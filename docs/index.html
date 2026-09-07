@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>מוניטור אבא איציק</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700&family=Heebo:wght@300;400;500;700&display=swap">
+<style>
+:root{--ground:#faf7f2;--surface:#fff;--sunk:#f2ede4;--ink:#22201c;--dim:#6e675d;
+ --line:#e6e0d5;--accent:#14675a;--accent-soft:#dfece8;--wait:#a8681a;
+ --shadow:0 1px 2px rgba(40,32,20,.06)}
+@media (prefers-color-scheme:dark){:root{--ground:#191714;--surface:#221f1b;--sunk:#1f1c18;
+ --ink:#f0ece5;--dim:#9b9387;--line:#35312b;--accent:#4fb3a0;--accent-soft:#1d3630;
+ --wait:#d99b45;--shadow:none}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);direction:rtl;
+ font:400 16px/1.65 Heebo,system-ui,"Segoe UI",Arial,sans-serif}
+.wrap{max-width:620px;margin:0 auto;padding:22px 18px 64px}
+h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0 0 6px;text-wrap:balance}
+.sub{color:var(--dim);font-size:14px;font-weight:300}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:22px 0 26px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:11px;
+ padding:13px 14px;box-shadow:var(--shadow)}
+.tile .k{font-size:12px;color:var(--dim)}
+.tile .v{font:500 28px/1.15 "Frank Ruhl Libre",Georgia,serif;
+ font-variant-numeric:tabular-nums;margin-top:3px}
+.tile.wait .v{color:var(--wait)}
+h2{font:500 15px/1.3 Heebo,sans-serif;margin:0 0 11px;color:var(--dim);letter-spacing:.04em}
+section{margin-bottom:30px}
+.seg{display:flex;gap:4px;background:var(--sunk);border-radius:10px;padding:4px;margin-bottom:14px}
+.seg button{flex:1;background:transparent;color:var(--dim);border:0;border-radius:7px;
+ padding:8px 4px;font:500 14px Heebo,sans-serif;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.item{background:var(--surface);border:1px solid var(--line);border-radius:11px;
+ padding:12px 14px;margin-bottom:9px;box-shadow:var(--shadow);
+ border-inline-start:3px solid var(--line)}
+.item.answered{border-inline-start-color:var(--accent)}
+.item.pain{border-inline-start-color:var(--wait)}
+.item .top{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;
+ font-size:13px;color:var(--dim);margin-bottom:5px}
+.item .who{color:var(--ink);font-weight:500;font-size:14px}
+.chip{background:var(--sunk);border-radius:999px;padding:1px 9px;font-size:11px;color:var(--dim)}
+.item .body{font-size:15px;white-space:pre-wrap;overflow-wrap:anywhere}
+.item .said{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);
+ font-size:14px;color:var(--accent)}
+.empty{color:var(--dim);font-size:15px;font-weight:300;padding:16px 2px}
+.note{font-size:13px;color:var(--dim);font-weight:300;border-top:1px solid var(--line);
+ padding-top:14px;margin-top:30px}
+.note b{color:var(--ink);font-weight:500}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>מוניטור אבא איציק</h1>
+<div class="sub">מי פנה, מה נענה, ומה עוד מחכה.</div>
+
+<div class="tiles">
+ <div class="tile wait"><div class="k">ממתין לתשובה</div><div class="v" id="tP">0</div></div>
+ <div class="tile"><div class="k">נענה היום</div><div class="v" id="tT">0</div></div>
+ <div class="tile"><div class="k">נענה סך הכל</div><div class="v" id="tA">0</div></div>
+</div>
+
+<section>
+ <div class="seg" role="group" aria-label="סינון">
+  <button type="button" id="bP" aria-pressed="true">ממתין</button>
+  <button type="button" id="bD" aria-pressed="false">נענה</button>
+ </div>
+ <div id="list"></div>
+</section>
+
+<div class="note">
+ <b>הכלל האדום.</b> לא פונים למי שלא פנה. כל שורה כאן היא מישהו שהגיב,
+ ענה לסטורי או שלח הודעה. שעות שקט בין 23:00 ל־07:00.
+ <br><br>
+ שמות משפחה מקוצרים לאות אחת, כי הדף הזה פתוח לכל מי שיש לו הקישור.
+ <span id="built"></span>
+</div>
+</div>
+
+<script>
+var D = {"builtAt":"2026-09-07T07:09:21.549Z","counts":{"pending":10,"replied":19,"today":19},"pending":[{"network":"facebook","author":"Hilla C.","text":"רפואה שלמה","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null},{"network":"facebook","author":"צביה ג.","text":"בהצלחה ורפואה שלמה","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null},{"network":"facebook","author":"איילת ב.","text":"הי גיבור, בהצלחה","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null},{"network":"facebook","author":"Dov Z.","text":"בהצלחה מחזיק לך אצבעות","category":"encouragement","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null},{"network":"facebook","author":"אתי ז. י.","text":"בהצלחה המון בריאות","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null},{"network":"facebook","author":"הילה ש.","text":"רפואה שלימה והחלמה מהירה כל הכבוד על הפתיחות והשיתוף","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null},{"network":"facebook","author":"Shmulik S.","text":"בהצלחה אח יקר אוהבים אותך יאללה שיגמר כבר אמן","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null},{"network":"facebook","author":"אילן מ.","text":"אתה גדול מהחיים אתה תעבור את זה בהצלחה בעזרת השם","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null},{"network":"facebook","author":"אמנון ס.","text":"בריאות איש","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null},{"network":"facebook","author":"אייל ג.","text":"בריאות איתנה החלמה מהירה","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null}],"replied":[{"network":"facebook","author":"Livnat G.","text":"רפואה שלמה במהרה","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"אמן ואמן, תודה רבה 🙏"},{"network":"facebook","author":"Chen M.","text":"בהצלחה","category":"encouragement","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"תודה, המילים האלה מגיעות בול בזמן 💪"},{"network":"facebook","author":"אילנה מ.","text":"בהצלחה רפואה שלמה","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"אמן, ותודה שחשבתם עליי 🙏"},{"network":"facebook","author":"Michal B.","text":"בריאות איתנה והחלמה מהירה","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"תודה מכל הלב, הברכה הזאת שווה הרבה 🙏"},{"network":"facebook","author":"סופיה א.","text":"תוצאות טובות בה בהצלחה איש יקר","category":"personal","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"אמן, תודה רבה על המילים 🙏"},{"network":"facebook","author":"Carpenter D.","text":"הצלחה אלוף","category":"personal","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"תודה רבה, מעריך כל מילה 🙏"},{"network":"facebook","author":"Oz S.","text":"יאללה יא גבר, תן בראש. אתה השראה.","category":"personal","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"תודה, זה בדיוק הדלק שצריך 💪"},{"network":"facebook","author":"Zeev L.","text":"בהצלחה אלוף","category":"personal","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"תודה רבה, מעריך את זה מאוד 💪"},{"network":"facebook","author":"Christine L.","text":"בהצלחה כל כך אוהבים אותך","category":"personal","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"תודה ענקית, מרגיש את האהבה מכאן 🤍"},{"network":"facebook","author":"Shirly T.","text":"אלוף טרוף אחר כך את החיים תזכה לראות ולהנות מהם באמת","category":"personal","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"תודה מכל הלב, זה נוגע ללב 🙏"},{"network":"facebook","author":"נינה ב. י.","text":"בהצלחה אלוף","category":"personal","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"תודה רבה, זה נותן דלק להמשך 🙏"},{"network":"facebook","author":"Nevo G.","text":"תן הראש איש יקר","category":"personal","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"תודה רבה, קיבלתי את זה בגדול 💪"},{"network":"facebook","author":"אבי א. ק.","text":"בהצלחההההה רק בריאות","category":"blessing","seenAt":"2026-09-07T05:03:32.391Z","repliedAt":"2026-09-07T05:03:32.391Z","replyText":"רק בריאות, וזה הכי חשוב. תודה רבה 🙏"},{"network":"facebook","author":"Hai S.","text":"רפואה שלמה ובהצלחה 🙏","category":"blessing","seenAt":"2026-09-07T05:03:32.391Z","repliedAt":"2026-09-07T05:03:32.391Z","replyText":"תודה ענקית על הברכה, שווה זהב 🙏"},{"network":"facebook","author":"Eran H.","text":"בהצלחה רפואה שלמה","category":"blessing","seenAt":"2026-09-07T05:03:32.391Z","repliedAt":"2026-09-07T05:03:32.391Z","replyText":"אמן ותודה רבה, מעריך את זה מאוד 🙏"},{"network":"facebook","author":"Mor A.","text":"היידה אבא איציק כהן קטן עליך","category":"encouragement","seenAt":"2026-09-07T05:03:32.391Z","repliedAt":"2026-09-07T05:03:32.391Z","replyText":"תודה על החיזוק, זה עושה את ההבדל 🙏"},{"network":"facebook","author":"Eldad K.","text":"בהצלחה אלוף","category":"encouragement","seenAt":"2026-09-07T05:03:32.391Z","repliedAt":"2026-09-07T05:03:32.391Z","replyText":"תודה רבה, זה בדיוק מה שנותן כוח להמשיך 💪"},{"network":"facebook","author":"אורלי כ.","text":"בריאות אמן","category":"blessing","seenAt":"2026-09-07T05:03:32.391Z","repliedAt":"2026-09-07T05:03:32.391Z","replyText":"אמן, תודה רבה על הברכה 🙏"},{"network":"facebook","author":"דנה ג.","text":"אתה בן אדם מקסים רפואה שלמה","category":"personal","seenAt":"2026-09-07T05:03:32.390Z","repliedAt":"2026-09-07T05:03:32.391Z","replyText":"תודה מכל הלב, המילים האלה עושות טוב 🙏"}]}, NET = {"facebook":"פייסבוק","instagram":"אינסטגרם","tiktok":"טיקטוק","youtube":"יוטיוב"}, CAT = {"blessing":"ברכה","encouragement":"עידוד","personal":"אישי","pain":"שיתוף כאב","medical_advice":"המלצה רפואית","offer_help":"הצעת עזרה","donation":"שאלת תרומות"}, tab = 'pending';
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function ago(iso){if(!iso)return'';var d=Date.parse(iso);if(isNaN(d))return'';
+ var s=(Date.now()-d)/1000;if(s<90)return'עכשיו';if(s<3600)return Math.round(s/60)+' דקות';
+ if(s<86400)return Math.round(s/3600)+' שעות';return Math.round(s/86400)+' ימים';}
+function row(i){
+ var cls='item'+(i.repliedAt?' answered':(i.category==='pain'?' pain':''));
+ return '<div class="'+cls+'"><div class="top"><span class="who">'+esc(i.author)+'</span>'
+  +'<span class="chip">'+esc(NET[i.network]||i.network)+'</span>'
+  +(i.category?'<span class="chip">'+esc(CAT[i.category]||i.category)+'</span>':'')
+  +'<span>'+ago(i.repliedAt||i.seenAt)+'</span></div>'
+  +'<div class="body">'+esc(i.text)+'</div>'
+  +(i.replyText?'<div class="said">'+esc(i.replyText)+'</div>':'')+'</div>';
+}
+function render(){
+ document.getElementById('tP').textContent=D.counts.pending;
+ document.getElementById('tT').textContent=D.counts.today;
+ document.getElementById('tA').textContent=D.counts.replied;
+ document.getElementById('bP').setAttribute('aria-pressed',tab==='pending');
+ document.getElementById('bD').setAttribute('aria-pressed',tab==='done');
+ var rows=tab==='pending'?D.pending:D.replied;
+ document.getElementById('list').innerHTML=rows.length?rows.map(row).join('')
+  :'<div class="empty">'+(tab==='pending'?'התור ריק. כל מי שפנה קיבל תשובה.':'עוד לא נשלחו תשובות.')+'</div>';
+ document.getElementById('built').textContent='עודכן לפני '+ago(D.builtAt)+'.';
+}
+document.getElementById('bP').onclick=function(){tab='pending';render();};
+document.getElementById('bD').onclick=function(){tab='done';render();};
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+# Never publish anything holding full names of real people.
+# Only docs/ ships, and build.js shortens surnames there.
+data/
+seed.js
+sync-today.js
+node_modules/
