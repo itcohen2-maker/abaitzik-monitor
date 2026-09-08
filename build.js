@@ -28,6 +28,21 @@ function esc(s) {
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
+// Contacts and reports are pulled from the artifact database into data/, which
+// is gitignored. Only the fields below reach docs/. Phone numbers and email
+// addresses never do - Itzik asks for those by mail, one person at a time.
+function loadDocs(dir) {
+  const full = path.join(__dirname, 'data', dir, dir);
+  if (!fs.existsSync(full)) return [];
+  return fs.readdirSync(full)
+    .filter(f => f.endsWith('.json'))
+    .map(f => {
+      const doc = JSON.parse(fs.readFileSync(path.join(full, f), 'utf8'));
+      doc.id = f.replace(/\.json$/, '');
+      return doc;
+    });
+}
+
 function build() {
   const state = store.load();
   const items = Object.values(state.items).map(i => ({
@@ -45,11 +60,36 @@ function build() {
   const today = new Date().toDateString();
   const repliedToday = replied.filter(i => new Date(i.repliedAt).toDateString() === today);
 
+  const contacts = loadDocs('contacts')
+    .map(c => ({
+      name: c.name,
+      network: c.network,
+      note: c.note,
+      at: c.at,
+      status: c.status,
+      log: Array.isArray(c.log) ? c.log : [],
+    }))
+    .sort((a, b) => {
+      if ((a.status === 'done') !== (b.status === 'done')) return a.status === 'done' ? 1 : -1;
+      return (a.at || '') < (b.at || '') ? 1 : -1;
+    });
+
+  const reports = loadDocs('reports')
+    .map(r => ({ title: r.title, at: r.at, body: r.body }))
+    .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
+
   const payload = {
     builtAt: new Date().toISOString(),
-    counts: { pending: pending.length, replied: replied.length, today: repliedToday.length },
+    counts: {
+      pending: pending.length,
+      replied: replied.length,
+      today: repliedToday.length,
+      leads: contacts.filter(c => c.status !== 'done').length,
+    },
     pending: pending.sort((a, b) => (a.seenAt < b.seenAt ? 1 : -1)),
     replied: replied.sort((a, b) => (a.repliedAt < b.repliedAt ? 1 : -1)),
+    contacts,
+    reports,
   };
 
   const html = PAGE
@@ -62,7 +102,8 @@ function build() {
   fs.writeFileSync(path.join(OUT_DIR, '.nojekyll'), '', 'utf8');
   fs.writeFileSync(path.join(OUT_DIR, 'robots.txt'), 'User-agent: *\nDisallow: /\n', 'utf8');
   console.log('built docs/index.html |', items.length, 'items,',
-    payload.counts.pending, 'pending,', payload.counts.replied, 'replied');
+    payload.counts.pending, 'pending,', payload.counts.replied, 'replied,',
+    contacts.length, 'contacts,', reports.length, 'reports');
 }
 
 const PAGE = `<!DOCTYPE html>
@@ -115,6 +156,47 @@ section{margin-bottom:30px}
 .item .said{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);
  font-size:14px;color:var(--accent)}
 .empty{color:var(--dim);font-size:15px;font-weight:300;padding:16px 2px}
+.item.lead{border-inline-start-color:var(--wait)}
+.item.lead.closed{border-inline-start-color:var(--accent)}
+.log{list-style:none;margin:10px 0 0;padding:0 11px 0 0;border-inline-start:1px solid var(--line)}
+.log li{position:relative;padding:0 13px 9px 0;font-size:14px;overflow-wrap:anywhere}
+.log li:last-child{padding-bottom:0}
+.log li::before{content:"";position:absolute;inset-inline-start:-15px;top:8px;
+ width:6px;height:6px;border-radius:50%;background:var(--line)}
+.log li:last-child::before{background:var(--accent)}
+.log .d{display:block;color:var(--dim);font-size:12px;font-weight:300;
+ font-variant-numeric:tabular-nums}
+.ask{display:inline-block;margin-top:10px;background:transparent;color:var(--accent);
+ border:1px solid var(--line);border-radius:8px;padding:6px 14px;
+ font:400 13px Heebo,sans-serif;text-decoration:none}
+.ask:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.report{background:var(--surface);border:1px solid var(--line);border-radius:11px;
+ margin-bottom:9px;box-shadow:var(--shadow);overflow:hidden}
+.report summary{cursor:pointer;padding:12px 14px;list-style:none;
+ display:flex;gap:8px;align-items:baseline}
+.report summary::-webkit-details-marker{display:none}
+.report summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.report summary .t{font-weight:500;font-size:15px}
+.report summary .d{margin-inline-start:auto;color:var(--dim);font-size:13px;
+ font-weight:300;font-variant-numeric:tabular-nums}
+.report .text{padding:12px 14px 14px;font-size:15px;white-space:pre-wrap;
+ overflow-wrap:anywhere;border-top:1px solid var(--line)}
+.copyrow{display:flex;align-items:center;gap:11px;padding:0 14px 13px}
+.copyrow button{background:transparent;color:var(--accent);border:1px solid var(--line);
+ border-radius:8px;padding:6px 14px;font:400 13px Heebo,sans-serif;cursor:pointer}
+.copyrow button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.copyrow .msg{font-size:13px;color:var(--accent)}
+#pM{border-top:1px solid var(--line);padding-top:22px}
+#msgForm{display:flex;flex-direction:column;gap:10px}
+#msgText{width:100%;min-height:74px;resize:vertical;background:var(--surface);
+ color:var(--ink);border:1px solid var(--line);border-radius:11px;padding:12px 14px;
+ font:400 16px/1.6 Heebo,sans-serif;box-shadow:var(--shadow)}
+#msgText::placeholder{color:var(--dim);font-weight:300}
+#msgText:focus-visible,#msgBtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#msgBtn{align-self:flex-start;background:var(--accent);color:#fff;border:0;
+ border-radius:10px;padding:11px 26px;font:500 15px Heebo,sans-serif;cursor:pointer}
+#msgBtn[disabled]{opacity:.5;cursor:default}
+.msgsaid{color:var(--accent);font-size:14px;min-height:20px;margin-top:9px}
 .note{font-size:13px;color:var(--dim);font-weight:300;border-top:1px solid var(--line);
  padding-top:14px;margin-top:30px}
 .note b{color:var(--ink);font-weight:500}
@@ -128,10 +210,16 @@ section{margin-bottom:30px}
 <div class="tiles">
  <div class="tile wait"><div class="k">ממתין לתשובה</div><div class="v" id="tP">0</div></div>
  <div class="tile"><div class="k">נענה היום</div><div class="v" id="tT">0</div></div>
- <div class="tile"><div class="k">נענה סך הכל</div><div class="v" id="tA">0</div></div>
+ <div class="tile wait"><div class="k">אנשי קשר פתוחים</div><div class="v" id="tL">0</div></div>
 </div>
 
-<section>
+<div class="seg" role="group" aria-label="מסך">
+ <button type="button" id="nQ" aria-pressed="true">התור</button>
+ <button type="button" id="nL" aria-pressed="false">אנשי קשר</button>
+ <button type="button" id="nR" aria-pressed="false">דוחות</button>
+</div>
+
+<section id="pQ">
  <div class="seg" role="group" aria-label="סינון">
   <button type="button" id="bP" aria-pressed="true">ממתין</button>
   <button type="button" id="bD" aria-pressed="false">נענה</button>
@@ -139,17 +227,41 @@ section{margin-bottom:30px}
  <div id="list"></div>
 </section>
 
+<section id="pL" hidden>
+ <h2>מי יצר קשר ורוצה המשך</h2>
+ <div id="leads"></div>
+</section>
+
+<section id="pR" hidden>
+ <h2>דוחות הסבבים</h2>
+ <div id="reports"></div>
+</section>
+
+<section id="pM">
+ <h2>הודעה אליי</h2>
+ <form id="msgForm">
+  <textarea id="msgText" rows="3"
+   placeholder="תשובה, בקשה, או פרטים על מישהו חדש שפנה אליך"></textarea>
+  <button type="submit" id="msgBtn">שליחה</button>
+ </form>
+ <div class="msgsaid" id="msgSaid"></div>
+</section>
+
 <div class="note">
  <b>הכלל האדום.</b> לא פונים למי שלא פנה. כל שורה כאן היא מישהו שהגיב,
  ענה לסטורי או שלח הודעה. שעות שקט בין 23:00 ל־07:00.
  <br><br>
- שמות משפחה מקוצרים לאות אחת, כי הדף הזה פתוח לכל מי שיש לו הקישור.
+ שמות משפחה של מגיבים מקוצרים לאות אחת, ו<b>טלפונים ומיילים לא נמצאים בדף הזה בכלל</b>,
+ כי הוא פתוח לכל מי שיש לו הקישור. פרטי התקשרות מגיעים במייל.
  <span id="built"></span>
 </div>
 </div>
 
 <script>
 var D = __DATA__, NET = __NET__, CAT = __CAT__, tab = 'pending';
+// Split so a scraper crawling the page source does not lift a plain address.
+// This is obfuscation, not security - anyone reading the code can reassemble it.
+var MAILBOX = ['itcohen2','gmail.com'].join('@');
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){
  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function ago(iso){if(!iso)return'';var d=Date.parse(iso);if(isNaN(d))return'';
@@ -164,19 +276,115 @@ function row(i){
   +'<div class="body">'+esc(i.text)+'</div>'
   +(i.replyText?'<div class="said">'+esc(i.replyText)+'</div>':'')+'</div>';
 }
+function stamp(iso){var d=new Date(iso);if(isNaN(d.getTime()))return'';
+ function p(n){return (n<10?'0':'')+n;}
+ return p(d.getDate())+'.'+p(d.getMonth()+1)+' '+p(d.getHours())+':'+p(d.getMinutes());}
+function logHtml(log){
+ if(!log||!log.length)return'';
+ return '<ol class="log">'+log.slice().sort(function(a,b){
+   return (a.at||'')<(b.at||'')?-1:1;
+ }).map(function(e){
+   return '<li><span class="d">'+esc(stamp(e.at))+'</span>'+esc(e.text)+'</li>';
+ }).join('')+'</ol>';
+}
+function leadRow(c){
+ var closed=c.status==='done';
+ var subject='פרטים: '+(c.name||'');
+ var body='שלח לי את פרטי ההתקשרות ואת מה שסוכם.';
+ return '<div class="item lead'+(closed?' closed':'')+'">'
+  +'<div class="top"><span class="who">'+esc(c.name||'ללא שם')+'</span>'
+  +'<span class="chip">'+esc(NET[c.network]||c.network||'אחר')+'</span>'
+  +'<span class="chip">'+(closed?'טופל':'ממתין')+'</span>'
+  +'<span>'+ago(c.at)+'</span></div>'
+  +(c.note?'<div class="body">'+esc(c.note)+'</div>':'')
+  +logHtml(c.log)
+  +'<a class="ask" href="mailto:?subject='+encodeURIComponent(subject)
+  +'&body='+encodeURIComponent(body)+'">בקשת פרטי התקשרות</a>'
+  +'</div>';
+}
+function reportRow(r,n){
+ return '<details class="report"'+(n===0?' open':'')+'>'
+  +'<summary><span class="t">'+esc(r.title||'דוח')+'</span>'
+  +'<span class="d">'+esc(stamp(r.at))+'</span></summary>'
+  +'<div class="text">'+esc(r.body)+'</div>'
+  +'<div class="copyrow"><button type="button" data-copy="'+n+'">העתקת הדוח</button>'
+  +'<span class="msg" data-copied="'+n+'"></span></div>'
+  +'</details>';
+}
 function render(){
  document.getElementById('tP').textContent=D.counts.pending;
  document.getElementById('tT').textContent=D.counts.today;
- document.getElementById('tA').textContent=D.counts.replied;
+ document.getElementById('tL').textContent=D.counts.leads||0;
  document.getElementById('bP').setAttribute('aria-pressed',tab==='pending');
  document.getElementById('bD').setAttribute('aria-pressed',tab==='done');
  var rows=tab==='pending'?D.pending:D.replied;
  document.getElementById('list').innerHTML=rows.length?rows.map(row).join('')
   :'<div class="empty">'+(tab==='pending'?'התור ריק. כל מי שפנה קיבל תשובה.':'עוד לא נשלחו תשובות.')+'</div>';
+ var C=D.contacts||[];
+ document.getElementById('leads').innerHTML=C.length?C.map(leadRow).join('')
+  :'<div class="empty">אף אחד ברשימה עדיין.</div>';
+ var R=D.reports||[];
+ document.getElementById('reports').innerHTML=R.length?R.map(reportRow).join('')
+  :'<div class="empty">עוד לא נכתב דוח.</div>';
  document.getElementById('built').textContent='עודכן לפני '+ago(D.builtAt)+'.';
 }
+function pane(w){
+ document.getElementById('pQ').hidden=w!=='q';
+ document.getElementById('pL').hidden=w!=='l';
+ document.getElementById('pR').hidden=w!=='r';
+ document.getElementById('nQ').setAttribute('aria-pressed',w==='q');
+ document.getElementById('nL').setAttribute('aria-pressed',w==='l');
+ document.getElementById('nR').setAttribute('aria-pressed',w==='r');
+}
+document.getElementById('nQ').onclick=function(){pane('q');};
+document.getElementById('nL').onclick=function(){pane('l');};
+document.getElementById('nR').onclick=function(){pane('r');};
 document.getElementById('bP').onclick=function(){tab='pending';render();};
 document.getElementById('bD').onclick=function(){tab='done';render();};
+
+document.getElementById('reports').addEventListener('click',function(e){
+ var b=e.target.closest?e.target.closest('[data-copy]'):null;
+ if(!b)return;
+ var r=(D.reports||[])[Number(b.getAttribute('data-copy'))];
+ if(!r)return;
+ var said=document.querySelector('[data-copied="'+b.getAttribute('data-copy')+'"]');
+ var text=(r.title||'דוח')+'\\n\\n'+(r.body||'');
+ function ok(){if(said)said.textContent='הועתק.';}
+ function bad(){if(said)said.textContent='ההעתקה לא עברה. סמן ידנית.';}
+ if(navigator.clipboard&&navigator.clipboard.writeText){
+  navigator.clipboard.writeText(text).then(ok,bad);return;
+ }
+ var ta=document.createElement('textarea');
+ ta.value=text;ta.setAttribute('readonly','');
+ ta.style.position='fixed';ta.style.opacity='0';
+ document.body.appendChild(ta);ta.select();
+ try{document.execCommand('copy')?ok():bad();}catch(err){bad();}
+ document.body.removeChild(ta);
+});
+
+document.getElementById('msgForm').addEventListener('submit',function(e){
+ e.preventDefault();
+ var box=document.getElementById('msgText');
+ var btn=document.getElementById('msgBtn');
+ var said=document.getElementById('msgSaid');
+ var text=box.value.trim();
+ if(!text)return;
+ btn.disabled=true;
+ said.textContent='שולח.';
+ fetch('https://formsubmit.co/ajax/'+MAILBOX,{
+  method:'POST',
+  headers:{'Content-Type':'application/json',Accept:'application/json'},
+  body:JSON.stringify({_subject:'הודעה מהמוניטור',_template:'table',הודעה:text})
+ }).then(function(r){
+  if(!r.ok)throw new Error('bad');
+  box.value='';
+  said.textContent='נשלח. יטופל בסבב הקרוב.';
+ }).catch(function(){
+  said.textContent='השליחה לא עברה. נסה שוב, או שלח מייל רגיל.';
+ }).then(function(){btn.disabled=false;});
+});
+
+pane('q');
 render();
 </script>
 </body>
