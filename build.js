@@ -78,6 +78,10 @@ function build() {
     .map(r => ({ title: r.title, at: r.at, body: r.body }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
 
+  const chat = loadDocs('chat')
+    .map(m => ({ at: m.at, from: m.from, text: m.text }))
+    .sort((a, b) => ((a.at || '') < (b.at || '') ? -1 : 1));
+
   const payload = {
     builtAt: new Date().toISOString(),
     counts: {
@@ -90,6 +94,7 @@ function build() {
     replied: replied.sort((a, b) => (a.repliedAt < b.repliedAt ? 1 : -1)),
     contacts,
     reports,
+    chat,
   };
 
   const html = PAGE
@@ -186,7 +191,17 @@ section{margin-bottom:30px}
  border-radius:8px;padding:6px 14px;font:400 13px Heebo,sans-serif;cursor:pointer}
 .copyrow button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .copyrow .msg{font-size:13px;color:var(--accent)}
-#pM{border-top:1px solid var(--line);padding-top:22px}
+.thread{display:flex;flex-direction:column;gap:9px;margin-bottom:16px}
+.bub{max-width:82%;padding:10px 13px;border-radius:14px;font-size:15px;
+ white-space:pre-wrap;overflow-wrap:anywhere;box-shadow:var(--shadow)}
+.bub .w{display:block;color:var(--dim);font-size:11px;font-weight:300;
+ margin-bottom:3px;font-variant-numeric:tabular-nums}
+.bub.me{align-self:flex-start;background:var(--accent-soft);
+ border-bottom-inline-start-radius:4px}
+.bub.you{align-self:flex-end;background:var(--surface);
+ border:1px solid var(--line);border-bottom-inline-end-radius:4px}
+.bub.pend{opacity:.6}
+.hint{font-size:13px;color:var(--dim);font-weight:300;margin-top:14px;line-height:1.6}
 #msgForm{display:flex;flex-direction:column;gap:10px}
 #msgText{width:100%;min-height:74px;resize:vertical;background:var(--surface);
  color:var(--ink);border:1px solid var(--line);border-radius:11px;padding:12px 14px;
@@ -217,6 +232,7 @@ section{margin-bottom:30px}
  <button type="button" id="nQ" aria-pressed="true">התור</button>
  <button type="button" id="nL" aria-pressed="false">אנשי קשר</button>
  <button type="button" id="nR" aria-pressed="false">דוחות</button>
+ <button type="button" id="nM" aria-pressed="false">צ׳אט</button>
 </div>
 
 <section id="pQ">
@@ -237,14 +253,18 @@ section{margin-bottom:30px}
  <div id="reports"></div>
 </section>
 
-<section id="pM">
- <h2>הודעה אליי</h2>
+<section id="pM" hidden>
+ <div class="thread" id="thread"></div>
  <form id="msgForm">
-  <textarea id="msgText" rows="3"
-   placeholder="תשובה, בקשה, או פרטים על מישהו חדש שפנה אליך"></textarea>
+  <textarea id="msgText" rows="2"
+   placeholder="כתוב כאן. תשובה, בקשה, או מישהו חדש שפנה אליך"></textarea>
   <button type="submit" id="msgBtn">שליחה</button>
  </form>
  <div class="msgsaid" id="msgSaid"></div>
+ <div class="hint">
+  מה שאתה כותב מגיע למייל שלי ואני קורא אותו בסבב הקרוב.
+  התשובות שלי מופיעות כאן למעלה.
+ </div>
 </section>
 
 <div class="note">
@@ -328,17 +348,47 @@ function render(){
   :'<div class="empty">עוד לא נכתב דוח.</div>';
  document.getElementById('built').textContent='עודכן לפני '+ago(D.builtAt)+'.';
 }
+function pending(){
+ try{return JSON.parse(localStorage.getItem('pendingMsgs')||'[]');}catch(e){return[];}
+}
+function savePending(a){
+ try{localStorage.setItem('pendingMsgs',JSON.stringify(a));}catch(e){}
+}
+function renderThread(){
+ var baked=(D.chat||[]).slice();
+ var sent=baked.filter(function(m){return m.from==='itzik';})
+   .map(function(m){return String(m.text).trim();});
+ var still=pending().filter(function(p){return sent.indexOf(p.text.trim())===-1;});
+ savePending(still);
+ var all=baked.map(function(m){return{at:m.at,from:m.from,text:m.text,pend:false};})
+   .concat(still.map(function(p){return{at:p.at,from:'itzik',text:p.text,pend:true};}))
+   .sort(function(a,b){return (a.at||'')<(b.at||'')?-1:1;});
+ var host=document.getElementById('thread');
+ if(!all.length){
+  host.innerHTML='<div class="empty">עוד לא דיברנו כאן. תכתוב משהו למטה.</div>';
+  return;
+ }
+ host.innerHTML=all.map(function(m){
+  var mine=m.from==='itzik';
+  return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')+'">'
+   +'<span class="w">'+(mine?'אתה':'קלוד')+' · '+esc(stamp(m.at))
+   +(m.pend?' · ממתין':'')+'</span>'+esc(m.text)+'</div>';
+ }).join('');
+}
 function pane(w){
  document.getElementById('pQ').hidden=w!=='q';
  document.getElementById('pL').hidden=w!=='l';
  document.getElementById('pR').hidden=w!=='r';
+ document.getElementById('pM').hidden=w!=='m';
  document.getElementById('nQ').setAttribute('aria-pressed',w==='q');
  document.getElementById('nL').setAttribute('aria-pressed',w==='l');
  document.getElementById('nR').setAttribute('aria-pressed',w==='r');
+ document.getElementById('nM').setAttribute('aria-pressed',w==='m');
 }
 document.getElementById('nQ').onclick=function(){pane('q');};
 document.getElementById('nL').onclick=function(){pane('l');};
 document.getElementById('nR').onclick=function(){pane('r');};
+document.getElementById('nM').onclick=function(){pane('m');};
 document.getElementById('bP').onclick=function(){tab='pending';render();};
 document.getElementById('bD').onclick=function(){tab='done';render();};
 
@@ -377,8 +427,12 @@ document.getElementById('msgForm').addEventListener('submit',function(e){
   body:JSON.stringify({_subject:'הודעה מהמוניטור',_template:'table',הודעה:text})
  }).then(function(r){
   if(!r.ok)throw new Error('bad');
+  var p=pending();
+  p.push({at:new Date().toISOString(),text:text});
+  savePending(p);
   box.value='';
-  said.textContent='נשלח. יטופל בסבב הקרוב.';
+  said.textContent='נשלח.';
+  renderThread();
  }).catch(function(){
   said.textContent='השליחה לא עברה. נסה שוב, או שלח מייל רגיל.';
  }).then(function(){btn.disabled=false;});
@@ -386,6 +440,7 @@ document.getElementById('msgForm').addEventListener('submit',function(e){
 
 pane('q');
 render();
+renderThread();
 </script>
 </body>
 </html>`;
