@@ -420,10 +420,10 @@ section{margin-bottom:30px}
 .vtxt{flex:1;display:flex;flex-direction:column;justify-content:center}
 .vtxt b{font:700 16px Heebo,sans-serif}
 .vtxt small{color:var(--dim);font-size:12px;line-height:1.5;font-weight:300}
-.urg{flex:0 0 66px;cursor:pointer;border-radius:20px;color:var(--red);
+.urg{flex:0 0 66px;cursor:pointer;border-radius:20px;color:var(--blue);
  font:700 12.5px Heebo,sans-serif;line-height:1.25;
- background:var(--surface);border:2px solid var(--red);box-shadow:var(--shadow)}
-.urg:active{background:linear-gradient(180deg,#ff6a5e,var(--red));color:#fff}
+ background:var(--surface);border:2px solid var(--blue);box-shadow:var(--shadow)}
+.urg:active{background:linear-gradient(180deg,#6ea8ff,var(--blue));color:#fff}
 .urg span{font-size:19px;display:block;margin-bottom:2px}
 
 .row{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 10px;
@@ -580,7 +580,7 @@ section{margin-bottom:30px}
    <b>דבר אליי</b>
    <small id="micSaid">לוחצים, מדברים, לוחצים שוב. ההקלטה נשלחת אליי מיד.</small>
   </div>
-  <button type="button" id="urgBtn" class="urg"><span aria-hidden="true">🚨</span>דחוף</button>
+  <button type="button" id="urgBtn" class="urg"><span aria-hidden="true">📎</span>העלאת<br>קובץ</button>
  </div>
 
  <div class="sent" id="sentCard" hidden></div>
@@ -1402,7 +1402,14 @@ document.getElementById('landList').innerHTML=LANDING.map(function(l){
   +'<span class="chip">'+esc(l.note)+'</span></div>'
   +'<a class="ask" href="'+esc(l.url)+'" target="_blank" rel="noopener">פתיחת הדף</a></div>';
 }).join('')+'<div class="empty">דף נחיתה חדש נכנס לכאן. תשלח לי בצ׳אט את הכתובת ואת מילת המפתח שמפעילה אותו.</div>';
-document.getElementById('urgBtn').onclick=function(){askInChat('דחוף: ');};
+// The old urgent shortcut became the file upload: chat pane, attach form open.
+document.getElementById('urgBtn').onclick=function(){
+ pane('m');renderThread();
+ var f=document.getElementById('fileForm');
+ f.hidden=false;
+ document.getElementById('plusBtn').setAttribute('aria-expanded','true');
+ setTimeout(function(){f.scrollIntoView({behavior:'smooth',block:'center'});},60);
+};
 document.getElementById('bP').onclick=function(){tab='pending';render();};
 document.getElementById('bD').onclick=function(){tab='done';render();};
 
