@@ -733,7 +733,8 @@ section{margin-bottom:30px}
  <div class="item">
   <div class="top"><span class="who">הגיתית 7</span><span class="chip">24 דירות</span></div>
   <div class="body">קובץ מיסי ועד הבית, לשונית לכל שנה. ינואר עד ספטמבר 2026 כבר הוצלבו מול הבנק.</div>
-  <a class="ask" href="https://docs.google.com/spreadsheets/d/17PUmZuY_Qmb30a0klBBliN6xOrmwMsOH27z_tt7moIM/edit" target="_blank" rel="noopener">פתיחת הקובץ</a>
+  <a class="ask" href="https://docs.google.com/spreadsheets/u/1/d/17PUmZuY_Qmb30a0klBBliN6xOrmwMsOH27z_tt7moIM/edit" target="_blank" rel="noopener">פתיחת הקובץ</a>
+  <a class="ask" href="https://drive.google.com/drive/u/1/folders/1pLlW7nWGm3lYhMq0P7fzFPn_U1z1trE1" target="_blank" rel="noopener">תיקיית ועד הבית</a>
  </div>
  <div class="item">
   <div class="top"><span class="who">מה פתוח</span></div>
