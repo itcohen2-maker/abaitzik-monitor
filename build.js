@@ -166,6 +166,9 @@ const PAGE = `<!DOCTYPE html>
  --ink:#eef1f7;--dim:#9aa5b8;--line:#252c39;--accent:#8ab4f8;--accent-soft:#1b2b45;
  --wait:#fbbc05;--shadow:0 2px 10px rgba(0,0,0,.4)}}
 *{box-sizing:border-box}
+/* A class that sets display beats the browser default for [hidden], which is
+   how the recording overlay ended up on screen the moment the page opened. */
+[hidden]{display:none!important}
 body{margin:0;background:var(--ground);color:var(--ink);direction:rtl;
  font:400 16px/1.65 Heebo,system-ui,"Segoe UI",Arial,sans-serif;
  background-image:radial-gradient(120% 60% at 100% 0,var(--accent-soft) 0,transparent 60%);
