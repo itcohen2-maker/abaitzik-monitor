@@ -200,8 +200,10 @@ h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance
  border-radius:10px;padding:9px 12px;font:400 16px Heebo,sans-serif}
 #codeSave{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:9px 18px;
  font:500 14px Heebo,sans-serif;cursor:pointer}
-#codeEye{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:9px 12px;
- font-size:16px;cursor:pointer;line-height:1}
+.facerow{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+.facerow button{background:var(--sunk);color:var(--ink);border:1px solid var(--line);border-radius:10px;
+ padding:9px 16px;font:500 14px Heebo,sans-serif;cursor:pointer}
+.facerow span{font-size:12.5px;color:var(--dim);font-weight:300}
 .install{font-size:12.5px;color:var(--dim);font-weight:300;line-height:1.5;margin:8px 4px 0}
 @media(display-mode:standalone){.install{display:none}}
 .links{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px;
@@ -644,11 +646,17 @@ section{margin-bottom:30px}
 </div>
 <div class="codebox" id="codeBox" hidden>
  <b>קוד אישי</b>
- <small>מקלידים פעם אחת בנייד שלך והוא נשמר במכשיר. כל הודעה שתשלח תישא אותו, וכל פנייה בלעדיו אני מתעלם ממנה ומדווח לך. הקוד לא נמצא בקוד של הדף.</small>
- <div class="coderow">
+ <small>מקלידים פעם אחת בנייד שלך והוא נשמר במכשיר. כל הודעה שתשלח תישא אותו, וכל פנייה בלעדיו אני מתעלם ממנה ומדווח לך. הקוד לעולם לא מוצג על המסך, וכדי לשנות אותו צריך אישור בזיהוי פנים.</small>
+ <div class="facerow">
+  <button type="button" id="faceSetup">הפעלת זיהוי פנים</button>
+  <span id="faceState"></span>
+ </div>
+ <div class="coderow" id="codeRow" hidden>
   <input type="password" id="codeInput" inputmode="numeric" autocomplete="off" placeholder="קוד קצר, למשל 4 ספרות">
-  <button type="button" id="codeEye" aria-label="הצגת הקוד">👁️</button>
   <button type="button" id="codeSave">שמירה</button>
+ </div>
+ <div class="facerow">
+  <button type="button" id="codeChange">שינוי הקוד</button>
  </div>
  <div class="msgsaid" id="codeSaid"></div>
 </div>
@@ -1223,24 +1231,86 @@ function showCodeBox(){
  var box=document.getElementById('codeBox');
  box.hidden=false;
  var c=myCode();
- document.getElementById('codeSaid').textContent=c?'הקוד שמור במכשיר הזה. לחיצה על העין מציגה אותו לחמש שניות.':'עוד לא נקבע קוד במכשיר הזה.';
- if(c)document.getElementById('codeInput').value=c;
+ document.getElementById('codeSaid').textContent=c?'קוד שמור במכשיר הזה.':'עוד לא נקבע קוד. תקליד אחד ותשמור.';
+ document.getElementById('codeRow').hidden=!!c;
+ faceRender();
 }
-var codeTimer=null;
-document.getElementById('codeEye').onclick=function(){
- var el=document.getElementById('codeInput');
- var showing=el.type==='text';
- el.type=showing?'password':'text';
- this.setAttribute('aria-label',showing?'הצגת הקוד':'הסתרת הקוד');
- if(codeTimer){clearTimeout(codeTimer);codeTimer=null;}
- if(!showing){codeTimer=setTimeout(function(){el.type='password';},5000);}
+// Face ID through the platform authenticator. There is no server behind this,
+// so it gates the screen rather than encrypting anything, and the text below
+// says exactly that.
+function faceId(){
+ try{return localStorage.getItem('faceCred')||'';}catch(e){return '';}
+}
+function b64(buf){
+ var b='';new Uint8Array(buf).forEach(function(c){b+=String.fromCharCode(c);});
+ return btoa(b);
+}
+function unb64(str){
+ var raw=atob(str),a=new Uint8Array(raw.length);
+ for(var i=0;i<raw.length;i++)a[i]=raw.charCodeAt(i);
+ return a.buffer;
+}
+function faceSupported(){
+ return !!(window.PublicKeyCredential&&navigator.credentials&&location.protocol==='https:');
+}
+function faceEnroll(cb){
+ if(!faceSupported()){cb(false,'הדפדפן הזה לא תומך בזיהוי פנים.');return;}
+ var ch=new Uint8Array(32);crypto.getRandomValues(ch);
+ var uid=new Uint8Array(16);crypto.getRandomValues(uid);
+ navigator.credentials.create({publicKey:{
+  challenge:ch,
+  rp:{name:'המוניטור של אבא איציק'},
+  user:{id:uid,name:'itzik',displayName:'איציק'},
+  pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
+  authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},
+  timeout:60000,attestation:'none'
+ }}).then(function(c){
+  try{localStorage.setItem('faceCred',b64(c.rawId));}catch(e){}
+  cb(true,'זיהוי פנים מופעל במכשיר הזה.');
+ }).catch(function(){cb(false,'ההפעלה בוטלה או נכשלה.');});
+}
+function faceCheck(cb){
+ var id=faceId();
+ if(!id){cb(false,'צריך קודם להפעיל זיהוי פנים.');return;}
+ var ch=new Uint8Array(32);crypto.getRandomValues(ch);
+ navigator.credentials.get({publicKey:{
+  challenge:ch,
+  allowCredentials:[{type:'public-key',id:unb64(id)}],
+  userVerification:'required',timeout:60000
+ }}).then(function(){cb(true,'');}).catch(function(){cb(false,'הזיהוי נכשל. לא נפתח.');});
+}
+function faceRender(){
+ var st=document.getElementById('faceState');
+ var btn=document.getElementById('faceSetup');
+ if(!faceSupported()){st.textContent='לא נתמך בדפדפן הזה.';btn.disabled=true;return;}
+ var on=!!faceId();
+ st.textContent=on?'מופעל במכשיר הזה.':'עדיין לא הופעל במכשיר הזה.';
+ btn.textContent=on?'הפעלה מחדש':'הפעלת זיהוי פנים';
+}
+document.getElementById('faceSetup').onclick=function(){
+ var st=document.getElementById('faceState');
+ st.textContent='ממתין לזיהוי...';
+ faceEnroll(function(ok,msg){st.textContent=msg;faceRender();});
+};
+document.getElementById('codeChange').onclick=function(){
+ var said=document.getElementById('codeSaid');
+ var row=document.getElementById('codeRow');
+ if(!faceId()){said.textContent='קודם מפעילים זיהוי פנים, ורק אחר כך אפשר לשנות את הקוד.';return;}
+ said.textContent='ממתין לזיהוי פנים...';
+ faceCheck(function(ok,msg){
+  if(!ok){said.textContent=msg;row.hidden=true;return;}
+  row.hidden=false;
+  document.getElementById('codeInput').value='';
+  said.textContent='זוהית. תקליד קוד חדש ותשמור.';
+ });
 };
 document.getElementById('codeSave').onclick=function(){
  var v=document.getElementById('codeInput').value.trim();
  var said=document.getElementById('codeSaid');
  if(!v){said.textContent='תקליד קוד קודם.';return;}
  try{localStorage.setItem('monitorCode',v);said.textContent='נשמר. מעכשיו כל הודעה מהמכשיר הזה נושאת אותו.';
-  document.getElementById('codeInput').type='password';}
+  document.getElementById('codeInput').value='';
+  document.getElementById('codeRow').hidden=true;}
  catch(e){said.textContent='הדפדפן לא נתן לשמור. נסה בלי גלישה פרטית.';}
 };
 showCodeBox();
