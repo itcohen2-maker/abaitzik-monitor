@@ -459,6 +459,14 @@ section{margin-bottom:30px}
  box-shadow:0 0 0 2px var(--gold),0 14px 34px rgba(52,168,83,.45)}
 .toast.bad{color:#fff;border:0;background:linear-gradient(180deg,#ff6a5e,var(--red))}
 .threadbar{display:flex;justify-content:flex-end;margin-bottom:8px}
+.threadbar{gap:8px}
+.cpall.pickon{color:#fff;background:linear-gradient(180deg,#5cc36f,var(--green));border-color:transparent}
+.picking .bub{cursor:pointer}
+.picking .bub:before{content:"";position:absolute;inset-inline-start:8px;top:10px;
+ width:20px;height:20px;border-radius:6px;border:2px solid var(--line);background:var(--surface)}
+.picking .bub{padding-inline-start:38px;position:relative}
+.picking .bub.picked:before{background:var(--green);border-color:var(--green);
+ content:"¹3";color:#fff;font:700 14px/17px Heebo,sans-serif;text-align:center}
 .cpall{font:600 12.5px Heebo,sans-serif;color:var(--accent);cursor:pointer;
  background:var(--surface);border:1px solid var(--line);border-radius:999px;
  min-height:34px;padding:0 14px}
@@ -966,6 +974,8 @@ section{margin-bottom:30px}
 
 <section id="pM" hidden>
  <div class="threadbar">
+  <button type="button" id="pickMode" class="cpall">בחירת הודעות</button>
+  <button type="button" id="copyPicked" class="cpall pickon" hidden>העתקת הנבחרות</button>
   <button type="button" id="copyAll" class="cpall">העתקת כל השיחה</button>
  </div>
  <div class="thread" id="thread"></div>
@@ -1230,7 +1240,9 @@ function renderThread(){
  host.innerHTML=all.map(function(m,i){
   var mine=m.from==='itzik';
   var fresh=!mine&&(m.at||'')>seen;
-  return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')+(fresh?' fresh':' read')+'">'
+  var line=(mine?'איציק':'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');
+  return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')+(fresh?' fresh':' read')+'"'
+   +' data-copy="'+esc(line)+'">'
    +'<span class="w">'+(mine?'אתה':'קלוד')+' · '+esc(stamp(m.at))
    +(m.pend?' · נשלח, עוד לא נקרא':'')+statusTag(m)
    +(fresh?' · <em class="badge">חדש</em>':(mine?'':' · נקרא'))
@@ -1239,6 +1251,12 @@ function renderThread(){
  }).join('');
  // Copying by hand out of a bubble on a phone is a fight with the selection
  // handles, and he wanted my answers pasteable into his own notes.
+ if(picking)host.classList.add('picking');
+ Array.prototype.forEach.call(host.querySelectorAll('.bub'),function(el){
+  el.addEventListener('click',function(){
+   if(picking)el.classList.toggle('picked');
+  });
+ });
  Array.prototype.forEach.call(host.querySelectorAll('.cp'),function(b){
   b.onclick=function(e){
    e.stopPropagation();
@@ -1260,6 +1278,35 @@ function fallbackCopy(t,done){
  try{document.execCommand('copy');done();}catch(e){}
  document.body.removeChild(a);
 }
+// Selecting particular messages. The bubbles are drawn newest first, so the
+// copy is reordered oldest first, which is how a transcript reads.
+var picking=false;
+on('pickMode',function(){
+ picking=!picking;
+ var host=document.getElementById('thread');
+ host.classList.toggle('picking',picking);
+ this.textContent=picking?'ביטול בחירה':'בחירת הודעות';
+ this.classList.toggle('pickon',picking);
+ document.getElementById('copyPicked').hidden=!picking;
+ if(!picking)Array.prototype.forEach.call(host.querySelectorAll('.bub'),function(b){
+  b.classList.remove('picked');
+ });
+});
+on('copyPicked',function(){
+ var b=this;
+ var host=document.getElementById('thread');
+ var chosen=Array.prototype.slice.call(host.querySelectorAll('.bub.picked'));
+ if(!chosen.length){b.textContent='לא סימנת כלום';
+  setTimeout(function(){b.textContent='העתקת הנבחרות';},1500);return;}
+ var t=chosen.map(function(el){return el.getAttribute('data-copy')||'';})
+   .reverse().join(String.fromCharCode(10,10));
+ var done=function(){b.textContent='הועתק '+chosen.length;
+  setTimeout(function(){b.textContent='העתקת הנבחרות';},1600);};
+ if(navigator.clipboard&&navigator.clipboard.writeText){
+  navigator.clipboard.writeText(t).then(done,function(){fallbackCopy(t,done);});
+ }else fallbackCopy(t,done);
+});
+
 document.getElementById('copyAll').onclick=function(){
  var b=this;
  var all=(D.chat||[]).filter(function(m){return !isMail(m);})
