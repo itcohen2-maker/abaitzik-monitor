@@ -393,6 +393,10 @@ section{margin-bottom:30px}
  font:700 19px "Frank Ruhl Libre",Georgia,serif;color:var(--ink)}
 .hd .t{font:700 19px/1.15 Heebo,sans-serif}
 .hd .s{font-size:12px;color:var(--dim);font-weight:300}
+.gold{font:800 13.5px Heebo,sans-serif;margin-top:2px;
+ background:linear-gradient(90deg,#b8860b,#ffd76e,#f0b429,#fff3c4,#d4a017);
+ -webkit-background-clip:text;background-clip:text;color:transparent;
+ filter:drop-shadow(0 1px 0 rgba(0,0,0,.25))}
 .conn{margin-inline-start:auto;font:500 11.5px Heebo,sans-serif;color:#fff;background:var(--green);
  padding:5px 13px;border-radius:999px;border:0;cursor:pointer}
 .conn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -489,14 +493,17 @@ section{margin-bottom:30px}
 #slotSaid{color:var(--dim);font-size:13px;font-weight:300;margin-top:7px;min-height:18px}
 
 /* ===== bottom nav ===== */
-.micfab{position:fixed;inset-inline-start:14px;bottom:calc(78px + env(safe-area-inset-bottom));z-index:40;
+.micfab{position:fixed;left:50%;transform:translateX(-50%);
+ bottom:calc(84px + env(safe-area-inset-bottom));z-index:40;opacity:.88;touch-action:none;
  width:82px;height:82px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;
  background:conic-gradient(from 0deg,var(--blue),var(--red),var(--yellow),var(--green),var(--blue));
  box-shadow:0 10px 24px rgba(0,0,0,.35)}
 .micfab:before{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--surface)}
 .micfab svg{position:relative;z-index:1;width:38px;height:38px;stroke:var(--ink)}
 .micfab svg rect{fill:var(--ink)}
-.micfab.on{background:var(--red);animation:mpulse 1.1s infinite}
+.micfab.on{background:var(--red);animation:mpulse 1.1s infinite;opacity:1}
+.micfab.dragging{opacity:.6;transition:none}
+.micfab.placed{left:auto;transform:none}
 .micfab.on:before{background:var(--red)}
 .micfab.on svg{stroke:#fff}
 .micfab.on svg rect{fill:#fff}
@@ -550,6 +557,7 @@ section{margin-bottom:30px}
  <div>
   <div class="t">אבא איציק בבנייה עצמית</div>
   <div class="s" id="built"></div>
+  <div class="gold">המוניטור בונה את עצמו</div>
  </div>
  <button type="button" class="conn" id="reloadBtn" title="טעינה מחדש">רענון</button>
 </header>
@@ -668,7 +676,7 @@ section{margin-bottom:30px}
 <nav class="links" aria-label="קישורים מהירים">
  <a href="plan.html">
   <span aria-hidden="true">&#128736;</span>
-  <div>תכנון 2.0<small>המסך החדש, לאישורך</small></div>
+  <div>תכנון 2.0<small>מה נבנה ומה עוד מתוכנן</small></div>
  </a>
 </nav>
 </section>
@@ -1625,7 +1633,44 @@ function toggleRec(){
 }
 recBtn.onclick=toggleRec;
 document.getElementById('recBig').onclick=function(){recStop();};
-document.getElementById('micFab').onclick=toggleRec;
+var fabEl=document.getElementById('micFab');
+// Drag it anywhere. A press that never moves is still a tap, so recording is
+// not lost to a shaky finger.
+(function(){
+ var sx=0,sy=0,ox=0,oy=0,moved=false,down=false;
+ function place(x,y){
+  var w=fabEl.offsetWidth,h=fabEl.offsetHeight;
+  x=Math.max(6,Math.min(window.innerWidth-w-6,x));
+  y=Math.max(6,Math.min(window.innerHeight-h-6,y));
+  fabEl.classList.add('placed');
+  fabEl.style.left=x+'px';
+  fabEl.style.top=y+'px';
+  fabEl.style.bottom='auto';
+  try{localStorage.setItem('micPos',JSON.stringify({x:x,y:y}));}catch(e){}
+ }
+ try{
+  var saved=JSON.parse(localStorage.getItem('micPos')||'null');
+  if(saved)place(saved.x,saved.y);
+ }catch(e){}
+ fabEl.addEventListener('pointerdown',function(e){
+  down=true;moved=false;
+  var r=fabEl.getBoundingClientRect();
+  sx=e.clientX;sy=e.clientY;ox=r.left;oy=r.top;
+  fabEl.setPointerCapture(e.pointerId);
+ });
+ fabEl.addEventListener('pointermove',function(e){
+  if(!down)return;
+  var dx=e.clientX-sx,dy=e.clientY-sy;
+  if(!moved&&Math.abs(dx)+Math.abs(dy)<8)return;
+  moved=true;fabEl.classList.add('dragging');
+  place(ox+dx,oy+dy);
+ });
+ fabEl.addEventListener('pointerup',function(e){
+  down=false;fabEl.classList.remove('dragging');
+  if(!moved)toggleRec();
+ });
+ fabEl.addEventListener('pointercancel',function(){down=false;fabEl.classList.remove('dragging');});
+})();
 document.getElementById('recCancel').onclick=function(){
  if(rec&&rec.state==='recording'){recAbort=true;recStop();}
  else{recModal(false);}
