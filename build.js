@@ -435,6 +435,7 @@ section{margin-bottom:30px}
 .c-pg{background:linear-gradient(160deg,#a78bfa,#6d28d9)}
 .c-sl{background:linear-gradient(160deg,#f472b6,#be185d)}
 .c-vd{background:linear-gradient(160deg,#fbbf24,#d97706)}
+.c-hb{background:linear-gradient(160deg,#fbbf24,#b45309)}
 .c-add{background:var(--surface);border:2px dashed var(--line);box-shadow:none}
 .c-add:after{display:none}
 
@@ -488,12 +489,12 @@ section{margin-bottom:30px}
 #slotSaid{color:var(--dim);font-size:13px;font-weight:300;margin-top:7px;min-height:18px}
 
 /* ===== bottom nav ===== */
-.micfab{position:fixed;inset-inline-start:16px;bottom:calc(74px + env(safe-area-inset-bottom));z-index:40;
- width:62px;height:62px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;
+.micfab{position:fixed;inset-inline-start:14px;bottom:calc(78px + env(safe-area-inset-bottom));z-index:40;
+ width:82px;height:82px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;
  background:conic-gradient(from 0deg,var(--blue),var(--red),var(--yellow),var(--green),var(--blue));
  box-shadow:0 10px 24px rgba(0,0,0,.35)}
-.micfab:before{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--surface)}
-.micfab svg{position:relative;z-index:1;width:28px;height:28px;stroke:var(--ink)}
+.micfab:before{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--surface)}
+.micfab svg{position:relative;z-index:1;width:38px;height:38px;stroke:var(--ink)}
 .micfab svg rect{fill:var(--ink)}
 .micfab.on{background:var(--red);animation:mpulse 1.1s infinite}
 .micfab.on:before{background:var(--red)}
@@ -601,6 +602,8 @@ section{margin-bottom:30px}
    <svg viewBox="0 0 24 24"><path fill="#fff" d="M4 14c2-5 6-8 11-8l5-2-2 5c0 5-3 9-8 11l-1-3-3-1z"/><circle cx="14" cy="10" r="1.3" fill="#6d28d9"/></svg></span>פגסוס</a>
   <button type="button" class="ic" id="icDrive"><span class="c c-dr">
    <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M9.4 3h5.2l6 10.4h-5.2z"/><path fill="#34A853" d="M3 18.6 5.6 14h12.8l-2.6 4.6z"/><path fill="#FBBC05" d="M9.4 3 3 14l2.6 4.6L12 7.6z"/></svg></span>דרייב</button>
+  <button type="button" class="ic" id="icVaad"><span class="c c-hb">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/></svg></span>ועד הבית</button>
   <button type="button" class="ic" id="icAdd"><span class="c c-add">
    <svg viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>חדש</button>
  </div>
@@ -709,6 +712,23 @@ section{margin-bottom:30px}
   <button type="button" data-net="instagram" aria-pressed="false">אינסטגרם</button>
  </div>
  <div id="netBody"></div>
+</section>
+
+<section id="pV" hidden>
+ <h2>ועד הבית</h2>
+ <div class="item">
+  <div class="top"><span class="who">הגיתית 7</span><span class="chip">24 דירות</span></div>
+  <div class="body">קובץ מיסי ועד הבית, לשונית לכל שנה. ינואר עד ספטמבר 2026 כבר הוצלבו מול הבנק.</div>
+  <a class="ask" href="https://docs.google.com/spreadsheets/d/17PUmZuY_Qmb30a0klBBliN6xOrmwMsOH27z_tt7moIM/edit" target="_blank" rel="noopener">פתיחת הקובץ</a>
+ </div>
+ <div class="item">
+  <div class="top"><span class="who">מה פתוח</span></div>
+  <div class="body">בן יקר, דירה 6, חייב 1,200 על חודשים 6 עד 9.
+יוסי, דירה 17, חייב 600 מינואר ומאפריל.
+2,000 מדירה 2 שעוד לא נרשמו בקובץ.
+ספטמבר עוד חלקי, רוב התשלומים יורדים ב-10 בחודש.</div>
+  <button type="button" class="ask" id="vaadAsk">שאלה על ועד הבית</button>
+ </div>
 </section>
 
 <section id="pP" hidden>
@@ -1001,7 +1021,7 @@ function updateDot(){
  d.hidden=!(n&&n>chatSeen());
  document.title=(d.hidden?'':'(1) ')+'אבא איציק בבנייה עצמית';
 }
-var PANES={h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP'};
+var PANES={h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 var PILLGAP=8*3600*1000;
 function lastPill(){
@@ -1347,6 +1367,8 @@ document.getElementById('leads').addEventListener('click',function(e){
 });
 document.getElementById('icMail').onclick=function(){pane('e');};
 document.getElementById('icDrive').onclick=function(){pane('d');};
+document.getElementById('icVaad').onclick=function(){pane('v');};
+document.getElementById('vaadAsk').onclick=function(){askInChat('ועד הבית: ');};
 document.getElementById('icAdd').onclick=function(){askInChat('מודול חדש שאני רוצה: ');};
 document.getElementById('icLand').onclick=function(){pane('g');};
 document.getElementById('landList').innerHTML=LANDING.map(function(l){
