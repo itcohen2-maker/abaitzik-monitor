@@ -43,6 +43,22 @@ function loadDocs(dir) {
     });
 }
 
+// Which networks a report talks about. An explicit `network` field on the
+// document wins; otherwise the title and body are scanned for the four names,
+// so older reports written as free text still sort themselves.
+const NET_WORDS = {
+  youtube: /יוטיוב|youtube/i,
+  tiktok: /טיקטוק|tiktok/i,
+  facebook: /פייסבוק|facebook/i,
+  instagram: /אינסטגרם|instagram/i,
+};
+function reportNets(r) {
+  if (Array.isArray(r.network)) return r.network;
+  if (typeof r.network === 'string' && r.network) return [r.network];
+  const t = (r.title || '') + ' ' + (r.body || '');
+  return Object.keys(NET_WORDS).filter(k => NET_WORDS[k].test(t));
+}
+
 function build() {
   const state = store.load();
   const items = Object.values(state.items).map(i => ({
@@ -75,7 +91,7 @@ function build() {
     });
 
   const reports = loadDocs('reports')
-    .map(r => ({ title: r.title, at: r.at, body: r.body }))
+    .map(r => ({ title: r.title, at: r.at, body: r.body, nets: reportNets(r) }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
 
   const chat = loadDocs('chat')
@@ -418,13 +434,13 @@ section{margin-bottom:30px}
  </section>
 
  <div class="row" role="group" aria-label="קיצורים">
-  <a class="ic" href="https://studio.youtube.com/" target="_blank" rel="noopener"><span class="c c-yt">
+  <a class="ic" data-net="youtube" href="https://studio.youtube.com/" target="_blank" rel="noopener"><span class="c c-yt">
    <svg viewBox="0 0 24 24"><path fill="#fff" d="M10 8.5v7l6-3.5z"/></svg></span>יוטיוב</a>
-  <a class="ic" href="https://www.tiktok.com/@abaitzik" target="_blank" rel="noopener"><span class="c c-tt">
+  <a class="ic" data-net="tiktok" href="https://www.tiktok.com/@abaitzik" target="_blank" rel="noopener"><span class="c c-tt">
    <svg viewBox="0 0 24 24"><path fill="#fff" d="M13 3h3a4 4 0 0 0 4 4v3a7 7 0 0 1-4-1.3V15a5.5 5.5 0 1 1-5.5-5.5c.3 0 .6 0 .9.1v3.1a2.5 2.5 0 1 0 1.6 2.3z"/></svg></span>טיקטוק</a>
-  <a class="ic" href="https://www.facebook.com/lolos.lolo.90" target="_blank" rel="noopener"><span class="c c-fb">
+  <a class="ic" data-net="facebook" href="https://www.facebook.com/lolos.lolo.90" target="_blank" rel="noopener"><span class="c c-fb">
    <svg viewBox="0 0 24 24"><path fill="#fff" d="M13.5 21v-7h2.4l.4-3h-2.8V9.2c0-.9.3-1.5 1.5-1.5h1.5V5.1c-.3 0-1.2-.1-2.2-.1-2.2 0-3.7 1.3-3.7 3.8V11H8v3h2.6v7z"/></svg></span>פייסבוק</a>
-  <a class="ic" href="https://www.instagram.com/abaitzik/" target="_blank" rel="noopener"><span class="c c-ig">
+  <a class="ic" data-net="instagram" href="https://www.instagram.com/abaitzik/" target="_blank" rel="noopener"><span class="c c-ig">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="5"/><circle cx="12" cy="12" r="3.6"/><circle cx="17" cy="7" r="1" fill="#fff" stroke="none"/></svg></span>אינסטגרם</a>
   <a class="ic" href="https://web.whatsapp.com" target="_blank" rel="noopener"><span class="c c-wa">
    <svg viewBox="0 0 24 24"><path fill="#fff" d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3zm0 2a7 7 0 1 1-3.6 13l-.3-.2-2.4.6.7-2.3-.2-.3A7 7 0 0 1 12 5zm-2.6 3.5c-.2 0-.5.1-.7.3-.3.3-1 1-1 2.3s1 2.7 1.2 2.9c.1.2 2 3.1 4.9 4.2 2.4.9 2.9.8 3.4.7.5-.1 1.7-.7 1.9-1.4.2-.7.2-1.2.2-1.4l-.5-.3-1.9-.9c-.3-.1-.4-.1-.6.1l-.9 1.1c-.2.2-.3.2-.6.1-.3-.2-1.2-.5-2.3-1.5-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6l.4-.5.3-.5c.1-.2 0-.4 0-.5l-.9-2.1c-.2-.5-.4-.5-.6-.5z"/></svg></span>וואטסאפ</a>
@@ -483,6 +499,18 @@ section{margin-bottom:30px}
 <section id="pL" hidden>
  <h2>מי יצר קשר ורוצה המשך</h2>
  <div id="leads"></div>
+</section>
+
+<section id="pN" hidden>
+ <h2>ניטור לפי רשת</h2>
+ <div class="seg" id="netSeg" role="group" aria-label="בחירת רשת">
+  <button type="button" data-net="all" aria-pressed="true">הכל</button>
+  <button type="button" data-net="youtube" aria-pressed="false">יוטיוב</button>
+  <button type="button" data-net="tiktok" aria-pressed="false">טיקטוק</button>
+  <button type="button" data-net="facebook" aria-pressed="false">פייסבוק</button>
+  <button type="button" data-net="instagram" aria-pressed="false">אינסטגרם</button>
+ </div>
+ <div id="netBody"></div>
 </section>
 
 <section id="pR" hidden>
@@ -696,8 +724,63 @@ function updateDot(){
  d.hidden=!(n&&n>chatSeen());
  document.title=(d.hidden?'':'(1) ')+'המוניטור של אבא איציק';
 }
-var PANES={h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE'};
+var PANES={h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN'};
 var NAVS={h:'nH',q:'nQ',l:'nL',r:'nR',m:'nM'};
+
+// Per network monitoring. Tapping a network circle opens its own screen:
+// what is waiting there, and only the report lines about that network.
+var APPS={youtube:{t:'יוטיוב סטודיו',u:'https://studio.youtube.com/'},
+ tiktok:{t:'טיקטוק סטודיו',u:'https://www.tiktok.com/tiktokstudio/comment'},
+ facebook:{t:'מנהל התגובות',u:'https://www.facebook.com/professional_dashboard/engagement/comments_manager/'},
+ instagram:{t:'אינסטגרם',u:'https://www.instagram.com/abaitzik/'}};
+var HOT={personal:1,pain:1,offer_help:1,donation:1,medical_advice:1};
+var curNet='all';
+function netLines(body,k){
+ var re=NETRE[k];if(!re)return body;
+ var keep=String(body||'').split(String.fromCharCode(10)).filter(function(l){return re.test(l);});
+ return keep.join(String.fromCharCode(10));
+}
+var NETRE={youtube:/יוטיוב|youtube/i,tiktok:/טיקטוק|tiktok/i,
+ facebook:/פייסבוק|facebook/i,instagram:/אינסטגרם|instagram/i};
+function renderNet(){
+ var seg=document.getElementById('netSeg');
+ var bs=seg.querySelectorAll('button');
+ for(var i=0;i<bs.length;i++){bs[i].setAttribute('aria-pressed',bs[i].getAttribute('data-net')===curNet);}
+ var all=curNet==='all';
+ var pend=(D.pending||[]).filter(function(x){return all||x.network===curNet;});
+ var done=(D.replied||[]).filter(function(x){return all||x.network===curNet;});
+ var hot=pend.filter(function(x){return HOT[x.category];});
+ var out='';
+ var app=APPS[curNet];
+ out+='<div class="alerts"><div><b>'+(all?'כל הרשתות':esc(NET[curNet]))+'</b>'
+  +'<small>'+pend.length+' ממתינים, '+hot.length+' מהם דחופים, '+done.length+' נענו.</small></div>'
+  +(app?'<a class="abtn" href="'+app.u+'" target="_blank" rel="noopener">'+app.t+'</a>':'')+'</div>';
+ out+='<h2 style="margin-top:22px">מה דחוף</h2>';
+ out+=hot.length?hot.map(row).join(''):'<div class="empty">אין כרגע משהו דחוף כאן.</div>';
+ var R=(D.reports||[]).filter(function(r){return all||(r.nets||[]).indexOf(curNet)>-1;});
+ out+='<h2 style="margin-top:26px">מה נכתב בדוחות</h2>';
+ if(!R.length){out+='<div class="empty">עוד לא נכתב דוח על הרשת הזאת.</div>';}
+ else{out+=R.map(function(r,n){
+  var body=all?r.body:netLines(r.body,curNet);
+  if(!String(body||'').trim())body=r.body;
+  return '<details class="report"'+(n===0?' open':'')+'>'
+   +'<summary><span class="t">'+esc(r.title||'דוח')+'</span>'
+   +'<span class="d">'+esc(stamp(r.at))+'</span></summary>'
+   +'<div class="text">'+esc(body)+'</div></details>';
+  }).join('');}
+ document.getElementById('netBody').innerHTML=out;
+}
+function openNet(k){curNet=k||'all';pane('n');renderNet();}
+document.getElementById('netSeg').addEventListener('click',function(e){
+ var b=e.target.closest?e.target.closest('[data-net]'):null;
+ if(!b)return;curNet=b.getAttribute('data-net');renderNet();
+});
+(function(){
+ var ics=document.querySelectorAll('.ic[data-net]');
+ for(var i=0;i<ics.length;i++){
+  ics[i].addEventListener('click',function(ev){ev.preventDefault();openNet(this.getAttribute('data-net'));});
+ }
+})();
 function pane(w){
  for(var k in PANES){document.getElementById(PANES[k]).hidden=(k!==w);}
  for(var n in NAVS){document.getElementById(NAVS[n]).setAttribute('aria-pressed',n===w);}
@@ -718,7 +801,7 @@ function askInChat(prefix){
  try{box.setSelectionRange(box.value.length,box.value.length);}catch(e){}
 }
 document.getElementById('gChat').onclick=function(){pane('m');markChatSeen();};
-document.getElementById('gQueue').onclick=function(){pane('q');};
+document.getElementById('gQueue').onclick=function(){openNet('all');};
 document.getElementById('gReports').onclick=function(){pane('r');};
 document.getElementById('gMail').onclick=function(){pane('e');};
 document.getElementById('gPill').onclick=function(){askInChat('לקחתי כדור עכשיו. ');};
