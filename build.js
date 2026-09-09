@@ -1069,6 +1069,7 @@ function renderPill(){
 }
 // More landing pages are coming, so each one is a line here.
 var LANDING=[
+ {name:'כלל עשר הדקות',note:'מילת המפתח: שום',url:'https://itzik-site.vercel.app/shum'},
  {name:'שיטת הפירה',note:'מילת המפתח: גזר',url:'https://itzik-site.vercel.app/gezer'},
  {name:'סלינדה',note:'אתר',url:'https://salinda-mobile.vercel.app/'}
 ];
