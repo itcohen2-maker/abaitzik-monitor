@@ -975,9 +975,8 @@ function updateDot(){
  document.title=(d.hidden?'':'(1) ')+'אבא איציק בבנייה עצמית';
 }
 var PANES={h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP'};
-// Three doses a day, so the next one is six hours out. A default until Itzik
-// names fixed hours.
-var PILLGAP=6*3600*1000;
+// Itzik set the rhythm on 9.9: every eight hours from the morning dose.
+var PILLGAP=8*3600*1000;
 function lastPill(){
  var c=(D.chat||[]).filter(function(m){return m.from==='itzik'&&/לקחתי כדור/.test(m.text||'');});
  var local=0;
