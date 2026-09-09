@@ -385,6 +385,7 @@ section{margin-bottom:30px}
 .c-wa{background:#25d366}.c-gm{background:#fff;border:1px solid var(--line)}
 .c-st{background:linear-gradient(160deg,#4285F4,#0b57d0)}
 .c-pg{background:linear-gradient(160deg,#a78bfa,#6d28d9)}
+.c-sl{background:linear-gradient(160deg,#f472b6,#be185d)}
 .c-vd{background:linear-gradient(160deg,#fbbf24,#d97706)}
 .c-add{background:var(--surface);border:2px dashed var(--line);box-shadow:none}
 .c-add:after{display:none}
@@ -478,6 +479,8 @@ section{margin-bottom:30px}
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c3 3 3 13 0 16M12 4c-3 3-3 13 0 16"/></svg></span>האתר</a>
   <button type="button" class="ic" id="icLand"><span class="c c-vd">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 13h5"/></svg></span>דפי נחיתה</button>
+  <a class="ic" href="https://salinda-mobile.vercel.app/" target="_blank" rel="noopener"><span class="c c-sl">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/></svg></span>סלינדה</a>
   <a class="ic" href="https://pegasusgame.vercel.app" target="_blank" rel="noopener"><span class="c c-pg">
    <svg viewBox="0 0 24 24"><path fill="#fff" d="M4 14c2-5 6-8 11-8l5-2-2 5c0 5-3 9-8 11l-1-3-3-1z"/><circle cx="14" cy="10" r="1.3" fill="#6d28d9"/></svg></span>פגסוס</a>
   <button type="button" class="ic" id="icAdd"><span class="c c-add">
@@ -787,7 +790,8 @@ function updateDot(){
 var PANES={h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG'};
 // More landing pages are coming, so each one is a line here.
 var LANDING=[
- {name:'שיטת הפירה',note:'מילת המפתח: גזר',url:'https://itzik-site.vercel.app/gezer'}
+ {name:'שיטת הפירה',note:'מילת המפתח: גזר',url:'https://itzik-site.vercel.app/gezer'},
+ {name:'סלינדה',note:'אתר',url:'https://salinda-mobile.vercel.app/'}
 ];
 var NAVS={h:'nH',q:'nQ',l:'nL',r:'nR',m:'nM'};
 
