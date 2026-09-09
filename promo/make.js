@@ -17,17 +17,18 @@ function page(n){
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;500;800&display=swap">
 <style>
 html,body{margin:0;height:100%;background:#0b0e14;overflow:hidden}
-.w{width:540px;height:960px;display:flex;flex-direction:column;align-items:center;
- justify-content:center;gap:18px;font-family:Heebo,sans-serif;color:#eef1f7;
- background:radial-gradient(120% 60% at 50% 0,#16243c 0,#0b0e14 60%)}
-h1{font:800 40px Heebo;margin:0;letter-spacing:-.5px}
-p{font:300 20px Heebo;margin:0;color:#9aa5b8;text-align:center;max-width:440px}
-img{width:470px;border-radius:22px;border:1px solid #263149;box-shadow:0 20px 50px rgba(0,0,0,.55)}
-.n{font:500 14px Heebo;color:#8ab4f8;letter-spacing:.16em}
+.w{width:100vw;height:100vh;display:flex;flex-direction:row-reverse;align-items:center;
+ justify-content:center;gap:5vw;font-family:Heebo,sans-serif;color:#eef1f7;
+ background:radial-gradient(90% 120% at 80% 0,#16243c 0,#0b0e14 60%)}
+.txt{max-width:520px;text-align:right}
+h1{font:800 56px Heebo;margin:0 0 14px;letter-spacing:-1px}
+p{font:300 26px Heebo;margin:0;color:#9aa5b8;line-height:1.5}
+img{height:70vh;max-height:560px;border-radius:20px;border:1px solid #263149;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.n{font:500 15px Heebo;color:#8ab4f8;letter-spacing:.18em;margin-bottom:10px}
 </style></head><body><div class="w">
-<div class="n">${n+1} מתוך ${slides.length}</div>
-<h1>${d.t}</h1><p>${d.s}</p>
-<img src="${b64(d.img)}" alt=""></div></body></html>`;
+<img src="${b64(d.img)}" alt="">
+<div class="txt"><div class="n">${n+1} מתוך ${slides.length}</div>
+<h1>${d.t}</h1><p>${d.s}</p></div></div></body></html>`;
 }
 http.createServer((req,res)=>{
  const m=/^\/(\d+)$/.exec(req.url||'');

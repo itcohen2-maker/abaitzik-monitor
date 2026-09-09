@@ -742,12 +742,12 @@ section{margin-bottom:30px}
   <input type="hidden" name="הודעה" id="fNote" value="">
   <input type="hidden" name="קוד" id="fCode" value="">
   <div class="seg" role="group" aria-label="איכות">
-   <button type="button" id="qF" aria-pressed="true">מתוך קובץ</button>
-   <button type="button" id="qN" aria-pressed="false">רגיל</button>
+   <button type="button" id="qN" aria-pressed="true">🖼️ תמונה</button>
+   <button type="button" id="qF" aria-pressed="false">📎 מסמך</button>
   </div>
-  <input type="file" id="fPick" name="attachment"
+  <input type="file" id="fPick" name="attachment" multiple
    accept="image/*,video/*,audio/*,application/pdf">
-  <input type="text" id="fCap" placeholder="מה זה? לא חובה">
+  <input type="text" id="fCap" placeholder="כיתוב, לא חובה">
   <div class="fmeta" id="fMeta">מתוך קובץ שולח את המקור בלי לגעת בו. רגיל מכווץ תמונות.</div>
   <button type="submit" id="fBtn">שליחת הקובץ</button>
   <div id="recWrap">
@@ -1310,7 +1310,7 @@ document.getElementById('msgForm').addEventListener('submit',function(e){
 });
 
 var QMAX=10*1024*1024;
-var qMode='full';
+var qMode='normal';
 var fPick=document.getElementById('fPick');
 var fForm=document.getElementById('fileForm');
 var fMeta=document.getElementById('fMeta');
@@ -1318,17 +1318,23 @@ var fSaid=document.getElementById('fSaid');
 var fBtn=document.getElementById('fBtn');
 function mb(n){return (n/1048576).toFixed(1)+'MB';}
 function isImg(f){return !!f&&String(f.type).indexOf('image/')===0;}
+function picked(){
+ return fPick.files?Array.prototype.slice.call(fPick.files):[];
+}
 function describe(){
- var f=fPick.files&&fPick.files[0];
- if(!f){fMeta.className='fmeta';
-  fMeta.textContent='מתוך קובץ שולח את המקור בלי לגעת בו. רגיל מכווץ תמונות.';return;}
- var big=f.size>QMAX;
- var t=f.name+' · '+mb(f.size);
- if(qMode==='normal'&&isImg(f))t+=' · יכווץ לפני השליחה';
+ var list=picked();
+ if(!list.length){fMeta.className='fmeta';
+  fMeta.textContent='אפשר לבחור כמה קבצים יחד. תמונה מכווצת כמו בוואטסאפ, מסמך נשלח במקור.';return;}
+ var total=totalSize(list);
+ var allImages=list.every(isImg);
+ var t=list.length===1?(list[0].name+' · '+mb(total))
+   :(list.length+' קבצים · '+mb(total)+' יחד');
+ if(qMode==='normal'&&allImages)t+=' · יכווצו כמו בוואטסאפ';
  else if(qMode==='normal')t+=' · וידאו וקול נשלחים כמו שהם, אין כיווץ בדפדפן';
- else t+=' · נשלח במקור';
- if(big&&!(qMode==='normal'&&isImg(f)))t+=' · גדול מדי, המגבלה 10MB';
- fMeta.className='fmeta'+((big&&!(qMode==='normal'&&isImg(f)))?' bad':'');
+ else t+=' · נשלח במקור, איכות מלאה';
+ var big=total>QMAX&&!(qMode==='normal'&&allImages);
+ if(big)t+=' · גדול מדי, המגבלה 10MB יחד';
+ fMeta.className='fmeta'+(big?' bad':'');
  fMeta.textContent=t;
 }
 function setQ(m){
@@ -1340,25 +1346,45 @@ function setQ(m){
 document.getElementById('qF').onclick=function(){setQ('full');};
 document.getElementById('qN').onclick=function(){setQ('normal');};
 fPick.addEventListener('change',describe);
-function putFile(file){
- try{var dt=new DataTransfer();dt.items.add(file);fPick.files=dt.files;return true;}
+function putFiles(list){
+ try{var dt=new DataTransfer();list.forEach(function(f){dt.items.add(f);});fPick.files=dt.files;return true;}
  catch(e){return false;}
 }
-function reallySend(file){
- if(file.size>QMAX){
-  fSaid.textContent='הקובץ '+mb(file.size)+' והמגבלה היא 10MB. תשלח קטע קצר יותר, או תעלה לדרייב ותכתוב לי כאן את השם.';
+function totalSize(list){
+ return list.reduce(function(n,f){return n+f.size;},0);
+}
+// FormSubmit weighs the whole batch against one 10MB ceiling, so the check is
+// on the sum and the message says which files made it up.
+function reallySend(list){
+ if(!Array.isArray(list))list=[list];
+ var total=totalSize(list);
+ if(total>QMAX){
+  fSaid.textContent=(list.length>1?list.length+' קבצים יחד שוקלים ':'הקובץ שוקל ')+mb(total)
+   +' והמגבלה היא 10MB. תשלח פחות קבצים בבת אחת, או תעלה לדרייב ותכתוב לי כאן את השם.';
   fBtn.disabled=false;return;
  }
- if(!putFile(file)){fSaid.textContent='הדפדפן לא נתן להחליף את הקובץ. תבחר מתוך קובץ ותשלח שוב.';fBtn.disabled=false;return;}
+ if(!putFiles(list)){fSaid.textContent='הדפדפן לא נתן להחליף את הקבצים. תבחר שוב ותשלח.';fBtn.disabled=false;return;}
  document.getElementById('fNext').value=location.href.split('#')[0]+'#sent';
  var cap=document.getElementById('fCap').value.trim();
- var voice=/^voice-/.test(file.name);
- document.getElementById('fNote').value=cap||(voice?'הודעה קולית מהמוניטור':'קובץ מהמוניטור');
+ var voice=list.length===1&&/^voice-/.test(list[0].name);
+ var deflt=voice?'הודעה קולית מהמוניטור'
+   :(list.length>1?list.length+' קבצים מהמוניטור':'קובץ מהמוניטור');
+ document.getElementById('fNote').value=cap||deflt;
  document.getElementById('fCode').value=myCode();
- markSent(/^voice-/.test(file.name)?'voice':'file');
+ markSent(voice?'voice':'file');
  fForm.action='https://formsubmit.co/'+MAILBOX;
- fSaid.textContent='שולח.';
+ fSaid.textContent=list.length>1?('שולח '+list.length+' קבצים.'):'שולח.';
  fForm.submit();
+}
+// Images are shrunk one after another so the batch is ready before it is sent.
+function shrinkAll(list,done){
+ var out=[],i=0;
+ (function next(){
+  if(i>=list.length){done(out);return;}
+  var f=list[i++];
+  if(!isImg(f)){out.push(f);return next();}
+  shrink(f,function(r){out.push(r);next();});
+ })();
 }
 function shrink(file,done){
  var url=URL.createObjectURL(file);var im=new Image();
@@ -1380,11 +1406,12 @@ function shrink(file,done){
 }
 fForm.addEventListener('submit',function(e){
  e.preventDefault();
- var f=fPick.files&&fPick.files[0];
- if(!f){fSaid.textContent='קודם תבחר קובץ.';return;}
- fBtn.disabled=true;fSaid.textContent='מכין.';
- if(qMode==='normal'&&isImg(f))shrink(f,reallySend);
- else reallySend(f);
+ var list=picked();
+ if(!list.length){fSaid.textContent='קודם תבחר קובץ.';return;}
+ fBtn.disabled=true;
+ fSaid.textContent=list.length>1?('מכין '+list.length+' קבצים.'):'מכין.';
+ if(qMode==='normal')shrinkAll(list,reallySend);
+ else reallySend(list);
 });
 if(location.hash==='#chat'){pane('m');markChatSeen();}
 if(location.hash==='#sent'){
