@@ -433,6 +433,12 @@ section{margin-bottom:30px}
 
 .c-dr{background:#fff;border:1px solid var(--line)}
 .item .src{font-size:12.5px;color:var(--accent);font-weight:500;margin-top:4px}
+.thread{max-height:52vh;overflow-y:auto}
+.filebox{background:var(--surface);border:1px solid var(--line);border-radius:13px;
+ padding:2px 14px;margin-top:12px;box-shadow:var(--shadow)}
+.filebox summary{cursor:pointer;padding:11px 0;font:500 14px Heebo,sans-serif;color:var(--accent)}
+.filebox[open] summary{border-bottom:1px solid var(--line);margin-bottom:10px}
+
 /* ===== self build slot ===== */
 .slot{display:flex;gap:12px;align-items:flex-start;padding:4px 0 10px}
 .slot .plus{flex:0 0 44px;height:44px;border-radius:14px;border:2px dashed var(--line);
@@ -654,8 +660,9 @@ section{margin-bottom:30px}
  </form>
  <div class="msgsaid" id="msgSaid"></div>
 
- <form id="fileForm" method="POST" enctype="multipart/form-data">
-  <h3>שליחת קובץ</h3>
+ <details class="filebox">
+  <summary>צירוף קובץ או תמונה</summary>
+  <form id="fileForm" method="POST" enctype="multipart/form-data">
   <input type="hidden" name="_captcha" value="false">
   <input type="hidden" name="_subject" value="קובץ מהמוניטור">
   <input type="hidden" name="_next" id="fNext" value="">
@@ -675,6 +682,7 @@ section{margin-bottom:30px}
    <span id="recSaid">לחיצה מתחילה הקלטה. לחיצה שנייה עוצרת ושולחת.</span>
   </div>
  </form>
+ </details>
  <div class="msgsaid" id="fSaid"></div>
 
  <div class="hint">
