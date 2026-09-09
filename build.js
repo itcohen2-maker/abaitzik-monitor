@@ -433,6 +433,16 @@ section{margin-bottom:30px}
 
 .c-dr{background:#fff;border:1px solid var(--line)}
 .item .src{font-size:12.5px;color:var(--accent);font-weight:500;margin-top:4px}
+@keyframes hue{0%,100%{background:var(--accent-soft);color:var(--accent)}
+ 50%{background:color-mix(in srgb,var(--wait) 22%,transparent);color:var(--wait)}}
+.bn button.blink,.gt.blink{animation:hue 2.6s ease-in-out infinite;border-radius:10px}
+.wn.blink .n{animation:hue 2.6s ease-in-out infinite;border-radius:8px}
+.stat{display:flex;gap:6px;margin-top:9px}
+.stat button{flex:1;border:1px solid var(--line);background:var(--sunk);color:var(--dim);
+ border-radius:9px;padding:7px 4px;font:500 12.5px Heebo,sans-serif;cursor:pointer}
+.stat button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.stat button[aria-pressed="true"][data-s="standby"]{background:color-mix(in srgb,var(--wait) 18%,transparent);
+ color:var(--wait);border-color:var(--wait)}
 .thread{max-height:52vh;overflow-y:auto}
 .filebox{background:var(--surface);border:1px solid var(--line);border-radius:13px;
  padding:2px 14px;margin-top:12px;box-shadow:var(--shadow)}
@@ -740,20 +750,34 @@ function logHtml(log){
  }).join('')+'</ol>';
 }
 var SRC={site:'טופס יצירת קשר באתר',tiktok:'הודעה פרטית בטיקטוק',facebook:'פייסבוק',instagram:'אינסטגרם',youtube:'יוטיוב',phone:'טלפון',person:'הכרות אישית'};
+var STAT={open:'לטיפול',standby:'סטנד ביי',done:'טופל'};
+function leadStatus(c){
+ var k=c.name||'';
+ try{var o=JSON.parse(localStorage.getItem('leadStatus')||'{}');if(o[k])return o[k];}catch(e){}
+ return c.status||'open';
+}
+function setLeadStatus(name,st){
+ var o={};try{o=JSON.parse(localStorage.getItem('leadStatus')||'{}');}catch(e){}
+ o[name]=st;
+ try{localStorage.setItem('leadStatus',JSON.stringify(o));}catch(e){}
+ sendLine('סטטוס ליד: '+name+' · '+(STAT[st]||st));
+}
 function leadRow(c){
- var closed=c.status==='done';
+ var st=leadStatus(c);
+ var closed=st==='done';
  var subject='פרטים: '+(c.name||'');
  var body='שלח לי את פרטי ההתקשרות ואת מה שסוכם.';
  return '<div class="item lead'+(closed?' closed':'')+'">'
   +'<div class="top"><span class="who">'+esc(c.name||'ללא שם')+'</span>'
   +'<span class="chip">'+esc(NET[c.network]||c.network||'אחר')+'</span>'
-  +'<span class="chip">'+(closed?'טופל':'ממתין')+'</span>'
+  +'<span class="chip">'+esc(STAT[st]||st)+'</span>'
   +'<span>'+ago(c.at)+'</span></div>'
   +'<div class="src">מקור: '+esc(c.source||SRC[c.network]||NET[c.network]||'לא ידוע')+'</div>'
   +(c.note?'<div class="body">'+esc(c.note)+'</div>':'')
   +logHtml(c.log)
   +'<a class="ask" href="mailto:?subject='+encodeURIComponent(subject)
   +'&body='+encodeURIComponent(body)+'">בקשת פרטי התקשרות</a>'
+  +'<div class="stat" data-lead="'+esc(c.name||'')+'">'+['open','standby','done'].map(function(k){return '<button type="button" data-s="'+k+'" aria-pressed="'+(k===st)+'">'+STAT[k]+'</button>';}).join('')+'</div>'
   +'</div>';
 }
 function reportRow(r,n){
@@ -975,6 +999,36 @@ checkFresh();
 setInterval(checkFresh,120000);
 document.addEventListener('visibilitychange',function(){if(!document.hidden)checkFresh();});
 
+
+// One line straight into the same channel the chat uses, for the small
+// signals: a lead moved to standby, a folder is missing, and so on.
+function sendLine(text){
+ fetch('https://formsubmit.co/ajax/'+MAILBOX,{
+  method:'POST',
+  headers:{'Content-Type':'application/json',Accept:'application/json'},
+  body:JSON.stringify({_subject:'עדכון מהמוניטור',_template:'table',הודעה:text,קוד:myCode()})
+ }).then(function(){
+  var p=pending();p.push({at:new Date().toISOString(),text:text});savePending(p);
+ }).catch(function(){});
+}
+
+// The reports button breathes until he opens it.
+function newestReport(){
+ var R=D.reports||[];return R.length?(R[0].at||''):'';
+}
+function reportsSeen(){
+ try{return localStorage.getItem('reportsSeen')||'';}catch(e){return'';}
+}
+function markReportsSeen(){
+ try{localStorage.setItem('reportsSeen',newestReport());}catch(e){}
+ paintReportDot();
+}
+function paintReportDot(){
+ var fresh=newestReport()&&newestReport()>reportsSeen();
+ var n=document.getElementById('nR');if(n)n.classList.toggle('blink',!!fresh);
+ var t=document.getElementById('gReports');if(t)t.classList.toggle('blink',!!fresh);
+}
+
 function pane(w){
  for(var k in PANES){document.getElementById(PANES[k]).hidden=(k!==w);}
  for(var n in NAVS){document.getElementById(NAVS[n]).setAttribute('aria-pressed',n===w);}
@@ -1003,7 +1057,7 @@ document.getElementById('newBtn').onclick=function(){
 document.getElementById('nH').onclick=function(){pane('h');};
 document.getElementById('nQ').onclick=function(){pane('q');};
 document.getElementById('nL').onclick=function(){pane('l');};
-document.getElementById('nR').onclick=function(){pane('r');};
+document.getElementById('nR').onclick=function(){pane('r');markReportsSeen();};
 document.getElementById('nM').onclick=function(){pane('m');markChatSeen();};
 
 // Home shortcuts. The mail and "new module" circles have no screen of their
@@ -1060,11 +1114,21 @@ function askInChat(prefix){
 }
 document.getElementById('gChat').onclick=function(){pane('m');markChatSeen();};
 document.getElementById('gQueue').onclick=function(){openNet('all');};
-document.getElementById('gReports').onclick=function(){pane('r');};
+document.getElementById('gReports').onclick=function(){pane('r');markReportsSeen();};
 document.getElementById('gMail').onclick=function(){pane('e');};
 document.getElementById('gPill').onclick=function(){askInChat('לקחתי כדור עכשיו. ');};
 document.getElementById('gAsk').onclick=function(){askInChat('');};
 wireSlot();
+paintReportDot();
+document.getElementById('leads').addEventListener('click',function(e){
+ var b=e.target.closest?e.target.closest('.stat button'):null;
+ if(!b)return;
+ var host=b.parentNode;
+ var name=host.getAttribute('data-lead');
+ var st=b.getAttribute('data-s');
+ setLeadStatus(name,st);
+ render();
+});
 document.getElementById('icMail').onclick=function(){pane('e');};
 document.getElementById('icDrive').onclick=function(){pane('d');};
 document.getElementById('icAdd').onclick=function(){askInChat('מודול חדש שאני רוצה: ');};
