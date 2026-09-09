@@ -125,6 +125,13 @@ const PAGE = `<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="theme-color" content="#14675a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="המוניטור">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <title>מוניטור אבא איציק</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -159,6 +166,8 @@ h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance
 .alerts small{display:block;color:var(--dim);font-size:12.5px;line-height:1.5;margin-top:2px}
 .abtn{flex:0 0 auto;text-decoration:none;background:var(--accent);color:#fff;border-radius:10px;
  padding:10px 16px;font:500 14px Heebo,sans-serif;white-space:nowrap}
+.install{font-size:12.5px;color:var(--dim);font-weight:300;line-height:1.5;margin:8px 4px 0}
+@media(display-mode:standalone){.install{display:none}}
 .links{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px;
  margin:20px 0 4px}
 .links a{display:flex;align-items:center;gap:9px;text-decoration:none;
@@ -307,8 +316,9 @@ section{margin-bottom:30px}
   <b>התראות לנייד</b>
   <small>מתקינים את האפליקציה ntfy, לוחצים על הכפתור, ובוחרים Subscribe. מאז כל תשובה שלי קופצת כמו וואטסאפ.</small>
  </div>
- <a class="abtn" href="https://ntfy.sh/abaitzik-cf9044bdcfa8" target="_blank" rel="noopener">הפעלת התראות</a>
+ <a class="abtn" id="ntfyBtn" href="https://ntfy.sh/abaitzik-cf9044bdcfa8" target="_blank" rel="noopener">הפעלת התראות</a>
 </div>
+<div class="install" id="installHint">להתקנה כאפליקציה על מסך הבית: בספארי לוחצים שיתוף ואז "הוספה למסך הבית". באנדרואיד: תפריט ואז "התקנת אפליקציה".</div>
 
 <nav class="links" aria-label="קישורים מהירים">
  <a href="https://itzik-site.vercel.app/" target="_blank" rel="noopener">

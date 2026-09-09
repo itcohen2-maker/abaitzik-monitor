@@ -1,0 +1,16 @@
+{
+  "name": "מוניטור אבא איציק",
+  "short_name": "המוניטור",
+  "description": "מי פנה, מה נענה, ומה עוד מחכה.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "dir": "rtl",
+  "lang": "he",
+  "background_color": "#191714",
+  "theme_color": "#14675a",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
