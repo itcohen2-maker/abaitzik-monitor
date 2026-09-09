@@ -317,6 +317,10 @@ section{margin-bottom:30px}
 .st-received{background:var(--sunk);color:var(--dim)}
 .st-working{background:#f6e7c8;color:#8a5a12}
 .st-done{background:var(--accent-soft);color:var(--accent)}
+.bub.fresh{border:2px solid var(--red);box-shadow:0 6px 18px rgba(234,67,53,.25)}
+.bub.read{opacity:.72}
+.badge{font-style:normal;font-weight:700;background:var(--red);color:#fff;
+ padding:1px 8px;border-radius:999px;font-size:11px}
 .bub a{color:inherit;text-decoration:underline;word-break:break-all}
 .bub.pend{opacity:.6}
 .hint{font-size:13px;color:var(--dim);font-weight:300;margin-top:14px;line-height:1.6}
@@ -765,15 +769,25 @@ function statusTag(m){
  if(m.from!=='itzik'||!m.status||!STATUS[m.status])return '';
  return ' · <em class="st st-'+m.status+'">'+STATUS[m.status]+'</em>';
 }
+// A pending copy is dropped once any message of his lands at or after it: I
+// rewrite what he said (a recording becomes its transcript), so matching on the
+// text itself left the same message showing twice.
+function dropSettled(list,baked){
+ var mine=baked.filter(function(m){return m.from==='itzik';})
+   .map(function(m){return m.at||'';}).sort();
+ return list.filter(function(p){
+  if(isMail(p))return false;
+  return !mine.some(function(at){return at>=p.at;});
+ });
+}
 function renderThread(){
+ var seen=chatSeen();
  var baked=(D.chat||[]).filter(function(m){return !isMail(m);});
- var sent=baked.filter(function(m){return m.from==='itzik';})
-   .map(function(m){return String(m.text).trim();});
- var still=pending().filter(function(p){return sent.indexOf(p.text.trim())===-1&&!isMail(p);});
- savePending(still);
+ var still=dropSettled(pending(),baked);
+ savePending(still.concat(pending().filter(isMail)));
  var all=baked.map(function(m){return{at:m.at,from:m.from,text:m.text,status:m.status,pend:false};})
    .concat(still.map(function(p){return{at:p.at,from:'itzik',text:p.text,pend:true};}))
-   .sort(function(a,b){return (a.at||'')<(b.at||'')?-1:1;});
+   .sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
  var host=document.getElementById('thread');
  if(!all.length){
   host.innerHTML='<div class="empty">עוד לא דיברנו כאן. תכתוב משהו למטה.</div>';
@@ -781,9 +795,11 @@ function renderThread(){
  }
  host.innerHTML=all.map(function(m){
   var mine=m.from==='itzik';
-  return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')+'">'
+  var fresh=!mine&&(m.at||'')>seen;
+  return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')+(fresh?' fresh':' read')+'">'
    +'<span class="w">'+(mine?'אתה':'קלוד')+' · '+esc(stamp(m.at))
-   +(m.pend?' · נשלח, עוד לא נקרא':'')+statusTag(m)+'</span>'+linkify(m.text)+'</div>';
+   +(m.pend?' · נשלח, עוד לא נקרא':'')+statusTag(m)
+   +(fresh?' · <em class="badge">חדש</em>':(mine?'':' · נקרא'))+'</span>'+linkify(m.text)+'</div>';
  }).join('');
 }
 function newestClaude(){
@@ -949,7 +965,9 @@ function beep(){
 }
 document.getElementById('newBtn').onclick=function(){
  if(unreadCount())beep();
- pane('m');markChatSeen();renderNew();
+ pane('m');renderThread();
+ // the marks stay until he leaves the chat, so he can see what was new
+ setTimeout(function(){markChatSeen();renderNew();},50);
 };
 document.getElementById('nH').onclick=function(){pane('h');};
 document.getElementById('nQ').onclick=function(){pane('q');};
