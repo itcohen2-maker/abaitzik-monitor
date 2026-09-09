@@ -145,6 +145,12 @@ h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance
  font:500 12px Heebo,sans-serif}
 .pill i{width:7px;height:7px;border-radius:50%;background:var(--accent);
  animation:pulse 2.4s infinite;font-style:normal}
+.alerts{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;
+ background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:13px 15px;box-shadow:var(--shadow)}
+.alerts b{display:block;font:500 15px Heebo,sans-serif}
+.alerts small{display:block;color:var(--dim);font-size:12.5px;line-height:1.5;margin-top:2px}
+.abtn{flex:0 0 auto;text-decoration:none;background:var(--accent);color:#fff;border-radius:10px;
+ padding:10px 16px;font:500 14px Heebo,sans-serif;white-space:nowrap}
 .links{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px;
  margin:20px 0 4px}
 .links a{display:flex;align-items:center;gap:9px;text-decoration:none;
@@ -275,6 +281,13 @@ section{margin-bottom:30px}
  </div>
 </div>
 <div class="pill"><i></i>מתעדכן אוטומטית</div>
+<div class="alerts" id="alerts">
+ <div>
+  <b>התראות לנייד</b>
+  <small>מתקינים את האפליקציה ntfy, לוחצים על הכפתור, ובוחרים Subscribe. מאז כל תשובה שלי קופצת כמו וואטסאפ.</small>
+ </div>
+ <a class="abtn" href="https://ntfy.sh/abaitzik-cf9044bdcfa8" target="_blank" rel="noopener">הפעלת התראות</a>
+</div>
 
 <nav class="links" aria-label="קישורים מהירים">
  <a href="https://itzik-site.vercel.app/" target="_blank" rel="noopener">
@@ -624,6 +637,7 @@ fForm.addEventListener('submit',function(e){
  if(qMode==='normal'&&isImg(f))shrink(f,reallySend);
  else reallySend(f);
 });
+if(location.hash==='#chat'){pane('m');markChatSeen();}
 if(location.hash==='#sent'){
  fSaid.textContent='הקובץ נשלח. הוא מחכה לי במייל.';
  pane('m');
