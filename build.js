@@ -144,8 +144,15 @@ h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0 0 6px;text-wrap:b
 h2{font:500 15px/1.3 Heebo,sans-serif;margin:0 0 11px;color:var(--dim);letter-spacing:.04em}
 section{margin-bottom:30px}
 .seg{display:flex;gap:4px;background:var(--sunk);border-radius:10px;padding:4px;margin-bottom:14px}
-.seg button{flex:1;background:transparent;color:var(--dim);border:0;border-radius:7px;
+.seg button{flex:1;position:relative;background:transparent;color:var(--dim);border:0;border-radius:7px;
  padding:8px 4px;font:500 14px Heebo,sans-serif;cursor:pointer}
+.dot{position:absolute;top:4px;inset-inline-end:6px;width:9px;height:9px;border-radius:50%;
+ background:#e5484d;box-shadow:0 0 0 0 rgba(229,72,77,.7);animation:pulse 1.4s infinite}
+@keyframes pulse{
+ 0%{box-shadow:0 0 0 0 rgba(229,72,77,.7)}
+ 70%{box-shadow:0 0 0 7px rgba(229,72,77,0)}
+ 100%{box-shadow:0 0 0 0 rgba(229,72,77,0)}}
+@media(prefers-reduced-motion:reduce){.dot{animation:none}}
 .seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
 .seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .item{background:var(--surface);border:1px solid var(--line);border-radius:11px;
@@ -232,7 +239,7 @@ section{margin-bottom:30px}
  <button type="button" id="nQ" aria-pressed="true">התור</button>
  <button type="button" id="nL" aria-pressed="false">אנשי קשר</button>
  <button type="button" id="nR" aria-pressed="false">דוחות</button>
- <button type="button" id="nM" aria-pressed="false">צ׳אט</button>
+ <button type="button" id="nM" aria-pressed="false">צ׳אט<span class="dot" id="mDot" hidden></span></button>
 </div>
 
 <section id="pQ">
@@ -375,6 +382,23 @@ function renderThread(){
    +(m.pend?' · ממתין':'')+'</span>'+esc(m.text)+'</div>';
  }).join('');
 }
+function newestClaude(){
+ var c=(D.chat||[]).filter(function(m){return m.from==='claude';});
+ return c.length?c[c.length-1].at||'':'';
+}
+function chatSeen(){
+ try{return localStorage.getItem('chatSeen')||'';}catch(e){return'';}
+}
+function markChatSeen(){
+ try{localStorage.setItem('chatSeen',newestClaude());}catch(e){}
+ var d=document.getElementById('mDot');if(d)d.hidden=true;
+}
+function updateDot(){
+ var d=document.getElementById('mDot');if(!d)return;
+ var n=newestClaude();
+ d.hidden=!(n&&n>chatSeen());
+ document.title=(d.hidden?'':'(1) ')+'המוניטור של אבא איציק';
+}
 function pane(w){
  document.getElementById('pQ').hidden=w!=='q';
  document.getElementById('pL').hidden=w!=='l';
@@ -388,7 +412,7 @@ function pane(w){
 document.getElementById('nQ').onclick=function(){pane('q');};
 document.getElementById('nL').onclick=function(){pane('l');};
 document.getElementById('nR').onclick=function(){pane('r');};
-document.getElementById('nM').onclick=function(){pane('m');};
+document.getElementById('nM').onclick=function(){pane('m');markChatSeen();};
 document.getElementById('bP').onclick=function(){tab='pending';render();};
 document.getElementById('bD').onclick=function(){tab='done';render();};
 
@@ -441,6 +465,7 @@ document.getElementById('msgForm').addEventListener('submit',function(e){
 pane('q');
 render();
 renderThread();
+updateDot();
 </script>
 </body>
 </html>`;
