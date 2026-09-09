@@ -200,6 +200,8 @@ h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance
  border-radius:10px;padding:9px 12px;font:400 16px Heebo,sans-serif}
 #codeSave{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:9px 18px;
  font:500 14px Heebo,sans-serif;cursor:pointer}
+#codeEye{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:9px 12px;
+ font-size:16px;cursor:pointer;line-height:1}
 .install{font-size:12.5px;color:var(--dim);font-weight:300;line-height:1.5;margin:8px 4px 0}
 @media(display-mode:standalone){.install{display:none}}
 .links{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px;
@@ -351,7 +353,18 @@ section{margin-bottom:30px}
 #fileForm{display:flex;flex-direction:column;gap:10px;margin-top:22px;
  border-top:1px solid var(--line);padding-top:18px}
 #fileForm h3{margin:0;font:500 15px Heebo,sans-serif;color:var(--ink)}
-#fPick{font:400 14px Heebo,sans-serif;color:var(--dim)}
+#fPick{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.pickrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pickbtn{border:0;cursor:pointer;border-radius:18px;padding:14px 10px;color:#fff;
+ font-family:Heebo,sans-serif;text-align:center;
+ box-shadow:0 8px 18px rgba(20,30,60,.18),inset 0 2px 0 rgba(255,255,255,.3)}
+.pickbtn span{display:block;font-size:26px;line-height:1;margin-bottom:4px}
+.pickbtn b{display:block;font:800 16px Heebo,sans-serif}
+.pickbtn small{display:block;font-size:11px;opacity:.9;font-weight:300}
+.pickbtn:active{transform:translateY(2px) scale(.985)}
+.pb-img{background:linear-gradient(150deg,#5aa9fb,var(--blue))}
+.pb-doc{background:linear-gradient(150deg,#7d8ba1,#3f4a5c)}
+.pickbtn[aria-pressed="true"]{outline:3px solid var(--ink);outline-offset:2px}
 #fCap{background:var(--surface);color:var(--ink);border:1px solid var(--line);
  border-radius:11px;padding:11px 14px;font:400 16px Heebo,sans-serif;box-shadow:var(--shadow)}
 #fBtn{align-self:flex-start;background:var(--accent);color:#fff;border:0;
@@ -633,7 +646,8 @@ section{margin-bottom:30px}
  <b>קוד אישי</b>
  <small>מקלידים פעם אחת בנייד שלך והוא נשמר במכשיר. כל הודעה שתשלח תישא אותו, וכל פנייה בלעדיו אני מתעלם ממנה ומדווח לך. הקוד לא נמצא בקוד של הדף.</small>
  <div class="coderow">
-  <input type="text" id="codeInput" inputmode="numeric" autocomplete="off" placeholder="קוד קצר, למשל 4 ספרות">
+  <input type="password" id="codeInput" inputmode="numeric" autocomplete="off" placeholder="קוד קצר, למשל 4 ספרות">
+  <button type="button" id="codeEye" aria-label="הצגת הקוד">👁️</button>
   <button type="button" id="codeSave">שמירה</button>
  </div>
  <div class="msgsaid" id="codeSaid"></div>
@@ -741,9 +755,11 @@ section{margin-bottom:30px}
   <input type="hidden" name="_next" id="fNext" value="">
   <input type="hidden" name="הודעה" id="fNote" value="">
   <input type="hidden" name="קוד" id="fCode" value="">
-  <div class="seg" role="group" aria-label="איכות">
-   <button type="button" id="qN" aria-pressed="true">🖼️ תמונה</button>
-   <button type="button" id="qF" aria-pressed="false">📎 מסמך</button>
+  <div class="pickrow">
+   <button type="button" id="qN" class="pickbtn pb-img" aria-pressed="true">
+    <span aria-hidden="true">🖼️</span><b>תמונה</b><small>מכווץ, כמו בוואטסאפ</small></button>
+   <button type="button" id="qF" class="pickbtn pb-doc" aria-pressed="false">
+    <span aria-hidden="true">📎</span><b>מסמך</b><small>איכות מלאה</small></button>
   </div>
   <input type="file" id="fPick" name="attachment" multiple
    accept="image/*,video/*,audio/*,application/pdf">
@@ -1207,14 +1223,24 @@ function showCodeBox(){
  var box=document.getElementById('codeBox');
  box.hidden=false;
  var c=myCode();
- document.getElementById('codeSaid').textContent=c?('הקוד שמור במכשיר הזה: '+c):'עוד לא נקבע קוד במכשיר הזה.';
+ document.getElementById('codeSaid').textContent=c?'הקוד שמור במכשיר הזה. לחיצה על העין מציגה אותו לחמש שניות.':'עוד לא נקבע קוד במכשיר הזה.';
  if(c)document.getElementById('codeInput').value=c;
 }
+var codeTimer=null;
+document.getElementById('codeEye').onclick=function(){
+ var el=document.getElementById('codeInput');
+ var showing=el.type==='text';
+ el.type=showing?'password':'text';
+ this.setAttribute('aria-label',showing?'הצגת הקוד':'הסתרת הקוד');
+ if(codeTimer){clearTimeout(codeTimer);codeTimer=null;}
+ if(!showing){codeTimer=setTimeout(function(){el.type='password';},5000);}
+};
 document.getElementById('codeSave').onclick=function(){
  var v=document.getElementById('codeInput').value.trim();
  var said=document.getElementById('codeSaid');
  if(!v){said.textContent='תקליד קוד קודם.';return;}
- try{localStorage.setItem('monitorCode',v);said.textContent='נשמר. מעכשיו כל הודעה מהמכשיר הזה נושאת אותו.';}
+ try{localStorage.setItem('monitorCode',v);said.textContent='נשמר. מעכשיו כל הודעה מהמכשיר הזה נושאת אותו.';
+  document.getElementById('codeInput').type='password';}
  catch(e){said.textContent='הדפדפן לא נתן לשמור. נסה בלי גלישה פרטית.';}
 };
 showCodeBox();
@@ -1343,8 +1369,13 @@ function setQ(m){
  document.getElementById('qN').setAttribute('aria-pressed',m==='normal');
  describe();
 }
-document.getElementById('qF').onclick=function(){setQ('full');};
-document.getElementById('qN').onclick=function(){setQ('normal');};
+function openPicker(mode,accept){
+ setQ(mode);
+ fPick.setAttribute('accept',accept);
+ fPick.click();
+}
+document.getElementById('qN').onclick=function(){openPicker('normal','image/*');};
+document.getElementById('qF').onclick=function(){openPicker('full','image/*,video/*,audio/*,application/pdf');};
 fPick.addEventListener('change',describe);
 function putFiles(list){
  try{var dt=new DataTransfer();list.forEach(function(f){dt.items.add(f);});fPick.files=dt.files;return true;}
