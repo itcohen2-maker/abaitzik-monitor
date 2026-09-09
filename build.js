@@ -431,6 +431,7 @@ section{margin-bottom:30px}
 .g5{background:linear-gradient(150deg,#b39ddb,#673ab7)}
 .g6{background:linear-gradient(150deg,#80deea,#00838f)}
 
+.c-dr{background:#fff;border:1px solid var(--line)}
 .item .src{font-size:12.5px;color:var(--accent);font-weight:500;margin-top:4px}
 /* ===== self build slot ===== */
 .slot{display:flex;gap:12px;align-items:flex-start;padding:4px 0 10px}
@@ -515,6 +516,8 @@ section{margin-bottom:30px}
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/></svg></span>סלינדה</a>
   <a class="ic" href="https://pegasusgame.vercel.app" target="_blank" rel="noopener"><span class="c c-pg">
    <svg viewBox="0 0 24 24"><path fill="#fff" d="M4 14c2-5 6-8 11-8l5-2-2 5c0 5-3 9-8 11l-1-3-3-1z"/><circle cx="14" cy="10" r="1.3" fill="#6d28d9"/></svg></span>פגסוס</a>
+  <button type="button" class="ic" id="icDrive"><span class="c c-dr">
+   <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M9.4 3h5.2l6 10.4h-5.2z"/><path fill="#34A853" d="M3 18.6 5.6 14h12.8l-2.6 4.6z"/><path fill="#FBBC05" d="M9.4 3 3 14l2.6 4.6L12 7.6z"/></svg></span>דרייב</button>
   <button type="button" class="ic" id="icAdd"><span class="c c-add">
    <svg viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>חדש</button>
  </div>
@@ -588,6 +591,22 @@ section{margin-bottom:30px}
 <section id="pL" hidden>
  <h2>לידים: מי פנה ורוצה המשך</h2>
  <div id="leads"></div>
+</section>
+
+<section id="pD" hidden>
+ <h2>גוגל דרייב</h2>
+ <div class="hint" style="margin-bottom:12px">קיצורים ישירים לתיקיות שאנחנו עובדים איתן. הכל בחשבון itcohen2.</div>
+ <nav class="links" aria-label="תיקיות בדרייב">
+  <a href="https://drive.google.com/drive/u/1/folders/1f7q8Hm6r_3IXYORX8slR-40ZEq2tKxB0" target="_blank" rel="noopener">
+   <span aria-hidden="true">🎬</span><div>סרטוני סטורי<small>מה בצלחת וההיילייטים</small></div></a>
+  <a href="https://drive.google.com/drive/u/1/folders/1VK_2ZFOVVnN6mj2_hwWorFWgmD5Tqvoi" target="_blank" rel="noopener">
+   <span aria-hidden="true">📝</span><div>תסריטים<small>תסריט לכל ריל</small></div></a>
+  <a href="https://drive.google.com/drive/u/1/folders/1ZG-haqGM-j2WwwB-1PAGKCltDvCqS9Ce" target="_blank" rel="noopener">
+   <span aria-hidden="true">📊</span><div>דוח רשת<small>דוחות הניטור</small></div></a>
+  <a href="https://drive.google.com/drive/u/1/my-drive" target="_blank" rel="noopener">
+   <span aria-hidden="true">📁</span><div>כל הדרייב<small>הדף הראשי</small></div></a>
+ </nav>
+ <div class="hint" style="margin-top:14px">חסרה תיקייה? תכתוב לי בשורת הבנייה העצמית ואוסיף אותה לכאן.</div>
 </section>
 
 <section id="pN" hidden>
@@ -842,7 +861,7 @@ function updateDot(){
  d.hidden=!(n&&n>chatSeen());
  document.title=(d.hidden?'':'(1) ')+'אבא איציק בבנייה עצמית';
 }
-var PANES={h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG'};
+var PANES={h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD'};
 // More landing pages are coming, so each one is a line here.
 var LANDING=[
  {name:'שיטת הפירה',note:'מילת המפתח: גזר',url:'https://itzik-site.vercel.app/gezer'},
@@ -1039,6 +1058,7 @@ document.getElementById('gPill').onclick=function(){askInChat('לקחתי כדו
 document.getElementById('gAsk').onclick=function(){askInChat('');};
 wireSlot();
 document.getElementById('icMail').onclick=function(){pane('e');};
+document.getElementById('icDrive').onclick=function(){pane('d');};
 document.getElementById('icAdd').onclick=function(){askInChat('מודול חדש שאני רוצה: ');};
 document.getElementById('icLand').onclick=function(){pane('g');};
 document.getElementById('landList').innerHTML=LANDING.map(function(l){
