@@ -342,7 +342,8 @@ section{margin-bottom:30px}
 .hd .t{font:700 19px/1.15 Heebo,sans-serif}
 .hd .s{font-size:12px;color:var(--dim);font-weight:300}
 .conn{margin-inline-start:auto;font:500 11.5px Heebo,sans-serif;color:#fff;background:var(--green);
- padding:4px 11px;border-radius:999px}
+ padding:5px 13px;border-radius:999px;border:0;cursor:pointer}
+.conn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 .voice{display:flex;align-items:stretch;gap:12px;margin-bottom:14px}
 .mic{width:98px;height:98px;flex:0 0 98px;border-radius:50%;border:0;padding:0;cursor:pointer;position:relative;
@@ -432,7 +433,7 @@ section{margin-bottom:30px}
   <div class="t">אבא איציק בבנייה עצמית</div>
   <div class="s" id="built"></div>
  </div>
- <div class="conn">מחובר</div>
+ <button type="button" class="conn" id="reloadBtn" title="טעינה מחדש">רענון</button>
 </header>
 
 <section id="pH">
@@ -706,7 +707,7 @@ function render(){
  var R=D.reports||[];
  document.getElementById('reports').innerHTML=R.length?R.map(reportRow).join('')
   :'<div class="empty">עוד לא נכתב דוח.</div>';
- document.getElementById('built').textContent='עודכן לפני '+ago(D.builtAt)+'.';
+ document.getElementById('built').textContent='גרסה '+stamp(D.builtAt)+' · עודכן לפני '+ago(D.builtAt);
 }
 function pending(){
  try{return JSON.parse(localStorage.getItem('pendingMsgs')||'[]');}catch(e){return[];}
@@ -859,6 +860,9 @@ function pane(w){
  for(var n in NAVS){document.getElementById(NAVS[n]).setAttribute('aria-pressed',n===w);}
  window.scrollTo(0,0);
 }
+document.getElementById('reloadBtn').onclick=function(){
+ location.replace(location.pathname+'?v='+Date.now());
+};
 document.getElementById('nH').onclick=function(){pane('h');};
 document.getElementById('nQ').onclick=function(){pane('q');};
 document.getElementById('nL').onclick=function(){pane('l');};
