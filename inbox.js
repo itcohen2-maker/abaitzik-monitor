@@ -32,7 +32,9 @@ function mark() {
   const body = (await res.text()).trim();
   if (!body) { console.log('(אין הודעות חדשות בערוץ הגיבוי)'); return; }
 
-  const msgs = body.split('\n').map(JSON.parse).filter(m => m.event === 'message');
+  const msgs = body.split(String.fromCharCode(10)).map(JSON.parse)
+    .filter(m => m.event === 'message')
+    .filter(m => all || !seen.ids.includes(m.id));
   if (!msgs.length) { console.log('(אין הודעות חדשות בערוץ הגיבוי)'); return; }
 
   fs.mkdirSync(DROP, { recursive: true });
