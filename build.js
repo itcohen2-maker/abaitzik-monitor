@@ -403,8 +403,11 @@ section{margin-bottom:30px}
  background:linear-gradient(90deg,#b8860b,#ffd76e,#f0b429,#fff3c4,#d4a017);
  -webkit-background-clip:text;background-clip:text;color:transparent;
  filter:drop-shadow(0 1px 0 rgba(0,0,0,.25))}
-.conn{margin-inline-start:auto;font:500 11.5px Heebo,sans-serif;color:#fff;background:var(--green);
- padding:5px 13px;border-radius:999px;border:0;cursor:pointer}
+.conn{margin-inline-start:auto;font:700 15px Heebo,sans-serif;color:#fff;
+ background:linear-gradient(180deg,#5cc36f,var(--green));
+ min-height:44px;padding:0 20px;border-radius:999px;border:0;cursor:pointer;
+ box-shadow:0 2px 6px rgba(52,168,83,.4),inset 0 1px 0 rgba(255,255,255,.35)}
+.conn:active{background:linear-gradient(180deg,var(--green),#2b8c45);box-shadow:none;transform:translateY(1px)}
 .conn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 .voice{display:flex;align-items:stretch;gap:12px;margin-bottom:14px}
@@ -481,8 +484,6 @@ section{margin-bottom:30px}
 .thread{max-height:52vh;overflow-y:auto}
 .filebox{background:var(--surface);border:1px solid var(--line);border-radius:13px;
  padding:2px 14px;margin-top:12px;box-shadow:var(--shadow)}
-.filebox summary{cursor:pointer;padding:11px 0;font:500 14px Heebo,sans-serif;color:var(--accent)}
-.filebox[open] summary{border-bottom:1px solid var(--line);margin-bottom:10px}
 
 /* ===== self build slot ===== */
 .slot{display:flex;gap:12px;align-items:flex-start;padding:4px 0 10px}
@@ -793,9 +794,7 @@ section{margin-bottom:30px}
  </form>
  <div class="msgsaid" id="msgSaid"></div>
 
- <details class="filebox">
-  <summary>צירוף קובץ או תמונה</summary>
-  <form id="fileForm" method="POST" enctype="multipart/form-data" hidden>
+ <form id="fileForm" class="filebox" method="POST" enctype="multipart/form-data" hidden>
   <input type="hidden" name="_captcha" value="false">
   <input type="hidden" name="_subject" value="קובץ מהמוניטור">
   <input type="hidden" name="_next" id="fNext" value="">
@@ -817,7 +816,6 @@ section{margin-bottom:30px}
    <span id="recSaid">לחיצה מתחילה הקלטה. לחיצה שנייה עוצרת ושולחת.</span>
   </div>
  </form>
- </details>
  <div class="msgsaid" id="fSaid"></div>
 
  <div class="hint">
@@ -1263,12 +1261,14 @@ function renderSent(){
  var reply=(D.chat||[]).some(function(m){return m.from==='claude'&&(m.at||'')>L.at;});
  var label=SENTLABEL[L.kind]||'הודעה';
  var t,sub,done=false;
- if(st==='done'||reply){t=label+' טופלה';sub='יש תשובה בצ׳אט.';done=true;}
+ if(st==='done'||reply){t=label+' טופלה';sub='עניתי לך. לחץ כאן כדי לקרוא את התשובה.';done=true;}
  else if(st==='working'){t=label+' בעבודה';sub='קלטתי, אני מטפל.';}
  else if(st){t=label+' התקבלה';sub='נכנסה אליי, מחכה לטיפול.';}
  else{t=label+' נשלחה';sub='בדרך אליי. אני בודק את התיבה כל ארבע דקות.';}
  card.className='sent'+(done?' done':'');
  card.innerHTML='<span class="s-dot"></span><div><b>'+esc(t)+'</b><small>'+esc(sub)+' · '+esc(stamp(L.at))+'</small></div>';
+ card.style.cursor=done?'pointer':'';
+ card.onclick=done?function(){pane('m');renderThread();markChatSeen();}:null;
 }
 function myCode(){
  try{return localStorage.getItem('monitorCode')||'';}catch(e){return '';}
@@ -1409,6 +1409,10 @@ document.getElementById('urgBtn').onclick=function(){
  f.hidden=false;
  document.getElementById('plusBtn').setAttribute('aria-expanded','true');
  setTimeout(function(){f.scrollIntoView({behavior:'smooth',block:'center'});},60);
+ // Straight into the photo roll. Anything else is one tap away on מסמך.
+ // This has to run inside the tap itself: iOS ignores a file picker opened
+ // from a timer, because by then the gesture is over.
+ openPicker('normal','image/*');
 };
 document.getElementById('bP').onclick=function(){tab='pending';render();};
 document.getElementById('bD').onclick=function(){tab='done';render();};
