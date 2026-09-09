@@ -205,6 +205,13 @@ h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance
  padding:11px 13px;color:var(--ink);font:500 14px Heebo,sans-serif;box-shadow:var(--shadow)}
 .links a span{font-size:17px}
 .links a small{display:block;color:var(--dim);font-weight:300;font-size:12px}
+.sent{display:flex;align-items:center;gap:11px;margin-top:12px;padding:12px 15px;border-radius:16px;
+ background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);font-size:14px}
+.sent .s-dot{width:11px;height:11px;flex:0 0 11px;border-radius:50%;background:var(--wait);
+ animation:pulse 1.5s infinite}
+.sent.done .s-dot{background:var(--green);animation:none}
+.sent b{display:block;font:500 15px Heebo,sans-serif}
+.sent small{display:block;color:var(--dim);font-size:12px;font-weight:300}
 .newbtn{width:100%;display:flex;align-items:center;gap:12px;margin:14px 0 10px;padding:15px 17px;
  border:0;border-radius:18px;cursor:pointer;text-align:start;color:#fff;font-family:Heebo,sans-serif;
  background:linear-gradient(150deg,#9aa5b8,#6b7688);box-shadow:0 8px 18px rgba(20,30,60,.16)}
@@ -471,6 +478,7 @@ section{margin-bottom:30px}
   <button type="button" id="urgBtn" class="urg"><span aria-hidden="true">🚨</span>דחוף</button>
  </div>
 
+ <div class="sent" id="sentCard" hidden></div>
  <button type="button" id="newBtn" class="newbtn">
   <span class="nb-l"><b id="nbTitle">מה חדש</b><small id="nbSub"></small></span>
   <span class="nb-c" id="nbCount">0</span>
@@ -793,6 +801,7 @@ function unreadCount(){
  return (D.chat||[]).filter(function(m){return m.from==='claude'&&(m.at||'')>chatSeen();}).length;
 }
 function renderNew(){
+ renderSent();
  var c=unreadCount();
  var btn=document.getElementById('newBtn');
  btn.classList.toggle('hot',c>0);
@@ -950,6 +959,31 @@ document.getElementById('nM').onclick=function(){pane('m');markChatSeen();};
 
 // Home shortcuts. The mail and "new module" circles have no screen of their
 // own yet, so they open the chat with the request already started.
+function markSent(kind){
+ try{localStorage.setItem('lastSent',JSON.stringify({at:new Date().toISOString(),kind:kind}));}catch(e){}
+}
+function lastSent(){
+ try{return JSON.parse(localStorage.getItem('lastSent')||'null');}catch(e){return null;}
+}
+var SENTLABEL={text:'הודעה',mail:'בקשת מייל',file:'קובץ',voice:'הקלטה'};
+// The status comes from the message I write back into the chat: until it is
+// there, the send is still on its way to me.
+function renderSent(){
+ var L=lastSent();var card=document.getElementById('sentCard');
+ if(!L){card.hidden=true;return;}
+ card.hidden=false;
+ var mine=(D.chat||[]).filter(function(m){return m.from==='itzik'&&(m.at||'')>=L.at;});
+ var st=mine.length?(mine[mine.length-1].status||'received'):'';
+ var reply=(D.chat||[]).some(function(m){return m.from==='claude'&&(m.at||'')>L.at;});
+ var label=SENTLABEL[L.kind]||'הודעה';
+ var t,sub,done=false;
+ if(st==='done'||reply){t=label+' טופלה';sub='יש תשובה בצ׳אט.';done=true;}
+ else if(st==='working'){t=label+' בעבודה';sub='קלטתי, אני מטפל.';}
+ else if(st){t=label+' התקבלה';sub='נכנסה אליי, מחכה לטיפול.';}
+ else{t=label+' נשלחה';sub='בדרך אליי. אני בודק את התיבה כל ארבע דקות.';}
+ card.className='sent'+(done?' done':'');
+ card.innerHTML='<span class="s-dot"></span><div><b>'+esc(t)+'</b><small>'+esc(sub)+' · '+esc(stamp(L.at))+'</small></div>';
+}
 function myCode(){
  try{return localStorage.getItem('monitorCode')||'';}catch(e){return '';}
 }
@@ -1034,6 +1068,7 @@ document.getElementById('msgForm').addEventListener('submit',function(e){
   savePending(p);
   box.value='';
   said.textContent='נשלח.';
+  markSent('text');renderSent();
   renderThread();
  }).catch(function(){
   said.textContent='השליחה לא עברה. נסה שוב, או שלח מייל רגיל.';
@@ -1086,6 +1121,7 @@ function reallySend(file){
  var voice=/^voice-/.test(file.name);
  document.getElementById('fNote').value=cap||(voice?'הודעה קולית מהמוניטור':'קובץ מהמוניטור');
  document.getElementById('fCode').value=myCode();
+ markSent(/^voice-/.test(file.name)?'voice':'file');
  fForm.action='https://formsubmit.co/'+MAILBOX;
  fSaid.textContent='שולח.';
  fForm.submit();
@@ -1240,6 +1276,7 @@ document.getElementById('mailForm').addEventListener('submit',function(e){
   savePending(q);
   box.value='';
   said.textContent='נשלח. אני בודק את התיבה כל ארבע דקות.';
+  markSent('mail');renderSent();
   renderMail();renderThread();
  }).catch(function(){
   said.textContent='השליחה לא עברה. נסה שוב.';
