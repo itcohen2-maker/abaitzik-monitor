@@ -5,3 +5,4 @@ seed.js
 sync-today.js
 node_modules/
 data/ntfy-topic.txt
+backups/
