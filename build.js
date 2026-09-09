@@ -403,6 +403,11 @@ section{margin-bottom:30px}
  background:linear-gradient(90deg,#b8860b,#ffd76e,#f0b429,#fff3c4,#d4a017);
  -webkit-background-clip:text;background-clip:text;color:transparent;
  filter:drop-shadow(0 1px 0 rgba(0,0,0,.25))}
+.toast{position:fixed;z-index:80;inset-inline:16px;bottom:calc(76px + env(safe-area-inset-bottom));
+ margin-inline:auto;max-width:340px;text-align:center;
+ background:var(--surface);border:1px solid var(--line);border-radius:14px;
+ padding:12px 16px;font:600 14px Heebo,sans-serif;color:var(--ink);
+ box-shadow:0 12px 30px rgba(0,0,0,.45)}
 .threadbar{display:flex;justify-content:flex-end;margin-bottom:8px}
 .cpall{font:600 12.5px Heebo,sans-serif;color:var(--accent);cursor:pointer;
  background:var(--surface);border:1px solid var(--line);border-radius:999px;
@@ -895,6 +900,8 @@ section{margin-bottom:30px}
   <path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8.5 21h7"/>
  </svg>
 </button>
+
+<div class="toast" id="toast" role="status" hidden></div>
 
 <div class="recwrap" id="recModal" hidden>
  <div class="recbox">
@@ -1770,6 +1777,17 @@ function sendSay(t){
  fSaid.textContent=t;
  var r=document.getElementById('recSaid');
  if(r)r.textContent=t;
+ toast(t);
+}
+// Floats above every screen, because the microphone floats above every screen.
+var toastTimer=null;
+function toast(t){
+ var el=document.getElementById('toast');
+ if(!el)return;
+ el.textContent=t;
+ el.hidden=false;
+ clearTimeout(toastTimer);
+ toastTimer=setTimeout(function(){el.hidden=true;},4000);
 }
 // Images are shrunk one after another so the batch is ready before it is sent.
 function shrinkAll(list,done){
