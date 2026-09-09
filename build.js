@@ -219,6 +219,7 @@ h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance
 .newbtn .nb-l{flex:1;min-width:0}
 .newbtn b{display:block;font:800 17px Heebo,sans-serif}
 .newbtn small{display:block;font-size:12px;opacity:.92;font-weight:300;margin-top:1px}
+.newbtn:active{transform:translateY(2px) scale(.99)}
 .newbtn .nb-c{flex:0 0 auto;min-width:34px;height:34px;border-radius:999px;display:grid;place-items:center;
  background:rgba(255,255,255,.25);font:800 16px Heebo,sans-serif;padding:0 9px}
 .newbtn.hot{background:linear-gradient(150deg,#ff6b84,var(--red));
@@ -260,7 +261,9 @@ section{margin-bottom:30px}
  70%{box-shadow:0 0 0 7px rgba(229,72,77,0)}
  100%{box-shadow:0 0 0 0 rgba(229,72,77,0)}}
 @media(prefers-reduced-motion:reduce){.dot{animation:none}}
-.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.seg button[aria-pressed="true"]{background:linear-gradient(150deg,#5aa9fb,var(--blue));color:#fff;
+ font-weight:700;box-shadow:0 6px 14px rgba(66,133,244,.4),inset 0 1px 0 rgba(255,255,255,.4)}
+.seg button:active{transform:scale(.97)}
 .seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .item{background:var(--surface);border:1px solid var(--line);border-radius:11px;
  padding:12px 14px;margin-bottom:9px;box-shadow:var(--shadow);
@@ -418,7 +421,8 @@ section{margin-bottom:30px}
 .c-add:after{display:none}
 
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:2px}
-.gt{border:0;text-align:start;cursor:pointer;border-radius:18px;padding:12px 13px;color:#fff;min-height:76px;
+.gt{border:0;text-align:start;cursor:pointer;border-radius:20px;padding:14px 15px;color:#fff;min-height:84px;
+ transition:transform .12s ease,box-shadow .12s ease;
  display:flex;flex-direction:column;justify-content:space-between;font-family:Heebo,sans-serif;
  box-shadow:0 8px 18px rgba(20,30,60,.16),inset 0 2px 0 rgba(255,255,255,.3)}
 .gt b{font:700 14px Heebo,sans-serif;display:block}
@@ -427,7 +431,9 @@ section{margin-bottom:30px}
 .g1{background:linear-gradient(150deg,#5aa9fb,var(--blue))}
 .g2{background:linear-gradient(150deg,#ff8a80,var(--red))}
 .g3{background:linear-gradient(150deg,#ffd54f,#f9a825);color:#3b2a00}
-.g4{background:linear-gradient(150deg,#69f0ae,var(--green))}
+.g4{background:linear-gradient(150deg,#7d8ba1,#3f4a5c)}
+.gt:active{transform:translateY(2px) scale(.985);box-shadow:0 4px 10px rgba(20,30,60,.22)}
+.gt:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
 .g5{background:linear-gradient(150deg,#b39ddb,#673ab7)}
 .g6{background:linear-gradient(150deg,#80deea,#00838f)}
 
@@ -464,13 +470,31 @@ section{margin-bottom:30px}
 #slotSaid{color:var(--dim);font-size:13px;font-weight:300;margin-top:7px;min-height:18px}
 
 /* ===== bottom nav ===== */
+.recwrap{position:fixed;inset:0;z-index:60;display:grid;place-items:center;
+ background:rgba(8,10,16,.82);backdrop-filter:blur(6px)}
+.recbox{width:min(340px,88vw);background:var(--surface);border-radius:26px;padding:26px 22px 20px;
+ text-align:center;box-shadow:0 30px 70px rgba(0,0,0,.5)}
+.rectitle{font:700 20px Heebo,sans-serif;color:var(--ink)}
+.rectime{font:800 40px "Frank Ruhl Libre",Georgia,serif;color:var(--red);
+ font-variant-numeric:tabular-nums;margin:6px 0 16px}
+.recbig{width:132px;height:132px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;
+ background:linear-gradient(180deg,#ff6b84,var(--red));
+ box-shadow:0 14px 34px rgba(234,67,53,.5),inset 0 3px 0 rgba(255,255,255,.45);
+ animation:mpulse 1.2s infinite}
+.recbig svg{width:52px;height:52px}
+.recbig:active{transform:scale(.95)}
+.rechint{color:var(--dim);font-size:13.5px;font-weight:300;margin-top:14px}
+.reccancel{margin-top:12px;background:var(--sunk);color:var(--ink);border:1px solid var(--line);
+ border-radius:12px;padding:11px 26px;font:500 15px Heebo,sans-serif;cursor:pointer;width:100%}
 .bn{position:fixed;inset-inline:0;bottom:0;z-index:20;display:flex;justify-content:space-around;
  background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(12px);
  border-top:1px solid var(--line);padding:7px 4px calc(7px + env(safe-area-inset-bottom))}
 .bn button{position:relative;background:none;border:0;cursor:pointer;color:var(--dim);
  font:500 10px Heebo,sans-serif;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 10px}
 .bn button span{font-size:19px;line-height:1}
-.bn button[aria-pressed="true"]{color:var(--accent)}
+.bn button[aria-pressed="true"]{color:#fff;background:linear-gradient(150deg,#5aa9fb,var(--blue));
+ border-radius:14px;box-shadow:0 5px 12px rgba(66,133,244,.35)}
+.bn button:active{transform:scale(.94)}
 .bn button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:10px}
 
 </style>
@@ -700,6 +724,20 @@ section{margin-bottom:30px}
   התשובות שלי מופיעות כאן למעלה.
  </div>
 </section>
+
+<div class="recwrap" id="recModal" hidden>
+ <div class="recbox">
+  <div class="rectitle" id="recTitle">מדבר אליי</div>
+  <div class="rectime" id="recTime">0:00</div>
+  <button type="button" id="recBig" class="recbig" aria-label="עצירה ושליחה">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="7" y="7" width="10" height="10" rx="2" fill="#fff" stroke="none"/>
+   </svg>
+  </button>
+  <div class="rechint" id="recHint">לחיצה עוצרת ושולחת אליי</div>
+  <button type="button" id="recCancel" class="reccancel">ביטול</button>
+ </div>
+</div>
 
 <nav class="bn" aria-label="מסכים">
  <button type="button" id="nH" aria-pressed="true"><span aria-hidden="true">🏠</span>בית</button>
@@ -1280,12 +1318,29 @@ function recPickType(){
  for(var i=0;i<want.length;i++){if(MediaRecorder.isTypeSupported(want[i]))return want[i];}
  return '';
 }
+function recClock(){
+ var m=Math.floor(recSec/60),ss=recSec%60;
+ return m+':'+(ss<10?'0':'')+ss;
+}
 function recTick(){
  recSec++;
- var m=Math.floor(recSec/60),ss=recSec%60;
- recSaid.textContent='מקליט '+m+':'+(ss<10?'0':'')+ss+'. לחיצה נוספת עוצרת ושולחת.';
+ var t=document.getElementById('recTime');
+ if(t)t.textContent=recClock();
+ recSaid.textContent='מקליט '+recClock()+'. לחיצה נוספת עוצרת ושולחת.';
  if(recSec>=180)recStop();
 }
+function recModal(open){
+ var m=document.getElementById('recModal');
+ if(!m)return;
+ m.hidden=!open;
+ if(open){
+  document.getElementById('recTime').textContent='0:00';
+  document.getElementById('recTitle').textContent='מדבר אליי';
+  document.getElementById('recHint').textContent='לחיצה עוצרת ושולחת אליי';
+ }
+}
+// Cancelling throws the audio away instead of sending it.
+var recAbort=false;
 function recStop(){
  if(rec&&rec.state!=='inactive')rec.stop();
 }
@@ -1307,6 +1362,8 @@ function recStart(){
   rec.ondataavailable=function(ev){if(ev.data&&ev.data.size)recChunks.push(ev.data);};
   rec.onstop=function(){
    recCleanup();
+   if(recAbort){recAbort=false;recModal(false);recSaid.textContent='ההקלטה בוטלה.';recBtn.disabled=false;return;}
+   recModal(false);
    var type=(rec&&rec.mimeType)||'audio/webm';
    var b=new Blob(recChunks,{type:type});
    if(!b.size){recSaid.textContent='לא נקלט כלום. תנסה שוב.';recBtn.disabled=false;return;}
@@ -1319,13 +1376,14 @@ function recStart(){
    reallySend(file);
   };
   rec.start();
+  recModal(true);
   recBtn.classList.add('on');
   recBtn.disabled=false;
   recBtn.setAttribute('aria-label','עצירת ההקלטה ושליחה');
   recSaid.textContent='מקליט 0:00. לחיצה נוספת עוצרת ושולחת.';
   recTimer=setInterval(recTick,1000);
  }).catch(function(){
-  recBtn.disabled=false;
+  recBtn.disabled=false;recModal(false);
   recSaid.textContent='אין הרשאה למיקרופון. תאשר אותה בהגדרות האתר בדפדפן ותנסה שוב.';
  });
 }
@@ -1334,6 +1392,11 @@ function toggleRec(){
  recStart();
 }
 recBtn.onclick=toggleRec;
+document.getElementById('recBig').onclick=function(){recStop();};
+document.getElementById('recCancel').onclick=function(){
+ if(rec&&rec.state==='recording'){recAbort=true;recStop();}
+ else{recModal(false);}
+};
 var micBtn=document.getElementById('micBtn');
 var micSaid=document.getElementById('micSaid');
 micBtn.onclick=toggleRec;
