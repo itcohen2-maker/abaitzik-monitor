@@ -103,6 +103,10 @@ function build() {
     .filter(c => !c.done && /^[0-9]/.test(c.id))
     .map(c => ({ at: c.at, text: c.text }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
+  const food = loadDocs('food')
+    .map(f => ({ at: f.at, name: f.name, kcal: f.kcal, protein: f.protein,
+                 carbs: f.carbs, fat: f.fat, note: f.note || '' }))
+    .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
   const now = loadDocs('status').find(d => d.id === 'now') || null;
 
   const payload = {
@@ -115,6 +119,7 @@ function build() {
       today: repliedToday.length,
       leads: contacts.filter(c => c.status !== 'done').length,
     },
+    food,
     pending: pending.sort((a, b) => (a.seenAt < b.seenAt ? 1 : -1)),
     replied: replied.sort((a, b) => (a.repliedAt < b.repliedAt ? 1 : -1)),
     contacts,
@@ -412,6 +417,28 @@ section{margin-bottom:30px}
  background:linear-gradient(180deg,#5cc36f,var(--green))!important;animation:none!important;opacity:1}
 #micBtn.failed,#micFab.failed,#recBtn.failed,#recBig.failed{
  background:#5b6472!important;animation:none!important;opacity:1}
+.foodtop{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.foodtop>div{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+ padding:12px 6px;text-align:center;box-shadow:var(--shadow)}
+.foodtop span{display:block;font:800 22px Heebo,sans-serif;color:var(--accent)}
+.foodtop small{display:block;color:var(--dim);font-size:11px;margin-top:2px}
+.foodrow{margin-bottom:10px}
+.foodcam{width:100%;min-height:56px;border:0;border-radius:18px;cursor:pointer;
+ display:flex;align-items:center;justify-content:center;gap:10px;
+ font:700 16px Heebo,sans-serif;color:#fff;
+ background:linear-gradient(180deg,#5cc36f,var(--green));
+ box-shadow:0 4px 12px rgba(52,168,83,.4),inset 0 1px 0 rgba(255,255,255,.35)}
+.foodcam:active{background:linear-gradient(180deg,var(--green),#2b8c45);box-shadow:none;transform:translateY(1px)}
+.foodcam span{font-size:22px}
+.fitem{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+ padding:12px 14px;margin-bottom:8px;cursor:pointer}
+.fitem .ft{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.fitem b{font:700 15px Heebo,sans-serif}
+.fitem .kc{font:800 16px Heebo,sans-serif;color:var(--accent)}
+.fitem .macros{color:var(--dim);font-size:12.5px;margin-top:4px}
+.fitem .more{display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--line);
+ color:var(--dim);font-size:13px;line-height:1.6;white-space:pre-wrap}
+.fitem.open .more{display:block}
 .quickrow{display:flex;gap:8px;margin-bottom:12px}
 .quickrow input{flex:1;min-height:48px;border-radius:14px;padding:0 14px;
  border:1px solid var(--line);background:var(--surface);color:var(--ink);
@@ -491,10 +518,10 @@ section{margin-bottom:30px}
 .urg:active{background:linear-gradient(180deg,#6ea8ff,var(--blue));color:#fff}
 .urg span{font-size:19px;display:block;margin-bottom:2px}
 
-.row{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 10px;
- scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px 8px;padding:2px 2px 12px;
+ justify-items:center}
 .row::-webkit-scrollbar{display:none}
-.ic{flex:0 0 62px;display:flex;flex-direction:column;align-items:center;gap:5px;
+.ic{width:100%;display:flex;flex-direction:column;align-items:center;gap:5px;
  font:500 10.5px Heebo,sans-serif;color:var(--dim);text-decoration:none;background:none;border:0;
  padding:0;cursor:pointer}
 .ic .c{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;position:relative;
@@ -530,6 +557,7 @@ section{margin-bottom:30px}
 .gt:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
 .g5{background:linear-gradient(150deg,#b39ddb,#673ab7)}
 .g6{background:linear-gradient(150deg,#80deea,#00838f)}
+.g7{background:linear-gradient(150deg,#7bd88f,#1e8e4a)}
 
 .c-dr{background:#fff;border:1px solid var(--line)}
 .item .src{font-size:12.5px;color:var(--accent);font-weight:500;margin-top:4px}
@@ -721,12 +749,12 @@ section{margin-bottom:30px}
   <div class="slot">
    <div class="plus" aria-hidden="true">+</div>
    <div>
-    <b>איזו אפליקציה תרצה שאוסיף כאן?</b>
-    <small>המקום הזה שמור. תכתוב או תקליט מה חסר לך, זה מגיע אליי, ואני מוסיף בסבב הקרוב. לא רק אפליקציות, כל דבר שתרצה שיהיה במסך הזה.</small>
+    <b>איזו פעולה תרצה שאוסיף כאן?</b>
+    <small>המקום הזה שמור לך. תכתוב או תקליט איזו פעולה חסרה לך, זה מגיע אליי, ואני מוסיף בסבב הקרוב. פעולה, מסך, כפתור או אפליקציה, כל דבר.</small>
    </div>
   </div>
   <form id="slotForm" class="slotForm">
-   <input id="slotText" type="text" placeholder="מה להוסיף לי למוניטור?" autocomplete="off">
+   <input id="slotText" type="text" placeholder="איזו פעולה להוסיף?" autocomplete="off">
    <button type="button" class="ghost" id="slotMic" aria-label="להקליט במקום לכתוב">🎤</button>
    <button type="submit">שלח</button>
   </form>
@@ -739,7 +767,8 @@ section{margin-bottom:30px}
   <button type="button" class="gt g3" id="gQueue"><b>📊 ניטור רשתות</b><small>מי פנה, מה נענה</small></button>
   <button type="button" class="gt g4" id="gReports"><b>📄 דוחות</b><small>סיכומי הסבבים</small></button>
   <button type="button" class="gt g5" id="gPill"><b>⏰ לקחתי כדור</b><small>מסמן את המנה ומעדכן אותי</small></button>
-  <button type="button" class="gt g6" id="gAsk"><b>❓ שאלה מהירה</b><small>כל דבר, אני עונה בצ׳אט</small></button>
+  <button type="button" class="gt g6" id="gCam"><b>📷 שלח לי תמונה</b><small>נפתחת המצלמה ומצלמים</small></button>
+  <button type="button" class="gt g7" id="gFood"><b>🥗 עקוב אחרי התזונה</b><small>מצלמים או כותבים, ואני מחשב</small></button>
  </div>
 
 <div class="tiles">
@@ -824,6 +853,31 @@ section{margin-bottom:30px}
   <button type="button" data-net="instagram" aria-pressed="false">אינסטגרם</button>
  </div>
  <div id="netBody"></div>
+</section>
+
+<section id="pF" hidden>
+ <h2>עקוב אחרי התזונה</h2>
+ <div class="foodtop">
+  <div><span id="fdKcal">0</span><small>קלוריות היום</small></div>
+  <div><span id="fdP">0</span><small>חלבון</small></div>
+  <div><span id="fdC">0</span><small>פחמימות</small></div>
+  <div><span id="fdF">0</span><small>שומן</small></div>
+ </div>
+ <div class="foodrow">
+  <button type="button" class="foodcam" id="fdCam">
+   <span aria-hidden="true">&#128247;</span>צילום של מה שאכלת</button>
+  <input type="file" id="fdPick" accept="image/*" capture="environment" hidden>
+ </div>
+ <form class="quickrow" id="fdForm">
+  <input type="text" id="fdText" autocomplete="off" placeholder="או תכתוב לי מה אכלת">
+  <button type="submit" id="fdBtn">שליחה</button>
+ </form>
+ <div class="msgsaid" id="fdSaid"></div>
+ <div id="fdList"></div>
+ <div class="hint">
+  שולחים תמונה או שורה, ואני מחזיר ערך קלורי, חלבון, פחמימות ושומן.
+  לחיצה על פריט פותחת את הפירוט המלא.
+ </div>
 </section>
 
 <section id="pV" hidden>
@@ -1224,7 +1278,7 @@ function updateDot(){
  d.hidden=!(n&&n>chatSeen());
  document.title=(d.hidden?'':'(1) ')+'אבא איציק בבנייה עצמית';
 }
-var PANES={h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV'};
+var PANES={h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 var PILLGAP=8*3600*1000;
 function lastPill(){
@@ -1625,6 +1679,81 @@ if(locked()){
 
 showCodeBox();
 
+// The camera tile: straight to the phone camera, no picker in between.
+document.getElementById('gCam').onclick=function(){
+ pane('m');renderThread();
+ var f=document.getElementById('fileForm');
+ f.hidden=false;
+ var pick=document.getElementById('fPick');
+ pick.setAttribute('accept','image/*');
+ pick.setAttribute('capture','environment');
+ pick.click();
+};
+
+// ---- what he ate ----
+// He sends a photo or a line; I look the values up and write the row back into
+// the food collection. The screen only adds up and displays what is there.
+document.getElementById('gFood').onclick=function(){pane('f');renderFood();};
+function todayKey(){return new Date().toISOString().slice(0,10);}
+function renderFood(){
+ var all=(D.food||[]).filter(function(f){return String(f.at||'').slice(0,10)===todayKey();});
+ var sum=function(k){return all.reduce(function(a,f){return a+(Number(f[k])||0);},0);};
+ document.getElementById('fdKcal').textContent=Math.round(sum('kcal'));
+ document.getElementById('fdP').textContent=Math.round(sum('protein'))+'g';
+ document.getElementById('fdC').textContent=Math.round(sum('carbs'))+'g';
+ document.getElementById('fdF').textContent=Math.round(sum('fat'))+'g';
+ var host=document.getElementById('fdList');
+ if(!all.length){
+  host.innerHTML='<div class="empty">עוד לא רשמנו היום כלום. תצלם את הצלחת או תכתוב מה אכלת, ואני מחזיר את הערכים.</div>';
+  return;
+ }
+ host.innerHTML=all.map(function(f,i){
+  return '<div class="fitem" data-i="'+i+'">'
+   +'<div class="ft"><b>'+esc(f.name||'פריט')+'</b>'
+   +'<span class="kc">'+Math.round(Number(f.kcal)||0)+' קלוריות</span></div>'
+   +'<div class="macros">חלבון '+(Number(f.protein)||0)+'g · פחמימות '+(Number(f.carbs)||0)
+   +'g · שומן '+(Number(f.fat)||0)+'g · '+esc(stamp(f.at))+'</div>'
+   +(f.note?'<div class="more">'+esc(f.note)+'</div>':'')
+   +'</div>';
+ }).join('');
+ Array.prototype.forEach.call(host.querySelectorAll('.fitem'),function(el){
+  el.onclick=function(){el.classList.toggle('open');};
+ });
+}
+document.getElementById('fdCam').onclick=function(){
+ document.getElementById('fdPick').click();
+};
+document.getElementById('fdPick').addEventListener('change',function(){
+ var list=this.files?Array.prototype.slice.call(this.files):[];
+ if(!list.length)return;
+ var said=document.getElementById('fdSaid');
+ said.textContent='שולח את התמונה.';
+ sendFiles(list,'תזונה: תמונה של מה שאכלתי').then(function(how){
+  said.textContent=how==='ntfy'?'נשלח בערוץ הגיבוי. אני מחשב ומחזיר לך.'
+   :'נשלח. אני מחשב ומחזיר לך את הערכים.';
+  toast(said.textContent);
+  markSent('file');renderSent();
+ }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';});
+ this.value='';
+});
+document.getElementById('fdForm').onsubmit=function(e){
+ e.preventDefault();
+ var box=document.getElementById('fdText');
+ var said=document.getElementById('fdSaid');
+ var btn=document.getElementById('fdBtn');
+ var text=box.value.trim();
+ if(!text)return;
+ btn.disabled=true;said.textContent='שולח.';
+ sendText('תזונה מהמוניטור','תזונה: '+text,'תזונה').then(function(how){
+  box.value='';
+  said.textContent='נשלח. אני מחשב ומחזיר לך את הערכים.';
+  toast(said.textContent);
+  markSent('text');renderSent();
+ }).catch(function(){
+  said.textContent='שני הערוצים לא ענו. תנסה שוב.';
+ }).then(function(){btn.disabled=false;});
+};
+
 document.getElementById('quickForm').onsubmit=function(e){
  e.preventDefault();
  var box=document.getElementById('quickText');
@@ -1924,6 +2053,7 @@ function recCleanup(){
  if(recTimer){clearInterval(recTimer);recTimer=null;}
  if(recStream){recStream.getTracks().forEach(function(t){t.stop();});recStream=null;}
  recBtn.classList.remove('on');
+ freeScreen();
  paintMics('send');
 }
 function recStart(){
@@ -1953,6 +2083,7 @@ function recStart(){
    reallySend(file);
   };
   rec.start();
+  holdScreen();
   recModal(true);
   recBtn.disabled=false;
   paintMics('rec');
@@ -1964,6 +2095,26 @@ function recStart(){
   recSaid.textContent='אין הרשאה למיקרופון. תאשר אותה בהגדרות האתר בדפדפן ותנסה שוב.';
  });
 }
+// Keeping the screen alive while recording. Without it the phone sleeps and
+// the recording ends mid sentence, which is exactly what he was seeing.
+var wakeLock=null;
+function holdScreen(){
+ try{
+  if(!navigator.wakeLock)return;
+  navigator.wakeLock.request('screen').then(function(l){
+   wakeLock=l;
+   // iOS drops the lock when the tab is backgrounded, so take it again.
+   l.addEventListener('release',function(){wakeLock=null;});
+  }).catch(function(){});
+ }catch(e){}
+}
+function freeScreen(){
+ try{if(wakeLock){wakeLock.release();wakeLock=null;}}catch(e){}
+}
+document.addEventListener('visibilitychange',function(){
+ if(document.visibilityState==='visible'&&rec&&rec.state==='recording')holdScreen();
+});
+
 function toggleRec(){
  if(rec&&rec.state==='recording'){recStop();return;}
  recStart();
