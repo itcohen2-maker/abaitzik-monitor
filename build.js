@@ -503,7 +503,12 @@ section{margin-bottom:30px}
 .mic{width:98px;height:98px;flex:0 0 98px;border-radius:50%;border:0;padding:0;cursor:pointer;position:relative;
  display:grid;place-items:center;background:conic-gradient(from 0deg,var(--blue),var(--red),var(--yellow),var(--green),var(--blue));
  box-shadow:0 12px 28px rgba(66,133,244,.35)}
-.mic:before{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--surface)}
+.mic:before{content:"";position:absolute;inset:6px;border-radius:50%;
+ background:radial-gradient(circle at 34% 26%,#ffffff 0%,var(--surface) 42%,
+  color-mix(in srgb,var(--surface) 82%,#000) 100%);
+ box-shadow:inset 0 -6px 12px rgba(0,0,0,.18),inset 0 4px 8px rgba(255,255,255,.9)}
+.mic:active{transform:translateY(2px) scale(.97)}
+.mic{transition:transform .09s ease}
 .mic svg{position:relative;z-index:1;width:42px;height:42px}
 .mic.on{animation:mpulse 1.2s infinite}
 .mic.on:before{background:#fdecea}
@@ -542,10 +547,25 @@ section{margin-bottom:30px}
 .c-add:after{display:none}
 
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:2px}
-.gt{border:0;text-align:start;cursor:pointer;border-radius:20px;padding:14px 15px;color:#fff;min-height:84px;
- transition:transform .12s ease,box-shadow .12s ease;
+.gt{border:0;text-align:start;cursor:pointer;border-radius:22px;padding:14px 15px;color:#fff;min-height:88px;
+ position:relative;overflow:hidden;isolation:isolate;
+ transition:transform .09s ease,box-shadow .09s ease,filter .09s ease;
  display:flex;flex-direction:column;justify-content:space-between;font-family:Heebo,sans-serif;
- box-shadow:0 8px 18px rgba(20,30,60,.16),inset 0 2px 0 rgba(255,255,255,.3)}
+ text-shadow:0 1px 2px rgba(0,0,0,.28);
+ box-shadow:0 10px 22px rgba(20,30,60,.22),
+  inset 0 1px 0 rgba(255,255,255,.55),
+  inset 0 -3px 8px rgba(0,0,0,.22),
+  inset 0 0 0 1px rgba(255,255,255,.14)}
+/* The sheen: a soft band of light across the upper half, like moulded plastic. */
+.gt:after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+ background:linear-gradient(180deg,rgba(255,255,255,.34) 0%,rgba(255,255,255,.10) 42%,
+  rgba(255,255,255,0) 55%,rgba(0,0,0,.10) 100%)}
+.gt:active{transform:translateY(2px) scale(.985);filter:saturate(1.15) brightness(.94);
+ box-shadow:0 3px 8px rgba(20,30,60,.26),
+  inset 0 2px 8px rgba(0,0,0,.32),
+  inset 0 0 0 1px rgba(255,255,255,.10)}
+.gt.dragging{opacity:.65;transform:scale(1.04);box-shadow:0 18px 34px rgba(0,0,0,.4)}
+.gt.dragover{outline:2px dashed rgba(255,255,255,.75);outline-offset:-6px}
 .gt b{font:700 14px Heebo,sans-serif;display:block}
 .gt small{font-size:10.5px;opacity:.92;font-weight:300}
 .gt:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
@@ -595,7 +615,10 @@ section{margin-bottom:30px}
  width:82px;height:82px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;
  background:conic-gradient(from 0deg,var(--blue),var(--red),var(--yellow),var(--green),var(--blue));
  box-shadow:0 10px 24px rgba(0,0,0,.35)}
-.micfab:before{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--surface)}
+.micfab:before{content:"";position:absolute;inset:6px;border-radius:50%;
+ background:radial-gradient(circle at 34% 26%,#ffffff 0%,var(--surface) 44%,
+  color-mix(in srgb,var(--surface) 80%,#000) 100%);
+ box-shadow:inset 0 -6px 12px rgba(0,0,0,.2),inset 0 4px 8px rgba(255,255,255,.85)}
 .micfab svg{position:relative;z-index:1;width:38px;height:38px;stroke:var(--ink)}
 .micfab svg rect{fill:var(--ink)}
 .micfab{box-shadow:0 0 0 3px rgba(66,133,244,.28),0 0 26px 6px rgba(66,133,244,.45),
@@ -1448,6 +1471,88 @@ function paintReportDot(){
  var t=document.getElementById('gReports');if(t)t.classList.toggle('blink',!!fresh);
 }
 
+// ---- his own order ----
+// He asked to arrange the tiles himself. A long press picks one up, and the
+// order is kept on the device. This is also the first thing a client will be
+// allowed to do on his own copy: add and arrange, never restructure.
+function tileOrder(){
+ try{return JSON.parse(localStorage.getItem('tileOrder')||'null');}catch(e){return null;}
+}
+function saveTileOrder(){
+ var g=document.querySelector('.grid');
+ if(!g)return;
+ var ids=Array.prototype.map.call(g.children,function(el){return el.id;});
+ try{localStorage.setItem('tileOrder',JSON.stringify(ids));}catch(e){}
+}
+function applyTileOrder(){
+ var g=document.querySelector('.grid');
+ var order=tileOrder();
+ if(!g||!order)return;
+ order.forEach(function(id){
+  var el=document.getElementById(id);
+  if(el)g.appendChild(el);
+ });
+ // Anything added since he last arranged simply stays at the end.
+}
+function armTileDrag(){
+ var g=document.querySelector('.grid');
+ if(!g)return;
+ var held=null,hold=null;
+ function clear(){clearTimeout(hold);}
+ Array.prototype.forEach.call(g.children,function(el){
+  el.addEventListener('pointerdown',function(e){
+   hold=setTimeout(function(){
+    held=el;el.classList.add('dragging');
+    try{navigator.vibrate&&navigator.vibrate(18);}catch(err){}
+   },420);
+  });
+  ['pointerup','pointercancel','pointerleave'].forEach(function(ev){
+   el.addEventListener(ev,function(){
+    clear();
+    if(held){held.classList.remove('dragging');held=null;saveTileOrder();}
+    Array.prototype.forEach.call(g.children,function(c){c.classList.remove('dragover');});
+   });
+  });
+  // While one is held, moving over another swaps them in place.
+  el.addEventListener('pointermove',function(e){
+   if(!held)return;
+   clear();
+   var over=document.elementFromPoint(e.clientX,e.clientY);
+   while(over&&over.parentNode!==g)over=over.parentNode;
+   if(!over||over===held)return;
+   Array.prototype.forEach.call(g.children,function(c){c.classList.remove('dragover');});
+   over.classList.add('dragover');
+   var kids=Array.prototype.slice.call(g.children);
+   if(kids.indexOf(held)<kids.indexOf(over))g.insertBefore(over,held);
+   else g.insertBefore(held,over);
+  });
+  // A press that never became a drag must still count as a tap.
+  el.addEventListener('click',function(e){
+   if(el.classList.contains('dragging')){e.preventDefault();e.stopPropagation();}
+  },true);
+ });
+}
+
+// A short click when a button is pressed. Browsers block audio until the page
+// has been touched, so this only ever plays on his own tap.
+var actx=null;
+function click(){
+ try{
+  var A=window.AudioContext||window.webkitAudioContext;
+  if(!A)return;
+  actx=actx||new A();
+  var o=actx.createOscillator(),g=actx.createGain();
+  o.type='triangle';o.frequency.setValueAtTime(660,actx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(240,actx.currentTime+.07);
+  g.gain.setValueAtTime(.055,actx.currentTime);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+.09);
+  o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+.1);
+ }catch(e){}
+}
+document.addEventListener('pointerdown',function(e){
+ if(e.target.closest&&e.target.closest('.gt,.mic,.micfab,.recbig,.foodcam,.conn'))click();
+},{passive:true});
+
 function on(id,fn){
  var el=document.getElementById(id);
  if(el)el.onclick=fn;
@@ -2272,6 +2377,8 @@ document.getElementById('mailForm').addEventListener('submit',function(e){
  }).then(function(){btn.disabled=false;});
 });
 
+applyTileOrder();
+armTileDrag();
 render();
 renderThread();
 renderPill();
