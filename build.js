@@ -137,18 +137,19 @@ const PAGE = `<!DOCTYPE html>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700&family=Heebo:wght@300;400;500;700&display=swap">
 <style>
-:root{--ground:#faf7f2;--surface:#fff;--sunk:#f2ede4;--ink:#22201c;--dim:#6e675d;
- --line:#e6e0d5;--accent:#14675a;--accent-soft:#dfece8;--wait:#a8681a;
- --shadow:0 1px 2px rgba(40,32,20,.06)}
-@media (prefers-color-scheme:dark){:root{--ground:#191714;--surface:#221f1b;--sunk:#1f1c18;
- --ink:#f0ece5;--dim:#9b9387;--line:#35312b;--accent:#4fb3a0;--accent-soft:#1d3630;
- --wait:#d99b45;--shadow:none}}
+:root{--blue:#4285F4;--red:#EA4335;--yellow:#FBBC05;--green:#34A853;
+ --ground:#f6f8fc;--surface:#fff;--sunk:#eef2fa;--ink:#1f2430;--dim:#5f6b7f;
+ --line:#e3e9f4;--accent:#1a73e8;--accent-soft:#e8f0fe;--wait:#e37400;
+ --shadow:0 2px 8px rgba(30,40,70,.07)}
+@media (prefers-color-scheme:dark){:root{--ground:#0f1218;--surface:#181d27;--sunk:#141922;
+ --ink:#eef1f7;--dim:#9aa5b8;--line:#252c39;--accent:#8ab4f8;--accent-soft:#1b2b45;
+ --wait:#fbbc05;--shadow:0 2px 10px rgba(0,0,0,.4)}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--ground);color:var(--ink);direction:rtl;
  font:400 16px/1.65 Heebo,system-ui,"Segoe UI",Arial,sans-serif;
  background-image:radial-gradient(120% 60% at 100% 0,var(--accent-soft) 0,transparent 60%);
  background-repeat:no-repeat}
-.wrap{max-width:620px;margin:0 auto;padding:22px 18px 64px}
+.wrap{max-width:620px;margin:0 auto;padding:18px 16px 96px}
 .brand{display:flex;align-items:center;gap:12px;margin-bottom:4px}
 .mark{width:42px;height:42px;flex:0 0 42px;border-radius:13px;display:grid;place-items:center;
  background:linear-gradient(145deg,var(--accent),color-mix(in srgb,var(--accent) 55%,#000));
@@ -299,18 +300,148 @@ section{margin-bottom:30px}
 .note{font-size:13px;color:var(--dim);font-weight:300;border-top:1px solid var(--line);
  padding-top:14px;margin-top:30px}
 .note b{color:var(--ink);font-weight:500}
+
+/* ===== home screen ===== */
+.hd{display:flex;align-items:center;gap:11px;margin-bottom:14px}
+.ava{width:46px;height:46px;flex:0 0 46px;border-radius:50%;padding:3px;
+ background:conic-gradient(var(--blue),var(--red),var(--yellow),var(--green),var(--blue))}
+.ava div{width:100%;height:100%;border-radius:50%;background:var(--surface);display:grid;place-items:center;
+ font:700 19px "Frank Ruhl Libre",Georgia,serif;color:var(--ink)}
+.hd .t{font:700 19px/1.15 Heebo,sans-serif}
+.hd .s{font-size:12px;color:var(--dim);font-weight:300}
+.conn{margin-inline-start:auto;font:500 11.5px Heebo,sans-serif;color:#fff;background:var(--green);
+ padding:4px 11px;border-radius:999px}
+
+.voice{display:flex;align-items:stretch;gap:12px;margin-bottom:14px}
+.mic{width:98px;height:98px;flex:0 0 98px;border-radius:50%;border:0;padding:0;cursor:pointer;position:relative;
+ display:grid;place-items:center;background:conic-gradient(from 0deg,var(--blue),var(--red),var(--yellow),var(--green),var(--blue));
+ box-shadow:0 12px 28px rgba(66,133,244,.35)}
+.mic:before{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--surface)}
+.mic svg{position:relative;z-index:1;width:42px;height:42px}
+.mic.on{animation:mpulse 1.2s infinite}
+.mic.on:before{background:#fdecea}
+@keyframes mpulse{50%{box-shadow:0 12px 40px rgba(234,67,53,.6)}}
+.mic[disabled]{opacity:.55;cursor:default}
+.vtxt{flex:1;display:flex;flex-direction:column;justify-content:center}
+.vtxt b{font:700 16px Heebo,sans-serif}
+.vtxt small{color:var(--dim);font-size:12px;line-height:1.5;font-weight:300}
+.urg{flex:0 0 66px;border:0;cursor:pointer;border-radius:20px;color:#fff;
+ font:700 12.5px Heebo,sans-serif;line-height:1.25;
+ background:linear-gradient(180deg,#ff6a5e,var(--red));
+ box-shadow:0 10px 22px rgba(234,67,53,.38),inset 0 2px 0 rgba(255,255,255,.45)}
+.urg span{font-size:19px;display:block;margin-bottom:2px}
+
+.row{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 10px;
+ scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.row::-webkit-scrollbar{display:none}
+.ic{flex:0 0 62px;display:flex;flex-direction:column;align-items:center;gap:5px;
+ font:500 10.5px Heebo,sans-serif;color:var(--dim);text-decoration:none;background:none;border:0;
+ padding:0;cursor:pointer}
+.ic .c{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;position:relative;
+ box-shadow:0 8px 16px rgba(20,30,60,.22),inset 0 2px 0 rgba(255,255,255,.5),inset 0 -3px 0 rgba(0,0,0,.16)}
+.ic .c:after{content:"";position:absolute;top:6px;left:12px;right:12px;height:15px;border-radius:50%;
+ background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,0))}
+.ic svg{width:28px;height:28px;position:relative;z-index:1}
+.ic:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:12px}
+.c-yt{background:#ff0033}.c-tt{background:#111}.c-fb{background:#1877f2}
+.c-ig{background:linear-gradient(45deg,#f9ce34,#ee2a7b,#6228d7)}
+.c-wa{background:#25d366}.c-gm{background:#fff;border:1px solid var(--line)}
+.c-st{background:linear-gradient(160deg,#4285F4,#0b57d0)}
+.c-pg{background:linear-gradient(160deg,#a78bfa,#6d28d9)}
+.c-vd{background:linear-gradient(160deg,#fbbf24,#d97706)}
+.c-add{background:var(--surface);border:2px dashed var(--line);box-shadow:none}
+.c-add:after{display:none}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:2px}
+.gt{border:0;text-align:start;cursor:pointer;border-radius:18px;padding:12px 13px;color:#fff;min-height:76px;
+ display:flex;flex-direction:column;justify-content:space-between;font-family:Heebo,sans-serif;
+ box-shadow:0 8px 18px rgba(20,30,60,.16),inset 0 2px 0 rgba(255,255,255,.3)}
+.gt b{font:700 14px Heebo,sans-serif;display:block}
+.gt small{font-size:10.5px;opacity:.92;font-weight:300}
+.gt:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.g1{background:linear-gradient(150deg,#5aa9fb,var(--blue))}
+.g2{background:linear-gradient(150deg,#ff8a80,var(--red))}
+.g3{background:linear-gradient(150deg,#ffd54f,#f9a825);color:#3b2a00}
+.g4{background:linear-gradient(150deg,#69f0ae,var(--green))}
+
+/* ===== bottom nav ===== */
+.bn{position:fixed;inset-inline:0;bottom:0;z-index:20;display:flex;justify-content:space-around;
+ background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(12px);
+ border-top:1px solid var(--line);padding:7px 4px calc(7px + env(safe-area-inset-bottom))}
+.bn button{position:relative;background:none;border:0;cursor:pointer;color:var(--dim);
+ font:500 10px Heebo,sans-serif;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 10px}
+.bn button span{font-size:19px;line-height:1}
+.bn button[aria-pressed="true"]{color:var(--accent)}
+.bn button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:10px}
+
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="brand">
- <div class="mark" aria-hidden="true">א</div>
+<header class="hd">
+ <div class="ava" aria-hidden="true"><div>א</div></div>
  <div>
-  <h1>מוניטור אבא איציק</h1>
-  <div class="sub">מי פנה, מה נענה, ומה עוד מחכה.</div>
+  <div class="t">אבא איציק</div>
+  <div class="s" id="built"></div>
  </div>
+ <div class="conn">מחובר</div>
+</header>
+
+<section id="pH">
+ <div class="voice">
+  <button type="button" id="micBtn" class="mic" aria-label="דבר אליי">
+   <svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="9" y="3" width="6" height="11" rx="3" fill="var(--ink)" stroke="none"/>
+    <path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8.5 21h7"/>
+   </svg>
+  </button>
+  <div class="vtxt">
+   <b>דבר אליי</b>
+   <small id="micSaid">לוחצים, מדברים, לוחצים שוב. ההקלטה נשלחת אליי מיד.</small>
+  </div>
+  <button type="button" id="urgBtn" class="urg"><span aria-hidden="true">🚨</span>דחוף</button>
+ </div>
+
+ <section class="whatsnew" aria-label="מה חדש">
+  <div class="wn" id="wnChat"></div>
+  <div class="wn" id="wnCmds"></div>
+  <div class="wn" id="wnNow"></div>
+ </section>
+
+ <div class="row" role="group" aria-label="קיצורים">
+  <a class="ic" href="https://studio.youtube.com/" target="_blank" rel="noopener"><span class="c c-yt">
+   <svg viewBox="0 0 24 24"><path fill="#fff" d="M10 8.5v7l6-3.5z"/></svg></span>יוטיוב</a>
+  <a class="ic" href="https://www.tiktok.com/@abaitzik" target="_blank" rel="noopener"><span class="c c-tt">
+   <svg viewBox="0 0 24 24"><path fill="#fff" d="M13 3h3a4 4 0 0 0 4 4v3a7 7 0 0 1-4-1.3V15a5.5 5.5 0 1 1-5.5-5.5c.3 0 .6 0 .9.1v3.1a2.5 2.5 0 1 0 1.6 2.3z"/></svg></span>טיקטוק</a>
+  <a class="ic" href="https://www.facebook.com/lolos.lolo.90" target="_blank" rel="noopener"><span class="c c-fb">
+   <svg viewBox="0 0 24 24"><path fill="#fff" d="M13.5 21v-7h2.4l.4-3h-2.8V9.2c0-.9.3-1.5 1.5-1.5h1.5V5.1c-.3 0-1.2-.1-2.2-.1-2.2 0-3.7 1.3-3.7 3.8V11H8v3h2.6v7z"/></svg></span>פייסבוק</a>
+  <a class="ic" href="https://www.instagram.com/abaitzik/" target="_blank" rel="noopener"><span class="c c-ig">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="5"/><circle cx="12" cy="12" r="3.6"/><circle cx="17" cy="7" r="1" fill="#fff" stroke="none"/></svg></span>וואטסאפ</a>
+  <button type="button" class="ic" id="icMail"><span class="c c-gm">
+   <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M4 7v11h3V9.8z"/><path fill="#34A853" d="M20 7v11h-3V9.8z"/><path fill="#EA4335" d="M4 7l8 6 8-6v-1.5L12 11 4 5.5z"/><path fill="#FBBC05" d="M4 5.5L12 11l8-5.5V5H4z"/></svg></span>מייל</button>
+  <a class="ic" href="https://itzik-site.vercel.app/" target="_blank" rel="noopener"><span class="c c-st">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c3 3 3 13 0 16M12 4c-3 3-3 13 0 16"/></svg></span>האתר</a>
+  <a class="ic" href="https://itzik-site.vercel.app/gezer" target="_blank" rel="noopener"><span class="c c-vd">
+   <svg viewBox="0 0 24 24"><path fill="#fff" d="M11 21c-4-3-6-7-6-10a3 3 0 0 1 5-2 3 3 0 0 1 5 2c0 3-2 7-4 10z"/><path fill="#fff" d="M14 4c2-2 5-2 5-2s0 3-2 5z"/></svg></span>גזר</a>
+  <a class="ic" href="https://pegasusgame.vercel.app" target="_blank" rel="noopener"><span class="c c-pg">
+   <svg viewBox="0 0 24 24"><path fill="#fff" d="M4 14c2-5 6-8 11-8l5-2-2 5c0 5-3 9-8 11l-1-3-3-1z"/><circle cx="14" cy="10" r="1.3" fill="#6d28d9"/></svg></span>פגסוס</a>
+  <button type="button" class="ic" id="icAdd"><span class="c c-add">
+   <svg viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>חדש</button>
+ </div>
+
+ <div class="grid">
+  <button type="button" class="gt g1" id="gChat"><b>💬 פנייה אליי</b><small>צ׳אט, קול, קובץ</small></button>
+  <button type="button" class="gt g2" id="gMail"><b>📧 מייל</b><small>בקשה, ואני מחזיר תשובה</small></button>
+  <button type="button" class="gt g3" id="gQueue"><b>📊 ניטור רשתות</b><small>מי פנה, מה נענה</small></button>
+  <button type="button" class="gt g4" id="gReports"><b>📄 דוחות</b><small>סיכומי הסבבים</small></button>
+ </div>
+
+<div class="tiles">
+ <div class="tile wait"><div class="k">ממתין לתשובה</div><div class="v" id="tP">0</div></div>
+ <div class="tile"><div class="k">נענה היום</div><div class="v" id="tT">0</div></div>
+ <div class="tile wait"><div class="k">אנשי קשר פתוחים</div><div class="v" id="tL">0</div></div>
 </div>
-<div class="pill"><i></i>מתעדכן אוטומטית</div>
+
 <div class="alerts" id="alerts">
  <div>
   <b>התראות לנייד</b>
@@ -321,41 +452,14 @@ section{margin-bottom:30px}
 <div class="install" id="installHint">להתקנה כאפליקציה על מסך הבית: בספארי לוחצים שיתוף ואז "הוספה למסך הבית". באנדרואיד: תפריט ואז "התקנת אפליקציה".</div>
 
 <nav class="links" aria-label="קישורים מהירים">
- <a href="https://itzik-site.vercel.app/" target="_blank" rel="noopener">
-  <span aria-hidden="true">&#127959;</span>
-  <div>האתר<small>איציק אימונים נגישים</small></div>
- </a>
- <a href="https://itzik-site.vercel.app/gezer" target="_blank" rel="noopener">
-  <span aria-hidden="true">&#129365;</span>
-  <div>שיטת הפירה<small>דף הנחיתה של גזר</small></div>
- </a>
  <a href="plan.html">
   <span aria-hidden="true">&#128736;</span>
   <div>תכנון 2.0<small>המסך החדש, לאישורך</small></div>
  </a>
 </nav>
-
-<section class="whatsnew" aria-label="מה חדש">
- <h2>מה חדש</h2>
- <div class="wn" id="wnChat"></div>
- <div class="wn" id="wnCmds"></div>
- <div class="wn" id="wnNow"></div>
 </section>
 
-<div class="tiles">
- <div class="tile wait"><div class="k">ממתין לתשובה</div><div class="v" id="tP">0</div></div>
- <div class="tile"><div class="k">נענה היום</div><div class="v" id="tT">0</div></div>
- <div class="tile wait"><div class="k">אנשי קשר פתוחים</div><div class="v" id="tL">0</div></div>
-</div>
-
-<div class="seg" role="group" aria-label="מסך">
- <button type="button" id="nQ" aria-pressed="true">התור</button>
- <button type="button" id="nL" aria-pressed="false">אנשי קשר</button>
- <button type="button" id="nR" aria-pressed="false">דוחות</button>
- <button type="button" id="nM" aria-pressed="false">צ׳אט<span class="dot" id="mDot" hidden></span></button>
-</div>
-
-<section id="pQ">
+<section id="pQ" hidden>
  <div class="seg" role="group" aria-label="סינון">
   <button type="button" id="bP" aria-pressed="true">ממתין</button>
   <button type="button" id="bD" aria-pressed="false">נענה</button>
@@ -409,6 +513,14 @@ section{margin-bottom:30px}
   התשובות שלי מופיעות כאן למעלה.
  </div>
 </section>
+
+<nav class="bn" aria-label="מסכים">
+ <button type="button" id="nH" aria-pressed="true"><span aria-hidden="true">🏠</span>בית</button>
+ <button type="button" id="nM" aria-pressed="false"><span aria-hidden="true">💬</span>צ׳אט<i class="dot" id="mDot" hidden></i></button>
+ <button type="button" id="nQ" aria-pressed="false"><span aria-hidden="true">📈</span>רשתות</button>
+ <button type="button" id="nL" aria-pressed="false"><span aria-hidden="true">👥</span>אנשי קשר</button>
+ <button type="button" id="nR" aria-pressed="false"><span aria-hidden="true">📄</span>דוחות</button>
+</nav>
 
 <div class="note">
  <b>הכלל האדום.</b> לא פונים למי שלא פנה. כל שורה כאן היא מישהו שהגיב,
@@ -557,20 +669,34 @@ function updateDot(){
  d.hidden=!(n&&n>chatSeen());
  document.title=(d.hidden?'':'(1) ')+'המוניטור של אבא איציק';
 }
+var PANES={h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM'};
+var NAVS={h:'nH',q:'nQ',l:'nL',r:'nR',m:'nM'};
 function pane(w){
- document.getElementById('pQ').hidden=w!=='q';
- document.getElementById('pL').hidden=w!=='l';
- document.getElementById('pR').hidden=w!=='r';
- document.getElementById('pM').hidden=w!=='m';
- document.getElementById('nQ').setAttribute('aria-pressed',w==='q');
- document.getElementById('nL').setAttribute('aria-pressed',w==='l');
- document.getElementById('nR').setAttribute('aria-pressed',w==='r');
- document.getElementById('nM').setAttribute('aria-pressed',w==='m');
+ for(var k in PANES){document.getElementById(PANES[k]).hidden=(k!==w);}
+ for(var n in NAVS){document.getElementById(NAVS[n]).setAttribute('aria-pressed',n===w);}
+ window.scrollTo(0,0);
 }
+document.getElementById('nH').onclick=function(){pane('h');};
 document.getElementById('nQ').onclick=function(){pane('q');};
 document.getElementById('nL').onclick=function(){pane('l');};
 document.getElementById('nR').onclick=function(){pane('r');};
 document.getElementById('nM').onclick=function(){pane('m');markChatSeen();};
+
+// Home shortcuts. The mail and "new module" circles have no screen of their
+// own yet, so they open the chat with the request already started.
+function askInChat(prefix){
+ pane('m');markChatSeen();
+ var box=document.getElementById('msgText');
+ box.value=prefix;box.focus();
+ try{box.setSelectionRange(box.value.length,box.value.length);}catch(e){}
+}
+document.getElementById('gChat').onclick=function(){pane('m');markChatSeen();};
+document.getElementById('gQueue').onclick=function(){pane('q');};
+document.getElementById('gReports').onclick=function(){pane('r');};
+document.getElementById('gMail').onclick=function(){askInChat('מייל: ');};
+document.getElementById('icMail').onclick=function(){askInChat('מייל: ');};
+document.getElementById('icAdd').onclick=function(){askInChat('מודול חדש שאני רוצה: ');};
+document.getElementById('urgBtn').onclick=function(){askInChat('דחוף: ');};
 document.getElementById('bP').onclick=function(){tab='pending';render();};
 document.getElementById('bD').onclick=function(){tab='done';render();};
 
@@ -757,13 +883,27 @@ function recStart(){
   recSaid.textContent='אין הרשאה למיקרופון. תאשר אותה בהגדרות האתר בדפדפן ותנסה שוב.';
  });
 }
-recBtn.onclick=function(){
+function toggleRec(){
  if(rec&&rec.state==='recording'){recStop();return;}
  recStart();
-};
+}
+recBtn.onclick=toggleRec;
+var micBtn=document.getElementById('micBtn');
+var micSaid=document.getElementById('micSaid');
+micBtn.onclick=toggleRec;
+
+// recSaid lives in the chat pane; mirror it onto the home screen so the timer
+// and any error are visible wherever the recording was started from.
+new MutationObserver(function(){
+ micSaid.textContent=recSaid.textContent;
+ var on=!!(rec&&rec.state==='recording');
+ micBtn.classList.toggle('on',on);
+ micBtn.setAttribute('aria-label',on?'עצירת ההקלטה ושליחה':'דבר אליי');
+}).observe(recSaid,{childList:true,characterData:true,subtree:true});
 render();
 renderThread();
 updateDot();
+pane('h');
 </script>
 </body>
 </html>`;
