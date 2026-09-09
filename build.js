@@ -868,6 +868,54 @@ var D = __DATA__, NET = __NET__, CAT = __CAT__, tab = 'pending';
 // Split so a scraper crawling the page source does not lift a plain address.
 // This is obfuscation, not security - anyone reading the code can reassemble it.
 var MAILBOX = ['itcohen2','gmail.com'].join('@');
+// FormSubmit's free tier has a daily cap, and on a busy day Itzik hits it in
+// the middle of a sentence and gets a Rate Limit page instead of a send. ntfy
+// takes the same message with no quota, so every send tries the mailbox first
+// and falls back here. I poll this topic in the same round as the mailbox.
+// The topic sits in the page source, so it is public: every message carries
+// his code, and anything unsigned is ignored on my side.
+var NTFYIN = 'abaitzik-in-95e62e86c34f4853';
+function ntfyText(kind, text) {
+ // Headers have to stay ASCII, so the Hebrew all rides in the body.
+ return fetch('https://ntfy.sh/' + NTFYIN, {
+  method: 'POST', headers: { Title: 'monitor', 'X-Tags': 'memo' },
+  // The page is emitted from a template literal, so a backslash escape here
+  // would be eaten at build time. The newline is built from its code point.
+  body: [kind, text, '', 'קוד ' + myCode()].join(String.fromCharCode(10))
+ }).then(function (r) { if (!r.ok) throw new Error('ntfy'); return 'ntfy'; });
+}
+// Returns which channel carried it, so the page can say so.
+function sendText(subject, text, kind) {
+ return fetch('https://formsubmit.co/ajax/' + MAILBOX, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+  body: JSON.stringify({ _subject: subject, _template: 'table', 'הודעה': text, 'קוד': myCode() })
+ }).then(function (r) {
+  if (!r.ok) throw new Error('quota');
+  return 'mail';
+ }).catch(function () { return ntfyText(kind, text); });
+}
+function sendFiles(list, note) {
+ var fd = new FormData();
+ fd.append('_subject', 'קובץ מהמוניטור');
+ fd.append('הודעה', note);
+ fd.append('קוד', myCode());
+ list.forEach(function (f) { fd.append('attachment', f, f.name); });
+ return fetch('https://formsubmit.co/ajax/' + MAILBOX, {
+  method: 'POST', headers: { Accept: 'application/json' }, body: fd
+ }).then(function (r) {
+  if (!r.ok) throw new Error('quota');
+  return 'mail';
+ }).catch(function () {
+  // One PUT per file. ntfy stores the bytes and hands me a link to fetch.
+  return list.reduce(function (chain, f) {
+   return chain.then(function () {
+    return fetch('https://ntfy.sh/' + NTFYIN + '?filename=' + encodeURIComponent(f.name),
+     { method: 'PUT', headers: { Title: 'file' }, body: f });
+   });
+  }, Promise.resolve()).then(function () { return ntfyText('קובץ', note); });
+ });
+}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){
  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function ago(iso){if(!iso)return'';var d=Date.parse(iso);if(isNaN(d))return'';
@@ -1177,11 +1225,7 @@ document.addEventListener('visibilitychange',function(){if(!document.hidden)chec
 // One line straight into the same channel the chat uses, for the small
 // signals: a lead moved to standby, a folder is missing, and so on.
 function sendLine(text){
- fetch('https://formsubmit.co/ajax/'+MAILBOX,{
-  method:'POST',
-  headers:{'Content-Type':'application/json',Accept:'application/json'},
-  body:JSON.stringify({_subject:'עדכון מהמוניטור',_template:'table',הודעה:text,קוד:myCode()})
- }).then(function(){
+ sendText('עדכון מהמוניטור',text,'עדכון').then(function(){
   var p=pending();p.push({at:new Date().toISOString(),text:text});savePending(p);
  }).catch(function(){});
 }
@@ -1447,21 +1491,16 @@ document.getElementById('msgForm').addEventListener('submit',function(e){
  if(!text)return;
  btn.disabled=true;
  said.textContent='שולח.';
- fetch('https://formsubmit.co/ajax/'+MAILBOX,{
-  method:'POST',
-  headers:{'Content-Type':'application/json',Accept:'application/json'},
-  body:JSON.stringify({_subject:'הודעה מהמוניטור',_template:'table',הודעה:text,קוד:myCode()})
- }).then(function(r){
-  if(!r.ok)throw new Error('bad');
+ sendText('הודעה מהמוניטור',text,'הודעה').then(function(how){
   var p=pending();
   p.push({at:new Date().toISOString(),text:text});
   savePending(p);
   box.value='';
-  said.textContent='נשלח.';
+  said.textContent=how==='ntfy'?'נשלח בערוץ הגיבוי. הגיע אליי.':'נשלח.';
   markSent('text');renderSent();
   renderThread();
  }).catch(function(){
-  said.textContent='השליחה לא עברה. נסה שוב, או שלח מייל רגיל.';
+  said.textContent='שני הערוצים לא ענו. תבדוק חיבור ותנסה שוב.';
  }).then(function(){btn.disabled=false;});
 });
 
@@ -1524,18 +1563,26 @@ function reallySend(list){
    +' והמגבלה היא 10MB. תשלח פחות קבצים בבת אחת, או תעלה לדרייב ותכתוב לי כאן את השם.';
   fBtn.disabled=false;return;
  }
- if(!putFiles(list)){fSaid.textContent='הדפדפן לא נתן להחליף את הקבצים. תבחר שוב ותשלח.';fBtn.disabled=false;return;}
- document.getElementById('fNext').value=location.href.split('#')[0]+'#sent';
  var cap=document.getElementById('fCap').value.trim();
  var voice=list.length===1&&/^voice-/.test(list[0].name);
  var deflt=voice?'הודעה קולית מהמוניטור'
    :(list.length>1?list.length+' קבצים מהמוניטור':'קובץ מהמוניטור');
- document.getElementById('fNote').value=cap||deflt;
- document.getElementById('fCode').value=myCode();
  markSent(voice?'voice':'file');
- fForm.action='https://formsubmit.co/'+MAILBOX;
  fSaid.textContent=list.length>1?('שולח '+list.length+' קבצים.'):'שולח.';
- fForm.submit();
+ // This used to be a plain form.submit(), which navigated away. When the
+ // mailbox was over quota the whole page became a Rate Limit notice and the
+ // recording was simply lost. Sending in place keeps the page, and lets the
+ // backup channel take over without him noticing.
+ sendFiles(list,cap||deflt).then(function(how){
+  document.getElementById('fCap').value='';
+  fSaid.textContent=how==='ntfy'?'נשלח בערוץ הגיבוי. הגיע אליי.':'נשלח.';
+  var q=pending();
+  q.push({at:new Date().toISOString(),text:cap||deflt});
+  savePending(q);
+  renderSent();renderThread();
+ }).catch(function(){
+  fSaid.textContent='שני הערוצים לא ענו. תבדוק חיבור ותשלח שוב.';
+ }).then(function(){fBtn.disabled=false;});
 }
 // Images are shrunk one after another so the batch is ready before it is sent.
 function shrinkAll(list,done){
@@ -1752,21 +1799,17 @@ document.getElementById('mailForm').addEventListener('submit',function(e){
  var full=MAILTAG+' '+text;
  btn.disabled=true;
  said.textContent='שולח.';
- fetch('https://formsubmit.co/ajax/'+MAILBOX,{
-  method:'POST',
-  headers:{'Content-Type':'application/json',Accept:'application/json'},
-  body:JSON.stringify({_subject:'בקשת מייל מהמוניטור',_template:'table',הודעה:full,קוד:myCode()})
- }).then(function(r){
-  if(!r.ok)throw new Error('bad');
+ sendText('בקשת מייל מהמוניטור',full,'בקשת מייל').then(function(how){
   var q=pending();
   q.push({at:new Date().toISOString(),text:full});
   savePending(q);
   box.value='';
-  said.textContent='נשלח. אני בודק את התיבה כל ארבע דקות.';
+  said.textContent=how==='ntfy'?'נשלח בערוץ הגיבוי. אני בודק כל ארבע דקות.'
+   :'נשלח. אני בודק את התיבה כל ארבע דקות.';
   markSent('mail');renderSent();
   renderMail();renderThread();
  }).catch(function(){
-  said.textContent='השליחה לא עברה. נסה שוב.';
+  said.textContent='שני הערוצים לא ענו. תבדוק חיבור ותנסה שוב.';
  }).then(function(){btn.disabled=false;});
 });
 
