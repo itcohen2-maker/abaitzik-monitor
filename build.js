@@ -403,6 +403,14 @@ section{margin-bottom:30px}
  background:linear-gradient(90deg,#b8860b,#ffd76e,#f0b429,#fff3c4,#d4a017);
  -webkit-background-clip:text;background-clip:text;color:transparent;
  filter:drop-shadow(0 1px 0 rgba(0,0,0,.25))}
+/* One vocabulary for every microphone: red while recording, amber while it is
+   on its way to me, green when it landed, grey when it did not. */
+#micBtn.sending,#micFab.sending,#recBtn.sending,#recBig.sending{
+ background:linear-gradient(180deg,#ffd257,var(--yellow))!important;animation:none!important;opacity:1}
+#micBtn.sent,#micFab.sent,#recBtn.sent,#recBig.sent{
+ background:linear-gradient(180deg,#5cc36f,var(--green))!important;animation:none!important;opacity:1}
+#micBtn.failed,#micFab.failed,#recBtn.failed,#recBig.failed{
+ background:#5b6472!important;animation:none!important;opacity:1}
 .toast{position:fixed;z-index:80;inset-inline:16px;bottom:calc(76px + env(safe-area-inset-bottom));
  margin-inline:auto;max-width:340px;text-align:center;
  background:var(--surface);border:1px solid var(--line);border-radius:14px;
@@ -1764,12 +1772,14 @@ function reallySend(list){
  // backup channel take over without him noticing.
  sendFiles(list,cap||deflt).then(function(how){
   document.getElementById('fCap').value='';
+  paintMics('ok');
   sendSay(how==='ntfy'?'נשלח בערוץ הגיבוי. הגיע אליי.':'נשלח. קלטתי.');
   var q=pending();
   q.push({at:new Date().toISOString(),text:cap||deflt});
   savePending(q);
   renderSent();renderThread();
  }).catch(function(){
+  paintMics('bad');
   sendSay('שני הערוצים לא ענו. תבדוק חיבור ותשלח שוב.');
  }).then(function(){fBtn.disabled=false;});
 }
@@ -1870,6 +1880,7 @@ function recCleanup(){
  if(recTimer){clearInterval(recTimer);recTimer=null;}
  if(recStream){recStream.getTracks().forEach(function(t){t.stop();});recStream=null;}
  recBtn.classList.remove('on');
+ paintMics('send');
 }
 function recStart(){
  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){
@@ -1884,11 +1895,11 @@ function recStart(){
   rec.ondataavailable=function(ev){if(ev.data&&ev.data.size)recChunks.push(ev.data);};
   rec.onstop=function(){
    recCleanup();
-   if(recAbort){recAbort=false;recModal(false);recSaid.textContent='ההקלטה בוטלה.';recBtn.disabled=false;return;}
+   if(recAbort){recAbort=false;recModal(false);recSaid.textContent='ההקלטה בוטלה.';recBtn.disabled=false;paintMics('idle');return;}
    recModal(false);
    var type=(rec&&rec.mimeType)||'audio/webm';
    var b=new Blob(recChunks,{type:type});
-   if(!b.size){recSaid.textContent='לא נקלט כלום. תנסה שוב.';recBtn.disabled=false;return;}
+   if(!b.size){recSaid.textContent='לא נקלט כלום. תנסה שוב.';recBtn.disabled=false;paintMics('bad');return;}
    var ext=type.indexOf('mp4')>-1?'m4a':(type.indexOf('ogg')>-1?'ogg':'webm');
    var stampName='voice-'+new Date().toISOString().slice(0,19).replace(/[:T]/g,'')+'.'+ext;
    var file=new File([b],stampName,{type:type});
@@ -1899,8 +1910,8 @@ function recStart(){
   };
   rec.start();
   recModal(true);
-  recBtn.classList.add('on');
   recBtn.disabled=false;
+  paintMics('rec');
   recBtn.setAttribute('aria-label','עצירת ההקלטה ושליחה');
   recSaid.textContent='מקליט 0:00. לחיצה נוספת עוצרת ושולחת.';
   recTimer=setInterval(recTick,1000);
@@ -1985,12 +1996,28 @@ micBtn.onclick=toggleRec;
 // and any error are visible wherever the recording was started from.
 new MutationObserver(function(){
  micSaid.textContent=recSaid.textContent;
- var on=!!(rec&&rec.state==='recording');
- micBtn.classList.toggle('on',on);
- var fab=document.getElementById('micFab');
- if(fab){fab.classList.toggle('on',on);fab.setAttribute('aria-label',on?'מקליט, לחיצה עוצרת':'דבר אליי');}
- micBtn.setAttribute('aria-label',on?'עצירת ההקלטה ושליחה':'דבר אליי');
 }).observe(recSaid,{childList:true,characterData:true,subtree:true});
+
+// idle, rec, send, ok, bad. Every microphone on the page wears the same one.
+var micTimer=null;
+function paintMics(state){
+ clearTimeout(micTimer);
+ var ids=['micBtn','micFab','recBtn','recBig'];
+ var label={rec:'מקליט, לחיצה עוצרת ושולחת',send:'שולח אליי',
+  ok:'נשלח',bad:'לא נשלח',idle:'דבר אליי'}[state]||'דבר אליי';
+ ids.forEach(function(id){
+  var el=document.getElementById(id);
+  if(!el)return;
+  el.classList.remove('on','sending','sent','failed');
+  if(state==='rec')el.classList.add('on');
+  if(state==='send')el.classList.add('sending');
+  if(state==='ok')el.classList.add('sent');
+  if(state==='bad')el.classList.add('failed');
+  el.setAttribute('aria-label',label);
+ });
+ // The finished states are a flash, not a mode, so they clear themselves.
+ if(state==='ok'||state==='bad')micTimer=setTimeout(function(){paintMics('idle');},2600);
+}
 // The mail pane is the same channel as the chat, filtered to the mail thread:
 // every message on either side that starts with "מייל:" belongs here.
 var MAILTAG='מייל:';
