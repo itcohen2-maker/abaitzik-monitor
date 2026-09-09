@@ -403,6 +403,11 @@ section{margin-bottom:30px}
  background:linear-gradient(90deg,#b8860b,#ffd76e,#f0b429,#fff3c4,#d4a017);
  -webkit-background-clip:text;background-clip:text;color:transparent;
  filter:drop-shadow(0 1px 0 rgba(0,0,0,.25))}
+.threadbar{display:flex;justify-content:flex-end;margin-bottom:8px}
+.cpall{font:600 12.5px Heebo,sans-serif;color:var(--accent);cursor:pointer;
+ background:var(--surface);border:1px solid var(--line);border-radius:999px;
+ min-height:34px;padding:0 14px}
+.cpall:active{background:var(--accent);color:#fff;border-color:var(--accent)}
 .cp{margin-inline-start:8px;font:600 11px Heebo,sans-serif;color:var(--accent);
  background:transparent;border:1px solid var(--line);border-radius:999px;
  padding:2px 9px;cursor:pointer;vertical-align:middle}
@@ -835,6 +840,9 @@ section{margin-bottom:30px}
 </section>
 
 <section id="pM" hidden>
+ <div class="threadbar">
+  <button type="button" id="copyAll" class="cpall">העתקת כל השיחה</button>
+ </div>
  <div class="thread" id="thread"></div>
  <form id="msgForm">
   <textarea id="msgText" rows="2"
@@ -1125,6 +1133,19 @@ function fallbackCopy(t,done){
  try{document.execCommand('copy');done();}catch(e){}
  document.body.removeChild(a);
 }
+document.getElementById('copyAll').onclick=function(){
+ var b=this;
+ var all=(D.chat||[]).filter(function(m){return !isMail(m);})
+  .slice().sort(function(a,b2){return (a.at||'')<(b2.at||'')?-1:1;});
+ if(!all.length)return;
+ var t=all.map(function(m){
+  return (m.from==='itzik'?'איציק':'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');
+ }).join(String.fromCharCode(10,10));
+ var done=function(){b.textContent='הועתק';setTimeout(function(){b.textContent='העתקת כל השיחה';},1500);};
+ if(navigator.clipboard&&navigator.clipboard.writeText){
+  navigator.clipboard.writeText(t).then(done,function(){fallbackCopy(t,done);});
+ }else fallbackCopy(t,done);
+};
 function newestClaude(){
  var c=(D.chat||[]).filter(function(m){return m.from==='claude';});
  return c.length?c[c.length-1].at||'':'';
@@ -1701,21 +1722,26 @@ function reallySend(list){
  var deflt=voice?'הודעה קולית מהמוניטור'
    :(list.length>1?list.length+' קבצים מהמוניטור':'קובץ מהמוניטור');
  markSent(voice?'voice':'file');
- fSaid.textContent=list.length>1?('שולח '+list.length+' קבצים.'):'שולח.';
+ sendSay(list.length>1?('שולח '+list.length+' קבצים.'):'שולח.');
  // This used to be a plain form.submit(), which navigated away. When the
  // mailbox was over quota the whole page became a Rate Limit notice and the
  // recording was simply lost. Sending in place keeps the page, and lets the
  // backup channel take over without him noticing.
  sendFiles(list,cap||deflt).then(function(how){
   document.getElementById('fCap').value='';
-  fSaid.textContent=how==='ntfy'?'נשלח בערוץ הגיבוי. הגיע אליי.':'נשלח.';
+  sendSay(how==='ntfy'?'נשלח בערוץ הגיבוי. הגיע אליי.':'נשלח. קלטתי.');
   var q=pending();
   q.push({at:new Date().toISOString(),text:cap||deflt});
   savePending(q);
   renderSent();renderThread();
  }).catch(function(){
-  fSaid.textContent='שני הערוצים לא ענו. תבדוק חיבור ותשלח שוב.';
+  sendSay('שני הערוצים לא ענו. תבדוק חיבור ותשלח שוב.');
  }).then(function(){fBtn.disabled=false;});
+}
+function sendSay(t){
+ fSaid.textContent=t;
+ var r=document.getElementById('recSaid');
+ if(r)r.textContent=t;
 }
 // Images are shrunk one after another so the batch is ready before it is sent.
 function shrinkAll(list,done){
@@ -1858,10 +1884,30 @@ var fabEl=document.getElementById('micFab');
   fabEl.style.bottom='auto';
   try{localStorage.setItem('micPos',JSON.stringify({x:x,y:y}));}catch(e){}
  }
+ function centre(){
+  var r=fabEl.getBoundingClientRect();
+  place((window.innerWidth-r.width)/2,window.innerHeight-r.height-96);
+ }
  try{
+  if(!localStorage.getItem('micCentred')){
+   localStorage.removeItem('micPos');
+   localStorage.setItem('micCentred','1');
+  }
   var saved=JSON.parse(localStorage.getItem('micPos')||'null');
   if(saved)place(saved.x,saved.y);
  }catch(e){}
+ // Long press recentres it, for the next time it wanders.
+ var hold=null;
+ fabEl.addEventListener('pointerdown',function(){
+  hold=setTimeout(function(){
+   centre();
+   try{localStorage.removeItem('micPos');}catch(e){}
+   moved=true;
+  },650);
+ });
+ ['pointerup','pointermove','pointercancel'].forEach(function(ev){
+  fabEl.addEventListener(ev,function(){clearTimeout(hold);});
+ });
  fabEl.addEventListener('pointerdown',function(e){
   down=true;moved=false;
   var r=fabEl.getBoundingClientRect();
