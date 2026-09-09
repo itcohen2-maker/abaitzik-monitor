@@ -148,7 +148,7 @@ const PAGE = `<!DOCTYPE html>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-<title>מוניטור אבא איציק</title>
+<title>אבא איציק בבנייה עצמית</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700&family=Heebo:wght@300;400;500;700&display=swap">
@@ -389,6 +389,20 @@ section{margin-bottom:30px}
 .g5{background:linear-gradient(150deg,#b39ddb,#673ab7)}
 .g6{background:linear-gradient(150deg,#80deea,#00838f)}
 
+/* ===== self build slot ===== */
+.slot{display:flex;gap:12px;align-items:flex-start;padding:4px 0 10px}
+.slot .plus{flex:0 0 44px;height:44px;border-radius:14px;border:2px dashed var(--line);
+ background:var(--sunk);color:var(--dim);font:300 26px/1 Heebo,sans-serif;display:grid;place-items:center}
+.slot b{display:block;font:500 15px Heebo,sans-serif}
+.slot small{display:block;color:var(--dim);font-weight:300;font-size:13px;line-height:1.55;margin-top:2px}
+.slotForm{display:flex;gap:7px;align-items:center;margin-top:4px}
+.slotForm input{flex:1;min-width:0;background:var(--sunk);border:1px solid var(--line);border-radius:11px;
+ padding:11px 13px;color:var(--ink);font:400 15px Heebo,sans-serif}
+.slotForm button{flex:0 0 auto;border:0;border-radius:11px;padding:11px 14px;cursor:pointer;
+ background:var(--accent);color:#fff;font:500 14px Heebo,sans-serif}
+.slotForm button.ghost{background:var(--sunk);color:var(--ink);border:1px solid var(--line);font-size:17px}
+#slotSaid{color:var(--dim);font-size:13px;font-weight:300;margin-top:7px;min-height:18px}
+
 /* ===== bottom nav ===== */
 .bn{position:fixed;inset-inline:0;bottom:0;z-index:20;display:flex;justify-content:space-around;
  background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(12px);
@@ -406,7 +420,7 @@ section{margin-bottom:30px}
 <header class="hd">
  <div class="ava" aria-hidden="true"><div>א</div></div>
  <div>
-  <div class="t">אבא איציק</div>
+  <div class="t">אבא איציק בבנייה עצמית</div>
   <div class="s" id="built"></div>
  </div>
  <div class="conn">מחובר</div>
@@ -455,6 +469,23 @@ section{margin-bottom:30px}
   <button type="button" class="ic" id="icAdd"><span class="c c-add">
    <svg viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>חדש</button>
  </div>
+
+ <section class="whatsnew" aria-label="בנייה עצמית">
+  <h2>המוניטור בונה את עצמו</h2>
+  <div class="slot">
+   <div class="plus" aria-hidden="true">+</div>
+   <div>
+    <b>איזו אפליקציה תרצה שאוסיף כאן?</b>
+    <small>המקום הזה שמור. תכתוב או תקליט מה חסר לך, זה מגיע אליי, ואני מוסיף בסבב הקרוב. לא רק אפליקציות, כל דבר שתרצה שיהיה במסך הזה.</small>
+   </div>
+  </div>
+  <form id="slotForm" class="slotForm">
+   <input id="slotText" type="text" placeholder="מה להוסיף לי למוניטור?" autocomplete="off">
+   <button type="button" class="ghost" id="slotMic" aria-label="להקליט במקום לכתוב">🎤</button>
+   <button type="submit">שלח</button>
+  </form>
+  <div id="slotSaid"></div>
+ </section>
 
  <div class="grid">
   <button type="button" class="gt g1" id="gChat"><b>💬 פנייה אליי</b><small>צ׳אט, קול, קובץ</small></button>
@@ -722,7 +753,7 @@ function updateDot(){
  var d=document.getElementById('mDot');if(!d)return;
  var n=newestClaude();
  d.hidden=!(n&&n>chatSeen());
- document.title=(d.hidden?'':'(1) ')+'המוניטור של אבא איציק';
+ document.title=(d.hidden?'':'(1) ')+'אבא איציק בבנייה עצמית';
 }
 var PANES={h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN'};
 var NAVS={h:'nH',q:'nQ',l:'nL',r:'nR',m:'nM'};
@@ -781,6 +812,29 @@ document.getElementById('netSeg').addEventListener('click',function(e){
   ics[i].addEventListener('click',function(ev){ev.preventDefault();openNet(this.getAttribute('data-net'));});
  }
 })();
+
+// The open slot. Whatever Itzik types or says here lands in the same chat
+// channel as everything else, so the monitor grows from his own requests.
+function wireSlot(){
+ var f=document.getElementById('slotForm');
+ if(!f)return;
+ f.addEventListener('submit',function(e){
+  e.preventDefault();
+  var box=document.getElementById('slotText');
+  var v=box.value.trim();
+  if(!v)return;
+  var m=document.getElementById('msgText');
+  m.value='בנייה עצמית: '+v;
+  document.getElementById('msgForm').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));
+  box.value='';
+  document.getElementById('slotSaid').textContent='נשלח. אני מוסיף את זה ומעדכן אותך במייל.';
+ });
+ document.getElementById('slotMic').onclick=function(){
+  pane('m');markChatSeen();
+  var mb=document.getElementById('micBtn');if(mb)mb.click();
+ };
+}
+
 function pane(w){
  for(var k in PANES){document.getElementById(PANES[k]).hidden=(k!==w);}
  for(var n in NAVS){document.getElementById(NAVS[n]).setAttribute('aria-pressed',n===w);}
@@ -806,6 +860,7 @@ document.getElementById('gReports').onclick=function(){pane('r');};
 document.getElementById('gMail').onclick=function(){pane('e');};
 document.getElementById('gPill').onclick=function(){askInChat('לקחתי כדור עכשיו. ');};
 document.getElementById('gAsk').onclick=function(){askInChat('');};
+wireSlot();
 document.getElementById('icMail').onclick=function(){pane('e');};
 document.getElementById('icAdd').onclick=function(){askInChat('מודול חדש שאני רוצה: ');};
 document.getElementById('urgBtn').onclick=function(){askInChat('דחוף: ');};
