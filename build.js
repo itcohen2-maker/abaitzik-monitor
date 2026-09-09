@@ -82,7 +82,15 @@ function build() {
     .map(m => ({ at: m.at, from: m.from, text: m.text }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? -1 : 1));
 
+  const openCmds = loadDocs('commands')
+    .filter(c => !c.done && /^[0-9]/.test(c.id))
+    .map(c => ({ at: c.at, text: c.text }))
+    .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
+  const now = loadDocs('status').find(d => d.id === 'now') || null;
+
   const payload = {
+    now: now ? { at: now.at, text: now.text, next: now.next } : null,
+    openCmds,
     builtAt: new Date().toISOString(),
     counts: {
       pending: pending.length,
@@ -158,6 +166,15 @@ h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance
  padding:11px 13px;color:var(--ink);font:500 14px Heebo,sans-serif;box-shadow:var(--shadow)}
 .links a span{font-size:17px}
 .links a small{display:block;color:var(--dim);font-weight:300;font-size:12px}
+.whatsnew{background:var(--surface);border:1px solid var(--line);border-radius:13px;
+ padding:14px 16px 8px;margin-top:18px;box-shadow:var(--shadow)}
+.whatsnew h2{margin-bottom:8px}
+.wn{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line);font-size:15px}
+.wn:first-of-type{border-top:0}
+.wn .n{font:500 20px/1 "Frank Ruhl Libre",Georgia,serif;min-width:26px;text-align:center;color:var(--accent)}
+.wn .n.hot{color:#e5484d}
+.wn .n.zero{color:var(--dim)}
+.wn small{color:var(--dim);font-weight:300;display:block;font-size:13px}
 .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:22px 0 26px}
 .tile{position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--line);
  border-radius:13px;padding:14px 15px;box-shadow:var(--shadow)}
@@ -299,6 +316,13 @@ section{margin-bottom:30px}
   <div>שיטת הפירה<small>דף הנחיתה של גזר</small></div>
  </a>
 </nav>
+
+<section class="whatsnew" aria-label="מה חדש">
+ <h2>מה חדש</h2>
+ <div class="wn" id="wnChat"></div>
+ <div class="wn" id="wnCmds"></div>
+ <div class="wn" id="wnNow"></div>
+</section>
 
 <div class="tiles">
  <div class="tile wait"><div class="k">ממתין לתשובה</div><div class="v" id="tP">0</div></div>
@@ -494,7 +518,17 @@ function markChatSeen(){
  try{localStorage.setItem('chatSeen',newestClaude());}catch(e){}
  var d=document.getElementById('mDot');if(d)d.hidden=true;
 }
+function renderNew(){
+ var c=(D.chat||[]).filter(function(m){return m.from==='claude'&&(m.at||'')>chatSeen();}).length;
+ var el=document.getElementById('wnChat');
+ el.innerHTML='<span class="n '+(c?'hot':'zero')+'">'+c+'</span><div>'+(c?'תשובות שעוד לא קראת':'אין תשובות שלא קראת')+'<small>לחיצה על צ׳אט פותחת אותן</small></div>';
+ var K=D.openCmds||[];
+ document.getElementById('wnCmds').innerHTML='<span class="n '+(K.length?'':'zero')+'">'+K.length+'</span><div>'+(K.length?'משימות פתוחות ממך':'אין משימות פתוחות')+(K.length?'<small>'+esc(K[0].text).slice(0,90)+'</small>':'')+'</div>';
+ var N=D.now;
+ document.getElementById('wnNow').innerHTML='<span class="n">·</span><div>'+(N?esc(N.text):'שקט כרגע')+(N&&N.next?'<small>הבא בתור: '+esc(N.next)+'</small>':'')+(N?'<small>'+esc(stamp(N.at))+'</small>':'')+'</div>';
+}
 function updateDot(){
+ renderNew();
  var d=document.getElementById('mDot');if(!d)return;
  var n=newestClaude();
  d.hidden=!(n&&n>chatSeen());
