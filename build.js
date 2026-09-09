@@ -130,20 +130,42 @@ const PAGE = `<!DOCTYPE html>
  --wait:#d99b45;--shadow:none}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--ground);color:var(--ink);direction:rtl;
- font:400 16px/1.65 Heebo,system-ui,"Segoe UI",Arial,sans-serif}
+ font:400 16px/1.65 Heebo,system-ui,"Segoe UI",Arial,sans-serif;
+ background-image:radial-gradient(120% 60% at 100% 0,var(--accent-soft) 0,transparent 60%);
+ background-repeat:no-repeat}
 .wrap{max-width:620px;margin:0 auto;padding:22px 18px 64px}
-h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0 0 6px;text-wrap:balance}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+.mark{width:42px;height:42px;flex:0 0 42px;border-radius:13px;display:grid;place-items:center;
+ background:linear-gradient(145deg,var(--accent),color-mix(in srgb,var(--accent) 55%,#000));
+ color:#fff;font:700 19px/1 "Frank Ruhl Libre",Georgia,serif;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance}
 .sub{color:var(--dim);font-size:14px;font-weight:300}
+.pill{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:4px 11px;
+ border-radius:999px;background:var(--accent-soft);color:var(--accent);
+ font:500 12px Heebo,sans-serif}
+.pill i{width:7px;height:7px;border-radius:50%;background:var(--accent);
+ animation:pulse 2.4s infinite;font-style:normal}
+.links{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px;
+ margin:20px 0 4px}
+.links a{display:flex;align-items:center;gap:9px;text-decoration:none;
+ background:var(--surface);border:1px solid var(--line);border-radius:12px;
+ padding:11px 13px;color:var(--ink);font:500 14px Heebo,sans-serif;box-shadow:var(--shadow)}
+.links a span{font-size:17px}
+.links a small{display:block;color:var(--dim);font-weight:300;font-size:12px}
 .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:22px 0 26px}
-.tile{background:var(--surface);border:1px solid var(--line);border-radius:11px;
- padding:13px 14px;box-shadow:var(--shadow)}
+.tile{position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--line);
+ border-radius:13px;padding:14px 15px;box-shadow:var(--shadow)}
+.tile:before{content:"";position:absolute;inset-block-start:0;inset-inline:0;height:3px;
+ background:var(--accent);opacity:.85}
+.tile.wait:before{background:var(--wait)}
 .tile .k{font-size:12px;color:var(--dim)}
 .tile .v{font:500 28px/1.15 "Frank Ruhl Libre",Georgia,serif;
  font-variant-numeric:tabular-nums;margin-top:3px}
 .tile.wait .v{color:var(--wait)}
 h2{font:500 15px/1.3 Heebo,sans-serif;margin:0 0 11px;color:var(--dim);letter-spacing:.04em}
 section{margin-bottom:30px}
-.seg{display:flex;gap:4px;background:var(--sunk);border-radius:10px;padding:4px;margin-bottom:14px}
+.seg{display:flex;gap:4px;background:var(--sunk);border-radius:12px;padding:4px;margin-bottom:14px;
+ border:1px solid var(--line)}
 .seg button{flex:1;position:relative;background:transparent;color:var(--dim);border:0;border-radius:7px;
  padding:8px 4px;font:500 14px Heebo,sans-serif;cursor:pointer}
 .dot{position:absolute;top:4px;inset-inline-end:6px;width:9px;height:9px;border-radius:50%;
@@ -244,8 +266,25 @@ section{margin-bottom:30px}
 </head>
 <body>
 <div class="wrap">
-<h1>מוניטור אבא איציק</h1>
-<div class="sub">מי פנה, מה נענה, ומה עוד מחכה.</div>
+<div class="brand">
+ <div class="mark" aria-hidden="true">א</div>
+ <div>
+  <h1>מוניטור אבא איציק</h1>
+  <div class="sub">מי פנה, מה נענה, ומה עוד מחכה.</div>
+ </div>
+</div>
+<div class="pill"><i></i>מתעדכן אוטומטית</div>
+
+<nav class="links" aria-label="קישורים מהירים">
+ <a href="https://itzik-site.vercel.app/" target="_blank" rel="noopener">
+  <span aria-hidden="true">&#127959;</span>
+  <div>האתר<small>איציק אימונים נגישים</small></div>
+ </a>
+ <a href="https://itzik-site.vercel.app/gezer" target="_blank" rel="noopener">
+  <span aria-hidden="true">&#129365;</span>
+  <div>שיטת הפירה<small>דף הנחיתה של גזר</small></div>
+ </a>
+</nav>
 
 <div class="tiles">
  <div class="tile wait"><div class="k">ממתין לתשובה</div><div class="v" id="tP">0</div></div>
