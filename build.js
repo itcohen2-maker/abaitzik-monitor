@@ -598,7 +598,15 @@ section{margin-bottom:30px}
 .micfab:before{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--surface)}
 .micfab svg{position:relative;z-index:1;width:38px;height:38px;stroke:var(--ink)}
 .micfab svg rect{fill:var(--ink)}
-.micfab.on{background:var(--red);animation:mpulse 1.1s infinite;opacity:1}
+.micfab{box-shadow:0 0 0 3px rgba(66,133,244,.28),0 0 26px 6px rgba(66,133,244,.45),
+ 0 10px 26px rgba(0,0,0,.45)}
+.micfab.on{background:var(--red);animation:mpulse 1.1s infinite;opacity:1;
+ box-shadow:0 0 0 3px rgba(234,67,53,.32),0 0 34px 10px rgba(234,67,53,.55),
+ 0 10px 26px rgba(0,0,0,.45)}
+.micfab.sending{box-shadow:0 0 0 3px rgba(251,188,5,.32),0 0 30px 8px rgba(251,188,5,.5),
+ 0 10px 26px rgba(0,0,0,.45)}
+.micfab.sent{box-shadow:0 0 0 3px rgba(52,168,83,.35),0 0 34px 10px rgba(52,168,83,.55),
+ 0 10px 26px rgba(0,0,0,.45)}
 .micfab.dragging{opacity:.6;transition:none}
 .micfab.placed{left:auto;transform:none}
 .micfab.on:before{background:var(--red)}
