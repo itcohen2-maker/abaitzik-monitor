@@ -329,6 +329,10 @@ section{margin-bottom:30px}
   <span aria-hidden="true">&#129365;</span>
   <div>שיטת הפירה<small>דף הנחיתה של גזר</small></div>
  </a>
+ <a href="plan.html">
+  <span aria-hidden="true">&#128736;</span>
+  <div>תכנון 2.0<small>המסך החדש, לאישורך</small></div>
+ </a>
 </nav>
 
 <section class="whatsnew" aria-label="מה חדש">
