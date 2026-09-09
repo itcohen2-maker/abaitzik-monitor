@@ -183,6 +183,15 @@ h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance
 .alerts small{display:block;color:var(--dim);font-size:12.5px;line-height:1.5;margin-top:2px}
 .abtn{flex:0 0 auto;text-decoration:none;background:var(--accent);color:#fff;border-radius:10px;
  padding:10px 16px;font:500 14px Heebo,sans-serif;white-space:nowrap}
+.codebox{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+ padding:13px 15px;margin-top:14px;box-shadow:var(--shadow)}
+.codebox b{display:block;font:500 15px Heebo,sans-serif}
+.codebox small{display:block;color:var(--dim);font-size:12.5px;line-height:1.5;margin:2px 0 9px}
+.coderow{display:flex;gap:8px}
+#codeInput{flex:1;background:var(--sunk);color:var(--ink);border:1px solid var(--line);
+ border-radius:10px;padding:9px 12px;font:400 16px Heebo,sans-serif}
+#codeSave{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:9px 18px;
+ font:500 14px Heebo,sans-serif;cursor:pointer}
 .install{font-size:12.5px;color:var(--dim);font-weight:300;line-height:1.5;margin:8px 4px 0}
 @media(display-mode:standalone){.install{display:none}}
 .links{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px;
@@ -509,6 +518,15 @@ section{margin-bottom:30px}
  </div>
  <a class="abtn" id="ntfyBtn" href="https://ntfy.sh/abaitzik-cf9044bdcfa8" target="_blank" rel="noopener">הפעלת התראות</a>
 </div>
+<div class="codebox" id="codeBox" hidden>
+ <b>קוד אישי</b>
+ <small>מקלידים פעם אחת בנייד שלך והוא נשמר במכשיר. כל הודעה שתשלח תישא אותו, וכל פנייה בלעדיו אני מתעלם ממנה ומדווח לך. הקוד לא נמצא בקוד של הדף.</small>
+ <div class="coderow">
+  <input type="text" id="codeInput" inputmode="numeric" autocomplete="off" placeholder="קוד קצר, למשל 4 ספרות">
+  <button type="button" id="codeSave">שמירה</button>
+ </div>
+ <div class="msgsaid" id="codeSaid"></div>
+</div>
 <div class="install" id="installHint">להתקנה כאפליקציה על מסך הבית: בספארי לוחצים שיתוף ואז "הוספה למסך הבית". באנדרואיד: תפריט ואז "התקנת אפליקציה".</div>
 
 <nav class="links" aria-label="קישורים מהירים">
@@ -578,6 +596,7 @@ section{margin-bottom:30px}
   <input type="hidden" name="_subject" value="קובץ מהמוניטור">
   <input type="hidden" name="_next" id="fNext" value="">
   <input type="hidden" name="הודעה" id="fNote" value="">
+  <input type="hidden" name="קוד" id="fCode" value="">
   <div class="seg" role="group" aria-label="איכות">
    <button type="button" id="qF" aria-pressed="true">מתוך קובץ</button>
    <button type="button" id="qN" aria-pressed="false">רגיל</button>
@@ -848,6 +867,25 @@ document.getElementById('nM').onclick=function(){pane('m');markChatSeen();};
 
 // Home shortcuts. The mail and "new module" circles have no screen of their
 // own yet, so they open the chat with the request already started.
+function myCode(){
+ try{return localStorage.getItem('monitorCode')||'';}catch(e){return '';}
+}
+function showCodeBox(){
+ var box=document.getElementById('codeBox');
+ box.hidden=false;
+ var c=myCode();
+ document.getElementById('codeSaid').textContent=c?('הקוד שמור במכשיר הזה: '+c):'עוד לא נקבע קוד במכשיר הזה.';
+ if(c)document.getElementById('codeInput').value=c;
+}
+document.getElementById('codeSave').onclick=function(){
+ var v=document.getElementById('codeInput').value.trim();
+ var said=document.getElementById('codeSaid');
+ if(!v){said.textContent='תקליד קוד קודם.';return;}
+ try{localStorage.setItem('monitorCode',v);said.textContent='נשמר. מעכשיו כל הודעה מהמכשיר הזה נושאת אותו.';}
+ catch(e){said.textContent='הדפדפן לא נתן לשמור. נסה בלי גלישה פרטית.';}
+};
+showCodeBox();
+
 function askInChat(prefix){
  pane('m');markChatSeen();
  var box=document.getElementById('msgText');
@@ -899,7 +937,7 @@ document.getElementById('msgForm').addEventListener('submit',function(e){
  fetch('https://formsubmit.co/ajax/'+MAILBOX,{
   method:'POST',
   headers:{'Content-Type':'application/json',Accept:'application/json'},
-  body:JSON.stringify({_subject:'הודעה מהמוניטור',_template:'table',הודעה:text})
+  body:JSON.stringify({_subject:'הודעה מהמוניטור',_template:'table',הודעה:text,קוד:myCode()})
  }).then(function(r){
   if(!r.ok)throw new Error('bad');
   var p=pending();
@@ -958,6 +996,7 @@ function reallySend(file){
  var cap=document.getElementById('fCap').value.trim();
  var voice=/^voice-/.test(file.name);
  document.getElementById('fNote').value=cap||(voice?'הודעה קולית מהמוניטור':'קובץ מהמוניטור');
+ document.getElementById('fCode').value=myCode();
  fForm.action='https://formsubmit.co/'+MAILBOX;
  fSaid.textContent='שולח.';
  fForm.submit();
@@ -1104,7 +1143,7 @@ document.getElementById('mailForm').addEventListener('submit',function(e){
  fetch('https://formsubmit.co/ajax/'+MAILBOX,{
   method:'POST',
   headers:{'Content-Type':'application/json',Accept:'application/json'},
-  body:JSON.stringify({_subject:'בקשת מייל מהמוניטור',_template:'table',הודעה:full})
+  body:JSON.stringify({_subject:'בקשת מייל מהמוניטור',_template:'table',הודעה:full,קוד:myCode()})
  }).then(function(r){
   if(!r.ok)throw new Error('bad');
   var q=pending();
