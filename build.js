@@ -229,6 +229,7 @@ section{margin-bottom:30px}
  border-bottom-inline-start-radius:4px}
 .bub.you{align-self:flex-end;background:var(--surface);
  border:1px solid var(--line);border-bottom-inline-end-radius:4px}
+.bub a{color:inherit;text-decoration:underline;word-break:break-all}
 .bub.pend{opacity:.6}
 .hint{font-size:13px;color:var(--dim);font-weight:300;margin-top:14px;line-height:1.6}
 #msgForm{display:flex;flex-direction:column;gap:10px}
@@ -441,6 +442,13 @@ function pending(){
 function savePending(a){
  try{localStorage.setItem('pendingMsgs',JSON.stringify(a));}catch(e){}
 }
+function linkify(t){
+ var parts=String(t==null?'':t).split(new RegExp('(https?://[^ <>]+)','g'));
+ return parts.map(function(x,i){
+  if(i%2){return '<a href="'+esc(x)+'" target="_blank" rel="noopener">'+esc(x)+'</a>';}
+  return esc(x);
+ }).join('');
+}
 function renderThread(){
  var baked=(D.chat||[]).slice();
  var sent=baked.filter(function(m){return m.from==='itzik';})
@@ -459,7 +467,7 @@ function renderThread(){
   var mine=m.from==='itzik';
   return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')+'">'
    +'<span class="w">'+(mine?'אתה':'קלוד')+' · '+esc(stamp(m.at))
-   +(m.pend?' · ממתין':'')+'</span>'+esc(m.text)+'</div>';
+   +(m.pend?' · ממתין':'')+'</span>'+linkify(m.text)+'</div>';
  }).join('');
 }
 function newestClaude(){
