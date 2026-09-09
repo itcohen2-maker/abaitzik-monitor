@@ -403,6 +403,35 @@ section{margin-bottom:30px}
  background:linear-gradient(90deg,#b8860b,#ffd76e,#f0b429,#fff3c4,#d4a017);
  -webkit-background-clip:text;background-clip:text;color:transparent;
  filter:drop-shadow(0 1px 0 rgba(0,0,0,.25))}
+.cp{margin-inline-start:8px;font:600 11px Heebo,sans-serif;color:var(--accent);
+ background:transparent;border:1px solid var(--line);border-radius:999px;
+ padding:2px 9px;cursor:pointer;vertical-align:middle}
+.cp:active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* The lock covers everything, so it is defined before the app it hides. */
+.lock{display:none}
+.locked .lock{display:grid;position:fixed;inset:0;z-index:99;
+ place-items:center;padding:24px;background:var(--bg)}
+.locked .wrap,.locked .micfab,.locked .bn,.locked .recwrap{display:none!important}
+.lockbox{width:100%;max-width:340px;text-align:center;
+ background:var(--surface);border:1px solid var(--line);border-radius:22px;
+ padding:30px 22px;box-shadow:var(--shadow)}
+.lockbox .em{font-size:44px;line-height:1;margin-bottom:12px}
+.lockbox b{display:block;font:700 20px Heebo,sans-serif;margin-bottom:6px}
+.lockbox small{display:block;color:var(--dim);font-size:13px;line-height:1.6;margin-bottom:18px}
+.lockbox button{width:100%;min-height:48px;border:0;border-radius:999px;cursor:pointer;
+ font:700 16px Heebo,sans-serif;color:#fff;
+ background:linear-gradient(180deg,#6ea8ff,var(--blue));
+ box-shadow:0 2px 8px rgba(66,133,244,.45),inset 0 1px 0 rgba(255,255,255,.35)}
+.lockbox button:active{background:linear-gradient(180deg,var(--blue),#1b63d6);box-shadow:none}
+.lockbox .alt{margin-top:10px;background:transparent;color:var(--accent);
+ box-shadow:none;font-weight:500;font-size:14px;min-height:38px}
+.lockrow{display:flex;gap:8px;margin-top:12px}
+.lockrow input{flex:1;min-height:46px;text-align:center;border-radius:14px;
+ border:1px solid var(--line);background:var(--bg);color:var(--ink);
+ font:600 18px Heebo,sans-serif;letter-spacing:.3em}
+.lockrow button{flex:0 0 92px}
+
 .conn{margin-inline-start:auto;font:700 15px Heebo,sans-serif;color:#fff;
  background:linear-gradient(180deg,#5cc36f,var(--green));
  min-height:44px;padding:0 20px;border-radius:999px;border:0;cursor:pointer;
@@ -558,6 +587,29 @@ section{margin-bottom:30px}
 </style>
 </head>
 <body>
+<div class="lock" id="lockWrap">
+ <div class="lockbox">
+  <div class="em" aria-hidden="true">&#128274;</div>
+  <b>המוניטור נעול</b>
+  <small id="lockSaid">מזדהים כדי להיכנס.</small>
+  <button type="button" id="lockFace">כניסה בזיהוי פנים</button>
+  <div class="lockrow" id="lockRow" hidden>
+   <input type="password" id="lockCode" inputmode="numeric" autocomplete="off" placeholder="הקוד">
+   <button type="button" id="lockGo">כניסה</button>
+  </div>
+  <button type="button" class="alt" id="lockUseCode">כניסה עם הקוד</button>
+ </div>
+</div>
+<script>
+// This runs before the page is painted on purpose. Itzik asked for the lock to
+// be the first thing on screen, not something that appears a moment later over
+// content that was already readable. Nothing here can wait for the main script.
+(function(){try{
+ if(localStorage.getItem('faceCred')||localStorage.getItem('monitorCode')){
+  document.documentElement.className+=' locked';
+ }
+}catch(e){}})();
+</script>
 <div class="wrap">
 <header class="hd">
  <div class="ava" aria-hidden="true"><div>א</div></div>
@@ -1040,14 +1092,38 @@ function renderThread(){
   host.innerHTML='<div class="empty">עוד לא דיברנו כאן. תכתוב משהו למטה.</div>';
   return;
  }
- host.innerHTML=all.map(function(m){
+ host.innerHTML=all.map(function(m,i){
   var mine=m.from==='itzik';
   var fresh=!mine&&(m.at||'')>seen;
   return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')+(fresh?' fresh':' read')+'">'
    +'<span class="w">'+(mine?'אתה':'קלוד')+' · '+esc(stamp(m.at))
    +(m.pend?' · נשלח, עוד לא נקרא':'')+statusTag(m)
-   +(fresh?' · <em class="badge">חדש</em>':(mine?'':' · נקרא'))+'</span>'+linkify(m.text)+'</div>';
+   +(fresh?' · <em class="badge">חדש</em>':(mine?'':' · נקרא'))
+   +'<button type="button" class="cp" data-i="'+i+'" aria-label="העתקה">העתקה</button>'
+   +'</span>'+linkify(m.text)+'</div>';
  }).join('');
+ // Copying by hand out of a bubble on a phone is a fight with the selection
+ // handles, and he wanted my answers pasteable into his own notes.
+ Array.prototype.forEach.call(host.querySelectorAll('.cp'),function(b){
+  b.onclick=function(e){
+   e.stopPropagation();
+   var t=all[Number(b.getAttribute('data-i'))].text||'';
+   var done=function(){b.textContent='הועתק';setTimeout(function(){b.textContent='העתקה';},1400);};
+   if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(done,function(){fallbackCopy(t,done);});
+   }else fallbackCopy(t,done);
+  };
+ });
+}
+// Safari refuses the clipboard API in some contexts, so a hidden textarea and
+// execCommand stay as the way that always works.
+function fallbackCopy(t,done){
+ var a=document.createElement('textarea');
+ a.value=t;a.setAttribute('readonly','');
+ a.style.position='fixed';a.style.opacity='0';
+ document.body.appendChild(a);a.select();a.setSelectionRange(0,t.length);
+ try{document.execCommand('copy');done();}catch(e){}
+ document.body.removeChild(a);
 }
 function newestClaude(){
  var c=(D.chat||[]).filter(function(m){return m.from==='claude';});
@@ -1404,6 +1480,63 @@ document.getElementById('codeSave').onclick=function(){
   document.getElementById('codeRow').hidden=true;}
  catch(e){said.textContent='הדפדפן לא נתן לשמור. נסה בלי גלישה פרטית.';}
 };
+// ---- the lock ----
+// The class was already put on <html> by the early script, so by the time this
+// runs the app is hidden. All that is left is a way back in.
+//
+// This gates the screen on this device. It is not encryption: the page is
+// public and the code lives in this browser's storage, so anyone with the
+// address still sees the built page. It stops the person standing next to him,
+// which is exactly what he asked for. A real gate needs a server.
+function locked(){return /(^| )locked( |$)/.test(document.documentElement.className);}
+function unlock(){
+ document.documentElement.className=
+  document.documentElement.className.replace(/(^| )locked( |$)/,' ').trim();
+ // The bubbles were laid out while hidden, so the thread is drawn again.
+ try{renderThread();renderSent();}catch(e){}
+}
+function lockSay(t){document.getElementById('lockSaid').textContent=t;}
+function lockFaceTry(auto){
+ if(!faceId()){
+  // No face enrolled on this device, so the code is the only way in.
+  document.getElementById('lockFace').hidden=true;
+  if(!myCode()){unlock();return;}
+  document.getElementById('lockRow').hidden=false;
+  document.getElementById('lockUseCode').hidden=true;
+  lockSay('תקליד את הקוד האישי כדי להיכנס.');
+  return;
+ }
+ lockSay('ממתין לזיהוי פנים...');
+ faceCheck(function(ok){
+  if(ok){unlock();return;}
+  lockSay(auto?'מזדהים כדי להיכנס.':'הזיהוי נכשל. אפשר לנסות שוב או להיכנס עם הקוד.');
+ });
+}
+if(locked()){
+ document.getElementById('lockFace').onclick=function(){lockFaceTry(false);};
+ // Offering a code entry when no code was ever set would be a door that opens
+ // onto a wall, so it is not offered at all.
+ if(!myCode())document.getElementById('lockUseCode').hidden=true;
+ document.getElementById('lockUseCode').onclick=function(){
+  document.getElementById('lockRow').hidden=false;
+  document.getElementById('lockCode').focus();
+  lockSay('תקליד את הקוד האישי.');
+ };
+ var lockGo=function(){
+  var v=document.getElementById('lockCode').value.trim();
+  if(v&&v===myCode()){unlock();return;}
+  document.getElementById('lockCode').value='';
+  lockSay('קוד לא נכון.');
+ };
+ document.getElementById('lockGo').onclick=lockGo;
+ document.getElementById('lockCode').addEventListener('keydown',function(e){
+  if(e.key==='Enter')lockGo();
+ });
+ // Face ID is offered the moment the page opens, so in the good case he only
+ // looks at the phone and he is in.
+ setTimeout(function(){lockFaceTry(true);},220);
+}
+
 showCodeBox();
 
 function askInChat(prefix){
@@ -1782,7 +1915,7 @@ function renderMail(){
   host.innerHTML='<div class="empty">עוד לא ביקשת ממני כלום מהתיבה.</div>';
   return;
  }
- host.innerHTML=all.map(function(m){
+ host.innerHTML=all.map(function(m,i){
   var mine=m.from==='itzik';
   return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')+'">'
    +'<span class="w">'+(mine?'אתה':'קלוד')+' · '+esc(stamp(m.at))
