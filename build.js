@@ -470,6 +470,31 @@ section{margin-bottom:30px}
 #slotSaid{color:var(--dim);font-size:13px;font-weight:300;margin-top:7px;min-height:18px}
 
 /* ===== bottom nav ===== */
+.micfab{position:fixed;inset-inline-start:16px;bottom:calc(74px + env(safe-area-inset-bottom));z-index:40;
+ width:62px;height:62px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;
+ background:conic-gradient(from 0deg,var(--blue),var(--red),var(--yellow),var(--green),var(--blue));
+ box-shadow:0 10px 24px rgba(0,0,0,.35)}
+.micfab:before{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--surface)}
+.micfab svg{position:relative;z-index:1;width:28px;height:28px;stroke:var(--ink)}
+.micfab svg rect{fill:var(--ink)}
+.micfab.on{background:var(--red);animation:mpulse 1.1s infinite}
+.micfab.on:before{background:var(--red)}
+.micfab.on svg{stroke:#fff}
+.micfab.on svg rect{fill:#fff}
+.micfab:active{transform:scale(.94)}
+.pillbox{text-align:center;padding:10px 0 4px}
+.pillbig{width:min(230px,66vw);height:min(230px,66vw);border-radius:50%;border:0;cursor:pointer;
+ display:grid;place-items:center;gap:4px;color:#fff;font-family:Heebo,sans-serif;
+ background:linear-gradient(180deg,#b39ddb,#5e35b1);
+ box-shadow:0 18px 44px rgba(94,53,177,.45),inset 0 4px 0 rgba(255,255,255,.4)}
+.pillbig .pb-i{font-size:56px;line-height:1}
+.pillbig .pb-t{font:800 22px Heebo,sans-serif}
+.pillbig:active{transform:scale(.96)}
+.pillbig.done{background:linear-gradient(180deg,#69f0ae,var(--green));
+ box-shadow:0 18px 44px rgba(52,168,83,.45),inset 0 4px 0 rgba(255,255,255,.4)}
+.pillinfo{margin-top:20px;font-size:16px;color:var(--ink);line-height:1.9}
+.pillinfo b{display:block;font:800 22px Heebo,sans-serif;color:var(--accent)}
+.pillinfo small{display:block;color:var(--dim);font-size:13px;font-weight:300}
 .recwrap{position:fixed;inset:0;z-index:60;display:grid;place-items:center;
  background:rgba(8,10,16,.82);backdrop-filter:blur(6px)}
 .recbox{width:min(340px,88vw);background:var(--surface);border-radius:26px;padding:26px 22px 20px;
@@ -661,6 +686,17 @@ section{margin-bottom:30px}
  <div id="netBody"></div>
 </section>
 
+<section id="pP" hidden>
+ <h2>הכדור</h2>
+ <div class="pillbox">
+  <button type="button" id="pillBig" class="pillbig">
+   <span class="pb-i">✓</span>
+   <span class="pb-t">לקחתי כדור</span>
+  </button>
+  <div class="pillinfo" id="pillInfo"></div>
+ </div>
+</section>
+
 <section id="pG" hidden>
  <h2>דפי נחיתה</h2>
  <div id="landList"></div>
@@ -724,6 +760,13 @@ section{margin-bottom:30px}
   התשובות שלי מופיעות כאן למעלה.
  </div>
 </section>
+
+<button type="button" id="micFab" class="micfab" aria-label="דבר אליי">
+ <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="9" y="3" width="6" height="11" rx="3" fill="#fff" stroke="none"/>
+  <path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8.5 21h7"/>
+ </svg>
+</button>
 
 <div class="recwrap" id="recModal" hidden>
  <div class="recbox">
@@ -931,7 +974,37 @@ function updateDot(){
  d.hidden=!(n&&n>chatSeen());
  document.title=(d.hidden?'':'(1) ')+'אבא איציק בבנייה עצמית';
 }
-var PANES={h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD'};
+var PANES={h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP'};
+// Three doses a day, so the next one is six hours out. A default until Itzik
+// names fixed hours.
+var PILLGAP=6*3600*1000;
+function lastPill(){
+ var c=(D.chat||[]).filter(function(m){return m.from==='itzik'&&/לקחתי כדור/.test(m.text||'');});
+ var local=0;
+ try{local=Number(localStorage.getItem('lastPill')||0);}catch(e){}
+ var fromChat=c.length?Date.parse(c[c.length-1].at||'')||0:0;
+ return Math.max(local,fromChat);
+}
+function renderPill(){
+ var box=document.getElementById('pillInfo');
+ var btn=document.getElementById('pillBig');
+ if(!box||!btn)return;
+ var t=lastPill();
+ if(!t){
+  btn.className='pillbig';
+  box.innerHTML='<b>עוד לא נרשמה מנה</b><small>לחיצה על העיגול מסמנת שלקחת ומתחילה את הספירה למנה הבאה.</small>';
+  return;
+ }
+ var next=t+PILLGAP,left=next-Date.now();
+ function hm(x){return x.getHours()+':'+String(x.getMinutes()).padStart(2,'0');}
+ btn.className='pillbig'+(left>0?' done':'');
+ var when=left>0
+  ?('בעוד '+Math.floor(left/3600000)+' שעות ו'+Math.round(left%3600000/60000)+' דקות')
+  :'עכשיו';
+ box.innerHTML='<b>המנה הבאה '+esc(when)+'</b>'
+  +'<div>בשעה '+esc(hm(new Date(next)))+'</div>'
+  +'<small>המנה האחרונה נרשמה ב'+esc(hm(new Date(t)))+'. אזכיר לך גם בהתראה לנייד.</small>';
+}
 // More landing pages are coming, so each one is a line here.
 var LANDING=[
  {name:'שיטת הפירה',note:'מילת המפתח: גזר',url:'https://itzik-site.vercel.app/gezer'},
@@ -1154,7 +1227,14 @@ document.getElementById('gChat').onclick=function(){pane('m');markChatSeen();};
 document.getElementById('gQueue').onclick=function(){openNet('all');};
 document.getElementById('gReports').onclick=function(){pane('r');markReportsSeen();};
 document.getElementById('gMail').onclick=function(){pane('e');};
-document.getElementById('gPill').onclick=function(){askInChat('לקחתי כדור עכשיו. ');};
+document.getElementById('gPill').onclick=function(){pane('p');renderPill();};
+document.getElementById('pillBig').onclick=function(){
+ var box=document.getElementById('msgText');
+ box.value='לקחתי כדור עכשיו.';
+ document.getElementById('msgForm').dispatchEvent(new Event('submit',{cancelable:true}));
+ try{localStorage.setItem('lastPill',String(Date.now()));}catch(e){}
+ renderPill();
+};
 document.getElementById('gAsk').onclick=function(){askInChat('');};
 wireSlot();
 paintReportDot();
@@ -1393,6 +1473,7 @@ function toggleRec(){
 }
 recBtn.onclick=toggleRec;
 document.getElementById('recBig').onclick=function(){recStop();};
+document.getElementById('micFab').onclick=toggleRec;
 document.getElementById('recCancel').onclick=function(){
  if(rec&&rec.state==='recording'){recAbort=true;recStop();}
  else{recModal(false);}
@@ -1407,6 +1488,8 @@ new MutationObserver(function(){
  micSaid.textContent=recSaid.textContent;
  var on=!!(rec&&rec.state==='recording');
  micBtn.classList.toggle('on',on);
+ var fab=document.getElementById('micFab');
+ if(fab){fab.classList.toggle('on',on);fab.setAttribute('aria-label',on?'מקליט, לחיצה עוצרת':'דבר אליי');}
  micBtn.setAttribute('aria-label',on?'עצירת ההקלטה ושליחה':'דבר אליי');
 }).observe(recSaid,{childList:true,characterData:true,subtree:true});
 // The mail pane is the same channel as the chat, filtered to the mail thread:
@@ -1462,6 +1545,7 @@ document.getElementById('mailForm').addEventListener('submit',function(e){
 
 render();
 renderThread();
+renderPill();
 renderMail();
 updateDot();
 pane('h');
