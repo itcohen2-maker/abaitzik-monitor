@@ -161,6 +161,7 @@ const PAGE = `<!DOCTYPE html>
 :root{--blue:#4285F4;--red:#EA4335;--yellow:#FBBC05;--green:#34A853;
  --ground:#f6f8fc;--surface:#fff;--sunk:#eef2fa;--ink:#1f2430;--dim:#5f6b7f;
  --line:#e3e9f4;--accent:#1a73e8;--accent-soft:#e8f0fe;--wait:#e37400;
+ --gold:#f0b429;
  --shadow:0 2px 8px rgba(30,40,70,.07)}
 @media (prefers-color-scheme:dark){:root{--ground:#0f1218;--surface:#181d27;--sunk:#141922;
  --ink:#eef1f7;--dim:#9aa5b8;--line:#252c39;--accent:#8ab4f8;--accent-soft:#1b2b45;
@@ -411,11 +412,25 @@ section{margin-bottom:30px}
  background:linear-gradient(180deg,#5cc36f,var(--green))!important;animation:none!important;opacity:1}
 #micBtn.failed,#micFab.failed,#recBtn.failed,#recBig.failed{
  background:#5b6472!important;animation:none!important;opacity:1}
+.quickrow{display:flex;gap:8px;margin-bottom:12px}
+.quickrow input{flex:1;min-height:48px;border-radius:14px;padding:0 14px;
+ border:1px solid var(--line);background:var(--surface);color:var(--ink);
+ font:400 15px Heebo,sans-serif}
+.quickrow button{flex:0 0 92px;min-height:48px;border:0;border-radius:999px;cursor:pointer;
+ font:700 15px Heebo,sans-serif;color:#fff;
+ background:linear-gradient(180deg,#6ea8ff,var(--blue));
+ box-shadow:0 2px 6px rgba(66,133,244,.4),inset 0 1px 0 rgba(255,255,255,.3)}
+.quickrow button:active{background:linear-gradient(180deg,var(--blue),#1b63d6);box-shadow:none}
+.quickrow button[disabled]{opacity:.55}
 .toast{position:fixed;z-index:80;inset-inline:16px;bottom:calc(76px + env(safe-area-inset-bottom));
- margin-inline:auto;max-width:340px;text-align:center;
- background:var(--surface);border:1px solid var(--line);border-radius:14px;
- padding:12px 16px;font:600 14px Heebo,sans-serif;color:var(--ink);
+ margin-inline:auto;max-width:360px;text-align:center;
+ background:var(--surface);border:1px solid var(--line);border-radius:16px;
+ padding:14px 18px;font:600 15px Heebo,sans-serif;color:var(--ink);
  box-shadow:0 12px 30px rgba(0,0,0,.45)}
+.toast.good{color:#fff;border:0;font:800 17px Heebo,sans-serif;
+ background:linear-gradient(180deg,#5cc36f,var(--green));
+ box-shadow:0 0 0 2px var(--gold),0 14px 34px rgba(52,168,83,.45)}
+.toast.bad{color:#fff;border:0;background:linear-gradient(180deg,#ff6a5e,var(--red))}
 .threadbar{display:flex;justify-content:flex-end;margin-bottom:8px}
 .cpall{font:600 12.5px Heebo,sans-serif;color:var(--accent);cursor:pointer;
  background:var(--surface);border:1px solid var(--line);border-radius:999px;
@@ -654,6 +669,13 @@ section{margin-bottom:30px}
   </div>
   <button type="button" id="urgBtn" class="urg"><span aria-hidden="true">📎</span>העלאת<br>קובץ</button>
  </div>
+
+ <form class="quickrow" id="quickForm">
+  <input type="text" id="quickText" autocomplete="off"
+   placeholder="או פשוט תכתוב לי כאן">
+  <button type="submit" id="quickBtn">שליחה</button>
+ </form>
+ <div class="msgsaid" id="quickSaid"></div>
 
  <div class="sent" id="sentCard" hidden></div>
  <button type="button" id="newBtn" class="newbtn">
@@ -1603,6 +1625,27 @@ if(locked()){
 
 showCodeBox();
 
+document.getElementById('quickForm').onsubmit=function(e){
+ e.preventDefault();
+ var box=document.getElementById('quickText');
+ var said=document.getElementById('quickSaid');
+ var btn=document.getElementById('quickBtn');
+ var text=box.value.trim();
+ if(!text)return;
+ btn.disabled=true;said.textContent='שולח.';
+ sendText('הודעה מהמוניטור',text,'הודעה').then(function(how){
+  var p=pending();
+  p.push({at:new Date().toISOString(),text:text});
+  savePending(p);
+  box.value='';
+  said.textContent=how==='ntfy'?'נשלח בערוץ הגיבוי. הגיע אליי.':'נשלח. קלטתי.';
+  markSent('text');renderSent();renderThread();
+  toast(said.textContent);
+ }).catch(function(){
+  said.textContent='שני הערוצים לא ענו. תבדוק חיבור ותנסה שוב.';
+ }).then(function(){btn.disabled=false;});
+};
+
 function askInChat(prefix){
  pane('m');markChatSeen();
  var box=document.getElementById('msgText');
@@ -1795,6 +1838,7 @@ function toast(t){
  var el=document.getElementById('toast');
  if(!el)return;
  el.textContent=t;
+ el.className='toast'+(/נשלח|קלטתי|הגיע/.test(t)?' good':(/לא ענו|לא נשלח/.test(t)?' bad':''));
  el.hidden=false;
  clearTimeout(toastTimer);
  toastTimer=setTimeout(function(){el.hidden=true;},4000);
