@@ -8,131 +8,211 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap">
 <style>
-:root{--bg:#0d0f14;--card:#161a23;--line:#242a37;--ink:#f3f4f8;--dim:#9aa3b5;
- --red:#ff3b5c;--pink:#ff6fb5;--teal:#22d3b0;--blue:#4f8cff;--gold:#ffbf47;--violet:#8b6cff}
+:root{--blue:#4285F4;--red:#EA4335;--yellow:#FBBC05;--green:#34A853;
+ --bg:#f6f8fc;--card:#fff;--ink:#1f2430;--dim:#6b7280;--line:#e5e9f2}
 *{box-sizing:border-box}
-body{margin:0;background:radial-gradient(120% 80% at 50% 0,#1a2140 0,var(--bg) 60%);color:var(--ink);
- font:400 16px/1.7 Heebo,system-ui,sans-serif}
-.wrap{max-width:680px;margin:0 auto;padding:24px 18px 80px}
-h1{font:900 30px/1.15 Heebo;margin:0 0 6px;background:linear-gradient(90deg,var(--pink),var(--gold));
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.7 Heebo,system-ui,sans-serif}
+.wrap{max-width:680px;margin:0 auto;padding:22px 18px 90px}
+h1{font:900 30px/1.15 Heebo;margin:0 0 4px}
+h1 b{background:linear-gradient(90deg,var(--blue),var(--red),var(--yellow),var(--green));
  -webkit-background-clip:text;background-clip:text;color:transparent}
-.lead{color:var(--dim);margin:0 0 22px}
-h2{font:700 19px Heebo;margin:34px 0 10px}
-p{margin:0 0 10px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px;margin:12px 0}
-.card b{color:#fff}
-ol,ul{padding-inline-start:20px;margin:6px 0}
-li{margin:4px 0}
-.tag{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700;margin-inline-start:6px}
-.t-now{background:#1e3d35;color:var(--teal)}.t-next{background:#3b2a12;color:var(--gold)}.t-later{background:#2a2440;color:#c4b5ff}
+.lead{color:var(--dim);margin:0 0 20px}
+h2{font:800 20px Heebo;margin:36px 0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px 18px;margin:12px 0;
+ box-shadow:0 6px 20px rgba(30,40,70,.06)}
+.card b{color:#111}
+ul,ol{padding-inline-start:20px;margin:6px 0}li{margin:5px 0}
+.g{display:inline-block;width:12px;height:12px;border-radius:50%;margin-inline-end:6px;vertical-align:middle}
 
-.phone{width:min(360px,100%);margin:18px auto;background:#0b0d12;border:10px solid #1c202b;border-radius:44px;
- padding:22px 14px 26px;box-shadow:0 30px 60px rgba(0,0,0,.6),inset 0 0 0 1px #2a3040}
-.ph-top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.ph-mark{width:40px;height:40px;border-radius:14px;background:linear-gradient(145deg,var(--teal),#0b6b58);
- display:grid;place-items:center;font-weight:900;color:#fff;box-shadow:0 8px 20px rgba(34,211,176,.35)}
-.ph-title{font:900 18px Heebo;line-height:1.1}
-.ph-sub{font-size:11.5px;color:var(--dim)}
-.urgent{display:flex;align-items:center;justify-content:center;gap:10px;margin:8px 0 12px;padding:15px;
- border-radius:999px;font:900 17px Heebo;color:#fff;
- background:linear-gradient(180deg,#ff6b84 0,#ff2d55 55%,#c8123a 100%);
- box-shadow:0 10px 26px rgba(255,45,85,.45),inset 0 2px 0 rgba(255,255,255,.55),inset 0 -3px 0 rgba(0,0,0,.25);
- animation:glow 2s infinite}
-@keyframes glow{50%{box-shadow:0 10px 36px rgba(255,45,85,.75),inset 0 2px 0 rgba(255,255,255,.55),inset 0 -3px 0 rgba(0,0,0,.25)}}
-.strip{background:#131722;border:1px solid var(--line);border-radius:16px;padding:10px 12px;margin-bottom:12px;font-size:13px}
-.strip div{display:flex;gap:8px;align-items:center;padding:3px 0}
-.strip .n{font-weight:900;font-size:16px;min-width:20px;text-align:center}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
-.app{aspect-ratio:1;border-radius:22px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
- font:700 12.5px Heebo;color:#fff;text-align:center;
- box-shadow:inset 0 2px 0 rgba(255,255,255,.35),inset 0 -4px 0 rgba(0,0,0,.28),0 8px 18px rgba(0,0,0,.35)}
-.app span{font-size:24px;filter:drop-shadow(0 2px 2px rgba(0,0,0,.4))}
-.app small{font-weight:400;font-size:10px;opacity:.85}
-.a1{background:linear-gradient(160deg,#5ad0ff,#2a7bff)}
-.a2{background:linear-gradient(160deg,#ff8fc8,#ff4fa3)}
-.a3{background:linear-gradient(160deg,#ff5d5d,#d11a1a)}
-.a4{background:linear-gradient(160deg,#4de3c4,#0fa88a)}
-.a5{background:linear-gradient(160deg,#ffd166,#f59e0b)}
-.a6{background:linear-gradient(160deg,#a78bfa,#6d4bff)}
-.a7{background:linear-gradient(160deg,#6ee7f9,#0891b2)}
-.a8{background:linear-gradient(160deg,#fb7185,#be123c)}
-.a9{background:linear-gradient(160deg,#c084fc,#7c3aed)}
-.a10{background:linear-gradient(160deg,#34d399,#059669)}
-.a11{background:linear-gradient(160deg,#fbbf24,#d97706)}
-.a12{background:linear-gradient(160deg,#334155,#1e293b);border:2px dashed #475569;box-shadow:none;color:#94a3b8}
-.foot{margin-top:12px;background:#131722;border:1px solid var(--line);border-radius:16px;padding:10px 12px;font-size:12.5px;color:var(--dim)}
-.q{background:linear-gradient(135deg,#2a1b3d,#1b2440);border:1px solid #3b3560;border-radius:18px;padding:16px 18px;margin-top:26px}
-.q b{color:var(--pink)}
+/* ===== phone ===== */
+.phone{width:min(380px,100%);margin:18px auto;background:#fff;border:12px solid #111;border-radius:48px;
+ padding:20px 14px 14px;box-shadow:0 30px 70px rgba(0,0,0,.35);position:relative;overflow:hidden}
+.phone:before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:110px;height:24px;
+ background:#111;border-radius:0 0 16px 16px}
+.hd{display:flex;align-items:center;gap:10px;margin:10px 0 12px}
+.ava{width:44px;height:44px;border-radius:50%;padding:3px;
+ background:conic-gradient(var(--blue),var(--red),var(--yellow),var(--green),var(--blue))}
+.ava div{width:100%;height:100%;border-radius:50%;background:#fff;display:grid;place-items:center;font:900 18px Heebo;color:#111}
+.hd .t{font:900 17px/1.1 Heebo}.hd .s{font-size:11.5px;color:var(--dim)}
+.pill{margin-inline-start:auto;font:700 11px Heebo;color:#fff;background:var(--green);padding:4px 10px;border-radius:999px}
+
+.voice{display:flex;align-items:center;gap:12px;margin:6px 0 12px}
+.mic{width:96px;height:96px;flex:0 0 96px;border-radius:50%;position:relative;display:grid;place-items:center;
+ background:conic-gradient(from 0deg,var(--blue),var(--red),var(--yellow),var(--green),var(--blue));
+ box-shadow:0 12px 30px rgba(66,133,244,.35);animation:spin 6s linear infinite}
+.mic:after{content:"";position:absolute;inset:6px;border-radius:50%;background:#fff}
+.mic svg{position:relative;z-index:1;width:40px;height:40px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.mic svg{animation:spin 6s linear infinite reverse}
+.vtxt b{display:block;font:900 16px Heebo}
+.vtxt small{color:var(--dim);font-size:11.5px;line-height:1.45;display:block}
+.urgent{flex:0 0 auto;align-self:stretch;display:grid;place-items:center;width:64px;border-radius:22px;
+ background:linear-gradient(180deg,#ff6a5e,var(--red));color:#fff;font:900 12px Heebo;text-align:center;line-height:1.2;
+ box-shadow:0 10px 24px rgba(234,67,53,.4),inset 0 2px 0 rgba(255,255,255,.5)}
+
+.strip{background:#f2f5fb;border-radius:16px;padding:9px 12px;margin-bottom:12px;font-size:12.5px}
+.strip div{display:flex;gap:8px;align-items:center;padding:2px 0}
+.strip .n{font-weight:900;font-size:15px;min-width:18px;text-align:center}
+
+.row{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 8px;scrollbar-width:none}
+.row::-webkit-scrollbar{display:none}
+.ic{flex:0 0 64px;display:flex;flex-direction:column;align-items:center;gap:5px;font:600 10.5px Heebo;color:#333}
+.ic .c{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;position:relative;
+ box-shadow:0 8px 18px rgba(0,0,0,.18),inset 0 2px 0 rgba(255,255,255,.55),inset 0 -3px 0 rgba(0,0,0,.18)}
+.ic .c:after{content:"";position:absolute;top:6px;left:12px;right:12px;height:16px;border-radius:50%;
+ background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,0))}
+.ic svg{width:28px;height:28px;position:relative;z-index:1}
+.ic .b{position:absolute;top:-3px;inset-inline-end:-3px;background:var(--red);color:#fff;font:800 10px/1 Heebo;
+ padding:3px 5px;border-radius:999px;border:2px solid #fff;z-index:2}
+.yt{background:#ff0033}.tt{background:#111}.fb{background:#1877f2}.ig{background:linear-gradient(45deg,#f9ce34,#ee2a7b,#6228d7)}
+.wa{background:#25d366}.gm{background:#fff;border:1px solid #e5e9f2}.st{background:linear-gradient(160deg,#4285F4,#0b57d0)}
+.pg{background:linear-gradient(160deg,#a78bfa,#6d28d9)}.vd{background:linear-gradient(160deg,#fbbf24,#d97706)}
+.add{background:#fff;border:2px dashed #cfd6e4;box-shadow:none}.add:after{display:none}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:4px}
+.tile{border-radius:18px;padding:12px;color:#fff;min-height:74px;display:flex;flex-direction:column;justify-content:space-between;
+ box-shadow:0 8px 20px rgba(0,0,0,.15),inset 0 2px 0 rgba(255,255,255,.35)}
+.tile b{font:800 13.5px Heebo}.tile small{font-size:10.5px;opacity:.9}
+.t1{background:linear-gradient(150deg,#4facfe,var(--blue))}
+.t2{background:linear-gradient(150deg,#ff8a80,var(--red))}
+.t3{background:linear-gradient(150deg,#ffd54f,#f9a825);color:#3b2a00}
+.t4{background:linear-gradient(150deg,#69f0ae,var(--green))}
+
+.nav{display:flex;justify-content:space-around;margin-top:12px;padding:8px 4px 2px;border-top:1px solid var(--line);
+ font:600 10px Heebo;color:var(--dim)}
+.nav div{display:flex;flex-direction:column;align-items:center;gap:2px}
+.nav span{font-size:18px}
+.nav .on{color:var(--blue)}
+
+.cmds{display:grid;grid-template-columns:1fr;gap:8px}
+.cmd{display:flex;gap:10px;align-items:flex-start;background:#f2f5fb;border-radius:14px;padding:10px 12px}
+.cmd i{font-style:normal;font-size:18px}
+.cmd b{display:block;font:700 15px Heebo}
+.cmd small{color:var(--dim);font-size:13px}
+.ok{background:linear-gradient(135deg,#e8f0fe,#e6f4ea);border:1px solid #cfe0fc;border-radius:20px;padding:16px 18px;margin-top:26px}
+.ok b{color:#0b57d0}
 </style>
 </head>
 <body>
 <div class="wrap">
-<h1>המוניטור 2.0</h1>
-<p class="lead">תכנון לפני בנייה. מוצר שאפשר למכור: מסך בית כמו של משחק, כפתור אדום לדחוף, ומודולים שמוסיפים בלחיצה.</p>
+<h1>המוניטור <b>2.0</b></h1>
+<p class="lead">מסך בית כמו של אפליקציה גדולה: צבעי גוגל, כפתורים עגולים מבריקים, מיקרופון במרכז, ואייקונים אמיתיים של כל רשת.</p>
 
 <h2>ככה ייראה מסך הבית</h2>
 <div class="phone">
- <div class="ph-top">
-  <div class="ph-mark">א</div>
-  <div><div class="ph-title">אבא איציק</div><div class="ph-sub">מתעדכן אוטומטית · 3 תשובות חדשות</div></div>
+ <div class="hd">
+  <div class="ava"><div>א</div></div>
+  <div><div class="t">אבא איציק</div><div class="s">מתעדכן אוטומטית · עודכן לפני 2 דק׳</div></div>
+  <div class="pill">מחובר</div>
  </div>
- <div class="urgent">🚨 דחוף אליי</div>
+
+ <div class="voice">
+  <div class="mic">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="9" y="3" width="6" height="11" rx="3" fill="#111" stroke="none"/>
+    <path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8.5 21h7"/>
+   </svg>
+  </div>
+  <div class="vtxt">
+   <b>דבר אליי</b>
+   <small>לוחצים ומדברים. אני מזהה את הקול, מבין את הפקודה ומבצע: "תזכיר לי ב־8 כדור", "חפש במייל מבית חולים", "מה חדש בטיקטוק".</small>
+  </div>
+  <div class="urgent">🚨<br>דחוף</div>
+ </div>
+
  <div class="strip">
-  <div><span class="n" style="color:#ff5d7a">3</span> תשובות שעוד לא קראת</div>
-  <div><span class="n" style="color:#ffbf47">1</span> משימה פתוחה ממך</div>
-  <div><span class="n" style="color:#22d3b0">·</span> עכשיו: בונה את מסך הבית החדש</div>
+  <div><span class="n" style="color:var(--red)">3</span> תשובות חדשות ממני</div>
+  <div><span class="n" style="color:var(--yellow)">1</span> משימה פתוחה ממך</div>
+  <div><span class="n" style="color:var(--green)">·</span> עכשיו: בונה את מסך הבית</div>
  </div>
+
+ <div class="row">
+  <div class="ic"><div class="c yt"><span class="b">4</span>
+   <svg viewBox="0 0 24 24"><path fill="#fff" d="M10 8.5v7l6-3.5z"/></svg></div>יוטיוב</div>
+  <div class="ic"><div class="c tt"><span class="b">12</span>
+   <svg viewBox="0 0 24 24"><path fill="#fff" d="M13 3h3a4 4 0 0 0 4 4v3a7 7 0 0 1-4-1.3V15a5.5 5.5 0 1 1-5.5-5.5c.3 0 .6 0 .9.1v3.1a2.5 2.5 0 1 0 1.6 2.3z"/></svg></div>טיקטוק</div>
+  <div class="ic"><div class="c fb"><span class="b">7</span>
+   <svg viewBox="0 0 24 24"><path fill="#fff" d="M13.5 21v-7h2.4l.4-3h-2.8V9.2c0-.9.3-1.5 1.5-1.5h1.5V5.1c-.3 0-1.2-.1-2.2-.1-2.2 0-3.7 1.3-3.7 3.8V11H8v3h2.6v7z"/></svg></div>פייסבוק</div>
+  <div class="ic"><div class="c ig">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="5"/><circle cx="12" cy="12" r="3.6"/><circle cx="17" cy="7" r="1" fill="#fff" stroke="none"/></svg></div>אינסטגרם</div>
+  <div class="ic"><div class="c wa">
+   <svg viewBox="0 0 24 24"><path fill="#fff" d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3zm0 2a7 7 0 1 1-3.6 13l-.3-.2-2.4.6.7-2.3-.2-.3A7 7 0 0 1 12 5zm-2.6 3.5c-.2 0-.5.1-.7.3-.3.3-1 1-1 2.3s1 2.7 1.2 2.9c.1.2 2 3.1 4.9 4.2 2.4.9 2.9.8 3.4.7.5-.1 1.7-.7 1.9-1.4.2-.7.2-1.2.2-1.4l-.5-.3-1.9-.9c-.3-.1-.4-.1-.6.1l-.9 1.1c-.2.2-.3.2-.6.1-.3-.2-1.2-.5-2.3-1.5-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6l.4-.5.3-.5c.1-.2 0-.4 0-.5l-.9-2.1c-.2-.5-.4-.5-.6-.5z"/></svg></div>וואטסאפ</div>
+  <div class="ic"><div class="c gm"><span class="b">2</span>
+   <svg viewBox="0 0 24 24"><path fill="#EA4335" d="M4 7l8 6 8-6v-1.5L12 11 4 5.5z"/><path fill="#4285F4" d="M4 7v11h3V9.8z"/><path fill="#34A853" d="M20 7v11h-3V9.8z"/><path fill="#FBBC05" d="M4 5.5L12 11l8-5.5V5H4z"/></svg></div>מייל</div>
+  <div class="ic"><div class="c st">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c3 3 3 13 0 16M12 4c-3 3-3 13 0 16"/></svg></div>האתר</div>
+  <div class="ic"><div class="c pg">
+   <svg viewBox="0 0 24 24"><path fill="#fff" d="M4 14c2-5 6-8 11-8l5-2-2 5c0 5-3 9-8 11l-1-3-3-1z"/><circle cx="14" cy="10" r="1.3" fill="#6d28d9"/></svg></div>פגסוס</div>
+  <div class="ic"><div class="c vd">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/></svg></div>ועד הבית</div>
+  <div class="ic"><div class="c add"><svg viewBox="0 0 24 24" fill="none" stroke="#9aa3b5" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></div>חדש</div>
+ </div>
+
  <div class="grid">
-  <div class="app a1"><span>💬</span>פנייה אליי<small>צ׳אט, קול, קובץ</small></div>
-  <div class="app a2"><span>📧</span>מייל<small>חפש, הבא, סכם</small></div>
-  <div class="app a3"><span>⏰</span>תזכורות<small>כדור 3 ביום</small></div>
-  <div class="app a4"><span>📊</span>רשתות<small>מי פנה, מה נענה</small></div>
-  <div class="app a5"><span>▶️</span>יוטיוב</div>
-  <div class="app a6"><span>🎵</span>טיקטוק</div>
-  <div class="app a7"><span>📘</span>פייסבוק</div>
-  <div class="app a8"><span>📸</span>אינסטגרם</div>
-  <div class="app a10"><span>🟢</span>וואטסאפ<small>יומן ציבורי</small></div>
-  <div class="app a9"><span>🏢</span>ועד הבית</div>
-  <div class="app a11"><span>🌐</span>האתר<small>ודפי נחיתה</small></div>
-  <div class="app a12"><span>➕</span>מודול חדש</div>
+  <div class="tile t1"><b>💬 פנייה אליי</b><small>צ׳אט, קול, קובץ · סטטוס לכל הודעה</small></div>
+  <div class="tile t2"><b>⏰ תזכורות</b><small>כדור 3 ביום · "לקחתי" בלחיצה</small></div>
+  <div class="tile t3"><b>📧 מייל</b><small>חפש, הבא, סכם · תשובות כאן</small></div>
+  <div class="tile t4"><b>📊 ניטור רשתות</b><small>מי פנה, מה נענה, מספרים</small></div>
  </div>
- <div class="foot">אנשי קשר · פניות מיוחדות · דוחות · הגדרות</div>
+
+ <div class="nav">
+  <div class="on"><span>🏠</span>בית</div><div><span>💬</span>צ׳אט</div><div><span>📈</span>רשתות</div><div><span>👥</span>אנשי קשר</div><div><span>⚙️</span>הגדרות</div>
+ </div>
 </div>
 
-<h2>מה כל כפתור עושה</h2>
-<div class="card"><b>🚨 דחוף אליי.</b> כפתור אדום זוהר בראש המסך. לוחצים, כותבים או מקליטים, וההודעה עוקפת את התור: אני מקבל התראה בעדיפות הכי גבוהה ומטפל מיד, גם אם אני באמצע משהו אחר. יש גם מצב "התראה יומית": לקבוע משהו שיקפוץ כל יום בשעה קבועה.</div>
-<div class="card"><b>💬 פנייה אליי.</b> מה שיש היום, מסודר יותר: טקסט, קול, קובץ, וסטטוס לכל הודעה (התקבל, בעבודה, בוצע). כל תשובה שלי מגיעה גם כהתראה לנייד.</div>
-<div class="card"><b>📧 מייל.</b> תיבה שכותבים בה בקשה בשפה חופשית: "הגיע משהו מבית חולים?", "תמצא את המייל מהעירייה מהשנה שעברה", "תוציא לי את הקובץ שמישהו שלח". אני מחפש בתיבה, מביא את התשובה או הקובץ לתוך המוניטור, בקצב הבדיקה של המוניטור (כל ארבע דקות).</div>
-<div class="card"><b>⏰ תזכורות.</b> הכדור שלוש פעמים ביום, וכל דבר אחר שתוסיף. כל תזכורת יוצאת כהתראה לנייד ונרשמת בצ׳אט. אפשר לסמן "לקחתי" בלחיצה.</div>
-<div class="card"><b>📊 רשתות, ואז כפתור לכל רשת.</b> מסך אחד עם התמונה הכללית: מי פנה, מה נענה, מה מחכה, ומספרים מול אתמול. ואז יוטיוב, טיקטוק, פייסבוק, אינסטגרם, כל אחד בנפרד: הריל האחרון, תגובות שמחכות, ועוקבים. וואטסאפ מקבל "יומן ציבורי": מה נשלח לעצמך ומתי, בלי לגעת בשיחות של אחרים.</div>
-<div class="card"><b>🏢 ועד הבית.</b> מי שילם, מי לא, ומה פתוח החודש. הנתונים מהקובץ שכבר עבדנו עליו.</div>
-<div class="card"><b>🌐 האתר ודפי נחיתה.</b> קפיצה לאתר, לדף הגזר, ולכל דף נחיתה חדש שנוסיף.</div>
-<div class="card"><b>➕ מודול חדש.</b> משבצת ריקה עם קו מקווקו. המוניטור בנוי כך שכל מודול הוא כרטיס עם שם, אייקון, צבע ותוכן, ולהוסיף אחד זה עניין של דקות. ככה אצל לקוח אחר יהיו כפתורים אחרים באותו מבנה.</div>
-<div class="card"><b>למטה, קבוע:</b> אנשי קשר, פניות מיוחדות, דוחות, והגדרות (צבע, שם, אילו מודולים מוצגים).</div>
+<h2>🎙️ המיקרופון: פקודות קוליות</h2>
+<div class="card">
+<p>לוחצים על העיגול הצבעוני, מדברים, ומשחררים. הקול עובר זיהוי דיבור בעברית (רץ אצלך במחשב, לא יוצא החוצה), ואני מבין מה ביקשת ומבצע. דוגמאות:</p>
+<div class="cmds">
+ <div class="cmd"><i>⏰</i><div><b>"תזכיר לי ב־8 בערב לקחת כדור"</b><small>נכנס לתזכורות, קופץ בשעה כהתראה.</small></div></div>
+ <div class="cmd"><i>📧</i><div><b>"תחפש במייל אם הגיע משהו מבית חולים"</b><small>אני מחפש בתיבה ומחזיר את התשובה או הקובץ למוניטור.</small></div></div>
+ <div class="cmd"><i>📊</i><div><b>"מה חדש בטיקטוק"</b><small>מספרים של היום מול אתמול, ומי פנה.</small></div></div>
+ <div class="cmd"><i>📤</i><div><b>"תעביר את הברכה של ראש השנה לדרייב"</b><small>העברות בין הכלים שלך: דרייב, מייל, המוניטור.</small></div></div>
+ <div class="cmd"><i>🚨</i><div><b>"דחוף: ..."</b><small>כל פקודה שמתחילה ב"דחוף" עוקפת את התור.</small></div></div>
+</div>
+<p style="margin-top:10px"><b>מה שרואים אחרי שמדברים:</b> התמלול מופיע בצ׳אט כהודעה שלך עם סטטוס "התקבל", ואז "בעבודה", ואז "בוצע" עם התוצאה.</p>
+</div>
 
-<h2>איך זה נמכר</h2>
+<h2>🔴 הכפתור האדום</h2>
+<div class="card">"דחוף" ליד המיקרופון. לוחצים, כותבים או מדברים, ואני מקבל התראה בעדיפות מקסימלית עם צליל אחר. בנוסף, בהגדרות אפשר לקבוע התראות יומיות קבועות (למשל "בוקר טוב, זה מה שמחכה היום" ב־08:00).</div>
+
+<h2>⭕ שורת העיגולים</h2>
+<div class="card">
+<p>אייקונים אמיתיים בצבעי המותג, עם מספר אדום כשיש משהו שמחכה. גוללים ימינה ושמאלה, ולוחצים:</p>
+<ul>
+ <li><span class="g" style="background:#ff0033"></span><b>יוטיוב, טיקטוק, פייסבוק, אינסטגרם:</b> הריל האחרון, תגובות שמחכות, עוקבים, ומה עשיתי היום ברשת הזאת.</li>
+ <li><span class="g" style="background:#25d366"></span><b>וואטסאפ:</b> יומן ציבורי בלבד, מה נשלח לעצמך ומתי.</li>
+ <li><span class="g" style="background:#EA4335"></span><b>מייל:</b> הבקשות שלך והתשובות שלי, בלי לפתוח ג׳ימייל.</li>
+ <li><span class="g" style="background:#4285F4"></span><b>האתר:</b> קפיצה לאתר ולדפי הנחיתה (גזר ומה שיבוא).</li>
+ <li><span class="g" style="background:#6d28d9"></span><b>פגסוס:</b> המשחק שלנו. כרגע קפיצה למשחק ולחשבון האינסטגרם שלו, ובקרוב עדכון ומספרים.</li>
+ <li><span class="g" style="background:#f9a825"></span><b>ועד הבית:</b> מי שילם, מי לא, מה פתוח החודש.</li>
+ <li><span class="g" style="background:#cfd6e4"></span><b>חדש:</b> משבצת פתוחה. כל דבר שתרצה להוסיף נכנס כעיגול נוסף באותו סגנון.</li>
+</ul>
+</div>
+
+<h2>🎨 העיצוב</h2>
 <div class="card">
 <ul>
- <li><b>שם, לוגו וצבע</b> לכל לקוח בקובץ הגדרות אחד. אותו קוד, מראה אחר.</li>
- <li><b>מודולים נדלקים ונכבים.</b> לקוח בלי טיקטוק לא רואה טיקטוק.</li>
- <li><b>הכל בנייד</b>, מותקן כאפליקציה, עם התראות אמיתיות.</li>
- <li><b>הערוץ הפרטי</b>: כל לקוח מקבל ערוץ התראות משלו וכתובת משלו.</li>
+ <li><b>צבעי גוגל:</b> <span class="g" style="background:#4285F4"></span>כחול <span class="g" style="background:#EA4335"></span>אדום <span class="g" style="background:#FBBC05"></span>צהוב <span class="g" style="background:#34A853"></span>ירוק, על רקע לבן נקי.</li>
+ <li><b>כפתורים עגולים מבריקים</b> עם ברק למעלה וצל למטה, כמו במשחק.</li>
+ <li><b>המיקרופון</b> עם טבעת צבעונית מסתובבת, האלמנט הכי בולט במסך.</li>
+ <li><b>מצב כהה</b> אוטומטי בלילה, אותם צבעים על רקע כהה.</li>
+ <li><b>שם, לוגו וצבע ראשי</b> מתחלפים בקובץ הגדרות אחד, ככה זה נמכר ללקוח אחר.</li>
 </ul>
 </div>
 
 <h2>סדר הבנייה</h2>
 <div class="card">
 <ol>
- <li>מסך הבית החדש עם הכפתורים והכפתור האדום <span class="tag t-now">מתחיל אחרי אישורך</span></li>
- <li>מודול מייל: תיבת בקשה ותשובות בתוך המוניטור <span class="tag t-now">באותו יום</span></li>
- <li>תזכורות עם "לקחתי" <span class="tag t-next">אחר כך</span></li>
- <li>מסכי הרשתות, אחד אחד <span class="tag t-next">אחר כך</span></li>
- <li>ועד הבית <span class="tag t-later">בהמשך</span></li>
- <li>קובץ הגדרות ללקוח חדש <span class="tag t-later">בהמשך</span></li>
+ <li>מסך הבית: מיקרופון, אדום, עיגולים, ארבעת הכרטיסים, ניווט תחתון.</li>
+ <li>פקודות קוליות: תמלול ← הבנת הפקודה ← ביצוע ← סטטוס בצ׳אט.</li>
+ <li>מודול מייל עם תיבת בקשה.</li>
+ <li>מסכי הרשתות, אחד אחד, ואז פגסוס וועד הבית.</li>
+ <li>קובץ הגדרות ללקוח חדש.</li>
 </ol>
 </div>
 
-<div class="q"><b>מה אני צריך ממך:</b> מילה אחת, "תבנה", ואני מתחיל משלב 1. אם משהו במסך לא מתאים לך, תכתוב מה, ואני מתקן בתכנון לפני שנוגעים בקוד.</div>
+<div class="ok"><b>התוכנית מוכנה.</b> אם זה הכיוון, תכתוב "תבנה" ואני מתחיל משלב 1. אם משהו לא מתאים, תגיד מה ואתקן כאן לפני שנוגעים בקוד.</div>
 </div>
 </body>
 </html>
