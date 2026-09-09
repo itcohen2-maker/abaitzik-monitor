@@ -586,6 +586,24 @@ section{margin-bottom:30px}
 .g5{background:linear-gradient(150deg,#b39ddb,#673ab7)}
 .g6{background:linear-gradient(150deg,#80deea,#00838f)}
 .g7{background:linear-gradient(150deg,#7bd88f,#1e8e4a)}
+.g8{background:linear-gradient(150deg,#ffb74d,#e65100)}
+.lolos{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.lbtn{display:flex;align-items:center;gap:12px;text-align:start;cursor:pointer;
+ border:0;border-radius:18px;padding:14px 16px;color:#fff;text-decoration:none;
+ position:relative;overflow:hidden;isolation:isolate;
+ text-shadow:0 1px 2px rgba(0,0,0,.28);
+ box-shadow:0 8px 18px rgba(20,30,60,.2),inset 0 1px 0 rgba(255,255,255,.5),
+  inset 0 -3px 8px rgba(0,0,0,.2)}
+.lbtn:after{content:"";position:absolute;inset:0;z-index:-1;
+ background:linear-gradient(180deg,rgba(255,255,255,.3),rgba(255,255,255,0) 55%,rgba(0,0,0,.1))}
+.lbtn:active{transform:translateY(2px) scale(.99);box-shadow:0 3px 8px rgba(20,30,60,.26),
+ inset 0 2px 8px rgba(0,0,0,.3)}
+.lbtn span{font-size:26px;line-height:1}
+.lbtn b{display:block;font:700 16px Heebo,sans-serif}
+.lbtn small{font-size:11.5px;opacity:.93;font-weight:300}
+.lb-riv{background:linear-gradient(150deg,#ffb74d,#e65100)}
+.lb-cal{background:linear-gradient(150deg,#5aa9fb,var(--blue))}
+.lb-x{background:linear-gradient(150deg,#b39ddb,#5e35b1)}
 
 .c-dr{background:#fff;border:1px solid var(--line)}
 .item .src{font-size:12.5px;color:var(--accent);font-weight:500;margin-top:4px}
@@ -808,6 +826,7 @@ section{margin-bottom:30px}
   <button type="button" class="gt g5" id="gPill"><b>⏰ לקחתי כדור</b><small>מסמן את המנה ומעדכן אותי</small></button>
   <button type="button" class="gt g6" id="gCam"><b>📷 שלח לי תמונה</b><small>נפתחת המצלמה ומצלמים</small></button>
   <button type="button" class="gt g7" id="gFood"><b>🥗 עקוב אחרי התזונה</b><small>מצלמים או כותבים, ואני מחשב</small></button>
+  <button type="button" class="gt g8" id="gLolos"><b>🧾 לולוס</b><small>ריווחית והיומן</small></button>
  </div>
 
 <div class="tiles">
@@ -892,6 +911,28 @@ section{margin-bottom:30px}
   <button type="button" data-net="instagram" aria-pressed="false">אינסטגרם</button>
  </div>
  <div id="netBody"></div>
+</section>
+
+<section id="pL2" hidden>
+ <h2>לולוס</h2>
+ <div class="lolos">
+  <a class="lbtn lb-riv" href="https://online.rivhit.co.il/" target="_blank" rel="noopener">
+   <span aria-hidden="true">&#129534;</span>
+   <div><b>ריווחית אונליין</b><small>חשבוניות, קבלות, לקוחות ויתרות</small></div>
+  </a>
+  <a class="lbtn lb-cal" href="https://calendar.google.com/calendar/r" target="_blank" rel="noopener">
+   <span aria-hidden="true">&#128197;</span>
+   <div><b>היומן</b><small>הפגישות וההזמנות</small></div>
+  </a>
+  <button type="button" class="lbtn lb-x" id="lolosAsk">
+   <span aria-hidden="true">&#128269;</span>
+   <div><b>בקשת הצלבה</b><small>תשאל אותי מה להצליב ואני בודק</small></div>
+  </button>
+ </div>
+ <div class="hint">
+  ריווחית מחוברת דרך אסימון ולא דרך סיסמה. כשתוציא אותו מההגדרות של ריווחית,
+  אני אוכל למשוך משם נתונים ולהצליב אותם בלי להיכנס לחשבון בכלל.
+ </div>
 </section>
 
 <section id="pF" hidden>
@@ -1356,7 +1397,7 @@ function updateDot(){
  d.hidden=!(n&&n>chatSeen());
  document.title=(d.hidden?'':'(1) ')+'אבא איציק בבנייה עצמית';
 }
-var PANES={h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF'};
+var PANES={h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 var PILLGAP=8*3600*1000;
 function lastPill(){
@@ -1858,6 +1899,8 @@ document.getElementById('gCam').onclick=function(){
 // He sends a photo or a line; I look the values up and write the row back into
 // the food collection. The screen only adds up and displays what is there.
 document.getElementById('gFood').onclick=function(){pane('f');renderFood();};
+on('gLolos',function(){pane('o');});
+on('lolosAsk',function(){askInChat('לולוס: תצליב לי ');});
 function todayKey(){return new Date().toISOString().slice(0,10);}
 function renderFood(){
  var all=(D.food||[]).filter(function(f){return String(f.at||'').slice(0,10)===todayKey();});
