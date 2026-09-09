@@ -205,6 +205,21 @@ h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance
  padding:11px 13px;color:var(--ink);font:500 14px Heebo,sans-serif;box-shadow:var(--shadow)}
 .links a span{font-size:17px}
 .links a small{display:block;color:var(--dim);font-weight:300;font-size:12px}
+.newbtn{width:100%;display:flex;align-items:center;gap:12px;margin:14px 0 10px;padding:15px 17px;
+ border:0;border-radius:18px;cursor:pointer;text-align:start;color:#fff;font-family:Heebo,sans-serif;
+ background:linear-gradient(150deg,#9aa5b8,#6b7688);box-shadow:0 8px 18px rgba(20,30,60,.16)}
+.newbtn .nb-l{flex:1;min-width:0}
+.newbtn b{display:block;font:800 17px Heebo,sans-serif}
+.newbtn small{display:block;font-size:12px;opacity:.92;font-weight:300;margin-top:1px}
+.newbtn .nb-c{flex:0 0 auto;min-width:34px;height:34px;border-radius:999px;display:grid;place-items:center;
+ background:rgba(255,255,255,.25);font:800 16px Heebo,sans-serif;padding:0 9px}
+.newbtn.hot{background:linear-gradient(150deg,#ff6b84,var(--red));
+ box-shadow:0 10px 26px rgba(234,67,53,.45);animation:nbeat 1.3s infinite}
+@keyframes nbeat{
+ 0%{box-shadow:0 10px 26px rgba(234,67,53,.45)}
+ 50%{box-shadow:0 10px 40px rgba(234,67,53,.85)}
+ 100%{box-shadow:0 10px 26px rgba(234,67,53,.45)}}
+@media(prefers-reduced-motion:reduce){.newbtn.hot{animation:none}}
 .whatsnew{background:var(--surface);border:1px solid var(--line);border-radius:13px;
  padding:14px 16px 8px;margin-top:18px;box-shadow:var(--shadow)}
 .whatsnew h2{margin-bottom:8px}
@@ -456,8 +471,11 @@ section{margin-bottom:30px}
   <button type="button" id="urgBtn" class="urg"><span aria-hidden="true">🚨</span>דחוף</button>
  </div>
 
+ <button type="button" id="newBtn" class="newbtn">
+  <span class="nb-l"><b id="nbTitle">מה חדש</b><small id="nbSub"></small></span>
+  <span class="nb-c" id="nbCount">0</span>
+ </button>
  <section class="whatsnew" aria-label="מה חדש">
-  <div class="wn" id="wnChat"></div>
   <div class="wn" id="wnCmds"></div>
   <div class="wn" id="wnNow"></div>
  </section>
@@ -771,10 +789,18 @@ function markChatSeen(){
  try{localStorage.setItem('chatSeen',newestClaude());}catch(e){}
  var d=document.getElementById('mDot');if(d)d.hidden=true;
 }
+function unreadCount(){
+ return (D.chat||[]).filter(function(m){return m.from==='claude'&&(m.at||'')>chatSeen();}).length;
+}
 function renderNew(){
- var c=(D.chat||[]).filter(function(m){return m.from==='claude'&&(m.at||'')>chatSeen();}).length;
- var el=document.getElementById('wnChat');
- el.innerHTML='<span class="n '+(c?'hot':'zero')+'">'+c+'</span><div>'+(c?'תשובות שעוד לא קראת':'אין תשובות שלא קראת')+'<small>לחיצה על צ׳אט פותחת אותן</small></div>';
+ var c=unreadCount();
+ var btn=document.getElementById('newBtn');
+ btn.classList.toggle('hot',c>0);
+ document.getElementById('nbCount').textContent=c?c:'✓';
+ document.getElementById('nbTitle').textContent=c?'יש מה חדש':'הכל מעודכן';
+ document.getElementById('nbSub').textContent=c
+  ?(c===1?'תשובה אחת מחכה לך. לחיצה פותחת אותה.':c+' תשובות מחכות לך. לחיצה פותחת אותן.')
+  :'אין תשובות שלא קראת.';
  var K=D.openCmds||[];
  document.getElementById('wnCmds').innerHTML='<span class="n '+(K.length?'':'zero')+'">'+K.length+'</span><div>'+(K.length?'משימות פתוחות ממך':'אין משימות פתוחות')+(K.length?'<small>'+esc(K[0].text).slice(0,90)+'</small>':'')+'</div>';
  var N=D.now;
@@ -900,6 +926,21 @@ function pane(w){
 }
 document.getElementById('reloadBtn').onclick=function(){
  location.replace(location.pathname+'?v='+Date.now());
+};
+// A short beep when something is waiting. Browsers block audio until the page
+// has been touched, so it only ever plays on his own tap, never on load.
+function beep(){
+ try{
+  var A=window.AudioContext||window.webkitAudioContext;if(!A)return;
+  var ctx=new A();var o=ctx.createOscillator();var g=ctx.createGain();
+  o.type='sine';o.frequency.value=880;g.gain.value=.06;
+  o.connect(g);g.connect(ctx.destination);o.start();
+  setTimeout(function(){o.stop();ctx.close();},160);
+ }catch(e){}
+}
+document.getElementById('newBtn').onclick=function(){
+ if(unreadCount())beep();
+ pane('m');markChatSeen();renderNew();
 };
 document.getElementById('nH').onclick=function(){pane('h');};
 document.getElementById('nQ').onclick=function(){pane('q');};
