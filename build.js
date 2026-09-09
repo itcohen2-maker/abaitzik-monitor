@@ -80,6 +80,7 @@ function build() {
     .map(c => ({
       name: c.name,
       network: c.network,
+      source: c.source,
       note: c.note,
       at: c.at,
       status: c.status,
@@ -430,6 +431,7 @@ section{margin-bottom:30px}
 .g5{background:linear-gradient(150deg,#b39ddb,#673ab7)}
 .g6{background:linear-gradient(150deg,#80deea,#00838f)}
 
+.item .src{font-size:12.5px;color:var(--accent);font-weight:500;margin-top:4px}
 /* ===== self build slot ===== */
 .slot{display:flex;gap:12px;align-items:flex-start;padding:4px 0 10px}
 .slot .plus{flex:0 0 44px;height:44px;border-radius:14px;border:2px dashed var(--line);
@@ -546,7 +548,7 @@ section{margin-bottom:30px}
 <div class="tiles">
  <div class="tile wait"><div class="k">ממתין לתשובה</div><div class="v" id="tP">0</div></div>
  <div class="tile"><div class="k">נענה היום</div><div class="v" id="tT">0</div></div>
- <div class="tile wait"><div class="k">אנשי קשר פתוחים</div><div class="v" id="tL">0</div></div>
+ <div class="tile wait"><div class="k">לידים פתוחים</div><div class="v" id="tL">0</div></div>
 </div>
 
 <div class="alerts" id="alerts">
@@ -584,7 +586,7 @@ section{margin-bottom:30px}
 </section>
 
 <section id="pL" hidden>
- <h2>מי יצר קשר ורוצה המשך</h2>
+ <h2>לידים: מי פנה ורוצה המשך</h2>
  <div id="leads"></div>
 </section>
 
@@ -666,7 +668,7 @@ section{margin-bottom:30px}
  <button type="button" id="nH" aria-pressed="true"><span aria-hidden="true">🏠</span>בית</button>
  <button type="button" id="nM" aria-pressed="false"><span aria-hidden="true">💬</span>צ׳אט<i class="dot" id="mDot" hidden></i></button>
  <button type="button" id="nQ" aria-pressed="false"><span aria-hidden="true">📈</span>רשתות</button>
- <button type="button" id="nL" aria-pressed="false"><span aria-hidden="true">👥</span>אנשי קשר</button>
+ <button type="button" id="nL" aria-pressed="false"><span aria-hidden="true">🎯</span>לידים</button>
  <button type="button" id="nR" aria-pressed="false"><span aria-hidden="true">📄</span>דוחות</button>
 </nav>
 
@@ -710,6 +712,7 @@ function logHtml(log){
    return '<li><span class="d">'+esc(stamp(e.at))+'</span>'+esc(e.text)+'</li>';
  }).join('')+'</ol>';
 }
+var SRC={site:'טופס יצירת קשר באתר',tiktok:'הודעה פרטית בטיקטוק',facebook:'פייסבוק',instagram:'אינסטגרם',youtube:'יוטיוב',phone:'טלפון',person:'הכרות אישית'};
 function leadRow(c){
  var closed=c.status==='done';
  var subject='פרטים: '+(c.name||'');
@@ -719,6 +722,7 @@ function leadRow(c){
   +'<span class="chip">'+esc(NET[c.network]||c.network||'אחר')+'</span>'
   +'<span class="chip">'+(closed?'טופל':'ממתין')+'</span>'
   +'<span>'+ago(c.at)+'</span></div>'
+  +'<div class="src">מקור: '+esc(c.source||SRC[c.network]||NET[c.network]||'לא ידוע')+'</div>'
   +(c.note?'<div class="body">'+esc(c.note)+'</div>':'')
   +logHtml(c.log)
   +'<a class="ask" href="mailto:?subject='+encodeURIComponent(subject)
