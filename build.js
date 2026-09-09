@@ -219,6 +219,24 @@ section{margin-bottom:30px}
  border-radius:10px;padding:11px 26px;font:500 15px Heebo,sans-serif;cursor:pointer}
 #msgBtn[disabled]{opacity:.5;cursor:default}
 .msgsaid{color:var(--accent);font-size:14px;min-height:20px;margin-top:9px}
+#fileForm{display:flex;flex-direction:column;gap:10px;margin-top:22px;
+ border-top:1px solid var(--line);padding-top:18px}
+#fileForm h3{margin:0;font:500 15px Heebo,sans-serif;color:var(--ink)}
+#fPick{font:400 14px Heebo,sans-serif;color:var(--dim)}
+#fCap{background:var(--surface);color:var(--ink);border:1px solid var(--line);
+ border-radius:11px;padding:11px 14px;font:400 16px Heebo,sans-serif;box-shadow:var(--shadow)}
+#fBtn{align-self:flex-start;background:var(--accent);color:#fff;border:0;
+ border-radius:10px;padding:11px 26px;font:500 15px Heebo,sans-serif;cursor:pointer}
+#fBtn[disabled]{opacity:.5;cursor:default}
+.fmeta{font-size:13px;color:var(--dim);font-weight:300;min-height:18px}
+.fmeta.bad{color:#e5484d}
+#recWrap{display:flex;align-items:center;gap:12px;margin-top:6px}
+#recBtn{width:54px;height:54px;flex:0 0 54px;border-radius:50%;border:0;cursor:pointer;
+ background:var(--accent);color:#fff;font-size:22px;line-height:1;box-shadow:var(--shadow)}
+#recBtn.on{background:#e5484d;animation:pulse 1.4s infinite}
+#recBtn[disabled]{opacity:.5;cursor:default}
+#recSaid{font-size:14px;color:var(--dim);font-weight:300}
+@media(prefers-reduced-motion:reduce){#recBtn.on{animation:none}}
 .note{font-size:13px;color:var(--dim);font-weight:300;border-top:1px solid var(--line);
  padding-top:14px;margin-top:30px}
 .note b{color:var(--ink);font-weight:500}
@@ -268,6 +286,29 @@ section{margin-bottom:30px}
   <button type="submit" id="msgBtn">שליחה</button>
  </form>
  <div class="msgsaid" id="msgSaid"></div>
+
+ <form id="fileForm" method="POST" enctype="multipart/form-data">
+  <h3>שליחת קובץ</h3>
+  <input type="hidden" name="_captcha" value="false">
+  <input type="hidden" name="_subject" value="קובץ מהמוניטור">
+  <input type="hidden" name="_next" id="fNext" value="">
+  <input type="hidden" name="הודעה" id="fNote" value="">
+  <div class="seg" role="group" aria-label="איכות">
+   <button type="button" id="qF" aria-pressed="true">מתוך קובץ</button>
+   <button type="button" id="qN" aria-pressed="false">רגיל</button>
+  </div>
+  <input type="file" id="fPick" name="attachment"
+   accept="image/*,video/*,audio/*,application/pdf">
+  <input type="text" id="fCap" placeholder="מה זה? לא חובה">
+  <div class="fmeta" id="fMeta">מתוך קובץ שולח את המקור בלי לגעת בו. רגיל מכווץ תמונות.</div>
+  <button type="submit" id="fBtn">שליחת הקובץ</button>
+  <div id="recWrap">
+   <button type="button" id="recBtn" aria-label="הקלטת הודעה קולית">&#127908;</button>
+   <span id="recSaid">לחיצה מתחילה הקלטה. לחיצה שנייה עוצרת ושולחת.</span>
+  </div>
+ </form>
+ <div class="msgsaid" id="fSaid"></div>
+
  <div class="hint">
   מה שאתה כותב מגיע למייל שלי ואני קורא אותו בסבב הקרוב.
   התשובות שלי מופיעות כאן למעלה.
@@ -463,6 +504,145 @@ document.getElementById('msgForm').addEventListener('submit',function(e){
 });
 
 pane('q');
+var QMAX=10*1024*1024;
+var qMode='full';
+var fPick=document.getElementById('fPick');
+var fForm=document.getElementById('fileForm');
+var fMeta=document.getElementById('fMeta');
+var fSaid=document.getElementById('fSaid');
+var fBtn=document.getElementById('fBtn');
+function mb(n){return (n/1048576).toFixed(1)+'MB';}
+function isImg(f){return !!f&&String(f.type).indexOf('image/')===0;}
+function describe(){
+ var f=fPick.files&&fPick.files[0];
+ if(!f){fMeta.className='fmeta';
+  fMeta.textContent='מתוך קובץ שולח את המקור בלי לגעת בו. רגיל מכווץ תמונות.';return;}
+ var big=f.size>QMAX;
+ var t=f.name+' · '+mb(f.size);
+ if(qMode==='normal'&&isImg(f))t+=' · יכווץ לפני השליחה';
+ else if(qMode==='normal')t+=' · וידאו וקול נשלחים כמו שהם, אין כיווץ בדפדפן';
+ else t+=' · נשלח במקור';
+ if(big&&!(qMode==='normal'&&isImg(f)))t+=' · גדול מדי, המגבלה 10MB';
+ fMeta.className='fmeta'+((big&&!(qMode==='normal'&&isImg(f)))?' bad':'');
+ fMeta.textContent=t;
+}
+function setQ(m){
+ qMode=m;
+ document.getElementById('qF').setAttribute('aria-pressed',m==='full');
+ document.getElementById('qN').setAttribute('aria-pressed',m==='normal');
+ describe();
+}
+document.getElementById('qF').onclick=function(){setQ('full');};
+document.getElementById('qN').onclick=function(){setQ('normal');};
+fPick.addEventListener('change',describe);
+function putFile(file){
+ try{var dt=new DataTransfer();dt.items.add(file);fPick.files=dt.files;return true;}
+ catch(e){return false;}
+}
+function reallySend(file){
+ if(file.size>QMAX){
+  fSaid.textContent='הקובץ '+mb(file.size)+' והמגבלה היא 10MB. תשלח קטע קצר יותר, או תעלה לדרייב ותכתוב לי כאן את השם.';
+  fBtn.disabled=false;return;
+ }
+ if(!putFile(file)){fSaid.textContent='הדפדפן לא נתן להחליף את הקובץ. תבחר מתוך קובץ ותשלח שוב.';fBtn.disabled=false;return;}
+ document.getElementById('fNext').value=location.href.split('#')[0]+'#sent';
+ document.getElementById('fNote').value=document.getElementById('fCap').value.trim()||'קובץ מהמוניטור';
+ fForm.action='https://formsubmit.co/'+MAILBOX;
+ fSaid.textContent='שולח.';
+ fForm.submit();
+}
+function shrink(file,done){
+ var url=URL.createObjectURL(file);var im=new Image();
+ im.onload=function(){
+  var max=1600,w=im.width,h=im.height;
+  var r=Math.min(1,max/Math.max(w,h));
+  var c=document.createElement('canvas');
+  c.width=Math.round(w*r);c.height=Math.round(h*r);
+  c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+  c.toBlob(function(b){
+   URL.revokeObjectURL(url);
+   if(!b){done(file);return;}
+   var dot=file.name.lastIndexOf('.');var base=dot>0?file.name.slice(0,dot):file.name;var n=base+'.jpg';
+   done(new File([b],n,{type:'image/jpeg'}));
+  },'image/jpeg',0.75);
+ };
+ im.onerror=function(){URL.revokeObjectURL(url);done(file);};
+ im.src=url;
+}
+fForm.addEventListener('submit',function(e){
+ e.preventDefault();
+ var f=fPick.files&&fPick.files[0];
+ if(!f){fSaid.textContent='קודם תבחר קובץ.';return;}
+ fBtn.disabled=true;fSaid.textContent='מכין.';
+ if(qMode==='normal'&&isImg(f))shrink(f,reallySend);
+ else reallySend(f);
+});
+if(location.hash==='#sent'){
+ fSaid.textContent='הקובץ נשלח. הוא מחכה לי במייל.';
+ pane('m');
+}
+var rec=null,recChunks=[],recTimer=null,recSec=0,recStream=null;
+var recBtn=document.getElementById('recBtn');
+var recSaid=document.getElementById('recSaid');
+function recPickType(){
+ var want=['audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg'];
+ if(!window.MediaRecorder||!MediaRecorder.isTypeSupported)return '';
+ for(var i=0;i<want.length;i++){if(MediaRecorder.isTypeSupported(want[i]))return want[i];}
+ return '';
+}
+function recTick(){
+ recSec++;
+ var m=Math.floor(recSec/60),ss=recSec%60;
+ recSaid.textContent='מקליט '+m+':'+(ss<10?'0':'')+ss+'. לחיצה נוספת עוצרת ושולחת.';
+ if(recSec>=180)recStop();
+}
+function recStop(){
+ if(rec&&rec.state!=='inactive')rec.stop();
+}
+function recCleanup(){
+ if(recTimer){clearInterval(recTimer);recTimer=null;}
+ if(recStream){recStream.getTracks().forEach(function(t){t.stop();});recStream=null;}
+ recBtn.classList.remove('on');
+}
+function recStart(){
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){
+  recSaid.textContent='הדפדפן הזה לא תומך בהקלטה. תשלח קובץ קול דרך בחירת קובץ.';return;
+ }
+ recBtn.disabled=true;
+ navigator.mediaDevices.getUserMedia({audio:true}).then(function(st){
+  recStream=st;recChunks=[];recSec=0;
+  var mt=recPickType();
+  try{rec=mt?new MediaRecorder(st,{mimeType:mt}):new MediaRecorder(st);}
+  catch(e){rec=new MediaRecorder(st);}
+  rec.ondataavailable=function(ev){if(ev.data&&ev.data.size)recChunks.push(ev.data);};
+  rec.onstop=function(){
+   recCleanup();
+   var type=(rec&&rec.mimeType)||'audio/webm';
+   var b=new Blob(recChunks,{type:type});
+   if(!b.size){recSaid.textContent='לא נקלט כלום. תנסה שוב.';recBtn.disabled=false;return;}
+   var ext=type.indexOf('mp4')>-1?'m4a':(type.indexOf('ogg')>-1?'ogg':'webm');
+   var stampName='voice-'+new Date().toISOString().slice(0,19).replace(/[:T]/g,'')+'.'+ext;
+   var file=new File([b],stampName,{type:type});
+   recSaid.textContent='ההקלטה מוכנה, '+mb(file.size)+'. שולח.';
+   recBtn.disabled=false;
+   fBtn.disabled=true;
+   reallySend(file);
+  };
+  rec.start();
+  recBtn.classList.add('on');
+  recBtn.disabled=false;
+  recBtn.setAttribute('aria-label','עצירת ההקלטה ושליחה');
+  recSaid.textContent='מקליט 0:00. לחיצה נוספת עוצרת ושולחת.';
+  recTimer=setInterval(recTick,1000);
+ }).catch(function(){
+  recBtn.disabled=false;
+  recSaid.textContent='אין הרשאה למיקרופון. תאשר אותה בהגדרות האתר בדפדפן ותנסה שוב.';
+ });
+}
+recBtn.onclick=function(){
+ if(rec&&rec.state==='recording'){recStop();return;}
+ recStart();
+};
 render();
 renderThread();
 updateDot();

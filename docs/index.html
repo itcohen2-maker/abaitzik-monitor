@@ -106,6 +106,24 @@ section{margin-bottom:30px}
  border-radius:10px;padding:11px 26px;font:500 15px Heebo,sans-serif;cursor:pointer}
 #msgBtn[disabled]{opacity:.5;cursor:default}
 .msgsaid{color:var(--accent);font-size:14px;min-height:20px;margin-top:9px}
+#fileForm{display:flex;flex-direction:column;gap:10px;margin-top:22px;
+ border-top:1px solid var(--line);padding-top:18px}
+#fileForm h3{margin:0;font:500 15px Heebo,sans-serif;color:var(--ink)}
+#fPick{font:400 14px Heebo,sans-serif;color:var(--dim)}
+#fCap{background:var(--surface);color:var(--ink);border:1px solid var(--line);
+ border-radius:11px;padding:11px 14px;font:400 16px Heebo,sans-serif;box-shadow:var(--shadow)}
+#fBtn{align-self:flex-start;background:var(--accent);color:#fff;border:0;
+ border-radius:10px;padding:11px 26px;font:500 15px Heebo,sans-serif;cursor:pointer}
+#fBtn[disabled]{opacity:.5;cursor:default}
+.fmeta{font-size:13px;color:var(--dim);font-weight:300;min-height:18px}
+.fmeta.bad{color:#e5484d}
+#recWrap{display:flex;align-items:center;gap:12px;margin-top:6px}
+#recBtn{width:54px;height:54px;flex:0 0 54px;border-radius:50%;border:0;cursor:pointer;
+ background:var(--accent);color:#fff;font-size:22px;line-height:1;box-shadow:var(--shadow)}
+#recBtn.on{background:#e5484d;animation:pulse 1.4s infinite}
+#recBtn[disabled]{opacity:.5;cursor:default}
+#recSaid{font-size:14px;color:var(--dim);font-weight:300}
+@media(prefers-reduced-motion:reduce){#recBtn.on{animation:none}}
 .note{font-size:13px;color:var(--dim);font-weight:300;border-top:1px solid var(--line);
  padding-top:14px;margin-top:30px}
 .note b{color:var(--ink);font-weight:500}
@@ -155,6 +173,29 @@ section{margin-bottom:30px}
   <button type="submit" id="msgBtn">שליחה</button>
  </form>
  <div class="msgsaid" id="msgSaid"></div>
+
+ <form id="fileForm" method="POST" enctype="multipart/form-data">
+  <h3>שליחת קובץ</h3>
+  <input type="hidden" name="_captcha" value="false">
+  <input type="hidden" name="_subject" value="קובץ מהמוניטור">
+  <input type="hidden" name="_next" id="fNext" value="">
+  <input type="hidden" name="הודעה" id="fNote" value="">
+  <div class="seg" role="group" aria-label="איכות">
+   <button type="button" id="qF" aria-pressed="true">מתוך קובץ</button>
+   <button type="button" id="qN" aria-pressed="false">רגיל</button>
+  </div>
+  <input type="file" id="fPick" name="attachment"
+   accept="image/*,video/*,audio/*,application/pdf">
+  <input type="text" id="fCap" placeholder="מה זה? לא חובה">
+  <div class="fmeta" id="fMeta">מתוך קובץ שולח את המקור בלי לגעת בו. רגיל מכווץ תמונות.</div>
+  <button type="submit" id="fBtn">שליחת הקובץ</button>
+  <div id="recWrap">
+   <button type="button" id="recBtn" aria-label="הקלטת הודעה קולית">&#127908;</button>
+   <span id="recSaid">לחיצה מתחילה הקלטה. לחיצה שנייה עוצרת ושולחת.</span>
+  </div>
+ </form>
+ <div class="msgsaid" id="fSaid"></div>
+
  <div class="hint">
   מה שאתה כותב מגיע למייל שלי ואני קורא אותו בסבב הקרוב.
   התשובות שלי מופיעות כאן למעלה.
@@ -172,7 +213,7 @@ section{margin-bottom:30px}
 </div>
 
 <script>
-var D = {"builtAt":"2026-09-09T05:02:17.220Z","counts":{"pending":10,"replied":19,"today":0,"leads":2},"pending":[{"network":"facebook","author":"Hilla C.","text":"רפואה שלמה","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null},{"network":"facebook","author":"צביה ג.","text":"בהצלחה ורפואה שלמה","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null},{"network":"facebook","author":"איילת ב.","text":"הי גיבור, בהצלחה","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null},{"network":"facebook","author":"Dov Z.","text":"בהצלחה מחזיק לך אצבעות","category":"encouragement","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null},{"network":"facebook","author":"אתי ז. י.","text":"בהצלחה המון בריאות","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null},{"network":"facebook","author":"הילה ש.","text":"רפואה שלימה והחלמה מהירה כל הכבוד על הפתיחות והשיתוף","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null},{"network":"facebook","author":"Shmulik S.","text":"בהצלחה אח יקר אוהבים אותך יאללה שיגמר כבר אמן","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null},{"network":"facebook","author":"אילן מ.","text":"אתה גדול מהחיים אתה תעבור את זה בהצלחה בעזרת השם","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null},{"network":"facebook","author":"אמנון ס.","text":"בריאות איש","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null},{"network":"facebook","author":"אייל ג.","text":"בריאות איתנה החלמה מהירה","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null}],"replied":[{"network":"facebook","author":"Livnat G.","text":"רפואה שלמה במהרה","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"אמן ואמן, תודה רבה 🙏"},{"network":"facebook","author":"Chen M.","text":"בהצלחה","category":"encouragement","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"תודה, המילים האלה מגיעות בול בזמן 💪"},{"network":"facebook","author":"אילנה מ.","text":"בהצלחה רפואה שלמה","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"אמן, ותודה שחשבתם עליי 🙏"},{"network":"facebook","author":"Michal B.","text":"בריאות איתנה והחלמה מהירה","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"תודה מכל הלב, הברכה הזאת שווה הרבה 🙏"},{"network":"facebook","author":"סופיה א.","text":"תוצאות טובות בה בהצלחה איש יקר","category":"personal","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"אמן, תודה רבה על המילים 🙏"},{"network":"facebook","author":"Carpenter D.","text":"הצלחה אלוף","category":"personal","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"תודה רבה, מעריך כל מילה 🙏"},{"network":"facebook","author":"Oz S.","text":"יאללה יא גבר, תן בראש. אתה השראה.","category":"personal","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"תודה, זה בדיוק הדלק שצריך 💪"},{"network":"facebook","author":"Zeev L.","text":"בהצלחה אלוף","category":"personal","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"תודה רבה, מעריך את זה מאוד 💪"},{"network":"facebook","author":"Christine L.","text":"בהצלחה כל כך אוהבים אותך","category":"personal","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"תודה ענקית, מרגיש את האהבה מכאן 🤍"},{"network":"facebook","author":"Shirly T.","text":"אלוף טרוף אחר כך את החיים תזכה לראות ולהנות מהם באמת","category":"personal","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"תודה מכל הלב, זה נוגע ללב 🙏"},{"network":"facebook","author":"נינה ב. י.","text":"בהצלחה אלוף","category":"personal","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"תודה רבה, זה נותן דלק להמשך 🙏"},{"network":"facebook","author":"Nevo G.","text":"תן הראש איש יקר","category":"personal","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"תודה רבה, קיבלתי את זה בגדול 💪"},{"network":"facebook","author":"אבי א. ק.","text":"בהצלחההההה רק בריאות","category":"blessing","seenAt":"2026-09-07T05:03:32.391Z","repliedAt":"2026-09-07T05:03:32.391Z","replyText":"רק בריאות, וזה הכי חשוב. תודה רבה 🙏"},{"network":"facebook","author":"Hai S.","text":"רפואה שלמה ובהצלחה 🙏","category":"blessing","seenAt":"2026-09-07T05:03:32.391Z","repliedAt":"2026-09-07T05:03:32.391Z","replyText":"תודה ענקית על הברכה, שווה זהב 🙏"},{"network":"facebook","author":"Eran H.","text":"בהצלחה רפואה שלמה","category":"blessing","seenAt":"2026-09-07T05:03:32.391Z","repliedAt":"2026-09-07T05:03:32.391Z","replyText":"אמן ותודה רבה, מעריך את זה מאוד 🙏"},{"network":"facebook","author":"Mor A.","text":"היידה אבא איציק כהן קטן עליך","category":"encouragement","seenAt":"2026-09-07T05:03:32.391Z","repliedAt":"2026-09-07T05:03:32.391Z","replyText":"תודה על החיזוק, זה עושה את ההבדל 🙏"},{"network":"facebook","author":"Eldad K.","text":"בהצלחה אלוף","category":"encouragement","seenAt":"2026-09-07T05:03:32.391Z","repliedAt":"2026-09-07T05:03:32.391Z","replyText":"תודה רבה, זה בדיוק מה שנותן כוח להמשיך 💪"},{"network":"facebook","author":"אורלי כ.","text":"בריאות אמן","category":"blessing","seenAt":"2026-09-07T05:03:32.391Z","repliedAt":"2026-09-07T05:03:32.391Z","replyText":"אמן, תודה רבה על הברכה 🙏"},{"network":"facebook","author":"דנה ג.","text":"אתה בן אדם מקסים רפואה שלמה","category":"personal","seenAt":"2026-09-07T05:03:32.390Z","repliedAt":"2026-09-07T05:03:32.391Z","replyText":"תודה מכל הלב, המילים האלה עושות טוב 🙏"}],"contacts":[{"name":"סער לוגסי","network":"tiktok","note":"שלח בקשת הודעה בטיקטוק וביקש שתיצור איתו קשר. השאיר מספר טלפון. לא נענה, לא אושר, מחכה להחלטה שלך.","at":"2026-09-08T18:21:00+03:00","status":"open","log":[]},{"name":"אריאל","network":"site","note":"קצינת אימון גופני בגדוד פנתר. פנתה דרך האתר. אמרה שהדרך מדהימה, וביקשה שתבוא להרצות בגדוד ולשתף את החיילים — על להמשיך להתאמן, על מוטיבציה, ועל שמירה עליה.","at":"2026-09-07T12:00:00+03:00","status":"open","log":[{"at":"2026-09-07T12:00:00+03:00","text":"פנתה דרך טופס הצור קשר באתר. הליד הראשון שהגיע מהאתר."},{"at":"2026-09-08T19:30:00+03:00","text":"איציק דיבר איתה בטלפון. הסביר שהוא נכנס לניתוח ושיהיה בקשר אחרי כן. לא נקבע תאריך."}]}],"reports":[{"title":"דוח 8.9.2026","at":"2026-09-08T19:00:00+03:00","body":"נתונים\nאינסטגרם 30 יום: 345,611 צפיות, 150,977 צופים, 5,870 ביקורי פרופיל, 4,222 עוקבים. 90% מהצפיות ממי שלא עוקב, 95% מהרילים.\nיוטיוב 7 ימים: 54,711 צפיות, 101.8 שעות צפייה שזה מינוס 36%, 123 מנויים חדשים שזה פלוס 156%, סך הכל 2,546 מנויים.\n\nשתי חריגות\n1. החשיפה של הרילים החדשים התרסקה. 4.9 עשה 45K ו-1.9 עשה 20K, אבל 3.9 ו-6.9 ו-7.9 תקועים על 1.6 עד 2.4K. אותה תמונה גם ביוטיוב.\n2. ככל שהסרטון ארוך יותר אחוז הצפייה נופל. 9 שניות החזיק 107%, 12 שניות 87%, 23 שניות רק 48%. כדאי לקצר ל-10 עד 12 שניות.\n\nמה נעשה\nאינסטגרם: 3 לייקים. תגובות חסומות.\nטיקטוק: 9 לייקים, 2 תשובות.\nיוטיוב: 4 לבבות, תשובה אחת.\nפייסבוק: 9 לייקים, תשובה אחת.\nסך הכל 25 לייקים ו-4 תשובות.\n\nהפסקה\nהעבודה נעצרה ב-23:00 לפי שעות השקט. גל פייסבוק של הערב נקטע באמצע.\n\nחסימות ותקלות\nאינסטגרם מחזירה Couldnt post comment על כל ניסיון לשלוח תגובה. נבדק פעמיים. הופסקו הניסיונות לפי הוראה. לייקים עוברים.\nטיקטוק סטודיו קופא כל כמה דקות. רענון לא עוזר, רק טאב חדש.\n\nמה מחכה למחר\n1. גוסלין פריאנטה בפייסבוק כתבה משהו אישי וכואב. קיבלה לייק, התשובה לא נכתבה בגלל 23:00.\n2. Pnina Hai כתבה שהיא הייתה במקום הזה בעצמה. מועמדת לתשובה מחר.\n3. פנינה אוסדון הגיבה אימון על הפוסט שמבטיח תוכנית אימון על כיסא במתנה. ManyChat בוטל ואין מי שישלח לה.\n4. 71 בקשות הודעה בטיקטוק, 5 באינסטגרם. עוד לא נסרקו לעומק, חלון הכרום היה קטן מדי לגלול.\n5. טיקטוק מבקש אישור לתנאי Contact Card. נדחה ל-Later, ההחלטה שלך.\n\nאין תגובה שלילית או מטרידה היום."}],"chat":[{"at":"2026-09-09T02:00:00+03:00","from":"claude","text":"העמדה פתוחה. כתוב לי כאן מהנייד בלי לפתוח קלוד, ואני אענה לך כאן בסבב הקרוב. הודעה שעוד לא קראתי מסומנת אצלך כממתינה."},{"at":"2026-09-09T07:45:00+03:00","from":"claude","text":"כן, הכל מוכן להעלות את הסטורי. בדקתי בממשק: שתי האוטומציות של גזר LIVE, גם התגובה על פוסט וריל וגם התשובה לסטורי. שתיהן על אפס ריצות, כלומר עוד אף אחד לא נכנס למשפך. אתה יכול להעלות."},{"at":"2026-09-09T08:10:00+03:00","from":"claude","text":"הוספתי כפתור מהבהב. כשיש תשובה חדשה ממני, על לשונית הצ׳אט תדלק נקודה אדומה שפועמת, וגם בכותרת הלשונית בדפדפן תופיע (1). ברגע שאתה פותח את הצ׳אט זה נכבה לבד. אם אתה לא רואה נקודה, אין תשובה חדשה שלא ראית."}]}, NET = {"facebook":"פייסבוק","instagram":"אינסטגרם","tiktok":"טיקטוק","youtube":"יוטיוב"}, CAT = {"blessing":"ברכה","encouragement":"עידוד","personal":"אישי","pain":"שיתוף כאב","medical_advice":"המלצה רפואית","offer_help":"הצעת עזרה","donation":"שאלת תרומות"}, tab = 'pending';
+var D = {"builtAt":"2026-09-09T05:08:15.905Z","counts":{"pending":10,"replied":19,"today":0,"leads":2},"pending":[{"network":"facebook","author":"Hilla C.","text":"רפואה שלמה","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null},{"network":"facebook","author":"צביה ג.","text":"בהצלחה ורפואה שלמה","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null},{"network":"facebook","author":"איילת ב.","text":"הי גיבור, בהצלחה","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null},{"network":"facebook","author":"Dov Z.","text":"בהצלחה מחזיק לך אצבעות","category":"encouragement","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null},{"network":"facebook","author":"אתי ז. י.","text":"בהצלחה המון בריאות","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null},{"network":"facebook","author":"הילה ש.","text":"רפואה שלימה והחלמה מהירה כל הכבוד על הפתיחות והשיתוף","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null},{"network":"facebook","author":"Shmulik S.","text":"בהצלחה אח יקר אוהבים אותך יאללה שיגמר כבר אמן","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null},{"network":"facebook","author":"אילן מ.","text":"אתה גדול מהחיים אתה תעבור את זה בהצלחה בעזרת השם","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null},{"network":"facebook","author":"אמנון ס.","text":"בריאות איש","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null},{"network":"facebook","author":"אייל ג.","text":"בריאות איתנה החלמה מהירה","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":null,"replyText":null}],"replied":[{"network":"facebook","author":"Livnat G.","text":"רפואה שלמה במהרה","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"אמן ואמן, תודה רבה 🙏"},{"network":"facebook","author":"Chen M.","text":"בהצלחה","category":"encouragement","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"תודה, המילים האלה מגיעות בול בזמן 💪"},{"network":"facebook","author":"אילנה מ.","text":"בהצלחה רפואה שלמה","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"אמן, ותודה שחשבתם עליי 🙏"},{"network":"facebook","author":"Michal B.","text":"בריאות איתנה והחלמה מהירה","category":"blessing","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"תודה מכל הלב, הברכה הזאת שווה הרבה 🙏"},{"network":"facebook","author":"סופיה א.","text":"תוצאות טובות בה בהצלחה איש יקר","category":"personal","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"אמן, תודה רבה על המילים 🙏"},{"network":"facebook","author":"Carpenter D.","text":"הצלחה אלוף","category":"personal","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"תודה רבה, מעריך כל מילה 🙏"},{"network":"facebook","author":"Oz S.","text":"יאללה יא גבר, תן בראש. אתה השראה.","category":"personal","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"תודה, זה בדיוק הדלק שצריך 💪"},{"network":"facebook","author":"Zeev L.","text":"בהצלחה אלוף","category":"personal","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"תודה רבה, מעריך את זה מאוד 💪"},{"network":"facebook","author":"Christine L.","text":"בהצלחה כל כך אוהבים אותך","category":"personal","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"תודה ענקית, מרגיש את האהבה מכאן 🤍"},{"network":"facebook","author":"Shirly T.","text":"אלוף טרוף אחר כך את החיים תזכה לראות ולהנות מהם באמת","category":"personal","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"תודה מכל הלב, זה נוגע ללב 🙏"},{"network":"facebook","author":"נינה ב. י.","text":"בהצלחה אלוף","category":"personal","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"תודה רבה, זה נותן דלק להמשך 🙏"},{"network":"facebook","author":"Nevo G.","text":"תן הראש איש יקר","category":"personal","seenAt":"2026-09-07T07:08:18.859Z","repliedAt":"2026-09-07T07:08:18.859Z","replyText":"תודה רבה, קיבלתי את זה בגדול 💪"},{"network":"facebook","author":"אבי א. ק.","text":"בהצלחההההה רק בריאות","category":"blessing","seenAt":"2026-09-07T05:03:32.391Z","repliedAt":"2026-09-07T05:03:32.391Z","replyText":"רק בריאות, וזה הכי חשוב. תודה רבה 🙏"},{"network":"facebook","author":"Hai S.","text":"רפואה שלמה ובהצלחה 🙏","category":"blessing","seenAt":"2026-09-07T05:03:32.391Z","repliedAt":"2026-09-07T05:03:32.391Z","replyText":"תודה ענקית על הברכה, שווה זהב 🙏"},{"network":"facebook","author":"Eran H.","text":"בהצלחה רפואה שלמה","category":"blessing","seenAt":"2026-09-07T05:03:32.391Z","repliedAt":"2026-09-07T05:03:32.391Z","replyText":"אמן ותודה רבה, מעריך את זה מאוד 🙏"},{"network":"facebook","author":"Mor A.","text":"היידה אבא איציק כהן קטן עליך","category":"encouragement","seenAt":"2026-09-07T05:03:32.391Z","repliedAt":"2026-09-07T05:03:32.391Z","replyText":"תודה על החיזוק, זה עושה את ההבדל 🙏"},{"network":"facebook","author":"Eldad K.","text":"בהצלחה אלוף","category":"encouragement","seenAt":"2026-09-07T05:03:32.391Z","repliedAt":"2026-09-07T05:03:32.391Z","replyText":"תודה רבה, זה בדיוק מה שנותן כוח להמשיך 💪"},{"network":"facebook","author":"אורלי כ.","text":"בריאות אמן","category":"blessing","seenAt":"2026-09-07T05:03:32.391Z","repliedAt":"2026-09-07T05:03:32.391Z","replyText":"אמן, תודה רבה על הברכה 🙏"},{"network":"facebook","author":"דנה ג.","text":"אתה בן אדם מקסים רפואה שלמה","category":"personal","seenAt":"2026-09-07T05:03:32.390Z","repliedAt":"2026-09-07T05:03:32.391Z","replyText":"תודה מכל הלב, המילים האלה עושות טוב 🙏"}],"contacts":[{"name":"סער לוגסי","network":"tiktok","note":"שלח בקשת הודעה בטיקטוק וביקש שתיצור איתו קשר. השאיר מספר טלפון. לא נענה, לא אושר, מחכה להחלטה שלך.","at":"2026-09-08T18:21:00+03:00","status":"open","log":[]},{"name":"אריאל","network":"site","note":"קצינת אימון גופני בגדוד פנתר. פנתה דרך האתר. אמרה שהדרך מדהימה, וביקשה שתבוא להרצות בגדוד ולשתף את החיילים — על להמשיך להתאמן, על מוטיבציה, ועל שמירה עליה.","at":"2026-09-07T12:00:00+03:00","status":"open","log":[{"at":"2026-09-07T12:00:00+03:00","text":"פנתה דרך טופס הצור קשר באתר. הליד הראשון שהגיע מהאתר."},{"at":"2026-09-08T19:30:00+03:00","text":"איציק דיבר איתה בטלפון. הסביר שהוא נכנס לניתוח ושיהיה בקשר אחרי כן. לא נקבע תאריך."}]}],"reports":[{"title":"דוח 8.9.2026","at":"2026-09-08T19:00:00+03:00","body":"נתונים\nאינסטגרם 30 יום: 345,611 צפיות, 150,977 צופים, 5,870 ביקורי פרופיל, 4,222 עוקבים. 90% מהצפיות ממי שלא עוקב, 95% מהרילים.\nיוטיוב 7 ימים: 54,711 צפיות, 101.8 שעות צפייה שזה מינוס 36%, 123 מנויים חדשים שזה פלוס 156%, סך הכל 2,546 מנויים.\n\nשתי חריגות\n1. החשיפה של הרילים החדשים התרסקה. 4.9 עשה 45K ו-1.9 עשה 20K, אבל 3.9 ו-6.9 ו-7.9 תקועים על 1.6 עד 2.4K. אותה תמונה גם ביוטיוב.\n2. ככל שהסרטון ארוך יותר אחוז הצפייה נופל. 9 שניות החזיק 107%, 12 שניות 87%, 23 שניות רק 48%. כדאי לקצר ל-10 עד 12 שניות.\n\nמה נעשה\nאינסטגרם: 3 לייקים. תגובות חסומות.\nטיקטוק: 9 לייקים, 2 תשובות.\nיוטיוב: 4 לבבות, תשובה אחת.\nפייסבוק: 9 לייקים, תשובה אחת.\nסך הכל 25 לייקים ו-4 תשובות.\n\nהפסקה\nהעבודה נעצרה ב-23:00 לפי שעות השקט. גל פייסבוק של הערב נקטע באמצע.\n\nחסימות ותקלות\nאינסטגרם מחזירה Couldnt post comment על כל ניסיון לשלוח תגובה. נבדק פעמיים. הופסקו הניסיונות לפי הוראה. לייקים עוברים.\nטיקטוק סטודיו קופא כל כמה דקות. רענון לא עוזר, רק טאב חדש.\n\nמה מחכה למחר\n1. גוסלין פריאנטה בפייסבוק כתבה משהו אישי וכואב. קיבלה לייק, התשובה לא נכתבה בגלל 23:00.\n2. Pnina Hai כתבה שהיא הייתה במקום הזה בעצמה. מועמדת לתשובה מחר.\n3. פנינה אוסדון הגיבה אימון על הפוסט שמבטיח תוכנית אימון על כיסא במתנה. ManyChat בוטל ואין מי שישלח לה.\n4. 71 בקשות הודעה בטיקטוק, 5 באינסטגרם. עוד לא נסרקו לעומק, חלון הכרום היה קטן מדי לגלול.\n5. טיקטוק מבקש אישור לתנאי Contact Card. נדחה ל-Later, ההחלטה שלך.\n\nאין תגובה שלילית או מטרידה היום."}],"chat":[{"at":"2026-09-09T02:00:00+03:00","from":"claude","text":"העמדה פתוחה. כתוב לי כאן מהנייד בלי לפתוח קלוד, ואני אענה לך כאן בסבב הקרוב. הודעה שעוד לא קראתי מסומנת אצלך כממתינה."},{"at":"2026-09-09T07:45:00+03:00","from":"claude","text":"כן, הכל מוכן להעלות את הסטורי. בדקתי בממשק: שתי האוטומציות של גזר LIVE, גם התגובה על פוסט וריל וגם התשובה לסטורי. שתיהן על אפס ריצות, כלומר עוד אף אחד לא נכנס למשפך. אתה יכול להעלות."},{"at":"2026-09-09T08:10:00+03:00","from":"claude","text":"הוספתי כפתור מהבהב. כשיש תשובה חדשה ממני, על לשונית הצ׳אט תדלק נקודה אדומה שפועמת, וגם בכותרת הלשונית בדפדפן תופיע (1). ברגע שאתה פותח את הצ׳אט זה נכבה לבד. אם אתה לא רואה נקודה, אין תשובה חדשה שלא ראית."}]}, NET = {"facebook":"פייסבוק","instagram":"אינסטגרם","tiktok":"טיקטוק","youtube":"יוטיוב"}, CAT = {"blessing":"ברכה","encouragement":"עידוד","personal":"אישי","pain":"שיתוף כאב","medical_advice":"המלצה רפואית","offer_help":"הצעת עזרה","donation":"שאלת תרומות"}, tab = 'pending';
 // Split so a scraper crawling the page source does not lift a plain address.
 // This is obfuscation, not security - anyone reading the code can reassemble it.
 var MAILBOX = ['itcohen2','gmail.com'].join('@');
@@ -350,6 +391,145 @@ document.getElementById('msgForm').addEventListener('submit',function(e){
 });
 
 pane('q');
+var QMAX=10*1024*1024;
+var qMode='full';
+var fPick=document.getElementById('fPick');
+var fForm=document.getElementById('fileForm');
+var fMeta=document.getElementById('fMeta');
+var fSaid=document.getElementById('fSaid');
+var fBtn=document.getElementById('fBtn');
+function mb(n){return (n/1048576).toFixed(1)+'MB';}
+function isImg(f){return !!f&&String(f.type).indexOf('image/')===0;}
+function describe(){
+ var f=fPick.files&&fPick.files[0];
+ if(!f){fMeta.className='fmeta';
+  fMeta.textContent='מתוך קובץ שולח את המקור בלי לגעת בו. רגיל מכווץ תמונות.';return;}
+ var big=f.size>QMAX;
+ var t=f.name+' · '+mb(f.size);
+ if(qMode==='normal'&&isImg(f))t+=' · יכווץ לפני השליחה';
+ else if(qMode==='normal')t+=' · וידאו וקול נשלחים כמו שהם, אין כיווץ בדפדפן';
+ else t+=' · נשלח במקור';
+ if(big&&!(qMode==='normal'&&isImg(f)))t+=' · גדול מדי, המגבלה 10MB';
+ fMeta.className='fmeta'+((big&&!(qMode==='normal'&&isImg(f)))?' bad':'');
+ fMeta.textContent=t;
+}
+function setQ(m){
+ qMode=m;
+ document.getElementById('qF').setAttribute('aria-pressed',m==='full');
+ document.getElementById('qN').setAttribute('aria-pressed',m==='normal');
+ describe();
+}
+document.getElementById('qF').onclick=function(){setQ('full');};
+document.getElementById('qN').onclick=function(){setQ('normal');};
+fPick.addEventListener('change',describe);
+function putFile(file){
+ try{var dt=new DataTransfer();dt.items.add(file);fPick.files=dt.files;return true;}
+ catch(e){return false;}
+}
+function reallySend(file){
+ if(file.size>QMAX){
+  fSaid.textContent='הקובץ '+mb(file.size)+' והמגבלה היא 10MB. תשלח קטע קצר יותר, או תעלה לדרייב ותכתוב לי כאן את השם.';
+  fBtn.disabled=false;return;
+ }
+ if(!putFile(file)){fSaid.textContent='הדפדפן לא נתן להחליף את הקובץ. תבחר מתוך קובץ ותשלח שוב.';fBtn.disabled=false;return;}
+ document.getElementById('fNext').value=location.href.split('#')[0]+'#sent';
+ document.getElementById('fNote').value=document.getElementById('fCap').value.trim()||'קובץ מהמוניטור';
+ fForm.action='https://formsubmit.co/'+MAILBOX;
+ fSaid.textContent='שולח.';
+ fForm.submit();
+}
+function shrink(file,done){
+ var url=URL.createObjectURL(file);var im=new Image();
+ im.onload=function(){
+  var max=1600,w=im.width,h=im.height;
+  var r=Math.min(1,max/Math.max(w,h));
+  var c=document.createElement('canvas');
+  c.width=Math.round(w*r);c.height=Math.round(h*r);
+  c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+  c.toBlob(function(b){
+   URL.revokeObjectURL(url);
+   if(!b){done(file);return;}
+   var dot=file.name.lastIndexOf('.');var base=dot>0?file.name.slice(0,dot):file.name;var n=base+'.jpg';
+   done(new File([b],n,{type:'image/jpeg'}));
+  },'image/jpeg',0.75);
+ };
+ im.onerror=function(){URL.revokeObjectURL(url);done(file);};
+ im.src=url;
+}
+fForm.addEventListener('submit',function(e){
+ e.preventDefault();
+ var f=fPick.files&&fPick.files[0];
+ if(!f){fSaid.textContent='קודם תבחר קובץ.';return;}
+ fBtn.disabled=true;fSaid.textContent='מכין.';
+ if(qMode==='normal'&&isImg(f))shrink(f,reallySend);
+ else reallySend(f);
+});
+if(location.hash==='#sent'){
+ fSaid.textContent='הקובץ נשלח. הוא מחכה לי במייל.';
+ pane('m');
+}
+var rec=null,recChunks=[],recTimer=null,recSec=0,recStream=null;
+var recBtn=document.getElementById('recBtn');
+var recSaid=document.getElementById('recSaid');
+function recPickType(){
+ var want=['audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg'];
+ if(!window.MediaRecorder||!MediaRecorder.isTypeSupported)return '';
+ for(var i=0;i<want.length;i++){if(MediaRecorder.isTypeSupported(want[i]))return want[i];}
+ return '';
+}
+function recTick(){
+ recSec++;
+ var m=Math.floor(recSec/60),ss=recSec%60;
+ recSaid.textContent='מקליט '+m+':'+(ss<10?'0':'')+ss+'. לחיצה נוספת עוצרת ושולחת.';
+ if(recSec>=180)recStop();
+}
+function recStop(){
+ if(rec&&rec.state!=='inactive')rec.stop();
+}
+function recCleanup(){
+ if(recTimer){clearInterval(recTimer);recTimer=null;}
+ if(recStream){recStream.getTracks().forEach(function(t){t.stop();});recStream=null;}
+ recBtn.classList.remove('on');
+}
+function recStart(){
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){
+  recSaid.textContent='הדפדפן הזה לא תומך בהקלטה. תשלח קובץ קול דרך בחירת קובץ.';return;
+ }
+ recBtn.disabled=true;
+ navigator.mediaDevices.getUserMedia({audio:true}).then(function(st){
+  recStream=st;recChunks=[];recSec=0;
+  var mt=recPickType();
+  try{rec=mt?new MediaRecorder(st,{mimeType:mt}):new MediaRecorder(st);}
+  catch(e){rec=new MediaRecorder(st);}
+  rec.ondataavailable=function(ev){if(ev.data&&ev.data.size)recChunks.push(ev.data);};
+  rec.onstop=function(){
+   recCleanup();
+   var type=(rec&&rec.mimeType)||'audio/webm';
+   var b=new Blob(recChunks,{type:type});
+   if(!b.size){recSaid.textContent='לא נקלט כלום. תנסה שוב.';recBtn.disabled=false;return;}
+   var ext=type.indexOf('mp4')>-1?'m4a':(type.indexOf('ogg')>-1?'ogg':'webm');
+   var stampName='voice-'+new Date().toISOString().slice(0,19).replace(/[:T]/g,'')+'.'+ext;
+   var file=new File([b],stampName,{type:type});
+   recSaid.textContent='ההקלטה מוכנה, '+mb(file.size)+'. שולח.';
+   recBtn.disabled=false;
+   fBtn.disabled=true;
+   reallySend(file);
+  };
+  rec.start();
+  recBtn.classList.add('on');
+  recBtn.disabled=false;
+  recBtn.setAttribute('aria-label','עצירת ההקלטה ושליחה');
+  recSaid.textContent='מקליט 0:00. לחיצה נוספת עוצרת ושולחת.';
+  recTimer=setInterval(recTick,1000);
+ }).catch(function(){
+  recBtn.disabled=false;
+  recSaid.textContent='אין הרשאה למיקרופון. תאשר אותה בהגדרות האתר בדפדפן ותנסה שוב.';
+ });
+}
+recBtn.onclick=function(){
+ if(rec&&rec.state==='recording'){recStop();return;}
+ recStart();
+};
 render();
 renderThread();
 updateDot();
