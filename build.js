@@ -269,7 +269,14 @@ section{margin-bottom:30px}
 .bub a{color:inherit;text-decoration:underline;word-break:break-all}
 .bub.pend{opacity:.6}
 .hint{font-size:13px;color:var(--dim);font-weight:300;margin-top:14px;line-height:1.6}
-#msgForm{display:flex;flex-direction:column;gap:10px}
+#msgForm,#mailForm{display:flex;flex-direction:column;gap:10px}
+#mailText{width:100%;min-height:64px;resize:vertical;background:var(--surface);
+ color:var(--ink);border:1px solid var(--line);border-radius:11px;padding:12px 14px;
+ font:400 16px/1.6 Heebo,sans-serif;box-shadow:var(--shadow)}
+#mailBtn{align-self:flex-start;background:var(--red);color:#fff;border:0;
+ border-radius:10px;padding:11px 26px;font:500 15px Heebo,sans-serif;cursor:pointer}
+#mailBtn[disabled]{opacity:.5;cursor:default}
+#mailThread{margin-top:16px}
 #msgText{width:100%;min-height:74px;resize:vertical;background:var(--surface);
  color:var(--ink);border:1px solid var(--line);border-radius:11px;padding:12px 14px;
  font:400 16px/1.6 Heebo,sans-serif;box-shadow:var(--shadow)}
@@ -483,6 +490,20 @@ section{margin-bottom:30px}
  <div id="reports"></div>
 </section>
 
+<section id="pE" hidden>
+ <h2>מייל</h2>
+ <div class="hint" style="margin-bottom:12px">
+  כותבים כאן בקשה בשפה חופשית, ואני מחפש בתיבה ומחזיר את התשובה לכאן.
+  לדוגמה: הגיע משהו מבית חולים? תמצא את המייל מהעירייה מהשנה שעברה. מי שלח לי קובץ בשבוע האחרון?
+ </div>
+ <form id="mailForm">
+  <textarea id="mailText" rows="2" placeholder="מה לחפש לך בתיבה?"></textarea>
+  <button type="submit" id="mailBtn">שליחת הבקשה</button>
+ </form>
+ <div class="msgsaid" id="mailSaid"></div>
+ <div class="thread" id="mailThread"></div>
+</section>
+
 <section id="pM" hidden>
  <div class="thread" id="thread"></div>
  <form id="msgForm">
@@ -628,10 +649,10 @@ function statusTag(m){
  return ' · <em class="st st-'+m.status+'">'+STATUS[m.status]+'</em>';
 }
 function renderThread(){
- var baked=(D.chat||[]).slice();
+ var baked=(D.chat||[]).filter(function(m){return !isMail(m);});
  var sent=baked.filter(function(m){return m.from==='itzik';})
    .map(function(m){return String(m.text).trim();});
- var still=pending().filter(function(p){return sent.indexOf(p.text.trim())===-1;});
+ var still=pending().filter(function(p){return sent.indexOf(p.text.trim())===-1&&!isMail(p);});
  savePending(still);
  var all=baked.map(function(m){return{at:m.at,from:m.from,text:m.text,status:m.status,pend:false};})
    .concat(still.map(function(p){return{at:p.at,from:'itzik',text:p.text,pend:true};}))
@@ -675,7 +696,7 @@ function updateDot(){
  d.hidden=!(n&&n>chatSeen());
  document.title=(d.hidden?'':'(1) ')+'המוניטור של אבא איציק';
 }
-var PANES={h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM'};
+var PANES={h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE'};
 var NAVS={h:'nH',q:'nQ',l:'nL',r:'nR',m:'nM'};
 function pane(w){
  for(var k in PANES){document.getElementById(PANES[k]).hidden=(k!==w);}
@@ -699,10 +720,10 @@ function askInChat(prefix){
 document.getElementById('gChat').onclick=function(){pane('m');markChatSeen();};
 document.getElementById('gQueue').onclick=function(){pane('q');};
 document.getElementById('gReports').onclick=function(){pane('r');};
-document.getElementById('gMail').onclick=function(){askInChat('מייל: ');};
+document.getElementById('gMail').onclick=function(){pane('e');};
 document.getElementById('gPill').onclick=function(){askInChat('לקחתי כדור עכשיו. ');};
 document.getElementById('gAsk').onclick=function(){askInChat('');};
-document.getElementById('icMail').onclick=function(){askInChat('מייל: ');};
+document.getElementById('icMail').onclick=function(){pane('e');};
 document.getElementById('icAdd').onclick=function(){askInChat('מודול חדש שאני רוצה: ');};
 document.getElementById('urgBtn').onclick=function(){askInChat('דחוף: ');};
 document.getElementById('bP').onclick=function(){tab='pending';render();};
@@ -754,7 +775,6 @@ document.getElementById('msgForm').addEventListener('submit',function(e){
  }).then(function(){btn.disabled=false;});
 });
 
-pane('q');
 var QMAX=10*1024*1024;
 var qMode='full';
 var fPick=document.getElementById('fPick');
@@ -910,8 +930,59 @@ new MutationObserver(function(){
  micBtn.classList.toggle('on',on);
  micBtn.setAttribute('aria-label',on?'עצירת ההקלטה ושליחה':'דבר אליי');
 }).observe(recSaid,{childList:true,characterData:true,subtree:true});
+// The mail pane is the same channel as the chat, filtered to the mail thread:
+// every message on either side that starts with "מייל:" belongs here.
+var MAILTAG='מייל:';
+function isMail(m){return String(m.text||'').indexOf(MAILTAG)===0;}
+function mailBody(t){return String(t).slice(MAILTAG.length).trim();}
+function renderMail(){
+ var baked=(D.chat||[]).filter(isMail);
+ var still=pending().filter(isMail);
+ var all=baked.map(function(m){return{at:m.at,from:m.from,text:m.text,pend:false};})
+  .concat(still.map(function(p){return{at:p.at,from:'itzik',text:p.text,pend:true};}))
+  .sort(function(a,b){return (a.at||'')<(b.at||'')?-1:1;});
+ var host=document.getElementById('mailThread');
+ if(!all.length){
+  host.innerHTML='<div class="empty">עוד לא ביקשת ממני כלום מהתיבה.</div>';
+  return;
+ }
+ host.innerHTML=all.map(function(m){
+  var mine=m.from==='itzik';
+  return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')+'">'
+   +'<span class="w">'+(mine?'אתה':'קלוד')+' · '+esc(stamp(m.at))
+   +(m.pend?' · נשלח, עוד לא נקרא':'')+'</span>'+linkify(mailBody(m.text))+'</div>';
+ }).join('');
+}
+document.getElementById('mailForm').addEventListener('submit',function(e){
+ e.preventDefault();
+ var box=document.getElementById('mailText');
+ var btn=document.getElementById('mailBtn');
+ var said=document.getElementById('mailSaid');
+ var text=box.value.trim();
+ if(!text)return;
+ var full=MAILTAG+' '+text;
+ btn.disabled=true;
+ said.textContent='שולח.';
+ fetch('https://formsubmit.co/ajax/'+MAILBOX,{
+  method:'POST',
+  headers:{'Content-Type':'application/json',Accept:'application/json'},
+  body:JSON.stringify({_subject:'בקשת מייל מהמוניטור',_template:'table',הודעה:full})
+ }).then(function(r){
+  if(!r.ok)throw new Error('bad');
+  var q=pending();
+  q.push({at:new Date().toISOString(),text:full});
+  savePending(q);
+  box.value='';
+  said.textContent='נשלח. אני בודק את התיבה כל ארבע דקות.';
+  renderMail();renderThread();
+ }).catch(function(){
+  said.textContent='השליחה לא עברה. נסה שוב.';
+ }).then(function(){btn.disabled=false;});
+});
+
 render();
 renderThread();
+renderMail();
 updateDot();
 pane('h');
 </script>
