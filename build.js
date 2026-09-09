@@ -363,6 +363,8 @@ section{margin-bottom:30px}
 .g2{background:linear-gradient(150deg,#ff8a80,var(--red))}
 .g3{background:linear-gradient(150deg,#ffd54f,#f9a825);color:#3b2a00}
 .g4{background:linear-gradient(150deg,#69f0ae,var(--green))}
+.g5{background:linear-gradient(150deg,#b39ddb,#673ab7)}
+.g6{background:linear-gradient(150deg,#80deea,#00838f)}
 
 /* ===== bottom nav ===== */
 .bn{position:fixed;inset-inline:0;bottom:0;z-index:20;display:flex;justify-content:space-around;
@@ -436,6 +438,8 @@ section{margin-bottom:30px}
   <button type="button" class="gt g2" id="gMail"><b>📧 מייל</b><small>בקשה, ואני מחזיר תשובה</small></button>
   <button type="button" class="gt g3" id="gQueue"><b>📊 ניטור רשתות</b><small>מי פנה, מה נענה</small></button>
   <button type="button" class="gt g4" id="gReports"><b>📄 דוחות</b><small>סיכומי הסבבים</small></button>
+  <button type="button" class="gt g5" id="gPill"><b>⏰ לקחתי כדור</b><small>מסמן את המנה ומעדכן אותי</small></button>
+  <button type="button" class="gt g6" id="gAsk"><b>❓ שאלה מהירה</b><small>כל דבר, אני עונה בצ׳אט</small></button>
  </div>
 
 <div class="tiles">
@@ -696,6 +700,8 @@ document.getElementById('gChat').onclick=function(){pane('m');markChatSeen();};
 document.getElementById('gQueue').onclick=function(){pane('q');};
 document.getElementById('gReports').onclick=function(){pane('r');};
 document.getElementById('gMail').onclick=function(){askInChat('מייל: ');};
+document.getElementById('gPill').onclick=function(){askInChat('לקחתי כדור עכשיו. ');};
+document.getElementById('gAsk').onclick=function(){askInChat('');};
 document.getElementById('icMail').onclick=function(){askInChat('מייל: ');};
 document.getElementById('icAdd').onclick=function(){askInChat('מודול חדש שאני רוצה: ');};
 document.getElementById('urgBtn').onclick=function(){askInChat('דחוף: ');};
@@ -791,7 +797,9 @@ function reallySend(file){
  }
  if(!putFile(file)){fSaid.textContent='הדפדפן לא נתן להחליף את הקובץ. תבחר מתוך קובץ ותשלח שוב.';fBtn.disabled=false;return;}
  document.getElementById('fNext').value=location.href.split('#')[0]+'#sent';
- document.getElementById('fNote').value=document.getElementById('fCap').value.trim()||'קובץ מהמוניטור';
+ var cap=document.getElementById('fCap').value.trim();
+ var voice=/^voice-/.test(file.name);
+ document.getElementById('fNote').value=cap||(voice?'הודעה קולית מהמוניטור':'קובץ מהמוניטור');
  fForm.action='https://formsubmit.co/'+MAILBOX;
  fSaid.textContent='שולח.';
  fForm.submit();
