@@ -1448,6 +1448,10 @@ function paintReportDot(){
  var t=document.getElementById('gReports');if(t)t.classList.toggle('blink',!!fresh);
 }
 
+function on(id,fn){
+ var el=document.getElementById(id);
+ if(el)el.onclick=fn;
+}
 function pane(w){
  for(var k in PANES){document.getElementById(PANES[k]).hidden=(k!==w);}
  for(var n in NAVS){document.getElementById(NAVS[n]).setAttribute('aria-pressed',n===w);}
@@ -1801,7 +1805,7 @@ document.getElementById('pillBig').onclick=function(){
  try{localStorage.setItem('lastPill',String(Date.now()));}catch(e){}
  renderPill();
 };
-document.getElementById('gAsk').onclick=function(){askInChat('');};
+on('gAsk',function(){askInChat('');});
 wireSlot();
 paintReportDot();
 document.getElementById('leads').addEventListener('click',function(e){
