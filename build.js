@@ -79,7 +79,7 @@ function build() {
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
 
   const chat = loadDocs('chat')
-    .map(m => ({ at: m.at, from: m.from, text: m.text }))
+    .map(m => ({ at: m.at, from: m.from, text: m.text, status: m.status || '' }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? -1 : 1));
 
   const openCmds = loadDocs('commands')
@@ -252,6 +252,10 @@ section{margin-bottom:30px}
  border-bottom-inline-start-radius:4px}
 .bub.you{align-self:flex-end;background:var(--surface);
  border:1px solid var(--line);border-bottom-inline-end-radius:4px}
+.st{font-style:normal;font-weight:500;padding:1px 7px;border-radius:999px;font-size:11.5px}
+.st-received{background:var(--sunk);color:var(--dim)}
+.st-working{background:#f6e7c8;color:#8a5a12}
+.st-done{background:var(--accent-soft);color:var(--accent)}
 .bub a{color:inherit;text-decoration:underline;word-break:break-all}
 .bub.pend{opacity:.6}
 .hint{font-size:13px;color:var(--dim);font-weight:300;margin-top:14px;line-height:1.6}
@@ -486,13 +490,18 @@ function linkify(t){
   return esc(x);
  }).join('');
 }
+var STATUS={received:'התקבל',working:'בעבודה',done:'בוצע'};
+function statusTag(m){
+ if(m.from!=='itzik'||!m.status||!STATUS[m.status])return '';
+ return ' · <em class="st st-'+m.status+'">'+STATUS[m.status]+'</em>';
+}
 function renderThread(){
  var baked=(D.chat||[]).slice();
  var sent=baked.filter(function(m){return m.from==='itzik';})
    .map(function(m){return String(m.text).trim();});
  var still=pending().filter(function(p){return sent.indexOf(p.text.trim())===-1;});
  savePending(still);
- var all=baked.map(function(m){return{at:m.at,from:m.from,text:m.text,pend:false};})
+ var all=baked.map(function(m){return{at:m.at,from:m.from,text:m.text,status:m.status,pend:false};})
    .concat(still.map(function(p){return{at:p.at,from:'itzik',text:p.text,pend:true};}))
    .sort(function(a,b){return (a.at||'')<(b.at||'')?-1:1;});
  var host=document.getElementById('thread');
@@ -504,7 +513,7 @@ function renderThread(){
   var mine=m.from==='itzik';
   return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')+'">'
    +'<span class="w">'+(mine?'אתה':'קלוד')+' · '+esc(stamp(m.at))
-   +(m.pend?' · ממתין':'')+'</span>'+linkify(m.text)+'</div>';
+   +(m.pend?' · נשלח, עוד לא נקרא':'')+statusTag(m)+'</span>'+linkify(m.text)+'</div>';
  }).join('');
 }
 function newestClaude(){
