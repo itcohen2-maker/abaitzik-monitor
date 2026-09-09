@@ -348,6 +348,12 @@ section{margin-bottom:30px}
  font:400 16px/1.6 Heebo,sans-serif;box-shadow:var(--shadow)}
 #msgText::placeholder{color:var(--dim);font-weight:300}
 #msgText:focus-visible,#msgBtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sendrow{display:flex;align-items:center;gap:10px}
+.plusbtn{width:48px;height:48px;flex:0 0 48px;border-radius:50%;border:0;cursor:pointer;
+ background:linear-gradient(150deg,#5aa9fb,var(--blue));color:#fff;font:300 30px/1 Heebo,sans-serif;
+ box-shadow:0 8px 18px rgba(66,133,244,.35),inset 0 2px 0 rgba(255,255,255,.35)}
+.plusbtn:active{transform:scale(.94)}
+.plusbtn[aria-expanded="true"]{transform:rotate(45deg)}
 #msgBtn{align-self:flex-start;background:var(--accent);color:#fff;border:0;
  border-radius:10px;padding:11px 26px;font:500 15px Heebo,sans-serif;cursor:pointer}
 #msgBtn[disabled]{opacity:.5;cursor:default}
@@ -414,10 +420,10 @@ section{margin-bottom:30px}
 .vtxt{flex:1;display:flex;flex-direction:column;justify-content:center}
 .vtxt b{font:700 16px Heebo,sans-serif}
 .vtxt small{color:var(--dim);font-size:12px;line-height:1.5;font-weight:300}
-.urg{flex:0 0 66px;border:0;cursor:pointer;border-radius:20px;color:#fff;
+.urg{flex:0 0 66px;cursor:pointer;border-radius:20px;color:var(--red);
  font:700 12.5px Heebo,sans-serif;line-height:1.25;
- background:linear-gradient(180deg,#ff6a5e,var(--red));
- box-shadow:0 10px 22px rgba(234,67,53,.38),inset 0 2px 0 rgba(255,255,255,.45)}
+ background:var(--surface);border:2px solid var(--red);box-shadow:var(--shadow)}
+.urg:active{background:linear-gradient(180deg,#ff6a5e,var(--red));color:#fff}
 .urg span{font-size:19px;display:block;margin-bottom:2px}
 
 .row{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 10px;
@@ -779,13 +785,16 @@ section{margin-bottom:30px}
  <form id="msgForm">
   <textarea id="msgText" rows="2"
    placeholder="כתוב כאן. תשובה, בקשה, או מישהו חדש שפנה אליך"></textarea>
-  <button type="submit" id="msgBtn">שליחה</button>
+  <div class="sendrow">
+   <button type="button" id="plusBtn" class="plusbtn" aria-label="צירוף תמונה או קובץ">+</button>
+   <button type="submit" id="msgBtn">שליחה</button>
+  </div>
  </form>
  <div class="msgsaid" id="msgSaid"></div>
 
  <details class="filebox">
   <summary>צירוף קובץ או תמונה</summary>
-  <form id="fileForm" method="POST" enctype="multipart/form-data">
+  <form id="fileForm" method="POST" enctype="multipart/form-data" hidden>
   <input type="hidden" name="_captcha" value="false">
   <input type="hidden" name="_subject" value="קובץ מהמוניטור">
   <input type="hidden" name="_next" id="fNext" value="">
@@ -1213,6 +1222,14 @@ function beep(){
   setTimeout(function(){o.stop();ctx.close();},160);
  }catch(e){}
 }
+// The attach form stays out of the way until the plus is pressed.
+document.getElementById('plusBtn').onclick=function(){
+ var f=document.getElementById('fileForm');
+ var open=f.hidden;
+ f.hidden=!open;
+ this.setAttribute('aria-expanded',open?'true':'false');
+ if(open)f.scrollIntoView({behavior:'smooth',block:'nearest'});
+};
 document.getElementById('newBtn').onclick=function(){
  if(unreadCount())beep();
  pane('m');renderThread();
