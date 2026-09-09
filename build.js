@@ -610,7 +610,8 @@ section{margin-bottom:30px}
 // be the first thing on screen, not something that appears a moment later over
 // content that was already readable. Nothing here can wait for the main script.
 (function(){try{
- if(localStorage.getItem('faceCred')||localStorage.getItem('monitorCode')){
+ if(localStorage.getItem('lockOn')==='1'
+   &&(localStorage.getItem('faceCred')||localStorage.getItem('monitorCode'))){
   document.documentElement.className+=' locked';
  }
 }catch(e){}})();
@@ -732,6 +733,10 @@ section{margin-bottom:30px}
  </div>
  <div class="facerow">
   <button type="button" id="codeChange">שינוי הקוד</button>
+ </div>
+ <div class="facerow">
+  <button type="button" id="lockToggle">נעילה בפתיחה</button>
+  <span id="lockState"></span>
  </div>
  <div class="msgsaid" id="codeSaid"></div>
 </div>
@@ -1501,6 +1506,29 @@ document.getElementById('codeSave').onclick=function(){
   document.getElementById('codeRow').hidden=true;}
  catch(e){said.textContent='הדפדפן לא נתן לשמור. נסה בלי גלישה פרטית.';}
 };
+function lockOn(){
+ try{return localStorage.getItem('lockOn')==='1';}catch(e){return false;}
+}
+function lockToggleRender(){
+ var st=document.getElementById('lockState');
+ var btn=document.getElementById('lockToggle');
+ var on=lockOn();
+ st.textContent=on?'מופעלת. המוניטור נעול בכל פתיחה.'
+  :'כבויה. המוניטור נפתח ישר, בלי זיהוי.';
+ btn.textContent=on?'כיבוי הנעילה':'הפעלת הנעילה';
+}
+document.getElementById('lockToggle').onclick=function(){
+ var turningOn=!lockOn();
+ if(turningOn&&!faceId()&&!myCode()){
+  document.getElementById('lockState').textContent=
+   'קודם מגדירים קוד או זיהוי פנים, אחרת אין דרך להיכנס.';
+  return;
+ }
+ try{localStorage.setItem('lockOn',turningOn?'1':'0');}catch(e){}
+ lockToggleRender();
+};
+lockToggleRender();
+
 // ---- the lock ----
 // The class was already put on <html> by the early script, so by the time this
 // runs the app is hidden. All that is left is a way back in.
