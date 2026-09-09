@@ -129,6 +129,8 @@ function build() {
   fs.mkdirSync(OUT_DIR, { recursive: true });
   fs.writeFileSync(path.join(OUT_DIR, 'index.html'), html, 'utf8');
   fs.writeFileSync(path.join(OUT_DIR, '.nojekyll'), '', 'utf8');
+  fs.writeFileSync(path.join(OUT_DIR, 'version.json'),
+    JSON.stringify({ builtAt: payload.builtAt }), 'utf8');
   fs.writeFileSync(path.join(OUT_DIR, 'robots.txt'), 'User-agent: *\nDisallow: /\n', 'utf8');
   console.log('built docs/index.html |', items.length, 'items,',
     payload.counts.pending, 'pending,', payload.counts.replied, 'replied,',
@@ -141,6 +143,8 @@ const PAGE = `<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow,noarchive">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
 <meta name="theme-color" content="#14675a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -854,6 +858,27 @@ function wireSlot(){
   var mb=document.getElementById('micBtn');if(mb)mb.click();
  };
 }
+
+
+// The page is one HTML file, so a phone that cached it keeps showing an old
+// screen. version.json is fetched with no-store on every open; when it names
+// a newer build than the one baked in here, the page reloads itself once.
+function checkFresh(){
+ if(!window.fetch)return;
+ fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){
+  return r.ok?r.json():null;
+ }).then(function(v){
+  if(!v||!v.builtAt||v.builtAt===D.builtAt)return;
+  var seen='';
+  try{seen=sessionStorage.getItem('reloadedFor')||'';}catch(e){}
+  if(seen===v.builtAt)return;
+  try{sessionStorage.setItem('reloadedFor',v.builtAt);}catch(e){}
+  location.replace(location.pathname+'?b='+encodeURIComponent(v.builtAt));
+ }).catch(function(){});
+}
+checkFresh();
+setInterval(checkFresh,120000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden)checkFresh();});
 
 function pane(w){
  for(var k in PANES){document.getElementById(PANES[k]).hidden=(k!==w);}
