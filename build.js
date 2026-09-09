@@ -476,8 +476,8 @@ section{margin-bottom:30px}
    <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M4 7v11h3V9.8z"/><path fill="#34A853" d="M20 7v11h-3V9.8z"/><path fill="#EA4335" d="M4 7l8 6 8-6v-1.5L12 11 4 5.5z"/><path fill="#FBBC05" d="M4 5.5L12 11l8-5.5V5H4z"/></svg></span>מייל</button>
   <a class="ic" href="https://itzik-site.vercel.app/" target="_blank" rel="noopener"><span class="c c-st">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c3 3 3 13 0 16M12 4c-3 3-3 13 0 16"/></svg></span>האתר</a>
-  <a class="ic" href="https://itzik-site.vercel.app/gezer" target="_blank" rel="noopener"><span class="c c-vd">
-   <svg viewBox="0 0 24 24"><path fill="#fff" d="M11 21c-4-3-6-7-6-10a3 3 0 0 1 5-2 3 3 0 0 1 5 2c0 3-2 7-4 10z"/><path fill="#fff" d="M14 4c2-2 5-2 5-2s0 3-2 5z"/></svg></span>גזר</a>
+  <button type="button" class="ic" id="icLand"><span class="c c-vd">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 13h5"/></svg></span>דפי נחיתה</button>
   <a class="ic" href="https://pegasusgame.vercel.app" target="_blank" rel="noopener"><span class="c c-pg">
    <svg viewBox="0 0 24 24"><path fill="#fff" d="M4 14c2-5 6-8 11-8l5-2-2 5c0 5-3 9-8 11l-1-3-3-1z"/><circle cx="14" cy="10" r="1.3" fill="#6d28d9"/></svg></span>פגסוס</a>
   <button type="button" class="ic" id="icAdd"><span class="c c-add">
@@ -565,6 +565,11 @@ section{margin-bottom:30px}
   <button type="button" data-net="instagram" aria-pressed="false">אינסטגרם</button>
  </div>
  <div id="netBody"></div>
+</section>
+
+<section id="pG" hidden>
+ <h2>דפי נחיתה</h2>
+ <div id="landList"></div>
 </section>
 
 <section id="pR" hidden>
@@ -779,7 +784,11 @@ function updateDot(){
  d.hidden=!(n&&n>chatSeen());
  document.title=(d.hidden?'':'(1) ')+'אבא איציק בבנייה עצמית';
 }
-var PANES={h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN'};
+var PANES={h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG'};
+// More landing pages are coming, so each one is a line here.
+var LANDING=[
+ {name:'שיטת הפירה',note:'מילת המפתח: גזר',url:'https://itzik-site.vercel.app/gezer'}
+];
 var NAVS={h:'nH',q:'nQ',l:'nL',r:'nR',m:'nM'};
 
 // Per network monitoring. Tapping a network circle opens its own screen:
@@ -930,6 +939,12 @@ document.getElementById('gAsk').onclick=function(){askInChat('');};
 wireSlot();
 document.getElementById('icMail').onclick=function(){pane('e');};
 document.getElementById('icAdd').onclick=function(){askInChat('מודול חדש שאני רוצה: ');};
+document.getElementById('icLand').onclick=function(){pane('g');};
+document.getElementById('landList').innerHTML=LANDING.map(function(l){
+ return '<div class="item"><div class="top"><span class="who">'+esc(l.name)+'</span>'
+  +'<span class="chip">'+esc(l.note)+'</span></div>'
+  +'<a class="ask" href="'+esc(l.url)+'" target="_blank" rel="noopener">פתיחת הדף</a></div>';
+}).join('')+'<div class="empty">דף נחיתה חדש נכנס לכאן. תשלח לי בצ׳אט את הכתובת ואת מילת המפתח שמפעילה אותו.</div>';
 document.getElementById('urgBtn').onclick=function(){askInChat('דחוף: ');};
 document.getElementById('bP').onclick=function(){tab='pending';render();};
 document.getElementById('bD').onclick=function(){tab='done';render();};
