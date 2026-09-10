@@ -479,6 +479,22 @@ section{margin-bottom:30px}
  box-shadow:0 2px 6px rgba(66,133,244,.4),inset 0 1px 0 rgba(255,255,255,.3)}
 .ask .opts button:active{background:linear-gradient(180deg,var(--blue),#1b63d6);box-shadow:none}
 .ask .opts button[disabled]{opacity:.5}
+.editbar{position:fixed;z-index:90;inset-inline:0;bottom:0;display:flex;align-items:center;
+ gap:12px;justify-content:space-between;
+ padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+ background:color-mix(in srgb,var(--surface) 96%,transparent);
+ border-top:1px solid var(--line);box-shadow:0 -8px 24px rgba(0,0,0,.25)}
+.editbar span{font:600 14px Heebo,sans-serif;color:var(--dim)}
+.editbar button{min-height:42px;padding:0 22px;border:0;border-radius:999px;cursor:pointer;
+ font:700 15px Heebo,sans-serif;color:#fff;
+ background:linear-gradient(180deg,#5cc36f,var(--green));
+ box-shadow:0 2px 6px rgba(52,168,83,.4),inset 0 1px 0 rgba(255,255,255,.3)}
+body.editing .editbox>*{animation:wobble .28s infinite alternate ease-in-out;
+ touch-action:none;cursor:grab}
+body.editing .bn{display:none}
+@keyframes wobble{from{transform:rotate(-.5deg)}to{transform:rotate(.5deg)}}
+@media(prefers-reduced-motion:reduce){body.editing .editbox>*{animation:none;
+ outline:1px dashed var(--accent);outline-offset:3px}}
 .stamp{text-align:center;color:var(--dim);font-size:11px;padding:10px 0 4px}
 .toast{position:fixed;z-index:80;inset-inline:16px;bottom:calc(76px + env(safe-area-inset-bottom));
  margin-inline:auto;max-width:360px;text-align:center;
@@ -670,8 +686,8 @@ section{margin-bottom:30px}
 #slotSaid{color:var(--dim);font-size:13px;font-weight:300;margin-top:7px;min-height:18px}
 
 /* ===== bottom nav ===== */
-.micfab{position:fixed;left:50%;transform:translateX(-50%);
- bottom:calc(84px + env(safe-area-inset-bottom));z-index:40;opacity:.88;touch-action:none;
+.micfab{position:fixed;left:16px;
+ bottom:calc(84px + env(safe-area-inset-bottom));z-index:40;opacity:.95;touch-action:none;
  width:82px;height:82px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;
  background:conic-gradient(from 0deg,var(--blue),var(--red),var(--yellow),var(--green),var(--blue));
  box-shadow:0 10px 24px rgba(0,0,0,.35)}
@@ -1103,6 +1119,11 @@ section{margin-bottom:30px}
   <path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8.5 21h7"/>
  </svg>
 </button>
+
+<div class="editbar" id="editBar" hidden>
+ <span>סידור המסך. גרור מה שתרצה.</span>
+ <button type="button" id="editDone">סיום</button>
+</div>
 
 <div class="toast" id="toast" role="status" hidden></div>
 
@@ -1637,50 +1658,89 @@ function applyOrder(box,key){
  });
  // Anything added since he last arranged simply stays at the end.
 }
-// The same gesture for the tiles and for the whole blocks on the home screen,
-// the way the phone itself works: hold, then move.
+// The iPhone method, which is what he asked for and what the first attempt got
+// wrong: a long press does not drag anything. It puts the screen into edit
+// mode, everything wobbles, and from then on he can move blocks as many times
+// as he likes with ordinary drags. A Done bar ends it.
+//
+// The first version tied the drag to the same press, so letting go ended
+// everything and he could only ever move one block one place.
+var editing=null;
 function armDrag(box,key){
  if(!box)return;
- var held=null,hold=null;
- function clear(){clearTimeout(hold);}
+ var hold=null,held=null,startY=0;
  function tidy(){
   Array.prototype.forEach.call(box.children,function(c){c.classList.remove('dragover');});
  }
- Array.prototype.forEach.call(box.children,function(el){
-  el.addEventListener('pointerdown',function(e){
-   // A long press inside a text field belongs to the field, not to us.
-   var t=e.target;
-   if(t&&t.closest&&t.closest('input,textarea,select'))return;
-   hold=setTimeout(function(){
-    held=el;el.classList.add('dragging');
-    try{navigator.vibrate&&navigator.vibrate(18);}catch(err){}
-   },420);
-  });
-  ['pointerup','pointercancel','pointerleave'].forEach(function(ev){
-   el.addEventListener(ev,function(){
-    clear();
-    if(held){held.classList.remove('dragging');held=null;saveOrder(box,key);}
-    tidy();
-   });
-  });
-  // While one is held, moving over another swaps them in place.
-  el.addEventListener('pointermove',function(e){
-   if(!held)return;
-   clear();
-   var over=document.elementFromPoint(e.clientX,e.clientY);
-   while(over&&over.parentNode!==box)over=over.parentNode;
-   if(!over||over===held)return;
-   tidy();
-   over.classList.add('dragover');
-   var kids=Array.prototype.slice.call(box.children);
-   if(kids.indexOf(held)<kids.indexOf(over))box.insertBefore(over,held);
-   else box.insertBefore(held,over);
-  });
-  // A press that never became a drag must still count as a tap.
-  el.addEventListener('click',function(e){
-   if(el.classList.contains('dragging')){e.preventDefault();e.stopPropagation();}
-  },true);
+ function enterEdit(){
+  if(editing)return;
+  editing={box:box,key:key};
+  document.body.classList.add('editing');
+  box.classList.add('editbox');
+  try{navigator.vibrate&&navigator.vibrate(18);}catch(e){}
+  showEditBar();
+ }
+ box.addEventListener('pointerdown',function(e){
+  var t=e.target;
+  if(t&&t.closest&&t.closest('input,textarea,select'))return;
+  if(editing)return;
+  startY=e.clientY;
+  hold=setTimeout(enterEdit,500);
  });
+ box.addEventListener('pointermove',function(e){
+  // A scroll is not a long press.
+  if(hold&&Math.abs(e.clientY-startY)>10){clearTimeout(hold);hold=null;}
+ });
+ ['pointerup','pointercancel','pointerleave'].forEach(function(ev){
+  box.addEventListener(ev,function(){clearTimeout(hold);hold=null;});
+ });
+
+ // Once in edit mode, any press picks a block up and any release drops it.
+ box.addEventListener('pointerdown',function(e){
+  if(!editing||editing.box!==box)return;
+  var el=e.target;
+  while(el&&el.parentNode!==box)el=el.parentNode;
+  if(!el)return;
+  held=el;el.classList.add('dragging');
+  e.preventDefault();
+ });
+ box.addEventListener('pointermove',function(e){
+  if(!held)return;
+  e.preventDefault();
+  var over=document.elementFromPoint(e.clientX,e.clientY);
+  while(over&&over.parentNode!==box)over=over.parentNode;
+  if(!over||over===held)return;
+  tidy();
+  over.classList.add('dragover');
+  var kids=Array.prototype.slice.call(box.children);
+  if(kids.indexOf(held)<kids.indexOf(over))box.insertBefore(over,held);
+  else box.insertBefore(held,over);
+ });
+ ['pointerup','pointercancel'].forEach(function(ev){
+  box.addEventListener(ev,function(){
+   if(!held)return;
+   held.classList.remove('dragging');held=null;tidy();
+   saveOrder(box,key);
+  });
+ });
+ // Nothing is clickable while arranging, exactly as on the phone.
+ box.addEventListener('click',function(e){
+  if(editing&&editing.box===box){e.preventDefault();e.stopPropagation();}
+ },true);
+}
+function showEditBar(){
+ var bar=document.getElementById('editBar');
+ if(!bar)return;
+ bar.hidden=false;
+}
+function endEdit(){
+ if(!editing)return;
+ saveOrder(editing.box,editing.key);
+ editing.box.classList.remove('editbox');
+ editing=null;
+ document.body.classList.remove('editing');
+ var bar=document.getElementById('editBar');
+ if(bar)bar.hidden=true;
 }
 
 // A short click when a button is pressed. Browsers block audio until the page
@@ -2462,60 +2522,15 @@ document.getElementById('recBig').onclick=function(){recStop();};
 var fabEl=document.getElementById('micFab');
 // Drag it anywhere. A press that never moves is still a tap, so recording is
 // not lost to a shaky finger.
+// The microphone used to be draggable and it kept ending up over something
+// else. He asked for it fixed at the bottom left, so the position is now in
+// the stylesheet and any spot saved from the draggable version is cleared.
 (function(){
- var sx=0,sy=0,ox=0,oy=0,moved=false,down=false;
- function place(x,y){
-  var w=fabEl.offsetWidth,h=fabEl.offsetHeight;
-  x=Math.max(6,Math.min(window.innerWidth-w-6,x));
-  y=Math.max(6,Math.min(window.innerHeight-h-6,y));
-  fabEl.classList.add('placed');
-  fabEl.style.left=x+'px';
-  fabEl.style.top=y+'px';
-  fabEl.style.bottom='auto';
-  try{localStorage.setItem('micPos',JSON.stringify({x:x,y:y}));}catch(e){}
- }
- function centre(){
-  var r=fabEl.getBoundingClientRect();
-  place((window.innerWidth-r.width)/2,window.innerHeight-r.height-96);
- }
  try{
-  if(!localStorage.getItem('micCentred')){
-   localStorage.removeItem('micPos');
-   localStorage.setItem('micCentred','1');
-  }
-  var saved=JSON.parse(localStorage.getItem('micPos')||'null');
-  if(saved)place(saved.x,saved.y);
+  localStorage.removeItem('micPos');
+  localStorage.removeItem('micCentred');
  }catch(e){}
- // Long press recentres it, for the next time it wanders.
- var hold=null;
- fabEl.addEventListener('pointerdown',function(){
-  hold=setTimeout(function(){
-   centre();
-   try{localStorage.removeItem('micPos');}catch(e){}
-   moved=true;
-  },650);
- });
- ['pointerup','pointermove','pointercancel'].forEach(function(ev){
-  fabEl.addEventListener(ev,function(){clearTimeout(hold);});
- });
- fabEl.addEventListener('pointerdown',function(e){
-  down=true;moved=false;
-  var r=fabEl.getBoundingClientRect();
-  sx=e.clientX;sy=e.clientY;ox=r.left;oy=r.top;
-  fabEl.setPointerCapture(e.pointerId);
- });
- fabEl.addEventListener('pointermove',function(e){
-  if(!down)return;
-  var dx=e.clientX-sx,dy=e.clientY-sy;
-  if(!moved&&Math.abs(dx)+Math.abs(dy)<8)return;
-  moved=true;fabEl.classList.add('dragging');
-  place(ox+dx,oy+dy);
- });
- fabEl.addEventListener('pointerup',function(e){
-  down=false;fabEl.classList.remove('dragging');
-  if(!moved)toggleRec();
- });
- fabEl.addEventListener('pointercancel',function(){down=false;fabEl.classList.remove('dragging');});
+ fabEl.addEventListener('click',function(){toggleRec();});
 })();
 document.getElementById('recCancel').onclick=function(){
  if(rec&&rec.state==='recording'){recAbort=true;recStop();}
@@ -2604,6 +2619,7 @@ document.getElementById('mailForm').addEventListener('submit',function(e){
  if(grid){nameChildren(grid,'tile');applyOrder(grid,'tileOrder');armDrag(grid,'tileOrder');}
  if(home){nameChildren(home,'blk');applyOrder(home,'blockOrder');armDrag(home,'blockOrder');}
 })();
+on('editDone',endEdit);
 renderNextReport();
 renderAsk();
 render();
