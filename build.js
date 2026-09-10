@@ -249,12 +249,15 @@ h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance
 .newbtn:active{transform:translateY(2px) scale(.99)}
 .newbtn .nb-c{flex:0 0 auto;min-width:34px;height:34px;border-radius:999px;display:grid;place-items:center;
  background:rgba(255,255,255,.25);font:800 16px Heebo,sans-serif;padding:0 9px}
-.newbtn.hot{background:linear-gradient(150deg,#ff6b84,var(--red));
- box-shadow:0 10px 26px rgba(234,67,53,.45);animation:nbeat 1.3s infinite}
+.newbtn.hot{background:linear-gradient(150deg,#ff5570,#c5221f);
+ outline:3px solid var(--red);outline-offset:3px;
+ box-shadow:0 10px 26px rgba(234,67,53,.55);animation:nbeat 1.1s infinite}
+.newbtn.hot b{font-size:20px}
+.newbtn.hot .nb-c{background:#fff;color:var(--red);min-width:42px;height:42px;font-size:19px}
 @keyframes nbeat{
- 0%{box-shadow:0 10px 26px rgba(234,67,53,.45)}
- 50%{box-shadow:0 10px 40px rgba(234,67,53,.85)}
- 100%{box-shadow:0 10px 26px rgba(234,67,53,.45)}}
+ 0%{box-shadow:0 10px 26px rgba(234,67,53,.5);transform:scale(1)}
+ 50%{box-shadow:0 14px 46px rgba(234,67,53,.95);transform:scale(1.02)}
+ 100%{box-shadow:0 10px 26px rgba(234,67,53,.5);transform:scale(1)}}
 @media(prefers-reduced-motion:reduce){.newbtn.hot{animation:none}}
 .whatsnew{background:var(--surface);border:1px solid var(--line);border-radius:13px;
  padding:14px 16px 8px;margin-top:18px;box-shadow:var(--shadow)}
@@ -281,7 +284,8 @@ section{margin-bottom:30px}
  border:1px solid var(--line)}
 .seg button{flex:1;position:relative;background:transparent;color:var(--dim);border:0;border-radius:7px;
  padding:8px 4px;font:500 14px Heebo,sans-serif;cursor:pointer}
-.dot{position:absolute;top:4px;inset-inline-end:6px;width:9px;height:9px;border-radius:50%;
+.dot{position:absolute;top:2px;inset-inline-end:4px;width:14px;height:14px;border-radius:50%;
+ border:2px solid var(--surface);
  background:#e5484d;box-shadow:0 0 0 0 rgba(229,72,77,.7);animation:pulse 1.4s infinite}
 @keyframes pulse{
  0%{box-shadow:0 0 0 0 rgba(229,72,77,.7)}
@@ -360,11 +364,12 @@ section{margin-bottom:30px}
 /* Unread is red and glowing, and it stays that way for days if that is how
    long it takes him to get to it. Touching it turns it green, which is his
    own mark that he dealt with it. */
-.bub.fresh{border:2px solid var(--red);background:var(--unread);
- animation:bubglow 2s ease-in-out infinite}
+.bub.fresh{border:3px solid var(--red);border-inline-start:10px solid var(--red);
+ background:var(--unread);animation:bubglow 1.5s ease-in-out infinite}
+.bub.fresh .badge{font-size:13px;padding:3px 12px}
 @keyframes bubglow{
- 0%,100%{box-shadow:0 6px 18px rgba(234,67,53,.2),0 0 0 0 rgba(234,67,53,.5)}
- 55%{box-shadow:0 6px 18px rgba(234,67,53,.2),0 0 0 11px rgba(234,67,53,0)}
+ 0%,100%{box-shadow:0 8px 22px rgba(234,67,53,.35),0 0 0 0 rgba(234,67,53,.65)}
+ 55%{box-shadow:0 8px 22px rgba(234,67,53,.35),0 0 0 14px rgba(234,67,53,0)}
 }
 @media(prefers-reduced-motion:reduce){.bub.fresh{animation:none}}
 .bub.touched{animation:none;border:2px solid var(--green);background:var(--fresh)}
@@ -999,8 +1004,6 @@ body.editing .bn{display:none}
    <svg viewBox="0 0 24 24"><path fill="#fff" d="M13.5 21v-7h2.4l.4-3h-2.8V9.2c0-.9.3-1.5 1.5-1.5h1.5V5.1c-.3 0-1.2-.1-2.2-.1-2.2 0-3.7 1.3-3.7 3.8V11H8v3h2.6v7z"/></svg></span>פייסבוק</a>
   <a class="ic" data-net="instagram" href="https://www.instagram.com/abaitzik/" target="_blank" rel="noopener"><span class="c c-ig">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="5"/><circle cx="12" cy="12" r="3.6"/><circle cx="17" cy="7" r="1" fill="#fff" stroke="none"/></svg></span>אינסטגרם</a>
-  <a class="ic" href="https://web.whatsapp.com" target="_blank" rel="noopener"><span class="c c-wa">
-   <svg viewBox="0 0 24 24"><path fill="#fff" d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3zm0 2a7 7 0 1 1-3.6 13l-.3-.2-2.4.6.7-2.3-.2-.3A7 7 0 0 1 12 5zm-2.6 3.5c-.2 0-.5.1-.7.3-.3.3-1 1-1 2.3s1 2.7 1.2 2.9c.1.2 2 3.1 4.9 4.2 2.4.9 2.9.8 3.4.7.5-.1 1.7-.7 1.9-1.4.2-.7.2-1.2.2-1.4l-.5-.3-1.9-.9c-.3-.1-.4-.1-.6.1l-.9 1.1c-.2.2-.3.2-.6.1-.3-.2-1.2-.5-2.3-1.5-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6l.4-.5.3-.5c.1-.2 0-.4 0-.5l-.9-2.1c-.2-.5-.4-.5-.6-.5z"/></svg></span>וואטסאפ</a>
   <button type="button" class="ic" id="icMail"><span class="c c-gm">
    <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M4 7v11h3V9.8z"/><path fill="#34A853" d="M20 7v11h-3V9.8z"/><path fill="#EA4335" d="M4 7l8 6 8-6v-1.5L12 11 4 5.5z"/><path fill="#FBBC05" d="M4 5.5L12 11l8-5.5V5H4z"/></svg></span>מייל</button>
   <a class="ic" href="https://itzik-site.vercel.app/" target="_blank" rel="noopener"><span class="c c-st">
@@ -1934,10 +1937,14 @@ function renderNew(){
  var btn=document.getElementById('newBtn');
  btn.classList.toggle('hot',c>0);
  document.getElementById('nbCount').textContent=c?c:'✓';
- document.getElementById('nbTitle').textContent=c?'יש מה חדש':'הכל מעודכן';
+ // Said in words as well as in colour. He told me a colour blind person would
+ // not notice the old marking at all, and he was right.
+ document.getElementById('nbTitle').textContent=c
+  ?(c===1?'הודעה אחת שלא קראת':c+' הודעות שלא קראת')
+  :'הכל נקרא';
  document.getElementById('nbSub').textContent=c
-  ?(c===1?'תשובה אחת מחכה לך. לחיצה פותחת אותה.':c+' תשובות מחכות לך. לחיצה פותחת אותן.')
-  :'אין תשובות שלא קראת.';
+  ?'לחיצה פותחת אותן, אחת אחת.'
+  :'אין תשובות שמחכות לך.';
  var K=D.openCmds||[];
  document.getElementById('wnCmds').innerHTML='<span class="n '+(K.length?'':'zero')+'">'+K.length+'</span><div>'+(K.length?'משימות פתוחות ממך':'אין משימות פתוחות')+(K.length?'<small>'+esc(K[0].text).slice(0,90)+'</small>':'')+'</div>';
  var N=D.now;
