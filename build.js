@@ -853,18 +853,22 @@ body.editing .bn{display:none}
 .pillinfo{margin-top:20px;font-size:16px;color:var(--ink);line-height:1.9}
 .pillinfo b{display:block;font:800 22px Heebo,sans-serif;color:var(--accent)}
 .pillinfo small{display:block;color:var(--dim);font-size:13px;font-weight:300}
-.recwrap{position:fixed;inset:0;z-index:60;display:grid;place-items:center;
- background:rgba(8,10,16,.82);backdrop-filter:blur(6px)}
-.recbox{width:min(340px,88vw);background:var(--surface);border-radius:26px;padding:26px 22px 20px;
- text-align:center;box-shadow:0 30px 70px rgba(0,0,0,.5)}
+/* He talks to me about a message he is looking at, so the recorder must not
+   cover it. It floats at the bottom and lets the screen show through, and it
+   ignores taps everywhere except on its own buttons. */
+.recwrap{position:fixed;inset:0;z-index:60;display:grid;align-items:end;justify-items:center;
+ padding-bottom:calc(78px + env(safe-area-inset-bottom));background:transparent;pointer-events:none}
+.recbox{width:min(340px,88vw);background:color-mix(in srgb,var(--surface) 78%,transparent);
+ backdrop-filter:blur(9px);border:1px solid var(--line);border-radius:26px;padding:16px 20px 14px;
+ text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.35);pointer-events:auto}
 .rectitle{font:700 20px Heebo,sans-serif;color:var(--ink)}
-.rectime{font:800 40px "Frank Ruhl Libre",Georgia,serif;color:var(--red);
+.rectime{font:800 30px "Frank Ruhl Libre",Georgia,serif;color:var(--red);
  font-variant-numeric:tabular-nums;margin:6px 0 16px}
-.recbig{width:132px;height:132px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;
+.recbig{width:96px;height:96px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;
  background:linear-gradient(180deg,#ff6b84,var(--red));
  box-shadow:0 14px 34px rgba(234,67,53,.5),inset 0 3px 0 rgba(255,255,255,.45);
  animation:mpulse 1.2s infinite}
-.recbig svg{width:52px;height:52px}
+.recbig svg{width:38px;height:38px}
 .recbig:active{transform:scale(.95)}
 .rechint{color:var(--dim);font-size:13.5px;font-weight:300;margin-top:14px}
 .reccancel{margin-top:12px;background:var(--sunk);color:var(--ink);border:1px solid var(--line);
@@ -3119,7 +3123,7 @@ function recTick(){
  var t=document.getElementById('recTime');
  if(t)t.textContent=recClock();
  recSaid.textContent='מקליט '+recClock()+'. לחיצה נוספת עוצרת ושולחת.';
- if(recSec>=180)recStop();
+ if(recSec>=480)recStop();
 }
 function recModal(open){
  var m=document.getElementById('recModal');
@@ -3175,7 +3179,7 @@ function recStart(){
   recBtn.disabled=false;
   paintMics('rec');
   recBtn.setAttribute('aria-label','עצירת ההקלטה ושליחה');
-  recSaid.textContent='מקליט 0:00. לחיצה נוספת עוצרת ושולחת.';
+  recSaid.textContent='מקליט 0:00. לחיצה נוספת עוצרת ושולחת. עד שמונה דקות.';
   recTimer=setInterval(recTick,1000);
  }).catch(function(){
   recBtn.disabled=false;recModal(false);
