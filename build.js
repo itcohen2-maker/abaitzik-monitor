@@ -689,16 +689,30 @@ body.editing .bn{display:none}
 .g9{background:linear-gradient(150deg,#f48fb1,#ad1457)}
 .g10{background:linear-gradient(150deg,#ffe082,#f57f17)}
 .g11{background:linear-gradient(150deg,#b9f6ca,#00897b)}
+/* A tile with something waiting inside it. He asked for the screen to tell him
+   where to look: the reports tile when a report he has not opened is up, the
+   pill tile when a dose is due. It stops the moment he opens that screen. */
+@keyframes tileglow{
+ 0%,100%{box-shadow:0 10px 22px rgba(20,30,60,.22),0 0 0 0 rgba(234,67,53,.5),
+  inset 0 1px 0 rgba(255,255,255,.55),inset 0 -3px 8px rgba(0,0,0,.22)}
+ 55%{box-shadow:0 10px 22px rgba(20,30,60,.22),0 0 0 9px rgba(234,67,53,0),
+  inset 0 1px 0 rgba(255,255,255,.55),inset 0 -3px 8px rgba(0,0,0,.22)}
+}
+.gt.glow{animation:tileglow 2.1s ease-out infinite}
+.gt .flag{position:absolute;top:9px;inset-inline-end:11px;background:var(--red);color:#fff;
+ font:700 10.5px Heebo,sans-serif;padding:2px 8px;border-radius:999px;text-shadow:none}
+@media(prefers-reduced-motion:reduce){.gt.glow{animation:none}}
 /* On air. He asked to see that someone is actually working, and that an answer
    can land on its own without waiting for the other nine. The strip talks to
    version.json every forty seconds, so it moves while the page stays put. */
-.live{display:flex;align-items:center;gap:9px;padding:9px 15px;margin:0 0 12px;
- background:var(--surface);border:1px solid var(--line);border-radius:999px;
- font-size:13.5px;box-shadow:var(--shadow)}
-.live b{font-weight:500}
+.live{display:flex;align-items:center;gap:11px;padding:13px 18px;margin:0 0 14px;
+ background:var(--surface);border:1px solid var(--line);border-radius:18px;
+ font-size:16px;box-shadow:var(--shadow)}
+.live b{font-weight:500;font-size:17px}
+.live.busy{border-color:var(--red);box-shadow:0 8px 20px rgba(234,67,53,.18)}
 .live span:last-child{color:var(--dim);font-weight:300;margin-inline-start:auto;
- font-variant-numeric:tabular-nums}
-.live .pulse{width:9px;height:9px;flex:0 0 9px;border-radius:50%;background:var(--green);
+ font-size:13.5px;text-align:end;font-variant-numeric:tabular-nums}
+.live .pulse{width:13px;height:13px;flex:0 0 13px;border-radius:50%;background:var(--green);
  box-shadow:0 0 0 0 rgba(52,168,83,.55);animation:onair 2s infinite}
 .live.busy .pulse{background:var(--red);box-shadow:0 0 0 0 rgba(234,67,53,.55)}
 @keyframes onair{
@@ -839,6 +853,22 @@ body.editing .bn{display:none}
 .bn button{position:relative;background:none;border:0;cursor:pointer;color:var(--dim);
  font:500 10px Heebo,sans-serif;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 10px}
 .bn button span{font-size:19px;line-height:1}
+/* The emoji row was the one part of the screen that looked like a default.
+   These are drawn instead: same stroke weight as the rest of the app, and
+   they take the button's own colour, so the selected tab colours its icon. */
+.bn button svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.7;
+ stroke-linecap:round;stroke-linejoin:round}
+.bn button[aria-pressed="true"] svg{stroke-width:2}
+/* Something new on a screen he is not looking at. The tab breathes until he
+   opens it, and stops the moment he does. */
+@keyframes tabnudge{
+ 0%,100%{transform:translateY(0)}
+ 50%{transform:translateY(-3px)}
+}
+.bn button.hasnew svg{animation:tabnudge 1.8s ease-in-out infinite}
+.bn button.hasnew{color:var(--red)}
+.bn button[aria-pressed="true"].hasnew{color:#fff}
+@media(prefers-reduced-motion:reduce){.bn button.hasnew svg{animation:none}}
 .bn button[aria-pressed="true"]{color:#fff;background:linear-gradient(150deg,#5aa9fb,var(--blue));
  border-radius:14px;box-shadow:0 5px 12px rgba(66,133,244,.35)}
 .bn button:active{transform:scale(.94)}
@@ -1265,11 +1295,11 @@ body.editing .bn{display:none}
 </div>
 
 <nav class="bn" aria-label="מסכים">
- <button type="button" id="nH" aria-pressed="true"><span aria-hidden="true">🏠</span>בית</button>
- <button type="button" id="nM" aria-pressed="false"><span aria-hidden="true">💬</span>צ׳אט<i class="dot" id="mDot" hidden></i></button>
- <button type="button" id="nQ" aria-pressed="false"><span aria-hidden="true">📈</span>רשתות</button>
- <button type="button" id="nL" aria-pressed="false"><span aria-hidden="true">🎯</span>לידים</button>
- <button type="button" id="nR" aria-pressed="false"><span aria-hidden="true">📄</span>דוחות</button>
+ <button type="button" id="nH" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10.5V20h12v-9.5"/><path d="M10 20v-5h4v5"/></svg>בית</button>
+ <button type="button" id="nM" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12.5c0 3.9-3.6 7-8 7a9 9 0 0 1-2.6-.4L5 21l1.2-3.3A6.7 6.7 0 0 1 4 12.5c0-3.9 3.6-7 8-7s8 3.1 8 7Z"/></svg>צ׳אט<i class="dot" id="mDot" hidden></i></button>
+ <button type="button" id="nQ" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"/><path d="M7 19v-6"/><path d="M12 19V7"/><path d="M17 19v-9"/></svg>רשתות</button>
+ <button type="button" id="nL" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>לידים<i class="dot" id="lDot" hidden></i></button>
+ <button type="button" id="nR" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8L18.5 8v12.5h-13Z"/><path d="M14 3.5V8h4.5"/><path d="M8.5 13h7M8.5 16.5h4.5"/></svg>דוחות<i class="dot" id="rDot" hidden></i></button>
 </nav>
 
 <div class="stamp"><span id="built"></span></div>
@@ -1487,6 +1517,7 @@ function renderThread(){
    +'<div class="rrow">'
    +'<button type="button" class="rb rmic" data-i="'+i+'">🎤 להשיב בקול</button>'
    +'<button type="button" class="rb rtxt" data-i="'+i+'">✍️ בכתב</button>'
+   +'<button type="button" class="rb rcam" data-i="'+i+'">📷 מצלמה</button>'
    +'<button type="button" class="rb rfile" data-i="'+i+'">📎 קובץ</button>'
    +'</div>'
    +'<form class="rform" data-i="'+i+'">'
@@ -1531,6 +1562,7 @@ function replyBox(quote){
   +'<div class="rrow">'
   +'<button type="button" class="rb bmic">🎤 להשיב בקול</button>'
   +'<button type="button" class="rb btxt">✍️ בכתב</button>'
+  +'<button type="button" class="rb bcam">📷 מצלמה</button>'
   +'<button type="button" class="rb bfile">📎 קובץ</button>'
   +'</div>'
   +'<form class="rform"><textarea placeholder="מה יש לך להגיד על זה"></textarea>'
@@ -1553,6 +1585,13 @@ function wireBoxes(root){
    e.stopPropagation();
    document.getElementById('fCap').value=q;
    openPicker('full','image/*,video/*,audio/*,application/pdf');
+  };
+  // Straight to the camera. On a phone this opens the lens instead of the
+  // gallery, which is what he means when he says he wants to show me something.
+  box.querySelector('.bcam').onclick=function(e){
+   e.stopPropagation();
+   document.getElementById('fCap').value=q;
+   shoot();
   };
   txt.onclick=function(e){
    e.stopPropagation();
@@ -1615,6 +1654,16 @@ function wireReplies(host,all){
    // this recording is an answer to. The caption rides along with the audio.
    document.getElementById('fCap').value=quoteOf(m);
    toggleRec();
+  };
+ });
+ Array.prototype.forEach.call(host.querySelectorAll('.rcam'),function(b){
+  b.onclick=function(e){
+   e.stopPropagation();
+   var m=at(b);
+   answering=m;
+   markAnswering(b.closest('.bub'));
+   document.getElementById('fCap').value=quoteOf(m);
+   shoot();
   };
  });
  Array.prototype.forEach.call(host.querySelectorAll('.rfile'),function(b){
@@ -1764,6 +1813,38 @@ function markOneSeen(m){
 function paintDot(){
  var d=document.getElementById('mDot');
  if(d)d.hidden=!unreadList().length;
+ paintNew();
+}
+// How many reports are newer than the last one he opened. The mark itself
+// lives further down in reportsSeen, which keeps the newest timestamp.
+function newReports(){
+ var cut=reportsSeen();
+ return (D.reports||[]).filter(function(r){return (r.at||'')>cut;});
+}
+// He asked the screen to point at what needs him. A tile glows and wears a
+// count, and the tab at the bottom breathes, until he opens that screen.
+function paintNew(){
+ var msgs=unreadList().length;
+ var reps=newReports().length;
+ var t=lastPill();
+ var pillNow=!t||(Date.now()-t)>=PILLGAP;
+ function mark(id,on,label){
+  var el=document.getElementById(id);
+  if(!el)return;
+  el.classList.toggle('glow',!!on);
+  var f=el.querySelector(':scope > .flag');
+  if(on&&!f){
+   f=document.createElement('span');f.className='flag';el.appendChild(f);
+  }
+  if(f)f.textContent=label||'';
+  if(f&&!on)f.remove();
+ }
+ mark('gChat',msgs>0,String(msgs));
+ mark('gReports',reps>0,String(reps));
+ mark('gPill',pillNow,'עכשיו');
+ var nM=document.getElementById('nM');if(nM)nM.classList.toggle('hasnew',msgs>0);
+ var nR=document.getElementById('nR');if(nR)nR.classList.toggle('hasnew',reps>0);
+ var rd=document.getElementById('rDot');if(rd)rd.hidden=!reps;
 }
 // Unread used to mean newer than the last time he opened the chat. That broke
 // the moment I wrote a reply with a timestamp earlier than one already there:
@@ -1953,9 +2034,10 @@ function checkFresh(){
 }
 checkFresh();
 paintLive(null);
+paintNew();
 // Forty seconds, not two minutes. He wants to see that something is alive.
 setInterval(checkFresh,40000);
-setInterval(function(){paintLive(null);},20000);
+setInterval(function(){paintLive(null);paintNew();},20000);
 document.addEventListener('visibilitychange',function(){if(!document.hidden)checkFresh();});
 
 
@@ -1977,6 +2059,7 @@ function reportsSeen(){
 function markReportsSeen(){
  try{localStorage.setItem('reportsSeen',newestReport());}catch(e){}
  paintReportDot();
+ paintNew();
 }
 function paintReportDot(){
  var fresh=newestReport()&&newestReport()>reportsSeen();
@@ -2402,15 +2485,21 @@ if(locked()){
 
 showCodeBox();
 
-// The camera tile: straight to the phone camera, no picker in between.
-document.getElementById('gCam').onclick=function(){
- pane('m');renderThread();
+// Straight to the phone camera, no picker in between. Used by the camera tile
+// and by the camera button that sits beside every message and every report.
+function shoot(){
  var f=document.getElementById('fileForm');
- f.hidden=false;
+ if(f)f.hidden=false;
  var pick=document.getElementById('fPick');
+ if(!pick)return;
+ setQ('normal');
  pick.setAttribute('accept','image/*');
  pick.setAttribute('capture','environment');
  pick.click();
+}
+document.getElementById('gCam').onclick=function(){
+ pane('m');renderThread();
+ shoot();
 };
 
 // ---- what he ate ----
