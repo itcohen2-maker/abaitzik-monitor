@@ -113,3 +113,35 @@ test('orderThreads: fresh first, then standby, then the rest, numbered', () => {
     [4, 'done', 'c1'],
   ]);
 });
+
+test('splitThreads: a reply to a reply lands in the root thread, in time order', () => {
+  const th = ML.splitThreads([
+    { id: 'a1', at: '2026-09-10T10:00:00', from: 'claude', text: 'root', re: '' },
+    { id: 'a2', at: '2026-09-10T10:05:00', from: 'itzik', text: 'reply', re: 'a1' },
+    { id: 'a3', at: '2026-09-10T10:10:00', from: 'claude', text: 'reply to reply', re: 'a2' },
+  ]);
+  assert.equal(th.length, 1);
+  assert.equal(th[0].key, 'a1');
+  assert.deepEqual(th[0].msgs.map(m => m.id), ['a1', 'a2', 'a3']);
+});
+
+test('splitThreads: a re cycle does not hang and drops nothing', () => {
+  const th = ML.splitThreads([
+    { id: 'x1', at: '2026-09-10T10:00:00', from: 'claude', text: 'one', re: 'x2' },
+    { id: 'x2', at: '2026-09-10T10:01:00', from: 'itzik', text: 'two', re: 'x1' },
+  ]);
+  const all = th.reduce((n, t) => n + t.msgs.length, 0);
+  assert.equal(all, 2);
+});
+
+test('rootKeyOf walks to the root and stops on a broken link', () => {
+  const byKey = {
+    a1: { id: 'a1', re: '' },
+    a2: { id: 'a2', re: 'a1' },
+    a3: { id: 'a3', re: 'a2' },
+    z9: { id: 'z9', re: 'missing' },
+  };
+  assert.equal(ML.rootKeyOf(byKey.a3, byKey), 'a1');
+  assert.equal(ML.rootKeyOf(byKey.a1, byKey), 'a1');
+  assert.equal(ML.rootKeyOf(byKey.z9, byKey), 'z9');
+});

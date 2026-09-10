@@ -1660,6 +1660,32 @@ function bubbleHtml(m,i,fresh,handled){
   +'<button type="button" class="cp" data-i="'+i+'" aria-label="העתקה">העתקה</button>'
   +'</span>'+linkify(m.text)+'</div>';
 }
+// Copy, paste and send on every reply form, whatever screen it is on.
+function pasteRow(){
+ return '<div class="rrow"><button type="button" class="rb rpaste">📋 הדבקה</button>'
+  +'<button type="submit">שליחה</button></div>';
+}
+function wirePaste(root){
+ Array.prototype.forEach.call((root||document).querySelectorAll('.rpaste'),function(b){
+  if(b.getAttribute('data-wired'))return;
+  b.setAttribute('data-wired','1');
+  b.onclick=function(e){
+   e.stopPropagation();e.preventDefault();
+   var ta=b.closest('form').querySelector('textarea');
+   if(navigator.clipboard&&navigator.clipboard.readText){
+    navigator.clipboard.readText().then(function(t){ta.value=(ta.value?ta.value+' ':'')+t;ta.focus();},
+     function(){ta.focus();b.textContent='לחיצה ארוכה בתיבה, ואז הדבקה';});
+   }else{ta.focus();b.textContent='לחיצה ארוכה בתיבה, ואז הדבקה';}
+  };
+ });
+}
+// The unread screen has no data-k on the form, so a reply from there must
+// resolve the root itself, the same way the thread cards already are keyed.
+function rootKeyFor(m){
+ var byKey={};
+ (D.chat||[]).forEach(function(x){byKey[ML.keyOf(x)]=x;});
+ return ML.rootKeyOf(m,byKey);
+}
 function renderThread(){
  var unreadKeys=unreadList().map(claudeKey);
  var touched=touchedIds();
@@ -1703,12 +1729,12 @@ function renderThread(){
    +'</div>'
    +'<form class="rform" data-i="'+ri2+'" data-k="'+esc(t.key)+'">'
    +'<textarea placeholder="התשובה שלך בשרשור הזה"></textarea>'
-   +'<div class="rrow"><button type="button" class="rb rpaste">📋 הדבקה</button>'
-   +'<button type="submit">שליחה</button></div>'
+   +pasteRow()
    +'<span class="rsaid"></span></form>'
    +'</div></details>';
  }).join('');
  wireReplies(host,flat);
+ wirePaste(host);
  if(picking)host.classList.add('picking');
  // Touching a card, or any bubble in it, turns every unread answer in it green.
  Array.prototype.forEach.call(host.querySelectorAll('.th'),function(card){
@@ -1751,16 +1777,6 @@ function renderThread(){
    }else fallbackCopy(t,done);
   };
  });
- Array.prototype.forEach.call(host.querySelectorAll('.rpaste'),function(b){
-  b.onclick=function(e){
-   e.stopPropagation();e.preventDefault();
-   var ta=b.closest('form').querySelector('textarea');
-   if(navigator.clipboard&&navigator.clipboard.readText){
-    navigator.clipboard.readText().then(function(t){ta.value=(ta.value?ta.value+' ':'')+t;ta.focus();},
-     function(){ta.focus();b.textContent='לחיצה ארוכה בתיבה, ואז הדבקה';});
-   }else{ta.focus();b.textContent='לחיצה ארוכה בתיבה, ואז הדבקה';}
-  };
- });
 }
 // The same three ways in, next to anything I put on his screen: a report, a
 // notice, a message. He asked for it beside every one of them, because an
@@ -1774,13 +1790,14 @@ function replyBox(quote){
   +'<button type="button" class="rb bfile">📎 קובץ</button>'
   +'</div>'
   +'<form class="rform"><textarea placeholder="מה יש לך להגיד על זה"></textarea>'
-  +'<button type="submit">שליחה</button><span class="rsaid"></span></form>'
+  +pasteRow()+'<span class="rsaid"></span></form>'
   +'</div>';
 }
 function wireBoxes(root){
  Array.prototype.forEach.call((root||document).querySelectorAll('.rbox'),function(box){
   if(box.getAttribute('data-wired'))return;
   box.setAttribute('data-wired','1');
+  wirePaste(box);
   var q=box.getAttribute('data-q')||'';
   var f=box.querySelector('.rform');
   var txt=box.querySelector('.btxt');
@@ -1812,7 +1829,7 @@ function wireBoxes(root){
   f.addEventListener('submit',function(e){
    e.preventDefault();
    var box2=f.querySelector('textarea');
-   var btn=f.querySelector('button');
+   var btn=f.querySelector('button[type=submit]');
    var said=f.querySelector('.rsaid');
    var text=box2.value.trim();
    if(!text)return;
@@ -1867,7 +1884,7 @@ function wireReplies(host,all){
    // The recorder already knows how to send; it just needs to be told what
    // this recording is an answer to. The caption rides along with the audio.
    document.getElementById('fCap').value=quoteOf(m);
-   setStandby(ML.keyOf(m));
+   setStandby(rootKeyFor(m));
    toggleRec();
   };
  });
@@ -1879,7 +1896,7 @@ function wireReplies(host,all){
    var host2=b.closest('.bub')||b.closest('.th');
    markAnswering(host2);
    document.getElementById('fCap').value=quoteOf(m);
-   setStandby(ML.keyOf(m));
+   setStandby(rootKeyFor(m));
    shoot(true);
   };
  });
@@ -1891,7 +1908,7 @@ function wireReplies(host,all){
    var host2=b.closest('.bub')||b.closest('.th');
    markAnswering(host2);
    document.getElementById('fCap').value=quoteOf(m);
-   setStandby(ML.keyOf(m));
+   setStandby(rootKeyFor(m));
    openPicker('full','image/*,video/*,audio/*,application/pdf',true);
   };
  });
@@ -1913,7 +1930,7 @@ function wireReplies(host,all){
    e.preventDefault();
    var m=at(f);
    var box=f.querySelector('textarea');
-   var btn=f.querySelector('button');
+   var btn=f.querySelector('button[type=submit]');
    var said=f.querySelector('.rsaid');
    var text=box.value.trim();
    if(!text)return;
@@ -1922,9 +1939,9 @@ function wireReplies(host,all){
    var full=quoteOf(m)+String.fromCharCode(10)+text;
    sendText('תשובה מהמוניטור',full,'תשובה').then(function(how){
     var p=pending();
-    p.push({at:new Date().toISOString(),text:full,re:m.id||''});
+    p.push({at:new Date().toISOString(),text:full,re:rootKeyFor(m)});
     savePending(p);
-    setStandby(f.getAttribute('data-k')||ML.keyOf(m));
+    setStandby(f.getAttribute('data-k')||rootKeyFor(m));
     box.value='';
     said.textContent=how==='ntfy'?'נשלח בערוץ הגיבוי.':'נשלח.';
     markTouched(m);markOneSeen(m);
@@ -2143,16 +2160,23 @@ function updateDot(){
 }
 var PANES={a:'pA',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
-var PILLGAP=ML.PILL_GAP;
+var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
 // The last dose. From the chat it is read out of the message text, because he
 // confirms the hour he took it and that hour is what the count runs from.
 function lastPill(){
  var c=(D.chat||[]).filter(function(m){return m.from==='itzik'&&/לקחתי כדור/.test(m.text||'');});
- var local=0;
- try{local=Number(localStorage.getItem('lastPill')||0);}catch(e){}
  var last=c.length?c[c.length-1]:null;
  var fromChat=last?ML.parsePillTime(last.text,last.at):0;
- return Math.max(local,fromChat);
+ var chatAt=last?(Date.parse(last.at||'')||0):0;
+ var rec=null;
+ try{
+  var raw=localStorage.getItem('lastPill')||'';
+  rec=raw.charAt(0)==='{'?JSON.parse(raw):(Number(raw)?{taken:Number(raw),recordedAt:Number(raw)}:null);
+ }catch(e){rec=null;}
+ // The most recent record wins, not the largest hour: a correction to an
+ // earlier time is still the newest thing he said.
+ if(rec&&rec.taken&&rec.recordedAt>=chatAt)return rec.taken;
+ return fromChat||(rec&&rec.taken)||0;
 }
 function hm(x){return x.getHours()+':'+String(x.getMinutes()).padStart(2,'0');}
 function renderPill(){
@@ -2191,7 +2215,7 @@ function recordPill(takenMs){
  var box=document.getElementById('msgText');
  box.value='לקחתי כדור בשעה '+hm(new Date(takenMs))+'.';
  document.getElementById('msgForm').dispatchEvent(new Event('submit',{cancelable:true}));
- try{localStorage.setItem('lastPill',String(takenMs));}catch(e){}
+ try{localStorage.setItem('lastPill',JSON.stringify({taken:takenMs,recordedAt:Date.now()}));}catch(e){}
  closePillSheet();
  renderPill();
  paintNew();
@@ -2736,11 +2760,12 @@ function renderUnread(){
    +'</div>'
    +'<form class="rform" data-i="'+i+'">'
    +'<textarea placeholder="התשובה שלך להודעה הזאת"></textarea>'
-   +'<button type="submit">שליחת התשובה</button>'
+   +pasteRow()
    +'<span class="rsaid"></span></form>'
    +'</div>';
  }).join('');
  wireReplies(host,list);
+ wirePaste(host);
  Array.prototype.forEach.call(host.querySelectorAll('.bub'),function(el,n){
   el.addEventListener('click',function(){
    if(!el.classList.contains('fresh'))return;

@@ -114,3 +114,25 @@ test('new things blink hard and fast, and stop for reduced motion', () => {
   assert.ok(!html.includes('.bn button.hasnew{animation:hardblink .5s steps(1) infinite;border-radius:12px}'));
   assert.ok(/prefers-reduced-motion:reduce\)\{[^}]*\.bn button\.hasnew[^}]*animation:none/.test(html));
 });
+
+test('the newest pill record wins, not the largest hour', () => {
+  const html = renderPage(fixture());
+  assert.ok(html.includes("JSON.stringify({taken:takenMs,recordedAt:Date.now()})"));
+  assert.ok(html.includes('rec.recordedAt>=chatAt'));
+  assert.ok(!html.includes('Math.max(local,fromChat)'));
+});
+
+test('paste sits beside send on every reply form', () => {
+  const html = renderPage(fixture());
+  assert.ok(html.includes('function pasteRow('));
+  assert.equal((html.match(/\+pasteRow\(\)/g) || []).length >= 3, true, 'renderThread, renderUnread and replyBox all use pasteRow');
+  assert.ok(!html.includes("f.querySelector('button')"), 'submit lookups must not grab the paste button');
+});
+
+test('standby and re are keyed on the thread root from every screen', () => {
+  const html = renderPage(fixture());
+  assert.ok(html.includes('function rootKeyFor('));
+  assert.ok(html.includes("setStandby(f.getAttribute('data-k')||rootKeyFor(m))"));
+  assert.ok(html.includes('re:rootKeyFor(m)'));
+  assert.ok(!html.includes("ML.keyOf(m))"), 'no standby keyed on a bare message key');
+});
