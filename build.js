@@ -59,6 +59,19 @@ function reportNets(r) {
   return Object.keys(NET_WORDS).filter(k => NET_WORDS[k].test(t));
 }
 
+// The page as a string, from a payload. build() feeds it real data; the
+// tests feed it a fixture. Replacements use a function so that a "$&" inside
+// the JSON or the lib source is not expanded by String.replace.
+const LIB = fs.readFileSync(path.join(__dirname, 'lib', 'monitor-logic.js'), 'utf8');
+function renderPage(payload) {
+  const data = JSON.stringify(payload).replace(/</g, '\\u003c');
+  return PAGE
+    .replace('__LIB__', () => LIB.replace(/<\/script/gi, '<\\/script'))
+    .replace('__DATA__', () => data)
+    .replace('__NET__', () => JSON.stringify(NET))
+    .replace('__CAT__', () => JSON.stringify(CAT));
+}
+
 function build() {
   const state = store.load();
   const items = Object.values(state.items).map(i => ({
@@ -96,7 +109,7 @@ function build() {
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
 
   const chat = loadDocs('chat')
-    .map(m => ({ at: m.at, from: m.from, text: m.text, status: m.status || '' }))
+    .map(m => ({ id: m.id, at: m.at, from: m.from, text: m.text, status: m.status || '', re: m.re || '' }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? -1 : 1));
 
   const openCmds = loadDocs('commands')
@@ -134,10 +147,7 @@ function build() {
     chat,
   };
 
-  const html = PAGE
-    .replace('__DATA__', JSON.stringify(payload).replace(/</g, '\\u003c'))
-    .replace('__NET__', JSON.stringify(NET))
-    .replace('__CAT__', JSON.stringify(CAT));
+  const html = renderPage(payload);
 
   fs.mkdirSync(OUT_DIR, { recursive: true });
   fs.writeFileSync(path.join(OUT_DIR, 'index.html'), html, 'utf8');
@@ -181,7 +191,7 @@ const PAGE = `<!DOCTYPE html>
  --ground:#f6f8fc;--surface:#fff;--sunk:#eef2fa;--ink:#1f2430;--dim:#5f6b7f;
  --line:#e3e9f4;--accent:#1a73e8;--accent-soft:#e8f0fe;--wait:#e37400;
  --gold:#f0b429;--fresh:#e6f6ec;--unread:#fdeceb;
- --shadow:0 2px 8px rgba(30,40,70,.07)}
+ --shadow:0 2px 8px rgba(30,40,70,.07);--r:18px}
 @media (prefers-color-scheme:dark){:root{--ground:#0f1218;--surface:#181d27;--sunk:#141922;
  --ink:#eef1f7;--dim:#9aa5b8;--line:#252c39;--accent:#8ab4f8;--accent-soft:#1b2b45;
  --wait:#fbbc05;--fresh:#12301f;--unread:#331615;--shadow:0 2px 10px rgba(0,0,0,.4)}}
@@ -206,12 +216,12 @@ h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance
 .pill i{width:7px;height:7px;border-radius:50%;background:var(--accent);
  animation:pulse 2.4s infinite;font-style:normal}
 .alerts{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;
- background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:13px 15px;box-shadow:var(--shadow)}
+ background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:13px 15px;box-shadow:var(--shadow)}
 .alerts b{display:block;font:500 15px Heebo,sans-serif}
 .alerts small{display:block;color:var(--dim);font-size:12.5px;line-height:1.5;margin-top:2px}
 .abtn{flex:0 0 auto;text-decoration:none;background:var(--accent);color:#fff;border-radius:10px;
  padding:10px 16px;font:500 14px Heebo,sans-serif;white-space:nowrap}
-.codebox{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+.codebox{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
  padding:13px 15px;margin-top:14px;box-shadow:var(--shadow)}
 .codebox b{display:block;font:500 15px Heebo,sans-serif}
 .codebox small{display:block;color:var(--dim);font-size:12.5px;line-height:1.5;margin:2px 0 9px}
@@ -233,7 +243,7 @@ h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance
  padding:11px 13px;color:var(--ink);font:500 14px Heebo,sans-serif;box-shadow:var(--shadow)}
 .links a span{font-size:17px}
 .links a small{display:block;color:var(--dim);font-weight:300;font-size:12px}
-.sent{display:flex;align-items:center;gap:11px;margin-top:12px;padding:12px 15px;border-radius:16px;
+.sent{display:flex;align-items:center;gap:11px;margin-top:12px;padding:12px 15px;border-radius:var(--r);
  background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);font-size:14px}
 .sent .s-dot{width:11px;height:11px;flex:0 0 11px;border-radius:50%;background:var(--wait);
  animation:pulse 1.5s infinite}
@@ -241,7 +251,7 @@ h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance
 .sent b{display:block;font:500 15px Heebo,sans-serif}
 .sent small{display:block;color:var(--dim);font-size:12px;font-weight:300}
 .newbtn{width:100%;display:flex;align-items:center;gap:12px;margin:14px 0 10px;padding:15px 17px;
- border:0;border-radius:18px;cursor:pointer;text-align:start;color:#fff;font-family:Heebo,sans-serif;
+ border:0;border-radius:var(--r);cursor:pointer;text-align:start;color:#fff;font-family:Heebo,sans-serif;
  background:linear-gradient(150deg,#9aa5b8,#6b7688);box-shadow:0 8px 18px rgba(20,30,60,.16)}
 .newbtn .nb-l{flex:1;min-width:0}
 .newbtn b{display:block;font:800 17px Heebo,sans-serif}
@@ -259,7 +269,19 @@ h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance
  50%{box-shadow:0 14px 46px rgba(234,67,53,.95);transform:scale(1.02)}
  100%{box-shadow:0 10px 26px rgba(234,67,53,.5);transform:scale(1)}}
 @media(prefers-reduced-motion:reduce){.newbtn.hot{animation:none}}
-.whatsnew{background:var(--surface);border:1px solid var(--line);border-radius:13px;
+/* He asked for a blink that cannot be missed. Two colours, no easing, twice a
+   second, on the count and on the badges only, so the page itself stays
+   readable while the thing that needs him flashes. */
+@keyframes hardblink{
+ 0%,49%{background:var(--red);color:#fff;box-shadow:0 0 0 4px rgba(234,67,53,.55)}
+ 50%,100%{background:#fff;color:var(--red);box-shadow:0 0 0 4px rgba(255,255,255,.9)}}
+.newbtn.hot .nb-c{animation:hardblink .5s steps(1) infinite}
+.gt.glow .flag{animation:hardblink .5s steps(1) infinite}
+.th-fresh>summary .badge{animation:hardblink .5s steps(1) infinite}
+.bub.fresh .badge{animation:hardblink .5s steps(1) infinite}
+.bn button.hasnew,.bn button.hasnew.blink{animation:hardblink .5s steps(1) infinite}
+@media(prefers-reduced-motion:reduce){.newbtn.hot .nb-c,.gt.glow .flag,.th-fresh>summary .badge,.bub.fresh .badge,.bn button.hasnew,.bn button.hasnew.blink{animation:none}}
+.whatsnew{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
  padding:14px 16px 8px;margin-top:18px;box-shadow:var(--shadow)}
 .whatsnew h2{margin-bottom:8px}
 .wn{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line);font-size:15px}
@@ -270,7 +292,7 @@ h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance
 .wn small{color:var(--dim);font-weight:300;display:block;font-size:13px}
 .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:22px 0 26px}
 .tile{position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--line);
- border-radius:13px;padding:14px 15px;box-shadow:var(--shadow)}
+ border-radius:var(--r);padding:14px 15px;box-shadow:var(--shadow)}
 .tile:before{content:"";position:absolute;inset-block-start:0;inset-inline:0;height:3px;
  background:var(--accent);opacity:.85}
 .tile.wait:before{background:var(--wait)}
@@ -402,6 +424,30 @@ section{margin-bottom:30px}
    them, and each one is full width because there is no thread to place it in. */
 .ubox{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
 .ubox .bub{max-width:100%;align-self:stretch}
+/* One card per thread. Red until he touches it, amber while he waits on me,
+   green once it is done. The number is its place in the list right now, so
+   it changes when a reply lands and the card jumps up. */
+.th{background:var(--surface);border:2px solid var(--line);border-radius:var(--r);
+ margin-bottom:12px;box-shadow:var(--shadow);overflow:hidden}
+.th>summary{list-style:none;display:flex;align-items:center;gap:9px;flex-wrap:wrap;
+ padding:12px 14px;cursor:pointer;font-size:15px}
+.th>summary::-webkit-details-marker{display:none}
+.th>summary b{flex:1 1 60%;min-width:0;font-weight:600;line-height:1.35}
+.th>summary small{color:var(--dim);font-size:12px;font-variant-numeric:tabular-nums}
+.th .num{flex:0 0 auto;min-width:30px;height:30px;border-radius:999px;display:grid;place-items:center;
+ background:var(--sunk);color:var(--ink);font:800 14px Heebo,sans-serif;padding:0 8px}
+.th .rcopyall{margin-inline-start:auto}
+.thbody{display:flex;flex-direction:column;gap:9px;padding:0 14px 14px;border-top:1px solid var(--line)}
+.thbody .bub{max-width:92%}
+.th-fresh{border-color:var(--red);background:var(--unread);animation:bubglow 1.5s ease-in-out infinite}
+.th-fresh .num{background:var(--red);color:#fff}
+.th-standby{border-color:#d9a441;background:#fff8ea}
+.th-standby .num{background:#f6e7c8;color:#8a5a12}
+.th-done{border-color:var(--green)}
+.th-done .num{background:var(--fresh);color:var(--green)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .th-standby{background:#33290f}}
+:root[data-theme="dark"] .th-standby{background:#33290f}
+@media(prefers-reduced-motion:reduce){.th-fresh{animation:none}}
 /* A light running around the thing he is working on. He asked to see that this
    one card, and nothing else, is what has his hand on it right now. */
 .busyring{position:relative;isolation:isolate}
@@ -684,7 +730,7 @@ body.editing .bn{display:none}
 .c-add:after{display:none}
 
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:2px}
-.gt{border:0;text-align:start;cursor:pointer;border-radius:22px;padding:14px 15px;color:#fff;min-height:88px;
+.gt{border:0;text-align:start;cursor:pointer;border-radius:var(--r);padding:14px 15px;color:#fff;min-height:88px;
  position:relative;overflow:hidden;isolation:isolate;
  transition:transform .09s ease,box-shadow .09s ease,filter .09s ease;
  display:flex;flex-direction:column;justify-content:space-between;font-family:Heebo,sans-serif;
@@ -888,6 +934,19 @@ body.editing .bn{display:none}
 .pillbig:active{transform:scale(.96)}
 .pillbig.done{background:linear-gradient(180deg,#69f0ae,var(--green));
  box-shadow:0 18px 44px rgba(52,168,83,.45),inset 0 4px 0 rgba(255,255,255,.4)}
+/* The question before the count starts. He reports late sometimes, and eight
+   hours from the tap would drift the next dose. So the tap asks first. */
+.sheet{margin-top:14px;padding:14px 16px;border-radius:var(--r);background:var(--surface);
+ border:2px solid var(--accent);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}
+.sheet b{font:600 16px Heebo,sans-serif;line-height:1.45}
+.sheetrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sheetrow label{font-size:13px;color:var(--dim)}
+.sheet input[type=time]{font:500 18px Heebo,sans-serif;padding:8px 12px;border-radius:12px;
+ border:1px solid var(--line);background:var(--sunk);color:var(--ink)}
+.sbtn{border:1px solid var(--line);background:var(--sunk);color:var(--ink);border-radius:999px;
+ padding:9px 16px;font:500 14px Heebo,sans-serif;cursor:pointer}
+.sbtn.main{background:var(--accent);color:#fff;border-color:var(--accent)}
+.sbtn.quiet{align-self:flex-start;background:transparent;color:var(--dim)}
 .pillinfo{margin-top:20px;font-size:16px;color:var(--ink);line-height:1.9}
 .pillinfo b{display:block;font:800 22px Heebo,sans-serif;color:var(--accent)}
 .pillinfo small{display:block;color:var(--dim);font-size:13px;font-weight:300}
@@ -978,6 +1037,10 @@ body.editing .bn{display:none}
 </header>
 
 <section id="pH">
+ <button type="button" id="newBtn" class="newbtn">
+  <span class="nb-l"><b id="nbTitle">מה חדש</b><small id="nbSub"></small></span>
+  <span class="nb-c" id="nbCount">0</span>
+ </button>
  <div class="voice">
   <button type="button" id="micBtn" class="mic" aria-label="דבר אליי">
    <svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -992,11 +1055,6 @@ body.editing .bn{display:none}
   <button type="button" id="urgBtn" class="urg"><span aria-hidden="true">📎</span>העלאת<br>קובץ</button>
  </div>
 
-
- <button type="button" id="newBtn" class="newbtn">
-  <span class="nb-l"><b id="nbTitle">מה חדש</b><small id="nbSub"></small></span>
-  <span class="nb-c" id="nbCount">0</span>
- </button>
   <div class="sent" id="sentCard" hidden></div>
 <section class="whatsnew" aria-label="מה חדש">
   <div class="wn" id="wnCmds"></div>
@@ -1054,6 +1112,15 @@ body.editing .bn{display:none}
 
 
 
+<div class="install" id="installHint">להתקנה כאפליקציה על מסך הבית: בספארי לוחצים שיתוף ואז "הוספה למסך הבית". באנדרואיד: תפריט ואז "התקנת אפליקציה".</div>
+
+<nav class="links" aria-label="קישורים מהירים">
+ <a href="plan.html">
+  <span aria-hidden="true">&#128736;</span>
+  <div>תכנון 2.0<small>מה נבנה ומה עוד מתוכנן</small></div>
+ </a>
+</nav>
+
 <div class="alerts" id="alerts">
  <div>
   <b>התראות לנייד</b>
@@ -1081,14 +1148,6 @@ body.editing .bn{display:none}
  </div>
  <div class="msgsaid" id="codeSaid"></div>
 </div>
-<div class="install" id="installHint">להתקנה כאפליקציה על מסך הבית: בספארי לוחצים שיתוף ואז "הוספה למסך הבית". באנדרואיד: תפריט ואז "התקנת אפליקציה".</div>
-
-<nav class="links" aria-label="קישורים מהירים">
- <a href="plan.html">
-  <span aria-hidden="true">&#128736;</span>
-  <div>תכנון 2.0<small>מה נבנה ומה עוד מתוכנן</small></div>
- </a>
-</nav>
 </section>
 
 <section id="pQ" hidden>
@@ -1256,6 +1315,19 @@ body.editing .bn{display:none}
    <span class="pb-t">לקחתי כדור</span>
   </button>
   <div class="pillinfo" id="pillInfo"></div>
+  <div class="sheet" id="pillSheet" hidden>
+   <b id="pillQ">השעה עכשיו. לקחת את הכדור מוקדם יותר?</b>
+   <div class="sheetrow">
+    <button type="button" id="pillNow" class="sbtn main">לא, עכשיו</button>
+    <button type="button" id="pillEarlier" class="sbtn">כן, בשעה אחרת</button>
+   </div>
+   <div class="sheetrow" id="pillTimeRow" hidden>
+    <label for="pillTime">השעה שבה לקחת</label>
+    <input type="time" id="pillTime">
+    <button type="button" id="pillOk" class="sbtn main">אישור</button>
+   </div>
+   <button type="button" id="pillCancel" class="sbtn quiet">ביטול</button>
+  </div>
  </div>
 </section>
 
@@ -1372,6 +1444,7 @@ body.editing .bn{display:none}
 <div class="stamp"><span id="built"></span></div>
 </div>
 
+<script>__LIB__</script>
 <script>
 var D = __DATA__, NET = __NET__, CAT = __CAT__, tab = 'pending';
 // Split so a scraper crawling the page source does not lift a plain address.
@@ -1556,69 +1629,149 @@ function dropSettled(list,baked){
   return !mine.some(function(at){return at>=p.at;});
  });
 }
+// A thread he answered and is waiting on. Kept per device, cleared by itself
+// the moment my reply with the same re lands.
+function standbyMap(){
+ try{return JSON.parse(localStorage.getItem('chatStandby')||'{}')||{};}catch(e){return {};}
+}
+function setStandby(key){
+ if(!key)return;
+ try{
+  var m=standbyMap();
+  m[key]=new Date().toISOString();
+  var keys=Object.keys(m);
+  if(keys.length>200){keys.sort().slice(0,keys.length-200).forEach(function(k){delete m[k];});}
+  localStorage.setItem('chatStandby',JSON.stringify(m));
+ }catch(e){}
+}
+function threadState(){
+ var unread=new Set(unreadList().map(ML.keyOf));
+ return {unread:unread,standby:standbyMap()};
+}
+function bubbleHtml(m,i,fresh,handled){
+ var mine=m.from==='itzik';
+ var line=(mine?'איציק':'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');
+ return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')
+  +(fresh?' fresh':(handled?' touched':' read'))+'" data-i="'+i+'"'
+  +' data-copy="'+esc(line)+'">'
+  +'<span class="w">'+(mine?'אתה':'קלוד')+' · '+esc(stamp(m.at))
+  +(m.pend?' · נשלח, עוד לא נקרא':'')+statusTag(m)
+  +(fresh?' · <em class="badge">חדש</em>':(mine?'':' · נקרא'))
+  +'<button type="button" class="cp" data-i="'+i+'" aria-label="העתקה">העתקה</button>'
+  +'</span>'+linkify(m.text)+'</div>';
+}
+// Copy, paste and send on every reply form, whatever screen it is on.
+function pasteRow(){
+ return '<div class="rrow"><button type="button" class="rb rpaste">📋 הדבקה</button>'
+  +'<button type="submit">שליחה</button></div>';
+}
+function wirePaste(root){
+ Array.prototype.forEach.call((root||document).querySelectorAll('.rpaste'),function(b){
+  if(b.getAttribute('data-wired'))return;
+  b.setAttribute('data-wired','1');
+  b.onclick=function(e){
+   e.stopPropagation();e.preventDefault();
+   var ta=b.closest('form').querySelector('textarea');
+   if(navigator.clipboard&&navigator.clipboard.readText){
+    navigator.clipboard.readText().then(function(t){ta.value=(ta.value?ta.value+' ':'')+t;ta.focus();},
+     function(){ta.focus();b.textContent='לחיצה ארוכה בתיבה, ואז הדבקה';});
+   }else{ta.focus();b.textContent='לחיצה ארוכה בתיבה, ואז הדבקה';}
+  };
+ });
+}
+// The unread screen has no data-k on the form, so a reply from there must
+// resolve the root itself, the same way the thread cards already are keyed.
+function rootKeyFor(m){
+ var byKey={};
+ (D.chat||[]).forEach(function(x){byKey[ML.keyOf(x)]=x;});
+ return ML.rootKeyOf(m,byKey);
+}
 function renderThread(){
- var seen=chatSeen();
- var unread=unreadList();
+ var unreadKeys=unreadList().map(claudeKey);
  var touched=touchedIds();
  var baked=(D.chat||[]).filter(function(m){return !isMail(m);});
  var still=dropSettled(pending(),baked);
  savePending(still.concat(pending().filter(isMail)));
- var all=baked.map(function(m){return{at:m.at,from:m.from,text:m.text,status:m.status,pend:false};})
-   .concat(still.map(function(p){return{at:p.at,from:'itzik',text:p.text,pend:true};}))
-   .sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
+ var all=baked.map(function(m){return{id:m.id,re:m.re||'',at:m.at,from:m.from,text:m.text,status:m.status,pend:false};})
+   .concat(still.map(function(p){return{id:'',re:p.re||'',at:p.at,from:'itzik',text:p.text,pend:true};}));
  var host=document.getElementById('thread');
  if(!all.length){
   host.innerHTML='<div class="empty">עוד לא דיברנו כאן. תכתוב משהו למטה.</div>';
   return;
  }
- host.innerHTML=all.map(function(m,i){
-  var mine=m.from==='itzik';
-  var fresh=!mine&&unread.indexOf(m)>-1;
-  var handled=!fresh&&touched.indexOf(claudeKey(m))>-1;
-  var line=(mine?'איציק':'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');
-  return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')
-   +(fresh?' fresh':(handled?' touched':' read'))+'"'
-   +' data-copy="'+esc(line)+'">'
-   +'<span class="w">'+(mine?'אתה':'קלוד')+' · '+esc(stamp(m.at))
-   +(m.pend?' · נשלח, עוד לא נקרא':'')+statusTag(m)
-   +(fresh?' · <em class="badge">חדש</em>':(mine?'':' · נקרא'))
-   +'<button type="button" class="cp" data-i="'+i+'" aria-label="העתקה">העתקה</button>'
-   +'</span>'+linkify(m.text)
+ var rows=ML.orderThreads(ML.splitThreads(all),threadState());
+ var flat=[];
+ host.innerHTML=rows.map(function(r,ri){
+  var t=r.thread;
+  var head=String(t.root.text||'').replace(/\s+/g,' ').trim().slice(0,70);
+  var tag=r.status==='fresh'?'<em class="badge">חדש</em>'
+   :r.status==='standby'?'<em class="st st-working">ממתין לתשובה</em>'
+   :'<em class="badge ok">נקרא</em>';
+  var body=t.msgs.map(function(m){
+   var i=flat.push(m)-1;
+   var fresh=m.from!=='itzik'&&unreadKeys.indexOf(claudeKey(m))>-1;
+   var handled=!fresh&&touched.indexOf(claudeKey(m))>-1;
+   return bubbleHtml(m,i,fresh,handled);
+  }).join('');
+  var ri2=flat.indexOf(t.root);
+  var whole=t.msgs.map(function(m){return (m.from==='itzik'?'איציק':'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');}).join(String.fromCharCode(10,10));
+  return '<details class="th th-'+r.status+'" data-k="'+esc(t.key)+'"'+(ri===0&&r.status==='fresh'?' open':'')+'>'
+   +'<summary><span class="num">'+r.n+'</span><b>'+esc(head)+'</b>'+tag
+   +'<small>'+esc(stamp(t.last))+' · '+t.msgs.length+'</small>'
+   +'<button type="button" class="cp rcopyall" data-copy="'+esc(whole)+'" aria-label="העתקת השרשור">העתקת השרשור</button>'
+   +'</summary>'
+   +'<div class="thbody">'+body
    +'<div class="rrow">'
-   +'<button type="button" class="rb rmic" data-i="'+i+'">🎤 להשיב בקול</button>'
-   +'<button type="button" class="rb rtxt" data-i="'+i+'">✍️ בכתב</button>'
-   +'<button type="button" class="rb rcam" data-i="'+i+'">📷 מצלמה</button>'
-   +'<button type="button" class="rb rfile" data-i="'+i+'">📎 קובץ</button>'
+   +'<button type="button" class="rb rmic" data-i="'+ri2+'">🎤 להשיב בקול</button>'
+   +'<button type="button" class="rb rtxt" data-i="'+ri2+'">✍️ בכתב</button>'
+   +'<button type="button" class="rb rcam" data-i="'+ri2+'">📷 מצלמה</button>'
+   +'<button type="button" class="rb rfile" data-i="'+ri2+'">📎 קובץ</button>'
    +'</div>'
-   +'<form class="rform" data-i="'+i+'">'
-   +'<textarea placeholder="התשובה שלך להודעה הזאת"></textarea>'
-   +'<button type="submit">שליחת התשובה</button>'
+   +'<form class="rform" data-i="'+ri2+'" data-k="'+esc(t.key)+'">'
+   +'<textarea placeholder="התשובה שלך בשרשור הזה"></textarea>'
+   +pasteRow()
    +'<span class="rsaid"></span></form>'
-   +'</div>';
+   +'</div></details>';
  }).join('');
- wireReplies(host,all);
- // Copying by hand out of a bubble on a phone is a fight with the selection
- // handles, and he wanted my answers pasteable into his own notes.
+ wireReplies(host,flat);
+ wirePaste(host);
  if(picking)host.classList.add('picking');
- Array.prototype.forEach.call(host.querySelectorAll('.bub'),function(el,n){
-  el.addEventListener('click',function(){
-   if(picking){el.classList.toggle('picked');return;}
-   var m=all[n];
-   if(!m||m.from==='itzik')return;
-   if(!el.classList.contains('fresh'))return;
-   el.classList.remove('fresh');
-   el.classList.add('touched');
-   ringFor(el);
-   markOneSeen(m);
-   var w=el.querySelector('.w .badge');
-   if(w){w.className='badge ok';w.textContent='נקרא';}
+ // Touching a card, or any bubble in it, turns every unread answer in it green.
+ Array.prototype.forEach.call(host.querySelectorAll('.th'),function(card){
+  var key=card.getAttribute('data-k');
+  function touch(){
+   var any=false;
+   Array.prototype.forEach.call(card.querySelectorAll('.bub.fresh'),function(el){
+    var m=flat[Number(el.getAttribute('data-i'))];
+    el.classList.remove('fresh');el.classList.add('touched');
+    var w=el.querySelector('.w .badge');
+    if(w){w.className='badge ok';w.textContent='נקרא';}
+    markOneSeen(m);any=true;
+   });
+   if(any){
+    card.classList.remove('th-fresh');card.classList.add('th-done');
+    var tag=card.querySelector('summary .badge');
+    if(tag){tag.className='badge ok';tag.textContent='נקרא';}
+    ringFor(card);renderNew();
+   }
+  }
+  card.querySelector('summary').addEventListener('click',function(e){
+   if(e.target.closest&&e.target.closest('.rcopyall'))return;
+   touch();
+  });
+  Array.prototype.forEach.call(card.querySelectorAll('.bub'),function(el){
+   el.addEventListener('click',function(){
+    if(picking){el.classList.toggle('picked');return;}
+    touch();
+   });
   });
  });
  Array.prototype.forEach.call(host.querySelectorAll('.cp'),function(b){
   b.onclick=function(e){
-   e.stopPropagation();
-   var t=all[Number(b.getAttribute('data-i'))].text||'';
-   var done=function(){b.textContent='הועתק';setTimeout(function(){b.textContent='העתקה';},1400);};
+   e.stopPropagation();e.preventDefault();
+   var t=b.classList.contains('rcopyall')?(b.getAttribute('data-copy')||''):(flat[Number(b.getAttribute('data-i'))].text||'');
+   var was=b.textContent;
+   var done=function(){b.textContent='הועתק';setTimeout(function(){b.textContent=was;},1400);};
    if(navigator.clipboard&&navigator.clipboard.writeText){
     navigator.clipboard.writeText(t).then(done,function(){fallbackCopy(t,done);});
    }else fallbackCopy(t,done);
@@ -1637,13 +1790,14 @@ function replyBox(quote){
   +'<button type="button" class="rb bfile">📎 קובץ</button>'
   +'</div>'
   +'<form class="rform"><textarea placeholder="מה יש לך להגיד על זה"></textarea>'
-  +'<button type="submit">שליחה</button><span class="rsaid"></span></form>'
+  +pasteRow()+'<span class="rsaid"></span></form>'
   +'</div>';
 }
 function wireBoxes(root){
  Array.prototype.forEach.call((root||document).querySelectorAll('.rbox'),function(box){
   if(box.getAttribute('data-wired'))return;
   box.setAttribute('data-wired','1');
+  wirePaste(box);
   var q=box.getAttribute('data-q')||'';
   var f=box.querySelector('.rform');
   var txt=box.querySelector('.btxt');
@@ -1675,7 +1829,7 @@ function wireBoxes(root){
   f.addEventListener('submit',function(e){
    e.preventDefault();
    var box2=f.querySelector('textarea');
-   var btn=f.querySelector('button');
+   var btn=f.querySelector('button[type=submit]');
    var said=f.querySelector('.rsaid');
    var text=box2.value.trim();
    if(!text)return;
@@ -1713,7 +1867,7 @@ function quoteOf(m){
 var answering=null;
 function markAnswering(el){
  var host=document.getElementById('thread');
- Array.prototype.forEach.call(host.querySelectorAll('.bub'),function(b){
+ Array.prototype.forEach.call(host.querySelectorAll('.bub,.th'),function(b){
   b.classList.remove('answering');
  });
  if(el)el.classList.add('answering');
@@ -1725,10 +1879,12 @@ function wireReplies(host,all){
    e.stopPropagation();
    var m=at(b);
    answering=m;
-   markAnswering(b.closest('.bub'));
+   var host2=b.closest('.bub')||b.closest('.th');
+   markAnswering(host2);
    // The recorder already knows how to send; it just needs to be told what
    // this recording is an answer to. The caption rides along with the audio.
    document.getElementById('fCap').value=quoteOf(m);
+   setStandby(rootKeyFor(m));
    toggleRec();
   };
  });
@@ -1737,8 +1893,10 @@ function wireReplies(host,all){
    e.stopPropagation();
    var m=at(b);
    answering=m;
-   markAnswering(b.closest('.bub'));
+   var host2=b.closest('.bub')||b.closest('.th');
+   markAnswering(host2);
    document.getElementById('fCap').value=quoteOf(m);
+   setStandby(rootKeyFor(m));
    shoot(true);
   };
  });
@@ -1747,20 +1905,22 @@ function wireReplies(host,all){
    e.stopPropagation();
    var m=at(b);
    answering=m;
-   markAnswering(b.closest('.bub'));
+   var host2=b.closest('.bub')||b.closest('.th');
+   markAnswering(host2);
    document.getElementById('fCap').value=quoteOf(m);
+   setStandby(rootKeyFor(m));
    openPicker('full','image/*,video/*,audio/*,application/pdf',true);
   };
  });
  Array.prototype.forEach.call(host.querySelectorAll('.rtxt'),function(b){
   b.onclick=function(e){
    e.stopPropagation();
-   var bub=b.closest('.bub');
-   var f=bub.querySelector('.rform');
+   var host2=b.closest('.bub')||b.closest('.th');
+   var f=host2.querySelector('.rform');
    var open=!f.classList.contains('open');
    f.classList.toggle('open',open);
    b.classList.toggle('on',open);
-   markAnswering(open?bub:null);
+   markAnswering(open?host2:null);
    if(open)f.querySelector('textarea').focus();
   };
  });
@@ -1770,7 +1930,7 @@ function wireReplies(host,all){
    e.preventDefault();
    var m=at(f);
    var box=f.querySelector('textarea');
-   var btn=f.querySelector('button');
+   var btn=f.querySelector('button[type=submit]');
    var said=f.querySelector('.rsaid');
    var text=box.value.trim();
    if(!text)return;
@@ -1779,8 +1939,9 @@ function wireReplies(host,all){
    var full=quoteOf(m)+String.fromCharCode(10)+text;
    sendText('תשובה מהמוניטור',full,'תשובה').then(function(how){
     var p=pending();
-    p.push({at:new Date().toISOString(),text:full});
+    p.push({at:new Date().toISOString(),text:full,re:rootKeyFor(m)});
     savePending(p);
+    setStandby(f.getAttribute('data-k')||rootKeyFor(m));
     box.value='';
     said.textContent=how==='ntfy'?'נשלח בערוץ הגיבוי.':'נשלח.';
     markTouched(m);markOneSeen(m);
@@ -1999,14 +2160,25 @@ function updateDot(){
 }
 var PANES={a:'pA',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
-var PILLGAP=8*3600*1000;
+var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
+// The last dose. From the chat it is read out of the message text, because he
+// confirms the hour he took it and that hour is what the count runs from.
 function lastPill(){
  var c=(D.chat||[]).filter(function(m){return m.from==='itzik'&&/לקחתי כדור/.test(m.text||'');});
- var local=0;
- try{local=Number(localStorage.getItem('lastPill')||0);}catch(e){}
- var fromChat=c.length?Date.parse(c[c.length-1].at||'')||0:0;
- return Math.max(local,fromChat);
+ var last=c.length?c[c.length-1]:null;
+ var fromChat=last?ML.parsePillTime(last.text,last.at):0;
+ var chatAt=last?(Date.parse(last.at||'')||0):0;
+ var rec=null;
+ try{
+  var raw=localStorage.getItem('lastPill')||'';
+  rec=raw.charAt(0)==='{'?JSON.parse(raw):(Number(raw)?{taken:Number(raw),recordedAt:Number(raw)}:null);
+ }catch(e){rec=null;}
+ // The most recent record wins, not the largest hour: a correction to an
+ // earlier time is still the newest thing he said.
+ if(rec&&rec.taken&&rec.recordedAt>=chatAt)return rec.taken;
+ return fromChat||(rec&&rec.taken)||0;
 }
+function hm(x){return x.getHours()+':'+String(x.getMinutes()).padStart(2,'0');}
 function renderPill(){
  var box=document.getElementById('pillInfo');
  var btn=document.getElementById('pillBig');
@@ -2014,18 +2186,39 @@ function renderPill(){
  var t=lastPill();
  if(!t){
   btn.className='pillbig';
-  box.innerHTML='<b>עוד לא נרשמה מנה</b><small>לחיצה על העיגול מסמנת שלקחת ומתחילה את הספירה למנה הבאה.</small>';
+  box.innerHTML='<b>עוד לא נרשמה מנה</b><small>לחיצה על העיגול שואלת מתי לקחת, ומשם מתחילה הספירה למנה הבאה.</small>';
   return;
  }
- var next=t+PILLGAP,left=next-Date.now();
- function hm(x){return x.getHours()+':'+String(x.getMinutes()).padStart(2,'0');}
- btn.className='pillbig'+(left>0?' done':'');
- var when=left>0
-  ?('בעוד '+Math.floor(left/3600000)+' שעות ו'+Math.round(left%3600000/60000)+' דקות')
-  :'עכשיו';
+ var s=ML.pillState(t,Date.now());
+ btn.className='pillbig'+(s.due?'':' done');
+ var when=s.due?'עכשיו'
+  :('בעוד '+Math.floor(s.left/3600000)+' שעות ו'+Math.round(s.left%3600000/60000)+' דקות');
  box.innerHTML='<b>המנה הבאה '+esc(when)+'</b>'
-  +'<div>בשעה '+esc(hm(new Date(next)))+'</div>'
+  +'<div>בשעה '+esc(hm(new Date(s.next)))+'</div>'
   +'<small>המנה האחרונה נרשמה ב'+esc(hm(new Date(t)))+'. אזכיר לך גם בהתראה לנייד.</small>';
+}
+// The sheet. Nothing is counted until he answers it.
+function openPillSheet(){
+ var sh=document.getElementById('pillSheet');
+ if(!sh)return;
+ document.getElementById('pillQ').textContent='השעה עכשיו '+hm(new Date())+'. לקחת את הכדור מוקדם יותר?';
+ document.getElementById('pillTimeRow').hidden=true;
+ document.getElementById('pillTime').value=hm(new Date()).padStart(5,'0');
+ sh.hidden=false;
+ sh.scrollIntoView({block:'center'});
+}
+function closePillSheet(){
+ var sh=document.getElementById('pillSheet');
+ if(sh)sh.hidden=true;
+}
+function recordPill(takenMs){
+ var box=document.getElementById('msgText');
+ box.value='לקחתי כדור בשעה '+hm(new Date(takenMs))+'.';
+ document.getElementById('msgForm').dispatchEvent(new Event('submit',{cancelable:true}));
+ try{localStorage.setItem('lastPill',JSON.stringify({taken:takenMs,recordedAt:Date.now()}));}catch(e){}
+ closePillSheet();
+ renderPill();
+ paintNew();
 }
 // More landing pages are coming, so each one is a line here.
 var LANDING=[
@@ -2331,6 +2524,7 @@ function showEditBar(){
 function endEdit(){
  if(!editing)return;
  saveOrder(editing.box,editing.key);
+ pinHome(document.getElementById('pH'));
  dropHandles();
  editing.box.classList.remove('editbox');
  editing=null;
@@ -2566,11 +2760,12 @@ function renderUnread(){
    +'</div>'
    +'<form class="rform" data-i="'+i+'">'
    +'<textarea placeholder="התשובה שלך להודעה הזאת"></textarea>'
-   +'<button type="submit">שליחת התשובה</button>'
+   +pasteRow()
    +'<span class="rsaid"></span></form>'
    +'</div>';
  }).join('');
  wireReplies(host,list);
+ wirePaste(host);
  Array.prototype.forEach.call(host.querySelectorAll('.bub'),function(el,n){
   el.addEventListener('click',function(){
    if(!el.classList.contains('fresh'))return;
@@ -3102,14 +3297,18 @@ document.getElementById('gChat').onclick=function(){pane('m');markChatSeen();};
 document.getElementById('gQueue').onclick=function(){openNet('all');};
 document.getElementById('gReports').onclick=function(){pane('r');markReportsSeen();renderNextReport();};
 document.getElementById('gMail').onclick=function(){pane('e');};
-document.getElementById('gPill').onclick=function(){pane('p');renderPill();};
-document.getElementById('pillBig').onclick=function(){
- var box=document.getElementById('msgText');
- box.value='לקחתי כדור עכשיו.';
- document.getElementById('msgForm').dispatchEvent(new Event('submit',{cancelable:true}));
- try{localStorage.setItem('lastPill',String(Date.now()));}catch(e){}
- renderPill();
-};
+document.getElementById('gPill').onclick=function(){pane('p');renderPill();openPillSheet();};
+document.getElementById('pillBig').onclick=function(){openPillSheet();};
+on('pillNow',function(){recordPill(Date.now());});
+on('pillEarlier',function(){
+ document.getElementById('pillTimeRow').hidden=false;
+ document.getElementById('pillTime').focus();
+});
+on('pillOk',function(){
+ var v=document.getElementById('pillTime').value;
+ recordPill(ML.resolveTaken(v,Date.now()));
+});
+on('pillCancel',closePillSheet);
 on('gAsk',function(){askInChat('');});
 paintReportDot();
 document.getElementById('leads').addEventListener('click',function(e){
@@ -3577,11 +3776,23 @@ document.getElementById('mailForm').addEventListener('submit',function(e){
  }).then(function(){btn.disabled=false;});
 });
 
+// Whatever he has dragged around, two things do not move: what is unread is
+// always the first thing under the title, and the phone alerts and the
+// personal code are always the last things on the screen.
+function pinHome(home){
+ if(!home)return;
+ var top=document.getElementById('newBtn');
+ if(top&&top.parentNode===home)home.insertBefore(top,home.firstChild);
+ ['alerts','codeBox'].forEach(function(id){
+  var el=document.getElementById(id);
+  if(el&&el.parentNode===home)home.appendChild(el);
+ });
+}
 (function(){
  var grid=document.querySelector('.grid');
  var home=document.getElementById('pH');
  if(grid){nameChildren(grid,'tile');applyOrder(grid,'tileOrder');armDrag(grid,'tileOrder');}
- if(home){nameChildren(home,'blk');applyOrder(home,'blockOrder');armDrag(home,'blockOrder');}
+ if(home){nameChildren(home,'blk');applyOrder(home,'blockOrder');pinHome(home);armDrag(home,'blockOrder');}
 })();
 on('editDone',endEdit);
 // The explicit way into arranging, for when the long press is not obvious.
@@ -3636,4 +3847,5 @@ if(bootFailed.length){
 </body>
 </html>`;
 
-build();
+module.exports = { renderPage, build };
+if (require.main === module) build();

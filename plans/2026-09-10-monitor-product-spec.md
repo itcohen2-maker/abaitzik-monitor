@@ -16,7 +16,7 @@
 - No dashes in any Hebrew copy that reaches the screen (rule: בלי מקפים במלל). Use commas or a new sentence. Digits and times like `15:40` are fine.
 - Nothing under `data/` is ever committed (it is gitignored and holds real names). Tests must not read `data/`.
 - `docs/` is the public site. Never put plans, fixtures or notes under `docs/`.
-- Every task ends with `node --test tests` green and `node build.js` producing `docs/index.html` without error.
+- Every task ends with `npm test` (= `node --test tests/*.test.js`) green and `node build.js` producing `docs/index.html` without error.
 - The page must still open when JavaScript throws: the `boot(name, fn)` guard at the end of the inline script must wrap any new top level render call.
 - Commit messages end with:
   ```
