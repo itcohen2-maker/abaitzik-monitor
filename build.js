@@ -364,6 +364,8 @@ section{margin-bottom:30px}
 /* Unread is red and glowing, and it stays that way for days if that is how
    long it takes him to get to it. Touching it turns it green, which is his
    own mark that he dealt with it. */
+.bootwarn{margin:0 0 12px;padding:12px 14px;border-radius:12px;border:2px solid var(--red);background:var(--unread);font-size:15px;line-height:1.5}
+.bootwarn button{margin-inline-start:8px;padding:6px 14px;border:0;border-radius:999px;background:var(--red);color:#fff;font:inherit;font-size:14px}
 .bub.fresh{border:3px solid var(--red);border-inline-start:10px solid var(--red);
  background:var(--unread);animation:bubglow 1.5s ease-in-out infinite}
 .bub.fresh .badge{font-size:13px;padding:3px 12px}
@@ -3595,19 +3597,41 @@ on('arrangeBtn',function(){
  showEditBar();
  toast('סידור המסך. גרור מהידית הכחולה.');
 });
-renderNextReport();
-renderAsk();
-render();
-renderThread();
-renderPill();
-renderMail();
-updateDot();
+// Boot. Every one of these draws a different part of the page, and until now a
+// throw in any of them stopped the rest, including the pane() at the end that
+// decides which screen is visible. The result on his phone was a blank page and
+// "the site is not coming up", with nothing to say what happened. Each step is
+// now on its own, and the screen opens even if one of them fails.
+var bootFailed=[];
+function boot(name,fn){try{fn();}catch(e){bootFailed.push(name);try{console.error('boot '+name,e);}catch(_){}}}
+boot('report',renderNextReport);
+boot('ask',renderAsk);
+boot('items',render);
+boot('thread',renderThread);
+boot('pill',renderPill);
+boot('mail',renderMail);
+boot('dot',updateDot);
 // The last word on which screen opens. This runs after everything else, so a
 // plain pane('h') here quietly undid the notification landing above: he tapped
 // the banner and got the home screen with no sign of what was new.
-if(location.hash==='#new'){pane('u');renderUnread();}
-else if(location.hash==='#chat'){pane('m');}
-else pane('h');
+boot('pane',function(){
+ if(location.hash==='#new'){pane('u');renderUnread();}
+ else if(location.hash==='#chat'){pane('m');}
+ else pane('h');
+});
+// If the pane itself could not be chosen, the page would be blank. Home is the
+// one screen that is always in the HTML, so it is the floor to fall back to.
+if(bootFailed.indexOf('pane')>-1){try{pane('h');}catch(e){var h=document.getElementById('pH');if(h)h.hidden=false;}}
+if(bootFailed.length){
+ var w=document.createElement('div');
+ w.className='bootwarn';
+ w.innerHTML='<b>חלק מהמסך לא נטען.</b><br>מה שכן נטען עובד. תלחץ רענון, ואם זה חוזר תגיד לי.'
+  +' <button type="button" id="bootReload">רענון</button>';
+ var host=document.getElementById('pH')||document.body;
+ host.insertBefore(w,host.firstChild);
+ var rb=document.getElementById('bootReload');
+ if(rb)rb.onclick=function(){location.reload();};
+}
 </script>
 </body>
 </html>`;
