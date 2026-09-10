@@ -449,6 +449,7 @@ section{margin-bottom:30px}
  box-shadow:0 2px 6px rgba(66,133,244,.4),inset 0 1px 0 rgba(255,255,255,.3)}
 .quickrow button:active{background:linear-gradient(180deg,var(--blue),#1b63d6);box-shadow:none}
 .quickrow button[disabled]{opacity:.55}
+.stamp{text-align:center;color:var(--dim);font-size:11px;padding:10px 0 4px}
 .toast{position:fixed;z-index:80;inset-inline:16px;bottom:calc(76px + env(safe-area-inset-bottom));
  margin-inline:auto;max-width:360px;text-align:center;
  background:var(--surface);border:1px solid var(--line);border-radius:16px;
@@ -1054,10 +1055,6 @@ section{margin-bottom:30px}
  </form>
  <div class="msgsaid" id="fSaid"></div>
 
- <div class="hint">
-  מה שאתה כותב מגיע למייל שלי ואני קורא אותו בסבב הקרוב.
-  התשובות שלי מופיעות כאן למעלה.
- </div>
 </section>
 
 <button type="button" id="micFab" class="micfab" aria-label="דבר אליי">
@@ -1091,14 +1088,7 @@ section{margin-bottom:30px}
  <button type="button" id="nR" aria-pressed="false"><span aria-hidden="true">📄</span>דוחות</button>
 </nav>
 
-<div class="note">
- <b>הכלל האדום.</b> לא פונים למי שלא פנה. כל שורה כאן היא מישהו שהגיב,
- ענה לסטורי או שלח הודעה. שעות שקט בין 23:00 ל־07:00.
- <br><br>
- שמות משפחה של מגיבים מקוצרים לאות אחת, ו<b>טלפונים ומיילים לא נמצאים בדף הזה בכלל</b>,
- כי הוא פתוח לכל מי שיש לו הקישור. פרטי התקשרות מגיעים במייל.
- <span id="built"></span>
-</div>
+<div class="stamp"><span id="built"></span></div>
 </div>
 
 <script>
