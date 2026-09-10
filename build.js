@@ -279,8 +279,8 @@ h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance
 .gt.glow .flag{animation:hardblink .5s steps(1) infinite}
 .th-fresh>summary .badge{animation:hardblink .5s steps(1) infinite}
 .bub.fresh .badge{animation:hardblink .5s steps(1) infinite}
-.hasnew::after{animation:hardblink .5s steps(1) infinite}
-@media(prefers-reduced-motion:reduce){.newbtn.hot .nb-c,.gt.glow .flag,.th-fresh>summary .badge,.bub.fresh .badge,.hasnew::after{animation:none}}
+.bn button.hasnew{animation:hardblink .5s steps(1) infinite;border-radius:12px}
+@media(prefers-reduced-motion:reduce){.newbtn.hot .nb-c,.gt.glow .flag,.th-fresh>summary .badge,.bub.fresh .badge,.bn button.hasnew{animation:none}}
 .whatsnew{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
  padding:14px 16px 8px;margin-top:18px;box-shadow:var(--shadow)}
 .whatsnew h2{margin-bottom:8px}
