@@ -103,6 +103,12 @@ function build() {
     .filter(c => !c.done && /^[0-9]/.test(c.id))
     .map(c => ({ at: c.at, text: c.text }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
+  // Open questions I am waiting on an answer for. This is the part a client
+  // sees: the app asks what he wants and changes in front of him.
+  const choices = loadDocs('choices')
+    .filter(c => !c.answer)
+    .map(c => ({ id: c.id, at: c.at, question: c.question, options: c.options || [] }))
+    .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
   const food = loadDocs('food')
     .map(f => ({ at: f.at, name: f.name, kcal: f.kcal, protein: f.protein,
                  carbs: f.carbs, fat: f.fat, note: f.note || '' }))
@@ -119,6 +125,7 @@ function build() {
       today: repliedToday.length,
       leads: contacts.filter(c => c.status !== 'done').length,
     },
+    choices,
     food,
     pending: pending.sort((a, b) => (a.seenAt < b.seenAt ? 1 : -1)),
     replied: replied.sort((a, b) => (a.repliedAt < b.repliedAt ? 1 : -1)),
@@ -461,6 +468,17 @@ section{margin-bottom:30px}
  box-shadow:0 2px 6px rgba(66,133,244,.4),inset 0 1px 0 rgba(255,255,255,.3)}
 .nextrep button:active{background:linear-gradient(180deg,var(--blue),#1b63d6);box-shadow:none}
 .nextrep button[disabled]{opacity:.55}
+.ask{background:var(--surface);border:1px solid var(--line);border-radius:18px;
+ padding:14px 16px;margin-bottom:12px;box-shadow:0 0 0 2px var(--gold),var(--shadow)}
+.ask .q{font:700 15.5px Heebo,sans-serif;margin-bottom:4px}
+.ask .sub{color:var(--dim);font-size:12px;margin-bottom:10px}
+.ask .opts{display:flex;flex-wrap:wrap;gap:8px}
+.ask .opts button{flex:1 1 44%;min-height:46px;border:0;border-radius:14px;cursor:pointer;
+ font:700 14px Heebo,sans-serif;color:#fff;padding:0 12px;
+ background:linear-gradient(180deg,#6ea8ff,var(--blue));
+ box-shadow:0 2px 6px rgba(66,133,244,.4),inset 0 1px 0 rgba(255,255,255,.3)}
+.ask .opts button:active{background:linear-gradient(180deg,var(--blue),#1b63d6);box-shadow:none}
+.ask .opts button[disabled]{opacity:.5}
 .stamp{text-align:center;color:var(--dim);font-size:11px;padding:10px 0 4px}
 .toast{position:fixed;z-index:80;inset-inline:16px;bottom:calc(76px + env(safe-area-inset-bottom));
  margin-inline:auto;max-width:360px;text-align:center;
@@ -777,6 +795,8 @@ section{margin-bottom:30px}
   <button type="submit" id="quickBtn">שליחה</button>
  </form>
  <div class="msgsaid" id="quickSaid"></div>
+
+ <div id="askBox"></div>
 
  <div class="sent" id="sentCard" hidden></div>
  <button type="button" id="newBtn" class="newbtn">
@@ -1953,6 +1973,40 @@ function nextReport(){
  t.setHours(REPHOURS[0][0],REPHOURS[0][1],0,0);
  return t;
 }
+// Questions I am waiting on. Answering one sends it back through the same
+// channel as everything else, and hides the card so it is not asked twice.
+function answeredChoices(){
+ try{return JSON.parse(localStorage.getItem('choicesDone')||'[]');}catch(e){return [];}
+}
+function renderAsk(){
+ var host=document.getElementById('askBox');
+ if(!host)return;
+ var done=answeredChoices();
+ var open=(D.choices||[]).filter(function(c){return done.indexOf(c.id)<0;});
+ if(!open.length){host.innerHTML='';return;}
+ var c=open[0];
+ host.innerHTML='<div class="ask"><div class="q">'+esc(c.question)+'</div>'
+  +'<div class="sub">תבחר אחת, ואני בונה לפי זה</div><div class="opts">'
+  +c.options.map(function(o,i){return '<button type="button" data-i="'+i+'">'+esc(o)+'</button>';}).join('')
+  +'</div></div>';
+ Array.prototype.forEach.call(host.querySelectorAll('button'),function(b){
+  b.onclick=function(){
+   var pick=c.options[Number(b.getAttribute('data-i'))];
+   Array.prototype.forEach.call(host.querySelectorAll('button'),function(x){x.disabled=true;});
+   b.textContent='נבחר';
+   sendText('תשובה מהמוניטור','בחירה: '+c.question+' ← '+pick,'בחירה').then(function(){
+    var d=answeredChoices();d.push(c.id);
+    try{localStorage.setItem('choicesDone',JSON.stringify(d));}catch(e){}
+    toast('נבחר: '+pick+'. אני בונה לפי זה.');
+    setTimeout(renderAsk,900);
+   }).catch(function(){
+    Array.prototype.forEach.call(host.querySelectorAll('button'),function(x){x.disabled=false;});
+    b.textContent=pick;
+    toast('הבחירה לא נשלחה. תנסה שוב.');
+   });
+  };
+ });
+}
 function renderNextReport(){
  var el=document.getElementById('repWhen');
  if(!el)return;
@@ -2551,6 +2605,7 @@ document.getElementById('mailForm').addEventListener('submit',function(e){
  if(home){nameChildren(home,'blk');applyOrder(home,'blockOrder');armDrag(home,'blockOrder');}
 })();
 renderNextReport();
+renderAsk();
 render();
 renderThread();
 renderPill();
