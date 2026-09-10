@@ -958,14 +958,13 @@ body.editing .bn{display:none}
   <button type="button" id="urgBtn" class="urg"><span aria-hidden="true">📎</span>העלאת<br>קובץ</button>
  </div>
 
- <div id="askBox"></div>
 
- <div class="sent" id="sentCard" hidden></div>
  <button type="button" id="newBtn" class="newbtn">
   <span class="nb-l"><b id="nbTitle">מה חדש</b><small id="nbSub"></small></span>
   <span class="nb-c" id="nbCount">0</span>
  </button>
- <section class="whatsnew" aria-label="מה חדש">
+  <div class="sent" id="sentCard" hidden></div>
+<section class="whatsnew" aria-label="מה חדש">
   <div class="wn" id="wnCmds"></div>
   <div class="wn" id="wnNow"></div>
  </section>
@@ -976,6 +975,7 @@ body.editing .bn{display:none}
  <div class="tile wait"><div class="k">לידים פתוחים</div><div class="v" id="tL">0</div></div>
 </div>
 
+ <div id="askBox"></div>
  <div class="grid" id="blkTiles">
   <button type="button" class="gt g1" id="gChat"><b>💬 פנייה אליי</b><small>צ׳אט, קול, קובץ</small></button>
   <button type="button" class="gt g2" id="gMail"><b>📧 מייל</b><small>בקשה, ואני מחזיר תשובה</small></button>
