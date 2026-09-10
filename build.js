@@ -269,6 +269,18 @@ h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance
  50%{box-shadow:0 14px 46px rgba(234,67,53,.95);transform:scale(1.02)}
  100%{box-shadow:0 10px 26px rgba(234,67,53,.5);transform:scale(1)}}
 @media(prefers-reduced-motion:reduce){.newbtn.hot{animation:none}}
+/* He asked for a blink that cannot be missed. Two colours, no easing, twice a
+   second, on the count and on the badges only, so the page itself stays
+   readable while the thing that needs him flashes. */
+@keyframes hardblink{
+ 0%,49%{background:var(--red);color:#fff;box-shadow:0 0 0 4px rgba(234,67,53,.55)}
+ 50%,100%{background:#fff;color:var(--red);box-shadow:0 0 0 4px rgba(255,255,255,.9)}}
+.newbtn.hot .nb-c{animation:hardblink .5s steps(1) infinite}
+.gt.glow .flag{animation:hardblink .5s steps(1) infinite}
+.th-fresh>summary .badge{animation:hardblink .5s steps(1) infinite}
+.bub.fresh .badge{animation:hardblink .5s steps(1) infinite}
+.hasnew::after{animation:hardblink .5s steps(1) infinite}
+@media(prefers-reduced-motion:reduce){.newbtn.hot .nb-c,.gt.glow .flag,.th-fresh>summary .badge,.bub.fresh .badge,.hasnew::after{animation:none}}
 .whatsnew{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
  padding:14px 16px 8px;margin-top:18px;box-shadow:var(--shadow)}
 .whatsnew h2{margin-bottom:8px}

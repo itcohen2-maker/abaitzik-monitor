@@ -103,3 +103,12 @@ test('the chat screen renders thread cards with copy, paste and send on each', (
   assert.ok(html.includes("var ri2=flat.indexOf(t.root);"));
   assert.ok(html.includes("b.closest('.bub')||b.closest('.th')"));
 });
+
+test('new things blink hard and fast, and stop for reduced motion', () => {
+  const html = renderPage(fixture());
+  assert.ok(html.includes('@keyframes hardblink'));
+  for (const sel of ['.newbtn.hot .nb-c', '.gt.glow .flag', '.th-fresh>summary .badge', '.bub.fresh .badge']) {
+    assert.ok(html.includes(sel + '{animation:hardblink'), 'no hardblink on ' + sel);
+  }
+  assert.ok(/prefers-reduced-motion:reduce\)\{[^}]*hardblink|prefers-reduced-motion:reduce\)\{\.newbtn\.hot \.nb-c,/.test(html));
+});
