@@ -1519,6 +1519,7 @@ function dropSettled(list,baked){
 function renderThread(){
  var seen=chatSeen();
  var unread=unreadList();
+ var touched=touchedIds();
  var baked=(D.chat||[]).filter(function(m){return !isMail(m);});
  var still=dropSettled(pending(),baked);
  savePending(still.concat(pending().filter(isMail)));
@@ -1533,8 +1534,10 @@ function renderThread(){
  host.innerHTML=all.map(function(m,i){
   var mine=m.from==='itzik';
   var fresh=!mine&&unread.indexOf(m)>-1;
+  var handled=!fresh&&touched.indexOf(claudeKey(m))>-1;
   var line=(mine?'איציק':'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');
-  return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')+(fresh?' fresh':' read')+'"'
+  return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')
+   +(fresh?' fresh':(handled?' touched':' read'))+'"'
    +' data-copy="'+esc(line)+'">'
    +'<span class="w">'+(mine?'אתה':'קלוד')+' · '+esc(stamp(m.at))
    +(m.pend?' · נשלח, עוד לא נקרא':'')+statusTag(m)
@@ -1740,6 +1743,7 @@ function wireReplies(host,all){
     savePending(p);
     box.value='';
     said.textContent=how==='ntfy'?'נשלח בערוץ הגיבוי.':'נשלח.';
+    markTouched(m);markOneSeen(m);
     markSent('text');renderSent();
     // renderThread redraws every bubble, so the confirmation is shown first.
     setTimeout(renderThread,900);
@@ -1832,8 +1836,26 @@ function markChatSeen(){
  }catch(e){}
  paintDot();
 }
+// Which bubbles he has already dealt with. Being seen and being handled are
+// not the same thing: the first happens once on a new device for the whole
+// history, the second only when his finger lands on that message. The green
+// has to survive a reload, so it is kept here and not only in the class.
+function touchedIds(){
+ try{return JSON.parse(localStorage.getItem('chatTouched')||'[]');}catch(e){return [];}
+}
+function markTouched(m){
+ if(!m)return;
+ try{
+  var t=touchedIds();
+  var k=claudeKey(m);
+  if(t.indexOf(k)<0)t.push(k);
+  if(t.length>600)t=t.slice(-600);
+  localStorage.setItem('chatTouched',JSON.stringify(t));
+ }catch(e){}
+}
 // One message, when he actually touches it.
 function markOneSeen(m){
+ markTouched(m);
  try{
   var seen=seenIds();
   var k=claudeKey(m);
