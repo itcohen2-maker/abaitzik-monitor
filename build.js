@@ -191,7 +191,7 @@ const PAGE = `<!DOCTYPE html>
  --ground:#f6f8fc;--surface:#fff;--sunk:#eef2fa;--ink:#1f2430;--dim:#5f6b7f;
  --line:#e3e9f4;--accent:#1a73e8;--accent-soft:#e8f0fe;--wait:#e37400;
  --gold:#f0b429;--fresh:#e6f6ec;--unread:#fdeceb;
- --shadow:0 2px 8px rgba(30,40,70,.07)}
+ --shadow:0 2px 8px rgba(30,40,70,.07);--r:18px}
 @media (prefers-color-scheme:dark){:root{--ground:#0f1218;--surface:#181d27;--sunk:#141922;
  --ink:#eef1f7;--dim:#9aa5b8;--line:#252c39;--accent:#8ab4f8;--accent-soft:#1b2b45;
  --wait:#fbbc05;--fresh:#12301f;--unread:#331615;--shadow:0 2px 10px rgba(0,0,0,.4)}}
@@ -216,12 +216,12 @@ h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance
 .pill i{width:7px;height:7px;border-radius:50%;background:var(--accent);
  animation:pulse 2.4s infinite;font-style:normal}
 .alerts{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;
- background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:13px 15px;box-shadow:var(--shadow)}
+ background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:13px 15px;box-shadow:var(--shadow)}
 .alerts b{display:block;font:500 15px Heebo,sans-serif}
 .alerts small{display:block;color:var(--dim);font-size:12.5px;line-height:1.5;margin-top:2px}
 .abtn{flex:0 0 auto;text-decoration:none;background:var(--accent);color:#fff;border-radius:10px;
  padding:10px 16px;font:500 14px Heebo,sans-serif;white-space:nowrap}
-.codebox{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+.codebox{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
  padding:13px 15px;margin-top:14px;box-shadow:var(--shadow)}
 .codebox b{display:block;font:500 15px Heebo,sans-serif}
 .codebox small{display:block;color:var(--dim);font-size:12.5px;line-height:1.5;margin:2px 0 9px}
@@ -243,7 +243,7 @@ h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance
  padding:11px 13px;color:var(--ink);font:500 14px Heebo,sans-serif;box-shadow:var(--shadow)}
 .links a span{font-size:17px}
 .links a small{display:block;color:var(--dim);font-weight:300;font-size:12px}
-.sent{display:flex;align-items:center;gap:11px;margin-top:12px;padding:12px 15px;border-radius:16px;
+.sent{display:flex;align-items:center;gap:11px;margin-top:12px;padding:12px 15px;border-radius:var(--r);
  background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);font-size:14px}
 .sent .s-dot{width:11px;height:11px;flex:0 0 11px;border-radius:50%;background:var(--wait);
  animation:pulse 1.5s infinite}
@@ -251,7 +251,7 @@ h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance
 .sent b{display:block;font:500 15px Heebo,sans-serif}
 .sent small{display:block;color:var(--dim);font-size:12px;font-weight:300}
 .newbtn{width:100%;display:flex;align-items:center;gap:12px;margin:14px 0 10px;padding:15px 17px;
- border:0;border-radius:18px;cursor:pointer;text-align:start;color:#fff;font-family:Heebo,sans-serif;
+ border:0;border-radius:var(--r);cursor:pointer;text-align:start;color:#fff;font-family:Heebo,sans-serif;
  background:linear-gradient(150deg,#9aa5b8,#6b7688);box-shadow:0 8px 18px rgba(20,30,60,.16)}
 .newbtn .nb-l{flex:1;min-width:0}
 .newbtn b{display:block;font:800 17px Heebo,sans-serif}
@@ -269,7 +269,7 @@ h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance
  50%{box-shadow:0 14px 46px rgba(234,67,53,.95);transform:scale(1.02)}
  100%{box-shadow:0 10px 26px rgba(234,67,53,.5);transform:scale(1)}}
 @media(prefers-reduced-motion:reduce){.newbtn.hot{animation:none}}
-.whatsnew{background:var(--surface);border:1px solid var(--line);border-radius:13px;
+.whatsnew{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
  padding:14px 16px 8px;margin-top:18px;box-shadow:var(--shadow)}
 .whatsnew h2{margin-bottom:8px}
 .wn{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line);font-size:15px}
@@ -280,7 +280,7 @@ h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance
 .wn small{color:var(--dim);font-weight:300;display:block;font-size:13px}
 .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:22px 0 26px}
 .tile{position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--line);
- border-radius:13px;padding:14px 15px;box-shadow:var(--shadow)}
+ border-radius:var(--r);padding:14px 15px;box-shadow:var(--shadow)}
 .tile:before{content:"";position:absolute;inset-block-start:0;inset-inline:0;height:3px;
  background:var(--accent);opacity:.85}
 .tile.wait:before{background:var(--wait)}
@@ -694,7 +694,7 @@ body.editing .bn{display:none}
 .c-add:after{display:none}
 
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:2px}
-.gt{border:0;text-align:start;cursor:pointer;border-radius:22px;padding:14px 15px;color:#fff;min-height:88px;
+.gt{border:0;text-align:start;cursor:pointer;border-radius:var(--r);padding:14px 15px;color:#fff;min-height:88px;
  position:relative;overflow:hidden;isolation:isolate;
  transition:transform .09s ease,box-shadow .09s ease,filter .09s ease;
  display:flex;flex-direction:column;justify-content:space-between;font-family:Heebo,sans-serif;
@@ -900,7 +900,7 @@ body.editing .bn{display:none}
  box-shadow:0 18px 44px rgba(52,168,83,.45),inset 0 4px 0 rgba(255,255,255,.4)}
 /* The question before the count starts. He reports late sometimes, and eight
    hours from the tap would drift the next dose. So the tap asks first. */
-.sheet{margin-top:14px;padding:14px 16px;border-radius:18px;background:var(--surface);
+.sheet{margin-top:14px;padding:14px 16px;border-radius:var(--r);background:var(--surface);
  border:2px solid var(--accent);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}
 .sheet b{font:600 16px Heebo,sans-serif;line-height:1.45}
 .sheetrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
@@ -1001,6 +1001,10 @@ body.editing .bn{display:none}
 </header>
 
 <section id="pH">
+ <button type="button" id="newBtn" class="newbtn">
+  <span class="nb-l"><b id="nbTitle">מה חדש</b><small id="nbSub"></small></span>
+  <span class="nb-c" id="nbCount">0</span>
+ </button>
  <div class="voice">
   <button type="button" id="micBtn" class="mic" aria-label="דבר אליי">
    <svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -1015,11 +1019,6 @@ body.editing .bn{display:none}
   <button type="button" id="urgBtn" class="urg"><span aria-hidden="true">📎</span>העלאת<br>קובץ</button>
  </div>
 
-
- <button type="button" id="newBtn" class="newbtn">
-  <span class="nb-l"><b id="nbTitle">מה חדש</b><small id="nbSub"></small></span>
-  <span class="nb-c" id="nbCount">0</span>
- </button>
   <div class="sent" id="sentCard" hidden></div>
 <section class="whatsnew" aria-label="מה חדש">
   <div class="wn" id="wnCmds"></div>
@@ -1077,6 +1076,15 @@ body.editing .bn{display:none}
 
 
 
+<div class="install" id="installHint">להתקנה כאפליקציה על מסך הבית: בספארי לוחצים שיתוף ואז "הוספה למסך הבית". באנדרואיד: תפריט ואז "התקנת אפליקציה".</div>
+
+<nav class="links" aria-label="קישורים מהירים">
+ <a href="plan.html">
+  <span aria-hidden="true">&#128736;</span>
+  <div>תכנון 2.0<small>מה נבנה ומה עוד מתוכנן</small></div>
+ </a>
+</nav>
+
 <div class="alerts" id="alerts">
  <div>
   <b>התראות לנייד</b>
@@ -1104,14 +1112,6 @@ body.editing .bn{display:none}
  </div>
  <div class="msgsaid" id="codeSaid"></div>
 </div>
-<div class="install" id="installHint">להתקנה כאפליקציה על מסך הבית: בספארי לוחצים שיתוף ואז "הוספה למסך הבית". באנדרואיד: תפריט ואז "התקנת אפליקציה".</div>
-
-<nav class="links" aria-label="קישורים מהירים">
- <a href="plan.html">
-  <span aria-hidden="true">&#128736;</span>
-  <div>תכנון 2.0<small>מה נבנה ומה עוד מתוכנן</small></div>
- </a>
-</nav>
 </section>
 
 <section id="pQ" hidden>
@@ -2393,6 +2393,7 @@ function showEditBar(){
 function endEdit(){
  if(!editing)return;
  saveOrder(editing.box,editing.key);
+ pinHome(document.getElementById('pH'));
  dropHandles();
  editing.box.classList.remove('editbox');
  editing=null;
@@ -3643,11 +3644,23 @@ document.getElementById('mailForm').addEventListener('submit',function(e){
  }).then(function(){btn.disabled=false;});
 });
 
+// Whatever he has dragged around, two things do not move: what is unread is
+// always the first thing under the title, and the phone alerts and the
+// personal code are always the last things on the screen.
+function pinHome(home){
+ if(!home)return;
+ var top=document.getElementById('newBtn');
+ if(top&&top.parentNode===home)home.insertBefore(top,home.firstChild);
+ ['alerts','codeBox'].forEach(function(id){
+  var el=document.getElementById(id);
+  if(el&&el.parentNode===home)home.appendChild(el);
+ });
+}
 (function(){
  var grid=document.querySelector('.grid');
  var home=document.getElementById('pH');
  if(grid){nameChildren(grid,'tile');applyOrder(grid,'tileOrder');armDrag(grid,'tileOrder');}
- if(home){nameChildren(home,'blk');applyOrder(home,'blockOrder');armDrag(home,'blockOrder');}
+ if(home){nameChildren(home,'blk');applyOrder(home,'blockOrder');pinHome(home);armDrag(home,'blockOrder');}
 })();
 on('editDone',endEdit);
 // The explicit way into arranging, for when the long press is not obvious.

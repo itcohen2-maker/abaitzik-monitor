@@ -53,3 +53,24 @@ test('the pill screen asks whether the pill was taken earlier', () => {
   assert.ok(html.includes('ML.pillState('));
   assert.ok(html.includes("'לקחתי כדור בשעה '"));
 });
+
+test('home order: unread count under the title, alerts and code at the bottom', () => {
+  const html = renderPage(fixture());
+  const at = (s) => { const i = html.indexOf(s); assert.ok(i > -1, 'missing ' + s); return i; };
+  const header = at('</header>');
+  const ph = at('<section id="pH">');
+  const newBtn = at('id="newBtn"');
+  assert.ok(header < ph && ph < newBtn);
+  // Nothing sits between the section opening and the unread button.
+  assert.equal(html.slice(ph, newBtn).replace(/\s/g, ''), '<sectionid="pH"><buttontype="button"');
+  const order = ['id="newBtn"', 'id="micBtn"', 'id="sentCard"', 'class="whatsnew"', 'class="tiles"',
+    'id="askBox"', 'id="blkTiles"', 'id="blkIcons"', 'id="alerts"', 'id="codeBox"'];
+  const idx = order.map(at);
+  for (let i = 1; i < idx.length; i++) assert.ok(idx[i - 1] < idx[i], order[i] + ' must come after ' + order[i - 1]);
+  // codeBox is the last block of the home section.
+  const codeEnd = html.indexOf('</section>', at('id="codeBox"'));
+  const between = html.slice(at('id="codeBox"'), codeEnd);
+  assert.ok(!/<div class="(alerts|tiles|grid|row|voice)"/.test(between));
+  assert.ok(html.includes('function pinHome('));
+  assert.ok(html.includes('--r:18px'));
+});
