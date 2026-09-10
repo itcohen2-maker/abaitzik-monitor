@@ -677,6 +677,18 @@ body.editing .bn{display:none}
 .g8{background:linear-gradient(150deg,#ffb74d,#e65100)}
 .g9{background:linear-gradient(150deg,#f48fb1,#ad1457)}
 .g10{background:linear-gradient(150deg,#ffe082,#f57f17)}
+.g11{background:linear-gradient(150deg,#b9f6ca,#00897b)}
+/* The idea list. Each one is a real thing the screen could do, with a button
+   that asks for it, because a new user does not know what to ask for until he
+   sees a sentence that describes his own week. */
+.idea{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+ padding:15px 17px;margin-bottom:11px;box-shadow:var(--shadow)}
+.idea b{display:block;font-size:16px;font-weight:500;margin-bottom:4px}
+.idea p{margin:0 0 11px;font-size:14px;color:var(--dim);font-weight:300;line-height:1.6}
+.idea button{background:var(--accent);color:#fff;border:0;border-radius:9px;
+ padding:8px 17px;font:500 13.5px Heebo,sans-serif;cursor:pointer}
+.idea button.done{background:var(--green)}
+.ideahead{font-size:13.5px;color:var(--dim);font-weight:300;margin-bottom:14px;line-height:1.65}
 .opcard{background:var(--surface);border:1px solid var(--line);border-radius:18px;
  padding:6px 16px;margin-bottom:14px;box-shadow:var(--shadow)}
 .opline{display:flex;justify-content:space-between;gap:12px;align-items:baseline;
@@ -917,6 +929,7 @@ body.editing .bn{display:none}
   <button type="button" class="gt g8" id="gLolos"><b>🧾 לולוס</b><small>ריווחית והיומן</small></button>
   <button type="button" class="gt g9" id="gOp"><b>🏥 ניתוח</b><small>מתי, איפה, ומה צריך</small></button>
   <button type="button" class="gt g10" id="gNotes"><b>📝 פתקים</b><small>נכתב, נשמר, לא הולך לאיבוד</small></button>
+  <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
  </div>
 
 <div class="tiles">
@@ -1027,6 +1040,17 @@ body.editing .bn{display:none}
  </form>
  <div id="noteList"></div>
  <div class="hint">הפתקים נשמרים במכשיר הזה. לחיצה ארוכה על פתק מוחקת אותו.</div>
+</section>
+
+<section id="pI" hidden>
+ <h2>רעיונות</h2>
+ <div class="ideahead">אלה דברים שהמסך הזה כבר יודע לעשות או שאני יכול לבנות. לחיצה על "רוצה את זה" שולחת לי את הבקשה, ואני בונה ומעדכן.</div>
+ <div id="ideaList"></div>
+ <form class="quickrow" id="ideaForm">
+  <input type="text" id="ideaText" autocomplete="off" placeholder="רעיון משלך">
+  <button type="submit" id="ideaBtn">שליחה</button>
+ </form>
+ <div class="msgsaid" id="ideaSaid"></div>
 </section>
 
 <section id="pL2" hidden>
@@ -1717,7 +1741,7 @@ function updateDot(){
  d.hidden=!(n&&n>chatSeen());
  document.title=(d.hidden?'':'(1) ')+'אבא איציק בבנייה עצמית';
 }
-var PANES={h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2'};
+var PANES={h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 var PILLGAP=8*3600*1000;
 function lastPill(){
@@ -2028,6 +2052,7 @@ document.addEventListener('pointerdown',function(e){
  if(e.target.closest&&e.target.closest('.gt,.mic,.micfab,.recbig,.foodcam,.conn'))click();
 },{passive:true});
 
+function on2(id,ev,fn){var el=document.getElementById(id);if(el)el.addEventListener(ev,fn);}
 function on(id,fn){
  var el=document.getElementById(id);
  if(el)el.onclick=fn;
@@ -2371,6 +2396,64 @@ document.getElementById('gFood').onclick=function(){pane('f');renderFood();};
 on('gLolos',function(){pane('o');});
 on('gOp',function(){pane('s');});
 on('gNotes',function(){pane('t');renderNotes();});
+on('gIdeas',function(){pane('i');renderIdeas();});
+// The same list a new client sees on the first visit. Every line is written as
+// his week, not as a feature: he recognises the problem before he understands
+// the screen. What he taps becomes a request in my inbox.
+var IDEAS=[
+ {t:'לתעד כל דבר שאני אוכל',d:'מצלמים או אומרים במילה, וזה נרשם עם הקלוריות. בסוף השבוע יש תמונה של מה שבאמת אכלת, בלי לשאול אף אחד.'},
+ {t:'לדעת מי פנה ולא קיבל תשובה',d:'כל פנייה מכל מקום נכנסת לתור אחד, ומי שמחכה יותר מדי נצבע.'},
+ {t:'דוח בוקר על הטלפון',d:'מה קרה אתמול בעסק, בשלוש שורות, לפני הקפה הראשון.'},
+ {t:'תזכורות שלא מפספסים',d:'ביטוח, רישיון, תשלום לספק, מסמך לרשות. המסך זוכר במקומך.'},
+ {t:'מה נכנס החודש',d:'הכנסות והוצאות במקום אחד, בלי לחכות לרואה החשבון בסוף הרבעון.'},
+ {t:'סריקת חשבוניות וקבלות',d:'מצלמים קבלה והיא נכנסת לרשימה מסודרת, גם לעסק וגם לחשבון הפרטי.'},
+ {t:'מי הלקוחות שלי ומאיפה הם הגיעו',d:'רשימה אחת של אנשים, עם המקור שממנו כל אחד הגיע.'},
+ {t:'עובד חדש שיודע איך עובדים כאן',d:'מה שכתוב במסך הוא ההדרכה. אין תלות במי שיושב פה חמש שנים.'},
+ {t:'הכל נשאר גם כשאני בחופש',d:'המסך ממשיך לענות ולתעד, ואתה קורא כשנוח לך.'},
+ {t:'תיק מסודר לעסק',d:'שנתיים של תיעוד מסודר הן ההבדל בין להראות לקונה תיק לבין לספר לו סיפור.'}
+];
+function ideaKey(t){return 'idea:'+t;}
+function ideaDone(){
+ try{return JSON.parse(localStorage.getItem('ideasAsked')||'[]');}catch(e){return[];}
+}
+function renderIdeas(){
+ var asked=ideaDone();
+ document.getElementById('ideaList').innerHTML=IDEAS.map(function(x,n){
+  var on=asked.indexOf(x.t)>-1;
+  return '<div class="idea"><b>'+esc(x.t)+'</b><p>'+esc(x.d)+'</p>'
+   +'<button type="button" data-i="'+n+'"'+(on?' class="done"':'')+'>'
+   +(on?'ביקשת. אני על זה':'רוצה את זה')+'</button></div>';
+ }).join('');
+ Array.prototype.forEach.call(document.querySelectorAll('#ideaList button'),function(b){
+  b.onclick=function(){
+   var x=IDEAS[Number(b.getAttribute('data-i'))];
+   b.disabled=true;b.textContent='שולח.';
+   sendText('רעיון מהמוניטור','רוצה את זה: '+x.t,'רעיון').then(function(){
+    var a=ideaDone();
+    if(a.indexOf(x.t)<0)a.push(x.t);
+    try{localStorage.setItem('ideasAsked',JSON.stringify(a));}catch(e){}
+    b.className='done';b.textContent='ביקשת. אני על זה';
+    var p=pending();p.push({at:new Date().toISOString(),text:'רוצה את זה: '+x.t});savePending(p);
+    markSent('text');renderSent();renderThread();
+   }).catch(function(){
+    b.textContent='לא נשלח. תנסה שוב';
+   }).then(function(){b.disabled=false;});
+  };
+ });
+}
+on2('ideaForm','submit',function(e){
+ e.preventDefault();
+ var box=document.getElementById('ideaText');
+ var said=document.getElementById('ideaSaid');
+ var t=box.value.trim();
+ if(!t)return;
+ said.textContent='שולח.';
+ sendText('רעיון מהמוניטור','רעיון שלי: '+t,'רעיון').then(function(){
+  var p=pending();p.push({at:new Date().toISOString(),text:'רעיון שלי: '+t});savePending(p);
+  box.value='';said.textContent='נשלח. אני חוזר אליך עם שתי דרכים לעשות את זה.';
+  markSent('text');renderSent();renderThread();
+ }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';});
+});
 
 // Anything he adds about the operation goes to me as well as onto the screen,
 // so a correction is never only on one device.
