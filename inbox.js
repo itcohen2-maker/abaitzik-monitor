@@ -42,12 +42,24 @@ function mark() {
     const when = new Date(m.time * 1000).toISOString().slice(0, 19).replace('T', ' ');
     console.log('--- ' + when + ' ---');
     if (m.attachment) {
-      // ntfy drops attachments after a few hours, so they are pulled now and
-      // kept on disk rather than fetched again at transcribe time.
+      // ntfy keeps attachments only about three hours. If the poll is late the
+      // audio is already gone, and the fetch returns a small JSON error that
+      // looks like a file on disk. That happened once and fourteen recordings
+      // were written as 51 byte stubs, so the download is now checked and a
+      // loss is reported loudly instead of being handed to the transcriber.
       const out = path.join(DROP, m.attachment.name);
-      const bin = Buffer.from(await (await fetch(m.attachment.url)).arrayBuffer());
-      fs.writeFileSync(out, bin);
-      console.log('קובץ: ' + out + '  (' + m.attachment.size + ' bytes)');
+      const res = await fetch(m.attachment.url);
+      const bin = Buffer.from(await res.arrayBuffer());
+      const expected = Number(m.attachment.size) || 0;
+      const looksReal = res.ok && bin.length > 1024 && (!expected || bin.length >= expected * 0.9);
+      if (looksReal) {
+        fs.writeFileSync(out, bin);
+        console.log('קובץ: ' + out + '  (' + bin.length + ' bytes)');
+      } else {
+        console.log('!! ההקלטה אבדה: ' + m.attachment.name +
+          '  (' + res.status + ', ' + bin.length + ' bytes, ציפינו ל-' + expected + ')');
+        console.log('!! ntfy מוחק צרופות אחרי כשלוש שעות. צריך לבקש מאיציק לשלוח שוב.');
+      }
     }
     if (m.message) console.log(m.message);
   }
