@@ -1131,11 +1131,22 @@ function sendText(subject, text, kind) {
 // mailbox as well so there is a record that a recording existed even if the
 // audio expires before I fetch it.
 function sendFiles(list, note) {
+ // Every upload is checked against what came back. A recording that does not
+ // arrive whole must fail here and say so on his screen, because the last time
+ // one was dropped silently he kept talking into nothing and then could not
+ // remember what he had asked for.
  return list.reduce(function (chain, f) {
   return chain.then(function () {
    return fetch('https://ntfy.sh/' + NTFYIN + '?filename=' + encodeURIComponent(f.name),
     { method: 'PUT', headers: { Title: 'file' }, body: f })
-    .then(function (r) { if (!r.ok) throw new Error('ntfy'); });
+    .then(function (r) {
+     if (!r.ok) throw new Error('ntfy');
+     return r.json().catch(function () { return null; });
+    })
+    .then(function (j) {
+     var got = j && j.attachment && Number(j.attachment.size);
+     if (!got || got < f.size * 0.98) throw new Error('הקובץ לא הגיע שלם');
+    });
   });
  }, Promise.resolve()).then(function () {
   return ntfyText('קובץ', note).then(function () {
@@ -2155,7 +2166,7 @@ function reallySend(list){
   renderSent();renderThread();
  }).catch(function(){
   paintMics('bad');
-  sendSay('שני הערוצים לא ענו. תבדוק חיבור ותשלח שוב.');
+  sendSay('ההקלטה לא הגיעה שלמה ולא נשמרה. תקליט שוב עכשיו, לפני שתשכח מה אמרת.');
  }).then(function(){fBtn.disabled=false;});
 }
 function sendSay(t){
