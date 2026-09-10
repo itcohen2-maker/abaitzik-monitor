@@ -956,7 +956,7 @@ body.editing .bn{display:none}
 
  <div class="live" id="liveBar">
   <span class="pulse" aria-hidden="true"></span>
-  <b id="liveWhat">מקשיב</b>
+  <b id="liveWhat">אני מקשיב לך</b>
   <span id="liveWhen"></span>
  </div>
 
@@ -2062,7 +2062,7 @@ function paintLive(v){
  var when=document.getElementById('liveWhen');
  var fresh=now&&now.at&&(Date.now()-Date.parse(now.at))<25*60*1000;
  bar.classList.toggle('busy',!!fresh);
- what.textContent=fresh?(now.text||'עובד עכשיו'):'מקשיב. תכתוב ואני עונה';
+ what.textContent=fresh?(now.text||'עובד עכשיו'):'אני מקשיב לך. אפשר גם לכתוב כאן';
  var n=unreadList().length;
  when.textContent=(n?(n===1?'תשובה אחת מחכה · ':n+' תשובות מחכות · '):'')
   +(now&&now.at?ago(now.at):ago(D.builtAt));
