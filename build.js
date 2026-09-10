@@ -449,6 +449,18 @@ section{margin-bottom:30px}
  box-shadow:0 2px 6px rgba(66,133,244,.4),inset 0 1px 0 rgba(255,255,255,.3)}
 .quickrow button:active{background:linear-gradient(180deg,var(--blue),#1b63d6);box-shadow:none}
 .quickrow button[disabled]{opacity:.55}
+.nextrep{display:flex;align-items:center;gap:12px;margin-bottom:12px;
+ background:var(--surface);border:1px solid var(--line);border-radius:16px;
+ padding:12px 14px;box-shadow:var(--shadow)}
+.nextrep>div{flex:1}
+.nextrep b{display:block;font:700 15px Heebo,sans-serif}
+.nextrep small{display:block;color:var(--dim);font-size:12.5px;margin-top:2px}
+.nextrep button{flex:0 0 auto;min-height:42px;padding:0 18px;border:0;border-radius:999px;
+ cursor:pointer;font:700 14px Heebo,sans-serif;color:#fff;
+ background:linear-gradient(180deg,#6ea8ff,var(--blue));
+ box-shadow:0 2px 6px rgba(66,133,244,.4),inset 0 1px 0 rgba(255,255,255,.3)}
+.nextrep button:active{background:linear-gradient(180deg,var(--blue),#1b63d6);box-shadow:none}
+.nextrep button[disabled]{opacity:.55}
 .stamp{text-align:center;color:var(--dim);font-size:11px;padding:10px 0 4px}
 .toast{position:fixed;z-index:80;inset-inline:16px;bottom:calc(76px + env(safe-area-inset-bottom));
  margin-inline:auto;max-width:360px;text-align:center;
@@ -997,6 +1009,11 @@ section{margin-bottom:30px}
 
 <section id="pR" hidden>
  <h2>דוחות הסבבים</h2>
+ <div class="nextrep">
+  <div><b id="repNext">הדוח הבא</b><small id="repWhen"></small></div>
+  <button type="button" id="repNow">דוח עכשיו</button>
+ </div>
+ <div class="msgsaid" id="repSaid"></div>
  <div id="reports"></div>
 </section>
 
@@ -1688,7 +1705,7 @@ document.getElementById('newBtn').onclick=function(){
 document.getElementById('nH').onclick=function(){pane('h');};
 document.getElementById('nQ').onclick=function(){pane('q');};
 document.getElementById('nL').onclick=function(){pane('l');};
-document.getElementById('nR').onclick=function(){pane('r');markReportsSeen();};
+document.getElementById('nR').onclick=function(){pane('r');markReportsSeen();renderNextReport();};
 document.getElementById('nM').onclick=function(){pane('m');markChatSeen();};
 
 // Home shortcuts. The mail and "new module" circles have no screen of their
@@ -1905,6 +1922,41 @@ document.getElementById('gCam').onclick=function(){
 // ---- what he ate ----
 // He sends a photo or a line; I look the values up and write the row back into
 // the food collection. The screen only adds up and displays what is there.
+var REPHOURS=[[8,17],[20,17]];
+function nextReport(){
+ var now=new Date();
+ for(var i=0;i<REPHOURS.length;i++){
+  var d=new Date(now);
+  d.setHours(REPHOURS[i][0],REPHOURS[i][1],0,0);
+  if(d>now)return d;
+ }
+ var t=new Date(now);
+ t.setDate(t.getDate()+1);
+ t.setHours(REPHOURS[0][0],REPHOURS[0][1],0,0);
+ return t;
+}
+function renderNextReport(){
+ var el=document.getElementById('repWhen');
+ if(!el)return;
+ var d=nextReport();
+ var mins=Math.max(0,Math.round((d-new Date())/60000));
+ var hh=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+ var when=d.toDateString()===new Date().toDateString()?'היום':'מחר';
+ var left=mins<60?('בעוד '+mins+' דקות'):('בעוד '+Math.round(mins/60)+' שעות');
+ el.textContent=when+' ב-'+hh+', '+left;
+}
+setInterval(renderNextReport,60000);
+on('repNow',function(){
+ var b=this,said=document.getElementById('repSaid');
+ b.disabled=true;said.textContent='מבקש.';
+ sendText('בקשת דוח מהמוניטור','דוח עכשיו: תן לי דוח רשתות מעודכן','דוח').then(function(){
+  said.textContent='ביקשתי. הדוח ייכנס לכאן בסבב הקרוב.';
+  toast(said.textContent);
+  markSent('text');renderSent();
+ }).catch(function(){
+  said.textContent='הבקשה לא עברה. תנסה שוב.';
+ }).then(function(){b.disabled=false;});
+});
 document.getElementById('gFood').onclick=function(){pane('f');renderFood();};
 on('gLolos',function(){pane('o');});
 on('lolosAsk',function(){askInChat('לולוס: תצליב לי ');});
@@ -1997,7 +2049,7 @@ function askInChat(prefix){
 }
 document.getElementById('gChat').onclick=function(){pane('m');markChatSeen();};
 document.getElementById('gQueue').onclick=function(){openNet('all');};
-document.getElementById('gReports').onclick=function(){pane('r');markReportsSeen();};
+document.getElementById('gReports').onclick=function(){pane('r');markReportsSeen();renderNextReport();};
 document.getElementById('gMail').onclick=function(){pane('e');};
 document.getElementById('gPill').onclick=function(){pane('p');renderPill();};
 document.getElementById('pillBig').onclick=function(){
@@ -2476,6 +2528,7 @@ document.getElementById('mailForm').addEventListener('submit',function(e){
 
 applyTileOrder();
 armTileDrag();
+renderNextReport();
 render();
 renderThread();
 renderPill();
