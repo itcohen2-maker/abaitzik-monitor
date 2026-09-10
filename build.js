@@ -1608,14 +1608,14 @@ function wireBoxes(root){
   box.querySelector('.bfile').onclick=function(e){
    e.stopPropagation();
    document.getElementById('fCap').value=q;
-   openPicker('full','image/*,video/*,audio/*,application/pdf');
+   openPicker('full','image/*,video/*,audio/*,application/pdf',true);
   };
   // Straight to the camera. On a phone this opens the lens instead of the
   // gallery, which is what he means when he says he wants to show me something.
   box.querySelector('.bcam').onclick=function(e){
    e.stopPropagation();
    document.getElementById('fCap').value=q;
-   shoot();
+   shoot(true);
   };
   txt.onclick=function(e){
    e.stopPropagation();
@@ -1692,7 +1692,7 @@ function wireReplies(host,all){
    answering=m;
    markAnswering(b.closest('.bub'));
    document.getElementById('fCap').value=quoteOf(m);
-   shoot();
+   shoot(true);
   };
  });
  Array.prototype.forEach.call(host.querySelectorAll('.rfile'),function(b){
@@ -1702,7 +1702,7 @@ function wireReplies(host,all){
    answering=m;
    markAnswering(b.closest('.bub'));
    document.getElementById('fCap').value=quoteOf(m);
-   openPicker('full','image/*,video/*,audio/*,application/pdf');
+   openPicker('full','image/*,video/*,audio/*,application/pdf',true);
   };
  });
  Array.prototype.forEach.call(host.querySelectorAll('.rtxt'),function(b){
@@ -2545,11 +2545,12 @@ showCodeBox();
 
 // Straight to the phone camera, no picker in between. Used by the camera tile
 // and by the camera button that sits beside every message and every report.
-function shoot(){
+function shoot(auto){
  var f=document.getElementById('fileForm');
  if(f)f.hidden=false;
  var pick=document.getElementById('fPick');
  if(!pick)return;
+ autoSend=!!auto;
  setQ('normal');
  pick.setAttribute('accept','image/*');
  pick.setAttribute('capture','environment');
@@ -2968,14 +2969,35 @@ function setQ(m){
  document.getElementById('qN').setAttribute('aria-pressed',m==='normal');
  describe();
 }
-function openPicker(mode,accept){
+// Two things were broken when the picker was opened from a reply row next to a
+// message. The file input lives inside a form that starts hidden, and a phone
+// ignores a click on an input inside a hidden container, so nothing happened
+// at all. And even when it did open, the send button was inside that same
+// hidden form, so a chosen photo had nowhere to go.
+//
+// The form is opened first, and a pick started from a reply sends itself.
+var autoSend=false;
+function openPicker(mode,accept,auto){
+ var f=document.getElementById('fileForm');
+ if(f)f.hidden=false;
+ autoSend=!!auto;
  setQ(mode);
  fPick.setAttribute('accept',accept);
  fPick.click();
 }
 document.getElementById('qN').onclick=function(){openPicker('normal','image/*');};
 document.getElementById('qF').onclick=function(){openPicker('full','image/*,video/*,audio/*,application/pdf');};
-fPick.addEventListener('change',describe);
+fPick.addEventListener('change',function(){
+ describe();
+ if(!autoSend)return;
+ autoSend=false;
+ var list=picked();
+ if(!list.length)return;
+ fBtn.disabled=true;
+ sendSay(list.length>1?('מכין '+list.length+' קבצים.'):'מכין.');
+ if(qMode==='normal')shrinkAll(list,reallySend);
+ else reallySend(list);
+});
 function putFiles(list){
  try{var dt=new DataTransfer();list.forEach(function(f){dt.items.add(f);});fPick.files=dt.files;return true;}
  catch(e){return false;}
