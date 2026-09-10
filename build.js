@@ -180,11 +180,11 @@ const PAGE = `<!DOCTYPE html>
 :root{--blue:#4285F4;--red:#EA4335;--yellow:#FBBC05;--green:#34A853;
  --ground:#f6f8fc;--surface:#fff;--sunk:#eef2fa;--ink:#1f2430;--dim:#5f6b7f;
  --line:#e3e9f4;--accent:#1a73e8;--accent-soft:#e8f0fe;--wait:#e37400;
- --gold:#f0b429;--fresh:#e6f6ec;
+ --gold:#f0b429;--fresh:#e6f6ec;--unread:#fdeceb;
  --shadow:0 2px 8px rgba(30,40,70,.07)}
 @media (prefers-color-scheme:dark){:root{--ground:#0f1218;--surface:#181d27;--sunk:#141922;
  --ink:#eef1f7;--dim:#9aa5b8;--line:#252c39;--accent:#8ab4f8;--accent-soft:#1b2b45;
- --wait:#fbbc05;--fresh:#12301f;--shadow:0 2px 10px rgba(0,0,0,.4)}}
+ --wait:#fbbc05;--fresh:#12301f;--unread:#331615;--shadow:0 2px 10px rgba(0,0,0,.4)}}
 *{box-sizing:border-box}
 /* A class that sets display beats the browser default for [hidden], which is
    how the recording overlay ended up on screen the moment the page opened. */
@@ -357,17 +357,17 @@ section{margin-bottom:30px}
 .st-received{background:var(--sunk);color:var(--dim)}
 .st-working{background:#f6e7c8;color:#8a5a12}
 .st-done{background:var(--accent-soft);color:var(--accent)}
-/* An answer he has not read yet: green and glowing, so it is impossible to
-   miss in a long thread. Touching it clears the colour and the bubble goes
-   back to looking like every other one, which is how he knows what is left. */
-.bub.fresh{border:2px solid var(--green);background:var(--fresh);
- animation:bubglow 2.2s ease-in-out infinite}
+/* Unread is red and glowing, and it stays that way for days if that is how
+   long it takes him to get to it. Touching it turns it green, which is his
+   own mark that he dealt with it. */
+.bub.fresh{border:2px solid var(--red);background:var(--unread);
+ animation:bubglow 2s ease-in-out infinite}
 @keyframes bubglow{
- 0%,100%{box-shadow:0 6px 18px rgba(52,168,83,.18),0 0 0 0 rgba(52,168,83,.45)}
- 55%{box-shadow:0 6px 18px rgba(52,168,83,.18),0 0 0 10px rgba(52,168,83,0)}
+ 0%,100%{box-shadow:0 6px 18px rgba(234,67,53,.2),0 0 0 0 rgba(234,67,53,.5)}
+ 55%{box-shadow:0 6px 18px rgba(234,67,53,.2),0 0 0 11px rgba(234,67,53,0)}
 }
 @media(prefers-reduced-motion:reduce){.bub.fresh{animation:none}}
-.bub.touched{animation:none}
+.bub.touched{animation:none;border:2px solid var(--green);background:var(--fresh)}
 .badge.ok{background:var(--green)}
 .bub.read{opacity:.72}
 .badge{font-style:normal;font-weight:700;background:var(--red);color:#fff;
@@ -975,7 +975,7 @@ body.editing .bn{display:none}
   <div class="wn" id="wnNow"></div>
  </section>
 
- <div class="row" role="group" aria-label="קיצורים">
+ <div class="row" id="blkIcons" role="group" aria-label="קיצורים">
   <a class="ic" data-net="youtube" href="https://studio.youtube.com/" target="_blank" rel="noopener"><span class="c c-yt">
    <svg viewBox="0 0 24 24"><path fill="#fff" d="M10 8.5v7l6-3.5z"/></svg></span>יוטיוב</a>
   <a class="ic" data-net="tiktok" href="https://www.tiktok.com/@abaitzik" target="_blank" rel="noopener"><span class="c c-tt">
@@ -1005,7 +1005,7 @@ body.editing .bn{display:none}
  </div>
 
 
- <div class="grid">
+ <div class="grid" id="blkTiles">
   <button type="button" class="gt g1" id="gChat"><b>💬 פנייה אליי</b><small>צ׳אט, קול, קובץ</small></button>
   <button type="button" class="gt g2" id="gMail"><b>📧 מייל</b><small>בקשה, ואני מחזיר תשובה</small></button>
   <button type="button" class="gt g3" id="gQueue"><b>📊 ניטור רשתות</b><small>מי פנה, מה נענה</small></button>
@@ -1297,6 +1297,7 @@ body.editing .bn{display:none}
 
 <div class="editbar" id="editBar" hidden>
  <span>סידור המסך. גרור מה שתרצה.</span>
+ <button type="button" id="swapBlocks">החלפה בין הריבועים לעיגולים</button>
  <button type="button" id="editDone">סיום</button>
 </div>
 
@@ -2107,6 +2108,22 @@ function paintReportDot(){
  var n=document.getElementById('nR');if(n)n.classList.toggle('blink',!!fresh);
  var t=document.getElementById('gReports');if(t)t.classList.toggle('blink',!!fresh);
 }
+
+// The two big blocks on the home screen: the square tiles and the round app
+// icons. He wanted one above the other and the freedom to flip them whenever,
+// without hunting for a grip. One button does it and the order is kept.
+function swapHomeBlocks(){
+ var tiles=document.getElementById('blkTiles');
+ var icons=document.getElementById('blkIcons');
+ if(!tiles||!icons||!tiles.parentNode)return;
+ var box=tiles.parentNode;
+ var kids=Array.prototype.slice.call(box.children);
+ if(kids.indexOf(tiles)<kids.indexOf(icons))box.insertBefore(icons,tiles);
+ else box.insertBefore(tiles,icons);
+ saveOrder(box,'blockOrder');
+ toast('הוחלף. אפשר להחליף שוב בכל רגע.');
+}
+on('swapBlocks',swapHomeBlocks);
 
 // ---- his own order ----
 // He asked to arrange the tiles himself. A long press picks one up, and the
