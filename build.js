@@ -1596,7 +1596,16 @@ function checkFresh(){
   try{seen=sessionStorage.getItem('reloadedFor')||'';}catch(e){}
   if(seen===v.builtAt)return;
   try{sessionStorage.setItem('reloadedFor',v.builtAt);}catch(e){}
-  location.replace(location.pathname+'?b='+encodeURIComponent(v.builtAt));
+  var go=function(){location.replace(location.pathname+'?b='+encodeURIComponent(v.builtAt));};
+  try{
+   if(window.caches&&caches.keys){
+    caches.keys().then(function(keys){
+     return Promise.all(keys.map(function(k){return caches.delete(k);}));
+    }).catch(function(){}).then(go);
+    return;
+   }
+  }catch(e){}
+  go();
  }).catch(function(){});
 }
 checkFresh();
@@ -1775,7 +1784,20 @@ function pane(w){
  window.scrollTo(0,0);
 }
 document.getElementById('reloadBtn').onclick=function(){
- location.replace(location.pathname+'?v='+Date.now());
+ // He reported the header still showing a build fifty minutes old after
+ // pressing this, so a fresh query string was not enough. Anything the
+ // browser has stored for this page is cleared first: a page added to the
+ // home screen keeps its own copy that a normal reload never touches.
+ var done=function(){location.replace(location.pathname+'?v='+Date.now());};
+ try{
+  if(window.caches&&caches.keys){
+   caches.keys().then(function(keys){
+    return Promise.all(keys.map(function(k){return caches.delete(k);}));
+   }).catch(function(){}).then(done);
+   return;
+  }
+ }catch(e){}
+ done();
 };
 // A short beep when something is waiting. Browsers block audio until the page
 // has been touched, so it only ever plays on his own tap, never on load.
