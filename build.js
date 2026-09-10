@@ -109,7 +109,7 @@ function build() {
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
 
   const chat = loadDocs('chat')
-    .map(m => ({ at: m.at, from: m.from, text: m.text, status: m.status || '' }))
+    .map(m => ({ id: m.id, at: m.at, from: m.from, text: m.text, status: m.status || '', re: m.re || '' }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? -1 : 1));
 
   const openCmds = loadDocs('commands')

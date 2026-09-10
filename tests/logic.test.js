@@ -53,3 +53,53 @@ test('pillState is due once the gap has passed, and with no record', () => {
   assert.equal(ML.pillState(NOW - 9 * H, NOW).due, true);
   assert.deepEqual(ML.pillState(0, NOW), { next: 0, left: 0, due: true });
 });
+
+const CHAT = [
+  { id: 'a1', at: '2026-09-10T10:00:00', from: 'claude', text: 'שאלה על הלוגו', re: '' },
+  { id: 'a2', at: '2026-09-10T10:05:00', from: 'itzik', text: 'תשובה ללוגו', re: 'a1' },
+  { id: 'a3', at: '2026-09-10T10:20:00', from: 'claude', text: 'קיבלתי, הלוגו אושר', re: 'a1' },
+  { id: 'b1', at: '2026-09-10T11:00:00', from: 'claude', text: 'דוח ערב', re: '' },
+  { id: 'c1', at: '2026-09-10T09:00:00', from: 'itzik', text: 'תזכורת שלי', re: '' },
+  { id: 'c2', at: '2026-09-10T09:30:00', from: 'claude', text: 'רשמתי', re: 'c1' },
+  { id: 'x9', at: '2026-09-10T12:00:00', from: 'claude', text: 'יתום', re: 'nope' },
+];
+
+test('keyOf prefers the doc id and falls back to time plus text', () => {
+  assert.equal(ML.keyOf({ id: 'a1', at: 't', text: 'x' }), 'a1');
+  assert.equal(ML.keyOf({ at: '2026-09-10T10:00:00', text: 'abcdefghij'.repeat(6) }),
+    '2026-09-10T10:00:00|' + 'abcdefghij'.repeat(4));
+});
+
+test('splitThreads groups replies under their root and keeps time order', () => {
+  const th = ML.splitThreads(CHAT);
+  const byKey = Object.fromEntries(th.map(t => [t.key, t]));
+  assert.deepEqual(Object.keys(byKey).sort(), ['a1', 'b1', 'c1', 'x9']);
+  assert.deepEqual(byKey.a1.msgs.map(m => m.id), ['a1', 'a2', 'a3']);
+  assert.equal(byKey.a1.last, '2026-09-10T10:20:00');
+  assert.equal(byKey.x9.root.id, 'x9', 'a reply whose root is missing becomes its own thread');
+});
+
+test('threadStatus: fresh beats standby beats done', () => {
+  const th = ML.splitThreads(CHAT);
+  const a1 = th.find(t => t.key === 'a1');
+  const b1 = th.find(t => t.key === 'b1');
+  const c1 = th.find(t => t.key === 'c1');
+  const unread = new Set(['a3']);
+  assert.equal(ML.threadStatus(a1, { unread, standby: {} }), 'fresh');
+  assert.equal(ML.threadStatus(b1, { unread, standby: { b1: '2026-09-10T11:30:00' } }), 'standby');
+  // A claude message newer than the standby mark clears the standby.
+  assert.equal(ML.threadStatus(c1, { unread: new Set(), standby: { c1: '2026-09-10T09:10:00' } }), 'done');
+  assert.equal(ML.threadStatus(c1, { unread: new Set(), standby: {} }), 'done');
+});
+
+test('orderThreads: fresh first, then standby, then the rest, numbered', () => {
+  const th = ML.splitThreads(CHAT);
+  const state = { unread: new Set(['a3']), standby: { b1: '2026-09-10T11:30:00' } };
+  const out = ML.orderThreads(th, state);
+  assert.deepEqual(out.map(o => [o.n, o.status, o.thread.key]), [
+    [1, 'fresh', 'a1'],
+    [2, 'standby', 'b1'],
+    [3, 'done', 'x9'],
+    [4, 'done', 'c1'],
+  ]);
+});

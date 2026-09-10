@@ -74,3 +74,12 @@ test('home order: unread count under the title, alerts and code at the bottom', 
   assert.ok(html.includes('function pinHome('));
   assert.ok(html.includes('--r:18px'));
 });
+
+test('chat messages reach the page with id and re', () => {
+  const html = renderPage(fixture({ chat: [
+    { id: 'a1', at: '2026-09-10T10:00:00', from: 'claude', text: 'x', status: '', re: '' },
+    { id: 'a2', at: '2026-09-10T10:05:00', from: 'itzik', text: 'y', status: 'done', re: 'a1' },
+  ] }));
+  assert.ok(html.includes('"id":"a2"'));
+  assert.ok(html.includes('"re":"a1"'));
+});
