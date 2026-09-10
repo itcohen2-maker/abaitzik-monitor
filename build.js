@@ -3602,7 +3602,12 @@ renderThread();
 renderPill();
 renderMail();
 updateDot();
-pane('h');
+// The last word on which screen opens. This runs after everything else, so a
+// plain pane('h') here quietly undid the notification landing above: he tapped
+// the banner and got the home screen with no sign of what was new.
+if(location.hash==='#new'){pane('u');renderUnread();}
+else if(location.hash==='#chat'){pane('m');}
+else pane('h');
 </script>
 </body>
 </html>`;
