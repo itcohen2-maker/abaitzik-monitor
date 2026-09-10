@@ -412,6 +412,30 @@ section{margin-bottom:30px}
    them, and each one is full width because there is no thread to place it in. */
 .ubox{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
 .ubox .bub{max-width:100%;align-self:stretch}
+/* One card per thread. Red until he touches it, amber while he waits on me,
+   green once it is done. The number is its place in the list right now, so
+   it changes when a reply lands and the card jumps up. */
+.th{background:var(--surface);border:2px solid var(--line);border-radius:var(--r);
+ margin-bottom:12px;box-shadow:var(--shadow);overflow:hidden}
+.th>summary{list-style:none;display:flex;align-items:center;gap:9px;flex-wrap:wrap;
+ padding:12px 14px;cursor:pointer;font-size:15px}
+.th>summary::-webkit-details-marker{display:none}
+.th>summary b{flex:1 1 60%;min-width:0;font-weight:600;line-height:1.35}
+.th>summary small{color:var(--dim);font-size:12px;font-variant-numeric:tabular-nums}
+.th .num{flex:0 0 auto;min-width:30px;height:30px;border-radius:999px;display:grid;place-items:center;
+ background:var(--sunk);color:var(--ink);font:800 14px Heebo,sans-serif;padding:0 8px}
+.th .rcopyall{margin-inline-start:auto}
+.thbody{display:flex;flex-direction:column;gap:9px;padding:0 14px 14px;border-top:1px solid var(--line)}
+.thbody .bub{max-width:92%}
+.th-fresh{border-color:var(--red);background:var(--unread);animation:bubglow 1.5s ease-in-out infinite}
+.th-fresh .num{background:var(--red);color:#fff}
+.th-standby{border-color:#d9a441;background:#fff8ea}
+.th-standby .num{background:#f6e7c8;color:#8a5a12}
+.th-done{border-color:var(--green)}
+.th-done .num{background:var(--fresh);color:var(--green)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .th-standby{background:#33290f}}
+:root[data-theme="dark"] .th-standby{background:#33290f}
+@media(prefers-reduced-motion:reduce){.th-fresh{animation:none}}
 /* A light running around the thing he is working on. He asked to see that this
    one card, and nothing else, is what has his hand on it right now. */
 .busyring{position:relative;isolation:isolate}
@@ -1593,72 +1617,136 @@ function dropSettled(list,baked){
   return !mine.some(function(at){return at>=p.at;});
  });
 }
+// A thread he answered and is waiting on. Kept per device, cleared by itself
+// the moment my reply with the same re lands.
+function standbyMap(){
+ try{return JSON.parse(localStorage.getItem('chatStandby')||'{}')||{};}catch(e){return {};}
+}
+function setStandby(key){
+ if(!key)return;
+ try{
+  var m=standbyMap();
+  m[key]=new Date().toISOString();
+  var keys=Object.keys(m);
+  if(keys.length>200){keys.sort().slice(0,keys.length-200).forEach(function(k){delete m[k];});}
+  localStorage.setItem('chatStandby',JSON.stringify(m));
+ }catch(e){}
+}
+function threadState(){
+ var unread=new Set(unreadList().map(ML.keyOf));
+ return {unread:unread,standby:standbyMap()};
+}
+function bubbleHtml(m,i,fresh,handled){
+ var mine=m.from==='itzik';
+ var line=(mine?'איציק':'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');
+ return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')
+  +(fresh?' fresh':(handled?' touched':' read'))+'" data-i="'+i+'"'
+  +' data-copy="'+esc(line)+'">'
+  +'<span class="w">'+(mine?'אתה':'קלוד')+' · '+esc(stamp(m.at))
+  +(m.pend?' · נשלח, עוד לא נקרא':'')+statusTag(m)
+  +(fresh?' · <em class="badge">חדש</em>':(mine?'':' · נקרא'))
+  +'<button type="button" class="cp" data-i="'+i+'" aria-label="העתקה">העתקה</button>'
+  +'</span>'+linkify(m.text)+'</div>';
+}
 function renderThread(){
- var seen=chatSeen();
  var unread=unreadList();
  var touched=touchedIds();
  var baked=(D.chat||[]).filter(function(m){return !isMail(m);});
  var still=dropSettled(pending(),baked);
  savePending(still.concat(pending().filter(isMail)));
- var all=baked.map(function(m){return{at:m.at,from:m.from,text:m.text,status:m.status,pend:false};})
-   .concat(still.map(function(p){return{at:p.at,from:'itzik',text:p.text,pend:true};}))
-   .sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
+ var all=baked.map(function(m){return{id:m.id,re:m.re||'',at:m.at,from:m.from,text:m.text,status:m.status,pend:false};})
+   .concat(still.map(function(p){return{id:'',re:p.re||'',at:p.at,from:'itzik',text:p.text,pend:true};}));
  var host=document.getElementById('thread');
  if(!all.length){
   host.innerHTML='<div class="empty">עוד לא דיברנו כאן. תכתוב משהו למטה.</div>';
   return;
  }
- host.innerHTML=all.map(function(m,i){
-  var mine=m.from==='itzik';
-  var fresh=!mine&&unread.indexOf(m)>-1;
-  var handled=!fresh&&touched.indexOf(claudeKey(m))>-1;
-  var line=(mine?'איציק':'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');
-  return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')
-   +(fresh?' fresh':(handled?' touched':' read'))+'"'
-   +' data-copy="'+esc(line)+'">'
-   +'<span class="w">'+(mine?'אתה':'קלוד')+' · '+esc(stamp(m.at))
-   +(m.pend?' · נשלח, עוד לא נקרא':'')+statusTag(m)
-   +(fresh?' · <em class="badge">חדש</em>':(mine?'':' · נקרא'))
-   +'<button type="button" class="cp" data-i="'+i+'" aria-label="העתקה">העתקה</button>'
-   +'</span>'+linkify(m.text)
+ var rows=ML.orderThreads(ML.splitThreads(all),threadState());
+ var flat=[];
+ host.innerHTML=rows.map(function(r,ri){
+  var t=r.thread;
+  var head=String(t.root.text||'').replace(/\s+/g,' ').trim().slice(0,70);
+  var tag=r.status==='fresh'?'<em class="badge">חדש</em>'
+   :r.status==='standby'?'<em class="st st-working">ממתין לתשובה</em>'
+   :'<em class="badge ok">נקרא</em>';
+  var body=t.msgs.map(function(m){
+   var i=flat.push(m)-1;
+   var fresh=m.from!=='itzik'&&unread.indexOf(m)>-1;
+   var handled=!fresh&&touched.indexOf(claudeKey(m))>-1;
+   return bubbleHtml(m,i,fresh,handled);
+  }).join('');
+  var ri2=flat.length-1;
+  var whole=t.msgs.map(function(m){return (m.from==='itzik'?'איציק':'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');}).join(String.fromCharCode(10,10));
+  return '<details class="th th-'+r.status+'" data-k="'+esc(t.key)+'"'+(ri===0&&r.status==='fresh'?' open':'')+'>'
+   +'<summary><span class="num">'+r.n+'</span><b>'+esc(head)+'</b>'+tag
+   +'<small>'+esc(stamp(t.last))+' · '+t.msgs.length+'</small>'
+   +'<button type="button" class="cp rcopyall" data-copy="'+esc(whole)+'" aria-label="העתקת השרשור">העתקת השרשור</button>'
+   +'</summary>'
+   +'<div class="thbody">'+body
    +'<div class="rrow">'
-   +'<button type="button" class="rb rmic" data-i="'+i+'">🎤 להשיב בקול</button>'
-   +'<button type="button" class="rb rtxt" data-i="'+i+'">✍️ בכתב</button>'
-   +'<button type="button" class="rb rcam" data-i="'+i+'">📷 מצלמה</button>'
-   +'<button type="button" class="rb rfile" data-i="'+i+'">📎 קובץ</button>'
+   +'<button type="button" class="rb rmic" data-i="'+ri2+'">🎤 להשיב בקול</button>'
+   +'<button type="button" class="rb rtxt" data-i="'+ri2+'">✍️ בכתב</button>'
+   +'<button type="button" class="rb rcam" data-i="'+ri2+'">📷 מצלמה</button>'
+   +'<button type="button" class="rb rfile" data-i="'+ri2+'">📎 קובץ</button>'
    +'</div>'
-   +'<form class="rform" data-i="'+i+'">'
-   +'<textarea placeholder="התשובה שלך להודעה הזאת"></textarea>'
-   +'<button type="submit">שליחת התשובה</button>'
+   +'<form class="rform" data-i="'+ri2+'" data-k="'+esc(t.key)+'">'
+   +'<textarea placeholder="התשובה שלך בשרשור הזה"></textarea>'
+   +'<div class="rrow"><button type="button" class="rb rpaste">📋 הדבקה</button>'
+   +'<button type="submit">שליחה</button></div>'
    +'<span class="rsaid"></span></form>'
-   +'</div>';
+   +'</div></details>';
  }).join('');
- wireReplies(host,all);
- // Copying by hand out of a bubble on a phone is a fight with the selection
- // handles, and he wanted my answers pasteable into his own notes.
+ wireReplies(host,flat);
  if(picking)host.classList.add('picking');
- Array.prototype.forEach.call(host.querySelectorAll('.bub'),function(el,n){
-  el.addEventListener('click',function(){
-   if(picking){el.classList.toggle('picked');return;}
-   var m=all[n];
-   if(!m||m.from==='itzik')return;
-   if(!el.classList.contains('fresh'))return;
-   el.classList.remove('fresh');
-   el.classList.add('touched');
-   ringFor(el);
-   markOneSeen(m);
-   var w=el.querySelector('.w .badge');
-   if(w){w.className='badge ok';w.textContent='נקרא';}
+ // Touching a card, or any bubble in it, turns every unread answer in it green.
+ Array.prototype.forEach.call(host.querySelectorAll('.th'),function(card){
+  var key=card.getAttribute('data-k');
+  function touch(){
+   var any=false;
+   Array.prototype.forEach.call(card.querySelectorAll('.bub.fresh'),function(el){
+    var m=flat[Number(el.getAttribute('data-i'))];
+    el.classList.remove('fresh');el.classList.add('touched');
+    var w=el.querySelector('.w .badge');
+    if(w){w.className='badge ok';w.textContent='נקרא';}
+    markOneSeen(m);any=true;
+   });
+   if(any){
+    card.classList.remove('th-fresh');card.classList.add('th-done');
+    var tag=card.querySelector('summary .badge');
+    if(tag){tag.className='badge ok';tag.textContent='נקרא';}
+    ringFor(card);renderNew();
+   }
+  }
+  card.querySelector('summary').addEventListener('click',function(e){
+   if(e.target.closest&&e.target.closest('.rcopyall'))return;
+   touch();
+  });
+  Array.prototype.forEach.call(card.querySelectorAll('.bub'),function(el){
+   el.addEventListener('click',function(){
+    if(picking){el.classList.toggle('picked');return;}
+    touch();
+   });
   });
  });
  Array.prototype.forEach.call(host.querySelectorAll('.cp'),function(b){
   b.onclick=function(e){
-   e.stopPropagation();
-   var t=all[Number(b.getAttribute('data-i'))].text||'';
-   var done=function(){b.textContent='הועתק';setTimeout(function(){b.textContent='העתקה';},1400);};
+   e.stopPropagation();e.preventDefault();
+   var t=b.classList.contains('rcopyall')?(b.getAttribute('data-copy')||''):(flat[Number(b.getAttribute('data-i'))].text||'');
+   var was=b.textContent;
+   var done=function(){b.textContent='הועתק';setTimeout(function(){b.textContent=was;},1400);};
    if(navigator.clipboard&&navigator.clipboard.writeText){
     navigator.clipboard.writeText(t).then(done,function(){fallbackCopy(t,done);});
    }else fallbackCopy(t,done);
+  };
+ });
+ Array.prototype.forEach.call(host.querySelectorAll('.rpaste'),function(b){
+  b.onclick=function(e){
+   e.stopPropagation();e.preventDefault();
+   var ta=b.closest('form').querySelector('textarea');
+   if(navigator.clipboard&&navigator.clipboard.readText){
+    navigator.clipboard.readText().then(function(t){ta.value=(ta.value?ta.value+' ':'')+t;ta.focus();},
+     function(){ta.focus();b.textContent='לחיצה ארוכה בתיבה, ואז הדבקה';});
+   }else{ta.focus();b.textContent='לחיצה ארוכה בתיבה, ואז הדבקה';}
   };
  });
 }
@@ -1766,6 +1854,7 @@ function wireReplies(host,all){
    // The recorder already knows how to send; it just needs to be told what
    // this recording is an answer to. The caption rides along with the audio.
    document.getElementById('fCap').value=quoteOf(m);
+   setStandby(ML.keyOf(m));
    toggleRec();
   };
  });
@@ -1776,6 +1865,7 @@ function wireReplies(host,all){
    answering=m;
    markAnswering(b.closest('.bub'));
    document.getElementById('fCap').value=quoteOf(m);
+   setStandby(ML.keyOf(m));
    shoot(true);
   };
  });
@@ -1786,6 +1876,7 @@ function wireReplies(host,all){
    answering=m;
    markAnswering(b.closest('.bub'));
    document.getElementById('fCap').value=quoteOf(m);
+   setStandby(ML.keyOf(m));
    openPicker('full','image/*,video/*,audio/*,application/pdf',true);
   };
  });
@@ -1816,8 +1907,9 @@ function wireReplies(host,all){
    var full=quoteOf(m)+String.fromCharCode(10)+text;
    sendText('תשובה מהמוניטור',full,'תשובה').then(function(how){
     var p=pending();
-    p.push({at:new Date().toISOString(),text:full});
+    p.push({at:new Date().toISOString(),text:full,re:m.id||''});
     savePending(p);
+    setStandby(f.getAttribute('data-k')||ML.keyOf(m));
     box.value='';
     said.textContent=how==='ntfy'?'נשלח בערוץ הגיבוי.':'נשלח.';
     markTouched(m);markOneSeen(m);

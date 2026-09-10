@@ -83,3 +83,18 @@ test('chat messages reach the page with id and re', () => {
   assert.ok(html.includes('"id":"a2"'));
   assert.ok(html.includes('"re":"a1"'));
 });
+
+test('the chat screen renders thread cards with copy, paste and send on each', () => {
+  const html = renderPage(fixture());
+  assert.ok(html.includes('ML.splitThreads('));
+  assert.ok(html.includes('ML.orderThreads('));
+  assert.ok(html.includes("'<details class=\"th th-'"));
+  assert.ok(html.includes('class="rb rpaste"'));
+  assert.ok(html.includes('class="cp rcopyall"'));
+  assert.ok(html.includes("localStorage.getItem('chatStandby')"));
+  assert.ok(html.includes('ממתין לתשובה'));
+  // Copy sits inside every bubble, as before.
+  assert.ok(html.includes('class="cp" data-i='));
+  // CSS for the three states.
+  for (const s of ['.th-fresh', '.th-standby', '.th-done']) assert.ok(html.includes(s), 'missing css ' + s);
+});
