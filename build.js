@@ -587,6 +587,9 @@ section{margin-bottom:30px}
   inset 0 0 0 1px rgba(255,255,255,.10)}
 .gt.dragging{opacity:.65;transform:scale(1.04);box-shadow:0 18px 34px rgba(0,0,0,.4)}
 .gt.dragover{outline:2px dashed rgba(255,255,255,.75);outline-offset:-6px}
+#pH>.dragging{opacity:.6;transform:scale(1.02);outline:2px solid var(--accent);
+ outline-offset:4px;border-radius:16px}
+#pH>.dragover{outline:2px dashed var(--accent);outline-offset:4px;border-radius:16px}
 .gt b{font:700 14px Heebo,sans-serif;display:block}
 .gt small{font-size:10.5px;opacity:.92;font-weight:300}
 .gt:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
@@ -1587,32 +1590,47 @@ function paintReportDot(){
 // He asked to arrange the tiles himself. A long press picks one up, and the
 // order is kept on the device. This is also the first thing a client will be
 // allowed to do on his own copy: add and arrange, never restructure.
-function tileOrder(){
- try{return JSON.parse(localStorage.getItem('tileOrder')||'null');}catch(e){return null;}
+// Anything that can be rearranged needs a stable name to be remembered by.
+// The tiles already have ids; the blocks on the home screen do not, so they
+// are given one from their position the first time they are seen.
+function nameChildren(box,prefix){
+ Array.prototype.forEach.call(box.children,function(el,i){
+  if(!el.id)el.id=prefix+'-'+i;
+ });
 }
-function saveTileOrder(){
- var g=document.querySelector('.grid');
- if(!g)return;
- var ids=Array.prototype.map.call(g.children,function(el){return el.id;});
- try{localStorage.setItem('tileOrder',JSON.stringify(ids));}catch(e){}
+function readOrder(key){
+ try{return JSON.parse(localStorage.getItem(key)||'null');}catch(e){return null;}
 }
-function applyTileOrder(){
- var g=document.querySelector('.grid');
- var order=tileOrder();
- if(!g||!order)return;
+function saveOrder(box,key){
+ if(!box)return;
+ var ids=Array.prototype.map.call(box.children,function(el){return el.id;});
+ try{localStorage.setItem(key,JSON.stringify(ids));}catch(e){}
+}
+function applyOrder(box,key){
+ var order=readOrder(key);
+ if(!box||!order)return;
  order.forEach(function(id){
   var el=document.getElementById(id);
-  if(el)g.appendChild(el);
+  // Only move a child of this box: an id from an older layout must not drag
+  // some unrelated element in here.
+  if(el&&el.parentNode===box)box.appendChild(el);
  });
  // Anything added since he last arranged simply stays at the end.
 }
-function armTileDrag(){
- var g=document.querySelector('.grid');
- if(!g)return;
+// The same gesture for the tiles and for the whole blocks on the home screen,
+// the way the phone itself works: hold, then move.
+function armDrag(box,key){
+ if(!box)return;
  var held=null,hold=null;
  function clear(){clearTimeout(hold);}
- Array.prototype.forEach.call(g.children,function(el){
+ function tidy(){
+  Array.prototype.forEach.call(box.children,function(c){c.classList.remove('dragover');});
+ }
+ Array.prototype.forEach.call(box.children,function(el){
   el.addEventListener('pointerdown',function(e){
+   // A long press inside a text field belongs to the field, not to us.
+   var t=e.target;
+   if(t&&t.closest&&t.closest('input,textarea,select'))return;
    hold=setTimeout(function(){
     held=el;el.classList.add('dragging');
     try{navigator.vibrate&&navigator.vibrate(18);}catch(err){}
@@ -1621,8 +1639,8 @@ function armTileDrag(){
   ['pointerup','pointercancel','pointerleave'].forEach(function(ev){
    el.addEventListener(ev,function(){
     clear();
-    if(held){held.classList.remove('dragging');held=null;saveTileOrder();}
-    Array.prototype.forEach.call(g.children,function(c){c.classList.remove('dragover');});
+    if(held){held.classList.remove('dragging');held=null;saveOrder(box,key);}
+    tidy();
    });
   });
   // While one is held, moving over another swaps them in place.
@@ -1630,13 +1648,13 @@ function armTileDrag(){
    if(!held)return;
    clear();
    var over=document.elementFromPoint(e.clientX,e.clientY);
-   while(over&&over.parentNode!==g)over=over.parentNode;
+   while(over&&over.parentNode!==box)over=over.parentNode;
    if(!over||over===held)return;
-   Array.prototype.forEach.call(g.children,function(c){c.classList.remove('dragover');});
+   tidy();
    over.classList.add('dragover');
-   var kids=Array.prototype.slice.call(g.children);
-   if(kids.indexOf(held)<kids.indexOf(over))g.insertBefore(over,held);
-   else g.insertBefore(held,over);
+   var kids=Array.prototype.slice.call(box.children);
+   if(kids.indexOf(held)<kids.indexOf(over))box.insertBefore(over,held);
+   else box.insertBefore(held,over);
   });
   // A press that never became a drag must still count as a tap.
   el.addEventListener('click',function(e){
@@ -2526,8 +2544,12 @@ document.getElementById('mailForm').addEventListener('submit',function(e){
  }).then(function(){btn.disabled=false;});
 });
 
-applyTileOrder();
-armTileDrag();
+(function(){
+ var grid=document.querySelector('.grid');
+ var home=document.getElementById('pH');
+ if(grid){nameChildren(grid,'tile');applyOrder(grid,'tileOrder');armDrag(grid,'tileOrder');}
+ if(home){nameChildren(home,'blk');applyOrder(home,'blockOrder');armDrag(home,'blockOrder');}
+})();
 renderNextReport();
 render();
 renderThread();
