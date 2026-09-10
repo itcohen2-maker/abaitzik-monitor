@@ -1013,7 +1013,7 @@ body.editing .bn{display:none}
   <button type="button" class="gt g5" id="gPill"><b>⏰ לקחתי כדור</b><small>מסמן את המנה ומעדכן אותי</small></button>
   <button type="button" class="gt g6" id="gCam"><b>📷 שלח לי תמונה</b><small>נפתחת המצלמה ומצלמים</small></button>
   <button type="button" class="gt g7" id="gFood"><b>🥗 עקוב אחרי התזונה</b><small>מצלמים או כותבים, ואני מחשב</small></button>
-  <button type="button" class="gt g8" id="gLolos"><b>🧾 לולוס</b><small>ריווחית והיומן</small></button>
+  <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>חשבוניות והיומן</small></button>
   <button type="button" class="gt g9" id="gOp"><b>🏥 ניתוח</b><small>מתי, איפה, ומה צריך</small></button>
   <button type="button" class="gt g10" id="gNotes"><b>📝 פתקים</b><small>נכתב, נשמר, לא הולך לאיבוד</small></button>
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
@@ -1141,7 +1141,7 @@ body.editing .bn{display:none}
 </section>
 
 <section id="pL2" hidden>
- <h2>לולוס</h2>
+ <h2>הנהלת חשבונות</h2>
  <div class="lolos">
   <a class="lbtn lb-riv" href="https://online.rivhit.co.il/" target="_blank" rel="noopener">
    <span aria-hidden="true">&#129534;</span>
@@ -2735,7 +2735,7 @@ document.getElementById('noteForm').onsubmit=function(e){
  l.unshift({text:v,at:new Date().toISOString()});
  saveNotes(l);box.value='';renderNotes();
 };
-on('lolosAsk',function(){askInChat('לולוס: תצליב לי ');});
+on('lolosAsk',function(){askInChat('תצליב לי ');});
 function todayKey(){return new Date().toISOString().slice(0,10);}
 function renderFood(){
  var all=(D.food||[]).filter(function(f){return String(f.at||'').slice(0,10)===todayKey();});
