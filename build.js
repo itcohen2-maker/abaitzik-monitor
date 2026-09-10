@@ -351,6 +351,10 @@ section{margin-bottom:30px}
 .st-working{background:#f6e7c8;color:#8a5a12}
 .st-done{background:var(--accent-soft);color:var(--accent)}
 .bub.fresh{border:2px solid var(--red);box-shadow:0 6px 18px rgba(234,67,53,.25)}
+/* Red until he touches it, green the moment he does. He does not always get
+   through everything in one sitting, and the colour has to survive that. */
+.bub.touched{border:2px solid var(--green);box-shadow:0 6px 18px rgba(52,168,83,.22)}
+.badge.ok{background:var(--green)}
 .bub.read{opacity:.72}
 .badge{font-style:normal;font-weight:700;background:var(--red);color:#fff;
  padding:1px 8px;border-radius:999px;font-size:11px}
@@ -1464,9 +1468,17 @@ function renderThread(){
  // Copying by hand out of a bubble on a phone is a fight with the selection
  // handles, and he wanted my answers pasteable into his own notes.
  if(picking)host.classList.add('picking');
- Array.prototype.forEach.call(host.querySelectorAll('.bub'),function(el){
+ Array.prototype.forEach.call(host.querySelectorAll('.bub'),function(el,n){
   el.addEventListener('click',function(){
-   if(picking)el.classList.toggle('picked');
+   if(picking){el.classList.toggle('picked');return;}
+   var m=all[n];
+   if(!m||m.from==='itzik')return;
+   if(!el.classList.contains('fresh'))return;
+   el.classList.remove('fresh');
+   el.classList.add('touched');
+   markOneSeen(m);
+   var w=el.querySelector('.w .badge');
+   if(w){w.className='badge ok';w.textContent='נקרא';}
   });
  });
  Array.prototype.forEach.call(host.querySelectorAll('.cp'),function(b){
@@ -1683,20 +1695,44 @@ function newestClaude(){
 function chatSeen(){
  try{return localStorage.getItem('chatSeen')||'';}catch(e){return'';}
 }
+// Opening the chat used to mark everything read at once. He told me what that
+// costs: he opens the screen, does not manage to read it all, and the red is
+// gone as if he had. Now nothing is marked by opening. A message stays red
+// until he touches it, and turns green the moment he does.
+//
+// The one exception is the very first time this device shows the chat: the
+// whole history would light up red, so it is marked read once and never again.
 function markChatSeen(){
  try{
-  localStorage.setItem('chatSeen',newestClaude());
+  if(!localStorage.getItem('chatBooted')){
+   localStorage.setItem('chatBooted','1');
+   localStorage.setItem('chatSeen',newestClaude());
+   var seen=seenIds();
+   (D.chat||[]).forEach(function(m){
+    if(m.from!=='claude')return;
+    var k=claudeKey(m);
+    if(seen.indexOf(k)<0)seen.push(k);
+   });
+   if(seen.length>400)seen=seen.slice(-400);
+   localStorage.setItem('chatSeenIds',JSON.stringify(seen));
+  }
+ }catch(e){}
+ paintDot();
+}
+// One message, when he actually touches it.
+function markOneSeen(m){
+ try{
   var seen=seenIds();
-  (D.chat||[]).forEach(function(m){
-   if(m.from!=='claude')return;
-   var k=claudeKey(m);
-   if(seen.indexOf(k)<0)seen.push(k);
-  });
-  // Keep the list from growing without limit.
+  var k=claudeKey(m);
+  if(seen.indexOf(k)<0)seen.push(k);
   if(seen.length>400)seen=seen.slice(-400);
   localStorage.setItem('chatSeenIds',JSON.stringify(seen));
  }catch(e){}
- var d=document.getElementById('mDot');if(d)d.hidden=true;
+ paintDot();
+}
+function paintDot(){
+ var d=document.getElementById('mDot');
+ if(d)d.hidden=!unreadList().length;
 }
 // Unread used to mean newer than the last time he opened the chat. That broke
 // the moment I wrote a reply with a timestamp earlier than one already there:
@@ -2100,7 +2136,8 @@ document.getElementById('plusBtn').onclick=function(){
 document.getElementById('newBtn').onclick=function(){
  if(unreadCount())beep();
  pane('m');renderThread();
- // the marks stay until he leaves the chat, so he can see what was new
+ // Opening does not clear anything any more. Only a touch on the message
+ // itself does, so what he did not get to read is still red tomorrow.
  setTimeout(function(){markChatSeen();renderNew();},50);
 };
 document.getElementById('nH').onclick=function(){pane('h');};
