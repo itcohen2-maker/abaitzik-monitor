@@ -954,13 +954,6 @@ body.editing .bn{display:none}
   <button type="button" id="urgBtn" class="urg"><span aria-hidden="true">📎</span>העלאת<br>קובץ</button>
  </div>
 
- <form class="quickrow" id="quickForm">
-  <input type="text" id="quickText" autocomplete="off"
-   placeholder="או פשוט תכתוב לי כאן">
-  <button type="submit" id="quickBtn">שליחה</button>
- </form>
- <div class="msgsaid" id="quickSaid"></div>
-
  <div id="askBox"></div>
 
  <div class="sent" id="sentCard" hidden></div>
@@ -978,6 +971,20 @@ body.editing .bn{display:none}
  <div class="tile"><div class="k">נענה היום</div><div class="v" id="tT">0</div></div>
  <div class="tile wait"><div class="k">לידים פתוחים</div><div class="v" id="tL">0</div></div>
 </div>
+
+ <div class="grid" id="blkTiles">
+  <button type="button" class="gt g1" id="gChat"><b>💬 פנייה אליי</b><small>צ׳אט, קול, קובץ</small></button>
+  <button type="button" class="gt g2" id="gMail"><b>📧 מייל</b><small>בקשה, ואני מחזיר תשובה</small></button>
+  <button type="button" class="gt g3" id="gQueue"><b>📊 ניטור רשתות</b><small>מי פנה, מה נענה</small></button>
+  <button type="button" class="gt g4" id="gReports"><b>📄 דוחות</b><small>סיכומי הסבבים</small></button>
+  <button type="button" class="gt g5" id="gPill"><b>⏰ לקחתי כדור</b><small>מסמן את המנה ומעדכן אותי</small></button>
+  <button type="button" class="gt g6" id="gCam"><b>📷 שלח לי תמונה</b><small>נפתחת המצלמה ומצלמים</small></button>
+  <button type="button" class="gt g7" id="gFood"><b>🥗 עקוב אחרי התזונה</b><small>מצלמים או כותבים, ואני מחשב</small></button>
+  <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>חשבוניות והיומן</small></button>
+  <button type="button" class="gt g9" id="gOp"><b>🏥 ניתוח</b><small>מתי, איפה, ומה צריך</small></button>
+  <button type="button" class="gt g10" id="gNotes"><b>📝 פתקים</b><small>נכתב, נשמר, לא הולך לאיבוד</small></button>
+  <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
+ </div>
 
  <div class="row" id="blkIcons" role="group" aria-label="קיצורים">
   <a class="ic" data-net="youtube" href="https://studio.youtube.com/" target="_blank" rel="noopener"><span class="c c-yt">
@@ -1009,19 +1016,6 @@ body.editing .bn{display:none}
  </div>
 
 
- <div class="grid" id="blkTiles">
-  <button type="button" class="gt g1" id="gChat"><b>💬 פנייה אליי</b><small>צ׳אט, קול, קובץ</small></button>
-  <button type="button" class="gt g2" id="gMail"><b>📧 מייל</b><small>בקשה, ואני מחזיר תשובה</small></button>
-  <button type="button" class="gt g3" id="gQueue"><b>📊 ניטור רשתות</b><small>מי פנה, מה נענה</small></button>
-  <button type="button" class="gt g4" id="gReports"><b>📄 דוחות</b><small>סיכומי הסבבים</small></button>
-  <button type="button" class="gt g5" id="gPill"><b>⏰ לקחתי כדור</b><small>מסמן את המנה ומעדכן אותי</small></button>
-  <button type="button" class="gt g6" id="gCam"><b>📷 שלח לי תמונה</b><small>נפתחת המצלמה ומצלמים</small></button>
-  <button type="button" class="gt g7" id="gFood"><b>🥗 עקוב אחרי התזונה</b><small>מצלמים או כותבים, ואני מחשב</small></button>
-  <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>חשבוניות והיומן</small></button>
-  <button type="button" class="gt g9" id="gOp"><b>🏥 ניתוח</b><small>מתי, איפה, ומה צריך</small></button>
-  <button type="button" class="gt g10" id="gNotes"><b>📝 פתקים</b><small>נכתב, נשמר, לא הולך לאיבוד</small></button>
-  <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
- </div>
 
 
 <div class="alerts" id="alerts">
@@ -2840,11 +2834,15 @@ document.getElementById('fdForm').onsubmit=function(e){
  }).then(function(){btn.disabled=false;});
 };
 
-document.getElementById('quickForm').onsubmit=function(e){
+// The quick write row was removed from the home screen: the microphone card
+// already offers writing, and he asked for one thing at the top and not two.
+// The handler stays, guarded, so nothing breaks if the row ever returns.
+on2('quickForm','submit',function(e){
  e.preventDefault();
  var box=document.getElementById('quickText');
  var said=document.getElementById('quickSaid');
  var btn=document.getElementById('quickBtn');
+ if(!box||!said||!btn)return;
  var text=box.value.trim();
  if(!text)return;
  btn.disabled=true;said.textContent='שולח.';
@@ -2859,7 +2857,7 @@ document.getElementById('quickForm').onsubmit=function(e){
  }).catch(function(){
   said.textContent='שני הערוצים לא ענו. תבדוק חיבור ותנסה שוב.';
  }).then(function(){btn.disabled=false;});
-};
+});
 
 function askInChat(prefix){
  pane('m');markChatSeen();
