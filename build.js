@@ -180,11 +180,11 @@ const PAGE = `<!DOCTYPE html>
 :root{--blue:#4285F4;--red:#EA4335;--yellow:#FBBC05;--green:#34A853;
  --ground:#f6f8fc;--surface:#fff;--sunk:#eef2fa;--ink:#1f2430;--dim:#5f6b7f;
  --line:#e3e9f4;--accent:#1a73e8;--accent-soft:#e8f0fe;--wait:#e37400;
- --gold:#f0b429;
+ --gold:#f0b429;--fresh:#e6f6ec;
  --shadow:0 2px 8px rgba(30,40,70,.07)}
 @media (prefers-color-scheme:dark){:root{--ground:#0f1218;--surface:#181d27;--sunk:#141922;
  --ink:#eef1f7;--dim:#9aa5b8;--line:#252c39;--accent:#8ab4f8;--accent-soft:#1b2b45;
- --wait:#fbbc05;--shadow:0 2px 10px rgba(0,0,0,.4)}}
+ --wait:#fbbc05;--fresh:#12301f;--shadow:0 2px 10px rgba(0,0,0,.4)}}
 *{box-sizing:border-box}
 /* A class that sets display beats the browser default for [hidden], which is
    how the recording overlay ended up on screen the moment the page opened. */
@@ -357,10 +357,17 @@ section{margin-bottom:30px}
 .st-received{background:var(--sunk);color:var(--dim)}
 .st-working{background:#f6e7c8;color:#8a5a12}
 .st-done{background:var(--accent-soft);color:var(--accent)}
-.bub.fresh{border:2px solid var(--red);box-shadow:0 6px 18px rgba(234,67,53,.25)}
-/* Red until he touches it, green the moment he does. He does not always get
-   through everything in one sitting, and the colour has to survive that. */
-.bub.touched{border:2px solid var(--green);box-shadow:0 6px 18px rgba(52,168,83,.22)}
+/* An answer he has not read yet: green and glowing, so it is impossible to
+   miss in a long thread. Touching it clears the colour and the bubble goes
+   back to looking like every other one, which is how he knows what is left. */
+.bub.fresh{border:2px solid var(--green);background:var(--fresh);
+ animation:bubglow 2.2s ease-in-out infinite}
+@keyframes bubglow{
+ 0%,100%{box-shadow:0 6px 18px rgba(52,168,83,.18),0 0 0 0 rgba(52,168,83,.45)}
+ 55%{box-shadow:0 6px 18px rgba(52,168,83,.18),0 0 0 10px rgba(52,168,83,0)}
+}
+@media(prefers-reduced-motion:reduce){.bub.fresh{animation:none}}
+.bub.touched{animation:none}
 .badge.ok{background:var(--green)}
 .bub.read{opacity:.72}
 .badge{font-style:normal;font-weight:700;background:var(--red);color:#fff;
