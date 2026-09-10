@@ -935,12 +935,6 @@ body.editing .bn{display:none}
  <div class="ava" aria-hidden="true"><div>א</div></div>
 </header>
 
-<div class="live" id="liveBar">
- <span class="pulse" aria-hidden="true"></span>
- <b id="liveWhat">מקשיב</b>
- <span id="liveWhen"></span>
-</div>
-
 <section id="pH">
  <div class="voice">
   <button type="button" id="micBtn" class="mic" aria-label="דבר אליי">
@@ -954,6 +948,12 @@ body.editing .bn{display:none}
    <small id="micSaid">לוחצים, מדברים, לוחצים שוב. ההקלטה נשלחת אליי מיד.</small>
   </div>
   <button type="button" id="urgBtn" class="urg"><span aria-hidden="true">📎</span>העלאת<br>קובץ</button>
+ </div>
+
+ <div class="live" id="liveBar">
+  <span class="pulse" aria-hidden="true"></span>
+  <b id="liveWhat">מקשיב</b>
+  <span id="liveWhen"></span>
  </div>
 
  <form class="quickrow" id="quickForm">
