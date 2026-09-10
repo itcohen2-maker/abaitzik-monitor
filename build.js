@@ -637,6 +637,19 @@ body.editing .bn{display:none}
 .g6{background:linear-gradient(150deg,#80deea,#00838f)}
 .g7{background:linear-gradient(150deg,#7bd88f,#1e8e4a)}
 .g8{background:linear-gradient(150deg,#ffb74d,#e65100)}
+.g9{background:linear-gradient(150deg,#f48fb1,#ad1457)}
+.g10{background:linear-gradient(150deg,#ffe082,#f57f17)}
+.opcard{background:var(--surface);border:1px solid var(--line);border-radius:18px;
+ padding:6px 16px;margin-bottom:14px;box-shadow:var(--shadow)}
+.opline{display:flex;justify-content:space-between;gap:12px;align-items:baseline;
+ padding:12px 0;border-bottom:1px solid var(--line)}
+.opline:last-child{border-bottom:0}
+.opline span{color:var(--dim);font-size:13px;flex:0 0 auto}
+.opline b{font:700 15px Heebo,sans-serif;text-align:end}
+.note-i{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+ padding:12px 14px;margin-bottom:8px;font-size:14.5px;line-height:1.6;
+ white-space:pre-wrap;cursor:pointer}
+.note-i small{display:block;color:var(--dim);font-size:11.5px;margin-top:4px}
 .lolos{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
 .lbtn{display:flex;align-items:center;gap:12px;text-align:start;cursor:pointer;
  border:0;border-radius:18px;padding:14px 16px;color:#fff;text-decoration:none;
@@ -853,22 +866,6 @@ body.editing .bn{display:none}
    <svg viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>חדש</button>
  </div>
 
- <section class="whatsnew" aria-label="בנייה עצמית">
-  <h2>המוניטור בונה את עצמו</h2>
-  <div class="slot">
-   <div class="plus" aria-hidden="true">+</div>
-   <div>
-    <b>איזו פעולה תרצה שאוסיף כאן?</b>
-    <small>המקום הזה שמור לך. תכתוב או תקליט איזו פעולה חסרה לך, זה מגיע אליי, ואני מוסיף בסבב הקרוב. פעולה, מסך, כפתור או אפליקציה, כל דבר.</small>
-   </div>
-  </div>
-  <form id="slotForm" class="slotForm">
-   <input id="slotText" type="text" placeholder="איזו פעולה להוסיף?" autocomplete="off">
-   <button type="button" class="ghost" id="slotMic" aria-label="להקליט במקום לכתוב">🎤</button>
-   <button type="submit">שלח</button>
-  </form>
-  <div id="slotSaid"></div>
- </section>
 
  <div class="grid">
   <button type="button" class="gt g1" id="gChat"><b>💬 פנייה אליי</b><small>צ׳אט, קול, קובץ</small></button>
@@ -879,6 +876,8 @@ body.editing .bn{display:none}
   <button type="button" class="gt g6" id="gCam"><b>📷 שלח לי תמונה</b><small>נפתחת המצלמה ומצלמים</small></button>
   <button type="button" class="gt g7" id="gFood"><b>🥗 עקוב אחרי התזונה</b><small>מצלמים או כותבים, ואני מחשב</small></button>
   <button type="button" class="gt g8" id="gLolos"><b>🧾 לולוס</b><small>ריווחית והיומן</small></button>
+  <button type="button" class="gt g9" id="gOp"><b>🏥 ניתוח</b><small>מתי, איפה, ומה צריך</small></button>
+  <button type="button" class="gt g10" id="gNotes"><b>📝 פתקים</b><small>נכתב, נשמר, לא הולך לאיבוד</small></button>
  </div>
 
 <div class="tiles">
@@ -963,6 +962,32 @@ body.editing .bn{display:none}
   <button type="button" data-net="instagram" aria-pressed="false">אינסטגרם</button>
  </div>
  <div id="netBody"></div>
+</section>
+
+<section id="pS" hidden>
+ <h2>ניתוח</h2>
+ <div class="opcard">
+  <div class="opline"><span>מתי</span><b id="opWhen">יום ראשון הקרוב</b></div>
+  <div class="opline"><span>אשפוז</span><b>במוצאי החג, הערב שלפני</b></div>
+  <div class="opline"><span>איפה</span><b>בניין אריסון, קומה 5, כירורגית א׳</b></div>
+  <div class="opline"><span>שעה</span><b>16:00</b></div>
+ </div>
+ <div class="msgsaid" id="opSaid"></div>
+ <form class="quickrow" id="opForm">
+  <input type="text" id="opText" autocomplete="off" placeholder="להוסיף פרט או לתקן">
+  <button type="submit" id="opBtn">שליחה</button>
+ </form>
+ <div id="opList"></div>
+</section>
+
+<section id="pN2" hidden>
+ <h2>פתקים</h2>
+ <form class="quickrow" id="noteForm">
+  <input type="text" id="noteText" autocomplete="off" placeholder="פתק חדש">
+  <button type="submit" id="noteBtn">הוספה</button>
+ </form>
+ <div id="noteList"></div>
+ <div class="hint">הפתקים נשמרים במכשיר הזה. לחיצה ארוכה על פתק מוחקת אותו.</div>
 </section>
 
 <section id="pL2" hidden>
@@ -1465,7 +1490,7 @@ function updateDot(){
  d.hidden=!(n&&n>chatSeen());
  document.title=(d.hidden?'':'(1) ')+'אבא איציק בבנייה עצמית';
 }
-var PANES={h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2'};
+var PANES={h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 var PILLGAP=8*3600*1000;
 function lastPill(){
@@ -1557,29 +1582,6 @@ document.getElementById('netSeg').addEventListener('click',function(e){
   ics[i].addEventListener('click',function(ev){ev.preventDefault();openNet(this.getAttribute('data-net'));});
  }
 })();
-
-// The open slot. Whatever Itzik types or says here lands in the same chat
-// channel as everything else, so the monitor grows from his own requests.
-function wireSlot(){
- var f=document.getElementById('slotForm');
- if(!f)return;
- f.addEventListener('submit',function(e){
-  e.preventDefault();
-  var box=document.getElementById('slotText');
-  var v=box.value.trim();
-  if(!v)return;
-  var m=document.getElementById('msgText');
-  m.value='בנייה עצמית: '+v;
-  document.getElementById('msgForm').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));
-  box.value='';
-  document.getElementById('slotSaid').textContent='נשלח. אני מוסיף את זה ומעדכן אותך במייל.';
- });
- document.getElementById('slotMic').onclick=function(){
-  pane('m');markChatSeen();
-  var mb=document.getElementById('micBtn');if(mb)mb.click();
- };
-}
-
 
 // The page is one HTML file, so a phone that cached it keeps showing an old
 // screen. version.json is fetched with no-store on every open; when it names
@@ -2091,6 +2093,66 @@ on('repNow',function(){
 });
 document.getElementById('gFood').onclick=function(){pane('f');renderFood();};
 on('gLolos',function(){pane('o');});
+on('gOp',function(){pane('s');});
+on('gNotes',function(){pane('t');renderNotes();});
+
+// Anything he adds about the operation goes to me as well as onto the screen,
+// so a correction is never only on one device.
+document.getElementById('opForm').onsubmit=function(e){
+ e.preventDefault();
+ var box=document.getElementById('opText');
+ var said=document.getElementById('opSaid');
+ var v=box.value.trim();
+ if(!v)return;
+ said.textContent='שולח.';
+ sendText('ניתוח','ניתוח: '+v,'ניתוח').then(function(){
+  box.value='';said.textContent='נשלח. אני מוסיף את זה.';toast(said.textContent);
+ }).catch(function(){said.textContent='לא נשלח. תנסה שוב.';});
+};
+
+// Notes live on the device. He asked for somewhere nothing gets lost, and
+// that means not depending on a round trip through me to save a line.
+function notes(){
+ try{return JSON.parse(localStorage.getItem('notes')||'[]');}catch(e){return [];}
+}
+function saveNotes(list){
+ try{localStorage.setItem('notes',JSON.stringify(list));}catch(e){}
+}
+function renderNotes(){
+ var host=document.getElementById('noteList');
+ if(!host)return;
+ var list=notes();
+ if(!list.length){
+  host.innerHTML='<div class="empty">אין פתקים. תכתוב אחד למעלה.</div>';
+  return;
+ }
+ host.innerHTML=list.map(function(n,i){
+  return '<div class="note-i" data-i="'+i+'">'+esc(n.text)
+   +'<small>'+esc(stamp(n.at))+' · לחיצה ארוכה מוחקת</small></div>';
+ }).join('');
+ Array.prototype.forEach.call(host.querySelectorAll('.note-i'),function(el){
+  var hold=null;
+  el.addEventListener('pointerdown',function(){
+   hold=setTimeout(function(){
+    var l=notes();l.splice(Number(el.getAttribute('data-i')),1);saveNotes(l);
+    try{navigator.vibrate&&navigator.vibrate(18);}catch(e){}
+    renderNotes();toast('הפתק נמחק.');
+   },600);
+  });
+  ['pointerup','pointercancel','pointermove','pointerleave'].forEach(function(ev){
+   el.addEventListener(ev,function(){clearTimeout(hold);});
+  });
+ });
+}
+document.getElementById('noteForm').onsubmit=function(e){
+ e.preventDefault();
+ var box=document.getElementById('noteText');
+ var v=box.value.trim();
+ if(!v)return;
+ var l=notes();
+ l.unshift({text:v,at:new Date().toISOString()});
+ saveNotes(l);box.value='';renderNotes();
+};
 on('lolosAsk',function(){askInChat('לולוס: תצליב לי ');});
 function todayKey(){return new Date().toISOString().slice(0,10);}
 function renderFood(){
@@ -2126,7 +2188,10 @@ document.getElementById('fdPick').addEventListener('change',function(){
  if(!list.length)return;
  var said=document.getElementById('fdSaid');
  said.textContent='שולח את התמונה.';
- sendFiles(list,'תזונה: תמונה של מה שאכלתי').then(function(how){
+ var typed=document.getElementById('fdText');
+ var cap='תזונה: תמונה של מה שאכלתי';
+ if(typed&&typed.value.trim()){cap='תזונה: '+typed.value.trim();typed.value='';}
+ sendFiles(list,cap).then(function(how){
   said.textContent=how==='ntfy'?'נשלח בערוץ הגיבוי. אני מחשב ומחזיר לך.'
    :'נשלח. אני מחשב ומחזיר לך את הערכים.';
   toast(said.textContent);
@@ -2192,7 +2257,6 @@ document.getElementById('pillBig').onclick=function(){
  renderPill();
 };
 on('gAsk',function(){askInChat('');});
-wireSlot();
 paintReportDot();
 document.getElementById('leads').addEventListener('click',function(e){
  var b=e.target.closest?e.target.closest('.stat button'):null;
@@ -2331,6 +2395,10 @@ function reallySend(list){
   fBtn.disabled=false;return;
  }
  var cap=document.getElementById('fCap').value.trim();
+ if(!cap){
+  var m=document.getElementById('msgText');
+  if(m&&m.value.trim()){cap=m.value.trim();m.value='';}
+ }
  var voice=list.length===1&&/^voice-/.test(list[0].name);
  var deflt=voice?'הודעה קולית מהמוניטור'
    :(list.length>1?list.length+' קבצים מהמוניטור':'קובץ מהמוניטור');
