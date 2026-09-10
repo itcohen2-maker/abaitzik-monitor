@@ -391,6 +391,18 @@ section{margin-bottom:30px}
  border-radius:9px;padding:7px 16px;font:500 13px Heebo,sans-serif;cursor:pointer}
 .rsaid{font-size:12.5px;color:var(--accent)}
 .answering{outline:2px solid var(--accent);outline-offset:2px}
+/* A light running around the thing he is working on. He asked to see that this
+   one card, and nothing else, is what has his hand on it right now. */
+.busyring{position:relative;isolation:isolate}
+.busyring::after{
+ content:'';position:absolute;inset:-4px;border-radius:inherit;padding:3px;
+ background:conic-gradient(from var(--ang,0deg),transparent 0 62%,var(--accent) 78%,#7ad0ff 88%,transparent 96%);
+ -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+ -webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+ mask-composite:exclude;animation:ringspin 1.25s linear infinite;pointer-events:none;z-index:2}
+@property --ang{syntax:'<angle>';initial-value:0deg;inherits:false}
+@keyframes ringspin{to{--ang:360deg}}
+@media(prefers-reduced-motion:reduce){.busyring::after{animation:none;opacity:.5}}
 .repreply{padding:0 14px 14px;border-top:1px solid var(--line);margin-top:2px}
 .repreply .rrow{margin-top:12px}
 .hint{font-size:13px;color:var(--dim);font-weight:300;margin-top:14px;line-height:1.6}
@@ -452,6 +464,9 @@ section{margin-bottom:30px}
 
 /* ===== home screen ===== */
 .hd{display:flex;align-items:center;gap:11px;margin-bottom:14px}
+/* He asked for the two buttons on the right and the name on the left, so the
+   text block takes the leftover width and the avatar closes the row. */
+.hdtext{flex:1 1 auto;text-align:end}
 .ava{width:46px;height:46px;flex:0 0 46px;border-radius:50%;padding:3px;
  background:conic-gradient(var(--blue),var(--red),var(--yellow),var(--green),var(--blue))}
 .ava div{width:100%;height:100%;border-radius:50%;background:var(--surface);display:grid;place-items:center;
@@ -910,14 +925,14 @@ body.editing .bn{display:none}
 </script>
 <div class="wrap">
 <header class="hd">
- <div class="ava" aria-hidden="true"><div>א</div></div>
- <div>
+ <button type="button" class="conn arr" id="arrangeBtn" title="סידור המסך">סידור</button>
+ <button type="button" class="conn" id="reloadBtn" title="טעינה מחדש">רענון</button>
+ <div class="hdtext">
   <div class="t">אבא איציק בבנייה עצמית</div>
   <div class="s" id="built"></div>
   <div class="gold">המוניטור בונה את עצמו</div>
  </div>
- <button type="button" class="conn arr" id="arrangeBtn" title="סידור המסך">סידור</button>
- <button type="button" class="conn" id="reloadBtn" title="טעינה מחדש">רענון</button>
+ <div class="ava" aria-hidden="true"><div>א</div></div>
 </header>
 
 <div class="live" id="liveBar">
@@ -1239,7 +1254,7 @@ body.editing .bn{display:none}
  <div class="thread" id="thread"></div>
  <form id="msgForm">
   <textarea id="msgText" rows="2"
-   placeholder="כתוב כאן. תשובה, בקשה, או מישהו חדש שפנה אליך"></textarea>
+   placeholder="כתוב כאן. בקשה, תשובה, או כל דבר שבא לך שאדע"></textarea>
   <div class="sendrow">
    <button type="button" id="plusBtn" class="plusbtn" aria-label="צירוף תמונה או קובץ">+</button>
    <button type="submit" id="msgBtn">שליחה</button>
@@ -1545,6 +1560,7 @@ function renderThread(){
    if(!el.classList.contains('fresh'))return;
    el.classList.remove('fresh');
    el.classList.add('touched');
+   ringFor(el);
    markOneSeen(m);
    var w=el.querySelector('.w .badge');
    if(w){w.className='badge ok';w.textContent='נקרא';}
@@ -1617,6 +1633,8 @@ function wireBoxes(root){
    if(!text)return;
    btn.disabled=true;
    said.textContent='שולח.';
+   var card=box.closest('.report')||box.parentNode;
+   if(card)card.classList.add('busyring');
    var full=q+String.fromCharCode(10)+text;
    sendText('הערה מהמוניטור',full,'הערה').then(function(how){
     var p=pending();
@@ -1627,7 +1645,10 @@ function wireBoxes(root){
     markSent('text');renderSent();renderThread();
    }).catch(function(){
     said.textContent='שני הערוצים לא ענו. תנסה שוב.';
-   }).then(function(){btn.disabled=false;});
+   }).then(function(){
+    btn.disabled=false;
+    if(card)card.classList.remove('busyring');
+   });
   });
  });
 }
@@ -1816,6 +1837,13 @@ function markOneSeen(m){
   localStorage.setItem('chatSeenIds',JSON.stringify(seen));
  }catch(e){}
  paintDot();
+}
+// The ring runs for a moment on whatever he just touched, and stays on while
+// something is actually being sent from that card.
+function ringFor(el,ms){
+ if(!el)return;
+ el.classList.add('busyring');
+ setTimeout(function(){el.classList.remove('busyring');},ms||1300);
 }
 function paintDot(){
  var d=document.getElementById('mDot');
@@ -2042,6 +2070,12 @@ function checkFresh(){
 checkFresh();
 paintLive(null);
 paintNew();
+// Anything he taps says so for a moment: a tile, a report, a reply button.
+document.addEventListener('click',function(e){
+ var t=e.target.closest?e.target.closest('.gt,.rb,.report > summary'):null;
+ if(!t)return;
+ ringFor(t.tagName==='SUMMARY'?t.parentNode:t,1200);
+},true);
 // Forty seconds, not two minutes. He wants to see that something is alive.
 setInterval(checkFresh,40000);
 setInterval(function(){paintLive(null);paintNew();},20000);
