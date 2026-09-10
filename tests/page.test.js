@@ -107,8 +107,10 @@ test('the chat screen renders thread cards with copy, paste and send on each', (
 test('new things blink hard and fast, and stop for reduced motion', () => {
   const html = renderPage(fixture());
   assert.ok(html.includes('@keyframes hardblink'));
-  for (const sel of ['.newbtn.hot .nb-c', '.gt.glow .flag', '.th-fresh>summary .badge', '.bub.fresh .badge', '.bn button.hasnew']) {
+  for (const sel of ['.newbtn.hot .nb-c', '.gt.glow .flag', '.th-fresh>summary .badge', '.bub.fresh .badge', '.bn button.hasnew,.bn button.hasnew.blink']) {
     assert.ok(html.includes(sel + '{animation:hardblink'), 'no hardblink on ' + sel);
   }
+  assert.ok(html.includes('.bn button.hasnew,.bn button.hasnew.blink{animation:hardblink'), 'hardblink must beat the older .blink rule on the same tab');
+  assert.ok(!html.includes('.bn button.hasnew{animation:hardblink .5s steps(1) infinite;border-radius:12px}'));
   assert.ok(/prefers-reduced-motion:reduce\)\{[^}]*\.bn button\.hasnew[^}]*animation:none/.test(html));
 });
