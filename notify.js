@@ -29,7 +29,8 @@ const req = https.request({
     'Content-Length': payload.length,
     // ntfy headers only take latin1, so the Hebrew title is RFC 2047 encoded.
     'Title': '=?UTF-8?B?' + Buffer.from(title || 'המוניטור', 'utf8').toString('base64') + '?=',
-    'Click': 'https://itcohen2-maker.github.io/abaitzik-monitor/#chat',
+    // Straight to the screen that holds only unread answers.
+    'Click': 'https://itcohen2-maker.github.io/abaitzik-monitor/#new',
     'Tags': prio === '5' ? 'rotating_light' : 'speech_balloon',
     'Priority': prio,
   },

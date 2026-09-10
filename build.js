@@ -391,6 +391,10 @@ section{margin-bottom:30px}
  border-radius:9px;padding:7px 16px;font:500 13px Heebo,sans-serif;cursor:pointer}
 .rsaid{font-size:12.5px;color:var(--accent)}
 .answering{outline:2px solid var(--accent);outline-offset:2px}
+/* The unread screen. Same bubbles, but nothing else on the page competes with
+   them, and each one is full width because there is no thread to place it in. */
+.ubox{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
+.ubox .bub{max-width:100%;align-self:stretch}
 /* A light running around the thing he is working on. He asked to see that this
    one card, and nothing else, is what has his hand on it right now. */
 .busyring{position:relative;isolation:isolate}
@@ -1120,6 +1124,12 @@ body.editing .bn{display:none}
  </form>
  <div id="noteList"></div>
  <div class="hint">הפתקים נשמרים במכשיר הזה. לחיצה ארוכה על פתק מוחקת אותו.</div>
+</section>
+
+<section id="pU" hidden>
+ <h2>מה שלא קראת</h2>
+ <div class="ubox" id="unreadBox"></div>
+ <div class="hint">נגיעה בהודעה מסמנת שקראת אותה והופכת אותה לירוקה. מה שנשאר אדום עוד מחכה לך.</div>
 </section>
 
 <section id="pI" hidden>
@@ -1940,7 +1950,7 @@ function updateDot(){
  d.hidden=!(n&&n>chatSeen());
  document.title=(d.hidden?'':'(1) ')+'אבא איציק בבנייה עצמית';
 }
-var PANES={h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI'};
+var PANES={h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 var PILLGAP=8*3600*1000;
 function lastPill(){
@@ -2347,13 +2357,52 @@ document.getElementById('plusBtn').onclick=function(){
  this.setAttribute('aria-expanded',open?'true':'false');
  if(open)f.scrollIntoView({behavior:'smooth',block:'nearest'});
 };
+// The big button used to drop him into the full thread, two hundred bubbles
+// deep, and he said plainly that he could not find the new messages. It opens
+// a screen that holds only what he has not read.
 document.getElementById('newBtn').onclick=function(){
  if(unreadCount())beep();
- pane('m');renderThread();
- // Opening does not clear anything any more. Only a touch on the message
- // itself does, so what he did not get to read is still red tomorrow.
+ pane('u');renderUnread();
  setTimeout(function(){markChatSeen();renderNew();},50);
 };
+function renderUnread(){
+ var host=document.getElementById('unreadBox');
+ if(!host)return;
+ var list=unreadList();
+ if(!list.length){
+  host.innerHTML='<div class="empty">אין הודעות חדשות. הכל נקרא.</div>';
+  return;
+ }
+ host.innerHTML=list.map(function(m,i){
+  return '<div class="bub me fresh" data-i="'+i+'">'
+   +'<span class="w">קלוד · '+esc(stamp(m.at))+' · <em class="badge">חדש</em></span>'
+   +linkify(m.text)
+   +'<div class="rrow">'
+   +'<button type="button" class="rb rmic" data-i="'+i+'">🎤 להשיב בקול</button>'
+   +'<button type="button" class="rb rtxt" data-i="'+i+'">✍️ בכתב</button>'
+   +'<button type="button" class="rb rcam" data-i="'+i+'">📷 מצלמה</button>'
+   +'<button type="button" class="rb rfile" data-i="'+i+'">📎 קובץ</button>'
+   +'</div>'
+   +'<form class="rform" data-i="'+i+'">'
+   +'<textarea placeholder="התשובה שלך להודעה הזאת"></textarea>'
+   +'<button type="submit">שליחת התשובה</button>'
+   +'<span class="rsaid"></span></form>'
+   +'</div>';
+ }).join('');
+ wireReplies(host,list);
+ Array.prototype.forEach.call(host.querySelectorAll('.bub'),function(el,n){
+  el.addEventListener('click',function(){
+   if(!el.classList.contains('fresh'))return;
+   el.classList.remove('fresh');
+   el.classList.add('touched');
+   ringFor(el);
+   markOneSeen(list[n]);
+   var b=el.querySelector('.badge');
+   if(b){b.className='badge ok';b.textContent='נקרא';}
+   renderNew();
+  });
+ });
+}
 document.getElementById('nH').onclick=function(){pane('h');};
 document.getElementById('nQ').onclick=function(){pane('q');};
 document.getElementById('nL').onclick=function(){pane('l');};
@@ -3128,6 +3177,12 @@ function jumpToUnread(){
  if(!el)return;
  try{el.scrollIntoView({block:'center',behavior:'smooth'});}catch(e){el.scrollIntoView();}
  ringFor(el,2200);
+}
+// A push notification lands here. Straight to the unread screen, which is the
+// only place he asked for: what is new, and nothing else.
+if(location.hash==='#new'){
+ pane('u');renderUnread();
+ setTimeout(function(){markChatSeen();renderNew();},50);
 }
 if(location.hash==='#chat'){
  pane('m');markChatSeen();
