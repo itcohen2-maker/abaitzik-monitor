@@ -1133,25 +1133,31 @@ function sendText(subject, text, kind) {
   return 'mail';
  }).catch(function () { return ntfyText(kind, text); });
 }
+// Files do NOT go through FormSubmit's ajax endpoint. It answers 200 and then
+// silently drops the attachment, so two recordings arrived as a note with no
+// audio and nothing looked wrong at either end. That endpoint is for text.
+//
+// The bytes go to ntfy, which carries files reliably, and a line goes to the
+// mailbox as well so there is a record that a recording existed even if the
+// audio expires before I fetch it.
 function sendFiles(list, note) {
- var fd = new FormData();
- fd.append('_subject', 'קובץ מהמוניטור');
- fd.append('הודעה', note);
- fd.append('קוד', myCode());
- list.forEach(function (f) { fd.append('attachment', f, f.name); });
- return fetch('https://formsubmit.co/ajax/' + MAILBOX, {
-  method: 'POST', headers: { Accept: 'application/json' }, body: fd
- }).then(function (r) {
-  if (!r.ok) throw new Error('quota');
-  return 'mail';
- }).catch(function () {
-  // One PUT per file. ntfy stores the bytes and hands me a link to fetch.
-  return list.reduce(function (chain, f) {
-   return chain.then(function () {
-    return fetch('https://ntfy.sh/' + NTFYIN + '?filename=' + encodeURIComponent(f.name),
-     { method: 'PUT', headers: { Title: 'file' }, body: f });
-   });
-  }, Promise.resolve()).then(function () { return ntfyText('קובץ', note); });
+ return list.reduce(function (chain, f) {
+  return chain.then(function () {
+   return fetch('https://ntfy.sh/' + NTFYIN + '?filename=' + encodeURIComponent(f.name),
+    { method: 'PUT', headers: { Title: 'file' }, body: f })
+    .then(function (r) { if (!r.ok) throw new Error('ntfy'); });
+  });
+ }, Promise.resolve()).then(function () {
+  return ntfyText('קובץ', note).then(function () {
+   // Best effort only: the recording is already delivered by this point, so a
+   // blocked mailbox must not turn a successful send into a failure.
+   return fetch('https://formsubmit.co/ajax/' + MAILBOX, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ _subject: 'קובץ מהמוניטור', _template: 'table',
+      'הודעה': note + ' (הקובץ עצמו נשלח בערוץ הקבצים)', 'קוד': myCode() })
+   }).catch(function () {}).then(function () { return 'ntfy'; });
+  });
  });
 }
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){
