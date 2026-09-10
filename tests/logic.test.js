@@ -79,6 +79,16 @@ test('splitThreads groups replies under their root and keeps time order', () => 
   assert.equal(byKey.x9.root.id, 'x9', 'a reply whose root is missing becomes its own thread');
 });
 
+test('splitThreads: a reply stamped before its root still joins it, once', () => {
+  const th = ML.splitThreads([
+    { id: 'root1', at: '2026-09-10T10:10:00', from: 'itzik', text: 'root later', re: '' },
+    { id: 'reply1', at: '2026-09-10T10:00:00', from: 'claude', text: 'reply earlier', re: 'root1' },
+  ]);
+  assert.equal(th.length, 1);
+  assert.deepEqual(th[0].msgs.map(m => m.id), ['reply1', 'root1']);
+  assert.equal(th[0].root.id, 'root1');
+});
+
 test('threadStatus: fresh beats standby beats done', () => {
   const th = ML.splitThreads(CHAT);
   const a1 = th.find(t => t.key === 'a1');
