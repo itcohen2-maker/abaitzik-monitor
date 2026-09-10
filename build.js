@@ -356,6 +356,23 @@ section{margin-bottom:30px}
  padding:1px 8px;border-radius:999px;font-size:11px}
 .bub a{color:inherit;text-decoration:underline;word-break:break-all}
 .bub.pend{opacity:.6}
+/* Answering one message and only that one. Every bubble carries its own row of
+   three ways in, because he replies by voice, by writing or by sending a file
+   depending on what he has in his hand at that moment. */
+.rrow{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
+.rb{background:var(--surface);color:var(--accent);border:1px solid var(--line);
+ border-radius:999px;padding:5px 12px;font:400 12.5px Heebo,sans-serif;cursor:pointer}
+.rb:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.rb.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.rform{display:none;flex-direction:column;gap:7px;margin-top:8px}
+.rform.open{display:flex}
+.rform textarea{width:100%;min-height:56px;resize:vertical;background:var(--surface);
+ color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:9px 11px;
+ font:400 14px Heebo,sans-serif}
+.rform button{align-self:flex-start;background:var(--accent);color:#fff;border:0;
+ border-radius:9px;padding:7px 16px;font:500 13px Heebo,sans-serif;cursor:pointer}
+.rsaid{font-size:12.5px;color:var(--accent)}
+.answering{outline:2px solid var(--accent);outline-offset:2px}
 .hint{font-size:13px;color:var(--dim);font-weight:300;margin-top:14px;line-height:1.6}
 #msgForm,#mailForm{display:flex;flex-direction:column;gap:10px}
 #mailText{width:100%;min-height:64px;resize:vertical;background:var(--surface);
@@ -1403,8 +1420,19 @@ function renderThread(){
    +(m.pend?' · נשלח, עוד לא נקרא':'')+statusTag(m)
    +(fresh?' · <em class="badge">חדש</em>':(mine?'':' · נקרא'))
    +'<button type="button" class="cp" data-i="'+i+'" aria-label="העתקה">העתקה</button>'
-   +'</span>'+linkify(m.text)+'</div>';
+   +'</span>'+linkify(m.text)
+   +'<div class="rrow">'
+   +'<button type="button" class="rb rmic" data-i="'+i+'">🎤 להשיב בקול</button>'
+   +'<button type="button" class="rb rtxt" data-i="'+i+'">✍️ בכתב</button>'
+   +'<button type="button" class="rb rfile" data-i="'+i+'">📎 קובץ</button>'
+   +'</div>'
+   +'<form class="rform" data-i="'+i+'">'
+   +'<textarea placeholder="התשובה שלך להודעה הזאת"></textarea>'
+   +'<button type="submit">שליחת התשובה</button>'
+   +'<span class="rsaid"></span></form>'
+   +'</div>';
  }).join('');
+ wireReplies(host,all);
  // Copying by hand out of a bubble on a phone is a fight with the selection
  // handles, and he wanted my answers pasteable into his own notes.
  if(picking)host.classList.add('picking');
@@ -1422,6 +1450,88 @@ function renderThread(){
     navigator.clipboard.writeText(t).then(done,function(){fallbackCopy(t,done);});
    }else fallbackCopy(t,done);
   };
+ });
+}
+// A reply has to say what it is answering, or it arrives here as a sentence
+// with no subject. The quote is short on purpose: enough for me to find the
+// message, not so much that a voice note becomes a wall of text.
+function quoteOf(m){
+ var t=String(m.text||'').replace(/\s+/g,' ').trim().slice(0,60);
+ return 'תשובה ל' + (m.from==='itzik'?'הודעה שלי':'הודעה שלך') + ' מ' + stamp(m.at)
+  + ': "' + t + '"';
+}
+// Marks which bubble is being answered, so a recording started here is not
+// mistaken later for a new subject.
+var answering=null;
+function markAnswering(el){
+ var host=document.getElementById('thread');
+ Array.prototype.forEach.call(host.querySelectorAll('.bub'),function(b){
+  b.classList.remove('answering');
+ });
+ if(el)el.classList.add('answering');
+}
+function wireReplies(host,all){
+ function at(b){return all[Number(b.getAttribute('data-i'))];}
+ Array.prototype.forEach.call(host.querySelectorAll('.rmic'),function(b){
+  b.onclick=function(e){
+   e.stopPropagation();
+   var m=at(b);
+   answering=m;
+   markAnswering(b.closest('.bub'));
+   // The recorder already knows how to send; it just needs to be told what
+   // this recording is an answer to. The caption rides along with the audio.
+   document.getElementById('fCap').value=quoteOf(m);
+   toggleRec();
+  };
+ });
+ Array.prototype.forEach.call(host.querySelectorAll('.rfile'),function(b){
+  b.onclick=function(e){
+   e.stopPropagation();
+   var m=at(b);
+   answering=m;
+   markAnswering(b.closest('.bub'));
+   document.getElementById('fCap').value=quoteOf(m);
+   openPicker('full','image/*,video/*,audio/*,application/pdf');
+  };
+ });
+ Array.prototype.forEach.call(host.querySelectorAll('.rtxt'),function(b){
+  b.onclick=function(e){
+   e.stopPropagation();
+   var bub=b.closest('.bub');
+   var f=bub.querySelector('.rform');
+   var open=!f.classList.contains('open');
+   f.classList.toggle('open',open);
+   b.classList.toggle('on',open);
+   markAnswering(open?bub:null);
+   if(open)f.querySelector('textarea').focus();
+  };
+ });
+ Array.prototype.forEach.call(host.querySelectorAll('.rform'),function(f){
+  f.addEventListener('click',function(e){e.stopPropagation();});
+  f.addEventListener('submit',function(e){
+   e.preventDefault();
+   var m=at(f);
+   var box=f.querySelector('textarea');
+   var btn=f.querySelector('button');
+   var said=f.querySelector('.rsaid');
+   var text=box.value.trim();
+   if(!text)return;
+   btn.disabled=true;
+   said.textContent='שולח.';
+   var full=quoteOf(m)+String.fromCharCode(10)+text;
+   sendText('תשובה מהמוניטור',full,'תשובה').then(function(how){
+    var p=pending();
+    p.push({at:new Date().toISOString(),text:full});
+    savePending(p);
+    box.value='';
+    said.textContent=how==='ntfy'?'נשלח בערוץ הגיבוי.':'נשלח.';
+    markSent('text');renderSent();
+    // renderThread redraws every bubble, so the confirmation is shown first.
+    setTimeout(renderThread,900);
+   }).catch(function(){
+    said.textContent='שני הערוצים לא ענו. תנסה שוב.';
+   }).then(function(){btn.disabled=false;});
+  });
  });
 }
 // Safari refuses the clipboard API in some contexts, so a hidden textarea and
