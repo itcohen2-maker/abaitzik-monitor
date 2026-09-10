@@ -488,6 +488,12 @@ section{margin-bottom:30px}
  box-shadow:0 2px 6px rgba(66,133,244,.4),inset 0 1px 0 rgba(255,255,255,.3)}
 .ask .opts button:active{background:linear-gradient(180deg,var(--blue),#1b63d6);box-shadow:none}
 .ask .opts button[disabled]{opacity:.5}
+.grip{position:absolute;inset-inline-end:6px;top:6px;z-index:5;
+ width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
+ font-size:17px;color:#fff;cursor:grab;touch-action:none;
+ background:linear-gradient(180deg,#6ea8ff,var(--blue));
+ box-shadow:0 2px 6px rgba(0,0,0,.35)}
+#pH>.hasgrip{position:relative}
 .editbar{position:fixed;z-index:90;inset-inline:0;bottom:0;display:flex;align-items:center;
  gap:12px;justify-content:space-between;
  padding:12px 16px calc(12px + env(safe-area-inset-bottom));
@@ -561,6 +567,10 @@ body.editing .bn{display:none}
  min-height:44px;padding:0 20px;border-radius:999px;border:0;cursor:pointer;
  box-shadow:0 2px 6px rgba(52,168,83,.4),inset 0 1px 0 rgba(255,255,255,.35)}
 .conn:active{background:linear-gradient(180deg,var(--green),#2b8c45);box-shadow:none;transform:translateY(1px)}
+.conn.arr{margin-inline-start:0;margin-inline-end:8px;
+ background:linear-gradient(180deg,#6ea8ff,var(--blue));
+ box-shadow:0 2px 6px rgba(66,133,244,.4),inset 0 1px 0 rgba(255,255,255,.35)}
+.conn.arr:active{background:linear-gradient(180deg,var(--blue),#1b63d6)}
 .conn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 .voice{display:flex;align-items:stretch;gap:12px;margin-bottom:14px}
@@ -809,6 +819,7 @@ body.editing .bn{display:none}
   <div class="s" id="built"></div>
   <div class="gold">המוניטור בונה את עצמו</div>
  </div>
+ <button type="button" class="conn arr" id="arrangeBtn" title="סידור המסך">סידור</button>
  <button type="button" class="conn" id="reloadBtn" title="טעינה מחדש">רענון</button>
 </header>
 
@@ -1728,6 +1739,7 @@ function armDrag(box,key){
   editing={box:box,key:key};
   document.body.classList.add('editing');
   box.classList.add('editbox');
+  addHandles(box);
   try{navigator.vibrate&&navigator.vibrate(18);}catch(e){}
   showEditBar();
  }
@@ -1746,10 +1758,12 @@ function armDrag(box,key){
   box.addEventListener(ev,function(){clearTimeout(hold);hold=null;});
  });
 
- // Once in edit mode, any press picks a block up and any release drops it.
+ // In edit mode a press on the handle picks its block up.
  box.addEventListener('pointerdown',function(e){
   if(!editing||editing.box!==box)return;
-  var el=e.target;
+  var t=e.target;
+  if(box===document.getElementById('pH')&&!(t.classList&&t.classList.contains('grip')))return;
+  var el=t;
   while(el&&el.parentNode!==box)el=el.parentNode;
   if(!el)return;
   held=el;el.classList.add('dragging');
@@ -1779,6 +1793,26 @@ function armDrag(box,key){
   if(editing&&editing.box===box){e.preventDefault();e.stopPropagation();}
  },true);
 }
+// A visible grip on each block, because on a phone there is no other way to
+// say move this whole thing rather than move what is inside it.
+function addHandles(box){
+ if(box!==document.getElementById('pH'))return;
+ Array.prototype.forEach.call(box.children,function(el){
+  if(el.querySelector&&el.querySelector(':scope > .grip'))return;
+  var g=document.createElement('div');
+  g.className='grip';
+  g.textContent='⠿';
+  g.setAttribute('aria-hidden','true');
+  el.insertBefore(g,el.firstChild);
+  el.classList.add('hasgrip');
+ });
+}
+function dropHandles(){
+ Array.prototype.forEach.call(document.querySelectorAll('.grip'),function(g){
+  var p=g.parentNode;
+  if(p){p.removeChild(g);p.classList.remove('hasgrip');}
+ });
+}
 function showEditBar(){
  var bar=document.getElementById('editBar');
  if(!bar)return;
@@ -1787,6 +1821,7 @@ function showEditBar(){
 function endEdit(){
  if(!editing)return;
  saveOrder(editing.box,editing.key);
+ dropHandles();
  editing.box.classList.remove('editbox');
  editing=null;
  document.body.classList.remove('editing');
@@ -2750,6 +2785,19 @@ document.getElementById('mailForm').addEventListener('submit',function(e){
  if(home){nameChildren(home,'blk');applyOrder(home,'blockOrder');armDrag(home,'blockOrder');}
 })();
 on('editDone',endEdit);
+// The explicit way into arranging, for when the long press is not obvious.
+on('arrangeBtn',function(){
+ if(editing){endEdit();return;}
+ var home=document.getElementById('pH');
+ if(!home)return;
+ pane('h');
+ editing={box:home,key:'blockOrder'};
+ document.body.classList.add('editing');
+ home.classList.add('editbox');
+ addHandles(home);
+ showEditBar();
+ toast('סידור המסך. גרור מהידית הכחולה.');
+});
 renderNextReport();
 renderAsk();
 render();
