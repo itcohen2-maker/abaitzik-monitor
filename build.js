@@ -1649,7 +1649,7 @@ function bubbleHtml(m,i,fresh,handled){
   +'</span>'+linkify(m.text)+'</div>';
 }
 function renderThread(){
- var unread=unreadList();
+ var unreadKeys=unreadList().map(claudeKey);
  var touched=touchedIds();
  var baked=(D.chat||[]).filter(function(m){return !isMail(m);});
  var still=dropSettled(pending(),baked);
@@ -1671,11 +1671,11 @@ function renderThread(){
    :'<em class="badge ok">נקרא</em>';
   var body=t.msgs.map(function(m){
    var i=flat.push(m)-1;
-   var fresh=m.from!=='itzik'&&unread.indexOf(m)>-1;
+   var fresh=m.from!=='itzik'&&unreadKeys.indexOf(claudeKey(m))>-1;
    var handled=!fresh&&touched.indexOf(claudeKey(m))>-1;
    return bubbleHtml(m,i,fresh,handled);
   }).join('');
-  var ri2=flat.length-1;
+  var ri2=flat.indexOf(t.root);
   var whole=t.msgs.map(function(m){return (m.from==='itzik'?'איציק':'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');}).join(String.fromCharCode(10,10));
   return '<details class="th th-'+r.status+'" data-k="'+esc(t.key)+'"'+(ri===0&&r.status==='fresh'?' open':'')+'>'
    +'<summary><span class="num">'+r.n+'</span><b>'+esc(head)+'</b>'+tag
@@ -1838,7 +1838,7 @@ function quoteOf(m){
 var answering=null;
 function markAnswering(el){
  var host=document.getElementById('thread');
- Array.prototype.forEach.call(host.querySelectorAll('.bub'),function(b){
+ Array.prototype.forEach.call(host.querySelectorAll('.bub,.th'),function(b){
   b.classList.remove('answering');
  });
  if(el)el.classList.add('answering');
@@ -1850,7 +1850,8 @@ function wireReplies(host,all){
    e.stopPropagation();
    var m=at(b);
    answering=m;
-   markAnswering(b.closest('.bub'));
+   var host2=b.closest('.bub')||b.closest('.th');
+   markAnswering(host2);
    // The recorder already knows how to send; it just needs to be told what
    // this recording is an answer to. The caption rides along with the audio.
    document.getElementById('fCap').value=quoteOf(m);
@@ -1863,7 +1864,8 @@ function wireReplies(host,all){
    e.stopPropagation();
    var m=at(b);
    answering=m;
-   markAnswering(b.closest('.bub'));
+   var host2=b.closest('.bub')||b.closest('.th');
+   markAnswering(host2);
    document.getElementById('fCap').value=quoteOf(m);
    setStandby(ML.keyOf(m));
    shoot(true);
@@ -1874,7 +1876,8 @@ function wireReplies(host,all){
    e.stopPropagation();
    var m=at(b);
    answering=m;
-   markAnswering(b.closest('.bub'));
+   var host2=b.closest('.bub')||b.closest('.th');
+   markAnswering(host2);
    document.getElementById('fCap').value=quoteOf(m);
    setStandby(ML.keyOf(m));
    openPicker('full','image/*,video/*,audio/*,application/pdf',true);
@@ -1883,12 +1886,12 @@ function wireReplies(host,all){
  Array.prototype.forEach.call(host.querySelectorAll('.rtxt'),function(b){
   b.onclick=function(e){
    e.stopPropagation();
-   var bub=b.closest('.bub');
-   var f=bub.querySelector('.rform');
+   var host2=b.closest('.bub')||b.closest('.th');
+   var f=host2.querySelector('.rform');
    var open=!f.classList.contains('open');
    f.classList.toggle('open',open);
    b.classList.toggle('on',open);
-   markAnswering(open?bub:null);
+   markAnswering(open?host2:null);
    if(open)f.querySelector('textarea').focus();
   };
  });

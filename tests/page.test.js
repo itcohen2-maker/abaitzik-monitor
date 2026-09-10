@@ -97,4 +97,9 @@ test('the chat screen renders thread cards with copy, paste and send on each', (
   assert.ok(html.includes('class="cp" data-i='));
   // CSS for the three states.
   for (const s of ['.th-fresh', '.th-standby', '.th-done']) assert.ok(html.includes(s), 'missing css ' + s);
+  assert.ok(html.includes("var unreadKeys=unreadList().map(claudeKey);"));
+  assert.ok(html.includes("unreadKeys.indexOf(claudeKey(m))>-1"));
+  assert.ok(!html.includes("unread.indexOf(m)>-1"), 'freshness must be by key, not identity');
+  assert.ok(html.includes("var ri2=flat.indexOf(t.root);"));
+  assert.ok(html.includes("b.closest('.bub')||b.closest('.th')"));
 });
