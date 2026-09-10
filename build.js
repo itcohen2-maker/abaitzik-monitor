@@ -822,6 +822,33 @@ body.editing .bn{display:none}
 .slotForm button.ghost{background:var(--sunk);color:var(--ink);border:1px solid var(--line);font-size:17px}
 #slotSaid{color:var(--dim);font-size:13px;font-weight:300;margin-top:7px;min-height:18px}
 
+/* ===== my answers ===== */
+.achips{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 12px}
+.achip{background:var(--surface);border:1px solid var(--line);border-radius:999px;
+ padding:8px 14px;font:500 13.5px Heebo,sans-serif;color:var(--dim);cursor:pointer}
+.achip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.achip b{font-weight:800}
+.asearch{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:12px;
+ padding:12px 14px;font:400 15px Heebo,sans-serif;color:var(--ink);margin-bottom:14px}
+.ansc{background:var(--surface);border:1px solid var(--line);border-radius:16px;
+ padding:13px 15px;margin-bottom:12px;box-shadow:var(--shadow);line-height:1.75;
+ border-inline-start:5px solid var(--line)}
+.ansc.fresh{border-inline-start-color:var(--red)}
+.ansc.done{border-inline-start-color:var(--green)}
+.ansc.star{border-inline-start-color:var(--yellow)}
+.ansc .w{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--dim);
+ font:500 12.5px Heebo,sans-serif;margin-bottom:7px}
+.ansc .atxt{white-space:pre-wrap;word-break:break-word}
+.arow{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+.ab{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:9px 13px;
+ font:500 13px Heebo,sans-serif;color:var(--ink);cursor:pointer}
+.ab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.aempty{color:var(--dim);text-align:center;padding:26px 10px;font-weight:300}
+.asaid{display:block;color:var(--green);font-size:12.5px;margin-top:7px;min-height:16px}
+.bn .cnt{position:absolute;top:-2px;inset-inline-end:0;min-width:19px;height:19px;
+ border-radius:10px;background:var(--red);color:#fff;font:800 11px/19px Heebo,sans-serif;
+ text-align:center;padding:0 5px;font-style:normal}
+.bn .cnt.zero{background:var(--line);color:var(--dim)}
 /* ===== bottom nav ===== */
 .micfab{position:fixed;left:16px;
  bottom:calc(84px + env(safe-area-inset-bottom));z-index:40;opacity:.95;touch-action:none;
@@ -1135,6 +1162,14 @@ body.editing .bn{display:none}
  <div class="hint">נגיעה בהודעה מסמנת שקראת אותה והופכת אותה לירוקה. מה שנשאר אדום עוד מחכה לך.</div>
 </section>
 
+<section id="pA" hidden>
+ <h2>התשובות שלי</h2>
+ <div class="achips" id="aChips"></div>
+ <input type="search" id="aSearch" class="asearch" autocomplete="off" placeholder="חיפוש בתוך התשובות">
+ <div id="ansBox"></div>
+ <div class="hint">כאן שמורות כל התשובות שלי, גם אחרי שקראת אותן. כלום לא נעלם מכאן. אדום זה מה שלא קראת, ירוק זה מה שסימנת כטופל, וצהוב זה מה ששמת עליו כוכב.</div>
+</section>
+
 <section id="pI" hidden>
  <h2>רעיונות</h2>
  <div class="ideahead">אלה דברים שהמסך הזה כבר יודע לעשות או שאני יכול לבנות. לחיצה על "רוצה את זה" שולחת לי את הבקשה, ואני בונה ומעדכן.</div>
@@ -1329,6 +1364,7 @@ body.editing .bn{display:none}
  <button type="button" id="nQ" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"/><path d="M7 19v-6"/><path d="M12 19V7"/><path d="M17 19v-9"/></svg>רשתות</button>
  <button type="button" id="nL" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>לידים<i class="dot" id="lDot" hidden></i></button>
  <button type="button" id="nR" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8L18.5 8v12.5h-13Z"/><path d="M14 3.5V8h4.5"/><path d="M8.5 13h7M8.5 16.5h4.5"/></svg>דוחות<i class="dot" id="rDot" hidden></i></button>
+ <button type="button" id="nA" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h16v11h-9l-5 3.5v-3.5H4Z"/><path d="M8 10.5h8M8 14h5"/></svg>תשובות<i class="cnt zero" id="aCnt">0</i></button>
 </nav>
 
 <div class="stamp"><span id="built"></span></div>
@@ -1878,6 +1914,7 @@ function paintDot(){
  var d=document.getElementById('mDot');
  if(d)d.hidden=!unreadList().length;
  paintNew();
+ paintAnsCount();
 }
 // How many reports are newer than the last one he opened. The mark itself
 // lives further down in reportsSeen, which keeps the newest timestamp.
@@ -1933,6 +1970,7 @@ function unreadList(){
 function unreadCount(){return unreadList().length;}
 function renderNew(){
  renderSent();
+ paintAnsCount();
  var c=unreadCount();
  var btn=document.getElementById('newBtn');
  btn.classList.toggle('hot',c>0);
@@ -1957,7 +1995,7 @@ function updateDot(){
  d.hidden=!(n&&n>chatSeen());
  document.title=(d.hidden?'':'(1) ')+'אבא איציק בבנייה עצמית';
 }
-var PANES={h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU'};
+var PANES={a:'pA',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 var PILLGAP=8*3600*1000;
 function lastPill(){
@@ -1993,7 +2031,7 @@ var LANDING=[
  {name:'שיטת הפירה',note:'מילת המפתח: גזר',url:'https://itzik-site.vercel.app/gezer'},
  {name:'סלינדה',note:'אתר',url:'https://salinda-mobile.vercel.app/'}
 ];
-var NAVS={h:'nH',q:'nQ',l:'nL',r:'nR',m:'nM'};
+var NAVS={h:'nH',q:'nQ',l:'nL',r:'nR',m:'nM',a:'nA'};
 
 // Per network monitoring. Tapping a network circle opens its own screen:
 // what is waiting there, and only the report lines about that network.
@@ -2324,6 +2362,136 @@ function on(id,fn){
  var el=document.getElementById(id);
  if(el)el.onclick=fn;
 }
+// He said it plainly: my answers vanish. The unread screen empties itself the
+// moment he touches a message, and after that the only copy sits buried in the
+// thread among his own messages. This screen keeps every answer I ever wrote.
+// Nothing here removes a message from view - the filters only narrow it.
+var ansFilter='all',ansQ='';
+// Two hundred cards, each with a recorder and an attach form, is more than a
+// phone should build at once. It draws a page at a time.
+var ansShow=30;
+function starIds(){
+ try{return JSON.parse(localStorage.getItem('chatStar')||'[]');}catch(e){return [];}
+}
+function isStar(m){return starIds().indexOf(claudeKey(m))>-1;}
+function toggleStar(m){
+ try{
+  var s=starIds(),k=claudeKey(m),i=s.indexOf(k);
+  if(i>-1)s.splice(i,1);else s.push(k);
+  if(s.length>400)s=s.slice(-400);
+  localStorage.setItem('chatStar',JSON.stringify(s));
+ }catch(e){}
+}
+function isDone(m){return touchedIds().indexOf(claudeKey(m))>-1;}
+function unDone(m){
+ try{
+  var t=touchedIds(),k=claudeKey(m),i=t.indexOf(k);
+  if(i>-1){t.splice(i,1);localStorage.setItem('chatTouched',JSON.stringify(t));}
+ }catch(e){}
+}
+function allAnswers(){
+ return (D.chat||[]).filter(function(m){return m.from==='claude'&&!isMail(m);})
+  .slice().sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
+}
+function isFresh(m){return unreadList().indexOf(m)>-1;}
+function ansCounts(){
+ var a=allAnswers();
+ return {all:a.length,
+  fresh:a.filter(isFresh).length,
+  star:a.filter(isStar).length,
+  done:a.filter(function(m){return isDone(m)&&!isFresh(m);}).length};
+}
+function ansList(){
+ var a=allAnswers();
+ if(ansFilter==='fresh')a=a.filter(isFresh);
+ if(ansFilter==='star')a=a.filter(isStar);
+ if(ansFilter==='done')a=a.filter(function(m){return isDone(m)&&!isFresh(m);});
+ if(ansQ){
+  var q=ansQ.toLowerCase();
+  a=a.filter(function(m){return String(m.text||'').toLowerCase().indexOf(q)>-1;});
+ }
+ return a;
+}
+function ansCopy(btn,text){
+ var done=function(){var o=btn.textContent;btn.textContent='הועתק';
+  setTimeout(function(){btn.textContent=o;},1500);};
+ if(navigator.clipboard&&navigator.clipboard.writeText){
+  navigator.clipboard.writeText(text).then(done,function(){fallbackCopy(text,done);});
+ }else fallbackCopy(text,done);
+}
+function renderAnswers(){
+ var chips=document.getElementById('aChips');
+ var host=document.getElementById('ansBox');
+ if(!chips||!host)return;
+ var c=ansCounts();
+ var defs=[['all','הכל',c.all],['fresh','לא נקראו',c.fresh],
+  ['star','מסומנות',c.star],['done','טופלו',c.done]];
+ chips.innerHTML=defs.map(function(d){
+  return '<button type="button" class="achip'+(ansFilter===d[0]?' on':'')
+   +'" data-f="'+d[0]+'">'+d[1]+' <b>'+d[2]+'</b></button>';
+ }).join('');
+ Array.prototype.forEach.call(chips.querySelectorAll('.achip'),function(b){
+  b.onclick=function(){ansFilter=b.getAttribute('data-f');ansShow=30;renderAnswers();};
+ });
+ var full=ansList();
+ var list=full.slice(0,ansShow);
+ if(!full.length){
+  host.innerHTML='<div class="aempty">אין כאן כלום בסינון הזה.</div>';
+  return;
+ }
+ host.innerHTML=list.map(function(m,i){
+  var fresh=isFresh(m),done=!fresh&&isDone(m),st=isStar(m);
+  return '<div class="ansc'+(fresh?' fresh':(done?' done':''))+(st?' star':'')+'" data-i="'+i+'">'
+   +'<span class="w">קלוד · '+esc(stamp(m.at))
+   +(fresh?' · <em class="badge">חדש</em>':(done?' · טופל':' · נקרא'))+'</span>'
+   +'<div class="atxt">'+linkify(m.text)+'</div>'
+   +'<div class="arow">'
+   +'<button type="button" class="ab acopy" data-i="'+i+'">העתקה</button>'
+   +'<button type="button" class="ab astar'+(st?' on':'')+'" data-i="'+i+'">'
+   +(st?'★ מסומן':'☆ סימון')+'</button>'
+   +'<button type="button" class="ab adone'+(done?' on':'')+'" data-i="'+i+'">'
+   +(done?'✓ טופל':'סמן כטופל')+'</button>'
+   +'<button type="button" class="ab aread" data-i="'+i+'"'+(fresh?'':' hidden')+'>קראתי</button>'
+   +'</div>'
+   +replyBox('בקשר לתשובה שלך מ'+stamp(m.at))
+   +'<span class="asaid" data-i="'+i+'"></span>'
+   +'</div>';
+ }).join('');
+ var at=function(b){return list[Number(b.getAttribute('data-i'))];};
+ Array.prototype.forEach.call(host.querySelectorAll('.acopy'),function(b){
+  b.onclick=function(e){e.stopPropagation();
+   var m=at(b);
+   ansCopy(b,'קלוד · '+stamp(m.at)+String.fromCharCode(10)+(m.text||''));};
+ });
+ Array.prototype.forEach.call(host.querySelectorAll('.astar'),function(b){
+  b.onclick=function(e){e.stopPropagation();toggleStar(at(b));renderAnswers();};
+ });
+ Array.prototype.forEach.call(host.querySelectorAll('.adone'),function(b){
+  b.onclick=function(e){e.stopPropagation();
+   var m=at(b);
+   if(isDone(m)&&!isFresh(m))unDone(m);else markOneSeen(m);
+   renderAnswers();paintDot();};
+ });
+ Array.prototype.forEach.call(host.querySelectorAll('.aread'),function(b){
+  b.onclick=function(e){e.stopPropagation();markOneSeen(at(b));renderAnswers();paintDot();};
+ });
+ if(full.length>list.length){
+  var more=document.createElement('button');
+  more.type='button';more.className='ab';more.style.width='100%';more.style.padding='14px';
+  more.textContent='להציג עוד ('+(full.length-list.length)+')';
+  more.onclick=function(){ansShow+=30;renderAnswers();};
+  host.appendChild(more);
+ }
+ wireBoxes(host);
+}
+function paintAnsCount(){
+ var el=document.getElementById('aCnt');
+ if(!el)return;
+ var n=unreadList().length;
+ var total=allAnswers().length;
+ el.textContent=n?String(n):String(total);
+ el.classList.toggle('zero',!n);
+}
 function pane(w){
  for(var k in PANES){document.getElementById(PANES[k]).hidden=(k!==w);}
  for(var n in NAVS){document.getElementById(NAVS[n]).setAttribute('aria-pressed',n===w);}
@@ -2369,8 +2537,12 @@ document.getElementById('plusBtn').onclick=function(){
 // a screen that holds only what he has not read.
 document.getElementById('newBtn').onclick=function(){
  if(unreadCount())beep();
- pane('u');renderUnread();
- setTimeout(function(){markChatSeen();renderNew();},50);
+ // Used to open the unread screen, which empties itself the moment he reads
+ // a message. It now opens the answers screen, filtered to the unread ones,
+ // and everything stays reachable from the same place afterwards.
+ ansFilter=unreadCount()?'fresh':'all';ansQ='';
+ var sb=document.getElementById('aSearch');if(sb)sb.value='';
+ pane('a');renderAnswers();
 };
 function renderUnread(){
  var host=document.getElementById('unreadBox');
@@ -2410,11 +2582,14 @@ function renderUnread(){
   });
  });
 }
+var aSearchEl=document.getElementById('aSearch');
+if(aSearchEl)aSearchEl.oninput=function(){ansQ=this.value.trim();ansShow=30;renderAnswers();};
 document.getElementById('nH').onclick=function(){pane('h');};
 document.getElementById('nQ').onclick=function(){pane('q');};
 document.getElementById('nL').onclick=function(){pane('l');};
 document.getElementById('nR').onclick=function(){pane('r');markReportsSeen();renderNextReport();};
 document.getElementById('nM').onclick=function(){pane('m');markChatSeen();};
+document.getElementById('nA').onclick=function(){pane('a');renderAnswers();};
 
 // Home shortcuts. The mail and "new module" circles have no screen of their
 // own yet, so they open the chat with the request already started.
