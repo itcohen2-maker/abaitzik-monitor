@@ -59,6 +59,19 @@ function reportNets(r) {
   return Object.keys(NET_WORDS).filter(k => NET_WORDS[k].test(t));
 }
 
+// The page as a string, from a payload. build() feeds it real data; the
+// tests feed it a fixture. Replacements use a function so that a "$&" inside
+// the JSON or the lib source is not expanded by String.replace.
+const LIB = fs.readFileSync(path.join(__dirname, 'lib', 'monitor-logic.js'), 'utf8');
+function renderPage(payload) {
+  const data = JSON.stringify(payload).replace(/</g, '\\u003c');
+  return PAGE
+    .replace('__LIB__', () => LIB.replace(/<\/script/gi, '<\\/script'))
+    .replace('__DATA__', () => data)
+    .replace('__NET__', () => JSON.stringify(NET))
+    .replace('__CAT__', () => JSON.stringify(CAT));
+}
+
 function build() {
   const state = store.load();
   const items = Object.values(state.items).map(i => ({
@@ -134,10 +147,7 @@ function build() {
     chat,
   };
 
-  const html = PAGE
-    .replace('__DATA__', JSON.stringify(payload).replace(/</g, '\\u003c'))
-    .replace('__NET__', JSON.stringify(NET))
-    .replace('__CAT__', JSON.stringify(CAT));
+  const html = renderPage(payload);
 
   fs.mkdirSync(OUT_DIR, { recursive: true });
   fs.writeFileSync(path.join(OUT_DIR, 'index.html'), html, 'utf8');
@@ -1372,6 +1382,7 @@ body.editing .bn{display:none}
 <div class="stamp"><span id="built"></span></div>
 </div>
 
+<script>__LIB__</script>
 <script>
 var D = __DATA__, NET = __NET__, CAT = __CAT__, tab = 'pending';
 // Split so a scraper crawling the page source does not lift a plain address.
@@ -3636,4 +3647,5 @@ if(bootFailed.length){
 </body>
 </html>`;
 
-build();
+module.exports = { renderPage, build };
+if (require.main === module) build();
