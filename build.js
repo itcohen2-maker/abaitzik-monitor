@@ -142,8 +142,15 @@ function build() {
   fs.mkdirSync(OUT_DIR, { recursive: true });
   fs.writeFileSync(path.join(OUT_DIR, 'index.html'), html, 'utf8');
   fs.writeFileSync(path.join(OUT_DIR, '.nojekyll'), '', 'utf8');
+  // The live strip reads this every forty seconds. It carries what I am doing
+  // right now and how many answers are waiting, so the screen can say it
+  // without downloading the whole page again.
   fs.writeFileSync(path.join(OUT_DIR, 'version.json'),
-    JSON.stringify({ builtAt: payload.builtAt }), 'utf8');
+    JSON.stringify({
+      builtAt: payload.builtAt,
+      now: payload.now || null,
+      answers: chat.filter(m => m.from === 'claude').length,
+    }), 'utf8');
   fs.writeFileSync(path.join(OUT_DIR, 'robots.txt'), 'User-agent: *\nDisallow: /\n', 'utf8');
   console.log('built docs/index.html |', items.length, 'items,',
     payload.counts.pending, 'pending,', payload.counts.replied, 'replied,',
@@ -682,6 +689,24 @@ body.editing .bn{display:none}
 .g9{background:linear-gradient(150deg,#f48fb1,#ad1457)}
 .g10{background:linear-gradient(150deg,#ffe082,#f57f17)}
 .g11{background:linear-gradient(150deg,#b9f6ca,#00897b)}
+/* On air. He asked to see that someone is actually working, and that an answer
+   can land on its own without waiting for the other nine. The strip talks to
+   version.json every forty seconds, so it moves while the page stays put. */
+.live{display:flex;align-items:center;gap:9px;padding:9px 15px;margin:0 0 12px;
+ background:var(--surface);border:1px solid var(--line);border-radius:999px;
+ font-size:13.5px;box-shadow:var(--shadow)}
+.live b{font-weight:500}
+.live span:last-child{color:var(--dim);font-weight:300;margin-inline-start:auto;
+ font-variant-numeric:tabular-nums}
+.live .pulse{width:9px;height:9px;flex:0 0 9px;border-radius:50%;background:var(--green);
+ box-shadow:0 0 0 0 rgba(52,168,83,.55);animation:onair 2s infinite}
+.live.busy .pulse{background:var(--red);box-shadow:0 0 0 0 rgba(234,67,53,.55)}
+@keyframes onair{
+ 0%{box-shadow:0 0 0 0 rgba(52,168,83,.5)}
+ 70%{box-shadow:0 0 0 11px rgba(52,168,83,0)}
+ 100%{box-shadow:0 0 0 0 rgba(52,168,83,0)}
+}
+@media(prefers-reduced-motion:reduce){.live .pulse{animation:none}}
 /* The idea list. Each one is a real thing the screen could do, with a button
    that asks for it, because a new user does not know what to ask for until he
    sees a sentence that describes his own week. */
@@ -857,6 +882,12 @@ body.editing .bn{display:none}
  <button type="button" class="conn arr" id="arrangeBtn" title="סידור המסך">סידור</button>
  <button type="button" class="conn" id="reloadBtn" title="טעינה מחדש">רענון</button>
 </header>
+
+<div class="live" id="liveBar">
+ <span class="pulse" aria-hidden="true"></span>
+ <b id="liveWhat">מקשיב</b>
+ <span id="liveWhen"></span>
+</div>
 
 <section id="pH">
  <div class="voice">
@@ -1876,12 +1907,34 @@ document.getElementById('netSeg').addEventListener('click',function(e){
 // The page is one HTML file, so a phone that cached it keeps showing an old
 // screen. version.json is fetched with no-store on every open; when it names
 // a newer build than the one baked in here, the page reloads itself once.
+// Painted from whatever the last poll brought back. Red pulse while a round is
+// running, green while I am listening, and the answer count updates on its own
+// so one reply can arrive without waiting for the rest.
+var liveSeen=null;
+function paintLive(v){
+ var bar=document.getElementById('liveBar');
+ if(!bar)return;
+ var now=(v&&v.now)||D.now;
+ var what=document.getElementById('liveWhat');
+ var when=document.getElementById('liveWhen');
+ var fresh=now&&now.at&&(Date.now()-Date.parse(now.at))<25*60*1000;
+ bar.classList.toggle('busy',!!fresh);
+ what.textContent=fresh?(now.text||'עובד עכשיו'):'מקשיב. תכתוב ואני עונה';
+ var n=unreadList().length;
+ when.textContent=(n?(n===1?'תשובה אחת מחכה · ':n+' תשובות מחכות · '):'')
+  +(now&&now.at?ago(now.at):ago(D.builtAt));
+}
 function checkFresh(){
  if(!window.fetch)return;
  fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){
   return r.ok?r.json():null;
  }).then(function(v){
+  if(v)paintLive(v);
   if(!v||!v.builtAt||v.builtAt===D.builtAt)return;
+  // A new build is up. Say so before reloading, so a reply that landed while
+  // he was reading does not just make the screen jump under his hands.
+  var what=document.getElementById('liveWhat');
+  if(what&&liveSeen!==v.builtAt){liveSeen=v.builtAt;what.textContent='יש תשובה חדשה. טוען.';}
   var seen='';
   try{seen=sessionStorage.getItem('reloadedFor')||'';}catch(e){}
   if(seen===v.builtAt)return;
@@ -1899,7 +1952,10 @@ function checkFresh(){
  }).catch(function(){});
 }
 checkFresh();
-setInterval(checkFresh,120000);
+paintLive(null);
+// Forty seconds, not two minutes. He wants to see that something is alive.
+setInterval(checkFresh,40000);
+setInterval(function(){paintLive(null);},20000);
 document.addEventListener('visibilitychange',function(){if(!document.hidden)checkFresh();});
 
 
