@@ -1370,6 +1370,7 @@ function dropSettled(list,baked){
 }
 function renderThread(){
  var seen=chatSeen();
+ var unread=unreadList();
  var baked=(D.chat||[]).filter(function(m){return !isMail(m);});
  var still=dropSettled(pending(),baked);
  savePending(still.concat(pending().filter(isMail)));
@@ -1383,7 +1384,7 @@ function renderThread(){
  }
  host.innerHTML=all.map(function(m,i){
   var mine=m.from==='itzik';
-  var fresh=!mine&&(m.at||'')>seen;
+  var fresh=!mine&&unread.indexOf(m)>-1;
   var line=(mine?'איציק':'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');
   return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')+(fresh?' fresh':' read')+'"'
    +' data-copy="'+esc(line)+'">'
@@ -1472,12 +1473,41 @@ function chatSeen(){
  try{return localStorage.getItem('chatSeen')||'';}catch(e){return'';}
 }
 function markChatSeen(){
- try{localStorage.setItem('chatSeen',newestClaude());}catch(e){}
+ try{
+  localStorage.setItem('chatSeen',newestClaude());
+  var seen=seenIds();
+  (D.chat||[]).forEach(function(m){
+   if(m.from!=='claude')return;
+   var k=claudeKey(m);
+   if(seen.indexOf(k)<0)seen.push(k);
+  });
+  // Keep the list from growing without limit.
+  if(seen.length>400)seen=seen.slice(-400);
+  localStorage.setItem('chatSeenIds',JSON.stringify(seen));
+ }catch(e){}
  var d=document.getElementById('mDot');if(d)d.hidden=true;
 }
-function unreadCount(){
- return (D.chat||[]).filter(function(m){return m.from==='claude'&&(m.at||'')>chatSeen();}).length;
+// Unread used to mean newer than the last time he opened the chat. That broke
+// the moment I wrote a reply with a timestamp earlier than one already there:
+// a real answer arrived and the button stayed grey. Seen messages are now
+// remembered one by one, so the order they were written in cannot hide one.
+function seenIds(){
+ try{return JSON.parse(localStorage.getItem('chatSeenIds')||'[]');}catch(e){return [];}
 }
+function claudeKey(m){return (m.at||'')+'|'+String(m.text||'').slice(0,40);}
+function unreadList(){
+ var seen=seenIds();
+ var cut=chatSeen();
+ return (D.chat||[]).filter(function(m){
+  if(m.from!=='claude')return false;
+  if(seen.indexOf(claudeKey(m))>-1)return false;
+  // Anything already on screen before this change counts as read, so he does
+  // not get a hundred old answers marked new once.
+  if(!seen.length&&cut&&(m.at||'')<=cut)return false;
+  return true;
+ });
+}
+function unreadCount(){return unreadList().length;}
 function renderNew(){
  renderSent();
  var c=unreadCount();
