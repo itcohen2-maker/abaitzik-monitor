@@ -373,6 +373,8 @@ section{margin-bottom:30px}
  border-radius:9px;padding:7px 16px;font:500 13px Heebo,sans-serif;cursor:pointer}
 .rsaid{font-size:12.5px;color:var(--accent)}
 .answering{outline:2px solid var(--accent);outline-offset:2px}
+.repreply{padding:0 14px 14px;border-top:1px solid var(--line);margin-top:2px}
+.repreply .rrow{margin-top:12px}
 .hint{font-size:13px;color:var(--dim);font-weight:300;margin-top:14px;line-height:1.6}
 #msgForm,#mailForm{display:flex;flex-direction:column;gap:10px}
 #mailText{width:100%;min-height:64px;resize:vertical;background:var(--surface);
@@ -1347,6 +1349,7 @@ function reportRow(r,n){
   +'<div class="text">'+esc(r.body)+'</div>'
   +'<div class="copyrow"><button type="button" data-copy="'+n+'">העתקת הדוח</button>'
   +'<span class="msg" data-copied="'+n+'"></span></div>'
+  +'<div class="repreply">'+replyBox('על הדוח "'+(r.title||'דוח')+'" מ'+stamp(r.at))+'</div>'
   +'</details>';
 }
 function render(){
@@ -1366,6 +1369,7 @@ function render(){
  document.getElementById('reports').innerHTML=R.length?head+R.map(reportRow).join('')
   :'<div class="empty">עוד לא נכתב דוח.</div>';
  document.getElementById('built').textContent='גרסה '+stamp(D.builtAt)+' · עודכן לפני '+ago(D.builtAt);
+ wireBoxes(document.getElementById('reports'));
 }
 function pending(){
  try{return JSON.parse(localStorage.getItem('pendingMsgs')||'[]');}catch(e){return[];}
@@ -1450,6 +1454,68 @@ function renderThread(){
     navigator.clipboard.writeText(t).then(done,function(){fallbackCopy(t,done);});
    }else fallbackCopy(t,done);
   };
+ });
+}
+// The same three ways in, next to anything I put on his screen: a report, a
+// notice, a message. He asked for it beside every one of them, because an
+// answer that is not written where the thing is gets lost by the evening.
+function replyBox(quote){
+ return '<div class="rbox" data-q="'+esc(quote)+'">'
+  +'<div class="rrow">'
+  +'<button type="button" class="rb bmic">🎤 להשיב בקול</button>'
+  +'<button type="button" class="rb btxt">✍️ בכתב</button>'
+  +'<button type="button" class="rb bfile">📎 קובץ</button>'
+  +'</div>'
+  +'<form class="rform"><textarea placeholder="מה יש לך להגיד על זה"></textarea>'
+  +'<button type="submit">שליחה</button><span class="rsaid"></span></form>'
+  +'</div>';
+}
+function wireBoxes(root){
+ Array.prototype.forEach.call((root||document).querySelectorAll('.rbox'),function(box){
+  if(box.getAttribute('data-wired'))return;
+  box.setAttribute('data-wired','1');
+  var q=box.getAttribute('data-q')||'';
+  var f=box.querySelector('.rform');
+  var txt=box.querySelector('.btxt');
+  box.querySelector('.bmic').onclick=function(e){
+   e.stopPropagation();
+   document.getElementById('fCap').value=q;
+   toggleRec();
+  };
+  box.querySelector('.bfile').onclick=function(e){
+   e.stopPropagation();
+   document.getElementById('fCap').value=q;
+   openPicker('full','image/*,video/*,audio/*,application/pdf');
+  };
+  txt.onclick=function(e){
+   e.stopPropagation();
+   var open=!f.classList.contains('open');
+   f.classList.toggle('open',open);
+   txt.classList.toggle('on',open);
+   if(open)f.querySelector('textarea').focus();
+  };
+  f.addEventListener('click',function(e){e.stopPropagation();});
+  f.addEventListener('submit',function(e){
+   e.preventDefault();
+   var box2=f.querySelector('textarea');
+   var btn=f.querySelector('button');
+   var said=f.querySelector('.rsaid');
+   var text=box2.value.trim();
+   if(!text)return;
+   btn.disabled=true;
+   said.textContent='שולח.';
+   var full=q+String.fromCharCode(10)+text;
+   sendText('הערה מהמוניטור',full,'הערה').then(function(how){
+    var p=pending();
+    p.push({at:new Date().toISOString(),text:full});
+    savePending(p);
+    box2.value='';
+    said.textContent=how==='ntfy'?'נשלח בערוץ הגיבוי.':'נשלח. קלטתי.';
+    markSent('text');renderSent();renderThread();
+   }).catch(function(){
+    said.textContent='שני הערוצים לא ענו. תנסה שוב.';
+   }).then(function(){btn.disabled=false;});
+  });
  });
 }
 // A reply has to say what it is answering, or it arrives here as a sentence
@@ -1728,9 +1794,12 @@ function renderNet(){
   return '<details class="report"'+(n===0?' open':'')+'>'
    +'<summary><span class="t">'+esc(r.title||'דוח')+'</span>'
    +'<span class="d">'+esc(stamp(r.at))+'</span></summary>'
-   +'<div class="text">'+esc(body)+'</div></details>';
+   +'<div class="text">'+esc(body)+'</div>'
+   +'<div class="repreply">'+replyBox('על הדוח "'+(r.title||'דוח')+'" מ'+stamp(r.at))+'</div>'
+   +'</details>';
   }).join('');}
  document.getElementById('netBody').innerHTML=out;
+ wireBoxes(document.getElementById('netBody'));
 }
 function openNet(k){curNet=k||'all';pane('n');renderNet();}
 document.getElementById('netSeg').addEventListener('click',function(e){
