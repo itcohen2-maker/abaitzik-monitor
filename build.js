@@ -318,11 +318,20 @@ section{margin-bottom:30px}
  display:flex;gap:8px;align-items:baseline}
 .report summary::-webkit-details-marker{display:none}
 .report summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
-.report summary .t{font-weight:500;font-size:15px}
+.report summary .t{font-weight:600;font-size:15px}
+.report summary:before{content:"";flex:0 0 auto;width:8px;height:8px;
+ border-inline-start:2px solid var(--dim);border-block-end:2px solid var(--dim);
+ transform:rotate(45deg);transition:transform .15s ease;margin-inline-end:2px}
+.report[open] summary:before{transform:rotate(-45deg) translate(2px,2px);
+ border-color:var(--accent)}
+.report[open]{box-shadow:0 0 0 2px var(--accent-soft),var(--shadow)}
+.report[open] summary{background:var(--accent-soft)}
+.report:not([open]) summary:active{background:var(--sunk)}
 .report summary .d{margin-inline-start:auto;color:var(--dim);font-size:13px;
  font-weight:300;font-variant-numeric:tabular-nums}
 .report .text{padding:12px 14px 14px;font-size:15px;white-space:pre-wrap;
  overflow-wrap:anywhere;border-top:1px solid var(--line)}
+.rephint{color:var(--dim);font-size:12.5px;margin-bottom:8px}
 .copyrow{display:flex;align-items:center;gap:11px;padding:0 14px 13px}
 .copyrow button{background:transparent;color:var(--accent);border:1px solid var(--line);
  border-radius:8px;padding:6px 14px;font:400 13px Heebo,sans-serif;cursor:pointer}
@@ -1325,7 +1334,8 @@ function render(){
  document.getElementById('leads').innerHTML=C.length?C.map(leadRow).join('')
   :'<div class="empty">אף אחד ברשימה עדיין.</div>';
  var R=D.reports||[];
- document.getElementById('reports').innerHTML=R.length?R.map(reportRow).join('')
+ var head=R.length>1?'<div class="rephint">הדוח האחרון פתוח. לחיצה על כותרת פותחת דוח קודם.</div>':'';
+ document.getElementById('reports').innerHTML=R.length?head+R.map(reportRow).join('')
   :'<div class="empty">עוד לא נכתב דוח.</div>';
  document.getElementById('built').textContent='גרסה '+stamp(D.builtAt)+' · עודכן לפני '+ago(D.builtAt);
 }
