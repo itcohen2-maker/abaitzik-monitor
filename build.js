@@ -954,12 +954,6 @@ body.editing .bn{display:none}
   <button type="button" id="urgBtn" class="urg"><span aria-hidden="true">📎</span>העלאת<br>קובץ</button>
  </div>
 
- <div class="live" id="liveBar">
-  <span class="pulse" aria-hidden="true"></span>
-  <b id="liveWhat">אני מקשיב לך</b>
-  <span id="liveWhen"></span>
- </div>
-
  <form class="quickrow" id="quickForm">
   <input type="text" id="quickText" autocomplete="off"
    placeholder="או פשוט תכתוב לי כאן">
@@ -978,6 +972,12 @@ body.editing .bn{display:none}
   <div class="wn" id="wnCmds"></div>
   <div class="wn" id="wnNow"></div>
  </section>
+
+<div class="tiles">
+ <div class="tile wait"><div class="k">ממתין לתשובה</div><div class="v" id="tP">0</div></div>
+ <div class="tile"><div class="k">נענה היום</div><div class="v" id="tT">0</div></div>
+ <div class="tile wait"><div class="k">לידים פתוחים</div><div class="v" id="tL">0</div></div>
+</div>
 
  <div class="row" id="blkIcons" role="group" aria-label="קיצורים">
   <a class="ic" data-net="youtube" href="https://studio.youtube.com/" target="_blank" rel="noopener"><span class="c c-yt">
@@ -1023,11 +1023,6 @@ body.editing .bn{display:none}
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
  </div>
 
-<div class="tiles">
- <div class="tile wait"><div class="k">ממתין לתשובה</div><div class="v" id="tP">0</div></div>
- <div class="tile"><div class="k">נענה היום</div><div class="v" id="tT">0</div></div>
- <div class="tile wait"><div class="k">לידים פתוחים</div><div class="v" id="tL">0</div></div>
-</div>
 
 <div class="alerts" id="alerts">
  <div>
@@ -2056,6 +2051,8 @@ document.getElementById('netSeg').addEventListener('click',function(e){
 var liveSeen=null;
 function paintLive(v){
  var bar=document.getElementById('liveBar');
+ // The strip was removed from the home screen at his request. Everything else
+ // in here still runs, so if it ever comes back nothing needs rewiring.
  if(!bar)return;
  var now=(v&&v.now)||D.now;
  var what=document.getElementById('liveWhat');
@@ -3122,7 +3119,22 @@ fForm.addEventListener('submit',function(e){
  if(qMode==='normal')shrinkAll(list,reallySend);
  else reallySend(list);
 });
-if(location.hash==='#chat'){pane('m');markChatSeen();}
+// Arriving from a push notification. He taps the banner, lands in the chat,
+// and then cannot find the message it was about: the thread is long and the
+// answer sits among two hundred others. Now the screen jumps to the first
+// unread bubble and lights it for a moment.
+function jumpToUnread(){
+ var host=document.getElementById('thread');
+ if(!host)return;
+ var el=host.querySelector('.bub.fresh');
+ if(!el)return;
+ try{el.scrollIntoView({block:'center',behavior:'smooth'});}catch(e){el.scrollIntoView();}
+ ringFor(el,2200);
+}
+if(location.hash==='#chat'){
+ pane('m');markChatSeen();
+ setTimeout(jumpToUnread,350);
+}
 if(location.hash==='#sent'){
  fSaid.textContent='הקובץ נשלח. הוא מחכה לי במייל.';
  pane('m');
