@@ -898,6 +898,19 @@ body.editing .bn{display:none}
 .pillbig:active{transform:scale(.96)}
 .pillbig.done{background:linear-gradient(180deg,#69f0ae,var(--green));
  box-shadow:0 18px 44px rgba(52,168,83,.45),inset 0 4px 0 rgba(255,255,255,.4)}
+/* The question before the count starts. He reports late sometimes, and eight
+   hours from the tap would drift the next dose. So the tap asks first. */
+.sheet{margin-top:14px;padding:14px 16px;border-radius:18px;background:var(--surface);
+ border:2px solid var(--accent);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}
+.sheet b{font:600 16px Heebo,sans-serif;line-height:1.45}
+.sheetrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sheetrow label{font-size:13px;color:var(--dim)}
+.sheet input[type=time]{font:500 18px Heebo,sans-serif;padding:8px 12px;border-radius:12px;
+ border:1px solid var(--line);background:var(--sunk);color:var(--ink)}
+.sbtn{border:1px solid var(--line);background:var(--sunk);color:var(--ink);border-radius:999px;
+ padding:9px 16px;font:500 14px Heebo,sans-serif;cursor:pointer}
+.sbtn.main{background:var(--accent);color:#fff;border-color:var(--accent)}
+.sbtn.quiet{align-self:flex-start;background:transparent;color:var(--dim)}
 .pillinfo{margin-top:20px;font-size:16px;color:var(--ink);line-height:1.9}
 .pillinfo b{display:block;font:800 22px Heebo,sans-serif;color:var(--accent)}
 .pillinfo small{display:block;color:var(--dim);font-size:13px;font-weight:300}
@@ -1266,6 +1279,19 @@ body.editing .bn{display:none}
    <span class="pb-t">לקחתי כדור</span>
   </button>
   <div class="pillinfo" id="pillInfo"></div>
+  <div class="sheet" id="pillSheet" hidden>
+   <b id="pillQ">השעה עכשיו. לקחת את הכדור מוקדם יותר?</b>
+   <div class="sheetrow">
+    <button type="button" id="pillNow" class="sbtn main">לא, עכשיו</button>
+    <button type="button" id="pillEarlier" class="sbtn">כן, בשעה אחרת</button>
+   </div>
+   <div class="sheetrow" id="pillTimeRow" hidden>
+    <label for="pillTime">השעה שבה לקחת</label>
+    <input type="time" id="pillTime">
+    <button type="button" id="pillOk" class="sbtn main">אישור</button>
+   </div>
+   <button type="button" id="pillCancel" class="sbtn quiet">ביטול</button>
+  </div>
  </div>
 </section>
 
@@ -2010,14 +2036,18 @@ function updateDot(){
 }
 var PANES={a:'pA',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
-var PILLGAP=8*3600*1000;
+var PILLGAP=ML.PILL_GAP;
+// The last dose. From the chat it is read out of the message text, because he
+// confirms the hour he took it and that hour is what the count runs from.
 function lastPill(){
  var c=(D.chat||[]).filter(function(m){return m.from==='itzik'&&/לקחתי כדור/.test(m.text||'');});
  var local=0;
  try{local=Number(localStorage.getItem('lastPill')||0);}catch(e){}
- var fromChat=c.length?Date.parse(c[c.length-1].at||'')||0:0;
+ var last=c.length?c[c.length-1]:null;
+ var fromChat=last?ML.parsePillTime(last.text,last.at):0;
  return Math.max(local,fromChat);
 }
+function hm(x){return x.getHours()+':'+String(x.getMinutes()).padStart(2,'0');}
 function renderPill(){
  var box=document.getElementById('pillInfo');
  var btn=document.getElementById('pillBig');
@@ -2025,18 +2055,39 @@ function renderPill(){
  var t=lastPill();
  if(!t){
   btn.className='pillbig';
-  box.innerHTML='<b>עוד לא נרשמה מנה</b><small>לחיצה על העיגול מסמנת שלקחת ומתחילה את הספירה למנה הבאה.</small>';
+  box.innerHTML='<b>עוד לא נרשמה מנה</b><small>לחיצה על העיגול שואלת מתי לקחת, ומשם מתחילה הספירה למנה הבאה.</small>';
   return;
  }
- var next=t+PILLGAP,left=next-Date.now();
- function hm(x){return x.getHours()+':'+String(x.getMinutes()).padStart(2,'0');}
- btn.className='pillbig'+(left>0?' done':'');
- var when=left>0
-  ?('בעוד '+Math.floor(left/3600000)+' שעות ו'+Math.round(left%3600000/60000)+' דקות')
-  :'עכשיו';
+ var s=ML.pillState(t,Date.now());
+ btn.className='pillbig'+(s.due?'':' done');
+ var when=s.due?'עכשיו'
+  :('בעוד '+Math.floor(s.left/3600000)+' שעות ו'+Math.round(s.left%3600000/60000)+' דקות');
  box.innerHTML='<b>המנה הבאה '+esc(when)+'</b>'
-  +'<div>בשעה '+esc(hm(new Date(next)))+'</div>'
+  +'<div>בשעה '+esc(hm(new Date(s.next)))+'</div>'
   +'<small>המנה האחרונה נרשמה ב'+esc(hm(new Date(t)))+'. אזכיר לך גם בהתראה לנייד.</small>';
+}
+// The sheet. Nothing is counted until he answers it.
+function openPillSheet(){
+ var sh=document.getElementById('pillSheet');
+ if(!sh)return;
+ document.getElementById('pillQ').textContent='השעה עכשיו '+hm(new Date())+'. לקחת את הכדור מוקדם יותר?';
+ document.getElementById('pillTimeRow').hidden=true;
+ document.getElementById('pillTime').value=hm(new Date()).padStart(5,'0');
+ sh.hidden=false;
+ sh.scrollIntoView({block:'center'});
+}
+function closePillSheet(){
+ var sh=document.getElementById('pillSheet');
+ if(sh)sh.hidden=true;
+}
+function recordPill(takenMs){
+ var box=document.getElementById('msgText');
+ box.value='לקחתי כדור בשעה '+hm(new Date(takenMs))+'.';
+ document.getElementById('msgForm').dispatchEvent(new Event('submit',{cancelable:true}));
+ try{localStorage.setItem('lastPill',String(takenMs));}catch(e){}
+ closePillSheet();
+ renderPill();
+ paintNew();
 }
 // More landing pages are coming, so each one is a line here.
 var LANDING=[
@@ -3113,14 +3164,18 @@ document.getElementById('gChat').onclick=function(){pane('m');markChatSeen();};
 document.getElementById('gQueue').onclick=function(){openNet('all');};
 document.getElementById('gReports').onclick=function(){pane('r');markReportsSeen();renderNextReport();};
 document.getElementById('gMail').onclick=function(){pane('e');};
-document.getElementById('gPill').onclick=function(){pane('p');renderPill();};
-document.getElementById('pillBig').onclick=function(){
- var box=document.getElementById('msgText');
- box.value='לקחתי כדור עכשיו.';
- document.getElementById('msgForm').dispatchEvent(new Event('submit',{cancelable:true}));
- try{localStorage.setItem('lastPill',String(Date.now()));}catch(e){}
- renderPill();
-};
+document.getElementById('gPill').onclick=function(){pane('p');renderPill();openPillSheet();};
+document.getElementById('pillBig').onclick=function(){openPillSheet();};
+on('pillNow',function(){recordPill(Date.now());});
+on('pillEarlier',function(){
+ document.getElementById('pillTimeRow').hidden=false;
+ document.getElementById('pillTime').focus();
+});
+on('pillOk',function(){
+ var v=document.getElementById('pillTime').value;
+ recordPill(ML.resolveTaken(v,Date.now()));
+});
+on('pillCancel',closePillSheet);
 on('gAsk',function(){askInChat('');});
 paintReportDot();
 document.getElementById('leads').addEventListener('click',function(e){

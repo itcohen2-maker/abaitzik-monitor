@@ -39,3 +39,17 @@ test('requiring build.js does not build', () => {
   const after = fs.existsSync(out) ? fs.statSync(out).mtimeMs : null;
   assert.equal(before, after, 'require must not write docs/index.html');
 });
+
+test('the pill screen asks whether the pill was taken earlier', () => {
+  const html = renderPage(fixture());
+  for (const id of ['pillSheet', 'pillQ', 'pillNow', 'pillEarlier', 'pillTime', 'pillOk', 'pillCancel']) {
+    assert.ok(html.includes('id="' + id + '"'), 'missing #' + id);
+  }
+  assert.ok(html.includes('type="time" id="pillTime"'));
+  assert.ok(html.includes('לקחת את הכדור מוקדם יותר?'));
+  // The count starts from the hour he confirms, never from the tap itself.
+  assert.ok(html.includes('ML.resolveTaken('));
+  assert.ok(html.includes('ML.parsePillTime('));
+  assert.ok(html.includes('ML.pillState('));
+  assert.ok(html.includes("'לקחתי כדור בשעה '"));
+});
