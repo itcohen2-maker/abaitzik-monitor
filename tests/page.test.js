@@ -224,3 +224,13 @@ test('every inner screen has a way back, its own address, and one search finds i
   assert.ok(html.includes('function searchAll(q){'));
   assert.ok(html.includes('function renderSearch(){'));
 });
+
+test('the last things he asked for are pinned on the home screen', () => {
+  const html = renderPage(fixture({
+    special: [{ at: '2026-09-11T16:30:00', title: 'א', url: 'a.html', note: 'n' }],
+  }));
+  assert.ok(html.includes('id="pinBox"'));
+  assert.ok(html.includes('function renderPin('));
+  assert.ok(html.includes("boot('pin',renderPin);"));
+  assert.ok(html.includes('.pin{background'));
+});

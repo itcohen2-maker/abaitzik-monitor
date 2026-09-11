@@ -840,6 +840,15 @@ body.editing .bn{display:none}
 .g11{background:linear-gradient(150deg,#b9f6ca,#00897b)}
 .g12{background:linear-gradient(150deg,#d1c4e9,#5e35b1)}
 .g13{background:linear-gradient(150deg,#ffd27f,#ef6c00)}
+/* The last thing he asked me for, sitting on the home screen itself. He could
+   not find the print page through search and asked to have it pinned. */
+.pin{background:linear-gradient(150deg,#fff4e0,#ffe3b8);border:1px solid #f0c987;
+ border-radius:var(--r);padding:14px 16px;margin-top:16px}
+.pin .k{font:800 12px Heebo,sans-serif;color:#a35b00;letter-spacing:.4px}
+.pin b{display:block;font:800 17px Heebo,sans-serif;color:#20242c;margin:5px 0 3px}
+.pin small{display:block;color:#6b5a3d;font-size:13px;line-height:1.5}
+.pin a{display:inline-block;margin-top:11px;background:#20242c;color:#fff;text-decoration:none;
+ border-radius:999px;padding:11px 20px;font:800 15px Heebo,sans-serif}
 .backbar{display:block;width:100%;margin:0 0 14px;padding:12px 16px;border:0;cursor:pointer;
  border-radius:var(--r);background:var(--ink);color:#fff;font:800 15px Heebo,sans-serif;text-align:start}
 .backbar:active{transform:translateY(1px)}
@@ -1180,6 +1189,8 @@ body.editing .bn{display:none}
   <button type="button" class="gt g12" id="gPegasus"><b>🐴 פגסוס</b><small>מה נעשה, מה קורה, מה מתוכנן</small></button>
   <button type="button" class="gt g13" id="gSpecial"><b>⭐ בקשות מיוחדות</b><small>מה שביקשת ומוכן, דפים וקבצים</small></button>
  </div>
+
+ <div id="pinBox"></div>
 
  <input type="search" id="gSearch" class="gsearch" autocomplete="off"
   placeholder="חיפוש בכל מה שכתבתי לך, למשל ראש השנה">
@@ -3029,6 +3040,22 @@ function renderSearch(){
  });
 }
 
+function renderPin(){
+ var host=document.getElementById('pinBox');
+ if(!host)return;
+ var S=D.special||[];
+ if(!S.length){host.innerHTML='';return;}
+ // The two most recent, because the thing he is hunting for is usually the
+ // last one or the one before it.
+ host.innerHTML=S.slice(0,2).map(function(u,i){
+  return '<div class="pin"><div class="k">'+(i?'ולפני זה':'האחרון שביקשת')+'</div>'
+   +'<b>'+esc(u.title||'')+'</b>'
+   +(u.note?'<small>'+esc(u.note)+'</small>':'')
+   +(u.url?'<a href="'+esc(u.url)+'">פתיחה</a>':'')
+   +'</div>';
+ }).join('');
+}
+
 function markSpecialSeen(){
  var sp=(D.special||[]);
  if(!sp.length)return;
@@ -4142,6 +4169,7 @@ boot('report',renderNextReport);
 boot('pegasus',renderPegasus);
 boot('improve',renderImprove);
 boot('special',renderSpecial);
+boot('pin',renderPin);
 // A link like #pegasus or #special lands straight on that screen.
 boot('hash',function(){
  var h=(location.hash||'').replace('#','');
