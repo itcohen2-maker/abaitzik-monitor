@@ -250,6 +250,10 @@ h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance
 .alerts small{display:block;color:var(--dim);font-size:12.5px;line-height:1.5;margin-top:2px}
 .abtn{flex:0 0 auto;text-decoration:none;background:var(--accent);color:#fff;border-radius:10px;
  padding:10px 16px;font:500 14px Heebo,sans-serif;white-space:nowrap}
+button.abtn{border:0;cursor:pointer}
+button.abtn[disabled]{opacity:.55}
+.alerts.ok{border-color:var(--ok,#0B6B5E)}
+.alerts.ok b::after{content:" ¹3";color:var(--ok,#0B6B5E)}
 .codebox{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
  padding:13px 15px;margin-top:14px;box-shadow:var(--shadow)}
 .codebox b{display:block;font:500 15px Heebo,sans-serif}
@@ -1259,6 +1263,13 @@ body.editing .bn{display:none}
   <small>מתקינים את האפליקציה ntfy, לוחצים על הכפתור, ובוחרים Subscribe. מאז כל תשובה שלי קופצת כמו וואטסאפ.</small>
  </div>
  <a class="abtn" id="ntfyBtn" href="https://ntfy.sh/abaitzik-cf9044bdcfa8" target="_blank" rel="noopener">הפעלת התראות</a>
+</div>
+<div class="alerts" id="pingBox">
+ <div>
+  <b>בדיקת חיבור</b>
+  <small id="pingSaid">לוחצים, ההודעה יוצאת אליי, והשורה הזאת אומרת מה עבר ומתי חזרתי.</small>
+ </div>
+ <button type="button" class="abtn" id="pingBtn">בדיקה</button>
 </div>
 <div class="codebox" id="codeBox" hidden>
  <b>קוד אישי</b>
@@ -2526,6 +2537,55 @@ setInterval(checkFresh,40000);
 setInterval(function(){paintLive(null);paintNew();},20000);
 document.addEventListener('visibilitychange',function(){if(!document.hidden)checkFresh();});
 
+
+// The connection test. He asked for it after a night where he sent messages and
+// could not tell whether anything reached me. A green light that is always green
+// would be worse than nothing, so this one is measured end to end: the send is a
+// real send and it reports which channel carried it, and the answer only counts
+// when a build newer than his tap actually lands on his phone. Nothing here is
+// simulated, and if both channels are down the line says so.
+function pingState(){
+ try{return JSON.parse(localStorage.getItem('pingState')||'{}')||{};}catch(e){return {};}
+}
+function savePingState(s){
+ try{localStorage.setItem('pingState',JSON.stringify(s));}catch(e){}
+}
+function pingSay(t){
+ var e=document.getElementById('pingSaid');if(e)e.textContent=t;
+}
+function pingPaint(){
+ var st=pingState(),box=document.getElementById('pingBox');
+ if(!box||!st.at)return;
+ var built=D.builtAt||'';
+ if(built&&Date.parse(built)>Date.parse(st.at)){
+  var m=Math.max(1,Math.round((Date.parse(built)-Date.parse(st.at))/60000));
+  box.classList.add('ok');
+  pingSay('חזרתי אליך '+(m===1?'דקה':m+' דקות')+' אחרי הלחיצה. החיבור עובד.');
+ }else{
+  box.classList.remove('ok');
+  pingSay('נשלח '+ago(st.at)+' ועוד לא חזרתי. אם עוברת יותר משעה, משהו אצלי תקוע.');
+ }
+}
+function pingBind(){
+ var btn=document.getElementById('pingBtn');
+ if(!btn)return;
+ btn.addEventListener('click',function(){
+  btn.disabled=true;
+  pingSay('שולח.');
+  var at=new Date().toISOString();
+  sendText('בדיקת חיבור','בדיקת חיבור מהמוניטור. תחזור אליי כדי שאדע שאתה מחובר.','בדיקה')
+  .then(function(how){
+   savePingState({at:at});
+   document.getElementById('pingBox').classList.remove('ok');
+   pingSay((how==='ntfy'?'יצא בערוץ הגיבוי. ':'יצא במייל. ')+'מחכה שאחזור אליך.');
+  }).catch(function(){
+   pingSay('לא יצא. שני הערוצים לא ענו, ואין טעם ללחוץ שוב עד שיש רשת.');
+  }).then(function(){btn.disabled=false;});
+ });
+ pingPaint();
+}
+pingBind();
+setInterval(pingPaint,60000);
 
 // One line straight into the same channel the chat uses, for the small
 // signals: a lead moved to standby, a folder is missing, and so on.
