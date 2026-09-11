@@ -184,7 +184,7 @@ test('the improve screen sits behind a big button under the microphone', () => {
   assert.ok(html.includes('id="growBtn"'));
   assert.ok(html.includes('<section id="pW" hidden>'));
   assert.ok(html.includes('function renderImprove('));
-  assert.ok(html.includes("w:'pW'}"));
+  assert.ok(html.includes("w:'pW'"));
   assert.ok(html.includes('"improve":[{"at":"2026-09-11T10:35:00"'));
   assert.ok(html.includes("boot('improve',renderImprove);"));
 });
@@ -199,4 +199,17 @@ test('a pegasus update that waits on him carries the answer on its own card', ()
   assert.ok(html.includes('<div class="pask">'));
   assert.ok(html.includes("replyBox('פגסוס: '+u.ask)"));
   assert.ok(html.includes('.peg.waiting{'));
+});
+
+test('special requests get their own tile, screen and blink until opened', () => {
+  const html = renderPage(fixture({
+    special: [{ at: '2026-09-11T15:23:00', title: 'דף להדפסה', url: 'print.html', note: 'A4' }],
+  }));
+  assert.ok(html.includes('id="gSpecial"'));
+  assert.ok(html.includes('<section id="pY" hidden>'));
+  assert.ok(html.includes('function renderSpecial('));
+  assert.ok(html.includes("y:'pY'}"));
+  assert.ok(html.includes('"special":[{"at":"2026-09-11T15:23:00"'));
+  assert.ok(html.includes("localStorage.getItem('specialSeen')"));
+  assert.ok(html.includes("mark('gSpecial',!!spTop&&spSeen<spTop,'חדש');"));
 });

@@ -122,6 +122,12 @@ function build() {
   const improve = loadDocs('improve')
     .map(p => ({ at: p.at, what: p.what || '', why: p.why || '', effect: p.effect || '' }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
+  // One off things he asked for that are not a report and not a chat message:
+  // a page to print, a file to keep. He asked for a tile that blinks when one
+  // lands so he can find it without asking me where it went.
+  const special = loadDocs('special')
+    .map(x => ({ at: x.at, title: x.title || '', url: x.url || '', note: x.note || '' }))
+    .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
   const reports = loadDocs('reports')
     .map(r => ({ title: r.title, at: r.at, body: r.body, nets: reportNets(r) }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
@@ -165,6 +171,7 @@ function build() {
     reports,
     pegasus,
     improve,
+    special,
     chat,
   };
 
@@ -832,6 +839,14 @@ body.editing .bn{display:none}
 .g10{background:linear-gradient(150deg,#ffe082,#f57f17)}
 .g11{background:linear-gradient(150deg,#b9f6ca,#00897b)}
 .g12{background:linear-gradient(150deg,#d1c4e9,#5e35b1)}
+.g13{background:linear-gradient(150deg,#ffd27f,#ef6c00)}
+.spec{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+ padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.spec .w{color:var(--dim);font-size:12.5px}
+.spec b{display:block;font:800 16px Heebo,sans-serif;margin:4px 0 3px}
+.spec small{display:block;color:var(--dim);font-size:13.5px;line-height:1.5}
+.spec a{display:inline-block;margin-top:10px;background:#1a73e8;color:#fff;text-decoration:none;
+ border-radius:999px;padding:10px 18px;font:800 14px Heebo,sans-serif}
 /* A tile with something waiting inside it. He asked for the screen to tell him
    where to look: the reports tile when a report he has not opened is up, the
    pill tile when a dose is due. It stops the moment he opens that screen. */
@@ -1151,6 +1166,7 @@ body.editing .bn{display:none}
   <button type="button" class="gt g10" id="gNotes"><b>📝 פתקים</b><small>נכתב, נשמר, לא הולך לאיבוד</small></button>
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
   <button type="button" class="gt g12" id="gPegasus"><b>🐴 פגסוס</b><small>מה נעשה, מה קורה, מה מתוכנן</small></button>
+  <button type="button" class="gt g13" id="gSpecial"><b>⭐ בקשות מיוחדות</b><small>מה שביקשת ומוכן, דפים וקבצים</small></button>
  </div>
 
  <div class="row" id="blkIcons" role="group" aria-label="קיצורים">
@@ -1405,6 +1421,12 @@ body.editing .bn{display:none}
 <section id="pG" hidden>
  <h2>דפי נחיתה</h2>
  <div id="landList"></div>
+</section>
+
+<section id="pY" hidden>
+ <h2>בקשות מיוחדות</h2>
+ <div class="rephint">מה שביקשת ואני הכנתי, עם קישור ישיר. החדש למעלה.</div>
+ <div id="specBox"></div>
 </section>
 
 <section id="pW" hidden>
@@ -2187,6 +2209,12 @@ function paintNew(){
   if(f)f.textContent=label||'';
   if(f&&!on)f.remove();
  }
+ // The special requests tile blinks until he opens it once for that item.
+ var sp=(D.special||[]);
+ var spTop=sp.length?(sp[0].at||''):'';
+ var spSeen='';
+ try{spSeen=localStorage.getItem('specialSeen')||'';}catch(e){}
+ mark('gSpecial',!!spTop&&spSeen<spTop,'חדש');
  mark('gChat',msgs>0,String(msgs));
  mark('gReports',reps>0,String(reps));
  mark('gPill',pillNow,'עכשיו');
@@ -2242,7 +2270,7 @@ function updateDot(){
  d.hidden=!(n&&n>chatSeen());
  document.title=(d.hidden?'':'(1) ')+'אבא איציק בבנייה עצמית';
 }
-var PANES={x:'pX',a:'pA',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW'};
+var PANES={x:'pX',a:'pA',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
 // The last dose. From the chat it is read out of the message text, because he
@@ -2902,6 +2930,28 @@ function renderImprove(){
  wireBoxes(host);
 }
 
+function markSpecialSeen(){
+ var sp=(D.special||[]);
+ if(!sp.length)return;
+ try{localStorage.setItem('specialSeen',sp[0].at||'');}catch(e){}
+ var el=document.getElementById('gSpecial');
+ if(el){el.classList.remove('glow');var f=el.querySelector(':scope > .flag');if(f)f.remove();}
+}
+
+function renderSpecial(){
+ var host=document.getElementById('specBox');
+ if(!host)return;
+ var S=D.special||[];
+ host.innerHTML=replyBox('על הבקשות')+(S.length?S.map(function(u){
+  return '<div class="spec"><div class="w">'+esc(stamp(u.at))+' · '+esc(ago(u.at))+'</div>'
+   +'<b>'+esc(u.title)+'</b>'
+   +(u.note?'<small>'+esc(u.note)+'</small>':'')
+   +(u.url?'<a href="'+esc(u.url)+'">פתיחה</a>':'')
+   +'</div>';
+ }).join(''):'<div class="empty">עוד אין בקשה מוכנה כאן.</div>');
+ wireBoxes(host);
+}
+
 function renderPegasus(){
  var host=document.getElementById('pegBox');
  if(!host)return;
@@ -2938,6 +2988,7 @@ function renderPegasus(){
 }
 on('gPegasus',function(){pane('x');renderPegasus();});
 on('growBtn',function(){pane('w');renderImprove();});
+on('gSpecial',function(){pane('y');renderSpecial();markSpecialSeen();});
 function renderSent(){
  var L=lastSent();var card=document.getElementById('sentCard');
  if(!L){card.hidden=true;return;}
@@ -3987,6 +4038,7 @@ function boot(name,fn){try{fn();}catch(e){bootFailed.push(name);try{console.erro
 boot('report',renderNextReport);
 boot('pegasus',renderPegasus);
 boot('improve',renderImprove);
+boot('special',renderSpecial);
 boot('ask',renderAsk);
 boot('items',render);
 boot('thread',renderThread);
