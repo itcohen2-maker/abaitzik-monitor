@@ -163,3 +163,16 @@ test('one button marks the backlog read, and a server stamp resets it once per p
   assert.ok(html.includes("localStorage.setItem('seenResetAt',stamp)"));
   assert.ok(!html.includes('seen.slice(-400)'), 'the seen cap must hold the whole backlog');
 });
+
+test('a pegasus screen with a tile, and a live working state on the sent card', () => {
+  const html = renderPage(fixture({ pegasus: [{ at: '2026-09-11T11:30:00', did: 'a', now: 'b', plan: 'c' }] }));
+  assert.ok(html.includes('id="gPegasus"'));
+  assert.ok(html.includes('<section id="pX" hidden>'));
+  assert.ok(html.includes('function renderPegasus('));
+  assert.ok(html.includes("var PANES={x:'pX',"));
+  assert.ok(html.includes('"pegasus":[{"at":"2026-09-11T11:30:00"'));
+  assert.ok(html.includes("boot('pegasus',renderPegasus);"));
+  assert.ok(html.includes('.sent.working .s-dot{'));
+  assert.ok(html.includes('@keyframes neon'));
+  assert.ok(html.includes("sub='קיבלתי: '+what"));
+});

@@ -108,6 +108,11 @@ function build() {
       return (a.at || '') < (b.at || '') ? 1 : -1;
     });
 
+  // Short updates from the pegasus session: what was done, what is
+  // happening, what is planned. He asked for a screen that shows only these.
+  const pegasus = loadDocs('pegasus')
+    .map(p => ({ at: p.at, did: p.did || '', now: p.now || '', plan: p.plan || '' }))
+    .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
   const reports = loadDocs('reports')
     .map(r => ({ title: r.title, at: r.at, body: r.body, nets: reportNets(r) }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
@@ -149,6 +154,7 @@ function build() {
     replied: replied.sort((a, b) => (a.repliedAt < b.repliedAt ? 1 : -1)),
     contacts,
     reports,
+    pegasus,
     chat,
   };
 
@@ -253,6 +259,15 @@ h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance
 .sent .s-dot{width:11px;height:11px;flex:0 0 11px;border-radius:50%;background:var(--wait);
  animation:pulse 1.5s infinite}
 .sent.done .s-dot{background:var(--green);animation:none}
+/* While I am on his request the dot runs through every neon there is, so
+   the card reads as alive and not as a note that was left behind. */
+.sent.working .s-dot{width:14px;height:14px;flex-basis:14px;animation:neon 1.2s linear infinite}
+@keyframes neon{0%{background:#39ff14;box-shadow:0 0 10px #39ff14}25%{background:#00f0ff;box-shadow:0 0 12px #00f0ff}
+ 50%{background:#ff2bd6;box-shadow:0 0 12px #ff2bd6}75%{background:#fff700;box-shadow:0 0 12px #fff700}100%{background:#39ff14;box-shadow:0 0 10px #39ff14}}
+@media(prefers-reduced-motion:reduce){.sent.working .s-dot{animation:none;background:#39ff14}}
+.peg{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin-bottom:10px;box-shadow:var(--shadow);font-size:15px;line-height:1.5}
+.peg .w{color:var(--dim);font-size:12px;margin-bottom:4px;font-variant-numeric:tabular-nums}
+.peg b{display:inline-block;min-width:88px;color:var(--accent);font-weight:600}
 .sent b{display:block;font:500 15px Heebo,sans-serif}
 .sent small{display:block;color:var(--dim);font-size:12px;font-weight:300}
 .newbtn{width:100%;display:flex;align-items:center;gap:12px;margin:14px 0 10px;padding:15px 17px;
@@ -775,6 +790,7 @@ body.editing .bn{display:none}
 .g9{background:linear-gradient(150deg,#f48fb1,#ad1457)}
 .g10{background:linear-gradient(150deg,#ffe082,#f57f17)}
 .g11{background:linear-gradient(150deg,#b9f6ca,#00897b)}
+.g12{background:linear-gradient(150deg,#d1c4e9,#5e35b1)}
 /* A tile with something waiting inside it. He asked for the screen to tell him
    where to look: the reports tile when a report he has not opened is up, the
    pill tile when a dose is due. It stops the moment he opens that screen. */
@@ -1087,6 +1103,7 @@ body.editing .bn{display:none}
   <button type="button" class="gt g9" id="gOp"><b>🏥 ניתוח</b><small>מתי, איפה, ומה צריך</small></button>
   <button type="button" class="gt g10" id="gNotes"><b>📝 פתקים</b><small>נכתב, נשמר, לא הולך לאיבוד</small></button>
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
+  <button type="button" class="gt g12" id="gPegasus"><b>🐴 פגסוס</b><small>מה נעשה, מה קורה, מה מתוכנן</small></button>
  </div>
 
  <div class="row" id="blkIcons" role="group" aria-label="קיצורים">
@@ -1341,6 +1358,12 @@ body.editing .bn{display:none}
 <section id="pG" hidden>
  <h2>דפי נחיתה</h2>
  <div id="landList"></div>
+</section>
+
+<section id="pX" hidden>
+ <h2>פגסוס</h2>
+ <div class="rephint">עדכונים קצרים מהסשן של המשחק. לדבר איתי על זה כאן למטה.</div>
+ <div id="pegBox"></div>
 </section>
 
 <section id="pR" hidden>
@@ -2166,7 +2189,7 @@ function updateDot(){
  d.hidden=!(n&&n>chatSeen());
  document.title=(d.hidden?'':'(1) ')+'אבא איציק בבנייה עצמית';
 }
-var PANES={a:'pA',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU'};
+var PANES={x:'pX',a:'pA',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
 // The last dose. From the chat it is read out of the message text, because he
@@ -2806,6 +2829,22 @@ function lastSent(){
 var SENTLABEL={text:'הודעה',mail:'בקשת מייל',file:'קובץ',voice:'הקלטה'};
 // The status comes from the message I write back into the chat: until it is
 // there, the send is still on its way to me.
+// One card per pegasus update, newest first, three lines each. The reply
+// box on top is the place he asked for to talk about the game.
+function renderPegasus(){
+ var host=document.getElementById('pegBox');
+ if(!host)return;
+ var P=D.pegasus||[];
+ host.innerHTML=replyBox('על פגסוס')+(P.length?P.map(function(u){
+  return '<div class="peg"><div class="w">'+esc(stamp(u.at))+' · '+esc(ago(u.at))+'</div>'
+   +(u.did?'<div><b>מה נעשה</b>'+esc(u.did)+'</div>':'')
+   +(u.now?'<div><b>מה קורה</b>'+esc(u.now)+'</div>':'')
+   +(u.plan?'<div><b>מה מתוכנן</b>'+esc(u.plan)+'</div>':'')
+   +'</div>';
+ }).join(''):'<div class="empty">עוד אין עדכון מפגסוס.</div>');
+ wireBoxes(host);
+}
+on('gPegasus',function(){pane('x');renderPegasus();});
 function renderSent(){
  var L=lastSent();var card=document.getElementById('sentCard');
  if(!L){card.hidden=true;return;}
@@ -2814,15 +2853,25 @@ function renderSent(){
  var st=mine.length?(mine[mine.length-1].status||'received'):'';
  var reply=(D.chat||[]).some(function(m){return m.from==='claude'&&(m.at||'')>L.at;});
  var label=SENTLABEL[L.kind]||'הודעה';
- var t,sub,done=false;
+ var t,sub,done=false,working=false;
  if(st==='done'||reply){t=label+' טופלה';sub='עניתי לך. לחץ כאן כדי לקרוא את התשובה.';done=true;}
- else if(st==='working'){t=label+' בעבודה';sub='קלטתי, אני מטפל.';}
+ else if(st==='working'){
+  // He said he loses track here: what did I get, and what am I doing with
+  // it. So the card names the request and what is happening right now.
+  var last=mine[mine.length-1];
+  var what=String(last.text||'').replace(/\s+/g,' ').trim().slice(0,70);
+  var doing=(D.now&&D.now.text)?D.now.text:'';
+  t=label+' בעבודה';
+  sub='קיבלתי: '+what+(doing?' · עכשיו: '+doing:'');
+  working=true;
+ }
  else if(st){t=label+' התקבלה';sub='נכנסה אליי, מחכה לטיפול.';}
  else{t=label+' נשלחה';sub='בדרך אליי. אני בודק את התיבה כל ארבע דקות.';}
- card.className='sent'+(done?' done':'');
+ card.className='sent'+(done?' done':'')+(working?' working':'');
  card.innerHTML='<span class="s-dot"></span><div><b>'+esc(t)+'</b><small>'+esc(sub)+' · '+esc(stamp(L.at))+'</small></div>';
  card.style.cursor=done?'pointer':'';
- card.onclick=done?function(){pane('m');renderThread();markChatSeen();}:null;
+ card.style.cursor=(done||working)?'pointer':'';
+ card.onclick=(done||working)?function(){pane('m');renderThread();markChatSeen();}:null;
 }
 function myCode(){
  try{return localStorage.getItem('monitorCode')||'';}catch(e){return '';}
@@ -3843,6 +3892,7 @@ on('readOld',function(){markAllRead();toast('הכל סומן כנקרא. מה ש
 var bootFailed=[];
 function boot(name,fn){try{fn();}catch(e){bootFailed.push(name);try{console.error('boot '+name,e);}catch(_){}}}
 boot('report',renderNextReport);
+boot('pegasus',renderPegasus);
 boot('ask',renderAsk);
 boot('items',render);
 boot('thread',renderThread);
