@@ -176,3 +176,15 @@ test('a pegasus screen with a tile, and a live working state on the sent card', 
   assert.ok(html.includes('@keyframes neon'));
   assert.ok(html.includes("sub='קיבלתי: '+what"));
 });
+
+test('the improve screen sits behind a big button under the microphone', () => {
+  const html = renderPage(fixture({
+    improve: [{ at: '2026-09-11T10:35:00', what: 'a', why: 'b', effect: 'c' }],
+  }));
+  assert.ok(html.includes('id="growBtn"'));
+  assert.ok(html.includes('<section id="pW" hidden>'));
+  assert.ok(html.includes('function renderImprove('));
+  assert.ok(html.includes("w:'pW'}"));
+  assert.ok(html.includes('"improve":[{"at":"2026-09-11T10:35:00"'));
+  assert.ok(html.includes("boot('improve',renderImprove);"));
+});

@@ -113,6 +113,11 @@ function build() {
   const pegasus = loadDocs('pegasus')
     .map(p => ({ at: p.at, did: p.did || '', now: p.now || '', plan: p.plan || '' }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
+  // How I keep getting better. Each entry is one thing I got wrong or one
+  // thing I changed, in his words: what, why, and what it changes for him.
+  const improve = loadDocs('improve')
+    .map(p => ({ at: p.at, what: p.what || '', why: p.why || '', effect: p.effect || '' }))
+    .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
   const reports = loadDocs('reports')
     .map(r => ({ title: r.title, at: r.at, body: r.body, nets: reportNets(r) }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
@@ -155,6 +160,7 @@ function build() {
     contacts,
     reports,
     pegasus,
+    improve,
     chat,
   };
 
@@ -270,6 +276,26 @@ h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance
 .peg b{display:inline-block;min-width:88px;color:var(--accent);font-weight:600}
 .sent b{display:block;font:500 15px Heebo,sans-serif}
 .sent small{display:block;color:var(--dim);font-size:12px;font-weight:300}
+/* The big button he asked for, right under the microphone and in the same
+   family: one wide pill in the Google colours, so it reads as a twin of the
+   mic and not as another tile. */
+.growbtn{width:100%;display:flex;align-items:center;gap:13px;margin:12px 0 2px;padding:16px 18px;
+ border:0;border-radius:var(--r);cursor:pointer;text-align:start;color:#fff;font-family:Heebo,sans-serif;
+ background:linear-gradient(120deg,#4285F4 0%,#34A853 38%,#FBBC05 70%,#EA4335 100%);
+ box-shadow:0 10px 24px rgba(66,133,244,.32)}
+.growbtn .gb-i{flex:0 0 auto;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;
+ background:rgba(255,255,255,.22);font-size:22px}
+.growbtn .gb-l{flex:1;min-width:0}
+.growbtn b{display:block;font:800 17px Heebo,sans-serif}
+.growbtn small{display:block;font-size:12.5px;opacity:.94;font-weight:300;margin-top:1px}
+.growbtn .gb-c{flex:0 0 auto;min-width:32px;height:32px;border-radius:999px;display:grid;place-items:center;
+ background:rgba(255,255,255,.28);font:800 15px Heebo,sans-serif;padding:0 9px}
+.growbtn:active{transform:translateY(2px) scale(.99)}
+.grow{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+ padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.grow .w{color:var(--dim);font-size:12.5px;margin-bottom:7px}
+.grow div.l{margin-top:8px;font-size:15px;line-height:1.55}
+.grow div.l b{display:block;font:800 13px Heebo,sans-serif;color:var(--accent);margin-bottom:2px}
 .newbtn{width:100%;display:flex;align-items:center;gap:12px;margin:14px 0 10px;padding:15px 17px;
  border:0;border-radius:var(--r);cursor:pointer;text-align:start;color:#fff;font-family:Heebo,sans-serif;
  background:linear-gradient(150deg,#9aa5b8,#6b7688);box-shadow:0 8px 18px rgba(20,30,60,.16)}
@@ -1078,6 +1104,12 @@ body.editing .bn{display:none}
   <button type="button" id="urgBtn" class="urg"><span aria-hidden="true">📎</span>העלאת<br>קובץ</button>
  </div>
 
+ <button type="button" id="growBtn" class="growbtn">
+  <span class="gb-i" aria-hidden="true">✨</span>
+  <span class="gb-l"><b>איך אני משתפר</b><small>מה פיספסתי, מה תיקנתי, ומה זה משנה לך</small></span>
+  <span class="gb-c" id="growCount">0</span>
+ </button>
+
   <div class="sent" id="sentCard" hidden></div>
 <section class="whatsnew" aria-label="מה חדש">
   <div class="wn" id="wnCmds"></div>
@@ -1358,6 +1390,12 @@ body.editing .bn{display:none}
 <section id="pG" hidden>
  <h2>דפי נחיתה</h2>
  <div id="landList"></div>
+</section>
+
+<section id="pW" hidden>
+ <h2>איך אני משתפר</h2>
+ <div class="rephint">כל שורה היא דבר אחד שיצא לי לא טוב ומה שיניתי בעקבות זה. החדש למעלה.</div>
+ <div id="growBox"></div>
 </section>
 
 <section id="pX" hidden>
@@ -2189,7 +2227,7 @@ function updateDot(){
  d.hidden=!(n&&n>chatSeen());
  document.title=(d.hidden?'':'(1) ')+'אבא איציק בבנייה עצמית';
 }
-var PANES={x:'pX',a:'pA',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU'};
+var PANES={x:'pX',a:'pA',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
 // The last dose. From the chat it is read out of the message text, because he
@@ -2831,6 +2869,24 @@ var SENTLABEL={text:'הודעה',mail:'בקשת מייל',file:'קובץ',voice:
 // there, the send is still on its way to me.
 // One card per pegasus update, newest first, three lines each. The reply
 // box on top is the place he asked for to talk about the game.
+// The screen behind the big button: what I got wrong, what I changed, and what
+// it changes for him. He asked to be told how I keep improving myself.
+function renderImprove(){
+ var host=document.getElementById('growBox');
+ if(!host)return;
+ var G=D.improve||[];
+ var c=document.getElementById('growCount');
+ if(c)c.textContent=G.length;
+ host.innerHTML=replyBox('על השיפורים')+(G.length?G.map(function(u){
+  return '<div class="grow"><div class="w">'+esc(stamp(u.at))+' · '+esc(ago(u.at))+'</div>'
+   +(u.what?'<div class="l"><b>מה שיניתי</b>'+esc(u.what)+'</div>':'')
+   +(u.why?'<div class="l"><b>למה</b>'+esc(u.why)+'</div>':'')
+   +(u.effect?'<div class="l"><b>מה זה משנה לך</b>'+esc(u.effect)+'</div>':'')
+   +'</div>';
+ }).join(''):'<div class="empty">עוד לא רשמתי כאן שיפור.</div>');
+ wireBoxes(host);
+}
+
 function renderPegasus(){
  var host=document.getElementById('pegBox');
  if(!host)return;
@@ -2845,6 +2901,7 @@ function renderPegasus(){
  wireBoxes(host);
 }
 on('gPegasus',function(){pane('x');renderPegasus();});
+on('growBtn',function(){pane('w');renderImprove();});
 function renderSent(){
  var L=lastSent();var card=document.getElementById('sentCard');
  if(!L){card.hidden=true;return;}
@@ -3893,6 +3950,7 @@ var bootFailed=[];
 function boot(name,fn){try{fn();}catch(e){bootFailed.push(name);try{console.error('boot '+name,e);}catch(_){}}}
 boot('report',renderNextReport);
 boot('pegasus',renderPegasus);
+boot('improve',renderImprove);
 boot('ask',renderAsk);
 boot('items',render);
 boot('thread',renderThread);
