@@ -840,6 +840,18 @@ body.editing .bn{display:none}
 .g11{background:linear-gradient(150deg,#b9f6ca,#00897b)}
 .g12{background:linear-gradient(150deg,#d1c4e9,#5e35b1)}
 .g13{background:linear-gradient(150deg,#ffd27f,#ef6c00)}
+.backbar{display:block;width:100%;margin:0 0 14px;padding:12px 16px;border:0;cursor:pointer;
+ border-radius:var(--r);background:var(--ink);color:#fff;font:800 15px Heebo,sans-serif;text-align:start}
+.backbar:active{transform:translateY(1px)}
+.gsearch{width:100%;margin:14px 0 0;padding:13px 16px;border:1px solid var(--line);border-radius:var(--r);
+ background:var(--surface);color:var(--ink);font:400 15px Heebo,sans-serif}
+.gres{margin-top:10px}
+.gres .r{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+ padding:12px 14px;margin-bottom:9px;cursor:pointer}
+.gres .r b{display:block;font:800 13px Heebo,sans-serif;color:var(--accent);margin-bottom:3px}
+.gres .r small{display:block;color:var(--dim);font-size:12.5px;margin-bottom:4px}
+.gres .r span{display:block;font-size:14.5px;line-height:1.5}
+.gres .none{color:var(--dim);font-size:14px;padding:8px 2px}
 .spec{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
  padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow)}
 .spec .w{color:var(--dim);font-size:12.5px}
@@ -1168,6 +1180,10 @@ body.editing .bn{display:none}
   <button type="button" class="gt g12" id="gPegasus"><b>🐴 פגסוס</b><small>מה נעשה, מה קורה, מה מתוכנן</small></button>
   <button type="button" class="gt g13" id="gSpecial"><b>⭐ בקשות מיוחדות</b><small>מה שביקשת ומוכן, דפים וקבצים</small></button>
  </div>
+
+ <input type="search" id="gSearch" class="gsearch" autocomplete="off"
+  placeholder="חיפוש בכל מה שכתבתי לך, למשל ראש השנה">
+ <div class="gres" id="gResults"></div>
 
  <div class="row" id="blkIcons" role="group" aria-label="קיצורים">
   <a class="ic" data-net="youtube" href="https://studio.youtube.com/" target="_blank" rel="noopener"><span class="c c-yt">
@@ -2800,9 +2816,32 @@ function paintAnsCount(){
  el.textContent=n?String(n):String(total);
  el.classList.toggle('zero',!n);
 }
+// Every inner screen gets a way back and its own address. He asked for both:
+// a link that opens the screen I am talking about, and a way out of it.
+var PANENAME={x:'pegasus',y:'special',w:'improve',r:'reports',a:'answers',m:'chat'};
+function paneOf(name){
+ for(var k in PANENAME){if(PANENAME[k]===name)return k;}
+ return PANES[name]?name:'';
+}
+function backBar(sec){
+ if(sec.id==='pH')return;
+ if(sec.querySelector(':scope > .backbar'))return;
+ var b=document.createElement('button');
+ b.type='button';b.className='backbar';b.textContent='חזרה למסך הבית';
+ b.onclick=function(){pane('h');};
+ sec.insertBefore(b,sec.firstChild);
+}
 function pane(w){
- for(var k in PANES){document.getElementById(PANES[k]).hidden=(k!==w);}
+ for(var k in PANES){
+  var sec=document.getElementById(PANES[k]);
+  sec.hidden=(k!==w);
+  if(k===w)backBar(sec);
+ }
  for(var n in NAVS){document.getElementById(NAVS[n]).setAttribute('aria-pressed',n===w);}
+ try{
+  var h=PANENAME[w]||(w==='h'?'':w);
+  if(history&&history.replaceState)history.replaceState(null,'',h?('#'+h):location.pathname);
+ }catch(e){}
  window.scrollTo(0,0);
 }
 document.getElementById('reloadBtn').onclick=function(){
@@ -2930,6 +2969,50 @@ function renderImprove(){
  wireBoxes(host);
 }
 
+// One search over everything I ever wrote him: chat, reports, the special
+// requests and the improvements. He lost the link to the print page in the
+// chat and asked for a way to find it again.
+function searchAll(q){
+ q=(q||'').trim();
+ if(q.length<2)return [];
+ var out=[];
+ function add(kind,pane,title,at,text){
+  if((text||'').indexOf(q)<0&&(title||'').indexOf(q)<0)return;
+  out.push({kind:kind,pane:pane,title:title,at:at,text:text});
+ }
+ (D.special||[]).forEach(function(x){add('בקשות מיוחדות','y',x.title,x.at,(x.note||'')+' '+(x.url||''));});
+ (D.reports||[]).forEach(function(x){add('דוח','r',x.title,x.at,x.body);});
+ (D.chat||[]).forEach(function(x){add(x.from==='claude'?'הודעה ממני':'הודעה ממך','m','',x.at,x.text);});
+ (D.improve||[]).forEach(function(x){add('שיפור','w',x.what,x.at,(x.why||'')+' '+(x.effect||''));});
+ out.sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
+ return out.slice(0,25);
+}
+function renderSearch(){
+ var box=document.getElementById('gResults');
+ var inp=document.getElementById('gSearch');
+ if(!box||!inp)return;
+ var q=inp.value.trim();
+ if(q.length<2){box.innerHTML='';return;}
+ var hits=searchAll(q);
+ if(!hits.length){box.innerHTML='<div class="none">לא מצאתי כלום על '+esc(q)+'</div>';return;}
+ box.innerHTML=hits.map(function(h,i){
+  var t=String(h.text||'');
+  var at=t.indexOf(q);
+  var snip=at<0?t.slice(0,150):t.slice(Math.max(0,at-60),at+110);
+  return '<div class="r" data-i="'+i+'"><b>'+esc(h.kind)+'</b>'
+   +'<small>'+esc(stamp(h.at))+(h.title?' · '+esc(h.title):'')+'</small>'
+   +'<span>'+esc(snip)+'</span></div>';
+ }).join('');
+ Array.prototype.forEach.call(box.querySelectorAll('.r'),function(el){
+  el.onclick=function(){
+   var h=hits[Number(el.getAttribute('data-i'))];
+   pane(h.pane);
+   if(h.pane==='y')renderSpecial();
+   if(h.pane==='w')renderImprove();
+  };
+ });
+}
+
 function markSpecialSeen(){
  var sp=(D.special||[]);
  if(!sp.length)return;
@@ -2989,6 +3072,10 @@ function renderPegasus(){
 on('gPegasus',function(){pane('x');renderPegasus();});
 on('growBtn',function(){pane('w');renderImprove();});
 on('gSpecial',function(){pane('y');renderSpecial();markSpecialSeen();});
+(function(){
+ var inp=document.getElementById('gSearch');
+ if(inp)inp.oninput=renderSearch;
+})();
 function renderSent(){
  var L=lastSent();var card=document.getElementById('sentCard');
  if(!L){card.hidden=true;return;}
@@ -4039,6 +4126,17 @@ boot('report',renderNextReport);
 boot('pegasus',renderPegasus);
 boot('improve',renderImprove);
 boot('special',renderSpecial);
+// A link like #pegasus or #special lands straight on that screen.
+boot('hash',function(){
+ var h=(location.hash||'').replace('#','');
+ if(!h)return;
+ var k=paneOf(h);
+ if(!k||k==='h')return;
+ pane(k);
+ if(k==='x')renderPegasus();
+ if(k==='y'){renderSpecial();markSpecialSeen();}
+ if(k==='w')renderImprove();
+});
 boot('ask',renderAsk);
 boot('items',render);
 boot('thread',renderThread);

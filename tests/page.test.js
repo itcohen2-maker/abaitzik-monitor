@@ -213,3 +213,14 @@ test('special requests get their own tile, screen and blink until opened', () =>
   assert.ok(html.includes("localStorage.getItem('specialSeen')"));
   assert.ok(html.includes("mark('gSpecial',!!spTop&&spSeen<spTop,'חדש');"));
 });
+
+test('every inner screen has a way back, its own address, and one search finds it', () => {
+  const html = renderPage(fixture({}));
+  assert.ok(html.includes('function backBar(sec){'));
+  assert.ok(html.includes(".backbar{"));
+  assert.ok(html.includes("var PANENAME={x:'pegasus',y:'special'"));
+  assert.ok(html.includes("boot('hash',function(){"));
+  assert.ok(html.includes('id="gSearch"'));
+  assert.ok(html.includes('function searchAll(q){'));
+  assert.ok(html.includes('function renderSearch(){'));
+});
