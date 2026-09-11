@@ -63,6 +63,10 @@ function reportNets(r) {
 // tests feed it a fixture. Replacements use a function so that a "$&" inside
 // the JSON or the lib source is not expanded by String.replace.
 const LIB = fs.readFileSync(path.join(__dirname, 'lib', 'monitor-logic.js'), 'utf8');
+// He asked on 11.9 to mark everything read and start the count from zero.
+// A phone that has not applied this stamp yet marks every answer written
+// before it as read once, on its next load. Bump the value to reset again.
+const RESET_SEEN_AT = '2026-09-11T10:35:00';
 function renderPage(payload) {
   const data = JSON.stringify(payload).replace(/</g, '\\u003c');
   return PAGE
@@ -132,6 +136,7 @@ function build() {
     now: now ? { at: now.at, text: now.text, next: now.next } : null,
     openCmds,
     builtAt: new Date().toISOString(),
+    resetSeenAt: RESET_SEEN_AT,
     counts: {
       pending: pending.length,
       replied: replied.length,
@@ -639,6 +644,7 @@ body.editing .bn{display:none}
 .picking .bub{padding-inline-start:38px;position:relative}
 .picking .bub.picked:before{background:var(--green);border-color:var(--green);
  content:"¹3";color:#fff;font:700 14px/17px Heebo,sans-serif;text-align:center}
+.cpall.readold{background:var(--green);color:#fff;border-color:var(--green)}
 .cpall{font:600 12.5px Heebo,sans-serif;color:var(--accent);cursor:pointer;
  background:var(--surface);border:1px solid var(--line);border-radius:999px;
  min-height:34px;padding:0 14px}
@@ -1366,6 +1372,7 @@ body.editing .bn{display:none}
   <button type="button" id="pickMode" class="cpall">בחירת הודעות</button>
   <button type="button" id="copyPicked" class="cpall pickon" hidden>העתקת הנבחרות</button>
   <button type="button" id="copyAll" class="cpall">העתקת כל השיחה</button>
+  <button type="button" id="readOld" class="cpall readold">קראתי את הישנות</button>
  </div>
  <div class="thread" id="thread"></div>
  <form id="msgForm">
@@ -2032,7 +2039,7 @@ function markChatSeen(){
     var k=claudeKey(m);
     if(seen.indexOf(k)<0)seen.push(k);
    });
-   if(seen.length>400)seen=seen.slice(-400);
+   if(seen.length>2000)seen=seen.slice(-2000);
    localStorage.setItem('chatSeenIds',JSON.stringify(seen));
   }
  }catch(e){}
@@ -2051,7 +2058,7 @@ function markTouched(m){
   var t=touchedIds();
   var k=claudeKey(m);
   if(t.indexOf(k)<0)t.push(k);
-  if(t.length>600)t=t.slice(-600);
+  if(t.length>2000)t=t.slice(-2000);
   localStorage.setItem('chatTouched',JSON.stringify(t));
  }catch(e){}
 }
@@ -2062,7 +2069,7 @@ function markOneSeen(m){
   var seen=seenIds();
   var k=claudeKey(m);
   if(seen.indexOf(k)<0)seen.push(k);
-  if(seen.length>400)seen=seen.slice(-400);
+  if(seen.length>2000)seen=seen.slice(-2000);
   localStorage.setItem('chatSeenIds',JSON.stringify(seen));
  }catch(e){}
  paintDot();
@@ -3813,6 +3820,26 @@ on('arrangeBtn',function(){
 // decides which screen is visible. The result on his phone was a blank page and
 // "the site is not coming up", with nothing to say what happened. Each step is
 // now on its own, and the screen opens even if one of them fails.
+// One button for the backlog: every answer of mine up to the cutoff (or all
+// of them) becomes read and handled, the count drops to zero, and only what
+// arrives afterwards turns red again.
+function markAllRead(cutoff){
+ try{
+  var seen=seenIds(),t=touchedIds();
+  (D.chat||[]).forEach(function(m){
+   if(m.from!=='claude')return;
+   if(cutoff&&(m.at||'')>cutoff)return;
+   var k=claudeKey(m);
+   if(seen.indexOf(k)<0)seen.push(k);
+   if(t.indexOf(k)<0)t.push(k);
+  });
+  localStorage.setItem('chatSeenIds',JSON.stringify(seen.slice(-2000)));
+  localStorage.setItem('chatTouched',JSON.stringify(t.slice(-2000)));
+  localStorage.setItem('chatSeen',newestClaude());
+ }catch(e){}
+ paintDot();renderNew();renderThread();
+}
+on('readOld',function(){markAllRead();toast('הכל סומן כנקרא. מה שיגיע מעכשיו יהיה אדום.');});
 var bootFailed=[];
 function boot(name,fn){try{fn();}catch(e){bootFailed.push(name);try{console.error('boot '+name,e);}catch(_){}}}
 boot('report',renderNextReport);
@@ -3825,6 +3852,15 @@ boot('dot',updateDot);
 // The last word on which screen opens. This runs after everything else, so a
 // plain pane('h') here quietly undid the notification landing above: he tapped
 // the banner and got the home screen with no sign of what was new.
+boot('reset',function(){
+ var stamp=D.resetSeenAt||'';
+ if(!stamp)return;
+ var done='';
+ try{done=localStorage.getItem('seenResetAt')||'';}catch(e){}
+ if(done>=stamp)return;
+ markAllRead(stamp);
+ try{localStorage.setItem('seenResetAt',stamp);}catch(e){}
+});
 boot('pane',function(){
  if(location.hash==='#new'){pane('m');renderThread();}
  else if(location.hash==='#chat'){pane('m');}

@@ -152,3 +152,14 @@ test('thread cards never shrink inside the flex thread column', () => {
   const html = renderPage(fixture());
   assert.ok(html.includes('.th{flex:none;'));
 });
+
+test('one button marks the backlog read, and a server stamp resets it once per phone', () => {
+  const html = renderPage(fixture({ resetSeenAt: '2026-09-11T10:35:00' }));
+  assert.ok(html.includes('id="readOld"'));
+  assert.ok(html.includes('function markAllRead(cutoff)'));
+  assert.ok(html.includes("on('readOld',function(){markAllRead();"));
+  assert.ok(html.includes('"resetSeenAt":"2026-09-11T10:35:00"'));
+  assert.ok(html.includes("boot('reset',function(){"));
+  assert.ok(html.includes("localStorage.setItem('seenResetAt',stamp)"));
+  assert.ok(!html.includes('seen.slice(-400)'), 'the seen cap must hold the whole backlog');
+});
