@@ -2838,9 +2838,10 @@ function pane(w){
   if(k===w)backBar(sec);
  }
  for(var n in NAVS){document.getElementById(NAVS[n]).setAttribute('aria-pressed',n===w);}
+ // The hash is only an incoming address. Writing it on every move made the
+ // app reopen on an inner screen and feel like it jumped on its own.
  try{
-  var h=PANENAME[w]||(w==='h'?'':w);
-  if(history&&history.replaceState)history.replaceState(null,'',h?('#'+h):location.pathname);
+  if(location.hash&&history&&history.replaceState)history.replaceState(null,'',location.pathname);
  }catch(e){}
  window.scrollTo(0,0);
 }
@@ -3009,6 +3010,21 @@ function renderSearch(){
    pane(h.pane);
    if(h.pane==='y')renderSpecial();
    if(h.pane==='w')renderImprove();
+   // Land on the line he searched for, not at the top of a long screen.
+   setTimeout(function(){
+    var host=document.getElementById(PANES[h.pane]);
+    if(!host)return;
+    var all=host.querySelectorAll('div,p,li');
+    for(var i=0;i<all.length;i++){
+     if((all[i].textContent||'').indexOf(q)>=0&&all[i].children.length<3){
+      try{all[i].scrollIntoView({block:'center'});}catch(e){}
+      all[i].style.outline='3px solid var(--accent)';
+      all[i].style.borderRadius='10px';
+      setTimeout(function(el2){return function(){el2.style.outline='';};}(all[i]),2600);
+      break;
+     }
+    }
+   },60);
   };
  });
 }
