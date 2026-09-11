@@ -136,3 +136,12 @@ test('standby and re are keyed on the thread root from every screen', () => {
   assert.ok(html.includes('re:rootKeyFor(m)'));
   assert.ok(!html.includes("ML.keyOf(m))"), 'no standby keyed on a bare message key');
 });
+
+test('the red button and the push both open the thread cards, newest labelled', () => {
+  const html = renderPage(fixture());
+  assert.ok(html.includes("document.getElementById('newBtn').onclick=function(){\n if(unreadCount())beep();"));
+  assert.ok(!html.includes("pane('a');renderAnswers();\n};\nfunction renderUnread"), 'newBtn must not open the flat answers list');
+  assert.ok(html.includes("if(location.hash==='#new'){pane('m');renderThread();}"));
+  assert.ok(html.includes('<em class="badge latest">האחרונה שהגיעה</em>'));
+  assert.ok(html.includes('.badge.latest{'));
+});

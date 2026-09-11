@@ -398,6 +398,7 @@ section{margin-bottom:30px}
 @media(prefers-reduced-motion:reduce){.bub.fresh{animation:none}}
 .bub.touched{animation:none;border:2px solid var(--green);background:var(--fresh)}
 .badge.ok{background:var(--green)}
+.badge.latest{background:#fff;color:var(--red);font-size:14px;padding:3px 12px;border:2px solid var(--red)}
 .bub.read{opacity:.72}
 .badge{font-style:normal;font-weight:700;background:var(--red);color:#fff;
  padding:1px 8px;border-radius:999px;font-size:11px}
@@ -1704,7 +1705,7 @@ function renderThread(){
  host.innerHTML=rows.map(function(r,ri){
   var t=r.thread;
   var head=String(t.root.text||'').replace(/\s+/g,' ').trim().slice(0,70);
-  var tag=r.status==='fresh'?'<em class="badge">חדש</em>'
+  var tag=r.status==='fresh'?(ri===0?'<em class="badge latest">האחרונה שהגיעה</em>':'<em class="badge">חדש</em>')
    :r.status==='standby'?'<em class="st st-working">ממתין לתשובה</em>'
    :'<em class="badge ok">נקרא</em>';
   var body=t.msgs.map(function(m){
@@ -1717,7 +1718,7 @@ function renderThread(){
   var whole=t.msgs.map(function(m){return (m.from==='itzik'?'איציק':'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');}).join(String.fromCharCode(10,10));
   return '<details class="th th-'+r.status+'" data-k="'+esc(t.key)+'"'+(ri===0&&r.status==='fresh'?' open':'')+'>'
    +'<summary><span class="num">'+r.n+'</span><b>'+esc(head)+'</b>'+tag
-   +'<small>'+esc(stamp(t.last))+' · '+t.msgs.length+'</small>'
+   +'<small>'+esc(stamp(t.last))+' · '+esc(ago(t.last))+' · '+t.msgs.length+'</small>'
    +'<button type="button" class="cp rcopyall" data-copy="'+esc(whole)+'" aria-label="העתקת השרשור">העתקת השרשור</button>'
    +'</summary>'
    +'<div class="thbody">'+body
@@ -2733,12 +2734,11 @@ document.getElementById('plusBtn').onclick=function(){
 // a screen that holds only what he has not read.
 document.getElementById('newBtn').onclick=function(){
  if(unreadCount())beep();
- // Used to open the unread screen, which empties itself the moment he reads
- // a message. It now opens the answers screen, filtered to the unread ones,
- // and everything stays reachable from the same place afterwards.
- ansFilter=unreadCount()?'fresh':'all';ansQ='';
- var sb=document.getElementById('aSearch');if(sb)sb.value='';
- pane('a');renderAnswers();
+ // Opens the thread cards. The unread ones sit first, newest at the top and
+ // labelled as the latest, so he can tell at a glance which answer is the
+ // last one and which are older. The flat answers list is still under the
+ // תשובות tab.
+ pane('m');renderThread();
 };
 function renderUnread(){
  var host=document.getElementById('unreadBox');
@@ -3564,7 +3564,7 @@ function jumpToUnread(){
 // A push notification lands here. Straight to the unread screen, which is the
 // only place he asked for: what is new, and nothing else.
 if(location.hash==='#new'){
- pane('u');renderUnread();
+ pane('m');renderThread();
  setTimeout(function(){markChatSeen();renderNew();},50);
 }
 if(location.hash==='#chat'){
@@ -3826,7 +3826,7 @@ boot('dot',updateDot);
 // plain pane('h') here quietly undid the notification landing above: he tapped
 // the banner and got the home screen with no sign of what was new.
 boot('pane',function(){
- if(location.hash==='#new'){pane('u');renderUnread();}
+ if(location.hash==='#new'){pane('m');renderThread();}
  else if(location.hash==='#chat'){pane('m');}
  else pane('h');
 });
