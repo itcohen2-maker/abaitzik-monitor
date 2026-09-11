@@ -843,12 +843,13 @@ body.editing .bn{display:none}
 /* The last thing he asked me for, sitting on the home screen itself. He could
    not find the print page through search and asked to have it pinned. */
 .pin{background:linear-gradient(150deg,#fff4e0,#ffe3b8);border:1px solid #f0c987;
- border-radius:var(--r);padding:14px 16px;margin-top:16px}
-.pin .k{font:800 12px Heebo,sans-serif;color:#a35b00;letter-spacing:.4px}
-.pin b{display:block;font:800 17px Heebo,sans-serif;color:#20242c;margin:5px 0 3px}
-.pin small{display:block;color:#6b5a3d;font-size:13px;line-height:1.5}
-.pin a{display:inline-block;margin-top:11px;background:#20242c;color:#fff;text-decoration:none;
- border-radius:999px;padding:11px 20px;font:800 15px Heebo,sans-serif}
+ border-radius:12px;padding:9px 12px;margin-top:9px;display:flex;align-items:center;gap:10px}
+.pin .t{flex:1;min-width:0}
+.pin .k{font:800 10.5px Heebo,sans-serif;color:#a35b00;letter-spacing:.3px}
+.pin b{display:block;font:800 14px Heebo,sans-serif;color:#20242c;
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pin a{flex:0 0 auto;background:#20242c;color:#fff;text-decoration:none;
+ border-radius:999px;padding:8px 15px;font:800 13px Heebo,sans-serif}
 .backbar{display:block;width:100%;margin:0 0 14px;padding:12px 16px;border:0;cursor:pointer;
  border-radius:var(--r);background:var(--ink);color:#fff;font:800 15px Heebo,sans-serif;text-align:start}
 .backbar:active{transform:translateY(1px)}
@@ -1714,9 +1715,29 @@ function reportRow(r,n){
   +'<div class="repreply">'+replyBox('על הדוח "'+(r.title||'דוח')+'" מ'+stamp(r.at))+'</div>'
   +'</details>';
 }
+// He said the three tiles are not connected to anything: he sends me messages
+// and the counter still says nothing. So the first tile now counts what HE
+// sent that I have not answered yet, and the second what I answered today.
+function myPending(){
+ var c=(D.chat||[]).slice().sort(function(a,b){return (a.at||'')<(b.at||'')?-1:1;});
+ var last='';
+ for(var i=c.length-1;i>=0;i--){if(c[i].from==='claude'){last=c[i].at||'';break;}}
+ var n=0;
+ for(var j=0;j<c.length;j++){
+  if(c[j].from!=='claude'&&(c[j].at||'')>last&&c[j].status!=='done')n++;
+ }
+ return n;
+}
+function answeredToday(){
+ var d=new Date();
+ var day=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+ return (D.chat||[]).filter(function(m){
+  return m.from==='claude'&&String(m.at||'').slice(0,10)===day;
+ }).length;
+}
 function render(){
- document.getElementById('tP').textContent=D.counts.pending;
- document.getElementById('tT').textContent=D.counts.today;
+ document.getElementById('tP').textContent=myPending();
+ document.getElementById('tT').textContent=answeredToday();
  document.getElementById('tL').textContent=D.counts.leads||0;
  document.getElementById('bP').setAttribute('aria-pressed',tab==='pending');
  document.getElementById('bD').setAttribute('aria-pressed',tab==='done');
@@ -3048,9 +3069,8 @@ function renderPin(){
  // The two most recent, because the thing he is hunting for is usually the
  // last one or the one before it.
  host.innerHTML=S.slice(0,2).map(function(u,i){
-  return '<div class="pin"><div class="k">'+(i?'ולפני זה':'האחרון שביקשת')+'</div>'
-   +'<b>'+esc(u.title||'')+'</b>'
-   +(u.note?'<small>'+esc(u.note)+'</small>':'')
+  return '<div class="pin"><div class="t"><div class="k">'+(i?'ולפני זה':'האחרון שביקשת')+'</div>'
+   +'<b>'+esc(u.title||'')+'</b></div>'
    +(u.url?'<a href="'+esc(u.url)+'">פתיחה</a>':'')
    +'</div>';
  }).join('');

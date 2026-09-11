@@ -234,3 +234,11 @@ test('the last things he asked for are pinned on the home screen', () => {
   assert.ok(html.includes("boot('pin',renderPin);"));
   assert.ok(html.includes('.pin{background'));
 });
+
+test('the first two tiles count his own waiting messages and my answers today', () => {
+  const html = renderPage(fixture({}));
+  assert.ok(html.includes('function myPending(){'));
+  assert.ok(html.includes('function answeredToday(){'));
+  assert.ok(html.includes("document.getElementById('tP').textContent=myPending();"));
+  assert.ok(html.includes("document.getElementById('tT').textContent=answeredToday();"));
+});
