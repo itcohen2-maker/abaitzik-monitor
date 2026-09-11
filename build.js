@@ -126,7 +126,8 @@ function build() {
   // a page to print, a file to keep. He asked for a tile that blinks when one
   // lands so he can find it without asking me where it went.
   const special = loadDocs('special')
-    .map(x => ({ at: x.at, title: x.title || '', url: x.url || '', note: x.note || '' }))
+    .map(x => ({ at: x.at, title: x.title || '', url: x.url || '',
+                 note: x.note || '', copy: x.copy || '' }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
   const reports = loadDocs('reports')
     .map(r => ({ title: r.title, at: r.at, body: r.body, nets: reportNets(r) }))
@@ -867,6 +868,11 @@ body.editing .bn{display:none}
 .spec .w{color:var(--dim);font-size:12.5px}
 .spec b{display:block;font:800 16px Heebo,sans-serif;margin:4px 0 3px}
 .spec small{display:block;color:var(--dim);font-size:13.5px;line-height:1.5}
+.cptext{background:var(--bg);border:1px dashed var(--line);border-radius:10px;
+ padding:11px 13px;margin-top:10px;font-size:15px;line-height:1.6;white-space:pre-wrap}
+.cpbtn{display:inline-block;margin-top:10px;margin-inline-end:8px;border:1px solid var(--line);
+ background:var(--surface);color:var(--ink);border-radius:999px;padding:10px 18px;
+ font:800 14px Heebo,sans-serif;cursor:pointer}
 .spec a{display:inline-block;margin-top:10px;background:#1a73e8;color:#fff;text-decoration:none;
  border-radius:999px;padding:10px 18px;font:800 14px Heebo,sans-serif}
 /* A tile with something waiting inside it. He asked for the screen to tell him
@@ -3092,9 +3098,20 @@ function renderSpecial(){
   return '<div class="spec"><div class="w">'+esc(stamp(u.at))+' · '+esc(ago(u.at))+'</div>'
    +'<b>'+esc(u.title)+'</b>'
    +(u.note?'<small>'+esc(u.note)+'</small>':'')
+   +(u.copy?'<div class="cptext">'+esc(u.copy)+'</div>'
+     +'<button type="button" class="cpbtn" data-t="'+esc(u.copy)+'">העתקת הטקסט</button>':'')
    +(u.url?'<a href="'+esc(u.url)+'">פתיחה</a>':'')
    +'</div>';
  }).join(''):'<div class="empty">עוד אין בקשה מוכנה כאן.</div>');
+ Array.prototype.forEach.call(host.querySelectorAll('.cpbtn'),function(b){
+  b.onclick=function(){
+   var t=b.getAttribute('data-t')||'';
+   var done=function(){b.textContent='הועתק';setTimeout(function(){b.textContent='העתקת הטקסט';},1600);};
+   if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(done,function(){fallbackCopy(t,done);});
+   }else fallbackCopy(t,done);
+  };
+ });
  wireBoxes(host);
 }
 
