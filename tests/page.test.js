@@ -188,3 +188,15 @@ test('the improve screen sits behind a big button under the microphone', () => {
   assert.ok(html.includes('"improve":[{"at":"2026-09-11T10:35:00"'));
   assert.ok(html.includes("boot('improve',renderImprove);"));
 });
+
+test('a pegasus update that waits on him carries the answer on its own card', () => {
+  const html = renderPage(fixture({
+    pegasus: [{ at: '2026-09-11T11:30:00', did: 'a', now: 'b', plan: 'c',
+                ask: 'מזג האוויר לזירה שתיים', opts: ['חורף עם גשם', 'בוקר קר'] }],
+  }));
+  assert.ok(html.includes('"ask":"מזג האוויר לזירה שתיים"'));
+  assert.ok(html.includes('"opts":["חורף עם גשם","בוקר קר"]'));
+  assert.ok(html.includes('<div class="pask">'));
+  assert.ok(html.includes("replyBox('פגסוס: '+u.ask)"));
+  assert.ok(html.includes('.peg.waiting{'));
+});

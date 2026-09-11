@@ -110,8 +110,12 @@ function build() {
 
   // Short updates from the pegasus session: what was done, what is
   // happening, what is planned. He asked for a screen that shows only these.
+  // `ask` is the part of an update that is waiting on him, and `opts` are the
+  // ready answers. He asked to answer on the card itself, not to scroll down
+  // and write a message about which update he means.
   const pegasus = loadDocs('pegasus')
-    .map(p => ({ at: p.at, did: p.did || '', now: p.now || '', plan: p.plan || '' }))
+    .map(p => ({ at: p.at, did: p.did || '', now: p.now || '', plan: p.plan || '',
+                 ask: p.ask || '', opts: Array.isArray(p.opts) ? p.opts : [] }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
   // How I keep getting better. Each entry is one thing I got wrong or one
   // thing I changed, in his words: what, why, and what it changes for him.
@@ -279,6 +283,17 @@ h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance
 /* The big button he asked for, right under the microphone and in the same
    family: one wide pill in the Google colours, so it reads as a twin of the
    mic and not as another tile. */
+/* An update that is waiting on him says so on the card, and carries the answer
+   right there: the ready options, and the same voice, text, camera and file
+   row as everywhere else. */
+.peg.waiting{border-inline-start:4px solid var(--accent)}
+.pask{margin-top:11px;padding-top:11px;border-top:1px dashed var(--line)}
+.pask .q{font:800 15px Heebo,sans-serif;margin-bottom:9px}
+.popts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.popts button{border:1px solid var(--line);background:var(--surface);color:var(--ink);
+ border-radius:999px;padding:9px 15px;font:700 14px Heebo,sans-serif;cursor:pointer}
+.popts button:active{transform:translateY(1px)}
+.popts button[disabled]{opacity:.55;cursor:default}
 .growbtn{width:100%;display:flex;align-items:center;gap:13px;margin:12px 0 2px;padding:16px 18px;
  border:0;border-radius:var(--r);cursor:pointer;text-align:start;color:#fff;font-family:Heebo,sans-serif;
  background:linear-gradient(120deg,#4285F4 0%,#34A853 38%,#FBBC05 70%,#EA4335 100%);
@@ -2891,13 +2906,34 @@ function renderPegasus(){
  var host=document.getElementById('pegBox');
  if(!host)return;
  var P=D.pegasus||[];
- host.innerHTML=replyBox('על פגסוס')+(P.length?P.map(function(u){
-  return '<div class="peg"><div class="w">'+esc(stamp(u.at))+' · '+esc(ago(u.at))+'</div>'
+ host.innerHTML=replyBox('על פגסוס')+(P.length?P.map(function(u,pi){
+  return '<div class="peg'+(u.ask?' waiting':'')+'"><div class="w">'+esc(stamp(u.at))+' · '+esc(ago(u.at))+'</div>'
    +(u.did?'<div><b>מה נעשה</b>'+esc(u.did)+'</div>':'')
    +(u.now?'<div><b>מה קורה</b>'+esc(u.now)+'</div>':'')
    +(u.plan?'<div><b>מה מתוכנן</b>'+esc(u.plan)+'</div>':'')
+   +(u.ask?'<div class="pask"><div class="q">מחכה לך: '+esc(u.ask)+'</div>'
+     +(u.opts.length?'<div class="popts" data-p="'+pi+'">'+u.opts.map(function(o,oi){
+        return '<button type="button" data-o="'+oi+'">'+esc(o)+'</button>';}).join('')+'</div>':'')
+     +replyBox('פגסוס: '+u.ask)+'</div>':'')
    +'</div>';
  }).join(''):'<div class="empty">עוד אין עדכון מפגסוס.</div>');
+ Array.prototype.forEach.call(host.querySelectorAll('.popts'),function(row){
+  var u=P[Number(row.getAttribute('data-p'))];
+  Array.prototype.forEach.call(row.querySelectorAll('button'),function(b){
+   b.onclick=function(){
+    var pick=u.opts[Number(b.getAttribute('data-o'))];
+    Array.prototype.forEach.call(row.querySelectorAll('button'),function(x){x.disabled=true;});
+    b.textContent='נבחר';
+    sendText('תשובה מהמוניטור','פגסוס: '+u.ask+' ← '+pick,'בחירה').then(function(){
+     toast('נבחר: '+pick+'. אני ממשיך לפי זה.');
+    }).catch(function(){
+     Array.prototype.forEach.call(row.querySelectorAll('button'),function(x){x.disabled=false;});
+     b.textContent=pick;
+     toast('הבחירה לא נשלחה. תנסה שוב.');
+    });
+   };
+  });
+ });
  wireBoxes(host);
 }
 on('gPegasus',function(){pane('x');renderPegasus();});
