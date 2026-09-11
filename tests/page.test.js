@@ -145,3 +145,10 @@ test('the red button and the push both open the thread cards, newest labelled', 
   assert.ok(html.includes('<em class="badge latest">האחרונה שהגיעה</em>'));
   assert.ok(html.includes('.badge.latest{'));
 });
+
+test('thread cards never shrink inside the flex thread column', () => {
+  // overflow:hidden drops a flex item's min-height to zero, so without
+  // flex:none every card collapsed to its borders on the phone.
+  const html = renderPage(fixture());
+  assert.ok(html.includes('.th{flex:none;'));
+});

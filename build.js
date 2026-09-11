@@ -428,7 +428,7 @@ section{margin-bottom:30px}
 /* One card per thread. Red until he touches it, amber while he waits on me,
    green once it is done. The number is its place in the list right now, so
    it changes when a reply lands and the card jumps up. */
-.th{background:var(--surface);border:2px solid var(--line);border-radius:var(--r);
+.th{flex:none;background:var(--surface);border:2px solid var(--line);border-radius:var(--r);
  margin-bottom:12px;box-shadow:var(--shadow);overflow:hidden}
 .th>summary{list-style:none;display:flex;align-items:center;gap:9px;flex-wrap:wrap;
  padding:12px 14px;cursor:pointer;font-size:15px}
