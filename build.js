@@ -851,6 +851,16 @@ body.editing .bn{display:none}
  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pin a{flex:0 0 auto;background:#20242c;color:#fff;text-decoration:none;
  border-radius:999px;padding:8px 15px;font:800 13px Heebo,sans-serif}
+/* The screen gets crowded. He asked me to notice which buttons he never uses,
+   offer to take them off, and keep one button that remembers what we removed. */
+.tidy{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+ padding:13px 15px;margin-top:14px;box-shadow:var(--shadow)}
+.tidy b{display:block;font:800 15px Heebo,sans-serif;margin-bottom:4px}
+.tidy small{display:block;color:var(--dim);font-size:13px;line-height:1.5;margin-bottom:10px}
+.tidy .row2{display:flex;flex-wrap:wrap;gap:8px}
+.tidy button{border:1px solid var(--line);background:var(--bg);color:var(--ink);
+ border-radius:999px;padding:9px 16px;font:800 13.5px Heebo,sans-serif;cursor:pointer}
+.tidy button.go{background:var(--ink);color:#fff;border-color:var(--ink)}
 .backbar{display:block;width:100%;margin:0 0 14px;padding:12px 16px;border:0;cursor:pointer;
  border-radius:var(--r);background:var(--ink);color:#fff;font:800 15px Heebo,sans-serif;text-align:start}
 .backbar:active{transform:translateY(1px)}
@@ -1197,6 +1207,7 @@ body.editing .bn{display:none}
   <button type="button" class="gt g13" id="gSpecial"><b>⭐ בקשות מיוחדות</b><small>מה שביקשת ומוכן, דפים וקבצים</small></button>
  </div>
 
+ <div id="tidyBox"></div>
  <div id="pinBox"></div>
 
  <input type="search" id="gSearch" class="gsearch" autocomplete="off"
@@ -3067,6 +3078,75 @@ function renderSearch(){
  });
 }
 
+// Which tile he actually taps, and which ones just take up room. Everything
+// here lives in the browser, per device, and nothing is ever deleted: a hidden
+// tile is one line away from coming back.
+function tileStore(k,d){try{return JSON.parse(localStorage.getItem(k)||'')||d;}catch(e){return d;}}
+function tileSave(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+function tileLabel(id){
+ var el=document.getElementById(id);
+ var b=el&&el.querySelector('b');
+ return b?b.textContent.replace(/^[^ ]+ /,''):id;
+}
+function tileIds(){
+ return Array.prototype.map.call(document.querySelectorAll('#blkTiles .gt'),function(e){return e.id;});
+}
+function applyHidden(){
+ var hid=tileStore('tilesHidden',[]);
+ tileIds().forEach(function(id){
+  var el=document.getElementById(id);
+  if(el)el.hidden=hid.indexOf(id)>=0;
+ });
+ var back=document.getElementById('tidyBack');
+ if(back)back.hidden=!hid.length;
+}
+function countTiles(){
+ var since=tileStore('tilesSince',0);
+ if(!since){since=Date.now();tileSave('tilesSince',since);}
+ tileIds().forEach(function(id){
+  var el=document.getElementById(id);
+  if(!el||el.dataset.counted)return;
+  el.dataset.counted='1';
+  el.addEventListener('click',function(){
+   var u=tileStore('tileUse',{});
+   u[id]=(u[id]||0)+1;tileSave('tileUse',u);
+  });
+ });
+}
+function renderTidy(){
+ var host=document.getElementById('tidyBox');
+ if(!host)return;
+ applyHidden();
+ var since=tileStore('tilesSince',Date.now());
+ var days=(Date.now()-since)/86400000;
+ var hid=tileStore('tilesHidden',[]);
+ var use=tileStore('tileUse',{});
+ var snooze=tileStore('tidySnooze',0);
+ var cold=tileIds().filter(function(id){return hid.indexOf(id)<0&&!use[id];});
+ var parts=[];
+ if(hid.length){
+  parts.push('<div class="tidy"><b>מה הסתרנו</b>'
+   +'<small>'+hid.map(function(id){return esc(tileLabel(id));}).join(', ')+'</small>'
+   +'<div class="row2"><button type="button" id="tidyBack">להחזיר הכל</button></div></div>');
+ }
+ // Three days of use and at least three buttons he never touched, and I ask once.
+ if(days>=3&&cold.length>=3&&Date.now()>snooze){
+  parts.push('<div class="tidy"><b>המסך עמוס</b>'
+   +'<small>שלושה ימים ולא נגעת ב'+cold.length+' כפתורים: '
+   +cold.map(function(id){return esc(tileLabel(id));}).join(', ')
+   +'. להסיר אותם מהמסך? שום דבר לא נמחק, הם חוזרים בלחיצה.</small>'
+   +'<div class="row2"><button type="button" class="go" id="tidyGo">להסיר</button>'
+   +'<button type="button" id="tidyNo">להשאיר</button></div></div>');
+ }
+ host.innerHTML=parts.join('');
+ var back=document.getElementById('tidyBack');
+ if(back)back.onclick=function(){tileSave('tilesHidden',[]);renderTidy();};
+ var go=document.getElementById('tidyGo');
+ if(go)go.onclick=function(){tileSave('tilesHidden',hid.concat(cold));renderTidy();};
+ var no=document.getElementById('tidyNo');
+ if(no)no.onclick=function(){tileSave('tidySnooze',Date.now()+7*86400000);renderTidy();};
+}
+
 function renderPin(){
  var host=document.getElementById('pinBox');
  if(!host)return;
@@ -4207,6 +4287,7 @@ boot('pegasus',renderPegasus);
 boot('improve',renderImprove);
 boot('special',renderSpecial);
 boot('pin',renderPin);
+boot('tidy',function(){countTiles();renderTidy();});
 // A link like #pegasus or #special lands straight on that screen.
 boot('hash',function(){
  var h=(location.hash||'').replace('#','');
