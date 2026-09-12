@@ -1221,6 +1221,10 @@ body.editing .bn{display:none}
 :root.calm .dot{box-shadow:0 0 0 0 rgba(229,72,77,0)}
 :root.calm .live .pulse{box-shadow:none}
 :root.calm body.editing .editbox>*{transform:none}
+/* The record button only exists while he is actually recording, so it keeps a
+   breath to show it is live, just a slow one. Shadow only, no flash. */
+:root.calm .recbig{animation:mpulse 2.8s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){:root.calm .recbig{animation:none}}
 /* The opt-in. A ring that fades in and out over ten seconds, no colour flip,
    no size change, on the three places that actually mean "something new". */
 @keyframes softmark{
