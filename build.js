@@ -3563,7 +3563,9 @@ function renderReqs(){
   var st=reqStatus(r),label=SENTLABEL[r.kind]||'הודעה';
   var link='';
   if(st.reply){
-   var url=String(st.reply.text||'').match(/https?:\/\/[^ <>"]+/);
+   // Built rather than written as a literal: this file is a template string,
+   // so a backslash in a regex here never survives into the page.
+   var url=String(st.reply.text||'').match(new RegExp('https?://[^ <>"]+'));
    if(url)link='<a class="rq-open" href="'+esc(url[0])+'" target="_blank" rel="noopener">פתיחת מה ששלחתי</a>';
   }
   return '<div class="req big"><div class="rq-t"><b>'+esc(r.text||label)+'</b>'

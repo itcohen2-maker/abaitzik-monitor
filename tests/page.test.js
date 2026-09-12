@@ -289,6 +289,20 @@ test('one card holds all four ways in, and nothing floats over the page', () => 
   assert.ok(html.includes("document.getElementById('wShoot').onclick"));
 });
 
+test('the page actually parses', () => {
+  // The gap that let a broken page go live. Every other test here asks whether
+  // a string is present, and a string is present whether or not the script it
+  // sits in can run: a regex written as a literal lost its backslashes to the
+  // template string that builds this file, the whole script died on load, and
+  // forty seven passing checks said nothing at all about it.
+  const html = renderPage(fixture({}));
+  const scripts = [...html.matchAll(/<script(?![^>]*src)[^>]*>([\s\S]*?)<\/script>/g)];
+  assert.ok(scripts.length >= 3, `expected the inline scripts, found ${scripts.length}`);
+  scripts.forEach((m, i) => {
+    assert.doesNotThrow(() => new Function(m[1]), `inline script ${i} does not parse`);
+  });
+});
+
 test('every setting moved to one screen, and not one of them changed', () => {
   const html = renderPage(fixture({}));
   // Its own screen, with a permanent way in from the header.
