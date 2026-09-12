@@ -24,6 +24,47 @@ const CONN = path.join('C:', 'Users', 'User', 'OneDrive', 'Documents', 'pegasus'
   'agent-handoff', '.runtime', 'connection.json');
 const IN = path.join(__dirname, 'data', 'codex', 'codex');
 const OUT = path.join(__dirname, 'data', 'codex', 'outbox');
+// The session to queue into. It lives under data/ (gitignored) because it names
+// a session on this machine and has no business in a public repository.
+const THREAD = path.join(__dirname, 'data', 'codex', 'thread.txt');
+
+const { execFileSync } = require('child_process');
+
+function thread() {
+  if (!fs.existsSync(THREAD)) return '';
+  return fs.readFileSync(THREAD, 'utf8').trim();
+}
+
+// The adapter Codex asked for. `delivered` is written only when this command
+// actually exits zero; anything else leaves the message `stored`, which is what
+// the screen already says. There is no optimistic case.
+function cliEntry() {
+  const guesses = [
+    path.join(process.env.APPDATA || '', 'npm', 'node_modules', '@openai', 'codex', 'bin', 'codex.js'),
+    path.join(process.env.HOME || '', '.npm-global', 'lib', 'node_modules', '@openai', 'codex', 'bin', 'codex.js'),
+    '/usr/local/lib/node_modules/@openai/codex/bin/codex.js'
+  ];
+  return guesses.find(p => p && fs.existsSync(p)) || '';
+}
+
+function queueToSession(text) {
+  const id = thread();
+  if (!id) return { ok: false, why: 'אין מזהה שיחה ב-data/codex/thread.txt' };
+  // The npm shim on Windows is a .cmd, and Node refuses to spawn one without a
+  // shell. A shell is not an option here: the text is his, and it would be one
+  // quote away from running as a command. So the CLI's own entry script is
+  // called with this node, and the message stays a plain argument.
+  const entry = cliEntry();
+  if (!entry) return { ok: false, why: 'לא נמצא הקובץ של codex במחשב' };
+  try {
+    execFileSync(process.execPath, [entry, 'queue', '--thread', id, '--message', text],
+      { stdio: ['ignore', 'pipe', 'pipe'], timeout: 60000, windowsHide: true });
+    return { ok: true };
+  } catch (e) {
+    const why = String((e.stderr && e.stderr.toString()) || e.message || '').trim().slice(0, 300);
+    return { ok: false, why: why || 'codex queue נכשל בלי הודעה' };
+  }
+}
 
 function conn() {
   if (!fs.existsSync(CONN)) {
@@ -90,17 +131,21 @@ async function push(text, from) {
   const m = res.message || res;
   if (!m.id) throw new Error('the mailbox stored nothing it could name');
   ensure(IN);
+  const q = queueToSession(t);
   // His own message is written to the same folder so the screen shows one
-  // thread, and its state is the literal truth: stored, not delivered.
+  // thread, and its state is whichever of the two actually happened.
   fs.writeFileSync(path.join(IN, m.id + '.json'), JSON.stringify({
     at: m.createdAt,
     from: from || 'user',
     to: 'codex',
     text: t,
     replyTo: m.replyTo || '',
-    state: 'stored'
+    state: q.ok ? 'delivered' : 'stored',
+    error: q.ok ? '' : q.why
   }, null, 2), 'utf8');
-  console.log('נשמר בתיבה של קודקס: ' + m.id);
+  console.log(q.ok
+    ? 'נמסר לשיחה של קודקס: ' + m.id
+    : 'נשמר בתיבה בלבד (' + q.why + '): ' + m.id);
   return m;
 }
 

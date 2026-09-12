@@ -307,6 +307,7 @@ button.abtn[disabled]{opacity:.55}
  padding:3px 10px;border-radius:999px}
 .cx-received .st{background:var(--fresh);color:var(--green)}
 .cx-stored .st{background:var(--sunk);color:var(--dim)}
+.cx-delivered .st{background:var(--accent-soft);color:var(--accent)}
 .cxrow{display:flex;gap:8px;padding:11px 15px;border-top:1px solid var(--line)}
 .cxrow input{flex:1;min-width:0;background:var(--sunk);color:var(--ink);
  border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:400 16px Heebo,sans-serif}
@@ -3468,7 +3469,9 @@ function renderTidy(){
 // does not wake a Codex session, so a message of his says it is waiting in the
 // mailbox and never says it was delivered or answered. The moment an adapter to
 // a real Codex session exists, this is the one place that changes.
-var CX_STATE={received:'הגיע מקודקס',stored:'מחכה בתיבה, קודקס עוד לא מחובר אוטומטית'};
+var CX_STATE={received:'הגיע מקודקס',
+ stored:'מחכה בתיבה, לא נמסר לשיחה',
+ delivered:'נמסר לשיחה של קודקס'};
 function renderCodex(){
  var box=document.getElementById('codexBox');
  if(!box)return;
@@ -3479,7 +3482,7 @@ function renderCodex(){
  var rows=C.slice(0,6).map(function(m){
   var st=CX_STATE[m.state]||'';
   return '<div class="cx cx-'+esc(m.state||'stored')+'">'
-   +'<div class="who">'+(m.from==='codex'?'קודקס':'אתה')+' · '+esc(stamp(m.at))+'</div>'
+   +'<div class="who">'+(m.from==='codex'?'זה מ־Codex':'אתה')+' · '+esc(stamp(m.at))+'</div>'
    +'<p>'+esc(m.text)+'</p>'
    +(st?'<span class="st">'+esc(st)+'</span>':'')+'</div>';
  }).join('');
@@ -3489,7 +3492,7 @@ function renderCodex(){
    +'<span class="st">יצא אליי, עוד לא הועבר לתיבה</span></div>';
  }).join('');
  box.innerHTML='<b>קודקס</b>'
-  +'<small>התיבה שומרת הודעות. היא לא מפעילה שיחת קודקס, ולכן שום דבר כאן לא ייכתב כנמסר עד שזה באמת יעבוד.</small>'
+  +'<small>מה שאתה שולח נמסר לשיחה החיה של קודקס. כל הודעה נושאת את מה שקרה לה בפועל, ונמסר נכתב רק כשהמסירה הצליחה.</small>'
   +pend+rows
   +'<div class="cxrow"><input id="cxIn" placeholder="הודעה לקודקס" autocomplete="off">'
   +'<button type="button" id="cxSend">שליחה</button></div>';

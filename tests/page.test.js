@@ -309,8 +309,10 @@ test('the codex thread never says delivered while the mailbox only stores', () =
   assert.ok(html.includes('id="codexBox"'));
   assert.ok(html.includes('function renderCodex(){'));
   assert.ok(html.includes("boot('codex',renderCodex);"));
-  // The two words that must not appear on a stored message.
-  assert.ok(html.includes('מחכה בתיבה, קודקס עוד לא מחובר אוטומטית'));
-  assert.ok(!html.includes('נמסר לקודקס'));
+  // Three states, each literal. `delivered` exists only because a real
+  // `codex queue` call succeeded, so `stored` must never borrow its wording.
+  assert.ok(html.includes("stored:'מחכה בתיבה, לא נמסר לשיחה'"));
+  assert.ok(html.includes("delivered:'נמסר לשיחה של קודקס'"));
+  assert.ok(html.includes('זה מ־Codex'));
   assert.ok(!html.includes('קודקס ענה'));
 });
