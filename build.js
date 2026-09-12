@@ -671,11 +671,11 @@ section{margin-bottom:30px}
  filter:drop-shadow(0 1px 0 rgba(0,0,0,.25))}
 /* One vocabulary for every microphone: red while recording, amber while it is
    on its way to me, green when it landed, grey when it did not. */
-#micBtn.sending,#micFab.sending,#recBtn.sending,#recBig.sending{
+#micBtn.sending,#recBtn.sending,#recBig.sending{
  background:linear-gradient(180deg,#ffd257,var(--yellow))!important;animation:none!important;opacity:1}
-#micBtn.sent,#micFab.sent,#recBtn.sent,#recBig.sent{
+#micBtn.sent,#recBtn.sent,#recBig.sent{
  background:linear-gradient(180deg,#5cc36f,var(--green))!important;animation:none!important;opacity:1}
-#micBtn.failed,#micFab.failed,#recBtn.failed,#recBig.failed{
+#micBtn.failed,#recBtn.failed,#recBig.failed{
  background:#5b6472!important;animation:none!important;opacity:1}
 .foodtop{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
 .foodtop>div{background:var(--surface);border:1px solid var(--line);border-radius:14px;
@@ -796,7 +796,7 @@ body.editing .bn{display:none}
 .lock{display:none}
 .locked .lock{display:grid;position:fixed;inset:0;z-index:99;
  place-items:center;padding:24px;background:var(--bg)}
-.locked .wrap,.locked .micfab,.locked .bn,.locked .recwrap{display:none!important}
+.locked .wrap,.locked .bn,.locked .recwrap{display:none!important}
 .lockbox{width:100%;max-width:340px;text-align:center;
  background:var(--surface);border:1px solid var(--line);border-radius:22px;
  padding:30px 22px;box-shadow:var(--shadow)}
@@ -827,7 +827,20 @@ body.editing .bn{display:none}
 .conn.arr:active{background:linear-gradient(180deg,var(--blue),#1b63d6)}
 .conn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-.voice{display:flex;align-items:stretch;gap:12px;margin-bottom:14px}
+/* The one place he talks to me. Roomy on purpose: the four ways in were
+   scattered across a strip, a tile and another screen, and one of them floated
+   on top of the page. */
+.talk{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+ box-shadow:var(--shadow);padding:16px 16px 14px;margin-bottom:14px;
+ display:grid;grid-template-columns:auto 1fr;gap:12px 14px;align-items:center}
+.ways{grid-column:1 / -1;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:2px}
+.way{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;
+ background:var(--sunk);border:1px solid var(--line);border-radius:14px;padding:11px 6px 9px}
+.way b{font:700 13px Heebo,sans-serif;color:var(--ink)}
+.way small{font:300 11px Heebo,sans-serif;color:var(--dim)}
+.way .wi{font-size:21px;line-height:1}
+.way:active{background:var(--accent-soft);border-color:var(--accent)}
+.way:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .mic{width:98px;height:98px;flex:0 0 98px;border-radius:50%;border:0;padding:0;cursor:pointer;position:relative;
  display:grid;place-items:center;background:conic-gradient(from 0deg,var(--blue),var(--red),var(--yellow),var(--green),var(--blue));
  box-shadow:0 12px 28px rgba(66,133,244,.35)}
@@ -1089,32 +1102,7 @@ body.editing .bn{display:none}
  text-align:center;padding:0 5px;font-style:normal}
 .bn .cnt.zero{background:var(--line);color:var(--dim)}
 /* ===== bottom nav ===== */
-.micfab{position:fixed;left:16px;
- bottom:calc(84px + env(safe-area-inset-bottom));z-index:40;opacity:.95;touch-action:none;
- width:82px;height:82px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;
- background:conic-gradient(from 0deg,var(--blue),var(--red),var(--yellow),var(--green),var(--blue));
- box-shadow:0 10px 24px rgba(0,0,0,.35)}
-.micfab:before{content:"";position:absolute;inset:6px;border-radius:50%;
- background:radial-gradient(circle at 34% 26%,#ffffff 0%,var(--surface) 44%,
-  color-mix(in srgb,var(--surface) 80%,#000) 100%);
- box-shadow:inset 0 -6px 12px rgba(0,0,0,.2),inset 0 4px 8px rgba(255,255,255,.85)}
-.micfab svg{position:relative;z-index:1;width:38px;height:38px;stroke:var(--ink)}
-.micfab svg rect{fill:var(--ink)}
-.micfab{box-shadow:0 0 0 3px rgba(66,133,244,.28),0 0 26px 6px rgba(66,133,244,.45),
- 0 10px 26px rgba(0,0,0,.45)}
-.micfab.on{background:var(--red);animation:mpulse 1.1s infinite;opacity:1;
- box-shadow:0 0 0 3px rgba(234,67,53,.32),0 0 34px 10px rgba(234,67,53,.55),
- 0 10px 26px rgba(0,0,0,.45)}
-.micfab.sending{box-shadow:0 0 0 3px rgba(251,188,5,.32),0 0 30px 8px rgba(251,188,5,.5),
- 0 10px 26px rgba(0,0,0,.45)}
-.micfab.sent{box-shadow:0 0 0 3px rgba(52,168,83,.35),0 0 34px 10px rgba(52,168,83,.55),
- 0 10px 26px rgba(0,0,0,.45)}
-.micfab.dragging{opacity:.6;transition:none}
-.micfab.placed{left:auto;transform:none}
-.micfab.on:before{background:var(--red)}
-.micfab.on svg{stroke:#fff}
-.micfab.on svg rect{fill:#fff}
-.micfab:active{transform:scale(.94)}
+/* The floating microphone was removed with its styles. */
 .pillbox{text-align:center;padding:10px 0 4px}
 .pillbig{width:min(230px,66vw);height:min(230px,66vw);border-radius:50%;border:0;cursor:pointer;
  display:grid;place-items:center;gap:4px;color:#fff;font-family:Heebo,sans-serif;
@@ -1317,7 +1305,20 @@ try{
   <span class="nb-l"><b id="nbTitle">מה חדש</b><small id="nbSub"></small></span>
   <span class="nb-c" id="nbCount">0</span>
  </button>
- <div class="voice">
+ <!--
+   One card, four ways in, and nothing floating over it.
+
+   The microphone and the paperclip used to sit in a cramped strip, the camera
+   was a tile fourteen rows down, and writing meant finding the chat screen
+   first. Worse, a second microphone floated over the page and covered whatever
+   was underneath it. There is one microphone now and it is this one; the other
+   three sit under it at the same size, so none of them is hidden and none of
+   them is a guess.
+
+   Nothing here asks for a permission until it is pressed, and nothing starts
+   recording or sends a file on its own.
+ -->
+ <section class="talk" id="talkCard" aria-label="פנייה אליי">
   <button type="button" id="micBtn" class="mic" aria-label="דבר אליי">
    <svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
     <rect x="9" y="3" width="6" height="11" rx="3" fill="var(--ink)" stroke="none"/>
@@ -1328,8 +1329,21 @@ try{
    <b>דבר אליי</b>
    <small id="micSaid">לוחצים, מדברים, לוחצים שוב. ההקלטה נשלחת אליי מיד.</small>
   </div>
-  <button type="button" id="urgBtn" class="urg"><span aria-hidden="true">📎</span>העלאת<br>קובץ</button>
- </div>
+  <div class="ways">
+   <button type="button" id="wWrite" class="way">
+    <span class="wi" aria-hidden="true">✍️</span>
+    <b>כתוב לי</b><small>הקלדה</small>
+   </button>
+   <button type="button" id="urgBtn" class="way">
+    <span class="wi" aria-hidden="true">📎</span>
+    <b>העלאת קובץ</b><small>גם תמונה</small>
+   </button>
+   <button type="button" id="wShoot" class="way">
+    <span class="wi" aria-hidden="true">📷</span>
+    <b>צילום</b><small>מצלמה</small>
+   </button>
+  </div>
+ </section>
 
  <button type="button" id="growBtn" class="growbtn">
   <span class="gb-i" aria-hidden="true">✨</span>
@@ -1743,12 +1757,7 @@ try{
 
 </section>
 
-<button type="button" id="micFab" class="micfab" aria-label="דבר אליי">
- <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-  <rect x="9" y="3" width="6" height="11" rx="3" fill="#fff" stroke="none"/>
-  <path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8.5 21h7"/>
- </svg>
-</button>
+<!-- The floating microphone is gone. One microphone, on the card above. -->
 
 <div class="editbar" id="editBar" hidden>
  <span>סידור המסך. גרור מה שתרצה, ומינוס מסיר.</span>
@@ -2715,11 +2724,14 @@ function paintLive(v){
 */
 var lastCheckAt=0;
 var lastCheckFail=false;
+// ago() says "now" for anything under a minute and a half, and "updated ago
+// now" is not a sentence. Reads as one either way.
+function since(iso){var a=ago(iso);return a==='עכשיו'?'עכשיו':'לפני '+a;}
 function paintStamp(){
  var el=document.getElementById('built');
  if(el){
   el.textContent='גרסה '+(D.buildId||'')+' · פורסם '+stamp(D.builtAt)
-   +' · עודכן לפני '+ago(D.builtAt);
+   +' · עודכן '+since(D.builtAt);
  }
  var foot=document.getElementById('builtFoot');
  if(foot)foot.textContent='גרסה '+(D.buildId||'')+' · '+stamp(D.builtAt);
@@ -2729,7 +2741,7 @@ function paintStamp(){
   // Quietly, and without pretending the numbers above are live.
   line.textContent='אין חיבור לנתונים. המספרים כאן הם מרגע הפרסום.';
  }else if(lastCheckAt){
-  line.textContent='נתונים נבדקו לפני '+ago(new Date(lastCheckAt).toISOString());
+  line.textContent='נתונים נבדקו '+since(new Date(lastCheckAt).toISOString());
  }else{
   line.textContent='נתונים עוד לא נבדקו מול השרת.';
  }
@@ -3178,7 +3190,7 @@ function click(){
  }catch(e){}
 }
 document.addEventListener('pointerdown',function(e){
- if(e.target.closest&&e.target.closest('.gt,.mic,.micfab,.recbig,.foodcam,.conn'))click();
+ if(e.target.closest&&e.target.closest('.gt,.mic,.way,.recbig,.foodcam,.conn'))click();
 },{passive:true});
 
 function on2(id,ev,fn){var el=document.getElementById(id);if(el)el.addEventListener(ev,fn);}
@@ -4285,6 +4297,26 @@ function askInChat(prefix){
  try{box.setSelectionRange(box.value.length,box.value.length);}catch(e){}
 }
 document.getElementById('gChat').onclick=function(){pane('m');markChatSeen();};
+/*
+  Writing and the camera, from the card at the top instead of from a tile most
+  of the way down the screen. Both land in the same place everything else does,
+  so there is one thread and not four.
+
+  The camera does not ask for the camera until it is pressed: shoot() opens the
+  picker inside the tap, which is also the only way iOS allows it at all.
+*/
+document.getElementById('wWrite').onclick=function(){
+ pane('m');markChatSeen();renderThread();
+ var box=document.getElementById('msgText');
+ if(!box)return;
+ // After the pane has been painted, or the focus lands on a hidden field and
+ // the keyboard never opens.
+ setTimeout(function(){try{box.focus();box.scrollIntoView({block:'center'});}catch(e){}},80);
+};
+document.getElementById('wShoot').onclick=function(){
+ pane('m');renderThread();
+ shoot();
+};
 document.getElementById('gQueue').onclick=function(){openNet('all');};
 document.getElementById('gReports').onclick=function(){pane('r');markReportsSeen();renderNextReport();};
 document.getElementById('gMail').onclick=function(){pane('e');};
@@ -4678,18 +4710,14 @@ function toggleRec(){
 }
 recBtn.onclick=toggleRec;
 document.getElementById('recBig').onclick=function(){recStop();};
-var fabEl=document.getElementById('micFab');
-// Drag it anywhere. A press that never moves is still a tap, so recording is
-// not lost to a shaky finger.
-// The microphone used to be draggable and it kept ending up over something
-// else. He asked for it fixed at the bottom left, so the position is now in
-// the stylesheet and any spot saved from the draggable version is cleared.
+// The floating microphone is gone: one microphone, on the card at the top of
+// the home screen. Anything a previous version saved about where it sat is
+// cleared so nothing is left pinned to a corner.
 (function(){
  try{
   localStorage.removeItem('micPos');
   localStorage.removeItem('micCentred');
  }catch(e){}
- fabEl.addEventListener('click',function(){toggleRec();});
 })();
 document.getElementById('recCancel').onclick=function(){
  if(rec&&rec.state==='recording'){recAbort=true;recStop();}
@@ -4709,7 +4737,7 @@ new MutationObserver(function(){
 var micTimer=null;
 function paintMics(state){
  clearTimeout(micTimer);
- var ids=['micBtn','micFab','recBtn','recBig'];
+ var ids=['micBtn','recBtn','recBig'];
  var label={rec:'מקליט, לחיצה עוצרת ושולחת',send:'שולח אליי',
   ok:'נשלח',bad:'לא נשלח',idle:'דבר אליי'}[state]||'דבר אליי';
  ids.forEach(function(id){

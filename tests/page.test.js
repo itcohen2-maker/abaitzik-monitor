@@ -269,6 +269,26 @@ test('the skin can be left to the phone or forced white or black', () => {
   assert.ok(html.indexOf("localStorage.getItem('skin')") < html.indexOf('<body>'));
 });
 
+test('one card holds all four ways in, and nothing floats over the page', () => {
+  const html = renderPage(fixture({}));
+  assert.ok(html.includes('<section class="talk" id="talkCard"'));
+  // Speak, write, upload, photograph. All four on the same card.
+  assert.ok(html.includes('id="micBtn"'));
+  assert.ok(html.includes('id="wWrite"'));
+  assert.ok(html.includes('id="urgBtn"'));
+  assert.ok(html.includes('id="wShoot"'));
+  assert.ok(html.includes('<b>העלאת קובץ</b><small>גם תמונה</small>'));
+  // One microphone. The second one floated over whatever was underneath it.
+  assert.strictEqual(html.split('micfab').length - 1, 0);
+  assert.strictEqual(html.split('id="micFab"').length - 1, 0);
+  assert.strictEqual(html.split('aria-label="דבר אליי"').length - 1, 1);
+  // Writing opens the composer and puts the cursor in it; the camera is not
+  // asked for until the button is pressed.
+  assert.ok(html.includes("document.getElementById('wWrite').onclick"));
+  assert.ok(html.includes('box.focus();box.scrollIntoView'));
+  assert.ok(html.includes("document.getElementById('wShoot').onclick"));
+});
+
 test('the title is his, and the build and the data are two different facts', () => {
   const html = renderPage(fixture({}));
   assert.ok(html.includes('<div class="t">מוניטור בבניין עצמי</div>'));
@@ -277,14 +297,16 @@ test('the title is his, and the build and the data are two different facts', () 
   assert.ok(html.includes('<div class="s dim" id="checked"></div>'));
   // The build says which one it is and when it went out, in absolute time.
   assert.ok(html.includes("'גרסה '+(D.buildId||'')+' · פורסם '+stamp(D.builtAt)"));
-  assert.ok(html.includes("+' · עודכן לפני '+ago(D.builtAt)"));
+  assert.ok(html.includes("+' · עודכן '+since(D.builtAt)"));
+  // "updated ago now" is not a sentence.
+  assert.ok(html.includes("return a==='עכשיו'?'עכשיו':'לפני '+a;"));
   // And "updated N ago" is recomputed, so it counts up instead of resetting.
   assert.ok(html.includes('setInterval(paintStamp,30000)'));
   // The data line never claims a check that did not happen, and says so when
   // the server could not be reached.
   assert.ok(html.includes("line.textContent='נתונים עוד לא נבדקו מול השרת.'"));
   assert.ok(html.includes('lastCheckFail=true;paintStamp();'));
-  assert.ok(html.includes("'נתונים נבדקו לפני '+ago("));
+  assert.ok(html.includes("'נתונים נבדקו '+since("));
   // One id per element. The footer stamp was a second id="built" and never
   // painted at all.
   assert.strictEqual(html.split('id="built"').length - 1, 1);
