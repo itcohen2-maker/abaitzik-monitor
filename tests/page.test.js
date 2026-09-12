@@ -269,6 +269,42 @@ test('the skin can be left to the phone or forced white or black', () => {
   assert.ok(html.indexOf("localStorage.getItem('skin')") < html.indexOf('<body>'));
 });
 
+test('nothing flashes at him, and the unread mark stays put', () => {
+  const html = renderPage(fixture({}));
+  // Calm is the default and it is on the element before the first paint, so the
+  // old half second flash never gets a frame.
+  assert.ok(html.includes("localStorage.getItem('motion')==='soft'?'soft':'off'"));
+  assert.ok(html.indexOf("classList.add(mo==='soft'?'motion-soft':'calm')") < html.indexOf('<body>'));
+  // Every element the old sheet flashed is stopped, including the tab buttons,
+  // the fresh message badges and the working dot.
+  const off = html.slice(html.indexOf(':root.calm .newbtn.hot,'), html.indexOf('@keyframes softmark'));
+  [':root.calm .newbtn.hot .nb-c,',
+   ':root.calm .gt.glow .flag,',
+   ':root.calm .th-fresh>summary .badge,',
+   ':root.calm .bub.fresh .badge,',
+   ':root.calm .bn button.hasnew,',
+   ':root.calm .bn button.hasnew.blink,',
+   ':root.calm .bn button.blink,',
+   ':root.calm .bn button.hasnew svg,',
+   ':root.calm .sent.working .s-dot,',
+   ':root.calm .live .pulse,'].forEach(sel => assert.ok(off.includes(sel), sel));
+  assert.ok(off.includes('{animation:none!important}'));
+  // The state itself is untouched: the red badge is still red and still there.
+  assert.ok(off.includes(':root.calm .bub.fresh .badge{background:var(--red);color:#fff'));
+  // The opt in is slow, is only a ring, and still yields to the phone.
+  assert.ok(html.includes('animation:softmark 10s ease-in-out infinite'));
+  assert.ok(html.includes('50%{box-shadow:0 0 0 5px rgba(234,67,53,.26)}'));
+  const reduce = html.slice(html.indexOf('@keyframes softmark'));
+  assert.ok(reduce.includes('@media(prefers-reduced-motion:reduce){'));
+  assert.ok(reduce.indexOf(':root.motion-soft .newbtn.hot .nb-c')
+    < reduce.indexOf('@media(prefers-reduced-motion:reduce){'));
+  // And he can turn it on or back off, saved on the device.
+  assert.ok(html.includes('id="motionBox"'));
+  assert.ok(html.includes('data-motion="soft"'));
+  assert.ok(html.includes('data-motion="off"'));
+  assert.ok(html.includes("localStorage.setItem('motion',v)"));
+});
+
 test('arranging shrinks the board to one screen and every card gets a minus', () => {
   const html = renderPage(fixture({}));
   assert.ok(html.includes('function fitEdit(){'));

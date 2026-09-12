@@ -1177,6 +1177,67 @@ body.editing .bn{display:none}
 .bn button:active{transform:scale(.94)}
 .bn button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:10px}
 
+/* ---------- מצב רגוע ----------
+   Itzik said the flashing in the monitor is stressful and asked for calm and
+   control. Nothing on this page flashes any more. The count, the badges and
+   the button all stay exactly where they were and keep their red, which is
+   what tells him something is waiting; only the movement is gone. This block
+   is last in the sheet on purpose, so it wins over the older attention rules
+   without deleting them and without touching any state or data. Motion is off
+   by default; the soft option below is a ten second colour breath, saved per
+   device, and the phone's reduce-motion setting still turns it off. */
+:root.calm .newbtn.hot,
+:root.calm .newbtn.hot .nb-c,
+:root.calm .gt.glow,
+:root.calm .gt.glow .flag,
+:root.calm .gt.blink,
+:root.calm .th-fresh,
+:root.calm .th-fresh>summary .badge,
+:root.calm .bub.fresh,
+:root.calm .bub.fresh .badge,
+:root.calm .bn button.hasnew,
+:root.calm .bn button.hasnew.blink,
+:root.calm .bn button.blink,
+:root.calm .bn button.hasnew svg,
+:root.calm .wn.blink .n,
+:root.calm .sent .s-dot,
+:root.calm .sent.working .s-dot,
+:root.calm .dot,
+:root.calm .pill i,
+:root.calm .live .pulse,
+:root.calm body.editing .editbox>*{animation:none!important}
+/* Whatever the killed frame happened to leave behind, put back a still shape. */
+:root.calm .newbtn.hot{transform:none;outline-width:2px;
+ box-shadow:0 8px 20px rgba(234,67,53,.26)}
+:root.calm .newbtn.hot .nb-c{background:#fff;color:var(--red);box-shadow:none}
+:root.calm .gt.glow .flag,
+:root.calm .th-fresh>summary .badge,
+:root.calm .bub.fresh .badge{background:var(--red);color:#fff;box-shadow:none}
+:root.calm .bn button.hasnew svg{transform:none}
+:root.calm .bn button.hasnew,
+:root.calm .bn button.hasnew.blink{background:none;color:var(--red);box-shadow:none}
+:root.calm .bn button[aria-pressed="true"].hasnew{color:#fff}
+:root.calm .sent.working .s-dot{background:var(--green);box-shadow:none}
+:root.calm .dot{box-shadow:0 0 0 0 rgba(229,72,77,0)}
+:root.calm .live .pulse{box-shadow:none}
+:root.calm body.editing .editbox>*{transform:none}
+/* The opt-in. A ring that fades in and out over ten seconds, no colour flip,
+   no size change, on the three places that actually mean "something new". */
+@keyframes softmark{
+ 0%,100%{box-shadow:0 0 0 0 rgba(234,67,53,0)}
+ 50%{box-shadow:0 0 0 5px rgba(234,67,53,.26)}}
+:root.motion-soft .newbtn.hot .nb-c,
+:root.motion-soft .th-fresh>summary .badge,
+:root.motion-soft .bub.fresh .badge{animation:softmark 10s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){
+ :root.motion-soft .newbtn.hot .nb-c,
+ :root.motion-soft .th-fresh>summary .badge,
+ :root.motion-soft .bub.fresh .badge{animation:none}}
+.mob{display:flex;gap:6px;flex:0 0 auto}
+.mob button{background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:10px;
+ padding:9px 12px;font:500 13.5px Heebo,sans-serif;cursor:pointer;white-space:nowrap}
+.mob button[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+.mob button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 </style>
 <script>
 /* Runs before the body exists on purpose. A skin applied after first paint is a
@@ -1184,7 +1245,13 @@ body.editing .bn{display:none}
 (function(){try{
  var t=localStorage.getItem('skin')||'';
  if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);
-}catch(e){}})();
+}catch(e){}
+// Same reason: the calm class has to be on the element before the first paint,
+// or the old flash gets one frame on screen every time he opens the page.
+try{
+ var mo=localStorage.getItem('motion')==='soft'?'soft':'off';
+ document.documentElement.classList.add(mo==='soft'?'motion-soft':'calm');
+}catch(e){document.documentElement.classList.add('calm');}})();
 </script>
 </head>
 <body>
@@ -1349,6 +1416,16 @@ body.editing .bn{display:none}
   <button type="button" class="skb" data-skin="auto">הטלפון</button>
   <button type="button" class="skb" data-skin="light">לבן</button>
   <button type="button" class="skb" data-skin="dark">שחור</button>
+ </div>
+</div>
+<div class="alerts" id="motionBox">
+ <div>
+  <b>תנועה על המסך</b>
+  <small id="motionSaid">רגוע: שום דבר לא מהבהב. הסימון האדום נשאר במקומו.</small>
+ </div>
+ <div class="mob" role="group" aria-label="תנועה על המסך">
+  <button type="button" class="mob-b" data-motion="off">רגוע</button>
+  <button type="button" class="mob-b" data-motion="soft">רמז עדין</button>
  </div>
 </div>
 <div class="codebox" id="codeBox" hidden>
@@ -2678,6 +2755,38 @@ function skinBind(){
  skinApply(skinGet());
 }
 skinBind();
+
+// The flashing. He said it stresses him, so calm is the default and the choice
+// is saved on the device like the skin. Nothing about the unread state changes
+// here: the button, the count and the red badge stay. Only the movement is a
+// preference. The class is also written before first paint, above, so the old
+// flash never gets a frame.
+function motionGet(){
+ try{return localStorage.getItem('motion')==='soft'?'soft':'off';}catch(e){return 'off';}
+}
+function motionApply(v){
+ var r=document.documentElement;
+ r.classList.toggle('motion-soft',v==='soft');
+ r.classList.toggle('calm',v!=='soft');
+ var said=document.getElementById('motionSaid');
+ if(said)said.textContent=v==='soft'
+  ?'רמז עדין: טבעת שנכנסת ויוצאת לאט על הסימון החדש בלבד.'
+  :'רגוע: שום דבר לא מהבהב. הסימון האדום נשאר במקומו.';
+ Array.prototype.forEach.call(document.querySelectorAll('.mob-b'),function(b){
+  b.setAttribute('aria-pressed',b.getAttribute('data-motion')===v?'true':'false');
+ });
+}
+function motionBind(){
+ Array.prototype.forEach.call(document.querySelectorAll('.mob-b'),function(b){
+  b.addEventListener('click',function(){
+   var v=b.getAttribute('data-motion')==='soft'?'soft':'off';
+   try{localStorage.setItem('motion',v);}catch(e){}
+   motionApply(v);
+  });
+ });
+ motionApply(motionGet());
+}
+motionBind();
 
 // The connection test. He asked for it after a night where he sent messages and
 // could not tell whether anything reached me. A green light that is always green
