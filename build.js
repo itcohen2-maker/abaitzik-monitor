@@ -120,7 +120,17 @@ function build() {
   // How I keep getting better. Each entry is one thing I got wrong or one
   // thing I changed, in his words: what, why, and what it changes for him.
   const improve = loadDocs('improve')
-    .map(p => ({ at: p.at, what: p.what || '', why: p.why || '', effect: p.effect || '' }))
+    .map(p => ({
+      at: p.at,
+      what: p.what || '',
+      why: p.why || '',
+      effect: p.effect || '',
+      // How it was checked and where the proof is. Blank on the older records,
+      // and blank is shown as "not verified yet" rather than hidden: a change
+      // nobody checked is exactly the one worth knowing about.
+      verified: p.verified || '',
+      proof: p.proof || '',
+    }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
   // One off things he asked for that are not a report and not a chat message:
   // a page to print, a file to keep. He asked for a tile that blinks when one
@@ -337,6 +347,18 @@ button.abtn[disabled]{opacity:.55}
 .rq-got{background:var(--accent-soft);color:var(--accent)}
 .rq-working{background:var(--hand-soft,#f6ebd3);color:var(--wait)}
 .rq-done{background:var(--fresh);color:var(--green)}
+.rq-after{background:var(--accent-soft);color:var(--accent)}
+/* The two latest get room to be read: the title wraps instead of being cut at
+   the first ellipsis, and the line about what is still missing sits under both
+   of them rather than competing for the same row. */
+.req.big{flex-wrap:wrap;align-items:flex-start;padding:14px 15px 13px}
+.req.big .rq-t b{white-space:normal;overflow:visible;font-size:15.5px;line-height:1.4}
+.req.big .rq-m{flex:1 1 100%;margin-top:8px;color:var(--dim);font-size:12.5px;line-height:1.5}
+.req.big .rq-open{display:inline-block;margin-inline-start:8px;color:var(--accent);font-weight:500}
+.reqall{display:block;width:100%;margin-top:2px;padding:11px 8px;cursor:pointer;
+ background:var(--sunk);color:var(--dim);border:0;border-top:1px solid var(--line);
+ font:500 13px Heebo,sans-serif}
+.reqall:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .sent{display:flex;align-items:center;gap:11px;margin-top:12px;padding:12px 15px;border-radius:var(--r);
  background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);font-size:14px}
 .sent .s-dot{width:11px;height:11px;flex:0 0 11px;border-radius:50%;background:var(--wait);
@@ -384,6 +406,13 @@ button.abtn[disabled]{opacity:.55}
 .grow .w{color:var(--dim);font-size:12.5px;margin-bottom:7px}
 .grow div.l{margin-top:8px;font-size:15px;line-height:1.55}
 .grow div.l b{display:block;font:800 13px Heebo,sans-serif;color:var(--accent);margin-bottom:2px}
+.grow div.l a{color:var(--accent);word-break:break-all}
+/* The three newest on the home screen, in the same box as the requests above
+   so the two lists read as one column rather than two designs. */
+.grows{margin-top:14px}
+.grows>b{display:block;font:800 15px Heebo,sans-serif;margin-bottom:9px}
+.grows .grow{margin-bottom:10px}
+.grows .reqall{border-top:0;border-radius:12px;margin-top:0}
 .newbtn{width:100%;display:flex;align-items:center;gap:12px;margin:14px 0 10px;padding:15px 17px;
  border:0;border-radius:var(--r);cursor:pointer;text-align:start;color:#fff;font-family:Heebo,sans-serif;
  background:linear-gradient(150deg,#9aa5b8,#6b7688);box-shadow:0 8px 18px rgba(20,30,60,.16)}
@@ -1353,6 +1382,13 @@ try{
 
   <div class="sent" id="sentCard" hidden></div>
   <div class="reqs" id="reqBox" hidden></div>
+  <!--
+    What got better, on the home screen instead of only behind a button. Three
+    of them, newest first, each with the problem, the change, what it changes
+    for him, when, and whether anybody actually checked it. The rest are one
+    tap away. This is a record of the work, not a claim about the model.
+  -->
+  <section class="grows" id="growHome" hidden></section>
   <div id="pinBox"></div>
   <div class="cdx" id="codexBox" hidden></div>
 <section class="whatsnew" aria-label="מה חדש">
@@ -3472,28 +3508,69 @@ function markSent(kind,text){
  reqSave(a);
  try{renderReqs();}catch(e){}
 }
+/*
+  Where one request stands, and what is still missing from it.
+
+  The old version called a request answered the moment *any* message of mine
+  landed after it, which is not the same claim at all: a reply about something
+  else made every open request look closed. So the state now says exactly what
+  is known, and the second line says what has not happened yet, because "got
+  it" with nothing after it is the state he most often needs to chase.
+*/
 function reqStatus(r){
  var mine=(D.chat||[]).filter(function(m){return m.from==='itzik'&&(m.at||'')>=r.at;})
   .sort(function(a,b){return (a.at||'')<(b.at||'')?-1:1;});
- var answered=(D.chat||[]).some(function(m){return m.from==='claude'&&(m.at||'')>r.at;});
- if(answered)return {k:'done',t:'נעניתי'};
+ var after=(D.chat||[]).filter(function(m){return m.from==='claude'&&(m.at||'')>r.at;})
+  .sort(function(a,b){return (a.at||'')<(b.at||'')?-1:1;});
  var st=mine.length?(mine[0].status||'received'):'';
- if(st==='working')return {k:'working',t:'עובד על זה'};
- if(st)return {k:'got',t:'קראתי'};
- return {k:'sent',t:'הגיע לתיבה'};
+ if(st==='done')return {k:'done',t:'בוצע',
+  missing:'סימנתי שזה בוצע. שווה שתעבור על זה.',reply:after[0]||null};
+ if(after.length)return {k:'after',t:'יש תשובה אחרי זה',
+  missing:'ענתי בצ׳אט אחרי הבקשה. אם זה לא על זה, תגיד לי.',reply:after[0]};
+ if(st==='working')return {k:'working',t:'עובד על זה',missing:'עוד אין תוצר.',reply:null};
+ if(st)return {k:'got',t:'קראתי',missing:'קראתי, עוד לא התחלתי.',reply:null};
+ return {k:'sent',t:'הגיע לתיבה',missing:'עוד לא סימנתי שקראתי.',reply:null};
 }
+/*
+  The two last things he asked for, as cards he can actually read.
+
+  They were a six line strip of one line each, which is where a request goes to
+  be forgotten. Two, bigger, with the time, who is on it, the exact state and
+  what is still missing. If there is something to open it is linked; if there
+  is not, nothing is shown, because a card pretending to hold a result is worse
+  than an empty screen. One request makes one card and no request makes none.
+*/
 function renderReqs(){
  var box=document.getElementById('reqBox');
  if(!box)return;
  var a=reqLog();
  if(!a.length){box.hidden=true;return;}
  box.hidden=false;
- box.innerHTML='<b>מה שלחתי</b>'+a.slice(0,6).map(function(r){
+ var more=a.length>2?'<button type="button" class="reqall" id="reqAll">כל מה ששלחתי ('+a.length+')</button>':'';
+ box.innerHTML='<b>שתי הבקשות האחרונות</b>'+a.slice(0,2).map(function(r){
   var st=reqStatus(r),label=SENTLABEL[r.kind]||'הודעה';
-  return '<div class="req"><div class="rq-t"><b>'+esc(r.text||label)+'</b>'
-   +'<small>'+esc(label)+' · יצא ב'+esc(stamp(r.at))+'</small></div>'
-   +'<span class="rq-s rq-'+st.k+'">'+esc(st.t)+'</span></div>';
- }).join('');
+  var link='';
+  if(st.reply){
+   var url=String(st.reply.text||'').match(/https?:\/\/[^ <>"]+/);
+   if(url)link='<a class="rq-open" href="'+esc(url[0])+'" target="_blank" rel="noopener">פתיחת מה ששלחתי</a>';
+  }
+  return '<div class="req big"><div class="rq-t"><b>'+esc(r.text||label)+'</b>'
+   +'<small>'+esc(label)+' · יצא ב'+esc(stamp(r.at))+' · '+esc(since(r.at))+'</small>'
+   +'<small>מבצע: קלוד</small></div>'
+   +'<span class="rq-s rq-'+st.k+'">'+esc(st.t)+'</span>'
+   +'<div class="rq-m">'+esc(st.missing)+link+'</div></div>';
+ }).join('')+more;
+ var all=document.getElementById('reqAll');
+ if(all)all.onclick=function(){
+  box.innerHTML='<b>כל מה ששלחתי</b>'+a.map(function(r){
+   var st=reqStatus(r),label=SENTLABEL[r.kind]||'הודעה';
+   return '<div class="req"><div class="rq-t"><b>'+esc(r.text||label)+'</b>'
+    +'<small>'+esc(label)+' · יצא ב'+esc(stamp(r.at))+'</small></div>'
+    +'<span class="rq-s rq-'+st.k+'">'+esc(st.t)+'</span></div>';
+  }).join('')+'<button type="button" class="reqall" id="reqFew">רק השתיים האחרונות</button>';
+  var few=document.getElementById('reqFew');
+  if(few)few.onclick=renderReqs;
+ };
 }
 function lastSent(){
  try{return JSON.parse(localStorage.getItem('lastSent')||'null');}catch(e){return null;}
@@ -3505,19 +3582,51 @@ var SENTLABEL={text:'הודעה',mail:'בקשת מייל',file:'קובץ',voice:
 // box on top is the place he asked for to talk about the game.
 // The screen behind the big button: what I got wrong, what I changed, and what
 // it changes for him. He asked to be told how I keep improving myself.
+/*
+  One improvement, written the same way every time: what went wrong, what
+  changed, what it changes for him, when, and whether it was checked.
+
+  The verification line is the one that matters and the one that was missing.
+  A change nobody checked is not a smaller achievement, it is a different
+  thing, and saying so is what keeps this list from turning into a list of
+  claims. Nothing here is a claim about the model teaching itself; it is the
+  record of work on this project.
+*/
+function growCard(u){
+ var proof='';
+ if(u.proof){
+  proof=/^https?:/.test(u.proof)
+   ? '<a href="'+esc(u.proof)+'" target="_blank" rel="noopener">'+esc(u.proof)+'</a>'
+   : esc(u.proof);
+ }
+ return '<div class="grow"><div class="w">'+esc(stamp(u.at))+' · '+esc(since(u.at))+'</div>'
+  +(u.why?'<div class="l"><b>מה לא עבד</b>'+esc(u.why)+'</div>':'')
+  +(u.what?'<div class="l"><b>מה שיניתי</b>'+esc(u.what)+'</div>':'')
+  +(u.effect?'<div class="l"><b>מה זה משנה לך</b>'+esc(u.effect)+'</div>':'')
+  +'<div class="l"><b>נבדק</b>'+(u.verified?esc(u.verified):'עוד לא נבדק.')
+  +(proof?' · '+proof:'')+'</div>'
+  +'</div>';
+}
 function renderImprove(){
- var host=document.getElementById('growBox');
- if(!host)return;
  var G=D.improve||[];
  var c=document.getElementById('growCount');
  if(c)c.textContent=G.length;
- host.innerHTML=replyBox('על השיפורים')+(G.length?G.map(function(u){
-  return '<div class="grow"><div class="w">'+esc(stamp(u.at))+' · '+esc(ago(u.at))+'</div>'
-   +(u.what?'<div class="l"><b>מה שיניתי</b>'+esc(u.what)+'</div>':'')
-   +(u.why?'<div class="l"><b>למה</b>'+esc(u.why)+'</div>':'')
-   +(u.effect?'<div class="l"><b>מה זה משנה לך</b>'+esc(u.effect)+'</div>':'')
-   +'</div>';
- }).join(''):'<div class="empty">עוד לא רשמתי כאן שיפור.</div>');
+ // The three newest on the home screen; the whole history behind the button.
+ var home=document.getElementById('growHome');
+ if(home){
+  if(!G.length){home.hidden=true;}
+  else{
+   home.hidden=false;
+   home.innerHTML='<b>מה השתפר</b>'+G.slice(0,3).map(growCard).join('')
+    +(G.length>3?'<button type="button" class="reqall" id="growAll">כל השיפורים ('+G.length+')</button>':'');
+   var all=document.getElementById('growAll');
+   if(all)all.onclick=function(){pane('w');};
+  }
+ }
+ var host=document.getElementById('growBox');
+ if(!host)return;
+ host.innerHTML=replyBox('על השיפורים')+(G.length?G.map(growCard).join('')
+  :'<div class="empty">עוד לא רשמתי כאן שיפור.</div>');
  wireBoxes(host);
 }
 

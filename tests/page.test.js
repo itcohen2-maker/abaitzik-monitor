@@ -289,6 +289,30 @@ test('one card holds all four ways in, and nothing floats over the page', () => 
   assert.ok(html.includes("document.getElementById('wShoot').onclick"));
 });
 
+test('what got better is on the home screen, with whether anyone checked it', () => {
+  const html = renderPage(fixture({
+    improve: [
+      { at: '2026-09-12T10:00:00+03:00', why: 'ב1', what: 'מ1', effect: 'א1', verified: 'נבדק באתר החי', proof: 'https://example.com/x' },
+      { at: '2026-09-11T10:00:00+03:00', why: 'ב2', what: 'מ2', effect: 'א2' },
+      { at: '2026-09-10T10:00:00+03:00', why: 'ב3', what: 'מ3', effect: 'א3' },
+      { at: '2026-09-09T10:00:00+03:00', why: 'ב4', what: 'מ4', effect: 'א4' },
+    ],
+  }));
+  assert.ok(html.includes('<section class="grows" id="growHome" hidden></section>'));
+  assert.ok(html.includes("home.innerHTML='<b>מה השתפר</b>'+G.slice(0,3).map(growCard)"));
+  // The problem, the change, what it changes for him, and the verification.
+  assert.ok(html.includes('<b>מה לא עבד</b>'));
+  assert.ok(html.includes('<b>מה שיניתי</b>'));
+  assert.ok(html.includes('<b>מה זה משנה לך</b>'));
+  // A change nobody checked says so rather than staying quiet about it.
+  assert.ok(html.includes("+'<div class=\"l\"><b>נבדק</b>'+(u.verified?esc(u.verified):'עוד לא נבדק.')"));
+  // The rest are one tap away, not filling the home screen.
+  assert.ok(html.includes("G.length>3?'<button type=\"button\" class=\"reqall\" id=\"growAll\">"));
+  assert.ok(html.includes("if(all)all.onclick=function(){pane('w');};"));
+  // Nothing empty pretends to be a list.
+  assert.ok(html.includes('if(!G.length){home.hidden=true;}'));
+});
+
 test('the title is his, and the build and the data are two different facts', () => {
   const html = renderPage(fixture({}));
   assert.ok(html.includes('<div class="t">מוניטור בבניין עצמי</div>'));
@@ -368,9 +392,27 @@ test('every send is written down and carries its own status', () => {
   assert.ok(html.includes('function reqStatus(r){'));
   assert.ok(html.includes('function renderReqs(){'));
   assert.ok(html.includes("boot('reqs',renderReqs);"));
-  // The wording never claims more than the page can prove.
-  assert.ok(html.includes("return {k:'sent',t:'הגיע לתיבה'};"));
-  assert.ok(html.includes("if(answered)return {k:'done',t:'נעניתי'};"));
+  // The wording never claims more than the page can prove. A reply of mine that
+  // landed after a request is not proof it was about that request, so it says
+  // exactly that and nothing stronger.
+  assert.ok(html.includes("return {k:'sent',t:'הגיע לתיבה',missing:'עוד לא סימנתי שקראתי.',reply:null};"));
+  assert.ok(html.includes("if(after.length)return {k:'after',t:'יש תשובה אחרי זה',"));
+  assert.ok(!html.includes("t:'נעניתי'"), 'nothing may claim the request itself was answered');
+});
+
+test('the last two requests are cards he can read, and never invented', () => {
+  const html = renderPage(fixture({}));
+  assert.ok(html.includes("'<b>שתי הבקשות האחרונות</b>'+a.slice(0,2)"));
+  // Time, who is on it, the exact state, and what is still missing.
+  assert.ok(html.includes("' · יצא ב'+esc(stamp(r.at))+' · '+esc(since(r.at))"));
+  assert.ok(html.includes('<small>מבצע: קלוד</small>'));
+  assert.ok(html.includes('<div class="rq-m">')); 
+  // No requests makes no cards, and the rest are behind a button rather than
+  // filling the home screen.
+  assert.ok(html.includes('if(!a.length){box.hidden=true;return;}'));
+  assert.ok(html.includes("a.length>2?'<button type=\"button\" class=\"reqall\" id=\"reqAll\">"));
+  // Something to open is linked only when there is something to open.
+  assert.ok(html.includes('if(url)link='));
 });
 
 test('the newest request sits near the top, not under fourteen tiles', () => {
