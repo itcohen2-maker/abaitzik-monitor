@@ -242,3 +242,26 @@ test('the first two tiles count his own waiting messages and my answers today', 
   assert.ok(html.includes("document.getElementById('tP').textContent=myPending();"));
   assert.ok(html.includes("document.getElementById('tT').textContent=answeredToday();"));
 });
+
+test('the connection test says which channel carried it and waits for a real answer', () => {
+  const html = renderPage(fixture({}));
+  assert.ok(html.includes('id="pingBox"'));
+  assert.ok(html.includes('id="pingBtn"'));
+  assert.ok(html.includes('function pingPaint(){'));
+  // Green only when a build newer than his tap actually landed.
+  assert.ok(html.includes('Date.parse(built)>Date.parse(st.at)'));
+});
+
+test('the skin can be left to the phone or forced white or black', () => {
+  const html = renderPage(fixture({}));
+  assert.ok(html.includes('id="skinBox"'));
+  assert.ok(html.includes('data-skin="light"'));
+  assert.ok(html.includes('data-skin="dark"'));
+  assert.ok(html.includes('data-skin="auto"'));
+  assert.ok(html.includes('function skinApply(v){'));
+  // A forced choice has to beat the phone in both directions.
+  assert.ok(html.includes(':root:not([data-theme="light"]){--ground:#0f1218'));
+  assert.ok(html.includes(':root[data-theme="dark"]{--ground:#0f1218'));
+  // And it has to be applied before the body exists, or night gets a white flash.
+  assert.ok(html.indexOf("localStorage.getItem('skin')") < html.indexOf('<body>'));
+});

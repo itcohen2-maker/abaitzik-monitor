@@ -221,9 +221,15 @@ const PAGE = `<!DOCTYPE html>
  --line:#e3e9f4;--accent:#1a73e8;--accent-soft:#e8f0fe;--wait:#e37400;
  --gold:#f0b429;--fresh:#e6f6ec;--unread:#fdeceb;
  --shadow:0 2px 8px rgba(30,40,70,.07);--r:18px}
-@media (prefers-color-scheme:dark){:root{--ground:#0f1218;--surface:#181d27;--sunk:#141922;
+/* Three states, not two. With no choice made the phone decides, which is
+   what he had until now. A choice stamps data-theme on the root and has to
+   win in both directions, so the same tokens are written twice on purpose. */
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ground:#0f1218;--surface:#181d27;--sunk:#141922;
  --ink:#eef1f7;--dim:#9aa5b8;--line:#252c39;--accent:#8ab4f8;--accent-soft:#1b2b45;
  --wait:#fbbc05;--fresh:#12301f;--unread:#331615;--shadow:0 2px 10px rgba(0,0,0,.4)}}
+:root[data-theme="dark"]{--ground:#0f1218;--surface:#181d27;--sunk:#141922;
+ --ink:#eef1f7;--dim:#9aa5b8;--line:#252c39;--accent:#8ab4f8;--accent-soft:#1b2b45;
+ --wait:#fbbc05;--fresh:#12301f;--unread:#331615;--shadow:0 2px 10px rgba(0,0,0,.4)}
 *{box-sizing:border-box}
 /* A class that sets display beats the browser default for [hidden], which is
    how the recording overlay ended up on screen the moment the page opened. */
@@ -251,6 +257,11 @@ h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance
 .abtn{flex:0 0 auto;text-decoration:none;background:var(--accent);color:#fff;border-radius:10px;
  padding:10px 16px;font:500 14px Heebo,sans-serif;white-space:nowrap}
 button.abtn{border:0;cursor:pointer}
+.skinrow{display:flex;gap:6px;flex:0 0 auto}
+.skb{background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:10px;
+ padding:9px 12px;font:500 13.5px Heebo,sans-serif;cursor:pointer;white-space:nowrap}
+.skb[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+.skb:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 button.abtn[disabled]{opacity:.55}
 .alerts.ok{border-color:var(--ok,#0B6B5E)}
 .alerts.ok b::after{content:" ¹3";color:var(--ok,#0B6B5E)}
@@ -1119,6 +1130,14 @@ body.editing .bn{display:none}
 .bn button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:10px}
 
 </style>
+<script>
+/* Runs before the body exists on purpose. A skin applied after first paint is a
+   white flash on a phone at night, and that flash is the whole complaint. */
+(function(){try{
+ var t=localStorage.getItem('skin')||'';
+ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);
+}catch(e){}})();
+</script>
 </head>
 <body>
 <div class="lock" id="lockWrap">
@@ -1270,6 +1289,17 @@ body.editing .bn{display:none}
   <small id="pingSaid">לוחצים, ההודעה יוצאת אליי, והשורה הזאת אומרת מה עבר ומתי חזרתי.</small>
  </div>
  <button type="button" class="abtn" id="pingBtn">בדיקה</button>
+</div>
+<div class="alerts" id="skinBox">
+ <div>
+  <b>צבע המסך</b>
+  <small id="skinSaid">אפשר להשאיר על מה שהטלפון מחליט, או לקבוע בעצמך.</small>
+ </div>
+ <div class="skinrow" role="group" aria-label="צבע המסך">
+  <button type="button" class="skb" data-skin="auto">הטלפון</button>
+  <button type="button" class="skb" data-skin="light">לבן</button>
+  <button type="button" class="skb" data-skin="dark">שחור</button>
+ </div>
 </div>
 <div class="codebox" id="codeBox" hidden>
  <b>קוד אישי</b>
@@ -2537,6 +2567,42 @@ setInterval(checkFresh,40000);
 setInterval(function(){paintLive(null);paintNew();},20000);
 document.addEventListener('visibilitychange',function(){if(!document.hidden)checkFresh();});
 
+
+// The skin. Three states: let the phone decide, force white, force black. The
+// choice lives on the device, like every other per device preference here, so
+// his phone and the laptop can differ without fighting each other.
+function skinGet(){
+ try{return localStorage.getItem('skin')||'auto';}catch(e){return 'auto';}
+}
+function skinApply(v){
+ var r=document.documentElement;
+ if(v==='dark'||v==='light')r.setAttribute('data-theme',v);
+ else r.removeAttribute('data-theme');
+ // The phone paints the status bar from this, so it has to move with the skin
+ // or the top strip stays the colour of the theme he just left.
+ var m=document.querySelector('meta[name="theme-color"]');
+ if(m){
+  var dark=v==='dark'||(v==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme:dark)').matches);
+  m.setAttribute('content',dark?'#0f1218':'#14675a');
+ }
+ var said=document.getElementById('skinSaid');
+ if(said)said.textContent=v==='auto'?'הטלפון מחליט, לפי מצב לילה שלו.'
+  :v==='light'?'לבן קבוע, גם בלילה.':'שחור קבוע, גם ביום.';
+ Array.prototype.forEach.call(document.querySelectorAll('.skb'),function(b){
+  b.setAttribute('aria-pressed',b.getAttribute('data-skin')===v?'true':'false');
+ });
+}
+function skinBind(){
+ Array.prototype.forEach.call(document.querySelectorAll('.skb'),function(b){
+  b.addEventListener('click',function(){
+   var v=b.getAttribute('data-skin');
+   try{if(v==='auto')localStorage.removeItem('skin');else localStorage.setItem('skin',v);}catch(e){}
+   skinApply(v);
+  });
+ });
+ skinApply(skinGet());
+}
+skinBind();
 
 // The connection test. He asked for it after a night where he sent messages and
 // could not tell whether anything reached me. A green light that is always green
