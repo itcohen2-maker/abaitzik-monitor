@@ -161,10 +161,20 @@ function build() {
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
   const now = loadDocs('status').find(d => d.id === 'now') || null;
 
+  /*
+    One build, one identity. `builtAt` is when this page was written and
+    `BUILD_ID` is a short name for it, derived from that same moment so the two
+    can never disagree: he can read a five character id off his phone and it
+    points at exactly one publish.
+  */
+  const BUILT_AT = new Date().toISOString();
+  const BUILD_ID = Math.floor(Date.parse(BUILT_AT) / 1000).toString(36).slice(-5);
+
   const payload = {
     now: now ? { at: now.at, text: now.text, next: now.next } : null,
     openCmds,
-    builtAt: new Date().toISOString(),
+    builtAt: BUILT_AT,
+    buildId: BUILD_ID,
     resetSeenAt: RESET_SEEN_AT,
     counts: {
       pending: pending.length,
@@ -196,6 +206,7 @@ function build() {
   fs.writeFileSync(path.join(OUT_DIR, 'version.json'),
     JSON.stringify({
       builtAt: payload.builtAt,
+      buildId: payload.buildId,
       now: payload.now || null,
       answers: chat.filter(m => m.from === 'claude').length,
     }), 'utf8');
@@ -1288,9 +1299,15 @@ try{
  <button type="button" class="conn arr" id="arrangeBtn" title="סידור המסך">סידור</button>
  <button type="button" class="conn" id="reloadBtn" title="טעינה מחדש">רענון</button>
  <div class="hdtext">
-  <div class="t">אבא איציק בבנייה עצמית</div>
+  <!--
+    The exact title he gave. Under it two different facts that were one line
+    before: which version of the screen this is, and when its numbers were last
+    checked against the server. A page can be five minutes old and its data an
+    hour stale, and saying so is the difference between a monitor and a poster.
+  -->
+  <div class="t">מוניטור בבניין עצמי</div>
   <div class="s" id="built"></div>
-  <div class="gold">המוניטור בונה את עצמו</div>
+  <div class="s dim" id="checked"></div>
  </div>
  <div class="ava" aria-hidden="true"><div>א</div></div>
 </header>
@@ -1765,7 +1782,7 @@ try{
  <button type="button" id="nA" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h16v11h-9l-5 3.5v-3.5H4Z"/><path d="M8 10.5h8M8 14h5"/></svg>תשובות<i class="cnt zero" id="aCnt">0</i></button>
 </nav>
 
-<div class="stamp"><span id="built"></span></div>
+<div class="stamp"><span id="builtFoot"></span></div>
 </div>
 
 <script>__LIB__</script>
@@ -1941,7 +1958,7 @@ function render(){
  var head=R.length>1?'<div class="rephint">הדוח האחרון פתוח. לחיצה על כותרת פותחת דוח קודם.</div>':'';
  document.getElementById('reports').innerHTML=R.length?head+R.map(reportRow).join('')
   :'<div class="empty">עוד לא נכתב דוח.</div>';
- document.getElementById('built').textContent='גרסה '+stamp(D.builtAt)+' · עודכן לפני '+ago(D.builtAt);
+ paintStamp();
  wireBoxes(document.getElementById('reports'));
 }
 function pending(){
@@ -2682,11 +2699,52 @@ function paintLive(v){
  when.textContent=(n?(n===1?'תשובה אחת מחכה · ':n+' תשובות מחכות · '):'')
   +(now&&now.at?ago(now.at):ago(D.builtAt));
 }
+/*
+  The two lines under the title.
+
+  They answer different questions and used to be one sentence, which is how a
+  page that had not talked to the server in an hour could still look current.
+  The first is the build: its short id, the absolute moment it was published,
+  and how long ago that was. The second is the data: when the numbers on this
+  screen were last confirmed against the server, and nothing at all is claimed
+  when that has not happened yet.
+
+  "Updated N ago" is computed from the published timestamp every time it is
+  painted, so it counts up while the page stays open instead of resetting to
+  "now" every time he opens it. It is repainted on a timer for the same reason.
+*/
+var lastCheckAt=0;
+var lastCheckFail=false;
+function paintStamp(){
+ var el=document.getElementById('built');
+ if(el){
+  el.textContent='גרסה '+(D.buildId||'')+' · פורסם '+stamp(D.builtAt)
+   +' · עודכן לפני '+ago(D.builtAt);
+ }
+ var foot=document.getElementById('builtFoot');
+ if(foot)foot.textContent='גרסה '+(D.buildId||'')+' · '+stamp(D.builtAt);
+ var line=document.getElementById('checked');
+ if(!line)return;
+ if(lastCheckFail){
+  // Quietly, and without pretending the numbers above are live.
+  line.textContent='אין חיבור לנתונים. המספרים כאן הם מרגע הפרסום.';
+ }else if(lastCheckAt){
+  line.textContent='נתונים נבדקו לפני '+ago(new Date(lastCheckAt).toISOString());
+ }else{
+  line.textContent='נתונים עוד לא נבדקו מול השרת.';
+ }
+}
+// Every half minute, so "updated 4 minutes ago" does not sit on 4 all evening.
+setInterval(paintStamp,30000);
+
 function checkFresh(){
  if(!window.fetch)return;
  fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){
   return r.ok?r.json():null;
  }).then(function(v){
+  if(v){lastCheckAt=Date.now();lastCheckFail=false;}
+  else{lastCheckFail=true;}
+  paintStamp();
   if(v)paintLive(v);
   if(!v||!v.builtAt||v.builtAt===D.builtAt)return;
   // A new build is up. Say so before reloading, so a reply that landed while
@@ -2707,9 +2765,10 @@ function checkFresh(){
    }
   }catch(e){}
   go();
- }).catch(function(){});
+ }).catch(function(){lastCheckFail=true;paintStamp();});
 }
 checkFresh();
+paintStamp();
 paintLive(null);
 paintNew();
 // Anything he taps says so for a moment: a tile, a report, a reply button.
