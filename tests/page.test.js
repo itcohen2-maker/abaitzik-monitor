@@ -67,7 +67,7 @@ test('home order: what is unread first, and the utilities off this screen', () =
   assert.ok(html.includes("var top=document.getElementById('newBlock');"));
   // Then the one place he talks to me, then everything else.
   const order = ['id="newBlock"', 'id="talkCard"', 'id="micBtn"', 'id="reqBox"', 'id="growHome"',
-    'class="whatsnew"', 'class="tiles"', 'id="askBox"', 'id="blkTiles"', 'id="blkIcons"'];
+    'class="whatsnew"', 'id="askBox"', 'id="blkTiles"', 'id="blkIcons"'];
   const idx = order.map(at);
   for (let i = 1; i < idx.length; i++) assert.ok(idx[i - 1] < idx[i], order[i] + ' must come after ' + order[i - 1]);
   // The alerts and the personal code are not on this screen at all any more:
@@ -312,12 +312,20 @@ test('the last things he asked for are pinned on the home screen', () => {
   assert.ok(html.includes('.pin{background'));
 });
 
-test('the first two tiles count his own waiting messages and my answers today', () => {
+test('the dead counters are off the home screen', () => {
   const html = renderPage(fixture({}));
-  assert.ok(html.includes('function myPending(){'));
-  assert.ok(html.includes('function answeredToday(){'));
-  assert.ok(html.includes("document.getElementById('tP').textContent=myPending();"));
-  assert.ok(html.includes("document.getElementById('tT').textContent=answeredToday();"));
+  // "ממתין לתשובה", "נענה היום" and "לידים פתוחים" were fed by the networks
+  // queue, and nothing has written to that queue since the networks went read
+  // only. Three zeros on the home screen are not a quiet state: they are a
+  // claim that nothing is waiting, made by a number with no source.
+  assert.ok(!html.includes('<div class="tiles">'));
+  assert.ok(!html.includes('id="tP"'));
+  assert.ok(!html.includes('id="tT"'));
+  assert.ok(!html.includes('id="tL"'));
+  assert.ok(!html.includes("document.getElementById('tP').textContent"));
+  // The networks screen itself is untouched: it is a screen he chooses to open.
+  assert.ok(html.includes('id="bP"'));
+  assert.ok(html.includes('id="list"'));
 });
 
 test('the connection test says which channel carried it and waits for a real answer', () => {
@@ -623,7 +631,16 @@ test('every send is written down and carries its own status', () => {
 
 test('the last two requests are cards he can read, and never invented', () => {
   const html = renderPage(fixture({}));
-  assert.ok(html.includes("'<b>שתי הבקשות האחרונות</b>'+a.slice(0,2)"));
+  // Folded shut: open, these paragraphs were taller than the phone.
+  assert.ok(html.includes('<details class="reqs fold" id="reqBox" hidden>'));
+  assert.ok(html.includes('<summary id="reqSum">שתי הבקשות האחרונות</summary>'));
+  assert.ok(html.includes("foldCard(box,'reqSum','שתי הבקשות האחרונות · '+a.length,'reqOpen');"));
+  assert.ok(html.includes('body.innerHTML=a.slice(0,2)'));
+  assert.ok(html.includes('<details class="cdx fold" id="codexBox" hidden>'));
+  assert.ok(html.includes("foldCard(box,'cdxSum','קודקס · '+(C.length+q.length),'cdxOpen');"));
+  // Shut unless he opened it before, and the choice sticks.
+  assert.ok(html.includes("box.open=open==='1';"));
+  assert.ok(!/<details class="(reqs|cdx) fold"[^>]*open/.test(html), 'neither may ship open');
   // Time, who is on it, the exact state, and what is still missing.
   assert.ok(html.includes("' · יצא ב'+esc(stamp(r.at))+' · '+esc(since(r.at))"));
   assert.ok(html.includes('<small>מבצע: קלוד</small>'));

@@ -450,6 +450,17 @@ button.abtn[disabled]{opacity:.55}
 .grow div.l a{color:var(--accent);word-break:break-all}
 /* The three newest on the home screen, in the same box as the requests above
    so the two lists read as one column rather than two designs. */
+.fold{margin-top:14px;background:var(--surface);border:1px solid var(--line);
+ border-radius:var(--r);box-shadow:var(--shadow);padding:0}
+.fold>summary{list-style:none;cursor:pointer;padding:13px 16px;
+ font:800 15px Heebo,sans-serif;display:flex;align-items:center;gap:8px}
+.fold>summary::-webkit-details-marker{display:none}
+.fold>summary::after{content:"›";margin-inline-start:auto;color:var(--dim);
+ font-size:20px;line-height:1;transform:rotate(90deg);transition:transform .18s ease}
+.fold[open]>summary::after{transform:rotate(-90deg)}
+@media(prefers-reduced-motion:reduce){.fold>summary::after{transition:none}}
+.fold>summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:var(--r)}
+#reqBody,#cdxBody{padding:0 14px 12px}
 .grows{margin-top:14px;background:var(--surface);border:1px solid var(--line);
  border-radius:var(--r);box-shadow:var(--shadow)}
 .grows>summary{list-style:none;cursor:pointer;padding:13px 16px;
@@ -1568,7 +1579,10 @@ try{
  </button>
 
   <div class="sent" id="sentCard" hidden></div>
-  <div class="reqs" id="reqBox" hidden></div>
+  <details class="reqs fold" id="reqBox" hidden>
+   <summary id="reqSum">שתי הבקשות האחרונות</summary>
+   <div id="reqBody"></div>
+  </details>
   <!--
     What got better, on the home screen instead of only behind a button. Three
     of them, newest first, each with the problem, the change, what it changes
@@ -1588,17 +1602,25 @@ try{
    <div id="growBody"></div>
   </details>
   <div id="pinBox"></div>
-  <div class="cdx" id="codexBox" hidden></div>
+  <details class="cdx fold" id="codexBox" hidden>
+   <summary id="cdxSum">קודקס</summary>
+   <div id="cdxBody"></div>
+  </details>
 <section class="whatsnew" aria-label="מה חדש">
   <div class="wn" id="wnCmds"></div>
   <div class="wn" id="wnNow"></div>
  </section>
 
-<div class="tiles">
- <div class="tile wait"><div class="k">ממתין לתשובה</div><div class="v" id="tP">0</div></div>
- <div class="tile"><div class="k">נענה היום</div><div class="v" id="tT">0</div></div>
- <div class="tile wait"><div class="k">לידים פתוחים</div><div class="v" id="tL">0</div></div>
-</div>
+<!--
+  The three counters that used to sit here are gone.
+
+  "ממתין לתשובה", "נענה היום" and "לידים פתוחים" were fed by the networks queue,
+  and nothing has written to that queue since the networks went read only. So
+  they sat on the home screen reading zero, zero, zero, which is not a quiet
+  state: it is a claim that there is nothing waiting, made by a number with no
+  source behind it. He called it a mockup that is not connected to anything and
+  asked for it off the screen, and he was right on both counts.
+-->
 
  <div id="askBox"></div>
  <div class="grid" id="blkTiles">
@@ -2232,9 +2254,7 @@ function answeredToday(){
  }).length;
 }
 function render(){
- document.getElementById('tP').textContent=myPending();
- document.getElementById('tT').textContent=answeredToday();
- document.getElementById('tL').textContent=D.counts.leads||0;
+ // The three home counters this used to paint are gone; nothing fed them.
  document.getElementById('bP').setAttribute('aria-pressed',tab==='pending');
  document.getElementById('bD').setAttribute('aria-pressed',tab==='done');
  var rows=tab==='pending'?D.pending:D.replied;
@@ -3998,8 +4018,10 @@ function renderReqs(){
  var a=reqLog();
  if(!a.length){box.hidden=true;return;}
  box.hidden=false;
+ foldCard(box,'reqSum','שתי הבקשות האחרונות · '+a.length,'reqOpen');
+ var body=document.getElementById('reqBody');
  var more=a.length>2?'<button type="button" class="reqall" id="reqAll">כל מה ששלחתי ('+a.length+')</button>':'';
- box.innerHTML='<b>שתי הבקשות האחרונות</b>'+a.slice(0,2).map(function(r){
+ body.innerHTML=a.slice(0,2).map(function(r){
   var st=reqStatus(r),label=SENTLABEL[r.kind]||'הודעה';
   var link='';
   if(st.reply){
@@ -4016,7 +4038,7 @@ function renderReqs(){
  }).join('')+more;
  var all=document.getElementById('reqAll');
  if(all)all.onclick=function(){
-  box.innerHTML='<b>כל מה ששלחתי</b>'+a.map(function(r){
+  body.innerHTML=a.map(function(r){
    var st=reqStatus(r),label=SENTLABEL[r.kind]||'הודעה';
    return '<div class="req"><div class="rq-t"><b>'+esc(r.text||label)+'</b>'
     +'<small>'+esc(label)+' · יצא ב'+esc(stamp(r.at))+'</small></div>'
@@ -4046,6 +4068,22 @@ var SENTLABEL={text:'הודעה',mail:'בקשת מייל',file:'קובץ',voice:
   claims. Nothing here is a claim about the model teaching itself; it is the
   record of work on this project.
 */
+/*
+  A long card that opens on a tap instead of taking the screen.
+
+  Said plainly: these two were taller than the phone. The two latest requests
+  and the Codex thread are both paragraphs, and stacked open above everything
+  else they buried the screen he actually came to use. Shut is the default and
+  the choice is remembered, the same way the improvements list works.
+*/
+function foldCard(box,sumId,title,key){
+ var sum=document.getElementById(sumId);
+ if(sum)sum.textContent=title;
+ var open='0';
+ try{open=localStorage.getItem(key)||'0';}catch(e){}
+ box.open=open==='1';
+ box.ontoggle=function(){try{localStorage.setItem(key,box.open?'1':'0');}catch(e){}};
+}
 function growCard(u){
  var proof='';
  if(u.proof){
@@ -4238,6 +4276,7 @@ function renderCodex(){
  var q=cxQueue();
  if(!C.length&&!q.length){box.hidden=true;return;}
  box.hidden=false;
+ foldCard(box,'cdxSum','קודקס · '+(C.length+q.length),'cdxOpen');
  var rows=C.slice(0,6).map(function(m){
   var st=CX_STATE[m.state]||'';
   return '<div class="cx cx-'+esc(m.state||'stored')+'">'
@@ -4250,8 +4289,8 @@ function renderCodex(){
    +'<p>'+esc(t.text)+'</p>'
    +'<span class="st">יצא אליי, עוד לא הועבר לתיבה</span></div>';
  }).join('');
- box.innerHTML='<b>קודקס</b>'
-  +'<small>מה שאתה שולח נמסר לשיחה החיה של קודקס. כל הודעה נושאת את מה שקרה לה בפועל, ונמסר נכתב רק כשהמסירה הצליחה.</small>'
+ document.getElementById('cdxBody').innerHTML=
+  '<small>מה שאתה שולח נמסר לשיחה החיה של קודקס. כל הודעה נושאת את מה שקרה לה בפועל, ונמסר נכתב רק כשהמסירה הצליחה.</small>'
   +pend+rows
   +'<div class="cxrow"><input id="cxIn" placeholder="הודעה לקודקס" autocomplete="off">'
   +'<button type="button" id="cxSend">שליחה</button></div>';
