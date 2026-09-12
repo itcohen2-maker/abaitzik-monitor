@@ -684,10 +684,15 @@ section{margin-bottom:30px}
 .note b{color:var(--ink);font-weight:500}
 
 /* ===== home screen ===== */
-.hd{display:flex;align-items:center;gap:11px;margin-bottom:14px}
+/* Three buttons, a title and the avatar do not fit across a 390 wide phone in
+   one line, and the row refusing to be narrower than the screen is what gave
+   the whole app its sideways scroll. It wraps now: the title keeps the leftover
+   width down to a floor, and past that the row takes a second line rather than
+   pushing the page wider than the screen. */
+.hd{display:flex;align-items:center;gap:8px 11px;margin-bottom:14px;flex-wrap:wrap}
 /* He asked for the two buttons on the right and the name on the left, so the
    text block takes the leftover width and the avatar closes the row. */
-.hdtext{flex:1 1 auto;text-align:end}
+.hdtext{flex:1 1 150px;min-width:0;text-align:end}
 .ava{width:46px;height:46px;flex:0 0 46px;border-radius:50%;padding:3px;
  background:conic-gradient(var(--blue),var(--red),var(--yellow),var(--green),var(--blue))}
 .ava div{width:100%;height:100%;border-radius:50%;background:var(--surface);display:grid;place-items:center;
@@ -846,14 +851,17 @@ body.editing .bn{display:none}
 .lockrow button{flex:0 0 92px}
 
 .conn{margin-inline-start:auto;font:700 15px Heebo,sans-serif;color:#fff;
- background:linear-gradient(180deg,#5cc36f,var(--green));
- min-height:44px;padding:0 20px;border-radius:999px;border:0;cursor:pointer;
+ background:linear-gradient(180deg,#5cc36f,var(--green));flex:0 0 auto;white-space:nowrap;
+ min-height:44px;padding:0 16px;border-radius:999px;border:0;cursor:pointer;
  box-shadow:0 2px 6px rgba(52,168,83,.4),inset 0 1px 0 rgba(255,255,255,.35)}
 .conn:active{background:linear-gradient(180deg,var(--green),#2b8c45);box-shadow:none;transform:translateY(1px)}
 .conn.arr{margin-inline-start:0;margin-inline-end:8px;
  background:linear-gradient(180deg,#6ea8ff,var(--blue));
  box-shadow:0 2px 6px rgba(66,133,244,.4),inset 0 1px 0 rgba(255,255,255,.35)}
 .conn.arr:active{background:linear-gradient(180deg,var(--blue),#1b63d6)}
+#setBtn{margin-inline-start:0;background:linear-gradient(180deg,#9aa5b8,#6b7688);
+ box-shadow:0 2px 6px rgba(20,30,60,.3),inset 0 1px 0 rgba(255,255,255,.28)}
+#setBtn:active{background:linear-gradient(180deg,#6b7688,#4c5566)}
 .conn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 /* The one place he talks to me. Roomy on purpose: the four ways in were
