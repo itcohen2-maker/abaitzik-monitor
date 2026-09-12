@@ -84,7 +84,11 @@ async function pull() {
 async function push(text, from) {
   const t = String(text || '').trim();
   if (!t) throw new Error('אין טקסט לשלוח');
-  const m = await call('POST', '/messages', { from: from || 'user', to: 'codex', text: t });
+  // The service answers 201 with {receipt, agentAutoDelivery, message}; the
+  // stored record is the nested `message`, not the envelope.
+  const res = await call('POST', '/messages', { from: from || 'user', to: 'codex', text: t });
+  const m = res.message || res;
+  if (!m.id) throw new Error('the mailbox stored nothing it could name');
   ensure(IN);
   // His own message is written to the same folder so the screen shows one
   // thread, and its state is the literal truth: stored, not delivered.
