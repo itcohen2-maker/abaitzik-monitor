@@ -139,11 +139,74 @@ test('standby and re are keyed on the thread root from every screen', () => {
 
 test('the red button and the push both open the thread cards, newest labelled', () => {
   const html = renderPage(fixture());
-  assert.ok(html.includes("document.getElementById('newBtn').onclick=function(){\n if(unreadCount())beep();"));
+  assert.ok(html.includes("document.getElementById('newBtn').onclick=function(){\n if(unreadCount()){\n  beep();"));
   assert.ok(!html.includes("pane('a');renderAnswers();\n};\nfunction renderUnread"), 'newBtn must not open the flat answers list');
   assert.ok(html.includes("if(location.hash==='#new'){pane('m');renderThread();}"));
   assert.ok(html.includes('<em class="badge latest">האחרונה שהגיעה</em>'));
   assert.ok(html.includes('.badge.latest{'));
+});
+
+test('arranging has a control you can find, not only a drag', () => {
+  const html = renderPage(fixture());
+  // The drag itself works, measured on the live page with a real touch drag
+  // and with a mouse. What it cannot do is announce itself, so there are two
+  // buttons beside the grip that say what they do.
+  assert.ok(html.includes("m.className='nudge nudge-'+dir;"));
+  assert.ok(html.includes("m.setAttribute('aria-label',dir==='up'?'להזיז למעלה':'להזיז למטה');"));
+  assert.ok(html.includes('function nudgeBlock(el,dir){'));
+  // One place, past what is actually on screen: half these cards are hidden
+  // until they have something to say.
+  assert.ok(html.includes("var kids=Array.prototype.filter.call(box.children,function(c){return !c.hidden;});"));
+  // Saved on the spot, so nothing depends on ending a drag in the right place.
+  assert.ok(html.includes("saveOrder(box,editing&&editing.box===box?editing.key:'blockOrder');"));
+  // And they are cleaned up with the rest of the handles.
+  assert.ok(html.includes("document.querySelectorAll('.grip,.minus,.nudge')"));
+  // Nothing is pinned to the bottom of the home screen any more: those two
+  // controls live on the settings screen, so arranging cannot fight them.
+  assert.ok(!html.includes("['alerts','codeBox'].forEach(function(id){"));
+});
+
+test('a refresh never costs him what he was writing', () => {
+  const html = renderPage(fixture());
+  assert.ok(html.includes("var DRAFT='msgDraft';"));
+  assert.ok(html.includes('function keepDraft(){'));
+  assert.ok(html.includes('function restoreDraft(){'));
+  // The refresh button is the one control allowed to throw the page away, so
+  // it puts the draft down first, and it says what it is doing rather than
+  // looking like a second way home.
+  const at = html.indexOf("document.getElementById('reloadBtn').onclick=function(){");
+  const body = html.slice(at, at + 900);
+  assert.ok(body.includes('keepDraft();'), 'the refresh must save the draft before reloading');
+  assert.ok(body.includes("btn.textContent='טוען מחדש';"));
+  assert.ok(body.includes('btn.disabled=true;'));
+  // Leaving the page at all has the same shape as pressing the button.
+  assert.ok(html.includes("window.addEventListener('pagehide',keepDraft);"));
+  assert.ok(html.includes("document.addEventListener('visibilitychange',function(){if(document.hidden)keepDraft();});"));
+  // A restore may only fill an empty box, never overwrite live typing.
+  assert.ok(html.includes('if(d&&!box.value)box.value=d;'));
+  // And a sent message stops being a draft.
+  assert.ok(html.includes('try{localStorage.removeItem(DRAFT);}catch(err){}'));
+});
+
+test('nothing opens by itself, and everything that opens can be closed', () => {
+  const html = renderPage(fixture());
+  // With nothing unread the big button no longer throws the whole archive on
+  // screen. It reveals the one button that does, which is his to press.
+  assert.ok(html.includes('<button type="button" id="allMsgs" class="allmsgs" hidden>כל ההודעות</button>'));
+  assert.ok(html.includes(" var all=document.getElementById('allMsgs');\n if(all)all.hidden=!all.hidden;"));
+  assert.ok(html.includes("if(allBtn)allBtn.onclick=function(){pane('m');renderThread();};"));
+  // And it goes away again the moment the button has real unread messages to
+  // open, so there are never two ways in competing on the same screen.
+  assert.ok(html.includes(" if(all&&c)all.hidden=true;"));
+  // The way out says what it does, and a keyboard has one too.
+  assert.ok(html.includes("b.textContent='סגירה וחזרה לבית';"));
+  assert.ok(html.includes("if(e.key!=='Escape')return;"));
+  // Escape must not eat a keystroke in the middle of a message.
+  assert.ok(html.includes("if(tag==='INPUT'||tag==='TEXTAREA'||(t&&t.isContentEditable))return;"));
+  // Closing is navigation and nothing else: no deleting, no marking read.
+  const at = html.indexOf("if(e.key!=='Escape')return;");
+  const esc = html.slice(at, at + 400);
+  assert.ok(!/markChatSeen|removeItem|setItem/.test(esc), 'closing must not change what is read');
 });
 
 test('thread cards never shrink inside the flex thread column', () => {

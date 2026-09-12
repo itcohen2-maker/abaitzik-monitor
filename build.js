@@ -782,6 +782,16 @@ section{margin-bottom:30px}
  font-size:17px;color:#fff;cursor:grab;touch-action:none;
  background:linear-gradient(180deg,#6ea8ff,var(--blue));
  box-shadow:0 2px 6px rgba(0,0,0,.35)}
+/* Beside the grip, because a drag is not something a person discovers. Same
+   size as the grip so they read as one control with three ways to use it. */
+.nudge{position:absolute;top:6px;z-index:5;width:34px;height:34px;border-radius:10px;
+ display:grid;place-items:center;border:0;cursor:pointer;touch-action:none;
+ font:700 13px/1 Heebo,sans-serif;color:#fff;
+ background:linear-gradient(180deg,#8fb9ff,#3f7ddd);box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.nudge-up{inset-inline-end:46px}
+.nudge-down{inset-inline-end:86px}
+.nudge:active{transform:translateY(1px)}
+.nudge:focus-visible{outline:2px solid #fff;outline-offset:2px}
 #pH>.hasgrip{position:relative}
 .editbar{position:fixed;z-index:90;inset-inline:0;bottom:0;display:flex;align-items:center;
  gap:12px;justify-content:space-between;
@@ -987,6 +997,10 @@ body.editing .bn{display:none}
 .tidy button{border:1px solid var(--line);background:var(--bg);color:var(--ink);
  border-radius:999px;padding:9px 16px;font:800 13.5px Heebo,sans-serif;cursor:pointer}
 .tidy button.go{background:var(--ink);color:#fff;border-color:var(--ink)}
+.allmsgs{display:block;width:100%;margin:-4px 0 10px;padding:11px 14px;cursor:pointer;
+ background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:14px;
+ font:500 13.5px Heebo,sans-serif}
+.allmsgs:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .backbar{display:block;width:100%;margin:0 0 14px;padding:12px 16px;border:0;cursor:pointer;
  border-radius:var(--r);background:var(--ink);color:#fff;font:800 15px Heebo,sans-serif;text-align:start}
 .backbar:active{transform:translateY(1px)}
@@ -1348,6 +1362,13 @@ try{
   <span class="nb-l"><b id="nbTitle">מה חדש</b><small id="nbSub"></small></span>
   <span class="nb-c" id="nbCount">0</span>
  </button>
+ <!--
+   The archive, separated from "all read". Pressing the button above when there
+   is nothing unread used to open the whole history, which is how the screen
+   filled up with something he had not asked for. Now it reveals this, and this
+   is the thing that opens it.
+ -->
+ <button type="button" id="allMsgs" class="allmsgs" hidden>כל ההודעות</button>
  <!--
    One card, four ways in, and nothing floating over it.
 
@@ -2606,7 +2627,9 @@ function renderNew(){
   :'הכל נקרא';
  document.getElementById('nbSub').textContent=c
   ?'לחיצה פותחת אותן, אחת אחת.'
-  :'אין תשובות שמחכות לך.';
+  :'אין תשובות שמחכות לך. לחיצה מראה את כל ההודעות.';
+ var all=document.getElementById('allMsgs');
+ if(all&&c)all.hidden=true;
  var K=D.openCmds||[];
  document.getElementById('wnCmds').innerHTML='<span class="n '+(K.length?'':'zero')+'">'+K.length+'</span><div>'+(K.length?'משימות פתוחות ממך':'אין משימות פתוחות')+(K.length?'<small>'+esc(K[0].text).slice(0,90)+'</small>':'')+'</div>';
  var N=D.now;
@@ -3192,6 +3215,28 @@ function addHandles(box){
   g.textContent='⠿';
   g.setAttribute('aria-hidden','true');
   el.insertBefore(g,el.firstChild);
+  /*
+    Up and down, beside the grip.
+
+    The drag itself works: measured on this page with a real touch drag and
+    with a mouse, the block moves and the new order survives a reload. What a
+    drag cannot do is announce itself. A grip you have to know to pull is not a
+    control a person finds, and "arranging does nothing" is what that feels
+    like. These two say what they do, move exactly one place, and save on the
+    spot, so nothing depends on ending the drag in the right place.
+  */
+  ['up','down'].forEach(function(dir){
+   var m=document.createElement('button');
+   m.type='button';
+   m.className='nudge nudge-'+dir;
+   m.textContent=dir==='up'?'▲':'▼';
+   m.setAttribute('aria-label',dir==='up'?'להזיז למעלה':'להזיז למטה');
+   m.addEventListener('pointerdown',function(ev){ev.stopPropagation();});
+   m.addEventListener('click',function(ev){
+    ev.preventDefault();ev.stopPropagation();nudgeBlock(el,dir);
+   });
+   el.insertBefore(m,el.firstChild);
+  });
   if(blockKey(el)){
    var m=document.createElement('button');
    m.type='button';
@@ -3207,8 +3252,31 @@ function addHandles(box){
   el.classList.add('hasgrip');
  });
 }
+/*
+  One place up or down, past whatever is actually visible.
+
+  Skipping the hidden blocks matters: half the cards on this screen only appear
+  when they have something to say, so a move that counted them would look like
+  a button that did nothing at all.
+*/
+function nudgeBlock(el,dir){
+ var box=el.parentNode;
+ if(!box)return;
+ var kids=Array.prototype.filter.call(box.children,function(c){return !c.hidden;});
+ var i=kids.indexOf(el);
+ if(i<0)return;
+ if(dir==='up'){
+  if(i===0)return;
+  box.insertBefore(el,kids[i-1]);
+ }else{
+  if(i>=kids.length-1)return;
+  box.insertBefore(kids[i+1],el);
+ }
+ saveOrder(box,editing&&editing.box===box?editing.key:'blockOrder');
+ try{el.scrollIntoView({block:'nearest'});}catch(e){}
+}
 function dropHandles(){
- Array.prototype.forEach.call(document.querySelectorAll('.grip,.minus'),function(g){
+ Array.prototype.forEach.call(document.querySelectorAll('.grip,.minus,.nudge'),function(g){
   var p=g.parentNode;
   if(p){p.removeChild(g);p.classList.remove('hasgrip');}
  });
@@ -3400,7 +3468,7 @@ function backBar(sec){
  if(sec.id==='pH')return;
  if(sec.querySelector(':scope > .backbar'))return;
  var b=document.createElement('button');
- b.type='button';b.className='backbar';b.textContent='חזרה למסך הבית';
+ b.type='button';b.className='backbar';b.textContent='סגירה וחזרה לבית';
  b.onclick=function(){pane('h');};
  sec.insertBefore(b,sec.firstChild);
 }
@@ -3418,11 +3486,52 @@ function pane(w){
  }catch(e){}
  window.scrollTo(0,0);
 }
+/*
+  The draft, kept across a reload.
+
+  רענון throws the page away and fetches it again, which is exactly what it is
+  for, and until now it also threw away whatever he had half written in the
+  composer. Nothing about a refresh should cost him a message, so the text is
+  put down before the page goes and picked up on the way back in.
+*/
+var DRAFT='msgDraft';
+function keepDraft(){
+ var box=document.getElementById('msgText');
+ if(!box)return;
+ try{
+  if(box.value&&box.value.trim())localStorage.setItem(DRAFT,box.value);
+  else localStorage.removeItem(DRAFT);
+ }catch(e){}
+}
+function restoreDraft(){
+ var box=document.getElementById('msgText');
+ if(!box)return;
+ try{
+  var d=localStorage.getItem(DRAFT);
+  // Only ever fills an empty box, so a restore can never overwrite something
+  // he has already started typing.
+  if(d&&!box.value)box.value=d;
+ }catch(e){}
+}
+// Anything that takes the page away, not just the button: a swipe to another
+// app and back has the same shape.
+window.addEventListener('pagehide',keepDraft);
+document.addEventListener('visibilitychange',function(){if(document.hidden)keepDraft();});
+restoreDraft();
+
 document.getElementById('reloadBtn').onclick=function(){
  // He reported the header still showing a build fifty minutes old after
  // pressing this, so a fresh query string was not enough. Anything the
  // browser has stored for this page is cleared first: a page added to the
  // home screen keeps its own copy that a normal reload never touches.
+ // The draft is written down first, because this is the one button here that
+ // is allowed to throw the whole page away.
+ keepDraft();
+ // And it says what it is doing. A button that looks like it did nothing, on a
+ // fast connection, is how רענון came to be read as a second way home.
+ var btn=this;
+ btn.textContent='טוען מחדש';
+ btn.disabled=true;
  var done=function(){location.replace(location.pathname+'?v='+Date.now());};
  try{
   if(window.caches&&caches.keys){
@@ -3456,14 +3565,30 @@ document.getElementById('plusBtn').onclick=function(){
 // The big button used to drop him into the full thread, two hundred bubbles
 // deep, and he said plainly that he could not find the new messages. It opens
 // a screen that holds only what he has not read.
+/*
+  With something unread, this opens it. With nothing unread, it does not.
+
+  He reported that pressing it opened messages he could not close, and this is
+  where that starts: with the counter at zero the button still threw the whole
+  archive on screen, which is a screenful he never asked for. Nothing is
+  deleted and nothing is marked read to make that go away; the archive simply
+  stopped opening itself, and the button under it is the deliberate way in.
+*/
 document.getElementById('newBtn').onclick=function(){
- if(unreadCount())beep();
- // Opens the thread cards. The unread ones sit first, newest at the top and
- // labelled as the latest, so he can tell at a glance which answer is the
- // last one and which are older. The flat answers list is still under the
- // תשובות tab.
- pane('m');renderThread();
+ if(unreadCount()){
+  beep();
+  // The thread cards. The unread ones sit first, newest at the top and
+  // labelled as the latest, so he can tell at a glance which answer is the
+  // last one and which are older. The flat answers list is still under the
+  // תשובות tab.
+  pane('m');renderThread();
+  return;
+ }
+ var all=document.getElementById('allMsgs');
+ if(all)all.hidden=!all.hidden;
 };
+var allBtn=document.getElementById('allMsgs');
+if(allBtn)allBtn.onclick=function(){pane('m');renderThread();};
 function renderUnread(){
  var host=document.getElementById('unreadBox');
  if(!host)return;
@@ -3506,6 +3631,18 @@ function renderUnread(){
 var aSearchEl=document.getElementById('aSearch');
 if(aSearchEl)aSearchEl.oninput=function(){ansQ=this.value.trim();ansShow=30;renderAnswers();};
 document.getElementById('nH').onclick=function(){pane('h');};
+/*
+  Escape closes whatever is open, on a keyboard. Nothing is deleted, nothing is
+  marked read and no draft is touched: it is the same move as the button at the
+  top of the screen. Ignored while he is typing, or it would eat the key in the
+  middle of a message.
+*/
+document.addEventListener('keydown',function(e){
+ if(e.key!=='Escape')return;
+ var t=e.target,tag=t&&t.tagName;
+ if(tag==='INPUT'||tag==='TEXTAREA'||(t&&t.isContentEditable))return;
+ if(document.getElementById('pH').hidden)pane('h');
+});
 document.getElementById('nQ').onclick=function(){pane('q');};
 document.getElementById('nL').onclick=function(){pane('l');};
 document.getElementById('nR').onclick=function(){pane('r');markReportsSeen();renderNextReport();};
@@ -4540,6 +4677,8 @@ document.getElementById('msgForm').addEventListener('submit',function(e){
   p.push({at:new Date().toISOString(),text:text});
   savePending(p);
   box.value='';
+  // Sent, so the draft is no longer a draft.
+  try{localStorage.removeItem(DRAFT);}catch(err){}
   said.textContent=how==='ntfy'?'נשלח בערוץ הגיבוי. הגיע אליי.':'נשלח.';
   markSent('text');renderSent();
   renderThread();
@@ -4944,10 +5083,9 @@ function pinHome(home){
  if(!home)return;
  var top=document.getElementById('newBtn');
  if(top&&top.parentNode===home)home.insertBefore(top,home.firstChild);
- ['alerts','codeBox'].forEach(function(id){
-  var el=document.getElementById(id);
-  if(el&&el.parentNode===home)home.appendChild(el);
- });
+ // The phone alerts and the personal code used to be pinned to the bottom of
+ // this screen. They live on the settings screen now, so there is nothing left
+ // to pin down there and nothing here to drag them back up.
 }
 (function(){
  var grid=document.querySelector('.grid');
