@@ -422,9 +422,11 @@ button.abtn[disabled]{opacity:.55}
 .newbtn:active{transform:translateY(2px) scale(.99)}
 .newbtn .nb-c{flex:0 0 auto;min-width:34px;height:34px;border-radius:999px;display:grid;place-items:center;
  background:rgba(255,255,255,.25);font:800 16px Heebo,sans-serif;padding:0 9px}
-.newbtn.hot{background:linear-gradient(150deg,#ff5570,#c5221f);
- outline:3px solid var(--red);outline-offset:3px;
- box-shadow:0 10px 26px rgba(234,67,53,.55);animation:nbeat 1.1s infinite}
+/* Still the loudest thing on the screen, because it is the one thing that
+   might need him, but quietly: one flat red, no ring around it, no halo
+   spreading underneath. The count and the words carry it. */
+.newbtn.hot{background:linear-gradient(150deg,#e85566,#c5221f);
+ box-shadow:0 6px 16px rgba(234,67,53,.22);animation:nbeat 1.1s infinite}
 .newbtn.hot b{font-size:20px}
 .newbtn.hot .nb-c{background:#fff;color:var(--red);min-width:42px;height:42px;font-size:19px}
 @keyframes nbeat{
@@ -1247,8 +1249,7 @@ body.editing .bn{display:none}
 :root.calm .live .pulse,
 :root.calm body.editing .editbox>*{animation:none!important}
 /* Whatever the killed frame happened to leave behind, put back a still shape. */
-:root.calm .newbtn.hot{transform:none;outline-width:2px;
- box-shadow:0 8px 20px rgba(234,67,53,.26)}
+:root.calm .newbtn.hot{transform:none;box-shadow:0 6px 16px rgba(234,67,53,.22)}
 :root.calm .newbtn.hot .nb-c{background:#fff;color:var(--red);box-shadow:none}
 :root.calm .gt.glow .flag,
 :root.calm .th-fresh>summary .badge,
