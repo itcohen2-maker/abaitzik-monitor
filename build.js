@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 // Generates docs/index.html: a standalone page with the data baked in, for
 // GitHub Pages. No server, no database, opens in any browser.
 //
@@ -1884,9 +1884,9 @@ try{
  <h2>הנהלת חשבונות</h2>
  <div id="rivBox" hidden>
   <div class="rivsum" id="rivSum"></div>
-  <h3 class="rivh" id="rivH1">כסף שנכנס לבנק וממתין לקבלה</h3>
+  <h3 class="rivh" id="rivH1">מי חייב כסף</h3>
   <div id="rivList"></div>
-  <h3 class="rivh" id="rivH2">נכנס בלי שם</h3>
+  <h3 class="rivh" id="rivH2">נכנס לבנק באפריל עד יוני ואין עליו קבלה</h3>
   <div id="rivOpen"></div>
   <h3 class="rivh" id="rivH3">שים לב</h3>
   <div id="rivAlerts"></div>
@@ -5553,7 +5553,7 @@ on('resetBtn',function(){
   The match field says what the receipt will do to the customer card: exact closes it,
   partial leaves a remainder, near is a small old difference worth a look.
 */
-var RIVTAG={exact:['rv-exact','סוגר את הכרטיס'],near:['rv-near','כמעט, בדוק את ההפרש'],partial:['rv-partial','תשלום חלקי']};
+var RIVTAG={exact:['rv-exact','חיוב חדש, טרם הגיע מועד'],near:['rv-near','חלקו ישן וחלקו חדש'],partial:['rv-partial','חוב ישן לגמרי']};
 // Thousands separators, and a negative written as a word. A minus sign in
 // front of a number inside a right to left line lands visually at the wrong
 // end and reads like a typo, so the sign is said out loud instead.
@@ -5566,7 +5566,7 @@ function rivRow(r){
  var tag=RIVTAG[r.match];
  return '<div class="rivrow"><span class="d">'+esc(r.date)+'</span>'
   +'<span class="t"><b>'+esc(r.name)+'</b>'
-  +(r.card!=null?'<small>יתרת הכרטיס '+ils(r.card)+'</small>':'')
+  +(r.card?'<small>מתוכו חוב ישן '+ils(r.card)+'</small>':'')
   +(r.note?'<small>'+esc(r.note)+'</small>':'')
   +(tag?'<span class="rivtag '+tag[0]+'">'+tag[1]+'</span>':'')
   +'</span><span class="a">'+ils(r.amount)+'</span></div>';
@@ -5594,7 +5594,7 @@ function renderRivhit(){
   el.hidden=!rows.length;
   if(h)h.hidden=!rows.length;
  };
- put('rivList',by('receipt'),'rivH1');
+ put('rivList',by('debt'),'rivH1');
  put('rivOpen',by('open'),'rivH2');
  var A=by('alert'),ae=document.getElementById('rivAlerts'),ah=document.getElementById('rivH3');
  if(ae){
@@ -5673,3 +5673,4 @@ try{window.__monAlive();}catch(e){}
 
 module.exports = { renderPage, build };
 if (require.main === module) build();
+
