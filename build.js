@@ -1225,6 +1225,7 @@ body.editing .bn{display:none}
 
   <div class="sent" id="sentCard" hidden></div>
   <div class="reqs" id="reqBox" hidden></div>
+  <div id="pinBox"></div>
 <section class="whatsnew" aria-label="מה חדש">
   <div class="wn" id="wnCmds"></div>
   <div class="wn" id="wnNow"></div>
@@ -1254,7 +1255,6 @@ body.editing .bn{display:none}
  </div>
 
  <div id="tidyBox"></div>
- <div id="pinBox"></div>
 
  <input type="search" id="gSearch" class="gsearch" autocomplete="off"
   placeholder="חיפוש בכל מה שכתבתי לך, למשל ראש השנה">

@@ -292,3 +292,12 @@ test('every send is written down and carries its own status', () => {
   assert.ok(html.includes("return {k:'sent',t:'הגיע לתיבה'};"));
   assert.ok(html.includes("if(answered)return {k:'done',t:'נעניתי'};"));
 });
+
+test('the newest request sits near the top, not under fourteen tiles', () => {
+  const html = renderPage(fixture({
+    special: [{ at: '2026-09-12T13:20:00', title: 'א', url: 'pyramid.html', note: 'n' }],
+  }));
+  // It has to come before the tile grid, or he has to scroll past everything.
+  assert.ok(html.indexOf('id="pinBox"') < html.indexOf('id="blkTiles"'));
+  assert.ok(html.indexOf('id="reqBox"') < html.indexOf('id="pinBox"'));
+});
