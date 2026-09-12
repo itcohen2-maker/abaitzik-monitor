@@ -23,6 +23,19 @@ function shortName(name) {
   return parts[0] + ' ' + parts.slice(1).map(p => p[0] + '.').join(' ');
 }
 
+// Customer names on the accounting screen. A full company name next to an
+// amount owed is a customer list, and this page is served from a public repo,
+// so the corporate suffix goes and only the first two words stay. Itzik knows
+// every one of them from that much; a stranger cannot look them up.
+function rivShort(name) {
+  const clean = String(name || '')
+    .replace(/בע["״']?מ/g, '')
+    .replace(/[,]/g, ' ')
+    .trim();
+  const parts = clean.split(/\s+/).filter(Boolean);
+  return parts.slice(0, 2).join(' ') || 'ללא שם';
+}
+
 function esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -169,6 +182,33 @@ function build() {
     .map(m => ({ at: m.at, from: m.from || '', to: m.to || '',
                  text: m.text || '', state: m.state || '' }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
+  /*
+    The accounting cross check: what landed in the bank account against what
+    Rivhit already has a receipt for. Customer names are shortened the same way
+    the reply queue shortens people, because this page is served from a public
+    repo and a customer list with amounts next to it is exactly the kind of
+    thing that should not be readable by a stranger. Itzik recognises every one
+    of them from the short form.
+  */
+  const rivhit = loadDocs('rivhit')
+    .map(r => ({
+      at: r.at,
+      kind: r.kind || 'note',
+      date: r.date || '',
+      name: r.kind === 'receipt' ? rivShort(r.name) : (r.name || ''),
+      amount: typeof r.amount === 'number' ? r.amount : null,
+      card: typeof r.card === 'number' ? r.card : null,
+      match: r.match || '',
+      title: r.title || '',
+      note: r.note || '',
+      period: r.period || '',
+      account: r.account || '',
+      balance: typeof r.balance === 'number' ? r.balance : null,
+      toReceipt: typeof r.toReceipt === 'number' ? r.toReceipt : null,
+      count: typeof r.count === 'number' ? r.count : null,
+    }))
+    .sort((a, b) => (b.amount || 0) - (a.amount || 0));
+
   const now = loadDocs('status').find(d => d.id === 'now') || null;
 
   /*
@@ -203,6 +243,7 @@ function build() {
     special,
     chat,
     codex,
+    rivhit,
   };
 
   const html = renderPage(payload);
@@ -1104,6 +1145,27 @@ body.editing .bn{display:none}
 .lbtn span{font-size:26px;line-height:1}
 .lbtn b{display:block;font:700 16px Heebo,sans-serif}
 .lbtn small{font-size:11.5px;opacity:.93;font-weight:300}
+/* The cross check block. A row is one line he can act on: who, how much, and
+   whether it closes the card. Amounts stay readable on a phone held in one
+   hand, which is where he reads this. */
+.rivsum{border-radius:18px;padding:14px 16px;margin-bottom:12px;
+ background:linear-gradient(150deg,#ffb74d,#e65100);color:#fff;
+ text-shadow:0 1px 2px rgba(0,0,0,.28);box-shadow:0 8px 18px rgba(20,30,60,.2)}
+.rivsum b{display:block;font:700 17px Heebo,sans-serif}
+.rivsum small{display:block;font-size:12px;opacity:.95;font-weight:300;margin-top:3px}
+.rivh{font:700 14px Heebo,sans-serif;color:var(--dim);margin:16px 0 8px}
+.rivrow{display:flex;align-items:center;gap:10px;padding:11px 13px;margin-bottom:7px;
+ border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.rivrow .d{font-size:11.5px;color:var(--dim);min-width:34px}
+.rivrow .t{flex:1;min-width:0}
+.rivrow .t b{display:block;font:600 14px Heebo,sans-serif}
+.rivrow .t small{display:block;font-size:11.5px;color:var(--dim);font-weight:300}
+.rivrow .a{font:700 15px Heebo,sans-serif;white-space:nowrap}
+.rivtag{display:inline-block;font-size:10.5px;font-weight:600;border-radius:999px;
+ padding:2px 8px;margin-top:4px}
+.rv-exact{background:#e6f4ea;color:#137333}
+.rv-near{background:#fef7e0;color:#8a6100}
+.rv-partial{background:#e8f0fe;color:#1a56c4}
 .lb-riv{background:linear-gradient(150deg,#ffb74d,#e65100)}
 .lb-cal{background:linear-gradient(150deg,#5aa9fb,var(--blue))}
 .lb-x{background:linear-gradient(150deg,#b39ddb,#5e35b1)}
@@ -1725,6 +1787,15 @@ try{
 
 <section id="pL2" hidden>
  <h2>הנהלת חשבונות</h2>
+ <div id="rivBox" hidden>
+  <div class="rivsum" id="rivSum"></div>
+  <h3 class="rivh" id="rivH1">כסף שנכנס לבנק וממתין לקבלה</h3>
+  <div id="rivList"></div>
+  <h3 class="rivh" id="rivH2">נכנס בלי שם</h3>
+  <div id="rivOpen"></div>
+  <h3 class="rivh" id="rivH3">שים לב</h3>
+  <div id="rivAlerts"></div>
+ </div>
  <div class="lolos">
   <a class="lbtn lb-riv" href="https://online.rivhit.co.il/" target="_blank" rel="noopener">
    <span aria-hidden="true">&#129534;</span>
@@ -5235,6 +5306,64 @@ on('resetBtn',function(){
  if(said)said.textContent='אופס. המונה על אפס, ורק מה שיגיע מעכשיו יידלק.';
  toast('אופס. רק מה שיגיע מעכשיו יידלק.');
 });
+/*
+  The accounting screen. Every row is money that is already in the bank and has
+  no receipt behind it, so the list is the work itself and not a summary of it.
+  The match field says what the receipt will do to the customer card: exact closes it,
+  partial leaves a remainder, near is a small old difference worth a look.
+*/
+var RIVTAG={exact:['rv-exact','סוגר את הכרטיס'],near:['rv-near','כמעט, בדוק את ההפרש'],partial:['rv-partial','תשלום חלקי']};
+// Thousands separators, and a negative written as a word. A minus sign in
+// front of a number inside a right to left line lands visually at the wrong
+// end and reads like a typo, so the sign is said out loud instead.
+function ils(n){
+ if(n==null)return '';
+ return Math.round(Math.abs(n)).toString().replace(/\\B(?=(\\d{3})+(?!\\d))/g,',')
+  +(n<0?' במינוס':'');
+}
+function rivRow(r){
+ var tag=RIVTAG[r.match];
+ return '<div class="rivrow"><span class="d">'+esc(r.date)+'</span>'
+  +'<span class="t"><b>'+esc(r.name)+'</b>'
+  +(r.card!=null?'<small>יתרת הכרטיס '+ils(r.card)+'</small>':'')
+  +(r.note?'<small>'+esc(r.note)+'</small>':'')
+  +(tag?'<span class="rivtag '+tag[0]+'">'+tag[1]+'</span>':'')
+  +'</span><span class="a">'+ils(r.amount)+'</span></div>';
+}
+function renderRivhit(){
+ var R=D.rivhit||[],box=document.getElementById('rivBox');
+ if(!box)return;
+ if(!R.length){box.hidden=true;return;}
+ box.hidden=false;
+ var s=R.filter(function(r){return r.kind==='sum';})[0];
+ var host=document.getElementById('rivSum');
+ if(host){
+  host.innerHTML=s
+   ?'<b>'+esc(s.title)+'</b><small>'+esc(s.period)+' · '+esc(s.account)+'</small>'
+    +'<small>יתרה בבנק '+ils(s.balance)+' · ממתין לקבלה '+ils(s.toReceipt)+' על פני '+esc(String(s.count))+' לקוחות</small>'
+    +'<small>'+esc(s.note)+'</small>'
+   :'';
+  host.hidden=!s;
+ }
+ var by=function(k){return R.filter(function(r){return r.kind===k;});};
+ var put=function(id,rows,head){
+  var el=document.getElementById(id),h=document.getElementById(head);
+  if(!el)return;
+  el.innerHTML=rows.map(rivRow).join('');
+  el.hidden=!rows.length;
+  if(h)h.hidden=!rows.length;
+ };
+ put('rivList',by('receipt'),'rivH1');
+ put('rivOpen',by('open'),'rivH2');
+ var A=by('alert'),ae=document.getElementById('rivAlerts'),ah=document.getElementById('rivH3');
+ if(ae){
+  ae.innerHTML=A.map(function(a){
+   return '<div class="rivrow"><span class="t"><b>'+esc(a.title)+'</b><small>'+esc(a.note)+'</small></span></div>';
+  }).join('');
+  ae.hidden=!A.length;
+ }
+ if(ah)ah.hidden=!A.length;
+}
 var bootFailed=[];
 function boot(name,fn){try{fn();}catch(e){bootFailed.push(name);try{console.error('boot '+name,e);}catch(_){}}}
 boot('report',renderNextReport);
@@ -5244,6 +5373,7 @@ boot('special',renderSpecial);
 boot('pin',renderPin);
 boot('reqs',renderReqs);
 boot('codex',renderCodex);
+boot('rivhit',renderRivhit);
 boot('tidy',function(){countTiles();renderTidy();});
 // A link like #pegasus or #special lands straight on that screen.
 boot('hash',function(){
