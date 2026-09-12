@@ -1182,7 +1182,11 @@ body.editing .bn{display:none}
  background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(12px);
  border-top:1px solid var(--line);padding:7px 4px calc(7px + env(safe-area-inset-bottom))}
 .bn button{position:relative;background:none;border:0;cursor:pointer;color:var(--dim);
- font:500 10px Heebo,sans-serif;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 10px}
+ font:500 10px Heebo,sans-serif;display:flex;flex-direction:column;align-items:center;gap:2px;
+ /* Six tabs with fixed side padding came to 408px on a 390px phone, and those
+    eighteen pixels were the horizontal scroll on every screen of the app. They
+    share the row now instead of each demanding a width. */
+ flex:1 1 0;min-width:0;padding:4px 2px}
 .bn button span{font-size:19px;line-height:1}
 /* The emoji row was the one part of the screen that looked like a default.
    These are drawn instead: same stroke weight as the rest of the app, and
