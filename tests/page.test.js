@@ -54,23 +54,30 @@ test('the pill screen asks whether the pill was taken earlier', () => {
   assert.ok(html.includes("'לקחתי כדור בשעה '"));
 });
 
-test('home order: unread count under the title, alerts and code at the bottom', () => {
+test('home order: what is unread first, and the utilities off this screen', () => {
   const html = renderPage(fixture());
   const at = (s) => { const i = html.indexOf(s); assert.ok(i > -1, 'missing ' + s); return i; };
-  const header = at('</header>');
   const ph = at('<section id="pH">');
-  const newBtn = at('id="newBtn"');
-  assert.ok(header < ph && ph < newBtn);
-  // Nothing sits between the section opening and the unread button.
-  assert.equal(html.slice(ph, newBtn).replace(/\s/g, ''), '<sectionid="pH"><buttontype="button"');
-  const order = ['id="newBtn"', 'id="micBtn"', 'id="sentCard"', 'class="whatsnew"', 'class="tiles"',
-    'id="askBox"', 'id="blkTiles"', 'id="blkIcons"', 'id="alerts"', 'id="codeBox"'];
+  assert.ok(at('</header>') < ph);
+  // The unread button and the archive button are one block, and it is the
+  // first thing in the section.
+  assert.ok(ph < at('id="newBlock"'));
+  assert.ok(at('id="newBlock"') < at('id="newBtn"'));
+  assert.ok(at('id="newBtn"') < at('id="allMsgs"'));
+  assert.ok(html.includes("var top=document.getElementById('newBlock');"));
+  // Then the one place he talks to me, then everything else.
+  const order = ['id="newBlock"', 'id="talkCard"', 'id="micBtn"', 'id="reqBox"', 'id="growHome"',
+    'class="whatsnew"', 'class="tiles"', 'id="askBox"', 'id="blkTiles"', 'id="blkIcons"'];
   const idx = order.map(at);
   for (let i = 1; i < idx.length; i++) assert.ok(idx[i - 1] < idx[i], order[i] + ' must come after ' + order[i - 1]);
-  // codeBox is the last block of the home section.
-  const codeEnd = html.indexOf('</section>', at('id="codeBox"'));
-  const between = html.slice(at('id="codeBox"'), codeEnd);
-  assert.ok(!/<div class="(alerts|tiles|grid|row|voice)"/.test(between));
+  // The alerts and the personal code are not on this screen at all any more:
+  // they are on the settings screen, which starts after this section ends.
+  const homeEnd = html.indexOf('<section id="pZ" hidden>');
+  const home = html.slice(ph, homeEnd);
+  assert.ok(!home.includes('id="alerts"'));
+  assert.ok(!home.includes('id="codeBox"'));
+  assert.ok(html.indexOf('id="alerts"') > homeEnd);
+  assert.ok(html.indexOf('id="codeBox"') > homeEnd);
   assert.ok(html.includes('function pinHome('));
   assert.ok(html.includes('--r:18px'));
 });
@@ -161,6 +168,10 @@ test('arranging has a control you can find, not only a drag', () => {
   assert.ok(html.includes("saveOrder(box,editing&&editing.box===box?editing.key:'blockOrder');"));
   // And they are cleaned up with the rest of the handles.
   assert.ok(html.includes("document.querySelectorAll('.grip,.minus,.nudge')"));
+  // The blocker that made arranging safe also swallowed these. It ran in the
+  // capture phase, so the click never reached the button it was aimed at:
+  // measured live, a nudge moved nothing and wrote nothing.
+  assert.ok(html.includes("if(t&&t.closest&&t.closest('.nudge,.minus'))return;"));
   // Nothing is pinned to the bottom of the home screen any more: those two
   // controls live on the settings screen, so arranging cannot fight them.
   assert.ok(!html.includes("['alerts','codeBox'].forEach(function(id){"));

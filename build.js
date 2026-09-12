@@ -1358,6 +1358,10 @@ try{
 </header>
 
 <section id="pH">
+<!-- The unread button and the archive button are one block. Apart, arranging
+     treated a one line control as a card of its own, gave it a grip, and let
+     it be dragged away from the button that reveals it. -->
+<div id="newBlock">
  <button type="button" id="newBtn" class="newbtn">
   <span class="nb-l"><b id="nbTitle">מה חדש</b><small id="nbSub"></small></span>
   <span class="nb-c" id="nbCount">0</span>
@@ -1369,6 +1373,7 @@ try{
    is the thing that opens it.
  -->
  <button type="button" id="allMsgs" class="allmsgs" hidden>כל ההודעות</button>
+</div>
  <!--
    One card, four ways in, and nothing floating over it.
 
@@ -3140,9 +3145,20 @@ function armDrag(box,key){
    saveOrder(box,key);
   });
  });
- // Nothing is clickable while arranging, exactly as on the phone.
+ /*
+   Nothing is clickable while arranging, exactly as on the phone, except the
+   controls that arranging itself puts there.
+
+   This ran in the capture phase, so it stopped the click before it ever
+   reached the button it was aimed at: the up and down buttons did nothing at
+   all, and so did the minus. Measured on the live page, a nudge left the order
+   untouched and wrote nothing.
+ */
  box.addEventListener('click',function(e){
-  if(editing&&editing.box===box){e.preventDefault();e.stopPropagation();}
+  if(!editing||editing.box!==box)return;
+  var t=e.target;
+  if(t&&t.closest&&t.closest('.nudge,.minus'))return;
+  e.preventDefault();e.stopPropagation();
  },true);
 }
 // A visible grip on each block, because on a phone there is no other way to
@@ -5081,7 +5097,7 @@ document.getElementById('mailForm').addEventListener('submit',function(e){
 // personal code are always the last things on the screen.
 function pinHome(home){
  if(!home)return;
- var top=document.getElementById('newBtn');
+ var top=document.getElementById('newBlock');
  if(top&&top.parentNode===home)home.insertBefore(top,home.firstChild);
  // The phone alerts and the personal code used to be pinned to the bottom of
  // this screen. They live on the settings screen now, so there is nothing left
