@@ -388,6 +388,47 @@ test('one card holds all four ways in, and nothing floats over the page', () => 
   assert.ok(html.includes("document.getElementById('wShoot').onclick"));
 });
 
+test('a dead page says so instead of ignoring him', () => {
+  const html = renderPage(fixture({}));
+  // The guard is the FIRST script on the page, because everything after it is
+  // what might be broken.
+  const guard = html.indexOf('window.__monAlive=function(){ok=true;};');
+  assert.ok(guard > -1, 'the guard is missing');
+  assert.ok(guard < html.indexOf("localStorage.getItem('skin')"), 'the guard must come first');
+  // It depends on nothing: no helper of ours, no stylesheet class.
+  const body = html.slice(guard - 400, html.indexOf('</script>', guard));
+  assert.ok(!/\besc\(|\bpane\(|\btoast\(/.test(body), 'the guard must not call into the script it guards');
+  // One bar, one button, and the button clears the stored copy first, because
+  // that is the likeliest thing keeping a dead build alive on his phone.
+  assert.ok(html.includes('המסך לא נטען כמו שצריך, ולכן הכפתורים והמיקרופון לא יגיבו.'));
+  assert.ok(body.includes('caches.delete'));
+  // Cleared only by the last line of the main script.
+  assert.ok(html.includes('try{window.__monAlive();}catch(e){}'));
+  assert.ok(html.lastIndexOf('try{window.__monAlive();}catch(e){}') > html.lastIndexOf('boot('));
+  // And the silent case is covered too: no error, but never finished either.
+  assert.ok(body.includes("if(!ok)bar('never signalled');"));
+});
+
+test('the microphone answers the tap before the phone has decided', () => {
+  const html = renderPage(fixture({}));
+  // He said twice that it does not respond. Between the tap and the permission
+  // prompt resolving, nothing on the screen changed at all.
+  const at = html.indexOf('function recStart(){');
+  const body = html.slice(at, html.indexOf('function holdScreen', at));
+  const said = body.indexOf("recSaid.textContent='פותח את המיקרופון");
+  assert.ok(said > -1, 'nothing is said when he taps');
+  assert.ok(said < body.indexOf('getUserMedia({audio:true})'), 'and it must be said before the wait');
+  // One attempt at a time: only recBtn was guarded, so a second tap on the main
+  // microphone launched a second permission request.
+  assert.ok(body.includes('if(recStarting||rec)return;'));
+  // And a failure says what actually failed, instead of sending him to a
+  // permission screen for a microphone another app is holding.
+  assert.ok(body.includes("name==='NotReadableError'||name==='AbortError'"));
+  assert.ok(body.includes('המיקרופון תפוס'));
+  assert.ok(body.includes('לא נמצא מיקרופון במכשיר הזה'));
+  assert.ok(body.includes('rec.onerror=function(){'));
+});
+
 test('the page actually parses', () => {
   // The gap that let a broken page go live. Every other test here asks whether
   // a string is present, and a string is present whether or not the script it

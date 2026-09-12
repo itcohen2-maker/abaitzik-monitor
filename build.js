@@ -1382,6 +1382,69 @@ body.editing .bn{display:none}
 .mob button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 </style>
 <script>
+/*
+  A page that dies has to say so.
+
+  Tonight one character of a regex broke the whole inline script, and a page in
+  that state is not a page with a bug in it: every button on it is dead,
+  including the microphone, and every counter reads zero. It looks exactly like
+  a screen that is simply ignoring him, which is precisely what he reported.
+  The tab can also sit on that build for hours, because the thing that fetches
+  a newer one is itself in the script that died.
+
+  So this runs first, alone, and holds nothing but a flag. If the main script
+  never reaches its own last line, or throws on the way, this puts one bar on
+  the screen with one button. No dependency on anything below it, because
+  everything below it is what may be broken.
+*/
+(function(){
+ var ok=false;
+ window.__monAlive=function(){ok=true;};
+ function bar(why){
+  if(document.getElementById('deadbar'))return;
+  var d=document.createElement('div');
+  d.id='deadbar';
+  d.setAttribute('dir','rtl');
+  d.style.cssText='position:fixed;inset-inline:0;top:0;z-index:9999;padding:14px 16px;'
+   +'background:#7f1d1d;color:#fff;font:600 14px/1.5 Heebo,system-ui,sans-serif;text-align:center';
+  d.innerHTML='<div>המסך לא נטען כמו שצריך, ולכן הכפתורים והמיקרופון לא יגיבו.</div>';
+  var b=document.createElement('button');
+  b.type='button';
+  b.textContent='טעינה מחדש';
+  b.style.cssText='margin-top:10px;padding:11px 26px;border:0;border-radius:12px;cursor:pointer;'
+   +'background:#fff;color:#7f1d1d;font:700 15px Heebo,system-ui,sans-serif';
+  b.onclick=function(){
+   b.disabled=true;b.textContent='טוען מחדש';
+   // The stored copy is the likeliest thing keeping a dead build alive, so it
+   // goes first. A plain reload would hand him the same broken page again.
+   var go=function(){location.replace(location.pathname+'?fix='+Date.now());};
+   try{
+    if(window.caches&&caches.keys){
+     caches.keys().then(function(k){
+      return Promise.all(k.map(function(n){return caches.delete(n);}));
+     }).catch(function(){}).then(go);
+     return;
+    }
+   }catch(e){}
+   go();
+  };
+  d.appendChild(b);
+  (document.body||document.documentElement).appendChild(d);
+  try{console.error('monitor did not boot:',why);}catch(e){}
+ }
+ window.addEventListener('error',function(ev){
+  if(ok)return;
+  var t=ev&&ev.target;
+  if(t&&t!==window&&t.tagName)return;
+  bar((ev&&ev.message)||'error');
+ },true);
+ // And the silent case: no error we saw, but the script never finished either.
+ window.addEventListener('load',function(){
+  setTimeout(function(){if(!ok)bar('never signalled');},1500);
+ });
+})();
+</script>
+<script>
 /* Runs before the body exists on purpose. A skin applied after first paint is a
    white flash on a phone at night, and that flash is the whole complaint. */
 (function(){try{
@@ -5156,11 +5219,42 @@ function recCleanup(){
  freeScreen();
  paintMics('send');
 }
+/*
+  Starting a recording, and saying so before the phone has decided.
+
+  He reported twice that the microphone does not respond, and the gap is here
+  rather than in the button: between the tap and the browser resolving the
+  permission prompt, nothing on this screen changed at all. On a phone that
+  wait is seconds long, so a working microphone and a broken one look exactly
+  the same, and the honest reading of "it does not respond" is that it never
+  said it had heard the tap.
+
+  Three things were missing and all three are cheap:
+
+  - a word the moment he taps, before anything async begins;
+  - a guard, because only recBtn was disabled while the main microphone stayed
+    live, so a second tap launched a second permission request;
+  - an error that says what actually failed. Every failure was reported as a
+    refused permission, including a device that is busy and a MediaRecorder
+    that will not start, which sends him to a settings screen where there is
+    nothing to fix.
+*/
+var recStarting=false;
 function recStart(){
  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){
-  recSaid.textContent='הדפדפן הזה לא תומך בהקלטה. תשלח קובץ קול דרך בחירת קובץ.';return;
+  recSaid.textContent='הדפדפן הזה לא תומך בהקלטה. תשלח קובץ קול דרך בחירת קובץ.';
+  paintMics('bad');
+  return;
  }
+ // One attempt at a time. Two permission prompts is how a tap that did work
+ // ends up looking like a tap that did nothing.
+ if(recStarting||rec)return;
+ recStarting=true;
  recBtn.disabled=true;
+ // Said first, synchronously, so the screen answers the finger and not the
+ // browser. Everything below this line can take seconds.
+ recSaid.textContent='פותח את המיקרופון. אם הדפדפן שואל, תאשר.';
+ paintMics('sending');
  navigator.mediaDevices.getUserMedia({audio:true}).then(function(st){
   recStream=st;recChunks=[];recSec=0;
   var mt=recPickType();
@@ -5187,7 +5281,14 @@ function recStart(){
    fBtn.disabled=true;
    reallySend(file);
   };
+  // A recorder that dies mid take used to leave the screen recording forever.
+  rec.onerror=function(){
+   recCleanup();recModal(false);
+   recSaid.textContent='ההקלטה נקטעה. תנסה שוב, ואם זה חוזר תשלח קובץ קול.';
+   recBtn.disabled=false;paintMics('bad');
+  };
   rec.start();
+  recStarting=false;
   holdScreen();
   recModal(true);
   recBtn.disabled=false;
@@ -5195,9 +5296,21 @@ function recStart(){
   recBtn.setAttribute('aria-label','עצירת ההקלטה ושליחה');
   recSaid.textContent='מקליט 0:00. לחיצה נוספת עוצרת ושולחת. עד שמונה דקות.';
   recTimer=setInterval(recTick,1000);
- }).catch(function(){
+ }).catch(function(err){
+  recStarting=false;
   recBtn.disabled=false;recModal(false);
-  recSaid.textContent='אין הרשאה למיקרופון. תאשר אותה בהגדרות האתר בדפדפן ותנסה שוב.';
+  // What actually went wrong. Sending him to the permission screen for a
+  // microphone another app is holding is a wasted trip.
+  var name=(err&&err.name)||'';
+  recSaid.textContent=
+   name==='NotAllowedError'||name==='SecurityError'
+    ? 'אין הרשאה למיקרופון. תאשר אותה בהגדרות האתר בדפדפן ותנסה שוב.'
+   :name==='NotFoundError'||name==='OverconstrainedError'
+    ? 'לא נמצא מיקרופון במכשיר הזה.'
+   :name==='NotReadableError'||name==='AbortError'
+    ? 'המיקרופון תפוס. תסגור שיחה או אפליקציה שמקליטה ותנסה שוב.'
+    : 'לא הצלחתי לפתוח את המיקרופון'+(name?' ('+name+')':'')+'. תנסה שוב, או תשלח קובץ קול.';
+  paintMics('bad');
  });
 }
 // Keeping the screen alive while recording. Without it the phone sleeps and
@@ -5496,6 +5609,10 @@ if(bootFailed.length){
  var rb=document.getElementById('bootReload');
  if(rb)rb.onclick=function(){location.reload();};
 }
+// The last line of the script, and the only thing that clears the dead page
+// guard at the top. If anything above threw hard enough to skip this, the bar
+// appears and he has a way out instead of a screen that ignores him.
+try{window.__monAlive();}catch(e){}
 </script>
 </body>
 </html>`;
