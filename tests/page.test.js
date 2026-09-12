@@ -301,3 +301,16 @@ test('the newest request sits near the top, not under fourteen tiles', () => {
   assert.ok(html.indexOf('id="pinBox"') < html.indexOf('id="blkTiles"'));
   assert.ok(html.indexOf('id="reqBox"') < html.indexOf('id="pinBox"'));
 });
+
+test('the codex thread never says delivered while the mailbox only stores', () => {
+  const html = renderPage(fixture({
+    codex: [{ at: '2026-09-12T13:04:00', from: 'codex', to: 'user', text: 'שלום', state: 'received' }],
+  }));
+  assert.ok(html.includes('id="codexBox"'));
+  assert.ok(html.includes('function renderCodex(){'));
+  assert.ok(html.includes("boot('codex',renderCodex);"));
+  // The two words that must not appear on a stored message.
+  assert.ok(html.includes('מחכה בתיבה, קודקס עוד לא מחובר אוטומטית'));
+  assert.ok(!html.includes('נמסר לקודקס'));
+  assert.ok(!html.includes('קודקס ענה'));
+});

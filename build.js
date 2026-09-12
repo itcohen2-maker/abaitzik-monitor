@@ -151,6 +151,14 @@ function build() {
     .map(f => ({ at: f.at, name: f.name, kcal: f.kcal, protein: f.protein,
                  carbs: f.carbs, fat: f.fat, note: f.note || '' }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
+  // Messages that crossed the bridge to the local agent mailbox. `state` is the
+  // literal truth for each one and never says answered: `received` is something
+  // Codex wrote, `stored` is something of his that is sitting in the mailbox
+  // waiting, because that mailbox stores messages and does not wake Codex.
+  const codex = loadDocs('codex')
+    .map(m => ({ at: m.at, from: m.from || '', to: m.to || '',
+                 text: m.text || '', state: m.state || '' }))
+    .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
   const now = loadDocs('status').find(d => d.id === 'now') || null;
 
   const payload = {
@@ -174,6 +182,7 @@ function build() {
     improve,
     special,
     chat,
+    codex,
   };
 
   const html = renderPage(payload);
@@ -287,6 +296,22 @@ button.abtn[disabled]{opacity:.55}
  padding:11px 13px;color:var(--ink);font:500 14px Heebo,sans-serif;box-shadow:var(--shadow)}
 .links a span{font-size:17px}
 .links a small{display:block;color:var(--dim);font-weight:300;font-size:12px}
+.cdx{margin-top:12px;background:var(--surface);border:1px solid var(--line);
+ border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.cdx > b{display:block;font:500 15px Heebo,sans-serif;padding:13px 15px 4px}
+.cdx > small{display:block;color:var(--dim);font-size:12.5px;padding:0 15px 11px}
+.cx{padding:11px 15px;border-top:1px solid var(--line)}
+.cx .who{font:500 12.5px Heebo,sans-serif;color:var(--dim)}
+.cx p{margin:3px 0 0;font-size:14.5px;line-height:1.55;white-space:pre-wrap}
+.cx .st{display:inline-block;margin-top:6px;font:500 12px Heebo,sans-serif;
+ padding:3px 10px;border-radius:999px}
+.cx-received .st{background:var(--fresh);color:var(--green)}
+.cx-stored .st{background:var(--sunk);color:var(--dim)}
+.cxrow{display:flex;gap:8px;padding:11px 15px;border-top:1px solid var(--line)}
+.cxrow input{flex:1;min-width:0;background:var(--sunk);color:var(--ink);
+ border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:400 16px Heebo,sans-serif}
+.cxrow button{background:var(--accent);color:#fff;border:0;border-radius:10px;
+ padding:10px 16px;font:500 14px Heebo,sans-serif;cursor:pointer}
 .reqs{margin-top:12px;background:var(--surface);border:1px solid var(--line);
  border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
 .reqs > b{display:block;font:500 15px Heebo,sans-serif;padding:13px 15px 9px}
@@ -1226,6 +1251,7 @@ body.editing .bn{display:none}
   <div class="sent" id="sentCard" hidden></div>
   <div class="reqs" id="reqBox" hidden></div>
   <div id="pinBox"></div>
+  <div class="cdx" id="codexBox" hidden></div>
 <section class="whatsnew" aria-label="מה חדש">
   <div class="wn" id="wnCmds"></div>
   <div class="wn" id="wnNow"></div>
@@ -3438,6 +3464,58 @@ function renderTidy(){
  if(no)no.onclick=function(){tileSave('tidySnooze',Date.now()+7*86400000);renderTidy();};
 }
 
+// Codex. The wording here is the whole point: the mailbox stores messages and
+// does not wake a Codex session, so a message of his says it is waiting in the
+// mailbox and never says it was delivered or answered. The moment an adapter to
+// a real Codex session exists, this is the one place that changes.
+var CX_STATE={received:'הגיע מקודקס',stored:'מחכה בתיבה, קודקס עוד לא מחובר אוטומטית'};
+function renderCodex(){
+ var box=document.getElementById('codexBox');
+ if(!box)return;
+ var C=(D.codex||[]);
+ var q=cxQueue();
+ if(!C.length&&!q.length){box.hidden=true;return;}
+ box.hidden=false;
+ var rows=C.slice(0,6).map(function(m){
+  var st=CX_STATE[m.state]||'';
+  return '<div class="cx cx-'+esc(m.state||'stored')+'">'
+   +'<div class="who">'+(m.from==='codex'?'קודקס':'אתה')+' · '+esc(stamp(m.at))+'</div>'
+   +'<p>'+esc(m.text)+'</p>'
+   +(st?'<span class="st">'+esc(st)+'</span>':'')+'</div>';
+ }).join('');
+ var pend=q.map(function(t){
+  return '<div class="cx cx-stored"><div class="who">אתה · עכשיו</div>'
+   +'<p>'+esc(t.text)+'</p>'
+   +'<span class="st">יצא אליי, עוד לא הועבר לתיבה</span></div>';
+ }).join('');
+ box.innerHTML='<b>קודקס</b>'
+  +'<small>התיבה שומרת הודעות. היא לא מפעילה שיחת קודקס, ולכן שום דבר כאן לא ייכתב כנמסר עד שזה באמת יעבוד.</small>'
+  +pend+rows
+  +'<div class="cxrow"><input id="cxIn" placeholder="הודעה לקודקס" autocomplete="off">'
+  +'<button type="button" id="cxSend">שליחה</button></div>';
+ var b=document.getElementById('cxSend');
+ if(b)b.onclick=cxSubmit;
+}
+function cxQueue(){
+ try{return JSON.parse(localStorage.getItem('codexQueue')||'[]');}catch(e){return [];}
+}
+function cxSubmit(){
+ var el=document.getElementById('cxIn');
+ var t=(el&&el.value||'').trim();
+ if(!t)return;
+ // The phone cannot reach the mailbox: it listens on this machine only and
+ // refuses anything with an Origin header. So the message rides my channel and
+ // I carry it across on the next round.
+ sendText('קודקס','קודקס: '+t,'קודקס').then(function(){
+  var q=cxQueue();q.unshift({at:new Date().toISOString(),text:t});
+  try{localStorage.setItem('codexQueue',JSON.stringify(q.slice(0,10)));}catch(e){}
+  el.value='';
+  renderCodex();
+ }).catch(function(){
+  toast('לא נשלח. אין רשת כרגע.');
+ });
+}
+
 function renderPin(){
  var host=document.getElementById('pinBox');
  if(!host)return;
@@ -4586,6 +4664,7 @@ boot('improve',renderImprove);
 boot('special',renderSpecial);
 boot('pin',renderPin);
 boot('reqs',renderReqs);
+boot('codex',renderCodex);
 boot('tidy',function(){countTiles();renderTidy();});
 // A link like #pegasus or #special lands straight on that screen.
 boot('hash',function(){
