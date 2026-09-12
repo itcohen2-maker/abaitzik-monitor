@@ -3099,17 +3099,41 @@ function savePingState(s){
 function pingSay(t){
  var e=document.getElementById('pingSaid');if(e)e.textContent=t;
 }
+/*
+  Whether the connection works, answered only by an answer.
+
+  This used to say "החיבור עובד" whenever a build newer than the tap existed.
+  Reproduced: tap at 10:00, an unrelated publish at 11:00, zero replies, and the
+  line read "חזרתי אליך 60 דקות אחרי הלחיצה. החיבור עובד." It was reporting that
+  a deploy happened, which it always does, and calling it a round trip.
+
+  A connection test that cannot fail is not a test. So the tap carries a code
+  of its own, and only a message of mine carrying that same code turns the line
+  green. A new build proves nothing and is not consulted.
+*/
 function pingPaint(){
  var st=pingState(),box=document.getElementById('pingBox');
  if(!box||!st.at)return;
- var built=D.builtAt||'';
- if(built&&Date.parse(built)>Date.parse(st.at)){
-  var m=Math.max(1,Math.round((Date.parse(built)-Date.parse(st.at))/60000));
+ var code=st.code||'';
+ var back=null;
+ if(code){
+  var all=(D.chat||[]);
+  for(var i=0;i<all.length;i++){
+   var m=all[i];
+   if(m.from!=='claude')continue;
+   if(String(m.text||'').indexOf(code)>-1||(m.requestId||m.re||'')===code){back=m;break;}
+  }
+ }
+ if(back){
+  var ms=Math.max(0,Date.parse(back.at||'')-Date.parse(st.at));
+  var mins=Math.round(ms/60000);
   box.classList.add('ok');
-  pingSay('חזרתי אליך '+(m===1?'דקה':m+' דקות')+' אחרי הלחיצה. החיבור עובד.');
+  pingSay('חזרתי אליך עם הקוד של הבדיקה'
+   +(mins>0?', '+(mins===1?'דקה':mins+' דקות')+' אחרי הלחיצה':'')+'. החיבור עובד.');
  }else{
   box.classList.remove('ok');
-  pingSay('נשלח '+ago(st.at)+' ועוד לא חזרתי. אם עוברת יותר משעה, משהו אצלי תקוע.');
+  pingSay('נשלח '+since(st.at)+' ועוד לא חזרתי עם הקוד. גרסה חדשה של האתר אינה תשובה, '
+   +'אז השורה הזאת לא תתחלף לבד. אם עוברת יותר משעה, משהו אצלי תקוע.');
  }
 }
 function pingBind(){
@@ -3119,11 +3143,15 @@ function pingBind(){
   btn.disabled=true;
   pingSay('שולח.');
   var at=new Date().toISOString();
-  sendText('בדיקת חיבור','בדיקת חיבור מהמוניטור. תחזור אליי כדי שאדע שאתה מחובר.','בדיקה')
+  // The code the answer has to carry back. Short enough to read off a phone.
+  var code='PING-'+Date.now().toString(36).toUpperCase().slice(-6);
+  sendText('בדיקת חיבור','בדיקת חיבור מהמוניטור. תחזור אליי עם הקוד '+code
+   +' כדי שאדע שאתה מחובר. בלי הקוד הזה המסך לא יסמן שהחיבור עובד.','בדיקה')
   .then(function(how){
-   savePingState({at:at});
+   savePingState({at:at,code:code});
    document.getElementById('pingBox').classList.remove('ok');
-   pingSay((how==='ntfy'?'יצא בערוץ הגיבוי. ':'יצא במייל. ')+'מחכה שאחזור אליך.');
+   pingSay((how==='ntfy'?'יצא בערוץ הגיבוי. ':'יצא במייל. ')
+    +'מחכה שאחזור עם הקוד '+code+'.');
   }).catch(function(){
    pingSay('לא יצא. שני הערוצים לא ענו, ואין טעם ללחוץ שוב עד שיש רשת.');
   }).then(function(){btn.disabled=false;});
@@ -3815,13 +3843,26 @@ function reqLog(){
 function reqSave(a){
  try{localStorage.setItem('myRequests',JSON.stringify(a.slice(0,25)));}catch(e){}
 }
-function markSent(kind,text){
+/*
+  An id per request, so one request can never speak for another.
+
+  Without one, status was matched by time: the first message of mine at or
+  after a request's clock decided that request's state. Reproduced: request A
+  at 10:00, an unrelated request B at 11:00 marked done, nothing answered about
+  A at all, and A displayed בוצע. The screen was reporting B.
+*/
+function newRequestId(){
+ return 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+function markSent(kind,text,id){
  var at=new Date().toISOString();
- try{localStorage.setItem('lastSent',JSON.stringify({at:at,kind:kind}));}catch(e){}
+ var rid=id||newRequestId();
+ try{localStorage.setItem('lastSent',JSON.stringify({at:at,kind:kind,id:rid}));}catch(e){}
  var a=reqLog();
- a.unshift({at:at,kind:kind,text:String(text||'').replace(/\s+/g,' ').trim().slice(0,80)});
+ a.unshift({id:rid,at:at,kind:kind,text:String(text||'').replace(/\s+/g,' ').trim().slice(0,80)});
  reqSave(a);
  try{renderReqs();}catch(e){}
+ return rid;
 }
 /*
   Where one request stands, and what is still missing from it.
@@ -3832,19 +3873,52 @@ function markSent(kind,text){
   is known, and the second line says what has not happened yet, because "got
   it" with nothing after it is the state he most often needs to chase.
 */
+/*
+  Where ONE request stands. Matched by its own id, never by the clock.
+
+  Two rules, both learned from the same bug:
+
+  1. A record only speaks for a request if it carries that request's id. A
+     message that merely happens to be later is not about it.
+  2. What is not known is said as not known. "אין לי עדיין קישור" is a worse
+     looking card and a true one; בוצע borrowed from another request is a
+     better looking card that sent him to check work that was never done.
+
+  Until the send pipeline carries the id back, most requests will sit on
+  "left the device". That is the honest floor, and it is the point.
+*/
+function recordFor(r){
+ if(!r.id)return null;
+ var all=(D.chat||[]);
+ for(var i=0;i<all.length;i++){
+  var m=all[i];
+  if(m.from!=='itzik')continue;
+  if((m.requestId||m.re||'')===r.id)return m;
+ }
+ return null;
+}
+function replyFor(r){
+ if(!r.id)return null;
+ var all=(D.chat||[]);
+ for(var i=0;i<all.length;i++){
+  var m=all[i];
+  if(m.from!=='claude')continue;
+  if((m.requestId||m.re||'')===r.id)return m;
+ }
+ return null;
+}
 function reqStatus(r){
- var mine=(D.chat||[]).filter(function(m){return m.from==='itzik'&&(m.at||'')>=r.at;})
-  .sort(function(a,b){return (a.at||'')<(b.at||'')?-1:1;});
- var after=(D.chat||[]).filter(function(m){return m.from==='claude'&&(m.at||'')>r.at;})
-  .sort(function(a,b){return (a.at||'')<(b.at||'')?-1:1;});
- var st=mine.length?(mine[0].status||'received'):'';
+ var mine=recordFor(r);
+ var reply=replyFor(r);
+ var st=mine?(mine.status||'received'):'';
  if(st==='done')return {k:'done',t:'בוצע',
-  missing:'סימנתי שזה בוצע. שווה שתעבור על זה.',reply:after[0]||null};
- if(after.length)return {k:'after',t:'יש תשובה אחרי זה',
-  missing:'ענתי בצ׳אט אחרי הבקשה. אם זה לא על זה, תגיד לי.',reply:after[0]};
+  missing:'סימנתי שזה בוצע. שווה שתעבור על זה.',reply:reply};
+ if(reply)return {k:'after',t:'ענתי על זה',
+  missing:'יש תשובה שמקושרת לבקשה הזאת.',reply:reply};
  if(st==='working')return {k:'working',t:'עובד על זה',missing:'עוד אין תוצר.',reply:null};
  if(st)return {k:'got',t:'קראתי',missing:'קראתי, עוד לא התחלתי.',reply:null};
- return {k:'sent',t:'הגיע לתיבה',missing:'עוד לא סימנתי שקראתי.',reply:null};
+ return {k:'sent',t:'יצא מהמכשיר',
+  missing:'עוד לא קישרתי אליה שום תשובה שלי. אם ענינו עליה בצ׳אט, זה לא מופיע כאן.',reply:null};
 }
 /*
   The two last things he asked for, as cards he can actually read.

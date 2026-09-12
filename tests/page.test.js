@@ -325,8 +325,24 @@ test('the connection test says which channel carried it and waits for a real ans
   assert.ok(html.includes('id="pingBox"'));
   assert.ok(html.includes('id="pingBtn"'));
   assert.ok(html.includes('function pingPaint(){'));
-  // Green only when a build newer than his tap actually landed.
-  assert.ok(html.includes('Date.parse(built)>Date.parse(st.at)'));
+  // Green ONLY on an answer that carries the tap's own code.
+  //
+  // This asserted that a build newer than the tap turns it green, which is the
+  // bug: reproduced with a tap at 10:00, an unrelated publish at 11:00 and zero
+  // replies, the line read "I came back to you 60 minutes after the tap. The
+  // connection works." It was reporting that a deploy happened.
+  assert.ok(!html.includes('Date.parse(built)>Date.parse(st.at)'),
+    'a new build must never be treated as a round trip');
+  assert.ok(html.includes("var code='PING-'+Date.now()"));
+  assert.ok(html.includes('savePingState({at:at,code:code});'));
+  assert.ok(html.includes("if(String(m.text||'').indexOf(code)>-1"));
+  // And the waiting line says outright that a new build will not change it.
+  assert.ok(html.includes('גרסה חדשה של האתר אינה תשובה'));
+  // A test that cannot fail is not a test: nothing in the painter may consult
+  // the build at all.
+  const at = html.indexOf('function pingPaint(){');
+  const body = html.slice(at, at + 1400);
+  assert.ok(!/builtAt/.test(body), 'the connection test must not look at the build');
 });
 
 test('the skin can be left to the phone or forced white or black', () => {
@@ -540,15 +556,27 @@ test('arranging shrinks the board to one screen and every card gets a minus', ()
 test('every send is written down and carries its own status', () => {
   const html = renderPage(fixture({}));
   assert.ok(html.includes('id="reqBox"'));
-  assert.ok(html.includes('function markSent(kind,text){'));
+  assert.ok(html.includes('function markSent(kind,text,id){'));
   assert.ok(html.includes('function reqStatus(r){'));
   assert.ok(html.includes('function renderReqs(){'));
   assert.ok(html.includes("boot('reqs',renderReqs);"));
-  // The wording never claims more than the page can prove. A reply of mine that
-  // landed after a request is not proof it was about that request, so it says
-  // exactly that and nothing stronger.
-  assert.ok(html.includes("return {k:'sent',t:'הגיע לתיבה',missing:'עוד לא סימנתי שקראתי.',reply:null};"));
-  assert.ok(html.includes("if(after.length)return {k:'after',t:'יש תשובה אחרי זה',"));
+  // Every request carries an id of its own, and status is matched on it.
+  assert.ok(html.includes('function newRequestId(){'));
+  assert.ok(html.includes('a.unshift({id:rid,at:at,'));
+  assert.ok(html.includes('function recordFor(r){'));
+  assert.ok(html.includes('function replyFor(r){'));
+  assert.ok(html.includes(" if(!r.id)return null;"));
+  assert.ok(html.includes("if((m.requestId||m.re||'')===r.id)return m;"));
+  // Reproduced and closed: status must never be matched by the clock, or an
+  // unrelated later request marks an earlier one done.
+  const at = html.indexOf('function reqStatus(r){');
+  const body = html.slice(at, html.indexOf('function renderReqs(){'));
+  assert.ok(!/\(m\.at\|\|''\)\s*>=?\s*r\.at/.test(body), 'status must not be matched by time');
+  assert.ok(!/sort\(/.test(body), 'and not by picking the first of a sorted list');
+  // The wording never claims more than the page can prove, and what is unknown
+  // says so rather than borrowing another request's answer.
+  assert.ok(html.includes("return {k:'sent',t:'יצא מהמכשיר',"));
+  assert.ok(html.includes('עוד לא קישרתי אליה שום תשובה שלי'));
   assert.ok(!html.includes("t:'נעניתי'"), 'nothing may claim the request itself was answered');
 });
 
