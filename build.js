@@ -409,8 +409,19 @@ button.abtn[disabled]{opacity:.55}
 .grow div.l a{color:var(--accent);word-break:break-all}
 /* The three newest on the home screen, in the same box as the requests above
    so the two lists read as one column rather than two designs. */
-.grows{margin-top:14px}
-.grows>b{display:block;font:800 15px Heebo,sans-serif;margin-bottom:9px}
+.grows{margin-top:14px;background:var(--surface);border:1px solid var(--line);
+ border-radius:var(--r);box-shadow:var(--shadow)}
+.grows>summary{list-style:none;cursor:pointer;padding:13px 16px;
+ font:800 15px Heebo,sans-serif;display:flex;align-items:center;gap:8px}
+.grows>summary::-webkit-details-marker{display:none}
+/* A closed arrow that turns when it opens, so shut looks deliberate rather
+   than broken. */
+.grows>summary::after{content:"›";margin-inline-start:auto;color:var(--dim);
+ font-size:20px;line-height:1;transform:rotate(90deg);transition:transform .18s ease}
+.grows[open]>summary::after{transform:rotate(-90deg)}
+@media(prefers-reduced-motion:reduce){.grows>summary::after{transition:none}}
+.grows>summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:var(--r)}
+#growBody{padding:0 14px 12px}
 .grows .grow{margin-bottom:10px}
 .grows .reqall{border-top:0;border-radius:12px;margin-top:0}
 .newbtn{width:100%;display:flex;align-items:center;gap:12px;margin:14px 0 10px;padding:15px 17px;
@@ -1351,6 +1362,7 @@ try{
 <div class="wrap">
 <header class="hd">
  <button type="button" class="conn arr" id="arrangeBtn" title="סידור המסך">סידור</button>
+ <button type="button" class="conn" id="homeBtn" title="חזרה לבית" hidden>בית</button>
  <button type="button" class="conn" id="setBtn" title="הגדרות" aria-label="הגדרות">הגדרות</button>
  <button type="button" class="conn" id="reloadBtn" title="טעינה מחדש">רענון</button>
  <div class="hdtext">
@@ -1438,7 +1450,18 @@ try{
     for him, when, and whether anybody actually checked it. The rest are one
     tap away. This is a record of the work, not a claim about the model.
   -->
-  <section class="grows" id="growHome" hidden></section>
+  <!--
+    Shut, and one line tall.
+
+    He asked three times to be able to close this, which is the answer to
+    having put it on the screen open: a wall of text about my own work, above
+    everything he actually came here for. It is a summary line now, it opens
+    only when he taps it, and it remembers that choice.
+  -->
+  <details class="grows" id="growHome" hidden>
+   <summary id="growSum">מה השתפר</summary>
+   <div id="growBody"></div>
+  </details>
   <div id="pinBox"></div>
   <div class="cdx" id="codexBox" hidden></div>
 <section class="whatsnew" aria-label="מה חדש">
@@ -1549,6 +1572,22 @@ try{
   <button type="button" class="skb" data-skin="light">לבן</button>
   <button type="button" class="skb" data-skin="dark">שחור</button>
  </div>
+</div>
+<!--
+  "Reset everything, everything reset."
+
+  What that can honestly mean here: every answer of mine counts as read, the
+  count goes to zero, and only what arrives from now on turns red again. It
+  deletes nothing. The history is still in the chat, because throwing away what
+  I wrote him is not something a button on a settings screen should be able to
+  do.
+-->
+<div class="alerts" id="resetBox">
+ <div>
+  <b>לאפס את ההודעות</b>
+  <small id="resetSaid">כל מה שכתבתי עד עכשיו נחשב נקרא והמונה יורד לאפס. רק מה שיגיע מכאן והלאה יידלק. שום דבר לא נמחק.</small>
+ </div>
+ <button type="button" class="abtn" id="resetBtn">איפוס</button>
 </div>
 <div class="alerts" id="motionBox">
  <div>
@@ -3507,6 +3546,11 @@ function pane(w){
   if(k===w)backBar(sec);
  }
  for(var n in NAVS){document.getElementById(NAVS[n]).setAttribute('aria-pressed',n===w);}
+ // He asked twice for a way home from wherever he is. The bottom tab was
+ // always there, but the button he reaches for is at the top, next to the one
+ // that took him off the home screen in the first place.
+ var hb=document.getElementById('homeBtn');
+ if(hb)hb.hidden=(w==='h');
  // The hash is only an incoming address. Writing it on every move made the
  // app reopen on an inner screen and feel like it jumped on its own.
  try{
@@ -3809,10 +3853,22 @@ function renderImprove(){
   if(!G.length){home.hidden=true;}
   else{
    home.hidden=false;
-   home.innerHTML='<b>מה השתפר</b>'+G.slice(0,3).map(growCard).join('')
-    +(G.length>3?'<button type="button" class="reqall" id="growAll">כל השיפורים ('+G.length+')</button>':'');
-   var all=document.getElementById('growAll');
-   if(all)all.onclick=function(){pane('w');};
+   var sum=document.getElementById('growSum');
+   if(sum)sum.textContent='מה השתפר · '+G.length;
+   // Shut unless he has opened it before. The choice is his and it sticks.
+   var open='0';
+   try{open=localStorage.getItem('growOpen')||'0';}catch(e){}
+   home.open=open==='1';
+   home.ontoggle=function(){
+    try{localStorage.setItem('growOpen',home.open?'1':'0');}catch(e){}
+   };
+   var body=document.getElementById('growBody');
+   if(body){
+    body.innerHTML=G.slice(0,3).map(growCard).join('')
+     +(G.length>3?'<button type="button" class="reqall" id="growAll">כל השיפורים ('+G.length+')</button>':'');
+    var all=document.getElementById('growAll');
+    if(all)all.onclick=function(){pane('w');};
+   }
   }
  }
  var host=document.getElementById('growBox');
@@ -4598,6 +4654,7 @@ function askInChat(prefix){
  try{box.setSelectionRange(box.value.length,box.value.length);}catch(e){}
 }
 document.getElementById('setBtn').onclick=function(){pane('z');};
+document.getElementById('homeBtn').onclick=function(){pane('h');};
 document.getElementById('gChat').onclick=function(){pane('m');markChatSeen();};
 /*
   Writing and the camera, from the card at the top instead of from a tile most
@@ -5162,6 +5219,12 @@ function markAllRead(cutoff){
  paintDot();renderNew();renderThread();
 }
 on('readOld',function(){markAllRead();toast('הכל סומן כנקרא. מה שיגיע מעכשיו יהיה אדום.');});
+on('resetBtn',function(){
+ markAllRead();
+ var said=document.getElementById('resetSaid');
+ if(said)said.textContent='אופס. המונה על אפס, ורק מה שיגיע מעכשיו יידלק.';
+ toast('אופס. רק מה שיגיע מעכשיו יידלק.');
+});
 var bootFailed=[];
 function boot(name,fn){try{fn();}catch(e){bootFailed.push(name);try{console.error('boot '+name,e);}catch(_){}}}
 boot('report',renderNextReport);

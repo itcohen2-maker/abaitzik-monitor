@@ -377,6 +377,25 @@ test('the page actually parses', () => {
   });
 });
 
+test('a way home from the top of every inner screen, and a reset that deletes nothing', () => {
+  const html = renderPage(fixture({}));
+  // He asked twice for a way home. The bottom tab was always there; the button
+  // he reaches for is at the top, beside the one that took him off home.
+  assert.ok(html.includes('<button type="button" class="conn" id="homeBtn" title="חזרה לבית" hidden>בית</button>'));
+  assert.ok(html.includes("document.getElementById('homeBtn').onclick=function(){pane('h');};"));
+  // And it is only there when it means something.
+  assert.ok(html.includes(" if(hb)hb.hidden=(w==='h');"));
+  // "Reset everything": every answer counts as read and the count goes to
+  // zero. It must not be able to delete anything.
+  assert.ok(html.includes('id="resetBox"'));
+  assert.ok(html.includes('id="resetBtn"'));
+  assert.ok(html.includes('שום דבר לא נמחק'));
+  const at = html.indexOf("on('resetBtn',function(){");
+  const body = html.slice(at, at + 400);
+  assert.ok(body.includes('markAllRead();'));
+  assert.ok(!/removeItem|splice|delete /.test(body), 'the reset must not delete anything');
+});
+
 test('every setting moved to one screen, and not one of them changed', () => {
   const html = renderPage(fixture({}));
   // Its own screen, with a permanent way in from the header.
@@ -406,8 +425,15 @@ test('what got better is on the home screen, with whether anyone checked it', ()
       { at: '2026-09-09T10:00:00+03:00', why: 'ב4', what: 'מ4', effect: 'א4' },
     ],
   }));
-  assert.ok(html.includes('<section class="grows" id="growHome" hidden></section>'));
-  assert.ok(html.includes("home.innerHTML='<b>מה השתפר</b>'+G.slice(0,3).map(growCard)"));
+  // Shut, and one line tall. He asked three times to be able to close this,
+  // which is what putting it on screen open earned: a wall of text about my
+  // own work, above everything he came here for.
+  assert.ok(html.includes('<details class="grows" id="growHome" hidden>'));
+  assert.ok(html.includes('<summary id="growSum">מה השתפר</summary>'));
+  assert.ok(!/<details class="grows"[^>]*open/.test(html), 'it must not ship open');
+  assert.ok(html.includes("home.open=open==='1';"), 'closed unless he opened it before');
+  assert.ok(html.includes("localStorage.setItem('growOpen',home.open?'1':'0');"), 'and the choice sticks');
+  assert.ok(html.includes("body.innerHTML=G.slice(0,3).map(growCard)"));
   // The problem, the change, what it changes for him, and the verification.
   assert.ok(html.includes('<b>מה לא עבד</b>'));
   assert.ok(html.includes('<b>מה שיניתי</b>'));
