@@ -287,6 +287,19 @@ button.abtn[disabled]{opacity:.55}
  padding:11px 13px;color:var(--ink);font:500 14px Heebo,sans-serif;box-shadow:var(--shadow)}
 .links a span{font-size:17px}
 .links a small{display:block;color:var(--dim);font-weight:300;font-size:12px}
+.reqs{margin-top:12px;background:var(--surface);border:1px solid var(--line);
+ border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.reqs > b{display:block;font:500 15px Heebo,sans-serif;padding:13px 15px 9px}
+.req{display:flex;align-items:center;gap:11px;padding:11px 15px;border-top:1px solid var(--line)}
+.req .rq-t{flex:1;min-width:0}
+.req .rq-t b{display:block;font:400 14.5px Heebo,sans-serif;font-weight:500;
+ overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.req .rq-t small{display:block;color:var(--dim);font-size:12.5px}
+.rq-s{flex:0 0 auto;font:500 12.5px Heebo,sans-serif;padding:4px 11px;border-radius:999px;white-space:nowrap}
+.rq-sent{background:var(--sunk);color:var(--dim)}
+.rq-got{background:var(--accent-soft);color:var(--accent)}
+.rq-working{background:var(--hand-soft,#f6ebd3);color:var(--wait)}
+.rq-done{background:var(--fresh);color:var(--green)}
 .sent{display:flex;align-items:center;gap:11px;margin-top:12px;padding:12px 15px;border-radius:var(--r);
  background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);font-size:14px}
 .sent .s-dot{width:11px;height:11px;flex:0 0 11px;border-radius:50%;background:var(--wait);
@@ -1211,6 +1224,7 @@ body.editing .bn{display:none}
  </button>
 
   <div class="sent" id="sentCard" hidden></div>
+  <div class="reqs" id="reqBox" hidden></div>
 <section class="whatsnew" aria-label="מה חדש">
   <div class="wn" id="wnCmds"></div>
   <div class="wn" id="wnNow"></div>
@@ -2574,7 +2588,7 @@ document.addEventListener('click',function(e){
 },true);
 // Forty seconds, not two minutes. He wants to see that something is alive.
 setInterval(checkFresh,40000);
-setInterval(function(){paintLive(null);paintNew();},20000);
+setInterval(function(){paintLive(null);paintNew();try{renderReqs();}catch(e){}},20000);
 document.addEventListener('visibilitychange',function(){if(!document.hidden)checkFresh();});
 
 
@@ -3204,8 +3218,47 @@ document.getElementById('nA').onclick=function(){pane('a');renderAnswers();};
 
 // Home shortcuts. The mail and "new module" circles have no screen of their
 // own yet, so they open the chat with the request already started.
-function markSent(kind){
- try{localStorage.setItem('lastSent',JSON.stringify({at:new Date().toISOString(),kind:kind}));}catch(e){}
+// He said the thing that breaks him is sending and not knowing. So every send
+// is written down on the device the moment it leaves, and the list below says
+// what happened to each one. The wording is deliberately literal: the page can
+// prove the message reached my mailbox, so it says that, and only says I read
+// it once I have actually written back.
+function reqLog(){
+ try{return JSON.parse(localStorage.getItem('myRequests')||'[]');}catch(e){return [];}
+}
+function reqSave(a){
+ try{localStorage.setItem('myRequests',JSON.stringify(a.slice(0,25)));}catch(e){}
+}
+function markSent(kind,text){
+ var at=new Date().toISOString();
+ try{localStorage.setItem('lastSent',JSON.stringify({at:at,kind:kind}));}catch(e){}
+ var a=reqLog();
+ a.unshift({at:at,kind:kind,text:String(text||'').replace(/\s+/g,' ').trim().slice(0,80)});
+ reqSave(a);
+ try{renderReqs();}catch(e){}
+}
+function reqStatus(r){
+ var mine=(D.chat||[]).filter(function(m){return m.from==='itzik'&&(m.at||'')>=r.at;})
+  .sort(function(a,b){return (a.at||'')<(b.at||'')?-1:1;});
+ var answered=(D.chat||[]).some(function(m){return m.from==='claude'&&(m.at||'')>r.at;});
+ if(answered)return {k:'done',t:'נעניתי'};
+ var st=mine.length?(mine[0].status||'received'):'';
+ if(st==='working')return {k:'working',t:'עובד על זה'};
+ if(st)return {k:'got',t:'קראתי'};
+ return {k:'sent',t:'הגיע לתיבה'};
+}
+function renderReqs(){
+ var box=document.getElementById('reqBox');
+ if(!box)return;
+ var a=reqLog();
+ if(!a.length){box.hidden=true;return;}
+ box.hidden=false;
+ box.innerHTML='<b>מה שלחתי</b>'+a.slice(0,6).map(function(r){
+  var st=reqStatus(r),label=SENTLABEL[r.kind]||'הודעה';
+  return '<div class="req"><div class="rq-t"><b>'+esc(r.text||label)+'</b>'
+   +'<small>'+esc(label)+' · יצא ב'+esc(stamp(r.at))+'</small></div>'
+   +'<span class="rq-s rq-'+st.k+'">'+esc(st.t)+'</span></div>';
+ }).join('');
 }
 function lastSent(){
  try{return JSON.parse(localStorage.getItem('lastSent')||'null');}catch(e){return null;}
@@ -4508,6 +4561,7 @@ boot('pegasus',renderPegasus);
 boot('improve',renderImprove);
 boot('special',renderSpecial);
 boot('pin',renderPin);
+boot('reqs',renderReqs);
 boot('tidy',function(){countTiles();renderTidy();});
 // A link like #pegasus or #special lands straight on that screen.
 boot('hash',function(){

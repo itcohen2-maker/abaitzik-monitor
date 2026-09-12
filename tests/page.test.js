@@ -277,3 +277,15 @@ test('arranging shrinks the board to one screen and every card gets a minus', ()
   assert.ok(html.includes('var CAN_REMOVE = true;'));
   assert.ok(html.includes("sendLine('בקשה להסיר מהמסך: '+k)"));
 });
+
+test('every send is written down and carries its own status', () => {
+  const html = renderPage(fixture({}));
+  assert.ok(html.includes('id="reqBox"'));
+  assert.ok(html.includes('function markSent(kind,text){'));
+  assert.ok(html.includes('function reqStatus(r){'));
+  assert.ok(html.includes('function renderReqs(){'));
+  assert.ok(html.includes("boot('reqs',renderReqs);"));
+  // The wording never claims more than the page can prove.
+  assert.ok(html.includes("return {k:'sent',t:'הגיע לתיבה'};"));
+  assert.ok(html.includes("if(answered)return {k:'done',t:'נעניתי'};"));
+});
