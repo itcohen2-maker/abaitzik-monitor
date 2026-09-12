@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>פירמידה מסתובבת</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700&family=Heebo:wght@300;400;500;700&display=swap">
+<style>
+:root{
+ --ground:#EEF1F6; --surface:#FFFFFF; --sunk:#E4E9F2;
+ --ink:#151A22; --dim:#5C6A7D; --line:#DCE3EE;
+ --accent:#1F6FEB; --accent-soft:#E1EBFD;
+ --ok:#1E9E6A; --urgent:#DB4A36; --wait:#C77A11;
+ --shadow:0 1px 2px rgba(21,26,34,.05),0 10px 26px rgba(21,26,34,.08);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+ --ground:#0E1116; --surface:#171C24; --sunk:#121720;
+ --ink:#E9EEF5; --dim:#93A0B2; --line:#232B37;
+ --accent:#74A8FF; --accent-soft:#16233A;
+ --ok:#4FD39B; --urgent:#F07660; --wait:#E5A93F;
+ --shadow:0 1px 2px rgba(0,0,0,.5),0 12px 30px rgba(0,0,0,.45);
+}}
+:root[data-theme="dark"]{
+ --ground:#0E1116; --surface:#171C24; --sunk:#121720;
+ --ink:#E9EEF5; --dim:#93A0B2; --line:#232B37;
+ --accent:#74A8FF; --accent-soft:#16233A;
+ --ok:#4FD39B; --urgent:#F07660; --wait:#E5A93F;
+ --shadow:0 1px 2px rgba(0,0,0,.5),0 12px 30px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);direction:rtl;
+ font:400 16px/1.65 Heebo,"Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:820px;margin:0 auto;padding-block:30px 80px;padding-inline:18px}
+header{border-bottom:2px solid var(--ink);padding-bottom:18px;margin-bottom:24px}
+.eyebrow{font-size:12.5px;letter-spacing:.12em;color:var(--dim);font-weight:500;margin:0 0 8px}
+h1{font:700 32px/1.15 "Frank Ruhl Libre",Georgia,serif;margin:0 0 10px;text-wrap:balance}
+.lede{margin:0;color:var(--dim);font-size:16px;font-weight:300;max-width:60ch}
+h2{font:700 21px/1.3 "Frank Ruhl Libre",Georgia,serif;margin:30px 0 4px}
+.sub{color:var(--dim);font-size:14.5px;margin:0 0 16px;max-width:62ch}
+
+/* The apex: one card, full width, the only thing that changes by itself. */
+.apex{background:var(--surface);border:1px solid var(--line);border-inline-start:5px solid var(--urgent);
+ border-radius:16px;padding:15px 17px;box-shadow:var(--shadow);margin-bottom:14px}
+.apex .k{font:500 11.5px Heebo,sans-serif;letter-spacing:.08em;color:var(--urgent)}
+.apex b{display:block;font:500 18px/1.35 Heebo,sans-serif;margin:3px 0 2px}
+.apex small{color:var(--dim);font-size:13.5px}
+
+/* The rotating body. Four flat faces around one axis, so text always reads
+   straight when a face is turned to the front. */
+.stage{perspective:1000px;height:320px;margin-bottom:6px;touch-action:pan-y;cursor:grab;user-select:none}
+.stage:active{cursor:grabbing}
+.spin{position:relative;width:230px;height:100%;margin:0 auto;transform-style:preserve-3d;
+ transition:transform .32s cubic-bezier(.22,.61,.36,1)}
+.spin.free{transition:none}
+.face{position:absolute;inset:0;backface-visibility:hidden;
+ display:flex;flex-direction:column;gap:8px}
+.face h3{margin:0 0 2px;font:500 13px Heebo,sans-serif;color:var(--dim);text-align:center}
+.btn{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+ padding:12px 14px;box-shadow:var(--shadow);display:flex;align-items:center;gap:10px}
+.btn b{font:500 15px Heebo,sans-serif}
+.btn small{display:block;color:var(--dim);font-size:12px}
+.dot{width:30px;height:30px;flex:0 0 30px;border-radius:10px;display:grid;place-items:center;
+ font-size:15px;background:var(--accent-soft);color:var(--accent)}
+.btn.cold{opacity:.5}
+.btn.cold .dot{background:var(--sunk);color:var(--dim)}
+
+.dots{display:flex;gap:7px;justify-content:center;margin:4px 0 14px}
+.dots button{width:9px;height:9px;padding:0;border:0;border-radius:50%;background:var(--line);cursor:pointer}
+.dots button[aria-current="true"]{background:var(--accent);width:22px;border-radius:99px}
+.hint{text-align:center;color:var(--dim);font-size:13px;margin:0 0 6px}
+
+/* The fixed row he asked to keep at the bottom. */
+.floor{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+.floor span{background:var(--sunk);color:var(--dim);border-radius:999px;padding:8px 15px;
+ font:500 13px Heebo,sans-serif}
+
+/* Flat alternative */
+.flat{background:var(--surface);border:1px solid var(--line);border-radius:16px;
+ padding:14px;box-shadow:var(--shadow)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+.thin{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px;padding-top:11px;border-top:1px dashed var(--line)}
+.thin span{background:var(--sunk);color:var(--dim);border-radius:9px;padding:6px 11px;font-size:12.5px}
+
+/* Question */
+.q{background:var(--surface);border:1px solid var(--line);border-radius:16px;
+ padding:18px;box-shadow:var(--shadow);margin-top:26px}
+.qtitle{font:500 17px/1.4 Heebo,sans-serif;margin:0 0 12px}
+.opts{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.opt{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:start;
+ background:var(--sunk);border:1.5px solid transparent;border-radius:11px;padding:11px 13px;
+ font:400 14.5px/1.5 Heebo,sans-serif;color:var(--ink);cursor:pointer}
+.opt[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:500}
+.opt:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tick{flex:0 0 auto;width:19px;height:19px;border-radius:50%;border:1.5px solid var(--dim);margin-top:2px}
+.opt[aria-pressed="true"] .tick{border-color:var(--accent);background:var(--accent);box-shadow:inset 0 0 0 3.5px var(--surface)}
+label.note{display:block;font-size:12.5px;color:var(--dim);margin-bottom:5px}
+textarea{width:100%;background:var(--sunk);color:var(--ink);border:1px solid var(--line);
+ border-radius:11px;padding:11px 13px;font:400 14.5px/1.6 Heebo,sans-serif;resize:vertical;min-height:70px}
+textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.send{margin-top:4px;background:var(--accent);color:#fff;border:0;border-radius:11px;
+ padding:12px 22px;font:500 15px Heebo,sans-serif;cursor:pointer}
+.send:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.saved{font-size:12.5px;color:var(--ok);margin-top:8px;min-height:1.2em;font-weight:500}
+footer{border-top:1px solid var(--line);margin-top:26px;padding-top:15px;color:var(--dim);font-size:13.5px}
+@media (prefers-reduced-motion:reduce){.spin{transition:none}}
+@media (max-width:420px){h1{font-size:26px}.spin{width:200px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+ <p class="eyebrow">מוניטור · ניסוי עיצוב · 12 בספטמבר 2026</p>
+ <h1>פירמידה מסתובבת</h1>
+ <p class="lede">זה לא ציור, זה עובד. תמשוך את הגוף ימינה או שמאלה והוא מסתובב. ארבעה פנים, כל פן קבוצה אחת, וראש אחד גדול שלא זז. מתחת יש שאלה אחת.</p>
+</header>
+
+<h2>הגרסה המסתובבת</h2>
+<p class="sub">הראש למעלה הוא הדבר הדחוף עכשיו, והוא היחיד שמתחלף לבד. הגוף מסתובב באצבע, ומה שלא נגעת בו הרבה זמן מופיע דהוי אבל נמצא.</p>
+
+<div class="apex">
+ <div class="k">הדחוף עכשיו</div>
+ <b>שאלון העיצוב מחכה לתשובה</b>
+ <small>ביקשת ב־12:39 · עובד על זה</small>
+</div>
+
+<p class="hint">תמשוך את הגוף לצדדים</p>
+<div class="stage" id="stage">
+ <div class="spin" id="spin">
+
+  <div class="face">
+   <h3>עכשיו</h3>
+   <div class="btn"><span class="dot">🎤</span><div><b>דבר אליי</b><small>הקלטה נשלחת מיד</small></div></div>
+   <div class="btn"><span class="dot">⏰</span><div><b>תזכורת כדור</b><small>הבא ב־14:00</small></div></div>
+   <div class="btn"><span class="dot">📨</span><div><b>מה שלחתי</b><small>3 ממתינות</small></div></div>
+  </div>
+
+  <div class="face">
+   <h3>רשתות</h3>
+   <div class="btn"><span class="dot">📡</span><div><b>כל הרשתות</b><small>11 תגובות חדשות</small></div></div>
+   <div class="btn"><span class="dot">👥</span><div><b>לידים</b><small>4 פתוחים</small></div></div>
+   <div class="btn cold"><span class="dot">📊</span><div><b>נתוני שבוע</b><small>לא נפתח 9 ימים</small></div></div>
+  </div>
+
+  <div class="face">
+   <h3>כלים</h3>
+   <div class="btn"><span class="dot">✉️</span><div><b>מייל</b><small>שליחה ישירה עובדת</small></div></div>
+   <div class="btn"><span class="dot">📄</span><div><b>דוחות</b><small>20 שמורים</small></div></div>
+   <div class="btn cold"><span class="dot">🍽️</span><div><b>מה בצלחת</b><small>לא נפתח 6 ימים</small></div></div>
+  </div>
+
+  <div class="face">
+   <h3>מערכת</h3>
+   <div class="btn"><span class="dot">⚙️</span><div><b>הגדרות</b><small>סיסמה אישית חסרה</small></div></div>
+   <div class="btn"><span class="dot">🔌</span><div><b>בדיקת חיבור</b><small>עובד</small></div></div>
+   <div class="btn cold"><span class="dot">🎨</span><div><b>צבע המסך</b><small>לבן</small></div></div>
+  </div>
+
+ </div>
+</div>
+<div class="dots" id="dots" role="group" aria-label="פן"></div>
+<div class="floor"><span>דוחות</span><span>תכנון</span><span>ארכיון</span><span>אנשי קשר</span></div>
+
+<h2>הגרסה השטוחה, להשוואה</h2>
+<p class="sub">אותו עיקרון בלי סיבוב. ראש אחד גדול, רשת שאתה מסדר בגרירה, ושורה דקה למטה לכל מה שקר. הכל נקרא ישר, שום דבר לא מסתתר מאחור.</p>
+<div class="flat">
+ <div class="apex" style="margin:0">
+  <div class="k">הדחוף עכשיו</div>
+  <b>שאלון העיצוב מחכה לתשובה</b>
+  <small>ביקשת ב־12:39 · עובד על זה</small>
+ </div>
+ <div class="grid">
+  <div class="btn"><span class="dot">🎤</span><div><b>דבר אליי</b></div></div>
+  <div class="btn"><span class="dot">⏰</span><div><b>תזכורת</b></div></div>
+  <div class="btn"><span class="dot">📡</span><div><b>כל הרשתות</b></div></div>
+  <div class="btn"><span class="dot">✉️</span><div><b>מייל</b></div></div>
+ </div>
+ <div class="thin">
+  <span>נתוני שבוע</span><span>מה בצלחת</span><span>ארכיון</span><span>צבע המסך</span><span>תכנון</span>
+ </div>
+</div>
+
+<div class="q" id="q">
+ <h3 class="qtitle">אחרי שניסית את שניהם באצבע, מה נשאר?</h3>
+ <div class="opts">
+  <button type="button" class="opt" aria-pressed="false" data-v="מסתובבת"><span class="tick"></span><span>המסתובבת. זה מה שראיתי בראש</span></button>
+  <button type="button" class="opt" aria-pressed="false" data-v="שטוחה"><span class="tick"></span><span>השטוחה. מהירה יותר וקריאה יותר</span></button>
+  <button type="button" class="opt" aria-pressed="false" data-v="שילוב"><span class="tick"></span><span>ראש קבוע מלמעלה, ומתחתיו סיבוב</span></button>
+  <button type="button" class="opt" aria-pressed="false" data-v="אחרת"><span class="tick"></span><span>שתיהן לא. אני אסביר</span></button>
+ </div>
+ <label class="note" for="note">מה הרגיש טוב ומה הפריע כשסובבת</label>
+ <textarea id="note" placeholder="כתוב כאן בחופשיות"></textarea>
+ <button type="button" class="send" id="sendBtn">שליחה אליי</button>
+ <div class="saved" id="said"></div>
+</div>
+
+<footer>
+ בוחרים, כותבים, ולוחצים שליחה אליי. הדף הזה נפתח בלי שום התחברות.
+</footer>
+</div>
+
+<script>
+// Four faces, ninety degrees apart, pushed out along Z by half the face width
+// so the front face lands flat against the screen.
+var FACES = 4, W = 230, R = Math.round(W / 2 / Math.tan(Math.PI / FACES));
+var spin = document.getElementById('spin');
+var stage = document.getElementById('stage');
+var dots = document.getElementById('dots');
+var faces = spin.querySelectorAll('.face');
+var angle = 0, at = 0;
+
+Array.prototype.forEach.call(faces, function (f, i) {
+ f.style.transform = 'rotateY(' + (i * 360 / FACES) + 'deg) translateZ(' + R + 'px)';
+});
+
+function paint(a) { spin.style.transform = 'translateZ(-' + R + 'px) rotateY(' + a + 'deg)'; }
+
+function marks() {
+ dots.innerHTML = '';
+ for (var i = 0; i < FACES; i++) {
+  var b = document.createElement('button');
+  b.type = 'button';
+  b.setAttribute('aria-label', 'פן ' + (i + 1));
+  b.setAttribute('aria-current', i === at ? 'true' : 'false');
+  (function (i) { b.onclick = function () { go(i); }; })(i);
+  dots.appendChild(b);
+ }
+}
+function go(i) {
+ at = ((i % FACES) + FACES) % FACES;
+ angle = -at * 360 / FACES;
+ spin.classList.remove('free');
+ paint(angle);
+ marks();
+}
+
+var down = null, base = 0, moved = false;
+stage.addEventListener('pointerdown', function (e) {
+ down = e.clientX; base = angle; moved = false;
+ spin.classList.add('free');
+ stage.setPointerCapture && stage.setPointerCapture(e.pointerId);
+});
+stage.addEventListener('pointermove', function (e) {
+ if (down === null) return;
+ var dx = e.clientX - down;
+ if (Math.abs(dx) > 4) moved = true;
+ // A finger crossing the width of one face turns exactly one face.
+ paint(base + dx / W * (360 / FACES));
+});
+function release() {
+ if (down === null) return;
+ var cur = parseFloat((spin.style.transform.match(/rotateY\(([-\d.]+)deg\)/) || [0, angle])[1]);
+ down = null;
+ spin.classList.remove('free');
+ go(Math.round(-cur / (360 / FACES)));
+}
+['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) {
+ stage.addEventListener(ev, release);
+});
+// Keyboard, because a drag is not the only way anyone reaches this.
+stage.tabIndex = 0;
+stage.addEventListener('keydown', function (e) {
+ if (e.key === 'ArrowLeft') { go(at + 1); e.preventDefault(); }
+ if (e.key === 'ArrowRight') { go(at - 1); e.preventDefault(); }
+});
+
+go(0);
+
+// The answer rides the same two channels the monitor itself uses, so this page
+// works with no login anywhere: the mailbox first, and the backup topic when
+// the mailbox is out of quota.
+var MAILBOX = ['itcohen2','gmail.com'].join('@');
+var NTFYIN = 'abaitzik-in-95e62e86c34f4853';
+var pick = '';
+function say(t){ document.getElementById('said').textContent = t; }
+
+function sendAnswer(){
+ var body = 'בחירה: ' + (pick || 'לא נבחר') + String.fromCharCode(10)
+  + 'הערה: ' + (document.getElementById('note').value || 'ריק');
+ say('שולח.');
+ return fetch('https://formsubmit.co/ajax/' + MAILBOX, {
+  method:'POST',
+  headers:{'Content-Type':'application/json',Accept:'application/json'},
+  body: JSON.stringify({_subject:'תשובה על הפירמידה','הודעה':body})
+ }).then(function(r){ if(!r.ok) throw new Error('quota'); return 'mail'; })
+ .catch(function(){
+  return fetch('https://ntfy.sh/' + NTFYIN, {
+   method:'POST', headers:{Title:'monitor','X-Tags':'memo'},
+   body:['פירמידה', body].join(String.fromCharCode(10))
+  }).then(function(r){ if(!r.ok) throw new Error('ntfy'); return 'ntfy'; });
+ }).then(function(how){
+  say(how === 'ntfy' ? 'נשלח בערוץ הגיבוי. הגיע אליי.' : 'נשלח. הגיע אליי.');
+ }).catch(function(){
+  say('לא נשלח. אין רשת כרגע.');
+ });
+}
+
+document.getElementById('q').addEventListener('click', function (e) {
+ var b = e.target.closest ? e.target.closest('.opt') : null;
+ if (!b) return;
+ pick = b.getAttribute('data-v');
+ Array.prototype.forEach.call(document.querySelectorAll('.opt'), function (o) {
+  o.setAttribute('aria-pressed', o === b ? 'true' : 'false');
+ });
+ say('נבחר. אפשר להוסיף מילים ואז לשלוח.');
+});
+document.getElementById('sendBtn').addEventListener('click', sendAnswer);
+</script>
+
+</body>
+</html>
