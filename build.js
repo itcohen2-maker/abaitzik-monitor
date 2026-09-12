@@ -4209,7 +4209,12 @@ function recStart(){
    var b=new Blob(recChunks,{type:type});
    if(!b.size){recSaid.textContent='לא נקלט כלום. תנסה שוב.';recBtn.disabled=false;paintMics('bad');return;}
    var ext=type.indexOf('mp4')>-1?'m4a':(type.indexOf('ogg')>-1?'ogg':'webm');
-   var stampName='voice-'+new Date().toISOString().slice(0,19).replace(/[:T]/g,'')+'.'+ext;
+   // The name used to come from toISOString, which is UTC. Every memo then
+   // carried a time three hours behind his, and a pill he took at 10:00 was
+   // filed at 07:00. The stamp is built from the phone's own clock instead.
+   var d=new Date(),p2=function(n){return (n<10?'0':'')+n;};
+   var stampName='voice-'+d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())
+    +p2(d.getHours())+p2(d.getMinutes())+p2(d.getSeconds())+'.'+ext;
    var file=new File([b],stampName,{type:type});
    recSaid.textContent='ההקלטה מוכנה, '+mb(file.size)+'. שולח.';
    recBtn.disabled=false;
