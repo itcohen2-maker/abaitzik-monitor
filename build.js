@@ -1539,6 +1539,16 @@ try{
 -->
 <section id="pZ" hidden>
  <h2>הגדרות</h2>
+<div class="alerts" id="skinBox">
+ <div>
+  <b>מצב יום ולילה</b>
+  <small id="skinSaid">אפשר להשאיר על מה שהטלפון מחליט, או לקבוע בעצמך.</small>
+ </div>
+ <div class="skinrow" role="group" aria-label="מצב יום ולילה">
+  <button type="button" class="skb" data-skin="auto">הטלפון</button>
+  <button type="button" class="skb" data-skin="light">יום</button>
+  <button type="button" class="skb" data-skin="dark">לילה</button>
+ </div>
 <div class="install" id="installHint">להתקנה כאפליקציה על מסך הבית: בספארי לוחצים שיתוף ואז "הוספה למסך הבית". באנדרואיד: תפריט ואז "התקנת אפליקציה".</div>
 
 <nav class="links" aria-label="קישורים מהירים">
@@ -1562,16 +1572,16 @@ try{
  </div>
  <button type="button" class="abtn" id="pingBtn">בדיקה</button>
 </div>
-<div class="alerts" id="skinBox">
- <div>
-  <b>צבע המסך</b>
-  <small id="skinSaid">אפשר להשאיר על מה שהטלפון מחליט, או לקבוע בעצמך.</small>
- </div>
- <div class="skinrow" role="group" aria-label="צבע המסך">
-  <button type="button" class="skb" data-skin="auto">הטלפון</button>
-  <button type="button" class="skb" data-skin="light">לבן</button>
-  <button type="button" class="skb" data-skin="dark">שחור</button>
- </div>
+<!--
+  Called what it is.
+
+  This control has been here all along, as "screen colour" with לבן and שחור
+  on it, and he asked twice this evening for a night mode he could not find. He
+  was not looking for a colour, he was looking for night, so it says night. It
+  is also first on the settings screen now, because sitting in the dark is not
+  something to scroll for.
+-->
+
 </div>
 <!--
   "Reset everything, everything reset."
@@ -2951,8 +2961,8 @@ function skinApply(v){
   m.setAttribute('content',dark?'#0f1218':'#14675a');
  }
  var said=document.getElementById('skinSaid');
- if(said)said.textContent=v==='auto'?'הטלפון מחליט, לפי מצב לילה שלו.'
-  :v==='light'?'לבן קבוע, גם בלילה.':'שחור קבוע, גם ביום.';
+ if(said)said.textContent=v==='auto'?'הטלפון מחליט, לפי מצב הלילה שלו.'
+  :v==='light'?'מצב יום קבוע, גם בלילה.':'מצב לילה קבוע, גם ביום.';
  Array.prototype.forEach.call(document.querySelectorAll('.skb'),function(b){
   b.setAttribute('aria-pressed',b.getAttribute('data-skin')===v?'true':'false');
  });

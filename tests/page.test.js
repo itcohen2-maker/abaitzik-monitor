@@ -332,6 +332,15 @@ test('the connection test says which channel carried it and waits for a real ans
 test('the skin can be left to the phone or forced white or black', () => {
   const html = renderPage(fixture({}));
   assert.ok(html.includes('id="skinBox"'));
+  // He asked twice for a night mode he could not find, because it was called
+  // "screen colour" and its buttons said white and black.
+  assert.ok(html.includes('<b>מצב יום ולילה</b>'));
+  assert.ok(html.includes('data-skin="dark">לילה</button>'));
+  assert.ok(html.includes('data-skin="light">יום</button>'));
+  // And it is the first thing on the settings screen: sitting in the dark is
+  // not something to scroll for.
+  const settingsTop = html.indexOf('<section id="pZ" hidden>');
+  assert.ok(html.indexOf('id="skinBox"') - settingsTop < 200, 'night mode must be at the top of settings');
   assert.ok(html.includes('data-skin="light"'));
   assert.ok(html.includes('data-skin="dark"'));
   assert.ok(html.includes('data-skin="auto"'));
