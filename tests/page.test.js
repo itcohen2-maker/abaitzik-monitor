@@ -467,6 +467,15 @@ test('nothing flashes at him, and the unread mark stays put', () => {
   assert.ok(off.includes('{animation:none!important}'));
   // The state itself is untouched: the red badge is still red and still there.
   assert.ok(off.includes(':root.calm .bub.fresh .badge{background:var(--red);color:#fff'));
+  // Calm is the floor in BOTH modes. The first version swapped the classes, so
+  // choosing "a gentle hint" took calm off and restored every hard animation
+  // it cancels: the blink, the beat, the glow, the nudging tabs.
+  assert.ok(html.includes("document.documentElement.classList.add('calm');\n if(localStorage.getItem('motion')==='soft')"));
+  assert.ok(html.includes(" r.classList.add('calm');\n r.classList.toggle('motion-soft',v==='soft');"));
+  assert.ok(!/classList\.toggle\('calm'/.test(html), 'calm must never be toggled off');
+  assert.ok(html.includes(':root.calm.motion-soft .newbtn.hot .nb-c,'));
+  // And the soft rules have to beat calm's own blanket cancellation.
+  assert.ok(html.includes('animation:softmark 10s ease-in-out infinite!important'));
   // The opt in is slow, is only a ring, and still yields to the phone.
   assert.ok(html.includes('animation:softmark 10s ease-in-out infinite'));
   assert.ok(html.includes('50%{box-shadow:0 0 0 5px rgba(234,67,53,.26)}'));

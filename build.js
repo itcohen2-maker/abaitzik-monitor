@@ -1285,13 +1285,23 @@ body.editing .bn{display:none}
 @keyframes softmark{
  0%,100%{box-shadow:0 0 0 0 rgba(234,67,53,0)}
  50%{box-shadow:0 0 0 5px rgba(234,67,53,.26)}}
-:root.motion-soft .newbtn.hot .nb-c,
-:root.motion-soft .th-fresh>summary .badge,
-:root.motion-soft .bub.fresh .badge{animation:softmark 10s ease-in-out infinite}
+/*
+  The opt in is an addition to calm, never a replacement for it.
+
+  The first version took the calm class off when he chose the soft hint, which
+  put every one of the hard animations back: the half second blink on the
+  count, the beating button, the glowing bubbles, the nudging tabs. Choosing
+  "a gentle hint" turned the whole thing back on. So the calm class stays on
+  the element in both modes and this re-animates exactly three things, with
+  !important because it has to beat calm's own blanket cancellation.
+*/
+:root.calm.motion-soft .newbtn.hot .nb-c,
+:root.calm.motion-soft .th-fresh>summary .badge,
+:root.calm.motion-soft .bub.fresh .badge{animation:softmark 10s ease-in-out infinite!important}
 @media(prefers-reduced-motion:reduce){
- :root.motion-soft .newbtn.hot .nb-c,
- :root.motion-soft .th-fresh>summary .badge,
- :root.motion-soft .bub.fresh .badge{animation:none}}
+ :root.calm.motion-soft .newbtn.hot .nb-c,
+ :root.calm.motion-soft .th-fresh>summary .badge,
+ :root.calm.motion-soft .bub.fresh .badge{animation:none!important}}
 .mob{display:flex;gap:6px;flex:0 0 auto}
 .mob button{background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:10px;
  padding:9px 12px;font:500 13.5px Heebo,sans-serif;cursor:pointer;white-space:nowrap}
@@ -1308,8 +1318,8 @@ body.editing .bn{display:none}
 // Same reason: the calm class has to be on the element before the first paint,
 // or the old flash gets one frame on screen every time he opens the page.
 try{
- var mo=localStorage.getItem('motion')==='soft'?'soft':'off';
- document.documentElement.classList.add(mo==='soft'?'motion-soft':'calm');
+ document.documentElement.classList.add('calm');
+ if(localStorage.getItem('motion')==='soft')document.documentElement.classList.add('motion-soft');
 }catch(e){document.documentElement.classList.add('calm');}})();
 </script>
 </head>
@@ -2930,8 +2940,10 @@ function motionGet(){
 }
 function motionApply(v){
  var r=document.documentElement;
+ // Calm is the floor in both modes. Taking it off was the bug: it did not
+ // soften anything, it restored every hard animation the class cancels.
+ r.classList.add('calm');
  r.classList.toggle('motion-soft',v==='soft');
- r.classList.toggle('calm',v!=='soft');
  var said=document.getElementById('motionSaid');
  if(said)said.textContent=v==='soft'
   ?'רמז עדין: טבעת שנכנסת ויוצאת לאט על הסימון החדש בלבד.'
