@@ -437,6 +437,22 @@ test('the microphone answers the tap before the phone has decided', () => {
   assert.ok(body.includes('rec.onerror=function(){'));
 });
 
+test('a card about listening gets something to press', () => {
+  const html = renderPage(fixture({
+    special: [{ at: '2026-09-13T01:30:00+03:00', title: 'מוזיקה', note: 'n', url: '',
+      audio: [{ title: '1. גלישה · 104', note: 'x', src: 'files/music/01-glide.mp3' }] }],
+  }));
+  // The player is in the page, pointed at a file this repository actually ships.
+  assert.ok(html.includes('<audio controls preload="none" src="'));
+  assert.ok(html.includes('files/music/01-glide.mp3'));
+  assert.ok(require('fs').existsSync(require('path').join(__dirname, '..', 'docs', 'files', 'music', '01-glide.mp3')),
+    'the card points at a file that is not in the build');
+  // Nothing downloads until he decides to listen: three sketches is about two
+  // and a half megabytes, and the screen opens on a phone.
+  assert.ok(!/<audio[^>]*preload="(auto|metadata)"/.test(html));
+  assert.ok(!/<audio[^>]*\bautoplay\b/.test(html), 'nothing may start playing by itself');
+});
+
 test('the page actually parses', () => {
   // The gap that let a broken page go live. Every other test here asks whether
   // a string is present, and a string is present whether or not the script it

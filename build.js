@@ -150,7 +150,9 @@ function build() {
   // lands so he can find it without asking me where it went.
   const special = loadDocs('special')
     .map(x => ({ at: x.at, title: x.title || '', url: x.url || '',
-                 note: x.note || '', copy: x.copy || '' }))
+                 note: x.note || '', copy: x.copy || '',
+                 // Files to play in place, for a card that is about listening.
+                 audio: Array.isArray(x.audio) ? x.audio : [] }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
   const reports = loadDocs('reports')
     .map(r => ({ title: r.title, at: r.at, body: r.body, nets: reportNets(r) }))
@@ -1060,6 +1062,14 @@ body.editing .bn{display:none}
 .tidy button{border:1px solid var(--line);background:var(--bg);color:var(--ink);
  border-radius:999px;padding:9px 16px;font:800 13.5px Heebo,sans-serif;cursor:pointer}
 .tidy button.go{background:var(--ink);color:#fff;border-color:var(--ink)}
+/* A card about something to listen to gets a button he can tap, not a link he
+   has to go and find. preload none, so opening the screen does not pull two
+   and a half megabytes before he has decided to listen. */
+.tune{margin-top:10px;padding:10px 12px;border-radius:14px;background:var(--sunk);
+ border:1px solid var(--line)}
+.tune b{display:block;font:700 14.5px Heebo,sans-serif}
+.tune small{display:block;color:var(--dim);font-size:12.5px;margin:2px 0 8px;line-height:1.5}
+.tune audio{width:100%;height:38px}
 .allmsgs{display:block;width:100%;margin:-4px 0 10px;padding:11px 14px;cursor:pointer;
  background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:14px;
  font:500 13.5px Heebo,sans-serif}
@@ -4350,6 +4360,11 @@ function renderSpecial(){
    +(u.note?'<small>'+esc(u.note)+'</small>':'')
    +(u.copy?'<div class="cptext">'+esc(u.copy)+'</div>'
      +'<button type="button" class="cpbtn" data-t="'+esc(u.copy)+'">העתקת הטקסט</button>':'')
+   +((u.audio||[]).map(function(a){
+     return '<div class="tune"><b>'+esc(a.title)+'</b>'
+      +(a.note?'<small>'+esc(a.note)+'</small>':'')
+      +'<audio controls preload="none" src="'+esc(a.src)+'"></audio></div>';
+    }).join(''))
    +(u.url?'<a href="'+esc(u.url)+'">פתיחה</a>':'')
    +'</div>';
  }).join(''):'<div class="empty">עוד אין בקשה מוכנה כאן.</div>');
