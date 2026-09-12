@@ -1314,6 +1314,7 @@ try{
 <div class="wrap">
 <header class="hd">
  <button type="button" class="conn arr" id="arrangeBtn" title="סידור המסך">סידור</button>
+ <button type="button" class="conn" id="setBtn" title="הגדרות" aria-label="הגדרות">הגדרות</button>
  <button type="button" class="conn" id="reloadBtn" title="טעינה מחדש">רענון</button>
  <div class="hdtext">
   <!--
@@ -1455,6 +1456,17 @@ try{
 
 
 
+</section>
+
+<!--
+  Everything that is a setting, on one screen instead of stacked under the home
+  page. Not one control changed and not one value moved: the same elements,
+  the same ids, the same handlers, in a different place. Moving a switch is not
+  the same as changing what it does, and the security block in particular is
+  untouched.
+-->
+<section id="pZ" hidden>
+ <h2>הגדרות</h2>
 <div class="install" id="installHint">להתקנה כאפליקציה על מסך הבית: בספארי לוחצים שיתוף ואז "הוספה למסך הבית". באנדרואיד: תפריט ואז "התקנת אפליקציה".</div>
 
 <nav class="links" aria-label="קישורים מהירים">
@@ -2594,7 +2606,7 @@ function updateDot(){
  d.hidden=!(n&&n>chatSeen());
  document.title=(d.hidden?'':'(1) ')+'אבא איציק בבנייה עצמית';
 }
-var PANES={x:'pX',a:'pA',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY'};
+var PANES={z:'pZ',x:'pX',a:'pA',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
 // The last dose. From the chat it is read out of the message text, because he
@@ -4405,6 +4417,7 @@ function askInChat(prefix){
  box.value=prefix;box.focus();
  try{box.setSelectionRange(box.value.length,box.value.length);}catch(e){}
 }
+document.getElementById('setBtn').onclick=function(){pane('z');};
 document.getElementById('gChat').onclick=function(){pane('m');markChatSeen();};
 /*
   Writing and the camera, from the card at the top instead of from a tile most

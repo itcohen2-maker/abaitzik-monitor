@@ -169,7 +169,7 @@ test('a pegasus screen with a tile, and a live working state on the sent card', 
   assert.ok(html.includes('id="gPegasus"'));
   assert.ok(html.includes('<section id="pX" hidden>'));
   assert.ok(html.includes('function renderPegasus('));
-  assert.ok(html.includes("var PANES={x:'pX',"));
+  assert.ok(html.includes("var PANES={z:'pZ',x:'pX',"));
   assert.ok(html.includes('"pegasus":[{"at":"2026-09-11T11:30:00"'));
   assert.ok(html.includes("boot('pegasus',renderPegasus);"));
   assert.ok(html.includes('.sent.working .s-dot{'));
@@ -287,6 +287,26 @@ test('one card holds all four ways in, and nothing floats over the page', () => 
   assert.ok(html.includes("document.getElementById('wWrite').onclick"));
   assert.ok(html.includes('box.focus();box.scrollIntoView'));
   assert.ok(html.includes("document.getElementById('wShoot').onclick"));
+});
+
+test('every setting moved to one screen, and not one of them changed', () => {
+  const html = renderPage(fixture({}));
+  // Its own screen, with a permanent way in from the header.
+  assert.ok(html.includes('<section id="pZ" hidden>'));
+  assert.ok(html.includes('id="setBtn"'));
+  assert.ok(html.includes("document.getElementById('setBtn').onclick=function(){pane('z');};"));
+  assert.ok(html.includes("var PANES={z:'pZ',"));
+  // Every control that was stacked under the home page is there, by the same
+  // id, so the handlers that drive them are untouched.
+  const settings = html.slice(html.indexOf('<section id="pZ" hidden>'), html.indexOf('<section id="pQ" hidden>'));
+  ['id="installHint"', 'id="alerts"', 'id="ntfyBtn"', 'id="pingBox"', 'id="pingBtn"',
+   'id="skinBox"', 'data-skin="auto"', 'id="motionBox"', 'data-motion="soft"',
+   'id="codeBox"', 'id="faceSetup"', 'id="codeInput"', 'id="codeChange"',
+   'id="lockToggle"'].forEach((bit) => assert.ok(settings.includes(bit), bit));
+  // And none of them is still sitting on the home screen as well.
+  const home = html.slice(html.indexOf('<section id="pH">'), html.indexOf('<section id="pZ" hidden>'));
+  ['id="skinBox"', 'id="motionBox"', 'id="codeBox"', 'id="pingBox"', 'id="alerts"']
+    .forEach((bit) => assert.ok(!home.includes(bit), `${bit} is still on the home screen`));
 });
 
 test('what got better is on the home screen, with whether anyone checked it', () => {
