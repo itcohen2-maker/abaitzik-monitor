@@ -211,7 +211,10 @@ test('special requests get their own tile, screen and blink until opened', () =>
   assert.ok(html.includes("y:'pY'}"));
   assert.ok(html.includes('"special":[{"at":"2026-09-11T15:23:00"'));
   assert.ok(html.includes("localStorage.getItem('specialSeen')"));
-  assert.ok(html.includes("mark('gSpecial',!!spTop&&spSeen<spTop,'חדש');"));
+  assert.ok(html.includes("mark('gSpecial',spNew,'חדש');"))
+  // While it is new it sits first, and it drops back into place once opened.
+  assert.ok(html.includes("floatTile('gSpecial',spNew);"))
+  assert.ok(html.includes('function floatTile(id,up){'));
 });
 
 test('every inner screen has a way back, its own address, and one search finds it', () => {

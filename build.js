@@ -2344,7 +2344,12 @@ function paintNew(){
  var spTop=sp.length?(sp[0].at||''):'';
  var spSeen='';
  try{spSeen=localStorage.getItem('specialSeen')||'';}catch(e){}
- mark('gSpecial',!!spTop&&spSeen<spTop,'חדש');
+ var spNew=!!spTop&&spSeen<spTop;
+ mark('gSpecial',spNew,'חדש');
+ // His own principle, applied for real: the thing that is new rises to the top
+ // instead of sitting fourteen tiles down where he has to hunt for it. Once he
+ // has opened it, it goes back to wherever he put it.
+ floatTile('gSpecial',spNew);
  mark('gChat',msgs>0,String(msgs));
  mark('gReports',reps>0,String(reps));
  mark('gPill',pillNow,'עכשיו');
@@ -2352,6 +2357,25 @@ function paintNew(){
  var nR=document.getElementById('nR');if(nR)nR.classList.toggle('hasnew',reps>0);
  var rd=document.getElementById('rDot');if(rd)rd.hidden=!reps;
 }
+// Lift one tile to the front of the grid while it is new, and put it back in
+// its saved place the moment it is not. Nothing else moves.
+function floatTile(id,up){
+ var el=document.getElementById(id),box=document.getElementById('blkTiles');
+ if(!el||!box)return;
+ if(up){
+  if(!el.dataset.homeIdx){
+   el.dataset.homeIdx=String(Array.prototype.indexOf.call(box.children,el));
+  }
+  if(box.firstChild!==el)box.insertBefore(el,box.firstChild);
+ }else if(el.dataset.homeIdx){
+  var i=parseInt(el.dataset.homeIdx,10);
+  delete el.dataset.homeIdx;
+  var kids=Array.prototype.slice.call(box.children);
+  var ref=kids[i]||null;
+  if(ref!==el)box.insertBefore(el,ref);
+ }
+}
+
 // Unread used to mean newer than the last time he opened the chat. That broke
 // the moment I wrote a reply with a timestamp earlier than one already there:
 // a real answer arrived and the button stayed grey. Seen messages are now
