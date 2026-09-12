@@ -265,3 +265,15 @@ test('the skin can be left to the phone or forced white or black', () => {
   // And it has to be applied before the body exists, or night gets a white flash.
   assert.ok(html.indexOf("localStorage.getItem('skin')") < html.indexOf('<body>'));
 });
+
+test('arranging shrinks the board to one screen and every card gets a minus', () => {
+  const html = renderPage(fixture({}));
+  assert.ok(html.includes('function fitEdit(){'));
+  assert.ok(html.includes('.editbox{transform-origin:top center'));
+  assert.ok(html.includes('.minus{position:absolute'));
+  assert.ok(html.includes('function hideBlock(el){'));
+  assert.ok(html.includes('id="editBack"'));
+  // The client build flips this and the minus becomes a request.
+  assert.ok(html.includes('var CAN_REMOVE = true;'));
+  assert.ok(html.includes("sendLine('בקשה להסיר מהמסך: '+k)"));
+});

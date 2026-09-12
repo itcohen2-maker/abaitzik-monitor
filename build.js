@@ -682,6 +682,15 @@ section{margin-bottom:30px}
  box-shadow:0 2px 6px rgba(66,133,244,.4),inset 0 1px 0 rgba(255,255,255,.3)}
 .ask .opts button:active{background:linear-gradient(180deg,var(--blue),#1b63d6);box-shadow:none}
 .ask .opts button[disabled]{opacity:.5}
+.minus{position:absolute;inset-inline-start:6px;top:6px;z-index:6;
+ width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+ font:700 20px/1 Heebo,sans-serif;color:#fff;cursor:pointer;touch-action:none;border:0;
+ background:linear-gradient(180deg,#ff7a6a,#e0402c);
+ box-shadow:0 2px 6px rgba(0,0,0,.35)}
+/* While arranging, the whole board is scaled to fit one screen. Dragging a
+   card used to stall two rows down because the drag could not scroll the page,
+   and the bottom of the list was simply out of reach. */
+.editbox{transform-origin:top center;transition:transform .18s ease}
 .grip{position:absolute;inset-inline-end:6px;top:6px;z-index:5;
  width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
  font-size:17px;color:#fff;cursor:grab;touch-action:none;
@@ -1603,7 +1612,8 @@ body.editing .bn{display:none}
 </button>
 
 <div class="editbar" id="editBar" hidden>
- <span>סידור המסך. גרור מה שתרצה.</span>
+ <span>סידור המסך. גרור מה שתרצה, ומינוס מסיר.</span>
+ <button type="button" id="editBack" hidden>החזרת הכל</button>
  <button type="button" id="swapBlocks">החלפה בין הריבועים לעיגולים</button>
  <button type="button" id="editDone">סיום</button>
 </div>
@@ -2743,6 +2753,9 @@ function armDrag(box,key){
  function enterEdit(){
   if(editing)return;
   editing={box:box,key:key};
+  // Start from the top, or the shrink happens around wherever he was scrolled
+  // to and the board jumps under his finger.
+  try{window.scrollTo({top:0,behavior:'auto'});}catch(e){window.scrollTo(0,0);}
   document.body.classList.add('editing');
   box.classList.add('editbox');
   addHandles(box);
@@ -2801,6 +2814,65 @@ function armDrag(box,key){
 }
 // A visible grip on each block, because on a phone there is no other way to
 // say move this whole thing rather than move what is inside it.
+// Only the master may take a card off the screen. In the client build this is
+// false, the minus turns into a request, and the removal waits for us. That is
+// the line the whole product is sold on: he adds, he never dismantles.
+var CAN_REMOVE = true;
+
+function blockKey(el){
+ return el.id || el.getAttribute('data-blk') || '';
+}
+function blocksHidden(){return tileStore('blocksHidden',[]);}
+function applyBlocksHidden(){
+ var hid=blocksHidden(),box=document.getElementById('pH');
+ if(!box)return;
+ Array.prototype.forEach.call(box.children,function(el){
+  var k=blockKey(el);
+  if(k)el.hidden=hid.indexOf(k)>=0;
+ });
+ var back=document.getElementById('editBack');
+ if(back)back.hidden=!hid.length;
+}
+function hideBlock(el){
+ var k=blockKey(el);
+ if(!k)return;
+ if(!CAN_REMOVE){
+  sendLine('בקשה להסיר מהמסך: '+k);
+  toast('הבקשה נשלחה. ההסרה מחכה לאישור.');
+  return;
+ }
+ var hid=blocksHidden();
+ if(hid.indexOf(k)<0)hid.push(k);
+ tileSave('blocksHidden',hid);
+ applyBlocksHidden();
+ fitEdit();
+}
+function restoreBlocks(){
+ tileSave('blocksHidden',[]);
+ applyBlocksHidden();
+ fitEdit();
+}
+
+// Shrink the board so the whole thing sits on one screen while arranging, the
+// way a phone does when the icons start to wobble. Without this the bottom of
+// the list cannot be reached by a finger that is already holding a card.
+function fitEdit(){
+ var box=document.getElementById('pH');
+ if(!box)return;
+ if(!document.body.classList.contains('editing')){
+  box.style.transform='';box.style.height='';return;
+ }
+ box.style.transform='';box.style.height='';
+ var natural=box.getBoundingClientRect().height;
+ if(!natural)return;
+ var room=window.innerHeight-box.getBoundingClientRect().top-96;
+ var k=Math.min(1,Math.max(.45,room/natural));
+ if(k>=.999)return;
+ box.style.transform='scale('+k+')';
+ box.style.height=(natural*k)+'px';
+}
+window.addEventListener('resize',function(){if(document.body.classList.contains('editing'))fitEdit();});
+
 function addHandles(box){
  if(box!==document.getElementById('pH'))return;
  Array.prototype.forEach.call(box.children,function(el){
@@ -2810,11 +2882,23 @@ function addHandles(box){
   g.textContent='⠿';
   g.setAttribute('aria-hidden','true');
   el.insertBefore(g,el.firstChild);
+  if(blockKey(el)){
+   var m=document.createElement('button');
+   m.type='button';
+   m.className='minus';
+   m.textContent='−';
+   m.setAttribute('aria-label',CAN_REMOVE?'להסיר מהמסך':'לבקש הסרה');
+   m.addEventListener('pointerdown',function(ev){ev.stopPropagation();});
+   m.addEventListener('click',function(ev){
+    ev.preventDefault();ev.stopPropagation();hideBlock(el);
+   });
+   el.insertBefore(m,el.firstChild);
+  }
   el.classList.add('hasgrip');
  });
 }
 function dropHandles(){
- Array.prototype.forEach.call(document.querySelectorAll('.grip'),function(g){
+ Array.prototype.forEach.call(document.querySelectorAll('.grip,.minus'),function(g){
   var p=g.parentNode;
   if(p){p.removeChild(g);p.classList.remove('hasgrip');}
  });
@@ -2823,9 +2907,13 @@ function showEditBar(){
  var bar=document.getElementById('editBar');
  if(!bar)return;
  bar.hidden=false;
+ applyBlocksHidden();
+ fitEdit();
 }
 function endEdit(){
  if(!editing)return;
+ var pH=document.getElementById('pH');
+ if(pH){pH.style.transform='';pH.style.height='';}
  saveOrder(editing.box,editing.key);
  pinHome(document.getElementById('pH'));
  dropHandles();
@@ -4373,6 +4461,8 @@ function pinHome(home){
  if(home){nameChildren(home,'blk');applyOrder(home,'blockOrder');pinHome(home);armDrag(home,'blockOrder');}
 })();
 on('editDone',endEdit);
+on('editBack',restoreBlocks);
+boot('blocksHidden',applyBlocksHidden);
 // The explicit way into arranging, for when the long press is not obvious.
 on('arrangeBtn',function(){
  if(editing){endEdit();return;}
