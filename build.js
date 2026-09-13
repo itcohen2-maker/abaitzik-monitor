@@ -1942,6 +1942,8 @@ try{
   <div id="rivList"></div>
   <h3 class="rivh" id="rivH2">נכנס לבנק באפריל עד יוני ואין עליו קבלה</h3>
   <div id="rivOpen"></div>
+  <h3 class="rivh" id="rivH4">לאן הלך הכסף, שנתיים אחורה</h3>
+  <div id="rivBank"></div>
   <h3 class="rivh" id="rivH3">שים לב</h3>
   <div id="rivAlerts"></div>
  </div>
@@ -5672,6 +5674,7 @@ function renderRivhit(){
  };
  put('rivList',by('debt'),'rivH1');
  put('rivOpen',by('open'),'rivH2');
+ put('rivBank',by('bank'),'rivH4');
  var A=by('alert'),ae=document.getElementById('rivAlerts'),ah=document.getElementById('rivH3');
  if(ae){
   ae.innerHTML=A.map(function(a){
@@ -5750,4 +5753,5 @@ try{window.__monAlive();}catch(e){}
 
 module.exports = { renderPage, build };
 if (require.main === module) build();
+
 
