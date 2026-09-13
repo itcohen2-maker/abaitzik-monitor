@@ -132,6 +132,33 @@ function sleepSetting() {
     'powercfg /change standby-timeout-ac 0');
 }
 
+/* ---------- 4b. מצב לילה ---------- */
+function nightMode() {
+  // שתי משימות: שינה ב-23:00 והערה ב-06:55. שינה ולא כיבוי, כי שינה
+  // שומרת את הזיכרון ולכן הטרמינל וכרום שורדים את הלילה.
+  const q = ps("foreach($n in 'AbaItzikNightSleep','AbaItzikMorningWake'){" +
+    "$t=Get-ScheduledTask -TaskName $n -ErrorAction SilentlyContinue;" +
+    "if($t){\"$n=$($t.State)\"}else{\"$n=MISSING\"}}");
+  const has = n => q.indexOf(n + '=Ready') > -1;
+  // משימת ההערה רצה כ-SYSTEM, ושאילתה בלי הרשאות מנהל מקבלת עליה
+  // גישה נדחתה ולא חסר. אסור להציג את זה כאילו המשימה נמחקה.
+  const seen = q.indexOf('AbaItzikMorningWake=') > -1;
+  if (!has('AbaItzikNightSleep')) {
+    warn('מצב לילה', 'משימת השינה חסרה', 'להריץ setup-night.ps1 בהרשאות מנהל');
+  } else if (!has('AbaItzikMorningWake')) {
+    warn('מצב לילה', seen ? 'משימת ההערה חסרה'
+      : 'השינה קיימת. את ההערה אי אפשר לבדוק בלי הרשאות מנהל',
+      'להריץ בהרשאות מנהל: Get-ScheduledTask AbaItzikMorningWake');
+  } else {
+    ok('מצב לילה', 'שינה 01:00, הערה 06:00');
+  }
+
+  const rtc = ps("(powercfg /q SCHEME_CURRENT SUB_SLEEP RTCWAKE | Select-String 'Current AC Power Setting')");
+  if (/0x0*1/.test(rtc)) ok('טיימר הערה', 'מורשה');
+  else if (rtc) fail('טיימר הערה', 'חסום, ולכן ההערה בבוקר לא תרוץ',
+    'powercfg -setacvalueindex SCHEME_CURRENT SUB_SLEEP RTCWAKE 1');
+}
+
 /* ---------- 5. הדף הציבורי ---------- */
 async function publicPage() {
   const code = await head(PUBLIC_URL);
@@ -169,6 +196,7 @@ function backup() {
   chrome();
   remote();
   sleepSetting();
+  nightMode();
   git();
   backup();
   await publicPage();
