@@ -1384,20 +1384,44 @@ body.editing .bn{display:none}
 .reloadbig:active{background:linear-gradient(180deg,var(--green),#2b8c45);box-shadow:none;transform:translateY(1px)}
 .reloadbig[disabled]{opacity:.6}
 .reloadbig:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-/* Small, and parked clear of the bottom navigation rather than over it. */
+/*
+  The same microphone as the big one, shrunk.
+
+  The first version was a flat blue disc and he could not see it, which is fair:
+  it looked like a chip rather than like the thing it is. This is the card
+  microphone's own treatment at 54px, the coloured ring around a lit sphere, so
+  it reads as the same object wherever he meets it.
+*/
 .micdock{position:fixed;inset-inline-start:12px;z-index:30;
  bottom:calc(70px + env(safe-area-inset-bottom));
- width:48px;height:48px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;
- color:#fff;background:linear-gradient(150deg,#5aa9fb,var(--blue));
- box-shadow:0 4px 14px rgba(0,0,0,.35)}
-.micdock svg{width:24px;height:24px}
-.micdock.on{background:var(--red)}
-.micdock.sending{background:linear-gradient(150deg,#ffd257,var(--yellow));color:#3a2c00}
-.micdock.sent{background:linear-gradient(150deg,#5cc36f,var(--green))}
-.micdock.failed{background:#5b6472}
+ width:54px;height:54px;flex:0 0 54px;border-radius:50%;border:0;padding:0;cursor:pointer;
+ position:fixed;display:grid;place-items:center;
+ background:conic-gradient(from 0deg,var(--blue),var(--red),var(--yellow),var(--green),var(--blue));
+ box-shadow:0 6px 18px rgba(0,0,0,.4)}
+.micdock:before{content:"";position:absolute;inset:4px;border-radius:50%;
+ background:radial-gradient(circle at 34% 26%,#ffffff 0%,var(--surface) 42%,
+  color-mix(in srgb,var(--surface) 82%,#000) 100%);
+ box-shadow:inset 0 -4px 8px rgba(0,0,0,.18),inset 0 3px 6px rgba(255,255,255,.9)}
+.micdock svg{position:relative;z-index:1;width:26px;height:26px;stroke:var(--ink)}
+.micdock svg rect{fill:var(--ink)}
+.micdock.on:before{background:#fdecea}
+.micdock.on svg{stroke:var(--red)}
+.micdock.on svg rect{fill:var(--red)}
 .micdock:active{transform:scale(.94)}
-.micdock:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.micdock:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .locked .micdock{display:none}
+/*
+  Round buttons along the bottom, because he asked for ours rather than for a
+  row of outlines. Each icon sits in its own lit disc, the selected one takes
+  the accent, and the label stays underneath so nothing is a guess.
+*/
+.bn button svg{border-radius:50%;padding:6px;box-sizing:content-box;
+ background:var(--sunk);border:1px solid var(--line)}
+.bn button[aria-pressed="true"]{background:none;box-shadow:none;border-radius:0;color:var(--accent)}
+.bn button[aria-pressed="true"] svg{background:linear-gradient(150deg,#5aa9fb,var(--blue));
+ border-color:transparent;color:#fff;stroke:#fff;
+ box-shadow:0 4px 10px rgba(66,133,244,.4)}
+.bn button.hasnew svg{border-color:var(--red)}
 .morebtn{display:block;width:100%;margin:2px 0 0;padding:12px 14px;cursor:pointer;
  background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:14px;
  font:500 13.5px Heebo,sans-serif}
