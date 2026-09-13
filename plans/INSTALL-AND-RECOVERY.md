@@ -80,7 +80,24 @@ Start-Process msiexec.exe -ArgumentList '/i','"<path>\chromeremotedesktophost.ms
 **באייפון אין אפליקציה.** גוגל הוציאה אותה מה-App Store בספטמבר 2025.
 נכנסים מספארי ל-`remotedesktop.google.com` ומוסיפים למסך הבית.
 
-### 5. המוניטור
+### 5. מצב לילה
+
+```powershell
+powershell -ExecutionPolicy Bypass -File setup-night.ps1   # בהרשאות מנהל
+```
+
+שתי משימות: `AbaItzikNightSleep` ב-01:00 ו-`AbaItzikMorningWake` ב-06:00.
+**שינה ולא כיבוי.** שינה שומרת את הזיכרון, ולכן הטרמינל וכרום שורדים את
+הלילה והעבודה ממשיכה בבוקר. כיבוי היה הורג את שניהם ואיש לא היה מרים אותם.
+
+משימת ההערה רצה כ-SYSTEM עם `WakeToRun`, וצריך גם להתיר את טיימר ההערה,
+אחרת היא פשוט לא תרוץ.
+
+**מלכודת בבדיקה:** `Get-ScheduledTask` בלי הרשאות מנהל מדווח על משימת
+SYSTEM ״לא נמצא״, וזה שקר. `schtasks` אומר במפורש גישה נדחתה, ולכן
+הבדיקה משתמשת בו.
+
+### 6. המוניטור
 
 ```bash
 node server.js          # מקומי, 127.0.0.1:4173

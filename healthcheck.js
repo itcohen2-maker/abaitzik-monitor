@@ -136,19 +136,23 @@ function sleepSetting() {
 function nightMode() {
   // שתי משימות: שינה ב-23:00 והערה ב-06:55. שינה ולא כיבוי, כי שינה
   // שומרת את הזיכרון ולכן הטרמינל וכרום שורדים את הלילה.
+  // צריך להבחין בין משימה שנמחקה לבין משימה שאין הרשאה לקרוא אותה.
+  // AbaItzikMorningWake רצה כ-SYSTEM. Get-ScheduledTask בלי הרשאות מנהל
+  // מדווח עליה "לא נמצא", וזה שקר. schtasks לפחות אומר במפורש גישה נדחתה.
   const q = ps("foreach($n in 'AbaItzikNightSleep','AbaItzikMorningWake'){" +
-    "$t=Get-ScheduledTask -TaskName $n -ErrorAction SilentlyContinue;" +
-    "if($t){\"$n=$($t.State)\"}else{\"$n=MISSING\"}}");
+    "$o=(schtasks /query /tn $n 2>&1 | Out-String);" +
+    "if($o -match 'denied|נדחת'){\"$n=DENIED\"}" +
+    "elseif($o -match [regex]::Escape($n)){\"$n=Ready\"}else{\"$n=MISSING\"}}");
   const has = n => q.indexOf(n + '=Ready') > -1;
   // משימת ההערה רצה כ-SYSTEM, ושאילתה בלי הרשאות מנהל מקבלת עליה
   // גישה נדחתה ולא חסר. אסור להציג את זה כאילו המשימה נמחקה.
-  const seen = q.indexOf('AbaItzikMorningWake=') > -1;
+  const denied = q.indexOf('AbaItzikMorningWake=DENIED') > -1;
   if (!has('AbaItzikNightSleep')) {
     warn('מצב לילה', 'משימת השינה חסרה', 'להריץ setup-night.ps1 בהרשאות מנהל');
+  } else if (denied) {
+    ok('מצב לילה', 'שינה 01:00 קיימת. ההערה רצה כ-SYSTEM ואי אפשר לקרוא אותה מכאן');
   } else if (!has('AbaItzikMorningWake')) {
-    warn('מצב לילה', seen ? 'משימת ההערה חסרה'
-      : 'השינה קיימת. את ההערה אי אפשר לבדוק בלי הרשאות מנהל',
-      'להריץ בהרשאות מנהל: Get-ScheduledTask AbaItzikMorningWake');
+    warn('מצב לילה', 'משימת ההערה חסרה', 'להריץ setup-night.ps1 בהרשאות מנהל');
   } else {
     ok('מצב לילה', 'שינה 01:00, הערה 06:00');
   }
