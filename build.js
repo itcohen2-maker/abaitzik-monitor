@@ -486,6 +486,10 @@ button.abtn[disabled]{opacity:.55}
 .livepill.up .lp-d{background:var(--green)}
 .livepill.down{border-color:#e5484d;color:#e5484d}
 .livepill.down .lp-d{background:#e5484d}
+/* Catching him fine, but with no channel left to answer on. Not a failure and
+   not health, so not red and not green. */
+.livepill.mute{border-color:#e0a11b;color:#e0a11b}
+.livepill.mute .lp-d{background:#e0a11b}
 @keyframes lpbeat{0%,100%{opacity:1}50%{opacity:.35}}
 .livepill.up .lp-d{animation:lpbeat 2.4s ease-in-out infinite}
 @media(prefers-reduced-motion:reduce){.livepill.up .lp-d{animation:none}}
@@ -6182,6 +6186,16 @@ function paintLive(){
   txt.textContent='נפל ב'+liveTime(liveLast.at);
   return;
  }
+ // Alive, but with no way to reach him, is its own state and it is not green.
+ // That is exactly the situation that went unnoticed on 13.9.
+ var B=liveLast.budget||{};
+ var mute=Object.keys(B).length&&Object.keys(B).every(function(k){
+  return B[k].blockedUntil||B[k].left===0;});
+ if(mute){
+  pill.className='livepill mute';
+  txt.textContent='קולט, לא יכול להתריע';
+  return;
+ }
  pill.className='livepill up';
  txt.textContent=liveLast.last?('נקלט '+liveTime(liveLast.last)):'מאזין';
 }
@@ -6217,6 +6231,18 @@ function openLiveSheet(){
    ['רץ',up<60?(up+' דקות'):(Math.round(up/60)+' שעות')],
    ['נקלטו',String(liveLast.n||0)],
    ['פעימה כל','רבע שעה']];
+  // What is left of today's sending budget. On 13.9 both notification
+  // channels ran out inside an hour with no warning anywhere, and the first
+  // anyone knew was Itzik asking why the monitor had fallen. This is the
+  // warning that did not exist.
+  var B=liveLast.budget||{};
+  Object.keys(B).forEach(function(k){
+   var c=B[k];
+   rows.push([c.label,c.blockedUntil
+    ?('חסום עד '+liveTime(c.blockedUntil))
+    :(c.left+' מתוך '+c.cap)]);
+  });
+  if(liveLast.queued)rows.push(['ממתינות בתור',String(liveLast.queued)]);
   body.innerHTML=rows.map(function(r){
    return '<div class="lr"><span>'+esc(r[0])+'</span><b>'+esc(r[1])+'</b></div>';
   }).join('')

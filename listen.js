@@ -26,6 +26,7 @@
 */
 const fs = require('fs');
 const path = require('path');
+const ch = require('./lib/notify-channels.js');
 
 const TOPIC = 'abaitzik-in-95e62e86c34f4853';
 const LIVE = TOPIC + '-live';
@@ -92,13 +93,21 @@ function beatBody() {
   // up" is the question the indicator has to answer.
   const recent = readJson(PULLS, []).slice(-5)
     .map(function (r) { return { at: r.at, kind: r.kind }; });
+  // The pulse also carries what is left of today's sending budget. The whole
+  // point of the rebuild is that we see the cliff before we walk off it, and
+  // the only screen Itzik reads is the one on his phone.
+  let money = {};
+  let queued = 0;
+  try { money = ch.budget(); queued = ch.queueLength(); } catch (e) { /* never block the pulse */ }
   return {
     at: new Date().toISOString(),
     up: Math.round((Date.now() - STARTED) / 1000),
     since: connectedAt ? new Date(connectedAt).toISOString() : '',
     last: lastMsgAt ? new Date(lastMsgAt).toISOString() : '',
     n: received,
-    recent: recent
+    recent: recent,
+    budget: money,
+    queued: queued
   };
 }
 
@@ -209,8 +218,21 @@ async function connect() {
   }
 }
 
+// Whatever could not go out while the channels were down is retried on the
+// same clock as the pulse. Nothing here shouts: if it still cannot go out it
+// stays on the queue and the count travels on the next beat.
+async function drainQueue() {
+  try {
+    const before = ch.queueLength();
+    if (!before) return;
+    const r = await ch.drain();
+    if (r.sent) say('נשלחו ' + r.sent + ' הודעות שהמתינו בתור. נשארו ' + r.left + '.');
+  } catch (e) { /* the queue survives to the next round */ }
+}
+
 (async () => {
   setInterval(beat, BEAT_MS);
+  setInterval(drainQueue, BEAT_MS);
   let wait = 2000;
   for (;;) {
     try {

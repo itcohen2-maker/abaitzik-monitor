@@ -1,43 +1,63 @@
 'use strict';
-// Sends a push notification to Itzik's phone through ntfy.sh.
-// Usage: node notify.js "title" "message" [--p1..--p5]
-//
-// The priority decides how the phone announces it, which is the only part of
-// the sound I control from here: the ringtone itself is chosen inside the ntfy
-// app, not in the message. 5 is reserved for the pill and anything that must
-// not wait, 3 for routine updates that can arrive quietly.
-// The topic lives in data/ntfy-topic.txt (gitignored): anyone who knows it can
-// read and post, so it never reaches docs/ or the public repo.
-const fs = require('fs');
-const path = require('path');
-const https = require('https');
+/*
+  Sends a notification to Itzik, through whichever channel is still standing.
 
-const topicFile = path.join(__dirname, 'data', 'ntfy-topic.txt');
-const topic = fs.existsSync(topicFile) ? fs.readFileSync(topicFile, 'utf8').trim() : '';
-if (!topic) { console.error('no topic in data/ntfy-topic.txt'); process.exit(1); }
+  Usage: node notify.js "title" "message"
+         node notify.js --budget          what is left today, and what is queued
+         node notify.js --drain           retry whatever could not go out
 
-const args = process.argv.slice(2);
-const prio = (args.find(a => /^--p[1-5]$/.test(a)) || '--p4').slice(3);
-const [title, ...rest] = args.filter(a => !/^--p[1-5]$/.test(a));
-const body = rest.join(' ') || title || 'יש תשובה חדשה במוניטור';
-const payload = Buffer.from(body, 'utf8');
+  This used to post straight to ntfy and ignore the answer. On 13.9 that meant
+  the daily quota ran out in complete silence and he found out by asking why
+  the monitor had died. Everything now goes through lib/notify-channels.js,
+  which counts what it spends, believes a service that says no, falls over to
+  the next channel, and queues a message it cannot deliver rather than
+  dropping it.
 
-const req = https.request({
-  host: 'ntfy.sh', path: '/' + topic, method: 'POST',
-  headers: {
-    'Content-Type': 'text/plain; charset=utf-8',
-    'Content-Length': payload.length,
-    // ntfy headers only take latin1, so the Hebrew title is RFC 2047 encoded.
-    'Title': '=?UTF-8?B?' + Buffer.from(title || 'המוניטור', 'utf8').toString('base64') + '?=',
-    // Straight to the screen that holds only unread answers.
-    'Click': 'https://itcohen2-maker.github.io/abaitzik-monitor/#new',
-    'Tags': prio === '5' ? 'rotating_light' : 'speech_balloon',
-    'Priority': prio,
-  },
-}, res => {
-  let out = '';
-  res.on('data', d => out += d);
-  res.on('end', () => { console.log(res.statusCode, out.slice(0, 120)); });
-});
-req.on('error', e => { console.error(e.message); process.exit(1); });
-req.end(payload);
+  What this cannot do is invent a channel. When the output says every channel
+  is blocked, the message is on the queue and Itzik has not been told: say so
+  out loud instead of assuming it arrived.
+*/
+const ch = require('./lib/notify-channels.js');
+
+function line(b) {
+  return Object.keys(b).map(function (k) {
+    const c = b[k];
+    const state = c.blockedUntil
+      ? 'חסום עד ' + new Date(c.blockedUntil).toLocaleTimeString('he-IL')
+      : (c.left + ' נותרו')
+    return c.label + ': ' + c.used + '/' + c.cap + '  ' + state;
+  }).join('\n');
+}
+
+(async () => {
+  const args = process.argv.slice(2);
+
+  if (args.includes('--budget')) {
+    console.log(line(ch.budget()));
+    console.log('בתור: ' + ch.queueLength());
+    return;
+  }
+  if (args.includes('--drain')) {
+    const r = await ch.drain();
+    console.log('נשלחו ' + r.sent + ', נשארו ' + r.left);
+    return;
+  }
+
+  const rest = args.filter(a => !a.startsWith('--'));
+  const title = rest[0] || 'עדכון מהמוניטור';
+  const body = rest.slice(1).join(' ') || title;
+
+  const r = await ch.notify(title, body);
+  if (r.ok) {
+    console.log('נשלח דרך ' + r.channel);
+  } else {
+    console.log('!! לא נשלח לאף ערוץ. ההודעה בתור ותנוסה שוב.');
+    console.log('!! ' + r.tried.join(' | '));
+    // The third channel is not reachable from node: it is the Gmail connector,
+    // which only exists inside a running Claude session. Proven working on
+    // 13.9 while both of these were refusing. When this line prints, a session
+    // should send the message itself rather than assume Itzik was told.
+    console.log('!! ערוץ שלישי: מחבר Gmail דרך סשן קלוד. עובד, ולא תלוי בשני האלה.');
+    process.exitCode = 2;
+  }
+})();
