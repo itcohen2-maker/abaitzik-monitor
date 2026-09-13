@@ -1195,6 +1195,25 @@ body.editing .bn{display:none}
 .rv-exact{background:#e6f4ea;color:#137333}
 .rv-near{background:#fef7e0;color:#8a6100}
 .rv-partial{background:#e8f0fe;color:#1a56c4}
+/*
+  The home screen, stripped to one thing.
+
+  Itzik asked for a main screen with nothing on it but the way to reach me:
+  talk, write, attach a file, or take a photo. Everything else that used to
+  pile up here, the tiles, the shortcuts, the search, the counters and the
+  fold outs, is hidden rather than deleted, so every handler and renderer
+  behind them keeps working and any of it can come back by deleting a line.
+
+  Only on the home screen. The same elements on inner screens are untouched,
+  and the bottom navigation stays, because a screen you cannot leave is not a
+  simpler screen.
+*/
+#pH #newBlock, #pH #growBtn, #pH .whatsnew, #pH #askBox, #pH #blkTiles,
+#pH #tidyBox, #pH #gSearch, #pH .gres, #pH #blkIcons, #pH #pinBox,
+#pH #reqBox, #pH #growHome, #pH #codexBox, #pH #tuneBox{
+ display:none!important}
+#pH{padding-top:10px}
+#pH #talkCard{margin-top:0}
 .lb-riv{background:linear-gradient(150deg,#ffb74d,#e65100)}
 .lb-cal{background:linear-gradient(150deg,#5aa9fb,var(--blue))}
 .lb-x{background:linear-gradient(150deg,#b39ddb,#5e35b1)}
@@ -5791,5 +5810,6 @@ try{window.__monAlive();}catch(e){}
 
 module.exports = { renderPage, build };
 if (require.main === module) build();
+
 
 
