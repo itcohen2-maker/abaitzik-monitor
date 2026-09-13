@@ -282,13 +282,31 @@ test('special requests get their own tile, screen and blink until opened', () =>
   assert.ok(html.includes('id="gSpecial"'));
   assert.ok(html.includes('<section id="pY" hidden>'));
   assert.ok(html.includes('function renderSpecial('));
-  assert.ok(html.includes("y:'pY'}"));
+  assert.ok(html.includes("y:'pY'"));
   assert.ok(html.includes('"special":[{"at":"2026-09-11T15:23:00"'));
   assert.ok(html.includes("localStorage.getItem('specialSeen')"));
   assert.ok(html.includes("mark('gSpecial',spNew,'חדש');"))
   // While it is new it sits first, and it drops back into place once opened.
   assert.ok(html.includes("floatTile('gSpecial',spNew);"))
   assert.ok(html.includes('function floatTile(id,up){'));
+});
+
+test('the replies I sent in his name get a tile, a screen and a count that blinks', () => {
+  const html = renderPage(fixture({
+    replies: [{ at: '2026-09-13T11:48:00+03:00', network: 'youtube', video: 'x',
+                comment: 'c', reply: 'r', why: 'w' }],
+  }));
+  assert.ok(html.includes('id="gReplies"'));
+  assert.ok(html.includes('<section id="pK" hidden>'));
+  assert.ok(html.includes('function renderReplies('));
+  assert.ok(html.includes("k:'pK'}"));
+  assert.ok(html.includes("k:'replies'"));
+  assert.ok(html.includes('"replies":[{"at":"2026-09-13T11:48:00+03:00"'));
+  // The count is what he asked for: tell me there are more, not just that
+  // something exists. It clears only when he opens the screen.
+  assert.ok(html.includes("localStorage.getItem('repliesSeen')"));
+  assert.ok(html.includes("mark('gReplies',rpNew>0,String(rpNew));"));
+  assert.ok(html.includes("on('gReplies',function(){pane('k');renderReplies();markRepliesSeen();});"));
 });
 
 test('every inner screen has a way back, its own address, and one search finds it', () => {

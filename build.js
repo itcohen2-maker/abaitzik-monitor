@@ -157,6 +157,21 @@ function build() {
                  // Files to play in place, for a card that is about listening.
                  audio: Array.isArray(x.audio) ? x.audio : [] }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
+  /*
+    Every reply I sent on the networks that was not a routine thank you: a
+    question about the illness, someone sharing their own pain, anything I had
+    to decide on my own. He asked on 13.9 to see them all in one place, to go
+    over them himself, and for the tile to blink while there are ones he has
+    not read yet.
+
+    No names here on purpose. This page is public and the reply is enough to
+    know what happened; who wrote it stays between me and the network.
+  */
+  const replies = loadDocs('replies')
+    .map(x => ({ at: x.at, network: x.network || '', video: x.video || '',
+                 comment: x.comment || '', reply: x.reply || '',
+                 why: x.why || '', url: x.url || '' }))
+    .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
   const reports = loadDocs('reports')
     .map(r => ({ title: r.title, at: r.at, body: r.body, nets: reportNets(r) }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
@@ -246,6 +261,7 @@ function build() {
     pegasus,
     improve,
     special,
+    replies,
     chat,
     codex,
     rivhit,
@@ -456,10 +472,22 @@ button.abtn[disabled]{opacity:.55}
 /* The three newest on the home screen, in the same box as the requests above
    so the two lists read as one column rather than two designs. */
 .tunes{margin-top:14px;background:var(--surface);border:1px solid var(--line);
- border-radius:var(--r);box-shadow:var(--shadow);padding:14px 16px}
-.tunes>b{display:block;font:800 16px Heebo,sans-serif}
-.tunes>small{display:block;color:var(--dim);font-size:12.5px;line-height:1.6;
+ border-radius:var(--r);box-shadow:var(--shadow)}
+/* The padding moved off the card and onto the two halves, so the closed state
+   is one summary line and not a padded box wrapping one. */
+.tunes>summary{padding:13px 16px}
+.tunes #tuneBody{padding:0 16px 14px}
+.tunes .tune>b{display:block;font:700 15px Heebo,sans-serif}
+.tunes .tune>small{display:block;color:var(--dim);font-size:12.5px;line-height:1.6;
  margin:4px 0 6px;white-space:pre-line}
+/* A fold out he has already been inside: green edge, nothing flashing. The
+   same green the thread cards use, so one mark means one thing everywhere. */
+.fold.fold-done,.grows.fold-done,.tunes.fold-done{border-color:var(--green)}
+.fold>summary b{font:700 15px Heebo,sans-serif}
+.fold>summary small{color:var(--dim);font-size:12.5px;font-weight:400}
+.tunes.fold>summary{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tunes.fold>summary .badge{margin-inline-start:auto}
+.tnote{display:block;color:var(--dim);font-size:12.5px;line-height:1.6;padding:0 16px 10px}
 .fold{margin-top:14px;background:var(--surface);border:1px solid var(--line);
  border-radius:var(--r);box-shadow:var(--shadow);padding:0}
 .fold>summary{list-style:none;cursor:pointer;padding:13px 16px;
@@ -1063,6 +1091,7 @@ body.editing .bn{display:none}
 .g11{background:linear-gradient(150deg,#b9f6ca,#00897b)}
 .g12{background:linear-gradient(150deg,#d1c4e9,#5e35b1)}
 .g13{background:linear-gradient(150deg,#ffd27f,#ef6c00)}
+.g14{background:linear-gradient(150deg,#a5d6a7,#2e7d32)}
 /* The last thing he asked me for, sitting on the home screen itself. He could
    not find the print page through search and asked to have it pinned. */
 .pin{background:linear-gradient(150deg,#fff4e0,#ffe3b8);border:1px solid #f0c987;
@@ -1122,6 +1151,14 @@ body.editing .bn{display:none}
  font:800 14px Heebo,sans-serif;cursor:pointer}
 .spec a{display:inline-block;margin-top:10px;background:#1a73e8;color:#fff;text-decoration:none;
  border-radius:999px;padding:10px 18px;font:800 14px Heebo,sans-serif}
+/* One documented reply. Their words sit in a quiet box, mine in a green one,
+   so he can tell at a glance which half is his voice going out. */
+.rep .said{background:var(--bg);border:1px solid var(--line);border-radius:10px;
+ padding:10px 12px;margin-top:8px;font-size:14.5px;line-height:1.6;white-space:pre-wrap}
+.rep .mine{background:rgba(46,125,50,.10);border:1px solid rgba(46,125,50,.35)}
+.rep .lbl{display:block;color:var(--dim);font-size:12px;font-weight:800;margin-bottom:3px}
+.rep .tagnew{display:inline-block;background:#ef6c00;color:#fff;border-radius:999px;
+ padding:2px 10px;font:800 12px Heebo,sans-serif;margin-inline-start:8px}
 /* A tile with something waiting inside it. He asked for the screen to tell him
    where to look: the reports tile when a report he has not opened is up, the
    pill tile when a dose is due. It stops the moment he opens that screen. */
@@ -1770,7 +1807,16 @@ try{
     about listening belongs where he lands.
   -->
   <button type="button" id="bareBtn" class="morebtn">עוד כלים</button>
-  <section class="tunes" id="tuneBox" hidden></section>
+  <!--
+    It used to be an open card seven hundred pixels tall, sitting on the home
+    screen with the players already unrolled. He asked for headlines: one line
+    that says what it is, and it opens only if he wants it. Same shape as every
+    other fold out here, and the same green mark once he has been inside.
+  -->
+  <details class="tunes fold" id="tuneBox" hidden>
+   <summary id="tuneSum">מוזיקה</summary>
+   <div id="tuneBody"></div>
+  </details>
   <details class="reqs fold" id="reqBox" hidden>
    <summary id="reqSum">שתי הבקשות האחרונות</summary>
    <div id="reqBody"></div>
@@ -1829,6 +1875,7 @@ try{
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
   <button type="button" class="gt g12" id="gPegasus"><b>🐴 פגסוס</b><small>מה נעשה, מה קורה, מה מתוכנן</small></button>
   <button type="button" class="gt g13" id="gSpecial"><b>⭐ בקשות מיוחדות</b><small>מה שביקשת ומוכן, דפים וקבצים</small></button>
+  <button type="button" class="gt g14" id="gReplies"><b>✍️ תגובות מיוחדות</b><small>מה עניתי בשמך, לעבור ולאשר</small></button>
  </div>
 
  <div id="tidyBox"></div>
@@ -2186,6 +2233,12 @@ try{
  <h2>בקשות מיוחדות</h2>
  <div class="rephint">מה שביקשת ואני הכנתי, עם קישור ישיר. החדש למעלה.</div>
  <div id="specBox"></div>
+</section>
+
+<section id="pK" hidden>
+ <h2>תגובות מיוחדות</h2>
+ <div class="rephint">כל תשובה שכתבתי בשמך ולא הייתה סתם תודה. החדש למעלה, ומה שעוד לא ראית מסומן.</div>
+ <div id="repBox"></div>
 </section>
 
 <section id="pW" hidden>
@@ -3062,6 +3115,12 @@ function paintNew(){
  try{spSeen=localStorage.getItem('specialSeen')||'';}catch(e){}
  var spNew=!!spTop&&spSeen<spTop;
  mark('gSpecial',spNew,'חדש');
+ // The replies I sent in his name. The tile carries how many he has not gone
+ // over yet, not just that there is something, because the number is the whole
+ // point: he asked to be told there are more waiting.
+ var rpNew=repliesNew().length;
+ mark('gReplies',rpNew>0,String(rpNew));
+ floatTile('gReplies',rpNew>0);
  // His own principle, applied for real: the thing that is new rises to the top
  // instead of sitting fourteen tiles down where he has to hunt for it. Once he
  // has opened it, it goes back to wherever he put it.
@@ -3142,7 +3201,8 @@ function updateDot(){
  d.hidden=!(n&&n>chatSeen());
  document.title=(d.hidden?'':'(1) ')+'אבא איציק בבנייה עצמית';
 }
-var PANES={z:'pZ',x:'pX',a:'pA',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY'};
+var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
+var PANES={z:'pZ',x:'pX',a:'pA',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',k:'pK'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
 // The last dose. From the chat it is read out of the message text, because he
@@ -4013,7 +4073,7 @@ function paintAnsCount(){
 }
 // Every inner screen gets a way back and its own address. He asked for both:
 // a link that opens the screen I am talking about, and a way out of it.
-var PANENAME={x:'pegasus',y:'special',w:'improve',r:'reports',a:'answers',m:'chat'};
+var PANENAME={x:'pegasus',y:'special',w:'improve',r:'reports',a:'answers',m:'chat',k:'replies'};
 function paneOf(name){
  for(var k in PANENAME){if(PANENAME[k]===name)return k;}
  return PANES[name]?name:'';
@@ -4478,6 +4538,7 @@ function searchAll(q){
   out.push({kind:kind,pane:pane,title:title,at:at,text:text});
  }
  (D.special||[]).forEach(function(x){add('בקשות מיוחדות','y',x.title,x.at,(x.note||'')+' '+(x.url||''));});
+ (D.replies||[]).forEach(function(x){add('תגובות מיוחדות','k',x.video||(NETNAME[x.network]||x.network||'תגובה'),x.at,(x.comment||'')+' '+(x.reply||'')+' '+(x.why||''));});
  (D.reports||[]).forEach(function(x){add('דוח','r',x.title,x.at,x.body);});
  (D.chat||[]).forEach(function(x){add(x.from==='claude'?'הודעה ממני':'הודעה ממך','m','',x.at,x.text);});
  (D.improve||[]).forEach(function(x){add('שיפור','w',x.what,x.at,(x.why||'')+' '+(x.effect||''));});
@@ -4505,6 +4566,7 @@ function renderSearch(){
    var h=hits[Number(el.getAttribute('data-i'))];
    pane(h.pane);
    if(h.pane==='y')renderSpecial();
+   if(h.pane==='k'){renderReplies();markRepliesSeen();}
    if(h.pane==='w')renderImprove();
    // Land on the line he searched for, not at the top of a long screen.
    setTimeout(function(){
@@ -4664,6 +4726,47 @@ function renderPin(){
  }).join('');
 }
 
+/*
+  The replies I sent in his name, on his networks.
+
+  repliesSeen holds the timestamp of the newest one he has already opened.
+  Anything newer than that is what the tile counts and what gets a mark on the
+  card, so opening the screen is what clears it and nothing clears by itself.
+*/
+function repliesSeen(){
+ try{return localStorage.getItem('repliesSeen')||'';}catch(e){return '';}
+}
+function repliesNew(){
+ var seen=repliesSeen();
+ return (D.replies||[]).filter(function(r){return (r.at||'')>seen;});
+}
+function markRepliesSeen(){
+ var R=D.replies||[];
+ if(!R.length)return;
+ try{localStorage.setItem('repliesSeen',R[0].at||'');}catch(e){}
+ var el=document.getElementById('gReplies');
+ if(el){el.classList.remove('glow');var f=el.querySelector(':scope > .flag');if(f)f.remove();}
+}
+function renderReplies(){
+ var host=document.getElementById('repBox');
+ if(!host)return;
+ var R=D.replies||[];
+ var seen=repliesSeen();
+ host.innerHTML=replyBox('על התגובות')+(R.length?R.map(function(r){
+  var isNew=(r.at||'')>seen;
+  return '<div class="spec rep"><div class="w">'+esc(stamp(r.at))+' · '+esc(ago(r.at))
+   +(r.network?' · '+esc(NETNAME[r.network]||r.network):'')
+   +(isNew?'<span class="tagnew">חדש</span>':'')+'</div>'
+   +(r.video?'<b>'+esc(r.video)+'</b>':'')
+   +(r.comment?'<div class="said"><span class="lbl">מה שכתבו</span>'+esc(r.comment)+'</div>':'')
+   +(r.reply?'<div class="said mine"><span class="lbl">מה שעניתי בשמך</span>'+esc(r.reply)+'</div>':'')
+   +(r.why?'<small>'+esc(r.why)+'</small>':'')
+   +(r.url?'<a href="'+esc(r.url)+'" target="_blank" rel="noopener">פתיחה ברשת</a>':'')
+   +'</div>';
+ }).join(''):'<div class="empty">עוד לא כתבתי תשובה מיוחדת בשמך.</div>');
+ wireBoxes(host);
+}
+
 function markSpecialSeen(){
  var sp=(D.special||[]);
  if(!sp.length)return;
@@ -4686,13 +4789,66 @@ function renderTunes(){
  if(!S.length){box.hidden=true;return;}
  box.hidden=false;
  var u=S[0];
- box.innerHTML='<b>'+esc(u.title)+'</b>'
-  +(u.note?'<small>'+esc(u.note)+'</small>':'')
+ var n=(u.audio||[]).length;
+ // The headline carries enough to decide without opening: what it is, and how
+ // many there are to listen to.
+ document.getElementById('tuneSum').innerHTML='<b>'+esc(u.title)+'</b>'
+  +'<small>'+n+(n===1?' הקלטה':' הקלטות')+'</small>'+foldBadge('tuneBox');
+ document.getElementById('tuneBody').innerHTML=
+  (u.note?'<small class="tnote">'+esc(u.note)+'</small>':'')
   +(u.audio||[]).map(function(a){
     return '<div class="tune"><b>'+esc(a.title)+'</b>'
      +(a.note?'<small>'+esc(a.note)+'</small>':'')
      +'<audio controls preload="none" src="'+esc(a.src)+'"></audio></div>';
    }).join('');
+ armFold(box);
+}
+
+/*
+  The green mark on the home fold outs.
+
+  The thread cards already work this way: a card he has been inside stops
+  shouting and turns green. The cards on the home screen did not, so he had no
+  way to tell apart what he had already looked at. Same convention, same
+  wording, remembered on the device like every other preference here.
+*/
+// Every fold out on the home screen, marked the same way.
+function paintHomeFolds(){
+ var home=document.getElementById('pH');
+ if(!home)return;
+ Array.prototype.forEach.call(
+  home.querySelectorAll('details.fold, details.grows'),armFold);
+}
+function foldSeen(){
+ try{return JSON.parse(localStorage.getItem('foldSeen')||'[]');}catch(e){return [];}
+}
+function foldBadge(id){
+ return foldSeen().indexOf(id)>-1
+  ? '<em class="badge ok">נקרא</em>'
+  : '<em class="badge">חדש</em>';
+}
+function armFold(el){
+ if(!el)return;
+ var sum=el.querySelector('summary');
+ // The mark is put here rather than in each renderer, so a card added later
+ // gets it without anyone remembering to.
+ if(sum&&!sum.querySelector('.badge')){
+  sum.insertAdjacentHTML('beforeend',foldBadge(el.id));
+ }
+ el.classList.toggle('fold-done',foldSeen().indexOf(el.id)>-1);
+ if(el.getAttribute('data-armed'))return;
+ el.setAttribute('data-armed','1');
+ el.addEventListener('toggle',function(){
+  if(!el.open)return;
+  var f=foldSeen();
+  if(f.indexOf(el.id)<0){
+   f.push(el.id);
+   try{localStorage.setItem('foldSeen',JSON.stringify(f.slice(-200)));}catch(e){}
+  }
+  el.classList.add('fold-done');
+  var b=el.querySelector('summary .badge');
+  if(b){b.className='badge ok';b.textContent='נקרא';}
+ });
 }
 function renderSpecial(){
  var host=document.getElementById('specBox');
@@ -4761,6 +4917,9 @@ function renderPegasus(){
 on('gPegasus',function(){pane('x');renderPegasus();});
 on('growBtn',function(){pane('w');renderImprove();});
 on('gSpecial',function(){pane('y');renderSpecial();markSpecialSeen();});
+// Render first, mark second: the cards he is about to read still carry their
+// "new" mark, and only the tile goes quiet.
+on('gReplies',function(){pane('k');renderReplies();markRepliesSeen();});
 (function(){
  var inp=document.getElementById('gSearch');
  if(inp)inp.oninput=renderSearch;
@@ -6014,11 +6173,13 @@ boot('report',renderNextReport);
 boot('pegasus',renderPegasus);
 boot('improve',renderImprove);
 boot('special',renderSpecial);
+boot('replies',renderReplies);
 boot('tunes',renderTunes);
 boot('pin',renderPin);
 boot('reqs',renderReqs);
 boot('codex',renderCodex);
 boot('rivhit',renderRivhit);
+boot('folds',paintHomeFolds);
 boot('tidy',function(){countTiles();renderTidy();});
 // A link like #pegasus or #special lands straight on that screen.
 boot('hash',function(){
@@ -6030,6 +6191,7 @@ boot('hash',function(){
  if(k==='x')renderPegasus();
  if(k==='y'){renderSpecial();markSpecialSeen();}
  if(k==='w')renderImprove();
+ if(k==='k'){renderReplies();markRepliesSeen();}
 });
 boot('ask',renderAsk);
 boot('items',render);
