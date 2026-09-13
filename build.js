@@ -1224,9 +1224,18 @@ body.editing .bn{display:none}
   and the bottom navigation stays, because a screen you cannot leave is not a
   simpler screen.
 */
-#pH #newBlock, #pH #growBtn, #pH .whatsnew, #pH #askBox, #pH #blkTiles,
-#pH #tidyBox, #pH #gSearch, #pH .gres, #pH #blkIcons, #pH #pinBox,
-#pH #reqBox, #pH #growHome, #pH #codexBox, #pH #tuneBox{
+/*
+  This list used to hide unconditionally, which quietly broke the promise the
+  comment above makes. "עוד כלים" took the bare class off and nothing came
+  back: the tiles, the shortcut row and the search stayed hidden forever, and
+  the swap button in the arrange bar was moving two blocks nobody could see.
+  He reported both, and both were the same line. Scoped to .bare, so the
+  screen still opens stripped and the button actually brings the rest back.
+*/
+#pH.bare #newBlock, #pH.bare #growBtn, #pH.bare .whatsnew, #pH.bare #askBox,
+#pH.bare #blkTiles, #pH.bare #tidyBox, #pH.bare #gSearch, #pH.bare .gres,
+#pH.bare #blkIcons, #pH.bare #pinBox, #pH.bare #reqBox, #pH.bare #growHome,
+#pH.bare #codexBox, #pH.bare #tuneBox{
  display:none!important}
 #pH{padding-top:10px}
 #pH #talkCard{margin-top:0}
