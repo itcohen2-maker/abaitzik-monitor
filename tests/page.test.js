@@ -188,7 +188,7 @@ test('a refresh never costs him what he was writing', () => {
   const at = html.indexOf("document.getElementById('reloadBtn').onclick=function(){");
   const body = html.slice(at, at + 900);
   assert.ok(body.includes('keepDraft();'), 'the refresh must save the draft before reloading');
-  assert.ok(body.includes("btn.textContent='טוען מחדש';"));
+  assert.ok(body.includes("btn.textContent='מרענן';"));
   assert.ok(body.includes('btn.disabled=true;'));
   // Leaving the page at all has the same shape as pressing the button.
   assert.ok(html.includes("window.addEventListener('pagehide',keepDraft);"));
@@ -481,12 +481,21 @@ test('the home screen is the microphone and nothing else', () => {
   const html = renderPage(fixture({}));
   // He asked for the main screen to hold the microphone and the four ways of
   // reaching me, and nothing more.
-  assert.ok(html.includes('#pH.bare > *:not(#talkCard){display:none!important}'));
+  assert.ok(html.includes('#pH.bare > *:not(#talkCard):not(#bareBtn){display:none!important}'));
   // Hidden, never removed: every render on this page still writes to the
   // element it always wrote to, and nothing becomes unreachable.
   assert.ok(html.includes('id="bareBtn"'));
+  // The one action at the top says what pressing it does, not what it is
+  // called: it fetches a new copy AND lands him back on the home screen.
+  assert.ok(html.includes('<button type="button" class="reloadbig" id="reloadBtn">רענן אותי · חזרה לדף הבית</button>'));
+  // And arranging is in settings, where he put it.
+  const settings = html.slice(html.indexOf('<section id="pZ" hidden>'), html.indexOf('<section id="pQ" hidden>'));
+  assert.ok(settings.includes('id="arrangeBtn"'), 'arranging must live in settings');
+  const header = html.slice(html.indexOf('<header class="hd">'), html.indexOf('</header>'));
+  assert.ok(!header.includes('id="arrangeBtn"'), 'and not beside the title');
+  assert.ok(!header.includes('id="bareBtn"'), 'nor the tools link');
   assert.ok(html.includes("home.classList.toggle('bare',!!on);"));
-  assert.ok(html.includes("btn.textContent=on?'כלים':'רק המיקרופון';"));
+  assert.ok(html.includes("btn.textContent=on?'עוד כלים':'רק המיקרופון';"));
   // Bare by default, and the choice survives a reload like every other one.
   assert.ok(html.includes("return localStorage.getItem('bareHome')!=='0';"));
   assert.ok(html.includes("localStorage.setItem('bareHome',next?'1':'0');"));

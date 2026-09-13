@@ -1363,7 +1363,18 @@ body.editing .bn{display:none}
   and nothing becomes unreachable: one button in the header brings the rest
   back, and the choice is remembered.
 */
-#pH.bare > *:not(#talkCard){display:none!important}
+#pH.bare > *:not(#talkCard):not(#bareBtn){display:none!important}
+.reloadbig{flex:1 1 100%;order:-1;min-height:52px;border:0;border-radius:16px;cursor:pointer;
+ color:#fff;font:800 16px Heebo,sans-serif;
+ background:linear-gradient(180deg,#5cc36f,var(--green));
+ box-shadow:0 3px 10px rgba(52,168,83,.4),inset 0 1px 0 rgba(255,255,255,.35)}
+.reloadbig:active{background:linear-gradient(180deg,var(--green),#2b8c45);box-shadow:none;transform:translateY(1px)}
+.reloadbig[disabled]{opacity:.6}
+.reloadbig:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.morebtn{display:block;width:100%;margin:2px 0 0;padding:12px 14px;cursor:pointer;
+ background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:14px;
+ font:500 13.5px Heebo,sans-serif}
+.morebtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 #pH.bare{padding-top:6px}
 #bareBtn{margin-inline-start:0;background:linear-gradient(180deg,#b39ddb,#5e35b1);
  box-shadow:0 2px 6px rgba(94,53,177,.4),inset 0 1px 0 rgba(255,255,255,.28)}
@@ -1585,12 +1596,23 @@ try{
 }catch(e){}})();
 </script>
 <div class="wrap">
+<!--
+  One big action at the top, then who this is, then the microphone.
+
+  He asked exactly this, in this order, and asked the refresh button to say what
+  it does rather than what it is called: pressing it fetches a new copy AND
+  puts him back on the home screen, and now it says so. Arranging moved into
+  settings, where he put it, because it is something you do once and not a
+  thing you need beside the title every day. And he asked what כלים was even
+  for, which was fair: it is the only way back to the pill, the food, the drive
+  and the special requests, so it stays, but as a quiet line under the card
+  rather than as a pill in the header competing with the one action that
+  matters.
+-->
 <header class="hd">
- <button type="button" class="conn arr" id="arrangeBtn" title="סידור המסך">סידור</button>
+ <button type="button" class="reloadbig" id="reloadBtn">רענן אותי · חזרה לדף הבית</button>
  <button type="button" class="conn" id="homeBtn" title="חזרה לבית" hidden>בית</button>
- <button type="button" class="conn" id="bareBtn" title="כלים">כלים</button>
  <button type="button" class="conn" id="setBtn" title="הגדרות" aria-label="הגדרות">הגדרות</button>
- <button type="button" class="conn" id="reloadBtn" title="טעינה מחדש">רענון</button>
  <div class="hdtext">
   <!--
     The exact title he gave. Under it two different facts that were one line
@@ -1676,6 +1698,7 @@ try{
     inner screen behind a tile", which is the same as nowhere. A card that is
     about listening belongs where he lands.
   -->
+  <button type="button" id="bareBtn" class="morebtn">עוד כלים</button>
   <section class="tunes" id="tuneBox" hidden></section>
   <details class="reqs fold" id="reqBox" hidden>
    <summary id="reqSum">שתי הבקשות האחרונות</summary>
@@ -1837,6 +1860,13 @@ try{
   I wrote him is not something a button on a settings screen should be able to
   do.
 -->
+<div class="alerts" id="arrangeBox">
+ <div>
+  <b>סידור המסך</b>
+  <small>מזיז את הכרטיסים לסדר שנוח לך. הידית הכחולה גוררת, ולידה מעלה ומטה.</small>
+ </div>
+ <button type="button" class="abtn" id="arrangeBtn">סידור</button>
+</div>
 <div class="alerts" id="resetBox">
  <div>
   <b>לאפס את ההודעות</b>
@@ -3894,7 +3924,7 @@ document.getElementById('reloadBtn').onclick=function(){
  // And it says what it is doing. A button that looks like it did nothing, on a
  // fast connection, is how רענון came to be read as a second way home.
  var btn=this;
- btn.textContent='טוען מחדש';
+ btn.textContent='מרענן';
  btn.disabled=true;
  var done=function(){location.replace(location.pathname+'?v='+Date.now());};
  try{
@@ -5053,7 +5083,7 @@ function bareApply(on){
  var home=document.getElementById('pH');
  if(home)home.classList.toggle('bare',!!on);
  var btn=document.getElementById('bareBtn');
- if(btn)btn.textContent=on?'כלים':'רק המיקרופון';
+ if(btn)btn.textContent=on?'עוד כלים':'רק המיקרופון';
 }
 document.getElementById('bareBtn').onclick=function(){
  var next=!bareGet();
