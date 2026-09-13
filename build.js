@@ -475,7 +475,7 @@ button.abtn[disabled]{opacity:.55}
    same green the thread cards use, so one mark means one thing everywhere. */
 /* The listener indicator. Fixed to the edge, small, and never in the way of
    a thumb reaching the bottom navigation. */
-.livepill{position:fixed;inset-inline-start:8px;bottom:78px;z-index:60;
+.livepill{position:fixed;inset-inline-end:10px;bottom:78px;z-index:60;
  display:flex;align-items:center;gap:6px;border:1px solid var(--line);
  background:var(--surface);color:var(--dim);border-radius:999px;
  padding:6px 11px 6px 8px;font:700 11.5px Heebo,sans-serif;cursor:pointer;
@@ -489,7 +489,9 @@ button.abtn[disabled]{opacity:.55}
 @keyframes lpbeat{0%,100%{opacity:1}50%{opacity:.35}}
 .livepill.up .lp-d{animation:lpbeat 2.4s ease-in-out infinite}
 @media(prefers-reduced-motion:reduce){.livepill.up .lp-d{animation:none}}
-.livesheet{position:fixed;inset-inline-start:8px;bottom:112px;z-index:61;
+/* The far edge from the floating microphone, which sits bottom-start. The
+   first version landed on top of it. */
+.livesheet{position:fixed;inset-inline-end:10px;bottom:112px;z-index:61;
  max-width:min(320px,calc(100vw - 32px));background:var(--surface);
  border:1px solid var(--line);border-radius:14px;padding:12px 14px;
  box-shadow:var(--shadow)}
