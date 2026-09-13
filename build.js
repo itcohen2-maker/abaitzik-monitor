@@ -1482,6 +1482,14 @@ body.editing .bn{display:none}
 @media(prefers-reduced-motion:reduce){:root.calm .recbig{animation:none}}
 /* The opt-in. A ring that fades in and out over ten seconds, no colour flip,
    no size change, on the three places that actually mean "something new". */
+/* The two home blocks after the swap button moves them. A ring that says
+   "this is what moved", and nothing more. */
+@keyframes swapmark{
+ 0%,100%{box-shadow:0 0 0 0 rgba(37,99,235,0)}
+ 30%,60%{box-shadow:0 0 0 6px rgba(37,99,235,.30)}}
+#blkTiles.swapped,#blkIcons.swapped{border-radius:14px;animation:swapmark 2.4s ease-in-out}
+@media(prefers-reduced-motion:reduce){#blkTiles.swapped,#blkIcons.swapped{animation:none;
+ box-shadow:0 0 0 4px rgba(37,99,235,.28)}}
 @keyframes softmark{
  0%,100%{box-shadow:0 0 0 0 rgba(234,67,53,0)}
  50%{box-shadow:0 0 0 5px rgba(234,67,53,.26)}}
@@ -3544,10 +3552,23 @@ function swapHomeBlocks(){
  if(!tiles||!icons||!tiles.parentNode)return;
  var box=tiles.parentNode;
  var kids=Array.prototype.slice.call(box.children);
- if(kids.indexOf(tiles)<kids.indexOf(icons))box.insertBefore(icons,tiles);
+ var iconsFirst=kids.indexOf(icons)<kids.indexOf(tiles);
+ if(!iconsFirst)box.insertBefore(icons,tiles);
  else box.insertBefore(tiles,icons);
  saveOrder(box,'blockOrder');
- toast('הוחלף. אפשר להחליף שוב בכל רגע.');
+ // The two blocks sit far down the home screen. Pressing the button while
+ // scrolled to the top swapped them out of sight, and it looked like the
+ // button was wired to nothing. Now the screen goes to them and they are
+ // marked for a moment, so the change is something he can see.
+ var top=iconsFirst?tiles:icons;
+ try{top.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){top.scrollIntoView();}
+ [tiles,icons].forEach(function(el){
+  el.classList.remove('swapped');
+  void el.offsetWidth;
+  el.classList.add('swapped');
+  setTimeout(function(){el.classList.remove('swapped');},2400);
+ });
+ toast(iconsFirst?'הריבועים למעלה, העיגולים מתחת.':'העיגולים למעלה, הריבועים מתחת.');
 }
 on('swapBlocks',swapHomeBlocks);
 
