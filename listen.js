@@ -131,29 +131,54 @@ async function handle(m) {
   await beat();
 }
 
-// One long connection. ntfy sends a keepalive every 45 seconds, so a stream
-// that goes quiet for much longer than that is a dead socket, not a quiet day.
+/*
+  One long connection.
+
+  ntfy sends a keepalive every 45 seconds. The dangerous failure is not a
+  socket that closes, which throws and reconnects on its own: it is a socket
+  the machine still believes is open after the nightly sleep, which yields
+  nothing and never errors. The listener would sit there looking connected
+  while Itzik's messages piled up on the server, which is the exact failure
+  this whole thing exists to end. So silence longer than two and a half minutes
+  is treated as death and the connection is torn down and rebuilt.
+*/
+const STALL_MS = 150000;
 async function connect() {
   const since = mark().time || 'all';
-  const res = await fetch('https://ntfy.sh/' + TOPIC + '/json?since=' + since);
-  if (!res.ok || !res.body) throw new Error('ntfy ' + res.status);
-  connectedAt = Date.now();
-  say('מחובר לערוץ. מאזין.');
-  await beat();
-  let buf = '';
-  for await (const chunk of res.body) {
-    buf += Buffer.from(chunk).toString('utf8');
-    let i;
-    while ((i = buf.indexOf(String.fromCharCode(10))) >= 0) {
-      const line = buf.slice(0, i).trim();
-      buf = buf.slice(i + 1);
-      if (!line) continue;
-      let m;
-      try { m = JSON.parse(line); } catch (e) { continue; }
-      if (m.event === 'message') await handle(m);
+  const ac = new AbortController();
+  let lastEvent = Date.now();
+  const watchdog = setInterval(function () {
+    if (Date.now() - lastEvent > STALL_MS) {
+      say('הזרם שתק ' + Math.round((Date.now() - lastEvent) / 1000) + ' שניות. מנתק ומתחבר מחדש.');
+      ac.abort();
     }
+  }, 15000);
+  try {
+    const res = await fetch('https://ntfy.sh/' + TOPIC + '/json?since=' + since,
+      { signal: ac.signal });
+    if (!res.ok || !res.body) throw new Error('ntfy ' + res.status);
+    connectedAt = Date.now();
+    lastEvent = Date.now();
+    say('מחובר לערוץ. מאזין.');
+    await beat();
+    let buf = '';
+    for await (const chunk of res.body) {
+      lastEvent = Date.now();
+      buf += Buffer.from(chunk).toString('utf8');
+      let i;
+      while ((i = buf.indexOf(String.fromCharCode(10))) >= 0) {
+        const line = buf.slice(0, i).trim();
+        buf = buf.slice(i + 1);
+        if (!line) continue;
+        let m;
+        try { m = JSON.parse(line); } catch (e) { continue; }
+        if (m.event === 'message') await handle(m);
+      }
+    }
+    throw new Error('הזרם נסגר');
+  } finally {
+    clearInterval(watchdog);
   }
-  throw new Error('הזרם נסגר');
 }
 
 (async () => {
