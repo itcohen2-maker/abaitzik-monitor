@@ -471,23 +471,11 @@ button.abtn[disabled]{opacity:.55}
 .grow div.l a{color:var(--accent);word-break:break-all}
 /* The three newest on the home screen, in the same box as the requests above
    so the two lists read as one column rather than two designs. */
-.tunes{margin-top:14px;background:var(--surface);border:1px solid var(--line);
- border-radius:var(--r);box-shadow:var(--shadow)}
-/* The padding moved off the card and onto the two halves, so the closed state
-   is one summary line and not a padded box wrapping one. */
-.tunes>summary{padding:13px 16px}
-.tunes #tuneBody{padding:0 16px 14px}
-.tunes .tune>b{display:block;font:700 15px Heebo,sans-serif}
-.tunes .tune>small{display:block;color:var(--dim);font-size:12.5px;line-height:1.6;
- margin:4px 0 6px;white-space:pre-line}
 /* A fold out he has already been inside: green edge, nothing flashing. The
    same green the thread cards use, so one mark means one thing everywhere. */
-.fold.fold-done,.grows.fold-done,.tunes.fold-done{border-color:var(--green)}
+.fold.fold-done{border-color:var(--green)}
 .fold>summary b{font:700 15px Heebo,sans-serif}
 .fold>summary small{color:var(--dim);font-size:12.5px;font-weight:400}
-.tunes.fold>summary{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.tunes.fold>summary .badge{margin-inline-start:auto}
-.tnote{display:block;color:var(--dim);font-size:12.5px;line-height:1.6;padding:0 16px 10px}
 .fold{margin-top:14px;background:var(--surface);border:1px solid var(--line);
  border-radius:var(--r);box-shadow:var(--shadow);padding:0}
 .fold>summary{list-style:none;cursor:pointer;padding:13px 16px;
@@ -1094,14 +1082,6 @@ body.editing .bn{display:none}
 .g14{background:linear-gradient(150deg,#a5d6a7,#2e7d32)}
 /* The last thing he asked me for, sitting on the home screen itself. He could
    not find the print page through search and asked to have it pinned. */
-.pin{background:linear-gradient(150deg,#fff4e0,#ffe3b8);border:1px solid #f0c987;
- border-radius:12px;padding:9px 12px;margin-top:9px;display:flex;align-items:center;gap:10px}
-.pin .t{flex:1;min-width:0}
-.pin .k{font:800 10.5px Heebo,sans-serif;color:#a35b00;letter-spacing:.3px}
-.pin b{display:block;font:800 14px Heebo,sans-serif;color:#20242c;
- white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pin a{flex:0 0 auto;background:#20242c;color:#fff;text-decoration:none;
- border-radius:999px;padding:8px 15px;font:800 13px Heebo,sans-serif}
 /* The screen gets crowded. He asked me to notice which buttons he never uses,
    offer to take them off, and keep one button that remembers what we removed. */
 .tidy{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
@@ -1271,8 +1251,7 @@ body.editing .bn{display:none}
 */
 #pH.bare #newBlock, #pH.bare #growBtn, #pH.bare .whatsnew, #pH.bare #askBox,
 #pH.bare #blkTiles, #pH.bare #tidyBox, #pH.bare #gSearch, #pH.bare .gres,
-#pH.bare #blkIcons, #pH.bare #pinBox, #pH.bare #reqBox, #pH.bare #growHome,
-#pH.bare #codexBox, #pH.bare #tuneBox{
+#pH.bare #blkIcons, #pH.bare #reqBox, #pH.bare #codexBox{
  display:none!important}
 #pH{padding-top:10px}
 #pH #talkCard{margin-top:0}
@@ -1798,47 +1777,27 @@ try{
  </button>
 
   <div class="sent" id="sentCard" hidden></div>
-  <!--
-    Anything with something to listen to comes to the front.
-
-    He asked where he could hear the three pieces, and the answer was "on an
-    inner screen behind a tile", which is the same as nowhere. A card that is
-    about listening belongs where he lands.
-  -->
   <button type="button" id="bareBtn" class="morebtn">עוד כלים</button>
   <!--
-    It used to be an open card seven hundred pixels tall, sitting on the home
-    screen with the players already unrolled. He asked for headlines: one line
-    that says what it is, and it opens only if he wants it. Same shape as every
-    other fold out here, and the same green mark once he has been inside.
+    The music card is gone from here too. Itzik pointed out on 13.9 that the
+    same thing is already announced in the messages, so the card was a second
+    copy of an item he had read once. The recordings themselves are untouched:
+    they are on the special requests screen, which has its own tile.
   -->
-  <details class="tunes fold" id="tuneBox" hidden>
-   <summary id="tuneSum">מוזיקה</summary>
-   <div id="tuneBody"></div>
-  </details>
   <details class="reqs fold" id="reqBox" hidden>
    <summary id="reqSum">שתי הבקשות האחרונות</summary>
    <div id="reqBody"></div>
   </details>
   <!--
-    What got better, on the home screen instead of only behind a button. Three
-    of them, newest first, each with the problem, the change, what it changes
-    for him, when, and whether anybody actually checked it. The rest are one
-    tap away. This is a record of the work, not a claim about the model.
-  -->
-  <!--
-    Shut, and one line tall.
+    "מה השתפר" used to live here as a fold out, and "איך אני משתפר" at the foot
+    of the screen opens the same list from the same data. Itzik called it a
+    duplication on 13.9 and it was: two counters of the same sixteen items on
+    one screen. The button at the foot is the one that stays.
 
-    He asked three times to be able to close this, which is the answer to
-    having put it on the screen open: a wall of text about my own work, above
-    everything he actually came here for. It is a summary line now, it opens
-    only when he taps it, and it remembers that choice.
+    "האחרון שביקשת ולפני זה" is gone with it. The two most recent special
+    requests already have their own tile and their own screen, and he asked for
+    the card off the home screen.
   -->
-  <details class="grows" id="growHome" hidden>
-   <summary id="growSum">מה השתפר</summary>
-   <div id="growBody"></div>
-  </details>
-  <div id="pinBox"></div>
   <details class="cdx fold" id="codexBox" hidden>
    <summary id="cdxSum">קודקס</summary>
    <div id="cdxBody"></div>
@@ -4489,30 +4448,10 @@ function renderImprove(){
  var G=D.improve||[];
  var c=document.getElementById('growCount');
  if(c)c.textContent=G.length;
- // The three newest on the home screen; the whole history behind the button.
- var home=document.getElementById('growHome');
- if(home){
-  if(!G.length){home.hidden=true;}
-  else{
-   home.hidden=false;
-   var sum=document.getElementById('growSum');
-   if(sum)sum.textContent='מה השתפר · '+G.length;
-   // Shut unless he has opened it before. The choice is his and it sticks.
-   var open='0';
-   try{open=localStorage.getItem('growOpen')||'0';}catch(e){}
-   home.open=open==='1';
-   home.ontoggle=function(){
-    try{localStorage.setItem('growOpen',home.open?'1':'0');}catch(e){}
-   };
-   var body=document.getElementById('growBody');
-   if(body){
-    body.innerHTML=G.slice(0,3).map(growCard).join('')
-     +(G.length>3?'<button type="button" class="reqall" id="growAll">כל השיפורים ('+G.length+')</button>':'');
-    var all=document.getElementById('growAll');
-    if(all)all.onclick=function(){pane('w');};
-   }
-  }
- }
+ // The fold out that used to repeat the three newest here is gone. It counted
+ // the same items as the button at the foot of the screen and opened the same
+ // screen, and Itzik called it a duplication on 13.9. The count on the button
+ // above is the only one now.
  var host=document.getElementById('growBox');
  if(!host)return;
  host.innerHTML=replyBox('על השיפורים')+(G.length?G.map(growCard).join('')
@@ -4705,21 +4644,6 @@ function cxSubmit(){
  });
 }
 
-function renderPin(){
- var host=document.getElementById('pinBox');
- if(!host)return;
- var S=D.special||[];
- if(!S.length){host.innerHTML='';return;}
- // The two most recent, because the thing he is hunting for is usually the
- // last one or the one before it.
- host.innerHTML=S.slice(0,2).map(function(u,i){
-  return '<div class="pin"><div class="t"><div class="k">'+(i?'ולפני זה':'האחרון שביקשת')+'</div>'
-   +'<b>'+esc(u.title||'')+'</b></div>'
-   +(u.url?'<a href="'+esc(u.url)+'">פתיחה</a>':'')
-   +'</div>';
- }).join('');
-}
-
 /*
   The replies I sent in his name, on his networks.
 
@@ -4770,35 +4694,6 @@ function markSpecialSeen(){
 }
 
 /*
-  The listening card, on the home screen.
-
-  Same data as the special screen, drawn where he actually is. Only items that
-  carry audio appear here, so this stays empty and hidden unless there is
-  genuinely something to play.
-*/
-function renderTunes(){
- var box=document.getElementById('tuneBox');
- if(!box)return;
- var S=(D.special||[]).filter(function(u){return (u.audio||[]).length;});
- if(!S.length){box.hidden=true;return;}
- box.hidden=false;
- var u=S[0];
- var n=(u.audio||[]).length;
- // The headline carries enough to decide without opening: what it is, and how
- // many there are to listen to.
- document.getElementById('tuneSum').innerHTML='<b>'+esc(u.title)+'</b>'
-  +'<small>'+n+(n===1?' הקלטה':' הקלטות')+'</small>'+foldBadge('tuneBox');
- document.getElementById('tuneBody').innerHTML=
-  (u.note?'<small class="tnote">'+esc(u.note)+'</small>':'')
-  +(u.audio||[]).map(function(a){
-    return '<div class="tune"><b>'+esc(a.title)+'</b>'
-     +(a.note?'<small>'+esc(a.note)+'</small>':'')
-     +'<audio controls preload="none" src="'+esc(a.src)+'"></audio></div>';
-   }).join('');
- armFold(box);
-}
-
-/*
   The green mark on the home fold outs.
 
   The thread cards already work this way: a card he has been inside stops
@@ -4811,7 +4706,7 @@ function paintHomeFolds(){
  var home=document.getElementById('pH');
  if(!home)return;
  Array.prototype.forEach.call(
-  home.querySelectorAll('details.fold, details.grows'),armFold);
+  home.querySelectorAll('details.fold'),armFold);
 }
 function foldSeen(){
  try{return JSON.parse(localStorage.getItem('foldSeen')||'[]');}catch(e){return [];}
@@ -6199,8 +6094,6 @@ boot('pegasus',renderPegasus);
 boot('improve',renderImprove);
 boot('special',renderSpecial);
 boot('replies',renderReplies);
-boot('tunes',renderTunes);
-boot('pin',renderPin);
 boot('reqs',renderReqs);
 boot('codex',renderCodex);
 boot('rivhit',renderRivhit);

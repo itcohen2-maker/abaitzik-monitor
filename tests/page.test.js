@@ -72,7 +72,7 @@ test('home order: one message button on top, the tools next, my log last', () =>
   assert.ok(html.includes("var HOME_TAIL=['growBtn'];"));
   assert.ok(html.includes('HOME_TAIL.forEach'));
   assert.ok(!html.includes("var top=document.getElementById('newBlock');"));
-  const order = ['id="talkCard"', 'id="micBtn"', 'id="bareBtn"', 'id="reqBox"', 'id="growHome"',
+  const order = ['id="talkCard"', 'id="micBtn"', 'id="bareBtn"', 'id="reqBox"',
     'class="whatsnew"', 'id="askBox"', 'id="blkTiles"', 'id="blkIcons"'];
   const idx = order.map(at);
   for (let i = 1; i < idx.length; i++) assert.ok(idx[i - 1] < idx[i], order[i] + ' must come after ' + order[i - 1]);
@@ -327,14 +327,22 @@ test('every inner screen has a way back, its own address, and one search finds i
   assert.ok(html.includes('function renderSearch(){'));
 });
 
-test('the last things he asked for are pinned on the home screen', () => {
+test('the home screen does not repeat what already has its own screen', () => {
   const html = renderPage(fixture({
-    special: [{ at: '2026-09-11T16:30:00', title: 'א', url: 'a.html', note: 'n' }],
+    special: [{ at: '2026-09-11T16:30:00', title: 'א', url: 'a.html', note: 'n',
+      audio: [{ title: 'ק', src: 'a.mp3' }] }],
   }));
-  assert.ok(html.includes('id="pinBox"'));
-  assert.ok(html.includes('function renderPin('));
-  assert.ok(html.includes("boot('pin',renderPin);"));
-  assert.ok(html.includes('.pin{background'));
+  // Itzik cleared three cards off the home screen on 13.9, each a second copy
+  // of something he had already seen: "האחרון שביקשת ולפני זה", the music
+  // card, and "מה השתפר". The tile and the screen behind them are untouched.
+  assert.ok(!html.includes('id="pinBox"'));
+  assert.ok(!html.includes('function renderPin('));
+  assert.ok(!html.includes('.pin{background'));
+  assert.ok(!html.includes('id="tuneBox"'));
+  assert.ok(!html.includes('function renderTunes('));
+  assert.ok(!html.includes('id="growHome"'));
+  assert.ok(html.includes('id="gSpecial"'));
+  assert.ok(html.includes('id="specBox"'));
 });
 
 test('the dead counters are off the home screen', () => {
@@ -612,7 +620,7 @@ test('every setting moved to one screen, and not one of them changed', () => {
     .forEach((bit) => assert.ok(!home.includes(bit), `${bit} is still on the home screen`));
 });
 
-test('what got better is on the home screen, with whether anyone checked it', () => {
+test('what got better lives behind one button, not twice on the home screen', () => {
   const html = renderPage(fixture({
     improve: [
       { at: '2026-09-12T10:00:00+03:00', why: 'ב1', what: 'מ1', effect: 'א1', verified: 'נבדק באתר החי', proof: 'https://example.com/x' },
@@ -621,26 +629,22 @@ test('what got better is on the home screen, with whether anyone checked it', ()
       { at: '2026-09-09T10:00:00+03:00', why: 'ב4', what: 'מ4', effect: 'א4' },
     ],
   }));
-  // Shut, and one line tall. He asked three times to be able to close this,
-  // which is what putting it on screen open earned: a wall of text about my
-  // own work, above everything he came here for.
-  assert.ok(html.includes('<details class="grows" id="growHome" hidden>'));
-  assert.ok(html.includes('<summary id="growSum">מה השתפר</summary>'));
-  assert.ok(!/<details class="grows"[^>]*open/.test(html), 'it must not ship open');
-  assert.ok(html.includes("home.open=open==='1';"), 'closed unless he opened it before');
-  assert.ok(html.includes("localStorage.setItem('growOpen',home.open?'1':'0');"), 'and the choice sticks');
-  assert.ok(html.includes("body.innerHTML=G.slice(0,3).map(growCard)"));
+  // "מה השתפר" on the home screen counted the same items as "איך אני משתפר"
+  // at the foot of it and opened the same screen. Itzik called it a
+  // duplication on 13.9. The fold out is gone; the button is what is left.
+  assert.ok(!html.includes('id="growHome"'));
+  assert.ok(!html.includes('id="growSum"'));
+  assert.ok(!html.includes("localStorage.setItem('growOpen'"));
+  assert.ok(html.includes('id="growBtn"'));
+  assert.ok(html.includes("on('growBtn',function(){pane('w');renderImprove();});"));
   // The problem, the change, what it changes for him, and the verification.
   assert.ok(html.includes('<b>מה לא עבד</b>'));
   assert.ok(html.includes('<b>מה שיניתי</b>'));
   assert.ok(html.includes('<b>מה זה משנה לך</b>'));
   // A change nobody checked says so rather than staying quiet about it.
   assert.ok(html.includes("+'<div class=\"l\"><b>נבדק</b>'+(u.verified?esc(u.verified):'עוד לא נבדק.')"));
-  // The rest are one tap away, not filling the home screen.
-  assert.ok(html.includes("G.length>3?'<button type=\"button\" class=\"reqall\" id=\"growAll\">"));
-  assert.ok(html.includes("if(all)all.onclick=function(){pane('w');};"));
   // Nothing empty pretends to be a list.
-  assert.ok(html.includes('if(!G.length){home.hidden=true;}'));
+  assert.ok(html.includes("<div class=\"empty\">עוד לא רשמתי כאן שיפור.</div>"));
 });
 
 test('the title is his, and the build and the data are two different facts', () => {
@@ -779,9 +783,10 @@ test('the newest request sits near the top, not under fourteen tiles', () => {
   const html = renderPage(fixture({
     special: [{ at: '2026-09-12T13:20:00', title: 'א', url: 'pyramid.html', note: 'n' }],
   }));
-  // It has to come before the tile grid, or he has to scroll past everything.
-  assert.ok(html.indexOf('id="pinBox"') < html.indexOf('id="blkTiles"'));
-  assert.ok(html.indexOf('id="reqBox"') < html.indexOf('id="pinBox"'));
+  // The pinned card is gone; the fold out that lists the last two requests is
+  // what carries this now, and it still has to come before the tile grid.
+  assert.ok(html.indexOf('id="reqBox"') < html.indexOf('id="blkTiles"'));
+  assert.ok(html.indexOf('id="reqBox"') > html.indexOf('<section id="pH">'));
 });
 
 test('the codex thread never says delivered while the mailbox only stores', () => {
