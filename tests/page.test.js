@@ -415,6 +415,16 @@ test('a dead page says so instead of ignoring him', () => {
   assert.ok(html.lastIndexOf('try{window.__monAlive();}catch(e){}') > html.lastIndexOf('boot('));
   // And the silent case is covered too: no error, but never finished either.
   assert.ok(body.includes("if(!ok)bar('never signalled');"));
+  // A stale copy has to be able to replace itself. The forty second check
+  // lives in the main script, so a page whose script died cannot fetch the fix
+  // for the thing that killed it, which is how he sat on a dead build for
+  // hours. This check runs in the one script that cannot be broken.
+  assert.ok(body.includes("fetch('version.json?t='+Date.now()"));
+  assert.ok(/v\.builtAt==='[^']+'/.test(body), 'the guard must carry this page own stamp as a literal');
+  assert.ok(body.includes("location.replace(location.pathname+'?fresh='"), 'a plain reload serves the same stored copy');
+  assert.ok(body.includes('caches.delete'));
+  // Once per session, so an odd answer cannot put the page in a reload loop.
+  assert.ok(body.includes("if(seen===v.builtAt)return;"));
 });
 
 test('the microphone answers the tap before the phone has decided', () => {

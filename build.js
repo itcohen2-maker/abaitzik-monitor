@@ -85,6 +85,9 @@ function renderPage(payload) {
   return PAGE
     .replace('__LIB__', () => LIB.replace(/<\/script/gi, '<\\/script'))
     .replace('__DATA__', () => data)
+    // The guard at the top of the page needs this page's own stamp as a
+    // literal, because it runs before any data exists.
+    .replace('__BUILT_AT__', () => payload.builtAt)
     .replace('__NET__', () => JSON.stringify(NET))
     .replace('__CAT__', () => JSON.stringify(CAT));
 }
@@ -1468,6 +1471,44 @@ body.editing .bn{display:none}
  window.addEventListener('load',function(){
   setTimeout(function(){if(!ok)bar('never signalled');},1500);
  });
+
+ /*
+   A stale copy has to be able to replace itself.
+
+   The page already checks for a newer build every forty seconds, but that
+   check lives in the main script, so a page whose script died cannot fetch the
+   fix for the thing that killed it. He sat on a dead build for hours for
+   exactly this reason, and reloading by hand did not help because the copy on
+   his phone is what a reload serves.
+
+   So the freshness check runs HERE too, in the one script that cannot be
+   broken by anything below it. It compares this page's own stamp against the
+   live one and replaces itself once, with a fresh query string so the stored
+   copy is bypassed rather than served again. Once per session, so a server
+   that answers oddly cannot put the page in a reload loop.
+ */
+ try{
+  if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
+   .then(function(r){return r.ok?r.json():null;})
+   .then(function(v){
+    if(!v||!v.builtAt||v.builtAt==='__BUILT_AT__')return;
+    var key='staleFixedFor';
+    var seen='';
+    try{seen=sessionStorage.getItem(key)||'';}catch(e){}
+    if(seen===v.builtAt)return;
+    try{sessionStorage.setItem(key,v.builtAt);}catch(e){}
+    var go=function(){location.replace(location.pathname+'?fresh='+encodeURIComponent(v.builtAt));};
+    try{
+     if(window.caches&&caches.keys){
+      caches.keys().then(function(k){
+       return Promise.all(k.map(function(n){return caches.delete(n);}));
+      }).catch(function(){}).then(go);
+      return;
+     }
+    }catch(e){}
+    go();
+   }).catch(function(){});
+ }catch(e){}
 })();
 </script>
 <script>
