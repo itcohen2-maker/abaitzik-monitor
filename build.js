@@ -1091,6 +1091,9 @@ body.editing .bn{display:none}
 .tune b{display:block;font:700 14.5px Heebo,sans-serif}
 .tune small{display:block;color:var(--dim);font-size:12.5px;margin:2px 0 8px;line-height:1.5}
 .tune audio{width:100%;height:38px}
+.hidemsg{margin-inline-start:8px;background:none;border:0;cursor:pointer;color:var(--dim);
+ font:700 16px/1 Heebo,sans-serif;padding:0 4px}
+.hidemsg:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .allmsgs{display:block;width:100%;margin:-4px 0 10px;padding:11px 14px;cursor:pointer;
  background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:14px;
  font:500 13.5px Heebo,sans-serif}
@@ -1919,6 +1922,13 @@ try{
  </div>
  <button type="button" class="abtn" id="arrangeBtn">סידור</button>
 </div>
+<div class="alerts" id="clearBox">
+ <div>
+  <b>לנקות את ההודעות מהמסך</b>
+  <small id="clearSaid">מסתיר את כל ההודעות מהצ׳אט במכשיר הזה. לא מוחק אותן מהרישום, ואפשר להחזיר הכל בלחיצה. אפשר גם להעיף הודעה אחת בהחלקה הצידה או ב-× שלידה.</small>
+ </div>
+ <button type="button" class="abtn" id="clearBtn">ניקוי</button>
+</div>
 <div class="alerts" id="resetBox">
  <div>
   <b>לאפס את ההודעות</b>
@@ -2549,6 +2559,26 @@ function threadState(){
  var unread=new Set(unreadList().map(ML.keyOf));
  return {unread:unread,standby:standbyMap()};
 }
+/*
+  Messages he has cleared away, kept on this device.
+
+  He asked to be able to delete messages from the history and to swipe them
+  away like a phone does. What this does is hide them here, and it says so:
+  the chat is the record of what we asked each other and what was answered, and
+  a button on a phone that quietly destroys that record is not something I am
+  going to build without him saying that is what he means. Hidden is reversible
+  and it clears his screen, which is what the complaint was about.
+*/
+function hiddenMsgs(){
+ try{return JSON.parse(localStorage.getItem('msgHidden')||'[]');}catch(e){return [];}
+}
+function hideMsg(key){
+ if(!key)return;
+ var h=hiddenMsgs();
+ if(h.indexOf(key)<0)h.push(key);
+ try{localStorage.setItem('msgHidden',JSON.stringify(h.slice(-4000)));}catch(e){}
+}
+function msgKey(m){return (m.id||'')||((m.from||'')+'|'+(m.at||''));}
 function bubbleHtml(m,i,fresh,handled){
  var mine=m.from==='itzik';
  var line=(mine?'איציק':'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');
@@ -2559,6 +2589,7 @@ function bubbleHtml(m,i,fresh,handled){
   +(m.pend?' · נשלח, עוד לא נקרא':'')+statusTag(m)
   +(fresh?' · <em class="badge">חדש</em>':(mine?'':' · נקרא'))
   +'<button type="button" class="cp" data-i="'+i+'" aria-label="העתקה">העתקה</button>'
+  +'<button type="button" class="hidemsg" data-k="'+esc(msgKey(m))+'" aria-label="להסתיר">×</button>'
   +'</span>'+linkify(m.text)+ackLine(m)+'</div>';
 }
 // Copy, paste and send on every reply form, whatever screen it is on.
@@ -2590,7 +2621,10 @@ function rootKeyFor(m){
 function renderThread(){
  var unreadKeys=unreadList().map(claudeKey);
  var touched=touchedIds();
- var baked=(D.chat||[]).filter(function(m){return !isMail(m);});
+ var hidden=hiddenMsgs();
+ var baked=(D.chat||[]).filter(function(m){
+  return !isMail(m) && hidden.indexOf(msgKey(m))<0;
+ });
  var still=dropSettled(pending(),baked);
  savePending(still.concat(pending().filter(isMail)));
  var all=baked.map(function(m){return{id:m.id,re:m.re||'',at:m.at,from:m.from,text:m.text,status:m.status,pend:false};})
@@ -4069,6 +4103,43 @@ document.getElementById('plusBtn').onclick=function(){
   deleted and nothing is marked read to make that go away; the archive simply
   stopped opening itself, and the button under it is the deliberate way in.
 */
+/*
+  Clearing one message: a tap on its ×, or a swipe across it.
+
+  The swipe is the way a phone does it and the way he asked for it, so it is
+  here as well as the button rather than instead of it: a swipe is easy to
+  discover and easy to do by accident, and a visible control is neither.
+*/
+(function(){
+ var thread=document.getElementById('thread');
+ if(!thread)return;
+ thread.addEventListener('click',function(e){
+  var b=e.target.closest&&e.target.closest('.hidemsg');
+  if(!b)return;
+  e.preventDefault();e.stopPropagation();
+  hideMsg(b.getAttribute('data-k')||'');
+  renderThread();renderNew();
+ });
+ var startX=0,startY=0,onBub=null;
+ thread.addEventListener('pointerdown',function(e){
+  onBub=e.target.closest?e.target.closest('.bub'):null;
+  startX=e.clientX;startY=e.clientY;
+ });
+ thread.addEventListener('pointerup',function(e){
+  if(!onBub)return;
+  var dx=e.clientX-startX, dy=e.clientY-startY;
+  onBub=null;
+  // Sideways, far, and not while scrolling: a list that deletes on a scroll is
+  // worse than one that never deletes at all.
+  if(Math.abs(dx)<90||Math.abs(dy)>40)return;
+  var bub=e.target.closest?e.target.closest('.bub'):null;
+  var k=bub&&bub.querySelector('.hidemsg');
+  if(!k)return;
+  hideMsg(k.getAttribute('data-k')||'');
+  renderThread();renderNew();
+  toast('הוסתר. אפשר להחזיר הכל בהגדרות.');
+ });
+})();
 document.getElementById('newBtn').onclick=function(){
  if(unreadCount()){
   beep();
@@ -5825,6 +5896,23 @@ function markAllRead(cutoff){
  paintDot();renderNew();renderThread();
 }
 on('readOld',function(){markAllRead();toast('הכל סומן כנקרא. מה שיגיע מעכשיו יהיה אדום.');});
+on('clearBtn',function(){
+ var said=document.getElementById('clearSaid');
+ var btn=document.getElementById('clearBtn');
+ if(btn&&btn.textContent==='החזרה'){
+  try{localStorage.removeItem('msgHidden');}catch(e){}
+  btn.textContent='ניקוי';
+  if(said)said.textContent='הכל חזר.';
+  renderThread();renderNew();
+  return;
+ }
+ var keys=(D.chat||[]).map(msgKey);
+ try{localStorage.setItem('msgHidden',JSON.stringify(keys.slice(-4000)));}catch(e){}
+ if(btn)btn.textContent='החזרה';
+ if(said)said.textContent='נוקה מהמסך. הרישום עצמו שלם, ולחיצה נוספת מחזירה הכל.';
+ renderThread();renderNew();
+ toast('הצ׳אט נוקה מהמסך.');
+});
 on('resetBtn',function(){
  markAllRead();
  var said=document.getElementById('resetSaid');

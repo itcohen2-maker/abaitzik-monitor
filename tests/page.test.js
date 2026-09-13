@@ -482,6 +482,28 @@ test('a card about listening gets something to press', () => {
   assert.ok(!/<audio[^>]*\bautoplay\b/.test(html), 'nothing may start playing by itself');
 });
 
+test('clearing messages hides them here and destroys nothing', () => {
+  const html = renderPage(fixture({}));
+  // He asked to delete messages and to swipe them away. Both are here, and
+  // both hide rather than destroy: the chat is the record of what was asked
+  // and what was answered.
+  assert.ok(html.includes('function hiddenMsgs(){'));
+  assert.ok(html.includes('function hideMsg(key){'));
+  assert.ok(html.includes('class="hidemsg"'));
+  assert.ok(html.includes("hidden.indexOf(msgKey(m))<0"), 'hidden messages must drop out of the thread');
+  // A swipe has to be sideways and far, or a scroll deletes his history.
+  assert.ok(html.includes('if(Math.abs(dx)<90||Math.abs(dy)>40)return;'));
+  // Clearing everything is reversible, and the copy says so rather than
+  // implying the record was destroyed.
+  assert.ok(html.includes('id="clearBtn"'));
+  assert.ok(html.includes('לא מוחק אותן מהרישום'));
+  assert.ok(html.includes("try{localStorage.removeItem('msgHidden');}catch(e){}"), 'there must be a way back');
+  // Nothing in this path may touch the record itself.
+  const at = html.indexOf("on('clearBtn',function(){");
+  const body = html.slice(at, at + 900);
+  assert.ok(!/D\.chat\s*=|splice|delete /.test(body), 'clearing must not mutate the record');
+});
+
 test('the page actually parses', () => {
   // The gap that let a broken page go live. Every other test here asks whether
   // a string is present, and a string is present whether or not the script it
