@@ -184,20 +184,27 @@ function publishFallback(body, force) {
     fs.mkdirSync(path.dirname(DOCS_LIVE), { recursive: true });
     fs.writeFileSync(DOCS_LIVE, JSON.stringify(body, null, 1), 'utf8');
   } catch (e) { return; }
-  git(['commit', '-m', 'live: ' + shape, '--', 'docs/live.json'], function (err, out) {
-    if (/nothing to commit|no changes added/i.test(out)) return;
-    git(['push'], function (err2) {
-      if (!err2) { say('מצב המאזין פורסם לדף: ' + shape); return; }
-      // Someone else pushed first. Rebase onto them and try once more, then
-      // leave it: the next change will carry the same information anyway.
-      git(['pull', '--rebase', '--autostash'], function () {
-        git(['push'], function (err3) {
-          say(err3 ? '!! פרסום מצב המאזין לדף נכשל, ינוסה בשינוי הבא.'
-            : 'מצב המאזין פורסם לדף: ' + shape);
-        });
-      });
+  // The first version went straight to commit with a pathspec. On the very
+  // first run the file was untracked, so the commit matched nothing, git said
+  // so in words the code did not recognise, the push succeeded with nothing in
+  // it, and the listener reported the state as published when it was not. An
+  // add first, and a check that a commit actually happened.
+  git(['add', '--', 'docs/live.json'], function () {
+    git(['commit', '-m', 'live: ' + shape, '--', 'docs/live.json'], function (err, out) {
+      if (/nothing to commit|no changes added|did not match/i.test(out)) return;
+      if (err) { say('!! מצב המאזין לא נשמר: ' + out.trim().slice(0, 120)); return; }
+      push(0);
     });
   });
+  function push(attempt) {
+    git(['push'], function (err) {
+      if (!err) { say('מצב המאזין פורסם לדף: ' + shape); return; }
+      if (attempt) { say('!! פרסום מצב המאזין לדף נכשל, ינוסה בשינוי הבא.'); return; }
+      // Someone else pushed first. Rebase onto them and try once more, then
+      // leave it: the next change carries the same information anyway.
+      git(['pull', '--rebase', '--autostash'], function () { push(1); });
+    });
+  }
 }
 
 async function saveAttachment(m) {
