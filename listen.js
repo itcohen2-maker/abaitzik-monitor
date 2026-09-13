@@ -52,7 +52,19 @@ const PULLS = path.join(STATUS, 'pulls.json');
   feedback he cares about does not depend on it: every catch beats immediately,
   so seconds after he sends anything the indicator says so by name.
 */
-const BEAT_MS = 900000;
+/*
+  The idle pulse is hourly now, not every fifteen minutes.
+
+  Even at fifteen minutes it was ninety six messages a day against an
+  allowance of about two hundred and fifty, so almost half of Itzik's
+  notification budget was being spent on saying "still here". At an hour it is
+  twenty four, it draws on its own small ration that cannot touch the
+  notifications, and the page has a second source that costs nothing anyway.
+
+  None of this slows down the part he actually watches: a catch still pulses
+  immediately, so the answer to "did what I just sent arrive" is still seconds.
+*/
+const BEAT_MS = 3600000;
 // The fallback pulse. Only on a change of shape, never on a clock, because
 // every one of these is a commit.
 const DOCS_LIVE = path.join(__dirname, 'docs', 'live.json');
@@ -122,26 +134,19 @@ function beatBody() {
 // starts buzzing his phone the indicator is worse than no indicator at all.
 async function beat() {
   const body = beatBody();
+  // Two writes that cost nothing and always happen: the local file, and the
+  // one next to the page when the state has changed shape.
   writeJson(LIVEFILE, body);
   publishFallback(body);
-  if (Date.now() < beatBlockedUntil) return;
-  try {
-    const res = await fetch('https://ntfy.sh/' + LIVE, {
-      method: 'POST',
-      headers: { 'Priority': 'min', 'Title': 'live', 'X-Tags': 'none' },
-      body: JSON.stringify(body)
-    });
-    // A refused pulse used to be swallowed, so the quota ran out in silence and
-    // the only symptom was an indicator that had gone red for no visible
-    // reason. Now it says so, and stops hammering a door that is shut.
-    if (res.status === 429) {
-      beatBlockedUntil = Date.now() + BEAT_BACKOFF_MS;
-      say('!! ntfy חסם פרסום, המכסה היומית נגמרה. הפעימה מושהית לשעה.');
-      say('!! זה חוסם גם את התראות הפוש מהמחשב הזה עד שהמכסה מתאפסת.');
-    } else if (!res.ok) {
-      say('!! הפעימה לא יצאה: ' + res.status);
-    }
-  } catch (e) { /* offline: the file above still moved, the pill will go red */ }
+  // And the fast pulse, which is the only part with a price on it. Its ration
+  // is separate from the notifications, so running out here can never mean
+  // Itzik stops being reachable.
+  const sent = await ch.pulse(JSON.stringify(body));
+  if (!sent && !beatBlockedUntil) {
+    beatBlockedUntil = Date.now();
+    say('הפעימה המהירה לא יוצאת. הדף יקרא את הקובץ במקום, וההתראות לא נפגעות.');
+  }
+  if (sent) beatBlockedUntil = 0;
 }
 
 /*
