@@ -1936,6 +1936,16 @@ try{
   <button type="button" class="skb" data-skin="light">יום</button>
   <button type="button" class="skb" data-skin="dark">לילה</button>
  </div>
+</div>
+<!--
+  This closing tag was missing.
+
+  .alerts is a flex row that does not wrap, and without the close everything
+  below became a child of it: the install hint, the notifications card, the
+  quick links and the connection test were all squeezed into columns of one
+  flex row and pushed off the side of the screen. Itzik sent a photo of it from
+  his phone with the notifications card sliced in half at the edge.
+-->
 <div class="install" id="installHint">להתקנה כאפליקציה על מסך הבית: בספארי לוחצים שיתוף ואז "הוספה למסך הבית". באנדרואיד: תפריט ואז "התקנת אפליקציה".</div>
 <div class="alerts" id="alerts">
  <div>
@@ -1968,9 +1978,10 @@ try{
   was not looking for a colour, he was looking for night, so it says night. It
   is also first on the settings screen now, because sitting in the dark is not
   something to scroll for.
--->
 
-</div>
+  The stray closing tag that used to sit here belonged to the day and night
+  card far above, which is what turned this whole screen into one flex row.
+-->
 <!--
   "Reset everything, everything reset."
 
