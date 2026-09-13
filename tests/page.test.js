@@ -445,6 +445,13 @@ test('the microphone answers the tap before the phone has decided', () => {
   assert.ok(body.includes('המיקרופון תפוס'));
   assert.ok(body.includes('לא נמצא מיקרופון במכשיר הזה'));
   assert.ok(body.includes('rec.onerror=function(){'));
+  // And the guard has to be released, or it refuses every recording after the
+  // first. He reported exactly that: one message sent, then nothing until a
+  // refresh. The release lives in the cleanup, which runs on stop, on abort
+  // and on a recorder error alike.
+  const clean = html.slice(html.indexOf('function recCleanup(){'), html.indexOf('function recStart(){'));
+  assert.ok(clean.includes('rec=null;'), 'the recorder is never let go');
+  assert.ok(clean.includes('recStarting=false;'), 'and neither is the starting flag');
 });
 
 test('a card about listening gets something to press', () => {

@@ -5434,6 +5434,21 @@ function recStop(){
 function recCleanup(){
  if(recTimer){clearInterval(recTimer);recTimer=null;}
  if(recStream){recStream.getTracks().forEach(function(t){t.stop();});recStream=null;}
+ /*
+   Let go of the recorder, or the next tap is refused forever.
+
+   He reported it exactly: after sending one message he could not record again
+   until he pressed refresh. This is mine. I added a guard on recStarting and rec
+   last night to stop a second tap opening a second permission prompt, and it
+   did stop that, but nothing ever put rec back to null when a recording
+   finished. So the guard that was supposed to prevent one double tap ended up
+   refusing every recording after the first for the rest of the session.
+
+   A guard has to be released by the thing that ends what it was guarding, and
+   this is that thing: it runs on stop, on abort and on a recorder error alike.
+ */
+ rec=null;
+ recStarting=false;
  recBtn.classList.remove('on');
  freeScreen();
  paintMics('send');
