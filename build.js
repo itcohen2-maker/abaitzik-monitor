@@ -6199,19 +6199,46 @@ function paintLive(){
  pill.className='livepill up';
  txt.textContent=liveLast.last?('נקלט '+liveTime(liveLast.last)):'מאזין';
 }
+/*
+  Two sources, and the fresher one wins.
+
+  The fast one is ntfy, which carries a pulse every fifteen minutes and one on
+  every catch. The problem with it alone is that it is the same channel that
+  can be down: when ntfy refuses, no pulse goes out, the pill goes red, and it
+  cannot say the true thing, which is "I hear you, I just cannot answer".
+
+  The second source is a file next to this page, written by the listener only
+  when the state changes shape. It is slower and coarser, and it is on our own
+  origin, so it keeps working precisely when the other one cannot.
+*/
+async function liveFromNtfy(){
+ var r=await fetch('https://ntfy.sh/'+LIVE_TOPIC+'/json?poll=1&since=20m',{cache:'no-store'});
+ var t=(await r.text()).trim();
+ var rows=t?t.split(String.fromCharCode(10)):[];
+ for(var i=rows.length-1;i>=0;i--){
+  var m=null;
+  try{m=JSON.parse(rows[i]);}catch(e){continue;}
+  if(m.event!=='message'||!m.message)continue;
+  try{return JSON.parse(m.message);}catch(e){continue;}
+ }
+ return null;
+}
+async function liveFromDocs(){
+ var r=await fetch('live.json?t='+Date.now(),{cache:'no-store'});
+ if(!r.ok)return null;
+ return await r.json();
+}
 async function pollLive(){
- try{
-  var r=await fetch('https://ntfy.sh/'+LIVE_TOPIC+'/json?poll=1&since=10m',{cache:'no-store'});
-  var t=(await r.text()).trim();
-  var rows=t?t.split(String.fromCharCode(10)):[];
-  for(var i=rows.length-1;i>=0;i--){
-   var m=null;
-   try{m=JSON.parse(rows[i]);}catch(e){continue;}
-   if(m.event!=='message'||!m.message)continue;
-   try{liveLast=JSON.parse(m.message);}catch(e){continue;}
-   break;
-  }
- }catch(e){/* offline: the age check below turns it red on its own */}
+ var got=await Promise.all([
+  liveFromNtfy().catch(function(){return null;}),
+  liveFromDocs().catch(function(){return null;})
+ ]);
+ var best=null;
+ got.forEach(function(c){
+  if(!c||!c.at)return;
+  if(!best||Date.parse(c.at)>Date.parse(best.at))best=c;
+ });
+ if(best)liveLast=best;
  paintLive();
 }
 function openLiveSheet(){

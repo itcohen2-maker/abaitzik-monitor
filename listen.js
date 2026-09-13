@@ -27,6 +27,7 @@
 const fs = require('fs');
 const path = require('path');
 const ch = require('./lib/notify-channels.js');
+const { execFile } = require('child_process');
 
 const TOPIC = 'abaitzik-in-95e62e86c34f4853';
 const LIVE = TOPIC + '-live';
@@ -52,6 +53,12 @@ const PULLS = path.join(STATUS, 'pulls.json');
   so seconds after he sends anything the indicator says so by name.
 */
 const BEAT_MS = 900000;
+// The fallback pulse. Only on a change of shape, never on a clock, because
+// every one of these is a commit.
+const DOCS_LIVE = path.join(__dirname, 'docs', 'live.json');
+const FALLBACK_MIN_GAP = 300000;
+let lastFallbackAt = 0;
+let lastShape = '';
 const BEAT_BACKOFF_MS = 3600000;
 let beatBlockedUntil = 0;
 const STARTED = Date.now();
@@ -116,6 +123,7 @@ function beatBody() {
 async function beat() {
   const body = beatBody();
   writeJson(LIVEFILE, body);
+  publishFallback(body);
   if (Date.now() < beatBlockedUntil) return;
   try {
     const res = await fetch('https://ntfy.sh/' + LIVE, {
@@ -134,6 +142,62 @@ async function beat() {
       say('!! הפעימה לא יצאה: ' + res.status);
     }
   } catch (e) { /* offline: the file above still moved, the pill will go red */ }
+}
+
+/*
+  The pulse that does not ride the blocked channel.
+
+  The indicator reads ntfy, which is fine until ntfy is the thing that is down:
+  then no pulse goes out at all, the pill shows red, and it cannot say the one
+  thing that is actually true, which is "I hear you, I just cannot answer". On
+  13.9 that is exactly what happened and Itzik read it as the monitor dying.
+
+  So the same state is also written next to the page itself, on GitHub Pages,
+  which the page can always read from its own origin with nobody's quota in the
+  way. This is a commit, so it is written only when the shape of the state
+  changes, never on a timer, and no more than once every five minutes.
+
+  It touches one path and nothing else. A commit limited to a pathspec cannot
+  sweep up whatever else is in the working tree, which matters because a
+  session may well be editing this repository at the same moment.
+*/
+function git(args, cb) {
+  execFile('git', args, { cwd: __dirname, timeout: 30000 }, function (err, out, errout) {
+    cb(err, String(out || '') + String(errout || ''));
+  });
+}
+function shapeOf(body) {
+  const b = body.budget || {};
+  return [connectedAt ? 'up' : 'down',
+    Object.keys(b).map(function (k) {
+      return k + (b[k].blockedUntil ? ':blocked' : ':' + (b[k].left > 0 ? 'ok' : 'empty'));
+    }).join(','),
+    body.queued ? 'queued' : ''].join('|');
+}
+function publishFallback(body, force) {
+  const shape = shapeOf(body);
+  if (!force && shape === lastShape) return;
+  if (Date.now() - lastFallbackAt < FALLBACK_MIN_GAP) return;
+  lastShape = shape;
+  lastFallbackAt = Date.now();
+  try {
+    fs.mkdirSync(path.dirname(DOCS_LIVE), { recursive: true });
+    fs.writeFileSync(DOCS_LIVE, JSON.stringify(body, null, 1), 'utf8');
+  } catch (e) { return; }
+  git(['commit', '-m', 'live: ' + shape, '--', 'docs/live.json'], function (err, out) {
+    if (/nothing to commit|no changes added/i.test(out)) return;
+    git(['push'], function (err2) {
+      if (!err2) { say('מצב המאזין פורסם לדף: ' + shape); return; }
+      // Someone else pushed first. Rebase onto them and try once more, then
+      // leave it: the next change will carry the same information anyway.
+      git(['pull', '--rebase', '--autostash'], function () {
+        git(['push'], function (err3) {
+          say(err3 ? '!! פרסום מצב המאזין לדף נכשל, ינוסה בשינוי הבא.'
+            : 'מצב המאזין פורסם לדף: ' + shape);
+        });
+      });
+    });
+  });
 }
 
 async function saveAttachment(m) {
