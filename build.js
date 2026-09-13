@@ -473,6 +473,32 @@ button.abtn[disabled]{opacity:.55}
    so the two lists read as one column rather than two designs. */
 /* A fold out he has already been inside: green edge, nothing flashing. The
    same green the thread cards use, so one mark means one thing everywhere. */
+/* The listener indicator. Fixed to the edge, small, and never in the way of
+   a thumb reaching the bottom navigation. */
+.livepill{position:fixed;inset-inline-start:8px;bottom:78px;z-index:60;
+ display:flex;align-items:center;gap:6px;border:1px solid var(--line);
+ background:var(--surface);color:var(--dim);border-radius:999px;
+ padding:6px 11px 6px 8px;font:700 11.5px Heebo,sans-serif;cursor:pointer;
+ box-shadow:var(--shadow)}
+.livepill .lp-d{width:8px;height:8px;border-radius:50%;background:var(--dim);
+ flex:0 0 auto}
+.livepill.up{border-color:var(--green);color:var(--green)}
+.livepill.up .lp-d{background:var(--green)}
+.livepill.down{border-color:#e5484d;color:#e5484d}
+.livepill.down .lp-d{background:#e5484d}
+@keyframes lpbeat{0%,100%{opacity:1}50%{opacity:.35}}
+.livepill.up .lp-d{animation:lpbeat 2.4s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){.livepill.up .lp-d{animation:none}}
+.livesheet{position:fixed;inset-inline-start:8px;bottom:112px;z-index:61;
+ max-width:min(320px,calc(100vw - 32px));background:var(--surface);
+ border:1px solid var(--line);border-radius:14px;padding:12px 14px;
+ box-shadow:var(--shadow)}
+.livesheet b{display:block;font:800 14px Heebo,sans-serif;margin-bottom:6px}
+.livesheet .lr{display:flex;gap:8px;justify-content:space-between;
+ font:500 12.5px Heebo,sans-serif;color:var(--dim);padding:3px 0}
+.livesheet #lsClose{margin-top:9px;width:100%;border:0;border-radius:10px;
+ background:var(--sunk);color:var(--ink);padding:8px;
+ font:700 13px Heebo,sans-serif;cursor:pointer}
 .fold.fold-done{border-color:var(--green)}
 .fold>summary b{font:700 15px Heebo,sans-serif}
 .fold>summary small{color:var(--dim);font-size:12.5px;font-weight:400}
@@ -2287,6 +2313,24 @@ try{
  <button type="button" id="editDone">סיום</button>
 </div>
 
+<!--
+  Is the thing running at all.
+
+  On 13.9 six of his voice memos sat on the channel for up to ninety seven
+  minutes, and the screen looked exactly the same as it does when everything
+  is fine. That is the failure worth fixing: not the delay itself, but a page
+  that cannot tell him the difference. The listener publishes a pulse every
+  minute on its own topic, and this reads it. Green means a pulse in the last
+  three minutes. Red means nobody is listening, and now he knows.
+-->
+<button type="button" class="livepill" id="livePill" aria-live="polite">
+ <i class="lp-d"></i><span class="lp-t" id="lpText">בודק</span>
+</button>
+<div class="livesheet" id="liveSheet" hidden>
+ <b id="lsHead">המאזין</b>
+ <div id="lsBody"></div>
+ <button type="button" id="lsClose">סגירה</button>
+</div>
 <div class="toast" id="toast" role="status" hidden></div>
 
 <div class="recwrap" id="recModal" hidden>
@@ -6097,6 +6141,87 @@ boot('replies',renderReplies);
 boot('reqs',renderReqs);
 boot('codex',renderCodex);
 boot('rivhit',renderRivhit);
+/*
+  The listener indicator.
+
+  His phone cannot see a file on the machine at home, so the listener puts a
+  pulse on a second ntfy topic once a minute at minimum priority, and this
+  reads that topic. Nothing here can start, stop or repair the listener: it
+  only reports, which is the whole point. A screen that cannot go red is a
+  screen that told him everything was fine for ninety seven minutes.
+*/
+var LIVE_TOPIC='abaitzik-in-95e62e86c34f4853-live';
+var liveLast=null;
+function liveTime(iso){
+ var d=new Date(iso);
+ return isNaN(d)?'':(d.getHours()+':'+String(d.getMinutes()).padStart(2,'0')
+  +':'+String(d.getSeconds()).padStart(2,'0'));
+}
+function paintLive(){
+ var pill=document.getElementById('livePill');
+ var txt=document.getElementById('lpText');
+ if(!pill||!txt)return;
+ if(!liveLast){
+  pill.className='livepill down';txt.textContent='אין מאזין';return;
+ }
+ var age=(Date.now()-Date.parse(liveLast.at))/1000;
+ // The pulse is every sixty seconds. Three minutes of nothing is a process
+ // that stopped, not a slow network.
+ if(age>180){
+  pill.className='livepill down';
+  txt.textContent='נפל ב'+liveTime(liveLast.at);
+  return;
+ }
+ pill.className='livepill up';
+ txt.textContent=liveLast.last?('נקלט '+liveTime(liveLast.last)):'מאזין';
+}
+async function pollLive(){
+ try{
+  var r=await fetch('https://ntfy.sh/'+LIVE_TOPIC+'/json?poll=1&since=10m',{cache:'no-store'});
+  var t=(await r.text()).trim();
+  var rows=t?t.split(String.fromCharCode(10)):[];
+  for(var i=rows.length-1;i>=0;i--){
+   var m=null;
+   try{m=JSON.parse(rows[i]);}catch(e){continue;}
+   if(m.event!=='message'||!m.message)continue;
+   try{liveLast=JSON.parse(m.message);}catch(e){continue;}
+   break;
+  }
+ }catch(e){/* offline: the age check below turns it red on its own */}
+ paintLive();
+}
+function openLiveSheet(){
+ var sh=document.getElementById('liveSheet');
+ var body=document.getElementById('lsBody');
+ var head=document.getElementById('lsHead');
+ if(!sh||!body)return;
+ if(!liveLast){
+  head.textContent='המאזין';
+  body.innerHTML='<div class="lr"><span>אף אחד לא מאזין לערוץ.</span></div>'
+   +'<div class="lr"><span>הודעות שתשלח יחכו עד שמישהו יפעיל אותו.</span></div>';
+ }else{
+  var up=Math.round((liveLast.up||0)/60);
+  head.textContent='המאזין פעיל';
+  var rows=[['פעימה אחרונה',liveTime(liveLast.at)],
+   ['מחובר מאז',liveTime(liveLast.since)],
+   ['רץ',up<60?(up+' דקות'):(Math.round(up/60)+' שעות')],
+   ['נקלטו',String(liveLast.n||0)]];
+  body.innerHTML=rows.map(function(r){
+   return '<div class="lr"><span>'+esc(r[0])+'</span><b>'+esc(r[1])+'</b></div>';
+  }).join('')
+  +((liveLast.recent||[]).length
+    ?'<div class="lr"><span>הקליטות האחרונות</span></div>'
+     +liveLast.recent.slice().reverse().map(function(r){
+       return '<div class="lr"><span>'+esc(r.kind==='file'?'קובץ':r.kind==='lost'?'אבד':'הודעה')
+        +'</span><b>'+esc(liveTime(r.at))+'</b></div>';
+      }).join('')
+    :'');
+ }
+ sh.hidden=false;
+}
+on('livePill',openLiveSheet);
+on('lsClose',function(){var sh=document.getElementById('liveSheet');if(sh)sh.hidden=true;});
+boot('live',function(){pollLive();setInterval(pollLive,30000);setInterval(paintLive,15000);});
 boot('folds',paintHomeFolds);
 boot('tidy',function(){countTiles();renderTidy();});
 // A link like #pegasus or #special lands straight on that screen.
