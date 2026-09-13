@@ -1384,6 +1384,20 @@ body.editing .bn{display:none}
 .reloadbig:active{background:linear-gradient(180deg,var(--green),#2b8c45);box-shadow:none;transform:translateY(1px)}
 .reloadbig[disabled]{opacity:.6}
 .reloadbig:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* Small, and parked clear of the bottom navigation rather than over it. */
+.micdock{position:fixed;inset-inline-start:12px;z-index:30;
+ bottom:calc(70px + env(safe-area-inset-bottom));
+ width:48px;height:48px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;
+ color:#fff;background:linear-gradient(150deg,#5aa9fb,var(--blue));
+ box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.micdock svg{width:24px;height:24px}
+.micdock.on{background:var(--red)}
+.micdock.sending{background:linear-gradient(150deg,#ffd257,var(--yellow));color:#3a2c00}
+.micdock.sent{background:linear-gradient(150deg,#5cc36f,var(--green))}
+.micdock.failed{background:#5b6472}
+.micdock:active{transform:scale(.94)}
+.micdock:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.locked .micdock{display:none}
 .morebtn{display:block;width:100%;margin:2px 0 0;padding:12px 14px;cursor:pointer;
  background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:14px;
  font:500 13.5px Heebo,sans-serif}
@@ -1831,6 +1845,13 @@ try{
   <button type="button" class="skb" data-skin="dark">לילה</button>
  </div>
 <div class="install" id="installHint">להתקנה כאפליקציה על מסך הבית: בספארי לוחצים שיתוף ואז "הוספה למסך הבית". באנדרואיד: תפריט ואז "התקנת אפליקציה".</div>
+<div class="alerts" id="alerts">
+ <div>
+  <b>התראות לנייד</b>
+  <small>מתקינים את האפליקציה ntfy, לוחצים על הכפתור, ובוחרים Subscribe. מאז כל תשובה שלי קופצת כמו וואטסאפ.</small>
+ </div>
+ <a class="abtn" id="ntfyBtn" href="https://ntfy.sh/abaitzik-cf9044bdcfa8" target="_blank" rel="noopener">הפעלת התראות</a>
+</div>
 
 <nav class="links" aria-label="קישורים מהירים">
  <a href="plan.html">
@@ -1839,13 +1860,7 @@ try{
  </a>
 </nav>
 
-<div class="alerts" id="alerts">
- <div>
-  <b>התראות לנייד</b>
-  <small>מתקינים את האפליקציה ntfy, לוחצים על הכפתור, ובוחרים Subscribe. מאז כל תשובה שלי קופצת כמו וואטסאפ.</small>
- </div>
- <a class="abtn" id="ntfyBtn" href="https://ntfy.sh/abaitzik-cf9044bdcfa8" target="_blank" rel="noopener">הפעלת התראות</a>
-</div>
+
 <div class="alerts" id="pingBox">
  <div>
   <b>בדיקת חיבור</b>
@@ -2227,6 +2242,25 @@ try{
  </div>
 </div>
 
+<!--
+  A microphone on every screen, small, bottom left.
+
+  He asked for it and called it mandatory, and it is the opposite of the one I
+  removed last night: that one was a large glowing button that floated over
+  whatever was underneath it, and he was right that it covered content. This is
+  small, parked in the corner the thumb of his other hand reaches, and it is
+  outside the screen container so it belongs to no screen in particular and
+  disappears on none of them.
+
+  It is the same recorder as the card on the home screen, not a second one:
+  the same toggle, the same guard, the same state painted on both.
+-->
+<button type="button" id="micDock" class="micdock" aria-label="דבר אליי">
+ <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" stroke="none"/>
+  <path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8.5 21h7"/>
+ </svg>
+</button>
 <nav class="bn" aria-label="מסכים">
  <button type="button" id="nH" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10.5V20h12v-9.5"/><path d="M10 20v-5h4v5"/></svg>בית</button>
  <button type="button" id="nM" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12.5c0 3.9-3.6 7-8 7a9 9 0 0 1-2.6-.4L5 21l1.2-3.3A6.7 6.7 0 0 1 4 12.5c0-3.9 3.6-7 8-7s8 3.1 8 7Z"/></svg>צ׳אט<i class="dot" id="mDot" hidden></i></button>
@@ -5632,6 +5666,9 @@ document.getElementById('recCancel').onclick=function(){
 var micBtn=document.getElementById('micBtn');
 var micSaid=document.getElementById('micSaid');
 micBtn.onclick=toggleRec;
+// The same recorder, from wherever he is standing.
+var micDock=document.getElementById('micDock');
+if(micDock)micDock.onclick=toggleRec;
 
 // recSaid lives in the chat pane; mirror it onto the home screen so the timer
 // and any error are visible wherever the recording was started from.
@@ -5643,7 +5680,7 @@ new MutationObserver(function(){
 var micTimer=null;
 function paintMics(state){
  clearTimeout(micTimer);
- var ids=['micBtn','recBtn','recBig'];
+ var ids=['micBtn','micDock','recBtn','recBig'];
  var label={rec:'מקליט, לחיצה עוצרת ושולחת',send:'שולח אליי',
   ok:'נשלח',bad:'לא נשלח',idle:'דבר אליי'}[state]||'דבר אליי';
  ids.forEach(function(id){
