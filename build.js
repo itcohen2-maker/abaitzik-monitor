@@ -6027,13 +6027,32 @@ document.getElementById('mailForm').addEventListener('submit',function(e){
  }).then(function(){btn.disabled=false;});
 });
 
-// Whatever he has dragged around, two things do not move: what is unread is
-// always the first thing under the title, and the phone alerts and the
-// personal code are always the last things on the screen.
+/*
+  The head of the home screen, in the order Itzik asked for on 13.9.
+
+  Talking to me comes first, because that is what the screen is for. Under it
+  the one button that opens the rest, and the first thing that opens is the
+  tools themselves: the round shortcuts and then the thirteen tiles. Everything
+  else, the unread count included, comes after those.
+
+  The unread count used to be pinned above all of it. It is still the loudest
+  thing on the screen when there is something waiting, but it is no longer the
+  thing standing between him and the microphone.
+
+  The order below wins over anything he has dragged, and only for these four.
+  The rest of the screen is still his to arrange.
+*/
+var HOME_HEAD=['talkCard','bareBtn','blkIcons','blkTiles'];
 function pinHome(home){
  if(!home)return;
- var top=document.getElementById('newBlock');
- if(top&&top.parentNode===home)home.insertBefore(top,home.firstChild);
+ var at=null;
+ HOME_HEAD.forEach(function(id){
+  var el=document.getElementById(id);
+  if(!el||el.parentNode!==home)return;
+  if(at)home.insertBefore(el,at.nextSibling);
+  else home.insertBefore(el,home.firstChild);
+  at=el;
+ });
  // The phone alerts and the personal code used to be pinned to the bottom of
  // this screen. They live on the settings screen now, so there is nothing left
  // to pin down there and nothing here to drag them back up.

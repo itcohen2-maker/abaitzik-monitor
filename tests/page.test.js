@@ -54,19 +54,23 @@ test('the pill screen asks whether the pill was taken earlier', () => {
   assert.ok(html.includes("'לקחתי כדור בשעה '"));
 });
 
-test('home order: what is unread first, and the utilities off this screen', () => {
+test('home order: talking to me first, then the tools, then everything else', () => {
   const html = renderPage(fixture());
   const at = (s) => { const i = html.indexOf(s); assert.ok(i > -1, 'missing ' + s); return i; };
   const ph = at('<section id="pH">');
   assert.ok(at('</header>') < ph);
-  // The unread button and the archive button are one block, and it is the
-  // first thing in the section.
+  // The unread button and the archive button are still one block.
   assert.ok(ph < at('id="newBlock"'));
   assert.ok(at('id="newBlock"') < at('id="newBtn"'));
   assert.ok(at('id="newBtn"') < at('id="allMsgs"'));
-  assert.ok(html.includes("var top=document.getElementById('newBlock');"));
-  // Then the one place he talks to me, then everything else.
-  const order = ['id="newBlock"', 'id="talkCard"', 'id="micBtn"', 'id="reqBox"', 'id="growHome"',
+  // He asked for this order on 13.9: the microphone card, then the button that
+  // opens the rest, and the first thing inside it is the shortcuts and the
+  // tiles. Four blocks pinned; the rest of the screen stays his to arrange.
+  assert.ok(html.includes("var HOME_HEAD=['talkCard','bareBtn','blkIcons','blkTiles'];"));
+  assert.ok(html.includes('HOME_HEAD.forEach'));
+  // The unread count is no longer pinned above the microphone.
+  assert.ok(!html.includes("var top=document.getElementById('newBlock');"));
+  const order = ['id="talkCard"', 'id="micBtn"', 'id="bareBtn"', 'id="reqBox"', 'id="growHome"',
     'class="whatsnew"', 'id="askBox"', 'id="blkTiles"', 'id="blkIcons"'];
   const idx = order.map(at);
   for (let i = 1; i < idx.length; i++) assert.ok(idx[i - 1] < idx[i], order[i] + ' must come after ' + order[i - 1]);
