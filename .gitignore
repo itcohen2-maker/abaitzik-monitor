@@ -6,6 +6,8 @@ seed-rivhit.js
 sync-today.js
 node_modules/
 data/ntfy-topic.txt
+# His paid ntfy token. Same rule as the topic: never leaves this machine.
+data/ntfy-token.txt
 backups/
 rivhit/
 
