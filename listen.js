@@ -35,7 +35,24 @@ const STATUS = path.join(__dirname, 'data', 'status');
 const LIVEFILE = path.join(STATUS, 'live.json');
 const PULLS = path.join(STATUS, 'pulls.json');
 
-const BEAT_MS = 60000;
+/*
+  How often the pulse goes out.
+
+  The first version beat every sixty seconds and that was a mistake with a
+  cost: a hundred and thirty two messages in two hours exhausted ntfy's free
+  daily quota for this machine, which is the same quota the push notifications
+  use. The indicator meant to prove the monitor was alive is what knocked its
+  own channel over, and from Itzik's phone that looked exactly like the monitor
+  falling.
+
+  So the idle pulse is every fifteen minutes, about ninety six a day, which
+  leaves the rest of the daily allowance for messages that actually matter. The
+  feedback he cares about does not depend on it: every catch beats immediately,
+  so seconds after he sends anything the indicator says so by name.
+*/
+const BEAT_MS = 900000;
+const BEAT_BACKOFF_MS = 3600000;
+let beatBlockedUntil = 0;
 const STARTED = Date.now();
 let received = 0;
 let lastMsgAt = 0;
@@ -90,13 +107,24 @@ function beatBody() {
 async function beat() {
   const body = beatBody();
   writeJson(LIVEFILE, body);
+  if (Date.now() < beatBlockedUntil) return;
   try {
-    await fetch('https://ntfy.sh/' + LIVE, {
+    const res = await fetch('https://ntfy.sh/' + LIVE, {
       method: 'POST',
       headers: { 'Priority': 'min', 'Title': 'live', 'X-Tags': 'none' },
       body: JSON.stringify(body)
     });
-  } catch (e) { /* the pulse is allowed to miss; the file above still moved */ }
+    // A refused pulse used to be swallowed, so the quota ran out in silence and
+    // the only symptom was an indicator that had gone red for no visible
+    // reason. Now it says so, and stops hammering a door that is shut.
+    if (res.status === 429) {
+      beatBlockedUntil = Date.now() + BEAT_BACKOFF_MS;
+      say('!! ntfy חסם פרסום, המכסה היומית נגמרה. הפעימה מושהית לשעה.');
+      say('!! זה חוסם גם את התראות הפוש מהמחשב הזה עד שהמכסה מתאפסת.');
+    } else if (!res.ok) {
+      say('!! הפעימה לא יצאה: ' + res.status);
+    }
+  } catch (e) { /* offline: the file above still moved, the pill will go red */ }
 }
 
 async function saveAttachment(m) {

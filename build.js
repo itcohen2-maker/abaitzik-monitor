@@ -6167,9 +6167,17 @@ function paintLive(){
   pill.className='livepill down';txt.textContent='אין מאזין';return;
  }
  var age=(Date.now()-Date.parse(liveLast.at))/1000;
- // The pulse is every sixty seconds. Three minutes of nothing is a process
- // that stopped, not a slow network.
- if(age>180){
+ /*
+   The idle pulse is every fifteen minutes, not every minute: the first version
+   beat so often it exhausted ntfy's daily quota for that machine in two hours
+   and took the push notifications down with it, which read on his phone as the
+   monitor falling. Thirty five minutes of nothing is a stopped process.
+
+   This is not the number that matters to him, though. Every catch beats
+   immediately, so the answer to "did what I just sent get through" still
+   arrives within seconds, by name and with its time.
+ */
+ if(age>2100){
   pill.className='livepill down';
   txt.textContent='נפל ב'+liveTime(liveLast.at);
   return;
@@ -6207,7 +6215,8 @@ function openLiveSheet(){
   var rows=[['פעימה אחרונה',liveTime(liveLast.at)],
    ['מחובר מאז',liveTime(liveLast.since)],
    ['רץ',up<60?(up+' דקות'):(Math.round(up/60)+' שעות')],
-   ['נקלטו',String(liveLast.n||0)]];
+   ['נקלטו',String(liveLast.n||0)],
+   ['פעימה כל','רבע שעה']];
   body.innerHTML=rows.map(function(r){
    return '<div class="lr"><span>'+esc(r[0])+'</span><b>'+esc(r[1])+'</b></div>';
   }).join('')
