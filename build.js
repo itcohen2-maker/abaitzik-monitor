@@ -452,6 +452,11 @@ button.abtn[disabled]{opacity:.55}
 .grow div.l a{color:var(--accent);word-break:break-all}
 /* The three newest on the home screen, in the same box as the requests above
    so the two lists read as one column rather than two designs. */
+.tunes{margin-top:14px;background:var(--surface);border:1px solid var(--line);
+ border-radius:var(--r);box-shadow:var(--shadow);padding:14px 16px}
+.tunes>b{display:block;font:800 16px Heebo,sans-serif}
+.tunes>small{display:block;color:var(--dim);font-size:12.5px;line-height:1.6;
+ margin:4px 0 6px;white-space:pre-line}
 .fold{margin-top:14px;background:var(--surface);border:1px solid var(--line);
  border-radius:var(--r);box-shadow:var(--shadow);padding:0}
 .fold>summary{list-style:none;cursor:pointer;padding:13px 16px;
@@ -1589,6 +1594,14 @@ try{
  </button>
 
   <div class="sent" id="sentCard" hidden></div>
+  <!--
+    Anything with something to listen to comes to the front.
+
+    He asked where he could hear the three pieces, and the answer was "on an
+    inner screen behind a tile", which is the same as nowhere. A card that is
+    about listening belongs where he lands.
+  -->
+  <section class="tunes" id="tuneBox" hidden></section>
   <details class="reqs fold" id="reqBox" hidden>
    <summary id="reqSum">שתי הבקשות האחרונות</summary>
    <div id="reqBody"></div>
@@ -4350,6 +4363,28 @@ function markSpecialSeen(){
  if(el){el.classList.remove('glow');var f=el.querySelector(':scope > .flag');if(f)f.remove();}
 }
 
+/*
+  The listening card, on the home screen.
+
+  Same data as the special screen, drawn where he actually is. Only items that
+  carry audio appear here, so this stays empty and hidden unless there is
+  genuinely something to play.
+*/
+function renderTunes(){
+ var box=document.getElementById('tuneBox');
+ if(!box)return;
+ var S=(D.special||[]).filter(function(u){return (u.audio||[]).length;});
+ if(!S.length){box.hidden=true;return;}
+ box.hidden=false;
+ var u=S[0];
+ box.innerHTML='<b>'+esc(u.title)+'</b>'
+  +(u.note?'<small>'+esc(u.note)+'</small>':'')
+  +(u.audio||[]).map(function(a){
+    return '<div class="tune"><b>'+esc(a.title)+'</b>'
+     +(a.note?'<small>'+esc(a.note)+'</small>':'')
+     +'<audio controls preload="none" src="'+esc(a.src)+'"></audio></div>';
+   }).join('');
+}
 function renderSpecial(){
  var host=document.getElementById('specBox');
  if(!host)return;
@@ -5611,6 +5646,7 @@ boot('report',renderNextReport);
 boot('pegasus',renderPegasus);
 boot('improve',renderImprove);
 boot('special',renderSpecial);
+boot('tunes',renderTunes);
 boot('pin',renderPin);
 boot('reqs',renderReqs);
 boot('codex',renderCodex);
