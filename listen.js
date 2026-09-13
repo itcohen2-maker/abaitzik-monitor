@@ -306,7 +306,46 @@ async function drainQueue() {
   } catch (e) { /* the queue survives to the next round */ }
 }
 
+/*
+  Only ever one of me.
+
+  There are two things that start this now, a scheduled task and a shortcut in
+  the Startup folder, and for a while both were live at once. Two listeners
+  means two pulses, two sets of commits and twice the spend against the daily
+  allowance, which is the exact shape of the fault that started all of this. A
+  lock file settles it: the second one to arrive says so and leaves.
+
+  The lock holds a pid, so a lock left behind by a process that was killed is
+  recognised as stale rather than blocking the restart forever.
+*/
+const LOCK = path.join(STATUS, 'listen.lock');
+function alive(pid) {
+  try { process.kill(pid, 0); return true; } catch (e) { return e.code === 'EPERM'; }
+}
+function claimLock() {
+  try {
+    const held = JSON.parse(fs.readFileSync(LOCK, 'utf8'));
+    if (held.pid && held.pid !== process.pid && alive(held.pid)) return false;
+  } catch (e) { /* no lock, or an unreadable one: take it */ }
+  fs.mkdirSync(STATUS, { recursive: true });
+  fs.writeFileSync(LOCK, JSON.stringify({ pid: process.pid, at: new Date().toISOString() }), 'utf8');
+  return true;
+}
+function releaseLock() {
+  try {
+    const held = JSON.parse(fs.readFileSync(LOCK, 'utf8'));
+    if (held.pid === process.pid) fs.unlinkSync(LOCK);
+  } catch (e) { /* nothing to release */ }
+}
+['exit', 'SIGINT', 'SIGTERM'].forEach(function (sig) {
+  process.on(sig, function () { releaseLock(); if (sig !== 'exit') process.exit(0); });
+});
+
 (async () => {
+  if (!claimLock()) {
+    say('מאזין אחר כבר רץ. יוצא בלי לעשות כלום.');
+    return;
+  }
   setInterval(beat, BEAT_MS);
   setInterval(drainQueue, BEAT_MS);
   let wait = 2000;
