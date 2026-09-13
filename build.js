@@ -1123,7 +1123,8 @@ body.editing .bn{display:none}
 .tidy .row2{display:flex;flex-wrap:wrap;gap:8px}
 .tidy button{border:1px solid var(--line);background:var(--bg);color:var(--ink);
  border-radius:999px;padding:9px 16px;font:800 13.5px Heebo,sans-serif;cursor:pointer}
-.tidy button.go{background:var(--ink);color:#fff;border-color:var(--ink)}
+/* Same half inversion as the back bar had, same fix. */
+.tidy button.go{background:var(--ink);color:var(--ground);border-color:var(--ink)}
 /* A card about something to listen to gets a button he can tap, not a link he
    has to go and find. preload none, so opening the screen does not pull two
    and a half megabytes before he has decided to listen. */
@@ -1139,8 +1140,19 @@ body.editing .bn{display:none}
  background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:14px;
  font:500 13.5px Heebo,sans-serif}
 .allmsgs:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/*
+  The bar is meant to be the inverse of the page: dark on a light screen, light
+  on a dark one. It took its background from --ink and its text from a fixed
+  white, which is only half an inversion. In night mode --ink is nearly white,
+  so the bar became white text on a white bar: Itzik saw it as washed out and
+  see through, and he was reading a button he could barely make out.
+
+  The text now inverts with the background instead of being pinned, so the
+  contrast holds in both themes.
+*/
 .backbar{display:block;width:100%;margin:0 0 14px;padding:12px 16px;border:0;cursor:pointer;
- border-radius:var(--r);background:var(--ink);color:#fff;font:800 15px Heebo,sans-serif;text-align:start}
+ border-radius:var(--r);background:var(--ink);color:var(--ground);
+ font:800 15px Heebo,sans-serif;text-align:start}
 .backbar:active{transform:translateY(1px)}
 .gsearch{width:100%;margin:14px 0 0;padding:13px 16px;border:1px solid var(--line);border-radius:var(--r);
  background:var(--surface);color:var(--ink);font:400 15px Heebo,sans-serif}
