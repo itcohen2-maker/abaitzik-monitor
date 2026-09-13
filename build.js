@@ -1335,6 +1335,20 @@ body.editing .bn{display:none}
 .bn button:active{transform:scale(.94)}
 .bn button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:10px}
 
+/*
+  The bare home: one card, and nothing else.
+
+  He asked for the main screen to hold the microphone and the four ways of
+  reaching me, and nothing more. Everything else is hidden rather than removed,
+  so every render on this page keeps writing to the element it always wrote to
+  and nothing becomes unreachable: one button in the header brings the rest
+  back, and the choice is remembered.
+*/
+#pH.bare > *:not(#talkCard){display:none!important}
+#pH.bare{padding-top:6px}
+#bareBtn{margin-inline-start:0;background:linear-gradient(180deg,#b39ddb,#5e35b1);
+ box-shadow:0 2px 6px rgba(94,53,177,.4),inset 0 1px 0 rgba(255,255,255,.28)}
+#bareBtn:active{background:linear-gradient(180deg,#5e35b1,#4527a0)}
 /* ---------- מצב רגוע ----------
    Itzik said the flashing in the monitor is stressful and asked for calm and
    control. Nothing on this page flashes any more. The count, the badges and
@@ -1555,6 +1569,7 @@ try{
 <header class="hd">
  <button type="button" class="conn arr" id="arrangeBtn" title="סידור המסך">סידור</button>
  <button type="button" class="conn" id="homeBtn" title="חזרה לבית" hidden>בית</button>
+ <button type="button" class="conn" id="bareBtn" title="כלים">כלים</button>
  <button type="button" class="conn" id="setBtn" title="הגדרות" aria-label="הגדרות">הגדרות</button>
  <button type="button" class="conn" id="reloadBtn" title="טעינה מחדש">רענון</button>
  <div class="hdtext">
@@ -5005,6 +5020,29 @@ function askInChat(prefix){
 }
 document.getElementById('setBtn').onclick=function(){pane('z');};
 document.getElementById('homeBtn').onclick=function(){pane('h');};
+/*
+  One card, or everything.
+
+  Default is bare, because that is what he asked for. The button says which way
+  it will take him rather than what the screen is now, and the choice survives
+  a reload like every other preference here.
+*/
+function bareGet(){
+ try{return localStorage.getItem('bareHome')!=='0';}catch(e){return true;}
+}
+function bareApply(on){
+ var home=document.getElementById('pH');
+ if(home)home.classList.toggle('bare',!!on);
+ var btn=document.getElementById('bareBtn');
+ if(btn)btn.textContent=on?'כלים':'רק המיקרופון';
+}
+document.getElementById('bareBtn').onclick=function(){
+ var next=!bareGet();
+ try{localStorage.setItem('bareHome',next?'1':'0');}catch(e){}
+ bareApply(next);
+ window.scrollTo(0,0);
+};
+bareApply(bareGet());
 document.getElementById('gChat').onclick=function(){pane('m');markChatSeen();};
 /*
   Writing and the camera, from the card at the top instead of from a tile most

@@ -477,6 +477,27 @@ test('the page actually parses', () => {
   });
 });
 
+test('the home screen is the microphone and nothing else', () => {
+  const html = renderPage(fixture({}));
+  // He asked for the main screen to hold the microphone and the four ways of
+  // reaching me, and nothing more.
+  assert.ok(html.includes('#pH.bare > *:not(#talkCard){display:none!important}'));
+  // Hidden, never removed: every render on this page still writes to the
+  // element it always wrote to, and nothing becomes unreachable.
+  assert.ok(html.includes('id="bareBtn"'));
+  assert.ok(html.includes("home.classList.toggle('bare',!!on);"));
+  assert.ok(html.includes("btn.textContent=on?'כלים':'רק המיקרופון';"));
+  // Bare by default, and the choice survives a reload like every other one.
+  assert.ok(html.includes("return localStorage.getItem('bareHome')!=='0';"));
+  assert.ok(html.includes("localStorage.setItem('bareHome',next?'1':'0');"));
+  assert.ok(html.includes('bareApply(bareGet());'));
+  // The card it keeps is the one with all four ways in.
+  ['id="micBtn"', 'id="wWrite"', 'id="urgBtn"', 'id="wShoot"'].forEach((bit) => {
+    const card = html.slice(html.indexOf('id="talkCard"'), html.indexOf('</section>', html.indexOf('id="talkCard"')));
+    assert.ok(card.includes(bit), `${bit} is not on the card the bare home keeps`);
+  });
+});
+
 test('a way home from the top of every inner screen, and a reset that deletes nothing', () => {
   const html = renderPage(fixture({}));
   // He asked twice for a way home. The bottom tab was always there; the button
