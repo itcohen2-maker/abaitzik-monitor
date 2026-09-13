@@ -619,6 +619,19 @@ section{margin-bottom:30px}
  border:1px solid var(--line);border-bottom-inline-end-radius:4px}
 .st{font-style:normal;font-weight:500;padding:1px 7px;border-radius:999px;font-size:11.5px}
 .st-received{background:var(--sunk);color:var(--dim)}
+/* שורת אישור הקבלה מתחת להודעה שלו. לא תווית, משפט. */
+.ack{margin-top:8px;padding:7px 10px;border-radius:10px;font-size:13px;line-height:1.45;
+ background:var(--sunk);color:var(--dim);border-inline-start:3px solid var(--line)}
+.ack-n{display:block;margin-top:4px;color:var(--ink);opacity:.85}
+.ack-wait{background:var(--unread);color:#8a3a32;border-inline-start-color:var(--red)}
+.ack-received{background:var(--sunk);color:var(--dim)}
+.ack-working{background:#f6e7c8;color:#8a5a12;border-inline-start-color:var(--gold)}
+.ack-partial{background:var(--accent-soft);color:var(--accent);border-inline-start-color:var(--accent)}
+.ack-done{background:var(--fresh);color:#1d6b3f;border-inline-start-color:#1d6b3f}
+.pulse{display:inline-block;width:8px;height:8px;border-radius:50%;margin-inline-end:7px;
+ background:currentColor;vertical-align:middle;animation:ackpulse 1.8s ease-in-out infinite}
+@keyframes ackpulse{0%,100%{opacity:.35;transform:scale(.82)}50%{opacity:1;transform:scale(1.12)}}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none;opacity:.9}}
 .st-working{background:#f6e7c8;color:#8a5a12}
 .st-done{background:var(--accent-soft);color:var(--accent)}
 /* Unread is red and glowing, and it stays that way for days if that is how
@@ -2413,10 +2426,40 @@ function linkify(t){
   return esc(x);
  }).join('');
 }
-var STATUS={received:'התקבל',working:'בעבודה',done:'בוצע'};
+var STATUS={received:'התקבל',working:'בעבודה',partial:'יש לי חלק',done:'בוצע'};
 function statusTag(m){
  if(m.from!=='itzik'||!m.status||!STATUS[m.status])return '';
  return ' · <em class="st st-'+m.status+'">'+STATUS[m.status]+'</em>';
+}
+/*
+  משפט מתחת לכל הודעה שלו, במקום תווית קטנה בשורת המטא.
+
+  הוא אמר שהמוניטור לא מחזיר לו תשובות. הסיבה האמיתית היא שכשאין
+  סשן של קלוד רץ, אין מי שקורא את התיבה, ולכן ההודעה נשארת בלי סימן.
+  השתיקה הזאת נראת כמו תקלה. עכשיו היא אומרת במפורש כמה זמן ההודעה מחכה.
+
+  אף מצב כאן לא נכתב מעצמו. כל אחד מהם מגיע משדה שאני כותב לקובץ
+  ההודעה, ולכן אין כאן מצג של עבודה שלא קרתה.
+*/
+function ackLine(m){
+ if(m.from!=='itzik')return '';
+ if(m.pend)return '<div class="ack ack-wait">יצא מהמכשיר. עוד לא הגיע אליי.</div>';
+ var st=m.status,when=m.ackAt||'';
+ if(!st){
+  return '<div class="ack ack-wait">עוד לא קראתי את זה. ממתין '
+   +esc(ago(m.at))+', מאז ששלחת.</div>';
+ }
+ var head=when?('קיבלתי את זה ב'+esc(stamp(when))):'קיבלתי את זה';
+ var tail=st==='working'?'ואני עדיין עובד על זה.'
+  :st==='partial'?'ויש לי חלק מהתשובות. השאר בדרך.'
+  :st==='done'?'וזה בוצע.'
+  :'ועוד לא התחלתי.';
+ var note=m.note?'<span class="ack-n">'+esc(m.note)+'</span>':'';
+ // נקודה פועמת רק כשבאמת עובדים. ביקש ב-11.09 שיהיה סימן חי ליד הסטטוס.
+ // הפעימה איטית בכוונה, אחרי שנדחה ההבהוב החד, ומכובה לגמרי למי שביקש
+ // פחות תנועה במערכת.
+ var dot=(st==='working'||st==='partial')?'<i class="pulse"></i>':'';
+ return '<div class="ack ack-'+esc(st)+'">'+dot+head+' '+tail+note+'</div>';
 }
 // A pending copy is dropped once any message of his lands at or after it: I
 // rewrite what he said (a recording becomes its transcript), so matching on the
@@ -2458,7 +2501,7 @@ function bubbleHtml(m,i,fresh,handled){
   +(m.pend?' · נשלח, עוד לא נקרא':'')+statusTag(m)
   +(fresh?' · <em class="badge">חדש</em>':(mine?'':' · נקרא'))
   +'<button type="button" class="cp" data-i="'+i+'" aria-label="העתקה">העתקה</button>'
-  +'</span>'+linkify(m.text)+'</div>';
+  +'</span>'+linkify(m.text)+ackLine(m)+'</div>';
 }
 // Copy, paste and send on every reply form, whatever screen it is on.
 function pasteRow(){
