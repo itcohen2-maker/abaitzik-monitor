@@ -6265,9 +6265,11 @@ function openLiveSheet(){
   var B=liveLast.budget||{};
   Object.keys(B).forEach(function(k){
    var c=B[k];
-   rows.push([c.label,c.blockedUntil
-    ?('חסום עד '+liveTime(c.blockedUntil))
-    :(c.left+' מתוך '+c.cap)]);
+   // A daily wall gets said in words. Showing "blocked until 21:42" and then
+   // "blocked until 22:58" an hour later taught him to distrust the number.
+   rows.push([c.label,c.daily
+    ?'המכסה היומית נגמרה'
+    :(c.blockedUntil?('חסום עד '+liveTime(c.blockedUntil)):(c.left+' מתוך '+c.cap))]);
   });
   if(liveLast.queued)rows.push(['ממתינות בתור',String(liveLast.queued)]);
   body.innerHTML=rows.map(function(r){
