@@ -1,6 +1,6 @@
 {
- "at": "2026-09-13T22:31:02.481Z",
- "up": 7200,
+ "at": "2026-09-13T23:31:02.502Z",
+ "up": 10800,
  "since": "2026-09-13T20:31:02.953Z",
  "last": "",
  "n": 0,
@@ -51,8 +51,8 @@
    "cap": 30,
    "left": 30,
    "paid": false,
-   "blockedUntil": "2026-09-13T22:31:03.207Z",
-   "daily": true
+   "blockedUntil": "",
+   "daily": false
   }
  },
  "queued": 0
