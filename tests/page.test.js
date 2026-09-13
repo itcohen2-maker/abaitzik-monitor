@@ -54,21 +54,23 @@ test('the pill screen asks whether the pill was taken earlier', () => {
   assert.ok(html.includes("'לקחתי כדור בשעה '"));
 });
 
-test('home order: talking to me first, then the tools, then everything else', () => {
+test('home order: one message button on top, the tools next, my log last', () => {
   const html = renderPage(fixture());
   const at = (s) => { const i = html.indexOf(s); assert.ok(i > -1, 'missing ' + s); return i; };
   const ph = at('<section id="pH">');
   assert.ok(at('</header>') < ph);
-  // The unread button and the archive button are still one block.
+  // The message block is one button now, and nothing else lives in it.
   assert.ok(ph < at('id="newBlock"'));
   assert.ok(at('id="newBlock"') < at('id="newBtn"'));
-  assert.ok(at('id="newBtn"') < at('id="allMsgs"'));
-  // He asked for this order on 13.9: the microphone card, then the button that
-  // opens the rest, and the first thing inside it is the shortcuts and the
-  // tiles. Four blocks pinned; the rest of the screen stays his to arrange.
-  assert.ok(html.includes("var HOME_HEAD=['talkCard','bareBtn','blkIcons','blkTiles'];"));
+  // He set this order on 13.9: the one message button, the microphone card,
+  // then the button that opens the rest, and the first thing inside it is the
+  // shortcuts and the tiles. Five blocks pinned at the head and one at the
+  // foot; the rest of the screen stays his to arrange.
+  assert.ok(html.includes("var HOME_HEAD=['newBlock','talkCard','bareBtn','blkIcons','blkTiles'];"));
   assert.ok(html.includes('HOME_HEAD.forEach'));
-  // The unread count is no longer pinned above the microphone.
+  // And the one block he wanted out of the way is pinned to the bottom.
+  assert.ok(html.includes("var HOME_TAIL=['growBtn'];"));
+  assert.ok(html.includes('HOME_TAIL.forEach'));
   assert.ok(!html.includes("var top=document.getElementById('newBlock');"));
   const order = ['id="talkCard"', 'id="micBtn"', 'id="bareBtn"', 'id="reqBox"', 'id="growHome"',
     'class="whatsnew"', 'id="askBox"', 'id="blkTiles"', 'id="blkIcons"'];
@@ -205,14 +207,15 @@ test('a refresh never costs him what he was writing', () => {
 
 test('nothing opens by itself, and everything that opens can be closed', () => {
   const html = renderPage(fixture());
-  // With nothing unread the big button no longer throws the whole archive on
-  // screen. It reveals the one button that does, which is his to press.
-  assert.ok(html.includes('<button type="button" id="allMsgs" class="allmsgs" hidden>כל ההודעות</button>'));
-  assert.ok(html.includes(" var all=document.getElementById('allMsgs');\n if(all)all.hidden=!all.hidden;"));
-  assert.ok(html.includes("if(allBtn)allBtn.onclick=function(){pane('m');renderThread();};"));
-  // And it goes away again the moment the button has real unread messages to
-  // open, so there are never two ways in competing on the same screen.
-  assert.ok(html.includes(" if(all&&c)all.hidden=true;"));
+  // One button for messages, asked for on 13.9. The archive button that used
+  // to appear underneath it is gone, and so is the chat tile: a button that
+  // reveals a button is not one way in, it is two.
+  assert.ok(!html.includes('id="allMsgs"'));
+  assert.ok(!html.includes('id="gChat"'));
+  assert.ok(!html.includes("mark('gChat'"));
+  // Nothing unread is not a reason to do nothing: the button opens the chat
+  // either way, because it is the same chat either way.
+  assert.ok(html.includes(" pane('m');renderThread();\n};"));
   // The way out says what it does, and a keyboard has one too.
   assert.ok(html.includes("b.textContent='סגירה וחזרה לבית';"));
   assert.ok(html.includes("if(e.key!=='Escape')return;"));

@@ -1745,12 +1745,11 @@ try{
   <span class="nb-c" id="nbCount">0</span>
  </button>
  <!--
-   The archive, separated from "all read". Pressing the button above when there
-   is nothing unread used to open the whole history, which is how the screen
-   filled up with something he had not asked for. Now it reveals this, and this
-   is the thing that opens it.
+   The archive button that used to sit here is gone. Itzik asked on 13.9 for
+   one button for messages and nothing beside it: the button above is the chat,
+   whether there is something unread or not. A second control that revealed a
+   third control was the opposite of that.
  -->
- <button type="button" id="allMsgs" class="allmsgs" hidden>כל ההודעות</button>
 </div>
  <!--
    One card, four ways in, and nothing floating over it.
@@ -1862,7 +1861,6 @@ try{
 
  <div id="askBox"></div>
  <div class="grid" id="blkTiles">
-  <button type="button" class="gt g1" id="gChat"><b>💬 פנייה אליי</b><small>צ׳אט, קול, קובץ</small></button>
   <button type="button" class="gt g2" id="gMail"><b>📧 מייל</b><small>בקשה, ואני מחזיר תשובה</small></button>
   <button type="button" class="gt g3" id="gQueue"><b>📊 ניטור רשתות</b><small>מי פנה, מה נענה</small></button>
   <button type="button" class="gt g4" id="gReports"><b>📄 דוחות</b><small>סיכומי הסבבים</small></button>
@@ -3125,7 +3123,6 @@ function paintNew(){
  // instead of sitting fourteen tiles down where he has to hunt for it. Once he
  // has opened it, it goes back to wherever he put it.
  floatTile('gSpecial',spNew);
- mark('gChat',msgs>0,String(msgs));
  mark('gReports',reps>0,String(reps));
  mark('gPill',pillNow,'עכשיו');
  var nM=document.getElementById('nM');if(nM)nM.classList.toggle('hasnew',msgs>0);
@@ -3187,8 +3184,6 @@ function renderNew(){
  document.getElementById('nbSub').textContent=c
   ?'לחיצה פותחת אותן, אחת אחת.'
   :'אין תשובות שמחכות לך. לחיצה מראה את כל ההודעות.';
- var all=document.getElementById('allMsgs');
- if(all&&c)all.hidden=true;
  var K=D.openCmds||[];
  document.getElementById('wnCmds').innerHTML='<span class="n '+(K.length?'':'zero')+'">'+K.length+'</span><div>'+(K.length?'משימות פתוחות ממך':'אין משימות פתוחות')+(K.length?'<small>'+esc(K[0].text).slice(0,90)+'</small>':'')+'</div>';
  var N=D.now;
@@ -4240,11 +4235,10 @@ document.getElementById('newBtn').onclick=function(){
   pane('m');renderThread();
   return;
  }
- var all=document.getElementById('allMsgs');
- if(all)all.hidden=!all.hidden;
+ // Nothing unread is not a reason to do nothing. It is the same chat either
+ // way, so the button opens it either way.
+ pane('m');renderThread();
 };
-var allBtn=document.getElementById('allMsgs');
-if(allBtn)allBtn.onclick=function(){pane('m');renderThread();};
 function renderUnread(){
  var host=document.getElementById('unreadBox');
  if(!host)return;
@@ -5453,7 +5447,11 @@ document.getElementById('bareBtn').onclick=function(){
  window.scrollTo(0,0);
 };
 bareApply(bareGet());
-document.getElementById('gChat').onclick=function(){pane('m');markChatSeen();};
+// The chat tile is gone with the archive button, for the same reason: one
+// button for messages. The tile's counter is gone with it; the count lives on
+// that one button.
+var gChatEl=document.getElementById('gChat');
+if(gChatEl)gChatEl.onclick=function(){pane('m');markChatSeen();};
 /*
   Writing and the camera, from the card at the top instead of from a tile most
   of the way down the screen. Both land in the same place everything else does,
@@ -6042,7 +6040,11 @@ document.getElementById('mailForm').addEventListener('submit',function(e){
   The order below wins over anything he has dragged, and only for these four.
   The rest of the screen is still his to arrange.
 */
-var HOME_HEAD=['talkCard','bareBtn','blkIcons','blkTiles'];
+var HOME_HEAD=['newBlock','talkCard','bareBtn','blkIcons','blkTiles'];
+// "איך אני משתפר" is the one block he wants out of the way rather than gone.
+// It is a log of my own mistakes and fixes: worth keeping, never worth the top
+// of his screen.
+var HOME_TAIL=['growBtn'];
 function pinHome(home){
  if(!home)return;
  var at=null;
@@ -6052,6 +6054,10 @@ function pinHome(home){
   if(at)home.insertBefore(el,at.nextSibling);
   else home.insertBefore(el,home.firstChild);
   at=el;
+ });
+ HOME_TAIL.forEach(function(id){
+  var el=document.getElementById(id);
+  if(el&&el.parentNode===home)home.appendChild(el);
  });
  // The phone alerts and the personal code used to be pinned to the bottom of
  // this screen. They live on the settings screen now, so there is nothing left
