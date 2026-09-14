@@ -137,7 +137,12 @@ async function beat() {
   // Two writes that cost nothing and always happen: the local file, and the
   // one next to the page when the state has changed shape.
   writeJson(LIVEFILE, body);
-  publishFallback(body);
+  // Every beat, not only when the state changes shape. The change-only rule
+  // meant that through a quiet night the published file stayed hours old, and
+  // a page that could not reach ntfy had nothing fresh to read from either
+  // source. Hourly beats make this about two dozen small commits a day, which
+  // is a fair price for a page that does not lie about being alive.
+  publishFallback(body, true);
   // And the fast pulse, which is the only part with a price on it. Its ration
   // is separate from the notifications, so running out here can never mean
   // Itzik stops being reachable.

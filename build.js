@@ -6242,7 +6242,15 @@ function paintLive(){
   origin, so it keeps working precisely when the other one cannot.
 */
 async function liveFromNtfy(){
- var r=await fetch('https://ntfy.sh/'+LIVE_TOPIC+'/json?poll=1&since=20m',{cache:'no-store'});
+ /*
+   The window has to be wider than the gap between pulses, and it was not.
+   The pulse slowed to hourly while this stayed at twenty minutes, so most of
+   the time the query came back empty and the page silently fell back to the
+   file, which only updates when the state changes shape. Between them the
+   newest thing Itzik could see was hours old and the pill called it dead.
+   Three hours: several pulses inside the window even if one or two are lost.
+ */
+ var r=await fetch('https://ntfy.sh/'+LIVE_TOPIC+'/json?poll=1&since=3h',{cache:'no-store'});
  var t=(await r.text()).trim();
  var rows=t?t.split(String.fromCharCode(10)):[];
  for(var i=rows.length-1;i>=0;i--){
