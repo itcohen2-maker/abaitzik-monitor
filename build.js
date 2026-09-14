@@ -6195,16 +6195,23 @@ function paintLive(){
  }
  var age=(Date.now()-Date.parse(liveLast.at))/1000;
  /*
-   The idle pulse is every fifteen minutes, not every minute: the first version
-   beat so often it exhausted ntfy's daily quota for that machine in two hours
-   and took the push notifications down with it, which read on his phone as the
-   monitor falling. Thirty five minutes of nothing is a stopped process.
+   This threshold has to stay behind the listener's idle interval, and twice
+   now it has not. The pulse moved from sixty seconds to fifteen minutes to an
+   hour as the quota was brought under control, and this number was left at
+   thirty five minutes. So for twenty five minutes out of every hour the pill
+   told Itzik the monitor was disconnected while the listener was up, had
+   caught everything and had a full allowance waiting. He read it at 05:23
+   from a hospital bed and asked why he was cut off. He was not. This line was
+   lying to him.
 
-   This is not the number that matters to him, though. Every catch beats
-   immediately, so the answer to "did what I just sent get through" still
-   arrives within seconds, by name and with its time.
+   Eighty minutes: comfortably past an hourly pulse, still short enough that a
+   genuinely dead listener shows up well inside a morning. If BEAT_MS in
+   listen.js moves again, this moves with it.
+
+   None of this governs the thing he actually watches. Every catch pulses at
+   once, so "did what I just sent get through" is still answered in seconds.
  */
- if(age>2100){
+ if(age>4800){
   pill.className='livepill down';
   txt.textContent='נפל ב'+liveTime(liveLast.at);
   return;
