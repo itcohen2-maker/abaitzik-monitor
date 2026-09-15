@@ -3218,8 +3218,23 @@ function renderNew(){
   :'אין תשובות שמחכות לך. לחיצה מראה את כל ההודעות.';
  var K=D.openCmds||[];
  document.getElementById('wnCmds').innerHTML='<span class="n '+(K.length?'':'zero')+'">'+K.length+'</span><div>'+(K.length?'משימות פתוחות ממך':'אין משימות פתוחות')+(K.length?'<small>'+esc(K[0].text).slice(0,90)+'</small>':'')+'</div>';
+ renderActivity();
+}
+// A saved report is not a live worker signal. Age the report independently
+// of page builds and listener heartbeats, including while the tab stays open.
+function renderActivity(){
+ var el=document.getElementById('wnNow');
+ if(!el)return;
  var N=D.now;
- document.getElementById('wnNow').innerHTML='<span class="n">·</span><div>'+(N?esc(N.text):'שקט כרגע')+(N&&N.next?'<small>הבא בתור: '+esc(N.next)+'</small>':'')+(N?'<small>'+esc(stamp(N.at))+'</small>':'')+'</div>';
+ var at=N&&Date.parse(N.at);
+ var valid=Number.isFinite(at)&&at<=Date.now();
+ var recent=valid&&Date.now()-at<25*60*1000;
+ var title=!N?'אין דיווח על העבודה':recent?'דיווח אחרון על העבודה':'אין דיווח עדכני על העבודה';
+ el.innerHTML='<span class="n zero">·</span><div><b>'+title+'</b>'
+  +(N&&N.text?'<small>בדיווח האחרון: '+esc(N.text)+'</small>':'')
+  +(N&&N.next?'<small>המשך שתוכנן אז: '+esc(N.next)+'</small>':'')
+  +(valid?'<small>'+esc(stamp(N.at))+' · '+esc(since(N.at))+'</small>':N?'<small>מועד הדיווח אינו ידוע</small>':'')
+  +'<small>הדיווח אינו מאשר שמתבצעת עבודה עכשיו.</small></div>';
 }
 function updateDot(){
  renderNew();
@@ -3419,6 +3434,7 @@ function paintStamp(){
 }
 // Every half minute, so "updated 4 minutes ago" does not sit on 4 all evening.
 setInterval(paintStamp,30000);
+setInterval(renderActivity,30000);
 
 function checkFresh(){
  if(!window.fetch)return;
@@ -6386,6 +6402,5 @@ try{window.__monAlive();}catch(e){}
 
 module.exports = { renderPage, build };
 if (require.main === module) build();
-
 
 
