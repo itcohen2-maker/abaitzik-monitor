@@ -414,6 +414,32 @@ test('the skin can be left to the phone or forced white or black', () => {
   assert.ok(html.indexOf("localStorage.getItem('skin')") < html.indexOf('<body>'));
 });
 
+// Itzik, 16.9, by voice: in every answer I give him he has no way to reply, and
+// the icon at the foot of the screen does not reply to anything either. Every
+// answer of mine now carries a reply button that aims the microphone at it.
+test('every answer of mine can be replied to, and the dock says what it answers', () => {
+  const html = renderPage(fixture({}));
+  // The strip above the microphone, and the way off it.
+  assert.ok(html.includes('id="aimBar"'));
+  assert.ok(html.includes('id="aimTxt"'));
+  assert.ok(html.includes('id="aimX"'));
+  assert.ok(html.includes('.aimbar{position:fixed;inset-inline-start:12px'));
+  // A reply button on my bubbles in the thread, and on the answers screen.
+  assert.ok(html.includes('class="aimb bubaim" data-k='));
+  assert.ok(html.includes('<button type="button" class="ab aimb" data-k='));
+  // His own bubbles get none: he does not reply to himself.
+  assert.ok(html.includes("+(mine?'':'<button type=\"button\" class=\"aimb bubaim\""));
+  // Codex answers are not mine to be aimed at.
+  assert.ok(html.includes("(m.src==='codex'?'':'<button type=\"button\" class=\"ab aimb\""));
+  // Aiming fills the caption the recorder sends with, so a voice note arrives
+  // attached to the answer instead of as a sentence with no question.
+  assert.ok(html.includes('function aimQuote(m){'));
+  assert.ok(html.includes("if(f)f.value=aimQuote(aim);"));
+  // And it is released after a send, so the next recording is a fresh subject.
+  assert.ok(html.includes('  clearAim();'));
+  // Both screens wire the buttons and repaint the aim after a redraw.
+  assert.strictEqual(html.split('wireAim(host);paintAim();').length - 1, 2);
+});
 test('one card holds all four ways in, and nothing floats over the page', () => {
   const html = renderPage(fixture({}));
   assert.ok(html.includes('<section class="talk" id="talkCard"'));
@@ -438,8 +464,10 @@ test('one card holds all four ways in, and nothing floats over the page', () => 
   assert.ok(html.includes('.micdock{position:fixed;inset-inline-start:12px'));
   assert.ok(html.includes('bottom:calc(70px + env(safe-area-inset-bottom))'));
   assert.ok(html.includes('width:48px;height:48px'), 'the dock must stay small');
-  // The same recorder, not a second one: same toggle, same state on both.
-  assert.ok(html.includes('if(micDock)micDock.onclick=toggleRec;'));
+  // The same recorder, not a second one: same toggle, same state on both. The
+  // dock aims itself at the last answer first, then toggles that same recorder.
+  assert.ok(html.includes('if(micDock)micDock.onclick=function(){'));
+  assert.ok(html.includes('  if(l)setAim(l);'));
   assert.ok(html.includes("var ids=['micBtn','micDock','recBtn','recBig'];"));
   // It lives outside the screen container, so no screen can take it away.
   assert.ok(html.indexOf('id="micDock"') > html.indexOf('<nav class="bn"') - 900);

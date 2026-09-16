@@ -1617,6 +1617,26 @@ body.editing .bn{display:none}
 .micdock:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .locked .micdock{display:none}
 /*
+  Itzik, 16.9, by voice: in every answer I give him he has no way to reply, and
+  the icon at the foot of the screen does not reply to anything either. It
+  recorded a new subject every time. Now an answer can be aimed at: this strip
+  sits above the microphone and says what the next recording is answering.
+*/
+.aimbar{position:fixed;inset-inline-start:12px;z-index:30;
+ bottom:calc(132px + env(safe-area-inset-bottom));
+ max-width:min(74vw,320px);display:flex;align-items:center;gap:8px;
+ background:var(--surface);border:1px solid var(--accent);border-radius:14px;
+ padding:8px 10px;box-shadow:0 6px 18px rgba(0,0,0,.35);font-size:13px;color:var(--ink)}
+.aimbar b{font-weight:600;color:var(--accent)}
+.aimbar span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.aimbar button{background:none;border:0;color:var(--dim);font-size:19px;
+ line-height:1;padding:0 2px;cursor:pointer}
+.locked .aimbar{display:none}
+.aimb{background:var(--accent);color:#fff;border:0}
+.bubaim{margin-inline-start:8px;font:600 11px Heebo,sans-serif;border-radius:999px;
+ padding:3px 11px;cursor:pointer;vertical-align:middle}
+.aimb.on{background:var(--green)}
+/*
   Round buttons along the bottom, because he asked for ours rather than for a
   row of outlines. Each icon sits in its own lit disc, the selected one takes
   the accent, and the label stays underneath so nothing is a guess.
@@ -2545,6 +2565,7 @@ try{
   It is the same recorder as the card on the home screen, not a second one:
   the same toggle, the same guard, the same state painted on both.
 -->
+<div class="aimbar" id="aimBar" hidden><span id="aimTxt"></span><button type="button" id="aimX" aria-label="לבטל את המענה">×</button></div>
 <button type="button" id="micDock" class="micdock" aria-label="דבר אליי">
  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
   <rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" stroke="none"/>
@@ -2892,6 +2913,7 @@ function bubbleHtml(m,i,fresh,handled){
   +(fresh?' · <em class="badge">חדש</em>':(mine?'':' · נקרא'))
   +'<button type="button" class="cp" data-i="'+i+'" aria-label="העתקה">העתקה</button>'
   +'<button type="button" class="hidemsg" data-k="'+esc(msgKey(m))+'" aria-label="להסתיר">×</button>'
+  +(mine?'':'<button type="button" class="aimb bubaim" data-k="'+esc(claudeKey(m))+'">להשיב</button>')
   +'</span>'+linkify(m.text)+ackLine(m)+'</div>';
 }
 // Copy, paste and send on every reply form, whatever screen it is on.
@@ -2977,6 +2999,7 @@ function renderThread(){
  }).join('');
  wireReplies(host,flat);
  wirePaste(host);
+ wireAim(host);paintAim();
  if(picking)host.classList.add('picking');
  // Touching a card, or any bubble in it, turns every unread answer in it green.
  Array.prototype.forEach.call(host.querySelectorAll('.th'),function(card){
@@ -3103,6 +3126,79 @@ function quoteOf(m){
  var t=String(m.text||'').replace(/\s+/g,' ').trim().slice(0,60);
  return 'תשובה ל' + (m.from==='itzik'?'הודעה שלי':'הודעה שלך') + ' מ' + stamp(m.at)
   + ': "' + t + '"';
+}
+/*
+  The answer the next recording is aimed at.
+
+  Itzik, 16.9, by voice: "in every answer you give me I have no way to reply,
+  with the icon at the bottom of the screen I have no way to reply to you." The
+  microphone at the foot of the screen always opened a new subject, so a spoken
+  answer arrived here as a sentence with no question attached. Now every answer
+  of mine carries a reply button that aims the microphone at it, the strip above
+  the microphone says out loud what is aimed, and the x takes the aim off and
+  gives him back a fresh subject.
+
+  With nothing aimed by hand the microphone aims itself at the newest answer I
+  wrote, because that is the one he is standing in front of when he presses it.
+*/
+var aim=null;
+function aimQuote(m){
+ var t=String(m&&m.text||'').replace(/\s+/g,' ').trim().slice(0,60);
+ return 'תשובה למה שכתבת לי ב' + stamp(m&&m.at) + ': "' + t + '"';
+}
+function lastAnswer(){
+ var c=(D.chat||[]).filter(function(m){return m.from==='claude'&&!isMail(m);})
+  .sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
+ return c[0]||null;
+}
+function setAim(m){
+ aim=m||null;
+ paintAim();
+ if(aim){
+  var f=document.getElementById('fCap');
+  if(f)f.value=aimQuote(aim);
+  try{setStandby(rootKeyFor(aim));}catch(e){}
+ }
+}
+function clearAim(){
+ aim=null;
+ var f=document.getElementById('fCap');
+ if(f)f.value='';
+ paintAim();
+}
+function paintAim(){
+ var bar=document.getElementById('aimBar');
+ if(!bar)return;
+ bar.hidden=!aim;
+ if(aim){
+  var t=document.getElementById('aimTxt');
+  var head=String(aim.text||'').replace(/\s+/g,' ').trim().slice(0,40);
+  if(t)t.innerHTML='<b>משיב ל</b> '+esc(stamp(aim.at))+' · '+esc(head);
+ }
+ // Every reply button on the page wears the current aim, so a redraw does not
+ // lose the mark and two answers can never both look aimed at.
+ var k=aim?claudeKey(aim):'';
+ Array.prototype.forEach.call(document.querySelectorAll('.aimb'),function(b){
+  var on=k&&b.getAttribute('data-k')===k;
+  b.classList.toggle('on',!!on);
+  b.textContent=on?'✓ מכוון למטה':'להשיב';
+ });
+}
+// Every reply button on the page, wherever an answer of mine is drawn.
+function wireAim(root){
+ Array.prototype.forEach.call((root||document).querySelectorAll('.aimb'),function(b){
+  if(b.getAttribute('data-wired'))return;
+  b.setAttribute('data-wired','1');
+  b.onclick=function(e){
+   e.stopPropagation();e.preventDefault();
+   var k=b.getAttribute('data-k');
+   var cur=aim&&claudeKey(aim)===k;
+   if(cur){clearAim();return;}
+   var m=(D.chat||[]).filter(function(x){return claudeKey(x)===k;})[0];
+   if(!m)return;
+   setAim(m);
+  };
+ });
 }
 // Marks which bubble is being answered, so a recording started here is not
 // mistaken later for a new subject.
@@ -4409,6 +4505,7 @@ function renderAnswers(){
    +(fresh?' · <em class="badge">חדש</em>':(done?' · טופל':' · נקרא'))+'</span>'
    +'<div class="atxt">'+linkify(m.text)+'</div>'
    +'<div class="arow">'
+   +(m.src==='codex'?'':'<button type="button" class="ab aimb" data-k="'+esc(claudeKey(m))+'">להשיב</button>')
    +'<button type="button" class="ab acopy" data-i="'+i+'">העתקה</button>'
    +'<button type="button" class="ab astar'+(st?' on':'')+'" data-i="'+i+'">'
    +(st?'★ מסומן':'☆ סימון')+'</button>'
@@ -4446,6 +4543,7 @@ function renderAnswers(){
   host.appendChild(more);
  }
  wireBoxes(host);
+ wireAim(host);paintAim();
 }
 // ---- what was received: his messages by state, and what is in work ----
 function gotList(){
@@ -6072,6 +6170,7 @@ function reallySend(list){
  // backup channel take over without him noticing.
  sendFiles(list,cap||deflt).then(function(how){
   document.getElementById('fCap').value='';
+  clearAim();
   paintMics('ok');
   sendSay(how==='ntfy'?'נשלח בערוץ הגיבוי. הגיע אליי.':'נשלח. קלטתי.');
   var q=pending();
@@ -6358,7 +6457,19 @@ var micSaid=document.getElementById('micSaid');
 micBtn.onclick=toggleRec;
 // The same recorder, from wherever he is standing.
 var micDock=document.getElementById('micDock');
-if(micDock)micDock.onclick=toggleRec;
+// Nothing aimed by hand means the microphone answers the last thing I wrote,
+// which is what he was pressing it for. The strip above it says so before a
+// word is recorded, and the x on the strip takes it back to a new subject.
+if(micDock)micDock.onclick=function(){
+ if(!(rec&&rec.state==='recording')&&!aim){
+  var l=lastAnswer();
+  if(l)setAim(l);
+ }
+ toggleRec();
+};
+var aimX=document.getElementById('aimX');
+if(aimX)aimX.onclick=function(e){e.stopPropagation();clearAim();};
+paintAim();
 
 // recSaid lives in the chat pane; mirror it onto the home screen so the timer
 // and any error are visible wherever the recording was started from.
