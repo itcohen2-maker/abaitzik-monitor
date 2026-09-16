@@ -340,7 +340,29 @@ function build() {
   }
   payload.lazy = lazy;
 
-  const html = slim(renderPage(payload));
+  /*
+    The same payload, as a file.
+
+    A new answer used to mean reloading the whole page: he lost his place, a
+    half written message and a second of staring. The page can swallow a new
+    payload instead, so this is the identical object it was built with, and a
+    refresh is one small fetch and a repaint.
+  */
+  const DATA_DIR2 = path.join(OUT_DIR, 'data');
+  fs.mkdirSync(DATA_DIR2, { recursive: true });
+  fs.writeFileSync(path.join(DATA_DIR2, 'head.json'), JSON.stringify(payload), 'utf8');
+
+  const html0 = slim(renderPage(payload));
+  // The code, with everything that moves on every build taken out: the payload
+  // itself, and the build stamp the top of the page carries as a literal. The
+  // first try hashed the stamp too, so the id changed on a data only build and
+  // every new answer still cost a full reload, which is the thing this is for.
+  const codeOnly = html0
+    .split(JSON.stringify(payload).replace(/</g, '\\u003c')).join('')
+    .split(payload.builtAt).join('')
+    .split(payload.buildId).join('');
+  const codeId0 = require('crypto').createHash('sha1').update(codeOnly).digest('hex').slice(0, 10);
+  const html = html0.replace('__CODE_ID__', codeId0);
 
   fs.mkdirSync(OUT_DIR, { recursive: true });
   fs.writeFileSync(path.join(OUT_DIR, 'index.html'), html, 'utf8');
@@ -348,10 +370,20 @@ function build() {
   // The live strip reads this every forty seconds. It carries what I am doing
   // right now and how many answers are waiting, so the screen can say it
   // without downloading the whole page again.
+  /*
+    Data moved or code moved: not the same event.
+
+    Swallowing a payload is safe while the page's own code is the code that
+    was built with it. When build.js itself changes, the running page is the
+    wrong program for the new data and has to be replaced. codeId is the page
+    with its data taken out, so it moves only when the code does.
+  */
+  const codeId = codeId0;
   fs.writeFileSync(path.join(OUT_DIR, 'version.json'),
     JSON.stringify({
       builtAt: payload.builtAt,
       buildId: payload.buildId,
+      codeId,
       now: payload.now || null,
       answers: chat.filter(m => m.from === 'claude').length,
     }), 'utf8');
@@ -2534,6 +2566,7 @@ var D = __DATA__, NET = __NET__, CAT = __CAT__, tab = 'pending';
   again when the file lands. A failed fetch leaves the head in place rather
   than emptying the screen, because a short list is a smaller lie than none.
 */
+var CODE_ID='__CODE_ID__';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -3601,6 +3634,100 @@ function paintStamp(){
 setInterval(paintStamp,30000);
 setInterval(renderActivity,30000);
 
+/*
+  A new answer without a new page.
+
+  The head file is the payload this page would have been built with, so
+  swallowing it replaces every counter and every head slice in place. Whatever
+  he had already pulled down is pulled again, because a chat screen that is
+  open when the answer lands has to show it. Then the screen he is standing on
+  is drawn again, and nothing else moves: not the scroll, not the draft, not
+  the fold he opened.
+*/
+var softBusy=false;
+function softRefresh(v){
+ if(softBusy||!window.fetch)return;
+ softBusy=true;
+ var again=Object.keys(lazyDone).filter(function(k){return lazyDone[k];});
+ var urls=['data/head.json?b='+encodeURIComponent(v.buildId||'')]
+  .concat(again.map(function(k){return 'data/'+k+'.json?b='+encodeURIComponent(v.buildId||'');}));
+ Promise.all(urls.map(function(u){
+  return fetch(u,{cache:'no-store'}).then(function(r){return r.ok?r.json():null;},function(){return null;});
+ })).then(function(res){
+  var head=res[0];
+  if(!head){softBusy=false;return;}
+  Object.keys(head).forEach(function(k){D[k]=head[k];});
+  LAZY=D.lazy||{};
+  again.forEach(function(k,i){
+   var v2=res[i+1];
+   if(Array.isArray(v2))D[k]=v2;else lazyDone[k]=false;
+  });
+  softBusy=false;
+  repaintAll();
+ },function(){softBusy=false;});
+}
+/*
+  What he was in the middle of, carried across the repaint.
+
+  Redrawing a screen throws away the boxes he was typing in and shuts the
+  thread he had opened. He lost a draft to a refresh once already and said so,
+  and a soft update that eats a half written answer is worse than the reload
+  it replaced. Every box with something in it and every open fold is written
+  down first and put back after, along with the cursor.
+*/
+function fieldKey(el){
+ var f=el.closest?el.closest('form,details,section'):null;
+ var owner=f?(f.getAttribute('data-k')||f.getAttribute('data-i')||f.id||''):'';
+ var peers=f?f.querySelectorAll('textarea,input'):[el];
+ var n=Array.prototype.indexOf.call(peers,el);
+ return [owner,el.id||'',el.className||'',n].join('|');
+}
+function foldKey(d){
+ var s1=d.querySelector('summary');
+ return d.getAttribute('data-k')||d.id||(s1?s1.textContent.slice(0,40):'');
+}
+function keepState(){
+ var ae=document.activeElement,st={drafts:{},open:{},focus:null,sel:null};
+ Array.prototype.forEach.call(document.querySelectorAll('textarea,input'),function(el){
+  if(el.type==='file'||el.type==='checkbox'||el.type==='radio')return;
+  var k=fieldKey(el);
+  if(el.value)st.drafts[k]=el.value;
+  if(el===ae){
+   st.focus=k;
+   try{st.sel=[el.selectionStart,el.selectionEnd];}catch(e){}
+  }
+ });
+ Array.prototype.forEach.call(document.querySelectorAll('details'),function(d){
+  if(d.open)st.open[foldKey(d)]=1;
+ });
+ return st;
+}
+function putState(st){
+ if(!st)return;
+ Array.prototype.forEach.call(document.querySelectorAll('details'),function(d){
+  if(st.open[foldKey(d)])d.open=true;
+ });
+ Array.prototype.forEach.call(document.querySelectorAll('textarea,input'),function(el){
+  if(el.type==='file'||el.type==='checkbox'||el.type==='radio')return;
+  var k=fieldKey(el);
+  if(st.drafts[k]&&!el.value)el.value=st.drafts[k];
+  if(st.focus===k){
+   try{el.focus();if(st.sel)el.setSelectionRange(st.sel[0],st.sel[1]);}catch(e){}
+  }
+ });
+}
+// Every screen that can be standing open when a new payload lands. Each one
+// redraws from D, so calling them all is cheaper than remembering which.
+function repaintAll(){
+ var st=keepState(),y=window.scrollY;
+ [paintDot,renderNew,renderThread,renderAnswers,renderGot,renderNet,render,
+  renderPegasus,renderImprove,renderSpecial,renderReplies,renderRivhit,
+  renderFood,renderReqs,paintStamp].forEach(function(fn){
+  try{if(typeof fn==='function')fn();}catch(e){}
+ });
+ try{putState(st);}catch(e){}
+ if(Math.abs(window.scrollY-y)>2)window.scrollTo(0,y);
+}
 function checkFresh(){
  if(!window.fetch)return;
  fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){
@@ -3611,9 +3738,17 @@ function checkFresh(){
   paintStamp();
   if(v)paintLive(v);
   if(!v||!v.builtAt||v.builtAt===D.builtAt)return;
+  var what=document.getElementById('liveWhat');
+  // Only the data moved: take it in where he stands. He asked for an answer
+  // that arrives without the screen jumping under his hands, and a reload is
+  // exactly that jump, plus the draft in the box.
+  if(v.codeId&&CODE_ID&&v.codeId===CODE_ID){
+   if(what&&liveSeen!==v.builtAt){liveSeen=v.builtAt;what.textContent='תשובה חדשה נכנסת.';}
+   softRefresh(v);
+   return;
+  }
   // A new build is up. Say so before reloading, so a reply that landed while
   // he was reading does not just make the screen jump under his hands.
-  var what=document.getElementById('liveWhat');
   if(what&&liveSeen!==v.builtAt){liveSeen=v.builtAt;what.textContent='יש תשובה חדשה. טוען.';}
   var seen='';
   try{seen=sessionStorage.getItem('reloadedFor')||'';}catch(e){}
