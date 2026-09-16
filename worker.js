@@ -91,26 +91,38 @@ function markHandled(list) {
 function prompt(list) {
   const lines = list.map((m) => '- [' + m.at + '] (id ' + (m.id || m.file) + ') ' + String(m.text || '').replace(/\s+/g, ' '));
   return [
+    'זו הרצה אוטומטית. אין אדם בצד השני של הפלט הזה ואף אחד לא יקרא אותו.',
+    'אל תבקש אישור ואל תציע לעשות משהו: תבצע. אל תסיים בלי לכתוב תשובה ולדחוף אותה.',
+    '',
     'איציק שלח את ההודעות האלה למוניטור והן עדיין בלי תשובה:',
     '',
     lines.join('\n'),
     '',
-    'תעשה בדיוק את מה שהוא ביקש, עד הסוף, ותאמת את התוצאה.',
-    'כללי הבית: קרא את הסקיל abaitzik-onboarding לפני שאתה נוגע במשהו.',
-    'הודעה קולית: תמלל אותה עם `node transcribe.js data/inbox/<שם>.webm` ופעל לפי מה שנאמר.',
-    'כשסיימת, בשביל כל הודעה:',
-    '  1. עדכן את הקובץ שלה ב-data/chat/chat ל-status "done".',
-    '  2. כתוב תשובה חדשה מ-claude עם השדה re שמצביע על ה-id שלה, קצרה ויבשה, בלי מקפים ובלי אימוג׳י.',
-    '  3. npm test, node build.js, commit ו-push.',
-    'אם משהו חסום או דורש החלטה שלו, תכתוב לו את זה בצ׳אט במקום לנחש.',
+    'תעשה בדיוק את מה שהוא ביקש, עד הסוף, ותאמת את התוצאה על הדף החי.',
+    'כללי הבית: הפעל את הסקיל abaitzik-onboarding לפני שאתה נוגע במשהו.',
+    'הודעה קולית: תמלל עם `node transcribe.js data/inbox/<שם>.webm` ופעל לפי מה שנאמר.',
+    '',
+    'בסוף, לכל הודעה, חובה:',
+    '  1. בקובץ שלה ב-data/chat/chat: status ל-"done", ו-note עם התמלול אם זו הקלטה.',
+    '  2. קובץ חדש ב-data/chat/chat בשם <YYYYMMDD>-<HHMM>-claude-<slug>.json ובו',
+    '     {"at":"<ISO עם +03:00>","from":"claude","re":"<id ההודעה שלו>","text":"<התשובה>"}.',
+    '     קצר ויבש, בלי מקפים, בלי אימוגי, בלי לפנות בשם.',
+    '  3. npm test, node build.js, git add -A, git commit, git push.',
+    '',
+    'אם משהו באמת חסום או דורש החלטה שלו, כתוב לו את זה באותה תשובה בצאט. גם אז',
+    'הכתיבה והדחיפה הן חובה: הודעה שלא נכתבה היא הודעה שהוא לא קיבל.',
   ].join('\n');
 }
 
 function run(list) {
   const text = prompt(list);
   say('מפעיל סשן על ' + list.length + ' הודעות');
-  const args = ['-p', text, '--dangerously-skip-permissions'];
-  const child = spawn('claude', args, { cwd: HERE, shell: true, windowsHide: true });
+  // The prompt goes in on stdin, not as an argument. It is long, it is Hebrew,
+  // and it quotes him; concatenating it into a Windows command line is a
+  // quoting bug waiting for the first message that contains a double quote.
+  const child = spawn('claude', ['-p', '--dangerously-skip-permissions'],
+    { cwd: HERE, shell: true, windowsHide: true });
+  child.stdin.end(text, 'utf8');
   let out = '';
   child.stdout.on('data', (b) => { out += b; });
   child.stderr.on('data', (b) => { out += b; });
