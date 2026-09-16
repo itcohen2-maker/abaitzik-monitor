@@ -994,3 +994,12 @@ test('the screenshot path survives the contacts payload', () => {
   assert.ok(src.includes("shot: c.shot || '',"));
   assert.ok(src.includes("shotNote: c.shotNote || '',"));
 });
+
+test('the ack line gets the arrival time and the transcript it reads', () => {
+  const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'build.js'), 'utf8');
+  // ackLine() reads m.ackAt and m.note; the chat mapper has to carry both.
+  assert.ok(src.includes("re: m.re || '', ackAt: m.ackAt || '', note: m.note || '' }))"));
+  const html = renderPage(fixture({ chat: [{ id: 'v1', at: '2026-09-16T20:43:41.745Z', from: 'itzik',
+    text: 'הודעה קולית: voice.webm', status: 'done', ackAt: '2026-09-16T20:43:41.745Z', note: 'תמלול: בדיקה' }] }));
+  assert.ok(html.includes('תמלול: בדיקה'));
+});

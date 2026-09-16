@@ -212,7 +212,11 @@ function build() {
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
 
   const chat = loadDocs('chat')
-    .map(m => ({ id: m.id, at: m.at, from: m.from, text: m.text, status: m.status || '', re: m.re || '' }))
+    // `ackAt` and `note` are what the ack line under each of his messages reads:
+    // when it landed, and for a recording, what it said. They were being
+    // dropped here, so the transcript he asks for never reached his screen.
+    .map(m => ({ id: m.id, at: m.at, from: m.from, text: m.text, status: m.status || '',
+                 re: m.re || '', ackAt: m.ackAt || '', note: m.note || '' }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? -1 : 1));
 
   const openCmds = loadDocs('commands')
