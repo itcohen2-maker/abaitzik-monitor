@@ -68,11 +68,12 @@ test('home order: one message button on top, the tools next, my log last', () =>
   // foot; the rest of the screen stays his to arrange.
   assert.ok(html.includes("var HOME_HEAD=['newBlock','talkCard','bareBtn','blkIcons','blkTiles'];"));
   assert.ok(html.includes('HOME_HEAD.forEach'));
-  // And the one block he wanted out of the way is pinned to the bottom.
-  assert.ok(html.includes("var HOME_TAIL=['growBtn'];"));
+  // Nothing is pinned to the foot any more: the block that was, "איך אני
+  // משתפר", came off the home screen on 16.9 at his word.
+  assert.ok(html.includes('var HOME_TAIL=[];'));
   assert.ok(html.includes('HOME_TAIL.forEach'));
   assert.ok(!html.includes("var top=document.getElementById('newBlock');"));
-  const order = ['id="talkCard"', 'id="micBtn"', 'id="bareBtn"', 'id="reqBox"',
+  const order = ['id="talkCard"', 'id="micBtn"', 'id="bareBtn"',
     'class="whatsnew"', 'id="askBox"', 'id="blkTiles"', 'id="blkIcons"'];
   const idx = order.map(at);
   for (let i = 1; i < idx.length; i++) assert.ok(idx[i - 1] < idx[i], order[i] + ' must come after ' + order[i - 1]);
@@ -258,11 +259,11 @@ test('a pegasus screen with a tile, and a live working state on the sent card', 
   assert.ok(html.includes("sub='קיבלתי: '+what"));
 });
 
-test('the improve screen sits behind a big button under the microphone', () => {
+test('the improve screen is reachable, and not on the home screen', () => {
   const html = renderPage(fixture({
     improve: [{ at: '2026-09-11T10:35:00', what: 'a', why: 'b', effect: 'c' }],
   }));
-  assert.ok(html.includes('id="growBtn"'));
+  assert.ok(!html.includes('id="growBtn"'));
   assert.ok(html.includes('<section id="pW" hidden>'));
   assert.ok(html.includes('function renderImprove('));
   assert.ok(html.includes("w:'pW'"));
@@ -414,7 +415,12 @@ test('one card holds all four ways in, and nothing floats over the page', () => 
   assert.ok(html.includes('<section class="talk" id="talkCard"'));
   // Speak, write, upload, photograph. All four on the same card.
   assert.ok(html.includes('id="micBtn"'));
-  assert.ok(html.includes('id="wWrite"'));
+  // Writing stopped being a button on 16.9. "כתוב לי" opened a screen that had
+  // a line in it; now the line is here, on the card, and sends from here.
+  assert.ok(!html.includes('id="wWrite"'));
+  assert.ok(html.includes('id="quickText"'));
+  assert.ok(html.includes('id="quickForm"'));
+  assert.ok(html.includes('placeholder="כתוב לי כאן, ואני עונה"'));
   assert.ok(html.includes('id="urgBtn"'));
   assert.ok(html.includes('id="wShoot"'));
   assert.ok(html.includes('<b>העלאת קובץ</b><small>גם תמונה</small>'));
@@ -436,8 +442,10 @@ test('one card holds all four ways in, and nothing floats over the page', () => 
   assert.ok(html.indexOf('id="micDock"') < html.indexOf('<nav class="bn"'));
   // Writing opens the composer and puts the cursor in it; the camera is not
   // asked for until the button is pressed.
-  assert.ok(html.includes("document.getElementById('wWrite').onclick"));
-  assert.ok(html.includes('box.focus();box.scrollIntoView'));
+  assert.ok(html.includes('id="quickBtn"'));
+  // And it sends from there: the same path the chat screen uses.
+  assert.ok(html.includes("on2('quickForm','submit',function(e){"));
+  assert.ok(html.includes("sendText('הודעה מהמוניטור',text,'הודעה')"));
   assert.ok(html.includes("document.getElementById('wShoot').onclick"));
 });
 
@@ -575,7 +583,7 @@ test('the home screen is the microphone and nothing else', () => {
   assert.ok(html.includes("localStorage.setItem('bareHome',next?'1':'0');"));
   assert.ok(html.includes('bareApply(bareGet());'));
   // The card it keeps is the one with all four ways in.
-  ['id="micBtn"', 'id="wWrite"', 'id="urgBtn"', 'id="wShoot"'].forEach((bit) => {
+  ['id="micBtn"', 'id="quickText"', 'id="urgBtn"', 'id="wShoot"'].forEach((bit) => {
     const card = html.slice(html.indexOf('id="talkCard"'), html.indexOf('</section>', html.indexOf('id="talkCard"')));
     assert.ok(card.includes(bit), `${bit} is not on the card the bare home keeps`);
   });
@@ -635,8 +643,7 @@ test('what got better lives behind one button, not twice on the home screen', ()
   assert.ok(!html.includes('id="growHome"'));
   assert.ok(!html.includes('id="growSum"'));
   assert.ok(!html.includes("localStorage.setItem('growOpen'"));
-  assert.ok(html.includes('id="growBtn"'));
-  assert.ok(html.includes("on('growBtn',function(){pane('w');renderImprove();ensure('improve',renderImprove);});"));
+  assert.ok(!html.includes('id="growBtn"'));
   // The problem, the change, what it changes for him, and the verification.
   assert.ok(html.includes('<b>מה לא עבד</b>'));
   assert.ok(html.includes('<b>מה שיניתי</b>'));
@@ -730,7 +737,6 @@ test('arranging shrinks the board to one screen and every card gets a minus', ()
 
 test('every send is written down and carries its own status', () => {
   const html = renderPage(fixture({}));
-  assert.ok(html.includes('id="reqBox"'));
   assert.ok(html.includes('function markSent(kind,text,id){'));
   assert.ok(html.includes('function reqStatus(r){'));
   assert.ok(html.includes('function renderReqs(){'));
@@ -757,9 +763,10 @@ test('every send is written down and carries its own status', () => {
 
 test('the last two requests are cards he can read, and never invented', () => {
   const html = renderPage(fixture({}));
-  // Folded shut: open, these paragraphs were taller than the phone.
-  assert.ok(html.includes('<details class="reqs fold" id="reqBox" hidden>'));
-  assert.ok(html.includes('<summary id="reqSum">שתי הבקשות האחרונות</summary>'));
+  // The fold came off the home screen on 16.9: the same two requests sit in
+  // "מה התקבל" with their state beside them. The code that builds the cards
+  // stays, and stays honest, because that screen is still reachable.
+  assert.ok(!html.includes('id="reqBox"'));
   assert.ok(html.includes("foldCard(box,'reqSum','שתי הבקשות האחרונות · '+a.length,'reqOpen');"));
   assert.ok(html.includes('body.innerHTML=a.slice(0,2)'));
   // The Codex fold left the home screen on 16.9 at Itzik's request.
@@ -783,10 +790,10 @@ test('the newest request sits near the top, not under fourteen tiles', () => {
   const html = renderPage(fixture({
     special: [{ at: '2026-09-12T13:20:00', title: 'א', url: 'pyramid.html', note: 'n' }],
   }));
-  // The pinned card is gone; the fold out that lists the last two requests is
-  // what carries this now, and it still has to come before the tile grid.
-  assert.ok(html.indexOf('id="reqBox"') < html.indexOf('id="blkTiles"'));
-  assert.ok(html.indexOf('id="reqBox"') > html.indexOf('<section id="pH">'));
+  // Both the pinned card and the fold are gone. What is left near the top is
+  // the line he types into, and it has to come before the tile grid.
+  assert.ok(html.indexOf('id="quickText"') < html.indexOf('id="blkTiles"'));
+  assert.ok(html.indexOf('id="quickText"') > html.indexOf('<section id="pH">'));
 });
 
 test('the codex thread never says delivered while the mailbox only stores', () => {
@@ -865,4 +872,31 @@ test('the big collections travel in their own files, not in the page', () => {
   assert.ok(html.includes("if(floor&&(m.at||'')<=floor)return false;"));
   // And the chat is not pulled at boot, only when its screen is up.
   assert.ok(html.includes("if(pM&&!pM.hidden&&LAZY.chat&&!lazyDone.chat)ensure('chat',renderThread);"));
+});
+
+test('sent is yellow, the answer is red, what he touched is green', () => {
+  const html = renderPage(fixture({}));
+  // Itzik, 16.9: three states and three colours, and the colour says whose
+  // turn it is. Waiting on me is yellow, waiting on him is red, done is green.
+  assert.ok(html.includes('.ack-wait{background:#f6e7c8;color:#8a5a12;border-inline-start-color:var(--gold)}'));
+  assert.ok(html.includes('.ack-working{background:#f6e7c8;color:#8a5a12;border-inline-start-color:var(--gold)}'));
+  assert.ok(html.includes('.ack-done{background:var(--fresh);color:#1d6b3f;border-inline-start-color:#1d6b3f}'));
+  assert.ok(html.includes('.bub.fresh{border:3px solid var(--red)'));
+  assert.ok(html.includes('.bub.touched{animation:none;border:2px solid var(--green)'));
+  // And the line says when it went out, not only that it is waiting.
+  assert.ok(html.includes("var sent=m.at?('נשלח ב'+esc(stamp(m.at))+'. '):'';"));
+  assert.ok(html.includes("'. ממתין לתשובה, '+esc(ago(m.at))+'.</div>'"));
+});
+
+test('one button clears every message off the screen, and deletes nothing', () => {
+  const html = renderPage(fixture({}));
+  assert.ok(html.includes('id="clearAll"'));
+  assert.ok(html.includes('>ניקוי כל ההודעות<'));
+  // Asked once before it fires: it is the whole screen, not one line.
+  assert.ok(html.includes("b.textContent='לנקות הכל? לחץ שוב';"));
+  // It hides, one key each, the way the x on a single message already works.
+  assert.ok(html.includes("localStorage.setItem('msgHidden',JSON.stringify(h.slice(-6000)));"));
+  // And it waits for the whole history before hiding it, or it would only
+  // clear the head slice and the rest would come back on the next fetch.
+  assert.ok(html.includes("ensure('chat',function(){"));
 });

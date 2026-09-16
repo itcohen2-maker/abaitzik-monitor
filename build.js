@@ -791,17 +791,21 @@ section{margin-bottom:30px}
 .ack{margin-top:8px;padding:7px 10px;border-radius:10px;font-size:13px;line-height:1.45;
  background:var(--sunk);color:var(--dim);border-inline-start:3px solid var(--line)}
 .ack-n{display:block;margin-top:4px;color:var(--ink);opacity:.85}
-.ack-wait{background:var(--unread);color:#8a3a32;border-inline-start-color:var(--red)}
-.ack-received{background:var(--sunk);color:var(--dim)}
-/* Itzik, 16.9: open is red, answered is green. Nothing in between. */
-.ack-working{background:var(--unread);color:#8a3a32;border-inline-start-color:var(--red)}
+/*
+  Itzik, 16.9: sent and waiting is yellow, the answer coming back is red, and
+  what he has touched is green. Three states, three colours, and the colour
+  always says whose turn it is.
+*/
+.ack-wait{background:#f6e7c8;color:#8a5a12;border-inline-start-color:var(--gold)}
+.ack-received{background:#f6e7c8;color:#8a5a12;border-inline-start-color:var(--gold)}
+.ack-working{background:#f6e7c8;color:#8a5a12;border-inline-start-color:var(--gold)}
 .ack-partial{background:var(--accent-soft);color:var(--accent);border-inline-start-color:var(--accent)}
 .ack-done{background:var(--fresh);color:#1d6b3f;border-inline-start-color:#1d6b3f}
 .pulse{display:inline-block;width:8px;height:8px;border-radius:50%;margin-inline-end:7px;
  background:currentColor;vertical-align:middle;animation:ackpulse 1.8s ease-in-out infinite}
 @keyframes ackpulse{0%,100%{opacity:.35;transform:scale(.82)}50%{opacity:1;transform:scale(1.12)}}
 @media (prefers-reduced-motion:reduce){.pulse{animation:none;opacity:.9}}
-.st-working{background:var(--unread);color:#8a3a32}
+.st-working{background:#f6e7c8;color:#8a5a12}
 .st-done{background:var(--fresh);color:#1d6b3f}
 /* Unread is red and glowing, and it stays that way for days if that is how
    long it takes him to get to it. Touching it turns it green, which is his
@@ -1084,6 +1088,7 @@ body.editing .bn{display:none}
 .picking .bub.picked:before{background:var(--green);border-color:var(--green);
  content:"¹3";color:#fff;font:700 14px/17px Heebo,sans-serif;text-align:center}
 .cpall.readold{background:var(--green);color:#fff;border-color:var(--green)}
+.cpall.clearall{background:#f6e7c8;color:#8a5a12;border-color:var(--gold)}
 .cpall{font:600 12.5px Heebo,sans-serif;color:var(--accent);cursor:pointer;
  background:var(--surface);border:1px solid var(--line);border-radius:999px;
  min-height:34px;padding:0 14px}
@@ -1137,7 +1142,15 @@ body.editing .bn{display:none}
 .talk{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
  box-shadow:var(--shadow);padding:16px 16px 14px;margin-bottom:14px;
  display:grid;grid-template-columns:auto 1fr;gap:12px 14px;align-items:center}
-.ways{grid-column:1 / -1;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:2px}
+.ways{grid-column:1 / -1;display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:2px}
+.quickwrite{grid-column:1 / -1;display:flex;gap:8px;margin-top:9px}
+.quickwrite input{flex:1;min-width:0;background:var(--sunk);color:var(--ink);
+ border:1px solid var(--line);border-radius:12px;padding:12px 13px;
+ font:400 15.5px Heebo,sans-serif}
+.quickwrite input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.quickwrite button{flex:0 0 auto;background:var(--accent);color:#fff;border:0;
+ border-radius:12px;padding:0 18px;font:700 15px Heebo,sans-serif;cursor:pointer}
+.quickwrite button:active{transform:scale(.97)}
 .way{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;
  background:var(--sunk);border:1px solid var(--line);border-radius:14px;padding:11px 6px 9px}
 .way b{font:700 13px Heebo,sans-serif;color:var(--ink)}
@@ -1930,10 +1943,6 @@ try{
    <small id="micSaid">לוחצים, מדברים, לוחצים שוב. ההקלטה נשלחת אליי מיד.</small>
   </div>
   <div class="ways">
-   <button type="button" id="wWrite" class="way">
-    <span class="wi" aria-hidden="true">✍️</span>
-    <b>כתוב לי</b><small>הקלדה</small>
-   </button>
    <button type="button" id="urgBtn" class="way">
     <span class="wi" aria-hidden="true">📎</span>
     <b>העלאת קובץ</b><small>גם תמונה</small>
@@ -1943,13 +1952,21 @@ try{
     <b>צילום</b><small>מצלמה</small>
    </button>
   </div>
+  <!--
+    Writing is not a button any more. He asked on 16.9 for one simple thing:
+    a line he types into, not a button that opens a screen that has a line.
+    This sends the same way the chat does and lands in the same thread.
+  -->
+  <form class="quickwrite" id="quickForm">
+   <input type="text" id="quickText" autocomplete="off"
+    placeholder="כתוב לי כאן, ואני עונה">
+   <button type="submit" id="quickBtn">שליחה</button>
+  </form>
+  <div class="msgsaid" id="quickSaid"></div>
  </section>
 
- <button type="button" id="growBtn" class="growbtn">
-  <span class="gb-i" aria-hidden="true">✨</span>
-  <span class="gb-l"><b>איך אני משתפר</b><small>מה פיספסתי, מה תיקנתי, ומה זה משנה לך</small></span>
-  <span class="gb-c" id="growCount">0</span>
- </button>
+ <!-- "איך אני משתפר" came off the home screen on 16.9. The screen itself is
+      still reachable, it just does not sit on the way to everything else. -->
 
   <div class="sent" id="sentCard" hidden></div>
   <button type="button" id="bareBtn" class="morebtn">עוד כלים</button>
@@ -1959,10 +1976,8 @@ try{
     copy of an item he had read once. The recordings themselves are untouched:
     they are on the special requests screen, which has its own tile.
   -->
-  <details class="reqs fold" id="reqBox" hidden>
-   <summary id="reqSum">שתי הבקשות האחרונות</summary>
-   <div id="reqBody"></div>
-  </details>
+  <!-- "שתי הבקשות האחרונות" came off on 16.9 at his word. The same two sit in
+       "מה התקבל", under the red button, with their state next to them. -->
   <!--
     "מה השתפר" used to live here as a fold out, and "איך אני משתפר" at the foot
     of the screen opens the same list from the same data. Itzik called it a
@@ -2011,7 +2026,7 @@ try{
   <button type="button" class="gt g14" id="gReplies"><b>✍️ תגובות מיוחדות</b><small>מה עניתי בשמך, לעבור ולאשר</small></button>
  </div>
 
- <div id="tidyBox"></div>
+ <!-- "מה הסתרנו" came off on 16.9. Hiding a tile is his to undo in settings. -->
 
  <input type="search" id="gSearch" class="gsearch" autocomplete="off"
   placeholder="חיפוש בכל מה שכתבתי לך, למשל ראש השנה">
@@ -2437,6 +2452,7 @@ try{
   <button type="button" id="copyPicked" class="cpall pickon" hidden>העתקת הנבחרות</button>
   <button type="button" id="copyAll" class="cpall">העתקת כל השיחה</button>
   <button type="button" id="readOld" class="cpall readold">קראתי את הישנות</button>
+  <button type="button" id="clearAll" class="cpall clearall">ניקוי כל ההודעות</button>
  </div>
  <div class="thread" id="thread"></div>
  <form id="msgForm">
@@ -2798,14 +2814,15 @@ function statusTag(m){
 */
 function ackLine(m){
  if(m.from!=='itzik')return '';
- if(m.pend)return '<div class="ack ack-wait">יצא מהמכשיר. עוד לא הגיע אליי.</div>';
+ if(m.pend)return '<div class="ack ack-wait">נשלח עכשיו. ממתין לתשובה.</div>';
  var st=m.status,when=m.ackAt||'';
  if(!st){
-  return '<div class="ack ack-wait">עוד לא קראתי את זה. ממתין '
-   +esc(ago(m.at))+', מאז ששלחת.</div>';
+  return '<div class="ack ack-wait">נשלח ב'+esc(stamp(m.at))
+   +'. ממתין לתשובה, '+esc(ago(m.at))+'.</div>';
  }
- var head=when?('קיבלתי את זה ב'+esc(stamp(when))):'קיבלתי את זה';
- var tail=st==='working'?'ואני עדיין עובד על זה.'
+ var sent=m.at?('נשלח ב'+esc(stamp(m.at))+'. '):'';
+ var head=when?(sent+'קיבלתי את זה ב'+esc(stamp(when))):(sent+'קיבלתי את זה');
+ var tail=st==='working'?'ממתין לתשובה.'
   :st==='partial'?'ויש לי חלק מהתשובות. השאר בדרך.'
   :st==='done'?'וזה בוצע.'
   :'ועוד לא התחלתי.';
@@ -5750,9 +5767,14 @@ document.getElementById('fdForm').onsubmit=function(e){
  }).then(function(){btn.disabled=false;});
 };
 
-// The quick write row was removed from the home screen: the microphone card
-// already offers writing, and he asked for one thing at the top and not two.
-// The handler stays, guarded, so nothing breaks if the row ever returns.
+/*
+  The line he types into on the home screen.
+
+  It was taken off once and is back on 16.9 at his word: "כתוב לי" was a
+  button that opened a screen that had a line in it, and he asked for the
+  line. The handler never left, so this is the same send path the chat uses:
+  recorded, queued, and acknowledged the same way.
+*/
 on2('quickForm','submit',function(e){
  e.preventDefault();
  var box=document.getElementById('quickText');
@@ -5781,6 +5803,43 @@ function askInChat(prefix){
  box.value=prefix;box.focus();
  try{box.setSelectionRange(box.value.length,box.value.length);}catch(e){}
 }
+/*
+  Clear every message off the screen.
+
+  Itzik, 16.9: a button that clears all the messages. It hides them, one key
+  each, exactly the way the small x on a single message already works. Nothing
+  is deleted: the files stay where they are and a fresh device sees them
+  again, which is the difference between a screen he cleaned and a history I
+  destroyed. Asked once first, because it is the whole screen and not one line.
+*/
+on('clearAll',function(){
+ var b=this;
+ if(b.getAttribute('data-armed')!=='1'){
+  b.setAttribute('data-armed','1');
+  b.textContent='לנקות הכל? לחץ שוב';
+  setTimeout(function(){
+   if(b.getAttribute('data-armed')==='1'){
+    b.removeAttribute('data-armed');b.textContent='ניקוי כל ההודעות';
+   }
+  },5000);
+  return;
+ }
+ b.removeAttribute('data-armed');
+ // The whole history first, or this clears the head slice and the rest comes
+ // back the next time the chat file lands.
+ ensure('chat',function(){
+  var h=hiddenMsgs();
+  (D.chat||[]).forEach(function(m){
+   var k=msgKey(m);
+   if(k&&h.indexOf(k)<0)h.push(k);
+  });
+  try{localStorage.setItem('msgHidden',JSON.stringify(h.slice(-6000)));}catch(e){}
+  markAllRead('');
+  renderThread();paintDot();
+  b.textContent='נוקה';
+  setTimeout(function(){b.textContent='ניקוי כל ההודעות';},2500);
+ });
+});
 document.getElementById('setBtn').onclick=function(){pane('z');};
 document.getElementById('homeBtn').onclick=function(){pane('h');};
 /*
@@ -5819,14 +5878,6 @@ if(gChatEl)gChatEl.onclick=function(){pane('m');markChatSeen();};
   The camera does not ask for the camera until it is pressed: shoot() opens the
   picker inside the tap, which is also the only way iOS allows it at all.
 */
-document.getElementById('wWrite').onclick=function(){
- pane('m');markChatSeen();renderThread();
- var box=document.getElementById('msgText');
- if(!box)return;
- // After the pane has been painted, or the focus lands on a hidden field and
- // the keyboard never opens.
- setTimeout(function(){try{box.focus();box.scrollIntoView({block:'center'});}catch(e){}},80);
-};
 document.getElementById('wShoot').onclick=function(){
  pane('m');renderThread();
  shoot();
@@ -6403,7 +6454,9 @@ var HOME_HEAD=['newBlock','talkCard','bareBtn','blkIcons','blkTiles'];
 // "איך אני משתפר" is the one block he wants out of the way rather than gone.
 // It is a log of my own mistakes and fixes: worth keeping, never worth the top
 // of his screen.
-var HOME_TAIL=['growBtn'];
+// Nothing is pinned to the foot of the home screen since "איך אני משתפר"
+// came off it on 16.9.
+var HOME_TAIL=[];
 function pinHome(home){
  if(!home)return;
  var at=null;
