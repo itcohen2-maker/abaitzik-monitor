@@ -2086,6 +2086,10 @@ try{
  <h2>גוגל דרייב</h2>
  <div class="hint" style="margin-bottom:12px">קיצורים ישירים לתיקיות שאנחנו עובדים איתן. הכל בחשבון itcohen2.</div>
  <nav class="links" aria-label="תיקיות בדרייב">
+  <!-- Itzik, 16.9: the Drive button took him straight to the stories and he
+       could not find the new sign photo. Posts get their own entry, first. -->
+  <a href="https://drive.google.com/drive/u/1/folders/1DsAP6qZwcKMz5nVuXT3DSKJ3Ox-74Qh3" target="_blank" rel="noopener">
+   <span aria-hidden="true">🖼️</span><div>פוסטים<small>תמונות לפוסט, כמו השלט מבית החולים</small></div></a>
   <a href="https://drive.google.com/drive/u/1/folders/1f7q8Hm6r_3IXYORX8slR-40ZEq2tKxB0" target="_blank" rel="noopener">
    <span aria-hidden="true">🎬</span><div>סרטוני סטורי<small>מה בצלחת וההיילייטים</small></div></a>
   <a href="https://drive.google.com/drive/u/1/folders/1VK_2ZFOVVnN6mj2_hwWorFWgmD5Tqvoi" target="_blank" rel="noopener">
