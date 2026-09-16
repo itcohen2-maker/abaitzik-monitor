@@ -1359,6 +1359,18 @@ body.editing .bn{display:none}
 .idea button{background:var(--accent);color:#fff;border:0;border-radius:9px;
  padding:8px 17px;font:500 13.5px Heebo,sans-serif;cursor:pointer}
 .idea button.done{background:var(--green)}
+.ideabuilt{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
+.ibt{border:0;text-align:start;cursor:pointer;border-radius:var(--r);padding:14px 15px;color:#fff;
+ min-height:88px;display:flex;flex-direction:column;justify-content:space-between;
+ font-family:Heebo,sans-serif;text-shadow:0 1px 2px rgba(0,0,0,.28);
+ box-shadow:0 10px 22px rgba(20,30,60,.22),inset 0 1px 0 rgba(255,255,255,.55),
+  inset 0 -3px 8px rgba(0,0,0,.22),inset 0 0 0 1px rgba(255,255,255,.14)}
+.ibt b{font-size:16px;font-weight:600}
+.ibt small{font-size:12px;opacity:.92;font-weight:300;line-height:1.45}
+.ibt:active{transform:translateY(1px)}
+.ib1{background:linear-gradient(150deg,#b39ddb,#673ab7)}
+.ib2{background:linear-gradient(150deg,#80deea,#00838f)}
+.ib3{background:linear-gradient(150deg,#7bd88f,#1e8e4a)}
 .ideahead{font-size:13.5px;color:var(--dim);font-weight:300;margin-bottom:14px;line-height:1.65}
 .opcard{background:var(--surface);border:1px solid var(--line);border-radius:18px;
  padding:6px 16px;margin-bottom:14px;box-shadow:var(--shadow)}
@@ -2034,9 +2046,6 @@ try{
   <button type="button" class="gt g2" id="gMail"><b>📧 מייל</b><small>בקשה, ואני מחזיר תשובה</small></button>
   <button type="button" class="gt g3" id="gQueue"><b>📊 ניטור רשתות</b><small>מי פנה, מה נענה</small></button>
   <button type="button" class="gt g4" id="gReports"><b>📄 דוחות</b><small>סיכומי הסבבים</small></button>
-  <button type="button" class="gt g5" id="gPill"><b>⏰ לקחתי כדור</b><small>מסמן את המנה ומעדכן אותי</small></button>
-  <button type="button" class="gt g6" id="gCam"><b>📷 שלח לי תמונה</b><small>נפתחת המצלמה ומצלמים</small></button>
-  <button type="button" class="gt g7" id="gFood"><b>🥗 עקוב אחרי התזונה</b><small>מצלמים או כותבים, ואני מחשב</small></button>
   <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>חשבוניות והיומן</small></button>
   <button type="button" class="gt g10" id="gNotes"><b>📝 פתקים</b><small>נכתב, נשמר, לא הולך לאיבוד</small></button>
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
@@ -2302,6 +2311,16 @@ try{
 
 <section id="pI" hidden>
  <h2>רעיונות</h2>
+ <!--
+  הוא ביקש את שלושת הכפתורים האלה מחוץ למסך הבית ובתוך הרעיונות.
+  הם לא נמחקו ולא איבדו כלום, הם פשוט יושבים כאן.
+ -->
+ <div class="ideabuilt">
+  <button type="button" class="ibt ib1" id="iPill"><b>⏰ לקחתי כדור</b><small>מסמן את המנה ומעדכן אותי</small></button>
+  <button type="button" class="ibt ib2" id="iCam"><b>📷 שלח לי תמונה</b><small>נפתחת המצלמה ומצלמים</small></button>
+  <button type="button" class="ibt ib3" id="iFood"><b>🥗 עקוב אחרי התזונה</b><small>מצלמים או כותבים, ואני מחשב</small></button>
+ </div>
+ <div class="ideahead">אלה כבר עובדים וירדו ממסך הבית לפי בקשתך. לחיצה פותחת אותם מכאן.</div>
  <div class="ideahead">אלה דברים שהמסך הזה כבר יודע לעשות או שאני יכול לבנות. לחיצה על "רוצה את זה" שולחת לי את הבקשה, ואני בונה ומעדכן.</div>
  <div id="ideaList"></div>
  <form class="quickrow" id="ideaForm">
@@ -5602,10 +5621,8 @@ function shoot(auto){
  pick.setAttribute('capture','environment');
  pick.click();
 }
-document.getElementById('gCam').onclick=function(){
- pane('m');renderThread();
- shoot();
-};
+function openCam(){pane('m');renderThread();shoot();}
+on('gCam',openCam);on('iCam',openCam);
 
 // ---- what he ate ----
 // He sends a photo or a line; I look the values up and write the row back into
@@ -5679,7 +5696,8 @@ on('repNow',function(){
   said.textContent='הבקשה לא עברה. תנסה שוב.';
  }).then(function(){b.disabled=false;});
 });
-document.getElementById('gFood').onclick=function(){pane('f');renderFood();ensure('food',renderFood);};
+function openFood(){pane('f');renderFood();ensure('food',renderFood);}
+on('gFood',openFood);on('iFood',openFood);
 on('gLolos',function(){pane('o');});
 on('gOp',function(){pane('s');});
 on('gNotes',function(){pane('t');renderNotes();});
@@ -5980,8 +5998,9 @@ document.getElementById('wShoot').onclick=function(){
 };
 document.getElementById('gQueue').onclick=function(){openNet('all');};
 document.getElementById('gReports').onclick=function(){pane('r');markReportsSeen();renderNextReport();ensure('reports',renderNet);};
-document.getElementById('gMail').onclick=function(){pane('e');};
-document.getElementById('gPill').onclick=function(){pane('p');renderPill();openPillSheet();};
+on('gMail',function(){pane('e');});
+function openPill(){pane('p');renderPill();openPillSheet();}
+on('gPill',openPill);on('iPill',openPill);
 document.getElementById('pillBig').onclick=function(){openPillSheet();};
 on('pillNow',function(){recordPill(Date.now());});
 on('pillEarlier',function(){

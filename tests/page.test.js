@@ -932,3 +932,26 @@ test('one button clears every message off the screen, and deletes nothing', () =
   // clear the head slice and the rest would come back on the next fetch.
   assert.ok(html.includes("ensure('chat',function(){"));
 });
+
+test('the three health buttons left the home screen and live in the ideas screen', () => {
+  const html = renderPage(fixture({}));
+  // Itzik, 16.9: take the food button off, take the photo button off, move it
+  // all to ideas, and the pill button too. Off the grid, not deleted.
+  const grid = html.slice(html.indexOf('id="blkTiles"'), html.indexOf('id="gSearch"'));
+  assert.ok(!grid.includes('id="gPill"'));
+  assert.ok(!grid.includes('id="gCam"'));
+  assert.ok(!grid.includes('id="gFood"'));
+  // They open from the ideas screen instead, with the same three labels.
+  const ideas = html.slice(html.indexOf('id="pI"'), html.indexOf('id="ideaForm"'));
+  assert.ok(ideas.includes('id="iPill"'));
+  assert.ok(ideas.includes('id="iCam"'));
+  assert.ok(ideas.includes('id="iFood"'));
+  assert.ok(ideas.includes('לקחתי כדור'));
+  assert.ok(ideas.includes('שלח לי תמונה'));
+  assert.ok(ideas.includes('עקוב אחרי התזונה'));
+  // The old ids are still wired, so nothing breaks if a tile ever comes back,
+  // and the binding is the null safe one now that the tile is gone.
+  assert.ok(html.includes("on('gPill',openPill);on('iPill',openPill);"));
+  assert.ok(html.includes("on('gCam',openCam);on('iCam',openCam);"));
+  assert.ok(html.includes("on('gFood',openFood);on('iFood',openFood);"));
+});
