@@ -1,13 +1,19 @@
-﻿# Never publish anything holding full names of real people.
+# Never publish anything holding full names of real people.
 # Only docs/ ships, and build.js shortens surnames there.
-data/
+#
+# Anchored to the root on 16.9.2026. Unanchored, this line also swallowed
+# docs/data, the built collections the page now fetches instead of carrying
+# inline, and the phone got a 404 for every screen. Those files are the same
+# payload that used to sit inside docs/index.html, already shortened, already
+# public. The source directory below is the one that must never ship.
+/data/
 seed.js
 seed-rivhit.js
 sync-today.js
 node_modules/
-data/ntfy-topic.txt
+/data/ntfy-topic.txt
 # His paid ntfy token. Same rule as the topic: never leaves this machine.
-data/ntfy-token.txt
+/data/ntfy-token.txt
 backups/
 rivhit/
 
