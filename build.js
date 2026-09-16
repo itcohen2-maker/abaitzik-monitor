@@ -2018,10 +2018,8 @@ try{
   <button type="button" class="gt g6" id="gCam"><b>📷 שלח לי תמונה</b><small>נפתחת המצלמה ומצלמים</small></button>
   <button type="button" class="gt g7" id="gFood"><b>🥗 עקוב אחרי התזונה</b><small>מצלמים או כותבים, ואני מחשב</small></button>
   <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>חשבוניות והיומן</small></button>
-  <button type="button" class="gt g9" id="gOp"><b>🏥 ניתוח</b><small>מתי, איפה, ומה צריך</small></button>
   <button type="button" class="gt g10" id="gNotes"><b>📝 פתקים</b><small>נכתב, נשמר, לא הולך לאיבוד</small></button>
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
-  <button type="button" class="gt g12" id="gPegasus"><b>🐴 פגסוס</b><small>מה נעשה, מה קורה, מה מתוכנן</small></button>
   <button type="button" class="gt g13" id="gSpecial"><b>⭐ בקשות מיוחדות</b><small>מה שביקשת ומוכן, דפים וקבצים</small></button>
   <button type="button" class="gt g14" id="gReplies"><b>✍️ תגובות מיוחדות</b><small>מה עניתי בשמך, לעבור ולאשר</small></button>
  </div>

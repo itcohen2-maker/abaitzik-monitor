@@ -248,7 +248,11 @@ test('one button marks the backlog read, and a server stamp resets it once per p
 
 test('a pegasus screen with a tile, and a live working state on the sent card', () => {
   const html = renderPage(fixture({ pegasus: [{ at: '2026-09-11T11:30:00', did: 'a', now: 'b', plan: 'c' }] }));
-  assert.ok(html.includes('id="gPegasus"'));
+  // The tile came off the home screen on 16.9 at his word, twice asked for.
+  // The screen and its data stay: he reads it, he just does not want a square
+  // for it on the way to everything else.
+  assert.ok(!html.includes('id="gPegasus"'));
+  assert.ok(!html.includes('id="gOp"'));
   assert.ok(html.includes('<section id="pX" hidden>'));
   assert.ok(html.includes('function renderPegasus('));
   assert.ok(html.includes("var PANES={z:'pZ',x:'pX',"));
