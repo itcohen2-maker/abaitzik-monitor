@@ -762,8 +762,8 @@ test('the last two requests are cards he can read, and never invented', () => {
   assert.ok(html.includes('<summary id="reqSum">שתי הבקשות האחרונות</summary>'));
   assert.ok(html.includes("foldCard(box,'reqSum','שתי הבקשות האחרונות · '+a.length,'reqOpen');"));
   assert.ok(html.includes('body.innerHTML=a.slice(0,2)'));
-  assert.ok(html.includes('<details class="cdx fold" id="codexBox" hidden>'));
-  assert.ok(html.includes("foldCard(box,'cdxSum','קודקס · '+(C.length+q.length),'cdxOpen');"));
+  // The Codex fold left the home screen on 16.9 at Itzik's request.
+  assert.ok(!html.includes('id="codexBox"'));
   // Shut unless he opened it before, and the choice sticks.
   assert.ok(html.includes("box.open=open==='1';"));
   assert.ok(!/<details class="(reqs|cdx) fold"[^>]*open/.test(html), 'neither may ship open');
@@ -793,9 +793,9 @@ test('the codex thread never says delivered while the mailbox only stores', () =
   const html = renderPage(fixture({
     codex: [{ at: '2026-09-12T13:04:00', from: 'codex', to: 'user', text: 'שלום', state: 'received' }],
   }));
-  assert.ok(html.includes('id="codexBox"'));
+  assert.ok(!html.includes('id="codexBox"'));
   assert.ok(html.includes('function renderCodex(){'));
-  assert.ok(html.includes("boot('codex',renderCodex);"));
+  assert.ok(!html.includes("boot('codex',renderCodex);"));
   // Three states, each literal. `delivered` exists only because a real
   // `codex queue` call succeeded, so `stored` must never borrow its wording.
   assert.ok(html.includes("stored:'מחכה בתיבה, לא נמסר לשיחה'"));
@@ -830,4 +830,21 @@ test('the answers tab sits beside home and its badge counts what waits', () => {
   // waiting. Now it is the number waiting, in red, or a tick.
   assert.ok(html.includes("el.textContent=n?String(n):'✓';"));
   assert.ok(!html.includes('var total=allAnswers().length;'));
+});
+
+test('what was received sits under the red button as one ordered list', () => {
+  const html = renderPage(fixture({}));
+  const red = html.indexOf('id="newBtn"');
+  const got = html.indexOf('id="gotBtn"');
+  const talk = html.indexOf('id="talkCard"');
+  assert.ok(red > -1 && got > red && got < talk);
+  // One screen, four sections in a fixed order: in work, received, open tasks, done.
+  assert.ok(html.includes('<section id="pB" hidden>'));
+  assert.ok(html.includes("b:'pB'"));
+  const body = html.slice(html.indexOf('function renderGot(){'));
+  const order = ['בעבודה עכשיו', 'התקבלו, עוד לא התחלתי', 'משימות פתוחות ממך', 'בוצע'].map((h) => body.indexOf(h));
+  assert.ok(order.every((i, n) => i > -1 && (n === 0 || i > order[n - 1])), String(order));
+  // The count is what is still open, and it is painted with the home screen.
+  assert.ok(html.includes("var n=gotList().filter(gotOpen).length+(D.openCmds||[]).length;"));
+  assert.ok(html.includes(' paintGot();\n var c=unreadCount();'));
 });

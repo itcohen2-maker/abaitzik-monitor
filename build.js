@@ -538,6 +538,20 @@ button.abtn[disabled]{opacity:.55}
  border:0;border-radius:var(--r);cursor:pointer;text-align:start;color:#fff;font-family:Heebo,sans-serif;
  background:linear-gradient(150deg,#9aa5b8,#6b7688);box-shadow:0 8px 18px rgba(20,30,60,.16)}
 .newbtn .nb-l{flex:1;min-width:0}
+.newbtn.got{margin-top:0;background:linear-gradient(150deg,#5aa9fb,var(--blue))}
+.newbtn.got .nb-c.zero{opacity:.55}
+.gotlist h3{font:800 15px Heebo,sans-serif;margin:18px 0 8px;color:var(--dim)}
+.gr{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);
+ border-radius:12px;margin-bottom:8px;background:var(--surface)}
+.gr.now{border-color:var(--blue)}
+.gr-t{flex:0 0 auto;font-size:12px;color:var(--dim);padding-top:3px}
+.gr-x{flex:1;min-width:0;font-size:15px;line-height:1.45;overflow-wrap:anywhere}
+.gr-x small{display:block;color:var(--dim);font-size:12.5px;margin-top:4px}
+.gr-s{flex:0 0 auto;font-size:12px;border-radius:999px;padding:3px 9px;font-weight:700}
+.gr-w{background:#fff3cd;color:#7a5200}
+.gr-g{background:#e3ecfb;color:#1a4b9c}
+.gr-d{background:#e2f5e6;color:#1b6b34}
+.gempty{color:var(--dim);font-weight:300;padding:6px 4px 10px}
 .newbtn b{display:block;font:800 17px Heebo,sans-serif}
 .newbtn small{display:block;font-size:12px;opacity:.92;font-weight:300;margin-top:1px}
 .newbtn:active{transform:translateY(2px) scale(.99)}
@@ -1768,6 +1782,16 @@ try{
   <span class="nb-c" id="nbCount">0</span>
  </button>
  <!--
+   Itzik asked on 16.9 for a button under the red one: what was received.
+   His messages with where each one stands, and what is being worked on, as
+   one ordered list. The number is what is still open: received, in work,
+   and open tasks. It replaces the Codex fold that used to sit lower down.
+ -->
+ <button type="button" id="gotBtn" class="newbtn got">
+  <span class="nb-l"><b>מה התקבל</b><small>ההודעות שלך, מה בעבודה ומה בוצע</small></span>
+  <span class="nb-c" id="gotCount">0</span>
+ </button>
+ <!--
    The archive button that used to sit here is gone. Itzik asked on 13.9 for
    one button for messages and nothing beside it: the button above is the chat,
    whether there is something unread or not. A second control that revealed a
@@ -1842,10 +1866,11 @@ try{
     requests already have their own tile and their own screen, and he asked for
     the card off the home screen.
   -->
-  <details class="cdx fold" id="codexBox" hidden>
-   <summary id="cdxSum">קודקס</summary>
-   <div id="cdxBody"></div>
-  </details>
+  <!--
+    The Codex fold that sat here is gone. Itzik asked on 16.9 to remove the
+    "requests from Codex" button; Codex answers already live on the answers
+    screen, and what he sends goes through the ordinary chat.
+  -->
 <section class="whatsnew" aria-label="מה חדש">
   <div class="wn" id="wnCmds"></div>
   <div class="wn" id="wnNow"></div>
@@ -2115,6 +2140,12 @@ try{
  <h2>מה שלא קראת</h2>
  <div class="ubox" id="unreadBox"></div>
  <div class="hint">נגיעה בהודעה מסמנת שקראת אותה והופכת אותה לירוקה. מה שנשאר אדום עוד מחכה לך.</div>
+</section>
+
+<section id="pB" hidden>
+ <h2>מה התקבל</h2>
+ <div class="gotlist" id="gotBox"></div>
+ <div class="hint">כל מה ששלחת לי, לפי מצב: מה בעבודה עכשיו, מה התקבל ועוד לא התחיל, המשימות הפתוחות, ומה שבוצע. חדש למעלה.</div>
 </section>
 
 <section id="pA" hidden>
@@ -3204,6 +3235,7 @@ function unreadCount(){return unreadList().length;}
 function renderNew(){
  renderSent();
  paintAnsCount();
+ paintGot();
  var c=unreadCount();
  var btn=document.getElementById('newBtn');
  btn.classList.toggle('hot',c>0);
@@ -3244,7 +3276,7 @@ function updateDot(){
  document.title=(d.hidden?'':'(1) ')+'אבא איציק בבנייה עצמית';
 }
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
-var PANES={z:'pZ',x:'pX',a:'pA',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',k:'pK'};
+var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',k:'pK'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
 // The last dose. From the chat it is read out of the message text, because he
@@ -4131,6 +4163,51 @@ function renderAnswers(){
  }
  wireBoxes(host);
 }
+// ---- what was received: his messages by state, and what is in work ----
+function gotList(){
+ return (D.chat||[]).filter(function(m){return m.from==='itzik';})
+  .slice().sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
+}
+function gotOpen(m){return !m.status||m.status==='received'||m.status==='working';}
+var gotShow=30;
+function paintGot(){
+ var el=document.getElementById('gotCount');
+ if(!el)return;
+ var n=gotList().filter(gotOpen).length+(D.openCmds||[]).length;
+ el.textContent=String(n);
+ el.classList.toggle('zero',!n);
+}
+function renderGot(){
+ var host=document.getElementById('gotBox');
+ if(!host)return;
+ var all=gotList();
+ var work=all.filter(function(m){return m.status==='working';});
+ var got=all.filter(function(m){return !m.status||m.status==='received';});
+ var done=all.filter(function(m){return m.status==='done';});
+ var K=D.openCmds||[];
+ var N=D.now;
+ function row(m,k,label){
+  return '<div class="gr"><span class="gr-t">'+esc(stamp(m.at))+'</span>'
+   +'<div class="gr-x">'+linkify(m.text||'')+'</div>'
+   +'<span class="gr-s gr-'+k+'">'+label+'</span></div>';
+ }
+ var h='<h3>בעבודה עכשיו</h3>';
+ if(N&&N.text)h+='<div class="gr now"><span class="gr-t">'+esc(stamp(N.at))+'</span>'
+  +'<div class="gr-x">'+esc(N.text)+(N.next?'<small>אחר כך: '+esc(N.next)+'</small>':'')+'</div>'
+  +'<span class="gr-s gr-w">דיווח</span></div>';
+ h+=work.map(function(m){return row(m,'w','עובד על זה');}).join('');
+ if(!work.length&&!(N&&N.text))h+='<div class="gempty">אין הודעה שמסומנת בעבודה.</div>';
+ h+='<h3>התקבלו, עוד לא התחלתי · '+got.length+'</h3>';
+ h+=got.length?got.map(function(m){return row(m,'g','התקבל');}).join(''):'<div class="gempty">הכל נקרא והתחיל.</div>';
+ h+='<h3>משימות פתוחות ממך · '+K.length+'</h3>';
+ h+=K.length?K.map(function(c){return row(c,'g','פתוח');}).join(''):'<div class="gempty">אין משימות פתוחות.</div>';
+ h+='<h3>בוצע · '+done.length+'</h3>';
+ h+=done.slice(0,gotShow).map(function(m){return row(m,'d','בוצע');}).join('');
+ if(done.length>gotShow)h+='<button type="button" class="ab" id="gotMore" style="width:100%;padding:14px">להציג עוד ('+(done.length-gotShow)+')</button>';
+ host.innerHTML=h;
+ var mb=document.getElementById('gotMore');
+ if(mb)mb.onclick=function(){gotShow+=30;renderGot();};
+}
 function paintAnsCount(){
  var el=document.getElementById('aCnt');
  if(!el)return;
@@ -4140,7 +4217,7 @@ function paintAnsCount(){
 }
 // Every inner screen gets a way back and its own address. He asked for both:
 // a link that opens the screen I am talking about, and a way out of it.
-var PANENAME={x:'pegasus',y:'special',w:'improve',r:'reports',a:'answers',m:'chat',k:'replies'};
+var PANENAME={x:'pegasus',y:'special',w:'improve',r:'reports',a:'answers',m:'chat',k:'replies',b:'got'};
 function paneOf(name){
  for(var k in PANENAME){if(PANENAME[k]===name)return k;}
  return PANES[name]?name:'';
@@ -4370,6 +4447,7 @@ document.getElementById('nL').onclick=function(){pane('l');};
 document.getElementById('nR').onclick=function(){pane('r');markReportsSeen();renderNextReport();};
 document.getElementById('nM').onclick=function(){pane('m');markChatSeen();};
 document.getElementById('nA').onclick=function(){pane('a');renderAnswers();};
+document.getElementById('gotBtn').onclick=function(){pane('b');renderGot();};
 
 // Home shortcuts. The mail and "new module" circles have no screen of their
 // own yet, so they open the chat with the request already started.
@@ -6204,7 +6282,7 @@ boot('improve',renderImprove);
 boot('special',renderSpecial);
 boot('replies',renderReplies);
 boot('reqs',renderReqs);
-boot('codex',renderCodex);
+// boot('codex',renderCodex) is retired with the fold; the function stays for the tests and the answers screen.
 boot('rivhit',renderRivhit);
 /*
   The listener indicator.
