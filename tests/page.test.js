@@ -313,7 +313,7 @@ test('the replies I sent in his name get a tile, a screen and a count that blink
   // something exists. It clears only when he opens the screen.
   assert.ok(html.includes("localStorage.getItem('repliesSeen')"));
   assert.ok(html.includes("mark('gReplies',rpNew>0,String(rpNew));"));
-  assert.ok(html.includes("on('gReplies',function(){pane('k');renderReplies();markRepliesSeen();});"));
+  assert.ok(html.includes("on('gReplies',function(){pane('k');renderReplies();markRepliesSeen();ensure('replies',renderReplies);});"));
 });
 
 test('every inner screen has a way back, its own address, and one search finds it', () => {
@@ -636,7 +636,7 @@ test('what got better lives behind one button, not twice on the home screen', ()
   assert.ok(!html.includes('id="growSum"'));
   assert.ok(!html.includes("localStorage.setItem('growOpen'"));
   assert.ok(html.includes('id="growBtn"'));
-  assert.ok(html.includes("on('growBtn',function(){pane('w');renderImprove();});"));
+  assert.ok(html.includes("on('growBtn',function(){pane('w');renderImprove();ensure('improve',renderImprove);});"));
   // The problem, the change, what it changes for him, and the verification.
   assert.ok(html.includes('<b>מה לא עבד</b>'));
   assert.ok(html.includes('<b>מה שיניתי</b>'));
@@ -847,4 +847,22 @@ test('what was received sits under the red button as one ordered list', () => {
   // The count is what is still open, and it is painted with the home screen.
   assert.ok(html.includes("var n=gotList().filter(gotOpen).length+(D.openCmds||[]).length;"));
   assert.ok(html.includes(' paintGot();\n var c=unreadCount();'));
+});
+
+test('the big collections travel in their own files, not in the page', () => {
+  const html = renderPage(fixture({
+    chat: Array.from({ length: 200 }, (_, i) => ({ at: '2026-09-0' + (i % 9 + 1) + 'T10:00:00', from: 'claude', text: 'x' + i })),
+  }));
+  // The loader, and a total that survives the head being a slice.
+  assert.ok(html.includes('function ensure(keys, fn){'));
+  assert.ok(html.includes("function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }"));
+  assert.ok(html.includes("var url='data/'+k+'.json?b='+encodeURIComponent(D.buildId||'');"));
+  // Every screen that reads a split collection fetches it on the way in.
+  assert.ok(html.includes("ensure(['chat','codex'],function(){renderAnswers();paintAnsCount();});"));
+  assert.ok(html.includes("ensure('reports',renderNet);"));
+  assert.ok(html.includes("ensure('chat',renderThread);"));
+  // Old answers must not turn red when the history lands: the reset is a floor.
+  assert.ok(html.includes("if(floor&&(m.at||'')<=floor)return false;"));
+  // And the chat is not pulled at boot, only when its screen is up.
+  assert.ok(html.includes("if(pM&&!pM.hidden&&LAZY.chat&&!lazyDone.chat)ensure('chat',renderThread);"));
 });

@@ -80,6 +80,37 @@ const LIB = fs.readFileSync(path.join(__dirname, 'lib', 'monitor-logic.js'), 'ut
 // A phone that has not applied this stamp yet marks every answer written
 // before it as read once, on its next load. Bump the value to reset again.
 const RESET_SEEN_AT = '2026-09-16T20:05:00';
+/*
+  The page the phone gets is the page without its own notes.
+
+  Every comment in here is written for whoever reads this file next, and that
+  reader is never the phone. Whole lines that are nothing but a comment are
+  dropped on the way out: 56KB of Hebrew explanation that cost him load time
+  and told him nothing. Only whole lines, and only ones that open a comment,
+  so a line of real code is never touched.
+*/
+function slim(html) {
+  const out = [];
+  let js = false;
+  const NL = String.fromCharCode(10);
+  for (const line of html.split(NL)) {
+    const t = line.trim();
+    if (js) { if (t.endsWith('*/')) js = false; continue; }
+    if (t.startsWith('/*')) { if (!t.endsWith('*/')) js = true; continue; }
+    if (t.startsWith('//')) continue;
+    out.push(line);
+  }
+  const kept = [];
+  let html_c = false;
+  for (const line of out) {
+    const t = line.trim();
+    if (html_c) { if (t.endsWith('-->')) html_c = false; continue; }
+    if (t.startsWith('<!--')) { if (!t.endsWith('-->')) html_c = true; continue; }
+    kept.push(line);
+  }
+  return kept.join(NL);
+}
+
 function renderPage(payload) {
   const data = JSON.stringify(payload).replace(/</g, '\\u003c');
   return PAGE
@@ -267,7 +298,49 @@ function build() {
     rivhit,
   };
 
-  const html = renderPage(payload);
+  /*
+    The big collections do not travel with the page.
+
+    Itzik, 16.9: the monitor is slow. It was: one 692KB file on every open,
+    and 398KB of that was data, most of it history he was not looking at.
+    Each collection now gets its own file next to the page, and the payload
+    keeps only the newest few of each, enough that the home screen is right
+    the moment it paints. A screen fetches its own file when he opens it.
+
+    The head sizes are not arbitrary. Each one is bigger than the window any
+    home screen counter looks at: unread since the last reset, reports since
+    he last opened the reports screen, and so on. So no count is ever wrong
+    while a file is still in the air.
+  */
+  const HEADS = { chat: 150, reports: 14, codex: 20, special: 8, replies: 8,
+                  improve: 4, food: 12, pegasus: 4, replied: 0, rivhit: 0 };
+  // A report's body is most of its weight, and only the newest few are read
+  // off the card without opening the screen.
+  const BODY_HEAD = 3;
+  const DATA_DIR = path.join(OUT_DIR, 'data');
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  const lazy = {};
+  for (const key of Object.keys(HEADS)) {
+    const all = payload[key] || [];
+    fs.writeFileSync(path.join(DATA_DIR, key + '.json'), JSON.stringify(all), 'utf8');
+    // Newest first by time, then put them back in the collection's own order.
+    // Some of these arrive oldest first and some newest first, and slicing off
+    // the front of an ascending list hands the phone the oldest hundred and
+    // fifty messages, which is the exact opposite of what every counter needs.
+    const newest = new Set(all.slice()
+      .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1))
+      .slice(0, HEADS[key]));
+    let seenBodies = 0;
+    const head = all.filter(x => newest.has(x)).map((x) => {
+      if (key !== 'reports') return x;
+      return (seenBodies++ < BODY_HEAD) ? x : Object.assign({}, x, { body: '' });
+    });
+    payload[key] = head;
+    lazy[key] = { n: all.length };
+  }
+  payload.lazy = lazy;
+
+  const html = slim(renderPage(payload));
 
   fs.mkdirSync(OUT_DIR, { recursive: true });
   fs.writeFileSync(path.join(OUT_DIR, 'index.html'), html, 'utf8');
@@ -285,7 +358,8 @@ function build() {
   fs.writeFileSync(path.join(OUT_DIR, 'robots.txt'), 'User-agent: *\nDisallow: /\n', 'utf8');
   console.log('built docs/index.html |', items.length, 'items,',
     payload.counts.pending, 'pending,', payload.counts.replied, 'replied,',
-    contacts.length, 'contacts,', reports.length, 'reports');
+    contacts.length, 'contacts,', reports.length, 'reports,',
+    Math.round(html.length / 1024) + 'KB page');
 }
 
 const PAGE = `<!DOCTYPE html>
@@ -2446,6 +2520,50 @@ try{
 <script>__LIB__</script>
 <script>
 var D = __DATA__, NET = __NET__, CAT = __CAT__, tab = 'pending';
+/*
+  Data that does not travel with the page.
+
+  Itzik, 16.9: the monitor is slow. It was carrying every message, report and
+  receipt inline, 692KB on every open. Now each big collection sits in its own
+  file next to the page and D holds only the newest few, enough that every
+  count on the home screen is right the moment it paints. A screen fetches its
+  own file the first time it is opened, once per build, and the browser keeps
+  it after that.
+
+  ensure() never blocks a render: the screen draws with what it has and draws
+  again when the file lands. A failed fetch leaves the head in place rather
+  than emptying the screen, because a short list is a smaller lie than none.
+*/
+var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
+function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
+function ensure(keys, fn){
+ var list=(typeof keys==='string'?[keys]:keys).filter(function(k){
+  return LAZY[k]&&!lazyDone[k];
+ });
+ if(!list.length){if(fn)fn();return;}
+ var left=list.length;
+ function step(){if(!--left&&fn)fn();}
+ list.forEach(function(k){
+  if(lazyWait[k]){lazyWait[k].push(step);return;}
+  lazyWait[k]=[step];
+  var url='data/'+k+'.json?b='+encodeURIComponent(D.buildId||'');
+  var end=function(){
+   var q=lazyWait[k]||[];lazyWait[k]=null;
+   q.forEach(function(g){try{g();}catch(e){}});
+   // The counters on the home screen were computed from the head. Now that the
+   // whole collection is here they are computed again, so a number never sits
+   // there stale behind a screen he has already opened.
+   try{paintDot();}catch(e){}
+  };
+  if(!window.fetch){lazyDone[k]=true;end();return;}
+  fetch(url,{cache:'force-cache'}).then(function(r){
+   return r.ok?r.json():null;
+  }).then(function(v){
+   if(Array.isArray(v))D[k]=v;
+   lazyDone[k]=true;
+  },function(){}).then(end,end);
+ });
+}
 // Split so a scraper crawling the page source does not lift a plain address.
 // This is obfuscation, not security - anyone reading the code can reassemble it.
 var MAILBOX = ['itcohen2','gmail.com'].join('@');
@@ -2755,6 +2873,11 @@ function rootKeyFor(m){
  return ML.rootKeyOf(m,byKey);
 }
 function renderThread(){
+ // Whoever opened the chat, the history follows, and the screen redraws when
+ // it lands. Only when the chat is actually on screen: this also runs at boot,
+ // and pulling 300KB nobody asked for is the thing this change exists to stop.
+ var pM=document.getElementById('pM');
+ if(pM&&!pM.hidden&&LAZY.chat&&!lazyDone.chat)ensure('chat',renderThread);
  var unreadKeys=unreadList().map(claudeKey);
  var touched=touchedIds();
  var hidden=hiddenMsgs();
@@ -3227,8 +3350,13 @@ function claudeKey(m){return (m.at||'')+'|'+String(m.text||'').slice(0,40);}
 function unreadList(){
  var seen=seenIds();
  var cut=chatSeen();
+ var floor=D.resetSeenAt||'';
  return (D.chat||[]).filter(function(m){
   if(m.from!=='claude')return false;
+  // The floor matters now that the history arrives after the page. Without it,
+  // every old answer would turn red the moment the chat file landed, because
+  // the read marks only cover what was on screen when he read them.
+  if(floor&&(m.at||'')<=floor)return false;
   if(seen.indexOf(claudeKey(m))>-1)return false;
   // Anything already on screen before this change counts as read, so he does
   // not get a hundred old answers marked new once.
@@ -3397,7 +3525,7 @@ function renderNet(){
  document.getElementById('netBody').innerHTML=out;
  wireBoxes(document.getElementById('netBody'));
 }
-function openNet(k){curNet=k||'all';pane('n');renderNet();}
+function openNet(k){curNet=k||'all';pane('n');renderNet();ensure(['reports','replied'],renderNet);}
 document.getElementById('netSeg').addEventListener('click',function(e){
  var b=e.target.closest?e.target.closest('[data-net]'):null;
  if(!b)return;curNet=b.getAttribute('data-net');renderNet();
@@ -4066,6 +4194,7 @@ function ansWho(m){return m&&m.src==='codex'?'קודקס':'קלוד';}
 function codexFresh(){
  var seen=seenIds();
  var cut=chatSeen()||new Date(Date.now()-3*864e5).toISOString();
+ if((D.resetSeenAt||'')>cut)cut=D.resetSeenAt;
  return (D.codex||[]).filter(function(m){
   if(m.from!=='codex')return false;
   if(seen.indexOf(claudeKey(m))>-1)return false;
@@ -4447,12 +4576,12 @@ document.addEventListener('keydown',function(e){
  if(tag==='INPUT'||tag==='TEXTAREA'||(t&&t.isContentEditable))return;
  if(document.getElementById('pH').hidden)pane('h');
 });
-document.getElementById('nQ').onclick=function(){pane('q');};
+document.getElementById('nQ').onclick=function(){pane('q');ensure(['replied'],render);};
 document.getElementById('nL').onclick=function(){pane('l');};
-document.getElementById('nR').onclick=function(){pane('r');markReportsSeen();renderNextReport();};
-document.getElementById('nM').onclick=function(){pane('m');markChatSeen();};
-document.getElementById('nA').onclick=function(){pane('a');renderAnswers();};
-document.getElementById('gotBtn').onclick=function(){pane('b');renderGot();};
+document.getElementById('nR').onclick=function(){pane('r');markReportsSeen();renderNextReport();ensure('reports',renderNet);};
+document.getElementById('nM').onclick=function(){pane('m');markChatSeen();ensure('chat',renderThread);};
+document.getElementById('nA').onclick=function(){pane('a');renderAnswers();ensure(['chat','codex'],function(){renderAnswers();paintAnsCount();});};
+document.getElementById('gotBtn').onclick=function(){pane('b');renderGot();ensure('chat',renderGot);};
 
 // Home shortcuts. The mail and "new module" circles have no screen of their
 // own yet, so they open the chat with the request already started.
@@ -4643,7 +4772,7 @@ function growCard(u){
 function renderImprove(){
  var G=D.improve||[];
  var c=document.getElementById('growCount');
- if(c)c.textContent=G.length;
+ if(c)c.textContent=lazyTotal('improve');
  // The fold out that used to repeat the three newest here is gone. It counted
  // the same items as the button at the foot of the screen and opened the same
  // screen, and Itzik called it a duplication on 13.9. The count on the button
@@ -4995,15 +5124,23 @@ function renderPegasus(){
  });
  wireBoxes(host);
 }
-on('gPegasus',function(){pane('x');renderPegasus();});
-on('growBtn',function(){pane('w');renderImprove();});
-on('gSpecial',function(){pane('y');renderSpecial();markSpecialSeen();});
+on('gPegasus',function(){pane('x');renderPegasus();ensure('pegasus',renderPegasus);});
+on('growBtn',function(){pane('w');renderImprove();ensure('improve',renderImprove);});
+on('gSpecial',function(){pane('y');renderSpecial();markSpecialSeen();ensure('special',renderSpecial);});
 // Render first, mark second: the cards he is about to read still carry their
 // "new" mark, and only the tile goes quiet.
-on('gReplies',function(){pane('k');renderReplies();markRepliesSeen();});
+on('gReplies',function(){pane('k');renderReplies();markRepliesSeen();ensure('replies',renderReplies);});
 (function(){
  var inp=document.getElementById('gSearch');
- if(inp)inp.oninput=renderSearch;
+ if(!inp)return;
+ inp.oninput=renderSearch;
+ // Search reaches into every collection, so touching the box pulls them all
+ // in once, and re-runs whatever he had already typed when they land.
+ inp.addEventListener('focus',function(){
+  ensure(['chat','reports','special','improve','replies'],function(){
+   if(inp.value.trim())renderSearch();
+  });
+ });
 })();
 function renderSent(){
  var L=lastSent();var card=document.getElementById('sentCard');
@@ -5294,7 +5431,7 @@ on('repNow',function(){
   said.textContent='הבקשה לא עברה. תנסה שוב.';
  }).then(function(){b.disabled=false;});
 });
-document.getElementById('gFood').onclick=function(){pane('f');renderFood();};
+document.getElementById('gFood').onclick=function(){pane('f');renderFood();ensure('food',renderFood);};
 on('gLolos',function(){pane('o');});
 on('gOp',function(){pane('s');});
 on('gNotes',function(){pane('t');renderNotes();});
@@ -5560,7 +5697,7 @@ document.getElementById('wShoot').onclick=function(){
  shoot();
 };
 document.getElementById('gQueue').onclick=function(){openNet('all');};
-document.getElementById('gReports').onclick=function(){pane('r');markReportsSeen();renderNextReport();};
+document.getElementById('gReports').onclick=function(){pane('r');markReportsSeen();renderNextReport();ensure('reports',renderNet);};
 document.getElementById('gMail').onclick=function(){pane('e');};
 document.getElementById('gPill').onclick=function(){pane('p');renderPill();openPillSheet();};
 document.getElementById('pillBig').onclick=function(){openPillSheet();};
@@ -5587,7 +5724,7 @@ document.getElementById('leads').addEventListener('click',function(e){
 });
 document.getElementById('icMail').onclick=function(){pane('e');};
 document.getElementById('icDrive').onclick=function(){pane('d');};
-document.getElementById('icVaad').onclick=function(){pane('v');};
+document.getElementById('icVaad').onclick=function(){pane('v');ensure('rivhit',renderRivhit);};
 document.getElementById('vaadAsk').onclick=function(){askInChat('ועד הבית: ');};
 document.getElementById('icAdd').onclick=function(){askInChat('מודול חדש שאני רוצה: ');};
 document.getElementById('icLand').onclick=function(){pane('g');};
