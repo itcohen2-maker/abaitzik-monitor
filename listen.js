@@ -27,6 +27,8 @@
 const fs = require('fs');
 const path = require('path');
 const ch = require('./lib/notify-channels.js');
+const codexBridge = require('./codex-bridge.js');
+const codexRoute = require('./lib/codex-route.js');
 const { execFile } = require('child_process');
 
 const TOPIC = 'abaitzik-in-95e62e86c34f4853';
@@ -245,6 +247,11 @@ async function handle(m) {
   say('הודעה: ' + String(m.message || '(צרופה)').slice(0, 80));
   if (m.attachment) await saveAttachment(m);
   if (m.message) logPull('text', m.message);
+  const routed = await codexRoute.route(m, codexBridge);
+  if (routed.matched) {
+    say(routed.duplicate ? 'בקשת קודקס כבר נמסרה: ' + routed.sourceId
+      : 'בקשת קודקס נמסרה לשיחה: ' + routed.sourceId);
+  }
   remember(m);
   await beat();
 }
@@ -350,6 +357,15 @@ function releaseLock() {
   if (!claimLock()) {
     say('מאזין אחר כבר רץ. יוצא בלי לעשות כלום.');
     return;
+  }
+  try {
+    const mailbox = await codexBridge.ensureMailbox();
+    say(mailbox.started ? 'תיבת קודקס הופעלה מחדש.' : 'תיבת קודקס מחוברת.');
+  } catch (e) {
+    // Keep listening even if Codex is temporarily unavailable. An explicitly
+    // addressed request will remain unseen by remember() and retry after the
+    // stream reconnects.
+    say('!! תיבת קודקס לא זמינה: ' + e.message);
   }
   setInterval(beat, BEAT_MS);
   setInterval(drainQueue, BEAT_MS);

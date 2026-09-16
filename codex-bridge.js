@@ -7,10 +7,9 @@
 // Everything therefore crosses here, on the PC, in the same round in which I
 // rebuild and push the page.
 //
-// What this does NOT do: it does not start a Codex session and it does not
-// hand a message to one. The mailbox itself reports agentAutoDelivery false.
-// A message pushed from here is stored and waiting, and the monitor says
-// exactly that word and never says answered.
+// The mailbox itself only stores. This adapter also queues an explicitly
+// addressed monitor request into the configured live Codex task and records
+// `delivered` only when that command exits successfully.
 //
 //   node codex-bridge.js health
 //   node codex-bridge.js pull                 write new messages into data/codex
@@ -22,13 +21,16 @@ const path = require('path');
 
 const CONN = path.join('C:', 'Users', 'User', 'OneDrive', 'Documents', 'pegasus',
   'agent-handoff', '.runtime', 'connection.json');
+const MAILBOX = path.join('C:', 'Users', 'User', 'OneDrive', 'Documents', 'pegasus',
+  'agent-handoff', 'mailbox.cjs');
 const IN = path.join(__dirname, 'data', 'codex', 'codex');
 const OUT = path.join(__dirname, 'data', 'codex', 'outbox');
+const DELIVERIES = path.join(__dirname, 'data', 'codex', 'deliveries');
 // The session to queue into. It lives under data/ (gitignored) because it names
 // a session on this machine and has no business in a public repository.
 const THREAD = path.join(__dirname, 'data', 'codex', 'thread.txt');
 
-const { execFileSync } = require('child_process');
+const { execFileSync, spawn } = require('child_process');
 
 function thread() {
   if (!fs.existsSync(THREAD)) return '';
@@ -96,6 +98,28 @@ async function call(method, route, body) {
   return data;
 }
 
+async function ensureMailbox() {
+  try {
+    await call('GET', '/health');
+    return { started: false };
+  } catch (firstError) {
+    if (!fs.existsSync(MAILBOX)) throw firstError;
+  }
+  const child = spawn(process.execPath, [MAILBOX, 'serve'], {
+    detached: true, windowsHide: true, stdio: 'ignore'
+  });
+  child.unref();
+  let lastError;
+  for (let attempt = 0; attempt < 30; attempt++) {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    try {
+      await call('GET', '/health');
+      return { started: true, pid: child.pid };
+    } catch (error) { lastError = error; }
+  }
+  throw lastError || new Error('mailbox did not start');
+}
+
 function ensure(dir) { fs.mkdirSync(dir, { recursive: true }); }
 
 // Messages addressed to him or to me both belong on his screen: he is the one
@@ -122,16 +146,40 @@ async function pull() {
   return added;
 }
 
-async function push(text, from) {
+function deliveryFile(sourceId) {
+  if (!sourceId) return '';
+  const safe = String(sourceId).replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 160);
+  return safe ? path.join(DELIVERIES, safe + '.json') : '';
+}
+
+// `queuedText` may add local routing context for the Codex task while the
+// monitor keeps showing exactly what Itzik typed. `sourceId` makes listener
+// retries idempotent after a successful delivery and reuses the first mailbox
+// receipt after a temporary queue failure.
+async function push(text, from, queuedText, sourceId) {
   const t = String(text || '').trim();
   if (!t) throw new Error('אין טקסט לשלוח');
-  // The service answers 201 with {receipt, agentAutoDelivery, message}; the
-  // stored record is the nested `message`, not the envelope.
-  const res = await call('POST', '/messages', { from: from || 'user', to: 'codex', text: t });
-  const m = res.message || res;
+  const marker = deliveryFile(sourceId);
+  const prior = marker ? (() => {
+    try { return JSON.parse(fs.readFileSync(marker, 'utf8')); } catch (e) { return null; }
+  })() : null;
+  if (prior && prior.state === 'delivered' && prior.message && prior.message.id) {
+    return { message: prior.message, delivery: { ok: true, duplicate: true } };
+  }
+  let m = prior && prior.message;
+  if (!m || !m.id) {
+    // The service answers 201 with {receipt, agentAutoDelivery, message}; the
+    // stored record is the nested `message`, not the envelope.
+    const res = await call('POST', '/messages', { from: from || 'user', to: 'codex', text: t });
+    m = res.message || res;
+  }
   if (!m.id) throw new Error('the mailbox stored nothing it could name');
   ensure(IN);
-  const q = queueToSession(t);
+  if (marker) {
+    ensure(DELIVERIES);
+    fs.writeFileSync(marker, JSON.stringify({ sourceId, state: 'stored', message: m }, null, 2), 'utf8');
+  }
+  const q = queueToSession(String(queuedText || t));
   // His own message is written to the same folder so the screen shows one
   // thread, and its state is whichever of the two actually happened.
   fs.writeFileSync(path.join(IN, m.id + '.json'), JSON.stringify({
@@ -146,7 +194,13 @@ async function push(text, from) {
   console.log(q.ok
     ? 'נמסר לשיחה של קודקס: ' + m.id
     : 'נשמר בתיבה בלבד (' + q.why + '): ' + m.id);
-  return m;
+  if (marker) {
+    fs.writeFileSync(marker, JSON.stringify({
+      sourceId, state: q.ok ? 'delivered' : 'stored', message: m,
+      error: q.ok ? '' : q.why, updatedAt: new Date().toISOString()
+    }, null, 2), 'utf8');
+  }
+  return { message: m, delivery: q };
 }
 
 // Anything he wrote on the phone lands here as a file, because the phone can
@@ -184,4 +238,4 @@ if (require.main === module) {
   main().catch(e => { console.error('!! ' + e.message); process.exit(1); });
 }
 
-module.exports = { pull, push, drainOutbox, call };
+module.exports = { pull, push, drainOutbox, call, ensureMailbox, queueToSession };
