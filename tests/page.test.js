@@ -800,6 +800,34 @@ test('the codex thread never says delivered while the mailbox only stores', () =
   // `codex queue` call succeeded, so `stored` must never borrow its wording.
   assert.ok(html.includes("stored:'מחכה בתיבה, לא נמסר לשיחה'"));
   assert.ok(html.includes("delivered:'נמסר לשיחה של קודקס'"));
-  assert.ok(html.includes('זה מ־Codex'));
   assert.ok(!html.includes('קודקס ענה'));
+  // The card box is the way in only. Since 16.9 the answers themselves sit in
+  // one cluster on the answers screen, so this fold must not list them again.
+  assert.ok(!html.includes("(m.from==='codex'?'זה מ־Codex':'אתה')"));
+});
+
+test('answers screen holds both sources in one cluster', () => {
+  const html = renderPage(fixture({
+    codex: [{ at: '2026-09-12T13:04:00', from: 'codex', to: 'user', text: 'שלום', state: 'received' }],
+  }));
+  // One list, built from my chat answers and from what Codex sent, each card
+  // saying which of us it was.
+  assert.ok(html.includes("var cdx=(D.codex||[]).filter(function(m){return m.from==='codex';})"));
+  assert.ok(html.includes("function ansWho(m){return m&&m.src==='codex'?'קודקס':'קלוד';}"));
+  assert.ok(html.includes("'<span class=\"w\">'+ansWho(m)+' · '+esc(stamp(m.at))"));
+});
+
+test('the answers tab sits beside home and its badge counts what waits', () => {
+  const html = renderPage(fixture({}));
+  const home = html.indexOf('id="nH"');
+  const ans = html.indexOf('id="nA"');
+  const chat = html.indexOf('id="nM"');
+  assert.ok(home > -1 && ans > -1 && chat > -1);
+  // In an RTL row the first button is the rightmost one, so "next to home, on
+  // the right" means second in source order, before the chat tab.
+  assert.ok(ans > home && ans < chat);
+  // Grey used to read out the total, which looks like a count of things
+  // waiting. Now it is the number waiting, in red, or a tick.
+  assert.ok(html.includes("el.textContent=n?String(n):'✓';"));
+  assert.ok(!html.includes('var total=allAnswers().length;'));
 });

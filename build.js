@@ -2397,11 +2397,11 @@ try{
 </button>
 <nav class="bn" aria-label="מסכים">
  <button type="button" id="nH" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10.5V20h12v-9.5"/><path d="M10 20v-5h4v5"/></svg>בית</button>
+ <button type="button" id="nA" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h16v11h-9l-5 3.5v-3.5H4Z"/><path d="M8 10.5h8M8 14h5"/></svg>תשובות<i class="cnt zero" id="aCnt">0</i></button>
  <button type="button" id="nM" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12.5c0 3.9-3.6 7-8 7a9 9 0 0 1-2.6-.4L5 21l1.2-3.3A6.7 6.7 0 0 1 4 12.5c0-3.9 3.6-7 8-7s8 3.1 8 7Z"/></svg>צ׳אט<i class="dot" id="mDot" hidden></i></button>
  <button type="button" id="nQ" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"/><path d="M7 19v-6"/><path d="M12 19V7"/><path d="M17 19v-9"/></svg>רשתות</button>
  <button type="button" id="nL" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>לידים<i class="dot" id="lDot" hidden></i></button>
  <button type="button" id="nR" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8L18.5 8v12.5h-13Z"/><path d="M14 3.5V8h4.5"/><path d="M8.5 13h7M8.5 16.5h4.5"/></svg>דוחות<i class="dot" id="rDot" hidden></i></button>
- <button type="button" id="nA" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h16v11h-9l-5 3.5v-3.5H4Z"/><path d="M8 10.5h8M8 14h5"/></svg>תשובות<i class="cnt zero" id="aCnt">0</i></button>
 </nav>
 
 <div class="stamp"><span id="builtFoot"></span></div>
@@ -4011,11 +4011,36 @@ function unDone(m){
   if(i>-1){t.splice(i,1);localStorage.setItem('chatTouched',JSON.stringify(t));}
  }catch(e){}
 }
+// One list, two sources. Itzik asked on 16.9 for everything Codex answered and
+// everything I answered in a single cluster instead of a fold on the home
+// screen and a screen at the foot of the app. The cards carry who said it.
 function allAnswers(){
- return (D.chat||[]).filter(function(m){return m.from==='claude'&&!isMail(m);})
-  .slice().sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
+ var mine=(D.chat||[]).filter(function(m){return m.from==='claude'&&!isMail(m);})
+  .map(function(m){return {at:m.at,text:m.text,src:'claude'};});
+ var cdx=(D.codex||[]).filter(function(m){return m.from==='codex';})
+  .map(function(m){return {at:m.at,text:m.text,src:'codex'};});
+ return mine.concat(cdx).sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
 }
-function isFresh(m){return unreadList().indexOf(m)>-1;}
+function ansWho(m){return m&&m.src==='codex'?'קודקס':'קלוד';}
+// Codex answers never had a read mark of their own, so the chat's cut carries
+// them: anything older than the last thing he read counts as read. With no cut
+// at all the window is three days, otherwise a first open would light up forty
+// four old answers as if they had just arrived.
+function codexFresh(){
+ var seen=seenIds();
+ var cut=chatSeen()||new Date(Date.now()-3*864e5).toISOString();
+ return (D.codex||[]).filter(function(m){
+  if(m.from!=='codex')return false;
+  if(seen.indexOf(claudeKey(m))>-1)return false;
+  if((m.at||'')<=cut)return false;
+  return true;
+ });
+}
+function ansFreshKeys(){
+ var k=unreadList().map(claudeKey);
+ return k.concat(codexFresh().map(claudeKey));
+}
+function isFresh(m){return ansFreshKeys().indexOf(claudeKey(m))>-1;}
 function ansCounts(){
  var a=allAnswers();
  return {all:a.length,
@@ -4064,7 +4089,7 @@ function renderAnswers(){
  host.innerHTML=list.map(function(m,i){
   var fresh=isFresh(m),done=!fresh&&isDone(m),st=isStar(m);
   return '<div class="ansc'+(fresh?' fresh':(done?' done':''))+(st?' star':'')+'" data-i="'+i+'">'
-   +'<span class="w">קלוד · '+esc(stamp(m.at))
+   +'<span class="w">'+ansWho(m)+' · '+esc(stamp(m.at))
    +(fresh?' · <em class="badge">חדש</em>':(done?' · טופל':' · נקרא'))+'</span>'
    +'<div class="atxt">'+linkify(m.text)+'</div>'
    +'<div class="arow">'
@@ -4075,7 +4100,7 @@ function renderAnswers(){
    +(done?'✓ טופל':'סמן כטופל')+'</button>'
    +'<button type="button" class="ab aread" data-i="'+i+'"'+(fresh?'':' hidden')+'>קראתי</button>'
    +'</div>'
-   +replyBox('בקשר לתשובה שלך מ'+stamp(m.at))
+   +replyBox('בקשר לתשובה מ'+ansWho(m)+' מ'+stamp(m.at))
    +'<span class="asaid" data-i="'+i+'"></span>'
    +'</div>';
  }).join('');
@@ -4083,7 +4108,7 @@ function renderAnswers(){
  Array.prototype.forEach.call(host.querySelectorAll('.acopy'),function(b){
   b.onclick=function(e){e.stopPropagation();
    var m=at(b);
-   ansCopy(b,'קלוד · '+stamp(m.at)+String.fromCharCode(10)+(m.text||''));};
+   ansCopy(b,ansWho(m)+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||''));};
  });
  Array.prototype.forEach.call(host.querySelectorAll('.astar'),function(b){
   b.onclick=function(e){e.stopPropagation();toggleStar(at(b));renderAnswers();};
@@ -4109,9 +4134,8 @@ function renderAnswers(){
 function paintAnsCount(){
  var el=document.getElementById('aCnt');
  if(!el)return;
- var n=unreadList().length;
- var total=allAnswers().length;
- el.textContent=n?String(n):String(total);
+ var n=ansFreshKeys().length;
+ el.textContent=n?String(n):'✓';
  el.classList.toggle('zero',!n);
 }
 // Every inner screen gets a way back and its own address. He asked for both:
@@ -4693,21 +4717,17 @@ function renderCodex(){
  if(!C.length&&!q.length){box.hidden=true;return;}
  box.hidden=false;
  foldCard(box,'cdxSum','קודקס · '+(C.length+q.length),'cdxOpen');
- var rows=C.slice(0,6).map(function(m){
-  var st=CX_STATE[m.state]||'';
-  return '<div class="cx cx-'+esc(m.state||'stored')+'">'
-   +'<div class="who">'+(m.from==='codex'?'זה מ־Codex':'אתה')+' · '+esc(stamp(m.at))+'</div>'
-   +'<p>'+esc(m.text)+'</p>'
-   +(st?'<span class="st">'+esc(st)+'</span>':'')+'</div>';
- }).join('');
+ // The answers Codex sent used to be listed here as well as on the answers
+ // screen. Itzik asked on 16.9 for one cluster, so this is the way in only:
+ // what is waiting to go out, and the line to write on.
  var pend=q.map(function(t){
   return '<div class="cx cx-stored"><div class="who">אתה · עכשיו</div>'
    +'<p>'+esc(t.text)+'</p>'
    +'<span class="st">יצא אליי, עוד לא הועבר לתיבה</span></div>';
  }).join('');
  document.getElementById('cdxBody').innerHTML=
-  '<small>מה שאתה שולח נמסר לשיחה החיה של קודקס. כל הודעה נושאת את מה שקרה לה בפועל, ונמסר נכתב רק כשהמסירה הצליחה.</small>'
-  +pend+rows
+  '<small>מה שאתה שולח נמסר לשיחה החיה של קודקס. התשובות שלו יושבות במסך תשובות, יחד עם שלי.</small>'
+  +pend
   +'<div class="cxrow"><input id="cxIn" placeholder="הודעה לקודקס" autocomplete="off">'
   +'<button type="button" id="cxSend">שליחה</button></div>';
  var b=document.getElementById('cxSend');
