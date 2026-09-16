@@ -38,6 +38,7 @@ const DROP = path.join(__dirname, 'data', 'inbox');
 const STATUS = path.join(__dirname, 'data', 'status');
 const LIVEFILE = path.join(STATUS, 'live.json');
 const PULLS = path.join(STATUS, 'pulls.json');
+const CHAT = path.join(__dirname, 'data', 'chat', 'chat');
 
 /*
   How often the pulse goes out.
@@ -239,6 +240,66 @@ async function saveAttachment(m) {
   return false;
 }
 
+/*
+  Itzik, 16.9: "give me an answer the moment you start working on it, and it
+  stays open in red until the answer arrives, then green". Until now his
+  message only entered the chat when I answered it, so for the whole wait the
+  page showed nothing. Now the listener writes the message into the chat the
+  moment it lands, with status working and the time it was received. The page
+  renders that as a red line under his words. When I answer, the record turns
+  done and the line turns green. No claim is made that was not true: the
+  listener really did receive it at that time.
+*/
+function isSystemText(text) {
+  const t = String(text || '');
+  return /^You received a file/.test(t) || /^קובץ\n/.test(t) || /^קודקס:/.test(t);
+}
+function recordIncoming(m) {
+  let text = '';
+  if (m.attachment) text = 'הודעה קולית: ' + (m.attachment.name || '');
+  else if (m.message && !isSystemText(m.message)) text = String(m.message);
+  if (!text) return false;
+  const at = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const name = at.getFullYear() + pad(at.getMonth() + 1) + pad(at.getDate()) + '-'
+    + pad(at.getHours()) + pad(at.getMinutes()) + pad(at.getSeconds()) + '-itzik-auto.json';
+  const rec = { at: at.toISOString(), from: 'itzik', text: text, status: 'working',
+    ackAt: at.toISOString(), id: 'ntfy-' + m.id, auto: true };
+  try {
+    fs.mkdirSync(CHAT, { recursive: true });
+    fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+    say('נרשם בצ׳אט עם אישור קבלה: ' + text.slice(0, 60));
+    return true;
+  } catch (e) { say('!! לא נרשם בצ׳אט: ' + e.message); return false; }
+}
+let publishing = false, publishAgain = false;
+function publishChat() {
+  if (publishing) { publishAgain = true; return; }
+  publishing = true;
+  execFile('node', ['build.js'], { cwd: __dirname, timeout: 120000 }, function (err, out) {
+    if (err) { say('!! build נכשל: ' + String(out).slice(0, 120)); return finish(); }
+    git(['add', '--', 'data/chat', 'docs'], function () {
+      git(['commit', '-m', 'listener: received, working on it'], function (err2, out2) {
+        if (/nothing to commit/i.test(out2)) return finish();
+        if (err2) { say('!! commit נכשל: ' + out2.trim().slice(0, 120)); return finish(); }
+        git(['push'], function (err3) {
+          if (!err3) { say('אישור הקבלה פורסם לדף'); return finish(); }
+          git(['pull', '--rebase', '--autostash'], function () {
+            git(['push'], function (err4) {
+              say(err4 ? '!! פרסום אישור הקבלה נכשל' : 'אישור הקבלה פורסם לדף (אחרי rebase)');
+              finish();
+            });
+          });
+        });
+      });
+    });
+  });
+  function finish() {
+    publishing = false;
+    if (publishAgain) { publishAgain = false; publishChat(); }
+  }
+}
+
 async function handle(m) {
   const seen = mark();
   if (m.time === seen.time && seen.ids.includes(m.id)) return;
@@ -251,6 +312,8 @@ async function handle(m) {
   if (routed.matched) {
     say(routed.duplicate ? 'בקשת קודקס כבר נמסרה: ' + routed.sourceId
       : 'בקשת קודקס נמסרה לשיחה: ' + routed.sourceId);
+  } else if (recordIncoming(m)) {
+    publishChat();
   }
   remember(m);
   await beat();

@@ -79,7 +79,7 @@ const LIB = fs.readFileSync(path.join(__dirname, 'lib', 'monitor-logic.js'), 'ut
 // He asked on 11.9 to mark everything read and start the count from zero.
 // A phone that has not applied this stamp yet marks every answer written
 // before it as read once, on its next load. Bump the value to reset again.
-const RESET_SEEN_AT = '2026-09-11T10:35:00';
+const RESET_SEEN_AT = '2026-09-16T20:05:00';
 function renderPage(payload) {
   const data = JSON.stringify(payload).replace(/</g, '\\u003c');
   return PAGE
@@ -687,15 +687,16 @@ section{margin-bottom:30px}
 .ack-n{display:block;margin-top:4px;color:var(--ink);opacity:.85}
 .ack-wait{background:var(--unread);color:#8a3a32;border-inline-start-color:var(--red)}
 .ack-received{background:var(--sunk);color:var(--dim)}
-.ack-working{background:#f6e7c8;color:#8a5a12;border-inline-start-color:var(--gold)}
+/* Itzik, 16.9: open is red, answered is green. Nothing in between. */
+.ack-working{background:var(--unread);color:#8a3a32;border-inline-start-color:var(--red)}
 .ack-partial{background:var(--accent-soft);color:var(--accent);border-inline-start-color:var(--accent)}
 .ack-done{background:var(--fresh);color:#1d6b3f;border-inline-start-color:#1d6b3f}
 .pulse{display:inline-block;width:8px;height:8px;border-radius:50%;margin-inline-end:7px;
  background:currentColor;vertical-align:middle;animation:ackpulse 1.8s ease-in-out infinite}
 @keyframes ackpulse{0%,100%{opacity:.35;transform:scale(.82)}50%{opacity:1;transform:scale(1.12)}}
 @media (prefers-reduced-motion:reduce){.pulse{animation:none;opacity:.9}}
-.st-working{background:#f6e7c8;color:#8a5a12}
-.st-done{background:var(--accent-soft);color:var(--accent)}
+.st-working{background:var(--unread);color:#8a3a32}
+.st-done{background:var(--fresh);color:#1d6b3f}
 /* Unread is red and glowing, and it stays that way for days if that is how
    long it takes him to get to it. Touching it turns it green, which is his
    own mark that he dealt with it. */
