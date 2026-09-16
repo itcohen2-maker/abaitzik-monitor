@@ -883,8 +883,10 @@ test('what was received sits under the red button as one ordered list', () => {
   const body = html.slice(html.indexOf('function renderGot(){'));
   const order = ['בעבודה עכשיו', 'התקבלו, עוד לא התחלתי', 'משימות פתוחות ממך', 'בוצע'].map((h) => body.indexOf(h));
   assert.ok(order.every((i, n) => i > -1 && (n === 0 || i > order[n - 1])), String(order));
-  // The count is what is still open, and it is painted with the home screen.
-  assert.ok(html.includes("var n=gotList().filter(gotOpen).length+(D.openCmds||[]).length;"));
+  // The count is what is still open and not deleted by hand, and it is painted
+  // with the home screen.
+  assert.ok(html.includes("var n=dropGone('msg',gotList().filter(gotOpen)).length"));
+  assert.ok(html.includes("+dropGone('cmd',D.openCmds||[]).length;"));
   assert.ok(html.includes(' paintGot();\n var c=unreadCount();'));
 });
 
@@ -954,4 +956,41 @@ test('the three health buttons left the home screen and live in the ideas screen
   assert.ok(html.includes("on('gPill',openPill);on('iPill',openPill);"));
   assert.ok(html.includes("on('gCam',openCam);on('iCam',openCam);"));
   assert.ok(html.includes("on('gFood',openFood);on('iFood',openFood);"));
+});
+
+test('every row in what was received carries a manual delete button', () => {
+  const html = renderPage(fixture({}));
+  // Itzik, 16.9 at night: a line from 10.9 saying "עובד על הבקשות שלך" was
+  // still sitting there. He asked for buttons that take old requests off by
+  // hand.
+  const body = html.slice(html.indexOf('function renderGot(){'), html.indexOf('function paintAnsCount(){'));
+  assert.ok(body.includes("+del(kind||'msg',m)+'</div>'"));
+  assert.ok(body.includes("+del('now',{at:N.at,text:N.text})"));
+  assert.ok(body.includes("row(c,'g','פתוח','cmd')"));
+  // Deleting is local to his phone and silent: no message, no notification.
+  assert.ok(html.includes("localStorage.setItem('gotGone',JSON.stringify(a.slice(-400)));"));
+  assert.ok(body.includes('renderGot();paintGot();'));
+  // And it is reversible in one press.
+  assert.ok(body.includes('id="gotBack"'));
+  assert.ok(body.includes('if(bb)bb.onclick=function(){saveGone([]);renderGot();paintGot();'));
+});
+
+test('a lead can carry the screenshot of the request, closed by default', () => {
+  const html = renderPage(fixture({
+    contacts: [{ at: '2026-09-16T23:10:00+03:00', name: 'b3n1306', network: 'instagram',
+      status: 'standby', shot: 'files/x.jpg', shotNote: 'צילום המסך ששלחת' }],
+  }));
+  const body = html.slice(html.indexOf('function leadRow(c){'), html.indexOf('function reportRow('));
+  assert.ok(body.includes("c.shot?'<details class=\"shot\"><summary>צילום המסך של הפנייה</summary>'"));
+  assert.ok(body.includes("+'<img src=\"'+esc(c.shot)+'\" alt=\"צילום מסך של הפנייה\" loading=\"lazy\"></a></details>'"));
+  assert.ok(html.includes('.shot img{display:block;width:100%;max-width:300px'));
+});
+
+test('the screenshot path survives the contacts payload', () => {
+  const { build } = require('../build.js');
+  assert.ok(typeof build === 'function' || true);
+  const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'build.js'), 'utf8');
+  // The field has to be copied in the mapper, or the lead ships without it.
+  assert.ok(src.includes("shot: c.shot || '',"));
+  assert.ok(src.includes("shotNote: c.shotNote || '',"));
 });

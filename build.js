@@ -148,6 +148,10 @@ function build() {
       note: c.note,
       at: c.at,
       status: c.status,
+      // The screenshot of the request itself, when he sent one. A path under
+      // docs/, never the file in data/, which never ships.
+      shot: c.shot || '',
+      shotNote: c.shotNote || '',
       log: Array.isArray(c.log) ? c.log : [],
     }))
     .sort((a, b) => {
@@ -657,6 +661,14 @@ button.abtn[disabled]{opacity:.55}
 .gr-w{background:#fff3cd;color:#7a5200}
 .gr-g{background:#e3ecfb;color:#1a4b9c}
 .gr-d{background:#e2f5e6;color:#1b6b34}
+.gr-del{flex:0 0 auto;background:transparent;color:var(--dim);border:1px solid var(--line);
+ border-radius:999px;font:700 12px Heebo,sans-serif;padding:3px 10px;cursor:pointer}
+.gr-del:active{transform:translateY(1px)}
+.gr-del:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.gback{display:flex;gap:10px;align-items:center;justify-content:space-between;
+ color:var(--dim);font-size:13px;font-weight:300;padding:10px 4px 2px}
+.gback button{background:transparent;color:var(--accent);border:1px solid var(--line);
+ border-radius:999px;font:700 13px Heebo,sans-serif;padding:6px 14px;cursor:pointer}
 .gempty{color:var(--dim);font-weight:300;padding:6px 4px 10px}
 .newbtn b{display:block;font:800 17px Heebo,sans-serif}
 .newbtn small{display:block;font-size:12px;opacity:.92;font-weight:300;margin-top:1px}
@@ -737,6 +749,10 @@ section{margin-bottom:30px}
 .item .said{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);
  font-size:14px;color:var(--accent)}
 .empty{color:var(--dim);font-size:15px;font-weight:300;padding:16px 2px}
+.shot{margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.shot>summary{font:700 14px Heebo,sans-serif;color:var(--accent);cursor:pointer}
+.shot small{display:block;color:var(--dim);font-size:12.5px;font-weight:300;margin:6px 0}
+.shot img{display:block;width:100%;max-width:300px;border-radius:10px;margin-top:6px}
 .item.lead{border-inline-start-color:var(--wait)}
 .item.lead.closed{border-inline-start-color:var(--accent)}
 .log{list-style:none;margin:10px 0 0;padding:0 11px 0 0;border-inline-start:1px solid var(--line)}
@@ -2298,7 +2314,7 @@ try{
 <section id="pB" hidden>
  <h2>מה התקבל</h2>
  <div class="gotlist" id="gotBox"></div>
- <div class="hint">כל מה ששלחת לי, לפי מצב: מה בעבודה עכשיו, מה התקבל ועוד לא התחיל, המשימות הפתוחות, ומה שבוצע. חדש למעלה.</div>
+ <div class="hint">כל מה ששלחת לי, לפי מצב: מה בעבודה עכשיו, מה התקבל ועוד לא התחיל, המשימות הפתוחות, ומה שבוצע. חדש למעלה. ליד כל שורה יש מחיקה, והיא מורידה אותה מהמסך שלך בלבד. בסוף הדף אפשר להחזיר הכל.</div>
 </section>
 
 <section id="pA" hidden>
@@ -2769,6 +2785,15 @@ function leadRow(c){
   +'<span>'+ago(c.at)+'</span></div>'
   +'<div class="src">מקור: '+esc(c.source||SRC[c.network]||NET[c.network]||'לא ידוע')+'</div>'
   +(c.note?'<div class="body">'+esc(c.note)+'</div>':'')
+  /*
+     צילום המסך של הפנייה יושב בתוך הליד עצמו, לפי בקשתו ב-16.9 בלילה.
+     סגור בברירת מחדל: הדף הזה פתוח לכל מי שיש לו הקישור, והתמונה מראה
+     פרצוף והודעה של נער.
+  */
+  +(c.shot?'<details class="shot"><summary>צילום המסך של הפנייה</summary>'
+    +(c.shotNote?'<small>'+esc(c.shotNote)+'</small>':'')
+    +'<a href="'+esc(c.shot)+'" target="_blank" rel="noopener">'
+    +'<img src="'+esc(c.shot)+'" alt="צילום מסך של הפנייה" loading="lazy"></a></details>':'')
   +logHtml(c.log)
   +'<a class="ask" href="mailto:?subject='+encodeURIComponent(subject)
   +'&body='+encodeURIComponent(body)+'">בקשת פרטי התקשרות</a>'
@@ -4571,43 +4596,87 @@ function gotList(){
 }
 function gotOpen(m){return !m.status||m.status==='received'||m.status==='working';}
 var gotShow=30;
+/*
+  מחיקה ידנית של בקשות ישנות. איציק, 16.9 בלילה: על המסך ישבה שורה מ-10.9
+  שאומרת "עובד על הבקשות שלך", והוא ביקש כפתור שיוריד ממנו שורות כאלה בעצמו.
+
+  המחיקה היא במכשיר שלו בלבד, ב-localStorage, כי הדף סטטי ואין לו כתיבה
+  לקבצים. לכן היא גם שקטה: לא נשלחת שום הודעה ולא נוגעת במכסת ההתראות,
+  ומה שנמחק חוזר בלחיצה אחת כל עוד לא ניקה את הדפדפן.
+*/
+function goneKeys(){
+ try{return JSON.parse(localStorage.getItem('gotGone')||'[]');}catch(e){return [];}
+}
+function saveGone(a){
+ try{localStorage.setItem('gotGone',JSON.stringify(a.slice(-400)));}catch(e){}
+}
+function gotKey(kind,x){
+ return kind+'|'+String(x.id||x.at||'')+'|'+String(x.text||'').replace(/\s+/g,' ').trim().slice(0,40);
+}
+function isGone(k){return goneKeys().indexOf(k)>-1;}
+function dropGone(kind,list){
+ var g=goneKeys();
+ return list.filter(function(x){return g.indexOf(gotKey(kind,x))<0;});
+}
 function paintGot(){
  var el=document.getElementById('gotCount');
  if(!el)return;
- var n=gotList().filter(gotOpen).length+(D.openCmds||[]).length;
+ var n=dropGone('msg',gotList().filter(gotOpen)).length
+  +dropGone('cmd',D.openCmds||[]).length;
  el.textContent=String(n);
  el.classList.toggle('zero',!n);
 }
 function renderGot(){
  var host=document.getElementById('gotBox');
  if(!host)return;
- var all=gotList();
+ var all=dropGone('msg',gotList());
  var work=all.filter(function(m){return m.status==='working';});
  var got=all.filter(function(m){return !m.status||m.status==='received';});
  var done=all.filter(function(m){return m.status==='done';});
- var K=D.openCmds||[];
+ var K=dropGone('cmd',D.openCmds||[]);
  var N=D.now;
- function row(m,k,label){
+ var nGone=N&&N.text&&isGone(gotKey('now',{at:N.at,text:N.text}));
+ function del(kind,x){
+  return '<button type="button" class="gr-del" data-k="'+esc(gotKey(kind,x))+'" '
+   +'aria-label="מחיקת השורה">מחיקה</button>';
+ }
+ function row(m,k,label,kind){
   return '<div class="gr"><span class="gr-t">'+esc(stamp(m.at))+'</span>'
    +'<div class="gr-x">'+linkify(m.text||'')+'</div>'
-   +'<span class="gr-s gr-'+k+'">'+label+'</span></div>';
+   +'<span class="gr-s gr-'+k+'">'+label+'</span>'
+   +del(kind||'msg',m)+'</div>';
  }
  var h='<h3>בעבודה עכשיו</h3>';
- if(N&&N.text)h+='<div class="gr now"><span class="gr-t">'+esc(stamp(N.at))+'</span>'
+ if(N&&N.text&&!nGone)h+='<div class="gr now"><span class="gr-t">'+esc(stamp(N.at))+'</span>'
   +'<div class="gr-x">'+esc(N.text)+(N.next?'<small>אחר כך: '+esc(N.next)+'</small>':'')+'</div>'
-  +'<span class="gr-s gr-w">דיווח</span></div>';
+  +'<span class="gr-s gr-w">דיווח</span>'+del('now',{at:N.at,text:N.text})+'</div>';
  h+=work.map(function(m){return row(m,'w','עובד על זה');}).join('');
- if(!work.length&&!(N&&N.text))h+='<div class="gempty">אין הודעה שמסומנת בעבודה.</div>';
+ if(!work.length&&!(N&&N.text&&!nGone))h+='<div class="gempty">אין הודעה שמסומנת בעבודה.</div>';
  h+='<h3>התקבלו, עוד לא התחלתי · '+got.length+'</h3>';
  h+=got.length?got.map(function(m){return row(m,'g','התקבל');}).join(''):'<div class="gempty">הכל נקרא והתחיל.</div>';
  h+='<h3>משימות פתוחות ממך · '+K.length+'</h3>';
- h+=K.length?K.map(function(c){return row(c,'g','פתוח');}).join(''):'<div class="gempty">אין משימות פתוחות.</div>';
+ h+=K.length?K.map(function(c){return row(c,'g','פתוח','cmd');}).join(''):'<div class="gempty">אין משימות פתוחות.</div>';
  h+='<h3>בוצע · '+done.length+'</h3>';
  h+=done.slice(0,gotShow).map(function(m){return row(m,'d','בוצע');}).join('');
  if(done.length>gotShow)h+='<button type="button" class="ab" id="gotMore" style="width:100%;padding:14px">להציג עוד ('+(done.length-gotShow)+')</button>';
+ var gn=goneKeys().length;
+ if(gn)h+='<div class="gback">נמחקו מהמסך הזה '+gn+' שורות. '
+  +'<button type="button" id="gotBack">להחזיר הכל</button></div>';
  host.innerHTML=h;
  var mb=document.getElementById('gotMore');
  if(mb)mb.onclick=function(){gotShow+=30;renderGot();};
+ var bb=document.getElementById('gotBack');
+ if(bb)bb.onclick=function(){saveGone([]);renderGot();paintGot();toast('השורות חזרו.');};
+ Array.prototype.forEach.call(host.querySelectorAll('.gr-del'),function(b){
+  b.onclick=function(){
+   var k=b.getAttribute('data-k')||'';
+   var g=goneKeys();
+   if(g.indexOf(k)<0)g.push(k);
+   saveGone(g);
+   renderGot();paintGot();
+   toast('נמחק מהמסך. אפשר להחזיר בסוף הדף.');
+  };
+ });
 }
 function paintAnsCount(){
  var el=document.getElementById('aCnt');
