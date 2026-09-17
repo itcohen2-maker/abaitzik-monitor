@@ -839,6 +839,25 @@ section{margin-bottom:30px}
 @media (prefers-reduced-motion:reduce){.pulse{animation:none;opacity:.9}}
 .st-working{background:#f6e7c8;color:#8a5a12}
 .st-done{background:var(--fresh);color:#1d6b3f}
+/*
+  איציק, 17.9: "ברגע שאתה שולח את ההודעה שאני משאיר לך פה, תעשה עבעוב כזה
+  מדליק על התשובה שלי, שאני אדע שאתה בעבודה."
+
+  ההודעה שלו מתחילה לפעום ברגע שהיא נשלחת, וממשיכה כל עוד היא פתוחה.
+  הפעימה נכבית כשהמצב בקובץ ההודעה הופך done. היא לא מוכיחה שנעשתה עבודה,
+  היא אומרת שההודעה נקלטה ופתוחה, וזה בדיוק מה שהוא ביקש לראות.
+*/
+.bub.you.live{border:2px solid var(--gold);opacity:1;animation:livebeat 1.6s ease-in-out infinite}
+.bub.you.live .w{color:#8a5a12}
+@keyframes livebeat{
+ 0%,100%{box-shadow:0 6px 18px rgba(200,150,30,.28),0 0 0 0 rgba(212,160,23,.55)}
+ 55%{box-shadow:0 6px 18px rgba(200,150,30,.28),0 0 0 12px rgba(212,160,23,0)}
+}
+@media(prefers-reduced-motion:reduce){.bub.you.live{animation:none}}
+.bub.you.live .lv{display:inline-block;width:8px;height:8px;border-radius:50%;
+ margin-inline-end:6px;background:var(--gold);vertical-align:middle;
+ animation:ackpulse 1.6s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){.bub.you.live .lv{animation:none;opacity:.9}}
 /* Unread is red and glowing, and it stays that way for days if that is how
    long it takes him to get to it. Touching it turns it green, which is his
    own mark that he dealt with it. */
@@ -2986,13 +3005,20 @@ function hideMsg(key){
  try{localStorage.setItem('msgHidden',JSON.stringify(h.slice(-4000)));}catch(e){}
 }
 function msgKey(m){return (m.id||'')||((m.from||'')+'|'+(m.at||''));}
+// פועם כל עוד ההודעה שלו פתוחה: מרגע השליחה, דרך התקבל ובעבודה, ועד done.
+function isLive(m){
+ if(m.from!=='itzik')return false;
+ if(m.pend)return true;
+ return !m.status||m.status==='received'||m.status==='working'||m.status==='partial';
+}
 function bubbleHtml(m,i,fresh,handled){
  var mine=m.from==='itzik';
+ var live=isLive(m);
  var line=(mine?'איציק':'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');
- return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')
+ return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')+(live?' live':'')
   +(fresh?' fresh':(handled?' touched':' read'))+'" data-i="'+i+'"'
   +' data-copy="'+esc(line)+'">'
-  +'<span class="w">'+(mine?'אתה':'קלוד')+' · '+esc(stamp(m.at))
+  +'<span class="w">'+(live?'<i class="lv"></i>':'')+(mine?'אתה':'קלוד')+' · '+esc(stamp(m.at))
   +(m.pend?' · נשלח, עוד לא נקרא':'')+statusTag(m)
   +(fresh?' · <em class="badge">חדש</em>':(mine?'':' · נקרא'))
   +'<button type="button" class="cp" data-i="'+i+'" aria-label="העתקה">העתקה</button>'

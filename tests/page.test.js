@@ -1066,3 +1066,28 @@ test('text and a chosen file leave as one message, on one press', () => {
   assert.ok(html.includes('  clearPick();'));
   assert.ok(html.includes("b.textContent=n?(n>1?('שליחה עם '+n+' הקבצים'):'שליחה עם הקובץ'):'שליחה';"));
 });
+
+// איציק, 17.9: הודעה שלו פועמת מרגע השליחה ועד שהיא done, כדי שידע שאני עליה.
+test('his own message pulses while it is still open, and stops when it is done', () => {
+  const html = renderPage(fixture());
+  assert.ok(html.includes('@keyframes livebeat'), 'no livebeat keyframes');
+  assert.ok(html.includes('.bub.you.live{border:2px solid var(--gold);opacity:1;animation:livebeat'),
+    'his open bubble must pulse at full opacity');
+  assert.ok(/prefers-reduced-motion:reduce\)\{\.bub\.you\.live\{animation:none\}/.test(html),
+    'the pulse must stop for reduced motion');
+
+  const isLive = new Function('m', html.match(/function isLive\(m\)\{[\s\S]*?\n\}/)[0] + '; return isLive(m);');
+  assert.equal(isLive({ from: 'itzik', pend: true }), true, 'pulses the moment it is sent');
+  assert.equal(isLive({ from: 'itzik' }), true, 'pulses while nothing has read it');
+  assert.equal(isLive({ from: 'itzik', status: 'received' }), true);
+  assert.equal(isLive({ from: 'itzik', status: 'working' }), true);
+  assert.equal(isLive({ from: 'itzik', status: 'partial' }), true);
+  assert.equal(isLive({ from: 'itzik', status: 'done' }), false, 'done stops the pulse');
+  assert.equal(isLive({ from: 'claude' }), false, 'only his own messages pulse');
+
+  const bub = new Function('m',
+    html.match(/function isLive\(m\)\{[\s\S]*?\n\}/)[0]
+    + ';return "<div class=\\"bub "+(m.from===\'itzik\'?\'you\':\'me\')+(isLive(m)?\' live\':\'\')+"\\">";');
+  assert.ok(bub({ from: 'itzik', status: 'working' }).includes('bub you live'));
+  assert.ok(!bub({ from: 'itzik', status: 'done' }).includes('live'));
+});
