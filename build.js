@@ -2128,7 +2128,8 @@ try{
  <div class="grid" id="blkTiles">
   <button type="button" class="gt g2" id="gMail"><b>📧 מייל</b><small>בקשה, ואני מחזיר תשובה</small></button>
   <button type="button" class="gt g3" id="gQueue"><b>📊 ניטור רשתות</b><small>מי פנה, מה נענה</small></button>
-  <button type="button" class="gt g4" id="gReports"><b>📄 דוחות</b><small>סיכומי הסבבים</small></button>
+  <!-- The reports tile came off on 17.9. The reports are in "תשובות" now,
+       which is the one button he asked for. -->
   <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>חשבוניות והיומן</small></button>
   <button type="button" class="gt g10" id="gNotes"><b>📝 פתקים</b><small>נכתב, נשמר, לא הולך לאיבוד</small></button>
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
@@ -3608,7 +3609,7 @@ function paintNew(){
  // instead of sitting fourteen tiles down where he has to hunt for it. Once he
  // has opened it, it goes back to wherever he put it.
  floatTile('gSpecial',spNew);
- mark('gReports',reps>0,String(reps));
+ // The reports tile is gone; its count is carried by the answers badge.
  mark('gPill',pillNow,'עכשיו');
  var nM=document.getElementById('nM');if(nM)nM.classList.toggle('hasnew',msgs>0);
  var nR=document.getElementById('nR');if(nR)nR.classList.toggle('hasnew',reps>0);
@@ -4218,7 +4219,7 @@ function markReportsSeen(){
 function paintReportDot(){
  var fresh=newestReport()&&newestReport()>reportsSeen();
  var n=document.getElementById('nR');if(n)n.classList.toggle('blink',!!fresh);
- var t=document.getElementById('gReports');if(t)t.classList.toggle('blink',!!fresh);
+ var t=document.getElementById('gReports');if(t)t.classList.toggle('blink',!!fresh); // tile removed 17.9, guarded
 }
 
 // The two big blocks on the home screen: the square tiles and the round app
@@ -4580,14 +4581,32 @@ function unDone(m){
 // One list, two sources. Itzik asked on 16.9 for everything Codex answered and
 // everything I answered in a single cluster instead of a fold on the home
 // screen and a screen at the foot of the app. The cards carry who said it.
+/*
+  Everything I produce, in one list, behind one button.
+
+  Itzik, 17.9: "I do not see your report in the monitor, where exactly does it
+  appear, in answers or in reports. Cancel all of it, I want only one button."
+  He was right to ask, because the answer was both: the short message went to
+  the chat and the full report to a separate screen behind a separate tile, so
+  finding out what happened meant knowing which of two places to look in, and
+  the honest answer to "where is it" was "depends".
+
+  There is one place now. A report is an answer that happens to have a title,
+  and it sorts into the same list by time with everything else. The search box
+  and the filter chips above already cover the whole list, so a report is
+  findable by a word in it rather than by remembering which screen it lives on.
+*/
 function allAnswers(){
  var mine=(D.chat||[]).filter(function(m){return m.from==='claude'&&!isMail(m);})
   .map(function(m){return {at:m.at,text:m.text,src:'claude'};});
  var cdx=(D.codex||[]).filter(function(m){return m.from==='codex';})
   .map(function(m){return {at:m.at,text:m.text,src:'codex'};});
- return mine.concat(cdx).sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
+ var rps=(D.reports||[]).map(function(r){
+  return {at:r.at,text:(r.title||'')+String.fromCharCode(10)+(r.body||''),src:'report'};
+ });
+ return mine.concat(cdx).concat(rps).sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
 }
-function ansWho(m){return m&&m.src==='codex'?'קודקס':'קלוד';}
+function ansWho(m){return m&&m.src==='codex'?'קודקס':(m&&m.src==='report'?'דוח':'קלוד');}
 // Codex answers never had a read mark of their own, so the chat's cut carries
 // them: anything older than the last thing he read counts as read. With no cut
 // at all the window is three days, otherwise a first open would light up forty
@@ -4660,7 +4679,7 @@ function renderAnswers(){
    +(fresh?' · <em class="badge">חדש</em>':(done?' · טופל':' · נקרא'))+'</span>'
    +'<div class="atxt">'+linkify(m.text)+'</div>'
    +'<div class="arow">'
-   +(m.src==='codex'?'':'<button type="button" class="ab aimb" data-k="'+esc(claudeKey(m))+'">להשיב</button>')
+   +(m.src==='codex'||m.src==='report'?'':'<button type="button" class="ab aimb" data-k="'+esc(claudeKey(m))+'">להשיב</button>')
    +'<button type="button" class="ab acopy" data-i="'+i+'">העתקה</button>'
    +'<button type="button" class="ab astar'+(st?' on':'')+'" data-i="'+i+'">'
    +(st?'★ מסומן':'☆ סימון')+'</button>'
@@ -6237,7 +6256,10 @@ document.getElementById('wShoot').onclick=function(){
  shoot();
 };
 document.getElementById('gQueue').onclick=function(){openNet('all');};
-document.getElementById('gReports').onclick=function(){pane('r');markReportsSeen();renderNextReport();ensure('reports',renderNet);};
+// The reports screen is still built and still reachable from inside, but it
+// is no longer a tile on the way to everything else.
+(function(){var b=document.getElementById('gReports');if(!b)return;
+ b.onclick=function(){pane('r');markReportsSeen();renderNextReport();ensure('reports',renderNet);};})();
 on('gMail',function(){pane('e');});
 function openPill(){pane('p');renderPill();openPillSheet();}
 on('gPill',openPill);on('iPill',openPill);

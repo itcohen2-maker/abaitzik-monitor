@@ -433,7 +433,9 @@ test('every answer of mine can be replied to, and the dock says what it answers'
   // His own bubbles get none: he does not reply to himself.
   assert.ok(html.includes("+(mine?'':'<button type=\"button\" class=\"aimb bubaim\""));
   // Codex answers are not mine to be aimed at.
-  assert.ok(html.includes("(m.src==='codex'?'':'<button type=\"button\" class=\"ab aimb\""));
+  // Neither are Codex's answers nor a report: one is not mine, the other is
+  // not a thing anybody replies to.
+  assert.ok(html.includes("(m.src==='codex'||m.src==='report'?'':'<button type=\"button\" class=\"ab aimb\""));
   // Aiming fills the caption the recorder sends with, so a voice note arrives
   // attached to the answer instead of as a sentence with no question.
   assert.ok(html.includes('function aimQuote(m){'));
@@ -848,15 +850,28 @@ test('the codex thread never says delivered while the mailbox only stores', () =
   assert.ok(!html.includes("(m.from==='codex'?'זה מ־Codex':'אתה')"));
 });
 
-test('answers screen holds both sources in one cluster', () => {
+test('answers screen holds every source in one cluster', () => {
   const html = renderPage(fixture({
     codex: [{ at: '2026-09-12T13:04:00', from: 'codex', to: 'user', text: 'שלום', state: 'received' }],
   }));
-  // One list, built from my chat answers and from what Codex sent, each card
-  // saying which of us it was.
+  // One list, built from my chat answers, from what Codex sent, and from the
+  // round reports, each card saying which it was.
   assert.ok(html.includes("var cdx=(D.codex||[]).filter(function(m){return m.from==='codex';})"));
-  assert.ok(html.includes("function ansWho(m){return m&&m.src==='codex'?'קודקס':'קלוד';}"));
+  assert.ok(html.includes('var rps=(D.reports||[]).map(function(r){'));
+  assert.ok(html.includes("function ansWho(m){return m&&m.src==='codex'?'קודקס':(m&&m.src==='report'?'דוח':'קלוד');}"));
   assert.ok(html.includes("'<span class=\"w\">'+ansWho(m)+' · '+esc(stamp(m.at))"));
+});
+
+test('one button, so "where is the report" has one answer', () => {
+  const html = renderPage(fixture({}));
+  // Itzik, 17.9: the report went to the chat and to a separate reports tile,
+  // so finding it meant knowing which of two screens to open. The tile is off
+  // the home screen and the reports sort into the answers list by time.
+  assert.ok(!html.includes('id="gReports"><b>📄 דוחות</b>'));
+  assert.ok(html.includes("text:(r.title||'')+String.fromCharCode(10)+(r.body||'')"));
+  // The screen that drew them is still built, so nothing was deleted, but
+  // nothing on the way to everything else points at it any more.
+  assert.ok(html.includes("var b=document.getElementById('gReports');if(!b)return;"));
 });
 
 test('the answers tab sits beside home and its badge counts what waits', () => {
