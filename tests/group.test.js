@@ -137,3 +137,11 @@ test('requiring the listener does not open a connection', () => {
   assert.ok(src.includes('if (require.main === module)'),
     'a test must never become a second listener');
 });
+
+test('the caption survives a body that lost its newlines', () => {
+  const nl = String.fromCharCode(10);
+  assert.equal(group.captionFrom('קובץ' + nl + 'תראה את זה' + nl + nl + 'קוד 1808'),
+    'תראה את זה');
+  // A relay that strips newlines used to swallow the whole sentence.
+  assert.equal(group.captionFrom('קובץבדיקה עצמיתקוד 1808'), 'בדיקה עצמית');
+});

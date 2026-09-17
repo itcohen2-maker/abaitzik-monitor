@@ -295,8 +295,7 @@ function recordIncoming(m) {
   if (!m.attachment && m.message && (gid || !isSystemText(m.message))) {
     // A caption arrives as the same body every text send uses: a kind line,
     // the words, a blank line and his code. Only the words belong in the chat.
-    caption = gid ? String(m.message).split(String.fromCharCode(10))[1] || ''
-      : String(m.message);
+    caption = gid ? group.captionFrom(m.message) : String(m.message);
   }
   if (!attach && !caption.trim()) return false;
 
