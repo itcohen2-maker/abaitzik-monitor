@@ -2768,10 +2768,14 @@ function ensure(keys, fn){
 // Split so a scraper crawling the page source does not lift a plain address.
 // This is obfuscation, not security - anyone reading the code can reassemble it.
 var MAILBOX = ['itcohen2','gmail.com'].join('@');
-// FormSubmit's free tier has a daily cap, and on a busy day Itzik hits it in
-// the middle of a sentence and gets a Rate Limit page instead of a send. ntfy
-// takes the same message with no quota, so every send tries the mailbox first
-// and falls back here. I poll this topic in the same round as the mailbox.
+// ntfy is the primary channel for everything the page sends, and FormSubmit is
+// the fallback under it. It was the other way round until 17.9, and the mailbox
+// being first had two costs. FormSubmit's free tier has a daily cap, so on a
+// busy day Itzik hit it mid sentence and got a Rate Limit page instead of a
+// send. And the mailbox is his own: every button press landed as an email in
+// his inbox, which is what he asked about by voice at 21:47 that evening. ntfy
+// has no such cap and the listener is holding it open, so a message sent this
+// way is in the chat the same second instead of waiting for a mailbox round.
 // The topic sits in the page source, so it is public: every message carries
 // his code, and anything unsigned is ignored on my side.
 var NTFYIN = 'abaitzik-in-95e62e86c34f4853';
@@ -2782,18 +2786,22 @@ function ntfyText(kind, text, gid) {
   // The page is emitted from a template literal, so a backslash escape here
   // would be eaten at build time. The newline is built from its code point.
   body: [kind, text, '', 'קוד ' + myCode()].join(String.fromCharCode(10))
- }).then(function (r) { if (!r.ok) throw new Error('ntfy'); return 'ntfy'; });
+ }).then(function (r) { if (!r.ok) throw new Error('ntfy'); return 'ok'; });
 }
-// Returns which channel carried it, so the page can say so.
+// Returns 'ok' when the primary channel carried it and 'backup' when the
+// mailbox had to, so the page can tell him which one it went out on rather
+// than naming a channel he has no reason to care about.
 function sendText(subject, text, kind) {
- return fetch('https://formsubmit.co/ajax/' + MAILBOX, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-  body: JSON.stringify({ _subject: subject, _template: 'table', 'הודעה': text, 'קוד': myCode() })
- }).then(function (r) {
-  if (!r.ok) throw new Error('quota');
-  return 'mail';
- }).catch(function () { return ntfyText(kind, text); });
+ return ntfyText(kind, text).catch(function () {
+  return fetch('https://formsubmit.co/ajax/' + MAILBOX, {
+   method: 'POST',
+   headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+   body: JSON.stringify({ _subject: subject, _template: 'table', 'הודעה': text, 'קוד': myCode() })
+  }).then(function (r) {
+   if (!r.ok) throw new Error('quota');
+   return 'backup';
+  });
+ });
 }
 // Files do NOT go through FormSubmit's ajax endpoint. It answers 200 and then
 // silently drops the attachment, so two recordings arrived as a note with no
@@ -2833,15 +2841,20 @@ function sendFiles(list, note) {
     });
   });
  }, Promise.resolve()).then(function () {
-  return ntfyText('קובץ', note, gid).then(function () {
-   // Best effort only: the recording is already delivered by this point, so a
-   // blocked mailbox must not turn a successful send into a failure.
+  // The caption carries the group token, so it is the line that joins the
+  // uploads back into one item in the chat. It used to be followed by a copy
+  // to the mailbox on every single send, as a record in case the audio expired
+  // before I fetched it. The listener fetches within the second, so that copy
+  // was never read and only put an email in his own inbox for every recording
+  // he made. Now it is what it should have been: a fallback, sent only when
+  // the caption itself did not get through.
+  return ntfyText('קובץ', note, gid).catch(function () {
    return fetch('https://formsubmit.co/ajax/' + MAILBOX, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify({ _subject: 'קובץ מהמוניטור', _template: 'table',
       'הודעה': note + ' (הקובץ עצמו נשלח בערוץ הקבצים)', 'קוד': myCode() })
-   }).catch(function () {}).then(function () { return 'ntfy'; });
+   }).then(function (r) { if (!r.ok) throw new Error('quota'); return 'backup'; });
   });
  });
 }
@@ -3281,7 +3294,7 @@ function wireBoxes(root){
     p.push({at:new Date().toISOString(),text:full});
     savePending(p);
     box2.value='';
-    said.textContent=how==='ntfy'?'נשלח בערוץ הגיבוי.':'נשלח. קלטתי.';
+    said.textContent=how==='backup'?'נשלח בערוץ הגיבוי.':'נשלח. קלטתי.';
     markSent('text');renderSent();renderThread();
    }).catch(function(){
     said.textContent='שני הערוצים לא ענו. תנסה שוב.';
@@ -3454,7 +3467,7 @@ function wireReplies(host,all){
     savePending(p);
     setStandby(f.getAttribute('data-k')||rootKeyFor(m));
     box.value='';
-    said.textContent=how==='ntfy'?'נשלח בערוץ הגיבוי.':'נשלח.';
+    said.textContent=how==='backup'?'נשלח בערוץ הגיבוי.':'נשלח.';
     markTouched(m);markOneSeen(m);
     markSent('text');renderSent();
     // renderThread redraws every bubble, so the confirmation is shown first.
@@ -4207,7 +4220,7 @@ function pingBind(){
   .then(function(how){
    savePingState({at:at,code:code});
    document.getElementById('pingBox').classList.remove('ok');
-   pingSay((how==='ntfy'?'יצא בערוץ הגיבוי. ':'יצא במייל. ')
+   pingSay((how==='backup'?'יצא בערוץ הגיבוי. ':'יצא. ')
     +'מחכה שאחזור עם הקוד '+code+'.');
   }).catch(function(){
    pingSay('לא יצא. שני הערוצים לא ענו, ואין טעם ללחוץ שוב עד שיש רשת.');
@@ -6234,7 +6247,7 @@ document.getElementById('fdPick').addEventListener('change',function(){
  var cap='תזונה: תמונה של מה שאכלתי';
  if(typed&&typed.value.trim()){cap='תזונה: '+typed.value.trim();typed.value='';}
  sendFiles(list,cap).then(function(how){
-  said.textContent=how==='ntfy'?'נשלח בערוץ הגיבוי. אני מחשב ומחזיר לך.'
+  said.textContent=how==='backup'?'נשלח בערוץ הגיבוי. אני מחשב ומחזיר לך.'
    :'נשלח. אני מחשב ומחזיר לך את הערכים.';
   toast(said.textContent);
   markSent('file');renderSent();
@@ -6281,7 +6294,7 @@ on2('quickForm','submit',function(e){
   p.push({at:new Date().toISOString(),text:text});
   savePending(p);
   box.value='';
-  said.textContent=how==='ntfy'?'נשלח בערוץ הגיבוי. הגיע אליי.':'נשלח. קלטתי.';
+  said.textContent=how==='backup'?'נשלח בערוץ הגיבוי. הגיע אליי.':'נשלח. קלטתי.';
   markSent('text');renderSent();renderThread();
   toast(said.textContent);
  }).catch(function(){
@@ -6492,7 +6505,7 @@ document.getElementById('msgForm').addEventListener('submit',function(e){
   box.value='';
   // Sent, so the draft is no longer a draft.
   try{localStorage.removeItem(DRAFT);}catch(err){}
-  said.textContent=how==='ntfy'?'נשלח בערוץ הגיבוי. הגיע אליי.':'נשלח.';
+  said.textContent=how==='backup'?'נשלח בערוץ הגיבוי. הגיע אליי.':'נשלח.';
   markSent('text');renderSent();
   renderThread();
  }).catch(function(){
@@ -6630,7 +6643,7 @@ function reallySend(list){
   try{localStorage.removeItem(DRAFT);}catch(err){}
   clearAim();
   paintMics('ok');
-  sendSay(how==='ntfy'?'נשלח בערוץ הגיבוי. הגיע אליי.':'נשלח. קלטתי.');
+  sendSay(how==='backup'?'נשלח בערוץ הגיבוי. הגיע אליי.':'נשלח. קלטתי.');
   var q=pending();
   q.push({at:new Date().toISOString(),text:cap||deflt});
   savePending(q);
@@ -7006,8 +7019,8 @@ document.getElementById('mailForm').addEventListener('submit',function(e){
   q.push({at:new Date().toISOString(),text:full});
   savePending(q);
   box.value='';
-  said.textContent=how==='ntfy'?'נשלח בערוץ הגיבוי. אני בודק כל ארבע דקות.'
-   :'נשלח. אני בודק את התיבה כל ארבע דקות.';
+  said.textContent=how==='backup'?'נשלח למייל. אני בודק את התיבה כל ארבע דקות.'
+   :'נשלח. הגיע אליי.';
   markSent('mail');renderSent();
   renderMail();renderThread();
  }).catch(function(){

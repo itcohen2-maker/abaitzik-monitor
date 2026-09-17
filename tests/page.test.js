@@ -1195,3 +1195,33 @@ test('switching screens starts the new one at the top', () => {
   // in the middle of reading, which is the bug the keepState work already fixed.
   assert.ok(html.includes(' if(moved){'));
 });
+
+// 17.9, by voice at 21:47: "an email was sent to me, what's going on". Every
+// send from the page went to the mailbox first, and the mailbox is his own, so
+// every button press and every recording put an email in his inbox. ntfy is
+// the primary now and the mailbox is the fallback under it, which also means
+// the listener sees a message the second it is sent instead of waiting for a
+// mailbox round.
+test('the page sends over the open channel first and the mailbox only as fallback', () => {
+  const html = renderPage(fixture({}));
+  const fn = html.slice(html.indexOf('function sendText(subject, text, kind) {'));
+  const body = fn.slice(0, fn.indexOf('\n}'));
+  assert.ok(body.includes('ntfyText(kind, text)'), 'sendText must start at ntfy');
+  assert.ok(body.indexOf('ntfyText(kind, text)') < body.indexOf('formsubmit.co'),
+    'the mailbox must not be tried before the open channel');
+  // And the fallback is a real fallback: reached from a rejection, not chained
+  // onto the success of the first one.
+  assert.ok(/ntfyText\(kind, text\)\.catch\(/.test(body), 'the mailbox must sit in a catch');
+
+  // A recording used to mail a copy of its caption unconditionally, as a
+  // record nobody ever read. Same rule: only when the caption itself failed.
+  const sf = html.slice(html.indexOf('function sendFiles(list, note) {'));
+  const sfBody = sf.slice(0, sf.indexOf('\nfunction esc('));
+  assert.ok(/ntfyText\('קובץ', note, gid\)\.catch\(/.test(sfBody),
+    'the file record mail must sit in a catch, not a then');
+
+  // Nothing on screen still names the old channel, or the labels would read
+  // backwards: the backup wording on every successful send.
+  assert.ok(!html.includes("how==='ntfy'"), 'a screen label still tests for the old channel');
+  assert.ok(html.includes("return 'backup';"), 'the fallback must report itself as the backup');
+});
