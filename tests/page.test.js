@@ -1140,3 +1140,46 @@ test('every saved video gets a permanent page, and nothing is dropped', () => {
   }
   assert.ok(html.includes('href="./"'), 'the page must have a way back to the monitor');
 });
+
+// 17.9, his voice message about the answers button: every answer starts red,
+// a touch turns it green, and he can move it to orange standby or yellow.
+test('answers carry the four colour states of the old chat', () => {
+  const html = renderPage(fixture());
+  for (const css of ['.ansc.fresh', '.ansc.done', '.ansc.standby', '.ansc.star']) {
+    assert.ok(html.includes(css), 'missing style ' + css);
+  }
+  assert.ok(html.includes('--orange:'), 'orange must be its own token, not the yellow one');
+  assert.ok(html.includes("localStorage.setItem('chatStandby'"), 'standby must persist');
+  assert.ok(html.includes("['standby','סטנד ביי',c.standby]"), 'standby needs its own filter chip');
+  assert.ok(html.includes('class="ab astandby'), 'each card needs a standby button');
+  assert.ok(html.includes('function ansColor(m)'), 'one place decides the colour');
+  assert.ok(html.includes('alegend'), 'the legend explains the four colours');
+});
+
+test('a touch anywhere on an answer card marks it read', () => {
+  const html = renderPage(fixture());
+  const i = html.indexOf("host.querySelectorAll('.ansc')");
+  assert.ok(i > -1, 'the cards themselves must be wired, not only the buttons');
+  const block = html.slice(i, i + 700);
+  assert.ok(block.includes('markOneSeen'), 'the touch must mark the answer read');
+  for (const tag of ["n==='button'", "n==='a'", "n==='input'", "n==='textarea'"]) {
+    assert.ok(block.includes(tag), 'a touch on ' + tag + ' must not count as reading');
+  }
+});
+
+test('the colour of a card is decided in one order: star, standby, fresh, done', () => {
+  const html = renderPage(fixture());
+  const src = html.slice(html.indexOf('function ansColor(m)'));
+  const body = src.slice(0, src.indexOf('\nfunction isDone'));
+  const flags = { star: false, standby: false, fresh: false, done: false };
+  const run = new Function('f', body
+    + '\nfunction isStar(){return f.star;}function isStandby(){return f.standby;}'
+    + 'function isFresh(){return f.fresh;}function isDone(){return f.done;}'
+    + '\nreturn ansColor({});');
+  assert.equal(run(flags), '');
+  assert.equal(run(Object.assign({}, flags, { fresh: true })), 'fresh');
+  assert.equal(run(Object.assign({}, flags, { done: true })), 'done');
+  assert.equal(run(Object.assign({}, flags, { fresh: true, standby: true })), 'standby');
+  assert.equal(run(Object.assign({}, flags, { done: true, standby: true })), 'standby');
+  assert.equal(run(Object.assign({}, flags, { standby: true, star: true })), 'star');
+});
