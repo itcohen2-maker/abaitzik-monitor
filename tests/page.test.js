@@ -964,6 +964,20 @@ test('the three health buttons left the home screen and live in the ideas screen
   assert.ok(html.includes("on('gFood',openFood);on('iFood',openFood);"));
 });
 
+test('an open task says who it is waiting on', () => {
+  // Itzik, 17.9: "כתוב לי משימות פתוחות, תשע משימות פתוחות" and asked for
+  // order in the things that do not update. Four of the nine were already
+  // done, and two of the rest were waiting on him, not on me. A task with
+  // nobody named on it reads as a debt of mine and rots.
+  const html = renderPage(fixture({}));
+  const body = html.slice(html.indexOf('function renderGot(){'), html.indexOf('function paintAnsCount(){'));
+  assert.ok(body.includes("c.who==='itzik'?['y','ממתין לך']"));
+  assert.ok(body.includes("c.who==='codex'?['g','אצל קודקס']"));
+  assert.ok(body.includes("['g','אצלי']"));
+  // And the badge for his own column has a colour of its own.
+  assert.ok(html.includes('.gr-y{'));
+});
+
 test('every row in what was received carries a manual delete button', () => {
   const html = renderPage(fixture({}));
   // Itzik, 16.9 at night: a line from 10.9 saying "עובד על הבקשות שלך" was
@@ -972,7 +986,7 @@ test('every row in what was received carries a manual delete button', () => {
   const body = html.slice(html.indexOf('function renderGot(){'), html.indexOf('function paintAnsCount(){'));
   assert.ok(body.includes("+del(kind||'msg',m)+'</div>'"));
   assert.ok(body.includes("+del('now',{at:N.at,text:N.text})"));
-  assert.ok(body.includes("row(c,'g','פתוח','cmd')"));
+  assert.ok(body.includes("return row(c,w[0],w[1],'cmd');"));
   // Deleting is local to his phone and silent: no message, no notification.
   assert.ok(html.includes("localStorage.setItem('gotGone',JSON.stringify(a.slice(-400)));"));
   assert.ok(body.includes('renderGot();paintGot();'));

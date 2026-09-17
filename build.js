@@ -219,9 +219,13 @@ function build() {
                  re: m.re || '', ackAt: m.ackAt || '', note: m.note || '' }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? -1 : 1));
 
+  // `who` is who the task is actually waiting on. Without it the list read as
+  // nine things I owe him, when four of them were already done and two are
+  // waiting on a decision of his. A task with nobody named on it rots quietly,
+  // which is exactly what he called out on 17.9.
   const openCmds = loadDocs('commands')
     .filter(c => !c.done && /^[0-9]/.test(c.id))
-    .map(c => ({ at: c.at, text: c.text }))
+    .map(c => ({ at: c.at, text: c.text, who: c.who || 'claude' }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
   // Open questions I am waiting on an answer for. This is the part a client
   // sees: the app asks what he wants and changes in front of him.
@@ -665,6 +669,9 @@ button.abtn[disabled]{opacity:.55}
 .gr-w{background:#fff3cd;color:#7a5200}
 .gr-g{background:#e3ecfb;color:#1a4b9c}
 .gr-d{background:#e2f5e6;color:#1b6b34}
+/* Waiting on him. Not red, because nothing here is on fire, but not the same
+   quiet blue as the rest either: this is the one he can move himself. */
+.gr-y{background:#fde7d6;color:#8a4212}
 .gr-del{flex:0 0 auto;background:transparent;color:var(--dim);border:1px solid var(--line);
  border-radius:999px;font:700 12px Heebo,sans-serif;padding:3px 10px;cursor:pointer}
 .gr-del:active{transform:translateY(1px)}
@@ -4664,7 +4671,12 @@ function renderGot(){
  h+='<h3>התקבלו, עוד לא התחלתי · '+got.length+'</h3>';
  h+=got.length?got.map(function(m){return row(m,'g','התקבל');}).join(''):'<div class="gempty">הכל נקרא והתחיל.</div>';
  h+='<h3>משימות פתוחות ממך · '+K.length+'</h3>';
- h+=K.length?K.map(function(c){return row(c,'g','פתוח','cmd');}).join(''):'<div class="gempty">אין משימות פתוחות.</div>';
+ // Each line says who it is stuck on, so the list cannot quietly turn into a
+ // pile of things that look like they are all on me.
+ h+=K.length?K.map(function(c){
+  var w=c.who==='itzik'?['y','ממתין לך']:c.who==='codex'?['g','אצל קודקס']:['g','אצלי'];
+  return row(c,w[0],w[1],'cmd');
+ }).join(''):'<div class="gempty">אין משימות פתוחות.</div>';
  h+='<h3>בוצע · '+done.length+'</h3>';
  h+=done.slice(0,gotShow).map(function(m){return row(m,'d','בוצע');}).join('');
  if(done.length>gotShow)h+='<button type="button" class="ab" id="gotMore" style="width:100%;padding:14px">להציג עוד ('+(done.length-gotShow)+')</button>';
