@@ -154,11 +154,14 @@ test('standby and re are keyed on the thread root from every screen', () => {
   assert.ok(!html.includes("ML.keyOf(m))"), 'no standby keyed on a bare message key');
 });
 
-test('the red button and the push both open the thread cards, newest labelled', () => {
+test('the red button and the push both land on the one answers screen', () => {
   const html = renderPage(fixture());
-  assert.ok(html.includes("document.getElementById('newBtn').onclick=function(){\n if(unreadCount()){\n  beep();"));
-  assert.ok(!html.includes("pane('a');renderAnswers();\n};\nfunction renderUnread"), 'newBtn must not open the flat answers list');
-  assert.ok(html.includes("if(location.hash==='#new'){pane('m');renderThread();}"));
+  // 17.9: the red button, the answers tab and the chat tab were three doors
+  // to the same room. One door now, and it opens on what he has not read.
+  assert.ok(html.includes("document.getElementById('newBtn').onclick=function(){\n var n=unreadCount();\n if(n)beep();\n openAnswers(n?'fresh':'all');\n};"));
+  assert.ok(html.includes('function openAnswers(filter){'));
+  assert.ok(html.includes("if(location.hash==='#new'||location.hash==='#chat'){\n  pane('a');renderAnswers();\n }"));
+  assert.ok(!html.includes("onclick=function(){pane('m');markChatSeen();"), 'no tab may open the chat screen');
   assert.ok(html.includes('<em class="badge latest">האחרונה שהגיעה</em>'));
   assert.ok(html.includes('.badge.latest{'));
 });
@@ -217,9 +220,9 @@ test('nothing opens by itself, and everything that opens can be closed', () => {
   assert.ok(!html.includes('id="allMsgs"'));
   assert.ok(!html.includes('id="gChat"'));
   assert.ok(!html.includes("mark('gChat'"));
-  // Nothing unread is not a reason to do nothing: the button opens the chat
-  // either way, because it is the same chat either way.
-  assert.ok(html.includes(" pane('m');renderThread();\n};"));
+  // Nothing unread is not a reason to do nothing: the button opens the one
+  // screen either way, because it is the same conversation either way.
+  assert.ok(html.includes(" openAnswers(n?'fresh':'all');\n};"));
   // The way out says what it does, and a keyboard has one too.
   assert.ok(html.includes("b.textContent='סגירה וחזרה לבית';"));
   assert.ok(html.includes("if(e.key!=='Escape')return;"));
@@ -435,7 +438,8 @@ test('every answer of mine can be replied to, and the dock says what it answers'
   // Codex answers are not mine to be aimed at.
   // Neither are Codex's answers nor a report: one is not mine, the other is
   // not a thing anybody replies to.
-  assert.ok(html.includes("(m.src==='codex'||m.src==='report'?'':'<button type=\"button\" class=\"ab aimb\""));
+  // Only mine carry it, now that his own messages sit in the same list.
+  assert.ok(html.includes("(m.src!=='claude'?'':'<button type=\"button\" class=\"ab aimb\""));
   // Aiming fills the caption the recorder sends with, so a voice note arrives
   // attached to the answer instead of as a sentence with no question.
   assert.ok(html.includes('function aimQuote(m){'));
@@ -858,8 +862,15 @@ test('answers screen holds every source in one cluster', () => {
   // round reports, each card saying which it was.
   assert.ok(html.includes("var cdx=(D.codex||[]).filter(function(m){return m.from==='codex';})"));
   assert.ok(html.includes('var rps=(D.reports||[]).map(function(r){'));
-  assert.ok(html.includes("function ansWho(m){return m&&m.src==='codex'?'קודקס':(m&&m.src==='report'?'דוח':'קלוד');}"));
-  assert.ok(html.includes("'<span class=\"w\">'+ansWho(m)+' · '+esc(stamp(m.at))"));
+  // And from his own messages, so the screen is the conversation and not
+  // half of it. That was the third door: the chat tab held only his side.
+  assert.ok(html.includes("var his=(D.chat||[]).filter(function(m){return m.from==='itzik';})"));
+  assert.ok(html.includes(" return his.concat(mine).concat(cdx).concat(rps).sort("));
+  assert.ok(html.includes("function ansWho(m){var k=m&&m.src;return k==='codex'?'קודקס':k==='report'?'דוח':k==='itzik'?'אתה':'קלוד';}"));
+  assert.ok(html.includes("'<span class=\"w\">'+ansWho(m)+' · '+esc(stamp(m.at))+mark+'</span>'"));
+  // His own message is never unread to him, and offers no reply button.
+  assert.ok(html.includes("function isFresh(m){if(m&&m.src==='itzik')return false;"));
+  assert.ok(html.includes('.ansc.mine{'));
 });
 
 test('one button, so "where is the report" has one answer', () => {
@@ -878,11 +889,17 @@ test('the answers tab sits beside home and its badge counts what waits', () => {
   const html = renderPage(fixture({}));
   const home = html.indexOf('id="nH"');
   const ans = html.indexOf('id="nA"');
-  const chat = html.indexOf('id="nM"');
-  assert.ok(home > -1 && ans > -1 && chat > -1);
-  // In an RTL row the first button is the rightmost one, so "next to home, on
-  // the right" means second in source order, before the chat tab.
-  assert.ok(ans > home && ans < chat);
+  assert.ok(home > -1 && ans > -1);
+  // In an RTL row the first button is the rightmost one, so "next to home,
+  // on the right" means second in source order.
+  assert.ok(ans > home);
+  // 17.9: "answers at the bottom, chat at the bottom, all the same thing, I
+  // want one button". The chat and reports tabs came off the bar.
+  assert.ok(!html.includes('id="nM"'), 'the chat tab must be gone');
+  assert.ok(!html.includes('id="nR"'), 'the reports tab must be gone');
+  assert.ok(html.includes("var NAVS={h:'nH',q:'nQ',l:'nL',a:'nA'};"));
+  // And one badge carries what used to light up three separate tabs.
+  assert.ok(html.includes("if(nA)nA.classList.toggle('hasnew',msgs>0||reps>0);"));
   // Grey used to read out the total, which looks like a count of things
   // waiting. Now it is the number waiting, in red, or a tick.
   assert.ok(html.includes("el.textContent=n?String(n):'✓';"));
@@ -920,8 +937,8 @@ test('the big collections travel in their own files, not in the page', () => {
   assert.ok(html.includes("function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }"));
   assert.ok(html.includes("var url='data/'+k+'.json?b='+encodeURIComponent(D.buildId||'');"));
   // Every screen that reads a split collection fetches it on the way in.
-  assert.ok(html.includes("ensure(['chat','codex'],function(){renderAnswers();paintAnsCount();});"));
-  assert.ok(html.includes("ensure('reports',renderNet);"));
+  assert.ok(html.includes("ensure(['chat','codex','reports'],function(){renderAnswers();paintAnsCount();});"));
+  assert.ok(html.includes("if(w==='r')ensure('reports',function(){render();renderNextReport();});"));
   assert.ok(html.includes("ensure('chat',renderThread);"));
   // Old answers must not turn red when the history lands: the reset is a floor.
   assert.ok(html.includes("if(floor&&(m.at||'')<=floor)return false;"));

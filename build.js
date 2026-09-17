@@ -1567,6 +1567,7 @@ body.editing .bn{display:none}
 .achip{background:var(--surface);border:1px solid var(--line);border-radius:999px;
  padding:8px 14px;font:500 13.5px Heebo,sans-serif;color:var(--dim);cursor:pointer}
 .achip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.achip.allread{margin-inline-start:auto;border-color:var(--red);color:var(--red)}
 .achip b{font-weight:800}
 .asearch{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:12px;
  padding:12px 14px;font:400 15px Heebo,sans-serif;color:var(--ink);margin-bottom:14px}
@@ -1576,6 +1577,12 @@ body.editing .bn{display:none}
 .ansc.fresh{border-inline-start-color:var(--red)}
 .ansc.done{border-inline-start-color:var(--green)}
 .ansc.star{border-inline-start-color:var(--yellow)}
+/* His own messages sit in the same list now. Indented and quieter, so the
+   list still reads as answers with the question above each one, rather than
+   as two voices of equal weight. */
+.ansc.mine{background:var(--sunk);box-shadow:none;margin-inline-start:22px;
+ border-inline-start-color:var(--blue)}
+.ansc.mine .atxt{font-weight:300}
 .ansc .w{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--dim);
  font:500 12.5px Heebo,sans-serif;margin-bottom:7px}
 .ansc .atxt{white-space:pre-wrap;word-break:break-word}
@@ -2386,11 +2393,11 @@ try{
 </section>
 
 <section id="pA" hidden>
- <h2>התשובות שלי</h2>
+ <h2>תשובות</h2>
  <div class="achips" id="aChips"></div>
  <input type="search" id="aSearch" class="asearch" autocomplete="off" placeholder="חיפוש בתוך התשובות">
  <div id="ansBox"></div>
- <div class="hint">כאן שמורות כל התשובות שלי, גם אחרי שקראת אותן. כלום לא נעלם מכאן. אדום זה מה שלא קראת, ירוק זה מה שסימנת כטופל, וצהוב זה מה ששמת עליו כוכב.</div>
+ <div class="hint">הכל כאן, לפי זמן: מה ששלחת, מה שעניתי, מה שענה קודקס, והדוחות המלאים. כלום לא נעלם מכאן. אדום זה מה שלא קראת, ירוק זה מה שסימנת כטופל, וצהוב זה מה ששמת עליו כוכב.</div>
 </section>
 
 <section id="pI" hidden>
@@ -2686,10 +2693,8 @@ try{
 <nav class="bn" aria-label="מסכים">
  <button type="button" id="nH" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10.5V20h12v-9.5"/><path d="M10 20v-5h4v5"/></svg>בית</button>
  <button type="button" id="nA" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h16v11h-9l-5 3.5v-3.5H4Z"/><path d="M8 10.5h8M8 14h5"/></svg>תשובות<i class="cnt zero" id="aCnt">0</i></button>
- <button type="button" id="nM" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12.5c0 3.9-3.6 7-8 7a9 9 0 0 1-2.6-.4L5 21l1.2-3.3A6.7 6.7 0 0 1 4 12.5c0-3.9 3.6-7 8-7s8 3.1 8 7Z"/></svg>צ׳אט<i class="dot" id="mDot" hidden></i></button>
  <button type="button" id="nQ" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"/><path d="M7 19v-6"/><path d="M12 19V7"/><path d="M17 19v-9"/></svg>רשתות</button>
  <button type="button" id="nL" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>לידים<i class="dot" id="lDot" hidden></i></button>
- <button type="button" id="nR" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8L18.5 8v12.5h-13Z"/><path d="M14 3.5V8h4.5"/><path d="M8.5 13h7M8.5 16.5h4.5"/></svg>דוחות<i class="dot" id="rDot" hidden></i></button>
 </nav>
 
 <div class="stamp"><span id="builtFoot"></span></div>
@@ -3611,9 +3616,10 @@ function paintNew(){
  floatTile('gSpecial',spNew);
  // The reports tile is gone; its count is carried by the answers badge.
  mark('gPill',pillNow,'עכשיו');
- var nM=document.getElementById('nM');if(nM)nM.classList.toggle('hasnew',msgs>0);
- var nR=document.getElementById('nR');if(nR)nR.classList.toggle('hasnew',reps>0);
- var rd=document.getElementById('rDot');if(rd)rd.hidden=!reps;
+ // One tab now, so one place for the mark. Chat and reports used to light up
+ // their own tabs beside it, which is exactly the three doors he reported.
+ var nA=document.getElementById('nA');
+ if(nA)nA.classList.toggle('hasnew',msgs>0||reps>0);
 }
 // Lift one tile to the front of the grid while it is new, and put it back in
 // its saved place the moment it is not. Nothing else moves.
@@ -3703,10 +3709,9 @@ function renderActivity(){
 }
 function updateDot(){
  renderNew();
- var d=document.getElementById('mDot');if(!d)return;
- var n=newestClaude();
- d.hidden=!(n&&n>chatSeen());
- document.title=(d.hidden?'':'(1) ')+'אבא איציק בבנייה עצמית';
+ var n=newestClaude(),fresh=!!(n&&n>chatSeen());
+ var d=document.getElementById('mDot');if(d)d.hidden=!fresh;
+ document.title=(fresh?'(1) ':'')+'אבא איציק בבנייה עצמית';
 }
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
 var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',k:'pK'};
@@ -3777,7 +3782,7 @@ var LANDING=[
  {name:'שיטת הפירה',note:'מילת המפתח: גזר',url:'https://itzik-site.vercel.app/gezer'},
  {name:'סלינדה',note:'אתר',url:'https://salinda-mobile.vercel.app/'}
 ];
-var NAVS={h:'nH',q:'nQ',l:'nL',r:'nR',m:'nM',a:'nA'};
+var NAVS={h:'nH',q:'nQ',l:'nL',a:'nA'};
 
 // Per network monitoring. Tapping a network circle opens its own screen:
 // what is waiting there, and only the report lines about that network.
@@ -4218,7 +4223,7 @@ function markReportsSeen(){
 }
 function paintReportDot(){
  var fresh=newestReport()&&newestReport()>reportsSeen();
- var n=document.getElementById('nR');if(n)n.classList.toggle('blink',!!fresh);
+ var n=document.getElementById('nA');if(n)n.classList.toggle('blink',!!fresh);
  var t=document.getElementById('gReports');if(t)t.classList.toggle('blink',!!fresh); // tile removed 17.9, guarded
 }
 
@@ -4597,6 +4602,11 @@ function unDone(m){
   findable by a word in it rather than by remembering which screen it lives on.
 */
 function allAnswers(){
+ // 17.9: "three doors to the same room". His own messages were only in the
+ // chat, my answers only here, so neither screen was the conversation. They
+ // are one list now, his side included, sorted by time like everything else.
+ var his=(D.chat||[]).filter(function(m){return m.from==='itzik';})
+  .map(function(m){return {at:m.at,text:m.text,src:'itzik',note:m.note,status:m.status};});
  var mine=(D.chat||[]).filter(function(m){return m.from==='claude'&&!isMail(m);})
   .map(function(m){return {at:m.at,text:m.text,src:'claude'};});
  var cdx=(D.codex||[]).filter(function(m){return m.from==='codex';})
@@ -4604,9 +4614,9 @@ function allAnswers(){
  var rps=(D.reports||[]).map(function(r){
   return {at:r.at,text:(r.title||'')+String.fromCharCode(10)+(r.body||''),src:'report'};
  });
- return mine.concat(cdx).concat(rps).sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
+ return his.concat(mine).concat(cdx).concat(rps).sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
 }
-function ansWho(m){return m&&m.src==='codex'?'קודקס':(m&&m.src==='report'?'דוח':'קלוד');}
+function ansWho(m){var k=m&&m.src;return k==='codex'?'קודקס':k==='report'?'דוח':k==='itzik'?'אתה':'קלוד';}
 // Codex answers never had a read mark of their own, so the chat's cut carries
 // them: anything older than the last thing he read counts as read. With no cut
 // at all the window is three days, otherwise a first open would light up forty
@@ -4626,7 +4636,7 @@ function ansFreshKeys(){
  var k=unreadList().map(claudeKey);
  return k.concat(codexFresh().map(claudeKey));
 }
-function isFresh(m){return ansFreshKeys().indexOf(claudeKey(m))>-1;}
+function isFresh(m){if(m&&m.src==='itzik')return false;return ansFreshKeys().indexOf(claudeKey(m))>-1;}
 function ansCounts(){
  var a=allAnswers();
  return {all:a.length,
@@ -4666,6 +4676,14 @@ function renderAnswers(){
  Array.prototype.forEach.call(chips.querySelectorAll('.achip'),function(b){
   b.onclick=function(){ansFilter=b.getAttribute('data-f');ansShow=30;renderAnswers();};
  });
+ // The chat tab used to hold "קראתי את הישנות", and it was the only way to put the red
+ // count back to zero in one move. The tab is gone, so the button lives here.
+ if(c.fresh){
+  var all=document.createElement('button');
+  all.type='button';all.className='achip allread';all.textContent='סימון הכל כנקרא';
+  all.onclick=function(){markAllRead();renderAnswers();};
+  chips.appendChild(all);
+ }
  var full=ansList();
  var list=full.slice(0,ansShow);
  if(!full.length){
@@ -4674,20 +4692,22 @@ function renderAnswers(){
  }
  host.innerHTML=list.map(function(m,i){
   var fresh=isFresh(m),done=!fresh&&isDone(m),st=isStar(m);
-  return '<div class="ansc'+(fresh?' fresh':(done?' done':''))+(st?' star':'')+'" data-i="'+i+'">'
-   +'<span class="w">'+ansWho(m)+' · '+esc(stamp(m.at))
-   +(fresh?' · <em class="badge">חדש</em>':(done?' · טופל':' · נקרא'))+'</span>'
+  var his=m.src==='itzik';
+  var mark=his?(m.status==='done'?' · בוצע':(m.status==='working'?' · בעבודה':''))
+   :(fresh?' · <em class="badge">חדש</em>':(done?' · טופל':' · נקרא'));
+  return '<div class="ansc'+(his?' mine':(fresh?' fresh':(done?' done':'')))+(st?' star':'')+'" data-i="'+i+'">'
+   +'<span class="w">'+ansWho(m)+' · '+esc(stamp(m.at))+mark+'</span>'
    +'<div class="atxt">'+linkify(m.text)+'</div>'
    +'<div class="arow">'
-   +(m.src==='codex'||m.src==='report'?'':'<button type="button" class="ab aimb" data-k="'+esc(claudeKey(m))+'">להשיב</button>')
+   +(m.src!=='claude'?'':'<button type="button" class="ab aimb" data-k="'+esc(claudeKey(m))+'">להשיב</button>')
    +'<button type="button" class="ab acopy" data-i="'+i+'">העתקה</button>'
-   +'<button type="button" class="ab astar'+(st?' on':'')+'" data-i="'+i+'">'
+   +(his?'':'<button type="button" class="ab astar'+(st?' on':'')+'" data-i="'+i+'">'
    +(st?'★ מסומן':'☆ סימון')+'</button>'
    +'<button type="button" class="ab adone'+(done?' on':'')+'" data-i="'+i+'">'
    +(done?'✓ טופל':'סמן כטופל')+'</button>'
-   +'<button type="button" class="ab aread" data-i="'+i+'"'+(fresh?'':' hidden')+'>קראתי</button>'
+   +'<button type="button" class="ab aread" data-i="'+i+'"'+(fresh?'':' hidden')+'>קראתי</button>')
    +'</div>'
-   +replyBox('בקשר לתשובה מ'+ansWho(m)+' מ'+stamp(m.at))
+   +(his?'':replyBox('בקשר לתשובה מ'+ansWho(m)+' מ'+stamp(m.at)))
    +'<span class="asaid" data-i="'+i+'"></span>'
    +'</div>';
  }).join('');
@@ -4841,7 +4861,10 @@ function pane(w){
   sec.hidden=(k!==w);
   if(k===w)backBar(sec);
  }
- for(var n in NAVS){document.getElementById(NAVS[n]).setAttribute('aria-pressed',n===w);}
+ for(var n in NAVS){var nb=document.getElementById(NAVS[n]);if(nb)nb.setAttribute('aria-pressed',n===w);}
+ // The reports screen has no button left pointing at it, but a saved link can
+ // still open it, and it must not paint the head slice and call that the list.
+ if(w==='r')ensure('reports',function(){render();renderNextReport();});
  // He asked twice for a way home from wherever he is. The bottom tab was
  // always there, but the button he reaches for is at the top, next to the one
  // that took him off the home screen in the first place.
@@ -4979,19 +5002,25 @@ document.getElementById('plusBtn').onclick=function(){
   toast('הוסתר. אפשר להחזיר הכל בהגדרות.');
  });
 })();
+/*
+  Itzik, 17.9: "three messages you did not read on the red button, answers at
+  the bottom, chat at the bottom, all the same thing. I want one button."
+
+  They were the same thing, and that was the whole fault: the red button opened
+  the thread, the תשובות tab opened the flat list, the צ׳אט tab opened the
+  thread again, and none of the three was wrong, which is why he could not tell
+  which one to press. Everything lands on תשובות now, red button included,
+  and it opens on what he has not read when there is something to read.
+*/
+function openAnswers(filter){
+ ansFilter=filter||'all';ansShow=30;
+ pane('a');renderAnswers();
+ ensure(['chat','codex','reports'],function(){renderAnswers();paintAnsCount();});
+}
 document.getElementById('newBtn').onclick=function(){
- if(unreadCount()){
-  beep();
-  // The thread cards. The unread ones sit first, newest at the top and
-  // labelled as the latest, so he can tell at a glance which answer is the
-  // last one and which are older. The flat answers list is still under the
-  // תשובות tab.
-  pane('m');renderThread();
-  return;
- }
- // Nothing unread is not a reason to do nothing. It is the same chat either
- // way, so the button opens it either way.
- pane('m');renderThread();
+ var n=unreadCount();
+ if(n)beep();
+ openAnswers(n?'fresh':'all');
 };
 function renderUnread(){
  var host=document.getElementById('unreadBox');
@@ -5049,9 +5078,7 @@ document.addEventListener('keydown',function(e){
 });
 document.getElementById('nQ').onclick=function(){pane('q');ensure(['replied'],render);};
 document.getElementById('nL').onclick=function(){pane('l');};
-document.getElementById('nR').onclick=function(){pane('r');markReportsSeen();renderNextReport();ensure('reports',renderNet);};
-document.getElementById('nM').onclick=function(){pane('m');markChatSeen();ensure('chat',renderThread);};
-document.getElementById('nA').onclick=function(){pane('a');renderAnswers();ensure(['chat','codex'],function(){renderAnswers();paintAnsCount();});};
+document.getElementById('nA').onclick=function(){openAnswers(ansFilter);};
 document.getElementById('gotBtn').onclick=function(){pane('b');renderGot();ensure('chat',renderGot);};
 
 // Home shortcuts. The mail and "new module" circles have no screen of their
@@ -6242,7 +6269,7 @@ bareApply(bareGet());
 // button for messages. The tile's counter is gone with it; the count lives on
 // that one button.
 var gChatEl=document.getElementById('gChat');
-if(gChatEl)gChatEl.onclick=function(){pane('m');markChatSeen();};
+if(gChatEl)gChatEl.onclick=function(){openAnswers('all');};
 /*
   Writing and the camera, from the card at the top instead of from a tile most
   of the way down the screen. Both land in the same place everything else does,
@@ -6259,7 +6286,7 @@ document.getElementById('gQueue').onclick=function(){openNet('all');};
 // The reports screen is still built and still reachable from inside, but it
 // is no longer a tile on the way to everything else.
 (function(){var b=document.getElementById('gReports');if(!b)return;
- b.onclick=function(){pane('r');markReportsSeen();renderNextReport();ensure('reports',renderNet);};})();
+ b.onclick=function(){markReportsSeen();openAnswers('all');};})();
 on('gMail',function(){pane('e');});
 function openPill(){pane('p');renderPill();openPillSheet();}
 on('gPill',openPill);on('iPill',openPill);
@@ -6589,15 +6616,13 @@ function jumpToUnread(){
  try{el.scrollIntoView({block:'center',behavior:'smooth'});}catch(e){el.scrollIntoView();}
  ringFor(el,2200);
 }
-// A push notification lands here. Straight to the unread screen, which is the
-// only place he asked for: what is new, and nothing else.
+// A push notification lands here. It goes where every other way in goes now:
+// the one screen, opened on what he has not read.
 if(location.hash==='#new'){
- pane('m');renderThread();
- setTimeout(function(){markChatSeen();renderNew();},50);
+ openAnswers('fresh');
 }
 if(location.hash==='#chat'){
- pane('m');markChatSeen();
- setTimeout(jumpToUnread,350);
+ openAnswers('all');
 }
 if(location.hash==='#sent'){
  fSaid.textContent='הקובץ נשלח. הוא מחכה לי במייל.';
@@ -7287,8 +7312,9 @@ boot('reset',function(){
  try{localStorage.setItem('seenResetAt',stamp);}catch(e){}
 });
 boot('pane',function(){
- if(location.hash==='#new'){pane('m');renderThread();}
- else if(location.hash==='#chat'){pane('m');}
+ if(location.hash==='#new'||location.hash==='#chat'){
+  pane('a');renderAnswers();
+ }
  else pane('h');
 });
 // If the pane itself could not be chosen, the page would be blank. Home is the
