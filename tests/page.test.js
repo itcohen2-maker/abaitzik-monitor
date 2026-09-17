@@ -1024,6 +1024,19 @@ test('the ack line gets the arrival time and the transcript it reads', () => {
   assert.ok(html.includes('תמלול: בדיקה'));
 });
 
+test('the small clear button waits for the whole chat, not the head slice', () => {
+  // Itzik, 17.9: "כפתור ניקוי ההודעות לא עובד", then a minute later "אה אני
+  // רואה שהוא כן עובד". Both were true. It hid only the messages baked into
+  // the page, so the older half came back as soon as the full chat file
+  // landed. The big clear on the messages screen already loaded the history
+  // first; this one did not.
+  const html = renderPage(fixture({}));
+  const body = html.slice(html.indexOf("on('clearBtn',function(){"), html.indexOf("on('resetBtn',function(){"));
+  assert.ok(body.includes("ensure('chat',function(){"));
+  assert.ok(body.includes("localStorage.setItem('msgHidden',JSON.stringify(keys.slice(-6000)));"));
+  assert.ok(!body.includes('keys.slice(-4000)'));
+});
+
 test('the file ceiling is the one the file channel actually has', () => {
   // Itzik, 17.9: he sent a video twice and it never arrived. The gate was 10MB,
   // which is FormSubmit's limit, and files stopped going through FormSubmit:

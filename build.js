@@ -6805,12 +6805,20 @@ on('clearBtn',function(){
   renderThread();renderNew();
   return;
  }
- var keys=(D.chat||[]).map(msgKey);
- try{localStorage.setItem('msgHidden',JSON.stringify(keys.slice(-4000)));}catch(e){}
- if(btn)btn.textContent='החזרה';
- if(said)said.textContent='נוקה מהמסך. הרישום עצמו שלם, ולחיצה נוספת מחזירה הכל.';
- renderThread();renderNew();
- toast('הצ׳אט נוקה מהמסך.');
+ // The whole history first, exactly like the big clear on the messages screen.
+ // Without this it hid only the head slice that ships inside the page, and the
+ // rest came back the moment the full chat file landed a second later. Itzik,
+ // 17.9: "כפתור ניקוי ההודעות לא עובד", and then a minute later that it does.
+ // Both were true: it cleared what was on screen and the older half returned.
+ if(said)said.textContent='מנקה.';
+ ensure('chat',function(){
+  var keys=(D.chat||[]).map(msgKey);
+  try{localStorage.setItem('msgHidden',JSON.stringify(keys.slice(-6000)));}catch(e){}
+  if(btn)btn.textContent='החזרה';
+  if(said)said.textContent='נוקה מהמסך. הרישום עצמו שלם, ולחיצה נוספת מחזירה הכל.';
+  renderThread();renderNew();paintDot();
+  toast('הצ׳אט נוקה מהמסך.');
+ });
 });
 on('resetBtn',function(){
  markAllRead();
