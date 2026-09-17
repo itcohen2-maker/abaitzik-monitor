@@ -6147,12 +6147,37 @@ document.getElementById('reports').addEventListener('click',function(e){
  document.body.removeChild(ta);
 });
 
+/*
+  One press, one message.
+
+  Itzik, 17.9: "I noticed that I attach a file and send what I write with it,
+  it is not sent together, it is one message." He is right, and it cost him the
+  video he wanted me to watch: the writing box and the attach box were two
+  forms with two send buttons, so a sentence and its file left as two separate
+  things, or the sentence left alone and the file stayed behind on the phone.
+  Nothing on the screen said which of the two had happened.
+
+  Now the send button under the writing box is the only one he needs. If a file
+  is chosen it goes out with the text as its caption, in one send, and the file
+  send button below is the same send for anyone who presses it there.
+*/
 document.getElementById('msgForm').addEventListener('submit',function(e){
  e.preventDefault();
  var box=document.getElementById('msgText');
  var btn=document.getElementById('msgBtn');
  var said=document.getElementById('msgSaid');
  var text=box.value.trim();
+ var withFiles=picked();
+ if(withFiles.length){
+  // reallySend takes the writing box as the caption when no caption was typed,
+  // so the text and the file leave as one message and the box empties itself.
+  said.textContent='';
+  fBtn.disabled=true;
+  sendSay(withFiles.length>1?('מכין '+withFiles.length+' קבצים.'):'מכין.');
+  if(qMode==='normal')shrinkAll(withFiles,reallySend);
+  else reallySend(withFiles);
+  return;
+ }
  if(!text)return;
  btn.disabled=true;
  said.textContent='שולח.';
@@ -6183,7 +6208,25 @@ function isImg(f){return !!f&&String(f.type).indexOf('image/')===0;}
 function picked(){
  return fPick.files?Array.prototype.slice.call(fPick.files):[];
 }
+// The send button says what it is about to send, so a chosen file is never a
+// thing he has to remember he chose.
+function paintSendBtn(){
+ var b=document.getElementById('msgBtn');
+ if(!b)return;
+ var n=picked().length;
+ b.textContent=n?(n>1?('שליחה עם '+n+' הקבצים'):'שליחה עם הקובץ'):'שליחה';
+}
+function clearPick(){
+ try{fPick.value='';}catch(e){}
+ var f=document.getElementById('fileForm');
+ if(f)f.hidden=true;
+ var p=document.getElementById('plusBtn');
+ if(p)p.setAttribute('aria-expanded','false');
+ describe();
+ paintSendBtn();
+}
 function describe(){
+ paintSendBtn();
  var list=picked();
  if(!list.length){fMeta.className='fmeta';
   fMeta.textContent='אפשר לבחור כמה קבצים יחד. תמונה מכווצת כמו בוואטסאפ, מסמך נשלח במקור.';return;}
@@ -6267,6 +6310,10 @@ function reallySend(list){
  // backup channel take over without him noticing.
  sendFiles(list,cap||deflt).then(function(how){
   document.getElementById('fCap').value='';
+  // The file left with the message. Leaving it selected would attach it again
+  // to the next thing he writes.
+  clearPick();
+  try{localStorage.removeItem(DRAFT);}catch(err){}
   clearAim();
   paintMics('ok');
   sendSay(how==='ntfy'?'נשלח בערוץ הגיבוי. הגיע אליי.':'נשלח. קלטתי.');

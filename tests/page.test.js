@@ -1009,3 +1009,20 @@ test('the ack line gets the arrival time and the transcript it reads', () => {
     text: 'הודעה קולית: voice.webm', status: 'done', ackAt: '2026-09-16T20:43:41.745Z', note: 'תמלול: בדיקה' }] }));
   assert.ok(html.includes('תמלול: בדיקה'));
 });
+
+test('text and a chosen file leave as one message, on one press', () => {
+  // Itzik, 17.9: "I attach a file and send what I write with it, it is not sent
+  // together." Two forms, two buttons, two messages. The video he wanted me to
+  // watch was lost exactly there.
+  const html = renderPage(fixture({}));
+  const body = html.slice(html.indexOf("document.getElementById('msgForm').addEventListener('submit'"),
+    html.indexOf('var QMAX='));
+  // The writing box send takes the picked files through the file path, which
+  // folds the text in as the caption.
+  assert.ok(body.includes('var withFiles=picked();'));
+  assert.ok(body.includes("if(qMode==='normal')shrinkAll(withFiles,reallySend);"));
+  // And the picked file is released after it left, so the next message does
+  // not carry it a second time.
+  assert.ok(html.includes('  clearPick();'));
+  assert.ok(html.includes("b.textContent=n?(n>1?('שליחה עם '+n+' הקבצים'):'שליחה עם הקובץ'):'שליחה';"));
+});
