@@ -1945,31 +1945,6 @@ try{
 </header>
 
 <section id="pH">
-<!-- The unread button and the archive button are one block. Apart, arranging
-     treated a one line control as a card of its own, gave it a grip, and let
-     it be dragged away from the button that reveals it. -->
-<div id="newBlock">
- <button type="button" id="newBtn" class="newbtn">
-  <span class="nb-l"><b id="nbTitle">מה חדש</b><small id="nbSub"></small></span>
-  <span class="nb-c" id="nbCount">0</span>
- </button>
- <!--
-   Itzik asked on 16.9 for a button under the red one: what was received.
-   His messages with where each one stands, and what is being worked on, as
-   one ordered list. The number is what is still open: received, in work,
-   and open tasks. It replaces the Codex fold that used to sit lower down.
- -->
- <button type="button" id="gotBtn" class="newbtn got">
-  <span class="nb-l"><b>מה התקבל</b><small>ההודעות שלך, מה בעבודה ומה בוצע</small></span>
-  <span class="nb-c" id="gotCount">0</span>
- </button>
- <!--
-   The archive button that used to sit here is gone. Itzik asked on 13.9 for
-   one button for messages and nothing beside it: the button above is the chat,
-   whether there is something unread or not. A second control that revealed a
-   third control was the opposite of that.
- -->
-</div>
  <!--
    One card, four ways in, and nothing floating over it.
 
@@ -2016,6 +1991,31 @@ try{
   </form>
   <div class="msgsaid" id="quickSaid"></div>
  </section>
+<!-- The unread button and the archive button are one block. Apart, arranging
+     treated a one line control as a card of its own, gave it a grip, and let
+     it be dragged away from the button that reveals it. -->
+<div id="newBlock">
+ <button type="button" id="newBtn" class="newbtn">
+  <span class="nb-l"><b id="nbTitle">מה חדש</b><small id="nbSub"></small></span>
+  <span class="nb-c" id="nbCount">0</span>
+ </button>
+ <!--
+   Itzik asked on 16.9 for a button under the red one: what was received.
+   His messages with where each one stands, and what is being worked on, as
+   one ordered list. The number is what is still open: received, in work,
+   and open tasks. It replaces the Codex fold that used to sit lower down.
+ -->
+ <button type="button" id="gotBtn" class="newbtn got">
+  <span class="nb-l"><b>מה התקבל</b><small>ההודעות שלך, מה בעבודה ומה בוצע</small></span>
+  <span class="nb-c" id="gotCount">0</span>
+ </button>
+ <!--
+   The archive button that used to sit here is gone. Itzik asked on 13.9 for
+   one button for messages and nothing beside it: the button above is the chat,
+   whether there is something unread or not. A second control that revealed a
+   third control was the opposite of that.
+ -->
+</div>
 
  <!-- "איך אני משתפר" came off the home screen on 16.9. The screen itself is
       still reachable, it just does not sit on the way to everything else. -->
@@ -3567,12 +3567,17 @@ function renderNew(){
  document.getElementById('nbCount').textContent=c?c:'✓';
  // Said in words as well as in colour. He told me a colour blind person would
  // not notice the old marking at all, and he was right.
+ //
+ // Idle, the button used to be labelled 'הכל נקרא'. He asked on 17.9 whether
+ // 'תשובות' would be better there and it is: the button opens the answers
+ // either way, so a state was standing where the destination belongs. The
+ // count beside it already says everything is read.
  document.getElementById('nbTitle').textContent=c
   ?(c===1?'הודעה אחת שלא קראת':c+' הודעות שלא קראת')
-  :'הכל נקרא';
+  :'תשובות';
  document.getElementById('nbSub').textContent=c
   ?'לחיצה פותחת אותן, אחת אחת.'
-  :'אין תשובות שמחכות לך. לחיצה מראה את כל ההודעות.';
+  :'הכל נקרא. לחיצה מראה את כל התשובות שלי.';
  var K=D.openCmds||[];
  document.getElementById('wnCmds').innerHTML='<span class="n '+(K.length?'':'zero')+'">'+K.length+'</span><div>'+(K.length?'משימות פתוחות ממך':'אין משימות פתוחות')+(K.length?'<small>'+esc(K[0].text).slice(0,90)+'</small>':'')+'</div>';
  renderActivity();
@@ -6637,21 +6642,21 @@ document.getElementById('mailForm').addEventListener('submit',function(e){
 });
 
 /*
-  The head of the home screen, in the order Itzik asked for on 13.9.
+  The head of the home screen, in the order Itzik asked for on 17.9.
 
-  Talking to me comes first, because that is what the screen is for. Under it
-  the one button that opens the rest, and the first thing that opens is the
-  tools themselves: the round shortcuts and then the thirteen tiles. Everything
-  else, the unread count included, comes after those.
+  Talking to me comes first, because that is what the screen is for. The
+  comment here has said that since 13.9, but the list underneath it said
+  otherwise and the list is what the browser reads, so the microphone sat
+  second for four days. It is first now in the markup and in this list both.
 
-  The unread count used to be pinned above all of it. It is still the loudest
-  thing on the screen when there is something waiting, but it is no longer the
-  thing standing between him and the microphone.
+  Under it the two message buttons, in the order he named them: the one that
+  opens the answers, then what was received. After those the one button that
+  opens the rest, the round shortcuts, and the tiles.
 
-  The order below wins over anything he has dragged, and only for these four.
+  The order below wins over anything he has dragged, and only for these five.
   The rest of the screen is still his to arrange.
 */
-var HOME_HEAD=['newBlock','talkCard','bareBtn','blkIcons','blkTiles'];
+var HOME_HEAD=['talkCard','newBlock','bareBtn','blkIcons','blkTiles'];
 // "איך אני משתפר" is the one block he wants out of the way rather than gone.
 // It is a log of my own mistakes and fixes: worth keeping, never worth the top
 // of his screen.

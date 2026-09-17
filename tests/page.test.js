@@ -62,11 +62,14 @@ test('home order: one message button on top, the tools next, my log last', () =>
   // The message block is one button now, and nothing else lives in it.
   assert.ok(ph < at('id="newBlock"'));
   assert.ok(at('id="newBlock"') < at('id="newBtn"'));
-  // He set this order on 13.9: the one message button, the microphone card,
+  // The talking card is above the message block in the markup as well as in
+  // the pinned list, so the screen does not reshuffle after it paints.
+  assert.ok(at('id="talkCard"') < at('id="newBlock"'));
+  // He set this order on 17.9: the microphone card, then the message buttons,
   // then the button that opens the rest, and the first thing inside it is the
-  // shortcuts and the tiles. Five blocks pinned at the head and one at the
+  // shortcuts and the tiles. Five blocks pinned at the head and none at the
   // foot; the rest of the screen stays his to arrange.
-  assert.ok(html.includes("var HOME_HEAD=['newBlock','talkCard','bareBtn','blkIcons','blkTiles'];"));
+  assert.ok(html.includes("var HOME_HEAD=['talkCard','newBlock','bareBtn','blkIcons','blkTiles'];"));
   assert.ok(html.includes('HOME_HEAD.forEach'));
   // Nothing is pinned to the foot any more: the block that was, "איך אני
   // משתפר", came off the home screen on 16.9 at his word.
@@ -876,7 +879,10 @@ test('what was received sits under the red button as one ordered list', () => {
   const red = html.indexOf('id="newBtn"');
   const got = html.indexOf('id="gotBtn"');
   const talk = html.indexOf('id="talkCard"');
-  assert.ok(red > -1 && got > red && got < talk);
+  // 17.9: the talking card is first on the screen, then the answers button,
+  // then what was received. The two message buttons stay in that order and
+  // stay one under the other.
+  assert.ok(talk > -1 && red > talk && got > red);
   // One screen, four sections in a fixed order: in work, received, open tasks, done.
   assert.ok(html.includes('<section id="pB" hidden>'));
   assert.ok(html.includes("b:'pB'"));
