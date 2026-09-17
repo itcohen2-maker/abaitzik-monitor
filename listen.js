@@ -29,6 +29,7 @@ const path = require('path');
 const ch = require('./lib/notify-channels.js');
 const codexBridge = require('./codex-bridge.js');
 const codexRoute = require('./lib/codex-route.js');
+const group = require('./lib/group.js');
 const { execFile } = require('child_process');
 
 const TOPIC = 'abaitzik-in-95e62e86c34f4853';
@@ -38,7 +39,10 @@ const DROP = path.join(__dirname, 'data', 'inbox');
 const STATUS = path.join(__dirname, 'data', 'status');
 const LIVEFILE = path.join(STATUS, 'live.json');
 const PULLS = path.join(STATUS, 'pulls.json');
-const CHAT = path.join(__dirname, 'data', 'chat', 'chat');
+// The chat folder can be pointed somewhere else so the merge can be exercised
+// against real files without writing into his actual conversation.
+const CHAT = process.env.ABAITZIK_CHAT_DIR
+  || path.join(__dirname, 'data', 'chat', 'chat');
 
 /*
   How often the pulse goes out.
@@ -254,23 +258,84 @@ function isSystemText(text) {
   const t = String(text || '');
   return /^You received a file/.test(t) || /^קובץ\n/.test(t) || /^קודקס:/.test(t);
 }
+/*
+  The parts of one send, held open until the last one lands.
+
+  A send that carries a photo, a video, a recording and a line of writing
+  arrives here as four separate ntfy messages, seconds apart. The token the
+  page stamped on each title is what says they are one thing, and this is the
+  file that was opened for that token, so every later part is folded into it
+  instead of starting a new conversation.
+*/
+const groupFiles = new Map();
+
+/*
+  The name is stamped to the second, and two things can land inside one second.
+  Until now the second one overwrote the first, and a message he sent was gone
+  from the page without anything anywhere saying it had been dropped.
+*/
+function chatName(at) {
+  const pad = (n) => String(n).padStart(2, '0');
+  const base = at.getFullYear() + pad(at.getMonth() + 1) + pad(at.getDate()) + '-'
+    + pad(at.getHours()) + pad(at.getMinutes()) + pad(at.getSeconds()) + '-itzik-auto';
+  let name = base + '.json';
+  for (let i = 2; fs.existsSync(path.join(CHAT, name)); i++) name = base + '-' + i + '.json';
+  return name;
+}
+
 function recordIncoming(m) {
-  let text = '';
-  if (m.attachment) text = 'הודעה קולית: ' + (m.attachment.name || '');
-  else if (m.message && !isSystemText(m.message)) text = String(m.message);
+  const gid = group.groupOf(m.title);
+  const held = gid ? groupFiles.get(gid) : null;
+  const attach = m.attachment ? String(m.attachment.name || '') : '';
+  let caption = '';
+  // The caption line of a file send starts with the word קובץ, which is what
+  // isSystemText turns away. Inside a group that line is the message: it is the
+  // sentence he typed or spoke over the files, so it is the one thing here that
+  // must not be dropped.
+  if (!m.attachment && m.message && (gid || !isSystemText(m.message))) {
+    // A caption arrives as the same body every text send uses: a kind line,
+    // the words, a blank line and his code. Only the words belong in the chat.
+    caption = gid ? String(m.message).split(String.fromCharCode(10))[1] || ''
+      : String(m.message);
+  }
+  if (!attach && !caption.trim()) return false;
+
+  if (held) {
+    // A part of a send that is already on the page. Widen it, do not repeat it.
+    if (attach) held.files.push(attach);
+    if (caption.trim()) held.caption = caption.trim();
+    let rec;
+    try { rec = JSON.parse(fs.readFileSync(path.join(CHAT, held.name), 'utf8')); }
+    catch (e) { groupFiles.delete(gid); return false; }
+    // Never rewrite a message that was already answered. If a session closed it
+    // between the first part and the last, the late part opens its own line.
+    if (rec.status === 'done') { groupFiles.delete(gid); return false; }
+    rec.text = group.groupText(held.caption, held.files);
+    rec.files = held.files.slice();
+    try { fs.writeFileSync(path.join(CHAT, held.name), JSON.stringify(rec, null, 1), 'utf8'); }
+    catch (e) { say('!! לא עודכן בצ׳אט: ' + e.message); return false; }
+    say('צורף לאותה הודעה: ' + rec.text.slice(0, 60));
+    if (attach && group.isAudio(attach)) {
+      transcribeLater(path.join(DROP, attach), held.name);
+    }
+    return true;
+  }
+
+  const files = attach ? [attach] : [];
+  const text = attach ? group.groupText(caption, files) : caption;
   if (!text) return false;
   const at = new Date();
-  const pad = (n) => String(n).padStart(2, '0');
-  const name = at.getFullYear() + pad(at.getMonth() + 1) + pad(at.getDate()) + '-'
-    + pad(at.getHours()) + pad(at.getMinutes()) + pad(at.getSeconds()) + '-itzik-auto.json';
+  const name = chatName(at);
   const rec = { at: at.toISOString(), from: 'itzik', text: text, status: 'working',
     ackAt: at.toISOString(), id: 'ntfy-' + m.id, auto: true };
+  if (files.length) rec.files = files.slice();
   try {
     fs.mkdirSync(CHAT, { recursive: true });
     fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
     say('נרשם בצ׳אט עם אישור קבלה: ' + text.slice(0, 60));
-    if (m.attachment && /\.(webm|m4a|mp3|ogg|wav)$/i.test(m.attachment.name || '')) {
-      transcribeLater(path.join(DROP, m.attachment.name), name);
+    if (gid) groupFiles.set(gid, { name: name, files: files, caption: caption.trim() });
+    if (attach && group.isAudio(attach)) {
+      transcribeLater(path.join(DROP, attach), name);
     }
     return true;
   } catch (e) { say('!! לא נרשם בצ׳אט: ' + e.message); return false; }
@@ -463,7 +528,13 @@ function releaseLock() {
   process.on(sig, function () { releaseLock(); if (sig !== 'exit') process.exit(0); });
 });
 
-(async () => {
+module.exports = { recordIncoming, isSystemText };
+
+/*
+  Requiring this file must not open a connection or claim the lock. A test that
+  exercises the merge would otherwise become a second listener.
+*/
+if (require.main === module) (async () => {
   if (!claimLock()) {
     say('מאזין אחר כבר רץ. יוצא בלי לעשות כלום.');
     return;

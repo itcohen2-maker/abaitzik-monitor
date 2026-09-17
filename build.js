@@ -2544,11 +2544,11 @@ try{
   <input type="file" id="fPick" name="attachment" multiple
    accept="image/*,video/*,audio/*,application/pdf">
   <input type="text" id="fCap" placeholder="כיתוב, לא חובה">
-  <div class="fmeta" id="fMeta">מתוך קובץ שולח את המקור בלי לגעת בו. רגיל מכווץ תמונות.</div>
+  <div class="fmeta" id="fMeta">אפשר לבחור תמונות וסרטונים יחד, לכתוב שורה, ואז להקליט. הכל יוצא בהודעה אחת.</div>
   <button type="submit" id="fBtn">שליחת הקובץ</button>
   <div id="recWrap">
    <button type="button" id="recBtn" aria-label="הקלטת הודעה קולית">&#127908;</button>
-   <span id="recSaid">לחיצה מתחילה הקלטה. לחיצה שנייה עוצרת ושולחת.</span>
+   <span id="recSaid">לחיצה מתחילה הקלטה. לחיצה שנייה עוצרת ושולחת. אם בחרת קבצים או כתבת משהו, הכל יוצא יחד בהודעה אחת.</span>
   </div>
  </form>
  <div class="msgsaid" id="fSaid"></div>
@@ -2688,10 +2688,10 @@ var MAILBOX = ['itcohen2','gmail.com'].join('@');
 // The topic sits in the page source, so it is public: every message carries
 // his code, and anything unsigned is ignored on my side.
 var NTFYIN = 'abaitzik-in-95e62e86c34f4853';
-function ntfyText(kind, text) {
+function ntfyText(kind, text, gid) {
  // Headers have to stay ASCII, so the Hebrew all rides in the body.
  return fetch('https://ntfy.sh/' + NTFYIN, {
-  method: 'POST', headers: { Title: 'monitor', 'X-Tags': 'memo' },
+  method: 'POST', headers: { Title: 'monitor' + (gid ? ' ' + gid + ' cap' : ''), 'X-Tags': 'memo' },
   // The page is emitted from a template literal, so a backslash escape here
   // would be eaten at build time. The newline is built from its code point.
   body: [kind, text, '', 'קוד ' + myCode()].join(String.fromCharCode(10))
@@ -2715,15 +2715,27 @@ function sendText(subject, text, kind) {
 // The bytes go to ntfy, which carries files reliably, and a line goes to the
 // mailbox as well so there is a record that a recording existed even if the
 // audio expires before I fetch it.
+//
+// Itzik, 17.9, by voice: "set it up so I can send a video and a voice and a
+// photo and everything together". Every file is still its own upload, because
+// ntfy carries one file per message, but they all leave stamped with the same
+// token and so does the caption. The listener joins them back into one line in
+// the chat instead of four, so one send is one thing to answer.
+function sendGroupId() {
+ return 'g' + Date.now().toString(36)
+  + Math.floor(Math.random() * 1679616).toString(36);
+}
 function sendFiles(list, note) {
+ var gid = sendGroupId();
+ var n = list.length;
  // Every upload is checked against what came back. A recording that does not
  // arrive whole must fail here and say so on his screen, because the last time
  // one was dropped silently he kept talking into nothing and then could not
  // remember what he had asked for.
- return list.reduce(function (chain, f) {
+ return list.reduce(function (chain, f, i) {
   return chain.then(function () {
    return fetch('https://ntfy.sh/' + NTFYIN + '?filename=' + encodeURIComponent(f.name),
-    { method: 'PUT', headers: { Title: 'file' }, body: f })
+    { method: 'PUT', headers: { Title: 'file ' + gid + ' ' + (i + 1) + '/' + n }, body: f })
     .then(function (r) {
      if (!r.ok) throw new Error('ntfy');
      return r.json().catch(function () { return null; });
@@ -2734,7 +2746,7 @@ function sendFiles(list, note) {
     });
   });
  }, Promise.resolve()).then(function () {
-  return ntfyText('קובץ', note).then(function () {
+  return ntfyText('קובץ', note, gid).then(function () {
    // Best effort only: the recording is already delivered by this point, so a
    // blocked mailbox must not turn a successful send into a failure.
    return fetch('https://formsubmit.co/ajax/' + MAILBOX, {
@@ -6131,10 +6143,11 @@ document.getElementById('urgBtn').onclick=function(){
  f.hidden=false;
  document.getElementById('plusBtn').setAttribute('aria-expanded','true');
  setTimeout(function(){f.scrollIntoView({behavior:'smooth',block:'center'});},60);
- // Straight into the photo roll. Anything else is one tap away on מסמך.
+ // Straight into the roll, photos and clips both. Anything else is one tap
+ // away on מסמך.
  // This has to run inside the tap itself: iOS ignores a file picker opened
  // from a timer, because by then the gesture is over.
- openPicker('normal','image/*');
+ openPicker('normal','image/*,video/*');
 };
 document.getElementById('bP').onclick=function(){tab='pending';render();};
 document.getElementById('bD').onclick=function(){tab='done';render();};
@@ -6247,7 +6260,7 @@ function describe(){
  paintSendBtn();
  var list=picked();
  if(!list.length){fMeta.className='fmeta';
-  fMeta.textContent='אפשר לבחור כמה קבצים יחד. תמונה מכווצת כמו בוואטסאפ, מסמך נשלח במקור.';return;}
+  fMeta.textContent='אפשר לבחור תמונות וסרטונים יחד, לכתוב שורה, ואז להקליט. הכל יוצא בהודעה אחת.';return;}
  var total=totalSize(list);
  var allImages=list.every(isImg);
  var t=list.length===1?(list[0].name+' · '+mb(total))
@@ -6282,7 +6295,10 @@ function openPicker(mode,accept,auto){
  fPick.setAttribute('accept',accept);
  fPick.click();
 }
-document.getElementById('qN').onclick=function(){openPicker('normal','image/*');};
+// The everyday button takes videos as well as photos. He asked to send a
+// video and a photo and a recording in one go, and a picker that only offered
+// stills sent him to מסמך for every clip.
+document.getElementById('qN').onclick=function(){openPicker('normal','image/*,video/*');};
 document.getElementById('qF').onclick=function(){openPicker('full','image/*,video/*,audio/*,application/pdf');};
 fPick.addEventListener('change',function(){
  describe();
@@ -6317,10 +6333,11 @@ function reallySend(list){
   var m=document.getElementById('msgText');
   if(m&&m.value.trim()){cap=m.value.trim();m.value='';}
  }
- var voice=list.length===1&&/^voice-/.test(list[0].name);
+ var hasVoice=list.some(function(f){return /^voice-/.test(f.name);});
+ var voice=list.length===1&&hasVoice;
  var deflt=voice?'הודעה קולית מהמוניטור'
    :(list.length>1?list.length+' קבצים מהמוניטור':'קובץ מהמוניטור');
- markSent(voice?'voice':'file');
+ markSent(hasVoice?'voice':'file');
  sendSay(list.length>1?('שולח '+list.length+' קבצים.'):'שולח.');
  // This used to be a plain form.submit(), which navigated away. When the
  // mailbox was over quota the whole page became a Rate Limit notice and the
@@ -6341,7 +6358,7 @@ function reallySend(list){
   renderSent();renderThread();
  }).catch(function(){
   paintMics('bad');
-  sendSay(voice
+  sendSay(hasVoice
    ?'ההקלטה לא הגיעה שלמה ולא נשמרה. תקליט שוב עכשיו, לפני שתשכח מה אמרת.'
    :'הקובץ לא הגיע שלם ולא נשמר. תשלח שוב, ואם הוא גדול תעלה לדרייב ותכתוב לי את הקישור.');
  }).then(function(){fBtn.disabled=false;});
@@ -6540,10 +6557,23 @@ function recStart(){
    var stampName='voice-'+d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())
     +p2(d.getHours())+p2(d.getMinutes())+p2(d.getSeconds())+'.'+ext;
    var file=new File([b],stampName,{type:type});
-   recSaid.textContent='ההקלטה מוכנה, '+mb(file.size)+'. שולח.';
+   /*
+     Itzik, 17.9, by voice: "set it up so I can send a video and a voice and a
+     photo and everything together". A recording used to leave on its own and
+     then clear the picker, so a photo he had already chosen was wiped without
+     ever being sent and nothing on the screen said so. Now the recording joins
+     whatever is already waiting and the whole thing leaves as one send: the
+     files, the voice over them, and the writing box as the caption.
+   */
+   var batch=picked();
+   batch.push(file);
+   recSaid.textContent=batch.length>1
+    ?('ההקלטה מוכנה. שולח אותה עם '+(batch.length-1)+' הקבצים.')
+    :('ההקלטה מוכנה, '+mb(file.size)+'. שולח.');
    recBtn.disabled=false;
    fBtn.disabled=true;
-   reallySend(file);
+   if(batch.length>1&&qMode==='normal')shrinkAll(batch,reallySend);
+   else reallySend(batch);
   };
   // A recorder that dies mid take used to leave the screen recording forever.
   rec.onerror=function(){
@@ -7035,6 +7065,19 @@ function openLiveSheet(){
     :(c.blockedUntil?('חסום עד '+liveTime(c.blockedUntil)):(c.left+' מתוך '+c.cap))]);
   });
   if(liveLast.queued)rows.push(['ממתינות בתור',String(liveLast.queued)]);
+  /*
+    Itzik, 17.9, by voice: "if we run out of the 150 sends, do we have another
+    backup channel, or is that it for today". The panel showed him a channel at
+    its wall and stopped there, which reads like the line went dead. It does
+    not: the send drops to the next channel, and what no channel will take sits
+    on the queue until one opens. This says so, in the one place he looks when
+    he suspects the monitor has fallen.
+  */
+  var spent=Object.keys(B).filter(function(k){
+   return B[k].daily||B[k].blockedUntil||Number(B[k].left)===0;});
+  if(spent.length||liveLast.queued){
+   rows.push(['כשנגמרת המכסה','עובר לערוץ הבא, ומה שנשאר ממתין בתור ויוצא. כלום לא נמחק.']);
+  }
   body.innerHTML=rows.map(function(r){
    return '<div class="lr"><span>'+esc(r[0])+'</span><b>'+esc(r[1])+'</b></div>';
   }).join('')
