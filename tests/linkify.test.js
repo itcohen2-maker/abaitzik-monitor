@@ -66,3 +66,29 @@ test('the build ships a 404 page with a way back to the monitor', () => {
   assert.ok(html.includes('href="/abaitzik-monitor/"'), 'must offer the way back');
   assert.ok(html.includes('dir="rtl"'));
 });
+
+// Nineteen answers on 16.9 linked to sign photos that a later commit tidied
+// away, so scrolling back in the chat was a wall of 404s. The files are cheap
+// to keep and the answers are permanent; this is the guard that keeps them.
+test('every file this repo ever linked to in an answer is still shipped', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const root = path.join(__dirname, '..');
+  const dir = path.join(root, 'data', 'chat', 'chat');
+  if (!fs.existsSync(dir)) return; // data/ is not published; skip off machine
+  const own = 'https://itcohen2-maker.github.io/abaitzik-monitor/';
+  const missing = [];
+  for (const f of fs.readdirSync(dir)) {
+    const m = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
+    if (m.from !== 'claude') continue;
+    for (const raw of String(m.text || '').match(/https?:\/\/[^\s<>"]+/g) || []) {
+      const url = raw.replace(/[.,;:!?)"]+$/, '');
+      if (!url.startsWith(own)) continue;
+      const rel = url.slice(own.length).split('?')[0].split('#')[0];
+      if (!rel || rel.endsWith('/')) continue;
+      const target = path.join(root, 'docs', decodeURIComponent(rel));
+      if (!fs.existsSync(target)) missing.push(f + ' -> ' + rel);
+    }
+  }
+  assert.deepEqual(missing, [], 'answers pointing at files that no longer exist');
+});
