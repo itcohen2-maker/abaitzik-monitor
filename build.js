@@ -400,6 +400,11 @@ function build() {
       answers: chat.filter(m => m.from === 'claude').length,
     }), 'utf8');
   fs.writeFileSync(path.join(OUT_DIR, 'robots.txt'), 'User-agent: *\nDisallow: /\n', 'utf8');
+  // A missing address used to hand him GitHub's own 404, which inside the
+  // installed app has no chrome and no back button: a dead end. Pages serves
+  // this file for anything missing under the repo, so now every wrong address
+  // ends on a door back to the monitor.
+  fs.writeFileSync(path.join(OUT_DIR, '404.html'), NOT_FOUND, 'utf8');
   console.log('built docs/index.html |', items.length, 'items,',
     payload.counts.pending, 'pending,', payload.counts.replied, 'replied,',
     contacts.length, 'contacts,', reports.length, 'reports,',
@@ -2876,11 +2881,23 @@ function pending(){
 function savePending(a){
  try{localStorage.setItem('pendingMsgs',JSON.stringify(a));}catch(e){}
 }
+/* The old class here was [^ <>], which stops only at a space. A link on its
+   own line therefore swallowed the newline and the first word of the next
+   line, and the href he tapped was an address that never existed: a 404 with
+   nothing to go back to. Stop at any whitespace, and hand back the trailing
+   punctuation that belongs to the sentence, not to the address.
+   The backslashes are written four deep: this page is a template literal,
+   and the result is a string handed to RegExp, so each layer eats one. */
 function linkify(t){
- var parts=String(t==null?'':t).split(new RegExp('(https?://[^ <>]+)','g'));
+ var parts=String(t==null?'':t).split(new RegExp('(https?://[^\\\\s<>"]+)','g'));
  return parts.map(function(x,i){
-  if(i%2){return '<a href="'+esc(x)+'" target="_blank" rel="noopener">'+esc(x)+'</a>';}
-  return esc(x);
+  if(!(i%2))return esc(x);
+  var tail='';
+  var m=x.match(new RegExp('[.,;:!?)"]+$'));
+  if(m){tail=m[0];x=x.slice(0,x.length-tail.length);}
+  if(!x)return esc(tail);
+  return '<a href="'+esc(x)+'" target="_blank" rel="noopener noreferrer">'
+   +esc(x)+'</a>'+esc(tail);
  }).join('');
 }
 var STATUS={received:'התקבל',working:'בעבודה',partial:'יש לי חלק',done:'בוצע'};
@@ -7150,6 +7167,43 @@ if(bootFailed.length){
 try{window.__monAlive();}catch(e){}
 </script>
 </body>
+</html>`;
+
+const NOT_FOUND = `<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>הכתובת לא נמצאה</title>
+<style>
+html,body{margin:0;height:100%}
+body{background:#191714;color:#f2ede4;font:400 17px/1.6 Heebo,system-ui,sans-serif;
+ display:flex;align-items:center;justify-content:center;padding:24px}
+.box{max-width:420px;width:100%;text-align:center}
+h1{font:700 22px/1.3 Heebo,system-ui,sans-serif;margin:0 0 10px}
+p{margin:0 0 14px;color:#cdc4b6}
+code{display:block;direction:ltr;text-align:left;word-break:break-all;
+ background:#221f1b;border:1px solid #3a352e;border-radius:10px;
+ padding:10px 12px;font-size:13px;color:#a79d8e;margin:0 0 18px}
+a.b{display:block;background:#14675a;color:#fff;text-decoration:none;
+ border-radius:12px;padding:14px 18px;font-weight:700}
+a.s{display:inline-block;margin-top:14px;color:#9fb8b2;font-size:15px}
+</style>
+<div class="box">
+<h1>הכתובת הזאת לא קיימת</h1>
+<p>הקישור שנפתח מצביע על מקום שאין בו קובץ. לא נתקעת, יש דרך חזרה.</p>
+<code id="u"></code>
+<a class="b" href="/abaitzik-monitor/">חזרה למוניטור</a>
+<a class="s" href="#" id="back">חזרה לדף הקודם</a>
+</div>
+<script>
+document.getElementById('u').textContent=location.pathname+location.search;
+document.getElementById('back').onclick=function(e){
+ e.preventDefault();
+ if(history.length>1){history.back();return;}
+ location.href='/abaitzik-monitor/';
+};
+</script>
 </html>`;
 
 module.exports = { renderPage, build };
