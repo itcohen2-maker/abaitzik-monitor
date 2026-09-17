@@ -41,6 +41,23 @@ const DRY = process.argv.includes('--dry');
 const SETTLE_MS = 20 * 1000;
 // Never two at once, and never one that has been stuck for an hour.
 const LOCK_STALE_MS = 60 * 60 * 1000;
+/*
+  How long one session may hold the queue, and why there is a limit at all.
+
+  Only one session runs, because two of them committing and pushing the same
+  repository at the same second is a worse failure than a wait. The cost of
+  that choice is that a long session is a wall: everything he sends while it
+  runs waits for it to finish. On 17.9 a session started at 08:01 and six
+  notes he sent from 08:09 sat behind it untouched, which from where he sits
+  is the monitor ignoring him, and it is the whole complaint.
+
+  The prompt now makes the session write and push its answer inside the first
+  two minutes. That is what makes a cap safe: by the time this fires he has
+  already been answered, and what is lost is the tail of the work, not the
+  reply. Ten minutes is roughly the longest session that has ever finished
+  something useful; past that it has been rereading itself.
+*/
+const MAX_SESSION_MS = 10 * 60 * 1000;
 
 function say(line) {
   const t = new Date().toTimeString().slice(0, 8);
@@ -148,10 +165,16 @@ function run(list) {
   const child = spawn('claude', ['-p', '--dangerously-skip-permissions'],
     { cwd: HERE, shell: true, windowsHide: true });
   child.stdin.end(text, 'utf8');
+  const cap = setTimeout(() => {
+    say('!! הסשן עבר ' + (MAX_SESSION_MS / 60000) + ' דקות. עוצר אותו כדי לשחרר את התור.');
+    try { process.kill(child.pid); } catch (e) {}
+    try { execFile('taskkill', ['/pid', String(child.pid), '/t', '/f'], () => {}); } catch (e) {}
+  }, MAX_SESSION_MS);
   let out = '';
   child.stdout.on('data', (b) => { out += b; });
   child.stderr.on('data', (b) => { out += b; });
   child.on('close', (code) => {
+    clearTimeout(cap);
     say('הסשן הסתיים, קוד ' + code + '. ' + String(out).trim().slice(-300).replace(/\s+/g, ' '));
     // A session that died is not an answer. Marking before the run stops a
     // crash loop from answering the same thing five times; putting a failed
@@ -160,7 +183,7 @@ function run(list) {
     if (code !== 0) unmarkHandled(list);
     releaseLock();
   });
-  child.on('error', (e) => { say('!! הסשן לא עלה: ' + e.message); unmarkHandled(list); releaseLock(); });
+  child.on('error', (e) => { clearTimeout(cap); say('!! הסשן לא עלה: ' + e.message); unmarkHandled(list); releaseLock(); });
 }
 
 function main() {
