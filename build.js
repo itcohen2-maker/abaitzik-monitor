@@ -405,6 +405,9 @@ function build() {
   // this file for anything missing under the repo, so now every wrong address
   // ends on a door back to the monitor.
   fs.writeFileSync(path.join(OUT_DIR, '404.html'), NOT_FOUND, 'utf8');
+  // איציק, 17.9: "כל הסרטונים שעשינו תשמור, כי את זה אנחנו מעלים לאתר."
+  // כל mp4 ששמור תחת docs/files נכנס לכאן מעצמו בכל בנייה, ושום דבר לא נמחק.
+  fs.writeFileSync(path.join(OUT_DIR, 'videos.html'), videosPage(), 'utf8');
   console.log('built docs/index.html |', items.length, 'items,',
     payload.counts.pending, 'pending,', payload.counts.replied, 'replied,',
     contacts.length, 'contacts,', reports.length, 'reports,',
@@ -7194,6 +7197,55 @@ try{window.__monAlive();}catch(e){}
 </script>
 </body>
 </html>`;
+
+/*
+  ארכיון הסרטונים. איציק, 17.9: את הסרטונים שנעשים כאן מעלים לאתר, ולכן הם
+  לא יכולים לשבת רק בקישור בתוך הודעה בצאט. כל mp4 תחת docs/files נכנס לדף
+  הזה מעצמו בכל בנייה, החדש למעלה, ושום קובץ לא נמחק בדרך.
+*/
+function videosPage() {
+  let files = [];
+  const dir = path.join(OUT_DIR, 'files');
+  try {
+    files = fs.readdirSync(dir)
+      .filter(n => n.toLowerCase().endsWith('.mp4'))
+      .map(n => ({ n, t: fs.statSync(path.join(dir, n)).mtimeMs,
+                   mb: Math.round(fs.statSync(path.join(dir, n)).size / 104857.6) / 10 }))
+      .sort((a, b) => b.t - a.t);
+  } catch (e) { files = []; }
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const body = files.length
+    ? files.map(f => '<div class="v"><video controls preload="metadata" src="files/' + esc(f.n) + '"></video>'
+        + '<div class="m"><b>' + esc(f.n) + '</b><span>' + f.mb + ' MB</span></div>'
+        + '<a class="b" href="files/' + esc(f.n) + '" download>הורדה</a></div>').join('')
+    : '<p class="e">עוד אין כאן סרטונים שמורים.</p>';
+  return [
+    '<!DOCTYPE html>',
+    '<html lang="he" dir="rtl">',
+    '<meta charset="utf-8">',
+    '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">',
+    '<meta name="robots" content="noindex">',
+    '<title>הסרטונים השמורים</title>',
+    '<style>',
+    'body{margin:0;background:#191714;color:#f2ede4;font:400 17px/1.6 Heebo,system-ui,sans-serif;padding:18px}',
+    'h1{font:700 22px/1.3 Heebo,system-ui,sans-serif;margin:0 0 4px}',
+    'p.s{margin:0 0 18px;color:#cdc4b6;font-size:15px}',
+    '.v{background:#221f1b;border:1px solid #3a352e;border-radius:14px;padding:12px;margin:0 0 16px}',
+    '.v video{width:100%;border-radius:10px;background:#000;display:block}',
+    '.m{display:flex;justify-content:space-between;gap:10px;margin:10px 0 0;font-size:14px;color:#cdc4b6}',
+    '.m b{font-weight:500;direction:ltr;word-break:break-all}',
+    'a.b{display:block;margin-top:10px;background:#14675a;color:#fff;text-decoration:none;border-radius:12px;padding:12px 16px;font-weight:700;text-align:center}',
+    'a.home{display:block;margin:22px 0 0;color:#9fb8b2;text-align:center;font-size:15px}',
+    'p.e{color:#cdc4b6}',
+    '</style>',
+    '<h1>הסרטונים השמורים</h1>',
+    '<p class="s">כל סרטון שנעשה כאן נשמר בדף הזה ונשאר בו. '
+      + (files.length === 1 ? 'סרטון אחד' : files.length + ' סרטונים') + '.</p>',
+    body,
+    '<a class="home" href="./">חזרה למוניטור</a>',
+    '</html>',
+  ].join('\n');
+}
 
 const NOT_FOUND = `<!DOCTYPE html>
 <html lang="he" dir="rtl">

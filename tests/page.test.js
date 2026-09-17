@@ -1091,3 +1091,20 @@ test('his own message pulses while it is still open, and stops when it is done',
   assert.ok(bub({ from: 'itzik', status: 'working' }).includes('bub you live'));
   assert.ok(!bub({ from: 'itzik', status: 'done' }).includes('live'));
 });
+
+// איציק, 17.9: את הסרטונים שנעשים כאן מעלים לאתר, אז הם חייבים דף קבוע.
+test('every saved video gets a permanent page, and nothing is dropped', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const page = path.join(__dirname, '..', 'docs', 'videos.html');
+  assert.ok(fs.existsSync(page), 'docs/videos.html must be built');
+  const html = fs.readFileSync(page, 'utf8');
+  const dir = path.join(__dirname, '..', 'docs', 'files');
+  const mp4 = fs.readdirSync(dir).filter(n => n.toLowerCase().endsWith('.mp4'));
+  assert.ok(mp4.length > 0, 'there must be at least one saved video to list');
+  for (const n of mp4) {
+    assert.ok(html.includes('src="files/' + n + '"'), n + ' is saved but missing from the page');
+    assert.ok(fs.existsSync(path.join(dir, n)), n + ' is listed but the file is gone');
+  }
+  assert.ok(html.includes('href="./"'), 'the page must have a way back to the monitor');
+});
