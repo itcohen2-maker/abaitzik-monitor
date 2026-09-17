@@ -19,3 +19,11 @@ rivhit/
 
 # SDD scratch (ledger, briefs, review packages)
 .superpowers/
+
+# Generated reel assets: the raw clips and the voice track are rebuildable from
+# video/banana/gen-clips.js and the script, and they are megabytes each. Only
+# the finished reel ships, under docs/files.
+video/banana/clip*.mp4
+video/banana/voice.mp3
+video/banana/banana-reel.mp4
+video/banana/gen.log
