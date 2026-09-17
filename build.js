@@ -4926,11 +4926,32 @@ function backBar(sec){
  b.onclick=function(){pane('h');};
  sec.insertBefore(b,sec.firstChild);
 }
+/*
+  The screen he lands on has to start at the top.
+
+  Itzik, 17.9: "I press the red button and I do not see the answers." They were
+  there the whole time. The home screen is taller than a phone, the red button
+  sits well down it, and switching panes only toggled the hidden flag: the window kept
+  the scroll position it had. So the answers screen opened already scrolled past
+  its own list, and on a phone that is a blank screen with the answers above the
+  fold he cannot see. On a desktop the page is short enough that it never shows,
+  which is why it took a phone to find it.
+
+  Only on a real change of pane. A soft refresh repaints without moving him, and
+  yanking him to the top mid read would be a worse bug than the one this fixes.
+*/
+var panePrev='';
 function pane(w){
+ var moved=(panePrev!==w);
+ panePrev=w;
  for(var k in PANES){
   var sec=document.getElementById(PANES[k]);
   sec.hidden=(k!==w);
   if(k===w)backBar(sec);
+ }
+ if(moved){
+  try{window.scrollTo(0,0);}catch(e){}
+  try{document.documentElement.scrollTop=0;document.body.scrollTop=0;}catch(e){}
  }
  for(var n in NAVS){var nb=document.getElementById(NAVS[n]);if(nb)nb.setAttribute('aria-pressed',n===w);}
  // The reports screen has no button left pointing at it, but a saved link can

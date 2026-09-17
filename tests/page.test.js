@@ -1183,3 +1183,15 @@ test('the colour of a card is decided in one order: star, standby, fresh, done',
   assert.equal(run(Object.assign({}, flags, { done: true, standby: true })), 'standby');
   assert.equal(run(Object.assign({}, flags, { standby: true, star: true })), 'star');
 });
+
+test('switching screens starts the new one at the top', () => {
+  const html = renderPage(fixture({}));
+  // Itzik, 17.9: "I press the red button and I do not see the answers." The
+  // home screen is taller than a phone and the red button sits well down it,
+  // so the answers pane opened with the window still scrolled past its list.
+  assert.ok(html.includes("var moved=(panePrev!==w);"));
+  assert.ok(html.includes("try{window.scrollTo(0,0);}catch(e){}"));
+  // Only on a real change of pane: a soft refresh must not yank him to the top
+  // in the middle of reading, which is the bug the keepState work already fixed.
+  assert.ok(html.includes(' if(moved){'));
+});
