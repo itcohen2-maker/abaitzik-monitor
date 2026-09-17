@@ -163,6 +163,27 @@ function nightMode() {
     'powercfg -setacvalueindex SCHEME_CURRENT SUB_SLEEP RTCWAKE 1');
 }
 
+/* ---------- 4c. שעון הגלים ---------- */
+function wave() {
+  // הכשל של המשימה הזאת שקט: אין שגיאה ואין התראה, פשוט בוקר
+  // בלי גל. לכן לא מספיק שהמשימה קיימת, צריך שהטריגר שלה יהיה
+  // יומי. טריגר חד פעמי עובד יום אחד ואז נגמר בלי להגיד כלום.
+  const q = ps("$t=Get-ScheduledTask -TaskName 'AbaItzikWave' -ErrorAction SilentlyContinue;" +
+    "if(-not $t){'MISSING'}else{" +
+    "$d=($t.Triggers | Where-Object {$_.CimClass.CimClassName -eq 'MSFT_TaskDailyTrigger' -and $_.Enabled});" +
+    "if(-not $d){'NOTDAILY'}elseif($t.State -eq 'Disabled'){'DISABLED'}else{" +
+    "'OK ' + (Get-ScheduledTaskInfo -TaskName 'AbaItzikWave').NextRunTime}}");
+  if (!q || q === 'MISSING') {
+    fail('שעון הגלים', 'משימת הגלים חסרה, ולכן לא יהיו גלים', 'powershell -File setup-wave.ps1');
+  } else if (q === 'NOTDAILY') {
+    fail('שעון הגלים', 'הטריגר אינו יומי, ולכן מחר בבוקר אין גל', 'powershell -File setup-wave.ps1');
+  } else if (q === 'DISABLED') {
+    fail('שעון הגלים', 'המשימה מכובה', 'Enable-ScheduledTask -TaskName AbaItzikWave');
+  } else {
+    ok('שעון הגלים', 'יומי, הבא ' + q.slice(3).trim());
+  }
+}
+
 /* ---------- 5. הדף הציבורי ---------- */
 async function publicPage() {
   const code = await head(PUBLIC_URL);
@@ -201,6 +222,7 @@ function backup() {
   remote();
   sleepSetting();
   nightMode();
+  wave();
   git();
   backup();
   await publicPage();
