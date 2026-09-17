@@ -28,10 +28,17 @@ const LOCK = path.join(STATUS, 'worker.lock');
 const LOG = path.join(STATUS, 'worker.log');
 const SEEN = path.join(STATUS, 'worker-seen.json');
 const DRY = process.argv.includes('--dry');
-// A message needs a moment to settle: the listener writes the record, and a
-// voice note still has to be transcribed. Starting on the same second would
-// hand the session half a message.
-const SETTLE_MS = 60 * 1000;
+/*
+  A message needs a moment to settle, but a minute was never that moment.
+
+  The listener writes the record in the same second it arrives, and since 17.9
+  it also transcribes a voice note by itself, in about twenty seconds, so the
+  text is on the page long before a session could have read it. The minute here
+  was buying nothing and costing a minute of a wait he was already calling
+  unanswered. Twenty seconds is enough to let a burst of notes land together
+  and be answered in one session rather than three.
+*/
+const SETTLE_MS = 20 * 1000;
 // Never two at once, and never one that has been stuck for an hour.
 const LOCK_STALE_MS = 60 * 60 * 1000;
 
@@ -88,6 +95,13 @@ function markHandled(list) {
   try { fs.writeFileSync(SEEN, JSON.stringify(done, null, 1), 'utf8'); } catch (e) {}
 }
 
+function unmarkHandled(list) {
+  const done = readJson(SEEN, {});
+  list.forEach((m) => { delete done[m.file]; });
+  try { fs.writeFileSync(SEEN, JSON.stringify(done, null, 1), 'utf8'); } catch (e) {}
+  say('הבאטץ׳ הוחזר לתור: ' + list.map((m) => m.file).join(', '));
+}
+
 function prompt(list) {
   const lines = list.map((m) => '- [' + m.at + '] (id ' + (m.id || m.file) + ') ' + String(m.text || '').replace(/\s+/g, ' '));
   return [
@@ -98,18 +112,29 @@ function prompt(list) {
     '',
     lines.join('\n'),
     '',
-    'תעשה בדיוק את מה שהוא ביקש, עד הסוף, ותאמת את התוצאה על הדף החי.',
     'כללי הבית: הפעל את הסקיל abaitzik-onboarding לפני שאתה נוגע במשהו.',
-    'הודעה קולית: תמלל עם `node transcribe.js data/inbox/<שם>.webm` ופעל לפי מה שנאמר.',
+    'אם ל-note של ההודעה כבר יש תמלול, זה התמלול. רק אם אין, תמלל בעצמך עם',
+    '`node transcribe.js data/inbox/<שם>.webm`.',
     '',
-    'בסוף, לכל הודעה, חובה:',
-    '  1. בקובץ שלה ב-data/chat/chat: status ל-"done", ו-note עם התמלול אם זו הקלטה.',
-    '  2. קובץ חדש ב-data/chat/chat בשם <YYYYMMDD>-<HHMM>-claude-<slug>.json ובו',
+    'סדר העבודה, ובדיוק בסדר הזה. הוא מחכה מול מסך.',
+    '',
+    'שלב א, לפני שאתה עובד על משהו, ולא יותר משתי דקות מתחילת הסשן:',
+    '  1. קובץ חדש ב-data/chat/chat בשם <YYYYMMDD>-<HHMM>-claude-<slug>.json ובו',
     '     {"at":"<ISO עם +03:00>","from":"claude","re":"<id ההודעה שלו>","text":"<התשובה>"}.',
-    '     קצר ויבש, בלי מקפים, בלי אימוגי, בלי לפנות בשם.',
+    '     כתוב מה הבנת ומה אתה הולך לעשות, במשפט או שניים. אם אתה כבר יודע את',
+    '     התשובה, זו התשובה. קצר ויבש, בלי מקפים, בלי אימוגי, בלי לפנות בשם.',
+    '  2. node build.js, git add -A, git commit, git push. עכשיו, לא בסוף.',
+    'זה לא דיווח התקדמות ולא "עובד על זה". זו תשובה. שתים עשרה דקות של שקט',
+    'הן מבחינתו הודעה שנפלה, וזה מה שהוא ביקש לתקן.',
+    '',
+    'שלב ב: תעשה בדיוק את מה שהוא ביקש, עד הסוף, ותאמת את התוצאה על הדף החי.',
+    '',
+    'שלב ג, בסוף, לכל הודעה, חובה:',
+    '  1. בקובץ שלה ב-data/chat/chat: status ל-"done", ו-note עם התמלול אם זו הקלטה.',
+    '  2. הודעה נוספת בצאט עם מה שיצא בפועל, אם זה שונה ממה שכתבת בשלב א.',
     '  3. npm test, node build.js, git add -A, git commit, git push.',
     '',
-    'אם משהו באמת חסום או דורש החלטה שלו, כתוב לו את זה באותה תשובה בצאט. גם אז',
+    'אם משהו באמת חסום או דורש החלטה שלו, כתוב לו את זה כבר בשלב א. גם אז',
     'הכתיבה והדחיפה הן חובה: הודעה שלא נכתבה היא הודעה שהוא לא קיבל.',
   ].join('\n');
 }
@@ -128,9 +153,14 @@ function run(list) {
   child.stderr.on('data', (b) => { out += b; });
   child.on('close', (code) => {
     say('הסשן הסתיים, קוד ' + code + '. ' + String(out).trim().slice(-300).replace(/\s+/g, ' '));
+    // A session that died is not an answer. Marking before the run stops a
+    // crash loop from answering the same thing five times; putting a failed
+    // batch back is what stops the opposite, a message that was marked handled
+    // and never was. The next tick picks it up again.
+    if (code !== 0) unmarkHandled(list);
     releaseLock();
   });
-  child.on('error', (e) => { say('!! הסשן לא עלה: ' + e.message); releaseLock(); });
+  child.on('error', (e) => { say('!! הסשן לא עלה: ' + e.message); unmarkHandled(list); releaseLock(); });
 }
 
 function main() {

@@ -269,8 +269,55 @@ function recordIncoming(m) {
     fs.mkdirSync(CHAT, { recursive: true });
     fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
     say('נרשם בצ׳אט עם אישור קבלה: ' + text.slice(0, 60));
+    if (m.attachment && /\.(webm|m4a|mp3|ogg|wav)$/i.test(m.attachment.name || '')) {
+      transcribeLater(path.join(DROP, m.attachment.name), name);
+    }
     return true;
   } catch (e) { say('!! לא נרשם בצ׳אט: ' + e.message); return false; }
+}
+
+/*
+  What he said, on his screen, before anyone has answered him.
+
+  Itzik, 17.9: "you said within three minutes I get an answer from the monitor.
+  Why is that not happening." A recording used to reach the page as the line
+  "voice note: voice-20260917075848.webm" and stayed that way until a session
+  finished, which is between four and twelve minutes later. For all that time
+  the page could not even show that the words had arrived, let alone which
+  words, and a red line quoting a filename back at him is indistinguishable
+  from a message that fell on the floor.
+
+  Whisper needs about twenty seconds for a note of his length. That is cheap
+  enough to spend here, and it buys two separate things: he sees his own
+  sentence on the page within roughly half a minute, and the session that
+  answers it is handed the text instead of a filename, so it no longer spends
+  its own first minute transcribing.
+
+  It runs detached from the stream on purpose. The listener must never block on
+  it: a transcript that fails or takes too long costs the note nothing, because
+  the record is already written and the session can still transcribe for
+  itself.
+*/
+function transcribeLater(audio, file) {
+  const started = Date.now();
+  execFile('node', ['transcribe.js', audio], { cwd: __dirname, timeout: 180000 },
+    function (err, out) {
+      const text = String(out || '').trim().split(String.fromCharCode(10)).filter(Boolean).pop() || '';
+      if (err || !text || /^\(/.test(text)) {
+        say('!! תמלול מיידי נכשל: ' + path.basename(audio));
+        return;
+      }
+      const full = path.join(CHAT, file);
+      let rec;
+      try { rec = JSON.parse(fs.readFileSync(full, 'utf8')); } catch (e) { return; }
+      // Never overwrite an answer. If a session already got here and closed the
+      // message, its transcript is the one that was acted on.
+      if (rec.note || rec.status === 'done') return;
+      rec.note = 'תמלול: ' + text;
+      try { fs.writeFileSync(full, JSON.stringify(rec, null, 1), 'utf8'); } catch (e) { return; }
+      say('תומלל ב' + Math.round((Date.now() - started) / 1000) + ' שניות: ' + text.slice(0, 60));
+      publishChat();
+    });
 }
 let publishing = false, publishAgain = false;
 function publishChat() {
