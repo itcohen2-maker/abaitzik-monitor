@@ -439,7 +439,7 @@ const PAGE = `<!DOCTYPE html>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700&family=Heebo:wght@300;400;500;700&display=swap">
 <style>
-:root{--blue:#4285F4;--red:#EA4335;--yellow:#FBBC05;--green:#34A853;
+:root{--blue:#4285F4;--red:#EA4335;--yellow:#FBBC05;--green:#34A853;--orange:#e8710a;
  --ground:#f6f8fc;--surface:#fff;--sunk:#eef2fa;--ink:#1f2430;--dim:#5f6b7f;
  --line:#e3e9f4;--accent:#1a73e8;--accent-soft:#e8f0fe;--wait:#e37400;
  --gold:#f0b429;--fresh:#e6f6ec;--unread:#fdeceb;
@@ -449,10 +449,10 @@ const PAGE = `<!DOCTYPE html>
    win in both directions, so the same tokens are written twice on purpose. */
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ground:#0f1218;--surface:#181d27;--sunk:#141922;
  --ink:#eef1f7;--dim:#9aa5b8;--line:#252c39;--accent:#8ab4f8;--accent-soft:#1b2b45;
- --wait:#fbbc05;--fresh:#12301f;--unread:#331615;--shadow:0 2px 10px rgba(0,0,0,.4)}}
+ --wait:#fbbc05;--orange:#fb8c00;--fresh:#12301f;--unread:#331615;--shadow:0 2px 10px rgba(0,0,0,.4)}}
 :root[data-theme="dark"]{--ground:#0f1218;--surface:#181d27;--sunk:#141922;
  --ink:#eef1f7;--dim:#9aa5b8;--line:#252c39;--accent:#8ab4f8;--accent-soft:#1b2b45;
- --wait:#fbbc05;--fresh:#12301f;--unread:#331615;--shadow:0 2px 10px rgba(0,0,0,.4)}
+ --wait:#fbbc05;--orange:#fb8c00;--fresh:#12301f;--unread:#331615;--shadow:0 2px 10px rgba(0,0,0,.4)}
 *{box-sizing:border-box}
 /* A class that sets display beats the browser default for [hidden], which is
    how the recording overlay ended up on screen the moment the page opened. */
@@ -1574,9 +1574,25 @@ body.editing .bn{display:none}
 .ansc{background:var(--surface);border:1px solid var(--line);border-radius:16px;
  padding:13px 15px;margin-bottom:12px;box-shadow:var(--shadow);line-height:1.75;
  border-inline-start:5px solid var(--line)}
-.ansc.fresh{border-inline-start-color:var(--red)}
-.ansc.done{border-inline-start-color:var(--green)}
-.ansc.star{border-inline-start-color:var(--yellow)}
+/* 17.9, his voice message: "every answer sits on red, the moment I touch it it
+   is green, and I can move it to orange on standby or to yellow". That was the
+   old chat and it is the whole system here now. One colour per card, decided in
+   one place, with the stripe wide enough to read from across the room. */
+.ansc.fresh{border-inline-start-color:var(--red);background:color-mix(in srgb,var(--red) 7%,var(--surface))}
+.ansc.done{border-inline-start-color:var(--green);background:color-mix(in srgb,var(--green) 7%,var(--surface))}
+.ansc.standby{border-inline-start-color:var(--orange);background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
+.ansc.star{border-inline-start-color:var(--yellow);background:color-mix(in srgb,var(--yellow) 10%,var(--surface))}
+.ab.astandby.on{background:var(--orange);border-color:var(--orange);color:#fff}
+.ab.astar.on{background:var(--yellow);border-color:var(--yellow);color:#3a2d00}
+.ab.adone.on{background:var(--green);border-color:var(--green);color:#fff}
+.alegend{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 12px;
+ font:400 12.5px Heebo,sans-serif;color:var(--dim)}
+.alegend span{display:flex;align-items:center;gap:5px}
+.alegend i{width:11px;height:11px;border-radius:50%;display:inline-block}
+.alegend .l1{background:var(--red)}
+.alegend .l2{background:var(--green)}
+.alegend .l3{background:var(--orange)}
+.alegend .l4{background:var(--yellow)}
 /* His own messages sit in the same list now. Indented and quieter, so the
    list still reads as answers with the question above each one, rather than
    as two voices of equal weight. */
@@ -2395,9 +2411,10 @@ try{
 <section id="pA" hidden>
  <h2>תשובות</h2>
  <div class="achips" id="aChips"></div>
+ <div class="alegend"><span><i class="l1"></i>לא נקרא</span><span><i class="l2"></i>קראתי</span><span><i class="l3"></i>סטנד ביי</span><span><i class="l4"></i>מסומן</span></div>
  <input type="search" id="aSearch" class="asearch" autocomplete="off" placeholder="חיפוש בתוך התשובות">
  <div id="ansBox"></div>
- <div class="hint">הכל כאן, לפי זמן: מה ששלחת, מה שעניתי, מה שענה קודקס, והדוחות המלאים. כלום לא נעלם מכאן. אדום זה מה שלא קראת, ירוק זה מה שסימנת כטופל, וצהוב זה מה ששמת עליו כוכב.</div>
+ <div class="hint">הכל כאן, לפי זמן: מה ששלחת, מה שעניתי, מה שענה קודקס, והדוחות המלאים. כלום לא נעלם מכאן. כל תשובה נכנסת באדום, נגיעה בה הופכת אותה לירוקה, ואפשר להעביר אותה לכתום סטנד ביי או לצהוב.</div>
 </section>
 
 <section id="pI" hidden>
@@ -4576,6 +4593,30 @@ function toggleStar(m){
   localStorage.setItem('chatStar',JSON.stringify(s));
  }catch(e){}
 }
+// Orange, the third colour he asked for on 17.9. Red and green are decided for
+// him by what he read; standby is the one state only he can set, for an answer
+// he saw, did not finish with, and does not want back in the red pile.
+function standbyIds(){
+ try{return JSON.parse(localStorage.getItem('chatStandby')||'[]');}catch(e){return [];}
+}
+function isStandby(m){return standbyIds().indexOf(claudeKey(m))>-1;}
+function toggleStandby(m){
+ try{
+  var s=standbyIds(),k=claudeKey(m),i=s.indexOf(k);
+  if(i>-1)s.splice(i,1);else s.push(k);
+  if(s.length>400)s=s.slice(-400);
+  localStorage.setItem('chatStandby',JSON.stringify(s));
+ }catch(e){}
+}
+// One card, one colour. Yellow beats orange beats red beats green, so a mark he
+// made himself is never painted over by a mark the page made for him.
+function ansColor(m){
+ if(isStar(m))return 'star';
+ if(isStandby(m))return 'standby';
+ if(isFresh(m))return 'fresh';
+ if(isDone(m))return 'done';
+ return '';
+}
 function isDone(m){return touchedIds().indexOf(claudeKey(m))>-1;}
 function unDone(m){
  try{
@@ -4642,13 +4683,15 @@ function ansCounts(){
  return {all:a.length,
   fresh:a.filter(isFresh).length,
   star:a.filter(isStar).length,
-  done:a.filter(function(m){return isDone(m)&&!isFresh(m);}).length};
+  standby:a.filter(isStandby).length,
+  done:a.filter(function(m){return isDone(m)&&!isFresh(m)&&!isStandby(m)&&!isStar(m);}).length};
 }
 function ansList(){
  var a=allAnswers();
  if(ansFilter==='fresh')a=a.filter(isFresh);
  if(ansFilter==='star')a=a.filter(isStar);
- if(ansFilter==='done')a=a.filter(function(m){return isDone(m)&&!isFresh(m);});
+ if(ansFilter==='standby')a=a.filter(isStandby);
+ if(ansFilter==='done')a=a.filter(function(m){return isDone(m)&&!isFresh(m)&&!isStandby(m)&&!isStar(m);});
  if(ansQ){
   var q=ansQ.toLowerCase();
   a=a.filter(function(m){return String(m.text||'').toLowerCase().indexOf(q)>-1;});
@@ -4668,7 +4711,7 @@ function renderAnswers(){
  if(!chips||!host)return;
  var c=ansCounts();
  var defs=[['all','הכל',c.all],['fresh','לא נקראו',c.fresh],
-  ['star','מסומנות',c.star],['done','טופלו',c.done]];
+  ['standby','סטנד ביי',c.standby],['star','מסומנות',c.star],['done','טופלו',c.done]];
  chips.innerHTML=defs.map(function(d){
   return '<button type="button" class="achip'+(ansFilter===d[0]?' on':'')
    +'" data-f="'+d[0]+'">'+d[1]+' <b>'+d[2]+'</b></button>';
@@ -4691,11 +4734,11 @@ function renderAnswers(){
   return;
  }
  host.innerHTML=list.map(function(m,i){
-  var fresh=isFresh(m),done=!fresh&&isDone(m),st=isStar(m);
+  var fresh=isFresh(m),done=!fresh&&isDone(m),st=isStar(m),sb=isStandby(m);
   var his=m.src==='itzik';
   var mark=his?(m.status==='done'?' · בוצע':(m.status==='working'?' · בעבודה':''))
-   :(fresh?' · <em class="badge">חדש</em>':(done?' · טופל':' · נקרא'));
-  return '<div class="ansc'+(his?' mine':(fresh?' fresh':(done?' done':'')))+(st?' star':'')+'" data-i="'+i+'">'
+   :(fresh?' · <em class="badge">חדש</em>':(sb?' · סטנד ביי':(done?' · טופל':' · נקרא')));
+  return '<div class="ansc'+(his?' mine':' '+ansColor(m))+'" data-i="'+i+'">'
    +'<span class="w">'+ansWho(m)+' · '+esc(stamp(m.at))+mark+'</span>'
    +'<div class="atxt">'+linkify(m.text)+'</div>'
    +'<div class="arow">'
@@ -4703,6 +4746,8 @@ function renderAnswers(){
    +'<button type="button" class="ab acopy" data-i="'+i+'">העתקה</button>'
    +(his?'':'<button type="button" class="ab astar'+(st?' on':'')+'" data-i="'+i+'">'
    +(st?'★ מסומן':'☆ סימון')+'</button>'
+   +'<button type="button" class="ab astandby'+(sb?' on':'')+'" data-i="'+i+'">'
+   +(sb?'● סטנד ביי':'סטנד ביי')+'</button>'
    +'<button type="button" class="ab adone'+(done?' on':'')+'" data-i="'+i+'">'
    +(done?'✓ טופל':'סמן כטופל')+'</button>'
    +'<button type="button" class="ab aread" data-i="'+i+'"'+(fresh?'':' hidden')+'>קראתי</button>')
@@ -4719,6 +4764,32 @@ function renderAnswers(){
  });
  Array.prototype.forEach.call(host.querySelectorAll('.astar'),function(b){
   b.onclick=function(e){e.stopPropagation();toggleStar(at(b));renderAnswers();};
+ });
+ Array.prototype.forEach.call(host.querySelectorAll('.astandby'),function(b){
+  b.onclick=function(e){e.stopPropagation();
+   var m=at(b);
+   // Standby is a state he reached by looking at the answer, so it also counts
+   // as read. Without that the card would go orange and stay in the red count.
+   if(!isStandby(m))markOneSeen(m);
+   toggleStandby(m);renderAnswers();paintDot();};
+ });
+ // "The moment I touch them they are green." A touch anywhere on the card that
+ // is not a button, a link or a field marks it read.
+ Array.prototype.forEach.call(host.querySelectorAll('.ansc'),function(card){
+  if(card.className.indexOf('mine')>-1)return;
+  card.addEventListener('click',function(e){
+   var t=e.target;
+   while(t&&t!==card){
+    var n=(t.tagName||'').toLowerCase();
+    if(n==='button'||n==='a'||n==='input'||n==='textarea'||n==='label'||n==='select')return;
+    t=t.parentNode;
+   }
+   var sel=window.getSelection&&window.getSelection();
+   if(sel&&String(sel).length>2)return;
+   var m=list[Number(card.getAttribute('data-i'))];
+   if(!m||!isFresh(m))return;
+   markOneSeen(m);renderAnswers();paintDot();
+  });
  });
  Array.prototype.forEach.call(host.querySelectorAll('.adone'),function(b){
   b.onclick=function(e){e.stopPropagation();
