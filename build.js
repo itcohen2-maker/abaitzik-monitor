@@ -234,8 +234,13 @@ function build() {
     .map(c => ({ id: c.id, at: c.at, question: c.question, options: c.options || [] }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
   const food = loadDocs('food')
+    // zinc is in milligrams and may be missing on rows written before 17.9.
+    // A missing value is not a zero: the screen says so rather than quietly
+    // adding nothing, because a low total he trusts is worse than one gap.
     .map(f => ({ at: f.at, name: f.name, kcal: f.kcal, protein: f.protein,
-                 carbs: f.carbs, fat: f.fat, note: f.note || '' }))
+                 carbs: f.carbs, fat: f.fat,
+                 zinc: (f.zinc === undefined || f.zinc === null) ? null : Number(f.zinc),
+                 note: f.note || '' }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
   // Messages that crossed the bridge to the local agent mailbox. `state` is the
   // literal truth for each one and never says answered: `received` is something
@@ -1031,6 +1036,30 @@ section{margin-bottom:30px}
  padding:12px 6px;text-align:center;box-shadow:var(--shadow)}
 .foodtop span{display:block;font:800 22px Heebo,sans-serif;color:var(--accent)}
 .foodtop small{display:block;color:var(--dim);font-size:11px;margin-top:2px}
+/*
+  אבץ, לבקשתו ב-17.9: "בסוף היום תאגור את הכל ותגיד לי כמה אבץ היה באוכל".
+  הוא לא עוד מספר בשורת המאקרו, הוא השאלה. לכן כרטיס בפני עצמו מעל הכל,
+  עם מד שמראה כמה מהיעד היומי כבר נאסף, ופירוט מי תרם מה.
+*/
+.zbox{background:var(--surface);border:1px solid var(--line);border-radius:16px;
+ padding:14px 14px 12px;margin-bottom:14px;box-shadow:var(--shadow)}
+.zbox .zt{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.zbox .zt b{font:700 15px Heebo,sans-serif}
+.zbox .zv{font:800 24px Heebo,sans-serif;color:var(--accent);white-space:nowrap}
+.zbox .zbar{height:10px;border-radius:999px;background:var(--line);overflow:hidden;margin:10px 0 8px}
+.zbox .zbar i{display:block;height:100%;border-radius:999px;
+ background:linear-gradient(90deg,#5cc36f,var(--green))}
+.zbox.low .zbar i{background:linear-gradient(90deg,#f0b429,#e08a1e)}
+.zbox.over .zbar i{background:linear-gradient(90deg,#e4884e,#d4603a)}
+.zbox .zsaid{color:var(--dim);font-size:13px;line-height:1.6}
+.zbox .zparts{margin-top:8px;color:var(--dim);font-size:12.5px;line-height:1.7}
+.zbox .zparts div{display:flex;justify-content:space-between;gap:10px}
+.zdays{margin-top:14px}
+.zdays h3{font:700 14px Heebo,sans-serif;margin:0 0 8px}
+.zdays .zd{display:flex;justify-content:space-between;gap:10px;padding:8px 12px;
+ background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:6px;
+ color:var(--dim);font-size:13px}
+.zdays .zd b{color:var(--ink);font:700 13px Heebo,sans-serif}
 .foodrow{margin-bottom:10px}
 .foodcam{width:100%;min-height:56px;border:0;border-radius:18px;cursor:pointer;
  display:flex;align-items:center;justify-content:center;gap:10px;
@@ -2419,6 +2448,12 @@ try{
 
 <section id="pF" hidden>
  <h2>עקוב אחרי התזונה</h2>
+ <div class="zbox" id="fdZinc">
+  <div class="zt"><b>אבץ שנאסף היום</b><span class="zv" id="zVal">0 מ״ג</span></div>
+  <div class="zbar"><i id="zBar" style="width:0%"></i></div>
+  <div class="zsaid" id="zSaid"></div>
+  <div class="zparts" id="zParts"></div>
+ </div>
  <div class="foodtop">
   <div><span id="fdKcal">0</span><small>קלוריות היום</small></div>
   <div><span id="fdP">0</span><small>חלבון</small></div>
@@ -2436,8 +2471,10 @@ try{
  </form>
  <div class="msgsaid" id="fdSaid"></div>
  <div id="fdList"></div>
+ <div class="zdays" id="zDays"></div>
  <div class="hint">
-  שולחים תמונה או שורה, ואני מחזיר ערך קלורי, חלבון, פחמימות ושומן.
+  שולחים תמונה או שורה, ואני מחזיר ערך קלורי, חלבון, פחמימות, שומן ואבץ.
+  הכרטיס למעלה אוגר את האבץ של כל מה שנרשם היום, ובסוף היום הוא הסיכום.
   לחיצה על פריט פותחת את הפירוט המלא.
  </div>
 </section>
@@ -5967,6 +6004,58 @@ document.getElementById('noteForm').onsubmit=function(e){
 };
 on('lolosAsk',function(){askInChat('תצליב לי ');});
 function todayKey(){return new Date().toISOString().slice(0,10);}
+/*
+  אבץ.
+
+  "כל מה שאני אצלם היום מה שאכלתי, בסוף היום תאגור את הכל ותגיד לי כמה אבץ
+  היה באוכל." אז האיסוף רץ כל היום, והכרטיס הוא הסיכום בכל רגע שהוא פותח
+  אותו, כולל בסוף. היעד היומי לגבר בוגר הוא 11 מ״ג. שורה שאין בה ערך אבץ
+  לא נספרת כאפס אלא נאמרת בשמה, כדי שלא יסתכל על מספר נמוך ויחשוב שחסר לו.
+*/
+var ZINC_TARGET=11;
+function zincDays(){
+ var by={};
+ (D.food||[]).forEach(function(f){
+  var k=String(f.at||'').slice(0,10);
+  if(!k)return;
+  if(!by[k])by[k]={mg:0,items:0,missing:0};
+  by[k].items++;
+  if(f.zinc===null||f.zinc===undefined||f.zinc==='')by[k].missing++;
+  else by[k].mg+=Number(f.zinc)||0;
+ });
+ return by;
+}
+function mg(n){return (Math.round(n*10)/10)+' מ״ג';}
+function renderZinc(all){
+ var box=document.getElementById('fdZinc');
+ if(!box)return;
+ var known=all.filter(function(f){return f.zinc!==null&&f.zinc!==undefined&&f.zinc!=='';});
+ var missing=all.length-known.length;
+ var total=known.reduce(function(a,f){return a+(Number(f.zinc)||0);},0);
+ var pct=Math.min(100,Math.round(total/ZINC_TARGET*100));
+ box.className='zbox'+(total>=ZINC_TARGET?(total>ZINC_TARGET*2.5?' over':''):' low');
+ document.getElementById('zVal').textContent=mg(total);
+ document.getElementById('zBar').style.width=pct+'%';
+ var said;
+ if(!all.length)said='עוד לא נרשם היום כלום, אז אין מה לאגור. תצלם את הצלחת ואני ארשום כמה אבץ היה בה.';
+ else if(total>=ZINC_TARGET)said='זה '+pct+' אחוז מהיעד היומי של '+ZINC_TARGET+' מ״ג. היום סגור מבחינת אבץ.';
+ else said='זה '+pct+' אחוז מהיעד היומי של '+ZINC_TARGET+' מ״ג. חסרים '+mg(ZINC_TARGET-total)+'.';
+ if(missing)said+=' '+(missing===1?'פריט אחד עוד בלי ערך אבץ':missing+' פריטים עוד בלי ערך אבץ')+', אז המספר יכול לעלות.';
+ document.getElementById('zSaid').textContent=said;
+ var parts=known.slice().sort(function(a,b){return (Number(b.zinc)||0)-(Number(a.zinc)||0);});
+ document.getElementById('zParts').innerHTML=parts.map(function(f){
+  return '<div><span>'+esc(f.name||'פריט')+'</span><span>'+mg(Number(f.zinc)||0)+'</span></div>';
+ }).join('');
+ var host=document.getElementById('zDays');
+ if(!host)return;
+ var by=zincDays(),keys=Object.keys(by).filter(function(k){return k!==todayKey();}).sort().reverse().slice(0,7);
+ if(!keys.length){host.innerHTML='';return;}
+ host.innerHTML='<h3>אבץ בימים הקודמים</h3>'+keys.map(function(k){
+  var d=by[k],p=k.slice(8,10)+'.'+k.slice(5,7);
+  return '<div class="zd"><span>'+p+' · '+d.items+' פריטים'
+   +(d.missing?' · '+d.missing+' בלי ערך':'')+'</span><b>'+mg(d.mg)+'</b></div>';
+ }).join('');
+}
 function renderFood(){
  var all=(D.food||[]).filter(function(f){return String(f.at||'').slice(0,10)===todayKey();});
  var sum=function(k){return all.reduce(function(a,f){return a+(Number(f[k])||0);},0);};
@@ -5974,6 +6063,7 @@ function renderFood(){
  document.getElementById('fdP').textContent=Math.round(sum('protein'))+'g';
  document.getElementById('fdC').textContent=Math.round(sum('carbs'))+'g';
  document.getElementById('fdF').textContent=Math.round(sum('fat'))+'g';
+ renderZinc(all);
  var host=document.getElementById('fdList');
  if(!all.length){
   host.innerHTML='<div class="empty">עוד לא רשמנו היום כלום. תצלם את הצלחת או תכתוב מה אכלת, ואני מחזיר את הערכים.</div>';
@@ -5984,7 +6074,9 @@ function renderFood(){
    +'<div class="ft"><b>'+esc(f.name||'פריט')+'</b>'
    +'<span class="kc">'+Math.round(Number(f.kcal)||0)+' קלוריות</span></div>'
    +'<div class="macros">חלבון '+(Number(f.protein)||0)+'g · פחמימות '+(Number(f.carbs)||0)
-   +'g · שומן '+(Number(f.fat)||0)+'g · '+esc(stamp(f.at))+'</div>'
+   +'g · שומן '+(Number(f.fat)||0)+'g · אבץ '
+   +((f.zinc===null||f.zinc===undefined||f.zinc==='')?'עוד לא נמדד':mg(Number(f.zinc)||0))
+   +' · '+esc(stamp(f.at))+'</div>'
    +(f.note?'<div class="more">'+esc(f.note)+'</div>':'')
    +'</div>';
  }).join('');
