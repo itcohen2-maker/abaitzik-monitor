@@ -1024,6 +1024,19 @@ test('the ack line gets the arrival time and the transcript it reads', () => {
   assert.ok(html.includes('תמלול: בדיקה'));
 });
 
+test('the file ceiling is the one the file channel actually has', () => {
+  // Itzik, 17.9: he sent a video twice and it never arrived. The gate was 10MB,
+  // which is FormSubmit's limit, and files stopped going through FormSubmit:
+  // the bytes go to ntfy, which takes 15MB. So a video ntfy would have carried
+  // was turned away at the door.
+  const html = renderPage(fixture({}));
+  assert.ok(html.includes('var QMAX=15*1024*1024;'));
+  assert.ok(!html.includes('var QMAX=10*1024*1024;'));
+  assert.ok(html.includes("t+=' · גדול מדי, המגבלה 15MB יחד'"));
+  // And a failed send of a video must not tell him to record again.
+  assert.ok(html.includes('הקובץ לא הגיע שלם ולא נשמר.'));
+});
+
 test('text and a chosen file leave as one message, on one press', () => {
   // Itzik, 17.9: "I attach a file and send what I write with it, it is not sent
   // together." Two forms, two buttons, two messages. The video he wanted me to

@@ -6208,7 +6208,13 @@ document.getElementById('msgForm').addEventListener('submit',function(e){
  }).then(function(){btn.disabled=false;});
 });
 
-var QMAX=10*1024*1024;
+// The ceiling used to be 10MB, which was FormSubmit's. Files stopped going
+// through FormSubmit a while ago: the bytes go to ntfy and only a line of text
+// goes to the mailbox. So the gate was measuring a channel that no longer
+// carries the file, and it turned away videos that ntfy would have taken.
+// 15MB is ntfy's real per file limit. Itzik, 17.9: he sent a video twice and
+// it never arrived.
+var QMAX=15*1024*1024;
 var qMode='normal';
 var fPick=document.getElementById('fPick');
 var fForm=document.getElementById('fileForm');
@@ -6250,7 +6256,7 @@ function describe(){
  else if(qMode==='normal')t+=' · וידאו וקול נשלחים כמו שהם, אין כיווץ בדפדפן';
  else t+=' · נשלח במקור, איכות מלאה';
  var big=total>QMAX&&!(qMode==='normal'&&allImages);
- if(big)t+=' · גדול מדי, המגבלה 10MB יחד';
+ if(big)t+=' · גדול מדי, המגבלה 15MB יחד';
  fMeta.className='fmeta'+(big?' bad':'');
  fMeta.textContent=t;
 }
@@ -6303,7 +6309,7 @@ function reallySend(list){
  var total=totalSize(list);
  if(total>QMAX){
   fSaid.textContent=(list.length>1?list.length+' קבצים יחד שוקלים ':'הקובץ שוקל ')+mb(total)
-   +' והמגבלה היא 10MB. תשלח פחות קבצים בבת אחת, או תעלה לדרייב ותכתוב לי כאן את השם.';
+   +' והמגבלה היא 15MB. תשלח פחות קבצים בבת אחת, או תעלה לדרייב ותכתוב לי כאן את הקישור.';
   fBtn.disabled=false;return;
  }
  var cap=document.getElementById('fCap').value.trim();
@@ -6335,7 +6341,9 @@ function reallySend(list){
   renderSent();renderThread();
  }).catch(function(){
   paintMics('bad');
-  sendSay('ההקלטה לא הגיעה שלמה ולא נשמרה. תקליט שוב עכשיו, לפני שתשכח מה אמרת.');
+  sendSay(voice
+   ?'ההקלטה לא הגיעה שלמה ולא נשמרה. תקליט שוב עכשיו, לפני שתשכח מה אמרת.'
+   :'הקובץ לא הגיע שלם ולא נשמר. תשלח שוב, ואם הוא גדול תעלה לדרייב ותכתוב לי את הקישור.');
  }).then(function(){fBtn.disabled=false;});
 }
 function sendSay(t){
