@@ -669,8 +669,26 @@ button.abtn[disabled]{opacity:.55}
  border:0;border-radius:var(--r);cursor:pointer;text-align:start;color:#fff;font-family:Heebo,sans-serif;
  background:linear-gradient(150deg,#9aa5b8,#6b7688);box-shadow:0 8px 18px rgba(20,30,60,.16)}
 .newbtn .nb-l{flex:1;min-width:0}
-.newbtn.got{margin-top:0;background:linear-gradient(150deg,#5aa9fb,var(--blue))}
+/* Itzik, 18.9: he pressed the red button and landed on "מה התקבל", which had
+   nothing in it, and wrote "אין מידע". The two buttons were the same size and
+   touching, margin-top:0 under a card sized exactly like it, so a thumb aimed
+   at the bottom of the red one came down on the blue one. It is a second rank
+   button now: a gap above it, shorter, quieter, and no big count disc that
+   makes it read as a twin of the red. */
+.newbtn.got{margin-top:16px;padding:11px 15px;
+ background:linear-gradient(150deg,#5aa9fb,var(--blue));box-shadow:0 4px 10px rgba(20,30,60,.12)}
+.newbtn.got b{font-size:15px}
+.newbtn.got .nb-c{min-width:28px;height:28px;font-size:14px}
 .newbtn.got .nb-c.zero{opacity:.55}
+/* And more air still while the red one is beating, so nothing sits inside the
+   reach of a finger going for it. */
+#newBlock.hasnew .newbtn.got{margin-top:26px}
+/* The way out of the empty screen, straight to what he actually pressed for. */
+.gjump{width:100%;margin:0 0 14px;padding:14px 16px;border:0;border-radius:var(--r);
+ cursor:pointer;color:#fff;font:800 16px Heebo,sans-serif;text-align:start;
+ background:linear-gradient(150deg,#e85566,#c5221f);box-shadow:0 6px 16px rgba(234,67,53,.22)}
+.gjump small{display:block;font-size:12.5px;font-weight:300;opacity:.92;margin-top:2px}
+.gjump:active{transform:translateY(2px)}
 .gotlist h3{font:800 15px Heebo,sans-serif;margin:18px 0 8px;color:var(--dim)}
 .gr{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);
  border-radius:12px;margin-bottom:8px;background:var(--surface)}
@@ -3703,6 +3721,10 @@ function renderNew(){
  var c=unreadCount();
  var btn=document.getElementById('newBtn');
  btn.classList.toggle('hot',c>0);
+ // The block knows when the red one is live, so the button under it can step
+ // further back exactly then and not be in the way of the thumb.
+ var blk=document.getElementById('newBlock');
+ if(blk)blk.classList.toggle('hasnew',c>0);
  document.getElementById('nbCount').textContent=c?c:'✓';
  // Said in words as well as in colour. He told me a colour blind person would
  // not notice the old marking at all, and he was right.
@@ -4590,7 +4612,7 @@ function on(id,fn){
 // moment he touches a message, and after that the only copy sits buried in the
 // thread among his own messages. This screen keeps every answer I ever wrote.
 // Nothing here removes a message from view - the filters only narrow it.
-var ansFilter='all',ansQ='';
+var ansFilter='all',ansQ='',ansAuto=false;
 // Two hundred cards, each with a recorder and an attach form, is more than a
 // phone should build at once. It draws a page at a time.
 var ansShow=30;
@@ -4730,7 +4752,7 @@ function renderAnswers(){
    +'" data-f="'+d[0]+'">'+d[1]+' <b>'+d[2]+'</b></button>';
  }).join('');
  Array.prototype.forEach.call(chips.querySelectorAll('.achip'),function(b){
-  b.onclick=function(){ansFilter=b.getAttribute('data-f');ansShow=30;renderAnswers();};
+  b.onclick=function(){ansAuto=false;ansFilter=b.getAttribute('data-f');ansShow=30;renderAnswers();};
  });
  // The chat tab used to hold "קראתי את הישנות", and it was the only way to put the red
  // count back to zero in one move. The tab is gone, so the button lives here.
@@ -4880,7 +4902,18 @@ function renderGot(){
    +'<span class="gr-s gr-'+k+'">'+label+'</span>'
    +del(kind||'msg',m)+'</div>';
  }
- var h='<h3>בעבודה עכשיו</h3>';
+ /*
+   Itzik, 18.9: "אין מידע". He wanted the answers, opened this screen by
+   mistake, and its first three sections were empty, so the screen told him
+   nothing while eight unread answers sat one tab away. A screen that is not
+   what he was after has to say where the thing he was after is.
+ */
+ var h='';
+ var un=unreadCount();
+ if(un)h+='<button type="button" class="gjump" id="gotToAns">'
+  +(un===1?'תשובה אחת שלא קראת':un+' תשובות שלא קראת')
+  +'<small>זה המסך של ההודעות ששלחת לי. התשובות שלי נמצאות כאן, בלחיצה.</small></button>';
+ h+='<h3>בעבודה עכשיו</h3>';
  if(N&&N.text&&!nGone)h+='<div class="gr now"><span class="gr-t">'+esc(stamp(N.at))+'</span>'
   +'<div class="gr-x">'+esc(N.text)+(N.next?'<small>אחר כך: '+esc(N.next)+'</small>':'')+'</div>'
   +'<span class="gr-s gr-w">דיווח</span>'+del('now',{at:N.at,text:N.text})+'</div>';
@@ -4902,6 +4935,8 @@ function renderGot(){
  if(gn)h+='<div class="gback">נמחקו מהמסך הזה '+gn+' שורות. '
   +'<button type="button" id="gotBack">להחזיר הכל</button></div>';
  host.innerHTML=h;
+ var ja=document.getElementById('gotToAns');
+ if(ja)ja.onclick=function(){openAnswers('fresh');};
  var mb=document.getElementById('gotMore');
  if(mb)mb.onclick=function(){gotShow+=30;renderGot();};
  var bb=document.getElementById('gotBack');
@@ -5117,10 +5152,30 @@ document.getElementById('plusBtn').onclick=function(){
   which one to press. Everything lands on תשובות now, red button included,
   and it opens on what he has not read when there is something to read.
 */
+/*
+  The red button may never land on an empty screen.
+
+  The count on it comes from unreadList, the 'fresh' filter comes from
+  isFresh, and the two are not the same set: a mail answer counts as unread
+  but never appears in the answers list, so a red 1 could open on
+  "אין כאן כלום בסינון הזה". The chosen filter stands only if it has
+  something in it; otherwise he gets the whole list, which is never empty.
+*/
 function openAnswers(filter){
- ansFilter=filter||'all';ansShow=30;
+ ansShow=30;
+ var pick=function(f){
+  ansFilter=f||'all';
+  if(ansFilter!=='all'&&!ansList().length)ansFilter='all';
+ };
+ ansAuto=true;
+ pick(filter);
  pane('a');renderAnswers();
- ensure(['chat','codex','reports'],function(){renderAnswers();paintAnsCount();});
+ ensure(['chat','codex','reports'],function(){
+  // Only second guess a filter nobody chose by hand. A chip he pressed while
+  // the file was still landing outranks anything the button decided.
+  if(ansAuto&&ansFilter==='all')pick(filter);
+  renderAnswers();paintAnsCount();
+ });
 }
 document.getElementById('newBtn').onclick=function(){
  var n=unreadCount();

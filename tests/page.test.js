@@ -928,6 +928,27 @@ test('what was received sits under the red button as one ordered list', () => {
   assert.ok(html.includes(' paintGot();\n var c=unreadCount();'));
 });
 
+test('the red button cannot be missed and cannot open on nothing', () => {
+  const html = renderPage(fixture({}));
+  // 18.9: he aimed at the red button and landed on "מה התקבל", which was glued
+  // to it with margin-top:0 and built at the same size. It steps back now.
+  assert.ok(!html.includes('.newbtn.got{margin-top:0;'));
+  assert.ok(html.includes('.newbtn.got{margin-top:16px;'));
+  assert.ok(html.includes('#newBlock.hasnew .newbtn.got{margin-top:26px}'));
+  assert.ok(html.includes("if(blk)blk.classList.toggle('hasnew',c>0);"));
+  // The wrong screen says where the right one is, and gets there in one press.
+  assert.ok(html.includes('class="gjump" id="gotToAns"'));
+  assert.ok(html.includes("if(ja)ja.onclick=function(){openAnswers('fresh');};"));
+  const body = html.slice(html.indexOf('function renderGot(){'));
+  assert.ok(body.indexOf('gotToAns') < body.indexOf('בעבודה עכשיו'));
+  // And a filter with nothing in it is never what the button lands on: the
+  // count comes from unreadList, the filter from isFresh, and a mail answer
+  // is in one and not the other.
+  assert.ok(html.includes("if(ansFilter!=='all'&&!ansList().length)ansFilter='all';"));
+  assert.ok(html.includes("if(ansAuto&&ansFilter==='all')pick(filter);"));
+  assert.ok(html.includes("b.onclick=function(){ansAuto=false;"));
+});
+
 test('the big collections travel in their own files, not in the page', () => {
   const html = renderPage(fixture({
     chat: Array.from({ length: 200 }, (_, i) => ({ at: '2026-09-0' + (i % 9 + 1) + 'T10:00:00', from: 'claude', text: 'x' + i })),
@@ -937,7 +958,8 @@ test('the big collections travel in their own files, not in the page', () => {
   assert.ok(html.includes("function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }"));
   assert.ok(html.includes("var url='data/'+k+'.json?b='+encodeURIComponent(D.buildId||'');"));
   // Every screen that reads a split collection fetches it on the way in.
-  assert.ok(html.includes("ensure(['chat','codex','reports'],function(){renderAnswers();paintAnsCount();});"));
+  assert.ok(html.includes("ensure(['chat','codex','reports'],function(){"));
+  assert.ok(html.includes('renderAnswers();paintAnsCount();'));
   assert.ok(html.includes("if(w==='r')ensure('reports',function(){render();renderNextReport();});"));
   assert.ok(html.includes("ensure('chat',renderThread);"));
   // Old answers must not turn red when the history lands: the reset is a floor.
