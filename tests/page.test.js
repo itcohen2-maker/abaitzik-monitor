@@ -1363,7 +1363,7 @@ test('the diagnostic does not read a closed screen or a lazy tail as a fault', (
   // Same dump: "כל התשובות: 175 · כרטיסים בפועל על המסך: 0" with the answers
   // screen closed, and "הודעות בזיכרון: 150 מתוך 231". Both are normal and
   // both look like loss when the number stands on its own.
-  assert.ok(html.includes('(מסך התשובות סגור, ולכן אפס זה תקין)'));
+  assert.ok(html.includes("((!ansOpen&&!cards)?' (מסך התשובות סגור)':'')"));
   assert.ok(html.includes('השאר נטען כשפותחים את המסך'));
 });
 

@@ -6827,10 +6827,14 @@ function diagnose(){
  L.push('כל התשובות: '+num(function(){return allAnswers().length;})+' · בסינון הנוכחי: '+num(function(){return ansList().length;}));
  L.push('סינון: '+(typeof ansFilter!=='undefined'?ansFilter:'?')+' · מציג עד '+(typeof ansShow!=='undefined'?ansShow:'?'));
  var ansOpen=!!(pA&&!pA.hidden);
- // Zero cards on a closed screen is what a closed screen looks like. Saying so
- // on the same line stops the number from reading as a fault.
+ /*
+   Zero cards while the screen is shut is what a shut screen can look like, and
+   saying so on the same line stops the number from reading as a fault. It is
+   only said when the count really is zero: on this machine the cards are built
+   and sit hidden, so the same note on a line reading 30 would be a lie.
+ */
  L.push('כרטיסים בפועל על המסך: '+cards+' · צ׳יפים: '+chips
-  +(ansOpen?'':' (מסך התשובות סגור, ולכן אפס זה תקין)'));
+  +((!ansOpen&&!cards)?' (מסך התשובות סגור)':''));
  L.push('מסך התשובות פתוח: '+(ansOpen?'כן':'לא'));
  L.push('סומנו כנקראו במכשיר: '+num(function(){return seenIds().length;}));
  L.push('כשלי טעינה: '+((window.bootFailed&&bootFailed.length?bootFailed.join(','):'')

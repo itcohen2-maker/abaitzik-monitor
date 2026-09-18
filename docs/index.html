@@ -1332,7 +1332,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-18T13:33:56.992Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-18T13:35:53.211Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2131,7 +2131,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='e302c31dac';
+var CODE_ID='06c1ff843a';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -5036,7 +5036,7 @@ function diagnose(){
  L.push('סינון: '+(typeof ansFilter!=='undefined'?ansFilter:'?')+' · מציג עד '+(typeof ansShow!=='undefined'?ansShow:'?'));
  var ansOpen=!!(pA&&!pA.hidden);
  L.push('כרטיסים בפועל על המסך: '+cards+' · צ׳יפים: '+chips
-  +(ansOpen?'':' (מסך התשובות סגור, ולכן אפס זה תקין)'));
+  +((!ansOpen&&!cards)?' (מסך התשובות סגור)':''));
  L.push('מסך התשובות פתוח: '+(ansOpen?'כן':'לא'));
  L.push('סומנו כנקראו במכשיר: '+num(function(){return seenIds().length;}));
  L.push('כשלי טעינה: '+((window.bootFailed&&bootFailed.length?bootFailed.join(','):'')
