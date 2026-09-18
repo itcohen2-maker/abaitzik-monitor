@@ -335,7 +335,7 @@ test('the replies I sent in his name get a tile, a screen and a count that blink
   assert.ok(html.includes('id="gReplies"'));
   assert.ok(html.includes('<section id="pK" hidden>'));
   assert.ok(html.includes('function renderReplies('));
-  assert.ok(html.includes("k:'pK',j:'pDr'}"));
+  assert.ok(html.includes("k:'pK',j:'pDr',c:'pBl'}"));
   assert.ok(html.includes("k:'replies'"));
   assert.ok(html.includes('"replies":[{"at":"2026-09-13T11:48:00+03:00"'));
   // The count is what he asked for: tell me there are more, not just that
@@ -1702,4 +1702,27 @@ test('a list from the device is a list, and two features never share a key', () 
   assert.ok(!html.includes("localStorage.setItem('chatStandby',JSON.stringify(s));"));
   // The map keeps the old name, which is the one it always meant.
   assert.ok(html.includes("localStorage.setItem('chatStandby',JSON.stringify(m));"));
+});
+
+test('the block list is a list he ticks, and nothing acts on its own', () => {
+  const html = renderPage(fixture({}));
+  // Itzik, 18.9: "give me a detailed list and I will approve, prepare a lead
+  // with a tick box, I will tell you what to do." Blocking is visible to the
+  // person and hard to walk back, some of these are a first name with no
+  // account yet, and two of them are that man's children.
+  assert.ok(html.includes('id="gBlock"'));
+  assert.ok(html.includes('<section id="pBl" hidden>'));
+  assert.ok(html.includes('<b>כלום כאן לא מבוצע.</b>'));
+  assert.ok(html.includes('function renderBlock(){'));
+  // Ticks survive a refresh, so a half finished decision is not lost, and they
+  // go through idList like every other stored list.
+  assert.ok(html.includes("function blTicks(){ return idList('blockTicks'); }"));
+  // The form sends a decision. It does not block anything itself.
+  assert.ok(html.includes("sendText('חסימה','אישור לחסימה, '"));
+  assert.ok(!html.includes('function doBlock('));
+  // A name with no account is shown as exactly that, because blocking a name
+  // is not a thing that can be done.
+  assert.ok(html.includes("'<em class=\"blnone\">עוד אין חשבון מזוהה</em>'"));
+  // And his children are called out for a separate decision.
+  assert.ok(html.includes("p.minorCheck?' <b class=\"blwarn\">ילד שלו. תחליט עליו בנפרד.</b>':''"));
 });

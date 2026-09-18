@@ -1282,6 +1282,17 @@ body.editing .bn{display:none}
 .drpeein input{background:var(--sunk,#141922);color:var(--ink,#e8edf5);border:1px solid var(--line,#2a3342);
  border-radius:11px;padding:11px 12px;font:700 16px Heebo,sans-serif;text-align:center}
 .drpeein input:focus{outline:2px solid var(--accent,#4285F4);outline-offset:1px}
+.blrow{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:start;
+ background:var(--surface,#181d27);border:1px solid var(--line,#2a3342);border-radius:13px;
+ padding:12px 13px;margin-bottom:9px;cursor:pointer}
+.blrow.on{border-color:var(--red,#EA4335)}
+.blrow input{width:22px;height:22px;accent-color:var(--red,#EA4335);grid-row:1 / span 2;margin:2px 0 0}
+.blwho{font:400 15px Heebo,sans-serif;color:var(--ink,#e8edf5)}
+.blwho b{font-weight:800}
+.blwho em{font-style:normal;margin-inline-start:7px;font-size:13px;color:var(--dim,#9aa7ba)}
+.blwho em.blnone{color:var(--gold,#FBBC05)}
+.blwhy{grid-column:2;font:400 13.5px Heebo,sans-serif;color:var(--dim,#9aa7ba);line-height:1.5}
+.blwarn{color:var(--gold,#FBBC05);font-weight:700}
 .gt-e{min-height:20px;margin-top:10px;font:600 13.5px Heebo,sans-serif;color:var(--red,#EA4335)}
 </style>
 <script>
@@ -1332,7 +1343,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-18T16:38:03.429Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-18T16:45:16.648Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1453,6 +1464,7 @@ try{
   <button type="button" class="gt g3" id="gQueue"><b>📊 ניטור רשתות</b><small>מי פנה, מה נענה</small></button>
   <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>חשבוניות והיומן</small></button>
   <button type="button" class="gt g4" id="gDrains"><b>🩺 ניקוזים</b><small>ארבעה, כמה יצא ולאן זה הולך</small></button>
+  <button type="button" class="gt g9" id="gBlock"><b>🚫 לחסימה</b><small>רשימה לאישור. כלום לא קורה עד שתסמן</small></button>
   <button type="button" class="gt g10" id="gNotes"><b>📝 פתקים</b><small>נכתב, נשמר, לא הולך לאיבוד</small></button>
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
   <button type="button" class="gt g13" id="gSpecial"><b>⭐ בקשות מיוחדות</b><small>מה שביקשת ומוכן, דפים וקבצים</small></button>
@@ -1623,6 +1635,20 @@ try{
    <span aria-hidden="true">📁</span><div>כל הדרייב<small>הדף הראשי</small></div></a>
  </nav>
  <div class="hint" style="margin-top:14px">חסרה תיקייה? תכתוב לי בשורת הבנייה העצמית ואוסיף אותה לכאן.</div>
+</section>
+
+<section id="pBl" hidden>
+ <h2>רשימה לחסימה</h2>
+ <div class="hint">
+  <b>כלום כאן לא מבוצע.</b> זו רשימה לאישור שלך. מסמן את מי שאתה רוצה,
+  לוחץ שליחה, ואני חוסם רק אותם ומדווח לך אחד אחד.
+  מי שנמסר בשם פרטי בלבד עדיין צריך זיהוי, ואני לא חוסם על סמך שם שאין לו חשבון.
+ </div>
+ <div id="blBody"></div>
+ <form class="drform" id="blForm">
+  <button type="submit" id="blSend">שליחת המסומנים לחסימה</button>
+ </form>
+ <div class="msgsaid" id="blSaid"></div>
 </section>
 
 <section id="pDr" hidden>
@@ -2131,7 +2157,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='22f090ab37';
+var CODE_ID='1e55b043c2';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -2976,7 +3002,7 @@ function updateDot(){
  document.title=(fresh?'(1) ':'')+'אבא איציק בבנייה עצמית';
 }
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
-var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',k:'pK',j:'pDr'};
+var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',k:'pK',j:'pDr',c:'pBl'};
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
 function lastPill(){
  var c=(D.chat||[]).filter(function(m){return m.from==='itzik'&&/לקחתי כדור/.test(m.text||'');});
@@ -3219,7 +3245,7 @@ function repaintAll(){
   ['pegasus',renderPegasus],['improve',renderImprove],['special',renderSpecial],
   ['replies',renderReplies],['rivhit',renderRivhit],['food',renderFood],
   ['reqs',renderReqs],['stamp',paintStamp],['secrets',paintSecrets],
-  ['drains',renderDrains]];
+  ['drains',renderDrains],['block',renderBlock]];
  var bad=[],ran={};
  jobs.forEach(function(j){
   ran[j[0]]=1;
@@ -4057,7 +4083,7 @@ function pane(w){
  }
  var PAINT={a:function(){renderAnswers();paintAnsCount();},b:renderGot,m:renderThread,
   n:renderNet,r:render,p:renderPegasus,w:renderImprove,s:renderSpecial,
-  e:renderReplies,f:renderFood,j:renderDrains,v:renderRivhit};
+  e:renderReplies,f:renderFood,j:renderDrains,v:renderRivhit,c:renderBlock};
  if(PAINT[w]){try{PAINT[w]();}catch(e){try{console.error('pane paint '+w,e);}catch(_){}}}
  var talk=document.getElementById('talkCard');
  if(talk)talk.hidden=(w!=='h');
@@ -5006,6 +5032,60 @@ function renderDrains(){
   +'<caption>מ״ל, החדש למעלה. החץ הוא ההפרש מהמדידה שלפניה. סה״כ הוא ארבעת הניקוזים בלבד, בלי שתן.</caption>'
   +'<thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>';
 }
+function blTicks(){ return idList('blockTicks'); }
+function blToggle(id){
+ var t=blTicks(),i=t.indexOf(id);
+ if(i>-1)t.splice(i,1);else t.push(id);
+ try{localStorage.setItem('blockTicks',JSON.stringify(t));}catch(e){}
+}
+function renderBlock(){
+ var host=document.getElementById('blBody');
+ if(!host)return;
+ var lists=(D.blocklist||[]);
+ var people=[];
+ lists.forEach(function(l){(l.people||[]).forEach(function(p){people.push(p);});});
+ if(!people.length){
+  host.innerHTML='<div class="empty">אין כרגע שמות ברשימה.</div>';
+  return;
+ }
+ var t=blTicks();
+ host.innerHTML=people.map(function(p){
+  var on=t.indexOf(p.id)>-1;
+  return '<label class="blrow'+(on?' on':'')+'">'
+   +'<input type="checkbox" data-id="'+esc(p.id)+'"'+(on?' checked':'')+'>'
+   +'<span class="blwho"><b>'+esc(p.name||p.id)+'</b>'
+   +(p.handle?'<em>@'+esc(p.handle)+'</em>':'<em class="blnone">עוד אין חשבון מזוהה</em>')
+   +'</span>'
+   +'<span class="blwhy">'+esc(p.why||'')
+   +(p.minorCheck?' <b class="blwarn">ילד שלו. תחליט עליו בנפרד.</b>':'')+'</span>'
+   +'</label>';
+ }).join('');
+ Array.prototype.forEach.call(host.querySelectorAll('input[type=checkbox]'),function(b){
+  b.onchange=function(){blToggle(b.getAttribute('data-id'));renderBlock();};
+ });
+}
+function openBlock(){pane('c');renderBlock();ensure('blocklist',renderBlock);}
+on('gBlock',openBlock);
+(function(){
+ var f=document.getElementById('blForm');
+ if(!f)return;
+ f.onsubmit=function(e){
+  e.preventDefault();
+  var said=document.getElementById('blSaid');
+  var t=blTicks();
+  if(!t.length){ if(said)said.textContent='לא סימנת אף אחד.'; return; }
+  var lists=(D.blocklist||[]),names=[];
+  lists.forEach(function(l){(l.people||[]).forEach(function(p){
+   if(t.indexOf(p.id)>-1)names.push(p.name+(p.handle?(' @'+p.handle):' (בלי חשבון מזוהה)'));
+  });});
+  if(said)said.textContent='שולח.';
+  sendText('חסימה','אישור לחסימה, '+names.length+' שמות: '+names.join(' · '),'חסימה')
+   .then(function(){
+    if(said)said.textContent='נשלח. חוסם רק את מי שסימנת ומדווח אחד אחד.';
+    setTimeout(function(){if(said)said.textContent='';},7000);
+   }).catch(function(){ if(said)said.textContent='לא נשלח. אין רשת כרגע.'; });
+ };
+})();
 function openDrains(){pane('j');renderDrains();ensure('drains',renderDrains);}
 on('gDrains',openDrains);
 (function(){

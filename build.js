@@ -331,6 +331,19 @@ function build() {
       thresholds are a field he fills in from what the hospital told him.
     */
     drains: loadDocs('drains').sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1)),
+    /*
+      Who to cut off, and nobody is cut off until he ticks them.
+
+      Itzik, 18.9: a list of people connected to him through one person he is
+      done with. He asked for it exactly this way, in his words: give me a
+      detailed list first and I will approve, make a lead with a tick box.
+
+      So it is a list and not an action. Blocking somebody is visible to them
+      and hard to walk back, some of these are only a first name so far, and two
+      of them are that man's children. A screen that blocks on a tap would be
+      wrong even when he is sure, and he was right to ask for the ticks.
+    */
+    blocklist: loadDocs('blocklist').sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1)),
     pending: pending.sort((a, b) => (a.seenAt < b.seenAt ? 1 : -1)),
     replied: replied.sort((a, b) => (a.repliedAt < b.repliedAt ? 1 : -1)),
     contacts,
@@ -360,7 +373,7 @@ function build() {
   */
   const HEADS = { chat: 150, reports: 14, codex: 20, special: 8, replies: 8,
                   improve: 4, food: 12, pegasus: 4, replied: 0, rivhit: 0,
-                  drains: 40 };
+                  drains: 40, blocklist: 12 };
   // A report's body is most of its weight, and only the newest few are read
   // off the card without opening the screen.
   const BODY_HEAD = 3;
@@ -2010,6 +2023,19 @@ body.editing .bn{display:none}
 .drpeein input{background:var(--sunk,#141922);color:var(--ink,#e8edf5);border:1px solid var(--line,#2a3342);
  border-radius:11px;padding:11px 12px;font:700 16px Heebo,sans-serif;text-align:center}
 .drpeein input:focus{outline:2px solid var(--accent,#4285F4);outline-offset:1px}
+/* A list he ticks. Deliberately plain: a screen that decides who gets cut off
+   should look like a form, not like a button. */
+.blrow{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:start;
+ background:var(--surface,#181d27);border:1px solid var(--line,#2a3342);border-radius:13px;
+ padding:12px 13px;margin-bottom:9px;cursor:pointer}
+.blrow.on{border-color:var(--red,#EA4335)}
+.blrow input{width:22px;height:22px;accent-color:var(--red,#EA4335);grid-row:1 / span 2;margin:2px 0 0}
+.blwho{font:400 15px Heebo,sans-serif;color:var(--ink,#e8edf5)}
+.blwho b{font-weight:800}
+.blwho em{font-style:normal;margin-inline-start:7px;font-size:13px;color:var(--dim,#9aa7ba)}
+.blwho em.blnone{color:var(--gold,#FBBC05)}
+.blwhy{grid-column:2;font:400 13.5px Heebo,sans-serif;color:var(--dim,#9aa7ba);line-height:1.5}
+.blwarn{color:var(--gold,#FBBC05);font-weight:700}
 .gt-e{min-height:20px;margin-top:10px;font:600 13.5px Heebo,sans-serif;color:var(--red,#EA4335)}
 </style>
 <script>
@@ -2326,6 +2352,7 @@ try{
        which is the one button he asked for. -->
   <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>חשבוניות והיומן</small></button>
   <button type="button" class="gt g4" id="gDrains"><b>🩺 ניקוזים</b><small>ארבעה, כמה יצא ולאן זה הולך</small></button>
+  <button type="button" class="gt g9" id="gBlock"><b>🚫 לחסימה</b><small>רשימה לאישור. כלום לא קורה עד שתסמן</small></button>
   <button type="button" class="gt g10" id="gNotes"><b>📝 פתקים</b><small>נכתב, נשמר, לא הולך לאיבוד</small></button>
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
   <button type="button" class="gt g13" id="gSpecial"><b>⭐ בקשות מיוחדות</b><small>מה שביקשת ומוכן, דפים וקבצים</small></button>
@@ -2547,6 +2574,20 @@ try{
    <span aria-hidden="true">📁</span><div>כל הדרייב<small>הדף הראשי</small></div></a>
  </nav>
  <div class="hint" style="margin-top:14px">חסרה תיקייה? תכתוב לי בשורת הבנייה העצמית ואוסיף אותה לכאן.</div>
+</section>
+
+<section id="pBl" hidden>
+ <h2>רשימה לחסימה</h2>
+ <div class="hint">
+  <b>כלום כאן לא מבוצע.</b> זו רשימה לאישור שלך. מסמן את מי שאתה רוצה,
+  לוחץ שליחה, ואני חוסם רק אותם ומדווח לך אחד אחד.
+  מי שנמסר בשם פרטי בלבד עדיין צריך זיהוי, ואני לא חוסם על סמך שם שאין לו חשבון.
+ </div>
+ <div id="blBody"></div>
+ <form class="drform" id="blForm">
+  <button type="submit" id="blSend">שליחת המסומנים לחסימה</button>
+ </form>
+ <div class="msgsaid" id="blSaid"></div>
 </section>
 
 <section id="pDr" hidden>
@@ -4135,7 +4176,7 @@ function updateDot(){
  document.title=(fresh?'(1) ':'')+'אבא איציק בבנייה עצמית';
 }
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
-var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',k:'pK',j:'pDr'};
+var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',k:'pK',j:'pDr',c:'pBl'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
 // The last dose. From the chat it is read out of the message text, because he
@@ -4461,7 +4502,7 @@ function repaintAll(){
   ['pegasus',renderPegasus],['improve',renderImprove],['special',renderSpecial],
   ['replies',renderReplies],['rivhit',renderRivhit],['food',renderFood],
   ['reqs',renderReqs],['stamp',paintStamp],['secrets',paintSecrets],
-  ['drains',renderDrains]];
+  ['drains',renderDrains],['block',renderBlock]];
  var bad=[],ran={};
  jobs.forEach(function(j){
   ran[j[0]]=1;
@@ -5583,7 +5624,7 @@ function pane(w){
  */
  var PAINT={a:function(){renderAnswers();paintAnsCount();},b:renderGot,m:renderThread,
   n:renderNet,r:render,p:renderPegasus,w:renderImprove,s:renderSpecial,
-  e:renderReplies,f:renderFood,j:renderDrains,v:renderRivhit};
+  e:renderReplies,f:renderFood,j:renderDrains,v:renderRivhit,c:renderBlock};
  if(PAINT[w]){try{PAINT[w]();}catch(e){try{console.error('pane paint '+w,e);}catch(_){}}}
  // It lives above the header now, outside every pane, so nothing hides it but
  // this line. On any screen other than home it would be a microphone following
@@ -6865,6 +6906,71 @@ function renderDrains(){
   +'<caption>מ״ל, החדש למעלה. החץ הוא ההפרש מהמדידה שלפניה. סה״כ הוא ארבעת הניקוזים בלבד, בלי שתן.</caption>'
   +'<thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>';
 }
+/*
+  The list he ticks. Nothing here acts on its own.
+
+  Itzik, 18.9: "give me a detailed list and I will approve, prepare a lead with
+  a tick box, I will tell you what to do." Blocking is visible to the person and
+  hard to walk back, some of these are a first name with no account yet, and two
+  of them are that man's children. So the screen collects a decision and sends
+  it; the blocking happens afterwards, by me, one at a time, reported back.
+
+  The ticks live in the browser so a half finished list survives a refresh.
+*/
+function blTicks(){ return idList('blockTicks'); }
+function blToggle(id){
+ var t=blTicks(),i=t.indexOf(id);
+ if(i>-1)t.splice(i,1);else t.push(id);
+ try{localStorage.setItem('blockTicks',JSON.stringify(t));}catch(e){}
+}
+function renderBlock(){
+ var host=document.getElementById('blBody');
+ if(!host)return;
+ var lists=(D.blocklist||[]);
+ var people=[];
+ lists.forEach(function(l){(l.people||[]).forEach(function(p){people.push(p);});});
+ if(!people.length){
+  host.innerHTML='<div class="empty">אין כרגע שמות ברשימה.</div>';
+  return;
+ }
+ var t=blTicks();
+ host.innerHTML=people.map(function(p){
+  var on=t.indexOf(p.id)>-1;
+  return '<label class="blrow'+(on?' on':'')+'">'
+   +'<input type="checkbox" data-id="'+esc(p.id)+'"'+(on?' checked':'')+'>'
+   +'<span class="blwho"><b>'+esc(p.name||p.id)+'</b>'
+   +(p.handle?'<em>@'+esc(p.handle)+'</em>':'<em class="blnone">עוד אין חשבון מזוהה</em>')
+   +'</span>'
+   +'<span class="blwhy">'+esc(p.why||'')
+   +(p.minorCheck?' <b class="blwarn">ילד שלו. תחליט עליו בנפרד.</b>':'')+'</span>'
+   +'</label>';
+ }).join('');
+ Array.prototype.forEach.call(host.querySelectorAll('input[type=checkbox]'),function(b){
+  b.onchange=function(){blToggle(b.getAttribute('data-id'));renderBlock();};
+ });
+}
+function openBlock(){pane('c');renderBlock();ensure('blocklist',renderBlock);}
+on('gBlock',openBlock);
+(function(){
+ var f=document.getElementById('blForm');
+ if(!f)return;
+ f.onsubmit=function(e){
+  e.preventDefault();
+  var said=document.getElementById('blSaid');
+  var t=blTicks();
+  if(!t.length){ if(said)said.textContent='לא סימנת אף אחד.'; return; }
+  var lists=(D.blocklist||[]),names=[];
+  lists.forEach(function(l){(l.people||[]).forEach(function(p){
+   if(t.indexOf(p.id)>-1)names.push(p.name+(p.handle?(' @'+p.handle):' (בלי חשבון מזוהה)'));
+  });});
+  if(said)said.textContent='שולח.';
+  sendText('חסימה','אישור לחסימה, '+names.length+' שמות: '+names.join(' · '),'חסימה')
+   .then(function(){
+    if(said)said.textContent='נשלח. חוסם רק את מי שסימנת ומדווח אחד אחד.';
+    setTimeout(function(){if(said)said.textContent='';},7000);
+   }).catch(function(){ if(said)said.textContent='לא נשלח. אין רשת כרגע.'; });
+ };
+})();
 function openDrains(){pane('j');renderDrains();ensure('drains',renderDrains);}
 on('gDrains',openDrains);
 /*
