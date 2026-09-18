@@ -1332,7 +1332,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-18T10:16:21.923Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-18T10:33:39.214Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2123,7 +2123,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='14094b2227';
+var CODE_ID='4927101b00';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -2934,11 +2934,9 @@ function renderNew(){
  var blk=document.getElementById('newBlock');
  if(blk)blk.classList.toggle('hasnew',c>0);
  document.getElementById('nbCount').textContent=c?c:'✓';
- document.getElementById('nbTitle').textContent=c
-  ?(c===1?'הודעה אחת שלא קראת':c+' הודעות שלא קראת')
-  :'תשובות';
+ document.getElementById('nbTitle').textContent='תשובות';
  document.getElementById('nbSub').textContent=c
-  ?'לחיצה פותחת אותן, אחת אחת.'
+  ?(c===1?'אחת שלא קראת. לחיצה פותחת.':c+' שלא קראת. לחיצה פותחת את כולן.')
   :'הכל נקרא. לחיצה מראה את כל התשובות שלי.';
  var K=D.openCmds||[];
  document.getElementById('wnCmds').innerHTML='<span class="n '+(K.length?'':'zero')+'">'+K.length+'</span><div>'+(K.length?'משימות פתוחות ממך':'אין משימות פתוחות')+(K.length?'<small>'+esc(K[0].text).slice(0,90)+'</small>':'')+'</div>';

@@ -1522,3 +1522,16 @@ test('the red button counts exactly what it is about to show', () => {
   // would come up empty is refused and everything opens instead.
   assert.ok(html.includes("if(ansFilter!=='all'&&!ansList().length)ansFilter='all';"));
 });
+
+test('the red button is named after where it goes, not after a state', () => {
+  const html = renderPage(fixture({}));
+  // Itzik, 18.9: "the red button is for alerts and not for answers, fix it
+  // immediately." It read "N הודעות שלא קראת", the language of a notification,
+  // so the one control he presses to reach my answers announced itself as
+  // something else. It only ever opened the answers screen.
+  assert.ok(html.includes("document.getElementById('nbTitle').textContent='תשובות';"));
+  assert.ok(!html.includes("?(c===1?'הודעה אחת שלא קראת':c+' הודעות שלא קראת')"));
+  // The number keeps its place, in the badge and in the line underneath.
+  assert.ok(html.includes("document.getElementById('nbCount').textContent=c?c:'✓';"));
+  assert.ok(html.includes("' שלא קראת. לחיצה פותחת את כולן.'"));
+});

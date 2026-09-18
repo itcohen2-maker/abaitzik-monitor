@@ -4045,11 +4045,22 @@ function renderNew(){
  // 'תשובות' would be better there and it is: the button opens the answers
  // either way, so a state was standing where the destination belongs. The
  // count beside it already says everything is read.
- document.getElementById('nbTitle').textContent=c
-  ?(c===1?'הודעה אחת שלא קראת':c+' הודעות שלא קראת')
-  :'תשובות';
+ /*
+   The button is named after where it goes, always.
+
+   Itzik, 18.9: "the red button is for alerts and not for answers, fix it
+   immediately." It read "N הודעות שלא קראת", which is the language of a
+   notification, so the one control he presses to reach my answers announced
+   itself as something else. It only ever opened the answers screen; the label
+   was describing a state where the destination belongs, and a button that
+   names a state makes you guess where it leads.
+
+   The count keeps saying how many are waiting, in the badge and in the line
+   underneath, where a number belongs.
+ */
+ document.getElementById('nbTitle').textContent='תשובות';
  document.getElementById('nbSub').textContent=c
-  ?'לחיצה פותחת אותן, אחת אחת.'
+  ?(c===1?'אחת שלא קראת. לחיצה פותחת.':c+' שלא קראת. לחיצה פותחת את כולן.')
   :'הכל נקרא. לחיצה מראה את כל התשובות שלי.';
  var K=D.openCmds||[];
  document.getElementById('wnCmds').innerHTML='<span class="n '+(K.length?'':'zero')+'">'+K.length+'</span><div>'+(K.length?'משימות פתוחות ממך':'אין משימות פתוחות')+(K.length?'<small>'+esc(K[0].text).slice(0,90)+'</small>':'')+'</div>';
