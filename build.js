@@ -4067,7 +4067,7 @@ function markOneSeen(m){
 function ringFor(el,ms){
  if(!el)return;
  el.classList.add('busyring');
- setTimeout(function(){el.classList.remove('busyring');},ms||1300);
+ setTimeout(function(){el.classList.remove('busyring');},ms||2400);
 }
 function paintDot(){
  var d=document.getElementById('mDot');

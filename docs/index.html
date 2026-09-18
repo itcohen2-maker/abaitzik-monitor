@@ -1364,7 +1364,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-18T20:40:03.808Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-18T20:43:22.873Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2181,7 +2181,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='63d433560e';
+var CODE_ID='e1581af040';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -2933,7 +2933,7 @@ function markOneSeen(m){
 function ringFor(el,ms){
  if(!el)return;
  el.classList.add('busyring');
- setTimeout(function(){el.classList.remove('busyring');},ms||1300);
+ setTimeout(function(){el.classList.remove('busyring');},ms||2400);
 }
 function paintDot(){
  var d=document.getElementById('mDot');
