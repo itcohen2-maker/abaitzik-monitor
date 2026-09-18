@@ -207,36 +207,34 @@ function run(list) {
   // and it quotes him; concatenating it into a Windows command line is a
   // quoting bug waiting for the first message that contains a double quote.
   /*
-    Detached for real, not just unref'd.
+    Three attempts at this on 18.9, and the measurements that settled it.
 
-    The first version called child.unref() and thought that was enough, then
-    kept listening on child.stdout and child.stderr. Those pipes are handles:
-    while they are open the dispatcher's event loop will not exit, so it lived
-    for the whole session exactly as before, the scheduled task kept refusing
-    to start another instance with "an instance of this task is already
-    running", and the queue went unwatched again. He said it in four words:
-    "what is happening with the monitor, I have no answers."
+    First: write to child.stdin and listen on child.stdout. The listeners are
+    handles, so the dispatcher never exited, the scheduled task kept refusing to
+    start another instance, and nobody watched the queue.
 
-    So the output goes straight to a file by descriptor. No listeners, no
-    handles, nothing for the parent to wait on. The log is not lost, it is just
-    written by the child instead of relayed by its parent.
+    Second: detach it. That killed the stdin pipe instead. Four sessions in a
+    row spawned and wrote zero bytes while five of his messages sat on "working
+    on it" for two hours. He watched it happen and said he had lost control of
+    his own monitor, and he was right. Redirecting the prompt in from a file
+    instead of a pipe does not help either: claude reads a pipe and produces
+    nothing from a file redirect, measured twice.
+
+    Third, and this is the one: keep the stdin pipe, because that is the only
+    way it reads, and send the output to open file descriptors, because a
+    descriptor is not a listener and holds nothing. Then unref, and do not
+    detach. Measured on this machine: the dispatcher exits in 0.7 seconds and
+    the child writes its answer.
+
+    Anything changed here gets measured the same way before it ships. This cost
+    him a morning.
   */
   fs.mkdirSync(STATUS, { recursive: true });
   const outFile = path.join(STATUS, 'session-' + Date.now() + '.log');
   const fd = fs.openSync(outFile, 'a');
   const child = spawn('claude', ['-p', '--chrome', '--dangerously-skip-permissions'],
-    { cwd: HERE, shell: true, windowsHide: true, detached: true, stdio: ['pipe', fd, fd] });
+    { cwd: HERE, shell: true, windowsHide: true, stdio: ['pipe', fd, fd] });
   child.stdin.end(text, 'utf8');
-  register(child.pid, list.map((m) => m.file));
-  say('סשן ' + child.pid + ' יצא לדרך. הפלט שלו ב' + path.basename(outFile));
-  /*
-    The dispatcher does not wait for it.
-
-    unref lets this process exit the moment it has started what it started, so
-    the next tick is a minute away rather than however long the session takes.
-    The ten minute cap is enforced by a later tick reading the register, not by
-    a timer inside a process that is meant to be gone.
-  */
   child.unref();
   /*
     Nobody waits for it here.
