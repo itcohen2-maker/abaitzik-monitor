@@ -3354,7 +3354,10 @@ function render(){
  // The three home counters this used to paint are gone; nothing fed them.
  document.getElementById('bP').setAttribute('aria-pressed',tab==='pending');
  document.getElementById('bD').setAttribute('aria-pressed',tab==='done');
- var rows=tab==='pending'?D.pending:D.replied;
+ // Both are lazy, so at boot they can be undefined while every other list
+ // on this screen already guards itself. Without the guard render throws on
+ // rows.length, boot catches it, and the whole screen never paints.
+ var rows=(tab==='pending'?D.pending:D.replied)||[];
  document.getElementById('list').innerHTML=rows.length?rows.map(row).join('')
   :'<div class="empty">'+(tab==='pending'?'התור ריק. כל מי שפנה קיבל תשובה.':'עוד לא נשלחו תשובות.')+'</div>';
  var C=D.contacts||[];
