@@ -234,8 +234,20 @@ function run(list) {
   const fd = fs.openSync(outFile, 'a');
   const child = spawn('claude', ['-p', '--chrome', '--dangerously-skip-permissions'],
     { cwd: HERE, shell: true, windowsHide: true, stdio: ['pipe', fd, fd] });
-  child.stdin.end(text, 'utf8');
-  child.unref();
+  /*
+    Unref only after the prompt has actually left.
+
+    The probe passed with a one line prompt and the real thing died with a four
+    kilobyte Hebrew one, which is the whole tell: end() is asynchronous, unref()
+    took the last handle away, and the dispatcher exited before the pipe had
+    flushed. The session then read a truncated prompt, or none, and died
+    writing nothing. That is the fourth version of this bug today and the third
+    that produced an empty log file.
+
+    The callback fires when the bytes are gone. Until then the pipe holds the
+    process up, which is milliseconds, not the length of the session.
+  */
+  child.stdin.end(text, 'utf8', () => { child.unref(); });
   /*
     Nobody waits for it here.
 
