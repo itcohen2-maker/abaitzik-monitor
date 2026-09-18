@@ -4439,7 +4439,24 @@ function repaintAll(){
  jobs.forEach(function(j){
   ran[j[0]]=1;
   try{if(typeof j[1]==='function')j[1]();}
-  catch(e){bad.push(j[0]);try{console.error('repaint '+j[0],e);}catch(_){}}
+  catch(e){
+   bad.push(j[0]);
+   /*
+     The message, not just the name.
+
+     "answers" on its own told me a render was throwing on his iPhone and
+     nothing about what. The console it is written to is on a phone I cannot
+     open. Keeping the last message here means one more tap of the diagnostic
+     carries the actual line back to me, instead of another day of me guessing
+     at a device from a different device.
+   */
+   try{
+    window.__lastFail=window.__lastFail||{};
+    window.__lastFail[j[0]]=String(e&&e.message||e)
+     +' @ '+String((e&&e.stack||'').split(String.fromCharCode(10))[1]||'').trim().slice(0,90);
+   }catch(_){}
+   try{console.error('repaint '+j[0],e);}catch(_){}
+  }
  });
  /*
    A failure held from the locked boot is only real if the same render fails
@@ -5414,7 +5431,7 @@ function renderGot(){
   +'<button type="button" id="gotBack">להחזיר הכל</button></div>';
  host.innerHTML=h;
  var ja=document.getElementById('gotToAns');
- if(ja)ja.onclick=function(){openAnswers('fresh');};
+ if(ja)ja.onclick=function(){openAnswers('fresh',true);};
  var mb=document.getElementById('gotMore');
  if(mb)mb.onclick=function(){gotShow+=30;renderGot();};
  var bb=document.getElementById('gotBack');
@@ -5700,11 +5717,36 @@ function landPane(id){
  if(window.requestAnimationFrame)requestAnimationFrame(function(){requestAnimationFrame(go);});
  else setTimeout(go,60);
 }
-function openAnswers(filter){
+/*
+  A search he typed ten minutes ago may not empty this screen.
+
+  Itzik, 18.9 19:21: "יש לי התראה של שלושים תשובות בכפתור האדום, ואין לי
+  תשובות בפנים". Found it, and it was never the counter: ansList filters by
+  ansFilter AND by the search box, and the guard below only ever second guessed
+  the filter. So one word left in the search field survived going home, and the
+  red button then opened on "אין כאן כלום בסינון הזה" while the badge honestly
+  said thirty. Reproduced on the live page: badge 133, cards 0.
+
+  The button means "show me the answers", so it now owns the whole screen and
+  clears the search with it. Filtering stays available inside the screen, where
+  he can see the field he is typing in.
+*/
+function clearAnsSearch(){
+ ansQ='';
+ var el=document.getElementById('aSearch');
+ if(el)el.value='';
+}
+function openAnswers(filter,wipe){
  ansShow=30;
+ // The red button wipes it outright. The nav button is pressed from inside the
+ // screen too, where a search he can see in the field is his and stays, and
+ // the guard below still refuses to leave him on an empty list.
+ if(wipe)clearAnsSearch();
  var pick=function(f){
   ansFilter=f||'all';
-  if(ansFilter!=='all'&&!ansList().length)ansFilter='all';
+  // Last resort. With the search cleared this cannot be empty while there is
+  // data, but it costs nothing and it is the property the button needs.
+  if(!ansList().length){clearAnsSearch();ansFilter='all';}
  };
  ansAuto=true;
  pick(filter);
@@ -5752,11 +5794,14 @@ document.getElementById('newBtn').onclick=function(){
  try{
   n=unreadCount();
   if(n)beep();
-  openAnswers(n?'fresh':'all');
+  openAnswers(n?'fresh':'all',true);
   // Counted off the screen and not off the data, so the line cannot promise
   // cards that are not there.
   var shown=document.querySelectorAll('#ansBox .ansc').length;
-  toast(n?(shown?('נפתחו '+n+' תשובות שלא קראת')
+  // The screen shows a page at a time, so a line promising all of them would
+  // be the same lie in a smaller place.
+  toast(n?(shown?(shown<n?('נפתחו '+shown+' מתוך '+n+' שלא קראת')
+     :('נפתחו '+n+' תשובות שלא קראת'))
     :'המסך נפתח ריק. לחיצה על רענן ואז שוב.')
    :('מסך התשובות, '+shown+' פריטים. הכל נקרא.'));
  }catch(e){
@@ -6854,8 +6899,17 @@ function diagnose(){
   +((!ansOpen&&!cards)?' (מסך התשובות סגור)':''));
  L.push('מסך התשובות פתוח: '+(ansOpen?'כן':'לא'));
  L.push('סומנו כנקראו במכשיר: '+num(function(){return seenIds().length;}));
- L.push('כשלי טעינה: '+((window.bootFailed&&bootFailed.length?bootFailed.join(','):'')
-   ||(window.__heldBootFails&&__heldBootFails.length?__heldBootFails.join(',')+' (בזמן נעילה)':'אין')));
+ var fails=(window.bootFailed&&bootFailed.length?bootFailed.join(','):'')
+   ||(window.__heldBootFails&&__heldBootFails.length?__heldBootFails.join(',')+' (בזמן נעילה)':'אין');
+ L.push('כשלי טעינה: '+fails);
+ // And what each one actually said, which is the part I cannot get any other way.
+ var lf=window.__lastFail||{};
+ Object.keys(lf).forEach(function(k){ L.push('   ' + k + ': ' + lf[k]); });
+ // Forced once here too: a render that only fails while a screen is closed
+ // would never appear above, and that is exactly where this one has been hiding.
+ try{ renderAnswers(); L.push('ציור התשובות עכשיו: עבר'); }
+ catch(e){ L.push('ציור התשובות עכשיו: נפל · '+String(e&&e.message||e)
+   +' @ '+String((e&&e.stack||'').split(String.fromCharCode(10))[1]||'').trim().slice(0,90)); }
  L.push('בדיקה אחרונה: '+q('checked'));
  L.push('מסך '+window.innerWidth+'x'+window.innerHeight+' · '+(navigator.onLine?'מחובר':'בלי רשת'));
  L.push('דפדפן: '+String(navigator.userAgent||'').slice(0,120));
@@ -7216,7 +7270,7 @@ bareApply(bareGet());
 // button for messages. The tile's counter is gone with it; the count lives on
 // that one button.
 var gChatEl=document.getElementById('gChat');
-if(gChatEl)gChatEl.onclick=function(){openAnswers('all');};
+if(gChatEl)gChatEl.onclick=function(){openAnswers('all',true);};
 /*
   Writing and the camera, from the card at the top instead of from a tile most
   of the way down the screen. Both land in the same place everything else does,
@@ -7233,7 +7287,7 @@ document.getElementById('gQueue').onclick=function(){openNet('all');};
 // The reports screen is still built and still reachable from inside, but it
 // is no longer a tile on the way to everything else.
 (function(){var b=document.getElementById('gReports');if(!b)return;
- b.onclick=function(){markReportsSeen();openAnswers('all');};})();
+ b.onclick=function(){markReportsSeen();openAnswers('all',true);};})();
 on('gMail',function(){pane('e');});
 function openPill(){pane('p');renderPill();openPillSheet();}
 on('gPill',openPill);on('iPill',openPill);
@@ -7566,10 +7620,10 @@ function jumpToUnread(){
 // A push notification lands here. It goes where every other way in goes now:
 // the one screen, opened on what he has not read.
 if(location.hash==='#new'){
- openAnswers('fresh');
+ openAnswers('fresh',true);
 }
 if(location.hash==='#chat'){
- openAnswers('all');
+ openAnswers('all',true);
 }
 if(location.hash==='#sent'){
  fSaid.textContent='הקובץ נשלח. הוא מחכה לי במייל.';

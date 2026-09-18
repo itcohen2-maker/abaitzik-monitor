@@ -176,8 +176,8 @@ test('the red button and the push both land on the one answers screen', () => {
   // 17.9: the red button, the answers tab and the chat tab were three doors
   // to the same room. One door now, and it opens on what he has not read.
   assert.ok(html.includes("document.getElementById('newBtn').onclick=function(){"));
-  assert.ok(html.includes("  openAnswers(n?'fresh':'all');"));
-  assert.ok(html.includes('function openAnswers(filter){'));
+  assert.ok(html.includes("  openAnswers(n?'fresh':'all',true);"));
+  assert.ok(html.includes('function openAnswers(filter,wipe){'));
   assert.ok(html.includes("if(location.hash==='#new'||location.hash==='#chat'){\n  pane('a');renderAnswers();landPane('pA');\n }"));
   assert.ok(!html.includes("onclick=function(){pane('m');markChatSeen();"), 'no tab may open the chat screen');
   assert.ok(html.includes('<em class="badge latest">האחרונה שהגיעה</em>'));
@@ -240,7 +240,7 @@ test('nothing opens by itself, and everything that opens can be closed', () => {
   assert.ok(!html.includes("mark('gChat'"));
   // Nothing unread is not a reason to do nothing: the button opens the one
   // screen either way, because it is the same conversation either way.
-  assert.ok(html.includes("  openAnswers(n?'fresh':'all');"));
+  assert.ok(html.includes("  openAnswers(n?'fresh':'all',true);"));
   // The way out says what it does, and a keyboard has one too.
   assert.ok(html.includes("b.textContent='סגירה וחזרה לבית';"));
   assert.ok(html.includes("if(e.key!=='Escape')return;"));
@@ -967,13 +967,13 @@ test('the red button cannot be missed and cannot open on nothing', () => {
   assert.ok(html.includes("if(blk)blk.classList.toggle('hasnew',c>0);"));
   // The wrong screen says where the right one is, and gets there in one press.
   assert.ok(html.includes('class="gjump" id="gotToAns"'));
-  assert.ok(html.includes("if(ja)ja.onclick=function(){openAnswers('fresh');};"));
+  assert.ok(html.includes("if(ja)ja.onclick=function(){openAnswers('fresh',true);};"));
   const body = html.slice(html.indexOf('function renderGot(){'));
   assert.ok(body.indexOf('gotToAns') < body.indexOf('בעבודה עכשיו'));
   // And a filter with nothing in it is never what the button lands on: the
   // count comes from unreadList, the filter from isFresh, and a mail answer
   // is in one and not the other.
-  assert.ok(html.includes("if(ansFilter!=='all'&&!ansList().length)ansFilter='all';"));
+  assert.ok(html.includes("if(!ansList().length){clearAnsSearch();ansFilter='all';}"));
   assert.ok(html.includes("if(ansAuto&&ansFilter==='all')pick(filter);"));
   assert.ok(html.includes("b.onclick=function(){ansAuto=false;"));
 });
@@ -1364,7 +1364,15 @@ test('a held boot failure stops being reported once the same render works', () =
   assert.ok(html.includes('return !ran[n]||bad.indexOf(n)>-1;'));
   // And the other half: a repaint that throws no longer vanishes into an empty
   // catch. It is named, logged, and reaches the diagnostic he sends me.
-  assert.ok(html.includes("catch(e){bad.push(j[0]);"));
+  assert.ok(html.includes("catch(e){" + String.fromCharCode(10) + "   bad.push(j[0]);"));
+  // And the message travels with the name. "answers" on its own told me a
+  // render was throwing on his iPhone and nothing about what, and the console
+  // it writes to is on a phone I cannot open.
+  assert.ok(html.includes('window.__lastFail[j[0]]=String(e&&e.message||e)'));
+  assert.ok(html.includes("L.push('   ' + k + ': ' + lf[k]);"));
+  // The diagnostic forces the render once itself, because a render that only
+  // fails while its screen is closed never shows up in the list above.
+  assert.ok(html.includes("try{ renderAnswers(); L.push('ציור התשובות עכשיו: עבר'); }"));
   assert.ok(html.includes("bad.forEach(function(n){if(bootFailed.indexOf(n)<0)bootFailed.push(n);});"));
 });
 
@@ -1427,7 +1435,7 @@ test('the red button lands on the answers after the paint, not before it', () =>
   // off the cards on the screen, so it cannot promise answers that are not
   // there, and an empty landing says so instead of claiming a number.
   assert.ok(html.includes("var shown=document.querySelectorAll('#ansBox .ansc').length;"));
-  assert.ok(html.includes("toast(n?(shown?('נפתחו '+n+' תשובות שלא קראת')"));
+  assert.ok(html.includes("toast(n?(shown?(shown<n?('נפתחו '+shown+' מתוך '+n+' שלא קראת')"));
   assert.ok(html.includes("המסך נפתח ריק. לחיצה על רענן ואז שוב."));
   assert.ok(html.includes("toast('מסך התשובות לא נפתח. לחיצה על רענן ואז שוב.');"));
 });
@@ -1558,9 +1566,32 @@ test('the red button counts exactly what it is about to show', () => {
   const mailFilter = html.indexOf('if(isMail(m))return false;', unread);
   const endOfUnread = html.indexOf('function unreadCount()', unread);
   assert.ok(mailFilter > unread && mailFilter < endOfUnread, 'the filter is inside unreadList');
-  // And the belt for that brace, which lives inside openAnswers: a filter that
-  // would come up empty is refused and everything opens instead.
-  assert.ok(html.includes("if(ansFilter!=='all'&&!ansList().length)ansFilter='all';"));
+  // And the belt for that brace, which lives inside openAnswers: a list that
+  // would come up empty is refused, and everything opens with the search
+  // cleared instead.
+  assert.ok(html.includes("if(!ansList().length){clearAnsSearch();ansFilter='all';}"));
+});
+
+test('a leftover search cannot empty the screen the red button opens', () => {
+  const html = renderPage(fixture({}));
+  // Itzik, 18.9 19:21: "יש לי התראה של 30 תשובות בכפתור האדום, ואין לי תשובות
+  // בפנים." ansList filters by ansFilter AND by the search box, and the guard
+  // only ever second guessed the filter, so one word left in the search field
+  // survived going home and the red button opened on "אין כאן כלום בסינון
+  // הזה" while the badge honestly said thirty. Reproduced on the live page:
+  // badge 133, cards 0.
+  assert.ok(html.includes('function clearAnsSearch(){'));
+  assert.ok(html.includes("ansQ='';"));
+  // The red button wipes the search outright.
+  assert.ok(html.includes("openAnswers(n?'fresh':'all',true);"));
+  // Every other way in from outside the screen does too.
+  assert.ok(html.includes("if(location.hash==='#new'){"));
+  assert.ok(html.includes("openAnswers('fresh',true);"));
+  // The nav button does not: it is pressed from inside the screen, where the
+  // search field he typed in is on his screen.
+  assert.ok(html.includes("document.getElementById('nA').onclick=function(){openAnswers(ansFilter);};"));
+  // And the line it says cannot promise more cards than it put on the screen.
+  assert.ok(html.includes("shown<n?('נפתחו '+shown+' מתוך '+n+' שלא קראת')"));
 });
 
 test('the red button is named after where it goes, not after a state', () => {

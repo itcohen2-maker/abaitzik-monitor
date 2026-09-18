@@ -1332,7 +1332,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-18T16:23:57.405Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-18T16:29:01.400Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2131,7 +2131,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='bcab308be6';
+var CODE_ID='7786862ae7';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -3219,7 +3219,15 @@ function repaintAll(){
  jobs.forEach(function(j){
   ran[j[0]]=1;
   try{if(typeof j[1]==='function')j[1]();}
-  catch(e){bad.push(j[0]);try{console.error('repaint '+j[0],e);}catch(_){}}
+  catch(e){
+   bad.push(j[0]);
+   try{
+    window.__lastFail=window.__lastFail||{};
+    window.__lastFail[j[0]]=String(e&&e.message||e)
+     +' @ '+String((e&&e.stack||'').split(String.fromCharCode(10))[1]||'').trim().slice(0,90);
+   }catch(_){}
+   try{console.error('repaint '+j[0],e);}catch(_){}
+  }
  });
  var held=window.__heldBootFails;
  if(held&&held.length){
@@ -3983,7 +3991,7 @@ function renderGot(){
   +'<button type="button" id="gotBack">להחזיר הכל</button></div>';
  host.innerHTML=h;
  var ja=document.getElementById('gotToAns');
- if(ja)ja.onclick=function(){openAnswers('fresh');};
+ if(ja)ja.onclick=function(){openAnswers('fresh',true);};
  var mb=document.getElementById('gotMore');
  if(mb)mb.onclick=function(){gotShow+=30;renderGot();};
  var bb=document.getElementById('gotBack');
@@ -4140,11 +4148,17 @@ function landPane(id){
  if(window.requestAnimationFrame)requestAnimationFrame(function(){requestAnimationFrame(go);});
  else setTimeout(go,60);
 }
-function openAnswers(filter){
+function clearAnsSearch(){
+ ansQ='';
+ var el=document.getElementById('aSearch');
+ if(el)el.value='';
+}
+function openAnswers(filter,wipe){
  ansShow=30;
+ if(wipe)clearAnsSearch();
  var pick=function(f){
   ansFilter=f||'all';
-  if(ansFilter!=='all'&&!ansList().length)ansFilter='all';
+  if(!ansList().length){clearAnsSearch();ansFilter='all';}
  };
  ansAuto=true;
  pick(filter);
@@ -4159,9 +4173,10 @@ document.getElementById('newBtn').onclick=function(){
  try{
   n=unreadCount();
   if(n)beep();
-  openAnswers(n?'fresh':'all');
+  openAnswers(n?'fresh':'all',true);
   var shown=document.querySelectorAll('#ansBox .ansc').length;
-  toast(n?(shown?('נפתחו '+n+' תשובות שלא קראת')
+  toast(n?(shown?(shown<n?('נפתחו '+shown+' מתוך '+n+' שלא קראת')
+     :('נפתחו '+n+' תשובות שלא קראת'))
     :'המסך נפתח ריק. לחיצה על רענן ואז שוב.')
    :('מסך התשובות, '+shown+' פריטים. הכל נקרא.'));
  }catch(e){
@@ -5042,8 +5057,14 @@ function diagnose(){
   +((!ansOpen&&!cards)?' (מסך התשובות סגור)':''));
  L.push('מסך התשובות פתוח: '+(ansOpen?'כן':'לא'));
  L.push('סומנו כנקראו במכשיר: '+num(function(){return seenIds().length;}));
- L.push('כשלי טעינה: '+((window.bootFailed&&bootFailed.length?bootFailed.join(','):'')
-   ||(window.__heldBootFails&&__heldBootFails.length?__heldBootFails.join(',')+' (בזמן נעילה)':'אין')));
+ var fails=(window.bootFailed&&bootFailed.length?bootFailed.join(','):'')
+   ||(window.__heldBootFails&&__heldBootFails.length?__heldBootFails.join(',')+' (בזמן נעילה)':'אין');
+ L.push('כשלי טעינה: '+fails);
+ var lf=window.__lastFail||{};
+ Object.keys(lf).forEach(function(k){ L.push('   ' + k + ': ' + lf[k]); });
+ try{ renderAnswers(); L.push('ציור התשובות עכשיו: עבר'); }
+ catch(e){ L.push('ציור התשובות עכשיו: נפל · '+String(e&&e.message||e)
+   +' @ '+String((e&&e.stack||'').split(String.fromCharCode(10))[1]||'').trim().slice(0,90)); }
  L.push('בדיקה אחרונה: '+q('checked'));
  L.push('מסך '+window.innerWidth+'x'+window.innerHeight+' · '+(navigator.onLine?'מחובר':'בלי רשת'));
  L.push('דפדפן: '+String(navigator.userAgent||'').slice(0,120));
@@ -5360,14 +5381,14 @@ document.getElementById('bareBtn').onclick=function(){
 };
 bareApply(bareGet());
 var gChatEl=document.getElementById('gChat');
-if(gChatEl)gChatEl.onclick=function(){openAnswers('all');};
+if(gChatEl)gChatEl.onclick=function(){openAnswers('all',true);};
 document.getElementById('wShoot').onclick=function(){
  pane('m');renderThread();
  shoot();
 };
 document.getElementById('gQueue').onclick=function(){openNet('all');};
 (function(){var b=document.getElementById('gReports');if(!b)return;
- b.onclick=function(){markReportsSeen();openAnswers('all');};})();
+ b.onclick=function(){markReportsSeen();openAnswers('all',true);};})();
 on('gMail',function(){pane('e');});
 function openPill(){pane('p');renderPill();openPillSheet();}
 on('gPill',openPill);on('iPill',openPill);
@@ -5644,10 +5665,10 @@ function jumpToUnread(){
  ringFor(el,2200);
 }
 if(location.hash==='#new'){
- openAnswers('fresh');
+ openAnswers('fresh',true);
 }
 if(location.hash==='#chat'){
- openAnswers('all');
+ openAnswers('all',true);
 }
 if(location.hash==='#sent'){
  fSaid.textContent='הקובץ נשלח. הוא מחכה לי במייל.';
