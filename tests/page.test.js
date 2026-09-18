@@ -1572,3 +1572,28 @@ test('a screen paints itself when it opens, whatever opened it', () => {
   assert.ok(pane > -1, 'pane() is in the page');
   assert.ok(html.indexOf('var PAINT={a:', pane) > pane, 'the paint table is inside pane()');
 });
+
+test('one tap sends me what his phone actually holds', () => {
+  const html = renderPage(fixture({}));
+  // Itzik, 18.9, for the third time in a day: "no change in the red button."
+  // On my browser it has worked every time I have looked, which means the
+  // thing that is broken lives on his phone and I was guessing at it from
+  // here. The guessing cost him a day.
+  assert.ok(html.includes('id="diagBtn"'));
+  assert.ok(html.includes('function diagnose(){'));
+  // It reads both sides of the disagreement that has already bitten once: the
+  // count on the button and the length of the list it opens.
+  assert.ok(html.includes("L.push('מונה הכפתור האדום: '"));
+  assert.ok(html.includes("L.push('כל התשובות: '"));
+  // And the cards really in the DOM, not the ones the data says should be.
+  assert.ok(html.includes("var cards=document.querySelectorAll('#ansBox .ansc').length;"));
+  assert.ok(html.includes("var chips=document.querySelectorAll('#aChips .achip').length;"));
+  // Boot failures reach me even when they were held back by the locked gate.
+  assert.ok(html.includes('__heldBootFails'));
+  // It travels the same road as everything else he says. No second channel.
+  assert.ok(html.includes("sendText('אבחון',txt,'אבחון')"));
+  // Night mode stays the first thing in settings; this sits at the foot.
+  const settingsTop = html.indexOf('<section id="pZ" hidden>');
+  assert.ok(html.indexOf('id="skinBox"') - settingsTop < 200);
+  assert.ok(html.indexOf('id="diagBox"') > html.indexOf('id="skinBox"'));
+});

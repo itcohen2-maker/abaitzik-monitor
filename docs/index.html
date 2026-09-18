@@ -1332,7 +1332,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-18T12:47:44.085Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-18T13:12:04.612Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1584,6 +1584,14 @@ try{
  </div>
  <div class="msgsaid" id="codeSaid"></div>
 </div>
+ <div class="alerts" id="diagBox">
+  <div>
+   <b>משהו לא מתנהג כמו שצריך?</b>
+   <small>לחיצה אחת שולחת לי מה בדיוק קורה במכשיר שלך. בלי להעתיק כלום.</small>
+  </div>
+  <button type="button" class="abtn" id="diagBtn">שליחת אבחון</button>
+ </div>
+ <div class="msgsaid" id="diagSaid"></div>
 </section>
 
 <section id="pQ" hidden>
@@ -2123,7 +2131,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='8f304edff2';
+var CODE_ID='c700608c0a';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -4988,6 +4996,44 @@ on('gDrains',openDrains);
   });
  };
 })();
+function diagnose(){
+ var q=function(id){var e=document.getElementById(id);return e?(e.textContent||'').trim():'-';};
+ var cards=document.querySelectorAll('#ansBox .ansc').length;
+ var chips=document.querySelectorAll('#aChips .achip').length;
+ var pA=document.getElementById('pA');
+ var num=function(f){try{return f();}catch(e){return 'שגיאה: '+e.message;}};
+ var L=[];
+ L.push('אבחון מהמכשיר של איציק');
+ L.push('גרסה '+(D.buildId||'?')+' · קוד '+(typeof CODE_ID!=='undefined'?CODE_ID:'?'));
+ L.push('נעילה: '+(GATE?(GKEY?'נפתחה':'עדיין סגורה'):'כבויה'));
+ L.push('הודעות בזיכרון: '+((D.chat||[]).length)+' מתוך '+num(function(){return lazyTotal('chat');}));
+ L.push('דוחות: '+((D.reports||[]).length)+' מתוך '+num(function(){return lazyTotal('reports');}));
+ L.push('מונה הכפתור האדום: '+num(function(){return unreadCount();})+' · על המסך כתוב '+q('nbCount'));
+ L.push('כל התשובות: '+num(function(){return allAnswers().length;})+' · בסינון הנוכחי: '+num(function(){return ansList().length;}));
+ L.push('סינון: '+(typeof ansFilter!=='undefined'?ansFilter:'?')+' · מציג עד '+(typeof ansShow!=='undefined'?ansShow:'?'));
+ L.push('כרטיסים בפועל על המסך: '+cards+' · צ׳יפים: '+chips);
+ L.push('מסך התשובות פתוח: '+(pA&&!pA.hidden?'כן':'לא'));
+ L.push('סומנו כנקראו במכשיר: '+num(function(){return seenIds().length;}));
+ L.push('כשלי טעינה: '+((window.bootFailed&&bootFailed.length?bootFailed.join(','):'')
+   ||(window.__heldBootFails&&__heldBootFails.length?__heldBootFails.join(',')+' (בזמן נעילה)':'אין')));
+ L.push('בדיקה אחרונה: '+q('checked'));
+ L.push('מסך '+window.innerWidth+'x'+window.innerHeight+' · '+(navigator.onLine?'מחובר':'בלי רשת'));
+ L.push('דפדפן: '+String(navigator.userAgent||'').slice(0,120));
+ return L.join(String.fromCharCode(10));
+}
+on('diagBtn',function(){
+ var said=document.getElementById('diagSaid');
+ var txt;
+ try{ txt=diagnose(); }
+ catch(e){ txt='אבחון מהמכשיר של איציק'+String.fromCharCode(10)+'האבחון עצמו נפל: '+e.message; }
+ if(said)said.textContent='שולח.';
+ sendText('אבחון',txt,'אבחון').then(function(){
+  if(said)said.textContent='נשלח. אני רואה את זה עכשיו.';
+  setTimeout(function(){if(said)said.textContent='';},6000);
+ }).catch(function(){
+  if(said)said.textContent='לא נשלח. אין רשת כרגע.';
+ });
+});
 function openFood(){pane('f');renderFood();ensure('food',renderFood);}
 on('gFood',openFood);on('iFood',openFood);
 on('gLolos',function(){pane('o');});

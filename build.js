@@ -2495,6 +2495,25 @@ try{
  </div>
  <div class="msgsaid" id="codeSaid"></div>
 </div>
+ <!--
+   Itzik, 18.9, for the third time in a day: "no change in the red button." On
+   my browser it has worked every single time I have looked, which means the
+   thing that is broken lives on his phone and I have been guessing at it from
+   here. Guessing cost him a day.
+
+   This is the end of the guessing. One tap collects what his device actually
+   holds and sends it down the same channel as everything else he says, so it
+   lands in the chat where I read it. No numbers he has to copy, no screenshots
+   to interpret.
+ -->
+ <div class="alerts" id="diagBox">
+  <div>
+   <b>משהו לא מתנהג כמו שצריך?</b>
+   <small>לחיצה אחת שולחת לי מה בדיוק קורה במכשיר שלך. בלי להעתיק כלום.</small>
+  </div>
+  <button type="button" class="abtn" id="diagBtn">שליחת אבחון</button>
+ </div>
+ <div class="msgsaid" id="diagSaid"></div>
 </section>
 
 <section id="pQ" hidden>
@@ -6743,6 +6762,53 @@ on('gDrains',openDrains);
   });
  };
 })();
+/*
+  What his phone actually holds, in one tap.
+
+  Everything here is read off the live page rather than assumed, because every
+  wrong turn today came from me reasoning about his device from mine. It reads
+  the counts from both sides of the answers screen at once, which is where the
+  count and the list have already disagreed once, and it counts the cards that
+  are really in the DOM rather than the ones the data says should be.
+*/
+function diagnose(){
+ var q=function(id){var e=document.getElementById(id);return e?(e.textContent||'').trim():'-';};
+ var cards=document.querySelectorAll('#ansBox .ansc').length;
+ var chips=document.querySelectorAll('#aChips .achip').length;
+ var pA=document.getElementById('pA');
+ var num=function(f){try{return f();}catch(e){return 'שגיאה: '+e.message;}};
+ var L=[];
+ L.push('אבחון מהמכשיר של איציק');
+ L.push('גרסה '+(D.buildId||'?')+' · קוד '+(typeof CODE_ID!=='undefined'?CODE_ID:'?'));
+ L.push('נעילה: '+(GATE?(GKEY?'נפתחה':'עדיין סגורה'):'כבויה'));
+ L.push('הודעות בזיכרון: '+((D.chat||[]).length)+' מתוך '+num(function(){return lazyTotal('chat');}));
+ L.push('דוחות: '+((D.reports||[]).length)+' מתוך '+num(function(){return lazyTotal('reports');}));
+ L.push('מונה הכפתור האדום: '+num(function(){return unreadCount();})+' · על המסך כתוב '+q('nbCount'));
+ L.push('כל התשובות: '+num(function(){return allAnswers().length;})+' · בסינון הנוכחי: '+num(function(){return ansList().length;}));
+ L.push('סינון: '+(typeof ansFilter!=='undefined'?ansFilter:'?')+' · מציג עד '+(typeof ansShow!=='undefined'?ansShow:'?'));
+ L.push('כרטיסים בפועל על המסך: '+cards+' · צ׳יפים: '+chips);
+ L.push('מסך התשובות פתוח: '+(pA&&!pA.hidden?'כן':'לא'));
+ L.push('סומנו כנקראו במכשיר: '+num(function(){return seenIds().length;}));
+ L.push('כשלי טעינה: '+((window.bootFailed&&bootFailed.length?bootFailed.join(','):'')
+   ||(window.__heldBootFails&&__heldBootFails.length?__heldBootFails.join(',')+' (בזמן נעילה)':'אין')));
+ L.push('בדיקה אחרונה: '+q('checked'));
+ L.push('מסך '+window.innerWidth+'x'+window.innerHeight+' · '+(navigator.onLine?'מחובר':'בלי רשת'));
+ L.push('דפדפן: '+String(navigator.userAgent||'').slice(0,120));
+ return L.join(String.fromCharCode(10));
+}
+on('diagBtn',function(){
+ var said=document.getElementById('diagSaid');
+ var txt;
+ try{ txt=diagnose(); }
+ catch(e){ txt='אבחון מהמכשיר של איציק'+String.fromCharCode(10)+'האבחון עצמו נפל: '+e.message; }
+ if(said)said.textContent='שולח.';
+ sendText('אבחון',txt,'אבחון').then(function(){
+  if(said)said.textContent='נשלח. אני רואה את זה עכשיו.';
+  setTimeout(function(){if(said)said.textContent='';},6000);
+ }).catch(function(){
+  if(said)said.textContent='לא נשלח. אין רשת כרגע.';
+ });
+});
 function openFood(){pane('f');renderFood();ensure('food',renderFood);}
 on('gFood',openFood);on('iFood',openFood);
 on('gLolos',function(){pane('o');});
