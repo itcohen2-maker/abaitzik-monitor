@@ -1362,7 +1362,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-18T18:10:53.931Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-18T18:12:04.834Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2177,7 +2177,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='b912bb26c9';
+var CODE_ID='b64d786ca0';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -2390,14 +2390,14 @@ function statusTag(m){
  if(m.from!=='itzik'||!m.status||!STATUS[m.status])return '';
  return ' · <em class="st st-'+m.status+'">'+STATUS[m.status]+'</em>';
 }
-var VOICE_RE=/.(webm|m4a|mp3|ogg|wav)/i;
+var VOICE_RE=/\.(webm|m4a|mp3|ogg|wav)\b/i;
 function hasVoice(m){
  var t=m.text||'';
  return m.from==='itzik'&&VOICE_RE.test(t)&&/הודעה קולית|קבצים יחד/.test(t);
 }
 function transcriptOf(m){
  var n=String(m.note||'');
- return /^s*תמלול:/.test(n)?n.replace(/^s*תמלול:s*/,'').trim():'';
+ return /^\s*תמלול:/.test(n)?n.replace(/^\s*תמלול:\s*/,'').trim():'';
 }
 function voiceBlock(m){
  if(!hasVoice(m))return '';

@@ -3413,14 +3413,16 @@ function statusTag(m){
   הכתובית הזאת נכתבת רק משדה שנשמר בקובץ ההודעה, ולכן אין כאן הצגה של
   תמלול שלא קרה.
 */
-var VOICE_RE=/\.(webm|m4a|mp3|ogg|wav)\b/i;
+// לוכסן כפול בכוונה: הקטע הזה יושב בתבנית מחרוזת, ולוכסן יחיד נבלע בדרך לדף
+// ומשאיר ביטוי רגולרי אחר לגמרי.
+var VOICE_RE=/\\.(webm|m4a|mp3|ogg|wav)\\b/i;
 function hasVoice(m){
  var t=m.text||'';
  return m.from==='itzik'&&VOICE_RE.test(t)&&/הודעה קולית|קבצים יחד/.test(t);
 }
 function transcriptOf(m){
  var n=String(m.note||'');
- return /^\s*תמלול:/.test(n)?n.replace(/^\s*תמלול:\s*/,'').trim():'';
+ return /^\\s*תמלול:/.test(n)?n.replace(/^\\s*תמלול:\\s*/,'').trim():'';
 }
 function voiceBlock(m){
  if(!hasVoice(m))return '';
