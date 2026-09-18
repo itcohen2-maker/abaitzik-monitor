@@ -39,25 +39,29 @@ const DRY = process.argv.includes('--dry');
   and be answered in one session rather than three.
 */
 const SETTLE_MS = 20 * 1000;
-// Never two at once, and never one that has been stuck for an hour.
-const LOCK_STALE_MS = 60 * 60 * 1000;
 /*
-  How long one session may hold the queue, and why there is a limit at all.
+  How many of his messages can be worked at the same time.
 
-  Only one session runs, because two of them committing and pushing the same
-  repository at the same second is a worse failure than a wait. The cost of
-  that choice is that a long session is a wall: everything he sends while it
-  runs waits for it to finish. On 17.9 a session started at 08:01 and six
-  notes he sent from 08:09 sat behind it untouched, which from where he sits
-  is the monitor ignoring him, and it is the whole complaint.
+  Itzik, 18.9: "it cannot be that you take one request at a time, then the
+  monitor is worth nothing, it is not efficient and no client will want it."
 
-  The prompt now makes the session write and push its answer inside the first
-  two minutes. That is what makes a cap safe: by the time this fires he has
-  already been answered, and what is lost is the tail of the work, not the
-  reply. Ten minutes is roughly the longest session that has ever finished
-  something useful; past that it has been rereading itself.
+  It used to be one, with a lock, because two sessions committing to the same
+  repository in the same second break the build. That reasoning was right about
+  the danger and wrong about the cure: it queued the whole job to protect one
+  step of it. Six notes he sent between 07:53 and 07:58 on 17.9 sat behind a
+  session that had started at 07:52 and had nothing to do with them.
+
+  So the sessions run together and only the write is queued, in push.js. Three
+  is not a hardware limit, it is a judgement: each one is a full session reading
+  his repo, and past three they spend more time waiting on that one queue than
+  working.
 */
+const MAX_LIVE = 3;
+const LIVE = path.join(STATUS, 'worker-live.json');
+// A session gets ten minutes. The prompt makes it answer inside the first two,
+// so a cap costs the tail of the work and never the reply.
 const MAX_SESSION_MS = 10 * 60 * 1000;
+
 
 function say(line) {
   const t = new Date().toTimeString().slice(0, 8);
@@ -70,14 +74,48 @@ function readJson(p, fallback) {
 function alive(pid) {
   try { process.kill(pid, 0); return true; } catch (e) { return e.code === 'EPERM'; }
 }
-function claimLock() {
-  const cur = readJson(LOCK, null);
-  if (cur && cur.pid && alive(cur.pid) && Date.now() - Date.parse(cur.at) < LOCK_STALE_MS) return false;
-  fs.mkdirSync(STATUS, { recursive: true });
-  fs.writeFileSync(LOCK, JSON.stringify({ pid: process.pid, at: new Date().toISOString() }), 'utf8');
-  return true;
+/*
+  The register of sessions that are actually alive.
+
+  There is no lock any more, because there is nothing here to hold one for.
+  This is a head count: who is running, since when, and on what. A dispatcher
+  run prunes the dead, kills anything past its ten minutes, and starts more
+  only if there is room.
+
+  It is a file rather than memory because the dispatcher exits between ticks.
+  It has to: while it was alive the scheduled task refused to start another
+  one, so a session that ran for nineteen minutes meant nineteen minutes with
+  nobody watching the queue. That was the bug behind "the monitor does not
+  answer me".
+*/
+function livePids() {
+  const reg = readJson(LIVE, {});
+  const now = Date.now();
+  const kept = {};
+  Object.keys(reg).forEach((pid) => {
+    const e = reg[pid];
+    if (!alive(Number(pid))) return;
+    if (now - Date.parse(e.at) > MAX_SESSION_MS) {
+      say('!! סשן ' + pid + ' עבר ' + (MAX_SESSION_MS / 60000) + ' דקות. עוצר אותו.');
+      try { process.kill(Number(pid)); } catch (e2) {}
+      try { execFile('taskkill', ['/pid', pid, '/t', '/f'], () => {}); } catch (e2) {}
+      return;
+    }
+    kept[pid] = e;
+  });
+  try { fs.writeFileSync(LIVE, JSON.stringify(kept, null, 1), 'utf8'); } catch (e) {}
+  return kept;
 }
-function releaseLock() { try { fs.unlinkSync(LOCK); } catch (e) {} }
+function register(pid, files) {
+  const reg = readJson(LIVE, {});
+  reg[pid] = { at: new Date().toISOString(), files };
+  try { fs.mkdirSync(STATUS, { recursive: true }); fs.writeFileSync(LIVE, JSON.stringify(reg, null, 1), 'utf8'); } catch (e) {}
+}
+function unregister(pid) {
+  const reg = readJson(LIVE, {});
+  delete reg[pid];
+  try { fs.writeFileSync(LIVE, JSON.stringify(reg, null, 1), 'utf8'); } catch (e) {}
+}
 
 /*
   Unanswered means unanswered by me, not unread by him.
@@ -125,6 +163,12 @@ function prompt(list) {
     'זו הרצה אוטומטית. אין אדם בצד השני של הפלט הזה ואף אחד לא יקרא אותו.',
     'אל תבקש אישור ואל תציע לעשות משהו: תבצע. אל תסיים בלי לכתוב תשובה ולדחוף אותה.',
     '',
+    'חשוב: יתכן שרצים עכשיו עוד סשנים במקביל על הודעות אחרות שלו.',
+    'לכן **אל תריץ git add, git commit או git push בעצמך**. במקום זה תמיד',
+    '`node push.js "הודעת הקומיט"`. הוא בונה, מקמט, דוחף ועושה rebase אם צריך,',
+    'ומחזיק תור כך ששני סשנים לא דורסים זה את זה. זה הדבר היחיד שמתוזמן.',
+    'אל תיגע בקבצים של הודעות שלא הוקצו לך, ואל תענה להודעה שלא ברשימה למטה.',
+    '',
     'איציק שלח את ההודעות האלה למוניטור והן עדיין בלי תשובה:',
     '',
     lines.join('\n'),
@@ -140,7 +184,7 @@ function prompt(list) {
     '     {"at":"<ISO עם +03:00>","from":"claude","re":"<id ההודעה שלו>","text":"<התשובה>"}.',
     '     כתוב מה הבנת ומה אתה הולך לעשות, במשפט או שניים. אם אתה כבר יודע את',
     '     התשובה, זו התשובה. קצר ויבש, בלי מקפים, בלי אימוגי, בלי לפנות בשם.',
-    '  2. node build.js, git add -A, git commit, git push. עכשיו, לא בסוף.',
+    '  2. `node push.js "מה עשית"`. עכשיו, לא בסוף.',
     'זה לא דיווח התקדמות ולא "עובד על זה". זו תשובה. שתים עשרה דקות של שקט',
     'הן מבחינתו הודעה שנפלה, וזה מה שהוא ביקש לתקן.',
     '',
@@ -149,7 +193,7 @@ function prompt(list) {
     'שלב ג, בסוף, לכל הודעה, חובה:',
     '  1. בקובץ שלה ב-data/chat/chat: status ל-"done", ו-note עם התמלול אם זו הקלטה.',
     '  2. הודעה נוספת בצאט עם מה שיצא בפועל, אם זה שונה ממה שכתבת בשלב א.',
-    '  3. npm test, node build.js, git add -A, git commit, git push.',
+    '  3. npm test, ואז `node push.js "מה עשית"`.',
     '',
     'אם משהו באמת חסום או דורש החלטה שלו, כתוב לו את זה כבר בשלב א. גם אז',
     'הכתיבה והדחיפה הן חובה: הודעה שלא נכתבה היא הודעה שהוא לא קיבל.',
@@ -158,44 +202,69 @@ function prompt(list) {
 
 function run(list) {
   const text = prompt(list);
-  say('מפעיל סשן על ' + list.length + ' הודעות');
+  say('מפעיל סשן על ' + list.length + ' הודעות: ' + list.map((m) => m.file).join(', '));
   // The prompt goes in on stdin, not as an argument. It is long, it is Hebrew,
   // and it quotes him; concatenating it into a Windows command line is a
   // quoting bug waiting for the first message that contains a double quote.
   const child = spawn('claude', ['-p', '--dangerously-skip-permissions'],
     { cwd: HERE, shell: true, windowsHide: true });
   child.stdin.end(text, 'utf8');
-  const cap = setTimeout(() => {
-    say('!! הסשן עבר ' + (MAX_SESSION_MS / 60000) + ' דקות. עוצר אותו כדי לשחרר את התור.');
-    try { process.kill(child.pid); } catch (e) {}
-    try { execFile('taskkill', ['/pid', String(child.pid), '/t', '/f'], () => {}); } catch (e) {}
-  }, MAX_SESSION_MS);
+  register(child.pid, list.map((m) => m.file));
+  /*
+    The dispatcher does not wait for it.
+
+    unref lets this process exit the moment it has started what it started, so
+    the next tick is a minute away rather than however long the session takes.
+    The ten minute cap is enforced by a later tick reading the register, not by
+    a timer inside a process that is meant to be gone.
+  */
+  child.unref();
   let out = '';
   child.stdout.on('data', (b) => { out += b; });
   child.stderr.on('data', (b) => { out += b; });
   child.on('close', (code) => {
-    clearTimeout(cap);
+    unregister(child.pid);
     say('הסשן הסתיים, קוד ' + code + '. ' + String(out).trim().slice(-300).replace(/\s+/g, ' '));
     // A session that died is not an answer. Marking before the run stops a
     // crash loop from answering the same thing five times; putting a failed
     // batch back is what stops the opposite, a message that was marked handled
     // and never was. The next tick picks it up again.
     if (code !== 0) unmarkHandled(list);
-    releaseLock();
   });
-  child.on('error', (e) => { clearTimeout(cap); say('!! הסשן לא עלה: ' + e.message); unmarkHandled(list); releaseLock(); });
+  child.on('error', (e) => { unregister(child.pid); say('!! הסשן לא עלה: ' + e.message); unmarkHandled(list); });
 }
 
 function main() {
+  const live = livePids();
+  const room = MAX_LIVE - Object.keys(live).length;
   const list = waiting();
-  if (!list.length) { if (DRY) say('אין הודעות שמחכות.'); return; }
-  say('מחכות ' + list.length + ': ' + list.map((m) => String(m.text || '').slice(0, 40)).join(' | '));
+  if (!list.length) { if (DRY) say('אין הודעות שמחכות. רצים: ' + Object.keys(live).length); return; }
+  say('מחכות ' + list.length + ', רצים ' + Object.keys(live).length + ', מקום ל' + Math.max(0, room));
   if (DRY) return;
-  if (!claimLock()) { say('סשן אחר עוד רץ. לא מפעיל שני.'); return; }
-  // Marked before the session starts, not after. A session that crashes must
-  // not put the same message back in the queue for ever; he would rather hear
-  // "I missed one" once than get the same answer five times.
-  markHandled(list);
-  run(list);
+  if (room <= 0) { say('שלושה סשנים כבר רצים. ממתין לטיק הבא.'); return; }
+  /*
+    One session per message, not one per batch.
+
+    Batching was a habit from the days of a single lock: if only one thing may
+    run, you want it to carry everything. Now that they run together, a batch
+    is only a way of making one slow message hold up three fast ones. The one
+    exception is a burst he sent in the same breath, which is still one thought
+    and reads badly as three separate answers, so notes within ninety seconds
+    of each other travel together.
+  */
+  const BURST_MS = 90 * 1000;
+  const batches = [];
+  list.forEach((m) => {
+    const last = batches[batches.length - 1];
+    if (last && Math.abs(Date.parse(m.at) - Date.parse(last[last.length - 1].at)) <= BURST_MS) last.push(m);
+    else batches.push([m]);
+  });
+  batches.slice(0, room).forEach((batch) => {
+    // Marked before the session starts, not after. A session that crashes must
+    // not put the same message back in the queue for ever; he would rather hear
+    // "I missed one" once than get the same answer five times.
+    markHandled(batch);
+    run(batch);
+  });
 }
 main();
