@@ -71,17 +71,35 @@ test('a later send never erases a number with לא נמדד', () => {
   assert.equal(row.d2, 25);
 });
 
-test('a second number for the same tube is written down as a correction', () => {
+test('a second number in the same round is written down as a correction', () => {
   const dir = tmp();
   drains.record(dir, SENDS[0], new Date(2026, 8, 18, 8, 41, 0));
   const out = drains.record(dir,
     'ניקוזים\nניקוזים 1=70 2=לא נמדד 3=לא נמדד 4=לא נמדד\n\nקוד 1808',
-    new Date(2026, 8, 18, 12, 10, 0));
+    new Date(2026, 8, 18, 8, 52, 0));
   assert.equal(out.row.d1, 70, 'the newer number is the one that counts');
   assert.equal(out.fixed.length, 1);
   assert.ok(/65/.test(out.row.note) && /70/.test(out.row.note),
     'both numbers stay readable on the row: ' + out.row.note);
-  assert.ok(/12:10/.test(out.row.note));
+  assert.ok(/08:52/.test(out.row.note));
+});
+
+test('a later round is a new measurement, not a correction of the old one', () => {
+  const dir = tmp();
+  drains.record(dir, SENDS[0], new Date(2026, 8, 18, 8, 41, 0));
+  const out = drains.record(dir,
+    'ניקוזים\nניקוזים 1=25 2=לא נמדד 3=לא נמדד 4=לא נמדד\n\nקוד 1808',
+    new Date(2026, 8, 18, 10, 4, 0));
+  // 18.9 is the case: 65 at 08:41 and 25 at 10:04. Folded into one row it read
+  // "drain 1 corrected from 65 to 25". Nothing was corrected. He measured
+  // twice, and a log that turns the morning reading into a typo has lost the
+  // only thing it exists to show.
+  assert.ok(!/עודכן/.test(out.row.note || ''), 'not a correction: ' + out.row.note);
+  const rows = fs.readdirSync(dir).filter(function (f) { return /\.json$/.test(f); }).sort();
+  assert.equal(rows.length, 2, 'two rounds, two rows');
+  const first = JSON.parse(fs.readFileSync(path.join(dir, rows[0]), 'utf8'));
+  assert.equal(first.d1, 65, 'the morning reading survives untouched');
+  assert.equal(out.row.d1, 25);
 });
 
 test('the same send twice changes nothing', () => {

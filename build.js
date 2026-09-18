@@ -2003,6 +2003,13 @@ body.editing .bn{display:none}
 .drtot{font:800 16.5px Heebo,sans-serif;color:var(--ink,#e8edf5)}
 .drnrow.newest td{background:rgba(66,133,244,.10)}
 .drnote{text-align:right;font:400 13px Heebo,sans-serif;color:var(--dim,#9aa7ba);line-height:1.5}
+/* Urine is on the same row but it is not a drain, so the column is set apart
+   rather than blended in with the four. */
+.drtab .drpee{border-inline-start:2px solid var(--line,#2a3342)}
+.drpeein{display:flex;flex-direction:column;gap:4px;font:700 13px Heebo,sans-serif;color:var(--dim,#9aa7ba)}
+.drpeein input{background:var(--sunk,#141922);color:var(--ink,#e8edf5);border:1px solid var(--line,#2a3342);
+ border-radius:11px;padding:11px 12px;font:700 16px Heebo,sans-serif;text-align:center}
+.drpeein input:focus{outline:2px solid var(--accent,#4285F4);outline-offset:1px}
 .gt-e{min-height:20px;margin-top:10px;font:600 13.5px Heebo,sans-serif;color:var(--red,#EA4335)}
 </style>
 <script>
@@ -2544,6 +2551,7 @@ try{
    <label>3<input type="number" inputmode="decimal" min="0" step="1" id="dr3" placeholder="מ״ל"></label>
    <label>4<input type="number" inputmode="decimal" min="0" step="1" id="dr4" placeholder="מ״ל"></label>
   </div>
+  <label class="drpeein">שתן<input type="number" inputmode="decimal" min="0" step="1" id="drUrine" placeholder="מ״ל, אפשר להשאיר ריק"></label>
   <input type="text" id="drNote" autocomplete="off" placeholder="צבע, ריח, כאב, כל דבר חריג. אפשר להשאיר ריק">
   <button type="submit" id="drSend">רישום המדידה</button>
  </form>
@@ -6575,7 +6583,16 @@ function renderDrains(){
    does not. A note hangs under its own day, across the width, where it cannot
    push a column out of line.
  */
- var head='<tr><th>יום</th><th>1</th><th>2</th><th>3</th><th>4</th><th>סה״כ</th></tr>';
+ /*
+   Urine is a column here and not a screen of its own.
+
+   Itzik, 18.9: "make a column for urine, 280, add it to the table." It is not
+   a drain, and it is set apart in the table for that reason, but it is
+   measured in the same jug at the same hour and it answers the other half of
+   the same question after an abdominal operation: what came out, and by which
+   route. Two screens to answer one question is one screen too many.
+ */
+ var head='<tr><th>יום</th><th>1</th><th>2</th><th>3</th><th>4</th><th>סה״כ</th><th class="drpee">שתן</th></tr>';
  var body='';
  rows.slice(0,30).forEach(function(r,i){
   var prev=rows[i+1];
@@ -6590,16 +6607,21 @@ function renderDrains(){
     +(d===''?'':'<em>'+arrow+' '+Math.abs(d)+'</em>')+'</td>';
   }).join('');
   var tot=drainTotal(r);
+  var pee=r.urine;
+  var peeWas=prev&&typeof prev.urine==='number'?prev.urine:null;
+  var peeD=(typeof pee!=='number'||peeWas===null)?'':(pee-peeWas);
   body+='<tr class="drrw'+(i?'':' newest')+'">'
    +'<th class="drday">'+esc(stamp(r.at))+'</th>'
    +cells
    +'<td class="drtot">'+(tot===null?'·':tot)+'</td>'
+   +'<td class="drc drpee">'+(typeof pee==='number'?('<b>'+pee+'</b>'
+     +(peeD===''?'':'<em>'+(peeD<0?'▼':(peeD>0?'▲':'='))+' '+Math.abs(peeD)+'</em>')):'·')+'</td>'
    +'</tr>';
-  if(r.note)body+='<tr class="drnrow'+(i?'':' newest')+'"><td colspan="6" class="drnote">'
+  if(r.note)body+='<tr class="drnrow'+(i?'':' newest')+'"><td colspan="7" class="drnote">'
    +esc(r.note)+'</td></tr>';
  });
  host.innerHTML='<div class="drwrap"><table class="drtab">'
-  +'<caption>מ״ל ליממה, החדש למעלה. החץ הוא ההפרש מהמדידה שלפניה.</caption>'
+  +'<caption>מ״ל, החדש למעלה. החץ הוא ההפרש מהמדידה שלפניה. סה״כ הוא ארבעת הניקוזים בלבד, בלי שתן.</caption>'
   +'<thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>';
 }
 function openDrains(){pane('j');renderDrains();ensure('drains',renderDrains);}
@@ -6641,19 +6663,22 @@ on('gDrains',openDrains);
    var v=(el&&el.value||'').trim();
    return v===''?null:Number(v);
   });
-  if(vals.every(function(v){return v===null;})){
-   if(said)said.textContent='תמלא לפחות ניקוז אחד.';
+  var peeNow=((document.getElementById('drUrine')||{}).value||'').trim();
+  if(vals.every(function(v){return v===null;})&&!peeNow){
+   if(said)said.textContent='תמלא לפחות ניקוז אחד, או שתן.';
    return;
   }
   var note=(document.getElementById('drNote')||{}).value||'';
+  var pee=((document.getElementById('drUrine')||{}).value||'').trim();
   var line='ניקוזים '+vals.map(function(v,i){
    return (i+1)+'='+(v===null?'לא נמדד':v);
-  }).join(' ')+(note.trim()?(' · '+note.trim()):'');
+  }).join(' ')+(pee?(' שתן='+Number(pee)):'')+(note.trim()?(' · '+note.trim()):'');
   if(said)said.textContent='שולח.';
   sendText('ניקוזים',line,'ניקוזים').then(function(){
    if(said)said.textContent='נרשם. ירשם כאן ברגע שאעדכן.';
    [1,2,3,4].forEach(function(n){var el=document.getElementById('dr'+n);if(el)el.value='';});
    var nt=document.getElementById('drNote');if(nt)nt.value='';
+   var pu=document.getElementById('drUrine');if(pu)pu.value='';
    setTimeout(function(){if(said)said.textContent='';},5000);
   }).catch(function(){
    if(said)said.textContent='לא נשלח. אין רשת כרגע.';

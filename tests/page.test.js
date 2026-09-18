@@ -1450,13 +1450,20 @@ test('the drain log is a table, a day to a line and a tube to a column', () => {
   // the only thing on this screen worth reading and cards lay the tubes across
   // the page instead of down it.
   assert.ok(html.includes('<table class="drtab">'));
-  assert.ok(html.includes('<tr><th>יום</th><th>1</th><th>2</th><th>3</th><th>4</th><th>סה״כ</th></tr>'));
+  // Urine joined the row on 18.9 at his word. It is not a drain, so it sits
+  // past the total with a rule down its edge rather than among the four.
+  assert.ok(html.includes('<tr><th>יום</th><th>1</th><th>2</th><th>3</th><th>4</th><th>סה״כ</th><th class="drpee">שתן</th></tr>'));
+  assert.ok(html.includes('id="drUrine"'));
+  assert.ok(html.includes(".drtab .drpee{border-inline-start:2px solid var(--line,#2a3342)}"));
+  // The total stays the four tubes, and the caption says so, because a total
+  // that quietly includes urine is a number a surgeon would read wrong.
+  assert.ok(html.includes('סה״כ הוא ארבעת הניקוזים בלבד, בלי שתן.'));
   assert.ok(html.includes('<td class="drtot">'));
   // A missing tube is a dot in its column, so the row keeps its shape.
   assert.ok(html.includes('<td class="drc dim">·</td>'));
   // A note hangs under its own day across the width, where it cannot push a
   // column out of line.
-  assert.ok(html.includes('colspan="6" class="drnote"'));
+  assert.ok(html.includes('colspan="7" class="drnote"'));
   assert.ok(html.includes('.drtab{width:100%;border-collapse:collapse;text-align:center}'));
 });
 
