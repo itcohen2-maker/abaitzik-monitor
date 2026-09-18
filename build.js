@@ -2078,38 +2078,21 @@ try{
   rather than as a pill in the header competing with the one action that
   matters.
 -->
-<header class="hd">
- <button type="button" class="reloadbig" id="reloadBtn">רענן אותי · חזרה לדף הבית</button>
- <button type="button" class="conn" id="homeBtn" title="חזרה לבית" hidden>בית</button>
- <button type="button" class="conn" id="setBtn" title="הגדרות" aria-label="הגדרות">הגדרות</button>
- <div class="hdtext">
-  <!--
-    The exact title he gave. Under it two different facts that were one line
-    before: which version of the screen this is, and when its numbers were last
-    checked against the server. A page can be five minutes old and its data an
-    hour stale, and saying so is the difference between a monitor and a poster.
-  -->
-  <div class="t">מוניטור בבניין עצמי</div>
-  <div class="s" id="built"></div>
-  <div class="s dim" id="checked"></div>
- </div>
- <div class="ava" aria-hidden="true"><div>א</div></div>
-</header>
+<!--
+  The microphone sits above everything, including the header.
 
-<section id="pH">
- <!--
-   One card, four ways in, and nothing floating over it.
+  Itzik, 18.9, with a photograph of his own screen: "at the top of the page
+  there will always be the mockup with the microphone, nothing above it." It
+  was already first among the home blocks, but the refresh bar, the title and
+  the boot warning are not home blocks, they are page furniture, and they were
+  all standing in front of the one control the screen exists for.
 
-   The microphone and the paperclip used to sit in a cramped strip, the camera
-   was a tile fourteen rows down, and writing meant finding the chat screen
-   first. Worse, a second microphone floated over the page and covered whatever
-   was underneath it. There is one microphone now and it is this one; the other
-   three sit under it at the same size, so none of them is hidden and none of
-   them is a guess.
-
-   Nothing here asks for a permission until it is pressed, and nothing starts
-   recording or sends a file on its own.
- -->
+  So it leaves the home section and becomes the first thing in the body. It is
+  hidden on every other screen by pane(), because a microphone that follows him
+  into the settings is a different bug, and it is out of the arrange list on
+  purpose: "nothing above it" is not a preference he should be able to drag
+  away by accident.
+-->
  <section class="talk" id="talkCard" aria-label="פנייה אליי">
   <button type="button" id="micBtn" class="mic" aria-label="דבר אליי">
    <svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -2143,6 +2126,38 @@ try{
   </form>
   <div class="msgsaid" id="quickSaid"></div>
  </section>
+<header class="hd">
+ <button type="button" class="reloadbig" id="reloadBtn">רענן אותי · חזרה לדף הבית</button>
+ <button type="button" class="conn" id="homeBtn" title="חזרה לבית" hidden>בית</button>
+ <button type="button" class="conn" id="setBtn" title="הגדרות" aria-label="הגדרות">הגדרות</button>
+ <div class="hdtext">
+  <!--
+    The exact title he gave. Under it two different facts that were one line
+    before: which version of the screen this is, and when its numbers were last
+    checked against the server. A page can be five minutes old and its data an
+    hour stale, and saying so is the difference between a monitor and a poster.
+  -->
+  <div class="t">מוניטור בבניין עצמי</div>
+  <div class="s" id="built"></div>
+  <div class="s dim" id="checked"></div>
+ </div>
+ <div class="ava" aria-hidden="true"><div>א</div></div>
+</header>
+
+<section id="pH">
+ <!--
+   One card, four ways in, and nothing floating over it.
+
+   The microphone and the paperclip used to sit in a cramped strip, the camera
+   was a tile fourteen rows down, and writing meant finding the chat screen
+   first. Worse, a second microphone floated over the page and covered whatever
+   was underneath it. There is one microphone now and it is this one; the other
+   three sit under it at the same size, so none of them is hidden and none of
+   them is a guess.
+
+   Nothing here asks for a permission until it is pressed, and nothing starts
+   recording or sends a file on its own.
+ -->
 <!-- The unread button and the archive button are one block. Apart, arranging
      treated a one line control as a card of its own, gave it a grip, and let
      it be dragged away from the button that reveals it. -->
@@ -5119,6 +5134,11 @@ function pane(w){
   sec.hidden=(k!==w);
   if(k===w)backBar(sec);
  }
+ // It lives above the header now, outside every pane, so nothing hides it but
+ // this line. On any screen other than home it would be a microphone following
+ // him around.
+ var talk=document.getElementById('talkCard');
+ if(talk)talk.hidden=(w!=='h');
  if(moved){
   try{window.scrollTo(0,0);}catch(e){}
   try{document.documentElement.scrollTop=0;document.body.scrollTop=0;}catch(e){}
@@ -7220,7 +7240,9 @@ document.getElementById('mailForm').addEventListener('submit',function(e){
   The order below wins over anything he has dragged, and only for these five.
   The rest of the screen is still his to arrange.
 */
-var HOME_HEAD=['talkCard','newBlock','bareBtn','blkIcons','blkTiles'];
+// talkCard came out of this list on 18.9: it is above the header now and is
+// not his to drag, because "nothing above it" is the whole point of it.
+var HOME_HEAD=['newBlock','bareBtn','blkIcons','blkTiles'];
 // "איך אני משתפר" is the one block he wants out of the way rather than gone.
 // It is a log of my own mistakes and fixes: worth keeping, never worth the top
 // of his screen.
@@ -7694,6 +7716,16 @@ boot('pane',function(){
 // If the pane itself could not be chosen, the page would be blank. Home is the
 // one screen that is always in the HTML, so it is the floor to fall back to.
 if(bootFailed.indexOf('pane')>-1){try{pane('h');}catch(e){var h=document.getElementById('pH');if(h)h.hidden=false;}}
+/*
+  Not while the page is still locked.
+
+  With the gate on the screen boots with no data at all and several renders
+  throw on the way past, which is expected and harmless: they run again the
+  moment he unlocks. Counting those as failures put a red "part of the screen
+  did not load" across the top of a page that was working perfectly, which is
+  how he saw it on his phone this morning.
+*/
+if(GATE&&!GKEY)bootFailed.length=0;
 if(bootFailed.length){
  var w=document.createElement('div');
  w.className='bootwarn';

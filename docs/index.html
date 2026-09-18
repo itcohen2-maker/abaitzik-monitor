@@ -1295,7 +1295,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-18T03:57:45.864Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-18T04:02:02.605Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1349,19 +1349,6 @@ try{
 }catch(e){}})();
 </script>
 <div class="wrap">
-<header class="hd">
- <button type="button" class="reloadbig" id="reloadBtn">רענן אותי · חזרה לדף הבית</button>
- <button type="button" class="conn" id="homeBtn" title="חזרה לבית" hidden>בית</button>
- <button type="button" class="conn" id="setBtn" title="הגדרות" aria-label="הגדרות">הגדרות</button>
- <div class="hdtext">
-  <div class="t">מוניטור בבניין עצמי</div>
-  <div class="s" id="built"></div>
-  <div class="s dim" id="checked"></div>
- </div>
- <div class="ava" aria-hidden="true"><div>א</div></div>
-</header>
-
-<section id="pH">
  <section class="talk" id="talkCard" aria-label="פנייה אליי">
   <button type="button" id="micBtn" class="mic" aria-label="דבר אליי">
    <svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -1390,6 +1377,19 @@ try{
   </form>
   <div class="msgsaid" id="quickSaid"></div>
  </section>
+<header class="hd">
+ <button type="button" class="reloadbig" id="reloadBtn">רענן אותי · חזרה לדף הבית</button>
+ <button type="button" class="conn" id="homeBtn" title="חזרה לבית" hidden>בית</button>
+ <button type="button" class="conn" id="setBtn" title="הגדרות" aria-label="הגדרות">הגדרות</button>
+ <div class="hdtext">
+  <div class="t">מוניטור בבניין עצמי</div>
+  <div class="s" id="built"></div>
+  <div class="s dim" id="checked"></div>
+ </div>
+ <div class="ava" aria-hidden="true"><div>א</div></div>
+</header>
+
+<section id="pH">
 <div id="newBlock">
  <button type="button" id="newBtn" class="newbtn">
   <span class="nb-l"><b id="nbTitle">מה חדש</b><small id="nbSub"></small></span>
@@ -2063,7 +2063,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='0bab9d6e05';
+var CODE_ID='14e61f7257';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -3900,6 +3900,8 @@ function pane(w){
   sec.hidden=(k!==w);
   if(k===w)backBar(sec);
  }
+ var talk=document.getElementById('talkCard');
+ if(talk)talk.hidden=(w!=='h');
  if(moved){
   try{window.scrollTo(0,0);}catch(e){}
   try{document.documentElement.scrollTop=0;document.body.scrollTop=0;}catch(e){}
@@ -5587,7 +5589,7 @@ document.getElementById('mailForm').addEventListener('submit',function(e){
  }).then(function(){btn.disabled=false;});
 });
 
-var HOME_HEAD=['talkCard','newBlock','bareBtn','blkIcons','blkTiles'];
+var HOME_HEAD=['newBlock','bareBtn','blkIcons','blkTiles'];
 var HOME_TAIL=[];
 function pinHome(home){
  if(!home)return;
@@ -5935,6 +5937,7 @@ boot('pane',function(){
  else pane('h');
 });
 if(bootFailed.indexOf('pane')>-1){try{pane('h');}catch(e){var h=document.getElementById('pH');if(h)h.hidden=false;}}
+if(GATE&&!GKEY)bootFailed.length=0;
 if(bootFailed.length){
  var w=document.createElement('div');
  w.className='bootwarn';

@@ -65,14 +65,23 @@ test('home order: one message button on top, the tools next, my log last', () =>
   // The message block is one button now, and nothing else lives in it.
   assert.ok(ph < at('id="newBlock"'));
   assert.ok(at('id="newBlock"') < at('id="newBtn"'));
-  // The talking card is above the message block in the markup as well as in
-  // the pinned list, so the screen does not reshuffle after it paints.
-  assert.ok(at('id="talkCard"') < at('id="newBlock"'));
+  // Itzik, 18.9, with a photograph of his screen: "at the top of the page
+  // there will always be the mockup with the microphone, nothing above it."
+  // Above the header, above the refresh bar, above everything, and hidden by
+  // pane() on every screen that is not home.
+  assert.ok(at('id="talkCard"') < at('<header class="hd">'));
+  assert.ok(at('id="talkCard"') < at('id="reloadBtn"'));
+  assert.ok(at('id="talkCard"') < ph);
+  assert.ok(html.includes("var talk=document.getElementById('talkCard');"));
+  assert.ok(html.includes("if(talk)talk.hidden=(w!=='h');"));
   // He set this order on 17.9: the microphone card, then the message buttons,
   // then the button that opens the rest, and the first thing inside it is the
   // shortcuts and the tiles. Five blocks pinned at the head and none at the
   // foot; the rest of the screen stays his to arrange.
-  assert.ok(html.includes("var HOME_HEAD=['talkCard','newBlock','bareBtn','blkIcons','blkTiles'];"));
+  // talkCard is out of the arrange list: it is not in the home section any
+  // more, and "nothing above it" is not a preference he should be able to drag
+  // away by accident.
+  assert.ok(html.includes("var HOME_HEAD=['newBlock','bareBtn','blkIcons','blkTiles'];"));
   assert.ok(html.includes('HOME_HEAD.forEach'));
   // Nothing is pinned to the foot any more: the block that was, "איך אני
   // משתפר", came off the home screen on 16.9 at his word.
@@ -837,7 +846,8 @@ test('the newest request sits near the top, not under fourteen tiles', () => {
   // Both the pinned card and the fold are gone. What is left near the top is
   // the line he types into, and it has to come before the tile grid.
   assert.ok(html.indexOf('id="quickText"') < html.indexOf('id="blkTiles"'));
-  assert.ok(html.indexOf('id="quickText"') > html.indexOf('<section id="pH">'));
+  // It rides with the microphone card, which is now the first thing in the body.
+  assert.ok(html.indexOf('id="quickText"') < html.indexOf('<section id="pH">'));
 });
 
 test('the codex thread never says delivered while the mailbox only stores', () => {
@@ -1309,4 +1319,14 @@ test('a saved key is dropped only when it is proven wrong', () => {
   assert.ok(html.includes("if(txt===false)return false;"));
   assert.ok(html.includes("if(!txt)return null;"));
   assert.ok(html.includes("if(ok===null){said.textContent='אין רשת כרגע. נסה שוב עוד רגע.';"));
+});
+
+test('a page that is still locked does not cry that it failed to load', () => {
+  const html = renderPage(fixture({}));
+  // With the gate on the screen boots with no data and several renders throw
+  // on the way past. They run again the moment he unlocks. Counting those as
+  // failures put a red "part of the screen did not load" across the top of a
+  // page that was working, which is how he saw it on his phone.
+  assert.ok(html.includes('if(GATE&&!GKEY)bootFailed.length=0;'));
+  assert.ok(html.indexOf('if(GATE&&!GKEY)bootFailed.length=0;') < html.indexOf('if(bootFailed.length){'));
 });
