@@ -1341,6 +1341,32 @@ test('a page that is still locked does not cry that it failed to load', () => {
   assert.ok(html.includes('window.__heldBootFails=held;'));
 });
 
+test('a held boot failure stops being reported once the same render works', () => {
+  const html = renderPage(fixture({}));
+  // Itzik, 18.9 16:29, the diagnostic straight off his phone: lock open, and
+  // still "כשלי טעינה: items (בזמן נעילה)". render() reads D.pending, which
+  // does not exist while the gate is up, so it throws at boot every single
+  // time and is held. Nothing ever cleared the held list, so hours after the
+  // unlock the page was reporting a failure that had repaired itself in the
+  // first repaint. He read that line as data loss.
+  assert.ok(html.includes("['items',render]"));
+  assert.ok(html.includes('window.__heldBootFails=held.filter(function(n){'));
+  assert.ok(html.includes('return !ran[n]||bad.indexOf(n)>-1;'));
+  // And the other half: a repaint that throws no longer vanishes into an empty
+  // catch. It is named, logged, and reaches the diagnostic he sends me.
+  assert.ok(html.includes("catch(e){bad.push(j[0]);"));
+  assert.ok(html.includes("bad.forEach(function(n){if(bootFailed.indexOf(n)<0)bootFailed.push(n);});"));
+});
+
+test('the diagnostic does not read a closed screen or a lazy tail as a fault', () => {
+  const html = renderPage(fixture({}));
+  // Same dump: "כל התשובות: 175 · כרטיסים בפועל על המסך: 0" with the answers
+  // screen closed, and "הודעות בזיכרון: 150 מתוך 231". Both are normal and
+  // both look like loss when the number stands on its own.
+  assert.ok(html.includes('(מסך התשובות סגור, ולכן אפס זה תקין)'));
+  assert.ok(html.includes('השאר נטען כשפותחים את המסך'));
+});
+
 test('the page names no channel, no address and no neighbour', () => {
   const html = renderPage(fixture({}));
   // An audit on 18.9 found all of these sitting in the page as plain text on a
@@ -1361,7 +1387,7 @@ test('the page names no channel, no address and no neighbour', () => {
   assert.ok(html.includes("fetch('https://ntfy.sh/' + NTFYIN(), {"));
   assert.ok(html.includes("fetch('https://formsubmit.co/ajax/' + MAILBOX(), {"));
   assert.ok(html.includes('function paintSecrets(){'));
-  assert.ok(html.includes('paintStamp,paintSecrets,renderDrains].forEach'));
+  assert.ok(html.includes("['secrets',paintSecrets]"));
   // The build must not fall back to a literal if the private file is missing:
   // a send button that does nothing beats his inbox printed on a public page.
   assert.ok(html.includes('id="vaadOpen"'));

@@ -4407,11 +4407,42 @@ function paintSecrets(){
 }
 function repaintAll(){
  var st=keepState(),y=window.scrollY;
- [paintDot,renderNew,renderThread,renderAnswers,renderGot,renderNet,render,
-  renderPegasus,renderImprove,renderSpecial,renderReplies,renderRivhit,
-  renderFood,renderReqs,paintStamp,paintSecrets,renderDrains].forEach(function(fn){
-  try{if(typeof fn==='function')fn();}catch(e){}
+ /*
+   Named, because a repaint that throws used to disappear into an empty catch.
+   The names are the ones boot() uses, so a failure here and a failure at boot
+   are the same word on the diagnostic he sends me.
+ */
+ var jobs=[['dot',paintDot],['new',renderNew],['thread',renderThread],
+  ['answers',renderAnswers],['got',renderGot],['net',renderNet],['items',render],
+  ['pegasus',renderPegasus],['improve',renderImprove],['special',renderSpecial],
+  ['replies',renderReplies],['rivhit',renderRivhit],['food',renderFood],
+  ['reqs',renderReqs],['stamp',paintStamp],['secrets',paintSecrets],
+  ['drains',renderDrains]];
+ var bad=[],ran={};
+ jobs.forEach(function(j){
+  ran[j[0]]=1;
+  try{if(typeof j[1]==='function')j[1]();}
+  catch(e){bad.push(j[0]);try{console.error('repaint '+j[0],e);}catch(_){}}
  });
+ /*
+   A failure held from the locked boot is only real if the same render fails
+   again now that there is data to render. He tapped the diagnostic hours after
+   unlocking and it still reported items as a load failure, which by then was a
+   render that had thrown on an empty page and worked ever since. Anything that
+   came back clean stops being reported, because he reads that line as a fault.
+ */
+ var held=window.__heldBootFails;
+ if(held&&held.length){
+  window.__heldBootFails=held.filter(function(n){
+   return !ran[n]||bad.indexOf(n)>-1;
+  });
+ }
+ if(bad.length){
+  window.__repaintFailed=bad;
+  if(typeof bootFailed!=='undefined'&&!(GATE&&!GKEY)){
+   bad.forEach(function(n){if(bootFailed.indexOf(n)<0)bootFailed.push(n);});
+  }
+ }else{window.__repaintFailed=null;}
  try{putState(st);}catch(e){}
  if(Math.abs(window.scrollY-y)>2)window.scrollTo(0,y);
 }
@@ -6781,13 +6812,26 @@ function diagnose(){
  L.push('אבחון מהמכשיר של איציק');
  L.push('גרסה '+(D.buildId||'?')+' · קוד '+(typeof CODE_ID!=='undefined'?CODE_ID:'?'));
  L.push('נעילה: '+(GATE?(GKEY?'נפתחה':'עדיין סגורה'):'כבויה'));
- L.push('הודעות בזיכרון: '+((D.chat||[]).length)+' מתוך '+num(function(){return lazyTotal('chat');}));
- L.push('דוחות: '+((D.reports||[]).length)+' מתוך '+num(function(){return lazyTotal('reports');}));
+ /*
+   The rest is not missing, it is not fetched yet: the page ships a first slice
+   and pulls the tail when a screen asks for it. Written out, because "150 out
+   of 231" on a page that says nothing else reads like 81 lost messages.
+ */
+ var lazyNote=function(k){
+  var have=(D[k]||[]).length,all=num(function(){return lazyTotal(k);});
+  return have+' מתוך '+all+(typeof all==='number'&&all>have?' · השאר נטען כשפותחים את המסך':'');
+ };
+ L.push('הודעות בזיכרון: '+lazyNote('chat'));
+ L.push('דוחות: '+lazyNote('reports'));
  L.push('מונה הכפתור האדום: '+num(function(){return unreadCount();})+' · על המסך כתוב '+q('nbCount'));
  L.push('כל התשובות: '+num(function(){return allAnswers().length;})+' · בסינון הנוכחי: '+num(function(){return ansList().length;}));
  L.push('סינון: '+(typeof ansFilter!=='undefined'?ansFilter:'?')+' · מציג עד '+(typeof ansShow!=='undefined'?ansShow:'?'));
- L.push('כרטיסים בפועל על המסך: '+cards+' · צ׳יפים: '+chips);
- L.push('מסך התשובות פתוח: '+(pA&&!pA.hidden?'כן':'לא'));
+ var ansOpen=!!(pA&&!pA.hidden);
+ // Zero cards on a closed screen is what a closed screen looks like. Saying so
+ // on the same line stops the number from reading as a fault.
+ L.push('כרטיסים בפועל על המסך: '+cards+' · צ׳יפים: '+chips
+  +(ansOpen?'':' (מסך התשובות סגור, ולכן אפס זה תקין)'));
+ L.push('מסך התשובות פתוח: '+(ansOpen?'כן':'לא'));
  L.push('סומנו כנקראו במכשיר: '+num(function(){return seenIds().length;}));
  L.push('כשלי טעינה: '+((window.bootFailed&&bootFailed.length?bootFailed.join(','):'')
    ||(window.__heldBootFails&&__heldBootFails.length?__heldBootFails.join(',')+' (בזמן נעילה)':'אין')));

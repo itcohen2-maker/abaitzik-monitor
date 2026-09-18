@@ -1332,7 +1332,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-18T13:31:27.359Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-18T13:33:56.992Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2131,7 +2131,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='c700608c0a';
+var CODE_ID='e302c31dac';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -3206,11 +3206,30 @@ function paintSecrets(){
 }
 function repaintAll(){
  var st=keepState(),y=window.scrollY;
- [paintDot,renderNew,renderThread,renderAnswers,renderGot,renderNet,render,
-  renderPegasus,renderImprove,renderSpecial,renderReplies,renderRivhit,
-  renderFood,renderReqs,paintStamp,paintSecrets,renderDrains].forEach(function(fn){
-  try{if(typeof fn==='function')fn();}catch(e){}
+ var jobs=[['dot',paintDot],['new',renderNew],['thread',renderThread],
+  ['answers',renderAnswers],['got',renderGot],['net',renderNet],['items',render],
+  ['pegasus',renderPegasus],['improve',renderImprove],['special',renderSpecial],
+  ['replies',renderReplies],['rivhit',renderRivhit],['food',renderFood],
+  ['reqs',renderReqs],['stamp',paintStamp],['secrets',paintSecrets],
+  ['drains',renderDrains]];
+ var bad=[],ran={};
+ jobs.forEach(function(j){
+  ran[j[0]]=1;
+  try{if(typeof j[1]==='function')j[1]();}
+  catch(e){bad.push(j[0]);try{console.error('repaint '+j[0],e);}catch(_){}}
  });
+ var held=window.__heldBootFails;
+ if(held&&held.length){
+  window.__heldBootFails=held.filter(function(n){
+   return !ran[n]||bad.indexOf(n)>-1;
+  });
+ }
+ if(bad.length){
+  window.__repaintFailed=bad;
+  if(typeof bootFailed!=='undefined'&&!(GATE&&!GKEY)){
+   bad.forEach(function(n){if(bootFailed.indexOf(n)<0)bootFailed.push(n);});
+  }
+ }else{window.__repaintFailed=null;}
  try{putState(st);}catch(e){}
  if(Math.abs(window.scrollY-y)>2)window.scrollTo(0,y);
 }
@@ -5006,13 +5025,19 @@ function diagnose(){
  L.push('אבחון מהמכשיר של איציק');
  L.push('גרסה '+(D.buildId||'?')+' · קוד '+(typeof CODE_ID!=='undefined'?CODE_ID:'?'));
  L.push('נעילה: '+(GATE?(GKEY?'נפתחה':'עדיין סגורה'):'כבויה'));
- L.push('הודעות בזיכרון: '+((D.chat||[]).length)+' מתוך '+num(function(){return lazyTotal('chat');}));
- L.push('דוחות: '+((D.reports||[]).length)+' מתוך '+num(function(){return lazyTotal('reports');}));
+ var lazyNote=function(k){
+  var have=(D[k]||[]).length,all=num(function(){return lazyTotal(k);});
+  return have+' מתוך '+all+(typeof all==='number'&&all>have?' · השאר נטען כשפותחים את המסך':'');
+ };
+ L.push('הודעות בזיכרון: '+lazyNote('chat'));
+ L.push('דוחות: '+lazyNote('reports'));
  L.push('מונה הכפתור האדום: '+num(function(){return unreadCount();})+' · על המסך כתוב '+q('nbCount'));
  L.push('כל התשובות: '+num(function(){return allAnswers().length;})+' · בסינון הנוכחי: '+num(function(){return ansList().length;}));
  L.push('סינון: '+(typeof ansFilter!=='undefined'?ansFilter:'?')+' · מציג עד '+(typeof ansShow!=='undefined'?ansShow:'?'));
- L.push('כרטיסים בפועל על המסך: '+cards+' · צ׳יפים: '+chips);
- L.push('מסך התשובות פתוח: '+(pA&&!pA.hidden?'כן':'לא'));
+ var ansOpen=!!(pA&&!pA.hidden);
+ L.push('כרטיסים בפועל על המסך: '+cards+' · צ׳יפים: '+chips
+  +(ansOpen?'':' (מסך התשובות סגור, ולכן אפס זה תקין)'));
+ L.push('מסך התשובות פתוח: '+(ansOpen?'כן':'לא'));
  L.push('סומנו כנקראו במכשיר: '+num(function(){return seenIds().length;}));
  L.push('כשלי טעינה: '+((window.bootFailed&&bootFailed.length?bootFailed.join(','):'')
    ||(window.__heldBootFails&&__heldBootFails.length?__heldBootFails.join(',')+' (בזמן נעילה)':'אין')));
