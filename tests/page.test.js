@@ -1383,8 +1383,12 @@ test('the red button lands on the answers after the paint, not before it', () =>
   // are not scrolled off by the fix itself.
   assert.ok(html.includes('window.scrollTo(0,top<260?0:top-12);'));
   // And the press says so in words, because he has read this button as broken
-  // twice while it was firing both times.
-  assert.ok(html.includes("toast(n?('נפתחו '+n+' תשובות שלא קראת')"));
+  // twice while it was firing both times. The number in that line is counted
+  // off the cards on the screen, so it cannot promise answers that are not
+  // there, and an empty landing says so instead of claiming a number.
+  assert.ok(html.includes("var shown=document.querySelectorAll('#ansBox .ansc').length;"));
+  assert.ok(html.includes("toast(n?(shown?('נפתחו '+shown+' תשובות שלא קראת')"));
+  assert.ok(html.includes("המסך נפתח ריק. לחיצה על רענן ואז שוב."));
   assert.ok(html.includes("toast('מסך התשובות לא נפתח. לחיצה על רענן ואז שוב.');"));
 });
 
@@ -1437,4 +1441,45 @@ test('the drain log records four tubes and never judges a number', () => {
   // It sends down the same road as everything else he says, and writes nothing
   // itself: one road means one place a message can go missing.
   assert.ok(html.includes("sendText('ניקוזים',line,'ניקוזים')"));
+});
+
+test('the drain log is a table, a day to a line and a tube to a column', () => {
+  const html = renderPage(fixture({}));
+  // Itzik, 18.09, by voice: "תוסיף טבלה פה בניקוזים". A card a day reads fine for one
+  // day and badly for ten, because the direction of one tube over a week is
+  // the only thing on this screen worth reading and cards lay the tubes across
+  // the page instead of down it.
+  assert.ok(html.includes('<table class="drtab">'));
+  assert.ok(html.includes('<tr><th>יום</th><th>1</th><th>2</th><th>3</th><th>4</th><th>סה״כ</th></tr>'));
+  assert.ok(html.includes('<td class="drtot">'));
+  // A missing tube is a dot in its column, so the row keeps its shape.
+  assert.ok(html.includes('<td class="drc dim">·</td>'));
+  // A note hangs under its own day across the width, where it cannot push a
+  // column out of line.
+  assert.ok(html.includes('colspan="6" class="drnote"'));
+  assert.ok(html.includes('.drtab{width:100%;border-collapse:collapse;text-align:center}'));
+});
+
+test('Enter inside the drain form walks to the next tube and does not send', () => {
+  const html = renderPage(fixture({}));
+  // The first real measurement arrived as four messages inside twenty four
+  // seconds, each carrying one tube and three "לא נמדד": Enter on a phone
+  // keyboard submitted the form from inside the first field, every time.
+  assert.ok(html.includes("['dr1','dr2','dr3','dr4','drNote'].forEach(function(id,i,all){"));
+  assert.ok(html.includes("if(e.key!=='Enter')return;"));
+  assert.ok(html.includes('next.focus();'));
+});
+
+test('the red count is the length of the list it opens', () => {
+  const html = renderPage(fixture({}));
+  // Itzik, 18.09 08:43, on a button reading five: "כתוב 5 הודעות שלא
+  // קראת. אין כלום שם". The count came from one set and the screen from
+  // another, so anything the answers list does not carry was counted here and
+  // could never appear there.
+  assert.ok(html.includes('function unreadCount(){return allAnswers().filter(isFresh).length;}'));
+  // Codex answers are counted now, so the button that clears everything has to
+  // reach them too, or the count sticks above zero right after a press that
+  // says everything is read.
+  assert.ok(html.includes('(D.chat||[]).concat(D.codex||[]).forEach(function(m){'));
+  assert.ok(html.includes("if(m.from!=='claude'&&m.from!=='codex')return;"));
 });
