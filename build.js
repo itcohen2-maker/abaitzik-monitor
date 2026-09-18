@@ -111,9 +111,23 @@ function slim(html) {
   return kept.join(NL);
 }
 
+const gate = require('./gate.js');
+
 function renderPage(payload) {
-  const data = JSON.stringify(payload).replace(/</g, '\\u003c');
+  /*
+    With the gate on the page carries no data at all.
+
+    Not "carries it encrypted": carries none. The whole payload moves to
+    data/head.json, sealed, and the page fetches it after he types the code.
+    A stranger with the link gets an empty shell, which is the point, and the
+    page drops to a fraction of its weight as a side effect.
+  */
+  const data = gate.enabled() ? '{}'
+    : JSON.stringify(payload).replace(/</g, '\\u003c');
   return PAGE
+    .replace('__GATE__', () => gate.enabled()
+      ? JSON.stringify({ salt: gate.saltB64(), rounds: gate.rounds })
+      : 'null')
     .replace('__LIB__', () => LIB.replace(/<\/script/gi, '<\\/script'))
     .replace('__DATA__', () => data)
     // The guard at the top of the page needs this page's own stamp as a
@@ -339,7 +353,8 @@ function build() {
   const lazy = {};
   for (const key of Object.keys(HEADS)) {
     const all = payload[key] || [];
-    fs.writeFileSync(path.join(DATA_DIR, key + '.json'), JSON.stringify(all), 'utf8');
+    fs.writeFileSync(path.join(DATA_DIR, key + '.json'),
+      gate.enabled() ? gate.seal(JSON.stringify(all)) : JSON.stringify(all), 'utf8');
     // Newest first by time, then put them back in the collection's own order.
     // Some of these arrive oldest first and some newest first, and slicing off
     // the front of an ascending list hands the phone the oldest hundred and
@@ -367,7 +382,8 @@ function build() {
   */
   const DATA_DIR2 = path.join(OUT_DIR, 'data');
   fs.mkdirSync(DATA_DIR2, { recursive: true });
-  fs.writeFileSync(path.join(DATA_DIR2, 'head.json'), JSON.stringify(payload), 'utf8');
+  fs.writeFileSync(path.join(DATA_DIR2, 'head.json'),
+    gate.enabled() ? gate.seal(JSON.stringify(payload)) : JSON.stringify(payload), 'utf8');
 
   const html0 = slim(renderPage(payload));
   // The code, with everything that moves on every build taken out: the payload
@@ -401,7 +417,16 @@ function build() {
       builtAt: payload.builtAt,
       buildId: payload.buildId,
       codeId,
-      now: payload.now || null,
+      /*
+        The live card's text does not travel in the clear.
+
+        version.json is fetched on every open with no-store and cannot be
+        sealed, because the page reads it before it has a key: it is how the
+        page learns there is a new build at all. So with the gate on it carries
+        only stamps. The page already falls back to D.now, which arrives
+        sealed, so nothing is lost on screen.
+      */
+      now: gate.enabled() ? null : (payload.now || null),
       answers: chat.filter(m => m.from === 'claude').length,
     }), 'utf8');
   fs.writeFileSync(path.join(OUT_DIR, 'robots.txt'), 'User-agent: *\nDisallow: /\n', 'utf8');
@@ -1874,6 +1899,22 @@ body.editing .bn{display:none}
  padding:9px 12px;font:500 13.5px Heebo,sans-serif;cursor:pointer;white-space:nowrap}
 .mob button[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
 .mob button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* The lock screen. Covers everything, because behind it there is nothing to
+   see anyway: with the gate on the page ships without any data at all. */
+#gateWrap{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;
+ justify-content:center;background:var(--ground,#0f1218);padding:24px}
+.gatecard{width:min(340px,100%);background:var(--surface,#181d27);border:1px solid var(--line,#2a3342);
+ border-radius:18px;padding:22px 18px;text-align:center;
+ box-shadow:0 18px 50px rgba(0,0,0,.28)}
+.gt-t{display:block;font:800 21px Heebo,sans-serif;color:var(--ink,#e8edf5);letter-spacing:.5px}
+.gt-s{margin:8px 0 16px;font:400 14.5px Heebo,sans-serif;color:var(--dim,#9aa7ba);line-height:1.5}
+#gateForm{display:flex;gap:8px}
+#gateIn{flex:1;min-width:0;background:var(--sunk,#141922);color:var(--ink,#e8edf5);border:1px solid var(--line,#2a3342);
+ border-radius:12px;padding:13px;font:700 19px Heebo,sans-serif;text-align:center;letter-spacing:3px}
+#gateIn:focus{outline:2px solid var(--accent);outline-offset:1px}
+#gateGo{flex:0 0 auto;background:var(--accent,#4285F4);color:#fff;border:0;border-radius:12px;
+ padding:0 18px;font:700 15px Heebo,sans-serif;cursor:pointer}
+.gt-e{min-height:20px;margin-top:10px;font:600 13.5px Heebo,sans-serif;color:var(--red,#EA4335)}
 </style>
 <script>
 /*
@@ -2739,6 +2780,58 @@ try{
 <script>
 var D = __DATA__, NET = __NET__, CAT = __CAT__, tab = 'pending';
 /*
+  The lock.
+
+  Itzik, 17.9: "move all the details to private storage." A free GitHub account
+  will not serve a private repository through Pages, so the page cannot be made
+  private where it stands. It can be made unreadable, which is what this is: the
+  data is sealed before it is published and opened here, in his browser, with a
+  code he types once per device.
+
+  He picked this over a real login after I laid out what a login costs him: a
+  code by email is four screens between him and a message he wants to read now.
+  This keeps the address, the shortcut on his home screen and the push links
+  untouched.
+
+  Say plainly what it is: a lock on a public door. Anybody holding both the link
+  and the code reads everything. It stops the link alone from being enough, and
+  that was the actual exposure.
+
+  The derived key is cached, not the code, because a cached code is a code
+  sitting in storage for anyone with the phone. Deriving takes about a second on
+  an old phone and happens once.
+*/
+var GATE = __GATE__, GKEY = null;
+function gbytes(b64){var x=atob(b64),a=new Uint8Array(x.length);for(var i=0;i<x.length;i++)a[i]=x.charCodeAt(i);return a;}
+function graw(a){var s='';for(var i=0;i<a.length;i++)s+=String.fromCharCode(a[i]);return btoa(s);}
+function gderive(code){
+ var enc=new TextEncoder();
+ return crypto.subtle.importKey('raw',enc.encode(code),'PBKDF2',false,['deriveKey'])
+  .then(function(base){
+   return crypto.subtle.deriveKey(
+    {name:'PBKDF2',salt:gbytes(GATE.salt),iterations:GATE.rounds,hash:'SHA-256'},
+    base,{name:'AES-GCM',length:256},true,['decrypt']);
+  });
+}
+function gopen(blob){
+ var parts=String(blob).split('.');
+ var iv=gbytes(parts[0]),body=gbytes(parts[1]);
+ return crypto.subtle.decrypt({name:'AES-GCM',iv:iv},GKEY,body)
+  .then(function(buf){return new TextDecoder().decode(buf);});
+}
+/*
+  Every fetch of a data file goes through here.
+
+  Sealed files are text, not JSON, so r.json() on one throws and the screen
+  that asked keeps its head slice for ever. One helper, used by both the lazy
+  loader and the soft refresh, so a file cannot be read one way in one place and
+  another way somewhere else.
+*/
+function gjson(r){
+ if(!GATE)return r.json();
+ return r.text().then(gopen).then(function(t){return JSON.parse(t);});
+}
+/*
   Data that does not travel with the page.
 
   Itzik, 16.9: the monitor is slow. It was carrying every message, report and
@@ -2776,7 +2869,7 @@ function ensure(keys, fn){
   };
   if(!window.fetch){lazyDone[k]=true;end();return;}
   fetch(url,{cache:'force-cache'}).then(function(r){
-   return r.ok?r.json():null;
+   return r.ok?gjson(r):null;
   }).then(function(v){
    if(Array.isArray(v))D[k]=v;
    lazyDone[k]=true;
@@ -3976,7 +4069,7 @@ function softRefresh(v){
  var urls=['data/head.json?b='+encodeURIComponent(v.buildId||'')]
   .concat(again.map(function(k){return 'data/'+k+'.json?b='+encodeURIComponent(v.buildId||'');}));
  Promise.all(urls.map(function(u){
-  return fetch(u,{cache:'no-store'}).then(function(r){return r.ok?r.json():null;},function(){return null;});
+  return fetch(u,{cache:'no-store'}).then(function(r){return r.ok?gjson(r):null;},function(){return null;});
  })).then(function(res){
   var head=res[0];
   if(!head){softBusy=false;return;}
@@ -7262,6 +7355,80 @@ function renderRivhit(){
 }
 var bootFailed=[];
 function boot(name,fn){try{fn();}catch(e){bootFailed.push(name);try{console.error('boot '+name,e);}catch(_){}}}
+/*
+  The unlock, and what he sees while it is shut.
+
+  The page boots empty on purpose: with the gate on, index.html carries no data
+  at all, so the only thing a stranger with the link can read is an empty shell
+  and a box asking for a code. The whole payload arrives sealed and is opened
+  here.
+
+  The overlay is drawn from script rather than sitting in the markup, so a build
+  without a gate ships nothing of it and the page is exactly what it was.
+*/
+function gateUI(){
+ var w=document.createElement('div');
+ w.id='gateWrap';
+ w.innerHTML='<div class="gatecard">'
+  +'<b class="gt-t">אבא איציק</b>'
+  +'<div class="gt-s">הדף נעול. תקליד את הקוד פעם אחת והמכשיר הזה יזכור אותו.</div>'
+  +'<form id="gateForm"><input id="gateIn" type="tel" inputmode="numeric" autocomplete="off"'
+  +' maxlength="12" placeholder="הקוד"><button type="submit" id="gateGo">פתיחה</button></form>'
+  +'<div class="gt-e" id="gateSaid"></div>'
+  +'</div>';
+ document.body.appendChild(w);
+ return w;
+}
+function gateBoot(){
+ if(!GATE)return;
+ var wrap=gateUI();
+ var said=document.getElementById('gateSaid');
+ var form=document.getElementById('gateForm');
+ var box=document.getElementById('gateIn');
+ function load(){
+  return fetch('data/head.json?b='+Date.now(),{cache:'no-store'})
+   .then(function(r){return r.ok?r.text():null;})
+   .then(function(t){return t?gopen(t):null;})
+   .then(function(txt){
+    if(!txt)return false;
+    var head=JSON.parse(txt);
+    Object.keys(head).forEach(function(k){D[k]=head[k];});
+    LAZY=D.lazy||{};
+    repaintAll();
+    wrap.parentNode.removeChild(wrap);
+    return true;
+   });
+ }
+ // A key that was cached by an earlier visit. If the code was changed since,
+ // the decrypt simply fails and he is asked again, which is the right
+ // behaviour and needs no version number of its own.
+ var saved=null;
+ try{saved=localStorage.getItem('gateKey');}catch(e){}
+ if(saved){
+  crypto.subtle.importKey('raw',gbytes(saved),{name:'AES-GCM'},true,['decrypt'])
+   .then(function(k){GKEY=k;return load();})
+   .then(function(ok){if(!ok){GKEY=null;try{localStorage.removeItem('gateKey');}catch(e){}}})
+   .catch(function(){GKEY=null;try{localStorage.removeItem('gateKey');}catch(e){}});
+ }
+ form.onsubmit=function(e){
+  e.preventDefault();
+  var code=(box.value||'').trim();
+  if(!code)return;
+  said.textContent='רגע, פותח.';
+  gderive(code).then(function(k){
+   GKEY=k;
+   return load();
+  }).then(function(ok){
+   if(!ok){said.textContent='הקוד לא מתאים.';GKEY=null;return;}
+   return crypto.subtle.exportKey('raw',GKEY).then(function(raw){
+    try{localStorage.setItem('gateKey',graw(new Uint8Array(raw)));}catch(e){}
+   });
+  }).catch(function(){
+   said.textContent='הקוד לא מתאים.';GKEY=null;
+  });
+ };
+ setTimeout(function(){try{box.focus();}catch(e){}},120);
+}
 boot('report',renderNextReport);
 boot('pegasus',renderPegasus);
 boot('improve',renderImprove);
@@ -7471,6 +7638,7 @@ boot('reset',function(){
  markAllRead(stamp);
  try{localStorage.setItem('seenResetAt',stamp);}catch(e){}
 });
+boot('gate',gateBoot);
 boot('pane',function(){
  if(location.hash==='#new'||location.hash==='#chat'){
   pane('a');renderAnswers();

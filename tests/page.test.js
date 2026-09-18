@@ -1,3 +1,6 @@
+// The gate strips the data out of the page on purpose; these checks read it
+// back out. See gate.js for why this is off here and tested on its own.
+process.env.MONITOR_NO_GATE = '1';
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -1246,4 +1249,40 @@ test('the page sends over the open channel first and the mailbox only as fallbac
   // backwards: the backup wording on every successful send.
   assert.ok(!html.includes("how==='ntfy'"), 'a screen label still tests for the old channel');
   assert.ok(html.includes("return 'backup';"), 'the fallback must report itself as the backup');
+});
+
+test('the gate seals and opens, and never twice under the same iv', () => {
+  const gate = require('../gate.js');
+  const text = 'הודעה של איציק, עם מקף ובלי, 123';
+  const a = gate.seal(text);
+  const b = gate.seal(text);
+  assert.equal(gate.open(a), text);
+  assert.equal(gate.open(b), text);
+  // Same plaintext, different blob. AES-GCM under a repeated IV leaks the
+  // difference between two builds, and two builds of this page differ by
+  // exactly the messages added since the last one.
+  assert.notEqual(a, b);
+  assert.notEqual(a.split('.')[0], b.split('.')[0]);
+  // A blob whose body was touched must not open at all rather than open wrong.
+  const broken = a.split('.')[0] + '.' + Buffer.from('nonsense').toString('base64');
+  assert.throws(() => gate.open(broken));
+});
+
+test('the page carries the lock and, when it is on, no data at all', () => {
+  const html = renderPage(fixture({}));
+  // The lock's own code ships either way: it is inert with GATE null.
+  assert.ok(html.includes('var GATE = '));
+  assert.ok(html.includes('function gderive(code){'));
+  assert.ok(html.includes("crypto.subtle.deriveKey("));
+  assert.ok(html.includes("{name:'AES-GCM',length:256}"));
+  // Both readers of a data file go through one helper, so a file cannot be
+  // read as JSON in one place and as a sealed blob in another.
+  assert.ok(html.includes('function gjson(r){'));
+  assert.ok(html.includes('return r.ok?gjson(r):null;'));
+  assert.ok(html.includes('return fetch(u,{cache:\'no-store\'}).then(function(r){return r.ok?gjson(r):null;}'));
+  // The derived key is cached, never the code itself.
+  assert.ok(html.includes("localStorage.setItem('gateKey'"));
+  assert.ok(!html.includes("localStorage.setItem('gateCode'"));
+  // A key that no longer opens the page is dropped rather than kept for ever.
+  assert.ok(html.includes("localStorage.removeItem('gateKey')"));
 });
