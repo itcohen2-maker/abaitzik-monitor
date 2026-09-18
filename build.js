@@ -5568,7 +5568,16 @@ function paintAnsCount(){
 }
 // Every inner screen gets a way back and its own address. He asked for both:
 // a link that opens the screen I am talking about, and a way out of it.
-var PANENAME={x:'pegasus',y:'special',w:'improve',r:'reports',a:'answers',m:'chat',k:'replies',b:'got'};
+/*
+  Names for the screens he can be sent straight to.
+
+  Itzik, 18.9, twice in a row: "where is the list, where are you sending me?"
+  I had told him to find a tile in a grid, on a home screen that is taller than
+  his phone, on a page he had not refreshed since before the screen existed. A
+  link he taps is not a nicety here, it is the difference between a thing that
+  exists and a thing he can reach.
+*/
+var PANENAME={x:'pegasus',y:'special',w:'improve',r:'reports',a:'answers',m:'chat',k:'replies',b:'got',c:'block',j:'drains'};
 function paneOf(name){
  for(var k in PANENAME){if(PANENAME[k]===name)return k;}
  return PANES[name]?name:'';
@@ -8566,6 +8575,8 @@ boot('hash',function(){
  if(k==='x')renderPegasus();
  if(k==='y'){renderSpecial();markSpecialSeen();}
  if(k==='w')renderImprove();
+ if(k==='c'){renderBlock();ensure('blocklist',renderBlock);}
+ if(k==='j'){renderDrains();ensure('drains',renderDrains);}
  if(k==='k'){renderReplies();markRepliesSeen();}
 });
 boot('ask',renderAsk);

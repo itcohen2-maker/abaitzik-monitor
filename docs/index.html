@@ -1343,7 +1343,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-18T17:15:57.903Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-18T17:19:03.369Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2157,7 +2157,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='1e55b043c2';
+var CODE_ID='d830176889';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -4059,7 +4059,7 @@ function paintAnsCount(){
  el.textContent=n?String(n):'✓';
  el.classList.toggle('zero',!n);
 }
-var PANENAME={x:'pegasus',y:'special',w:'improve',r:'reports',a:'answers',m:'chat',k:'replies',b:'got'};
+var PANENAME={x:'pegasus',y:'special',w:'improve',r:'reports',a:'answers',m:'chat',k:'replies',b:'got',c:'block',j:'drains'};
 function paneOf(name){
  for(var k in PANENAME){if(PANENAME[k]===name)return k;}
  return PANES[name]?name:'';
@@ -6323,6 +6323,8 @@ boot('hash',function(){
  if(k==='x')renderPegasus();
  if(k==='y'){renderSpecial();markSpecialSeen();}
  if(k==='w')renderImprove();
+ if(k==='c'){renderBlock();ensure('blocklist',renderBlock);}
+ if(k==='j'){renderDrains();ensure('drains',renderDrains);}
  if(k==='k'){renderReplies();markRepliesSeen();}
 });
 boot('ask',renderAsk);
