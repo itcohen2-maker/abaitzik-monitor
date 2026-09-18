@@ -2038,6 +2038,22 @@ body.editing .bn{display:none}
 .blwarn{color:var(--gold,#FBBC05);font-weight:700}
 .blstate{grid-column:2;display:inline-block;margin-inline-start:6px;font:700 12px Heebo,sans-serif;font-style:normal;color:var(--gold,#FBBC05)}
 .blstate.done{color:var(--ok,#34A853)}
+/* He asked for the leftovers as a list he can search, so the leftovers get
+   their own block above the form. A handle he has to retype is a handle he
+   will mistype; every line here is a link that opens the profile. */
+.blopen{background:var(--surface,#181d27);border:1px solid var(--gold,#FBBC05);
+ border-radius:13px;padding:12px 13px;margin-bottom:13px}
+.blopen h3{margin:0 0 3px;font:800 15px Heebo,sans-serif;color:var(--gold,#FBBC05)}
+.blopen p{margin:0 0 9px;font:400 13px Heebo,sans-serif;color:var(--dim,#9aa7ba);line-height:1.5}
+.blopen ol{margin:0;padding-inline-start:20px}
+.blopen li{margin-bottom:7px;font:400 14px Heebo,sans-serif;color:var(--ink,#e8edf5)}
+.blopen li b{font-weight:700}
+.blopen a{display:block;font:400 13px Heebo,sans-serif;color:var(--accent,#4285F4);
+ text-decoration:none;word-break:break-all;direction:ltr;text-align:start}
+.blopen a:hover{text-decoration:underline}
+.blcopy{margin-top:10px;width:100%;padding:11px;border:1px solid var(--line,#2a3342);
+ border-radius:11px;background:var(--bg,#0e1219);color:var(--ink,#e8edf5);
+ font:700 14px Heebo,sans-serif;cursor:pointer}
 .gt-e{min-height:20px;margin-top:10px;font:600 13.5px Heebo,sans-serif;color:var(--red,#EA4335)}
 </style>
 <script>
@@ -2585,6 +2601,7 @@ try{
   לוחץ שליחה, ואני חוסם רק אותם ומדווח לך אחד אחד.
   מי שנמסר בשם פרטי בלבד עדיין צריך זיהוי, ואני לא חוסם על סמך שם שאין לו חשבון.
  </div>
+ <div id="blOpen"></div>
  <div id="blBody"></div>
  <form class="drform" id="blForm">
   <button type="submit" id="blSend">שליחת המסומנים לחסימה</button>
@@ -6934,7 +6951,63 @@ function blToggle(id){
  if(i>-1)t.splice(i,1);else t.push(id);
  try{localStorage.setItem('blockTicks',JSON.stringify(t));}catch(e){}
 }
+/*
+  A handle is not a link. He reads this on a phone, and "facebook.com/rwth.ppy.swyly"
+  typed by hand from a screen is one dropped letter away from the wrong person's
+  profile. So the leftover list carries the opened address, not the name of it.
+*/
+function blUrl(h){
+ if(!h)return '';
+ var s=String(h).replace(/^@/,'');
+ var low=s.toLowerCase();
+ if(low.indexOf('http')===0)return s;
+ if(low.indexOf('www.')===0)s=s.slice(4);
+ if(s.toLowerCase().indexOf('facebook.com/')===0)return 'https://www.'+s;
+ return 'https://www.instagram.com/'+s+'/';
+}
+function blOpenPeople(){
+ var out=[];
+ (D.blocklist||[]).forEach(function(l){(l.people||[]).forEach(function(p){
+  if(p.handle&&p.state&&p.state!=='נחסם'&&p.state!=='ממתין')out.push(p);
+ });});
+ return out;
+}
+function renderBlockOpen(){
+ var host=document.getElementById('blOpen');
+ if(!host)return;
+ var left=blOpenPeople();
+ if(!left.length){ host.innerHTML=''; return; }
+ host.innerHTML='<h3>עוד לא נחסמו, '+left.length+'</h3>'
+  +'<p>אישרת אותם ואני לא הצלחתי להשלים. כל שורה כאן היא קישור שנפתח '
+  +'בפרופיל עצמו, בלי להקליד כלום.</p>'
+  +'<ol>'+left.map(function(p){
+   return '<li><b>'+esc(p.name||p.id)+'</b>'
+    +'<a href="'+esc(blUrl(p.handle))+'" target="_blank" rel="noopener">'
+    +esc(blUrl(p.handle))+'</a></li>';
+  }).join('')+'</ol>'
+  +'<button type="button" class="blcopy" id="blCopy">העתקת הרשימה</button>';
+ var btn=document.getElementById('blCopy');
+ if(btn)btn.onclick=function(){
+  var txt=left.map(function(p){return (p.name||p.id)+'  '+blUrl(p.handle);}).join('\\n');
+  var done=function(){btn.textContent='הועתק';setTimeout(function(){btn.textContent='העתקת הרשימה';},3000);};
+  try{
+   if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done,function(){fallbackCopy(txt,done);});
+   }else fallbackCopy(txt,done);
+  }catch(e){fallbackCopy(txt,done);}
+ };
+}
+function fallbackCopy(txt,done){
+ try{
+  var ta=document.createElement('textarea');
+  ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.select();
+  document.execCommand('copy');document.body.removeChild(ta);
+  done();
+ }catch(e){}
+}
 function renderBlock(){
+ renderBlockOpen();
  var host=document.getElementById('blBody');
  if(!host)return;
  var lists=(D.blocklist||[]);
