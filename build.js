@@ -3600,7 +3600,10 @@ function renderThread(){
  });
  var still=dropSettled(pending(),baked);
  savePending(still.concat(pending().filter(isMail)));
- var all=baked.map(function(m){return{id:m.id,re:m.re||'',at:m.at,from:m.from,text:m.text,status:m.status,pend:false};})
+ // note ו-ackAt נוסעים איתה. בלעדיהם התמלול נשמר בקובץ, נסע עד הדף,
+ // ונמחק כאן בשורה אחת של העתקת שדות, כך שמתחת להודעה לא הופיע כלום.
+ var all=baked.map(function(m){return{id:m.id,re:m.re||'',at:m.at,from:m.from,text:m.text,
+   status:m.status,note:m.note||'',ackAt:m.ackAt||'',pend:false};})
    .concat(still.map(function(p){return{id:'',re:p.re||'',at:p.at,from:'itzik',text:p.text,pend:true};}));
  var host=document.getElementById('thread');
  if(!all.length){
