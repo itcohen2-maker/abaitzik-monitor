@@ -1664,3 +1664,31 @@ test('one tap sends me what his phone actually holds', () => {
   assert.ok(html.indexOf('id="skinBox"') - settingsTop < 200);
   assert.ok(html.indexOf('id="diagBox"') > html.indexOf('id="skinBox"'));
 });
+
+test('a list from the device is a list, and two features never share a key', () => {
+  const html = renderPage(fixture({}));
+  // Itzik's diagnostic, straight off his iPhone on 18.9:
+  //   standbyIds().indexOf is not a function
+  // Two unrelated features had both picked the storage name chatStandby. One
+  // keeps a MAP of threads he is waiting on, written as {}. The other keeps a
+  // LIST of answers he parked, written as []. Whichever wrote last decided the
+  // shape, and when the map won, every paint of the answers screen died on the
+  // first line that asked the list for indexOf. His red button read 32 with
+  // nothing behind it all day while the same code drew thirty cards for me.
+  assert.ok(html.includes('function idList(key){'));
+  assert.ok(html.includes('if(Array.isArray(v))return v;'));
+  // A bad value is repaired, not just survived, or the same throw returns on
+  // the very next paint.
+  assert.ok(html.includes("try{localStorage.removeItem(key);}catch(e2){}"));
+  // Every reader of a stored list goes through it.
+  ['hiddenMsgs', 'touchedIds', 'seenIds', 'starIds'].forEach((fn) => {
+    assert.ok(html.includes('function ' + fn + '(){ return idList('), fn + ' must use idList');
+  });
+  // The parked list has its own name now, and what was written under the old
+  // one is carried across so a parked card does not come back red.
+  assert.ok(html.includes("var own=idList('chatParked');"));
+  assert.ok(html.includes("localStorage.setItem('chatParked',JSON.stringify(s));"));
+  assert.ok(!html.includes("localStorage.setItem('chatStandby',JSON.stringify(s));"));
+  // The map keeps the old name, which is the one it always meant.
+  assert.ok(html.includes("localStorage.setItem('chatStandby',JSON.stringify(m));"));
+});
