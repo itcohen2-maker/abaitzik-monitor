@@ -3822,7 +3822,7 @@ function paintAim(){
  if(aim){
   var t=document.getElementById('aimTxt');
   var head=String(aim.text||'').replace(/\s+/g,' ').trim().slice(0,40);
-  if(t)t.innerHTML='<b>משיב ל</b> '+esc(stamp(aim.at))+' · '+esc(head);
+  if(t)t.innerHTML='<b>המיקרופון מכוון ל</b> '+esc(stamp(aim.at))+' · '+esc(head);
  }
  // Every reply button on the page wears the current aim, so a redraw does not
  // lose the mark and two answers can never both look aimed at.
@@ -3830,7 +3830,7 @@ function paintAim(){
  Array.prototype.forEach.call(document.querySelectorAll('.aimb'),function(b){
   var on=k&&b.getAttribute('data-k')===k;
   b.classList.toggle('on',!!on);
-  b.textContent=on?'✓ מכוון למטה':'להשיב';
+  b.textContent=on?'✓ המיקרופון מכוון לזה':'להשיב';
  });
 }
 // Every reply button on the page, wherever an answer of mine is drawn.
