@@ -2914,12 +2914,30 @@ function ensure(keys, fn){
    try{paintDot();}catch(e){}
   };
   if(!window.fetch){lazyDone[k]=true;end();return;}
-  fetch(url,{cache:'force-cache'}).then(function(r){
-   return r.ok?gjson(r):null;
-  }).then(function(v){
-   if(Array.isArray(v))D[k]=v;
-   lazyDone[k]=true;
-  },function(){}).then(end,end);
+  /*
+    One retry, off the cache.
+
+    A sealed file is decrypted here, and a decrypt that throws used to be
+    swallowed into an empty function: the key stayed not done, nothing tried
+    again, and the screen sat on whatever head slice it had. With the gate on
+    that head is nothing at all, so one bad response - a cached body from
+    before the seal, a truncated file, an offline moment - made the answers
+    screen permanently empty for the rest of that page's life. The second
+    attempt asks the network rather than the cache, which is the one thing
+    that changes the answer.
+  */
+  var attempt=function(opts,again){
+   return fetch(url,opts).then(function(r){
+    return r.ok?gjson(r):null;
+   }).then(function(v){
+    if(Array.isArray(v)){D[k]=v;lazyDone[k]=true;return;}
+    if(again)return attempt({cache:'reload'},false);
+    lazyDone[k]=true;
+   },function(){
+    if(again)return attempt({cache:'reload'},false);
+   });
+  };
+  attempt({cache:'force-cache'},true).then(end,end);
  });
 }
 // Split so a scraper crawling the page source does not lift a plain address.
@@ -4971,6 +4989,26 @@ function renderAnswers(){
  var full=ansList();
  var list=full.slice(0,ansShow);
  if(!full.length){
+  /*
+    An empty screen has to say which empty it is.
+
+    "אין כאן כלום בסינון הזה" is true only when there is something here and
+    the filter hides it. With the gate on the page ships with no data at all,
+    so a data file that fails to arrive leaves this screen genuinely empty,
+    and the old line then blamed a filter he never touched. Whichever it is,
+    he gets the reason and a way out of it.
+  */
+  if(!allAnswers().length){
+   host.innerHTML='<div class="aempty">התשובות עוד לא נטענו.'
+    +'<button type="button" class="ab" id="ansRetry">טעינה מחדש</button></div>';
+   var rb=document.getElementById('ansRetry');
+   if(rb)rb.onclick=function(){
+    lazyDone={};lazyWait={};
+    ensure(['chat','codex','reports'],function(){renderAnswers();paintAnsCount();});
+    toast('מנסה לטעון שוב.');
+   };
+   return;
+  }
   host.innerHTML='<div class="aempty">אין כאן כלום בסינון הזה.</div>';
   return;
  }
@@ -5372,6 +5410,40 @@ document.getElementById('plusBtn').onclick=function(){
   "אין כאן כלום בסינון הזה". The chosen filter stands only if it has
   something in it; otherwise he gets the whole list, which is never empty.
 */
+/*
+  Landing on the list, and not next to it.
+
+  Itzik, 18.9 07:47, with a screenshot of the red button reading
+  "12 הודעות שלא קראת": "הכפתור האדום לא עובד ואין לו תשובות. ריק".
+
+  pane() already resets the scroll, and on 17.9 that was the whole fix. It is
+  not enough, and the order is why: pane() moves the window while the pane it
+  just opened is still empty, because renderAnswers runs after it. The document
+  is short for that instant, the browser clamps the offset to the short page,
+  and the answers are then poured in underneath a viewport that mobile Chrome
+  is free to anchor back where his finger left it. A screen that is blank with
+  the list above the fold is, from where he sits, a button that does nothing.
+
+  So the landing happens after the paint and not before it, and it aims at the
+  heading of the pane rather than at the top of the document, which is true no
+  matter how tall the page turns out to be. Twice: once on the next frame, and
+  once when the lazy files land and the list grows again.
+*/
+function landPane(id){
+ var go=function(){
+  var sec=document.getElementById(id);
+  if(!sec||sec.hidden)return;
+  var h=sec.querySelector('h2')||sec;
+  var top=h.getBoundingClientRect().top+(window.pageYOffset||0);
+  // Near the top of the document it goes to the actual top, so the refresh bar
+  // and the way home stay on screen. Only a pane that starts below the fold is
+  // pulled up to its own heading.
+  try{window.scrollTo(0,top<260?0:top-12);}catch(e){}
+ };
+ go();
+ if(window.requestAnimationFrame)requestAnimationFrame(function(){requestAnimationFrame(go);});
+ else setTimeout(go,60);
+}
 function openAnswers(filter){
  ansShow=30;
  var pick=function(f){
@@ -5380,18 +5452,36 @@ function openAnswers(filter){
  };
  ansAuto=true;
  pick(filter);
- pane('a');renderAnswers();
+ pane('a');renderAnswers();landPane('pA');
  ensure(['chat','codex','reports'],function(){
   // Only second guess a filter nobody chose by hand. A chip he pressed while
   // the file was still landing outranks anything the button decided.
   if(ansAuto&&ansFilter==='all')pick(filter);
-  renderAnswers();paintAnsCount();
+  renderAnswers();paintAnsCount();landPane('pA');
  });
 }
+/*
+  The press has to be audible in the screen, not only in the code.
+
+  He has now read this button as broken twice, and both times it had fired.
+  A line saying what opened and how big it is costs nothing and removes the
+  one reading that kept coming back. It is also the only thing that still
+  reports honestly if the scroll lands somewhere unexpected on a phone I do
+  not have, and the try/catch is there so a throw in any one of these steps
+  cannot leave him on a half switched screen with no word about it.
+*/
 document.getElementById('newBtn').onclick=function(){
- var n=unreadCount();
- if(n)beep();
- openAnswers(n?'fresh':'all');
+ var n=0;
+ try{
+  n=unreadCount();
+  if(n)beep();
+  openAnswers(n?'fresh':'all');
+  var shown=ansList().length;
+  toast(n?('נפתחו '+n+' תשובות שלא קראת')
+   :('מסך התשובות, '+shown+' פריטים. הכל נקרא.'));
+ }catch(e){
+  toast('מסך התשובות לא נפתח. לחיצה על רענן ואז שוב.');
+ }
 };
 function renderUnread(){
  var host=document.getElementById('unreadBox');
@@ -7778,7 +7868,7 @@ boot('reset',function(){
 boot('gate',gateBoot);
 boot('pane',function(){
  if(location.hash==='#new'||location.hash==='#chat'){
-  pane('a');renderAnswers();
+  pane('a');renderAnswers();landPane('pA');
  }
  else pane('h');
 });

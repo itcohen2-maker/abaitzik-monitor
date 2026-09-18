@@ -175,9 +175,10 @@ test('the red button and the push both land on the one answers screen', () => {
   const html = renderPage(fixture());
   // 17.9: the red button, the answers tab and the chat tab were three doors
   // to the same room. One door now, and it opens on what he has not read.
-  assert.ok(html.includes("document.getElementById('newBtn').onclick=function(){\n var n=unreadCount();\n if(n)beep();\n openAnswers(n?'fresh':'all');\n};"));
+  assert.ok(html.includes("document.getElementById('newBtn').onclick=function(){"));
+  assert.ok(html.includes("  openAnswers(n?'fresh':'all');"));
   assert.ok(html.includes('function openAnswers(filter){'));
-  assert.ok(html.includes("if(location.hash==='#new'||location.hash==='#chat'){\n  pane('a');renderAnswers();\n }"));
+  assert.ok(html.includes("if(location.hash==='#new'||location.hash==='#chat'){\n  pane('a');renderAnswers();landPane('pA');\n }"));
   assert.ok(!html.includes("onclick=function(){pane('m');markChatSeen();"), 'no tab may open the chat screen');
   assert.ok(html.includes('<em class="badge latest">האחרונה שהגיעה</em>'));
   assert.ok(html.includes('.badge.latest{'));
@@ -239,7 +240,7 @@ test('nothing opens by itself, and everything that opens can be closed', () => {
   assert.ok(!html.includes("mark('gChat'"));
   // Nothing unread is not a reason to do nothing: the button opens the one
   // screen either way, because it is the same conversation either way.
-  assert.ok(html.includes(" openAnswers(n?'fresh':'all');\n};"));
+  assert.ok(html.includes("  openAnswers(n?'fresh':'all');"));
   // The way out says what it does, and a keyboard has one too.
   assert.ok(html.includes("b.textContent='סגירה וחזרה לבית';"));
   assert.ok(html.includes("if(e.key!=='Escape')return;"));
@@ -1360,4 +1361,54 @@ test('the page names no channel, no address and no neighbour', () => {
   // The build must not fall back to a literal if the private file is missing:
   // a send button that does nothing beats his inbox printed on a public page.
   assert.ok(html.includes('id="vaadOpen"'));
+});
+
+test('the red button lands on the answers after the paint, not before it', () => {
+  const html = renderPage(fixture());
+  // Itzik, 18.9 07:47, screenshot of the button reading 12 unread:
+  // "הכפתור האדום לא עובד ואין לו תשובות. ריק".
+  //
+  // pane() resets the scroll while the pane it opened is still empty, so the
+  // browser clamps the offset to a short document and the list is poured in
+  // under a viewport that a phone is free to anchor back. The landing has to
+  // happen after the content exists, and it has to aim at the pane's own
+  // heading rather than at the top of a document whose height just changed.
+  assert.ok(html.includes('function landPane(id){'));
+  assert.ok(html.includes("var h=sec.querySelector('h2')||sec;"));
+  assert.ok(html.includes('if(window.requestAnimationFrame)requestAnimationFrame(function(){requestAnimationFrame(go);});'));
+  // Once on the press, and again when the lazy files land and it grows.
+  assert.ok(html.includes("pane('a');renderAnswers();landPane('pA');"));
+  assert.ok(html.includes('renderAnswers();paintAnsCount();landPane(\'pA\');'));
+  // Near the top it goes to the real top, so the refresh bar and the way home
+  // are not scrolled off by the fix itself.
+  assert.ok(html.includes('window.scrollTo(0,top<260?0:top-12);'));
+  // And the press says so in words, because he has read this button as broken
+  // twice while it was firing both times.
+  assert.ok(html.includes("toast(n?('נפתחו '+n+' תשובות שלא קראת')"));
+  assert.ok(html.includes("toast('מסך התשובות לא נפתח. לחיצה על רענן ואז שוב.');"));
+});
+
+test('an empty answers screen says which empty it is', () => {
+  const html = renderPage(fixture());
+  // With the gate on the page ships with no data, so a data file that never
+  // arrives leaves this screen truly empty. Blaming a filter he never touched
+  // is the wrong sentence, and it has no way out of it.
+  assert.ok(html.includes('if(!allAnswers().length){'));
+  assert.ok(html.includes('התשובות עוד לא נטענו.'));
+  assert.ok(html.includes('id="ansRetry"'));
+  assert.ok(html.includes('lazyDone={};lazyWait={};'));
+  assert.ok(html.includes('אין כאן כלום בסינון הזה.'));
+});
+
+test('a data file that fails to decrypt is tried again off the cache', () => {
+  const html = renderPage(fixture());
+  // The decrypt used to reject into an empty handler: the key stayed not done,
+  // nothing retried, and with the gate on the screen sat on nothing for the
+  // rest of that page's life.
+  assert.ok(html.includes('var attempt=function(opts,again){'));
+  assert.ok(html.includes("if(again)return attempt({cache:'reload'},false);"));
+  assert.ok(html.includes("attempt({cache:'force-cache'},true).then(end,end);"));
+  // Only a real array counts as loaded.
+  assert.ok(html.includes('if(Array.isArray(v)){D[k]=v;lazyDone[k]=true;return;}'));
+  assert.ok(!html.includes("},function(){}).then(end,end);"), 'no silent swallow of a failed data load');
 });
