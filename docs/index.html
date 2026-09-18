@@ -1358,7 +1358,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-18T18:00:39.611Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-18T18:02:00.784Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2173,7 +2173,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='9d5ddb6783';
+var CODE_ID='5b09204d5f';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -5066,7 +5066,7 @@ function blUrl(h){
 function blOpenPeople(){
  var out=[];
  (D.blocklist||[]).forEach(function(l){(l.people||[]).forEach(function(p){
-  if(p.handle&&p.state&&p.state!=='נחסם'&&p.state!=='ממתין')out.push(p);
+  if(p.handle&&p.state!=='נחסם')out.push(p);
  });});
  return out;
 }
@@ -5076,10 +5076,10 @@ function renderBlockOpen(){
  var left=blOpenPeople();
  if(!left.length){ host.innerHTML=''; return; }
  host.innerHTML='<h3>עוד לא נחסמו, '+left.length+'</h3>'
-  +'<p>אישרת אותם ואני לא הצלחתי להשלים. כל שורה כאן היא קישור שנפתח '
-  +'בפרופיל עצמו, בלי להקליד כלום.</p>'
+  +'<p>כל שורה כאן היא קישור שנפתח בפרופיל עצמו, בלי להקליד ובלי לחפש.</p>'
   +'<ol>'+left.map(function(p){
    return '<li><b>'+esc(p.name||p.id)+'</b>'
+    +(p.state?' <i class="blstate">'+esc(p.state)+'</i>':'')
     +'<a href="'+esc(blUrl(p.handle))+'" target="_blank" rel="noopener">'
     +esc(blUrl(p.handle))+'</a></li>';
   }).join('')+'</ol>'

@@ -6968,7 +6968,7 @@ function blUrl(h){
 function blOpenPeople(){
  var out=[];
  (D.blocklist||[]).forEach(function(l){(l.people||[]).forEach(function(p){
-  if(p.handle&&p.state&&p.state!=='נחסם'&&p.state!=='ממתין')out.push(p);
+  if(p.handle&&p.state!=='נחסם')out.push(p);
  });});
  return out;
 }
@@ -6978,10 +6978,10 @@ function renderBlockOpen(){
  var left=blOpenPeople();
  if(!left.length){ host.innerHTML=''; return; }
  host.innerHTML='<h3>עוד לא נחסמו, '+left.length+'</h3>'
-  +'<p>אישרת אותם ואני לא הצלחתי להשלים. כל שורה כאן היא קישור שנפתח '
-  +'בפרופיל עצמו, בלי להקליד כלום.</p>'
+  +'<p>כל שורה כאן היא קישור שנפתח בפרופיל עצמו, בלי להקליד ובלי לחפש.</p>'
   +'<ol>'+left.map(function(p){
    return '<li><b>'+esc(p.name||p.id)+'</b>'
+    +(p.state?' <i class="blstate">'+esc(p.state)+'</i>':'')
     +'<a href="'+esc(blUrl(p.handle))+'" target="_blank" rel="noopener">'
     +esc(blUrl(p.handle))+'</a></li>';
   }).join('')+'</ol>'
