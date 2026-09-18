@@ -1052,11 +1052,13 @@ section{margin-bottom:30px}
    one card, and nothing else, is what has his hand on it right now. */
 .busyring{position:relative;isolation:isolate}
 .busyring::after{
- content:'';position:absolute;inset:-4px;border-radius:inherit;padding:3px;
- background:conic-gradient(from var(--ang,0deg),transparent 0 62%,var(--accent) 78%,#7ad0ff 88%,transparent 96%);
+ content:'';position:absolute;inset:-5px;border-radius:inherit;padding:5px;
+ background:conic-gradient(from var(--ang,0deg),transparent 0 34%,var(--blue) 50%,var(--accent) 62%,
+  #7ad0ff 72%,var(--green) 82%,var(--yellow) 90%,transparent 97%);
  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
  -webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
- mask-composite:exclude;animation:ringspin 1.25s linear infinite;pointer-events:none;z-index:2}
+ mask-composite:exclude;animation:ringspin 1.05s linear infinite;pointer-events:none;z-index:2;
+ filter:saturate(1.35) drop-shadow(0 0 7px rgba(122,208,255,.55))}
 @property --ang{syntax:'<angle>';initial-value:0deg;inherits:false}
 @keyframes ringspin{to{--ang:360deg}}
 @media(prefers-reduced-motion:reduce){.busyring::after{animation:none;opacity:.5}}
