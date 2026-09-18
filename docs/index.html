@@ -1332,7 +1332,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-18T14:08:55.037Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-18T14:25:52.675Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2131,7 +2131,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='06c1ff843a';
+var CODE_ID='bcab308be6';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -3110,8 +3110,9 @@ function since(iso){var a=ago(iso);return a==='עכשיו'?'עכשיו':'לפנ�
 function paintStamp(){
  var el=document.getElementById('built');
  if(el){
-  el.textContent='גרסה '+(D.buildId||'')+' · פורסם '+stamp(D.builtAt)
-   +' · עודכן '+since(D.builtAt);
+  var age=since(D.builtAt);
+  el.textContent='גרסה '+(D.buildId||'')+' · '+stamp(D.builtAt)
+   +' · הגרסה '+String(age).replace(/^לפני /,'בת ');
  }
  var foot=document.getElementById('builtFoot');
  if(foot)foot.textContent='גרסה '+(D.buildId||'')+' · '+stamp(D.builtAt);
@@ -3120,7 +3121,9 @@ function paintStamp(){
  if(lastCheckFail){
   line.textContent='אין חיבור לנתונים. המספרים כאן הם מרגע הפרסום.';
  }else if(lastCheckAt){
-  line.textContent='נתונים נבדקו '+since(new Date(lastCheckAt).toISOString());
+  var ago=since(new Date(lastCheckAt).toISOString());
+  line.textContent=/עכשיו/.test(ago)?'הנתונים מעודכנים לרגע זה.'
+   :('הנתונים נבדקו '+ago+'.');
  }else{
   line.textContent='נתונים עוד לא נבדקו מול השרת.';
  }

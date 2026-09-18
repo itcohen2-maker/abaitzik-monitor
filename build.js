@@ -4278,10 +4278,25 @@ var lastCheckFail=false;
 // now" is not a sentence. Reads as one either way.
 function since(iso){var a=ago(iso);return a==='עכשיו'?'עכשיו':'לפני '+a;}
 function paintStamp(){
+ /*
+   Two lines, two different clocks, and one of them was lying about the other.
+
+   Itzik spent 18.9 telling me the monitor was not updating. The top line said
+   "עודכן לפני 15 דקות" and the line under it said "נתונים נבדקו עכשיו". Both
+   were true and they measure different things: the first is how old this
+   BUILD is, the second is when the page last asked the server for news. He
+   read the first one, the way anybody would, as "this thing has not updated in
+   fifteen minutes", and he was not wrong to. A screen whose whole job is to
+   tell him he is being heard cannot have a line on it that reads like neglect.
+
+   So it says what it is. Age of the version, in the words "בת 15 דקות", and
+   the live line below keeps the word that matters, נתונים.
+ */
  var el=document.getElementById('built');
  if(el){
-  el.textContent='גרסה '+(D.buildId||'')+' · פורסם '+stamp(D.builtAt)
-   +' · עודכן '+since(D.builtAt);
+  var age=since(D.builtAt);
+  el.textContent='גרסה '+(D.buildId||'')+' · '+stamp(D.builtAt)
+   +' · הגרסה '+String(age).replace(/^לפני /,'בת ');
  }
  var foot=document.getElementById('builtFoot');
  if(foot)foot.textContent='גרסה '+(D.buildId||'')+' · '+stamp(D.builtAt);
@@ -4291,7 +4306,9 @@ function paintStamp(){
   // Quietly, and without pretending the numbers above are live.
   line.textContent='אין חיבור לנתונים. המספרים כאן הם מרגע הפרסום.';
  }else if(lastCheckAt){
-  line.textContent='נתונים נבדקו '+since(new Date(lastCheckAt).toISOString());
+  var ago=since(new Date(lastCheckAt).toISOString());
+  line.textContent=/עכשיו/.test(ago)?'הנתונים מעודכנים לרגע זה.'
+   :('הנתונים נבדקו '+ago+'.');
  }else{
   line.textContent='נתונים עוד לא נבדקו מול השרת.';
  }
