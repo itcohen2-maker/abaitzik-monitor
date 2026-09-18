@@ -737,7 +737,10 @@ test('the title is his, and the build and the data are two different facts', () 
   // the server could not be reached.
   assert.ok(html.includes("line.textContent='נתונים עוד לא נבדקו מול השרת.'"));
   assert.ok(html.includes('lastCheckFail=true;paintStamp();'));
-  assert.ok(html.includes("'נתונים נבדקו '+since("));
+  // Not "now" is still reported as a stamp; "now" gets words instead, because
+  // "נתונים נבדקו עכשיו" sitting under "עודכן לפני 15 דקות" is the pair that
+  // made him read a working page as a broken one.
+  assert.ok(html.includes("('הנתונים נבדקו '+ago+'.')"));
   // One id per element. The footer stamp was a second id="built" and never
   // painted at all.
   assert.strictEqual(html.split('id="built"').length - 1, 1);
