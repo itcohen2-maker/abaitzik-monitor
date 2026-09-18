@@ -2615,7 +2615,9 @@ try{
  <div id="blOpen"></div>
  <div id="blBody"></div>
  <form class="drform" id="blForm">
-  <button type="submit" id="blSend">שליחת המסומנים לחסימה</button>
+  <label class="bllab" for="blNote">משהו להגיד לי על הרשימה</label>
+  <textarea id="blNote" rows="3" placeholder="מי זה, מה לא נכון, את מי להוריד, את מי להוסיף. אפשר לשלוח גם בלי לסמן אף אחד."></textarea>
+  <button type="submit" id="blSend">שליחה</button>
  </form>
  <div class="msgsaid" id="blSaid"></div>
 </section>
@@ -7089,15 +7091,20 @@ on('gBlock',openBlock);
   e.preventDefault();
   var said=document.getElementById('blSaid');
   var t=blTicks();
-  if(!t.length){ if(said)said.textContent='לא סימנת אף אחד.'; return; }
+  var nEl=document.getElementById('blNote');
+  var note=nEl?String(nEl.value||'').trim():'';
+  if(!t.length&&!note){ if(said)said.textContent='לא סימנת אף אחד ולא כתבת כלום.'; return; }
   var lists=(D.blocklist||[]),names=[];
   lists.forEach(function(l){(l.people||[]).forEach(function(p){
    if(t.indexOf(p.id)>-1)names.push(p.name+(p.handle?(' @'+p.handle):' (בלי חשבון מזוהה)'));
   });});
   if(said)said.textContent='שולח.';
-  sendText('חסימה','אישור לחסימה, '+names.length+' שמות: '+names.join(' · '),'חסימה')
+  var body=names.length?('אישור לחסימה, '+names.length+' שמות: '+names.join(' · ')):'בלי סימון אף אחד.';
+  if(note)body+=String.fromCharCode(10)+String.fromCharCode(10)+'הוא כתב: '+note;
+  sendText('חסימה',body,'חסימה')
    .then(function(){
-    if(said)said.textContent='נשלח. חוסם רק את מי שסימנת ומדווח אחד אחד.';
+    if(nEl)nEl.value='';
+    if(said)said.textContent=names.length?'נשלח. חוסם רק את מי שסימנת ומדווח אחד אחד.':'נשלח. קראתי מה שכתבת.';
     setTimeout(function(){if(said)said.textContent='';},7000);
    }).catch(function(){ if(said)said.textContent='לא נשלח. אין רשת כרגע.'; });
  };

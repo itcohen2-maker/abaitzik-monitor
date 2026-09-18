@@ -1718,7 +1718,15 @@ test('the block list is a list he ticks, and nothing acts on its own', () => {
   // go through idList like every other stored list.
   assert.ok(html.includes("function blTicks(){ return idList('blockTicks'); }"));
   // The form sends a decision. It does not block anything itself.
-  assert.ok(html.includes("sendText('חסימה','אישור לחסימה, '"));
+  assert.ok(html.includes("'אישור לחסימה, '+names.length+' שמות: '"));
+  assert.ok(html.includes("sendText('חסימה',body,'חסימה')"));
+  // 18.9, and he was right: a list with only tick boxes gave him no way to
+  // answer the questions written on the rows. Who is this one, that one is
+  // wrong, take this one off. So the screen carries a free text box, and it
+  // sends on its own with nobody ticked at all.
+  assert.ok(html.includes('id="blNote"'));
+  assert.ok(html.includes("if(!t.length&&!note){"));
+  assert.ok(html.includes("'הוא כתב: '+note"));
   assert.ok(!html.includes('function doBlock('));
   // A name with no account is shown as exactly that, because blocking a name
   // is not a thing that can be done.
