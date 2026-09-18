@@ -1330,3 +1330,24 @@ test('a page that is still locked does not cry that it failed to load', () => {
   assert.ok(html.includes('if(GATE&&!GKEY)bootFailed.length=0;'));
   assert.ok(html.indexOf('if(GATE&&!GKEY)bootFailed.length=0;') < html.indexOf('if(bootFailed.length){'));
 });
+
+test('the page names no channel, no address and no neighbour', () => {
+  const html = renderPage(fixture({}));
+  // An audit on 18.9 found all of these sitting in the page as plain text on a
+  // public URL. An ntfy topic has no authentication, so the name IS the
+  // credential: it let anyone subscribe to everything reaching his phone and
+  // publish into his inbox on the real channel. The rest is his address and
+  // his neighbours named as debtors, which was never his to publish about them.
+  ['abaitzik-in-95e62e86c34f4853', 'abaitzik-cf9044bdcfa8',
+   'הגיתית 7', 'יוסי, דירה 17', '17PUmZuY', '1pLlW7nW',
+  ].forEach((leak) => assert.ok(!html.includes(leak), 'still leaks ' + leak));
+  // They arrive in the sealed payload and are written in after the unlock.
+  assert.ok(html.includes("function secret(k, fallback){"));
+  assert.ok(html.includes("var NTFYIN = secret('ntfyIn');"));
+  assert.ok(html.includes("var MAILBOX = secret('mail');"));
+  assert.ok(html.includes('function paintSecrets(){'));
+  assert.ok(html.includes('paintStamp,paintSecrets].forEach'));
+  // The build must not fall back to a literal if the private file is missing:
+  // a send button that does nothing beats his inbox printed on a public page.
+  assert.ok(html.includes('id="vaadOpen"'));
+});

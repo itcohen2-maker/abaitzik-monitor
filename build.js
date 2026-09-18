@@ -371,6 +371,24 @@ function build() {
     lazy[key] = { n: all.length };
   }
   payload.lazy = lazy;
+  /*
+    The channels ride inside the sealed payload, never in the page.
+
+    data/keys.json is gitignored. Without it the page still builds and still
+    works for reading; what stops working is sending, which is the honest
+    failure mode: better a send button that does nothing than his inbox topic
+    printed on a public page for anyone to publish into.
+  */
+  payload.keys = (() => {
+    try {
+      const k = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'keys.json'), 'utf8'));
+      delete k._why;
+      return k;
+    } catch (e) {
+      console.warn('אין data/keys.json. הדף ייבנה בלי ערוצי שליחה.');
+      return {};
+    }
+  })();
 
   /*
     The same payload, as a file.
@@ -2314,7 +2332,7 @@ try{
   <b>התראות לנייד</b>
   <small>מתקינים את האפליקציה ntfy, לוחצים על הכפתור, ובוחרים Subscribe. מאז כל תשובה שלי קופצת כמו וואטסאפ.</small>
  </div>
- <a class="abtn" id="ntfyBtn" href="https://ntfy.sh/abaitzik-cf9044bdcfa8" target="_blank" rel="noopener">הפעלת התראות</a>
+ <a class="abtn" id="ntfyBtn" href="#" target="_blank" rel="noopener">הפעלת התראות</a>
 </div>
 
 <nav class="links" aria-label="קישורים מהירים">
@@ -2587,18 +2605,23 @@ try{
 
 <section id="pV" hidden>
  <h2>ועד הבית</h2>
+ <!--
+   His address, his neighbours' names and what each of them owes were written
+   here as plain text on a public page. An audit on 18.9 found them. Naming a
+   neighbour as a debtor in public is his business to publish or not, and he
+   never chose to; the address tells a stranger where a man recovering from
+   surgery sleeps. Both now arrive in the sealed payload and are written in
+   after he unlocks, so the page on its own says nothing.
+ -->
  <div class="item">
-  <div class="top"><span class="who">הגיתית 7</span><span class="chip">24 דירות</span></div>
-  <div class="body">קובץ מיסי ועד הבית, לשונית לכל שנה. ינואר עד ספטמבר 2026 כבר הוצלבו מול הבנק.</div>
-  <a class="ask" href="https://docs.google.com/spreadsheets/u/1/d/17PUmZuY_Qmb30a0klBBliN6xOrmwMsOH27z_tt7moIM/edit" target="_blank" rel="noopener">פתיחת הקובץ</a>
-  <a class="ask" href="https://drive.google.com/drive/u/1/folders/1pLlW7nWGm3lYhMq0P7fzFPn_U1z1trE1" target="_blank" rel="noopener">תיקיית ועד הבית</a>
+  <div class="top"><span class="who" id="vaadWho"></span><span class="chip" id="vaadFlats"></span></div>
+  <div class="body" id="vaadAbout"></div>
+  <a class="ask" id="vaadSheet" href="#" target="_blank" rel="noopener" hidden>פתיחת הקובץ</a>
+  <a class="ask" id="vaadFolder" href="#" target="_blank" rel="noopener" hidden>תיקיית ועד הבית</a>
  </div>
  <div class="item">
   <div class="top"><span class="who">מה פתוח</span></div>
-  <div class="body">בן יקר, דירה 6, חייב 1,200 על חודשים 6 עד 9.
-יוסי, דירה 17, חייב 600 מינואר ומאפריל.
-2,000 מדירה 2 שעוד לא נרשמו בקובץ.
-ספטמבר עוד חלקי, רוב התשלומים יורדים ב-10 בחודש.</div>
+  <div class="body" id="vaadOpen"></div>
   <button type="button" class="ask" id="vaadAsk">שאלה על ועד הבית</button>
  </div>
 </section>
@@ -2900,7 +2923,22 @@ function ensure(keys, fn){
 }
 // Split so a scraper crawling the page source does not lift a plain address.
 // This is obfuscation, not security - anyone reading the code can reassemble it.
-var MAILBOX = ['itcohen2','gmail.com'].join('@');
+/*
+  The addresses and channels move behind the lock.
+
+  An audit on 18.9 found them all sitting in the page as literals: the inbound
+  ntfy topic, the live topic, the outbound topic as a clickable link, and his
+  email twice. An ntfy topic has no authentication at all, so the name IS the
+  credential: anyone reading the page could subscribe to everything that
+  reaches his phone, and publish messages into his inbox that would arrive on
+  the real channel and defeat the impersonation check from underneath.
+
+  They live in the sealed payload now, so an unlocked page has them and a
+  stranger with the link has an empty string. Everything that used them reads
+  through here instead of from a literal.
+*/
+function secret(k, fallback){ return (D && D.keys && D.keys[k]) || fallback || ''; }
+var MAILBOX = secret('mail');
 // ntfy is the primary channel for everything the page sends, and FormSubmit is
 // the fallback under it. It was the other way round until 17.9, and the mailbox
 // being first had two costs. FormSubmit's free tier has a daily cap, so on a
@@ -2911,7 +2949,7 @@ var MAILBOX = ['itcohen2','gmail.com'].join('@');
 // way is in the chat the same second instead of waiting for a mailbox round.
 // The topic sits in the page source, so it is public: every message carries
 // his code, and anything unsigned is ignored on my side.
-var NTFYIN = 'abaitzik-in-95e62e86c34f4853';
+var NTFYIN = secret('ntfyIn');
 function ntfyText(kind, text, gid) {
  // Headers have to stay ASCII, so the Hebrew all rides in the body.
  return fetch('https://ntfy.sh/' + NTFYIN, {
@@ -4157,11 +4195,32 @@ function putState(st){
 }
 // Every screen that can be standing open when a new payload lands. Each one
 // redraws from D, so calling them all is cheaper than remembering which.
+/*
+  The things that were literals in the page, written in after he unlocks.
+
+  Everything here was public text until 18.9: the outbound notification topic
+  as a clickable link that subscribed anyone who opened it, his address, and
+  his neighbours by name with what each of them owes. None of it is mine to
+  publish and none of it belongs in a file a stranger can fetch.
+*/
+function paintSecrets(){
+ var out=secret('ntfyOut');
+ var b=document.getElementById('ntfyBtn');
+ if(b&&out)b.href='https://ntfy.sh/'+out;
+ var v=(D&&D.keys&&D.keys.vaad)||null;
+ if(!v)return;
+ var put=function(id,txt){var el=document.getElementById(id);if(el&&txt)el.textContent=txt;};
+ put('vaadWho',v.who); put('vaadFlats',v.flats); put('vaadAbout',v.about); put('vaadOpen',v.open);
+ [['vaadSheet',v.sheet],['vaadFolder',v.folder]].forEach(function(p){
+  var el=document.getElementById(p[0]);
+  if(el&&p[1]){el.href=p[1];el.hidden=false;}
+ });
+}
 function repaintAll(){
  var st=keepState(),y=window.scrollY;
  [paintDot,renderNew,renderThread,renderAnswers,renderGot,renderNet,render,
   renderPegasus,renderImprove,renderSpecial,renderReplies,renderRivhit,
-  renderFood,renderReqs,paintStamp].forEach(function(fn){
+  renderFood,renderReqs,paintStamp,paintSecrets].forEach(function(fn){
   try{if(typeof fn==='function')fn();}catch(e){}
  });
  try{putState(st);}catch(e){}
@@ -7514,7 +7573,7 @@ boot('rivhit',renderRivhit);
   only reports, which is the whole point. A screen that cannot go red is a
   screen that told him everything was fine for ninety seven minutes.
 */
-var LIVE_TOPIC='abaitzik-in-95e62e86c34f4853-live';
+var LIVE_TOPIC=secret('ntfyLive');
 var liveLast=null;
 function liveTime(iso){
  var d=new Date(iso);

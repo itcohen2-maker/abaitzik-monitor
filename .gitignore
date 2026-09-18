@@ -34,3 +34,8 @@ gate-key.txt
 # Lead screenshots. They show other people, one of them a minor, and docs/ is
 # served in the clear. The originals stay in data/files-private.
 docs/files/lead-*
+
+# Database dumps. They carry other people's phone numbers and names in clear
+# text, and this repo is public. Originals live in data/backups-private.
+abaitzik-backup-*.json
+/backups/

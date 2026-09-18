@@ -1295,7 +1295,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-18T04:09:11.942Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-18T04:14:00.841Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1477,7 +1477,7 @@ try{
   <b>התראות לנייד</b>
   <small>מתקינים את האפליקציה ntfy, לוחצים על הכפתור, ובוחרים Subscribe. מאז כל תשובה שלי קופצת כמו וואטסאפ.</small>
  </div>
- <a class="abtn" id="ntfyBtn" href="https://ntfy.sh/abaitzik-cf9044bdcfa8" target="_blank" rel="noopener">הפעלת התראות</a>
+ <a class="abtn" id="ntfyBtn" href="#" target="_blank" rel="noopener">הפעלת התראות</a>
 </div>
 
 <nav class="links" aria-label="קישורים מהירים">
@@ -1724,17 +1724,14 @@ try{
 <section id="pV" hidden>
  <h2>ועד הבית</h2>
  <div class="item">
-  <div class="top"><span class="who">הגיתית 7</span><span class="chip">24 דירות</span></div>
-  <div class="body">קובץ מיסי ועד הבית, לשונית לכל שנה. ינואר עד ספטמבר 2026 כבר הוצלבו מול הבנק.</div>
-  <a class="ask" href="https://docs.google.com/spreadsheets/u/1/d/17PUmZuY_Qmb30a0klBBliN6xOrmwMsOH27z_tt7moIM/edit" target="_blank" rel="noopener">פתיחת הקובץ</a>
-  <a class="ask" href="https://drive.google.com/drive/u/1/folders/1pLlW7nWGm3lYhMq0P7fzFPn_U1z1trE1" target="_blank" rel="noopener">תיקיית ועד הבית</a>
+  <div class="top"><span class="who" id="vaadWho"></span><span class="chip" id="vaadFlats"></span></div>
+  <div class="body" id="vaadAbout"></div>
+  <a class="ask" id="vaadSheet" href="#" target="_blank" rel="noopener" hidden>פתיחת הקובץ</a>
+  <a class="ask" id="vaadFolder" href="#" target="_blank" rel="noopener" hidden>תיקיית ועד הבית</a>
  </div>
  <div class="item">
   <div class="top"><span class="who">מה פתוח</span></div>
-  <div class="body">בן יקר, דירה 6, חייב 1,200 על חודשים 6 עד 9.
-יוסי, דירה 17, חייב 600 מינואר ומאפריל.
-2,000 מדירה 2 שעוד לא נרשמו בקובץ.
-ספטמבר עוד חלקי, רוב התשלומים יורדים ב-10 בחודש.</div>
+  <div class="body" id="vaadOpen"></div>
   <button type="button" class="ask" id="vaadAsk">שאלה על ועד הבית</button>
  </div>
 </section>
@@ -2063,7 +2060,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='14e61f7257';
+var CODE_ID='6a706a2258';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -2091,8 +2088,9 @@ function ensure(keys, fn){
   },function(){}).then(end,end);
  });
 }
-var MAILBOX = ['itcohen2','gmail.com'].join('@');
-var NTFYIN = 'abaitzik-in-95e62e86c34f4853';
+function secret(k, fallback){ return (D && D.keys && D.keys[k]) || fallback || ''; }
+var MAILBOX = secret('mail');
+var NTFYIN = secret('ntfyIn');
 function ntfyText(kind, text, gid) {
  return fetch('https://ntfy.sh/' + NTFYIN, {
   method: 'POST', headers: { Title: 'monitor' + (gid ? ' ' + gid + ' cap' : ''), 'X-Tags': 'memo' },
@@ -3116,11 +3114,24 @@ function putState(st){
   }
  });
 }
+function paintSecrets(){
+ var out=secret('ntfyOut');
+ var b=document.getElementById('ntfyBtn');
+ if(b&&out)b.href='https://ntfy.sh/'+out;
+ var v=(D&&D.keys&&D.keys.vaad)||null;
+ if(!v)return;
+ var put=function(id,txt){var el=document.getElementById(id);if(el&&txt)el.textContent=txt;};
+ put('vaadWho',v.who); put('vaadFlats',v.flats); put('vaadAbout',v.about); put('vaadOpen',v.open);
+ [['vaadSheet',v.sheet],['vaadFolder',v.folder]].forEach(function(p){
+  var el=document.getElementById(p[0]);
+  if(el&&p[1]){el.href=p[1];el.hidden=false;}
+ });
+}
 function repaintAll(){
  var st=keepState(),y=window.scrollY;
  [paintDot,renderNew,renderThread,renderAnswers,renderGot,renderNet,render,
   renderPegasus,renderImprove,renderSpecial,renderReplies,renderRivhit,
-  renderFood,renderReqs,paintStamp].forEach(function(fn){
+  renderFood,renderReqs,paintStamp,paintSecrets].forEach(function(fn){
   try{if(typeof fn==='function')fn();}catch(e){}
  });
  try{putState(st);}catch(e){}
@@ -5794,7 +5805,7 @@ boot('special',renderSpecial);
 boot('replies',renderReplies);
 boot('reqs',renderReqs);
 boot('rivhit',renderRivhit);
-var LIVE_TOPIC='abaitzik-in-95e62e86c34f4853-live';
+var LIVE_TOPIC=secret('ntfyLive');
 var liveLast=null;
 function liveTime(iso){
  var d=new Date(iso);
