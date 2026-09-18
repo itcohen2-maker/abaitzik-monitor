@@ -1115,7 +1115,7 @@ body.editing .bn{display:none}
 .bn button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:10px}
 
 #pH.bare > *:not(#talkCard):not(#bareBtn){display:none!important}
-.reloadbig{flex:1 1 100%;order:-1;min-height:52px;border:0;border-radius:16px;cursor:pointer;
+.reloadbig{display:block;width:100%;margin:0 0 14px;min-height:52px;border:0;border-radius:16px;cursor:pointer;
  color:#fff;font:800 16px Heebo,sans-serif;
  background:linear-gradient(180deg,#5cc36f,var(--green));
  box-shadow:0 3px 10px rgba(52,168,83,.4),inset 0 1px 0 rgba(255,255,255,.35)}
@@ -1295,7 +1295,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-18T04:47:56.554Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-18T04:49:15.270Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1349,6 +1349,16 @@ try{
 }catch(e){}})();
 </script>
 <div class="wrap">
+<header class="hd">
+ <button type="button" class="conn" id="homeBtn" title="חזרה לבית" hidden>בית</button>
+ <button type="button" class="conn" id="setBtn" title="הגדרות" aria-label="הגדרות">הגדרות</button>
+ <div class="hdtext">
+  <div class="t">מוניטור בבניין עצמי</div>
+  <div class="s" id="built"></div>
+  <div class="s dim" id="checked"></div>
+ </div>
+ <div class="ava" aria-hidden="true"><div>א</div></div>
+</header>
  <section class="talk" id="talkCard" aria-label="פנייה אליי">
   <button type="button" id="micBtn" class="mic" aria-label="דבר אליי">
    <svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -1377,17 +1387,7 @@ try{
   </form>
   <div class="msgsaid" id="quickSaid"></div>
  </section>
-<header class="hd">
  <button type="button" class="reloadbig" id="reloadBtn">רענן אותי · חזרה לדף הבית</button>
- <button type="button" class="conn" id="homeBtn" title="חזרה לבית" hidden>בית</button>
- <button type="button" class="conn" id="setBtn" title="הגדרות" aria-label="הגדרות">הגדרות</button>
- <div class="hdtext">
-  <div class="t">מוניטור בבניין עצמי</div>
-  <div class="s" id="built"></div>
-  <div class="s dim" id="checked"></div>
- </div>
- <div class="ava" aria-hidden="true"><div>א</div></div>
-</header>
 
 <section id="pH">
 <div id="newBlock">
@@ -2060,7 +2060,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='5851bdab29';
+var CODE_ID='969eb6951c';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){

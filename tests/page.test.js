@@ -65,13 +65,18 @@ test('home order: one message button on top, the tools next, my log last', () =>
   // The message block is one button now, and nothing else lives in it.
   assert.ok(ph < at('id="newBlock"'));
   assert.ok(at('id="newBlock"') < at('id="newBtn"'));
-  // Itzik, 18.9, with a photograph of his screen: "at the top of the page
-  // there will always be the mockup with the microphone, nothing above it."
-  // Above the header, above the refresh bar, above everything, and hidden by
-  // pane() on every screen that is not home.
-  assert.ok(at('id="talkCard"') < at('<header class="hd">'));
+  // Itzik, 18.9, by voice: "the monitor title will be at the top, and under it
+  // the mockup of the microphone." So the header comes first, the microphone
+  // card directly after it with nothing in between, and the green refresh bar
+  // below the microphone instead of above the title. Still outside every pane,
+  // still hidden by pane() on every screen that is not home.
+  assert.ok(at('<header class="hd">') < at('id="talkCard"'));
+  assert.ok(at('class="t">מוניטור') < at('id="talkCard"'));
   assert.ok(at('id="talkCard"') < at('id="reloadBtn"'));
   assert.ok(at('id="talkCard"') < ph);
+  assert.ok(html.indexOf('</header>') < at('id="talkCard"'));
+  // Nothing between the title block and the microphone.
+  assert.ok(html.slice(html.indexOf('</header>'), at('id="talkCard"')).indexOf('<button') === -1);
   assert.ok(html.includes("var talk=document.getElementById('talkCard');"));
   assert.ok(html.includes("if(talk)talk.hidden=(w!=='h');"));
   // He set this order on 17.9: the microphone card, then the message buttons,

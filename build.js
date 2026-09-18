@@ -1762,7 +1762,7 @@ body.editing .bn{display:none}
   back, and the choice is remembered.
 */
 #pH.bare > *:not(#talkCard):not(#bareBtn){display:none!important}
-.reloadbig{flex:1 1 100%;order:-1;min-height:52px;border:0;border-radius:16px;cursor:pointer;
+.reloadbig{display:block;width:100%;margin:0 0 14px;min-height:52px;border:0;border-radius:16px;cursor:pointer;
  color:#fff;font:800 16px Heebo,sans-serif;
  background:linear-gradient(180deg,#5cc36f,var(--green));
  box-shadow:0 3px 10px rgba(52,168,83,.4),inset 0 1px 0 rgba(255,255,255,.35)}
@@ -2097,20 +2097,37 @@ try{
   matters.
 -->
 <!--
-  The microphone sits above everything, including the header.
+  The title first, the microphone right under it.
 
-  Itzik, 18.9, with a photograph of his own screen: "at the top of the page
-  there will always be the mockup with the microphone, nothing above it." It
-  was already first among the home blocks, but the refresh bar, the title and
-  the boot warning are not home blocks, they are page furniture, and they were
-  all standing in front of the one control the screen exists for.
+  Itzik, 18.9, by voice: "the monitor title will be at the top, and under it the
+  mockup of the microphone." Earlier the same day he had asked for the opposite,
+  nothing above the microphone, so the header had been pushed below it. Now he
+  wants the name of the screen to be the first line he reads and the microphone
+  to sit directly beneath it, which means only two things are allowed between
+  them: nothing.
 
-  So it leaves the home section and becomes the first thing in the body. It is
-  hidden on every other screen by pane(), because a microphone that follows him
-  into the settings is a different bug, and it is out of the arrange list on
-  purpose: "nothing above it" is not a preference he should be able to drag
-  away by accident.
+  So the big refresh button leaves the header, where it had order:-1 and was the
+  first row of the page, and moves below the microphone. It is still one full
+  width green bar, just not in front of the title any more. The microphone stays
+  outside the home section and out of the arrange list, hidden on every other
+  screen by pane(), so nothing can drag it away from under the title.
 -->
+<header class="hd">
+ <button type="button" class="conn" id="homeBtn" title="חזרה לבית" hidden>בית</button>
+ <button type="button" class="conn" id="setBtn" title="הגדרות" aria-label="הגדרות">הגדרות</button>
+ <div class="hdtext">
+  <!--
+    The exact title he gave. Under it two different facts that were one line
+    before: which version of the screen this is, and when its numbers were last
+    checked against the server. A page can be five minutes old and its data an
+    hour stale, and saying so is the difference between a monitor and a poster.
+  -->
+  <div class="t">מוניטור בבניין עצמי</div>
+  <div class="s" id="built"></div>
+  <div class="s dim" id="checked"></div>
+ </div>
+ <div class="ava" aria-hidden="true"><div>א</div></div>
+</header>
  <section class="talk" id="talkCard" aria-label="פנייה אליי">
   <button type="button" id="micBtn" class="mic" aria-label="דבר אליי">
    <svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -2144,23 +2161,7 @@ try{
   </form>
   <div class="msgsaid" id="quickSaid"></div>
  </section>
-<header class="hd">
  <button type="button" class="reloadbig" id="reloadBtn">רענן אותי · חזרה לדף הבית</button>
- <button type="button" class="conn" id="homeBtn" title="חזרה לבית" hidden>בית</button>
- <button type="button" class="conn" id="setBtn" title="הגדרות" aria-label="הגדרות">הגדרות</button>
- <div class="hdtext">
-  <!--
-    The exact title he gave. Under it two different facts that were one line
-    before: which version of the screen this is, and when its numbers were last
-    checked against the server. A page can be five minutes old and its data an
-    hour stale, and saying so is the difference between a monitor and a poster.
-  -->
-  <div class="t">מוניטור בבניין עצמי</div>
-  <div class="s" id="built"></div>
-  <div class="s dim" id="checked"></div>
- </div>
- <div class="ava" aria-hidden="true"><div>א</div></div>
-</header>
 
 <section id="pH">
  <!--
