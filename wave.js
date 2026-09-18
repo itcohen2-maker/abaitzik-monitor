@@ -17,7 +17,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const { spawn } = require('child_process');
+const { spawn, execFile } = require('child_process');
 
 const HERE = __dirname;
 const STATUS = path.join(HERE, 'data', 'status');
@@ -165,7 +165,15 @@ function main() {
   // the session is not working, it is thinking about working.
   const cap = setTimeout(() => {
     say('!! הגל עבר 12 דקות. עוצר אותו.');
+    /*
+      shell:true means child.pid is cmd.exe, so killing it left the session
+      itself running. Verified in wave.log on 18.9: three waves announced a
+      stop and never reported an end, and the session they thought they had
+      stopped went on touching his accounts past every cap this file sets.
+      The tree has to go, the way worker.js already does it.
+    */
     try { process.kill(child.pid); } catch (e) {}
+    try { execFile('taskkill', ['/pid', String(child.pid), '/t', '/f'], () => {}); } catch (e) {}
   }, 12 * 60 * 1000);
   child.on('close', (code) => {
     clearTimeout(cap);

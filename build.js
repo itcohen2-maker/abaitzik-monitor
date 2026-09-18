@@ -112,6 +112,22 @@ function slim(html) {
 }
 
 const gate = require('./gate.js');
+/*
+  The gate fails closed, or it is not a gate.
+
+  enabled() is just "does gate-key.txt exist", and that file is gitignored.
+  So on a fresh clone, on another machine, or the day it is deleted by
+  accident, every build published the whole payload in the clear — his chat,
+  the block list, the drain log, the reports, and the keys to both channels —
+  onto a public repo, with nothing said and a page that looked entirely
+  normal. The tests pass MONITOR_NO_GATE, and that stays the one way to build
+  without it, deliberately and out loud.
+*/
+if (!gate.enabled() && !process.env.MONITOR_NO_GATE) {
+  console.error('אין gate-key.txt. בנייה בלי המפתח מפרסמת את הכל בגלוי, ולכן היא נעצרת כאן.');
+  console.error('אם זו בנייה מכוונת בלי הצפנה: MONITOR_NO_GATE=1 node build.js');
+  process.exit(1);
+}
 
 function renderPage(payload) {
   /*

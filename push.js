@@ -70,7 +70,20 @@ async function main() {
     // those racing produce a page that matches neither session's data.
     await new Promise((res, rej) => execFile('node', ['build.js'], { cwd: HERE, timeout: 180000 },
       (e, o) => (e ? rej(new Error(String(o).slice(-200))) : res())));
-    git('add', '-A');
+    /*
+      One retry, because the failure is a race and not a refusal.
+
+      18.9, 21:00: add died with "open(bl.tmp): No such file or directory"
+      — another session had created and deleted a temp file in the repo
+      root while add was walking the tree. main() threw, nothing was
+      committed, and the answer that session had written never reached the
+      page. The same call succeeded a moment later by hand.
+    */
+    try { git('add', '-A'); }
+    catch (e) {
+      say('הוספה נכשלה, מנסה שוב: ' + String(e.message || e).slice(-120));
+      git('add', '-A');
+    }
     let out = '';
     try { out = git('commit', '-m', msg); }
     catch (e) {

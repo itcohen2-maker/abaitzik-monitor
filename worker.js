@@ -63,6 +63,23 @@ const LIVE = path.join(STATUS, 'worker-live.json');
 const MAX_SESSION_MS = 10 * 60 * 1000;
 
 
+/*
+  A failure he is not told about is a failure that costs him the wait.
+
+  18.9, in his words: "נמאס לי לתקן אותך". Every !! below used to land in
+  data/status/worker.log and nowhere else, so the only way he learned that
+  the worker had fallen over was that no answer arrived and he asked. The
+  budget in notify-channels already protects the channel from a flood, so
+  there is no reason left to stay quiet.
+*/
+function tell(title, body) {
+  try {
+    require('./lib/notify-channels.js').notify(title, String(body || ''));
+  } catch (e) {
+    say('!! לא הצלחתי להודיע לו: ' + e.message);
+  }
+}
+
 function say(line) {
   const t = new Date().toTimeString().slice(0, 8);
   try { fs.appendFileSync(LOG, t + '  ' + line + '\n', 'utf8'); } catch (e) {}
@@ -140,6 +157,33 @@ function waiting() {
     .filter((m) => !done[m.file])
     .filter((m) => now - Date.parse(m.at) > SETTLE_MS)
     .sort((a, b) => (a.at < b.at ? -1 : 1));
+}
+
+/*
+  Was he actually answered.
+
+  18.9: the worker treated exit 0 as success. A session that came up, did
+  nothing and exited cleanly was indistinguishable from one that wrote him a
+  reply, so the message stayed marked handled and no later tick ever looked
+  at it again. That is the wave bug, the one that logged exit 0 three times
+  and touched nothing, living on in the worker.
+
+  So the proof is the answer itself: a chat record of mine whose re points
+  back at his id. Nothing else counts as done.
+*/
+function answeredIds() {
+  let files = [];
+  try { files = fs.readdirSync(CHAT); } catch (e) { return new Set(); }
+  const out = new Set();
+  files.forEach((f2) => {
+    const d = readJson(path.join(CHAT, f2), null);
+    if (d && d.from === 'claude' && d.re) out.add(d.re);
+  });
+  return out;
+}
+function unanswered(list) {
+  const got = answeredIds();
+  return list.filter((m) => m.id && !got.has(m.id));
 }
 
 function markHandled(list) {
@@ -229,19 +273,45 @@ function run(list) {
   const child = spawn('claude', ['-p', '--chrome', '--dangerously-skip-permissions'],
     { cwd: HERE, shell: true, windowsHide: true });
   child.stdin.end(text, 'utf8');
-  register(process.pid, list.map((m) => m.file));
+  /*
+    The session, not the thing that started it.
+
+    18.9: this registered process.pid, so one tick that started three
+    sessions counted as a single entry, and the first of them to close
+    deleted it while the other two were still running. The next minute saw
+    room for three more. MAX_LIVE was a number nobody enforced.
+  */
+  const sid = child.pid;
+  register(sid, list.map((m) => m.file));
   let out = '';
   child.stdout.on('data', (b2) => { out += b2; });
   child.stderr.on('data', (b2) => { out += b2; });
   child.on('close', (code) => {
-    unregister(process.pid);
+    unregister(sid);
     say('הסשן הסתיים, קוד ' + code + '. ' + String(out).trim().slice(-300).replace(/\s+/g, ' '));
-    if (code !== 0) unmarkHandled(list);
+    /*
+      The exit code was never the question.
+
+      A session that came up, did nothing and exited 0 looked exactly like
+      one that answered him, so the message stayed marked handled and no
+      later tick ever looked at it again. He waited for an answer that was
+      never coming and nothing anywhere said so.
+    */
+    const missed = code === 0 ? unanswered(list) : list;
+    if (missed.length) {
+      unmarkHandled(missed);
+      tell(
+        'הודעה נשארה בלי תשובה',
+        'סשן הסתיים בקוד ' + code + ' ובלי לענות על ' + missed.length +
+        '. הוחזרו לתור: ' + missed.map((m) => String(m.text || m.file).slice(0, 60)).join(' · ')
+      );
+    }
   });
   child.on('error', (e) => {
-    unregister(process.pid);
+    unregister(sid);
     say('!! הסשן לא עלה: ' + e.message);
     unmarkHandled(list);
+    tell('הסשן לא עלה', e.message);
   });
 }
 

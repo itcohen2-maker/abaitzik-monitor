@@ -61,19 +61,26 @@ function waitingMessages() {
 
   // מה שמדאיג הוא הודעה שאיש לא נגע בה, לא הודעה שעוד לא נגמרה.
   // הודעה מסומנת עם ackAt נקראה, גם אם העבודה עליה נמשכת.
-  const unread = mine.filter(m => !m.ackAt && m.status !== 'done');
-  const openWork = mine.filter(m => m.ackAt && m.status !== 'done');
+  // 18.9: this measured !ackAt, and since 16.9 the listener stamps ackAt on
+  // every message the moment it lands. So unread was always empty and the
+  // one check that exists because he asked "why does the monitor not answer
+  // me" printed OK no matter how long a message sat. What is worrying is a
+  // message that never got an answer, not one that was never looked at.
+  const open = mine.filter(m => m.status !== 'done');
+  const age = (m) => (Date.now() - new Date(m.at).getTime()) / 36e5;
+  const unread = open.filter(m => age(m) > 0.25);
+  const openWork = open.filter(m => age(m) <= 0.25);
 
   if (unread.length) {
     const oldest = unread.map(m => new Date(m.at).getTime()).filter(t => !isNaN(t)).sort()[0];
     const hours = oldest ? (Date.now() - oldest) / 36e5 : 0;
-    const line = unread.length + ' שלא נקראו, הוותיקה מחכה ' + hours.toFixed(1) + ' שעות';
-    if (hours > 6) fail('תיבת ההודעות', line, 'אף סשן לא קרא את התיבה. לפתוח את הטרמינל ולהריץ סבב.');
-    else warn('תיבת ההודעות', line, 'לקרוא ולסמן ackAt.');
+    const line = unread.length + ' בלי תשובה, הוותיקה מחכה ' + hours.toFixed(1) + ' שעות';
+    if (hours > 0.5) fail('תיבת ההודעות', line, 'אף סשן לא ענה. לבדוק את worker.log ואת המשימה AbaItzikWorker.');
+    else warn('תיבת ההודעות', line, 'לענות ולסמן done.');
     return;
   }
-  ok('תיבת ההודעות', mine.length + ' הודעות שלו, הכל נקרא'
-    + (openWork.length ? ', ' + openWork.length + ' עוד בעבודה' : ''));
+  ok('תיבת ההודעות', mine.length + ' הודעות שלו, הכל נענה'
+    + (openWork.length ? ', ' + openWork.length + ' הגיעו ברבע השעה האחרונה' : ''));
 }
 
 /* ---------- 2. כרום והתוסף ---------- */
