@@ -206,7 +206,7 @@ function run(list) {
   // The prompt goes in on stdin, not as an argument. It is long, it is Hebrew,
   // and it quotes him; concatenating it into a Windows command line is a
   // quoting bug waiting for the first message that contains a double quote.
-  const child = spawn('claude', ['-p', '--dangerously-skip-permissions'],
+  const child = spawn('claude', ['-p', '--chrome', '--dangerously-skip-permissions'],
     { cwd: HERE, shell: true, windowsHide: true });
   child.stdin.end(text, 'utf8');
   register(child.pid, list.map((m) => m.file));

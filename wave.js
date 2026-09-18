@@ -101,6 +101,12 @@ function prompt(slot, b) {
     '',
     'כללי הבית: הפעל את הסקיל abaitzik-onboarding לפני שאתה נוגע במשהו.',
     '',
+    'הדפדפן: יש שני דפדפנים מחוברים והסשן בוחר לבד את האחרון שהיה בשימוש.',
+    'לכן קודם `select_browser` על fdb22e3a-91c6-4369-9e07-6b35799d6198, שזה Browser 1.',
+    'לסשן הזה אין קבוצת לשוניות משלו, אז `tabs_context_mcp` יחזיר שאין. זה תקין:',
+    'פותחים לשונית עם tabs_create_mcp או navigate ועובדים בה. אי אפשר לקרוא לשונית',
+    'שהוא פתח בעצמו, ואין לגעת בה.',
+    '',
     'הגל: עד שמונה דקות, רשת אחת בלבד, לא לעבור לרשת אחרת.',
     'לייק לכל תגובה חדשה. תשובה כתובה רק למה שמצדיק אותה.',
     'בין פעולה לפעולה 8 עד 20 שניות, מרווח שונה בכל פעם.',
@@ -137,7 +143,19 @@ function main() {
   say('גל ' + slot.net + ' בחלון ' + b.name + ', תקרה ' + b.cap + '.');
   if (DRY) return;
   if (!claimLock()) { say('גל אחר עוד רץ. מדלג.'); return; }
-  const child = spawn('claude', ['-p', '--dangerously-skip-permissions'],
+  /*
+    --chrome is the whole reason the first nine waves touched nothing.
+
+    Claude in Chrome is a built in integration rather than an MCP server, and
+    it is off by default in a non interactive session. So every wave the clock
+    opened came up with no browser at all, wrote an honest report saying so,
+    and exited zero. Three of those in one evening read as a scheduler that
+    runs and does nothing, which is worse than one that fails loudly.
+
+    Verified on this machine: with the flag the spawned session lists both of
+    his connected browsers; without it, NO_BROWSER_TOOLS.
+  */
+  const child = spawn('claude', ['-p', '--chrome', '--dangerously-skip-permissions'],
     { cwd: HERE, shell: true, windowsHide: true });
   child.stdin.end(prompt(slot, b), 'utf8');
   let out = '';
