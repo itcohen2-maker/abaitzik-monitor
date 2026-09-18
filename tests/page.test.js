@@ -1535,3 +1535,20 @@ test('the red button is named after where it goes, not after a state', () => {
   assert.ok(html.includes("document.getElementById('nbCount').textContent=c?c:'✓';"));
   assert.ok(html.includes("' שלא קראת. לחיצה פותחת את כולן.'"));
 });
+
+test('every way a phone comes back to the page wakes the check', () => {
+  const html = renderPage(fixture({}));
+  // Itzik, 18.9, on a page whose own line said it had last checked twenty four
+  // minutes ago: "why, because the phone locked? that does not interest me.
+  // the moment I open it, it should update." visibilitychange alone was the
+  // gap: a phone usually restores the page from its back forward cache, which
+  // fires pageshow, and app switching can deliver focus with no visibility
+  // change at all.
+  assert.ok(html.includes('function wake(){ if(!document.hidden) checkFresh(); }'));
+  ['visibilitychange', 'pageshow', 'focus', 'online'].forEach((ev) => {
+    assert.ok(html.includes("EventListener('" + ev + "',wake)"), 'missing ' + ev);
+  });
+  // A check that failed as the phone woke tries again in seconds, not in a
+  // minute, because that is the same complaint in a smaller size.
+  assert.ok(html.includes('setTimeout(function(){if(!document.hidden)checkFresh();},4000);'));
+});

@@ -4402,7 +4402,13 @@ function checkFresh(){
   return r.ok?r.json():null;
  }).then(function(v){
   if(v){lastCheckAt=Date.now();lastCheckFail=false;}
-  else{lastCheckFail=true;}
+  else{
+   lastCheckFail=true;
+   // One quick retry, because the usual reason is a second without signal as
+   // the phone wakes, and making him wait a full minute for that is the same
+   // complaint in a smaller size.
+   setTimeout(function(){if(!document.hidden)checkFresh();},4000);
+  }
   paintStamp();
   if(v)paintLive(v);
   if(!v||!v.builtAt||v.builtAt===D.builtAt)return;
@@ -4447,7 +4453,26 @@ document.addEventListener('click',function(e){
 // Forty seconds, not two minutes. He wants to see that something is alive.
 setInterval(checkFresh,40000);
 setInterval(function(){paintLive(null);paintNew();try{renderReqs();}catch(e){}},20000);
-document.addEventListener('visibilitychange',function(){if(!document.hidden)checkFresh();});
+/*
+  Every way a phone can come back to this page.
+
+  Itzik, 18.9, looking at a page whose own line said it had last checked
+  twenty four minutes ago: "why, because the phone locked? it does not work
+  behind the scenes? that does not interest me. the moment I open it, it should
+  update for me." He is right, and it is not his job to know why.
+
+  visibilitychange alone was the gap. Coming back to a page on a phone does not
+  reliably fire it: the browser often restores the whole page from its back
+  forward cache instead, which fires pageshow with persisted set, and switching
+  between apps can deliver focus without a visibility change at all. So all
+  three wake it, and a check that failed on a dead bar of signal tries again
+  shortly rather than leaving a stale line sitting there until the next minute.
+*/
+function wake(){ if(!document.hidden) checkFresh(); }
+document.addEventListener('visibilitychange',wake);
+window.addEventListener('pageshow',wake);
+window.addEventListener('focus',wake);
+window.addEventListener('online',wake);
 
 
 // The skin. Three states: let the phone decide, force white, force black. The
