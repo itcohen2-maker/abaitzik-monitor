@@ -2036,6 +2036,8 @@ body.editing .bn{display:none}
 .blwho em.blnone{color:var(--gold,#FBBC05)}
 .blwhy{grid-column:2;font:400 13.5px Heebo,sans-serif;color:var(--dim,#9aa7ba);line-height:1.5}
 .blwarn{color:var(--gold,#FBBC05);font-weight:700}
+.blstate{grid-column:2;display:inline-block;margin-inline-start:6px;font:700 12px Heebo,sans-serif;font-style:normal;color:var(--gold,#FBBC05)}
+.blstate.done{color:var(--ok,#34A853)}
 .gt-e{min-height:20px;margin-top:10px;font:600 13.5px Heebo,sans-serif;color:var(--red,#EA4335)}
 </style>
 <script>
@@ -6949,6 +6951,7 @@ function renderBlock(){
    +'<input type="checkbox" data-id="'+esc(p.id)+'"'+(on?' checked':'')+'>'
    +'<span class="blwho"><b>'+esc(p.name||p.id)+'</b>'
    +(p.handle?'<em>@'+esc(p.handle)+'</em>':'<em class="blnone">עוד אין חשבון מזוהה</em>')
+   +(p.state&&p.state!=='ממתין'?'<i class="blstate'+(p.state==='נחסם'?' done':'')+'">'+esc(p.state)+'</i>':'')
    +'</span>'
    +'<span class="blwhy">'+esc(p.why||'')
    +(p.minorCheck?' <b class="blwarn">ילד שלו. תחליט עליו בנפרד.</b>':'')+'</span>'

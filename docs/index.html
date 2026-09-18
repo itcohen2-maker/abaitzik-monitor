@@ -1293,6 +1293,8 @@ body.editing .bn{display:none}
 .blwho em.blnone{color:var(--gold,#FBBC05)}
 .blwhy{grid-column:2;font:400 13.5px Heebo,sans-serif;color:var(--dim,#9aa7ba);line-height:1.5}
 .blwarn{color:var(--gold,#FBBC05);font-weight:700}
+.blstate{grid-column:2;display:inline-block;margin-inline-start:6px;font:700 12px Heebo,sans-serif;font-style:normal;color:var(--gold,#FBBC05)}
+.blstate.done{color:var(--ok,#34A853)}
 .gt-e{min-height:20px;margin-top:10px;font:600 13.5px Heebo,sans-serif;color:var(--red,#EA4335)}
 </style>
 <script>
@@ -1343,7 +1345,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-18T17:46:40.845Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-18T17:47:56.436Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2157,7 +2159,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='d830176889';
+var CODE_ID='eb65366d9c';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -5055,6 +5057,7 @@ function renderBlock(){
    +'<input type="checkbox" data-id="'+esc(p.id)+'"'+(on?' checked':'')+'>'
    +'<span class="blwho"><b>'+esc(p.name||p.id)+'</b>'
    +(p.handle?'<em>@'+esc(p.handle)+'</em>':'<em class="blnone">עוד אין חשבון מזוהה</em>')
+   +(p.state&&p.state!=='ממתין'?'<i class="blstate'+(p.state==='נחסם'?' done':'')+'">'+esc(p.state)+'</i>':'')
    +'</span>'
    +'<span class="blwhy">'+esc(p.why||'')
    +(p.minorCheck?' <b class="blwarn">ילד שלו. תחליט עליו בנפרד.</b>':'')+'</span>'
