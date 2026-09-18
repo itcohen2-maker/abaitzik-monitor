@@ -1343,8 +1343,13 @@ test('the page names no channel, no address and no neighbour', () => {
   ].forEach((leak) => assert.ok(!html.includes(leak), 'still leaks ' + leak));
   // They arrive in the sealed payload and are written in after the unlock.
   assert.ok(html.includes("function secret(k, fallback){"));
-  assert.ok(html.includes("var NTFYIN = secret('ntfyIn');"));
-  assert.ok(html.includes("var MAILBOX = secret('mail');"));
+  // Read at the moment of use, not at parse time. The first version captured
+  // them into vars while D was still empty and they stayed empty for ever; the
+  // first casualty was the microphone, posting to the empty string.
+  assert.ok(html.includes("function NTFYIN(){ return secret('ntfyIn'); }"));
+  assert.ok(html.includes("function MAILBOX(){ return secret('mail'); }"));
+  assert.ok(html.includes("fetch('https://ntfy.sh/' + NTFYIN(), {"));
+  assert.ok(html.includes("fetch('https://formsubmit.co/ajax/' + MAILBOX(), {"));
   assert.ok(html.includes('function paintSecrets(){'));
   assert.ok(html.includes('paintStamp,paintSecrets].forEach'));
   // The build must not fall back to a literal if the private file is missing:

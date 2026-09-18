@@ -1295,7 +1295,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-18T04:14:00.841Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-18T04:15:45.722Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2060,7 +2060,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='6a706a2258';
+var CODE_ID='5851bdab29';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -2089,17 +2089,17 @@ function ensure(keys, fn){
  });
 }
 function secret(k, fallback){ return (D && D.keys && D.keys[k]) || fallback || ''; }
-var MAILBOX = secret('mail');
-var NTFYIN = secret('ntfyIn');
+function MAILBOX(){ return secret('mail'); }
+function NTFYIN(){ return secret('ntfyIn'); }
 function ntfyText(kind, text, gid) {
- return fetch('https://ntfy.sh/' + NTFYIN, {
+ return fetch('https://ntfy.sh/' + NTFYIN(), {
   method: 'POST', headers: { Title: 'monitor' + (gid ? ' ' + gid + ' cap' : ''), 'X-Tags': 'memo' },
   body: [kind, text, '', 'קוד ' + myCode()].join(String.fromCharCode(10))
  }).then(function (r) { if (!r.ok) throw new Error('ntfy'); return 'ok'; });
 }
 function sendText(subject, text, kind) {
  return ntfyText(kind, text).catch(function () {
-  return fetch('https://formsubmit.co/ajax/' + MAILBOX, {
+  return fetch('https://formsubmit.co/ajax/' + MAILBOX(), {
    method: 'POST',
    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
    body: JSON.stringify({ _subject: subject, _template: 'table', 'הודעה': text, 'קוד': myCode() })
@@ -2118,7 +2118,7 @@ function sendFiles(list, note) {
  var n = list.length;
  return list.reduce(function (chain, f, i) {
   return chain.then(function () {
-   return fetch('https://ntfy.sh/' + NTFYIN + '?filename=' + encodeURIComponent(f.name),
+   return fetch('https://ntfy.sh/' + NTFYIN() + '?filename=' + encodeURIComponent(f.name),
     { method: 'PUT', headers: { Title: 'file ' + gid + ' ' + (i + 1) + '/' + n }, body: f })
     .then(function (r) {
      if (!r.ok) throw new Error('ntfy');
@@ -2131,7 +2131,7 @@ function sendFiles(list, note) {
   });
  }, Promise.resolve()).then(function () {
   return ntfyText('קובץ', note, gid).catch(function () {
-   return fetch('https://formsubmit.co/ajax/' + MAILBOX, {
+   return fetch('https://formsubmit.co/ajax/' + MAILBOX(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify({ _subject: 'קובץ מהמוניטור', _template: 'table',
@@ -5805,7 +5805,7 @@ boot('special',renderSpecial);
 boot('replies',renderReplies);
 boot('reqs',renderReqs);
 boot('rivhit',renderRivhit);
-var LIVE_TOPIC=secret('ntfyLive');
+function LIVE_TOPIC(){ return secret('ntfyLive'); }
 var liveLast=null;
 function liveTime(iso){
  var d=new Date(iso);
@@ -5837,7 +5837,7 @@ function paintLive(){
  txt.textContent=liveLast.last?('נקלט '+liveTime(liveLast.last)):'מאזין';
 }
 async function liveFromNtfy(){
- var r=await fetch('https://ntfy.sh/'+LIVE_TOPIC+'/json?poll=1&since=3h',{cache:'no-store'});
+ var r=await fetch('https://ntfy.sh/'+LIVE_TOPIC()+'/json?poll=1&since=3h',{cache:'no-store'});
  var t=(await r.text()).trim();
  var rows=t?t.split(String.fromCharCode(10)):[];
  for(var i=rows.length-1;i>=0;i--){

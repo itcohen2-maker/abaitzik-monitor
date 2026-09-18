@@ -2938,7 +2938,16 @@ function ensure(keys, fn){
   through here instead of from a literal.
 */
 function secret(k, fallback){ return (D && D.keys && D.keys[k]) || fallback || ''; }
-var MAILBOX = secret('mail');
+/*
+  Read at the moment of use, not at the moment the script parses.
+
+  The first version captured these into vars while D was still empty, because
+  with the gate on the page starts with no data at all. They stayed empty for
+  ever, and the first thing that broke was the microphone: the one control the
+  whole screen exists for, posting to the empty string. Caught on the live page
+  before he touched it. A secret that arrives later has to be asked for later.
+*/
+function MAILBOX(){ return secret('mail'); }
 // ntfy is the primary channel for everything the page sends, and FormSubmit is
 // the fallback under it. It was the other way round until 17.9, and the mailbox
 // being first had two costs. FormSubmit's free tier has a daily cap, so on a
@@ -2949,10 +2958,10 @@ var MAILBOX = secret('mail');
 // way is in the chat the same second instead of waiting for a mailbox round.
 // The topic sits in the page source, so it is public: every message carries
 // his code, and anything unsigned is ignored on my side.
-var NTFYIN = secret('ntfyIn');
+function NTFYIN(){ return secret('ntfyIn'); }
 function ntfyText(kind, text, gid) {
  // Headers have to stay ASCII, so the Hebrew all rides in the body.
- return fetch('https://ntfy.sh/' + NTFYIN, {
+ return fetch('https://ntfy.sh/' + NTFYIN(), {
   method: 'POST', headers: { Title: 'monitor' + (gid ? ' ' + gid + ' cap' : ''), 'X-Tags': 'memo' },
   // The page is emitted from a template literal, so a backslash escape here
   // would be eaten at build time. The newline is built from its code point.
@@ -2964,7 +2973,7 @@ function ntfyText(kind, text, gid) {
 // than naming a channel he has no reason to care about.
 function sendText(subject, text, kind) {
  return ntfyText(kind, text).catch(function () {
-  return fetch('https://formsubmit.co/ajax/' + MAILBOX, {
+  return fetch('https://formsubmit.co/ajax/' + MAILBOX(), {
    method: 'POST',
    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
    body: JSON.stringify({ _subject: subject, _template: 'table', 'הודעה': text, 'קוד': myCode() })
@@ -3000,7 +3009,7 @@ function sendFiles(list, note) {
  // remember what he had asked for.
  return list.reduce(function (chain, f, i) {
   return chain.then(function () {
-   return fetch('https://ntfy.sh/' + NTFYIN + '?filename=' + encodeURIComponent(f.name),
+   return fetch('https://ntfy.sh/' + NTFYIN() + '?filename=' + encodeURIComponent(f.name),
     { method: 'PUT', headers: { Title: 'file ' + gid + ' ' + (i + 1) + '/' + n }, body: f })
     .then(function (r) {
      if (!r.ok) throw new Error('ntfy');
@@ -3020,7 +3029,7 @@ function sendFiles(list, note) {
   // he made. Now it is what it should have been: a fallback, sent only when
   // the caption itself did not get through.
   return ntfyText('קובץ', note, gid).catch(function () {
-   return fetch('https://formsubmit.co/ajax/' + MAILBOX, {
+   return fetch('https://formsubmit.co/ajax/' + MAILBOX(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify({ _subject: 'קובץ מהמוניטור', _template: 'table',
@@ -7573,7 +7582,7 @@ boot('rivhit',renderRivhit);
   only reports, which is the whole point. A screen that cannot go red is a
   screen that told him everything was fine for ninety seven minutes.
 */
-var LIVE_TOPIC=secret('ntfyLive');
+function LIVE_TOPIC(){ return secret('ntfyLive'); }
 var liveLast=null;
 function liveTime(iso){
  var d=new Date(iso);
@@ -7644,7 +7653,7 @@ async function liveFromNtfy(){
    newest thing Itzik could see was hours old and the pill called it dead.
    Three hours: several pulses inside the window even if one or two are lost.
  */
- var r=await fetch('https://ntfy.sh/'+LIVE_TOPIC+'/json?poll=1&since=3h',{cache:'no-store'});
+ var r=await fetch('https://ntfy.sh/'+LIVE_TOPIC()+'/json?poll=1&since=3h',{cache:'no-store'});
  var t=(await r.text()).trim();
  var rows=t?t.split(String.fromCharCode(10)):[];
  for(var i=rows.length-1;i>=0;i--){
