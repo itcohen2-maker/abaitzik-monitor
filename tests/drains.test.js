@@ -131,3 +131,21 @@ test('the listener writes the row, not just the chat line', () => {
   assert.equal(files.length, 1, 'a drain send lands in the log by itself');
   assert.equal(JSON.parse(fs.readFileSync(path.join(dir, files[0]), 'utf8')).d1, 65);
 });
+
+// 18.9, in a voice note: "make a column for urine 280, add it to the table."
+// The form writes an equals sign, he does not, and both are the same sentence.
+test('urine is read whether he writes it with an equals sign or without', () => {
+  assert.equal(drains.parse('ניקוזים 1=25 2=לא נמדד 3=לא נמדד 4=50 שתן=280').urine, 280);
+  assert.equal(drains.parse('ניקוזים 1=25 2=לא נמדד 3=לא נמדד 4=50 שתן 280').urine, 280);
+  assert.equal(drains.parse('ניקוזים שתן 280').urine, 280);
+  assert.equal(drains.parse('ניקוזים 1=25 · יצא צלול').urine, null);
+});
+
+test('a urine only send opens a row and keeps the total to the drains', () => {
+  const dir = tmp();
+  const out = drains.record(dir, 'ניקוזים\nניקוזים 1=לא נמדד 2=לא נמדד 3=לא נמדד 4=לא נמדד שתן 300\n\nקוד 1808',
+    new Date(2026, 8, 18, 14, 0, 0));
+  assert.equal(out.row.urine, 300);
+  assert.equal(drains.total(out.row), null);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(dir, '20260918-1400.json'), 'utf8')).urine, 300);
+});

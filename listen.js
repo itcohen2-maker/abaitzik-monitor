@@ -420,7 +420,16 @@ function publishChat() {
   publishing = true;
   execFile('node', ['build.js'], { cwd: __dirname, timeout: 120000 }, function (err, out) {
     if (err) { say('!! build נכשל: ' + String(out).slice(0, 120)); return finish(); }
-    git(['add', '--', 'data/chat', 'docs'], function () {
+    /*
+      The measurement travels with the page.
+
+      The first version committed 'data/chat' and 'docs' only, so a drain row
+      the listener had just written sat uncommitted in the working tree while
+      the published table already showed it. The number on the screen was real
+      and the file behind it was not saved anywhere, which is the wrong half to
+      lose: the page is rebuilt from the file, not the other way round.
+    */
+    git(['add', '--', 'data/chat', 'data/drains', 'docs'], function () {
       git(['commit', '-m', 'listener: received, working on it'], function (err2, out2) {
         if (/nothing to commit/i.test(out2)) return finish();
         if (err2) { say('!! commit נכשל: ' + out2.trim().slice(0, 120)); return finish(); }
