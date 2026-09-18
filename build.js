@@ -6991,12 +6991,26 @@ function renderDrains(){
  */
  var head='<tr><th>יום</th><th>1</th><th>2</th><th>3</th><th>4</th><th>סה״כ</th><th class="drpee">שתן</th></tr>';
  var body='';
+ /*
+   The arrow looks back to the last time that tube was measured, not to the
+   line above it.
+
+   19.9, 00:02: he sent all four tubes, and the round before it was a partial
+   one, drain 1 and drain 4 only. Comparing line to line left drains 2 and 3
+   with no arrow at all, so the screen hid the one thing on it worth seeing:
+   drain 2 had gone from 25 to 0. A row is partial whenever he empties one
+   tube and puts the jug down, which is most rounds, so the comparison has to
+   follow the tube down the column and skip the dots.
+ */
+ function lastOf(from,key){
+  for(var j=from;j<rows.length;j++){if(typeof rows[j][key]==='number')return rows[j][key];}
+  return null;
+ }
  rows.slice(0,30).forEach(function(r,i){
-  var prev=rows[i+1];
   var cells=[1,2,3,4].map(function(n){
    var v=r['d'+n];
    if(typeof v!=='number')return '<td class="drc dim">·</td>';
-   var was=prev&&typeof prev['d'+n]==='number'?prev['d'+n]:null;
+   var was=lastOf(i+1,'d'+n);
    var d=was===null?'':(v-was);
    var arrow=d===''?'':(d<0?'▼':(d>0?'▲':'='));
    var cls=d===''?'':(d<0?' down':(d>0?' up':''));
@@ -7005,7 +7019,7 @@ function renderDrains(){
   }).join('');
   var tot=drainTotal(r);
   var pee=r.urine;
-  var peeWas=prev&&typeof prev.urine==='number'?prev.urine:null;
+  var peeWas=lastOf(i+1,'urine');
   var peeD=(typeof pee!=='number'||peeWas===null)?'':(pee-peeWas);
   body+='<tr class="drrw'+(i?'':' newest')+'">'
    +'<th class="drday">'+esc(stamp(r.at))+'</th>'
@@ -7018,7 +7032,7 @@ function renderDrains(){
    +esc(r.note)+'</td></tr>';
  });
  host.innerHTML='<div class="drwrap"><table class="drtab">'
-  +'<caption>מ״ל, החדש למעלה. החץ הוא ההפרש מהמדידה שלפניה. סה״כ הוא ארבעת הניקוזים בלבד, בלי שתן.</caption>'
+  +'<caption>מ״ל, החדש למעלה. החץ הוא ההפרש מהמדידה הקודמת של אותו ניקוז. סה״כ הוא ארבעת הניקוזים בלבד, בלי שתן.</caption>'
   +'<thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>';
 }
 /*

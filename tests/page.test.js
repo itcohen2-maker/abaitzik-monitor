@@ -1493,7 +1493,7 @@ test('the drain log records four tubes and never judges a number', () => {
   // Zero is a reading, not a gap.
   assert.ok(html.includes('אפס הוא נתון, לא חוסר נתון'));
   // The direction is the point, so each tube carries its change since yesterday.
-  assert.ok(html.includes("var was=prev&&typeof prev['d'+n]==='number'?prev['d'+n]:null;"));
+  assert.ok(html.includes("var was=lastOf(i+1,'d'+n);"));
   assert.ok(html.includes(".drc.down em{color:var(--green,#34A853)}"));
   assert.ok(html.includes(".drc.up em{color:var(--red,#EA4335)}"));
   // It sends down the same road as everything else he says, and writes nothing
@@ -1523,6 +1523,39 @@ test('the drain log is a table, a day to a line and a tube to a column', () => {
   // column out of line.
   assert.ok(html.includes('colspan="7" class="drnote"'));
   assert.ok(html.includes('.drtab{width:100%;border-collapse:collapse;text-align:center}'));
+});
+
+test('the arrow follows the tube down the column and skips the rounds it was not measured in', () => {
+  // 19.9, 00:02: four tubes, on top of a partial round from the afternoon
+  // before that carried drain 1 and drain 4 only. Comparing a row to the row
+  // above it left drains 2 and 3 with no arrow, which hid the only thing on
+  // the screen worth seeing: drain 2 had emptied out, 25 to 0.
+  const html = renderPage(fixture({}));
+  const a = html.indexOf('function drainRows()');
+  const b = html.indexOf('function blTicks()', a);
+  const src = html.slice(a, b);
+  let out = '';
+  const doc = { getElementById: () => ({ set innerHTML(v) { out = v; } }) };
+  new Function('D', 'document', 'esc', 'stamp', src + '; renderDrains();')(
+    {
+      drains: [
+        { at: '2026-09-18T08:41:00+03:00', d1: 65, d2: 25, d3: 0, d4: 60 },
+        { at: '2026-09-18T10:04:20+03:00', d1: 25, d4: 50, urine: 280 },
+        { at: '2026-09-19T00:02:02+03:00', d1: 70, d2: 0, d3: 0, d4: 80 },
+      ],
+      },
+    doc,
+    (s) => String(s),
+    (s) => String(s),
+  );
+  const newest = out.slice(out.indexOf('drrw newest'), out.indexOf('</tr>', out.indexOf('drrw newest')));
+  // Drain 2 fell 25 to 0 across a round it was not measured in, and the table
+  // has to say so.
+  assert.ok(newest.includes('<td class="drc down"><b>0</b><em>▼ 25</em></td>'), newest);
+  // Drain 1 still compares to the measurement right above it.
+  assert.ok(newest.includes('<td class="drc up"><b>70</b><em>▲ 45</em></td>'), newest);
+  // And the caption says which measurement the arrow is against.
+  assert.ok(out.includes('ההפרש מהמדידה הקודמת של אותו ניקוז'));
 });
 
 test('Enter inside the drain form walks to the next tube and does not send', () => {

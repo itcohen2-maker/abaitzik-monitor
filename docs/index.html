@@ -1364,7 +1364,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-18T21:03:54.379Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-18T21:06:21.505Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2181,7 +2181,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='e1581af040';
+var CODE_ID='9282625424';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -5053,12 +5053,15 @@ function renderDrains(){
  }
  var head='<tr><th>יום</th><th>1</th><th>2</th><th>3</th><th>4</th><th>סה״כ</th><th class="drpee">שתן</th></tr>';
  var body='';
+ function lastOf(from,key){
+  for(var j=from;j<rows.length;j++){if(typeof rows[j][key]==='number')return rows[j][key];}
+  return null;
+ }
  rows.slice(0,30).forEach(function(r,i){
-  var prev=rows[i+1];
   var cells=[1,2,3,4].map(function(n){
    var v=r['d'+n];
    if(typeof v!=='number')return '<td class="drc dim">·</td>';
-   var was=prev&&typeof prev['d'+n]==='number'?prev['d'+n]:null;
+   var was=lastOf(i+1,'d'+n);
    var d=was===null?'':(v-was);
    var arrow=d===''?'':(d<0?'▼':(d>0?'▲':'='));
    var cls=d===''?'':(d<0?' down':(d>0?' up':''));
@@ -5067,7 +5070,7 @@ function renderDrains(){
   }).join('');
   var tot=drainTotal(r);
   var pee=r.urine;
-  var peeWas=prev&&typeof prev.urine==='number'?prev.urine:null;
+  var peeWas=lastOf(i+1,'urine');
   var peeD=(typeof pee!=='number'||peeWas===null)?'':(pee-peeWas);
   body+='<tr class="drrw'+(i?'':' newest')+'">'
    +'<th class="drday">'+esc(stamp(r.at))+'</th>'
@@ -5080,7 +5083,7 @@ function renderDrains(){
    +esc(r.note)+'</td></tr>';
  });
  host.innerHTML='<div class="drwrap"><table class="drtab">'
-  +'<caption>מ״ל, החדש למעלה. החץ הוא ההפרש מהמדידה שלפניה. סה״כ הוא ארבעת הניקוזים בלבד, בלי שתן.</caption>'
+  +'<caption>מ״ל, החדש למעלה. החץ הוא ההפרש מהמדידה הקודמת של אותו ניקוז. סה״כ הוא ארבעת הניקוזים בלבד, בלי שתן.</caption>'
   +'<thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>';
 }
 function blTicks(){ return idList('blockTicks'); }
