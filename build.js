@@ -3427,7 +3427,11 @@ function transcriptOf(m){
 function voiceBlock(m){
  if(!hasVoice(m))return '';
  var t=transcriptOf(m);
- return t?'<div class="vtx"><b>תמלול</b>'+esc(t)+'</div>'
+ if(t)return '<div class="vtx"><b>תמלול</b>'+esc(t)+'</div>';
+ // הקלטה ישנה שאין לה תמלול שמור לא מתמללת את עצמה עכשיו. השורה אומרת
+ // מה קרה ולא מבטיחה טקסט שלא יגיע.
+ var age=Date.now()-(Date.parse(m.at||'')||0);
+ return age>600000?'<div class="vtx vwait"><b>תמלול</b>לא נשמר תמלול להקלטה הזאת.</div>'
   :'<div class="vtx vwait"><b>תמלול</b>מתמלל את ההקלטה, התמלול יופיע כאן.</div>';
 }
 function ackLine(m,noNote){

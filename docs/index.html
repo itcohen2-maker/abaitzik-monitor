@@ -1362,7 +1362,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-18T18:12:04.834Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-18T18:13:29.343Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2177,7 +2177,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='b64d786ca0';
+var CODE_ID='b817315f7b';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -2402,7 +2402,9 @@ function transcriptOf(m){
 function voiceBlock(m){
  if(!hasVoice(m))return '';
  var t=transcriptOf(m);
- return t?'<div class="vtx"><b>תמלול</b>'+esc(t)+'</div>'
+ if(t)return '<div class="vtx"><b>תמלול</b>'+esc(t)+'</div>';
+ var age=Date.now()-(Date.parse(m.at||'')||0);
+ return age>600000?'<div class="vtx vwait"><b>תמלול</b>לא נשמר תמלול להקלטה הזאת.</div>'
   :'<div class="vtx vwait"><b>תמלול</b>מתמלל את ההקלטה, התמלול יופיע כאן.</div>';
 }
 function ackLine(m,noNote){
