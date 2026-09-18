@@ -1332,7 +1332,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-18T16:34:22.587Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-18T16:35:18.690Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2131,7 +2131,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='bb31c79e9e';
+var CODE_ID='22f090ab37';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -2387,12 +2387,14 @@ function threadState(){
  var unread=new Set(unreadList().map(ML.keyOf));
  return {unread:unread,standby:standbyMap()};
 }
-function idList(key){
+function idList(key,keep){
  try{
   var v=JSON.parse(localStorage.getItem(key)||'[]');
   if(Array.isArray(v))return v;
-  try{localStorage.removeItem(key);}catch(e2){}
-  try{console.warn('storage key '+key+' was not a list, cleared');}catch(e2){}
+  if(!keep){
+   try{localStorage.removeItem(key);}catch(e2){}
+   try{console.warn('storage key '+key+' was not a list, cleared');}catch(e2){}
+  }
   return [];
  }catch(e){return [];}
 }
@@ -3238,6 +3240,16 @@ function repaintAll(){
    return !ran[n]||bad.indexOf(n)>-1;
   });
  }
+ if(typeof bootFailed!=='undefined'&&bootFailed.length){
+  for(var bi=bootFailed.length-1;bi>=0;bi--){
+   if(ran[bootFailed[bi]]&&bad.indexOf(bootFailed[bi])<0)bootFailed.splice(bi,1);
+  }
+ }
+ try{
+  if(window.__lastFail)Object.keys(ran).forEach(function(n){
+   if(bad.indexOf(n)<0)delete window.__lastFail[n];
+  });
+ }catch(e){}
  if(bad.length){
   window.__repaintFailed=bad;
   if(typeof bootFailed!=='undefined'&&!(GATE&&!GKEY)){
@@ -3720,7 +3732,7 @@ function toggleStar(m){
 function standbyIds(){
  var own=idList('chatParked');
  if(own.length)return own;
- var old=idList('chatStandby');
+ var old=idList('chatStandby',true);
  if(old.length){
   try{localStorage.setItem('chatParked',JSON.stringify(old));}catch(e){}
  }

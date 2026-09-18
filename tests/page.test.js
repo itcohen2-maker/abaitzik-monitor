@@ -1374,6 +1374,14 @@ test('a held boot failure stops being reported once the same render works', () =
   // fails while its screen is closed never shows up in the list above.
   assert.ok(html.includes("try{ renderAnswers(); L.push('ציור התשובות עכשיו: עבר'); }"));
   assert.ok(html.includes("bad.forEach(function(n){if(bootFailed.indexOf(n)<0)bootFailed.push(n);});"));
+  // Itzik, 18.9 19:23, the first dump of the evening: "כשלי טעינה: answers"
+  // with no message under it and no failing render. The name had been pushed
+  // hours before and nothing ever took it off again, so the line was reporting
+  // a fault that no longer existed and would have kept doing it, after the fix
+  // shipped, until he thought to reload. A render that ran and passed comes
+  // off the list, and its stored message goes with it.
+  assert.ok(html.includes('if(ran[bootFailed[bi]]&&bad.indexOf(bootFailed[bi])<0)bootFailed.splice(bi,1);'));
+  assert.ok(html.includes('if(bad.indexOf(n)<0)delete window.__lastFail[n];'));
 });
 
 test('the diagnostic does not read a closed screen or a lazy tail as a fault', () => {
@@ -1675,11 +1683,14 @@ test('a list from the device is a list, and two features never share a key', () 
   // shape, and when the map won, every paint of the answers screen died on the
   // first line that asked the list for indexOf. His red button read 32 with
   // nothing behind it all day while the same code drew thirty cards for me.
-  assert.ok(html.includes('function idList(key){'));
+  assert.ok(html.includes('function idList(key,keep){'));
   assert.ok(html.includes('if(Array.isArray(v))return v;'));
   // A bad value is repaired, not just survived, or the same throw returns on
   // the very next paint.
   assert.ok(html.includes("try{localStorage.removeItem(key);}catch(e2){}"));
+  // Except on the key the two features shared: the parked list reads the old
+  // name to carry it across, and must not delete the map that now owns it.
+  assert.ok(html.includes("var old=idList('chatStandby',true);"));
   // Every reader of a stored list goes through it.
   ['hiddenMsgs', 'touchedIds', 'seenIds', 'starIds'].forEach((fn) => {
     assert.ok(html.includes('function ' + fn + '(){ return idList('), fn + ' must use idList');

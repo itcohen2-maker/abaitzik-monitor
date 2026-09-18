@@ -3412,14 +3412,19 @@ function threadState(){
   page that no longer exist, and it comes back from a browser that may have
   truncated it. One reader, and it always hands back an array.
 */
-function idList(key){
+function idList(key,keep){
  try{
   var v=JSON.parse(localStorage.getItem(key)||'[]');
   if(Array.isArray(v))return v;
-  // Not an array, and not silently: repairing it stops the same throw from
-  // coming back on the next paint, and on every paint after that.
-  try{localStorage.removeItem(key);}catch(e2){}
-  try{console.warn('storage key '+key+' was not a list, cleared');}catch(e2){}
+  // Not an array. Where this key belongs to one feature, repairing it stops the
+  // same throw from coming back on the next paint and on every paint after.
+  // Where a key is shared (chatStandby held a map before the parked list moved
+  // out of it), keep says read it and leave it alone: clearing it there would
+  // throw away the other feature's state to fix this one.
+  if(!keep){
+   try{localStorage.removeItem(key);}catch(e2){}
+   try{console.warn('storage key '+key+' was not a list, cleared');}catch(e2){}
+  }
   return [];
  }catch(e){return [];}
 }
@@ -4493,6 +4498,30 @@ function repaintAll(){
    return !ran[n]||bad.indexOf(n)>-1;
   });
  }
+ /*
+   And the same mercy for the list that is already showing.
+
+   Itzik's first diagnostic today, 19:23, said "כשלי טעינה: answers" and
+   nothing else: no message, no failing render. It was a name pushed here
+   hours earlier that nothing ever took off again. bootFailed only grew. So
+   the line on his screen was not telling him what is broken now, it was
+   telling him what broke once, for as long as the tab stayed open, and after
+   a fix he would have had to know to reload before the page stopped accusing
+   itself. A render that ran and passed is not a failure, and is removed.
+ */
+ if(typeof bootFailed!=='undefined'&&bootFailed.length){
+  for(var bi=bootFailed.length-1;bi>=0;bi--){
+   if(ran[bootFailed[bi]]&&bad.indexOf(bootFailed[bi])<0)bootFailed.splice(bi,1);
+  }
+ }
+ // The stored message goes with it. Otherwise the diagnostic reads "כשלי
+ // טעינה: אין" and then quotes an error underneath it, which is worse than
+ // either line alone.
+ try{
+  if(window.__lastFail)Object.keys(ran).forEach(function(n){
+   if(bad.indexOf(n)<0)delete window.__lastFail[n];
+  });
+ }catch(e){}
  if(bad.length){
   window.__repaintFailed=bad;
   if(typeof bootFailed!=='undefined'&&!(GATE&&!GKEY)){
@@ -5123,7 +5152,7 @@ function standbyIds(){
  var own=idList('chatParked');
  if(own.length)return own;
  // The old key, only if it still holds the shape this feature meant.
- var old=idList('chatStandby');
+ var old=idList('chatStandby',true);
  if(old.length){
   try{localStorage.setItem('chatParked',JSON.stringify(old));}catch(e){}
  }
