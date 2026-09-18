@@ -1211,7 +1211,9 @@ test('a touch anywhere on an answer card marks it read', () => {
   const html = renderPage(fixture());
   const i = html.indexOf("host.querySelectorAll('.ansc')");
   assert.ok(i > -1, 'the cards themselves must be wired, not only the buttons');
-  const block = html.slice(i, i + 700);
+  // The window is generous because the handler carries a comment explaining
+  // why touching turns a card green; the assertions below are what matter.
+  const block = html.slice(i, i + 1600);
   assert.ok(block.includes('markOneSeen'), 'the touch must mark the answer read');
   for (const tag of ["n==='button'", "n==='a'", "n==='input'", "n==='textarea'"]) {
     assert.ok(block.includes(tag), 'a touch on ' + tag + ' must not count as reading');
@@ -1733,4 +1735,18 @@ test('the block list is a list he ticks, and nothing acts on its own', () => {
   assert.ok(html.includes("'<em class=\"blnone\">עוד אין חשבון מזוהה</em>'"));
   // And his children are called out for a separate decision.
   assert.ok(html.includes("p.minorCheck?' <b class=\"blwarn\">ילד שלו. תחליט עליו בנפרד.</b>':''"));
+});
+
+test('touching an answer turns it green even when it is no longer new', () => {
+  const html = renderPage(fixture({}));
+  // 18.9, twice in one evening: "your answers do not turn colour when I touch
+  // them." The card click used to bail out on !isFresh(m), so only a brand new
+  // answer could ever go green. Anything he came back to a second time was a
+  // dead card, and green was unreachable for it.
+  assert.ok(!html.includes("if(!m||!isFresh(m))return;"),
+    "the fresh-only guard is what kept the card grey");
+  // Touching means green. Already green is left alone, so a tap never undoes
+  // his own mark; the טופל button is the only way back.
+  assert.ok(html.includes("if(isDone(m)&&!isFresh(m))return;"));
+  assert.ok(html.includes("markOneSeen(m);renderAnswers();paintDot();"));
 });

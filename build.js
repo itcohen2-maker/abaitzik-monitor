@@ -5496,7 +5496,17 @@ function renderAnswers(){
    var sel=window.getSelection&&window.getSelection();
    if(sel&&String(sel).length>2)return;
    var m=list[Number(card.getAttribute('data-i'))];
-   if(!m||!isFresh(m))return;
+   if(!m)return;
+   /*
+     18.9, and he has said it more than once: "your answers do not turn colour
+     when I touch them." The guard here used to be !isFresh(m), so a card that
+     had stopped being new did nothing at all when he tapped it. It could not
+     go green, because the only path to green ran through fresh. Every answer
+     he came back to a second time was a dead card.
+     Touching means green. Already green stays green; the טופל button is the
+     only way back.
+   */
+   if(isDone(m)&&!isFresh(m))return;
    markOneSeen(m);renderAnswers();paintDot();
   });
  });
