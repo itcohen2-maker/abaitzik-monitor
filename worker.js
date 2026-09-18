@@ -206,10 +206,29 @@ function run(list) {
   // The prompt goes in on stdin, not as an argument. It is long, it is Hebrew,
   // and it quotes him; concatenating it into a Windows command line is a
   // quoting bug waiting for the first message that contains a double quote.
+  /*
+    Detached for real, not just unref'd.
+
+    The first version called child.unref() and thought that was enough, then
+    kept listening on child.stdout and child.stderr. Those pipes are handles:
+    while they are open the dispatcher's event loop will not exit, so it lived
+    for the whole session exactly as before, the scheduled task kept refusing
+    to start another instance with "an instance of this task is already
+    running", and the queue went unwatched again. He said it in four words:
+    "what is happening with the monitor, I have no answers."
+
+    So the output goes straight to a file by descriptor. No listeners, no
+    handles, nothing for the parent to wait on. The log is not lost, it is just
+    written by the child instead of relayed by its parent.
+  */
+  fs.mkdirSync(STATUS, { recursive: true });
+  const outFile = path.join(STATUS, 'session-' + Date.now() + '.log');
+  const fd = fs.openSync(outFile, 'a');
   const child = spawn('claude', ['-p', '--chrome', '--dangerously-skip-permissions'],
-    { cwd: HERE, shell: true, windowsHide: true });
+    { cwd: HERE, shell: true, windowsHide: true, detached: true, stdio: ['pipe', fd, fd] });
   child.stdin.end(text, 'utf8');
   register(child.pid, list.map((m) => m.file));
+  say('סשן ' + child.pid + ' יצא לדרך. הפלט שלו ב' + path.basename(outFile));
   /*
     The dispatcher does not wait for it.
 
@@ -219,19 +238,20 @@ function run(list) {
     a timer inside a process that is meant to be gone.
   */
   child.unref();
-  let out = '';
-  child.stdout.on('data', (b) => { out += b; });
-  child.stderr.on('data', (b) => { out += b; });
-  child.on('close', (code) => {
+  /*
+    Nobody waits for it here.
+
+    A later tick prunes the register when the pid is gone, and the batch it was
+    given stays marked handled. The requeue on failure went with the listeners:
+    it cost a dispatcher that never exits, which is a worse bug than a message
+    that needs saying twice. waiting() already skips anything that got an
+    answer, so a batch that was half done is not answered twice either.
+  */
+  child.on('error', (e) => {
     unregister(child.pid);
-    say('הסשן הסתיים, קוד ' + code + '. ' + String(out).trim().slice(-300).replace(/\s+/g, ' '));
-    // A session that died is not an answer. Marking before the run stops a
-    // crash loop from answering the same thing five times; putting a failed
-    // batch back is what stops the opposite, a message that was marked handled
-    // and never was. The next tick picks it up again.
-    if (code !== 0) unmarkHandled(list);
+    say('!! הסשן לא עלה: ' + e.message);
+    unmarkHandled(list);
   });
-  child.on('error', (e) => { unregister(child.pid); say('!! הסשן לא עלה: ' + e.message); unmarkHandled(list); });
 }
 
 function main() {
