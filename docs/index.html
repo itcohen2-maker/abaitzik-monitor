@@ -1238,6 +1238,13 @@ body.editing .bn{display:none}
 #gateIn:focus{outline:2px solid var(--accent);outline-offset:1px}
 #gateGo{flex:0 0 auto;background:var(--accent,#4285F4);color:#fff;border:0;border-radius:12px;
  padding:0 18px;font:700 15px Heebo,sans-serif;cursor:pointer}
+.ansc .arep{margin:0}
+.ansc .arep>summary{cursor:pointer;font:700 15px Heebo,sans-serif;color:var(--ink,#e8edf5);
+ list-style:none;padding:2px 0;line-height:1.45}
+.ansc .arep>summary::-webkit-details-marker{display:none}
+.ansc .arep>summary::before{content:'C2 ';color:var(--dim,#9aa7ba);font-size:12px}
+.ansc .arep[open]>summary::before{content:'BE '}
+.ansc .arep>.atxt{margin-top:8px;padding-top:8px;border-top:1px solid var(--line,#2a3342)}
 .gt-e{min-height:20px;margin-top:10px;font:600 13.5px Heebo,sans-serif;color:var(--red,#EA4335)}
 </style>
 <script>
@@ -1288,7 +1295,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-18T03:53:24.175Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-18T03:56:03.588Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2056,7 +2063,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='c9c338a17d';
+var CODE_ID='0bab9d6e05';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -3622,6 +3629,15 @@ function allAnswers(){
  });
  return his.concat(mine).concat(cdx).concat(rps).sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
 }
+function ansReport(m){
+ var t=String(m.text||'');
+ var cut=t.indexOf(String.fromCharCode(10));
+ var title=cut<0?t:t.slice(0,cut);
+ var body=cut<0?'':t.slice(cut+1).trim();
+ if(!body)return '<div class="atxt">'+linkify(title)+'</div>';
+ return '<details class="arep"><summary>'+esc(title)+'</summary>'
+  +'<div class="atxt">'+linkify(body)+'</div></details>';
+}
 function ansWho(m){var k=m&&m.src;return k==='codex'?'קודקס':k==='report'?'דוח':k==='itzik'?'אתה':'קלוד';}
 function codexFresh(){
  var seen=seenIds();
@@ -3699,7 +3715,7 @@ function renderAnswers(){
    :(fresh?' · <em class="badge">חדש</em>':(sb?' · סטנד ביי':(done?' · טופל':' · נקרא')));
   return '<div class="ansc'+(his?' mine':' '+ansColor(m))+'" data-i="'+i+'">'
    +'<span class="w">'+ansWho(m)+' · '+esc(stamp(m.at))+mark+'</span>'
-   +'<div class="atxt">'+linkify(m.text)+'</div>'
+   +(m.src==='report'?ansReport(m):'<div class="atxt">'+linkify(m.text)+'</div>')
    +'<div class="arow">'
    +(m.src!=='claude'?'':'<button type="button" class="ab aimb" data-k="'+esc(claudeKey(m))+'">להשיב</button>')
    +'<button type="button" class="ab acopy" data-i="'+i+'">העתקה</button>'
@@ -5709,7 +5725,8 @@ function gateUI(){
  w.id='gateWrap';
  w.innerHTML='<div class="gatecard">'
   +'<b class="gt-t">אבא איציק</b>'
-  +'<div class="gt-s">הדף נעול. תקליד את הקוד פעם אחת והמכשיר הזה יזכור אותו.</div>'
+  +'<div class="gt-s">הדף נעול. תקליד את הקוד פעם אחת והמכשיר הזה יזכור אותו.'
+  +'<br>הקוד נשלח אליך בהתראה לטלפון, בנושא הקוד לפתיחת הדף.</div>'
   +'<form id="gateForm"><input id="gateIn" type="tel" inputmode="numeric" autocomplete="off"'
   +' maxlength="12" placeholder="הקוד"><button type="submit" id="gateGo">פתיחה</button></form>'
   +'<div class="gt-e" id="gateSaid"></div>'
@@ -5726,9 +5743,10 @@ function gateBoot(){
  function load(){
   return fetch('data/head.json?b='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.text():null;})
-   .then(function(t){return t?gopen(t):null;})
+   .then(function(t){return t?gopen(t).then(function(x){return x;},function(){return false;}):null;})
    .then(function(txt){
-    if(!txt)return false;
+    if(txt===false)return false;
+    if(!txt)return null;
     var head=JSON.parse(txt);
     Object.keys(head).forEach(function(k){D[k]=head[k];});
     LAZY=D.lazy||{};
@@ -5742,8 +5760,10 @@ function gateBoot(){
  if(saved){
   crypto.subtle.importKey('raw',gbytes(saved),{name:'AES-GCM'},true,['decrypt'])
    .then(function(k){GKEY=k;return load();})
-   .then(function(ok){if(!ok){GKEY=null;try{localStorage.removeItem('gateKey');}catch(e){}}})
-   .catch(function(){GKEY=null;try{localStorage.removeItem('gateKey');}catch(e){}});
+   .then(function(ok){
+    if(ok===false){GKEY=null;try{localStorage.removeItem('gateKey');}catch(e){}}
+   })
+   .catch(function(){GKEY=null;});
  }
  form.onsubmit=function(e){
   e.preventDefault();
@@ -5754,6 +5774,7 @@ function gateBoot(){
    GKEY=k;
    return load();
   }).then(function(ok){
+   if(ok===null){said.textContent='אין רשת כרגע. נסה שוב עוד רגע.';GKEY=null;return;}
    if(!ok){said.textContent='הקוד לא מתאים.';GKEY=null;return;}
    return crypto.subtle.exportKey('raw',GKEY).then(function(raw){
     try{localStorage.setItem('gateKey',graw(new Uint8Array(raw)));}catch(e){}

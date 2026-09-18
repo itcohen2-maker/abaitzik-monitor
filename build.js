@@ -1914,6 +1914,13 @@ body.editing .bn{display:none}
 #gateIn:focus{outline:2px solid var(--accent);outline-offset:1px}
 #gateGo{flex:0 0 auto;background:var(--accent,#4285F4);color:#fff;border:0;border-radius:12px;
  padding:0 18px;font:700 15px Heebo,sans-serif;cursor:pointer}
+.ansc .arep{margin:0}
+.ansc .arep>summary{cursor:pointer;font:700 15px Heebo,sans-serif;color:var(--ink,#e8edf5);
+ list-style:none;padding:2px 0;line-height:1.45}
+.ansc .arep>summary::-webkit-details-marker{display:none}
+.ansc .arep>summary::before{content:'C2 ';color:var(--dim,#9aa7ba);font-size:12px}
+.ansc .arep[open]>summary::before{content:'BE '}
+.ansc .arep>.atxt{margin-top:8px;padding-top:8px;border-top:1px solid var(--line,#2a3342)}
 .gt-e{min-height:20px;margin-top:10px;font:600 13.5px Heebo,sans-serif;color:var(--red,#EA4335)}
 </style>
 <script>
@@ -4785,6 +4792,28 @@ function allAnswers(){
  });
  return his.concat(mine).concat(cdx).concat(rps).sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
 }
+/*
+  A report is a title until he asks for the rest.
+
+  Putting the reports in with the answers was right: he asked where a report
+  lives and the honest answer had been "one of two screens, depending". But
+  dropping a thousand word round summary in among one line replies turned the
+  screen into what he called a salad, and a list nobody can skim is not one
+  button, it is one heap.
+
+  So a report shows its first line and nothing else until it is opened. The
+  body is in the page either way, so search still finds a word inside a report
+  that is folded shut.
+*/
+function ansReport(m){
+ var t=String(m.text||'');
+ var cut=t.indexOf(String.fromCharCode(10));
+ var title=cut<0?t:t.slice(0,cut);
+ var body=cut<0?'':t.slice(cut+1).trim();
+ if(!body)return '<div class="atxt">'+linkify(title)+'</div>';
+ return '<details class="arep"><summary>'+esc(title)+'</summary>'
+  +'<div class="atxt">'+linkify(body)+'</div></details>';
+}
 function ansWho(m){var k=m&&m.src;return k==='codex'?'קודקס':k==='report'?'דוח':k==='itzik'?'אתה':'קלוד';}
 // Codex answers never had a read mark of their own, so the chat's cut carries
 // them: anything older than the last thing he read counts as read. With no cut
@@ -4868,7 +4897,7 @@ function renderAnswers(){
    :(fresh?' · <em class="badge">חדש</em>':(sb?' · סטנד ביי':(done?' · טופל':' · נקרא')));
   return '<div class="ansc'+(his?' mine':' '+ansColor(m))+'" data-i="'+i+'">'
    +'<span class="w">'+ansWho(m)+' · '+esc(stamp(m.at))+mark+'</span>'
-   +'<div class="atxt">'+linkify(m.text)+'</div>'
+   +(m.src==='report'?ansReport(m):'<div class="atxt">'+linkify(m.text)+'</div>')
    +'<div class="arow">'
    +(m.src!=='claude'?'':'<button type="button" class="ab aimb" data-k="'+esc(claudeKey(m))+'">להשיב</button>')
    +'<button type="button" class="ab acopy" data-i="'+i+'">העתקה</button>'
@@ -7371,7 +7400,8 @@ function gateUI(){
  w.id='gateWrap';
  w.innerHTML='<div class="gatecard">'
   +'<b class="gt-t">אבא איציק</b>'
-  +'<div class="gt-s">הדף נעול. תקליד את הקוד פעם אחת והמכשיר הזה יזכור אותו.</div>'
+  +'<div class="gt-s">הדף נעול. תקליד את הקוד פעם אחת והמכשיר הזה יזכור אותו.'
+  +'<br>הקוד נשלח אליך בהתראה לטלפון, בנושא הקוד לפתיחת הדף.</div>'
   +'<form id="gateForm"><input id="gateIn" type="tel" inputmode="numeric" autocomplete="off"'
   +' maxlength="12" placeholder="הקוד"><button type="submit" id="gateGo">פתיחה</button></form>'
   +'<div class="gt-e" id="gateSaid"></div>'
@@ -7388,9 +7418,12 @@ function gateBoot(){
  function load(){
   return fetch('data/head.json?b='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.text():null;})
-   .then(function(t){return t?gopen(t):null;})
+   // A file that never arrived says nothing about the key. Null means retry,
+   // and only a decrypt that threw means the key is wrong.
+   .then(function(t){return t?gopen(t).then(function(x){return x;},function(){return false;}):null;})
    .then(function(txt){
-    if(!txt)return false;
+    if(txt===false)return false;
+    if(!txt)return null;
     var head=JSON.parse(txt);
     Object.keys(head).forEach(function(k){D[k]=head[k];});
     LAZY=D.lazy||{};
@@ -7405,10 +7438,22 @@ function gateBoot(){
  var saved=null;
  try{saved=localStorage.getItem('gateKey');}catch(e){}
  if(saved){
+  /*
+    A saved key is dropped only when it is proven wrong.
+
+    The first version threw it away whenever the unlock did not complete, which
+    includes a fetch that failed because the phone was on a bad bar of signal.
+    He reported the code being asked for on every single open, and that was
+    this: one flaky request and the device forgot him. A key that decrypts
+    nothing is wrong; a key that never got a file to try is unproven, and
+    unproven is not a reason to make a man retype a code.
+  */
   crypto.subtle.importKey('raw',gbytes(saved),{name:'AES-GCM'},true,['decrypt'])
    .then(function(k){GKEY=k;return load();})
-   .then(function(ok){if(!ok){GKEY=null;try{localStorage.removeItem('gateKey');}catch(e){}}})
-   .catch(function(){GKEY=null;try{localStorage.removeItem('gateKey');}catch(e){}});
+   .then(function(ok){
+    if(ok===false){GKEY=null;try{localStorage.removeItem('gateKey');}catch(e){}}
+   })
+   .catch(function(){GKEY=null;});
  }
  form.onsubmit=function(e){
   e.preventDefault();
@@ -7419,6 +7464,7 @@ function gateBoot(){
    GKEY=k;
    return load();
   }).then(function(ok){
+   if(ok===null){said.textContent='אין רשת כרגע. נסה שוב עוד רגע.';GKEY=null;return;}
    if(!ok){said.textContent='הקוד לא מתאים.';GKEY=null;return;}
    return crypto.subtle.exportKey('raw',GKEY).then(function(raw){
     try{localStorage.setItem('gateKey',graw(new Uint8Array(raw)));}catch(e){}

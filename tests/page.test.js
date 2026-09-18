@@ -1286,3 +1286,27 @@ test('the page carries the lock and, when it is on, no data at all', () => {
   // A key that no longer opens the page is dropped rather than kept for ever.
   assert.ok(html.includes("localStorage.removeItem('gateKey')"));
 });
+
+test('a report in the answers list is a title until it is opened', () => {
+  const html = renderPage(fixture({}));
+  // Itzik, 18.9: "the red button gives me nothing, just a salad." Merging the
+  // reports in was right, but a thousand word round summary next to a one line
+  // reply makes a list nobody can skim, and that is a heap, not one button.
+  assert.ok(html.includes('function ansReport(m){'));
+  assert.ok(html.includes("+(m.src==='report'?ansReport(m):'<div class=\"atxt\">'+linkify(m.text)+'</div>')"));
+  assert.ok(html.includes("'<details class=\"arep\"><summary>'+esc(title)+'</summary>'"));
+  // The body still ships, so the search box finds a word inside a folded report.
+  assert.ok(html.includes("var body=cut<0?'':t.slice(cut+1).trim();"));
+});
+
+test('a saved key is dropped only when it is proven wrong', () => {
+  const html = renderPage(fixture({}));
+  // A fetch that failed on a bad bar of signal used to wipe the cached key and
+  // ask him for the code again on every open. Null means retry; only a decrypt
+  // that threw means the key is wrong.
+  assert.ok(html.includes('if(ok===false){GKEY=null;'));
+  assert.ok(html.includes(".catch(function(){GKEY=null;});"));
+  assert.ok(html.includes("if(txt===false)return false;"));
+  assert.ok(html.includes("if(!txt)return null;"));
+  assert.ok(html.includes("if(ok===null){said.textContent='אין רשת כרגע. נסה שוב עוד רגע.';"));
+});
