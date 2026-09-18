@@ -3395,9 +3395,35 @@ function threadState(){
   going to build without him saying that is what he means. Hidden is reversible
   and it clears his screen, which is what the complaint was about.
 */
-function hiddenMsgs(){
- try{return JSON.parse(localStorage.getItem('msgHidden')||'[]');}catch(e){return [];}
+/*
+  A list from the device is a list, whatever the device kept there.
+
+  Itzik's diagnostic, 18.9, straight off his iPhone:
+    standbyIds().indexOf is not a function
+  Every one of these read a key out of storage, handed it to JSON.parse and
+  trusted the result to be an array. JSON.parse is happy to return {} or null
+  or a number, none of which have Array's indexOf, and one key on his phone was
+  holding exactly that. The throw took the whole answers screen down: he had a
+  red button reading 32 and nothing behind it, all day, while the same code on
+  my machine drew thirty cards every time I looked.
+
+  I cannot know how that key got written, and it does not matter. Storage is
+  not something to trust: it survives builds, it is edited by versions of this
+  page that no longer exist, and it comes back from a browser that may have
+  truncated it. One reader, and it always hands back an array.
+*/
+function idList(key){
+ try{
+  var v=JSON.parse(localStorage.getItem(key)||'[]');
+  if(Array.isArray(v))return v;
+  // Not an array, and not silently: repairing it stops the same throw from
+  // coming back on the next paint, and on every paint after that.
+  try{localStorage.removeItem(key);}catch(e2){}
+  try{console.warn('storage key '+key+' was not a list, cleared');}catch(e2){}
+  return [];
+ }catch(e){return [];}
 }
+function hiddenMsgs(){ return idList('msgHidden'); }
 function hideMsg(key){
  if(!key)return;
  var h=hiddenMsgs();
@@ -3889,9 +3915,7 @@ function markChatSeen(){
 // not the same thing: the first happens once on a new device for the whole
 // history, the second only when his finger lands on that message. The green
 // has to survive a reload, so it is kept here and not only in the class.
-function touchedIds(){
- try{return JSON.parse(localStorage.getItem('chatTouched')||'[]');}catch(e){return [];}
-}
+function touchedIds(){ return idList('chatTouched'); }
 function markTouched(m){
  if(!m)return;
  try{
@@ -3998,9 +4022,7 @@ function floatTile(id,up){
 // the moment I wrote a reply with a timestamp earlier than one already there:
 // a real answer arrived and the button stayed grey. Seen messages are now
 // remembered one by one, so the order they were written in cannot hide one.
-function seenIds(){
- try{return JSON.parse(localStorage.getItem('chatSeenIds')||'[]');}catch(e){return [];}
-}
+function seenIds(){ return idList('chatSeenIds'); }
 function claudeKey(m){return (m.at||'')+'|'+String(m.text||'').slice(0,40);}
 function unreadList(){
  var seen=seenIds();
@@ -5069,9 +5091,7 @@ var ansFilter='all',ansQ='',ansAuto=false;
 // Two hundred cards, each with a recorder and an attach form, is more than a
 // phone should build at once. It draws a page at a time.
 var ansShow=30;
-function starIds(){
- try{return JSON.parse(localStorage.getItem('chatStar')||'[]');}catch(e){return [];}
-}
+function starIds(){ return idList('chatStar'); }
 function isStar(m){return starIds().indexOf(claudeKey(m))>-1;}
 function toggleStar(m){
  try{
@@ -5082,10 +5102,32 @@ function toggleStar(m){
  }catch(e){}
 }
 // Orange, the third colour he asked for on 17.9. Red and green are decided for
-// him by what he read; standby is the one state only he can set, for an answer
-// he saw, did not finish with, and does not want back in the red pile.
+/*
+  Two different things were living in one storage key, and one of them threw.
+
+  Itzik's diagnostic off his iPhone, 18.9: standbyIds().indexOf is not a
+  function. Two unrelated features had both picked the name chatStandby. The
+  one above keeps a MAP of threads he is waiting on, written as {}. This one
+  keeps a LIST of answers he parked, written as []. Whichever wrote last
+  decided the shape, and when the map won, every paint of the answers screen
+  died on the first line that asked the list for indexOf.
+
+  That is why his red button read 32 with nothing behind it all day, and why I
+  could never reproduce it: my own storage happened to hold the list.
+
+  The parked list moves to its own name. Anything already written under the old
+  one is read once and carried across, so a card he parked yesterday does not
+  come back red today.
+*/
 function standbyIds(){
- try{return JSON.parse(localStorage.getItem('chatStandby')||'[]');}catch(e){return [];}
+ var own=idList('chatParked');
+ if(own.length)return own;
+ // The old key, only if it still holds the shape this feature meant.
+ var old=idList('chatStandby');
+ if(old.length){
+  try{localStorage.setItem('chatParked',JSON.stringify(old));}catch(e){}
+ }
+ return old;
 }
 function isStandby(m){return standbyIds().indexOf(claudeKey(m))>-1;}
 function toggleStandby(m){
@@ -5093,7 +5135,7 @@ function toggleStandby(m){
   var s=standbyIds(),k=claudeKey(m),i=s.indexOf(k);
   if(i>-1)s.splice(i,1);else s.push(k);
   if(s.length>400)s=s.slice(-400);
-  localStorage.setItem('chatStandby',JSON.stringify(s));
+  localStorage.setItem('chatParked',JSON.stringify(s));
  }catch(e){}
 }
 // One card, one colour. Yellow beats orange beats red beats green, so a mark he
