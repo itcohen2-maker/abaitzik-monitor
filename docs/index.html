@@ -1362,7 +1362,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-18T19:01:52.328Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-18T19:04:14.969Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2179,7 +2179,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='6aa09dd25b';
+var CODE_ID='140566b31a';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -3981,7 +3981,8 @@ function renderAnswers(){
    var sel=window.getSelection&&window.getSelection();
    if(sel&&String(sel).length>2)return;
    var m=list[Number(card.getAttribute('data-i'))];
-   if(!m||!isFresh(m))return;
+   if(!m)return;
+   if(isDone(m)&&!isFresh(m))return;
    markOneSeen(m);renderAnswers();paintDot();
   });
  });
