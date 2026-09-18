@@ -30,3 +30,7 @@ video/banana/gen.log
 
 # The monitor's passphrase. Never committed: the repo is public.
 gate-key.txt
+
+# Lead screenshots. They show other people, one of them a minor, and docs/ is
+# served in the clear. The originals stay in data/files-private.
+docs/files/lead-*
