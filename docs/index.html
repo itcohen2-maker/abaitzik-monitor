@@ -1295,7 +1295,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-18T04:56:02.897Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-18T05:02:14.719Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2060,7 +2060,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='969eb6951c';
+var CODE_ID='d801576a6b';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -2080,12 +2080,18 @@ function ensure(keys, fn){
    try{paintDot();}catch(e){}
   };
   if(!window.fetch){lazyDone[k]=true;end();return;}
-  fetch(url,{cache:'force-cache'}).then(function(r){
-   return r.ok?gjson(r):null;
-  }).then(function(v){
-   if(Array.isArray(v))D[k]=v;
-   lazyDone[k]=true;
-  },function(){}).then(end,end);
+  var attempt=function(opts,again){
+   return fetch(url,opts).then(function(r){
+    return r.ok?gjson(r):null;
+   }).then(function(v){
+    if(Array.isArray(v)){D[k]=v;lazyDone[k]=true;return;}
+    if(again)return attempt({cache:'reload'},false);
+    lazyDone[k]=true;
+   },function(){
+    if(again)return attempt({cache:'reload'},false);
+   });
+  };
+  attempt({cache:'force-cache'},true).then(end,end);
  });
 }
 function secret(k, fallback){ return (D && D.keys && D.keys[k]) || fallback || ''; }
@@ -3716,6 +3722,17 @@ function renderAnswers(){
  var full=ansList();
  var list=full.slice(0,ansShow);
  if(!full.length){
+  if(!allAnswers().length){
+   host.innerHTML='<div class="aempty">התשובות עוד לא נטענו.'
+    +'<button type="button" class="ab" id="ansRetry">טעינה מחדש</button></div>';
+   var rb=document.getElementById('ansRetry');
+   if(rb)rb.onclick=function(){
+    lazyDone={};lazyWait={};
+    ensure(['chat','codex','reports'],function(){renderAnswers();paintAnsCount();});
+    toast('מנסה לטעון שוב.');
+   };
+   return;
+  }
   host.innerHTML='<div class="aempty">אין כאן כלום בסינון הזה.</div>';
   return;
  }
@@ -4007,6 +4024,18 @@ document.getElementById('plusBtn').onclick=function(){
   toast('הוסתר. אפשר להחזיר הכל בהגדרות.');
  });
 })();
+function landPane(id){
+ var go=function(){
+  var sec=document.getElementById(id);
+  if(!sec||sec.hidden)return;
+  var h=sec.querySelector('h2')||sec;
+  var top=h.getBoundingClientRect().top+(window.pageYOffset||0);
+  try{window.scrollTo(0,top<260?0:top-12);}catch(e){}
+ };
+ go();
+ if(window.requestAnimationFrame)requestAnimationFrame(function(){requestAnimationFrame(go);});
+ else setTimeout(go,60);
+}
 function openAnswers(filter){
  ansShow=30;
  var pick=function(f){
@@ -4015,16 +4044,24 @@ function openAnswers(filter){
  };
  ansAuto=true;
  pick(filter);
- pane('a');renderAnswers();
+ pane('a');renderAnswers();landPane('pA');
  ensure(['chat','codex','reports'],function(){
   if(ansAuto&&ansFilter==='all')pick(filter);
-  renderAnswers();paintAnsCount();
+  renderAnswers();paintAnsCount();landPane('pA');
  });
 }
 document.getElementById('newBtn').onclick=function(){
- var n=unreadCount();
- if(n)beep();
- openAnswers(n?'fresh':'all');
+ var n=0;
+ try{
+  n=unreadCount();
+  if(n)beep();
+  openAnswers(n?'fresh':'all');
+  var shown=ansList().length;
+  toast(n?('נפתחו '+n+' תשובות שלא קראת')
+   :('מסך התשובות, '+shown+' פריטים. הכל נקרא.'));
+ }catch(e){
+  toast('מסך התשובות לא נפתח. לחיצה על רענן ואז שוב.');
+ }
 };
 function renderUnread(){
  var host=document.getElementById('unreadBox');
@@ -5943,7 +5980,7 @@ boot('reset',function(){
 boot('gate',gateBoot);
 boot('pane',function(){
  if(location.hash==='#new'||location.hash==='#chat'){
-  pane('a');renderAnswers();
+  pane('a');renderAnswers();landPane('pA');
  }
  else pane('h');
 });
