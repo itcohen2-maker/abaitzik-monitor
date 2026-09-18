@@ -3981,6 +3981,17 @@ function unreadList(){
  var floor=D.resetSeenAt||'';
  return (D.chat||[]).filter(function(m){
   if(m.from!=='claude')return false;
+  /*
+    Counted and shown have to be the same set.
+
+    Itzik, 18.9: "it says nineteen unread, I press the red button, zero
+    messages." Both numbers were honest and they counted different things. This
+    list took every answer of mine; the screen it opens is built by
+    allAnswers(), which drops the mail ones. A backlog made of mail therefore
+    produced a badge with nothing behind it, and a red button that opens on an
+    empty screen is the monitor telling him it lost his messages.
+  */
+  if(isMail(m))return false;
   // The floor matters now that the history arrives after the page. Without it,
   // every old answer would turn red the moment the chat file landed, because
   // the read marks only cover what was on screen when he read them.
@@ -5599,6 +5610,33 @@ document.getElementById('newBtn').onclick=function(){
   toast('מסך התשובות לא נפתח. לחיצה על רענן ואז שוב.');
  }
 };
+/*
+  The red button must never land on an empty screen.
+
+  Itzik, 18.9: "it says nineteen unread, I press the red button, zero
+  messages." The cause was two filters disagreeing and that is fixed above, in
+  the one place both of them read from. This is the belt for that brace:
+  whatever the reason, "nothing here" from the button that says there are
+  messages is the one thing he must never be shown. If the unread filter comes
+  up empty the screen opens on everything instead and says so, because a wrong
+  screenful is recoverable and a blank one is not.
+*/
+(function(){
+ var orig=openAnswers;
+ openAnswers=function(filter){
+  orig(filter);
+  if(filter!=='fresh')return;
+  if(ansList().length)return;
+  ansFilter='all';ansShow=30;renderAnswers();
+  var host=document.getElementById('ansBox');
+  if(host&&host.firstChild){
+   var n=document.createElement('div');
+   n.className='aempty';
+   n.textContent='לא מצאתי הודעות שלא נקראו, אז פתחתי את הכל.';
+   host.insertBefore(n,host.firstChild);
+  }
+ };
+})();
 function renderUnread(){
  var host=document.getElementById('unreadBox');
  if(!host)return;

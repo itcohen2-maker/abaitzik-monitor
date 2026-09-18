@@ -1499,3 +1499,21 @@ test('nothing ends up underneath the floating bottom bar', () => {
   // The bar it makes room for.
   assert.ok(html.includes('.bn{position:fixed;inset-inline:0;bottom:0;z-index:20;'));
 });
+
+test('the red button counts exactly what it is about to show', () => {
+  const html = renderPage(fixture({}));
+  // Itzik, 18.9: "it says nineteen unread, I press the red button, zero
+  // messages." Both numbers were honest and counted different things: the
+  // unread list took every answer of mine, the screen it opens drops the mail
+  // ones. A backlog of mail gave a badge with nothing behind it.
+  assert.ok(html.includes('if(isMail(m))return false;'));
+  const unread = html.indexOf('function unreadList(){');
+  const mailFilter = html.indexOf('if(isMail(m))return false;', unread);
+  const endOfUnread = html.indexOf('function unreadCount()', unread);
+  assert.ok(mailFilter > unread && mailFilter < endOfUnread, 'the filter is inside unreadList');
+  // And the belt for that brace: whatever the reason, the button that says
+  // there are messages must never land on an empty screen.
+  assert.ok(html.includes("if(filter!=='fresh')return;"));
+  assert.ok(html.includes('if(ansList().length)return;'));
+  assert.ok(html.includes('לא מצאתי הודעות שלא נקראו, אז פתחתי את הכל.'));
+});

@@ -1327,7 +1327,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-18T09:48:07.075Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-18T09:51:19.991Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2117,7 +2117,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='7028326e4c';
+var CODE_ID='606326c2f1';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -2910,6 +2910,7 @@ function unreadList(){
  var floor=D.resetSeenAt||'';
  return (D.chat||[]).filter(function(m){
   if(m.from!=='claude')return false;
+  if(isMail(m))return false;
   if(floor&&(m.at||'')<=floor)return false;
   if(seen.indexOf(claudeKey(m))>-1)return false;
   if(!seen.length&&cut&&(m.at||'')<=cut)return false;
@@ -4122,6 +4123,22 @@ document.getElementById('newBtn').onclick=function(){
   toast('מסך התשובות לא נפתח. לחיצה על רענן ואז שוב.');
  }
 };
+(function(){
+ var orig=openAnswers;
+ openAnswers=function(filter){
+  orig(filter);
+  if(filter!=='fresh')return;
+  if(ansList().length)return;
+  ansFilter='all';ansShow=30;renderAnswers();
+  var host=document.getElementById('ansBox');
+  if(host&&host.firstChild){
+   var n=document.createElement('div');
+   n.className='aempty';
+   n.textContent='לא מצאתי הודעות שלא נקראו, אז פתחתי את הכל.';
+   host.insertBefore(n,host.firstChild);
+  }
+ };
+})();
 function renderUnread(){
  var host=document.getElementById('unreadBox');
  if(!host)return;
