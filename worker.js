@@ -207,58 +207,39 @@ function run(list) {
   // and it quotes him; concatenating it into a Windows command line is a
   // quoting bug waiting for the first message that contains a double quote.
   /*
-    Three attempts at this on 18.9, and the measurements that settled it.
+    The dispatcher waits for its session, and that is allowed now.
 
-    First: write to child.stdin and listen on child.stdout. The listeners are
-    handles, so the dispatcher never exited, the scheduled task kept refusing to
-    start another instance, and nobody watched the queue.
+    Four versions of this today, three of them mine and all three wrong in the
+    same direction: I kept trying to make the dispatcher exit early so the
+    scheduled task would not refuse the next tick. Detaching broke the stdin
+    pipe. A file redirect produced nothing, measured twice. Unref'ing before the
+    pipe flushed truncated a four kilobyte Hebrew prompt. Every one of them
+    ended as an empty log file and a message of his going unanswered, and he
+    spent a morning watching it.
 
-    Second: detach it. That killed the stdin pipe instead. Four sessions in a
-    row spawned and wrote zero bytes while five of his messages sat on "working
-    on it" for two hours. He watched it happen and said he had lost control of
-    his own monitor, and he was right. Redirecting the prompt in from a file
-    instead of a pipe does not help either: claude reads a pipe and produces
-    nothing from a file redirect, measured twice.
+    The error was the level. Nothing was wrong with piping a prompt into a
+    session and waiting for it; what was wrong was a scheduled task set to
+    IgnoreNew, so one long session silenced every later tick. That is one
+    setting, and it is now Parallel. The dispatcher may take as long as its
+    session takes, because another dispatcher is free to start beside it, and
+    the count that stops a fourth one is the register below.
 
-    Third, and this is the one: keep the stdin pipe, because that is the only
-    way it reads, and send the output to open file descriptors, because a
-    descriptor is not a listener and holds nothing. Then unref, and do not
-    detach. Measured on this machine: the dispatcher exits in 0.7 seconds and
-    the child writes its answer.
-
-    Anything changed here gets measured the same way before it ships. This cost
-    him a morning.
+    Back to what worked for months, and the concurrency comes from the task.
   */
-  fs.mkdirSync(STATUS, { recursive: true });
-  const outFile = path.join(STATUS, 'session-' + Date.now() + '.log');
-  const fd = fs.openSync(outFile, 'a');
   const child = spawn('claude', ['-p', '--chrome', '--dangerously-skip-permissions'],
-    { cwd: HERE, shell: true, windowsHide: true, stdio: ['pipe', fd, fd] });
-  /*
-    Unref only after the prompt has actually left.
-
-    The probe passed with a one line prompt and the real thing died with a four
-    kilobyte Hebrew one, which is the whole tell: end() is asynchronous, unref()
-    took the last handle away, and the dispatcher exited before the pipe had
-    flushed. The session then read a truncated prompt, or none, and died
-    writing nothing. That is the fourth version of this bug today and the third
-    that produced an empty log file.
-
-    The callback fires when the bytes are gone. Until then the pipe holds the
-    process up, which is milliseconds, not the length of the session.
-  */
-  child.stdin.end(text, 'utf8', () => { child.unref(); });
-  /*
-    Nobody waits for it here.
-
-    A later tick prunes the register when the pid is gone, and the batch it was
-    given stays marked handled. The requeue on failure went with the listeners:
-    it cost a dispatcher that never exits, which is a worse bug than a message
-    that needs saying twice. waiting() already skips anything that got an
-    answer, so a batch that was half done is not answered twice either.
-  */
+    { cwd: HERE, shell: true, windowsHide: true });
+  child.stdin.end(text, 'utf8');
+  register(process.pid, list.map((m) => m.file));
+  let out = '';
+  child.stdout.on('data', (b2) => { out += b2; });
+  child.stderr.on('data', (b2) => { out += b2; });
+  child.on('close', (code) => {
+    unregister(process.pid);
+    say('הסשן הסתיים, קוד ' + code + '. ' + String(out).trim().slice(-300).replace(/\s+/g, ' '));
+    if (code !== 0) unmarkHandled(list);
+  });
   child.on('error', (e) => {
-    unregister(child.pid);
+    unregister(process.pid);
     say('!! הסשן לא עלה: ' + e.message);
     unmarkHandled(list);
   });

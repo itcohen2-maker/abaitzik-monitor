@@ -1319,7 +1319,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-18T08:03:02.759Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-18T08:05:06.146Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2109,7 +2109,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='caa3c559b8';
+var CODE_ID='a7386fc78d';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -2907,7 +2907,7 @@ function unreadList(){
   return true;
  });
 }
-function unreadCount(){return unreadList().length;}
+function unreadCount(){return allAnswers().filter(isFresh).length;}
 function renderNew(){
  renderSent();
  paintAnsCount();
@@ -4105,8 +4105,9 @@ document.getElementById('newBtn').onclick=function(){
   n=unreadCount();
   if(n)beep();
   openAnswers(n?'fresh':'all');
-  var shown=ansList().length;
-  toast(n?('נפתחו '+n+' תשובות שלא קראת')
+  var shown=document.querySelectorAll('#ansBox .ansc').length;
+  toast(n?(shown?('נפתחו '+shown+' תשובות שלא קראת')
+    :'המסך נפתח ריק. לחיצה על רענן ואז שוב.')
    :('מסך התשובות, '+shown+' פריטים. הכל נקרא.'));
  }catch(e){
   toast('מסך התשובות לא נפתח. לחיצה על רענן ואז שוב.');
@@ -4884,28 +4885,32 @@ function renderDrains(){
   host.innerHTML='<div class="empty">עוד לא נרשמה מדידה. תמלא את המספרים למעלה ותשלח, גם אם אחד מהם אפס.</div>';
   return;
  }
- var html='';
+ var head='<tr><th>יום</th><th>1</th><th>2</th><th>3</th><th>4</th><th>סה״כ</th></tr>';
+ var body='';
  rows.slice(0,30).forEach(function(r,i){
   var prev=rows[i+1];
   var cells=[1,2,3,4].map(function(n){
    var v=r['d'+n];
-   if(typeof v!=='number')return '<span class="drc dim">'+n+': ·</span>';
+   if(typeof v!=='number')return '<td class="drc dim">·</td>';
    var was=prev&&typeof prev['d'+n]==='number'?prev['d'+n]:null;
    var d=was===null?'':(v-was);
    var arrow=d===''?'':(d<0?'▼':(d>0?'▲':'='));
    var cls=d===''?'':(d<0?' down':(d>0?' up':''));
-   return '<span class="drc'+cls+'">'+n+': <b>'+v+'</b>'
-    +(d===''?'':' <em>'+arrow+' '+Math.abs(d)+'</em>')+'</span>';
+   return '<td class="drc'+cls+'"><b>'+v+'</b>'
+    +(d===''?'':'<em>'+arrow+' '+Math.abs(d)+'</em>')+'</td>';
   }).join('');
   var tot=drainTotal(r);
-  html+='<div class="drday'+(i?'':' newest')+'">'
-   +'<div class="drhead">'+esc(stamp(r.at))
-   +(tot===null?'':' · <b>סה״כ '+tot+' מ״ל</b>')+'</div>'
-   +'<div class="drcells">'+cells+'</div>'
-   +(r.note?'<div class="drnote">'+esc(r.note)+'</div>':'')
-   +'</div>';
+  body+='<tr class="drrw'+(i?'':' newest')+'">'
+   +'<th class="drday">'+esc(stamp(r.at))+'</th>'
+   +cells
+   +'<td class="drtot">'+(tot===null?'·':tot)+'</td>'
+   +'</tr>';
+  if(r.note)body+='<tr class="drnrow'+(i?'':' newest')+'"><td colspan="6" class="drnote">'
+   +esc(r.note)+'</td></tr>';
  });
- host.innerHTML=html;
+ host.innerHTML='<div class="drwrap"><table class="drtab">'
+  +'<caption>מ״ל ליממה, החדש למעלה. החץ הוא ההפרש מהמדידה שלפניה.</caption>'
+  +'<thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>';
 }
 function openDrains(){pane('j');renderDrains();ensure('drains',renderDrains);}
 on('gDrains',openDrains);
@@ -5798,8 +5803,8 @@ on('arrangeBtn',function(){
 function markAllRead(cutoff){
  try{
   var seen=seenIds(),t=touchedIds();
-  (D.chat||[]).forEach(function(m){
-   if(m.from!=='claude')return;
+  (D.chat||[]).concat(D.codex||[]).forEach(function(m){
+   if(m.from!=='claude'&&m.from!=='codex')return;
    if(cutoff&&(m.at||'')>cutoff)return;
    var k=claudeKey(m);
    if(seen.indexOf(k)<0)seen.push(k);

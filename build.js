@@ -3965,7 +3965,21 @@ function unreadList(){
   return true;
  });
 }
-function unreadCount(){return unreadList().length;}
+/*
+  The number on the red button is the length of the list it opens. Nothing else.
+
+  Itzik, 18.09 08:43, on a button reading five: "כתוב 5 הודעות שלא קראת. אין
+  כלום שם". It had been counted from unreadList and shown from the answers
+  list, and those are two different sets: a mail answer, or anything else the
+  answers screen does not carry, was counted here and could never appear
+  there. Patching the landing was treating the symptom. The count is now taken
+  from the very cards the fresh filter renders, so a button saying five cannot
+  open on nothing: if there is nothing to show it says nothing to show.
+
+  It reads zero while the chat file is still on its way, which is the honest
+  answer at that moment, and it goes red by itself when the file lands.
+*/
+function unreadCount(){return allAnswers().filter(isFresh).length;}
 function renderNew(){
  renderSent();
  paintAnsCount();
@@ -5547,8 +5561,12 @@ document.getElementById('newBtn').onclick=function(){
   n=unreadCount();
   if(n)beep();
   openAnswers(n?'fresh':'all');
-  var shown=ansList().length;
-  toast(n?('נפתחו '+n+' תשובות שלא קראת')
+  // Counted off the screen and not off the data, so the line cannot promise
+  // cards that are not there. If it ever says zero with a red button, that is
+  // the truth arriving instead of a number that lied.
+  var shown=document.querySelectorAll('#ansBox .ansc').length;
+  toast(n?(shown?('נפתחו '+shown+' תשובות שלא קראת')
+    :'המסך נפתח ריק. לחיצה על רענן ואז שוב.')
    :('מסך התשובות, '+shown+' פריטים. הכל נקרא.'));
  }catch(e){
   toast('מסך התשובות לא נפתח. לחיצה על רענן ואז שוב.');
@@ -6486,28 +6504,45 @@ function renderDrains(){
   host.innerHTML='<div class="empty">עוד לא נרשמה מדידה. תמלא את המספרים למעלה ותשלח, גם אם אחד מהם אפס.</div>';
   return;
  }
- var html='';
+ /*
+   Itzik, 18.09, by voice: "תוסיף טבלה פה בניקוזים".
+
+   A card a day reads fine for one day and badly for ten: the only thing worth
+   seeing here is one tube down the page over a week, and cards put the four
+   tubes across the page instead. A table puts a day on a line and a tube in a
+   column, so the column is the direction and the eye does the work.
+
+   The arrow stays with the number and keeps the colour, because green and red
+   on the number itself would be the screen judging the measurement, and it
+   does not. A note hangs under its own day, across the width, where it cannot
+   push a column out of line.
+ */
+ var head='<tr><th>יום</th><th>1</th><th>2</th><th>3</th><th>4</th><th>סה״כ</th></tr>';
+ var body='';
  rows.slice(0,30).forEach(function(r,i){
   var prev=rows[i+1];
   var cells=[1,2,3,4].map(function(n){
    var v=r['d'+n];
-   if(typeof v!=='number')return '<span class="drc dim">'+n+': ·</span>';
+   if(typeof v!=='number')return '<td class="drc dim">·</td>';
    var was=prev&&typeof prev['d'+n]==='number'?prev['d'+n]:null;
    var d=was===null?'':(v-was);
    var arrow=d===''?'':(d<0?'▼':(d>0?'▲':'='));
    var cls=d===''?'':(d<0?' down':(d>0?' up':''));
-   return '<span class="drc'+cls+'">'+n+': <b>'+v+'</b>'
-    +(d===''?'':' <em>'+arrow+' '+Math.abs(d)+'</em>')+'</span>';
+   return '<td class="drc'+cls+'"><b>'+v+'</b>'
+    +(d===''?'':'<em>'+arrow+' '+Math.abs(d)+'</em>')+'</td>';
   }).join('');
   var tot=drainTotal(r);
-  html+='<div class="drday'+(i?'':' newest')+'">'
-   +'<div class="drhead">'+esc(stamp(r.at))
-   +(tot===null?'':' · <b>סה״כ '+tot+' מ״ל</b>')+'</div>'
-   +'<div class="drcells">'+cells+'</div>'
-   +(r.note?'<div class="drnote">'+esc(r.note)+'</div>':'')
-   +'</div>';
+  body+='<tr class="drrw'+(i?'':' newest')+'">'
+   +'<th class="drday">'+esc(stamp(r.at))+'</th>'
+   +cells
+   +'<td class="drtot">'+(tot===null?'·':tot)+'</td>'
+   +'</tr>';
+  if(r.note)body+='<tr class="drnrow'+(i?'':' newest')+'"><td colspan="6" class="drnote">'
+   +esc(r.note)+'</td></tr>';
  });
- host.innerHTML=html;
+ host.innerHTML='<div class="drwrap"><table class="drtab">'
+  +'<caption>מ״ל ליממה, החדש למעלה. החץ הוא ההפרש מהמדידה שלפניה.</caption>'
+  +'<thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>';
 }
 function openDrains(){pane('j');renderDrains();ensure('drains',renderDrains);}
 on('gDrains',openDrains);
@@ -7620,8 +7655,12 @@ on('arrangeBtn',function(){
 function markAllRead(cutoff){
  try{
   var seen=seenIds(),t=touchedIds();
-  (D.chat||[]).forEach(function(m){
-   if(m.from!=='claude')return;
+  // Codex answers are counted on the button too, so this has to be able to
+  // clear them. Without them here the count would stick above zero right after
+  // a press that promises everything is read, which is the same complaint in
+  // a new place.
+  (D.chat||[]).concat(D.codex||[]).forEach(function(m){
+   if(m.from!=='claude'&&m.from!=='codex')return;
    if(cutoff&&(m.at||'')>cutoff)return;
    var k=claudeKey(m);
    if(seen.indexOf(k)<0)seen.push(k);

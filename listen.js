@@ -30,6 +30,7 @@ const ch = require('./lib/notify-channels.js');
 const codexBridge = require('./codex-bridge.js');
 const codexRoute = require('./lib/codex-route.js');
 const group = require('./lib/group.js');
+const drains = require('./lib/drains.js');
 const { execFile } = require('child_process');
 
 const TOPIC = 'abaitzik-in-95e62e86c34f4853';
@@ -43,6 +44,8 @@ const PULLS = path.join(STATUS, 'pulls.json');
 // against real files without writing into his actual conversation.
 const CHAT = process.env.ABAITZIK_CHAT_DIR
   || path.join(__dirname, 'data', 'chat', 'chat');
+const DRAINS = process.env.ABAITZIK_DRAINS_DIR
+  || path.join(__dirname, 'data', 'drains', 'drains');
 
 /*
   How often the pulse goes out.
@@ -332,12 +335,40 @@ function recordIncoming(m) {
     fs.mkdirSync(CHAT, { recursive: true });
     fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
     say('נרשם בצ׳אט עם אישור קבלה: ' + text.slice(0, 60));
+    recordDrain(text, at);
     if (gid) groupFiles.set(gid, { name: name, files: files, caption: caption.trim() });
     if (attach && group.isAudio(attach)) {
       transcribeLater(path.join(DROP, attach), name);
     }
     return true;
   } catch (e) { say('!! לא נרשם בצ׳אט: ' + e.message); return false; }
+}
+
+/*
+  A measurement is written the moment it lands.
+
+  The drain screen sends one line per submit, and on 18.9 he sent four of them
+  a few seconds apart, one tube at a time. The chat held all four and the log
+  held nothing, until a session read them by eye at 10:58 and typed the row in.
+  Two hours is not a log, it is a memory, and it only worked because a session
+  happened to be running.
+
+  So the listener writes it itself. It never overwrites a number with "לא
+  נמדד", a number that contradicts an earlier one becomes a correction line in
+  the note, and a failure here is said out loud rather than swallowed: the chat
+  record is already safe on disk, so the worst case is the old one, a session
+  writing the row by hand, and now it at least knows that it has to.
+*/
+function recordDrain(text, at) {
+  let out;
+  try { out = drains.record(DRAINS, text, at); }
+  catch (e) { say('!! מדידת ניקוזים לא נרשמה: ' + e.message); return; }
+  if (!out) return;
+  const tot = drains.total(out.row);
+  say('ניקוזים נרשמו ב' + out.file + ': '
+    + [1, 2, 3, 4].map(n => n + '=' + (typeof out.row['d' + n] === 'number' ? out.row['d' + n] : '·')).join(' ')
+    + (tot === null ? '' : ' · סה״כ ' + tot)
+    + (out.fixed.length ? ' · ' + out.fixed.join(' · ') : ''));
 }
 
 /*
@@ -527,7 +558,7 @@ function releaseLock() {
   process.on(sig, function () { releaseLock(); if (sig !== 'exit') process.exit(0); });
 });
 
-module.exports = { recordIncoming, isSystemText };
+module.exports = { recordIncoming, isSystemText, recordDrain };
 
 /*
   Requiring this file must not open a connection or claim the lock. A test that
