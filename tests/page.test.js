@@ -1333,8 +1333,12 @@ test('a page that is still locked does not cry that it failed to load', () => {
   // on the way past. They run again the moment he unlocks. Counting those as
   // failures put a red "part of the screen did not load" across the top of a
   // page that was working, which is how he saw it on his phone.
-  assert.ok(html.includes('if(GATE&&!GKEY)bootFailed.length=0;'));
-  assert.ok(html.indexOf('if(GATE&&!GKEY)bootFailed.length=0;') < html.indexOf('if(bootFailed.length){'));
+  assert.ok(html.includes('if(GATE&&!GKEY){'));
+  assert.ok(html.indexOf('if(GATE&&!GKEY){') < html.indexOf('if(bootFailed.length){'));
+  // Held, not thrown away: a real failure after the unlock still has a way to
+  // reach the screen. Clearing it outright hid the class of bug that left him
+  // looking at an answers screen with nothing on it at all.
+  assert.ok(html.includes('window.__heldBootFails=held;'));
 });
 
 test('the page names no channel, no address and no neighbour', () => {
@@ -1551,4 +1555,20 @@ test('every way a phone comes back to the page wakes the check', () => {
   // A check that failed as the phone woke tries again in seconds, not in a
   // minute, because that is the same complaint in a smaller size.
   assert.ok(html.includes('setTimeout(function(){if(!document.hidden)checkFresh();},4000);'));
+});
+
+test('a screen paints itself when it opens, whatever opened it', () => {
+  const html = renderPage(fixture({}));
+  // Itzik, 18.9, on a screenshot of the answers screen with nothing on it at
+  // all, not even the filter chips, while the button said 26. Chips and cards
+  // are both painted by renderAnswers, so their absence together means it never
+  // ran, not that it ran and found nothing: finding nothing still draws chips
+  // reading zero. A route into a pane that forgets to paint leaves a screen
+  // that is blank rather than empty, and blank is indistinguishable from lost.
+  assert.ok(html.includes('var PAINT={a:function(){renderAnswers();paintAnsCount();},'));
+  assert.ok(html.includes("if(PAINT[w]){try{PAINT[w]();}catch(e){"));
+  // It sits inside pane(), so every route in is covered by construction.
+  const pane = html.indexOf('function pane(w){');
+  assert.ok(pane > -1, 'pane() is in the page');
+  assert.ok(html.indexOf('var PAINT={a:', pane) > pane, 'the paint table is inside pane()');
 });

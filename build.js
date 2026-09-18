@@ -5408,6 +5408,28 @@ function pane(w){
   sec.hidden=(k!==w);
   if(k===w)backBar(sec);
  }
+ /*
+   A screen draws itself when it opens. No caller can forget.
+
+   Itzik, 18.9, on a screenshot of the answers screen with nothing on it at all,
+   not even the filter chips, while the button said 26: "the monitor still does
+   not update, thirty three minutes and I am waiting. Stop everything and put
+   it all on the monitor."
+
+   The chips and the cards are both painted by renderAnswers. Their absence
+   together means it never ran on his phone, not that it ran and found nothing,
+   because finding nothing still draws chips reading zero. Every route into a
+   pane used to be responsible for painting it, and a route that forgets leaves
+   a screen that is blank rather than empty, which is indistinguishable from
+   lost data.
+
+   So the pane paints itself, from here, whatever opened it. A second paint
+   costs a few milliseconds. A blank screen costs him his trust in the thing.
+ */
+ var PAINT={a:function(){renderAnswers();paintAnsCount();},b:renderGot,m:renderThread,
+  n:renderNet,r:render,p:renderPegasus,w:renderImprove,s:renderSpecial,
+  e:renderReplies,f:renderFood,j:renderDrains,v:renderRivhit};
+ if(PAINT[w]){try{PAINT[w]();}catch(e){try{console.error('pane paint '+w,e);}catch(_){}}}
  // It lives above the header now, outside every pane, so nothing hides it but
  // this line. On any screen other than home it would be a microphone following
  // him around.
@@ -8221,7 +8243,19 @@ if(bootFailed.indexOf('pane')>-1){try{pane('h');}catch(e){var h=document.getElem
   did not load" across the top of a page that was working perfectly, which is
   how he saw it on his phone this morning.
 */
-if(GATE&&!GKEY)bootFailed.length=0;
+/*
+  Silent only while the page is still locked, and never after.
+
+  The first version of this cleared the list outright, which was right for the
+  renders that throw before he has typed the code and wrong for everything
+  after: a real failure then had no way to reach the screen. The list is kept
+  and simply not shown until the gate opens.
+*/
+if(GATE&&!GKEY){
+ var held=bootFailed.slice();
+ bootFailed.length=0;
+ window.__heldBootFails=held;
+}
 if(bootFailed.length){
  var w=document.createElement('div');
  w.className='bootwarn';
