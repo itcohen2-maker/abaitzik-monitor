@@ -1387,7 +1387,7 @@ test('the red button lands on the answers after the paint, not before it', () =>
   // off the cards on the screen, so it cannot promise answers that are not
   // there, and an empty landing says so instead of claiming a number.
   assert.ok(html.includes("var shown=document.querySelectorAll('#ansBox .ansc').length;"));
-  assert.ok(html.includes("toast(n?(shown?('נפתחו '+shown+' תשובות שלא קראת')"));
+  assert.ok(html.includes("toast(n?(shown?('נפתחו '+n+' תשובות שלא קראת')"));
   assert.ok(html.includes("המסך נפתח ריק. לחיצה על רענן ואז שוב."));
   assert.ok(html.includes("toast('מסך התשובות לא נפתח. לחיצה על רענן ואז שוב.');"));
 });
@@ -1482,4 +1482,7 @@ test('the red count is the length of the list it opens', () => {
   // says everything is read.
   assert.ok(html.includes('(D.chat||[]).concat(D.codex||[]).forEach(function(m){'));
   assert.ok(html.includes("if(m.from!=='claude'&&m.from!=='codex')return;"));
+  // The count is made of files that arrive after the page, so it is painted
+  // again when they land instead of sitting low until the next press.
+  assert.ok(html.includes('try{renderNew();}catch(e){}'));
 });

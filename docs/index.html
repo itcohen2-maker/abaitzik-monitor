@@ -1326,7 +1326,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-18T08:08:43.622Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-18T08:09:40.932Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2116,7 +2116,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='c3d6f012ad';
+var CODE_ID='fca7713304';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -2134,6 +2134,7 @@ function ensure(keys, fn){
    var q=lazyWait[k]||[];lazyWait[k]=null;
    q.forEach(function(g){try{g();}catch(e){}});
    try{paintDot();}catch(e){}
+   try{renderNew();}catch(e){}
   };
   if(!window.fetch){lazyDone[k]=true;end();return;}
   var attempt=function(opts,again){
@@ -4113,7 +4114,7 @@ document.getElementById('newBtn').onclick=function(){
   if(n)beep();
   openAnswers(n?'fresh':'all');
   var shown=document.querySelectorAll('#ansBox .ansc').length;
-  toast(n?(shown?('נפתחו '+shown+' תשובות שלא קראת')
+  toast(n?(shown?('נפתחו '+n+' תשובות שלא קראת')
     :'המסך נפתח ריק. לחיצה על רענן ואז שוב.')
    :('מסך התשובות, '+shown+' פריטים. הכל נקרא.'));
  }catch(e){

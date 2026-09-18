@@ -2990,6 +2990,11 @@ function ensure(keys, fn){
    // whole collection is here they are computed again, so a number never sits
    // there stale behind a screen he has already opened.
    try{paintDot();}catch(e){}
+   // And the red button with them. It counts the answers the screen can show,
+   // and those arrive in these files, so a count painted before they landed is
+   // a count of a page that was still half empty. Painted again here it climbs
+   // to the truth by itself instead of waiting for the next press.
+   try{renderNew();}catch(e){}
   };
   if(!window.fetch){lazyDone[k]=true;end();return;}
   /*
@@ -5572,7 +5577,7 @@ document.getElementById('newBtn').onclick=function(){
   // cards that are not there. If it ever says zero with a red button, that is
   // the truth arriving instead of a number that lied.
   var shown=document.querySelectorAll('#ansBox .ansc').length;
-  toast(n?(shown?('נפתחו '+shown+' תשובות שלא קראת')
+  toast(n?(shown?('נפתחו '+n+' תשובות שלא קראת')
     :'המסך נפתח ריק. לחיצה על רענן ואז שוב.')
    :('מסך התשובות, '+shown+' פריטים. הכל נקרא.'));
  }catch(e){
