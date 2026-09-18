@@ -32,6 +32,7 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{margin:0;background:var(--ground);color:var(--ink);direction:rtl;
+ padding-bottom:calc(84px + env(safe-area-inset-bottom));
  font:400 16px/1.65 Heebo,system-ui,"Segoe UI",Arial,sans-serif;
  background-image:radial-gradient(120% 60% at 100% 0,var(--accent-soft) 0,transparent 60%);
  background-repeat:no-repeat}
@@ -1326,7 +1327,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-18T08:50:32.909Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-18T09:45:45.785Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2116,7 +2117,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='fca7713304';
+var CODE_ID='7028326e4c';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){

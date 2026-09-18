@@ -516,7 +516,22 @@ const PAGE = `<!DOCTYPE html>
 /* A class that sets display beats the browser default for [hidden], which is
    how the recording overlay ended up on screen the moment the page opened. */
 [hidden]{display:none!important}
+/*
+  Room at the foot of every screen for the bar that floats over it.
+
+  Itzik, 18.9: "the answers icon does not respond, the red button does not
+  respond." They responded. His finger was landing on the bottom bar, which is
+  fixed, 76 pixels tall and sits on top of whatever the page ends with. Nothing
+  ever reserved that space, and it went unnoticed only because the red button
+  used to sit higher up. Moving the microphone to the top this morning pushed it
+  down into the bar, and a button you cannot press is a button that is broken.
+
+  Measured on the live page: the red button's centre was at y 532 in a 552 pixel
+  viewport, with the bar starting at 476. elementFromPoint on it returned
+  nothing at all, which is the machine saying the same thing he did.
+*/
 body{margin:0;background:var(--ground);color:var(--ink);direction:rtl;
+ padding-bottom:calc(84px + env(safe-area-inset-bottom));
  font:400 16px/1.65 Heebo,system-ui,"Segoe UI",Arial,sans-serif;
  background-image:radial-gradient(120% 60% at 100% 0,var(--accent-soft) 0,transparent 60%);
  background-repeat:no-repeat}

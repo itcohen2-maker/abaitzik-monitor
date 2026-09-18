@@ -1486,3 +1486,16 @@ test('the red count is the length of the list it opens', () => {
   // again when they land instead of sitting low until the next press.
   assert.ok(html.includes('try{renderNew();}catch(e){}'));
 });
+
+test('nothing ends up underneath the floating bottom bar', () => {
+  const html = renderPage(fixture({}));
+  // Itzik, 18.9: "the answers icon does not respond, the red button does not
+  // respond." They did respond. His finger was landing on the bottom bar,
+  // which is fixed, 76px tall and sits over whatever the page ends with.
+  // Nothing ever reserved that space; it went unnoticed only because the red
+  // button used to sit higher. Moving the microphone to the top pushed it
+  // under the bar, and a button you cannot press is a button that is broken.
+  assert.ok(html.includes('padding-bottom:calc(84px + env(safe-area-inset-bottom));'));
+  // The bar it makes room for.
+  assert.ok(html.includes('.bn{position:fixed;inset-inline:0;bottom:0;z-index:20;'));
+});
