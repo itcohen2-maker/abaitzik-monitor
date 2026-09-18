@@ -335,7 +335,7 @@ test('the replies I sent in his name get a tile, a screen and a count that blink
   assert.ok(html.includes('id="gReplies"'));
   assert.ok(html.includes('<section id="pK" hidden>'));
   assert.ok(html.includes('function renderReplies('));
-  assert.ok(html.includes("k:'pK'}"));
+  assert.ok(html.includes("k:'pK',j:'pDr'}"));
   assert.ok(html.includes("k:'replies'"));
   assert.ok(html.includes('"replies":[{"at":"2026-09-13T11:48:00+03:00"'));
   // The count is what he asked for: tell me there are more, not just that
@@ -1357,7 +1357,7 @@ test('the page names no channel, no address and no neighbour', () => {
   assert.ok(html.includes("fetch('https://ntfy.sh/' + NTFYIN(), {"));
   assert.ok(html.includes("fetch('https://formsubmit.co/ajax/' + MAILBOX(), {"));
   assert.ok(html.includes('function paintSecrets(){'));
-  assert.ok(html.includes('paintStamp,paintSecrets].forEach'));
+  assert.ok(html.includes('paintStamp,paintSecrets,renderDrains].forEach'));
   // The build must not fall back to a literal if the private file is missing:
   // a send button that does nothing beats his inbox printed on a public page.
   assert.ok(html.includes('id="vaadOpen"'));
@@ -1411,4 +1411,30 @@ test('a data file that fails to decrypt is tried again off the cache', () => {
   // Only a real array counts as loaded.
   assert.ok(html.includes('if(Array.isArray(v)){D[k]=v;lazyDone[k]=true;return;}'));
   assert.ok(!html.includes("},function(){}).then(end,end);"), 'no silent swallow of a failed data load');
+});
+
+test('the drain log records four tubes and never judges a number', () => {
+  const html = renderPage(fixture({}));
+  // Itzik, 18.9, five days after the operation: "I have four drains in my
+  // abdomen, I asked to start tracking, build a button with a plan inside it
+  // and I will put the numbers in."
+  assert.ok(html.includes('id="gDrains"'));
+  assert.ok(html.includes('<section id="pDr" hidden>'));
+  ['dr1', 'dr2', 'dr3', 'dr4', 'drNote', 'drForm', 'drBody'].forEach((id) => {
+    assert.ok(html.includes('id="' + id + '"'), 'missing ' + id);
+  });
+  // The plan is in the screen, and it stops where medicine starts: the number
+  // that decides anything came from his surgeon, not from me.
+  assert.ok(html.includes('id="drPlan"'));
+  assert.ok(html.includes('זו שיחת טלפון למנתח ולא שאלה בשבילי'));
+  assert.ok(html.includes('את הסף המדויק להוצאת ניקוז נותנים לך בבית החולים'));
+  // Zero is a reading, not a gap.
+  assert.ok(html.includes('אפס הוא נתון, לא חוסר נתון'));
+  // The direction is the point, so each tube carries its change since yesterday.
+  assert.ok(html.includes("var was=prev&&typeof prev['d'+n]==='number'?prev['d'+n]:null;"));
+  assert.ok(html.includes(".drc.down em{color:var(--green,#34A853)}"));
+  assert.ok(html.includes(".drc.up em{color:var(--red,#EA4335)}"));
+  // It sends down the same road as everything else he says, and writes nothing
+  // itself: one road means one place a message can go missing.
+  assert.ok(html.includes("sendText('ניקוזים',line,'ניקוזים')"));
 });

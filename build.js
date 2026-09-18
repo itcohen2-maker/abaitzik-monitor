@@ -316,6 +316,21 @@ function build() {
     },
     choices,
     food,
+    /*
+      The drains.
+
+      Itzik, 18.9, five days after the operation to take the second tumour out:
+      "I have four drains in my abdomen, I asked to start tracking, build a
+      button with a plan inside it and I will put the numbers in."
+
+      It is a log, not a diagnosis. What a drain chart is actually for is
+      noticing a direction: output that keeps falling is the ordinary way out,
+      output that climbs again or changes colour is a phone call to the surgeon,
+      and the numbers that decide which is which belong to his surgeon and not
+      to me. So the screen records, totals and shows the direction, and the
+      thresholds are a field he fills in from what the hospital told him.
+    */
+    drains: loadDocs('drains').sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1)),
     pending: pending.sort((a, b) => (a.seenAt < b.seenAt ? 1 : -1)),
     replied: replied.sort((a, b) => (a.repliedAt < b.repliedAt ? 1 : -1)),
     contacts,
@@ -344,7 +359,8 @@ function build() {
     while a file is still in the air.
   */
   const HEADS = { chat: 150, reports: 14, codex: 20, special: 8, replies: 8,
-                  improve: 4, food: 12, pegasus: 4, replied: 0, rivhit: 0 };
+                  improve: 4, food: 12, pegasus: 4, replied: 0, rivhit: 0,
+                  drains: 40 };
   // A report's body is most of its weight, and only the newest few are read
   // off the card without opening the screen.
   const BODY_HEAD = 3;
@@ -1939,6 +1955,32 @@ body.editing .bn{display:none}
 .ansc .arep>summary::before{content:'C2 ';color:var(--dim,#9aa7ba);font-size:12px}
 .ansc .arep[open]>summary::before{content:'BE '}
 .ansc .arep>.atxt{margin-top:8px;padding-top:8px;border-top:1px solid var(--line,#2a3342)}
+/* The drain log. Four tubes, one row a day, and the only thing worth reading
+   off it is the direction, so the arrow gets the colour and not the number. */
+.drform{display:flex;flex-direction:column;gap:9px;margin:12px 0}
+.drrow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.drrow label{display:flex;flex-direction:column;gap:4px;font:700 13px Heebo,sans-serif;color:var(--dim,#9aa7ba);text-align:center}
+.drrow input{width:100%;box-sizing:border-box;background:var(--sunk,#141922);color:var(--ink,#e8edf5);
+ border:1px solid var(--line,#2a3342);border-radius:11px;padding:11px 6px;
+ font:700 17px Heebo,sans-serif;text-align:center}
+#drNote{background:var(--sunk,#141922);color:var(--ink,#e8edf5);border:1px solid var(--line,#2a3342);
+ border-radius:11px;padding:11px 12px;font:400 14.5px Heebo,sans-serif}
+.drrow input:focus,#drNote:focus{outline:2px solid var(--accent,#4285F4);outline-offset:1px}
+#drSend{background:var(--accent,#4285F4);color:#fff;border:0;border-radius:12px;padding:13px;
+ font:700 15.5px Heebo,sans-serif;cursor:pointer}
+.drday{background:var(--surface,#181d27);border:1px solid var(--line,#2a3342);border-radius:14px;
+ padding:11px 13px;margin-bottom:9px}
+.drday.newest{border-color:var(--accent,#4285F4)}
+.drhead{font:600 13.5px Heebo,sans-serif;color:var(--dim,#9aa7ba);margin-bottom:7px}
+.drcells{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.drc{font:400 14.5px Heebo,sans-serif;color:var(--ink,#e8edf5)}
+.drc b{font-weight:800}
+.drc em{font-style:normal;font-size:12.5px;color:var(--dim,#9aa7ba)}
+.drc.down em{color:var(--green,#34A853)}
+.drc.up em{color:var(--red,#EA4335)}
+.drc.dim{color:var(--dim,#9aa7ba)}
+.drnote{margin-top:8px;padding-top:7px;border-top:1px solid var(--line,#2a3342);
+ font:400 13.5px Heebo,sans-serif;color:var(--dim,#9aa7ba);line-height:1.5}
 .gt-e{min-height:20px;margin-top:10px;font:600 13.5px Heebo,sans-serif;color:var(--red,#EA4335)}
 </style>
 <script>
@@ -2254,6 +2296,7 @@ try{
   <!-- The reports tile came off on 17.9. The reports are in "תשובות" now,
        which is the one button he asked for. -->
   <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>חשבוניות והיומן</small></button>
+  <button type="button" class="gt g4" id="gDrains"><b>🩺 ניקוזים</b><small>ארבעה, כמה יצא ולאן זה הולך</small></button>
   <button type="button" class="gt g10" id="gNotes"><b>📝 פתקים</b><small>נכתב, נשמר, לא הולך לאיבוד</small></button>
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
   <button type="button" class="gt g13" id="gSpecial"><b>⭐ בקשות מיוחדות</b><small>מה שביקשת ומוכן, דפים וקבצים</small></button>
@@ -2456,6 +2499,34 @@ try{
    <span aria-hidden="true">📁</span><div>כל הדרייב<small>הדף הראשי</small></div></a>
  </nav>
  <div class="hint" style="margin-top:14px">חסרה תיקייה? תכתוב לי בשורת הבנייה העצמית ואוסיף אותה לכאן.</div>
+</section>
+
+<section id="pDr" hidden>
+ <h2>ניקוזים</h2>
+ <!--
+   A log, not a diagnosis. The numbers that decide what is normal came from his
+   surgeon, so they are a field he fills in rather than something I state.
+ -->
+ <div class="hint" id="drPlan">
+  <b>איך עובדים עם זה.</b>
+  מודדים בכל בוקר באותה שעה, ומרוקנים לפני המדידה כדי שהמספר יהיה של יממה שלמה.
+  רושמים כל ניקוז בנפרד, גם אם יצא אפס. אפס הוא נתון, לא חוסר נתון.
+  מה שחשוב הוא <b>הכיוון לאורך ימים</b>, לא מספר בודד: ירידה מתמשכת היא הדרך הרגילה החוצה.
+  עלייה אחרי ירידה, או שינוי בצבע ובריח, זו שיחת טלפון למנתח ולא שאלה בשבילי.
+  את הסף המדויק להוצאת ניקוז נותנים לך בבית החולים. תכתוב לי אותו ואני אשמור אותו כאן ואתריע כשמתקרבים אליו.
+ </div>
+ <form class="drform" id="drForm">
+  <div class="drrow">
+   <label>1<input type="number" inputmode="decimal" min="0" step="1" id="dr1" placeholder="מ״ל"></label>
+   <label>2<input type="number" inputmode="decimal" min="0" step="1" id="dr2" placeholder="מ״ל"></label>
+   <label>3<input type="number" inputmode="decimal" min="0" step="1" id="dr3" placeholder="מ״ל"></label>
+   <label>4<input type="number" inputmode="decimal" min="0" step="1" id="dr4" placeholder="מ״ל"></label>
+  </div>
+  <input type="text" id="drNote" autocomplete="off" placeholder="צבע, ריח, כאב, כל דבר חריג. אפשר להשאיר ריק">
+  <button type="submit" id="drSend">רישום המדידה</button>
+ </form>
+ <div class="msgsaid" id="drSaid"></div>
+ <div id="drBody"></div>
 </section>
 
 <section id="pN" hidden>
@@ -3947,7 +4018,7 @@ function updateDot(){
  document.title=(fresh?'(1) ':'')+'אבא איציק בבנייה עצמית';
 }
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
-var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',k:'pK'};
+var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',k:'pK',j:'pDr'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
 // The last dose. From the chat it is read out of the message text, because he
@@ -4248,7 +4319,7 @@ function repaintAll(){
  var st=keepState(),y=window.scrollY;
  [paintDot,renderNew,renderThread,renderAnswers,renderGot,renderNet,render,
   renderPegasus,renderImprove,renderSpecial,renderReplies,renderRivhit,
-  renderFood,renderReqs,paintStamp,paintSecrets].forEach(function(fn){
+  renderFood,renderReqs,paintStamp,paintSecrets,renderDrains].forEach(function(fn){
   try{if(typeof fn==='function')fn();}catch(e){}
  });
  try{putState(st);}catch(e){}
@@ -6388,6 +6459,96 @@ on('repNow',function(){
   said.textContent='הבקשה לא עברה. תנסה שוב.';
  }).then(function(){b.disabled=false;});
 });
+/*
+  The drain log.
+
+  Four tubes, one row a day, and the only thing worth reading off it is the
+  direction. So the newest row is the big one, each drain carries the change
+  since the day before, and the total is what a surgeon asks for first.
+
+  Nothing here judges a number. Rising output, a change of colour or a smell is
+  a phone call to his surgeon, and the screen says so rather than reassuring
+  him, because a log that reassures is worse than no log.
+*/
+function drainRows(){
+ return (D.drains||[]).slice().sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
+}
+function drainTotal(r){
+ var t=0,n=0;
+ [1,2,3,4].forEach(function(i){var v=r['d'+i];if(typeof v==='number'){t+=v;n++;}});
+ return n?t:null;
+}
+function renderDrains(){
+ var host=document.getElementById('drBody');
+ if(!host)return;
+ var rows=drainRows();
+ if(!rows.length){
+  host.innerHTML='<div class="empty">עוד לא נרשמה מדידה. תמלא את המספרים למעלה ותשלח, גם אם אחד מהם אפס.</div>';
+  return;
+ }
+ var html='';
+ rows.slice(0,30).forEach(function(r,i){
+  var prev=rows[i+1];
+  var cells=[1,2,3,4].map(function(n){
+   var v=r['d'+n];
+   if(typeof v!=='number')return '<span class="drc dim">'+n+': ·</span>';
+   var was=prev&&typeof prev['d'+n]==='number'?prev['d'+n]:null;
+   var d=was===null?'':(v-was);
+   var arrow=d===''?'':(d<0?'▼':(d>0?'▲':'='));
+   var cls=d===''?'':(d<0?' down':(d>0?' up':''));
+   return '<span class="drc'+cls+'">'+n+': <b>'+v+'</b>'
+    +(d===''?'':' <em>'+arrow+' '+Math.abs(d)+'</em>')+'</span>';
+  }).join('');
+  var tot=drainTotal(r);
+  html+='<div class="drday'+(i?'':' newest')+'">'
+   +'<div class="drhead">'+esc(stamp(r.at))
+   +(tot===null?'':' · <b>סה״כ '+tot+' מ״ל</b>')+'</div>'
+   +'<div class="drcells">'+cells+'</div>'
+   +(r.note?'<div class="drnote">'+esc(r.note)+'</div>':'')
+   +'</div>';
+ });
+ host.innerHTML=html;
+}
+function openDrains(){pane('j');renderDrains();ensure('drains',renderDrains);}
+on('gDrains',openDrains);
+/*
+  The form sends, it does not write.
+
+  Everything he records travels the same road as everything else he says: out
+  through the channel, into the chat, and a session writes the record. One road
+  means one place where a message can go missing, and this screen is not the
+  place to invent a second.
+*/
+(function(){
+ var f=document.getElementById('drForm');
+ if(!f)return;
+ f.onsubmit=function(e){
+  e.preventDefault();
+  var said=document.getElementById('drSaid');
+  var vals=[1,2,3,4].map(function(n){
+   var el=document.getElementById('dr'+n);
+   var v=(el&&el.value||'').trim();
+   return v===''?null:Number(v);
+  });
+  if(vals.every(function(v){return v===null;})){
+   if(said)said.textContent='תמלא לפחות ניקוז אחד.';
+   return;
+  }
+  var note=(document.getElementById('drNote')||{}).value||'';
+  var line='ניקוזים '+vals.map(function(v,i){
+   return (i+1)+'='+(v===null?'לא נמדד':v);
+  }).join(' ')+(note.trim()?(' · '+note.trim()):'');
+  if(said)said.textContent='שולח.';
+  sendText('ניקוזים',line,'ניקוזים').then(function(){
+   if(said)said.textContent='נרשם. ירשם כאן ברגע שאעדכן.';
+   [1,2,3,4].forEach(function(n){var el=document.getElementById('dr'+n);if(el)el.value='';});
+   var nt=document.getElementById('drNote');if(nt)nt.value='';
+   setTimeout(function(){if(said)said.textContent='';},5000);
+  }).catch(function(){
+   if(said)said.textContent='לא נשלח. אין רשת כרגע.';
+  });
+ };
+})();
 function openFood(){pane('f');renderFood();ensure('food',renderFood);}
 on('gFood',openFood);on('iFood',openFood);
 on('gLolos',function(){pane('o');});
