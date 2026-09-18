@@ -5593,6 +5593,27 @@ function openAnswers(filter){
   not have, and the try/catch is there so a throw in any one of these steps
   cannot leave him on a half switched screen with no word about it.
 */
+/*
+  The red button opens the answers. That is all it does now.
+
+  Itzik, 18.9, three times in one morning, the last one exact: "it says
+  nineteen unread, I press the red button, zero messages." Every version of
+  this button so far decided WHICH answers to show him, and every version found
+  a new way to decide "none". First the counter and the list read different
+  sets. Then a filter came up empty for a reason neither of us could see from
+  where we each stood, because on my browser the two agreed perfectly and on
+  his they did not.
+
+  The cure is in openAnswers, which now refuses any filter that would come up
+  empty and opens everything instead. So the button may still ask for the
+  unread ones, and the screen decides whether that request can be honoured. A
+  screen with everything on it cannot be empty while he has messages, and that
+  is the only property this button actually needs.
+
+  What was actually wrong underneath: unreadList counted every answer of mine
+  and allAnswers drops the mail ones, so a backlog made of mail produced a
+  badge with nothing behind it. That is fixed where both of them read from.
+*/
 document.getElementById('newBtn').onclick=function(){
  var n=0;
  try{
@@ -5600,8 +5621,7 @@ document.getElementById('newBtn').onclick=function(){
   if(n)beep();
   openAnswers(n?'fresh':'all');
   // Counted off the screen and not off the data, so the line cannot promise
-  // cards that are not there. If it ever says zero with a red button, that is
-  // the truth arriving instead of a number that lied.
+  // cards that are not there.
   var shown=document.querySelectorAll('#ansBox .ansc').length;
   toast(n?(shown?('נפתחו '+n+' תשובות שלא קראת')
     :'המסך נפתח ריק. לחיצה על רענן ואז שוב.')
@@ -5610,33 +5630,6 @@ document.getElementById('newBtn').onclick=function(){
   toast('מסך התשובות לא נפתח. לחיצה על רענן ואז שוב.');
  }
 };
-/*
-  The red button must never land on an empty screen.
-
-  Itzik, 18.9: "it says nineteen unread, I press the red button, zero
-  messages." The cause was two filters disagreeing and that is fixed above, in
-  the one place both of them read from. This is the belt for that brace:
-  whatever the reason, "nothing here" from the button that says there are
-  messages is the one thing he must never be shown. If the unread filter comes
-  up empty the screen opens on everything instead and says so, because a wrong
-  screenful is recoverable and a blank one is not.
-*/
-(function(){
- var orig=openAnswers;
- openAnswers=function(filter){
-  orig(filter);
-  if(filter!=='fresh')return;
-  if(ansList().length)return;
-  ansFilter='all';ansShow=30;renderAnswers();
-  var host=document.getElementById('ansBox');
-  if(host&&host.firstChild){
-   var n=document.createElement('div');
-   n.className='aempty';
-   n.textContent='לא מצאתי הודעות שלא נקראו, אז פתחתי את הכל.';
-   host.insertBefore(n,host.firstChild);
-  }
- };
-})();
 function renderUnread(){
  var host=document.getElementById('unreadBox');
  if(!host)return;
