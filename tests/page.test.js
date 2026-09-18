@@ -1747,6 +1747,15 @@ test('touching an answer turns it green even when it is no longer new', () => {
     "the fresh-only guard is what kept the card grey");
   // Touching means green. Already green is left alone, so a tap never undoes
   // his own mark; the טופל button is the only way back.
-  assert.ok(html.includes("if(isDone(m)&&!isFresh(m))return;"));
+  assert.ok(html.includes("if(isDone(m)&&!isFresh(m)){ringFor(card);return;}"),
+    "an already green card still has to answer the finger");
+  // 18.9, the same complaint a third time and this was the real cause: the red
+  // button opens the fresh filter, so marking a card read dropped it out of the
+  // list on the very next render. It never turned green, it disappeared, and
+  // touching the last one emptied the screen.
+  assert.ok(html.includes("return isFresh(m)||ansKeep[claudeKey(m)];"),
+    "a card he touched has to survive the re-filter");
+  assert.ok(html.includes("ansKeep[claudeKey(m)]=1;"));
+  assert.ok(html.includes("ansKeep={};"), "and the set clears when he leaves the screen");
   assert.ok(html.includes("markOneSeen(m);renderAnswers();paintDot();"));
 });

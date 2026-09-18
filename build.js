@@ -3368,7 +3368,7 @@ function render(){
  wireBoxes(document.getElementById('reports'));
 }
 function pending(){
- try{return JSON.parse(localStorage.getItem('pendingMsgs')||'[]');}catch(e){return[];}
+ return idList('pendingMsgs');
 }
 function savePending(a){
  try{localStorage.setItem('pendingMsgs',JSON.stringify(a));}catch(e){}
@@ -3471,7 +3471,13 @@ function dropSettled(list,baked){
 // A thread he answered and is waiting on. Kept per device, cleared by itself
 // the moment my reply with the same re lands.
 function standbyMap(){
- try{return JSON.parse(localStorage.getItem('chatStandby')||'{}')||{};}catch(e){return {};}
+ /*
+   An array is truthy, so the old ||{} guard let one straight through and
+   every lookup on it came back undefined. That is how the waiting mark on
+   the chat threads died quietly on the phones that had the old shape.
+ */
+ try{var v=JSON.parse(localStorage.getItem('chatStandby')||'{}');
+  return (v&&typeof v==='object'&&!Array.isArray(v))?v:{};}catch(e){return {};}
 }
 function setStandby(key){
  if(!key)return;
@@ -5225,6 +5231,16 @@ function on(id,fn){
 // thread among his own messages. This screen keeps every answer I ever wrote.
 // Nothing here removes a message from view - the filters only narrow it.
 var ansFilter='all',ansQ='',ansAuto=false;
+/*
+  Cards he touched in this render stay on screen.
+
+  18.9: the red button opens the fresh filter, so touching a card made it
+  not fresh and the next render dropped it off the list. From his side the
+  answer vanished instead of turning green, which is the same complaint
+  again with a different cause. Touch the last one and the screen said there
+  was nothing here. He keeps what he touched until he leaves the screen.
+*/
+var ansKeep={};
 // Two hundred cards, each with a recorder and an attach form, is more than a
 // phone should build at once. It draws a page at a time.
 var ansShow=30;
@@ -5262,7 +5278,9 @@ function standbyIds(){
  // The old key, only if it still holds the shape this feature meant.
  var old=idList('chatStandby',true);
  if(old.length){
-  try{localStorage.setItem('chatParked',JSON.stringify(old));}catch(e){}
+  // Copied once and the old key is dropped, or the day he unparks his last
+  // card the fallback below hands every old one back to him.
+  try{localStorage.setItem('chatParked',JSON.stringify(old));localStorage.removeItem('chatStandby');}catch(e){}
  }
  return old;
 }
@@ -5377,7 +5395,7 @@ function ansCounts(){
 }
 function ansList(){
  var a=allAnswers();
- if(ansFilter==='fresh')a=a.filter(isFresh);
+ if(ansFilter==='fresh')a=a.filter(function(m){return isFresh(m)||ansKeep[claudeKey(m)];});
  if(ansFilter==='star')a=a.filter(isStar);
  if(ansFilter==='standby')a=a.filter(isStandby);
  if(ansFilter==='done')a=a.filter(function(m){return isDone(m)&&!isFresh(m)&&!isStandby(m)&&!isStar(m);});
@@ -5506,8 +5524,13 @@ function renderAnswers(){
      Touching means green. Already green stays green; the טופל button is the
      only way back.
    */
-   if(isDone(m)&&!isFresh(m))return;
+   // A starred or parked card outranks green in ansColor, so the colour
+   // cannot move and the ring is the only thing that answers his finger.
+   ansKeep[claudeKey(m)]=1;
+   if(isDone(m)&&!isFresh(m)){ringFor(card);return;}
    markOneSeen(m);renderAnswers();paintDot();
+   var again=host.querySelector('.ansc[data-i="'+card.getAttribute('data-i')+'"]');
+   if(again)ringFor(again);
   });
  });
  Array.prototype.forEach.call(host.querySelectorAll('.adone'),function(b){
@@ -5545,7 +5568,7 @@ var gotShow=30;
   ומה שנמחק חוזר בלחיצה אחת כל עוד לא ניקה את הדפדפן.
 */
 function goneKeys(){
- try{return JSON.parse(localStorage.getItem('gotGone')||'[]');}catch(e){return [];}
+ return idList('gotGone');
 }
 function saveGone(a){
  try{localStorage.setItem('gotGone',JSON.stringify(a.slice(-400)));}catch(e){}
@@ -5940,6 +5963,7 @@ function openAnswers(filter,wipe){
  // screen too, where a search he can see in the field is his and stays, and
  // the guard below still refuses to leave him on an empty list.
  if(wipe)clearAnsSearch();
+ ansKeep={};
  var pick=function(f){
   ansFilter=f||'all';
   // Last resort. With the search cleared this cannot be empty while there is
@@ -6073,7 +6097,7 @@ document.getElementById('gotBtn').onclick=function(){pane('b');renderGot();ensur
 // prove the message reached my mailbox, so it says that, and only says I read
 // it once I have actually written back.
 function reqLog(){
- try{return JSON.parse(localStorage.getItem('myRequests')||'[]');}catch(e){return [];}
+ return idList('myRequests');
 }
 function reqSave(a){
  try{localStorage.setItem('myRequests',JSON.stringify(a.slice(0,25)));}catch(e){}
@@ -6428,7 +6452,7 @@ function renderCodex(){
  if(b)b.onclick=cxSubmit;
 }
 function cxQueue(){
- try{return JSON.parse(localStorage.getItem('codexQueue')||'[]');}catch(e){return [];}
+ return idList('codexQueue');
 }
 function cxSubmit(){
  var el=document.getElementById('cxIn');
@@ -6512,7 +6536,7 @@ function paintHomeFolds(){
   home.querySelectorAll('details.fold'),armFold);
 }
 function foldSeen(){
- try{return JSON.parse(localStorage.getItem('foldSeen')||'[]');}catch(e){return [];}
+ return idList('foldSeen');
 }
 function foldBadge(id){
  return foldSeen().indexOf(id)>-1
@@ -6858,7 +6882,7 @@ function nextReport(){
 // Questions I am waiting on. Answering one sends it back through the same
 // channel as everything else, and hides the card so it is not asked twice.
 function answeredChoices(){
- try{return JSON.parse(localStorage.getItem('choicesDone')||'[]');}catch(e){return [];}
+ return idList('choicesDone');
 }
 function renderAsk(){
  var host=document.getElementById('askBox');
@@ -7276,7 +7300,7 @@ var IDEAS=[
 ];
 function ideaKey(t){return 'idea:'+t;}
 function ideaDone(){
- try{return JSON.parse(localStorage.getItem('ideasAsked')||'[]');}catch(e){return[];}
+ return idList('ideasAsked');
 }
 function renderIdeas(){
  var asked=ideaDone();
@@ -7334,7 +7358,7 @@ document.getElementById('opForm').onsubmit=function(e){
 // Notes live on the device. He asked for somewhere nothing gets lost, and
 // that means not depending on a round trip through me to save a line.
 function notes(){
- try{return JSON.parse(localStorage.getItem('notes')||'[]');}catch(e){return [];}
+ return idList('notes');
 }
 function saveNotes(list){
  try{localStorage.setItem('notes',JSON.stringify(list));}catch(e){}
