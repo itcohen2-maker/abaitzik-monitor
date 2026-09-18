@@ -937,6 +937,17 @@ section{margin-bottom:30px}
  background:var(--sunk);color:var(--dim);border-inline-start:3px solid var(--line)}
 .ack-n{display:block;margin-top:4px;color:var(--ink);opacity:.85}
 /*
+  התמלול של הקלטה, בתוך ההודעה עצמה.
+
+  ביקש ב-18.09: להציג לו את התמלול של מה ששלח. התמלול כבר נשמר לכל
+  הקלטה, אבל בהודעה נקרא שם הקובץ בלבד והמילים ישבו בשורה הקטנה
+  שמתחת לסטטוס. כאן הן במקום שבו הוא קורא את ההודעה.
+*/
+.vtx{margin-top:7px;padding:7px 10px;border-radius:10px;font-size:14px;line-height:1.5;
+ background:var(--sunk);border-inline-start:3px solid var(--accent,#3a7afe);color:var(--ink)}
+.vtx b{display:block;font-size:11px;font-weight:500;color:var(--dim);margin-bottom:2px}
+.vtx.vwait{color:var(--dim);border-inline-start-color:var(--line)}
+/*
   Itzik, 16.9: sent and waiting is yellow, the answer coming back is red, and
   what he has touched is green. Three states, three colours, and the colour
   always says whose turn it is.
@@ -3394,7 +3405,30 @@ function statusTag(m){
   אף מצב כאן לא נכתב מעצמו. כל אחד מהם מגיע משדה שאני כותב לקובץ
   ההודעה, ולכן אין כאן מצג של עבודה שלא קרתה.
 */
-function ackLine(m){
+/*
+  התמלול כטקסט של ההודעה.
+
+  שם הקובץ הוא לא מה שהוא אמר. כשיש תמלול הוא נקרא בתוך ההודעה, וכשהוא
+  עוד לא חזר ההודעה אומרת את זה במפורש במקום להשאיר שורה עם שם קובץ.
+  הכתובית הזאת נכתבת רק משדה שנשמר בקובץ ההודעה, ולכן אין כאן הצגה של
+  תמלול שלא קרה.
+*/
+var VOICE_RE=/\.(webm|m4a|mp3|ogg|wav)\b/i;
+function hasVoice(m){
+ var t=m.text||'';
+ return m.from==='itzik'&&VOICE_RE.test(t)&&/הודעה קולית|קבצים יחד/.test(t);
+}
+function transcriptOf(m){
+ var n=String(m.note||'');
+ return /^\s*תמלול:/.test(n)?n.replace(/^\s*תמלול:\s*/,'').trim():'';
+}
+function voiceBlock(m){
+ if(!hasVoice(m))return '';
+ var t=transcriptOf(m);
+ return t?'<div class="vtx"><b>תמלול</b>'+esc(t)+'</div>'
+  :'<div class="vtx vwait"><b>תמלול</b>מתמלל את ההקלטה, התמלול יופיע כאן.</div>';
+}
+function ackLine(m,noNote){
  if(m.from!=='itzik')return '';
  if(m.pend)return '<div class="ack ack-wait">נשלח עכשיו. ממתין לתשובה.</div>';
  var st=m.status,when=m.ackAt||'';
@@ -3408,7 +3442,7 @@ function ackLine(m){
   :st==='partial'?'ויש לי חלק מהתשובות. השאר בדרך.'
   :st==='done'?'וזה בוצע.'
   :'ועוד לא התחלתי.';
- var note=m.note?'<span class="ack-n">'+esc(m.note)+'</span>':'';
+ var note=(m.note&&!noNote)?'<span class="ack-n">'+esc(m.note)+'</span>':'';
  // נקודה פועמת רק כשבאמת עובדים. ביקש ב-11.09 שיהיה סימן חי ליד הסטטוס.
  // הפעימה איטית בכוונה, אחרי שנדחה ההבהוב החד, ומכובה לגמרי למי שביקש
  // פחות תנועה במערכת.
@@ -3505,7 +3539,10 @@ function isLive(m){
 function bubbleHtml(m,i,fresh,handled){
  var mine=m.from==='itzik';
  var live=isLive(m);
- var line=(mine?'איציק':'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');
+ var vb=voiceBlock(m),vtx=vb?transcriptOf(m):'';
+ // מה שמועתק מהודעה קולית הוא המילים, לא שם הקובץ.
+ var line=(mine?'איציק':'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'')
+  +(vtx?String.fromCharCode(10)+'תמלול: '+vtx:'');
  return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')+(live?' live':'')
   +(fresh?' fresh':(handled?' touched':' read'))+'" data-i="'+i+'"'
   +' data-copy="'+esc(line)+'">'
@@ -3515,7 +3552,7 @@ function bubbleHtml(m,i,fresh,handled){
   +'<button type="button" class="cp" data-i="'+i+'" aria-label="העתקה">העתקה</button>'
   +'<button type="button" class="hidemsg" data-k="'+esc(msgKey(m))+'" aria-label="להסתיר">×</button>'
   +(mine?'':'<button type="button" class="aimb bubaim" data-k="'+esc(claudeKey(m))+'">להשיב</button>')
-  +'</span>'+linkify(m.text)+ackLine(m)+'</div>';
+  +'</span>'+linkify(m.text)+vb+ackLine(m,!!vtx)+'</div>';
 }
 // Copy, paste and send on every reply form, whatever screen it is on.
 function pasteRow(){

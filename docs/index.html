@@ -383,6 +383,10 @@ section{margin-bottom:30px}
 .ack{margin-top:8px;padding:7px 10px;border-radius:10px;font-size:13px;line-height:1.45;
  background:var(--sunk);color:var(--dim);border-inline-start:3px solid var(--line)}
 .ack-n{display:block;margin-top:4px;color:var(--ink);opacity:.85}
+.vtx{margin-top:7px;padding:7px 10px;border-radius:10px;font-size:14px;line-height:1.5;
+ background:var(--sunk);border-inline-start:3px solid var(--accent,#3a7afe);color:var(--ink)}
+.vtx b{display:block;font-size:11px;font-weight:500;color:var(--dim);margin-bottom:2px}
+.vtx.vwait{color:var(--dim);border-inline-start-color:var(--line)}
 .ack-wait{background:#f6e7c8;color:#8a5a12;border-inline-start-color:var(--gold)}
 .ack-received{background:#f6e7c8;color:#8a5a12;border-inline-start-color:var(--gold)}
 .ack-working{background:#f6e7c8;color:#8a5a12;border-inline-start-color:var(--gold)}
@@ -1358,7 +1362,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-18T18:08:56.151Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-18T18:10:53.931Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2173,7 +2177,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='5b09204d5f';
+var CODE_ID='b912bb26c9';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -2386,7 +2390,22 @@ function statusTag(m){
  if(m.from!=='itzik'||!m.status||!STATUS[m.status])return '';
  return ' · <em class="st st-'+m.status+'">'+STATUS[m.status]+'</em>';
 }
-function ackLine(m){
+var VOICE_RE=/.(webm|m4a|mp3|ogg|wav)/i;
+function hasVoice(m){
+ var t=m.text||'';
+ return m.from==='itzik'&&VOICE_RE.test(t)&&/הודעה קולית|קבצים יחד/.test(t);
+}
+function transcriptOf(m){
+ var n=String(m.note||'');
+ return /^s*תמלול:/.test(n)?n.replace(/^s*תמלול:s*/,'').trim():'';
+}
+function voiceBlock(m){
+ if(!hasVoice(m))return '';
+ var t=transcriptOf(m);
+ return t?'<div class="vtx"><b>תמלול</b>'+esc(t)+'</div>'
+  :'<div class="vtx vwait"><b>תמלול</b>מתמלל את ההקלטה, התמלול יופיע כאן.</div>';
+}
+function ackLine(m,noNote){
  if(m.from!=='itzik')return '';
  if(m.pend)return '<div class="ack ack-wait">נשלח עכשיו. ממתין לתשובה.</div>';
  var st=m.status,when=m.ackAt||'';
@@ -2400,7 +2419,7 @@ function ackLine(m){
   :st==='partial'?'ויש לי חלק מהתשובות. השאר בדרך.'
   :st==='done'?'וזה בוצע.'
   :'ועוד לא התחלתי.';
- var note=m.note?'<span class="ack-n">'+esc(m.note)+'</span>':'';
+ var note=(m.note&&!noNote)?'<span class="ack-n">'+esc(m.note)+'</span>':'';
  var dot=(st==='working'||st==='partial')?'<i class="pulse"></i>':'';
  return '<div class="ack ack-'+esc(st)+'">'+dot+head+' '+tail+note+'</div>';
 }
@@ -2456,7 +2475,9 @@ function isLive(m){
 function bubbleHtml(m,i,fresh,handled){
  var mine=m.from==='itzik';
  var live=isLive(m);
- var line=(mine?'איציק':'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');
+ var vb=voiceBlock(m),vtx=vb?transcriptOf(m):'';
+ var line=(mine?'איציק':'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'')
+  +(vtx?String.fromCharCode(10)+'תמלול: '+vtx:'');
  return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')+(live?' live':'')
   +(fresh?' fresh':(handled?' touched':' read'))+'" data-i="'+i+'"'
   +' data-copy="'+esc(line)+'">'
@@ -2466,7 +2487,7 @@ function bubbleHtml(m,i,fresh,handled){
   +'<button type="button" class="cp" data-i="'+i+'" aria-label="העתקה">העתקה</button>'
   +'<button type="button" class="hidemsg" data-k="'+esc(msgKey(m))+'" aria-label="להסתיר">×</button>'
   +(mine?'':'<button type="button" class="aimb bubaim" data-k="'+esc(claudeKey(m))+'">להשיב</button>')
-  +'</span>'+linkify(m.text)+ackLine(m)+'</div>';
+  +'</span>'+linkify(m.text)+vb+ackLine(m,!!vtx)+'</div>';
 }
 function pasteRow(){
  return '<div class="rrow"><button type="button" class="rb rpaste">📋 הדבקה</button>'
