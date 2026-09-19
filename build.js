@@ -2382,7 +2382,7 @@ try{
   -->
   <form class="quickwrite" id="quickForm">
    <input type="text" id="quickText" autocomplete="off"
-    placeholder="כתוב לי כאן, ואני עונה">
+    placeholder="יצחק, כתוב לי מה אתה צריך">
    <button type="submit" id="quickBtn">שליחה</button>
   </form>
   <div class="msgsaid" id="quickSaid"></div>
@@ -4281,6 +4281,24 @@ function paintNew(){
  var bl=[];
  (D.blocklist||[]).forEach(function(l){(l.people||[]).forEach(function(p){if(p.state==='ממתין')bl.push(p);});});
  mark('gBlock',bl.length>0,String(bl.length));
+ // Itzik, 19.9: "עדכן את כפתור חסימות". The line under the button said the
+ // same thing whatever the list held, so approved names that were never
+ // carried out looked settled. It now says what waits on him and what on me.
+ (function(){
+  var todo=0,done=0;
+  (D.blocklist||[]).forEach(function(l){(l.people||[]).forEach(function(p){
+   var st=p.state||'';
+   if(st.indexOf('אושר')===0||st.indexOf('פייסבוק ב')>-1)todo++;
+   else if(st==='נחסם'||st==='חסום')done++;
+  });});
+  var sm=document.querySelector('#gBlock small');
+  if(!sm||!(D.blocklist||[]).length)return;
+  var parts=[];
+  if(bl.length)parts.push(bl.length+' מחכים להחלטה שלך');
+  if(todo)parts.push(todo+' אושרו ועוד לא בוצעו');
+  parts.push(done+' חסומים');
+  sm.textContent=parts.join(' · ');
+ })();
  var vc=(typeof voiceList==='function')?voiceList():[];
  mark('gVoices',newerThan(vc,'voicesSeen'),'חדש');
  floatTile('gVoices',newerThan(vc,'voicesSeen'));
@@ -7297,6 +7315,7 @@ function blUrl(h){
  if(low.indexOf('http')===0)return s;
  if(low.indexOf('www.')===0)s=s.slice(4);
  if(s.toLowerCase().indexOf('facebook.com/')===0)return 'https://www.'+s;
+ if(s.toLowerCase().indexOf('tiktok.com/')===0)return 'https://www.'+s;
  return 'https://www.instagram.com/'+s+'/';
 }
 function blOpenPeople(){

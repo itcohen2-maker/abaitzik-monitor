@@ -477,7 +477,7 @@ test('one card holds all four ways in, and nothing floats over the page', () => 
   assert.ok(!html.includes('id="wWrite"'));
   assert.ok(html.includes('id="quickText"'));
   assert.ok(html.includes('id="quickForm"'));
-  assert.ok(html.includes('placeholder="כתוב לי כאן, ואני עונה"'));
+  assert.ok(html.includes('placeholder="יצחק, כתוב לי מה אתה צריך"'));
   assert.ok(html.includes('id="urgBtn"'));
   assert.ok(html.includes('id="wShoot"'));
   assert.ok(html.includes('<b>העלאת קובץ</b><small>גם תמונה</small>'));
