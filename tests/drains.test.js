@@ -149,3 +149,30 @@ test('a urine only send opens a row and keeps the total to the drains', () => {
   assert.equal(drains.total(out.row), null);
   assert.equal(JSON.parse(fs.readFileSync(path.join(dir, '20260918-1400.json'), 'utf8')).urine, 300);
 });
+
+/*
+  19.9, 05:02: "ניקוזים 1=50 2=25 3=0 4=45 · שתן 350". The urine has its own
+  column, so copying the same words into the note put three hundred and fifty
+  on the row twice and left him reading a note that said nothing new.
+*/
+test('the urine reading is not repeated in the note', () => {
+  assert.equal(drains.parse('ניקוזים 1=50 2=25 3=0 4=45 · שתן 350').note, '');
+  assert.equal(drains.parse('ניקוזים 1=50 · שתן 350 · יצא צלול').note, 'יצא צלול');
+  assert.equal(drains.parse('ניקוזים 1=50 · יצא צלול').note, 'יצא צלול');
+});
+
+/*
+  The same night, the real damage: the round at 05:02 was written on top of the
+  round at 00:02 and three real numbers were replaced by newer ones. Five hours
+  is not one round.
+*/
+test('a round five hours later opens its own row and leaves the earlier one alone', () => {
+  const dir = tmp();
+  drains.record(dir, 'ניקוזים\nניקוזים 1=70 2=0 3=0 4=80\n\nקוד 1808', new Date(2026, 8, 19, 0, 2, 2));
+  drains.record(dir, 'ניקוזים\nניקוזים 1=50 2=25 3=0 4=45 · שתן 350\n\nקוד 1808', new Date(2026, 8, 19, 5, 2, 17));
+  assert.deepEqual(fs.readdirSync(dir).sort(), ['20260919-0002.json', '20260919-0502.json']);
+  const first = JSON.parse(fs.readFileSync(path.join(dir, '20260919-0002.json'), 'utf8'));
+  assert.equal(first.d1, 70);
+  assert.equal(first.d4, 80);
+  assert.equal(first.note, undefined, 'nothing was corrected, so nothing is reported as a correction');
+});

@@ -451,7 +451,57 @@ function publishChat() {
   }
 }
 
+/*
+  Code on disk, and code in memory.
+
+  19.9, 05:02: his second drains round of the night was written on top of the
+  first one and three real numbers were replaced. The reading code had been
+  fixed the afternoon before and the fix was correct. It simply was not
+  running: this process had started at 11:06, node had loaded the old module
+  into memory, and nothing ever made it read the file again. A listener that
+  stays up for a day is a listener running yesterday's code, and the failure is
+  silent, which is the worst kind here because the thing it quietly damages is
+  his measurements.
+
+  So the sources are stamped at startup and watched. When one of them changes,
+  this process says so and leaves; the guard that started it puts it back up
+  five seconds later with the code that is actually on disk. Nothing is lost by
+  exiting, because the stream is resumed from the last seen message.
+*/
+const SOURCES = [__filename].concat(
+  fs.existsSync(path.join(__dirname, 'lib'))
+    ? fs.readdirSync(path.join(__dirname, 'lib'))
+        .filter(function (f) { return /\.js$/.test(f); })
+        .map(function (f) { return path.join(__dirname, 'lib', f); })
+    : []
+);
+function stampSources() {
+  return SOURCES.map(function (f) {
+    try { return f + '@' + fs.statSync(f).mtimeMs; } catch (e) { return f + '@?'; }
+  }).join('|');
+}
+const SOURCE_STAMP = stampSources();
+// Set while a message is being handled, so a restart never lands in the middle
+// of writing one of his rows.
+let busy = false;
+function checkSources() {
+  if (busy) return;
+  if (stampSources() === SOURCE_STAMP) return;
+  say('הקוד על הדיסק השתנה. יוצא כדי שהשומר יעלה אותי מחדש עם הגרסה החדשה.');
+  releaseLock();
+  process.exit(0);
+}
+
+// The wrapper exists only so that a throw inside cannot leave the busy flag
+// set and freeze the restart check forever.
 async function handle(m) {
+  busy = true;
+  try { await handleOne(m); }
+  finally { busy = false; }
+  checkSources();
+}
+
+async function handleOne(m) {
   const seen = mark();
   if (m.time === seen.time && seen.ids.includes(m.id)) return;
   received++;
@@ -589,6 +639,9 @@ if (require.main === module) (async () => {
   }
   setInterval(beat, BEAT_MS);
   setInterval(drainQueue, BEAT_MS);
+  // A fix pushed while nothing is arriving should not have to wait for his
+  // next message to take effect.
+  setInterval(checkSources, 60000);
   let wait = 2000;
   for (;;) {
     try {
