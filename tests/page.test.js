@@ -1110,7 +1110,8 @@ test('the screenshot path survives the contacts payload', () => {
 test('the ack line gets the arrival time and the transcript it reads', () => {
   const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'build.js'), 'utf8');
   // ackLine() reads m.ackAt and m.note; the chat mapper has to carry both.
-  assert.ok(src.includes("re: m.re || '', ackAt: m.ackAt || '', note: m.note || '' }))"));
+  assert.ok(src.includes("ackAt: m.ackAt || '',"));
+  assert.ok(src.includes("note: group.stripCode(m.note)"));
   const html = renderPage(fixture({ chat: [{ id: 'v1', at: '2026-09-16T20:43:41.745Z', from: 'itzik',
     text: 'הודעה קולית: voice.webm', status: 'done', ackAt: '2026-09-16T20:43:41.745Z', note: 'תמלול: בדיקה' }] }));
   assert.ok(html.includes('תמלול: בדיקה'));
@@ -1829,4 +1830,32 @@ test('a recording I could not read gets its own screen, not a message', () => {
   assert.ok(at > -1);
   assert.ok(html.slice(at, at + 40).indexOf(String.fromCharCode(92)) === -1,
     'no backslash survives the template, so none may be written here');
+});
+
+/*
+  Itzik, 19.9, with a screenshot of the recordings screen: "always give me an
+  option to reply." That screen had a refresh button, a way out, and no way to
+  say anything about what was on it.
+*/
+test('every inner screen gets a reply bar, and the chat does not get a second one', () => {
+  const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'build.js'), 'utf8');
+  // The bar is hung where the back button is: on every pane the router opens.
+  assert.ok(src.includes('if(k===w){backBar(sec);replyBar(sec);}'));
+  assert.ok(src.includes("if(sec.id==='pH'||sec.id==='pM')return;"));
+  // It is the same reply box the cards carry, so mic, camera, file and text
+  // all come with it rather than being rebuilt.
+  assert.ok(/function replyBar\(sec\)\{[\s\S]*replyBox\(/.test(src));
+  assert.ok(/function replyBar\(sec\)\{[\s\S]*wireBoxes\(wrap\)/.test(src));
+});
+
+test('his personal code never reaches the page, wherever it was written', () => {
+  const html = renderPage(fixture({
+    chat: [{ id: 'c1', at: '2026-09-19T04:06:06.274Z', from: 'itzik',
+             text: 'הודעה' + String.fromCharCode(10) + 'המסך לא נטען'
+                   + String.fromCharCode(10, 10) + 'קוד 1808', status: 'done' }],
+    blocklist: [{ id: 'b1', at: '2026-09-19T03:20:00.000Z', name: 'אוסנת',
+                  why: 'אישרת חסימה ב19.9 עם קוד 1808.' }],
+  }));
+  assert.ok(!html.includes('קוד 1808'), 'the code must not be published anywhere on the page');
+  assert.ok(html.includes('המסך לא נטען'), 'the words he wrote still have to be there');
 });

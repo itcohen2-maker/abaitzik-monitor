@@ -298,7 +298,10 @@ function recordIncoming(m) {
   if (!m.attachment && m.message && (gid || !isSystemText(m.message))) {
     // A caption arrives as the same body every text send uses: a kind line,
     // the words, a blank line and his code. Only the words belong in the chat.
-    caption = gid ? group.captionFrom(m.message) : String(m.message);
+    // A plain send carries the code on its last line just like a caption does.
+    // It used to be stored whole, which put the code back on his screen at
+    // every refresh, so the tail comes off here too.
+    caption = gid ? group.captionFrom(m.message) : group.stripCode(m.message);
   }
   if (!attach && !caption.trim()) return false;
 

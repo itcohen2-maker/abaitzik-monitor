@@ -145,3 +145,24 @@ test('the caption survives a body that lost its newlines', () => {
   // A relay that strips newlines used to swallow the whole sentence.
   assert.equal(group.captionFrom('קובץבדיקה עצמיתקוד 1808'), 'בדיקה עצמית');
 });
+
+/*
+  Itzik, 19.9: "is the code exposed on screen at every refresh?" It was. Every
+  send appends it, a plain message was stored whole, and sessions had quoted it
+  back inside blocklist reasons, where the tail cut never reached it.
+*/
+test('his code comes off the end of a plain message', () => {
+  const nl = String.fromCharCode(10);
+  assert.equal(group.stripCode('הודעה' + nl + 'המסך לא נטען' + nl + nl + 'קוד 1808'),
+    'הודעה' + nl + 'המסך לא נטען');
+});
+
+test('his code is masked in the middle of a sentence too', () => {
+  assert.equal(group.stripCode('אישרת חסימה ב19.9 עם קוד 1808. שישה עשר שמות.'),
+    'אישרת חסימה ב19.9 עם קוד ••••. שישה עשר שמות.');
+});
+
+test('a message without a code is left exactly as it is', () => {
+  assert.equal(group.stripCode('ניקוזים 1=65'), 'ניקוזים 1=65');
+  assert.equal(group.stripCode(null), '');
+});

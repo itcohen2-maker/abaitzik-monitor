@@ -9,6 +9,7 @@
 const fs = require('fs');
 const path = require('path');
 const store = require('./lib/store');
+const group = require('./lib/group.js');
 
 const OUT_DIR = path.join(__dirname, 'docs');
 const NET = { facebook: 'פייסבוק', instagram: 'אינסטגרם', tiktok: 'טיקטוק', youtube: 'יוטיוב' };
@@ -112,6 +113,17 @@ function slim(html) {
 }
 
 const gate = require('./gate.js');
+
+// Walks a built payload and takes his code out of every string in it.
+function scrubCodes(node) {
+  if (Array.isArray(node)) { node.forEach(scrubCodes); return; }
+  if (!node || typeof node !== 'object') return;
+  for (const k of Object.keys(node)) {
+    const v = node[k];
+    if (typeof v === 'string') node[k] = group.stripCode(v);
+    else scrubCodes(v);
+  }
+}
 /*
   The gate fails closed, or it is not a gate.
 
@@ -130,6 +142,10 @@ if (!gate.enabled() && !process.env.MONITOR_NO_GATE) {
 }
 
 function renderPage(payload) {
+  // Belt and braces on the promise the settings screen makes. build() scrubs
+  // the payload before it splits it into the sealed files; this catches the
+  // page itself whatever rendered it.
+  scrubCodes(payload);
   /*
     With the gate on the page carries no data at all.
 
@@ -245,8 +261,11 @@ function build() {
     // `ackAt` and `note` are what the ack line under each of his messages reads:
     // when it landed, and for a recording, what it said. They were being
     // dropped here, so the transcript he asks for never reached his screen.
-    .map(m => ({ id: m.id, at: m.at, from: m.from, text: m.text, status: m.status || '',
-                 re: m.re || '', ackAt: m.ackAt || '', note: m.note || '' }))
+    // His code rides on the last line of every send. Stripped here so the
+    // messages already on disk stop putting it back on screen at each refresh.
+    .map(m => ({ id: m.id, at: m.at, from: m.from, text: group.stripCode(m.text),
+                 status: m.status || '', re: m.re || '', ackAt: m.ackAt || '',
+                 note: group.stripCode(m.note) }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? -1 : 1));
 
   // `who` is who the task is actually waiting on. Without it the list read as
@@ -372,6 +391,19 @@ function build() {
     codex,
     rivhit,
   };
+
+  /*
+    Nothing published carries his personal code.
+
+    The settings screen has always promised it is never shown. It was shown:
+    the send form appends it to the body, so a plain message was stored with
+    it and drawn with it, and sessions had also quoted it back in blocklist
+    reasons as proof of who approved a name. Itzik, 19.9: "is the code exposed
+    on screen at every refresh?" It was. One pass over everything about to be
+    published, rather than one guard per field, because the next field that
+    grows a code would be found the same way this one was.
+  */
+  scrubCodes(payload);
 
   /*
     The big collections do not travel with the page.
@@ -1535,6 +1567,11 @@ body.editing .bn{display:none}
  border-radius:var(--r);background:var(--ink);color:var(--ground);
  font:800 15px Heebo,sans-serif;text-align:start}
 .backbar:active{transform:translateY(1px)}
+/* שורת התגובה שיושבת בתחתית כל מסך פנימי. ביקש ב-19.09: תמיד תן לי אפשרות להגיב. */
+.replybar{margin:22px 0 4px;padding:14px;border:1px solid var(--line);border-radius:var(--r);
+ background:var(--surface)}
+.replybar .rlead{font:800 14px Heebo,sans-serif;color:var(--ink);margin-bottom:2px}
+.replybar .rbox{margin:0}
 .gsearch{width:100%;margin:14px 0 0;padding:13px 16px;border:1px solid var(--line);border-radius:var(--r);
  background:var(--surface);color:var(--ink);font:400 15px Heebo,sans-serif}
 .gres{margin-top:10px}
@@ -5850,6 +5887,31 @@ function backBar(sec){
  sec.insertBefore(b,sec.firstChild);
 }
 /*
+  A way to answer, on every screen, without going anywhere first.
+
+  Itzik, 19.9, with a screenshot of the recordings screen: "always give me an
+  option to reply." That screen had a refresh button and a way out and nothing
+  else, so anything he wanted to say about what was on it meant leaving the
+  screen, finding the chat, and typing it without the thing in front of him.
+
+  The bar is the same reply box the report cards carry, quoted with the name of
+  the screen it sits on, so what arrives here says what he was looking at. The
+  chat pane is the one screen that skips it: its whole body is a send form
+  already, and a second one under it is noise.
+*/
+function replyBar(sec){
+ if(sec.id==='pH'||sec.id==='pM')return;
+ if(sec.querySelector(':scope > .replybar'))return;
+ var h=sec.querySelector('h2');
+ var name=h?String(h.textContent||'').trim():'';
+ var wrap=document.createElement('div');
+ wrap.className='replybar';
+ wrap.innerHTML='<div class="rlead">יש לך מה להגיד על המסך הזה</div>'
+  +replyBox(name?('על המסך '+name):'על המסך הזה');
+ sec.appendChild(wrap);
+ try{wireBoxes(wrap);}catch(e){try{console.error('replyBar',e);}catch(_){}}
+}
+/*
   The screen he lands on has to start at the top.
 
   Itzik, 17.9: "I press the red button and I do not see the answers." They were
@@ -5870,7 +5932,7 @@ function pane(w){
  for(var k in PANES){
   var sec=document.getElementById(PANES[k]);
   sec.hidden=(k!==w);
-  if(k===w)backBar(sec);
+  if(k===w){backBar(sec);replyBar(sec);}
  }
  /*
    A screen draws itself when it opens. No caller can forget.
