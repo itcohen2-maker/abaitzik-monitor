@@ -42,14 +42,14 @@ powercfg /change monitor-timeout-ac 15
 
 ### 2. כרום ופרופיל ייעודי
 
-פרופיל נפרד לעבודה, לא הפרופיל הפרטי. כאן זה `Profile 3`.
+פרופיל נפרד לעבודה, לא הפרופיל הפרטי. כאן זה `Profile 4`, החשבון itcohen2. Profile 3 הוא trtech ואסור לפתוח אותו.
 המיפוי בין שם התיקייה לשם התצוגה נמצא ב-`Local State` תחת `profile.info_cache`.
 
 **חובה להפעיל עם דגל הפרופיל:**
 
 ```powershell
 Start-Process "C:\Program Files\Google\Chrome\Application\chrome.exe" `
-  -ArgumentList '--profile-directory=Profile 3'
+  -ArgumentList '--profile-directory="Profile 4"'
 ```
 
 **למה זה קריטי:** הפעלה בלי הדגל נעצרת על מסך ״Who's using Chrome?״.
@@ -133,7 +133,7 @@ node healthcheck.js     # חייב לצאת ירוק
 
 ```powershell
 Start-Process "C:\Program Files\Google\Chrome\Application\chrome.exe" `
-  -ArgumentList '--profile-directory=Profile 3'
+  -ArgumentList '--profile-directory="Profile 4"'
 ```
 
 ואז לחכות כ-12 שניות ולוודא שיש מכשיר מחובר.

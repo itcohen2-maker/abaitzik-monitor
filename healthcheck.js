@@ -22,7 +22,7 @@ const https = require('https');
 
 const HERE = __dirname;
 const CHROME = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-const PROFILE = 'Profile 3';                       // ראה [[chrome-relaunch]]
+const PROFILE = 'Profile 4';                       // itcohen2 בלבד (איציק, 19.9.2026). ראה [[chrome-relaunch]]
 const CLAUDE_EXT = 'fcoeoabgfenejglbffodgkkbkcdhcgfn';
 const USER_DATA = path.join(process.env.LOCALAPPDATA || '', 'Google', 'Chrome', 'User Data');
 const PUBLIC_URL = 'https://itcohen2-maker.github.io/abaitzik-monitor/';
@@ -92,7 +92,7 @@ function chrome() {
   const n = Number(ps('(Get-Process chrome -ErrorAction SilentlyContinue | Measure-Object).Count') || 0);
   if (!n) {
     fail('כרום רץ', 'אין תהליך כרום',
-      'Start-Process "' + CHROME + '" -ArgumentList \'--profile-directory=' + PROFILE + '\'');
+      'Start-Process "' + CHROME + '" -ArgumentList \'--profile-directory="' + PROFILE + '"\'');
   } else {
     ok('כרום רץ', n + ' תהליכים');
   }
