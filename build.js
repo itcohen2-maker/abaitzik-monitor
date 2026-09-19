@@ -1572,6 +1572,18 @@ body.editing .bn{display:none}
  background:var(--surface)}
 .replybar .rlead{font:800 14px Heebo,sans-serif;color:var(--ink);margin-bottom:2px}
 .replybar .rbox{margin:0}
+/* The reply box, sized for his thumbs. 19.09: "מיקרופון כפתור גדול, יש לי אצבעות עבות". */
+.rbox .bmic{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;
+ min-height:72px;margin-top:12px;border-radius:18px;background:var(--accent);color:#fff;
+ border:0;font:800 22px Heebo,sans-serif}
+.rbox .rform{margin-top:12px}
+.rbox .rform textarea{min-height:84px;font:400 19px Heebo,sans-serif;padding:14px;border-radius:14px}
+.rbox .rrow{gap:10px}
+.rbox .rrow .rb,.rbox .rform button{flex:1 1 40%;min-height:58px;padding:10px 16px;
+ font:700 18px Heebo,sans-serif;border-radius:14px}
+.rbox .rform button[type=submit]{align-self:stretch}
+.rbox .rsaid{font-size:16px}
+.rbox .rb:focus-visible,.rbox button:focus-visible,.rbox textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .gsearch{width:100%;margin:14px 0 0;padding:13px 16px;border:1px solid var(--line);border-radius:var(--r);
  background:var(--surface);color:var(--ink);font:400 15px Heebo,sans-serif}
 .gres{margin-top:10px}
@@ -3826,16 +3838,21 @@ function renderThread(){
 // The same three ways in, next to anything I put on his screen: a report, a
 // notice, a message. He asked for it beside every one of them, because an
 // answer that is not written where the thing is gets lost by the evening.
+/*
+  Itzik, 19.9, with a screenshot of this box: "put a writing line instead of
+  the icon, make it all accessible, the microphone a big button, I have thick
+  fingers." The writing button only opened a line he then had to find, so the
+  line is simply there now, and every target is at least a thumb high.
+*/
 function replyBox(quote){
  return '<div class="rbox" data-q="'+esc(quote)+'">'
-  +'<div class="rrow">'
-  +'<button type="button" class="rb bmic">🎤 להשיב בקול</button>'
-  +'<button type="button" class="rb btxt">✍️ בכתב</button>'
+  +'<button type="button" class="rb bmic" aria-label="להשיב בקול">🎤 להשיב בקול</button>'
+  +'<form class="rform open"><textarea aria-label="כתוב לי כאן" placeholder="כתוב לי כאן"></textarea>'
+  +pasteRow()+'<span class="rsaid" role="status" aria-live="polite"></span></form>'
+  +'<div class="rrow rside">'
   +'<button type="button" class="rb bcam">📷 מצלמה</button>'
   +'<button type="button" class="rb bfile">📎 קובץ</button>'
   +'</div>'
-  +'<form class="rform"><textarea placeholder="מה יש לך להגיד על זה"></textarea>'
-  +pasteRow()+'<span class="rsaid"></span></form>'
   +'</div>';
 }
 function wireBoxes(root){
@@ -3863,7 +3880,7 @@ function wireBoxes(root){
    document.getElementById('fCap').value=q;
    shoot(true);
   };
-  txt.onclick=function(e){
+  if(txt)txt.onclick=function(e){
    e.stopPropagation();
    var open=!f.classList.contains('open');
    f.classList.toggle('open',open);
