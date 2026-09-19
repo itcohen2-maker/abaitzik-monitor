@@ -400,19 +400,50 @@ function transcribeLater(audio, file) {
       const text = String(out || '').trim().split(String.fromCharCode(10)).filter(Boolean).pop() || '';
       if (err || !text || /^\(/.test(text)) {
         say('!! תמלול מיידי נכשל: ' + path.basename(audio));
+        /*
+          One retry, and then he is told.
+
+          19.9, 05:44 to 05:53: four notes in a row failed to transcribe while
+          four agents were loading the machine. The page showed him a filename,
+          no session knew what he had asked, and the only trace was this line in
+          a log on a machine he cannot read. He waited, then asked in the chat
+          why nobody had answered. Run by hand afterwards, every one of the four
+          transcribed on the first try in about five seconds, so the failure was
+          load and not the recording.
+
+          A retry costs twenty seconds. Silence cost him twenty minutes.
+        */
+        execFile('node', ['transcribe.js', audio], { cwd: __dirname, timeout: 180000 },
+          function (err2, out2) {
+            const text2 = String(out2 || '').trim().split(String.fromCharCode(10)).filter(Boolean).pop() || '';
+            if (err2 || !text2 || /^\(/.test(text2)) {
+              say('!! תמלול נכשל גם בניסיון השני: ' + path.basename(audio));
+              try {
+                ch.notify('הודעה קולית בלי תמלול',
+                  'הגיעה ממנו הודעה קולית ולא הצלחתי לתמלל אותה פעמיים. היא על הדף כשם קובץ בלבד, ואף סשן לא יודע מה היא אומרת. הקובץ: '
+                  + path.basename(audio));
+              } catch (e2) {}
+              return;
+            }
+            applyTranscript(text2, file, started);
+          });
         return;
       }
-      const full = path.join(CHAT, file);
-      let rec;
-      try { rec = JSON.parse(fs.readFileSync(full, 'utf8')); } catch (e) { return; }
-      // Never overwrite an answer. If a session already got here and closed the
-      // message, its transcript is the one that was acted on.
-      if (rec.note || rec.status === 'done') return;
-      rec.note = 'תמלול: ' + text;
-      try { fs.writeFileSync(full, JSON.stringify(rec, null, 1), 'utf8'); } catch (e) { return; }
-      say('תומלל ב' + Math.round((Date.now() - started) / 1000) + ' שניות: ' + text.slice(0, 60));
-      publishChat();
+      applyTranscript(text, file, started);
     });
+}
+
+function applyTranscript(text, file, started) {
+  const full = path.join(CHAT, file);
+  let rec;
+  try { rec = JSON.parse(fs.readFileSync(full, 'utf8')); } catch (e) { return; }
+  // Never overwrite an answer. If a session already got here and closed the
+  // message, its transcript is the one that was acted on.
+  if (rec.note || rec.status === 'done') return;
+  rec.note = 'תמלול: ' + text;
+  try { fs.writeFileSync(full, JSON.stringify(rec, null, 1), 'utf8'); } catch (e) { return; }
+  say('תומלל ב' + Math.round((Date.now() - started) / 1000) + ' שניות: ' + text.slice(0, 60));
+  publishChat();
 }
 let publishing = false, publishAgain = false;
 function publishChat() {
