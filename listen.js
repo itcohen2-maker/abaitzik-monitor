@@ -418,10 +418,40 @@ function transcribeLater(audio, file) {
             const text2 = String(out2 || '').trim().split(String.fromCharCode(10)).filter(Boolean).pop() || '';
             if (err2 || !text2 || /^\(/.test(text2)) {
               say('!! תמלול נכשל גם בניסיון השני: ' + path.basename(audio));
+              /*
+                If I cannot read it, he can still hear it.
+
+                Itzik, 19.9: "אם אתה לא מצליח לתמלל שלח לי שאני אקשיב". He is
+                right, and it is the obvious answer. A failed transcript used to
+                leave the note as a filename on his page and nothing he could
+                press. The recording is already on this machine; copying it to
+                docs/files makes it a link he can play from the phone, and then
+                the worst case is that he listens to his own note and tells a
+                session what it said, instead of the message being lost.
+              */
+              let link = '';
+              try {
+                const pub = path.join(__dirname, 'docs', 'files');
+                fs.mkdirSync(pub, { recursive: true });
+                fs.copyFileSync(audio, path.join(pub, path.basename(audio)));
+                link = 'files/' + path.basename(audio);
+              } catch (e2) {
+                say('!! לא הצלחתי להעתיק את ההקלטה לדף: ' + e2.message);
+              }
+              try {
+                const full2 = path.join(CHAT, file);
+                const rec2 = JSON.parse(fs.readFileSync(full2, 'utf8'));
+                if (!rec2.note && rec2.status !== 'done') {
+                  rec2.note = link
+                    ? 'לא הצלחתי לתמלל. ההקלטה כאן ואפשר להאזין: ' + link
+                    : 'לא הצלחתי לתמלל, וגם לא להעלות את ההקלטה לדף.';
+                  fs.writeFileSync(full2, JSON.stringify(rec2, null, 1), 'utf8');
+                  publishChat();
+                }
+              } catch (e2) {}
               try {
                 ch.notify('הודעה קולית בלי תמלול',
-                  'הגיעה ממנו הודעה קולית ולא הצלחתי לתמלל אותה פעמיים. היא על הדף כשם קובץ בלבד, ואף סשן לא יודע מה היא אומרת. הקובץ: '
-                  + path.basename(audio));
+                  'לא הצלחתי לתמלל הודעה קולית שלך, פעמיים. שמתי אותה במוניטור כדי שתוכל להאזין ולהגיד לי מה ביקשת.');
               } catch (e2) {}
               return;
             }
