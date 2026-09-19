@@ -1367,7 +1367,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-19T03:46:27.353Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-19T03:48:25.774Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2184,7 +2184,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='a6cb4669d0';
+var CODE_ID='266e246c07';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -6198,7 +6198,7 @@ function markAllRead(cutoff){
   });
   localStorage.setItem('chatSeenIds',JSON.stringify(seen.slice(-2000)));
   localStorage.setItem('chatTouched',JSON.stringify(t.slice(-2000)));
-  localStorage.setItem('chatSeen',newestClaude());
+  localStorage.setItem('chatSeen',cutoff||newestClaude());
  }catch(e){}
  paintDot();renderNew();renderThread();
 }

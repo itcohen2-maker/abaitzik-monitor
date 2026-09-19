@@ -8499,7 +8499,10 @@ function markAllRead(cutoff){
   });
   localStorage.setItem('chatSeenIds',JSON.stringify(seen.slice(-2000)));
   localStorage.setItem('chatTouched',JSON.stringify(t.slice(-2000)));
-  localStorage.setItem('chatSeen',newestClaude());
+  // Up to the cutoff when there is one. The reset boot passes one, and writing
+  // the newest answer here instead would have said everything is read when
+  // only the older half was meant.
+  localStorage.setItem('chatSeen',cutoff||newestClaude());
  }catch(e){}
  paintDot();renderNew();renderThread();
 }
