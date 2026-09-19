@@ -1367,7 +1367,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-19T03:43:00.793Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-19T03:46:27.353Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2184,7 +2184,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='a7c5191332';
+var CODE_ID='a6cb4669d0';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -2940,7 +2940,7 @@ function ringFor(el,ms){
 }
 function paintDot(){
  var d=document.getElementById('mDot');
- if(d)d.hidden=!unreadList().length;
+ if(d)d.hidden=!unreadTally();
  paintNew();
  paintAnsCount();
 }
@@ -2949,7 +2949,7 @@ function newReports(){
  return (D.reports||[]).filter(function(r){return (r.at||'')>cut;});
 }
 function paintNew(){
- var msgs=unreadList().length;
+ var msgs=unreadTally();
  var reps=newReports().length;
  var t=lastPill();
  var pillNow=!t||(Date.now()-t)>=PILLGAP;
@@ -3010,7 +3010,25 @@ function unreadList(){
   return true;
  });
 }
-function unreadCount(){return allAnswers().filter(isFresh).length;}
+function unreadTally(){
+ var n=unreadList().length;
+ var keys=D.ansKeys;
+ if(!keys||!keys.length)return n;
+ var seen=seenIds(),cut=chatSeen();
+ var m=0;
+ for(var i=0;i<keys.length;i++){
+  var k=keys[i];
+  if(seen.indexOf(k)>-1)continue;
+  if(!seen.length&&cut&&k.slice(0,k.indexOf('|'))<=cut)continue;
+  m++;
+ }
+ return m>n?m:n;
+}
+function unreadCount(){
+ var shown=allAnswers().filter(isFresh).length;
+ var wide=unreadTally()+codexFresh().length;
+ return wide>shown?wide:shown;
+}
 function renderNew(){
  renderSent();
  paintAnsCount();
@@ -3179,7 +3197,7 @@ function paintLive(v){
  var fresh=now&&now.at&&(Date.now()-Date.parse(now.at))<25*60*1000;
  bar.classList.toggle('busy',!!fresh);
  what.textContent=fresh?(now.text||'עובד עכשיו'):'אני מקשיב לך. אפשר גם לכתוב כאן';
- var n=unreadList().length;
+ var n=unreadTally();
  when.textContent=(n?(n===1?'תשובה אחת מחכה · ':n+' תשובות מחכות · '):'')
   +(now&&now.at?ago(now.at):ago(D.builtAt));
 }
@@ -6169,10 +6187,12 @@ on('arrangeBtn',function(){
 function markAllRead(cutoff){
  try{
   var seen=seenIds(),t=touchedIds();
-  (D.chat||[]).concat(D.codex||[]).forEach(function(m){
-   if(m.from!=='claude'&&m.from!=='codex')return;
-   if(cutoff&&(m.at||'')>cutoff)return;
-   var k=claudeKey(m);
+  var keys=(D.chat||[]).concat(D.codex||[]).filter(function(m){
+   return m.from==='claude'||m.from==='codex';
+  }).map(claudeKey);
+  keys=keys.concat(D.ansKeys||[]);
+  keys.forEach(function(k){
+   if(cutoff&&k.slice(0,k.indexOf('|'))>cutoff)return;
    if(seen.indexOf(k)<0)seen.push(k);
    if(t.indexOf(k)<0)t.push(k);
   });

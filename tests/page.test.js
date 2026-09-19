@@ -1583,12 +1583,17 @@ test('the red count is the length of the list it opens', () => {
   // קראת. אין כלום שם". The count came from one set and the screen from
   // another, so anything the answers list does not carry was counted here and
   // could never appear there.
-  assert.ok(html.includes('function unreadCount(){return allAnswers().filter(isFresh).length;}'));
+  // It is still built from those cards, and now also from the keys of the
+  // answers that are inside the unread window but not in memory yet, so it can
+  // be wider than the slice on the page and never narrower than it.
+  assert.ok(html.includes('var shown=allAnswers().filter(isFresh).length;'));
+  assert.ok(html.includes('var wide=unreadTally()+codexFresh().length;'));
+  assert.ok(html.includes('return wide>shown?wide:shown;'));
   // Codex answers are counted now, so the button that clears everything has to
   // reach them too, or the count sticks above zero right after a press that
-  // says everything is read.
-  assert.ok(html.includes('(D.chat||[]).concat(D.codex||[]).forEach(function(m){'));
-  assert.ok(html.includes("if(m.from!=='claude'&&m.from!=='codex')return;"));
+  // says everything is read. The same goes for that wider window.
+  assert.ok(html.includes("return m.from==='claude'||m.from==='codex';"));
+  assert.ok(html.includes('keys=keys.concat(D.ansKeys||[]);'));
   // The count is made of files that arrive after the page, so it is painted
   // again when they land instead of sitting low until the next press.
   assert.ok(html.includes('try{renderNew();}catch(e){}'));

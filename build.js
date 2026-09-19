@@ -386,6 +386,12 @@ function build() {
     home screen counter looks at: unread since the last reset, reports since
     he last opened the reports screen, and so on. So no count is ever wrong
     while a file is still in the air.
+
+    That stopped being true for the chat. The reset is days back now and the
+    window behind the red button is 225 answers deep, against a slice of 150,
+    so the oldest 129 of them were outside anything the count could see. The
+    answer is not a bigger slice, which is the weight this whole split was for.
+    It is `ansKeys` below: the window as keys alone.
   */
   const HEADS = { chat: 150, reports: 14, codex: 20, special: 8, replies: 8,
                   improve: 4, food: 12, pegasus: 4, replied: 0, rivhit: 0,
@@ -396,6 +402,8 @@ function build() {
   const DATA_DIR = path.join(OUT_DIR, 'data');
   fs.mkdirSync(DATA_DIR, { recursive: true });
   const lazy = {};
+  // Kept before the loop below trims payload.chat down to its head slice.
+  const fullChat = (payload.chat || []).slice();
   for (const key of Object.keys(HEADS)) {
     const all = payload[key] || [];
     fs.writeFileSync(path.join(DATA_DIR, key + '.json'),
@@ -416,6 +424,28 @@ function build() {
     lazy[key] = { n: all.length };
   }
   payload.lazy = lazy;
+  /*
+    The unread window, as keys and nothing else.
+
+    From his diagnostic, 19.9 06:35: 150 messages in memory out of 376, red
+    button 13. The 13 was right, and it was right by luck: it was counted over
+    the slice in memory, and every unread answer happened to be inside it. One
+    older than the slice would simply not have been counted until some screen
+    pulled the whole file down.
+
+    A key is `moment|first forty characters`, which is exactly what the read
+    marks on his phone are written against, so the count needs the keys and
+    never the messages. Two hundred of them weigh a few kilobytes against the
+    hundreds the messages themselves cost. The list he opens is still built
+    from messages really in memory, and pressing the button fetches them
+    first, so the number is right at paint and the cards are there when he
+    arrives.
+  */
+  const MAIL_TAG = 'מייל:';
+  payload.ansKeys = fullChat
+    .filter(m => m.from === 'claude' && String(m.text || '').indexOf(MAIL_TAG) !== 0)
+    .filter(m => !RESET_SEEN_AT || (m.at || '') > RESET_SEEN_AT)
+    .map(m => (m.at || '') + '|' + String(m.text || '').slice(0, 40));
   /*
     The channels ride inside the sealed payload, never in the page.
 
@@ -4090,7 +4120,7 @@ function ringFor(el,ms){
 }
 function paintDot(){
  var d=document.getElementById('mDot');
- if(d)d.hidden=!unreadList().length;
+ if(d)d.hidden=!unreadTally();
  paintNew();
  paintAnsCount();
 }
@@ -4103,7 +4133,7 @@ function newReports(){
 // He asked the screen to point at what needs him. A tile glows and wears a
 // count, and the tab at the bottom breathes, until he opens that screen.
 function paintNew(){
- var msgs=unreadList().length;
+ var msgs=unreadTally();
  var reps=newReports().length;
  var t=lastPill();
  var pillNow=!t||(Date.now()-t)>=PILLGAP;
@@ -4196,6 +4226,32 @@ function unreadList(){
  });
 }
 /*
+  How many are unread, including the ones not in memory yet.
+
+  unreadList can only look at the messages this page is holding, and that is
+  the newest slice, not the whole window the count runs over. So the head
+  carries ansKeys: every answer since the last reset, as the same key the
+  read marks are written against. Counted here, the number is whole from the
+  first paint instead of climbing when a file lands.
+
+  It is never smaller than the list, only ever wider than it, so a count can
+  still not drop below what is already on the screen.
+*/
+function unreadTally(){
+ var n=unreadList().length;
+ var keys=D.ansKeys;
+ if(!keys||!keys.length)return n;
+ var seen=seenIds(),cut=chatSeen();
+ var m=0;
+ for(var i=0;i<keys.length;i++){
+  var k=keys[i];
+  if(seen.indexOf(k)>-1)continue;
+  if(!seen.length&&cut&&k.slice(0,k.indexOf('|'))<=cut)continue;
+  m++;
+ }
+ return m>n?m:n;
+}
+/*
   The number on the red button is the length of the list it opens. Nothing else.
 
   Itzik, 18.09 08:43, on a button reading five: "כתוב 5 הודעות שלא קראת. אין
@@ -4209,7 +4265,11 @@ function unreadList(){
   It reads zero while the chat file is still on its way, which is the honest
   answer at that moment, and it goes red by itself when the file lands.
 */
-function unreadCount(){return allAnswers().filter(isFresh).length;}
+function unreadCount(){
+ var shown=allAnswers().filter(isFresh).length;
+ var wide=unreadTally()+codexFresh().length;
+ return wide>shown?wide:shown;
+}
 function renderNew(){
  renderSent();
  paintAnsCount();
@@ -4419,7 +4479,7 @@ function paintLive(v){
  var fresh=now&&now.at&&(Date.now()-Date.parse(now.at))<25*60*1000;
  bar.classList.toggle('busy',!!fresh);
  what.textContent=fresh?(now.text||'עובד עכשיו'):'אני מקשיב לך. אפשר גם לכתוב כאן';
- var n=unreadList().length;
+ var n=unreadTally();
  when.textContent=(n?(n===1?'תשובה אחת מחכה · ':n+' תשובות מחכות · '):'')
   +(now&&now.at?ago(now.at):ago(D.builtAt));
 }
@@ -8425,10 +8485,15 @@ function markAllRead(cutoff){
   // clear them. Without them here the count would stick above zero right after
   // a press that promises everything is read, which is the same complaint in
   // a new place.
-  (D.chat||[]).concat(D.codex||[]).forEach(function(m){
-   if(m.from!=='claude'&&m.from!=='codex')return;
-   if(cutoff&&(m.at||'')>cutoff)return;
-   var k=claudeKey(m);
+  var keys=(D.chat||[]).concat(D.codex||[]).filter(function(m){
+   return m.from==='claude'||m.from==='codex';
+  }).map(claudeKey);
+  // And the rest of the window, which is counted now and is mostly not in
+  // memory. Without these the press would promise everything is read and the
+  // number would sit there unmoved, which is the old complaint in a new place.
+  keys=keys.concat(D.ansKeys||[]);
+  keys.forEach(function(k){
+   if(cutoff&&k.slice(0,k.indexOf('|'))>cutoff)return;
    if(seen.indexOf(k)<0)seen.push(k);
    if(t.indexOf(k)<0)t.push(k);
   });
