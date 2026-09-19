@@ -862,7 +862,7 @@ body.editing .bn{display:none}
 .backbar:active{transform:translateY(1px)}
 .replybar{margin:22px 0 4px;padding:14px;border:1px solid var(--line);border-radius:var(--r);
  background:var(--surface)}
-.replybar .rlead{font:800 14px Heebo,sans-serif;color:var(--ink);margin-bottom:2px}
+.replybar .rlead{font:800 19px Heebo,sans-serif;color:var(--ink);margin-bottom:2px}
 .replybar .rbox{margin:0}
 .rbox .bmic{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;
  min-height:72px;margin-top:12px;border-radius:18px;background:var(--accent);color:#fff;
@@ -873,6 +873,8 @@ body.editing .bn{display:none}
 .rbox .rrow .rb,.rbox .rform button{flex:1 1 40%;min-height:58px;padding:10px 16px;
  font:700 18px Heebo,sans-serif;border-radius:14px}
 .rbox .rform button[type=submit]{align-self:stretch}
+.rbox .bmic,.rbox .rform button[type=submit]{color:var(--ground)}
+.rbox .rform .rpaste{background:var(--surface);color:var(--accent);border:1px solid var(--line)}
 .rbox .rsaid{font-size:16px}
 .rbox .rb:focus-visible,.rbox button:focus-visible,.rbox textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .gsearch{width:100%;margin:14px 0 0;padding:13px 16px;border:1px solid var(--line);border-radius:var(--r);
@@ -1382,7 +1384,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-19T11:31:56.098Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-19T11:33:06.299Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2211,7 +2213,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='c6fc35c89b';
+var CODE_ID='a38252c896';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){

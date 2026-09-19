@@ -1570,7 +1570,7 @@ body.editing .bn{display:none}
 /* שורת התגובה שיושבת בתחתית כל מסך פנימי. ביקש ב-19.09: תמיד תן לי אפשרות להגיב. */
 .replybar{margin:22px 0 4px;padding:14px;border:1px solid var(--line);border-radius:var(--r);
  background:var(--surface)}
-.replybar .rlead{font:800 14px Heebo,sans-serif;color:var(--ink);margin-bottom:2px}
+.replybar .rlead{font:800 19px Heebo,sans-serif;color:var(--ink);margin-bottom:2px}
 .replybar .rbox{margin:0}
 /* The reply box, sized for his thumbs. 19.09: "מיקרופון כפתור גדול, יש לי אצבעות עבות". */
 .rbox .bmic{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;
@@ -1582,6 +1582,8 @@ body.editing .bn{display:none}
 .rbox .rrow .rb,.rbox .rform button{flex:1 1 40%;min-height:58px;padding:10px 16px;
  font:700 18px Heebo,sans-serif;border-radius:14px}
 .rbox .rform button[type=submit]{align-self:stretch}
+.rbox .bmic,.rbox .rform button[type=submit]{color:var(--ground)}
+.rbox .rform .rpaste{background:var(--surface);color:var(--accent);border:1px solid var(--line)}
 .rbox .rsaid{font-size:16px}
 .rbox .rb:focus-visible,.rbox button:focus-visible,.rbox textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .gsearch{width:100%;margin:14px 0 0;padding:13px 16px;border:1px solid var(--line);border-radius:var(--r);
