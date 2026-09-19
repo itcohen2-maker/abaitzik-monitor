@@ -550,7 +550,16 @@ test('the microphone answers the tap before the phone has decided', () => {
   assert.ok(said < body.indexOf('getUserMedia({audio:true})'), 'and it must be said before the wait');
   // One attempt at a time: only recBtn was guarded, so a second tap on the main
   // microphone launched a second permission request.
-  assert.ok(body.includes('if(recStarting||rec)return;'));
+  assert.ok(body.includes("if(recStarting||rec){"));
+  // And the refusal has a voice. A silent return is the same dead tap he has
+  // reported on three other screens.
+  assert.ok(body.includes('כבר מקליט. לחיצה נוספת עוצרת ושולחת.'));
+  assert.ok(body.includes('רגע, המיקרופון נפתח.'));
+  // 19.9: if start() threw, rec stayed set and the stream stayed open, so the
+  // microphone was dead for the rest of the session and the indicator stayed
+  // on. The failure path has to let go of the recorder like the cleanup does.
+  assert.ok(body.includes("try{recCleanup();}catch(e){}"),
+    "a failed start has to release the recorder too");
   // And a failure says what actually failed, instead of sending him to a
   // permission screen for a microphone another app is holding.
   assert.ok(body.includes("name==='NotReadableError'||name==='AbortError'"));

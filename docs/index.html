@@ -1367,7 +1367,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-19T03:08:45.756Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-19T03:10:09.411Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2184,7 +2184,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='efd56908b3';
+var CODE_ID='a7c5191332';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -5107,7 +5107,7 @@ function blUrl(h){
 function blOpenPeople(){
  var out=[];
  (D.blocklist||[]).forEach(function(l){(l.people||[]).forEach(function(p){
-  if(p.handle&&p.state!=='נחסם')out.push(p);
+  if(p.handle&&p.handle.indexOf('חיפוש')!==0&&p.state!=='נחסם')out.push(p);
  });});
  return out;
 }
@@ -5116,7 +5116,7 @@ function renderBlockOpen(){
  if(!host)return;
  var left=blOpenPeople();
  if(!left.length){ host.innerHTML=''; return; }
- host.innerHTML='<h3>עוד לא נחסמו, '+left.length+'</h3>'
+ host.innerHTML='<h3>קישורים ישירים, '+left.length+'</h3>'
   +'<p>כל שורה כאן היא קישור שנפתח בפרופיל עצמו, בלי להקליד ובלי לחפש.</p>'
   +'<ol>'+left.map(function(p){
    return '<li><b>'+esc(p.name||p.id)+'</b>'
@@ -5946,7 +5946,10 @@ function recStart(){
   paintMics('bad');
   return;
  }
- if(recStarting||rec)return;
+ if(recStarting||rec){
+  if(recSaid)recSaid.textContent=rec?'כבר מקליט. לחיצה נוספת עוצרת ושולחת.':'רגע, המיקרופון נפתח.';
+  return;
+ }
  recStarting=true;
  recBtn.disabled=true;
  recSaid.textContent='פותח את המיקרופון. אם הדפדפן שואל, תאשר.';
@@ -5995,6 +5998,8 @@ function recStart(){
   recTimer=setInterval(recTick,1000);
  }).catch(function(err){
   recStarting=false;
+  try{recCleanup();}catch(e){}
+  rec=null;
   recBtn.disabled=false;recModal(false);
   var name=(err&&err.name)||'';
   recSaid.textContent=

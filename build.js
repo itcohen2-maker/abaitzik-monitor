@@ -7088,7 +7088,9 @@ function blUrl(h){
 function blOpenPeople(){
  var out=[];
  (D.blocklist||[]).forEach(function(l){(l.people||[]).forEach(function(p){
-  if(p.handle&&p.state!=='נחסם')out.push(p);
+  // Some rows carry a search hint instead of a handle. Those cannot become a
+  // link, and printing them as one gave him a URL that opens nothing.
+  if(p.handle&&p.handle.indexOf('חיפוש')!==0&&p.state!=='נחסם')out.push(p);
  });});
  return out;
 }
@@ -7097,7 +7099,7 @@ function renderBlockOpen(){
  if(!host)return;
  var left=blOpenPeople();
  if(!left.length){ host.innerHTML=''; return; }
- host.innerHTML='<h3>עוד לא נחסמו, '+left.length+'</h3>'
+ host.innerHTML='<h3>קישורים ישירים, '+left.length+'</h3>'
   +'<p>כל שורה כאן היא קישור שנפתח בפרופיל עצמו, בלי להקליד ובלי לחפש.</p>'
   +'<ol>'+left.map(function(p){
    return '<li><b>'+esc(p.name||p.id)+'</b>'
@@ -8113,7 +8115,17 @@ function recStart(){
  }
  // One attempt at a time. Two permission prompts is how a tap that did work
  // ends up looking like a tap that did nothing.
- if(recStarting||rec)return;
+ /*
+   And it answers, instead of just refusing.
+
+   A silent return here is the same dead tap he has reported on three other
+   screens: he presses, nothing moves, and there is nothing on the page that
+   tells him why. One sentence costs nothing.
+ */
+ if(recStarting||rec){
+  if(recSaid)recSaid.textContent=rec?'כבר מקליט. לחיצה נוספת עוצרת ושולחת.':'רגע, המיקרופון נפתח.';
+  return;
+ }
  recStarting=true;
  recBtn.disabled=true;
  // Said first, synchronously, so the screen answers the finger and not the
@@ -8176,6 +8188,18 @@ function recStart(){
   recTimer=setInterval(recTick,1000);
  }).catch(function(err){
   recStarting=false;
+  /*
+    Let the recorder go on the way out too.
+
+    recCleanup already exists for the end of a recording, and the comment in
+    it describes this exact regression: a guard that nothing released refused
+    every recording after the first until he reloaded. This path had the same
+    hole. If start() throws, rec stays set and the stream stays open, so the
+    microphone is dead for the rest of the session and the indicator light
+    stays on. His voice is how he uses this page at all.
+  */
+  try{recCleanup();}catch(e){}
+  rec=null;
   recBtn.disabled=false;recModal(false);
   // What actually went wrong. Sending him to the permission screen for a
   // microphone another app is holding is a wasted trip.
