@@ -3446,6 +3446,28 @@ function savePending(a){
    punctuation that belongs to the sentence, not to the address.
    The backslashes are written four deep: this page is a template literal,
    and the result is a string handed to RegExp, so each layer eats one. */
+/*
+  A word he can press, straight to the screen the answer is on.
+
+  Itzik, 19.9: "תשים גם בתשובות שיש תשובה עם לינק". An answer that says the
+  report is in the monitor is not much use if he then has to find which
+  button it is under. So #reports, #block, #drains, #voices and the rest
+  become buttons inside the answer itself, and the page already knows how to
+  route those names.
+*/
+var SCREENWORD={reports:'הדוחות',block:'לחסימה',drains:'הניקוזים',voices:'ההקלטות',answers:'התשובות',chat:'הצ׳אט',got:'מה שהתקבל',replies:'התשובות ברשתות',special:'הבקשות',pegasus:'פגסוס',improve:'מה השתפר'};
+function screenLinks(t){
+ var out='';
+ var seen={};
+ String(t==null?'':t).replace(new RegExp('#([a-z]+)','g'),function(all,name){
+  if(SCREENWORD[name]&&!seen[name]){
+   seen[name]=1;
+   out+='<button type="button" class="ab goscreen" data-screen="'+esc(name)+'">לפתוח: '+esc(SCREENWORD[name])+'</button>';
+  }
+  return all;
+ });
+ return out;
+}
 function linkify(t){
  var parts=String(t==null?'':t).split(new RegExp('(https?://[^\\\\s<>"]+)','g'));
  return parts.map(function(x,i){
@@ -4178,6 +4200,39 @@ function paintNew(){
  // has opened it, it goes back to wherever he put it.
  floatTile('gSpecial',spNew);
  // The reports tile is gone; its count is carried by the answers badge.
+ /*
+   The button that holds the answer is the one that blinks.
+
+   Itzik, 19.9: "תהבהב את הכפתור היכן התשובה". Until now only three tiles
+   could light up, so an answer that landed on the reports screen or the
+   block screen or the recordings screen arrived in total silence and he had
+   to go looking for it. Each of these keeps its own seen stamp, so a screen
+   stops blinking the moment he opens it and not before.
+ */
+ function newerThan(list,key){
+  var top=(list&&list.length)?(list[0].at||''):'';
+  if(!top)return false;
+  var seen='';
+  try{seen=localStorage.getItem(key)||'';}catch(e){}
+  return seen<top;
+ }
+ function stampSeen(key,list){
+  var top=(list&&list.length)?(list[0].at||''):'';
+  if(!top)return;
+  try{localStorage.setItem(key,top);}catch(e){}
+ }
+ window.stampSeen=stampSeen;
+ // אין אריח דוחות במסך הבית, המונה שלו רוכב על התג של התשובות, וסימון
+ // מזהה שלא קיים הוא פעולה שקטה שנראית כמו תכונה.
+ var bl=[];
+ (D.blocklist||[]).forEach(function(l){(l.people||[]).forEach(function(p){if(p.state==='ממתין')bl.push(p);});});
+ mark('gBlock',bl.length>0,String(bl.length));
+ var vc=(typeof voiceList==='function')?voiceList():[];
+ mark('gVoices',newerThan(vc,'voicesSeen'),'חדש');
+ floatTile('gVoices',newerThan(vc,'voicesSeen'));
+ var dr=(D.drains||[]).slice().sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
+ mark('gDrains',newerThan(dr,'drainsSeen'),'חדש');
+
  mark('gPill',pillNow,'עכשיו');
  // One tab now, so one place for the mark. Chat and reports used to light up
  // their own tabs beside it, which is exactly the three doors he reported.
@@ -5564,6 +5619,7 @@ function renderAnswers(){
   return '<div class="ansc'+(his?' mine':' '+ansColor(m))+'" data-i="'+i+'">'
    +'<span class="w">'+ansWho(m)+' · '+esc(stamp(m.at))+mark+'</span>'
    +(m.src==='report'?ansReport(m):'<div class="atxt">'+linkify(m.text)+'</div>')
+   +screenLinks(m.text)
    +'<div class="arow">'
    +(m.src!=='claude'?'':'<button type="button" class="ab aimb" data-k="'+esc(claudeKey(m))+'">להשיב</button>')
    +'<button type="button" class="ab acopy" data-i="'+i+'">העתקה</button>'
@@ -5628,6 +5684,13 @@ function renderAnswers(){
    var again=host.querySelector('.ansc[data-i="'+card.getAttribute('data-i')+'"]');
    if(again)ringFor(again);
   });
+ });
+ // לחיצה על לפתוח הולכת ישר לשם, במקום שיחפש מתחת לאיזה כפתור זה יושב.
+ Array.prototype.forEach.call(host.querySelectorAll('.goscreen'),function(b){
+  b.onclick=function(e){e.stopPropagation();
+   var k=paneOf(b.getAttribute('data-screen')||'');
+   if(k)pane(k);
+  };
  });
  Array.prototype.forEach.call(host.querySelectorAll('.adone'),function(b){
   b.onclick=function(e){e.stopPropagation();
@@ -7304,9 +7367,15 @@ function renderVoices(){
    +'</div>';
  }).join('');
 }
-function openVoices(){pane('V');renderVoices();ensure('chat',renderVoices);}
+function openVoices(){
+ pane('V');renderVoices();ensure('chat',renderVoices);
+ try{window.stampSeen&&window.stampSeen('voicesSeen',voiceList());renderNew();}catch(e){}
+}
 on('gVoices',openVoices);
-function openDrains(){pane('j');renderDrains();ensure('drains',renderDrains);}
+function openDrains(){
+ pane('j');renderDrains();ensure('drains',renderDrains);
+ try{window.stampSeen&&window.stampSeen('drainsSeen',(D.drains||[]).slice().sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;}));renderNew();}catch(e){}
+}
 on('gDrains',openDrains);
 /*
   The form sends, it does not write.

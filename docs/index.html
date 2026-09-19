@@ -1367,7 +1367,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-19T04:01:09.260Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-19T04:02:53.268Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2196,7 +2196,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='ccd83d6ca5';
+var CODE_ID='13367f7716';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -2391,6 +2391,19 @@ function pending(){
 }
 function savePending(a){
  try{localStorage.setItem('pendingMsgs',JSON.stringify(a));}catch(e){}
+}
+var SCREENWORD={reports:'הדוחות',block:'לחסימה',drains:'הניקוזים',voices:'ההקלטות',answers:'התשובות',chat:'הצ׳אט',got:'מה שהתקבל',replies:'התשובות ברשתות',special:'הבקשות',pegasus:'פגסוס',improve:'מה השתפר'};
+function screenLinks(t){
+ var out='';
+ var seen={};
+ String(t==null?'':t).replace(new RegExp('#([a-z]+)','g'),function(all,name){
+  if(SCREENWORD[name]&&!seen[name]){
+   seen[name]=1;
+   out+='<button type="button" class="ab goscreen" data-screen="'+esc(name)+'">לפתוח: '+esc(SCREENWORD[name])+'</button>';
+  }
+  return all;
+ });
+ return out;
 }
 function linkify(t){
  var parts=String(t==null?'':t).split(new RegExp('(https?://[^\\s<>"]+)','g'));
@@ -2986,6 +2999,28 @@ function paintNew(){
  mark('gReplies',rpNew>0,String(rpNew));
  floatTile('gReplies',rpNew>0);
  floatTile('gSpecial',spNew);
+ function newerThan(list,key){
+  var top=(list&&list.length)?(list[0].at||''):'';
+  if(!top)return false;
+  var seen='';
+  try{seen=localStorage.getItem(key)||'';}catch(e){}
+  return seen<top;
+ }
+ function stampSeen(key,list){
+  var top=(list&&list.length)?(list[0].at||''):'';
+  if(!top)return;
+  try{localStorage.setItem(key,top);}catch(e){}
+ }
+ window.stampSeen=stampSeen;
+ var bl=[];
+ (D.blocklist||[]).forEach(function(l){(l.people||[]).forEach(function(p){if(p.state==='ממתין')bl.push(p);});});
+ mark('gBlock',bl.length>0,String(bl.length));
+ var vc=(typeof voiceList==='function')?voiceList():[];
+ mark('gVoices',newerThan(vc,'voicesSeen'),'חדש');
+ floatTile('gVoices',newerThan(vc,'voicesSeen'));
+ var dr=(D.drains||[]).slice().sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
+ mark('gDrains',newerThan(dr,'drainsSeen'),'חדש');
+
  mark('gPill',pillNow,'עכשיו');
  var nA=document.getElementById('nA');
  if(nA)nA.classList.toggle('hasnew',msgs>0||reps>0);
@@ -3976,6 +4011,7 @@ function renderAnswers(){
   return '<div class="ansc'+(his?' mine':' '+ansColor(m))+'" data-i="'+i+'">'
    +'<span class="w">'+ansWho(m)+' · '+esc(stamp(m.at))+mark+'</span>'
    +(m.src==='report'?ansReport(m):'<div class="atxt">'+linkify(m.text)+'</div>')
+   +screenLinks(m.text)
    +'<div class="arow">'
    +(m.src!=='claude'?'':'<button type="button" class="ab aimb" data-k="'+esc(claudeKey(m))+'">להשיב</button>')
    +'<button type="button" class="ab acopy" data-i="'+i+'">העתקה</button>'
@@ -4025,6 +4061,12 @@ function renderAnswers(){
    var again=host.querySelector('.ansc[data-i="'+card.getAttribute('data-i')+'"]');
    if(again)ringFor(again);
   });
+ });
+ Array.prototype.forEach.call(host.querySelectorAll('.goscreen'),function(b){
+  b.onclick=function(e){e.stopPropagation();
+   var k=paneOf(b.getAttribute('data-screen')||'');
+   if(k)pane(k);
+  };
  });
  Array.prototype.forEach.call(host.querySelectorAll('.adone'),function(b){
   b.onclick=function(e){e.stopPropagation();
@@ -5261,9 +5303,15 @@ function renderVoices(){
    +'</div>';
  }).join('');
 }
-function openVoices(){pane('V');renderVoices();ensure('chat',renderVoices);}
+function openVoices(){
+ pane('V');renderVoices();ensure('chat',renderVoices);
+ try{window.stampSeen&&window.stampSeen('voicesSeen',voiceList());renderNew();}catch(e){}
+}
 on('gVoices',openVoices);
-function openDrains(){pane('j');renderDrains();ensure('drains',renderDrains);}
+function openDrains(){
+ pane('j');renderDrains();ensure('drains',renderDrains);
+ try{window.stampSeen&&window.stampSeen('drainsSeen',(D.drains||[]).slice().sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;}));renderNew();}catch(e){}
+}
 on('gDrains',openDrains);
 (function(){
  var f=document.getElementById('drForm');
