@@ -2433,6 +2433,7 @@ try{
   <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>חשבוניות והיומן</small></button>
   <button type="button" class="gt g4" id="gDrains"><b>🩺 ניקוזים</b><small>ארבעה, כמה יצא ולאן זה הולך</small></button>
   <button type="button" class="gt g9" id="gBlock"><b>🚫 לחסימה</b><small>רשימה לאישור. כלום לא קורה עד שתסמן</small></button>
+  <button type="button" class="gt g4" id="gVoices"><b>🎙️ הקלטות שלא תומללו</b><small>מה שלא הצלחתי לקרוא. תלחץ ותשמע</small></button>
   <button type="button" class="gt g10" id="gNotes"><b>📝 פתקים</b><small>נכתב, נשמר, לא הולך לאיבוד</small></button>
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
   <button type="button" class="gt g13" id="gSpecial"><b>⭐ בקשות מיוחדות</b><small>מה שביקשת ומוכן, דפים וקבצים</small></button>
@@ -2671,6 +2672,17 @@ try{
   <button type="submit" id="blSend">שליחה</button>
  </form>
  <div class="msgsaid" id="blSaid"></div>
+</section>
+
+<section id="pVc" hidden>
+ <h2>הקלטות שלא תומללו</h2>
+ <div class="hint">
+  <b>אלה ההודעות הקוליות שלך שלא הצלחתי להפוך למילים.</b>
+  איציק, 19.9: "אם אתה לא מצליח לתמלל שלח לי שאני אקשיב". אז הן כאן, ואפשר
+  ללחוץ ולשמוע. כשתדע מה אמרת שם, תכתוב לי בצ׳אט ואני ממשיך מזה.
+  אם המסך ריק, זה אומר שהכל תומלל.
+ </div>
+ <div id="vcBody"></div>
 </section>
 
 <section id="pDr" hidden>
@@ -4333,7 +4345,7 @@ function updateDot(){
  document.title=(fresh?'(1) ':'')+'אבא איציק בבנייה עצמית';
 }
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
-var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',k:'pK',j:'pDr',c:'pBl'};
+var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',k:'pK',j:'pDr',c:'pBl',V:'pVc'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
 // The last dose. From the chat it is read out of the message text, because he
@@ -5761,7 +5773,7 @@ function paintAnsCount(){
   link he taps is not a nicety here, it is the difference between a thing that
   exists and a thing he can reach.
 */
-var PANENAME={x:'pegasus',y:'special',w:'improve',r:'reports',a:'answers',m:'chat',k:'replies',b:'got',c:'block',j:'drains'};
+var PANENAME={x:'pegasus',y:'special',w:'improve',r:'reports',a:'answers',m:'chat',k:'replies',b:'got',c:'block',j:'drains',V:'voices'};
 function paneOf(name){
  for(var k in PANENAME){if(PANENAME[k]===name)return k;}
  return PANES[name]?name:'';
@@ -7254,6 +7266,46 @@ on('gBlock',openBlock);
    }).catch(function(){ if(said)said.textContent='לא נשלח. אין רשת כרגע.'; });
  };
 })();
+/*
+  What I could not read, in his own voice.
+
+  19.9: four of his notes failed to transcribe inside ten minutes while the
+  machine was loaded, and the page showed him a filename. He asked for the
+  recording itself instead, and then for a button to find them in. Nothing
+  extra is stored for this: the listener already copies a twice-failed
+  recording into docs/files and writes the link into the note, so the screen
+  is just a reader over the chat he already has.
+*/
+function voiceList(){
+ return (D.chat||[]).filter(function(m){
+  // Anything whose note carries the recording itself. That covers a twice
+  // failed transcript, and also one a session recovered by hand afterwards,
+  // because he still wants to hear it and check the words I put in his mouth.
+  return m && m.from==='itzik' && /files[/]voice-/.test(String(m.note||''));
+ }).sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
+}
+function renderVoices(){
+ var host=document.getElementById('vcBody');
+ if(!host)return;
+ var list=voiceList();
+ if(!list.length){
+  host.innerHTML='<div class="empty">אין כאן כלום. כל ההקלטות שלך תומללו.</div>';
+  return;
+ }
+ host.innerHTML=list.map(function(m){
+  // No backslash in this regex on purpose. The page template strips one on its
+  // way out, so /files\/[^\s]+/ reached the browser as /files/[^s]+/ and the
+  // whole script stopped parsing — every screen below it died at once.
+  var link=String(m.note||'').match(/files[/][^ ]+/);
+  return '<div class="ansc">'
+   +'<span class="w">'+esc(stamp(m.at))+'</span>'
+   +(link?'<audio controls preload="none" src="'+esc(link[0])+'" style="width:100%;margin-top:8px"></audio>'
+         :'<div class="atxt">ההקלטה עצמה לא הגיעה לדף. תגיד לי מה ביקשת שם.</div>')
+   +'</div>';
+ }).join('');
+}
+function openVoices(){pane('V');renderVoices();ensure('chat',renderVoices);}
+on('gVoices',openVoices);
 function openDrains(){pane('j');renderDrains();ensure('drains',renderDrains);}
 on('gDrains',openDrains);
 /*

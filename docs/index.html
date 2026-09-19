@@ -1367,7 +1367,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-19T03:49:59.623Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-19T03:54:42.069Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1489,6 +1489,7 @@ try{
   <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>חשבוניות והיומן</small></button>
   <button type="button" class="gt g4" id="gDrains"><b>🩺 ניקוזים</b><small>ארבעה, כמה יצא ולאן זה הולך</small></button>
   <button type="button" class="gt g9" id="gBlock"><b>🚫 לחסימה</b><small>רשימה לאישור. כלום לא קורה עד שתסמן</small></button>
+  <button type="button" class="gt g4" id="gVoices"><b>🎙️ הקלטות שלא תומללו</b><small>מה שלא הצלחתי לקרוא. תלחץ ותשמע</small></button>
   <button type="button" class="gt g10" id="gNotes"><b>📝 פתקים</b><small>נכתב, נשמר, לא הולך לאיבוד</small></button>
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
   <button type="button" class="gt g13" id="gSpecial"><b>⭐ בקשות מיוחדות</b><small>מה שביקשת ומוכן, דפים וקבצים</small></button>
@@ -1676,6 +1677,17 @@ try{
   <button type="submit" id="blSend">שליחה</button>
  </form>
  <div class="msgsaid" id="blSaid"></div>
+</section>
+
+<section id="pVc" hidden>
+ <h2>הקלטות שלא תומללו</h2>
+ <div class="hint">
+  <b>אלה ההודעות הקוליות שלך שלא הצלחתי להפוך למילים.</b>
+  איציק, 19.9: "אם אתה לא מצליח לתמלל שלח לי שאני אקשיב". אז הן כאן, ואפשר
+  ללחוץ ולשמוע. כשתדע מה אמרת שם, תכתוב לי בצ׳אט ואני ממשיך מזה.
+  אם המסך ריק, זה אומר שהכל תומלל.
+ </div>
+ <div id="vcBody"></div>
 </section>
 
 <section id="pDr" hidden>
@@ -2184,7 +2196,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='266e246c07';
+var CODE_ID='ccd83d6ca5';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -3068,7 +3080,7 @@ function updateDot(){
  document.title=(fresh?'(1) ':'')+'אבא איציק בבנייה עצמית';
 }
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
-var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',k:'pK',j:'pDr',c:'pBl'};
+var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',k:'pK',j:'pDr',c:'pBl',V:'pVc'};
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
 function lastPill(){
  var c=(D.chat||[]).filter(function(m){return m.from==='itzik'&&/לקחתי כדור/.test(m.text||'');});
@@ -4130,7 +4142,7 @@ function paintAnsCount(){
  el.textContent=n?String(n):'✓';
  el.classList.toggle('zero',!n);
 }
-var PANENAME={x:'pegasus',y:'special',w:'improve',r:'reports',a:'answers',m:'chat',k:'replies',b:'got',c:'block',j:'drains'};
+var PANENAME={x:'pegasus',y:'special',w:'improve',r:'reports',a:'answers',m:'chat',k:'replies',b:'got',c:'block',j:'drains',V:'voices'};
 function paneOf(name){
  for(var k in PANENAME){if(PANENAME[k]===name)return k;}
  return PANES[name]?name:'';
@@ -5227,6 +5239,30 @@ on('gBlock',openBlock);
    }).catch(function(){ if(said)said.textContent='לא נשלח. אין רשת כרגע.'; });
  };
 })();
+function voiceList(){
+ return (D.chat||[]).filter(function(m){
+  return m && m.from==='itzik' && /files[/]voice-/.test(String(m.note||''));
+ }).sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
+}
+function renderVoices(){
+ var host=document.getElementById('vcBody');
+ if(!host)return;
+ var list=voiceList();
+ if(!list.length){
+  host.innerHTML='<div class="empty">אין כאן כלום. כל ההקלטות שלך תומללו.</div>';
+  return;
+ }
+ host.innerHTML=list.map(function(m){
+  var link=String(m.note||'').match(/files[/][^ ]+/);
+  return '<div class="ansc">'
+   +'<span class="w">'+esc(stamp(m.at))+'</span>'
+   +(link?'<audio controls preload="none" src="'+esc(link[0])+'" style="width:100%;margin-top:8px"></audio>'
+         :'<div class="atxt">ההקלטה עצמה לא הגיעה לדף. תגיד לי מה ביקשת שם.</div>')
+   +'</div>';
+ }).join('');
+}
+function openVoices(){pane('V');renderVoices();ensure('chat',renderVoices);}
+on('gVoices',openVoices);
 function openDrains(){pane('j');renderDrains();ensure('drains',renderDrains);}
 on('gDrains',openDrains);
 (function(){

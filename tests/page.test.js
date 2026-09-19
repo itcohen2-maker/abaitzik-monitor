@@ -335,7 +335,7 @@ test('the replies I sent in his name get a tile, a screen and a count that blink
   assert.ok(html.includes('id="gReplies"'));
   assert.ok(html.includes('<section id="pK" hidden>'));
   assert.ok(html.includes('function renderReplies('));
-  assert.ok(html.includes("k:'pK',j:'pDr',c:'pBl'}"));
+  assert.ok(html.includes("k:'pK',j:'pDr',c:'pBl'"));
   assert.ok(html.includes("k:'replies'"));
   assert.ok(html.includes('"replies":[{"at":"2026-09-13T11:48:00+03:00"'));
   // The count is what he asked for: tell me there are more, not just that
@@ -1805,4 +1805,28 @@ test('touching an answer turns it green even when it is no longer new', () => {
   assert.ok(html.includes("ansKeep[claudeKey(m)]=1;"));
   assert.ok(html.includes("ansKeep={};"), "and the set clears when he leaves the screen");
   assert.ok(html.includes("markOneSeen(m);renderAnswers();paintDot();"));
+});
+
+test('a recording I could not read gets its own screen, not a message', () => {
+  const html = renderPage(fixture({}));
+  // Itzik, 19.9, twice: "אם אתה לא מצליח לתמלל שלח לי שאני אקשיב", and then
+  // "תכניס לי את זה לכפתור ייעודי במוניטור". Four of his notes failed to
+  // transcribe inside ten minutes and the page showed him a filename, so no
+  // session knew what he had asked and he waited twenty minutes before asking
+  // again himself.
+  assert.ok(html.includes('id="gVoices"'), 'a button on the home screen');
+  assert.ok(html.includes('<section id="pVc" hidden>'), 'and a screen of its own');
+  assert.ok(html.includes('function renderVoices('));
+  assert.ok(html.includes("V:'pVc'"), 'the pane is routable');
+  assert.ok(html.includes("V:'voices'"), 'and reachable by #voices');
+  // The list is a reader over the chat he already has: a failed transcript
+  // writes the link into the note, and that is the only thing stored.
+  assert.ok(html.includes("/files[/]voice-/.test(String(m.note"));
+  assert.ok(html.indexOf('audio controls preload')>-1, 'he has to be able to press play');
+  // And the regex that finds the link carries no backslash. The page template
+  // strips one, and a mangled character class stopped the whole script parsing.
+  const at = html.indexOf('match(/files');
+  assert.ok(at > -1);
+  assert.ok(html.slice(at, at + 40).indexOf(String.fromCharCode(92)) === -1,
+    'no backslash survives the template, so none may be written here');
 });

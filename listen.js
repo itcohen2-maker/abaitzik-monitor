@@ -449,10 +449,15 @@ function transcribeLater(audio, file) {
                   publishChat();
                 }
               } catch (e2) {}
-              try {
-                ch.notify('הודעה קולית בלי תמלול',
-                  'לא הצלחתי לתמלל הודעה קולית שלך, פעמיים. שמתי אותה במוניטור כדי שתוכל להאזין ולהגיד לי מה ביקשת.');
-              } catch (e2) {}
+              /*
+                No message to him about this.
+
+                Itzik, 19.9: "אתה ממשיך לשלוח לי הודעות ... תכניס לי את זה
+                לכפתור ייעודי במוניטור". A notification saying I could not read
+                his note is one more thing for him to handle from a phone, and
+                it tells him nothing he can act on in the moment. The recording
+                now lands on its own screen and waits for him there.
+              */
               return;
             }
             applyTranscript(text2, file, started);
