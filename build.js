@@ -2067,6 +2067,9 @@ body.editing .bn{display:none}
 .blwarn{color:var(--gold,#FBBC05);font-weight:700}
 .blstate{grid-column:2;display:inline-block;margin-inline-start:6px;font:700 12px Heebo,sans-serif;font-style:normal;color:var(--gold,#FBBC05)}
 .blstate.done{color:var(--ok,#34A853)}
+.blhead{margin:16px 0 8px;font:800 16px Heebo,sans-serif}
+.bldone{margin-top:16px}
+.bldone summary{cursor:pointer;padding:10px 2px;font:700 15px Heebo,sans-serif;color:var(--ok,#34A853)}
 /* He asked for the leftovers as a list he can search, so the leftovers get
    their own block above the form. A handle he has to retype is a handle he
    will mistype; every line here is a link that opens the profile. */
@@ -7135,7 +7138,9 @@ function renderBlock(){
   return;
  }
  var t=blTicks();
- host.innerHTML=people.map(function(p){
+ // Names he already decided on kept filling the screen, so what still waits for
+ // him was buried. Waiting names stay open, blocked ones fold away.
+ var row=function(p){
   var on=t.indexOf(p.id)>-1;
   return '<label class="blrow'+(on?' on':'')+'">'
    +'<input type="checkbox" data-id="'+esc(p.id)+'"'+(on?' checked':'')+'>'
@@ -7146,7 +7151,16 @@ function renderBlock(){
    +'<span class="blwhy">'+esc(p.why||'')
    +(p.minorCheck?' <b class="blwarn">ילד שלו. תחליט עליו בנפרד.</b>':'')+'</span>'
    +'</label>';
- }).join('');
+ };
+ var waiting=people.filter(function(p){return p.state!=='נחסם';});
+ var blocked=people.filter(function(p){return p.state==='נחסם';});
+ host.innerHTML=(waiting.length
+   ?'<h3 class="blhead">מחכים להחלטה שלך, '+waiting.length+'</h3>'+waiting.map(row).join('')
+   :'<div class="empty">אין כרגע מי שמחכה להחלטה שלך.</div>')
+  +(blocked.length
+   ?'<details class="bldone"><summary>כבר חסומים, '+blocked.length+'</summary>'
+     +blocked.map(row).join('')+'</details>'
+   :'');
  Array.prototype.forEach.call(host.querySelectorAll('input[type=checkbox]'),function(b){
   b.onchange=function(){blToggle(b.getAttribute('data-id'));renderBlock();};
  });
