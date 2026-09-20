@@ -83,7 +83,7 @@
   </div>
 
   <a class="cta" href="sekira.pdf" target="_blank" rel="noopener">פתיחת הסקירה</a>
-  <a class="alt" id="dl" href="sekira.pdf" download="סקירת פיתוח happymeal.pdf">או הורדה למכשיר</a>
+  <a class="alt" id="dl" href="sekira.pdf" download="happymeal.pdf">או הורדה למכשיר</a>
 
   <div class="card">
     <h2>מה נמצא, בקצרה</h2>
@@ -140,10 +140,10 @@
     }).then(function(b){
       var u = URL.createObjectURL(b);
       var l = document.createElement('a');
-      l.href = u; l.download = 'סקירת פיתוח happymeal.pdf';
+      l.href = u; l.download = 'happymeal.pdf';
       document.body.appendChild(l); l.click(); l.remove();
       setTimeout(function(){ URL.revokeObjectURL(u); }, 4000);
-      say('הקובץ ירד. תמצא אותו בהורדות');
+      say('ירד בשם happymeal.pdf, בתיקיית ההורדות');
     }).catch(function(){
       // Never leave the button dead: fall back to opening it in a new tab,
       // which at least keeps this page behind it.

@@ -1436,7 +1436,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-20T17:22:32.823Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-20T17:33:26.521Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2289,7 +2289,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='0e61985359';
+var CODE_ID='b23dc26bc2';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -5562,7 +5562,7 @@ function openFood(){pane('f');renderFood();ensure('food',renderFood);}
 on('gFood',openFood);on('iFood',openFood);
 on('gLolos',function(){pane('o');});
 var YEHUDA_PDF='files/happymeal-sekira-yehuda.pdf';
-var YEHUDA_NAME='סקירת פיתוח happymeal.pdf';
+var YEHUDA_NAME='happymeal.pdf';
 var YEHUDA_LINK='https://happymeal-sekira.vercel.app/';
 function yehudaUrl(){return YEHUDA_LINK;}
 function yehudaOpen(){window.open(YEHUDA_LINK,'_blank','noopener');}
