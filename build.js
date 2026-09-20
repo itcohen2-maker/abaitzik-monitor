@@ -10,6 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const store = require('./lib/store');
 const group = require('./lib/group.js');
+const ML = require('./lib/monitor-logic.js');
 
 const OUT_DIR = path.join(__dirname, 'docs');
 const NET = { facebook: 'פייסבוק', instagram: 'אינסטגרם', tiktok: 'טיקטוק', youtube: 'יוטיוב' };
@@ -268,6 +269,10 @@ function build() {
                  note: group.stripCode(m.note) }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? -1 : 1));
 
+  // A message of his that already has an answer is closed here, so the screen
+  // never shows work in progress that finished yesterday. See autoClose.
+  const chatClosed = ML.autoClose(chat);
+
   // `who` is who the task is actually waiting on. Without it the list read as
   // nine things I owe him, when four of them were already done and two are
   // waiting on a decision of his. A task with nobody named on it rots quietly,
@@ -387,7 +392,7 @@ function build() {
     improve,
     special,
     replies,
-    chat,
+    chat: chatClosed,
     codex,
     rivhit,
   };

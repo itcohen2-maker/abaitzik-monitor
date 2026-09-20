@@ -1401,7 +1401,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-20T05:52:14.689Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-20T06:13:30.965Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2167,6 +2167,27 @@ try{
     });
   }
 
+  function autoClose(chat) {
+    var byKey = {};
+    (chat || []).forEach(function (m) { byKey[keyOf(m)] = m; });
+    var answeredAt = {};
+    (chat || []).forEach(function (m) {
+      if (m.from !== 'claude') return;
+      var root = rootKeyOf(m, byKey);
+      if (!answeredAt[root] || (m.at || '') > answeredAt[root]) answeredAt[root] = m.at || '';
+    });
+    return (chat || []).map(function (m) {
+      if (m.from !== 'itzik' || m.status === 'done') return m;
+      var when = answeredAt[rootKeyOf(m, byKey)];
+      if (!when || when <= (m.at || '')) return m;
+      var out = {};
+      Object.keys(m).forEach(function (k) { out[k] = m[k]; });
+      out.status = 'done';
+      out.doneAt = m.doneAt || when;
+      return out;
+    });
+  }
+
   function threadStatus(t, state) {
     var unread = (state && state.unread) || new Set();
     var standby = (state && state.standby) || {};
@@ -2201,6 +2222,7 @@ try{
     keyOf: keyOf,
     rootKeyOf: rootKeyOf,
     splitThreads: splitThreads,
+    autoClose: autoClose,
     threadStatus: threadStatus,
     orderThreads: orderThreads,
   };
@@ -2230,7 +2252,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='4801a3c572';
+var CODE_ID='20a5a03e05';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
