@@ -291,9 +291,16 @@ function build() {
   // nine things I owe him, when four of them were already done and two are
   // waiting on a decision of his. A task with nobody named on it rots quietly,
   // which is exactly what he called out on 17.9.
+  // Not every task file was written with a `text`. Four of the open ones carry
+  // a `title` and a `note` instead, and this read `text` alone, so they came
+  // out as four rows with a date, a tag and nothing between them. Itzik, 20.9:
+  // "סימנתי בדף. מה זה?". Whatever the file calls its headline, the row shows
+  // it, and a task with no headline at all never reaches the screen blank.
+  const cmdLine = c => String(c.text || c.title || c.note || '').trim();
   const openCmds = loadDocs('commands')
     .filter(c => !c.done && /^[0-9]/.test(c.id))
-    .map(c => ({ at: c.at, text: c.text, who: c.who || 'claude' }))
+    .map(c => ({ at: c.at, text: cmdLine(c), who: c.who || 'claude' }))
+    .filter(c => c.text)
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
   // Open questions I am waiting on an answer for. This is the part a client
   // sees: the app asks what he wants and changes in front of him.
@@ -1115,18 +1122,24 @@ section{margin-bottom:30px}
   ההודעה שלו מתחילה לפעום ברגע שהיא נשלחת, וממשיכה כל עוד היא פתוחה.
   הפעימה נכבית כשהמצב בקובץ ההודעה הופך done. היא לא מוכיחה שנעשתה עבודה,
   היא אומרת שההודעה נקלטה ופתוחה, וזה בדיוק מה שהוא ביקש לראות.
+
+  The class is beat and not live, because .live further down is the
+  on air strip, and it carries display:flex. A bubble that picked up both
+  turned into a row: the byline, the message and the acknowledgement stood
+  side by side in three narrow columns, the byline sitting across the text.
+  Itzik, 20.9: "יש שם באג. מה זה. תסדר".
 */
-.bub.you.live{border:2px solid var(--gold);opacity:1;animation:livebeat 1.6s ease-in-out infinite}
-.bub.you.live .w{color:#8a5a12}
+.bub.you.beat{border:2px solid var(--gold);opacity:1;animation:livebeat 1.6s ease-in-out infinite}
+.bub.you.beat .w{color:#8a5a12}
 @keyframes livebeat{
  0%,100%{box-shadow:0 6px 18px rgba(200,150,30,.28),0 0 0 0 rgba(212,160,23,.55)}
  55%{box-shadow:0 6px 18px rgba(200,150,30,.28),0 0 0 12px rgba(212,160,23,0)}
 }
-@media(prefers-reduced-motion:reduce){.bub.you.live{animation:none}}
-.bub.you.live .lv{display:inline-block;width:8px;height:8px;border-radius:50%;
+@media(prefers-reduced-motion:reduce){.bub.you.beat{animation:none}}
+.bub.you.beat .lv{display:inline-block;width:8px;height:8px;border-radius:50%;
  margin-inline-end:6px;background:var(--gold);vertical-align:middle;
  animation:ackpulse 1.6s ease-in-out infinite}
-@media(prefers-reduced-motion:reduce){.bub.you.live .lv{animation:none;opacity:.9}}
+@media(prefers-reduced-motion:reduce){.bub.you.beat .lv{animation:none;opacity:.9}}
 /* Unread is red and glowing, and it stays that way for days if that is how
    long it takes him to get to it. Touching it turns it green, which is his
    own mark that he dealt with it. */
@@ -3833,7 +3846,7 @@ function bubbleHtml(m,i,fresh,handled){
  // מה שמועתק מהודעה קולית הוא המילים, לא שם הקובץ.
  var line=(mine?'איציק':'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'')
   +(vtx?String.fromCharCode(10)+'תמלול: '+vtx:'');
- return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')+(live?' live':'')
+ return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')+(live?' beat':'')
   +(fresh?' fresh':(handled?' touched':' read'))+'" data-i="'+i+'"'
   +' data-copy="'+esc(line)+'">'
   +'<span class="w">'+(live?'<i class="lv"></i>':'')+(mine?'אתה':'קלוד')+' · '+esc(stamp(m.at))

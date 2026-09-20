@@ -1240,9 +1240,9 @@ test('text and a chosen file leave as one message, on one press', () => {
 test('his own message pulses while it is still open, and stops when it is done', () => {
   const html = renderPage(fixture());
   assert.ok(html.includes('@keyframes livebeat'), 'no livebeat keyframes');
-  assert.ok(html.includes('.bub.you.live{border:2px solid var(--gold);opacity:1;animation:livebeat'),
+  assert.ok(html.includes('.bub.you.beat{border:2px solid var(--gold);opacity:1;animation:livebeat'),
     'his open bubble must pulse at full opacity');
-  assert.ok(/prefers-reduced-motion:reduce\)\{\.bub\.you\.live\{animation:none\}/.test(html),
+  assert.ok(/prefers-reduced-motion:reduce\)\{\.bub\.you\.beat\{animation:none\}/.test(html),
     'the pulse must stop for reduced motion');
 
   const isLive = new Function('m', html.match(/function isLive\(m\)\{[\s\S]*?\n\}/)[0] + '; return isLive(m);');
@@ -1256,9 +1256,19 @@ test('his own message pulses while it is still open, and stops when it is done',
 
   const bub = new Function('m',
     html.match(/function isLive\(m\)\{[\s\S]*?\n\}/)[0]
-    + ';return "<div class=\\"bub "+(m.from===\'itzik\'?\'you\':\'me\')+(isLive(m)?\' live\':\'\')+"\\">";');
-  assert.ok(bub({ from: 'itzik', status: 'working' }).includes('bub you live'));
-  assert.ok(!bub({ from: 'itzik', status: 'done' }).includes('live'));
+    + ';return "<div class=\\"bub "+(m.from===\'itzik\'?\'you\':\'me\')+(isLive(m)?\' beat\':\'\')+"\\">";');
+  assert.ok(bub({ from: 'itzik', status: 'working' }).includes('bub you beat'));
+  assert.ok(!bub({ from: 'itzik', status: 'done' }).includes('beat'));
+
+  /*
+    20.9: the pulsing bubble used to be marked `live`, the same class name the
+    on air strip uses, and that strip carries display:flex. On a phone the
+    bubble turned into a flex row: byline, message and acknowledgement stood in
+    three narrow columns with the byline lying across the text. He sent a photo
+    of it. A bubble must never wear a class a layout rule elsewhere owns.
+  */
+  assert.ok(/\+\(live\?' beat':''\)/.test(html), 'the bubble must be marked beat, not live');
+  assert.ok(!/class="bub [^"]*live/.test(html), 'no bubble may carry the strip class');
 });
 
 // איציק, 17.9: את הסרטונים שנעשים כאן מעלים לאתר, אז הם חייבים דף קבוע.
