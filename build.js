@@ -913,6 +913,13 @@ button.abtn[disabled]{opacity:.55}
 .gr-del{flex:0 0 auto;background:transparent;color:var(--dim);border:1px solid var(--line);
  border-radius:999px;font:700 12px Heebo,sans-serif;padding:3px 10px;cursor:pointer}
 .gr-del:active{transform:translateY(1px)}
+/* Copy and delete stack, so a fifth item on the row does not squeeze the text
+   into a column two words wide on a phone. */
+.gr-b{flex:0 0 auto;display:flex;flex-direction:column;gap:6px}
+.gr-cp{background:transparent;color:var(--accent);border:1px solid var(--line);
+ border-radius:999px;font:700 12px Heebo,sans-serif;padding:3px 10px;cursor:pointer;
+ min-height:28px;white-space:nowrap}
+.gr-cp:active{background:var(--accent);color:#fff;border-color:var(--accent)}
 .gr-del:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .gback{display:flex;gap:10px;align-items:center;justify-content:space-between;
  color:var(--dim);font-size:13px;font-weight:300;padding:10px 4px 2px}
@@ -6054,13 +6061,38 @@ function renderGot(){
   return '<button type="button" class="gr-del" data-k="'+esc(gotKey(kind,x))+'" '
    +'aria-label="מחיקת השורה">מחיקה</button>';
  }
+ /*
+   Itzik, 20.9 23:15, on his own message asking for the followers total:
+   "למה אין לי אפשרות העתקה?". Every other screen that shows words carries a
+   copy button next to them, the chat bubbles and the answer cards both, and
+   this screen, the one that lists the messages he sent me, carried only a
+   delete. So the one place he goes to find a thing he wrote was the one place
+   he could not take it out of.
+ */
+ function cpBtn(txt){
+  return '<button type="button" class="gr-cp" data-copy="'+esc(txt)+'" '
+   +'aria-label="העתקת השורה">העתקה</button>';
+ }
+ // A voice message stores the file name as its text, so what gets copied is
+ // the words, the same as in the chat.
+ function cpText(m,extra){
+  var NL=String.fromCharCode(10);
+  var t=String(m.text||'');
+  var n=String(m.note||'').replace(/^תמלול:\s*/,'');
+  if(n&&/הודעה קולית|voice-/.test(t))t=n;
+  else if(n)t=t+NL+n;
+  return stamp(m.at)+NL+t+(extra?NL+extra:'');
+ }
+ function tail(kind,m,extra){
+  return '<span class="gr-b">'+cpBtn(cpText(m,extra))+del(kind,m)+'</span>';
+ }
  function row(m,k,label,kind){
   // מד ההתקדמות יושב גם כאן, ליד כל בקשה שלו, ולא רק בצ׳אט.
   var bar=(kind&&kind!=='msg')?'':progressBar(m);
   return '<div class="gr"><span class="gr-t">'+esc(stamp(m.at))+'</span>'
    +'<div class="gr-x">'+linkify(m.text||'')+bar+'</div>'
    +'<span class="gr-s gr-'+k+'">'+label+'</span>'
-   +del(kind||'msg',m)+'</div>';
+   +tail(kind||'msg',m)+'</div>';
  }
  /*
    Itzik, 18.9: "אין מידע". He wanted the answers, opened this screen by
@@ -6076,7 +6108,8 @@ function renderGot(){
  h+='<h3>בעבודה עכשיו</h3>';
  if(N&&N.text&&!nGone)h+='<div class="gr now"><span class="gr-t">'+esc(stamp(N.at))+'</span>'
   +'<div class="gr-x">'+esc(N.text)+(N.next?'<small>אחר כך: '+esc(N.next)+'</small>':'')+'</div>'
-  +'<span class="gr-s gr-w">דיווח</span>'+del('now',{at:N.at,text:N.text})+'</div>';
+  +'<span class="gr-s gr-w">דיווח</span>'
+  +tail('now',{at:N.at,text:N.text},N.next?'אחר כך: '+N.next:'')+'</div>';
  h+=work.map(function(m){return row(m,'w','עובד על זה');}).join('');
  if(!work.length&&!(N&&N.text&&!nGone))h+='<div class="gempty">אין הודעה שמסומנת בעבודה.</div>';
  h+='<h3>התקבלו, עוד לא התחלתי · '+got.length+'</h3>';
@@ -6101,6 +6134,9 @@ function renderGot(){
  if(mb)mb.onclick=function(){gotShow+=30;renderGot();};
  var bb=document.getElementById('gotBack');
  if(bb)bb.onclick=function(){saveGone([]);renderGot();paintGot();toast('השורות חזרו.');};
+ Array.prototype.forEach.call(host.querySelectorAll('.gr-cp'),function(b){
+  b.onclick=function(e){e.stopPropagation();ansCopy(b,b.getAttribute('data-copy')||'');};
+ });
  Array.prototype.forEach.call(host.querySelectorAll('.gr-del'),function(b){
   b.onclick=function(){
    var k=b.getAttribute('data-k')||'';

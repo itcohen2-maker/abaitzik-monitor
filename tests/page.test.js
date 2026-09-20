@@ -1146,14 +1146,29 @@ test('an open task says who it is waiting on', () => {
   assert.ok(html.includes('.gr-y{'));
 });
 
+test('every row in what was received can be copied', () => {
+  const html = renderPage(fixture({}));
+  // Itzik, 20.9 23:15: "למה אין לי אפשרות העתקה?" This is the screen that
+  // lists the messages he sent me, and it was the only screen with words on it
+  // that had no copy button beside them.
+  const body = html.slice(html.indexOf('function renderGot(){'), html.indexOf('function paintAnsCount(){'));
+  assert.ok(body.includes('class="gr-cp"'));
+  assert.ok(body.includes("ansCopy(b,b.getAttribute('data-copy')||'')"));
+  // A recording is copied as its words, not as the name of its file.
+  assert.ok(body.includes("if(n&&/הודעה קולית|voice-/.test(t))t=n;"));
+  assert.ok(html.includes('.gr-cp{'));
+});
+
 test('every row in what was received carries a manual delete button', () => {
   const html = renderPage(fixture({}));
   // Itzik, 16.9 at night: a line from 10.9 saying "עובד על הבקשות שלך" was
   // still sitting there. He asked for buttons that take old requests off by
   // hand.
   const body = html.slice(html.indexOf('function renderGot(){'), html.indexOf('function paintAnsCount(){'));
-  assert.ok(body.includes("+del(kind||'msg',m)+'</div>'"));
-  assert.ok(body.includes("+del('now',{at:N.at,text:N.text})"));
+  // The delete button travels with the copy button now, both in the same tail.
+  assert.ok(body.includes("+tail(kind||'msg',m)+'</div>'"));
+  assert.ok(body.includes("+tail('now',{at:N.at,text:N.text}"));
+  assert.ok(body.includes("return '<span class=\"gr-b\">'+cpBtn(cpText(m,extra))+del(kind,m)+'</span>';"));
   assert.ok(body.includes("return row(c,w[0],w[1],'cmd');"));
   // Deleting is local to his phone and silent: no message, no notification.
   assert.ok(html.includes("localStorage.setItem('gotGone',JSON.stringify(a.slice(-400)));"));
