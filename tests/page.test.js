@@ -1267,8 +1267,10 @@ test('his own message pulses while it is still open, and stops when it is done',
     three narrow columns with the byline lying across the text. He sent a photo
     of it. A bubble must never wear a class a layout rule elsewhere owns.
   */
-  assert.ok(/\+\(live\?' beat':''\)/.test(html), 'the bubble must be marked beat, not live');
-  assert.ok(!/class="bub [^"]*live/.test(html), 'no bubble may carry the strip class');
+  const cls = bub({ from: 'itzik', status: 'working' }).match(/class="([^"]*)"/)[1].split(" ");
+  assert.ok(cls.indexOf('live') < 0,
+    'the bubble must not wear live: .live is the on air strip and it carries display:flex');
+  assert.ok(html.includes('.live{display:flex'), 'the strip rule it collided with is still here');
 });
 
 // איציק, 17.9: את הסרטונים שנעשים כאן מעלים לאתר, אז הם חייבים דף קבוע.
