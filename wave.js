@@ -33,15 +33,26 @@ const FORCED = (process.argv.find((a) => a.startsWith('--net=')) || '').slice(6)
   08:00 every day is reading a cron file out loud. These come from the burst
   schedule he set on 7.9, with YouTube added on 17.9 at his word, spaced so two
   networks never share an hour.
+
+  Facebook joined on 20.9, at his word: of course put Facebook in the waves.
+  It had been missing since this table existed, which is the oddest gap in it,
+  because Facebook is the loudest of the four. The 01:20 scan counted twenty
+  plus unread notifications there, two comment waves on reels and a reel past
+  twenty five thousand plays, and all of that was handled only on the rounds
+  somebody asked for by hand. Three slots, one per band, in the hours 08, 13
+  and 18 that nothing else was using.
 */
 const SLOTS = [
   { at: '07:34', net: 'tiktok' },
+  { at: '08:41', net: 'facebook' },
   { at: '09:23', net: 'youtube' },
   { at: '10:07', net: 'instagram' },
   { at: '12:34', net: 'tiktok' },
+  { at: '13:17', net: 'facebook' },
   { at: '14:23', net: 'youtube' },
   { at: '15:07', net: 'instagram' },
   { at: '17:34', net: 'tiktok' },
+  { at: '18:41', net: 'facebook' },
   { at: '19:23', net: 'youtube' },
   { at: '21:34', net: 'tiktok' },
 ];
@@ -92,6 +103,24 @@ function slotNow(now) {
   }) || null;
 }
 
+/*
+  Where a wave actually works, per network.
+
+  Added with Facebook on 20.9. Without this the session has to guess the entry
+  point, and on Facebook guessing means the feed, which is the one surface where
+  a stray click turns into an action in his name. Facebook also carries the two
+  standing red rules that bite there and nowhere else: friend requests are never
+  approved, and Messenger is not opened, because it asks for a six digit PIN and
+  that is an identity confirmation nobody here gives.
+*/
+const WHERE = {
+  facebook: 'איפה: מנהל התגובות בדף שלו, לא הפיד. בקשות חברות לא מאשרים ולא דוחים.\n'
+    + 'ולא נוגעים במסנג׳ר: הוא מבקש קוד PIN בן שש ספרות, וזה אישור זהות.',
+  instagram: 'איפה: הרילים בפרופיל שלו. תגובות באינסטגרם חסומות, לייקים בלבד.',
+  tiktok: 'איפה: פאנל הפעילות, מסנן תגובות. עד ארבע שעות אחורה.',
+  youtube: 'איפה: התגובות בסרטונים שלו, דרך סטודיו או דף הסרטון.',
+};
+
 function prompt(slot, b) {
   return [
     'זו הרצה אוטומטית. אין אדם בצד השני של הפלט הזה ואף אחד לא יקרא אותו.',
@@ -101,13 +130,17 @@ function prompt(slot, b) {
     '',
     'כללי הבית: הפעל את הסקיל abaitzik-onboarding לפני שאתה נוגע במשהו.',
     '',
-    'הדפדפן: יש שני דפדפנים מחוברים והסשן בוחר לבד את האחרון שהיה בשימוש.',
-    'לכן קודם `select_browser` על fdb22e3a-91c6-4369-9e07-6b35799d6198, שזה Browser 1.',
+    'הדפדפן: קודם `list_connected_browsers`. אם יש אחד, `select_browser` עליו.',
+    'אם יש יותר מאחד, בחר את Browser 1. אל תשתמש במזהה משוחזר מהוראות קודמות,',
+    'המזהים מתחלפים בין הפעלות של כרום וזה מה שהפיל את הגלים ב19.9 וב20.9.',
+    'אם הרשימה ריקה או שהתוסף לא מחובר, תעצור, תכתוב דוח ואל תנסה שוב.',
     'לסשן הזה אין קבוצת לשוניות משלו, אז `tabs_context_mcp` יחזיר שאין. זה תקין:',
     'פותחים לשונית עם tabs_create_mcp או navigate ועובדים בה. אי אפשר לקרוא לשונית',
     'שהוא פתח בעצמו, ואין לגעת בה.',
     '',
     'הגל: עד שמונה דקות, רשת אחת בלבד, לא לעבור לרשת אחרת.',
+    '',
+    WHERE[slot.net] || '',
     'לייק לכל תגובה חדשה. תשובה כתובה רק למה שמצדיק אותה.',
     'בין פעולה לפעולה 8 עד 20 שניות, מרווח שונה בכל פעם.',
     '',
@@ -129,8 +162,10 @@ function prompt(slot, b) {
     'בריחה: אם מופיע קאפצ׳ה, אימות, בקשת האטה או הודעת יותר מדי נסיונות,',
     'תעצור מיד באמצע, לא תנסה שוב, ותכתוב את זה בדוח.',
     '',
-    'בסוף: דוח ב-data/reports/reports, ואז npm test, node build.js, git add -A,',
-    'git commit, git push. דוח שלא נדחף הוא דוח שהוא לא קיבל.',
+    'בסוף: דוח ב-data/reports/reports, ואז npm test, ואז `node push.js "מה עשית"`.',
+    'לא git add ולא git commit ולא git push בעצמך: יתכן שרץ עוד סשן במקביל,',
+    'ו-push.js מחזיק תור ועושה rebase כך ששניכם לא דורסים זה את זה.',
+    'דוח שלא נדחף הוא דוח שהוא לא קיבל.',
   ].join('\n');
 }
 
