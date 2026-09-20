@@ -1576,6 +1576,7 @@ body.editing .bn{display:none}
 .g12{background:linear-gradient(150deg,#d1c4e9,#5e35b1)}
 .g13{background:linear-gradient(150deg,#ffd27f,#ef6c00)}
 .g14{background:linear-gradient(150deg,#a5d6a7,#2e7d32)}
+.g15{background:linear-gradient(150deg,#90caf9,#1565c0)}
 /* The last thing he asked me for, sitting on the home screen itself. He could
    not find the print page through search and asked to have it pinned. */
 /* The screen gets crowded. He asked me to notice which buttons he never uses,
@@ -2559,6 +2560,13 @@ try{
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
   <button type="button" class="gt g13" id="gSpecial"><b>⭐ בקשות מיוחדות</b><small>מה שביקשת ומוכן, דפים וקבצים</small></button>
   <button type="button" class="gt g14" id="gReplies"><b>✍️ תגובות מיוחדות</b><small>מה עניתי בשמך, לעבור ולאשר</small></button>
+  <!--
+    יהודה, 20.9. A tile of his own, because the happymeal work is a client
+    job and not part of the networks queue. It opens the file straight from
+    docs/files, so it needs no login and no Drive on the phone. One file
+    today; when there is a second, this becomes a list instead of a link.
+  -->
+  <button type="button" class="gt g15" id="gYehuda"><b>📄 יהודה</b><small>happymeal, סקירת הפיתוח להעברה ללקוח</small></button>
  </div>
 
  <!-- "מה הסתרנו" came off on 16.9. Hiding a tile is his to undo in settings. -->
@@ -7765,6 +7773,13 @@ on('diagBtn',function(){
 function openFood(){pane('f');renderFood();ensure('food',renderFood);}
 on('gFood',openFood);on('iFood',openFood);
 on('gLolos',function(){pane('o');});
+/*
+  יהודה. The report lives next to the page under docs/files, so this is a
+  plain open and not a screen: no login, no Drive app, no key. Opening in a
+  new tab keeps the monitor where it was, which matters on a phone where
+  going back into a pane means finding your place again.
+*/
+on('gYehuda',function(){window.open('files/happymeal-sekira-yehuda.pdf','_blank','noopener');});
 on('gOp',function(){pane('s');});
 on('gNotes',function(){pane('t');renderNotes();});
 on('gIdeas',function(){pane('i');renderIdeas();});
