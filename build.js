@@ -857,16 +857,32 @@ button.abtn[disabled]{opacity:.55}
    nothing in it, and wrote "אין מידע". The two buttons were the same size and
    touching, margin-top:0 under a card sized exactly like it, so a thumb aimed
    at the bottom of the red one came down on the blue one. It is a second rank
-   button now: a gap above it, shorter, quieter, and no big count disc that
-   makes it read as a twin of the red. */
-.newbtn.got{margin-top:16px;padding:11px 15px;
+   button now: shorter, quieter, and no big count disc that makes it read as a
+   twin of the red. The gap that used to sit above it is now the gap beside it.
+*/
+.newbtn.got{padding:11px 13px;
  background:linear-gradient(150deg,#5aa9fb,var(--blue));box-shadow:0 4px 10px rgba(20,30,60,.12)}
 .newbtn.got b{font-size:15px}
 .newbtn.got .nb-c{min-width:28px;height:28px;font-size:14px}
 .newbtn.got .nb-c.zero{opacity:.55}
-/* And more air still while the red one is beating, so nothing sits inside the
-   reach of a finger going for it. */
-#newBlock.hasnew .newbtn.got{margin-top:26px}
+/*
+  Itzik, 20.9 19:28: "ביקשתי לשים את מה התקבל ותשובות באותה שורה על מנת לחסוך
+  מקום". Two full width buttons stacked took the whole first screen of the
+  phone before anything else began. Side by side they take one row, and the
+  tiles under them come up into view without a scroll.
+
+  Equal columns and stretch, so the short blue one is exactly as tall as the
+  red one and the pair reads as one row and not as a big button with a small
+  one hanging off it.
+*/
+#newBlock{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:stretch;
+ margin:14px 0 10px}
+#newBlock .newbtn{width:auto;height:100%;margin:0}
+/* Half the width, so the label and the count cannot both have all the room.
+   The count keeps its size, the words wrap under it. */
+#newBlock .newbtn{gap:8px;padding:13px 13px}
+#newBlock.hasnew .newbtn.hot b{font-size:19px}
+#newBlock .newbtn small{overflow-wrap:anywhere}
 /* The way out of the empty screen, straight to what he actually pressed for. */
 .gjump{width:100%;margin:0 0 14px;padding:14px 16px;border:0;border-radius:var(--r);
  cursor:pointer;color:#fff;font:800 16px Heebo,sans-serif;text-align:start;
@@ -2491,7 +2507,7 @@ try{
    and open tasks. It replaces the Codex fold that used to sit lower down.
  -->
  <button type="button" id="gotBtn" class="newbtn got">
-  <span class="nb-l"><b>מה התקבל</b><small>ההודעות שלך, מה בעבודה ומה בוצע</small></span>
+  <span class="nb-l"><b>מה התקבל</b><small>מה בעבודה ומה בוצע</small></span>
   <span class="nb-c" id="gotCount">0</span>
  </button>
  <!--
@@ -4546,9 +4562,11 @@ function renderNew(){
    underneath, where a number belongs.
  */
  document.getElementById('nbTitle').textContent='תשובות';
+ // Short, because the button is half a screen wide since 20.9 and a sentence
+ // here pushed the pair three lines taller than the row he asked for.
  document.getElementById('nbSub').textContent=c
-  ?(c===1?'אחת שלא קראת. לחיצה פותחת.':c+' שלא קראת. לחיצה פותחת את כולן.')
-  :'הכל נקרא. לחיצה מראה את כל התשובות שלי.';
+  ?(c===1?'אחת שלא קראת':c+' שלא קראת')
+  :'הכל נקרא';
  var K=D.openCmds||[];
  document.getElementById('wnCmds').innerHTML='<span class="n '+(K.length?'':'zero')+'">'+K.length+'</span><div>'+(K.length?'משימות פתוחות ממך':'אין משימות פתוחות')+(K.length?'<small>'+esc(K[0].text).slice(0,90)+'</small>':'')+'</div>';
  renderActivity();

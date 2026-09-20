@@ -996,10 +996,12 @@ test('what was received sits under the red button as one ordered list', () => {
 test('the red button cannot be missed and cannot open on nothing', () => {
   const html = renderPage(fixture({}));
   // 18.9: he aimed at the red button and landed on "מה התקבל", which was glued
-  // to it with margin-top:0 and built at the same size. It steps back now.
-  assert.ok(!html.includes('.newbtn.got{margin-top:0;'));
-  assert.ok(html.includes('.newbtn.got{margin-top:16px;'));
-  assert.ok(html.includes('#newBlock.hasnew .newbtn.got{margin-top:26px}'));
+  // to it with margin-top:0 and built at the same size.
+  // 20.9: the two sit side by side in one row at his word, so the distance
+  // between them is the column gap and the blue one is still the quiet one.
+  assert.ok(html.includes('#newBlock{display:grid;grid-template-columns:1fr 1fr;gap:12px;'));
+  assert.ok(html.includes('#newBlock .newbtn{width:auto;height:100%;margin:0}'));
+  assert.ok(html.includes('.newbtn.got b{font-size:15px}'));
   assert.ok(html.includes("if(blk)blk.classList.toggle('hasnew',c>0);"));
   // The wrong screen says where the right one is, and gets there in one press.
   assert.ok(html.includes('class="gjump" id="gotToAns"'));
@@ -1736,7 +1738,9 @@ test('the red button is named after where it goes, not after a state', () => {
   assert.ok(!html.includes("?(c===1?'הודעה אחת שלא קראת':c+' הודעות שלא קראת')"));
   // The number keeps its place, in the badge and in the line underneath.
   assert.ok(html.includes("document.getElementById('nbCount').textContent=c?c:'✓';"));
-  assert.ok(html.includes("' שלא קראת. לחיצה פותחת את כולן.'"));
+  // Shortened on 20.9 when the button became half a screen wide, next to
+  // "מה התקבל" instead of above it. The number stays in the line underneath.
+  assert.ok(html.includes("?(c===1?'אחת שלא קראת':c+' שלא קראת')"));
 });
 
 test('every way a phone comes back to the page wakes the check', () => {
