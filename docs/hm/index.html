@@ -82,8 +82,8 @@
     <div class="stat"><div class="v">23</div><div class="l">משימות</div></div>
   </div>
 
-  <a class="cta" href="sekira.pdf">פתיחת הסקירה</a>
-  <a class="alt" href="sekira.pdf" download="סקירת פיתוח happymeal.pdf">או הורדה למכשיר</a>
+  <a class="cta" href="sekira.pdf" target="_blank" rel="noopener">פתיחת הסקירה</a>
+  <a class="alt" id="dl" href="sekira.pdf" download="סקירת פיתוח happymeal.pdf">או הורדה למכשיר</a>
 
   <div class="card">
     <h2>מה נמצא, בקצרה</h2>
@@ -110,5 +110,48 @@
   </footer>
 
 </div>
+
+<div id="toast" hidden></div>
+<style>
+  #toast{position:fixed; inset-inline:0; bottom:22px; margin:0 auto; width:max-content;
+    max-width:88vw; background:#151a22; color:#fff; padding:11px 18px; border-radius:12px;
+    font-size:14px; font-weight:500; box-shadow:0 10px 26px rgba(0,0,0,.35); z-index:50}
+</style>
+<script>
+/*
+  On Android a link to a PDF opens the viewer rather than saving, and the
+  viewer swallows the screen: you are left holding a document with no way
+  back to this page. A blob address carries no type for the browser to act
+  on, so the download attribute is honoured, the file lands in Downloads,
+  and this page never moves.
+*/
+(function(){
+  var a = document.getElementById('dl');
+  var t = document.getElementById('toast');
+  function say(msg){ t.textContent = msg; t.hidden = false;
+    clearTimeout(say._t); say._t = setTimeout(function(){ t.hidden = true; }, 3200); }
+  if (!a || !window.fetch || !window.URL || !URL.createObjectURL) return;
+  a.addEventListener('click', function(e){
+    e.preventDefault();
+    say('מוריד');
+    fetch('sekira.pdf').then(function(r){
+      if (!r.ok) throw 0;
+      return r.blob();
+    }).then(function(b){
+      var u = URL.createObjectURL(b);
+      var l = document.createElement('a');
+      l.href = u; l.download = 'סקירת פיתוח happymeal.pdf';
+      document.body.appendChild(l); l.click(); l.remove();
+      setTimeout(function(){ URL.revokeObjectURL(u); }, 4000);
+      say('הקובץ ירד. תמצא אותו בהורדות');
+    }).catch(function(){
+      // Never leave the button dead: fall back to opening it in a new tab,
+      // which at least keeps this page behind it.
+      say('ההורדה נכשלה, פותח בכרטיסייה חדשה');
+      window.open('sekira.pdf', '_blank', 'noopener');
+    });
+  });
+})();
+</script>
 </body>
 </html>

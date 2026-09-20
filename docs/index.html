@@ -1436,7 +1436,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-20T17:21:17.749Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-20T17:22:32.823Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2289,7 +2289,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='114eca70ef';
+var CODE_ID='0e61985359';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -5566,10 +5566,23 @@ var YEHUDA_NAME='סקירת פיתוח happymeal.pdf';
 var YEHUDA_LINK='https://happymeal-sekira.vercel.app/';
 function yehudaUrl(){return YEHUDA_LINK;}
 function yehudaOpen(){window.open(YEHUDA_LINK,'_blank','noopener');}
-function yehudaDownload(){
+function yehudaSave(blob){
+ var u=URL.createObjectURL(blob);
  var a=document.createElement('a');
- a.href=YEHUDA_PDF;a.download=YEHUDA_NAME;a.rel='noopener';
+ a.href=u;a.download=YEHUDA_NAME;a.rel='noopener';
  document.body.appendChild(a);a.click();a.remove();
+ setTimeout(function(){URL.revokeObjectURL(u);},4000);
+ toastY('הקובץ ירד. תמצא אותו בהורדות');
+}
+function yehudaDownload(){
+ if(yFile)return yehudaSave(yFile);
+ toastY('מוריד');
+ fetch(YEHUDA_PDF).then(function(r){
+  if(!r.ok)throw 0;return r.blob();
+ }).then(yehudaSave).catch(function(){
+  toastY('ההורדה נכשלה, פותח את הקובץ');
+  window.open(YEHUDA_PDF,'_blank','noopener');
+ });
 }
 var yFile=null,yFileTried=false;
 function yehudaPrefetch(){
