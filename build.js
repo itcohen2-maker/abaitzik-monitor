@@ -1593,6 +1593,25 @@ body.editing .bn{display:none}
 .g13{background:linear-gradient(150deg,#ffd27f,#ef6c00)}
 .g14{background:linear-gradient(150deg,#a5d6a7,#2e7d32)}
 .g15{background:linear-gradient(150deg,#90caf9,#1565c0)}
+/* The three choices behind the יהודה tile. Its own sheet, so it borrows
+   nothing from the panes and cannot disturb them. */
+.ysheet{position:fixed;inset:0;z-index:9999;background:rgba(10,14,22,.55);
+ display:flex;align-items:flex-end;justify-content:center;padding:14px}
+.ycard{background:var(--card,#fff);color:var(--ink,#16202c);width:100%;max-width:420px;
+ border-radius:18px;padding:18px 16px 14px;display:flex;flex-direction:column;gap:9px;
+ box-shadow:0 -8px 40px rgba(0,0,0,.35)}
+.ycard b{font:700 16px Heebo,sans-serif}
+.ycard small{font-size:12px;opacity:.7;margin-bottom:4px}
+.yb{border:0;border-radius:12px;padding:13px;font:600 15px Heebo,sans-serif;
+ background:#e8eef6;color:#16202c;cursor:pointer;min-height:48px}
+.yb1{background:linear-gradient(150deg,#90caf9,#1565c0);color:#fff}
+.yb2{background:linear-gradient(150deg,#7bd88f,#1e8e4a);color:#fff}
+.yx{background:transparent;opacity:.6;min-height:40px;padding:8px}
+.yb:active{transform:translateY(1px)}
+.ytoast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:10000;
+ background:#16202c;color:#fff;padding:10px 16px;border-radius:12px;
+ font:600 13px Heebo,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+@media(min-width:520px){.ysheet{align-items:center}}
 /* The last thing he asked me for, sitting on the home screen itself. He could
    not find the print page through search and asked to have it pinned. */
 /* The screen gets crowded. He asked me to notice which buttons he never uses,
@@ -2582,7 +2601,7 @@ try{
     docs/files, so it needs no login and no Drive on the phone. One file
     today; when there is a second, this becomes a list instead of a link.
   -->
-  <button type="button" class="gt g15" id="gYehuda"><b>📄 יהודה</b><small>happymeal, סקירת הפיתוח להעברה ללקוח</small></button>
+  <button type="button" class="gt g15" id="gYehuda"><b>📄 יהודה</b><small>סקירת happymeal. פתיחה, הורדה או שליחה אליו</small></button>
  </div>
 
  <!-- "מה הסתרנו" came off on 16.9. Hiding a tile is his to undo in settings. -->
@@ -7810,7 +7829,177 @@ on('gLolos',function(){pane('o');});
   new tab keeps the monitor where it was, which matters on a phone where
   going back into a pane means finding your place again.
 */
-on('gYehuda',function(){window.open('files/happymeal-sekira-yehuda.pdf','_blank','noopener');});
+/*
+  יהודה. Opening the file was not enough: on a phone the PDF opens in a
+  viewer with no obvious way back, and what he actually wants to do with it
+  is send it to the client. So the tile raises three choices instead of one.
+
+  שליחה prefers the real Web Share sheet with the file attached, which is how
+  it reaches WhatsApp as a document rather than as a link someone has to open.
+  Where that is not available it shares the address, and where nothing is
+  available it copies the address and says so. Every step falls back rather
+  than failing, because a dead button on his phone is worse than a plain one.
+*/
+var YEHUDA_PDF='files/happymeal-sekira-yehuda.pdf';
+/*
+  ASCII on purpose. Android does not reliably honour a non ASCII download
+  name: the file arrives called something else, and then it is not in his
+  Downloads as far as he is concerned. A plain short name he can spot beats
+  a pretty one he cannot find.
+*/
+var YEHUDA_NAME='happymeal.pdf';
+/*
+  What he sends and what he reads are two different addresses on purpose.
+
+  The client gets the short one: a page that introduces the document before
+  it opens, on a name that reads like a job and not like a build artifact.
+  The file itself is still pulled from here, same origin, so attaching it to
+  a share needs no network permission and no second copy to keep in step.
+*/
+var YEHUDA_LINK='https://happymeal-sekira.vercel.app/';
+function yehudaUrl(){return YEHUDA_LINK;}
+function yehudaOpen(){window.open(YEHUDA_LINK,'_blank','noopener');}
+/*
+  A plain <a download> to a PDF does not download on Android: Chrome hands
+  the file to its viewer instead, the viewer takes over the screen, and he
+  is standing in a document with no way back. That is the dead end he hit.
+
+  A blob address has no content type for the browser to be clever about, so
+  the download attribute is honoured and the file lands in Downloads while
+  the page he is standing on does not move at all. The file is usually
+  already in hand from the prefetch; if not we pull it, and only if that
+  fails do we fall back to the old behaviour, with a word of warning first.
+*/
+function yehudaSave(blob){
+ var u=URL.createObjectURL(blob);
+ var a=document.createElement('a');
+ a.href=u;a.download=YEHUDA_NAME;a.rel='noopener';
+ document.body.appendChild(a);a.click();a.remove();
+ setTimeout(function(){URL.revokeObjectURL(u);},4000);
+ toastY('הקובץ ירד. תמצא אותו בהורדות');
+}
+/*
+  He is on an iPhone. Safari does not save a blob address, it opens it, and
+  there is no Downloads folder waiting at the other end either. So on Apple
+  the honest move is to open the file and let Safari's own share button do
+  the saving and the sending, and to say that out loud rather than promise a
+  folder that does not exist on his phone.
+*/
+function yehudaApple(){
+ return /iPad|iPhone|iPod/.test(navigator.userAgent)||
+  (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+}
+function yehudaDownload(){
+ if(yehudaApple()){
+  toastY('נפתח. כפתור השיתוף בספארי שומר או שולח');
+  window.open(YEHUDA_PDF,'_blank','noopener');
+  return;
+ }
+ if(yFile)return yehudaSave(yFile);
+ toastY('מוריד');
+ fetch(YEHUDA_PDF).then(function(r){
+  if(!r.ok)throw 0;return r.blob();
+ }).then(yehudaSave).catch(function(){
+  toastY('ההורדה נכשלה, פותח את הקובץ');
+  window.open(YEHUDA_PDF,'_blank','noopener');
+ });
+}
+/*
+  The first version fetched the PDF inside the tap and then called share.
+  That is the bug: Android spends the transient user activation on the await,
+  so by the time share is called the gesture is gone and the sheet never
+  opens. Nothing throws in a way he can see, so it reads as "does nothing".
+
+  So the file is fetched when the sheet opens, a beat before he chooses, and
+  the share call itself is synchronous inside the tap. If the file is not
+  ready yet we do not await it: we share the address instead, which still
+  opens WhatsApp, rather than trading a working sheet for a prettier one.
+*/
+var yFile=null,yFileTried=false;
+function yehudaPrefetch(){
+ if(yFileTried)return;yFileTried=true;
+ if(!navigator.canShare)return;
+ fetch(YEHUDA_PDF).then(function(r){return r.ok?r.blob():null;}).then(function(b){
+  if(!b)return;
+  var f=new File([b],YEHUDA_NAME,{type:'application/pdf'});
+  if(navigator.canShare({files:[f]}))yFile=f;
+ }).catch(function(){});
+}
+function yehudaShare(){
+ var url=yehudaUrl();
+ // Synchronous, inside the tap. No await before this point.
+ if(yFile&&navigator.share){
+  navigator.share({files:[yFile],title:'סקירת פיתוח happymeal'})
+   .catch(function(e){ if(e&&e.name!=='AbortError')yehudaShareLink(url); });
+  return;
+ }
+ yehudaShareLink(url);
+}
+function yehudaShareLink(url){
+ if(navigator.share){
+  navigator.share({title:'סקירת פיתוח happymeal',text:'סקירת הפיתוח לאתר',url:url})
+   .catch(function(e){ if(e&&e.name!=='AbortError')yehudaCopy(url); });
+  return;
+ }
+ yehudaCopy(url);
+}
+function yehudaCopy(url){
+ if(navigator.clipboard&&navigator.clipboard.writeText){
+  navigator.clipboard.writeText(url)
+   .then(function(){toastY('הקישור הועתק, אפשר להדביק בוואטסאפ');})
+   .catch(function(){toastY('לא הצלחתי לשתף. תפתח ותוריד, ותצרף ידנית');});
+  return;
+ }
+ toastY('לא הצלחתי לשתף. תפתח ותוריד, ותצרף ידנית');
+}
+/*
+  The one that cannot fail. wa.me opens WhatsApp with the address already in
+  the box, on every phone and every browser, with no permission and no API.
+  It sends a link and not a document, which is the trade, and it is the right
+  trade for a button whose job is to never leave him stuck.
+*/
+function yehudaWhatsapp(){
+ window.open('https://wa.me/?text='+encodeURIComponent('סקירת הפיתוח לאתר '+yehudaUrl()),'_blank','noopener');
+}
+function toastY(msg){
+ var t=document.createElement('div');
+ t.className='ytoast';t.textContent=msg;document.body.appendChild(t);
+ setTimeout(function(){t.remove();},2600);
+}
+function yehudaSheet(){
+ var old=document.getElementById('ySheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='ySheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','סקירת happymeal ליהודה');
+ w.innerHTML='<div class="ycard">'
+  +'<b>סקירת הפיתוח ליהודה</b>'
+  +'<small>12 עמודים, מוכן לשליחה ללקוח</small>'
+  +'<button type="button" class="yb" data-y="open">פתיחת העמוד</button>'
+  +'<button type="button" class="yb" data-y="down">שמירה למכשיר</button>'
+  +'<button type="button" class="yb yb1" data-y="share">שליחה, עם הקובץ מצורף</button>'
+  +'<button type="button" class="yb yb2" data-y="wa">וואטסאפ, שליחת קישור</button>'
+  +'<button type="button" class="yb yx" data-y="close">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-y');
+  if(!k)return;
+  if(k==='open'){yehudaOpen();close();}
+  else if(k==='down'){yehudaDownload();close();}
+  else if(k==='share'){yehudaShare();close();}
+  else if(k==='wa'){yehudaWhatsapp();close();}
+  else close();
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+ // Start pulling the file now, so the share tap has nothing to wait for.
+ yehudaPrefetch();
+ var first=w.querySelector('.yb');if(first)first.focus();
+}
+on('gYehuda',yehudaSheet);
 on('gOp',function(){pane('s');});
 on('gNotes',function(){pane('t');renderNotes();});
 on('gIdeas',function(){pane('i');renderIdeas();});
