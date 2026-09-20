@@ -853,6 +853,7 @@ body.editing .bn{display:none}
 .g12{background:linear-gradient(150deg,#d1c4e9,#5e35b1)}
 .g13{background:linear-gradient(150deg,#ffd27f,#ef6c00)}
 .g14{background:linear-gradient(150deg,#a5d6a7,#2e7d32)}
+.g15{background:linear-gradient(150deg,#90caf9,#1565c0)}
 .tidy{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
  padding:13px 15px;margin-top:14px;box-shadow:var(--shadow)}
 .tidy b{display:block;font:800 15px Heebo,sans-serif;margin-bottom:4px}
@@ -1413,7 +1414,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-20T15:56:06.680Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-20T16:27:41.934Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1540,6 +1541,7 @@ try{
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
   <button type="button" class="gt g13" id="gSpecial"><b>⭐ בקשות מיוחדות</b><small>מה שביקשת ומוכן, דפים וקבצים</small></button>
   <button type="button" class="gt g14" id="gReplies"><b>✍️ תגובות מיוחדות</b><small>מה עניתי בשמך, לעבור ולאשר</small></button>
+  <button type="button" class="gt g15" id="gYehuda"><b>📄 יהודה</b><small>happymeal, סקירת הפיתוח להעברה ללקוח</small></button>
  </div>
 
 
@@ -2265,7 +2267,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='3754e0015b';
+var CODE_ID='fcb5fb4105';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -5537,6 +5539,7 @@ on('diagBtn',function(){
 function openFood(){pane('f');renderFood();ensure('food',renderFood);}
 on('gFood',openFood);on('iFood',openFood);
 on('gLolos',function(){pane('o');});
+on('gYehuda',function(){window.open('files/happymeal-sekira-yehuda.pdf','_blank','noopener');});
 on('gOp',function(){pane('s');});
 on('gNotes',function(){pane('t');renderNotes();});
 on('gIdeas',function(){pane('i');renderIdeas();});
