@@ -1070,7 +1070,7 @@ section{margin-bottom:30px}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .prg-t{background:rgba(255,255,255,.14)}
  :root:not([data-theme="light"]) .prg-sent{--prgc:#9aa3b2}
  :root:not([data-theme="light"]) .prg-received{--prgc:#6ba4f0}
- :root:not([data-theme="light"]) .prg-working{--prgc:#f0a martian}
+ :root:not([data-theme="light"]) .prg-working{--prgc:#f0a94a}
  :root:not([data-theme="light"]) .prg-partial{--prgc:#e0b74a}
  :root:not([data-theme="light"]) .prg-done{--prgc:#45c57e}}
 /*
@@ -3615,10 +3615,18 @@ function progress(m){
  var p=PRG[m.status];
  return typeof p==='number'?p:10;
 }
+// הצבע יושב על אותו מצב שממנו נגזר האחוז, ולא על האחוז עצמו, כדי ששניהם
+// לא יוכלו להיפרד זה מזה.
+function progStage(m){
+ if(m.pend)return 'sent';
+ return PRG[m.status]?m.status:'sent';
+}
+var PRGW={sent:'נשלחה',received:'התקבלה',working:'בעבודה',partial:'יש חלק',done:'בוצעה'};
 function progressBar(m){
- var p=progress(m);
- return '<div class="prg" role="progressbar" aria-valuemin="0" aria-valuemax="100"'
-  +' aria-valuenow="'+p+'" aria-label="התקדמות הבקשה">'
+ var p=progress(m),st=progStage(m);
+ return '<div class="prg prg-'+st+'" role="progressbar" aria-valuemin="0" aria-valuemax="100"'
+  +' aria-valuenow="'+p+'" aria-valuetext="'+esc(PRGW[st]||'')+', '+p+' אחוז"'
+  +' aria-label="התקדמות הבקשה">'
   +'<span class="prg-t"><i class="prg-f" style="width:'+p+'%"></i></span>'
   +'<span class="prg-n">'+p+'%</span></div>';
 }
@@ -5473,21 +5481,22 @@ function endEdit(){
  if(bar)bar.hidden=true;
 }
 
-// A short click when a button is pressed. Browsers block audio until the page
-// has been touched, so this only ever plays on his own tap.
-var actx=null;
+/*
+  איציק, 20.9 בקול: "אם אני מפעיל את המוניטור בלי להפעיל את המיקרופון בזמן
+  ששמעתי מוזיקה המוניטור מחביא את המוזיקה. תסתכל איך אפשר שרק כשאני מפעיל
+  את המיקרופון זה מחביא, ואז מחזיר אותה."
+
+  זה היה כאן. הקלקה קטנה על כל לחיצה פתחה ערוץ שמע של הדף, והטלפון מוסר את
+  פס הקול לדף שפותח אותו: המוזיקה שרצה ברקע נחתכת. ה-context גם נשמר
+  במשתנה ולא נסגר, אז המוזיקה לא חזרה עד רענון. אותו דבר בצפצוף של
+  הכפתור הגדול.
+
+  הדף כבר לא מייצר קול בעצמו. הדבר היחיד שנוגע בשמע הוא ההקלטה, והיא
+  משחררת את המיקרופון ב-recCleanup ברגע שהיא נגמרת, כך שהמוזיקה חוזרת
+  לבד. משוב הלחיצה נשאר בוויברציה, שלא נוגעת בשמע בכלל.
+*/
 function click(){
- try{
-  var A=window.AudioContext||window.webkitAudioContext;
-  if(!A)return;
-  actx=actx||new A();
-  var o=actx.createOscillator(),g=actx.createGain();
-  o.type='triangle';o.frequency.setValueAtTime(660,actx.currentTime);
-  o.frequency.exponentialRampToValueAtTime(240,actx.currentTime+.07);
-  g.gain.setValueAtTime(.055,actx.currentTime);
-  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+.09);
-  o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+.1);
- }catch(e){}
+ try{if(navigator.vibrate)navigator.vibrate(8);}catch(e){}
 }
 document.addEventListener('pointerdown',function(e){
  if(e.target.closest&&e.target.closest('.gt,.mic,.way,.recbig,.foodcam,.conn'))click();
@@ -6124,16 +6133,10 @@ document.getElementById('reloadBtn').onclick=function(){
  }catch(e){}
  done();
 };
-// A short beep when something is waiting. Browsers block audio until the page
-// has been touched, so it only ever plays on his own tap, never on load.
+// הסימן שיש משהו שמחכה. היה צפצוף, והצפצוף חתך לו את המוזיקה ברקע, אז
+// הוא ויברציה קצרה. ויברציה לא נוגעת בפס הקול של הטלפון.
 function beep(){
- try{
-  var A=window.AudioContext||window.webkitAudioContext;if(!A)return;
-  var ctx=new A();var o=ctx.createOscillator();var g=ctx.createGain();
-  o.type='sine';o.frequency.value=880;g.gain.value=.06;
-  o.connect(g);g.connect(ctx.destination);o.start();
-  setTimeout(function(){o.stop();ctx.close();},160);
- }catch(e){}
+ try{if(navigator.vibrate)navigator.vibrate([12,40,12]);}catch(e){}
 }
 // The attach form stays out of the way until the plus is pressed.
 document.getElementById('plusBtn').onclick=function(){

@@ -412,7 +412,7 @@ section{margin-bottom:30px}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .prg-t{background:rgba(255,255,255,.14)}
  :root:not([data-theme="light"]) .prg-sent{--prgc:#9aa3b2}
  :root:not([data-theme="light"]) .prg-received{--prgc:#6ba4f0}
- :root:not([data-theme="light"]) .prg-working{--prgc:#f0a martian}
+ :root:not([data-theme="light"]) .prg-working{--prgc:#f0a94a}
  :root:not([data-theme="light"]) .prg-partial{--prgc:#e0b74a}
  :root:not([data-theme="light"]) .prg-done{--prgc:#45c57e}}
 .bub.you.live{border:2px solid var(--gold);opacity:1;animation:livebeat 1.6s ease-in-out infinite}
@@ -1401,7 +1401,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-20T05:00:13.248Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-20T05:02:28.795Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2230,7 +2230,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='0a4595825c';
+var CODE_ID='4801a3c572';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -2479,10 +2479,16 @@ function progress(m){
  var p=PRG[m.status];
  return typeof p==='number'?p:10;
 }
+function progStage(m){
+ if(m.pend)return 'sent';
+ return PRG[m.status]?m.status:'sent';
+}
+var PRGW={sent:'נשלחה',received:'התקבלה',working:'בעבודה',partial:'יש חלק',done:'בוצעה'};
 function progressBar(m){
- var p=progress(m);
- return '<div class="prg" role="progressbar" aria-valuemin="0" aria-valuemax="100"'
-  +' aria-valuenow="'+p+'" aria-label="התקדמות הבקשה">'
+ var p=progress(m),st=progStage(m);
+ return '<div class="prg prg-'+st+'" role="progressbar" aria-valuemin="0" aria-valuemax="100"'
+  +' aria-valuenow="'+p+'" aria-valuetext="'+esc(PRGW[st]||'')+', '+p+' אחוז"'
+  +' aria-label="התקדמות הבקשה">'
   +'<span class="prg-t"><i class="prg-f" style="width:'+p+'%"></i></span>'
   +'<span class="prg-n">'+p+'%</span></div>';
 }
@@ -3894,19 +3900,8 @@ function endEdit(){
  if(bar)bar.hidden=true;
 }
 
-var actx=null;
 function click(){
- try{
-  var A=window.AudioContext||window.webkitAudioContext;
-  if(!A)return;
-  actx=actx||new A();
-  var o=actx.createOscillator(),g=actx.createGain();
-  o.type='triangle';o.frequency.setValueAtTime(660,actx.currentTime);
-  o.frequency.exponentialRampToValueAtTime(240,actx.currentTime+.07);
-  g.gain.setValueAtTime(.055,actx.currentTime);
-  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+.09);
-  o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+.1);
- }catch(e){}
+ try{if(navigator.vibrate)navigator.vibrate(8);}catch(e){}
 }
 document.addEventListener('pointerdown',function(e){
  if(e.target.closest&&e.target.closest('.gt,.mic,.way,.recbig,.foodcam,.conn'))click();
@@ -4337,13 +4332,7 @@ document.getElementById('reloadBtn').onclick=function(){
  done();
 };
 function beep(){
- try{
-  var A=window.AudioContext||window.webkitAudioContext;if(!A)return;
-  var ctx=new A();var o=ctx.createOscillator();var g=ctx.createGain();
-  o.type='sine';o.frequency.value=880;g.gain.value=.06;
-  o.connect(g);g.connect(ctx.destination);o.start();
-  setTimeout(function(){o.stop();ctx.close();},160);
- }catch(e){}
+ try{if(navigator.vibrate)navigator.vibrate([12,40,12]);}catch(e){}
 }
 document.getElementById('plusBtn').onclick=function(){
  var f=document.getElementById('fileForm');

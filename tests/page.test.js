@@ -1028,10 +1028,43 @@ test('every request of his carries a progress meter', () => {
   assert.ok(html.includes("var p=PRG[m.status];"));
   assert.ok(html.includes("return typeof p==='number'?p:10;"));
   assert.ok(html.includes(`<span class="prg-t"><i class="prg-f" style="width:'+p+'%"></i></span>`));
-  assert.ok(html.includes(`aria-valuenow="'+p+'" aria-label="התקדמות הבקשה"`));
+  assert.ok(html.includes(`aria-valuenow="'+p+'"`));
+  assert.ok(html.includes(`aria-label="התקדמות הבקשה"`));
   // וגם במסך מה שהתקבל, לא רק בצ׳אט.
   assert.ok(html.includes("var bar=(kind&&kind!=='msg')?'':progressBar(m);"));
-  assert.ok(html.includes('.prg-f{display:block;height:100%;border-radius:999px;background:currentColor;'));
+});
+
+// איציק, 20.9 בקול: "את מד ההתקדמות תצווה בצבעים לפי ההתקדמות."
+test('the progress meter is coloured by the stage it is at', () => {
+  const html = renderPage(fixture({}));
+  // הצבע נגזר מאותו מצב שממנו נגזר האחוז, ולא מהאחוז, כדי ששניהם לא ייפרדו.
+  assert.ok(html.includes("function progStage(m){"));
+  assert.ok(html.includes("return PRG[m.status]?m.status:'sent';"));
+  assert.ok(html.includes(`'<div class="prg prg-'+st+'"`));
+  for (const c of ['.prg-sent{--prgc:', '.prg-received{--prgc:', '.prg-working{--prgc:',
+                   '.prg-partial{--prgc:', '.prg-done{--prgc:']) {
+    assert.ok(html.includes(c), c);
+  }
+  assert.ok(html.includes('background:var(--prgc,'));
+  // ומי שמקריא את המסך שומע את השלב, לא רק את המספר.
+  assert.ok(html.includes('aria-valuetext='));
+});
+
+/*
+  איציק, 20.9 בקול: פתיחת המוניטור בלי מיקרופון חתכה לו את המוזיקה ברקע.
+  כל ערוץ שמע שהדף פותח מעביר אליו את פס הקול של הטלפון. הדף לא מייצר
+  קול בעצמו, וזה נשמר כאן כדי שלא יחזור.
+*/
+test('the page never opens an audio context of its own', () => {
+  const html = renderPage(fixture({}));
+  assert.ok(!html.includes('AudioContext'), 'no page owned audio context');
+  assert.ok(!html.includes('createOscillator'), 'no page generated tone');
+  // משוב הלחיצה נשאר, בוויברציה, שלא נוגעת בשמע.
+  assert.ok(html.includes('navigator.vibrate'));
+  // וההקלטה עדיין משחררת את המיקרופון כשהיא נגמרת, אחרת המוזיקה לא חוזרת.
+  assert.ok(html.includes("if(recStream){recStream.getTracks().forEach(function(t){t.stop();});recStream=null;}"));
+  // שמע מוקלט לא נטען מעצמו, הוא מחכה ללחיצה שלו.
+  assert.ok(!html.includes('<audio controls autoplay'));
 });
 
 test('one button clears every message off the screen, and deletes nothing', () => {
