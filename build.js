@@ -1050,10 +1050,29 @@ section{margin-bottom:30px}
 */
 .prg{display:flex;align-items:center;gap:8px;margin-top:7px}
 .prg-t{flex:1;height:10px;border-radius:999px;background:rgba(0,0,0,.12);overflow:hidden}
-.prg-f{display:block;height:100%;border-radius:999px;background:currentColor;
- width:0;transition:width .5s ease}
-.prg-n{font-size:.82rem;font-weight:700;min-width:3.2em;text-align:start}
+.prg-f{display:block;height:100%;border-radius:999px;background:var(--prgc,#8b93a1);
+ width:0;transition:width .5s ease,background .5s ease}
+.prg-n{font-size:.82rem;font-weight:700;min-width:3.2em;text-align:start;color:var(--prgc,#8b93a1)}
 @media (prefers-reduced-motion:reduce){.prg-f{transition:none}}
+/*
+  איציק, 20.9 בקול: "את מד ההתקדמות תצווה בצבעים לפי ההתקדמות."
+
+  הפס היה בצבע אחד לכל השלבים, אז מבט חטוף לא הבדיל בין בקשה שרק יצאה
+  לבין בקשה שנגמרה. עכשיו הצבע נגזר מאותו מצב שממנו נגזר האחוז: אפור
+  בהתחלה, כחול כשהתקבלה, כתום כשהיא בעבודה, ענבר כשיש חלק, ירוק כשבוצעה.
+  אין כאן מצב חדש ואין צבע שמקדים את המצב.
+*/
+.prg-sent{--prgc:#8b93a1}
+.prg-received{--prgc:#2f6fd0}
+.prg-working{--prgc:#c9730a}
+.prg-partial{--prgc:#b8860b}
+.prg-done{--prgc:#1d8a4e}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .prg-t{background:rgba(255,255,255,.14)}
+ :root:not([data-theme="light"]) .prg-sent{--prgc:#9aa3b2}
+ :root:not([data-theme="light"]) .prg-received{--prgc:#6ba4f0}
+ :root:not([data-theme="light"]) .prg-working{--prgc:#f0a martian}
+ :root:not([data-theme="light"]) .prg-partial{--prgc:#e0b74a}
+ :root:not([data-theme="light"]) .prg-done{--prgc:#45c57e}}
 /*
   איציק, 17.9: "ברגע שאתה שולח את ההודעה שאני משאיר לך פה, תעשה עבעוב כזה
   מדליק על התשובה שלי, שאני אדע שאתה בעבודה."

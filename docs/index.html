@@ -400,10 +400,21 @@ section{margin-bottom:30px}
 .st-done{background:var(--fresh);color:#1d6b3f}
 .prg{display:flex;align-items:center;gap:8px;margin-top:7px}
 .prg-t{flex:1;height:10px;border-radius:999px;background:rgba(0,0,0,.12);overflow:hidden}
-.prg-f{display:block;height:100%;border-radius:999px;background:currentColor;
- width:0;transition:width .5s ease}
-.prg-n{font-size:.82rem;font-weight:700;min-width:3.2em;text-align:start}
+.prg-f{display:block;height:100%;border-radius:999px;background:var(--prgc,#8b93a1);
+ width:0;transition:width .5s ease,background .5s ease}
+.prg-n{font-size:.82rem;font-weight:700;min-width:3.2em;text-align:start;color:var(--prgc,#8b93a1)}
 @media (prefers-reduced-motion:reduce){.prg-f{transition:none}}
+.prg-sent{--prgc:#8b93a1}
+.prg-received{--prgc:#2f6fd0}
+.prg-working{--prgc:#c9730a}
+.prg-partial{--prgc:#b8860b}
+.prg-done{--prgc:#1d8a4e}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .prg-t{background:rgba(255,255,255,.14)}
+ :root:not([data-theme="light"]) .prg-sent{--prgc:#9aa3b2}
+ :root:not([data-theme="light"]) .prg-received{--prgc:#6ba4f0}
+ :root:not([data-theme="light"]) .prg-working{--prgc:#f0a martian}
+ :root:not([data-theme="light"]) .prg-partial{--prgc:#e0b74a}
+ :root:not([data-theme="light"]) .prg-done{--prgc:#45c57e}}
 .bub.you.live{border:2px solid var(--gold);opacity:1;animation:livebeat 1.6s ease-in-out infinite}
 .bub.you.live .w{color:#8a5a12}
 @keyframes livebeat{
@@ -1390,7 +1401,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-20T04:59:27.039Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-20T05:00:13.248Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2219,7 +2230,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='097bb2e41f';
+var CODE_ID='0a4595825c';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
