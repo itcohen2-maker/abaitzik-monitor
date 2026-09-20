@@ -1868,10 +1868,20 @@ body.editing .bn{display:none}
 /* The question inside the card that answers it. Sunk, thin and cut off after
    a few lines, so the answer stays the thing the eye lands on. */
 .ansc .aq{background:var(--sunk);border-inline-start:3px solid var(--blue);
- border-radius:10px;padding:8px 11px;margin:0 0 10px}
-.ansc .aq .w{margin-bottom:4px}
+ border-radius:10px;padding:6px 10px;margin:0 0 8px;
+ display:flex;align-items:baseline;gap:8px;font:300 13.5px Heebo,sans-serif}
+.ansc .aq .w{margin-bottom:0;flex:0 0 auto;white-space:nowrap;flex-wrap:nowrap}
+/* The message itself takes the rest of that row and no more. min-width:0 is
+   what lets a flex child shrink far enough for the ellipsis to appear at all;
+   without it the long line pushes the card wider than the phone. */
+.ansc .aq .qline,.ansc .aq .qfold{flex:1 1 auto;min-width:0;overflow:hidden;
+ text-overflow:ellipsis;white-space:nowrap}
+.ansc .aq .qfold summary{cursor:pointer;overflow:hidden;text-overflow:ellipsis;
+ white-space:nowrap;list-style:none}
+.ansc .aq .qfold summary::-webkit-details-marker{display:none}
+.ansc .aq .qfold[open]{white-space:normal}
+.ansc .aq .qfold[open] summary{white-space:normal;color:var(--dim);margin-bottom:5px}
 .ansc .aq .atxt{font-weight:300}
-.ansc .aq summary{font-weight:300;cursor:pointer}
 .ansc .w{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--dim);
  font:500 12.5px Heebo,sans-serif;margin-bottom:7px}
 .ansc .atxt{white-space:pre-wrap;word-break:break-word}
@@ -5814,13 +5824,19 @@ function renderAnswers(){
    var qn=String(m.q.note||'').replace(/^תמלול:\s*/,'');
    if(qn&&/הודעה קולית|voice-/.test(qt))qt=qn;
    else if(qn)qt=qt+String.fromCharCode(10)+qn;
-   // A long message of his is folded to its first line. One of them runs two
-   // thousand characters, and that on top of every answer is not a pair, it
-   // is the question burying the answer.
-   var qb=qt.length>220
-    ?'<details class="arep"><summary>'+esc(qt.replace(/\s+/g,' ').slice(0,90))+'…</summary>'
+   /*
+     20.9, second time he asked: "the answers and what came in on the same
+     line, to save space". The question used to be a block of its own, its
+     byline on one row and its text under it, so every pair cost four lines
+     before the answer started. Now the byline and the message share one row,
+     the message clipped to what fits, and the rest is a tap away. A pair that
+     used to run a screen and a half fits on a phone without scrolling.
+   */
+   var one=qt.replace(/\s+/g,' ').trim();
+   var qb=one.length>45
+    ?'<details class="qfold"><summary>'+esc(one)+'</summary>'
      +'<div class="atxt">'+linkify(qt)+'</div></details>'
-    :'<div class="atxt">'+linkify(qt)+'</div>';
+    :'<span class="qline">'+linkify(one)+'</span>';
    ask='<div class="aq"><span class="w">אתה · '+esc(stamp(m.q.at))+'</span>'+qb+'</div>';
   }
   return '<div class="ansc'+(his?' mine':' '+ansColor(m))+(m.q?' pair':'')+'" data-i="'+i+'">'

@@ -1079,10 +1079,17 @@ body.editing .bn{display:none}
  border-inline-start-color:var(--blue)}
 .ansc.mine .atxt{font-weight:300}
 .ansc .aq{background:var(--sunk);border-inline-start:3px solid var(--blue);
- border-radius:10px;padding:8px 11px;margin:0 0 10px}
-.ansc .aq .w{margin-bottom:4px}
+ border-radius:10px;padding:6px 10px;margin:0 0 8px;
+ display:flex;align-items:baseline;gap:8px;font:300 13.5px Heebo,sans-serif}
+.ansc .aq .w{margin-bottom:0;flex:0 0 auto;white-space:nowrap;flex-wrap:nowrap}
+.ansc .aq .qline,.ansc .aq .qfold{flex:1 1 auto;min-width:0;overflow:hidden;
+ text-overflow:ellipsis;white-space:nowrap}
+.ansc .aq .qfold summary{cursor:pointer;overflow:hidden;text-overflow:ellipsis;
+ white-space:nowrap;list-style:none}
+.ansc .aq .qfold summary::-webkit-details-marker{display:none}
+.ansc .aq .qfold[open]{white-space:normal}
+.ansc .aq .qfold[open] summary{white-space:normal;color:var(--dim);margin-bottom:5px}
 .ansc .aq .atxt{font-weight:300}
-.ansc .aq summary{font-weight:300;cursor:pointer}
 .ansc .w{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--dim);
  font:500 12.5px Heebo,sans-serif;margin-bottom:7px}
 .ansc .atxt{white-space:pre-wrap;word-break:break-word}
@@ -1406,7 +1413,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-20T09:14:15.326Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-20T09:15:24.149Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2258,7 +2265,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='24182f3f62';
+var CODE_ID='a561c735f6';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -4109,10 +4116,11 @@ function renderAnswers(){
    var qn=String(m.q.note||'').replace(/^תמלול:s*/,'');
    if(qn&&/הודעה קולית|voice-/.test(qt))qt=qn;
    else if(qn)qt=qt+String.fromCharCode(10)+qn;
-   var qb=qt.length>220
-    ?'<details class="arep"><summary>'+esc(qt.replace(/s+/g,' ').slice(0,90))+'…</summary>'
+   var one=qt.replace(/s+/g,' ').trim();
+   var qb=one.length>45
+    ?'<details class="qfold"><summary>'+esc(one)+'</summary>'
      +'<div class="atxt">'+linkify(qt)+'</div></details>'
-    :'<div class="atxt">'+linkify(qt)+'</div>';
+    :'<span class="qline">'+linkify(one)+'</span>';
    ask='<div class="aq"><span class="w">אתה · '+esc(stamp(m.q.at))+'</span>'+qb+'</div>';
   }
   return '<div class="ansc'+(his?' mine':' '+ansColor(m))+(m.q?' pair':'')+'" data-i="'+i+'">'
