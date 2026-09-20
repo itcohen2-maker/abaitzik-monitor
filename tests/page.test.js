@@ -1020,6 +1020,20 @@ test('sent is yellow, the answer is red, what he touched is green', () => {
   assert.ok(html.includes("'. ממתין לתשובה, '+esc(ago(m.at))+'.'+progressBar(m)+'</div>'"));
 });
 
+// איציק, 20.9: מד התקדמות ליד כל בקשה שלו.
+test('every request of his carries a progress meter', () => {
+  const html = renderPage(fixture({}));
+  assert.ok(html.includes("var PRG={received:25,working:60,partial:80,done:100};"));
+  // כל אחוז יושב על מצב שכתוב בקובץ ההודעה, ואין מונה שרץ לבד.
+  assert.ok(html.includes("var p=PRG[m.status];"));
+  assert.ok(html.includes("return typeof p==='number'?p:10;"));
+  assert.ok(html.includes(`<span class="prg-t"><i class="prg-f" style="width:'+p+'%"></i></span>`));
+  assert.ok(html.includes(`aria-valuenow="'+p+'" aria-label="התקדמות הבקשה"`));
+  // וגם במסך מה שהתקבל, לא רק בצ׳אט.
+  assert.ok(html.includes("var bar=(kind&&kind!=='msg')?'':progressBar(m);"));
+  assert.ok(html.includes('.prg-f{display:block;height:100%;border-radius:999px;background:currentColor;'));
+});
+
 test('one button clears every message off the screen, and deletes nothing', () => {
   const html = renderPage(fixture({}));
   assert.ok(html.includes('id="clearAll"'));
