@@ -60,8 +60,16 @@
     box-shadow:0 8px 20px rgba(245,166,35,.28);
   }
   .cta:active{transform:translateY(1px)}
+  .cta2{
+    display:block; width:100%; text-align:center; border:1px solid var(--line);
+    background:var(--card); color:var(--ink); font-family:inherit;
+    font-weight:700; font-size:16px; padding:15px; border-radius:14px;
+    margin:0 0 6px; cursor:pointer;
+  }
+  .cta2:active{transform:translateY(1px)}
   .alt{display:block; text-align:center; color:var(--dim); font-size:14px;
-    text-decoration:none; padding:8px}
+    text-decoration:none; padding:8px; background:none; border:0;
+    font-family:inherit; width:100%; cursor:pointer}
   .alt:hover{color:var(--ink)}
 
   footer{color:var(--dim); font-size:12.5px; margin-top:30px;
@@ -83,7 +91,8 @@
   </div>
 
   <a class="cta" href="sekira.pdf" target="_blank" rel="noopener">פתיחת הסקירה</a>
-  <a class="alt" id="dl" href="sekira.pdf" download="happymeal.pdf">או הורדה למכשיר</a>
+  <button type="button" class="cta2" id="sh" hidden>שליחת הקובץ</button>
+  <a class="alt" id="dl" href="sekira.pdf" download="happymeal.pdf">או שמירה למכשיר</a>
 
   <div class="card">
     <h2>מה נמצא, בקצרה</h2>
@@ -119,35 +128,73 @@
 </style>
 <script>
 /*
-  On Android a link to a PDF opens the viewer rather than saving, and the
-  viewer swallows the screen: you are left holding a document with no way
-  back to this page. A blob address carries no type for the browser to act
-  on, so the download attribute is honoured, the file lands in Downloads,
-  and this page never moves.
+  Two phones, two different truths, and guessing between them is how someone
+  ends up holding a document with no way out.
+
+  On an iPhone there is no Downloads folder to look in and a blob address is
+  not saved: Safari opens it. What an iPhone does have is a real share sheet,
+  so the honest button there is שליחת הקובץ, which hands WhatsApp the PDF as
+  a document. Saving goes through Safari's own download, which lands in
+  Files, and the wording says Files rather than a folder that is not there.
+
+  Elsewhere the blob save is the one that works, so that stays.
+
+  The file is fetched on load, not on the tap. Both Safari and Chrome spend
+  the tap's permission on an await, and then the share sheet never opens and
+  nothing says why.
 */
 (function(){
-  var a = document.getElementById('dl');
-  var t = document.getElementById('toast');
+  var dl = document.getElementById('dl');
+  var sh = document.getElementById('sh');
+  var t  = document.getElementById('toast');
+  var NAME = 'happymeal.pdf';
+  var file = null;
+
   function say(msg){ t.textContent = msg; t.hidden = false;
-    clearTimeout(say._t); say._t = setTimeout(function(){ t.hidden = true; }, 3200); }
-  if (!a || !window.fetch || !window.URL || !URL.createObjectURL) return;
-  a.addEventListener('click', function(e){
+    clearTimeout(say._t); say._t = setTimeout(function(){ t.hidden = true; }, 3600); }
+
+  var isApple = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  // Pull it now, so a tap never has to wait and lose its permission.
+  if (window.fetch && window.File) {
+    fetch('sekira.pdf').then(function(r){ return r.ok ? r.blob() : null; })
+      .then(function(b){
+        if (!b) return;
+        var f = new File([b], NAME, { type: 'application/pdf' });
+        if (navigator.canShare && navigator.canShare({ files: [f] })) {
+          file = f;
+          if (sh) sh.hidden = false;
+        }
+      }).catch(function(){});
+  }
+
+  if (sh) sh.addEventListener('click', function(){
+    if (!file) { say('הקובץ עוד נטען, שנייה'); return; }
+    navigator.share({ files: [file], title: 'סקירת פיתוח happymeal' })
+      .catch(function(e){ if (e && e.name !== 'AbortError') say('השליחה לא נפתחה'); });
+  });
+
+  if (!dl) return;
+  dl.addEventListener('click', function(e){
+    // On an iPhone the plain link is the right one: Safari saves it to Files.
+    if (isApple) { say('נשמר דרך ספארי, בתיקיית Files בהורדות'); return; }
+    if (!window.URL || !URL.createObjectURL || !window.fetch) return;
     e.preventDefault();
-    say('מוריד');
+    say('שומר');
     fetch('sekira.pdf').then(function(r){
       if (!r.ok) throw 0;
       return r.blob();
     }).then(function(b){
       var u = URL.createObjectURL(b);
       var l = document.createElement('a');
-      l.href = u; l.download = 'happymeal.pdf';
+      l.href = u; l.download = NAME;
       document.body.appendChild(l); l.click(); l.remove();
       setTimeout(function(){ URL.revokeObjectURL(u); }, 4000);
-      say('ירד בשם happymeal.pdf, בתיקיית ההורדות');
+      say('נשמר בשם ' + NAME + ', בתיקיית ההורדות');
     }).catch(function(){
-      // Never leave the button dead: fall back to opening it in a new tab,
-      // which at least keeps this page behind it.
-      say('ההורדה נכשלה, פותח בכרטיסייה חדשה');
+      // Never leave the button dead: opening it at least keeps this page behind.
+      say('השמירה נכשלה, פותח בכרטיסייה חדשה');
       window.open('sekira.pdf', '_blank', 'noopener');
     });
   });
