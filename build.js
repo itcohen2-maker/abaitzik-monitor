@@ -1880,7 +1880,9 @@ body.editing .bn{display:none}
  white-space:nowrap;list-style:none}
 .ansc .aq .qfold summary::-webkit-details-marker{display:none}
 .ansc .aq .qfold[open]{white-space:normal}
-.ansc .aq .qfold[open] summary{white-space:normal;color:var(--dim);margin-bottom:5px}
+/* Open, the summary stays the clipped one line: letting it wrap printed the
+   whole message twice, once in the summary and once in the body. */
+.ansc .aq .qfold[open] summary{color:var(--dim);margin-bottom:5px}
 .ansc .aq .atxt{font-weight:300}
 .ansc .w{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--dim);
  font:500 12.5px Heebo,sans-serif;margin-bottom:7px}
