@@ -859,6 +859,22 @@ body.editing .bn{display:none}
 .g13{background:linear-gradient(150deg,#ffd27f,#ef6c00)}
 .g14{background:linear-gradient(150deg,#a5d6a7,#2e7d32)}
 .g15{background:linear-gradient(150deg,#90caf9,#1565c0)}
+.ysheet{position:fixed;inset:0;z-index:9999;background:rgba(10,14,22,.55);
+ display:flex;align-items:flex-end;justify-content:center;padding:14px}
+.ycard{background:var(--card,#fff);color:var(--ink,#16202c);width:100%;max-width:420px;
+ border-radius:18px;padding:18px 16px 14px;display:flex;flex-direction:column;gap:9px;
+ box-shadow:0 -8px 40px rgba(0,0,0,.35)}
+.ycard b{font:700 16px Heebo,sans-serif}
+.ycard small{font-size:12px;opacity:.7;margin-bottom:4px}
+.yb{border:0;border-radius:12px;padding:13px;font:600 15px Heebo,sans-serif;
+ background:#e8eef6;color:#16202c;cursor:pointer;min-height:48px}
+.yb1{background:linear-gradient(150deg,#90caf9,#1565c0);color:#fff}
+.yx{background:transparent;opacity:.6;min-height:40px;padding:8px}
+.yb:active{transform:translateY(1px)}
+.ytoast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:10000;
+ background:#16202c;color:#fff;padding:10px 16px;border-radius:12px;
+ font:600 13px Heebo,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+@media(min-width:520px){.ysheet{align-items:center}}
 .tidy{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
  padding:13px 15px;margin-top:14px;box-shadow:var(--shadow)}
 .tidy b{display:block;font:800 15px Heebo,sans-serif;margin-bottom:4px}
@@ -1419,7 +1435,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-20T16:36:56.611Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-20T16:44:51.822Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1546,7 +1562,7 @@ try{
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
   <button type="button" class="gt g13" id="gSpecial"><b>⭐ בקשות מיוחדות</b><small>מה שביקשת ומוכן, דפים וקבצים</small></button>
   <button type="button" class="gt g14" id="gReplies"><b>✍️ תגובות מיוחדות</b><small>מה עניתי בשמך, לעבור ולאשר</small></button>
-  <button type="button" class="gt g15" id="gYehuda"><b>📄 יהודה</b><small>happymeal, סקירת הפיתוח להעברה ללקוח</small></button>
+  <button type="button" class="gt g15" id="gYehuda"><b>📄 יהודה</b><small>סקירת happymeal. פתיחה, הורדה או שליחה אליו</small></button>
  </div>
 
 
@@ -2272,7 +2288,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='765f1ecf51';
+var CODE_ID='9aec90a98d';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -5544,7 +5560,70 @@ on('diagBtn',function(){
 function openFood(){pane('f');renderFood();ensure('food',renderFood);}
 on('gFood',openFood);on('iFood',openFood);
 on('gLolos',function(){pane('o');});
-on('gYehuda',function(){window.open('files/happymeal-sekira-yehuda.pdf','_blank','noopener');});
+var YEHUDA_PDF='files/happymeal-sekira-yehuda.pdf';
+var YEHUDA_NAME='סקירת פיתוח happymeal.pdf';
+function yehudaUrl(){
+ try{return new URL(YEHUDA_PDF,location.href).href;}catch(e){return YEHUDA_PDF;}
+}
+function yehudaOpen(){window.open(YEHUDA_PDF,'_blank','noopener');}
+function yehudaDownload(){
+ var a=document.createElement('a');
+ a.href=YEHUDA_PDF;a.download=YEHUDA_NAME;a.rel='noopener';
+ document.body.appendChild(a);a.click();a.remove();
+}
+function yehudaShare(){
+ var url=yehudaUrl();
+ function byLink(){
+  if(navigator.share)return navigator.share({title:'סקירת פיתוח happymeal',url:url});
+  if(navigator.clipboard&&navigator.clipboard.writeText)
+   return navigator.clipboard.writeText(url).then(function(){toastY('הקישור הועתק');});
+  yehudaOpen();return Promise.resolve();
+ }
+ if(!navigator.canShare)return byLink();
+ return fetch(YEHUDA_PDF).then(function(r){return r.blob();}).then(function(b){
+  var f=new File([b],YEHUDA_NAME,{type:'application/pdf'});
+  if(!navigator.canShare({files:[f]}))throw 0;
+  return navigator.share({files:[f],title:'סקירת פיתוח happymeal'});
+ }).catch(function(e){
+  if(e&&e.name==='AbortError')return;
+  return byLink();
+ });
+}
+function toastY(msg){
+ var t=document.createElement('div');
+ t.className='ytoast';t.textContent=msg;document.body.appendChild(t);
+ setTimeout(function(){t.remove();},2600);
+}
+function yehudaSheet(){
+ var old=document.getElementById('ySheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='ySheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','סקירת happymeal ליהודה');
+ w.innerHTML='<div class="ycard">'
+  +'<b>סקירת הפיתוח ליהודה</b>'
+  +'<small>12 עמודים, מוכן לשליחה ללקוח</small>'
+  +'<button type="button" class="yb" data-y="open">פתיחה</button>'
+  +'<button type="button" class="yb" data-y="down">הורדה</button>'
+  +'<button type="button" class="yb yb1" data-y="share">שליחה ליהודה</button>'
+  +'<button type="button" class="yb yx" data-y="close">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-y');
+  if(!k)return;
+  if(k==='open'){yehudaOpen();close();}
+  else if(k==='down'){yehudaDownload();close();}
+  else if(k==='share'){yehudaShare();close();}
+  else close();
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+ var first=w.querySelector('.yb');if(first)first.focus();
+}
+on('gYehuda',yehudaSheet);
 on('gOp',function(){pane('s');});
 on('gNotes',function(){pane('t');renderNotes();});
 on('gIdeas',function(){pane('i');renderIdeas();});
