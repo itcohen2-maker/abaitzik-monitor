@@ -398,6 +398,12 @@ section{margin-bottom:30px}
 @media (prefers-reduced-motion:reduce){.pulse{animation:none;opacity:.9}}
 .st-working{background:#f6e7c8;color:#8a5a12}
 .st-done{background:var(--fresh);color:#1d6b3f}
+.prg{display:flex;align-items:center;gap:8px;margin-top:7px}
+.prg-t{flex:1;height:10px;border-radius:999px;background:rgba(0,0,0,.12);overflow:hidden}
+.prg-f{display:block;height:100%;border-radius:999px;background:currentColor;
+ width:0;transition:width .5s ease}
+.prg-n{font-size:.82rem;font-weight:700;min-width:3.2em;text-align:start}
+@media (prefers-reduced-motion:reduce){.prg-f{transition:none}}
 .bub.you.live{border:2px solid var(--gold);opacity:1;animation:livebeat 1.6s ease-in-out infinite}
 .bub.you.live .w{color:#8a5a12}
 @keyframes livebeat{
@@ -1384,7 +1390,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-20T04:35:09.933Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-20T04:36:45.226Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2213,7 +2219,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='a38252c896';
+var CODE_ID='097bb2e41f';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -2456,13 +2462,26 @@ function voiceBlock(m){
  return age>600000?'<div class="vtx vwait"><b>תמלול</b>לא נשמר תמלול להקלטה הזאת.</div>'
   :'<div class="vtx vwait"><b>תמלול</b>מתמלל את ההקלטה, התמלול יופיע כאן.</div>';
 }
+var PRG={received:25,working:60,partial:80,done:100};
+function progress(m){
+ if(m.pend)return 10;
+ var p=PRG[m.status];
+ return typeof p==='number'?p:10;
+}
+function progressBar(m){
+ var p=progress(m);
+ return '<div class="prg" role="progressbar" aria-valuemin="0" aria-valuemax="100"'
+  +' aria-valuenow="'+p+'" aria-label="התקדמות הבקשה">'
+  +'<span class="prg-t"><i class="prg-f" style="width:'+p+'%"></i></span>'
+  +'<span class="prg-n">'+p+'%</span></div>';
+}
 function ackLine(m,noNote){
  if(m.from!=='itzik')return '';
- if(m.pend)return '<div class="ack ack-wait">נשלח עכשיו. ממתין לתשובה.</div>';
+ if(m.pend)return '<div class="ack ack-wait">נשלח עכשיו. ממתין לתשובה.'+progressBar(m)+'</div>';
  var st=m.status,when=m.ackAt||'';
  if(!st){
   return '<div class="ack ack-wait">נשלח ב'+esc(stamp(m.at))
-   +'. ממתין לתשובה, '+esc(ago(m.at))+'.</div>';
+   +'. ממתין לתשובה, '+esc(ago(m.at))+'.'+progressBar(m)+'</div>';
  }
  var sent=m.at?('נשלח ב'+esc(stamp(m.at))+'. '):'';
  var head=when?(sent+'קיבלתי את זה ב'+esc(stamp(when))):(sent+'קיבלתי את זה');
@@ -2472,7 +2491,7 @@ function ackLine(m,noNote){
   :'ועוד לא התחלתי.';
  var note=(m.note&&!noNote)?'<span class="ack-n">'+esc(m.note)+'</span>':'';
  var dot=(st==='working'||st==='partial')?'<i class="pulse"></i>':'';
- return '<div class="ack ack-'+esc(st)+'">'+dot+head+' '+tail+note+'</div>';
+ return '<div class="ack ack-'+esc(st)+'">'+dot+head+' '+tail+note+progressBar(m)+'</div>';
 }
 function dropSettled(list,baked){
  var mine=baked.filter(function(m){return m.from==='itzik';})
@@ -4161,8 +4180,9 @@ function renderGot(){
    +'aria-label="מחיקת השורה">מחיקה</button>';
  }
  function row(m,k,label,kind){
+  var bar=(kind&&kind!=='msg')?'':progressBar(m);
   return '<div class="gr"><span class="gr-t">'+esc(stamp(m.at))+'</span>'
-   +'<div class="gr-x">'+linkify(m.text||'')+'</div>'
+   +'<div class="gr-x">'+linkify(m.text||'')+bar+'</div>'
    +'<span class="gr-s gr-'+k+'">'+label+'</span>'
    +del(kind||'msg',m)+'</div>';
  }

@@ -1042,6 +1042,19 @@ section{margin-bottom:30px}
 .st-working{background:#f6e7c8;color:#8a5a12}
 .st-done{background:var(--fresh);color:#1d6b3f}
 /*
+  איציק, 20.9: "אני רוצה מד התקדמות במוניטור כל בקשה שלי שתופיע ליד הבקשה."
+
+  המשפט מתחת להודעה אמר את המצב במילים, אבל לא נתן תמונה של כמה נשאר.
+  עכשיו יש פס מתחת לכל בקשה שלו עם אחוז. האחוז נגזר מהמצב ששמור בקובץ
+  ההודעה ולא נע מעצמו, כך שהוא לא מציג התקדמות שלא קרתה.
+*/
+.prg{display:flex;align-items:center;gap:8px;margin-top:7px}
+.prg-t{flex:1;height:10px;border-radius:999px;background:rgba(0,0,0,.12);overflow:hidden}
+.prg-f{display:block;height:100%;border-radius:999px;background:currentColor;
+ width:0;transition:width .5s ease}
+.prg-n{font-size:.82rem;font-weight:700;min-width:3.2em;text-align:start}
+@media (prefers-reduced-motion:reduce){.prg-f{transition:none}}
+/*
   איציק, 17.9: "ברגע שאתה שולח את ההודעה שאני משאיר לך פה, תעשה עבעוב כזה
   מדליק על התשובה שלי, שאני אדע שאתה בעבודה."
 
@@ -3575,13 +3588,28 @@ function voiceBlock(m){
  return age>600000?'<div class="vtx vwait"><b>תמלול</b>לא נשמר תמלול להקלטה הזאת.</div>'
   :'<div class="vtx vwait"><b>תמלול</b>מתמלל את ההקלטה, התמלול יופיע כאן.</div>';
 }
+// מד ההתקדמות. כל אחוז כאן יושב על מצב שכתוב בקובץ ההודעה: נשלחה,
+// התקבלה, בעבודה, יש חלק, בוצעה. אין כאן מונה שרץ לבד.
+var PRG={received:25,working:60,partial:80,done:100};
+function progress(m){
+ if(m.pend)return 10;
+ var p=PRG[m.status];
+ return typeof p==='number'?p:10;
+}
+function progressBar(m){
+ var p=progress(m);
+ return '<div class="prg" role="progressbar" aria-valuemin="0" aria-valuemax="100"'
+  +' aria-valuenow="'+p+'" aria-label="התקדמות הבקשה">'
+  +'<span class="prg-t"><i class="prg-f" style="width:'+p+'%"></i></span>'
+  +'<span class="prg-n">'+p+'%</span></div>';
+}
 function ackLine(m,noNote){
  if(m.from!=='itzik')return '';
- if(m.pend)return '<div class="ack ack-wait">נשלח עכשיו. ממתין לתשובה.</div>';
+ if(m.pend)return '<div class="ack ack-wait">נשלח עכשיו. ממתין לתשובה.'+progressBar(m)+'</div>';
  var st=m.status,when=m.ackAt||'';
  if(!st){
   return '<div class="ack ack-wait">נשלח ב'+esc(stamp(m.at))
-   +'. ממתין לתשובה, '+esc(ago(m.at))+'.</div>';
+   +'. ממתין לתשובה, '+esc(ago(m.at))+'.'+progressBar(m)+'</div>';
  }
  var sent=m.at?('נשלח ב'+esc(stamp(m.at))+'. '):'';
  var head=when?(sent+'קיבלתי את זה ב'+esc(stamp(when))):(sent+'קיבלתי את זה');
@@ -3594,7 +3622,7 @@ function ackLine(m,noNote){
  // הפעימה איטית בכוונה, אחרי שנדחה ההבהוב החד, ומכובה לגמרי למי שביקש
  // פחות תנועה במערכת.
  var dot=(st==='working'||st==='partial')?'<i class="pulse"></i>':'';
- return '<div class="ack ack-'+esc(st)+'">'+dot+head+' '+tail+note+'</div>';
+ return '<div class="ack ack-'+esc(st)+'">'+dot+head+' '+tail+note+progressBar(m)+'</div>';
 }
 // A pending copy is dropped once any message of his lands at or after it: I
 // rewrite what he said (a recording becomes its transcript), so matching on the
@@ -5837,8 +5865,10 @@ function renderGot(){
    +'aria-label="מחיקת השורה">מחיקה</button>';
  }
  function row(m,k,label,kind){
+  // מד ההתקדמות יושב גם כאן, ליד כל בקשה שלו, ולא רק בצ׳אט.
+  var bar=(kind&&kind!=='msg')?'':progressBar(m);
   return '<div class="gr"><span class="gr-t">'+esc(stamp(m.at))+'</span>'
-   +'<div class="gr-x">'+linkify(m.text||'')+'</div>'
+   +'<div class="gr-x">'+linkify(m.text||'')+bar+'</div>'
    +'<span class="gr-s gr-'+k+'">'+label+'</span>'
    +del(kind||'msg',m)+'</div>';
  }

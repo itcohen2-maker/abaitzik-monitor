@@ -1017,7 +1017,7 @@ test('sent is yellow, the answer is red, what he touched is green', () => {
   assert.ok(html.includes('.bub.touched{animation:none;border:2px solid var(--green)'));
   // And the line says when it went out, not only that it is waiting.
   assert.ok(html.includes("var sent=m.at?('נשלח ב'+esc(stamp(m.at))+'. '):'';"));
-  assert.ok(html.includes("'. ממתין לתשובה, '+esc(ago(m.at))+'.</div>'"));
+  assert.ok(html.includes("'. ממתין לתשובה, '+esc(ago(m.at))+'.'+progressBar(m)+'</div>'"));
 });
 
 test('one button clears every message off the screen, and deletes nothing', () => {
