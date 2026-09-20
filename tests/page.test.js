@@ -1728,6 +1728,16 @@ test('a leftover search cannot empty the screen the red button opens', () => {
   assert.ok(html.includes("shown<n?('נפתחו '+shown+' מתוך '+n+' שלא קראת')"));
 });
 
+test('the two buttons that count answers count the same thing', () => {
+  const html = renderPage(fixture({}));
+  // Itzik, 20.9: the red button said 307 and the tab at the foot said 111, at
+  // the same moment, about the same answers. The tab was counting only the
+  // answers already in memory. Both read unreadCount now.
+  assert.ok(html.includes(" var n=unreadCount();"));
+  assert.ok(html.includes("el.textContent=n?String(n):'✓';"));
+  assert.ok(!html.includes(' var n=ansFreshKeys().length;'));
+});
+
 test('the red button is named after where it goes, not after a state', () => {
   const html = renderPage(fixture({}));
   // Itzik, 18.9: "the red button is for alerts and not for answers, fix it

@@ -6076,10 +6076,23 @@ function renderGot(){
   };
  });
 }
+/*
+  Itzik, 20.9 19:27: "שוב אתה לא מעדכן את הכפתורים. תשובות". Two buttons for
+  the same thing said two different numbers on his screen at the same moment:
+  the red one 307, the tab at the foot 111. Both were painted from the same
+  call, and they disagreed because they counted different sets. ansFreshKeys
+  can only see the answers this page is holding, and the whole collection is
+  not fetched until a screen asks for it, so the tab sat on the head slice
+  until he happened to open the answers. The red button counts the window
+  itself and was right the whole time.
+
+  One number now, unreadCount, the one the red button shows. A second counter
+  of the same thing is not a second opinion, it is a button that looks broken.
+*/
 function paintAnsCount(){
  var el=document.getElementById('aCnt');
  if(!el)return;
- var n=ansFreshKeys().length;
+ var n=unreadCount();
  el.textContent=n?String(n):'✓';
  el.classList.toggle('zero',!n);
 }

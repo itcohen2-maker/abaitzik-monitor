@@ -1419,7 +1419,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-20T16:31:51.062Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-20T16:33:48.027Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2272,7 +2272,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='91f96c3e85';
+var CODE_ID='765f1ecf51';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -4306,7 +4306,7 @@ function renderGot(){
 function paintAnsCount(){
  var el=document.getElementById('aCnt');
  if(!el)return;
- var n=ansFreshKeys().length;
+ var n=unreadCount();
  el.textContent=n?String(n):'✓';
  el.classList.toggle('zero',!n);
 }
