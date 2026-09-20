@@ -112,10 +112,23 @@ function slotNow(now) {
   standing red rules that bite there and nowhere else: friend requests are never
   approved, and Messenger is not opened, because it asks for a six digit PIN and
   that is an identity confirmation nobody here gives.
+
+  The Facebook line also names which surface each half of a wave happens on,
+  because the first wave off this table found they are not the same one. Likes
+  work inside the comments manager. Reply there does not: it opens the video's
+  comment thread with a single box at the bottom that posts a new public comment
+  on the video rather than a reply to the person. That wave wrote nothing and
+  eight people who had written to him got a like and no answer, so the written
+  half is sent to the post itself, the way the manual round on 19.9 did it.
 */
 const WHERE = {
-  facebook: 'איפה: מנהל התגובות בדף שלו, לא הפיד. בקשות חברות לא מאשרים ולא דוחים.\n'
-    + 'ולא נוגעים במסנג׳ר: הוא מבקש קוד PIN בן שש ספרות, וזה אישור זהות.',
+  facebook: 'איפה: מנהל התגובות בדף שלו, לא הפיד, ובתוכו המסנן לא הגבת.\n'
+    + 'הלייק נעשה שם. לתשובה כתובה פותחים את הפוסט או הריל עצמו ומשיבים\n'
+    + 'מתחת לתגובה שם, כמו בסבב של 19.9. כפתור ההשב במנהל התגובות מוביל\n'
+    + 'לתיבה שמפרסמת תגובה חדשה לסרטון ולא תשובה לאדם, ואין לכתוב בה.\n'
+    + 'מאמתים שהתשובה מופיעה מתחת לתגובה לפני שממשיכים.\n'
+    + 'בקשות חברות לא מאשרים ולא דוחים, ולא נוגעים במסנג׳ר: הוא מבקש\n'
+    + 'קוד PIN בן שש ספרות, וזה אישור זהות.',
   instagram: 'איפה: הרילים בפרופיל שלו. תגובות באינסטגרם חסומות, לייקים בלבד.',
   tiktok: 'איפה: פאנל הפעילות, מסנן תגובות. עד ארבע שעות אחורה.',
   youtube: 'איפה: התגובות בסרטונים שלו, דרך סטודיו או דף הסרטון.',
