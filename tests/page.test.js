@@ -932,10 +932,18 @@ test('the answers tab sits beside home and its badge counts what waits', () => {
   // on the right" means second in source order.
   assert.ok(ans > home);
   // 17.9: "answers at the bottom, chat at the bottom, all the same thing, I
-  // want one button". The chat and reports tabs came off the bar.
+  // want one button". The chat tab came off the bar and never came back.
   assert.ok(!html.includes('id="nM"'), 'the chat tab must be gone');
-  assert.ok(!html.includes('id="nR"'), 'the reports tab must be gone');
-  assert.ok(html.includes("var NAVS={h:'nH',q:'nQ',l:'nL',a:'nA'};"));
+  // Reports did come back, 20.9. Folding them into the answers list by time
+  // left him with no button named after the thing he was looking for, and he
+  // read the bar back to me to say so: answers, networks, leads. The reports
+  // are the end of every round, so they get the fifth tab.
+  assert.ok(html.includes('id="nR"'), 'the reports tab must be on the bar');
+  assert.ok(html.includes("var NAVS={h:'nH',q:'nQ',l:'nL',a:'nA',r:'nR'};"));
+  assert.ok(html.includes("document.getElementById('nR').onclick=function(){pane('r');};"));
+  // Reports still sort into the answers list by time. The tab is a second way
+  // in, not a move: taking them out of answers would undo 17.9.
+  assert.ok(html.includes("(D.reports||[]).forEach(function(x){add('דוח','r',x.title,x.at,x.body);});"));
   // And one badge carries what used to light up three separate tabs.
   assert.ok(html.includes("if(nA)nA.classList.toggle('hasnew',msgs>0||reps>0);"));
   // Grey used to read out the total, which looks like a count of things

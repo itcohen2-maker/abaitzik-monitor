@@ -3161,6 +3161,7 @@ try{
  <button type="button" id="nA" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h16v11h-9l-5 3.5v-3.5H4Z"/><path d="M8 10.5h8M8 14h5"/></svg>תשובות<i class="cnt zero" id="aCnt">0</i></button>
  <button type="button" id="nQ" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"/><path d="M7 19v-6"/><path d="M12 19V7"/><path d="M17 19v-9"/></svg>רשתות</button>
  <button type="button" id="nL" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>לידים<i class="dot" id="lDot" hidden></i></button>
+ <button type="button" id="nR" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6Z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h4"/></svg>דוחות</button>
 </nav>
 
 <div class="stamp"><span id="builtFoot"></span></div>
@@ -4602,7 +4603,16 @@ var LANDING=[
  {name:'שיטת הפירה',note:'מילת המפתח: גזר',url:'https://itzik-site.vercel.app/gezer'},
  {name:'סלינדה',note:'אתר',url:'https://salinda-mobile.vercel.app/'}
 ];
-var NAVS={h:'nH',q:'nQ',l:'nL',a:'nA'};
+/*
+  Reports got a tab of their own.
+
+  They were reachable only through a card on the home screen titled "דוח רשת",
+  and he went looking for a button called reports and did not find one. Itzik,
+  20.9, on the bottom bar: "we have answers, networks and leads down there."
+  The reports are what he reads at the end of every round, and they were the
+  one screen of the four he uses with no way in from the bar.
+*/
+var NAVS={h:'nH',q:'nQ',l:'nL',a:'nA',r:'nR'};
 
 // Per network monitoring. Tapping a network circle opens its own screen:
 // what is waiting there, and only the report lines about that network.
@@ -6401,6 +6411,7 @@ document.addEventListener('keydown',function(e){
 });
 document.getElementById('nQ').onclick=function(){pane('q');ensure(['replied'],render);};
 document.getElementById('nL').onclick=function(){pane('l');};
+document.getElementById('nR').onclick=function(){pane('r');};
 document.getElementById('nA').onclick=function(){openAnswers(ansFilter);};
 document.getElementById('gotBtn').onclick=function(){pane('b');renderGot();ensure('chat',renderGot);};
 
