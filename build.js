@@ -53,7 +53,21 @@ function loadDocs(dir) {
     .filter(f => f.endsWith('.json'))
     .map(f => {
       const doc = JSON.parse(fs.readFileSync(path.join(full, f), 'utf8'));
-      doc.id = f.replace(/\.json$/, '');
+      /*
+        The id inside the document wins over the name of its file.
+
+        This line used to overwrite it, and that quietly cut every thread in
+        the monitor in two. A message of his arrives with the id the sending
+        channel gave it, my answer carries that id in `re`, and the pairing
+        the whole chat screen is built on is `re` pointing at `id`. With the
+        id replaced by a filename, `re` pointed at nothing: 483 messages came
+        out as 483 threads of one, his question and my answer sat as two
+        unrelated lines, and autoClose could never see that a message had
+        been answered. Only the chat documents carry an id of their own, so
+        everything else keeps behaving exactly as before.
+      */
+      doc.file = f.replace(/\.json$/, '');
+      if (!doc.id) doc.id = doc.file;
       return doc;
     });
 }
@@ -1851,6 +1865,13 @@ body.editing .bn{display:none}
 .ansc.mine{background:var(--sunk);box-shadow:none;margin-inline-start:22px;
  border-inline-start-color:var(--blue)}
 .ansc.mine .atxt{font-weight:300}
+/* The question inside the card that answers it. Sunk, thin and cut off after
+   a few lines, so the answer stays the thing the eye lands on. */
+.ansc .aq{background:var(--sunk);border-inline-start:3px solid var(--blue);
+ border-radius:10px;padding:8px 11px;margin:0 0 10px}
+.ansc .aq .w{margin-bottom:4px}
+.ansc .aq .atxt{font-weight:300}
+.ansc .aq summary{font-weight:300;cursor:pointer}
 .ansc .w{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--dim);
  font:500 12.5px Heebo,sans-serif;margin-bottom:7px}
 .ansc .atxt{white-space:pre-wrap;word-break:break-word}
@@ -5627,10 +5648,28 @@ function allAnswers(){
  // 17.9: "three doors to the same room". His own messages were only in the
  // chat, my answers only here, so neither screen was the conversation. They
  // are one list now, his side included, sorted by time like everything else.
- var his=(D.chat||[]).filter(function(m){return m.from==='itzik';})
-  .map(function(m){return {at:m.at,text:m.text,src:'itzik',note:m.note,status:m.status};});
+ /*
+   His message and the answer to it are one card.
+
+   Itzik, 20.9: "put the answers and what came in on the same line". They were
+   two rows sorted by time, so reading one exchange meant finding his message,
+   then scrolling to wherever my answer had landed, sometimes past everything
+   that arrived in between. An answer carries the id of the message it answers,
+   so it can show that message above itself and the pair reads in one place.
+   A message of his with no answer yet stays a card of its own, which is the
+   one thing the list must never hide.
+ */
+ var byId={};
+ (D.chat||[]).forEach(function(m){if(m.from==='itzik'&&m.id)byId[m.id]=m;});
+ var answered={};
  var mine=(D.chat||[]).filter(function(m){return m.from==='claude'&&!isMail(m);})
-  .map(function(m){return {at:m.at,text:m.text,src:'claude'};});
+  .map(function(m){
+   var q=(m.re&&byId[m.re])||null;
+   if(q)answered[m.re]=true;
+   return {at:m.at,text:m.text,src:'claude',q:q};
+  });
+ var his=(D.chat||[]).filter(function(m){return m.from==='itzik'&&!answered[m.id];})
+  .map(function(m){return {at:m.at,text:m.text,src:'itzik',note:m.note,status:m.status};});
  var cdx=(D.codex||[]).filter(function(m){return m.from==='codex';})
   .map(function(m){return {at:m.at,text:m.text,src:'codex'};});
  var rps=(D.reports||[]).map(function(r){
@@ -5697,7 +5736,13 @@ function ansList(){
  if(ansFilter==='done')a=a.filter(function(m){return isDone(m)&&!isFresh(m)&&!isStandby(m)&&!isStar(m);});
  if(ansQ){
   var q=ansQ.toLowerCase();
-  a=a.filter(function(m){return String(m.text||'').toLowerCase().indexOf(q)>-1;});
+  // The question folded into a card is searchable text too, otherwise a word
+  // he wrote himself stopped finding the exchange it opened.
+  a=a.filter(function(m){
+   var t=String(m.text||'');
+   if(m.q)t+=' '+String(m.q.text||'')+' '+String(m.q.note||'');
+   return t.toLowerCase().indexOf(q)>-1;
+  });
  }
  return a;
 }
@@ -5761,7 +5806,25 @@ function renderAnswers(){
   var his=m.src==='itzik';
   var mark=his?(m.status==='done'?' · בוצע':(m.status==='working'?' · בעבודה':''))
    :(fresh?' · <em class="badge">חדש</em>':(sb?' · סטנד ביי':(done?' · טופל':' · נקרא')));
-  return '<div class="ansc'+(his?' mine':' '+ansColor(m))+'" data-i="'+i+'">'
+  // The question sits at the top of the card that answers it. For a recording
+  // the text is only the name of the file, so the transcript is what is shown.
+  var ask='';
+  if(m.q){
+   var qt=String(m.q.text||'');
+   var qn=String(m.q.note||'').replace(/^תמלול:\s*/,'');
+   if(qn&&/הודעה קולית|voice-/.test(qt))qt=qn;
+   else if(qn)qt=qt+String.fromCharCode(10)+qn;
+   // A long message of his is folded to its first line. One of them runs two
+   // thousand characters, and that on top of every answer is not a pair, it
+   // is the question burying the answer.
+   var qb=qt.length>220
+    ?'<details class="arep"><summary>'+esc(qt.replace(/\s+/g,' ').slice(0,90))+'…</summary>'
+     +'<div class="atxt">'+linkify(qt)+'</div></details>'
+    :'<div class="atxt">'+linkify(qt)+'</div>';
+   ask='<div class="aq"><span class="w">אתה · '+esc(stamp(m.q.at))+'</span>'+qb+'</div>';
+  }
+  return '<div class="ansc'+(his?' mine':' '+ansColor(m))+(m.q?' pair':'')+'" data-i="'+i+'">'
+   +ask
    +'<span class="w">'+ansWho(m)+' · '+esc(stamp(m.at))+mark+'</span>'
    +(m.src==='report'?ansReport(m):'<div class="atxt">'+linkify(m.text)+'</div>')
    +screenLinks(m.text)
@@ -5784,7 +5847,11 @@ function renderAnswers(){
  Array.prototype.forEach.call(host.querySelectorAll('.acopy'),function(b){
   b.onclick=function(e){e.stopPropagation();
    var m=at(b);
-   ansCopy(b,ansWho(m)+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||''));};
+   var NL=String.fromCharCode(10);
+   // Copying a pair copies the pair. Half an exchange pasted into a mail is
+   // an answer to a question nobody can see.
+   var head=m.q?('אתה · '+stamp(m.q.at)+NL+(m.q.note||m.q.text||'')+NL+NL):'';
+   ansCopy(b,head+ansWho(m)+' · '+stamp(m.at)+NL+(m.text||''));};
  });
  Array.prototype.forEach.call(host.querySelectorAll('.astar'),function(b){
   b.onclick=function(e){e.stopPropagation();toggleStar(at(b));renderAnswers();};
@@ -9326,7 +9393,7 @@ document.getElementById('back').onclick=function(e){
 </script>
 </html>`;
 
-module.exports = { renderPage, build };
+module.exports = { renderPage, build, loadDocs };
 if (require.main === module) build();
 
 

@@ -902,13 +902,32 @@ test('answers screen holds every source in one cluster', () => {
   assert.ok(html.includes('var rps=(D.reports||[]).map(function(r){'));
   // And from his own messages, so the screen is the conversation and not
   // half of it. That was the third door: the chat tab held only his side.
-  assert.ok(html.includes("var his=(D.chat||[]).filter(function(m){return m.from==='itzik';})"));
+  assert.ok(html.includes("var his=(D.chat||[]).filter(function(m){return m.from==='itzik'&&!answered[m.id];})"));
   assert.ok(html.includes(" return his.concat(mine).concat(cdx).concat(rps).sort("));
   assert.ok(html.includes("function ansWho(m){var k=m&&m.src;return k==='codex'?'קודקס':k==='report'?'דוח':k==='itzik'?'אתה':'קלוד';}"));
   assert.ok(html.includes("'<span class=\"w\">'+ansWho(m)+' · '+esc(stamp(m.at))+mark+'</span>'"));
   // His own message is never unread to him, and offers no reply button.
   assert.ok(html.includes("function isFresh(m){if(m&&m.src==='itzik')return false;"));
   assert.ok(html.includes('.ansc.mine{'));
+});
+
+// 20.9, his voice message: "put the answers and what came in on the same line".
+test('an answer carries the message it answers in the same card', () => {
+  const html = renderPage(fixture({
+    chat: [
+      { id: 'ntfy-1', at: '2026-09-20T09:48:00', from: 'itzik', text: 'שאלה שלו' },
+      { at: '2026-09-20T09:52:00', from: 'claude', re: 'ntfy-1', text: 'התשובה שלי' },
+    ],
+  }));
+  // The answer looks up the message it answers, and that message is then not
+  // drawn a second time as a card of its own.
+  assert.ok(html.includes("if(m.from==='itzik'&&m.id)byId[m.id]=m;"));
+  assert.ok(html.includes("var q=(m.re&&byId[m.re])||null;"));
+  assert.ok(html.includes("if(q)answered[m.re]=true;"));
+  // Drawn above the answer, inside the same card, and searchable with it.
+  assert.ok(html.includes(String.fromCharCode(39) + '<div class="aq"><span class="w">אתה · '));
+  assert.ok(html.includes("if(m.q)t+=' '+String(m.q.text||'')+' '+String(m.q.note||'');"));
+  assert.ok(html.includes('.ansc .aq{'));
 });
 
 test('one button, so "where is the report" has one answer', () => {
