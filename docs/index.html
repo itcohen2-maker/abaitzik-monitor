@@ -1436,7 +1436,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-20T20:22:27.710Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-20T20:23:11.717Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1556,7 +1556,6 @@ try{
   <button type="button" class="gt g2" id="gMail"><b>📧 מייל</b><small>בקשה, ואני מחזיר תשובה</small></button>
   <button type="button" class="gt g3" id="gQueue"><b>📊 ניטור רשתות</b><small>מי פנה, מה נענה</small></button>
   <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>חשבוניות והיומן</small></button>
-  <button type="button" class="gt g4" id="gDrains"><b>🩺 ניקוזים</b><small>ארבעה, כמה יצא ולאן זה הולך</small></button>
   <button type="button" class="gt g9" id="gBlock"><b>🚫 לחסימה</b><small>רשימה לאישור. כלום לא קורה עד שתסמן</small></button>
   <button type="button" class="gt g4" id="gVoices"><b>🎙️ הקלטות שלא תומללו</b><small>מה שלא הצלחתי לקרוא. תלחץ ותשמע</small></button>
   <button type="button" class="gt g10" id="gNotes"><b>📝 פתקים</b><small>נכתב, נשמר, לא הולך לאיבוד</small></button>
@@ -2289,7 +2288,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='cda09fc4bb';
+var CODE_ID='137d7df498';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){

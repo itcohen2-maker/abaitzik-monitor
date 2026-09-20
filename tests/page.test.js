@@ -1578,7 +1578,10 @@ test('the drain log records four tubes and never judges a number', () => {
   // Itzik, 18.9, five days after the operation: "I have four drains in my
   // abdomen, I asked to start tracking, build a button with a plan inside it
   // and I will put the numbers in."
-  assert.ok(html.includes('id="gDrains"'));
+  // 20.9, by voice: "on the drains screen you can delete the button, I do not
+  // need it anymore." The home tile is gone; the screen and every reading he
+  // already logged stay, reachable at #j.
+  assert.ok(!html.includes('id="gDrains"'));
   assert.ok(html.includes('<section id="pDr" hidden>'));
   ['dr1', 'dr2', 'dr3', 'dr4', 'drNote', 'drForm', 'drBody'].forEach((id) => {
     assert.ok(html.includes('id="' + id + '"'), 'missing ' + id);

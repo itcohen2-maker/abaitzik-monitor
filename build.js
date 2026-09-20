@@ -2601,7 +2601,11 @@ try{
   <!-- The reports tile came off on 17.9. The reports are in "תשובות" now,
        which is the one button he asked for. -->
   <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>חשבוניות והיומן</small></button>
-  <button type="button" class="gt g4" id="gDrains"><b>🩺 ניקוזים</b><small>ארבעה, כמה יצא ולאן זה הולך</small></button>
+  <!--
+    איציק, 20.9: "על המסך ניקוזים אתה יכול למחוק את הכפתור. אין לי יותר צורך בזה".
+    הכפתור ירד ממסך הבית. המסך עצמו pDr וכל הרישומים שלו נשארים במקום,
+    עדיין נפתחים במסלול #j, כדי שלא יאבד מה שכבר נמדד.
+  -->
   <button type="button" class="gt g9" id="gBlock"><b>🚫 לחסימה</b><small>רשימה לאישור. כלום לא קורה עד שתסמן</small></button>
   <button type="button" class="gt g4" id="gVoices"><b>🎙️ הקלטות שלא תומללו</b><small>מה שלא הצלחתי לקרוא. תלחץ ותשמע</small></button>
   <button type="button" class="gt g10" id="gNotes"><b>📝 פתקים</b><small>נכתב, נשמר, לא הולך לאיבוד</small></button>
