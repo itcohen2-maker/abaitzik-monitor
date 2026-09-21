@@ -2881,15 +2881,17 @@ try{
  <nav class="links" aria-label="תיקיות בדרייב">
   <!-- Itzik, 16.9: the Drive button took him straight to the stories and he
        could not find the new sign photo. Posts get their own entry, first. -->
-  <a href="https://drive.google.com/drive/u/1/folders/1DsAP6qZwcKMz5nVuXT3DSKJ3Ox-74Qh3" target="_blank" rel="noopener">
+  <a href="https://drive.google.com/drive/u/0/folders/1DsAP6qZwcKMz5nVuXT3DSKJ3Ox-74Qh3" target="_blank" rel="noopener">
    <span aria-hidden="true">🖼️</span><div>פוסטים<small>תמונות לפוסט, כמו השלט מבית החולים</small></div></a>
-  <a href="https://drive.google.com/drive/u/1/folders/1f7q8Hm6r_3IXYORX8slR-40ZEq2tKxB0" target="_blank" rel="noopener">
-   <span aria-hidden="true">🎬</span><div>סרטוני סטורי<small>מה בצלחת וההיילייטים</small></div></a>
-  <a href="https://drive.google.com/drive/u/1/folders/1VK_2ZFOVVnN6mj2_hwWorFWgmD5Tqvoi" target="_blank" rel="noopener">
+  <!-- Itzik, 21.9: the series moved to a folder with the character intro.
+       Inside it, "עלה לרשת" holds what was already published. -->
+  <a href="https://drive.google.com/drive/u/0/folders/1W0sj-5Nc_Xy9beI_HApwHLEG_qAswVw3" target="_blank" rel="noopener">
+   <span aria-hidden="true">🎬</span><div>מה בצלחת עם דמות<small>הסרטונים עם הפתיח, ובפנים "עלה לרשת"</small></div></a>
+  <a href="https://drive.google.com/drive/u/0/folders/1VK_2ZFOVVnN6mj2_hwWorFWgmD5Tqvoi" target="_blank" rel="noopener">
    <span aria-hidden="true">📝</span><div>תסריטים<small>תסריט לכל ריל</small></div></a>
-  <a href="https://drive.google.com/drive/u/1/folders/1ZG-haqGM-j2WwwB-1PAGKCltDvCqS9Ce" target="_blank" rel="noopener">
+  <a href="https://drive.google.com/drive/u/0/folders/1ZG-haqGM-j2WwwB-1PAGKCltDvCqS9Ce" target="_blank" rel="noopener">
    <span aria-hidden="true">📊</span><div>דוח רשת<small>דוחות הניטור</small></div></a>
-  <a href="https://drive.google.com/drive/u/1/my-drive" target="_blank" rel="noopener">
+  <a href="https://drive.google.com/drive/u/0/my-drive" target="_blank" rel="noopener">
    <span aria-hidden="true">📁</span><div>כל הדרייב<small>הדף הראשי</small></div></a>
  </nav>
  <div class="hint" style="margin-top:14px">חסרה תיקייה? תכתוב לי בשורת הבנייה העצמית ואוסיף אותה לכאן.</div>
