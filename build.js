@@ -1564,6 +1564,8 @@ body.editing .bn{display:none}
 .c-wa{background:#25d366}.c-gm{background:#fff;border:1px solid var(--line)}
 .c-st{background:linear-gradient(160deg,#4285F4,#0b57d0)}
 .c-pg{background:linear-gradient(160deg,#a78bfa,#6d28d9)}
+/* נר. Night behind the flames, the way the site itself looks. */
+.c-nr{background:linear-gradient(160deg,#243a6b,#0B1330)}
 .c-sl{background:linear-gradient(160deg,#f472b6,#be185d)}
 .c-vd{background:linear-gradient(160deg,#fbbf24,#d97706)}
 .c-hb{background:linear-gradient(160deg,#fbbf24,#b45309)}
@@ -2651,6 +2653,15 @@ try{
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 13h5"/></svg></span>דפי נחיתה</button>
   <a class="ic" href="https://salinda-mobile.vercel.app/" target="_blank" rel="noopener"><span class="c c-sl">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/></svg></span>סלינדה</a>
+  <!-- נר. Two candles in the round, same as the site they open. -->
+  <a class="ic" href="https://ner-sigma.vercel.app" target="_blank" rel="noopener"><span class="c c-nr">
+   <svg viewBox="0 0 24 24">
+    <path fill="#F4EFE6" d="M8.4 11.6h2.2v8.8H8.4zM13.4 11.6h2.2v8.8h-2.2z"/>
+    <path fill="#F5A623" d="M9.5 10.9c2.6-1.9 2-4.3 0-6.2-2 1.9-2.6 4.3 0 6.2z"/>
+    <path fill="#F5A623" d="M14.5 10.9c2.6-1.9 2-4.3 0-6.2-2 1.9-2.6 4.3 0 6.2z"/>
+    <path fill="#FFF3D6" d="M9.5 10.3c1.2-1 .9-2.3 0-3.4-.9 1.1-1.2 2.4 0 3.4z"/>
+    <path fill="#FFF3D6" d="M14.5 10.3c1.2-1 .9-2.3 0-3.4-.9 1.1-1.2 2.4 0 3.4z"/>
+   </svg></span>נרות</a>
   <a class="ic" href="https://pegasusgame.vercel.app" target="_blank" rel="noopener"><span class="c c-pg">
    <svg viewBox="0 0 24 24"><path fill="#fff" d="M4 14c2-5 6-8 11-8l5-2-2 5c0 5-3 9-8 11l-1-3-3-1z"/><circle cx="14" cy="10" r="1.3" fill="#6d28d9"/></svg></span>פגסוס</a>
   <button type="button" class="ic" id="icDrive"><span class="c c-dr">
