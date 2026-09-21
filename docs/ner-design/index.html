@@ -42,8 +42,11 @@
   }
   .stage .scene{position:absolute;inset:0;pointer-events:none}
   .stage .scene svg{position:absolute;inset:0;width:100%;height:100%}
-  .stage .candles{position:relative;z-index:3;margin-bottom:9%}
-  .stage .candles svg{height:min(42%,240px);width:auto;display:block;overflow:visible}
+  /* A percentage height needs something to be a percentage of: the svg
+     was asking the container, the container had no height of its own, and
+     the candles collapsed to nothing. The box takes the share now. */
+  .stage .candles{position:relative;z-index:3;height:46%;margin-bottom:8%;display:flex;align-items:flex-end}
+  .stage .candles svg{height:100%;width:auto;display:block;overflow:visible}
   .stage .glowfloor{
     position:absolute;left:50%;bottom:-16%;width:150%;height:52%;transform:translateX(-50%);
     background:radial-gradient(ellipse at 50% 100%,#FFB25A 0%,transparent 62%);
