@@ -263,6 +263,16 @@ function build() {
     No names here on purpose. This page is public and the reply is enough to
     know what happened; who wrote it stays between me and the network.
   */
+  /*
+    Reminders he asked me to set for later. Itzik, 21.9: "שים לי תזכורת עוד
+    חודש לבקש תו נכה, תעשה כפתור ייעודי". Each one is a file with the moment it
+    is due and what to do then; remind.js sends it as a push on the day, and
+    this screen shows what is waiting and what already went out. Soonest first.
+  */
+  const reminders = loadDocs('reminders')
+    .map(x => ({ at: x.at, due: x.due || '', text: x.text || '',
+                 sentAt: x.sentAt || '' }))
+    .sort((a, b) => ((a.due || '') < (b.due || '') ? -1 : 1));
   const replies = loadDocs('replies')
     .map(x => ({ at: x.at, network: x.network || '', video: x.video || '',
                  comment: x.comment || '', reply: x.reply || '',
@@ -412,6 +422,7 @@ function build() {
     pegasus,
     improve,
     special,
+    reminders,
     replies,
     chat: chatClosed,
     codex,
@@ -1615,6 +1626,11 @@ body.editing .bn{display:none}
 .g13{background:linear-gradient(150deg,#ffd27f,#ef6c00)}
 .g14{background:linear-gradient(150deg,#a5d6a7,#2e7d32)}
 .g15{background:linear-gradient(150deg,#90caf9,#1565c0)}
+.g16{background:linear-gradient(150deg,#f8bbd0,#c2185b)}
+.rem{padding:10px 12px;margin:8px 0;border-radius:12px;background:rgba(127,127,127,.12)}
+.rem b{display:block;font-size:1.05em}
+.rem .w{font-size:.85em;opacity:.8}
+.rem.sent{opacity:.6}
 /* The three choices behind the יהודה tile. Its own sheet, so it borrows
    nothing from the panes and cannot disturb them. */
 .ysheet{position:fixed;inset:0;z-index:9999;background:rgba(10,14,22,.55);
@@ -2617,6 +2633,7 @@ try{
   -->
   <button type="button" class="gt g9" id="gBlock"><b>🚫 לחסימה</b><small>רשימה לאישור. כלום לא קורה עד שתסמן</small></button>
   <button type="button" class="gt g4" id="gVoices"><b>🎙️ הקלטות שלא תומללו</b><small>מה שלא הצלחתי לקרוא. תלחץ ותשמע</small></button>
+  <button type="button" class="gt g16" id="gRemind"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
   <button type="button" class="gt g10" id="gNotes"><b>📝 פתקים</b><small>נכתב, נשמר, לא הולך לאיבוד</small></button>
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
   <button type="button" class="gt g13" id="gSpecial"><b>⭐ בקשות מיוחדות</b><small>מה שביקשת ומוכן, דפים וקבצים</small></button>
@@ -3109,6 +3126,18 @@ try{
 <section id="pG" hidden>
  <h2>דפי נחיתה</h2>
  <div id="landList"></div>
+</section>
+
+<section id="pRm" hidden>
+ <h2>תזכורות</h2>
+ <div class="rephint">כל תזכורת קופצת לך בטלפון ביום שלה בתשע בבוקר.</div>
+ <div id="remBox"></div>
+ <form class="quickrow" id="remForm">
+  <input type="date" id="remDate">
+  <input type="text" id="remText" autocomplete="off" placeholder="על מה להזכיר">
+  <button type="submit" id="remBtn">קביעה</button>
+ </form>
+ <div class="msgsaid" id="remSaid"></div>
 </section>
 
 <section id="pY" hidden>
@@ -4648,7 +4677,7 @@ function updateDot(){
  document.title=(fresh?'(1) ':'')+'אבא איציק בבנייה עצמית';
 }
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
-var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',k:'pK',j:'pDr',c:'pBl',V:'pVc'};
+var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',k:'pK',j:'pDr',c:'pBl',V:'pVc'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
 // The last dose. From the chat it is read out of the message text, because he
@@ -4981,7 +5010,7 @@ function repaintAll(){
  var jobs=[['dot',paintDot],['new',renderNew],['thread',renderThread],
   ['answers',renderAnswers],['got',renderGot],['net',renderNet],['items',render],
   ['pegasus',renderPegasus],['improve',renderImprove],['special',renderSpecial],
-  ['replies',renderReplies],['rivhit',renderRivhit],['food',renderFood],
+  ['reminders',renderReminders],['replies',renderReplies],['rivhit',renderRivhit],['food',renderFood],
   ['reqs',renderReqs],['stamp',paintStamp],['secrets',paintSecrets],
   ['drains',renderDrains],['block',renderBlock]];
  var bad=[],ran={};
@@ -6190,7 +6219,7 @@ function paintAnsCount(){
   link he taps is not a nicety here, it is the difference between a thing that
   exists and a thing he can reach.
 */
-var PANENAME={x:'pegasus',y:'special',w:'improve',r:'reports',a:'answers',m:'chat',k:'replies',b:'got',c:'block',j:'drains',V:'voices'};
+var PANENAME={x:'pegasus',y:'special',w:'improve',r:'reports',a:'answers',m:'chat',k:'replies',b:'got',c:'block',j:'drains',V:'voices',R:'reminders'};
 function paneOf(name){
  for(var k in PANENAME){if(PANENAME[k]===name)return k;}
  return PANES[name]?name:'';
@@ -7129,6 +7158,34 @@ function renderSpecial(){
  wireBoxes(host);
 }
 
+function renderReminders(){
+ var host=document.getElementById('remBox');
+ if(!host)return;
+ var R=D.reminders||[];
+ var day=function(iso){
+  try{return new Date(iso).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',year:'numeric'});}
+  catch(e){return String(iso||'').slice(0,10);}
+ };
+ host.innerHTML=R.length?R.map(function(r){
+  return '<div class="rem'+(r.sentAt?' sent':'')+'"><b>'+esc(r.text)+'</b>'
+   +'<div class="w">'+(r.sentAt?'נשלחה '+esc(day(r.sentAt)):'תקפוץ '+esc(day(r.due))+' בתשע בבוקר')+'</div></div>';
+ }).join(''):'<div class="empty">אין תזכורת פתוחה.</div>';
+}
+on2('remForm','submit',function(e){
+ e.preventDefault();
+ var d=document.getElementById('remDate'),t=document.getElementById('remText');
+ var said=document.getElementById('remSaid');
+ var v=t.value.trim();
+ if(!v||!d.value){said.textContent='צריך תאריך ועל מה להזכיר.';return;}
+ var msg='תזכורת: '+d.value.split('-').reverse().join('.')+' '+v;
+ said.textContent='שולח.';
+ sendText('תזכורת מהמוניטור',msg,'תזכורת').then(function(){
+  var p=pending();p.push({at:new Date().toISOString(),text:msg});savePending(p);
+  t.value='';said.textContent='נשלח. היא תופיע כאן ברשימה כשאקבע אותה.';
+  markSent('text');renderSent();renderThread();
+ }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';});
+});
+
 function renderPegasus(){
  var host=document.getElementById('pegBox');
  if(!host)return;
@@ -8066,6 +8123,7 @@ function yehudaSheet(){
 on('gYehuda',yehudaSheet);
 on('gOp',function(){pane('s');});
 on('gNotes',function(){pane('t');renderNotes();});
+on('gRemind',function(){pane('R');renderReminders();});
 on('gIdeas',function(){pane('i');renderIdeas();});
 // The same list a new client sees on the first visit. Every line is written as
 // his week, not as a feature: he recognises the problem before he understands
@@ -9367,6 +9425,7 @@ boot('report',renderNextReport);
 boot('pegasus',renderPegasus);
 boot('improve',renderImprove);
 boot('special',renderSpecial);
+boot('reminders',renderReminders);
 boot('replies',renderReplies);
 boot('reqs',renderReqs);
 // boot('codex',renderCodex) is retired with the fold; the function stays for the tests and the answers screen.
