@@ -1448,7 +1448,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-21T08:48:11.323Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-21T08:48:49.134Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1600,7 +1600,7 @@ try{
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 13h5"/></svg></span>דפי נחיתה</button>
   <a class="ic" href="https://salinda-mobile.vercel.app/" target="_blank" rel="noopener"><span class="c c-sl">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/></svg></span>סלינדה</a>
-  <a class="ic" href="ner/" target="_blank" rel="noopener"><span class="c c-nr">
+  <a class="ic" href="https://candletimes.com" target="_blank" rel="noopener"><span class="c c-nr">
    <svg viewBox="0 0 24 24">
     <path fill="#F4EFE6" d="M8.4 11.6h2.2v8.8H8.4zM13.4 11.6h2.2v8.8h-2.2z"/>
     <path fill="#F5A623" d="M9.5 10.9c2.6-1.9 2-4.3 0-6.2-2 1.9-2.6 4.3 0 6.2z"/>
@@ -2321,7 +2321,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='219a2a41c2';
+var CODE_ID='6abf4a032c';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){

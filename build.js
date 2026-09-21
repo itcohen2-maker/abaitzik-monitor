@@ -2672,8 +2672,16 @@ try{
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 13h5"/></svg></span>דפי נחיתה</button>
   <a class="ic" href="https://salinda-mobile.vercel.app/" target="_blank" rel="noopener"><span class="c c-sl">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/></svg></span>סלינדה</a>
-  <!-- נר. Two candles in the round, same as the site they open. -->
-  <a class="ic" href="ner/" target="_blank" rel="noopener"><span class="c c-nr">
+  <!--
+    נר. Two candles in the round, same as the site they open.
+
+    This used to open the hub at ner/, which is a page of links: the site,
+    two PDFs of the name options, the design sheet. On a phone that reads as
+    a button that sends you to a PDF, which is not what a candle icon should
+    do. It goes straight to the site now. The hub is still at ner/ for when
+    the PDFs are wanted.
+  -->
+  <a class="ic" href="https://candletimes.com" target="_blank" rel="noopener"><span class="c c-nr">
    <svg viewBox="0 0 24 24">
     <path fill="#F4EFE6" d="M8.4 11.6h2.2v8.8H8.4zM13.4 11.6h2.2v8.8h-2.2z"/>
     <path fill="#F5A623" d="M9.5 10.9c2.6-1.9 2-4.3 0-6.2-2 1.9-2.6 4.3 0 6.2z"/>
