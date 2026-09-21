@@ -1,0 +1,45 @@
+# The clock behind the candle lighting reminders.
+#
+# Vercel's free plan will only run a scheduled job once a day, which is
+# no use to a reminder that has to land half an hour before sunset. This
+# runs every ten minutes instead and pokes the endpoint that does the
+# work, so the storage and the signing keys stay where they already are
+# and nothing secret is copied here except the one key that opens it.
+#
+# GitHub delays scheduled runs under load, sometimes by several minutes,
+# which is why the sender accepts a notice that is up to twelve minutes
+# late rather than insisting on the exact minute.
+
+name: ner push
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:        # so it can be run by hand when testing
+
+concurrency:
+  group: ner-push
+  cancel-in-progress: false
+
+jobs:
+  ring:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ask the sender to look
+        env:
+          KEY: ${{ secrets.NER_SEND_KEY }}
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "NER_SEND_KEY is not set on this repository"
+            exit 1
+          fi
+          code=$(curl -sS -o body.json -w '%{http_code}' --max-time 120 \
+            -H "x-ner-key: $KEY" \
+            https://ner-sigma.vercel.app/api/send)
+          echo "http $code"
+          cat body.json
+          echo
+          # A bad key or a broken deploy should fail loudly here rather
+          # than quietly never ringing anyone.
+          [ "$code" = "200" ]
