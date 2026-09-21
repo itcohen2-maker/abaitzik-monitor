@@ -36,7 +36,7 @@ jobs:
           fi
           code=$(curl -sS -o body.json -w '%{http_code}' --max-time 120 \
             -H "x-ner-key: $KEY" \
-            https://ner-sigma.vercel.app/api/send)
+            https://candletimes.com/api/send)
           echo "http $code"
           cat body.json
           echo
