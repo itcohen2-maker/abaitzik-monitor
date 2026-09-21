@@ -818,6 +818,7 @@ body.editing .bn{display:none}
 .c-pg{background:linear-gradient(160deg,#a78bfa,#6d28d9)}
 .c-nr{background:linear-gradient(160deg,#243a6b,#0B1330)}
 .c-sl{background:linear-gradient(160deg,#f472b6,#be185d)}
+.c-kb{background:linear-gradient(160deg,#34d399,#047857)}
 .c-vd{background:linear-gradient(160deg,#fbbf24,#d97706)}
 .c-hb{background:linear-gradient(160deg,#fbbf24,#b45309)}
 .c-add{background:var(--surface);border:2px dashed var(--line);box-shadow:none}
@@ -1447,7 +1448,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-21T07:56:58.833Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-21T08:45:18.692Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2320,7 +2321,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='e306220672';
+var CODE_ID='219a2a41c2';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){

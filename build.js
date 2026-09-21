@@ -1578,6 +1578,8 @@ body.editing .bn{display:none}
 /* נר. Night behind the flames, the way the site itself looks. */
 .c-nr{background:linear-gradient(160deg,#243a6b,#0B1330)}
 .c-sl{background:linear-gradient(160deg,#f472b6,#be185d)}
+/* קבלות. Paper, not a brand colour: the page behind it is a ledger. */
+.c-kb{background:linear-gradient(160deg,#34d399,#047857)}
 .c-vd{background:linear-gradient(160deg,#fbbf24,#d97706)}
 .c-hb{background:linear-gradient(160deg,#fbbf24,#b45309)}
 .c-add{background:var(--surface);border:2px dashed var(--line);box-shadow:none}
@@ -2679,6 +2681,18 @@ try{
     <path fill="#FFF3D6" d="M9.5 10.3c1.2-1 .9-2.3 0-3.4-.9 1.1-1.2 2.4 0 3.4z"/>
     <path fill="#FFF3D6" d="M14.5 10.3c1.2-1 .9-2.3 0-3.4-.9 1.1-1.2 2.4 0 3.4z"/>
    </svg></span>נרות</a>
+  <!--
+    קבלות goes here. The markup and the .c-kb colour are ready, and so is
+    build-kabalot.js, but the button stays out until data/receipts.json
+    exists: a round button that opens a 404 is worse than no button.
+
+    <a class="ic" href="kabalot/" target="_blank" rel="noopener"><span class="c c-kb">
+     <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9"
+          stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 3h12v17l-2-1.4-2 1.4-2-1.4-2 1.4-2-1.4z"/>
+      <path d="M9.5 8h5M9.5 12h5"/>
+     </svg></span>קבלות</a>
+  -->
   <a class="ic" href="https://pegasusgame.vercel.app" target="_blank" rel="noopener"><span class="c c-pg">
    <svg viewBox="0 0 24 24"><path fill="#fff" d="M4 14c2-5 6-8 11-8l5-2-2 5c0 5-3 9-8 11l-1-3-3-1z"/><circle cx="14" cy="10" r="1.3" fill="#6d28d9"/></svg></span>פגסוס</a>
   <button type="button" class="ic" id="icDrive"><span class="c c-dr">
