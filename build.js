@@ -273,6 +273,15 @@ function build() {
     .map(x => ({ at: x.at, due: x.due || '', text: x.text || '',
                  sentAt: x.sentAt || '' }))
     .sort((a, b) => ((a.due || '') < (b.due || '') ? -1 : 1));
+  /*
+    Tasks by day. Itzik, 22.9, a recording: "שיפתח לי כפתור חדש, ממחר בבוקר,
+    ללכת לפטצ'נקו, להתקשר לדוקטור, לקבוע תור". A checklist and not a
+    reminder: a reminder pushes once, this stays on the screen and he ticks
+    each one off. The tick lives on his phone only.
+  */
+  const tasks = loadDocs('tasks')
+    .map(x => ({ id: x.id, day: x.day || '', text: x.text || '', n: x.n || 0 }))
+    .sort((a, b) => (a.day === b.day ? a.n - b.n : (a.day < b.day ? -1 : 1)));
   const replies = loadDocs('replies')
     .map(x => ({ at: x.at, network: x.network || '', video: x.video || '',
                  comment: x.comment || '', reply: x.reply || '',
@@ -423,6 +432,7 @@ function build() {
     improve,
     special,
     reminders,
+    tasks,
     replies,
     chat: chatClosed,
     codex,
@@ -1630,6 +1640,10 @@ body.editing .bn{display:none}
 .g14{background:linear-gradient(150deg,#a5d6a7,#2e7d32)}
 .g15{background:linear-gradient(150deg,#90caf9,#1565c0)}
 .g16{background:linear-gradient(150deg,#f8bbd0,#c2185b)}
+.g17{background:linear-gradient(150deg,#c5e1a5,#558b2f)}
+.tk{display:flex;align-items:center;gap:12px;padding:12px;margin:8px 0;border-radius:12px;background:rgba(127,127,127,.12);cursor:pointer;font-size:1.05em}
+.tk input{width:24px;height:24px;flex:0 0 24px}
+.tk.done span{text-decoration:line-through;opacity:.55}
 .rem{padding:10px 12px;margin:8px 0;border-radius:12px;background:rgba(127,127,127,.12)}
 .rem b{display:block;font-size:1.05em}
 .rem .w{font-size:.85em;opacity:.8}
@@ -2636,6 +2650,7 @@ try{
   -->
   <button type="button" class="gt g9" id="gBlock"><b>🚫 לחסימה</b><small>רשימה לאישור. כלום לא קורה עד שתסמן</small></button>
   <button type="button" class="gt g4" id="gVoices"><b>🎙️ הקלטות שלא תומללו</b><small>מה שלא הצלחתי לקרוא. תלחץ ותשמע</small></button>
+  <button type="button" class="gt g17" id="gTasks"><b>✅ משימות</b><small>מה לעשות, לפי יום. מסמנים כשבוצע</small></button>
   <button type="button" class="gt g16" id="gRemind"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
   <button type="button" class="gt g10" id="gNotes"><b>📝 פתקים</b><small>נכתב, נשמר, לא הולך לאיבוד</small></button>
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
@@ -3165,6 +3180,12 @@ try{
 <section id="pG" hidden>
  <h2>דפי נחיתה</h2>
  <div id="landList"></div>
+</section>
+
+<section id="pTk" hidden>
+ <h2>משימות</h2>
+ <div class="rephint">לחיצה על משימה מסמנת שבוצעה. הסימון נשמר בטלפון שלך.</div>
+ <div id="tkBox"></div>
 </section>
 
 <section id="pRm" hidden>
@@ -4716,7 +4737,7 @@ function updateDot(){
  document.title=(fresh?'(1) ':'')+'אבא איציק בבנייה עצמית';
 }
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
-var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs'};
+var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
 // The last dose. From the chat it is read out of the message text, because he
@@ -5049,7 +5070,7 @@ function repaintAll(){
  var jobs=[['dot',paintDot],['new',renderNew],['thread',renderThread],
   ['answers',renderAnswers],['got',renderGot],['net',renderNet],['items',render],
   ['pegasus',renderPegasus],['improve',renderImprove],['special',renderSpecial],
-  ['reminders',renderReminders],['replies',renderReplies],['rivhit',renderRivhit],['food',renderFood],
+  ['reminders',renderReminders],['tasks',renderTasks],['replies',renderReplies],['rivhit',renderRivhit],['food',renderFood],
   ['reqs',renderReqs],['stamp',paintStamp],['secrets',paintSecrets],
   ['drains',renderDrains],['block',renderBlock]];
  var bad=[],ran={};
@@ -7210,6 +7231,31 @@ function renderReminders(){
    +'<div class="w">'+(r.sentAt?'נשלחה '+esc(day(r.sentAt)):'תקפוץ '+esc(day(r.due))+' בתשע בבוקר')+'</div></div>';
  }).join(''):'<div class="empty">אין תזכורת פתוחה.</div>';
 }
+function tkDone(){try{return JSON.parse(localStorage.getItem('tasksDone')||'{}');}catch(e){return {};}}
+function renderTasks(){
+ var host=document.getElementById('tkBox');
+ if(!host)return;
+ var T=D.tasks||[],done=tkDone(),h='',last='';
+ T.forEach(function(t){
+  if(t.day!==last){
+   last=t.day;
+   var lbl=t.day;
+   try{lbl=new Date(t.day+'T09:00:00').toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'});}catch(e){}
+   h+='<h3>'+esc(lbl)+'</h3>';
+  }
+  h+='<label class="tk'+(done[t.id]?' done':'')+'"><input type="checkbox" data-tk="'+esc(t.id)+'"'
+   +(done[t.id]?' checked':'')+'><span>'+esc(t.text)+'</span></label>';
+ });
+ host.innerHTML=h||'<div class="empty">אין משימות.</div>';
+}
+document.addEventListener('change',function(e){
+ var k=e.target&&e.target.getAttribute&&e.target.getAttribute('data-tk');
+ if(!k)return;
+ var d=tkDone();
+ if(e.target.checked)d[k]=new Date().toISOString();else delete d[k];
+ try{localStorage.setItem('tasksDone',JSON.stringify(d));}catch(err){}
+ renderTasks();
+});
 on2('remForm','submit',function(e){
  e.preventDefault();
  var d=document.getElementById('remDate'),t=document.getElementById('remText');
@@ -8163,6 +8209,7 @@ on('gYehuda',yehudaSheet);
 on('gOp',function(){pane('s');});
 on('gNotes',function(){pane('t');renderNotes();});
 on('gRemind',function(){pane('R');renderReminders();});
+on('gTasks',function(){pane('T');renderTasks();});
 on('gIdeas',function(){pane('i');renderIdeas();});
 // The same list a new client sees on the first visit. Every line is written as
 // his week, not as a feature: he recognises the problem before he understands
@@ -9544,6 +9591,7 @@ boot('pegasus',renderPegasus);
 boot('improve',renderImprove);
 boot('special',renderSpecial);
 boot('reminders',renderReminders);
+boot('tasks',renderTasks);
 boot('replies',renderReplies);
 boot('reqs',renderReqs);
 // boot('codex',renderCodex) is retired with the fold; the function stays for the tests and the answers screen.
