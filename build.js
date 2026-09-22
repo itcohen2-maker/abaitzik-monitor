@@ -1582,6 +1582,7 @@ body.editing .bn{display:none}
 .c-kb{background:linear-gradient(160deg,#34d399,#047857)}
 .c-vd{background:linear-gradient(160deg,#fbbf24,#d97706)}
 .c-hb{background:linear-gradient(160deg,#fbbf24,#b45309)}
+.c-vs{background:linear-gradient(160deg,#22d3ee,#0e7490)}
 .c-add{background:var(--surface);border:2px dashed var(--line);box-shadow:none}
 .c-add:after{display:none}
 
@@ -2707,6 +2708,14 @@ try{
    <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M9.4 3h5.2l6 10.4h-5.2z"/><path fill="#34A853" d="M3 18.6 5.6 14h12.8l-2.6 4.6z"/><path fill="#FBBC05" d="M9.4 3 3 14l2.6 4.6L12 7.6z"/></svg></span>דרייב</button>
   <button type="button" class="ic" id="icVaad"><span class="c c-hb">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/></svg></span>ועד הבית</button>
+  <!--
+    כניסות. One shared beacon (ner-site's /api/visit) every one of the four
+    sites/apps now pings on load; this button reads it back. A toast, not a
+    new pane -- the screen is already stacked and waiting for a redesign, so
+    this stays the smallest thing that could answer "how many people came".
+  -->
+  <button type="button" class="ic" id="icVisits"><span class="c c-vs">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></span>כניסות</button>
   <button type="button" class="ic" id="icAdd"><span class="c c-add">
    <svg viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>חדש</button>
  </div>
@@ -8533,6 +8542,31 @@ document.getElementById('icDrive').onclick=function(){pane('d');};
 document.getElementById('icVaad').onclick=function(){pane('v');ensure('rivhit',renderRivhit);};
 document.getElementById('vaadAsk').onclick=function(){askInChat('ועד הבית: ');};
 document.getElementById('icAdd').onclick=function(){askInChat('מודול חדש שאני רוצה: ');};
+/*
+  כניסות. GET back the same beacon every site/app now posts to on load
+  (ner-site's own /api/visit, on its Vercel Blob store). Site labels are
+  fixed here rather than trusting the response's keys, so a malformed or
+  unexpected payload cannot inject text into the toast.
+*/
+document.getElementById('icVisits').onclick=function(){
+ var btn=this;
+ btn.disabled=true;
+ toast('בודק כניסות…');
+ fetch('https://candletimes.com/api/visit',{cache:'no-store'})
+  .then(function(r){return r.ok?r.json():null;})
+  .then(function(j){
+   btn.disabled=false;
+   var c=j&&j.counts;
+   if(!c){toast('לא הצלחתי לקרוא את הכניסות.');return;}
+   var LABEL={pegasus:'פגסוס',ner:'נר','itzik-site':'האתר',salinda:'סלינדה'};
+   var order=['pegasus','ner','itzik-site','salinda'];
+   var line=order.map(function(k){
+    var s=c[k]||{total:0,today:0};
+    return LABEL[k]+' '+s.total+' (היום '+s.today+')';
+   }).join(' · ');
+   toast(line);
+  },function(){btn.disabled=false;toast('הכניסות לא נטענו. תנסה שוב.');});
+};
 document.getElementById('icLand').onclick=function(){pane('g');};
 document.getElementById('landList').innerHTML=LANDING.map(function(l){
  return '<div class="item"><div class="top"><span class="who">'+esc(l.name)+'</span>'
