@@ -3156,6 +3156,12 @@ try{
  </div>
 </section>
 
+<section id="pVs" hidden>
+ <h2>כניסות</h2>
+ <div id="visitsList"></div>
+ <button type="button" id="visitsAgain" class="sbtn quiet">רענון</button>
+</section>
+
 <section id="pG" hidden>
  <h2>דפי נחיתה</h2>
  <div id="landList"></div>
@@ -4710,7 +4716,7 @@ function updateDot(){
  document.title=(fresh?'(1) ':'')+'אבא איציק בבנייה עצמית';
 }
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
-var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',k:'pK',j:'pDr',c:'pBl',V:'pVc'};
+var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
 // The last dose. From the chat it is read out of the message text, because he
@@ -6252,7 +6258,7 @@ function paintAnsCount(){
   link he taps is not a nicety here, it is the difference between a thing that
   exists and a thing he can reach.
 */
-var PANENAME={x:'pegasus',y:'special',w:'improve',r:'reports',a:'answers',m:'chat',k:'replies',b:'got',c:'block',j:'drains',V:'voices',R:'reminders'};
+var PANENAME={x:'pegasus',y:'special',w:'improve',r:'reports',a:'answers',m:'chat',k:'replies',b:'got',c:'block',j:'drains',V:'voices',R:'reminders',X:'visits'};
 function paneOf(name){
  for(var k in PANENAME){if(PANENAME[k]===name)return k;}
  return PANES[name]?name:'';
@@ -8546,27 +8552,35 @@ document.getElementById('icAdd').onclick=function(){askInChat('מודול חדש
   כניסות. GET back the same beacon every site/app now posts to on load
   (ner-site's own /api/visit, on its Vercel Blob store). Site labels are
   fixed here rather than trusting the response's keys, so a malformed or
-  unexpected payload cannot inject text into the toast.
+  unexpected payload cannot inject text into the screen.
+
+  Itzik, 22.9: "the visits button gives me details and then it disappears."
+  The counts used to arrive in a toast, gone after a few seconds. They get
+  their own screen now, one row per site, and stay until he leaves it.
 */
-document.getElementById('icVisits').onclick=function(){
- var btn=this;
- btn.disabled=true;
- toast('בודק כניסות…');
+function loadVisits(){
+ var box=document.getElementById('visitsList');
+ var again=document.getElementById('visitsAgain');
+ again.disabled=true;
+ box.innerHTML='<div class="empty">בודק כניסות…</div>';
  fetch('https://candletimes.com/api/visit',{cache:'no-store'})
   .then(function(r){return r.ok?r.json():null;})
   .then(function(j){
-   btn.disabled=false;
+   again.disabled=false;
    var c=j&&j.counts;
-   if(!c){toast('לא הצלחתי לקרוא את הכניסות.');return;}
+   if(!c){box.innerHTML='<div class="empty">לא הצלחתי לקרוא את הכניסות.</div>';return;}
    var LABEL={pegasus:'פגסוס',ner:'נר','itzik-site':'האתר',salinda:'סלינדה'};
    var order=['pegasus','ner','itzik-site','salinda'];
-   var line=order.map(function(k){
+   box.innerHTML=order.map(function(k){
     var s=c[k]||{total:0,today:0};
-    return LABEL[k]+' '+s.total+' (היום '+s.today+')';
-   }).join(' · ');
-   toast(line);
-  },function(){btn.disabled=false;toast('הכניסות לא נטענו. תנסה שוב.');});
-};
+    return '<div class="item"><div class="top"><span class="who">'+esc(LABEL[k])+'</span>'
+     +'<span class="chip">היום '+esc(String(Number(s.today)||0))+'</span></div>'
+     +'<div>סך הכל '+esc(String(Number(s.total)||0))+'</div></div>';
+   }).join('')+'<div class="empty">נבדק בשעה '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})+'</div>';
+  },function(){again.disabled=false;box.innerHTML='<div class="empty">הכניסות לא נטענו. תנסה שוב.</div>';});
+}
+document.getElementById('icVisits').onclick=function(){pane('X');loadVisits();};
+document.getElementById('visitsAgain').onclick=loadVisits;
 document.getElementById('icLand').onclick=function(){pane('g');};
 document.getElementById('landList').innerHTML=LANDING.map(function(l){
  return '<div class="item"><div class="top"><span class="who">'+esc(l.name)+'</span>'
