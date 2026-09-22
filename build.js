@@ -8578,8 +8578,28 @@ function loadVisits(){
     return '<div class="item"><div class="top"><span class="who">'+esc(LABEL[k])+'</span>'
      +'<span class="chip">היום '+esc(String(Number(s.today)||0))+'</span></div>'
      +'<div>סך הכל '+esc(String(Number(s.total)||0))+'</div></div>';
-   }).join('')+visitDays(j.days,order,LABEL)+'<div class="empty">נבדק בשעה '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})+'</div>';
+   }).join('')+visitDays(j.days,order,LABEL)+'<div id="fixCount"></div><div class="empty">נבדק בשעה '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})+'</div>';
+   loadFixCount();
   },function(){again.disabled=false;box.innerHTML='<div class="empty">הכניסות לא נטענו. תנסה שוב.</div>';});
+}
+/*
+  Itzik, 22.9: translations on נר should be checked by people who speak the
+  language. Under each blessing in every language but Hebrew there is a
+  "found a mistake?" link that stores a report on ner-site (/api/fix). Only
+  the count is public; the text needs the send key, so I read the reports
+  and bring them here in the chat. This row says how many are waiting.
+*/
+function loadFixCount(){
+ fetch('https://candletimes.com/api/fix',{cache:'no-store'})
+  .then(function(r){return r.ok?r.json():null;})
+  .then(function(j){
+   var el=document.getElementById('fixCount');
+   if(!el||!j)return;
+   var n=Number(j.count)||0;
+   el.innerHTML='<div class="item"><div class="top"><span class="who">דיווחי תרגום בנר</span>'
+    +'<span class="chip">'+esc(String(n))+'</span></div>'
+    +'<div>'+(n?'יש דיווחים שממתינים. אני קורא אותם ומביא לך בצ׳אט.':'אין דיווחים על טעויות בתרגום.')+'</div></div>';
+  },function(){});
 }
 function visitDays(d,order,LABEL){
  if(!d)return '';

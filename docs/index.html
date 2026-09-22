@@ -1449,7 +1449,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-22T08:12:06.511Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-22T08:27:34.599Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2330,7 +2330,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='50c090329d';
+var CODE_ID='ad05e8cde1';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -6110,8 +6110,21 @@ function loadVisits(){
     return '<div class="item"><div class="top"><span class="who">'+esc(LABEL[k])+'</span>'
      +'<span class="chip">היום '+esc(String(Number(s.today)||0))+'</span></div>'
      +'<div>סך הכל '+esc(String(Number(s.total)||0))+'</div></div>';
-   }).join('')+visitDays(j.days,order,LABEL)+'<div class="empty">נבדק בשעה '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})+'</div>';
+   }).join('')+visitDays(j.days,order,LABEL)+'<div id="fixCount"></div><div class="empty">נבדק בשעה '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})+'</div>';
+   loadFixCount();
   },function(){again.disabled=false;box.innerHTML='<div class="empty">הכניסות לא נטענו. תנסה שוב.</div>';});
+}
+function loadFixCount(){
+ fetch('https://candletimes.com/api/fix',{cache:'no-store'})
+  .then(function(r){return r.ok?r.json():null;})
+  .then(function(j){
+   var el=document.getElementById('fixCount');
+   if(!el||!j)return;
+   var n=Number(j.count)||0;
+   el.innerHTML='<div class="item"><div class="top"><span class="who">דיווחי תרגום בנר</span>'
+    +'<span class="chip">'+esc(String(n))+'</span></div>'
+    +'<div>'+(n?'יש דיווחים שממתינים. אני קורא אותם ומביא לך בצ׳אט.':'אין דיווחים על טעויות בתרגום.')+'</div></div>';
+  },function(){});
 }
 function visitDays(d,order,LABEL){
  if(!d)return '';
