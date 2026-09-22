@@ -1449,7 +1449,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-22T08:08:12.852Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-22T08:11:01.922Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2330,7 +2330,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='f14720af6b';
+var CODE_ID='50c090329d';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -6110,8 +6110,29 @@ function loadVisits(){
     return '<div class="item"><div class="top"><span class="who">'+esc(LABEL[k])+'</span>'
      +'<span class="chip">היום '+esc(String(Number(s.today)||0))+'</span></div>'
      +'<div>סך הכל '+esc(String(Number(s.total)||0))+'</div></div>';
-   }).join('')+'<div class="empty">נבדק בשעה '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})+'</div>';
+   }).join('')+visitDays(j.days,order,LABEL)+'<div class="empty">נבדק בשעה '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})+'</div>';
   },function(){again.disabled=false;box.innerHTML='<div class="empty">הכניסות לא נטענו. תנסה שוב.</div>';});
+}
+function visitDays(d,order,LABEL){
+ if(!d)return '';
+ var fmt=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jerusalem'});
+ var first=null,rows=[];
+ for(var i=0;i<14;i++){
+  var key=fmt.format(new Date(Date.now()-i*864e5));
+  var n=order.map(function(k){return Number(d[k]&&d[k][key])||0;});
+  rows.push({key:key,n:n});
+  if(n.some(Boolean))first=i;
+ }
+ if(first===null)return '';
+ rows=rows.slice(0,first+1);
+ var th='<th style="text-align:right;padding:4px 6px">יום</th>'+order.map(function(k){return '<th style="padding:4px 6px">'+esc(LABEL[k])+'</th>';}).join('');
+ var tr=rows.map(function(r){
+  var p=r.key.split('-');
+  return '<tr><td style="padding:4px 6px">'+esc(Number(p[2])+'.'+Number(p[1]))+'</td>'
+   +r.n.map(function(v){return '<td style="text-align:center;padding:4px 6px">'+v+'</td>';}).join('')+'</tr>';
+ }).join('');
+ return '<div class="item"><div class="top"><span class="who">לפי ימים</span></div>'
+  +'<table style="width:100%;border-collapse:collapse"><thead><tr>'+th+'</tr></thead><tbody>'+tr+'</tbody></table></div>';
 }
 document.getElementById('icVisits').onclick=function(){pane('X');loadVisits();};
 document.getElementById('visitsAgain').onclick=loadVisits;

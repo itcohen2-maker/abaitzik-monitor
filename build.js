@@ -8557,6 +8557,8 @@ document.getElementById('icAdd').onclick=function(){askInChat('מודול חדש
   Itzik, 22.9: "the visits button gives me details and then it disappears."
   The counts used to arrive in a toast, gone after a few seconds. They get
   their own screen now, one row per site, and stay until he leaves it.
+  Same day, later: "collect data, I'll check every day." The beacon now also
+  returns counts per Israel day, shown under the rows as the last 14 days.
 */
 function loadVisits(){
  var box=document.getElementById('visitsList');
@@ -8576,8 +8578,29 @@ function loadVisits(){
     return '<div class="item"><div class="top"><span class="who">'+esc(LABEL[k])+'</span>'
      +'<span class="chip">היום '+esc(String(Number(s.today)||0))+'</span></div>'
      +'<div>סך הכל '+esc(String(Number(s.total)||0))+'</div></div>';
-   }).join('')+'<div class="empty">נבדק בשעה '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})+'</div>';
+   }).join('')+visitDays(j.days,order,LABEL)+'<div class="empty">נבדק בשעה '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})+'</div>';
   },function(){again.disabled=false;box.innerHTML='<div class="empty">הכניסות לא נטענו. תנסה שוב.</div>';});
+}
+function visitDays(d,order,LABEL){
+ if(!d)return '';
+ var fmt=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jerusalem'});
+ var first=null,rows=[];
+ for(var i=0;i<14;i++){
+  var key=fmt.format(new Date(Date.now()-i*864e5));
+  var n=order.map(function(k){return Number(d[k]&&d[k][key])||0;});
+  rows.push({key:key,n:n});
+  if(n.some(Boolean))first=i;
+ }
+ if(first===null)return '';
+ rows=rows.slice(0,first+1);
+ var th='<th style="text-align:right;padding:4px 6px">יום</th>'+order.map(function(k){return '<th style="padding:4px 6px">'+esc(LABEL[k])+'</th>';}).join('');
+ var tr=rows.map(function(r){
+  var p=r.key.split('-');
+  return '<tr><td style="padding:4px 6px">'+esc(Number(p[2])+'.'+Number(p[1]))+'</td>'
+   +r.n.map(function(v){return '<td style="text-align:center;padding:4px 6px">'+v+'</td>';}).join('')+'</tr>';
+ }).join('');
+ return '<div class="item"><div class="top"><span class="who">לפי ימים</span></div>'
+  +'<table style="width:100%;border-collapse:collapse"><thead><tr>'+th+'</tr></thead><tbody>'+tr+'</tbody></table></div>';
 }
 document.getElementById('icVisits').onclick=function(){pane('X');loadVisits();};
 document.getElementById('visitsAgain').onclick=loadVisits;
