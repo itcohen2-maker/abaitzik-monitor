@@ -166,3 +166,13 @@ test('a message without a code is left exactly as it is', () => {
   assert.equal(group.stripCode('ניקוזים 1=65'), 'ניקוזים 1=65');
   assert.equal(group.stripCode(null), '');
 });
+
+// Itzik, 22.9, by voice: "I go to upload a file and it takes me straight to
+// the camera, no option to upload". The camera tile set capture on the shared
+// input and nothing ever took it off.
+test('the file picker clears the camera flag the camera tile left behind', () => {
+  const body = html.slice(html.indexOf('function openPicker('));
+  const fn = body.slice(0, body.indexOf('fPick.click();'));
+  assert.ok(fn.includes("fPick.removeAttribute('capture')"),
+    'after one photo from the camera tile, every later pick opened the camera');
+});

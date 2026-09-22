@@ -8786,6 +8786,9 @@ function openPicker(mode,accept,auto){
  if(f)f.hidden=false;
  autoSend=!!auto;
  setQ(mode);
+ // The camera tile leaves capture on this same input. Without clearing it,
+ // every pick after one photo went straight to the camera with no gallery.
+ fPick.removeAttribute('capture');
  fPick.setAttribute('accept',accept);
  fPick.click();
 }
