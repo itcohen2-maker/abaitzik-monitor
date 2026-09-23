@@ -2705,7 +2705,7 @@ try{
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="5"/><circle cx="12" cy="12" r="3.6"/><circle cx="17" cy="7" r="1" fill="#fff" stroke="none"/></svg></span>אינסטגרם</a>
   <button type="button" class="ic" id="icMail"><span class="c c-gm">
    <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M4 7v11h3V9.8z"/><path fill="#34A853" d="M20 7v11h-3V9.8z"/><path fill="#EA4335" d="M4 7l8 6 8-6v-1.5L12 11 4 5.5z"/><path fill="#FBBC05" d="M4 5.5L12 11l8-5.5V5H4z"/></svg></span>מייל</button>
-  <a class="ic" href="https://itzik-site.vercel.app/" target="_blank" rel="noopener"><span class="c c-st">
+  <a class="ic" href="https://abaitzik.com/" target="_blank" rel="noopener"><span class="c c-st">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c3 3 3 13 0 16M12 4c-3 3-3 13 0 16"/></svg></span>האתר</a>
   <button type="button" class="ic" id="icLand"><span class="c c-vd">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 13h5"/></svg></span>דפי נחיתה</button>
@@ -4829,8 +4829,8 @@ function recordPill(takenMs){
 }
 // More landing pages are coming, so each one is a line here.
 var LANDING=[
- {name:'כלל עשר הדקות',note:'מילת המפתח: שום',url:'https://itzik-site.vercel.app/shum'},
- {name:'שיטת הפירה',note:'מילת המפתח: גזר',url:'https://itzik-site.vercel.app/gezer'},
+ {name:'כלל עשר הדקות',note:'מילת המפתח: שום',url:'https://abaitzik.com/shum'},
+ {name:'שיטת הפירה',note:'מילת המפתח: גזר',url:'https://abaitzik.com/gezer'},
  {name:'סלינדה',note:'אתר',url:'https://salinda-mobile.vercel.app/'}
 ];
 /*
