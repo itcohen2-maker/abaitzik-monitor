@@ -2670,7 +2670,11 @@ try{
   <button type="button" class="gt g16" id="gRemind"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
   <button type="button" class="gt g10" id="gNotes"><b>📝 פתקים</b><small>נכתב, נשמר, לא הולך לאיבוד</small></button>
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
-  <button type="button" class="gt g13" id="gSpecial"><b>⭐ בקשות מיוחדות</b><small>מה שביקשת ומוכן, דפים וקבצים</small></button>
+  <!--
+    איציק, 23.9, בהקלטה: "אפשר להסיר את כפתור בקשות מיוחדות".
+    הכפתור ירד ממסך הבית. המסך עצמו pY וכל הפריטים בו נשארים,
+    נפתחים במסלול #special ומהחיפוש.
+  -->
   <button type="button" class="gt g14" id="gReplies"><b>✍️ תגובות מיוחדות</b><small>מה עניתי בשמך, לעבור ולאשר</small></button>
   <!--
     יהודה, 20.9. A tile of his own, because the happymeal work is a client

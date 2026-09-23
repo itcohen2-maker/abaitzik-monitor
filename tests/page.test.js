@@ -311,11 +311,13 @@ test('a pegasus update that waits on him carries the answer on its own card', ()
   assert.ok(html.includes('.peg.waiting{'));
 });
 
-test('special requests get their own tile, screen and blink until opened', () => {
+test('special requests keep their screen after the tile came off', () => {
   const html = renderPage(fixture({
     special: [{ at: '2026-09-11T15:23:00', title: 'דף להדפסה', url: 'print.html', note: 'A4' }],
   }));
-  assert.ok(html.includes('id="gSpecial"'));
+  // Itzik, 23.9, by voice: "you can remove the special requests button".
+  // The home tile is gone; the screen and its items stay, reachable at #special.
+  assert.ok(!html.includes('id="gSpecial"'));
   assert.ok(html.includes('<section id="pY" hidden>'));
   assert.ok(html.includes('function renderSpecial('));
   assert.ok(html.includes("y:'pY'"));
@@ -370,7 +372,6 @@ test('the home screen does not repeat what already has its own screen', () => {
   assert.ok(!html.includes('id="tuneBox"'));
   assert.ok(!html.includes('function renderTunes('));
   assert.ok(!html.includes('id="growHome"'));
-  assert.ok(html.includes('id="gSpecial"'));
   assert.ok(html.includes('id="specBox"'));
 });
 
