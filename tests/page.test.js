@@ -1177,7 +1177,7 @@ test('every row in what was received carries a manual delete button', () => {
   assert.ok(body.includes('renderGot();paintGot();'));
   // And it is reversible in one press.
   assert.ok(body.includes('id="gotBack"'));
-  assert.ok(body.includes('if(bb)bb.onclick=function(){saveGone([]);renderGot();paintGot();'));
+  assert.ok(body.includes('if(bb)bb.onclick=function(){saveGone([]);saveCut(0);renderGot();paintGot();'));
 });
 
 test('a lead can carry the screenshot of the request, closed by default', () => {
@@ -1978,4 +1978,16 @@ test('his personal code never reaches the page, wherever it was written', () => 
   }));
   assert.ok(!html.includes('קוד 1808'), 'the code must not be published anywhere on the page');
   assert.ok(html.includes('המסך לא נטען'), 'the words he wrote still have to be there');
+});
+
+test('what was received has one clear-all button that hides everything up to that moment', () => {
+  const html = renderPage(fixture({}));
+  // Itzik, 23.9: "בכפתור מה התקבל אין מחיקה כללית, איך נפטרים מכל ההודעות?"
+  const body = html.slice(html.indexOf('function renderGot(){'), html.indexOf('function paintAnsCount(){'));
+  assert.ok(body.includes('id="gotClear"'));
+  assert.ok(body.includes('saveCut(Date.now());saveGone([]);'));
+  // Restoring brings back the cleared ones too.
+  assert.ok(body.includes('saveGone([]);saveCut(0);'));
+  // A moment, not a list of keys, so nothing older creeps back past the 400 cap.
+  assert.ok(html.includes("return g.indexOf(gotKey(kind,x))<0&&!beforeCut(x);"));
 });

@@ -958,7 +958,7 @@ button.abtn[disabled]{opacity:.55}
  border-radius:999px;font:700 13px Heebo,sans-serif;padding:6px 14px;cursor:pointer}
 .gempty{color:var(--dim);font-weight:300;padding:6px 4px 10px}
 .gclear{width:100%;margin:0 0 6px;padding:12px 16px;border:1px solid var(--line);border-radius:var(--r);
- cursor:pointer;background:var(--surface);color:var(--text);font:800 15px Heebo,sans-serif;text-align:start}
+ cursor:pointer;background:var(--surface);color:var(--ink);font:800 15px Heebo,sans-serif;text-align:start}
 .gclear small{display:block;font-size:12px;font-weight:300;color:var(--dim);margin-top:2px}
 .gclear:active{transform:translateY(2px)}
 .newbtn b{display:block;font:800 17px Heebo,sans-serif}
