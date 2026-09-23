@@ -2942,6 +2942,10 @@ try{
    <span aria-hidden="true">📝</span><div>תסריטים<small>תסריט לכל ריל</small></div></a>
   <a href="https://drive.google.com/drive/u/0/folders/1ZG-haqGM-j2WwwB-1PAGKCltDvCqS9Ce" target="_blank" rel="noopener">
    <span aria-hidden="true">📊</span><div>דוח רשת<small>דוחות הניטור</small></div></a>
+  <!-- Itzik, 23.9: the folder he will hand to the lawyer as a link, so he
+       wanted it one tap away. The draft notice to Barzani lives in 06. -->
+  <a href="https://drive.google.com/drive/u/0/folders/1Waun6RZNoBJV7hGof3M7Xzn6Qt-VNuOj" target="_blank" rel="noopener">
+   <span aria-hidden="true">⚖️</span><div>מכירת לולוס, לעורך דין<small>התיק המלא. המכתב לברזני ב 06 שכירות וחוזים</small></div></a>
   <a href="https://drive.google.com/drive/u/0/my-drive" target="_blank" rel="noopener">
    <span aria-hidden="true">📁</span><div>כל הדרייב<small>הדף הראשי</small></div></a>
  </nav>
