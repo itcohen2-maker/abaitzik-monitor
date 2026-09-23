@@ -957,6 +957,10 @@ button.abtn[disabled]{opacity:.55}
 .gback button{background:transparent;color:var(--accent);border:1px solid var(--line);
  border-radius:999px;font:700 13px Heebo,sans-serif;padding:6px 14px;cursor:pointer}
 .gempty{color:var(--dim);font-weight:300;padding:6px 4px 10px}
+.gclear{width:100%;margin:0 0 6px;padding:12px 16px;border:1px solid var(--line);border-radius:var(--r);
+ cursor:pointer;background:var(--surface);color:var(--text);font:800 15px Heebo,sans-serif;text-align:start}
+.gclear small{display:block;font-size:12px;font-weight:300;color:var(--dim);margin-top:2px}
+.gclear:active{transform:translateY(2px)}
 .newbtn b{display:block;font:800 17px Heebo,sans-serif}
 .newbtn small{display:block;font-size:12px;opacity:.92;font-weight:300;margin-top:1px}
 .newbtn:active{transform:translateY(2px) scale(.99)}
@@ -3048,7 +3052,7 @@ try{
 <section id="pB" hidden>
  <h2>מה התקבל</h2>
  <div class="gotlist" id="gotBox"></div>
- <div class="hint">כל מה ששלחת לי, לפי מצב: מה בעבודה עכשיו, מה התקבל ועוד לא התחיל, המשימות הפתוחות, ומה שבוצע. חדש למעלה. ליד כל שורה יש מחיקה, והיא מורידה אותה מהמסך שלך בלבד. בסוף הדף אפשר להחזיר הכל.</div>
+ <div class="hint">כל מה ששלחת לי, לפי מצב: מה בעבודה עכשיו, מה התקבל ועוד לא התחיל, המשימות הפתוחות, ומה שבוצע. חדש למעלה. ליד כל שורה יש מחיקה, ולמעלה נקה הכל. שתיהן מורידות מהמסך שלך בלבד, ובסוף הדף אפשר להחזיר הכל.</div>
 </section>
 
 <section id="pA" hidden>
@@ -6162,10 +6166,29 @@ function saveGone(a){
 function gotKey(kind,x){
  return kind+'|'+String(x.id||x.at||'')+'|'+String(x.text||'').replace(/\s+/g,' ').trim().slice(0,40);
 }
-function isGone(k){return goneKeys().indexOf(k)>-1;}
+/*
+  Itzik, 23.9 15:28: "בכפתור מה התקבל אין מחיקה כללית, איך נפטרים מכל
+  ההודעות?". One press clears the whole screen. It stores a moment rather than
+  a key per row: the per row list keeps only the last 400, and he has sent more
+  than that, so a list of keys would have let the oldest ones creep back.
+  Anything sent after the press shows up as usual.
+*/
+function gotCut(){
+ try{return Number(localStorage.getItem('gotCut'))||0;}catch(e){return 0;}
+}
+function saveCut(t){
+ try{if(t)localStorage.setItem('gotCut',String(t));else localStorage.removeItem('gotCut');}catch(e){}
+}
+function beforeCut(x){
+ var c=gotCut();
+ if(!c)return false;
+ var t=Date.parse(x&&x.at||'');
+ return !isNaN(t)&&t<=c;
+}
+function isGone(k,x){return goneKeys().indexOf(k)>-1||beforeCut(x);}
 function dropGone(kind,list){
  var g=goneKeys();
- return list.filter(function(x){return g.indexOf(gotKey(kind,x))<0;});
+ return list.filter(function(x){return g.indexOf(gotKey(kind,x))<0&&!beforeCut(x);});
 }
 function paintGot(){
  var el=document.getElementById('gotCount');
@@ -6184,7 +6207,7 @@ function renderGot(){
  var done=all.filter(function(m){return m.status==='done';});
  var K=dropGone('cmd',D.openCmds||[]);
  var N=D.now;
- var nGone=N&&N.text&&isGone(gotKey('now',{at:N.at,text:N.text}));
+ var nGone=N&&N.text&&isGone(gotKey('now',{at:N.at,text:N.text}),N);
  function del(kind,x){
   return '<button type="button" class="gr-del" data-k="'+esc(gotKey(kind,x))+'" '
    +'aria-label="מחיקת השורה">מחיקה</button>';
@@ -6233,6 +6256,9 @@ function renderGot(){
  if(un)h+='<button type="button" class="gjump" id="gotToAns">'
   +(un===1?'תשובה אחת שלא קראת':un+' תשובות שלא קראת')
   +'<small>זה המסך של ההודעות ששלחת לי. התשובות שלי נמצאות כאן, בלחיצה.</small></button>';
+ var nShown=all.length+K.length+(N&&N.text&&!nGone?1:0);
+ if(nShown)h+='<button type="button" class="gclear" id="gotClear">נקה הכל · '+nShown
+  +'<small>מוריד את כל השורות מהמסך הזה. מה שתשלח מעכשיו יופיע כרגיל, ואפשר להחזיר הכל בסוף הדף.</small></button>';
  h+='<h3>בעבודה עכשיו</h3>';
  if(N&&N.text&&!nGone)h+='<div class="gr now"><span class="gr-t">'+esc(stamp(N.at))+'</span>'
   +'<div class="gr-x">'+esc(N.text)+(N.next?'<small>אחר כך: '+esc(N.next)+'</small>':'')+'</div>'
@@ -6253,7 +6279,9 @@ function renderGot(){
  h+=done.slice(0,gotShow).map(function(m){return row(m,'d','בוצע');}).join('');
  if(done.length>gotShow)h+='<button type="button" class="ab" id="gotMore" style="width:100%;padding:14px">להציג עוד ('+(done.length-gotShow)+')</button>';
  var gn=goneKeys().length;
- if(gn)h+='<div class="gback">נמחקו מהמסך הזה '+gn+' שורות. '
+ if(gotCut())h+='<div class="gback">המסך נוקה ב '+esc(stamp(new Date(gotCut()).toISOString()))+'. '
+  +'<button type="button" id="gotBack">להחזיר הכל</button></div>';
+ else if(gn)h+='<div class="gback">נמחקו מהמסך הזה '+gn+' שורות. '
   +'<button type="button" id="gotBack">להחזיר הכל</button></div>';
  host.innerHTML=h;
  var ja=document.getElementById('gotToAns');
@@ -6261,7 +6289,13 @@ function renderGot(){
  var mb=document.getElementById('gotMore');
  if(mb)mb.onclick=function(){gotShow+=30;renderGot();};
  var bb=document.getElementById('gotBack');
- if(bb)bb.onclick=function(){saveGone([]);renderGot();paintGot();toast('השורות חזרו.');};
+ if(bb)bb.onclick=function(){saveGone([]);saveCut(0);renderGot();paintGot();toast('השורות חזרו.');};
+ var gc=document.getElementById('gotClear');
+ if(gc)gc.onclick=function(){
+  saveCut(Date.now());saveGone([]);
+  renderGot();paintGot();
+  toast('המסך נוקה. אפשר להחזיר בסוף הדף.');
+ };
  Array.prototype.forEach.call(host.querySelectorAll('.gr-cp'),function(b){
   b.onclick=function(e){e.stopPropagation();ansCopy(b,b.getAttribute('data-copy')||'');};
  });
