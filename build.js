@@ -2675,7 +2675,10 @@ try{
     הכפתור ירד ממסך הבית. המסך עצמו pY וכל הפריטים בו נשארים,
     נפתחים במסלול #special ומהחיפוש.
   -->
-  <button type="button" class="gt g14" id="gReplies"><b>✍️ תגובות מיוחדות</b><small>מה עניתי בשמך, לעבור ולאשר</small></button>
+  <!--
+    איציק, 23.9, בהקלטה: "תסירי את כפתור תגובות מיוחדות".
+    הכפתור ירד ממסך הבית. המסך עצמו pK נשאר, נפתח במסלול #replies ומהחיפוש.
+  -->
   <!--
     יהודה, 20.9. A tile of his own, because the happymeal work is a client
     job and not part of the networks queue. It opens the file straight from

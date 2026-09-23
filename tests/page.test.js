@@ -329,12 +329,13 @@ test('special requests keep their screen after the tile came off', () => {
   assert.ok(html.includes('function floatTile(id,up){'));
 });
 
-test('the replies I sent in his name get a tile, a screen and a count that blinks', () => {
+test('the replies I sent in his name keep their screen after the tile came off', () => {
   const html = renderPage(fixture({
     replies: [{ at: '2026-09-13T11:48:00+03:00', network: 'youtube', video: 'x',
                 comment: 'c', reply: 'r', why: 'w' }],
   }));
-  assert.ok(html.includes('id="gReplies"'));
+  // Itzik, 23.9, by voice: "remove the special replies button".
+  assert.ok(!html.includes('id="gReplies"'));
   assert.ok(html.includes('<section id="pK" hidden>'));
   assert.ok(html.includes('function renderReplies('));
   assert.ok(html.includes("k:'pK',j:'pDr',c:'pBl'"));
