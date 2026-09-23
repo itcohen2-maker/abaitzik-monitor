@@ -873,6 +873,7 @@ body.editing .bn{display:none}
 .ap{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:8px 0}
 .ap .d{font-weight:700;font-variant-numeric:tabular-nums}
 .ap .w,.ap .n{color:var(--dim);font-size:14px;margin-top:3px}
+.ap img{display:block;width:100%;max-width:240px;border-radius:10px;margin-top:8px}
 .tk{display:flex;align-items:center;gap:12px;padding:12px;margin:8px 0;border-radius:12px;background:rgba(127,127,127,.12);cursor:pointer;font-size:1.05em}
 .tk input{width:24px;height:24px;flex:0 0 24px}
 .tk.done span{text-decoration:line-through;opacity:.55}
@@ -1457,7 +1458,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-23T09:14:14.634Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-23T09:15:09.414Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2351,7 +2352,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='2fa450c909';
+var CODE_ID='3ddb56be5b';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -5051,14 +5052,17 @@ function renderAppts(){
  var now=Date.now();
  var A=(D.appts||[]).filter(function(a){var t=Date.parse(a.when);return isNaN(t)||t>now-3*3600e3;});
  host.innerHTML=A.length?A.map(function(a){
-  var d=a.when,h='';
+  var d=a.when,h='',t0=Date.parse(a.when);
+  var rm=(D.reminders||[]).filter(function(r){var u=Date.parse(r.due);return !r.sentAt&&u<t0&&t0-u<3*864e5;})[0];
   try{var x=new Date(a.when);
    d=x.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',year:'numeric',timeZone:'Asia/Jerusalem'});
    h=x.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Jerusalem'});}catch(e){}
   return '<div class="ap"><div class="d">'+esc(d)+(h?' בשעה '+esc(h):'')+'</div>'
    +'<b>'+esc(a.what)+'</b>'
    +(a.where?'<div class="w">'+esc(a.where)+'</div>':'')
-   +(a.note?'<div class="n">'+esc(a.note)+'</div>':'')+'</div>';
+   +(a.note?'<div class="n">'+esc(a.note)+'</div>':'')
+   +(rm?'<div class="n">⏰ תזכורת '+esc(new Date(rm.due).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'}))+' בתשע בבוקר</div>':'')
+   +(a.img?'<a href="'+esc(a.img)+'" target="_blank" rel="noopener"><img src="'+esc(a.img)+'" alt="ההודעה מבית החולים" loading="lazy"></a>':'')+'</div>';
  }).join(''):'<div class="empty">אין תור עתידי.</div>';
 }
 function tkDone(){try{return JSON.parse(localStorage.getItem('tasksDone')||'{}');}catch(e){return {};}}

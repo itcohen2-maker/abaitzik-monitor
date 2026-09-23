@@ -289,7 +289,7 @@ function build() {
   */
   const appts = loadDocs('appts')
     .map(x => ({ id: x.id, when: x.when || '', what: x.what || '',
-                 where: x.where || '', note: x.note || '' }))
+                 where: x.where || '', note: x.note || '', img: x.img || '' }))
     .sort((a, b) => ((a.when || '') < (b.when || '') ? -1 : 1));
   const replies = loadDocs('replies')
     .map(x => ({ at: x.at, network: x.network || '', video: x.video || '',
@@ -1655,6 +1655,7 @@ body.editing .bn{display:none}
 .ap{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:8px 0}
 .ap .d{font-weight:700;font-variant-numeric:tabular-nums}
 .ap .w,.ap .n{color:var(--dim);font-size:14px;margin-top:3px}
+.ap img{display:block;width:100%;max-width:240px;border-radius:10px;margin-top:8px}
 .tk{display:flex;align-items:center;gap:12px;padding:12px;margin:8px 0;border-radius:12px;background:rgba(127,127,127,.12);cursor:pointer;font-size:1.05em}
 .tk input{width:24px;height:24px;flex:0 0 24px}
 .tk.done span{text-decoration:line-through;opacity:.55}
@@ -7257,14 +7258,17 @@ function renderAppts(){
  var now=Date.now();
  var A=(D.appts||[]).filter(function(a){var t=Date.parse(a.when);return isNaN(t)||t>now-3*3600e3;});
  host.innerHTML=A.length?A.map(function(a){
-  var d=a.when,h='';
+  var d=a.when,h='',t0=Date.parse(a.when);
+  var rm=(D.reminders||[]).filter(function(r){var u=Date.parse(r.due);return !r.sentAt&&u<t0&&t0-u<3*864e5;})[0];
   try{var x=new Date(a.when);
    d=x.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',year:'numeric',timeZone:'Asia/Jerusalem'});
    h=x.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Jerusalem'});}catch(e){}
   return '<div class="ap"><div class="d">'+esc(d)+(h?' בשעה '+esc(h):'')+'</div>'
    +'<b>'+esc(a.what)+'</b>'
    +(a.where?'<div class="w">'+esc(a.where)+'</div>':'')
-   +(a.note?'<div class="n">'+esc(a.note)+'</div>':'')+'</div>';
+   +(a.note?'<div class="n">'+esc(a.note)+'</div>':'')
+   +(rm?'<div class="n">⏰ תזכורת '+esc(new Date(rm.due).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'}))+' בתשע בבוקר</div>':'')
+   +(a.img?'<a href="'+esc(a.img)+'" target="_blank" rel="noopener"><img src="'+esc(a.img)+'" alt="ההודעה מבית החולים" loading="lazy"></a>':'')+'</div>';
  }).join(''):'<div class="empty">אין תור עתידי.</div>';
 }
 function tkDone(){try{return JSON.parse(localStorage.getItem('tasksDone')||'{}');}catch(e){return {};}}
