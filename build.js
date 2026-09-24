@@ -7313,6 +7313,7 @@ function renderAppts(){
    +(a.where?'<div class="w">'+esc(a.where)+'</div>':'')
    +(a.note?'<div class="n">'+esc(a.note)+'</div>':'')
    +(rm?'<div class="n">⏰ תזכורת '+esc(new Date(rm.due).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'}))+' בתשע בבוקר</div>':'')
+   +(a.doc?'<div class="n"><a href="'+esc(a.doc)+'" target="_blank" rel="noopener">'+esc(a.docLabel||'ההפניה')+'</a></div>':'')
    +(a.img?'<a href="'+esc(a.img)+'" target="_blank" rel="noopener"><img src="'+esc(a.img)+'" alt="ההודעה מבית החולים" loading="lazy"></a>':'')+'</div>';
  }).join(''):'<div class="empty">אין תור עתידי.</div>';
 }
