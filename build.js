@@ -2943,6 +2943,14 @@ try{
    <span aria-hidden="true">📝</span><div>תסריטים<small>תסריט לכל ריל</small></div></a>
   <a href="https://drive.google.com/drive/u/0/folders/1ZG-haqGM-j2WwwB-1PAGKCltDvCqS9Ce" target="_blank" rel="noopener">
    <span aria-hidden="true">📊</span><div>דוח רשת<small>דוחות הניטור</small></div></a>
+  <!-- Itzik, 24.9: the summonses out of the mail and into Drive, so printing
+       one does not depend on finding the right email. -->
+  <a href="https://drive.google.com/drive/u/0/folders/1PO2J-fpjcIgO2JsNXqsrIMMOz3kl9Num" target="_blank" rel="noopener">
+   <span aria-hidden="true">🏥</span><div>תורים עתידיים<small>הזימונים, וקובץ אחד להדפסה של כולם</small></div></a>
+  <!-- Itzik, 24.9: a button for all the new candle videos, next to posts,
+       scripts and the network report. -->
+  <a href="https://drive.google.com/drive/u/0/folders/1IIrVvePNMBGThVUCJ6vlTzvWg2anmSf3" target="_blank" rel="noopener">
+   <span aria-hidden="true">🕯️</span><div>סרטוני הנרות<small>כל הסרטונים החדשים של candletimes</small></div></a>
   <!-- Itzik, 23.9: the folder he will hand to the lawyer as a link, so he
        wanted it one tap away. The draft notice to Barzani lives in 06. -->
   <a href="https://drive.google.com/drive/u/0/folders/1Waun6RZNoBJV7hGof3M7Xzn6Qt-VNuOj" target="_blank" rel="noopener">

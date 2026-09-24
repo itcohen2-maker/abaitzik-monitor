@@ -1462,7 +1462,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-24T15:32:41.047Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-24T15:39:12.421Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1762,6 +1762,10 @@ try{
    <span aria-hidden="true">📝</span><div>תסריטים<small>תסריט לכל ריל</small></div></a>
   <a href="https://drive.google.com/drive/u/0/folders/1ZG-haqGM-j2WwwB-1PAGKCltDvCqS9Ce" target="_blank" rel="noopener">
    <span aria-hidden="true">📊</span><div>דוח רשת<small>דוחות הניטור</small></div></a>
+  <a href="https://drive.google.com/drive/u/0/folders/1PO2J-fpjcIgO2JsNXqsrIMMOz3kl9Num" target="_blank" rel="noopener">
+   <span aria-hidden="true">🏥</span><div>תורים עתידיים<small>הזימונים, וקובץ אחד להדפסה של כולם</small></div></a>
+  <a href="https://drive.google.com/drive/u/0/folders/1IIrVvePNMBGThVUCJ6vlTzvWg2anmSf3" target="_blank" rel="noopener">
+   <span aria-hidden="true">🕯️</span><div>סרטוני הנרות<small>כל הסרטונים החדשים של candletimes</small></div></a>
   <a href="https://drive.google.com/drive/u/0/folders/1Waun6RZNoBJV7hGof3M7Xzn6Qt-VNuOj" target="_blank" rel="noopener">
    <span aria-hidden="true">⚖️</span><div>מכירת לולוס, לעורך דין<small>התיק המלא. המכתב לברזני ב 06 שכירות וחוזים</small></div></a>
   <a href="https://drive.google.com/drive/u/0/my-drive" target="_blank" rel="noopener">
@@ -2371,7 +2375,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='54139bc357';
+var CODE_ID='608a61cf99';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
