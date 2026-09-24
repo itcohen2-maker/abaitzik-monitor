@@ -1,6 +1,6 @@
 {
- "at": "2026-09-24T15:25:58.721Z",
- "up": 1,
+ "at": "2026-09-24T16:25:57.999Z",
+ "up": 3600,
  "since": "2026-09-24T15:25:58.718Z",
  "last": "",
  "n": 0,
@@ -29,9 +29,9 @@
  "budget": {
   "ntfy": {
    "label": "ntfy",
-   "used": 2,
+   "used": 3,
    "cap": 150,
-   "left": 148,
+   "left": 147,
    "paid": false,
    "blockedUntil": "",
    "daily": false
