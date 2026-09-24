@@ -289,7 +289,8 @@ function build() {
   */
   const appts = loadDocs('appts')
     .map(x => ({ id: x.id, when: x.when || '', what: x.what || '',
-                 where: x.where || '', note: x.note || '', img: x.img || '' }))
+                 where: x.where || '', note: x.note || '', img: x.img || '',
+                 doc: x.doc || '', docLabel: x.docLabel || '' }))
     .sort((a, b) => ((a.when || '') < (b.when || '') ? -1 : 1));
   const replies = loadDocs('replies')
     .map(x => ({ at: x.at, network: x.network || '', video: x.video || '',
