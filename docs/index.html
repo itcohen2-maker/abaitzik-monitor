@@ -1462,7 +1462,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-24T15:24:00.863Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-24T15:26:01.605Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2316,8 +2316,23 @@ try{
     return rows;
   }
 
+  function latestPerNet(reports, nets) {
+    var sorted = reports.slice().sort(function (a, b) { return String(a.at) < String(b.at) ? 1 : -1; });
+    var out = [];
+    nets.forEach(function (k) {
+      for (var i = 0; i < sorted.length; i++) {
+        if ((sorted[i].nets || []).indexOf(k) > -1) {
+          if (out.indexOf(sorted[i]) < 0) out.push(sorted[i]);
+          return;
+        }
+      }
+    });
+    return out.sort(function (a, b) { return String(a.at) < String(b.at) ? 1 : -1; });
+  }
+
   return {
     version: 1,
+    latestPerNet: latestPerNet,
     PILL_GAP: PILL_GAP,
     timeOnDay: timeOnDay,
     resolveTaken: resolveTaken,
@@ -2356,7 +2371,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='1da8709524';
+var CODE_ID='54139bc357';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -3399,8 +3414,8 @@ function renderNet(){
   +(app?'<a class="abtn" href="'+app.u+'" target="_blank" rel="noopener">'+app.t+'</a>':'')+'</div>';
  out+='<h2 style="margin-top:22px">מה דחוף</h2>';
  out+=hot.length?hot.map(row).join(''):'<div class="empty">אין כרגע משהו דחוף כאן.</div>';
- var R=(D.reports||[]).filter(function(r){return all||(r.nets||[]).indexOf(curNet)>-1;});
- out+='<h2 style="margin-top:26px">מה נכתב בדוחות</h2>';
+ var R=ML.latestPerNet(D.reports||[],all?Object.keys(NETNAME):[curNet]);
+ out+='<h2 style="margin-top:26px">הדוח האחרון</h2>';
  if(!R.length){out+='<div class="empty">עוד לא נכתב דוח על הרשת הזאת.</div>';}
  else{out+=R.map(function(r,n){
   var body=all?r.body:netLines(r.body,curNet);

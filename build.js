@@ -4883,8 +4883,12 @@ function renderNet(){
   +(app?'<a class="abtn" href="'+app.u+'" target="_blank" rel="noopener">'+app.t+'</a>':'')+'</div>';
  out+='<h2 style="margin-top:22px">מה דחוף</h2>';
  out+=hot.length?hot.map(row).join(''):'<div class="empty">אין כרגע משהו דחוף כאן.</div>';
- var R=(D.reports||[]).filter(function(r){return all||(r.nets||[]).indexOf(curNet)>-1;});
- out+='<h2 style="margin-top:26px">מה נכתב בדוחות</h2>';
+ // Itzik, 24.9: under TikTok and Instagram he got every old session and every
+ // exchange we ever had about them, and asked for all of it to go. One screen,
+ // one report: the newest about this network, or the newest per network on
+ // the all tab. Older reports stay on the reports screen.
+ var R=ML.latestPerNet(D.reports||[],all?Object.keys(NETNAME):[curNet]);
+ out+='<h2 style="margin-top:26px">הדוח האחרון</h2>';
  if(!R.length){out+='<div class="empty">עוד לא נכתב דוח על הרשת הזאת.</div>';}
  else{out+=R.map(function(r,n){
   var body=all?r.body:netLines(r.body,curNet);
