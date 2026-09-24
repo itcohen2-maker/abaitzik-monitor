@@ -1462,7 +1462,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-24T15:02:14.899Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-24T15:02:27.575Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2356,7 +2356,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='b48fe0020e';
+var CODE_ID='1da8709524';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -5089,6 +5089,7 @@ function renderAppts(){
    +(a.where?'<div class="w">'+esc(a.where)+'</div>':'')
    +(a.note?'<div class="n">'+esc(a.note)+'</div>':'')
    +(rm?'<div class="n">⏰ תזכורת '+esc(new Date(rm.due).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'}))+' בתשע בבוקר</div>':'')
+   +(a.doc?'<div class="n"><a href="'+esc(a.doc)+'" target="_blank" rel="noopener">'+esc(a.docLabel||'ההפניה')+'</a></div>':'')
    +(a.img?'<a href="'+esc(a.img)+'" target="_blank" rel="noopener"><img src="'+esc(a.img)+'" alt="ההודעה מבית החולים" loading="lazy"></a>':'')+'</div>';
  }).join(''):'<div class="empty">אין תור עתידי.</div>';
 }
