@@ -595,7 +595,9 @@ function build() {
   fs.writeFileSync(path.join(DATA_DIR2, 'head.json'),
     gate.enabled() ? gate.seal(JSON.stringify(payload)) : JSON.stringify(payload), 'utf8');
 
-  const html0 = slim(renderPage(payload));
+  // The owner cut runs before slim(), which strips HTML comments and with
+  // them the ITZIK and TENANT markers the cut is made of.
+  const html0 = slim(cutFor(inst, renderPage(payload)));
   // The code, with everything that moves on every build taken out: the payload
   // itself, and the build stamp the top of the page carries as a literal. The
   // first try hashed the stamp too, so the id changed on a data only build and
@@ -693,6 +695,50 @@ function build() {
     payload.counts.pending, 'pending,', payload.counts.replied, 'replied,',
     contacts.length, 'contacts,', reports.length, 'reports,',
     Math.round(html.length / 1024) + 'KB page');
+}
+
+/*
+  The tiles a customer can have, keyed by the ids the page already wires.
+  Which of them appear, and in which order, is the instance's screens list,
+  written from the customer's intake.
+*/
+const TENANT_TILES = {
+  gCIdeas: ['g11', '💡 רעיונות לתוכן', 'מה שעלה לך, לפני שנשכח'],
+  gPlan: ['g3', '🗓️ לוח תוכן', 'מה עולה מתי, ומה כבר עלה'],
+  gRemind: ['g16', '⏰ לחזור ללקוחות', 'תזכורות, ולקוח שנעלם'],
+  gTasks: ['g17', '✅ משימות', 'מה לעשות, לפי יום'],
+  gNotes: ['g10', '📝 פתקים', 'נכתב, נשמר, לא הולך לאיבוד'],
+  gVoices: ['g4', '🎙️ הקלטות שלא תומללו', 'מה שלא הצלחתי לקרוא'],
+};
+function tenantTiles(inst) {
+  const ids = Array.isArray(inst.screens) && inst.screens.length ? inst.screens : Object.keys(TENANT_TILES);
+  return ids.filter((id) => TENANT_TILES[id]).map((id) => {
+    const [cls, title, sub] = TENANT_TILES[id];
+    return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"><b>' + title + '</b><small>' + sub + '</small></button>';
+  }).join('') + '\n ';
+}
+/*
+  One page, two kinds of owner.
+
+  Itzik's copy keeps every ITZIK block and drops the TENANT ones. A customer's
+  copy drops every ITZIK block, so none of Itzik's links, Drive folders,
+  businesses or screens are in the source of the customer's page. The script
+  still looks those elements up by id at boot, and a null there would stop the
+  whole script, so each cut block leaves hidden empty stand ins for the ids it
+  held, except ids the customer's own blocks already carry.
+*/
+function cutFor(inst, html) {
+  const TEN = /<!--TENANT:BEGIN-->([\s\S]*?)<!--TENANT:END-->/g;
+  const ITZ = /<!--ITZIK:BEGIN-->([\s\S]*?)<!--ITZIK:END-->/g;
+  if (inst.name === 'abaitzik') return html.replace(TEN, '').replace(/<!--ITZIK:(BEGIN|END)-->/g, '');
+  const own = new Set();
+  html.replace(TEN, (m, b) => { b.replace(/\bid="([^"]+)"/g, (x, id) => own.add(id)); return m; });
+  html = html.replace(ITZ, (m, b) => {
+    const ids = [];
+    b.replace(/\bid="([^"]+)"/g, (x, id) => { if (!own.has(id) && !ids.includes(id)) ids.push(id); return x; });
+    return ids.length ? '<div hidden style="display:none!important">' + ids.map((id) => '<i id="' + id + '" hidden></i>').join('') + '</div>' : '';
+  });
+  return html.replace(/<!--TENANT:(BEGIN|END)-->/g, '');
 }
 
 const PAGE = `<!DOCTYPE html>
@@ -2685,7 +2731,9 @@ try{
       still reachable, it just does not sit on the way to everything else. -->
 
   <div class="sent" id="sentCard" hidden></div>
+<!--ITZIK:BEGIN-->
   <button type="button" id="bareBtn" class="morebtn">עוד כלים</button>
+<!--ITZIK:END-->
   <!--
     The music card is gone from here too. Itzik pointed out on 13.9 that the
     same thing is already announced in the messages, so the card was a second
@@ -2709,9 +2757,11 @@ try{
     "requests from Codex" button; Codex answers already live on the answers
     screen, and what he sends goes through the ordinary chat.
   -->
+<!--ITZIK:BEGIN-->
 <section class="whatsnew" aria-label="מה חדש">
   <div class="wn" id="wnCmds"></div>
  </section>
+<!--ITZIK:END-->
 
 <!--
   The three counters that used to sit here are gone.
@@ -2725,6 +2775,7 @@ try{
 -->
 
  <div id="askBox"></div>
+<!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
   <button type="button" class="gt g2" id="gMail"><b>📧 מייל</b><small>בקשה, ואני מחזיר תשובה</small></button>
   <button type="button" class="gt g3" id="gQueue"><b>📊 ניטור רשתות</b><small>מי פנה, מה נענה</small></button>
@@ -2845,6 +2896,17 @@ try{
   <button type="button" class="ic" id="icAdd"><span class="c c-add">
    <svg viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>חדש</button>
  </div>
+<!--ITZIK:END-->
+<!--TENANT:BEGIN-->
+  <!--
+    A customer's home screen, built from his intake answers and not filtered
+    out of Itzik's. 25.9: the first version hid Itzik's tiles by id, the round
+    icons had no id, and Ilay opened a monitor full of his father's Pegasus,
+    candles and networks. Here nothing of Itzik's is in the page at all: the
+    build cuts every ITZIK block out of a customer's copy and keeps this one.
+  -->
+  <div class="grid" id="blkTiles">${tenantTiles(inst)}</div>
+<!--TENANT:END-->
 
 
 
@@ -2997,6 +3059,7 @@ try{
  <div class="msgsaid" id="diagSaid"></div>
 </section>
 
+<!--ITZIK:BEGIN-->
 <section id="pQ" hidden>
  <div class="seg" role="group" aria-label="סינון">
   <button type="button" id="bP" aria-pressed="true">ממתין</button>
@@ -3004,12 +3067,16 @@ try{
  </div>
  <div id="list"></div>
 </section>
+<!--ITZIK:END-->
 
+<!--ITZIK:BEGIN-->
 <section id="pL" hidden>
  <h2>לידים: מי פנה ורוצה המשך</h2>
  <div id="leads"></div>
 </section>
+<!--ITZIK:END-->
 
+<!--ITZIK:BEGIN-->
 <section id="pD" hidden>
  <h2>גוגל דרייב</h2>
  <div class="hint" style="margin-bottom:12px">קיצורים ישירים לתיקיות שאנחנו עובדים איתן.${inst.name === 'abaitzik' ? ' הכל בחשבון itcohen2.' : ''}</div>
@@ -3050,7 +3117,9 @@ try{
  </nav>
  <div class="hint" style="margin-top:14px">חסרה תיקייה? תכתוב לי בשורת הבנייה העצמית ואוסיף אותה לכאן.</div>
 </section>
+<!--ITZIK:END-->
 
+<!--ITZIK:BEGIN-->
 <section id="pBl" hidden>
  <h2>רשימה לחסימה</h2>
  <div class="hint">
@@ -3067,6 +3136,7 @@ try{
  </form>
  <div class="msgsaid" id="blSaid"></div>
 </section>
+<!--ITZIK:END-->
 
 <section id="pVc" hidden>
  <h2>הקלטות שלא תומללו</h2>
@@ -3079,6 +3149,7 @@ try{
  <div id="vcBody"></div>
 </section>
 
+<!--ITZIK:BEGIN-->
 <section id="pDr" hidden>
  <h2>ניקוזים</h2>
  <!--
@@ -3107,7 +3178,9 @@ try{
  <div class="msgsaid" id="drSaid"></div>
  <div id="drBody"></div>
 </section>
+<!--ITZIK:END-->
 
+<!--ITZIK:BEGIN-->
 <section id="pN" hidden>
  <h2>ניטור לפי רשת</h2>
  <div class="seg" id="netSeg" role="group" aria-label="בחירת רשת">
@@ -3119,7 +3192,9 @@ try{
  </div>
  <div id="netBody"></div>
 </section>
+<!--ITZIK:END-->
 
+<!--ITZIK:BEGIN-->
 <section id="pS" hidden>
  <h2>ניתוח</h2>
  <div class="opcard">
@@ -3135,12 +3210,15 @@ try{
  </form>
  <div id="opList"></div>
 </section>
+<!--ITZIK:END-->
 
+<!--ITZIK:BEGIN-->
 <section id="pTn" hidden>
  <h2>מוניטורים אחרים</h2>
  <div class="rephint">רק האם הם חיים. שום דבר מהתוכן שלהם לא מגיע לכאן.</div>
  <div id="tnBox"></div>
 </section>
+<!--ITZIK:END-->
 
 <section id="pCI" hidden>
  <h2>רעיונות לתוכן</h2>
@@ -3185,6 +3263,7 @@ try{
  <div class="hint">הכל כאן, לפי זמן: מה ששלחת, מה שעניתי, מה שענה קודקס, והדוחות המלאים. כלום לא נעלם מכאן. כל תשובה נכנסת באדום, נגיעה בה הופכת אותה לירוקה, ואפשר להעביר אותה לכתום סטנד ביי או לצהוב.</div>
 </section>
 
+<!--ITZIK:BEGIN-->
 <section id="pI" hidden>
  <h2>רעיונות</h2>
  <!--
@@ -3205,7 +3284,9 @@ try{
  </form>
  <div class="msgsaid" id="ideaSaid"></div>
 </section>
+<!--ITZIK:END-->
 
+<!--ITZIK:BEGIN-->
 <section id="pL2" hidden>
  <h2>הנהלת חשבונות</h2>
  <div id="rivBox" hidden>
@@ -3238,7 +3319,9 @@ try{
   אני אוכל למשוך משם נתונים ולהצליב אותם בלי להיכנס לחשבון בכלל.
  </div>
 </section>
+<!--ITZIK:END-->
 
+<!--ITZIK:BEGIN-->
 <section id="pF" hidden>
  <h2>עקוב אחרי התזונה</h2>
  <div class="zbox" id="fdZinc">
@@ -3271,7 +3354,9 @@ try{
   לחיצה על פריט פותחת את הפירוט המלא.
  </div>
 </section>
+<!--ITZIK:END-->
 
+<!--ITZIK:BEGIN-->
 <section id="pV" hidden>
  <h2>ועד הבית</h2>
  <!--
@@ -3294,7 +3379,9 @@ try{
   <button type="button" class="ask" id="vaadAsk">שאלה על ועד הבית</button>
  </div>
 </section>
+<!--ITZIK:END-->
 
+<!--ITZIK:BEGIN-->
 <section id="pP" hidden>
  <h2>הכדור</h2>
  <div class="pillbox">
@@ -3318,17 +3405,22 @@ try{
   </div>
  </div>
 </section>
+<!--ITZIK:END-->
 
+<!--ITZIK:BEGIN-->
 <section id="pVs" hidden>
  <h2>כניסות</h2>
  <div id="visitsList"></div>
  <button type="button" id="visitsAgain" class="sbtn quiet">רענון</button>
 </section>
+<!--ITZIK:END-->
 
+<!--ITZIK:BEGIN-->
 <section id="pG" hidden>
  <h2>דפי נחיתה</h2>
  <div id="landList"></div>
 </section>
+<!--ITZIK:END-->
 
 <section id="pTk" hidden>
  <h2>משימות</h2>
@@ -3336,10 +3428,12 @@ try{
  <div id="tkBox"></div>
 </section>
 
+<!--ITZIK:BEGIN-->
 <section id="pAp" hidden>
  <h2>תורים עתידיים</h2>
  <div id="apBox"></div>
 </section>
+<!--ITZIK:END-->
 
 <section id="pRm" hidden>
  <h2>תזכורות</h2>
@@ -3353,30 +3447,39 @@ try{
  <div class="msgsaid" id="remSaid"></div>
 </section>
 
+<!--ITZIK:BEGIN-->
 <section id="pY" hidden>
  <h2>בקשות מיוחדות</h2>
  <div class="rephint">מה שביקשת ואני הכנתי, עם קישור ישיר. החדש למעלה.</div>
  <div id="specBox"></div>
 </section>
+<!--ITZIK:END-->
 
+<!--ITZIK:BEGIN-->
 <section id="pK" hidden>
  <h2>תגובות מיוחדות</h2>
  <div class="rephint">כל תשובה שכתבתי בשמך ולא הייתה סתם תודה. החדש למעלה, ומה שעוד לא ראית מסומן.</div>
  <div id="repBox"></div>
 </section>
+<!--ITZIK:END-->
 
+<!--ITZIK:BEGIN-->
 <section id="pW" hidden>
  <h2>איך אני משתפר</h2>
  <div class="rephint">כל שורה היא דבר אחד שיצא לי לא טוב ומה שיניתי בעקבות זה. החדש למעלה.</div>
  <div id="growBox"></div>
 </section>
+<!--ITZIK:END-->
 
+<!--ITZIK:BEGIN-->
 <section id="pX" hidden>
  <h2>פגסוס</h2>
  <div class="rephint">עדכונים קצרים מהסשן של המשחק. לדבר איתי על זה כאן למטה.</div>
  <div id="pegBox"></div>
 </section>
+<!--ITZIK:END-->
 
+<!--ITZIK:BEGIN-->
 <section id="pR" hidden>
  <h2>דוחות הסבבים</h2>
  <div class="nextrep">
@@ -3386,7 +3489,9 @@ try{
  <div class="msgsaid" id="repSaid"></div>
  <div id="reports"></div>
 </section>
+<!--ITZIK:END-->
 
+<!--ITZIK:BEGIN-->
 <section id="pE" hidden>
  <h2>מייל</h2>
  <div class="hint" style="margin-bottom:12px">
@@ -3400,6 +3505,7 @@ try{
  <div class="msgsaid" id="mailSaid"></div>
  <div class="thread" id="mailThread"></div>
 </section>
+<!--ITZIK:END-->
 
 <section id="pM" hidden>
  <div class="threadbar">
@@ -7445,7 +7551,10 @@ function tkDone(){try{return JSON.parse(localStorage.getItem('tasksDone')||'{}')
   adds rows.
 */
 function ciDone(){try{return JSON.parse(localStorage.getItem('ideasUsed')||'{}');}catch(e){return {};}}
-function renderIdeas(){
+function renderContentIdeas(){
+ // Not renderIdeas: that name is taken by Itzik's own ideas screen further
+ // down, and a later function declaration silently replaces an earlier one,
+ // so the content ideas tile opened and painted nothing. Found on the preview.
  var host=document.getElementById('ciBox');
  if(!host)return;
  var used=ciDone(),h='';
@@ -7479,10 +7588,10 @@ function renderPlan(){
 document.addEventListener('change',function(e){
  var t=e.target;if(!t||!t.getAttribute)return;
  var ci=t.getAttribute('data-ci'),pl=t.getAttribute('data-pl');
- if(ci){var d=ciDone();if(t.checked)d[ci]=new Date().toISOString();else delete d[ci];try{localStorage.setItem('ideasUsed',JSON.stringify(d));}catch(err){}renderIdeas();}
+ if(ci){var d=ciDone();if(t.checked)d[ci]=new Date().toISOString();else delete d[ci];try{localStorage.setItem('ideasUsed',JSON.stringify(d));}catch(err){}renderContentIdeas();}
  if(pl){var d2=plDone();if(t.checked)d2[pl]=new Date().toISOString();else delete d2[pl];try{localStorage.setItem('planDone',JSON.stringify(d2));}catch(err){}renderPlan();}
 });
-on('gCIdeas',function(){pane('I');renderIdeas();});
+on('gCIdeas',function(){pane('I');renderContentIdeas();});
 on('gPlan',function(){pane('P');renderPlan();});
 function renderTenants(){
  var host=document.getElementById('tnBox');
@@ -8838,6 +8947,11 @@ document.getElementById('homeBtn').onclick=function(){pane('h');};
   a reload like every other preference here.
 */
 function bareGet(){
+ // A customer's copy has no tools button to leave the microphone-only view,
+ // so it never starts in it: 25.9, Ilay's first screen showed nothing but
+ // the talk card, and his own tiles were there, hidden behind a switch he
+ // did not have.
+ if(INSTANCE&&INSTANCE.name!=='abaitzik')return false;
  try{return localStorage.getItem('bareHome')!=='0';}catch(e){return true;}
 }
 function bareApply(on){
