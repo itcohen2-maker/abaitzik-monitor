@@ -1463,7 +1463,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-25T12:01:31.365Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-25T12:06:16.459Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1571,13 +1571,18 @@ try{
 
 
   <div class="sent" id="sentCard" hidden></div>
+
   <button type="button" id="bareBtn" class="morebtn">עוד כלים</button>
+
+
 <section class="whatsnew" aria-label="מה חדש">
   <div class="wn" id="wnCmds"></div>
  </section>
 
 
+
  <div id="askBox"></div>
+
  <div class="grid" id="blkTiles">
   <button type="button" class="gt g2" id="gMail"><b>📧 מייל</b><small>בקשה, ואני מחזיר תשובה</small></button>
   <button type="button" class="gt g3" id="gQueue"><b>📊 ניטור רשתות</b><small>מי פנה, מה נענה</small></button>
@@ -1638,6 +1643,8 @@ try{
   <button type="button" class="ic" id="icAdd"><span class="c c-add">
    <svg viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>חדש</button>
  </div>
+
+
 
 
 
@@ -1742,6 +1749,7 @@ try{
  <div class="msgsaid" id="diagSaid"></div>
 </section>
 
+
 <section id="pQ" hidden>
  <div class="seg" role="group" aria-label="סינון">
   <button type="button" id="bP" aria-pressed="true">ממתין</button>
@@ -1750,10 +1758,14 @@ try{
  <div id="list"></div>
 </section>
 
+
+
 <section id="pL" hidden>
  <h2>לידים: מי פנה ורוצה המשך</h2>
  <div id="leads"></div>
 </section>
+
+
 
 <section id="pD" hidden>
  <h2>גוגל דרייב</h2>
@@ -1783,6 +1795,8 @@ try{
  <div class="hint" style="margin-top:14px">חסרה תיקייה? תכתוב לי בשורת הבנייה העצמית ואוסיף אותה לכאן.</div>
 </section>
 
+
+
 <section id="pBl" hidden>
  <h2>רשימה לחסימה</h2>
  <div class="hint">
@@ -1800,6 +1814,7 @@ try{
  <div class="msgsaid" id="blSaid"></div>
 </section>
 
+
 <section id="pVc" hidden>
  <h2>הקלטות שלא תומללו</h2>
  <div class="hint">
@@ -1810,6 +1825,7 @@ try{
  </div>
  <div id="vcBody"></div>
 </section>
+
 
 <section id="pDr" hidden>
  <h2>ניקוזים</h2>
@@ -1836,6 +1852,8 @@ try{
  <div id="drBody"></div>
 </section>
 
+
+
 <section id="pN" hidden>
  <h2>ניטור לפי רשת</h2>
  <div class="seg" id="netSeg" role="group" aria-label="בחירת רשת">
@@ -1847,6 +1865,8 @@ try{
  </div>
  <div id="netBody"></div>
 </section>
+
+
 
 <section id="pS" hidden>
  <h2>ניתוח</h2>
@@ -1864,11 +1884,14 @@ try{
  <div id="opList"></div>
 </section>
 
+
+
 <section id="pTn" hidden>
  <h2>מוניטורים אחרים</h2>
  <div class="rephint">רק האם הם חיים. שום דבר מהתוכן שלהם לא מגיע לכאן.</div>
  <div id="tnBox"></div>
 </section>
+
 
 <section id="pCI" hidden>
  <h2>רעיונות לתוכן</h2>
@@ -1913,6 +1936,7 @@ try{
  <div class="hint">הכל כאן, לפי זמן: מה ששלחת, מה שעניתי, מה שענה קודקס, והדוחות המלאים. כלום לא נעלם מכאן. כל תשובה נכנסת באדום, נגיעה בה הופכת אותה לירוקה, ואפשר להעביר אותה לכתום סטנד ביי או לצהוב.</div>
 </section>
 
+
 <section id="pI" hidden>
  <h2>רעיונות</h2>
  <div class="ideabuilt">
@@ -1929,6 +1953,8 @@ try{
  </form>
  <div class="msgsaid" id="ideaSaid"></div>
 </section>
+
+
 
 <section id="pL2" hidden>
  <h2>הנהלת חשבונות</h2>
@@ -1963,6 +1989,8 @@ try{
  </div>
 </section>
 
+
+
 <section id="pF" hidden>
  <h2>עקוב אחרי התזונה</h2>
  <div class="zbox" id="fdZinc">
@@ -1996,6 +2024,8 @@ try{
  </div>
 </section>
 
+
+
 <section id="pV" hidden>
  <h2>ועד הבית</h2>
  <div class="item">
@@ -2010,6 +2040,8 @@ try{
   <button type="button" class="ask" id="vaadAsk">שאלה על ועד הבית</button>
  </div>
 </section>
+
+
 
 <section id="pP" hidden>
  <h2>הכדור</h2>
@@ -2035,16 +2067,21 @@ try{
  </div>
 </section>
 
+
+
 <section id="pVs" hidden>
  <h2>כניסות</h2>
  <div id="visitsList"></div>
  <button type="button" id="visitsAgain" class="sbtn quiet">רענון</button>
 </section>
 
+
+
 <section id="pG" hidden>
  <h2>דפי נחיתה</h2>
  <div id="landList"></div>
 </section>
+
 
 <section id="pTk" hidden>
  <h2>משימות</h2>
@@ -2052,10 +2089,12 @@ try{
  <div id="tkBox"></div>
 </section>
 
+
 <section id="pAp" hidden>
  <h2>תורים עתידיים</h2>
  <div id="apBox"></div>
 </section>
+
 
 <section id="pRm" hidden>
  <h2>תזכורות</h2>
@@ -2069,11 +2108,14 @@ try{
  <div class="msgsaid" id="remSaid"></div>
 </section>
 
+
 <section id="pY" hidden>
  <h2>בקשות מיוחדות</h2>
  <div class="rephint">מה שביקשת ואני הכנתי, עם קישור ישיר. החדש למעלה.</div>
  <div id="specBox"></div>
 </section>
+
+
 
 <section id="pK" hidden>
  <h2>תגובות מיוחדות</h2>
@@ -2081,17 +2123,23 @@ try{
  <div id="repBox"></div>
 </section>
 
+
+
 <section id="pW" hidden>
  <h2>איך אני משתפר</h2>
  <div class="rephint">כל שורה היא דבר אחד שיצא לי לא טוב ומה שיניתי בעקבות זה. החדש למעלה.</div>
  <div id="growBox"></div>
 </section>
 
+
+
 <section id="pX" hidden>
  <h2>פגסוס</h2>
  <div class="rephint">עדכונים קצרים מהסשן של המשחק. לדבר איתי על זה כאן למטה.</div>
  <div id="pegBox"></div>
 </section>
+
+
 
 <section id="pR" hidden>
  <h2>דוחות הסבבים</h2>
@@ -2102,6 +2150,8 @@ try{
  <div class="msgsaid" id="repSaid"></div>
  <div id="reports"></div>
 </section>
+
+
 
 <section id="pE" hidden>
  <h2>מייל</h2>
@@ -2116,6 +2166,7 @@ try{
  <div class="msgsaid" id="mailSaid"></div>
  <div class="thread" id="mailThread"></div>
 </section>
+
 
 <section id="pM" hidden>
  <div class="threadbar">
@@ -2402,7 +2453,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='6ba4904602';
+var CODE_ID='eb8bdd2703';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -5135,7 +5186,7 @@ function renderAppts(){
 }
 function tkDone(){try{return JSON.parse(localStorage.getItem('tasksDone')||'{}');}catch(e){return {};}}
 function ciDone(){try{return JSON.parse(localStorage.getItem('ideasUsed')||'{}');}catch(e){return {};}}
-function renderIdeas(){
+function renderContentIdeas(){
  var host=document.getElementById('ciBox');
  if(!host)return;
  var used=ciDone(),h='';
@@ -5169,10 +5220,10 @@ function renderPlan(){
 document.addEventListener('change',function(e){
  var t=e.target;if(!t||!t.getAttribute)return;
  var ci=t.getAttribute('data-ci'),pl=t.getAttribute('data-pl');
- if(ci){var d=ciDone();if(t.checked)d[ci]=new Date().toISOString();else delete d[ci];try{localStorage.setItem('ideasUsed',JSON.stringify(d));}catch(err){}renderIdeas();}
+ if(ci){var d=ciDone();if(t.checked)d[ci]=new Date().toISOString();else delete d[ci];try{localStorage.setItem('ideasUsed',JSON.stringify(d));}catch(err){}renderContentIdeas();}
  if(pl){var d2=plDone();if(t.checked)d2[pl]=new Date().toISOString();else delete d2[pl];try{localStorage.setItem('planDone',JSON.stringify(d2));}catch(err){}renderPlan();}
 });
-on('gCIdeas',function(){pane('I');renderIdeas();});
+on('gCIdeas',function(){pane('I');renderContentIdeas();});
 on('gPlan',function(){pane('P');renderPlan();});
 function renderTenants(){
  var host=document.getElementById('tnBox');
@@ -6262,6 +6313,7 @@ on('clearAll',function(){
 document.getElementById('setBtn').onclick=function(){pane('z');};
 document.getElementById('homeBtn').onclick=function(){pane('h');};
 function bareGet(){
+ if(INSTANCE&&INSTANCE.name!=='abaitzik')return false;
  try{return localStorage.getItem('bareHome')!=='0';}catch(e){return true;}
 }
 function bareApply(on){
