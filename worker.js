@@ -22,8 +22,10 @@ const path = require('path');
 const { execFile, spawn } = require('child_process');
 
 const HERE = __dirname;
-const CHAT = path.join(HERE, 'data', 'chat', 'chat');
-const STATUS = path.join(HERE, 'data', 'status');
+// Which monitor this is. Defaults are Itzik's folders and Itzik's name.
+const inst = require('./lib/instance.js');
+const CHAT = path.join(inst.dataPath, 'chat', 'chat');
+const STATUS = path.join(inst.dataPath, 'status');
 const LOCK = path.join(STATUS, 'worker.lock');
 const LOG = path.join(STATUS, 'worker.log');
 const SEEN = path.join(STATUS, 'worker-seen.json');
@@ -213,11 +215,21 @@ function prompt(list) {
     'ומחזיק תור כך ששני סשנים לא דורסים זה את זה. זה הדבר היחיד שמתוזמן.',
     'אל תיגע בקבצים של הודעות שלא הוקצו לך, ואל תענה להודעה שלא ברשימה למטה.',
     '',
-    'איציק שלח את ההודעות האלה למוניטור והן עדיין בלי תשובה:',
+    inst.owner + ' שלח את ההודעות האלה למוניטור והן עדיין בלי תשובה:',
     '',
     lines.join('\n'),
     '',
-    'כללי הבית: הפעל את הסקיל abaitzik-onboarding לפני שאתה נוגע במשהו.',
+    /*
+      The house rules are the instance's.
+
+      Itzik's are a skill on this machine. A second instance has none of that
+      and must not inherit it: Ilay's monitor answering in his father's voice,
+      about his father's networks, would be the exact failure the separation
+      exists to prevent. So the rules come from data/profile.md when it is
+      there, written from his own intake answers, and the skill is only named
+      for the instance it belongs to.
+    */
+    houseRules(),
     'אם ל-note של ההודעה כבר יש תמלול, זה התמלול. רק אם אין, תמלל בעצמך עם',
     '`node transcribe.js data/inbox/<שם>.webm`.',
     '',
@@ -242,6 +254,17 @@ function prompt(list) {
     'אם משהו באמת חסום או דורש החלטה שלו, כתוב לו את זה כבר בשלב א. גם אז',
     'הכתיבה והדחיפה הן חובה: הודעה שלא נכתבה היא הודעה שהוא לא קיבל.',
   ].join('\n');
+}
+
+function houseRules() {
+  const lines = [];
+  if (inst.name === 'abaitzik') lines.push('כללי הבית: הפעל את הסקיל abaitzik-onboarding לפני שאתה נוגע במשהו.');
+  try {
+    const prof = fs.readFileSync(path.join(inst.dataPath, 'profile.md'), 'utf8').trim();
+    if (prof) lines.push('כללי הבית של המופע הזה, מתוך data/profile.md:', '', prof);
+  } catch (e) { /* no profile: nothing to add */ }
+  if (!lines.length) lines.push('כללי הבית: ענה קצר, בעברית, בלי מקפים, בלי אימוגי, בלי לפנות בשם.');
+  return lines.join('\n');
 }
 
 function run(list) {
