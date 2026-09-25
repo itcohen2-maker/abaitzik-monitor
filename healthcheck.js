@@ -22,10 +22,15 @@ const https = require('https');
 
 const HERE = __dirname;
 const CHROME = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-const PROFILE = 'Profile 4';                       // itcohen2 בלבד (איציק, 19.9.2026). ראה [[chrome-relaunch]]
+// Which monitor this is. Every default below is Itzik's current value.
+const inst = require('./lib/instance.js');
+const PROFILE = inst.chromeProfile;                // itcohen2 בלבד (איציק, 19.9.2026). ראה [[chrome-relaunch]]
+// The scheduled tasks are named per instance, so a second monitor on the
+// same machine cannot read or disable this one's.
+const TASK = n => inst.taskPrefix + n;
 const CLAUDE_EXT = 'fcoeoabgfenejglbffodgkkbkcdhcgfn';
 const USER_DATA = path.join(process.env.LOCALAPPDATA || '', 'Google', 'Chrome', 'User Data');
-const PUBLIC_URL = 'https://itcohen2-maker.github.io/abaitzik-monitor/';
+const PUBLIC_URL = inst.publicUrl;
 
 const checks = [];
 function ok(name, detail) { checks.push({ name, state: 'ok', detail }); }
@@ -75,7 +80,7 @@ function waitingMessages() {
     const oldest = unread.map(m => new Date(m.at).getTime()).filter(t => !isNaN(t)).sort()[0];
     const hours = oldest ? (Date.now() - oldest) / 36e5 : 0;
     const line = unread.length + ' בלי תשובה, הוותיקה מחכה ' + hours.toFixed(1) + ' שעות';
-    if (hours > 0.5) fail('תיבת ההודעות', line, 'אף סשן לא ענה. לבדוק את worker.log ואת המשימה AbaItzikWorker.');
+    if (hours > 0.5) fail('תיבת ההודעות', line, 'אף סשן לא ענה. לבדוק את worker.log ואת המשימה ' + TASK('Worker') + '.');
     else warn('תיבת ההודעות', line, 'לענות ולסמן done.');
     return;
   }
@@ -146,19 +151,19 @@ function nightMode() {
   // צריך להבחין בין משימה שנמחקה לבין משימה שאין הרשאה לקרוא אותה.
   // AbaItzikMorningWake רצה כ-SYSTEM. Get-ScheduledTask בלי הרשאות מנהל
   // מדווח עליה "לא נמצא", וזה שקר. schtasks לפחות אומר במפורש גישה נדחתה.
-  const q = ps("foreach($n in 'AbaItzikNightSleep','AbaItzikMorningWake'){" +
+  const q = ps("foreach($n in '" + TASK('NightSleep') + "','" + TASK('MorningWake') + "'){" +
     "$o=(schtasks /query /tn $n 2>&1 | Out-String);" +
     "if($o -match 'denied|נדחת'){\"$n=DENIED\"}" +
     "elseif($o -match [regex]::Escape($n)){\"$n=Ready\"}else{\"$n=MISSING\"}}");
   const has = n => q.indexOf(n + '=Ready') > -1;
   // משימת ההערה רצה כ-SYSTEM, ושאילתה בלי הרשאות מנהל מקבלת עליה
   // גישה נדחתה ולא חסר. אסור להציג את זה כאילו המשימה נמחקה.
-  const denied = q.indexOf('AbaItzikMorningWake=DENIED') > -1;
-  if (!has('AbaItzikNightSleep')) {
+  const denied = q.indexOf(TASK('MorningWake') + '=DENIED') > -1;
+  if (!has(TASK('NightSleep'))) {
     warn('מצב לילה', 'משימת השינה חסרה', 'להריץ setup-night.ps1 בהרשאות מנהל');
   } else if (denied) {
     ok('מצב לילה', 'שינה 01:00 קיימת. ההערה רצה כ-SYSTEM ואי אפשר לקרוא אותה מכאן');
-  } else if (!has('AbaItzikMorningWake')) {
+  } else if (!has(TASK('MorningWake'))) {
     warn('מצב לילה', 'משימת ההערה חסרה', 'להריץ setup-night.ps1 בהרשאות מנהל');
   } else {
     ok('מצב לילה', 'שינה 01:00, הערה 06:00');
@@ -175,17 +180,17 @@ function wave() {
   // הכשל של המשימה הזאת שקט: אין שגיאה ואין התראה, פשוט בוקר
   // בלי גל. לכן לא מספיק שהמשימה קיימת, צריך שהטריגר שלה יהיה
   // יומי. טריגר חד פעמי עובד יום אחד ואז נגמר בלי להגיד כלום.
-  const q = ps("$t=Get-ScheduledTask -TaskName 'AbaItzikWave' -ErrorAction SilentlyContinue;" +
+  const q = ps("$t=Get-ScheduledTask -TaskName '" + TASK('Wave') + "' -ErrorAction SilentlyContinue;" +
     "if(-not $t){'MISSING'}else{" +
     "$d=($t.Triggers | Where-Object {$_.CimClass.CimClassName -eq 'MSFT_TaskDailyTrigger' -and $_.Enabled});" +
     "if(-not $d){'NOTDAILY'}elseif($t.State -eq 'Disabled'){'DISABLED'}else{" +
-    "'OK ' + (Get-ScheduledTaskInfo -TaskName 'AbaItzikWave').NextRunTime}}");
+    "'OK ' + (Get-ScheduledTaskInfo -TaskName '" + TASK('Wave') + "').NextRunTime}}");
   if (!q || q === 'MISSING') {
     fail('שעון הגלים', 'משימת הגלים חסרה, ולכן לא יהיו גלים', 'powershell -File setup-wave.ps1');
   } else if (q === 'NOTDAILY') {
     fail('שעון הגלים', 'הטריגר אינו יומי, ולכן מחר בבוקר אין גל', 'powershell -File setup-wave.ps1');
   } else if (q === 'DISABLED') {
-    fail('שעון הגלים', 'המשימה מכובה', 'Enable-ScheduledTask -TaskName AbaItzikWave');
+    fail('שעון הגלים', 'המשימה מכובה', 'Enable-ScheduledTask -TaskName ' + TASK('Wave'));
   } else {
     ok('שעון הגלים', 'יומי, הבא ' + q.slice(3).trim());
   }

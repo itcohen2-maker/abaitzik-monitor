@@ -7,7 +7,8 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 
-const topic = fs.readFileSync(path.join(__dirname, 'data', 'ntfy-topic.txt'), 'utf8').trim();
+const inst = require('./lib/instance.js');
+const topic = fs.readFileSync(path.join(inst.dataPath, 'ntfy-topic.txt'), 'utf8').trim();
 const [when, ...rest] = process.argv.slice(2);
 const body = rest.join(' ') || 'תזכורת';
 
@@ -27,7 +28,7 @@ const req = https.request({
     'At': String(Math.floor(at.getTime() / 1000)),
     'Priority': '5',
     'Tags': 'alarm_clock',
-    'Click': 'https://itcohen2-maker.github.io/abaitzik-monitor/',
+    'Click': inst.publicUrl,
   },
 }, res => {
   let out = '';

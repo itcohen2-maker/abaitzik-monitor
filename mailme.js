@@ -2,6 +2,8 @@
 // Sends an update mail to Itzik through FormSubmit, the same relay the monitor
 // page uses. The Gmail connector has no send scope, so this is the channel.
 // Usage: node mailme.js "subject" < body.txt
+// Which monitor this is. Without instance.json these are Itzik's addresses.
+const inst = require('./lib/instance.js');
 const https = require('https');
 const subject = process.argv[2] || 'עדכון מהמוניטור';
 let body = '';
@@ -15,14 +17,14 @@ process.stdin.on('end', () => {
   });
   const req = https.request({
     host: 'formsubmit.co',
-    path: '/ajax/' + ['itcohen2', 'gmail.com'].join('@'),
+    path: '/ajax/' + inst.mailbox,
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
       'Content-Length': Buffer.byteLength(payload),
-      'Origin': 'https://itcohen2-maker.github.io',
-      'Referer': 'https://itcohen2-maker.github.io/abaitzik-monitor/',
+      'Origin': inst.origin,
+      'Referer': inst.publicUrl,
       'User-Agent': 'Mozilla/5.0',
     },
   }, res => {
