@@ -1462,7 +1462,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-25T09:55:58.141Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-25T10:29:06.899Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1587,6 +1587,8 @@ try{
   <button type="button" class="gt g18" id="gAppts"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
   <button type="button" class="gt g16" id="gRemind"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
   <button type="button" class="gt g10" id="gNotes"><b>📝 פתקים</b><small>נכתב, נשמר, לא הולך לאיבוד</small></button>
+  <button type="button" class="gt g11" id="gCIdeas" hidden><b>💡 רעיונות לתוכן</b><small>מה שעלה לך, לפני שנשכח</small></button>
+  <button type="button" class="gt g3" id="gPlan" hidden><b>🗓️ לוח תוכן</b><small>מה עולה מתי, ומה כבר עלה</small></button>
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
   <button type="button" class="gt g15" id="gYehuda"><b>📄 יהודה</b><small>סקירת happymeal. פתיחה, הורדה או שליחה אליו</small></button>
  </div>
@@ -1856,6 +1858,18 @@ try{
   <button type="submit" id="opBtn">שליחה</button>
  </form>
  <div id="opList"></div>
+</section>
+
+<section id="pCI" hidden>
+ <h2>רעיונות לתוכן</h2>
+ <div class="rephint">כל רעיון ששלחת נשמר כאן. לחיצה מסמנת שהשתמשת בו.</div>
+ <div id="ciBox"></div>
+</section>
+
+<section id="pPl" hidden>
+ <h2>לוח תוכן</h2>
+ <div class="rephint">מה מתוכנן לעלות, לפי יום. לחיצה מסמנת שעלה.</div>
+ <div id="plBox"></div>
 </section>
 
 <section id="pN2" hidden>
@@ -2378,7 +2392,8 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='55d983d5e2';
+var CODE_ID='902bddd4a4';
+var INSTANCE={"name":"abaitzik","owner":"איציק","screens":null};
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -3315,7 +3330,7 @@ function updateDot(){
  document.title=(fresh?'(1) ':'')+'אבא איציק בבנייה עצמית';
 }
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
-var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs'};
+var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl'};
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
 function lastPill(){
  var c=(D.chat||[]).filter(function(m){return m.from==='itzik'&&/לקחתי כדור/.test(m.text||'');});
@@ -5100,6 +5115,46 @@ function renderAppts(){
  }).join(''):'<div class="empty">אין תור עתידי.</div>';
 }
 function tkDone(){try{return JSON.parse(localStorage.getItem('tasksDone')||'{}');}catch(e){return {};}}
+function ciDone(){try{return JSON.parse(localStorage.getItem('ideasUsed')||'{}');}catch(e){return {};}}
+function renderIdeas(){
+ var host=document.getElementById('ciBox');
+ if(!host)return;
+ var used=ciDone(),h='';
+ (D.ideas||[]).forEach(function(t){
+  var when='';
+  try{when=new Date(t.at).toLocaleDateString('he-IL',{day:'numeric',month:'numeric'});}catch(e){}
+  h+='<label class="tk'+(used[t.id]||t.used?' done':'')+'"><input type="checkbox" data-ci="'+esc(t.id)+'"'
+   +(used[t.id]||t.used?' checked':'')+'><span>'+esc(t.text)+(t.network?' <small>'+esc(t.network)+'</small>':'')
+   +(when?' <small>'+esc(when)+'</small>':'')+'</span></label>';
+ });
+ host.innerHTML=h||'<div class="empty">עוד אין רעיונות. כל רעיון שתשלח למוניטור יופיע כאן.</div>';
+}
+function plDone(){try{return JSON.parse(localStorage.getItem('planDone')||'{}');}catch(e){return {};}}
+function renderPlan(){
+ var host=document.getElementById('plBox');
+ if(!host)return;
+ var done=plDone(),h='',last='';
+ (D.plan||[]).forEach(function(t){
+  if(t.day!==last){
+   last=t.day;
+   var lbl=t.day;
+   try{lbl=new Date(t.day+'T09:00:00').toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'});}catch(e){}
+   h+='<h3>'+esc(lbl)+'</h3>';
+  }
+  var isDone=done[t.id]||t.status==='published';
+  h+='<label class="tk'+(isDone?' done':'')+'"><input type="checkbox" data-pl="'+esc(t.id)+'"'
+   +(isDone?' checked':'')+'><span>'+esc(t.text)+(t.network?' <small>'+esc(t.network)+'</small>':'')+'</span></label>';
+ });
+ host.innerHTML=h||'<div class="empty">הלוח ריק. תגיד למוניטור מה אתה רוצה להעלות השבוע והוא יסדר.</div>';
+}
+document.addEventListener('change',function(e){
+ var t=e.target;if(!t||!t.getAttribute)return;
+ var ci=t.getAttribute('data-ci'),pl=t.getAttribute('data-pl');
+ if(ci){var d=ciDone();if(t.checked)d[ci]=new Date().toISOString();else delete d[ci];try{localStorage.setItem('ideasUsed',JSON.stringify(d));}catch(err){}renderIdeas();}
+ if(pl){var d2=plDone();if(t.checked)d2[pl]=new Date().toISOString();else delete d2[pl];try{localStorage.setItem('planDone',JSON.stringify(d2));}catch(err){}renderPlan();}
+});
+on('gCIdeas',function(){pane('I');renderIdeas();});
+on('gPlan',function(){pane('P');renderPlan();});
 function renderTasks(){
  var host=document.getElementById('tkBox');
  if(!host)return;
@@ -6514,6 +6569,18 @@ function jumpToUnread(){
  try{el.scrollIntoView({block:'center',behavior:'smooth'});}catch(e){el.scrollIntoView();}
  ringFor(el,2200);
 }
+(function(){
+ var keep=INSTANCE&&INSTANCE.screens;
+ if(!keep||!keep.length)return;
+ ['blkTiles','blkIcons'].forEach(function(id){
+  var box=document.getElementById(id);
+  if(!box)return;
+  Array.prototype.forEach.call(box.children,function(el){
+   if(!el.id)return;
+   el.hidden=keep.indexOf(el.id)<0;
+  });
+ });
+})();
 if(location.hash==='#new'){
  openAnswers('fresh',true);
 }
