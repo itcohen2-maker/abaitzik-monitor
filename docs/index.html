@@ -1462,7 +1462,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-25T08:03:01.171Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-25T08:03:52.876Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2378,7 +2378,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='3b608239e0';
+var CODE_ID='890ae1e010';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -6210,8 +6210,8 @@ function loadVisits(){
    box.innerHTML=order.map(function(k){
     var s=c[k]||{total:0,today:0};
     return '<div class="item"><div class="top"><span class="who">'+esc(LABEL[k])+'</span>'
-     +'<span class="chip">היום '+esc(String(Number(s.today)||0))+'</span></div>'
-     +'<div>סך הכל '+esc(String(Number(s.total)||0))+'</div></div>';
+     +'<span class="chip">סך הכל '+esc(String(Number(s.total)||0))+'</span></div>'
+     +'<div style="font-size:22px;font-weight:700">היום '+esc(String(Number(s.today)||0))+'</div></div>';
    }).join('')+visitDays(j.days,order,LABEL)+'<div id="fixCount"></div><div class="empty">נבדק בשעה '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})+'</div>';
    loadFixCount();
   },function(){again.disabled=false;box.innerHTML='<div class="empty">הכניסות לא נטענו. תנסה שוב.</div>';});

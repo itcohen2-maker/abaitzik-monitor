@@ -8696,6 +8696,8 @@ document.getElementById('icAdd').onclick=function(){askInChat('מודול חדש
   their own screen now, one row per site, and stay until he leaves it.
   Same day, later: "collect data, I'll check every day." The beacon now also
   returns counts per Israel day, shown under the rows as the last 14 days.
+  25.9: "today big, total small, flip it." Today is the row's large number,
+  the total moved into the small chip.
 */
 function loadVisits(){
  var box=document.getElementById('visitsList');
@@ -8713,8 +8715,8 @@ function loadVisits(){
    box.innerHTML=order.map(function(k){
     var s=c[k]||{total:0,today:0};
     return '<div class="item"><div class="top"><span class="who">'+esc(LABEL[k])+'</span>'
-     +'<span class="chip">היום '+esc(String(Number(s.today)||0))+'</span></div>'
-     +'<div>סך הכל '+esc(String(Number(s.total)||0))+'</div></div>';
+     +'<span class="chip">סך הכל '+esc(String(Number(s.total)||0))+'</span></div>'
+     +'<div style="font-size:22px;font-weight:700">היום '+esc(String(Number(s.today)||0))+'</div></div>';
    }).join('')+visitDays(j.days,order,LABEL)+'<div id="fixCount"></div><div class="empty">נבדק בשעה '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})+'</div>';
    loadFixCount();
   },function(){again.disabled=false;box.innerHTML='<div class="empty">הכניסות לא נטענו. תנסה שוב.</div>';});
