@@ -2701,8 +2701,8 @@ try{
   <button type="button" class="gt g16" id="gRemind"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
   <button type="button" class="gt g10" id="gNotes"><b>📝 פתקים</b><small>נכתב, נשמר, לא הולך לאיבוד</small></button>
   <!-- Ilay's two tiles. Hidden on Itzik's copy by the instance screens list. -->
-  <button type="button" class="gt g11" id="gCIdeas"><b>💡 רעיונות לתוכן</b><small>מה שעלה לך, לפני שנשכח</small></button>
-  <button type="button" class="gt g3" id="gPlan"><b>🗓️ לוח תוכן</b><small>מה עולה מתי, ומה כבר עלה</small></button>
+  <button type="button" class="gt g11" id="gCIdeas" hidden><b>💡 רעיונות לתוכן</b><small>מה שעלה לך, לפני שנשכח</small></button>
+  <button type="button" class="gt g3" id="gPlan" hidden><b>🗓️ לוח תוכן</b><small>מה עולה מתי, ומה כבר עלה</small></button>
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
   <!--
     איציק, 23.9, בהקלטה: "אפשר להסיר את כפתור בקשות מיוחדות".
@@ -9190,12 +9190,15 @@ function jumpToUnread(){
 */
 (function(){
  var keep=INSTANCE&&INSTANCE.screens;
+ // Tiles that belong to another instance start hidden in the markup, so with
+ // no list at all, Itzik's case, they never appear on his screen either.
  if(!keep||!keep.length)return;
  ['blkTiles','blkIcons'].forEach(function(id){
   var box=document.getElementById(id);
   if(!box)return;
   Array.prototype.forEach.call(box.children,function(el){
-   if(el.id&&keep.indexOf(el.id)<0)el.hidden=true;
+   if(!el.id)return;
+   el.hidden=keep.indexOf(el.id)<0;
   });
  });
 })();
