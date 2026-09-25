@@ -2955,6 +2955,13 @@ try{
        wanted it one tap away. The draft notice to Barzani lives in 06. -->
   <a href="https://drive.google.com/drive/u/0/folders/1Waun6RZNoBJV7hGof3M7Xzn6Qt-VNuOj" target="_blank" rel="noopener">
    <span aria-hidden="true">⚖️</span><div>מכירת לולוס, לעורך דין<small>התיק המלא. המכתב לברזני ב 06 שכירות וחוזים</small></div></a>
+  <!-- Itzik, 25.9: "תמיד תשים בתיקייה, אני לא מוצא ככה". The folders were
+       there; what was missing is a way to reach them from the phone. Every
+       folder I create for him gets a button here on the same day. -->
+  <a href="https://drive.google.com/drive/u/0/folders/1IIrVvePNMBGThVUCJ6vlTzvWg2anmSf3" target="_blank" rel="noopener">
+   <span aria-hidden="true">🕯️</span><div>שיווק נרות candletimes<small>הסטוריז של אתר הנרות, מוכנים להעלאה</small></div></a>
+  <a href="https://drive.google.com/drive/u/0/folders/1sVcaRvN3ii3XMUgmYzgYH_P7fkzyisic" target="_blank" rel="noopener">
+   <span aria-hidden="true">📋</span><div>שאלון אפיון למוניטור<small>השאלון ללקוח חדש, להעברה בוואטסאפ</small></div></a>
   <a href="https://drive.google.com/drive/u/0/my-drive" target="_blank" rel="noopener">
    <span aria-hidden="true">📁</span><div>כל הדרייב<small>הדף הראשי</small></div></a>
  </nav>
