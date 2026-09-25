@@ -1462,7 +1462,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-25T11:14:02.981Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-25T11:15:13.625Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1520,7 +1520,7 @@ try{
  <button type="button" class="conn" id="homeBtn" title="חזרה לבית" hidden>בית</button>
  <button type="button" class="conn" id="setBtn" title="הגדרות" aria-label="הגדרות">הגדרות</button>
  <div class="hdtext">
-  <div class="t">מוניטור בבניין עצמי</div>
+  <div class="t">מוניטור בבנייה עצמית</div>
   <div class="s" id="built"></div>
   <div class="s dim" id="checked"></div>
  </div>
@@ -2399,7 +2399,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='28da2fa727';
+var CODE_ID='9df4da99a8';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
