@@ -158,7 +158,31 @@ function waiting() {
     .filter((m) => !(m.id && answeredIds.has(m.id)))
     .filter((m) => !done[m.file])
     .filter((m) => now - Date.parse(m.at) > SETTLE_MS)
+    .filter((m) => heard(m, now))
     .sort((a, b) => (a.at < b.at ? -1 : 1));
+}
+
+/*
+  A voice note waits for its transcription.
+
+  Itzik, 25.9: "הוא לא הבין הקלטות". On the cloud server whisper takes about
+  forty five seconds for a one minute note, and the settle time above is
+  twenty. So the session started, found a message whose whole content was
+  "(הודעה קולית: voice-....webm)", and answered a man it had not heard. The
+  transcript landed in the note eight seconds after the session had begun.
+
+  A message with a voice file and no transcript yet is held until the
+  listener writes one. Held, not dropped: after four minutes it goes anyway,
+  and the prompt already tells the session to transcribe it itself, because a
+  transcription that never comes must not become a message nobody answers.
+*/
+const VOICE = /.(webm|m4a|ogg|mp3|aac|wav)$/i;
+const HEAR_MAX_MS = 4 * 60 * 1000;
+function heard(m, now) {
+  const voice = (m.files || []).some((f) => VOICE.test(f));
+  if (!voice) return true;
+  if (/^תמלול:/.test(String(m.note || ''))) return true;
+  return now - Date.parse(m.at) > HEAR_MAX_MS;
 }
 
 /*
