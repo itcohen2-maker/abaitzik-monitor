@@ -578,7 +578,12 @@ async function handleOne(m) {
   say('הודעה: ' + String(m.message || '(צרופה)').slice(0, 80));
   if (m.attachment) await saveAttachment(m);
   if (m.message) logPull('text', m.message);
-  const routed = await codexRoute.route(m, codexBridge);
+  // With the bridge off, a message that looks like a Codex request is an
+  // ordinary message. Routing it anyway would swallow it: matched messages
+  // never reach recordIncoming, so it would leave no trace in his chat.
+  const routed = process.env.ABAITZIK_CODEX === '1'
+    ? await codexRoute.route(m, codexBridge)
+    : { matched: false };
   if (routed.matched) {
     say(routed.duplicate ? 'בקשת קודקס כבר נמסרה: ' + routed.sourceId
       : 'בקשת קודקס נמסרה לשיחה: ' + routed.sourceId);
@@ -697,14 +702,21 @@ if (require.main === module) (async () => {
     say('מאזין אחר כבר רץ. יוצא בלי לעשות כלום.');
     return;
   }
-  try {
-    const mailbox = await codexBridge.ensureMailbox();
-    say(mailbox.started ? 'תיבת קודקס הופעלה מחדש.' : 'תיבת קודקס מחוברת.');
-  } catch (e) {
-    // Keep listening even if Codex is temporarily unavailable. An explicitly
-    // addressed request will remain unseen by remember() and retry after the
-    // stream reconnects.
-    say('!! תיבת קודקס לא זמינה: ' + e.message);
+  /*
+    Codex is off. Itzik, 25.9: "אין לנו צורך בקודקס".
+
+    It also could not have worked here: the mailbox lives in a folder on his
+    PC, and since the move to the cloud server this line only produced a
+    failure notice on every restart. The route below is left in place, so
+    turning the bridge back on is one environment variable and nothing else.
+  */
+  if (process.env.ABAITZIK_CODEX === '1') {
+    try {
+      const mailbox = await codexBridge.ensureMailbox();
+      say(mailbox.started ? 'תיבת קודקס הופעלה מחדש.' : 'תיבת קודקס מחוברת.');
+    } catch (e) {
+      say('!! תיבת קודקס לא זמינה: ' + e.message);
+    }
   }
   setInterval(beat, BEAT_MS);
   setInterval(drainQueue, BEAT_MS);
