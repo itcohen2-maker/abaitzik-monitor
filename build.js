@@ -9821,7 +9821,7 @@ function gateUI(){
  w.innerHTML='<div class="gatecard">'
   +'<b class="gt-t">'+esc((INSTANCE&&INSTANCE.name==='abaitzik')?'אבא איציק':(INSTANCE&&INSTANCE.owner||''))+'</b>'
   +'<div class="gt-s">הדף נעול. תקליד את הקוד פעם אחת והמכשיר הזה יזכור אותו.'
-  +'<br>הקוד נשלח אליך בהתראה לטלפון, בנושא הקוד לפתיחת הדף.</div>'
+  +'<br>'+((INSTANCE&&INSTANCE.name!=='abaitzik')?'זה הקוד שבחרת בהתקנה.':'הקוד נשלח אליך בהתראה לטלפון, בנושא הקוד לפתיחת הדף.')+'</div>'
   +'<form id="gateForm"><input id="gateIn" type="tel" inputmode="numeric" autocomplete="off"'
   +' maxlength="12" placeholder="הקוד"><button type="submit" id="gateGo">פתיחה</button></form>'
   +'<div class="gt-e" id="gateSaid"></div>'
