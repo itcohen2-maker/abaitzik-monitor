@@ -1671,6 +1671,7 @@ body.editing .bn{display:none}
 /* נר. Night behind the flames, the way the site itself looks. */
 .c-nr{background:linear-gradient(160deg,#243a6b,#0B1330)}
 .c-sl{background:linear-gradient(160deg,#f472b6,#be185d)}
+.c-el{background:linear-gradient(160deg,#1f8f7d,#14675a)}
 /* קבלות. Paper, not a brand colour: the page behind it is a ledger. */
 .c-kb{background:linear-gradient(160deg,#34d399,#047857)}
 .c-vd{background:linear-gradient(160deg,#fbbf24,#d97706)}
@@ -2805,6 +2806,12 @@ try{
     <path fill="#FFF3D6" d="M9.5 10.3c1.2-1 .9-2.3 0-3.4-.9 1.1-1.2 2.4 0 3.4z"/>
     <path fill="#FFF3D6" d="M14.5 10.3c1.2-1 .9-2.3 0-3.4-.9 1.1-1.2 2.4 0 3.4z"/>
    </svg></span>נרות</a>
+  <!--
+    אילי. איציק, 25.9: "אני לא רואה כפתור איליי". The mockup of Eli's own
+    monitor was only a link in a chat message; it is a round button now.
+  -->
+  <a class="ic" href="eli.html"><span class="c c-el">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 21c1.2-4 4-6 7.5-6s6.3 2 7.5 6"/></svg></span>אילי</a>
   <!--
     קבלות goes here. The markup and the .c-kb colour are ready, and so is
     build-kabalot.js, but the button stays out until data/receipts.json
@@ -3950,10 +3957,19 @@ function transcriptOf(m){
  var n=String(m.note||'');
  return /^\\s*תמלול:/.test(n)?n.replace(/^\\s*תמלול:\\s*/,'').trim():'';
 }
+// איציק, 25.9: "אם יש הקלטה לא טובה, תביא אותה פה בתשובה, אני לא הולך לחפש
+// אותה". הקלטה שלא תומללה מתנגנת כאן, בתוך ההודעה, ולא רק במסך ההקלטות.
+// בלי לוכסן בביטוי, מאותה סיבה כמו ב renderVoices.
+function voiceAudio(m){
+ var link=String((m&&m.note)||'').match(/files[/]voice-[^ ]+/);
+ return link?'<audio controls preload="none" src="'+esc(link[0])+'" style="width:100%;margin-top:6px"></audio>':'';
+}
 function voiceBlock(m){
  if(!hasVoice(m))return '';
  var t=transcriptOf(m);
  if(t)return '<div class="vtx"><b>תמלול</b>'+esc(t)+'</div>';
+ var au=voiceAudio(m);
+ if(au)return '<div class="vtx vwait"><b>לא תומלל</b>ההקלטה כאן, אפשר להאזין.'+au+'</div>';
  // הקלטה ישנה שאין לה תמלול שמור לא מתמללת את עצמה עכשיו. השורה אומרת
  // מה קרה ולא מבטיחה טקסט שלא יגיע.
  var age=Date.now()-(Date.parse(m.at||'')||0);
@@ -6143,7 +6159,8 @@ function renderAnswers(){
     ?'<details class="qfold"><summary>'+esc(one)+'</summary>'
      +'<div class="atxt">'+linkify(qt)+'</div></details>'
     :'<span class="qline">'+linkify(one)+'</span>';
-   ask='<div class="aq"><span class="w">אתה · '+esc(stamp(m.q.at))+'</span>'+qb+'</div>';
+   var qau=/^ *תמלול:/.test(String(m.q.note||''))?'':voiceAudio(m.q);
+   ask='<div class="aq"><span class="w">אתה · '+esc(stamp(m.q.at))+'</span>'+qb+qau+'</div>';
   }
   return '<div class="ansc'+(his?' mine':' '+ansColor(m))+(m.q?' pair':'')+'" data-i="'+i+'">'
    +ask
