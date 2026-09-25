@@ -294,6 +294,15 @@ function build() {
   const plan = loadDocs('plan')
     .map(x => ({ id: x.id, day: x.day || '', text: x.text || '', network: x.network || '', status: x.status || 'planned' }))
     .sort((a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : 0));
+  /*
+    Other monitors this server runs, as one colour each. Itzik, 25.9: a button
+    for Ilay's monitor, green when it is fine, red on a break. Only the state
+    and the reasons reach the page; not the folder, not the service names, and
+    never anything from inside the other instance.
+  */
+  const tenants = loadDocs('tenants')
+    .map(x => ({ id: x.id, title: x.title || x.id, state: x.state || 'unknown',
+                 problems: Array.isArray(x.problems) ? x.problems : [], checkedAt: x.checkedAt || '', beatAt: x.beatAt || '' }));
   const tasks = loadDocs('tasks')
     .map(x => ({ id: x.id, day: x.day || '', text: x.text || '', n: x.n || 0 }))
     .sort((a, b) => (a.day === b.day ? a.n - b.n : (a.day < b.day ? -1 : 1)));
@@ -458,6 +467,7 @@ function build() {
     special,
     reminders,
     tasks,
+    tenants,
     ideas,
     plan,
     appts,
@@ -2700,6 +2710,8 @@ try{
   <button type="button" class="gt g18" id="gAppts"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
   <button type="button" class="gt g16" id="gRemind"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
   <button type="button" class="gt g10" id="gNotes"><b>📝 פתקים</b><small>נכתב, נשמר, לא הולך לאיבוד</small></button>
+  <!-- Other monitors on this server, one colour each. Hidden when there are none. -->
+  <button type="button" class="gt g3" id="gTenants" hidden><b>🟢 מוניטורים אחרים</b><small>ירוק תקין, אדום נתק</small></button>
   <!-- Ilay's two tiles. Hidden on Itzik's copy by the instance screens list. -->
   <button type="button" class="gt g11" id="gCIdeas" hidden><b>💡 רעיונות לתוכן</b><small>מה שעלה לך, לפני שנשכח</small></button>
   <button type="button" class="gt g3" id="gPlan" hidden><b>🗓️ לוח תוכן</b><small>מה עולה מתי, ומה כבר עלה</small></button>
@@ -3080,6 +3092,12 @@ try{
   <button type="submit" id="opBtn">שליחה</button>
  </form>
  <div id="opList"></div>
+</section>
+
+<section id="pTn" hidden>
+ <h2>מוניטורים אחרים</h2>
+ <div class="rephint">רק האם הם חיים. שום דבר מהתוכן שלהם לא מגיע לכאן.</div>
+ <div id="tnBox"></div>
 </section>
 
 <section id="pCI" hidden>
@@ -4816,7 +4834,7 @@ function updateDot(){
  document.title=(fresh?'(1) ':'')+'אבא איציק בבנייה עצמית';
 }
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
-var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl'};
+var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
 // The last dose. From the chat it is read out of the message text, because he
@@ -7410,6 +7428,33 @@ document.addEventListener('change',function(e){
 });
 on('gCIdeas',function(){pane('I');renderIdeas();});
 on('gPlan',function(){pane('P');renderPlan();});
+function renderTenants(){
+ var host=document.getElementById('tnBox');
+ if(!host)return;
+ var h='';
+ (D.tenants||[]).forEach(function(t){
+  var ok=t.state==='ok',when='';
+  try{when=new Date(t.checkedAt).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});}catch(e){}
+  h+='<div class="tk'+(ok?' done':'')+'" style="border-inline-start:6px solid '+(ok?'#2e7d32':'#c62828')+'"><span><b>'+(ok?'🟢':'🔴')+' '+esc(t.title)+'</b>'
+   +(ok?' תקין':' נתק')+(when?' <small>נבדק '+esc(when)+'</small>':'')
+   +(t.problems&&t.problems.length?'<br><small>'+t.problems.map(esc).join(' · ')+'</small>':'')+'</span></div>';
+ });
+ host.innerHTML=h||'<div class="empty">אין מוניטורים אחרים בשרת הזה.</div>';
+}
+// The tile itself carries the colour, so he sees it without opening anything.
+// Runs from the boot list, after the payload is open, like every other screen.
+function paintTenantsTile(){
+ var b=document.getElementById('gTenants');
+ if(!b)return;
+ var T=D.tenants||[];
+ if(!T.length)return;
+ b.hidden=false;
+ var bad=T.filter(function(t){return t.state!=='ok';});
+ b.querySelector('b').textContent=(bad.length?'🔴 ':'🟢 ')+(T.length===1?T[0].title:'מוניטורים אחרים');
+ b.querySelector('small').textContent=bad.length?'נתק: '+bad.map(function(t){return t.title;}).join(', '):'הכל תקין';
+ b.style.background=bad.length?'linear-gradient(180deg,#ef5350,#b71c1c)':'linear-gradient(180deg,#66bb6a,#1b5e20)';
+}
+on('gTenants',function(){pane('N3');renderTenants();});
 function renderTasks(){
  var host=document.getElementById('tkBox');
  if(!host)return;
@@ -9739,7 +9784,7 @@ function gateUI(){
  var w=document.createElement('div');
  w.id='gateWrap';
  w.innerHTML='<div class="gatecard">'
-  +'<b class="gt-t">אבא איציק</b>'
+  +'<b class="gt-t">'+esc((INSTANCE&&INSTANCE.name==='abaitzik')?'אבא איציק':(INSTANCE&&INSTANCE.owner||''))+'</b>'
   +'<div class="gt-s">הדף נעול. תקליד את הקוד פעם אחת והמכשיר הזה יזכור אותו.'
   +'<br>הקוד נשלח אליך בהתראה לטלפון, בנושא הקוד לפתיחת הדף.</div>'
   +'<form id="gateForm"><input id="gateIn" type="tel" inputmode="numeric" autocomplete="off"'
@@ -9821,6 +9866,7 @@ boot('improve',renderImprove);
 boot('special',renderSpecial);
 boot('reminders',renderReminders);
 boot('tasks',renderTasks);
+boot('tenants',paintTenantsTile);
 boot('appts',renderAppts);
 boot('replies',renderReplies);
 boot('reqs',renderReqs);
