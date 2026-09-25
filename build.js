@@ -9857,7 +9857,19 @@ function gateBoot(){
  // behaviour and needs no version number of its own.
  var saved=null;
  try{saved=localStorage.getItem('gateKey');}catch(e){}
+ /*
+   No lock card on a phone that already has the key.
+
+   Itzik, 25.9: "every time I open the monitor I see the code box for a
+   second, can it disappear". It could: the card was drawn first and taken
+   away only after the saved key had decrypted the page, so every single open
+   flashed it. With a saved key the card now stays invisible. It shows only if
+   the key is proven wrong, or if four seconds pass without the page opening,
+   so a slow network never leaves him staring at nothing.
+ */
  if(saved){
+  wrap.style.visibility='hidden';
+  var reveal=setTimeout(function(){if(wrap.parentNode)wrap.style.visibility='';},4000);
   /*
     A saved key is dropped only when it is proven wrong.
 
@@ -9871,9 +9883,10 @@ function gateBoot(){
   crypto.subtle.importKey('raw',gbytes(saved),{name:'AES-GCM'},true,['decrypt'])
    .then(function(k){GKEY=k;return load();})
    .then(function(ok){
-    if(ok===false){GKEY=null;try{localStorage.removeItem('gateKey');}catch(e){}}
+    if(ok===false){GKEY=null;try{localStorage.removeItem('gateKey');}catch(e){}clearTimeout(reveal);wrap.style.visibility='';}
+    else if(ok===true)clearTimeout(reveal);
    })
-   .catch(function(){GKEY=null;});
+   .catch(function(){GKEY=null;clearTimeout(reveal);wrap.style.visibility='';});
  }
  form.onsubmit=function(e){
   e.preventDefault();

@@ -1448,7 +1448,11 @@ test('a saved key is dropped only when it is proven wrong', () => {
   // ask him for the code again on every open. Null means retry; only a decrypt
   // that threw means the key is wrong.
   assert.ok(html.includes('if(ok===false){GKEY=null;'));
-  assert.ok(html.includes(".catch(function(){GKEY=null;});"));
+  // The catch reveals the card now (25.9, no flash on open) but still never
+  // removes the saved key: a thrown import is not proof the key is wrong.
+  assert.ok(html.includes(".catch(function(){GKEY=null;clearTimeout(reveal);wrap.style.visibility='';});"));
+  const c = html.slice(html.indexOf(".catch(function(){GKEY=null;clearTimeout(reveal)"), html.indexOf(".catch(function(){GKEY=null;clearTimeout(reveal)") + 120);
+  assert.ok(!c.includes('removeItem'));
   assert.ok(html.includes("if(txt===false)return false;"));
   assert.ok(html.includes("if(!txt)return null;"));
   assert.ok(html.includes("if(ok===null){said.textContent='אין רשת כרגע. נסה שוב עוד רגע.';"));
