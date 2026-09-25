@@ -1462,7 +1462,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-25T11:35:20.883Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-25T11:38:01.015Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2399,7 +2399,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='1f012ea73b';
+var CODE_ID='4b0185803e';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -4279,7 +4279,7 @@ function renderAnswers(){
   b.onclick=function(e){e.stopPropagation();
    var m=at(b);
    if(!isStandby(m))markOneSeen(m);
-   toggleStandby(m);renderAnswers();paintDot();};
+   toggleStandby(m);renderAnswers();paintDot();renderNew();};
  });
  Array.prototype.forEach.call(host.querySelectorAll('.ansc'),function(card){
   if(card.className.indexOf('mine')>-1)return;
@@ -4296,7 +4296,7 @@ function renderAnswers(){
    if(!m)return;
    ansKeep[claudeKey(m)]=1;
    if(isDone(m)&&!isFresh(m)){ringFor(card);return;}
-   markOneSeen(m);renderAnswers();paintDot();
+   markOneSeen(m);renderAnswers();paintDot();renderNew();
    var again=host.querySelector('.ansc[data-i="'+card.getAttribute('data-i')+'"]');
    if(again)ringFor(again);
   });
@@ -4311,10 +4311,10 @@ function renderAnswers(){
   b.onclick=function(e){e.stopPropagation();
    var m=at(b);
    if(isDone(m)&&!isFresh(m))unDone(m);else markOneSeen(m);
-   renderAnswers();paintDot();};
+   renderAnswers();paintDot();renderNew();};
  });
  Array.prototype.forEach.call(host.querySelectorAll('.aread'),function(b){
-  b.onclick=function(e){e.stopPropagation();markOneSeen(at(b));renderAnswers();paintDot();};
+  b.onclick=function(e){e.stopPropagation();markOneSeen(at(b));renderAnswers();paintDot();renderNew();};
  });
  if(full.length>list.length){
   var more=document.createElement('button');

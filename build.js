@@ -6184,7 +6184,7 @@ function renderAnswers(){
    // Standby is a state he reached by looking at the answer, so it also counts
    // as read. Without that the card would go orange and stay in the red count.
    if(!isStandby(m))markOneSeen(m);
-   toggleStandby(m);renderAnswers();paintDot();};
+   toggleStandby(m);renderAnswers();paintDot();renderNew();};
  });
  // "The moment I touch them they are green." A touch anywhere on the card that
  // is not a button, a link or a field marks it read.
@@ -6214,7 +6214,7 @@ function renderAnswers(){
    // cannot move and the ring is the only thing that answers his finger.
    ansKeep[claudeKey(m)]=1;
    if(isDone(m)&&!isFresh(m)){ringFor(card);return;}
-   markOneSeen(m);renderAnswers();paintDot();
+   markOneSeen(m);renderAnswers();paintDot();renderNew();
    var again=host.querySelector('.ansc[data-i="'+card.getAttribute('data-i')+'"]');
    if(again)ringFor(again);
   });
@@ -6230,10 +6230,10 @@ function renderAnswers(){
   b.onclick=function(e){e.stopPropagation();
    var m=at(b);
    if(isDone(m)&&!isFresh(m))unDone(m);else markOneSeen(m);
-   renderAnswers();paintDot();};
+   renderAnswers();paintDot();renderNew();};
  });
  Array.prototype.forEach.call(host.querySelectorAll('.aread'),function(b){
-  b.onclick=function(e){e.stopPropagation();markOneSeen(at(b));renderAnswers();paintDot();};
+  b.onclick=function(e){e.stopPropagation();markOneSeen(at(b));renderAnswers();paintDot();renderNew();};
  });
  if(full.length>list.length){
   var more=document.createElement('button');
