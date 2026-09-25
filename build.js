@@ -655,6 +655,37 @@ function build() {
   // this file for anything missing under the repo, so now every wrong address
   // ends on a door back to the monitor.
   fs.writeFileSync(path.join(OUT_DIR, '404.html'), NOT_FOUND, 'utf8');
+  /*
+    The home screen install, for an instance that does not have one.
+
+    Itzik's manifest and icons were written by hand long ago and live in the
+    repo under docs/, so his copy never needed the build to make them. A new
+    instance is built from nothing: without these, "add to home screen" on an
+    iPhone gives a blank tile named after the URL. The build writes them only
+    when they are missing, so Itzik's hand made files are never touched.
+  */
+  const MANIFEST = path.join(OUT_DIR, 'manifest.webmanifest');
+  if (!fs.existsSync(MANIFEST)) {
+    fs.writeFileSync(MANIFEST, JSON.stringify({
+      name: inst.pageTitle, short_name: inst.appTitle,
+      description: 'מה נכנס, מה נענה, ומה עוד מחכה.',
+      start_url: './', scope: './', display: 'standalone', dir: 'rtl', lang: 'he',
+      background_color: '#191714', theme_color: '#14675a',
+      icons: [
+        { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+        { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+      ],
+    }, null, 2), 'utf8');
+  }
+  const ICONS = path.join(OUT_DIR, 'icons');
+  const SRC_ICONS = path.join(__dirname, 'public', 'icons');
+  if (!fs.existsSync(path.join(ICONS, 'icon-192.png')) && fs.existsSync(SRC_ICONS)) {
+    fs.mkdirSync(ICONS, { recursive: true });
+    for (const f of ['icon-180.png', 'icon-192.png', 'icon-512.png']) {
+      const from = path.join(SRC_ICONS, f);
+      if (fs.existsSync(from)) fs.copyFileSync(from, path.join(ICONS, f));
+    }
+  }
   // איציק, 17.9: "כל הסרטונים שעשינו תשמור, כי את זה אנחנו מעלים לאתר."
   // כל mp4 ששמור תחת docs/files נכנס לכאן מעצמו בכל בנייה, ושום דבר לא נמחק.
   fs.writeFileSync(path.join(OUT_DIR, 'videos.html'), videosPage(), 'utf8');
