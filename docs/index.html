@@ -635,6 +635,9 @@ section{margin-bottom:30px}
  box-shadow:0 2px 6px rgba(66,133,244,.4),inset 0 1px 0 rgba(255,255,255,.3)}
 .quickrow button:active{background:linear-gradient(180deg,var(--blue),#1b63d6);box-shadow:none}
 .quickrow button[disabled]{opacity:.55}
+#remForm{flex-wrap:wrap}
+#remForm input{min-width:0}
+#remForm #remDate{flex:1 1 100%}
 .nextrep{display:flex;align-items:center;gap:12px;margin-bottom:12px;
  background:var(--surface);border:1px solid var(--line);border-radius:16px;
  padding:12px 14px;box-shadow:var(--shadow)}
@@ -1463,7 +1466,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-25T12:56:16.349Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-25T13:51:41.274Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1819,8 +1822,10 @@ try{
  <h2>הקלטות שלא תומללו</h2>
  <div class="hint">
   <b>אלה ההודעות הקוליות שלך שלא הצלחתי להפוך למילים.</b>
-  איציק, 19.9: "אם אתה לא מצליח לתמלל שלח לי שאני אקשיב". אז הן כאן, ואפשר
-  ללחוץ ולשמוע. כשתדע מה אמרת שם, תכתוב לי בצ׳אט ואני ממשיך מזה.
+
+  איציק, 19.9: "אם אתה לא מצליח לתמלל שלח לי שאני אקשיב". אז הן כאן.
+
+  אפשר ללחוץ ולשמוע. כשתדע מה אמרת שם, תכתוב לי בצ׳אט ואני ממשיך מזה.
   אם המסך ריק, זה אומר שהכל תומלל.
  </div>
  <div id="vcBody"></div>
@@ -2453,7 +2458,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='eb8bdd2703';
+var CODE_ID='ffdebfd5c4';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -2652,7 +2657,10 @@ function pending(){
 function savePending(a){
  try{localStorage.setItem('pendingMsgs',JSON.stringify(a));}catch(e){}
 }
-var SCREENWORD={reports:'הדוחות',block:'לחסימה',drains:'הניקוזים',voices:'ההקלטות',answers:'התשובות',chat:'הצ׳אט',got:'מה שהתקבל',replies:'התשובות ברשתות',special:'הבקשות',pegasus:'פגסוס',improve:'מה השתפר'};
+var SCREENWORD={reports:'הדוחות',block:'לחסימה',drains:'הניקוזים',voices:'ההקלטות',answers:'התשובות',chat:'הצ׳אט',got:'מה שהתקבל',replies:'התשובות ברשתות',special:'הבקשות',improve:'מה השתפר'};
+
+SCREENWORD.pegasus='פגסוס';
+
 function screenLinks(t){
  var out='';
  var seen={};
@@ -3400,6 +3408,7 @@ function updateDot(){
 }
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
 var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn'};
+
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
 function lastPill(){
  var c=(D.chat||[]).filter(function(m){return m.from==='itzik'&&/לקחתי כדור/.test(m.text||'');});
@@ -3460,12 +3469,15 @@ var LANDING=[
  {name:'שיטת הפירה',note:'מילת המפתח: גזר',url:'https://abaitzik.com/gezer'},
  {name:'סלינדה',note:'אתר',url:'https://salinda-mobile.vercel.app/'}
 ];
+
 var NAVS={h:'nH',q:'nQ',l:'nL',a:'nA',r:'nR'};
+
 
 var APPS={youtube:{t:'יוטיוב סטודיו',u:'https://studio.youtube.com/'},
  tiktok:{t:'טיקטוק סטודיו',u:'https://www.tiktok.com/tiktokstudio/comment'},
  facebook:{t:'מנהל התגובות',u:'https://www.facebook.com/professional_dashboard/engagement/comments_manager/'},
  instagram:{t:'אינסטגרם',u:'https://www.instagram.com/abaitzik/'}};
+
 var HOT={personal:1,pain:1,offer_help:1,donation:1,medical_advice:1};
 var curNet='all';
 function netLines(body,k){
@@ -5306,6 +5318,7 @@ on2('remForm','submit',function(e){
  }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';});
 });
 
+
 function renderPegasus(){
  var host=document.getElementById('pegBox');
  if(!host)return;
@@ -5341,6 +5354,7 @@ function renderPegasus(){
  wireBoxes(host);
 }
 on('gPegasus',function(){pane('x');renderPegasus();ensure('pegasus',renderPegasus);});
+
 on('growBtn',function(){pane('w');renderImprove();ensure('improve',renderImprove);});
 on('gSpecial',function(){pane('y');renderSpecial();markSpecialSeen();ensure('special',renderSpecial);});
 on('gReplies',function(){pane('k');renderReplies();markRepliesSeen();ensure('replies',renderReplies);});
@@ -6092,6 +6106,7 @@ on2('ideaForm','submit',function(e){
  }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';});
 });
 
+
 document.getElementById('opForm').onsubmit=function(e){
  e.preventDefault();
  var box=document.getElementById('opText');
@@ -6103,6 +6118,7 @@ document.getElementById('opForm').onsubmit=function(e){
   box.value='';said.textContent='נשלח. אני מוסיף את זה.';toast(said.textContent);
  }).catch(function(){said.textContent='לא נשלח. תנסה שוב.';});
 };
+
 
 function notes(){
  return idList('notes');
@@ -6339,6 +6355,7 @@ document.getElementById('gQueue').onclick=function(){openNet('all');};
 (function(){var b=document.getElementById('gReports');if(!b)return;
  b.onclick=function(){markReportsSeen();openAnswers('all',true);};})();
 on('gMail',function(){pane('e');});
+
 function openPill(){pane('p');renderPill();openPillSheet();}
 on('gPill',openPill);on('iPill',openPill);
 document.getElementById('pillBig').onclick=function(){openPillSheet();};
@@ -6352,6 +6369,7 @@ on('pillOk',function(){
  recordPill(ML.resolveTaken(v,Date.now()));
 });
 on('pillCancel',closePillSheet);
+
 on('gAsk',function(){askInChat('');});
 paintReportDot();
 document.getElementById('leads').addEventListener('click',function(e){
@@ -6365,9 +6383,12 @@ document.getElementById('leads').addEventListener('click',function(e){
 });
 document.getElementById('icMail').onclick=function(){pane('e');};
 document.getElementById('icDrive').onclick=function(){pane('d');};
+
 document.getElementById('icVaad').onclick=function(){pane('v');ensure('rivhit',renderRivhit);};
 document.getElementById('vaadAsk').onclick=function(){askInChat('ועד הבית: ');};
+
 document.getElementById('icAdd').onclick=function(){askInChat('מודול חדש שאני רוצה: ');};
+
 function loadVisits(){
  var box=document.getElementById('visitsList');
  var again=document.getElementById('visitsAgain');
@@ -6431,6 +6452,7 @@ document.getElementById('landList').innerHTML=LANDING.map(function(l){
   +'<span class="chip">'+esc(l.note)+'</span></div>'
   +'<a class="ask" href="'+esc(l.url)+'" target="_blank" rel="noopener">פתיחת הדף</a></div>';
 }).join('')+'<div class="empty">דף נחיתה חדש נכנס לכאן. תשלח לי בצ׳אט את הכתובת ואת מילת המפתח שמפעילה אותו.</div>';
+
 document.getElementById('urgBtn').onclick=function(){
  pane('m');renderThread();
  var f=document.getElementById('fileForm');
@@ -7008,6 +7030,7 @@ on('resetBtn',function(){
  if(said)said.textContent='אופס. המונה על אפס, ורק מה שיגיע מעכשיו יידלק.';
  toast('אופס. רק מה שיגיע מעכשיו יידלק.');
 });
+
 var RIVTAG={exact:['rv-exact','חיוב חדש, טרם הגיע מועד'],near:['rv-near','חלקו ישן וחלקו חדש'],partial:['rv-partial','חוב ישן לגמרי']};
 function ils(n){
  if(n==null)return '';
@@ -7058,6 +7081,7 @@ function renderRivhit(){
  }
  if(ah)ah.hidden=!A.length;
 }
+
 var bootFailed=[];
 function boot(name,fn){try{fn();}catch(e){bootFailed.push(name);try{console.error('boot '+name,e);}catch(_){}}}
 function gateUI(){
@@ -7143,13 +7167,18 @@ boot('install',function(){
  var ios=/iPhone|iPad|iPod/i.test(navigator.userAgent||'');
  var bar=document.createElement('div');
  bar.id='installBar';
- bar.setAttribute('style','position:fixed;inset-inline:10px;bottom:84px;z-index:9000;background:#14675a;color:#fff;'
-  +'border-radius:16px;padding:14px 16px;font-size:16px;line-height:1.5;box-shadow:0 8px 30px rgba(0,0,0,.45)');
+ bar.setAttribute('style','margin:14px 0;background:#14675a;color:#fff;'
+  +'border-radius:16px;padding:14px 16px;font-size:16px;line-height:1.5;box-shadow:0 4px 16px rgba(0,0,0,.25)');
  bar.innerHTML=ios
   ?'<b>להפוך את המוניטור לאפליקציה</b><br>1. למטה בספארי לוחצים על כפתור השיתוף <span style="font-size:20px">⬆️</span><br>'
    +'2. גוללים ולוחצים <b>הוספה למסך הבית</b><br>3. פותחים מהאייקון החדש. בלי שורת כתובת, כמו כל אפליקציה.'
   :'<b>להפוך את המוניטור לאפליקציה</b><br><span id="installHow">בתפריט של כרום (שלוש הנקודות): <b>התקנת האפליקציה</b> או <b>הוספה למסך הבית</b>.</span>';
- document.body.appendChild(bar);
+ bar.innerHTML+='<button type="button" id="installLater" style="margin-top:8px;width:100%;padding:10px;border:1px solid rgba(255,255,255,.5);'
+  +'border-radius:10px;background:transparent;color:#fff;font-size:15px">אחר כך</button>';
+ var tiles=document.getElementById('newBlock')||document.getElementById('blkTiles');
+ if(tiles&&tiles.parentNode)tiles.parentNode.insertBefore(bar,tiles);
+ else document.body.appendChild(bar);
+ document.getElementById('installLater').onclick=function(){bar.remove();};
  window.addEventListener('beforeinstallprompt',function(e){
   e.preventDefault();
   var how=document.getElementById('installHow');
