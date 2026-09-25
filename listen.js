@@ -33,19 +33,22 @@ const group = require('./lib/group.js');
 const drains = require('./lib/drains.js');
 const { execFile } = require('child_process');
 
-const TOPIC = 'abaitzik-in-95e62e86c34f4853';
-const LIVE = TOPIC + '-live';
-const SEEN = path.join(__dirname, 'data', 'ntfy-seen.json');
-const DROP = path.join(__dirname, 'data', 'inbox');
-const STATUS = path.join(__dirname, 'data', 'status');
+// Which monitor this is. Without instance.json every one of these is Itzik's
+// current value, so the listener subscribes to exactly what it did yesterday.
+const inst = require('./lib/instance.js');
+const TOPIC = inst.ntfy.in;
+const LIVE = inst.ntfy.live;
+const SEEN = path.join(inst.dataPath, 'ntfy-seen.json');
+const DROP = path.join(inst.dataPath, 'inbox');
+const STATUS = path.join(inst.dataPath, 'status');
 const LIVEFILE = path.join(STATUS, 'live.json');
 const PULLS = path.join(STATUS, 'pulls.json');
 // The chat folder can be pointed somewhere else so the merge can be exercised
 // against real files without writing into his actual conversation.
 const CHAT = process.env.ABAITZIK_CHAT_DIR
-  || path.join(__dirname, 'data', 'chat', 'chat');
+  || path.join(inst.dataPath, 'chat', 'chat');
 const DRAINS = process.env.ABAITZIK_DRAINS_DIR
-  || path.join(__dirname, 'data', 'drains', 'drains');
+  || path.join(inst.dataPath, 'drains', 'drains');
 
 /*
   How often the pulse goes out.
@@ -717,7 +720,7 @@ function releaseLock() {
   process.on(sig, function () { releaseLock(); if (sig !== 'exit') process.exit(0); });
 });
 
-module.exports = { recordIncoming, isSystemText, recordDrain };
+module.exports = { recordIncoming, isSystemText, recordDrain, TOPIC, LIVE };
 
 /*
   Requiring this file must not open a connection or claim the lock. A test that

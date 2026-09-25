@@ -11,9 +11,11 @@
 const fs = require('fs');
 const path = require('path');
 
-const TOPIC = 'abaitzik-in-95e62e86c34f4853';
-const SEEN = path.join(__dirname, 'data', 'ntfy-seen.json');
-const DROP = path.join(__dirname, 'data', 'inbox');
+// Which monitor this is. Defaults are Itzik's topic and folders.
+const inst = require('./lib/instance.js');
+const TOPIC = inst.ntfy.in;
+const SEEN = path.join(inst.dataPath, 'ntfy-seen.json');
+const DROP = path.join(inst.dataPath, 'inbox');
 
 // ntfy's `since` is a second-resolution timestamp, and a voice memo lands in
 // the same second as the line that describes it. Asking for time+1 dropped one
