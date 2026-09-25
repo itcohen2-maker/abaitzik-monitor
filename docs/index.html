@@ -1462,7 +1462,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-25T10:41:13.317Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-25T11:14:02.981Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2399,8 +2399,10 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='551de1895e';
-var INSTANCE={"name":"abaitzik","owner":"איציק","screens":null};
+var CODE_ID='28da2fa727';
+var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null};
+var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
+var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -2734,7 +2736,7 @@ function bubbleHtml(m,i,fresh,handled){
  var mine=m.from==='itzik';
  var live=isLive(m);
  var vb=voiceBlock(m),vtx=vb?transcriptOf(m):'';
- var line=(mine?'איציק':'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'')
+ var line=(mine?OWNER:'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'')
   +(vtx?String.fromCharCode(10)+'תמלול: '+vtx:'');
  return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')+(live?' beat':'')
   +(fresh?' fresh':(handled?' touched':' read'))+'" data-i="'+i+'"'
@@ -2804,7 +2806,7 @@ function renderThread(){
    return bubbleHtml(m,i,fresh,handled);
   }).join('');
   var ri2=flat.indexOf(t.root);
-  var whole=t.msgs.map(function(m){return (m.from==='itzik'?'איציק':'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');}).join(String.fromCharCode(10,10));
+  var whole=t.msgs.map(function(m){return (m.from==='itzik'?OWNER:'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');}).join(String.fromCharCode(10,10));
   return '<details class="th th-'+r.status+'" data-k="'+esc(t.key)+'"'+(ri===0&&r.status==='fresh'?' open':'')+'>'
    +'<summary><span class="num">'+r.n+'</span><b>'+esc(head)+'</b>'+tag
    +'<small>'+esc(stamp(t.last))+' · '+esc(ago(t.last))+' · '+t.msgs.length+'</small>'
@@ -3127,7 +3129,7 @@ document.getElementById('copyAll').onclick=function(){
   .slice().sort(function(a,b2){return (a.at||'')<(b2.at||'')?-1:1;});
  if(!all.length)return;
  var t=all.map(function(m){
-  return (m.from==='itzik'?'איציק':'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');
+  return (m.from==='itzik'?OWNER:'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');
  }).join(String.fromCharCode(10,10));
  var done=function(){b.textContent='הועתק';setTimeout(function(){b.textContent='העתקת כל השיחה';},1500);};
  if(navigator.clipboard&&navigator.clipboard.writeText){
@@ -3334,7 +3336,7 @@ function updateDot(){
  renderNew();
  var n=newestClaude(),fresh=!!(n&&n>chatSeen());
  var d=document.getElementById('mDot');if(d)d.hidden=!fresh;
- document.title=(fresh?'(1) ':'')+'אבא איציק בבנייה עצמית';
+ document.title=(fresh?'(1) ':'')+PAGE_TITLE;
 }
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
 var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn'};
@@ -5343,8 +5345,8 @@ function faceEnroll(cb){
  var uid=new Uint8Array(16);crypto.getRandomValues(uid);
  navigator.credentials.create({publicKey:{
   challenge:ch,
-  rp:{name:'המוניטור של אבא איציק'},
-  user:{id:uid,name:'itzik',displayName:'איציק'},
+  rp:{name:PAGE_TITLE},
+  user:{id:uid,name:(INSTANCE&&INSTANCE.name)||'itzik',displayName:OWNER},
   pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
   authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},
   timeout:60000,attestation:'none'
@@ -5807,7 +5809,7 @@ function diagnose(){
  var pA=document.getElementById('pA');
  var num=function(f){try{return f();}catch(e){return 'שגיאה: '+e.message;}};
  var L=[];
- L.push('אבחון מהמכשיר של איציק');
+ L.push('אבחון מהמכשיר של '+OWNER);
  L.push('גרסה '+(D.buildId||'?')+' · קוד '+(typeof CODE_ID!=='undefined'?CODE_ID:'?'));
  L.push('נעילה: '+(GATE?(GKEY?'נפתחה':'עדיין סגורה'):'כבויה'));
  var lazyNote=function(k){
@@ -5841,7 +5843,7 @@ on('diagBtn',function(){
  var said=document.getElementById('diagSaid');
  var txt;
  try{ txt=diagnose(); }
- catch(e){ txt='אבחון מהמכשיר של איציק'+String.fromCharCode(10)+'האבחון עצמו נפל: '+e.message; }
+ catch(e){ txt='אבחון מהמכשיר של '+OWNER+String.fromCharCode(10)+'האבחון עצמו נפל: '+e.message; }
  if(said)said.textContent='שולח.';
  sendText('אבחון',txt,'אבחון').then(function(){
   if(said)said.textContent='נשלח. אני רואה את זה עכשיו.';
@@ -6996,7 +6998,7 @@ function gateUI(){
  w.innerHTML='<div class="gatecard">'
   +'<b class="gt-t">'+esc((INSTANCE&&INSTANCE.name==='abaitzik')?'אבא איציק':(INSTANCE&&INSTANCE.owner||''))+'</b>'
   +'<div class="gt-s">הדף נעול. תקליד את הקוד פעם אחת והמכשיר הזה יזכור אותו.'
-  +'<br>הקוד נשלח אליך בהתראה לטלפון, בנושא הקוד לפתיחת הדף.</div>'
+  +'<br>'+((INSTANCE&&INSTANCE.name!=='abaitzik')?'זה הקוד שבחרת בהתקנה.':'הקוד נשלח אליך בהתראה לטלפון, בנושא הקוד לפתיחת הדף.')+'</div>'
   +'<form id="gateForm"><input id="gateIn" type="tel" inputmode="numeric" autocomplete="off"'
   +' maxlength="12" placeholder="הקוד"><button type="submit" id="gateGo">פתיחה</button></form>'
   +'<div class="gt-e" id="gateSaid"></div>'
@@ -7028,12 +7030,15 @@ function gateBoot(){
  var saved=null;
  try{saved=localStorage.getItem('gateKey');}catch(e){}
  if(saved){
+  wrap.style.visibility='hidden';
+  var reveal=setTimeout(function(){if(wrap.parentNode)wrap.style.visibility='';},4000);
   crypto.subtle.importKey('raw',gbytes(saved),{name:'AES-GCM'},true,['decrypt'])
    .then(function(k){GKEY=k;return load();})
    .then(function(ok){
-    if(ok===false){GKEY=null;try{localStorage.removeItem('gateKey');}catch(e){}}
+    if(ok===false){GKEY=null;try{localStorage.removeItem('gateKey');}catch(e){}clearTimeout(reveal);wrap.style.visibility='';}
+    else if(ok===true)clearTimeout(reveal);
    })
-   .catch(function(){GKEY=null;});
+   .catch(function(){GKEY=null;clearTimeout(reveal);wrap.style.visibility='';});
  }
  form.onsubmit=function(e){
   e.preventDefault();
