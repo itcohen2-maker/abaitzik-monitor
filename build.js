@@ -281,6 +281,19 @@ function build() {
     reminder: a reminder pushes once, this stays on the screen and he ticks
     each one off. The tick lives on his phone only.
   */
+  /*
+    Two collections for a brand builder's monitor. Ilay, in his intake on 25.9:
+    content is what eats his time and what he has let slide, ideas get
+    forgotten, there is no content calendar. So: ideas, as they come in, and a
+    plan, by day. On Itzik's copy both folders are absent and both lists are
+    empty, and the tiles that show them are not on his screen.
+  */
+  const ideas = loadDocs('ideas')
+    .map(x => ({ id: x.id, at: x.at || '', text: x.text || '', network: x.network || '', used: !!x.used }))
+    .sort((a, b) => (a.at < b.at ? 1 : -1));
+  const plan = loadDocs('plan')
+    .map(x => ({ id: x.id, day: x.day || '', text: x.text || '', network: x.network || '', status: x.status || 'planned' }))
+    .sort((a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : 0));
   const tasks = loadDocs('tasks')
     .map(x => ({ id: x.id, day: x.day || '', text: x.text || '', n: x.n || 0 }))
     .sort((a, b) => (a.day === b.day ? a.n - b.n : (a.day < b.day ? -1 : 1)));
@@ -445,6 +458,8 @@ function build() {
     special,
     reminders,
     tasks,
+    ideas,
+    plan,
     appts,
     replies,
     chat: chatClosed,
@@ -2685,6 +2700,9 @@ try{
   <button type="button" class="gt g18" id="gAppts"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
   <button type="button" class="gt g16" id="gRemind"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
   <button type="button" class="gt g10" id="gNotes"><b>📝 פתקים</b><small>נכתב, נשמר, לא הולך לאיבוד</small></button>
+  <!-- Ilay's two tiles. Hidden on Itzik's copy by the instance screens list. -->
+  <button type="button" class="gt g11" id="gCIdeas"><b>💡 רעיונות לתוכן</b><small>מה שעלה לך, לפני שנשכח</small></button>
+  <button type="button" class="gt g3" id="gPlan"><b>🗓️ לוח תוכן</b><small>מה עולה מתי, ומה כבר עלה</small></button>
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
   <!--
     איציק, 23.9, בהקלטה: "אפשר להסיר את כפתור בקשות מיוחדות".
@@ -3062,6 +3080,18 @@ try{
   <button type="submit" id="opBtn">שליחה</button>
  </form>
  <div id="opList"></div>
+</section>
+
+<section id="pCI" hidden>
+ <h2>רעיונות לתוכן</h2>
+ <div class="rephint">כל רעיון ששלחת נשמר כאן. לחיצה מסמנת שהשתמשת בו.</div>
+ <div id="ciBox"></div>
+</section>
+
+<section id="pPl" hidden>
+ <h2>לוח תוכן</h2>
+ <div class="rephint">מה מתוכנן לעלות, לפי יום. לחיצה מסמנת שעלה.</div>
+ <div id="plBox"></div>
 </section>
 
 <section id="pN2" hidden>
@@ -4786,7 +4816,7 @@ function updateDot(){
  document.title=(fresh?'(1) ':'')+'אבא איציק בבנייה עצמית';
 }
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
-var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs'};
+var PANES={I:'pCI',P:'pPl',z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
 // The last dose. From the chat it is read out of the message text, because he
@@ -7334,6 +7364,52 @@ function renderAppts(){
  }).join(''):'<div class="empty">אין תור עתידי.</div>';
 }
 function tkDone(){try{return JSON.parse(localStorage.getItem('tasksDone')||'{}');}catch(e){return {};}}
+/*
+  Ideas and the plan, for a brand builder's copy. Same shape as the tasks: a
+  list from the payload, a checkbox state kept on the phone. Marking an idea
+  used or a post published is his gesture and stays his; the server only ever
+  adds rows.
+*/
+function ciDone(){try{return JSON.parse(localStorage.getItem('ideasUsed')||'{}');}catch(e){return {};}}
+function renderIdeas(){
+ var host=document.getElementById('ciBox');
+ if(!host)return;
+ var used=ciDone(),h='';
+ (D.ideas||[]).forEach(function(t){
+  var when='';
+  try{when=new Date(t.at).toLocaleDateString('he-IL',{day:'numeric',month:'numeric'});}catch(e){}
+  h+='<label class="tk'+(used[t.id]||t.used?' done':'')+'"><input type="checkbox" data-ci="'+esc(t.id)+'"'
+   +(used[t.id]||t.used?' checked':'')+'><span>'+esc(t.text)+(t.network?' <small>'+esc(t.network)+'</small>':'')
+   +(when?' <small>'+esc(when)+'</small>':'')+'</span></label>';
+ });
+ host.innerHTML=h||'<div class="empty">עוד אין רעיונות. כל רעיון שתשלח למוניטור יופיע כאן.</div>';
+}
+function plDone(){try{return JSON.parse(localStorage.getItem('planDone')||'{}');}catch(e){return {};}}
+function renderPlan(){
+ var host=document.getElementById('plBox');
+ if(!host)return;
+ var done=plDone(),h='',last='';
+ (D.plan||[]).forEach(function(t){
+  if(t.day!==last){
+   last=t.day;
+   var lbl=t.day;
+   try{lbl=new Date(t.day+'T09:00:00').toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'});}catch(e){}
+   h+='<h3>'+esc(lbl)+'</h3>';
+  }
+  var isDone=done[t.id]||t.status==='published';
+  h+='<label class="tk'+(isDone?' done':'')+'"><input type="checkbox" data-pl="'+esc(t.id)+'"'
+   +(isDone?' checked':'')+'><span>'+esc(t.text)+(t.network?' <small>'+esc(t.network)+'</small>':'')+'</span></label>';
+ });
+ host.innerHTML=h||'<div class="empty">הלוח ריק. תגיד למוניטור מה אתה רוצה להעלות השבוע והוא יסדר.</div>';
+}
+document.addEventListener('change',function(e){
+ var t=e.target;if(!t||!t.getAttribute)return;
+ var ci=t.getAttribute('data-ci'),pl=t.getAttribute('data-pl');
+ if(ci){var d=ciDone();if(t.checked)d[ci]=new Date().toISOString();else delete d[ci];try{localStorage.setItem('ideasUsed',JSON.stringify(d));}catch(err){}renderIdeas();}
+ if(pl){var d2=plDone();if(t.checked)d2[pl]=new Date().toISOString();else delete d2[pl];try{localStorage.setItem('planDone',JSON.stringify(d2));}catch(err){}renderPlan();}
+});
+on('gCIdeas',function(){pane('I');renderIdeas();});
+on('gPlan',function(){pane('P');renderPlan();});
 function renderTasks(){
  var host=document.getElementById('tkBox');
  if(!host)return;
