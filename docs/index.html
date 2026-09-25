@@ -1462,7 +1462,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-25T08:19:57.565Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-25T08:20:29.325Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2378,7 +2378,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='890ae1e010';
+var CODE_ID='ab0bcd1d5b';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -5103,7 +5103,10 @@ function tkDone(){try{return JSON.parse(localStorage.getItem('tasksDone')||'{}')
 function renderTasks(){
  var host=document.getElementById('tkBox');
  if(!host)return;
- var T=D.tasks||[],done=tkDone(),h='',last='';
+ var gone=clearedIds('tasksCleared');
+ var T=(D.tasks||[]).filter(function(t){return !gone[t.id];}),done=tkDone(),h='',last='';
+ if(T.length)h+='<button type="button" class="gclear" id="tkClear">עשיתי הכל · '+T.length
+  +'<small>מנקה את הרשימה. משימה חדשה תופיע כרגיל.</small></button>';
  T.forEach(function(t){
   if(t.day!==last){
    last=t.day;
@@ -5115,6 +5118,14 @@ function renderTasks(){
    +(done[t.id]?' checked':'')+'><span>'+esc(t.text)+'</span></label>';
  });
  host.innerHTML=h||'<div class="empty">אין משימות.</div>';
+ var b=document.getElementById('tkClear');
+ if(b)b.onclick=function(){clearIds('tasksCleared',T.map(function(t){return t.id;}));renderTasks();};
+}
+function clearedIds(k){try{return JSON.parse(localStorage.getItem(k)||'{}');}catch(e){return {};}}
+function clearIds(k,ids){
+ var d=clearedIds(k),now=new Date().toISOString();
+ ids.forEach(function(i){if(i)d[i]=now;});
+ try{localStorage.setItem(k,JSON.stringify(d));}catch(e){}
 }
 document.addEventListener('change',function(e){
  var k=e.target&&e.target.getAttribute&&e.target.getAttribute('data-tk');
@@ -5628,12 +5639,15 @@ function voiceList(){
 function renderVoices(){
  var host=document.getElementById('vcBody');
  if(!host)return;
- var list=voiceList();
+ var gone=clearedIds('voicesCleared');
+ var list=voiceList().filter(function(m){return !gone[m.id||m.at];});
  if(!list.length){
   host.innerHTML='<div class="empty">אין כאן כלום. כל ההקלטות שלך תומללו.</div>';
   return;
  }
- host.innerHTML=list.map(function(m){
+ host.innerHTML='<button type="button" class="gclear" id="vcClear">איפוס · '+list.length
+  +'<small>מנקה את המסך הזה. הקלטה חדשה שלא תתומלל תופיע כאן כרגיל.</small></button>'
+  +list.map(function(m){
   var link=String(m.note||'').match(/files[/][^ ]+/);
   return '<div class="ansc">'
    +'<span class="w">'+esc(stamp(m.at))+'</span>'
@@ -5641,6 +5655,9 @@ function renderVoices(){
          :'<div class="atxt">ההקלטה עצמה לא הגיעה לדף. תגיד לי מה ביקשת שם.</div>')
    +'</div>';
  }).join('');
+ document.getElementById('vcClear').onclick=function(){
+  clearIds('voicesCleared',list.map(function(m){return m.id||m.at;}));renderVoices();
+ };
 }
 function openVoices(){
  pane('V');renderVoices();ensure('chat',renderVoices);

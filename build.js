@@ -7324,7 +7324,15 @@ function tkDone(){try{return JSON.parse(localStorage.getItem('tasksDone')||'{}')
 function renderTasks(){
  var host=document.getElementById('tkBox');
  if(!host)return;
- var T=D.tasks||[],done=tkDone(),h='',last='';
+ /*
+   איציק, 25.9, בהקלטה: "רשימת מטלות, בכפתור עשיתי הכל תאפס". The button
+   hides every task on the screen now, on his phone only. A task added later
+   has a new id, so it shows up as usual.
+ */
+ var gone=clearedIds('tasksCleared');
+ var T=(D.tasks||[]).filter(function(t){return !gone[t.id];}),done=tkDone(),h='',last='';
+ if(T.length)h+='<button type="button" class="gclear" id="tkClear">עשיתי הכל · '+T.length
+  +'<small>מנקה את הרשימה. משימה חדשה תופיע כרגיל.</small></button>';
  T.forEach(function(t){
   if(t.day!==last){
    last=t.day;
@@ -7336,6 +7344,14 @@ function renderTasks(){
    +(done[t.id]?' checked':'')+'><span>'+esc(t.text)+'</span></label>';
  });
  host.innerHTML=h||'<div class="empty">אין משימות.</div>';
+ var b=document.getElementById('tkClear');
+ if(b)b.onclick=function(){clearIds('tasksCleared',T.map(function(t){return t.id;}));renderTasks();};
+}
+function clearedIds(k){try{return JSON.parse(localStorage.getItem(k)||'{}');}catch(e){return {};}}
+function clearIds(k,ids){
+ var d=clearedIds(k),now=new Date().toISOString();
+ ids.forEach(function(i){if(i)d[i]=now;});
+ try{localStorage.setItem(k,JSON.stringify(d));}catch(e){}
 }
 document.addEventListener('change',function(e){
  var k=e.target&&e.target.getAttribute&&e.target.getAttribute('data-tk');
@@ -7956,12 +7972,17 @@ function voiceList(){
 function renderVoices(){
  var host=document.getElementById('vcBody');
  if(!host)return;
- var list=voiceList();
+ // איציק, 25.9: "שים גם שם כפתור איפוס". Same as the tasks button: clears
+ // this screen on his phone, and a recording that fails later still shows.
+ var gone=clearedIds('voicesCleared');
+ var list=voiceList().filter(function(m){return !gone[m.id||m.at];});
  if(!list.length){
   host.innerHTML='<div class="empty">אין כאן כלום. כל ההקלטות שלך תומללו.</div>';
   return;
  }
- host.innerHTML=list.map(function(m){
+ host.innerHTML='<button type="button" class="gclear" id="vcClear">איפוס · '+list.length
+  +'<small>מנקה את המסך הזה. הקלטה חדשה שלא תתומלל תופיע כאן כרגיל.</small></button>'
+  +list.map(function(m){
   // No backslash in this regex on purpose. The page template strips one on its
   // way out, so /files\/[^\s]+/ reached the browser as /files/[^s]+/ and the
   // whole script stopped parsing — every screen below it died at once.
@@ -7972,6 +7993,9 @@ function renderVoices(){
          :'<div class="atxt">ההקלטה עצמה לא הגיעה לדף. תגיד לי מה ביקשת שם.</div>')
    +'</div>';
  }).join('');
+ document.getElementById('vcClear').onclick=function(){
+  clearIds('voicesCleared',list.map(function(m){return m.id||m.at;}));renderVoices();
+ };
 }
 function openVoices(){
  pane('V');renderVoices();ensure('chat',renderVoices);
