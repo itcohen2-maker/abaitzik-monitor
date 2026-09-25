@@ -1466,7 +1466,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-25T13:51:41.274Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-25T14:46:41.373Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2458,7 +2458,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='ffdebfd5c4';
+var CODE_ID='dd00e69eaa';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -7159,6 +7159,26 @@ boot('special',renderSpecial);
 boot('reminders',renderReminders);
 boot('tasks',renderTasks);
 boot('tenants',paintTenantsTile);
+boot('welcome',function(){
+ if(INSTANCE&&INSTANCE.name==='abaitzik')return;
+ try{if(localStorage.getItem('welcomeSeen'))return;}catch(e){}
+ var top=document.getElementById('talkCard')||document.getElementById('pH');
+ if(!top||!top.parentNode)return;
+ var w=document.createElement('div');
+ w.id='welcomeCard';
+ w.setAttribute('style','margin:0 0 14px;padding:16px 18px;border-radius:18px;color:#fff;'
+  +'background:linear-gradient(135deg,#1a73e8,#14675a);box-shadow:0 4px 16px rgba(0,0,0,.25);line-height:1.5');
+ var text=(INSTANCE&&INSTANCE.welcome)||'ברוכים הבאים למוניטור של אבא איציק';
+ w.innerHTML='<div style="font-size:21px;font-weight:700">'+esc(text)+'</div>'
+  +'<div style="font-size:18px;margin-top:2px">בהצלחה!</div>'
+  +'<button type="button" id="welcomeClose" style="margin-top:10px;padding:8px 18px;border:1px solid rgba(255,255,255,.6);'
+  +'border-radius:999px;background:transparent;color:#fff;font-size:15px">סגירה</button>';
+ top.parentNode.insertBefore(w,top);
+ document.getElementById('welcomeClose').onclick=function(){
+  try{localStorage.setItem('welcomeSeen','1');}catch(e){}
+  w.remove();
+ };
+});
 boot('install',function(){
  if(INSTANCE&&INSTANCE.name==='abaitzik')return;
  var standalone=(window.navigator&&window.navigator.standalone)||
