@@ -10501,7 +10501,7 @@ a.s{display:inline-block;margin-top:14px;color:#9fb8b2;font-size:15px}
 <h1>הכתובת הזאת לא קיימת</h1>
 <p>הקישור שנפתח מצביע על מקום שאין בו קובץ. לא נתקעת, יש דרך חזרה.</p>
 <code id="u"></code>
-<a class="b" href="/abaitzik-monitor/">חזרה למוניטור</a>
+<a class="b" href="${inst.basePath}">חזרה למוניטור</a>
 <a class="s" href="#" id="back">חזרה לדף הקודם</a>
 </div>
 <script>
@@ -10509,7 +10509,7 @@ document.getElementById('u').textContent=location.pathname+location.search;
 document.getElementById('back').onclick=function(e){
  e.preventDefault();
  if(history.length>1){history.back();return;}
- location.href='/abaitzik-monitor/';
+ location.href='${inst.basePath}';
 };
 </script>
 </html>`;
