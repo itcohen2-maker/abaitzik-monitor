@@ -10112,6 +10112,33 @@ boot('tenants',paintTenantsTile);
 
   Not on Itzik's copy: his icon has been on his screen since September.
 */
+/*
+  A customer's first screen greets him. Itzik, 25.9: "put in a greeting:
+  welcome to Aba Itzik's monitor, good luck." It sits at the top of the home
+  screen until he closes it, and closed it stays closed on that device.
+  instance.json may carry its own welcome text; without one this is the text.
+*/
+boot('welcome',function(){
+ if(INSTANCE&&INSTANCE.name==='abaitzik')return;
+ try{if(localStorage.getItem('welcomeSeen'))return;}catch(e){}
+ // Above the talk card, the first thing under his name.
+ var top=document.getElementById('talkCard')||document.getElementById('pH');
+ if(!top||!top.parentNode)return;
+ var w=document.createElement('div');
+ w.id='welcomeCard';
+ w.setAttribute('style','margin:0 0 14px;padding:16px 18px;border-radius:18px;color:#fff;'
+  +'background:linear-gradient(135deg,#1a73e8,#14675a);box-shadow:0 4px 16px rgba(0,0,0,.25);line-height:1.5');
+ var text=(INSTANCE&&INSTANCE.welcome)||'ברוכים הבאים למוניטור של אבא איציק';
+ w.innerHTML='<div style="font-size:21px;font-weight:700">'+esc(text)+'</div>'
+  +'<div style="font-size:18px;margin-top:2px">בהצלחה!</div>'
+  +'<button type="button" id="welcomeClose" style="margin-top:10px;padding:8px 18px;border:1px solid rgba(255,255,255,.6);'
+  +'border-radius:999px;background:transparent;color:#fff;font-size:15px">סגירה</button>';
+ top.parentNode.insertBefore(w,top);
+ document.getElementById('welcomeClose').onclick=function(){
+  try{localStorage.setItem('welcomeSeen','1');}catch(e){}
+  w.remove();
+ };
+});
 boot('install',function(){
  if(INSTANCE&&INSTANCE.name==='abaitzik')return;
  var standalone=(window.navigator&&window.navigator.standalone)||
