@@ -9188,10 +9188,10 @@ function jumpToUnread(){
   a list the instance provides. With no list, nothing is hidden, and that is
   the case for Itzik's own copy.
 */
+// Tiles that belong to another instance start hidden in the markup, so with
+// no list at all, Itzik's case, they never appear on his screen either.
 (function(){
  var keep=INSTANCE&&INSTANCE.screens;
- // Tiles that belong to another instance start hidden in the markup, so with
- // no list at all, Itzik's case, they never appear on his screen either.
  if(!keep||!keep.length)return;
  ['blkTiles','blkIcons'].forEach(function(id){
   var box=document.getElementById(id);
