@@ -95,7 +95,8 @@ test('one field given, everything else stays as it was', () => {
 test('an inbound topic without a live topic does not pulse onto his channel', () => {
   // Inheriting BEFORE.ntfyLive here would turn his own indicator green off
   // somebody else's heartbeat, and keep it green while his listener is down.
-  const i = loadWith(JSON.stringify({ ntfy: { in: 'ily-in-3f7c1a9e04b2d856' } }));
+  // A data folder with no keys.json, so the instance file alone is tested.
+  const i = loadWith(JSON.stringify({ ntfy: { in: 'ily-in-3f7c1a9e04b2d856' }, dataDir: os.tmpdir() }));
   assert.equal(i.ntfy.live, 'ily-in-3f7c1a9e04b2d856-live');
   assert.notEqual(i.ntfy.live, BEFORE.ntfyLive);
   // The outbound topic is a separate address and is not derived from anything.
@@ -122,4 +123,14 @@ test('memoryDir null means no memory folder, not the default one', () => {
   const i = loadWith(JSON.stringify({ memoryDir: null }));
   assert.equal(i.memoryDir, null);
   assert.ok(!i.notes.some(n => /memoryDir/.test(n)));
+});
+
+test('data/keys.json supplies the topics, so the committed file can leave them out', () => {
+  // Both repositories are public and a topic is a password. Itzik's keys.json
+  // holds his real topics; with instance.json absent the loader must still
+  // come up on them, and they must equal the literals the code used to carry.
+  const i = loadWith(null);
+  assert.equal(i.ntfy.in, BEFORE.ntfyIn);
+  assert.equal(i.ntfy.out, BEFORE.ntfyOut);
+  assert.equal(i.mailbox, BEFORE.mailbox);
 });

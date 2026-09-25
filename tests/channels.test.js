@@ -71,6 +71,8 @@ test('a second instance moves every address at once', () => {
     fs.writeFileSync(FILE, JSON.stringify({
       ntfy: { in: 'ily-in-3f7c1a9e04b2d856', out: 'ily-out-8b41ce22f0a7' },
       mailbox: 'ily@example.com',
+      // A data folder with no keys.json: Itzik's real keys.json would win otherwise.
+      dataDir: require('os').tmpdir(),
     }));
     fresh();
     const l = require(path.join(ROOT, 'listen.js'));
