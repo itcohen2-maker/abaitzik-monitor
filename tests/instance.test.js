@@ -116,3 +116,10 @@ test('the data folder is handed over absolute, so no caller has to guess', () =>
   const abs = path.join(os.tmpdir(), 'ily-data');
   assert.equal(loadWith(JSON.stringify({ dataDir: abs })).dataPath, abs);
 });
+
+test('memoryDir null means no memory folder, not the default one', () => {
+  // Ilay's backups must never pack his father's memory files.
+  const i = loadWith(JSON.stringify({ memoryDir: null }));
+  assert.equal(i.memoryDir, null);
+  assert.ok(!i.notes.some(n => /memoryDir/.test(n)));
+});
