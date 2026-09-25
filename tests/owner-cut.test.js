@@ -64,3 +64,34 @@ test('the customer tiles come from his screens list, in his order', () => {
   assert.ok(html.indexOf('id="gPlan"') < html.indexOf('id="gTasks"'));
   assert.ok(!html.includes('nope'));
 });
+
+/*
+  25.9 evening: the markup was clean, and the script still carried Pegasus,
+  the candle site's visits, the building committee, the pills, Salinda and
+  his landing pages. The whole page is built here the way the server builds a
+  customer's, and nothing of Itzik's may be anywhere in its source.
+*/
+test("a customer's built page, script included, has no word of Itzik's", () => {
+  const os = require('os');
+  const { execFileSync } = require('child_process');
+  const root = path.join(__dirname, '..');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'owner-cut-'));
+  for (const f of ['build.js', 'gate.js']) fs.copyFileSync(path.join(root, f), path.join(dir, f));
+  fs.cpSync(path.join(root, 'lib'), path.join(dir, 'lib'), { recursive: true });
+  if (fs.existsSync(path.join(root, 'public'))) fs.cpSync(path.join(root, 'public'), path.join(dir, 'public'), { recursive: true });
+  fs.mkdirSync(path.join(dir, 'data'));
+  fs.writeFileSync(path.join(dir, 'gate-key.txt'), '482913');
+  fs.writeFileSync(path.join(dir, 'instance.json'), JSON.stringify({
+    name: 'ily', owner: 'איליי', pageTitle: 'המוניטור של איליי', appTitle: 'המוניטור',
+    publicUrl: 'https://ilay.example/', basePath: '/', origin: 'https://ilay.example',
+    screens: ['gCIdeas', 'gPlan', 'gRemind', 'gTasks', 'gNotes'], chromeProfile: 'none', memoryDir: null,
+  }));
+  execFileSync(process.execPath, ['build.js'], { cwd: dir, env: { ...process.env, ABAITZIK_INSTANCE_FILE: '' }, stdio: 'pipe' });
+  const out = fs.readFileSync(path.join(dir, 'docs', 'index.html'), 'utf8');
+  const words = ['פגסוס', 'pegasusgame', 'candletimes', 'סלינדה', 'salinda', 'ועד הבית', 'ריווחית',
+    'כדור', 'ניתוח', 'abaitzik.com', 'instagram.com/abaitzik', 'gezer', 'גזר', 'drive.google', 'לולוס',
+    'איציק, ', 'נרות'];
+  const found = words.filter((w) => out.includes(w));
+  fs.rmSync(dir, { recursive: true, force: true });
+  assert.deepEqual(found, []);
+});

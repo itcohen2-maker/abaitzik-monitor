@@ -727,10 +727,26 @@ function tenantTiles(inst) {
   whole script, so each cut block leaves hidden empty stand ins for the ids it
   held, except ids the customer's own blocks already carry.
 */
+/*
+  The script has Itzik's parts too: pills, Pegasus, the building committee's
+  books, the candle site's visits, his landing pages. They sit between
+  /*ITZIK:BEGIN*\/ and /*ITZIK:END*\/ lines. A customer's copy keeps only
+  empty stand ins for the functions and variables such a block declared, so the
+  shared code that still names them does not throw, and no text, link or
+  number of Itzik's is left in the source.
+*/
+function jsStandIns(body) {
+  const out = [];
+  body.replace(/^function (\w+)\(/gm, (m, n) => { out.push('function ' + n + '(){}'); return m; });
+  body.replace(/^var (\w+)=\s*(\[|\{)?/gm, (m, n, o) => { out.push('var ' + n + '=' + (o === '[' ? '[]' : o === '{' ? '{}' : 'null') + ';'); return m; });
+  return out.join('\n');
+}
 function cutFor(inst, html) {
   const TEN = /<!--TENANT:BEGIN-->([\s\S]*?)<!--TENANT:END-->/g;
   const ITZ = /<!--ITZIK:BEGIN-->([\s\S]*?)<!--ITZIK:END-->/g;
-  if (inst.name === 'abaitzik') return html.replace(TEN, '').replace(/<!--ITZIK:(BEGIN|END)-->/g, '');
+  const ITZJS = /\/\*ITZIK:BEGIN\*\/([\s\S]*?)\/\*ITZIK:END\*\//g;
+  if (inst.name === 'abaitzik') return html.replace(TEN, '').replace(/<!--ITZIK:(BEGIN|END)-->/g, '').replace(/\/\*ITZIK:(BEGIN|END)\*\//g, '');
+  html = html.replace(ITZJS, (m, b) => jsStandIns(b));
   const own = new Set();
   html.replace(TEN, (m, b) => { b.replace(/\bid="([^"]+)"/g, (x, id) => own.add(id)); return m; });
   html = html.replace(ITZ, (m, b) => {
@@ -3142,8 +3158,10 @@ try{
  <h2>הקלטות שלא תומללו</h2>
  <div class="hint">
   <b>אלה ההודעות הקוליות שלך שלא הצלחתי להפוך למילים.</b>
-  איציק, 19.9: "אם אתה לא מצליח לתמלל שלח לי שאני אקשיב". אז הן כאן, ואפשר
-  ללחוץ ולשמוע. כשתדע מה אמרת שם, תכתוב לי בצ׳אט ואני ממשיך מזה.
+<!--ITZIK:BEGIN-->
+  איציק, 19.9: "אם אתה לא מצליח לתמלל שלח לי שאני אקשיב". אז הן כאן.
+<!--ITZIK:END-->
+  אפשר ללחוץ ולשמוע. כשתדע מה אמרת שם, תכתוב לי בצ׳אט ואני ממשיך מזה.
   אם המסך ריק, זה אומר שהכל תומלל.
  </div>
  <div id="vcBody"></div>
@@ -4008,7 +4026,10 @@ function savePending(a){
   become buttons inside the answer itself, and the page already knows how to
   route those names.
 */
-var SCREENWORD={reports:'הדוחות',block:'לחסימה',drains:'הניקוזים',voices:'ההקלטות',answers:'התשובות',chat:'הצ׳אט',got:'מה שהתקבל',replies:'התשובות ברשתות',special:'הבקשות',pegasus:'פגסוס',improve:'מה השתפר'};
+var SCREENWORD={reports:'הדוחות',block:'לחסימה',drains:'הניקוזים',voices:'ההקלטות',answers:'התשובות',chat:'הצ׳אט',got:'מה שהתקבל',replies:'התשובות ברשתות',special:'הבקשות',improve:'מה השתפר'};
+/*ITZIK:BEGIN*/
+SCREENWORD.pegasus='פגסוס';
+/*ITZIK:END*/
 function screenLinks(t){
  var out='';
  var seen={};
@@ -4997,6 +5018,7 @@ function updateDot(){
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
 var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
+/*ITZIK:BEGIN*/
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
 // The last dose. From the chat it is read out of the message text, because he
 // confirms the hour he took it and that hour is what the count runs from.
@@ -5063,6 +5085,7 @@ var LANDING=[
  {name:'שיטת הפירה',note:'מילת המפתח: גזר',url:'https://abaitzik.com/gezer'},
  {name:'סלינדה',note:'אתר',url:'https://salinda-mobile.vercel.app/'}
 ];
+/*ITZIK:END*/
 /*
   Reports got a tab of their own.
 
@@ -5076,10 +5099,12 @@ var NAVS={h:'nH',q:'nQ',l:'nL',a:'nA',r:'nR'};
 
 // Per network monitoring. Tapping a network circle opens its own screen:
 // what is waiting there, and only the report lines about that network.
+/*ITZIK:BEGIN*/
 var APPS={youtube:{t:'יוטיוב סטודיו',u:'https://studio.youtube.com/'},
  tiktok:{t:'טיקטוק סטודיו',u:'https://www.tiktok.com/tiktokstudio/comment'},
  facebook:{t:'מנהל התגובות',u:'https://www.facebook.com/professional_dashboard/engagement/comments_manager/'},
  instagram:{t:'אינסטגרם',u:'https://www.instagram.com/abaitzik/'}};
+/*ITZIK:END*/
 var HOT={personal:1,pain:1,offer_help:1,donation:1,medical_advice:1};
 var curNet='all';
 function netLines(body,k){
@@ -7681,6 +7706,7 @@ on2('remForm','submit',function(e){
  }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';});
 });
 
+/*ITZIK:BEGIN*/
 function renderPegasus(){
  var host=document.getElementById('pegBox');
  if(!host)return;
@@ -7716,6 +7742,7 @@ function renderPegasus(){
  wireBoxes(host);
 }
 on('gPegasus',function(){pane('x');renderPegasus();ensure('pegasus',renderPegasus);});
+/*ITZIK:END*/
 on('growBtn',function(){pane('w');renderImprove();ensure('improve',renderImprove);});
 on('gSpecial',function(){pane('y');renderSpecial();markSpecialSeen();ensure('special',renderSpecial);});
 // Render first, mark second: the cards he is about to read still carry their
@@ -8690,6 +8717,7 @@ on2('ideaForm','submit',function(e){
 
 // Anything he adds about the operation goes to me as well as onto the screen,
 // so a correction is never only on one device.
+/*ITZIK:BEGIN*/
 document.getElementById('opForm').onsubmit=function(e){
  e.preventDefault();
  var box=document.getElementById('opText');
@@ -8701,6 +8729,7 @@ document.getElementById('opForm').onsubmit=function(e){
   box.value='';said.textContent='נשלח. אני מוסיף את זה.';toast(said.textContent);
  }).catch(function(){said.textContent='לא נשלח. תנסה שוב.';});
 };
+/*ITZIK:END*/
 
 // Notes live on the device. He asked for somewhere nothing gets lost, and
 // that means not depending on a round trip through me to save a line.
@@ -8990,6 +9019,7 @@ document.getElementById('gQueue').onclick=function(){openNet('all');};
 (function(){var b=document.getElementById('gReports');if(!b)return;
  b.onclick=function(){markReportsSeen();openAnswers('all',true);};})();
 on('gMail',function(){pane('e');});
+/*ITZIK:BEGIN*/
 function openPill(){pane('p');renderPill();openPillSheet();}
 on('gPill',openPill);on('iPill',openPill);
 document.getElementById('pillBig').onclick=function(){openPillSheet();};
@@ -9003,6 +9033,7 @@ on('pillOk',function(){
  recordPill(ML.resolveTaken(v,Date.now()));
 });
 on('pillCancel',closePillSheet);
+/*ITZIK:END*/
 on('gAsk',function(){askInChat('');});
 paintReportDot();
 document.getElementById('leads').addEventListener('click',function(e){
@@ -9016,9 +9047,12 @@ document.getElementById('leads').addEventListener('click',function(e){
 });
 document.getElementById('icMail').onclick=function(){pane('e');};
 document.getElementById('icDrive').onclick=function(){pane('d');};
+/*ITZIK:BEGIN*/
 document.getElementById('icVaad').onclick=function(){pane('v');ensure('rivhit',renderRivhit);};
 document.getElementById('vaadAsk').onclick=function(){askInChat('ועד הבית: ');};
+/*ITZIK:END*/
 document.getElementById('icAdd').onclick=function(){askInChat('מודול חדש שאני רוצה: ');};
+/*ITZIK:BEGIN*/
 /*
   כניסות. GET back the same beacon every site/app now posts to on load
   (ner-site's own /api/visit, on its Vercel Blob store). Site labels are
@@ -9103,6 +9137,7 @@ document.getElementById('landList').innerHTML=LANDING.map(function(l){
   +'<span class="chip">'+esc(l.note)+'</span></div>'
   +'<a class="ask" href="'+esc(l.url)+'" target="_blank" rel="noopener">פתיחת הדף</a></div>';
 }).join('')+'<div class="empty">דף נחיתה חדש נכנס לכאן. תשלח לי בצ׳אט את הכתובת ואת מילת המפתח שמפעילה אותו.</div>';
+/*ITZIK:END*/
 // The old urgent shortcut became the file upload: chat pane, attach form open.
 document.getElementById('urgBtn').onclick=function(){
  pane('m');renderThread();
@@ -9884,6 +9919,7 @@ on('resetBtn',function(){
  if(said)said.textContent='אופס. המונה על אפס, ורק מה שיגיע מעכשיו יידלק.';
  toast('אופס. רק מה שיגיע מעכשיו יידלק.');
 });
+/*ITZIK:BEGIN*/
 /*
   The accounting screen. Every row is money that is already in the bank and has
   no receipt behind it, so the list is the work itself and not a summary of it.
@@ -9943,6 +9979,7 @@ function renderRivhit(){
  }
  if(ah)ah.hidden=!A.length;
 }
+/*ITZIK:END*/
 var bootFailed=[];
 function boot(name,fn){try{fn();}catch(e){bootFailed.push(name);try{console.error('boot '+name,e);}catch(_){}}}
 /*
