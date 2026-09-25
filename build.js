@@ -9942,6 +9942,43 @@ boot('special',renderSpecial);
 boot('reminders',renderReminders);
 boot('tasks',renderTasks);
 boot('tenants',paintTenantsTile);
+/*
+  An app, not a website.
+
+  Itzik, 25.9, about Ilay: "הוא מקבל את זה בתור דפדפן, ואני רוצה שזה יראה כמו
+  אצלי בלי שורת כתובת". A page cannot remove Safari's address bar by itself;
+  on an iPhone that only happens when it is opened from its own icon on the
+  home screen, and only the owner of the phone can put the icon there. So
+  every time this page is opened inside the browser, a bar at the bottom says
+  exactly how, with the two taps drawn out, until it is opened from the icon.
+  On Android, Chrome offers the install itself and the bar becomes one button.
+
+  Not on Itzik's copy: his icon has been on his screen since September.
+*/
+boot('install',function(){
+ if(INSTANCE&&INSTANCE.name==='abaitzik')return;
+ var standalone=(window.navigator&&window.navigator.standalone)||
+  (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches);
+ if(standalone)return;
+ var ios=/iPhone|iPad|iPod/i.test(navigator.userAgent||'');
+ var bar=document.createElement('div');
+ bar.id='installBar';
+ bar.setAttribute('style','position:fixed;inset-inline:10px;bottom:84px;z-index:9000;background:#14675a;color:#fff;'
+  +'border-radius:16px;padding:14px 16px;font-size:16px;line-height:1.5;box-shadow:0 8px 30px rgba(0,0,0,.45)');
+ bar.innerHTML=ios
+  ?'<b>להפוך את המוניטור לאפליקציה</b><br>1. למטה בספארי לוחצים על כפתור השיתוף <span style="font-size:20px">⬆️</span><br>'
+   +'2. גוללים ולוחצים <b>הוספה למסך הבית</b><br>3. פותחים מהאייקון החדש. בלי שורת כתובת, כמו כל אפליקציה.'
+  :'<b>להפוך את המוניטור לאפליקציה</b><br><span id="installHow">בתפריט של כרום (שלוש הנקודות): <b>התקנת האפליקציה</b> או <b>הוספה למסך הבית</b>.</span>';
+ document.body.appendChild(bar);
+ window.addEventListener('beforeinstallprompt',function(e){
+  e.preventDefault();
+  var how=document.getElementById('installHow');
+  if(!how)return;
+  how.innerHTML='<button type="button" id="installGo" style="margin-top:8px;width:100%;padding:12px;border:0;border-radius:10px;'
+   +'background:#fff;color:#14675a;font-size:17px;font-weight:700">התקנה במסך הבית</button>';
+  document.getElementById('installGo').onclick=function(){e.prompt();};
+ });
+});
 boot('appts',renderAppts);
 boot('replies',renderReplies);
 boot('reqs',renderReqs);
