@@ -1462,7 +1462,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-25T08:01:15.418Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-25T08:01:46.336Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1573,7 +1573,6 @@ try{
   <button type="button" id="bareBtn" class="morebtn">עוד כלים</button>
 <section class="whatsnew" aria-label="מה חדש">
   <div class="wn" id="wnCmds"></div>
-  <div class="wn" id="wnNow"></div>
  </section>
 
 
@@ -2379,7 +2378,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='5107bc6c6c';
+var CODE_ID='3b608239e0';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -3308,21 +3307,6 @@ function renderNew(){
   :'הכל נקרא';
  var K=D.openCmds||[];
  document.getElementById('wnCmds').innerHTML='<span class="n '+(K.length?'':'zero')+'">'+K.length+'</span><div>'+(K.length?'משימות פתוחות ממך':'אין משימות פתוחות')+(K.length?'<small>'+esc(K[0].text).slice(0,90)+'</small>':'')+'</div>';
- renderActivity();
-}
-function renderActivity(){
- var el=document.getElementById('wnNow');
- if(!el)return;
- var N=D.now;
- var at=N&&Date.parse(N.at);
- var valid=Number.isFinite(at)&&at<=Date.now();
- var recent=valid&&Date.now()-at<25*60*1000;
- var title=!N?'אין דיווח על העבודה':recent?'דיווח אחרון על העבודה':'אין דיווח עדכני על העבודה';
- el.innerHTML='<span class="n zero">·</span><div><b>'+title+'</b>'
-  +(N&&N.text?'<small>בדיווח האחרון: '+esc(N.text)+'</small>':'')
-  +(N&&N.next?'<small>המשך שתוכנן אז: '+esc(N.next)+'</small>':'')
-  +(valid?'<small>'+esc(stamp(N.at))+' · '+esc(since(N.at))+'</small>':N?'<small>מועד הדיווח אינו ידוע</small>':'')
-  +'<small>הדיווח אינו מאשר שמתבצעת עבודה עכשיו.</small></div>';
 }
 function updateDot(){
  renderNew();
@@ -3489,7 +3473,6 @@ function paintStamp(){
  }
 }
 setInterval(paintStamp,30000);
-setInterval(renderActivity,30000);
 
 var softBusy=false;
 function softRefresh(v){

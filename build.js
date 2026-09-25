@@ -2642,7 +2642,6 @@ try{
   -->
 <section class="whatsnew" aria-label="מה חדש">
   <div class="wn" id="wnCmds"></div>
-  <div class="wn" id="wnNow"></div>
  </section>
 
 <!--
@@ -4764,24 +4763,9 @@ function renderNew(){
   :'הכל נקרא';
  var K=D.openCmds||[];
  document.getElementById('wnCmds').innerHTML='<span class="n '+(K.length?'':'zero')+'">'+K.length+'</span><div>'+(K.length?'משימות פתוחות ממך':'אין משימות פתוחות')+(K.length?'<small>'+esc(K[0].text).slice(0,90)+'</small>':'')+'</div>';
- renderActivity();
 }
-// A saved report is not a live worker signal. Age the report independently
-// of page builds and listener heartbeats, including while the tab stays open.
-function renderActivity(){
- var el=document.getElementById('wnNow');
- if(!el)return;
- var N=D.now;
- var at=N&&Date.parse(N.at);
- var valid=Number.isFinite(at)&&at<=Date.now();
- var recent=valid&&Date.now()-at<25*60*1000;
- var title=!N?'אין דיווח על העבודה':recent?'דיווח אחרון על העבודה':'אין דיווח עדכני על העבודה';
- el.innerHTML='<span class="n zero">·</span><div><b>'+title+'</b>'
-  +(N&&N.text?'<small>בדיווח האחרון: '+esc(N.text)+'</small>':'')
-  +(N&&N.next?'<small>המשך שתוכנן אז: '+esc(N.next)+'</small>':'')
-  +(valid?'<small>'+esc(stamp(N.at))+' · '+esc(since(N.at))+'</small>':N?'<small>מועד הדיווח אינו ידוע</small>':'')
-  +'<small>הדיווח אינו מאשר שמתבצעת עבודה עכשיו.</small></div>';
-}
+// The "no current work report" line under open tasks is gone. Itzik, 25.9:
+// "unnecessary and not updated, delete". It only ever repeated an old report.
 function updateDot(){
  renderNew();
  var n=newestClaude(),fresh=!!(n&&n>chatSeen());
@@ -5009,7 +4993,6 @@ function paintStamp(){
 }
 // Every half minute, so "updated 4 minutes ago" does not sit on 4 all evening.
 setInterval(paintStamp,30000);
-setInterval(renderActivity,30000);
 
 /*
   A new answer without a new page.
