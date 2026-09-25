@@ -2599,11 +2599,11 @@ try{
     checked against the server. A page can be five minutes old and its data an
     hour stale, and saying so is the difference between a monitor and a poster.
   -->
-  <div class="t">מוניטור בבניין עצמי</div>
+  <div class="t">${inst.name === 'abaitzik' ? 'מוניטור בבנייה עצמית' : 'המוניטור של ' + inst.owner}</div>
   <div class="s" id="built"></div>
   <div class="s dim" id="checked"></div>
  </div>
- <div class="ava" aria-hidden="true"><div>א</div></div>
+ <div class="ava" aria-hidden="true"><div>${String(inst.owner || 'א').charAt(0)}</div></div>
 </header>
  <section class="talk" id="talkCard" aria-label="פנייה אליי">
   <button type="button" id="micBtn" class="mic" aria-label="דבר אליי">
@@ -2633,7 +2633,7 @@ try{
   -->
   <form class="quickwrite" id="quickForm">
    <input type="text" id="quickText" autocomplete="off"
-    placeholder="יצחק, כתוב לי מה אתה צריך">
+    placeholder="${inst.name === 'abaitzik' ? 'יצחק' : inst.owner}, כתוב לי מה אתה צריך">
    <button type="submit" id="quickBtn">שליחה</button>
   </form>
   <div class="msgsaid" id="quickSaid"></div>
@@ -3501,9 +3501,9 @@ try{
 <nav class="bn" aria-label="מסכים">
  <button type="button" id="nH" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10.5V20h12v-9.5"/><path d="M10 20v-5h4v5"/></svg>בית</button>
  <button type="button" id="nA" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h16v11h-9l-5 3.5v-3.5H4Z"/><path d="M8 10.5h8M8 14h5"/></svg>תשובות<i class="cnt zero" id="aCnt">0</i></button>
- <button type="button" id="nQ" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"/><path d="M7 19v-6"/><path d="M12 19V7"/><path d="M17 19v-9"/></svg>רשתות</button>
- <button type="button" id="nL" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>לידים<i class="dot" id="lDot" hidden></i></button>
- <button type="button" id="nR" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6Z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h4"/></svg>דוחות</button>
+ <button type="button" id="nQ" aria-pressed="false"${inst.name === 'abaitzik' ? '' : ' hidden'}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"/><path d="M7 19v-6"/><path d="M12 19V7"/><path d="M17 19v-9"/></svg>רשתות</button>
+ <button type="button" id="nL" aria-pressed="false"${inst.name === 'abaitzik' ? '' : ' hidden'}><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>לידים<i class="dot" id="lDot" hidden></i></button>
+ <button type="button" id="nR" aria-pressed="false"${inst.name === 'abaitzik' ? '' : ' hidden'}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6Z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h4"/></svg>דוחות</button>
 </nav>
 
 <div class="stamp"><span id="builtFoot"></span></div>

@@ -726,7 +726,9 @@ test('what got better lives behind one button, not twice on the home screen', ()
 
 test('the title is his, and the build and the data are two different facts', () => {
   const html = renderPage(fixture({}));
-  assert.ok(html.includes('<div class="t">מוניטור בבניין עצמי</div>'));
+  // The spelling Itzik caught on 25.9: בבנייה עצמית, not בבניין עצמי.
+  assert.ok(html.includes('<div class="t">מוניטור בבנייה עצמית</div>'));
+  assert.ok(!html.includes('בבניין עצמי'));
   // Two lines, not one sentence: a page can be fresh and its numbers stale.
   assert.ok(html.includes('<div class="s" id="built"></div>'));
   assert.ok(html.includes('<div class="s dim" id="checked"></div>'));
