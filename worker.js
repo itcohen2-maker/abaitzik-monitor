@@ -270,7 +270,17 @@ function run(list) {
 
     Back to what worked for months, and the concurrency comes from the task.
   */
-  const child = spawn('claude', ['-p', '--chrome', '--dangerously-skip-permissions'],
+  /*
+    --chrome only where there is a Chrome.
+
+    25.9: the worker also runs on the cloud server now, which has no browser
+    and no Profile 4. There, --chrome makes the session fail before reading a
+    word of his message. Anything that truly needs his browser still waits for
+    the PC, which is why the PC worker keeps running too.
+  */
+  const args = ['-p', '--dangerously-skip-permissions'];
+  if (process.platform === 'win32') args.splice(1, 0, '--chrome');
+  const child = spawn('claude', args,
     { cwd: HERE, shell: true, windowsHide: true });
   child.stdin.end(text, 'utf8');
   /*
