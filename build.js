@@ -2807,11 +2807,15 @@ try{
     <path fill="#FFF3D6" d="M14.5 10.3c1.2-1 .9-2.3 0-3.4-.9 1.1-1.2 2.4 0 3.4z"/>
    </svg></span>נרות</a>
   <!--
-    אילי. איציק, 25.9: "אני לא רואה כפתור איליי". The mockup of Eli's own
-    monitor was only a link in a chat message; it is a round button now.
+    איליי. איציק, 25.9: "אני לא רואה כפתור איליי", and then, when it opened
+    the old mockup page: "כפתור על מסך הבית, לא כאתר". It is a button of the
+    monitor now, not a link out. Pressing it opens the status of Ilay's
+    monitor, and the circle itself is green when his monitor is fine and red
+    on a break, painted by paintTenantsTile from the health check. Nothing of
+    Ilay's content reaches this page, only that one colour.
   -->
-  <a class="ic" href="eli.html"><span class="c c-el">
-   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 21c1.2-4 4-6 7.5-6s6.3 2 7.5 6"/></svg></span>אילי</a>
+  <a class="ic" href="#" id="icIly"><span class="c c-el" id="icIlyC">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 21c1.2-4 4-6 7.5-6s6.3 2 7.5 6"/></svg></span>איליי</a>
   <!--
     קבלות goes here. The markup and the .c-kb colour are ready, and so is
     build-kabalot.js, but the button stays out until data/receipts.json
@@ -7500,13 +7504,19 @@ function paintTenantsTile(){
  if(!b)return;
  var T=D.tenants||[];
  if(!T.length)return;
- b.hidden=false;
+ b.hidden=!!document.getElementById('icIly');
  var bad=T.filter(function(t){return t.state!=='ok';});
  b.querySelector('b').textContent=(bad.length?'🔴 ':'🟢 ')+(T.length===1?T[0].title:'מוניטורים אחרים');
  b.querySelector('small').textContent=bad.length?'נתק: '+bad.map(function(t){return t.title;}).join(', '):'הכל תקין';
  b.style.background=bad.length?'linear-gradient(180deg,#ef5350,#b71c1c)':'linear-gradient(180deg,#66bb6a,#1b5e20)';
+ var c=document.getElementById('icIlyC');
+ if(c)c.style.background=bad.length?'linear-gradient(160deg,#ef5350,#b71c1c)':'linear-gradient(160deg,#66bb6a,#1b5e20)';
 }
 on('gTenants',function(){pane('N3');renderTenants();});
+(function(){
+ var a=document.getElementById('icIly');
+ if(a)a.onclick=function(e){e.preventDefault();pane('N3');renderTenants();};
+})();
 function renderTasks(){
  var host=document.getElementById('tkBox');
  if(!host)return;
