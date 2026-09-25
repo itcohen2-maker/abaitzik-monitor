@@ -580,7 +580,17 @@ function build() {
     .split(payload.builtAt).join('')
     .split(payload.buildId).join('');
   const codeId0 = require('crypto').createHash('sha1').update(codeOnly).digest('hex').slice(0, 10);
-  const html = html0.replace('__CODE_ID__', codeId0);
+  /*
+    What this copy is, for the page itself.
+
+    Only the fields the page needs: the name, the owner and which home screen
+    tiles stay. No topics and no mailbox, because those are already in
+    payload.keys behind the gate, and this line is in the clear. `screens` is
+    a list of element ids from the home screen; null keeps everything, which
+    is what Itzik's instance says and what an absent instance.json means.
+  */
+  const instanceJson = JSON.stringify({ name: inst.name, owner: inst.owner, screens: inst.screens });
+  const html = html0.replace('__CODE_ID__', codeId0).replace("'__INSTANCE__'", instanceJson);
 
   fs.mkdirSync(OUT_DIR, { recursive: true });
   fs.writeFileSync(path.join(OUT_DIR, 'index.html'), html, 'utf8');
@@ -3490,6 +3500,7 @@ function gjson(r){
   than emptying the screen, because a short list is a smaller lie than none.
 */
 var CODE_ID='__CODE_ID__';
+var INSTANCE='__INSTANCE__';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -9091,6 +9102,27 @@ function jumpToUnread(){
  try{el.scrollIntoView({block:'center',behavior:'smooth'});}catch(e){el.scrollIntoView();}
  ringFor(el,2200);
 }
+/*
+  A second instance shows only its own tiles.
+
+  Ilay's monitor is built from this same page, but he is a brand builder with
+  four to ten clients and no medical appointments, no bookkeeping and no
+  networks queue of his father's. The tiles he does not need are not deleted
+  from the markup, which would fork the page; they are hidden here at boot from
+  a list the instance provides. With no list, nothing is hidden, and that is
+  the case for Itzik's own copy.
+*/
+(function(){
+ var keep=INSTANCE&&INSTANCE.screens;
+ if(!keep||!keep.length)return;
+ ['blkTiles','blkIcons'].forEach(function(id){
+  var box=document.getElementById(id);
+  if(!box)return;
+  Array.prototype.forEach.call(box.children,function(el){
+   if(el.id&&keep.indexOf(el.id)<0)el.hidden=true;
+  });
+ });
+})();
 // A push notification lands here. It goes where every other way in goes now:
 // the one screen, opened on what he has not read.
 if(location.hash==='#new'){
