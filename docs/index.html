@@ -822,6 +822,7 @@ body.editing .bn{display:none}
 .c-pg{background:linear-gradient(160deg,#a78bfa,#6d28d9)}
 .c-nr{background:linear-gradient(160deg,#243a6b,#0B1330)}
 .c-sl{background:linear-gradient(160deg,#f472b6,#be185d)}
+.c-el{background:linear-gradient(160deg,#1f8f7d,#14675a)}
 .c-kb{background:linear-gradient(160deg,#34d399,#047857)}
 .c-vd{background:linear-gradient(160deg,#fbbf24,#d97706)}
 .c-hb{background:linear-gradient(160deg,#fbbf24,#b45309)}
@@ -1462,7 +1463,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-25T11:39:46.495Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-25T11:39:56.429Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1624,6 +1625,8 @@ try{
     <path fill="#FFF3D6" d="M9.5 10.3c1.2-1 .9-2.3 0-3.4-.9 1.1-1.2 2.4 0 3.4z"/>
     <path fill="#FFF3D6" d="M14.5 10.3c1.2-1 .9-2.3 0-3.4-.9 1.1-1.2 2.4 0 3.4z"/>
    </svg></span>נרות</a>
+  <a class="ic" href="eli.html"><span class="c c-el">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 21c1.2-4 4-6 7.5-6s6.3 2 7.5 6"/></svg></span>אילי</a>
   <a class="ic" href="https://pegasusgame.vercel.app" target="_blank" rel="noopener"><span class="c c-pg">
    <svg viewBox="0 0 24 24"><path fill="#fff" d="M4 14c2-5 6-8 11-8l5-2-2 5c0 5-3 9-8 11l-1-3-3-1z"/><circle cx="14" cy="10" r="1.3" fill="#6d28d9"/></svg></span>פגסוס</a>
   <button type="button" class="ic" id="icDrive"><span class="c c-dr">
@@ -2399,7 +2402,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='4b0185803e';
+var CODE_ID='d9bf2c60e1';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -2637,10 +2640,16 @@ function transcriptOf(m){
  var n=String(m.note||'');
  return /^\s*תמלול:/.test(n)?n.replace(/^\s*תמלול:\s*/,'').trim():'';
 }
+function voiceAudio(m){
+ var link=String((m&&m.note)||'').match(/files[/]voice-[^ ]+/);
+ return link?'<audio controls preload="none" src="'+esc(link[0])+'" style="width:100%;margin-top:6px"></audio>':'';
+}
 function voiceBlock(m){
  if(!hasVoice(m))return '';
  var t=transcriptOf(m);
  if(t)return '<div class="vtx"><b>תמלול</b>'+esc(t)+'</div>';
+ var au=voiceAudio(m);
+ if(au)return '<div class="vtx vwait"><b>לא תומלל</b>ההקלטה כאן, אפשר להאזין.'+au+'</div>';
  var age=Date.now()-(Date.parse(m.at||'')||0);
  return age>600000?'<div class="vtx vwait"><b>תמלול</b>לא נשמר תמלול להקלטה הזאת.</div>'
   :'<div class="vtx vwait"><b>תמלול</b>מתמלל את ההקלטה, התמלול יופיע כאן.</div>';
@@ -4242,7 +4251,8 @@ function renderAnswers(){
     ?'<details class="qfold"><summary>'+esc(one)+'</summary>'
      +'<div class="atxt">'+linkify(qt)+'</div></details>'
     :'<span class="qline">'+linkify(one)+'</span>';
-   ask='<div class="aq"><span class="w">אתה · '+esc(stamp(m.q.at))+'</span>'+qb+'</div>';
+   var qau=/^ *תמלול:/.test(String(m.q.note||''))?'':voiceAudio(m.q);
+   ask='<div class="aq"><span class="w">אתה · '+esc(stamp(m.q.at))+'</span>'+qb+qau+'</div>';
   }
   return '<div class="ansc'+(his?' mine':' '+ansColor(m))+(m.q?' pair':'')+'" data-i="'+i+'">'
    +ask
