@@ -5207,7 +5207,7 @@ function repaintAll(){
   ['pegasus',renderPegasus],['improve',renderImprove],['special',renderSpecial],
   ['reminders',renderReminders],['tasks',renderTasks],['appts',renderAppts],['replies',renderReplies],['rivhit',renderRivhit],['food',renderFood],
   ['reqs',renderReqs],['stamp',paintStamp],['secrets',paintSecrets],
-  ['drains',renderDrains],['block',renderBlock]];
+  ['drains',renderDrains],['block',renderBlock],['tenants',paintTenantsTile]];
  var bad=[],ran={};
  jobs.forEach(function(j){
   ran[j[0]]=1;
