@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>התחלה · המוניטור של איליי</title>
+<style>
+:root{--bg:#191714;--card:#24211d;--ink:#f3eee6;--mute:#b9b0a3;--acc:#14675a;--acc2:#1f8f7d;--ok:#2e7d32;--bad:#e57373}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;padding:20px 16px 40px}
+main{max-width:520px;margin:0 auto}
+h1{font-size:26px;margin:4px 0 6px}
+.sub{color:var(--mute);margin:0 0 22px}
+.step{background:var(--card);border-radius:16px;padding:18px 18px 16px;margin:0 0 14px;border-inline-start:6px solid var(--acc)}
+.step.done{border-inline-start-color:var(--ok)}
+.n{display:inline-block;width:30px;height:30px;border-radius:50%;background:var(--acc);text-align:center;line-height:30px;font-weight:700;margin-inline-end:8px}
+.step.done .n{background:var(--ok)}
+.step h2{display:inline;font-size:19px;margin:0}
+.step p{margin:10px 0 12px;color:var(--mute)}
+a.btn,button.btn{display:block;width:100%;text-align:center;padding:15px;border-radius:12px;border:0;background:var(--acc2);color:#fff;font-size:18px;font-weight:700;text-decoration:none;cursor:pointer;font-family:inherit}
+button.btn[disabled]{opacity:.55}
+.topic{direction:ltr;text-align:center;font:600 17px ui-monospace,Consolas,monospace;background:#0f0e0c;border-radius:10px;padding:12px;margin:0 0 10px;user-select:all}
+input.code{display:block;width:100%;direction:ltr;text-align:center;font:600 24px ui-monospace,Consolas,monospace;letter-spacing:6px;padding:12px;border-radius:10px;border:2px solid #3a352f;background:#0f0e0c;color:var(--ink);margin:0 0 10px}
+.said{min-height:1.4em;margin:8px 0 0;font-size:15px;color:#8fd19e}
+.said.bad{color:var(--bad)}
+small{color:var(--mute)}
+</style>
+</head>
+<body>
+<main>
+<h1>ברוך הבא למוניטור שלך</h1>
+<p class="sub">שלושה צעדים, בערך שתי דקות, הכל כאן בטלפון. אחרי זה המוניטור עובד בשבילך לבד.</p>
+
+<section class="step" id="s1">
+ <span class="n">1</span><h2>להתקין את אפליקציית ההתראות</h2>
+ <p>דרכה המוניטור מודיע לך כשמשהו מוכן.</p>
+ <a class="btn" id="storeBtn" href="https://apps.apple.com/app/ntfy/id1625396347" target="_blank" rel="noopener">להורדת ntfy</a>
+</section>
+
+<section class="step" id="s2">
+ <span class="n">2</span><h2>לחבר את הערוץ שלך</h2>
+ <p>באפליקציה: לוחצים על <b>+</b>, מדביקים את השם הזה, ולוחצים Subscribe.</p>
+ <div class="topic" id="topic">ily-out-b75be9358122</div>
+ <button class="btn" id="copyBtn" type="button">העתקת שם הערוץ</button>
+ <div class="said" id="copySaid"></div>
+</section>
+
+<section class="step" id="s3">
+ <span class="n">3</span><h2 id="s3h">לבחור את הקוד שלך</h2>
+ <div id="pick">
+  <p>קוד של 6 עד 8 ספרות. רק אתה תדע אותו, גם לא אבא. איתו נפתח המוניטור שלך.</p>
+  <input class="code" id="c1" type="password" inputmode="numeric" autocomplete="new-password" maxlength="8" placeholder="הקוד">
+  <input class="code" id="c2" type="password" inputmode="numeric" autocomplete="new-password" maxlength="8" placeholder="שוב, לאימות">
+  <button class="btn" id="setBtn" type="button">זה הקוד שלי</button>
+  <div class="said" id="setSaid"></div>
+ </div>
+ <div id="enter" hidden>
+  <p>מקלידים את הקוד שבחרת, פעם אחת, והטלפון זוכר אותו. אחר כך בספארי: כפתור השיתוף, ואז <b>הוספה למסך הבית</b>.</p>
+  <a class="btn" href="./">כניסה למוניטור</a>
+ </div>
+</section>
+
+<p class="sub" style="margin-top:22px">משהו לא עובד? שולחים הודעה במוניטור עצמו, או לאבא.</p>
+</main>
+<script>
+(function(){
+ var $=function(id){return document.getElementById(id);};
+ var ua=navigator.userAgent||'';
+ if(/Android/i.test(ua)) $('storeBtn').href='https://play.google.com/store/apps/details?id=io.heckel.ntfy';
+
+ $('copyBtn').onclick=function(){
+  var t=$('topic').textContent.trim(),said=$('copySaid');
+  function ok(){said.textContent='הועתק. עכשיו לאפליקציה, + , הדבקה, Subscribe.';$('s2').classList.add('done');}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,function(){said.textContent='לסמן את השם ולהעתיק ידנית.';});}
+  else said.textContent='לסמן את השם ולהעתיק ידנית.';
+ };
+
+ // The one time token rides in the fragment, which the browser never sends in
+ // a request line, so it is in no log anywhere. It leaves this page only in
+ // the body of the one POST below.
+ var token=(location.hash.match(/t=([0-9a-f]{32})/)||[])[1]||'';
+ function showEnter(){$('pick').hidden=true;$('enter').hidden=false;$('s3h').textContent='להיכנס למוניטור';}
+ if(!token){showEnter();return;}
+
+ $('setBtn').onclick=function(){
+  var a=$('c1').value.trim(),b=$('c2').value.trim(),said=$('setSaid');
+  said.className='said';
+  if(a!==b){said.className='said bad';said.textContent='שני הקודים לא זהים.';return;}
+  $('setBtn').disabled=true;said.textContent='שומר ובונה לך את המוניטור, כמה שניות...';
+  fetch('/api/setup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:token,code:a})})
+   .then(function(r){return r.json().then(function(j){return {ok:r.ok&&j.ok,j:j};});})
+   .then(function(x){
+    if(!x.ok){said.className='said bad';said.textContent=x.j.error||'משהו נכשל.';$('setBtn').disabled=false;return;}
+    // The link is spent now; take it out of the address bar so a reload or a
+    // share of this page does not carry a dead token around.
+    try{history.replaceState(null,'',location.pathname);}catch(e){}
+    $('s3').classList.add('done');
+    said.textContent='נשמר. הקוד הזה הוא שלך בלבד.';
+    showEnter();
+   })
+   .catch(function(){said.className='said bad';said.textContent='אין חיבור. לנסות שוב.';$('setBtn').disabled=false;});
+ };
+})();
+</script>
+</body>
+</html>
