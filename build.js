@@ -1536,6 +1536,12 @@ section{margin-bottom:30px}
  box-shadow:0 2px 6px rgba(66,133,244,.4),inset 0 1px 0 rgba(255,255,255,.3)}
 .quickrow button:active{background:linear-gradient(180deg,var(--blue),#1b63d6);box-shadow:none}
 .quickrow button[disabled]{opacity:.55}
+/* Three controls do not fit one phone line: the date input alone refuses to
+   shrink below its own width, and it pushed the reminders screen sideways off
+   the phone, 25.9. The date takes a line of its own. */
+#remForm{flex-wrap:wrap}
+#remForm input{min-width:0}
+#remForm #remDate{flex:1 1 100%}
 .nextrep{display:flex;align-items:center;gap:12px;margin-bottom:12px;
  background:var(--surface);border:1px solid var(--line);border-radius:16px;
  padding:12px 14px;box-shadow:var(--shadow)}
@@ -10114,13 +10120,20 @@ boot('install',function(){
  var ios=/iPhone|iPad|iPod/i.test(navigator.userAgent||'');
  var bar=document.createElement('div');
  bar.id='installBar';
- bar.setAttribute('style','position:fixed;inset-inline:10px;bottom:84px;z-index:9000;background:#14675a;color:#fff;'
-  +'border-radius:16px;padding:14px 16px;font-size:16px;line-height:1.5;box-shadow:0 8px 30px rgba(0,0,0,.45)');
+ // In the flow of the home screen, above the tiles. Pinned to the bottom it sat
+ // on top of the customer's own tiles, 25.9, and a tile you cannot see is lost.
+ bar.setAttribute('style','margin:14px 0;background:#14675a;color:#fff;'
+  +'border-radius:16px;padding:14px 16px;font-size:16px;line-height:1.5;box-shadow:0 4px 16px rgba(0,0,0,.25)');
  bar.innerHTML=ios
   ?'<b>להפוך את המוניטור לאפליקציה</b><br>1. למטה בספארי לוחצים על כפתור השיתוף <span style="font-size:20px">⬆️</span><br>'
    +'2. גוללים ולוחצים <b>הוספה למסך הבית</b><br>3. פותחים מהאייקון החדש. בלי שורת כתובת, כמו כל אפליקציה.'
   :'<b>להפוך את המוניטור לאפליקציה</b><br><span id="installHow">בתפריט של כרום (שלוש הנקודות): <b>התקנת האפליקציה</b> או <b>הוספה למסך הבית</b>.</span>';
- document.body.appendChild(bar);
+ bar.innerHTML+='<button type="button" id="installLater" style="margin-top:8px;width:100%;padding:10px;border:1px solid rgba(255,255,255,.5);'
+  +'border-radius:10px;background:transparent;color:#fff;font-size:15px">אחר כך</button>';
+ var tiles=document.getElementById('newBlock')||document.getElementById('blkTiles');
+ if(tiles&&tiles.parentNode)tiles.parentNode.insertBefore(bar,tiles);
+ else document.body.appendChild(bar);
+ document.getElementById('installLater').onclick=function(){bar.remove();};
  window.addEventListener('beforeinstallprompt',function(e){
   e.preventDefault();
   var how=document.getElementById('installHow');
