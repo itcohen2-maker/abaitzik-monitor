@@ -8,6 +8,8 @@
 
 const fs = require('fs');
 const path = require('path');
+// Which monitor this is. Without instance.json this is Itzik's, word for word.
+const inst = require('./lib/instance.js');
 const store = require('./lib/store');
 const group = require('./lib/group.js');
 const ML = require('./lib/monitor-logic.js');
@@ -47,7 +49,7 @@ function esc(s) {
 // is gitignored. Only the fields below reach docs/. Phone numbers and email
 // addresses never do - Itzik asks for those by mail, one person at a time.
 function loadDocs(dir) {
-  const full = path.join(__dirname, 'data', dir, dir);
+  const full = path.join(inst.dataPath, dir, dir);
   if (!fs.existsSync(full)) return [];
   return fs.readdirSync(full)
     .filter(f => f.endsWith('.json'))
@@ -546,7 +548,7 @@ function build() {
   */
   payload.keys = (() => {
     try {
-      const k = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'keys.json'), 'utf8'));
+      const k = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'keys.json'), 'utf8'));
       delete k._why;
       return k;
     } catch (e) {
@@ -638,11 +640,11 @@ const PAGE = `<!DOCTYPE html>
 <meta name="theme-color" content="#14675a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="המוניטור">
+<meta name="apple-mobile-web-app-title" content="${inst.appTitle}">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-<title>אבא איציק בבנייה עצמית</title>
+<title>${inst.pageTitle}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700&family=Heebo:wght@300;400;500;700&display=swap">
