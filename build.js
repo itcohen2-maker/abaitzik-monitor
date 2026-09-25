@@ -614,7 +614,7 @@ function build() {
     a list of element ids from the home screen; null keeps everything, which
     is what Itzik's instance says and what an absent instance.json means.
   */
-  const instanceJson = JSON.stringify({ name: inst.name, owner: inst.owner, screens: inst.screens });
+  const instanceJson = JSON.stringify({ name: inst.name, owner: inst.owner, pageTitle: inst.pageTitle, screens: inst.screens });
   const html = html0.replace('__CODE_ID__', codeId0).replace("'__INSTANCE__'", instanceJson);
 
   fs.mkdirSync(OUT_DIR, { recursive: true });
@@ -2970,7 +2970,7 @@ try{
 
 <section id="pD" hidden>
  <h2>גוגל דרייב</h2>
- <div class="hint" style="margin-bottom:12px">קיצורים ישירים לתיקיות שאנחנו עובדים איתן. הכל בחשבון itcohen2.</div>
+ <div class="hint" style="margin-bottom:12px">קיצורים ישירים לתיקיות שאנחנו עובדים איתן.${inst.name === 'abaitzik' ? ' הכל בחשבון itcohen2.' : ''}</div>
  <nav class="links" aria-label="תיקיות בדרייב">
   <!-- Itzik, 16.9: the Drive button took him straight to the stories and he
        could not find the new sign photo. Posts get their own entry, first. -->
@@ -3549,6 +3549,10 @@ function gjson(r){
 */
 var CODE_ID='__CODE_ID__';
 var INSTANCE='__INSTANCE__';
+// Who this page belongs to, for every line that names him. Itzik's copy says
+// what it always said; another copy says its own owner's name.
+var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
+var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -4067,7 +4071,7 @@ function bubbleHtml(m,i,fresh,handled){
  var live=isLive(m);
  var vb=voiceBlock(m),vtx=vb?transcriptOf(m):'';
  // מה שמועתק מהודעה קולית הוא המילים, לא שם הקובץ.
- var line=(mine?'איציק':'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'')
+ var line=(mine?OWNER:'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'')
   +(vtx?String.fromCharCode(10)+'תמלול: '+vtx:'');
  return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')+(live?' beat':'')
   +(fresh?' fresh':(handled?' touched':' read'))+'" data-i="'+i+'"'
@@ -4145,7 +4149,7 @@ function renderThread(){
    return bubbleHtml(m,i,fresh,handled);
   }).join('');
   var ri2=flat.indexOf(t.root);
-  var whole=t.msgs.map(function(m){return (m.from==='itzik'?'איציק':'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');}).join(String.fromCharCode(10,10));
+  var whole=t.msgs.map(function(m){return (m.from==='itzik'?OWNER:'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');}).join(String.fromCharCode(10,10));
   return '<details class="th th-'+r.status+'" data-k="'+esc(t.key)+'"'+(ri===0&&r.status==='fresh'?' open':'')+'>'
    +'<summary><span class="num">'+r.n+'</span><b>'+esc(head)+'</b>'+tag
    +'<small>'+esc(stamp(t.last))+' · '+esc(ago(t.last))+' · '+t.msgs.length+'</small>'
@@ -4509,7 +4513,7 @@ document.getElementById('copyAll').onclick=function(){
   .slice().sort(function(a,b2){return (a.at||'')<(b2.at||'')?-1:1;});
  if(!all.length)return;
  var t=all.map(function(m){
-  return (m.from==='itzik'?'איציק':'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');
+  return (m.from==='itzik'?OWNER:'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');
  }).join(String.fromCharCode(10,10));
  var done=function(){b.textContent='הועתק';setTimeout(function(){b.textContent='העתקת כל השיחה';},1500);};
  if(navigator.clipboard&&navigator.clipboard.writeText){
@@ -4831,7 +4835,7 @@ function updateDot(){
  renderNew();
  var n=newestClaude(),fresh=!!(n&&n>chatSeen());
  var d=document.getElementById('mDot');if(d)d.hidden=!fresh;
- document.title=(fresh?'(1) ':'')+'אבא איציק בבנייה עצמית';
+ document.title=(fresh?'(1) ':'')+PAGE_TITLE;
 }
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
 var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn'};
@@ -7625,8 +7629,8 @@ function faceEnroll(cb){
  var uid=new Uint8Array(16);crypto.getRandomValues(uid);
  navigator.credentials.create({publicKey:{
   challenge:ch,
-  rp:{name:'המוניטור של אבא איציק'},
-  user:{id:uid,name:'itzik',displayName:'איציק'},
+  rp:{name:PAGE_TITLE},
+  user:{id:uid,name:(INSTANCE&&INSTANCE.name)||'itzik',displayName:OWNER},
   pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
   authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},
   timeout:60000,attestation:'none'
@@ -8216,7 +8220,7 @@ function diagnose(){
  var pA=document.getElementById('pA');
  var num=function(f){try{return f();}catch(e){return 'שגיאה: '+e.message;}};
  var L=[];
- L.push('אבחון מהמכשיר של איציק');
+ L.push('אבחון מהמכשיר של '+OWNER);
  L.push('גרסה '+(D.buildId||'?')+' · קוד '+(typeof CODE_ID!=='undefined'?CODE_ID:'?'));
  L.push('נעילה: '+(GATE?(GKEY?'נפתחה':'עדיין סגורה'):'כבויה'));
  /*
@@ -8264,7 +8268,7 @@ on('diagBtn',function(){
  var said=document.getElementById('diagSaid');
  var txt;
  try{ txt=diagnose(); }
- catch(e){ txt='אבחון מהמכשיר של איציק'+String.fromCharCode(10)+'האבחון עצמו נפל: '+e.message; }
+ catch(e){ txt='אבחון מהמכשיר של '+OWNER+String.fromCharCode(10)+'האבחון עצמו נפל: '+e.message; }
  if(said)said.textContent='שולח.';
  sendText('אבחון',txt,'אבחון').then(function(){
   if(said)said.textContent='נשלח. אני רואה את זה עכשיו.';
