@@ -68,11 +68,16 @@ function main() {
   }
   if (changed && !DRY) {
     // A colour change is worth a publish on its own; a same colour is not.
+    /*
+      Through push.js, never around it.
+
+      The first version built and pushed on its own. A worker session that was
+      pushing at the same second hit a conflict on the generated docs files
+      and had to untangle it, which it reported on 25.9. push.js is the one
+      queue every writer to this repository goes through; this is a writer.
+    */
     try {
-      execFileSync('node', ['build.js'], { cwd: __dirname, stdio: 'ignore' });
-      execFileSync('git', ['add', '-A', '--', 'docs'], { cwd: __dirname });
-      execFileSync('git', ['commit', '-q', '-m', 'tenants: health changed'], { cwd: __dirname });
-      execFileSync('git', ['push', '-q'], { cwd: __dirname });
+      execFileSync('node', ['push.js', 'tenants: health changed'], { cwd: __dirname, stdio: 'ignore', timeout: 240000 });
       console.log('published');
     } catch (e) { console.log('publish failed: ' + String(e.message).slice(0, 120)); }
   }
