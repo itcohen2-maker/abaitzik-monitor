@@ -41,6 +41,8 @@ function check(t) {
   const problems = [];
   if (t.listener && !active(t.listener)) problems.push('המאזין לא רץ');
   if (t.timer && !active(t.timer)) problems.push('המענה האוטומטי לא מתוזמן');
+  // A tenant that stopped receiving fixes is broken in a way nobody sees.
+  if (t.syncError) problems.push('העדכונים לא מגיעים אליו');
   let beatAt = '';
   try {
     const live = JSON.parse(fs.readFileSync(path.join(t.dir, 'data', 'status', 'live.json'), 'utf8'));
