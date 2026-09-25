@@ -36,6 +36,15 @@ const { execFile } = require('child_process');
 // Which monitor this is. Without instance.json every one of these is Itzik's
 // current value, so the listener subscribes to exactly what it did yesterday.
 const inst = require('./lib/instance.js');
+/*
+  Only on the machine this instance names. See serverHost in lib/instance.js:
+  a second the listener on another machine answers every message twice and fights
+  the first one over every push.
+*/
+if (require.main === module && inst.serverHost && require('os').hostname() !== inst.serverHost) {
+  console.log('the listener runs on ' + inst.serverHost + ', not here (' + require('os').hostname() + '). Leaving.');
+  process.exit(0);
+}
 const TOPIC = inst.ntfy.in;
 const LIVE = inst.ntfy.live;
 const SEEN = path.join(inst.dataPath, 'ntfy-seen.json');

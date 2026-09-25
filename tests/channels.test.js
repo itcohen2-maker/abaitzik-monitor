@@ -17,7 +17,9 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const FILE = path.join(ROOT, 'instance.json');
+// A private file per test process, never the real instance.json.
+const FILE = path.join(require('os').tmpdir(), 'abaitzik-instance-' + process.pid + '.json');
+process.env.ABAITZIK_INSTANCE_FILE = FILE;
 
 // Every module under the repo is dropped from the cache, because the instance
 // is read once at require time on purpose and anything that already holds it

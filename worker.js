@@ -24,6 +24,15 @@ const { execFile, spawn } = require('child_process');
 const HERE = __dirname;
 // Which monitor this is. Defaults are Itzik's folders and Itzik's name.
 const inst = require('./lib/instance.js');
+/*
+  Only on the machine this instance names. See serverHost in lib/instance.js:
+  a second the worker on another machine answers every message twice and fights
+  the first one over every push.
+*/
+if (require.main === module && inst.serverHost && require('os').hostname() !== inst.serverHost) {
+  console.log('the worker runs on ' + inst.serverHost + ', not here (' + require('os').hostname() + '). Leaving.');
+  process.exit(0);
+}
 const CHAT = path.join(inst.dataPath, 'chat', 'chat');
 const STATUS = path.join(inst.dataPath, 'status');
 const LOCK = path.join(STATUS, 'worker.lock');

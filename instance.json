@@ -12,5 +12,6 @@
   "screens": null,
   "chromeProfile": "Profile 4",
   "memoryDir": "C:/Users/User/.claude/projects/C--Users-User/memory",
-  "driveFolder": ""
+  "driveFolder": "",
+  "serverHost": "monitor"
 }

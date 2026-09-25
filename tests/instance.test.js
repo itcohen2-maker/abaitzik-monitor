@@ -20,7 +20,9 @@ const path = require('path');
 const os = require('os');
 
 const MODULE = path.join(__dirname, '..', 'lib', 'instance.js');
-const FILE = path.join(__dirname, '..', 'instance.json');
+// A private file per test process, never the real instance.json.
+const FILE = path.join(require('os').tmpdir(), 'abaitzik-instance-' + process.pid + '.json');
+process.env.ABAITZIK_INSTANCE_FILE = FILE;
 
 // The hard coded values, as they were before the loader existed.
 const BEFORE = {
