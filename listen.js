@@ -186,6 +186,32 @@ function git(args, cb) {
     cb(err, String(out || '') + String(errout || ''));
   });
 }
+/*
+  Catching up with the remote without ever leaving the tree in a state that
+  the next tick cannot use.
+
+  Twice on 25.9 a plain `pull --rebase` hit a conflict on docs/live.json, the
+  one file every instance rewrites, and stopped mid rebase: detached HEAD,
+  "UU docs/live.json", and from then on every push and every later pull
+  failed with words that looked exactly like a GitHub permissions problem.
+  The listener kept saying the publish failed and would try again, and it
+  never could, because the repository was no longer on a branch.
+
+  So: abort any rebase left behind first, take our side of any conflict since
+  what this machine just wrote is the newer state, and if even that fails,
+  abort again and go back to main, so that whatever happened, the next attempt
+  starts from a clean tree. The error is passed on for the caller to report.
+*/
+function resync(cb) {
+  git(['rebase', '--abort'], function () {
+    git(['pull', '--rebase', '--autostash', '-X', 'theirs'], function (err, out) {
+      if (!err) return cb(null, out);
+      git(['rebase', '--abort'], function () {
+        git(['checkout', '-q', 'main'], function () { cb(err, out); });
+      });
+    });
+  });
+}
 function shapeOf(body) {
   const b = body.budget || {};
   return [connectedAt ? 'up' : 'down',
@@ -222,7 +248,7 @@ function publishFallback(body, force) {
       if (attempt) { say('!! פרסום מצב המאזין לדף נכשל, ינוסה בשינוי הבא.'); return; }
       // Someone else pushed first. Rebase onto them and try once more, then
       // leave it: the next change carries the same information anyway.
-      git(['pull', '--rebase', '--autostash'], function () { push(1); });
+      resync(function () { push(1); });
     });
   }
 }
@@ -504,7 +530,7 @@ function publishChat() {
         if (err2) { say('!! commit נכשל: ' + out2.trim().slice(0, 120)); return finish(); }
         git(['push'], function (err3) {
           if (!err3) { say('אישור הקבלה פורסם לדף'); return finish(); }
-          git(['pull', '--rebase', '--autostash'], function () {
+          resync(function () {
             git(['push'], function (err4) {
               say(err4 ? '!! פרסום אישור הקבלה נכשל' : 'אישור הקבלה פורסם לדף (אחרי rebase)');
               finish();
