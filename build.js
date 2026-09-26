@@ -1867,6 +1867,35 @@ body.editing .bn{display:none}
  font:800 15px Heebo,sans-serif;text-align:start}
 .backbar:active{transform:translateY(1px)}
 /* שורת התגובה שיושבת בתחתית כל מסך פנימי. ביקש ב-19.09: תמיד תן לי אפשרות להגיב. */
+/*
+  Inner screens, 26.9. Every screen used to open with the title, the version
+  lines, the avatar on a row of its own, a green refresh bar and a white "close
+  and back home" bar: a third of the phone before the first line of content,
+  and three ways home. Now one slim bar sticks to the top: back on the right,
+  the screen's name, refresh on the left. The home screen keeps its header.
+*/
+.panebar{display:none}
+body.inner .panebar{display:flex;position:sticky;top:0;z-index:60;align-items:center;gap:10px;
+ margin:-18px -16px 14px;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
+ background:var(--ground);border-bottom:1px solid var(--line);box-shadow:var(--shadow)}
+.panebar .pb-back{flex:0 0 auto;min-height:44px;padding:0 16px 0 12px;border:0;border-radius:999px;cursor:pointer;
+ background:var(--accent-soft);color:var(--accent);font:700 16px Heebo,sans-serif;display:flex;align-items:center;gap:4px}
+.panebar .pb-back svg{width:20px;height:20px}
+.panebar .pb-t{flex:1;min-width:0;font:800 21px/1.2 Heebo,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.panebar .pb-r{flex:0 0 44px;height:44px;border:1px solid var(--line);border-radius:50%;background:var(--surface);
+ color:var(--dim);cursor:pointer;display:grid;place-items:center}
+.panebar .pb-r svg{width:20px;height:20px}
+.panebar button:active{transform:scale(.96)}
+body.inner .hd,body.inner #reloadBtn,body.inner section>.backbar,body.inner #welcomeCard,body.inner #installBar{display:none!important}
+body.inner section:not(#pH)>h2:first-of-type{display:none}
+/* Room under the last line, so the floating microphone never sits on it. */
+body.inner .wrap{padding-bottom:190px}
+/* The reply box folds into one line until he opens it. */
+details.replybar>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;
+ font:700 16px Heebo,sans-serif;color:var(--accent)}
+details.replybar>summary::-webkit-details-marker{display:none}
+details.replybar:not([open]){padding:12px 14px}
+details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
 .replybar{margin:22px 0 4px;padding:14px;border:1px solid var(--line);border-radius:var(--r);
  background:var(--surface)}
 .replybar .rlead{font:800 19px Heebo,sans-serif;color:var(--ink);margin-bottom:2px}
@@ -2305,7 +2334,9 @@ body.editing .bn{display:none}
 .morebtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 #pH.bare{padding-top:6px}
 #bareBtn{margin-inline-start:0;background:linear-gradient(180deg,#b39ddb,#5e35b1);
- box-shadow:0 2px 6px rgba(94,53,177,.4),inset 0 1px 0 rgba(255,255,255,.28)}
+ box-shadow:0 2px 6px rgba(94,53,177,.4),inset 0 1px 0 rgba(255,255,255,.28);
+ /* 26.9: dim grey text on purple read as a disabled button. */
+ color:#fff;font:700 16px Heebo,sans-serif;min-height:50px;border:0}
 #bareBtn:active{background:linear-gradient(180deg,#5e35b1,#4527a0)}
 /* ---------- מצב רגוע ----------
    Itzik said the flashing in the monitor is stressful and asked for calm and
@@ -6640,9 +6671,10 @@ function replyBar(sec){
  if(sec.querySelector(':scope > .replybar'))return;
  var h=sec.querySelector('h2');
  var name=h?String(h.textContent||'').trim():'';
- var wrap=document.createElement('div');
+ // 26.9: folded to one line until opened, so it stops pushing the screen down.
+ var wrap=document.createElement('details');
  wrap.className='replybar';
- wrap.innerHTML='<div class="rlead">יש לך מה להגיד על המסך הזה</div>'
+ wrap.innerHTML='<summary><span aria-hidden="true">💬</span>יש לך מה להגיד על המסך הזה?</summary>'
   +replyBox(name?('על המסך '+name):'על המסך הזה');
  sec.appendChild(wrap);
  try{wireBoxes(wrap);}catch(e){try{console.error('replyBar',e);}catch(_){}}
@@ -6661,6 +6693,25 @@ function replyBar(sec){
   Only on a real change of pane. A soft refresh repaints without moving him, and
   yanking him to the top mid read would be a worse bug than the one this fixes.
 */
+function paneBar(w){
+ var bar=document.getElementById('paneBar');
+ if(!bar){
+  bar=document.createElement('div');bar.id='paneBar';bar.className='panebar';
+  bar.innerHTML='<button type="button" class="pb-back" id="pbBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>בית</button>'
+   +'<div class="pb-t" id="pbTitle"></div>'
+   +'<button type="button" class="pb-r" id="pbReload" aria-label="רענון"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg></button>';
+  var hd=document.querySelector('.hd');
+  if(hd&&hd.parentNode)hd.parentNode.insertBefore(bar,hd);else document.body.insertBefore(bar,document.body.firstChild);
+  document.getElementById('pbBack').onclick=function(){pane('h');};
+  document.getElementById('pbReload').onclick=function(){window.reloadStay=panePrev;var r=document.getElementById('reloadBtn');if(r)r.click();};
+ }
+ var inner=(w!=='h');
+ document.body.classList.toggle('inner',inner);
+ if(inner){
+  var sec=document.getElementById(PANES[w]),h=sec&&sec.querySelector('h2');
+  document.getElementById('pbTitle').textContent=h?String(h.textContent||'').trim():'';
+ }
+}
 var panePrev='';
 function pane(w){
  var moved=(panePrev!==w);
@@ -6697,6 +6748,7 @@ function pane(w){
  // him around.
  var talk=document.getElementById('talkCard');
  if(talk)talk.hidden=(w!=='h');
+ paneBar(w);
  if(moved){
   try{window.scrollTo(0,0);}catch(e){}
   try{document.documentElement.scrollTop=0;document.body.scrollTop=0;}catch(e){}
@@ -6763,7 +6815,9 @@ document.getElementById('reloadBtn').onclick=function(){
  var btn=this;
  btn.textContent='מרענן';
  btn.disabled=true;
- var done=function(){location.replace(location.pathname+'?v='+Date.now());};
+ // The refresh in an inner screen's bar comes back to that same screen.
+ var stay=window.reloadStay||'';window.reloadStay='';
+ var done=function(){location.replace(location.pathname+'?v='+Date.now()+(stay?'#'+stay:''));};
  try{
   if(window.caches&&caches.keys){
    caches.keys().then(function(keys){
