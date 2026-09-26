@@ -710,6 +710,7 @@ function build() {
 const TENANT_TILES = {
   gCIdeas: ['g11', '💡 רעיונות לתוכן', 'מה שעלה לך, לפני שנשכח'],
   gPlan: ['g3', '🗓️ לוח תוכן', 'מה עולה מתי, ומה כבר עלה'],
+  gRemote: ['g4', '🖥️ לחבר את המחשב', 'משימה של חמש דקות, פעם אחת'],
   gRemind: ['g16', '⏰ לחזור ללקוחות', 'תזכורות, ולקוח שנעלם'],
   gTasks: ['g17', '✅ משימות', 'מה לעשות, לפי יום'],
   gNotes: ['g10', '📝 פתקים', 'נכתב, נשמר, לא הולך לאיבוד'],
@@ -1122,6 +1123,13 @@ button.abtn[disabled]{opacity:.55}
  50%,100%{background:#fff;color:var(--red);box-shadow:0 0 0 4px rgba(255,255,255,.9)}}
 .newbtn.hot .nb-c{animation:hardblink .5s steps(1) infinite}
 .gt.glow .flag{animation:hardblink .5s steps(1) infinite}
+/* A task tile blinks until it is done: a yellow ring pulsing twice a second. */
+@keyframes taskbeat{0%,49%{box-shadow:0 0 0 4px var(--yellow),var(--shadow)}50%,100%{box-shadow:0 0 0 0 transparent,var(--shadow)}}
+.gt.taskblink{animation:taskbeat .8s steps(1) infinite}
+@media(prefers-reduced-motion:reduce){.gt.taskblink{animation:none;box-shadow:0 0 0 4px var(--yellow)}}
+.rcsteps{margin:6px 0 14px;padding-inline-start:22px;line-height:1.7}
+.rcsteps li{margin-bottom:8px}
+#pRc .ask{display:flex;width:100%;margin-top:10px}
 .th-fresh>summary .badge{animation:hardblink .5s steps(1) infinite}
 .bub.fresh .badge{animation:hardblink .5s steps(1) infinite}
 .bn button.hasnew,.bn button.hasnew.blink{animation:hardblink .5s steps(1) infinite}
@@ -3319,6 +3327,28 @@ try{
  <div id="ciBox"></div>
 </section>
 
+<!--
+  Connecting a customer's computer, 26.9. Itzik: "Ilay got no offer to connect
+  his computer. Why? Give him a blinking button with a task." The step had been
+  taken off his start page on 25.9 because it ran through Itzik's profile. This
+  is the customer's own part: he installs Chrome Remote Desktop under his own
+  Google account and allows it on his Mac. Nothing connects without a one time
+  code he makes and shares himself, each time.
+-->
+<section id="pRc" hidden>
+ <h2>לחבר את המחשב</h2>
+ <div class="rephint">פעם אחת, בערך חמש דקות. אחרי זה אפשר לעזור לך במחשב עצמו, רק כשאתה מאשר.</div>
+ <ol class="rcsteps">
+  <li>במחשב, בכרום, נכנסים לכתובת למטה עם חשבון הגוגל שלך.</li>
+  <li>בחלק <b>קבלת תמיכה</b> לוחצים על כפתור ההורדה ומתקינים את <b>Chrome Remote Desktop</b>.</li>
+  <li>במק: הגדרות המערכת, פרטיות ואבטחה. מאשרים ל Chrome Remote Desktop גם <b>נגישות</b> וגם <b>הקלטת מסך</b>.</li>
+  <li>זהו. כשנצטרך להתחבר תקבל כאן בקשה: לוחצים <b>יצירת קוד</b>, שולחים את הקוד בצ׳אט ולוחצים <b>שיתוף</b>. בלי האישור שלך אף אחד לא נכנס.</li>
+ </ol>
+ <a class="ask" href="https://remotedesktop.google.com/support" target="_blank" rel="noopener">פתיחת remotedesktop.google.com/support</a>
+ <button type="button" class="ask" id="rcDone">סיימתי את ההתקנה</button>
+ <div class="msgsaid" id="rcSaid"></div>
+</section>
+
 <section id="pPl" hidden>
  <h2>לוח תוכן</h2>
  <div class="rephint">מה מתוכנן לעלות, לפי יום. לחיצה מסמנת שעלה.</div>
@@ -5114,7 +5144,7 @@ function updateDot(){
  document.title=(fresh?'(1) ':'')+PAGE_TITLE;
 }
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
-var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn'};
+var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn',Rc:'pRc'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 /*ITZIK:BEGIN*/
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
@@ -7926,6 +7956,18 @@ document.addEventListener('change',function(e){
 });
 on('gCIdeas',function(){pane('I');renderContentIdeas();});
 on('gPlan',function(){pane('P');renderPlan();});
+on('gRemote',function(){pane('Rc');});
+function remoteDone(){try{return localStorage.getItem('remoteDone')==='1';}catch(e){return false;}}
+boot('remote',function(){var b=document.getElementById('gRemote');if(b)b.classList.toggle('taskblink',!remoteDone());});
+on('rcDone',function(){
+ var said=document.getElementById('rcSaid'),btn=document.getElementById('rcDone');
+ btn.disabled=true;said.textContent='שולח.';
+ sendText('משימה מהמוניטור','התקנתי את Chrome Remote Desktop במחשב ואישרתי נגישות והקלטת מסך.','משימה').then(function(){
+  try{localStorage.setItem('remoteDone','1');}catch(e){}
+  var b=document.getElementById('gRemote');if(b)b.classList.remove('taskblink');
+  said.textContent='נשלח. המשימה סגורה.';toast(said.textContent);markSent('text');
+ }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';}).then(function(){btn.disabled=false;});
+});
 function renderTenants(){
  var host=document.getElementById('tnBox');
  if(!host)return;
