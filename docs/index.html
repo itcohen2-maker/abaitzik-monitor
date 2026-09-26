@@ -930,6 +930,26 @@ body.editing .bn{display:none}
  border-radius:var(--r);background:var(--ink);color:var(--ground);
  font:800 15px Heebo,sans-serif;text-align:start}
 .backbar:active{transform:translateY(1px)}
+.panebar{display:none}
+body.inner .panebar{display:flex;position:sticky;top:0;z-index:60;align-items:center;gap:10px;
+ margin:-18px -16px 14px;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
+ background:var(--ground);border-bottom:1px solid var(--line);box-shadow:var(--shadow)}
+.panebar .pb-back{flex:0 0 auto;min-height:44px;padding:0 16px 0 12px;border:0;border-radius:999px;cursor:pointer;
+ background:var(--accent-soft);color:var(--accent);font:700 16px Heebo,sans-serif;display:flex;align-items:center;gap:4px}
+.panebar .pb-back svg{width:20px;height:20px}
+.panebar .pb-t{flex:1;min-width:0;font:800 21px/1.2 Heebo,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.panebar .pb-r{flex:0 0 44px;height:44px;border:1px solid var(--line);border-radius:50%;background:var(--surface);
+ color:var(--dim);cursor:pointer;display:grid;place-items:center}
+.panebar .pb-r svg{width:20px;height:20px}
+.panebar button:active{transform:scale(.96)}
+body.inner .hd,body.inner #reloadBtn,body.inner section>.backbar,body.inner #welcomeCard,body.inner #installBar{display:none!important}
+body.inner section:not(#pH)>h2:first-of-type{display:none}
+body.inner .wrap{padding-bottom:190px}
+details.replybar>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;
+ font:700 16px Heebo,sans-serif;color:var(--accent)}
+details.replybar>summary::-webkit-details-marker{display:none}
+details.replybar:not([open]){padding:12px 14px}
+details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
 .replybar{margin:22px 0 4px;padding:14px;border:1px solid var(--line);border-radius:var(--r);
  background:var(--surface)}
 .replybar .rlead{font:800 19px Heebo,sans-serif;color:var(--ink);margin-bottom:2px}
@@ -1273,7 +1293,8 @@ body.editing .bn{display:none}
 .morebtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 #pH.bare{padding-top:6px}
 #bareBtn{margin-inline-start:0;background:linear-gradient(180deg,#b39ddb,#5e35b1);
- box-shadow:0 2px 6px rgba(94,53,177,.4),inset 0 1px 0 rgba(255,255,255,.28)}
+ box-shadow:0 2px 6px rgba(94,53,177,.4),inset 0 1px 0 rgba(255,255,255,.28);
+ color:#fff;font:700 16px Heebo,sans-serif;min-height:50px;border:0}
 #bareBtn:active{background:linear-gradient(180deg,#5e35b1,#4527a0)}
 :root.calm .newbtn.hot,
 :root.calm .newbtn.hot .nb-c,
@@ -1466,7 +1487,7 @@ body.editing .bn{display:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-26T05:02:27.938Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-26T05:10:23.432Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2465,7 +2486,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='c7148b47cf';
+var CODE_ID='3a351286c2';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -4564,12 +4585,31 @@ function replyBar(sec){
  if(sec.querySelector(':scope > .replybar'))return;
  var h=sec.querySelector('h2');
  var name=h?String(h.textContent||'').trim():'';
- var wrap=document.createElement('div');
+ var wrap=document.createElement('details');
  wrap.className='replybar';
- wrap.innerHTML='<div class="rlead">יש לך מה להגיד על המסך הזה</div>'
+ wrap.innerHTML='<summary><span aria-hidden="true">💬</span>יש לך מה להגיד על המסך הזה?</summary>'
   +replyBox(name?('על המסך '+name):'על המסך הזה');
  sec.appendChild(wrap);
  try{wireBoxes(wrap);}catch(e){try{console.error('replyBar',e);}catch(_){}}
+}
+function paneBar(w){
+ var bar=document.getElementById('paneBar');
+ if(!bar){
+  bar=document.createElement('div');bar.id='paneBar';bar.className='panebar';
+  bar.innerHTML='<button type="button" class="pb-back" id="pbBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>בית</button>'
+   +'<div class="pb-t" id="pbTitle"></div>'
+   +'<button type="button" class="pb-r" id="pbReload" aria-label="רענון"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg></button>';
+  var hd=document.querySelector('.hd');
+  if(hd&&hd.parentNode)hd.parentNode.insertBefore(bar,hd);else document.body.insertBefore(bar,document.body.firstChild);
+  document.getElementById('pbBack').onclick=function(){pane('h');};
+  document.getElementById('pbReload').onclick=function(){window.reloadStay=panePrev;var r=document.getElementById('reloadBtn');if(r)r.click();};
+ }
+ var inner=(w!=='h');
+ document.body.classList.toggle('inner',inner);
+ if(inner){
+  var sec=document.getElementById(PANES[w]),h=sec&&sec.querySelector('h2');
+  document.getElementById('pbTitle').textContent=h?String(h.textContent||'').trim():'';
+ }
 }
 var panePrev='';
 function pane(w){
@@ -4586,6 +4626,7 @@ function pane(w){
  if(PAINT[w]){try{PAINT[w]();}catch(e){try{console.error('pane paint '+w,e);}catch(_){}}}
  var talk=document.getElementById('talkCard');
  if(talk)talk.hidden=(w!=='h');
+ paneBar(w);
  if(moved){
   try{window.scrollTo(0,0);}catch(e){}
   try{document.documentElement.scrollTop=0;document.body.scrollTop=0;}catch(e){}
@@ -4625,7 +4666,8 @@ document.getElementById('reloadBtn').onclick=function(){
  var btn=this;
  btn.textContent='מרענן';
  btn.disabled=true;
- var done=function(){location.replace(location.pathname+'?v='+Date.now());};
+ var stay=window.reloadStay||'';window.reloadStay='';
+ var done=function(){location.replace(location.pathname+'?v='+Date.now()+(stay?'#'+stay:''));};
  try{
   if(window.caches&&caches.keys){
    caches.keys().then(function(keys){
