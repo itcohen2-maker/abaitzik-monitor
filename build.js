@@ -2898,7 +2898,7 @@ try{
     a cover, a spread and an agents page. The page sits in docs/katalog so it
     opens on the phone with no login. Originals and the PDF are on Drive.
   -->
-  <button type="button" class="gt gKat" id="gKatalog"><b>📖 הקטלוג הבא</b><small>קיץ 2027. עשרה כיווני עיצוב לבחירה</small></button>
+  <button type="button" class="gt gKat" id="gKatalog"><b>📖 הקטלוג הבא</b><small>קיץ 2027. עשרה כיווני עיצוב ודוח הטרנדים 2027 2028</small></button>
  </div>
 
  <!-- "מה הסתרנו" came off on 16.9. Hiding a tile is his to undo in settings. -->
