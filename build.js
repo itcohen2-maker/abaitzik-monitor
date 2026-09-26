@@ -3077,8 +3077,8 @@ try{
 </div>
 <div class="alerts" id="sfxBox">
  <div>
-  <b>צליל שליחה</b>
-  <small id="sfxSaid">כשהודעה יוצאת נשמע צליל קצר, והיא עפה במעטפה לתיבת הדואר. הצליל לא עוצר מוזיקה שמתנגנת.</small>
+  <b>צלילים</b>
+  <small id="sfxSaid">תקתוק קטן בכל לחיצה, וצליל כשהודעה עפה במעטפה לתיבת הדואר. הצלילים לא עוצרים מוזיקה שמתנגנת.</small>
  </div>
  <button type="button" class="abtn" id="sfxBtn">כיבוי</button>
 </div>
@@ -7148,12 +7148,37 @@ document.addEventListener('submit',function(e){
  try{
   var f=e.target,r=f&&f.getBoundingClientRect&&f.getBoundingClientRect();
   if(r&&r.width)sendFrom={x:r.left+r.width/2,y:r.top+r.height/2,w:Math.min(r.width,300)};
-  if(sfxOn()&&sfxCanMix()&&(window.AudioContext||window.webkitAudioContext)){
-   sfx=sfx||new (window.AudioContext||window.webkitAudioContext)();
-   if(sfx.state==='suspended')sfx.resume();
-  }
+  sfxCtx();
  }catch(err){}
 },true);
+/*
+  A soft tick on every press, 26.9: "are there sounds on the taps? I want
+  them." A press is the one moment a page may make a sound on an iPhone, so the
+  context is made here, inside the tap, never at load. The microphone is left
+  silent, so nothing plays into a recording.
+*/
+document.addEventListener('click',function(e){
+ try{
+  var el=e.target&&e.target.closest&&e.target.closest('button,a,summary,[role="button"],label,input[type="checkbox"]');
+  if(!el||el.id==='micBtn'||el.closest('#micDock'))return;
+  if(!sfxCtx())return;
+  var nav=!!el.closest('nav,.panebar');
+  sfxTone(nav?1320:1700,nav?880:1150,0,0.04,0.03,'sine');
+ }catch(err){}
+},true);
+var sfxT=0;
+function sfxCtx(){
+ if(!sfxOn()||!sfxCanMix()||!(window.AudioContext||window.webkitAudioContext))return null;
+ sfx=sfx||new (window.AudioContext||window.webkitAudioContext)();
+ if(sfx.state==='suspended')sfx.resume();
+ sfxIdle();
+ return sfx;
+}
+// Let go of the phone's audio eight seconds after the last sound.
+function sfxIdle(){
+ clearTimeout(sfxT);
+ sfxT=setTimeout(function(){var c=sfx;sfx=null;try{if(c)c.close();}catch(e){}},8000);
+}
 /*
   20.9: opening the monitor cut the music he had playing, because on an iPhone
   any sound a page makes takes over the phone's audio. So nothing is opened
@@ -7190,7 +7215,7 @@ function sentSound(){
   sfxTone(520,780,0,0.09,0.05,'triangle');
   sfxWhoosh(0.28,0.55);
   sfxTone(1175,0,0.86,0.5,0.07);sfxTone(1568,0,0.96,0.6,0.06);
-  var c=sfx;sfx=null;setTimeout(function(){try{c.close();}catch(e){}},2200);
+  sfxIdle();
  }catch(e){}
 }
 function flyMail(){
@@ -10125,7 +10150,7 @@ on('clearBtn',function(){
  var b=document.getElementById('sfxBtn');if(!b)return;
  function paint(){b.textContent=sfxOn()?'כיבוי':'הפעלה';}
  paint();
- b.onclick=function(){try{localStorage.setItem('sfxOff',sfxOn()?'1':'0');}catch(e){}paint();toast(sfxOn()?'הצליל פועל.':'הצליל כבוי.');};
+ b.onclick=function(){try{localStorage.setItem('sfxOff',sfxOn()?'1':'0');}catch(e){}paint();toast(sfxOn()?'הצלילים פועלים.':'הצלילים כבויים.');};
 })();
 on('resetBtn',function(){
  markAllRead();

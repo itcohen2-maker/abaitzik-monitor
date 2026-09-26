@@ -1094,10 +1094,21 @@ test('the page never opens an audio context of its own', () => {
   // stays: made only inside a send, only where the page is ambient, closed after.
   assert.equal(html.split('new (window.AudioContext').length - 1, 1, 'one audio context, in one place');
   const i = html.indexOf('new (window.AudioContext');
-  assert.ok(html.lastIndexOf("document.addEventListener('submit'", i) > i - 700, 'made inside the send, not at load');
-  assert.ok(html.slice(i - 200, i).includes('sfxCanMix()'), 'only where it can mix');
+  // 26.9: a tick on every tap too. The context is made only by sfxCtx, and
+  // sfxCtx is called only from inside a tap or a send, never at load.
+  assert.ok(html.slice(html.lastIndexOf('function sfxCtx(){', i), i).includes('sfxCanMix()'), 'only where it can mix');
+  const calls = html.split('sfxCtx()').length - 1;
+  // Each call sits in the first lines of a submit or click listener.
+  let inHandlers = 0;
+  for (let at = html.indexOf('sfxCtx()'); at >= 0; at = html.indexOf('sfxCtx()', at + 1)) {
+    if (html.slice(at - 9, at) === 'function ') continue;
+    const before = html.slice(Math.max(0, at - 400), at);
+    if (before.includes("addEventListener('submit',function(e){") || before.includes("addEventListener('click',function(e){")) inHandlers++;
+  }
+  assert.equal(inHandlers, 2, 'called from the send and the tap');
+  assert.equal(calls, 2 + 1, 'nowhere else (the third is its own definition)');
   assert.ok(html.includes("navigator.audioSession.type='ambient'"));
-  assert.ok(html.includes('c.close();'), 'closed again after the sound');
+  assert.ok(html.includes('if(c)c.close();'), 'let go of the audio after the sound');
   // משוב הלחיצה נשאר, בוויברציה, שלא נוגעת בשמע.
   assert.ok(html.includes('navigator.vibrate'));
   // וההקלטה עדיין משחררת את המיקרופון כשהיא נגמרת, אחרת המוזיקה לא חוזרת.
