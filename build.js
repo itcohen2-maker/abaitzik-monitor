@@ -1886,6 +1886,15 @@ body.inner .panebar{display:flex;position:sticky;top:0;z-index:60;align-items:ce
  color:var(--dim);cursor:pointer;display:grid;place-items:center}
 .panebar .pb-r svg{width:20px;height:20px}
 .panebar button:active{transform:scale(.96)}
+/*
+  Itzik, 26.9: "always try to centre the text; right aligned is fine, and some
+  things can be centred." Short lines that stand alone are centred: the screen's
+  name, the explanation under it, an empty screen, a status line, the reply
+  fold, headings. Anything read as a paragraph or a list stays right aligned.
+*/
+.panebar .pb-t{text-align:center}
+.rephint,.empty,.hint,.msgsaid,h2,details.replybar>summary{text-align:center}
+details.replybar>summary{justify-content:center}
 body.inner .hd,body.inner #reloadBtn,body.inner section>.backbar,body.inner #welcomeCard,body.inner #installBar{display:none!important}
 body.inner section:not(#pH)>h2:first-of-type{display:none}
 /* Room under the last line, so the floating microphone never sits on it. */
