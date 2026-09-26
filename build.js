@@ -1803,6 +1803,7 @@ body.editing .bn{display:none}
 .g13{background:linear-gradient(150deg,#ffd27f,#ef6c00)}
 .g14{background:linear-gradient(150deg,#a5d6a7,#2e7d32)}
 .g15{background:linear-gradient(150deg,#90caf9,#1565c0)}
+.gKat{background:linear-gradient(150deg,#e3c07a,#2b45a6)}
 .g16{background:linear-gradient(150deg,#f8bbd0,#c2185b)}
 .g17{background:linear-gradient(150deg,#c5e1a5,#558b2f)}
 .g18{background:linear-gradient(150deg,#80deea,#00838f)}
@@ -2892,6 +2893,12 @@ try{
     today; when there is a second, this becomes a list instead of a link.
   -->
   <button type="button" class="gt g15" id="gYehuda"><b>📄 יהודה</b><small>סקירת happymeal. פתיחה, הורדה או שליחה אליו</small></button>
+  <!--
+    26.9. The Home Style summer 2027 catalog: ten design directions, each with
+    a cover, a spread and an agents page. The page sits in docs/katalog so it
+    opens on the phone with no login. Originals and the PDF are on Drive.
+  -->
+  <button type="button" class="gt gKat" id="gKatalog"><b>📖 הקטלוג הבא</b><small>קיץ 2027. עשרה כיווני עיצוב לבחירה</small></button>
  </div>
 
  <!-- "מה הסתרנו" came off on 16.9. Hiding a tile is his to undo in settings. -->
@@ -8967,6 +8974,7 @@ function yehudaSheet(){
  var first=w.querySelector('.yb');if(first)first.focus();
 }
 on('gYehuda',yehudaSheet);
+on('gKatalog',function(){window.open('katalog/','_blank','noopener');});
 on('gOp',function(){pane('s');});
 on('gNotes',function(){pane('t');renderNotes();});
 on('gRemind',function(){pane('R');renderReminders();});
