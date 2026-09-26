@@ -21,11 +21,12 @@ test('the page declares the instance placeholder exactly once, as a string the b
   assert.ok(src.includes(`.replace("'__INSTANCE__'", instanceJson)`));
 });
 
-test('the build hands the page only name, owner, title and screens', () => {
+// 26.9: plus the customer's devices and greeting, none of them secret.
+test('the build hands the page only name, owner, title, screens, devices and greeting', () => {
   const m = /const instanceJson = JSON\.stringify\(\{([^}]*)\}\)/.exec(src);
   assert.ok(m, 'instanceJson is built from an object literal');
   const fields = m[1].split(',').map(f => f.trim().split(':')[0].trim()).sort();
-  assert.deepEqual(fields, ['name', 'owner', 'pageTitle', 'screens']);
+  assert.deepEqual(fields, ['computer', 'name', 'owner', 'pageTitle', 'phone', 'screens', 'welcome']);
   // Never the topics, never the mailbox: this line is outside the gate.
   assert.ok(!/instanceJson[^\n]*ntfy/.test(src));
 });

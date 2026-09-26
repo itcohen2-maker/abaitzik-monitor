@@ -621,7 +621,8 @@ function build() {
     a list of element ids from the home screen; null keeps everything, which
     is what Itzik's instance says and what an absent instance.json means.
   */
-  const instanceJson = JSON.stringify({ name: inst.name, owner: inst.owner, pageTitle: inst.pageTitle, screens: inst.screens });
+  const instanceJson = JSON.stringify({ name: inst.name, owner: inst.owner, pageTitle: inst.pageTitle, screens: inst.screens,
+    computer: inst.computer, phone: inst.phone, welcome: inst.welcome });
   const html = html0.replace('__CODE_ID__', codeId0).replace("'__INSTANCE__'", instanceJson);
 
   fs.mkdirSync(OUT_DIR, { recursive: true });
@@ -1129,6 +1130,8 @@ button.abtn[disabled]{opacity:.55}
 @media(prefers-reduced-motion:reduce){.gt.taskblink{animation:none;box-shadow:0 0 0 4px var(--yellow)}}
 .rcsteps{margin:6px 0 14px;padding-inline-start:22px;line-height:1.7}
 .rcsteps li{margin-bottom:8px}
+.rch{font:800 17px Heebo,sans-serif;margin:14px 0 4px;text-align:center}
+.rclast{counter-reset:none;list-style:none;padding-inline-start:0}
 #pRc .ask{display:flex;width:100%;margin-top:10px}
 .th-fresh>summary .badge{animation:hardblink .5s steps(1) infinite}
 .bub.fresh .badge{animation:hardblink .5s steps(1) infinite}
@@ -3331,20 +3334,39 @@ try{
   Connecting a customer's computer, 26.9. Itzik: "Ilay got no offer to connect
   his computer. Why? Give him a blinking button with a task." The step had been
   taken off his start page on 25.9 because it ran through Itzik's profile. This
-  is the customer's own part: he installs Chrome Remote Desktop under his own
-  Google account and allows it on his Mac. Nothing connects without a one time
-  code he makes and shares himself, each time.
+  is the customer's own part. Same day: Chrome Remote Desktop needs a Google
+  account on our side too, and Itzik cannot open another one, so it is
+  RustDesk: no account anywhere, and nothing connects without the number and
+  one time password he sends himself and the yes he gives, each time.
 -->
 <section id="pRc" hidden>
  <h2>לחבר את המחשב</h2>
  <div class="rephint">פעם אחת, בערך חמש דקות. אחרי זה אפשר לעזור לך במחשב עצמו, רק כשאתה מאשר.</div>
- <ol class="rcsteps">
-  <li>במחשב, בכרום, נכנסים לכתובת למטה עם חשבון הגוגל שלך.</li>
-  <li>בחלק <b>קבלת תמיכה</b> לוחצים על כפתור ההורדה ומתקינים את <b>Chrome Remote Desktop</b>.</li>
-  <li>במק: הגדרות המערכת, פרטיות ואבטחה. מאשרים ל Chrome Remote Desktop גם <b>נגישות</b> וגם <b>הקלטת מסך</b>.</li>
-  <li>זהו. כשנצטרך להתחבר תקבל כאן בקשה: לוחצים <b>יצירת קוד</b>, שולחים את הקוד בצ׳אט ולוחצים <b>שיתוף</b>. בלי האישור שלך אף אחד לא נכנס.</li>
+ <!-- One set of steps per kind of device. instance.json says which computer
+      and phone the customer has, from the intake; unknown shows every set,
+      each under its own heading. -->
+ <div data-comp="mac">
+  <h3 class="rch">במק</h3>
+  <ol class="rcsteps">
+   <li>נכנסים לדף ההורדות של <b>RustDesk</b> (הכפתור למטה). במק חדש, עם שבב של אפל, מורידים את הקובץ שנגמר ב <b>aarch64.dmg</b>. במק ישן, את הקובץ שנגמר ב <b>x86_64.dmg</b>.</li>
+   <li>פותחים את הקובץ, גוררים את RustDesk לתיקיית <b>Applications</b> ופותחים אותו משם. אם המק אומר שאי אפשר לפתוח, לוחצים עליו בכפתור הימני ובוחרים <b>פתיחה</b>.</li>
+   <li>RustDesk יבקש הרשאות. בהגדרות המערכת, בפרטיות ואבטחה, מדליקים את RustDesk תחת <b>נגישות</b> ותחת <b>הקלטת מסך</b>. אחר כך סוגרים את RustDesk ופותחים אותו שוב.</li>
+  </ol>
+ </div>
+ <div data-comp="win">
+  <h3 class="rch">בווינדוס</h3>
+  <ol class="rcsteps">
+   <li>נכנסים לדף ההורדות של <b>RustDesk</b> (הכפתור למטה) ומורידים את הקובץ שנגמר ב <b>x86_64.exe</b>.</li>
+   <li>פותחים אותו. אם מופיע חלון כחול של ווינדוס, לוחצים <b>מידע נוסף</b> ואז <b>הפעל בכל זאת</b>.</li>
+   <li>בתוך RustDesk לוחצים <b>התקנה</b>, כדי שיעבוד גם אחרי הפעלה מחדש של המחשב.</li>
+  </ol>
+ </div>
+ <ol class="rcsteps rclast">
+  <li>זהו. כשנצטרך להתחבר תקבל כאן בקשה: פותחים את RustDesk, שולחים בצ׳אט את <b>המספר</b> ואת <b>הסיסמה</b> שמופיעים בו, ומאשרים בחלון שקופץ. בלי האישור שלך אף אחד לא נכנס, ובכל רגע אפשר לנתק.</li>
  </ol>
- <a class="ask" href="https://remotedesktop.google.com/support" target="_blank" rel="noopener">פתיחת remotedesktop.google.com/support</a>
+ <div class="rephint" data-phone="ios">בונוס לאייפון: באפ סטור יש את <b>RustDesk Remote Desktop</b>, ואיתה נכנסים למחשב שלך מהטלפון.</div>
+ <div class="rephint" data-phone="android">בונוס לאנדרואיד: בגוגל פליי יש את <b>RustDesk Remote Desktop</b>, ואיתה נכנסים למחשב שלך מהטלפון.</div>
+ <a class="ask" href="https://github.com/rustdesk/rustdesk/releases/latest" target="_blank" rel="noopener">לדף ההורדות של RustDesk</a>
  <button type="button" class="ask" id="rcDone">סיימתי את ההתקנה</button>
  <div class="msgsaid" id="rcSaid"></div>
 </section>
@@ -7957,13 +7979,20 @@ document.addEventListener('change',function(e){
 on('gCIdeas',function(){pane('I');renderContentIdeas();});
 on('gPlan',function(){pane('P');renderPlan();});
 on('gRemote',function(){pane('Rc');});
-function remoteDone(){try{return localStorage.getItem('remoteDone')==='1';}catch(e){return false;}}
+function remoteDone(){try{return localStorage.getItem('remoteDoneRD')==='1';}catch(e){return false;}}
+boot('remoteDevices',function(){
+ var I=INSTANCE||{};
+ document.querySelectorAll('#pRc [data-comp]').forEach(function(el){if(I.computer&&el.getAttribute('data-comp')!==I.computer)el.hidden=true;});
+ document.querySelectorAll('#pRc [data-phone]').forEach(function(el){if(I.phone&&el.getAttribute('data-phone')!==I.phone)el.hidden=true;});
+ // With one computer known its heading says nothing new.
+ if(I.computer)document.querySelectorAll('#pRc .rch').forEach(function(h){h.hidden=true;});
+});
 boot('remote',function(){var b=document.getElementById('gRemote');if(b)b.classList.toggle('taskblink',!remoteDone());});
 on('rcDone',function(){
  var said=document.getElementById('rcSaid'),btn=document.getElementById('rcDone');
  btn.disabled=true;said.textContent='שולח.';
- sendText('משימה מהמוניטור','התקנתי את Chrome Remote Desktop במחשב ואישרתי נגישות והקלטת מסך.','משימה').then(function(){
-  try{localStorage.setItem('remoteDone','1');}catch(e){}
+ sendText('משימה מהמוניטור','התקנתי את RustDesk במק ואישרתי נגישות והקלטת מסך.','משימה').then(function(){
+  try{localStorage.setItem('remoteDoneRD','1');}catch(e){}
   var b=document.getElementById('gRemote');if(b)b.classList.remove('taskblink');
   said.textContent='נשלח. המשימה סגורה.';toast(said.textContent);markSent('text');
  }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';}).then(function(){btn.disabled=false;});
