@@ -33,6 +33,24 @@ h2.sec{font-family:'Frank Ruhl Libre',serif;font-size:30px;margin:44px 0 6px}
 nav.toc{display:flex;flex-wrap:wrap;gap:8px;margin:26px 0 0}
 nav.toc a{text-decoration:none;color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:14px;background:var(--card)}
 
+/* שיתוף ותגובה */
+.kt-actions{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0}
+.kt-actions button{cursor:pointer;font:inherit;color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:14px;background:var(--card)}
+.kt-actions button.pri{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.kt-sheet{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;z-index:50}
+.kt-card{background:var(--card);color:var(--ink);width:100%;max-width:480px;border-radius:16px 16px 0 0;padding:20px;max-height:80vh;overflow:auto}
+@media (min-width:640px){.kt-sheet{align-items:center}.kt-card{border-radius:16px}}
+.kt-card b{display:block;font-size:18px;margin-bottom:12px}
+.kt-card select,.kt-card textarea{width:100%;font:inherit;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);margin-bottom:10px}
+.kt-card textarea{min-height:80px;resize:vertical}
+.kt-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.kt-chips button{border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px;background:var(--bg);color:var(--ink);cursor:pointer;font:inherit}
+.kt-row{display:flex;gap:8px;flex-wrap:wrap}
+.kt-row button{flex:1;min-width:120px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;cursor:pointer}
+.kt-row button.pri{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.kt-toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:14px;z-index:60}
+@media print{.kt-actions,.kt-sheet,.kt-toast{display:none!important}}
+
 /* כיוון */
 section.cx{margin:56px 0 0;border-radius:22px;overflow:hidden;color:var(--cink);background:var(--cpaper);box-shadow:0 1px 0 rgba(0,0,0,.04)}
 .cx-head{display:flex;gap:18px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;padding:30px 28px 8px}
@@ -138,6 +156,10 @@ footer.end p{max-width:780px;color:var(--mute)}
  <h1>הקטלוג הבא.<br>קיץ 2027</h1>
  <p class="lead">עשרה כיווני עיצוב למגזין הקיץ. לכל כיוון יש שער, כפולת עמודים שמוכרת ברגש, ועמוד מסודר לסוכנים עם מק״טים, מידות וצבעים. אפשר לבחור אחד, לשלב בין שניים, או לפצל את הקטלוג לפרקים לפי כיוונים.</p>
  <nav class="toc" id="toc"></nav>
+ <div class="kt-actions">
+  <button type="button" id="ktShare">שיתוף הקטלוג</button>
+  <button type="button" id="ktFeedback" class="pri">תגובה על כיוון</button>
+ </div>
 </header>
 
 <h2 class="sec">מה השוק אומר על קיץ 2027</h2>
@@ -213,6 +235,79 @@ footer.end p{max-width:780px;color:var(--mute)}
    +'</section>';
  });
  list.innerHTML=h;
+})();
+</script>
+<script>
+(function(){
+ function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+ function shareUrl(){return location.href.split('#')[0];}
+ function waLink(text){return 'https://wa.me/?text='+encodeURIComponent(text)}
+ function toast(msg){
+  var t=document.createElement('div');
+  t.className='kt-toast';t.textContent=msg;document.body.appendChild(t);
+  setTimeout(function(){t.remove();},2600);
+ }
+ function fallbackShare(url,text){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+   navigator.clipboard.writeText(url)
+    .then(function(){toast('הקישור הועתק, אפשר להדביק בוואטסאפ');})
+    .catch(function(){window.open(waLink(text+String.fromCharCode(10)+url),'_blank','noopener');});
+   return;
+  }
+  window.open(waLink(text+String.fromCharCode(10)+url),'_blank','noopener');
+ }
+ document.getElementById('ktShare').addEventListener('click',function(){
+  var url=shareUrl(),text='הקטלוג הבא, קיץ 2027, עשרה כיווני עיצוב לבחירה';
+  if(navigator.share){
+   navigator.share({title:'הקטלוג הבא · קיץ 2027',text:text,url:url})
+    .catch(function(e){if(e&&e.name!=='AbortError')fallbackShare(url,text);});
+   return;
+  }
+  fallbackShare(url,text);
+ });
+ var CHIPS=['אהבתי, בואו נלך על זה','לא בשבילי','צריך לראות בדים אמיתיים קודם','חסר לי משהו בכיוון הזה'];
+ function feedbackSheet(){
+  var old=document.getElementById('ktSheet');if(old)old.remove();
+  var w=document.createElement('div');
+  w.id='ktSheet';w.className='kt-sheet';
+  w.setAttribute('role','dialog');
+  w.setAttribute('aria-label','תגובה על כיוון בקטלוג');
+  var opts='<option value="">כל הקטלוג</option>'+(window.CONCEPTS||[]).map(function(c){
+   return '<option value="'+esc(c.no+' '+c.he)+'">'+esc(c.no+' '+c.he)+'</option>';
+  }).join('');
+  w.innerHTML='<div class="kt-card">'
+   +'<b>תגובה על הקטלוג</b>'
+   +'<select id="ktDir">'+opts+'</select>'
+   +'<div class="kt-chips" id="ktChips">'+CHIPS.map(function(c,i){return '<button type="button" data-c="'+i+'">'+esc(c)+'</button>';}).join('')+'</div>'
+   +'<textarea id="ktText" placeholder="מה לומר, מה חסר, מה לשנות"></textarea>'
+   +'<div class="kt-row"><button type="button" id="ktSend" class="pri">שליחה בוואטסאפ</button><button type="button" id="ktClose">סגירה</button></div>'
+   +'</div>';
+  function close(){w.remove();document.removeEventListener('keydown',esckey);}
+  function esckey(e){if(e.key==='Escape')close();}
+  w.addEventListener('click',function(e){
+   if(e.target===w)return close();
+   if(e.target.id==='ktClose')return close();
+   var ci=e.target.getAttribute&&e.target.getAttribute('data-c');
+   if(ci!=null){
+    var ta=document.getElementById('ktText');
+    ta.value=(ta.value?ta.value+' ':'')+CHIPS[ci];
+    ta.focus();
+    return;
+   }
+   if(e.target.id==='ktSend'){
+    var dir=document.getElementById('ktDir').value;
+    var txt=document.getElementById('ktText').value.trim();
+    if(!dir&&!txt){toast('אפשר לבחור כיוון או לכתוב משהו');return;}
+    var msg='הקטלוג הבא'+(dir?' · '+dir:'')+(txt?String.fromCharCode(10)+txt:'')+String.fromCharCode(10)+shareUrl();
+    window.open(waLink(msg),'_blank','noopener');
+    close();
+   }
+  });
+  document.addEventListener('keydown',esckey);
+  document.body.appendChild(w);
+  document.getElementById('ktDir').focus();
+ }
+ document.getElementById('ktFeedback').addEventListener('click',feedbackSheet);
 })();
 </script>
 </body>
