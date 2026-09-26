@@ -1219,7 +1219,9 @@ section{margin-bottom:30px}
 .copyrow .msg{font-size:13px;color:var(--accent)}
 .thread{display:flex;flex-direction:column;gap:9px;margin-bottom:16px}
 .bub{max-width:82%;padding:10px 13px;border-radius:14px;font-size:15px;
- white-space:pre-wrap;overflow-wrap:anywhere;box-shadow:var(--shadow)}
+ white-space:pre-wrap;overflow-wrap:anywhere;box-shadow:var(--shadow);
+ transition:border-color .4s ease,background-color .4s ease}
+@media(prefers-reduced-motion:reduce){.bub{transition:none}}
 .bub .w{display:block;color:var(--dim);font-size:11px;font-weight:300;
  margin-bottom:3px;font-variant-numeric:tabular-nums}
 .bub.me{align-self:flex-start;background:var(--accent-soft);
@@ -1806,6 +1808,9 @@ body.editing .bn{display:none}
 .tk{display:flex;align-items:center;gap:12px;padding:12px;margin:8px 0;border-radius:12px;background:rgba(127,127,127,.12);cursor:pointer;font-size:1.05em}
 .tk input{width:24px;height:24px;flex:0 0 24px}
 .tk.done span{text-decoration:line-through;opacity:.55}
+@keyframes tkpop{0%{transform:scale(1)}45%{transform:scale(1.06)}100%{transform:scale(1)}}
+.tk.pop{animation:tkpop .3s ease-out}
+@media(prefers-reduced-motion:reduce){.tk.pop{animation:none}}
 .rem{padding:10px 12px;margin:8px 0;border-radius:12px;background:rgba(127,127,127,.12)}
 .rem b{display:block;font-size:1.05em}
 .rem .w{font-size:.85em;opacity:.8}
@@ -7920,9 +7925,14 @@ document.addEventListener('change',function(e){
  var k=e.target&&e.target.getAttribute&&e.target.getAttribute('data-tk');
  if(!k)return;
  var d=tkDone();
- if(e.target.checked)d[k]=new Date().toISOString();else delete d[k];
+ var justDone=e.target.checked;
+ if(justDone)d[k]=new Date().toISOString();else delete d[k];
  try{localStorage.setItem('tasksDone',JSON.stringify(d));}catch(err){}
- renderTasks();
+ // A task just done gets a small bounce before the strike-through lands,
+ // so ticking one off feels like something instead of a flat state flip.
+ var lbl=e.target.closest('label');
+ if(justDone&&lbl){lbl.classList.add('pop');setTimeout(renderTasks,300);}
+ else renderTasks();
 });
 on2('remForm','submit',function(e){
  e.preventDefault();
@@ -8014,7 +8024,7 @@ function renderSent(){
   working=true;
  }
  else if(st){t=label+' התקבלה';sub='נכנסה אליי, מחכה לטיפול.';}
- else{t=label+' נשלחה';sub='בדרך אליי. אני בודק את התיבה כל ארבע דקות.';}
+ else{t=label+' נשלחה';sub='בדרך אליי. אני קולט הודעות ברגע שהן מגיעות.';}
  card.className='sent'+(done?' done':'')+(working?' working':'');
  card.innerHTML='<span class="s-dot"></span><div><b>'+esc(t)+'</b><small>'+esc(sub)+' · '+esc(stamp(L.at))+'</small></div>';
  card.style.cursor=done?'pointer':'';
@@ -10021,7 +10031,7 @@ document.getElementById('mailForm').addEventListener('submit',function(e){
   q.push({at:new Date().toISOString(),text:full});
   savePending(q);
   box.value='';
-  said.textContent=how==='backup'?'נשלח למייל. אני בודק את התיבה כל ארבע דקות.'
+  said.textContent=how==='backup'?'נשלח למייל, כגיבוי. אני אבדוק שם בקרוב.'
    :'נשלח. הגיע אליי.';
   markSent('mail');renderSent();
   renderMail();renderThread();
