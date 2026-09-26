@@ -8744,6 +8744,16 @@ var YEHUDA_LINK='https://happymeal-sekira.vercel.app/';
 function yehudaUrl(){return YEHUDA_LINK;}
 function yehudaOpen(){window.open(YEHUDA_LINK,'_blank','noopener');}
 /*
+  He asked for the wording itself to sit inside the button, not just a link
+  he has to caption by hand each time. This is the note he already wrote and
+  signed at the end of the document itself, so what he sends matches what
+  Yehuda reads when he opens it.
+*/
+var YEHUDA_MSG='עברתי על האתר שלך לעומק והכנתי סקירה עם מה שהייתי עושה בו לו היה שלי. '
+ +'רוב הממצאים ניתנים לתיקון מהיר, וחלקם בשינוי הגדרה בודד.'+String.fromCharCode(10)+String.fromCharCode(10)
+ +'אשמח לעזור לך לבצע את זה. אפשר להתחיל משלב אחד בלבד ולראות תוצאה מדידה תוך שבוע.'+String.fromCharCode(10)+String.fromCharCode(10)
+ +'מוזמן לחזור אליי בכל שאלה, גם אם בסוף תבחר לבצע את זה בעצמך.';
+/*
   A plain <a download> to a PDF does not download on Android: Chrome hands
   the file to its viewer instead, the viewer takes over the screen, and he
   is standing in a document with no way back. That is the dead end he hit.
@@ -8813,7 +8823,7 @@ function yehudaShare(){
  var url=yehudaUrl();
  // Synchronous, inside the tap. No await before this point.
  if(yFile&&navigator.share){
-  navigator.share({files:[yFile],title:'סקירת פיתוח happymeal'})
+  navigator.share({files:[yFile],title:'סקירת פיתוח happymeal',text:YEHUDA_MSG})
    .catch(function(e){ if(e&&e.name!=='AbortError')yehudaShareLink(url); });
   return;
  }
@@ -8821,7 +8831,7 @@ function yehudaShare(){
 }
 function yehudaShareLink(url){
  if(navigator.share){
-  navigator.share({title:'סקירת פיתוח happymeal',text:'סקירת הפיתוח לאתר',url:url})
+  navigator.share({title:'סקירת פיתוח happymeal',text:YEHUDA_MSG,url:url})
    .catch(function(e){ if(e&&e.name!=='AbortError')yehudaCopy(url); });
   return;
  }
@@ -8843,7 +8853,7 @@ function yehudaCopy(url){
   trade for a button whose job is to never leave him stuck.
 */
 function yehudaWhatsapp(){
- window.open('https://wa.me/?text='+encodeURIComponent('סקירת הפיתוח לאתר '+yehudaUrl()),'_blank','noopener');
+ window.open('https://wa.me/?text='+encodeURIComponent(YEHUDA_MSG+String.fromCharCode(10)+String.fromCharCode(10)+yehudaUrl()),'_blank','noopener');
 }
 function toastY(msg){
  var t=document.createElement('div');
