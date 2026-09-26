@@ -3030,6 +3030,13 @@ try{
  </div>
  <button type="button" class="abtn" id="resetBtn">איפוס</button>
 </div>
+<div class="alerts" id="sfxBox">
+ <div>
+  <b>צליל שליחה</b>
+  <small id="sfxSaid">כשהודעה יוצאת נשמע צליל קצר, והיא עפה במעטפה לתיבת הדואר. הצליל לא עוצר מוזיקה שמתנגנת.</small>
+ </div>
+ <button type="button" class="abtn" id="sfxBtn">כיבוי</button>
+</div>
 <div class="alerts" id="motionBox">
  <div>
   <b>תנועה על המסך</b>
@@ -7058,6 +7065,132 @@ function reqSave(a){
 function newRequestId(){
  return 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
+/*
+  A sent message you can see leave. Itzik, 26.9: "even a message that was
+  received should fold up in the graphics and go into a mailbox that flies to
+  you." The paper folds into an envelope where it was written, the envelope
+  flies into a mailbox by the "what was received" button (or the corner, when
+  that button is not on screen), the flag goes up, and a short whoosh and ding
+  say it without looking. It runs on every successful send, since every send
+  path ends in markSent. With reduced motion only the sound plays, and the
+  sound can be switched off in the settings.
+*/
+var sendFrom=null,sfx=null;
+document.addEventListener('submit',function(e){
+ try{
+  var f=e.target,r=f&&f.getBoundingClientRect&&f.getBoundingClientRect();
+  if(r&&r.width)sendFrom={x:r.left+r.width/2,y:r.top+r.height/2,w:Math.min(r.width,300)};
+  if(sfxOn()&&sfxCanMix()&&(window.AudioContext||window.webkitAudioContext)){
+   sfx=sfx||new (window.AudioContext||window.webkitAudioContext)();
+   if(sfx.state==='suspended')sfx.resume();
+  }
+ }catch(err){}
+},true);
+/*
+  20.9: opening the monitor cut the music he had playing, because on an iPhone
+  any sound a page makes takes over the phone's audio. So nothing is opened
+  when the page loads. The sound exists only for the moment of a send, and on
+  an iPhone only where the page can declare itself ambient, which mixes with
+  the music instead of stopping it. An older iPhone gets the vibration alone.
+  The context is closed again two seconds after the ding.
+*/
+function sfxCanMix(){
+ var ios=/iPhone|iPad|iPod/i.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+ try{if(navigator.audioSession){navigator.audioSession.type='ambient';return true;}}catch(e){}
+ return !ios;
+}
+function sfxOn(){try{return localStorage.getItem('sfxOff')!=='1';}catch(e){return true;}}
+function sfxTone(f0,f1,at,len,vol,type){
+ var o=sfx.createOscillator(),g=sfx.createGain(),n=sfx.currentTime+at;
+ o.type=type||'sine';o.frequency.setValueAtTime(f0,n);
+ if(f1)o.frequency.exponentialRampToValueAtTime(f1,n+len);
+ g.gain.setValueAtTime(0.0001,n);g.gain.exponentialRampToValueAtTime(vol,n+0.02);
+ g.gain.exponentialRampToValueAtTime(0.0001,n+len);
+ o.connect(g);g.connect(sfx.destination);o.start(n);o.stop(n+len+0.05);
+}
+function sfxWhoosh(at,len){
+ var n=sfx.currentTime+at,b=sfx.createBuffer(1,Math.floor(sfx.sampleRate*len),sfx.sampleRate),d=b.getChannelData(0);
+ for(var i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.sin(Math.PI*i/d.length);
+ var s=sfx.createBufferSource(),f=sfx.createBiquadFilter(),g=sfx.createGain();
+ s.buffer=b;f.type='bandpass';f.Q.value=0.9;
+ f.frequency.setValueAtTime(500,n);f.frequency.exponentialRampToValueAtTime(2600,n+len);
+ g.gain.value=0.09;s.connect(f);f.connect(g);g.connect(sfx.destination);s.start(n);
+}
+function sentSound(){
+ if(!sfxOn()||!sfx)return;
+ try{
+  sfxTone(520,780,0,0.09,0.05,'triangle');
+  sfxWhoosh(0.28,0.55);
+  sfxTone(1175,0,0.86,0.5,0.07);sfxTone(1568,0,0.96,0.6,0.06);
+  var c=sfx;sfx=null;setTimeout(function(){try{c.close();}catch(e){}},2200);
+ }catch(e){}
+}
+function flyMail(){
+ sentSound();
+ var from=sendFrom;sendFrom=null;
+ if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ if(!document.body.animate)return;
+ var W=window.innerWidth,H=window.innerHeight;
+ if(!from)from={x:W/2,y:H*0.45,w:240};
+ var tb=document.getElementById('gotBtn'),tr=tb&&tb.getBoundingClientRect();
+ var to=(tr&&tr.width&&tr.bottom>0&&tr.top<H)?{x:tr.left+34,y:tr.top+tr.height/2}:{x:40,y:56};
+ var layer=document.createElement('div');
+ layer.setAttribute('style','position:fixed;inset:0;pointer-events:none;z-index:99999');
+ layer.innerHTML=
+  '<div class="fm-paper" style="position:absolute;left:0;top:0;width:'+from.w+'px;height:'+Math.round(from.w*0.62)+'px;'
+  +'border-radius:10px;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.35);padding:14px 16px;box-sizing:border-box">'
+  +'<i style="display:block;height:7px;border-radius:4px;background:#c9d4e6;margin:4px 0 9px;width:88%"></i>'
+  +'<i style="display:block;height:7px;border-radius:4px;background:#dbe3f0;margin-bottom:9px;width:70%"></i>'
+  +'<i style="display:block;height:7px;border-radius:4px;background:#dbe3f0;width:52%"></i></div>'
+  +'<svg class="fm-env" width="64" height="46" viewBox="0 0 64 46" style="position:absolute;left:0;top:0;opacity:0;overflow:visible">'
+  +'<rect x="1" y="4" width="62" height="41" rx="6" fill="#fff" stroke="#1a73e8" stroke-width="2"/>'
+  +'<path d="M3 43 L26 24 M61 43 L38 24" stroke="#c9d4e6" stroke-width="2" fill="none"/>'
+  +'<path class="fm-flap" d="M2 6 L32 28 L62 6" fill="#e8f0fe" stroke="#1a73e8" stroke-width="2" stroke-linejoin="round"/></svg>'
+  +'<svg class="fm-box" width="58" height="62" viewBox="0 0 58 62" style="position:absolute;left:0;top:0;opacity:0;overflow:visible">'
+  +'<rect x="26" y="34" width="6" height="28" rx="2" fill="#8a6d3b"/>'
+  +'<path d="M6 16 Q6 4 20 4 H40 Q52 4 52 16 V38 H6 Z" fill="#FBBC05" stroke="#7a5a00" stroke-width="2"/>'
+  +'<rect x="10" y="20" width="30" height="6" rx="3" fill="#5c4300"/>'
+  +'<g class="fm-flag" style="transform-origin:48px 30px"><rect x="47" y="10" width="3" height="22" fill="#555"/>'
+  +'<rect x="47" y="10" width="12" height="8" rx="1" fill="#EA4335"/></g></svg>';
+ document.body.appendChild(layer);
+ var paper=layer.querySelector('.fm-paper'),env=layer.querySelector('.fm-env'),box=layer.querySelector('.fm-box');
+ var flag=layer.querySelector('.fm-flag'),flap=layer.querySelector('.fm-flap');
+ var pw=from.w,ph=Math.round(from.w*0.62);
+ function at(x,y,w,h){return 'translate('+(x-w/2)+'px,'+(y-h/2)+'px)';}
+ box.style.transform=at(to.x,to.y,58,62);
+ box.animate([{opacity:0,transform:at(to.x,to.y,58,62)+' scale(.4)'},{opacity:1,transform:at(to.x,to.y,58,62)+' scale(1.08)',offset:.7},{opacity:1,transform:at(to.x,to.y,58,62)+' scale(1)'}],
+  {duration:320,delay:250,fill:'forwards',easing:'ease-out'});
+ paper.animate([
+  {transform:at(from.x,from.y,pw,ph),opacity:1},
+  {transform:at(from.x,from.y,pw,ph)+' perspective(500px) rotateX(55deg) scale(.5)',opacity:1,offset:.6},
+  {transform:at(from.x,from.y,pw,ph)+' perspective(500px) rotateX(80deg) scale(.22)',opacity:0}],
+  {duration:340,easing:'ease-in',fill:'forwards'});
+ env.style.transform=at(from.x,from.y,64,46);
+ flap.animate([{transform:'scaleY(-1)',transformOrigin:'32px 6px'},{transform:'scaleY(1)',transformOrigin:'32px 6px'}],{duration:220,delay:250,fill:'both'});
+ var mx=(from.x+to.x)/2+(to.x<from.x?-40:40),my=Math.min(from.y,to.y)-120;
+ var steps=[],N=14;
+ for(var i=0;i<=N;i++){
+  var k=i/N,u=1-k;
+  var x=u*u*from.x+2*u*k*mx+k*k*to.x,y=u*u*from.y+2*u*k*my+k*k*(to.y+4);
+  var s=1-0.55*k,rot=(to.x<from.x?-1:1)*Math.sin(k*Math.PI)*18;
+  steps.push({transform:at(x,y,64,46)+' rotate('+rot+'deg) scale('+s+')',opacity:i===N?0:1});
+ }
+ steps[0].opacity=1;
+ env.animate([{opacity:0,transform:at(from.x,from.y,64,46)+' scale(.6)'},{opacity:1,transform:at(from.x,from.y,64,46)+' scale(1)'}],{duration:180,delay:230,fill:'forwards'});
+ setTimeout(function(){
+  var fly=env.animate(steps,{duration:620,easing:'cubic-bezier(.45,0,.3,1)',fill:'forwards'});
+  fly.onfinish=function(){
+   box.animate([{transform:at(to.x,to.y,58,62)},{transform:at(to.x,to.y,58,62)+' scale(1.12,.92)'},{transform:at(to.x,to.y,58,62)}],{duration:260});
+   flag.animate([{transform:'rotate(90deg)'},{transform:'rotate(-8deg)',offset:.7},{transform:'rotate(0deg)'}],{duration:420,fill:'forwards'});
+   try{navigator.vibrate&&navigator.vibrate(12);}catch(e){}
+   setTimeout(function(){
+    var out=box.animate([{opacity:1},{opacity:0}],{duration:380,fill:'forwards'});
+    out.onfinish=function(){layer.remove();};
+   },650);
+  };
+ },440);
+ flag.style.transform='rotate(90deg)';
+}
 function markSent(kind,text,id){
  var at=new Date().toISOString();
  var rid=id||newRequestId();
@@ -7066,6 +7199,7 @@ function markSent(kind,text,id){
  a.unshift({id:rid,at:at,kind:kind,text:String(text||'').replace(/\s+/g,' ').trim().slice(0,80)});
  reqSave(a);
  try{renderReqs();}catch(e){}
+ try{flyMail();}catch(e){}
  return rid;
 }
 /*
@@ -9919,6 +10053,12 @@ on('clearBtn',function(){
   toast('הצ׳אט נוקה מהמסך.');
  });
 });
+(function(){
+ var b=document.getElementById('sfxBtn');if(!b)return;
+ function paint(){b.textContent=sfxOn()?'כיבוי':'הפעלה';}
+ paint();
+ b.onclick=function(){try{localStorage.setItem('sfxOff',sfxOn()?'1':'0');}catch(e){}paint();toast(sfxOn()?'הצליל פועל.':'הצליל כבוי.');};
+})();
 on('resetBtn',function(){
  markAllRead();
  var said=document.getElementById('resetSaid');

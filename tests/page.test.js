@@ -1090,8 +1090,14 @@ test('the progress meter is coloured by the stage it is at', () => {
 */
 test('the page never opens an audio context of its own', () => {
   const html = renderPage(fixture({}));
-  assert.ok(!html.includes('AudioContext'), 'no page owned audio context');
-  assert.ok(!html.includes('createOscillator'), 'no page generated tone');
+  // 26.9: the send sound is the one exception, and it is built so the music
+  // stays: made only inside a send, only where the page is ambient, closed after.
+  assert.equal(html.split('new (window.AudioContext').length - 1, 1, 'one audio context, in one place');
+  const i = html.indexOf('new (window.AudioContext');
+  assert.ok(html.lastIndexOf("document.addEventListener('submit'", i) > i - 700, 'made inside the send, not at load');
+  assert.ok(html.slice(i - 200, i).includes('sfxCanMix()'), 'only where it can mix');
+  assert.ok(html.includes("navigator.audioSession.type='ambient'"));
+  assert.ok(html.includes('c.close();'), 'closed again after the sound');
   // משוב הלחיצה נשאר, בוויברציה, שלא נוגעת בשמע.
   assert.ok(html.includes('navigator.vibrate'));
   // וההקלטה עדיין משחררת את המיקרופון כשהיא נגמרת, אחרת המוזיקה לא חוזרת.
