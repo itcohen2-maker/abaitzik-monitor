@@ -4277,21 +4277,44 @@ function threadState(){
   page that no longer exist, and it comes back from a browser that may have
   truncated it. One reader, and it always hands back an array.
 */
+/*
+  Every answer card checks isStar/isDone/isStandby against these lists, so one
+  tap on the answers screen used to reparse the same localStorage string a
+  few dozen times before the button could repaint. The raw string is the
+  cheap thing to compare; only a real change earns a fresh JSON.parse.
+*/
+var _idListCache={};
 function idList(key,keep){
- try{
-  var v=JSON.parse(localStorage.getItem(key)||'[]');
-  if(Array.isArray(v))return v;
-  // Not an array. Where this key belongs to one feature, repairing it stops the
-  // same throw from coming back on the next paint and on every paint after.
-  // Where a key is shared (chatStandby held a map before the parked list moved
-  // out of it), keep says read it and leave it alone: clearing it there would
-  // throw away the other feature's state to fix this one.
-  if(!keep){
-   try{localStorage.removeItem(key);}catch(e2){}
-   try{console.warn('storage key '+key+' was not a list, cleared');}catch(e2){}
-  }
-  return [];
- }catch(e){return [];}
+ var raw;
+ try{raw=localStorage.getItem(key);}catch(e){raw=null;}
+ var c=_idListCache[key];
+ if(!c||c.raw!==raw){
+  var list;
+  try{
+   var v=JSON.parse(raw||'[]');
+   if(Array.isArray(v)){
+    list=v;
+   }else{
+    // Not an array. Where this key belongs to one feature, repairing it stops
+    // the same throw from coming back on the next paint and on every paint
+    // after. Where a key is shared (chatStandby held a map before the parked
+    // list moved out of it), keep says read it and leave it alone: clearing
+    // it there would throw away the other feature's state to fix this one.
+    if(!keep){
+     try{localStorage.removeItem(key);}catch(e2){}
+     try{console.warn('storage key '+key+' was not a list, cleared');}catch(e2){}
+    }
+    list=[];
+   }
+  }catch(e){list=[];}
+  c={raw:raw,list:list};
+  _idListCache[key]=c;
+ }
+ // A copy, never the cached array itself: callers push/splice straight into
+ // what idList hands back and then write it out, and a shared reference would
+ // let that in-place edit leak into the cache even on the runs where the
+ // write after it fails.
+ return c.list.slice();
 }
 function hiddenMsgs(){ return idList('msgHidden'); }
 function hideMsg(key){
@@ -6174,7 +6197,23 @@ function unDone(m){
   and the filter chips above already cover the whole list, so a report is
   findable by a word in it rather than by remembering which screen it lives on.
 */
+/*
+  ansCounts and ansList each used to rebuild and resort the whole merged list
+  from scratch, so one tap on the answers screen paid for the merge twice
+  before either the chip count or the card list could draw. Kept here and
+  reused instead - but D.chat/D.codex/D.reports arrive piecemeal (the head
+  first, then each one lazy-loaded in over the network), so the cache has to
+  drop the moment one of them actually grows, not just once forever.
+*/
+var _allAnswersCache=null,_allAnswersSig=null;
 function allAnswers(){
+ var sig=(D.chat?D.chat.length:0)+'|'+(D.codex?D.codex.length:0)+'|'+(D.reports?D.reports.length:0);
+ if(_allAnswersCache&&_allAnswersSig===sig)return _allAnswersCache;
+ _allAnswersSig=sig;
+ _allAnswersCache=allAnswersUncached();
+ return _allAnswersCache;
+}
+function allAnswersUncached(){
  // 17.9: "three doors to the same room". His own messages were only in the
  // chat, my answers only here, so neither screen was the conversation. They
  // are one list now, his side included, sorted by time like everything else.
@@ -6245,11 +6284,30 @@ function codexFresh(){
   return true;
  });
 }
-function ansFreshKeys(){
- var k=unreadList().map(claudeKey);
- return k.concat(codexFresh().map(claudeKey));
+/*
+  ansCounts and every card in renderAnswers ask isFresh one message at a
+  time, and this used to rebuild unreadList+codexFresh - a full pass over
+  D.chat and D.codex each - from scratch for every single one of them. On a
+  history of any real size that turned one tap into hundreds of full passes
+  before the tapped button could even repaint, which is what read on his
+  phone as the buttons being stuck. Built once per read state and reused.
+*/
+var _ansFreshCache=null;
+function ansFreshSig(){
+ var rawSeen;
+ try{rawSeen=localStorage.getItem('chatSeenIds')||'';}catch(e){rawSeen='';}
+ return rawSeen+'|'+chatSeen()+'|'+(D.resetSeenAt||'')
+  +'|'+(D.chat?D.chat.length:0)+'|'+(D.codex?D.codex.length:0);
 }
-function isFresh(m){if(m&&m.src==='itzik')return false;return ansFreshKeys().indexOf(claudeKey(m))>-1;}
+function ansFreshKeys(){
+ var sig=ansFreshSig();
+ if(_ansFreshCache&&_ansFreshCache.sig===sig)return _ansFreshCache.keys;
+ var k=unreadList().map(claudeKey).concat(codexFresh().map(claudeKey));
+ var keys=new Set(k);
+ _ansFreshCache={sig:sig,keys:keys};
+ return keys;
+}
+function isFresh(m){if(m&&m.src==='itzik')return false;return ansFreshKeys().has(claudeKey(m));}
 function ansCounts(){
  var a=allAnswers();
  return {all:a.length,

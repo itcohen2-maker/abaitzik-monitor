@@ -1497,7 +1497,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-26T09:34:14.131Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-26T09:48:07.346Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2496,7 +2496,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='4610501e13';
+var CODE_ID='0de49443cf';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -2814,16 +2814,29 @@ function threadState(){
  var unread=new Set(unreadList().map(ML.keyOf));
  return {unread:unread,standby:standbyMap()};
 }
+var _idListCache={};
 function idList(key,keep){
- try{
-  var v=JSON.parse(localStorage.getItem(key)||'[]');
-  if(Array.isArray(v))return v;
-  if(!keep){
-   try{localStorage.removeItem(key);}catch(e2){}
-   try{console.warn('storage key '+key+' was not a list, cleared');}catch(e2){}
-  }
-  return [];
- }catch(e){return [];}
+ var raw;
+ try{raw=localStorage.getItem(key);}catch(e){raw=null;}
+ var c=_idListCache[key];
+ if(!c||c.raw!==raw){
+  var list;
+  try{
+   var v=JSON.parse(raw||'[]');
+   if(Array.isArray(v)){
+    list=v;
+   }else{
+    if(!keep){
+     try{localStorage.removeItem(key);}catch(e2){}
+     try{console.warn('storage key '+key+' was not a list, cleared');}catch(e2){}
+    }
+    list=[];
+   }
+  }catch(e){list=[];}
+  c={raw:raw,list:list};
+  _idListCache[key]=c;
+ }
+ return c.list.slice();
 }
 function hiddenMsgs(){ return idList('msgHidden'); }
 function hideMsg(key){
@@ -4223,7 +4236,15 @@ function unDone(m){
   if(i>-1){t.splice(i,1);localStorage.setItem('chatTouched',JSON.stringify(t));}
  }catch(e){}
 }
+var _allAnswersCache=null,_allAnswersSig=null;
 function allAnswers(){
+ var sig=(D.chat?D.chat.length:0)+'|'+(D.codex?D.codex.length:0)+'|'+(D.reports?D.reports.length:0);
+ if(_allAnswersCache&&_allAnswersSig===sig)return _allAnswersCache;
+ _allAnswersSig=sig;
+ _allAnswersCache=allAnswersUncached();
+ return _allAnswersCache;
+}
+function allAnswersUncached(){
  var byId={};
  (D.chat||[]).forEach(function(m){if(m.from==='itzik'&&m.id)byId[m.id]=m;});
  var answered={};
@@ -4263,11 +4284,22 @@ function codexFresh(){
   return true;
  });
 }
-function ansFreshKeys(){
- var k=unreadList().map(claudeKey);
- return k.concat(codexFresh().map(claudeKey));
+var _ansFreshCache=null;
+function ansFreshSig(){
+ var rawSeen;
+ try{rawSeen=localStorage.getItem('chatSeenIds')||'';}catch(e){rawSeen='';}
+ return rawSeen+'|'+chatSeen()+'|'+(D.resetSeenAt||'')
+  +'|'+(D.chat?D.chat.length:0)+'|'+(D.codex?D.codex.length:0);
 }
-function isFresh(m){if(m&&m.src==='itzik')return false;return ansFreshKeys().indexOf(claudeKey(m))>-1;}
+function ansFreshKeys(){
+ var sig=ansFreshSig();
+ if(_ansFreshCache&&_ansFreshCache.sig===sig)return _ansFreshCache.keys;
+ var k=unreadList().map(claudeKey).concat(codexFresh().map(claudeKey));
+ var keys=new Set(k);
+ _ansFreshCache={sig:sig,keys:keys};
+ return keys;
+}
+function isFresh(m){if(m&&m.src==='itzik')return false;return ansFreshKeys().has(claudeKey(m));}
 function ansCounts(){
  var a=allAnswers();
  return {all:a.length,

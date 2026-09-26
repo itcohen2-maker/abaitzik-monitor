@@ -1877,7 +1877,7 @@ test('a list from the device is a list, and two features never share a key', () 
   // first line that asked the list for indexOf. His red button read 32 with
   // nothing behind it all day while the same code drew thirty cards for me.
   assert.ok(html.includes('function idList(key,keep){'));
-  assert.ok(html.includes('if(Array.isArray(v))return v;'));
+  assert.ok(html.includes('if(Array.isArray(v)){'));
   // A bad value is repaired, not just survived, or the same throw returns on
   // the very next paint.
   assert.ok(html.includes("try{localStorage.removeItem(key);}catch(e2){}"));
