@@ -263,6 +263,20 @@ function prompt(list) {
       for the instance it belongs to.
     */
     houseRules(),
+    /*
+      How an answer reads, 26.9. Itzik asked for the whole monitor to be gone
+      over, "all your answers and how you bring them", and the answers screen
+      showed why: paragraphs full of renderNew, paintDot, instance.json and
+      data/keys. He reads these on a phone. Code names are for the commit
+      message, the answer is for a person.
+    */
+    'איך כותבים את התשובה עצמה (היא נקראת בטלפון, על ידי אדם):',
+    '  1. המשפט הראשון הוא התוצאה: מה נעשה, או מה התשובה. לא מה בדקת בדרך.',
+    '  2. עברית של יום יום. בלי שמות קבצים, פונקציות, משתנים, נתיבים, מזהי קומיט או מונחים באנגלית.',
+    '     אם חייבים לציין משהו טכני, אומרים במילים מה הוא עושה ("הכפתור של התזכורות"), לא איך קוראים לו בקוד.',
+    '  3. עד חמש שורות קצרות. אם יש כמה דברים, כל אחד בשורה משלו.',
+    '  4. אם צריך ממנו משהו, זו השורה האחרונה, ובה רק מה שהוא צריך לעשות.',
+    '',
     'אם ל-note של ההודעה כבר יש תמלול, זה התמלול. רק אם אין, תמלל בעצמך עם',
     '`node transcribe.js data/inbox/<שם>.webm`.',
     '',
