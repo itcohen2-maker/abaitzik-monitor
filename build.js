@@ -349,9 +349,14 @@ function build() {
   // out as four rows with a date, a tag and nothing between them. Itzik, 20.9:
   // "סימנתי בדף. מה זה?". Whatever the file calls its headline, the row shows
   // it, and a task with no headline at all never reaches the screen blank.
+  // A doc whose `state` is "כלל קבוע" is a standing rule, not a task: it has
+  // no `done` field because it never finishes, and without this it inflated
+  // the open count by one permanent line that could never be checked off.
+  // Itzik, 26.9: "עדיין מופיע" on a screenshot of the badge after he closed
+  // out the real open items; the rule about נעמה/מושיקו was the extra one.
   const cmdLine = c => String(c.text || c.title || c.note || '').trim();
   const openCmds = loadDocs('commands')
-    .filter(c => !c.done && /^[0-9]/.test(c.id))
+    .filter(c => !c.done && /^[0-9]/.test(c.id) && c.state !== 'כלל קבוע')
     .map(c => ({ at: c.at, text: cmdLine(c), who: c.who || 'claude' }))
     .filter(c => c.text)
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
