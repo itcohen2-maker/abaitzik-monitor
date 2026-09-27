@@ -1851,6 +1851,7 @@ body.editing .bn{display:none}
 .g14{background:linear-gradient(150deg,#a5d6a7,#2e7d32)}
 .g15{background:linear-gradient(150deg,#90caf9,#1565c0)}
 .gKat{background:linear-gradient(150deg,#e3c07a,#2b45a6)}
+.gPlan{background:linear-gradient(150deg,#e8743b,#6b2f7a)}
 .g16{background:linear-gradient(150deg,#f8bbd0,#c2185b)}
 .g17{background:linear-gradient(150deg,#c5e1a5,#558b2f)}
 .g18{background:linear-gradient(150deg,#80deea,#00838f)}
@@ -2948,6 +2949,11 @@ try{
     opens on the phone with no login. Originals and the PDF are on Drive.
   -->
   <button type="button" class="gt gKat" id="gKatalog"><b>📖 הקטלוג הבא</b><small>קיץ 2027. עשרה כיווני עיצוב ודוח הטרנדים 2027 2028</small></button>
+  <!--
+    27.9. The content plan, shared with Ilay who runs the socials. Public on
+    purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
+  -->
+  <button type="button" class="gt gPlan" id="gPlan"><b>🎬 תוכנית תוכן</b><small>סוגי פוסטים, שבוע לדוגמה ותסריטים. לשיתוף עם איליי</small></button>
  </div>
 
  <!-- "מה הסתרנו" came off on 16.9. Hiding a tile is his to undo in settings. -->
@@ -9186,6 +9192,7 @@ function yehudaSheet(){
 }
 on('gYehuda',yehudaSheet);
 on('gKatalog',function(){window.open('katalog/','_blank','noopener');});
+on('gPlan',function(){window.open('files/content-plan-ilay.pdf','_blank','noopener');});
 on('gOp',function(){pane('s');});
 on('gNotes',function(){pane('t');renderNotes();});
 on('gRemind',function(){pane('R');renderReminders();});
@@ -11031,7 +11038,7 @@ try{window.__monAlive();}catch(e){}
   The Yehuda review stays public: it is shared with him by link on purpose.
   Without a gate nothing moves, because then the page itself is public anyway.
 */
-const PUBLIC_FILES = new Set(['happymeal-sekira-yehuda.pdf']);
+const PUBLIC_FILES = new Set(['happymeal-sekira-yehuda.pdf', 'content-plan-ilay.pdf']);
 const MIME = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp',
   mp4: 'video/mp4', mov: 'video/quicktime', webm: 'audio/webm', m4a: 'audio/mp4', mp3: 'audio/mpeg',
   ogg: 'audio/ogg', wav: 'audio/wav', pdf: 'application/pdf', txt: 'text/plain; charset=utf-8',

@@ -907,6 +907,7 @@ body.editing .bn{display:none}
 .g14{background:linear-gradient(150deg,#a5d6a7,#2e7d32)}
 .g15{background:linear-gradient(150deg,#90caf9,#1565c0)}
 .gKat{background:linear-gradient(150deg,#e3c07a,#2b45a6)}
+.gPlan{background:linear-gradient(150deg,#e8743b,#6b2f7a)}
 .g16{background:linear-gradient(150deg,#f8bbd0,#c2185b)}
 .g17{background:linear-gradient(150deg,#c5e1a5,#558b2f)}
 .g18{background:linear-gradient(150deg,#80deea,#00838f)}
@@ -1525,7 +1526,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-27T13:08:09.236Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-27T13:09:08.244Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1663,6 +1664,7 @@ try{
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
   <button type="button" class="gt g15" id="gYehuda"><b>📄 יהודה</b><small>סקירת happymeal. פתיחה, הורדה או שליחה אליו</small></button>
   <button type="button" class="gt gKat" id="gKatalog"><b>📖 הקטלוג הבא</b><small>קיץ 2027. עשרה כיווני עיצוב ודוח הטרנדים 2027 2028</small></button>
+  <button type="button" class="gt gPlan" id="gPlan"><b>🎬 תוכנית תוכן</b><small>סוגי פוסטים, שבוע לדוגמה ותסריטים. לשיתוף עם איליי</small></button>
  </div>
 
 
@@ -2609,7 +2611,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='3684924d74';
+var CODE_ID='bb8d1e3471';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -6434,6 +6436,7 @@ function yehudaSheet(){
 }
 on('gYehuda',yehudaSheet);
 on('gKatalog',function(){window.open('katalog/','_blank','noopener');});
+on('gPlan',function(){window.open('files/content-plan-ilay.pdf','_blank','noopener');});
 on('gOp',function(){pane('s');});
 on('gNotes',function(){pane('t');renderNotes();});
 on('gRemind',function(){pane('R');renderReminders();});
