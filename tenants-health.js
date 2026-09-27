@@ -50,6 +50,13 @@ function check(t) {
     if (!beatAt || Date.now() - Date.parse(beatAt) > STALE_MS) problems.push('הפעימה של המאזין ישנה');
     if (live.up === 0 && live.at && Date.now() - Date.parse(live.at) > 5 * 60 * 1000) problems.push('המאזין מדווח שהוא מנותק מהערוץ');
   } catch (e) { problems.push('אין קובץ פעימה'); }
+  // 27.9: what the tenant's own watchdog found (answers stuck, a stalled worker)
+  // colours his tile too, so Itzik sees it without opening anything of Ilay's.
+  try {
+    const w = JSON.parse(fs.readFileSync(path.join(t.dir, 'data', 'status', 'watchdog.json'), 'utf8'));
+    if (w.at && Date.now() - Date.parse(w.at) < 10 * 60 * 1000) (w.problems || []).forEach((p) => problems.push(p));
+    else if (w.at) problems.push('השומר לא רץ');
+  } catch (e) {}
   return { state: problems.length ? 'down' : 'ok', problems, beatAt };
 }
 
