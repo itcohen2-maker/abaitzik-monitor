@@ -475,7 +475,37 @@ function main() {
     // not put the same message back in the queue for ever; he would rather hear
     // "I missed one" once than get the same answer five times.
     markHandled(batch);
-    run(batch);
+    runDetached(batch);
   });
 }
-main();
+
+/*
+  Itzik, 27.9 21:53: four notes, one answered, three waiting behind it. On the
+  server the worker is a oneshot unit fired by a timer, and this process waited
+  for its session to close, so the unit stayed "activating" and the timer did
+  not fire again until the session ended. MAX_LIVE was three on paper and one in
+  practice. The dispatcher now hands each batch to its own detached process
+  (worker.js --session <file>) and exits; the unit carries KillMode=process so
+  systemd leaves those sessions running. On Windows nothing changes.
+*/
+function runDetached(batch) {
+  if (process.platform === 'win32') return run(batch);
+  const f = path.join(STATUS, 'session-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7) + '.json');
+  try { fs.writeFileSync(f, JSON.stringify(batch), 'utf8'); } catch (e) { return run(batch); }
+  // say() already writes data/status/worker.log; the console goes where the
+  // unit's own log is (WORKER_CONSOLE_LOG), or nowhere, never twice.
+  let out = 'ignore';
+  try { if (process.env.WORKER_CONSOLE_LOG) out = fs.openSync(process.env.WORKER_CONSOLE_LOG, 'a'); } catch (e) {}
+  const c = spawn(process.execPath, [__filename, '--session', f], { cwd: HERE, detached: true, stdio: ['ignore', out, out] });
+  c.unref();
+}
+
+const si = process.argv.indexOf('--session');
+if (si > -1) {
+  const f = process.argv[si + 1];
+  const batch = readJson(f, []);
+  try { fs.unlinkSync(f); } catch (e) {}
+  if (batch.length) run(batch);
+} else {
+  main();
+}
