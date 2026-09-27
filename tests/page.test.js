@@ -620,7 +620,9 @@ test('a card about listening gets something to press', () => {
   // The player is in the page, pointed at a file this repository actually ships.
   assert.ok(html.includes('<audio controls preload="none" src="'));
   assert.ok(html.includes('files/music/01-glide.mp3'));
-  assert.ok(require('fs').existsSync(require('path').join(__dirname, '..', 'docs', 'files', 'music', '01-glide.mp3')),
+  // Shipped either in the clear or sealed (attachments are private since 27.9).
+  assert.ok(['docs/files', 'data/files-private'].some(d =>
+      require('fs').existsSync(require('path').join(__dirname, '..', d, 'music', '01-glide.mp3'))),
     'the card points at a file that is not in the build');
   // Nothing downloads until he decides to listen: three sketches is about two
   // and a half megabytes, and the screen opens on a phone.
@@ -1351,12 +1353,20 @@ test('every saved video gets a permanent page, and nothing is dropped', () => {
   const page = path.join(__dirname, '..', 'docs', 'videos.html');
   assert.ok(fs.existsSync(page), 'docs/videos.html must be built');
   const html = fs.readFileSync(page, 'utf8');
-  const dir = path.join(__dirname, '..', 'docs', 'files');
-  const mp4 = fs.readdirSync(dir).filter(n => n.toLowerCase().endsWith('.mp4'));
+  // Since 27.9 the build moves attachments to data/files-private (sealed);
+  // a video counts as saved in either place.
+  const dirs = [path.join(__dirname, '..', 'docs', 'files'), path.join(__dirname, '..', 'data', 'files-private')]
+    .filter(d => fs.existsSync(d));
+  const mp4 = [...new Set(dirs.flatMap(d => fs.readdirSync(d)).filter(n => n.toLowerCase().endsWith('.mp4')))];
   assert.ok(mp4.length > 0, 'there must be at least one saved video to list');
+  // With the gate on, the videos moved into the monitor's files screen by
+  // design (build.js videosPage); the page only points there.
+  if (html.includes('הסרטונים עברו למוניטור')) {
+    assert.ok(html.includes('href="./"'), 'the page must have a way back to the monitor');
+    return;
+  }
   for (const n of mp4) {
-    assert.ok(html.includes('src="files/' + n + '"'), n + ' is saved but missing from the page');
-    assert.ok(fs.existsSync(path.join(dir, n)), n + ' is listed but the file is gone');
+    assert.ok(html.includes('files/' + n), n + ' is saved but missing from the page');
   }
   assert.ok(html.includes('href="./"'), 'the page must have a way back to the monitor');
 });

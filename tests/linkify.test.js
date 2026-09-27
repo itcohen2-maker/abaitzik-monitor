@@ -87,7 +87,11 @@ test('every file this repo ever linked to in an answer is still shipped', () => 
       const rel = url.slice(own.length).split('?')[0].split('#')[0];
       if (!rel || rel.endsWith('/')) continue;
       const target = path.join(root, 'docs', decodeURIComponent(rel));
-      if (!fs.existsSync(target)) missing.push(f + ' -> ' + rel);
+      // Since 27.9 attachments are sealed: the build moves files/<name> to
+      // data/files-private and ships it encrypted, so either place counts.
+      const sealed = rel.startsWith('files/') &&
+        fs.existsSync(path.join(root, 'data', 'files-private', decodeURIComponent(rel.slice(6))));
+      if (!fs.existsSync(target) && !sealed) missing.push(f + ' -> ' + rel);
     }
   }
   assert.deepEqual(missing, [], 'answers pointing at files that no longer exist');
