@@ -1086,6 +1086,18 @@ button.abtn[disabled]{opacity:.55}
 .gr{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);
  border-radius:12px;margin-bottom:8px;background:var(--surface)}
 .gr.now{border-color:var(--blue)}
+.gr[data-sk]{cursor:pointer}
+.gr.sel{background:#fff1c2;border-color:#e0a800}
+.gr-cb{flex:0 0 auto;width:18px;height:18px;border:2px solid var(--line);border-radius:5px;margin-top:2px}
+.gr.sel .gr-cb{background:#e0a800;border-color:#e0a800}
+.gr-n{flex:0 0 auto;font:700 12px Heebo,sans-serif;color:var(--dim);padding-top:3px}
+.gselbar{position:sticky;top:0;z-index:5;display:flex;gap:8px;align-items:center;justify-content:space-between;
+ background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px;margin:8px 0}
+.gselbar span{font-size:13px;color:var(--dim)}
+.gselbar button{background:transparent;color:var(--accent);border:1px solid var(--line);border-radius:999px;
+ font:700 13px Heebo,sans-serif;padding:6px 12px;cursor:pointer}
+.gselbar .gseldel{background:#c62828;color:#fff;border-color:#c62828}
+.gselbar .gseldel[disabled]{opacity:.4}
 .gr-t{flex:0 0 auto;font-size:12px;color:var(--dim);padding-top:3px}
 .gr-x{flex:1;min-width:0;font-size:15px;line-height:1.45;overflow-wrap:anywhere}
 .gr-x small{display:block;color:var(--dim);font-size:12.5px;margin-top:4px}
@@ -6710,7 +6722,7 @@ function goneKeys(){
  return idList('gotGone');
 }
 function saveGone(a){
- try{localStorage.setItem('gotGone',JSON.stringify(a.slice(-400)));}catch(e){}
+ try{localStorage.setItem('gotGone',JSON.stringify(a.slice(-2000)));}catch(e){}
 }
 function gotKey(kind,x){
  return kind+'|'+String(x.id||x.at||'')+'|'+String(x.text||'').replace(/\s+/g,' ').trim().slice(0,40);
@@ -6747,10 +6759,25 @@ function paintGot(){
  el.textContent=String(n);
  el.classList.toggle('zero',!n);
 }
+/*
+  Itzik, 27.9: "שום דבר לא ממוספר" and a list he can mark and delete in one go,
+  "גם אם זה 200 הודעות". Every message of his gets a fixed number, oldest is 1,
+  so a number means the same message on every screen and every day. Marking is
+  a tap on the row; the bar on top deletes all marked rows at once, through the
+  same on-device list the single delete already used.
+*/
+var gotSel={};
+function gotNumbers(){
+ var L=(D.chat||[]).filter(function(m){return m.from==='itzik';})
+  .slice().sort(function(a,b){return (a.at||'')<(b.at||'')?-1:1;});
+ var map={};L.forEach(function(m,i){map[gotKey('msg',m)]=i+1;});
+ return map;
+}
 function renderGot(){
  var host=document.getElementById('gotBox');
  if(!host)return;
  var all=dropGone('msg',gotList());
+ var NUM=gotNumbers();
  var work=all.filter(function(m){return m.status==='working';});
  var got=all.filter(function(m){return !m.status||m.status==='received';});
  var done=all.filter(function(m){return m.status==='done';});
@@ -6789,7 +6816,11 @@ function renderGot(){
  function row(m,k,label,kind){
   // מד ההתקדמות יושב גם כאן, ליד כל בקשה שלו, ולא רק בצ׳אט.
   var bar=(kind&&kind!=='msg')?'':progressBar(m);
-  return '<div class="gr"><span class="gr-t">'+esc(stamp(m.at))+'</span>'
+  var gk=gotKey(kind||'msg',m),no=(kind||'msg')==='msg'?NUM[gk]:0;
+  return '<div class="gr'+(gotSel[gk]?' sel':'')+'" data-sk="'+esc(gk)+'">'
+   +'<span class="gr-cb" aria-hidden="true"></span>'
+   +(no?'<span class="gr-n">#'+no+'</span>':'')
+   +'<span class="gr-t">'+esc(stamp(m.at))+'</span>'
    +'<div class="gr-x">'+linkify(m.text||'')+bar+'</div>'
    +'<span class="gr-s gr-'+k+'">'+label+'</span>'
    +tail(kind||'msg',m)+'</div>';
@@ -6808,6 +6839,10 @@ function renderGot(){
  var nShown=all.length+K.length+(N&&N.text&&!nGone?1:0);
  if(nShown)h+='<button type="button" class="gclear" id="gotClear">נקה הכל · '+nShown
   +'<small>מוריד את כל השורות מהמסך הזה. מה שתשלח מעכשיו יופיע כרגיל, ואפשר להחזיר הכל בסוף הדף.</small></button>';
+ var nSel=Object.keys(gotSel).length;
+ if(nShown)h+='<div class="gselbar"><button type="button" id="gotSelAll">'+(nSel?'ביטול הסימון':'סימון הכל')+'</button>'
+  +'<span>'+(nSel?nSel+' מסומנות':'לחיצה על שורה מסמנת אותה')+'</span>'
+  +'<button type="button" id="gotSelDel" class="gseldel"'+(nSel?'':' disabled')+'>מחיקת המסומנות'+(nSel?' · '+nSel:'')+'</button></div>';
  h+='<h3>בעבודה עכשיו</h3>';
  if(N&&N.text&&!nGone)h+='<div class="gr now"><span class="gr-t">'+esc(stamp(N.at))+'</span>'
   +'<div class="gr-x">'+esc(N.text)+(N.next?'<small>אחר כך: '+esc(N.next)+'</small>':'')+'</div>'
@@ -6844,6 +6879,28 @@ function renderGot(){
   saveCut(Date.now());saveGone([]);
   renderGot();paintGot();
   toast('המסך נוקה. אפשר להחזיר בסוף הדף.');
+ };
+ Array.prototype.forEach.call(host.querySelectorAll('.gr[data-sk]'),function(r){
+  r.addEventListener('click',function(e){
+   if(e.target.closest('button,a,textarea,input'))return;
+   var k=r.getAttribute('data-sk');
+   if(gotSel[k])delete gotSel[k];else gotSel[k]=1;
+   renderGot();
+  });
+ });
+ var sa=document.getElementById('gotSelAll');
+ if(sa)sa.onclick=function(){
+  if(Object.keys(gotSel).length){gotSel={};}
+  else{gotShow=100000;renderGot();Array.prototype.forEach.call(host.querySelectorAll('.gr[data-sk]'),function(r){gotSel[r.getAttribute('data-sk')]=1;});}
+  renderGot();
+ };
+ var sd=document.getElementById('gotSelDel');
+ if(sd)sd.onclick=function(){
+  var ks=Object.keys(gotSel);if(!ks.length)return;
+  var g=goneKeys();ks.forEach(function(k){if(g.indexOf(k)<0)g.push(k);});
+  saveGone(g);gotSel={};
+  renderGot();paintGot();
+  toast('נמחקו '+ks.length+' שורות. אפשר להחזיר בסוף הדף.');
  };
  Array.prototype.forEach.call(host.querySelectorAll('.gr-cp'),function(b){
   b.onclick=function(e){e.stopPropagation();ansCopy(b,b.getAttribute('data-copy')||'');};

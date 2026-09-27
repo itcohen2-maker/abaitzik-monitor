@@ -395,8 +395,58 @@ function run(list) {
   });
 }
 
+/*
+  Itzik, 27.9: "מפספס המון בקשות, חלק מהבקשות נעלמות". Two leaks, both found in
+  the data that day.
+
+  One: a session answers (a record of mine with re) but forgets to set his
+  message to done. The worker already skips it, rightly, but the page keeps it
+  in "עובד על זה" for ever. Eleven such rows sat there, some from 19.9. The
+  answer is the proof, so the status follows it here, every tick.
+
+  Two: a message marked handled before its session ran, whose session then died
+  without answering. It was never looked at again (IMG_4088, 25.9). It gets one
+  more session once no live session holds it and the ten minutes are long past.
+  A second failure is told to him once instead of looping.
+*/
+const RETRY = path.join(STATUS, 'worker-retry.json');
+function reconcile(live) {
+  let files = [];
+  try { files = fs.readdirSync(CHAT); } catch (e) { return; }
+  const all = files.map((f) => { const d = readJson(path.join(CHAT, f), null); return d ? Object.assign({ file: f }, d) : null; }).filter(Boolean);
+  const got = new Set(all.filter((m) => m.from === 'claude' && m.re).map((m) => m.re));
+  all.filter((m) => m.from === 'itzik' && m.status !== 'done' && m.id && got.has(m.id)).forEach((m) => {
+    const d = readJson(path.join(CHAT, m.file), null);
+    if (!d) return;
+    d.status = 'done';
+    try { fs.writeFileSync(path.join(CHAT, m.file), JSON.stringify(d, null, 1), 'utf8'); say('סומנה בוצע, כי יש עליה תשובה: ' + m.file); } catch (e) {}
+  });
+  const held = new Set();
+  Object.keys(live).forEach((pid) => (live[pid].files || []).forEach((f) => held.add(f)));
+  const seen = readJson(SEEN, {});
+  const retry = readJson(RETRY, {});
+  const now = Date.now();
+  let changed = false;
+  all.filter((m) => m.from === 'itzik' && m.status !== 'done' && seen[m.file] && !(m.id && got.has(m.id)) && !held.has(m.file))
+    .filter((m) => now - Date.parse(seen[m.file]) > MAX_SESSION_MS + 2 * 60 * 1000)
+    .forEach((m) => {
+      if (!retry[m.file]) {
+        retry[m.file] = new Date().toISOString();
+        delete seen[m.file];
+        changed = true;
+        say('!! הודעה נלקחה ולא נענתה. מחזיר לתור פעם אחת: ' + m.file);
+      } else if (retry[m.file] !== 'told') {
+        retry[m.file] = 'told';
+        tell('הודעה שלא נענתה', 'ניסיתי פעמיים ולא הצלחתי לענות על: ' + String(m.text || '').slice(0, 80));
+      }
+    });
+  if (changed) try { fs.writeFileSync(SEEN, JSON.stringify(seen, null, 1), 'utf8'); } catch (e) {}
+  try { fs.writeFileSync(RETRY, JSON.stringify(retry, null, 1), 'utf8'); } catch (e) {}
+}
+
 function main() {
   const live = livePids();
+  if (!DRY) reconcile(live);
   const room = MAX_LIVE - Object.keys(live).length;
   const list = waiting();
   if (!list.length) { if (DRY) say('אין הודעות שמחכות. רצים: ' + Object.keys(live).length); return; }

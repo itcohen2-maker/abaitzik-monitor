@@ -1229,7 +1229,7 @@ test('every row in what was received carries a manual delete button', () => {
   assert.ok(body.includes("return '<span class=\"gr-b\">'+cpBtn(cpText(m,extra))+del(kind,m)+'</span>';"));
   assert.ok(body.includes("return row(c,w[0],w[1],'cmd');"));
   // Deleting is local to his phone and silent: no message, no notification.
-  assert.ok(html.includes("localStorage.setItem('gotGone',JSON.stringify(a.slice(-400)));"));
+  assert.ok(html.includes("localStorage.setItem('gotGone',JSON.stringify(a.slice(-2000)));"));
   assert.ok(body.includes('renderGot();paintGot();'));
   // And it is reversible in one press.
   assert.ok(body.includes('id="gotBack"'));
@@ -2073,3 +2073,15 @@ test('a tap sound never leaves the phone in a mode that cannot record', () => {
   assert.ok(html.includes("if(!sfxRecording())audioMode('auto');"), 'and after a sound');
 });
 
+
+// Itzik, 27.9: numbered rows, tap to mark, delete all marked at once.
+test('what was received is numbered and can delete many marked rows at once', () => {
+  const html = renderPage(fixture({ chat: [
+    { at: '2026-09-27T10:00:00+03:00', from: 'itzik', text: 'א', status: 'done' },
+    { at: '2026-09-27T11:00:00+03:00', from: 'itzik', text: 'ב', status: 'working' },
+  ] }));
+  const body = html.slice(html.indexOf('var gotSel={};'), html.indexOf('function paintAnsCount(){'));
+  assert.ok(body.includes("'<span class=\"gr-n\">#'+no+'</span>'"), 'each row shows its number');
+  assert.ok(body.includes('id="gotSelAll"') && body.includes('id="gotSelDel"'), 'mark all and delete marked');
+  assert.ok(body.includes('saveGone(g);gotSel={};'), 'marked rows go through the same on device delete');
+});
