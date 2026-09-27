@@ -1540,7 +1540,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-27T20:01:32.842Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-27T20:04:39.201Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2627,7 +2627,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='22d9ab9227';
+var CODE_ID='a1dcf8eaa0';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -7915,6 +7915,19 @@ boot('reset',function(){
  if(done>=stamp)return;
  markAllRead(stamp);
  try{localStorage.setItem('seenResetAt',stamp);}catch(e){}
+});
+boot('resetMarks',function(){
+ var stamp=D.resetMarksAt||'';
+ if(!stamp)return;
+ var done='';
+ try{done=localStorage.getItem('marksResetAt')||'';}catch(e){}
+ if(done>=stamp)return;
+ try{
+  localStorage.removeItem('chatStar');
+  localStorage.removeItem('chatParked');
+  localStorage.removeItem('chatStandby');
+  localStorage.setItem('marksResetAt',stamp);
+ }catch(e){}
 });
 boot('gate',gateBoot);
 boot('pane',function(){

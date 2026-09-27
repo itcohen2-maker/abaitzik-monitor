@@ -109,6 +109,13 @@ const LIB = fs.readFileSync(path.join(__dirname, 'lib', 'monitor-logic.js'), 'ut
 // A phone that has not applied this stamp yet marks every answer written
 // before it as read once, on its next load. Bump the value to reset again.
 const RESET_SEEN_AT = '2026-09-27T22:32:59';
+// 27.9: he sent a screenshot of the responses screen and asked to reset the
+// numbers on it. The unread count was already zero by then; what was left was
+// the standby and the marked flags, which he sets himself by tapping a card
+// and which never had a way back to zero in one move. Same trick as above: a
+// phone that has not applied this stamp yet clears both lists once, on its
+// next load. Bump the value to reset again.
+const RESET_MARKS_AT = '2026-09-27T23:00:00';
 /*
   The page the phone gets is the page without its own notes.
 
@@ -454,6 +461,7 @@ function build() {
     builtAt: BUILT_AT,
     buildId: BUILD_ID,
     resetSeenAt: RESET_SEEN_AT,
+    resetMarksAt: RESET_MARKS_AT,
     counts: {
       pending: pending.length,
       replied: replied.length,
@@ -11149,6 +11157,23 @@ boot('reset',function(){
  if(done>=stamp)return;
  markAllRead(stamp);
  try{localStorage.setItem('seenResetAt',stamp);}catch(e){}
+});
+// Same move, for the two counts markAllRead never touched: standby and
+// marked. Those are flags he set himself on individual cards, so there is no
+// cutoff date to compare against - the only reset that means anything is
+// clearing both lists outright.
+boot('resetMarks',function(){
+ var stamp=D.resetMarksAt||'';
+ if(!stamp)return;
+ var done='';
+ try{done=localStorage.getItem('marksResetAt')||'';}catch(e){}
+ if(done>=stamp)return;
+ try{
+  localStorage.removeItem('chatStar');
+  localStorage.removeItem('chatParked');
+  localStorage.removeItem('chatStandby');
+  localStorage.setItem('marksResetAt',stamp);
+ }catch(e){}
 });
 boot('gate',gateBoot);
 boot('pane',function(){
