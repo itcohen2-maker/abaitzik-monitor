@@ -391,6 +391,20 @@ function build() {
     thing that should not be readable by a stranger. Itzik recognises every one
     of them from the short form.
   */
+  /*
+    The sale of Lolos, 27.9: Itzik asked for one button that ties together
+    everything about the sale with the reports prepared for the lawyer. The
+    sections, links and open points live in data/sale, never in the page
+    source, because this page is public and its data is sealed.
+  */
+  const sale = loadDocs('sale')
+    .map(d => ({ order: Number(d.order) || 0, kind: d.kind || 'section', title: d.title || '',
+                 lines: Array.isArray(d.lines) ? d.lines.map(String) : [],
+                 folder: String(d.folder || '').startsWith('https://drive.google.com/') ? d.folder : '',
+                 files: (Array.isArray(d.files) ? d.files : [])
+                   .filter(f => String(f.url || '').startsWith('https://drive.google.com/'))
+                   .map(f => ({ name: String(f.name || ''), url: f.url })) }))
+    .sort((a, b) => a.order - b.order);
   const rivhit = loadDocs('rivhit')
     .map(r => ({
       at: r.at,
@@ -480,6 +494,7 @@ function build() {
     chat: chatClosed,
     codex,
     rivhit,
+    sale,
   };
 
   /*
@@ -516,7 +531,7 @@ function build() {
     It is `ansKeys` below: the window as keys alone.
   */
   const HEADS = { chat: 150, reports: 14, codex: 20, special: 8, replies: 8,
-                  improve: 4, food: 12, pegasus: 4, replied: 0, rivhit: 0,
+                  improve: 4, food: 12, pegasus: 4, replied: 0, rivhit: 0, sale: 0,
                   drains: 40, blocklist: 12 };
   // A report's body is most of its weight, and only the newest few are read
   // off the card without opening the screen.
@@ -1130,6 +1145,14 @@ button.abtn[disabled]{opacity:.55}
 @media(prefers-reduced-motion:reduce){.gt.taskblink{animation:none;box-shadow:0 0 0 4px var(--yellow)}}
 .rcsteps{margin:6px 0 14px;padding-inline-start:22px;line-height:1.7}
 .rcsteps li{margin-bottom:8px}
+.salecard{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.salecard h3{font:800 17px Heebo,sans-serif;margin:0 0 8px;text-align:center}
+.salecard.open{border-color:var(--yellow);box-shadow:0 0 0 2px var(--yellow),var(--shadow)}
+.salecard ul{margin:0;padding-inline-start:18px;line-height:1.6}
+.salecard .sfiles{display:flex;flex-direction:column;gap:6px}
+.salecard .sfiles a{display:block;padding:10px 12px;border-radius:12px;background:var(--sunk);color:var(--ink);text-decoration:none;font-weight:500}
+.salecard .sfiles a::before{content:'📄 '}
+.salecard .sfold{display:block;margin-top:10px;text-align:center;color:var(--accent);font-weight:700;text-decoration:none}
 .rch{font:800 17px Heebo,sans-serif;margin:14px 0 4px;text-align:center}
 .rclast{counter-reset:none;list-style:none;padding-inline-start:0}
 #pRc .ask{display:flex;width:100%;margin-top:10px}
@@ -2871,6 +2894,7 @@ try{
   <!-- The reports tile came off on 17.9. The reports are in "תשובות" now,
        which is the one button he asked for. -->
   <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>חשבוניות והיומן</small></button>
+  <button type="button" class="gt g15" id="gSale"><b>⚖️ מכירת לולוס</b><small>התיק לעורך הדין, מה פתוח ומה נמסר</small></button>
   <!--
     איציק, 20.9: "על המסך ניקוזים אתה יכול למחוק את הכפתור. אין לי יותר צורך בזה".
     הכפתור ירד ממסך הבית. המסך עצמו pDr וכל הרישומים שלו נשארים במקום,
@@ -3370,6 +3394,14 @@ try{
  <button type="button" class="ask" id="rcDone">סיימתי את ההתקנה</button>
  <div class="msgsaid" id="rcSaid"></div>
 </section>
+
+<!--ITZIK:BEGIN-->
+<section id="pSale" hidden>
+ <h2>מכירת לולוס</h2>
+ <div class="rephint">כל התיק שהוכן לעורך הדין, מסודר לפי החלקים שלו. כל שורה פותחת את הדוח עצמו בדרייב.</div>
+ <div id="saleBox"><div class="empty">טוען.</div></div>
+</section>
+<!--ITZIK:END-->
 
 <section id="pPl" hidden>
  <h2>לוח תוכן</h2>
@@ -5166,7 +5198,7 @@ function updateDot(){
  document.title=(fresh?'(1) ':'')+PAGE_TITLE;
 }
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
-var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn',Rc:'pRc'};
+var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn',Rc:'pRc',Sa:'pSale'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 /*ITZIK:BEGIN*/
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
@@ -7995,6 +8027,22 @@ document.addEventListener('change',function(e){
 });
 on('gCIdeas',function(){pane('I');renderContentIdeas();});
 on('gPlan',function(){pane('P');renderPlan();});
+/*ITZIK:BEGIN*/
+function renderSale(){
+ var box=document.getElementById('saleBox');if(!box)return;
+ var S=D.sale||[];
+ if(!S.length){box.innerHTML='<div class="empty">עוד אין כאן תיק.</div>';return;}
+ box.innerHTML=S.map(function(d){
+  var h='<div class="salecard'+(d.kind==='open'?' open':'')+'"><h3>'+esc(d.title)+'</h3>';
+  if(d.lines&&d.lines.length)h+='<ul>'+d.lines.map(function(l){return '<li>'+esc(l)+'</li>';}).join('')+'</ul>';
+  if(d.files&&d.files.length)h+='<div class="sfiles"'+(d.lines&&d.lines.length?' style="margin-top:10px"':'')+'>'+d.files.map(function(f){
+   return '<a href="'+esc(f.url)+'" target="_blank" rel="noopener">'+esc(f.name)+'</a>';}).join('')+'</div>';
+  if(d.folder)h+='<a class="sfold" href="'+esc(d.folder)+'" target="_blank" rel="noopener">'+(d.kind==='status'?'פתיחת כל התיק בדרייב':'פתיחת התיקייה')+'</a>';
+  return h+'</div>';
+ }).join('');
+}
+on('gSale',function(){pane('Sa');renderSale();ensure('sale',renderSale);});
+/*ITZIK:END*/
 on('gRemote',function(){pane('Rc');});
 function remoteDone(){try{return localStorage.getItem('remoteDoneRD')==='1';}catch(e){return false;}}
 boot('remoteDevices',function(){
