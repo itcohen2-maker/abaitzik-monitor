@@ -6943,7 +6943,10 @@ window.addEventListener('pagehide',keepDraft);
 document.addEventListener('visibilitychange',function(){if(document.hidden)keepDraft();});
 restoreDraft();
 
-document.getElementById('reloadBtn').onclick=function(){
+// Pulled out of the refresh button so the microphone can do the same thing on
+// its own. He asked for this by name: a permission that silently disappears
+// should not wait for him to notice and press רענן himself.
+function hardReload(){
  // He reported the header still showing a build fifty minutes old after
  // pressing this, so a fresh query string was not enough. Anything the
  // browser has stored for this page is cleared first: a page added to the
@@ -6951,11 +6954,6 @@ document.getElementById('reloadBtn').onclick=function(){
  // The draft is written down first, because this is the one button here that
  // is allowed to throw the whole page away.
  keepDraft();
- // And it says what it is doing. A button that looks like it did nothing, on a
- // fast connection, is how רענון came to be read as a second way home.
- var btn=this;
- btn.textContent='מרענן';
- btn.disabled=true;
  // The refresh in an inner screen's bar comes back to that same screen.
  var stay=window.reloadStay||'';window.reloadStay='';
  var done=function(){location.replace(location.pathname+'?v='+Date.now()+(stay?'#'+stay:''));};
@@ -6968,6 +6966,14 @@ document.getElementById('reloadBtn').onclick=function(){
   }
  }catch(e){}
  done();
+}
+document.getElementById('reloadBtn').onclick=function(){
+ // And it says what it is doing. A button that looks like it did nothing, on a
+ // fast connection, is how רענון came to be read as a second way home.
+ var btn=this;
+ btn.textContent='מרענן';
+ btn.disabled=true;
+ hardReload();
 };
 // הסימן שיש משהו שמחכה. היה צפצוף, והצפצוף חתך לו את המוזיקה ברקע, אז
 // הוא ויברציה קצרה. ויברציה לא נוגעת בפס הקול של הטלפון.
@@ -9970,6 +9976,17 @@ function recStart(){
  paintMics('sending');
  navigator.mediaDevices.getUserMedia({audio:true}).then(function(st){
   recStream=st;recChunks=[];recSec=0;
+  // He reported the mic dying mid-take too, not only at the permission
+  // prompt: the clock kept counting with nothing behind it. A track that
+  // ends on its own is the same "permission gone" failure, just discovered
+  // later, so it gets the same fix instead of a dead recording he has to
+  // notice himself.
+  var track=st.getAudioTracks()[0];
+  if(track)track.onended=function(){
+   recSaid.textContent='המיקרופון התנתק. מרענן את הדף כדי לתקן...';
+   paintMics('bad');
+   setTimeout(hardReload,1200);
+  };
   var mt=recPickType();
   try{rec=mt?new MediaRecorder(st,{mimeType:mt}):new MediaRecorder(st);}
   catch(e){rec=new MediaRecorder(st);}
@@ -9980,7 +9997,16 @@ function recStart(){
    recModal(false);
    var type=(rec&&rec.mimeType)||'audio/webm';
    var b=new Blob(recChunks,{type:type});
-   if(!b.size){recSaid.textContent='לא נקלט כלום. תנסה שוב.';recBtn.disabled=false;paintMics('bad');return;}
+   // The exact thing he described: it talked (the clock ran, the screen said
+   // מקליט) and nothing was actually captured. Trying again with the same
+   // stuck permission just repeats it, so this reaches for the same fix as a
+   // denied prompt instead of leaving him to find the refresh button.
+   if(!b.size){
+    recSaid.textContent='לא נקלט כלום. מרענן את הדף כדי לתקן...';
+    recBtn.disabled=false;paintMics('bad');
+    setTimeout(hardReload,1200);
+    return;
+   }
    var ext=type.indexOf('mp4')>-1?'m4a':(type.indexOf('ogg')>-1?'ogg':'webm');
    // The name used to come from toISOString, which is UTC. Every memo then
    // carried a time three hours behind his, and a pill he took at 10:00 was
@@ -10040,10 +10066,18 @@ function recStart(){
   // What actually went wrong. Sending him to the permission screen for a
   // microphone another app is holding is a wasted trip.
   var name=(err&&err.name)||'';
+  // This is the failure he called out by name: the permission is gone and
+  // every retry just asks again with nothing changed. A refresh is what
+  // actually clears it, so it happens on its own instead of sending him to a
+  // settings screen or waiting for him to find רענן himself.
+  if(name==='NotAllowedError'||name==='SecurityError'){
+   recSaid.textContent='ההרשאה למיקרופון נעלמה. מרענן את הדף כדי לתקן...';
+   paintMics('bad');
+   setTimeout(hardReload,1200);
+   return;
+  }
   recSaid.textContent=
-   name==='NotAllowedError'||name==='SecurityError'
-    ? 'אין הרשאה למיקרופון. תאשר אותה בהגדרות האתר בדפדפן ותנסה שוב.'
-   :name==='NotFoundError'||name==='OverconstrainedError'
+   name==='NotFoundError'||name==='OverconstrainedError'
     ? 'לא נמצא מיקרופון במכשיר הזה.'
    :name==='NotReadableError'||name==='AbortError'
     ? 'המיקרופון תפוס. תסגור שיחה או אפליקציה שמקליטה ותנסה שוב.'

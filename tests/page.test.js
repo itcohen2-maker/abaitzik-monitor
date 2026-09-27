@@ -215,12 +215,17 @@ test('a refresh never costs him what he was writing', () => {
   assert.ok(html.includes('function restoreDraft(){'));
   // The refresh button is the one control allowed to throw the page away, so
   // it puts the draft down first, and it says what it is doing rather than
-  // looking like a second way home.
+  // looking like a second way home. The save-and-reload itself lives in
+  // hardReload(), shared with the microphone so a failed permission can do
+  // the same thing on its own.
+  const hrAt = html.indexOf('function hardReload(){');
+  const hrBody = html.slice(hrAt, hrAt + 900);
+  assert.ok(hrBody.includes('keepDraft();'), 'the refresh must save the draft before reloading');
   const at = html.indexOf("document.getElementById('reloadBtn').onclick=function(){");
-  const body = html.slice(at, at + 900);
-  assert.ok(body.includes('keepDraft();'), 'the refresh must save the draft before reloading');
+  const body = html.slice(at, at + 300);
   assert.ok(body.includes("btn.textContent='מרענן';"));
   assert.ok(body.includes('btn.disabled=true;'));
+  assert.ok(body.includes('hardReload();'), 'the button must use the shared reload');
   // Leaving the page at all has the same shape as pressing the button.
   assert.ok(html.includes("window.addEventListener('pagehide',keepDraft);"));
   assert.ok(html.includes("document.addEventListener('visibilitychange',function(){if(document.hidden)keepDraft();});"));
@@ -575,6 +580,36 @@ test('the microphone answers the tap before the phone has decided', () => {
   const clean = html.slice(html.indexOf('function recCleanup(){'), html.indexOf('function recStart(){'));
   assert.ok(clean.includes('rec=null;'), 'the recorder is never let go');
   assert.ok(clean.includes('recStarting=false;'), 'and neither is the starting flag');
+});
+
+test('a permission that disappears refreshes the page instead of waiting to be noticed', () => {
+  const html = renderPage(fixture({}));
+  // He reported it exactly: the microphone asks for permission, the
+  // permission sometimes vanishes, and the screen goes on talking (the clock
+  // still runs) without anything actually recorded. Pressing רענן himself
+  // fixed it, but he is not the one who should have to find that button.
+  const at = html.indexOf('function recStart(){');
+  const body = html.slice(at, html.indexOf('function holdScreen', at));
+  // A denied or revoked permission reloads on its own.
+  const denied = body.slice(body.indexOf("name==='NotAllowedError'||name==='SecurityError'"));
+  assert.ok(denied.startsWith("name==='NotAllowedError'||name==='SecurityError'"));
+  assert.ok(denied.slice(0, 300).includes('setTimeout(hardReload,'),
+    'a denied or revoked permission must trigger the same fix as the refresh button');
+  // A recording that ran and said so, but captured nothing, is the same
+  // failure discovered later instead of at the prompt.
+  assert.ok(body.includes('if(!b.size){'));
+  const empty = body.slice(body.indexOf('if(!b.size){'), body.indexOf('if(!b.size){') + 300);
+  assert.ok(empty.includes('setTimeout(hardReload,'),
+    'an empty recording must reach for the same fix, not just ask him to try again');
+  // A track that dies mid-take (the device disappearing under a live
+  // recording) gets the same treatment the moment it happens, not only when
+  // the recording ends.
+  assert.ok(body.includes('track.onended=function(){'));
+  const ended = body.slice(body.indexOf('track.onended=function(){'), body.indexOf('track.onended=function(){') + 300);
+  assert.ok(ended.includes('setTimeout(hardReload,'));
+  // All three share the one reload the button already uses, so the draft is
+  // still kept and the caches are still cleared.
+  assert.ok(html.includes('function hardReload(){'));
 });
 
 test('a card about listening gets something to press', () => {
