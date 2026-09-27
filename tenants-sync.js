@@ -37,7 +37,7 @@ function sync(t) {
   const head = git(cwd, ['rev-parse', 'code/main']);
   if (!FORCE && t.syncedTo === head) return { changed: false, head };
   // Everything tracked upstream, minus what is the tenant's own.
-  git(cwd, ['checkout', 'code/main', '--', '.', ':(exclude)docs', ':(exclude)instance.json']);
+  git(cwd, ['checkout', 'code/main', '--', '.', ':(exclude)docs', ':(exclude)instance.json', ':(exclude)CLAUDE.md']);
   execFileSync('node', ['build.js'], { cwd, stdio: 'ignore', timeout: 180000 });
   try { execFileSync('chmod', ['-R', 'o+rX', path.join(cwd, 'docs')]); } catch (e) {}
   // The tenant's own history records what it runs; nothing is pushed.

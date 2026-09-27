@@ -95,3 +95,14 @@ test("a customer's built page, script included, has no word of Itzik's", () => {
   fs.rmSync(dir, { recursive: true, force: true });
   assert.deepEqual(found, []);
 });
+
+// 27.9: the shopping list link and the content plan reached Ilay's page,
+// because their handlers sat outside any ITZIK block. Every private address
+// in the page script must live inside one.
+test('Itzik private links in the page script sit inside an ITZIK block', () => {
+  const cut = src.replace(/\/\*ITZIK:BEGIN\*\/[\s\S]*?\/\*ITZIK:END\*\//g, '');
+  const js = cut.slice(cut.indexOf('const PAGE = `'), cut.indexOf('const PUBLIC_FILES'));
+  for (const s of ['1A2tvet0ucYNDoDclswaVDybuL8bir3OAerRzXtDUEPU', 'content-plan-ilay', 'happymeal-sekira']) {
+    assert.ok(!js.includes(s), s + ' would reach a customer page');
+  }
+});

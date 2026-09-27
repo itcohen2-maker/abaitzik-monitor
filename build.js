@@ -9080,6 +9080,7 @@ on('gLolos',function(){pane('o');});
   new tab keeps the monitor where it was, which matters on a phone where
   going back into a pane means finding your place again.
 */
+/*ITZIK:BEGIN*/
 /*
   יהודה. Opening the file was not enough: on a phone the PDF opens in a
   viewer with no obvious way back, and what he actually wants to do with it
@@ -9331,6 +9332,7 @@ function planSheet(){
 }
 on('gContentPlan',planSheet);
 on('gShopList',function(){window.open('https://docs.google.com/document/d/1A2tvet0ucYNDoDclswaVDybuL8bir3OAerRzXtDUEPU/edit','_blank','noopener');});
+/*ITZIK:END*/
 on('gOp',function(){pane('s');});
 on('gNotes',function(){pane('t');renderNotes();});
 on('gRemind',function(){pane('R');renderReminders();});
