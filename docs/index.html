@@ -242,6 +242,7 @@ button.abtn[disabled]{opacity:.55}
  border-radius:12px;margin-bottom:8px;background:var(--surface)}
 .gr.now{border-color:var(--blue)}
 .gr[data-sk]{cursor:pointer}
+.bno{font-weight:700;color:var(--accent)}
 .gr.sel{background:#fff1c2;border-color:#e0a800}
 .gr-cb{flex:0 0 auto;width:18px;height:18px;border:2px solid var(--line);border-radius:5px;margin-top:2px}
 .gr.sel .gr-cb{background:#e0a800;border-color:#e0a800}
@@ -1539,7 +1540,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-27T19:06:15.044Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-27T19:22:50.302Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2626,7 +2627,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='14038342c2';
+var CODE_ID='b47ceb7066';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -2982,8 +2983,15 @@ function isLive(m){
  if(m.pend)return true;
  return !m.status||m.status==='received'||m.status==='working'||m.status==='partial';
 }
+var numCache={n:-1,map:{}};
+function numOf(m){
+ var C=D.chat||[];
+ if(numCache.n!==C.length){numCache={n:C.length,map:gotNumbers()};}
+ return numCache.map[gotKey('msg',m)]||0;
+}
 function bubbleHtml(m,i,fresh,handled){
  var mine=m.from==='itzik';
+ var no=mine&&!m.pend?numOf(m):0;
  var live=isLive(m);
  var vb=voiceBlock(m),vtx=vb?transcriptOf(m):'';
  var line=(mine?OWNER:'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'')
@@ -2991,7 +2999,7 @@ function bubbleHtml(m,i,fresh,handled){
  return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')+(live?' beat':'')
   +(fresh?' fresh':(handled?' touched':' read'))+'" data-i="'+i+'"'
   +' data-copy="'+esc(line)+'">'
-  +'<span class="w">'+(live?'<i class="lv"></i>':'')+(mine?'אתה':'קלוד')+' · '+esc(stamp(m.at))
+  +'<span class="w">'+(live?'<i class="lv"></i>':'')+(no?'<b class="bno">#'+no+'</b> ':'')+(mine?'אתה':'קלוד')+' · '+esc(stamp(m.at))
   +(m.pend?' · נשלח, עוד לא נקרא':'')+statusTag(m)
   +(fresh?' · <em class="badge">חדש</em>':(mine?'':' · נקרא'))
   +'<button type="button" class="cp" data-i="'+i+'" aria-label="העתקה">העתקה</button>'

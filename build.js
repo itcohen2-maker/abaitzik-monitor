@@ -1087,6 +1087,7 @@ button.abtn[disabled]{opacity:.55}
  border-radius:12px;margin-bottom:8px;background:var(--surface)}
 .gr.now{border-color:var(--blue)}
 .gr[data-sk]{cursor:pointer}
+.bno{font-weight:700;color:var(--accent)}
 .gr.sel{background:#fff1c2;border-color:#e0a800}
 .gr-cb{flex:0 0 auto;width:18px;height:18px;border:2px solid var(--line);border-radius:5px;margin-top:2px}
 .gr.sel .gr-cb{background:#e0a800;border-color:#e0a800}
@@ -4522,8 +4523,19 @@ function isLive(m){
  if(m.pend)return true;
  return !m.status||m.status==='received'||m.status==='working'||m.status==='partial';
 }
+/*
+  27.9: a number on every message of his, the same one the "what was received"
+  screen shows, so "#12" is one message everywhere. Built once per chat size.
+*/
+var numCache={n:-1,map:{}};
+function numOf(m){
+ var C=D.chat||[];
+ if(numCache.n!==C.length){numCache={n:C.length,map:gotNumbers()};}
+ return numCache.map[gotKey('msg',m)]||0;
+}
 function bubbleHtml(m,i,fresh,handled){
  var mine=m.from==='itzik';
+ var no=mine&&!m.pend?numOf(m):0;
  var live=isLive(m);
  var vb=voiceBlock(m),vtx=vb?transcriptOf(m):'';
  // מה שמועתק מהודעה קולית הוא המילים, לא שם הקובץ.
@@ -4532,7 +4544,7 @@ function bubbleHtml(m,i,fresh,handled){
  return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')+(live?' beat':'')
   +(fresh?' fresh':(handled?' touched':' read'))+'" data-i="'+i+'"'
   +' data-copy="'+esc(line)+'">'
-  +'<span class="w">'+(live?'<i class="lv"></i>':'')+(mine?'אתה':'קלוד')+' · '+esc(stamp(m.at))
+  +'<span class="w">'+(live?'<i class="lv"></i>':'')+(no?'<b class="bno">#'+no+'</b> ':'')+(mine?'אתה':'קלוד')+' · '+esc(stamp(m.at))
   +(m.pend?' · נשלח, עוד לא נקרא':'')+statusTag(m)
   +(fresh?' · <em class="badge">חדש</em>':(mine?'':' · נקרא'))
   +'<button type="button" class="cp" data-i="'+i+'" aria-label="העתקה">העתקה</button>'
