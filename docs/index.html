@@ -1526,7 +1526,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-27T13:27:26.588Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-27T13:27:54.503Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1664,7 +1664,7 @@ try{
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
   <button type="button" class="gt g15" id="gYehuda"><b>📄 יהודה</b><small>סקירת happymeal. פתיחה, הורדה או שליחה אליו</small></button>
   <button type="button" class="gt gKat" id="gKatalog"><b>📖 הקטלוג הבא</b><small>קיץ 2027. עשרה כיווני עיצוב ודוח הטרנדים 2027 2028</small></button>
-  <button type="button" class="gt gCPlan" id="gContentPlan"><b>🎬 תוכנית תוכן</b><small>סוגי פוסטים, שבוע לדוגמה ותסריטים. לשיתוף עם איליי</small></button>
+  <button type="button" class="gt gCPlan" id="gContentPlan"><b>🎬 תוכנית תוכן</b><small>פתיחה, שליחה עם הקובץ או קישור בוואטסאפ לאיליי</small></button>
  </div>
 
 
@@ -2611,7 +2611,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='52d80de609';
+var CODE_ID='47d562bb43';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -6436,7 +6436,68 @@ function yehudaSheet(){
 }
 on('gYehuda',yehudaSheet);
 on('gKatalog',function(){window.open('katalog/','_blank','noopener');});
-on('gContentPlan',function(){window.open('files/content-plan-ilay.pdf','_blank','noopener');});
+var PLAN_PDF='files/content-plan-ilay.pdf',PLAN_NAME='תוכנית תוכן.pdf';
+var PLAN_LINK='https://itcohen2-maker.github.io/abaitzik-monitor/files/content-plan-ilay.pdf';
+var PLAN_MSG='תוכנית התוכן להמשך: סוגי פוסטים, שבוע לדוגמה ותסריטים.';
+var pFile=null,pFileTried=false;
+function planPrefetch(){
+ if(pFileTried)return;pFileTried=true;
+ if(!navigator.canShare)return;
+ fetch(PLAN_PDF).then(function(r){return r.ok?r.blob():null;}).then(function(b){
+  if(!b)return;
+  var f=new File([b],PLAN_NAME,{type:'application/pdf'});
+  if(navigator.canShare({files:[f]}))pFile=f;
+ }).catch(function(){pFileTried=false;});
+}
+function planShare(){
+ if(pFile&&navigator.share){
+  navigator.share({files:[pFile],title:'תוכנית תוכן',text:PLAN_MSG})
+   .catch(function(e){ if(e&&e.name!=='AbortError')planShareLink(); });
+  return;
+ }
+ planShareLink();
+}
+function planShareLink(){
+ if(navigator.share){
+  navigator.share({title:'תוכנית תוכן',text:PLAN_MSG,url:PLAN_LINK})
+   .catch(function(e){ if(e&&e.name!=='AbortError')yehudaCopy(PLAN_LINK); });
+  return;
+ }
+ yehudaCopy(PLAN_LINK);
+}
+function planSheet(){
+ var old=document.getElementById('ySheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='ySheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','תוכנית תוכן');
+ w.innerHTML='<div class="ycard">'
+  +'<b>תוכנית תוכן</b>'
+  +'<small>לשיתוף עם איליי</small>'
+  +'<button type="button" class="yb" data-y="open">פתיחה</button>'
+  +'<button type="button" class="yb yb1" data-y="share">שליחה, עם הקובץ מצורף</button>'
+  +'<button type="button" class="yb yb2" data-y="wa">וואטסאפ, שליחת קישור</button>'
+  +'<button type="button" class="yb" data-y="copy">העתקת הקישור</button>'
+  +'<button type="button" class="yb yx" data-y="close">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-y');
+  if(!k)return;
+  if(k==='open')window.open(PLAN_PDF,'_blank','noopener');
+  else if(k==='share')planShare();
+  else if(k==='wa')window.open('https://wa.me/?text='+encodeURIComponent(PLAN_MSG+String.fromCharCode(10)+PLAN_LINK),'_blank','noopener');
+  else if(k==='copy')yehudaCopy(PLAN_LINK);
+  close();
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+ planPrefetch();
+ var first=w.querySelector('.yb');if(first)first.focus();
+}
+on('gContentPlan',planSheet);
 on('gOp',function(){pane('s');});
 on('gNotes',function(){pane('t');renderNotes();});
 on('gRemind',function(){pane('R');renderReminders();});
