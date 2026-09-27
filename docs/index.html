@@ -291,6 +291,17 @@ button.abtn[disabled]{opacity:.55}
 @media(prefers-reduced-motion:reduce){.gt.taskblink{animation:none;box-shadow:0 0 0 4px var(--yellow)}}
 .rcsteps{margin:6px 0 14px;padding-inline-start:22px;line-height:1.7}
 .rcsteps li{margin-bottom:8px}
+.fview{position:fixed;inset:0;z-index:99990;background:rgba(10,12,18,.94);display:flex;flex-direction:column}
+.fv-bar{display:flex;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;color:#fff}
+.fv-bar b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
+.fv-x{width:44px;height:44px;border:0;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-size:20px;cursor:pointer}
+.fv-body{flex:1;overflow:auto;padding:12px 16px calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:12px}
+.fv-body img,.fv-body video{max-width:100%;max-height:70vh;border-radius:12px}
+.fv-body audio{width:100%}
+.fv-txt{white-space:pre-wrap;color:#eee;background:rgba(255,255,255,.06);padding:12px;border-radius:12px;width:100%;direction:rtl}
+.fv-body .ask{width:100%;max-width:420px}
+.flist a{display:flex;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--line);margin-bottom:8px;color:var(--ink);text-decoration:none}
+.flist small{color:var(--dim);white-space:nowrap}
 .salecard{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow)}
 .salecard h3{font:800 17px Heebo,sans-serif;margin:0 0 8px;text-align:center}
 .salecard.open{border-color:var(--yellow);box-shadow:0 0 0 2px var(--yellow),var(--shadow)}
@@ -1514,7 +1525,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-27T07:08:13.853Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-27T08:40:45.404Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1639,6 +1650,7 @@ try{
   <button type="button" class="gt g3" id="gQueue"><b>📊 ניטור רשתות</b><small>מי פנה, מה נענה</small></button>
   <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>חשבוניות והיומן</small></button>
   <button type="button" class="gt g15" id="gSale"><b>⚖️ מכירת לולוס</b><small>התיק לעורך הדין, מה פתוח ומה נמסר</small></button>
+  <button type="button" class="gt g10" id="gFiles"><b>📁 הקבצים שלי</b><small>כל מה ששלחת, סגור במוניטור</small></button>
   <button type="button" class="gt g9" id="gBlock"><b>🚫 לחסימה</b><small>רשימה לאישור. כלום לא קורה עד שתסמן</small></button>
   <button type="button" class="gt g4" id="gVoices"><b>🎙️ הקלטות שלא תומללו</b><small>מה שלא הצלחתי לקרוא. תלחץ ותשמע</small></button>
   <button type="button" class="gt g17" id="gTasks"><b>✅ משימות</b><small>מה לעשות, לפי יום. מסמנים כשבוצע</small></button>
@@ -1997,6 +2009,12 @@ try{
  <div id="saleBox"><div class="empty">טוען.</div></div>
 </section>
 
+
+<section id="pFi" hidden>
+ <h2>הקבצים שלי</h2>
+ <div class="rephint">כל קובץ ששלחת או שנשמר בשבילך. הם סגורים ונפתחים רק כאן, אחרי הקוד שלך.</div>
+ <div id="fiBox" class="flist"></div>
+</section>
 
 <section id="pPl" hidden>
  <h2>לוח תוכן</h2>
@@ -2552,7 +2570,46 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='7187ae7505';
+function fileEntry(name){var F=D.files||[];for(var i=0;i<F.length;i++)if(F[i].n===name)return F[i];return null;}
+function fileBlob(e){
+ return fetch('f/'+e.id+'.bin').then(function(r){if(!r.ok)throw 0;return r.arrayBuffer();})
+  .then(function(buf){var a=new Uint8Array(buf);return crypto.subtle.decrypt({name:'AES-GCM',iv:a.slice(0,12)},GKEY,a.slice(12));})
+  .then(function(pt){return new Blob([pt],{type:e.t});});
+}
+function fileView(name){
+ var e=fileEntry(name);if(!e||!GKEY)return false;
+ var ov=document.createElement('div');ov.className='fview';
+ var short=String(name).split('/').pop();
+ ov.innerHTML='<div class="fv-bar"><button type="button" class="fv-x" aria-label="סגירה">✕</button><b>'+esc(short)+'</b></div><div class="fv-body"><div class="empty">פותח.</div></div>';
+ document.body.appendChild(ov);
+ var url='';
+ function close(){ov.remove();if(url)setTimeout(function(){URL.revokeObjectURL(url);},1000);}
+ ov.querySelector('.fv-x').onclick=close;
+ fileBlob(e).then(function(b){
+  url=URL.createObjectURL(b);var t=e.t||'',h='';
+  if(t.indexOf('image/')===0)h='<img src="'+url+'" alt="">';
+  else if(t.indexOf('video/')===0)h='<video src="'+url+'" controls playsinline></video>';
+  else if(t.indexOf('audio/')===0)h='<audio src="'+url+'" controls></audio>';
+  else if(t.indexOf('text/')===0){h='<pre class="fv-txt"></pre>';}
+  else h='<a class="ask" href="'+url+'" target="_blank" rel="noopener">פתיחת הקובץ</a>';
+  h+='<a class="ask fv-save" href="'+url+'" download="'+esc(short)+'">שמירה בטלפון</a>';
+  var body=ov.querySelector('.fv-body');body.innerHTML=h;
+  if(t.indexOf('text/')===0)b.text().then(function(s){body.querySelector('.fv-txt').textContent=s;});
+ }).catch(function(){ov.querySelector('.fv-body').innerHTML='<div class="empty">לא הצלחתי לפתוח את הקובץ. רענן ונסה שוב.</div>';});
+ return true;
+}
+function fileNameOf(href){
+ var m=String(href||'').match(/(^|[/])files[/]([^?#]+)$/);
+ if(!m)return '';
+ try{return decodeURIComponent(m[2]);}catch(e){return m[2];}
+}
+document.addEventListener('click',function(ev){
+ var a=ev.target&&ev.target.closest&&ev.target.closest('a[href]');
+ if(!a||a.origin!==location.origin)return;
+ var n=fileNameOf(a.getAttribute('href'));
+ if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
+},true);
+var CODE_ID='3684924d74';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -3514,7 +3571,7 @@ function updateDot(){
  document.title=(fresh?'(1) ':'')+PAGE_TITLE;
 }
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
-var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn',Rc:'pRc',Sa:'pSale'};
+var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn',Rc:'pRc',Sa:'pSale',Fi:'pFi'};
 
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
 function lastPill(){
@@ -5517,6 +5574,15 @@ document.addEventListener('change',function(e){
 });
 on('gCIdeas',function(){pane('I');renderContentIdeas();});
 on('gPlan',function(){pane('P');renderPlan();});
+function renderFiles(){
+ var box=document.getElementById('fiBox');if(!box)return;var F=D.files||[];
+ if(!F.length){box.innerHTML='<div class="empty">אין כאן קבצים.</div>';return;}
+ box.innerHTML=F.map(function(f){
+  var kb=f.s>1048576?(Math.round(f.s/104857.6)/10+' MB'):(Math.max(1,Math.round(f.s/1024))+' KB');
+  return '<a href="files/'+esc(f.n)+'"><span>'+esc(f.n)+'</span><small>'+kb+'</small></a>';
+ }).join('');
+}
+on('gFiles',function(){pane('Fi');renderFiles();});
 
 function renderSale(){
  var box=document.getElementById('saleBox');if(!box)return;
@@ -6138,7 +6204,8 @@ function renderVoices(){
   var link=String(m.note||'').match(/files[/][^ ]+/);
   return '<div class="ansc">'
    +'<span class="w">'+esc(stamp(m.at))+'</span>'
-   +(link?'<audio controls preload="none" src="'+esc(link[0])+'" style="width:100%;margin-top:8px"></audio>'
+   +(link&&fileEntry(fileNameOf(link[0]))?'<a class="ask" href="'+esc(link[0])+'">▶ השמעה</a>'
+    :link?'<audio controls preload="none" src="'+esc(link[0])+'" style="width:100%;margin-top:8px"></audio>'
          :'<div class="atxt">ההקלטה עצמה לא הגיעה לדף. תגיד לי מה ביקשת שם.</div>')
    +'</div>';
  }).join('');
