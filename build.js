@@ -10,6 +10,17 @@ const fs = require('fs');
 const path = require('path');
 // Which monitor this is. Without instance.json this is Itzik's, word for word.
 const inst = require('./lib/instance.js');
+/*
+  27.9: the chat lives on the server since 25.9, and this PC's data/ is a stale
+  copy. Every build made here and pushed put that copy on his page, so the chat
+  went back to 25.9 and the requests he had just reset came back. An instance
+  that runs on a server is built there only. --local builds here anyway, for
+  looking at the page, and must not be pushed.
+*/
+if (require.main === module && process.platform === 'win32' && inst.serverHost && !process.argv.includes('--local')) {
+  console.log('הבנייה של ' + inst.name + ' רצה בשרת (' + inst.serverHost + '). לא בונה כאן. לבדיקה מקומית: node build.js --local, בלי לדחוף.');
+  process.exit(0);
+}
 const store = require('./lib/store');
 const group = require('./lib/group.js');
 const ML = require('./lib/monitor-logic.js');
