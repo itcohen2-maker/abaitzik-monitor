@@ -82,5 +82,20 @@ function open(blob) {
   return Buffer.concat([d.update(all.subarray(0, all.length - 16)), d.final()]).toString('utf8');
 }
 
-module.exports = { enabled, seal, open, rounds: ROUNDS,
+/*
+  Files, 27.9. Itzik's chat attachments sat in docs/files, readable by anyone
+  with the address, a hospital appointment among them. They are sealed the same
+  way as the data, as bytes: a 12 byte IV, then the ciphertext and its tag. The
+  published name is a keyed hash of the real one, so the address says nothing.
+*/
+function sealBytes(buf) {
+  const iv = crypto.randomBytes(12);
+  const c = crypto.createCipheriv('aes-256-gcm', key(), iv);
+  return Buffer.concat([iv, c.update(buf), c.final(), c.getAuthTag()]);
+}
+function fileId(name) {
+  return crypto.createHmac('sha256', key()).update('file:' + name).digest('hex').slice(0, 24);
+}
+
+module.exports = { enabled, seal, open, sealBytes, fileId, rounds: ROUNDS,
   saltB64: () => salt().toString('base64') };

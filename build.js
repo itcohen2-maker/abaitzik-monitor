@@ -433,9 +433,11 @@ function build() {
     points at exactly one publish.
   */
   const BUILT_AT = new Date().toISOString();
+  const files = sealFiles();
   const BUILD_ID = Math.floor(Date.parse(BUILT_AT) / 1000).toString(36).slice(-5);
 
   const payload = {
+    files,
     now: now ? { at: now.at, text: now.text, next: now.next } : null,
     openCmds,
     builtAt: BUILT_AT,
@@ -1145,6 +1147,17 @@ button.abtn[disabled]{opacity:.55}
 @media(prefers-reduced-motion:reduce){.gt.taskblink{animation:none;box-shadow:0 0 0 4px var(--yellow)}}
 .rcsteps{margin:6px 0 14px;padding-inline-start:22px;line-height:1.7}
 .rcsteps li{margin-bottom:8px}
+.fview{position:fixed;inset:0;z-index:99990;background:rgba(10,12,18,.94);display:flex;flex-direction:column}
+.fv-bar{display:flex;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;color:#fff}
+.fv-bar b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
+.fv-x{width:44px;height:44px;border:0;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-size:20px;cursor:pointer}
+.fv-body{flex:1;overflow:auto;padding:12px 16px calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:12px}
+.fv-body img,.fv-body video{max-width:100%;max-height:70vh;border-radius:12px}
+.fv-body audio{width:100%}
+.fv-txt{white-space:pre-wrap;color:#eee;background:rgba(255,255,255,.06);padding:12px;border-radius:12px;width:100%;direction:rtl}
+.fv-body .ask{width:100%;max-width:420px}
+.flist a{display:flex;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--line);margin-bottom:8px;color:var(--ink);text-decoration:none}
+.flist small{color:var(--dim);white-space:nowrap}
 .salecard{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow)}
 .salecard h3{font:800 17px Heebo,sans-serif;margin:0 0 8px;text-align:center}
 .salecard.open{border-color:var(--yellow);box-shadow:0 0 0 2px var(--yellow),var(--shadow)}
@@ -2895,6 +2908,7 @@ try{
        which is the one button he asked for. -->
   <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>חשבוניות והיומן</small></button>
   <button type="button" class="gt g15" id="gSale"><b>⚖️ מכירת לולוס</b><small>התיק לעורך הדין, מה פתוח ומה נמסר</small></button>
+  <button type="button" class="gt g10" id="gFiles"><b>📁 הקבצים שלי</b><small>כל מה ששלחת, סגור במוניטור</small></button>
   <!--
     איציק, 20.9: "על המסך ניקוזים אתה יכול למחוק את הכפתור. אין לי יותר צורך בזה".
     הכפתור ירד ממסך הבית. המסך עצמו pDr וכל הרישומים שלו נשארים במקום,
@@ -3403,6 +3417,12 @@ try{
 </section>
 <!--ITZIK:END-->
 
+<section id="pFi" hidden>
+ <h2>הקבצים שלי</h2>
+ <div class="rephint">כל קובץ ששלחת או שנשמר בשבילך. הם סגורים ונפתחים רק כאן, אחרי הקוד שלך.</div>
+ <div id="fiBox" class="flist"></div>
+</section>
+
 <section id="pPl" hidden>
  <h2>לוח תוכן</h2>
  <div class="rephint">מה מתוכנן לעלות, לפי יום. לחיצה מסמנת שעלה.</div>
@@ -3858,6 +3878,51 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
+/*
+  Private files, 27.9. A link to files/<name> is caught here: the sealed copy
+  is fetched, opened with the same key as the data, and shown on the page as a
+  picture, a player or a document, with a button to save it. Nothing goes to a
+  public address. No backslash in the regex below, the template strips them.
+*/
+function fileEntry(name){var F=D.files||[];for(var i=0;i<F.length;i++)if(F[i].n===name)return F[i];return null;}
+function fileBlob(e){
+ return fetch('f/'+e.id+'.bin').then(function(r){if(!r.ok)throw 0;return r.arrayBuffer();})
+  .then(function(buf){var a=new Uint8Array(buf);return crypto.subtle.decrypt({name:'AES-GCM',iv:a.slice(0,12)},GKEY,a.slice(12));})
+  .then(function(pt){return new Blob([pt],{type:e.t});});
+}
+function fileView(name){
+ var e=fileEntry(name);if(!e||!GKEY)return false;
+ var ov=document.createElement('div');ov.className='fview';
+ var short=String(name).split('/').pop();
+ ov.innerHTML='<div class="fv-bar"><button type="button" class="fv-x" aria-label="סגירה">✕</button><b>'+esc(short)+'</b></div><div class="fv-body"><div class="empty">פותח.</div></div>';
+ document.body.appendChild(ov);
+ var url='';
+ function close(){ov.remove();if(url)setTimeout(function(){URL.revokeObjectURL(url);},1000);}
+ ov.querySelector('.fv-x').onclick=close;
+ fileBlob(e).then(function(b){
+  url=URL.createObjectURL(b);var t=e.t||'',h='';
+  if(t.indexOf('image/')===0)h='<img src="'+url+'" alt="">';
+  else if(t.indexOf('video/')===0)h='<video src="'+url+'" controls playsinline></video>';
+  else if(t.indexOf('audio/')===0)h='<audio src="'+url+'" controls></audio>';
+  else if(t.indexOf('text/')===0){h='<pre class="fv-txt"></pre>';}
+  else h='<a class="ask" href="'+url+'" target="_blank" rel="noopener">פתיחת הקובץ</a>';
+  h+='<a class="ask fv-save" href="'+url+'" download="'+esc(short)+'">שמירה בטלפון</a>';
+  var body=ov.querySelector('.fv-body');body.innerHTML=h;
+  if(t.indexOf('text/')===0)b.text().then(function(s){body.querySelector('.fv-txt').textContent=s;});
+ }).catch(function(){ov.querySelector('.fv-body').innerHTML='<div class="empty">לא הצלחתי לפתוח את הקובץ. רענן ונסה שוב.</div>';});
+ return true;
+}
+function fileNameOf(href){
+ var m=String(href||'').match(/(^|[/])files[/]([^?#]+)$/);
+ if(!m)return '';
+ try{return decodeURIComponent(m[2]);}catch(e){return m[2];}
+}
+document.addEventListener('click',function(ev){
+ var a=ev.target&&ev.target.closest&&ev.target.closest('a[href]');
+ if(!a||a.origin!==location.origin)return;
+ var n=fileNameOf(a.getAttribute('href'));
+ if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
+},true);
 /*
   Data that does not travel with the page.
 
@@ -5198,7 +5263,7 @@ function updateDot(){
  document.title=(fresh?'(1) ':'')+PAGE_TITLE;
 }
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
-var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn',Rc:'pRc',Sa:'pSale'};
+var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn',Rc:'pRc',Sa:'pSale',Fi:'pFi'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 /*ITZIK:BEGIN*/
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
@@ -8027,6 +8092,15 @@ document.addEventListener('change',function(e){
 });
 on('gCIdeas',function(){pane('I');renderContentIdeas();});
 on('gPlan',function(){pane('P');renderPlan();});
+function renderFiles(){
+ var box=document.getElementById('fiBox');if(!box)return;var F=D.files||[];
+ if(!F.length){box.innerHTML='<div class="empty">אין כאן קבצים.</div>';return;}
+ box.innerHTML=F.map(function(f){
+  var kb=f.s>1048576?(Math.round(f.s/104857.6)/10+' MB'):(Math.max(1,Math.round(f.s/1024))+' KB');
+  return '<a href="files/'+esc(f.n)+'"><span>'+esc(f.n)+'</span><small>'+kb+'</small></a>';
+ }).join('');
+}
+on('gFiles',function(){pane('Fi');renderFiles();});
 /*ITZIK:BEGIN*/
 function renderSale(){
  var box=document.getElementById('saleBox');if(!box)return;
@@ -8770,7 +8844,8 @@ function renderVoices(){
   var link=String(m.note||'').match(/files[/][^ ]+/);
   return '<div class="ansc">'
    +'<span class="w">'+esc(stamp(m.at))+'</span>'
-   +(link?'<audio controls preload="none" src="'+esc(link[0])+'" style="width:100%;margin-top:8px"></audio>'
+   +(link&&fileEntry(fileNameOf(link[0]))?'<a class="ask" href="'+esc(link[0])+'">▶ השמעה</a>'
+    :link?'<audio controls preload="none" src="'+esc(link[0])+'" style="width:100%;margin-top:8px"></audio>'
          :'<div class="atxt">ההקלטה עצמה לא הגיעה לדף. תגיד לי מה ביקשת שם.</div>')
    +'</div>';
  }).join('');
@@ -10947,9 +11022,69 @@ try{window.__monAlive();}catch(e){}
   לא יכולים לשבת רק בקישור בתוך הודעה בצאט. כל mp4 תחת docs/files נכנס לדף
   הזה מעצמו בכל בנייה, החדש למעלה, ושום קובץ לא נמחק בדרך.
 */
+/*
+  Attachments are private, 27.9. Itzik: "move them." Anything a session or the
+  listener drops into docs/files is moved to data/files-private on the next
+  build, before anything is committed, and published only sealed under
+  docs/f/<keyed hash>.bin. A sealed copy is written once and kept while its
+  source exists, so an unchanged file does not change in git on every build.
+  The Yehuda review stays public: it is shared with him by link on purpose.
+  Without a gate nothing moves, because then the page itself is public anyway.
+*/
+const PUBLIC_FILES = new Set(['happymeal-sekira-yehuda.pdf']);
+const MIME = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp',
+  mp4: 'video/mp4', mov: 'video/quicktime', webm: 'audio/webm', m4a: 'audio/mp4', mp3: 'audio/mpeg',
+  ogg: 'audio/ogg', wav: 'audio/wav', pdf: 'application/pdf', txt: 'text/plain; charset=utf-8',
+  doc: 'application/msword', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', csv: 'text/csv; charset=utf-8' };
+function walkFiles(dir, base = '') {
+  if (!fs.existsSync(dir)) return [];
+  let out = [];
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const rel = base ? base + '/' + e.name : e.name;
+    if (e.isDirectory()) out = out.concat(walkFiles(path.join(dir, e.name), rel));
+    else if (!e.name.startsWith('.')) out.push(rel);
+  }
+  return out;
+}
+function sealFiles() {
+  if (!gate.enabled()) return [];
+  const src = path.join(inst.dataPath, 'files-private');
+  const pub = path.join(OUT_DIR, 'files');
+  const outDir = path.join(OUT_DIR, 'f');
+  fs.mkdirSync(src, { recursive: true });
+  fs.mkdirSync(outDir, { recursive: true });
+  for (const rel of walkFiles(pub)) {
+    if (PUBLIC_FILES.has(rel)) continue;
+    const to = path.join(src, rel);
+    fs.mkdirSync(path.dirname(to), { recursive: true });
+    if (!fs.existsSync(to)) fs.copyFileSync(path.join(pub, rel), to);
+    fs.unlinkSync(path.join(pub, rel));
+  }
+  // Empty folders left behind in docs/files go too.
+  (function prune(d) {
+    if (!fs.existsSync(d)) return;
+    for (const e of fs.readdirSync(d, { withFileTypes: true })) if (e.isDirectory()) prune(path.join(d, e.name));
+    if (d !== pub && !fs.readdirSync(d).length) fs.rmdirSync(d);
+  })(pub);
+  const list = [], keep = new Set();
+  for (const rel of walkFiles(src)) {
+    const id = gate.fileId(rel), target = path.join(outDir, id + '.bin');
+    const full = path.join(src, rel);
+    if (!fs.existsSync(target)) fs.writeFileSync(target, gate.sealBytes(fs.readFileSync(full)));
+    keep.add(id + '.bin');
+    const ext = (rel.split('.').pop() || '').toLowerCase();
+    list.push({ n: rel, id, s: fs.statSync(full).size, t: MIME[ext] || 'application/octet-stream',
+                at: new Date(fs.statSync(full).mtimeMs).toISOString() });
+  }
+  for (const f of fs.readdirSync(outDir)) if (!keep.has(f)) fs.unlinkSync(path.join(outDir, f));
+  return list.sort((a, b) => (a.at < b.at ? 1 : -1));
+}
+
 function videosPage() {
   let files = [];
   const dir = path.join(OUT_DIR, 'files');
+  if (gate.enabled()) return '<!DOCTYPE html><html lang="he" dir="rtl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>הסרטונים</title><body style="margin:0;background:#191714;color:#f2ede4;font:400 18px/1.6 system-ui,sans-serif;padding:24px;text-align:center"><p>הסרטונים עברו למוניטור, למסך הקבצים שלי. שם הם סגורים ונפתחים רק אחרי הקוד.</p><p><a style="color:#8ab4f8" href="./">חזרה למוניטור</a></p></body></html>';
   try {
     files = fs.readdirSync(dir)
       .filter(n => n.toLowerCase().endsWith('.mp4'))
