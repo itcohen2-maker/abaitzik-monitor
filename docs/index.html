@@ -1506,7 +1506,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-27T04:57:55.226Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-27T04:58:35.992Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2535,7 +2535,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='36d03be420';
+var CODE_ID='536ba9e9f6';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -4742,11 +4742,8 @@ window.addEventListener('pagehide',keepDraft);
 document.addEventListener('visibilitychange',function(){if(document.hidden)keepDraft();});
 restoreDraft();
 
-document.getElementById('reloadBtn').onclick=function(){
+function hardReload(){
  keepDraft();
- var btn=this;
- btn.textContent='מרענן';
- btn.disabled=true;
  var stay=window.reloadStay||'';window.reloadStay='';
  var done=function(){location.replace(location.pathname+'?v='+Date.now()+(stay?'#'+stay:''));};
  try{
@@ -4758,6 +4755,12 @@ document.getElementById('reloadBtn').onclick=function(){
   }
  }catch(e){}
  done();
+}
+document.getElementById('reloadBtn').onclick=function(){
+ var btn=this;
+ btn.textContent='מרענן';
+ btn.disabled=true;
+ hardReload();
 };
 function beep(){
  try{if(navigator.vibrate)navigator.vibrate([12,40,12]);}catch(e){}
@@ -7058,6 +7061,12 @@ function recStart(){
  paintMics('sending');
  navigator.mediaDevices.getUserMedia({audio:true}).then(function(st){
   recStream=st;recChunks=[];recSec=0;
+  var track=st.getAudioTracks()[0];
+  if(track)track.onended=function(){
+   recSaid.textContent='המיקרופון התנתק. מרענן את הדף כדי לתקן...';
+   paintMics('bad');
+   setTimeout(hardReload,1200);
+  };
   var mt=recPickType();
   try{rec=mt?new MediaRecorder(st,{mimeType:mt}):new MediaRecorder(st);}
   catch(e){rec=new MediaRecorder(st);}
