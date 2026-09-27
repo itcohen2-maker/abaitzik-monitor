@@ -2049,3 +2049,16 @@ test('what was received has one clear-all button that hides everything up to tha
   // A moment, not a list of keys, so nothing older creeps back past the 400 cap.
   assert.ok(html.includes("return g.indexOf(gotKey(kind,x))<0&&!beforeCut(x);"));
 });
+
+/*
+  27.9: the microphone stopped working well. Every tap set the iPhone's audio
+  to ambient, a mode that plays and does not record, and nothing set it back.
+*/
+test('a tap sound never leaves the phone in a mode that cannot record', () => {
+  const html = renderPage(fixture({}));
+  const i = html.indexOf('navigator.mediaDevices.getUserMedia({audio:true})');
+  assert.ok(html.slice(i - 200, i).includes("audioMode('play-and-record');"), 'the recording asks for play and record');
+  assert.ok(html.includes('function sfxCtx(){\n if(sfxRecording())return null;'), 'no sound while recording');
+  assert.ok(html.includes("recStream=null;}\n audioMode('auto');"), 'the phone gets its mode back after a recording');
+  assert.ok(html.includes("if(!sfxRecording())audioMode('auto');"), 'and after a sound');
+});

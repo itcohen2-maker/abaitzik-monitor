@@ -7300,7 +7300,18 @@ document.addEventListener('click',function(e){
  }catch(err){}
 },true);
 var sfxT=0;
+/*
+  27.9: "the monitor's microphone does not work well." It was this. Every tap
+  set the phone's audio to ambient and nothing set it back, and on an iPhone
+  an ambient page is a page that plays, not one that records. So no sound is
+  made while a recording is opening or running, the recording itself asks for
+  play and record, and the phone gets its own audio mode back ('auto') as soon
+  as a sound or a recording is over.
+*/
+function sfxRecording(){return !!(typeof rec!=='undefined'&&rec)||!!(typeof recStarting!=='undefined'&&recStarting)||!!(typeof recStream!=='undefined'&&recStream);}
+function audioMode(m){try{if(navigator.audioSession)navigator.audioSession.type=m;}catch(e){}}
 function sfxCtx(){
+ if(sfxRecording())return null;
  if(!sfxOn()||!sfxCanMix()||!(window.AudioContext||window.webkitAudioContext))return null;
  sfx=sfx||new (window.AudioContext||window.webkitAudioContext)();
  if(sfx.state==='suspended')sfx.resume();
@@ -7310,7 +7321,7 @@ function sfxCtx(){
 // Let go of the phone's audio eight seconds after the last sound.
 function sfxIdle(){
  clearTimeout(sfxT);
- sfxT=setTimeout(function(){var c=sfx;sfx=null;try{if(c)c.close();}catch(e){}},8000);
+ sfxT=setTimeout(function(){var c=sfx;sfx=null;try{if(c)c.close();}catch(e){}if(!sfxRecording())audioMode('auto');},8000);
 }
 /*
   20.9: opening the monitor cut the music he had playing, because on an iPhone
@@ -9909,6 +9920,7 @@ function recStop(){
 function recCleanup(){
  if(recTimer){clearInterval(recTimer);recTimer=null;}
  if(recStream){recStream.getTracks().forEach(function(t){t.stop();});recStream=null;}
+ audioMode('auto');
  /*
    Let go of the recorder, or the next tap is refused forever.
 
@@ -9974,6 +9986,9 @@ function recStart(){
  // browser. Everything below this line can take seconds.
  recSaid.textContent='פותח את המיקרופון. אם הדפדפן שואל, תאשר.';
  paintMics('sending');
+ // No page sound in the way of the microphone, and a mode that records.
+ clearTimeout(sfxT);try{if(sfx){sfx.close();sfx=null;}}catch(e){}
+ audioMode('play-and-record');
  navigator.mediaDevices.getUserMedia({audio:true}).then(function(st){
   recStream=st;recChunks=[];recSec=0;
   // He reported the mic dying mid-take too, not only at the permission
