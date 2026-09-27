@@ -1526,7 +1526,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-27T13:33:58.713Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-27T13:34:54.466Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2611,7 +2611,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='47d562bb43';
+var CODE_ID='f72edd4451';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -2767,6 +2767,7 @@ function reportRow(r,n){
   +'<span class="d">'+esc(stamp(r.at))+'</span></summary>'
   +'<div class="text">'+esc(r.body)+'</div>'
   +'<div class="copyrow"><button type="button" data-copy="'+n+'">העתקת הדוח</button>'
+  +'<button type="button" data-share="'+n+'">שיתוף הדוח</button>'
   +'<span class="msg" data-copied="'+n+'"></span></div>'
   +'<div class="repreply">'+replyBox('על הדוח "'+(r.title||'דוח')+'" מ'+stamp(r.at))+'</div>'
   +'</details>';
@@ -6917,13 +6918,7 @@ document.getElementById('urgBtn').onclick=function(){
 document.getElementById('bP').onclick=function(){tab='pending';render();};
 document.getElementById('bD').onclick=function(){tab='done';render();};
 
-document.getElementById('reports').addEventListener('click',function(e){
- var b=e.target.closest?e.target.closest('[data-copy]'):null;
- if(!b)return;
- var r=(D.reports||[])[Number(b.getAttribute('data-copy'))];
- if(!r)return;
- var said=document.querySelector('[data-copied="'+b.getAttribute('data-copy')+'"]');
- var text=(r.title||'דוח')+'\n\n'+(r.body||'');
+function copyReportText(text,said){
  function ok(){if(said)said.textContent='הועתק.';}
  function bad(){if(said)said.textContent='ההעתקה לא עברה. סמן ידנית.';}
  if(navigator.clipboard&&navigator.clipboard.writeText){
@@ -6935,6 +6930,24 @@ document.getElementById('reports').addEventListener('click',function(e){
  document.body.appendChild(ta);ta.select();
  try{document.execCommand('copy')?ok():bad();}catch(err){bad();}
  document.body.removeChild(ta);
+}
+document.getElementById('reports').addEventListener('click',function(e){
+ var sb=e.target.closest?e.target.closest('[data-share]'):null;
+ if(sb){
+  var sr=(D.reports||[])[Number(sb.getAttribute('data-share'))];
+  if(!sr)return;
+  var stext=(sr.title||'דוח')+'\n\n'+(sr.body||'');
+  if(navigator.share){navigator.share({title:sr.title||'דוח',text:stext}).catch(function(){});}
+  else{copyReportText(stext,document.querySelector('[data-copied="'+sb.getAttribute('data-share')+'"]'));}
+  return;
+ }
+ var b=e.target.closest?e.target.closest('[data-copy]'):null;
+ if(!b)return;
+ var r=(D.reports||[])[Number(b.getAttribute('data-copy'))];
+ if(!r)return;
+ var said=document.querySelector('[data-copied="'+b.getAttribute('data-copy')+'"]');
+ var text=(r.title||'דוח')+'\n\n'+(r.body||'');
+ copyReportText(text,said);
 });
 
 document.getElementById('msgForm').addEventListener('submit',function(e){

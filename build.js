@@ -4190,6 +4190,7 @@ function reportRow(r,n){
   +'<span class="d">'+esc(stamp(r.at))+'</span></summary>'
   +'<div class="text">'+esc(r.body)+'</div>'
   +'<div class="copyrow"><button type="button" data-copy="'+n+'">העתקת הדוח</button>'
+  +'<button type="button" data-share="'+n+'">שיתוף הדוח</button>'
   +'<span class="msg" data-copied="'+n+'"></span></div>'
   +'<div class="repreply">'+replyBox('על הדוח "'+(r.title||'דוח')+'" מ'+stamp(r.at))+'</div>'
   +'</details>';
@@ -9762,13 +9763,7 @@ document.getElementById('urgBtn').onclick=function(){
 document.getElementById('bP').onclick=function(){tab='pending';render();};
 document.getElementById('bD').onclick=function(){tab='done';render();};
 
-document.getElementById('reports').addEventListener('click',function(e){
- var b=e.target.closest?e.target.closest('[data-copy]'):null;
- if(!b)return;
- var r=(D.reports||[])[Number(b.getAttribute('data-copy'))];
- if(!r)return;
- var said=document.querySelector('[data-copied="'+b.getAttribute('data-copy')+'"]');
- var text=(r.title||'דוח')+'\\n\\n'+(r.body||'');
+function copyReportText(text,said){
  function ok(){if(said)said.textContent='הועתק.';}
  function bad(){if(said)said.textContent='ההעתקה לא עברה. סמן ידנית.';}
  if(navigator.clipboard&&navigator.clipboard.writeText){
@@ -9780,6 +9775,24 @@ document.getElementById('reports').addEventListener('click',function(e){
  document.body.appendChild(ta);ta.select();
  try{document.execCommand('copy')?ok():bad();}catch(err){bad();}
  document.body.removeChild(ta);
+}
+document.getElementById('reports').addEventListener('click',function(e){
+ var sb=e.target.closest?e.target.closest('[data-share]'):null;
+ if(sb){
+  var sr=(D.reports||[])[Number(sb.getAttribute('data-share'))];
+  if(!sr)return;
+  var stext=(sr.title||'דוח')+'\\n\\n'+(sr.body||'');
+  if(navigator.share){navigator.share({title:sr.title||'דוח',text:stext}).catch(function(){});}
+  else{copyReportText(stext,document.querySelector('[data-copied="'+sb.getAttribute('data-share')+'"]'));}
+  return;
+ }
+ var b=e.target.closest?e.target.closest('[data-copy]'):null;
+ if(!b)return;
+ var r=(D.reports||[])[Number(b.getAttribute('data-copy'))];
+ if(!r)return;
+ var said=document.querySelector('[data-copied="'+b.getAttribute('data-copy')+'"]');
+ var text=(r.title||'דוח')+'\\n\\n'+(r.body||'');
+ copyReportText(text,said);
 });
 
 /*
