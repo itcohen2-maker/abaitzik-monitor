@@ -10008,7 +10008,7 @@ function recCleanup(){
     that will not start, which sends him to a settings screen where there is
     nothing to fix.
 */
-var recStarting=false;
+var recStarting=false,recRetried=false;
 function recStart(){
  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){
   recSaid.textContent='הדפדפן הזה לא תומך בהקלטה. תשלח קובץ קול דרך בחירת קובץ.';
@@ -10048,6 +10048,7 @@ function recStart(){
   if(track)track.onended=function(){
    recSaid.textContent='המיקרופון התנתק. מרענן את הדף כדי לתקן...';
    paintMics('bad');
+   window.reloadStay=panePrev; // land back on the screen this reload interrupted
    setTimeout(hardReload,1200);
   };
   var mt=recPickType();
@@ -10067,6 +10068,7 @@ function recStart(){
    if(!b.size){
     recSaid.textContent='לא נקלט כלום. מרענן את הדף כדי לתקן...';
     recBtn.disabled=false;paintMics('bad');
+    window.reloadStay=panePrev;
     setTimeout(hardReload,1200);
     return;
    }
@@ -10136,7 +10138,26 @@ function recStart(){
   if(name==='NotAllowedError'||name==='SecurityError'){
    recSaid.textContent='ההרשאה למיקרופון נעלמה. מרענן את הדף כדי לתקן...';
    paintMics('bad');
+   window.reloadStay=panePrev;
    setTimeout(hardReload,1200);
+   return;
+  }
+  /*
+    27.9, the screenshot: InvalidStateError, right after the permission fix
+    went up. This is not a refused permission, it is WebKit refusing the mic
+    because the tap tick a moment earlier left the phone's audio session on
+    'ambient', and 'play-and-record' is set on the very same line that calls
+    getUserMedia, with no time for iOS to actually move between the two. A
+    reload does nothing for a timing gap, so this does not reach for one.
+    recCleanup just ran above and already returned the session to 'auto', a
+    neutral state either side accepts, and one retry after it has actually
+    landed is what closes the gap instead of just reporting it.
+  */
+  if(name==='InvalidStateError'&&!recRetried){
+   recRetried=true;
+   recSaid.textContent='רגע, פותח שוב את המיקרופון...';
+   paintMics('sending');
+   setTimeout(recStart,300);
    return;
   }
   recSaid.textContent=
@@ -10170,6 +10191,7 @@ document.addEventListener('visibilitychange',function(){
 
 function toggleRec(){
  if(rec&&rec.state==='recording'){recStop();return;}
+ recRetried=false;
  recStart();
 }
 recBtn.onclick=toggleRec;

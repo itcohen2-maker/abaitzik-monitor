@@ -1514,7 +1514,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-27T05:19:42.981Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-27T05:27:39.582Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2552,7 +2552,7 @@ function gjson(r){
  if(!GATE)return r.json();
  return r.text().then(gopen).then(function(t){return JSON.parse(t);});
 }
-var CODE_ID='38a85a4c6d';
+var CODE_ID='7187ae7505';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -7081,7 +7081,7 @@ function recCleanup(){
  freeScreen();
  paintMics('send');
 }
-var recStarting=false;
+var recStarting=false,recRetried=false;
 function recStart(){
  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){
   recSaid.textContent='הדפדפן הזה לא תומך בהקלטה. תשלח קובץ קול דרך בחירת קובץ.';
@@ -7104,6 +7104,7 @@ function recStart(){
   if(track)track.onended=function(){
    recSaid.textContent='המיקרופון התנתק. מרענן את הדף כדי לתקן...';
    paintMics('bad');
+   window.reloadStay=panePrev; // land back on the screen this reload interrupted
    setTimeout(hardReload,1200);
   };
   var mt=recPickType();
@@ -7119,6 +7120,7 @@ function recStart(){
    if(!b.size){
     recSaid.textContent='לא נקלט כלום. מרענן את הדף כדי לתקן...';
     recBtn.disabled=false;paintMics('bad');
+    window.reloadStay=panePrev;
     setTimeout(hardReload,1200);
     return;
    }
@@ -7160,7 +7162,15 @@ function recStart(){
   if(name==='NotAllowedError'||name==='SecurityError'){
    recSaid.textContent='ההרשאה למיקרופון נעלמה. מרענן את הדף כדי לתקן...';
    paintMics('bad');
+   window.reloadStay=panePrev;
    setTimeout(hardReload,1200);
+   return;
+  }
+  if(name==='InvalidStateError'&&!recRetried){
+   recRetried=true;
+   recSaid.textContent='רגע, פותח שוב את המיקרופון...';
+   paintMics('sending');
+   setTimeout(recStart,300);
    return;
   }
   recSaid.textContent=
@@ -7191,6 +7201,7 @@ document.addEventListener('visibilitychange',function(){
 
 function toggleRec(){
  if(rec&&rec.state==='recording'){recStop();return;}
+ recRetried=false;
  recStart();
 }
 recBtn.onclick=toggleRec;
