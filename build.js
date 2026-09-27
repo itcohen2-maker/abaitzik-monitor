@@ -108,7 +108,7 @@ const LIB = fs.readFileSync(path.join(__dirname, 'lib', 'monitor-logic.js'), 'ut
 // He asked on 11.9 to mark everything read and start the count from zero.
 // A phone that has not applied this stamp yet marks every answer written
 // before it as read once, on its next load. Bump the value to reset again.
-const RESET_SEEN_AT = '2026-09-16T20:05:00';
+const RESET_SEEN_AT = '2026-09-27T22:32:59';
 /*
   The page the phone gets is the page without its own notes.
 
