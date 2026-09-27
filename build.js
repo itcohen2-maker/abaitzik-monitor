@@ -10692,6 +10692,7 @@ on('clearBtn',function(){
 })();
 on('resetBtn',function(){
  markAllRead();
+ renderNew();updateDot();paintDot();
  var said=document.getElementById('resetSaid');
  if(said)said.textContent='אופס. המונה על אפס, ורק מה שיגיע מעכשיו יידלק.';
  toast('אופס. רק מה שיגיע מעכשיו יידלק.');
