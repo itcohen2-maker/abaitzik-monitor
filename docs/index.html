@@ -1526,7 +1526,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-27T13:37:59.510Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-27T15:24:03.562Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1665,6 +1665,7 @@ try{
   <button type="button" class="gt g15" id="gYehuda"><b>📄 יהודה</b><small>סקירת happymeal. פתיחה, הורדה או שליחה אליו</small></button>
   <button type="button" class="gt gKat" id="gKatalog"><b>📖 הקטלוג הבא</b><small>קיץ 2027. עשרה כיווני עיצוב ודוח הטרנדים 2027 2028</small></button>
   <button type="button" class="gt gCPlan" id="gContentPlan"><b>🎬 תוכנית תוכן</b><small>פתיחה, שליחה עם הקובץ או קישור בוואטסאפ לאיליי</small></button>
+  <button type="button" class="gt g16" id="gYoman"><b>📓 יומן החזרה</b><small>התסריט של היום והסרטון שממנו לקחנו את הפורמט</small></button>
  </div>
 
 
@@ -2611,7 +2612,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='f72edd4451';
+var CODE_ID='28a3a590d0';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -6437,6 +6438,7 @@ function yehudaSheet(){
 }
 on('gYehuda',yehudaSheet);
 on('gKatalog',function(){window.open('katalog/','_blank','noopener');});
+on('gYoman',function(){window.open('yoman/','_blank','noopener');});
 var PLAN_PDF='files/content-plan-ilay.pdf',PLAN_NAME='תוכנית תוכן.pdf';
 var PLAN_LINK='https://itcohen2-maker.github.io/abaitzik-monitor/files/content-plan-ilay.pdf';
 var PLAN_MSG='תוכנית התוכן להמשך: סוגי פוסטים, שבוע לדוגמה ותסריטים.';
