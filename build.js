@@ -1851,7 +1851,7 @@ body.editing .bn{display:none}
 .g14{background:linear-gradient(150deg,#a5d6a7,#2e7d32)}
 .g15{background:linear-gradient(150deg,#90caf9,#1565c0)}
 .gKat{background:linear-gradient(150deg,#e3c07a,#2b45a6)}
-.gPlan{background:linear-gradient(150deg,#e8743b,#6b2f7a)}
+.gCPlan{background:linear-gradient(150deg,#e8743b,#6b2f7a)}
 .g16{background:linear-gradient(150deg,#f8bbd0,#c2185b)}
 .g17{background:linear-gradient(150deg,#c5e1a5,#558b2f)}
 .g18{background:linear-gradient(150deg,#80deea,#00838f)}
@@ -2953,7 +2953,7 @@ try{
     27.9. The content plan, shared with Ilay who runs the socials. Public on
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
   -->
-  <button type="button" class="gt gPlan" id="gPlan"><b>🎬 תוכנית תוכן</b><small>סוגי פוסטים, שבוע לדוגמה ותסריטים. לשיתוף עם איליי</small></button>
+  <button type="button" class="gt gCPlan" id="gContentPlan"><b>🎬 תוכנית תוכן</b><small>סוגי פוסטים, שבוע לדוגמה ותסריטים. לשיתוף עם איליי</small></button>
  </div>
 
  <!-- "מה הסתרנו" came off on 16.9. Hiding a tile is his to undo in settings. -->
@@ -9192,7 +9192,7 @@ function yehudaSheet(){
 }
 on('gYehuda',yehudaSheet);
 on('gKatalog',function(){window.open('katalog/','_blank','noopener');});
-on('gPlan',function(){window.open('files/content-plan-ilay.pdf','_blank','noopener');});
+on('gContentPlan',function(){window.open('files/content-plan-ilay.pdf','_blank','noopener');});
 on('gOp',function(){pane('s');});
 on('gNotes',function(){pane('t');renderNotes();});
 on('gRemind',function(){pane('R');renderReminders();});

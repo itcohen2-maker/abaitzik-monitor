@@ -2072,3 +2072,4 @@ test('a tap sound never leaves the phone in a mode that cannot record', () => {
   assert.ok(html.includes("recStream=null;}\n audioMode('auto');"), 'the phone gets its mode back after a recording');
   assert.ok(html.includes("if(!sfxRecording())audioMode('auto');"), 'and after a sound');
 });
+
