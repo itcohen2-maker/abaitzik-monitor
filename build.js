@@ -1863,6 +1863,7 @@ body.editing .bn{display:none}
 .g14{background:linear-gradient(150deg,#a5d6a7,#2e7d32)}
 .g15{background:linear-gradient(150deg,#90caf9,#1565c0)}
 .gKat{background:linear-gradient(150deg,#e3c07a,#2b45a6)}
+.gShop{background:linear-gradient(150deg,#3aa55d,#1f6f8b)}
 .gCPlan{background:linear-gradient(150deg,#e8743b,#6b2f7a)}
 .g16{background:linear-gradient(150deg,#f8bbd0,#c2185b)}
 .g17{background:linear-gradient(150deg,#c5e1a5,#558b2f)}
@@ -2965,6 +2966,12 @@ try{
     27.9. The content plan, shared with Ilay who runs the socials. Public on
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
   -->
+  <!--
+    27.9. Itzik asked for this several times in voice notes and it was lost:
+    sessions on the server did not know where the list lives. It is the Google
+    Doc "קניות", owned by Jenny and shared with him (see CLAUDE.md).
+  -->
+  <button type="button" class="gt gShop" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
   <button type="button" class="gt gCPlan" id="gContentPlan"><b>🎬 תוכנית תוכן</b><small>פתיחה, שליחה עם הקובץ או קישור בוואטסאפ לאיליי</small></button>
   <!--
     27.9. The daily recovery diary: one raw video a day. The page sits in
@@ -9323,6 +9330,7 @@ function planSheet(){
  var first=w.querySelector('.yb');if(first)first.focus();
 }
 on('gContentPlan',planSheet);
+on('gShopList',function(){window.open('https://docs.google.com/document/d/1A2tvet0ucYNDoDclswaVDybuL8bir3OAerRzXtDUEPU/edit','_blank','noopener');});
 on('gOp',function(){pane('s');});
 on('gNotes',function(){pane('t');renderNotes();});
 on('gRemind',function(){pane('R');renderReminders();});
