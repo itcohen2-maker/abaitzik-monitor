@@ -2954,6 +2954,11 @@ try{
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
   -->
   <button type="button" class="gt gCPlan" id="gContentPlan"><b>🎬 תוכנית תוכן</b><small>פתיחה, שליחה עם הקובץ או קישור בוואטסאפ לאיליי</small></button>
+  <!--
+    27.9. The daily recovery diary: one raw video a day. The page sits in
+    docs/yoman so it opens on the phone with no login, like the catalog.
+  -->
+  <button type="button" class="gt g16" id="gYoman"><b>📓 יומן החזרה</b><small>התסריט של היום והסרטון שממנו לקחנו את הפורמט</small></button>
  </div>
 
  <!-- "מה הסתרנו" came off on 16.9. Hiding a tile is his to undo in settings. -->
@@ -9193,6 +9198,7 @@ function yehudaSheet(){
 }
 on('gYehuda',yehudaSheet);
 on('gKatalog',function(){window.open('katalog/','_blank','noopener');});
+on('gYoman',function(){window.open('yoman/','_blank','noopener');});
 /*
   27.9. The content plan for Ilay. Same sheet as Yehuda's, because the first
   version only opened the PDF and he asked where the share was. The file is
