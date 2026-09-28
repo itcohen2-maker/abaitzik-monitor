@@ -2989,7 +2989,10 @@ try{
  <div id="askBox"></div>
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
-  <button type="button" class="gt g2" id="gMail"><b>📧 מייל</b><small>בקשה, ואני מחזיר תשובה</small></button>
+  <!--
+    איציק, 28.9: "תסיר את כפתור מייל, אין לי צורך בו". ירדו גם האריח וגם הסמל
+    בשורת הרשתות, שניהם פתחו את אותו מסך. המסך pE עצמו נשאר.
+  -->
   <button type="button" class="gt g3" id="gQueue"><b>📊 ניטור רשתות</b><small>מי פנה, מה נענה</small></button>
   <!-- The reports tile came off on 17.9. The reports are in "תשובות" now,
        which is the one button he asked for. -->
@@ -3072,8 +3075,6 @@ try{
    <svg viewBox="0 0 24 24"><path fill="#fff" d="M13.5 21v-7h2.4l.4-3h-2.8V9.2c0-.9.3-1.5 1.5-1.5h1.5V5.1c-.3 0-1.2-.1-2.2-.1-2.2 0-3.7 1.3-3.7 3.8V11H8v3h2.6v7z"/></svg></span>פייסבוק</a>
   <a class="ic" data-net="instagram" href="https://www.instagram.com/abaitzik/" target="_blank" rel="noopener"><span class="c c-ig">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="5"/><circle cx="12" cy="12" r="3.6"/><circle cx="17" cy="7" r="1" fill="#fff" stroke="none"/></svg></span>אינסטגרם</a>
-  <button type="button" class="ic" id="icMail"><span class="c c-gm">
-   <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M4 7v11h3V9.8z"/><path fill="#34A853" d="M20 7v11h-3V9.8z"/><path fill="#EA4335" d="M4 7l8 6 8-6v-1.5L12 11 4 5.5z"/><path fill="#FBBC05" d="M4 5.5L12 11l8-5.5V5H4z"/></svg></span>מייל</button>
   <a class="ic" href="https://abaitzik.com/" target="_blank" rel="noopener"><span class="c c-st">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c3 3 3 13 0 16M12 4c-3 3-3 13 0 16"/></svg></span>האתר</a>
   <button type="button" class="ic" id="icLand"><span class="c c-vd">
@@ -9841,7 +9842,7 @@ document.getElementById('leads').addEventListener('click',function(e){
  setLeadStatus(name,st);
  render();
 });
-document.getElementById('icMail').onclick=function(){pane('e');};
+on('icMail',function(){pane('e');});
 document.getElementById('icDrive').onclick=function(){pane('d');};
 /*ITZIK:BEGIN*/
 document.getElementById('icVaad').onclick=function(){pane('v');ensure('rivhit',renderRivhit);};
