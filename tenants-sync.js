@@ -53,7 +53,7 @@ function main() {
   for (const f of fs.readdirSync(DIR).filter((x) => x.endsWith('.json'))) {
     const file = path.join(DIR, f);
     const t = JSON.parse(fs.readFileSync(file, 'utf8'));
-    if (!t.dir) continue;
+    if (!t.dir || t.selfSync) continue;
     try {
       const r = sync(t);
       if (r.changed) {
@@ -73,4 +73,34 @@ function main() {
   }
 }
 
-if (require.main === module) main();
+/*
+  28.9, Itzik: "הפרדה מוחלטת". A tenant that runs as its own Linux user cannot
+  be written into by this repository's user, and must not be. It syncs itself:
+  its own timer runs `node tenants-sync.js --self` in its own checkout, fetching
+  the public repository over https (it holds no GitHub key), and writes the
+  result to its own data/status/sync.json. Its record here carries
+  "selfSync": true so the loop above leaves it alone.
+*/
+const PUBLIC = 'https://github.com/itcohen2-maker/abaitzik-monitor.git';
+function selfSync() {
+  const out = path.join(inst.dataPath, 'status', 'sync.json');
+  const prev = (() => { try { return JSON.parse(fs.readFileSync(out, 'utf8')); } catch (e) { return {}; } })();
+  try { git(__dirname, ['remote', 'set-url', 'code', PUBLIC]); }
+  catch (e) { git(__dirname, ['remote', 'add', 'code', PUBLIC]); }
+  const t = { dir: __dirname, syncedTo: prev.syncedTo };
+  const r = { at: new Date().toISOString(), syncedTo: prev.syncedTo, syncedAt: prev.syncedAt };
+  try {
+    const s = sync(t);
+    if (s.changed) {
+      r.syncedTo = s.head; r.syncedAt = r.at;
+      console.log(r.at.slice(11, 19) + '  self synced to ' + s.head.slice(0, 8));
+    }
+  } catch (e) {
+    r.syncError = String(e.message).slice(0, 200);
+    console.log(r.at.slice(11, 19) + '  SELF SYNC FAILED: ' + r.syncError);
+  }
+  fs.mkdirSync(path.dirname(out), { recursive: true });
+  fs.writeFileSync(out, JSON.stringify(r, null, 1));
+}
+
+if (require.main === module) (process.argv.includes('--self') ? selfSync : main)();
