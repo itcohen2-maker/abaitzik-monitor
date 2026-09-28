@@ -122,6 +122,12 @@ const RESET_SEEN_AT = '2026-09-27T22:32:59';
 // it here guarantees one clean run even if his phone had already recorded an
 // old stamp as done before that fix existed.
 const RESET_MARKS_AT = '2026-09-28T15:20:00';
+// 28.9, 15:35: with standby and marked at zero he still saw "הכל 808" and
+// asked: "תמחק הכל חוץ מ 10 אחרונות". Of everything written before this stamp
+// only the ten newest stay on the screen; the rest leaves the page, search
+// included. The data itself stays on the server. A message of his with no
+// answer, a standby or a marked card is never hidden. Bump to clear again.
+const ARCHIVE_BEFORE = '2026-09-28T15:40:00';
 /*
   The page the phone gets is the page without its own notes.
 
@@ -498,6 +504,7 @@ function build() {
     buildId: BUILD_ID,
     resetSeenAt: RESET_SEEN_AT,
     resetMarksAt: RESET_MARKS_AT,
+    archiveBefore: ARCHIVE_BEFORE,
     counts: {
       pending: pending.length,
       replied: replied.length,
@@ -6626,8 +6633,33 @@ function ansFreshKeys(){
  return keys;
 }
 function isFresh(m){if(m&&m.src==='itzik')return false;return ansFreshKeys().has(claudeKey(m));}
+// Cleared off the screen: before the archive stamp, not among the ten newest
+// of those, and nothing about it still asks for him. Times are compared as
+// instants, since chat stamps carry +03:00 and the stamp is local time.
+var ARCHIVE_KEEP=10,_archCache=null,_archSig='';
+function archivedSet(){
+ var cut=D.archiveBefore||'',all=allAnswers();
+ var sig=cut+'|'+_allAnswersSig;
+ if(_archCache&&_archSig===sig)return _archCache;
+ var set=new Set();
+ if(cut){
+  var c=new Date(cut),kept=0;
+  all.forEach(function(m){
+   if(!m.at||new Date(m.at)>=c)return;
+   if(kept<ARCHIVE_KEEP){kept++;return;}
+   set.add(m);
+  });
+ }
+ _archSig=sig;_archCache=set;
+ return set;
+}
+function isArchived(m){
+ if(!archivedSet().has(m))return false;
+ return !(m.src==='itzik'||isStandby(m)||isStar(m)||isFresh(m));
+}
+function liveAnswers(){return allAnswers().filter(function(m){return !isArchived(m);});}
 function ansCounts(){
- var a=allAnswers();
+ var a=liveAnswers();
  return {all:a.length,
   fresh:a.filter(isFresh).length,
   star:a.filter(isStar).length,
@@ -6635,7 +6667,7 @@ function ansCounts(){
   done:a.filter(function(m){return isDone(m)&&!isFresh(m)&&!isStandby(m)&&!isStar(m);}).length};
 }
 function ansList(){
- var a=allAnswers();
+ var a=liveAnswers();
  if(ansFilter==='fresh')a=a.filter(function(m){return isFresh(m)||ansKeep[claudeKey(m)];});
  if(ansFilter==='star')a=a.filter(isStar);
  if(ansFilter==='standby')a=a.filter(isStandby);
