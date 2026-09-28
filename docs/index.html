@@ -1125,8 +1125,40 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
  background:var(--surface);color:#c89600;font:600 15px Heebo,sans-serif}
 .note-bar span{flex:1;text-align:center;color:var(--dim);font-size:12.5px}
 .note-bar .note-del{color:#d33}
-#noteBody{width:100%;min-height:62vh;border:0;border-radius:14px;padding:14px;resize:vertical;
- background:var(--surface);color:var(--ink);font:inherit;font-size:17px;line-height:1.6}
+#noteBody{width:100%;min-height:58vh;border:0;border-radius:14px;padding:14px 16px 90px;outline:0;
+ background:var(--surface);color:var(--ink);font:inherit;font-size:17px;line-height:1.55;
+ overflow-wrap:anywhere;-webkit-user-select:text;user-select:text}
+#noteBody.blank:before{content:'כותרת';color:var(--dim);font-size:26px;font-weight:700;position:absolute;pointer-events:none}
+#noteBody h1{font-size:26px;font-weight:700;margin:0 0 6px;line-height:1.3}
+#noteBody h2{font-size:21px;font-weight:700;margin:6px 0 4px;line-height:1.35}
+#noteBody h3{font-size:18px;font-weight:600;margin:4px 0 2px}
+#noteBody p,#noteBody div{margin:0}
+#noteBody pre{font:15px ui-monospace,Menlo,monospace;white-space:pre-wrap;margin:2px 0;
+ background:var(--line);border-radius:6px;padding:2px 6px}
+#noteBody ul,#noteBody ol{margin:2px 0;padding-inline-start:26px}
+#noteBody ul.dash{list-style:none}
+#noteBody ul.dash>li:before{content:'–';display:inline-block;width:20px;margin-inline-start:-20px}
+#noteBody ul.chk{list-style:none;padding-inline-start:34px}
+#noteBody ul.chk>li{position:relative;min-height:28px;padding:2px 0}
+#noteBody ul.chk>li:before{content:'';position:absolute;inset-inline-start:-32px;top:4px;width:20px;height:20px;
+ border:1.6px solid #b8b8b8;border-radius:50%;box-sizing:border-box}
+#noteBody ul.chk>li.on{color:var(--dim)}
+#noteBody ul.chk>li.on:before{background:#f5c400;border-color:#f5c400}
+#noteBody ul.chk>li.on:after{content:'✓';position:absolute;inset-inline-start:-28px;top:3px;
+ color:#fff;font-size:13px;font-weight:700;pointer-events:none}
+.note-tools{position:sticky;bottom:0;display:flex;justify-content:space-around;align-items:center;
+ background:var(--surface);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+ z-index:3}
+.note-tools button{min-width:48px;min-height:42px;border:0;background:none;color:#c89600;cursor:pointer;
+ font:600 19px Heebo,sans-serif;border-radius:10px}
+.note-tools button.on{background:var(--line)}
+.note-fmt{position:sticky;bottom:56px;background:var(--surface);border:1px solid var(--line);border-radius:16px;
+ padding:10px;margin:0 0 8px;box-shadow:0 6px 24px rgba(0,0,0,.18);z-index:4}
+.note-fmt .row{display:flex;gap:6px;margin-bottom:8px;overflow-x:auto}
+.note-fmt .row:last-child{margin-bottom:0}
+.note-fmt button{flex:1 0 auto;min-height:40px;padding:0 10px;border:0;border-radius:10px;cursor:pointer;
+ background:var(--line);color:var(--ink);font:500 15px Heebo,sans-serif}
+.note-fmt button.on{background:#f5c400;color:#222}
 .lolos{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
 .lbtn{display:flex;align-items:center;gap:12px;text-align:start;cursor:pointer;
  border:0;border-radius:18px;padding:14px 16px;color:#fff;text-decoration:none;
@@ -1578,7 +1610,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-28T14:40:07.970Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-28T14:41:08.263Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2107,7 +2139,35 @@ try{
    <button type="button" id="notePin">הצמדה</button>
    <button type="button" id="noteDel" class="note-del">מחיקה</button>
   </div>
-  <textarea id="noteBody" placeholder="השורה הראשונה היא הכותרת"></textarea>
+  <div id="noteBody" contenteditable="true" dir="auto" spellcheck="true"></div>
+  <div class="note-fmt" id="noteFmt" hidden>
+   <div class="row">
+    <button type="button" data-blk="h1" style="font-weight:700;font-size:18px">כותרת</button>
+    <button type="button" data-blk="h2" style="font-weight:700">כותרת משנה</button>
+    <button type="button" data-blk="h3" style="font-weight:600">תת כותרת</button>
+    <button type="button" data-blk="div">גוף</button>
+    <button type="button" data-blk="pre" style="font-family:monospace">מונו</button>
+   </div>
+   <div class="row">
+    <button type="button" data-cmd="bold" style="font-weight:800">B</button>
+    <button type="button" data-cmd="italic" style="font-style:italic;font-family:serif">I</button>
+    <button type="button" data-cmd="underline" style="text-decoration:underline">U</button>
+    <button type="button" data-cmd="strikeThrough" style="text-decoration:line-through">S</button>
+   </div>
+   <div class="row">
+    <button type="button" data-list="bul">• רשימה</button>
+    <button type="button" data-list="dash">– רשימה</button>
+    <button type="button" data-list="num">1. רשימה</button>
+    <button type="button" data-cmd="outdent">⇥</button>
+    <button type="button" data-cmd="indent">⇤</button>
+   </div>
+  </div>
+  <div class="note-tools">
+   <button type="button" id="noteAa" title="עיצוב">Aa</button>
+   <button type="button" id="noteChk" title="רשימת סימון">☑</button>
+   <button type="button" id="noteUndo" title="ביטול">↶</button>
+   <button type="button" id="noteRedo" title="חזרה">↷</button>
+  </div>
  </div>
 </section>
 
@@ -2690,7 +2750,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='2dd69576b5';
+var CODE_ID='a95023f1ce';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
