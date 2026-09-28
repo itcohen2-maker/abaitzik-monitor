@@ -2015,7 +2015,9 @@ test('a recording I could not read gets its own screen, not a message', () => {
   // transcribe inside ten minutes and the page showed him a filename, so no
   // session knew what he had asked and he waited twenty minutes before asking
   // again himself.
-  assert.ok(html.includes('id="gVoices"'), 'a button on the home screen');
+  // Itzik, 28.9: "תסיר את הכפתור הקלטות שלא תומללו". The home tile is gone,
+  // the screen stays and is still reached by #voices.
+  assert.ok(!html.includes('id="gVoices"'), 'no button on his home screen anymore');
   assert.ok(html.includes('<section id="pVc" hidden>'), 'and a screen of its own');
   assert.ok(html.includes('function renderVoices('));
   assert.ok(html.includes("V:'pVc'"), 'the pane is routable');
@@ -2106,4 +2108,15 @@ test('content plan tile is off the home screen, the reminders tile blinks a day 
   assert.ok(html.includes('id="gRemind"'));
   assert.ok(html.includes("now>=u-864e5") && html.includes("classList.toggle('taskblink',(D.reminders||[]).some(remHot))"));
   assert.ok(html.includes('class="remknow"') && html.includes("localStorage.setItem('remKnown'"));
+});
+
+test('a browser tile opens a browser inside the page', () => {
+  const html = renderPage(fixture({}));
+  // Itzik, 28.9, in a voice note: "אייקון של דפדפן ויהיה דפדפן בפנים".
+  assert.ok(html.includes('id="gBrowse"'), 'a tile on the home screen');
+  assert.ok(html.includes('<section id="pBr" hidden>'), 'a screen of its own');
+  assert.ok(html.includes('id="brFrame"'), 'with the page shown inside it');
+  assert.ok(html.includes("Br:'pBr'"), 'the pane is routable');
+  assert.ok(html.includes('igu=1'), 'searches use the form Google lets a page embed');
+  assert.ok(html.includes('id="brOut"'), 'and a way out to Safari for sites that refuse');
 });

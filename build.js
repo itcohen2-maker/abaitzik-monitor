@@ -3024,7 +3024,10 @@ try{
     איציק, 28.9: "תסיר את כפתור לחסימה בלבד, חסמנו כבר את מי שצריך, הוא לא נחוץ יותר".
     הכפתור ירד ממסך הבית. המסך pBl והרשימה נשארים, כמו הניקוזים.
   -->
-  <button type="button" class="gt g4" id="gVoices"><b>🎙️ הקלטות שלא תומללו</b><small>מה שלא הצלחתי לקרוא. תלחץ ותשמע</small></button>
+  <!--
+    איציק, 28.9, בהקלטה: "תסיר את הכפתור הקלטות שלא תומללו". הכפתור ירד ממסך הבית.
+    המסך pVc נשאר, נפתח במסלול #voices, והקלטה שלא תומללה עדיין מתנגנת בתוך ההודעה בצ׳אט.
+  -->
   <button type="button" class="gt g17" id="gTasks"><b>✅ משימות</b><small>מה לעשות, לפי יום. מסמנים כשבוצע</small></button>
   <button type="button" class="gt g18" id="gAppts"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
   <button type="button" class="gt g16" id="gRemind"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
@@ -3066,6 +3069,13 @@ try{
     sessions on the server did not know where the list lives. It is the Google
     Doc "קניות", owned by Jenny and shared with him (see CLAUDE.md).
   -->
+  <!--
+    איציק, 28.9, בהקלטה: "אייקון של דפדפן ויהיה דפדפן בפנים". A screen with an
+    address line; searches go to Google's embeddable form so they open inside
+    the page. Many sites refuse to be shown inside another page, so there is
+    always a button that opens the same address in Safari.
+  -->
+  <button type="button" class="gt g3" id="gBrowse"><b>🌐 דפדפן</b><small>חיפוש וכתובת, נפתח כאן בפנים</small></button>
   <button type="button" class="gt gShop" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
   <!--
     איציק, 28.9, בהקלטה: "תסיר את כפתור תוכניות תוכן". הכפתור ירד ממסך הבית.
@@ -3555,6 +3565,16 @@ try{
  <h2>הקבצים שלי</h2>
  <div class="rephint">כל קובץ ששלחת או שנשמר בשבילך. הם סגורים ונפתחים רק כאן, אחרי הקוד שלך.</div>
  <div id="fiBox" class="flist"></div>
+</section>
+
+<section id="pBr" hidden>
+ <h2>דפדפן</h2>
+ <form class="quickrow" id="brForm">
+  <input type="text" id="brUrl" autocomplete="off" autocapitalize="off" inputmode="url" placeholder="מה לחפש, או כתובת">
+  <button type="submit" id="brGo">פתח</button>
+ </form>
+ <div class="rephint">אם אתר נשאר לבן, הוא לא מסכים להיפתח בתוך דף אחר. <a href="#" id="brOut">לפתוח אותו בספארי</a></div>
+ <iframe id="brFrame" title="דפדפן" style="width:100%;height:70vh;border:0;border-radius:12px;background:#fff" referrerpolicy="no-referrer"></iframe>
 </section>
 
 <section id="pPl" hidden>
@@ -5411,7 +5431,7 @@ function updateDot(){
  document.title=(fresh?'(1) ':'')+PAGE_TITLE;
 }
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
-var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn',Rc:'pRc',Sa:'pSale',Fi:'pFi',Is:'pIsra'};
+var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn',Rc:'pRc',Sa:'pSale',Fi:'pFi',Br:'pBr',Is:'pIsra'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 /*ITZIK:BEGIN*/
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
@@ -9532,6 +9552,29 @@ function planSheet(){
  var first=w.querySelector('.yb');if(first)first.focus();
 }
 on('gContentPlan',planSheet);
+function brTarget(q){
+ q=String(q||'').trim();
+ if(!q)return '';
+ if(/^https?:[/][/]/i.test(q))return q;
+ if(q.indexOf(' ')<0&&/^[^ ]+[.][a-z]{2,}([/].*)?$/i.test(q))return 'https://'+q;
+ return 'https://www.google.com/search?igu=1&hl=iw&q='+encodeURIComponent(q);
+}
+function brOpen(){
+ var u=brTarget(document.getElementById('brUrl').value);
+ if(!u)return;
+ document.getElementById('brFrame').src=u;
+ document.getElementById('brOut').dataset.u=u.replace('igu=1&','');
+}
+on('gBrowse',function(){
+ pane('Br');
+ var f=document.getElementById('brFrame');
+ if(!f.src)f.src='https://www.google.com/webhp?igu=1&hl=iw';
+});
+document.getElementById('brForm').onsubmit=function(e){e.preventDefault();brOpen();};
+document.getElementById('brOut').onclick=function(e){
+ e.preventDefault();
+ window.open(this.dataset.u||'https://www.google.com','_blank','noopener');
+};
 on('gShopList',function(){window.open('https://docs.google.com/document/d/1A2tvet0ucYNDoDclswaVDybuL8bir3OAerRzXtDUEPU/edit','_blank','noopener');});
 /*ITZIK:END*/
 on('gOp',function(){pane('s');});
