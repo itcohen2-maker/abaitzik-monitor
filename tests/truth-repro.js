@@ -109,6 +109,60 @@ check('P0-2 a new build is not a round trip', () => {
   assert.ok(echoed.classes.includes('+ok'), 'and it must be green');
 });
 
+check('P0-3 the standby/star reset actually empties the lists a phone had marked, not just the code that claims it', () => {
+  // A fake localStorage, because this is exactly the thing the earlier fix
+  // was "verified" without: a test that only grepped for the function names
+  // in the built HTML, never ran them. He called that a credibility problem
+  // on 28.9, and he was right - a check that cannot run the code is not a
+  // check.
+  function fakeStorage() {
+    const m = {};
+    return {
+      getItem: (k) => (k in m ? m[k] : null),
+      setItem: (k, v) => { m[k] = String(v); },
+      removeItem: (k) => { delete m[k]; },
+      _dump: () => Object.assign({}, m),
+    };
+  }
+  const idListSrc = slice('var _idListCache={};', 'function hiddenMsgs(){');
+  const starSrc = slice('function starIds(){', 'function ansColor(m){');
+  const claudeKeySrc = 'function claudeKey(m){return (m.at||\'\')+\'|\'+String(m.text||\'\').slice(0,40);}';
+  const resetSrc = slice('function applyResetMarks(){', 'boot(\'reset\',applyResetSeen);');
+
+  const localStorage = fakeStorage();
+  // A phone with real history: two starred replies and one parked one,
+  // plus the pre-migration shape of chatStandby left over from before 18.9.
+  localStorage.setItem('chatStar', JSON.stringify(['a|old', 'b|old']));
+  localStorage.setItem('chatParked', JSON.stringify(['c|old']));
+  // An earlier stamp already applied, same as a phone that opened the page
+  // once before this build shipped.
+  localStorage.setItem('marksResetAt', '2026-09-27T22:00:00');
+
+  const ctx = { localStorage, D: { resetMarksAt: '2026-09-27T23:00:00' }, console };
+  vm.createContext(ctx);
+  vm.runInContext(`${idListSrc}\n${starSrc}\n${claudeKeySrc}\n${resetSrc}`, ctx);
+
+  vm.runInContext('applyResetMarks();', ctx);
+  const afterFirstRun = vm.runInContext('starIds().concat(standbyIds())', ctx);
+  assert.deepEqual(afterFirstRun, [],
+    `applyResetMarks left marks behind: ${JSON.stringify(afterFirstRun)}`);
+  assert.equal(localStorage.getItem('chatStar'), null, 'chatStar must be gone, not just empty');
+  assert.equal(localStorage.getItem('chatParked'), null, 'chatParked must be gone, not just empty');
+
+  // A card he marks again right after the reset must stick - the reset is
+  // one moment in time, not a lock on the feature.
+  vm.runInContext('toggleStar({at:"x",text:"new"});', ctx);
+  const afterMark = vm.runInContext('starIds()', ctx);
+  assert.deepEqual(afterMark, ['x|new'], 'a new star right after reset must show up');
+
+  // Running boot again on the same stamp (a second reload of the same visit)
+  // must not wipe the mark he just made.
+  vm.runInContext('applyResetMarks();', ctx);
+  const afterSecondRun = vm.runInContext('starIds()', ctx);
+  assert.deepEqual(afterSecondRun, ['x|new'],
+    'a stamp already applied must not clear marks a second time');
+});
+
 let failed = 0;
 for (const { name, fn } of checks) {
   try { fn(); console.log(`  ok  ${name}`); }
