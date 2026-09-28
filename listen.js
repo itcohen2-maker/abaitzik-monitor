@@ -485,7 +485,13 @@ function transcribeLater(audio, file) {
                 if (!rec2.note && rec2.status !== 'done') {
                   rec2.note = link
                     ? 'לא הצלחתי לתמלל. ההקלטה כאן ואפשר להאזין: ' + link
-                    : 'לא הצלחתי לתמלל, וגם לא להעלות את ההקלטה לדף.';
+                    : (fs.existsSync(audio)
+                      ? 'לא הצלחתי לתמלל, וגם לא להעלות את ההקלטה לדף.'
+                      // 28.9: the note from 23:21 expired on ntfy while the
+                      // listener was down, so there is nothing to play. Say so
+                      // plainly and ask for it again, on the page and not as a
+                      // push (his rule from 19.9).
+                      : 'ההקלטה לא הגיעה לשרת, כנראה פג תוקפה לפני שנקלטה. אפשר להקליט אותה שוב?');
                   fs.writeFileSync(full2, JSON.stringify(rec2, null, 1), 'utf8');
                   publishChat();
                 }

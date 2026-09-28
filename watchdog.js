@@ -57,6 +57,14 @@ function check(now) {
   const stale = mine.filter((m) => m.id && answered.has(m.id) && now - Date.parse(m.at) > WAIT_MS);
   if (stale.length) problems.push(stale.length + ' הודעות נענו ועדיין מסומנות בטיפול');
 
+  // The Claude login on the server (CLAUDE_CODE_OAUTH_TOKEN, set 25.9.2026)
+  // lasts about a year. Warn a month ahead, and at once if the worker log shows
+  // the sessions being refused.
+  if (now > Date.parse('2027-08-25T00:00:00Z')) problems.push('הכניסה של קלוד בשרת פגה בקרוב, צריך לחדש');
+  try {
+    const wl = fs.readFileSync(process.env.WORKER_LOG || '/var/log/monitor-worker.log', 'utf8').split('\n').slice(-60).join('\n');
+    if (/(401|unauthori[sz]ed|invalid (api key|token)|oauth token (has )?expired|please run \/login)/i.test(wl)) problems.push('סשנים בשרת נדחים, כנראה הכניסה של קלוד פגה');
+  } catch (e) {}
   if (process.platform !== 'win32') {
     const st = show(UNIT + '.service', 'ActiveState');
     const since = when(show(UNIT + '.service', 'StateChangeTimestamp'));
