@@ -1,0 +1,30 @@
+# Outside watcher. Itzik, 28.9: the monitor was down all night and the watchdog
+# went down with it, because it lives on the same server. This runs on GitHub,
+# not on the server: every 20 minutes it looks for the listener's heartbeat on
+# the live topic (the listener beats at least once an hour) and, if there has
+# been none for 80 minutes, tells him on his own notification topic. It tells
+# once per outage: it only fires when the previous run found a beat.
+name: heartbeat-watch
+on:
+  schedule:
+    - cron: '7,27,47 * * * *'
+  workflow_dispatch:
+permissions: {}
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the heartbeat
+        env:
+          LIVE: ${{ secrets.NTFY_LIVE }}
+          OUT: ${{ secrets.NTFY_OUT }}
+        run: |
+          n=$(curl -s --max-time 30 "https://ntfy.sh/$LIVE/json?poll=1&since=80m" | grep -c '"event":"message"' || true)
+          prev=$(curl -s --max-time 30 "https://ntfy.sh/$LIVE/json?poll=1&since=100m" | grep -c '"event":"message"' || true)
+          echo "beats in 80 min: $n, in 100 min: $prev"
+          if [ "$n" -eq 0 ] && [ "$prev" -gt 0 ]; then
+            curl -s --max-time 30 -H "Title: המוניטור לא עונה" -H "Priority: high" \
+              -d "אין דופק מהמוניטור כבר יותר משעה. אם זה לא עובר תוך כמה דקות, צריך לבדוק את השרת." \
+              "https://ntfy.sh/$OUT" > /dev/null
+            echo "alert sent"
+          fi
