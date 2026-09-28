@@ -126,7 +126,8 @@ const RESET_MARKS_AT = '2026-09-28T15:20:00';
 // asked: "תמחק הכל חוץ מ 10 אחרונות". Of everything written before this stamp
 // only the ten newest stay on the screen; the rest leaves the page, search
 // included. The data itself stays on the server. A message of his with no
-// answer, a standby or a marked card is never hidden. Bump to clear again.
+// answer, a standby or a marked card is never hidden; an unread one is, since
+// he asked for the screen itself to be emptied. Bump to clear again.
 const ARCHIVE_BEFORE = '2026-09-28T15:40:00';
 /*
   The page the phone gets is the page without its own notes.
@@ -6655,7 +6656,7 @@ function archivedSet(){
 }
 function isArchived(m){
  if(!archivedSet().has(m))return false;
- return !(m.src==='itzik'||isStandby(m)||isStar(m)||isFresh(m));
+ return !(m.src==='itzik'||isStandby(m)||isStar(m));
 }
 function liveAnswers(){return allAnswers().filter(function(m){return !isArchived(m);});}
 function ansCounts(){
