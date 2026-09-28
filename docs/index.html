@@ -926,6 +926,8 @@ body.editing .bn{display:none}
 .g13{background:linear-gradient(150deg,#ffd27f,#ef6c00)}
 .g14{background:linear-gradient(150deg,#a5d6a7,#2e7d32)}
 .g15{background:linear-gradient(150deg,#90caf9,#1565c0)}
+.gRec{background:linear-gradient(150deg,#ffd54f,#e06a00)}
+.gt .gi{height:1.35em;width:auto;vertical-align:-0.3em;margin-inline-end:2px}
 .gKat{background:linear-gradient(150deg,#e3c07a,#2b45a6)}
 .gShop{background:linear-gradient(150deg,#3aa55d,#1f6f8b)}
 .gCPlan{background:linear-gradient(150deg,#e8743b,#6b2f7a)}
@@ -1610,7 +1612,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-28T14:44:38.201Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-28T14:44:54.558Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1734,6 +1736,7 @@ try{
   <button type="button" class="gt g3" id="gQueue"><b>📊 ניטור רשתות</b><small>מי פנה, מה נענה</small></button>
   <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>חשבוניות והיומן</small></button>
   <button type="button" class="gt g15" id="gSale"><b>⚖️ מכירת לולוס</b><small>התיק לעורך הדין, מה פתוח ומה נמסר</small></button>
+  <button type="button" class="gt gRec" id="gRecipes"><b><img class="gi" src="icons/lolos-giraffe.png" alt=""> מתכונים לולוס</b><small>חוברת 2026, 19 מתכונים</small></button>
   <button type="button" class="gt g16" id="gIsra"><b>💳 ישראכרט יואל</b><small>הכרטיסים, מה לבקש, ומה ענו</small></button>
   <button type="button" class="gt g10" id="gFiles"><b>📁 הקבצים שלי</b><small>כל מה ששלחת, סגור במוניטור</small></button>
   <button type="button" class="gt g17" id="gTasks"><b>✅ משימות</b><small>מה לעשות, לפי יום. מסמנים כשבוצע</small></button>
@@ -2751,7 +2754,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='4a50243394';
+var CODE_ID='e7f859ff9c';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -5834,6 +5837,7 @@ function renderSale(){
  }).join('');
 }
 on('gSale',function(){pane('Sa');renderSale();ensure('sale',renderSale);});
+on('gRecipes',function(){if(!fileView('lolos-recipes-2026.pdf'))toast('החוברת עוד נטענת, נסה שוב בעוד רגע');});
 function renderIsra(){
  var box=document.getElementById('israBox');if(!box)return;
  var S=D.isra||[];
