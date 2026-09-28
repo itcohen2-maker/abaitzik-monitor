@@ -3621,6 +3621,7 @@ try{
   <button type="submit" id="brGo">פתח</button>
  </form>
  <div class="rephint">אם אתר נשאר לבן, הוא לא מסכים להיפתח בתוך דף אחר. <a href="#" id="brOut">לפתוח אותו בספארי</a></div>
+ <div class="rephint">כניסה לחשבון גוגל לא עובדת בתוך דף אחר, גוגל חוסמת את זה. <a href="#" id="brLogin">להתחבר לגוגל בספארי</a></div>
  <iframe id="brFrame" title="דפדפן" style="width:100%;height:70vh;border:0;border-radius:12px;background:#fff" referrerpolicy="no-referrer"></iframe>
 </section>
 
@@ -9643,9 +9644,19 @@ function brTarget(q){
  if(q.indexOf(' ')<0&&/^[^ ]+[.][a-z]{2,}([/].*)?$/i.test(q))return 'https://'+q;
  return 'https://www.google.com/search?igu=1&hl=iw&q='+encodeURIComponent(q);
 }
+/* Itzik, 28.9, voice: tried to sign in as itcohen2 inside this frame and the
+   login button did nothing. Google refuses to show its sign in page inside
+   another site's frame, and Safari would not share the session with the frame
+   anyway, so anything that is a login or a signed in Google service goes
+   straight to Safari instead of into a frame that can only stay blank. */
+var BR_OUTSIDE=/^https?:[/][/](accounts[.]google|mail[.]google|drive[.]google|docs[.]google|myaccount[.]google|www[.]gmail|gmail)[.]/i;
+function brLoginish(q){return /itcohen|gmail/i.test(String(q||''));}
 function brOpen(){
- var u=brTarget(document.getElementById('brUrl').value);
+ var raw=document.getElementById('brUrl').value;
+ var u=brTarget(raw);
  if(!u)return;
+ if(BR_OUTSIDE.test(u)){window.open(u,'_blank','noopener');return;}
+ if(brLoginish(raw)&&!/^https?:/i.test(raw.trim())){window.open('https://accounts.google.com/','_blank','noopener');return;}
  document.getElementById('brFrame').src=u;
  document.getElementById('brOut').dataset.u=u.replace('igu=1&','');
 }
@@ -9658,6 +9669,10 @@ document.getElementById('brForm').onsubmit=function(e){e.preventDefault();brOpen
 document.getElementById('brOut').onclick=function(e){
  e.preventDefault();
  window.open(this.dataset.u||'https://www.google.com','_blank','noopener');
+};
+document.getElementById('brLogin').onclick=function(e){
+ e.preventDefault();
+ window.open('https://accounts.google.com/','_blank','noopener');
 };
 on('gShopList',function(){window.open('https://docs.google.com/document/d/1A2tvet0ucYNDoDclswaVDybuL8bir3OAerRzXtDUEPU/edit','_blank','noopener');});
 /*ITZIK:END*/
