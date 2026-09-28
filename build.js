@@ -2181,8 +2181,40 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
  background:var(--surface);color:#c89600;font:600 15px Heebo,sans-serif}
 .note-bar span{flex:1;text-align:center;color:var(--dim);font-size:12.5px}
 .note-bar .note-del{color:#d33}
-#noteBody{width:100%;min-height:62vh;border:0;border-radius:14px;padding:14px;resize:vertical;
- background:var(--surface);color:var(--ink);font:inherit;font-size:17px;line-height:1.6}
+#noteBody{width:100%;min-height:58vh;border:0;border-radius:14px;padding:14px 16px 40px;outline:0;
+ background:var(--surface);color:var(--ink);font:inherit;font-size:17px;line-height:1.55;
+ overflow-wrap:anywhere;-webkit-user-select:text;user-select:text}
+#noteBody.blank:before{content:'כותרת';color:var(--dim);font-size:26px;font-weight:700;position:absolute;pointer-events:none}
+#noteBody h1,#noteBody h2,#noteBody h3{text-align:start;color:var(--ink);letter-spacing:0}
+#noteBody h1{font-size:26px;font-weight:700;margin:0 0 6px;line-height:1.3}
+#noteBody h2{font-size:21px;font-weight:700;margin:6px 0 4px;line-height:1.35}
+#noteBody h3{font-size:18px;font-weight:600;margin:4px 0 2px}
+#noteBody p,#noteBody div{margin:0}
+#noteBody pre{font:15px ui-monospace,Menlo,monospace;white-space:pre-wrap;margin:2px 0;
+ background:var(--line);border-radius:6px;padding:2px 6px}
+#noteBody ul,#noteBody ol{margin:2px 0;padding-inline-start:26px}
+#noteBody ul.dash{list-style:none}
+#noteBody ul.dash>li:before{content:'–';display:inline-block;width:20px;margin-inline-start:-20px}
+#noteBody ul.chk{list-style:none;padding-inline-start:34px}
+#noteBody ul.chk>li{position:relative;min-height:28px;padding:2px 0}
+#noteBody ul.chk>li:before{content:'';position:absolute;inset-inline-start:-32px;top:4px;width:20px;height:20px;
+ border:1.6px solid #b8b8b8;border-radius:50%;box-sizing:border-box}
+#noteBody ul.chk>li.on{color:var(--dim)}
+#noteBody ul.chk>li.on:before{background:#f5c400;border-color:#f5c400}
+#noteBody ul.chk>li.on:after{content:'✓';position:absolute;inset-inline-start:-28px;top:3px;
+ color:#fff;font-size:13px;font-weight:700;pointer-events:none}
+.note-tools{display:flex;justify-content:space-around;align-items:center;margin-bottom:8px;
+ background:var(--surface);border-radius:14px;padding:4px}
+.note-tools button{min-width:48px;min-height:42px;border:0;background:none;color:#c89600;cursor:pointer;
+ font:600 19px Heebo,sans-serif;border-radius:10px}
+.note-tools button.on{background:var(--line)}
+.note-fmt{background:var(--surface);border:1px solid var(--line);border-radius:16px;
+ padding:8px;margin:0 0 8px}
+.note-fmt .row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.note-fmt .row:last-child{margin-bottom:0}
+.note-fmt button{flex:1 1 auto;min-height:40px;padding:0 8px;border:0;border-radius:10px;cursor:pointer;
+ background:var(--line);color:var(--ink);font:500 15px Heebo,sans-serif}
+.note-fmt button.on{background:#f5c400;color:#222}
 .lolos{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
 .lbtn{display:flex;align-items:center;gap:12px;text-align:start;cursor:pointer;
  border:0;border-radius:18px;padding:14px 16px;color:#fff;text-decoration:none;
@@ -3613,7 +3645,35 @@ try{
    <button type="button" id="notePin">הצמדה</button>
    <button type="button" id="noteDel" class="note-del">מחיקה</button>
   </div>
-  <textarea id="noteBody" placeholder="השורה הראשונה היא הכותרת"></textarea>
+  <div class="note-fmt" id="noteFmt" hidden>
+   <div class="row">
+    <button type="button" data-blk="h1" style="font-weight:700;font-size:18px">כותרת</button>
+    <button type="button" data-blk="h2" style="font-weight:700">כותרת משנה</button>
+    <button type="button" data-blk="h3" style="font-weight:600">תת כותרת</button>
+    <button type="button" data-blk="div">גוף</button>
+    <button type="button" data-blk="pre" style="font-family:monospace">מונו</button>
+   </div>
+   <div class="row">
+    <button type="button" data-cmd="bold" style="font-weight:800">B</button>
+    <button type="button" data-cmd="italic" style="font-style:italic;font-family:serif">I</button>
+    <button type="button" data-cmd="underline" style="text-decoration:underline">U</button>
+    <button type="button" data-cmd="strikeThrough" style="text-decoration:line-through">S</button>
+   </div>
+   <div class="row">
+    <button type="button" data-list="bul">• רשימה</button>
+    <button type="button" data-list="dash">– רשימה</button>
+    <button type="button" data-list="num">1. רשימה</button>
+    <button type="button" data-cmd="outdent">⇥</button>
+    <button type="button" data-cmd="indent">⇤</button>
+   </div>
+  </div>
+  <div class="note-tools">
+   <button type="button" id="noteAa" title="עיצוב">Aa</button>
+   <button type="button" id="noteChk" title="רשימת סימון">☑</button>
+   <button type="button" id="noteUndo" title="ביטול">↶</button>
+   <button type="button" id="noteRedo" title="חזרה">↷</button>
+  </div>
+  <div id="noteBody" contenteditable="true" dir="auto" spellcheck="true"></div>
  </div>
 </section>
 
@@ -9751,10 +9811,135 @@ function openNote(id){
  document.getElementById('noteEdit').hidden=false;
  document.getElementById('noteWhen').textContent=noteDay(n.upd);
  document.getElementById('notePin').textContent=n.pin?'ביטול הצמדה':'הצמדה';
- var ta=document.getElementById('noteBody');
- ta.value=n.text||'';
- ta.focus();
+ var ed=document.getElementById('noteBody');
+ ed.innerHTML=n.html||noteHtmlFromText(n.text);
+ document.getElementById('noteFmt').hidden=true;
+ document.getElementById('noteAa').classList.remove('on');
+ noteBlank();
+ ed.focus();
+ if(!String(n.text||'').trim()){
+  var r=document.createRange();r.setStart(ed.firstChild||ed,0);r.collapse(true);
+  var s=window.getSelection();s.removeAllRanges();s.addRange(r);
+ }
 }
+// Itzik, 28.9 evening: "What is special about this notes app? I asked you to
+// copy the iPhone app with all the editing." So the page is a rich editor
+// now, with the iPhone's Aa panel (title, heading, subheading, body, mono,
+// B I U S, three kinds of list, indent) and its round checklist. A note keeps
+// its html for the editor and its plain text for the list and the search.
+// Old notes that were plain text open with their first line as the title.
+function noteHtmlFromText(t){
+ var ls=String(t||'').split(String.fromCharCode(10));
+ if(!ls.join('').trim())return '<h1><br></h1>';
+ return ls.map(function(x,i){
+  var v=esc(x)||'<br>';
+  return i===0?'<h1>'+v+'</h1>':'<div>'+v+'</div>';
+ }).join('');
+}
+function noteBlank(){
+ var ed=document.getElementById('noteBody');
+ ed.classList.toggle('blank',!ed.textContent.trim()&&!ed.querySelector('li,img'));
+}
+var noteRange=null;
+document.addEventListener('selectionchange',function(){
+ var s=window.getSelection(),ed=document.getElementById('noteBody');
+ if(s.rangeCount&&ed.contains(s.anchorNode))noteRange=s.getRangeAt(0).cloneRange();
+ if(!document.getElementById('noteFmt').hidden)noteFmtState();
+});
+function noteSel(){
+ var ed=document.getElementById('noteBody'),s=window.getSelection();
+ if(document.activeElement!==ed)ed.focus();
+ if(noteRange&&!(s.rangeCount&&ed.contains(s.anchorNode))){s.removeAllRanges();s.addRange(noteRange);}
+}
+function noteSave(){
+ var ed=document.getElementById('noteBody');
+ var html=ed.innerHTML,txt=ed.innerText;
+ noteBlank();
+ var n=editNote(function(x){x.html=html;x.text=txt;x.upd=new Date().toISOString();});
+ if(n)document.getElementById('noteWhen').textContent=noteDay(n.upd);
+}
+function noteNode(tag){
+ var s=window.getSelection(),ed=document.getElementById('noteBody');
+ if(!s.rangeCount)return null;
+ var el=s.anchorNode;
+ while(el&&el!==ed){if(el.nodeType===1&&el.tagName.toLowerCase()===tag)return el;el=el.parentNode;}
+ return null;
+}
+function noteList(kind){
+ noteSel();
+ var ul=noteNode('ul'),ol=noteNode('ol');
+ var cur=ol?'num':ul?(ul.classList.contains('chk')?'chk':ul.classList.contains('dash')?'dash':'bul'):'';
+ if(cur===kind){document.execCommand(kind==='num'?'insertOrderedList':'insertUnorderedList');noteSave();return;}
+ if(kind==='num'){document.execCommand('insertOrderedList');}
+ else{
+  if(ol||!ul)document.execCommand('insertUnorderedList');
+  ul=noteNode('ul');
+  if(ul){ul.classList.remove('chk','dash');if(kind!=='bul')ul.classList.add(kind);}
+ }
+ noteSave();noteFmtState();
+}
+function noteFmtState(){
+ var fmt=document.getElementById('noteFmt');
+ ['bold','italic','underline','strikeThrough'].forEach(function(c){
+  var b=fmt.querySelector('[data-cmd="'+c+'"]');
+  var on=false;try{on=document.queryCommandState(c);}catch(e){}
+  if(b)b.classList.toggle('on',on);
+ });
+ var blk='div';
+ ['h1','h2','h3','pre'].forEach(function(t){if(noteNode(t))blk=t;});
+ Array.prototype.forEach.call(fmt.querySelectorAll('[data-blk]'),function(b){
+  b.classList.toggle('on',b.getAttribute('data-blk')===blk);
+ });
+ var ul=noteNode('ul'),ol=noteNode('ol');
+ var cur=ol?'num':ul?(ul.classList.contains('dash')?'dash':ul.classList.contains('chk')?'chk':'bul'):'';
+ Array.prototype.forEach.call(fmt.querySelectorAll('[data-list]'),function(b){
+  b.classList.toggle('on',b.getAttribute('data-list')===cur);
+ });
+}
+// Tapping a toolbar button must not take the cursor out of the note, or the
+// iPhone closes the keyboard and the style lands nowhere.
+Array.prototype.forEach.call(document.querySelectorAll('#noteFmt button,.note-tools button'),function(b){
+ b.addEventListener('mousedown',function(e){e.preventDefault();});
+});
+Array.prototype.forEach.call(document.querySelectorAll('#noteFmt [data-blk]'),function(b){
+ b.onclick=function(){
+  noteSel();
+  var t=b.getAttribute('data-blk');
+  if(noteNode('li'))document.execCommand(noteNode('ol')?'insertOrderedList':'insertUnorderedList');
+  document.execCommand('formatBlock',false,'<'+t+'>');
+  noteSave();noteFmtState();
+ };
+});
+Array.prototype.forEach.call(document.querySelectorAll('#noteFmt [data-cmd]'),function(b){
+ b.onclick=function(){noteSel();document.execCommand(b.getAttribute('data-cmd'));noteSave();noteFmtState();};
+});
+Array.prototype.forEach.call(document.querySelectorAll('#noteFmt [data-list]'),function(b){
+ b.onclick=function(){noteList(b.getAttribute('data-list'));};
+});
+document.getElementById('noteAa').onclick=function(){
+ var f=document.getElementById('noteFmt');
+ f.hidden=!f.hidden;this.classList.toggle('on',!f.hidden);
+ if(!f.hidden){noteSel();noteFmtState();}
+};
+document.getElementById('noteChk').onclick=function(){noteList('chk');};
+document.getElementById('noteUndo').onclick=function(){noteSel();document.execCommand('undo');noteSave();};
+document.getElementById('noteRedo').onclick=function(){noteSel();document.execCommand('redo');noteSave();};
+// The round circle of a checklist line is drawn by css, so a tap on it is
+// found by where the finger landed: the start side of the line, before the text.
+document.getElementById('noteBody').addEventListener('click',function(e){
+ var li=e.target;
+ while(li&&li!==this&&!(li.tagName==='LI'&&li.parentNode.classList.contains('chk')))li=li.parentNode;
+ if(!li||li===this)return;
+ var r=li.getBoundingClientRect(),rtl=getComputedStyle(li).direction==='rtl';
+ var gap=rtl?e.clientX-r.right:r.left-e.clientX;
+ if(gap>=-4&&gap<=40){li.classList.toggle('on');e.preventDefault();noteSave();}
+});
+// A paste comes in as plain text, so a web page does not drag its fonts in.
+document.getElementById('noteBody').addEventListener('paste',function(e){
+ var t=(e.clipboardData||window.clipboardData).getData('text/plain');
+ if(t==null)return;
+ e.preventDefault();document.execCommand('insertText',false,t);
+});
 function editNote(fn){
  var l=notes(),hit=null;
  l.forEach(function(x){if(x.id===noteOpen)hit=x;});
@@ -9771,10 +9956,18 @@ function closeNote(){
  renderNotes();
 }
 document.getElementById('noteBody').addEventListener('input',function(){
- var v=this.value;
- var n=editNote(function(x){x.text=v;x.upd=new Date().toISOString();});
- if(n)document.getElementById('noteWhen').textContent=noteDay(n.upd);
+ // Emptied all the way down, the note starts again from a title line.
+ if(!this.textContent.trim()&&!this.querySelector('li')&&this.children.length<=1&&!this.querySelector('h1')){
+  this.innerHTML='<h1><br></h1>';
+  var r=document.createRange();r.setStart(this.firstChild,0);r.collapse(true);
+  var s=window.getSelection();s.removeAllRanges();s.addRange(r);
+ }
+ Array.prototype.forEach.call(this.querySelectorAll('ul.chk>li.on'),function(li){
+  if(!li.textContent.trim())li.classList.remove('on');
+ });
+ noteSave();
 });
+try{document.execCommand('defaultParagraphSeparator',false,'div');}catch(e){}
 document.getElementById('noteNew').onclick=function(){openNote(null);};
 document.getElementById('noteDone').onclick=closeNote;
 document.getElementById('notePin').onclick=function(){
