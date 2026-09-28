@@ -10811,6 +10811,11 @@ function gateBoot(){
     var head=JSON.parse(txt);
     Object.keys(head).forEach(function(k){D[k]=head[k];});
     LAZY=D.lazy||{};
+    // The first boot pass ran against an empty D, before this fetch, so a
+    // reset stamp that only exists inside the sealed payload never got its
+    // chance until now.
+    try{applyResetSeen();}catch(e){}
+    try{applyResetMarks();}catch(e){}
     repaintAll();
     wrap.parentNode.removeChild(wrap);
     return true;
@@ -11149,7 +11154,14 @@ boot('dot',updateDot);
 // The last word on which screen opens. This runs after everything else, so a
 // plain pane('h') here quietly undid the notification landing above: he tapped
 // the banner and got the home screen with no sign of what was new.
-boot('reset',function(){
+//
+// Named on their own, not just handed to boot() inline, because with the gate
+// on D starts as {} and these stamps only exist once head.json is fetched and
+// decrypted, well after this first pass ran and found nothing to do. Without
+// a way to run them again after that fetch, a reset stamp shipped the night
+// of 27.9 never actually fired on his phone, and he kept seeing the same old
+// standby and star counts no matter how many times the page said otherwise.
+function applyResetSeen(){
  var stamp=D.resetSeenAt||'';
  if(!stamp)return;
  var done='';
@@ -11157,12 +11169,12 @@ boot('reset',function(){
  if(done>=stamp)return;
  markAllRead(stamp);
  try{localStorage.setItem('seenResetAt',stamp);}catch(e){}
-});
+}
 // Same move, for the two counts markAllRead never touched: standby and
 // marked. Those are flags he set himself on individual cards, so there is no
 // cutoff date to compare against - the only reset that means anything is
 // clearing both lists outright.
-boot('resetMarks',function(){
+function applyResetMarks(){
  var stamp=D.resetMarksAt||'';
  if(!stamp)return;
  var done='';
@@ -11174,7 +11186,9 @@ boot('resetMarks',function(){
   localStorage.removeItem('chatStandby');
   localStorage.setItem('marksResetAt',stamp);
  }catch(e){}
-});
+}
+boot('reset',applyResetSeen);
+boot('resetMarks',applyResetMarks);
 boot('gate',gateBoot);
 boot('pane',function(){
  if(location.hash==='#new'||location.hash==='#chat'){

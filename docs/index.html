@@ -1540,7 +1540,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-28T02:05:34.232Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-28T02:11:27.234Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2627,7 +2627,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='a1dcf8eaa0';
+var CODE_ID='6c4800396a';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -7681,6 +7681,8 @@ function gateBoot(){
     var head=JSON.parse(txt);
     Object.keys(head).forEach(function(k){D[k]=head[k];});
     LAZY=D.lazy||{};
+    try{applyResetSeen();}catch(e){}
+    try{applyResetMarks();}catch(e){}
     repaintAll();
     wrap.parentNode.removeChild(wrap);
     return true;
@@ -7907,7 +7909,7 @@ boot('thread',renderThread);
 boot('pill',renderPill);
 boot('mail',renderMail);
 boot('dot',updateDot);
-boot('reset',function(){
+function applyResetSeen(){
  var stamp=D.resetSeenAt||'';
  if(!stamp)return;
  var done='';
@@ -7915,8 +7917,8 @@ boot('reset',function(){
  if(done>=stamp)return;
  markAllRead(stamp);
  try{localStorage.setItem('seenResetAt',stamp);}catch(e){}
-});
-boot('resetMarks',function(){
+}
+function applyResetMarks(){
  var stamp=D.resetMarksAt||'';
  if(!stamp)return;
  var done='';
@@ -7928,7 +7930,9 @@ boot('resetMarks',function(){
   localStorage.removeItem('chatStandby');
   localStorage.setItem('marksResetAt',stamp);
  }catch(e){}
-});
+}
+boot('reset',applyResetSeen);
+boot('resetMarks',applyResetMarks);
 boot('gate',gateBoot);
 boot('pane',function(){
  if(location.hash==='#new'||location.hash==='#chat'){
