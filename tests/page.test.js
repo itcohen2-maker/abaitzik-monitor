@@ -1952,7 +1952,8 @@ test('the block list is a list he ticks, and nothing acts on its own', () => {
   // with a tick box, I will tell you what to do." Blocking is visible to the
   // person and hard to walk back, some of these are a first name with no
   // account yet, and two of them are that man's children.
-  assert.ok(html.includes('id="gBlock"'));
+  // 28.9: the home tile is gone, he is done blocking. The screen stays.
+  assert.ok(!html.includes('id="gBlock"'));
   assert.ok(html.includes('<section id="pBl" hidden>'));
   assert.ok(html.includes('<b>כלום כאן לא מבוצע.</b>'));
   assert.ok(html.includes('function renderBlock(){'));

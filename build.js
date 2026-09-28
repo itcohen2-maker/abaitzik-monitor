@@ -3002,7 +3002,10 @@ try{
     הכפתור ירד ממסך הבית. המסך עצמו pDr וכל הרישומים שלו נשארים במקום,
     עדיין נפתחים במסלול #j, כדי שלא יאבד מה שכבר נמדד.
   -->
-  <button type="button" class="gt g9" id="gBlock"><b>🚫 לחסימה</b><small>רשימה לאישור. כלום לא קורה עד שתסמן</small></button>
+  <!--
+    איציק, 28.9: "תסיר את כפתור לחסימה בלבד, חסמנו כבר את מי שצריך, הוא לא נחוץ יותר".
+    הכפתור ירד ממסך הבית. המסך pBl והרשימה נשארים, כמו הניקוזים.
+  -->
   <button type="button" class="gt g4" id="gVoices"><b>🎙️ הקלטות שלא תומללו</b><small>מה שלא הצלחתי לקרוא. תלחץ ותשמע</small></button>
   <button type="button" class="gt g17" id="gTasks"><b>✅ משימות</b><small>מה לעשות, לפי יום. מסמנים כשבוצע</small></button>
   <button type="button" class="gt g18" id="gAppts"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
