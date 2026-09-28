@@ -64,8 +64,12 @@ try {
     .filter(Boolean);
 } catch (e) {}
 const answeredAt = {};
+// When the answer was written, not the time a session typed into it: sessions
+// round "at" to a tidy minute, sometimes ahead of the clock (28.9, a reply
+// written 17:46 carried 17:57 and read as a 13 minute wait).
 all.filter((m) => m.from === 'claude' && m.re).forEach((m) => {
-  const t = Date.parse(m.at);
+  let t = Date.parse(m.at);
+  try { t = Math.min(t || Infinity, fs.statSync(path.join(CHAT, m.f)).mtimeMs); } catch (e) {}
   if (!answeredAt[m.re] || t < answeredAt[m.re]) answeredAt[m.re] = t;
 });
 const mine = all.filter((m) => m.from === 'itzik' && Date.parse(m.at) > now - 24 * 3600000);
