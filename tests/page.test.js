@@ -2090,3 +2090,13 @@ test('what was received is numbered and can delete many marked rows at once', ()
   assert.ok(body.includes('id="gotSelAll"') && body.includes('id="gotSelDel"'), 'mark all and delete marked');
   assert.ok(body.includes('saveGone(g);gotSel={};'), 'marked rows go through the same on device delete');
 });
+
+test('content plan tile is off the home screen, the reminders tile blinks a day ahead', () => {
+  // 28.9, two recordings: "תסיר את כפתור תוכניות תוכן", and "כשמגיעה תזכורת,
+  // יום לפני, תתחיל להבהב את הכפתור ואז אני אסמן אני יודע".
+  const html = renderPage(fixture());
+  assert.ok(!html.includes('id="gContentPlan"'));
+  assert.ok(html.includes('id="gRemind"'));
+  assert.ok(html.includes("now>=u-864e5") && html.includes("classList.toggle('taskblink',(D.reminders||[]).some(remHot))"));
+  assert.ok(html.includes('class="remknow"') && html.includes("localStorage.setItem('remKnown'"));
+});

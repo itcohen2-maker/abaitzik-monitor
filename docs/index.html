@@ -946,6 +946,7 @@ body.editing .bn{display:none}
 .rem b{display:block;font-size:1.05em}
 .rem .w{font-size:.85em;opacity:.8}
 .rem.sent{opacity:.6}
+.rem .remknow{margin-top:8px;padding:8px 16px;border:0;border-radius:10px;background:var(--yellow);color:#000;font:700 15px Heebo,sans-serif}
 .ysheet{position:fixed;inset:0;z-index:9999;background:rgba(10,14,22,.55);
  display:flex;align-items:flex-end;justify-content:center;padding:14px}
 .ycard{background:var(--card,#fff);color:var(--ink,#16202c);width:100%;max-width:420px;
@@ -1562,7 +1563,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-28T12:21:00.391Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-28T12:21:56.530Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1700,7 +1701,6 @@ try{
   <button type="button" class="gt g15" id="gYehuda"><b>📄 יהודה</b><small>סקירת happymeal. פתיחה, הורדה או שליחה אליו</small></button>
   <button type="button" class="gt gKat" id="gKatalog"><b>📖 הקטלוג הבא</b><small>קיץ 2027. עשרה כיווני עיצוב ודוח הטרנדים 2027 2028</small></button>
   <button type="button" class="gt gShop" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
-  <button type="button" class="gt gCPlan" id="gContentPlan"><b>🎬 תוכנית תוכן</b><small>פתיחה, שליחה עם הקובץ או קישור בוואטסאפ לאיליי</small></button>
   <button type="button" class="gt g16" id="gYoman"><b>📓 יומן החזרה</b><small>התסריט של היום והסרטון שממנו לקחנו את הפורמט</small></button>
  </div>
 
@@ -2656,7 +2656,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='99d000abad';
+var CODE_ID='fd14bcf478';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -5593,7 +5593,18 @@ function renderSpecial(){
  wireBoxes(host);
 }
 
+function remKnown(){try{return JSON.parse(localStorage.getItem('remKnown')||'{}');}catch(e){return {};}}
+function remKey(r){return (r.at||'')+'|'+(r.due||'');}
+function remHot(r){
+ var u=Date.parse(r.due),now=Date.now();
+ return !isNaN(u)&&now>=u-864e5&&now<u+3*864e5&&!remKnown()[remKey(r)];
+}
+function remBlink(){
+ var b=document.getElementById('gRemind');
+ if(b)b.classList.toggle('taskblink',(D.reminders||[]).some(remHot));
+}
 function renderReminders(){
+ remBlink();
  var host=document.getElementById('remBox');
  if(!host)return;
  var R=D.reminders||[];
@@ -5603,8 +5614,16 @@ function renderReminders(){
  };
  host.innerHTML=R.length?R.map(function(r){
   return '<div class="rem'+(r.sentAt?' sent':'')+'"><b>'+esc(r.text)+'</b>'
-   +'<div class="w">'+(r.sentAt?'נשלחה '+esc(day(r.sentAt)):'תקפוץ '+esc(day(r.due))+' בתשע בבוקר')+'</div></div>';
+   +'<div class="w">'+(r.sentAt?'נשלחה '+esc(day(r.sentAt)):'תקפוץ '+esc(day(r.due))+' בתשע בבוקר')+'</div>'
+   +(remHot(r)?'<button type="button" class="remknow" data-k="'+esc(remKey(r))+'">אני יודע</button>':'')+'</div>';
  }).join(''):'<div class="empty">אין תזכורת פתוחה.</div>';
+ Array.prototype.forEach.call(host.querySelectorAll('.remknow'),function(b){
+  b.onclick=function(){
+   var k=remKnown();k[b.getAttribute('data-k')]=1;
+   try{localStorage.setItem('remKnown',JSON.stringify(k));}catch(e){}
+   renderReminders();
+  };
+ });
 }
 function renderAppts(){
  var host=document.getElementById('apBox');

@@ -1940,6 +1940,7 @@ body.editing .bn{display:none}
 .rem b{display:block;font-size:1.05em}
 .rem .w{font-size:.85em;opacity:.8}
 .rem.sent{opacity:.6}
+.rem .remknow{margin-top:8px;padding:8px 16px;border:0;border-radius:10px;background:var(--yellow);color:#000;font:700 15px Heebo,sans-serif}
 /* The three choices behind the יהודה tile. Its own sheet, so it borrows
    nothing from the panes and cannot disturb them. */
 .ysheet{position:fixed;inset:0;z-index:9999;background:rgba(10,14,22,.55);
@@ -3052,7 +3053,10 @@ try{
     Doc "קניות", owned by Jenny and shared with him (see CLAUDE.md).
   -->
   <button type="button" class="gt gShop" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
-  <button type="button" class="gt gCPlan" id="gContentPlan"><b>🎬 תוכנית תוכן</b><small>פתיחה, שליחה עם הקובץ או קישור בוואטסאפ לאיליי</small></button>
+  <!--
+    איציק, 28.9, בהקלטה: "תסיר את כפתור תוכניות תוכן". הכפתור ירד ממסך הבית.
+    הקובץ והגיליון שלו נשארים, הקישור שכבר נשלח לאיליי ממשיך להיפתח.
+  -->
   <!--
     27.9. The daily recovery diary: one raw video a day. The page sits in
     docs/yoman so it opens on the phone with no login, like the catalog.
@@ -8184,7 +8188,25 @@ function renderSpecial(){
  wireBoxes(host);
 }
 
+/*
+  Itzik, 28.9, a recording: "כשמגיעה תזכורת, קצת לפני, יום לפני, תתחיל להבהב
+  את הכפתור ואז אני אסמן אני יודע". From a day before a reminder is due the
+  reminders tile blinks, and keeps blinking past the due day until he taps
+  "אני יודע" on that reminder. The tick lives on his phone, like the tasks.
+  Anything more than three days past due stops on its own.
+*/
+function remKnown(){try{return JSON.parse(localStorage.getItem('remKnown')||'{}');}catch(e){return {};}}
+function remKey(r){return (r.at||'')+'|'+(r.due||'');}
+function remHot(r){
+ var u=Date.parse(r.due),now=Date.now();
+ return !isNaN(u)&&now>=u-864e5&&now<u+3*864e5&&!remKnown()[remKey(r)];
+}
+function remBlink(){
+ var b=document.getElementById('gRemind');
+ if(b)b.classList.toggle('taskblink',(D.reminders||[]).some(remHot));
+}
 function renderReminders(){
+ remBlink();
  var host=document.getElementById('remBox');
  if(!host)return;
  var R=D.reminders||[];
@@ -8194,8 +8216,16 @@ function renderReminders(){
  };
  host.innerHTML=R.length?R.map(function(r){
   return '<div class="rem'+(r.sentAt?' sent':'')+'"><b>'+esc(r.text)+'</b>'
-   +'<div class="w">'+(r.sentAt?'נשלחה '+esc(day(r.sentAt)):'תקפוץ '+esc(day(r.due))+' בתשע בבוקר')+'</div></div>';
+   +'<div class="w">'+(r.sentAt?'נשלחה '+esc(day(r.sentAt)):'תקפוץ '+esc(day(r.due))+' בתשע בבוקר')+'</div>'
+   +(remHot(r)?'<button type="button" class="remknow" data-k="'+esc(remKey(r))+'">אני יודע</button>':'')+'</div>';
  }).join(''):'<div class="empty">אין תזכורת פתוחה.</div>';
+ Array.prototype.forEach.call(host.querySelectorAll('.remknow'),function(b){
+  b.onclick=function(){
+   var k=remKnown();k[b.getAttribute('data-k')]=1;
+   try{localStorage.setItem('remKnown',JSON.stringify(k));}catch(e){}
+   renderReminders();
+  };
+ });
 }
 function renderAppts(){
  var host=document.getElementById('apBox');
