@@ -2017,7 +2017,9 @@ test('a recording I could not read gets its own screen, not a message', () => {
   // again himself.
   // Itzik, 28.9: "תסיר את הכפתור הקלטות שלא תומללו". The home tile is gone,
   // the screen stays and is still reached by #voices.
-  assert.ok(!html.includes('id="gVoices"'), 'no button on his home screen anymore');
+  // A customer's tiles still offer it, so only his own part of the page counts.
+  const his = html.replace(/<!--TENANT:BEGIN-->[\s\S]*?<!--TENANT:END-->/g, '');
+  assert.ok(!his.includes('id="gVoices"'), 'no button on his home screen anymore');
   assert.ok(html.includes('<section id="pVc" hidden>'), 'and a screen of its own');
   assert.ok(html.includes('function renderVoices('));
   assert.ok(html.includes("V:'pVc'"), 'the pane is routable');
