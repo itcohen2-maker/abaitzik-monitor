@@ -13,6 +13,10 @@
 
   Usage: node net-daily.js [--dry] [--force]
 
+  Itzik, 28.9: every day at seven in the morning, followers on every network
+  and story views on TikTok, Instagram and Facebook. It needs his logged in
+  browser, so it runs on his PC only; setup-net-daily.ps1 registers it at 07:00.
+
   Budget: one session a day and no notification of its own. A stamp per day
   makes a double run safe.
 */
@@ -54,14 +58,15 @@ function prompt(day) {
     'אם הרשימה ריקה, כתוב דוח אחד שאומר את זה ועצור.',
     '',
     'ארבע רשתות, עד חמש דקות לכל אחת:',
-    '  tiktok: https://www.tiktok.com/tiktokstudio  (עוקבים, צפיות, תגובות חדשות מאתמול)',
-    '  facebook: https://www.facebook.com/professional_dashboard/  (עוקבים, חשיפה, תגובות והודעות שממתינות)',
-    '  instagram: https://www.instagram.com/abaitzik/  (עוקבים, צפיות ברילים האחרונים, הודעות שממתינות)',
+    '  tiktok: https://www.tiktok.com/tiktokstudio  (עוקבים, צפיות, צפיות בסטורי אם יש, תגובות חדשות מאתמול)',
+    '  facebook: https://www.facebook.com/professional_dashboard/  (עוקבים, חשיפה, צפיות בסטורי אם יש, תגובות והודעות שממתינות)',
+    '  instagram: https://www.instagram.com/abaitzik/  (עוקבים, צפיות ברילים האחרונים, צפיות בסטורי הפעיל אם יש, הודעות שממתינות)',
     '  youtube: https://studio.youtube.com/  (מנויים, צפיות, תגובות חדשות)',
     '',
     'לכל רשת קובץ אחד ב-data/reports/reports בשם ' + day.replace(/-/g, '') + '-HHMM-daily-<network>.json:',
     '{"at":"<ISO עם +03:00>","network":"<network>","title":"<שם הרשת בעברית>, דוח יומי: <המספר החשוב>",',
     ' "body":"<המספרים, והשינוי מאתמול אם ידוע. מי פנה ומחכה לתשובה. בלי פנימיות>"}',
+    'בכל דוח חובה: מספר העוקבים, ואם יש סטורי פעיל כמה צפיות יש לו. אין סטורי, כתוב שאין.',
     'רק מספרים שראית על המסך. מה שלא נטען או לא נראה, כתוב שלא נראה.',
     'בלי מקפים, בלי אימוגי, בלי שם פרטי.',
     '',

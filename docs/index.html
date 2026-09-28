@@ -1108,10 +1108,25 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
 .opline:last-child{border-bottom:0}
 .opline span{color:var(--dim);font-size:13px;flex:0 0 auto}
 .opline b{font:700 15px Heebo,sans-serif;text-align:end}
-.note-i{background:var(--surface);border:1px solid var(--line);border-radius:14px;
- padding:12px 14px;margin-bottom:8px;font-size:14.5px;line-height:1.6;
- white-space:pre-wrap;cursor:pointer}
-.note-i small{display:block;color:var(--dim);font-size:11.5px;margin-top:4px}
+.note-search{width:100%;min-height:42px;border-radius:12px;padding:0 14px;margin-bottom:12px;
+ border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:15px}
+.note-grp{color:var(--dim);font-size:12.5px;font-weight:500;margin:14px 4px 6px}
+.note-box{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.note-i{padding:11px 14px;border-bottom:1px solid var(--line);cursor:pointer}
+.note-i:last-child{border-bottom:0}
+.note-i:active{background:var(--line)}
+.note-i b{display:block;font-size:15.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.note-i small{display:block;color:var(--dim);font-size:13px;margin-top:2px;overflow:hidden;
+ text-overflow:ellipsis;white-space:nowrap}
+.note-new{display:block;width:100%;min-height:50px;margin-top:14px;border:0;border-radius:999px;
+ background:#f5c400;color:#222;font:600 16px Heebo,sans-serif;cursor:pointer}
+.note-bar{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.note-bar button{min-height:40px;padding:0 14px;border:0;border-radius:999px;cursor:pointer;
+ background:var(--surface);color:#c89600;font:600 15px Heebo,sans-serif}
+.note-bar span{flex:1;text-align:center;color:var(--dim);font-size:12.5px}
+.note-bar .note-del{color:#d33}
+#noteBody{width:100%;min-height:62vh;border:0;border-radius:14px;padding:14px;resize:vertical;
+ background:var(--surface);color:var(--ink);font:inherit;font-size:17px;line-height:1.6}
 .lolos{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
 .lbtn{display:flex;align-items:center;gap:12px;text-align:start;cursor:pointer;
  border:0;border-radius:18px;padding:14px 16px;color:#fff;text-decoration:none;
@@ -1563,7 +1578,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-28T13:22:11.199Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-28T13:23:58.264Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2078,13 +2093,22 @@ try{
 </section>
 
 <section id="pN2" hidden>
- <h2>פתקים</h2>
- <form class="quickrow" id="noteForm">
-  <input type="text" id="noteText" autocomplete="off" placeholder="פתק חדש">
-  <button type="submit" id="noteBtn">הוספה</button>
- </form>
- <div id="noteList"></div>
- <div class="hint">הפתקים נשמרים במכשיר הזה. לחיצה ארוכה על פתק מוחקת אותו.</div>
+ <div id="noteHome">
+  <h2>פתקים</h2>
+  <input type="search" id="noteSearch" class="note-search" autocomplete="off" placeholder="חיפוש">
+  <div id="noteList"></div>
+  <button type="button" class="note-new" id="noteNew">✎ פתק חדש</button>
+  <div class="hint">הפתקים נשמרים במכשיר הזה. נגיעה בפתק פותחת אותו לכתיבה.</div>
+ </div>
+ <div id="noteEdit" hidden>
+  <div class="note-bar">
+   <button type="button" id="noteDone">סיום</button>
+   <span id="noteWhen"></span>
+   <button type="button" id="notePin">הצמדה</button>
+   <button type="button" id="noteDel" class="note-del">מחיקה</button>
+  </div>
+  <textarea id="noteBody" placeholder="השורה הראשונה היא הכותרת"></textarea>
+ </div>
 </section>
 
 <section id="pU" hidden>
@@ -2666,7 +2690,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='a641a37fab';
+var CODE_ID='2dd69576b5';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -6766,46 +6790,103 @@ document.getElementById('opForm').onsubmit=function(e){
 
 
 function notes(){
- return idList('notes');
+ var l=idList('notes'),n=0;
+ l.forEach(function(x){if(!x.id){x.id='n'+Date.parse(x.at||0)+'-'+(n++);}if(!x.upd)x.upd=x.at;});
+ return l;
 }
 function saveNotes(list){
  try{localStorage.setItem('notes',JSON.stringify(list));}catch(e){}
 }
+var noteOpen=null;
+function noteTitle(t){
+ var ls=String(t||'').split('\n').map(function(x){return x.trim();}).filter(Boolean);
+ return {head:ls[0]||'פתק חדש',rest:ls.slice(1).join(' ')};
+}
+function noteDay(iso){
+ var d=new Date(iso),now=new Date();
+ if(isNaN(d))return '';
+ if(d.toDateString()===now.toDateString())return d.toTimeString().slice(0,5);
+ var y=new Date(now);y.setDate(y.getDate()-1);
+ if(d.toDateString()===y.toDateString())return 'אתמול';
+ return d.getDate()+'.'+(d.getMonth()+1)+'.'+String(d.getFullYear()).slice(2);
+}
 function renderNotes(){
  var host=document.getElementById('noteList');
  if(!host)return;
- var list=notes();
+ document.getElementById('noteHome').hidden=false;
+ document.getElementById('noteEdit').hidden=true;
+ noteOpen=null;
+ var q=(document.getElementById('noteSearch').value||'').trim();
+ var list=notes().filter(function(n){return String(n.text||'').trim();});
+ if(q)list=list.filter(function(n){return String(n.text).indexOf(q)>=0;});
+ list.sort(function(a,b){return String(b.upd).localeCompare(String(a.upd));});
  if(!list.length){
-  host.innerHTML='<div class="empty">אין פתקים. תכתוב אחד למעלה.</div>';
+  host.innerHTML='<div class="empty">'+(q?'לא נמצא פתק עם זה.':'אין פתקים. לוחצים על פתק חדש למטה.')+'</div>';
   return;
  }
- host.innerHTML=list.map(function(n,i){
-  return '<div class="note-i" data-i="'+i+'">'+esc(n.text)
-   +'<small>'+esc(stamp(n.at))+' · לחיצה ארוכה מוחקת</small></div>';
- }).join('');
+ var pinned=list.filter(function(n){return n.pin;}),rest=list.filter(function(n){return !n.pin;});
+ function box(title,l){
+  if(!l.length)return '';
+  return (title?'<div class="note-grp">'+title+'</div>':'')+'<div class="note-box">'+l.map(function(n){
+   var t=noteTitle(n.text);
+   return '<div class="note-i" data-id="'+esc(n.id)+'"><b>'+esc(t.head)+'</b><small>'
+    +esc(noteDay(n.upd))+'  '+esc(t.rest||'אין עוד טקסט')+'</small></div>';
+  }).join('')+'</div>';
+ }
+ host.innerHTML=box(pinned.length?'📌 מוצמדים':'',pinned)+box(pinned.length?'פתקים':'',rest);
  Array.prototype.forEach.call(host.querySelectorAll('.note-i'),function(el){
-  var hold=null;
-  el.addEventListener('pointerdown',function(){
-   hold=setTimeout(function(){
-    var l=notes();l.splice(Number(el.getAttribute('data-i')),1);saveNotes(l);
-    try{navigator.vibrate&&navigator.vibrate(18);}catch(e){}
-    renderNotes();toast('הפתק נמחק.');
-   },600);
-  });
-  ['pointerup','pointercancel','pointermove','pointerleave'].forEach(function(ev){
-   el.addEventListener(ev,function(){clearTimeout(hold);});
-  });
+  el.onclick=function(){openNote(el.getAttribute('data-id'));};
  });
 }
-document.getElementById('noteForm').onsubmit=function(e){
- e.preventDefault();
- var box=document.getElementById('noteText');
- var v=box.value.trim();
- if(!v)return;
- var l=notes();
- l.unshift({text:v,at:new Date().toISOString()});
- saveNotes(l);box.value='';renderNotes();
+function openNote(id){
+ var n=null;
+ notes().forEach(function(x){if(x.id===id)n=x;});
+ if(!n){
+  var at=new Date().toISOString();
+  n={id:'n'+Date.now()+Math.random().toString(36).slice(2,6),text:'',at:at,upd:at};
+  var l=notes();l.unshift(n);saveNotes(l);
+ }
+ noteOpen=n.id;
+ document.getElementById('noteHome').hidden=true;
+ document.getElementById('noteEdit').hidden=false;
+ document.getElementById('noteWhen').textContent=noteDay(n.upd);
+ document.getElementById('notePin').textContent=n.pin?'ביטול הצמדה':'הצמדה';
+ var ta=document.getElementById('noteBody');
+ ta.value=n.text||'';
+ ta.focus();
+}
+function editNote(fn){
+ var l=notes(),hit=null;
+ l.forEach(function(x){if(x.id===noteOpen)hit=x;});
+ if(!hit)return null;
+ fn(hit,l);
+ saveNotes(l);
+ return hit;
+}
+function closeNote(){
+ var l=notes().filter(function(x){return x.id!==noteOpen||String(x.text||'').trim();});
+ saveNotes(l);
+ document.getElementById('noteSearch').value='';
+ renderNotes();
+}
+document.getElementById('noteBody').addEventListener('input',function(){
+ var v=this.value;
+ var n=editNote(function(x){x.text=v;x.upd=new Date().toISOString();});
+ if(n)document.getElementById('noteWhen').textContent=noteDay(n.upd);
+});
+document.getElementById('noteNew').onclick=function(){openNote(null);};
+document.getElementById('noteDone').onclick=closeNote;
+document.getElementById('notePin').onclick=function(){
+ var n=editNote(function(x){x.pin=!x.pin;});
+ if(n)this.textContent=n.pin?'ביטול הצמדה':'הצמדה';
 };
+document.getElementById('noteDel').onclick=function(){
+ if(!confirm('למחוק את הפתק?'))return;
+ saveNotes(notes().filter(function(x){return x.id!==noteOpen;}));
+ toast('הפתק נמחק.');
+ renderNotes();
+};
+document.getElementById('noteSearch').addEventListener('input',renderNotes);
 on('lolosAsk',function(){askInChat('תצליב לי ');});
 function todayKey(){return new Date().toISOString().slice(0,10);}
 var ZINC_TARGET=11;
