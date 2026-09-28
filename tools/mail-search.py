@@ -106,8 +106,10 @@ def main():
         print('nothing found for:', ' '.join(q))
     for uid in uids:
         _, d = m.uid('FETCH', uid, '(BODY.PEEK[HEADER.FIELDS (FROM DATE SUBJECT)] BODY.PEEK[TEXT]<0.600>)')
-        head = email.message_from_bytes(d[0][1])
-        snippet = d[1][1].decode('utf8', 'replace') if len(d) > 1 and isinstance(d[1], tuple) else ''
+        # Gmail does not keep the order asked for, so find each part by its label.
+        parts = {b'HEADER' in t[0]: t[1] for t in d if isinstance(t, tuple)}
+        head = email.message_from_bytes(parts.get(True, b''))
+        snippet = parts.get(False, b'').decode('utf8', 'replace')
         when = email.utils.parsedate_to_datetime(head['Date']).strftime('%d.%m.%Y %H:%M') if head['Date'] else ''
         print(f'[{uid.decode()}] {when} | {dec(head["From"])}')
         print('   ', dec(head['Subject']))
