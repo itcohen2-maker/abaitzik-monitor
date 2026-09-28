@@ -423,6 +423,24 @@ function build() {
                    .filter(f => String(f.url || '').startsWith('https://drive.google.com/'))
                    .map(f => ({ name: String(f.name || ''), url: f.url })) }))
     .sort((a, b) => a.order - b.order);
+  /*
+    Yoel's Isracard, 28.9: Itzik wanted one button to take into tomorrow's call
+    with Isracard about the two cards of his partner Yoel that are charged to
+    the Lolos business account. Card numbers, the account and the amounts are
+    exactly what must not be readable on a public page, so they live in
+    data/isra on the server and reach the page only sealed, like the sale.
+    `cards` are shown big at the top; links pass only when they are Drive.
+  */
+  const isra = loadDocs('isra')
+    .map(d => ({ order: Number(d.order) || 0, kind: d.kind || 'section', title: d.title || '',
+                 lines: Array.isArray(d.lines) ? d.lines.map(String) : [],
+                 cards: (Array.isArray(d.cards) ? d.cards : [])
+                   .map(c => ({ num: String(c.num || ''), name: String(c.name || '') })),
+                 empty: String(d.empty || ''),
+                 files: (Array.isArray(d.files) ? d.files : [])
+                   .filter(f => String(f.url || '').startsWith('https://drive.google.com/'))
+                   .map(f => ({ name: String(f.name || ''), url: f.url })) }))
+    .sort((a, b) => a.order - b.order);
   const rivhit = loadDocs('rivhit')
     .map(r => ({
       at: r.at,
@@ -516,6 +534,7 @@ function build() {
     codex,
     rivhit,
     sale,
+    isra,
   };
 
   /*
@@ -552,7 +571,7 @@ function build() {
     It is `ansKeys` below: the window as keys alone.
   */
   const HEADS = { chat: 150, reports: 14, codex: 20, special: 8, replies: 8,
-                  improve: 4, food: 12, pegasus: 4, replied: 0, rivhit: 0, sale: 0,
+                  improve: 4, food: 12, pegasus: 4, replied: 0, rivhit: 0, sale: 0, isra: 0,
                   drains: 40, blocklist: 12 };
   // A report's body is most of its weight, and only the newest few are read
   // off the card without opening the screen.
@@ -1198,6 +1217,13 @@ button.abtn[disabled]{opacity:.55}
 .salecard .sfiles a{display:block;padding:10px 12px;border-radius:12px;background:var(--sunk);color:var(--ink);text-decoration:none;font-weight:500}
 .salecard .sfiles a::before{content:'📄 '}
 .salecard .sfold{display:block;margin-top:10px;text-align:center;color:var(--accent);font-weight:700;text-decoration:none}
+.isracards{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.isracards div{display:flex;align-items:baseline;justify-content:center;gap:12px;padding:12px;border-radius:14px;background:var(--sunk)}
+.isracards b{font:800 34px Heebo,sans-serif;letter-spacing:2px;direction:ltr}
+.isracards span{font:700 17px Heebo,sans-serif}
+.salecard.isratop{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent),var(--shadow)}
+.salecard.isratop ul{font-size:17px;font-weight:600;list-style:none;padding-inline-start:0;text-align:center}
+.salecard .israempty{min-height:90px;border:2px dashed var(--line);border-radius:12px;padding:12px;opacity:.75;text-align:center}
 .rch{font:800 17px Heebo,sans-serif;margin:14px 0 4px;text-align:center}
 .rclast{counter-reset:none;list-style:none;padding-inline-start:0}
 #pRc .ask{display:flex;width:100%;margin-top:10px}
@@ -2942,6 +2968,7 @@ try{
        which is the one button he asked for. -->
   <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>חשבוניות והיומן</small></button>
   <button type="button" class="gt g15" id="gSale"><b>⚖️ מכירת לולוס</b><small>התיק לעורך הדין, מה פתוח ומה נמסר</small></button>
+  <button type="button" class="gt g16" id="gIsra"><b>💳 ישראכרט יואל</b><small>הכרטיסים, מה לבקש, ומה ענו</small></button>
   <button type="button" class="gt g10" id="gFiles"><b>📁 הקבצים שלי</b><small>כל מה ששלחת, סגור במוניטור</small></button>
   <!--
     איציק, 20.9: "על המסך ניקוזים אתה יכול למחוק את הכפתור. אין לי יותר צורך בזה".
@@ -3464,6 +3491,14 @@ try{
  <h2>מכירת לולוס</h2>
  <div class="rephint">כל התיק שהוכן לעורך הדין, מסודר לפי החלקים שלו. כל שורה פותחת את הדוח עצמו בדרייב.</div>
  <div id="saleBox"><div class="empty">טוען.</div></div>
+</section>
+<!--ITZIK:END-->
+
+<!--ITZIK:BEGIN-->
+<section id="pIsra" hidden>
+ <h2>ישראכרט יואל</h2>
+ <div class="rephint">הכל לשיחה עם ישראכרט על שני הכרטיסים של יואל, לפי הסדר.</div>
+ <div id="israBox"><div class="empty">טוען.</div></div>
 </section>
 <!--ITZIK:END-->
 
@@ -5325,7 +5360,7 @@ function updateDot(){
  document.title=(fresh?'(1) ':'')+PAGE_TITLE;
 }
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
-var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn',Rc:'pRc',Sa:'pSale',Fi:'pFi'};
+var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn',Rc:'pRc',Sa:'pSale',Fi:'pFi',Is:'pIsra'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 /*ITZIK:BEGIN*/
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
@@ -8223,6 +8258,22 @@ function renderSale(){
  }).join('');
 }
 on('gSale',function(){pane('Sa');renderSale();ensure('sale',renderSale);});
+function renderIsra(){
+ var box=document.getElementById('israBox');if(!box)return;
+ var S=D.isra||[];
+ if(!S.length){box.innerHTML='<div class="empty">עוד אין כאן כלום.</div>';return;}
+ box.innerHTML=S.map(function(d){
+  var h='<div class="salecard'+(d.kind==='cards'?' isratop':'')+'"><h3>'+esc(d.title)+'</h3>';
+  if(d.cards&&d.cards.length)h+='<div class="isracards">'+d.cards.map(function(c){
+   return '<div><b>'+esc(c.num)+'</b><span>'+esc(c.name)+'</span></div>';}).join('')+'</div>';
+  if(d.lines&&d.lines.length)h+='<ul>'+d.lines.map(function(l){return '<li>'+esc(l)+'</li>';}).join('')+'</ul>';
+  else if(d.kind==='answers')h+='<div class="israempty">'+esc(d.empty||'עוד ריק.')+'</div>';
+  if(d.files&&d.files.length)h+='<div class="sfiles" style="margin-top:10px">'+d.files.map(function(f){
+   return '<a href="'+esc(f.url)+'" target="_blank" rel="noopener">'+esc(f.name)+'</a>';}).join('')+'</div>';
+  return h+'</div>';
+ }).join('');
+}
+on('gIsra',function(){pane('Is');renderIsra();ensure('isra',renderIsra);});
 /*ITZIK:END*/
 on('gRemote',function(){pane('Rc');});
 function remoteDone(){try{return localStorage.getItem('remoteDoneRD')==='1';}catch(e){return false;}}
