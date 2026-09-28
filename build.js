@@ -457,6 +457,18 @@ function build() {
       balance: typeof r.balance === 'number' ? r.balance : null,
       toReceipt: typeof r.toReceipt === 'number' ? r.toReceipt : null,
       count: typeof r.count === 'number' ? r.count : null,
+      // kind audit: one customer checked invoice by invoice. Only those docs
+      // carry the two arrays, so the other records stay as small as they were.
+      ...(r.kind === 'audit' ? {
+        lines: (Array.isArray(r.lines) ? r.lines : []).map(String),
+        rows: (Array.isArray(r.rows) ? r.rows : []).map(x => ({
+          n: String(x.n || ''), date: String(x.date || ''),
+          amount: typeof x.amount === 'number' ? x.amount : null,
+          paid: String(x.paid || ''),
+          left: typeof x.left === 'number' ? x.left : null,
+          st: String(x.st || ''),
+        })),
+      } : {}),
     }))
     .sort((a, b) => (b.amount || 0) - (a.amount || 0));
 
@@ -2176,6 +2188,21 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
 .rv-exact{background:#e6f4ea;color:#137333}
 .rv-near{background:#fef7e0;color:#8a6100}
 .rv-partial{background:#e8f0fe;color:#1a56c4}
+.rivaud{border:1px solid var(--line);border-radius:16px;background:var(--surface);
+ padding:13px 14px;margin-bottom:10px}
+.rivaud>b{display:block;font:700 15px Heebo,sans-serif}
+.rivaud>small{display:block;font-size:11.5px;color:var(--dim);margin-top:2px}
+.rivaud ul{margin:10px 0 4px;padding:0 18px 0 0}
+.rivaud li{font-size:13px;line-height:1.5;margin-bottom:5px}
+.rivaud table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}
+.rivaud th{text-align:right;font-weight:600;color:var(--dim);padding:5px 4px;
+ border-bottom:1px solid var(--line)}
+.rivaud td{padding:6px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+.rivaud td.m{white-space:nowrap;font-weight:600}
+.rivaud tr.st-open td{background:#fdecea}
+.rivaud tr.st-extra td{background:#fef7e0}
+.rivaud tr.st-info td{color:var(--dim)}
+.rivaud tr.st-total td{font-weight:700;border-bottom:none}
 /*
   The home screen, stripped to one thing.
 
@@ -3573,6 +3600,8 @@ try{
  <h2>הנהלת חשבונות</h2>
  <div id="rivBox" hidden>
   <div class="rivsum" id="rivSum"></div>
+  <h3 class="rivh" id="rivH5" hidden>בדיקת לקוח</h3>
+  <div id="rivAudit" hidden></div>
   <h3 class="rivh" id="rivH1">מי חייב כסף</h3>
   <div id="rivList"></div>
   <h3 class="rivh" id="rivH2">נכנס לבנק באפריל עד יוני ואין עליו קבלה</h3>
@@ -10807,6 +10836,23 @@ function renderRivhit(){
  put('rivList',by('debt'),'rivH1');
  put('rivOpen',by('open'),'rivH2');
  put('rivBank',by('bank'),'rivH4');
+ var U=by('audit'),ue=document.getElementById('rivAudit'),uh=document.getElementById('rivH5');
+ if(ue){
+  ue.innerHTML=U.map(function(a){
+   var rows=(a.rows||[]).map(function(x){
+    return '<tr class="st-'+esc(x.st)+'"><td>'+esc(x.n)+'</td><td>'+esc(x.date)+'</td>'
+     +'<td class="m">'+ils(x.amount)+'</td><td>'+esc(x.paid)+'</td><td class="m">'+ils(x.left)+'</td></tr>';
+   }).join('');
+   return '<div class="rivaud"><b>'+esc(a.title)+'</b>'
+    +(a.name?'<small>'+esc(a.name)+'</small>':'')
+    +(a.period?'<small>'+esc(a.period)+'</small>':'')
+    +((a.lines||[]).length?'<ul>'+a.lines.map(function(l){return '<li>'+esc(l)+'</li>';}).join('')+'</ul>':'')
+    +(rows?'<table><thead><tr><th>חשבונית</th><th>תאריך</th><th>סכום</th><th>שולם</th><th>נשאר</th></tr></thead><tbody>'+rows+'</tbody></table>':'')
+    +'</div>';
+  }).join('');
+  ue.hidden=!U.length;
+ }
+ if(uh)uh.hidden=!U.length;
  var A=by('alert'),ae=document.getElementById('rivAlerts'),ah=document.getElementById('rivH3');
  if(ae){
   ae.innerHTML=A.map(function(a){
