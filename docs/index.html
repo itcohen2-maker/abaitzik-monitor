@@ -1563,7 +1563,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-28T12:21:56.530Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-28T12:26:05.368Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2656,7 +2656,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='fd14bcf478';
+var CODE_ID='40c059a513';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -3959,7 +3959,14 @@ document.addEventListener('click',function(e){
 },true);
 setInterval(checkFresh,40000);
 setInterval(function(){paintLive(null);paintNew();try{renderReqs();}catch(e){}},20000);
-function wake(){ if(!document.hidden) checkFresh(); }
+function wake(){
+ if(document.hidden)return;
+ var changed=false;
+ try{if(applyResetSeen())changed=true;}catch(e){}
+ try{if(applyResetMarks())changed=true;}catch(e){}
+ if(changed){try{repaintAll();}catch(e){}}
+ checkFresh();
+}
 document.addEventListener('visibilitychange',wake);
 window.addEventListener('pageshow',wake);
 window.addEventListener('focus',wake);
@@ -7992,25 +7999,27 @@ boot('mail',renderMail);
 boot('dot',updateDot);
 function applyResetSeen(){
  var stamp=D.resetSeenAt||'';
- if(!stamp)return;
+ if(!stamp)return false;
  var done='';
  try{done=localStorage.getItem('seenResetAt')||'';}catch(e){}
- if(done>=stamp)return;
+ if(done>=stamp)return false;
  markAllRead(stamp);
  try{localStorage.setItem('seenResetAt',stamp);}catch(e){}
+ return true;
 }
 function applyResetMarks(){
  var stamp=D.resetMarksAt||'';
- if(!stamp)return;
+ if(!stamp)return false;
  var done='';
  try{done=localStorage.getItem('marksResetAt')||'';}catch(e){}
- if(done>=stamp)return;
+ if(done>=stamp)return false;
  try{
   localStorage.removeItem('chatStar');
   localStorage.removeItem('chatParked');
   localStorage.removeItem('chatStandby');
   localStorage.setItem('marksResetAt',stamp);
  }catch(e){}
+ return true;
 }
 boot('reset',applyResetSeen);
 boot('resetMarks',applyResetMarks);

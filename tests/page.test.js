@@ -1865,10 +1865,17 @@ test('every way a phone comes back to the page wakes the check', () => {
   // gap: a phone usually restores the page from its back forward cache, which
   // fires pageshow, and app switching can deliver focus with no visibility
   // change at all.
-  assert.ok(html.includes('function wake(){ if(!document.hidden) checkFresh(); }'));
+  assert.ok(html.includes('function wake(){'));
+  assert.ok(html.includes('if(document.hidden)return;'));
   ['visibilitychange', 'pageshow', 'focus', 'online'].forEach((ev) => {
     assert.ok(html.includes("EventListener('" + ev + "',wake)"), 'missing ' + ev);
   });
+  // 28.9: a phone restored from the back forward cache resumes the same script
+  // instead of loading fresh, so a reset stamp that only fired inside the
+  // gate's decrypt never got a second chance. wake() now re-checks both stamps
+  // on every return to the page.
+  assert.ok(html.includes('try{if(applyResetSeen())changed=true;}catch(e){}'));
+  assert.ok(html.includes('try{if(applyResetMarks())changed=true;}catch(e){}'));
   // A check that failed as the phone woke tries again in seconds, not in a
   // minute, because that is the same complaint in a smaller size.
   assert.ok(html.includes('setTimeout(function(){if(!document.hidden)checkFresh();},4000);'));

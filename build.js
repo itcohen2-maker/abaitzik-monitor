@@ -115,7 +115,13 @@ const RESET_SEEN_AT = '2026-09-27T22:32:59';
 // and which never had a way back to zero in one move. Same trick as above: a
 // phone that has not applied this stamp yet clears both lists once, on its
 // next load. Bump the value to reset again.
-const RESET_MARKS_AT = '2026-09-27T23:00:00';
+//
+// 28.9: bumped again after two days of him saying it never took. The stamp
+// itself was never the problem - wake() now applies it on every return to the
+// page, not only on a load that goes through the gate from scratch. Bumping
+// it here guarantees one clean run even if his phone had already recorded an
+// old stamp as done before that fix existed.
+const RESET_MARKS_AT = '2026-09-28T15:20:00';
 /*
   The page the phone gets is the page without its own notes.
 
@@ -5880,8 +5886,25 @@ setInterval(function(){paintLive(null);paintNew();try{renderReqs();}catch(e){}},
   between apps can deliver focus without a visibility change at all. So all
   three wake it, and a check that failed on a dead bar of signal tries again
   shortly rather than leaving a stale line sitting there until the next minute.
+
+  28.9: a reset stamp only ever got applied inside gateBoot's decrypt, which
+  only runs on a true fresh load. A phone restored from the back forward cache
+  never goes through that again - the script resumes exactly where it was
+  suspended, D already holds the stamp from before, and nothing ever compares
+  it against localStorage a second time. That is why closing and reopening did
+  not help: on this phone "reopening" is usually this restore, not a fresh
+  load. Checking the two stamps here as well, on every single wake, means the
+  reset gets a chance every time the page comes back to life, not only on the
+  loads that happen to be a real navigation.
 */
-function wake(){ if(!document.hidden) checkFresh(); }
+function wake(){
+ if(document.hidden)return;
+ var changed=false;
+ try{if(applyResetSeen())changed=true;}catch(e){}
+ try{if(applyResetMarks())changed=true;}catch(e){}
+ if(changed){try{repaintAll();}catch(e){}}
+ checkFresh();
+}
 document.addEventListener('visibilitychange',wake);
 window.addEventListener('pageshow',wake);
 window.addEventListener('focus',wake);
@@ -11294,12 +11317,13 @@ boot('dot',updateDot);
 // standby and star counts no matter how many times the page said otherwise.
 function applyResetSeen(){
  var stamp=D.resetSeenAt||'';
- if(!stamp)return;
+ if(!stamp)return false;
  var done='';
  try{done=localStorage.getItem('seenResetAt')||'';}catch(e){}
- if(done>=stamp)return;
+ if(done>=stamp)return false;
  markAllRead(stamp);
  try{localStorage.setItem('seenResetAt',stamp);}catch(e){}
+ return true;
 }
 // Same move, for the two counts markAllRead never touched: standby and
 // marked. Those are flags he set himself on individual cards, so there is no
@@ -11307,16 +11331,17 @@ function applyResetSeen(){
 // clearing both lists outright.
 function applyResetMarks(){
  var stamp=D.resetMarksAt||'';
- if(!stamp)return;
+ if(!stamp)return false;
  var done='';
  try{done=localStorage.getItem('marksResetAt')||'';}catch(e){}
- if(done>=stamp)return;
+ if(done>=stamp)return false;
  try{
   localStorage.removeItem('chatStar');
   localStorage.removeItem('chatParked');
   localStorage.removeItem('chatStandby');
   localStorage.setItem('marksResetAt',stamp);
  }catch(e){}
+ return true;
 }
 boot('reset',applyResetSeen);
 boot('resetMarks',applyResetMarks);
