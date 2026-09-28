@@ -435,6 +435,22 @@ function reconcile(live) {
     d.status = 'done';
     try { fs.writeFileSync(path.join(CHAT, m.file), JSON.stringify(d, null, 1), 'utf8'); say('סומנה בוצע, כי יש עליה תשובה: ' + m.file); } catch (e) {}
   });
+  /*
+    28.9: a reply written at 17:46 carried "at": 17:57, a minute a session
+    rounded to. On his page the answer sat eleven minutes in the future and the
+    waiting time read 13 minutes instead of 2. A reply cannot be later than the
+    moment its file was written, so that moment wins.
+  */
+  all.filter((m) => m.from === 'claude' && m.at).forEach((m) => {
+    const full = path.join(CHAT, m.file);
+    let mt = 0;
+    try { mt = fs.statSync(full).mtimeMs; } catch (e) { return; }
+    if (!(Date.parse(m.at) > mt + 60 * 1000)) return;
+    const d = readJson(full, null);
+    if (!d) return;
+    d.at = new Date(mt).toISOString();
+    try { fs.writeFileSync(full, JSON.stringify(d, null, 1), 'utf8'); say('זמן תשובה תוקן לזמן הכתיבה: ' + m.file); } catch (e) {}
+  });
   const held = new Set();
   Object.keys(live).forEach((pid) => (live[pid].files || []).forEach((f) => held.add(f)));
   const seen = readJson(SEEN, {});

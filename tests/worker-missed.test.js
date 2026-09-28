@@ -32,3 +32,10 @@ test('the close handler uses it, not the exit code alone', () => {
   assert.ok(src.includes('const missed = missedOf(list, code);'));
   assert.ok(!src.includes("code === 0 ? unanswered(list) : list"));
 });
+
+// 28.9: a reply stamped 17:57 was written at 17:46. The worker pulls such a
+// stamp back to the moment the file was written.
+test('a reply stamped later than its file is pulled back to the write time', () => {
+  assert.ok(/Date\.parse\(m\.at\) > mt \+ 60 \* 1000/.test(src));
+  assert.ok(src.includes('d.at = new Date(mt).toISOString();'));
+});
