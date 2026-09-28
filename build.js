@@ -1934,6 +1934,8 @@ body.editing .bn{display:none}
 .g13{background:linear-gradient(150deg,#ffd27f,#ef6c00)}
 .g14{background:linear-gradient(150deg,#a5d6a7,#2e7d32)}
 .g15{background:linear-gradient(150deg,#90caf9,#1565c0)}
+.gRec{background:linear-gradient(150deg,#ffd54f,#e06a00)}
+.gt .gi{height:1.35em;width:auto;vertical-align:-0.3em;margin-inline-end:2px}
 .gKat{background:linear-gradient(150deg,#e3c07a,#2b45a6)}
 .gShop{background:linear-gradient(150deg,#3aa55d,#1f6f8b)}
 .gCPlan{background:linear-gradient(150deg,#e8743b,#6b2f7a)}
@@ -3060,6 +3062,12 @@ try{
        which is the one button he asked for. -->
   <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>חשבוניות והיומן</small></button>
   <button type="button" class="gt g15" id="gSale"><b>⚖️ מכירת לולוס</b><small>התיק לעורך הדין, מה פתוח ומה נמסר</small></button>
+  <!--
+    איציק, 28.9: "תשים אצלי במוניטור עם אייקון לולוס". The recipe booklet, 19
+    recipes from the Lolos drive (מתכונים תקינים למהדרין 2024). The PDF is a
+    private file, opened sealed like every other one.
+  -->
+  <button type="button" class="gt gRec" id="gRecipes"><b><img class="gi" src="icons/lolos-giraffe.png" alt=""> מתכונים לולוס</b><small>חוברת 2026, 19 מתכונים</small></button>
   <button type="button" class="gt g16" id="gIsra"><b>💳 ישראכרט יואל</b><small>הכרטיסים, מה לבקש, ומה ענו</small></button>
   <button type="button" class="gt g10" id="gFiles"><b>📁 הקבצים שלי</b><small>כל מה ששלחת, סגור במוניטור</small></button>
   <!--
@@ -8482,6 +8490,7 @@ function renderSale(){
  }).join('');
 }
 on('gSale',function(){pane('Sa');renderSale();ensure('sale',renderSale);});
+on('gRecipes',function(){if(!fileView('lolos-recipes-2026.pdf'))toast('החוברת עוד נטענת, נסה שוב בעוד רגע');});
 function renderIsra(){
  var box=document.getElementById('israBox');if(!box)return;
  var S=D.isra||[];
