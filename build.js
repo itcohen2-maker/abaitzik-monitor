@@ -4160,8 +4160,15 @@ function fileView(name){
   else if(t.indexOf('audio/')===0)h='<audio src="'+url+'" controls></audio>';
   else if(t.indexOf('text/')===0){h='<pre class="fv-txt"></pre>';}
   else h='<a class="ask" href="'+url+'" target="_blank" rel="noopener">פתיחת הקובץ</a>';
+  // Itzik, 29.9: the machine sale document has to go out to the buyer from the
+  // phone. Safari does not keep a blob download, so the share sheet carries the
+  // file itself (WhatsApp, mail) wherever it can.
+  var sf=null;try{sf=new File([b],short,{type:t||'application/octet-stream'});}catch(x){}
+  if(sf&&navigator.share&&navigator.canShare&&navigator.canShare({files:[sf]}))h+='<button type="button" class="ask fv-share">שליחה</button>';
   h+='<a class="ask fv-save" href="'+url+'" download="'+esc(short)+'">שמירה בטלפון</a>';
   var body=ov.querySelector('.fv-body');body.innerHTML=h;
+  var sb=body.querySelector('.fv-share');
+  if(sb)sb.onclick=function(){navigator.share({files:[sf],title:short}).catch(function(){});};
   if(t.indexOf('text/')===0)b.text().then(function(s){body.querySelector('.fv-txt').textContent=s;});
  }).catch(function(){ov.querySelector('.fv-body').innerHTML='<div class="empty">לא הצלחתי לפתוח את הקובץ. רענן ונסה שוב.</div>';});
  return true;
