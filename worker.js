@@ -221,6 +221,13 @@ function unanswered(list) {
   return list.filter((m) => m.id && !got.has(m.id));
 }
 
+// Exit 0 with no id to check keeps the old trust; anything else is judged by
+// whether an answer (a record of mine with re) exists for the message.
+function missedOf(list, code, got) {
+  got = got || answeredIds();
+  return list.filter((m) => (m.id ? !got.has(m.id) : code !== 0));
+}
+
 function markHandled(list) {
   const done = readJson(SEEN, {});
   list.forEach((m) => { done[m.file] = new Date().toISOString(); });
@@ -377,7 +384,14 @@ function run(list) {
       later tick ever looked at it again. He waited for an answer that was
       never coming and nothing anywhere said so.
     */
-    const missed = code === 0 ? unanswered(list) : list;
+    /*
+      28.9, 16:36: a session was stopped at ten minutes (code null) on two
+      messages another session had already answered at 16:22. Anything that
+      was not code 0 counted as missed, so he got "הודעה נשארה בלי תשובה" about
+      messages that were answered. "איך יכול להיות תקין?". The answer on disk
+      decides, whatever the exit code.
+    */
+    const missed = missedOf(list, code);
     if (missed.length) {
       unmarkHandled(missed);
       tell(
