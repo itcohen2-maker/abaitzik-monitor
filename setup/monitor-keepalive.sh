@@ -22,6 +22,7 @@ monitor-worker.timer|/home/monitor/abaitzik-monitor
 monitor-watchdog.timer|/home/monitor/abaitzik-monitor
 monitor-tenants.timer|/home/monitor/abaitzik-monitor
 monitor-tenants-sync.timer|/home/monitor/abaitzik-monitor
+monitor-remind.timer|/home/monitor/abaitzik-monitor
 monitor-listen-ily.service|/home/monitor/ily-monitor
 monitor-worker-ily.timer|/home/monitor/ily-monitor
 monitor-watchdog-ily.timer|/home/monitor/ily-monitor"
