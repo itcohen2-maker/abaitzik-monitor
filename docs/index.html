@@ -1612,7 +1612,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-29T03:55:11.171Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-29T04:19:14.771Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2759,7 +2759,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='ae31a8277b';
+var CODE_ID='cd3996c2aa';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -5852,7 +5852,7 @@ function machineSheet(){
   +'<b>מכירת מכונה לרביבה</b>'
   +'<small>איזה מסמך לפתוח</small>'
   +'<button type="button" class="yb yb1" data-r="TORTILLAS MACHINE SELL.pdf">מסמך הבנות</button>'
-  +'<button type="button" class="yb yb2" data-r="tortilla-dough-spec.pdf">מפרט בצק נאצוס</button>'
+  +'<button type="button" class="yb yb2" data-r="tortilla-dough-spec.pdf">מפרט בצק ל״סלט חדש״</button>'
   +'<button type="button" class="yb yx" data-r="">סגירה</button>'
   +'</div>';
  function close(){w.remove();document.removeEventListener('keydown',esckey);}
