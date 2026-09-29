@@ -44,15 +44,18 @@ def candle_body(img):
 
 def flame_field(cx, wy, t, ph):
     # sway: slow drift plus quick shivers, bending more toward the tip
-    lean = 26 * noise(t, ph, (0.9, 2.1, 3.7)) + 6 * math.sin(t * 17 + ph * 4)
-    hgt = FH * (1 + .07 * noise(t, ph + 3, (8.3, 13.1, 21.7)))
-    wid = FW * (1 + .05 * noise(t, ph + 5, (7.1, 11.3)))
-    x0, x1, y0, y1 = cx - 150, cx + 150, int(wy - hgt * 1.1), wy + 30
+    # 29.9 second pass: he still could not see it move on the phone, so the sway is three
+    # times wider, with gusts that bend the whole flame, and the height jumps visibly
+    gust = max(0, math.sin(t * .8 + ph)) ** 3
+    lean = 70 * noise(t, ph, (0.9, 2.1, 3.7)) + 55 * gust + 14 * math.sin(t * 17 + ph * 4)
+    hgt = FH * (1 + .16 * noise(t, ph + 3, (5.3, 9.1, 14.7)) - .12 * gust)
+    wid = FW * (1 + .12 * noise(t, ph + 5, (4.1, 7.3)) + .1 * gust)
+    x0, x1, y0, y1 = cx - 200, cx + 200, int(wy - hgt * 1.1), wy + 30
     ys, xs = YY[y0:y1, x0:x1], XX[y0:y1, x0:x1]
     v = (wy + 8 - ys) / hgt                                        # 0 at the wick, 1 at the tip
     vc = np.clip(v, 0, 1)
     # the flame body ripples as it rises
-    ripple = 7 * vc ** 1.5 * np.sin(vc * 9 - t * 14 + ph)
+    ripple = 16 * vc ** 1.5 * np.sin(vc * 9 - t * 14 + ph)
     center = cx + lean * vc ** 1.8 + ripple
     prof = np.where(v < 0, 0, np.sqrt(np.clip(v * 4, 0, 1)) * np.clip(1 - vc, 0, 1) ** .75 * 1.25)
     r = wid * prof + 1e-3
@@ -70,7 +73,7 @@ def render_frame(bg, t, embers):
     for cx, wy, ph in CANDLES:
         (y0, y1, x0, x1), a, vc, lean = flame_field(cx, wy, t, ph)
         total_lean += lean
-        b = .85 + .15 * noise(t, ph + 7, (9.7, 15.3))
+        b = .8 + .25 * noise(t, ph + 7, (6.7, 11.3))
         bright += b
         # colour by depth into the flame and height: red edge, orange, yellow, white core, blue root
         core = np.clip((a - .45) / .4, 0, 1)
@@ -139,13 +142,18 @@ def text_layer(text, size, lang):
     return lay
 
 
+# the files screen numbers them 1 to 4, so the new cut takes those names
+OUTNAMES = {'1-thursday-he': 'ner-1-thursday-he.mp4', '1-thursday-en': 'ner-2-thursday-en.mp4',
+            '2-friday-morning-he': 'ner-3-friday-he.mp4', '2-friday-morning-en': 'ner-4-friday-en.mp4'}
+
+
 def render(name, lang, mid, outdir):
     bg = candle_body(background())
     embers = make_embers()
     bs = base.beats(lang, mid)
     layers = [text_layer(t, s, lang) for t, _, s in bs]
     total = sum(b[1] for b in bs)
-    out = os.path.join(outdir, f'ner-live-{name}-{lang}.mp4')
+    out = os.path.join(outdir, OUTNAMES.get(f'{name}-{lang}', f'ner-live-{name}-{lang}.mp4'))
     p = subprocess.Popen(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgb24',
                           '-s', f'{W}x{H}', '-r', str(FPS), '-i', '-', '-c:v', 'libx264', '-preset', 'medium',
                           '-crf', '21', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', out],
