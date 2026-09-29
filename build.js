@@ -9624,7 +9624,8 @@ on('gYehuda',yehudaSheet);
 */
 var KAT_ITEMS=[
  {n:'01',t:'מצגת הום סנטר, טיוטה 2',r:'HomeCenter-Presentation.pdf'},
- {n:'02',t:'מצגת הום סנטר, גרסה 3 (48 שקפים)',r:'HomeCenter-Presentation-v3.pdf'}
+ {n:'02',t:'מצגת הום סנטר, גרסה 3 (48 שקפים)',r:'HomeCenter-Presentation-v3.pdf'},
+ {n:'03',t:'MINERA ים המלח: הדמיות החנות וסיפור המותג (16 שקפים)',r:'MINERA-DeadSea.pdf'}
 ];
 // 29.9: "הקטלוג הבא לא מעניין, זה היה מזמן. שים אותו בצד". Kept, unnumbered, at the bottom.
 var KAT_SIDE=[
