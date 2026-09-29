@@ -10,8 +10,9 @@ FONT_EN = '/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf'
 URL = 'candletimes.com'
 OPEN = {'he': 'הייתי חייב להחזיר לעם ישראל על כל התמיכה שנתתם לי',
         'en': 'I owed something back to the Jewish people, for all the support you gave me'}
-CLOSE = {'he': 'הכנתי את זה לכל יהודי העולם באשר הם',
-         'en': 'I made this for every Jew in the world, wherever you are'}
+CLOSE = {'he': 'הכנתי את זה', 'en': 'I made this'}
+# the closing line fills the whole screen, as Itzik asked (29.9)
+BIG = {'he': 'לכל יהודי העולם באשר הם', 'en': 'For every Jew in the world, wherever you are'}
 
 STORIES = {
     '1-thursday': {
@@ -44,7 +45,7 @@ STORIES = {
 def beats(lang, mid):
     # (text, seconds, size)
     return [(OPEN[lang], 4.2, 74), (mid[0], 3.6, 78), (mid[1], 4.2, 70),
-            (CLOSE[lang], 3.6, 74), (URL, 2.8, 96), (mid[2], 4.0, 80)]
+            (CLOSE[lang], 1.8, 90), (BIG[lang], 3.8, 0), (URL, 2.8, 96), (mid[2], 4.0, 80)]
 
 
 def background():
@@ -69,29 +70,41 @@ def background():
     return img
 
 
-def glow_layer(strength):
+def glow_layer(strength, shift=0):
     g = Image.new('RGBA', (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(g)
     for cx in (400, 680):
+        cx += shift
         d.ellipse([cx - 260, 1190 - 260, cx + 260, 1190 + 260], fill=(245, 166, 35, int(95 * strength)))
     return g.filter(ImageFilter.GaussianBlur(120))
 
 
+def wind(t, seed):
+    # a soft breeze: slow gusts plus a small fast tremble, in pixels of tip displacement
+    gust = .6 + .4 * math.sin(t * .7 + seed * .5)
+    return gust * (22 * math.sin(t * 1.3 + seed * .4) + 9 * math.sin(t * 2.9 + seed)) + 3 * math.sin(t * 13 + seed * 3)
+
+
 def flame(d, cx, t, seed):
     f = 1 + .08 * math.sin(t * 11 + seed) + .05 * math.sin(t * 23 + seed * 2)
-    sway = 5 * math.sin(t * 3.1 + seed)
-    h, w = 96 * f, 26
+    lean = wind(t, seed)
+    h = 96 * f * (1 - .12 * min(1, abs(lean) / 30))
+    w = 26 * (1 + .06 * math.sin(t * 9 + seed))
     base = 1236
-    pts = []
-    for i in range(41):
-        a = math.pi * i / 40
-        r = math.sin(a)
-        y = base - h * (1 - math.cos(a)) / 2
-        pts.append((cx + sway * (1 - math.cos(a)) / 2 + w * r ** .8, y))
-    pts += [(2 * cx - x + sway * 0, y) for x, y in reversed(pts)]
-    d.polygon(pts, fill=(255, 196, 80, 255))
-    inner = [(cx + (x - cx) * .5 + sway * .3, base - (base - y) * .6) for x, y in pts]
-    d.polygon(inner, fill=(255, 245, 210, 255))
+
+    def shape(scale_w, scale_h):
+        right, left = [], []
+        for i in range(41):
+            a = math.pi * i / 40
+            u = (1 - math.cos(a)) / 2          # 0 at the wick, 1 at the tip
+            y = base - h * scale_h * u
+            off = lean * scale_h * u ** 1.6    # the tip bends, the base stays on the wick
+            r = w * scale_w * math.sin(a) ** .8
+            right.append((cx + off + r, y)); left.append((cx + off - r, y))
+        return right + left[::-1]
+
+    d.polygon(shape(1, 1), fill=(255, 196, 80, 255))
+    d.polygon(shape(.5, .6), fill=(255, 245, 210, 255))
 
 
 def wrap(text, font, lang, maxw):
@@ -107,21 +120,35 @@ def wrap(text, font, lang, maxw):
     return lines, kw
 
 
+def fit(text, lang, maxw, maxh):
+    # size 0 means: the largest size that fills the screen
+    face = FONT_HE if lang == 'he' else FONT_EN
+    for size in range(320, 60, -6):
+        lines, _ = wrap(text, ImageFont.truetype(face, size), lang, maxw)
+        if len(lines) * size * 1.2 <= maxh:
+            if max(ImageFont.truetype(face, size).getlength(w_) for w_ in text.split()) <= maxw:
+                return size
+    return 60
+
+
 def text_layer(text, size, lang):
+    big = size == 0
+    if big:
+        size = fit(text, lang, 1000, 1700)
     font = ImageFont.truetype(FONT_HE if lang == 'he' and text != URL else FONT_EN, size)
-    lines, kw = wrap(text, font, lang if text != URL else 'en', 900)
+    lines, kw = wrap(text, font, lang if text != URL else 'en', 1000 if big else 900)
     if text == URL:
         kw = {}
-    lh = int(size * 1.35)
+    lh = int(size * (1.2 if big else 1.35))
     total = lh * len(lines)
-    y0 = 720 - total // 2
+    y0 = (960 if big else 720) - total // 2
     shadow = Image.new('RGBA', (W, H), (0, 0, 0, 0))
     fg = Image.new('RGBA', (W, H), (0, 0, 0, 0))
     ds, df = ImageDraw.Draw(shadow), ImageDraw.Draw(fg)
     for i, ln in enumerate(lines):
         lw = font.getlength(ln, **kw)
         x, y = (W - lw) / 2, y0 + i * lh
-        ds.text((x + 4, y + 6), ln, font=font, fill=(0, 0, 0, 230), **kw)
+        ds.text((x + 4, y + 6), ln, font=font, fill=(0, 0, 0, 240 if big else 230), **kw)
         df.text((x, y), ln, font=font, fill=(255, 255, 255, 255), **kw)
     shadow = shadow.filter(ImageFilter.GaussianBlur(10))
     return Image.alpha_composite(shadow, fg)
@@ -129,7 +156,8 @@ def text_layer(text, size, lang):
 
 def render(name, lang, mid, outdir):
     bg = background().convert('RGBA')
-    glows = [glow_layer(.75 + .25 * k / 7) for k in range(8)]
+    shifts = (-12, 0, 12)
+    glows = {(k, sh): glow_layer(.75 + .25 * k / 7, sh) for k in range(8) for sh in shifts}
     bs = beats(lang, mid)
     layers = [text_layer(t, s, lang) for t, _, s in bs]
     total = sum(b[1] for b in bs)
@@ -144,7 +172,8 @@ def render(name, lang, mid, outdir):
     for fi in range(int(total * FPS)):
         t = fi / FPS
         k = int((3.5 + 3.5 * math.sin(t * 7) * math.sin(t * 2.3)) + .5)
-        frame = Image.alpha_composite(bg, glows[max(0, min(7, k))])
+        sh = min(shifts, key=lambda v: abs(v - wind(t, .85) * .5))
+        frame = Image.alpha_composite(bg, glows[(max(0, min(7, k)), sh)])
         d = ImageDraw.Draw(frame)
         flame(d, 400, t, 0.0); flame(d, 680, t, 1.7)
         for i, (s, (_, dur, _)) in enumerate(zip(starts, bs)):
