@@ -11872,7 +11872,10 @@ function sealFiles() {
   for (const rel of walkFiles(src)) {
     const id = gate.fileId(rel), target = path.join(outDir, id + '.bin');
     const full = path.join(src, rel);
-    if (!fs.existsSync(target)) fs.writeFileSync(target, gate.sealBytes(fs.readFileSync(full)));
+    // 29.9: a file replaced under the same name kept its old sealed copy, so
+    // the monitor showed the previous version. A newer source is sealed again.
+    if (!fs.existsSync(target) || fs.statSync(full).mtimeMs > fs.statSync(target).mtimeMs)
+      fs.writeFileSync(target, gate.sealBytes(fs.readFileSync(full)));
     keep.add(id + '.bin');
     const ext = (rel.split('.').pop() || '').toLowerCase();
     list.push({ n: rel, id, s: fs.statSync(full).size, t: MIME[ext] || 'application/octet-stream',

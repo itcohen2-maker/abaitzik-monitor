@@ -39,3 +39,9 @@ test('a reply stamped later than its file is pulled back to the write time', () 
   assert.ok(/Date\.parse\(m\.at\) > mt \+ 60 \* 1000/.test(src));
   assert.ok(src.includes('d.at = new Date(mt).toISOString();'));
 });
+
+// 29.9: a private file replaced under the same name must be sealed again.
+test('a newer private file is resealed, not left at its old copy', () => {
+  const b = fs.readFileSync(path.join(__dirname, '..', 'build.js'), 'utf8');
+  assert.ok(b.includes('fs.statSync(full).mtimeMs > fs.statSync(target).mtimeMs'));
+});
