@@ -1612,7 +1612,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-29T01:09:51.054Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-29T01:30:39.957Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2759,7 +2759,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='f15335a052';
+var CODE_ID='75c0dc0f73';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -5842,7 +5842,7 @@ function renderSale(){
  }).join('');
 }
 on('gSale',function(){pane('Sa');renderSale();ensure('sale',renderSale);});
-on('gMachine',function(){if(!fileView('machine-sale-riva.pdf'))toast('המסמך עוד נטען, נסה שוב בעוד רגע');});
+on('gMachine',function(){if(!fileView('TORTILLAS MACHINE SELL.pdf'))toast('המסמך עוד נטען, נסה שוב בעוד רגע');});
 on('gRecipes',function(){if(!fileView('lolos-recipes-2026.pdf'))toast('החוברת עוד נטענת, נסה שוב בעוד רגע');});
 function renderIsra(){
  var box=document.getElementById('israBox');if(!box)return;
