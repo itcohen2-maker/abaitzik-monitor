@@ -3116,7 +3116,7 @@ try{
     a cover, a spread and an agents page. The page sits in docs/katalog so it
     opens on the phone with no login. Originals and the PDF are on Drive.
   -->
-  <button type="button" class="gt gKat" id="gKatalog"><b>🎨 המצגות של רינת</b><small>ממוספר. 01 מצגת הום סנטר</small></button>
+  <button type="button" class="gt gKat" id="gKatalog"><b>🎨 המצגות של רינת</b><small>ממוספר. 02 מצגת הום סנטר, גרסה 3</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
@@ -9619,7 +9619,8 @@ on('gYehuda',yehudaSheet);
   its share button. A new item gets the next number, and numbers never change.
 */
 var KAT_ITEMS=[
- {n:'01',t:'מצגת הום סנטר, טיוטה 2',r:'HomeCenter-Presentation.pdf'}
+ {n:'01',t:'מצגת הום סנטר, טיוטה 2',r:'HomeCenter-Presentation.pdf'},
+ {n:'02',t:'מצגת הום סנטר, גרסה 3 (48 שקפים)',r:'HomeCenter-Presentation-v3.pdf'}
 ];
 // 29.9: "הקטלוג הבא לא מעניין, זה היה מזמן. שים אותו בצד". Kept, unnumbered, at the bottom.
 var KAT_SIDE=[
