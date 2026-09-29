@@ -1970,6 +1970,7 @@ body.editing .bn{display:none}
  background:#e8eef6;color:#16202c;cursor:pointer;min-height:48px}
 .yb1{background:linear-gradient(150deg,#90caf9,#1565c0);color:#fff}
 .yb2{background:linear-gradient(150deg,#7bd88f,#1e8e4a);color:#fff}
+.yb3{background:linear-gradient(150deg,#e8a38a,#b0482c);color:#fff}
 .yx{background:transparent;opacity:.6;min-height:40px;padding:8px}
 .yb:active{transform:translateY(1px)}
 .ytoast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:10000;
@@ -8505,6 +8506,8 @@ on('gSale',function(){pane('Sa');renderSale();ensure('sale',renderSale);});
 /*
   איציק, 29.9: "שים את זה במוניטור מכירת מכונה טורטייה". Same tile, a choice of
   two sealed files: the understanding document and the dough spec sheet.
+  29.9: a third sealed file, the website improvement proposal for the same
+  customer, opened through fileView so the iPhone share sheet can send it on.
 */
 function machineSheet(){
  var old=document.getElementById('mSheet');if(old)old.remove();
@@ -8517,6 +8520,7 @@ function machineSheet(){
   +'<small>איזה מסמך לפתוח</small>'
   +'<button type="button" class="yb yb1" data-r="TORTILLAS MACHINE SELL.pdf">מסמך הבנות</button>'
   +'<button type="button" class="yb yb2" data-r="tortilla-dough-spec.pdf">מפרט בצק ל״סלט חדש״</button>'
+  +'<button type="button" class="yb yb3" data-r="הצעות לשיפור האתר של רביבה וסיליה.pdf">הצעות לשיפור האתר</button>'
   +'<button type="button" class="yb yx" data-r="">סגירה</button>'
   +'</div>';
  function close(){w.remove();document.removeEventListener('keydown',esckey);}
