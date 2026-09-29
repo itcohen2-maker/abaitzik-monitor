@@ -8516,7 +8516,7 @@ function machineSheet(){
   +'<b>מכירת מכונה לרביבה</b>'
   +'<small>איזה מסמך לפתוח</small>'
   +'<button type="button" class="yb yb1" data-r="TORTILLAS MACHINE SELL.pdf">מסמך הבנות</button>'
-  +'<button type="button" class="yb yb2" data-r="tortilla-dough-spec.pdf">מפרט בצק נאצ'וס</button>'
+  +'<button type="button" class="yb yb2" data-r="tortilla-dough-spec.pdf">מפרט בצק נאצוס</button>'
   +'<button type="button" class="yb yx" data-r="">סגירה</button>'
   +'</div>';
  function close(){w.remove();document.removeEventListener('keydown',esckey);}
