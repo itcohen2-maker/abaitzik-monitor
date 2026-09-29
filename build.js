@@ -3116,7 +3116,7 @@ try{
     a cover, a spread and an agents page. The page sits in docs/katalog so it
     opens on the phone with no login. Originals and the PDF are on Drive.
   -->
-  <button type="button" class="gt gKat" id="gKatalog"><b>📖 הקטלוג הבא</b><small>קיץ 2027. עשרה כיווני עיצוב ודוח הטרנדים 2027 2028</small></button>
+  <button type="button" class="gt gKat" id="gKatalog"><b>📖 הקטלוג הבא</b><small>ממוספר: 01 הקטלוג, 02 הטרנדים, 03 מצגת הום סנטר</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
@@ -9613,7 +9613,45 @@ function yehudaSheet(){
  var first=w.querySelector('.yb');if(first)first.focus();
 }
 on('gYehuda',yehudaSheet);
-on('gKatalog',function(){window.open('katalog/','_blank','noopener');});
+/*
+  איציק, 29.9: "שים אותו בקטלוג הבא. תמספר אותם תמיד". The tile became a
+  numbered list. Pages open in a new tab, a sealed file opens in fileView with
+  its share button. A new item gets the next number, and numbers never change.
+*/
+var KAT_ITEMS=[
+ {n:'01',t:'הקטלוג הבא, קיץ 2027',u:'katalog/'},
+ {n:'02',t:'דוח הטרנדים 2027 2028',u:'katalog/trends.html'},
+ {n:'03',t:'מצגת הום סנטר, טיוטה 2',r:'HomeCenter-Presentation.pdf'}
+];
+function katalogSheet(){
+ var old=document.getElementById('kSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='kSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','הקטלוג הבא');
+ w.innerHTML='<div class="ycard">'
+  +'<b>הקטלוג הבא</b>'
+  +'<small>מה לפתוח</small>'
+  +KAT_ITEMS.map(function(it,i){
+    return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=KAT_ITEMS[+k];if(k===''||!it)return;
+  if(it.u)window.open(it.u,'_blank','noopener');
+  else if(!fileView(it.r))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gKatalog',katalogSheet);
 on('gYoman',function(){window.open('yoman/','_blank','noopener');});
 /*
   27.9. The content plan for Ilay. Same sheet as Yehuda's, because the first
