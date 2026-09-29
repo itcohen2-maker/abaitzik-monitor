@@ -8370,12 +8370,16 @@ function renderSpecial(){
   reminders tile blinks, and keeps blinking past the due day until he taps
   "אני יודע" on that reminder. The tick lives on his phone, like the tasks.
   Anything more than three days past due stops on its own.
+  29.9, a recording: the reminder for a Thursday appointment already fires on
+  Wednesday ("מחר יש לך תור"), so blinking a day before that lit it up on
+  Tuesday. The reminder is itself the day-before, so it blinks from its own
+  due time only.
 */
 function remKnown(){try{return JSON.parse(localStorage.getItem('remKnown')||'{}');}catch(e){return {};}}
 function remKey(r){return (r.at||'')+'|'+(r.due||'');}
 function remHot(r){
  var u=Date.parse(r.due),now=Date.now();
- return !isNaN(u)&&now>=u-864e5&&now<u+3*864e5&&!remKnown()[remKey(r)];
+ return !isNaN(u)&&now>=u&&now<u+3*864e5&&!remKnown()[remKey(r)];
 }
 function remBlink(){
  var b=document.getElementById('gRemind');

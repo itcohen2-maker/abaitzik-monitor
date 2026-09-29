@@ -2108,7 +2108,7 @@ test('content plan tile is off the home screen, the reminders tile blinks a day 
   const html = renderPage(fixture());
   assert.ok(!html.includes('id="gContentPlan"'));
   assert.ok(html.includes('id="gRemind"'));
-  assert.ok(html.includes("now>=u-864e5") && html.includes("classList.toggle('taskblink',(D.reminders||[]).some(remHot))"));
+  assert.ok(html.includes("now>=u&&now<u+3*864e5") && html.includes("classList.toggle('taskblink',(D.reminders||[]).some(remHot))"));
   assert.ok(html.includes('class="remknow"') && html.includes("localStorage.setItem('remKnown'"));
 });
 
