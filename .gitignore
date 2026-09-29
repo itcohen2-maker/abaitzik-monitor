@@ -39,3 +39,4 @@ docs/files/lead-*
 # text, and this repo is public. Originals live in data/backups-private.
 abaitzik-backup-*.json
 /backups/
+__pycache__/
