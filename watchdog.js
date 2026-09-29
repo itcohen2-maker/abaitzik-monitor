@@ -72,8 +72,30 @@ function check(now) {
     const last = when(show(UNIT + '.timer', 'LastTriggerUSec'));
     if (show(UNIT + '.timer', 'ActiveState') !== 'active') problems.push('השעון של המענה לא פעיל');
     else if (!isNaN(last) && now - last > TIMER_MS) problems.push('השעון של המענה לא הופעל ' + Math.round((now - last) / 60000) + ' דקות');
+    const g = gitStuck(__dirname, now);
+    if (g) problems.push(g);
   }
   return problems;
+}
+
+/*
+  The listener's pull --rebase has stuck twice on docs/live.json and left HEAD
+  detached, which looks like a permissions failure. A rebase is normal for a
+  few seconds, so only one older than STUCK_MS counts. This used to be checked
+  by a Claude loop three times an hour (29.9); it costs nothing here.
+*/
+function gitStuck(repo, now) {
+  const git = path.join(repo, '.git');
+  if (!fs.existsSync(git)) return '';
+  for (const d of ['rebase-merge', 'rebase-apply']) {
+    try { const t = fs.statSync(path.join(git, d)).mtimeMs; if (now - t > STUCK_MS) return 'הגיט בשרת תקוע באמצע rebase'; } catch (e) {}
+  }
+  try {
+    const head = fs.readFileSync(path.join(git, 'HEAD'), 'utf8').trim();
+    const t = fs.statSync(path.join(git, 'HEAD')).mtimeMs;
+    if (!head.startsWith('ref:') && now - t > STUCK_MS) return 'הגיט בשרת במצב HEAD מנותק';
+  } catch (e) {}
+  return '';
 }
 
 /*
@@ -174,4 +196,4 @@ function main() {
 }
 
 if (require.main === module) main();
-module.exports = { check, when, speed };
+module.exports = { check, when, speed, gitStuck };

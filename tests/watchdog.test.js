@@ -1,9 +1,28 @@
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert');
-const { when } = require('../watchdog.js');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const { when, gitStuck } = require('../watchdog.js');
 
 test('the watchdog reads systemd timestamps as UTC', () => {
   assert.equal(when('Sun 2026-09-27 19:02:22 UTC'), Date.parse('2026-09-27T19:02:22Z'));
   assert.ok(isNaN(when('')));
+});
+
+test('a detached HEAD or a rebase counts only after three minutes', () => {
+  const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'wd-'));
+  const git = path.join(repo, '.git');
+  fs.mkdirSync(git);
+  fs.writeFileSync(path.join(git, 'HEAD'), 'ref: refs/heads/main\n');
+  const now = Date.now();
+  assert.equal(gitStuck(repo, now + 10 * 60000), '');
+  fs.writeFileSync(path.join(git, 'HEAD'), 'f5fe92d4f5fe92d4\n');
+  assert.equal(gitStuck(repo, now + 1000), '');
+  assert.match(gitStuck(repo, now + 10 * 60000), /מנותק/);
+  fs.mkdirSync(path.join(git, 'rebase-merge'));
+  assert.match(gitStuck(repo, now + 10 * 60000), /rebase/);
+  assert.equal(gitStuck(path.join(repo, 'nope'), now), '');
+  fs.rmSync(repo, { recursive: true, force: true });
 });
