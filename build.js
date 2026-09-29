@@ -9628,7 +9628,8 @@ var KAT_ITEMS=[
  {n:'03',t:'MINERA ים המלח (בוטל, לא רלוונטי)',r:'MINERA-DeadSea.pdf'},
  {n:'04',t:'הדמיית תלת מימד: מחלקת הטקסטיל בהום סנטר (13 שקפים)',r:'HomeCenter-Textile-3D.pdf'},
  {n:'05',t:'הדמיית מחלקת הטקסטיל, גרסה 2 לפי ההערות (16 שקפים)',r:'HomeCenter-Textile-3D-v2.pdf'},
- {n:'06',t:'מחלקת הטקסטיל, גרסה 3: עיצוב נקי ומואר (13 שקפים)',r:'HomeCenter-Textile-v3.pdf'}
+ {n:'06',t:'מחלקת הטקסטיל, גרסה 3: עיצוב נקי ומואר (13 שקפים)',r:'HomeCenter-Textile-v3.pdf'},
+ {n:'07',t:'מצגת הום סנטר, גרסה 4 לפי ההערות של רינת (48 שקפים)',r:'HomeCenter-Presentation-v4.pdf'}
 ];
 // 29.9: "הקטלוג הבא לא מעניין, זה היה מזמן. שים אותו בצד". Kept, unnumbered, at the bottom.
 var KAT_SIDE=[
