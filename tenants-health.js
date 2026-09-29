@@ -43,6 +43,15 @@ function check(t) {
   if (t.timer && !active(t.timer)) problems.push('המענה האוטומטי לא מתוזמן');
   // A tenant that stopped receiving fixes is broken in a way nobody sees.
   if (t.syncError) problems.push('העדכונים לא מגיעים אליו');
+  // 29.9: a tenant that syncs itself reports in its own folder; no report for
+  // an hour means its sync timer is not running, which is how Ilay's stayed
+  // unsynced after the move to his own user.
+  if (t.selfSync) {
+    try {
+      const s = JSON.parse(fs.readFileSync(path.join(t.dir, 'data', 'status', 'sync.json'), 'utf8'));
+      if (s.syncError || !s.at || Date.now() - Date.parse(s.at) > 60 * 60 * 1000) problems.push('העדכונים לא מגיעים אליו');
+    } catch (e) { problems.push('העדכונים לא מגיעים אליו'); }
+  }
   let beatAt = '';
   try {
     const live = JSON.parse(fs.readFileSync(path.join(t.dir, 'data', 'status', 'live.json'), 'utf8'));
