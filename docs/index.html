@@ -1614,7 +1614,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-29T19:25:28.478Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-29T19:27:21.441Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2717,7 +2717,7 @@ function gjson(r){
 }
 function fileEntry(name){var F=D.files||[];for(var i=0;i<F.length;i++)if(F[i].n===name)return F[i];return null;}
 function fileBlob(e){
- return fetch('f/'+e.id+'.bin').then(function(r){if(!r.ok)throw 0;return r.arrayBuffer();})
+ return fetch('f/'+e.id+'.bin?v='+encodeURIComponent(e.at||''),{cache:'no-cache'}).then(function(r){if(!r.ok)throw 0;return r.arrayBuffer();})
   .then(function(buf){var a=new Uint8Array(buf);return crypto.subtle.decrypt({name:'AES-GCM',iv:a.slice(0,12)},GKEY,a.slice(12));})
   .then(function(pt){return new Blob([pt],{type:e.t});});
 }
@@ -2758,7 +2758,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='92cd003de6';
+var CODE_ID='cb6ee3b8a0';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';

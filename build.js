@@ -4135,7 +4135,9 @@ function gjson(r){
 */
 function fileEntry(name){var F=D.files||[];for(var i=0;i<F.length;i++)if(F[i].n===name)return F[i];return null;}
 function fileBlob(e){
- return fetch('f/'+e.id+'.bin').then(function(r){if(!r.ok)throw 0;return r.arrayBuffer();})
+ // 29.9: a file replaced under the same name kept its address, so the phone
+ // played its cached old copy. The version in the address forces the new one.
+ return fetch('f/'+e.id+'.bin?v='+encodeURIComponent(e.at||''),{cache:'no-cache'}).then(function(r){if(!r.ok)throw 0;return r.arrayBuffer();})
   .then(function(buf){var a=new Uint8Array(buf);return crypto.subtle.decrypt({name:'AES-GCM',iv:a.slice(0,12)},GKEY,a.slice(12));})
   .then(function(pt){return new Blob([pt],{type:e.t});});
 }
