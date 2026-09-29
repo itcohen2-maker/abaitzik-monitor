@@ -8502,7 +8502,7 @@ function renderSale(){
  }).join('');
 }
 on('gSale',function(){pane('Sa');renderSale();ensure('sale',renderSale);});
-on('gMachine',function(){if(!fileView('machine-sale-riva.pdf'))toast('המסמך עוד נטען, נסה שוב בעוד רגע');});
+on('gMachine',function(){if(!fileView('TORTILLAS MACHINE SELL.pdf'))toast('המסמך עוד נטען, נסה שוב בעוד רגע');});
 on('gRecipes',function(){if(!fileView('lolos-recipes-2026.pdf'))toast('החוברת עוד נטענת, נסה שוב בעוד רגע');});
 function renderIsra(){
  var box=document.getElementById('israBox');if(!box)return;
