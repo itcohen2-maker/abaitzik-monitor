@@ -3072,7 +3072,7 @@ try{
     מסמך ההבנות נבנה מחדש מהצילום שלו, עם המחיר המעודכן. קובץ פרטי, נפתח סגור.
   -->
   <button type="button" class="gt g16" id="gMachine"><b>🤝 מכירת מכונה לרביבה</b><small>מסמך הבנות, 28,000 ₪</small></button>
-  <button type="button" class="gt gRec" id="gRecipes"><b><img class="gi" src="icons/lolos-giraffe.png" alt=""> מתכונים לולוס</b><small>חוברת 2026, 19 מתכונים</small></button>
+  <button type="button" class="gt gRec" id="gRecipes"><b><img class="gi" src="icons/lolos-giraffe.png" alt=""> מתכונים</b><small>לולוס ואיציק, כולל הבסבוסה לתבנית 30×40</small></button>
   <button type="button" class="gt g16" id="gIsra"><b>💳 ישראכרט יואל</b><small>הכרטיסים, מה לבקש, ומה ענו</small></button>
   <button type="button" class="gt g10" id="gFiles"><b>📁 הקבצים שלי</b><small>כל מה ששלחת, סגור במוניטור</small></button>
   <!--
@@ -8503,7 +8503,7 @@ function renderSale(){
 }
 on('gSale',function(){pane('Sa');renderSale();ensure('sale',renderSale);});
 on('gMachine',function(){if(!fileView('TORTILLAS MACHINE SELL.pdf'))toast('המסמך עוד נטען, נסה שוב בעוד רגע');});
-on('gRecipes',function(){if(!fileView('lolos-recipes-2026.pdf'))toast('החוברת עוד נטענת, נסה שוב בעוד רגע');});
+on('gRecipes',function(){if(!fileView('recipes-2026.pdf'))toast('החוברת עוד נטענת, נסה שוב בעוד רגע');});
 function renderIsra(){
  var box=document.getElementById('israBox');if(!box)return;
  var S=D.isra||[];
