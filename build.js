@@ -3430,19 +3430,17 @@ try{
        one does not depend on finding the right email. -->
   <a href="https://drive.google.com/drive/u/0/folders/1PO2J-fpjcIgO2JsNXqsrIMMOz3kl9Num" target="_blank" rel="noopener">
    <span aria-hidden="true">🏥</span><div>תורים עתידיים<small>הזימונים, וקובץ אחד להדפסה של כולם</small></div></a>
-  <!-- Itzik, 24.9: a button for all the new candle videos, next to posts,
-       scripts and the network report. -->
-  <a href="https://drive.google.com/drive/u/0/folders/1IIrVvePNMBGThVUCJ6vlTzvWg2anmSf3" target="_blank" rel="noopener">
-   <span aria-hidden="true">🕯️</span><div>סרטוני הנרות<small>כל הסרטונים החדשים של candletimes</small></div></a>
   <!-- Itzik, 23.9: the folder he will hand to the lawyer as a link, so he
        wanted it one tap away. The draft notice to Barzani lives in 06. -->
   <a href="https://drive.google.com/drive/u/0/folders/1Waun6RZNoBJV7hGof3M7Xzn6Qt-VNuOj" target="_blank" rel="noopener">
    <span aria-hidden="true">⚖️</span><div>מכירת לולוס, לעורך דין<small>התיק המלא. המכתב לברזני ב 06 שכירות וחוזים</small></div></a>
   <!-- Itzik, 25.9: "תמיד תשים בתיקייה, אני לא מוצא ככה". The folders were
        there; what was missing is a way to reach them from the phone. Every
-       folder I create for him gets a button here on the same day. -->
+       folder I create for him gets a button here on the same day.
+       29.9: there used to be a second "candle videos" button pointing at
+       this same folder, and he took them for two folders. One button now. -->
   <a href="https://drive.google.com/drive/u/0/folders/1IIrVvePNMBGThVUCJ6vlTzvWg2anmSf3" target="_blank" rel="noopener">
-   <span aria-hidden="true">🕯️</span><div>שיווק נרות candletimes<small>הסטוריז של אתר הנרות, מוכנים להעלאה</small></div></a>
+   <span aria-hidden="true">🕯️</span><div>שיווק נרות candletimes<small>כל סרטוני הנרות. הדרייב שלי ← שיווק נרות candletimes</small></div></a>
   <a href="https://drive.google.com/drive/u/0/folders/1sVcaRvN3ii3XMUgmYzgYH_P7fkzyisic" target="_blank" rel="noopener">
    <span aria-hidden="true">📋</span><div>שאלון אפיון למוניטור<small>השאלון ללקוח חדש, להעברה בוואטסאפ</small></div></a>
   <a href="https://drive.google.com/drive/u/0/my-drive" target="_blank" rel="noopener">
