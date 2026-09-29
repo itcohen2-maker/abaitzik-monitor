@@ -3069,11 +3069,6 @@ try{
     recipes from the Lolos drive (מתכונים תקינים למהדרין 2024). The PDF is a
     private file, opened sealed like every other one.
   -->
-  <!--
-    איציק, 29.9: "תכין כפתור במוניטור מכירת מכונה לרביבה", ומחיר 28,000 ש"ח.
-    מסמך ההבנות נבנה מחדש מהצילום שלו, עם המחיר המעודכן. קובץ פרטי, נפתח סגור.
-  -->
-  <button type="button" class="gt g16" id="gMachine"><b>🤝 מכירת מכונה לרביבה</b><small>מסמך הבנות 28,000 ₪ ומפרט בצק</small></button>
   <button type="button" class="gt gRec" id="gRecipes"><b><img class="gi" src="icons/lolos-giraffe.png" alt=""> מתכונים</b><small>חוברת לולוס וספר המתכונים של איציק</small></button>
   <button type="button" class="gt g16" id="gIsra"><b>💳 ישראכרט יואל</b><small>הכרטיסים, מה לבקש, ומה ענו</small></button>
   <button type="button" class="gt g10" id="gFiles"><b>📁 הקבצים שלי</b><small>כל מה ששלחת, סגור במוניטור</small></button>
@@ -8504,41 +8499,6 @@ function renderSale(){
  }).join('');
 }
 on('gSale',function(){pane('Sa');renderSale();ensure('sale',renderSale);});
-/*
-  איציק, 29.9: "שים את זה במוניטור מכירת מכונה טורטייה". Same tile, a choice of
-  two sealed files: the understanding document and the dough spec sheet.
-  29.9: a third sealed file, the website improvement proposal for the same
-  customer, opened through fileView so the iPhone share sheet can send it on.
-  And a fourth: the public example site on Vercel, a plain link in a new tab.
-*/
-function machineSheet(){
- var old=document.getElementById('mSheet');if(old)old.remove();
- var w=document.createElement('div');
- w.id='mSheet';w.className='ysheet';
- w.setAttribute('role','dialog');
- w.setAttribute('aria-label','מכירת מכונה');
- w.innerHTML='<div class="ycard">'
-  +'<b>מכירת מכונה לרביבה</b>'
-  +'<small>איזה מסמך לפתוח</small>'
-  +'<button type="button" class="yb yb1" data-r="TORTILLAS MACHINE SELL.pdf">מסמך הבנות</button>'
-  +'<button type="button" class="yb yb2" data-r="tortilla-dough-spec.pdf">מפרט בצק ל״סלט חדש״</button>'
-  +'<button type="button" class="yb yb3" data-r="הצעות לשיפור האתר של רביבה וסיליה.pdf">הצעות לשיפור האתר</button>'
-  +'<a class="yb yb4" href="https://restaurant-demo-nu-two.vercel.app" target="_blank" rel="noopener">הדגמה של האתר</a>'
-  +'<button type="button" class="yb yx" data-r="">סגירה</button>'
-  +'</div>';
- function close(){w.remove();document.removeEventListener('keydown',esckey);}
- function esckey(e){if(e.key==='Escape')close();}
- w.onclick=function(e){
-  if(e.target===w)return close();
-  var k=e.target.getAttribute&&e.target.getAttribute('data-r');
-  if(k===null||k===undefined)return;
-  close();
-  if(k&&!fileView(k))toast('המסמך עוד נטען, נסה שוב בעוד רגע');
- };
- document.addEventListener('keydown',esckey);
- document.body.appendChild(w);
-}
-on('gMachine',machineSheet);
 /*
   איציק, 29.9: "יהיו שתי ספרים, אחד לולוס אחד איציק", "הכל באותו כפתור".
   One tile, a choice of two books, each its own sealed file.
