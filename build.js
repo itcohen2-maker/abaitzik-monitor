@@ -3116,7 +3116,7 @@ try{
     a cover, a spread and an agents page. The page sits in docs/katalog so it
     opens on the phone with no login. Originals and the PDF are on Drive.
   -->
-  <button type="button" class="gt gKat" id="gKatalog"><b>📖 הקטלוג הבא</b><small>ממוספר: 01 הקטלוג, 02 הטרנדים, 03 מצגת הום סנטר</small></button>
+  <button type="button" class="gt gKat" id="gKatalog"><b>🎨 המצגות של רינת</b><small>ממוספר. 01 מצגת הום סנטר</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
@@ -9619,21 +9619,27 @@ on('gYehuda',yehudaSheet);
   its share button. A new item gets the next number, and numbers never change.
 */
 var KAT_ITEMS=[
- {n:'01',t:'הקטלוג הבא, קיץ 2027',u:'katalog/'},
- {n:'02',t:'דוח הטרנדים 2027 2028',u:'katalog/trends.html'},
- {n:'03',t:'מצגת הום סנטר, טיוטה 2',r:'HomeCenter-Presentation.pdf'}
+ {n:'01',t:'מצגת הום סנטר, טיוטה 2',r:'HomeCenter-Presentation.pdf'}
+];
+// 29.9: "הקטלוג הבא לא מעניין, זה היה מזמן. שים אותו בצד". Kept, unnumbered, at the bottom.
+var KAT_SIDE=[
+ {t:'בצד: הקטלוג הבא, קיץ 2027',u:'katalog/'},
+ {t:'בצד: דוח הטרנדים 2027 2028',u:'katalog/trends.html'}
 ];
 function katalogSheet(){
  var old=document.getElementById('kSheet');if(old)old.remove();
  var w=document.createElement('div');
  w.id='kSheet';w.className='ysheet';
  w.setAttribute('role','dialog');
- w.setAttribute('aria-label','הקטלוג הבא');
+ w.setAttribute('aria-label','המצגות של רינת');
  w.innerHTML='<div class="ycard">'
-  +'<b>הקטלוג הבא</b>'
-  +'<small>מה לפתוח</small>'
+  +'<b>המצגות של רינת</b>'
+  +'<small>ממוספר, החדשה מקבלת את המספר הבא</small>'
   +KAT_ITEMS.map(function(it,i){
     return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
+   }).join('')
+  +KAT_SIDE.map(function(it,i){
+    return '<button type="button" class="yb yx" style="font-size:13px;opacity:.75" data-k="s'+i+'">'+esc(it.t)+'</button>';
    }).join('')
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
   +'</div>';
@@ -9644,7 +9650,7 @@ function katalogSheet(){
   var k=e.target.getAttribute&&e.target.getAttribute('data-k');
   if(k===null||k===undefined)return;
   close();
-  var it=KAT_ITEMS[+k];if(k===''||!it)return;
+  var it=k.charAt(0)==='s'?KAT_SIDE[+k.slice(1)]:KAT_ITEMS[+k];if(k===''||!it)return;
   if(it.u)window.open(it.u,'_blank','noopener');
   else if(!fileView(it.r))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');
  };

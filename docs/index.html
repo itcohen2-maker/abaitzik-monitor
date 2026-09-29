@@ -1614,7 +1614,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-29T12:30:47.523Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-29T12:31:25.648Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1750,7 +1750,7 @@ try{
   <button type="button" class="gt g3" id="gPlan" hidden><b>🗓️ לוח תוכן</b><small>מה עולה מתי, ומה כבר עלה</small></button>
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
   <button type="button" class="gt g15" id="gYehuda"><b>📄 יהודה</b><small>סקירת happymeal. פתיחה, הורדה או שליחה אליו</small></button>
-  <button type="button" class="gt gKat" id="gKatalog"><b>📖 הקטלוג הבא</b><small>ממוספר: 01 הקטלוג, 02 הטרנדים, 03 מצגת הום סנטר</small></button>
+  <button type="button" class="gt gKat" id="gKatalog"><b>🎨 המצגות של רינת</b><small>ממוספר. 01 מצגת הום סנטר</small></button>
   <button type="button" class="gt g3" id="gBrowse"><b>🌐 דפדפן</b><small>חיפוש וכתובת, נפתח כאן בפנים</small></button>
   <button type="button" class="gt gShop" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
   <button type="button" class="gt g16" id="gYoman"><b>📓 יומן החזרה</b><small>התסריט של היום והסרטון שממנו לקחנו את הפורמט</small></button>
@@ -2758,7 +2758,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='959f60a519';
+var CODE_ID='b69460d737';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -6720,21 +6720,26 @@ function yehudaSheet(){
 }
 on('gYehuda',yehudaSheet);
 var KAT_ITEMS=[
- {n:'01',t:'הקטלוג הבא, קיץ 2027',u:'katalog/'},
- {n:'02',t:'דוח הטרנדים 2027 2028',u:'katalog/trends.html'},
- {n:'03',t:'מצגת הום סנטר, טיוטה 2',r:'HomeCenter-Presentation.pdf'}
+ {n:'01',t:'מצגת הום סנטר, טיוטה 2',r:'HomeCenter-Presentation.pdf'}
+];
+var KAT_SIDE=[
+ {t:'בצד: הקטלוג הבא, קיץ 2027',u:'katalog/'},
+ {t:'בצד: דוח הטרנדים 2027 2028',u:'katalog/trends.html'}
 ];
 function katalogSheet(){
  var old=document.getElementById('kSheet');if(old)old.remove();
  var w=document.createElement('div');
  w.id='kSheet';w.className='ysheet';
  w.setAttribute('role','dialog');
- w.setAttribute('aria-label','הקטלוג הבא');
+ w.setAttribute('aria-label','המצגות של רינת');
  w.innerHTML='<div class="ycard">'
-  +'<b>הקטלוג הבא</b>'
-  +'<small>מה לפתוח</small>'
+  +'<b>המצגות של רינת</b>'
+  +'<small>ממוספר, החדשה מקבלת את המספר הבא</small>'
   +KAT_ITEMS.map(function(it,i){
     return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
+   }).join('')
+  +KAT_SIDE.map(function(it,i){
+    return '<button type="button" class="yb yx" style="font-size:13px;opacity:.75" data-k="s'+i+'">'+esc(it.t)+'</button>';
    }).join('')
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
   +'</div>';
@@ -6745,7 +6750,7 @@ function katalogSheet(){
   var k=e.target.getAttribute&&e.target.getAttribute('data-k');
   if(k===null||k===undefined)return;
   close();
-  var it=KAT_ITEMS[+k];if(k===''||!it)return;
+  var it=k.charAt(0)==='s'?KAT_SIDE[+k.slice(1)]:KAT_ITEMS[+k];if(k===''||!it)return;
   if(it.u)window.open(it.u,'_blank','noopener');
   else if(!fileView(it.r))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');
  };
