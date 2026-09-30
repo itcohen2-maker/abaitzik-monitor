@@ -2002,13 +2002,19 @@ body.tdrag{-webkit-user-select:none;user-select:none}
    nothing from the panes and cannot disturb them. */
 .ysheet{position:fixed;inset:0;z-index:9999;background:rgba(10,14,22,.55);
  display:flex;align-items:flex-end;justify-content:center;padding:14px}
-.ycard{background:var(--card,#fff);color:var(--ink,#16202c);width:100%;max-width:420px;
+.ycard{background:#fff;color:#16202c;width:100%;max-width:420px;
  border-radius:18px;padding:18px 16px 14px;display:flex;flex-direction:column;gap:9px;
  box-shadow:0 -8px 40px rgba(0,0,0,.35)}
 .ycard b{font:700 16px Heebo,sans-serif}
 .ycard small{font-size:12px;opacity:.7;margin-bottom:4px}
-.yshort{white-space:pre-line;font-size:13px;line-height:1.5;max-height:34vh;overflow:auto;
- background:rgba(120,140,170,.12);border-radius:10px;padding:10px;margin-bottom:4px}
+/* 30.9: the short text was near invisible on the dark theme ("אני רוצה לראות
+   איך אני אראה"). It is now shown as the WhatsApp bubble Yehuda will get. */
+.ywa{background:#efeae2;border-radius:12px;padding:10px;max-height:40vh;overflow:auto;margin-bottom:4px}
+.ywa i{display:block;font:600 11px Heebo,sans-serif;font-style:normal;color:#54656f;text-align:center;margin-bottom:8px}
+.yshort{white-space:pre-line;font:15px/1.5 Heebo,sans-serif;color:#111b21;
+ background:#d9fdd3;border-radius:10px 0 10px 10px;padding:9px 11px 18px;position:relative;
+ margin-inline-start:14%;box-shadow:0 1px .5px rgba(11,20,26,.13)}
+.yshort u{position:absolute;bottom:4px;left:8px;text-decoration:none;font-size:11px;color:#667781}
 .yb{border:0;border-radius:12px;padding:13px;font:600 15px Heebo,sans-serif;
  background:#e8eef6;color:#16202c;cursor:pointer;min-height:48px}
 .yb1{background:linear-gradient(150deg,#90caf9,#1565c0);color:#fff}
@@ -9805,7 +9811,7 @@ function yehudaSheet(){
  w.innerHTML='<div class="ycard">'
   +'<b>יהודה, happymeal</b>'
   +'<small>הגרסה הקצרה נשלחת אליו. הסקירה המלאה נשארת כאן לזיכרון ולא נשלחת.</small>'
-  +'<div class="yshort">'+esc(YEHUDA_SHORT)+'</div>'
+  +'<div class="ywa"><i>כך זה ייראה אצלו בוואטסאפ</i><div class="yshort">'+esc(YEHUDA_SHORT)+'<u>✓✓</u></div></div>'
   +'<button type="button" class="yb yb2" data-y="swa">שליחת הגרסה הקצרה בוואטסאפ</button>'
   +'<button type="button" class="yb" data-y="scopy">העתקת הגרסה הקצרה</button>'
   +'<small>הסקירה המלאה, 12 עמודים, לא לשליחה</small>'
