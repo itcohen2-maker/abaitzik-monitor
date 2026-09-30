@@ -2284,6 +2284,14 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
 #rivBox .rivrow{cursor:pointer}
 #rivBox .rivrow:after{content:"💬";font-size:13px;opacity:.55;margin-inline-start:6px;flex:0 0 auto}
 .rivon{font:600 14px Heebo,sans-serif;color:var(--ink);margin:0 2px 8px}
+.rvcust summary{list-style:none;cursor:pointer}
+.rvcust summary::-webkit-details-marker{display:none}
+.rvcust summary b::before{content:'◂ ';color:var(--dim);font-weight:400}
+.rvcust[open] summary b::before{content:'▾ '}
+.rvf{display:flex;gap:6px;margin-top:8px}
+.rvf input{flex:1;min-width:0;border:1px solid rgba(0,0,0,.18);border-radius:10px;padding:9px 10px;font:400 14px Heebo,sans-serif}
+.rvf button{border:0;border-radius:10px;padding:9px 14px;background:#1a73e8;color:#fff;font:700 13.5px Heebo,sans-serif}
+.rvsaid{font-size:12px;color:var(--dim);margin-top:4px}
 .rvc{margin-top:6px;border:0;border-radius:999px;padding:6px 14px;font:600 12.5px Heebo,sans-serif;background:#e8f0fe;color:#1a56c4;cursor:pointer}
 .rivaud{border:1px solid var(--line);border-radius:16px;background:var(--surface);
  padding:13px 14px;margin-bottom:10px}
@@ -11490,50 +11498,27 @@ function rivRow(r){
   +(tag?'<span class="rivtag '+tag[0]+'">'+tag[1]+'</span>':'')
   +'</span><span class="a">'+ils(r.amount)+'</span></div>';
 }
+/*
+  The debtors, the way he asked on 30.9: one line per customer, "סלאס 6,966",
+  and a tap opens exactly which invoices are open, with a small line to write
+  a note on that customer right there. The note goes to me like any message,
+  without throwing him into the chat or the microphone.
+*/
 function rivDebt(r){
  if(!r.inv)return rivRow(r);
  var li=r.inv.map(function(x){
-  var q='על '+r.name+', '+(x.n?'חשבונית '+x.n+' מ '+x.date:x.date)+': ';
-  return '<li data-q="'+esc(q)+'"><span class="n">'+(x.n?'חשבונית '+esc(x.n):esc(x.label||'חוב ישן'))
+  return '<li><span class="n">'+(x.n?'חשבונית '+esc(x.n):esc(x.label||'חוב ישן'))
    +(x.left<x.amount-0.5?'<small>שולם חלק, מתוך '+ils(x.amount)+'</small>':'')+'</span>'
    +'<span class="dt">'+esc(x.date)+'</span><span class="m">'+ils(x.left)+'</span></li>';
  }).join('');
- return '<div class="rvcust"><div class="rvh"><b>'+esc(r.name)+'</b><span class="a">'+ils(r.amount)+'</span></div>'
+ return '<details class="rvcust"><summary class="rvh"><b>'+esc(r.name)+'</b><span class="a">'+ils(r.amount)+'</span></summary>'
   +'<small>'+esc(r.sub||'')+'</small><ul class="rvinv">'+li+'</ul>'
-  +'<button type="button" class="rvc" data-q="'+esc('על '+r.name+': ')+'">תגובה על '+esc(r.name)+'</button></div>';
-}
-/*
-  A way to talk from the bookkeeping screen, at the top where he is.
-
-  Itzik, 30.9, by voice: "make me reply buttons in bookkeeping, I have no way
-  to talk to you from there." The general box sat folded at the very bottom
-  of a long screen, and tapping an invoice threw him out to the chat. Now the
-  box is open above the lists, and tapping an invoice or a customer points
-  that same box at it and brings it into view, without leaving the screen.
-*/
-function rivTalk(){
- var host=document.getElementById('rivTalk');
- if(!host)return null;
- if(!host.querySelector('.rbox')){
-  host.innerHTML='<div class="rivon" id="rivOn">💬 לכתוב או להקליט לי על המסך הזה. נגיעה בחשבונית או בלקוח מכוונת לשם.</div>'
-   +replyBox('על המסך הנהלת חשבונות');
-  wireBoxes(host);
- }
- return host;
-}
-function rivAim(q){
- var host=rivTalk();if(!host)return;
- var b=host.querySelector('.rbox'),on=document.getElementById('rivOn');
- q=String(q||'').replace(/[:\\s]+$/,'');
- b.setAttribute('data-q',q);
- if(on)on.textContent='💬 מגיב על: '+q.replace(/^על /,'');
- host.scrollIntoView({behavior:'smooth',block:'start'});
- var t=b.querySelector('textarea');if(t)try{t.focus({preventScroll:true});}catch(e){t.focus();}
+  +'<form class="rvf" data-name="'+esc(r.name)+'"><input type="text" placeholder="הערה על '+esc(r.name)+'" autocomplete="off">'
+  +'<button type="submit">שליחה</button></form><div class="rvsaid"></div></details>';
 }
 function renderRivhit(){
  var R=D.rivhit||[],box=document.getElementById('rivBox');
  if(!box)return;
- rivTalk();
  var wt=document.getElementById('rivWait');
  if(wt){wt.hidden=!!R.length;wt.textContent=lazyDone.rivhit?'אין כרגע נתונים להציג.':'טוען את הנתונים...';}
  if(!R.length){box.hidden=true;return;}
@@ -11557,15 +11542,26 @@ function renderRivhit(){
   if(h)h.hidden=!rows.length;
  };
  var dl=document.getElementById('rivList');
- if(dl){dl.innerHTML=by('debt').map(rivDebt).join('');}
- // Every line on the screen answers a tap, not only the invoice lists: an
- // invoice or customer carries its own words, a plain row is quoted as seen.
- box.onclick=function(e){
-  var t=e.target.closest('[data-q]');
-  if(t&&box.contains(t)){rivAim(t.getAttribute('data-q'));return;}
-  var r=e.target.closest('.rivrow');
-  if(r)rivAim('על '+String(r.innerText||r.textContent||'').replace(/\\s+/g,' ').trim());
- };
+ if(dl){
+  var open={};
+  // A data refresh redraws this list; whatever he had open or half typed stays.
+  Array.prototype.forEach.call(dl.querySelectorAll('details[open] form'),function(f){open[f.getAttribute('data-name')]={v:f.querySelector('input').value};});
+  dl.innerHTML=by('debt').map(rivDebt).join('');
+  Array.prototype.forEach.call(dl.querySelectorAll('form.rvf'),function(f){var o=open[f.getAttribute('data-name')];if(o){f.parentNode.open=true;f.querySelector('input').value=o.v;}});
+  dl.onsubmit=function(e){
+   var f=e.target.closest('form.rvf');if(!f)return;
+   e.preventDefault();
+   var inp=f.querySelector('input'),said=f.parentNode.querySelector('.rvsaid'),btn=f.querySelector('button');
+   var v=inp.value.trim();if(!v)return;
+   var text='חייבים, '+f.getAttribute('data-name')+': '+v;
+   btn.disabled=true;said.textContent='שולח...';
+   sendText('הערה על חייב',text,'עדכון').then(function(){
+    var p=pending();p.push({at:new Date().toISOString(),text:text});savePending(p);
+    inp.value='';said.textContent='✓ נשלח אליי. התשובה תגיע בצ׳אט.';
+   }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';})
+   .then(function(){btn.disabled=false;});
+  };
+ }
  put('rivOpen',by('open'),'rivH2');
  put('rivBank',by('bank'),'rivH4');
  var U=by('audit'),ue=document.getElementById('rivAudit'),uh=document.getElementById('rivH5');
