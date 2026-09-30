@@ -597,8 +597,13 @@ test('a permission that disappears refreshes the page instead of waiting to be n
   // A denied or revoked permission reloads on its own.
   const denied = body.slice(body.indexOf("name==='NotAllowedError'||name==='SecurityError'"));
   assert.ok(denied.startsWith("name==='NotAllowedError'||name==='SecurityError'"));
-  assert.ok(denied.slice(0, 300).includes('setTimeout(hardReload,'),
+  // 30.9: a prompt the phone closed on its own gets one quiet retry first,
+  // then exactly one reload, never a loop of them (the loop is what made the
+  // prompt vanish under his finger).
+  assert.ok(denied.slice(0, 1200).includes('setTimeout(hardReload,'),
     'a denied or revoked permission must trigger the same fix as the refresh button');
+  assert.ok(denied.slice(0, 1200).includes("sessionStorage.getItem('micReloaded')"),
+    'the reload happens once, not in a loop');
   // A recording that ran and said so, but captured nothing, is the same
   // failure discovered later instead of at the prompt.
   assert.ok(body.includes('if(!b.size){'));

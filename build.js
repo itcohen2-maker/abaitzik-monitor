@@ -11639,7 +11639,7 @@ function renderRivhit(){
   dl.onsubmit=function(e){
    var f=e.target.closest('form.rvf');if(!f)return;
    e.preventDefault();
-   var inp=f.querySelector('input'),said=f.parentNode.querySelector('.rvsaid'),btn=f.querySelector('button');
+   var inp=f.querySelector('input'),said=f.parentNode.querySelector('.rvsaid'),btn=f.querySelector('button[type=submit]');
    var v=inp.value.trim();if(!v)return;
    var text='חייבים, '+f.getAttribute('data-name')+': '+v;
    btn.disabled=true;said.textContent='שולח...';
