@@ -1960,7 +1960,9 @@ body.editing .bn{display:none}
 .grid .gt{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .tarr{grid-column:1/-1;justify-self:start;display:block;margin:0;border:0;background:none;color:var(--dim);font:600 12.5px Heebo,sans-serif;cursor:pointer;padding:4px 2px}
 .tedit .gt{position:relative;animation:wobble .28s infinite alternate ease-in-out}
-.tedit .gt.tsel{animation:none;outline:3px solid #fbbc04;outline-offset:2px;transform:scale(1.04)}
+.grid .gt.tlift{opacity:.3}
+#tGhost{position:fixed;z-index:80;pointer-events:none;margin:0;transform:scale(1.08);box-shadow:0 18px 34px rgba(0,0,0,.4);opacity:.95;animation:none}
+body.tdrag{-webkit-user-select:none;user-select:none}
 .gt .tx{display:none;position:absolute;top:6px;inset-inline-end:6px;width:28px;height:28px;border-radius:50%;
  background:#d93025;color:#fff;border:2px solid #fff;font:700 16px/22px Heebo,sans-serif;padding:0;z-index:2;cursor:pointer;text-align:center}
 .tedit .gt .tx{display:block}
@@ -6393,6 +6395,8 @@ function armDrag(box,key){
  box.addEventListener('pointerdown',function(e){
   var t=e.target;
   if(t&&t.closest&&t.closest('input,textarea,select'))return;
+  // A long press on a tile lifts the tile, not the whole block.
+  if(t&&t.closest&&t.closest('#blkTiles .gt'))return;
   if(editing)return;
   startY=e.clientY;
   hold=setTimeout(enterEdit,500);
@@ -11412,19 +11416,29 @@ document.getElementById('mailForm').addEventListener('submit',function(e){
 // talkCard came out of this list on 18.9: it is above the header now and is
 // not his to drag, because "nothing above it" is the whole point of it.
 /*
-  Arranging the tiles, by taps. 30.9: he could not move them and could not
-  take one off. The old way was a drag, and on the iPhone a drag on a grid of
-  buttons is a scroll half the time. Here a tap picks a tile up, a tap on
-  another tile puts it there, and the red x takes a tile off this device's
-  screen. Nothing is deleted: "להחזיר" brings every hidden tile back.
+  Arranging the tiles, by dragging. 30.9 in his voice: the taps way (pick one,
+  tap another) was clumsy and not understood, "I want to press a button and
+  just drag it on the screen".
+
+  A press held for a moment lifts the tile, a copy of it follows the finger
+  and the others make room under it, letting go drops it there and the order
+  is saved on the device. A finger that moves before the moment is up is a
+  scroll, as always. Touch events and not pointer events on the phone: once a
+  pointer drag starts, Safari takes it over as a scroll and cancels it, which
+  is why the drag before the taps version failed half the time. A touchmove
+  that is not passive and refuses the scroll while a tile is held is the one
+  thing Safari respects.
+
+  The ✎ button still opens the mode with the red ✕ for taking a tile off this
+  device's screen. In that mode a tile drags without the wait.
 */
-var tEdit=false,tSel=null;
+var tEdit=false;
 function tileBar(show){
  var b=document.getElementById('tileBar');
  if(!show){if(b)b.remove();return;}
  if(!b){b=document.createElement('div');b.id='tileBar';document.body.appendChild(b);}
  var hid=tileStore('tilesHidden',[]);
- b.innerHTML='<small>לחיצה על אריח בוחרת אותו, לחיצה על אריח אחר מעבירה אותו לשם. ה ✕ האדום מוריד אריח מהמסך.</small>'
+ b.innerHTML='<small>גוררים אריח למקום שרוצים. ה ✕ האדום מוריד אריח מהמסך.</small>'
   +'<div class="row2"><button type="button" class="done" id="tileDone">סיום</button>'
   +(hid.length?'<button type="button" class="back" id="tileBack">להחזיר '+hid.length+' שהורדו</button>':'')+'</div>';
  document.getElementById('tileDone').onclick=tilesExit;
@@ -11433,7 +11447,7 @@ function tileBar(show){
 }
 function tilesEnter(grid){
  if(tEdit)return;
- tEdit=true;tSel=null;
+ tEdit=true;
  grid.classList.add('tedit');
  Array.prototype.forEach.call(grid.querySelectorAll('.gt'),function(el){
   if(el.querySelector(':scope > .tx'))return;
@@ -11443,37 +11457,103 @@ function tilesEnter(grid){
  });
  try{navigator.vibrate&&navigator.vibrate(18);}catch(e){}
  tileBar(true);
- var a=document.getElementById('tileArr');if(a)a.textContent='✓ סיום הסידור';
+ var a=document.getElementById('tileArr');if(a)a.textContent='✓ סיום';
 }
 function tilesExit(){
  var grid=document.getElementById('blkTiles');
  tEdit=false;
- if(tSel){tSel.classList.remove('tsel');tSel=null;}
  if(grid){grid.classList.remove('tedit');saveOrder(grid,'tileOrder');}
  tileBar(false);
- var a=document.getElementById('tileArr');if(a)a.textContent='✎ סידור האריחים';
+ var a=document.getElementById('tileArr');if(a)a.textContent='✎ הורדת אריחים';
 }
 function armTiles(grid){
  if(!grid)return;
  var arr=document.createElement('button');
- arr.type='button';arr.id='tileArr';arr.className='tarr';arr.textContent='✎ סידור האריחים';
+ arr.type='button';arr.id='tileArr';arr.className='tarr';arr.textContent='✎ הורדת אריחים';
  arr.onclick=function(){if(tEdit)tilesExit();else tilesEnter(grid);};
  // Inside the grid, across the full row: the home screen re-pins its blocks
  // after this runs, and a button standing beside the grid got left behind.
  grid.insertBefore(arr,grid.firstChild);
- var hold=null,sx=0,sy=0,swallow=false;
- grid.addEventListener('pointerdown',function(e){
-  if(tEdit)return;
-  sx=e.clientX;sy=e.clientY;
-  hold=setTimeout(function(){hold=null;swallow=true;tilesEnter(grid);},550);
- });
- grid.addEventListener('pointermove',function(e){
-  if(hold&&(Math.abs(e.clientX-sx)>10||Math.abs(e.clientY-sy)>10)){clearTimeout(hold);hold=null;}
- });
- ['pointerup','pointercancel','pointerleave'].forEach(function(ev){
-  grid.addEventListener(ev,function(){clearTimeout(hold);hold=null;});
- });
- grid.addEventListener('contextmenu',function(e){if(tEdit||swallow)e.preventDefault();});
+ var hold=null,sx=0,sy=0,cand=null,held=null,ghost=null,gdx=0,gdy=0,lx=0,ly=0,swallow=false,roll=null;
+ function tileAt(x,y){
+  var o=document.elementFromPoint(x,y);
+  o=o&&o.closest?o.closest('.gt'):null;
+  return o&&o.parentNode===grid?o:null;
+ }
+ function place(x,y){
+  if(!ghost)return;
+  ghost.style.left=(x-gdx)+'px';ghost.style.top=(y-gdy)+'px';
+  var over=tileAt(x,y);
+  if(!over||over===held)return;
+  var kids=Array.prototype.slice.call(grid.children);
+  if(kids.indexOf(held)<kids.indexOf(over))grid.insertBefore(held,over.nextSibling);
+  else grid.insertBefore(held,over);
+ }
+ // Near the top or bottom edge the page scrolls by itself, so a tile can
+ // travel further than one screen.
+ function edge(){
+  if(!held)return;
+  var h=window.innerHeight,d=ly<70?-(70-ly)/4:ly>h-70?(ly-(h-70))/4:0;
+  if(d){window.scrollBy(0,d);place(lx,ly);}
+  roll=requestAnimationFrame(edge);
+ }
+ function lift(t,x,y){
+  hold=null;held=t;swallow=true;
+  var r=t.getBoundingClientRect();
+  gdx=x-r.left;gdy=y-r.top;lx=x;ly=y;
+  ghost=t.cloneNode(true);ghost.id='tGhost';
+  ghost.style.width=r.width+'px';ghost.style.height=r.height+'px';
+  ghost.style.left=r.left+'px';ghost.style.top=r.top+'px';
+  document.body.appendChild(ghost);
+  t.classList.add('tlift');
+  document.body.classList.add('tdrag');
+  try{navigator.vibrate&&navigator.vibrate(18);}catch(e){}
+  roll=requestAnimationFrame(edge);
+ }
+ function drop(){
+  clearTimeout(hold);hold=null;cand=null;
+  if(!held)return;
+  cancelAnimationFrame(roll);roll=null;
+  held.classList.remove('tlift');held=null;
+  if(ghost){ghost.remove();ghost=null;}
+  document.body.classList.remove('tdrag');
+  saveOrder(grid,'tileOrder');
+  // The click that may follow the drop is not a tap on the tile. If none
+  // comes, the next real tap must not be eaten either.
+  setTimeout(function(){swallow=false;},450);
+ }
+ function start(e,x,y){
+  if(held)return;
+  var t=tileAt(x,y);
+  if(!t||(e.target.closest&&e.target.closest('.tx')))return;
+  cand=t;sx=x;sy=y;
+  if(tEdit)return; // in the ✕ mode the first real move lifts it
+  hold=setTimeout(function(){lift(t,sx,sy);},350);
+ }
+ function move(e,x,y){
+  lx=x;ly=y;
+  if(held){if(e.cancelable)e.preventDefault();place(x,y);return;}
+  if(!cand)return;
+  if(Math.abs(x-sx)>10||Math.abs(y-sy)>10){
+   if(tEdit){if(e.cancelable)e.preventDefault();lift(cand,sx,sy);place(x,y);return;}
+   clearTimeout(hold);hold=null;cand=null;
+  }
+ }
+ grid.addEventListener('touchstart',function(e){
+  if(e.touches.length!==1){drop();return;}
+  start(e,e.touches[0].clientX,e.touches[0].clientY);
+ },{passive:true});
+ document.addEventListener('touchmove',function(e){
+  if(!cand&&!held)return;
+  move(e,e.touches[0].clientX,e.touches[0].clientY);
+ },{passive:false});
+ document.addEventListener('touchend',drop);
+ document.addEventListener('touchcancel',drop);
+ // A mouse, for the computer.
+ grid.addEventListener('mousedown',function(e){if(e.button===0)start(e,e.clientX,e.clientY);});
+ document.addEventListener('mousemove',function(e){if(cand||held)move(e,e.clientX,e.clientY);});
+ document.addEventListener('mouseup',drop);
+ grid.addEventListener('contextmenu',function(e){if(tEdit||swallow||held)e.preventDefault();});
  grid.addEventListener('click',function(e){
   if(swallow){swallow=false;e.preventDefault();e.stopPropagation();return;}
   if(!tEdit||e.target.closest('#tileArr'))return;
@@ -11484,19 +11564,9 @@ function armTiles(grid){
    var hid=tileStore('tilesHidden',[]);
    if(hid.indexOf(t.id)<0)hid.push(t.id);
    tileSave('tilesHidden',hid);
-   if(tSel===t)tSel=null;
-   t.classList.remove('tsel');
    applyHidden();tileBar(true);
    toast('הורד מהמסך. "להחזיר" מחזיר אותו.');
-   return;
   }
-  if(!tSel){tSel=t;t.classList.add('tsel');return;}
-  if(tSel===t){t.classList.remove('tsel');tSel=null;return;}
-  var kids=Array.prototype.slice.call(grid.children);
-  if(kids.indexOf(tSel)<kids.indexOf(t))grid.insertBefore(tSel,t.nextSibling);
-  else grid.insertBefore(tSel,t);
-  tSel.classList.remove('tsel');tSel=null;
-  saveOrder(grid,'tileOrder');
  },true);
 }
 var HOME_HEAD=['newBlock','bareBtn','blkIcons','blkTiles'];
