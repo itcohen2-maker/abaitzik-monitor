@@ -1555,6 +1555,11 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
 #gateIn{flex:1;min-width:0;background:var(--sunk,#141922);color:var(--ink,#e8edf5);border:1px solid var(--line,#2a3342);
  border-radius:12px;padding:13px;font:700 19px Heebo,sans-serif;text-align:center;letter-spacing:3px}
 #gateIn:focus{outline:2px solid var(--accent);outline-offset:1px}
+#gateForm.gw{flex-direction:column}
+#gateForm.gw #gateIn{letter-spacing:0;font:600 17px Heebo,sans-serif;text-align:right}
+#gateForm.gw #gateGo{padding:12px 18px}
+.gt-eye{background:none;border:0;margin-top:10px;color:var(--dim,#9aa7ba);font:600 13.5px Heebo,sans-serif;
+ text-decoration:underline;cursor:pointer}
 #gateGo{flex:0 0 auto;background:var(--accent,#4285F4);color:#fff;border:0;border-radius:12px;
  padding:0 18px;font:700 15px Heebo,sans-serif;cursor:pointer}
 .ansc .arep{margin:0}
@@ -1679,7 +1684,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-30T07:33:28.247Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-30T08:20:29.460Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2747,9 +2752,10 @@ var D = {}, NET = {"facebook":"פייסבוק","instagram":"אינסטגרם","t
 var GATE = {"salt":"FADG3yVAiuMl/ULRAys1Cg==","rounds":210000}, GKEY = null;
 function gbytes(b64){var x=atob(b64),a=new Uint8Array(x.length);for(var i=0;i<x.length;i++)a[i]=x.charCodeAt(i);return a;}
 function graw(a){var s='';for(var i=0;i<a.length;i++)s+=String.fromCharCode(a[i]);return btoa(s);}
+function gnorm(s){return String(s==null?'':s).normalize('NFC').replace(/[\u0591-\u05C7]/g,'').replace(/[\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g,'').replace(/\s+/g,' ').trim().replace(/[ךםןףץ]/g,function(c){return 'כמנפצ'.charAt('ךםןףץ'.indexOf(c));});}
 function gderive(code){
  var enc=new TextEncoder();
- return crypto.subtle.importKey('raw',enc.encode(code),'PBKDF2',false,['deriveKey'])
+ return crypto.subtle.importKey('raw',enc.encode(gnorm(code)),'PBKDF2',false,['deriveKey'])
   .then(function(base){
    return crypto.subtle.deriveKey(
     {name:'PBKDF2',salt:gbytes(GATE.salt),iterations:GATE.rounds,hash:'SHA-256'},
@@ -2809,7 +2815,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='5703a6d22e';
+var CODE_ID='bdcbf6e513';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -8631,14 +8637,21 @@ function renderRivhit(){
 var bootFailed=[];
 function boot(name,fn){try{fn();}catch(e){bootFailed.push(name);try{console.error('boot '+name,e);}catch(_){}}}
 function gateUI(){
+ var W=!!(GATE&&GATE.words);
  var w=document.createElement('div');
  w.id='gateWrap';
  w.innerHTML='<div class="gatecard">'
   +'<b class="gt-t">'+esc((INSTANCE&&INSTANCE.name==='abaitzik')?'אבא איציק':(INSTANCE&&INSTANCE.owner||''))+'</b>'
-  +'<div class="gt-s">הדף נעול. תקליד את הקוד פעם אחת והמכשיר הזה יזכור אותו.'
-  +'<br>'+((INSTANCE&&INSTANCE.name!=='abaitzik')?'זה הקוד שבחרת בהתקנה.':'הקוד נשלח אליך בהתראה לטלפון, בנושא הקוד לפתיחת הדף.')+'</div>'
-  +'<form id="gateForm"><input id="gateIn" type="tel" inputmode="numeric" autocomplete="off"'
-  +' maxlength="12" placeholder="הקוד"><button type="submit" id="gateGo">פתיחה</button></form>'
+  +(W?'<div class="gt-s">הדף נעול. תקליד את הסיסמה פעם אחת והמכשיר הזה יזכור אותה.'
+    +'<br>חמש מילים, עם רווח בין מילה למילה.</div>'
+  :'<div class="gt-s">הדף נעול. תקליד את הקוד פעם אחת והמכשיר הזה יזכור אותו.'
+  +'<br>'+((INSTANCE&&INSTANCE.name!=='abaitzik')?'זה הקוד שבחרת בהתקנה.':'הקוד נשלח אליך בהתראה לטלפון, בנושא הקוד לפתיחת הדף.')+'</div>')
+  +(W?'<form id="gateForm" class="gw"><input id="gateIn" type="password" autocomplete="off" autocapitalize="off"'
+    +' autocorrect="off" spellcheck="false" dir="rtl" lang="he" placeholder="הסיסמה">'
+    +'<button type="submit" id="gateGo">פתיחה</button></form>'
+    +'<button type="button" class="gt-eye" id="gateEye">להציג את מה שהקלדתי</button>'
+  :'<form id="gateForm"><input id="gateIn" type="tel" inputmode="numeric" autocomplete="off"'
+  +' maxlength="12" placeholder="הקוד"><button type="submit" id="gateGo">פתיחה</button></form>')
   +'<div class="gt-e" id="gateSaid"></div>'
   +'</div>';
  document.body.appendChild(w);
@@ -8650,6 +8663,14 @@ function gateBoot(){
  var said=document.getElementById('gateSaid');
  var form=document.getElementById('gateForm');
  var box=document.getElementById('gateIn');
+ var eye=document.getElementById('gateEye');
+ var bad=GATE.words?'הסיסמה לא מתאימה. אפשר ללחוץ להציג ולבדוק.':'הקוד לא מתאים.';
+ if(eye)eye.onclick=function(){
+  var hid=box.type==='password';
+  box.type=hid?'text':'password';
+  eye.textContent=hid?'להסתיר':'להציג את מה שהקלדתי';
+  try{box.focus();}catch(e){}
+ };
  function load(){
   return fetch('data/head.json?b='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.text():null;})
@@ -8682,7 +8703,7 @@ function gateBoot(){
  }
  form.onsubmit=function(e){
   e.preventDefault();
-  var code=(box.value||'').trim();
+  var code=gnorm(box.value);
   if(!code)return;
   said.textContent='רגע, פותח.';
   gderive(code).then(function(k){
@@ -8690,12 +8711,12 @@ function gateBoot(){
    return load();
   }).then(function(ok){
    if(ok===null){said.textContent='אין רשת כרגע. נסה שוב עוד רגע.';GKEY=null;return;}
-   if(!ok){said.textContent='הקוד לא מתאים.';GKEY=null;return;}
+   if(!ok){said.textContent=bad;GKEY=null;return;}
    return crypto.subtle.exportKey('raw',GKEY).then(function(raw){
     try{localStorage.setItem('gateKey',graw(new Uint8Array(raw)));}catch(e){}
    });
   }).catch(function(){
-   said.textContent='הקוד לא מתאים.';GKEY=null;
+   said.textContent=bad;GKEY=null;
   });
  };
  setTimeout(function(){try{box.focus();}catch(e){}},120);
