@@ -3062,7 +3062,7 @@ try{
   <button type="button" class="gt g3" id="gQueue"><b>📊 ניטור רשתות</b><small>מי פנה, מה נענה</small></button>
   <!-- The reports tile came off on 17.9. The reports are in "תשובות" now,
        which is the one button he asked for. -->
-  <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>חשבוניות והיומן</small></button>
+  <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>מי חייב כסף ומאיזה חודש</small></button>
   <button type="button" class="gt g15" id="gSale"><b>⚖️ מכירת לולוס</b><small>התיק לעורך הדין, מה פתוח ומה נמסר</small></button>
   <!--
     איציק, 28.9: "תשים אצלי במוניטור עם אייקון לולוס". The recipe booklet, 19
@@ -3747,22 +3747,10 @@ try{
   <div id="rivAlerts"></div>
  </div>
  <div class="lolos">
-  <a class="lbtn lb-riv" href="https://online.rivhit.co.il/" target="_blank" rel="noopener">
-   <span aria-hidden="true">&#129534;</span>
-   <div><b>ריווחית אונליין</b><small>חשבוניות, קבלות, לקוחות ויתרות</small></div>
-  </a>
-  <a class="lbtn lb-cal" href="https://calendar.google.com/calendar/r" target="_blank" rel="noopener">
-   <span aria-hidden="true">&#128197;</span>
-   <div><b>היומן</b><small>הפגישות וההזמנות</small></div>
-  </a>
   <button type="button" class="lbtn lb-x" id="lolosAsk">
    <span aria-hidden="true">&#128269;</span>
    <div><b>בקשת הצלבה</b><small>תשאל אותי מה להצליב ואני בודק</small></div>
   </button>
- </div>
- <div class="hint">
-  ריווחית מחוברת דרך אסימון ולא דרך סיסמה. כשתוציא אותו מההגדרות של ריווחית,
-  אני אוכל למשוך משם נתונים ולהצליב אותם בלי להיכנס לחשבון בכלל.
  </div>
 </section>
 <!--ITZIK:END-->
@@ -9430,7 +9418,7 @@ on('diagBtn',function(){
 });
 function openFood(){pane('f');renderFood();ensure('food',renderFood);}
 on('gFood',openFood);on('iFood',openFood);
-on('gLolos',function(){pane('o');});
+on('gLolos',function(){pane('o');ensure('rivhit',renderRivhit);});
 /*
   יהודה. The report lives next to the page under docs/files, so this is a
   plain open and not a screen: no login, no Drive app, no key. Opening in a
