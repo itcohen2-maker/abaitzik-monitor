@@ -1614,7 +1614,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-30T03:47:31.384Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-30T03:47:59.366Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2231,6 +2231,18 @@ try{
   <h3 class="rivh" id="rivH3">שים לב</h3>
   <div id="rivAlerts"></div>
  </div>
+</section>
+
+
+
+<section id="pF" hidden>
+ <h2>עקוב אחרי התזונה</h2>
+ <div class="zbox" id="fdZinc">
+  <div class="zt"><b>אבץ שנאסף היום</b><span class="zv" id="zVal">0 מ״ג</span></div>
+  <div class="zbar"><i id="zBar" style="width:0%"></i></div>
+  <div class="zsaid" id="zSaid"></div>
+  <div class="zparts" id="zParts"></div>
+ </div>
  <div class="foodtop">
   <div><span id="fdKcal">0</span><small>קלוריות היום</small></div>
   <div><span id="fdP">0</span><small>חלבון</small></div>
@@ -2728,7 +2740,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='f1232de650';
+var CODE_ID='65ca645152';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
