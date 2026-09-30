@@ -934,7 +934,8 @@ body.editing .bn{display:none}
 .tenalert b{display:block;font:700 15px Heebo,sans-serif}
 .tenalert small{display:block;font-size:12px;opacity:.95}
 .idea .itag{display:block;font-size:11px;color:var(--dim);margin-bottom:3px}
-.grid .gt{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.grid .gt,#blkIcons .ic{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+#blkIcons .ic.tlift{opacity:.3}
 .tarr{grid-column:1/-1;justify-self:start;display:block;margin:0;border:0;background:none;color:var(--dim);font:600 12.5px Heebo,sans-serif;cursor:pointer;padding:4px 2px}
 .tedit .gt{position:relative;animation:wobble .28s infinite alternate ease-in-out}
 .grid .gt.tlift{opacity:.3}
@@ -1663,7 +1664,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-30T05:18:12.100Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-30T05:18:54.496Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2793,7 +2794,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='accc507424';
+var CODE_ID='cb4ea3f023';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -4333,7 +4334,7 @@ function armDrag(box,key){
  box.addEventListener('pointerdown',function(e){
   var t=e.target;
   if(t&&t.closest&&t.closest('input,textarea,select'))return;
-  if(t&&t.closest&&t.closest('#blkTiles .gt'))return;
+  if(t&&t.closest&&t.closest('#blkTiles .gt,#blkIcons .ic'))return;
   if(editing)return;
   startY=e.clientY;
   hold=setTimeout(enterEdit,500);
@@ -8162,16 +8163,12 @@ function tilesExit(){
  tileBar(false);
  var a=document.getElementById('tileArr');if(a)a.textContent='✎ הורדת אריחים';
 }
-function armTiles(grid){
- if(!grid)return;
- var arr=document.createElement('button');
- arr.type='button';arr.id='tileArr';arr.className='tarr';arr.textContent='✎ הורדת אריחים';
- arr.onclick=function(){if(tEdit)tilesExit();else tilesEnter(grid);};
- grid.insertBefore(arr,grid.firstChild);
+function pressDrag(grid,sel,key,inEdit){
+ inEdit=inEdit||function(){return false;};
  var hold=null,sx=0,sy=0,cand=null,held=null,ghost=null,gdx=0,gdy=0,lx=0,ly=0,swallow=false,roll=null;
  function tileAt(x,y){
   var o=document.elementFromPoint(x,y);
-  o=o&&o.closest?o.closest('.gt'):null;
+  o=o&&o.closest?o.closest(sel):null;
   return o&&o.parentNode===grid?o:null;
  }
  function place(x,y){
@@ -8209,7 +8206,7 @@ function armTiles(grid){
   held.classList.remove('tlift');held=null;
   if(ghost){ghost.remove();ghost=null;}
   document.body.classList.remove('tdrag');
-  saveOrder(grid,'tileOrder');
+  saveOrder(grid,key);
   setTimeout(function(){swallow=false;},450);
  }
  function start(e,x,y){
@@ -8217,7 +8214,7 @@ function armTiles(grid){
   var t=tileAt(x,y);
   if(!t||(e.target.closest&&e.target.closest('.tx')))return;
   cand=t;sx=x;sy=y;
-  if(tEdit)return; // in the ✕ mode the first real move lifts it
+  if(inEdit())return; // in the ✕ mode the first real move lifts it
   hold=setTimeout(function(){lift(t,sx,sy);},350);
  }
  function move(e,x,y){
@@ -8225,7 +8222,7 @@ function armTiles(grid){
   if(held){if(e.cancelable)e.preventDefault();place(x,y);return;}
   if(!cand)return;
   if(Math.abs(x-sx)>10||Math.abs(y-sy)>10){
-   if(tEdit){if(e.cancelable)e.preventDefault();lift(cand,sx,sy);place(x,y);return;}
+   if(inEdit()){if(e.cancelable)e.preventDefault();lift(cand,sx,sy);place(x,y);return;}
    clearTimeout(hold);hold=null;cand=null;
   }
  }
@@ -8242,9 +8239,20 @@ function armTiles(grid){
  grid.addEventListener('mousedown',function(e){if(e.button===0)start(e,e.clientX,e.clientY);});
  document.addEventListener('mousemove',function(e){if(cand||held)move(e,e.clientX,e.clientY);});
  document.addEventListener('mouseup',drop);
- grid.addEventListener('contextmenu',function(e){if(tEdit||swallow||held)e.preventDefault();});
+ grid.addEventListener('contextmenu',function(e){if(swallow||held)e.preventDefault();});
  grid.addEventListener('click',function(e){
-  if(swallow){swallow=false;e.preventDefault();e.stopPropagation();return;}
+  if(swallow){swallow=false;e.preventDefault();e.stopImmediatePropagation();return;}
+ },true);
+}
+function armTiles(grid){
+ if(!grid)return;
+ var arr=document.createElement('button');
+ arr.type='button';arr.id='tileArr';arr.className='tarr';arr.textContent='✎ הורדת אריחים';
+ arr.onclick=function(){if(tEdit)tilesExit();else tilesEnter(grid);};
+ grid.insertBefore(arr,grid.firstChild);
+ pressDrag(grid,'.gt','tileOrder',function(){return tEdit;});
+ grid.addEventListener('contextmenu',function(e){if(tEdit)e.preventDefault();});
+ grid.addEventListener('click',function(e){
   if(!tEdit||e.target.closest('#tileArr'))return;
   e.preventDefault();e.stopPropagation();
   var t=e.target.closest?e.target.closest('.gt'):null;
@@ -8279,6 +8287,13 @@ function pinHome(home){
  var grid=document.querySelector('.grid');
  var home=document.getElementById('pH');
  if(grid){nameChildren(grid,'tile');applyOrder(grid,'tileOrder');armTiles(grid);}
+ var icons=document.getElementById('blkIcons');
+ if(icons){
+  Array.prototype.forEach.call(icons.children,function(el){
+   if(!el.id)el.id='ic-'+(el.getAttribute('data-net')||el.textContent.trim());
+  });
+  applyOrder(icons,'iconOrder');pressDrag(icons,'.ic','iconOrder');
+ }
  if(home){nameChildren(home,'blk');applyOrder(home,'blockOrder');pinHome(home);armDrag(home,'blockOrder');}
 })();
 on('editDone',endEdit);
