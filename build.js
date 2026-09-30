@@ -2265,6 +2265,10 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
 .rvinv li .dt{color:var(--dim);font-size:12.5px;white-space:nowrap}
 .rvinv li .m{font-weight:700;white-space:nowrap;min-width:64px;text-align:left}
 .rvinv li small{display:block;font-size:11px;color:var(--dim)}
+.rivtalk{margin:0 0 14px}
+#rivBox .rivrow{cursor:pointer}
+#rivBox .rivrow:after{content:"💬";font-size:13px;opacity:.55;margin-inline-start:6px;flex:0 0 auto}
+.rivon{font:600 14px Heebo,sans-serif;color:var(--ink);margin:0 2px 8px}
 .rvc{margin-top:6px;border:0;border-radius:999px;padding:6px 14px;font:600 12.5px Heebo,sans-serif;background:#e8f0fe;color:#1a56c4;cursor:pointer}
 .rivaud{border:1px solid var(--line);border-radius:16px;background:var(--surface);
  padding:13px 14px;margin-bottom:10px}
@@ -3746,6 +3750,8 @@ try{
 <!--ITZIK:BEGIN-->
 <section id="pL2" hidden>
  <h2>הנהלת חשבונות</h2>
+ <div class="rivtalk" id="rivTalk"></div>
+ <div class="hint" id="rivWait">טוען את הנתונים...</div>
  <div id="rivBox" hidden>
   <div class="rivsum" id="rivSum"></div>
   <h3 class="rivh" id="rivH5" hidden>בדיקת לקוח</h3>
@@ -4929,24 +4935,27 @@ function wireBoxes(root){
   if(box.getAttribute('data-wired'))return;
   box.setAttribute('data-wired','1');
   wirePaste(box);
-  var q=box.getAttribute('data-q')||'';
+  // Read on every tap, not once: a screen can point the same box at another
+  // line (the bookkeeping screen does, per invoice).
+  var qOf=function(){return box.getAttribute('data-q')||'';};
   var f=box.querySelector('.rform');
   var txt=box.querySelector('.btxt');
   box.querySelector('.bmic').onclick=function(e){
    e.stopPropagation();
-   document.getElementById('fCap').value=q;
+   window.micBox=box;
+   document.getElementById('fCap').value=qOf();
    toggleRec();
   };
   box.querySelector('.bfile').onclick=function(e){
    e.stopPropagation();
-   document.getElementById('fCap').value=q;
+   document.getElementById('fCap').value=qOf();
    openPicker('full','image/*,video/*,audio/*,application/pdf',true);
   };
   // Straight to the camera. On a phone this opens the lens instead of the
   // gallery, which is what he means when he says he wants to show me something.
   box.querySelector('.bcam').onclick=function(e){
    e.stopPropagation();
-   document.getElementById('fCap').value=q;
+   document.getElementById('fCap').value=qOf();
    shoot(true);
   };
   if(txt)txt.onclick=function(e){
@@ -4968,7 +4977,7 @@ function wireBoxes(root){
    said.textContent='שולח.';
    var card=box.closest('.report')||box.parentNode;
    if(card)card.classList.add('busyring');
-   var full=q+String.fromCharCode(10)+text;
+   var full=qOf()+String.fromCharCode(10)+text;
    sendText('הערה מהמוניטור',full,'הערה').then(function(how){
     var p=pending();
     p.push({at:new Date().toISOString(),text:full});
@@ -7258,6 +7267,8 @@ function backBar(sec){
 */
 function replyBar(sec){
  if(sec.id==='pH'||sec.id==='pM')return;
+ // pL2 carries its own box, open at the top.
+ if(sec.id==='pL2')return;
  if(sec.querySelector(':scope > .replybar'))return;
  var h=sec.querySelector('h2');
  var name=h?String(h.textContent||'').trim():'';
@@ -7331,7 +7342,10 @@ function pane(w){
  */
  var PAINT={a:function(){renderAnswers();paintAnsCount();},b:renderGot,m:renderThread,
   n:renderNet,r:render,p:renderPegasus,w:renderImprove,s:renderSpecial,
-  e:renderReplies,f:renderFood,j:renderDrains,v:renderRivhit,c:renderBlock};
+  e:renderReplies,f:renderFood,j:renderDrains,c:renderBlock,
+  // 30.9: the bookkeeping screen sometimes opened blank. Its data loads late
+  // and only one route asked for it, so it is asked for here, by the pane.
+  v:function(){ensure('rivhit',renderRivhit);},o:function(){ensure('rivhit',renderRivhit);}};
  if(PAINT[w]){try{PAINT[w]();}catch(e){try{console.error('pane paint '+w,e);}catch(_){}}}
  // It lives above the header now, outside every pane, so nothing hides it but
  // this line. On any screen other than home it would be a microphone following
@@ -11102,8 +11116,18 @@ paintAim();
 
 // recSaid lives in the chat pane; mirror it onto the home screen so the timer
 // and any error are visible wherever the recording was started from.
+/*
+  And onto the reply box whose microphone was tapped.
+
+  Itzik, 30.9, from the bookkeeping screen: "the little microphone at the
+  bottom does not start." It did start, or said why not, but it said so on the
+  chat screen he was not looking at, so from where he stood the tap did
+  nothing. The words now land under the button he pressed.
+*/
 new MutationObserver(function(){
  micSaid.textContent=recSaid.textContent;
+ var mb=window.micBox,ms=mb&&mb.querySelector('.rsaid');
+ if(ms&&mb.offsetParent)ms.textContent=recSaid.textContent;
 }).observe(recSaid,{childList:true,characterData:true,subtree:true});
 
 // idle, rec, send, ok, bad. Every microphone on the page wears the same one.
@@ -11349,9 +11373,40 @@ function rivDebt(r){
   +'<small>'+esc(r.sub||'')+'</small><ul class="rvinv">'+li+'</ul>'
   +'<button type="button" class="rvc" data-q="'+esc('על '+r.name+': ')+'">תגובה על '+esc(r.name)+'</button></div>';
 }
+/*
+  A way to talk from the bookkeeping screen, at the top where he is.
+
+  Itzik, 30.9, by voice: "make me reply buttons in bookkeeping, I have no way
+  to talk to you from there." The general box sat folded at the very bottom
+  of a long screen, and tapping an invoice threw him out to the chat. Now the
+  box is open above the lists, and tapping an invoice or a customer points
+  that same box at it and brings it into view, without leaving the screen.
+*/
+function rivTalk(){
+ var host=document.getElementById('rivTalk');
+ if(!host)return null;
+ if(!host.querySelector('.rbox')){
+  host.innerHTML='<div class="rivon" id="rivOn">💬 לכתוב או להקליט לי על המסך הזה. נגיעה בחשבונית או בלקוח מכוונת לשם.</div>'
+   +replyBox('על המסך הנהלת חשבונות');
+  wireBoxes(host);
+ }
+ return host;
+}
+function rivAim(q){
+ var host=rivTalk();if(!host)return;
+ var b=host.querySelector('.rbox'),on=document.getElementById('rivOn');
+ q=String(q||'').replace(/[:\\s]+$/,'');
+ b.setAttribute('data-q',q);
+ if(on)on.textContent='💬 מגיב על: '+q.replace(/^על /,'');
+ host.scrollIntoView({behavior:'smooth',block:'start'});
+ var t=b.querySelector('textarea');if(t)try{t.focus({preventScroll:true});}catch(e){t.focus();}
+}
 function renderRivhit(){
  var R=D.rivhit||[],box=document.getElementById('rivBox');
  if(!box)return;
+ rivTalk();
+ var wt=document.getElementById('rivWait');
+ if(wt){wt.hidden=!!R.length;wt.textContent=lazyDone.rivhit?'אין כרגע נתונים להציג.':'טוען את הנתונים...';}
  if(!R.length){box.hidden=true;return;}
  box.hidden=false;
  var s=R.filter(function(r){return r.kind==='sum';})[0];
@@ -11373,8 +11428,15 @@ function renderRivhit(){
   if(h)h.hidden=!rows.length;
  };
  var dl=document.getElementById('rivList');
- if(dl){dl.innerHTML=by('debt').map(rivDebt).join('');
-  dl.onclick=function(e){var t=e.target.closest('[data-q]');if(t)askInChat(t.getAttribute('data-q'));};}
+ if(dl){dl.innerHTML=by('debt').map(rivDebt).join('');}
+ // Every line on the screen answers a tap, not only the invoice lists: an
+ // invoice or customer carries its own words, a plain row is quoted as seen.
+ box.onclick=function(e){
+  var t=e.target.closest('[data-q]');
+  if(t&&box.contains(t)){rivAim(t.getAttribute('data-q'));return;}
+  var r=e.target.closest('.rivrow');
+  if(r)rivAim('על '+String(r.innerText||r.textContent||'').replace(/\\s+/g,' ').trim());
+ };
  put('rivOpen',by('open'),'rivH2');
  put('rivBank',by('bank'),'rivH4');
  var U=by('audit'),ue=document.getElementById('rivAudit'),uh=document.getElementById('rivH5');
