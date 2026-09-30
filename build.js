@@ -2254,6 +2254,18 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
 .rv-exact{background:#e6f4ea;color:#137333}
 .rv-near{background:#fef7e0;color:#8a6100}
 .rv-partial{background:#e8f0fe;color:#1a56c4}
+.rvcust{background:var(--card,#fff);border-radius:14px;padding:11px 13px;margin-bottom:9px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.rvcust .rvh{display:flex;align-items:baseline;gap:8px}
+.rvcust .rvh b{flex:1;font:700 15px Heebo,sans-serif}
+.rvcust .rvh .a{font:700 16px Heebo,sans-serif;white-space:nowrap}
+.rvcust>small{display:block;font-size:12px;color:var(--dim);margin:2px 0 6px}
+.rvinv{list-style:none;margin:0;padding:0}
+.rvinv li{display:flex;gap:8px;align-items:center;padding:7px 2px;border-top:1px solid rgba(0,0,0,.07);font-size:13.5px;cursor:pointer}
+.rvinv li .n{flex:1;min-width:0}
+.rvinv li .dt{color:var(--dim);font-size:12.5px;white-space:nowrap}
+.rvinv li .m{font-weight:700;white-space:nowrap;min-width:64px;text-align:left}
+.rvinv li small{display:block;font-size:11px;color:var(--dim)}
+.rvc{margin-top:6px;border:0;border-radius:999px;padding:6px 14px;font:600 12.5px Heebo,sans-serif;background:#e8f0fe;color:#1a56c4;cursor:pointer}
 .rivaud{border:1px solid var(--line);border-radius:16px;background:var(--surface);
  padding:13px 14px;margin-bottom:10px}
 .rivaud>b{display:block;font:700 15px Heebo,sans-serif}
@@ -11323,6 +11335,18 @@ function rivRow(r){
   +(tag?'<span class="rivtag '+tag[0]+'">'+tag[1]+'</span>':'')
   +'</span><span class="a">'+ils(r.amount)+'</span></div>';
 }
+function rivDebt(r){
+ if(!r.inv)return rivRow(r);
+ var li=r.inv.map(function(x){
+  var q='על '+r.name+', '+(x.n?'חשבונית '+x.n+' מ '+x.date:x.date)+': ';
+  return '<li data-q="'+esc(q)+'"><span class="n">'+(x.n?'חשבונית '+esc(x.n):esc(x.label||'חוב ישן'))
+   +(x.left<x.amount-0.5?'<small>שולם חלק, מתוך '+ils(x.amount)+'</small>':'')+'</span>'
+   +'<span class="dt">'+esc(x.date)+'</span><span class="m">'+ils(x.left)+'</span></li>';
+ }).join('');
+ return '<div class="rvcust"><div class="rvh"><b>'+esc(r.name)+'</b><span class="a">'+ils(r.amount)+'</span></div>'
+  +'<small>'+esc(r.sub||'')+'</small><ul class="rvinv">'+li+'</ul>'
+  +'<button type="button" class="rvc" data-q="'+esc('על '+r.name+': ')+'">תגובה על '+esc(r.name)+'</button></div>';
+}
 function renderRivhit(){
  var R=D.rivhit||[],box=document.getElementById('rivBox');
  if(!box)return;
@@ -11333,7 +11357,7 @@ function renderRivhit(){
  if(host){
   host.innerHTML=s
    ?'<b>'+esc(s.title)+'</b><small>'+esc(s.period)+' · '+esc(s.account)+'</small>'
-    +'<small>יתרה בבנק '+ils(s.balance)+' · ממתין לקבלה '+ils(s.toReceipt)+' על פני '+esc(String(s.count))+' לקוחות</small>'
+    +(s.toReceipt?'<small>יתרה בבנק '+ils(s.balance)+' · ממתין לקבלה '+ils(s.toReceipt)+' על פני '+esc(String(s.count))+' לקוחות</small>':'')
     +'<small>'+esc(s.note)+'</small>'
    :'';
   host.hidden=!s;
@@ -11346,7 +11370,9 @@ function renderRivhit(){
   el.hidden=!rows.length;
   if(h)h.hidden=!rows.length;
  };
- put('rivList',by('debt'),'rivH1');
+ var dl=document.getElementById('rivList');
+ if(dl){dl.innerHTML=by('debt').map(rivDebt).join('');
+  dl.onclick=function(e){var t=e.target.closest('[data-q]');if(t)askInChat(t.getAttribute('data-q'));};}
  put('rivOpen',by('open'),'rivH2');
  put('rivBank',by('bank'),'rivH4');
  var U=by('audit'),ue=document.getElementById('rivAudit'),uh=document.getElementById('rivH5');
