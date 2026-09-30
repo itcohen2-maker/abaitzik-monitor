@@ -1957,7 +1957,8 @@ body.editing .bn{display:none}
 .tenalert b{display:block;font:700 15px Heebo,sans-serif}
 .tenalert small{display:block;font-size:12px;opacity:.95}
 .idea .itag{display:block;font-size:11px;color:var(--dim);margin-bottom:3px}
-.grid .gt{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.grid .gt,#blkIcons .ic{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+#blkIcons .ic.tlift{opacity:.3}
 .tarr{grid-column:1/-1;justify-self:start;display:block;margin:0;border:0;background:none;color:var(--dim);font:600 12.5px Heebo,sans-serif;cursor:pointer;padding:4px 2px}
 .tedit .gt{position:relative;animation:wobble .28s infinite alternate ease-in-out}
 .grid .gt.tlift{opacity:.3}
@@ -6396,7 +6397,7 @@ function armDrag(box,key){
   var t=e.target;
   if(t&&t.closest&&t.closest('input,textarea,select'))return;
   // A long press on a tile lifts the tile, not the whole block.
-  if(t&&t.closest&&t.closest('#blkTiles .gt'))return;
+  if(t&&t.closest&&t.closest('#blkTiles .gt,#blkIcons .ic'))return;
   if(editing)return;
   startY=e.clientY;
   hold=setTimeout(enterEdit,500);
@@ -11466,18 +11467,18 @@ function tilesExit(){
  tileBar(false);
  var a=document.getElementById('tileArr');if(a)a.textContent='✎ הורדת אריחים';
 }
-function armTiles(grid){
- if(!grid)return;
- var arr=document.createElement('button');
- arr.type='button';arr.id='tileArr';arr.className='tarr';arr.textContent='✎ הורדת אריחים';
- arr.onclick=function(){if(tEdit)tilesExit();else tilesEnter(grid);};
- // Inside the grid, across the full row: the home screen re-pins its blocks
- // after this runs, and a button standing beside the grid got left behind.
- grid.insertBefore(arr,grid.firstChild);
+/*
+  The press and drag itself, shared by the square tiles and, from 30.9 in his
+  voice ("now do it with the round icons too"), the round icons. sel picks the
+  items inside box, key is where the order is kept, inEdit says whether the
+  box is in a mode where a move lifts at once without the wait.
+*/
+function pressDrag(grid,sel,key,inEdit){
+ inEdit=inEdit||function(){return false;};
  var hold=null,sx=0,sy=0,cand=null,held=null,ghost=null,gdx=0,gdy=0,lx=0,ly=0,swallow=false,roll=null;
  function tileAt(x,y){
   var o=document.elementFromPoint(x,y);
-  o=o&&o.closest?o.closest('.gt'):null;
+  o=o&&o.closest?o.closest(sel):null;
   return o&&o.parentNode===grid?o:null;
  }
  function place(x,y){
@@ -11517,7 +11518,7 @@ function armTiles(grid){
   held.classList.remove('tlift');held=null;
   if(ghost){ghost.remove();ghost=null;}
   document.body.classList.remove('tdrag');
-  saveOrder(grid,'tileOrder');
+  saveOrder(grid,key);
   // The click that may follow the drop is not a tap on the tile. If none
   // comes, the next real tap must not be eaten either.
   setTimeout(function(){swallow=false;},450);
@@ -11527,7 +11528,7 @@ function armTiles(grid){
   var t=tileAt(x,y);
   if(!t||(e.target.closest&&e.target.closest('.tx')))return;
   cand=t;sx=x;sy=y;
-  if(tEdit)return; // in the ✕ mode the first real move lifts it
+  if(inEdit())return; // in the ✕ mode the first real move lifts it
   hold=setTimeout(function(){lift(t,sx,sy);},350);
  }
  function move(e,x,y){
@@ -11535,7 +11536,7 @@ function armTiles(grid){
   if(held){if(e.cancelable)e.preventDefault();place(x,y);return;}
   if(!cand)return;
   if(Math.abs(x-sx)>10||Math.abs(y-sy)>10){
-   if(tEdit){if(e.cancelable)e.preventDefault();lift(cand,sx,sy);place(x,y);return;}
+   if(inEdit()){if(e.cancelable)e.preventDefault();lift(cand,sx,sy);place(x,y);return;}
    clearTimeout(hold);hold=null;cand=null;
   }
  }
@@ -11553,9 +11554,24 @@ function armTiles(grid){
  grid.addEventListener('mousedown',function(e){if(e.button===0)start(e,e.clientX,e.clientY);});
  document.addEventListener('mousemove',function(e){if(cand||held)move(e,e.clientX,e.clientY);});
  document.addEventListener('mouseup',drop);
- grid.addEventListener('contextmenu',function(e){if(tEdit||swallow||held)e.preventDefault();});
+ grid.addEventListener('contextmenu',function(e){if(swallow||held)e.preventDefault();});
+ // Registered before any other click handler on the box, so stopping it here
+ // stops them too.
  grid.addEventListener('click',function(e){
-  if(swallow){swallow=false;e.preventDefault();e.stopPropagation();return;}
+  if(swallow){swallow=false;e.preventDefault();e.stopImmediatePropagation();return;}
+ },true);
+}
+function armTiles(grid){
+ if(!grid)return;
+ var arr=document.createElement('button');
+ arr.type='button';arr.id='tileArr';arr.className='tarr';arr.textContent='✎ הורדת אריחים';
+ arr.onclick=function(){if(tEdit)tilesExit();else tilesEnter(grid);};
+ // Inside the grid, across the full row: the home screen re-pins its blocks
+ // after this runs, and a button standing beside the grid got left behind.
+ grid.insertBefore(arr,grid.firstChild);
+ pressDrag(grid,'.gt','tileOrder',function(){return tEdit;});
+ grid.addEventListener('contextmenu',function(e){if(tEdit)e.preventDefault();});
+ grid.addEventListener('click',function(e){
   if(!tEdit||e.target.closest('#tileArr'))return;
   e.preventDefault();e.stopPropagation();
   var t=e.target.closest?e.target.closest('.gt'):null;
@@ -11598,6 +11614,15 @@ function pinHome(home){
  var grid=document.querySelector('.grid');
  var home=document.getElementById('pH');
  if(grid){nameChildren(grid,'tile');applyOrder(grid,'tileOrder');armTiles(grid);}
+ // The round icons: named by what they say, not where they stand, so a new
+ // icon added in the middle does not shuffle his order.
+ var icons=document.getElementById('blkIcons');
+ if(icons){
+  Array.prototype.forEach.call(icons.children,function(el){
+   if(!el.id)el.id='ic-'+(el.getAttribute('data-net')||el.textContent.trim());
+  });
+  applyOrder(icons,'iconOrder');pressDrag(icons,'.ic','iconOrder');
+ }
  if(home){nameChildren(home,'blk');applyOrder(home,'blockOrder');pinHome(home);armDrag(home,'blockOrder');}
 })();
 on('editDone',endEdit);
