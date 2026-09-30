@@ -10,7 +10,7 @@
   The trade he chose, in his words, was that a login screen with a code by email
   is four screens between him and a message he wants to read now. This keeps the
   address, the shortcut on his home screen and the push links exactly as they
-  are, and costs him six digits once per phone.
+  are, and costs him the code once per phone (five Hebrew words since 30.9).
 
   What this does not defend against: somebody who has both the link and the
   code. It is a lock on a public door, not a private room. The passphrase lives
@@ -25,10 +25,45 @@ const crypto = require('crypto');
 const HERE = __dirname;
 const KEY_FILE = path.join(HERE, 'gate-key.txt');
 const SALT_FILE = path.join(HERE, 'gate-salt.txt');
+const PARAMS_FILE = path.join(HERE, 'gate-params.json');
 // High enough to make guessing a six digit code off a stolen file slow, low
 // enough that an old phone derives it in about a second. It runs once per
 // device and the result is cached, so the cost is paid exactly once.
-const ROUNDS = 210000;
+const LEGACY_ROUNDS = 210000;
+/*
+  30.9, the passphrase. A six digit code under any number of rounds is a
+  million guesses, and the sealed files are public, so an audit found it could
+  be brute forced offline. The fix is a passphrase of five Hebrew words, and with
+  it the rounds go to 600000 (an iPhone derives that in well under a second,
+  once per device).
+
+  Its salt and rounds live in gate-params.json, next to the key and gitignored
+  like it, and not in gate-salt.txt: that one is tracked, and every customer
+  copy takes the tracked files from this repository every five minutes, so a
+  new salt there would reach Ilay and lock his phone out of his own code. A
+  copy with no gate-params.json keeps exactly what it had: gate-salt.txt,
+  210000 rounds and the numeric keypad.
+*/
+const ROUNDS = 600000;
+
+/*
+  What he types and what the key file holds are brought to one form before
+  either becomes a key. On an iPhone the same words can arrive as a different
+  string: a double space, a space the keyboard added at the end, a direction
+  mark, Hebrew in a decomposed form, or a final letter typed as a regular one.
+  None of those may lock him out, so all of them are folded away here, and the
+  page runs the very same steps (gnorm in build.js). Digits pass through
+  untouched, so every six digit code derives exactly what it always did.
+*/
+function normalize(s) {
+  return String(s == null ? '' : s)
+    .normalize('NFC')
+    .replace(/[֑-ׇ]/g, '')
+    .replace(/[​-‏‪-‮⁦-⁩﻿]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/[ךםןףץ]/g, (c) => 'כמנפצ'.charAt('ךםןףץ'.indexOf(c)));
+}
 
 /*
   Off for the tests, on everywhere else.
@@ -42,20 +77,47 @@ function enabled() {
   if (process.env.MONITOR_NO_GATE) return false;
   return fs.existsSync(KEY_FILE);
 }
-function passphrase() { return fs.readFileSync(KEY_FILE, 'utf8').trim(); }
+function passphrase() { return normalize(fs.readFileSync(KEY_FILE, 'utf8')); }
 
-function salt() {
+function legacySalt() {
   if (!fs.existsSync(SALT_FILE)) {
     fs.writeFileSync(SALT_FILE, crypto.randomBytes(16).toString('base64'), 'utf8');
   }
   return Buffer.from(fs.readFileSync(SALT_FILE, 'utf8').trim(), 'base64');
 }
 
+/*
+  The salt and rounds this copy seals with. A gate-params.json that is there
+  but broken stops the build rather than falling back: falling back would
+  publish under the old salt and rounds, and his phone would find a page that
+  no longer matches the words he was given.
+*/
+function params() {
+  if (!fs.existsSync(PARAMS_FILE)) return { salt: legacySalt(), rounds: LEGACY_ROUNDS, words: false };
+  const p = JSON.parse(fs.readFileSync(PARAMS_FILE, 'utf8'));
+  const s = Buffer.from(String(p.salt || ''), 'base64');
+  const r = Number(p.rounds);
+  if (s.length < 16) throw new Error('gate-params.json: salt must be at least 16 bytes');
+  if (!Number.isInteger(r) || r < 100000 || r > 10000000) throw new Error('gate-params.json: rounds out of range');
+  return { salt: s, rounds: r, words: true };
+}
+function salt() { return params().salt; }
+
 let cached = null;
 function key() {
   if (cached) return cached;
-  cached = crypto.pbkdf2Sync(passphrase(), salt(), ROUNDS, 32, 'sha256');
+  const p = params();
+  cached = crypto.pbkdf2Sync(passphrase(), p.salt, p.rounds, 32, 'sha256');
   return cached;
+}
+// What the page needs to derive the same key: public by design. `words` only
+// switches the box to a text keyboard; a copy without it ships the same GATE
+// object byte for byte as before.
+function pageParams() {
+  const p = params();
+  const o = { salt: p.salt.toString('base64'), rounds: p.rounds };
+  if (p.words) o.words = 1;
+  return o;
 }
 
 /*
@@ -97,5 +159,7 @@ function fileId(name) {
   return crypto.createHmac('sha256', key()).update('file:' + name).digest('hex').slice(0, 24);
 }
 
-module.exports = { enabled, seal, open, sealBytes, fileId, rounds: ROUNDS,
+module.exports = { enabled, seal, open, sealBytes, fileId, normalize, pageParams,
+  NEW_ROUNDS: ROUNDS, LEGACY_ROUNDS,
+  get rounds() { return params().rounds; },
   saltB64: () => salt().toString('base64') };

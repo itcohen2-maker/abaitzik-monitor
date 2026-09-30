@@ -62,6 +62,9 @@ let misses = 0, shutUntil = 0;
 function apply(code) {
   fs.writeFileSync(KEY_FILE, code + '\n', { mode: 0o600 });
   try { fs.unlinkSync(SALT_FILE); } catch (e) { /* first time: none yet */ }
+  // A passphrase copy keeps its salt and rounds here; a code chosen now is a
+  // six digit code, so it goes back to gate-salt.txt and the numeric keypad.
+  try { fs.unlinkSync(path.join(HERE, 'gate-params.json')); } catch (e) {}
   fs.unlinkSync(TOKEN_FILE);
   execFileSync('node', ['build.js'], { cwd: HERE, stdio: 'ignore', timeout: 120000 });
   // Caddy runs as another user and must be able to read what was just built.
