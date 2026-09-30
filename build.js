@@ -470,6 +470,16 @@ function build() {
       balance: typeof r.balance === 'number' ? r.balance : null,
       toReceipt: typeof r.toReceipt === 'number' ? r.toReceipt : null,
       count: typeof r.count === 'number' ? r.count : null,
+      // kind debt (30.9): the open invoices behind the total, so a tap on the
+      // customer shows exactly which ones.
+      ...(r.kind === 'debt' && Array.isArray(r.inv) ? {
+        sub: String(r.sub || ''),
+        inv: r.inv.map(x => ({
+          n: String(x.n || ''), label: String(x.label || ''), date: String(x.date || ''),
+          amount: typeof x.amount === 'number' ? x.amount : 0,
+          left: typeof x.left === 'number' ? x.left : 0,
+        })),
+      } : {}),
       // kind audit: one customer checked invoice by invoice. Only those docs
       // carry the two arrays, so the other records stay as small as they were.
       ...(r.kind === 'audit' ? {
@@ -1936,13 +1946,13 @@ body.editing .bn{display:none}
 .g15{background:linear-gradient(150deg,#90caf9,#1565c0)}
 .gRec{background:linear-gradient(150deg,#ffd54f,#e06a00)}
 .grid .gt{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
-.tarr{display:block;margin:10px 0 2px auto;border:0;background:none;color:var(--dim);font:600 12.5px Heebo,sans-serif;cursor:pointer;padding:4px 2px}
+.tarr{grid-column:1/-1;justify-self:start;display:block;margin:0;border:0;background:none;color:var(--dim);font:600 12.5px Heebo,sans-serif;cursor:pointer;padding:4px 2px}
 .tedit .gt{position:relative;animation:wobble .28s infinite alternate ease-in-out}
 .tedit .gt.tsel{animation:none;outline:3px solid #fbbc04;outline-offset:2px;transform:scale(1.04)}
-.gt .tx{display:none;position:absolute;top:-7px;inset-inline-start:-7px;width:28px;height:28px;border-radius:50%;
+.gt .tx{display:none;position:absolute;top:6px;inset-inline-end:6px;width:28px;height:28px;border-radius:50%;
  background:#d93025;color:#fff;border:2px solid #fff;font:700 16px/22px Heebo,sans-serif;padding:0;z-index:2;cursor:pointer;text-align:center}
 .tedit .gt .tx{display:block}
-#tileBar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--card,#fff);box-shadow:0 -2px 12px rgba(0,0,0,.18);
+#tileBar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--surface);color:inherit;border-top:1px solid var(--line);box-shadow:0 -2px 12px rgba(0,0,0,.18);
  padding:10px 14px calc(10px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px}
 #tileBar small{font-size:12.5px;color:var(--dim)}
 #tileBar .row2{display:flex;gap:8px}
@@ -2269,13 +2279,13 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
 .rv-exact{background:#e6f4ea;color:#137333}
 .rv-near{background:#fef7e0;color:#8a6100}
 .rv-partial{background:#e8f0fe;color:#1a56c4}
-.rvcust{background:var(--card,#fff);border-radius:14px;padding:11px 13px;margin-bottom:9px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.rvcust{background:var(--surface);border:1px solid var(--line);color:var(--text,inherit);border-radius:14px;padding:11px 13px;margin-bottom:9px}
 .rvcust .rvh{display:flex;align-items:baseline;gap:8px}
 .rvcust .rvh b{flex:1;font:700 15px Heebo,sans-serif}
 .rvcust .rvh .a{font:700 16px Heebo,sans-serif;white-space:nowrap}
 .rvcust>small{display:block;font-size:12px;color:var(--dim);margin:2px 0 6px}
 .rvinv{list-style:none;margin:0;padding:0}
-.rvinv li{display:flex;gap:8px;align-items:center;padding:7px 2px;border-top:1px solid rgba(0,0,0,.07);font-size:13.5px;cursor:pointer}
+.rvinv li{display:flex;gap:8px;align-items:center;padding:7px 2px;border-top:1px solid var(--line);font-size:13.5px;cursor:pointer}
 .rvinv li .n{flex:1;min-width:0}
 .rvinv li .dt{color:var(--dim);font-size:12.5px;white-space:nowrap}
 .rvinv li .m{font-weight:700;white-space:nowrap;min-width:64px;text-align:left}
@@ -2289,7 +2299,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
 .rvcust summary b::before{content:'◂ ';color:var(--dim);font-weight:400}
 .rvcust[open] summary b::before{content:'▾ '}
 .rvf{display:flex;gap:6px;margin-top:8px}
-.rvf input{flex:1;min-width:0;border:1px solid rgba(0,0,0,.18);border-radius:10px;padding:9px 10px;font:400 14px Heebo,sans-serif}
+.rvf input{flex:1;min-width:0;background:transparent;color:inherit;border:1px solid var(--line);border-radius:10px;padding:9px 10px;font:400 14px Heebo,sans-serif}
 .rvf button{border:0;border-radius:10px;padding:9px 14px;background:#1a73e8;color:#fff;font:700 13.5px Heebo,sans-serif}
 .rvsaid{font-size:12px;color:var(--dim);margin-top:4px}
 .rvc{margin-top:6px;border:0;border-radius:999px;padding:6px 14px;font:600 12.5px Heebo,sans-serif;background:#e8f0fe;color:#1a56c4;cursor:pointer}
@@ -11312,7 +11322,9 @@ function armTiles(grid){
  var arr=document.createElement('button');
  arr.type='button';arr.id='tileArr';arr.className='tarr';arr.textContent='✎ סידור האריחים';
  arr.onclick=function(){if(tEdit)tilesExit();else tilesEnter(grid);};
- grid.parentNode.insertBefore(arr,grid);
+ // Inside the grid, across the full row: the home screen re-pins its blocks
+ // after this runs, and a button standing beside the grid got left behind.
+ grid.insertBefore(arr,grid.firstChild);
  var hold=null,sx=0,sy=0,swallow=false;
  grid.addEventListener('pointerdown',function(e){
   if(tEdit)return;
@@ -11328,7 +11340,7 @@ function armTiles(grid){
  grid.addEventListener('contextmenu',function(e){if(tEdit||swallow)e.preventDefault();});
  grid.addEventListener('click',function(e){
   if(swallow){swallow=false;e.preventDefault();e.stopPropagation();return;}
-  if(!tEdit)return;
+  if(!tEdit||e.target.closest('#tileArr'))return;
   e.preventDefault();e.stopPropagation();
   var t=e.target.closest?e.target.closest('.gt'):null;
   if(!t||t.parentNode!==grid)return;

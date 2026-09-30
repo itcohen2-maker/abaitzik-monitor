@@ -928,13 +928,13 @@ body.editing .bn{display:none}
 .g15{background:linear-gradient(150deg,#90caf9,#1565c0)}
 .gRec{background:linear-gradient(150deg,#ffd54f,#e06a00)}
 .grid .gt{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
-.tarr{display:block;margin:10px 0 2px auto;border:0;background:none;color:var(--dim);font:600 12.5px Heebo,sans-serif;cursor:pointer;padding:4px 2px}
+.tarr{grid-column:1/-1;justify-self:start;display:block;margin:0;border:0;background:none;color:var(--dim);font:600 12.5px Heebo,sans-serif;cursor:pointer;padding:4px 2px}
 .tedit .gt{position:relative;animation:wobble .28s infinite alternate ease-in-out}
 .tedit .gt.tsel{animation:none;outline:3px solid #fbbc04;outline-offset:2px;transform:scale(1.04)}
-.gt .tx{display:none;position:absolute;top:-7px;inset-inline-start:-7px;width:28px;height:28px;border-radius:50%;
+.gt .tx{display:none;position:absolute;top:6px;inset-inline-end:6px;width:28px;height:28px;border-radius:50%;
  background:#d93025;color:#fff;border:2px solid #fff;font:700 16px/22px Heebo,sans-serif;padding:0;z-index:2;cursor:pointer;text-align:center}
 .tedit .gt .tx{display:block}
-#tileBar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--card,#fff);box-shadow:0 -2px 12px rgba(0,0,0,.18);
+#tileBar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--surface);color:inherit;border-top:1px solid var(--line);box-shadow:0 -2px 12px rgba(0,0,0,.18);
  padding:10px 14px calc(10px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px}
 #tileBar small{font-size:12.5px;color:var(--dim)}
 #tileBar .row2{display:flex;gap:8px}
@@ -1210,13 +1210,13 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
 .rv-exact{background:#e6f4ea;color:#137333}
 .rv-near{background:#fef7e0;color:#8a6100}
 .rv-partial{background:#e8f0fe;color:#1a56c4}
-.rvcust{background:var(--card,#fff);border-radius:14px;padding:11px 13px;margin-bottom:9px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.rvcust{background:var(--surface);border:1px solid var(--line);color:var(--text,inherit);border-radius:14px;padding:11px 13px;margin-bottom:9px}
 .rvcust .rvh{display:flex;align-items:baseline;gap:8px}
 .rvcust .rvh b{flex:1;font:700 15px Heebo,sans-serif}
 .rvcust .rvh .a{font:700 16px Heebo,sans-serif;white-space:nowrap}
 .rvcust>small{display:block;font-size:12px;color:var(--dim);margin:2px 0 6px}
 .rvinv{list-style:none;margin:0;padding:0}
-.rvinv li{display:flex;gap:8px;align-items:center;padding:7px 2px;border-top:1px solid rgba(0,0,0,.07);font-size:13.5px;cursor:pointer}
+.rvinv li{display:flex;gap:8px;align-items:center;padding:7px 2px;border-top:1px solid var(--line);font-size:13.5px;cursor:pointer}
 .rvinv li .n{flex:1;min-width:0}
 .rvinv li .dt{color:var(--dim);font-size:12.5px;white-space:nowrap}
 .rvinv li .m{font-weight:700;white-space:nowrap;min-width:64px;text-align:left}
@@ -1230,7 +1230,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
 .rvcust summary b::before{content:'◂ ';color:var(--dim);font-weight:400}
 .rvcust[open] summary b::before{content:'▾ '}
 .rvf{display:flex;gap:6px;margin-top:8px}
-.rvf input{flex:1;min-width:0;border:1px solid rgba(0,0,0,.18);border-radius:10px;padding:9px 10px;font:400 14px Heebo,sans-serif}
+.rvf input{flex:1;min-width:0;background:transparent;color:inherit;border:1px solid var(--line);border-radius:10px;padding:9px 10px;font:400 14px Heebo,sans-serif}
 .rvf button{border:0;border-radius:10px;padding:9px 14px;background:#1a73e8;color:#fff;font:700 13.5px Heebo,sans-serif}
 .rvsaid{font-size:12px;color:var(--dim);margin-top:4px}
 .rvc{margin-top:6px;border:0;border-radius:999px;padding:6px 14px;font:600 12.5px Heebo,sans-serif;background:#e8f0fe;color:#1a56c4;cursor:pointer}
@@ -1653,7 +1653,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-30T04:37:02.007Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-30T04:41:38.911Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2782,7 +2782,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='2c4194cda4';
+var CODE_ID='9674a302d5';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -8071,7 +8071,7 @@ function armTiles(grid){
  var arr=document.createElement('button');
  arr.type='button';arr.id='tileArr';arr.className='tarr';arr.textContent='✎ סידור האריחים';
  arr.onclick=function(){if(tEdit)tilesExit();else tilesEnter(grid);};
- grid.parentNode.insertBefore(arr,grid);
+ grid.insertBefore(arr,grid.firstChild);
  var hold=null,sx=0,sy=0,swallow=false;
  grid.addEventListener('pointerdown',function(e){
   if(tEdit)return;
@@ -8087,7 +8087,7 @@ function armTiles(grid){
  grid.addEventListener('contextmenu',function(e){if(tEdit||swallow)e.preventDefault();});
  grid.addEventListener('click',function(e){
   if(swallow){swallow=false;e.preventDefault();e.stopPropagation();return;}
-  if(!tEdit)return;
+  if(!tEdit||e.target.closest('#tileArr'))return;
   e.preventDefault();e.stopPropagation();
   var t=e.target.closest?e.target.closest('.gt'):null;
   if(!t||t.parentNode!==grid)return;
