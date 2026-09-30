@@ -3075,6 +3075,7 @@ try{
   <!-- The reports tile came off on 17.9. The reports are in "תשובות" now,
        which is the one button he asked for. -->
   <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>מי חייב כסף ומאיזה חודש</small></button>
+  <button type="button" class="gt g8" id="gVaad"><b>🏠 ועד הבית</b><small>מי שילם ומה פתוח</small></button>
   <button type="button" class="gt g15" id="gSale"><b>⚖️ מכירת לולוס</b><small>התיק לעורך הדין, מה פתוח ומה נמסר</small></button>
   <!--
     איציק, 28.9: "תשים אצלי במוניטור עם אייקון לולוס". The recipe booklet, 19
@@ -9425,6 +9426,7 @@ on('diagBtn',function(){
 function openFood(){pane('f');renderFood();ensure('food',renderFood);}
 on('gFood',openFood);on('iFood',openFood);
 on('gLolos',function(){pane('o');ensure('rivhit',renderRivhit);});
+on('gVaad',function(){pane('v');});
 /*
   יהודה. The report lives next to the page under docs/files, so this is a
   plain open and not a screen: no login, no Drive app, no key. Opening in a
