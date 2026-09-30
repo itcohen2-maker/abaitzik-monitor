@@ -366,6 +366,9 @@ function build() {
     // dropped here, so the transcript he asks for never reached his screen.
     // His code rides on the last line of every send. Stripped here so the
     // messages already on disk stop putting it back on screen at each refresh.
+    // Security, 30.9: a message that arrived without his code is held on disk
+    // for review and never drawn, so it cannot pose as him or as Claude.
+    .filter(m => m.from !== 'unverified')
     .map(m => ({ id: m.id, at: m.at, from: m.from, text: group.stripCode(m.text),
                  status: m.status || '', re: m.re || '', ackAt: m.ackAt || '',
                  note: group.stripCode(m.note) }))

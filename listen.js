@@ -324,6 +324,32 @@ function chatName(at) {
   return name;
 }
 
+/*
+  Security, 30.9. The incoming ntfy topic was public (it sat in the public
+  repo), and anything that arrived on it was recorded as Itzik and handed to
+  a Claude session with full permissions. Every send from his page carries
+  his personal code on its last line, so that code is now the proof: a
+  message, or a group of parts, is his only once a part with the right code
+  has arrived. Until then it is recorded as 'unverified', which the worker
+  never picks up. The code lives in data/owner-code.txt (600, gitignored).
+*/
+let ownerCode = null, ownerCodeAt = 0;
+function ownerCodeOk(text) {
+  if (Date.now() - ownerCodeAt > 60000) {
+    try { ownerCode = fs.readFileSync(path.join(__dirname, 'data', 'owner-code.txt'), 'utf8').trim(); }
+    catch (e) { ownerCode = null; }
+    ownerCodeAt = Date.now();
+  }
+  if (!ownerCode || !/^[0-9]{3,8}$/.test(ownerCode)) return false;
+  // Plain text, no pattern: every piece after the word, whitespace off,
+  // must start with the code and not run on into more digits.
+  const parts = String(text || '').split('קוד').slice(1);
+  return parts.some(function (part) {
+    const rest = part.trimStart();
+    return rest.startsWith(ownerCode) && !/[0-9]/.test(rest.charAt(ownerCode.length));
+  });
+}
+
 function recordIncoming(m) {
   const gid = group.groupOf(m.title);
   const held = gid ? groupFiles.get(gid) : null;
@@ -342,6 +368,7 @@ function recordIncoming(m) {
     caption = gid ? group.captionFrom(m.message) : group.stripCode(m.message);
   }
   if (!attach && !caption.trim()) return false;
+  const codeOk = !m.attachment && ownerCodeOk(m.message);
 
   if (held) {
     // A part of a send that is already on the page. Widen it, do not repeat it.
@@ -354,6 +381,7 @@ function recordIncoming(m) {
     // between the first part and the last, the late part opens its own line.
     if (rec.status === 'done') { groupFiles.delete(gid); return false; }
     rec.text = group.groupText(held.caption, held.files);
+    if (codeOk && rec.from === 'unverified') { rec.from = 'itzik'; rec.status = 'working'; say('הקוד אומת, ההודעה עוברת לעבודה'); }
     rec.files = held.files.slice();
     try { fs.writeFileSync(path.join(CHAT, held.name), JSON.stringify(rec, null, 1), 'utf8'); }
     catch (e) { say('!! לא עודכן בצ׳אט: ' + e.message); return false; }
@@ -369,13 +397,13 @@ function recordIncoming(m) {
   if (!text) return false;
   const at = new Date();
   const name = chatName(at);
-  const rec = { at: at.toISOString(), from: 'itzik', text: text, status: 'working',
+  const rec = { at: at.toISOString(), from: codeOk ? 'itzik' : 'unverified', text: text, status: codeOk ? 'working' : 'held',
     ackAt: at.toISOString(), id: 'ntfy-' + m.id, auto: true };
   if (files.length) rec.files = files.slice();
   try {
     fs.mkdirSync(CHAT, { recursive: true });
     fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
-    say('נרשם בצ׳אט עם אישור קבלה: ' + text.slice(0, 60));
+    say((codeOk ? 'נרשם בצ׳אט עם אישור קבלה: ' : 'נרשם בלי קוד, ממתין לאימות: ') + text.slice(0, 60));
     recordDrain(text, at);
     if (gid) groupFiles.set(gid, { name: name, files: files, caption: caption.trim() });
     if (attach && group.isAudio(attach)) {
@@ -619,7 +647,7 @@ async function handleOne(m) {
   if (m.time === seen.time && seen.ids.includes(m.id)) return;
   received++;
   lastMsgAt = Date.now();
-  say('הודעה: ' + String(m.message || '(צרופה)').slice(0, 80));
+  say('הודעה: ' + group.stripCode(String(m.message || '(צרופה)')).slice(0, 80));
   if (m.attachment) await saveAttachment(m);
   if (m.message) logPull('text', m.message);
   // With the bridge off, a message that looks like a Codex request is an
