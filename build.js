@@ -2007,6 +2007,8 @@ body.tdrag{-webkit-user-select:none;user-select:none}
  box-shadow:0 -8px 40px rgba(0,0,0,.35)}
 .ycard b{font:700 16px Heebo,sans-serif}
 .ycard small{font-size:12px;opacity:.7;margin-bottom:4px}
+.yshort{white-space:pre-line;font-size:13px;line-height:1.5;max-height:34vh;overflow:auto;
+ background:rgba(120,140,170,.12);border-radius:10px;padding:10px;margin-bottom:4px}
 .yb{border:0;border-radius:12px;padding:13px;font:600 15px Heebo,sans-serif;
  background:#e8eef6;color:#16202c;cursor:pointer;min-height:48px}
 .yb1{background:linear-gradient(150deg,#90caf9,#1565c0);color:#fff}
@@ -3177,7 +3179,7 @@ try{
     docs/files, so it needs no login and no Drive on the phone. One file
     today; when there is a second, this becomes a list instead of a link.
   -->
-  <button type="button" class="gt g15" id="gYehuda"><b>📄 יהודה</b><small>סקירת happymeal. פתיחה, הורדה או שליחה אליו</small></button>
+  <button type="button" class="gt g15" id="gYehuda"><b>📄 יהודה</b><small>גרסה קצרה לשליחה, והסקירה המלאה לזיכרון</small></button>
   <!--
     26.9. The Home Style summer 2027 catalog: ten design directions, each with
     a cover, a spread and an agents page. The page sits in docs/katalog so it
@@ -6046,6 +6048,28 @@ function repaintAll(){
 */
 var lastTypeAt=0,CARRY='carryState',carried=null,carriedUntil=0;
 document.addEventListener('input',function(){lastTypeAt=Date.now();},true);
+/*
+  Scrolling blocks both refreshes too (30.9, voice note: "גם כשאני גולל
+  בתשובות ... אין צורך לרענן, זה מקפיץ את כל השורות"). A finger on the screen,
+  or any scroll in the last twenty seconds, and the new answer waits; once he
+  has stood still that long it comes in by itself.
+*/
+var lastScrollAt=0,touching=false,scrollWait=null;
+function markScroll(){lastScrollAt=Date.now();}
+window.addEventListener('scroll',markScroll,{capture:true,passive:true});
+document.addEventListener('touchstart',function(){touching=true;markScroll();},{capture:true,passive:true});
+document.addEventListener('touchmove',markScroll,{capture:true,passive:true});
+document.addEventListener('touchend',function(){touching=false;markScroll();},{capture:true,passive:true});
+document.addEventListener('touchcancel',function(){touching=false;},{capture:true,passive:true});
+window.addEventListener('wheel',markScroll,{capture:true,passive:true});
+function scrollingNow(){return touching||Date.now()-lastScrollAt<20000;}
+function afterScroll(){
+ if(scrollWait)return;
+ scrollWait=setTimeout(function(){
+  scrollWait=null;
+  if(scrollingNow())afterScroll();else if(!document.hidden)checkFresh();
+ },Math.max(1000,20500-(Date.now()-lastScrollAt)));
+}
 function typingNow(){
  var a=document.activeElement;
  if(a&&(a.tagName==='TEXTAREA'||(a.tagName==='INPUT'&&/^(text|search|email|tel|url|number|)$/.test(a.type||''))||a.isContentEditable))return true;
@@ -6086,6 +6110,7 @@ function checkFresh(){
   // Only the data moved: take it in where he stands. He asked for an answer
   // that arrives without the screen jumping under his hands, and a reload is
   // exactly that jump, plus the draft in the box.
+  if(scrollingNow()){afterScroll();return;}
   if(v.codeId&&CODE_ID&&v.codeId===CODE_ID){
    if(what&&liveSeen!==v.builtAt){liveSeen=v.builtAt;what.textContent='תשובה חדשה נכנסת.';}
    softRefresh(v);
@@ -6129,7 +6154,7 @@ document.addEventListener('click',function(e){
 },true);
 // Forty seconds, not two minutes. He wants to see that something is alive.
 setInterval(checkFresh,40000);
-setInterval(function(){paintLive(null);paintNew();try{renderReqs();}catch(e){}},20000);
+setInterval(function(){paintLive(null);paintNew();if(!scrollingNow())try{renderReqs();}catch(e){}},20000);
 /*
   Every way a phone can come back to this page.
 
@@ -9737,6 +9762,30 @@ function yehudaCopy(url){
   It sends a link and not a document, which is the trade, and it is the right
   trade for a button whose job is to never leave him stuck.
 */
+/*
+  30.9, בהקלטה: "תשאיר אותה אבל, שנזכור מה צריך, וגרסה קצרה לשליחה אליו ...
+  אנחנו לא מוציאים את השירותים שלנו, אנחנו רק אומרים מה לא בסדר באתר". The
+  full review stays here to read, with no way to send it. What goes to Yehuda
+  is this short note: the three problems and nothing else. No offer, no link to
+  the full document, no how to fix.
+*/
+var NL=String.fromCharCode(10);
+var YEHUDA_SHORT='היי יהודה, עברתי על האתר ושמתי לב לשלושה דברים שכדאי שתדע.'+NL+NL
+ +'האתר לא מופיע בגוגל. בכל עמוד יש הגדרה שאומרת למנועי חיפוש לא להציג אותו, ואין מפת אתר.'+NL+NL
+ +'נשארו באוויר שאריות מהתבנית: תפריטים באנגלית, כתובות מייל של יצרן התבנית, מספר טלפון הודי ועמודי הדגמה פתוחים.'+NL+NL
+ +'האתר לא עומד בתקן הנגישות: אין כותרת ראשית, 109 קישורים בלי שם נגיש ו 63 תמונות בלי תיאור. זו חובה בחוק לעסק שנותן שירות לציבור.';
+function yehudaShortWa(){
+ window.open('https://wa.me/?text='+encodeURIComponent(YEHUDA_SHORT),'_blank','noopener');
+}
+function yehudaShortCopy(){
+ if(navigator.clipboard&&navigator.clipboard.writeText){
+  navigator.clipboard.writeText(YEHUDA_SHORT)
+   .then(function(){toastY('הגרסה הקצרה הועתקה, אפשר להדביק בוואטסאפ');})
+   .catch(function(){toastY('לא הצלחתי להעתיק. תשתמש בכפתור הוואטסאפ');});
+  return;
+ }
+ toastY('לא הצלחתי להעתיק. תשתמש בכפתור הוואטסאפ');
+}
 function yehudaWhatsapp(){
  window.open('https://wa.me/?text='+encodeURIComponent(YEHUDA_MSG+String.fromCharCode(10)+String.fromCharCode(10)+yehudaUrl()),'_blank','noopener');
 }
@@ -9752,12 +9801,14 @@ function yehudaSheet(){
  w.setAttribute('role','dialog');
  w.setAttribute('aria-label','סקירת happymeal ליהודה');
  w.innerHTML='<div class="ycard">'
-  +'<b>סקירת הפיתוח ליהודה</b>'
-  +'<small>12 עמודים, מוכן לשליחה ללקוח</small>'
-  +'<button type="button" class="yb" data-y="open">פתיחת העמוד</button>'
-  +'<button type="button" class="yb" data-y="down">שמירה למכשיר</button>'
-  +'<button type="button" class="yb yb1" data-y="share">שליחה, עם הקובץ מצורף</button>'
-  +'<button type="button" class="yb yb2" data-y="wa">וואטסאפ, שליחת קישור</button>'
+  +'<b>יהודה, happymeal</b>'
+  +'<small>הגרסה הקצרה נשלחת אליו. הסקירה המלאה נשארת כאן לזיכרון ולא נשלחת.</small>'
+  +'<div class="yshort">'+esc(YEHUDA_SHORT)+'</div>'
+  +'<button type="button" class="yb yb2" data-y="swa">שליחת הגרסה הקצרה בוואטסאפ</button>'
+  +'<button type="button" class="yb" data-y="scopy">העתקת הגרסה הקצרה</button>'
+  +'<small>הסקירה המלאה, 12 עמודים, לא לשליחה</small>'
+  +'<button type="button" class="yb" data-y="open">פתיחת הסקירה המלאה</button>'
+  +'<button type="button" class="yb" data-y="down">שמירת הסקירה המלאה למכשיר</button>'
   +'<button type="button" class="yb yx" data-y="close">סגירה</button>'
   +'</div>';
  function close(){w.remove();document.removeEventListener('keydown',esckey);}
@@ -9768,14 +9819,12 @@ function yehudaSheet(){
   if(!k)return;
   if(k==='open'){yehudaOpen();close();}
   else if(k==='down'){yehudaDownload();close();}
-  else if(k==='share'){yehudaShare();close();}
-  else if(k==='wa'){yehudaWhatsapp();close();}
+  else if(k==='swa'){yehudaShortWa();close();}
+  else if(k==='scopy'){yehudaShortCopy();close();}
   else close();
  };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
- // Start pulling the file now, so the share tap has nothing to wait for.
- yehudaPrefetch();
  var first=w.querySelector('.yb');if(first)first.focus();
 }
 on('gYehuda',yehudaSheet);
