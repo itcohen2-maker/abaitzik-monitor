@@ -1968,6 +1968,7 @@ body.editing .bn{display:none}
 @media(prefers-reduced-motion:reduce){.tedit .gt{animation:none}}
 .gt .gi{height:1.35em;width:auto;vertical-align:-0.3em;margin-inline-end:2px}
 .gKat{background:linear-gradient(150deg,#e3c07a,#2b45a6)}
+.gNer{background:linear-gradient(150deg,#f0a64a,#0f1a3a)}
 .gShop{background:linear-gradient(150deg,#3aa55d,#1f6f8b)}
 .gCPlan{background:linear-gradient(150deg,#e8743b,#6b2f7a)}
 .g16{background:linear-gradient(150deg,#f8bbd0,#c2185b)}
@@ -3173,6 +3174,12 @@ try{
     opens on the phone with no login. Originals and the PDF are on Drive.
   -->
   <button type="button" class="gt gKat" id="gKatalog"><b>🎨 המצגות של רינת</b><small>ממוספר. 02 מצגת הום סנטר, גרסה 3</small></button>
+  <!--
+    איציק, 30.9: "במוניטור שים את זה בכפתור, שיהיה לי נוח להתייעץ". Everything
+    made for pushing candletimes, numbered like Rinat's list: the bio
+    comparison, the how-to page, the live candle stories.
+  -->
+  <button type="button" class="gt gNer" id="gNerMkt"><b>🕯️ שיווק הנרות</b><small>ממוספר. הביו בטיקטוק, דף הקישורים והסטוריז</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
@@ -9746,6 +9753,47 @@ function katalogSheet(){
  document.body.appendChild(w);
 }
 on('gKatalog',katalogSheet);
+/*
+  30.9. Candle marketing, same numbered sheet as Rinat's. A new item gets the
+  next number and numbers never change.
+*/
+var NER_ITEMS=[
+ {n:'01',t:'הביו בטיקטוק, לפני ואחרי (PDF)',r:'tiktok-bio-before-after.pdf'},
+ {n:'02',t:'דף ההסבר: קישור לאתר ברשתות',u:'ner-links.html'},
+ {n:'03',t:'סטורי נרות חי, חמישי, עברית',r:'ner-live-1-thursday-he.mp4'},
+ {n:'04',t:'סטורי נרות חי, חמישי, אנגלית',r:'ner-live-2-thursday-en.mp4'},
+ {n:'05',t:'סטורי נרות חי, שישי, עברית',r:'ner-live-3-friday-he.mp4'},
+ {n:'06',t:'סטורי נרות חי, שישי, אנגלית',r:'ner-live-4-friday-en.mp4'}
+];
+function nerSheet(){
+ var old=document.getElementById('nSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='nSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','שיווק הנרות');
+ w.innerHTML='<div class="ycard">'
+  +'<b>שיווק הנרות</b>'
+  +'<small>ממוספר, החדש מקבל את המספר הבא</small>'
+  +NER_ITEMS.map(function(it,i){
+    return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=NER_ITEMS[+k];if(k===''||!it)return;
+  if(it.u)window.open(it.u,'_blank','noopener');
+  else if(!fileView(it.r))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gNerMkt',nerSheet);
 on('gYoman',function(){window.open('yoman/','_blank','noopener');});
 /*
   27.9. The content plan for Ilay. Same sheet as Yehuda's, because the first
