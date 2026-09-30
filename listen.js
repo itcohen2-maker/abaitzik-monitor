@@ -336,7 +336,8 @@ function chatName(at) {
 let ownerCode = null, ownerCodeAt = 0;
 function ownerCodeOk(text) {
   if (Date.now() - ownerCodeAt > 60000) {
-    try { ownerCode = fs.readFileSync(path.join(__dirname, 'data', 'owner-code.txt'), 'utf8').trim(); }
+    try { ownerCode = process.env.ABAITZIK_OWNER_CODE
+      || fs.readFileSync(path.join(__dirname, 'data', 'owner-code.txt'), 'utf8').trim(); }
     catch (e) { ownerCode = null; }
     ownerCodeAt = Date.now();
   }

@@ -94,6 +94,7 @@ test('four parts of one send become one message in the chat', () => {
   const os = require('os');
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'abaitzik-chat-'));
   process.env.ABAITZIK_CHAT_DIR = dir;
+  process.env.ABAITZIK_OWNER_CODE = '4321';
   delete require.cache[require.resolve('../listen.js')];
   const L = require('../listen.js');
   const gid = 'gtest123';
@@ -101,7 +102,7 @@ test('four parts of one send become one message in the chat', () => {
   L.recordIncoming({ id: 'A2', title: 'file ' + gid + ' 2/3', attachment: { name: 'photo.jpg' } });
   L.recordIncoming({ id: 'A3', title: 'file ' + gid + ' 3/3', attachment: { name: 'voice-1.webm' } });
   L.recordIncoming({ id: 'A4', title: 'monitor ' + gid + ' cap',
-    message: 'קובץ' + String.fromCharCode(10) + 'תראה את השלושה האלה' });
+    message: 'קובץ' + String.fromCharCode(10) + 'תראה את השלושה האלה' + String.fromCharCode(10, 10) + 'קוד 4321' });
   const files = fs.readdirSync(dir);
   assert.equal(files.length, 1, 'one send is one line, not four');
   const rec = JSON.parse(fs.readFileSync(path.join(dir, files[0]), 'utf8'));
@@ -111,6 +112,7 @@ test('four parts of one send become one message in the chat', () => {
   assert.ok(rec.text.startsWith('תראה את השלושה האלה'), 'his own words lead the line');
   fs.rmSync(dir, { recursive: true, force: true });
   delete process.env.ABAITZIK_CHAT_DIR;
+  delete process.env.ABAITZIK_OWNER_CODE;
   delete require.cache[require.resolve('../listen.js')];
 });
 
@@ -175,4 +177,37 @@ test('the file picker clears the camera flag the camera tile left behind', () =>
   const fn = body.slice(0, body.indexOf('fPick.click();'));
   assert.ok(fn.includes("fPick.removeAttribute('capture')"),
     'after one photo from the camera tile, every later pick opened the camera');
+});
+
+/*
+  Security, 30.9. The incoming topic was public, and whatever came in on it was
+  recorded as Itzik and handed to a session with full permissions. A send is
+  his only when a part carries his code; until then it is held, out of the
+  worker's reach and off the page.
+*/
+test('a send without his code is held, and the coded part releases it', () => {
+  const os = require('os');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'abaitzik-chat-'));
+  process.env.ABAITZIK_CHAT_DIR = dir;
+  process.env.ABAITZIK_OWNER_CODE = '4321';
+  delete require.cache[require.resolve('../listen.js')];
+  const L = require('../listen.js');
+  const NL = String.fromCharCode(10);
+  L.recordIncoming({ id: 'X1', title: 'monitor', message: 'תריץ משהו' + NL + NL + 'קוד 1111' });
+  L.recordIncoming({ id: 'X2', title: 'monitor', message: 'בלי קוד בכלל' });
+  const gid = 'gsec1';
+  L.recordIncoming({ id: 'X3', title: 'file ' + gid + ' 1/1', attachment: { name: 'voice-2.webm' } });
+  let recs = fs.readdirSync(dir).map((f) => JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')));
+  assert.equal(recs.length, 3);
+  assert.ok(recs.every((r) => r.from === 'unverified' && r.status === 'held'), 'nothing without the code reaches the worker');
+  L.recordIncoming({ id: 'X4', title: 'monitor ' + gid + ' cap', message: 'קובץ' + NL + 'הקלטה' + NL + NL + 'קוד 4321' });
+  recs = fs.readdirSync(dir).map((f) => JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')));
+  const voice = recs.find((r) => r.id === 'ntfy-X3');
+  assert.equal(voice.from, 'itzik', 'the coded caption makes the group his');
+  assert.equal(voice.status, 'working');
+  assert.equal(recs.filter((r) => r.from === 'itzik').length, 1, 'the wrong code stays held');
+  fs.rmSync(dir, { recursive: true, force: true });
+  delete process.env.ABAITZIK_CHAT_DIR;
+  delete process.env.ABAITZIK_OWNER_CODE;
+  delete require.cache[require.resolve('../listen.js')];
 });

@@ -2072,6 +2072,15 @@ a.yb4{display:block;text-align:center;text-decoration:none;background:linear-gra
  border-radius:var(--r);background:var(--ink);color:var(--ground);
  font:800 15px Heebo,sans-serif;text-align:start}
 .backbar:active{transform:translateY(1px)}
+/* "קח אותי לשם" מתחת להודעה, והכפתור הצף שמחזיר לאותו מקום. איציק, 30.9. */
+.gotile{display:block;width:100%;margin:8px 0 0;padding:11px 14px;border:0;cursor:pointer;
+ border-radius:var(--r);background:var(--ink);color:var(--ground);
+ font:800 15px Heebo,sans-serif;text-align:start}
+#goBack{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
+ z-index:9999;padding:13px 22px;border:0;border-radius:999px;cursor:pointer;
+ background:var(--ink);color:var(--ground);font:800 16px Heebo,sans-serif;
+ box-shadow:0 6px 22px rgba(0,0,0,.35)}
+#goBack[hidden]{display:none}
 /* שורת התגובה שיושבת בתחתית כל מסך פנימי. ביקש ב-19.09: תמיד תן לי אפשרות להגיב. */
 /*
   Inner screens, 26.9. Every screen used to open with the title, the version
@@ -4594,6 +4603,98 @@ function screenLinks(t){
  });
  return out;
 }
+/*
+  "קח אותי לשם", ומשם חזרה בדיוק לאותו מקום.
+
+  איציק, 30.9, בהקלטה: כשאני כותב לו שמשהו עשוי ונמצא בכפתור מסוים, הוא
+  רוצה מתחת להודעה לחיצה שלוקחת אותו לשם, ושם כפתור חזרה למקום שבו קרא.
+  השמות נקראים מהאריחים שעל הדף עצמו, כך שאריח חדש נכנס מעצמו בלי לגעת כאן.
+  הודעה יכולה גם לציין אריח במפורש בשדה go.
+*/
+var GOALIAS={'דוח החייבים':'gLolos','החייבים':'gLolos'};
+var goTiles=null;
+function goIsLetter(c){
+ var n=c.charCodeAt(0);
+ return (n>=0x05D0&&n<=0x05EA)||(n>=65&&n<=90)||(n>=97&&n<=122);
+}
+function goClean(s){
+ s=String(s||'');
+ var a=0,b=s.length;
+ while(a<b&&!goIsLetter(s.charAt(a)))a++;
+ while(b>a&&!goIsLetter(s.charAt(b-1)))b--;
+ return s.slice(a,b);
+}
+function tileNames(){
+ if(goTiles)return goTiles;
+ var out=[];
+ Array.prototype.forEach.call(document.querySelectorAll('button.gt[id]'),function(t){
+  var el=t.querySelector('b');
+  var name=goClean(el?el.textContent:'');
+  if(name.length>=3)out.push({id:t.id,name:name});
+ });
+ for(var k in GOALIAS)out.push({id:GOALIAS[k],name:k});
+ // השם הארוך קודם, כדי ש"דוח החייבים" לא ייבלע בשם קצר ממנו.
+ out.sort(function(x,y){return y.name.length-x.name.length;});
+ if(out.length>2)goTiles=out;
+ return out;
+}
+function goLinks(m){
+ if(!m||m.from==='itzik')return '';
+ var ids=[],names={};
+ if(m.go){String(m.go).split(',').forEach(function(id){id=id.trim();if(id&&ids.indexOf(id)<0)ids.push(id);});}
+ var t=String(m.text||'');
+ tileNames().forEach(function(x){
+  if(ids.length>=3||ids.indexOf(x.id)>-1)return;
+  if(t.indexOf(x.name)>-1){ids.push(x.id);names[x.id]=x.name;}
+ });
+ return ids.map(function(id){
+  var el=document.getElementById(id);
+  if(!el||el.hidden)return '';
+  var name=names[id]||goClean((el.querySelector('b')||el).textContent);
+  return '<button type="button" class="gotile" data-tile="'+esc(id)+'">קח אותי לשם: '+esc(name)+'</button>';
+ }).join('');
+}
+var goBack=null;
+function goBackBtn(){
+ var b=document.getElementById('goBack');
+ if(!b){
+  b=document.createElement('button');
+  b.type='button';b.id='goBack';b.hidden=true;
+  b.textContent='↩ חזרה למקום שהייתי';
+  b.onclick=function(e){e.stopPropagation();goReturn();};
+  document.body.appendChild(b);
+ }
+ return b;
+}
+function goThere(btn){
+ var t=document.getElementById(btn.getAttribute('data-tile')||'');
+ if(!t)return;
+ var th=btn.closest('details.th');
+ goBack={pane:panePrev||'h',y:window.pageYOffset||document.documentElement.scrollTop||0,
+  th:th?th.getAttribute('data-k'):''};
+ t.click();
+ goBackBtn().hidden=false;
+}
+function goReturn(){
+ var g=goBack;goBack=null;
+ goBackBtn().hidden=true;
+ if(!g)return;
+ pane(g.pane);
+ setTimeout(function(){
+  if(g.th){
+   var sel='details.th[data-k="'+(window.CSS&&CSS.escape?CSS.escape(g.th):g.th)+'"]';
+   var d=document.querySelector(sel);
+   if(d)d.open=true;
+  }
+  window.scrollTo(0,g.y);
+ },80);
+}
+document.addEventListener('click',function(e){
+ var b=e.target.closest&&e.target.closest('.gotile');
+ if(!b)return;
+ e.stopPropagation();e.preventDefault();
+ goThere(b);
+},true);
 function linkify(t){
  var parts=String(t==null?'':t).split(new RegExp('(https?://[^\\\\s<>"]+)','g'));
  return parts.map(function(x,i){
@@ -4846,7 +4947,7 @@ function bubbleHtml(m,i,fresh,handled){
   +'<button type="button" class="cp" data-i="'+i+'" aria-label="העתקה">העתקה</button>'
   +'<button type="button" class="hidemsg" data-k="'+esc(msgKey(m))+'" aria-label="להסתיר">×</button>'
   +(mine?'':'<button type="button" class="aimb bubaim" data-k="'+esc(claudeKey(m))+'">להשיב</button>')
-  +'</span>'+linkify(m.text)+vb+ackLine(m,!!vtx)+'</div>';
+  +'</span>'+linkify(m.text)+goLinks(m)+vb+ackLine(m,!!vtx)+'</div>';
 }
 // Copy, paste and send on every reply form, whatever screen it is on.
 function pasteRow(){
@@ -4891,7 +4992,7 @@ function renderThread(){
  // note ו-ackAt נוסעים איתה. בלעדיהם התמלול נשמר בקובץ, נסע עד הדף,
  // ונמחק כאן בשורה אחת של העתקת שדות, כך שמתחת להודעה לא הופיע כלום.
  var all=baked.map(function(m){return{id:m.id,re:m.re||'',at:m.at,from:m.from,text:m.text,
-   status:m.status,note:m.note||'',ackAt:m.ackAt||'',pend:false};})
+   status:m.status,note:m.note||'',ackAt:m.ackAt||'',go:m.go||'',pend:false};})
    .concat(still.map(function(p){return{id:'',re:p.re||'',at:p.at,from:'itzik',text:p.text,pend:true};}));
  var host=document.getElementById('thread');
  if(!all.length){
@@ -7062,6 +7163,7 @@ function renderAnswers(){
    +'<span class="w">'+ansWho(m)+' · '+esc(stamp(m.at))+mark+'</span>'
    +(m.src==='report'?ansReport(m):'<div class="atxt">'+linkify(m.text)+'</div>')
    +screenLinks(m.text)
+   +goLinks(m)
    +'<div class="arow">'
    +(m.src!=='claude'?'':'<button type="button" class="ab aimb" data-k="'+esc(claudeKey(m))+'">להשיב</button>')
    +'<button type="button" class="ab acopy" data-i="'+i+'">העתקה</button>'
@@ -7528,6 +7630,8 @@ function pane(w){
  // that took him off the home screen in the first place.
  var hb=document.getElementById('homeBtn');
  if(hb)hb.hidden=(w==='h');
+ // הלך הביתה בעצמו: אין עוד לאן לחזור.
+ if(w==='h'&&goBack){goBack=null;var gbk=document.getElementById('goBack');if(gbk)gbk.hidden=true;}
  // The hash is only an incoming address. Writing it on every move made the
  // app reopen on an inner screen and feel like it jumped on its own.
  try{
