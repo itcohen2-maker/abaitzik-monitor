@@ -6033,8 +6033,39 @@ function repaintAll(){
   }
  }else{window.__repaintFailed=null;}
  try{putState(st);}catch(e){}
+ try{takeCarried();}catch(e){}
  if(Math.abs(window.scrollY-y)>2)window.scrollTo(0,y);
 }
+/*
+  Typing blocks the automatic reload, and whatever is written survives one.
+
+  Only the composer's draft used to be kept, so a reply box, a note, anything
+  else he was halfway through went with the page. Now: a box in focus, or a
+  key pressed in the last half minute, means the new build waits. And every
+  box with text in it is put down before any reload and filled back in after.
+*/
+var lastTypeAt=0,CARRY='carryState',carried=null,carriedUntil=0;
+document.addEventListener('input',function(){lastTypeAt=Date.now();},true);
+function typingNow(){
+ var a=document.activeElement;
+ if(a&&(a.tagName==='TEXTAREA'||(a.tagName==='INPUT'&&/^(text|search|email|tel|url|number|)$/.test(a.type||''))||a.isContentEditable))return true;
+ return Date.now()-lastTypeAt<30000;
+}
+function carryState(){
+ try{
+  var st=keepState();st.focus=null;st.sel=null;
+  if(Object.keys(st.drafts).length)sessionStorage.setItem(CARRY,JSON.stringify(st));
+ }catch(e){}
+}
+function takeCarried(){
+ try{
+  var raw=sessionStorage.getItem(CARRY);
+  if(raw){carried=JSON.parse(raw);carriedUntil=Date.now()+120000;sessionStorage.removeItem(CARRY);}
+ }catch(e){}
+ if(carried&&Date.now()>carriedUntil)carried=null;
+ if(carried)try{putState(carried);}catch(e){}
+}
+window.addEventListener('pagehide',carryState);
 function checkFresh(){
  if(!window.fetch)return;
  fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){
@@ -6063,6 +6094,9 @@ function checkFresh(){
   // Never mid microphone: a reload closes the phone's permission prompt, which
   // is exactly the prompt he saw vanish under his finger (30.9).
   if(recStarting||rec)return;
+  // Never mid typing either (30.9, voice note: "באמצע הקלדה יש ריענון וזה מוחק
+  // לי את הכל"). The new build waits for the next check after he stops.
+  if(typingNow())return;
   // A new build is up. Say so before reloading, so a reply that landed while
   // he was reading does not just make the screen jump under his hands.
   if(what&&liveSeen!==v.builtAt){liveSeen=v.builtAt;what.textContent='יש תשובה חדשה. טוען.';}
@@ -6070,6 +6104,7 @@ function checkFresh(){
   try{seen=sessionStorage.getItem('reloadedFor')||'';}catch(e){}
   if(seen===v.builtAt)return;
   try{sessionStorage.setItem('reloadedFor',v.builtAt);}catch(e){}
+  carryState();
   var go=function(){location.replace(location.pathname+'?b='+encodeURIComponent(v.builtAt));};
   try{
    if(window.caches&&caches.keys){
@@ -7496,6 +7531,7 @@ function restoreDraft(){
 window.addEventListener('pagehide',keepDraft);
 document.addEventListener('visibilitychange',function(){if(document.hidden)keepDraft();});
 restoreDraft();
+try{takeCarried();}catch(e){}
 
 // Pulled out of the refresh button so the microphone can do the same thing on
 // its own. He asked for this by name: a permission that silently disappears
@@ -7508,6 +7544,7 @@ function hardReload(){
  // The draft is written down first, because this is the one button here that
  // is allowed to throw the whole page away.
  keepDraft();
+ carryState();
  // The refresh in an inner screen's bar comes back to that same screen.
  var stay=window.reloadStay||'';window.reloadStay='';
  var done=function(){location.replace(location.pathname+'?v='+Date.now()+(stay?'#'+stay:''));};

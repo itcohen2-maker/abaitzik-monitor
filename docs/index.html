@@ -1664,7 +1664,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-30T05:19:01.841Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-30T05:19:55.987Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2794,7 +2794,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='cb4ea3f023';
+var CODE_ID='7a1b5e43bb';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -4068,8 +4068,31 @@ function repaintAll(){
   }
  }else{window.__repaintFailed=null;}
  try{putState(st);}catch(e){}
+ try{takeCarried();}catch(e){}
  if(Math.abs(window.scrollY-y)>2)window.scrollTo(0,y);
 }
+var lastTypeAt=0,CARRY='carryState',carried=null,carriedUntil=0;
+document.addEventListener('input',function(){lastTypeAt=Date.now();},true);
+function typingNow(){
+ var a=document.activeElement;
+ if(a&&(a.tagName==='TEXTAREA'||(a.tagName==='INPUT'&&/^(text|search|email|tel|url|number|)$/.test(a.type||''))||a.isContentEditable))return true;
+ return Date.now()-lastTypeAt<30000;
+}
+function carryState(){
+ try{
+  var st=keepState();st.focus=null;st.sel=null;
+  if(Object.keys(st.drafts).length)sessionStorage.setItem(CARRY,JSON.stringify(st));
+ }catch(e){}
+}
+function takeCarried(){
+ try{
+  var raw=sessionStorage.getItem(CARRY);
+  if(raw){carried=JSON.parse(raw);carriedUntil=Date.now()+120000;sessionStorage.removeItem(CARRY);}
+ }catch(e){}
+ if(carried&&Date.now()>carriedUntil)carried=null;
+ if(carried)try{putState(carried);}catch(e){}
+}
+window.addEventListener('pagehide',carryState);
 function checkFresh(){
  if(!window.fetch)return;
  fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){
@@ -4090,11 +4113,13 @@ function checkFresh(){
    return;
   }
   if(recStarting||rec)return;
+  if(typingNow())return;
   if(what&&liveSeen!==v.builtAt){liveSeen=v.builtAt;what.textContent='יש תשובה חדשה. טוען.';}
   var seen='';
   try{seen=sessionStorage.getItem('reloadedFor')||'';}catch(e){}
   if(seen===v.builtAt)return;
   try{sessionStorage.setItem('reloadedFor',v.builtAt);}catch(e){}
+  carryState();
   var go=function(){location.replace(location.pathname+'?b='+encodeURIComponent(v.builtAt));};
   try{
    if(window.caches&&caches.keys){
@@ -5099,9 +5124,11 @@ function restoreDraft(){
 window.addEventListener('pagehide',keepDraft);
 document.addEventListener('visibilitychange',function(){if(document.hidden)keepDraft();});
 restoreDraft();
+try{takeCarried();}catch(e){}
 
 function hardReload(){
  keepDraft();
+ carryState();
  var stay=window.reloadStay||'';window.reloadStay='';
  var done=function(){location.replace(location.pathname+'?v='+Date.now()+(stay?'#'+stay:''));};
  try{
