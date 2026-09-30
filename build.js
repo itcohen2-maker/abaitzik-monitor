@@ -1935,6 +1935,21 @@ body.editing .bn{display:none}
 .g14{background:linear-gradient(150deg,#a5d6a7,#2e7d32)}
 .g15{background:linear-gradient(150deg,#90caf9,#1565c0)}
 .gRec{background:linear-gradient(150deg,#ffd54f,#e06a00)}
+.grid .gt{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.tarr{display:block;margin:10px 0 2px auto;border:0;background:none;color:var(--dim);font:600 12.5px Heebo,sans-serif;cursor:pointer;padding:4px 2px}
+.tedit .gt{position:relative;animation:wobble .28s infinite alternate ease-in-out}
+.tedit .gt.tsel{animation:none;outline:3px solid #fbbc04;outline-offset:2px;transform:scale(1.04)}
+.gt .tx{display:none;position:absolute;top:-7px;inset-inline-start:-7px;width:28px;height:28px;border-radius:50%;
+ background:#d93025;color:#fff;border:2px solid #fff;font:700 16px/22px Heebo,sans-serif;padding:0;z-index:2;cursor:pointer;text-align:center}
+.tedit .gt .tx{display:block}
+#tileBar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--card,#fff);box-shadow:0 -2px 12px rgba(0,0,0,.18);
+ padding:10px 14px calc(10px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px}
+#tileBar small{font-size:12.5px;color:var(--dim)}
+#tileBar .row2{display:flex;gap:8px}
+#tileBar button{flex:1;border:0;border-radius:12px;padding:11px;font:700 14px Heebo,sans-serif;cursor:pointer}
+#tileBar .done{background:var(--blue,#1a73e8);color:#fff}
+#tileBar .back{background:#eee;color:#333}
+@media(prefers-reduced-motion:reduce){.tedit .gt{animation:none}}
 .gt .gi{height:1.35em;width:auto;vertical-align:-0.3em;margin-inline-end:2px}
 .gKat{background:linear-gradient(150deg,#e3c07a,#2b45a6)}
 .gShop{background:linear-gradient(150deg,#3aa55d,#1f6f8b)}
@@ -5974,6 +5989,9 @@ function checkFresh(){
    softRefresh(v);
    return;
   }
+  // Never mid microphone: a reload closes the phone's permission prompt, which
+  // is exactly the prompt he saw vanish under his finger (30.9).
+  if(recStarting||rec)return;
   // A new build is up. Say so before reloading, so a reply that landed while
   // he was reading does not just make the screen jump under his hands.
   if(what&&liveSeen!==v.builtAt){liveSeen=v.builtAt;what.textContent='יש תשובה חדשה. טוען.';}
@@ -10923,7 +10941,9 @@ function recStart(){
  // No page sound in the way of the microphone, and a mode that records.
  clearTimeout(sfxT);try{if(sfx){sfx.close();sfx=null;}}catch(e){}
  audioMode('play-and-record');
+ var askAt=Date.now();
  navigator.mediaDevices.getUserMedia({audio:true}).then(function(st){
+  try{sessionStorage.removeItem('micReloaded');}catch(e){}
   recStream=st;recChunks=[];recSec=0;
   // He reported the mic dying mid-take too, not only at the permission
   // prompt: the clock kept counting with nothing behind it. A track that
@@ -11021,11 +11041,34 @@ function recStart(){
   // every retry just asks again with nothing changed. A refresh is what
   // actually clears it, so it happens on its own instead of sending him to a
   // settings screen or waiting for him to find רענן himself.
+  /*
+    30.9: "I press and it disappears." A refusal that comes back in under a
+    second and a half is not his answer, nobody reads a prompt that fast: the
+    phone closed its own prompt. So first one quiet second try, then one
+    reload, and if the phone still refuses, it stops reloading and says in
+    plain words where the switch is. A loop of reloads is what made the
+    prompt vanish every time, and a client would never guess why.
+  */
   if(name==='NotAllowedError'||name==='SecurityError'){
-   recSaid.textContent='ההרשאה למיקרופון נעלמה. מרענן את הדף כדי לתקן...';
+   if(Date.now()-askAt<1500&&!recRetried){
+    recRetried=true;
+    recSaid.textContent='החלון של האישור נסגר לבד. פותח אותו שוב, תלחץ "אישור".';
+    paintMics('sending');
+    setTimeout(recStart,700);
+    return;
+   }
+   var once='';try{once=sessionStorage.getItem('micReloaded')||'';}catch(e){}
+   if(!once){
+    try{sessionStorage.setItem('micReloaded','1');}catch(e){}
+    recSaid.textContent='ההרשאה למיקרופון נעלמה. מרענן פעם אחת כדי לתקן...';
+    paintMics('bad');
+    window.reloadStay=panePrev;
+    setTimeout(hardReload,1200);
+    return;
+   }
+   try{sessionStorage.removeItem('micReloaded');}catch(e){}
+   recSaid.textContent='הטלפון חוסם את המיקרופון לדף הזה. לתקן פעם אחת: בספארי, הכפתור "אא" ליד הכתובת, הגדרות אתר, מיקרופון, "לאפשר". או באייפון: הגדרות, אפליקציות, ספארי, מיקרופון, "לאפשר". ואז ללחוץ שוב על המיקרופון.';
    paintMics('bad');
-   window.reloadStay=panePrev;
-   setTimeout(hardReload,1200);
    return;
   }
   /*
@@ -11214,6 +11257,92 @@ document.getElementById('mailForm').addEventListener('submit',function(e){
 */
 // talkCard came out of this list on 18.9: it is above the header now and is
 // not his to drag, because "nothing above it" is the whole point of it.
+/*
+  Arranging the tiles, by taps. 30.9: he could not move them and could not
+  take one off. The old way was a drag, and on the iPhone a drag on a grid of
+  buttons is a scroll half the time. Here a tap picks a tile up, a tap on
+  another tile puts it there, and the red x takes a tile off this device's
+  screen. Nothing is deleted: "להחזיר" brings every hidden tile back.
+*/
+var tEdit=false,tSel=null;
+function tileBar(show){
+ var b=document.getElementById('tileBar');
+ if(!show){if(b)b.remove();return;}
+ if(!b){b=document.createElement('div');b.id='tileBar';document.body.appendChild(b);}
+ var hid=tileStore('tilesHidden',[]);
+ b.innerHTML='<small>לחיצה על אריח בוחרת אותו, לחיצה על אריח אחר מעבירה אותו לשם. ה ✕ האדום מוריד אריח מהמסך.</small>'
+  +'<div class="row2"><button type="button" class="done" id="tileDone">סיום</button>'
+  +(hid.length?'<button type="button" class="back" id="tileBack">להחזיר '+hid.length+' שהורדו</button>':'')+'</div>';
+ document.getElementById('tileDone').onclick=tilesExit;
+ var bk=document.getElementById('tileBack');
+ if(bk)bk.onclick=function(){tileSave('tilesHidden',[]);applyHidden();tileBar(true);toast('כל האריחים חזרו.');};
+}
+function tilesEnter(grid){
+ if(tEdit)return;
+ tEdit=true;tSel=null;
+ grid.classList.add('tedit');
+ Array.prototype.forEach.call(grid.querySelectorAll('.gt'),function(el){
+  if(el.querySelector(':scope > .tx'))return;
+  var x=document.createElement('span');
+  x.className='tx';x.textContent='✕';x.setAttribute('role','button');x.setAttribute('aria-label','להוריד מהמסך');
+  el.appendChild(x);
+ });
+ try{navigator.vibrate&&navigator.vibrate(18);}catch(e){}
+ tileBar(true);
+ var a=document.getElementById('tileArr');if(a)a.textContent='✓ סיום הסידור';
+}
+function tilesExit(){
+ var grid=document.getElementById('blkTiles');
+ tEdit=false;
+ if(tSel){tSel.classList.remove('tsel');tSel=null;}
+ if(grid){grid.classList.remove('tedit');saveOrder(grid,'tileOrder');}
+ tileBar(false);
+ var a=document.getElementById('tileArr');if(a)a.textContent='✎ סידור האריחים';
+}
+function armTiles(grid){
+ if(!grid)return;
+ var arr=document.createElement('button');
+ arr.type='button';arr.id='tileArr';arr.className='tarr';arr.textContent='✎ סידור האריחים';
+ arr.onclick=function(){if(tEdit)tilesExit();else tilesEnter(grid);};
+ grid.parentNode.insertBefore(arr,grid);
+ var hold=null,sx=0,sy=0,swallow=false;
+ grid.addEventListener('pointerdown',function(e){
+  if(tEdit)return;
+  sx=e.clientX;sy=e.clientY;
+  hold=setTimeout(function(){hold=null;swallow=true;tilesEnter(grid);},550);
+ });
+ grid.addEventListener('pointermove',function(e){
+  if(hold&&(Math.abs(e.clientX-sx)>10||Math.abs(e.clientY-sy)>10)){clearTimeout(hold);hold=null;}
+ });
+ ['pointerup','pointercancel','pointerleave'].forEach(function(ev){
+  grid.addEventListener(ev,function(){clearTimeout(hold);hold=null;});
+ });
+ grid.addEventListener('contextmenu',function(e){if(tEdit||swallow)e.preventDefault();});
+ grid.addEventListener('click',function(e){
+  if(swallow){swallow=false;e.preventDefault();e.stopPropagation();return;}
+  if(!tEdit)return;
+  e.preventDefault();e.stopPropagation();
+  var t=e.target.closest?e.target.closest('.gt'):null;
+  if(!t||t.parentNode!==grid)return;
+  if(e.target.closest('.tx')){
+   var hid=tileStore('tilesHidden',[]);
+   if(hid.indexOf(t.id)<0)hid.push(t.id);
+   tileSave('tilesHidden',hid);
+   if(tSel===t)tSel=null;
+   t.classList.remove('tsel');
+   applyHidden();tileBar(true);
+   toast('הורד מהמסך. "להחזיר" מחזיר אותו.');
+   return;
+  }
+  if(!tSel){tSel=t;t.classList.add('tsel');return;}
+  if(tSel===t){t.classList.remove('tsel');tSel=null;return;}
+  var kids=Array.prototype.slice.call(grid.children);
+  if(kids.indexOf(tSel)<kids.indexOf(t))grid.insertBefore(tSel,t.nextSibling);
+  else grid.insertBefore(tSel,t);
+  tSel.classList.remove('tsel');tSel=null;
+  saveOrder(grid,'tileOrder');
+ },true);
+}
 var HOME_HEAD=['newBlock','bareBtn','blkIcons','blkTiles'];
 // "איך אני משתפר" is the one block he wants out of the way rather than gone.
 // It is a log of my own mistakes and fixes: worth keeping, never worth the top
@@ -11242,7 +11371,7 @@ function pinHome(home){
 (function(){
  var grid=document.querySelector('.grid');
  var home=document.getElementById('pH');
- if(grid){nameChildren(grid,'tile');applyOrder(grid,'tileOrder');armDrag(grid,'tileOrder');}
+ if(grid){nameChildren(grid,'tile');applyOrder(grid,'tileOrder');armTiles(grid);}
  if(home){nameChildren(home,'blk');applyOrder(home,'blockOrder');pinHome(home);armDrag(home,'blockOrder');}
 })();
 on('editDone',endEdit);
