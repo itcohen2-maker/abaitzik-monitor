@@ -16,8 +16,13 @@
   nothing is deleted. Editing needs a browser signed in as itcohen2, which exists only on Itzik's PC,
   never the server — see the rule above.
 
-- **Rivhit and Lolos receipts:** the work so far is in `data/rivhit/rivhit/` (57 records, 12.9.2026). Where it stopped:
-  Bit and PayBox payments of 61,373 NIS over two years (55 transactions, PayBox 51,971 in 48, Bit via Yoel 9,402 in 7)
-  have no receipts; the list with date and amount is ready to match against who paid. Rivhit is a Windows desktop app
-  (Rivhit_cloud_2024) on Itzik's PC only, so issuing receipts happens from the PC session, never the server
-  — see the rule above. A session on the server answers with this state, not "I have nothing".
+- **Rivhit and Lolos (30.9.2026):** `data/rivhit/rivhit/` now holds the debtors report: one `d31-*.json` per
+  customer (kind debt, `inv` = the open invoices behind the total) and `d31-sum.json`. Built from Rivhit card
+  balances plus the 2025 and 2026 invoice exports; manpower firms (Orbit, Ram Sky, Gamma Hod) left out by his
+  request. The 12.9 records are in `data/_archive/`. September bank deposits were all covered by receipts. Rivhit
+  is a Windows desktop app on Itzik's PC only, so issuing receipts or invoices happens from the PC session, never
+  the server; see the rule above.
+
+- **The improvements reviewer:** `review.js`, timer `monitor-review.timer` every morning 05:30 Israel. A read only
+  Claude session that returns up to six improvements from a new customer's point of view into `data/better/better/`,
+  shown first on the "💡 רעיונות" screen. Log: `/var/log/monitor-review.log`.
