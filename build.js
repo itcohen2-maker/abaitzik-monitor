@@ -322,6 +322,10 @@ function build() {
   const ideas = loadDocs('ideas')
     .map(x => ({ id: x.id, at: x.at || '', text: x.text || '', network: x.network || '', used: !!x.used }))
     .sort((a, b) => (a.at < b.at ? 1 : -1));
+  // The reviewer's improvements (review.js), newest first. 30.9.
+  const better = loadDocs('better')
+    .map(x => ({ at: x.at || '', t: x.t || '', d: x.d || '', area: x.area || '', size: x.size || '' }))
+    .sort((a, b) => (a.at < b.at ? 1 : -1));
   const plan = loadDocs('plan')
     .map(x => ({ id: x.id, day: x.day || '', text: x.text || '', network: x.network || '', status: x.status || 'planned' }))
     .sort((a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : 0));
@@ -563,6 +567,7 @@ function build() {
     tasks,
     tenants,
     ideas,
+    better,
     plan,
     appts,
     replies,
@@ -1951,6 +1956,7 @@ body.editing .bn{display:none}
  color:#fff;background:linear-gradient(180deg,#ef5350,#b71c1c);animation:tdown 1s ease-in-out infinite}
 .tenalert b{display:block;font:700 15px Heebo,sans-serif}
 .tenalert small{display:block;font-size:12px;opacity:.95}
+.idea .itag{display:block;font-size:11px;color:var(--dim);margin-bottom:3px}
 .grid .gt{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .tarr{grid-column:1/-1;justify-self:start;display:block;margin:0;border:0;background:none;color:var(--dim);font:600 12.5px Heebo,sans-serif;cursor:pointer;padding:4px 2px}
 .tedit .gt{position:relative;animation:wobble .28s infinite alternate ease-in-out}
@@ -9910,6 +9916,7 @@ on('gIdeas',function(){pane('i');renderIdeas();});
 // The same list a new client sees on the first visit. Every line is written as
 // his week, not as a feature: he recognises the problem before he understands
 // the screen. What he taps becomes a request in my inbox.
+var IDEAS_SHOWN=[];
 var IDEAS=[
  {t:'לתעד כל דבר שאני אוכל',d:'מצלמים או אומרים במילה, וזה נרשם עם הקלוריות. בסוף השבוע יש תמונה של מה שבאמת אכלת, בלי לשאול אף אחד.'},
  {t:'לדעת מי פנה ולא קיבל תשובה',d:'כל פנייה מכל מקום נכנסת לתור אחד, ומי שמחכה יותר מדי נצבע.'},
@@ -9928,15 +9935,18 @@ function ideaDone(){
 }
 function renderIdeas(){
  var asked=ideaDone();
- document.getElementById('ideaList').innerHTML=IDEAS.map(function(x,n){
+ // What the daily reviewer found comes first, marked with the day it found it.
+ var L=(D.better||[]).map(function(x){return {t:x.t,d:x.d,tag:'🔍 בודק השיפורים'+(x.at?' · '+stamp(x.at):'')+(x.size?' · '+x.size:'')};}).concat(IDEAS);
+ IDEAS_SHOWN=L;
+ document.getElementById('ideaList').innerHTML=L.map(function(x,n){
   var on=asked.indexOf(x.t)>-1;
-  return '<div class="idea"><b>'+esc(x.t)+'</b><p>'+esc(x.d)+'</p>'
+  return '<div class="idea">'+(x.tag?'<small class="itag">'+esc(x.tag)+'</small>':'')+'<b>'+esc(x.t)+'</b><p>'+esc(x.d)+'</p>'
    +'<button type="button" data-i="'+n+'"'+(on?' class="done"':'')+'>'
    +(on?'ביקשת. אני על זה':'רוצה את זה')+'</button></div>';
  }).join('');
  Array.prototype.forEach.call(document.querySelectorAll('#ideaList button'),function(b){
   b.onclick=function(){
-   var x=IDEAS[Number(b.getAttribute('data-i'))];
+   var x=IDEAS_SHOWN[Number(b.getAttribute('data-i'))];
    b.disabled=true;b.textContent='שולח.';
    sendText('רעיון מהמוניטור','רוצה את זה: '+x.t,'רעיון').then(function(){
     var a=ideaDone();

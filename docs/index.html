@@ -933,6 +933,7 @@ body.editing .bn{display:none}
  color:#fff;background:linear-gradient(180deg,#ef5350,#b71c1c);animation:tdown 1s ease-in-out infinite}
 .tenalert b{display:block;font:700 15px Heebo,sans-serif}
 .tenalert small{display:block;font-size:12px;opacity:.95}
+.idea .itag{display:block;font-size:11px;color:var(--dim);margin-bottom:3px}
 .grid .gt{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .tarr{grid-column:1/-1;justify-self:start;display:block;margin:0;border:0;background:none;color:var(--dim);font:600 12.5px Heebo,sans-serif;cursor:pointer;padding:4px 2px}
 .tedit .gt{position:relative;animation:wobble .28s infinite alternate ease-in-out}
@@ -1660,7 +1661,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-30T04:49:24.305Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-30T04:55:20.231Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2790,7 +2791,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='0c17e01e89';
+var CODE_ID='c099224f87';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -6957,6 +6958,7 @@ on('gRemind',function(){pane('R');renderReminders();});
 on('gTasks',function(){pane('T');renderTasks();});
 on('gAppts',function(){pane('Q');renderAppts();});
 on('gIdeas',function(){pane('i');renderIdeas();});
+var IDEAS_SHOWN=[];
 var IDEAS=[
  {t:'לתעד כל דבר שאני אוכל',d:'מצלמים או אומרים במילה, וזה נרשם עם הקלוריות. בסוף השבוע יש תמונה של מה שבאמת אכלת, בלי לשאול אף אחד.'},
  {t:'לדעת מי פנה ולא קיבל תשובה',d:'כל פנייה מכל מקום נכנסת לתור אחד, ומי שמחכה יותר מדי נצבע.'},
@@ -6975,15 +6977,17 @@ function ideaDone(){
 }
 function renderIdeas(){
  var asked=ideaDone();
- document.getElementById('ideaList').innerHTML=IDEAS.map(function(x,n){
+ var L=(D.better||[]).map(function(x){return {t:x.t,d:x.d,tag:'🔍 בודק השיפורים'+(x.at?' · '+stamp(x.at):'')+(x.size?' · '+x.size:'')};}).concat(IDEAS);
+ IDEAS_SHOWN=L;
+ document.getElementById('ideaList').innerHTML=L.map(function(x,n){
   var on=asked.indexOf(x.t)>-1;
-  return '<div class="idea"><b>'+esc(x.t)+'</b><p>'+esc(x.d)+'</p>'
+  return '<div class="idea">'+(x.tag?'<small class="itag">'+esc(x.tag)+'</small>':'')+'<b>'+esc(x.t)+'</b><p>'+esc(x.d)+'</p>'
    +'<button type="button" data-i="'+n+'"'+(on?' class="done"':'')+'>'
    +(on?'ביקשת. אני על זה':'רוצה את זה')+'</button></div>';
  }).join('');
  Array.prototype.forEach.call(document.querySelectorAll('#ideaList button'),function(b){
   b.onclick=function(){
-   var x=IDEAS[Number(b.getAttribute('data-i'))];
+   var x=IDEAS_SHOWN[Number(b.getAttribute('data-i'))];
    b.disabled=true;b.textContent='שולח.';
    sendText('רעיון מהמוניטור','רוצה את זה: '+x.t,'רעיון').then(function(){
     var a=ideaDone();
