@@ -3746,24 +3746,6 @@ try{
   <h3 class="rivh" id="rivH3">שים לב</h3>
   <div id="rivAlerts"></div>
  </div>
- <div class="lolos">
-  <button type="button" class="lbtn lb-x" id="lolosAsk">
-   <span aria-hidden="true">&#128269;</span>
-   <div><b>בקשת הצלבה</b><small>תשאל אותי מה להצליב ואני בודק</small></div>
-  </button>
- </div>
-</section>
-<!--ITZIK:END-->
-
-<!--ITZIK:BEGIN-->
-<section id="pF" hidden>
- <h2>עקוב אחרי התזונה</h2>
- <div class="zbox" id="fdZinc">
-  <div class="zt"><b>אבץ שנאסף היום</b><span class="zv" id="zVal">0 מ״ג</span></div>
-  <div class="zbar"><i id="zBar" style="width:0%"></i></div>
-  <div class="zsaid" id="zSaid"></div>
-  <div class="zparts" id="zParts"></div>
- </div>
  <div class="foodtop">
   <div><span id="fdKcal">0</span><small>קלוריות היום</small></div>
   <div><span id="fdP">0</span><small>חלבון</small></div>
@@ -10087,7 +10069,6 @@ document.getElementById('noteDel').onclick=function(){
  renderNotes();
 };
 document.getElementById('noteSearch').addEventListener('input',renderNotes);
-on('lolosAsk',function(){askInChat('תצליב לי ');});
 function todayKey(){return new Date().toISOString().slice(0,10);}
 /*
   אבץ.
