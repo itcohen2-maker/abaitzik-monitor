@@ -1208,6 +1208,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
  text-shadow:0 1px 2px rgba(0,0,0,.28);box-shadow:0 8px 18px rgba(20,30,60,.2)}
 .rivsum b{display:block;font:700 17px Heebo,sans-serif}
 .rivsum small{display:block;font-size:12px;opacity:.95;font-weight:300;margin-top:3px}
+.rivsum b.rvtot{font-size:24px;margin-bottom:4px}
 .rivh{font:700 14px Heebo,sans-serif;color:var(--dim);margin:16px 0 8px}
 .rivrow{display:flex;align-items:center;gap:10px;padding:11px 13px;margin-bottom:7px;
  border:1px solid var(--line);border-radius:14px;background:var(--surface)}
@@ -1664,7 +1665,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-30T05:22:30.390Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-30T05:23:12.983Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2794,7 +2795,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='7a1b5e43bb';
+var CODE_ID='4fb3213fa5';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -8428,8 +8429,9 @@ function renderRivhit(){
  var s=R.filter(function(r){return r.kind==='sum';})[0];
  var host=document.getElementById('rivSum');
  if(host){
+  var out=R.reduce(function(a,r){return r.kind==='debt'?a+(+r.amount||0):a;},0);
   host.innerHTML=s
-   ?'<b>'+esc(s.title)+'</b><small>'+esc(s.period)+' · '+esc(s.account)+'</small>'
+   ?(out?'<b class="rvtot">סה״כ בחוץ '+ils(out)+'</b>':'')+'<b>'+esc(s.title)+'</b><small>'+esc(s.period)+' · '+esc(s.account)+'</small>'
     +(s.toReceipt?'<small>יתרה בבנק '+ils(s.balance)+' · ממתין לקבלה '+ils(s.toReceipt)+' על פני '+esc(String(s.count))+' לקוחות</small>':'')
     +'<small>'+esc(s.note)+'</small>'
    :'';

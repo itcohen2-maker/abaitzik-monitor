@@ -2282,6 +2282,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
  text-shadow:0 1px 2px rgba(0,0,0,.28);box-shadow:0 8px 18px rgba(20,30,60,.2)}
 .rivsum b{display:block;font:700 17px Heebo,sans-serif}
 .rivsum small{display:block;font-size:12px;opacity:.95;font-weight:300;margin-top:3px}
+.rivsum b.rvtot{font-size:24px;margin-bottom:4px}
 .rivh{font:700 14px Heebo,sans-serif;color:var(--dim);margin:16px 0 8px}
 .rivrow{display:flex;align-items:center;gap:10px;padding:11px 13px;margin-bottom:7px;
  border:1px solid var(--line);border-radius:14px;background:var(--surface)}
@@ -11806,8 +11807,11 @@ function renderRivhit(){
  var s=R.filter(function(r){return r.kind==='sum';})[0];
  var host=document.getElementById('rivSum');
  if(host){
+  // The total out there, added back on his ask of 30.9: summed from the very
+  // lines below, so it can never disagree with the list.
+  var out=R.reduce(function(a,r){return r.kind==='debt'?a+(+r.amount||0):a;},0);
   host.innerHTML=s
-   ?'<b>'+esc(s.title)+'</b><small>'+esc(s.period)+' · '+esc(s.account)+'</small>'
+   ?(out?'<b class="rvtot">סה״כ בחוץ '+ils(out)+'</b>':'')+'<b>'+esc(s.title)+'</b><small>'+esc(s.period)+' · '+esc(s.account)+'</small>'
     +(s.toReceipt?'<small>יתרה בבנק '+ils(s.balance)+' · ממתין לקבלה '+ils(s.toReceipt)+' על פני '+esc(String(s.count))+' לקוחות</small>':'')
     +'<small>'+esc(s.note)+'</small>'
    :'';
