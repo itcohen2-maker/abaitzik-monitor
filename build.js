@@ -435,12 +435,20 @@ function build() {
     sections, links and open points live in data/sale, never in the page
     source, because this page is public and its data is sealed.
   */
+  /*
+    30.9: a file Itzik sent from the phone lives sealed in the monitor, not in
+    Drive, and its link is files/<name>. The Drive only filter dropped the
+    calibration certificate from the vehicles section without a word, so a
+    link passes when it is Drive or one of those sealed files, nothing else.
+  */
+  const docLinkOk = u => String(u || '').startsWith('https://drive.google.com/') ||
+    /^files\/[^/?#\\]+$/.test(String(u || '')) && !String(u).includes('..');
   const sale = loadDocs('sale')
     .map(d => ({ order: Number(d.order) || 0, kind: d.kind || 'section', title: d.title || '',
                  lines: Array.isArray(d.lines) ? d.lines.map(String) : [],
                  folder: String(d.folder || '').startsWith('https://drive.google.com/') ? d.folder : '',
                  files: (Array.isArray(d.files) ? d.files : [])
-                   .filter(f => String(f.url || '').startsWith('https://drive.google.com/'))
+                   .filter(f => docLinkOk(f.url))
                    .map(f => ({ name: String(f.name || ''), url: f.url })) }))
     .sort((a, b) => a.order - b.order);
   /*
@@ -458,7 +466,7 @@ function build() {
                    .map(c => ({ num: String(c.num || ''), name: String(c.name || '') })),
                  empty: String(d.empty || ''),
                  files: (Array.isArray(d.files) ? d.files : [])
-                   .filter(f => String(f.url || '').startsWith('https://drive.google.com/'))
+                   .filter(f => docLinkOk(f.url))
                    .map(f => ({ name: String(f.name || ''), url: f.url })) }))
     .sort((a, b) => a.order - b.order);
   const rivhit = loadDocs('rivhit')
