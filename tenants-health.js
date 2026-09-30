@@ -80,6 +80,25 @@ function main() {
     Object.assign(t, r, { checkedAt: new Date().toISOString() });
     if (!DRY) fs.writeFileSync(file, JSON.stringify(t, null, 1));
     if (before !== t.state) changed = true;
+    /*
+      30.9: a customer going down is an alarm, not a colour. The phone rings
+      the moment it happens, again every two hours while it stays down, and
+      once more when it is back, so a red tile never waits for him to look.
+    */
+    if (!DRY) {
+      const down = t.state !== 'ok';
+      const again = down && (!t.alertedAt || Date.now() - Date.parse(t.alertedAt) > 2 * 60 * 60 * 1000);
+      if ((before && before !== t.state) || again) {
+        const title = down ? '🔴 ' + (t.title || t.id) + ' בנתק' : '🟢 ' + (t.title || t.id) + ' חזר לתקין';
+        const msg = down ? (r.problems.join(' · ') || 'לא עונה') : 'הכל תקין שוב';
+        try {
+          execFileSync('node', ['notify.js', title, msg], { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
+          if (down) t.alertedAt = new Date().toISOString(); else delete t.alertedAt;
+          fs.writeFileSync(file, JSON.stringify(t, null, 1));
+          console.log('alerted: ' + title);
+        } catch (e) { console.log('alert failed: ' + String(e.message).slice(0, 120)); }
+      }
+    }
     console.log((t.state === 'ok' ? 'ok   ' : 'DOWN ') + t.id + (r.problems.length ? ': ' + r.problems.join(', ') : ''));
   }
   if (changed && !DRY) {

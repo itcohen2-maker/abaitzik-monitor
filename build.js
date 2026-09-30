@@ -1945,6 +1945,12 @@ body.editing .bn{display:none}
 .g14{background:linear-gradient(150deg,#a5d6a7,#2e7d32)}
 .g15{background:linear-gradient(150deg,#90caf9,#1565c0)}
 .gRec{background:linear-gradient(150deg,#ffd54f,#e06a00)}
+.gt.tdown,.c.tdown{animation:tdown 1s ease-in-out infinite}
+@keyframes tdown{0%,100%{filter:none;box-shadow:0 0 0 0 rgba(239,83,80,.9)}50%{filter:brightness(1.35);box-shadow:0 0 0 8px rgba(239,83,80,0)}}
+.tenalert{display:block;width:100%;text-align:start;border:0;border-radius:14px;padding:12px 14px;margin:0 0 10px;cursor:pointer;
+ color:#fff;background:linear-gradient(180deg,#ef5350,#b71c1c);animation:tdown 1s ease-in-out infinite}
+.tenalert b{display:block;font:700 15px Heebo,sans-serif}
+.tenalert small{display:block;font-size:12px;opacity:.95}
 .grid .gt{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .tarr{grid-column:1/-1;justify-self:start;display:block;margin:0;border:0;background:none;color:var(--dim);font:600 12.5px Heebo,sans-serif;cursor:pointer;padding:4px 2px}
 .tedit .gt{position:relative;animation:wobble .28s infinite alternate ease-in-out}
@@ -8641,6 +8647,28 @@ function paintTenantsTile(){
  b.style.background=bad.length?'linear-gradient(180deg,#ef5350,#b71c1c)':'linear-gradient(180deg,#66bb6a,#1b5e20)';
  var c=document.getElementById('icIlyC');
  if(c)c.style.background=bad.length?'linear-gradient(160deg,#ef5350,#b71c1c)':'linear-gradient(160deg,#66bb6a,#1b5e20)';
+ /*
+   30.9, Itzik: "the red button has to blink, not just be red. It is an alarm,
+   it is a customer, the most important thing we have." So a customer that is
+   down blinks on the tile, on the round icon, and on a bar at the very top of
+   the home screen, which stays visible even in the microphone only view. The
+   tile also jumps to the front of the grid until the customer is back.
+ */
+ b.classList.toggle('tdown',!!bad.length);
+ if(c)c.classList.toggle('tdown',!!bad.length);
+ try{floatTile('gTenants',!!bad.length);}catch(e){}
+ var home=document.getElementById('pH'),al=document.getElementById('tenAlert');
+ if(bad.length&&home){
+  if(!al){
+   al=document.createElement('button');al.type='button';al.id='tenAlert';al.className='tenalert';
+   al.onclick=function(){pane('N3');renderTenants();};
+  }
+  al.innerHTML='<b>🔴 '+esc(bad.map(function(t){return t.title;}).join(', '))+' בנתק</b>'
+   +'<small>'+esc(bad.map(function(t){return (t.problems||[]).join(' · ');}).join(' | ')||'לחיצה לפרטים')+'</small>';
+  // Above the talk card, the first thing on the screen, not under the fold.
+  var top=document.getElementById('talkCard')||home.firstChild;
+  if(al.nextSibling!==top)top.parentNode.insertBefore(al,top);
+ }else if(al){al.remove();}
 }
 on('gTenants',function(){pane('N3');renderTenants();});
 (function(){
