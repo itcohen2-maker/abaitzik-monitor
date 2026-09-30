@@ -70,7 +70,9 @@ test('the build ships a 404 page with a way back to the monitor', () => {
 // Nineteen answers on 16.9 linked to sign photos that a later commit tidied
 // away, so scrolling back in the chat was a wall of 404s. The files are cheap
 // to keep and the answers are permanent; this is the guard that keeps them.
-test('every file this repo ever linked to in an answer is still shipped', () => {
+// 30.9: Itzik asked for old files to go, so the build deletes attachments older
+// than three days. The guard now covers only answers from those three days.
+test('every file linked in a recent answer is still shipped', () => {
   const fs = require('fs');
   const path = require('path');
   const root = path.join(__dirname, '..');
@@ -81,6 +83,7 @@ test('every file this repo ever linked to in an answer is still shipped', () => 
   for (const f of fs.readdirSync(dir)) {
     const m = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
     if (m.from !== 'claude') continue;
+    if (Date.parse(m.at) < Date.now() - 3 * 864e5) continue;
     for (const raw of String(m.text || '').match(/https?:\/\/[^\s<>"]+/g) || []) {
       const url = raw.replace(/[.,;:!?)"]+$/, '');
       if (!url.startsWith(own)) continue;

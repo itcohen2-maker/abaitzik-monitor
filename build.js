@@ -12544,6 +12544,33 @@ function walkFiles(dir, base = '') {
   }
   return out;
 }
+/*
+  Old files go, 30.9. Itzik: "why do you keep every file I got in the monitor,
+  I have no need for old ones." 162MB had piled up, most of it drafts nobody
+  opens again. A file older than FILE_DAYS is deleted from the files screen,
+  and a voice note older than that from the inbox (its transcript stays in the
+  chat). Kept anyway: anything this page names on purpose (Rinat's catalogue,
+  the Ner sheets), the hospital appointment, lead screenshots, and the music.
+*/
+const FILE_DAYS = 3;
+const KEEP_FILE = /^(appt-|lead-|music\/)/;
+function pruneOldFiles(src) {
+  // His request, his monitor. A customer's files are theirs to keep.
+  if (inst.name !== 'abaitzik') return;
+  const cutoff = Date.now() - FILE_DAYS * 864e5;
+  let named = '';
+  try { named = fs.readFileSync(__filename, 'utf8'); } catch (e) { return; }
+  for (const rel of walkFiles(src)) {
+    if (KEEP_FILE.test(rel) || named.includes("'" + rel + "'")) continue;
+    const full = path.join(src, rel);
+    if (fs.statSync(full).mtimeMs < cutoff) fs.unlinkSync(full);
+  }
+  const inbox = path.join(inst.dataPath, 'inbox');
+  for (const n of fs.existsSync(inbox) ? fs.readdirSync(inbox) : []) {
+    const full = path.join(inbox, n);
+    try { if (fs.statSync(full).isFile() && fs.statSync(full).mtimeMs < cutoff) fs.unlinkSync(full); } catch (e) {}
+  }
+}
 function sealFiles() {
   if (!gate.enabled()) return [];
   const src = path.join(inst.dataPath, 'files-private');
@@ -12564,6 +12591,7 @@ function sealFiles() {
     for (const e of fs.readdirSync(d, { withFileTypes: true })) if (e.isDirectory()) prune(path.join(d, e.name));
     if (d !== pub && !fs.readdirSync(d).length) fs.rmdirSync(d);
   })(pub);
+  pruneOldFiles(src);
   const list = [], keep = new Set();
   for (const rel of walkFiles(src)) {
     const id = gate.fileId(rel), target = path.join(outDir, id + '.bin');
