@@ -40,3 +40,7 @@ docs/files/lead-*
 abaitzik-backup-*.json
 /backups/
 __pycache__/
+
+# 30.9 security: never public
+*.pyc
+promo/first-client-playbook.html

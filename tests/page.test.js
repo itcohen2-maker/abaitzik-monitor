@@ -1594,9 +1594,13 @@ test('the page names no channel, no address and no neighbour', () => {
   // credential: it let anyone subscribe to everything reaching his phone and
   // publish into his inbox on the real channel. The rest is his address and
   // his neighbours named as debtors, which was never his to publish about them.
-  ['abaitzik-in-95e62e86c34f4853', 'abaitzik-cf9044bdcfa8',
-   'הגיתית 7', 'יוסי, דירה 17', '17PUmZuY', '1pLlW7nW',
-  ].forEach((leak) => assert.ok(!html.includes(leak), 'still leaks ' + leak));
+  // 30.9: the list itself sat in this public file, naming every leak it
+  // guards against. The real values live in data/leak-canaries.json, which
+  // is gitignored; a checkout without it still runs the fake canary below.
+  let canaries = ['canary-topic-0000'];
+  try { canaries = canaries.concat(JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'leak-canaries.json'), 'utf8'))); }
+  catch (e) { /* no data dir in this checkout */ }
+  canaries.forEach((leak) => assert.ok(!html.includes(leak), 'still leaks a canary'));
   // They arrive in the sealed payload and are written in after the unlock.
   assert.ok(html.includes("function secret(k, fallback){"));
   // Read at the moment of use, not at parse time. The first version captured

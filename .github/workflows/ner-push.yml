@@ -38,7 +38,7 @@ jobs:
             -H "x-ner-key: $KEY" \
             https://candletimes.com/api/send)
           echo "http $code"
-          cat body.json
+          echo "body $(wc -c < body.json) bytes"
           echo
           # A bad key or a broken deploy should fail loudly here rather
           # than quietly never ringing anyone.
