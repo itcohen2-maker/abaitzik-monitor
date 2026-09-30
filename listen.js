@@ -336,11 +336,15 @@ function chatName(at) {
 let ownerCode = null, ownerCodeAt = 0;
 function ownerCodeOk(text) {
   if (Date.now() - ownerCodeAt > 60000) {
+    // A tenant whose owner never set a code (no file) keeps the old open
+    // behaviour, so a new client is not locked out on day one; the file is
+    // what turns the check on. Itzik's copy has it.
     try { ownerCode = process.env.ABAITZIK_OWNER_CODE
       || fs.readFileSync(path.join(__dirname, 'data', 'owner-code.txt'), 'utf8').trim(); }
-    catch (e) { ownerCode = null; }
+    catch (e) { ownerCode = e.code === 'ENOENT' ? 'none' : null; }
     ownerCodeAt = Date.now();
   }
+  if (ownerCode === 'none') return true;
   if (!ownerCode || !/^[0-9]{3,8}$/.test(ownerCode)) return false;
   // Plain text, no pattern: every piece after the word, whitespace off,
   // must start with the code and not run on into more digits.
