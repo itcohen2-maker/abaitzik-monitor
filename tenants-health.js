@@ -57,7 +57,11 @@ function check(t) {
     const live = JSON.parse(fs.readFileSync(path.join(t.dir, 'data', 'status', 'live.json'), 'utf8'));
     beatAt = live.at || '';
     if (!beatAt || Date.now() - Date.parse(beatAt) > STALE_MS) problems.push('הפעימה של המאזין ישנה');
-    if (live.up === 0 && live.at && Date.now() - Date.parse(live.at) > 5 * 60 * 1000) problems.push('המאזין מדווח שהוא מנותק מהערוץ');
+    // 30.9: `up` is seconds since the listener started, so a beat written right
+    // after a restart says 0 and stays that way until the next hourly beat. That
+    // read as "disconnected" for an hour. The connection is `since`, empty only
+    // while the listener has no stream.
+    if (!live.since && live.at && Date.now() - Date.parse(live.at) > 5 * 60 * 1000) problems.push('המאזין מדווח שהוא מנותק מהערוץ');
   } catch (e) { problems.push('אין קובץ פעימה'); }
   // 27.9: what the tenant's own watchdog found (answers stuck, a stalled worker)
   // colours his tile too, so Itzik sees it without opening anything of Ilay's.
