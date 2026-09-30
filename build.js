@@ -3815,6 +3815,8 @@ try{
   <div id="rivAudit" hidden></div>
   <h3 class="rivh" id="rivH1">מי חייב כסף</h3>
   <div id="rivList"></div>
+  <h3 class="rivh" id="rivH6" hidden>נרשם כאן בנפרד, לא בריווחית</h3>
+  <div id="rivManual" hidden></div>
   <h3 class="rivh" id="rivH2">נכנס לבנק באפריל עד יוני ואין עליו קבלה</h3>
   <div id="rivOpen"></div>
   <h3 class="rivh" id="rivH4">לאן הלך הכסף, שנתיים אחורה</h3>
@@ -11893,6 +11895,8 @@ function renderRivhit(){
    .then(function(){btn.disabled=false;});
   };
  }
+ // kind manual (30.9): money he asked to keep here and not in Rivhit.
+ put('rivManual',by('manual'),'rivH6');
  put('rivOpen',by('open'),'rivH2');
  put('rivBank',by('bank'),'rivH4');
  var U=by('audit'),ue=document.getElementById('rivAudit'),uh=document.getElementById('rivH5');

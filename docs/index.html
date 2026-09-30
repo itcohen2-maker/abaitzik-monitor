@@ -1667,7 +1667,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-30T06:12:26.610Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-30T06:13:01.375Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2279,6 +2279,8 @@ try{
   <div id="rivAudit" hidden></div>
   <h3 class="rivh" id="rivH1">מי חייב כסף</h3>
   <div id="rivList"></div>
+  <h3 class="rivh" id="rivH6" hidden>נרשם כאן בנפרד, לא בריווחית</h3>
+  <div id="rivManual" hidden></div>
   <h3 class="rivh" id="rivH2">נכנס לבנק באפריל עד יוני ואין עליו קבלה</h3>
   <div id="rivOpen"></div>
   <h3 class="rivh" id="rivH4">לאן הלך הכסף, שנתיים אחורה</h3>
@@ -2795,7 +2797,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='64dd6fa8a2';
+var CODE_ID='9e9929c626';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -8499,6 +8501,7 @@ function renderRivhit(){
    .then(function(){btn.disabled=false;});
   };
  }
+ put('rivManual',by('manual'),'rivH6');
  put('rivOpen',by('open'),'rivH2');
  put('rivBank',by('bank'),'rivH4');
  var U=by('audit'),ue=document.getElementById('rivAudit'),uh=document.getElementById('rivH5');
