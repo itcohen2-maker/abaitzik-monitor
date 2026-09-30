@@ -1661,7 +1661,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-09-30T04:58:59.770Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-09-30T05:00:52.119Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2791,7 +2791,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='c099224f87';
+var CODE_ID='0aaefd6cef';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -3311,21 +3311,29 @@ function wireBoxes(root){
   var qOf=function(){return box.getAttribute('data-q')||'';};
   var f=box.querySelector('.rform');
   var txt=box.querySelector('.btxt');
+  var boxText=function(){
+   var ta=f.querySelector('textarea'),t=ta?ta.value.trim():'';
+   return {ta:ta,full:t?(qOf()?qOf()+String.fromCharCode(10)+t:t):qOf()};
+  };
   box.querySelector('.bmic').onclick=function(e){
    e.stopPropagation();
    window.micBox=box;
-   document.getElementById('fCap').value=qOf();
+   if(!(rec&&rec.state==='recording')){
+    var bt=boxText();
+    document.getElementById('fCap').value=bt.full;
+    if(bt.ta)bt.ta.value='';
+   }
    toggleRec();
   };
   box.querySelector('.bfile').onclick=function(e){
    e.stopPropagation();
-   document.getElementById('fCap').value=qOf();
-   openPicker('full','image/*,video/*,audio/*,application/pdf',true);
+   window.micBox=box;window.fileBox=box;
+   openPicker('full','image/*,video/*,audio/*,application/pdf',false);
   };
   box.querySelector('.bcam').onclick=function(e){
    e.stopPropagation();
-   document.getElementById('fCap').value=qOf();
-   shoot(true);
+   window.micBox=box;window.fileBox=box;
+   shoot(false);
   };
   if(txt)txt.onclick=function(e){
    e.stopPropagation();
@@ -3341,6 +3349,17 @@ function wireBoxes(root){
    var btn=f.querySelector('button[type=submit]');
    var said=f.querySelector('.rsaid');
    var text=box2.value.trim();
+   var withFiles=window.fileBox===box?picked():[];
+   if(withFiles.length){
+    window.micBox=box;
+    document.getElementById('fCap').value=boxText().full;
+    box2.value='';
+    fBtn.disabled=true;
+    sendSay(withFiles.length>1?('מכין '+withFiles.length+' קבצים.'):'מכין.');
+    if(qMode==='normal')shrinkAll(withFiles,reallySend);
+    else reallySend(withFiles);
+    return;
+   }
    if(!text)return;
    btn.disabled=true;
    said.textContent='שולח.';
@@ -7635,6 +7654,7 @@ function paintSendBtn(){
 }
 function clearPick(){
  try{fPick.value='';}catch(e){}
+ if(window.fileBox){var sb=window.fileBox.querySelector('button[type=submit]');if(sb)sb.textContent='שליחה';window.fileBox=null;}
  var f=document.getElementById('fileForm');
  if(f)f.hidden=true;
  var p=document.getElementById('plusBtn');
@@ -7677,8 +7697,15 @@ function openPicker(mode,accept,auto){
 }
 document.getElementById('qN').onclick=function(){openPicker('normal','image/*,video/*');};
 document.getElementById('qF').onclick=function(){openPicker('full','image/*,video/*,audio/*,application/pdf');};
+function paintBoxPick(){
+ var b=window.fileBox;if(!b)return;
+ var n=picked().length,sb=b.querySelector('button[type=submit]'),sd=b.querySelector('.rsaid');
+ if(sb)sb.textContent=n?(n>1?'שליחה עם '+n+' הקבצים':'שליחה עם הקובץ'):'שליחה';
+ if(sd&&n)sd.textContent=(n>1?n+' קבצים מחכים':'הקובץ מחכה')+'. כתוב שורה ולחץ שליחה, או הקלט, והוא יוצא איתם. גם שליחה לבד שולחת אותו.';
+}
 fPick.addEventListener('change',function(){
  describe();
+ paintBoxPick();
  if(!autoSend)return;
  autoSend=false;
  var list=picked();
@@ -7956,7 +7983,11 @@ function recStart(){
     return;
    }
    try{sessionStorage.removeItem('micReloaded');}catch(e){}
-   recSaid.textContent='הטלפון חוסם את המיקרופון לדף הזה. לתקן פעם אחת: בספארי, הכפתור "אא" ליד הכתובת, הגדרות אתר, מיקרופון, "לאפשר". או באייפון: הגדרות, אפליקציות, ספארי, מיקרופון, "לאפשר". ואז ללחוץ שוב על המיקרופון.';
+   var appMode=(window.navigator&&window.navigator.standalone)||
+    (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches);
+   recSaid.textContent=appMode
+    ?'הטלפון חוסם את המיקרופון. לתקן פעם אחת: לצאת מהמוניטור, להיכנס להגדרות של האייפון, אפליקציות, ספארי, מיקרופון, לבחור "לאפשר". אחר כך לסגור את המוניטור לגמרי (להחליק אותו למעלה ברשימת האפליקציות הפתוחות), לפתוח שוב וללחוץ על המיקרופון.'
+    :'הטלפון חוסם את המיקרופון לדף הזה. לתקן פעם אחת: בספארי, הכפתור "אא" ליד הכתובת, הגדרות אתר, מיקרופון, "לאפשר". או באייפון: הגדרות, אפליקציות, ספארי, מיקרופון, "לאפשר". ואז ללחוץ שוב על המיקרופון.';
    paintMics('bad');
    return;
   }

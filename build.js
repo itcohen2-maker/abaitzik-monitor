@@ -4992,23 +4992,42 @@ function wireBoxes(root){
   var qOf=function(){return box.getAttribute('data-q')||'';};
   var f=box.querySelector('.rform');
   var txt=box.querySelector('.btxt');
+  /*
+    A photo waits for the words that go with it.
+
+    Itzik, 30.9, by voice: "I can't attach a picture and send a message with
+    it, by voice or in writing, it all disappears." A pick from a reply box
+    used to leave on its own the moment it was chosen, with only the quote as
+    its caption, and cleared itself. The line he typed or the voice he then
+    recorded went out alone, and the photo he meant them for was already gone
+    from the screen. Now the photo stays chosen and says so under the box, and
+    whichever comes next, the send button or the microphone, takes it along.
+  */
+  var boxText=function(){
+   var ta=f.querySelector('textarea'),t=ta?ta.value.trim():'';
+   return {ta:ta,full:t?(qOf()?qOf()+String.fromCharCode(10)+t:t):qOf()};
+  };
   box.querySelector('.bmic').onclick=function(e){
    e.stopPropagation();
    window.micBox=box;
-   document.getElementById('fCap').value=qOf();
+   if(!(rec&&rec.state==='recording')){
+    var bt=boxText();
+    document.getElementById('fCap').value=bt.full;
+    if(bt.ta)bt.ta.value='';
+   }
    toggleRec();
   };
   box.querySelector('.bfile').onclick=function(e){
    e.stopPropagation();
-   document.getElementById('fCap').value=qOf();
-   openPicker('full','image/*,video/*,audio/*,application/pdf',true);
+   window.micBox=box;window.fileBox=box;
+   openPicker('full','image/*,video/*,audio/*,application/pdf',false);
   };
   // Straight to the camera. On a phone this opens the lens instead of the
   // gallery, which is what he means when he says he wants to show me something.
   box.querySelector('.bcam').onclick=function(e){
    e.stopPropagation();
-   document.getElementById('fCap').value=qOf();
-   shoot(true);
+   window.micBox=box;window.fileBox=box;
+   shoot(false);
   };
   if(txt)txt.onclick=function(e){
    e.stopPropagation();
@@ -5024,6 +5043,18 @@ function wireBoxes(root){
    var btn=f.querySelector('button[type=submit]');
    var said=f.querySelector('.rsaid');
    var text=box2.value.trim();
+   var withFiles=window.fileBox===box?picked():[];
+   if(withFiles.length){
+    // The chosen photo leaves with this line, as one message.
+    window.micBox=box;
+    document.getElementById('fCap').value=boxText().full;
+    box2.value='';
+    fBtn.disabled=true;
+    sendSay(withFiles.length>1?('מכין '+withFiles.length+' קבצים.'):'מכין.');
+    if(qMode==='normal')shrinkAll(withFiles,reallySend);
+    else reallySend(withFiles);
+    return;
+   }
    if(!text)return;
    btn.disabled=true;
    said.textContent='שולח.';
@@ -10719,6 +10750,7 @@ function paintSendBtn(){
 }
 function clearPick(){
  try{fPick.value='';}catch(e){}
+ if(window.fileBox){var sb=window.fileBox.querySelector('button[type=submit]');if(sb)sb.textContent='שליחה';window.fileBox=null;}
  var f=document.getElementById('fileForm');
  if(f)f.hidden=true;
  var p=document.getElementById('plusBtn');
@@ -10773,8 +10805,16 @@ function openPicker(mode,accept,auto){
 // stills sent him to מסמך for every clip.
 document.getElementById('qN').onclick=function(){openPicker('normal','image/*,video/*');};
 document.getElementById('qF').onclick=function(){openPicker('full','image/*,video/*,audio/*,application/pdf');};
+// Said under the reply box the photo was chosen from, and on its send button.
+function paintBoxPick(){
+ var b=window.fileBox;if(!b)return;
+ var n=picked().length,sb=b.querySelector('button[type=submit]'),sd=b.querySelector('.rsaid');
+ if(sb)sb.textContent=n?(n>1?'שליחה עם '+n+' הקבצים':'שליחה עם הקובץ'):'שליחה';
+ if(sd&&n)sd.textContent=(n>1?n+' קבצים מחכים':'הקובץ מחכה')+'. כתוב שורה ולחץ שליחה, או הקלט, והוא יוצא איתם. גם שליחה לבד שולחת אותו.';
+}
 fPick.addEventListener('change',function(){
  describe();
+ paintBoxPick();
  if(!autoSend)return;
  autoSend=false;
  var list=picked();
@@ -11171,7 +11211,17 @@ function recStart(){
     return;
    }
    try{sessionStorage.removeItem('micReloaded');}catch(e){}
-   recSaid.textContent='הטלפון חוסם את המיקרופון לדף הזה. לתקן פעם אחת: בספארי, הכפתור "אא" ליד הכתובת, הגדרות אתר, מיקרופון, "לאפשר". או באייפון: הגדרות, אפליקציות, ספארי, מיקרופון, "לאפשר". ואז ללחוץ שוב על המיקרופון.';
+   /*
+     Itzik, 30.9, by voice: "you explain how to fix it on the iPhone, but I
+     don't see an address bar, I put it on the home screen and it opens full
+     screen." The "aA" button lives in Safari's address bar, and an app opened
+     from the home screen has none, so from there the only way is Settings.
+   */
+   var appMode=(window.navigator&&window.navigator.standalone)||
+    (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches);
+   recSaid.textContent=appMode
+    ?'הטלפון חוסם את המיקרופון. לתקן פעם אחת: לצאת מהמוניטור, להיכנס להגדרות של האייפון, אפליקציות, ספארי, מיקרופון, לבחור "לאפשר". אחר כך לסגור את המוניטור לגמרי (להחליק אותו למעלה ברשימת האפליקציות הפתוחות), לפתוח שוב וללחוץ על המיקרופון.'
+    :'הטלפון חוסם את המיקרופון לדף הזה. לתקן פעם אחת: בספארי, הכפתור "אא" ליד הכתובת, הגדרות אתר, מיקרופון, "לאפשר". או באייפון: הגדרות, אפליקציות, ספארי, מיקרופון, "לאפשר". ואז ללחוץ שוב על המיקרופון.';
    paintMics('bad');
    return;
   }
