@@ -679,6 +679,9 @@ function build() {
     try {
       const k = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'keys.json'), 'utf8'));
       delete k._why;
+      // The rotation window is the listener's business; the page only ever
+      // sends on the current topics.
+      for (const f of Object.keys(k)) if (/Old(Until)?$/.test(f)) delete k[f];
       return k;
     } catch (e) {
       console.warn('אין data/keys.json. הדף ייבנה בלי ערוצי שליחה.');

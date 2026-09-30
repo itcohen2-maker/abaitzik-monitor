@@ -18,13 +18,24 @@ jobs:
         env:
           LIVE: ${{ secrets.NTFY_LIVE }}
           OUT: ${{ secrets.NTFY_OUT }}
+          # A rotation window (30.9): until OUT_OLD_UNTIL the alert also goes to
+          # the previous topic, which his phone may still be subscribed to.
+          OUT_OLD: ${{ secrets.NTFY_OUT_OLD }}
+          OUT_OLD_UNTIL: ${{ secrets.NTFY_OUT_OLD_UNTIL }}
         run: |
           n=$(curl -s --max-time 30 "https://ntfy.sh/$LIVE/json?poll=1&since=80m" | grep -c '"event":"message"' || true)
           prev=$(curl -s --max-time 30 "https://ntfy.sh/$LIVE/json?poll=1&since=100m" | grep -c '"event":"message"' || true)
           echo "beats in 80 min: $n, in 100 min: $prev"
           if [ "$n" -eq 0 ] && [ "$prev" -gt 0 ]; then
-            curl -s --max-time 30 -H "Title: המוניטור לא עונה" -H "Priority: high" \
-              -d "אין דופק מהמוניטור כבר יותר משעה. אם זה לא עובר תוך כמה דקות, צריך לבדוק את השרת." \
-              "https://ntfy.sh/$OUT" > /dev/null
+            targets="$OUT"
+            if [ -n "$OUT_OLD" ] && [ -n "$OUT_OLD_UNTIL" ] && \
+               [ "$(date +%s)" -lt "$(date -d "$OUT_OLD_UNTIL" +%s 2>/dev/null || echo 0)" ]; then
+              targets="$OUT $OUT_OLD"
+            fi
+            for t in $targets; do
+              curl -s --max-time 30 -H "Title: המוניטור לא עונה" -H "Priority: high" \
+                -d "אין דופק מהמוניטור כבר יותר משעה. אם זה לא עובר תוך כמה דקות, צריך לבדוק את השרת." \
+                "https://ntfy.sh/$t" > /dev/null
+            done
             echo "alert sent"
           fi

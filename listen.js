@@ -693,13 +693,30 @@ async function connect() {
       ac.abort();
     }
   }, 15000);
+  /*
+    During a rotation window both inbound topics are held on one connection,
+    ntfy's comma separated subscribe, so a page still open with the old topic
+    loses nothing. When the window closes the connection is dropped on purpose
+    and the next one is made to the new topic alone.
+  */
+  const topics = inst.inTopics();
+  let windowEnd = null;
   try {
-    const res = await fetch('https://ntfy.sh/' + TOPIC + '/json?since=' + since,
+    if (!topics.length) throw new Error('אין ערוץ נכנס: חסר ntfyIn ב-data/keys.json');
+    if (topics.length > 1) {
+      const ms = Date.parse(inst.ntfy.inOldUntil) - Date.now();
+      windowEnd = setTimeout(function () {
+        say('חלון המעבר נסגר. עובר לערוץ החדש בלבד.');
+        ac.abort();
+      }, Math.max(1000, Math.min(ms + 1000, 2147000000)));
+    }
+    const res = await fetch('https://ntfy.sh/' + topics.join(',') + '/json?since=' + since,
       { signal: ac.signal });
     if (!res.ok || !res.body) throw new Error('ntfy ' + res.status);
     connectedAt = Date.now();
     lastEvent = Date.now();
     say('מחובר לערוץ. מאזין.');
+    if (topics.length > 1) say('מאזין גם לערוץ הקודם עד ' + inst.ntfy.inOldUntil + '.');
     await beat();
     let buf = '';
     for await (const chunk of res.body) {
@@ -718,6 +735,7 @@ async function connect() {
     throw new Error('הזרם נסגר');
   } finally {
     clearInterval(watchdog);
+    if (windowEnd) clearTimeout(windowEnd);
   }
 }
 
@@ -768,7 +786,7 @@ function releaseLock() {
   process.on(sig, function () { releaseLock(); if (sig !== 'exit') process.exit(0); });
 });
 
-module.exports = { recordIncoming, isSystemText, recordDrain, TOPIC, LIVE };
+module.exports = { recordIncoming, isSystemText, recordDrain, TOPIC, LIVE, inTopics: (now) => inst.inTopics(now) };
 
 /*
   Requiring this file must not open a connection or claim the lock. A test that

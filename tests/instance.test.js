@@ -31,15 +31,30 @@ const BEFORE = {
   publicUrl: 'https://itcohen2-maker.github.io/abaitzik-monitor/',
   basePath: '/abaitzik-monitor/',
   origin: 'https://itcohen2-maker.github.io',
-  ntfyIn: 'abaitzik-in-95e62e86c34f4853',
-  ntfyLive: 'abaitzik-in-95e62e86c34f4853-live',
-  ntfyOut: 'abaitzik-cf9044bdcfa8',
   mailbox: 'itcohen2@gmail.com',
   dataDir: 'data',
   taskPrefix: 'AbaItzik',
   screens: null,
   chromeProfile: 'Profile 4',
 };
+
+/*
+  The topics are not in the code any more (30.9, they were rotated after
+  sitting in this public repository). They come from data/keys.json only, so
+  every test that is about topics points dataDir at a folder holding fake
+  ones. A real topic must never be written into this file again.
+*/
+const FAKE = {
+  ntfyIn: 'test-in-topic',
+  ntfyLive: 'test-live-topic',
+  ntfyOut: 'test-out-topic',
+  mail: 'itcohen2@gmail.com',
+};
+function fakeData(extra) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'abaitzik-keys-'));
+  fs.writeFileSync(path.join(dir, 'keys.json'), JSON.stringify(Object.assign({}, FAKE, extra || {})));
+  return dir;
+}
 
 // Each case loads the module fresh against a temporary root, because the
 // loader reads the file once at require time on purpose: a monitor that
@@ -65,10 +80,8 @@ test('with no instance.json at all, every value is the one that was in the code'
   assert.equal(i.publicUrl, BEFORE.publicUrl);
   assert.equal(i.basePath, BEFORE.basePath);
   assert.equal(i.origin, BEFORE.origin);
-  assert.equal(i.ntfy.in, BEFORE.ntfyIn);
-  assert.equal(i.ntfy.live, BEFORE.ntfyLive);
-  assert.equal(i.ntfy.out, BEFORE.ntfyOut);
-  assert.equal(i.mailbox, BEFORE.mailbox);
+  // The topics come from data/keys.json, tested below with fake ones.
+  assert.equal(typeof i.ntfy.in, 'string');
   assert.equal(i.dataDir, BEFORE.dataDir);
   assert.equal(i.taskPrefix, BEFORE.taskPrefix);
   assert.equal(i.screens, BEFORE.screens);
@@ -81,15 +94,15 @@ test('a broken instance.json falls back rather than throwing', () => {
   // monitor has to come up anyway; a listener that will not start is the one
   // failure this system exists to prevent.
   const i = loadWith('{ "name": "ily", ');
-  assert.equal(i.ntfy.in, BEFORE.ntfyIn);
-  assert.equal(i.mailbox, BEFORE.mailbox);
+  assert.equal(i.name, BEFORE.name);
+  assert.equal(i.dataDir, BEFORE.dataDir);
   assert.ok(i.notes.some(n => /could not be read/.test(n)));
 });
 
 test('one field given, everything else stays as it was', () => {
-  const i = loadWith(JSON.stringify({ owner: 'אילי' }));
+  const i = loadWith(JSON.stringify({ owner: 'אילי', dataDir: fakeData() }));
   assert.equal(i.owner, 'אילי');
-  assert.equal(i.ntfy.out, BEFORE.ntfyOut);
+  assert.equal(i.ntfy.out, FAKE.ntfyOut);
   assert.equal(i.mailbox, BEFORE.mailbox);
   assert.equal(i.isDefault, false);
 });
@@ -100,14 +113,14 @@ test('an inbound topic without a live topic does not pulse onto his channel', ()
   // A data folder with no keys.json, so the instance file alone is tested.
   const i = loadWith(JSON.stringify({ ntfy: { in: 'ily-in-3f7c1a9e04b2d856' }, dataDir: os.tmpdir() }));
   assert.equal(i.ntfy.live, 'ily-in-3f7c1a9e04b2d856-live');
-  assert.notEqual(i.ntfy.live, BEFORE.ntfyLive);
-  // The outbound topic is a separate address and is not derived from anything.
-  assert.equal(i.ntfy.out, BEFORE.ntfyOut);
+  // The outbound topic is a separate address and is not derived from anything,
+  // and with no keys.json there is none rather than a guessable default.
+  assert.equal(i.ntfy.out, '');
 });
 
 test('a field of the wrong type keeps the default and says so', () => {
   const i = loadWith(JSON.stringify({ ntfy: 'ily-in-3f7c1a9e04b2d856', dataDir: 7 }));
-  assert.equal(i.ntfy.in, BEFORE.ntfyIn);
+  assert.notEqual(i.ntfy.in, 'ily-in-3f7c1a9e04b2d856');
   assert.equal(i.dataDir, BEFORE.dataDir);
   assert.ok(i.notes.length >= 2);
 });
@@ -128,11 +141,66 @@ test('memoryDir null means no memory folder, not the default one', () => {
 });
 
 test('data/keys.json supplies the topics, so the committed file can leave them out', () => {
-  // Both repositories are public and a topic is a password. Itzik's keys.json
-  // holds his real topics; with instance.json absent the loader must still
-  // come up on them, and they must equal the literals the code used to carry.
-  const i = loadWith(null);
-  assert.equal(i.ntfy.in, BEFORE.ntfyIn);
-  assert.equal(i.ntfy.out, BEFORE.ntfyOut);
+  // Both repositories are public and a topic is a password. keys.json is the
+  // only place the real topics live.
+  const i = loadWith(JSON.stringify({ dataDir: fakeData() }));
+  assert.equal(i.ntfy.in, FAKE.ntfyIn);
+  assert.equal(i.ntfy.live, FAKE.ntfyLive);
+  assert.equal(i.ntfy.out, FAKE.ntfyOut);
   assert.equal(i.mailbox, BEFORE.mailbox);
+  assert.deepEqual(i.inTopics(), [FAKE.ntfyIn]);
+  assert.deepEqual(i.outTopics(), [FAKE.ntfyOut]);
+});
+
+test('the code carries no topic: without keys.json there is no channel, and it says so', () => {
+  const m = require(MODULE);
+  assert.deepEqual(m.DEFAULTS.ntfy, { in: '', live: '', out: '' });
+  const i = loadWith(JSON.stringify({ dataDir: os.tmpdir() }));
+  assert.equal(i.ntfy.in, '');
+  assert.equal(i.ntfy.out, '');
+  assert.deepEqual(i.inTopics(), []);
+  assert.deepEqual(i.outTopics(), []);
+  assert.ok(i.notes.some(n => /no topic in data\/keys\.json/.test(n)));
+  delete require.cache[require.resolve(MODULE)];
+});
+
+test('loading with keys does not leak the topics into the defaults', () => {
+  loadWith(JSON.stringify({ dataDir: fakeData() }));
+  const i = loadWith(JSON.stringify({ dataDir: os.tmpdir() }));
+  assert.equal(i.ntfy.in, '');
+  assert.equal(i.ntfy.out, '');
+});
+
+test('keys.json live wins even when instance.json names only an inbound topic', () => {
+  const i = loadWith(JSON.stringify({ ntfy: { in: 'ily-in-3f7c1a9e04b2d856' }, dataDir: fakeData() }));
+  assert.equal(i.ntfy.in, FAKE.ntfyIn);
+  assert.equal(i.ntfy.live, FAKE.ntfyLive);
+});
+
+test('rotation window: old and new topics both live until the deadline, then only the new', () => {
+  const until = new Date(Date.now() + 3600000).toISOString();
+  const i = loadWith(JSON.stringify({ dataDir: fakeData({
+    ntfyInOld: 'test-in-old', ntfyInOldUntil: until,
+    ntfyOutOld: 'test-out-old', ntfyOutOldUntil: until,
+  }) }));
+  // The new topic is always first: it is the one a sender must reach.
+  assert.deepEqual(i.inTopics(), ['test-in-topic', 'test-in-old']);
+  assert.deepEqual(i.outTopics(), ['test-out-topic', 'test-out-old']);
+  const after = Date.parse(until) + 1;
+  assert.deepEqual(i.inTopics(after), ['test-in-topic']);
+  assert.deepEqual(i.outTopics(after), ['test-out-topic']);
+});
+
+test('rotation window: an expired, malformed or missing deadline keeps only the new topic', () => {
+  const past = new Date(Date.now() - 1000).toISOString();
+  const a = loadWith(JSON.stringify({ dataDir: fakeData({ ntfyInOld: 'test-in-old', ntfyInOldUntil: past }) }));
+  assert.deepEqual(a.inTopics(), ['test-in-topic']);
+  const b = loadWith(JSON.stringify({ dataDir: fakeData({ ntfyInOld: 'test-in-old', ntfyInOldUntil: 'soon' }) }));
+  assert.deepEqual(b.inTopics(), ['test-in-topic']);
+  const c = loadWith(JSON.stringify({ dataDir: fakeData({ ntfyOutOld: 'test-out-old' }) }));
+  assert.deepEqual(c.outTopics(), ['test-out-topic']);
+  // A comma would turn one subscription into several.
+  const future = new Date(Date.now() + 3600000).toISOString();
+  const d = loadWith(JSON.stringify({ dataDir: fakeData({ ntfyInOld: 'x,y', ntfyInOldUntil: future }) }));
+  assert.deepEqual(d.inTopics(), ['test-in-topic']);
 });

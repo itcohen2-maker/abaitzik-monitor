@@ -13,7 +13,8 @@ const path = require('path');
 
 // Which monitor this is. Defaults are Itzik's topic and folders.
 const inst = require('./lib/instance.js');
-const TOPIC = inst.ntfy.in;
+// Both inbound topics while a rotation window is open, see lib/instance.js.
+const TOPICS = inst.inTopics();
 const SEEN = path.join(inst.dataPath, 'ntfy-seen.json');
 const DROP = path.join(inst.dataPath, 'inbox');
 
@@ -29,7 +30,8 @@ function mark() {
   const all = process.argv.includes('--all');
   const seen = mark();
   const since = all || !seen.time ? 'all' : seen.time;
-  const res = await fetch(`https://ntfy.sh/${TOPIC}/json?poll=1&since=${since}`);
+  if (!TOPICS.length) { console.error('אין ערוץ נכנס: חסר ntfyIn ב-data/keys.json'); process.exit(1); }
+  const res = await fetch(`https://ntfy.sh/${TOPICS.join(',')}/json?poll=1&since=${since}`);
   if (!res.ok) { console.error('ntfy ' + res.status); process.exit(1); }
   const body = (await res.text()).trim();
   if (!body) { console.log('(אין הודעות חדשות בערוץ הגיבוי)'); return; }

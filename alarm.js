@@ -19,8 +19,13 @@ at.setHours(h, m || 0, 0, 0);
 if (at <= new Date()) at.setDate(at.getDate() + 1);
 
 const payload = Buffer.from(body, 'utf8');
+// During a rotation window the alarm is also left on the old topic, since his
+// phone may still be subscribed only to that one. See lib/instance.js.
+const topics = [topic].concat(inst.outTopics().filter(t => t !== topic));
+for (const t of topics) send(t);
+function send(t) {
 const req = https.request({
-  host: 'ntfy.sh', path: '/' + topic, method: 'POST',
+  host: 'ntfy.sh', path: '/' + t, method: 'POST',
   headers: {
     'Content-Type': 'text/plain; charset=utf-8',
     'Content-Length': payload.length,
@@ -35,5 +40,6 @@ const req = https.request({
   res.on('data', d => (out += d));
   res.on('end', () => console.log(res.statusCode, at.toLocaleString('he-IL'), out.slice(0, 160)));
 });
-req.on('error', e => { console.error(e.message); process.exit(1); });
+req.on('error', e => { console.error(t === topic ? e.message : 'old topic: ' + e.message); if (t === topic) process.exitCode = 1; });
 req.end(payload);
+}
