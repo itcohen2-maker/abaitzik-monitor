@@ -9759,7 +9759,7 @@ on('gKatalog',katalogSheet);
 */
 var NER_ITEMS=[
  {n:'01',t:'הביו בטיקטוק, לפני ואחרי (PDF)',r:'tiktok-bio-before-after.pdf'},
- {n:'02',t:'דף ההסבר: קישור לאתר ברשתות',u:'ner-links.html'},
+ {n:'02',t:'דף ההסבר: קישור לאתר ברשתות (PDF)',r:'ner-links.pdf'},
  {n:'03',t:'סטורי נרות חי, חמישי, עברית',r:'ner-live-1-thursday-he.mp4'},
  {n:'04',t:'סטורי נרות חי, חמישי, אנגלית',r:'ner-live-2-thursday-en.mp4'},
  {n:'05',t:'סטורי נרות חי, שישי, עברית',r:'ner-live-3-friday-he.mp4'},
