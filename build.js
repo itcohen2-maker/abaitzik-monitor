@@ -3282,8 +3282,7 @@ try{
    <svg viewBox="0 0 24 24"><path fill="#fff" d="M4 14c2-5 6-8 11-8l5-2-2 5c0 5-3 9-8 11l-1-3-3-1z"/><circle cx="14" cy="10" r="1.3" fill="#6d28d9"/></svg></span>פגסוס</a>
   <button type="button" class="ic" id="icDrive"><span class="c c-dr">
    <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M9.4 3h5.2l6 10.4h-5.2z"/><path fill="#34A853" d="M3 18.6 5.6 14h12.8l-2.6 4.6z"/><path fill="#FBBC05" d="M9.4 3 3 14l2.6 4.6L12 7.6z"/></svg></span>דרייב</button>
-  <button type="button" class="ic" id="icVaad"><span class="c c-hb">
-   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/></svg></span>ועד הבית</button>
+  <!-- איציק, 30.9: "תסיר את האייקון לועד הבית, יש לי אותו גם בכפתור". The tile gVaad stays. -->
   <!--
     כניסות. One shared beacon (ner-site's /api/visit) every one of the four
     sites/apps now pings on load; this button reads it back. A toast, not a
@@ -10578,7 +10577,6 @@ document.getElementById('leads').addEventListener('click',function(e){
 on('icMail',function(){pane('e');});
 document.getElementById('icDrive').onclick=function(){pane('d');};
 /*ITZIK:BEGIN*/
-document.getElementById('icVaad').onclick=function(){pane('v');ensure('rivhit',renderRivhit);};
 document.getElementById('vaadAsk').onclick=function(){askInChat('ועד הבית: ');};
 /*ITZIK:END*/
 document.getElementById('icAdd').onclick=function(){askInChat('מודול חדש שאני רוצה: ');};
