@@ -10089,7 +10089,7 @@ on('gNerMkt',nerSheet);
   the next number and numbers never change.
 */
 var REEL_ITEMS=[
- {n:'01',t:'המנגל: שבועיים אחרי הניתוח, ולא ויתרתי (38 שניות)',r:'reel-01-mangal.mp4'},
+ {n:'01',t:'המנגל: שבועיים אחרי הניתוח, ולא ויתרתי (35 שניות, הגרסה הסופית שלך)',r:'reel-01-mangal.mp4'},
  {n:'02',t:'הביקורת אצל הפרופסור: יצאתי עם בשורה טובה (31 שניות)',r:'reel-02-bikoret.mp4'}
 ];
 function reelSheet(){
