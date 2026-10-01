@@ -21,7 +21,7 @@
     session says there is nothing open and the PC line has not moved, and a
     daily cap.
 
-  Timer: monitor-pegasus.timer, every 10 minutes. Log: /var/log/monitor-pegasus.log.
+  Started every 10 minutes by the worker (lib/pegasus-tick.js). Log: data/status/pegasus-server.log.
   Usage: node pegasus-server.js [--dry]   --dry decides and prints, runs nothing.
 */
 'use strict';

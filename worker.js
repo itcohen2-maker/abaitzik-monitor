@@ -551,4 +551,5 @@ if (si > -1) {
   if (batch.length) run(batch);
 } else {
   main();
+  if (!DRY) require('./lib/pegasus-tick.js').tick(Date.now());
 }

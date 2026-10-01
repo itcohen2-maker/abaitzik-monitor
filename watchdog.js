@@ -180,31 +180,6 @@ function doctor(problems, since, now) {
 }
 function key(p) { return p.replace(/\d+/g, '#'); }
 
-/*
-  Pegasus while the PC is off (Itzik, 1.10: "גם אם המחשב מכובה יש לנו את השרת").
-  No sudo here for a timer of its own, so the watchdog, already every two
-  minutes, starts pegasus-server.js every ten. That script decides alone: it
-  exits at once while the PC is awake, holds its own lock and its own caps.
-  Only Itzik's instance, the one the doctor runs in, has a Pegasus.
-*/
-const PEGASUS_EVERY_MS = 10 * 60 * 1000;
-const PEGASUS_LAST = path.join(STATUS, 'pegasus-tick.json');
-function pegasusTick(now) {
-  if (process.platform === 'win32' || !process.env.WATCHDOG_DOCTOR) return;
-  if (path.resolve(process.env.WATCHDOG_DOCTOR) !== path.resolve(__dirname)) return;
-  if (!fs.existsSync(path.join(__dirname, 'pegasus-server.js'))) return;
-  const last = readJson(PEGASUS_LAST, {}).at;
-  if (last && now - Date.parse(last) < PEGASUS_EVERY_MS - 30 * 1000) return;
-  try { fs.writeFileSync(PEGASUS_LAST, JSON.stringify({ at: new Date(now).toISOString() })); } catch (e) { return; }
-  let out = 'ignore';
-  try { out = fs.openSync('/var/log/monitor-pegasus.log', 'a'); } catch (e) {
-    try { out = fs.openSync(path.join(STATUS, 'pegasus-server.log'), 'a'); } catch (e2) {}
-  }
-  const c = require('child_process').spawn(process.execPath, [path.join(__dirname, 'pegasus-server.js')],
-    { cwd: __dirname, detached: true, stdio: ['ignore', out, out] });
-  c.unref();
-}
-
 function main() {
   const now = Date.now();
   const problems = check(now);
@@ -219,7 +194,6 @@ function main() {
     + (sp && sp.n ? '  | היום ' + sp.n + ' תשובות, חציון ' + sp.medianMin + ' דק׳, ' + sp.inTarget + '% בתוך שתי דקות' : ''));
   if (DRY) return;
   doctor(problems, since, now);
-  pegasusTick(now);
   if (fresh.length) {
     try {
       require('./lib/notify-channels.js').notify('השומר מצא תקלה', fresh.join('\n'));
