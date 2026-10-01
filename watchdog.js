@@ -45,6 +45,15 @@ function when(s) {
   return Date.parse(m[1] + 'T' + m[2] + (m[3] === 'UTC' || !m[3] ? 'Z' : 'Z'));
 }
 
+/*
+  1.10: "401" on its own matched 20261001-1401-claude-ner-candles-pc.json, a
+  reply written at 14:01, and he got an alarm that the login had expired while
+  every session was answering. The status code counts only as a number of its
+  own, not inside a file name or a time.
+*/
+function refused(log) {
+  return /((?<![\w-])401(?![\w-])|unauthori[sz]ed|invalid (api key|token)|oauth token (has )?expired|please run \/login)/i.test(log);
+}
 function check(now) {
   const problems = [];
   let files = [];
@@ -63,7 +72,7 @@ function check(now) {
   if (now > Date.parse('2027-08-25T00:00:00Z')) problems.push('הכניסה של קלוד בשרת פגה בקרוב, צריך לחדש');
   try {
     const wl = fs.readFileSync(process.env.WORKER_LOG || '/var/log/monitor-worker.log', 'utf8').split('\n').slice(-60).join('\n');
-    if (/(401|unauthori[sz]ed|invalid (api key|token)|oauth token (has )?expired|please run \/login)/i.test(wl)) problems.push('סשנים בשרת נדחים, כנראה הכניסה של קלוד פגה');
+    if (refused(wl)) problems.push('סשנים בשרת נדחים, כנראה הכניסה של קלוד פגה');
   } catch (e) {}
   if (process.platform !== 'win32') {
     const st = show(UNIT + '.service', 'ActiveState');
@@ -196,4 +205,4 @@ function main() {
 }
 
 if (require.main === module) main();
-module.exports = { check, when, speed, gitStuck };
+module.exports = { refused, check, when, speed, gitStuck };

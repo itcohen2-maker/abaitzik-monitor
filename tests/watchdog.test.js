@@ -4,7 +4,7 @@ const assert = require('node:assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { when, gitStuck } = require('../watchdog.js');
+const { when, gitStuck, refused } = require('../watchdog.js');
 
 test('the watchdog reads systemd timestamps as UTC', () => {
   assert.equal(when('Sun 2026-09-27 19:02:22 UTC'), Date.parse('2026-09-27T19:02:22Z'));
@@ -25,4 +25,11 @@ test('a detached HEAD or a rebase counts only after three minutes', () => {
   assert.match(gitStuck(repo, now + 10 * 60000), /rebase/);
   assert.equal(gitStuck(path.join(repo, 'nope'), now), '');
   fs.rmSync(repo, { recursive: true, force: true });
+});
+
+test('a time inside a file name is not a refused login', () => {
+  assert.equal(refused('זמן תשובה תוקן: 20261001-1401-claude-ner-candles-pc.json'), false);
+  assert.equal(refused('took 1401 ms'), false);
+  assert.equal(refused('API Error: 401 authentication_error'), true);
+  assert.equal(refused('Please run /login'), true);
 });
