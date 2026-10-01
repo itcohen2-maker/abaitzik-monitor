@@ -2341,6 +2341,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
 .rvinv li{display:flex;gap:8px;align-items:center;padding:7px 2px;border-top:1px solid var(--line);font-size:13.5px;cursor:pointer}
 .rvinv li .n{flex:1;min-width:0}
 .rvinv li .dt{color:var(--dim);font-size:12.5px;white-space:nowrap}
+.rvwa{display:block;color:#1a9e5a;font-size:12.5px;margin-top:2px}
 .rvinv li .m{font-weight:700;white-space:nowrap;min-width:64px;text-align:left}
 .rvinv li small{display:block;font-size:11px;color:var(--dim)}
 .rivtalk{margin:0 0 14px}
@@ -12184,11 +12185,12 @@ function rivDebt(r){
  if(!r.inv)return rivRow(r);
  var li=r.inv.map(function(x){
   return '<li><span class="n">'+(x.n?'חשבונית '+esc(x.n):esc(x.label||'חוב ישן'))
-   +(x.left<x.amount-0.5?'<small>שולם חלק, מתוך '+ils(x.amount)+'</small>':'')+'</span>'
+   +(x.left<x.amount-0.5?'<small>שולם חלק, מתוך '+ils(x.amount)+'</small>':'')
+   +(x.wa?'<small class="rvwa">וואטסאפ: '+esc(x.wa)+'</small>':'')+'</span>'
    +'<span class="dt">'+esc(x.date)+'</span><span class="m">'+ils(x.left)+'</span></li>';
  }).join('');
  return '<details class="rvcust"><summary class="rvh"><b>'+esc(r.name)+'</b><span class="a">'+ils(r.amount)+'</span></summary>'
-  +'<small>'+esc(r.sub||'')+'</small><ul class="rvinv">'+li+'</ul>'
+  +'<small>'+esc(r.sub||'')+'</small>'+(r.wa?'<small class="rvwa">'+esc(r.wa)+'</small>':'')+'<ul class="rvinv">'+li+'</ul>'
   +'<form class="rvf" data-name="'+esc(r.name)+'"><input type="text" placeholder="הערה על '+esc(r.name)+'" autocomplete="off">'
   +'<button type="submit">שליחה</button></form><div class="rvsaid"></div></details>';
 }
