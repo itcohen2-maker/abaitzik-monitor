@@ -3242,7 +3242,7 @@ try{
     his mail; private files only, numbered, a new one gets the next number.
   -->
   <button type="button" class="gt gInv" id="gInv"><b>🧾 חשבוניות</b><small>ממוספר. קלוד, גוגל ועורך הדין מאוגוסט</small></button>
-  <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>ממוספר. 01 המנגל, לא ויתרתי</small></button>
+  <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>ממוספר. 02 הביקורת אצל הפרופסור</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
@@ -10092,7 +10092,8 @@ on('gNerMkt',nerSheet);
   the next number and numbers never change.
 */
 var REEL_ITEMS=[
- {n:'01',t:'המנגל: שבועיים אחרי הניתוח, ולא ויתרתי (38 שניות)',r:'reel-01-mangal.mp4'}
+ {n:'01',t:'המנגל: שבועיים אחרי הניתוח, ולא ויתרתי (38 שניות)',r:'reel-01-mangal.mp4'},
+ {n:'02',t:'הביקורת אצל הפרופסור: יצאתי עם בשורה טובה (31 שניות)',r:'reel-02-bikoret.mp4'}
 ];
 function reelSheet(){
  var old=document.getElementById('rlSheet');if(old)old.remove();
