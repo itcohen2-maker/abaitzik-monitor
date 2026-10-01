@@ -1686,7 +1686,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-01T09:22:48.456Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-01T10:10:05.424Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1825,7 +1825,7 @@ try{
   <button type="button" class="gt g15" id="gYehuda"><b>📄 יהודה</b><small>גרסה קצרה לשליחה, והסקירה המלאה לזיכרון</small></button>
   <button type="button" class="gt gKat" id="gKatalog"><b>🎨 המצגות של רינת</b><small>ממוספר. 02 מצגת הום סנטר, גרסה 3</small></button>
   <button type="button" class="gt gNer" id="gNerMkt"><b>🕯️ שיווק הנרות</b><small>ממוספר. הביו בטיקטוק, דף הקישורים והסטוריז</small></button>
-  <button type="button" class="gt gMed" id="gMed"><b>🩺 אחרי הניתוח השני</b><small>ממוספר. 01 ביקורת אצל פרופ׳ גיא להט</small></button>
+  <button type="button" class="gt gMed" id="gMed"><b>🩺 אחרי הניתוח השני</b><small>ממוספר. המסמכים והסרטונים מהביקורת אצל הפרופסור</small></button>
   <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>ממוספר. 01 המנגל, לא ויתרתי</small></button>
   <button type="button" class="gt g3" id="gBrowse"><b>🌐 דפדפן</b><small>חיפוש וכתובת, נפתח כאן בפנים</small></button>
   <button type="button" class="gt gShop" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
@@ -2825,7 +2825,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='b5af020c6d';
+var CODE_ID='a938b8f02e';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -7088,7 +7088,9 @@ function reelSheet(){
 }
 on('gReels',reelSheet);
 var MED_ITEMS=[
- {n:'01',t:'ביקורת אצל פרופ׳ גיא להט, 1.10, עם הפתולוגיה',r:'med-01-lahat-review.pdf'}
+ {n:'01',t:'ביקורת אצל פרופ׳ גיא להט, 1.10, עם הפתולוגיה',r:'med-01-lahat-review.pdf'},
+ {n:'02',t:'ביקורת אצל הפרופסור: לפני שנכנסתי (13 שניות)',r:'med-02-before.mp4'},
+ {n:'03',t:'ביקורת אצל הפרופסור: יצאתי, הכל מצוין (21 שניות)',r:'med-03-after.mp4'}
 ];
 function medSheet(){
  var old=document.getElementById('mdSheet');if(old)old.remove();

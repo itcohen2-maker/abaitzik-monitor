@@ -3239,7 +3239,7 @@ try{
     papers after the 14.9 surgery, numbered like the reels. Private files only,
     never PUBLIC_FILES: this is pathology and a doctor's summary.
   -->
-  <button type="button" class="gt gMed" id="gMed"><b>🩺 אחרי הניתוח השני</b><small>ממוספר. 01 ביקורת אצל פרופ׳ גיא להט</small></button>
+  <button type="button" class="gt gMed" id="gMed"><b>🩺 אחרי הניתוח השני</b><small>ממוספר. המסמכים והסרטונים מהביקורת אצל הפרופסור</small></button>
   <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>ממוספר. 01 המנגל, לא ויתרתי</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
@@ -10126,7 +10126,9 @@ on('gReels',reelSheet);
   as the reels; a new paper gets the next number and numbers never change.
 */
 var MED_ITEMS=[
- {n:'01',t:'ביקורת אצל פרופ׳ גיא להט, 1.10, עם הפתולוגיה',r:'med-01-lahat-review.pdf'}
+ {n:'01',t:'ביקורת אצל פרופ׳ גיא להט, 1.10, עם הפתולוגיה',r:'med-01-lahat-review.pdf'},
+ {n:'02',t:'ביקורת אצל הפרופסור: לפני שנכנסתי (13 שניות)',r:'med-02-before.mp4'},
+ {n:'03',t:'ביקורת אצל הפרופסור: יצאתי, הכל מצוין (21 שניות)',r:'med-03-after.mp4'}
 ];
 function medSheet(){
  var old=document.getElementById('mdSheet');if(old)old.remove();
