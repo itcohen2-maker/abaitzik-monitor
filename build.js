@@ -4696,7 +4696,17 @@ function goLinks(m){
   if(ids.length>=3||ids.indexOf(x.id)>-1)return;
   if(t.indexOf(x.name)>-1){ids.push(x.id);names[x.id]=x.name;}
  });
- return ids.map(function(id){
+ // Itzik, 1.10: "איפה זה ממוקם ולמה אין לי כפתור קח אותי לשם". A file named
+ // in an answer as files/<name> was plain text. Now it gets its own button.
+ var fb=[];
+ (t.match(new RegExp('files/[^\\\\s<>"]+','g'))||[]).forEach(function(h){
+  var n=fileNameOf(h.replace(new RegExp('[.,;:!?)"]+$'),''));
+  if(!n||fb.indexOf(n)>-1||!fileEntry(n))return;
+  fb.push(n);
+ });
+ return fb.map(function(n){
+  return '<button type="button" class="gotile" data-file="'+esc(n)+'">קח אותי לשם: '+esc(n.split('/').pop())+'</button>';
+ }).join('')+ids.map(function(id){
   var el=document.getElementById(id);
   if(!el||el.hidden)return '';
   var name=names[id]||goClean((el.querySelector('b')||el).textContent);
@@ -4742,6 +4752,8 @@ document.addEventListener('click',function(e){
  var b=e.target.closest&&e.target.closest('.gotile');
  if(!b)return;
  e.stopPropagation();e.preventDefault();
+ var fn=b.getAttribute('data-file');
+ if(fn){if(!fileView(fn))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');return;}
  goThere(b);
 },true);
 function linkify(t){

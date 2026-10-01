@@ -1688,7 +1688,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-01T13:52:46.608Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-01T13:53:08.106Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2826,7 +2826,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='e6bb87665e';
+var CODE_ID='192bd85a1a';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -3077,7 +3077,15 @@ function goLinks(m){
   if(ids.length>=3||ids.indexOf(x.id)>-1)return;
   if(t.indexOf(x.name)>-1){ids.push(x.id);names[x.id]=x.name;}
  });
- return ids.map(function(id){
+ var fb=[];
+ (t.match(new RegExp('files/[^\\s<>"]+','g'))||[]).forEach(function(h){
+  var n=fileNameOf(h.replace(new RegExp('[.,;:!?)"]+$'),''));
+  if(!n||fb.indexOf(n)>-1||!fileEntry(n))return;
+  fb.push(n);
+ });
+ return fb.map(function(n){
+  return '<button type="button" class="gotile" data-file="'+esc(n)+'">קח אותי לשם: '+esc(n.split('/').pop())+'</button>';
+ }).join('')+ids.map(function(id){
   var el=document.getElementById(id);
   if(!el||el.hidden)return '';
   var name=names[id]||goClean((el.querySelector('b')||el).textContent);
@@ -3123,6 +3131,8 @@ document.addEventListener('click',function(e){
  var b=e.target.closest&&e.target.closest('.gotile');
  if(!b)return;
  e.stopPropagation();e.preventDefault();
+ var fn=b.getAttribute('data-file');
+ if(fn){if(!fileView(fn))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');return;}
  goThere(b);
 },true);
 function linkify(t){
