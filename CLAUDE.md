@@ -1,14 +1,14 @@
 # Facts every session here needs
 
 - **Tasks that need Itzik's real browser or his desktop apps (see the two below) cannot be done by
-  a session on the server at all, ever** — the server has no browser and never will (that's by
-  design, see `worker.js`, "25.9: the worker also runs on the cloud server now, which has no
-  browser"). Sending the request through the monitor chat again, asking for a link, or re-explaining
-  the limitation wastes his time and has already happened in a loop once (27.9, six messages over 90
-  minutes before landing on this). The one thing that actually works: he double-clicks
-  `CLAUDE.cmd` on his desktop, which opens a real Claude Code session on his own PC with his browser
-  attached, and asks it directly there. A session on the server's only job for these is to say that
-  in one line and stop — not investigate, not retry, not ask for anything else.
+  a session on the server at all, ever** — the server has no browser and never will. Since 1.10.2026
+  they are not sent back to him either. The server session marks them for the PC:
+  `node pc-task.js add --re <his message id> "<the full task>"`, tells him in one line that the PC
+  will do it by itself as soon as it is on, and stops. `pc-pull.js` on the PC (scheduled task
+  `AbaItzikPcPull`, every minute, hidden) claims it over ssh, runs a Claude session there with his
+  Chrome, and sends the answer back with `pc-task.js done`, which writes it in his thread and pushes.
+  The queue is `data/pc/pc/` on the server; `node pc-task.js list` shows it. Telling him to open
+  `CLAUDE.cmd` is now only for a task he wants to watch live.
 
 - **Shopping list:** the Google Doc "קניות", owned by Jenny Cohen and shared with itcohen2.
   https://docs.google.com/document/d/1A2tvet0ucYNDoDclswaVDybuL8bir3OAerRzXtDUEPU/edit
