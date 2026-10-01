@@ -350,7 +350,8 @@ function build() {
     .map(x => ({ id: x.id, when: x.when || '', what: x.what || '',
                  where: x.where || '', note: x.note || '', img: x.img || '',
                  doc: x.doc || '', docLabel: x.docLabel || '' }))
-    .sort((a, b) => ((a.when || '') < (b.when || '') ? -1 : 1));
+    // No date yet ("רופא תעסוקתי", 1.10) goes last, not first.
+    .sort((a, b) => ((a.when || '~') < (b.when || '~') ? -1 : 1));
   const replies = loadDocs('replies')
     .map(x => ({ at: x.at, network: x.network || '', video: x.video || '',
                  comment: x.comment || '', reply: x.reply || '',
@@ -1992,6 +1993,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .gt .gi{height:1.35em;width:auto;vertical-align:-0.3em;margin-inline-end:2px}
 .gKat{background:linear-gradient(150deg,#e3c07a,#2b45a6)}
 .gNer{background:linear-gradient(150deg,#f0a64a,#0f1a3a)}
+.gReel{background:linear-gradient(150deg,#e2574c,#2a1240)}
 .gShop{background:linear-gradient(150deg,#3aa55d,#1f6f8b)}
 .gCPlan{background:linear-gradient(150deg,#e8743b,#6b2f7a)}
 .g16{background:linear-gradient(150deg,#f8bbd0,#c2185b)}
@@ -3226,6 +3228,12 @@ try{
     comparison, the how-to page, the live candle stories.
   -->
   <button type="button" class="gt gNer" id="gNerMkt"><b>🕯️ שיווק הנרות</b><small>ממוספר. הביו בטיקטוק, דף הקישורים והסטוריז</small></button>
+  <!--
+    איציק, 1.10: "שים כפתור יעודי במוניטור, ככה אני לא מוצא". Every finished
+    reel, numbered like Rinat's list. The full quality copy is on Drive in
+    סרטונים; the one here is lighter so it opens and shares from the phone.
+  -->
+  <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>ממוספר. 01 המנגל, לא ויתרתי</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
@@ -8716,9 +8724,9 @@ function renderAppts(){
  var now=Date.now();
  var A=(D.appts||[]).filter(function(a){var t=Date.parse(a.when);return isNaN(t)||t>now-3*3600e3;});
  host.innerHTML=A.length?A.map(function(a){
-  var d=a.when,h='',t0=Date.parse(a.when);
+  var d=a.when||'עוד בלי תאריך',h='',t0=Date.parse(a.when);
   var rm=(D.reminders||[]).filter(function(r){var u=Date.parse(r.due);return !r.sentAt&&u<t0&&t0-u<3*864e5;})[0];
-  try{var x=new Date(a.when);
+  if(!isNaN(t0))try{var x=new Date(a.when);
    d=x.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',year:'numeric',timeZone:'Asia/Jerusalem'});
    h=x.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Jerusalem'});}catch(e){}
   return '<div class="ap"><div class="d">'+esc(d)+(h?' בשעה '+esc(h):'')+'</div>'
@@ -10060,6 +10068,42 @@ function nerSheet(){
  document.body.appendChild(w);
 }
 on('gNerMkt',nerSheet);
+/*
+  1.10. Finished reels, same numbered sheet as the candles. A new reel gets
+  the next number and numbers never change.
+*/
+var REEL_ITEMS=[
+ {n:'01',t:'המנגל: שבועיים אחרי הניתוח, ולא ויתרתי (38 שניות)',r:'reel-01-mangal.mp4'}
+];
+function reelSheet(){
+ var old=document.getElementById('rlSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='rlSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','הרילים שלי');
+ w.innerHTML='<div class="ycard">'
+  +'<b>הרילים שלי</b>'
+  +'<small>ממוספר, הריל החדש מקבל את המספר הבא</small>'
+  +REEL_ITEMS.map(function(it,i){
+    return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=REEL_ITEMS[+k];if(k===''||!it)return;
+  if(it.u)window.open(it.u,'_blank','noopener');
+  else if(!fileView(it.r))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gReels',reelSheet);
 on('gYoman',function(){window.open('yoman/','_blank','noopener');});
 /*
   27.9. The content plan for Ilay. Same sheet as Yehuda's, because the first
