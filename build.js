@@ -3219,12 +3219,6 @@ try{
   -->
   <button type="button" class="gt g15" id="gYehuda"><b>📄 יהודה</b><small>גרסה קצרה לשליחה, והסקירה המלאה לזיכרון</small></button>
   <!--
-    26.9. The Home Style summer 2027 catalog: ten design directions, each with
-    a cover, a spread and an agents page. The page sits in docs/katalog so it
-    opens on the phone with no login. Originals and the PDF are on Drive.
-  -->
-  <button type="button" class="gt gKat" id="gKatalog"><b>🎨 המצגות של רינת</b><small>ממוספר. 02 מצגת הום סנטר, גרסה 3</small></button>
-  <!--
     איציק, 30.9: "במוניטור שים את זה בכפתור, שיהיה לי נוח להתייעץ". Everything
     made for pushing candletimes, numbered like Rinat's list: the bio
     comparison, the how-to page, the live candle stories.
