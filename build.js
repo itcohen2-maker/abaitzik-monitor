@@ -490,10 +490,13 @@ function build() {
       // customer shows exactly which ones.
       ...(r.kind === 'debt' && Array.isArray(r.inv) ? {
         sub: String(r.sub || ''),
+        // what the WhatsApp payments group says about this customer (1.10)
+        ...(r.wa ? { wa: String(r.wa) } : {}),
         inv: r.inv.map(x => ({
           n: String(x.n || ''), label: String(x.label || ''), date: String(x.date || ''),
           amount: typeof x.amount === 'number' ? x.amount : 0,
           left: typeof x.left === 'number' ? x.left : 0,
+          ...(x.wa ? { wa: String(x.wa) } : {}),
         })),
       } : {}),
       // kind audit: one customer checked invoice by invoice. Only those docs
