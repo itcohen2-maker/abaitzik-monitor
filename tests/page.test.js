@@ -586,39 +586,29 @@ test('the microphone answers the tap before the phone has decided', () => {
   assert.ok(clean.includes('recStarting=false;'), 'and neither is the starting flag');
 });
 
-test('a permission that disappears refreshes the page instead of waiting to be noticed', () => {
+/*
+  1.10, Itzik by voice: after a few trips to other windows the microphone stops
+  answering, refresh does not fix it, and a client does not know he has to
+  close the app and open it again. So the automatic reload is gone: every way a
+  stuck microphone shows itself ends in one place, which tries once more after
+  letting everything go, and then puts the steps on the screen.
+*/
+test('a stuck microphone ends in one sheet with steps, not a reload', () => {
   const html = renderPage(fixture({}));
-  // He reported it exactly: the microphone asks for permission, the
-  // permission sometimes vanishes, and the screen goes on talking (the clock
-  // still runs) without anything actually recorded. Pressing רענן himself
-  // fixed it, but he is not the one who should have to find that button.
   const at = html.indexOf('function recStart(){');
   const body = html.slice(at, html.indexOf('function holdScreen', at));
-  // A denied or revoked permission reloads on its own.
   const denied = body.slice(body.indexOf("name==='NotAllowedError'||name==='SecurityError'"));
-  assert.ok(denied.startsWith("name==='NotAllowedError'||name==='SecurityError'"));
-  // 30.9: a prompt the phone closed on its own gets one quiet retry first,
-  // then exactly one reload, never a loop of them (the loop is what made the
-  // prompt vanish under his finger).
-  assert.ok(denied.slice(0, 1200).includes('setTimeout(hardReload,'),
-    'a denied or revoked permission must trigger the same fix as the refresh button');
-  assert.ok(denied.slice(0, 1200).includes("sessionStorage.getItem('micReloaded')"),
-    'the reload happens once, not in a loop');
-  // A recording that ran and said so, but captured nothing, is the same
-  // failure discovered later instead of at the prompt.
-  assert.ok(body.includes('if(!b.size){'));
-  const empty = body.slice(body.indexOf('if(!b.size){'), body.indexOf('if(!b.size){') + 300);
-  assert.ok(empty.includes('setTimeout(hardReload,'),
-    'an empty recording must reach for the same fix, not just ask him to try again');
-  // A track that dies mid-take (the device disappearing under a live
-  // recording) gets the same treatment the moment it happens, not only when
-  // the recording ends.
-  assert.ok(body.includes('track.onended=function(){'));
+  assert.ok(denied.slice(0, 1600).includes("micDenied().then(function(denied){micStuck(denied?'denied':'refused');});"),
+    'a refused permission goes to the sheet and says which case it is');
+  assert.ok(!body.includes('setTimeout(hardReload,'), 'no reload: he said refresh does not fix it');
+  const empty = body.slice(body.indexOf('if(!b.size){'), body.indexOf('if(!b.size){') + 200);
+  assert.ok(empty.includes("micStuck('empty');"), 'an empty take reaches the same place');
   const ended = body.slice(body.indexOf('track.onended=function(){'), body.indexOf('track.onended=function(){') + 300);
-  assert.ok(ended.includes('setTimeout(hardReload,'));
-  // All three share the one reload the button already uses, so the draft is
-  // still kept and the caches are still cleared.
-  assert.ok(html.includes('function hardReload(){'));
+  assert.ok(ended.includes("micStuck('ended');"), 'and so does a track that dies');
+  assert.ok(body.includes("micStuck('hang');"), 'a permission call that never answers has a deadline');
+  assert.ok(body.includes("track.muted&&!document.hidden"), 'a muted track is caught at the start');
+  assert.ok(html.includes('function micSheet(denied){'), 'the sheet exists');
+  assert.ok(html.includes("document.addEventListener('visibilitychange',micWake);"), 'coming back lets go of what was held');
 });
 
 test('a card about listening gets something to press', () => {

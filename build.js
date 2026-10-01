@@ -2025,6 +2025,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
  box-shadow:0 -8px 40px rgba(0,0,0,.35)}
 .ycard b{font:700 16px Heebo,sans-serif}
 .ycard small{font-size:12px;opacity:.7;margin-bottom:4px}
+.micSteps{margin:2px 0 6px;padding-inline-start:20px;font:500 15px/1.5 Heebo,sans-serif}
 /* 30.9: the short text was near invisible on the dark theme ("אני רוצה לראות
    איך אני אראה"). It is now shown as the WhatsApp bubble Yehuda will get. */
 .ywa{background:#efeae2;border-radius:12px;padding:10px;max-height:40vh;overflow:auto;margin-bottom:4px}
@@ -11455,9 +11456,24 @@ function recStart(){
  paintMics('sending');
  // No page sound in the way of the microphone, and a mode that records.
  clearTimeout(sfxT);try{if(sfx){sfx.close();sfx=null;}}catch(e){}
- audioMode('play-and-record');
- var askAt=Date.now();
+ var askAt=Date.now(),ask=++recAsk;
+ recAskAt=askAt;
+ /*
+   1.10, Itzik: after a few trips to other windows and back the microphone
+   stops answering, and refresh does not fix it. One way that shows is a
+   permission call that never comes back at all: recStarting stays true and
+   every tap after that says "the microphone is opening" forever. So it gets
+   a deadline, and a late answer is closed instead of used.
+ */
+ var deadline=setTimeout(function(){
+  if(ask!==recAsk||!recStarting||document.hidden)return;
+  recAsk++;recStarting=false;recBtn.disabled=false;
+  micStuck('hang');
+ },12000);
+  audioMode('play-and-record');
  navigator.mediaDevices.getUserMedia({audio:true}).then(function(st){
+  clearTimeout(deadline);
+  if(ask!==recAsk){try{st.getTracks().forEach(function(t){t.stop();});}catch(e){}return;}
   try{sessionStorage.removeItem('micReloaded');}catch(e){}
   recStream=st;recChunks=[];recSec=0;
   // He reported the mic dying mid-take too, not only at the permission
@@ -11467,17 +11483,26 @@ function recStart(){
   // notice himself.
   var track=st.getAudioTracks()[0];
   if(track)track.onended=function(){
-   recSaid.textContent='המיקרופון התנתק. מרענן את הדף כדי לתקן...';
-   paintMics('bad');
-   window.reloadStay=panePrev; // land back on the screen this reload interrupted
-   setTimeout(hardReload,1200);
+   if(document.hidden)return; // the phone cut it while he was away; rec.onstop sends what was caught
+   micStuck('ended');
   };
+  // 1.10: a track that comes back muted is the stuck microphone after
+  // switching windows. It records silence, so it is caught here, not after.
+  if(!track||track.readyState!=='live'){
+   try{st.getTracks().forEach(function(t){t.stop();});}catch(e){}
+   recStream=null;recStarting=false;recBtn.disabled=false;
+   micStuck('dead');return;
+  }
+  setTimeout(function(){
+   if(recStream===st&&track.muted&&!document.hidden){recAbort=true;recMuted=true;recStop();}
+  },1500);
   var mt=recPickType();
   try{rec=mt?new MediaRecorder(st,{mimeType:mt}):new MediaRecorder(st);}
   catch(e){rec=new MediaRecorder(st);}
   rec.ondataavailable=function(ev){if(ev.data&&ev.data.size)recChunks.push(ev.data);};
   rec.onstop=function(){
    recCleanup();
+   if(recMuted){recMuted=false;recAbort=false;micStuck('muted');return;}
    if(recAbort){recAbort=false;recModal(false);recSaid.textContent='ההקלטה בוטלה.';recBtn.disabled=false;paintMics('idle');return;}
    recModal(false);
    var type=(rec&&rec.mimeType)||'audio/webm';
@@ -11487,10 +11512,8 @@ function recStart(){
    // stuck permission just repeats it, so this reaches for the same fix as a
    // denied prompt instead of leaving him to find the refresh button.
    if(!b.size){
-    recSaid.textContent='לא נקלט כלום. מרענן את הדף כדי לתקן...';
-    recBtn.disabled=false;paintMics('bad');
-    window.reloadStay=panePrev;
-    setTimeout(hardReload,1200);
+    recBtn.disabled=false;
+    micStuck('empty');
     return;
    }
    var ext=type.indexOf('mp4')>-1?'m4a':(type.indexOf('ogg')>-1?'ogg':'webm');
@@ -11527,6 +11550,7 @@ function recStart(){
   };
   rec.start();
   recStarting=false;
+  micStuckRetried=false;
   holdScreen();
   recModal(true);
   recBtn.disabled=false;
@@ -11535,6 +11559,8 @@ function recStart(){
   recSaid.textContent='מקליט 0:00. לחיצה נוספת עוצרת ושולחת. עד שמונה דקות.';
   recTimer=setInterval(recTick,1000);
  }).catch(function(err){
+  clearTimeout(deadline);
+  if(ask!==recAsk)return;
   recStarting=false;
   /*
     Let the recorder go on the way out too.
@@ -11572,28 +11598,14 @@ function recStart(){
     setTimeout(recStart,700);
     return;
    }
-   var once='';try{once=sessionStorage.getItem('micReloaded')||'';}catch(e){}
-   if(!once){
-    try{sessionStorage.setItem('micReloaded','1');}catch(e){}
-    recSaid.textContent='ההרשאה למיקרופון נעלמה. מרענן פעם אחת כדי לתקן...';
-    paintMics('bad');
-    window.reloadStay=panePrev;
-    setTimeout(hardReload,1200);
-    return;
-   }
-   try{sessionStorage.removeItem('micReloaded');}catch(e){}
    /*
-     Itzik, 30.9, by voice: "you explain how to fix it on the iPhone, but I
-     don't see an address bar, I put it on the home screen and it opens full
-     screen." The "aA" button lives in Safari's address bar, and an app opened
-     from the home screen has none, so from there the only way is Settings.
+     1.10, Itzik: "refresh does not fix it, and a client does not know he has
+     to close the window and open it again." The automatic reload is gone. If
+     the phone itself says the permission is denied, the sheet shows where the
+     switch is; otherwise the permission is fine and the phone's microphone is
+     stuck, and the sheet says to close the app fully, in steps.
    */
-   var appMode=(window.navigator&&window.navigator.standalone)||
-    (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches);
-   recSaid.textContent=appMode
-    ?'הטלפון חוסם את המיקרופון. לתקן פעם אחת: לצאת מהמוניטור, להיכנס להגדרות של האייפון, אפליקציות, ספארי, מיקרופון, לבחור "לאפשר". אחר כך לסגור את המוניטור לגמרי (להחליק אותו למעלה ברשימת האפליקציות הפתוחות), לפתוח שוב וללחוץ על המיקרופון.'
-    :'הטלפון חוסם את המיקרופון לדף הזה. לתקן פעם אחת: בספארי, הכפתור "אא" ליד הכתובת, הגדרות אתר, מיקרופון, "לאפשר". או באייפון: הגדרות, אפליקציות, ספארי, מיקרופון, "לאפשר". ואז ללחוץ שוב על המיקרופון.';
-   paintMics('bad');
+   micDenied().then(function(denied){micStuck(denied?'denied':'refused');});
    return;
   }
   /*
@@ -11623,6 +11635,105 @@ function recStart(){
   paintMics('bad');
  });
 }
+var recAsk=0,recAskAt=0,micStuckRetried=false,recMuted=false;
+function micDenied(){
+ try{
+  if(navigator.permissions&&navigator.permissions.query)
+   return navigator.permissions.query({name:'microphone'}).then(function(r){return r.state==='denied';},function(){return false;});
+ }catch(e){}
+ return Promise.resolve(false);
+}
+function micAppMode(){
+ return !!((window.navigator&&window.navigator.standalone)||
+  (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches));
+}
+/*
+  The one place a stuck microphone ends up, whichever way it showed itself.
+
+  First a quiet second try with everything let go: the stream, the page's
+  sound, the phone's audio mode. That alone clears the cases where the audio
+  session was left in the wrong state while he was in another window. If the
+  second try fails too, nothing on this page can fix it, a reload included,
+  so it stops trying and puts a sheet on the screen that says, in steps, what
+  to do. What he typed is kept first, so closing the app loses nothing.
+*/
+function micStuck(why){
+ try{if(recStream){recStream.getTracks().forEach(function(t){t.stop();});recStream=null;}}catch(e){}
+ try{if(sfx){sfx.close();sfx=null;}}catch(e){}
+ recStarting=false;recBtn.disabled=false;recModal(false);
+ audioMode('auto');
+ // Only a start that failed is tried again by itself. A take that broke in
+ // the middle has already been sent, and starting a new one unasked is wrong.
+ if(why!=='denied'&&why!=='ended'&&why!=='empty'&&!micStuckRetried){
+  micStuckRetried=true;
+  recSaid.textContent='המיקרופון לא ענה. מנסה שוב...';
+  paintMics('sending');
+  setTimeout(function(){recRetried=true;recStart();},700);
+  return;
+ }
+ micStuckRetried=false;
+ paintMics('bad');
+ try{keepDraft();}catch(e){}
+ micSheet(why==='denied');
+}
+function micSheet(denied){
+ var old=document.getElementById('micSheet');if(old)old.remove();
+ var app=micAppMode(),ios=/iPhone|iPad|iPod/.test(navigator.userAgent||'')||(navigator.maxTouchPoints>1&&/Mac/.test(navigator.platform||''));
+ var steps;
+ if(denied){
+  steps=app||ios
+   ?['להיכנס להגדרות של האייפון','אפליקציות, ספארי, מיקרופון','לבחור "לאפשר"','לסגור את המוניטור לגמרי ולפתוח שוב']
+   :['ללחוץ על המנעול ליד כתובת האתר','מיקרופון, "לאפשר"','ללחוץ שוב על המיקרופון'];
+ }else if(app){
+  steps=['להחליק מלמטה למעלה ולעצור באמצע המסך','להחליק את החלון של המוניטור למעלה עד שהוא נעלם','לפתוח את המוניטור שוב וללחוץ על המיקרופון'];
+ }else if(ios){
+  steps=['להחליק מלמטה למעלה ולעצור באמצע המסך','להחליק את ספארי למעלה עד שהוא נעלם','לפתוח את ספארי ואת המוניטור שוב וללחוץ על המיקרופון'];
+ }else{
+  steps=['לסגור את החלון של המוניטור','לפתוח אותו שוב וללחוץ על המיקרופון'];
+ }
+ var w=document.createElement('div');
+ w.id='micSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','המיקרופון נתקע');
+ w.innerHTML='<div class="ycard">'
+  +'<b>'+(denied?'המיקרופון חסום לדף הזה':'המיקרופון של הטלפון נתקע')+'</b>'
+  +'<small>'+(denied
+    ?'הטלפון לא מרשה לדף להקליט. מתקנים פעם אחת:'
+    :'זה קורה לפעמים אחרי מעבר בין חלונות. זו לא תקלה שלך, ורענון לא מספיק. מה שהקלדת נשמר. מתקנים כך:')+'</small>'
+  +'<ol class="micSteps">'+steps.map(function(t){return '<li>'+esc(t)+'</li>';}).join('')+'</ol>'
+  +'<button type="button" class="yb yb1" data-k="again">לנסות שוב עכשיו</button>'
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  if(k==='again'){recRetried=false;recStart();}
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+ recSaid.textContent=denied?'המיקרופון חסום. ההסבר על המסך.':'המיקרופון נתקע. ההסבר על המסך.';
+}
+/*
+  Coming back from another window. Whatever the page was holding when he left
+  is let go here, before he taps: a permission call that never came back, a
+  stream with no recorder, the page's own sound. The microphone then starts
+  from a clean state instead of from whatever the phone left behind.
+*/
+function micWake(){
+ if(document.hidden)return;
+ if(rec&&rec.state==='recording')return;
+ if(recStarting&&Date.now()-recAskAt<12000)return; // a permission prompt he may be answering
+ if(recStarting){recAsk++;recStarting=false;}
+ if(!rec&&recStream){try{recStream.getTracks().forEach(function(t){t.stop();});}catch(e){}recStream=null;}
+ if(!rec){try{if(sfx){sfx.close();sfx=null;}}catch(e){}audioMode('auto');recBtn.disabled=false;}
+}
+document.addEventListener('visibilitychange',micWake);
+window.addEventListener('pageshow',micWake);
+window.addEventListener('focus',micWake);
 // Keeping the screen alive while recording. Without it the phone sleeps and
 // the recording ends mid sentence, which is exactly what he was seeing.
 var wakeLock=null;

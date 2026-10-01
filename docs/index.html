@@ -985,6 +985,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
  box-shadow:0 -8px 40px rgba(0,0,0,.35)}
 .ycard b{font:700 16px Heebo,sans-serif}
 .ycard small{font-size:12px;opacity:.7;margin-bottom:4px}
+.micSteps{margin:2px 0 6px;padding-inline-start:20px;font:500 15px/1.5 Heebo,sans-serif}
 .ywa{background:#efeae2;border-radius:12px;padding:10px;max-height:40vh;overflow:auto;margin-bottom:4px}
 .ywa i{display:block;font:600 11px Heebo,sans-serif;font-style:normal;color:#54656f;text-align:center;margin-bottom:8px}
 .yshort{white-space:pre-line;font:15px/1.5 Heebo,sans-serif;color:#111b21;
@@ -1687,7 +1688,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-01T11:56:06.478Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-01T12:00:14.682Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2826,7 +2827,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='62b7ce1a45';
+var CODE_ID='59fccbbbef';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -8183,33 +8184,46 @@ function recStart(){
  recSaid.textContent='פותח את המיקרופון. אם הדפדפן שואל, תאשר.';
  paintMics('sending');
  clearTimeout(sfxT);try{if(sfx){sfx.close();sfx=null;}}catch(e){}
- audioMode('play-and-record');
- var askAt=Date.now();
+ var askAt=Date.now(),ask=++recAsk;
+ recAskAt=askAt;
+ var deadline=setTimeout(function(){
+  if(ask!==recAsk||!recStarting||document.hidden)return;
+  recAsk++;recStarting=false;recBtn.disabled=false;
+  micStuck('hang');
+ },12000);
+  audioMode('play-and-record');
  navigator.mediaDevices.getUserMedia({audio:true}).then(function(st){
+  clearTimeout(deadline);
+  if(ask!==recAsk){try{st.getTracks().forEach(function(t){t.stop();});}catch(e){}return;}
   try{sessionStorage.removeItem('micReloaded');}catch(e){}
   recStream=st;recChunks=[];recSec=0;
   var track=st.getAudioTracks()[0];
   if(track)track.onended=function(){
-   recSaid.textContent='המיקרופון התנתק. מרענן את הדף כדי לתקן...';
-   paintMics('bad');
-   window.reloadStay=panePrev; // land back on the screen this reload interrupted
-   setTimeout(hardReload,1200);
+   if(document.hidden)return; // the phone cut it while he was away; rec.onstop sends what was caught
+   micStuck('ended');
   };
+  if(!track||track.readyState!=='live'){
+   try{st.getTracks().forEach(function(t){t.stop();});}catch(e){}
+   recStream=null;recStarting=false;recBtn.disabled=false;
+   micStuck('dead');return;
+  }
+  setTimeout(function(){
+   if(recStream===st&&track.muted&&!document.hidden){recAbort=true;recMuted=true;recStop();}
+  },1500);
   var mt=recPickType();
   try{rec=mt?new MediaRecorder(st,{mimeType:mt}):new MediaRecorder(st);}
   catch(e){rec=new MediaRecorder(st);}
   rec.ondataavailable=function(ev){if(ev.data&&ev.data.size)recChunks.push(ev.data);};
   rec.onstop=function(){
    recCleanup();
+   if(recMuted){recMuted=false;recAbort=false;micStuck('muted');return;}
    if(recAbort){recAbort=false;recModal(false);recSaid.textContent='ההקלטה בוטלה.';recBtn.disabled=false;paintMics('idle');return;}
    recModal(false);
    var type=(rec&&rec.mimeType)||'audio/webm';
    var b=new Blob(recChunks,{type:type});
    if(!b.size){
-    recSaid.textContent='לא נקלט כלום. מרענן את הדף כדי לתקן...';
-    recBtn.disabled=false;paintMics('bad');
-    window.reloadStay=panePrev;
-    setTimeout(hardReload,1200);
+    recBtn.disabled=false;
+    micStuck('empty');
     return;
    }
    var ext=type.indexOf('mp4')>-1?'m4a':(type.indexOf('ogg')>-1?'ogg':'webm');
@@ -8234,6 +8248,7 @@ function recStart(){
   };
   rec.start();
   recStarting=false;
+  micStuckRetried=false;
   holdScreen();
   recModal(true);
   recBtn.disabled=false;
@@ -8242,6 +8257,8 @@ function recStart(){
   recSaid.textContent='מקליט 0:00. לחיצה נוספת עוצרת ושולחת. עד שמונה דקות.';
   recTimer=setInterval(recTick,1000);
  }).catch(function(err){
+  clearTimeout(deadline);
+  if(ask!==recAsk)return;
   recStarting=false;
   try{recCleanup();}catch(e){}
   rec=null;
@@ -8255,22 +8272,7 @@ function recStart(){
     setTimeout(recStart,700);
     return;
    }
-   var once='';try{once=sessionStorage.getItem('micReloaded')||'';}catch(e){}
-   if(!once){
-    try{sessionStorage.setItem('micReloaded','1');}catch(e){}
-    recSaid.textContent='ההרשאה למיקרופון נעלמה. מרענן פעם אחת כדי לתקן...';
-    paintMics('bad');
-    window.reloadStay=panePrev;
-    setTimeout(hardReload,1200);
-    return;
-   }
-   try{sessionStorage.removeItem('micReloaded');}catch(e){}
-   var appMode=(window.navigator&&window.navigator.standalone)||
-    (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches);
-   recSaid.textContent=appMode
-    ?'הטלפון חוסם את המיקרופון. לתקן פעם אחת: לצאת מהמוניטור, להיכנס להגדרות של האייפון, אפליקציות, ספארי, מיקרופון, לבחור "לאפשר". אחר כך לסגור את המוניטור לגמרי (להחליק אותו למעלה ברשימת האפליקציות הפתוחות), לפתוח שוב וללחוץ על המיקרופון.'
-    :'הטלפון חוסם את המיקרופון לדף הזה. לתקן פעם אחת: בספארי, הכפתור "אא" ליד הכתובת, הגדרות אתר, מיקרופון, "לאפשר". או באייפון: הגדרות, אפליקציות, ספארי, מיקרופון, "לאפשר". ואז ללחוץ שוב על המיקרופון.';
-   paintMics('bad');
+   micDenied().then(function(denied){micStuck(denied?'denied':'refused');});
    return;
   }
   if(name==='InvalidStateError'&&!recRetried){
@@ -8289,6 +8291,87 @@ function recStart(){
   paintMics('bad');
  });
 }
+var recAsk=0,recAskAt=0,micStuckRetried=false,recMuted=false;
+function micDenied(){
+ try{
+  if(navigator.permissions&&navigator.permissions.query)
+   return navigator.permissions.query({name:'microphone'}).then(function(r){return r.state==='denied';},function(){return false;});
+ }catch(e){}
+ return Promise.resolve(false);
+}
+function micAppMode(){
+ return !!((window.navigator&&window.navigator.standalone)||
+  (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches));
+}
+function micStuck(why){
+ try{if(recStream){recStream.getTracks().forEach(function(t){t.stop();});recStream=null;}}catch(e){}
+ try{if(sfx){sfx.close();sfx=null;}}catch(e){}
+ recStarting=false;recBtn.disabled=false;recModal(false);
+ audioMode('auto');
+ if(why!=='denied'&&why!=='ended'&&why!=='empty'&&!micStuckRetried){
+  micStuckRetried=true;
+  recSaid.textContent='המיקרופון לא ענה. מנסה שוב...';
+  paintMics('sending');
+  setTimeout(function(){recRetried=true;recStart();},700);
+  return;
+ }
+ micStuckRetried=false;
+ paintMics('bad');
+ try{keepDraft();}catch(e){}
+ micSheet(why==='denied');
+}
+function micSheet(denied){
+ var old=document.getElementById('micSheet');if(old)old.remove();
+ var app=micAppMode(),ios=/iPhone|iPad|iPod/.test(navigator.userAgent||'')||(navigator.maxTouchPoints>1&&/Mac/.test(navigator.platform||''));
+ var steps;
+ if(denied){
+  steps=app||ios
+   ?['להיכנס להגדרות של האייפון','אפליקציות, ספארי, מיקרופון','לבחור "לאפשר"','לסגור את המוניטור לגמרי ולפתוח שוב']
+   :['ללחוץ על המנעול ליד כתובת האתר','מיקרופון, "לאפשר"','ללחוץ שוב על המיקרופון'];
+ }else if(app){
+  steps=['להחליק מלמטה למעלה ולעצור באמצע המסך','להחליק את החלון של המוניטור למעלה עד שהוא נעלם','לפתוח את המוניטור שוב וללחוץ על המיקרופון'];
+ }else if(ios){
+  steps=['להחליק מלמטה למעלה ולעצור באמצע המסך','להחליק את ספארי למעלה עד שהוא נעלם','לפתוח את ספארי ואת המוניטור שוב וללחוץ על המיקרופון'];
+ }else{
+  steps=['לסגור את החלון של המוניטור','לפתוח אותו שוב וללחוץ על המיקרופון'];
+ }
+ var w=document.createElement('div');
+ w.id='micSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','המיקרופון נתקע');
+ w.innerHTML='<div class="ycard">'
+  +'<b>'+(denied?'המיקרופון חסום לדף הזה':'המיקרופון של הטלפון נתקע')+'</b>'
+  +'<small>'+(denied
+    ?'הטלפון לא מרשה לדף להקליט. מתקנים פעם אחת:'
+    :'זה קורה לפעמים אחרי מעבר בין חלונות. זו לא תקלה שלך, ורענון לא מספיק. מה שהקלדת נשמר. מתקנים כך:')+'</small>'
+  +'<ol class="micSteps">'+steps.map(function(t){return '<li>'+esc(t)+'</li>';}).join('')+'</ol>'
+  +'<button type="button" class="yb yb1" data-k="again">לנסות שוב עכשיו</button>'
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  if(k==='again'){recRetried=false;recStart();}
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+ recSaid.textContent=denied?'המיקרופון חסום. ההסבר על המסך.':'המיקרופון נתקע. ההסבר על המסך.';
+}
+function micWake(){
+ if(document.hidden)return;
+ if(rec&&rec.state==='recording')return;
+ if(recStarting&&Date.now()-recAskAt<12000)return; // a permission prompt he may be answering
+ if(recStarting){recAsk++;recStarting=false;}
+ if(!rec&&recStream){try{recStream.getTracks().forEach(function(t){t.stop();});}catch(e){}recStream=null;}
+ if(!rec){try{if(sfx){sfx.close();sfx=null;}}catch(e){}audioMode('auto');recBtn.disabled=false;}
+}
+document.addEventListener('visibilitychange',micWake);
+window.addEventListener('pageshow',micWake);
+window.addEventListener('focus',micWake);
 var wakeLock=null;
 function holdScreen(){
  try{
