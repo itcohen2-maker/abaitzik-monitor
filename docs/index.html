@@ -1685,7 +1685,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-01T06:11:44.436Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-01T06:29:26.904Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2798,10 +2798,16 @@ function fileView(name){
   else h='<a class="ask" href="'+url+'" target="_blank" rel="noopener">פתיחת הקובץ</a>';
   var sf=null;try{sf=new File([b],short,{type:t||'application/octet-stream'});}catch(x){}
   if(sf&&navigator.share&&navigator.canShare&&navigator.canShare({files:[sf]}))h+='<button type="button" class="ask fv-share">שליחה</button>';
-  h+='<a class="ask fv-save" href="'+url+'" download="'+esc(short)+'">שמירה בטלפון</a>';
+  var ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  var media=t.indexOf('video/')===0||t.indexOf('image/')===0;
+  var gal=ios&&media&&sf&&navigator.share&&navigator.canShare&&navigator.canShare({files:[sf]});
+  if(gal)h+='<button type="button" class="ask fv-gal">שמירה לגלריה</button><div class="empty" style="font-size:13px">בחלון שנפתח: '+(t.indexOf('video/')===0?'שמור וידאו':'שמור תמונה')+'</div>';
+  else h+='<a class="ask fv-save" href="'+url+'" download="'+esc(short)+'">שמירה בטלפון</a>';
   var body=ov.querySelector('.fv-body');body.innerHTML=h;
   var sb=body.querySelector('.fv-share');
   if(sb)sb.onclick=function(){navigator.share({files:[sf],title:short}).catch(function(){});};
+  var gb=body.querySelector('.fv-gal');
+  if(gb)gb.onclick=function(){navigator.share({files:[sf]}).catch(function(){});};
   if(t.indexOf('text/')===0)b.text().then(function(s){body.querySelector('.fv-txt').textContent=s;});
  }).catch(function(){ov.querySelector('.fv-body').innerHTML='<div class="empty">לא הצלחתי לפתוח את הקובץ. רענן ונסה שוב.</div>';});
  return true;
@@ -2817,7 +2823,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='4080d10446';
+var CODE_ID='db47b01ff8';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';

@@ -4272,10 +4272,20 @@ function fileView(name){
   // file itself (WhatsApp, mail) wherever it can.
   var sf=null;try{sf=new File([b],short,{type:t||'application/octet-stream'});}catch(x){}
   if(sf&&navigator.share&&navigator.canShare&&navigator.canShare({files:[sf]}))h+='<button type="button" class="ask fv-share">שליחה</button>';
-  h+='<a class="ask fv-save" href="'+url+'" download="'+esc(short)+'">שמירה בטלפון</a>';
+  // Itzik, 1.10: "עשיתי שמירה לגלריה ואני לא מוצא". On the iPhone a blob
+  // download lands in Files, not in Photos. For a picture or a video the share
+  // sheet is the only road to the gallery (its "Save Video" line), so there the
+  // save button opens it and says which line to tap.
+  var ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  var media=t.indexOf('video/')===0||t.indexOf('image/')===0;
+  var gal=ios&&media&&sf&&navigator.share&&navigator.canShare&&navigator.canShare({files:[sf]});
+  if(gal)h+='<button type="button" class="ask fv-gal">שמירה לגלריה</button><div class="empty" style="font-size:13px">בחלון שנפתח: '+(t.indexOf('video/')===0?'שמור וידאו':'שמור תמונה')+'</div>';
+  else h+='<a class="ask fv-save" href="'+url+'" download="'+esc(short)+'">שמירה בטלפון</a>';
   var body=ov.querySelector('.fv-body');body.innerHTML=h;
   var sb=body.querySelector('.fv-share');
   if(sb)sb.onclick=function(){navigator.share({files:[sf],title:short}).catch(function(){});};
+  var gb=body.querySelector('.fv-gal');
+  if(gb)gb.onclick=function(){navigator.share({files:[sf]}).catch(function(){});};
   if(t.indexOf('text/')===0)b.text().then(function(s){body.querySelector('.fv-txt').textContent=s;});
  }).catch(function(){ov.querySelector('.fv-body').innerHTML='<div class="empty">לא הצלחתי לפתוח את הקובץ. רענן ונסה שוב.</div>';});
  return true;
