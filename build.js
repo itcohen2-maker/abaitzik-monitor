@@ -3240,7 +3240,7 @@ try{
     papers after the 14.9 surgery, numbered like the reels. Private files only,
     never PUBLIC_FILES: this is pathology and a doctor's summary.
   -->
-  <button type="button" class="gt gMed" id="gMed"><b>🩺 אחרי הניתוח השני</b><small>ממוספר. המסמכים והסרטונים מהביקורת אצל הפרופסור</small></button>
+  <button type="button" class="gt gMed" id="gMed"><b>🩺 אחרי הניתוח השני</b><small>ממוספר. המסמכים מהביקורת אצל הפרופסור</small></button>
   <!--
     1.10. Itzik, in a voice note: "תעשה לי כפתור של חשבוניות", ChatGPT, Claude
     and Google from August on (before that he filed them himself). Pulled from
@@ -10131,11 +10131,11 @@ on('gReels',reelSheet);
 /*
   1.10. Medical papers after the second surgery (14.9). Same numbered sheet
   as the reels; a new paper gets the next number and numbers never change.
+  Papers only: Itzik, 1.10, the two clips from the visit belong to his reels,
+  not here.
 */
 var MED_ITEMS=[
- {n:'01',t:'ביקורת אצל פרופ׳ גיא להט, 1.10, עם הפתולוגיה',r:'med-01-lahat-review.pdf'},
- {n:'02',t:'ביקורת אצל הפרופסור: לפני שנכנסתי (13 שניות)',r:'med-02-before.mp4'},
- {n:'03',t:'ביקורת אצל הפרופסור: יצאתי, הכל מצוין (21 שניות)',r:'med-03-after.mp4'}
+ {n:'01',t:'ביקורת אצל פרופ׳ גיא להט, 1.10, עם הפתולוגיה',r:'med-01-lahat-review.pdf'}
 ];
 function medSheet(){
  var old=document.getElementById('mdSheet');if(old)old.remove();

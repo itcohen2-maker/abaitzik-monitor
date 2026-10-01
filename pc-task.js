@@ -18,6 +18,8 @@
     node pc-task.js done <id>         answer text on stdin, writes it to the chat and pushes
     node pc-task.js fail <id>         reason on stdin; back to the queue once, then told to him
     node pc-task.js list
+    node pc-task.js add --test "<task>"   a dry run of the whole path: the answer
+                                          stays in the task record, nothing reaches his chat
 */
 'use strict';
 const fs = require('fs');
@@ -96,12 +98,13 @@ function push(msg) {
 const [cmd, ...rest] = process.argv.slice(2);
 
 if (cmd === 'add') {
+  const test = rest.includes('--test');
   const ri = rest.indexOf('--re');
   const re = ri > -1 ? rest[ri + 1] : '';
-  const task = rest.filter((x, i) => i !== ri && i !== ri + 1).join(' ').trim();
-  if (!re || !task) { console.error('usage: node pc-task.js add --re <id> "<task>"'); process.exit(2); }
+  const task = rest.filter((x, i) => x !== '--test' && i !== ri && i !== ri + 1).join(' ').trim();
+  if ((!re && !test) || !task) { console.error('usage: node pc-task.js add --re <id> "<task>"'); process.exit(2); }
   const id = 'pc-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
-  write({ id, re, at: new Date().toISOString(), task, status: 'pending', tries: 0 });
+  write(Object.assign({ id, re, at: new Date().toISOString(), task, status: 'pending', tries: 0 }, test ? { test: true } : {}));
   console.log(id);
 } else if (cmd === 'next') {
   const t = locked(() => {
@@ -122,7 +125,15 @@ if (cmd === 'add') {
 } else if (cmd === 'done') {
   const text = stdin();
   if (!text) { console.error('empty answer'); process.exit(2); }
-  const t = locked(() => { const x = get(rest[0]); x.status = 'done'; x.doneAt = new Date().toISOString(); write(x); return x; });
+  const t = locked(() => {
+    const x = get(rest[0]);
+    x.status = 'done';
+    x.doneAt = new Date().toISOString();
+    if (x.test) x.answer = text;
+    write(x);
+    return x;
+  });
+  if (t.test) { console.log('test task, answer kept in the record'); process.exit(0); }
   reply(t, text, 'done');
   push('המחשב סיים משימה: ' + t.task.slice(0, 60));
 } else if (cmd === 'fail') {
@@ -134,7 +145,7 @@ if (cmd === 'add') {
     write(x);
     return x;
   });
-  if (t.status === 'failed') {
+  if (t.status === 'failed' && !t.test) {
     reply(t, 'המחשב ניסה פעמיים ולא הצליח לבצע את זה. מה שנתקע: ' + why.slice(0, 300), 'failed');
     push('משימת מחשב נכשלה: ' + t.task.slice(0, 60));
   }
