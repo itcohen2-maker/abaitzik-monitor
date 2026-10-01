@@ -107,6 +107,9 @@ if (cmd === 'add') {
   write(Object.assign({ id, re, at: new Date().toISOString(), task, status: 'pending', tries: 0 }, test ? { test: true } : {}));
   console.log(id);
 } else if (cmd === 'next') {
+  // The PC asks every minute it is awake, so this is also its heartbeat.
+  // pegasus-server.js reads it to stand in for the PC only while it is off.
+  try { fs.writeFileSync(path.join(inst.dataPath, 'status', 'pc-seen.json'), JSON.stringify({ at: new Date().toISOString() })); } catch (e) {}
   const t = locked(() => {
     const now = Date.now();
     const free = all().find((x) => x.status === 'pending' ||
