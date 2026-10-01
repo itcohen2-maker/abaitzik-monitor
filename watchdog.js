@@ -180,6 +180,29 @@ function doctor(problems, since, now) {
 }
 function key(p) { return p.replace(/\d+/g, '#'); }
 
+/*
+  The seven o'clock network report. Itzik, 1.10: "ביקשתי ממך לעשות כל יום בשבע
+  בבוקר בדיקה, אתה לא בודק". The clock lived on the PC and never reached the
+  server. This runs every two minutes anyway, so from 07:00 Israel it marks the
+  job once a day in the PC queue (net-daily.js --queue), and the PC does it the
+  first minute it is on. A stamp per day keeps it to one try, even if the PC
+  job fails. His instance only: the customers' monitors have no such report.
+*/
+const NET_STAMP = path.join(STATUS, 'net-daily-queued.json');
+function netDaily(now) {
+  if (inst.name !== 'abaitzik') return;
+  const p = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' })
+    .formatToParts(new Date(now)).reduce((o, x) => { o[x.type] = x.value; return o; }, {});
+  const day = p.year + '-' + p.month + '-' + p.day;
+  if (+p.hour < 7 || readJson(NET_STAMP, {}).day === day) return;
+  try {
+    const out = execFileSync(process.execPath, [path.join(__dirname, 'net-daily.js'), '--queue'],
+      { cwd: __dirname, encoding: 'utf8', env: Object.assign({}, process.env, { TZ: 'Asia/Jerusalem' }), timeout: 30000 });
+    fs.writeFileSync(NET_STAMP, JSON.stringify({ day, at: new Date(now).toISOString(), out: String(out).trim().slice(0, 300) }));
+    console.log('דוח רשתות: ' + String(out).trim().slice(0, 120));
+  } catch (e) { console.log('!! דוח הרשתות לא סומן למחשב: ' + e.message); }
+}
+
 function main() {
   const now = Date.now();
   const problems = check(now);
@@ -193,6 +216,7 @@ function main() {
   console.log(new Date(now).toISOString().slice(11, 19) + '  ' + (problems.length ? 'תקלות: ' + problems.join(' · ') : 'תקין')
     + (sp && sp.n ? '  | היום ' + sp.n + ' תשובות, חציון ' + sp.medianMin + ' דק׳, ' + sp.inTarget + '% בתוך שתי דקות' : ''));
   if (DRY) return;
+  netDaily(now);
   doctor(problems, since, now);
   if (fresh.length) {
     try {
