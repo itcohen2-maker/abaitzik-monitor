@@ -3240,7 +3240,7 @@ try{
     and Google from August on (before that he filed them himself). Pulled from
     his mail; private files only, numbered, a new one gets the next number.
   -->
-  <button type="button" class="gt gInv" id="gInv"><b>🧾 חשבוניות</b><small>ממוספר. קלוד וגוגל מאוגוסט</small></button>
+  <button type="button" class="gt gInv" id="gInv"><b>🧾 חשבוניות</b><small>ממוספר. קלוד, גוגל ועורך הדין מאוגוסט</small></button>
   <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>ממוספר. 01 המנגל, לא ויתרתי</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
@@ -10162,6 +10162,8 @@ on('gMed',medSheet);
 /*
   1.10. Invoices for his subscriptions (ChatGPT, Claude, Google) from August
   on, taken from his mail. Same numbered sheet; numbers never change.
+  1.10, second voice note: everything paid to the lawyer Roy Shaya goes in too
+  (his invoices come from ezcount with a download link, not an attachment).
 */
 var INV_ITEMS=[
  {n:'01',t:'קלוד, 19.9, חשבונית, 289 ש״ח',r:'inv-01-claude-sep.pdf'},
@@ -10169,7 +10171,9 @@ var INV_ITEMS=[
  {n:'03',t:'גוגל AI Pro, 23.8, קבלה, 74.90 ש״ח',r:'inv-03-google-aipro-aug.pdf'},
  {n:'04',t:'גוגל AI Pro, 23.9, קבלה, 74.90 ש״ח',r:'inv-04-google-aipro-sep.pdf'},
  {n:'05',t:'יוטיוב מיוזיק, 13.8, קבלה, 23.90 ש״ח',r:'inv-05-youtube-music-aug.pdf'},
- {n:'06',t:'יוטיוב מיוזיק, 13.9, קבלה, 23.90 ש״ח',r:'inv-06-youtube-music-sep.pdf'}
+ {n:'06',t:'יוטיוב מיוזיק, 13.9, קבלה, 23.90 ש״ח',r:'inv-06-youtube-music-sep.pdf'},
+ {n:'07',t:'עו״ד רועי שעיה, 21.8, חשבונית מס קבלה, 2,588 ש״ח',r:'inv-07-lawyer-shaya-aug.pdf'},
+ {n:'08',t:'עו״ד רועי שעיה, 23.9, חשבונית מס קבלה, 6,000 ש״ח',r:'inv-08-lawyer-shaya-sep.pdf'}
 ];
 function invSheet(){
  var old=document.getElementById('ivSheet');if(old)old.remove();
