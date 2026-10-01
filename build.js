@@ -1995,6 +1995,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .gNer{background:linear-gradient(150deg,#f0a64a,#0f1a3a)}
 .gReel{background:linear-gradient(150deg,#e2574c,#2a1240)}
 .gMed{background:linear-gradient(150deg,#4fb3a9,#123a4a)}
+.gInv{background:linear-gradient(150deg,#d9a441,#3a2a12)}
 .gShop{background:linear-gradient(150deg,#3aa55d,#1f6f8b)}
 .gCPlan{background:linear-gradient(150deg,#e8743b,#6b2f7a)}
 .g16{background:linear-gradient(150deg,#f8bbd0,#c2185b)}
@@ -3240,6 +3241,12 @@ try{
     never PUBLIC_FILES: this is pathology and a doctor's summary.
   -->
   <button type="button" class="gt gMed" id="gMed"><b>🩺 אחרי הניתוח השני</b><small>ממוספר. המסמכים והסרטונים מהביקורת אצל הפרופסור</small></button>
+  <!--
+    1.10. Itzik, in a voice note: "תעשה לי כפתור של חשבוניות", ChatGPT, Claude
+    and Google from August on (before that he filed them himself). Pulled from
+    his mail; private files only, numbered, a new one gets the next number.
+  -->
+  <button type="button" class="gt gInv" id="gInv"><b>🧾 חשבוניות</b><small>ממוספר. קלוד וגוגל מאוגוסט</small></button>
   <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>ממוספר. 01 המנגל, לא ויתרתי</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
@@ -10158,6 +10165,46 @@ function medSheet(){
  document.body.appendChild(w);
 }
 on('gMed',medSheet);
+/*
+  1.10. Invoices for his subscriptions (ChatGPT, Claude, Google) from August
+  on, taken from his mail. Same numbered sheet; numbers never change.
+*/
+var INV_ITEMS=[
+ {n:'01',t:'קלוד, 19.9, חשבונית, 289 ש״ח',r:'inv-01-claude-sep.pdf'},
+ {n:'02',t:'קלוד, 19.9, קבלה, 289 ש״ח',r:'inv-02-claude-sep-receipt.pdf'},
+ {n:'03',t:'גוגל AI Pro, 23.8, קבלה, 74.90 ש״ח',r:'inv-03-google-aipro-aug.pdf'},
+ {n:'04',t:'גוגל AI Pro, 23.9, קבלה, 74.90 ש״ח',r:'inv-04-google-aipro-sep.pdf'},
+ {n:'05',t:'יוטיוב מיוזיק, 13.8, קבלה, 23.90 ש״ח',r:'inv-05-youtube-music-aug.pdf'},
+ {n:'06',t:'יוטיוב מיוזיק, 13.9, קבלה, 23.90 ש״ח',r:'inv-06-youtube-music-sep.pdf'}
+];
+function invSheet(){
+ var old=document.getElementById('ivSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='ivSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','חשבוניות');
+ w.innerHTML='<div class="ycard">'
+  +'<b>חשבוניות</b>'
+  +'<small>ממוספר, החדשה מקבלת את המספר הבא</small>'
+  +INV_ITEMS.map(function(it,i){
+    return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=INV_ITEMS[+k];if(k===''||!it)return;
+  if(!fileView(it.r))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gInv',invSheet);
 on('gYoman',function(){window.open('yoman/','_blank','noopener');});
 /*
   27.9. The content plan for Ilay. Same sheet as Yehuda's, because the first
