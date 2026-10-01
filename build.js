@@ -1994,6 +1994,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .gKat{background:linear-gradient(150deg,#e3c07a,#2b45a6)}
 .gNer{background:linear-gradient(150deg,#f0a64a,#0f1a3a)}
 .gReel{background:linear-gradient(150deg,#e2574c,#2a1240)}
+.gMed{background:linear-gradient(150deg,#4fb3a9,#123a4a)}
 .gShop{background:linear-gradient(150deg,#3aa55d,#1f6f8b)}
 .gCPlan{background:linear-gradient(150deg,#e8743b,#6b2f7a)}
 .g16{background:linear-gradient(150deg,#f8bbd0,#c2185b)}
@@ -3233,6 +3234,12 @@ try{
     reel, numbered like Rinat's list. The full quality copy is on Drive in
     סרטונים; the one here is lighter so it opens and shares from the phone.
   -->
+  <!--
+    1.10. Itzik: "שים לי במוניטור תחת כפתור חדש אחרי הניתוח השני". The medical
+    papers after the 14.9 surgery, numbered like the reels. Private files only,
+    never PUBLIC_FILES: this is pathology and a doctor's summary.
+  -->
+  <button type="button" class="gt gMed" id="gMed"><b>🩺 אחרי הניתוח השני</b><small>ממוספר. 01 ביקורת אצל פרופ׳ גיא להט</small></button>
   <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>ממוספר. 01 המנגל, לא ויתרתי</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
@@ -10114,6 +10121,41 @@ function reelSheet(){
  document.body.appendChild(w);
 }
 on('gReels',reelSheet);
+/*
+  1.10. Medical papers after the second surgery (14.9). Same numbered sheet
+  as the reels; a new paper gets the next number and numbers never change.
+*/
+var MED_ITEMS=[
+ {n:'01',t:'ביקורת אצל פרופ׳ גיא להט, 1.10, עם הפתולוגיה',r:'med-01-lahat-review.pdf'}
+];
+function medSheet(){
+ var old=document.getElementById('mdSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='mdSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','אחרי הניתוח השני');
+ w.innerHTML='<div class="ycard">'
+  +'<b>אחרי הניתוח השני</b>'
+  +'<small>ממוספר, מסמך חדש מקבל את המספר הבא</small>'
+  +MED_ITEMS.map(function(it,i){
+    return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=MED_ITEMS[+k];if(k===''||!it)return;
+  if(!fileView(it.r))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gMed',medSheet);
 on('gYoman',function(){window.open('yoman/','_blank','noopener');});
 /*
   27.9. The content plan for Ilay. Same sheet as Yehuda's, because the first
