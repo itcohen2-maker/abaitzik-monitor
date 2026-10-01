@@ -3265,10 +3265,8 @@ try{
     הקובץ והגיליון שלו נשארים, הקישור שכבר נשלח לאיליי ממשיך להיפתח.
   -->
   <!--
-    27.9. The daily recovery diary: one raw video a day. The page sits in
-    docs/yoman so it opens on the phone with no login, like the catalog.
+    איציק, 1.10, בהקלטה: יומן החזרה לא צריך יותר. הכפתור והדף נמחקו.
   -->
-  <button type="button" class="gt g16" id="gYoman"><b>📓 יומן החזרה</b><small>התסריט של היום והסרטון שממנו לקחנו את הפורמט</small></button>
  </div>
 
  <!-- "מה הסתרנו" came off on 16.9. Hiding a tile is his to undo in settings. -->
@@ -10203,7 +10201,6 @@ function invSheet(){
  document.body.appendChild(w);
 }
 on('gInv',invSheet);
-on('gYoman',function(){window.open('yoman/','_blank','noopener');});
 /*
   27.9. The content plan for Ilay. Same sheet as Yehuda's, because the first
   version only opened the PDF and he asked where the share was. The file is
