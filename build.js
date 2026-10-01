@@ -3252,13 +3252,6 @@ try{
     sessions on the server did not know where the list lives. It is the Google
     Doc "קניות", owned by Jenny and shared with him (see CLAUDE.md).
   -->
-  <!--
-    איציק, 28.9, בהקלטה: "אייקון של דפדפן ויהיה דפדפן בפנים". A screen with an
-    address line; searches go to Google's embeddable form so they open inside
-    the page. Many sites refuse to be shown inside another page, so there is
-    always a button that opens the same address in Safari.
-  -->
-  <button type="button" class="gt g3" id="gBrowse"><b>🌐 דפדפן</b><small>חיפוש וכתובת, נפתח כאן בפנים</small></button>
   <button type="button" class="gt gShop" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
   <!--
     איציק, 28.9, בהקלטה: "תסיר את כפתור תוכניות תוכן". הכפתור ירד ממסך הבית.
@@ -3266,6 +3259,9 @@ try{
   -->
   <!--
     איציק, 1.10, בהקלטה: יומן החזרה לא צריך יותר. הכפתור והדף נמחקו.
+  -->
+  <!--
+    איציק, 1.10, בהקלטה: כפתור הדפדפן לא עובד, אי אפשר להתחבר בתוכו. הכפתור והדף נמחקו.
   -->
  </div>
 
@@ -3743,17 +3739,6 @@ try{
  <h2>הקבצים שלי</h2>
  <div class="rephint">כל קובץ ששלחת או שנשמר בשבילך. הם סגורים ונפתחים רק כאן, אחרי הקוד שלך.</div>
  <div id="fiBox" class="flist"></div>
-</section>
-
-<section id="pBr" hidden>
- <h2>דפדפן</h2>
- <form class="quickrow" id="brForm">
-  <input type="text" id="brUrl" autocomplete="off" autocapitalize="off" inputmode="url" placeholder="מה לחפש, או כתובת">
-  <button type="submit" id="brGo">פתח</button>
- </form>
- <div class="rephint">אם אתר נשאר לבן, הוא לא מסכים להיפתח בתוך דף אחר. <a href="#" id="brOut">לפתוח אותו בספארי</a></div>
- <div class="rephint">כניסה לחשבון גוגל לא עובדת בתוך דף אחר, גוגל חוסמת את זה. <a href="#" id="brLogin">להתחבר לגוגל בספארי</a></div>
- <iframe id="brFrame" title="דפדפן" style="width:100%;height:70vh;border:0;border-radius:12px;background:#fff" referrerpolicy="no-referrer"></iframe>
 </section>
 
 <section id="pPl" hidden>
@@ -5798,7 +5783,7 @@ function updateDot(){
  document.title=(fresh?'(1) ':'')+PAGE_TITLE;
 }
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
-var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn',Rc:'pRc',Sa:'pSale',Fi:'pFi',Br:'pBr',Is:'pIsra'};
+var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn',Rc:'pRc',Sa:'pSale',Fi:'pFi',Is:'pIsra'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 /*ITZIK:BEGIN*/
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
@@ -10280,43 +10265,6 @@ function planSheet(){
  var first=w.querySelector('.yb');if(first)first.focus();
 }
 on('gContentPlan',planSheet);
-function brTarget(q){
- q=String(q||'').trim();
- if(!q)return '';
- if(/^https?:[/][/]/i.test(q))return q;
- if(q.indexOf(' ')<0&&/^[^ ]+[.][a-z]{2,}([/].*)?$/i.test(q))return 'https://'+q;
- return 'https://www.google.com/search?igu=1&hl=iw&q='+encodeURIComponent(q);
-}
-/* Itzik, 28.9, voice: tried to sign in as itcohen2 inside this frame and the
-   login button did nothing. Google refuses to show its sign in page inside
-   another site's frame, and Safari would not share the session with the frame
-   anyway, so anything that is a login or a signed in Google service goes
-   straight to Safari instead of into a frame that can only stay blank. */
-var BR_OUTSIDE=/^https?:[/][/](accounts[.]google|mail[.]google|drive[.]google|docs[.]google|myaccount[.]google|www[.]gmail|gmail)[.]/i;
-function brLoginish(q){return /itcohen|gmail/i.test(String(q||''));}
-function brOpen(){
- var raw=document.getElementById('brUrl').value;
- var u=brTarget(raw);
- if(!u)return;
- if(BR_OUTSIDE.test(u)){window.open(u,'_blank','noopener');return;}
- if(brLoginish(raw)&&!/^https?:/i.test(raw.trim())){window.open('https://accounts.google.com/','_blank','noopener');return;}
- document.getElementById('brFrame').src=u;
- document.getElementById('brOut').dataset.u=u.replace('igu=1&','');
-}
-on('gBrowse',function(){
- pane('Br');
- var f=document.getElementById('brFrame');
- if(!f.src)f.src='https://www.google.com/webhp?igu=1&hl=iw';
-});
-document.getElementById('brForm').onsubmit=function(e){e.preventDefault();brOpen();};
-document.getElementById('brOut').onclick=function(e){
- e.preventDefault();
- window.open(this.dataset.u||'https://www.google.com','_blank','noopener');
-};
-document.getElementById('brLogin').onclick=function(e){
- e.preventDefault();
- window.open('https://accounts.google.com/','_blank','noopener');
-};
 on('gShopList',function(){window.open('https://docs.google.com/document/d/1A2tvet0ucYNDoDclswaVDybuL8bir3OAerRzXtDUEPU/edit','_blank','noopener');});
 /*ITZIK:END*/
 on('gOp',function(){pane('s');});

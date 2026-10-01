@@ -2111,13 +2111,10 @@ test('content plan tile is off the home screen, the reminders tile blinks a day 
   assert.ok(html.includes('class="remknow"') && html.includes("localStorage.setItem('remKnown'"));
 });
 
-test('a browser tile opens a browser inside the page', () => {
+test('the browser tile is gone', () => {
   const html = renderPage(fixture({}));
-  // Itzik, 28.9, in a voice note: "אייקון של דפדפן ויהיה דפדפן בפנים".
-  assert.ok(html.includes('id="gBrowse"'), 'a tile on the home screen');
-  assert.ok(html.includes('<section id="pBr" hidden>'), 'a screen of its own');
-  assert.ok(html.includes('id="brFrame"'), 'with the page shown inside it');
-  assert.ok(html.includes("Br:'pBr'"), 'the pane is routable');
-  assert.ok(html.includes('igu=1'), 'searches use the form Google lets a page embed');
-  assert.ok(html.includes('id="brOut"'), 'and a way out to Safari for sites that refuse');
+  // Itzik, 1.10, in a voice note: the browser tile can go, signing in never worked inside it.
+  assert.ok(!html.includes('id="gBrowse"'));
+  assert.ok(!html.includes('id="pBr"'));
+  assert.ok(!html.includes('id="brFrame"'));
 });

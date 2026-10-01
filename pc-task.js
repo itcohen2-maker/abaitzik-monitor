@@ -20,6 +20,10 @@
     node pc-task.js list
     node pc-task.js add --test "<task>"   a dry run of the whole path: the answer
                                           stays in the task record, nothing reaches his chat
+    node pc-task.js add --quiet --re <id> "<task>"   a routine job (the 07:00 network
+                                          report): its output is the work itself, so a
+                                          success writes nothing to his chat. A final
+                                          failure still does, in the thread of <id>.
 */
 'use strict';
 const fs = require('fs');
@@ -99,12 +103,14 @@ const [cmd, ...rest] = process.argv.slice(2);
 
 if (cmd === 'add') {
   const test = rest.includes('--test');
+  const quiet = rest.includes('--quiet');
   const ri = rest.indexOf('--re');
   const re = ri > -1 ? rest[ri + 1] : '';
-  const task = rest.filter((x, i) => x !== '--test' && i !== ri && i !== ri + 1).join(' ').trim();
+  const task = rest.filter((x, i) => x !== '--test' && x !== '--quiet' && i !== ri && i !== ri + 1).join(' ').trim();
   if ((!re && !test) || !task) { console.error('usage: node pc-task.js add --re <id> "<task>"'); process.exit(2); }
   const id = 'pc-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
-  write(Object.assign({ id, re, at: new Date().toISOString(), task, status: 'pending', tries: 0 }, test ? { test: true } : {}));
+  write(Object.assign({ id, re, at: new Date().toISOString(), task, status: 'pending', tries: 0 },
+    test ? { test: true } : {}, quiet ? { quiet: true } : {}));
   console.log(id);
 } else if (cmd === 'next') {
   // The PC asks every minute it is awake, so this is also its heartbeat.
@@ -137,6 +143,11 @@ if (cmd === 'add') {
     return x;
   });
   if (t.test) { console.log('test task, answer kept in the record'); process.exit(0); }
+  if (t.quiet) {
+    locked(() => { const x = get(t.id); x.answer = text; write(x); });
+    push('המחשב סיים משימה קבועה: ' + t.task.slice(0, 60));
+    process.exit(0);
+  }
   reply(t, text, 'done');
   push('המחשב סיים משימה: ' + t.task.slice(0, 60));
 } else if (cmd === 'fail') {
