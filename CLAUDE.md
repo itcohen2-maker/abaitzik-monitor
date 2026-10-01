@@ -26,3 +26,13 @@
 - **The improvements reviewer:** `review.js`, timer `monitor-review.timer` every morning 05:30 Israel. A read only
   Claude session that returns up to six improvements from a new customer's point of view into `data/better/better/`,
   shown first on the "💡 רעיונות" screen. Log: `/var/log/monitor-review.log`.
+
+- **The candle times site, candletimes.com (1.10.2026):** all work on it happens in `/home/monitor/ner-site`, a clone
+  of the private repo `itcohen2-maker/ner-site` (branch master), not in this repo. It deploys by git push: change,
+  `node check.mjs`, `node build-pages.mjs` only when times changed, `git commit`, `git push origin master`, and
+  Vercel builds production from the push. Plain git is right there (push.js is only for this repo). The server holds
+  only a deploy key for that one repo (`~/.ssh/ner`, host alias `github-ner`); there is no Vercel or GitHub account
+  token here, on purpose, so deployment status is checked from the PC (`npx vercel ls ner`). Check the live site once,
+  never in a loop: polling it got this IP family blocked by Vercel before. Until Itzik adds the repo to the Vercel
+  GitHub app (one click on his side, pending since 1.10), a push only updates the repo and the PC's `deploy.sh` still
+  publishes. Never commit `.sendkey`, `.vapid.json`, `.env.local` or `.vercel/`.
