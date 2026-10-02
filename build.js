@@ -1268,6 +1268,8 @@ button.abtn[disabled]{opacity:.55}
 .fv-body{flex:1;overflow:auto;padding:12px 16px calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:12px}
 .fv-body img,.fv-body video{max-width:100%;max-height:70vh;border-radius:12px}
 .fv-body audio{width:100%}
+.fv-pdf{width:100%;max-width:640px;display:flex;flex-direction:column;gap:10px}
+.fv-pdf canvas{background:#fff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.4)}
 .fv-txt{white-space:pre-wrap;color:#eee;background:rgba(255,255,255,.06);padding:12px;border-radius:12px;width:100%;direction:rtl}
 .fv-body .ask{width:100%;max-width:420px}
 .flist a{display:flex;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--line);margin-bottom:8px;color:var(--ink);text-decoration:none}
@@ -4270,6 +4272,60 @@ function fileBlob(e){
   .then(function(buf){var a=new Uint8Array(buf);return crypto.subtle.decrypt({name:'AES-GCM',iv:a.slice(0,12)},GKEY,a.slice(12));})
   .then(function(pt){return new Blob([pt],{type:e.t});});
 }
+/*
+  Itzik, 2.10, on the basbousa: "אני רוצה לראות בתצוגה המקדימה את ה PDF".
+  A PDF used to open as one link, so before sending a recipe he could not see
+  what he was sending. Its pages are drawn here now, and the send button under
+  them carries the file itself. pdf.js is fetched only when a PDF is opened,
+  and both files are checked against a fixed hash first, because this page
+  holds the key to everything sealed in it.
+*/
+var PDFJS='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+var pdfLib=null;
+function loadPdfJs(){
+ if(pdfLib)return pdfLib;
+ pdfLib=new Promise(function(ok,bad){
+  var s=document.createElement('script');
+  s.src=PDFJS+'pdf.min.js';
+  s.integrity='sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e';
+  s.crossOrigin='anonymous';
+  s.onload=function(){
+   fetch(PDFJS+'pdf.worker.min.js',{integrity:'sha384-SnzOobpRMLXZ52iJvZm/C0fYw0OQemTXzTjIsdsfMcrCtCEe9qgzxTd3RSklO5x2'})
+    .then(function(r){if(!r.ok)throw 0;return r.blob();})
+    .then(function(wb){
+     window.pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(wb);
+     ok(window.pdfjsLib);
+    }).catch(bad);
+  };
+  s.onerror=bad;
+  document.head.appendChild(s);
+ });
+ pdfLib.catch(function(){pdfLib=null;});
+ return pdfLib;
+}
+function pdfPages(blob,host){
+ if(!host)return;
+ Promise.all([loadPdfJs(),blob.arrayBuffer()]).then(function(r){
+  return r[0].getDocument({data:new Uint8Array(r[1])}).promise;
+ }).then(function(doc){
+  host.innerHTML='';
+  var chain=Promise.resolve();
+  for(var i=1;i<=doc.numPages;i++)(function(n){
+   chain=chain.then(function(){return doc.getPage(n);}).then(function(p){
+    var w=Math.min(host.clientWidth||360,900),v1=p.getViewport({scale:1});
+    var dpr=Math.min(window.devicePixelRatio||1,2);
+    var vp=p.getViewport({scale:w/v1.width*dpr});
+    var c=document.createElement('canvas');
+    c.width=vp.width;c.height=vp.height;c.style.width='100%';
+    host.appendChild(c);
+    return p.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
+   });
+  })(i);
+  return chain;
+ }).catch(function(){
+  host.innerHTML='<div class="empty">לא הצלחתי להציג את העמודים כאן. פתיחת הקובץ למטה מראה אותו.</div>';
+ });
+}
 function fileView(name){
  var e=fileEntry(name);if(!e||!GKEY)return false;
  var ov=document.createElement('div');ov.className='fview';
@@ -4285,12 +4341,14 @@ function fileView(name){
   else if(t.indexOf('video/')===0)h='<video src="'+url+'" controls playsinline></video>';
   else if(t.indexOf('audio/')===0)h='<audio src="'+url+'" controls></audio>';
   else if(t.indexOf('text/')===0){h='<pre class="fv-txt"></pre>';}
+  else if(t==='application/pdf')h='<div class="fv-pdf"><div class="empty">מציג את העמודים.</div></div>'
+   +'<a class="ask" href="'+url+'" target="_blank" rel="noopener">פתיחת הקובץ</a>';
   else h='<a class="ask" href="'+url+'" target="_blank" rel="noopener">פתיחת הקובץ</a>';
   // Itzik, 29.9: the machine sale document has to go out to the buyer from the
   // phone. Safari does not keep a blob download, so the share sheet carries the
   // file itself (WhatsApp, mail) wherever it can.
   var sf=null;try{sf=new File([b],short,{type:t||'application/octet-stream'});}catch(x){}
-  if(sf&&navigator.share&&navigator.canShare&&navigator.canShare({files:[sf]}))h+='<button type="button" class="ask fv-share">שליחה</button>';
+  if(sf&&navigator.share&&navigator.canShare&&navigator.canShare({files:[sf]}))h+='<button type="button" class="ask fv-share">שליחה בוואטסאפ או במייל</button>';
   // Itzik, 1.10: "עשיתי שמירה לגלריה ואני לא מוצא". On the iPhone a blob
   // download lands in Files, not in Photos. For a picture or a video the share
   // sheet is the only road to the gallery (its "Save Video" line), so there the
@@ -4306,6 +4364,7 @@ function fileView(name){
   var gb=body.querySelector('.fv-gal');
   if(gb)gb.onclick=function(){navigator.share({files:[sf]}).catch(function(){});};
   if(t.indexOf('text/')===0)b.text().then(function(s){body.querySelector('.fv-txt').textContent=s;});
+  if(t==='application/pdf')pdfPages(b,body.querySelector('.fv-pdf'));
  }).catch(function(){ov.querySelector('.fv-body').innerHTML='<div class="empty">לא הצלחתי לפתוח את הקובץ. רענן ונסה שוב.</div>';});
  return true;
 }
@@ -8881,68 +8940,6 @@ on('gSale',function(){pane('Sa');renderSale();ensure('sale',renderSale);});
   איציק, 29.9: "יהיו שתי ספרים, אחד לולוס אחד איציק", "הכל באותו כפתור".
   One tile, a choice of two books, each its own sealed file.
 */
-var BASBOUSA_WA=[
- 'בסבוסה סולת עם אשל',
- 'שליש מהמתכון, לתבנית מרובעת 20 על 20 ס״מ. בלי קמח ובלי ביצים, מרקם אותנטי ולא עוגתי.',
- '',
- 'מצרכים לעוגה',
- '250 גרם סולת גסה (חצי חבילה)',
- '100 גרם סוכר (חצי כוס)',
- '50 גרם קוקוס טחון (חצי כוס)',
- 'חצי שקית אבקת אפייה (5 גרם)',
- '100 גרם חמאה מומסת (או 80 מ״ל שמן, שליש כוס)',
- 'חצי כף תמצית וניל (1.5 כפיות) או גרידה מלימון שלם',
- 'גביע אשל אחד (200 גרם)',
- '13 עד 17 חצאי שקדים או אגוזים לעיטור',
- '',
- 'מצרכים לסירופ',
- '600 מ״ל מים (3 כוסות)',
- '670 גרם סוכר (3 כוסות ושליש)',
- 'המיץ של לימון שלם',
- 'הקליפות של חצי לימון',
- 'גרידה מלימון',
- '2 ציפורן',
- '2 כפות מי ורדים',
- '',
- 'אופן ההכנה',
- '1. היבשים: בקערה מערבבים סולת, סוכר, קוקוס ואבקת אפייה.',
- '2. החמאה: מוסיפים את החמאה המומסת (או השמן) ואת הווניל, ומערבבים עד שכל הסולת מצופה.',
- '3. הלבן: רק עכשיו מוסיפים את האשל.',
- '4. לישה קצרה: מערבבים רק עד מסה אחידה ולחה, לא יותר, כדי לשמור על מרקם גרגירי.',
- '5. מנוחה: מניחים לבלילה לנוח 10 דקות.',
- '6. שפיכה לתבנית: משמנים היטב את התבנית, שופכים ומיישרים לשכבה אחידה עם גב של כף רטובה.',
- '7. חיתוך: בסכין חדה חורצים מעוינים או ריבועים כמעט עד התחתית.',
- '8. אגוזים ושקדים: מניחים שקד או חצי אגוז במרכז כל יחידה.',
- '9. לתנור: 180 מעלות, עליון ותחתון או טורבו, אין פה חוק. בתבנית אחת אפשר טורבו. חצי שעה ויותר, עד שמקבלים צבע זהוב.',
- '10. הסירופ: בזמן האפייה מבשלים מים, סוכר, מיץ הלימון, קליפות חצי הלימון, הגרידה, הציפורן ומי הוורדים. מביאים לרתיחה ומבשלים ברתיחה עדינה כ 7 דקות.',
- '11. השקיה: מוציאים מהתנור ושופכים מעל את כל הסירופ שכבר בישלנו, כשהוא מעט חם, גם אם נוצרת בריכה. עוזבים הכל ומחכים שיספוג.',
- '',
- 'כלל הברזל: עוגה חמה מהתנור, סירופ מעט חם, את כולו, ולא נוגעים עד שנספג.',
- '',
- 'מתוך ספר המתכונים של איציק'
-];
-function waPreview(){
- var old=document.getElementById('waSheet');if(old)old.remove();
- var txt=BASBOUSA_WA.join(String.fromCharCode(10));
- var w=document.createElement('div');
- w.id='waSheet';w.className='ysheet';
- w.setAttribute('role','dialog');
- w.setAttribute('aria-label','תצוגה מקדימה לוואטסאפ');
- w.innerHTML='<div class="ycard">'
-  +'<b>בסבוסה לוואטסאפ</b>'
-  +'<small>ככה ההודעה תיראה. אם הכל נכון, לוחצים ובוחרים למי לשלוח.</small>'
-  +'<div class="ywa"><i>תצוגה מקדימה</i><div class="yshort">'+esc(txt)+'<u>✓✓</u></div></div>'
-  +'<a class="yb ybwa" href="https://wa.me/?text='+encodeURIComponent(txt)+'" target="_blank" rel="noopener">פתיחה בוואטסאפ</a>'
-  +'<button type="button" class="yb yx" data-x="1">סגירה</button>'
-  +'</div>';
- function close(){w.remove();document.removeEventListener('keydown',esckey);}
- function esckey(e){if(e.key==='Escape')close();}
- w.onclick=function(e){
-  if(e.target===w||(e.target.getAttribute&&e.target.getAttribute('data-x')))close();
- };
- document.addEventListener('keydown',esckey);
- document.body.appendChild(w);
-}
 function recipesSheet(){
  var old=document.getElementById('rSheet');if(old)old.remove();
  var w=document.createElement('div');
@@ -8954,19 +8951,16 @@ function recipesSheet(){
   +'<small>איזה ספר לפתוח</small>'
   +'<button type="button" class="yb yb1" data-r="lolos-recipes-2026.pdf">חוברת מתכונים לולוס 2026</button>'
   +'<button type="button" class="yb yb2" data-r="itzik-recipes.pdf">ספר המתכונים של איציק</button>'
-  // Itzik, 2.10: "תכין לי פעם קישור לוואצאפ. שים את זה במתכונים כפתור".
-  // The PDF is private, so the message carries the whole recipe as text and
-  // opens on whoever gets it without a file or a permission. He picks who.
-  // 2.10, a minute later: "אני רוצה לראות תצוגה מקדימה קודם רק אז אני שולח".
-  // So this opens the message as it will look, and WhatsApp is the next tap.
-  +'<button type="button" class="yb ybwa" data-r="" data-wa="basbousa">בסבוסה לוואטסאפ</button>'
+  // Itzik, 2.10: a WhatsApp button for the basbousa, and then: see the PDF
+  // first, then send it. So it opens the PDF with its pages on screen, and the
+  // send button there carries the file itself to WhatsApp.
+  +'<button type="button" class="yb ybwa" data-r="basbousa-shlish-5.pdf">בסבוסה, לראות ולשלוח בוואטסאפ</button>'
   +'<button type="button" class="yb yx" data-r="">סגירה</button>'
   +'</div>';
  function close(){w.remove();document.removeEventListener('keydown',esckey);}
  function esckey(e){if(e.key==='Escape')close();}
  w.onclick=function(e){
   if(e.target===w)return close();
-  if(e.target.getAttribute&&e.target.getAttribute('data-wa')){close();return waPreview();}
   var k=e.target.getAttribute&&e.target.getAttribute('data-r');
   if(k===null||k===undefined)return;
   close();
