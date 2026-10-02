@@ -3547,6 +3547,10 @@ try{
  <h2>גוגל דרייב</h2>
  <div class="hint" style="margin-bottom:12px">קיצורים ישירים לתיקיות שאנחנו עובדים איתן.${inst.name === 'abaitzik' ? ' הכל בחשבון itcohen2.' : ''}</div>
  <nav class="links" aria-label="תיקיות בדרייב">
+  <!-- Itzik, 2.10: "הריל שלי" was missing here and he could not find the folder.
+       Only the latest version of each reel is kept in it, with its cover and post text. -->
+  <a href="https://drive.google.com/drive/u/0/folders/1k8uEixPICag2S06Xfq_CPcntJvSMR46R" target="_blank" rel="noopener">
+   <span aria-hidden="true">🎬</span><div>הרילים שלי<small>הגרסה האחרונה של כל ריל ב-4K, עם כריכה ותיאור לפוסט</small></div></a>
   <!-- Itzik, 16.9: the Drive button took him straight to the stories and he
        could not find the new sign photo. Posts get their own entry, first. -->
   <a href="https://drive.google.com/drive/u/0/folders/1DsAP6qZwcKMz5nVuXT3DSKJ3Ox-74Qh3" target="_blank" rel="noopener">
