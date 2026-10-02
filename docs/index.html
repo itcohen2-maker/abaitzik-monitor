@@ -1689,7 +1689,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-02T07:26:33.789Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-02T08:13:47.452Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2815,7 +2815,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='18d8a4a546';
+var CODE_ID='4120e061d8';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -7056,7 +7056,8 @@ on('gNerMkt',nerSheet);
 var REEL_ITEMS=[
  {n:'01',t:'המנגל: שבועיים אחרי הניתוח, ולא ויתרתי (35 שניות, הגרסה הסופית שלך)',r:'reel-01-mangal.mp4'},
  {n:'02',t:'הביקורת אצל הפרופסור: יצאתי עם בשורה טובה (21 שניות)',r:'reel-02-bikoret.mp4'},
- {n:'02ב',t:'הביקורת אצל הפרופסור: גרסה עם הדלת ושעה אחר כך (23 שניות)',r:'reel-02-bikoret-v3.mp4'}
+ {n:'02ב',t:'הביקורת אצל הפרופסור: גרסה עם הדלת ושעה אחר כך (23 שניות)',r:'reel-02-bikoret-v3.mp4'},
+ {n:'02ג',t:'הביקורת אצל הפרופסור: לפי הסקיל של איליי, ממורכז ועוצמה מכוונת (23 שניות)',r:'reel-02-bikoret-v4.mp4'}
 ];
 function reelSheet(){
  var old=document.getElementById('rlSheet');if(old)old.remove();
