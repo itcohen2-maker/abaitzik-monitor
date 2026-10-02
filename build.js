@@ -2000,6 +2000,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .gMed{background:linear-gradient(150deg,#4fb3a9,#123a4a)}
 .gInv{background:linear-gradient(150deg,#d9a441,#3a2a12)}
 .gShop{background:linear-gradient(150deg,#3aa55d,#1f6f8b)}
+.gWin{background:linear-gradient(150deg,#f2c94c,#7a2e12)}
 .gCPlan{background:linear-gradient(150deg,#e8743b,#6b2f7a)}
 .g16{background:linear-gradient(150deg,#f8bbd0,#c2185b)}
 .g17{background:linear-gradient(150deg,#c5e1a5,#558b2f)}
@@ -3246,6 +3247,11 @@ try{
     his mail; private files only, numbered, a new one gets the next number.
   -->
   <button type="button" class="gt gInv" id="gInv"><b>🧾 חשבוניות</b><small>ממוספר. קלוד, גוגל ועורך הדין מאוגוסט</small></button>
+  <!--
+    2.10. Itzik, in a voice note: a new tile with winning lines. The first one
+    is amirshwartz1's TikTok comment on the cake video (55 likes).
+  -->
+  <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>ממוספר. 02 הביקורת אצל הפרופסור</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
@@ -10123,6 +10129,46 @@ function reelSheet(){
  document.body.appendChild(w);
 }
 on('gReels',reelSheet);
+/*
+  2.10. Winning lines. Tapping a line copies it. A new line goes at the end
+  with the next number, with where it came from.
+*/
+var WIN_ITEMS=[
+ {n:'01',t:'מרימים את הראש ולא את הידיים',f:'amirshwartz1, תגובה בטיקטוק על סרטון העוגה'}
+];
+function winSheet(){
+ var old=document.getElementById('winSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='winSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','משפטים מנצחים');
+ w.innerHTML='<div class="ycard">'
+  +'<b>משפטים מנצחים</b>'
+  +'<small>לחיצה על משפט מעתיקה אותו</small>'
+  +WIN_ITEMS.map(function(it,i){
+    return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)
+     +(it.f?'<br><small>'+esc(it.f)+'</small>':'')+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var el=e.target.closest&&e.target.closest('[data-k]');
+  var k=el&&el.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=WIN_ITEMS[+k];if(k===''||!it)return;
+  var done=function(){toast('הועתק');};
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+   navigator.clipboard.writeText(it.t).then(done,function(){fallbackCopy(it.t,done);});
+  }else fallbackCopy(it.t,done);
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gWin',winSheet);
 /*
   1.10. Medical papers after the second surgery (14.9). Same numbered sheet
   as the reels; a new paper gets the next number and numbers never change.
