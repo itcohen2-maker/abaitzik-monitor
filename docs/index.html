@@ -963,6 +963,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .gMed{background:linear-gradient(150deg,#4fb3a9,#123a4a)}
 .gInv{background:linear-gradient(150deg,#d9a441,#3a2a12)}
 .gShop{background:linear-gradient(150deg,#3aa55d,#1f6f8b)}
+.gCheese{background:linear-gradient(150deg,#f2c94c,#1f6f8b)}
 .gWin{background:linear-gradient(150deg,#f2c94c,#7a2e12)}
 .gCPlan{background:linear-gradient(150deg,#e8743b,#6b2f7a)}
 .g16{background:linear-gradient(150deg,#f8bbd0,#c2185b)}
@@ -1694,7 +1695,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-02T14:37:13.664Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-02T14:38:17.579Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1832,6 +1833,7 @@ try{
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
   <button type="button" class="gt g15" id="gYehuda"><b>📄 יהודה</b><small>גרסה קצרה לשליחה, והסקירה המלאה לזיכרון</small></button>
   <button type="button" class="gt gNer" id="gNerMkt"><b>🕯️ שיווק הנרות</b><small>ממוספר. הביו בטיקטוק, דף הקישורים והסטוריז</small></button>
+  <button type="button" class="gt gCheese" id="gCheese"><b>🧀 גבינות חלבון</b><small>מדורג לפי חלבון ל 100 קלוריות</small></button>
   <button type="button" class="gt gMed" id="gMed"><b>🩺 אחרי הניתוח השני</b><small>ממוספר. המסמכים מהביקורת אצל הפרופסור</small></button>
   <button type="button" class="gt gInv" id="gInv"><b>🧾 חשבוניות</b><small>ממוספר. קלוד, גוגל ועורך הדין מאוגוסט</small></button>
   <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
@@ -2824,7 +2826,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='aaf4d73760';
+var CODE_ID='d85c1ddc12';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -7167,6 +7169,7 @@ function medSheet(){
  document.body.appendChild(w);
 }
 on('gMed',medSheet);
+on('gCheese',function(){if(!fileView('cheese-protein.pdf'))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');});
 var INV_ITEMS=[
  {n:'01',t:'קלוד, 19.9, חשבונית, 289 ש״ח',r:'inv-01-claude-sep.pdf'},
  {n:'02',t:'קלוד, 19.9, קבלה, 289 ש״ח',r:'inv-02-claude-sep-receipt.pdf'},
