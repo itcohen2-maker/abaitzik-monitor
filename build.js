@@ -4478,20 +4478,39 @@ function sendFiles(list, note) {
  // arrive whole must fail here and say so on his screen, because the last time
  // one was dropped silently he kept talking into nothing and then could not
  // remember what he had asked for.
+ /*
+   Itzik, 2.10 19:45: the logo and two more files in one send. The logo
+   arrived, the next file failed, and the failure stopped the chain before the
+   caption. The caption is the only part that carries his code, so the logo
+   that did arrive sat on the server as a stranger's file and nobody answered
+   it. He sent it four times and waited an hour. Now one file that fails is
+   tried once more and then skipped, the caption always goes out, it names
+   what did not arrive, and only after that does the send report a failure.
+ */
+ var failed = [];
+ function putOne(f, i) {
+  return fetch('https://ntfy.sh/' + NTFYIN() + '?filename=' + encodeURIComponent(f.name),
+   { method: 'PUT', headers: { Title: 'file ' + gid + ' ' + (i + 1) + '/' + n }, body: f })
+   .then(function (r) {
+    if (!r.ok) throw new Error('ntfy');
+    return r.json().catch(function () { return null; });
+   })
+   .then(function (j) {
+    var got = j && j.attachment && Number(j.attachment.size);
+    if (!got || got < f.size * 0.98) throw new Error('הקובץ לא הגיע שלם');
+   });
+ }
  return list.reduce(function (chain, f, i) {
   return chain.then(function () {
-   return fetch('https://ntfy.sh/' + NTFYIN() + '?filename=' + encodeURIComponent(f.name),
-    { method: 'PUT', headers: { Title: 'file ' + gid + ' ' + (i + 1) + '/' + n }, body: f })
-    .then(function (r) {
-     if (!r.ok) throw new Error('ntfy');
-     return r.json().catch(function () { return null; });
-    })
-    .then(function (j) {
-     var got = j && j.attachment && Number(j.attachment.size);
-     if (!got || got < f.size * 0.98) throw new Error('הקובץ לא הגיע שלם');
-    });
+   return putOne(f, i).catch(function () {
+    return putOne(f, i).catch(function () { failed.push(f.name); });
+   });
   });
  }, Promise.resolve()).then(function () {
+  if (failed.length) note = (note ? note + String.fromCharCode(10) : '')
+   + 'לא עלו: ' + failed.join(', ');
+  if (failed.length === n) throw new Error('הקובץ לא הגיע שלם');
+ }).then(function () {
   // The caption carries the group token, so it is the line that joins the
   // uploads back into one item in the chat. It used to be followed by a copy
   // to the mailbox on every single send, as a record in case the audio expired
@@ -4507,6 +4526,11 @@ function sendFiles(list, note) {
       'הודעה': note + ' (הקובץ עצמו נשלח בערוץ הקבצים)', 'קוד': myCode() })
    }).then(function (r) { if (!r.ok) throw new Error('quota'); return 'backup'; });
   });
+ }).then(function (how) {
+  if (!failed.length) return how;
+  var e = new Error('partial');
+  e.failed = failed;
+  throw e;
  });
 }
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){
@@ -11269,8 +11293,15 @@ function reallySend(list){
   q.push({at:new Date().toISOString(),text:cap||deflt});
   savePending(q);
   renderSent();renderThread();
- }).catch(function(){
+ }).catch(function(e){
   paintMics('bad');
+  if(e&&e.failed){
+   // Some arrived and are already in the chat. Only the rest has to go again.
+   clearPick();
+   sendSay((list.length-e.failed.length)+' מתוך '+list.length+' הגיעו. לא עלה: '+e.failed.join(', ')
+    +'. תשלח רק אותו שוב, ואם הוא וידאו גדול תעלה לדרייב ותכתוב לי את הקישור.');
+   return;
+  }
   sendSay(hasVoice
    ?'ההקלטה לא הגיעה שלמה ולא נשמרה. תקליט שוב עכשיו, לפני שתשכח מה אמרת.'
    :'הקובץ לא הגיע שלם ולא נשמר. תשלח שוב, ואם הוא גדול תעלה לדרייב ותכתוב לי את הקישור.');
