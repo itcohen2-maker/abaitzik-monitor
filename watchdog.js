@@ -54,6 +54,13 @@ function when(s) {
 function refused(log) {
   return /((?<![\w-])401(?![\w-])|unauthori[sz]ed|invalid (api key|token)|oauth token (has )?expired|please run \/login)/i.test(log);
 }
+function heldProblem(all, now) {
+  const held = all.filter((m) => m.from === 'unverified' && m.status === 'held'
+    && now - Date.parse(m.at) > 3 * 60 * 1000 && now - Date.parse(m.at) < 24 * 3600 * 1000);
+  if (!held.length) return '';
+  return (held.length === 1 ? 'הודעה אחת' : held.length + ' הודעות')
+    + ' הגיעו בלי הקוד ונעצרו, למשל ' + String(held[0].text || '').slice(0, 40);
+}
 function check(now) {
   const problems = [];
   let files = [];
@@ -65,6 +72,15 @@ function check(now) {
   if (late.length) problems.push(late.length === 1 ? 'הודעה אחת מחכה יותר מחמש דקות בלי תשובה' : late.length + ' הודעות מחכות יותר מחמש דקות בלי תשובה');
   const stale = mine.filter((m) => m.id && answered.has(m.id) && now - Date.parse(m.at) > WAIT_MS);
   if (stale.length) problems.push(stale.length + ' הודעות נענו ועדיין מסומנות בטיפול');
+  /*
+    2.10 19:45: his logo arrived four times and sat as 'held', because the file
+    after it failed and the line with his code never came. Nothing here looked
+    at held messages, so he waited an hour and found out alone. A held message
+    from the last day that is still held after three minutes is a problem: the
+    code that would release it is not coming.
+  */
+  const h = heldProblem(all, now);
+  if (h) problems.push(h);
 
   /*
     2.10: a shopping item sat for minutes while he was told the PC was off. A
@@ -243,4 +259,4 @@ function main() {
 }
 
 if (require.main === module) main();
-module.exports = { refused, check, when, speed, gitStuck };
+module.exports = { refused, check, when, speed, gitStuck, heldProblem };
