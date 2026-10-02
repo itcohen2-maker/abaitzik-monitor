@@ -8954,7 +8954,7 @@ function recipesSheet(){
   // Itzik, 2.10: a WhatsApp button for the basbousa, and then: see the PDF
   // first, then send it. So it opens the PDF with its pages on screen, and the
   // send button there carries the file itself to WhatsApp.
-  +'<button type="button" class="yb ybwa" data-r="basbousa-shlish-7.pdf">בסבוסה, לראות ולשלוח בוואטסאפ</button>'
+  +'<button type="button" class="yb ybwa" data-r="basbousa-shlish-8.pdf">בסבוסה, לראות ולשלוח בוואטסאפ</button>'
   +'<button type="button" class="yb yx" data-r="">סגירה</button>'
   +'</div>';
  function close(){w.remove();document.removeEventListener('keydown',esckey);}
