@@ -2048,7 +2048,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .yb1{background:linear-gradient(150deg,#90caf9,#1565c0);color:#fff}
 .yb2{background:linear-gradient(150deg,#7bd88f,#1e8e4a);color:#fff}
 .yb3{background:linear-gradient(150deg,#e8a38a,#b0482c);color:#fff}
-a.ybwa{display:block;text-align:center;text-decoration:none;background:linear-gradient(150deg,#5ee28a,#128c4a);color:#fff}
+.ybwa{display:block;width:100%;text-align:center;text-decoration:none;background:linear-gradient(150deg,#5ee28a,#128c4a);color:#fff}
 a.yb4{display:block;text-align:center;text-decoration:none;background:linear-gradient(150deg,#ffd76a,#d49a00);color:#3a2e00}
 .yx{background:transparent;opacity:.6;min-height:40px;padding:8px}
 .yb:active{transform:translateY(1px)}
@@ -8921,6 +8921,28 @@ var BASBOUSA_WA=[
  '',
  'מתוך ספר המתכונים של איציק'
 ];
+function waPreview(){
+ var old=document.getElementById('waSheet');if(old)old.remove();
+ var txt=BASBOUSA_WA.join(String.fromCharCode(10));
+ var w=document.createElement('div');
+ w.id='waSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','תצוגה מקדימה לוואטסאפ');
+ w.innerHTML='<div class="ycard">'
+  +'<b>בסבוסה לוואטסאפ</b>'
+  +'<small>ככה ההודעה תיראה. אם הכל נכון, לוחצים ובוחרים למי לשלוח.</small>'
+  +'<div class="ywa"><i>תצוגה מקדימה</i><div class="yshort">'+esc(txt)+'<u>✓✓</u></div></div>'
+  +'<a class="yb ybwa" href="https://wa.me/?text='+encodeURIComponent(txt)+'" target="_blank" rel="noopener">פתיחה בוואטסאפ</a>'
+  +'<button type="button" class="yb yx" data-x="1">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w||(e.target.getAttribute&&e.target.getAttribute('data-x')))close();
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
 function recipesSheet(){
  var old=document.getElementById('rSheet');if(old)old.remove();
  var w=document.createElement('div');
@@ -8935,14 +8957,16 @@ function recipesSheet(){
   // Itzik, 2.10: "תכין לי פעם קישור לוואצאפ. שים את זה במתכונים כפתור".
   // The PDF is private, so the message carries the whole recipe as text and
   // opens on whoever gets it without a file or a permission. He picks who.
-  +'<a class="yb ybwa" href="https://wa.me/?text='+encodeURIComponent(BASBOUSA_WA.join(String.fromCharCode(10)))
-  +'" target="_blank" rel="noopener">בסבוסה לוואטסאפ</a>'
+  // 2.10, a minute later: "אני רוצה לראות תצוגה מקדימה קודם רק אז אני שולח".
+  // So this opens the message as it will look, and WhatsApp is the next tap.
+  +'<button type="button" class="yb ybwa" data-r="" data-wa="basbousa">בסבוסה לוואטסאפ</button>'
   +'<button type="button" class="yb yx" data-r="">סגירה</button>'
   +'</div>';
  function close(){w.remove();document.removeEventListener('keydown',esckey);}
  function esckey(e){if(e.key==='Escape')close();}
  w.onclick=function(e){
   if(e.target===w)return close();
+  if(e.target.getAttribute&&e.target.getAttribute('data-wa')){close();return waPreview();}
   var k=e.target.getAttribute&&e.target.getAttribute('data-r');
   if(k===null||k===undefined)return;
   close();
