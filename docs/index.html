@@ -1698,7 +1698,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-02T17:30:40.701Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-02T17:46:04.579Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2878,7 +2878,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='f84f08fe29';
+var CODE_ID='1a969567ff';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -6150,7 +6150,7 @@ function recipesSheet(){
   +'<small>איזה ספר לפתוח</small>'
   +'<button type="button" class="yb yb1" data-r="lolos-recipes-2026.pdf">חוברת מתכונים לולוס 2026</button>'
   +'<button type="button" class="yb yb2" data-r="itzik-recipes.pdf">ספר המתכונים של איציק</button>'
-  +'<button type="button" class="yb ybwa" data-r="basbousa-shlish-5.pdf">בסבוסה, לראות ולשלוח בוואטסאפ</button>'
+  +'<button type="button" class="yb ybwa" data-r="basbousa-shlish-6.pdf">בסבוסה, לראות ולשלוח בוואטסאפ</button>'
   +'<button type="button" class="yb yx" data-r="">סגירה</button>'
   +'</div>';
  function close(){w.remove();document.removeEventListener('keydown',esckey);}
