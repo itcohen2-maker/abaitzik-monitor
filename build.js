@@ -12189,7 +12189,7 @@ function rivDebt(r){
  var li=r.inv.map(function(x){
   return '<li><span class="n">'+(x.n?'חשבונית '+esc(x.n):esc(x.label||'חוב ישן'))
    +(x.left<x.amount-0.5?'<small>שולם חלק, מתוך '+ils(x.amount)+'</small>':'')
-   +(x.wa?'<small class="rvwa">וואטסאפ: '+esc(x.wa)+'</small>':'')+'</span>'
+   +(x.wa?'<small class="rvwa">'+esc(x.wa)+'</small>':'')+'</span>'
    +'<span class="dt">'+esc(x.date)+'</span><span class="m">'+ils(x.left)+'</span></li>';
  }).join('');
  return '<details class="rvcust"><summary class="rvh"><b>'+esc(r.name)+'</b><span class="a">'+ils(r.amount)+'</span></summary>'
