@@ -10090,7 +10090,7 @@ on('gNerMkt',nerSheet);
 */
 var REEL_ITEMS=[
  {n:'01',t:'המנגל: שבועיים אחרי הניתוח, ולא ויתרתי (35 שניות, הגרסה הסופית שלך)',r:'reel-01-mangal.mp4'},
- {n:'02',t:'הביקורת אצל הפרופסור: יצאתי עם בשורה טובה (22 שניות)',r:'reel-02-bikoret.mp4'}
+ {n:'02',t:'הביקורת אצל הפרופסור: יצאתי עם בשורה טובה (21 שניות)',r:'reel-02-bikoret.mp4'}
 ];
 function reelSheet(){
  var old=document.getElementById('rlSheet');if(old)old.remove();
