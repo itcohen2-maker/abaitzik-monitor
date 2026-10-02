@@ -2048,6 +2048,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .yb1{background:linear-gradient(150deg,#90caf9,#1565c0);color:#fff}
 .yb2{background:linear-gradient(150deg,#7bd88f,#1e8e4a);color:#fff}
 .yb3{background:linear-gradient(150deg,#e8a38a,#b0482c);color:#fff}
+a.ybwa{display:block;text-align:center;text-decoration:none;background:linear-gradient(150deg,#5ee28a,#128c4a);color:#fff}
 a.yb4{display:block;text-align:center;text-decoration:none;background:linear-gradient(150deg,#ffd76a,#d49a00);color:#3a2e00}
 .yx{background:transparent;opacity:.6;min-height:40px;padding:8px}
 .yb:active{transform:translateY(1px)}
@@ -8880,6 +8881,46 @@ on('gSale',function(){pane('Sa');renderSale();ensure('sale',renderSale);});
   איציק, 29.9: "יהיו שתי ספרים, אחד לולוס אחד איציק", "הכל באותו כפתור".
   One tile, a choice of two books, each its own sealed file.
 */
+var BASBOUSA_WA=[
+ 'בסבוסה סולת עם אשל',
+ 'שליש מהמתכון, לתבנית מרובעת 20 על 20 ס״מ. בלי קמח ובלי ביצים, מרקם אותנטי ולא עוגתי.',
+ '',
+ 'מצרכים לעוגה',
+ '250 גרם סולת גסה (חצי חבילה)',
+ '100 גרם סוכר (חצי כוס)',
+ '50 גרם קוקוס טחון (חצי כוס)',
+ 'חצי שקית אבקת אפייה (5 גרם)',
+ '100 גרם חמאה מומסת (או 80 מ״ל שמן, שליש כוס)',
+ 'חצי כף תמצית וניל (1.5 כפיות) או גרידה מלימון שלם',
+ 'גביע אשל אחד (200 גרם)',
+ '13 עד 17 חצאי שקדים או אגוזים לעיטור',
+ '',
+ 'מצרכים לסירופ',
+ '600 מ״ל מים (3 כוסות)',
+ '670 גרם סוכר (3 כוסות ושליש)',
+ 'המיץ של לימון שלם',
+ 'הקליפות של חצי לימון',
+ 'גרידה מלימון',
+ '2 ציפורן',
+ '2 כפות מי ורדים',
+ '',
+ 'אופן ההכנה',
+ '1. היבשים: בקערה מערבבים סולת, סוכר, קוקוס ואבקת אפייה.',
+ '2. החמאה: מוסיפים את החמאה המומסת (או השמן) ואת הווניל, ומערבבים עד שכל הסולת מצופה.',
+ '3. הלבן: רק עכשיו מוסיפים את האשל.',
+ '4. לישה קצרה: מערבבים רק עד מסה אחידה ולחה, לא יותר, כדי לשמור על מרקם גרגירי.',
+ '5. מנוחה: מניחים לבלילה לנוח 10 דקות.',
+ '6. שפיכה לתבנית: משמנים היטב את התבנית, שופכים ומיישרים לשכבה אחידה עם גב של כף רטובה.',
+ '7. חיתוך: בסכין חדה חורצים מעוינים או ריבועים כמעט עד התחתית.',
+ '8. אגוזים ושקדים: מניחים שקד או חצי אגוז במרכז כל יחידה.',
+ '9. לתנור: 180 מעלות, עליון ותחתון או טורבו, אין פה חוק. בתבנית אחת אפשר טורבו. חצי שעה ויותר, עד שמקבלים צבע זהוב.',
+ '10. הסירופ: בזמן האפייה מבשלים מים, סוכר, מיץ הלימון, קליפות חצי הלימון, הגרידה, הציפורן ומי הוורדים. מביאים לרתיחה ומבשלים ברתיחה עדינה כ 7 דקות.',
+ '11. השקיה: מוציאים מהתנור ושופכים מעל את כל הסירופ שכבר בישלנו, כשהוא מעט חם, גם אם נוצרת בריכה. עוזבים הכל ומחכים שיספוג.',
+ '',
+ 'כלל הברזל: עוגה חמה מהתנור, סירופ מעט חם, את כולו, ולא נוגעים עד שנספג.',
+ '',
+ 'מתוך ספר המתכונים של איציק'
+];
 function recipesSheet(){
  var old=document.getElementById('rSheet');if(old)old.remove();
  var w=document.createElement('div');
@@ -8891,6 +8932,11 @@ function recipesSheet(){
   +'<small>איזה ספר לפתוח</small>'
   +'<button type="button" class="yb yb1" data-r="lolos-recipes-2026.pdf">חוברת מתכונים לולוס 2026</button>'
   +'<button type="button" class="yb yb2" data-r="itzik-recipes.pdf">ספר המתכונים של איציק</button>'
+  // Itzik, 2.10: "תכין לי פעם קישור לוואצאפ. שים את זה במתכונים כפתור".
+  // The PDF is private, so the message carries the whole recipe as text and
+  // opens on whoever gets it without a file or a permission. He picks who.
+  +'<a class="yb ybwa" href="https://wa.me/?text='+encodeURIComponent(BASBOUSA_WA.join(String.fromCharCode(10)))
+  +'" target="_blank" rel="noopener">בסבוסה לוואטסאפ</a>'
   +'<button type="button" class="yb yx" data-r="">סגירה</button>'
   +'</div>';
  function close(){w.remove();document.removeEventListener('keydown',esckey);}
