@@ -148,8 +148,32 @@ function beatBody() {
     n: received,
     recent: recent,
     budget: money,
-    queued: queued
+    queued: queued,
+    pc: pcState()
   };
+}
+
+/*
+  2.10, Itzik: "אני רוצה מוקאפ בתחתית שאומר אם המחשב דלוק או כבוי". The PC
+  writes data/status/pc-seen.json through pc-task.js every minute it is on.
+  Seen in the last three minutes is on. The page learns of a change from the
+  published file, so a flip publishes at once and nothing else does.
+*/
+const PC_SEEN = path.join(STATUS, "pc-seen.json");
+function pcState() {
+  const s = readJson(PC_SEEN, null);
+  const at = s && Date.parse(s.at);
+  return { on: Boolean(at && Date.now() - at < 180000), seen: s ? s.at : "" };
+}
+let pcLastOn = null;
+function pcWatch() {
+  const on = pcState().on;
+  if (pcLastOn !== null && on !== pcLastOn) {
+    say(on ? "המחשב חזר לפעול." : "המחשב הפסיק לדווח, כנראה כבוי.");
+    lastFallbackAt = 0;
+    publishFallback(beatBody(), true);
+  }
+  pcLastOn = on;
 }
 
 // Minimum priority and no tags: this is a pulse, not a notification. If it ever
@@ -230,7 +254,7 @@ function shapeOf(body) {
     Object.keys(b).map(function (k) {
       return k + (b[k].blockedUntil ? ':blocked' : ':' + (b[k].left > 0 ? 'ok' : 'empty'));
     }).join(','),
-    body.queued ? 'queued' : ''].join('|');
+    body.queued ? 'queued' : '', body.pc && body.pc.on ? 'pc:on' : 'pc:off'].join('|');
 }
 function publishFallback(body, force) {
   const shape = shapeOf(body);
@@ -818,6 +842,7 @@ if (require.main === module) (async () => {
   // A fix pushed while nothing is arriving should not have to wait for his
   // next message to take effect.
   setInterval(checkSources, 60000);
+  setInterval(pcWatch, 60000);
   let wait = 2000;
   for (;;) {
     try {

@@ -164,6 +164,10 @@ button.abtn[disabled]{opacity:.55}
 .grow div.l{margin-top:8px;font-size:15px;line-height:1.55}
 .grow div.l b{display:block;font:800 13px Heebo,sans-serif;color:var(--accent);margin-bottom:2px}
 .grow div.l a{color:var(--accent);word-break:break-all}
+.pcpill{position:fixed;inset-inline-start:10px;bottom:78px;z-index:60;padding:6px 12px;border-radius:999px;
+ font-size:13px;font-weight:700;background:var(--card,#1b1b1f);border:1px solid var(--dim);color:var(--dim)}
+.pcpill.on{border-color:var(--green);color:var(--green)}
+.pcpill.off{border-color:#e5484d;color:#e5484d}
 .livepill{position:fixed;inset-inline-end:10px;bottom:78px;z-index:60;
  display:flex;align-items:center;gap:6px;border:1px solid var(--line);
  background:var(--surface);color:var(--dim);border-radius:999px;
@@ -1690,7 +1694,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-02T10:41:49.035Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-02T13:16:21.870Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2535,6 +2539,7 @@ try{
  <button type="button" id="editDone">סיום</button>
 </div>
 
+<div class="pcpill" id="pcPill" aria-live="polite"><span id="pcText">💻 בודק</span></div>
 <button type="button" class="livepill" id="livePill" aria-live="polite">
  <i class="lp-d"></i><span class="lp-t" id="lpText">בודק</span>
 </button>
@@ -2817,7 +2822,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='64cf8db66e';
+var CODE_ID='2b411c5175';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -8989,7 +8994,17 @@ function liveTime(iso){
  return isNaN(d)?'':(d.getHours()+':'+String(d.getMinutes()).padStart(2,'0')
   +':'+String(d.getSeconds()).padStart(2,'0'));
 }
+function paintPc(){
+ var p=document.getElementById('pcPill'),t=document.getElementById('pcText');
+ if(!p||!t)return;
+ var pc=liveLast&&liveLast.pc;
+ if(!pc||(Date.now()-Date.parse(liveLast.at))/1000>4800){p.className='pcpill';t.textContent='💻 לא ידוע';return;}
+ if(pc.on){p.className='pcpill on';t.textContent='💻 המחשב דלוק';return;}
+ p.className='pcpill off';
+ t.textContent='💻 המחשב כבוי'+(pc.seen?' מאז '+liveTime(pc.seen).slice(0,-3):'');
+}
 function paintLive(){
+ paintPc();
  var pill=document.getElementById('livePill');
  var txt=document.getElementById('lpText');
  if(!pill||!txt)return;

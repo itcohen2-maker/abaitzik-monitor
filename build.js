@@ -1080,6 +1080,10 @@ button.abtn[disabled]{opacity:.55}
    same green the thread cards use, so one mark means one thing everywhere. */
 /* The listener indicator. Fixed to the edge, small, and never in the way of
    a thumb reaching the bottom navigation. */
+.pcpill{position:fixed;inset-inline-start:10px;bottom:78px;z-index:60;padding:6px 12px;border-radius:999px;
+ font-size:13px;font-weight:700;background:var(--card,#1b1b1f);border:1px solid var(--dim);color:var(--dim)}
+.pcpill.on{border-color:var(--green);color:var(--green)}
+.pcpill.off{border-color:#e5484d;color:#e5484d}
 .livepill{position:fixed;inset-inline-end:10px;bottom:78px;z-index:60;
  display:flex;align-items:center;gap:6px;border:1px solid var(--line);
  background:var(--surface);color:var(--dim);border-radius:999px;
@@ -4121,6 +4125,8 @@ try{
   minute on its own topic, and this reads it. Green means a pulse in the last
   three minutes. Red means nobody is listening, and now he knows.
 -->
+<!-- 2.10: whether his PC is on, so he knows if PC tasks run now or later. -->
+<div class="pcpill" id="pcPill" aria-live="polite"><span id="pcText">💻 בודק</span></div>
 <button type="button" class="livepill" id="livePill" aria-live="polite">
  <i class="lp-d"></i><span class="lp-t" id="lpText">בודק</span>
 </button>
@@ -12557,7 +12563,17 @@ function liveTime(iso){
  return isNaN(d)?'':(d.getHours()+':'+String(d.getMinutes()).padStart(2,'0')
   +':'+String(d.getSeconds()).padStart(2,'0'));
 }
+function paintPc(){
+ var p=document.getElementById('pcPill'),t=document.getElementById('pcText');
+ if(!p||!t)return;
+ var pc=liveLast&&liveLast.pc;
+ if(!pc||(Date.now()-Date.parse(liveLast.at))/1000>4800){p.className='pcpill';t.textContent='💻 לא ידוע';return;}
+ if(pc.on){p.className='pcpill on';t.textContent='💻 המחשב דלוק';return;}
+ p.className='pcpill off';
+ t.textContent='💻 המחשב כבוי'+(pc.seen?' מאז '+liveTime(pc.seen).slice(0,-3):'');
+}
 function paintLive(){
+ paintPc();
  var pill=document.getElementById('livePill');
  var txt=document.getElementById('lpText');
  if(!pill||!txt)return;
