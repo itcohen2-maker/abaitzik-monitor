@@ -1689,7 +1689,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-02T06:15:06.247Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-02T07:05:09.012Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2815,7 +2815,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='1671d0d514';
+var CODE_ID='14032f81db';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -8709,7 +8709,7 @@ function rivDebt(r){
  var li=r.inv.map(function(x){
   return '<li><span class="n">'+(x.n?'חשבונית '+esc(x.n):esc(x.label||'חוב ישן'))
    +(x.left<x.amount-0.5?'<small>שולם חלק, מתוך '+ils(x.amount)+'</small>':'')
-   +(x.wa?'<small class="rvwa">וואטסאפ: '+esc(x.wa)+'</small>':'')+'</span>'
+   +(x.wa?'<small class="rvwa">'+esc(x.wa)+'</small>':'')+'</span>'
    +'<span class="dt">'+esc(x.date)+'</span><span class="m">'+ils(x.left)+'</span></li>';
  }).join('');
  return '<details class="rvcust"><summary class="rvh"><b>'+esc(r.name)+'</b><span class="a">'+ils(r.amount)+'</span></summary>'
