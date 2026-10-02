@@ -66,6 +66,20 @@ function check(now) {
   const stale = mine.filter((m) => m.id && answered.has(m.id) && now - Date.parse(m.at) > WAIT_MS);
   if (stale.length) problems.push(stale.length + ' הודעות נענו ועדיין מסומנות בטיפול');
 
+  /*
+    2.10: a shopping item sat for minutes while he was told the PC was off. A
+    task still waiting 10 minutes after it was marked, or held by the PC for 25,
+    is a problem, whatever the reason.
+  */
+  try {
+    const PCDIR = path.join(path.dirname(CHAT), "..", "pc", "pc");
+    fs.readdirSync(PCDIR).forEach((f) => {
+      const t = readJson(path.join(PCDIR, f), null);
+      if (!t || t.test) return;
+      if (t.status === "pending" && now - Date.parse(t.at) > 10 * 60 * 1000) problems.push("משימה למחשב מחכה יותר מעשר דקות: " + String(t.task).slice(0, 40));
+      if (t.status === "claimed" && now - Date.parse(t.claimedAt) > 25 * 60 * 1000) problems.push("המחשב תקוע על משימה יותר מ-25 דקות: " + String(t.task).slice(0, 40));
+    });
+  } catch (e) {}
   // The Claude login on the server (CLAUDE_CODE_OAUTH_TOKEN, set 25.9.2026)
   // lasts about a year. Warn a month ahead, and at once if the worker log shows
   // the sessions being refused.

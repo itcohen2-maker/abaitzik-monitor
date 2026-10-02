@@ -39,6 +39,18 @@ const LOCK = path.join(inst.dataPath, 'status', 'pc-task.lock');
 // the lid closed) goes back to the queue after this long.
 const STALE_MS = 45 * 60 * 1000;
 const MAX_TRIES = 2;
+/*
+  2.10, Itzik: "למה הוא אומר לי המחשב מכובה ולא מוסיף". The PC was on and adding
+  the item; the reply said "it will run as soon as the PC is on", which reads as
+  "the PC is off". Every pc-pull run calls next once a minute, so that call is the
+  heartbeat: seen in the last 3 minutes means on, and the reply can say so.
+*/
+const SEEN = path.join(inst.dataPath, "status", "pc-seen.json");
+function pcOnline() {
+  const s = readJson(SEEN, null);
+  const at = s && Date.parse(s.at);
+  return { on: Boolean(at && Date.now() - at < 3 * 60 * 1000), at: s ? s.at : null };
+}
 
 function readJson(p, fallback) {
   try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return fallback; }
@@ -111,7 +123,12 @@ if (cmd === 'add') {
   const id = 'pc-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
   write(Object.assign({ id, re, at: new Date().toISOString(), task, status: 'pending', tries: 0 },
     test ? { test: true } : {}, quiet ? { quiet: true } : {}));
+  const o = pcOnline();
   console.log(id);
+  console.log(o.on ? 'pc: on' : 'pc: off, last seen ' + (o.at || 'never'));
+} else if (cmd === 'online') {
+  const o = pcOnline();
+  console.log(o.on ? 'on' : 'off ' + (o.at || 'never'));
 } else if (cmd === 'next') {
   // The PC asks every minute it is awake, so this is also its heartbeat.
   // pegasus-server.js reads it to stand in for the PC only while it is off.
