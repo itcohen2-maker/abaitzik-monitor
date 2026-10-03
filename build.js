@@ -280,6 +280,16 @@ function build() {
   // One off things he asked for that are not a report and not a chat message:
   // a page to print, a file to keep. He asked for a tile that blinks when one
   // lands so he can find it without asking me where it went.
+  /*
+    Itzik, 3.10: when a plan is done and the work could run on a cheaper
+    model, stop and tell him -- in the chat, and with a tile here that blinks
+    until he says he switched. He changes the model himself; I cannot.
+    Newest first; the tile blinks for the newest one he has not answered.
+  */
+  const modelswitch = loadDocs('modelswitch')
+    .map(x => ({ id: String(x.id || x.at || ''), at: x.at || '', title: x.title || '',
+                 note: x.note || '', model: x.model || '' }))
+    .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
   const special = loadDocs('special')
     .map(x => ({ at: x.at, title: x.title || '', url: x.url || '',
                  note: x.note || '', copy: x.copy || '',
@@ -578,6 +588,7 @@ function build() {
     pegasus,
     improve,
     special,
+    modelswitch,
     reminders,
     tasks,
     tenants,
@@ -3192,6 +3203,8 @@ try{
   -->
   <button type="button" class="gt gRec" id="gRecipes"><b><img class="gi" src="icons/lolos-giraffe.png" alt=""> מתכונים</b><small>חוברת לולוס וספר המתכונים של איציק</small></button>
   <button type="button" class="gt g16" id="gIsra"><b>💳 ישראכרט יואל</b><small>הכרטיסים, מה לבקש, ומה ענו</small></button>
+  <!-- איציק, 3.10: "כשאפשר לחסוך, תעצור ותעדכן אותי גם במוניטור בכפתור מהבהב". -->
+  <button type="button" class="gt g4" id="gModel"><b>🔁 להחליף מודל</b><small>מהבהב כשאפשר לחסוך, עד שהחלפת</small></button>
   <button type="button" class="gt g10" id="gFiles"><b>📁 הקבצים שלי</b><small>כל מה ששלחת, סגור במוניטור</small></button>
   <!--
     איציק, 20.9: "על המסך ניקוזים אתה יכול למחוק את הכפתור. אין לי יותר צורך בזה".
@@ -3755,6 +3768,14 @@ try{
 <!--ITZIK:END-->
 
 <!--ITZIK:BEGIN-->
+<section id="pModel" hidden>
+ <h2>להחליף מודל</h2>
+ <div class="rephint">כשהתכנון גמור והעבודה יכולה לרוץ על מודל זול יותר, אני עוצר ומבקש כאן. ההחלפה אצלך, במחשב.</div>
+ <div id="moBox"><div class="empty">אין כרגע בקשה להחליף.</div></div>
+ <button type="button" class="ask" id="moDone" hidden>החלפתי</button>
+ <div id="moSaid" class="rephint"></div>
+</section>
+
 <section id="pIsra" hidden>
  <h2>ישראכרט יואל</h2>
  <div class="rephint">הכל לשיחה עם ישראכרט על שני הכרטיסים של יואל, לפי הסדר.</div>
@@ -5893,7 +5914,7 @@ function updateDot(){
  document.title=(fresh?'(1) ':'')+PAGE_TITLE;
 }
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
-var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn',Rc:'pRc',Sa:'pSale',Fi:'pFi',Is:'pIsra'};
+var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn',Rc:'pRc',Mo:'pModel',Sa:'pSale',Fi:'pFi',Is:'pIsra'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 /*ITZIK:BEGIN*/
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
@@ -8997,6 +9018,37 @@ boot('remoteDevices',function(){
  if(I.computer)document.querySelectorAll('#pRc .rch').forEach(function(h){h.hidden=true;});
 });
 boot('remote',function(){var b=document.getElementById('gRemote');if(b)b.classList.toggle('taskblink',!remoteDone());});
+/* The model switch: the newest request he has not answered blinks the tile. */
+function modelPending(){
+ var m=(D.modelswitch||[])[0];if(!m||!m.id)return null;
+ var seen='';try{seen=localStorage.getItem('modelSwitchSeen')||'';}catch(e){}
+ return seen===m.id?null:m;
+}
+function renderModel(){
+ var box=document.getElementById('moBox'),btn=document.getElementById('moDone');
+ if(!box)return;
+ var m=modelPending(),last=(D.modelswitch||[])[0];
+ if(!m){
+  box.innerHTML='<div class="empty">אין כרגע בקשה להחליף.'+(last?' הבקשה האחרונה, '+esc(last.title)+', כבר סומנה.':'')+'</div>';
+  if(btn)btn.hidden=true;return;
+ }
+ box.innerHTML='<div class="card"><b>'+esc(m.title)+'</b>'
+  +(m.note?'<p>'+esc(m.note).split(String.fromCharCode(10)).join('<br>')+'</p>':'')
+  +'<p>מה עושים: במחשב, בחלון של קלוד, מקלידים <b dir="ltr">/model</b> ובוחרים <b dir="ltr">'+esc(m.model||'Haiku')+'</b>. אחר כך לוחצים כאן "החלפתי".</p></div>';
+ if(btn)btn.hidden=false;
+}
+boot('modelswitch',function(){var b=document.getElementById('gModel');if(b)b.classList.toggle('taskblink',!!modelPending());});
+on('gModel',function(){pane('Mo');renderModel();});
+on('moDone',function(){
+ var m=modelPending(),said=document.getElementById('moSaid'),btn=document.getElementById('moDone');
+ if(!m)return;
+ btn.disabled=true;said.textContent='שולח.';
+ sendText('החלפת מודל','החלפתי מודל ל-'+(m.model||'Haiku')+' ('+m.title+')','משימה').then(function(){
+  try{localStorage.setItem('modelSwitchSeen',m.id);}catch(e){}
+  var b=document.getElementById('gModel');if(b)b.classList.remove('taskblink');
+  said.textContent='נשלח. ממשיכים בביצוע.';toast(said.textContent);markSent('text');renderModel();
+ }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';}).then(function(){btn.disabled=false;});
+});
 on('rcDone',function(){
  var said=document.getElementById('rcSaid'),btn=document.getElementById('rcDone');
  btn.disabled=true;said.textContent='שולח.';
