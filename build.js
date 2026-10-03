@@ -2017,7 +2017,6 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .gMed{background:linear-gradient(150deg,#4fb3a9,#123a4a)}
 .gInv{background:linear-gradient(150deg,#d9a441,#3a2a12)}
 .gShop{background:linear-gradient(150deg,#3aa55d,#1f6f8b)}
-.gCheese{background:linear-gradient(150deg,#f2c94c,#1f6f8b)}
 .gWin{background:linear-gradient(150deg,#f2c94c,#7a2e12)}
 .gCPlan{background:linear-gradient(150deg,#e8743b,#6b2f7a)}
 .g16{background:linear-gradient(150deg,#f8bbd0,#c2185b)}
@@ -3261,11 +3260,6 @@ try{
     papers after the 14.9 surgery, numbered like the reels. Private files only,
     never PUBLIC_FILES: this is pathology and a doctor's summary.
   -->
-  <!--
-    2.10. Itzik: "סדר לי בכפתור ובpdf". The clinic's list of high protein, low
-    fat cheeses, ranked by grams of protein per 100 calories. Private file.
-  -->
-  <button type="button" class="gt gCheese" id="gCheese"><b>🧀 גבינות חלבון</b><small>מדורג לפי חלבון ל 100 קלוריות</small></button>
   <button type="button" class="gt gMed" id="gMed"><b>🩺 אחרי הניתוח השני</b><small>ממוספר. המסמכים מהביקורת אצל הפרופסור</small></button>
   <!--
     1.10. Itzik, in a voice note: "תעשה לי כפתור של חשבוניות", ChatGPT, Claude
@@ -10365,7 +10359,6 @@ function medSheet(){
  document.body.appendChild(w);
 }
 on('gMed',medSheet);
-on('gCheese',function(){if(!fileView('cheese-protein.pdf'))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');});
 /*
   1.10. Invoices for his subscriptions (ChatGPT, Claude, Google) from August
   on, taken from his mail. Same numbered sheet; numbers never change.
