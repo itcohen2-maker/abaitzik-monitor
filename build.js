@@ -2014,6 +2014,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .gKat{background:linear-gradient(150deg,#e3c07a,#2b45a6)}
 .gNer{background:linear-gradient(150deg,#f0a64a,#0f1a3a)}
 .gReel{background:linear-gradient(150deg,#e2574c,#2a1240)}
+.gFut{background:linear-gradient(150deg,#3a8fd9,#16243f)}
 .gMed{background:linear-gradient(150deg,#4fb3a9,#123a4a)}
 .gInv{background:linear-gradient(150deg,#d9a441,#3a2a12)}
 .gShop{background:linear-gradient(150deg,#3aa55d,#1f6f8b)}
@@ -3273,6 +3274,7 @@ try{
   -->
   <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>ממוספר. 02 הביקורת אצל הפרופסור</small></button>
+  <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
@@ -10282,6 +10284,43 @@ function reelSheet(){
  document.body.appendChild(w);
 }
 on('gReels',reelSheet);
+/*
+  3.10. Future reels: ideas and source clips saved for reels Itzik will shoot
+  later, so they do not get lost in the chat. Same numbered sheet as the reels.
+*/
+var FUT_ITEMS=[
+ {n:'01',t:'החנייה: הקטע הראשון עם כיתוב בעברית. אחריו מצלמים אותך מגיב (4 שניות)',r:'parking-part1-he.mp4'},
+ {n:'01ב',t:'החנייה: אותו קטע עם הכיתוב המקורי באנגלית',r:'parking-part1.mp4'}
+];
+function futSheet(){
+ var old=document.getElementById('ftSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='ftSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','רילים עתידיים');
+ w.innerHTML='<div class="ycard">'
+  +'<b>רילים עתידיים</b>'
+  +'<small>רעיונות וחומרים לרילים הבאים, ממוספר</small>'
+  +FUT_ITEMS.map(function(it,i){
+    return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=FUT_ITEMS[+k];if(k===''||!it)return;
+  if(it.u)window.open(it.u,'_blank','noopener');
+  else if(!fileView(it.r))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gFut',futSheet);
 /*
   2.10. Winning lines. Tapping a line copies it. A new line goes at the end
   with the next number, with where it came from.
