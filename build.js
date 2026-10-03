@@ -4363,7 +4363,7 @@ function fileView(name){
   // phone. Safari does not keep a blob download, so the share sheet carries the
   // file itself (WhatsApp, mail) wherever it can.
   var sf=null;try{sf=new File([b],short,{type:t||'application/octet-stream'});}catch(x){}
-  if(sf&&navigator.share&&navigator.canShare&&navigator.canShare({files:[sf]}))h+='<button type="button" class="ask fv-share">שליחה בוואטסאפ או במייל</button>';
+  if(sf&&navigator.share&&navigator.canShare&&navigator.canShare({files:[sf]}))h+='<button type="button" class="ask fv-share">שליחה בוואטסאפ, במסנג׳ר או במייל</button>';
   // Itzik, 1.10: "עשיתי שמירה לגלריה ואני לא מוצא". On the iPhone a blob
   // download lands in Files, not in Photos. For a picture or a video the share
   // sheet is the only road to the gallery (its "Save Video" line), so there the
