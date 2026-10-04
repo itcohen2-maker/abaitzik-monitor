@@ -47,6 +47,21 @@ function add(day, text, re) {
   console.log('נקבעה: ' + name + '  ' + due.toLocaleString('he-IL'));
 }
 
+// איציק, 4.10: "ב 11 לחודש להעביר חשבוניות לאילנה". תזכורת עם every: month
+// שנשלחה או נכנסה לתור מולידה את הקובץ של החודש הבא, באותו יום ובאותה שעה.
+function nextMonth(r) {
+  const d = new Date(r.doc.due);
+  d.setUTCMonth(d.getUTCMonth() + 1);
+  const day = d.toISOString().slice(0, 10).replace(/-/g, '');
+  const name = path.basename(r.file).replace(/^\d{8}/, day);
+  const file = path.join(DIR, name);
+  if (fs.existsSync(file)) return;
+  const doc = { at: new Date().toISOString(), due: d.toISOString(), text: r.doc.text, every: 'month' };
+  if (r.doc.re) doc.re = r.doc.re;
+  fs.writeFileSync(file, JSON.stringify(doc, null, 1) + '\n', 'utf8');
+  console.log('הבאה: ' + name);
+}
+
 async function run() {
   const dry = args.includes('--dry');
   const now = new Date();
@@ -68,6 +83,7 @@ async function run() {
       process.exitCode = 2;
     }
     fs.writeFileSync(r.file, JSON.stringify(r.doc, null, 1) + '\n', 'utf8');
+    if (r.doc.every === 'month') nextMonth(r);
     changed = true;
   }
   // שהדף יראה "נשלחה" ולא ימשיך להבטיח תזכורת שכבר יצאה.
