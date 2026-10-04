@@ -10525,6 +10525,10 @@ function lawSheet(){
  document.body.appendChild(w);
 }
 on('gLaw',lawSheet);
+// 4.10: Itzik could not find these files. The tile blinks until he opens it
+// after a new document was added (the count is what he has seen).
+boot('lawblink',function(){var b=document.getElementById('gLaw');if(!b)return;var n=0;try{n=+localStorage.getItem('lawSeen')||0;}catch(x){}b.classList.toggle('taskblink',n<LAW_ITEMS.length);});
+document.getElementById('gLaw')&&document.getElementById('gLaw').addEventListener('click',function(){try{localStorage.setItem('lawSeen',String(LAW_ITEMS.length));}catch(x){}this.classList.remove('taskblink');});
 /*
   2.10. Winning lines. Tapping a line copies it. A new line goes at the end
   with the next number, with where it came from.
