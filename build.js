@@ -10495,7 +10495,10 @@ on('gOcc',occSheet);
 */
 var LAW_ITEMS=[
  {n:'01',t:'הרכבים של לולוס: המרצדס 19834203 והיונדאי של יואל 6958655',r:'lolos-vehicles-2026-10-04.pdf'},
- {n:'02',t:'טבלת נטפליקס וספוטיפיי בכרטיס 6559 של יואל',r:'yoel-6559-netflix-spotify.pdf'}
+ {n:'01ב',t:'הרכבים כתמונה לגלריה, עמוד 1',r:'law-01a.jpg'},
+ {n:'01ג',t:'הרכבים כתמונה לגלריה, עמוד 2',r:'law-01b.jpg'},
+ {n:'02',t:'טבלת נטפליקס וספוטיפיי בכרטיס 6559 של יואל',r:'yoel-6559-netflix-spotify.pdf'},
+ {n:'02ב',t:'נטפליקס וספוטיפיי כתמונה לגלריה',r:'law-02.jpg'}
 ];
 function lawSheet(){
  var old=document.getElementById('lawSheet');if(old)old.remove();
