@@ -1708,7 +1708,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-04T20:28:54.797Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-04T20:29:15.524Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1850,7 +1850,7 @@ try{
   <button type="button" class="gt gMed" id="gMed"><b>🩺 אחרי הניתוח השני</b><small>ממוספר. המסמכים מהביקורת אצל הפרופסור</small></button>
   <button type="button" class="gt gInv" id="gInv"><b>🧾 חשבוניות</b><small>ממוספר. מ 3.10 והלאה</small></button>
   <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
-  <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>ממוספר. 02 הביקורת אצל הפרופסור</small></button>
+  <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>ממוספר. כרגע ריק</small></button>
   <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. כרגע ריק</small></button>
   <button type="button" class="gt gPen" id="gPen"><b>🏦 פנסיה</b><small>קוד מוצר 28417, 1,211 ש״ח. בדיקה ב 18.10</small></button>
   <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>01 הרכבים. 02 משיכה מכרטיס האשראי</small></button>
@@ -2920,7 +2920,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='e86bb68262';
+var CODE_ID='6122b64173';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -7253,15 +7253,7 @@ function nerSheet(){
  document.body.appendChild(w);
 }
 on('gNerMkt',nerSheet);
-var REEL_ITEMS=[
- {n:'01',t:'המנגל: שבועיים אחרי הניתוח, ולא ויתרתי (35 שניות, הגרסה הסופית שלך)',r:'reel-01-mangal.mp4'},
- {n:'02',t:'הביקורת אצל הפרופסור: יצאתי עם בשורה טובה (21 שניות)',r:'reel-02-bikoret.mp4'},
- {n:'02ב',t:'הביקורת אצל הפרופסור: גרסה עם הדלת ושעה אחר כך (23 שניות)',r:'reel-02-bikoret-v3.mp4'},
- {n:'02ג',t:'הביקורת אצל הפרופסור: לפי הסקיל של איליי, ממורכז ועוצמה מכוונת (23 שניות)',r:'reel-02-bikoret-v4.mp4'},
- {n:'02ד',t:'הביקורת אצל הפרופסור: קול ותמונה מסונכרנים (22 שניות)',r:'reel-02-bikoret-v5.mp4'},
- {n:'02ו',t:'הביקורת אצל הפרופסור: בלי המעבר, צל צמוד, בלי מילים חתוכות (24 שניות)',r:'reel-02-bikoret-v7.mp4'},
- {n:'02ז',t:'הביקורת אצל הפרופסור: הרקע לא הפוך, השלטים קריאים (24 שניות)',r:'reel-02-bikoret-v8.mp4'}
-];
+var REEL_ITEMS=[];
 function reelSheet(){
  var old=document.getElementById('rlSheet');if(old)old.remove();
  var w=document.createElement('div');
@@ -7270,7 +7262,7 @@ function reelSheet(){
  w.setAttribute('aria-label','הרילים שלי');
  w.innerHTML='<div class="ycard">'
   +'<b>הרילים שלי</b>'
-  +'<small>ממוספר, הריל החדש מקבל את המספר הבא</small>'
+  +'<small>'+(REEL_ITEMS.length?'ממוספר, הריל החדש מקבל את המספר הבא':'אין כרגע רילים. כל מה שהיה כאן עלה')+'</small>'
   +REEL_ITEMS.map(function(it,i){
     return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
    }).join('')

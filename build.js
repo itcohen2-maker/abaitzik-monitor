@@ -3297,7 +3297,7 @@ try{
     is amirshwartz1's TikTok comment on the cake video (55 likes).
   -->
   <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
-  <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>ממוספר. 02 הביקורת אצל הפרופסור</small></button>
+  <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>ממוספר. כרגע ריק</small></button>
   <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. כרגע ריק</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
@@ -10386,15 +10386,8 @@ on('gNerMkt',nerSheet);
   1.10. Finished reels, same numbered sheet as the candles. A new reel gets
   the next number and numbers never change.
 */
-var REEL_ITEMS=[
- {n:'01',t:'המנגל: שבועיים אחרי הניתוח, ולא ויתרתי (35 שניות, הגרסה הסופית שלך)',r:'reel-01-mangal.mp4'},
- {n:'02',t:'הביקורת אצל הפרופסור: יצאתי עם בשורה טובה (21 שניות)',r:'reel-02-bikoret.mp4'},
- {n:'02ב',t:'הביקורת אצל הפרופסור: גרסה עם הדלת ושעה אחר כך (23 שניות)',r:'reel-02-bikoret-v3.mp4'},
- {n:'02ג',t:'הביקורת אצל הפרופסור: לפי הסקיל של איליי, ממורכז ועוצמה מכוונת (23 שניות)',r:'reel-02-bikoret-v4.mp4'},
- {n:'02ד',t:'הביקורת אצל הפרופסור: קול ותמונה מסונכרנים (22 שניות)',r:'reel-02-bikoret-v5.mp4'},
- {n:'02ו',t:'הביקורת אצל הפרופסור: בלי המעבר, צל צמוד, בלי מילים חתוכות (24 שניות)',r:'reel-02-bikoret-v7.mp4'},
- {n:'02ז',t:'הביקורת אצל הפרופסור: הרקע לא הפוך, השלטים קריאים (24 שניות)',r:'reel-02-bikoret-v8.mp4'}
-];
+// 4.10 cleared, Itzik uploaded 01 and 02. The next reel is 03.
+var REEL_ITEMS=[];
 function reelSheet(){
  var old=document.getElementById('rlSheet');if(old)old.remove();
  var w=document.createElement('div');
@@ -10403,7 +10396,7 @@ function reelSheet(){
  w.setAttribute('aria-label','הרילים שלי');
  w.innerHTML='<div class="ycard">'
   +'<b>הרילים שלי</b>'
-  +'<small>ממוספר, הריל החדש מקבל את המספר הבא</small>'
+  +'<small>'+(REEL_ITEMS.length?'ממוספר, הריל החדש מקבל את המספר הבא':'אין כרגע רילים. כל מה שהיה כאן עלה')+'</small>'
   +REEL_ITEMS.map(function(it,i){
     return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
    }).join('')
