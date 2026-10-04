@@ -2052,6 +2052,9 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .rem b{display:block;font-size:1.05em}
 .rem .w{font-size:.85em;opacity:.8}
 .rem.sent{opacity:.6}
+.rem.sent:has(.remreply[open]){opacity:1}
+.remreply{margin-top:8px}
+.remreply summary{cursor:pointer;font-weight:700;padding:6px 0}
 .rem .remknow{margin-top:8px;padding:8px 16px;border:0;border-radius:10px;background:var(--yellow);color:#000;font:700 15px Heebo,sans-serif}
 /* The three choices behind the יהודה tile. Its own sheet, so it borrows
    nothing from the panes and cannot disturb them. */
@@ -8909,8 +8912,11 @@ function renderReminders(){
  host.innerHTML=R.length?R.map(function(r){
   return '<div class="rem'+(r.sentAt?' sent':'')+'"><b>'+esc(r.text)+'</b>'
    +'<div class="w">'+(r.sentAt?'נשלחה '+esc(day(r.sentAt)):'תקפוץ '+esc(day(r.due))+' בתשע בבוקר')+'</div>'
-   +(remHot(r)?'<button type="button" class="remknow" data-k="'+esc(remKey(r))+'">אני יודע</button>':'')+'</div>';
+   +(remHot(r)?'<button type="button" class="remknow" data-k="'+esc(remKey(r))+'">אני יודע</button>':'')
+   // Itzik, 4.10: "בתיזכורת אין לי אפשרות להגיב". Each reminder answers in place.
+   +'<details class="remreply"><summary>💬 להגיב על התזכורת</summary>'+replyBox('על התזכורת "'+r.text+'"')+'</details></div>';
  }).join(''):'<div class="empty">אין תזכורת פתוחה.</div>';
+ wireBoxes(host);
  Array.prototype.forEach.call(host.querySelectorAll('.remknow'),function(b){
   b.onclick=function(){
    var k=remKnown();k[b.getAttribute('data-k')]=1;
@@ -13056,6 +13062,7 @@ boot('hash',function(){
  if(k==='c'){renderBlock();ensure('blocklist',renderBlock);}
  if(k==='j'){renderDrains();ensure('drains',renderDrains);}
  if(k==='k'){renderReplies();markRepliesSeen();}
+ if(k==='R')renderReminders();
 });
 boot('ask',renderAsk);
 boot('items',render);

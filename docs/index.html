@@ -986,6 +986,9 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .rem b{display:block;font-size:1.05em}
 .rem .w{font-size:.85em;opacity:.8}
 .rem.sent{opacity:.6}
+.rem.sent:has(.remreply[open]){opacity:1}
+.remreply{margin-top:8px}
+.remreply summary{cursor:pointer;font-weight:700;padding:6px 0}
 .rem .remknow{margin-top:8px;padding:8px 16px;border:0;border-radius:10px;background:var(--yellow);color:#000;font:700 15px Heebo,sans-serif}
 .ysheet{position:fixed;inset:0;z-index:9999;background:rgba(10,14,22,.55);
  display:flex;align-items:flex-end;justify-content:center;padding:14px}
@@ -1703,7 +1706,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-04T08:33:08.651Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-04T08:34:20.973Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2900,7 +2903,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='fb30b0fb80';
+var CODE_ID='c7b5620e53';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -6079,8 +6082,10 @@ function renderReminders(){
  host.innerHTML=R.length?R.map(function(r){
   return '<div class="rem'+(r.sentAt?' sent':'')+'"><b>'+esc(r.text)+'</b>'
    +'<div class="w">'+(r.sentAt?'נשלחה '+esc(day(r.sentAt)):'תקפוץ '+esc(day(r.due))+' בתשע בבוקר')+'</div>'
-   +(remHot(r)?'<button type="button" class="remknow" data-k="'+esc(remKey(r))+'">אני יודע</button>':'')+'</div>';
+   +(remHot(r)?'<button type="button" class="remknow" data-k="'+esc(remKey(r))+'">אני יודע</button>':'')
+   +'<details class="remreply"><summary>💬 להגיב על התזכורת</summary>'+replyBox('על התזכורת "'+r.text+'"')+'</details></div>';
  }).join(''):'<div class="empty">אין תזכורת פתוחה.</div>';
+ wireBoxes(host);
  Array.prototype.forEach.call(host.querySelectorAll('.remknow'),function(b){
   b.onclick=function(){
    var k=remKnown();k[b.getAttribute('data-k')]=1;
@@ -9347,6 +9352,7 @@ boot('hash',function(){
  if(k==='c'){renderBlock();ensure('blocklist',renderBlock);}
  if(k==='j'){renderDrains();ensure('drains',renderDrains);}
  if(k==='k'){renderReplies();markRepliesSeen();}
+ if(k==='R')renderReminders();
 });
 boot('ask',renderAsk);
 boot('items',render);

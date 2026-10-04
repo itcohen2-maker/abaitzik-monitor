@@ -56,7 +56,9 @@ async function run() {
   let changed = false;
   for (const r of due) {
     if (dry) { console.log('היה נשלח: ' + r.doc.text); continue; }
-    const res = await ch.notify('תזכורת', r.doc.text);
+    // A tap opens the reminders screen, where every reminder has its own reply box.
+    const res = await ch.notify('תזכורת', r.doc.text,
+      { click: require('./lib/instance.js').publicUrl + '#reminders' });
     if (res.ok) {
       r.doc.sentAt = new Date().toISOString();
       console.log('נשלחה דרך ' + res.channel + ': ' + r.doc.text);
