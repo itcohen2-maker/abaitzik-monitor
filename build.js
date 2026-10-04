@@ -4868,14 +4868,25 @@ document.addEventListener('click',function(e){
  if(fn){if(!fileView(fn))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');return;}
  goThere(b);
 },true);
+/*
+  Itzik, 4.10, on the debtors PDF: "אני לא רואה את הקובץ", "הכל נראה ג'יבריש".
+  An answer naming files/<name> showed that path as plain English text in
+  every view but the chat bubble, with nothing to tap. Now it is a link that
+  says what it does, and the click handler above opens it in the viewer.
+*/
 function linkify(t){
- var parts=String(t==null?'':t).split(new RegExp('(https?://[^\\\\s<>"]+)','g'));
+ var parts=String(t==null?'':t).split(new RegExp('(https?://[^\\\\s<>"]+|files/[^\\\\s<>"]+)','g'));
  return parts.map(function(x,i){
   if(!(i%2))return esc(x);
   var tail='';
   var m=x.match(new RegExp('[.,;:!?)"]+$'));
   if(m){tail=m[0];x=x.slice(0,x.length-tail.length);}
   if(!x)return esc(tail);
+  if(x.indexOf('files/')===0){
+   var fn=fileNameOf(x);
+   if(!fn||!fileEntry(fn))return esc(x+tail);
+   return '<a href="'+esc(x)+'">פתיחת הקובץ</a>'+esc(tail);
+  }
   return '<a href="'+esc(x)+'" target="_blank" rel="noopener noreferrer">'
    +esc(x)+'</a>'+esc(tail);
  }).join('');
