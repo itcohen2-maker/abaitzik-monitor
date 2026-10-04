@@ -2118,3 +2118,23 @@ test('the browser tile is gone', () => {
   assert.ok(!html.includes('id="pBr"'));
   assert.ok(!html.includes('id="brFrame"'));
 });
+
+/*
+  Itzik, 4.10: "כפתור מה התקבל לא עובד. תבדוק מהיסוד". The envelope of every
+  send flies into that button, and the message he just sent was not on the
+  screen until the server published it a minute or two later.
+*/
+test('what was received shows a send from this device at once, and drops it when the real row lands', () => {
+  const html = renderPage(fixture({}));
+  const a = html.indexOf('function gotPending(){');
+  const src = html.slice(a, html.indexOf('function paintGot(){', a));
+  const now = Date.now(), iso = (ms) => new Date(now - ms).toISOString();
+  const run = (log, chat) => new Function('reqLog', 'D', src + 'return gotPending();')(() => log, { chat });
+  const log = [{ id: 'new', at: iso(30e3), kind: 'voice' }, { id: 'old', at: iso(5 * 60e3), kind: 'text' },
+    { id: 'mail', at: iso(10e3), kind: 'mail' }, { id: 'stale', at: iso(2 * 3600e3), kind: 'text' }];
+  const published = [{ from: 'itzik', at: iso(5 * 60e3 - 7e3) }, { from: 'claude', at: iso(10e3) }];
+  assert.deepStrictEqual(run(log, published).map((r) => r.id), ['new']);
+  assert.deepStrictEqual(run(log, published.concat({ from: 'itzik', at: iso(25e3) })), []);
+  assert.ok(html.includes("+gotPending().length"), 'the count on the button includes them');
+  assert.ok(html.includes("נשלח עכשיו, בדרך אליי"));
+});

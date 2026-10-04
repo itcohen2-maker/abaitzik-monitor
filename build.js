@@ -7548,10 +7548,41 @@ function dropGone(kind,list){
  var g=goneKeys();
  return list.filter(function(x){return g.indexOf(gotKey(kind,x))<0&&!beforeCut(x);});
 }
+/*
+  Itzik, 4.10, three times in one morning: "כפתור מה התקבל לא עובד", and the
+  last time "תבדוק מהיסוד". The root: every send ends with an envelope flying
+  into this very button, he taps it, and the message he just sent is not there.
+  The screen only knew what the server had published, and that lands a minute
+  or two after the send. So what this device sent and the server has not shown
+  yet is listed here at once, as on its way, and drops out by itself when the
+  real row arrives. Paired by time, oldest first, since the published message
+  does not carry the device's id.
+*/
+function gotPending(){
+ var now=Date.now(),SKEW=120000;
+ var mine=reqLog().filter(function(r){
+  var t=Date.parse(r&&r.at||'');
+  return r&&r.kind!=='mail'&&!isNaN(t)&&now-t<60*60*1000;
+ }).sort(function(a,b){return (a.at||'')<(b.at||'')?-1:1;});
+ if(!mine.length)return [];
+ var from=Date.parse(mine[0].at)-SKEW;
+ var pub=(D.chat||[]).filter(function(m){return m.from==='itzik';})
+  .map(function(m){return Date.parse(m.at||'');})
+  .filter(function(t){return !isNaN(t)&&t>=from;})
+  .sort(function(a,b){return a-b;});
+ var used={},out=[];
+ mine.forEach(function(r){
+  var t=Date.parse(r.at)-SKEW,hit=-1;
+  for(var i=0;i<pub.length;i++)if(!used[i]&&pub[i]>=t){hit=i;break;}
+  if(hit<0)out.push(r);else used[hit]=true;
+ });
+ return out.reverse();
+}
 function paintGot(){
  var el=document.getElementById('gotCount');
  if(!el)return;
  var n=dropGone('msg',gotList().filter(gotOpen)).length
+  +gotPending().length
   +dropGone('cmd',D.openCmds||[]).length;
  el.textContent=String(n);
  el.classList.toggle('zero',!n);
@@ -7646,6 +7677,16 @@ function renderGot(){
  if(nShown)h+='<div class="gselbar"><button type="button" id="gotSelAll">'+(nSel?'ביטול הסימון':'סימון הכל')+'</button>'
   +'<span>'+(nSel?nSel+' מסומנות':'לחיצה על שורה מסמנת אותה')+'</span>'
   +'<button type="button" id="gotSelDel" class="gseldel"'+(nSel?'':' disabled')+'>מחיקת המסומנות'+(nSel?' · '+nSel:'')+'</button></div>';
+ var P=gotPending();
+ if(P.length){
+  h+='<h3>נשלח עכשיו, בדרך אליי · '+P.length+'</h3>';
+  h+=P.map(function(r){
+   return '<div class="gr"><span class="gr-t">'+esc(stamp(r.at))+'</span>'
+    +'<div class="gr-x">'+esc(r.text||('ה'+(SENTLABEL[r.kind]||'הודעה')+' ששלחת עכשיו'))
+    +'<small>יצא מהמכשיר. תוך דקה או שתיים יופיע כאן כהתקבל.</small></div>'
+    +'<span class="gr-s gr-g">בדרך</span></div>';
+  }).join('');
+ }
  h+='<h3>בעבודה עכשיו</h3>';
  if(N&&N.text&&!nGone)h+='<div class="gr now"><span class="gr-t">'+esc(stamp(N.at))+'</span>'
   +'<div class="gr-x">'+esc(N.text)+(N.next?'<small>אחר כך: '+esc(N.next)+'</small>':'')+'</div>'
@@ -8414,6 +8455,7 @@ function markSent(kind,text,id){
  a.unshift({id:rid,at:at,kind:kind,text:String(text||'').replace(/\s+/g,' ').trim().slice(0,80)});
  reqSave(a);
  try{renderReqs();}catch(e){}
+ try{paintGot();renderGot();}catch(e){}
  try{flyMail();}catch(e){}
  return rid;
 }
