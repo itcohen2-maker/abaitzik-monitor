@@ -4826,8 +4826,13 @@ function goLinks(m){
  });
  // Itzik, 1.10: "איפה זה ממוקם ולמה אין לי כפתור קח אותי לשם". A file named
  // in an answer as files/<name> was plain text. Now it gets its own button.
+ // Itzik, 4.10, on "the updated link will come here": the file came in a
+ // later answer in the same thread, and the card that promised it had no
+ // button. A file named anywhere in the thread gets its button on every card.
+ var ft=t;
+ if(m.re)(D.chat||[]).forEach(function(x){if(x.from==='claude'&&x.re===m.re&&x.text!==m.text)ft+=' '+x.text;});
  var fb=[];
- (t.match(new RegExp('files/[^\\\\s<>"]+','g'))||[]).forEach(function(h){
+ (ft.match(new RegExp('files/[^\\\\s<>"]+','g'))||[]).forEach(function(h){
   var n=fileNameOf(h.replace(new RegExp('[.,;:!?)"]+$'),''));
   if(!n||fb.indexOf(n)>-1||!fileEntry(n))return;
   fb.push(n);
@@ -7150,7 +7155,7 @@ function allAnswersUncached(){
   .map(function(m){
    var q=(m.re&&byId[m.re])||null;
    if(q)answered[m.re]=true;
-   return {at:m.at,text:m.text,src:'claude',q:q};
+   return {at:m.at,text:m.text,src:'claude',q:q,re:m.re};
   });
  var his=(D.chat||[]).filter(function(m){return m.from==='itzik'&&!answered[m.id];})
   .map(function(m){return {at:m.at,text:m.text,src:'itzik',note:m.note,status:m.status};});
