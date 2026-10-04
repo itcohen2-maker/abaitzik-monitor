@@ -2275,6 +2275,10 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
 .note-box{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .note-i{padding:11px 14px;border-bottom:1px solid var(--line);cursor:pointer}
 .note-i:last-child{border-bottom:0}
+.note-i{display:flex;align-items:center;gap:8px}
+.note-i .note-t{flex:1;min-width:0}
+.note-i .note-sh{flex:none;width:38px;height:38px;border:0;border-radius:999px;background:var(--line);
+ color:inherit;font-size:17px;cursor:pointer}
 .note-i:active{background:var(--line)}
 .note-i b{display:block;font-size:15.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .note-i small{display:block;color:var(--dim);font-size:13px;margin-top:2px;overflow:hidden;
@@ -3810,6 +3814,7 @@ try{
    <button type="button" id="noteDone">סיום</button>
    <span id="noteWhen"></span>
    <button type="button" id="notePin">הצמדה</button>
+   <button type="button" id="noteShare">שיתוף</button>
    <button type="button" id="noteDel" class="note-del">מחיקה</button>
   </div>
   <div class="note-fmt" id="noteFmt" hidden>
@@ -10722,14 +10727,33 @@ function renderNotes(){
   if(!l.length)return '';
   return (title?'<div class="note-grp">'+title+'</div>':'')+'<div class="note-box">'+l.map(function(n){
    var t=noteTitle(n.text);
-   return '<div class="note-i" data-id="'+esc(n.id)+'"><b>'+esc(t.head)+'</b><small>'
-    +esc(noteDay(n.upd))+'  '+esc(t.rest||'אין עוד טקסט')+'</small></div>';
+   return '<div class="note-i" data-id="'+esc(n.id)+'"><div class="note-t"><b>'+esc(t.head)+'</b><small>'
+    +esc(noteDay(n.upd))+'  '+esc(t.rest||'אין עוד טקסט')+'</small></div>'
+    +'<button type="button" class="note-sh" aria-label="שיתוף" title="שיתוף">⤴</button></div>';
   }).join('')+'</div>';
  }
  host.innerHTML=box(pinned.length?'📌 מוצמדים':'',pinned)+box(pinned.length?'פתקים':'',rest);
  Array.prototype.forEach.call(host.querySelectorAll('.note-i'),function(el){
   el.onclick=function(){openNote(el.getAttribute('data-id'));};
+  el.querySelector('.note-sh').onclick=function(e){e.stopPropagation();shareNote(el.getAttribute('data-id'));};
  });
+}
+// Itzik, 4.10: "add a share option to every note." The phone's own share
+// sheet when there is one (WhatsApp, mail, messages), and a copy otherwise.
+function shareNote(id){
+ var n=null;
+ notes().forEach(function(x){if(x.id===id)n=x;});
+ if(!n)return;
+ var txt=String(n.text||'').trim();
+ if(!txt){toast('הפתק ריק.');return;}
+ if(navigator.share){
+  navigator.share({title:noteTitle(txt).head,text:txt}).catch(function(){});
+  return;
+ }
+ var done=function(){toast('הפתק הועתק. אפשר להדביק איפה שרוצים.');};
+ if(navigator.clipboard&&navigator.clipboard.writeText){
+  navigator.clipboard.writeText(txt).then(done,function(){fallbackCopy(txt,done);});
+ }else fallbackCopy(txt,done);
 }
 function openNote(id){
  var n=null;
@@ -10907,6 +10931,7 @@ document.getElementById('notePin').onclick=function(){
  var n=editNote(function(x){x.pin=!x.pin;});
  if(n)this.textContent=n.pin?'ביטול הצמדה':'הצמדה';
 };
+document.getElementById('noteShare').onclick=function(){noteSave();shareNote(noteOpen);};
 document.getElementById('noteDel').onclick=function(){
  if(!confirm('למחוק את הפתק?'))return;
  saveNotes(notes().filter(function(x){return x.id!==noteOpen;}));
