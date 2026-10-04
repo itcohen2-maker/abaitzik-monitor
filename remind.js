@@ -47,7 +47,7 @@ function add(day, text, re) {
   console.log('נקבעה: ' + name + '  ' + due.toLocaleString('he-IL'));
 }
 
-// איציק, 4.10: "ב 11 לחודש להעביר חשבוניות לאילנה". תזכורת עם every: month
+// איציק, 4.10: "ב 11 לחודש להעביר חשבוניות לילנה". תזכורת עם every: month
 // שנשלחה או נכנסה לתור מולידה את הקובץ של החודש הבא, באותו יום ובאותה שעה.
 function nextMonth(r) {
   const d = new Date(r.doc.due);
