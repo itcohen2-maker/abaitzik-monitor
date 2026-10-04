@@ -3990,6 +3990,7 @@ try{
   <div class="top"><span class="who" id="vaadWho"></span><span class="chip" id="vaadFlats"></span></div>
   <div class="body" id="vaadAbout"></div>
   <a class="ask" id="vaadLetter" href="#" hidden>המכתב לבניין: ביטוח המבנה</a>
+  <a class="ask" id="vaadLetterImg" href="#" hidden>המכתב כתמונה, לשמירה בגלריה</a>
   <a class="ask" id="vaadSheet" href="#" target="_blank" rel="noopener" hidden>פתיחת הקובץ</a>
   <a class="ask" id="vaadFolder" href="#" target="_blank" rel="noopener" hidden>תיקיית ועד הבית</a>
  </div>
@@ -6299,6 +6300,9 @@ function paintSecrets(){
  // 4.10: the notice for the stairwell sits on this screen, one tap from the tile.
  var lt=document.getElementById('vaadLetter');
  if(lt&&v.letter&&fileEntry(v.letter)){lt.setAttribute('href','files/'+v.letter);lt.hidden=false;}
+ // 4.10: Itzik prints and forwards from the gallery, easier than Files on the iPhone.
+ var li=document.getElementById('vaadLetterImg');
+ if(li&&v.letterImg&&fileEntry(v.letterImg)){li.setAttribute('href','files/'+v.letterImg);li.hidden=false;}
 }
 function repaintAll(){
  var st=keepState(),y=window.scrollY;

@@ -1707,7 +1707,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-04T09:13:27.405Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-04T09:16:49.611Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2378,6 +2378,7 @@ try{
   <div class="top"><span class="who" id="vaadWho"></span><span class="chip" id="vaadFlats"></span></div>
   <div class="body" id="vaadAbout"></div>
   <a class="ask" id="vaadLetter" href="#" hidden>המכתב לבניין: ביטוח המבנה</a>
+  <a class="ask" id="vaadLetterImg" href="#" hidden>המכתב כתמונה, לשמירה בגלריה</a>
   <a class="ask" id="vaadSheet" href="#" target="_blank" rel="noopener" hidden>פתיחת הקובץ</a>
   <a class="ask" id="vaadFolder" href="#" target="_blank" rel="noopener" hidden>תיקיית ועד הבית</a>
  </div>
@@ -2905,7 +2906,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='3cc01b635c';
+var CODE_ID='7cfbef043d';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -4250,6 +4251,8 @@ function paintSecrets(){
  });
  var lt=document.getElementById('vaadLetter');
  if(lt&&v.letter&&fileEntry(v.letter)){lt.setAttribute('href','files/'+v.letter);lt.hidden=false;}
+ var li=document.getElementById('vaadLetterImg');
+ if(li&&v.letterImg&&fileEntry(v.letterImg)){li.setAttribute('href','files/'+v.letterImg);li.hidden=false;}
 }
 function repaintAll(){
  var st=keepState(),y=window.scrollY;
