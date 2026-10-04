@@ -3272,7 +3272,7 @@ try{
     and Google from August on (before that he filed them himself). Pulled from
     his mail; private files only, numbered, a new one gets the next number.
   -->
-  <button type="button" class="gt gInv" id="gInv"><b>🧾 חשבוניות</b><small>ממוספר. קלוד, גוגל ועורך הדין מאוגוסט</small></button>
+  <button type="button" class="gt gInv" id="gInv"><b>🧾 חשבוניות</b><small>ממוספר. מ 3.10 והלאה</small></button>
   <!--
     2.10. Itzik, in a voice note: a new tile with winning lines. The first one
     is amirshwartz1's TikTok comment on the cake video (55 likes).
@@ -10493,16 +10493,12 @@ on('gMed',medSheet);
   1.10, second voice note: everything paid to the lawyer Roy Shaya goes in too
   (his invoices come from ezcount with a download link, not an attachment).
 */
-var INV_ITEMS=[
- {n:'01',t:'קלוד, 19.9, חשבונית, 289 ש״ח',r:'inv-01-claude-sep.pdf'},
- {n:'02',t:'קלוד, 19.9, קבלה, 289 ש״ח',r:'inv-02-claude-sep-receipt.pdf'},
- {n:'03',t:'גוגל AI Pro, 23.8, קבלה, 74.90 ש״ח',r:'inv-03-google-aipro-aug.pdf'},
- {n:'04',t:'גוגל AI Pro, 23.9, קבלה, 74.90 ש״ח',r:'inv-04-google-aipro-sep.pdf'},
- {n:'05',t:'יוטיוב מיוזיק, 13.8, קבלה, 23.90 ש״ח',r:'inv-05-youtube-music-aug.pdf'},
- {n:'06',t:'יוטיוב מיוזיק, 13.9, קבלה, 23.90 ש״ח',r:'inv-06-youtube-music-sep.pdf'},
- {n:'07',t:'עו״ד רועי שעיה, 21.8, חשבונית מס קבלה, 2,588 ש״ח',r:'inv-07-lawyer-shaya-aug.pdf'},
- {n:'08',t:'עו״ד רועי שעיה, 23.9, חשבונית מס קבלה, 6,000 ש״ח',r:'inv-08-lawyer-shaya-sep.pdf'}
-];
+/*
+  4.10, voice note: "תאפס את כפתור חשבוניות... אנחנו מודדים רק מאתמול והלאה".
+  The eight August/September entries (inv-01..08) were dropped from the list;
+  the files stay in private storage. Counting starts again at 01 from 3.10.
+*/
+var INV_ITEMS=[];
 function invSheet(){
  var old=document.getElementById('ivSheet');if(old)old.remove();
  var w=document.createElement('div');
@@ -10512,6 +10508,7 @@ function invSheet(){
  w.innerHTML='<div class="ycard">'
   +'<b>חשבוניות</b>'
   +'<small>ממוספר, החדשה מקבלת את המספר הבא</small>'
+  +(INV_ITEMS.length?'':'<small>עוד אין חשבוניות מ 3.10 והלאה</small>')
   +INV_ITEMS.map(function(it,i){
     return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
    }).join('')

@@ -1703,7 +1703,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-04T08:15:47.529Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-04T08:16:17.096Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1843,7 +1843,7 @@ try{
   <button type="button" class="gt g15" id="gYehuda"><b>📄 יהודה</b><small>גרסה קצרה לשליחה, והסקירה המלאה לזיכרון</small></button>
   <button type="button" class="gt gNer" id="gNerMkt"><b>🕯️ שיווק הנרות</b><small>ממוספר. הביו בטיקטוק, דף הקישורים והסטוריז</small></button>
   <button type="button" class="gt gMed" id="gMed"><b>🩺 אחרי הניתוח השני</b><small>ממוספר. המסמכים מהביקורת אצל הפרופסור</small></button>
-  <button type="button" class="gt gInv" id="gInv"><b>🧾 חשבוניות</b><small>ממוספר. קלוד, גוגל ועורך הדין מאוגוסט</small></button>
+  <button type="button" class="gt gInv" id="gInv"><b>🧾 חשבוניות</b><small>ממוספר. מ 3.10 והלאה</small></button>
   <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>ממוספר. 02 הביקורת אצל הפרופסור</small></button>
   <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה</small></button>
@@ -2896,7 +2896,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='1d0812e67a';
+var CODE_ID='096299fdd3';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -7371,16 +7371,7 @@ function medSheet(){
  document.body.appendChild(w);
 }
 on('gMed',medSheet);
-var INV_ITEMS=[
- {n:'01',t:'קלוד, 19.9, חשבונית, 289 ש״ח',r:'inv-01-claude-sep.pdf'},
- {n:'02',t:'קלוד, 19.9, קבלה, 289 ש״ח',r:'inv-02-claude-sep-receipt.pdf'},
- {n:'03',t:'גוגל AI Pro, 23.8, קבלה, 74.90 ש״ח',r:'inv-03-google-aipro-aug.pdf'},
- {n:'04',t:'גוגל AI Pro, 23.9, קבלה, 74.90 ש״ח',r:'inv-04-google-aipro-sep.pdf'},
- {n:'05',t:'יוטיוב מיוזיק, 13.8, קבלה, 23.90 ש״ח',r:'inv-05-youtube-music-aug.pdf'},
- {n:'06',t:'יוטיוב מיוזיק, 13.9, קבלה, 23.90 ש״ח',r:'inv-06-youtube-music-sep.pdf'},
- {n:'07',t:'עו״ד רועי שעיה, 21.8, חשבונית מס קבלה, 2,588 ש״ח',r:'inv-07-lawyer-shaya-aug.pdf'},
- {n:'08',t:'עו״ד רועי שעיה, 23.9, חשבונית מס קבלה, 6,000 ש״ח',r:'inv-08-lawyer-shaya-sep.pdf'}
-];
+var INV_ITEMS=[];
 function invSheet(){
  var old=document.getElementById('ivSheet');if(old)old.remove();
  var w=document.createElement('div');
@@ -7390,6 +7381,7 @@ function invSheet(){
  w.innerHTML='<div class="ycard">'
   +'<b>חשבוניות</b>'
   +'<small>ממוספר, החדשה מקבלת את המספר הבא</small>'
+  +(INV_ITEMS.length?'':'<small>עוד אין חשבוניות מ 3.10 והלאה</small>')
   +INV_ITEMS.map(function(it,i){
     return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
    }).join('')
