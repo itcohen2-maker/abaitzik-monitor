@@ -2029,6 +2029,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .gNer{background:linear-gradient(150deg,#f0a64a,#0f1a3a)}
 .gReel{background:linear-gradient(150deg,#e2574c,#2a1240)}
 .gFut{background:linear-gradient(150deg,#3a8fd9,#16243f)}
+.gOcc{background:linear-gradient(150deg,#2bb39a,#123d3a)}
 .gMed{background:linear-gradient(150deg,#4fb3a9,#123a4a)}
 .gInv{background:linear-gradient(150deg,#d9a441,#3a2a12)}
 .gShop{background:linear-gradient(150deg,#3aa55d,#1f6f8b)}
@@ -3311,6 +3312,12 @@ try{
     pension until we see the payments go through. Stays until he says it works.
   -->
   <button type="button" class="gt gPen" id="gPen"><b>🏦 פנסיה</b><small>קוד מוצר 28417, 1,211 ש״ח. בדיקה ב 18.10</small></button>
+  <!--
+    4.10. Itzik, from the Maccabi page on his phone: everything about the
+    occupational clinic in one place until he gets there. Phone answers
+    Sun to Thu 08:00 to 11:00 only.
+  -->
+  <button type="button" class="gt gOcc" id="gOcc"><b>🩺 מרפאה תעסוקתית</b><small>מכבי רמות. טלפון א עד ה 08:00 עד 11:00</small></button>
   <button type="button" class="gt gShop" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
   <!--
     איציק, 28.9, בהקלטה: "תסיר את כפתור תוכניות תוכן". הכפתור ירד ממסך הבית.
@@ -10388,6 +10395,48 @@ function futSheet(){
  document.body.appendChild(w);
 }
 on('gFut',futSheet);
+/*
+  4.10. Occupational clinic (Maccabi Ramot, Rishon). Details from the Maccabi
+  service page. Appointments by phone only; the mail is for forms.
+*/
+var OCC_ITEMS=[
+ {t:'📞 התקשרות 03 9541310',u:'tel:039541310'},
+ {t:'✉️ מייל occmedshf@mac.org.il (לטפסים בלבד)',u:'mailto:occmedshf@mac.org.il'},
+ {t:'📍 רוטשילד 15 ראשון לציון, קומה 5',u:'https://maps.google.com/?q=%D7%A8%D7%95%D7%98%D7%A9%D7%99%D7%9C%D7%93+15+%D7%A8%D7%90%D7%A9%D7%95%D7%9F+%D7%9C%D7%A6%D7%99%D7%95%D7%9F'},
+ {t:'🔗 הדף במכבי',u:'https://serguide.maccabi4u.co.il/heb/labsandtherapists/labsandtherapistssearchresults/labsandtherapistsinfopage/?ItemKeyIndex=2AF85BD23ADB152E6BC6DE4856326ECA'}
+];
+function occSheet(){
+ var old=document.getElementById('occSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='occSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','מרפאה תעסוקתית');
+ w.innerHTML='<div class="ycard">'
+  +'<b>מרפאה תעסוקתית, מכבי רמות</b>'
+  +'<small>מענה טלפוני: א עד ה, 08:00 עד 11:00 בלבד. קבלת קהל: א עד ה, 08:00 עד 14:00. שישי ושבת סגור.</small>'
+  +'<small>תור רק בטלפון ובהפניית רופא. הרופאה: ד״ר נטלי מתן. התור האחרון היה ב 2.7.26.</small>'
+  +'<small>4.10 נשלח מייל מ itcohen2 לבקשת תור דחוף. מחכים לתשובה.</small>'
+  +'<small>פקס 073 2132632</small>'
+  +OCC_ITEMS.map(function(it,i){
+    return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+esc(it.t)+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=OCC_ITEMS[+k];if(k===''||!it)return;
+  if(/^(tel|mailto):/.test(it.u))location.href=it.u;
+  else window.open(it.u,'_blank','noopener');
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gOcc',occSheet);
 /*
   2.10. Winning lines. Tapping a line copies it. A new line goes at the end
   with the next number, with where it came from.
