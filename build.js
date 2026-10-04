@@ -3298,7 +3298,7 @@ try{
   -->
   <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>ממוספר. 02 הביקורת אצל הפרופסור</small></button>
-  <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה</small></button>
+  <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. כרגע ריק</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
@@ -10428,11 +10428,7 @@ on('gReels',reelSheet);
   3.10. Future reels: ideas and source clips saved for reels Itzik will shoot
   later, so they do not get lost in the chat. Same numbered sheet as the reels.
 */
-var FUT_ITEMS=[
- {n:'01',t:'החנייה: הקטע הראשון עם כיתוב בעברית. אחריו מצלמים אותך מגיב (4 שניות)',r:'parking-part1-he.mp4'},
- {n:'01ב',t:'החנייה: אותו קטע עם הכיתוב המקורי באנגלית',r:'parking-part1.mp4'},
- {n:'01ג',t:'החנייה: הסרטון המקורי המלא',r:'parking-original.mp4'}
-];
+var FUT_ITEMS=[];
 function futSheet(){
  var old=document.getElementById('ftSheet');if(old)old.remove();
  var w=document.createElement('div');
@@ -10441,7 +10437,7 @@ function futSheet(){
  w.setAttribute('aria-label','רילים עתידיים');
  w.innerHTML='<div class="ycard">'
   +'<b>רילים עתידיים</b>'
-  +'<small>רעיונות וחומרים לרילים הבאים, ממוספר</small>'
+  +'<small>'+(FUT_ITEMS.length?'רעיונות וחומרים לרילים הבאים, ממוספר':'אין כרגע רילים עתידיים. כל מה שהיה כאן עלה')+'</small>'
   +FUT_ITEMS.map(function(it,i){
     return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
    }).join('')

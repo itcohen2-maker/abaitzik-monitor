@@ -1708,7 +1708,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-04T20:27:55.992Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-04T20:28:08.689Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1851,7 +1851,7 @@ try{
   <button type="button" class="gt gInv" id="gInv"><b>🧾 חשבוניות</b><small>ממוספר. מ 3.10 והלאה</small></button>
   <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>ממוספר. 02 הביקורת אצל הפרופסור</small></button>
-  <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה</small></button>
+  <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. כרגע ריק</small></button>
   <button type="button" class="gt gPen" id="gPen"><b>🏦 פנסיה</b><small>קוד מוצר 28417, 1,211 ש״ח. בדיקה ב 18.10</small></button>
   <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>01 הרכבים. 02 משיכה מכרטיס האשראי</small></button>
   <button type="button" class="gt gOcc" id="gOcc"><b>🩺 מרפאה תעסוקתית</b><small>מכבי רמות. טלפון א עד ה 08:00 עד 11:00</small></button>
@@ -2920,7 +2920,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='ca464c8a01';
+var CODE_ID='e86bb68262';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -7291,11 +7291,7 @@ function reelSheet(){
  document.body.appendChild(w);
 }
 on('gReels',reelSheet);
-var FUT_ITEMS=[
- {n:'01',t:'החנייה: הקטע הראשון עם כיתוב בעברית. אחריו מצלמים אותך מגיב (4 שניות)',r:'parking-part1-he.mp4'},
- {n:'01ב',t:'החנייה: אותו קטע עם הכיתוב המקורי באנגלית',r:'parking-part1.mp4'},
- {n:'01ג',t:'החנייה: הסרטון המקורי המלא',r:'parking-original.mp4'}
-];
+var FUT_ITEMS=[];
 function futSheet(){
  var old=document.getElementById('ftSheet');if(old)old.remove();
  var w=document.createElement('div');
@@ -7304,7 +7300,7 @@ function futSheet(){
  w.setAttribute('aria-label','רילים עתידיים');
  w.innerHTML='<div class="ycard">'
   +'<b>רילים עתידיים</b>'
-  +'<small>רעיונות וחומרים לרילים הבאים, ממוספר</small>'
+  +'<small>'+(FUT_ITEMS.length?'רעיונות וחומרים לרילים הבאים, ממוספר':'אין כרגע רילים עתידיים. כל מה שהיה כאן עלה')+'</small>'
   +FUT_ITEMS.map(function(it,i){
     return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
    }).join('')
