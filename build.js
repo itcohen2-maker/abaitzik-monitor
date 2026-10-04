@@ -10351,7 +10351,8 @@ on('gKatalog',katalogSheet);
 var NER_ITEMS=[
  {n:'01',t:'הביו בטיקטוק, לפני ואחרי (PDF)',r:'tiktok-bio-before-after.pdf'},
  {n:'05',t:'סטורי נרות חי, שישי, עברית',r:'ner-live-3-friday-he.mp4'},
- {n:'06',t:'סטורי נרות חי, שישי, אנגלית',r:'ner-live-4-friday-en.mp4'}
+ {n:'06',t:'סטורי נרות חי, שישי, אנגלית',r:'ner-live-4-friday-en.mp4'},
+ {n:'07',t:'סטורי פרסומת, חמישי 8.10, עברית (מצויר)',r:'candle-story-thu-he-8-10.mp4'}
 ];
 function nerSheet(){
  var old=document.getElementById('nSheet');if(old)old.remove();
