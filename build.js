@@ -2019,6 +2019,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .gInv{background:linear-gradient(150deg,#d9a441,#3a2a12)}
 .gShop{background:linear-gradient(150deg,#3aa55d,#1f6f8b)}
 .gWin{background:linear-gradient(150deg,#f2c94c,#7a2e12)}
+.gPen{background:linear-gradient(150deg,#5a8fd0,#1d2f55)}
 .gCPlan{background:linear-gradient(150deg,#e8743b,#6b2f7a)}
 .g16{background:linear-gradient(150deg,#f8bbd0,#c2185b)}
 .g17{background:linear-gradient(150deg,#c5e1a5,#558b2f)}
@@ -3284,6 +3285,11 @@ try{
     sessions on the server did not know where the list lives. It is the Google
     Doc "קניות", owned by Jenny and shared with him (see CLAUDE.md).
   -->
+  <!--
+    4.10. Itzik, in a voice note with a photo of his note: a tile for the
+    pension until we see the payments go through. Stays until he says it works.
+  -->
+  <button type="button" class="gt gPen" id="gPen"><b>🏦 פנסיה</b><small>קוד מוצר 28417, 1,211 ש״ח. בדיקה ב 18.10</small></button>
   <button type="button" class="gt gShop" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
   <!--
     איציק, 28.9, בהקלטה: "תסיר את כפתור תוכניות תוכן". הכפתור ירד ממסך הבית.
@@ -10378,6 +10384,52 @@ function winSheet(){
  document.body.appendChild(w);
 }
 on('gWin',winSheet);
+/*
+  4.10. Pension follow up. Itzik spoke with Arel, the old standing orders were
+  cancelled and the form went to the bank. Check on 18.10 that it all goes
+  through. Lines copy on tap; the photo of his note opens as a private file.
+*/
+var PEN_ITEMS=[
+ {t:'קוד מוצר 28417'},
+ {t:'הסכום 1,211 ש״ח בחודש (16% מ 7,566)'},
+ {t:'4.10: דיברתי עם אראל, ביטלו את הפעולות הישנות'},
+ {t:'4.10: הטופס נשלח לבנק'},
+ {t:'18.10: לבדוק שהכל יורד כמו שצריך'},
+ {t:'הפתק שצילמתי',r:'pension-01-note.jpg'}
+];
+function penSheet(){
+ var old=document.getElementById('penSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='penSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','פנסיה');
+ w.innerHTML='<div class="ycard">'
+  +'<b>פנסיה</b>'
+  +'<small>עד שרואים שהכל יורד. לחיצה על שורה מעתיקה אותה</small>'
+  +PEN_ITEMS.map(function(it,i){
+    return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+esc(it.t)+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var el=e.target.closest&&e.target.closest('[data-k]');
+  var k=el&&el.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=PEN_ITEMS[+k];if(k===''||!it)return;
+  if(it.r){if(!fileView(it.r))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');return;}
+  var done=function(){toast('הועתק');};
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+   navigator.clipboard.writeText(it.t).then(done,function(){fallbackCopy(it.t,done);});
+  }else fallbackCopy(it.t,done);
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gPen',penSheet);
 /*
   1.10. Medical papers after the second surgery (14.9). Same numbered sheet
   as the reels; a new paper gets the next number and numbers never change.
