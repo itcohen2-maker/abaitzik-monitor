@@ -7455,6 +7455,10 @@ function renderAnswers(){
  wireAim(host);paintAim();
 }
 // ---- what was received: his messages by state, and what is in work ----
+function nowFresh(){
+ var n=D.now;
+ return (n&&n.at&&(Date.now()-Date.parse(n.at))<25*60*1000)?n:null;
+}
 function gotList(){
  return (D.chat||[]).filter(function(m){return m.from==='itzik';})
   .slice().sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
@@ -7533,7 +7537,13 @@ function renderGot(){
  var got=all.filter(function(m){return !m.status||m.status==='received';});
  var done=all.filter(function(m){return m.status==='done';});
  var K=dropGone('cmd',D.openCmds||[]);
- var N=D.now;
+ /*
+   Itzik, 4.10, voice: "למה כפתור מה התקבל הכחול לא עובד?". The screen opened,
+   and under its "in work now" heading sat a report from 02.10 as if it were being
+   done right now. A report goes stale; the same 25 minutes the live strip uses
+   decide here too whether it is still "now".
+ */
+ var N=nowFresh();
  var nGone=N&&N.text&&isGone(gotKey('now',{at:N.at,text:N.text}),N);
  function del(kind,x){
   return '<button type="button" class="gr-del" data-k="'+esc(gotKey(kind,x))+'" '
@@ -9260,7 +9270,7 @@ function renderSent(){
   // it. So the card names the request and what is happening right now.
   var last=mine[mine.length-1];
   var what=String(last.text||'').replace(/\s+/g,' ').trim().slice(0,70);
-  var doing=(D.now&&D.now.text)?D.now.text:'';
+  var doing=(nowFresh()&&D.now.text)?D.now.text:'';
   t=label+' בעבודה';
   sub='קיבלתי: '+what+(doing?' · עכשיו: '+doing:'');
   working=true;
