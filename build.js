@@ -4334,8 +4334,13 @@ function pdfPages(blob,host){
     var vp=p.getViewport({scale:w/v1.width*dpr});
     var c=document.createElement('canvas');
     c.width=vp.width;c.height=vp.height;c.style.width='100%';
+    // Itzik, 4.10, on the debtors list: "הכל נראה שם ג׳יבריש". A canvas takes
+    // the page's rtl, pdf.js draws each glyph with fillText, and every Hebrew
+    // letter landed shifted onto its neighbour. The page is a picture: ltr.
+    c.dir='ltr';c.style.direction='ltr';
     host.appendChild(c);
-    return p.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
+    var cx=c.getContext('2d');cx.direction='ltr';
+    return p.render({canvasContext:cx,viewport:vp}).promise;
    });
   })(i);
   return chain;

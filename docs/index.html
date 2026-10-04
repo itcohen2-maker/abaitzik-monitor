@@ -1698,7 +1698,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-04T06:15:26.451Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-04T06:17:19.776Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2832,8 +2832,10 @@ function pdfPages(blob,host){
     var vp=p.getViewport({scale:w/v1.width*dpr});
     var c=document.createElement('canvas');
     c.width=vp.width;c.height=vp.height;c.style.width='100%';
+    c.dir='ltr';c.style.direction='ltr';
     host.appendChild(c);
-    return p.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
+    var cx=c.getContext('2d');cx.direction='ltr';
+    return p.render({canvasContext:cx,viewport:vp}).promise;
    });
   })(i);
   return chain;
@@ -2887,7 +2889,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='9b7cecb75b';
+var CODE_ID='02f9d27c20';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
