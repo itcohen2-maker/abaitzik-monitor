@@ -2029,6 +2029,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .gNer{background:linear-gradient(150deg,#f0a64a,#0f1a3a)}
 .gReel{background:linear-gradient(150deg,#e2574c,#2a1240)}
 .gFut{background:linear-gradient(150deg,#3a8fd9,#16243f)}
+.gLaw{background:linear-gradient(150deg,#c0623a,#3a1d12)}
 .gOcc{background:linear-gradient(150deg,#2bb39a,#123d3a)}
 .gMed{background:linear-gradient(150deg,#4fb3a9,#123a4a)}
 .gInv{background:linear-gradient(150deg,#d9a441,#3a2a12)}
@@ -3317,6 +3318,11 @@ try{
     occupational clinic in one place until he gets there. Phone answers
     Sun to Thu 08:00 to 11:00 only.
   -->
+  <!--
+    4.10. Itzik could not find the vehicles PDF inside the sale screen. Files
+    for the lawyer get one tile on the home screen, numbered.
+  -->
+  <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>01 הרכבים. 02 נטפליקס וספוטיפיי של יואל</small></button>
   <button type="button" class="gt gOcc" id="gOcc"><b>🩺 מרפאה תעסוקתית</b><small>מכבי רמות. טלפון א עד ה 08:00 עד 11:00</small></button>
   <button type="button" class="gt gShop" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
   <!--
@@ -10483,6 +10489,42 @@ function occSheet(){
  document.body.appendChild(w);
 }
 on('gOcc',occSheet);
+/*
+  4.10. Documents made for the lawyer in the Lolos sale, numbered. A new one
+  gets the next number. Same sheet as the future reels.
+*/
+var LAW_ITEMS=[
+ {n:'01',t:'הרכבים של לולוס: המרצדס 19834203 והיונדאי של יואל 6958655',r:'lolos-vehicles-2026-10-04.pdf'},
+ {n:'02',t:'טבלת נטפליקס וספוטיפיי בכרטיס 6559 של יואל',r:'yoel-6559-netflix-spotify.pdf'}
+];
+function lawSheet(){
+ var old=document.getElementById('lawSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='lawSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','מסמכים לעורך הדין');
+ w.innerHTML='<div class="ycard">'
+  +'<b>מסמכים לעורך הדין</b>'
+  +'<small>לחיצה פותחת. משם אפשר לשלוח בוואטסאפ או במייל</small>'
+  +LAW_ITEMS.map(function(it,i){
+    return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=LAW_ITEMS[+k];if(k===''||!it)return;
+  if(!fileView(it.r))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gLaw',lawSheet);
 /*
   2.10. Winning lines. Tapping a line copies it. A new line goes at the end
   with the next number, with where it came from.

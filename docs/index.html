@@ -963,6 +963,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .gNer{background:linear-gradient(150deg,#f0a64a,#0f1a3a)}
 .gReel{background:linear-gradient(150deg,#e2574c,#2a1240)}
 .gFut{background:linear-gradient(150deg,#3a8fd9,#16243f)}
+.gLaw{background:linear-gradient(150deg,#c0623a,#3a1d12)}
 .gOcc{background:linear-gradient(150deg,#2bb39a,#123d3a)}
 .gMed{background:linear-gradient(150deg,#4fb3a9,#123a4a)}
 .gInv{background:linear-gradient(150deg,#d9a441,#3a2a12)}
@@ -1707,7 +1708,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-04T10:26:59.116Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-04T10:30:53.105Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1852,6 +1853,7 @@ try{
   <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>ממוספר. 02 הביקורת אצל הפרופסור</small></button>
   <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה</small></button>
   <button type="button" class="gt gPen" id="gPen"><b>🏦 פנסיה</b><small>קוד מוצר 28417, 1,211 ש״ח. בדיקה ב 18.10</small></button>
+  <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>01 הרכבים. 02 נטפליקס וספוטיפיי של יואל</small></button>
   <button type="button" class="gt gOcc" id="gOcc"><b>🩺 מרפאה תעסוקתית</b><small>מכבי רמות. טלפון א עד ה 08:00 עד 11:00</small></button>
   <button type="button" class="gt gShop" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
  </div>
@@ -2906,7 +2908,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='3c18ddd222';
+var CODE_ID='ea05a2b2f4';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -7349,6 +7351,38 @@ function occSheet(){
  document.body.appendChild(w);
 }
 on('gOcc',occSheet);
+var LAW_ITEMS=[
+ {n:'01',t:'הרכבים של לולוס: המרצדס 19834203 והיונדאי של יואל 6958655',r:'lolos-vehicles-2026-10-04.pdf'},
+ {n:'02',t:'טבלת נטפליקס וספוטיפיי בכרטיס 6559 של יואל',r:'yoel-6559-netflix-spotify.pdf'}
+];
+function lawSheet(){
+ var old=document.getElementById('lawSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='lawSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','מסמכים לעורך הדין');
+ w.innerHTML='<div class="ycard">'
+  +'<b>מסמכים לעורך הדין</b>'
+  +'<small>לחיצה פותחת. משם אפשר לשלוח בוואטסאפ או במייל</small>'
+  +LAW_ITEMS.map(function(it,i){
+    return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=LAW_ITEMS[+k];if(k===''||!it)return;
+  if(!fileView(it.r))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gLaw',lawSheet);
 var WIN_ITEMS=[
  {n:'01',t:'מרימים את הראש ולא את הידיים',f:'amirshwartz1, תגובה בטיקטוק על סרטון העוגה'}
 ];
