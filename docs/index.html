@@ -1708,7 +1708,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-04T20:26:58.471Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-04T20:27:41.893Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2876,11 +2876,13 @@ function fileView(name){
   if(t.indexOf('image/')===0)h='<img src="'+url+'" alt="">';
   else if(t.indexOf('video/')===0)h='<video src="'+url+'" controls playsinline></video>';
   else if(t.indexOf('audio/')===0)h='<audio src="'+url+'" controls></audio>';
-  else if(t.indexOf('text/')===0){h='<pre class="fv-txt"></pre>';}
+  else if(t.indexOf('text/')===0){h='<pre class="fv-txt"></pre>'
+   +(navigator.share?'<button type="button" class="ask fv-tshare">שליחה בוואטסאפ כהודעה</button>':'')
+   +'<button type="button" class="ask fv-tcopy">העתקת כל הטקסט</button>';}
   else if(t==='application/pdf')h='<div class="fv-pdf"><div class="empty">מציג את העמודים.</div></div>'
    +'<a class="ask" href="'+url+'" target="_blank" rel="noopener">פתיחת הקובץ</a>';
   else h='<a class="ask" href="'+url+'" target="_blank" rel="noopener">פתיחת הקובץ</a>';
-  var sf=null;try{sf=new File([b],short,{type:t||'application/octet-stream'});}catch(x){}
+  var sf=null;try{sf=new File([b],short,{type:(t.split(';')[0])||'application/octet-stream'});}catch(x){}
   if(sf&&navigator.share&&navigator.canShare&&navigator.canShare({files:[sf]}))h+='<button type="button" class="ask fv-share">שליחה בוואטסאפ, במסנג׳ר או במייל</button>';
   var ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
   var media=t.indexOf('video/')===0||t.indexOf('image/')===0;
@@ -2892,7 +2894,17 @@ function fileView(name){
   if(sb)sb.onclick=function(){navigator.share({files:[sf],title:short}).catch(function(){});};
   var gb=body.querySelector('.fv-gal');
   if(gb)gb.onclick=function(){navigator.share({files:[sf]}).catch(function(){});};
-  if(t.indexOf('text/')===0)b.text().then(function(s){body.querySelector('.fv-txt').textContent=s;});
+  if(t.indexOf('text/')===0)b.text().then(function(s){
+   body.querySelector('.fv-txt').textContent=s;
+   var ts=body.querySelector('.fv-tshare');
+   if(ts)ts.onclick=function(){navigator.share({text:s}).catch(function(){});};
+   var tc=body.querySelector('.fv-tcopy');
+   if(tc)tc.onclick=function(){
+    var ok=function(){tc.textContent='הועתק. אפשר להדביק בוואטסאפ';};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(s).then(ok,function(){fallbackCopy(s,ok);});
+    else fallbackCopy(s,ok);
+   };
+  });
   if(t==='application/pdf')pdfPages(b,body.querySelector('.fv-pdf'));
  }).catch(function(){ov.querySelector('.fv-body').innerHTML='<div class="empty">לא הצלחתי לפתוח את הקובץ. רענן ונסה שוב.</div>';});
  return true;
@@ -2908,7 +2920,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='1d8bd4c779';
+var CODE_ID='ca464c8a01';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';

@@ -4405,14 +4405,19 @@ function fileView(name){
   if(t.indexOf('image/')===0)h='<img src="'+url+'" alt="">';
   else if(t.indexOf('video/')===0)h='<video src="'+url+'" controls playsinline></video>';
   else if(t.indexOf('audio/')===0)h='<audio src="'+url+'" controls></audio>';
-  else if(t.indexOf('text/')===0){h='<pre class="fv-txt"></pre>';}
+  // Itzik, 4.10: "אין לי אפשרות לשלוח את הקובץ טקסט לרינת". The iPhone will not
+  // hand a text file to WhatsApp, so a text goes out as the message itself, and
+  // can be copied whole for pasting anywhere.
+  else if(t.indexOf('text/')===0){h='<pre class="fv-txt"></pre>'
+   +(navigator.share?'<button type="button" class="ask fv-tshare">שליחה בוואטסאפ כהודעה</button>':'')
+   +'<button type="button" class="ask fv-tcopy">העתקת כל הטקסט</button>';}
   else if(t==='application/pdf')h='<div class="fv-pdf"><div class="empty">מציג את העמודים.</div></div>'
    +'<a class="ask" href="'+url+'" target="_blank" rel="noopener">פתיחת הקובץ</a>';
   else h='<a class="ask" href="'+url+'" target="_blank" rel="noopener">פתיחת הקובץ</a>';
   // Itzik, 29.9: the machine sale document has to go out to the buyer from the
   // phone. Safari does not keep a blob download, so the share sheet carries the
   // file itself (WhatsApp, mail) wherever it can.
-  var sf=null;try{sf=new File([b],short,{type:t||'application/octet-stream'});}catch(x){}
+  var sf=null;try{sf=new File([b],short,{type:(t.split(';')[0])||'application/octet-stream'});}catch(x){}
   if(sf&&navigator.share&&navigator.canShare&&navigator.canShare({files:[sf]}))h+='<button type="button" class="ask fv-share">שליחה בוואטסאפ, במסנג׳ר או במייל</button>';
   // Itzik, 1.10: "עשיתי שמירה לגלריה ואני לא מוצא". On the iPhone a blob
   // download lands in Files, not in Photos. For a picture or a video the share
@@ -4428,7 +4433,17 @@ function fileView(name){
   if(sb)sb.onclick=function(){navigator.share({files:[sf],title:short}).catch(function(){});};
   var gb=body.querySelector('.fv-gal');
   if(gb)gb.onclick=function(){navigator.share({files:[sf]}).catch(function(){});};
-  if(t.indexOf('text/')===0)b.text().then(function(s){body.querySelector('.fv-txt').textContent=s;});
+  if(t.indexOf('text/')===0)b.text().then(function(s){
+   body.querySelector('.fv-txt').textContent=s;
+   var ts=body.querySelector('.fv-tshare');
+   if(ts)ts.onclick=function(){navigator.share({text:s}).catch(function(){});};
+   var tc=body.querySelector('.fv-tcopy');
+   if(tc)tc.onclick=function(){
+    var ok=function(){tc.textContent='הועתק. אפשר להדביק בוואטסאפ';};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(s).then(ok,function(){fallbackCopy(s,ok);});
+    else fallbackCopy(s,ok);
+   };
+  });
   if(t==='application/pdf')pdfPages(b,body.querySelector('.fv-pdf'));
  }).catch(function(){ov.querySelector('.fv-body').innerHTML='<div class="empty">לא הצלחתי לפתוח את הקובץ. רענן ונסה שוב.</div>';});
  return true;
