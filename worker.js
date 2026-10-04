@@ -445,7 +445,12 @@ function reconcile(live) {
   try { files = fs.readdirSync(CHAT); } catch (e) { return; }
   const all = files.map((f) => { const d = readJson(path.join(CHAT, f), null); return d ? Object.assign({ file: f }, d) : null; }).filter(Boolean);
   const got = new Set(all.filter((m) => m.from === 'claude' && m.re).map((m) => m.re));
-  all.filter((m) => m.from === 'itzik' && m.status !== 'done' && m.id && got.has(m.id)).forEach((m) => {
+  const held = new Set();
+  Object.keys(live).forEach((pid) => (live[pid].files || []).forEach((f) => held.add(f)));
+  // 4.10: the first short reply comes within two minutes, so closing on any
+  // reply emptied "in work now" while the session was still on it. A session
+  // that is alive closes its own message; this only catches the ones it forgot.
+  all.filter((m) => m.from === 'itzik' && m.status !== 'done' && m.id && got.has(m.id) && !held.has(m.file)).forEach((m) => {
     const d = readJson(path.join(CHAT, m.file), null);
     if (!d) return;
     d.status = 'done';
@@ -467,8 +472,6 @@ function reconcile(live) {
     d.at = new Date(mt).toISOString();
     try { fs.writeFileSync(full, JSON.stringify(d, null, 1), 'utf8'); say('זמן תשובה תוקן לזמן הכתיבה: ' + m.file); } catch (e) {}
   });
-  const held = new Set();
-  Object.keys(live).forEach((pid) => (live[pid].files || []).forEach((f) => held.add(f)));
   const seen = readJson(SEEN, {});
   const retry = readJson(RETRY, {});
   const now = Date.now();

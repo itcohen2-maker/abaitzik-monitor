@@ -50,3 +50,14 @@ test('a doneAt already on disk is kept', () => {
   ]);
   assert.equal(out.find(m => m.id === 'a1').doneAt, '2026-09-19T05:30:00Z');
 });
+
+// 4.10.2026: the first short reply of a running session closed his message, so
+// "in work now" was always empty. A message a live session holds stays open.
+test('a message a live session still holds stays working despite the first reply', () => {
+  const chat = [
+    { id: 'a1', at: '2026-10-04T08:29:00Z', from: 'itzik', text: 'כפתור', status: 'working' },
+    { id: 'r1', at: '2026-10-04T08:30:00Z', from: 'claude', re: 'a1', text: 'הבנתי' },
+  ];
+  assert.equal(ML.autoClose(chat, ['a1']).find(m => m.id === 'a1').status, 'working');
+  assert.equal(ML.autoClose(chat).find(m => m.id === 'a1').status, 'done');
+});

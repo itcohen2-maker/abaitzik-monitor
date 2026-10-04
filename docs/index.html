@@ -1703,7 +1703,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-04T08:31:23.199Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-04T08:31:41.635Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2696,7 +2696,9 @@ try{
     });
   }
 
-  function autoClose(chat) {
+  function autoClose(chat, busy) {
+    var held = {};
+    (busy || []).forEach(function (id) { held[id] = true; });
     var byKey = {};
     (chat || []).forEach(function (m) { byKey[keyOf(m)] = m; });
     var answeredAt = {};
@@ -2707,6 +2709,7 @@ try{
     });
     return (chat || []).map(function (m) {
       if (m.from !== 'itzik' || m.status === 'done') return m;
+      if (m.id && held[m.id]) return m;
       var when = answeredAt[rootKeyOf(m, byKey)];
       if (!when || when <= (m.at || '')) return m;
       var out = {};
@@ -2897,7 +2900,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='4a89e90bf3';
+var CODE_ID='fb30b0fb80';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';

@@ -371,6 +371,18 @@ function build() {
     .map(r => ({ title: r.title, at: r.at, body: r.body, nets: reportNets(r) }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
 
+  function busyIds() {
+    const ids = [];
+    let reg = {};
+    try { reg = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'status', 'worker-live.json'), 'utf8')); } catch (e) { return ids; }
+    Object.keys(reg).forEach((pid) => {
+      try { process.kill(Number(pid), 0); } catch (e) { if (e.code !== 'EPERM') return; }
+      (reg[pid].files || []).forEach((f) => {
+        try { const m = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'chat', 'chat', f), 'utf8')); if (m.id) ids.push(m.id); } catch (e) {}
+      });
+    });
+    return ids;
+  }
   const chat = loadDocs('chat')
     // `ackAt` and `note` are what the ack line under each of his messages reads:
     // when it landed, and for a recording, what it said. They were being
@@ -387,7 +399,9 @@ function build() {
 
   // A message of his that already has an answer is closed here, so the screen
   // never shows work in progress that finished yesterday. See autoClose.
-  const chatClosed = ML.autoClose(chat);
+  // Except one a session is still running on: its first short reply is not
+  // the end of the work (4.10, "כפתור לא עובד מה בעבודה").
+  const chatClosed = ML.autoClose(chat, busyIds());
 
   // `who` is who the task is actually waiting on. Without it the list read as
   // nine things I owe him, when four of them were already done and two are
