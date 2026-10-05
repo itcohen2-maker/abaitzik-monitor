@@ -1096,7 +1096,10 @@ test('every request of his carries a progress meter', () => {
   // כל אחוז יושב על מצב שכתוב בקובץ ההודעה, ואין מונה שרץ לבד.
   assert.ok(html.includes("var p=PRG[m.status];"));
   assert.ok(html.includes("return typeof p==='number'?p:10;"));
-  assert.ok(html.includes(`<span class="prg-t"><i class="prg-f" style="width:'+p+'%"></i></span>`));
+  // איציק, 5.10: שלושה שלבים במילים במקום אחוז שנראה תקוע.
+  assert.ok(html.includes("var w=['קיבלתי','עובד על זה','מוכן'];"));
+  assert.ok(!html.includes('prg-f'));
+  assert.ok(html.includes('function prgLink(m){'));
   assert.ok(html.includes(`aria-valuenow="'+p+'"`));
   assert.ok(html.includes(`aria-label="התקדמות הבקשה"`));
   // וגם במסך מה שהתקבל, לא רק בצ׳אט.

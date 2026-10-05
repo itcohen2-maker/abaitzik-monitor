@@ -1488,12 +1488,12 @@ section{margin-bottom:30px}
   עכשיו יש פס מתחת לכל בקשה שלו עם אחוז. האחוז נגזר מהמצב ששמור בקובץ
   ההודעה ולא נע מעצמו, כך שהוא לא מציג התקדמות שלא קרתה.
 */
-.prg{display:flex;align-items:center;gap:8px;margin-top:7px}
-.prg-t{flex:1;height:10px;border-radius:999px;background:rgba(0,0,0,.12);overflow:hidden}
-.prg-f{display:block;height:100%;border-radius:999px;background:var(--prgc,#8b93a1);
- width:0;transition:width .5s ease,background .5s ease}
-.prg-n{font-size:.82rem;font-weight:700;min-width:3.2em;text-align:start;color:var(--prgc,#8b93a1)}
-@media (prefers-reduced-motion:reduce){.prg-f{transition:none}}
+.prg{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:7px;font-size:.82rem}
+.prg-s{padding:2px 9px;border-radius:999px;border:1.5px solid rgba(0,0,0,.14);color:#8b93a1;font-weight:600}
+.prg-s.on{border-color:var(--prgc,#8b93a1);color:var(--prgc,#8b93a1)}
+.prg-s.now{background:var(--prgc,#8b93a1);border-color:var(--prgc,#8b93a1);color:#fff;font-weight:700}
+.prg-l{width:10px;height:2px;background:rgba(0,0,0,.14);border-radius:2px}
+.prg-a{font-weight:700;color:var(--prgc,#1d8a4e);text-decoration:underline}
 /*
   איציק, 20.9 בקול: "את מד ההתקדמות תצווה בצבעים לפי ההתקדמות."
 
@@ -1507,7 +1507,7 @@ section{margin-bottom:30px}
 .prg-working{--prgc:#c9730a}
 .prg-partial{--prgc:#b8860b}
 .prg-done{--prgc:#1d8a4e}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .prg-t{background:rgba(255,255,255,.14)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .prg-s,:root:not([data-theme="light"]) .prg-l{border-color:rgba(255,255,255,.2)}
  :root:not([data-theme="light"]) .prg-sent{--prgc:#9aa3b2}
  :root:not([data-theme="light"]) .prg-received{--prgc:#6ba4f0}
  :root:not([data-theme="light"]) .prg-working{--prgc:#f0a94a}
@@ -5079,13 +5079,33 @@ function progStage(m){
  return PRG[m.status]?m.status:'sent';
 }
 var PRGW={sent:'נשלחה',received:'התקבלה',working:'בעבודה',partial:'יש חלק',done:'בוצעה'};
+// איציק, 5.10, מהבודק: "אחוזים שנתקעים נראים כמו תקלה". בקשה עמדה על
+// שישים אחוז שעות, ונראתה תקועה. במקום מספר יש שלושה שלבים במילים, וכל
+// שלב נדלק לפי אותו מצב שכתוב בקובץ ההודעה. ליד מוכן יש קישור לתוצר
+// כשתשובה בשרשור הביאה אחד.
+var PRGS={sent:0,received:1,working:2,partial:2,done:3};
+function prgLink(m){
+ if(!m.id)return '';
+ var u='';
+ (D.chat||[]).forEach(function(x){
+  if(x.from!=='claude'||x.re!==m.id)return;
+  var h=String(x.text||'').match(new RegExp('(https?://|files/)[^\\\\s<>"]+'));
+  if(h)u=h[0].replace(new RegExp('[.,;:!?)"]+$'),'');
+ });
+ return u;
+}
 function progressBar(m){
- var p=progress(m),st=progStage(m);
+ var p=progress(m),st=progStage(m),n=PRGS[st]||0;
+ var w=['קיבלתי','עובד על זה','מוכן'];
+ var u=n===3?prgLink(m):'';
  return '<div class="prg prg-'+st+'" role="progressbar" aria-valuemin="0" aria-valuemax="100"'
-  +' aria-valuenow="'+p+'" aria-valuetext="'+esc(PRGW[st]||'')+', '+p+' אחוז"'
+  +' aria-valuenow="'+p+'" aria-valuetext="'+esc(PRGW[st]||'')+'"'
   +' aria-label="התקדמות הבקשה">'
-  +'<span class="prg-t"><i class="prg-f" style="width:'+p+'%"></i></span>'
-  +'<span class="prg-n">'+p+'%</span></div>';
+  +w.map(function(t,i){
+   return '<span class="prg-s'+(i<n?' on':'')+(i===n-1?' now':'')+'">'+t+'</span>';
+  }).join('<i class="prg-l" aria-hidden="true"></i>')
+  +(u?'<a class="prg-a" href="'+esc(u)+'" target="_blank" rel="noopener">לתוצר</a>':'')
+  +'</div>';
 }
 function ackLine(m,noNote){
  if(m.from!=='itzik')return '';
