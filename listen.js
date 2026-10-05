@@ -31,6 +31,7 @@ const codexBridge = require('./codex-bridge.js');
 const codexRoute = require('./lib/codex-route.js');
 const group = require('./lib/group.js');
 const drains = require('./lib/drains.js');
+const notesSync = require('./lib/notes-sync.js');
 const { execFile } = require('child_process');
 
 // Which monitor this is. Without instance.json every one of these is Itzik's
@@ -662,6 +663,23 @@ function checkSources() {
   process.exit(0);
 }
 
+const NOTES = path.join(inst.dataPath, 'notes', 'notes');
+async function recordNotesSync(m) {
+  let raw;
+  try { const res = await fetch(m.attachment.url); raw = res.ok ? await res.text() : ''; }
+  catch (e) { raw = ''; }
+  let got;
+  try { got = JSON.parse(raw); } catch (e) { got = null; }
+  // The topic is public, so the copy is only taken with his code inside it.
+  if (!got || !ownerCodeOk('קוד ' + String(got.code || ''))) { say('!! סנכרון פתקים בלי קוד, לא נשמר'); return; }
+  delete got.code;
+  let out;
+  try { out = notesSync.record(NOTES, got); } catch (e) { say('!! סנכרון פתקים נכשל: ' + e.message); return; }
+  if (!out) return;
+  say('פתקים נשמרו בשרת: ' + out.notes.length + ' פתקים, ' + Object.keys(out.tasksDone).length + ' משימות שסומנו');
+  publishChat();
+}
+
 // The wrapper exists only so that a throw inside cannot leave the busy flag
 // set and freeze the restart check forever.
 async function handle(m) {
@@ -677,6 +695,13 @@ async function handleOne(m) {
   received++;
   lastMsgAt = Date.now();
   say('הודעה: ' + group.stripCode(String(m.message || '(צרופה)')).slice(0, 80));
+  // The notes and task ticks the page keeps on the server too. Not a message:
+  // it never enters the chat, it only refreshes the copy a new phone fills from.
+  if (m.attachment && m.title === 'notes-sync') {
+    await recordNotesSync(m);
+    remember(m);
+    return;
+  }
   if (m.attachment) await saveAttachment(m);
   if (m.message) logPull('text', m.message);
   // With the bridge off, a message that looks like a Codex request is an

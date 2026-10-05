@@ -626,6 +626,9 @@ function build() {
     rivhit,
     sale,
     isra,
+    // The server copy of the notes and task ticks, which a phone with an empty
+    // storage fills itself from. See lib/notes-sync.js.
+    notesSync: require('./lib/notes-sync.js').read(path.join(inst.dataPath, 'notes', 'notes')),
   };
 
   /*
