@@ -65,6 +65,12 @@ test('the customer tiles come from his screens list, in his order', () => {
   assert.ok(!html.includes('nope'));
 });
 
+test('with no screens chosen, a customer gets the few tiles that fit any work', () => {
+  const html = mod.tenantTiles({ screens: null });
+  assert.ok(html.includes('id="gTasks"') && html.includes('id="gNotes"') && html.includes('id="gAdminReq"'));
+  for (const id of ['gRemote', 'gRemind', 'gPlan']) assert.ok(!html.includes('id="' + id + '"'), id);
+});
+
 /*
   25.9 evening: the markup was clean, and the script still carried Pegasus,
   the candle site's visits, the building committee, the pills, Salinda and

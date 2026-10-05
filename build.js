@@ -867,8 +867,12 @@ const TENANT_TILES = {
   gVoices: ['g4', '🎙️ הקלטות שלא תומללו', 'מה שלא הצלחתי לקרוא'],
   gAdminReq: ['g3', '📨 בקשה ממנהל', 'לשנות משהו במוניטור? המנהל מאשר'],
 };
+// With no screens chosen at intake, only the tiles that fit any work. The whole
+// catalog gave a phone only customer "connect the computer", a client follow up
+// and a content plan, some of them empty screens.
+const TENANT_DEFAULT = ['gTasks', 'gNotes'];
 function tenantTiles(inst) {
-  const ids = (Array.isArray(inst.screens) && inst.screens.length ? inst.screens : Object.keys(TENANT_TILES)).filter((id) => id !== 'gAdminReq');
+  const ids = (Array.isArray(inst.screens) && inst.screens.length ? inst.screens : TENANT_DEFAULT).filter((id) => id !== 'gAdminReq');
   // Itzik, 5.10: a customer does not change the system, he asks. The way to ask
   // is on every customer's home screen, whatever his intake chose.
   ids.push('gAdminReq');
@@ -9372,7 +9376,8 @@ function renderTasks(){
   h+='<label class="tk'+(done[t.id]?' done':'')+'"><input type="checkbox" data-tk="'+esc(t.id)+'"'
    +(done[t.id]?' checked':'')+'><span>'+esc(t.text)+'</span></label>';
  });
- host.innerHTML=h||'<div class="empty">אין משימות.</div>';
+ // An empty screen says in one line what it is for, like the ideas screen does.
+ host.innerHTML=h||'<div class="empty">אין משימות. כל משימה שתשלח למוניטור תופיע כאן לפי היום שלה.</div>';
  var b=document.getElementById('tkClear');
  if(b)b.onclick=function(){clearIds('tasksCleared',T.map(function(t){return t.id;}));renderTasks();};
 }
