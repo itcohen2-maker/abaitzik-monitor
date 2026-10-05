@@ -4528,6 +4528,15 @@ function fvZoom(box){
  box.addEventListener('touchend',function(e){if(!e.touches.length){st=null;clamp();apply();}});
  box.addEventListener('dblclick',function(e){e.preventDefault();toggle({x:e.clientX-img.getBoundingClientRect().left+x,y:e.clientY-img.getBoundingClientRect().top+y});});
 }
+/*
+  Itzik, 5.10: "למה אני לא מצליח לשלוח בוואצאפ". A failed share used to end in silence,
+  so nobody could tell why. Closing the sheet by hand is not an error; anything else
+  is shown with its name, which is what tells the phone's refusal apart from a bug.
+*/
+function shareFail(e){
+ if(e&&e.name==='AbortError')return;
+ toast('השיתוף נכשל: '+((e&&e.name)||'שגיאה')+(e&&e.message?' · '+String(e.message).slice(0,80):''));
+}
 function fileView(name){
  var e=fileEntry(name);if(!e||!GKEY)return false;
  var ov=document.createElement('div');ov.className='fview';
@@ -4572,7 +4581,7 @@ function fileView(name){
   var body=ov.querySelector('.fv-body');body.innerHTML=h;
   var zb=body.querySelector('.fv-zoom');if(zb)fvZoom(zb);
   var sb=body.querySelector('.fv-share');
-  if(sb)sb.onclick=function(){navigator.share({files:[sf],title:short}).catch(function(){});};
+  if(sb)sb.onclick=function(){navigator.share({files:[sf],title:short}).catch(shareFail);};
   var pb=body.querySelector('.fv-print');
   /*
     Itzik, 5.10: "הכפתור שליחה להדפסה לא עובד". The monitor runs from his
@@ -4587,7 +4596,7 @@ function fileView(name){
    }else fvPrint(body,t);
   };
   var gb=body.querySelector('.fv-gal');
-  if(gb)gb.onclick=function(){navigator.share({files:[sf]}).catch(function(){});};
+  if(gb)gb.onclick=function(){navigator.share({files:[sf]}).catch(shareFail);};
   if(t.indexOf('text/')===0)b.text().then(function(s){
    body.querySelector('.fv-txt').textContent=s;
    var ts=body.querySelector('.fv-tshare');

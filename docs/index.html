@@ -1722,7 +1722,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-05T13:01:06.470Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-05T14:24:40.379Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2958,6 +2958,10 @@ function fvZoom(box){
  box.addEventListener('touchend',function(e){if(!e.touches.length){st=null;clamp();apply();}});
  box.addEventListener('dblclick',function(e){e.preventDefault();toggle({x:e.clientX-img.getBoundingClientRect().left+x,y:e.clientY-img.getBoundingClientRect().top+y});});
 }
+function shareFail(e){
+ if(e&&e.name==='AbortError')return;
+ toast('השיתוף נכשל: '+((e&&e.name)||'שגיאה')+(e&&e.message?' · '+String(e.message).slice(0,80):''));
+}
 function fileView(name){
  var e=fileEntry(name);if(!e||!GKEY)return false;
  var ov=document.createElement('div');ov.className='fview';
@@ -2989,7 +2993,7 @@ function fileView(name){
   var body=ov.querySelector('.fv-body');body.innerHTML=h;
   var zb=body.querySelector('.fv-zoom');if(zb)fvZoom(zb);
   var sb=body.querySelector('.fv-share');
-  if(sb)sb.onclick=function(){navigator.share({files:[sf],title:short}).catch(function(){});};
+  if(sb)sb.onclick=function(){navigator.share({files:[sf],title:short}).catch(shareFail);};
   var pb=body.querySelector('.fv-print');
   if(pb)pb.onclick=function(){
    if(ios&&sf&&navigator.share&&navigator.canShare&&navigator.canShare({files:[sf]})){
@@ -2997,7 +3001,7 @@ function fileView(name){
    }else fvPrint(body,t);
   };
   var gb=body.querySelector('.fv-gal');
-  if(gb)gb.onclick=function(){navigator.share({files:[sf]}).catch(function(){});};
+  if(gb)gb.onclick=function(){navigator.share({files:[sf]}).catch(shareFail);};
   if(t.indexOf('text/')===0)b.text().then(function(s){
    body.querySelector('.fv-txt').textContent=s;
    var ts=body.querySelector('.fv-tshare');
@@ -3024,7 +3028,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='63a292da1f';
+var CODE_ID='b9d24fa8b0';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
