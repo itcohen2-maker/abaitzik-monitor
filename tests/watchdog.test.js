@@ -4,7 +4,7 @@ const assert = require('node:assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { when, gitStuck, refused, heldProblem } = require('../watchdog.js');
+const { when, gitStuck, refused, heldProblem, pcProblems, doctorFaults } = require('../watchdog.js');
 
 test('the watchdog reads systemd timestamps as UTC', () => {
   assert.equal(when('Sun 2026-09-27 19:02:22 UTC'), Date.parse('2026-09-27T19:02:22Z'));
@@ -43,4 +43,23 @@ test('a message held without the code is reported after three minutes, not befor
   assert.equal(heldProblem([m(5, { status: 'done' })], now), '');
   assert.equal(heldProblem([m(5, { from: 'itzik' })], now), '');
   assert.equal(heldProblem([m(2 * 24 * 60)], now), '');
+});
+
+test('a task waiting for a PC that is off is not a fault, and the clock starts when it wakes', () => {
+  const now = Date.parse('2026-10-05T05:00:00Z');
+  const t = { status: 'pending', at: '2026-10-05T04:00:00Z', task: 'דוח הרשתות היומי' };
+  assert.deepEqual(pcProblems([t], false, 0, now), []);
+  assert.deepEqual(pcProblems([t], true, now - 2 * 60000, now), []);
+  assert.match(pcProblems([t], true, now - 11 * 60000, now)[0], /מחכה יותר מעשר דקות/);
+  const c = { status: 'claimed', claimedAt: '2026-10-05T04:00:00Z', task: 'x' };
+  assert.deepEqual(pcProblems([c], false, 0, now), []);
+  assert.match(pcProblems([c], true, now - 30 * 60000, now)[0], /תקוע/);
+});
+
+test('the doctor is not woken for the PC', () => {
+  const now = Date.parse('2026-10-05T05:00:00Z');
+  const since = {}; const old = new Date(now - 20 * 60000).toISOString();
+  const ps = ['משימה למחשב מחכה יותר מעשר דקות: x', 'המחשב תקוע על משימה יותר מ-25 דקות: y', 'השעון של המענה לא פעיל'];
+  ps.forEach((p) => { since[p.replace(/\d+/g, '#')] = old; });
+  assert.deepEqual(doctorFaults(ps, since, now), ['השעון של המענה לא פעיל']);
 });

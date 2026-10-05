@@ -61,6 +61,29 @@ function heldProblem(all, now) {
   return (held.length === 1 ? 'הודעה אחת' : held.length + ' הודעות')
     + ' הגיעו בלי הקוד ונעצרו, למשל ' + String(held[0].text || '').slice(0, 40);
 }
+/*
+  The PC leaves data/status/pc-seen.json every minute it is on (pc-task.js).
+  Seen in the last three minutes is on. "since" is when this watchdog first saw
+  it on, kept in watchdog.json, so a task marked while it slept gets its ten
+  minutes from the moment the PC woke, not from when it was marked.
+*/
+const PC_ON_MS = 3 * 60 * 1000;
+function pcState(now) {
+  const seen = Date.parse((readJson(path.join(STATUS, 'pc-seen.json'), {}) || {}).at);
+  const on = !isNaN(seen) && now - seen < PC_ON_MS;
+  const prev = (readJson(OUT, {}) || {}).pcOnSince;
+  return { on, since: on ? (Date.parse(prev) || now) : 0 };
+}
+function pcProblems(tasks, on, since, now) {
+  if (!on) return [];
+  const out = [];
+  tasks.forEach((t) => {
+    if (!t || t.test) return;
+    if (t.status === "pending" && now - Math.max(Date.parse(t.at), since || 0) > 10 * 60 * 1000) out.push("משימה למחשב מחכה יותר מעשר דקות: " + String(t.task).slice(0, 40));
+    if (t.status === "claimed" && now - Math.max(Date.parse(t.claimedAt), since || 0) > 25 * 60 * 1000) out.push("המחשב תקוע על משימה יותר מ-25 דקות: " + String(t.task).slice(0, 40));
+  });
+  return out;
+}
 function check(now) {
   const problems = [];
   let files = [];
@@ -85,17 +108,15 @@ function check(now) {
   /*
     2.10: a shopping item sat for minutes while he was told the PC was off. A
     task still waiting 10 minutes after it was marked, or held by the PC for 25,
-    is a problem, whatever the reason.
+    is a problem. 5.10: but not while the PC is off. The seven o'clock report
+    waited for a sleeping PC, he got an alarm, and the doctor was woken three
+    times in four minutes for something no code on the server can fix.
   */
-  try {
-    const PCDIR = path.join(path.dirname(CHAT), "..", "pc", "pc");
-    fs.readdirSync(PCDIR).forEach((f) => {
-      const t = readJson(path.join(PCDIR, f), null);
-      if (!t || t.test) return;
-      if (t.status === "pending" && now - Date.parse(t.at) > 10 * 60 * 1000) problems.push("משימה למחשב מחכה יותר מעשר דקות: " + String(t.task).slice(0, 40));
-      if (t.status === "claimed" && now - Date.parse(t.claimedAt) > 25 * 60 * 1000) problems.push("המחשב תקוע על משימה יותר מ-25 דקות: " + String(t.task).slice(0, 40));
-    });
-  } catch (e) {}
+  const PCDIR = path.join(path.dirname(CHAT), "..", "pc", "pc");
+  let tasks = [];
+  try { tasks = fs.readdirSync(PCDIR).map((f) => readJson(path.join(PCDIR, f), null)).filter(Boolean); } catch (e) {}
+  const pc = pcState(now);
+  pcProblems(tasks, pc.on, pc.since, now).forEach((p) => problems.push(p));
   // The Claude login on the server (CLAUDE_CODE_OAUTH_TOKEN, set 25.9.2026)
   // lasts about a year. Warn a month ahead, and at once if the worker log shows
   // the sessions being refused.
@@ -171,15 +192,28 @@ function speed(now) {
 const DOCTOR = path.join(STATUS, 'doctor.json');
 const DOCTOR_AFTER_MS = 10 * 60 * 1000;
 const DOCTOR_MAX = 3;
+/*
+  5.10: a session that ends in a minute without fixing anything left the fault
+  standing, so the next tick woke it again, and all three runs of the day went
+  in four minutes. An hour between runs, and never for the PC: no code on the
+  server can wake it or work it.
+*/
+const DOCTOR_GAP_MS = 60 * 60 * 1000;
+function doctorFaults(problems, since, now) {
+  return problems.filter((p) => !/^(משימה למחשב|המחשב תקוע)/.test(p)
+    && since[key(p)] && now - Date.parse(since[key(p)]) > DOCTOR_AFTER_MS);
+}
 function alive(pid) { try { process.kill(pid, 0); return true; } catch (e) { return e.code === 'EPERM'; } }
 function tailOf(f, n) {
   try { const L = fs.readFileSync(f, 'utf8').split('\n'); return L.slice(-n).join('\n'); } catch (e) { return ''; }
 }
 function doctor(problems, since, now) {
   if (process.platform === 'win32' || !process.env.WATCHDOG_DOCTOR) return;
-  const persistent = problems.filter((p) => since[key(p)] && now - Date.parse(since[key(p)]) > DOCTOR_AFTER_MS);
+  const persistent = doctorFaults(problems, since, now);
   if (!persistent.length) return;
   const d = readJson(DOCTOR, { day: '', runs: 0, pid: 0, log: [] });
+  const last = Date.parse(((d.log || []).slice(-1)[0] || {}).at);
+  if (!isNaN(last) && now - last < DOCTOR_GAP_MS) return;
   const day = new Date(now).toISOString().slice(0, 10);
   if (d.day !== day) { d.day = day; d.runs = 0; }
   if (d.pid && alive(d.pid)) return;
@@ -237,6 +271,7 @@ function main() {
   const now = Date.now();
   const problems = check(now);
   const prev = readJson(OUT, { told: {} });
+  const pc = pcState(now);
   const told = prev.told || {};
   const fresh = problems.filter((p) => { const k = key(p); return !told[k] || now - Date.parse(told[k]) > RETELL_MS; });
   // since: when each current fault was first seen, for the doctor's ten minutes.
@@ -255,8 +290,8 @@ function main() {
     } catch (e) { console.log('!! ההתראה לא נשלחה: ' + e.message); }
   }
   Object.keys(told).forEach((k) => { if (now - Date.parse(told[k]) > 24 * 3600 * 1000) delete told[k]; });
-  try { fs.mkdirSync(STATUS, { recursive: true }); fs.writeFileSync(OUT, JSON.stringify({ at: new Date(now).toISOString(), problems, told, since, speed: sp }, null, 1)); } catch (e) {}
+  try { fs.mkdirSync(STATUS, { recursive: true }); fs.writeFileSync(OUT, JSON.stringify({ at: new Date(now).toISOString(), problems, told, since, speed: sp, pcOnSince: pc.on ? new Date(pc.since).toISOString() : null }, null, 1)); } catch (e) {}
 }
 
 if (require.main === module) main();
-module.exports = { refused, check, when, speed, gitStuck, heldProblem };
+module.exports = { refused, check, when, speed, gitStuck, heldProblem, pcProblems, doctorFaults };
