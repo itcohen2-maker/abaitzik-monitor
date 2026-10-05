@@ -1314,6 +1314,9 @@ button.abtn[disabled]{opacity:.55}
 .fv-body{flex:1;overflow:auto;padding:12px 16px calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:12px}
 .fv-body img,.fv-body video{max-width:100%;max-height:70vh;border-radius:12px}
 .fv-body audio{width:100%}
+.fv-zoom{width:100%;overflow:hidden;display:flex;justify-content:center;border-radius:12px;touch-action:pan-y}
+.fv-zoom img{transform-origin:0 0;will-change:transform;max-height:70vh}
+.fv-zoom.on{touch-action:none}
 .fv-pdf{width:100%;max-width:640px;display:flex;flex-direction:column;gap:10px}
 .fv-pdf canvas{background:#fff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.4)}
 .fv-txt{white-space:pre-wrap;color:#eee;background:rgba(255,255,255,.06);padding:12px;border-radius:12px;width:100%;direction:rtl}
@@ -4435,18 +4438,101 @@ function fvPrint(body,t){
  function go(){setTimeout(function(){window.print();},50);}
  imgs.forEach(function(i){if(i.complete){if(!--left)go();}else i.onload=i.onerror=function(){if(!--left)go();};});
 }
+/*
+  A file is called by what it is, not by how it was saved.
+
+  The improvements reviewer, 5.10, approved by Itzik the same day: the bar
+  over an open file showed the stored name, numbers and extension, and the
+  file shared on to WhatsApp carried the same name, so the person it went to
+  saw it too. The name now comes from the line it was listed under in its
+  sheet, and a file listed nowhere has its dates and dashes taken off.
+*/
+function fileNiceName(name){
+ var short=String(name).split('/').pop();
+ var lists=[];
+ ['KAT_ITEMS','NER_ITEMS','REEL_ITEMS','FUT_ITEMS','OCC_ITEMS','LAW_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS']
+  .forEach(function(k){if(Array.isArray(window[k]))lists.push(window[k]);});
+ for(var i=0;i<lists.length;i++){
+  var L=lists[i]||[];
+  for(var j=0;j<L.length;j++)if(L[j]&&L[j].r===name&&L[j].t)return String(L[j].t).trim();
+ }
+ var base=short.replace(/[.][A-Za-z0-9]{1,5}$/,'')
+  .replace(/(^|[-_ ])20[0-9]{2}[-_.]?[01][0-9][-_.]?[0-3][0-9]([-_]?[0-9]{4,6})?(?=[-_ ]|$)/g,' ')
+  .replace(/[-_]+/g,' ').replace(/ +/g,' ').trim();
+ return base||short;
+}
+function fileShareName(name){
+ var short=String(name).split('/').pop();
+ var ext=(short.match(/[.][A-Za-z0-9]{1,5}$/)||[''])[0];
+ var bad='/:*?"<>|'+String.fromCharCode(92);
+ var nice=fileNiceName(name).split('').filter(function(c){return bad.indexOf(c)<0;}).join('').slice(0,80).trim();
+ return (nice||short.replace(ext,''))+ext;
+}
+/*
+  A picture is looked at up close.
+
+  The improvements reviewer, 5.10, approved by Itzik: an image always opened
+  fitted to the screen with no way in, and a designer has to see the weave,
+  the line and the colour. Two fingers zoom around the point between them, a
+  double tap zooms in where it landed, and a second double tap goes back.
+  At normal size a finger still scrolls the window, so nothing else changes.
+*/
+function fvZoom(box){
+ var img=box.querySelector('img');if(!img)return;
+ var s=1,x=0,y=0,st=null,lastTap=0;
+ function apply(){img.style.transform=s>1?'translate('+x+'px,'+y+'px) scale('+s+')':'';box.classList.toggle('on',s>1);}
+ function clamp(){
+  if(s<=1.01){s=1;x=0;y=0;return;}
+  var w=img.offsetWidth,h=img.offsetHeight;
+  x=Math.min(0,Math.max(w-w*s,x));y=Math.min(0,Math.max(h-h*s,y));
+ }
+ function at(t){var r=img.getBoundingClientRect();return {x:t.clientX-r.left+x,y:t.clientY-r.top+y};}
+ function toggle(p){
+  if(s>1){s=1;x=0;y=0;}
+  else{var ns=2.5;x=p.x-(p.x-x)*ns/s;y=p.y-(p.y-y)*ns/s;s=ns;clamp();}
+  img.style.transition='transform .2s';apply();setTimeout(function(){img.style.transition='';},220);
+ }
+ box.addEventListener('touchstart',function(e){
+  var t=e.touches;
+  if(t.length===2){
+   var a=at(t[0]),b=at(t[1]);
+   st={two:true,d:Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY)||1,s:s,x:x,y:y,mx:(a.x+b.x)/2,my:(a.y+b.y)/2};
+  }else if(t.length===1){
+   var now=Date.now(),p=at(t[0]);
+   if(now-lastTap<300){lastTap=0;st=null;e.preventDefault();toggle(p);return;}
+   lastTap=now;
+   st={two:false,cx:t[0].clientX,cy:t[0].clientY,x:x,y:y};
+  }
+ },{passive:false});
+ box.addEventListener('touchmove',function(e){
+  if(!st)return;
+  var t=e.touches;
+  if(st.two&&t.length===2){
+   e.preventDefault();
+   var d=Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+   var ns=Math.max(1,Math.min(6,st.s*d/st.d));
+   var cx=(st.mx-st.x)/st.s,cy=(st.my-st.y)/st.s;
+   s=ns;x=st.mx-cx*ns;y=st.my-cy*ns;clamp();apply();
+  }else if(!st.two&&t.length===1&&s>1){
+   e.preventDefault();
+   x=st.x+t[0].clientX-st.cx;y=st.y+t[0].clientY-st.cy;clamp();apply();
+  }
+ },{passive:false});
+ box.addEventListener('touchend',function(e){if(!e.touches.length){st=null;clamp();apply();}});
+ box.addEventListener('dblclick',function(e){e.preventDefault();toggle({x:e.clientX-img.getBoundingClientRect().left+x,y:e.clientY-img.getBoundingClientRect().top+y});});
+}
 function fileView(name){
  var e=fileEntry(name);if(!e||!GKEY)return false;
  var ov=document.createElement('div');ov.className='fview';
- var short=String(name).split('/').pop();
- ov.innerHTML='<div class="fv-bar"><button type="button" class="fv-x" aria-label="סגירה">✕</button><b>'+esc(short)+'</b></div><div class="fv-body"><div class="empty">פותח.</div></div>';
+ var short=fileShareName(name);
+ ov.innerHTML='<div class="fv-bar"><button type="button" class="fv-x" aria-label="סגירה">✕</button><b>'+esc(fileNiceName(name))+'</b></div><div class="fv-body"><div class="empty">פותח.</div></div>';
  document.body.appendChild(ov);
  var url='';
  function close(){ov.remove();if(url)setTimeout(function(){URL.revokeObjectURL(url);},1000);}
  ov.querySelector('.fv-x').onclick=close;
  fileBlob(e).then(function(b){
   url=URL.createObjectURL(b);var t=e.t||'',h='';
-  if(t.indexOf('image/')===0)h='<img src="'+url+'" alt="">';
+  if(t.indexOf('image/')===0)h='<div class="fv-zoom"><img src="'+url+'" alt=""></div><div class="empty" style="font-size:13px">שתי אצבעות או לחיצה כפולה מגדילות</div>';
   else if(t.indexOf('video/')===0)h='<video src="'+url+'" controls playsinline></video>';
   else if(t.indexOf('audio/')===0)h='<audio src="'+url+'" controls></audio>';
   // Itzik, 4.10: "אין לי אפשרות לשלוח את הקובץ טקסט לרינת". The iPhone will not
@@ -4477,6 +4563,7 @@ function fileView(name){
   if(gal)h+='<button type="button" class="ask fv-gal">שמירה לגלריה</button><div class="empty" style="font-size:13px">בחלון שנפתח: '+(t.indexOf('video/')===0?'שמור וידאו':'שמור תמונה')+'</div>';
   else h+='<a class="ask fv-save" href="'+url+'" download="'+esc(short)+'">שמירה בטלפון</a>';
   var body=ov.querySelector('.fv-body');body.innerHTML=h;
+  var zb=body.querySelector('.fv-zoom');if(zb)fvZoom(zb);
   var sb=body.querySelector('.fv-share');
   if(sb)sb.onclick=function(){navigator.share({files:[sf],title:short}).catch(function(){});};
   var pb=body.querySelector('.fv-print');
@@ -4655,6 +4742,54 @@ function sendText(subject, text, kind) {
   });
  });
 }
+/*
+  A message that did not leave waits and goes by itself. Reviewer, 4.10,
+  approved 5.10: with no signal (a warehouse, a showroom) the line said both
+  channels did not answer and it was on her to remember to send again. Now the
+  text is kept on this device and resolves as 'held'; it is tried again when
+  the phone says it is back online, when the screen comes back, and every 30
+  seconds while anything is waiting. Once out, it joins the pending bubbles the
+  same way a message sent the first time does.
+*/
+var HELD_SAY='אין קליטה כרגע. ההודעה שמורה ותישלח לבד כשתחזור קליטה.';
+function heldList(){
+ try{var a=JSON.parse(localStorage.getItem('heldMsgs')||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}
+}
+function saveHeld(a){try{localStorage.setItem('heldMsgs',JSON.stringify(a));}catch(e){}}
+function sendOrHold(subject,text,kind,pend){
+ return sendText(subject,text,kind).catch(function(){
+  var a=heldList();
+  a.push({subject:subject,text:text,kind:kind,pend:pend||{at:new Date().toISOString(),text:text}});
+  saveHeld(a);
+  flushHeldSoon();
+  return 'held';
+ });
+}
+var heldBusy=false,heldTimer=null;
+function flushHeldSoon(){
+ if(!heldTimer)heldTimer=setInterval(flushHeld,30000);
+}
+function flushHeld(){
+ var a=heldList();
+ if(!a.length){if(heldTimer){clearInterval(heldTimer);heldTimer=null;}return;}
+ if(heldBusy||(navigator.onLine===false))return;
+ heldBusy=true;
+ var first=a[0];
+ sendText(first.subject,first.text,first.kind).then(function(){
+  var rest=heldList().filter(function(x){return !(x.text===first.text&&x.pend&&first.pend&&x.pend.at===first.pend.at);});
+  saveHeld(rest);
+  var p=pending();
+  p.push({at:new Date().toISOString(),text:first.pend.text,re:first.pend.re||undefined});
+  savePending(p);
+  try{toast('ההודעה שחיכתה לקליטה נשלחה.');}catch(e){}
+  try{renderThread();}catch(e){}
+  heldBusy=false;
+  if(rest.length)setTimeout(flushHeld,800);
+ },function(){heldBusy=false;});
+}
+window.addEventListener('online',function(){setTimeout(flushHeld,1500);});
+document.addEventListener('visibilitychange',function(){if(!document.hidden)flushHeld();});
+setTimeout(function(){if(heldList().length){flushHeldSoon();flushHeld();}},4000);
 // Files do NOT go through FormSubmit's ajax endpoint. It answers 200 and then
 // silently drops the attachment, so two recordings arrived as a note with no
 // audio and nothing looked wrong at either end. That endpoint is for text.
@@ -5341,7 +5476,7 @@ function wireProjects(host){
    var v=prompt('שם הפרויקט של השיחה הזאת'+(names.length?' (כבר יש: '+names.join(', ')+')':'')
     +'. ריק מוציא אותה מהפרויקט.',m[k]||'');
    if(v===null)return;
-   v=v.replace(/\s+/g,' ').trim().slice(0,40);
+   v=v.replace(/\\s+/g,' ').trim().slice(0,40);
    if(v)m[k]=v;else delete m[k];
    saveProjMap(m);
    renderThread();
@@ -5569,7 +5704,8 @@ function wireBoxes(root){
    var card=box.closest('.report')||box.parentNode;
    if(card)card.classList.add('busyring');
    var full=qOf()+String.fromCharCode(10)+text;
-   sendText('הערה מהמוניטור',full,'הערה').then(function(how){
+   sendOrHold('הערה מהמוניטור',full,'הערה').then(function(how){
+    if(how==='held'){box2.value='';said.textContent=HELD_SAY;return;}
     var p=pending();
     p.push({at:new Date().toISOString(),text:full});
     savePending(p);
@@ -5741,7 +5877,8 @@ function wireReplies(host,all){
    btn.disabled=true;
    said.textContent='שולח.';
    var full=quoteOf(m)+String.fromCharCode(10)+text;
-   sendText('תשובה מהמוניטור',full,'תשובה').then(function(how){
+   sendOrHold('תשובה מהמוניטור',full,'תשובה',{at:new Date().toISOString(),text:full,re:rootKeyFor(m)}).then(function(how){
+    if(how==='held'){box.value='';said.textContent=HELD_SAY;setStandby(f.getAttribute('data-k')||rootKeyFor(m));return;}
     var p=pending();
     p.push({at:new Date().toISOString(),text:full,re:rootKeyFor(m)});
     savePending(p);
@@ -11597,7 +11734,8 @@ on2('quickForm','submit',function(e){
  var text=box.value.trim();
  if(!text)return;
  btn.disabled=true;said.textContent='שולח.';
- sendText('הודעה מהמוניטור',text,'הודעה').then(function(how){
+ sendOrHold('הודעה מהמוניטור',text,'הודעה').then(function(how){
+  if(how==='held'){box.value='';said.textContent=HELD_SAY;toast(HELD_SAY);return;}
   var p=pending();
   p.push({at:new Date().toISOString(),text:text});
   savePending(p);
@@ -11906,7 +12044,8 @@ document.getElementById('msgForm').addEventListener('submit',function(e){
  if(!text)return;
  btn.disabled=true;
  said.textContent='שולח.';
- sendText('הודעה מהמוניטור',text,'הודעה').then(function(how){
+ sendOrHold('הודעה מהמוניטור',text,'הודעה').then(function(how){
+  if(how==='held'){box.value='';try{localStorage.removeItem(DRAFT);}catch(err){}said.textContent=HELD_SAY;return;}
   var p=pending();
   p.push({at:new Date().toISOString(),text:text});
   savePending(p);
@@ -12696,7 +12835,8 @@ document.getElementById('mailForm').addEventListener('submit',function(e){
  var full=MAILTAG+' '+text;
  btn.disabled=true;
  said.textContent='שולח.';
- sendText('בקשת מייל מהמוניטור',full,'בקשת מייל').then(function(how){
+ sendOrHold('בקשת מייל מהמוניטור',full,'בקשת מייל').then(function(how){
+  if(how==='held'){box.value='';said.textContent=HELD_SAY;return;}
   var q=pending();
   q.push({at:new Date().toISOString(),text:full});
   savePending(q);

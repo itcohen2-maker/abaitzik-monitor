@@ -515,7 +515,7 @@ test('one card holds all four ways in, and nothing floats over the page', () => 
   assert.ok(html.includes('id="quickBtn"'));
   // And it sends from there: the same path the chat screen uses.
   assert.ok(html.includes("on2('quickForm','submit',function(e){"));
-  assert.ok(html.includes("sendText('הודעה מהמוניטור',text,'הודעה')"));
+  assert.ok(html.includes("sendOrHold('הודעה מהמוניטור',text,'הודעה')"));
   assert.ok(html.includes("document.getElementById('wShoot').onclick"));
 });
 
