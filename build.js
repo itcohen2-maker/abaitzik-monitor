@@ -10781,7 +10781,7 @@ on('gNerMkt',nerSheet);
   the next number and numbers never change.
 */
 // 4.10 cleared, Itzik uploaded 01 and 02. The next reel is 03.
-var REEL_ITEMS=[{n:'03',t:'אני אסתדר עם זה',r:'reel-03-esteder.mp4'},{n:'03ב',t:'אני אסתדר עם זה, פתיחה בכיווץ',r:'reel-03b-esteder.mp4'},{n:'03ג',t:'אני אסתדר עם זה, דלת אבן כבדה',r:'reel-03g-esteder.mp4'},{n:'03ג כריכה',t:'תמונת הכריכה של הריל',r:'reel-03g-cover.jpg'},{n:'03ג פרסום',t:'הטקסט לפרסום, מוכן להעתקה',r:'reel-03g-post.txt'}];
+var REEL_ITEMS=[{n:'03',t:'אני אסתדר עם זה',r:'reel-03-esteder.mp4'},{n:'03ב',t:'אני אסתדר עם זה, פתיחה בכיווץ',r:'reel-03b-esteder.mp4'},{n:'03ג',t:'אני אסתדר עם זה, דלת אבן כבדה',r:'reel-03g-esteder.mp4'},{n:'03ג וואטסאפ',t:'הגרסה הקטנה לשליחה בוואטסאפ (720, כ-10MB)',r:'reel-03g-whatsapp.mp4'},{n:'03ג כריכה',t:'תמונת הכריכה של הריל',r:'reel-03g-cover.jpg'},{n:'03ג פרסום',t:'הטקסט לפרסום, מוכן להעתקה',r:'reel-03g-post.txt'}];
 function reelSheet(){
  var old=document.getElementById('rlSheet');if(old)old.remove();
  var w=document.createElement('div');
