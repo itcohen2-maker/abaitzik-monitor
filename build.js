@@ -2060,6 +2060,8 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .gNer{background:linear-gradient(150deg,#f0a64a,#0f1a3a)}
 .gReel{background:linear-gradient(150deg,#e2574c,#2a1240)}
 .gFut{background:linear-gradient(150deg,#3a8fd9,#16243f)}
+.gSelf{background:linear-gradient(150deg,#d98a3a,#3f2416)}
+.meTxt{white-space:pre-wrap;text-align:right;line-height:1.7;font-size:17px;margin:10px 0 14px}
 .gLaw{background:linear-gradient(150deg,#c0623a,#3a1d12)}
 .gOcc{background:linear-gradient(150deg,#2bb39a,#123d3a)}
 .gMed{background:linear-gradient(150deg,#4fb3a9,#123a4a)}
@@ -3330,6 +3332,7 @@ try{
   <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>03 אני אסתדר עם זה</small></button>
   <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 02 אני אסתדר</small></button>
+  <button type="button" class="gt gSelf" id="gSelf"><b>🗣️ אני מספר על עצמי</b><small>איך אני מציג את עצמי, מתומלל ומסודר</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
@@ -10835,6 +10838,39 @@ function futSheet(){
  document.body.appendChild(w);
 }
 on('gFut',futSheet);
+/*
+  5.10: Itzik dictated how he presents himself (to the boss of Rinat's
+  department) and asked for it under its own button. The text is shown in
+  full, with copy and WhatsApp, so he can read it out or send it as is.
+*/
+var ME_TEXT=['אני איציק. אני עוסק בהמון תחומים, ואחד מהם הוא תוכנה. יש לנו בית תוכנה במשפחה. אנחנו יכולים לעמוד בכל אתגר, ובוחרים את האתגרים שלנו בפינצטה.','התבוננתי, על קצה המזלג, במה שרינת עושה. אני מלווה את רינת מהיום הראשון שהיא נכנסה לאולם העיצוב. רינת היא אשת מקצוע שהולכת לישון עם הרעיונות שלה וקמה בבוקר עם תובנות, בדיוק כמו אבא שלנו, כמוני, כמו האחים שלי והילדים.','עוד קצת על רינת: היא לא רק מבצעת, וזה גם לא מה שהתפקיד שלה מחייב. התפקיד שלה הוא להביא חדשנות ומקצועיות.','יש לך עכשיו הזדמנות להיות בין הראשונים, להקדים את הלקוחות שלך ולהדהים אותם. אל תתמהמה בנושא, ואל תיקח את מה שאני אומר לך בקלות דעת. היום הכל צריך להיות מקוון, בשביל חדשנות והתקדמות.','הבנתי שאתה רוצה מערכת התראות שתעדכן אותך בכל מה שנוגע לעסק, וזה אפשרי. אני אגיע, אראה במה מדובר ואיך מושכים את המידע, כדי שהכל יהיה בכף היד שלך. תמיד תהיה ראשון לדעת, עוד לפני העובדים שלך.'].join(String.fromCharCode(10,10));
+function meSheet(){
+ var old=document.getElementById('meSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='meSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','אני מספר על עצמי');
+ w.innerHTML='<div class="ycard">'
+  +'<b>אני מספר על עצמי</b>'
+  +'<div class="meTxt">'+esc(ME_TEXT)+'</div>'
+  +'<button type="button" class="yb yb1" data-k="copy">העתקה</button>'
+  +'<button type="button" class="yb yb2" data-k="wa">שליחה בוואטסאפ</button>'
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  if(k==='copy'){try{navigator.clipboard.writeText(ME_TEXT).then(function(){toast('הועתק');},function(){toast('לא הצלחתי להעתיק');});}catch(x){toast('לא הצלחתי להעתיק');}return;}
+  if(k==='wa'){window.open('https://wa.me/?text='+encodeURIComponent(ME_TEXT),'_blank','noopener');return;}
+  close();
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gSelf',meSheet);
 /*
   The customer's side of 5.10: he writes what he wants changed and it goes to
   his monitor as a request, which files it for Itzik. Nothing changes until
