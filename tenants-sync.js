@@ -35,7 +35,17 @@ function sync(t) {
   catch (e) { git(cwd, ['remote', 'add', 'code', git(__dirname, ['remote', 'get-url', 'origin'])]); }
   git(cwd, ['fetch', '-q', 'code']);
   const head = git(cwd, ['rev-parse', 'code/main']);
-  if (!FORCE && t.syncedTo === head) return { changed: false, head };
+  /*
+    5.10: a customer does not change his monitor (lib/change-requests.js). Code
+    edited or deleted in his checkout is put back on the next tick, not on the
+    next release.
+  */
+  let drift = false;
+  try {
+    execFileSync('git', ['diff', '--quiet', '--diff-filter=MDT', 'code/main', '--', '.',
+      ':(exclude)docs', ':(exclude)instance.json', ':(exclude)CLAUDE.md'], { cwd });
+  } catch (e) { drift = true; }
+  if (!FORCE && !drift && t.syncedTo === head) return { changed: false, head };
   // Everything tracked upstream, minus what is the tenant's own.
   git(cwd, ['checkout', 'code/main', '--', '.', ':(exclude)docs', ':(exclude)instance.json', ':(exclude)CLAUDE.md']);
   execFileSync('node', ['build.js'], { cwd, stdio: 'ignore', timeout: 180000 });

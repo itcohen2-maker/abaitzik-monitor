@@ -347,7 +347,9 @@ function build() {
   */
   const tenants = loadDocs('tenants')
     .map(x => ({ id: x.id, title: x.title || x.id, state: x.state || 'unknown',
-                 problems: Array.isArray(x.problems) ? x.problems : [], checkedAt: x.checkedAt || '', beatAt: x.beatAt || '' }));
+                 problems: Array.isArray(x.problems) ? x.problems : [], checkedAt: x.checkedAt || '', beatAt: x.beatAt || '',
+                 // 5.10: what the customer asked to change, waiting for Itzik.
+                 requests: (Array.isArray(x.requests) ? x.requests : []).map(r => ({ id: r.id, at: r.at || '', text: r.text || '', status: r.status || 'pending', note: r.note || '' })) }));
   const tasks = loadDocs('tasks')
     .map(x => ({ id: x.id, day: x.day || '', text: x.text || '', n: x.n || 0 }))
     .sort((a, b) => (a.day === b.day ? a.n - b.n : (a.day < b.day ? -1 : 1)));
@@ -855,9 +857,13 @@ const TENANT_TILES = {
   gTasks: ['g17', '✅ משימות', 'מה לעשות, לפי יום'],
   gNotes: ['g10', '📝 פתקים', 'נכתב, נשמר, לא הולך לאיבוד'],
   gVoices: ['g4', '🎙️ הקלטות שלא תומללו', 'מה שלא הצלחתי לקרוא'],
+  gAdminReq: ['g3', '📨 בקשה ממנהל', 'לשנות משהו במוניטור? המנהל מאשר'],
 };
 function tenantTiles(inst) {
-  const ids = Array.isArray(inst.screens) && inst.screens.length ? inst.screens : Object.keys(TENANT_TILES);
+  const ids = (Array.isArray(inst.screens) && inst.screens.length ? inst.screens : Object.keys(TENANT_TILES)).filter((id) => id !== 'gAdminReq');
+  // Itzik, 5.10: a customer does not change the system, he asks. The way to ask
+  // is on every customer's home screen, whatever his intake chose.
+  ids.push('gAdminReq');
   return ids.filter((id) => TENANT_TILES[id]).map((id) => {
     const [cls, title, sub] = TENANT_TILES[id];
     return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"><b>' + title + '</b><small>' + sub + '</small></button>';
@@ -9240,6 +9246,46 @@ function renderTenants(){
    +(t.problems&&t.problems.length?'<br><small>'+t.problems.map(esc).join(' · ')+'</small>':'')+'</span></div>';
  });
  host.innerHTML=h||'<div class="empty">אין מוניטורים אחרים בשרת הזה.</div>';
+ renderChangeReqs(host);
+}
+/*
+  Itzik, 5.10: "רק אני מאשר שינויים". A customer's request waits here until he
+  presses one of the two buttons. The press is a message to his own monitor,
+  which makes the change and tells the customer.
+*/
+function crSentGet(){try{return JSON.parse(localStorage.getItem('crSent')||'{}');}catch(e){return {};}}
+function renderChangeReqs(host){
+ var sent=crSentGet(),h='';
+ (D.tenants||[]).forEach(function(t){
+  (t.requests||[]).slice().reverse().forEach(function(r){
+   var k=t.id+'/'+r.id,when='';
+   try{when=new Date(r.at).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){}
+   var head='<b>📨 '+esc(t.title)+'</b> <small>'+esc(when)+'</small><br>'+esc(r.text);
+   if(r.status==='pending'){
+    h+='<div class="tk" style="border-inline-start:6px solid #f9a825"><span>'+head
+     +(sent[k]?'<br><small>'+(sent[k]==='ok'?'אישרת. המוניטור מבצע ומעדכן את הלקוח.':'דחית. הלקוח יקבל תשובה.')+'</small>'
+      :'<br><button type="button" class="ask" data-cr="'+esc(k)+'" data-act="ok">אישור וביצוע</button> <button type="button" class="ask" data-cr="'+esc(k)+'" data-act="no">דחייה</button>')
+     +'</span></div>';
+   }else{
+    h+='<div class="tk done"><span>'+head+'<br><small>'+(r.status==='approved'?'✅ אושר':'❌ נדחה')+(r.note?' · '+esc(r.note):'')+'</small></span></div>';
+   }
+  });
+ });
+ if(!h)return;
+ var box=document.createElement('div');
+ box.innerHTML='<h3 style="margin:16px 0 8px">בקשות שינוי של לקוחות</h3>'+h;
+ host.appendChild(box);
+ box.onclick=function(e){
+  var btn=e.target.closest&&e.target.closest('[data-cr]');if(!btn)return;
+  var k=btn.getAttribute('data-cr'),ok=btn.getAttribute('data-act')==='ok';
+  var parts=k.split('/'),t=(D.tenants||[]).filter(function(x){return x.id===parts[0];})[0]||{};
+  var r=(t.requests||[]).filter(function(x){return x.id===parts[1];})[0]||{};
+  box.querySelectorAll('[data-cr="'+k+'"]').forEach(function(x){x.disabled=true;});
+  sendText('בקשת שינוי',(ok?'אישור':'דחיית')+' בקשת שינוי '+k+': '+(r.text||''),'משימה').then(function(){
+   var s=crSentGet();s[k]=ok?'ok':'no';try{localStorage.setItem('crSent',JSON.stringify(s));}catch(x){}
+   markSent('text');toast(ok?'אושר. המוניטור מבצע.':'נדחה. הלקוח יקבל תשובה.');renderTenants();paintTenantsTile();
+  }).catch(function(){toast('לא נשלח. תבדוק חיבור ותנסה שוב.');box.querySelectorAll('[data-cr="'+k+'"]').forEach(function(x){x.disabled=false;});});
+ };
 }
 // The tile itself carries the colour, so he sees it without opening anything.
 // Runs from the boot list, after the payload is open, like every other screen.
@@ -9277,6 +9323,19 @@ function paintTenantsTile(){
   var top=document.getElementById('talkCard')||home.firstChild;
   if(al.nextSibling!==top)top.parentNode.insertBefore(al,top);
  }else if(al){al.remove();}
+ var sent=crSentGet(),pend=[];
+ T.forEach(function(t){(t.requests||[]).forEach(function(r){if(r.status==='pending'&&!sent[t.id+'/'+r.id])pend.push(t.title+': '+r.text);});});
+ var ca=document.getElementById('crAlert');
+ if(pend.length&&home){
+  if(!ca){
+   ca=document.createElement('button');ca.type='button';ca.id='crAlert';ca.className='tenalert';
+   ca.style.background='linear-gradient(180deg,#fbc02d,#e65100)';
+   ca.onclick=function(){pane('N3');renderTenants();};
+  }
+  ca.innerHTML='<b>📨 '+(pend.length===1?'בקשת שינוי מלקוח':pend.length+' בקשות שינוי מלקוחות')+'</b><small>'+esc(pend.join(' | ').slice(0,140))+'</small>';
+  var top2=document.getElementById('talkCard')||home.firstChild;
+  if(ca.nextSibling!==top2)top2.parentNode.insertBefore(ca,top2);
+ }else if(ca){ca.remove();}
 }
 on('gTenants',function(){pane('N3');renderTenants();});
 (function(){
@@ -10494,6 +10553,38 @@ function futSheet(){
  document.body.appendChild(w);
 }
 on('gFut',futSheet);
+/*
+  The customer's side of 5.10: he writes what he wants changed and it goes to
+  his monitor as a request, which files it for Itzik. Nothing changes until
+  Itzik approves; the answer arrives in his chat.
+*/
+function adminReqSheet(){
+ var old=document.getElementById('arSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='arSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','בקשה ממנהל');
+ w.innerHTML='<div class="ycard"><b>בקשה ממנהל</b>'
+  +'<small>מה תרצה לשנות במוניטור? כפתור, מסך, עיצוב, איך הוא עונה. המנהל יאשר, והתשובה תגיע אליך בצ׳אט.</small>'
+  +'<textarea id="arText" rows="5" style="width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif" placeholder="לדוגמה: תוסיף לי כפתור של רשימת קניות"></textarea>'
+  +'<button type="button" class="yb yb1" data-a="send">שליחה למנהל</button>'
+  +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+ function close(){w.remove();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var a=e.target.getAttribute&&e.target.getAttribute('data-a');
+  if(a==='x')return close();
+  if(a!=='send')return;
+  var t=(document.getElementById('arText').value||'').trim();
+  if(!t){toast('כתוב מה תרצה לשנות');return;}
+  e.target.disabled=true;
+  sendText('בקשה ממנהל','בקשה ממנהל: '+t,'משימה').then(function(){
+   markSent('text',t);close();toast('נשלח למנהל. התשובה תגיע בצ׳אט.');
+  }).catch(function(){e.target.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
+ };
+ document.body.appendChild(w);
+ setTimeout(function(){var x=document.getElementById('arText');if(x)x.focus();},50);
+}
+on('gAdminReq',adminReqSheet);
 /*
   4.10. Occupational clinic (Maccabi Ramot, Rishon). Details from the Maccabi
   service page. Appointments by phone only; the mail is for forms.

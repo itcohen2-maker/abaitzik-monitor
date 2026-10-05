@@ -25,6 +25,7 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 const inst = require('./lib/instance.js');
+const cr = require('./lib/change-requests.js');
 
 const DIR = path.join(inst.dataPath, 'tenants', 'tenants');
 const DRY = process.argv.includes('--dry');
@@ -81,6 +82,21 @@ function main() {
     const t = JSON.parse(fs.readFileSync(file, 'utf8'));
     const r = check(t);
     const before = t.state;
+    /*
+      5.10: a customer's change requests, which only Itzik can approve. A new
+      one rings his phone; any change in them republishes his page.
+    */
+    const known = new Set((t.requests || []).map((x) => x.id));
+    const reqs = t.dir ? cr.of(t.dir, t.id) : [];
+    const fresh = reqs.filter((x) => x.status === 'pending' && !known.has(x.id));
+    if (JSON.stringify(reqs) !== JSON.stringify(t.requests || [])) changed = true;
+    t.requests = reqs;
+    if (fresh.length && !DRY) {
+      try {
+        execFileSync('node', ['notify.js', '📨 ' + (t.title || t.id) + ' מבקש שינוי', fresh.map((x) => x.text).join(' · ').slice(0, 300)],
+          { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
+      } catch (e) { console.log('request alert failed: ' + String(e.message).slice(0, 120)); }
+    }
     Object.assign(t, r, { checkedAt: new Date().toISOString() });
     if (!DRY) fs.writeFileSync(file, JSON.stringify(t, null, 1));
     if (before !== t.state) changed = true;

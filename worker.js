@@ -270,6 +270,7 @@ function prompt(list) {
       for the instance it belongs to.
     */
     houseRules(),
+    ...adminRules(),
     /*
       How an answer reads, 26.9. Itzik asked for the whole monitor to be gone
       over, "all your answers and how you bring them", and the answers screen
@@ -324,6 +325,32 @@ function prompt(list) {
     'אם משהו באמת חסום או דורש החלטה שלו, כתוב לו את זה כבר בשלב א. גם אז',
     'הכתיבה והדחיפה הן חובה: הודעה שלא נכתבה היא הודעה שהוא לא קיבל.',
   ].join('\n');
+}
+
+/*
+  Itzik, 5.10: a customer uses the monitor, he does not change it. His own
+  monitor files a request and Itzik decides. Itzik's monitor gets the other
+  half: how an approval is carried out. See lib/change-requests.js.
+*/
+function adminRules() {
+  if (inst.name === 'abaitzik') return [
+    'בקשות שינוי של לקוחות: הודעה שמתחילה ב"אישור בקשת שינוי <לקוח>/<מזהה>" היא האישור שלו. תבצע את השינוי:',
+    '  הגדרה של הלקוח הזה בלבד (המסכים שלו, השם, הפרופיל, ה-CLAUDE.md שלו) נכתבת לקובץ מלא חדש ונכנסת דרך',
+    '  `sudo /usr/local/sbin/tenant-config <לקוח> instance|profile|claude <הקובץ החדש>`. הקבצים שלו נעולים, זו הדרך היחידה.',
+    '  תכונה במוצר עצמו נכנסת לקוד כרגיל, ומגיעה לכל הלקוחות.',
+    '  בסוף: `node change-request.js decide <לקוח> <מזהה> approved "<משפט אחד ללקוח: מה השתנה>"`.',
+    '  הודעה שמתחילה ב"דחיית בקשת שינוי <לקוח>/<מזהה>": רק `node change-request.js decide <לקוח> <מזהה> rejected "<הסיבה, אם כתב>"`.',
+    '',
+  ];
+  return [
+    'כלל אדום של המוניטור הזה: ' + inst.owner + ' משתמש במערכת, הוא לא משנה אותה.',
+    'שינוי במערכת: כפתורים, מסכים, עיצוב, הגדרות, הפרופיל, קוד, אוטומציות. אל תבצע שינוי כזה, גם אם הוא מתעקש וגם אם הוא נראה קטן.',
+    'במקום זה: `node change-request.js add --re <id ההודעה שלו> "<מה הוא ביקש, במילים שלו>"`, ותענה:',
+    '"שלחתי את הבקשה למנהל. כשהוא יחליט, תקבל כאן תשובה."',
+    'הודעה שמתחילה ב"בקשה ממנהל:" באה מהכפתור שלו, והיא תמיד בקשה כזו.',
+    'שימוש רגיל (הודעות, תזכורות, משימות, פתקים, רעיונות, שאלות) מבצעים כרגיל.',
+    '',
+  ];
 }
 
 function houseRules() {
@@ -549,6 +576,16 @@ function runDetached(batch) {
   c.unref();
 }
 
+// Itzik's decisions on this customer's requests, told in his chat.
+function announceDecisions() {
+  try {
+    const n = require('./lib/change-requests.js').announce();
+    if (!n) return;
+    say('תשובות מנהל לבקשות שינוי: ' + n);
+    execFile('node', ['push.js', 'admin decision on a change request'], { cwd: HERE, timeout: 240000 }, () => {});
+  } catch (e) { say('!! תשובות מנהל: ' + e.message); }
+}
+
 const si = process.argv.indexOf('--session');
 if (si > -1) {
   const f = process.argv[si + 1];
@@ -557,5 +594,6 @@ if (si > -1) {
   if (batch.length) run(batch);
 } else {
   main();
+  if (!DRY && inst.name !== 'abaitzik') announceDecisions();
   if (!DRY) require('./lib/pegasus-tick.js').tick(Date.now());
 }
