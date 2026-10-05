@@ -13500,6 +13500,24 @@ function pruneOldFiles(src) {
     try { if (fs.statSync(full).isFile() && fs.statSync(full).mtimeMs < cutoff) fs.unlinkSync(full); } catch (e) {}
   }
 }
+/*
+  Itzik, 5.10: "the original reel does not work, I can't see it." Reels saved
+  from Instagram are VP9 inside mp4, which the iPhone will not play. Every video
+  is turned into H.264 at 720 wide before it is sealed, once, in place.
+*/
+function phoneVideo(full) {
+  if (!/\.(mp4|mov)$/i.test(full)) return;
+  const { execFileSync } = require('child_process');
+  try {
+    const c = execFileSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=codec_name',
+      '-of', 'csv=p=0', full], { encoding: 'utf8' }).trim();
+    if (!c || c === 'h264') return;
+    const tmp = full + '.h264.mp4';
+    execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', full, '-vf', "scale='min(720,iw)':-2", '-c:v', 'libx264',
+      '-pix_fmt', 'yuv420p', '-crf', '24', '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', tmp]);
+    fs.renameSync(tmp, full);
+  } catch (e) { console.error('phoneVideo', full, e.message); }
+}
 function sealFiles() {
   if (!gate.enabled()) return [];
   const src = path.join(inst.dataPath, 'files-private');
@@ -13527,8 +13545,10 @@ function sealFiles() {
     const full = path.join(src, rel);
     // 29.9: a file replaced under the same name kept its old sealed copy, so
     // the monitor showed the previous version. A newer source is sealed again.
-    if (!fs.existsSync(target) || fs.statSync(full).mtimeMs > fs.statSync(target).mtimeMs)
+    if (!fs.existsSync(target) || fs.statSync(full).mtimeMs > fs.statSync(target).mtimeMs) {
+      phoneVideo(full);
       fs.writeFileSync(target, gate.sealBytes(fs.readFileSync(full)));
+    }
     keep.add(id + '.bin');
     const ext = (rel.split('.').pop() || '').toLowerCase();
     list.push({ n: rel, id, s: fs.statSync(full).size, t: MIME[ext] || 'application/octet-stream',
