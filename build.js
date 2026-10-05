@@ -1297,6 +1297,8 @@ button.abtn[disabled]{opacity:.55}
 .fv-pdf canvas{background:#fff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.4)}
 .fv-txt{white-space:pre-wrap;color:#eee;background:rgba(255,255,255,.06);padding:12px;border-radius:12px;width:100%;direction:rtl}
 .fv-body .ask{width:100%;max-width:420px}
+#fvPrint{display:none}
+@media print{body.fv-printing>*:not(#fvPrint){display:none!important}body.fv-printing{background:#fff!important}body.fv-printing #fvPrint{display:block}#fvPrint img{display:block;max-width:100%;max-height:96vh;width:auto;height:auto;margin:0 auto;break-after:page;page-break-after:always}#fvPrint img:last-child{break-after:auto;page-break-after:auto}}
 .flist a{display:flex;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--line);margin-bottom:8px;color:var(--ink);text-decoration:none}
 .flist small{color:var(--dim);white-space:nowrap}
 .salecard{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow)}
@@ -4391,6 +4393,21 @@ function pdfPages(blob,host){
   host.innerHTML='<div class="empty">לא הצלחתי להציג את העמודים כאן. פתיחת הקובץ למטה מראה אותו.</div>';
  });
 }
+function fvPrint(body,t){
+ var srcs=[];
+ if(t.indexOf('image/')===0){var im=body.querySelector('img');if(im)srcs.push(im.src);}
+ else body.querySelectorAll('.fv-pdf canvas').forEach(function(c){try{srcs.push(c.toDataURL('image/png'));}catch(x){}});
+ if(!srcs.length){toast('העמודים עוד נטענים, נסה שוב בעוד רגע');return;}
+ var old=document.getElementById('fvPrint');if(old)old.remove();
+ var d=document.createElement('div');d.id='fvPrint';
+ d.innerHTML=srcs.map(function(u){return '<img src="'+u+'" alt="">';}).join('');
+ document.body.appendChild(d);document.body.classList.add('fv-printing');
+ function done(){document.body.classList.remove('fv-printing');d.remove();window.removeEventListener('afterprint',done);}
+ window.addEventListener('afterprint',done);
+ var imgs=d.querySelectorAll('img'),left=imgs.length;
+ function go(){setTimeout(function(){window.print();},50);}
+ imgs.forEach(function(i){if(i.complete){if(!--left)go();}else i.onload=i.onerror=function(){if(!--left)go();};});
+}
 function fileView(name){
  var e=fileEntry(name);if(!e||!GKEY)return false;
  var ov=document.createElement('div');ov.className='fview';
@@ -4417,6 +4434,10 @@ function fileView(name){
   // Itzik, 29.9: the machine sale document has to go out to the buyer from the
   // phone. Safari does not keep a blob download, so the share sheet carries the
   // file itself (WhatsApp, mail) wherever it can.
+  // Itzik, 5.10, on the reel script: "תוסיף באופציות שליחה להדפסה". iPhone
+  // Safari prints the page and not a PDF held in a blob, so the pages that
+  // are already drawn on screen go into a print-only sheet and the page prints.
+  if(t==='application/pdf'||t.indexOf('image/')===0)h+='<button type="button" class="ask fv-print">שליחה להדפסה</button>';
   var sf=null;try{sf=new File([b],short,{type:(t.split(';')[0])||'application/octet-stream'});}catch(x){}
   if(sf&&navigator.share&&navigator.canShare&&navigator.canShare({files:[sf]}))h+='<button type="button" class="ask fv-share">שליחה בוואטסאפ, במסנג׳ר או במייל</button>';
   // Itzik, 1.10: "עשיתי שמירה לגלריה ואני לא מוצא". On the iPhone a blob
@@ -4431,6 +4452,8 @@ function fileView(name){
   var body=ov.querySelector('.fv-body');body.innerHTML=h;
   var sb=body.querySelector('.fv-share');
   if(sb)sb.onclick=function(){navigator.share({files:[sf],title:short}).catch(function(){});};
+  var pb=body.querySelector('.fv-print');
+  if(pb)pb.onclick=function(){fvPrint(body,t);};
   var gb=body.querySelector('.fv-gal');
   if(gb)gb.onclick=function(){navigator.share({files:[sf]}).catch(function(){});};
   if(t.indexOf('text/')===0)b.text().then(function(s){
