@@ -121,13 +121,15 @@ async function main() {
 
   const wt = fs.mkdtempSync(path.join(os.tmpdir(), 'improve-'));
   fs.rmdirSync(wt);
-  sh('git', ['worktree', 'add', '--detach', wt, 'HEAD'], HERE);
+  sh('git', ['worktree', 'add', '-q', '--detach', wt, 'HEAD'], HERE);
   let patch = '', v = { done: false, say: '' }, why = '';
   try {
-    // data/ and node_modules/ are not in git; the worktree borrows them so the
-    // build and the tests see what the real tree sees.
-    fs.symlinkSync(path.join(HERE, 'data'), path.join(wt, 'data'));
-    fs.symlinkSync(path.join(HERE, 'node_modules'), path.join(wt, 'node_modules'));
+    // data/, node_modules/ and the gate key are not in git; the worktree
+    // borrows them so the build and the tests see what the real tree sees.
+    // Without the key the gate tests fail and every idea was dropped (5.10).
+    for (const f of ['data', 'node_modules', 'gate-key.txt']) {
+      if (fs.existsSync(path.join(HERE, f))) fs.symlinkSync(path.join(HERE, f), path.join(wt, f));
+    }
     v = verdict(await runClaude(prompt(idea), wt));
     if (!v.done) why = 'the session did not finish it';
     else {
