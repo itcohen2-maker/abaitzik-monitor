@@ -3334,7 +3334,7 @@ try{
     is amirshwartz1's TikTok comment on the cake video (55 likes).
   -->
   <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
-  <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>03 אני אסתדר עם זה</small></button>
+  <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>03ג אני אסתדר עם זה</small></button>
   <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 02 אני אסתדר</small></button>
   <button type="button" class="gt gSelf" id="gSelf"><b>🗣️ אני מספר על עצמי</b><small>איך אני מציג את עצמי, מתומלל ומסודר</small></button>
   <!--
@@ -10772,7 +10772,7 @@ on('gNerMkt',nerSheet);
   the next number and numbers never change.
 */
 // 4.10 cleared, Itzik uploaded 01 and 02. The next reel is 03.
-var REEL_ITEMS=[{n:'03',t:'אני אסתדר עם זה',r:'reel-03-esteder.mp4'},{n:'03ב',t:'אני אסתדר עם זה, פתיחה בכיווץ',r:'reel-03b-esteder.mp4'},{n:'צליל א',t:'פתיחה: חריקה, הנוכחי',r:'snd-open-1.mp4'},{n:'צליל ב',t:'פתיחה: סינמטי, נבנה ופעימה',r:'snd-open-2.mp4'},{n:'צליל ג',t:'פתיחה: מכני, מנוע וקליק',r:'snd-open-3.mp4'},{n:'צליל ד',t:'פתיחה: דלת אבן כבדה',r:'snd-open-4.mp4'}];
+var REEL_ITEMS=[{n:'03',t:'אני אסתדר עם זה',r:'reel-03-esteder.mp4'},{n:'03ב',t:'אני אסתדר עם זה, פתיחה בכיווץ',r:'reel-03b-esteder.mp4'},{n:'03ג',t:'אני אסתדר עם זה, דלת אבן כבדה',r:'reel-03g-esteder.mp4'}];
 function reelSheet(){
  var old=document.getElementById('rlSheet');if(old)old.remove();
  var w=document.createElement('div');
