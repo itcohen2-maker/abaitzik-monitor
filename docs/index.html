@@ -1710,7 +1710,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-05T10:07:49.863Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-05T10:08:34.333Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2944,7 +2944,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='2f6991598a';
+var CODE_ID='1db7b737b7';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -7727,10 +7727,11 @@ function ideaDone(){
 }
 function renderIdeas(){
  var asked=ideaDone();
- var L=(D.better||[]).map(function(x){return {t:x.t,d:x.d,tag:'🔍 בודק השיפורים'+(x.at?' · '+stamp(x.at):'')+(x.size?' · '+x.size:'')};}).concat(IDEAS);
+ var L=(D.better||[]).map(function(x){return {t:x.t,d:x.d,built:!!x.built,tag:(x.built?'🛠 נבנה לבד · '+stamp(x.built):'🔍 בודק השיפורים'+(x.at?' · '+stamp(x.at):''))+(x.size?' · '+x.size:'')};}).concat(IDEAS);
  IDEAS_SHOWN=L;
  document.getElementById('ideaList').innerHTML=L.map(function(x,n){
   var on=asked.indexOf(x.t)>-1;
+  if(x.built)return '<div class="idea"><small class="itag">'+esc(x.tag)+'</small><b>'+esc(x.t)+'</b><p>'+esc(x.d)+'</p></div>';
   return '<div class="idea">'+(x.tag?'<small class="itag">'+esc(x.tag)+'</small>':'')+'<b>'+esc(x.t)+'</b><p>'+esc(x.d)+'</p>'
    +'<button type="button" data-i="'+n+'"'+(on?' class="done"':'')+'>'
    +(on?'ביקשת. אני על זה':'רוצה את זה')+'</button></div>';

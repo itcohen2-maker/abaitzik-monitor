@@ -341,7 +341,7 @@ function build() {
     .sort((a, b) => (a.at < b.at ? 1 : -1));
   // The reviewer's improvements (review.js), newest first. 30.9.
   const better = loadDocs('better')
-    .map(x => ({ at: x.at || '', t: x.t || '', d: x.d || '', area: x.area || '', size: x.size || '' }))
+    .map(x => ({ at: x.at || '', t: x.t || '', d: x.d || '', area: x.area || '', size: x.size || '', built: x.built || '' }))
     .sort((a, b) => (a.at < b.at ? 1 : -1));
   const plan = loadDocs('plan')
     .map(x => ({ id: x.id, day: x.day || '', text: x.text || '', network: x.network || '', status: x.status || 'planned' }))
@@ -10944,10 +10944,12 @@ function ideaDone(){
 function renderIdeas(){
  var asked=ideaDone();
  // What the daily reviewer found comes first, marked with the day it found it.
- var L=(D.better||[]).map(function(x){return {t:x.t,d:x.d,tag:'🔍 בודק השיפורים'+(x.at?' · '+stamp(x.at):'')+(x.size?' · '+x.size:'')};}).concat(IDEAS);
+ // What the improver (improve.js) already built says so instead of asking him.
+ var L=(D.better||[]).map(function(x){return {t:x.t,d:x.d,built:!!x.built,tag:(x.built?'🛠 נבנה לבד · '+stamp(x.built):'🔍 בודק השיפורים'+(x.at?' · '+stamp(x.at):''))+(x.size?' · '+x.size:'')};}).concat(IDEAS);
  IDEAS_SHOWN=L;
  document.getElementById('ideaList').innerHTML=L.map(function(x,n){
   var on=asked.indexOf(x.t)>-1;
+  if(x.built)return '<div class="idea"><small class="itag">'+esc(x.tag)+'</small><b>'+esc(x.t)+'</b><p>'+esc(x.d)+'</p></div>';
   return '<div class="idea">'+(x.tag?'<small class="itag">'+esc(x.tag)+'</small>':'')+'<b>'+esc(x.t)+'</b><p>'+esc(x.d)+'</p>'
    +'<button type="button" data-i="'+n+'"'+(on?' class="done"':'')+'>'
    +(on?'ביקשת. אני על זה':'רוצה את זה')+'</button></div>';
