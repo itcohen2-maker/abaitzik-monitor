@@ -10911,6 +10911,15 @@ on('gAdminReq',adminReqSheet);
   4.10. Occupational clinic (Maccabi Ramot, Rishon). Details from the Maccabi
   service page. Appointments by phone only; the mail is for forms.
 */
+/*
+  Itzik, 5.10: "always update the button when something happens in it". Every
+  step with the clinic goes here, newest last; the tile shows the last one.
+*/
+var OCC_LOG=[
+ '4.10 בבוקר: נשלח מייל לבקשת תור דחוף.',
+ '4.10 13:05: המרפאה ענתה וביקשה מספר תעודת זהות.',
+ '5.10 11:53: נשלח שוב, עם מספר תעודת הזהות. מחכים לתשובה.'
+];
 var OCC_ITEMS=[
  {t:'📞 התקשרות 03 9541310',u:'tel:039541310'},
  {t:'✉️ מייל occmedshf@mac.org.il (לטפסים בלבד)',u:'mailto:occmedshf@mac.org.il'},
@@ -10928,7 +10937,7 @@ function occSheet(){
   +'<b>מרפאה תעסוקתית, מכבי רמות</b>'
   +'<small>מענה טלפוני: א עד ה, 08:00 עד 11:00 בלבד. קבלת קהל: א עד ה, 08:00 עד 14:00. שישי ושבת סגור.</small>'
   +'<small>תור רק בטלפון ובהפניית רופא. הרופאה: ד״ר נטלי מתן. התור האחרון היה ב 2.7.26.</small>'
-  +'<small>4.10 נשלח מייל לבקשת תור דחוף. 5.10 נשלח שוב עם מספר תעודת הזהות.</small>'
+  +'<small><b>מה קרה עד עכשיו:</b><br>'+OCC_LOG.map(function(x){return esc(x);}).join('<br>')+'</small>'
   +((D.occ||[])[0]?'<small><b>תשובה מהמרפאה, '+esc((D.occ[0].at||'').slice(0,16).replace('T',' '))+':</b><br>'+esc(D.occ[0].text).split(String.fromCharCode(10)).join('<br>')+'</small>':'<small>עוד לא הגיעה תשובה במייל.</small>')
   +'<small>פקס 073 2132632</small>'
   +OCC_ITEMS.map(function(it,i){
@@ -10951,7 +10960,7 @@ function occSheet(){
  document.body.appendChild(w);
 }
 on('gOcc',occSheet);
-boot('occ',function(){var o=(D.occ||[])[0],seen='';try{seen=localStorage.getItem('occSeen')||'';}catch(e){}var b=document.getElementById('gOcc');if(b)b.classList.toggle('taskblink',!!(o&&o.id&&seen!==o.id));});
+boot('occ',function(){var o=(D.occ||[])[0],seen='';var sm=document.querySelector('#gOcc small');if(sm)sm.textContent=o?'המרפאה ענתה '+(o.at||'').slice(8,10).replace(/^0/,'')+'.'+(o.at||'').slice(5,7).replace(/^0/,'')+'. לחץ לקריאה':(function(l){var i=l.indexOf(': ');var h=l.slice(0,i).split(' ')[0];return h+': '+l.slice(i+2);})(OCC_LOG[OCC_LOG.length-1]);try{seen=localStorage.getItem('occSeen')||'';}catch(e){}var b=document.getElementById('gOcc');if(b)b.classList.toggle('taskblink',!!(o&&o.id&&seen!==o.id));});
 /*
   4.10. Documents made for the lawyer in the Lolos sale, numbered. A new one
   gets the next number. Same sheet as the future reels.
