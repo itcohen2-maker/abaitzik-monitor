@@ -90,10 +90,15 @@ function check(now) {
   try { files = fs.readdirSync(CHAT); } catch (e) { return ['אין תיקיית צ׳אט']; }
   const all = files.map((f) => { const d = readJson(path.join(CHAT, f), null); return d ? Object.assign({ file: f }, d) : null; }).filter(Boolean);
   const answered = new Set(all.filter((m) => m.from === 'claude' && m.re).map((m) => m.re));
+  // When each message was first answered. 5.10 13:19: three answers landed a
+  // moment before their messages were marked done, and that gap alone woke him.
+  // Only an answer that has sat ten minutes without the done mark is a fault.
+  const firstAnswer = {};
+  all.forEach((m) => { if (m.from === 'claude' && m.re) { const t = Date.parse(m.at); if (!(firstAnswer[m.re] <= t)) firstAnswer[m.re] = t; } });
   const mine = all.filter((m) => m.from === 'itzik' && m.status !== 'done');
   const late = mine.filter((m) => !(m.id && answered.has(m.id)) && now - Date.parse(m.at) > WAIT_MS);
   if (late.length) problems.push(late.length === 1 ? 'הודעה אחת מחכה יותר מחמש דקות בלי תשובה' : late.length + ' הודעות מחכות יותר מחמש דקות בלי תשובה');
-  const stale = mine.filter((m) => m.id && answered.has(m.id) && now - Date.parse(m.at) > WAIT_MS);
+  const stale = mine.filter((m) => m.id && answered.has(m.id) && now - Date.parse(m.at) > WAIT_MS && now - firstAnswer[m.id] > 2 * WAIT_MS);
   if (stale.length) problems.push(stale.length + ' הודעות נענו ועדיין מסומנות בטיפול');
   /*
     2.10 19:45: his logo arrived four times and sat as 'held', because the file

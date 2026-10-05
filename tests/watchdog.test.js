@@ -63,3 +63,23 @@ test('the doctor is not woken for the PC', () => {
   ps.forEach((p) => { since[p.replace(/\d+/g, '#')] = old; });
   assert.deepEqual(doctorFaults(ps, since, now), ['השעון של המענה לא פעיל']);
 });
+
+test('an answer that has not yet been marked done is a fault only after ten minutes', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wd-stale-'));
+  const chat = path.join(dir, 'chat', 'chat');
+  fs.mkdirSync(chat, { recursive: true });
+  fs.writeFileSync(path.join(dir, 'instance.json'), JSON.stringify({ name: 'test', dataDir: dir }));
+  const now = Date.parse('2026-10-05T10:20:00Z');
+  const at = (min) => new Date(now - min * 60000).toISOString();
+  fs.writeFileSync(path.join(chat, 'a.json'), JSON.stringify({ id: 'm1', at: at(30), from: 'itzik', status: 'working', text: 'x' }));
+  fs.writeFileSync(path.join(chat, 'b.json'), JSON.stringify({ at: at(2), from: 'claude', re: 'm1', text: 'y' }));
+  fs.writeFileSync(path.join(chat, 'c.json'), JSON.stringify({ id: 'm2', at: at(40), from: 'itzik', status: 'working', text: 'x' }));
+  fs.writeFileSync(path.join(chat, 'd.json'), JSON.stringify({ at: at(15), from: 'claude', re: 'm2', text: 'y' }));
+  const { execFileSync } = require('child_process');
+  const out = execFileSync(process.execPath, ['-e',
+    'console.log(JSON.stringify(require(' + JSON.stringify(path.join(__dirname, '..', 'watchdog.js')) + ').check(' + now + ')))'],
+    { env: Object.assign({}, process.env, { ABAITZIK_INSTANCE_FILE: path.join(dir, 'instance.json') }), encoding: 'utf8' });
+  const problems = JSON.parse(out.trim().split('\n').pop());
+  assert.ok(problems.includes('1 הודעות נענו ועדיין מסומנות בטיפול'), problems.join(' | '));
+  fs.rmSync(dir, { recursive: true, force: true });
+});
