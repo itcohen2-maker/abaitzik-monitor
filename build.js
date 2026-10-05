@@ -3320,7 +3320,7 @@ try{
     4.10. Itzik, in a voice note with a photo of his note: a tile for the
     pension until we see the payments go through. Stays until he says it works.
   -->
-  <button type="button" class="gt gPen" id="gPen"><b>🏦 פנסיה</b><small>קוד מוצר 28417, 1,211 ש״ח. בדיקה ב 18.10</small></button>
+  <button type="button" class="gt gPen" id="gPen"><b>🏦 פנסיה</b><small>קוד מוסד בבנק 28417, 1,211 ש״ח. בדיקה ב 18.10</small></button>
   <!--
     4.10. Itzik, from the Maccabi page on his phone: everything about the
     occupational clinic in one place until he gets there. Phone answers
@@ -10717,7 +10717,7 @@ on('gWin',winSheet);
   through. Lines copy on tap; the photo of his note opens as a private file.
 */
 var PEN_ITEMS=[
- {t:'קוד מוצר 28417'},
+ {t:'קוד מוסד בבנק 28417'},
  {t:'הסכום 1,211 ש״ח בחודש (16% מ 7,566)'},
  {t:'4.10: דיברתי עם אראל, ביטלו את הפעולות הישנות'},
  {t:'4.10: הטופס נשלח לבנק'},
