@@ -3298,7 +3298,7 @@ try{
   -->
   <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>ממוספר. כרגע ריק</small></button>
-  <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה</small></button>
+  <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 02 אני אסתדר</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
@@ -10427,7 +10427,9 @@ on('gReels',reelSheet);
 var FUT_ITEMS=[
  {n:'01',t:'החנייה: הקטע הראשון עם כיתוב בעברית. אחריו מצלמים אותך מגיב (4 שניות)',r:'parking-part1-he.mp4'},
  {n:'01ב',t:'החנייה: אותו קטע עם הכיתוב המקורי באנגלית',r:'parking-part1.mp4'},
- {n:'01ג',t:'החנייה: הסרטון המקורי המלא',r:'parking-original.mp4'}
+ {n:'01ג',t:'החנייה: הסרטון המקורי המלא',r:'parking-original.mp4'},
+ {n:'02',t:'אני אסתדר עם זה: התסריט להדפסה ואיך מצלמים',r:'fut02-handle-it-script.pdf'},
+ {n:'02ב',t:'אני אסתדר עם זה: הריל המקורי (השראה)',r:'fut02-handle-it-original.mp4'}
 ];
 function futSheet(){
  var old=document.getElementById('ftSheet');if(old)old.remove();
