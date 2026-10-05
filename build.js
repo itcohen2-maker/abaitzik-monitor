@@ -10768,7 +10768,7 @@ on('gNerMkt',nerSheet);
   the next number and numbers never change.
 */
 // 4.10 cleared, Itzik uploaded 01 and 02. The next reel is 03.
-var REEL_ITEMS=[{n:'03',t:'אני אסתדר עם זה',r:'reel-03-esteder.mp4'},{n:'03ב',t:'אני אסתדר עם זה, פתיחה בכיווץ',r:'reel-03b-esteder.mp4'}];
+var REEL_ITEMS=[{n:'03',t:'אני אסתדר עם זה',r:'reel-03-esteder.mp4'},{n:'03ב',t:'אני אסתדר עם זה, פתיחה בכיווץ',r:'reel-03b-esteder.mp4'},{n:'צליל א',t:'פתיחה: חריקה, הנוכחי',r:'snd-open-1.mp4'},{n:'צליל ב',t:'פתיחה: סינמטי, נבנה ופעימה',r:'snd-open-2.mp4'},{n:'צליל ג',t:'פתיחה: מכני, מנוע וקליק',r:'snd-open-3.mp4'},{n:'צליל ד',t:'פתיחה: דלת אבן כבדה',r:'snd-open-4.mp4'}];
 function reelSheet(){
  var old=document.getElementById('rlSheet');if(old)old.remove();
  var w=document.createElement('div');
