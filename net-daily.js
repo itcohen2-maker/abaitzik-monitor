@@ -51,6 +51,29 @@ const PCDIR = path.join(HERE, 'data', 'pc', 'pc');
 const REQUEST = 'ntfy-m0prnKTTXUTD';
 const SSH = 'ssh -i C:/Users/User/.ssh/monitor_server -o BatchMode=yes root@178.105.63.97';
 const SERVER_REPORTS = '/home/monitor/abaitzik-monitor/data/reports/reports';
+const SERVER_CONTACTS = '/home/monitor/abaitzik-monitor/data/contacts/contacts';
+
+// Itzik, 5.10: "תעשה גם בדיקה בבוקר סריקת רשתות אם יש איזה שהיא תגובה מעניינת או ליד".
+// Still reading only: comments and message requests are read where they sit,
+// nothing is liked, answered, accepted or opened as seen.
+function leadsTask(ymd) {
+  return [
+    '',
+    'תגובות ולידים, באותו סבב: בכל רשת עוברים על התגובות החדשות מ 24 השעות האחרונות ועל בקשות ההודעה שממתינות (רק הרשימה, בלי לאשר ובלי לפתוח שיחה).',
+    'מחפשים שני דברים:',
+    '  ליד: מי שמבקש קשר, הרצאה, שיתוף פעולה, אימון, קנייה, ראיון, או שואל איך מגיעים אליו.',
+    '  תגובה מעניינת: סיפור אישי, שאלה טובה שכדאי לענות עליה בסרטון, ביקורת עניינית, משהו שחוזר אצל כמה אנשים.',
+    'קובץ חמישי בשם ' + ymd + '-HHMM-daily-leads.json:',
+    '{"at":"<ISO עם +03:00>","network":"leads","title":"לידים ותגובות, בוקר: <כמה לידים וכמה תגובות מעניינות>",',
+    ' "body":"<לכל פריט שורה: הרשת, באיזה סרטון או פוסט, מי, מה כתב בקצרה, ולמה זה מעניין. אין כלום, כותבים שאין>"}',
+    'ליד אמיתי נכנס גם למסך הלידים: קובץ ב ' + SERVER_CONTACTS + '/<שם באנגלית>-' + ymd + '.json',
+    '{"at":"<ISO>","name":"<השם כמו שמופיע>","network":"<network>","reach":"<המשתמש, ומספר או מייל אם השאיר>","note":"<מה ביקש ואיפה. לא נענה, מחכה להחלטה שלך.>","status":"open"}',
+    'קודם בודקים ב ls שם שהוא לא כבר שם. רק פניות אמיתיות, לא כל מחמאה.',
+    'אם נכנס ליד חדש, התראה אחת בלבד: ' + SSH + ' "cd /home/monitor/abaitzik-monitor && sudo -u monitor node notify.js \'ליד חדש\' \'<מי ומה, שורה אחת>. במוניטור, כפתור לידים למטה\'"',
+    'ושוב: לא לייק, לא תגובה, לא תשובה, לא אישור בקשה.',
+  ].join('\n');
+}
+
 
 function localDay(d) {
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
@@ -102,7 +125,7 @@ function pcTask(day) {
   return [
     'דוח הרשתות היומי של ' + day + ' (הבדיקה של שבע בבוקר). קריאה בלבד.',
     'קודם בודקים בשרת אם הדוח של היום כבר נכתב: ' + SSH + ' "ls ' + SERVER_REPORTS + ' | grep ' + ymd + '-.*-daily-"',
-    'אם יש ארבעה קבצים, התשובה היא "הדוח של היום כבר בשרת" ועוצרים.',
+    'אם יש חמישה קבצים (ארבע רשתות ולידים), התשובה היא "הדוח של היום כבר בשרת" ועוצרים.',
     '',
     'אסור לגמרי: לייק, תגובה, תשובה, הודעה, בקשת חברות, מעקב, מחיקה.',
     'לא פותחים מסנג׳ר. לא פותחים סטוריז עם כוכב ירוק. לא נוגעים ב-ManyChat.',
@@ -120,10 +143,13 @@ function pcTask(day) {
     'בכל דוח חובה: מספר העוקבים, ואם יש סטורי פעיל כמה צפיות יש לו. אין סטורי, כתוב שאין.',
     'רק מספרים שראית על המסך. מה שלא נטען או לא נראה, כתוב שלא נראה. בלי מקפים, בלי אימוג׳י, בלי שם פרטי.',
     '',
+    leadsTask(ymd),
+    '',
     'הקבצים נכתבים בשרת, לא במחשב (תיקיית הנתונים במחשב לא מגיעה למוניטור):',
     '  scp -i C:/Users/User/.ssh/monitor_server <קובץ> root@178.105.63.97:' + SERVER_REPORTS + '/',
     '  ואחרי כולם: ' + SSH + ' "chown monitor:monitor ' + SERVER_REPORTS + '/' + ymd + '-*-daily-*.json"',
-    'בסוף מוודאים ב ls בשרת שארבעת הקבצים שם. התשובה: שורה אחת עם מספר העוקבים בכל רשת.',
+    '  ולידים חדשים גם ל ' + SERVER_CONTACTS + ', ואחריהם chown monitor:monitor גם שם.',
+    'בסוף מוודאים ב ls בשרת שחמשת הקבצים שם. התשובה: שורה אחת עם מספר העוקבים בכל רשת וכמה לידים נמצאו.',
   ].join('\n');
 }
 
@@ -133,7 +159,7 @@ function queue() {
   const ymd = day.replace(/-/g, '');
   let have = [];
   try { have = fs.readdirSync(REPORTS).filter((f) => f.startsWith(ymd + '-') && /-daily-/.test(f)); } catch (e) {}
-  if (have.length >= 4 && !FORCE) { console.log('today\'s report is already in: ' + have.join(' ')); return; }
+  if (have.length >= 5 && !FORCE) { console.log('today\'s report is already in: ' + have.join(' ')); return; }
   let open = [];
   try {
     open = fs.readdirSync(PCDIR).filter((f) => f.endsWith('.json'))
