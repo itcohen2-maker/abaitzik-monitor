@@ -1710,7 +1710,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-05T08:49:37.536Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-05T08:51:34.136Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2944,7 +2944,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='f5751c0ce9';
+var CODE_ID='2f6991598a';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -7430,6 +7430,7 @@ var OCC_ITEMS=[
 ];
 function occSheet(){
  var old=document.getElementById('occSheet');if(old)old.remove();
+ var o=(D.occ||[])[0];if(o){try{localStorage.setItem('occSeen',o.id);}catch(e){}var gb=document.getElementById('gOcc');if(gb)gb.classList.remove('taskblink');}
  var w=document.createElement('div');
  w.id='occSheet';w.className='ysheet';
  w.setAttribute('role','dialog');
@@ -7438,7 +7439,8 @@ function occSheet(){
   +'<b>מרפאה תעסוקתית, מכבי רמות</b>'
   +'<small>מענה טלפוני: א עד ה, 08:00 עד 11:00 בלבד. קבלת קהל: א עד ה, 08:00 עד 14:00. שישי ושבת סגור.</small>'
   +'<small>תור רק בטלפון ובהפניית רופא. הרופאה: ד״ר נטלי מתן. התור האחרון היה ב 2.7.26.</small>'
-  +'<small>4.10 נשלח מייל מ itcohen2 לבקשת תור דחוף. מחכים לתשובה.</small>'
+  +'<small>4.10 נשלח מייל לבקשת תור דחוף. 5.10 נשלח שוב עם מספר תעודת הזהות.</small>'
+  +((D.occ||[])[0]?'<small><b>תשובה מהמרפאה, '+esc((D.occ[0].at||'').slice(0,16).replace('T',' '))+':</b><br>'+esc(D.occ[0].text).split(String.fromCharCode(10)).join('<br>')+'</small>':'<small>עוד לא הגיעה תשובה במייל.</small>')
   +'<small>פקס 073 2132632</small>'
   +OCC_ITEMS.map(function(it,i){
     return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+esc(it.t)+'</button>';
@@ -7460,6 +7462,7 @@ function occSheet(){
  document.body.appendChild(w);
 }
 on('gOcc',occSheet);
+boot('occ',function(){var o=(D.occ||[])[0],seen='';try{seen=localStorage.getItem('occSeen')||'';}catch(e){}var b=document.getElementById('gOcc');if(b)b.classList.toggle('taskblink',!!(o&&o.id&&seen!==o.id));});
 var LAW_ITEMS=[
  {n:'01',t:'הרכבים של לולוס: המרצדס 19834203 והיונדאי של יואל 6958655',r:'lolos-vehicles-2026-10-04.pdf'},
  {n:'01ב',t:'הרכבים כתמונה לגלריה, עמוד 1',r:'law-01a.jpg'},

@@ -290,6 +290,13 @@ function build() {
     .map(x => ({ id: String(x.id || x.at || ''), at: x.at || '', title: x.title || '',
                  note: x.note || '', model: x.model || '' }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
+  /*
+    Itzik, 5.10: replies from the occupational clinic, found by occ-check.js in
+    his mail. The clinic tile blinks for the newest one until he opens it.
+  */
+  const occ = loadDocs('occ')
+    .map(x => ({ id: String(x.id || x.at || ''), at: x.at || '', subject: x.subject || '', text: x.text || '' }))
+    .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
   const special = loadDocs('special')
     .map(x => ({ at: x.at, title: x.title || '', url: x.url || '',
                  note: x.note || '', copy: x.copy || '',
@@ -605,6 +612,7 @@ function build() {
     improve,
     special,
     modelswitch,
+    occ,
     reminders,
     tasks,
     tenants,
@@ -10598,6 +10606,7 @@ var OCC_ITEMS=[
 ];
 function occSheet(){
  var old=document.getElementById('occSheet');if(old)old.remove();
+ var o=(D.occ||[])[0];if(o){try{localStorage.setItem('occSeen',o.id);}catch(e){}var gb=document.getElementById('gOcc');if(gb)gb.classList.remove('taskblink');}
  var w=document.createElement('div');
  w.id='occSheet';w.className='ysheet';
  w.setAttribute('role','dialog');
@@ -10606,7 +10615,8 @@ function occSheet(){
   +'<b>מרפאה תעסוקתית, מכבי רמות</b>'
   +'<small>מענה טלפוני: א עד ה, 08:00 עד 11:00 בלבד. קבלת קהל: א עד ה, 08:00 עד 14:00. שישי ושבת סגור.</small>'
   +'<small>תור רק בטלפון ובהפניית רופא. הרופאה: ד״ר נטלי מתן. התור האחרון היה ב 2.7.26.</small>'
-  +'<small>4.10 נשלח מייל מ itcohen2 לבקשת תור דחוף. מחכים לתשובה.</small>'
+  +'<small>4.10 נשלח מייל לבקשת תור דחוף. 5.10 נשלח שוב עם מספר תעודת הזהות.</small>'
+  +((D.occ||[])[0]?'<small><b>תשובה מהמרפאה, '+esc((D.occ[0].at||'').slice(0,16).replace('T',' '))+':</b><br>'+esc(D.occ[0].text).split(String.fromCharCode(10)).join('<br>')+'</small>':'<small>עוד לא הגיעה תשובה במייל.</small>')
   +'<small>פקס 073 2132632</small>'
   +OCC_ITEMS.map(function(it,i){
     return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+esc(it.t)+'</button>';
@@ -10628,6 +10638,7 @@ function occSheet(){
  document.body.appendChild(w);
 }
 on('gOcc',occSheet);
+boot('occ',function(){var o=(D.occ||[])[0],seen='';try{seen=localStorage.getItem('occSeen')||'';}catch(e){}var b=document.getElementById('gOcc');if(b)b.classList.toggle('taskblink',!!(o&&o.id&&seen!==o.id));});
 /*
   4.10. Documents made for the lawyer in the Lolos sale, numbered. A new one
   gets the next number. Same sheet as the future reels.
