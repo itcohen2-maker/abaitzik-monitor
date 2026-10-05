@@ -2097,7 +2097,11 @@ body.tdrag{-webkit-user-select:none;user-select:none}
  display:flex;align-items:flex-end;justify-content:center;padding:14px}
 .ycard{background:#fff;color:#16202c;width:100%;max-width:420px;
  border-radius:18px;padding:18px 16px 14px;display:flex;flex-direction:column;gap:9px;
- box-shadow:0 -8px 40px rgba(0,0,0,.35)}
+ box-shadow:0 -8px 40px rgba(0,0,0,.35);
+ /* 5.10: a long text (אני מספר על עצמי) grew past the top of the screen and
+    its opening could not be reached. The card now scrolls inside itself. */
+ max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.ycard>*{flex-shrink:0}
 .ycard b{font:700 16px Heebo,sans-serif}
 .ycard small{font-size:12px;opacity:.7;margin-bottom:4px}
 .micSteps{margin:2px 0 6px;padding-inline-start:20px;font:500 15px/1.5 Heebo,sans-serif}
