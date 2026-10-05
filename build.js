@@ -10741,7 +10741,8 @@ on('gKatalog',katalogSheet);
 // 5.10 Itzik: only the yellow caption stories stay, the rest is gone. Next is 11.
 var NER_ITEMS=[
  {n:'09',t:'סטורי פרסומת, חמישי 8.10, עברית (כיתוב צהוב גדול, בלי שאלה)',r:'ner-17-thu-he-yellow.mp4'},
- {n:'10',t:'סטורי פרסומת, חמישי 8.10, עברית (הלחץ לפני ההדלקה, כיתוב צהוב)',r:'ner-18-thu-he-rush.mp4'}
+ {n:'10',t:'סטורי פרסומת, חמישי 8.10, עברית (הלחץ לפני ההדלקה, כיתוב צהוב)',r:'ner-18-thu-he-rush.mp4'},
+ {n:'11',t:'סטורי פרסומת, חמישי 8.10, אנגלית (דמות אחרת)',r:'ner-19-thu-en.mp4'}
 ];
 function nerSheet(){
  var old=document.getElementById('nSheet');if(old)old.remove();

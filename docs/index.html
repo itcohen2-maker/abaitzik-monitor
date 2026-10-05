@@ -1722,7 +1722,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-05T18:33:00.713Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-05T19:00:15.731Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3028,7 +3028,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='95ca175d67';
+var CODE_ID='ef03ae521d';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -7515,7 +7515,8 @@ function katalogSheet(){
 on('gKatalog',katalogSheet);
 var NER_ITEMS=[
  {n:'09',t:'סטורי פרסומת, חמישי 8.10, עברית (כיתוב צהוב גדול, בלי שאלה)',r:'ner-17-thu-he-yellow.mp4'},
- {n:'10',t:'סטורי פרסומת, חמישי 8.10, עברית (הלחץ לפני ההדלקה, כיתוב צהוב)',r:'ner-18-thu-he-rush.mp4'}
+ {n:'10',t:'סטורי פרסומת, חמישי 8.10, עברית (הלחץ לפני ההדלקה, כיתוב צהוב)',r:'ner-18-thu-he-rush.mp4'},
+ {n:'11',t:'סטורי פרסומת, חמישי 8.10, אנגלית (דמות אחרת)',r:'ner-19-thu-en.mp4'}
 ];
 function nerSheet(){
  var old=document.getElementById('nSheet');if(old)old.remove();
