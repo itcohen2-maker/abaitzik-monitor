@@ -27,6 +27,11 @@
   Claude session that returns up to six improvements from a new customer's point of view into `data/better/better/`,
   shown first on the "💡 רעיונות" screen. Log: `/var/log/monitor-review.log`.
 
+- **The morning brief (5.10.2026):** `daily-brief.js`, timer `monitor-brief.timer` every day 07:00 Israel. Reads the
+  last 24 hours of mail (tools/mail-search.py, read only), the chat and the reports, and a Claude session with no
+  tools writes one report to `data/reports/reports/*-morning-brief.json`, shown on the "תשובות" screen, plus a push.
+  `--dry` prints without saving. Log: `/var/log/monitor-brief.log`.
+
 - **The candle times site, candletimes.com (1.10.2026):** all work on it happens in `/home/monitor/ner-site`, a clone
   of the private repo `itcohen2-maker/ner-site` (branch master), not in this repo. It deploys by git push: change,
   `node check.mjs`, `node build-pages.mjs` only when times changed, `git commit`, `git push origin master`, and
