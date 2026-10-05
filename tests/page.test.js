@@ -767,13 +767,16 @@ test('the title is his, and the build and the data are two different facts', () 
   assert.ok(!html.includes('בבניין עצמי'));
   // Two lines, not one sentence: a page can be fresh and its numbers stale.
   assert.ok(html.includes('<div class="s" id="built"></div>'));
-  assert.ok(html.includes('<div class="s dim" id="checked"></div>'));
+  assert.ok(html.includes('<div class="s dim" id="checked" hidden></div>'));
+  // 5.10: the top line is one plain sentence; the version moved to settings.
+  assert.ok(html.includes("'הכל תקין, עודכן לפני רגע.'"));
+  assert.ok(html.includes('id="builtSet"'));
   // The build says which one it is and when it went out, in absolute time, and
   // then how old IT is. It used to say "עודכן לפני 15 דקות", which reads as
   // "this thing has not updated in fifteen minutes" and is how Itzik read it
   // all of 18.9 while the line under it said the data was current. Two clocks,
   // and the first was lying about the second.
-  assert.ok(html.includes("'גרסה '+(D.buildId||'')+' · '+stamp(D.builtAt)"));
+  assert.ok(html.includes("var ver='גרסה '+(D.buildId||'')+' · '+stamp(D.builtAt)"));
   assert.ok(html.includes("+' · הגרסה '+String(age).replace(/^לפני /,'בת ')"));
   assert.ok(!html.includes("+' · עודכן '+since(D.builtAt)"));
   // And when the data really is current it says so in words, not in a stamp.
