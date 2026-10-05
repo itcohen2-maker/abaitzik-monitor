@@ -10447,7 +10447,8 @@ var NER_ITEMS=[
  {n:'06',t:'סטורי נרות חי, שישי, אנגלית',r:'ner-live-4-friday-en.mp4'},
  {n:'07',t:'סטורי פרסומת, חמישי 8.10, עברית (מצויר)',r:'candle-story-thu-he-8-10.mp4'},
  {n:'08',t:'סטורי פרסומת, חמישי 8.10, עברית (אישה אמיתית)',r:'ner-16-thu-he-anim.mp4'},
- {n:'09',t:'סטורי פרסומת, חמישי 8.10, עברית (כיתוב צהוב גדול, בלי שאלה)',r:'ner-17-thu-he-yellow.mp4'}
+ {n:'09',t:'סטורי פרסומת, חמישי 8.10, עברית (כיתוב צהוב גדול, בלי שאלה)',r:'ner-17-thu-he-yellow.mp4'},
+ {n:'10',t:'סטורי פרסומת, חמישי 8.10, עברית (הלחץ לפני ההדלקה)',r:'ner-18-thu-he-rush.mp4'}
 ];
 function nerSheet(){
  var old=document.getElementById('nSheet');if(old)old.remove();
