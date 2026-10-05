@@ -1710,7 +1710,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-05T06:37:56.642Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-05T06:41:21.522Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2899,7 +2899,7 @@ function fileView(name){
   else if(t==='application/pdf')h='<div class="fv-pdf"><div class="empty">מציג את העמודים.</div></div>'
    +'<a class="ask" href="'+url+'" target="_blank" rel="noopener">פתיחת הקובץ</a>';
   else h='<a class="ask" href="'+url+'" target="_blank" rel="noopener">פתיחת הקובץ</a>';
-  if(t==='application/pdf'||t.indexOf('image/')===0)h+='<button type="button" class="ask fv-print">שליחה להדפסה</button>';
+  if(t==='application/pdf'||t.indexOf('image/')===0)h+='<button type="button" class="ask fv-print">שליחה להדפסה</button>'+((/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1))?'<div class="empty" style="font-size:13px">בחלון שנפתח: גלול למטה ובחר הדפסה</div>':'');
   var sf=null;try{sf=new File([b],short,{type:(t.split(';')[0])||'application/octet-stream'});}catch(x){}
   if(sf&&navigator.share&&navigator.canShare&&navigator.canShare({files:[sf]}))h+='<button type="button" class="ask fv-share">שליחה בוואטסאפ, במסנג׳ר או במייל</button>';
   var ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
@@ -2911,7 +2911,11 @@ function fileView(name){
   var sb=body.querySelector('.fv-share');
   if(sb)sb.onclick=function(){navigator.share({files:[sf],title:short}).catch(function(){});};
   var pb=body.querySelector('.fv-print');
-  if(pb)pb.onclick=function(){fvPrint(body,t);};
+  if(pb)pb.onclick=function(){
+   if(ios&&sf&&navigator.share&&navigator.canShare&&navigator.canShare({files:[sf]})){
+    navigator.share({files:[sf],title:short}).catch(function(){});
+   }else fvPrint(body,t);
+  };
   var gb=body.querySelector('.fv-gal');
   if(gb)gb.onclick=function(){navigator.share({files:[sf]}).catch(function(){});};
   if(t.indexOf('text/')===0)b.text().then(function(s){
@@ -2940,7 +2944,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='1e2774dbe9';
+var CODE_ID='cf53a0d009';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';

@@ -4437,7 +4437,7 @@ function fileView(name){
   // Itzik, 5.10, on the reel script: "תוסיף באופציות שליחה להדפסה". iPhone
   // Safari prints the page and not a PDF held in a blob, so the pages that
   // are already drawn on screen go into a print-only sheet and the page prints.
-  if(t==='application/pdf'||t.indexOf('image/')===0)h+='<button type="button" class="ask fv-print">שליחה להדפסה</button>';
+  if(t==='application/pdf'||t.indexOf('image/')===0)h+='<button type="button" class="ask fv-print">שליחה להדפסה</button>'+((/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1))?'<div class="empty" style="font-size:13px">בחלון שנפתח: גלול למטה ובחר הדפסה</div>':'');
   var sf=null;try{sf=new File([b],short,{type:(t.split(';')[0])||'application/octet-stream'});}catch(x){}
   if(sf&&navigator.share&&navigator.canShare&&navigator.canShare({files:[sf]}))h+='<button type="button" class="ask fv-share">שליחה בוואטסאפ, במסנג׳ר או במייל</button>';
   // Itzik, 1.10: "עשיתי שמירה לגלריה ואני לא מוצא". On the iPhone a blob
@@ -4453,7 +4453,18 @@ function fileView(name){
   var sb=body.querySelector('.fv-share');
   if(sb)sb.onclick=function(){navigator.share({files:[sf],title:short}).catch(function(){});};
   var pb=body.querySelector('.fv-print');
-  if(pb)pb.onclick=function(){fvPrint(body,t);};
+  /*
+    Itzik, 5.10: "הכפתור שליחה להדפסה לא עובד". The monitor runs from his
+    home screen, and an iPhone web app opened that way ignores window.print
+    without a word. The share sheet is the iPhone's road to the printer: it
+    carries the file itself and has a Print line. The page print stays for a
+    computer.
+  */
+  if(pb)pb.onclick=function(){
+   if(ios&&sf&&navigator.share&&navigator.canShare&&navigator.canShare({files:[sf]})){
+    navigator.share({files:[sf],title:short}).catch(function(){});
+   }else fvPrint(body,t);
+  };
   var gb=body.querySelector('.fv-gal');
   if(gb)gb.onclick=function(){navigator.share({files:[sf]}).catch(function(){});};
   if(t.indexOf('text/')===0)b.text().then(function(s){
