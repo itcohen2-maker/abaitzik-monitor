@@ -1723,7 +1723,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-06T05:23:54.978Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-06T05:25:11.925Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3031,7 +3031,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='e16fdd506d';
+var CODE_ID='a0c5c594da';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -7677,7 +7677,8 @@ on('gAdminReq',adminReqSheet);
 var OCC_LOG=[
  '4.10 בבוקר: נשלח מייל לבקשת תור דחוף.',
  '4.10 13:05: המרפאה ענתה וביקשה מספר תעודת זהות.',
- '5.10 11:53: נשלח שוב, עם מספר תעודת הזהות. מחכים לתשובה.'
+ '5.10 11:53: נשלח שוב, עם מספר תעודת הזהות. מחכים לתשובה.',
+ '6.10 08:23: נשלח מייל חוזר, ניסה בטלפון ואין מענה.'
 ];
 var OCC_ITEMS=[
  {t:'📞 התקשרות 03 9541310',u:'tel:039541310'},
