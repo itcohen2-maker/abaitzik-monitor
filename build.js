@@ -11061,6 +11061,21 @@ on('gAlerts',function(){
  if(!A.length&&!Q.length)h+='<small>אין התראות. הכל תקין.</small>';
  shipOpen('shipAlerts','🔔 דורש טיפול',h);
 });
+on('gToday',function(){
+ var S=D.ship;if(!S)return toast('אין נתונים עדיין');
+ var A=(S.alerts||[]).filter(function(a){return a.level==='red' || a.level==='amber';});
+ var h='<small>המשימות שמחכות היום, לפי דחיפות</small>';
+ A.forEach(function(a){
+  h+='<div class="srow" style="border-left:4px solid '+((a.level==='red')?'#d9534f':'#f0ad4e')+';padding:8px">'
+   +'<b>'+esc(a.po)+'</b> '+esc(a.supplier)+'<br>'
+   +'<small>'+esc(a.text)+'</small><br>'
+   +'<a href="mailto:?subject='+encodeURIComponent(a.po)+'&body='+encodeURIComponent(a.action)+'">✉️ מייל מוכן</a> '
+   +'<button onclick="if(confirm(\'סימן טיפלתי\')) sendText(\''+a.id+'\n'+a.code+'\',\'ship-done\')">✔ טיפלתי</button>'
+   +'</div>';
+ });
+ if(!A.length)h+='<div class="srow"><small>הכל בזמן!</small></div>';
+ shipOpen('shipToday','📋 היום',h);
+});
 on('gShip',function(){
  ensure('shipments',function(){
   var S=D.ship||{summary:{red:0,amber:0,green:0,track:0},alerts:[]},rows=D.shipments||[];
