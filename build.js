@@ -9871,6 +9871,9 @@ on('gReplies',function(){pane('k');renderReplies();markRepliesSeen();ensure('rep
 })();
 function renderSent(){
  var L=lastSent();var card=document.getElementById('sentCard');
+ // Itzik, 6.10, a recording: "תסיר את המוקאפ הצהוב בתחילת הדף למעלה". The
+ // card stays hidden; where a message stands is in the chat and in "מה התקבל".
+ card.hidden=true;return;
  if(!L){card.hidden=true;return;}
  card.hidden=false;
  // By the clock, not by the text: half the answers are written with +03:00
