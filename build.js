@@ -2023,6 +2023,7 @@ body.editing .bn{display:none}
 .c-kb{background:linear-gradient(160deg,#34d399,#047857)}
 .c-vd{background:linear-gradient(160deg,#fbbf24,#d97706)}
 .c-hb{background:linear-gradient(160deg,#fbbf24,#b45309)}
+.c-nk{background:linear-gradient(160deg,#a78bfa,#0f4c6b)}
 .c-vs{background:linear-gradient(160deg,#22d3ee,#0e7490)}
 .c-add{background:var(--surface);border:2px dashed var(--line);box-shadow:none}
 .c-add:after{display:none}
@@ -3446,6 +3447,10 @@ try{
     one circle. Inside, the screen still has a tab per network and the button
     out to each network's own app.
   -->
+  <!-- איציק, 6.10, בהקלטה: "תכין לי אייקון עגול עם התעודת נכה בפנים". Opens
+       the card itself, decrypted, with the share button for the licensing office. -->
+  <button type="button" class="ic" id="icNache"><span class="c c-nk">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="4.5" r="1.6"/><path d="M11 7.5v6h5l2 5"/><path d="M11 10.5h4"/><path d="M8 11.2a5.5 5.5 0 1 0 7.6 6.3"/></svg></span>תעודת נכה</button>
   <a class="ic" data-net="all" id="icNet" href="#"><span class="c c-nt">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M10 20V5M15 20v-6M20 20V8"/></svg></span>ניטור רשתות</a>
   <a class="ic" href="https://abaitzik.com/" target="_blank" rel="noopener"><span class="c c-st">
@@ -12301,6 +12306,7 @@ function visitDays(d,order,LABEL){
 document.getElementById('icVisits').onclick=function(){pane('X');loadVisits();};
 document.getElementById('visitsAgain').onclick=loadVisits;
 document.getElementById('icLand').onclick=function(){pane('g');};
+document.getElementById('icNache').onclick=function(){if(!fileView('tav-nache-teuda.jpg'))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');};
 document.getElementById('landList').innerHTML=LANDING.map(function(l){
  return '<div class="item"><div class="top"><span class="who">'+esc(l.name)+'</span>'
   +'<span class="chip">'+esc(l.note)+'</span></div>'

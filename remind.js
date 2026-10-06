@@ -36,6 +36,9 @@ function add(day, text, re) {
     process.exit(1);
   }
   fs.mkdirSync(DIR, { recursive: true });
+  // 6.10: the server runs on UTC, so without this "09:00" landed at 12:00 his
+  // time, after the 09:00 run, and went out a day late.
+  process.env.TZ = 'Asia/Jerusalem';
   // תשע בבוקר שלו. שעון ישראל באוקטובר עדיין קיץ עד סוף החודש, אבל התאריך
   // נקבע כאן לפי השעון של המחשב שמריץ את המשימה, שהוא שעון ישראל.
   const due = new Date(day + 'T09:00:00');

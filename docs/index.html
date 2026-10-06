@@ -898,6 +898,7 @@ body.editing .bn{display:none}
 .c-kb{background:linear-gradient(160deg,#34d399,#047857)}
 .c-vd{background:linear-gradient(160deg,#fbbf24,#d97706)}
 .c-hb{background:linear-gradient(160deg,#fbbf24,#b45309)}
+.c-nk{background:linear-gradient(160deg,#a78bfa,#0f4c6b)}
 .c-vs{background:linear-gradient(160deg,#22d3ee,#0e7490)}
 .c-add{background:var(--surface);border:2px dashed var(--line);box-shadow:none}
 .c-add:after{display:none}
@@ -1735,7 +1736,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-06T15:31:50.258Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-06T15:33:17.694Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1892,6 +1893,8 @@ try{
  <div class="gres" id="gResults"></div>
 
  <div class="row" id="blkIcons" role="group" aria-label="קיצורים">
+  <button type="button" class="ic" id="icNache"><span class="c c-nk">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="4.5" r="1.6"/><path d="M11 7.5v6h5l2 5"/><path d="M11 10.5h4"/><path d="M8 11.2a5.5 5.5 0 1 0 7.6 6.3"/></svg></span>תעודת נכה</button>
   <a class="ic" data-net="all" id="icNet" href="#"><span class="c c-nt">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M10 20V5M15 20v-6M20 20V8"/></svg></span>ניטור רשתות</a>
   <a class="ic" href="https://abaitzik.com/" target="_blank" rel="noopener"><span class="c c-st">
@@ -3039,7 +3042,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='052b22f41a';
+var CODE_ID='07d90c5452';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -8837,6 +8840,7 @@ function visitDays(d,order,LABEL){
 document.getElementById('icVisits').onclick=function(){pane('X');loadVisits();};
 document.getElementById('visitsAgain').onclick=loadVisits;
 document.getElementById('icLand').onclick=function(){pane('g');};
+document.getElementById('icNache').onclick=function(){if(!fileView('tav-nache-teuda.jpg'))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');};
 document.getElementById('landList').innerHTML=LANDING.map(function(l){
  return '<div class="item"><div class="top"><span class="who">'+esc(l.name)+'</span>'
   +'<span class="chip">'+esc(l.note)+'</span></div>'
