@@ -3253,7 +3253,7 @@ try{
     בשורת הרשתות, שניהם פתחו את אותו מסך. המסך pE עצמו נשאר.
   -->
   <!-- 6.10: the meeting prep got buried under newer answers. Its own tile, first. -->
-  <button type="button" class="gt gMeet" id="gMeet"><b>🤝 הפגישה של היום</b><small>שאלות למרכזת המשלוחים, להדפסה</small></button>
+  <button type="button" class="gt gMeet" id="gMeet"><b>📦 מעקב משלוחים, הום סטייל</b><small>איפה אנחנו עומדים, לעדכון רוני</small></button>
   <button type="button" class="gt g3" id="gQueue"><b>📊 ניטור רשתות</b><small>מי פנה, מה נענה</small></button>
   <!-- The reports tile came off on 17.9. The reports are in "תשובות" now,
        which is the one button he asked for. -->
@@ -10987,17 +10987,33 @@ function occSheet(){
  document.body.appendChild(w);
 }
 on('gOcc',occSheet);
-// 6.10: HomeStyle, one file: the questions for the shipments coordinator.
+// 6.10: HomeStyle shipments tracking. Status for Roni (the CEO), plus one file.
+// Update SHIP_STATUS whenever something moves; keep exactly one file button.
+var SHIP_STATUS={at:'6.10.2026',done:[
+ 'עברנו על קובץ צפי המשלוחים, ארבעה גיליונות',
+ 'כל 24 השאלות נענו עם רינת ויעל',
+ 'נקבעו כללי ההתראה: אין SHO, כלומר לא פנו לסוכן; אין בוקינג עשרה ימים לפני יציאה מסין וחמישה מהודו; סטייה של יותר משלושה שבועות; אין מספר תיק עמילות שבועיים לפני הגעה',
+ 'מי מקבל: רינת פעם ביום; בסטייה רינת, יעל ורוני',
+ 'הזמנות שמתחילות ב 7 שייכות לשופרסל, רק מעקב'
+],next:[
+ 'מחלקת המחשוב: גישה לקריאה בלבד לתיבת ה Outlook של יעל, בלי הסיסמה שלה ובלי העברה החוצה. הבקשה מוכנה למטה',
+ 'שלוש דוגמאות למיילים מ DANIEL ומייל אחד של מירי מ ICL',
+ 'המייל של רוני',
+ 'באיזו שעה נשלח הדוח היומי לרינת'
+]};
 function meetSheet(){
  ensure('reports',function(){
   var old=document.getElementById('meetSheet');if(old)old.remove();
   var w=document.createElement('div');
   w.id='meetSheet';w.className='ysheet';
   w.setAttribute('role','dialog');
-  w.setAttribute('aria-label','הפגישה של היום');
+  w.setAttribute('aria-label','מעקב משלוחים, הום סטייל');
   w.innerHTML='<div class="ycard">'
-   +'<b>הפגישה של היום</b>'
-   +'<button type="button" class="yb yb4" data-k="f:shealot-merakezet-mishlochim.pdf">📋 שאלות למרכזת המשלוחים, להדפסה</button>'
+   +'<b>מעקב משלוחים, הום סטייל</b>'
+   +'<small>מעודכן ל '+SHIP_STATUS.at+'</small>'
+   +'<small><b>✅ מה נעשה</b><br>'+SHIP_STATUS.done.map(esc).join('<br>')+'</small>'
+   +'<small><b>⏳ מה נשאר</b><br>'+SHIP_STATUS.next.map(esc).join('<br>')+'</small>'
+   +'<button type="button" class="yb yb4" data-k="f:bakasha-mihshuv-homestyle.pdf">📄 בקשה למחלקת המחשוב</button>'
    +'<button type="button" class="yb yx" data-k="">סגירה</button>'
    +'</div>';
   function close(){w.remove();document.removeEventListener('keydown',esckey);}
