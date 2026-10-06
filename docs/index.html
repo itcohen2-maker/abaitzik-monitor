@@ -1734,7 +1734,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-06T12:31:29.721Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-06T12:40:47.618Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3045,7 +3045,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='55e820a5ef';
+var CODE_ID='a5349e5dce';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -7791,7 +7791,8 @@ on('gShip',function(){
      if(!q)return true;
      return (r.po+' '+r.supplier+' '+r.product).toLowerCase().indexOf(q)>-1;
     });
-    L.sort(function(a,b){return (a.eta||a.etd||'9999').localeCompare(b.eta||b.etd||'9999');});
+    function rk(r){var l=worst(r);return l===''?3:SHIP_RANK[l];}
+    L.sort(function(a,b){return (rk(a)-rk(b))||(a.eta||a.etd||'9999').localeCompare(b.eta||b.etd||'9999');});
     var n=L.length;L=L.slice(0,150);
     list.innerHTML=L.map(function(r){
      var lv=worst(r);
@@ -9994,6 +9995,8 @@ function liveTime(iso){
 function paintPc(){
  var p=document.getElementById('pcPill'),t=document.getElementById('pcText');
  if(!p||!t)return;
+ var scr=INSTANCE&&INSTANCE.screens;
+ if(scr&&scr.length&&scr.indexOf('gRemote')<0){p.style.display='none';return;}
  var pc=liveLast&&liveLast.pc;
  if(!pc||(Date.now()-Date.parse(liveLast.at))/1000>4800){p.className='pcpill';t.textContent='💻 לא ידוע';return;}
  if(pc.on){p.className='pcpill on';t.textContent='💻 המחשב דלוק';return;}

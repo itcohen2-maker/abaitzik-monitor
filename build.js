@@ -11087,7 +11087,8 @@ on('gShip',function(){
      if(!q)return true;
      return (r.po+' '+r.supplier+' '+r.product).toLowerCase().indexOf(q)>-1;
     });
-    L.sort(function(a,b){return (a.eta||a.etd||'9999').localeCompare(b.eta||b.etd||'9999');});
+    function rk(r){var l=worst(r);return l===''?3:SHIP_RANK[l];}
+    L.sort(function(a,b){return (rk(a)-rk(b))||(a.eta||a.etd||'9999').localeCompare(b.eta||b.etd||'9999');});
     var n=L.length;L=L.slice(0,150);
     list.innerHTML=L.map(function(r){
      var lv=worst(r);
@@ -13859,6 +13860,10 @@ function liveTime(iso){
 function paintPc(){
  var p=document.getElementById('pcPill'),t=document.getElementById('pcText');
  if(!p||!t)return;
+ // 6.10: the PC pill is for a monitor that is wired to its owner's computer. A customer
+ // whose screens do not include the connect-a-computer tile has no such computer.
+ var scr=INSTANCE&&INSTANCE.screens;
+ if(scr&&scr.length&&scr.indexOf('gRemote')<0){p.style.display='none';return;}
  var pc=liveLast&&liveLast.pc;
  if(!pc||(Date.now()-Date.parse(liveLast.at))/1000>4800){p.className='pcpill';t.textContent='💻 לא ידוע';return;}
  if(pc.on){p.className='pcpill on';t.textContent='💻 המחשב דלוק';return;}
