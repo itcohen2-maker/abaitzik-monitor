@@ -1736,7 +1736,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-06T16:46:16.792Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-06T17:06:40.805Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3042,7 +3042,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='07d90c5452';
+var CODE_ID='a7f838d258';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -7752,6 +7752,22 @@ on('gAlerts',function(){
  if(Q.length)h+='<b>מיילים שלא שויכו להזמנה ('+Q.length+')</b>'+Q.slice().reverse().map(function(q){return '<div class="srow"><b>'+esc(q.subject)+'</b><br><small>'+esc(q.reason)+'</small></div>';}).join('');
  if(!A.length&&!Q.length)h+='<small>אין התראות. הכל תקין.</small>';
  shipOpen('shipAlerts','🔔 דורש טיפול',h);
+});
+on('gToday',function(){
+ var S=D.ship;if(!S)return toast('אין נתונים עדיין');
+ var A=(S.alerts||[]).filter(function(a){return a.level==='red' || a.level==='amber';});
+ var h='<small>המשימות שמחכות היום, לפי דחיפות</small>';
+ A.forEach(function(a){
+  h+='<div class="srow" style="border-left:4px solid '+((a.level==='red')?'#d9534f':'#f0ad4e')+';padding:8px">'
+   +'<b>'+esc(a.po)+'</b> '+esc(a.supplier)+'<br>'
+   +'<small>'+esc(a.text)+'</small><br>'
+   +'<a href="mailto:?subject='+encodeURIComponent(a.po)+'&body='+encodeURIComponent(a.action)+'">✉️ מייל מוכן</a> '
+   +'<button onclick="if(confirm('סימן טיפלתי')) sendText(''+a.id+'
+'+a.code+'','ship-done')">✔ טיפלתי</button>'
+   +'</div>';
+ });
+ if(!A.length)h+='<div class="srow"><small>הכל בזמן!</small></div>';
+ shipOpen('shipToday','📋 היום',h);
 });
 on('gShip',function(){
  ensure('shipments',function(){
