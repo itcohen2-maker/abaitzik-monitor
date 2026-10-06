@@ -1736,7 +1736,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-06T17:10:59.682Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-06T17:14:25.488Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3042,7 +3042,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='34a1d6c5f1';
+var CODE_ID='6abd0d093c';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -4571,7 +4571,8 @@ function afterScroll(){
 }
 function typingNow(){
  var a=document.activeElement;
- if(a&&(a.tagName==='TEXTAREA'||(a.tagName==='INPUT'&&/^(text|search|email|tel|url|number|)$/.test(a.type||''))||a.isContentEditable))return true;
+ if(a&&(a.tagName==='TEXTAREA'||(a.tagName==='INPUT'&&/^(text|search|email|tel|url|number|)$/.test(a.type||''))||a.isContentEditable)
+   &&String(a.value!=null?a.value:(a.textContent||'')).trim())return true;
  return Date.now()-lastTypeAt<30000;
 }
 function carryState(){
@@ -4609,8 +4610,8 @@ function checkFresh(){
    softRefresh(v);
    return;
   }
-  if(recStarting||rec)return;
-  if(typingNow())return;
+  if(recStarting||rec){softRefresh(v);return;}
+  if(typingNow()){softRefresh(v);return;}
   if(what&&liveSeen!==v.builtAt){liveSeen=v.builtAt;what.textContent='יש תשובה חדשה. טוען.';}
   var seen='';
   try{seen=sessionStorage.getItem('reloadedFor')||'';}catch(e){}
@@ -4639,7 +4640,7 @@ document.addEventListener('click',function(e){
  ringFor(t.tagName==='SUMMARY'?t.parentNode:t,1200);
 },true);
 setInterval(checkFresh,40000);
-setInterval(function(){paintLive(null);paintNew();if(!scrollingNow())try{renderReqs();}catch(e){}},20000);
+setInterval(function(){paintLive(null);paintNew();try{renderSent();}catch(e){}if(!scrollingNow())try{renderReqs();}catch(e){}},20000);
 function wake(){
  if(document.hidden)return;
  var changed=false;
@@ -6789,9 +6790,11 @@ function renderSent(){
  var L=lastSent();var card=document.getElementById('sentCard');
  if(!L){card.hidden=true;return;}
  card.hidden=false;
- var mine=(D.chat||[]).filter(function(m){return m.from==='itzik'&&(m.at||'')>=L.at;});
+ var t0=Date.parse(L.at)||0,tm=function(m){return Date.parse(m.at||'')||0;};
+ var mine=(D.chat||[]).filter(function(m){return m.from==='itzik'&&tm(m)>=t0-5000;})
+  .sort(function(a,b){return tm(a)-tm(b);});
  var st=mine.length?(mine[mine.length-1].status||'received'):'';
- var reply=(D.chat||[]).some(function(m){return m.from==='claude'&&(m.at||'')>L.at;});
+ var reply=(D.chat||[]).some(function(m){return m.from==='claude'&&tm(m)>t0;});
  var label=SENTLABEL[L.kind]||'הודעה';
  var t,sub,done=false,working=false;
  if(st==='done'||reply){t=label+' טופלה';sub='עניתי לך. לחץ כאן כדי לקרוא את התשובה.';done=true;}

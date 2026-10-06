@@ -809,6 +809,24 @@ function build() {
     computer: inst.computer, phone: inst.phone, welcome: inst.welcome });
   const html = html0.replace('__CODE_ID__', codeId0).replace("'__INSTANCE__'", instanceJson);
 
+  /*
+    A page whose script does not parse never goes out.
+
+    6.10, 17:06 to 17:09: one unescaped quote in the shipments sheet killed the
+    whole script, and every phone that reloaded in those minutes sat on a dead
+    page that cannot fetch the next one. The test catches it, but push does not
+    run the tests, so the build itself refuses, and the old page stays live.
+  */
+  {
+    const vm = require('vm');
+    const re = /<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g;
+    let m, i = 0;
+    while ((m = re.exec(html))) {
+      i++;
+      try { new vm.Script(m[1]); }
+      catch (e) { throw new Error('inline script ' + i + ' does not parse: ' + e.message); }
+    }
+  }
   fs.mkdirSync(OUT_DIR, { recursive: true });
   fs.writeFileSync(path.join(OUT_DIR, 'index.html'), html, 'utf8');
   fs.writeFileSync(path.join(OUT_DIR, '.nojekyll'), '', 'utf8');
@@ -6817,8 +6835,13 @@ function afterScroll(){
  },Math.max(1000,20500-(Date.now()-lastScrollAt)));
 }
 function typingNow(){
+ // An empty box that still holds the focus is not typing. On the iPhone the
+ // box stays focused after a send and after the keyboard is put away, and
+ // this used to hold every new build off the screen for hours (6.10, voice
+ // note: the yellow card on top "לא מתעדכן ... כבר שעות").
  var a=document.activeElement;
- if(a&&(a.tagName==='TEXTAREA'||(a.tagName==='INPUT'&&/^(text|search|email|tel|url|number|)$/.test(a.type||''))||a.isContentEditable))return true;
+ if(a&&(a.tagName==='TEXTAREA'||(a.tagName==='INPUT'&&/^(text|search|email|tel|url|number|)$/.test(a.type||''))||a.isContentEditable)
+   &&String(a.value!=null?a.value:(a.textContent||'')).trim())return true;
  return Date.now()-lastTypeAt<30000;
 }
 function carryState(){
@@ -6864,10 +6887,12 @@ function checkFresh(){
   }
   // Never mid microphone: a reload closes the phone's permission prompt, which
   // is exactly the prompt he saw vanish under his finger (30.9).
-  if(recStarting||rec)return;
+  // The answers still come in while the reload waits: only the code waits,
+  // never the data. Holding both is what froze the card on top for hours.
+  if(recStarting||rec){softRefresh(v);return;}
   // Never mid typing either (30.9, voice note: "באמצע הקלדה יש ריענון וזה מוחק
   // לי את הכל"). The new build waits for the next check after he stops.
-  if(typingNow())return;
+  if(typingNow()){softRefresh(v);return;}
   // A new build is up. Say so before reloading, so a reply that landed while
   // he was reading does not just make the screen jump under his hands.
   if(what&&liveSeen!==v.builtAt){liveSeen=v.builtAt;what.textContent='יש תשובה חדשה. טוען.';}
@@ -6900,7 +6925,7 @@ document.addEventListener('click',function(e){
 },true);
 // Forty seconds, not two minutes. He wants to see that something is alive.
 setInterval(checkFresh,40000);
-setInterval(function(){paintLive(null);paintNew();if(!scrollingNow())try{renderReqs();}catch(e){}},20000);
+setInterval(function(){paintLive(null);paintNew();try{renderSent();}catch(e){}if(!scrollingNow())try{renderReqs();}catch(e){}},20000);
 /*
   Every way a phone can come back to this page.
 
@@ -9834,9 +9859,13 @@ function renderSent(){
  var L=lastSent();var card=document.getElementById('sentCard');
  if(!L){card.hidden=true;return;}
  card.hidden=false;
- var mine=(D.chat||[]).filter(function(m){return m.from==='itzik'&&(m.at||'')>=L.at;});
+ // By the clock, not by the text: half the answers are written with +03:00
+ // and half with Z, and as strings those two do not sort.
+ var t0=Date.parse(L.at)||0,tm=function(m){return Date.parse(m.at||'')||0;};
+ var mine=(D.chat||[]).filter(function(m){return m.from==='itzik'&&tm(m)>=t0-5000;})
+  .sort(function(a,b){return tm(a)-tm(b);});
  var st=mine.length?(mine[mine.length-1].status||'received'):'';
- var reply=(D.chat||[]).some(function(m){return m.from==='claude'&&(m.at||'')>L.at;});
+ var reply=(D.chat||[]).some(function(m){return m.from==='claude'&&tm(m)>t0;});
  var label=SENTLABEL[L.kind]||'הודעה';
  var t,sub,done=false,working=false;
  if(st==='done'||reply){t=label+' טופלה';sub='עניתי לך. לחץ כאן כדי לקרוא את התשובה.';done=true;}
