@@ -11070,7 +11070,7 @@ on('gToday',function(){
    +'<b>'+esc(a.po)+'</b> '+esc(a.supplier)+'<br>'
    +'<small>'+esc(a.text)+'</small><br>'
    +'<a href="mailto:?subject='+encodeURIComponent(a.po)+'&body='+encodeURIComponent(a.action)+'">✉️ מייל מוכן</a> '
-   +'<button onclick="if(confirm(\'סימן טיפלתי\')) sendText(\''+a.id+'\n'+a.code+'\',\'ship-done\')">✔ טיפלתי</button>'
+   +'<button onclick="if(confirm(\\'סימן טיפלתי\\')) sendText(\\''+a.id+'\\n'+a.code+'\\',\\'ship-done\\')">✔ טיפלתי</button>'
    +'</div>';
  });
  if(!A.length)h+='<div class="srow"><small>הכל בזמן!</small></div>';
