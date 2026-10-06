@@ -11224,7 +11224,8 @@ var SHIP_STATUS={at:'6.10.2026',done:[
  'כללי ההתראה רצים על הקובץ האמיתי: 12 דחופים, 37 לבדוק, 12 מגיעים השבוע',
  'נבדק בדפדפן אמיתי בגודל טלפון, כולל שאלה בצ׳אט שנענתה נכון',
  'אבטחה: קוד של 14 ספרות, בידוד מלא בין הלקוחות, ללא נקודות חשופות',
- 'עיגול הום סטייל במסך הבית שלך, ליד איליי, ירוק כשהכל תקין'
+ 'עיגול הום סטייל במסך הבית שלך, ליד איליי, ירוק כשהכל תקין',
+ 'המכתב לרוני מוכן: מסך הבית, אריח מעקב משלוחים, הכפתור למטה'
 ],next:[
  'למסור לרינת ולרוני את הקישור והקוד, בהודעות נפרדות',
  'מחלקת המחשוב: גישה לקריאה בלבד לתיבת ה Outlook של יעל, ממתינים לתשובה. אחריה הטבלה מתעדכנת לבד מהמיילים',
@@ -11244,7 +11245,7 @@ function meetSheet(){
    +'<small>מעודכן ל '+SHIP_STATUS.at+'</small>'
    +'<small><b>✅ מה נעשה</b><br>'+SHIP_STATUS.done.map(esc).join('<br>')+'</small>'
    +'<small><b>⏳ מה נשאר</b><br>'+SHIP_STATUS.next.map(esc).join('<br>')+'</small>'
-   +'<button type="button" class="yb yb4" data-k="f:mismach-mishlochim-homestyle.pdf">📄 להדפסה: איפה אנחנו עומדים והבקשה למחשוב</button>'
+   +'<button type="button" class="yb yb4" data-k="f:michtav-leroni.pdf">📄 המכתב לרוני: סיכום מה שעשינו</button>'
    +'<button type="button" class="yb yx" data-k="">סגירה</button>'
    +'</div>';
   function close(){w.remove();document.removeEventListener('keydown',esckey);}
