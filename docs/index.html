@@ -1723,7 +1723,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-06T05:23:01.125Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-06T05:23:54.978Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1844,7 +1844,7 @@ try{
  <div id="askBox"></div>
 
  <div class="grid" id="blkTiles">
-  <button type="button" class="gt gMeet" id="gMeet"><b>🤝 הפגישה של היום</b><small>הבעלים של הום סטייל. תיק ההכנה המלא</small></button>
+  <button type="button" class="gt gMeet" id="gMeet"><b>🤝 הפגישה של היום</b><small>הבעלים של הום סטייל. תיק ההכנה ודף השאלות להדפסה</small></button>
   <button type="button" class="gt g3" id="gQueue"><b>📊 ניטור רשתות</b><small>מי פנה, מה נענה</small></button>
   <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>מי חייב כסף ומאיזה חודש</small></button>
   <button type="button" class="gt g8" id="gVaad"><b>🏠 ועד הבית</b><small>מי שילם ומה פתוח</small></button>
@@ -3031,7 +3031,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='809a07a6f7';
+var CODE_ID='e16fdd506d';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -7730,11 +7730,12 @@ function meetSheet(){
   w.innerHTML='<div class="ycard">'
    +'<b>'+esc(r?r.title:'הפגישה עם הבעלים של הום סטייל')+'</b>'
    +(r?esc(r.body||'').split(String.fromCharCode(10)+String.fromCharCode(10)).map(function(p){return '<small>'+p.split(String.fromCharCode(10)).join('<br>')+'</small>';}).join(''):'<small>התיק לא נטען. משוך את המסך למטה לרענון.</small>')
+   +'<button type="button" class="yb yb1" data-k="q">📄 תיאום ציפיות: רק השאלות, להדפסה</button>'
    +'<button type="button" class="yb yx" data-k="">סגירה</button>'
    +'</div>';
   function close(){w.remove();document.removeEventListener('keydown',esckey);}
   function esckey(e){if(e.key==='Escape')close();}
-  w.onclick=function(e){if(e.target===w||(e.target.getAttribute&&e.target.getAttribute('data-k')===''))close();};
+  w.onclick=function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-k');if(k==='q'){close();if(!fileView('tiaum-tzipiyot-homestyle.pdf'))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');return;}if(e.target===w||k==='')close();};
   document.addEventListener('keydown',esckey);
   document.body.appendChild(w);
  });
