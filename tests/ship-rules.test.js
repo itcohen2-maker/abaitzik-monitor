@@ -60,3 +60,9 @@ test('insights rank suppliers by average slip', () => {
   assert.strictEqual(i[0].supplier, 'JEFF');
   assert.strictEqual(i[0].overThreeWeeks, 2);
 });
+test('insights merge the spellings of one supplier', () => {
+  const rows = [row({ supplier: 'Shari', retd: '2026-01-01', etd: '2026-03-01' }), row({ supplier: 'SHARI', retd: '2026-01-01', etd: '2026-03-01', po: '2' })];
+  const i = R.insights(rows);
+  assert.strictEqual(i.length, 1);
+  assert.strictEqual(i[0].orders, 2);
+});

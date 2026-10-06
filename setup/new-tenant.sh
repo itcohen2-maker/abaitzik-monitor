@@ -48,8 +48,8 @@ inst = {"name": ID, "owner": OWNER, "publicUrl": "https://%s/" % HOST, "basePath
         "computer": None, "phone": None, "welcome": WELCOME}
 if SHIP: inst["shipmentsDir"] = SHIP
 put(DIR + "/instance.json", json.dumps(inst, ensure_ascii=False, indent=1), 0o644)
-keys = {"_why": "נושאי ntfy הם סיסמה. לא נכנסים לגיט.", "ntfyIn": "%s-in-%s" % (ID, secrets.token_hex(8)),
-        "ntfyLive": "%s-in-%s-live" % (ID, secrets.token_hex(8)), "ntfyOut": "%s-out-%s" % (ID, secrets.token_hex(6)), "mail": ""}
+keys = {"_why": "נושאי ntfy הם סיסמה. לא נכנסים לגיט.", "ntfyIn": "%s-in-%s" % (ID, secrets.token_hex(16)),
+        "ntfyLive": "%s-live-%s" % (ID, secrets.token_hex(16)), "ntfyOut": "%s-out-%s" % (ID, secrets.token_hex(16)), "mail": ""}
 put(DIR + "/data/keys.json", json.dumps(keys, ensure_ascii=False), 0o600)
 code = "".join(str(secrets.randbelow(10)) for _ in range(14))
 put(DIR + "/gate-key.txt", code + "\n", 0o600)
@@ -162,6 +162,10 @@ OnBootSec=2min
 OnUnitActiveSec=5min
 [Install]
 WantedBy=timers.target"
+# The Claude CLI needs a normal /tmp and writes outside a strict sandbox: the answering worker
+# gets a lighter one than the other units (6.10: with strict it died on mkdir /tmp/claude-<uid>).
+mkdir -p /etc/systemd/system/monitor-worker-$ID.service.d
+printf '[Service]\nPrivateTmp=no\nProtectSystem=full\n' > /etc/systemd/system/monitor-worker-$ID.service.d/claude.conf
 for f in listen worker watchdog sync; do touch /var/log/monitor-$f-$ID.log; chown "$U":"$U" /var/log/monitor-$f-$ID.log; chmod 640 /var/log/monitor-$f-$ID.log; done
 
 # the web server: security headers, no API route, nothing but docs/
@@ -169,11 +173,6 @@ cp -n /etc/caddy/Caddyfile /etc/caddy/Caddyfile.bak-$(date +%Y%m%d)
 grep -q "^$HOST" /etc/caddy/Caddyfile || cat >> /etc/caddy/Caddyfile <<EOF
 
 $HOST {
-	root * $DIR/docs
-	try_files {path} {path}.html /index.html
-	file_server
-	@hidden path /.* /*.map
-	respond @hidden 404
 	header {
 		Cache-Control "no-cache"
 		X-Robots-Tag "noindex, nofollow"
@@ -184,6 +183,15 @@ $HOST {
 		Permissions-Policy "camera=(self), microphone=(self), geolocation=()"
 		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://ntfy.sh; frame-ancestors 'none'; base-uri 'none'; form-action 'self'; object-src 'none'"
 		-Server
+	}
+	@hidden path_regexp hid ^/(\.|api/|gate-|instance\.json|CLAUDE)
+	handle @hidden {
+		respond 404
+	}
+	handle {
+		root * $DIR/docs
+		try_files {path} {path}.html /index.html
+		file_server
 	}
 }
 EOF
