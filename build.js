@@ -11246,6 +11246,7 @@ function meetSheet(){
    +'<small><b>✅ מה נעשה</b><br>'+SHIP_STATUS.done.map(esc).join('<br>')+'</small>'
    +'<small><b>⏳ מה נשאר</b><br>'+SHIP_STATUS.next.map(esc).join('<br>')+'</small>'
    +'<button type="button" class="yb yb4" data-k="f:michtav-leroni.pdf">📄 המכתב לרוני: סיכום מה שעשינו</button>'
+   +'<button type="button" class="yb yb2" data-k="f:bakasha-mihshuv-homestyle.pdf">🖨️ הבקשה לצוות המחשוב, להדפסה</button>'
    +'<button type="button" class="yb yx" data-k="">סגירה</button>'
    +'</div>';
   function close(){w.remove();document.removeEventListener('keydown',esckey);}
