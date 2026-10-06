@@ -30,7 +30,9 @@ chmod 711 "$DIR"
 sudo -H -u "$U" rm -rf docs
 sudo -H -u "$U" mkdir -p data/chat data/reports data/tasks data/reminders data/inbox data/status data/files-private
 chmod 751 data; chmod 755 data/status
-for d in chat reports tasks reminders inbox files-private; do chmod 750 data/$d; done
+for d in chat reports tasks reminders inbox; do sudo -H -u "$U" mkdir -p data/$d/$d; chmod 750 data/$d data/$d/$d; done
+chmod 750 data/files-private
+sudo -H -u "$U" git config user.email "$ID@abaitzik.local"; sudo -H -u "$U" git config user.name "$ID monitor"
 
 # instance.json, keys, passphrase, profile
 python3 - "$ID" "$HOST" "$OWNER" "$TITLE" "$WELCOME" "$SCREENS" "$SHIP" "$DIR" "$U" <<'PY'
