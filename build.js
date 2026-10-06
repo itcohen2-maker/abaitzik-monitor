@@ -908,6 +908,7 @@ const TENANT_TILES = {
   gInsights: ['g11', '📈 תובנות', 'אילו ספקים מאחרים'],
   gCeo: ['g4', '📊 תמונת מצב', 'איפה אנחנו עומדים היום'],
   gUpgrade: ['g10', '🚀 שדרוגים', 'מה עוד המוניטור יודע לעשות'],
+  gToday: ['g17', '📋 היום', 'משימות מחכות היום, לפי דחיפות'],
 };
 // With no screens chosen at intake, only the tiles that fit any work. The whole
 // catalog gave a phone only customer "connect the computer", a client follow up

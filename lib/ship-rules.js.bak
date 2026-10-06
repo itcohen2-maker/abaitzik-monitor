@@ -143,19 +143,4 @@ function insights(rows) {
     .sort((p, q) => q.avgSlipDays - p.avgSlipDays);
 }
 
-function applyHandled(alerts, handled, todayIso) {
-  if (!handled || typeof handled !== "object") return alerts;
-  const today = ts(todayIso);
-  return alerts.filter((a) => {
-    const h = handled[a.id];
-    if (!h) return true; // not handled
-    if (h.code !== a.code) return true; // code changed, alert returns
-    if (!h.at) return true; // no timestamp, shouldn't happen
-    const then = ts(h.at);
-    if (then == null) return true;
-    if (days(today, then) > 7) return true; // older than 7 days, alert returns
-    return false; // same code, same id, within 7 days: hidden
-  });
-}
-
-module.exports = { evaluate, summary, insights, applyHandled, isClosed, isPaused, isSailed, isBooked, isShufersal, SLIP_DAYS, SHO_WINDOW };
+module.exports = { evaluate, summary, insights, isClosed, isPaused, isSailed, isBooked, isShufersal, SLIP_DAYS, SHO_WINDOW };
