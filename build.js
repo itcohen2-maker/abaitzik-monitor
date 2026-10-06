@@ -3310,6 +3310,11 @@ try{
   -->
   <button type="button" class="gt g15" id="gYehuda"><b>📄 יהודה</b><small>גרסה קצרה לשליחה, והסקירה המלאה לזיכרון</small></button>
   <!--
+    6.10. Back on the home screen: "שים לי במוניטור תחת כפתור רינת" for the
+    Merkaza leopard towels (item 10). Itzik had removed it on 1.10.
+  -->
+  <button type="button" class="gt gKat" id="gKatalog"><b>🎨 המצגות של רינת</b><small>ממוספר. 10 מרכזה, מגבת מנומרת בצהוב</small></button>
+  <!--
     איציק, 30.9: "במוניטור שים את זה בכפתור, שיהיה לי נוח להתייעץ". Everything
     made for pushing candletimes, numbered like Rinat's list: the bio
     comparison, the how-to page, the live candle stories.
