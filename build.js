@@ -3253,7 +3253,7 @@ try{
     בשורת הרשתות, שניהם פתחו את אותו מסך. המסך pE עצמו נשאר.
   -->
   <!-- 6.10: the meeting prep got buried under newer answers. Its own tile, first. -->
-  <button type="button" class="gt gMeet" id="gMeet"><b>🤝 הפגישה של היום</b><small>הבעלים של הום סטייל. תיק ההכנה ודף השאלות להדפסה</small></button>
+  <button type="button" class="gt gMeet" id="gMeet"><b>🤝 הפגישה של היום</b><small>שאלות למרכזת המשלוחים, להדפסה</small></button>
   <button type="button" class="gt g3" id="gQueue"><b>📊 ניטור רשתות</b><small>מי פנה, מה נענה</small></button>
   <!-- The reports tile came off on 17.9. The reports are in "תשובות" now,
        which is the one button he asked for. -->
@@ -10976,25 +10976,22 @@ function occSheet(){
  document.body.appendChild(w);
 }
 on('gOcc',occSheet);
-// 6.10: the HomeStyle meeting prep, read straight from its report.
+// 6.10: HomeStyle, one file: the questions for the shipments coordinator.
 function meetSheet(){
  ensure('reports',function(){
   var old=document.getElementById('meetSheet');if(old)old.remove();
-  var r=(D.reports||[]).filter(function(x){return /הום סטייל/.test(x.title||'');})[0];
   var w=document.createElement('div');
   w.id='meetSheet';w.className='ysheet';
   w.setAttribute('role','dialog');
   w.setAttribute('aria-label','הפגישה של היום');
   w.innerHTML='<div class="ycard">'
-   +'<b>'+esc(r?r.title:'הפגישה עם הבעלים של הום סטייל')+'</b>'
-   +(r?esc(r.body||'').split(String.fromCharCode(10)+String.fromCharCode(10)).map(function(p){return '<small>'+p.split(String.fromCharCode(10)).join('<br>')+'</small>';}).join(''):'<small>התיק לא נטען. משוך את המסך למטה לרענון.</small>')
-   +'<button type="button" class="yb yb1" data-k="q">📄 תיאום ציפיות: רק השאלות, להדפסה</button>'
+   +'<b>הפגישה של היום</b>'
    +'<button type="button" class="yb yb4" data-k="f:shealot-merakezet-mishlochim.pdf">📋 שאלות למרכזת המשלוחים, להדפסה</button>'
    +'<button type="button" class="yb yx" data-k="">סגירה</button>'
    +'</div>';
   function close(){w.remove();document.removeEventListener('keydown',esckey);}
   function esckey(e){if(e.key==='Escape')close();}
-  w.onclick=function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-k');if(k&&k.slice(0,2)==='f:'){close();if(!fileView(k.slice(2)))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');return;}if(k==='q'){close();if(!fileView('tiaum-tzipiyot-homestyle.pdf'))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');return;}if(e.target===w||k==='')close();};
+  w.onclick=function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-k');if(k&&k.slice(0,2)==='f:'){close();if(!fileView(k.slice(2)))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');return;}if(e.target===w||k==='')close();};
   document.addEventListener('keydown',esckey);
   document.body.appendChild(w);
  });
