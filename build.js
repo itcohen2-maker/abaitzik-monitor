@@ -2064,6 +2064,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .meTxt{white-space:pre-wrap;text-align:right;line-height:1.7;font-size:17px;margin:10px 0 14px}
 .gLaw{background:linear-gradient(150deg,#c0623a,#3a1d12)}
 .gOcc{background:linear-gradient(150deg,#2bb39a,#123d3a)}
+.gMeet{background:linear-gradient(150deg,#e0a43a,#5a3410)}
 .gMed{background:linear-gradient(150deg,#4fb3a9,#123a4a)}
 .gInv{background:linear-gradient(150deg,#d9a441,#3a2a12)}
 .gShop{background:linear-gradient(150deg,#3aa55d,#1f6f8b)}
@@ -3251,6 +3252,8 @@ try{
     איציק, 28.9: "תסיר את כפתור מייל, אין לי צורך בו". ירדו גם האריח וגם הסמל
     בשורת הרשתות, שניהם פתחו את אותו מסך. המסך pE עצמו נשאר.
   -->
+  <!-- 6.10: the meeting prep got buried under newer answers. Its own tile, first. -->
+  <button type="button" class="gt gMeet" id="gMeet"><b>🤝 הפגישה של היום</b><small>הבעלים של הום סטייל. תיק ההכנה המלא</small></button>
   <button type="button" class="gt g3" id="gQueue"><b>📊 ניטור רשתות</b><small>מי פנה, מה נענה</small></button>
   <!-- The reports tile came off on 17.9. The reports are in "תשובות" now,
        which is the one button he asked for. -->
@@ -10972,6 +10975,28 @@ function occSheet(){
  document.body.appendChild(w);
 }
 on('gOcc',occSheet);
+// 6.10: the HomeStyle meeting prep, read straight from its report.
+function meetSheet(){
+ ensure('reports',function(){
+  var old=document.getElementById('meetSheet');if(old)old.remove();
+  var r=(D.reports||[]).filter(function(x){return /הום סטייל/.test(x.title||'');})[0];
+  var w=document.createElement('div');
+  w.id='meetSheet';w.className='ysheet';
+  w.setAttribute('role','dialog');
+  w.setAttribute('aria-label','הפגישה של היום');
+  w.innerHTML='<div class="ycard">'
+   +'<b>'+esc(r?r.title:'הפגישה עם הבעלים של הום סטייל')+'</b>'
+   +(r?esc(r.body||'').split(String.fromCharCode(10)+String.fromCharCode(10)).map(function(p){return '<small>'+p.split(String.fromCharCode(10)).join('<br>')+'</small>';}).join(''):'<small>התיק לא נטען. משוך את המסך למטה לרענון.</small>')
+   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+   +'</div>';
+  function close(){w.remove();document.removeEventListener('keydown',esckey);}
+  function esckey(e){if(e.key==='Escape')close();}
+  w.onclick=function(e){if(e.target===w||(e.target.getAttribute&&e.target.getAttribute('data-k')===''))close();};
+  document.addEventListener('keydown',esckey);
+  document.body.appendChild(w);
+ });
+}
+on('gMeet',meetSheet);
 boot('occ',function(){var o=(D.occ||[])[0],seen='';var sm=document.querySelector('#gOcc small');if(sm)sm.textContent=o?'המרפאה ענתה '+(o.at||'').slice(8,10).replace(/^0/,'')+'.'+(o.at||'').slice(5,7).replace(/^0/,'')+'. לחץ לקריאה':(function(l){var i=l.indexOf(': ');var h=l.slice(0,i).split(' ')[0];return h+': '+l.slice(i+2);})(OCC_LOG[OCC_LOG.length-1]);try{seen=localStorage.getItem('occSeen')||'';}catch(e){}var b=document.getElementById('gOcc');if(b)b.classList.toggle('taskblink',!!(o&&o.id&&seen!==o.id));});
 /*
   4.10. Documents made for the lawyer in the Lolos sale, numbered. A new one
