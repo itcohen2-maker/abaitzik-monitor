@@ -10701,7 +10701,12 @@ var KAT_ITEMS=[
  {n:'06',t:'מחלקת הטקסטיל, גרסה 3: עיצוב נקי ומואר (13 שקפים)',r:'HomeCenter-Textile-v3.pdf'},
  {n:'07',t:'מצגת הום סנטר, גרסה 4 לפי ההערות של רינת (48 שקפים)',r:'HomeCenter-Presentation-v4.pdf'},
  {n:'08',t:'מחלקת הטקסטיל, גרסה 4 לפי ההערות (12 שקפים)',r:'HomeCenter-Textile-v4.pdf'},
- {n:'09',t:'מחלקת הטקסטיל, גרסה 5 לפי ההקלטה (14 שקפים)',r:'HomeCenter-Textile-v5.pdf'}
+ {n:'09',t:'מחלקת הטקסטיל, גרסה 5 לפי ההקלטה (14 שקפים)',r:'HomeCenter-Textile-v5.pdf'},
+ {n:'10',t:'מרכזה, מגבת מנומרת בגוונים צהובים: כל האפשרויות בתמונה אחת',r:'merkaza-leopard-compare.jpg'},
+ {n:'10א',t:'מרכזה מנומר, פאק שוט חמאה',r:'merkaza-leopard-butter.jpg'},
+ {n:'10ב',t:'מרכזה מנומר, פאק שוט דבש',r:'merkaza-leopard-honey.jpg'},
+ {n:'10ג',t:'מרכזה מנומר, פאק שוט חרדל',r:'merkaza-leopard-mustard.jpg'},
+ {n:'10ד',t:'מרכזה מנומר, פאק שוט קאמל',r:'merkaza-leopard-camel.jpg'}
 ];
 // 29.9: "הקטלוג הבא לא מעניין, זה היה מזמן. שים אותו בצד". Kept, unnumbered, at the bottom.
 var KAT_SIDE=[
