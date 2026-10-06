@@ -10996,7 +10996,7 @@ var SHIP_STATUS={at:'6.10.2026',done:[
  'מי מקבל: רינת פעם ביום; בסטייה רינת, יעל ורוני',
  'הזמנות שמתחילות ב 7 שייכות לשופרסל, רק מעקב'
 ],next:[
- 'מחלקת המחשוב: הבקשה לגישה לקריאה בלבד לתיבת ה Outlook של יעל הועברה אליהם, ממתינים לתשובה',
+ 'מחלקת המחשוב: הבקשה לגישה לקריאה בלבד לתיבת ה Outlook של יעל הועברה אליהם, ממתינים לתשובה. הבקשה בעמוד השני של הקובץ למטה',
  'שלוש דוגמאות למיילים מ DANIEL ומייל אחד של מירי מ ICL',
  'המייל של רוני',
  'באיזו שעה נשלח הדוח היומי לרינת'
@@ -11013,7 +11013,7 @@ function meetSheet(){
    +'<small>מעודכן ל '+SHIP_STATUS.at+'</small>'
    +'<small><b>✅ מה נעשה</b><br>'+SHIP_STATUS.done.map(esc).join('<br>')+'</small>'
    +'<small><b>⏳ מה נשאר</b><br>'+SHIP_STATUS.next.map(esc).join('<br>')+'</small>'
-   +'<button type="button" class="yb yb4" data-k="f:bakasha-mihshuv-homestyle.pdf">📄 בקשה למחלקת המחשוב</button>'
+   +'<button type="button" class="yb yb4" data-k="f:mismach-mishlochim-homestyle.pdf">📄 להדפסה: איפה אנחנו עומדים והבקשה למחשוב</button>'
    +'<button type="button" class="yb yx" data-k="">סגירה</button>'
    +'</div>';
   function close(){w.remove();document.removeEventListener('keydown',esckey);}
