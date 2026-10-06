@@ -1203,7 +1203,7 @@ test('an open task says who it is waiting on', () => {
   const html = renderPage(fixture({}));
   const body = html.slice(html.indexOf('function renderGot(){'), html.indexOf('function paintAnsCount(){'));
   assert.ok(body.includes("c.who==='itzik'?['y','ממתין לך']"));
-  assert.ok(body.includes("c.who==='codex'?['g','אצל קודקס']"));
+  assert.ok(body.includes("c.who==='codex'?['g','בטיפול']"));
   assert.ok(body.includes("['g','אצלי']"));
   // And the badge for his own column has a colour of its own.
   assert.ok(html.includes('.gr-y{'));
@@ -1385,7 +1385,7 @@ test('answers carry the four colour states of the old chat', () => {
   }
   assert.ok(html.includes('--orange:'), 'orange must be its own token, not the yellow one');
   assert.ok(html.includes("localStorage.setItem('chatStandby'"), 'standby must persist');
-  assert.ok(html.includes("['standby','סטנד ביי',c.standby]"), 'standby needs its own filter chip');
+  assert.ok(html.includes("['standby','בהמתנה',c.standby]"), 'standby needs its own filter chip');
   assert.ok(html.includes('class="ab astandby'), 'each card needs a standby button');
   assert.ok(html.includes('function ansColor(m)'), 'one place decides the colour');
   assert.ok(html.includes('alegend'), 'the legend explains the four colours');

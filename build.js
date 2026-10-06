@@ -3502,17 +3502,20 @@ try{
 <div class="alerts" id="alerts">
  <div>
   <b>התראות לנייד</b>
-  <small>מתקינים את האפליקציה ntfy, לוחצים על הכפתור, ובוחרים Subscribe. מאז כל תשובה שלי קופצת כמו וואטסאפ.</small>
+  <small>מתקינים את האפליקציה ntfy, לוחצים על הכפתור, ובוחרים הרשמה. מאז כל תשובה שלי קופצת כמו וואטסאפ.</small>
  </div>
  <a class="abtn" id="ntfyBtn" href="#" target="_blank" rel="noopener">הפעלת התראות</a>
 </div>
 
+<!-- The build plan is Itzik's internal page, so a customer's copy leaves the link out. -->
+<!--ITZIK:BEGIN-->
 <nav class="links" aria-label="קישורים מהירים">
  <a href="plan.html">
   <span aria-hidden="true">&#128736;</span>
-  <div>תכנון 2.0<small>מה נבנה ומה עוד מתוכנן</small></div>
+  <div>תוכנית הבנייה<small>מה נבנה ומה עוד מתוכנן</small></div>
  </a>
 </nav>
+<!--ITZIK:END-->
 
 
 <div class="alerts" id="pingBox">
@@ -3933,10 +3936,10 @@ try{
 <section id="pA" hidden>
  <h2>תשובות</h2>
  <div class="achips" id="aChips"></div>
- <div class="alegend"><span><i class="l1"></i>לא נקרא</span><span><i class="l2"></i>קראתי</span><span><i class="l3"></i>סטנד ביי</span><span><i class="l4"></i>מסומן</span></div>
+ <div class="alegend"><span><i class="l1"></i>לא נקרא</span><span><i class="l2"></i>קראתי</span><span><i class="l3"></i>בהמתנה</span><span><i class="l4"></i>מסומן</span></div>
  <input type="search" id="aSearch" class="asearch" autocomplete="off" placeholder="חיפוש בתוך התשובות">
  <div id="ansBox"></div>
- <div class="hint">הכל כאן, לפי זמן: מה ששלחת, מה שעניתי, מה שענה קודקס, והדוחות המלאים. כלום לא נעלם מכאן. כל תשובה נכנסת באדום, נגיעה בה הופכת אותה לירוקה, ואפשר להעביר אותה לכתום סטנד ביי או לצהוב.</div>
+ <div class="hint">הכל כאן, לפי זמן: מה ששלחת, מה שעניתי, והדוחות המלאים. כלום לא נעלם מכאן. כל תשובה נכנסת באדום, נגיעה בה הופכת אותה לירוקה, ואפשר להעביר אותה לכתום בהמתנה או לצהוב.</div>
 </section>
 
 <!--ITZIK:BEGIN-->
@@ -4911,7 +4914,7 @@ function logHtml(log){
  }).join('')+'</ol>';
 }
 var SRC={site:'טופס יצירת קשר באתר',tiktok:'הודעה פרטית בטיקטוק',facebook:'פייסבוק',instagram:'אינסטגרם',youtube:'יוטיוב',phone:'טלפון',person:'הכרות אישית'};
-var STAT={open:'לטיפול',standby:'סטנד ביי',done:'טופל'};
+var STAT={open:'לטיפול',standby:'בהמתנה',done:'טופל'};
 function leadStatus(c){
  var k=c.name||'';
  try{var o=JSON.parse(localStorage.getItem('leadStatus')||'{}');if(o[k])return o[k];}catch(e){}
@@ -7652,7 +7655,7 @@ function renderAnswers(){
  if(!chips||!host)return;
  var c=ansCounts();
  var defs=[['all','הכל',c.all],['fresh','לא נקראו',c.fresh],
-  ['standby','סטנד ביי',c.standby],['star','מסומנות',c.star],['done','טופלו',c.done]];
+  ['standby','בהמתנה',c.standby],['star','מסומנות',c.star],['done','טופלו',c.done]];
  chips.innerHTML=defs.map(function(d){
   return '<button type="button" class="achip'+(ansFilter===d[0]?' on':'')
    +'" data-f="'+d[0]+'">'+d[1]+' <b>'+d[2]+'</b></button>';
@@ -7698,7 +7701,7 @@ function renderAnswers(){
   var fresh=isFresh(m),done=!fresh&&isDone(m),st=isStar(m),sb=isStandby(m);
   var his=m.src==='itzik';
   var mark=his?(m.status==='done'?' · בוצע':(m.status==='working'?' · בעבודה':''))
-   :(fresh?' · <em class="badge">חדש</em>':(sb?' · סטנד ביי':(done?' · טופל':' · נקרא')));
+   :(fresh?' · <em class="badge">חדש</em>':(sb?' · בהמתנה':(done?' · טופל':' · נקרא')));
   // The question sits at the top of the card that answers it. For a recording
   // the text is only the name of the file, so the transcript is what is shown.
   var ask='';
@@ -7735,7 +7738,7 @@ function renderAnswers(){
    +(his?'':'<button type="button" class="ab astar'+(st?' on':'')+'" data-i="'+i+'">'
    +(st?'★ מסומן':'☆ סימון')+'</button>'
    +'<button type="button" class="ab astandby'+(sb?' on':'')+'" data-i="'+i+'">'
-   +(sb?'● סטנד ביי':'סטנד ביי')+'</button>'
+   +(sb?'● בהמתנה':'בהמתנה')+'</button>'
    +'<button type="button" class="ab adone'+(done?' on':'')+'" data-i="'+i+'">'
    +(done?'✓ טופל':'סמן כטופל')+'</button>'
    +'<button type="button" class="ab aread" data-i="'+i+'"'+(fresh?'':' hidden')+'>קראתי</button>')
@@ -8028,7 +8031,8 @@ function renderGot(){
  // Each line says who it is stuck on, so the list cannot quietly turn into a
  // pile of things that look like they are all on me.
  h+=K.length?K.map(function(c){
-  var w=c.who==='itzik'?['y','ממתין לך']:c.who==='codex'?['g','אצל קודקס']:['g','אצלי'];
+  // No internal tool names on a line a customer reads: a task with Codex is just in progress.
+  var w=c.who==='itzik'?['y','ממתין לך']:c.who==='codex'?['g','בטיפול']:['g','אצלי'];
   return row(c,w[0],w[1],'cmd');
  }).join(''):'<div class="gempty">אין משימות פתוחות.</div>';
  h+='<h3>בוצע · '+done.length+'</h3>';
