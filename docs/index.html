@@ -1008,6 +1008,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .remreply{margin-top:8px}
 .remreply summary{cursor:pointer;font-weight:700;padding:6px 0}
 .rem .remknow{margin-top:8px;padding:8px 16px;border:0;border-radius:10px;background:var(--yellow);color:#000;font:700 15px Heebo,sans-serif}
+.rem .remdel{margin-top:8px;margin-inline-start:6px;padding:8px 14px;border:1px solid var(--line,#555);border-radius:10px;background:transparent;color:inherit;font:600 14px Heebo,sans-serif}
 .ysheet{position:fixed;inset:0;z-index:9999;background:rgba(10,14,22,.55);
  display:flex;align-items:flex-end;justify-content:center;padding:14px}
 .ycard{background:#fff;color:#16202c;width:100%;max-width:420px;
@@ -1745,7 +1746,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-06T21:06:41.138Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-06T21:07:27.430Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3051,7 +3052,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='58e07ecb3c';
+var CODE_ID='6f32d47c0a';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null,"homeTile":""};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -6364,13 +6365,14 @@ function remHot(r){
 }
 function remBlink(){
  var b=document.getElementById('gRemind');
- if(b)b.classList.toggle('taskblink',(D.reminders||[]).some(remHot));
+ if(b)b.classList.toggle('taskblink',remLive().some(remHot));
 }
+function remLive(){var g=clearedIds('remGone');return (D.reminders||[]).filter(function(r){return !g[remKey(r)];});}
 function renderReminders(){
  remBlink();
  var host=document.getElementById('remBox');
  if(!host)return;
- var R=D.reminders||[];
+ var R=remLive();
  var day=function(iso){
   try{return new Date(iso).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',year:'numeric'});}
   catch(e){return String(iso||'').slice(0,10);}
@@ -6379,6 +6381,7 @@ function renderReminders(){
   return '<div class="rem'+(r.sentAt?' sent':'')+'"><b>'+esc(r.text)+'</b>'
    +'<div class="w">'+(r.sentAt?'נשלחה '+esc(day(r.sentAt)):'תקפוץ '+esc(day(r.due))+' בתשע בבוקר')+'</div>'
    +(remHot(r)?'<button type="button" class="remknow" data-k="'+esc(remKey(r))+'">אני יודע</button>':'')
+   +'<button type="button" class="remdel" data-k="'+esc(remKey(r))+'">🗑 למחוק</button>'
    +'<details class="remreply"><summary>💬 להגיב על התזכורת</summary>'+replyBox('על התזכורת "'+r.text+'"')+'</details></div>';
  }).join(''):'<div class="empty">אין תזכורת פתוחה.</div>';
  wireBoxes(host);
@@ -6386,6 +6389,14 @@ function renderReminders(){
   b.onclick=function(){
    var k=remKnown();k[b.getAttribute('data-k')]=1;
    try{localStorage.setItem('remKnown',JSON.stringify(k));}catch(e){}
+   renderReminders();
+  };
+ });
+ Array.prototype.forEach.call(host.querySelectorAll('.remdel'),function(b){
+  b.onclick=function(){
+   if(!confirm('למחוק את התזכורת?'))return;
+   clearIds('remGone',[b.getAttribute('data-k')]);
+   notesSend(false);
    renderReminders();
   };
  });
@@ -6397,7 +6408,7 @@ function renderAppts(){
  var A=(D.appts||[]).filter(function(a){var t=Date.parse(a.when);return isNaN(t)||t>now-3*3600e3;});
  host.innerHTML=A.length?A.map(function(a){
   var d=a.when||'עוד בלי תאריך',h='',t0=Date.parse(a.when);
-  var rm=(D.reminders||[]).filter(function(r){var u=Date.parse(r.due);return !r.sentAt&&u<t0&&t0-u<3*864e5;})[0];
+  var rm=remLive().filter(function(r){var u=Date.parse(r.due);return !r.sentAt&&u<t0&&t0-u<3*864e5;})[0];
   if(!isNaN(t0))try{var x=new Date(a.when);
    d=x.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',year:'numeric',timeZone:'Asia/Jerusalem'});
    h=x.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Jerusalem'});}catch(e){}
@@ -8442,6 +8453,9 @@ function notesPull(){
  var tc=clearedIds('tasksCleared'),cch=false;
  Object.keys(S.tasksCleared||{}).forEach(function(k){if(!tc[k]){tc[k]=S.tasksCleared[k];cch=true;}});
  if(cch)try{localStorage.setItem('tasksCleared',JSON.stringify(tc));}catch(e){}
+ var rg=clearedIds('remGone'),rch=false;
+ Object.keys(S.remGone||{}).forEach(function(k){if(!rg[k]){rg[k]=S.remGone[k];rch=true;}});
+ if(rch){try{localStorage.setItem('remGone',JSON.stringify(rg));}catch(e){}try{renderReminders();}catch(e){}}
  if(ch){try{renderNotes();}catch(e){}}
 }
 function notesPush(){clearTimeout(nsTimer);nsTimer=setTimeout(function(){notesSend(false);},8000);}
@@ -8451,7 +8465,7 @@ function notesSend(keep){
  if(!NTFYIN())return;
  var raw=notes();
  var body={notes:raw.filter(function(n){return n&&n.id;}),gone:notesGone(),tasksDone:tkDone(),
-  tasksUndone:tkUndone(),tasksCleared:clearedIds('tasksCleared')};
+  tasksUndone:tkUndone(),tasksCleared:clearedIds('tasksCleared'),remGone:clearedIds('remGone')};
  var sig=nsHash(JSON.stringify(body)),last='';
  try{last=localStorage.getItem('notesSyncSig')||'';}catch(e){}
  if(sig===last)return;
