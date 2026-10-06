@@ -10989,11 +10989,16 @@ function meetSheet(){
    +'<b>'+esc(r?r.title:'הפגישה עם הבעלים של הום סטייל')+'</b>'
    +(r?esc(r.body||'').split(String.fromCharCode(10)+String.fromCharCode(10)).map(function(p){return '<small>'+p.split(String.fromCharCode(10)).join('<br>')+'</small>';}).join(''):'<small>התיק לא נטען. משוך את המסך למטה לרענון.</small>')
    +'<button type="button" class="yb yb1" data-k="q">📄 תיאום ציפיות: רק השאלות, להדפסה</button>'
+   +'<button type="button" class="yb yb2" data-k="f:tzfi-mishlochim-homestyle.pdf">📦 צפי משלוחים: ההודעה למי שעובר על המיילים, PDF</button>'
+   +'<button type="button" class="yb yb3" data-k="f:tzfi-mishlochim-1.jpg">📦 צפי משלוחים כתמונה לגלריה, עמוד 1</button>'
+   +'<button type="button" class="yb yb3" data-k="f:tzfi-mishlochim-2.jpg">📦 צפי משלוחים כתמונה לגלריה, עמוד 2</button>'
+   +'<button type="button" class="yb yb3" data-k="f:tzfi-mishlochim-3.jpg">📦 צפי משלוחים כתמונה לגלריה, עמוד 3</button>'
+   +'<button type="button" class="yb yb3" data-k="f:tzfi-mishlochim-4.jpg">📦 צפי משלוחים כתמונה לגלריה, עמוד 4</button>'
    +'<button type="button" class="yb yx" data-k="">סגירה</button>'
    +'</div>';
   function close(){w.remove();document.removeEventListener('keydown',esckey);}
   function esckey(e){if(e.key==='Escape')close();}
-  w.onclick=function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-k');if(k==='q'){close();if(!fileView('tiaum-tzipiyot-homestyle.pdf'))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');return;}if(e.target===w||k==='')close();};
+  w.onclick=function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-k');if(k&&k.slice(0,2)==='f:'){close();if(!fileView(k.slice(2)))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');return;}if(k==='q'){close();if(!fileView('tiaum-tzipiyot-homestyle.pdf'))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');return;}if(e.target===w||k==='')close();};
   document.addEventListener('keydown',esckey);
   document.body.appendChild(w);
  });
