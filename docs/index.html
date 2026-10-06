@@ -1734,7 +1734,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-06T12:50:58.214Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-06T12:51:34.246Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3045,7 +3045,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='a5349e5dce';
+var CODE_ID='30d176c29e';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -7908,14 +7908,17 @@ function occSheet(){
 }
 on('gOcc',occSheet);
 var SHIP_STATUS={at:'6.10.2026',done:[
- 'עברנו על קובץ צפי המשלוחים, ארבעה גיליונות',
- 'כל 24 השאלות נענו עם רינת ויעל',
- 'נקבעו כללי ההתראה: אין SHO, כלומר לא פנו לסוכן; אין בוקינג עשרה ימים לפני יציאה מסין וחמישה מהודו; סטייה של יותר משלושה שבועות; אין מספר תיק עמילות שבועיים לפני הגעה',
- 'מי מקבל: רינת פעם ביום; בסטייה רינת, יעל ורוני',
- 'הזמנות שמתחילות ב 7 שייכות לשופרסל, רק מעקב'
+ 'נבנו שני מוניטורים נפרדים ונעולים: לרינת ב (עבודה על המשלוחים) ולרוני (תמונת מצב)',
+ 'משלוחים לפי דחיפות, התראות, דוח בוקר, תובנות, אקסל יומי ושדרוגים',
+ 'כללי ההתראה רצים על הקובץ האמיתי: 12 דחופים, 37 לבדוק, 12 מגיעים השבוע',
+ 'נבדק בדפדפן אמיתי בגודל טלפון, כולל שאלה בצ׳אט שנענתה נכון',
+ 'אבטחה: קוד של 14 ספרות, בידוד מלא בין הלקוחות, ללא נקודות חשופות',
+ 'עיגול הום סטייל במסך הבית שלך, ליד איליי, ירוק כשהכל תקין'
 ],next:[
- 'מחלקת המחשוב: הבקשה לגישה לקריאה בלבד לתיבת ה Outlook של יעל הועברה אליהם, ממתינים לתשובה. הבקשה בעמוד השני של הקובץ למטה',
- 'שלוש דוגמאות למיילים מ DANIEL ומייל אחד של מירי מ ICL',
+ 'למסור לרינת ולרוני את הקישור והקוד, בהודעות נפרדות',
+ 'מחלקת המחשוב: גישה לקריאה בלבד לתיבת ה Outlook של יעל, ממתינים לתשובה. אחריה הטבלה מתעדכנת לבד מהמיילים',
+ 'רינת: לאשר איזה ספקים מסין ואיזה מהודו',
+ 'כמה כסף בהזמנות פתוחות: צריך לדעת באיזה מטבע עמודת הסכום',
  'באיזו שעה נשלח הדוח היומי לרינת'
 ]};
 function meetSheet(){
