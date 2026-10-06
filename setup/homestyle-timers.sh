@@ -1,7 +1,7 @@
 #!/bin/bash
 # 6.10.2026. The two timers that keep Home Style's screens fresh. Run as root.
 #  hs:   07:30 Jerusalem, brief + Excel + page.
-#  roni: the page is rebuilt every 30 minutes from the same shared table.
+#  roni, hs, yael: each page is rebuilt every 30 minutes from the same shared table.
 set -euo pipefail
 HARD="NoNewPrivileges=yes
 PrivateTmp=yes
@@ -36,33 +36,47 @@ Persistent=true
 [Install]
 WantedBy=timers.target
 EOF2
-cat > /etc/systemd/system/monitor-shipbuild-roni.service <<EOF2
+# Every Home Style page is rebuilt every 30 minutes from the shared table, so a
+# "טיפלתי" marked on one phone reaches the others within half an hour.
+# Users: roni (read only), hs and yael (both mark). Run again after a new one.
+# The two writers (hs, yael) may replace files in the table folder; the group, which
+# is how Roni reads, stays read only. Not chmod g+w: that would let Roni write.
+# The default entries keep each new file (handled.json) readable to the group only.
+W="u:hs:rwx"; id yael >/dev/null 2>&1 && W="$W,u:yael:rwx"
+setfacl -m "$W" /srv/homestyle/shipments
+setfacl -d -m "u::rw,g::r,o::-,${W//rwx/rw}" /srv/homestyle/shipments
+for U in roni hs yael; do
+  id "$U" >/dev/null 2>&1 || continue
+  D=$(ls -d /home/$U/*-monitor | head -1)
+  RW=/home/$U; [ "$U" = roni ] || RW="/home/$U /srv/homestyle"
+  cat > /etc/systemd/system/monitor-shipbuild-$U.service <<EOF2
 [Unit]
-Description=Roni page from the shared shipments table
+Description=$U page from the shared shipments table
 [Service]
-User=roni
-Group=roni
-Environment=HOME=/home/roni
-WorkingDirectory=/home/roni/roni-monitor
+User=$U
+Group=$U
+Environment=HOME=/home/$U
+WorkingDirectory=$D
 $HARD
-ReadWritePaths=/home/roni
+ReadWritePaths=$RW
 Type=oneshot
 ExecStart=/bin/sh -c 'node build.js | tail -1 && chmod -R o+rX docs'
-StandardOutput=append:/var/log/monitor-ship-roni.log
-StandardError=append:/var/log/monitor-ship-roni.log
+StandardOutput=append:/var/log/monitor-ship-$U.log
+StandardError=append:/var/log/monitor-ship-$U.log
 EOF2
-cat > /etc/systemd/system/monitor-shipbuild-roni.timer <<EOF2
+  cat > /etc/systemd/system/monitor-shipbuild-$U.timer <<EOF2
 [Unit]
-Description=Roni page every 30 minutes
+Description=$U page every 30 minutes
 [Timer]
 OnBootSec=3min
 OnUnitActiveSec=30min
 [Install]
 WantedBy=timers.target
 EOF2
-for f in /var/log/monitor-ship-hs.log /var/log/monitor-ship-roni.log; do touch $f; done
-chown hs:hs /var/log/monitor-ship-hs.log; chown roni:roni /var/log/monitor-ship-roni.log
-chmod 640 /var/log/monitor-ship-hs.log /var/log/monitor-ship-roni.log
+  touch /var/log/monitor-ship-$U.log; chown $U:$U /var/log/monitor-ship-$U.log; chmod 640 /var/log/monitor-ship-$U.log
+  systemctl daemon-reload
+  systemctl enable --now monitor-shipbuild-$U.timer
+done
 systemctl daemon-reload
-systemctl enable --now monitor-ship-daily.timer monitor-shipbuild-roni.timer
+systemctl enable --now monitor-ship-daily.timer
 systemctl list-timers | grep -E "ship"

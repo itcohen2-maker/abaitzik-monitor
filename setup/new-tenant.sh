@@ -1,7 +1,7 @@
 #!/bin/bash
 # New customer monitor on this server, hardened. 6.10.2026, Home Style.
 #
-#   bash setup/new-tenant.sh <id> <user> <host> <owner> <title> <welcome> <screens-csv> <profile-file> [shipments-dir] [ro]
+#   bash setup/new-tenant.sh <id> <user> <host> <owner> <title> <welcome> <screens-csv> <profile-file> [shipments-dir] [ro|rw] [home-tile]
 #
 # Run as root. Everything a customer's monitor needs, and nothing it does not:
 #  - its own Linux user with no login shell, home closed to the other tenants;
@@ -15,13 +15,17 @@
 #    answering worker alone, not the listener or the watchdog.
 # The passphrase is printed once and written to /root/tenant-codes/<id>.txt.
 set -euo pipefail
-ID=$1; U=$2; HOST=$3; OWNER=$4; TITLE=$5; WELCOME=$6; SCREENS=$7; PROFILE=$8; SHIP=${9:-}; RO=${10:-}
+ID=$1; U=$2; HOST=$3; OWNER=$4; TITLE=$5; WELCOME=$6; SCREENS=$7; PROFILE=$8; SHIP=${9:-}; RO=${10:-}; HOMETILE=${11:-}
+[ "$RO" = rw ] && RO=""
 DIR=/home/$U/$ID-monitor
 PUB=https://github.com/itcohen2-maker/abaitzik-monitor.git
 TEN=/home/monitor/abaitzik-monitor/data/tenants/tenants
 echo $(( $(date +%s) + 900 )) > /run/monitor-maintenance-until
 
 id "$U" >/dev/null 2>&1 || useradd -m -s /usr/sbin/nologin "$U"
+# A shared table is read through its group (homestyle). 6.10: Roni's was added by hand and the
+# next customer would have had no access at all.
+[ -n "$SHIP" ] && usermod -aG "$(stat -c %G "$(dirname "$SHIP")")" "$U"
 chmod 711 /home/$U
 [ -d "$DIR" ] || sudo -H -u "$U" git clone -q "$PUB" "$DIR"
 cd "$DIR"
@@ -42,9 +46,9 @@ chmod 750 data/files-private
 sudo -H -u "$U" git config user.email "$ID@abaitzik.local"; sudo -H -u "$U" git config user.name "$ID monitor"
 
 # instance.json, keys, passphrase, profile
-python3 - "$ID" "$HOST" "$OWNER" "$TITLE" "$WELCOME" "$SCREENS" "$SHIP" "$DIR" "$U" <<'PY'
+python3 - "$ID" "$HOST" "$OWNER" "$TITLE" "$WELCOME" "$SCREENS" "$SHIP" "$DIR" "$U" "$HOMETILE" <<'PY'
 import json, os, secrets, sys, base64, pwd, grp
-ID, HOST, OWNER, TITLE, WELCOME, SCREENS, SHIP, DIR, U = sys.argv[1:10]
+ID, HOST, OWNER, TITLE, WELCOME, SCREENS, SHIP, DIR, U, HOMETILE = sys.argv[1:11]
 uid, gid = pwd.getpwnam(U).pw_uid, pwd.getpwnam(U).pw_gid
 def put(path, text, mode):
     with open(path, 'w', encoding='utf-8') as f: f.write(text)
@@ -54,6 +58,7 @@ inst = {"name": ID, "owner": OWNER, "publicUrl": "https://%s/" % HOST, "basePath
         "screens": [s for s in SCREENS.split(",") if s], "chromeProfile": "none", "memoryDir": None, "driveFolder": "",
         "computer": None, "phone": None, "welcome": WELCOME}
 if SHIP: inst["shipmentsDir"] = SHIP
+if HOMETILE: inst["homeTile"] = HOMETILE
 put(DIR + "/instance.json", json.dumps(inst, ensure_ascii=False, indent=1), 0o644)
 keys = {"_why": "נושאי ntfy הם סיסמה. לא נכנסים לגיט.", "ntfyIn": "%s-in-%s" % (ID, secrets.token_hex(16)),
         "ntfyLive": "%s-live-%s" % (ID, secrets.token_hex(16)), "ntfyOut": "%s-out-%s" % (ID, secrets.token_hex(16)), "mail": ""}

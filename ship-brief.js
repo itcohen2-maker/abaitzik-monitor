@@ -24,7 +24,10 @@ const rows = JSON.parse(fs.readFileSync(path.join(SD, 'rows.json'), 'utf8'));
 let sup = {};
 try { sup = JSON.parse(fs.readFileSync(path.join(SD, '..', 'suppliers.json'), 'utf8')); } catch (e) { /* defaults */ }
 const today = new Date().toLocaleDateString('sv', { timeZone: 'Asia/Jerusalem' });
-const alerts = rules.evaluate(rows, today, sup);
+let handled = {};
+try { handled = JSON.parse(fs.readFileSync(path.join(SD, 'handled.json'), 'utf8')); } catch (e) { /* nothing marked yet */ }
+// What was marked "טיפלתי" in the last week is neither counted nor reported.
+const alerts = rules.applyHandled(rules.evaluate(rows, today, sup), handled, today);
 
 const now = {};
 for (const a of alerts) now[a.id + '|' + a.code] = { t: a.po + ' ' + a.supplier + ': ' + a.text, l: a.level };

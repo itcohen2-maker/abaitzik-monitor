@@ -66,3 +66,30 @@ test('insights merge the spellings of one supplier', () => {
   assert.strictEqual(i.length, 1);
   assert.strictEqual(i[0].orders, 2);
 });
+
+test('handled hides the same alert only, and for seven days at most', () => {
+  const rows = [row({ po: '6201', eta: '2026-09-14', customs: '1', id: 'h1' }), row({ po: '6202', eta: '2026-09-20', customs: '1', id: 'h2' })];
+  const al = R.evaluate(rows, TODAY, SUP);
+  const h = { 'h1|ETA_PASSED': { id: 'h1', code: 'ETA_PASSED', at: '2026-10-05T09:00:00Z' } };
+  assert.deepStrictEqual(R.applyHandled(al, h, TODAY).map((a) => a.id), ['h2']);
+  // another code on the same row is not hidden
+  assert.strictEqual(R.applyHandled(al, { 'h1|NO_SHO': { id: 'h1', code: 'NO_SHO', at: '2026-10-05' } }, TODAY).length, 2);
+  // a week and a day later it is back
+  assert.strictEqual(R.applyHandled(al, h, '2026-10-13').length, 2);
+  assert.strictEqual(R.applyHandled(al, null, TODAY).length, 2);
+});
+
+test('ship-done writes only an alert that exists today', () => {
+  const fs = require('fs'), os = require('os'), path = require('path');
+  const { shipDone } = require('../tools/ship-done.js');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ship-'));
+  fs.writeFileSync(path.join(dir, 'rows.json'), JSON.stringify([row({ po: '6201', eta: '2026-09-14', customs: '1', id: '6201|2026|a' })]));
+  const now = new Date('2026-10-06T09:00:00Z');
+  assert.throws(() => shipDone(dir, '6201|2026|a', 'NO_SHO', 'yael', now));
+  assert.throws(() => shipDone(dir, 'nope', 'ETA_PASSED', 'yael', now));
+  shipDone(dir, '6201|2026|a', 'ETA_PASSED', 'yael', now);
+  const h = JSON.parse(fs.readFileSync(path.join(dir, 'handled.json'), 'utf8'));
+  assert.deepStrictEqual(Object.keys(h), ['6201|2026|a|ETA_PASSED']);
+  assert.strictEqual(R.applyHandled(R.evaluate(JSON.parse(fs.readFileSync(path.join(dir, 'rows.json'), 'utf8')), TODAY, SUP), h, TODAY).length, 0);
+  fs.rmSync(dir, { recursive: true, force: true });
+});

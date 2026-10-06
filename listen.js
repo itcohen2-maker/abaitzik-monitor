@@ -456,6 +456,27 @@ function recordIncoming(m) {
         say('בקשה ממנהל נרשמה: ' + crId);
       } catch (e) { say('!! בקשה ממנהל לא נרשמה: ' + e.message); }
     }
+    /*
+      6.10, Home Style: "✔ טיפלתי" on a shipment card. The page sends the row id
+      and the alert code; it is written to the shared table here, with no model,
+      and the page is rebuilt so the count drops for everyone on this monitor.
+      A read only monitor (Roni's) has no write access to the table and says so.
+    */
+    const shipM = codeOk && inst.shipmentsDir && /^\s*ship-done\s*([^\n]+?)\s*\n\s*([A-Z_]{2,20})\s*$/.exec(text);
+    if (shipM) {
+      try {
+        const a = require('./tools/ship-done.js').shipDone(inst.shipmentsDir, shipM[1], shipM[2], inst.name);
+        rec.text = '✔ טיפלתי: הזמנה ' + a.po + ', ' + a.supplier;
+        say('טיפלתי נרשם: ' + a.po + ' ' + a.code);
+      } catch (e) {
+        rec.text = 'טיפלתי לא נרשם (' + e.message + ')';
+        say('!! טיפלתי לא נרשם: ' + e.message);
+      }
+      rec.status = 'done';
+      try { fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8'); } catch (e) { /* the line is already there */ }
+      try { publishChat(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
     if (gid) groupFiles.set(gid, { name: name, files: files, caption: caption.trim() });
     if (attach && group.isAudio(attach)) {
       transcribeLater(path.join(DROP, attach), name);

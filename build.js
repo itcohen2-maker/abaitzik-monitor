@@ -683,7 +683,10 @@ function build() {
       let queue = [];
       try { queue = JSON.parse(fs.readFileSync(path.join(sd, 'mail-queue.json'), 'utf8')).slice(-20); } catch (e) { /* no mail yet */ }
       const today = new Date().toLocaleDateString('sv', { timeZone: 'Asia/Jerusalem' });
-      const alerts = rules.evaluate(shipRows, today, sup);
+      let handled = {};
+      try { handled = JSON.parse(fs.readFileSync(path.join(sd, 'handled.json'), 'utf8')); } catch (e) { /* nothing marked yet */ }
+      // "טיפלתי" hides an alert for a week at most, the same way the brief counts.
+      const alerts = rules.applyHandled(rules.evaluate(shipRows, today, sup), handled, today);
       payload.ship = { today, alerts, summary: rules.summary(shipRows, alerts, today),
         insights: rules.insights(shipRows.filter((r) => /202[67]$/.test(r.sheet))).slice(0, 12),
         brief, importedAt: meta.importedAt || '',
@@ -806,7 +809,7 @@ function build() {
   // was drawn and then hidden on every customer's page. It is appended here.
   const instanceJson = JSON.stringify({ name: inst.name, owner: inst.owner, pageTitle: inst.pageTitle,
     screens: Array.isArray(inst.screens) && inst.screens.length && !inst.screens.includes('gAdminReq') ? inst.screens.concat(['gAdminReq']) : inst.screens,
-    computer: inst.computer, phone: inst.phone, welcome: inst.welcome });
+    computer: inst.computer, phone: inst.phone, welcome: inst.welcome, homeTile: inst.homeTile || '' });
   const html = html0.replace('__CODE_ID__', codeId0).replace("'__INSTANCE__'", instanceJson);
 
   /*
@@ -2176,6 +2179,15 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .ship .scnt{display:flex;gap:6px}
 .ship .scnt div{flex:1;border-radius:12px;padding:8px 4px;text-align:center;color:#fff;font:700 22px Heebo,sans-serif}
 .ship .scnt small{display:block;font-size:11px;opacity:.95;margin:0}
+.shipline{display:block;width:100%;box-sizing:border-box;border:0;border-radius:14px;padding:12px 14px;margin:0 0 10px;color:#fff;font:700 17px/1.3 Heebo,sans-serif;text-align:start;cursor:pointer}
+.shipline.red{background:#c62828}.shipline.amber{background:#ef8f00}.shipline.green{background:#2e7d32}
+.shipline small{display:block;font:500 12px Heebo,sans-serif;opacity:.95}
+.ship .sbig{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+.ship .sbig button{border:0;border-radius:14px;padding:16px 8px;min-height:84px;color:#fff;font:700 17px/1.3 Heebo,sans-serif;cursor:pointer}
+.ship .sbig small{display:block;font:500 12px Heebo,sans-serif;opacity:.95;margin:0}
+.ship .sact{display:flex;gap:8px;margin-top:6px}
+.ship .sact a,.ship .sact button{flex:1;text-align:center;border:0;border-radius:10px;padding:9px 6px;font:700 14px Heebo,sans-serif;text-decoration:none;color:#fff;background:#14675a;cursor:pointer}
+.ship .sact button{background:#2e7d32}
 .ship .shipq{width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif}
 .micSteps{margin:2px 0 6px;padding-inline-start:20px;font:500 15px/1.5 Heebo,sans-serif}
 /* 30.9: the short text was near invisible on the dark theme ("אני רוצה לראות
@@ -3544,6 +3556,8 @@ try{
     candles and networks. Here nothing of Itzik's is in the page at all: the
     build cuts every ITZIK block out of a customer's copy and keeps this one.
   -->
+  <!-- 6.10, Home Style: one coloured line over the tiles, filled from D.ship. Hidden without a shipments table. -->
+  <button type="button" class="shipline" id="shipLine" hidden></button>
   <div class="grid" id="blkTiles">${tenantTiles(inst)}</div>
 <!--TENANT:END-->
 
@@ -11090,20 +11104,69 @@ on('gAlerts',function(){
  if(!A.length&&!Q.length)h+='<small>אין התראות. הכל תקין.</small>';
  shipOpen('shipAlerts','🔔 דורש טיפול',h);
 });
+/*
+  6.10, Yael's work list for today: the red and amber alerts, most urgent
+  first, each with a ready mail and "טיפלתי". The mail has no recipient (we
+  hold no supplier addresses), no name and no signature: she picks the contact
+  in Outlook. "טיפלתי" hides the card here at once and sends the id and code;
+  the listener writes it to the shared table with no model in between.
+*/
+var SHIP_MAIL={
+ NO_BOOKING:function(a){return ['PO '+a.po+': booking confirmation','PO '+a.po+': please send booking confirmation. Requested ETD '+shipDate(a.retd||a.etd)+'.'];},
+ ETD_SLIP:function(a){return ['PO '+a.po+': ETD','PO '+a.po+': ETD moved from '+shipDate(a.retd)+' to '+shipDate(a.etd)+'. Please confirm the earliest possible date.'];},
+ NO_SHO:function(a){return ['מספר תיק עמילות, הזמנה '+a.po,'בקשה למספר תיק עמילות, הזמנה '+a.po+(a.container?', מכולה '+a.container:'')+(a.eta?', ETA '+shipDate(a.eta):'')+'.'];},
+ ETA_PASSED:function(a){return ['סטטוס הזמנה '+a.po,'מה הסטטוס של הזמנה '+a.po+(a.container?', מכולה '+a.container:'')+'? תאריך ההגעה '+shipDate(a.eta)+' עבר.'];}
+};
+function shipMailHref(a){
+ var m=SHIP_MAIL[a.code];if(!m)return '';
+ var t=m(a);
+ return 'mailto:?subject='+encodeURIComponent(t[0])+'&body='+encodeURIComponent(t[1]);
+}
+function shipHidden(){
+ try{var o=JSON.parse(localStorage.getItem('shipDone')||'{}');return o&&typeof o==='object'?o:{};}catch(e){return {};}
+}
+function shipHide(a){
+ var o=shipHidden(),now=Date.now();
+ Object.keys(o).forEach(function(k){if(now-o[k]>8*86400000)delete o[k];});
+ o[a.id+'|'+a.code]=now;
+ try{localStorage.setItem('shipDone',JSON.stringify(o));}catch(e){}
+}
+function shipTodayList(){
+ var S=D.ship;if(!S)return [];
+ var hid=shipHidden();
+ return (S.alerts||[]).filter(function(a){return (a.level==='red'||a.level==='amber')&&!hid[a.id+'|'+a.code];});
+}
 on('gToday',function(){
  var S=D.ship;if(!S)return toast('אין נתונים עדיין');
- var A=(S.alerts||[]).filter(function(a){return a.level==='red' || a.level==='amber';});
- var h='<small>המשימות שמחכות היום, לפי דחיפות</small>';
- A.forEach(function(a){
-  h+='<div class="srow" style="border-left:4px solid '+((a.level==='red')?'#d9534f':'#f0ad4e')+';padding:8px">'
-   +'<b>'+esc(a.po)+'</b> '+esc(a.supplier)+'<br>'
-   +'<small>'+esc(a.text)+'</small><br>'
-   +'<a href="mailto:?subject='+encodeURIComponent(a.po)+'&body='+encodeURIComponent(a.action)+'">✉️ מייל מוכן</a> '
-   +'<button onclick="if(confirm(\\'סימן טיפלתי\\')) sendText(\\''+a.id+'\\n'+a.code+'\\',\\'ship-done\\')">✔ טיפלתי</button>'
-   +'</div>';
+ var A=shipTodayList();
+ var h='<small>נכון ל '+esc(shipDate(S.today))+'. הכי דחוף למעלה.</small>'
+  +'<input id="todayQ" class="shipq" type="search" placeholder="חיפוש: הזמנה, ספק או מכולה" autocomplete="off">'
+  +'<div id="todayList"></div>';
+ shipOpen('shipToday','📋 היום',h,function(w){
+  var list=w.querySelector('#todayList'),q='';
+  function draw(){
+   var L=shipTodayList().filter(function(a){return !q||(a.po+' '+a.supplier+' '+(a.container||'')).toLowerCase().indexOf(q)>-1;});
+   list.innerHTML=L.map(function(a,i){
+    var mail=shipMailHref(a);
+    return '<div class="srow" data-k="'+esc(a.id+'|'+a.code)+'">'+shipTag(a.level)+'<b>'+esc(a.po)+' · '+esc(a.supplier)+'</b>'
+     +'<br>'+esc(a.product||'')+'<br>'+esc(a.text)+'<br><small>'+esc(a.action)
+     +(a.etd?' · יציאה '+shipDate(a.etd):'')+(a.eta?' · הגעה '+shipDate(a.eta):'')+(a.container?' · מכולה '+esc(a.container):'')+'</small>'
+     +'<div class="sact">'+(mail?'<a href="'+esc(mail)+'">✉️ מייל מוכן</a>':'')
+     +'<button type="button" data-done="'+i+'">✔ טיפלתי</button></div></div>';
+   }).join('')||'<small>'+(q?'לא נמצא.':'אין היום משהו שמחכה לך. הכל בזמן.')+'</small>';
+   list._rows=L;
+  }
+  draw();
+  w.querySelector('#todayQ').addEventListener('input',function(e){q=e.target.value.trim().toLowerCase();draw();});
+  list.addEventListener('click',function(e){
+   var b=e.target.closest&&e.target.closest('[data-done]');if(!b)return;
+   var a=(list._rows||[])[+b.getAttribute('data-done')];if(!a)return;
+   if(!confirm('לסמן טיפלתי? '+a.po+'. ההתראה תחזור אם לא יתעדכן תוך שבוע.'))return;
+   shipHide(a);draw();paintShipLine();
+   sendText('טיפלתי במשלוח',a.id+String.fromCharCode(10)+a.code,'ship-done').then(function(){toast('נרשם. גם רינת תראה שזה טופל.');})
+    .catch(function(){toast('נשמר בטלפון. השליחה תנסה שוב.');});
+  });
  });
- if(!A.length)h+='<div class="srow"><small>הכל בזמן!</small></div>';
- shipOpen('shipToday','📋 היום',h);
 });
 on('gShip',function(){
  ensure('shipments',function(){
@@ -11111,7 +11174,7 @@ on('gShip',function(){
   var byId={};(S.alerts||[]).forEach(function(a){(byId[a.id]=byId[a.id]||[]).push(a);});
   var closedRe=/^(במלאי|הזמנה מבוטלת|יתרת הסחורה)/;
   var h=shipCounts(S.summary)
-   +'<input id="shipQ" class="shipq" type="search" placeholder="חיפוש: מספר הזמנה, ספק או מוצר" autocomplete="off">'
+   +'<input id="shipQ" class="shipq" type="search" placeholder="חיפוש: הזמנה, ספק, מוצר או מכולה" autocomplete="off">'
    +'<button type="button" class="yb yb4" id="shipAll">הצג גם הזמנות שכבר במלאי</button>'
    +'<div id="shipList"></div>'
    +'<button type="button" class="yb yb1" id="shipXls">📥 האקסל של היום</button>';
@@ -11140,7 +11203,7 @@ on('gShip',function(){
     var L=rows.filter(function(r){
      if(!all&&closedRe.test(r.status||''))return false;
      if(!q)return true;
-     return (r.po+' '+r.supplier+' '+r.product).toLowerCase().indexOf(q)>-1;
+     return (r.po+' '+r.supplier+' '+r.product+' '+(r.container||'')).toLowerCase().indexOf(q)>-1;
     });
     function rk(r){var l=worst(r);return l===''?3:SHIP_RANK[l];}
     L.sort(function(a,b){return (rk(a)-rk(b))||(a.eta||a.etd||'9999').localeCompare(b.eta||b.etd||'9999');});
@@ -11185,16 +11248,77 @@ on('gInsights',function(){
  if(!I.length)h+='<small>אין עדיין מספיק נתונים.</small>';
  shipOpen('shipInsights','📈 תובנות',h);
 });
+/*
+  6.10, Roni: four big buttons, each its own sheet, nothing to edit. The money
+  has no currency sign until Rinat says which currency that column is in.
+*/
+function shipWeekRows(S){
+ var rows=D.shipments||[],t=S.today,closedRe=/^(במלאי|הזמנה מבוטלת|יתרת הסחורה)/;
+ var end=new Date(Date.parse(t+'T00:00:00Z')+7*86400000).toISOString().slice(0,10);
+ return rows.filter(function(r){return r.eta&&r.eta>=t&&r.eta<=end&&!closedRe.test(r.status||'');})
+  .sort(function(a,b){return a.eta.localeCompare(b.eta);});
+}
 on('gCeo',function(){
  var S=D.ship;if(!S)return toast('אין נתונים עדיין');
  var s=S.summary;
- var top=(S.alerts||[]).filter(function(a){return a.level!=='track';}).slice(0,5);
- var h='<small>נכון ל '+esc(shipDate(S.today))+'</small>'+shipCounts(s)
-  +'<div class="srow"><b>'+s.open+'</b> הזמנות פתוחות · <b>'+s.arrivingThisWeek+'</b> מגיעות השבוע</div>';
- if(top.length)h+='<b>החמישה הדחופים</b>'+top.map(shipAlertRow).join('');
- else h+='<small>אין כרגע משלוח שדורש טיפול.</small>';
- shipOpen('shipCeo','📊 תמונת מצב',h);
+ var h='<small>נכון ל '+esc(shipDate(S.today))+'</small>'
+  +'<div class="srow"><b>'+s.open+'</b> הזמנות פתוחות</div>'
+  +'<div class="sbig">'
+  +'<button type="button" data-c="red" style="background:#c62828">🔴 דחוף<small>'+s.red+' הזמנות</small></button>'
+  +'<button type="button" data-c="week" style="background:#14675a">📅 מגיע השבוע<small>'+s.arrivingThisWeek+' הזמנות</small></button>'
+  +'<button type="button" data-c="money" style="background:#6a4c93">💰 כסף בדרך<small>'+Number(s.openMoney||0).toLocaleString('he-IL')+'</small></button>'
+  +'<button type="button" data-c="trend" style="background:#ef8f00">📈 מגמה<small>מי מאחר</small></button>'
+  +'</div>';
+ shipOpen('shipCeo','📊 תמונת מצב',h,function(w){
+  w.querySelector('.sbig').addEventListener('click',function(e){
+   var b=e.target.closest&&e.target.closest('[data-c]');if(!b)return;
+   var c=b.getAttribute('data-c');
+   if(c==='red'){
+    var top=(S.alerts||[]).filter(function(a){return a.level==='red';}).slice(0,5);
+    shipOpen('shipCeoRed','🔴 דחוף',top.length?top.map(shipAlertRow).join(''):'<small>אין כרגע משלוח דחוף.</small>');
+   }else if(c==='week'){
+    ensure('shipments',function(){
+     var L=shipWeekRows(S);
+     shipOpen('shipCeoWeek','📅 מגיע השבוע',L.length?L.map(function(r){
+      return '<div class="srow"><b>'+esc(r.po)+' · '+esc(r.supplier)+'</b><br>'+esc(r.product)+'<br><small>הגעה '+shipDate(r.eta)+(r.container?' · מכולה '+esc(r.container):'')+'</small></div>';
+     }).join(''):'<small>שום דבר לא מגיע השבוע.</small>');
+    });
+   }else if(c==='money'){
+    shipOpen('shipCeoMoney','💰 כסף בדרך','<div class="srow"><b>'+Number(s.openMoney||0).toLocaleString('he-IL')+'</b><br><small>סכום ההזמנות הפתוחות, לפי עמודת סכום ההזמנה בטבלה. המטבע עוד לא אומת, לכן בלי סימן.</small></div>');
+   }else{
+    var I=S.insights||[];
+    shipOpen('shipCeoTrend','📈 מגמה','<small>כמה ימים זז בממוצע תאריך היציאה של כל ספק, לעומת מה שביקשנו.</small>'+(I.length?I.map(function(x){
+     return '<div class="srow"><b>'+esc(x.supplier)+'</b><br>'+x.orders+' הזמנות, זז בממוצע '+x.avgSlipDays+' ימים'+(x.overThreeWeeks?', '+x.overThreeWeeks+' מהן יותר משלושה שבועות':'')+'</div>';
+    }).join(''):'<small>אין עדיין מספיק נתונים.</small>'));
+   }
+  });
+ });
 });
+/*
+  The coloured line over a customer's tiles: red with the urgent count, amber
+  with what to check, or green. It opens the instance's main tile (homeTile).
+  The phone's own "טיפלתי" marks are taken off at once, before the next build.
+*/
+function paintShipLine(){
+ var el=document.getElementById('shipLine');if(!el)return;
+ var S=D.ship;if(!S||!S.alerts){el.hidden=true;return;}
+ var hid=shipHidden(),A=(S.alerts||[]).filter(function(a){return !hid[a.id+'|'+a.code];});
+ function cnt(l){var o={};A.forEach(function(a){if(a.level===l)o[a.id]=1;});return Object.keys(o).length;}
+ var r=cnt('red'),am=cnt('amber');
+ el.className='shipline '+(r?'red':(am?'amber':'green'));
+ el.innerHTML=(r?(r===1?'דחוף אחד':r+' דחופים'):(am?am+' לבדוק':'הכל בזמן'))+(r&&am?', '+am+' לבדוק':'')+'<small>נכון ל '+esc(shipDate(S.today))+'. לחיצה פותחת את הפירוט.</small>';
+ el.hidden=false;
+}
+on('shipLine',function(){
+ var t=(INSTANCE&&INSTANCE.homeTile)||'';
+ var b=document.getElementById(t)||document.getElementById('gToday')||document.getElementById('gAlerts')||document.getElementById('gCeo');
+ if(b)b.click();
+});
+boot('shipLine',function(){
+ // The tiles below can be rearranged and reordered; the line stays first on the home screen.
+ var el=document.getElementById('shipLine'),h=document.getElementById('pH'),t=document.getElementById('talkCard');
+ if(el&&t&&t.parentNode)t.parentNode.insertBefore(el,t);else if(el&&h)h.insertBefore(el,h.firstChild);
+ paintShipLine();setInterval(paintShipLine,60000);});
 on('gUpgrade',function(){
  var h='<small>מה עוד המוניטור יודע לעשות. לחיצה שולחת בקשה למנהל והוא חוזר אליך.</small>'
   +SHIP_UPGRADES.map(function(u,i){
