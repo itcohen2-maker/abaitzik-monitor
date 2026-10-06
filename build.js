@@ -355,6 +355,7 @@ function build() {
   const tenants = loadDocs('tenants')
     .map(x => ({ id: x.id, title: x.title || x.id, state: x.state || 'unknown',
                  problems: Array.isArray(x.problems) ? x.problems : [], checkedAt: x.checkedAt || '', beatAt: x.beatAt || '',
+                 host: /^[a-z0-9.-]+$/.test(x.host || '') ? x.host : '',
                  // 5.10: what the customer asked to change, waiting for Itzik.
                  requests: (Array.isArray(x.requests) ? x.requests : []).map(r => ({ id: r.id, at: r.at || '', text: r.text || '', status: r.status || 'pending', note: r.note || '' })) }));
   const tasks = loadDocs('tasks')
@@ -2013,6 +2014,7 @@ body.editing .bn{display:none}
 .c-nr{background:linear-gradient(160deg,#243a6b,#0B1330)}
 .c-sl{background:linear-gradient(160deg,#f472b6,#be185d)}
 .c-el{background:linear-gradient(160deg,#1f8f7d,#14675a)}
+.c-hs{background:linear-gradient(160deg,#ef8f00,#b26a00)}
 /* קבלות. Paper, not a brand colour: the page behind it is a ledger. */
 .c-kb{background:linear-gradient(160deg,#34d399,#047857)}
 .c-vd{background:linear-gradient(160deg,#fbbf24,#d97706)}
@@ -3476,6 +3478,8 @@ try{
   -->
   <a class="ic" href="#" id="icIly"><span class="c c-el" id="icIlyC">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 21c1.2-4 4-6 7.5-6s6.3 2 7.5 6"/></svg></span>איליי</a>
+  <a class="ic" href="#" id="icHs"><span class="c c-hs" id="icHsC">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>הום סטייל</a>
   <!--
     קבלות goes here. The markup and the .c-kb colour are ready, and so is
     build-kabalot.js, but the button stays out until data/receipts.json
@@ -9567,7 +9571,8 @@ function renderTenants(){
   try{when=new Date(t.checkedAt).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});}catch(e){}
   h+='<div class="tk'+(ok?' done':'')+'" style="border-inline-start:6px solid '+(ok?'#2e7d32':'#c62828')+'"><span><b>'+(ok?'🟢':'🔴')+' '+esc(t.title)+'</b>'
    +(ok?' תקין':' נתק')+(when?' <small>נבדק '+esc(when)+'</small>':'')
-   +(t.problems&&t.problems.length?'<br><small>'+t.problems.map(esc).join(' · ')+'</small>':'')+'</span></div>';
+   +(t.problems&&t.problems.length?'<br><small>'+t.problems.map(esc).join(' · ')+'</small>':'')
+   +(t.host?'<br><a href="https://'+esc(t.host)+'/" target="_blank" rel="noopener">פתיחת המוניטור</a>':'')+'</span></div>';
  });
  host.innerHTML=h||'<div class="empty">אין מוניטורים אחרים בשרת הזה.</div>';
  renderChangeReqs(host);
@@ -9624,7 +9629,11 @@ function paintTenantsTile(){
  b.querySelector('small').textContent=bad.length?'נתק: '+bad.map(function(t){return t.title;}).join(', '):'הכל תקין';
  b.style.background=bad.length?'linear-gradient(180deg,#ef5350,#b71c1c)':'linear-gradient(180deg,#66bb6a,#1b5e20)';
  var c=document.getElementById('icIlyC');
- if(c)c.style.background=bad.length?'linear-gradient(160deg,#ef5350,#b71c1c)':'linear-gradient(160deg,#66bb6a,#1b5e20)';
+ var badIly=T.filter(function(t){return t.id==='ily'&&t.state!=='ok';});
+ if(c)c.style.background=badIly.length?'linear-gradient(160deg,#ef5350,#b71c1c)':'linear-gradient(160deg,#66bb6a,#1b5e20)';
+ var hc=document.getElementById('icHsC');
+ var badHs=T.filter(function(t){return (t.id==='homestyle'||t.id==='roni')&&t.state!=='ok';});
+ if(hc){hc.style.background=badHs.length?'linear-gradient(160deg,#ef5350,#b71c1c)':'linear-gradient(160deg,#66bb6a,#1b5e20)';hc.classList.toggle('tdown',!!badHs.length);}
  /*
    30.9, Itzik: "the red button has to blink, not just be red. It is an alarm,
    it is a customer, the most important thing we have." So a customer that is
@@ -9633,7 +9642,7 @@ function paintTenantsTile(){
    tile also jumps to the front of the grid until the customer is back.
  */
  b.classList.toggle('tdown',!!bad.length);
- if(c)c.classList.toggle('tdown',!!bad.length);
+ if(c)c.classList.toggle('tdown',!!badIly.length);
  try{floatTile('gTenants',!!bad.length);}catch(e){}
  var home=document.getElementById('pH'),al=document.getElementById('tenAlert');
  if(bad.length&&home){
@@ -9665,6 +9674,8 @@ on('gTenants',function(){pane('N3');renderTenants();});
 (function(){
  var a=document.getElementById('icIly');
  if(a)a.onclick=function(e){e.preventDefault();pane('N3');renderTenants();};
+ var h=document.getElementById('icHs');
+ if(h)h.onclick=function(e){e.preventDefault();pane('N3');renderTenants();};
 })();
 function renderTasks(){
  try{notesPull();notesPush();}catch(e){}

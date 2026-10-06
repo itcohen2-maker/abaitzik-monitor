@@ -893,6 +893,7 @@ body.editing .bn{display:none}
 .c-nr{background:linear-gradient(160deg,#243a6b,#0B1330)}
 .c-sl{background:linear-gradient(160deg,#f472b6,#be185d)}
 .c-el{background:linear-gradient(160deg,#1f8f7d,#14675a)}
+.c-hs{background:linear-gradient(160deg,#ef8f00,#b26a00)}
 .c-kb{background:linear-gradient(160deg,#34d399,#047857)}
 .c-vd{background:linear-gradient(160deg,#fbbf24,#d97706)}
 .c-hb{background:linear-gradient(160deg,#fbbf24,#b45309)}
@@ -1733,7 +1734,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-06T12:27:59.673Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-06T12:31:29.721Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1915,6 +1916,8 @@ try{
    </svg></span>נרות</a>
   <a class="ic" href="#" id="icIly"><span class="c c-el" id="icIlyC">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 21c1.2-4 4-6 7.5-6s6.3 2 7.5 6"/></svg></span>איליי</a>
+  <a class="ic" href="#" id="icHs"><span class="c c-hs" id="icHsC">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>הום סטייל</a>
   <a class="ic" href="https://pegasusgame.vercel.app" target="_blank" rel="noopener"><span class="c c-pg">
    <svg viewBox="0 0 24 24"><path fill="#fff" d="M4 14c2-5 6-8 11-8l5-2-2 5c0 5-3 9-8 11l-1-3-3-1z"/><circle cx="14" cy="10" r="1.3" fill="#6d28d9"/></svg></span>פגסוס</a>
   <button type="button" class="ic" id="icDrive"><span class="c c-dr">
@@ -3042,7 +3045,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='a0725b65ce';
+var CODE_ID='55e820a5ef';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -6566,7 +6569,8 @@ function renderTenants(){
   try{when=new Date(t.checkedAt).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});}catch(e){}
   h+='<div class="tk'+(ok?' done':'')+'" style="border-inline-start:6px solid '+(ok?'#2e7d32':'#c62828')+'"><span><b>'+(ok?'🟢':'🔴')+' '+esc(t.title)+'</b>'
    +(ok?' תקין':' נתק')+(when?' <small>נבדק '+esc(when)+'</small>':'')
-   +(t.problems&&t.problems.length?'<br><small>'+t.problems.map(esc).join(' · ')+'</small>':'')+'</span></div>';
+   +(t.problems&&t.problems.length?'<br><small>'+t.problems.map(esc).join(' · ')+'</small>':'')
+   +(t.host?'<br><a href="https://'+esc(t.host)+'/" target="_blank" rel="noopener">פתיחת המוניטור</a>':'')+'</span></div>';
  });
  host.innerHTML=h||'<div class="empty">אין מוניטורים אחרים בשרת הזה.</div>';
  renderChangeReqs(host);
@@ -6616,9 +6620,13 @@ function paintTenantsTile(){
  b.querySelector('small').textContent=bad.length?'נתק: '+bad.map(function(t){return t.title;}).join(', '):'הכל תקין';
  b.style.background=bad.length?'linear-gradient(180deg,#ef5350,#b71c1c)':'linear-gradient(180deg,#66bb6a,#1b5e20)';
  var c=document.getElementById('icIlyC');
- if(c)c.style.background=bad.length?'linear-gradient(160deg,#ef5350,#b71c1c)':'linear-gradient(160deg,#66bb6a,#1b5e20)';
+ var badIly=T.filter(function(t){return t.id==='ily'&&t.state!=='ok';});
+ if(c)c.style.background=badIly.length?'linear-gradient(160deg,#ef5350,#b71c1c)':'linear-gradient(160deg,#66bb6a,#1b5e20)';
+ var hc=document.getElementById('icHsC');
+ var badHs=T.filter(function(t){return (t.id==='homestyle'||t.id==='roni')&&t.state!=='ok';});
+ if(hc){hc.style.background=badHs.length?'linear-gradient(160deg,#ef5350,#b71c1c)':'linear-gradient(160deg,#66bb6a,#1b5e20)';hc.classList.toggle('tdown',!!badHs.length);}
  b.classList.toggle('tdown',!!bad.length);
- if(c)c.classList.toggle('tdown',!!bad.length);
+ if(c)c.classList.toggle('tdown',!!badIly.length);
  try{floatTile('gTenants',!!bad.length);}catch(e){}
  var home=document.getElementById('pH'),al=document.getElementById('tenAlert');
  if(bad.length&&home){
@@ -6649,6 +6657,8 @@ on('gTenants',function(){pane('N3');renderTenants();});
 (function(){
  var a=document.getElementById('icIly');
  if(a)a.onclick=function(e){e.preventDefault();pane('N3');renderTenants();};
+ var h=document.getElementById('icHs');
+ if(h)h.onclick=function(e){e.preventDefault();pane('N3');renderTenants();};
 })();
 function renderTasks(){
  try{notesPull();notesPush();}catch(e){}
