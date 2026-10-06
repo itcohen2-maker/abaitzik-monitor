@@ -2010,6 +2010,7 @@ body.editing .bn{display:none}
 .ic:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:12px}
 .c-yt{background:#ff0033}.c-tt{background:#111}.c-fb{background:#1877f2}
 .c-ig{background:linear-gradient(45deg,#f9ce34,#ee2a7b,#6228d7)}
+.c-nt{background:linear-gradient(45deg,#ff0033,#ee2a7b,#1877f2)}
 .c-wa{background:#25d366}.c-gm{background:#fff;border:1px solid var(--line)}
 .c-st{background:linear-gradient(160deg,#4285F4,#0b57d0)}
 .c-pg{background:linear-gradient(160deg,#a78bfa,#6d28d9)}
@@ -3305,7 +3306,6 @@ try{
   -->
   <!-- 6.10: the meeting prep got buried under newer answers. Its own tile, first. -->
   <button type="button" class="gt gMeet" id="gMeet"><b>📦 מעקב משלוחים, הום סטייל</b><small>איפה אנחנו עומדים, לעדכון רוני</small></button>
-  <button type="button" class="gt g3" id="gQueue"><b>📊 ניטור רשתות</b><small>מי פנה, מה נענה</small></button>
   <!-- The reports tile came off on 17.9. The reports are in "תשובות" now,
        which is the one button he asked for. -->
   <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>מי חייב כסף ומאיזה חודש</small></button>
@@ -3440,14 +3440,14 @@ try{
  <div class="gres" id="gResults"></div>
 
  <div class="row" id="blkIcons" role="group" aria-label="קיצורים">
-  <a class="ic" data-net="youtube" href="https://studio.youtube.com/" target="_blank" rel="noopener"><span class="c c-yt">
-   <svg viewBox="0 0 24 24"><path fill="#fff" d="M10 8.5v7l6-3.5z"/></svg></span>יוטיוב</a>
-  <a class="ic" data-net="tiktok" href="https://www.tiktok.com/@abaitzik" target="_blank" rel="noopener"><span class="c c-tt">
-   <svg viewBox="0 0 24 24"><path fill="#fff" d="M13 3h3a4 4 0 0 0 4 4v3a7 7 0 0 1-4-1.3V15a5.5 5.5 0 1 1-5.5-5.5c.3 0 .6 0 .9.1v3.1a2.5 2.5 0 1 0 1.6 2.3z"/></svg></span>טיקטוק</a>
-  <a class="ic" data-net="facebook" href="https://www.facebook.com/lolos.lolo.90" target="_blank" rel="noopener"><span class="c c-fb">
-   <svg viewBox="0 0 24 24"><path fill="#fff" d="M13.5 21v-7h2.4l.4-3h-2.8V9.2c0-.9.3-1.5 1.5-1.5h1.5V5.1c-.3 0-1.2-.1-2.2-.1-2.2 0-3.7 1.3-3.7 3.8V11H8v3h2.6v7z"/></svg></span>פייסבוק</a>
-  <a class="ic" data-net="instagram" href="https://www.instagram.com/abaitzik/" target="_blank" rel="noopener"><span class="c c-ig">
-   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="5"/><circle cx="12" cy="12" r="3.6"/><circle cx="17" cy="7" r="1" fill="#fff" stroke="none"/></svg></span>אינסטגרם</a>
+  <!--
+    איציק, 6.10, בהקלטה: "לצמצם את הכפתור של ניטור רשתות וכל האייקונים של כל
+    הרשתות, הכל אייקון אחד". The tile and the four network circles became this
+    one circle. Inside, the screen still has a tab per network and the button
+    out to each network's own app.
+  -->
+  <a class="ic" data-net="all" id="icNet" href="#"><span class="c c-nt">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M10 20V5M15 20v-6M20 20V8"/></svg></span>ניטור רשתות</a>
   <a class="ic" href="https://abaitzik.com/" target="_blank" rel="noopener"><span class="c c-st">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c3 3 3 13 0 16M12 4c-3 3-3 13 0 16"/></svg></span>האתר</a>
   <button type="button" class="ic" id="icLand"><span class="c c-vd">
@@ -12184,7 +12184,6 @@ document.getElementById('wShoot').onclick=function(){
  pane('m');renderThread();
  shoot();
 };
-document.getElementById('gQueue').onclick=function(){openNet('all');};
 // The reports screen is still built and still reachable from inside, but it
 // is no longer a tile on the way to everything else.
 (function(){var b=document.getElementById('gReports');if(!b)return;
