@@ -1014,6 +1014,16 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .ycard>*{flex-shrink:0}
 .ycard b{font:700 16px Heebo,sans-serif}
 .ycard small{font-size:12px;opacity:.7;margin-bottom:4px}
+.ship .srow{border-bottom:1px solid rgba(128,128,128,.25);padding:8px 0;font:500 14px/1.45 Heebo,sans-serif}
+.ship .srow b{font:700 14px Heebo,sans-serif}
+.ship .srow small{display:inline}
+.ship .sdet{margin-top:6px;padding:8px;border-radius:10px;background:rgba(128,128,128,.12)}
+.ship .stag{display:inline-block;border-radius:8px;padding:1px 8px;margin-inline-end:6px;font:700 11px Heebo,sans-serif;color:#fff}
+.ship .stag.red{background:#c62828}.ship .stag.amber{background:#ef8f00}.ship .stag.track{background:#757575}
+.ship .scnt{display:flex;gap:6px}
+.ship .scnt div{flex:1;border-radius:12px;padding:8px 4px;text-align:center;color:#fff;font:700 22px Heebo,sans-serif}
+.ship .scnt small{display:block;font-size:11px;opacity:.95;margin:0}
+.ship .shipq{width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif}
 .micSteps{margin:2px 0 6px;padding-inline-start:20px;font:500 15px/1.5 Heebo,sans-serif}
 .ywa{background:#efeae2;border-radius:12px;padding:10px;max-height:40vh;overflow:auto;margin-bottom:4px}
 .ywa i{display:block;font:600 11px Heebo,sans-serif;font-style:normal;color:#54656f;text-align:center;margin-bottom:8px}
@@ -1723,7 +1733,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-06T12:03:28.298Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-06T12:23:04.462Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3032,7 +3042,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='fccecc6746';
+var CODE_ID='a0725b65ce';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -7654,6 +7664,7 @@ function meSheet(){
  document.body.appendChild(w);
 }
 on('gSelf',meSheet);
+
 function adminReqSheet(){
  var old=document.getElementById('arSheet');if(old)old.remove();
  var w=document.createElement('div');
@@ -7681,6 +7692,164 @@ function adminReqSheet(){
  setTimeout(function(){var x=document.getElementById('arText');if(x)x.focus();},50);
 }
 on('gAdminReq',adminReqSheet);
+var SHIP_LVL={red:'דחוף',amber:'לבדוק',track:'מעקב'};
+var SHIP_RANK={red:0,amber:1,track:2};
+var SHIP_UPGRADES=[
+ ['📬 דוח בוקר מכל המייל','כל מה שחשוב מהתיבה שלך, בכמה שורות, כל בוקר'],
+ ['🎙️ הודעה קולית שנענית תוך דקה','אומרים במקום להקליד, והמוניטור עונה'],
+ ['⏰ תזכורות ומשימות','מה לעשות ומתי, ותזכורת כשמשהו נתקע'],
+ ['💰 דוח חייבים','מי חייב, כמה, ומאיזה יום'],
+ ['📁 מסמכים עם שליחה בוואטסאפ','כל מסמך נשלח בלחיצה אחת, בלי לחפש'],
+ ['📦 מעקב מלאי ומכירות','מוצר שנגמר, סניף שירד, ספק שהעלה מחיר']
+];
+function shipOpen(id,label,html,after){
+ var old=document.getElementById(id);if(old)old.remove();
+ var w=document.createElement('div');
+ w.id=id;w.className='ysheet';
+ w.setAttribute('role','dialog');w.setAttribute('aria-label',label);
+ w.innerHTML='<div class="ycard ship"><b>'+esc(label)+'</b>'+html+'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+ function close(){w.remove();document.removeEventListener('keydown',key);}
+ function key(e){if(e.key==='Escape')close();}
+ w.addEventListener('click',function(e){
+  if(e.target===w)return close();
+  var a=e.target.getAttribute&&e.target.getAttribute('data-a');
+  if(a==='x')close();
+ });
+ document.addEventListener('keydown',key);
+ document.body.appendChild(w);
+ if(after)after(w);
+ return w;
+}
+function shipTag(l){return '<span class="stag '+l+'">'+SHIP_LVL[l]+'</span>';}
+function shipDate(s){return s?s.slice(8,10)+'.'+s.slice(5,7)+'.'+s.slice(2,4):'';}
+function shipCounts(s){
+ return '<div class="scnt"><div style="background:#c62828">'+s.red+'<small>דחוף</small></div>'
+  +'<div style="background:#ef8f00">'+s.amber+'<small>לבדוק</small></div>'
+  +'<div style="background:#2e7d32">'+s.green+'<small>תקין</small></div>'
+  +'<div style="background:#757575">'+s.track+'<small>מעקב שופרסל</small></div></div>';
+}
+function shipAlertRow(a){
+ return '<div class="srow">'+shipTag(a.level)+'<b>'+esc(a.po)+' · '+esc(a.supplier)+'</b>'
+  +'<br>'+esc(a.text)+'<br><small>'+esc(a.action)+'</small></div>';
+}
+on('gAlerts',function(){
+ var S=D.ship;if(!S)return toast('אין נתונים עדיין');
+ var A=S.alerts||[];
+ var h='<small>נכון ל '+esc(shipDate(S.today))+'</small>'+shipCounts(S.summary);
+ ['red','amber','track'].forEach(function(l){
+  var L=A.filter(function(a){return a.level===l;});
+  if(!L.length)return;
+  h+='<b>'+(l==='track'?'מעקב, הזמנות שופרסל':SHIP_LVL[l])+' ('+L.length+')</b>'+L.map(shipAlertRow).join('');
+ });
+ if(!A.length)h+='<small>אין התראות. הכל תקין.</small>';
+ shipOpen('shipAlerts','🔔 דורש טיפול',h);
+});
+on('gShip',function(){
+ ensure('shipments',function(){
+  var S=D.ship||{summary:{red:0,amber:0,green:0,track:0},alerts:[]},rows=D.shipments||[];
+  var byId={};(S.alerts||[]).forEach(function(a){(byId[a.id]=byId[a.id]||[]).push(a);});
+  var closedRe=/^(במלאי|הזמנה מבוטלת|יתרת הסחורה)/;
+  var h=shipCounts(S.summary)
+   +'<input id="shipQ" class="shipq" type="search" placeholder="חיפוש: מספר הזמנה, ספק או מוצר" autocomplete="off">'
+   +'<button type="button" class="yb yb4" id="shipAll">הצג גם הזמנות שכבר במלאי</button>'
+   +'<div id="shipList"></div>'
+   +'<button type="button" class="yb yb1" id="shipXls">📥 האקסל של היום</button>';
+  shipOpen('shipTable','📦 משלוחים',h,function(w){
+   var all=false,q='';
+   var list=w.querySelector('#shipList');
+   function worst(r){
+    var al=byId[r.id]||[],best='';
+    al.forEach(function(a){if(best===''||SHIP_RANK[a.level]<SHIP_RANK[best])best=a.level;});
+    return best;
+   }
+   function detail(r){
+    var d=[];
+    if(r.customs)d.push('תיק עמילות: '+esc(r.customs));
+    if(r.container)d.push('מכולה: '+esc(r.container));
+    if(r.notes)d.push('הערות: '+esc(r.notes));
+    if(r.payStatus)d.push('תשלום: '+esc(r.payStatus));
+    (byId[r.id]||[]).forEach(function(a){d.push(shipTag(a.level)+' '+esc(a.text)+'<br><small>'+esc(a.action)+'</small>');});
+    var hs=(r.history||[]).slice(-5).reverse().map(function(x){
+     return shipDate(String(x.at||'').slice(0,10))+' '+esc(x.field==='row'?x.to:(x.field+': '+x.from+' ← '+x.to));
+    });
+    if(hs.length)d.push('<small>היסטוריה:<br>'+hs.join('<br>')+'</small>');
+    return d.join('<br>')||'<small>אין פרטים נוספים</small>';
+   }
+   function draw(){
+    var L=rows.filter(function(r){
+     if(!all&&closedRe.test(r.status||''))return false;
+     if(!q)return true;
+     return (r.po+' '+r.supplier+' '+r.product).toLowerCase().indexOf(q)>-1;
+    });
+    L.sort(function(a,b){return (a.eta||a.etd||'9999').localeCompare(b.eta||b.etd||'9999');});
+    var n=L.length;L=L.slice(0,150);
+    list.innerHTML=L.map(function(r){
+     var lv=worst(r);
+     return '<div class="srow" data-id="'+esc(r.id)+'">'+(lv?shipTag(lv):'')+'<b>'+esc(r.po)+' · '+esc(r.supplier)+'</b>'
+      +'<br>'+esc(r.product)+'<br><small>'+esc(r.status||'ללא סטטוס')+' · יציאה '+shipDate(r.etd)+' · הגעה '+shipDate(r.eta)+'</small>'
+      +'<div class="sdet" hidden>'+detail(r)+'</div></div>';
+    }).join('')+(n>150?'<small>מוצגות 150 מתוך '+n+'. צמצם בחיפוש.</small>':'')+(n?'':'<small>לא נמצאה הזמנה.</small>');
+   }
+   draw();
+   w.querySelector('#shipQ').addEventListener('input',function(e){q=e.target.value.trim().toLowerCase();draw();});
+   w.querySelector('#shipAll').addEventListener('click',function(e){all=!all;e.target.textContent=all?'להסתיר הזמנות שכבר במלאי':'הצג גם הזמנות שכבר במלאי';draw();});
+   list.addEventListener('click',function(e){
+    var row=e.target.closest&&e.target.closest('.srow');if(!row)return;
+    var d=row.querySelector('.sdet');if(d)d.hidden=!d.hidden;
+   });
+   w.querySelector('#shipXls').addEventListener('click',function(){if(!fileView('shipments.xlsx'))toast('האקסל עוד לא מוכן, ייווצר הלילה');});
+  });
+ });
+});
+on('gBrief',function(){
+ var S=D.ship;if(!S)return toast('אין נתונים עדיין');
+ var b=S.brief,s=S.summary;
+ var h='<small>'+(b?'הדוח של '+esc(shipDate(b.today)):'נכון ל '+esc(shipDate(S.today)))+'</small>'+shipCounts(s)
+  +'<b>מגיעים השבוע: '+s.arrivingThisWeek+'</b>';
+ if(b&&b.changes&&b.changes.length)h+='<b>מה השתנה מאתמול</b>'+b.changes.map(function(c){return '<div class="srow">'+esc(c)+'</div>';}).join('');
+ else if(b)h+='<small>לא השתנה כלום מאתמול.</small>';
+ var reds=(S.alerts||[]).filter(function(a){return a.level==='red';}).slice(0,8);
+ if(reds.length)h+='<b>הכי דחוף</b>'+reds.map(shipAlertRow).join('');
+ shipOpen('shipBrief','☀️ דוח הבוקר',h);
+});
+on('gInsights',function(){
+ var S=D.ship;if(!S)return toast('אין נתונים עדיין');
+ var I=S.insights||[];
+ var h='<small>לפי הזמנות 2026 ו 2027: כמה זז התאריך שבו הספק באמת מוציא, לעומת התאריך שביקשנו.</small>'
+  +I.map(function(x){
+   return '<div class="srow"><b>'+esc(x.supplier)+'</b><br>'+x.orders+' הזמנות, זז בממוצע '+x.avgSlipDays+' ימים'
+    +(x.overThreeWeeks?', '+x.overThreeWeeks+' מהן יותר משלושה שבועות':'')+'</div>';
+  }).join('');
+ if(!I.length)h+='<small>אין עדיין מספיק נתונים.</small>';
+ shipOpen('shipInsights','📈 תובנות',h);
+});
+on('gCeo',function(){
+ var S=D.ship;if(!S)return toast('אין נתונים עדיין');
+ var s=S.summary;
+ var top=(S.alerts||[]).filter(function(a){return a.level!=='track';}).slice(0,5);
+ var h='<small>נכון ל '+esc(shipDate(S.today))+'</small>'+shipCounts(s)
+  +'<div class="srow"><b>'+s.open+'</b> הזמנות פתוחות · <b>'+s.arrivingThisWeek+'</b> מגיעות השבוע</div>';
+ if(top.length)h+='<b>החמישה הדחופים</b>'+top.map(shipAlertRow).join('');
+ else h+='<small>אין כרגע משלוח שדורש טיפול.</small>';
+ shipOpen('shipCeo','📊 תמונת מצב',h);
+});
+on('gUpgrade',function(){
+ var h='<small>מה עוד המוניטור יודע לעשות. לחיצה שולחת בקשה למנהל והוא חוזר אליך.</small>'
+  +SHIP_UPGRADES.map(function(u,i){
+   return '<button type="button" class="yb yb'+(i%4+1)+'" data-u="'+i+'">'+esc(u[0])+'<br><small>'+esc(u[1])+'</small></button>';
+  }).join('');
+ shipOpen('shipUp','🚀 שדרוגים',h,function(w){
+  w.addEventListener('click',function(e){
+   var b=e.target.closest&&e.target.closest('[data-u]');if(!b)return;
+   var u=SHIP_UPGRADES[+b.getAttribute('data-u')];if(!u)return;
+   b.disabled=true;
+   sendText('בקשה ממנהל','בקשה ממנהל: בקשת שדרוג: '+u[0]+'. '+u[1],'משימה').then(function(){
+    markSent('text',u[0]);toast('נשלח למנהל. הוא יחזור אליך.');
+   }).catch(function(){b.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
+  });
+ });
+});
+
 var OCC_LOG=[
  '4.10 בבוקר: נשלח מייל לבקשת תור דחוף.',
  '4.10 13:05: המרפאה ענתה וביקשה מספר תעודת זהות.',

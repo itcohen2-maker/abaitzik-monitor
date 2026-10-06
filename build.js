@@ -664,9 +664,33 @@ function build() {
     answer is not a bigger slice, which is the weight this whole split was for.
     It is `ansKeys` below: the window as keys alone.
   */
+  /*
+    6.10, Home Style. An instance that names a shipments folder gets the table,
+    the alerts the rules draw from it, and the morning brief. Itzik's instance
+    names none, so for him nothing here runs and no file is written.
+  */
+  let shipRows = null;
+  if (inst.shipmentsDir) {
+    try {
+      const rules = require('./lib/ship-rules.js');
+      const sd = inst.shipmentsDir;
+      shipRows = JSON.parse(fs.readFileSync(path.join(sd, 'rows.json'), 'utf8'));
+      let sup = {}, brief = null, meta = {};
+      try { sup = JSON.parse(fs.readFileSync(path.join(sd, '..', 'suppliers.json'), 'utf8')); } catch (e) { /* defaults */ }
+      try { brief = JSON.parse(fs.readFileSync(path.join(sd, 'brief.json'), 'utf8')); } catch (e) { /* none yet */ }
+      try { meta = JSON.parse(fs.readFileSync(path.join(sd, 'meta.json'), 'utf8')); } catch (e) { /* none yet */ }
+      const today = new Date().toLocaleDateString('sv', { timeZone: 'Asia/Jerusalem' });
+      const alerts = rules.evaluate(shipRows, today, sup);
+      payload.ship = { today, alerts, summary: rules.summary(shipRows, alerts, today),
+        insights: rules.insights(shipRows.filter((r) => /202[67]$/.test(r.sheet))).slice(0, 12),
+        brief, importedAt: meta.importedAt || '' };
+      payload.shipments = shipRows;
+    } catch (e) { console.error('shipments: ' + e.message); shipRows = null; }
+  }
   const HEADS = { chat: 150, reports: 14, codex: 20, special: 8, replies: 8,
                   improve: 4, food: 12, pegasus: 4, replied: 0, rivhit: 0, sale: 0, isra: 0,
                   drains: 40, blocklist: 12 };
+  if (shipRows) HEADS.shipments = 0;
   // A report's body is most of its weight, and only the newest few are read
   // off the card without opening the screen.
   const BODY_HEAD = 3;
@@ -773,7 +797,11 @@ function build() {
     a list of element ids from the home screen; null keeps everything, which
     is what Itzik's instance says and what an absent instance.json means.
   */
-  const instanceJson = JSON.stringify({ name: inst.name, owner: inst.owner, pageTitle: inst.pageTitle, screens: inst.screens,
+  // 6.10: the page hides every home tile whose id is not in `screens`, and the
+  // request-to-admin tile is added to the HTML but was never in that list, so it
+  // was drawn and then hidden on every customer's page. It is appended here.
+  const instanceJson = JSON.stringify({ name: inst.name, owner: inst.owner, pageTitle: inst.pageTitle,
+    screens: Array.isArray(inst.screens) && inst.screens.length && !inst.screens.includes('gAdminReq') ? inst.screens.concat(['gAdminReq']) : inst.screens,
     computer: inst.computer, phone: inst.phone, welcome: inst.welcome });
   const html = html0.replace('__CODE_ID__', codeId0).replace("'__INSTANCE__'", instanceJson);
 
@@ -869,6 +897,13 @@ const TENANT_TILES = {
   gNotes: ['g10', '📝 פתקים', 'נכתב, נשמר, לא הולך לאיבוד'],
   gVoices: ['g4', '🎙️ הקלטות שלא תומללו', 'מה שלא הצלחתי לקרוא'],
   gAdminReq: ['g3', '📨 בקשה ממנהל', 'לשנות משהו במוניטור? המנהל מאשר'],
+  // 6.10, Home Style: shipments. Drawn only for an instance that lists them.
+  gShip: ['g16', '📦 משלוחים', 'כל ההזמנות הפתוחות, לפי דחיפות'],
+  gAlerts: ['g3', '🔔 דורש טיפול', 'מה שלא יכול לחכות'],
+  gBrief: ['g17', '☀️ דוח הבוקר', 'מה השתנה ומה מגיע השבוע'],
+  gInsights: ['g11', '📈 תובנות', 'אילו ספקים מאחרים'],
+  gCeo: ['g4', '📊 תמונת מצב', 'איפה אנחנו עומדים היום'],
+  gUpgrade: ['g10', '🚀 שדרוגים', 'מה עוד המוניטור יודע לעשות'],
 };
 // With no screens chosen at intake, only the tiles that fit any work. The whole
 // catalog gave a phone only customer "connect the computer", a client follow up
@@ -2105,6 +2140,17 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .ycard>*{flex-shrink:0}
 .ycard b{font:700 16px Heebo,sans-serif}
 .ycard small{font-size:12px;opacity:.7;margin-bottom:4px}
+/* 6.10: Home Style shipments screens */
+.ship .srow{border-bottom:1px solid rgba(128,128,128,.25);padding:8px 0;font:500 14px/1.45 Heebo,sans-serif}
+.ship .srow b{font:700 14px Heebo,sans-serif}
+.ship .srow small{display:inline}
+.ship .sdet{margin-top:6px;padding:8px;border-radius:10px;background:rgba(128,128,128,.12)}
+.ship .stag{display:inline-block;border-radius:8px;padding:1px 8px;margin-inline-end:6px;font:700 11px Heebo,sans-serif;color:#fff}
+.ship .stag.red{background:#c62828}.ship .stag.amber{background:#ef8f00}.ship .stag.track{background:#757575}
+.ship .scnt{display:flex;gap:6px}
+.ship .scnt div{flex:1;border-radius:12px;padding:8px 4px;text-align:center;color:#fff;font:700 22px Heebo,sans-serif}
+.ship .scnt small{display:block;font-size:11px;opacity:.95;margin:0}
+.ship .shipq{width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif}
 .micSteps{margin:2px 0 6px;padding-inline-start:20px;font:500 15px/1.5 Heebo,sans-serif}
 /* 30.9: the short text was near invisible on the dark theme ("אני רוצה לראות
    איך אני אראה"). It is now shown as the WhatsApp bubble Yehuda will get. */
@@ -10901,6 +10947,7 @@ function meSheet(){
  document.body.appendChild(w);
 }
 on('gSelf',meSheet);
+/*ITZIK:END*/
 /*
   The customer's side of 5.10: he writes what he wants changed and it goes to
   his monitor as a request, which files it for Itzik. Nothing changes until
@@ -10933,6 +10980,171 @@ function adminReqSheet(){
  setTimeout(function(){var x=document.getElementById('arText');if(x)x.focus();},50);
 }
 on('gAdminReq',adminReqSheet);
+/*
+  6.10.2026, Home Style. The shipments tiles. They are customer tiles: an id
+  that is not in TENANT_TILES is never drawn, so on Itzik's page nothing here
+  has an element to attach to. The data is D.ship (alerts, summary, insights,
+  brief, all small and always there) and the lazy collection D.shipments, the
+  whole table, loaded when the table screen opens.
+*/
+var SHIP_LVL={red:'דחוף',amber:'לבדוק',track:'מעקב'};
+var SHIP_RANK={red:0,amber:1,track:2};
+var SHIP_UPGRADES=[
+ ['📬 דוח בוקר מכל המייל','כל מה שחשוב מהתיבה שלך, בכמה שורות, כל בוקר'],
+ ['🎙️ הודעה קולית שנענית תוך דקה','אומרים במקום להקליד, והמוניטור עונה'],
+ ['⏰ תזכורות ומשימות','מה לעשות ומתי, ותזכורת כשמשהו נתקע'],
+ ['💰 דוח חייבים','מי חייב, כמה, ומאיזה יום'],
+ ['📁 מסמכים עם שליחה בוואטסאפ','כל מסמך נשלח בלחיצה אחת, בלי לחפש'],
+ ['📦 מעקב מלאי ומכירות','מוצר שנגמר, סניף שירד, ספק שהעלה מחיר']
+];
+function shipOpen(id,label,html,after){
+ var old=document.getElementById(id);if(old)old.remove();
+ var w=document.createElement('div');
+ w.id=id;w.className='ysheet';
+ w.setAttribute('role','dialog');w.setAttribute('aria-label',label);
+ w.innerHTML='<div class="ycard ship"><b>'+esc(label)+'</b>'+html+'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+ function close(){w.remove();document.removeEventListener('keydown',key);}
+ function key(e){if(e.key==='Escape')close();}
+ w.addEventListener('click',function(e){
+  if(e.target===w)return close();
+  var a=e.target.getAttribute&&e.target.getAttribute('data-a');
+  if(a==='x')close();
+ });
+ document.addEventListener('keydown',key);
+ document.body.appendChild(w);
+ if(after)after(w);
+ return w;
+}
+function shipTag(l){return '<span class="stag '+l+'">'+SHIP_LVL[l]+'</span>';}
+function shipDate(s){return s?s.slice(8,10)+'.'+s.slice(5,7)+'.'+s.slice(2,4):'';}
+function shipCounts(s){
+ return '<div class="scnt"><div style="background:#c62828">'+s.red+'<small>דחוף</small></div>'
+  +'<div style="background:#ef8f00">'+s.amber+'<small>לבדוק</small></div>'
+  +'<div style="background:#2e7d32">'+s.green+'<small>תקין</small></div>'
+  +'<div style="background:#757575">'+s.track+'<small>מעקב שופרסל</small></div></div>';
+}
+function shipAlertRow(a){
+ return '<div class="srow">'+shipTag(a.level)+'<b>'+esc(a.po)+' · '+esc(a.supplier)+'</b>'
+  +'<br>'+esc(a.text)+'<br><small>'+esc(a.action)+'</small></div>';
+}
+on('gAlerts',function(){
+ var S=D.ship;if(!S)return toast('אין נתונים עדיין');
+ var A=S.alerts||[];
+ var h='<small>נכון ל '+esc(shipDate(S.today))+'</small>'+shipCounts(S.summary);
+ ['red','amber','track'].forEach(function(l){
+  var L=A.filter(function(a){return a.level===l;});
+  if(!L.length)return;
+  h+='<b>'+(l==='track'?'מעקב, הזמנות שופרסל':SHIP_LVL[l])+' ('+L.length+')</b>'+L.map(shipAlertRow).join('');
+ });
+ if(!A.length)h+='<small>אין התראות. הכל תקין.</small>';
+ shipOpen('shipAlerts','🔔 דורש טיפול',h);
+});
+on('gShip',function(){
+ ensure('shipments',function(){
+  var S=D.ship||{summary:{red:0,amber:0,green:0,track:0},alerts:[]},rows=D.shipments||[];
+  var byId={};(S.alerts||[]).forEach(function(a){(byId[a.id]=byId[a.id]||[]).push(a);});
+  var closedRe=/^(במלאי|הזמנה מבוטלת|יתרת הסחורה)/;
+  var h=shipCounts(S.summary)
+   +'<input id="shipQ" class="shipq" type="search" placeholder="חיפוש: מספר הזמנה, ספק או מוצר" autocomplete="off">'
+   +'<button type="button" class="yb yb4" id="shipAll">הצג גם הזמנות שכבר במלאי</button>'
+   +'<div id="shipList"></div>'
+   +'<button type="button" class="yb yb1" id="shipXls">📥 האקסל של היום</button>';
+  shipOpen('shipTable','📦 משלוחים',h,function(w){
+   var all=false,q='';
+   var list=w.querySelector('#shipList');
+   function worst(r){
+    var al=byId[r.id]||[],best='';
+    al.forEach(function(a){if(best===''||SHIP_RANK[a.level]<SHIP_RANK[best])best=a.level;});
+    return best;
+   }
+   function detail(r){
+    var d=[];
+    if(r.customs)d.push('תיק עמילות: '+esc(r.customs));
+    if(r.container)d.push('מכולה: '+esc(r.container));
+    if(r.notes)d.push('הערות: '+esc(r.notes));
+    if(r.payStatus)d.push('תשלום: '+esc(r.payStatus));
+    (byId[r.id]||[]).forEach(function(a){d.push(shipTag(a.level)+' '+esc(a.text)+'<br><small>'+esc(a.action)+'</small>');});
+    var hs=(r.history||[]).slice(-5).reverse().map(function(x){
+     return shipDate(String(x.at||'').slice(0,10))+' '+esc(x.field==='row'?x.to:(x.field+': '+x.from+' ← '+x.to));
+    });
+    if(hs.length)d.push('<small>היסטוריה:<br>'+hs.join('<br>')+'</small>');
+    return d.join('<br>')||'<small>אין פרטים נוספים</small>';
+   }
+   function draw(){
+    var L=rows.filter(function(r){
+     if(!all&&closedRe.test(r.status||''))return false;
+     if(!q)return true;
+     return (r.po+' '+r.supplier+' '+r.product).toLowerCase().indexOf(q)>-1;
+    });
+    L.sort(function(a,b){return (a.eta||a.etd||'9999').localeCompare(b.eta||b.etd||'9999');});
+    var n=L.length;L=L.slice(0,150);
+    list.innerHTML=L.map(function(r){
+     var lv=worst(r);
+     return '<div class="srow" data-id="'+esc(r.id)+'">'+(lv?shipTag(lv):'')+'<b>'+esc(r.po)+' · '+esc(r.supplier)+'</b>'
+      +'<br>'+esc(r.product)+'<br><small>'+esc(r.status||'ללא סטטוס')+' · יציאה '+shipDate(r.etd)+' · הגעה '+shipDate(r.eta)+'</small>'
+      +'<div class="sdet" hidden>'+detail(r)+'</div></div>';
+    }).join('')+(n>150?'<small>מוצגות 150 מתוך '+n+'. צמצם בחיפוש.</small>':'')+(n?'':'<small>לא נמצאה הזמנה.</small>');
+   }
+   draw();
+   w.querySelector('#shipQ').addEventListener('input',function(e){q=e.target.value.trim().toLowerCase();draw();});
+   w.querySelector('#shipAll').addEventListener('click',function(e){all=!all;e.target.textContent=all?'להסתיר הזמנות שכבר במלאי':'הצג גם הזמנות שכבר במלאי';draw();});
+   list.addEventListener('click',function(e){
+    var row=e.target.closest&&e.target.closest('.srow');if(!row)return;
+    var d=row.querySelector('.sdet');if(d)d.hidden=!d.hidden;
+   });
+   w.querySelector('#shipXls').addEventListener('click',function(){if(!fileView('shipments.xlsx'))toast('האקסל עוד לא מוכן, ייווצר הלילה');});
+  });
+ });
+});
+on('gBrief',function(){
+ var S=D.ship;if(!S)return toast('אין נתונים עדיין');
+ var b=S.brief,s=S.summary;
+ var h='<small>'+(b?'הדוח של '+esc(shipDate(b.today)):'נכון ל '+esc(shipDate(S.today)))+'</small>'+shipCounts(s)
+  +'<b>מגיעים השבוע: '+s.arrivingThisWeek+'</b>';
+ if(b&&b.changes&&b.changes.length)h+='<b>מה השתנה מאתמול</b>'+b.changes.map(function(c){return '<div class="srow">'+esc(c)+'</div>';}).join('');
+ else if(b)h+='<small>לא השתנה כלום מאתמול.</small>';
+ var reds=(S.alerts||[]).filter(function(a){return a.level==='red';}).slice(0,8);
+ if(reds.length)h+='<b>הכי דחוף</b>'+reds.map(shipAlertRow).join('');
+ shipOpen('shipBrief','☀️ דוח הבוקר',h);
+});
+on('gInsights',function(){
+ var S=D.ship;if(!S)return toast('אין נתונים עדיין');
+ var I=S.insights||[];
+ var h='<small>לפי הזמנות 2026 ו 2027: כמה זז התאריך שבו הספק באמת מוציא, לעומת התאריך שביקשנו.</small>'
+  +I.map(function(x){
+   return '<div class="srow"><b>'+esc(x.supplier)+'</b><br>'+x.orders+' הזמנות, זז בממוצע '+x.avgSlipDays+' ימים'
+    +(x.overThreeWeeks?', '+x.overThreeWeeks+' מהן יותר משלושה שבועות':'')+'</div>';
+  }).join('');
+ if(!I.length)h+='<small>אין עדיין מספיק נתונים.</small>';
+ shipOpen('shipInsights','📈 תובנות',h);
+});
+on('gCeo',function(){
+ var S=D.ship;if(!S)return toast('אין נתונים עדיין');
+ var s=S.summary;
+ var top=(S.alerts||[]).filter(function(a){return a.level!=='track';}).slice(0,5);
+ var h='<small>נכון ל '+esc(shipDate(S.today))+'</small>'+shipCounts(s)
+  +'<div class="srow"><b>'+s.open+'</b> הזמנות פתוחות · <b>'+s.arrivingThisWeek+'</b> מגיעות השבוע</div>';
+ if(top.length)h+='<b>החמישה הדחופים</b>'+top.map(shipAlertRow).join('');
+ else h+='<small>אין כרגע משלוח שדורש טיפול.</small>';
+ shipOpen('shipCeo','📊 תמונת מצב',h);
+});
+on('gUpgrade',function(){
+ var h='<small>מה עוד המוניטור יודע לעשות. לחיצה שולחת בקשה למנהל והוא חוזר אליך.</small>'
+  +SHIP_UPGRADES.map(function(u,i){
+   return '<button type="button" class="yb yb'+(i%4+1)+'" data-u="'+i+'">'+esc(u[0])+'<br><small>'+esc(u[1])+'</small></button>';
+  }).join('');
+ shipOpen('shipUp','🚀 שדרוגים',h,function(w){
+  w.addEventListener('click',function(e){
+   var b=e.target.closest&&e.target.closest('[data-u]');if(!b)return;
+   var u=SHIP_UPGRADES[+b.getAttribute('data-u')];if(!u)return;
+   b.disabled=true;
+   sendText('בקשה ממנהל','בקשה ממנהל: בקשת שדרוג: '+u[0]+'. '+u[1],'משימה').then(function(){
+    markSent('text',u[0]);toast('נשלח למנהל. הוא יחזור אליך.');
+   }).catch(function(){b.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
+  });
+ });
+});
+/*ITZIK:BEGIN*/
 /*
   4.10. Occupational clinic (Maccabi Ramot, Rishon). Details from the Maccabi
   service page. Appointments by phone only; the mail is for forms.
