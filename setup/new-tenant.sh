@@ -26,6 +26,13 @@ chmod 711 /home/$U
 [ -d "$DIR" ] || sudo -H -u "$U" git clone -q "$PUB" "$DIR"
 cd "$DIR"
 sudo -H -u "$U" git remote rename origin code 2>/dev/null || true
+# The branch must track a private "origin" that does not exist (as Ilay's does), never the public
+# code remote: the listener runs `pull --rebase -X theirs` and would pull Itzik's published docs/
+# over the customer's page, and could push the customer's docs into the public repository.
+sudo -H -u "$U" git remote get-url origin >/dev/null 2>&1 || sudo -H -u "$U" git remote add origin "git@github.com:itcohen2-maker/$ID-monitor.git"
+sudo -H -u "$U" git remote set-url --push code no-push-allowed
+sudo -H -u "$U" git config branch.main.remote origin
+sudo -H -u "$U" git config branch.main.merge refs/heads/main
 chmod 711 "$DIR"
 sudo -H -u "$U" rm -rf docs
 sudo -H -u "$U" mkdir -p data/chat data/reports data/tasks data/reminders data/inbox data/status data/files-private
