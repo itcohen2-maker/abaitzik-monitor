@@ -442,11 +442,12 @@ function recordIncoming(m) {
       The 5.10 rule (a customer asks, only Itzik decides) cannot rest on a model's
       memory, so a message that opens with "בקשה ממנהל:" is filed here, answered here,
       and closed before any session sees it. Itzik's own monitor never takes this path.
+      The page sends the kind first ("משימה"), and it arrives glued to the text.
     */
-    if (codeOk && inst.name !== 'abaitzik' && /^\s*בקשה ממנהל\s*[:：]/.test(text)) {
+    if (codeOk && inst.name !== 'abaitzik' && /^\s*(?:משימה)?\s*בקשה ממנהל\s*[:：]/.test(text)) {
       try {
         const cr = require('./lib/change-requests.js');
-        const crId = cr.add(text.replace(/^\s*בקשה ממנהל\s*[:：]\s*/, ''), rec.id);
+        const crId = cr.add(text.replace(/^\s*(?:משימה)?\s*בקשה ממנהל\s*[:：]\s*/, ''), rec.id);
         rec.status = 'done';
         fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
         fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-admin-ack.json')),
