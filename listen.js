@@ -435,6 +435,26 @@ function recordIncoming(m) {
     fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
     say((codeOk ? 'נרשם בצ׳אט עם אישור קבלה: ' : 'נרשם בלי קוד, ממתין לאימות: ') + text.slice(0, 60));
     recordDrain(text, at);
+    /*
+      6.10: a customer's request to the admin is filed by this code, not by a model.
+      Until now the answering session was told to run `change-request.js add`, and in a
+      test on Home Style's monitor one session said it had filed the request and had not.
+      The 5.10 rule (a customer asks, only Itzik decides) cannot rest on a model's
+      memory, so a message that opens with "בקשה ממנהל:" is filed here, answered here,
+      and closed before any session sees it. Itzik's own monitor never takes this path.
+    */
+    if (codeOk && inst.name !== 'abaitzik' && /^\s*בקשה ממנהל\s*[:：]/.test(text)) {
+      try {
+        const cr = require('./lib/change-requests.js');
+        const crId = cr.add(text.replace(/^\s*בקשה ממנהל\s*[:：]\s*/, ''), rec.id);
+        rec.status = 'done';
+        fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+        fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-admin-ack.json')),
+          JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id,
+            text: 'הבקשה נשלחה למנהל. כשהוא יחליט, תקבל כאן תשובה.', status: 'done' }, null, 1), 'utf8');
+        say('בקשה ממנהל נרשמה: ' + crId);
+      } catch (e) { say('!! בקשה ממנהל לא נרשמה: ' + e.message); }
+    }
     if (gid) groupFiles.set(gid, { name: name, files: files, caption: caption.trim() });
     if (attach && group.isAudio(attach)) {
       transcribeLater(path.join(DROP, attach), name);
