@@ -680,11 +680,14 @@ function build() {
       try { sup = JSON.parse(fs.readFileSync(path.join(sd, '..', 'suppliers.json'), 'utf8')); } catch (e) { /* defaults */ }
       try { brief = JSON.parse(fs.readFileSync(path.join(sd, 'brief.json'), 'utf8')); } catch (e) { /* none yet */ }
       try { meta = JSON.parse(fs.readFileSync(path.join(sd, 'meta.json'), 'utf8')); } catch (e) { /* none yet */ }
+      let queue = [];
+      try { queue = JSON.parse(fs.readFileSync(path.join(sd, 'mail-queue.json'), 'utf8')).slice(-20); } catch (e) { /* no mail yet */ }
       const today = new Date().toLocaleDateString('sv', { timeZone: 'Asia/Jerusalem' });
       const alerts = rules.evaluate(shipRows, today, sup);
       payload.ship = { today, alerts, summary: rules.summary(shipRows, alerts, today),
         insights: rules.insights(shipRows.filter((r) => /202[67]$/.test(r.sheet))).slice(0, 12),
-        brief, importedAt: meta.importedAt || '' };
+        brief, importedAt: meta.importedAt || '',
+        queue: queue.map((q) => ({ at: q.at || '', subject: q.subject || '', reason: q.reason || '' })) };
       payload.shipments = shipRows;
     } catch (e) { console.error('shipments: ' + e.message); shipRows = null; }
   }
@@ -11047,7 +11050,9 @@ on('gAlerts',function(){
   if(!L.length)return;
   h+='<b>'+(l==='track'?'מעקב, הזמנות שופרסל':SHIP_LVL[l])+' ('+L.length+')</b>'+L.map(shipAlertRow).join('');
  });
- if(!A.length)h+='<small>אין התראות. הכל תקין.</small>';
+ var Q=S.queue||[];
+ if(Q.length)h+='<b>מיילים שלא שויכו להזמנה ('+Q.length+')</b>'+Q.slice().reverse().map(function(q){return '<div class="srow"><b>'+esc(q.subject)+'</b><br><small>'+esc(q.reason)+'</small></div>';}).join('');
+ if(!A.length&&!Q.length)h+='<small>אין התראות. הכל תקין.</small>';
  shipOpen('shipAlerts','🔔 דורש טיפול',h);
 });
 on('gShip',function(){

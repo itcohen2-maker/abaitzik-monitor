@@ -1734,7 +1734,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-06T13:04:15.842Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-06T13:12:41.471Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3045,7 +3045,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='30d176c29e';
+var CODE_ID='c4e2f5ec78';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -7751,7 +7751,9 @@ on('gAlerts',function(){
   if(!L.length)return;
   h+='<b>'+(l==='track'?'מעקב, הזמנות שופרסל':SHIP_LVL[l])+' ('+L.length+')</b>'+L.map(shipAlertRow).join('');
  });
- if(!A.length)h+='<small>אין התראות. הכל תקין.</small>';
+ var Q=S.queue||[];
+ if(Q.length)h+='<b>מיילים שלא שויכו להזמנה ('+Q.length+')</b>'+Q.slice().reverse().map(function(q){return '<div class="srow"><b>'+esc(q.subject)+'</b><br><small>'+esc(q.reason)+'</small></div>';}).join('');
+ if(!A.length&&!Q.length)h+='<small>אין התראות. הכל תקין.</small>';
  shipOpen('shipAlerts','🔔 דורש טיפול',h);
 });
 on('gShip',function(){
