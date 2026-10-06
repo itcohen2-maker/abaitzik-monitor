@@ -74,12 +74,65 @@ function check(t) {
   return { state: problems.length ? 'down' : 'ok', problems, beatAt };
 }
 
+/*
+  7.10: Yael's record was written by hand in another shape (no dir, no units),
+  so she showed red every two hours while her monitor ran fine. A record that
+  lacks them gets the names every tenant is built with (setup/new-tenant.sh).
+*/
+function complete(t) {
+  const u = t.user || t.id;
+  const d = { dir: '/home/' + u + '/' + t.id + '-monitor', listener: 'monitor-listen-' + t.id,
+    timer: 'monitor-worker-' + t.id + '.timer', user: u };
+  Object.keys(d).forEach((k) => { if (!t[k]) t[k] = d[k]; });
+  if (t.selfSync === undefined) t.selfSync = true;
+  return t;
+}
+
+/*
+  7.10, Itzik: "אם אתה מקבל התראה על מוניטורים אחרים שלא עובדים, אתה אמור
+  לטפל בהם". A customer down for ten minutes starts a Claude session in his
+  repo with the faults, as the watchdog's doctor does for his own. One at a
+  time, an hour apart, three a day.
+*/
+const FIX = path.join(inst.dataPath, 'status', 'tenant-doctor.json');
+const FIX_AFTER_MS = 10 * 60 * 1000;
+function alive(pid) { try { process.kill(pid, 0); return true; } catch (e) { return e.code === 'EPERM'; } }
+function fixer(t, now) {
+  if (DRY || process.platform === 'win32' || t.state === 'ok' || !t.downSince) return;
+  if (now - Date.parse(t.downSince) < FIX_AFTER_MS) return;
+  let d = { day: '', runs: 0, pid: 0, log: [] };
+  try { d = JSON.parse(fs.readFileSync(FIX, 'utf8')); } catch (e) {}
+  const day = new Date(now).toISOString().slice(0, 10);
+  if (d.day !== day) { d.day = day; d.runs = 0; }
+  const last = Date.parse(((d.log || []).slice(-1)[0] || {}).at);
+  if ((d.pid && alive(d.pid)) || d.runs >= 3 || (!isNaN(last) && now - last < 60 * 60 * 1000)) return;
+  const text = [
+    'אתה מתקן אוטומטי. המוניטור של הלקוח ' + (t.title || t.id) + ' בנתק יותר מעשר דקות:',
+    t.problems.map((p) => '- ' + p).join('\n'),
+    'הרשומה שלו: data/tenants/tenants/' + t.id + '.json. התיקייה שלו: ' + t.dir + ' (יחידות: ' + t.listener + ', ' + t.timer + ').',
+    'למצוא את הסיבה ולתקן. תיקון בקוד נעשה כאן ולא בתיקיית הלקוח (הסנכרון דורס). לא לגעת בהודעות ובנתונים של הלקוח.',
+    'מה שדורש root (systemd, משתמשים, Caddy) שולחים למחשב: node pc-task.js add --re tenant-' + t.id + ' "<המשימה>".',
+    'אחרי תיקון בקוד: npm test, ואז node push.js "tenant-doctor: <מה תוקן>".',
+    'בסוף רשומה אחת לאיציק ב data/chat/chat/ (from "claude"), בעברית פשוטה, בלי מקפים: מה נשבר אצל מי ומה תוקן, שורה או שתיים.',
+  ].join('\n');
+  const { spawn } = require('child_process');
+  let out = 'ignore';
+  try { out = fs.openSync('/var/log/monitor-tenants.log', 'a'); } catch (e) {}
+  const c = spawn('claude', ['-p', '--dangerously-skip-permissions'], { cwd: __dirname, detached: true, stdio: ['pipe', out, out], shell: true });
+  c.stdin.end(text, 'utf8');
+  c.unref();
+  d.runs += 1; d.pid = c.pid;
+  d.log = (d.log || []).concat([{ at: new Date(now).toISOString(), tenant: t.id, problems: t.problems }]).slice(-30);
+  try { fs.writeFileSync(FIX, JSON.stringify(d, null, 1)); } catch (e) {}
+  console.log('fixer started for ' + t.id);
+}
+
 function main() {
   if (!fs.existsSync(DIR)) { console.log('no tenants'); return; }
   let changed = false;
   for (const f of fs.readdirSync(DIR).filter(x => x.endsWith('.json'))) {
     const file = path.join(DIR, f);
-    const t = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const t = complete(JSON.parse(fs.readFileSync(file, 'utf8')));
     const r = check(t);
     const before = t.state;
     /*
@@ -98,6 +151,7 @@ function main() {
       } catch (e) { console.log('request alert failed: ' + String(e.message).slice(0, 120)); }
     }
     Object.assign(t, r, { checkedAt: new Date().toISOString() });
+    if (r.state === 'ok') delete t.downSince; else if (!t.downSince) t.downSince = new Date().toISOString();
     if (!DRY) fs.writeFileSync(file, JSON.stringify(t, null, 1));
     if (before !== t.state) changed = true;
     /*
@@ -119,6 +173,7 @@ function main() {
         } catch (e) { console.log('alert failed: ' + String(e.message).slice(0, 120)); }
       }
     }
+    fixer(t, Date.now());
     console.log((t.state === 'ok' ? 'ok   ' : 'DOWN ') + t.id + (r.problems.length ? ': ' + r.problems.join(', ') : ''));
   }
   if (changed && !DRY) {
@@ -139,4 +194,4 @@ function main() {
 }
 
 if (require.main === module) main();
-module.exports = { check };
+module.exports = { check, complete };
