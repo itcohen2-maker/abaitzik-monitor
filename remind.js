@@ -68,7 +68,11 @@ function nextMonth(r) {
 async function run() {
   const dry = args.includes('--dry');
   const now = new Date();
-  const due = list().filter(r => !r.doc.sentAt && !r.doc.queuedAt && new Date(r.doc.due) <= now);
+  // A reminder he deleted on the screen never goes out, and a monthly one stops there.
+  const st = require('./lib/notes-sync.js').read(path.join(require('./lib/instance.js').dataPath, 'notes', 'notes'));
+  const gone = (st && st.remGone) || {};
+  const due = list().filter(r => !r.doc.sentAt && !r.doc.queuedAt && new Date(r.doc.due) <= now
+    && !gone[(r.doc.at || '') + '|' + (r.doc.due || '')]);
   if (!due.length) { console.log('אין תזכורת שהגיע זמנה.'); return; }
   const ch = require('./lib/notify-channels.js');
   let changed = false;

@@ -28,3 +28,9 @@ test('record writes the file and refuses what is not a sync', () => {
   ns.record(dir, JSON.stringify({ notes: [{ id: 'a', upd: '1', text: 'x' }] }));
   assert.equal(ns.read(dir).notes[0].text, 'x');
 });
+
+test('a reminder deleted on any phone stays deleted', () => {
+  const a = ns.merge({ notes: [], remGone: { 'x|1': 't' } }, { notes: [], remGone: { 'y|2': 't' } });
+  assert.deepStrictEqual(Object.keys(a.remGone).sort(), ['x|1', 'y|2']);
+  assert.ok(ns.merge(a, { notes: [] }).remGone['x|1']);
+});

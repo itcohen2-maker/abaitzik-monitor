@@ -319,9 +319,12 @@ function build() {
     is due and what to do then; remind.js sends it as a push on the day, and
     this screen shows what is waiting and what already went out. Soonest first.
   */
+  // One he deleted on the screen (the same key the page uses) is left out.
+  const remGone = ((require('./lib/notes-sync.js').read(path.join(inst.dataPath, 'notes', 'notes')) || {}).remGone) || {};
   const reminders = loadDocs('reminders')
     .map(x => ({ at: x.at, due: x.due || '', text: x.text || '',
                  sentAt: x.sentAt || '' }))
+    .filter(x => !remGone[(x.at || '') + '|' + (x.due || '')])
     .sort((a, b) => ((a.due || '') < (b.due || '') ? -1 : 1));
   /*
     Tasks by day. Itzik, 22.9, a recording: "שיפתח לי כפתור חדש, ממחר בבוקר,
@@ -2156,6 +2159,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .remreply{margin-top:8px}
 .remreply summary{cursor:pointer;font-weight:700;padding:6px 0}
 .rem .remknow{margin-top:8px;padding:8px 16px;border:0;border-radius:10px;background:var(--yellow);color:#000;font:700 15px Heebo,sans-serif}
+.rem .remdel{margin-top:8px;margin-inline-start:6px;padding:8px 14px;border:1px solid var(--line,#555);border-radius:10px;background:transparent;color:inherit;font:600 14px Heebo,sans-serif}
 /* The three choices behind the יהודה tile. Its own sheet, so it borrows
    nothing from the panes and cannot disturb them. */
 .ysheet{position:fixed;inset:0;z-index:9999;background:rgba(10,14,22,.55);
@@ -9388,13 +9392,16 @@ function remHot(r){
 }
 function remBlink(){
  var b=document.getElementById('gRemind');
- if(b)b.classList.toggle('taskblink',(D.reminders||[]).some(remHot));
+ if(b)b.classList.toggle('taskblink',remLive().some(remHot));
 }
+// Itzik, 7.10: "צריך אפשרות בתזכורות למחוק". Gone at once on the phone, and
+// through the notes sync on the server, which then never sends it.
+function remLive(){var g=clearedIds('remGone');return (D.reminders||[]).filter(function(r){return !g[remKey(r)];});}
 function renderReminders(){
  remBlink();
  var host=document.getElementById('remBox');
  if(!host)return;
- var R=D.reminders||[];
+ var R=remLive();
  var day=function(iso){
   try{return new Date(iso).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',year:'numeric'});}
   catch(e){return String(iso||'').slice(0,10);}
@@ -9403,6 +9410,7 @@ function renderReminders(){
   return '<div class="rem'+(r.sentAt?' sent':'')+'"><b>'+esc(r.text)+'</b>'
    +'<div class="w">'+(r.sentAt?'נשלחה '+esc(day(r.sentAt)):'תקפוץ '+esc(day(r.due))+' בתשע בבוקר')+'</div>'
    +(remHot(r)?'<button type="button" class="remknow" data-k="'+esc(remKey(r))+'">אני יודע</button>':'')
+   +'<button type="button" class="remdel" data-k="'+esc(remKey(r))+'">🗑 למחוק</button>'
    // Itzik, 4.10: "בתיזכורת אין לי אפשרות להגיב". Each reminder answers in place.
    +'<details class="remreply"><summary>💬 להגיב על התזכורת</summary>'+replyBox('על התזכורת "'+r.text+'"')+'</details></div>';
  }).join(''):'<div class="empty">אין תזכורת פתוחה.</div>';
@@ -9414,6 +9422,14 @@ function renderReminders(){
    renderReminders();
   };
  });
+ Array.prototype.forEach.call(host.querySelectorAll('.remdel'),function(b){
+  b.onclick=function(){
+   if(!confirm('למחוק את התזכורת?'))return;
+   clearIds('remGone',[b.getAttribute('data-k')]);
+   notesSend(false);
+   renderReminders();
+  };
+ });
 }
 function renderAppts(){
  var host=document.getElementById('apBox');
@@ -9422,7 +9438,7 @@ function renderAppts(){
  var A=(D.appts||[]).filter(function(a){var t=Date.parse(a.when);return isNaN(t)||t>now-3*3600e3;});
  host.innerHTML=A.length?A.map(function(a){
   var d=a.when||'עוד בלי תאריך',h='',t0=Date.parse(a.when);
-  var rm=(D.reminders||[]).filter(function(r){var u=Date.parse(r.due);return !r.sentAt&&u<t0&&t0-u<3*864e5;})[0];
+  var rm=remLive().filter(function(r){var u=Date.parse(r.due);return !r.sentAt&&u<t0&&t0-u<3*864e5;})[0];
   if(!isNaN(t0))try{var x=new Date(a.when);
    d=x.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',year:'numeric',timeZone:'Asia/Jerusalem'});
    h=x.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Jerusalem'});}catch(e){}
@@ -11872,6 +11888,9 @@ function notesPull(){
  var tc=clearedIds('tasksCleared'),cch=false;
  Object.keys(S.tasksCleared||{}).forEach(function(k){if(!tc[k]){tc[k]=S.tasksCleared[k];cch=true;}});
  if(cch)try{localStorage.setItem('tasksCleared',JSON.stringify(tc));}catch(e){}
+ var rg=clearedIds('remGone'),rch=false;
+ Object.keys(S.remGone||{}).forEach(function(k){if(!rg[k]){rg[k]=S.remGone[k];rch=true;}});
+ if(rch){try{localStorage.setItem('remGone',JSON.stringify(rg));}catch(e){}try{renderReminders();}catch(e){}}
  if(ch){try{renderNotes();}catch(e){}}
 }
 function notesPush(){clearTimeout(nsTimer);nsTimer=setTimeout(function(){notesSend(false);},8000);}
@@ -11881,7 +11900,7 @@ function notesSend(keep){
  if(!NTFYIN())return;
  var raw=notes();
  var body={notes:raw.filter(function(n){return n&&n.id;}),gone:notesGone(),tasksDone:tkDone(),
-  tasksUndone:tkUndone(),tasksCleared:clearedIds('tasksCleared')};
+  tasksUndone:tkUndone(),tasksCleared:clearedIds('tasksCleared'),remGone:clearedIds('remGone')};
  var sig=nsHash(JSON.stringify(body)),last='';
  try{last=localStorage.getItem('notesSyncSig')||'';}catch(e){}
  if(sig===last)return;
