@@ -1746,7 +1746,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-06T21:18:03.751Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-06T21:18:26.000Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3052,7 +3052,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='6f32d47c0a';
+var CODE_ID='7473aee166';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null,"homeTile":""};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -6645,31 +6645,17 @@ function paintTenantsTile(){
  if(hc){hc.style.background=badHs.length?'linear-gradient(160deg,#ef5350,#b71c1c)':'linear-gradient(160deg,#66bb6a,#1b5e20)';hc.classList.toggle('tdown',!!badHs.length);}
  b.classList.toggle('tdown',!!bad.length);
  if(c)c.classList.toggle('tdown',!!badIly.length);
- try{floatTile('gTenants',!!bad.length);}catch(e){}
- var home=document.getElementById('pH'),al=document.getElementById('tenAlert');
- if(bad.length&&home){
-  if(!al){
-   al=document.createElement('button');al.type='button';al.id='tenAlert';al.className='tenalert';
-   al.onclick=function(){pane('N3');renderTenants();};
-  }
-  al.innerHTML='<b>🔴 '+esc(bad.map(function(t){return t.title;}).join(', '))+' בנתק</b>'
-   +'<small>'+esc(bad.map(function(t){return (t.problems||[]).join(' · ');}).join(' | ')||'לחיצה לפרטים')+'</small>';
-  var top=document.getElementById('talkCard')||home.firstChild;
-  if(al.nextSibling!==top)top.parentNode.insertBefore(al,top);
- }else if(al){al.remove();}
+ ['tenAlert','crAlert'].forEach(function(id){var x=document.getElementById(id);if(x)x.remove();});
  var sent=crSentGet(),pend=[];
  T.forEach(function(t){(t.requests||[]).forEach(function(r){if(r.status==='pending'&&!sent[t.id+'/'+r.id])pend.push(t.title+': '+r.text);});});
- var ca=document.getElementById('crAlert');
- if(pend.length&&home){
-  if(!ca){
-   ca=document.createElement('button');ca.type='button';ca.id='crAlert';ca.className='tenalert';
-   ca.style.background='linear-gradient(180deg,#fbc02d,#e65100)';
-   ca.onclick=function(){pane('N3');renderTenants();};
-  }
-  ca.innerHTML='<b>📨 '+(pend.length===1?'בקשת שינוי מלקוח':pend.length+' בקשות שינוי מלקוחות')+'</b><small>'+esc(pend.join(' | ').slice(0,140))+'</small>';
-  var top2=document.getElementById('talkCard')||home.firstChild;
-  if(ca.nextSibling!==top2)top2.parentNode.insertBefore(ca,top2);
- }else if(ca){ca.remove();}
+ if(pend.length){
+  b.hidden=false;
+  b.querySelector('small').textContent=(bad.length?'נתק: '+bad.map(function(t){return t.title;}).join(', ')+' · ':'')
+   +(pend.length===1?'בקשת שינוי אחת מחכה לך':pend.length+' בקשות שינוי מחכות לך');
+  if(!bad.length)b.style.background='linear-gradient(180deg,#fbc02d,#e65100)';
+ }
+ if(bad.length)b.hidden=false;
+ try{floatTile('gTenants',!!(bad.length||pend.length));}catch(e){}
 }
 on('gTenants',function(){pane('N3');renderTenants();});
 (function(){

@@ -9707,32 +9707,24 @@ function paintTenantsTile(){
  */
  b.classList.toggle('tdown',!!bad.length);
  if(c)c.classList.toggle('tdown',!!badIly.length);
- try{floatTile('gTenants',!!bad.length);}catch(e){}
- var home=document.getElementById('pH'),al=document.getElementById('tenAlert');
- if(bad.length&&home){
-  if(!al){
-   al=document.createElement('button');al.type='button';al.id='tenAlert';al.className='tenalert';
-   al.onclick=function(){pane('N3');renderTenants();};
-  }
-  al.innerHTML='<b>🔴 '+esc(bad.map(function(t){return t.title;}).join(', '))+' בנתק</b>'
-   +'<small>'+esc(bad.map(function(t){return (t.problems||[]).join(' · ');}).join(' | ')||'לחיצה לפרטים')+'</small>';
-  // Above the talk card, the first thing on the screen, not under the fold.
-  var top=document.getElementById('talkCard')||home.firstChild;
-  if(al.nextSibling!==top)top.parentNode.insertBefore(al,top);
- }else if(al){al.remove();}
+ /*
+   7.10, Itzik, with a screenshot: "why do I have these bars on top? I asked
+   that on top there is only the monitor." So no bar above the talk card any
+   more. A customer that is down, or a change request waiting for him, shows
+   on the customers tile instead: it comes out of hiding, blinks red or turns
+   orange, and jumps to the front of the grid.
+ */
+ ['tenAlert','crAlert'].forEach(function(id){var x=document.getElementById(id);if(x)x.remove();});
  var sent=crSentGet(),pend=[];
  T.forEach(function(t){(t.requests||[]).forEach(function(r){if(r.status==='pending'&&!sent[t.id+'/'+r.id])pend.push(t.title+': '+r.text);});});
- var ca=document.getElementById('crAlert');
- if(pend.length&&home){
-  if(!ca){
-   ca=document.createElement('button');ca.type='button';ca.id='crAlert';ca.className='tenalert';
-   ca.style.background='linear-gradient(180deg,#fbc02d,#e65100)';
-   ca.onclick=function(){pane('N3');renderTenants();};
-  }
-  ca.innerHTML='<b>📨 '+(pend.length===1?'בקשת שינוי מלקוח':pend.length+' בקשות שינוי מלקוחות')+'</b><small>'+esc(pend.join(' | ').slice(0,140))+'</small>';
-  var top2=document.getElementById('talkCard')||home.firstChild;
-  if(ca.nextSibling!==top2)top2.parentNode.insertBefore(ca,top2);
- }else if(ca){ca.remove();}
+ if(pend.length){
+  b.hidden=false;
+  b.querySelector('small').textContent=(bad.length?'נתק: '+bad.map(function(t){return t.title;}).join(', ')+' · ':'')
+   +(pend.length===1?'בקשת שינוי אחת מחכה לך':pend.length+' בקשות שינוי מחכות לך');
+  if(!bad.length)b.style.background='linear-gradient(180deg,#fbc02d,#e65100)';
+ }
+ if(bad.length)b.hidden=false;
+ try{floatTile('gTenants',!!(bad.length||pend.length));}catch(e){}
 }
 on('gTenants',function(){pane('N3');renderTenants();});
 (function(){
