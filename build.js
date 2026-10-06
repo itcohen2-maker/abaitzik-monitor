@@ -3313,7 +3313,7 @@ try{
     6.10. Back on the home screen: "שים לי במוניטור תחת כפתור רינת" for the
     Merkaza leopard towels (item 10). Itzik had removed it on 1.10.
   -->
-  <button type="button" class="gt gKat" id="gKatalog"><b>🎨 המצגות של רינת</b><small>ממוספר. 10 מרכזה, מגבת מנומרת בצהוב</small></button>
+  <button type="button" class="gt gKat" id="gKatalog"><b>🎨 המצגות של רינת</b><small>ממוספר. 10ה מרכזה, הכל בקובץ אחד לשליחה</small></button>
   <!--
     איציק, 30.9: "במוניטור שים את זה בכפתור, שיהיה לי נוח להתייעץ". Everything
     made for pushing candletimes, numbered like Rinat's list: the bio
@@ -10711,7 +10711,8 @@ var KAT_ITEMS=[
  {n:'10א',t:'מרכזה מנומר, פאק שוט חמאה',r:'merkaza-leopard-butter.jpg'},
  {n:'10ב',t:'מרכזה מנומר, פאק שוט דבש',r:'merkaza-leopard-honey.jpg'},
  {n:'10ג',t:'מרכזה מנומר, פאק שוט חרדל',r:'merkaza-leopard-mustard.jpg'},
- {n:'10ד',t:'מרכזה מנומר, פאק שוט קאמל',r:'merkaza-leopard-camel.jpg'}
+ {n:'10ד',t:'מרכזה מנומר, פאק שוט קאמל',r:'merkaza-leopard-camel.jpg'},
+ {n:'10ה',t:'מרכזה מנומר, הכל בקובץ אחד לשליחה (PDF, 5 עמודים)',r:'merkaza-leopard-all.pdf'}
 ];
 // 29.9: "הקטלוג הבא לא מעניין, זה היה מזמן. שים אותו בצד". Kept, unnumbered, at the bottom.
 var KAT_SIDE=[
