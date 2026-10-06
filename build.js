@@ -10989,14 +10989,7 @@ function meetSheet(){
    +'<b>'+esc(r?r.title:'הפגישה עם הבעלים של הום סטייל')+'</b>'
    +(r?esc(r.body||'').split(String.fromCharCode(10)+String.fromCharCode(10)).map(function(p){return '<small>'+p.split(String.fromCharCode(10)).join('<br>')+'</small>';}).join(''):'<small>התיק לא נטען. משוך את המסך למטה לרענון.</small>')
    +'<button type="button" class="yb yb1" data-k="q">📄 תיאום ציפיות: רק השאלות, להדפסה</button>'
-   +'<button type="button" class="yb yb4" data-k="f:shealot-merakezet-mishlochim.pdf">📋 שאלות למרכזת המשלוחים, PDF להדפסה</button>'
-   +'<button type="button" class="yb yb4" data-k="f:shealot-1.jpg">📋 השאלות כתמונה לגלריה, עמוד 1</button>'
-   +'<button type="button" class="yb yb4" data-k="f:shealot-2.jpg">📋 השאלות כתמונה לגלריה, עמוד 2</button>'
-   +'<button type="button" class="yb yb2" data-k="f:tzfi-mishlochim-homestyle.pdf">📦 צפי משלוחים: ההודעה למי שעובר על המיילים, PDF</button>'
-   +'<button type="button" class="yb yb3" data-k="f:tzfi-mishlochim-1.jpg">📦 צפי משלוחים כתמונה לגלריה, עמוד 1</button>'
-   +'<button type="button" class="yb yb3" data-k="f:tzfi-mishlochim-2.jpg">📦 צפי משלוחים כתמונה לגלריה, עמוד 2</button>'
-   +'<button type="button" class="yb yb3" data-k="f:tzfi-mishlochim-3.jpg">📦 צפי משלוחים כתמונה לגלריה, עמוד 3</button>'
-   +'<button type="button" class="yb yb3" data-k="f:tzfi-mishlochim-4.jpg">📦 צפי משלוחים כתמונה לגלריה, עמוד 4</button>'
+   +'<button type="button" class="yb yb4" data-k="f:shealot-merakezet-mishlochim.pdf">📋 שאלות למרכזת המשלוחים, להדפסה</button>'
    +'<button type="button" class="yb yx" data-k="">סגירה</button>'
    +'</div>';
   function close(){w.remove();document.removeEventListener('keydown',esckey);}
