@@ -1748,7 +1748,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-07T17:45:13.767Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-07T17:46:43.653Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3060,7 +3060,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='6ef259189a';
+var CODE_ID='7df363610e';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null,"homeTile":""};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -8135,7 +8135,8 @@ document.getElementById('rivShare')&&document.getElementById('rivShare').addEven
 boot('lawblink',function(){var b=document.getElementById('gLaw');if(!b)return;var n=0;try{n=+localStorage.getItem('lawSeen')||0;}catch(x){}b.classList.toggle('taskblink',n<LAW_ITEMS.length);});
 document.getElementById('gLaw')&&document.getElementById('gLaw').addEventListener('click',function(){try{localStorage.setItem('lawSeen',String(LAW_ITEMS.length));}catch(x){}this.classList.remove('taskblink');});
 var WIN_ITEMS=[
- {n:'01',t:'מרימים את הראש ולא את הידיים',f:'amirshwartz1, תגובה בטיקטוק על סרטון העוגה'}
+ {n:'01',t:'מרימים את הראש ולא את הידיים',f:'amirshwartz1, תגובה בטיקטוק על סרטון העוגה'},
+ {n:'02',t:'בכל רגע נתון יש לנו שתי אופציות: לצעוד קדימה לצמיחה או לצעוד אחורה לנוחות.',f:'כרטיס שצילמתי, 7.10, #מיאתבוחרתלהיות?'}
 ];
 function winSheet(){
  var old=document.getElementById('winSheet');if(old)old.remove();

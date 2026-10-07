@@ -11544,7 +11544,8 @@ document.getElementById('gLaw')&&document.getElementById('gLaw').addEventListene
   with the next number, with where it came from.
 */
 var WIN_ITEMS=[
- {n:'01',t:'מרימים את הראש ולא את הידיים',f:'amirshwartz1, תגובה בטיקטוק על סרטון העוגה'}
+ {n:'01',t:'מרימים את הראש ולא את הידיים',f:'amirshwartz1, תגובה בטיקטוק על סרטון העוגה'},
+ {n:'02',t:'בכל רגע נתון יש לנו שתי אופציות: לצעוד קדימה לצמיחה או לצעוד אחורה לנוחות.',f:'כרטיס שצילמתי, 7.10, #מיאתבוחרתלהיות?'}
 ];
 function winSheet(){
  var old=document.getElementById('winSheet');if(old)old.remove();
