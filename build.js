@@ -4091,6 +4091,14 @@ try{
   <div id="rivBank"></div>
   <h3 class="rivh" id="rivH3">שים לב</h3>
   <div id="rivAlerts"></div>
+  <h3 class="rivh">דף לשיתוף</h3>
+  <div class="hint">כל החשבונות הפתוחים, לקוח לקוח עם החשבוניות. לחיצה פותחת, ומשם שליחה בוואטסאפ.</div>
+  <div id="rivShare">
+   <button type="button" class="yb yb1" data-r="lolos-open-accounts-2026-10-07.pdf">📤 חשבונות פתוחים עד 7.10 (PDF)</button>
+   <button type="button" class="yb yb2" data-r="lolos-open-2026-10-07-1.jpg">🖼️ כתמונה לגלריה, עמוד 1</button>
+   <button type="button" class="yb yb3" data-r="lolos-open-2026-10-07-2.jpg">🖼️ כתמונה לגלריה, עמוד 2</button>
+   <button type="button" class="yb yb4" data-r="lolos-open-2026-10-07-3.jpg">🖼️ כתמונה לגלריה, עמוד 3</button>
+  </div>
  </div>
 </section>
 <!--ITZIK:END-->
@@ -11504,6 +11512,11 @@ function lawSheet(){
  document.body.appendChild(w);
 }
 on('gLaw',lawSheet);
+// 7.10: the open accounts as one file to send on, at the bottom of the debtors.
+document.getElementById('rivShare')&&document.getElementById('rivShare').addEventListener('click',function(e){
+ var r=e.target.closest&&e.target.closest('[data-r]');if(!r)return;
+ if(!fileView(r.getAttribute('data-r')))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');
+});
 // 4.10: Itzik could not find these files. The tile blinks until he opens it
 // after a new document was added (the count is what he has seen).
 boot('lawblink',function(){var b=document.getElementById('gLaw');if(!b)return;var n=0;try{n=+localStorage.getItem('lawSeen')||0;}catch(x){}b.classList.toggle('taskblink',n<LAW_ITEMS.length);});
