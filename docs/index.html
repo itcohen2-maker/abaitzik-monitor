@@ -1746,7 +1746,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-07T21:21:45.244Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-07T21:29:28.793Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3056,7 +3056,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='c61c08651c';
+var CODE_ID='c5c6f79036';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null,"homeTile":""};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -7508,10 +7508,10 @@ function yehudaSheet(){
 }
 on('gYehuda',yehudaSheet);
 var NER_ITEMS=[
- {n:'15',t:'סטורי פרסומת, חמישי 8.10, עברית, קול אישה עם מוזיקה',u:'https://drive.google.com/file/d/1C3i8m1gFqIiXBOyen0hmWpB7EISLQtpW/view'},
- {n:'16',t:'סטורי פרסומת, חמישי 8.10, אנגלית, קול גבר עם מוזיקה',u:'https://drive.google.com/file/d/1ayz_AAHK6iJn4d9FYmy6J3PANCt6c-_2/view'},
- {n:'17',t:'סטורי פרסומת, שישי 9.10, עברית, קול גבר עם מוזיקה',u:'https://drive.google.com/file/d/1sbVRfClXaWx_ScOrU60BLg3W8JobER-M/view'},
- {n:'18',t:'סטורי פרסומת, שישי 9.10, אנגלית, קול אישה עם מוזיקה',u:'https://drive.google.com/file/d/1JaOpVOhKeEzG36sEw7vfbHbZtNDV5HdY/view'}
+ {n:'15',t:'סטורי פרסומת, חמישי 8.10, עברית, קול אישה עם מוזיקה',r:'ner-27-thu-he-woman.mp4'},
+ {n:'16',t:'סטורי פרסומת, חמישי 8.10, אנגלית, קול גבר עם מוזיקה',r:'ner-28-thu-en-man.mp4'},
+ {n:'17',t:'סטורי פרסומת, שישי 9.10, עברית, קול גבר עם מוזיקה',r:'ner-29-fri-he-man.mp4'},
+ {n:'18',t:'סטורי פרסומת, שישי 9.10, אנגלית, קול אישה עם מוזיקה',r:'ner-30-fri-en-woman.mp4'}
 ];
 function nerSheet(){
  var old=document.getElementById('nSheet');if(old)old.remove();
@@ -7521,7 +7521,7 @@ function nerSheet(){
  w.setAttribute('aria-label','שיווק הנרות');
  w.innerHTML='<div class="ycard">'
   +'<b>שיווק הנרות</b>'
-  +'<small>'+(NER_ITEMS.length?'הסטוריז של סוף השבוע, כל אחד נפתח בדרייב':'אין כרגע סטוריז')+'</small>'
+  +'<small>'+(NER_ITEMS.length?'הסטוריז של סוף השבוע':'אין כרגע סטוריז')+'</small>'
   +NER_ITEMS.map(function(it,i){
     return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
    }).join('')

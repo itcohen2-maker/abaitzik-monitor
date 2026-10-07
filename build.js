@@ -10845,10 +10845,10 @@ on('gYehuda',yehudaSheet);
 // 7.10 evening: the PC built 15 to 18 but never put them here, so the sheet was
 // empty. They open from Drive until the PC copies the files themselves in.
 var NER_ITEMS=[
- {n:'15',t:'סטורי פרסומת, חמישי 8.10, עברית, קול אישה עם מוזיקה',u:'https://drive.google.com/file/d/1C3i8m1gFqIiXBOyen0hmWpB7EISLQtpW/view'},
- {n:'16',t:'סטורי פרסומת, חמישי 8.10, אנגלית, קול גבר עם מוזיקה',u:'https://drive.google.com/file/d/1ayz_AAHK6iJn4d9FYmy6J3PANCt6c-_2/view'},
- {n:'17',t:'סטורי פרסומת, שישי 9.10, עברית, קול גבר עם מוזיקה',u:'https://drive.google.com/file/d/1sbVRfClXaWx_ScOrU60BLg3W8JobER-M/view'},
- {n:'18',t:'סטורי פרסומת, שישי 9.10, אנגלית, קול אישה עם מוזיקה',u:'https://drive.google.com/file/d/1JaOpVOhKeEzG36sEw7vfbHbZtNDV5HdY/view'}
+ {n:'15',t:'סטורי פרסומת, חמישי 8.10, עברית, קול אישה עם מוזיקה',r:'ner-27-thu-he-woman.mp4'},
+ {n:'16',t:'סטורי פרסומת, חמישי 8.10, אנגלית, קול גבר עם מוזיקה',r:'ner-28-thu-en-man.mp4'},
+ {n:'17',t:'סטורי פרסומת, שישי 9.10, עברית, קול גבר עם מוזיקה',r:'ner-29-fri-he-man.mp4'},
+ {n:'18',t:'סטורי פרסומת, שישי 9.10, אנגלית, קול אישה עם מוזיקה',r:'ner-30-fri-en-woman.mp4'}
 ];
 function nerSheet(){
  var old=document.getElementById('nSheet');if(old)old.remove();
@@ -10858,7 +10858,7 @@ function nerSheet(){
  w.setAttribute('aria-label','שיווק הנרות');
  w.innerHTML='<div class="ycard">'
   +'<b>שיווק הנרות</b>'
-  +'<small>'+(NER_ITEMS.length?'הסטוריז של סוף השבוע, כל אחד נפתח בדרייב':'אין כרגע סטוריז')+'</small>'
+  +'<small>'+(NER_ITEMS.length?'הסטוריז של סוף השבוע':'אין כרגע סטוריז')+'</small>'
   +NER_ITEMS.map(function(it,i){
     return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
    }).join('')
