@@ -10908,15 +10908,9 @@ on('gKatalog',katalogSheet);
   30.9. Candle marketing, same numbered sheet as Rinat's. A new item gets the
   next number and numbers never change.
 */
-// 5.10 Itzik: only the yellow caption stories stay, the rest is gone. Next is 11.
-var NER_ITEMS=[
- {n:'09',t:'סטורי פרסומת, חמישי 8.10, עברית (כיתוב צהוב גדול, בלי שאלה)',r:'ner-17-thu-he-yellow.mp4'},
- {n:'10',t:'סטורי פרסומת, חמישי 8.10, עברית (הלחץ לפני ההדלקה, כיתוב צהוב)',r:'ner-18-thu-he-rush.mp4'},
- {n:'11',t:'סטורי פרסומת, חמישי 8.10, אנגלית (דמות אחרת)',r:'ner-19-thu-en.mp4'},
- {n:'12',t:'סטורי פרסומת, חמישי 8.10, עברית (יום חמישי בשוק)',r:'ner-20-thu-he-shuk.mp4'},
- {n:'13',t:'סטורי פרסומת, שישי 9.10, עברית (כל המשפחה מגיעה)',r:'ner-21-fri-he-family.mp4'},
- {n:'14',t:'סטורי פרסומת, שישי 9.10, עברית (שבת ראשונה בדירה חדשה)',r:'ner-22-fri-he-move.mp4'}
-];
+// 7.10 Itzik: delete all of these, keep only four stories with speech (two Thursday,
+// two Friday), with music under a looser voice. The PC remakes them as 15 to 18.
+var NER_ITEMS=[];
 function nerSheet(){
  var old=document.getElementById('nSheet');if(old)old.remove();
  var w=document.createElement('div');
