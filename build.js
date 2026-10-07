@@ -4152,6 +4152,9 @@ try{
  <div class="item">
   <div class="top"><span class="who" id="vaadWho"></span><span class="chip" id="vaadFlats"></span></div>
   <div class="body" id="vaadAbout"></div>
+  <a class="ask" id="vaadExp" href="#" hidden>🧾 הוצאות הבניין 2026, לשליחה לדיירים</a>
+  <a class="ask" id="vaadExpImg1" href="#" hidden>🧾 ההוצאות כתמונה, עמוד 1</a>
+  <a class="ask" id="vaadExpImg2" href="#" hidden>🧾 ההוצאות כתמונה, עמוד 2</a>
   <a class="ask" id="vaadReport" href="#" hidden>📊 דוח מי שילם, 7.10</a>
   <a class="ask" id="vaadReportImg" href="#" hidden>📊 הדוח כתמונה, לשמירה בגלריה</a>
   <a class="ask" id="vaadLetter" href="#" hidden>המכתב לבניין: ביטוח המבנה</a>
@@ -6740,7 +6743,7 @@ function paintSecrets(){
   if(el&&p[1]){el.href=p[1];el.hidden=false;}
  });
  // 7.10: who paid, as a file to keep and send on.
- [['vaadReport',v.report],['vaadReportImg',v.reportImg]].forEach(function(p){
+ [['vaadReport',v.report],['vaadReportImg',v.reportImg],['vaadExp',v.expenses],['vaadExpImg1',(v.expensesImg||[])[0]],['vaadExpImg2',(v.expensesImg||[])[1]]].forEach(function(p){
   var el=document.getElementById(p[0]);
   if(el&&p[1]&&fileEntry(p[1])){el.setAttribute('href','files/'+p[1]);el.hidden=false;}
  });

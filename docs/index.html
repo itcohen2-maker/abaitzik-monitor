@@ -1748,7 +1748,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-07T06:03:02.201Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-07T06:13:27.233Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2428,6 +2428,9 @@ try{
  <div class="item">
   <div class="top"><span class="who" id="vaadWho"></span><span class="chip" id="vaadFlats"></span></div>
   <div class="body" id="vaadAbout"></div>
+  <a class="ask" id="vaadExp" href="#" hidden>🧾 הוצאות הבניין 2026, לשליחה לדיירים</a>
+  <a class="ask" id="vaadExpImg1" href="#" hidden>🧾 ההוצאות כתמונה, עמוד 1</a>
+  <a class="ask" id="vaadExpImg2" href="#" hidden>🧾 ההוצאות כתמונה, עמוד 2</a>
   <a class="ask" id="vaadReport" href="#" hidden>📊 דוח מי שילם, 7.10</a>
   <a class="ask" id="vaadReportImg" href="#" hidden>📊 הדוח כתמונה, לשמירה בגלריה</a>
   <a class="ask" id="vaadLetter" href="#" hidden>המכתב לבניין: ביטוח המבנה</a>
@@ -3057,7 +3060,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='7fa1bac82b';
+var CODE_ID='b4d87a2545';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null,"homeTile":""};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -4513,7 +4516,7 @@ function paintSecrets(){
   var el=document.getElementById(p[0]);
   if(el&&p[1]){el.href=p[1];el.hidden=false;}
  });
- [['vaadReport',v.report],['vaadReportImg',v.reportImg]].forEach(function(p){
+ [['vaadReport',v.report],['vaadReportImg',v.reportImg],['vaadExp',v.expenses],['vaadExpImg1',(v.expensesImg||[])[0]],['vaadExpImg2',(v.expensesImg||[])[1]]].forEach(function(p){
   var el=document.getElementById(p[0]);
   if(el&&p[1]&&fileEntry(p[1])){el.setAttribute('href','files/'+p[1]);el.hidden=false;}
  });
