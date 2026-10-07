@@ -2123,7 +2123,6 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 #tileBar .back{background:#eee;color:#333}
 @media(prefers-reduced-motion:reduce){.tedit .gt{animation:none}}
 .gt .gi{height:1.35em;width:auto;vertical-align:-0.3em;margin-inline-end:2px}
-.gKat{background:linear-gradient(150deg,#e3c07a,#2b45a6)}
 .gNer{background:linear-gradient(150deg,#f0a64a,#0f1a3a)}
 .gReel{background:linear-gradient(150deg,#e2574c,#2a1240)}
 .gFut{background:linear-gradient(150deg,#3a8fd9,#16243f)}
@@ -2131,7 +2130,6 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .meTxt{white-space:pre-wrap;text-align:right;line-height:1.7;font-size:17px;margin:10px 0 14px}
 .gLaw{background:linear-gradient(150deg,#c0623a,#3a1d12)}
 .gOcc{background:linear-gradient(150deg,#2bb39a,#123d3a)}
-.gMeet{background:linear-gradient(150deg,#e0a43a,#5a3410)}
 .gMed{background:linear-gradient(150deg,#4fb3a9,#123a4a)}
 .gInv{background:linear-gradient(150deg,#d9a441,#3a2a12)}
 .gShop{background:linear-gradient(150deg,#3aa55d,#1f6f8b)}
@@ -3342,8 +3340,6 @@ try{
     איציק, 28.9: "תסיר את כפתור מייל, אין לי צורך בו". ירדו גם האריח וגם הסמל
     בשורת הרשתות, שניהם פתחו את אותו מסך. המסך pE עצמו נשאר.
   -->
-  <!-- 6.10: the meeting prep got buried under newer answers. Its own tile, first. -->
-  <button type="button" class="gt gMeet" id="gMeet"><b>📦 מעקב משלוחים, הום סטייל</b><small>איפה אנחנו עומדים, לעדכון רוני</small></button>
   <!-- The reports tile came off on 17.9. The reports are in "תשובות" now,
        which is the one button he asked for. -->
   <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>מי חייב כסף ומאיזה חודש</small></button>
@@ -3402,16 +3398,11 @@ try{
   -->
   <button type="button" class="gt g15" id="gYehuda"><b>📄 יהודה</b><small>גרסה קצרה לשליחה, והסקירה המלאה לזיכרון</small></button>
   <!--
-    6.10. Back on the home screen: "שים לי במוניטור תחת כפתור רינת" for the
-    Merkaza leopard towels (item 10). Itzik had removed it on 1.10.
-  -->
-  <button type="button" class="gt gKat" id="gKatalog"><b>🎨 המצגות של רינת</b><small>ממוספר. 10ה מרכזה, הכל בקובץ אחד לשליחה</small></button>
-  <!--
     איציק, 30.9: "במוניטור שים את זה בכפתור, שיהיה לי נוח להתייעץ". Everything
     made for pushing candletimes, numbered like Rinat's list: the bio
     comparison, the how-to page, the live candle stories.
   -->
-  <button type="button" class="gt gNer" id="gNerMkt"><b>🕯️ שיווק הנרות</b><small>ממוספר. הביו בטיקטוק, דף הקישורים והסטוריז</small></button>
+  <button type="button" class="gt gNer" id="gNerMkt"><b>🕯️ שיווק הנרות</b><small>ארבעת הסטוריז של חמישי ושישי</small></button>
   <!--
     איציק, 1.10: "שים כפתור יעודי במוניטור, ככה אני לא מוצא". Every finished
     reel, numbered like Rinat's list. The full quality copy is on Drive in
@@ -4574,7 +4565,7 @@ function fvPrint(body,t){
 function fileNiceName(name){
  var short=String(name).split('/').pop();
  var lists=[];
- ['KAT_ITEMS','NER_ITEMS','REEL_ITEMS','FUT_ITEMS','OCC_ITEMS','LAW_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS']
+ ['NER_ITEMS','REEL_ITEMS','FUT_ITEMS','OCC_ITEMS','LAW_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS']
   .forEach(function(k){if(Array.isArray(window[k]))lists.push(window[k]);});
  for(var i=0;i<lists.length;i++){
   var L=lists[i]||[];
@@ -10846,71 +10837,19 @@ function yehudaSheet(){
 }
 on('gYehuda',yehudaSheet);
 /*
-  איציק, 29.9: "שים אותו בקטלוג הבא. תמספר אותם תמיד". The tile became a
-  numbered list. Pages open in a new tab, a sealed file opens in fileView with
-  its share button. A new item gets the next number, and numbers never change.
-*/
-var KAT_ITEMS=[
- {n:'01',t:'מצגת הום סנטר, טיוטה 2',r:'HomeCenter-Presentation.pdf'},
- {n:'02',t:'מצגת הום סנטר, גרסה 3 (48 שקפים)',r:'HomeCenter-Presentation-v3.pdf'},
- {n:'03',t:'MINERA ים המלח (בוטל, לא רלוונטי)',r:'MINERA-DeadSea.pdf'},
- {n:'04',t:'הדמיית תלת מימד: מחלקת הטקסטיל בהום סנטר (13 שקפים)',r:'HomeCenter-Textile-3D.pdf'},
- {n:'05',t:'הדמיית מחלקת הטקסטיל, גרסה 2 לפי ההערות (16 שקפים)',r:'HomeCenter-Textile-3D-v2.pdf'},
- {n:'06',t:'מחלקת הטקסטיל, גרסה 3: עיצוב נקי ומואר (13 שקפים)',r:'HomeCenter-Textile-v3.pdf'},
- {n:'07',t:'מצגת הום סנטר, גרסה 4 לפי ההערות של רינת (48 שקפים)',r:'HomeCenter-Presentation-v4.pdf'},
- {n:'08',t:'מחלקת הטקסטיל, גרסה 4 לפי ההערות (12 שקפים)',r:'HomeCenter-Textile-v4.pdf'},
- {n:'09',t:'מחלקת הטקסטיל, גרסה 5 לפי ההקלטה (14 שקפים)',r:'HomeCenter-Textile-v5.pdf'},
- {n:'10',t:'מרכזה, מגבת מנומרת בגוונים צהובים: כל האפשרויות בתמונה אחת',r:'merkaza-leopard-compare.jpg'},
- {n:'10א',t:'מרכזה מנומר, פאק שוט חמאה',r:'merkaza-leopard-butter.jpg'},
- {n:'10ב',t:'מרכזה מנומר, פאק שוט דבש',r:'merkaza-leopard-honey.jpg'},
- {n:'10ג',t:'מרכזה מנומר, פאק שוט חרדל',r:'merkaza-leopard-mustard.jpg'},
- {n:'10ד',t:'מרכזה מנומר, פאק שוט קאמל',r:'merkaza-leopard-camel.jpg'},
- {n:'10ה',t:'מרכזה מנומר, הכל בקובץ אחד לשליחה (PDF, 5 עמודים)',r:'merkaza-leopard-all.pdf'}
-];
-// 29.9: "הקטלוג הבא לא מעניין, זה היה מזמן. שים אותו בצד". Kept, unnumbered, at the bottom.
-var KAT_SIDE=[
- {t:'בצד: הקטלוג הבא, קיץ 2027',u:'katalog/'},
- {t:'בצד: דוח הטרנדים 2027 2028',u:'katalog/trends.html'}
-];
-function katalogSheet(){
- var old=document.getElementById('kSheet');if(old)old.remove();
- var w=document.createElement('div');
- w.id='kSheet';w.className='ysheet';
- w.setAttribute('role','dialog');
- w.setAttribute('aria-label','המצגות של רינת');
- w.innerHTML='<div class="ycard">'
-  +'<b>המצגות של רינת</b>'
-  +'<small>ממוספר, החדשה מקבלת את המספר הבא</small>'
-  +KAT_ITEMS.map(function(it,i){
-    return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
-   }).join('')
-  +KAT_SIDE.map(function(it,i){
-    return '<button type="button" class="yb yx" style="font-size:13px;opacity:.75" data-k="s'+i+'">'+esc(it.t)+'</button>';
-   }).join('')
-  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
-  +'</div>';
- function close(){w.remove();document.removeEventListener('keydown',esckey);}
- function esckey(e){if(e.key==='Escape')close();}
- w.onclick=function(e){
-  if(e.target===w)return close();
-  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
-  if(k===null||k===undefined)return;
-  close();
-  var it=k.charAt(0)==='s'?KAT_SIDE[+k.slice(1)]:KAT_ITEMS[+k];if(k===''||!it)return;
-  if(it.u)window.open(it.u,'_blank','noopener');
-  else if(!fileView(it.r))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');
- };
- document.addEventListener('keydown',esckey);
- document.body.appendChild(w);
-}
-on('gKatalog',katalogSheet);
-/*
   30.9. Candle marketing, same numbered sheet as Rinat's. A new item gets the
   next number and numbers never change.
 */
 // 7.10 Itzik: delete all of these, keep only four stories with speech (two Thursday,
 // two Friday), with music under a looser voice. The PC remakes them as 15 to 18.
-var NER_ITEMS=[];
+// 7.10 evening: the PC built 15 to 18 but never put them here, so the sheet was
+// empty. They open from Drive until the PC copies the files themselves in.
+var NER_ITEMS=[
+ {n:'15',t:'סטורי פרסומת, חמישי 8.10, עברית, קול אישה עם מוזיקה',u:'https://drive.google.com/file/d/1C3i8m1gFqIiXBOyen0hmWpB7EISLQtpW/view'},
+ {n:'16',t:'סטורי פרסומת, חמישי 8.10, אנגלית, קול גבר עם מוזיקה',u:'https://drive.google.com/file/d/1ayz_AAHK6iJn4d9FYmy6J3PANCt6c-_2/view'},
+ {n:'17',t:'סטורי פרסומת, שישי 9.10, עברית, קול גבר עם מוזיקה',u:'https://drive.google.com/file/d/1sbVRfClXaWx_ScOrU60BLg3W8JobER-M/view'},
+ {n:'18',t:'סטורי פרסומת, שישי 9.10, אנגלית, קול אישה עם מוזיקה',u:'https://drive.google.com/file/d/1JaOpVOhKeEzG36sEw7vfbHbZtNDV5HdY/view'}
+];
 function nerSheet(){
  var old=document.getElementById('nSheet');if(old)old.remove();
  var w=document.createElement('div');
@@ -10919,7 +10858,7 @@ function nerSheet(){
  w.setAttribute('aria-label','שיווק הנרות');
  w.innerHTML='<div class="ycard">'
   +'<b>שיווק הנרות</b>'
-  +'<small>ממוספר, החדש מקבל את המספר הבא</small>'
+  +'<small>'+(NER_ITEMS.length?'הסטוריז של סוף השבוע, כל אחד נפתח בדרייב':'אין כרגע סטוריז')+'</small>'
   +NER_ITEMS.map(function(it,i){
     return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
    }).join('')
@@ -11443,47 +11382,6 @@ function occSheet(){
  document.body.appendChild(w);
 }
 on('gOcc',occSheet);
-// 6.10: HomeStyle shipments tracking. Status for Roni (the CEO), plus one file.
-// Update SHIP_STATUS whenever something moves; keep exactly one file button.
-var SHIP_STATUS={at:'6.10.2026',done:[
- 'נבנו שני מוניטורים נפרדים ונעולים: לרינת ב (עבודה על המשלוחים) ולרוני (תמונת מצב)',
- 'משלוחים לפי דחיפות, התראות, דוח בוקר, תובנות, אקסל יומי ושדרוגים',
- 'כללי ההתראה רצים על הקובץ האמיתי: 12 דחופים, 37 לבדוק, 12 מגיעים השבוע',
- 'נבדק בדפדפן אמיתי בגודל טלפון, כולל שאלה בצ׳אט שנענתה נכון',
- 'אבטחה: קוד של 14 ספרות, בידוד מלא בין הלקוחות, ללא נקודות חשופות',
- 'עיגול הום סטייל במסך הבית שלך, ליד איליי, ירוק כשהכל תקין',
- 'המכתב לרוני מוכן: מסך הבית, אריח מעקב משלוחים, הכפתור למטה'
-],next:[
- 'למסור לרינת ולרוני את הקישור והקוד, בהודעות נפרדות',
- 'מחלקת המחשוב: גישה לקריאה בלבד לתיבת ה Outlook של יעל, ממתינים לתשובה. אחריה הטבלה מתעדכנת לבד מהמיילים',
- 'רינת: לאשר איזה ספקים מסין ואיזה מהודו',
- 'כמה כסף בהזמנות פתוחות: צריך לדעת באיזה מטבע עמודת הסכום',
- 'באיזו שעה נשלח הדוח היומי לרינת'
-]};
-function meetSheet(){
- ensure('reports',function(){
-  var old=document.getElementById('meetSheet');if(old)old.remove();
-  var w=document.createElement('div');
-  w.id='meetSheet';w.className='ysheet';
-  w.setAttribute('role','dialog');
-  w.setAttribute('aria-label','מעקב משלוחים, הום סטייל');
-  w.innerHTML='<div class="ycard">'
-   +'<b>מעקב משלוחים, הום סטייל</b>'
-   +'<small>מעודכן ל '+SHIP_STATUS.at+'</small>'
-   +'<small><b>✅ מה נעשה</b><br>'+SHIP_STATUS.done.map(esc).join('<br>')+'</small>'
-   +'<small><b>⏳ מה נשאר</b><br>'+SHIP_STATUS.next.map(esc).join('<br>')+'</small>'
-   +'<button type="button" class="yb yb4" data-k="f:michtav-leroni.pdf">📄 המכתב לרוני: סיכום מה שעשינו</button>'
-   +'<button type="button" class="yb yb2" data-k="f:bakasha-mihshuv-homestyle.pdf">🖨️ הבקשה לצוות המחשוב, להדפסה</button>'
-   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
-   +'</div>';
-  function close(){w.remove();document.removeEventListener('keydown',esckey);}
-  function esckey(e){if(e.key==='Escape')close();}
-  w.onclick=function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-k');if(k&&k.slice(0,2)==='f:'){close();if(!fileView(k.slice(2)))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');return;}if(e.target===w||k==='')close();};
-  document.addEventListener('keydown',esckey);
-  document.body.appendChild(w);
- });
-}
-on('gMeet',meetSheet);
 boot('occ',function(){var o=(D.occ||[])[0],seen='';var sm=document.querySelector('#gOcc small');if(sm)sm.textContent=o?'המרפאה ענתה '+(o.at||'').slice(8,10).replace(/^0/,'')+'.'+(o.at||'').slice(5,7).replace(/^0/,'')+'. לחץ לקריאה':(function(l){var i=l.indexOf(': ');var h=l.slice(0,i).split(' ')[0];return h+': '+l.slice(i+2);})(OCC_LOG[OCC_LOG.length-1]);try{seen=localStorage.getItem('occSeen')||'';}catch(e){}var b=document.getElementById('gOcc');if(b)b.classList.toggle('taskblink',!!(o&&o.id&&seen!==o.id));});
 /*
   4.10. Documents made for the lawyer in the Lolos sale, numbered. A new one
