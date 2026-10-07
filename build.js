@@ -357,7 +357,7 @@ function build() {
   */
   const tenants = loadDocs('tenants')
     .map(x => ({ id: x.id, title: x.title || x.id, state: x.state || 'unknown',
-                 problems: Array.isArray(x.problems) ? x.problems : [], checkedAt: x.checkedAt || '', beatAt: x.beatAt || '',
+                 problems: Array.isArray(x.problems) ? x.problems : [], checkedAt: x.checkedAt || '', downSince: x.downSince || '', beatAt: x.beatAt || '',
                  host: /^[a-z0-9.-]+$/.test(x.host || '') ? x.host : '',
                  // 5.10: what the customer asked to change, waiting for Itzik.
                  requests: (Array.isArray(x.requests) ? x.requests : []).map(r => ({ id: r.id, at: r.at || '', text: r.text || '', status: r.status || 'pending', note: r.note || '' })) }));
@@ -2148,6 +2148,8 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .tk{display:flex;align-items:center;gap:12px;padding:12px;margin:8px 0;border-radius:12px;background:rgba(127,127,127,.12);cursor:pointer;font-size:1.05em}
 .tk input{width:24px;height:24px;flex:0 0 24px}
 .tk.done span{text-decoration:line-through;opacity:.55}
+.tk.tnc{cursor:default}.tk.tnc span{flex:1}
+.tnopen{flex:none;padding:8px 14px;border-radius:10px;background:#1e3a5f;color:#9ecbff;text-decoration:none;font-weight:700}
 @keyframes tkpop{0%{transform:scale(1)}45%{transform:scale(1.06)}100%{transform:scale(1)}}
 .tk.pop{animation:tkpop .3s ease-out}
 @media(prefers-reduced-motion:reduce){.tk.pop{animation:none}}
@@ -9628,12 +9630,20 @@ function renderTenants(){
  if(!host)return;
  var h='';
  (D.tenants||[]).forEach(function(t){
-  var ok=t.state==='ok',when='';
-  try{when=new Date(t.checkedAt).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});}catch(e){}
-  h+='<div class="tk'+(ok?' done':'')+'" style="border-inline-start:6px solid '+(ok?'#2e7d32':'#c62828')+'"><span><b>'+(ok?'🟢':'🔴')+' '+esc(t.title)+'</b>'
-   +(ok?' תקין':' נתק')+(when?' <small>נבדק '+esc(when)+'</small>':'')
-   +(t.problems&&t.problems.length?'<br><small>'+t.problems.map(esc).join(' · ')+'</small>':'')
-   +(t.host?'<br><a href="https://'+esc(t.host)+'/" target="_blank" rel="noopener">פתיחת המוניטור</a>':'')+'</span></div>';
+  /*
+    7.10, Itzik, with a screenshot: "הכל חיתוכים, בלגן ... זה צריך להתעדכן כל
+    הזמן". A healthy customer wore the "done" class, which strikes the whole
+    card through, and the time shown was of the last publish, an hour old,
+    while the server checks every minute and republishes on any change. So no
+    strike, no stale clock: green says it is checked every minute, red says
+    since when it is down.
+  */
+  var ok=t.state==='ok',since='';
+  try{if(!ok&&t.downSince)since=new Date(t.downSince).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});}catch(e){}
+  h+='<div class="tk tnc" style="border-inline-start:6px solid '+(ok?'#2e7d32':'#c62828')+'"><span><b>'+(ok?'🟢':'🔴')+' '+esc(t.title)+'</b>'
+   +'<br><small>'+(ok?'תקין · נבדק כל דקה':'נתק'+(since?' מאז '+esc(since):''))+'</small>'
+   +(!ok&&t.problems&&t.problems.length?'<br><small>'+t.problems.map(esc).join(' · ')+'</small>':'')
+   +'</span>'+(t.host?'<a class="tnopen" href="https://'+esc(t.host)+'/" target="_blank" rel="noopener">פתיחה</a>':'')+'</div>';
  });
  host.innerHTML=h||'<div class="empty">אין מוניטורים אחרים בשרת הזה.</div>';
  renderChangeReqs(host);
@@ -9657,7 +9667,7 @@ function renderChangeReqs(host){
       :'<br><button type="button" class="ask" data-cr="'+esc(k)+'" data-act="ok">אישור וביצוע</button> <button type="button" class="ask" data-cr="'+esc(k)+'" data-act="no">דחייה</button>')
      +'</span></div>';
    }else{
-    h+='<div class="tk done"><span>'+head+'<br><small>'+(r.status==='approved'?'✅ אושר':'❌ נדחה')+(r.note?' · '+esc(r.note):'')+'</small></span></div>';
+    h+='<div class="tk tnc" style="opacity:.6"><span>'+head+'<br><small>'+(r.status==='approved'?'✅ אושר':'❌ נדחה')+(r.note?' · '+esc(r.note):'')+'</small></span></div>';
    }
   });
  });
