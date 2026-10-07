@@ -160,6 +160,7 @@ function waiting() {
     return d && d.at ? Object.assign({ file: f }, d) : null;
   }).filter(Boolean);
   const answeredIds = new Set(all.filter((m) => m.from === 'claude' && m.re).map((m) => m.re));
+  require('./lib/pc-handed.js')().forEach((re) => answeredIds.add(re));
   const done = readJson(SEEN, {});
   const now = Date.now();
   return all.filter((m) => m.from === 'itzik')
@@ -208,8 +209,8 @@ function heard(m, now) {
 */
 function answeredIds() {
   let files = [];
-  try { files = fs.readdirSync(CHAT); } catch (e) { return new Set(); }
-  const out = new Set();
+  const out = require('./lib/pc-handed.js')();
+  try { files = fs.readdirSync(CHAT); } catch (e) { return out; }
   files.forEach((f2) => {
     const d = readJson(path.join(CHAT, f2), null);
     if (d && d.from === 'claude' && d.re) out.add(d.re);
@@ -297,9 +298,10 @@ function prompt(list) {
       'משימה שצריכה את המחשב שלו (הדפדפן המחובר ל-itcohen2, ריווחית, קבצים בהורדות או בשולחן העבודה,',
       'הדרייב, הוואטסאפ במחשב) לא מבצעים כאן ולא שולחים אותו לפתוח את CLAUDE.cmd. במקום זה:',
       '  `node pc-task.js add --re <id ההודעה שלו> "<המשימה במלואה: מה לעשות, איפה, ומה צריך לחזור אליו>"`',
-      '  הפקודה מדפיסה אם המחשב דלוק עכשיו (pc: on) או כבוי (pc: off). התשובה שלך מיד לפי זה, והיא התשובה היחידה שלך, בשורה אחת:',
-      '    דלוק: "המחשב מוסיף את זה עכשיו. תוך כמה דקות יגיע כאן אישור." אסור לכתוב "כשהמחשב יידלק" כשהוא דלוק.',
-      '    כבוי: "המחשב כבוי מאז <שעה>. זה יתבצע לבד ברגע שתדליק אותו."',
+      '  הפקודה מדפיסה אם המחשב דלוק עכשיו (pc: on) או כבוי (pc: off). לפי זה:',
+      '    דלוק: לא כותבים לו שום תשובה. האישור של המחשב הוא התשובה היחידה ("סתם מיותר", 7.10).',
+      '      רק מסמנים את ההודעה שלו status "done" (ו-note עם התמלול אם זו הקלטה) ודוחפים.',
+      '    כבוי: תשובה אחת בשורה אחת: "המחשב כבוי מאז <שעה>. זה יתבצע לבד ברגע שתדליק אותו."',
       '  המחשב יענה באותו שרשור כשסיים.',
       '  את החלק שאפשר לעשות כאן עושים כאן, ומעבירים למחשב רק את מה שבאמת צריך אותו.',
       '',

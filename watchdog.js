@@ -90,6 +90,7 @@ function check(now) {
   try { files = fs.readdirSync(CHAT); } catch (e) { return ['אין תיקיית צ׳אט']; }
   const all = files.map((f) => { const d = readJson(path.join(CHAT, f), null); return d ? Object.assign({ file: f }, d) : null; }).filter(Boolean);
   const answered = new Set(all.filter((m) => m.from === 'claude' && m.re).map((m) => m.re));
+  require('./lib/pc-handed.js')().forEach((re) => answered.add(re));
   // When each message was first answered. 5.10 13:19: three answers landed a
   // moment before their messages were marked done, and that gap alone woke him.
   // Only an answer that has sat ten minutes without the done mark is a fault.

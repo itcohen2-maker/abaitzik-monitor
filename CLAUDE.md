@@ -3,8 +3,8 @@
 - **Tasks that need Itzik's real browser or his desktop apps (see the two below) cannot be done by
   a session on the server at all, ever** — the server has no browser and never will. Since 1.10.2026
   they are not sent back to him either. The server session marks them for the PC:
-  `node pc-task.js add --re <his message id> "<the full task>"`, tells him in one line that the PC
-  will do it by itself as soon as it is on, and stops. `pc-pull.js` on the PC (scheduled task
+  `node pc-task.js add --re <his message id> "<the full task>"`. If the PC is on it writes him nothing
+  (the PC's own answer is the only one, 7.10); if it is off, one line that it will run once the PC is on. `pc-pull.js` on the PC (scheduled task
   `AbaItzikPcPull`, every minute, hidden) claims it over ssh, runs a Claude session there with his
   Chrome, and sends the answer back with `pc-task.js done`, which writes it in his thread and pushes.
   The queue is `data/pc/pc/` on the server; `node pc-task.js list` shows it. Telling him to open
