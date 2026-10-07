@@ -1746,7 +1746,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-07T02:31:02.172Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-07T03:31:47.487Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2583,12 +2583,6 @@ try{
   <input type="hidden" name="_next" id="fNext" value="">
   <input type="hidden" name="הודעה" id="fNote" value="">
   <input type="hidden" name="קוד" id="fCode" value="">
-  <div class="pickrow">
-   <button type="button" id="qN" class="pickbtn pb-img" aria-pressed="true">
-    <span aria-hidden="true">🖼️</span><b>תמונה</b><small>מכווץ, כמו בוואטסאפ</small></button>
-   <button type="button" id="qF" class="pickbtn pb-doc" aria-pressed="false">
-    <span aria-hidden="true">📎</span><b>מסמך</b><small>איכות מלאה</small></button>
-  </div>
   <input type="file" id="fPick" name="attachment" multiple
    accept="image/*,video/*,audio/*,application/pdf">
   <input type="text" id="fCap" placeholder="כיתוב, לא חובה">
@@ -3052,7 +3046,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='7473aee166';
+var CODE_ID='5619fdb0f6';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null,"homeTile":""};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -6981,7 +6975,7 @@ function shoot(auto){
  var pick=document.getElementById('fPick');
  if(!pick)return;
  autoSend=!!auto;
- setQ('normal');
+ setQ('full');
  pick.setAttribute('accept','image/*');
  pick.setAttribute('capture','environment');
  pick.click();
@@ -8989,7 +8983,7 @@ document.getElementById('urgBtn').onclick=function(){
  f.hidden=false;
  document.getElementById('plusBtn').setAttribute('aria-expanded','true');
  setTimeout(function(){f.scrollIntoView({behavior:'smooth',block:'center'});},60);
- openPicker('normal','image/*,video/*');
+ openPicker('full','image/*,video/*');
 };
 document.getElementById('bP').onclick=function(){tab='pending';render();};
 document.getElementById('bD').onclick=function(){tab='done';render();};
@@ -9060,7 +9054,7 @@ document.getElementById('msgForm').addEventListener('submit',function(e){
 });
 
 var QMAX=15*1024*1024;
-var qMode='normal';
+var qMode='full';
 var fPick=document.getElementById('fPick');
 var fForm=document.getElementById('fileForm');
 var fMeta=document.getElementById('fMeta');
@@ -9100,14 +9094,13 @@ function describe(){
  else if(qMode==='normal')t+=' · וידאו וקול נשלחים כמו שהם, אין כיווץ בדפדפן';
  else t+=' · נשלח במקור, איכות מלאה';
  var big=total>QMAX&&!(qMode==='normal'&&allImages);
+ if(big&&list.some(isImg)){t+=' · מעל 15MB, התמונות יכווצו כדי שייצאו';big=false;}
  if(big)t+=' · גדול מדי, המגבלה 15MB יחד';
  fMeta.className='fmeta'+(big?' bad':'');
  fMeta.textContent=t;
 }
 function setQ(m){
  qMode=m;
- document.getElementById('qF').setAttribute('aria-pressed',m==='full');
- document.getElementById('qN').setAttribute('aria-pressed',m==='normal');
  describe();
 }
 var autoSend=false;
@@ -9120,8 +9113,6 @@ function openPicker(mode,accept,auto){
  fPick.setAttribute('accept',accept);
  fPick.click();
 }
-document.getElementById('qN').onclick=function(){openPicker('normal','image/*,video/*');};
-document.getElementById('qF').onclick=function(){openPicker('full','image/*,video/*,audio/*,application/pdf');};
 function paintBoxPick(){
  var b=window.fileBox;if(!b)return;
  var n=picked().length,sb=b.querySelector('button[type=submit]'),sd=b.querySelector('.rsaid');
@@ -9147,9 +9138,12 @@ function putFiles(list){
 function totalSize(list){
  return list.reduce(function(n,f){return n+f.size;},0);
 }
-function reallySend(list){
+function reallySend(list,squeezed){
  if(!Array.isArray(list))list=[list];
  var total=totalSize(list);
+ if(total>QMAX&&!squeezed&&list.some(isImg)){
+  shrinkAll(list,function(out){reallySend(out,true);});return;
+ }
  if(total>QMAX){
   fSaid.textContent=(list.length>1?list.length+' קבצים יחד שוקלים ':'הקובץ שוקל ')+mb(total)
    +' והמגבלה היא 15MB. תשלח פחות קבצים בבת אחת, או תעלה לדרייב ותכתוב לי כאן את הקישור.';

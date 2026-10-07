@@ -67,7 +67,7 @@ test('a recording joins the files already picked instead of wiping them', () => 
 });
 
 test('the everyday picker takes clips as well as stills', () => {
-  assert.ok(html.includes("openPicker('normal','image/*,video/*')"),
+  assert.ok(html.includes("openPicker('full','image/*,video/*')"),
     'he asked to send a video with a photo, so the first picker has to offer both');
 });
 

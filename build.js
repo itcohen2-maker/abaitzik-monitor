@@ -4303,12 +4303,6 @@ try{
   <input type="hidden" name="_next" id="fNext" value="">
   <input type="hidden" name="הודעה" id="fNote" value="">
   <input type="hidden" name="קוד" id="fCode" value="">
-  <div class="pickrow">
-   <button type="button" id="qN" class="pickbtn pb-img" aria-pressed="true">
-    <span aria-hidden="true">🖼️</span><b>תמונה</b><small>מכווץ, כמו בוואטסאפ</small></button>
-   <button type="button" id="qF" class="pickbtn pb-doc" aria-pressed="false">
-    <span aria-hidden="true">📎</span><b>מסמך</b><small>איכות מלאה</small></button>
-  </div>
   <input type="file" id="fPick" name="attachment" multiple
    accept="image/*,video/*,audio/*,application/pdf">
   <input type="text" id="fCap" placeholder="כיתוב, לא חובה">
@@ -10091,7 +10085,7 @@ function shoot(auto){
  var pick=document.getElementById('fPick');
  if(!pick)return;
  autoSend=!!auto;
- setQ('normal');
+ setQ('full');
  pick.setAttribute('accept','image/*');
  pick.setAttribute('capture','environment');
  pick.click();
@@ -12518,11 +12512,10 @@ document.getElementById('urgBtn').onclick=function(){
  f.hidden=false;
  document.getElementById('plusBtn').setAttribute('aria-expanded','true');
  setTimeout(function(){f.scrollIntoView({behavior:'smooth',block:'center'});},60);
- // Straight into the roll, photos and clips both. Anything else is one tap
- // away on מסמך.
+ // Straight into the roll, photos and clips both, in full quality.
  // This has to run inside the tap itself: iOS ignores a file picker opened
  // from a timer, because by then the gesture is over.
- openPicker('normal','image/*,video/*');
+ openPicker('full','image/*,video/*');
 };
 document.getElementById('bP').onclick=function(){tab='pending';render();};
 document.getElementById('bD').onclick=function(){tab='done';render();};
@@ -12616,7 +12609,11 @@ document.getElementById('msgForm').addEventListener('submit',function(e){
 // 15MB is ntfy's real per file limit. Itzik, 17.9: he sent a video twice and
 // it never arrived.
 var QMAX=15*1024*1024;
-var qMode='normal';
+// Every file leaves in full quality. Squeezing a photo the WhatsApp way erased
+// the weave and the colour from a textile design, and choosing between photo
+// and document was one more question nobody should have to answer. The choice
+// is gone; a batch over the ceiling is still squeezed rather than refused.
+var qMode='full';
 var fPick=document.getElementById('fPick');
 var fForm=document.getElementById('fileForm');
 var fMeta=document.getElementById('fMeta');
@@ -12658,14 +12655,13 @@ function describe(){
  else if(qMode==='normal')t+=' · וידאו וקול נשלחים כמו שהם, אין כיווץ בדפדפן';
  else t+=' · נשלח במקור, איכות מלאה';
  var big=total>QMAX&&!(qMode==='normal'&&allImages);
+ if(big&&list.some(isImg)){t+=' · מעל 15MB, התמונות יכווצו כדי שייצאו';big=false;}
  if(big)t+=' · גדול מדי, המגבלה 15MB יחד';
  fMeta.className='fmeta'+(big?' bad':'');
  fMeta.textContent=t;
 }
 function setQ(m){
  qMode=m;
- document.getElementById('qF').setAttribute('aria-pressed',m==='full');
- document.getElementById('qN').setAttribute('aria-pressed',m==='normal');
  describe();
 }
 // Two things were broken when the picker was opened from a reply row next to a
@@ -12687,11 +12683,6 @@ function openPicker(mode,accept,auto){
  fPick.setAttribute('accept',accept);
  fPick.click();
 }
-// The everyday button takes videos as well as photos. He asked to send a
-// video and a photo and a recording in one go, and a picker that only offered
-// stills sent him to מסמך for every clip.
-document.getElementById('qN').onclick=function(){openPicker('normal','image/*,video/*');};
-document.getElementById('qF').onclick=function(){openPicker('full','image/*,video/*,audio/*,application/pdf');};
 // Said under the reply box the photo was chosen from, and on its send button.
 function paintBoxPick(){
  var b=window.fileBox;if(!b)return;
@@ -12720,9 +12711,14 @@ function totalSize(list){
 }
 // FormSubmit weighs the whole batch against one 10MB ceiling, so the check is
 // on the sum and the message says which files made it up.
-function reallySend(list){
+function reallySend(list,squeezed){
  if(!Array.isArray(list))list=[list];
  var total=totalSize(list);
+ // Full quality is the default, so only a batch too heavy to leave as it is
+ // gets its photos squeezed, once, before it is turned away.
+ if(total>QMAX&&!squeezed&&list.some(isImg)){
+  shrinkAll(list,function(out){reallySend(out,true);});return;
+ }
  if(total>QMAX){
   fSaid.textContent=(list.length>1?list.length+' קבצים יחד שוקלים ':'הקובץ שוקל ')+mb(total)
    +' והמגבלה היא 15MB. תשלח פחות קבצים בבת אחת, או תעלה לדרייב ותכתוב לי כאן את הקישור.';
