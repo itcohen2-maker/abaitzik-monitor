@@ -9466,7 +9466,7 @@ function renderAppts(){
   var rm=remLive().filter(function(r){var u=Date.parse(r.due);return !r.sentAt&&u<t0&&t0-u<3*864e5;})[0];
   if(!isNaN(t0))try{var x=new Date(a.when);
    d=x.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',year:'numeric',timeZone:'Asia/Jerusalem'});
-   h=x.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Jerusalem'});}catch(e){}
+   if(!a.noTime)h=x.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Jerusalem'});}catch(e){}
   return '<div class="ap"><div class="d">'+esc(d)+(h?' בשעה '+esc(h):'')+'</div>'
    +'<b>'+esc(a.what)+'</b>'
    +(a.where?'<div class="w">'+esc(a.where)+'</div>':'')

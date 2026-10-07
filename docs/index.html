@@ -1748,7 +1748,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-07T09:43:31.573Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-07T09:44:11.181Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3060,7 +3060,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='6a4ca9c41f';
+var CODE_ID='6ef259189a';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null,"homeTile":""};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -6425,7 +6425,7 @@ function renderAppts(){
   var rm=remLive().filter(function(r){var u=Date.parse(r.due);return !r.sentAt&&u<t0&&t0-u<3*864e5;})[0];
   if(!isNaN(t0))try{var x=new Date(a.when);
    d=x.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',year:'numeric',timeZone:'Asia/Jerusalem'});
-   h=x.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Jerusalem'});}catch(e){}
+   if(!a.noTime)h=x.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Jerusalem'});}catch(e){}
   return '<div class="ap"><div class="d">'+esc(d)+(h?' בשעה '+esc(h):'')+'</div>'
    +'<b>'+esc(a.what)+'</b>'
    +(a.where?'<div class="w">'+esc(a.where)+'</div>':'')
