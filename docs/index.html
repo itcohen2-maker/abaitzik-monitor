@@ -242,7 +242,7 @@ button.abtn[disabled]{opacity:.55}
 .gjump small{display:block;font-size:12.5px;font-weight:300;opacity:.92;margin-top:2px}
 .gjump:active{transform:translateY(2px)}
 .gotlist h3{font:800 15px Heebo,sans-serif;margin:18px 0 8px;color:var(--dim)}
-.gr{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);
+.gr{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;padding:10px 12px;border:1px solid var(--line);
  border-radius:12px;margin-bottom:8px;background:var(--surface)}
 .gr.now{border-color:var(--blue)}
 .gr[data-sk]{cursor:pointer}
@@ -259,7 +259,7 @@ button.abtn[disabled]{opacity:.55}
 .gselbar .gseldel{background:#c62828;color:#fff;border-color:#c62828}
 .gselbar .gseldel[disabled]{opacity:.4}
 .gr-t{flex:0 0 auto;font-size:12px;color:var(--dim);padding-top:3px}
-.gr-x{flex:1;min-width:0;font-size:15px;line-height:1.45;overflow-wrap:anywhere}
+.gr-x{flex:1 1 100%;order:9;min-width:0;font-size:15px;line-height:1.45;overflow-wrap:anywhere}
 .gr-x small{display:block;color:var(--dim);font-size:12.5px;margin-top:4px}
 .gr-s{flex:0 0 auto;font-size:12px;border-radius:999px;padding:3px 9px;font-weight:700}
 .gr-w{background:#fff3cd;color:#7a5200}
@@ -269,7 +269,7 @@ button.abtn[disabled]{opacity:.55}
 .gr-del{flex:0 0 auto;background:transparent;color:var(--dim);border:1px solid var(--line);
  border-radius:999px;font:700 12px Heebo,sans-serif;padding:3px 10px;cursor:pointer}
 .gr-del:active{transform:translateY(1px)}
-.gr-b{flex:0 0 auto;display:flex;flex-direction:column;gap:6px}
+.gr-b{flex:0 0 auto;display:flex;gap:6px;margin-inline-start:auto}
 .gr-cp{background:transparent;color:var(--accent);border:1px solid var(--line);
  border-radius:999px;font:700 12px Heebo,sans-serif;padding:3px 10px;cursor:pointer;
  min-height:28px;white-space:nowrap}
@@ -1746,7 +1746,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-07T21:43:26.822Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-07T21:44:31.456Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3056,7 +3056,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='0286c8faa8';
+var CODE_ID='44df533b46';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":""};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');

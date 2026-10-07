@@ -1294,7 +1294,7 @@ button.abtn[disabled]{opacity:.55}
 .gjump small{display:block;font-size:12.5px;font-weight:300;opacity:.92;margin-top:2px}
 .gjump:active{transform:translateY(2px)}
 .gotlist h3{font:800 15px Heebo,sans-serif;margin:18px 0 8px;color:var(--dim)}
-.gr{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);
+.gr{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;padding:10px 12px;border:1px solid var(--line);
  border-radius:12px;margin-bottom:8px;background:var(--surface)}
 .gr.now{border-color:var(--blue)}
 .gr[data-sk]{cursor:pointer}
@@ -1311,7 +1311,7 @@ button.abtn[disabled]{opacity:.55}
 .gselbar .gseldel{background:#c62828;color:#fff;border-color:#c62828}
 .gselbar .gseldel[disabled]{opacity:.4}
 .gr-t{flex:0 0 auto;font-size:12px;color:var(--dim);padding-top:3px}
-.gr-x{flex:1;min-width:0;font-size:15px;line-height:1.45;overflow-wrap:anywhere}
+.gr-x{flex:1 1 100%;order:9;min-width:0;font-size:15px;line-height:1.45;overflow-wrap:anywhere}
 .gr-x small{display:block;color:var(--dim);font-size:12.5px;margin-top:4px}
 .gr-s{flex:0 0 auto;font-size:12px;border-radius:999px;padding:3px 9px;font-weight:700}
 .gr-w{background:#fff3cd;color:#7a5200}
@@ -1325,7 +1325,7 @@ button.abtn[disabled]{opacity:.55}
 .gr-del:active{transform:translateY(1px)}
 /* Copy and delete stack, so a fifth item on the row does not squeeze the text
    into a column two words wide on a phone. */
-.gr-b{flex:0 0 auto;display:flex;flex-direction:column;gap:6px}
+.gr-b{flex:0 0 auto;display:flex;gap:6px;margin-inline-start:auto}
 .gr-cp{background:transparent;color:var(--accent);border:1px solid var(--line);
  border-radius:999px;font:700 12px Heebo,sans-serif;padding:3px 10px;cursor:pointer;
  min-height:28px;white-space:nowrap}
