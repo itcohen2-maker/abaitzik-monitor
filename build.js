@@ -4152,6 +4152,8 @@ try{
  <div class="item">
   <div class="top"><span class="who" id="vaadWho"></span><span class="chip" id="vaadFlats"></span></div>
   <div class="body" id="vaadAbout"></div>
+  <a class="ask" id="vaadReport" href="#" hidden>📊 דוח מי שילם, 7.10</a>
+  <a class="ask" id="vaadReportImg" href="#" hidden>📊 הדוח כתמונה, לשמירה בגלריה</a>
   <a class="ask" id="vaadLetter" href="#" hidden>המכתב לבניין: ביטוח המבנה</a>
   <a class="ask" id="vaadLetterImg" href="#" hidden>המכתב כתמונה, לשמירה בגלריה</a>
   <a class="ask" id="vaadSheet" href="#" target="_blank" rel="noopener" hidden>פתיחת הקובץ</a>
@@ -6736,6 +6738,11 @@ function paintSecrets(){
  [['vaadSheet',v.sheet],['vaadFolder',v.folder]].forEach(function(p){
   var el=document.getElementById(p[0]);
   if(el&&p[1]){el.href=p[1];el.hidden=false;}
+ });
+ // 7.10: who paid, as a file to keep and send on.
+ [['vaadReport',v.report],['vaadReportImg',v.reportImg]].forEach(function(p){
+  var el=document.getElementById(p[0]);
+  if(el&&p[1]&&fileEntry(p[1])){el.setAttribute('href','files/'+p[1]);el.hidden=false;}
  });
  // 4.10: the notice for the stairwell sits on this screen, one tap from the tile.
  var lt=document.getElementById('vaadLetter');
