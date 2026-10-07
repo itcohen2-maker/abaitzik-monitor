@@ -3370,7 +3370,10 @@ try{
     איציק, 28.9, בהקלטה: "תסיר את הכפתור הקלטות שלא תומללו". הכפתור ירד ממסך הבית.
     המסך pVc נשאר, נפתח במסלול #voices, והקלטה שלא תומללה עדיין מתנגנת בתוך ההודעה בצ׳אט.
   -->
-  <button type="button" class="gt g17" id="gTasks"><b>✅ משימות</b><small>מה לעשות, לפי יום. מסמנים כשבוצע</small></button>
+  <!--
+    איציק, 7.10, בהקלטה: "תסיר את כפתור משימות". הכפתור ירד ממסך הבית שלו.
+    המסך עצמו נשאר בקוד, והאריח אצל הלקוחות לא נגע.
+  -->
   <button type="button" class="gt g18" id="gAppts"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
   <button type="button" class="gt g16" id="gRemind"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
   <button type="button" class="gt g10" id="gNotes"><b>📝 פתקים</b><small>נכתב, נשמר, לא הולך לאיבוד</small></button>
