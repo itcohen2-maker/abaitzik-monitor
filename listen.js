@@ -42,6 +42,16 @@ const inst = require('./lib/instance.js');
   a second the listener on another machine answers every message twice and fights
   the first one over every push.
 */
+/*
+  8.10: a paused customer (instance.json paused) hears nothing. Exiting would
+  make systemd restart the listener every ten seconds, so it idles instead and
+  leaves once the flag is gone, to come back as a normal listener.
+*/
+if (require.main === module && inst.paused) {
+  console.log('paused: this monitor is on hold, not listening.');
+  setInterval(() => { if (!require('./lib/instance.js').load().paused) process.exit(0); }, 60 * 1000);
+  return;
+}
 if (require.main === module && inst.serverHost && require('os').hostname() !== inst.serverHost) {
   console.log('the listener runs on ' + inst.serverHost + ', not here (' + require('os').hostname() + '). Leaving.');
   process.exit(0);
@@ -681,7 +691,8 @@ function publishChat() {
   five seconds later with the code that is actually on disk. Nothing is lost by
   exiting, because the stream is resumed from the last seen message.
 */
-const SOURCES = [__filename].concat(
+// 8.10: instance.json too, so pausing a customer takes hold within a minute.
+const SOURCES = [__filename, path.join(__dirname, 'instance.json')].concat(
   fs.existsSync(path.join(__dirname, 'lib'))
     ? fs.readdirSync(path.join(__dirname, 'lib'))
         .filter(function (f) { return /\.js$/.test(f); })

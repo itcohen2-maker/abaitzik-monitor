@@ -38,7 +38,15 @@ function active(unit) {
   catch (e) { return false; }
 }
 
+function paused(t) {
+  try { return JSON.parse(fs.readFileSync(path.join(t.dir, 'instance.json'), 'utf8')).paused === true; }
+  catch (e) { return false; }
+}
+
 function check(t) {
+  // 8.10: on hold by Itzik's decision. Nothing runs, so nothing is broken, and
+  // the doctor must not try to bring it back.
+  if (paused(t)) return { state: 'ok', problems: [], beatAt: '', paused: true };
   const problems = [];
   if (t.listener && !active(t.listener)) problems.push('המאזין לא רץ');
   if (t.timer && !active(t.timer)) problems.push('המענה האוטומטי לא מתוזמן');
@@ -150,6 +158,7 @@ function main() {
           { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
       } catch (e) { console.log('request alert failed: ' + String(e.message).slice(0, 120)); }
     }
+    delete t.paused;
     Object.assign(t, r, { checkedAt: new Date().toISOString() });
     if (r.state === 'ok') delete t.downSince; else if (!t.downSince) t.downSince = new Date().toISOString();
     if (!DRY) fs.writeFileSync(file, JSON.stringify(t, null, 1));

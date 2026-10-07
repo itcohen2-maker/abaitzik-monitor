@@ -274,6 +274,8 @@ function netDaily(now) {
 }
 
 function main() {
+  // 8.10: a paused customer has nothing to watch and nobody to tell.
+  if (inst.paused) return;
   const now = Date.now();
   const problems = check(now);
   const prev = readJson(OUT, { told: {} });

@@ -535,6 +535,8 @@ function reconcile(live) {
 }
 
 function main() {
+  // 8.10: a paused customer gets no sessions at all.
+  if (inst.paused) { say('מושהה. לא עונה.'); return; }
   const live = livePids();
   if (!DRY) reconcile(live);
   const room = MAX_LIVE - Object.keys(live).length;

@@ -356,7 +356,7 @@ function build() {
     never anything from inside the other instance.
   */
   const tenants = loadDocs('tenants')
-    .map(x => ({ id: x.id, title: x.title || x.id, state: x.state || 'unknown',
+    .map(x => ({ id: x.id, title: x.title || x.id, state: x.state || 'unknown', paused: x.paused === true,
                  problems: Array.isArray(x.problems) ? x.problems : [], checkedAt: x.checkedAt || '', downSince: x.downSince || '', beatAt: x.beatAt || '',
                  host: /^[a-z0-9.-]+$/.test(x.host || '') ? x.host : '',
                  // 5.10: what the customer asked to change, waiting for Itzik.
@@ -9656,6 +9656,8 @@ function renderTenants(){
     strike, no stale clock: green says it is checked every minute, red says
     since when it is down.
   */
+  // 8.10: on hold by his decision, grey and not an alarm.
+  if(t.paused){h+='<div class="tk tnc" style="border-inline-start:6px solid #9e9e9e;opacity:.7"><span><b>⏸️ '+esc(t.title)+'</b><br><small>מושהה, לא עונה ולא רץ</small></span></div>';return;}
   var ok=t.state==='ok',since='';
   try{if(!ok&&t.downSince)since=new Date(t.downSince).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});}catch(e){}
   h+='<div class="tk tnc" style="border-inline-start:6px solid '+(ok?'#2e7d32':'#c62828')+'"><span><b>'+(ok?'🟢':'🔴')+' '+esc(t.title)+'</b>'
