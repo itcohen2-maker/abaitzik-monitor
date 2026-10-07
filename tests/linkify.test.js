@@ -99,3 +99,11 @@ test('every file linked in a recent answer is still shipped', () => {
   }
   assert.deepEqual(missing, [], 'answers pointing at files that no longer exist');
 });
+
+// Itzik, 7.10: "תשים לי את הטלפון כדי שאני אוכל ללחוץ וישר לחייג".
+test('a phone number in an answer dials on tap', () => {
+  assert.deepEqual(hrefs(linkify('הראל: 03-7547777, או 050 1234567')),
+    ['tel:037547777', 'tel:0501234567']);
+  assert.deepEqual(hrefs(linkify('קוד *2735')), []);
+  assert.deepEqual(hrefs(linkify('חשבונית 2026031234567 מיום 07-10-2026')), []);
+});

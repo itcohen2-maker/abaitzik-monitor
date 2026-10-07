@@ -5271,14 +5271,22 @@ document.addEventListener('click',function(e){
   every view but the chat bubble, with nothing to tap. Now it is a link that
   says what it does, and the click handler above opens it in the viewer.
 */
+/*
+  Itzik, 7.10, on Harel's number: "תשים לי את הטלפון כדי שאני אוכל ללחוץ
+  וישר לחייג". A phone number in any answer (03-7547777, 050 1234567,
+  1-800-...) is now a tel: link. Star codes like *2735 stay plain text:
+  iPhone refuses to dial a tel: link that has * in it.
+*/
 function linkify(t){
- var parts=String(t==null?'':t).split(new RegExp('(https?://[^\\\\s<>"]+|files/[^\\\\s<>"]+)','g'));
+ var PHONE_RE='(?<![0-9])(?:0[2-9][0-9]?[ -]?[0-9]{3}[ -]?[0-9]{4}|1[ -]?[78]00[ -]?[0-9]{2,3}[ -]?[0-9]{3,4})(?![0-9])';
+ var parts=String(t==null?'':t).split(new RegExp('(https?://[^\\\\s<>"]+|files/[^\\\\s<>"]+|'+PHONE_RE+')','g'));
  return parts.map(function(x,i){
   if(!(i%2))return esc(x);
   var tail='';
   var m=x.match(new RegExp('[.,;:!?)"]+$'));
   if(m){tail=m[0];x=x.slice(0,x.length-tail.length);}
   if(!x)return esc(tail);
+  if(/^[0-9]/.test(x))return '<a href="tel:'+x.replace(/[^0-9]/g,'')+'">'+esc(x)+'</a>'+esc(tail);
   if(x.indexOf('files/')===0){
    var fn=fileNameOf(x);
    if(!fn||!fileEntry(fn))return esc(x+tail);
