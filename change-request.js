@@ -4,7 +4,7 @@
 
     node change-request.js add --re <message id> "<what he asked to change>"
       on a customer's monitor: files the request for Itzik.
-    node change-request.js decide <customer> <request id> approved|rejected "<one line for the customer>"
+    node change-request.js decide <customer> <request id> approved|rejected|deleted "<one line for the customer>"
       on Itzik's: records his decision. The customer hears it within a minute.
 */
 const cr = require('./lib/change-requests.js');
