@@ -1746,7 +1746,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-07T21:29:28.793Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-07T21:30:43.501Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3056,7 +3056,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='c5c6f79036';
+var CODE_ID='8711ff35bb';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null,"homeTile":""};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
@@ -7509,9 +7509,17 @@ function yehudaSheet(){
 on('gYehuda',yehudaSheet);
 var NER_ITEMS=[
  {n:'15',t:'סטורי פרסומת, חמישי 8.10, עברית, קול אישה עם מוזיקה',r:'ner-27-thu-he-woman.mp4'},
+ {n:'15',t:'כריכה לפיד (4:5)',u:'https://drive.google.com/file/d/1pHUYLKboO974OwoQe5IQOhOHUyeRY-Sj/view'},
+ {n:'15',t:'תיאור לפוסט',u:'https://drive.google.com/file/d/1JjmQuvRHoOd4qYc7P2EFMLicDhnzUY7P/view'},
  {n:'16',t:'סטורי פרסומת, חמישי 8.10, אנגלית, קול גבר עם מוזיקה',r:'ner-28-thu-en-man.mp4'},
+ {n:'16',t:'כריכה לפיד (4:5)',u:'https://drive.google.com/file/d/1pNotiHzEPL1HP9v14N8sCwd2SFE9Jffr/view'},
+ {n:'16',t:'תיאור לפוסט',u:'https://drive.google.com/file/d/1HtURZRDk0-5cTvoGAeuFaXs-lmdtRr1S/view'},
  {n:'17',t:'סטורי פרסומת, שישי 9.10, עברית, קול גבר עם מוזיקה',r:'ner-29-fri-he-man.mp4'},
- {n:'18',t:'סטורי פרסומת, שישי 9.10, אנגלית, קול אישה עם מוזיקה',r:'ner-30-fri-en-woman.mp4'}
+ {n:'17',t:'כריכה לפיד (4:5)',u:'https://drive.google.com/file/d/12Xz259slLJQvo6rlA_knhWVDIukvXPCH/view'},
+ {n:'17',t:'תיאור לפוסט',u:'https://drive.google.com/file/d/1OfJMMzW_y-bIAZPWe_MnvNrIeaar6P_z/view'},
+ {n:'18',t:'סטורי פרסומת, שישי 9.10, אנגלית, קול אישה עם מוזיקה',r:'ner-30-fri-en-woman.mp4'},
+ {n:'18',t:'כריכה לפיד (4:5)',u:'https://drive.google.com/file/d/1AMrprIvYxMQDSVyNN24VmrCnsXRVMWx0/view'},
+ {n:'18',t:'תיאור לפוסט',u:'https://drive.google.com/file/d/12XOpmF3jjn2vHH7rjoXLYSYJ_bn0NVW4/view'}
 ];
 function nerSheet(){
  var old=document.getElementById('nSheet');if(old)old.remove();

@@ -10844,11 +10844,20 @@ on('gYehuda',yehudaSheet);
 // two Friday), with music under a looser voice. The PC remakes them as 15 to 18.
 // 7.10 evening: the PC built 15 to 18 but never put them here, so the sheet was
 // empty. They open from Drive until the PC copies the files themselves in.
+// 8.10 Itzik: every video comes with a feed cover and a post caption, same number.
 var NER_ITEMS=[
  {n:'15',t:'סטורי פרסומת, חמישי 8.10, עברית, קול אישה עם מוזיקה',r:'ner-27-thu-he-woman.mp4'},
+ {n:'15',t:'כריכה לפיד (4:5)',u:'https://drive.google.com/file/d/1pHUYLKboO974OwoQe5IQOhOHUyeRY-Sj/view'},
+ {n:'15',t:'תיאור לפוסט',u:'https://drive.google.com/file/d/1JjmQuvRHoOd4qYc7P2EFMLicDhnzUY7P/view'},
  {n:'16',t:'סטורי פרסומת, חמישי 8.10, אנגלית, קול גבר עם מוזיקה',r:'ner-28-thu-en-man.mp4'},
+ {n:'16',t:'כריכה לפיד (4:5)',u:'https://drive.google.com/file/d/1pNotiHzEPL1HP9v14N8sCwd2SFE9Jffr/view'},
+ {n:'16',t:'תיאור לפוסט',u:'https://drive.google.com/file/d/1HtURZRDk0-5cTvoGAeuFaXs-lmdtRr1S/view'},
  {n:'17',t:'סטורי פרסומת, שישי 9.10, עברית, קול גבר עם מוזיקה',r:'ner-29-fri-he-man.mp4'},
- {n:'18',t:'סטורי פרסומת, שישי 9.10, אנגלית, קול אישה עם מוזיקה',r:'ner-30-fri-en-woman.mp4'}
+ {n:'17',t:'כריכה לפיד (4:5)',u:'https://drive.google.com/file/d/12Xz259slLJQvo6rlA_knhWVDIukvXPCH/view'},
+ {n:'17',t:'תיאור לפוסט',u:'https://drive.google.com/file/d/1OfJMMzW_y-bIAZPWe_MnvNrIeaar6P_z/view'},
+ {n:'18',t:'סטורי פרסומת, שישי 9.10, אנגלית, קול אישה עם מוזיקה',r:'ner-30-fri-en-woman.mp4'},
+ {n:'18',t:'כריכה לפיד (4:5)',u:'https://drive.google.com/file/d/1AMrprIvYxMQDSVyNN24VmrCnsXRVMWx0/view'},
+ {n:'18',t:'תיאור לפוסט',u:'https://drive.google.com/file/d/12XOpmF3jjn2vHH7rjoXLYSYJ_bn0NVW4/view'}
 ];
 function nerSheet(){
  var old=document.getElementById('nSheet');if(old)old.remove();
