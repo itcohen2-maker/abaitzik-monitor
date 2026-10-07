@@ -27,7 +27,8 @@ id "$U" >/dev/null 2>&1 || useradd -m -s /usr/sbin/nologin "$U"
 # next customer would have had no access at all.
 [ -n "$SHIP" ] && usermod -aG "$(stat -c %G "$(dirname "$SHIP")")" "$U"
 chmod 711 /home/$U
-[ -d "$DIR" ] || sudo -H -u "$U" git clone -q "$PUB" "$DIR"
+# Shallow: a full clone carried 3.4G of Itzik's history into every customer and filled the disk (7.10).
+[ -d "$DIR" ] || sudo -H -u "$U" git clone -q --depth 1 "$PUB" "$DIR"
 cd "$DIR"
 sudo -H -u "$U" git remote rename origin code 2>/dev/null || true
 # The branch must track a private "origin" that does not exist (as Ilay's does), never the public
