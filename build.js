@@ -812,7 +812,7 @@ function build() {
   // was drawn and then hidden on every customer's page. It is appended here.
   const instanceJson = JSON.stringify({ name: inst.name, owner: inst.owner, pageTitle: inst.pageTitle,
     screens: Array.isArray(inst.screens) && inst.screens.length && !inst.screens.includes('gAdminReq') ? inst.screens.concat(['gAdminReq']) : inst.screens,
-    computer: inst.computer, phone: inst.phone, welcome: inst.welcome, homeTile: inst.homeTile || '' });
+    computer: inst.computer, phone: inst.phone, welcome: inst.welcome, homeTile: inst.homeTile || '', gender: inst.gender || '' });
   const html = html0.replace('__CODE_ID__', codeId0).replace("'__INSTANCE__'", instanceJson);
 
   /*
@@ -3212,14 +3212,14 @@ try{
  <div class="ava" aria-hidden="true"><div>${String(inst.owner || 'א').charAt(0)}</div></div>
 </header>
  <section class="talk" id="talkCard" aria-label="פנייה אליי">
-  <button type="button" id="micBtn" class="mic" aria-label="דבר אליי">
+  <button type="button" id="micBtn" class="mic" aria-label="${inst.gender === 'f' ? 'דברי' : 'דבר'} אליי">
    <svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
     <rect x="9" y="3" width="6" height="11" rx="3" fill="var(--ink)" stroke="none"/>
     <path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8.5 21h7"/>
    </svg>
   </button>
   <div class="vtxt">
-   <b>דבר אליי</b>
+   <b>${inst.gender === 'f' ? 'דברי' : 'דבר'} אליי</b>
    <small id="micSaid">לוחצים, מדברים, לוחצים שוב. ההקלטה נשלחת אליי מיד.</small>
   </div>
   <div class="ways">
@@ -3239,7 +3239,7 @@ try{
   -->
   <form class="quickwrite" id="quickForm">
    <input type="text" id="quickText" autocomplete="off"
-    placeholder="${inst.name === 'abaitzik' ? 'יצחק' : inst.owner}, כתוב לי מה אתה צריך">
+    placeholder="${inst.name === 'abaitzik' ? 'יצחק' : inst.owner}, ${inst.gender === 'f' ? 'כתבי לי מה את צריכה' : 'כתוב לי מה אתה צריך'}">
    <button type="submit" id="quickBtn">שליחה</button>
   </form>
   <div class="msgsaid" id="quickSaid"></div>
@@ -4359,7 +4359,7 @@ try{
 
 <div class="recwrap" id="recModal" hidden>
  <div class="recbox">
-  <div class="rectitle" id="recTitle">מדבר אליי</div>
+  <div class="rectitle" id="recTitle">${inst.gender === 'f' ? 'מדברת' : 'מדבר'} אליי</div>
   <div class="rectime" id="recTime">0:00</div>
   <button type="button" id="recBig" class="recbig" aria-label="עצירה ושליחה">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
@@ -4385,7 +4385,7 @@ try{
   the same toggle, the same guard, the same state painted on both.
 -->
 <div class="aimbar" id="aimBar" hidden><span id="aimTxt"></span><button type="button" id="aimX" aria-label="לבטל את המענה">×</button></div>
-<button type="button" id="micDock" class="micdock" aria-label="דבר אליי">
+<button type="button" id="micDock" class="micdock" aria-label="${inst.gender === 'f' ? 'דברי' : 'דבר'} אליי">
  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
   <rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" stroke="none"/>
   <path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8.5 21h7"/>
@@ -4750,6 +4750,7 @@ var INSTANCE='__INSTANCE__';
 // Who this page belongs to, for every line that names him. Itzik's copy says
 // what it always said; another copy says its own owner's name.
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
+var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
@@ -5638,7 +5639,7 @@ function renderThread(){
    .concat(still.map(function(p){return{id:'',re:p.re||'',at:p.at,from:'itzik',text:p.text,pend:true};}));
  var host=document.getElementById('thread');
  if(!all.length){
-  host.innerHTML='<div class="empty">עוד לא דיברנו כאן. תכתוב משהו למטה.</div>';
+  host.innerHTML='<div class="empty">עוד לא דיברנו כאן. '+(FEM?'כתבי':'תכתוב')+' משהו למטה.</div>';
   return;
  }
  var rows=ML.orderThreads(ML.splitThreads(all),threadState());
@@ -12667,7 +12668,7 @@ function reallySend(list,squeezed){
  }
  if(total>QMAX){
   fSaid.textContent=(list.length>1?list.length+' קבצים יחד שוקלים ':'הקובץ שוקל ')+mb(total)
-   +' והמגבלה היא 15MB. תשלח פחות קבצים בבת אחת, או תעלה לדרייב ותכתוב לי כאן את הקישור.';
+   +(FEM?' והמגבלה היא 15MB. שלחי פחות קבצים בבת אחת, או העלי לוויטרנספר והדביקי כאן את הקישור.':' והמגבלה היא 15MB. תשלח פחות קבצים בבת אחת, או תעלה לדרייב ותכתוב לי כאן את הקישור.');
   fBtn.disabled=false;return;
  }
  var cap=document.getElementById('fCap').value.trim();
@@ -12704,12 +12705,12 @@ function reallySend(list,squeezed){
    // Some arrived and are already in the chat. Only the rest has to go again.
    clearPick();
    sendSay((list.length-e.failed.length)+' מתוך '+list.length+' הגיעו. לא עלה: '+e.failed.join(', ')
-    +'. תשלח רק אותו שוב, ואם הוא וידאו גדול תעלה לדרייב ותכתוב לי את הקישור.');
+    +(FEM?'. שלחי רק אותו שוב, ואם הוא גדול העלי לוויטרנספר והדביקי כאן את הקישור.':'. תשלח רק אותו שוב, ואם הוא וידאו גדול תעלה לדרייב ותכתוב לי את הקישור.'));
    return;
   }
   sendSay(hasVoice
-   ?'ההקלטה לא הגיעה שלמה ולא נשמרה. תקליט שוב עכשיו, לפני שתשכח מה אמרת.'
-   :'הקובץ לא הגיע שלם ולא נשמר. תשלח שוב, ואם הוא גדול תעלה לדרייב ותכתוב לי את הקישור.');
+   ?(FEM?'ההקלטה לא הגיעה שלמה ולא נשמרה. הקליטי שוב עכשיו, לפני שתשכחי מה אמרת.':'ההקלטה לא הגיעה שלמה ולא נשמרה. תקליט שוב עכשיו, לפני שתשכח מה אמרת.')
+   :(FEM?'הקובץ לא הגיע שלם ולא נשמר. שלחי שוב, ואם הוא גדול העלי לוויטרנספר והדביקי כאן את הקישור.':'הקובץ לא הגיע שלם ולא נשמר. תשלח שוב, ואם הוא גדול תעלה לדרייב ותכתוב לי את הקישור.'));
  }).then(function(){fBtn.disabled=false;});
 }
 function sendSay(t){
@@ -12840,7 +12841,7 @@ function recModal(open){
  m.hidden=!open;
  if(open){
   document.getElementById('recTime').textContent='0:00';
-  document.getElementById('recTitle').textContent='מדבר אליי';
+  document.getElementById('recTitle').textContent=FEM?'מדברת אליי':'מדבר אליי';
   document.getElementById('recHint').textContent='לחיצה עוצרת ושולחת אליי';
  }
 }
