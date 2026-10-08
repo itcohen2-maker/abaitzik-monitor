@@ -9894,7 +9894,10 @@ function recipesSheet(){
   // Itzik, 2.10: a WhatsApp button for the basbousa, and then: see the PDF
   // first, then send it. So it opens the PDF with its pages on screen, and the
   // send button there carries the file itself to WhatsApp.
-  +'<button type="button" class="yb ybwa" data-r="basbousa-shlish-8.pdf">בסבוסה, לראות ולשלוח בוואטסאפ</button>'
+  +'<button type="button" class="yb ybwa" data-r="basbousa-shlish-8.pdf">בסבוסה בשליש, לראות ולשלוח בוואטסאפ</button>'
+  // Itzik, 8.10: "שיהיה לי אחד כזה, אחד כזה", the same sheet with the full
+  // recipe for the 30 by 40 tray and the book's original syrup.
+  +'<button type="button" class="yb ybwa" data-r="basbousa-full.pdf">בסבוסה מלאה, המתכון המקורי</button>'
   +'<button type="button" class="yb yx" data-r="">סגירה</button>'
   +'</div>';
  function close(){w.remove();document.removeEventListener('keydown',esckey);}
