@@ -2174,6 +2174,14 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .ycard>*{flex-shrink:0}
 .ycard b{font:700 16px Heebo,sans-serif}
 .ycard small{font-size:12px;opacity:.7;margin-bottom:4px}
+.arEx{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:start}
+.arEx>div{display:flex;flex-direction:column;gap:5px}
+.arEx .gt{cursor:default;min-height:72px;pointer-events:none}
+.arEx .yb{display:block;text-align:center;pointer-events:none;margin-top:12px;padding:11px 6px;min-height:0}
+.arEx i{font:500 11.5px Heebo,sans-serif;font-style:normal;opacity:.75;text-align:center}
+.arPick{display:flex;gap:6px}
+.arPick .yb{flex:1;padding:9px 4px;min-height:40px;font-size:13.5px}
+.arPick .yb.on{background:#16202c;color:#fff}
 /* 6.10: Home Style shipments screens */
 .ship .srow{border-bottom:1px solid rgba(128,128,128,.25);padding:8px 0;font:500 14px/1.45 Heebo,sans-serif}
 .ship .srow b{font:700 14px Heebo,sans-serif}
@@ -11060,6 +11068,18 @@ function adminReqSheet(){
  w.innerHTML='<div class="ycard"><b>בקשה ממנהל</b>'
   +'<small>מה תרצה לשנות במוניטור? כפתור, מסך, עיצוב, איך הוא עונה. המנהל יאשר, והתשובה תגיע אליך בצ׳אט.</small>'
   +'<textarea id="arText" rows="5" style="width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif" placeholder="לדוגמה: תוסיף לי כפתור של רשימת קניות"></textarea>'
+  // Itzik, 8.10: offer the customer the choice and show it, an icon on the
+  // home screen or a button inside a screen, for the same subject.
+  +'<small style="opacity:1;font-weight:600">איך זה ייראה? לדוגמה, נושא של דוחות:</small>'
+  +'<div class="arEx">'
+  +'<div><span class="gt g1" aria-hidden="true"><b>📊 דוחות</b><small>כל הדוחות במקום אחד</small></span><i>אייקון: ריבוע במסך הבית</i></div>'
+  +'<div><span class="yb yb2" aria-hidden="true">פתיחת הדוחות</span><i>כפתור: בתוך מסך שכבר יש לך</i></div>'
+  +'</div>'
+  +'<div class="arPick" role="group" aria-label="אייקון או כפתור">'
+  +'<button type="button" class="yb" data-k="אייקון במסך הבית">רוצה אייקון</button>'
+  +'<button type="button" class="yb" data-k="כפתור בתוך מסך">רוצה כפתור</button>'
+  +'<button type="button" class="yb" data-k="">לא משנה</button></div>'
+  +'<small>תמיד אפשר לבקש אחר כך למחוק או להוסיף.</small>'
   +'<button type="button" class="yb yb1" data-a="send">שליחה למנהל</button>'
   +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
  function close(){w.remove();}
@@ -11067,9 +11087,16 @@ function adminReqSheet(){
   if(e.target===w)return close();
   var a=e.target.getAttribute&&e.target.getAttribute('data-a');
   if(a==='x')return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k!==null&&k!==undefined){
+   w.arKind=k;
+   [].forEach.call(w.querySelectorAll('.arPick .yb'),function(b){b.classList.toggle('on',b===e.target);});
+   return;
+  }
   if(a!=='send')return;
   var t=(document.getElementById('arText').value||'').trim();
   if(!t){toast('כתוב מה תרצה לשנות');return;}
+  if(w.arKind)t+=' (בתור '+w.arKind+')';
   e.target.disabled=true;
   sendText('בקשה ממנהל','בקשה ממנהל: '+t,'משימה').then(function(){
    markSent('text',t);close();toast('נשלח למנהל. התשובה תגיע בצ׳אט.');
