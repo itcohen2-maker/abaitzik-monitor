@@ -2110,6 +2110,7 @@ body.editing .bn{display:none}
 .c-sl{background:linear-gradient(160deg,#f472b6,#be185d)}
 .c-el{background:linear-gradient(160deg,#1f8f7d,#14675a)}
 .c-hs{background:linear-gradient(160deg,#ef8f00,#b26a00)}
+.c-rn{background:linear-gradient(160deg,#d81b60,#8e1046)}
 /* קבלות. Paper, not a brand colour: the page behind it is a ledger. */
 .c-kb{background:linear-gradient(160deg,#34d399,#047857)}
 .c-vd{background:linear-gradient(160deg,#fbbf24,#d97706)}
@@ -3610,6 +3611,13 @@ try{
   -->
   <a class="ic" href="#" id="icIly"><span class="c c-el" id="icIlyC">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 21c1.2-4 4-6 7.5-6s6.3 2 7.5 6"/></svg></span>איליי</a>
+  <!--
+    רינת. Itzik, 8.10, by voice: "תעשה אייקון של המוניטור של רינת, שיראה תמיד
+    אם הוא אדום או ירוק, ליד איליי". Same as Ilay's: only the colour of her
+    monitor's health check, painted by paintTenantsTile, nothing of hers.
+  -->
+  <a class="ic" href="#" id="icRn"><span class="c c-rn" id="icRnC">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.8 1.6-1.6 0-1.2-1-1.5-1-2.6 0-1 .8-1.6 1.8-1.6H17a4 4 0 0 0 4-4C21 6.6 17 3 12 3z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7" r="1"/></svg></span>רינת</a>
   <a class="ic" href="#" id="icHs"><span class="c c-hs" id="icHsC">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>הום סטייל</a>
   <!--
@@ -10039,6 +10047,9 @@ function paintTenantsTile(){
  var c=document.getElementById('icIlyC');
  var badIly=T.filter(function(t){return t.id==='ily'&&t.state!=='ok';});
  if(c)c.style.background=badIly.length?'linear-gradient(160deg,#ef5350,#b71c1c)':'linear-gradient(160deg,#66bb6a,#1b5e20)';
+ var rc=document.getElementById('icRnC');
+ var badRn=T.filter(function(t){return t.id==='rinat'&&t.state!=='ok'&&!t.paused;});
+ if(rc&&T.some(function(t){return t.id==='rinat';})){rc.style.background=badRn.length?'linear-gradient(160deg,#ef5350,#b71c1c)':'linear-gradient(160deg,#66bb6a,#1b5e20)';rc.classList.toggle('tdown',!!badRn.length);}
  var hc=document.getElementById('icHsC');
  var badHs=T.filter(function(t){return (t.id==='homestyle'||t.id==='roni')&&t.state!=='ok';});
  if(hc){hc.style.background=badHs.length?'linear-gradient(160deg,#ef5350,#b71c1c)':'linear-gradient(160deg,#66bb6a,#1b5e20)';hc.classList.toggle('tdown',!!badHs.length);}
@@ -10074,6 +10085,8 @@ on('gTenants',function(){pane('N3');renderTenants();});
 (function(){
  var a=document.getElementById('icIly');
  if(a)a.onclick=function(e){e.preventDefault();pane('N3');renderTenants();};
+ var r=document.getElementById('icRn');
+ if(r)r.onclick=function(e){e.preventDefault();pane('N3');renderTenants();};
  var h=document.getElementById('icHs');
  if(h)h.onclick=function(e){e.preventDefault();pane('N3');renderTenants();};
 })();
