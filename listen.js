@@ -270,7 +270,11 @@ function shapeOf(body) {
 function publishFallback(body, force) {
   const shape = shapeOf(body);
   if (!force && shape === lastShape) return;
-  if (Date.now() - lastFallbackAt < FALLBACK_MIN_GAP) return;
+  // 8.10: a recovery goes out at once. On 7.10 at 22:12 ntfy dropped for 16
+  // seconds, the down went out, and this gap held the up back for 13 minutes,
+  // so his page said disconnected long after it was listening again.
+  const recovered = /^up/.test(shape) && /^down/.test(lastShape || '');
+  if (!recovered && Date.now() - lastFallbackAt < FALLBACK_MIN_GAP) return;
   lastShape = shape;
   lastFallbackAt = Date.now();
   try {
