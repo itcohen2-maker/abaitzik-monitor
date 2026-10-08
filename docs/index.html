@@ -1789,7 +1789,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-08T11:44:45.097Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-08T11:45:20.232Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2754,6 +2754,32 @@ try{
     return { next: next, left: left, due: left <= 0 };
   }
 
+  var MOXY_HOURS = [0, 8, 16];
+  function moxySlots(nowMs) {
+    var first = new Date(2026, 9, 8, 18, 0, 0, 0).getTime();
+    var last = 0, next = first;
+    if (nowMs >= first) {
+      last = first;
+      var d = new Date(nowMs);
+      for (var back = 0; back < 2 && last === first; back++) {
+        var day = new Date(d.getFullYear(), d.getMonth(), d.getDate() - back);
+        for (var i = MOXY_HOURS.length - 1; i >= 0; i--) {
+          var t = new Date(day.getFullYear(), day.getMonth(), day.getDate(), MOXY_HOURS[i]).getTime();
+          if (t <= nowMs && t > first) { last = t; break; }
+        }
+      }
+      next = 0;
+      var base = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      for (var k = 0; k < 2 && !next; k++) {
+        for (var j = 0; j < MOXY_HOURS.length; j++) {
+          var u = new Date(base.getFullYear(), base.getMonth(), base.getDate() + k, MOXY_HOURS[j]).getTime();
+          if (u > nowMs && u > first) { next = u; break; }
+        }
+      }
+    }
+    return { last: last, next: next };
+  }
+
   function keyOf(m) {
     if (!m) return '';
     if (m.id) return String(m.id);
@@ -2867,6 +2893,7 @@ try{
     resolveTaken: resolveTaken,
     parsePillTime: parsePillTime,
     pillState: pillState,
+    moxySlots: moxySlots,
     keyOf: keyOf,
     rootKeyOf: rootKeyOf,
     splitThreads: splitThreads,
@@ -3146,7 +3173,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='c52c26713e';
+var CODE_ID='aa43b401e3';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
