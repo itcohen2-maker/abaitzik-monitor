@@ -25,11 +25,13 @@ test('the page declares the instance placeholder exactly once, as a string the b
 // 6.10: and the tile the shipments status line opens.
 // 8.10: and the owner's grammatical gender, so Rinat is addressed as a woman.
 // 8.10: and her guide tiles, an explanation each, nothing secret.
-test('the build hands the page only name, owner, title, screens, devices, greeting, home tile, gender and guides', () => {
+// 8.10: and the device marks Itzik approved after "שכחתי את הקוד", random and
+// meaningless on any other phone.
+test('the build hands the page only name, owner, title, screens, devices, greeting, home tile, gender, guides and unlocks', () => {
   const m = /const instanceJson = JSON\.stringify\(\{([^}]*)\}\)/.exec(src);
   assert.ok(m, 'instanceJson is built from an object literal');
   const fields = m[1].split(',').map(f => f.trim().split(':')[0].trim()).sort();
-  assert.deepEqual(fields, ['computer', 'gender', 'guides', 'homeTile', 'name', 'owner', 'pageTitle', 'phone', 'screens', 'welcome']);
+  assert.deepEqual(fields, ['computer', 'gender', 'guides', 'homeTile', 'name', 'owner', 'pageTitle', 'phone', 'screens', 'unlocks', 'welcome']);
   // Never the topics, never the mailbox: this line is outside the gate.
   assert.ok(!/instanceJson[^\n]*ntfy/.test(src));
 });
@@ -43,4 +45,13 @@ test('with screens null the filter returns before touching a single tile', () =>
 test("Itzik's instance keeps every tile", () => {
   const inst = require(path.join(ROOT, 'lib', 'instance.js')).load();
   assert.equal(inst.screens, null);
+});
+
+// 8.10, from the reviewer: a forgotten lock code had no way back. The button is
+// on the lock, it goes to Itzik as a request, and only an approved mark opens.
+test('the lock offers "שכחתי את הקוד" and opens only on an approved device mark', () => {
+  assert.ok(src.includes('id="lockForgot"'));
+  assert.ok(src.includes("(INSTANCE.unlocks||[]).indexOf(lockMark())>-1&&lockMark()"));
+  assert.ok(src.includes("'בקשה ממנהל: שכחתי את הקוד של הנעילה."));
+  assert.ok(/r\.status === 'approved'[\s\S]{0,120}מכשיר \(\[a-f0-9\]\{12\}\)/.test(src));
 });

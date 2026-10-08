@@ -4678,7 +4678,7 @@ function fileMsgName(name){
    var ln=t.split(NL).filter(function(l){return l.indexOf(short)>-1;})[0]||'';
    cap=ln.replace(new RegExp('(https?://|files/)[^ ]+','g'),' ');
   }
-  cap=cap.split(NL)[0].replace(/[:\s]+$/,'').replace(/^[\s:]+/,'').replace(/ +/g,' ').trim();
+  cap=cap.split(NL)[0].replace(/[:\\s]+$/,'').replace(/^[\\s:]+/,'').replace(/ +/g,' ').trim();
   if(cap.length<3||cap.length>60||cap.indexOf(short)>-1)return false;
   got=cap;return true;
  });
@@ -4789,7 +4789,7 @@ function fileView(name){
  document.body.appendChild(ov);
  var nm=ov.querySelector('.fv-nm');
  if(nm)nm.onclick=function(){
-  var v=(prompt('לקובץ הזה אין שם. איך לקרוא לו?','')||'').replace(/\s+/g,' ').trim().slice(0,60);
+  var v=(prompt('לקובץ הזה אין שם. איך לקרוא לו?','')||'').replace(/\\s+/g,' ').trim().slice(0,60);
   if(!v)return;
   var all=fileOwnNames();all[name]=v;
   try{localStorage.setItem('fileNames',JSON.stringify(all));}catch(e){}
