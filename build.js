@@ -2245,6 +2245,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .ycard>*{flex-shrink:0}
 .ycard b{font:700 16px Heebo,sans-serif}
 .ycard small{font-size:12px;opacity:.7;margin-bottom:4px}
+.capTxt{white-space:pre-wrap;user-select:text;-webkit-user-select:text;background:#f3f5f8;border-radius:12px;padding:12px;font:400 15px/1.55 Heebo,sans-serif;max-height:55vh;overflow:auto}
 .arEx{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:start}
 .arEx>div{display:flex;flex-direction:column;gap:5px}
 .arEx .gt{cursor:default;min-height:72px;pointer-events:none}
@@ -11258,16 +11259,16 @@ on('gYehuda',yehudaSheet);
 var NER_ITEMS=[
  {n:'15',t:'סטורי פרסומת, חמישי 8.10, עברית, קול אישה עם מוזיקה',r:'ner-27-thu-he-woman.mp4'},
  {n:'15',t:'כריכה לפיד (4:5)',u:'https://drive.google.com/file/d/1pHUYLKboO974OwoQe5IQOhOHUyeRY-Sj/view'},
- {n:'15',t:'תיאור לפוסט',u:'https://drive.google.com/file/d/1JjmQuvRHoOd4qYc7P2EFMLicDhnzUY7P/view'},
+ {n:'15',t:'תיאור לפוסט, להעתקה',c:['יום חמישי בשוק, פרחים וחלה, והשאלה של הערב: מתי מדליקים?','זמן הדלקת הנרות לכל עיר בעולם, במקום אחד.','לחיצה אחת על התראה, והטלפון מזכיר לפני ההדלקה.','candletimes.com','ומה אצלכם, מי בבית אחראי לזכור את השעה?','#הדלקתנרות #ערב_שבת #שבתשלום #זמניהדלקתנרות']},
  {n:'16',t:'סטורי פרסומת, חמישי 8.10, אנגלית, קול גבר, נרות ושולחן שבת',r:'ner-28-thu-en-man.mp4'},
  {n:'16',t:'כריכה לפיד (4:5)',u:'https://drive.google.com/file/d/1WJ4rnqtxgZ0cmQ41lH196UOuTRhJb4tP/view'},
- {n:'16',t:'תיאור לפוסט',u:'https://drive.google.com/file/d/1BCIAEcE2tzdt6gLKkJuD9-OYNta92s5Y/view'},
+ {n:'16',t:'תיאור לפוסט, להעתקה',c:['Shabbat candles, a set table, and one question: what time do we light tonight?','Accurate candle lighting times for any city in the world, free.','One tap on the bell and your phone reminds you before lighting.','candletimes.com','What is always on your Shabbat table?','#candlelighting #shabbatshalom #shabbateve #jewishlife']},
  {n:'17',t:'סטורי פרסומת, שישי 9.10, עברית, קול גבר עם מוזיקה',r:'ner-29-fri-he-man.mp4'},
  {n:'17',t:'כריכה לפיד (4:5)',u:'https://drive.google.com/file/d/12Xz259slLJQvo6rlA_knhWVDIukvXPCH/view'},
- {n:'17',t:'תיאור לפוסט',u:'https://drive.google.com/file/d/1OfJMMzW_y-bIAZPWe_MnvNrIeaar6P_z/view'},
+ {n:'17',t:'תיאור לפוסט, להעתקה',c:['שישי בצהריים, כל המשפחה מגיעה, והילדים שואלים באיזו שעה להגיע.','זמן הדלקת הנרות של היום, לכל עיר בעולם.','לוחצים על התראה, וכולם יודעים לפני ההדלקה.','candletimes.com','כמה אנשים יושבים אצלכם סביב השולחן הערב?','#הדלקתנרות #ערב_שבת #שבתשלום #ארוחתשישי']},
  {n:'18',t:'סטורי פרסומת, שישי 9.10, אנגלית, קול אישה עם מוזיקה',r:'ner-30-fri-en-woman.mp4'},
  {n:'18',t:'כריכה לפיד (4:5)',u:'https://drive.google.com/file/d/1AMrprIvYxMQDSVyNN24VmrCnsXRVMWx0/view'},
- {n:'18',t:'תיאור לפוסט',u:'https://drive.google.com/file/d/12XOpmF3jjn2vHH7rjoXLYSYJ_bn0NVW4/view'}
+ {n:'18',t:'תיאור לפוסט, להעתקה',c:['New apartment, new city, and Shabbat eve is today.','The candlesticks came out of the boxes first.','Lighting times for any city in the world, and one tap on the bell brings a reminder before lighting.','candletimes.com','What is the first thing you unpack in a new home?','#candlelighting #shabbatshalom #newhome #jewishlife']}
 ];
 function nerSheet(){
  var old=document.getElementById('nSheet');if(old)old.remove();
@@ -11291,6 +11292,7 @@ function nerSheet(){
   if(k===null||k===undefined)return;
   close();
   var it=NER_ITEMS[+k];if(k===''||!it)return;
+  if(it.c)return captionSheet(it);
   if(it.u)window.open(it.u,'_blank','noopener');
   else if(!fileView(it.r))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');
  };
@@ -11298,6 +11300,36 @@ function nerSheet(){
  document.body.appendChild(w);
 }
 on('gNerMkt',nerSheet);
+// 8.10 Itzik: copying the caption out of a Drive file is awkward on the phone.
+// The caption lives here, shown in full, with one button that copies all of it.
+function captionSheet(it){
+ var txt=it.c.join(String.fromCharCode(10));
+ var w=document.createElement('div');
+ w.id='capSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','תיאור לפוסט');
+ w.innerHTML='<div class="ycard">'
+  +'<b>'+esc(it.n)+' · תיאור לפוסט</b>'
+  +'<div class="capTxt" dir="auto">'+esc(txt)+'</div>'
+  +'<button type="button" class="yb yb1" data-c="copy">העתקה</button>'
+  +'<button type="button" class="yb yx" data-c="">חזרה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-c');
+  if(k===null||k===undefined)return;
+  if(k!=='copy'){close();return nerSheet();}
+  var b=e.target;
+  var done=function(){b.textContent='הועתק, אפשר להדביק';setTimeout(function(){b.textContent='העתקה';},2000);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+   navigator.clipboard.writeText(txt).then(done,function(){fallbackCopy(txt,done);});
+  }else fallbackCopy(txt,done);
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
 /*
   1.10. Finished reels, same numbered sheet as the candles. A new reel gets
   the next number and numbers never change.
