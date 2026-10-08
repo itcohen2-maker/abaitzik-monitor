@@ -1,6 +1,6 @@
 {
- "at": "2026-10-07T23:50:09.761Z",
- "up": 7200,
+ "at": "2026-10-08T00:50:09.760Z",
+ "up": 10800,
  "since": "2026-10-07T21:50:10.094Z",
  "last": "2026-10-07T22:19:47.744Z",
  "n": 15,
@@ -29,9 +29,9 @@
  "budget": {
   "ntfy": {
    "label": "ntfy",
-   "used": 14,
+   "used": 0,
    "cap": 150,
-   "left": 136,
+   "left": 150,
    "paid": false,
    "blockedUntil": "",
    "daily": false
@@ -47,9 +47,9 @@
   },
   "beat": {
    "label": "פעימה",
-   "used": 30,
+   "used": 0,
    "cap": 30,
-   "left": 0,
+   "left": 30,
    "paid": false,
    "blockedUntil": "",
    "daily": false
@@ -58,6 +58,6 @@
  "queued": 0,
  "pc": {
   "on": true,
-  "seen": "2026-10-07T23:49:47.215Z"
+  "seen": "2026-10-08T00:49:48.324Z"
  }
 }
