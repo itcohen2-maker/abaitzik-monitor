@@ -810,9 +810,14 @@ function build() {
   // 6.10: the page hides every home tile whose id is not in `screens`, and the
   // request-to-admin tile is added to the HTML but was never in that list, so it
   // was drawn and then hidden on every customer's page. It is appended here.
+  // 8.10: and the guide tiles, which are not in that list either.
+  const guides = tenantGuides(inst).map((g) => ({ key: g.key, title: g.title, text: g.text }));
+  const screens = Array.isArray(inst.screens) && inst.screens.length
+    ? inst.screens.filter((id) => id !== 'gAdminReq').concat(guides.map((g, i) => 'gGuide' + i), ['gAdminReq']) : inst.screens;
   const instanceJson = JSON.stringify({ name: inst.name, owner: inst.owner, pageTitle: inst.pageTitle,
-    screens: Array.isArray(inst.screens) && inst.screens.length && !inst.screens.includes('gAdminReq') ? inst.screens.concat(['gAdminReq']) : inst.screens,
-    computer: inst.computer, phone: inst.phone, welcome: inst.welcome, homeTile: inst.homeTile || '', gender: inst.gender || '' });
+    screens,
+    computer: inst.computer, phone: inst.phone, welcome: inst.welcome, homeTile: inst.homeTile || '', gender: inst.gender || '',
+    guides });
   const html = html0.replace('__CODE_ID__', codeId0).replace("'__INSTANCE__'", instanceJson);
 
   /*
@@ -938,12 +943,26 @@ const TENANT_TILES = {
 // catalog gave a phone only customer "connect the computer", a client follow up
 // and a content plan, some of them empty screens.
 const TENANT_DEFAULT = ['gTasks', 'gNotes'];
+/*
+  Itzik, 8.10, a recording: an explanation the customer has to see, behind a
+  tile of its own on her home screen that blinks until she opens it once.
+  instance.json carries them as guides: [{key, icon, title, sub, text}]; the
+  text is plain, one line per paragraph. They are not secret, since this list
+  sits in the clear part of the page.
+*/
+function tenantGuides(inst) {
+  return (Array.isArray(inst.guides) ? inst.guides : []).filter((g) => g && g.key && g.title && g.text);
+}
 function tenantTiles(inst) {
   const ids = (Array.isArray(inst.screens) && inst.screens.length ? inst.screens : TENANT_DEFAULT).filter((id) => id !== 'gAdminReq');
   // Itzik, 5.10: a customer does not change the system, he asks. The way to ask
   // is on every customer's home screen, whatever his intake chose.
   ids.push('gAdminReq');
-  return ids.filter((id) => TENANT_TILES[id]).map((id) => {
+  // esc() is defined far above; this part is also lifted alone by a test.
+  const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const guides = tenantGuides(inst).map((g, i) => '\n  <button type="button" class="gt g11" id="gGuide' + i + '"><b>'
+    + esc((g.icon ? g.icon + ' ' : '') + g.title) + '</b><small>' + esc(g.sub || 'הסבר קצר, פעם אחת') + '</small></button>').join('');
+  return guides + ids.filter((id) => TENANT_TILES[id]).map((id) => {
     const [cls, title, sub] = TENANT_TILES[id];
     return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
@@ -14094,6 +14113,26 @@ boot('welcome',function(){
   try{localStorage.setItem('welcomeSeen','1');}catch(e){}
   w.remove();
  };
+});
+// A guide tile blinks until she has opened it once on this device.
+boot('guides',function(){
+ (INSTANCE&&INSTANCE.guides||[]).forEach(function(g,i){
+  var t=document.getElementById('gGuide'+i);if(!t)return;
+  var k='guideSeen:'+g.key,seen=false;
+  try{seen=!!localStorage.getItem(k);}catch(e){}
+  if(!seen)t.classList.add('taskblink');
+  t.onclick=function(){
+   try{localStorage.setItem(k,'1');}catch(e){}
+   t.classList.remove('taskblink');
+   var w=document.createElement('div');
+   w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label',g.title);
+   w.innerHTML='<div class="ycard"><b>'+esc(g.title)+'</b>'
+    +String(g.text).split('\\n').filter(Boolean).map(function(l){return '<div style="font-size:16px;line-height:1.55">'+esc(l)+'</div>';}).join('')
+    +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+   w.onclick=function(e){if(e.target===w||(e.target.getAttribute&&e.target.getAttribute('data-a')==='x'))w.remove();};
+   document.body.appendChild(w);
+  };
+ });
 });
 boot('install',function(){
  if(INSTANCE&&INSTANCE.name==='abaitzik')return;

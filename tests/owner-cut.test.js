@@ -112,3 +112,11 @@ test('Itzik private links in the page script sit inside an ITZIK block', () => {
     assert.ok(!js.includes(s), s + ' would reach a customer page');
   }
 });
+
+// 8.10: a guide is a tile of its own, before the rest, and its text is escaped.
+test('a customer guide becomes a home tile of its own', () => {
+  const html = mod.tenantTiles({ screens: ['gTasks'], guides: [{ key: 'a', icon: '📦', title: 'קובץ <גדול>', text: 'x' }, { key: 'b' }] });
+  assert.ok(html.includes('id="gGuide0"') && !html.includes('id="gGuide1"'));
+  assert.ok(html.indexOf('id="gGuide0"') < html.indexOf('id="gTasks"'));
+  assert.ok(html.includes('קובץ &lt;גדול&gt;'));
+});
