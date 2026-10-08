@@ -15073,7 +15073,9 @@ function pruneOldFiles(src) {
   let named = '';
   try { named = fs.readFileSync(__filename, 'utf8'); } catch (e) { return; }
   for (const rel of walkFiles(src)) {
-    if (KEEP_FILE.test(rel) || named.includes("'" + rel + "'")) continue;
+    // 8.10: the recipe books were named in a button as data-r="...", in double
+    // quotes, so this missed them and they were deleted after three days.
+    if (KEEP_FILE.test(rel) || named.includes("'" + rel + "'") || named.includes('"' + rel + '"')) continue;
     const full = path.join(src, rel);
     if (fs.statSync(full).mtimeMs < cutoff) fs.unlinkSync(full);
   }
