@@ -897,7 +897,7 @@ test('the last two requests are cards he can read, and never invented', () => {
   assert.ok(!/<details class="(reqs|cdx) fold"[^>]*open/.test(html), 'neither may ship open');
   // Time, who is on it, the exact state, and what is still missing.
   assert.ok(html.includes("' · יצא ב'+esc(stamp(r.at))+' · '+esc(since(r.at))"));
-  assert.ok(html.includes('<small>מבצע: קלוד</small>'));
+  assert.ok(html.includes("<small>מבצע: '+AI+'</small>"));
   assert.ok(html.includes('<div class="rq-m">')); 
   // No requests makes no cards, and the rest are behind a button rather than
   // filling the home screen.
@@ -947,7 +947,8 @@ test('answers screen holds every source in one cluster', () => {
   // half of it. That was the third door: the chat tab held only his side.
   assert.ok(html.includes("var his=(D.chat||[]).filter(function(m){return m.from==='itzik'&&!answered[m.id];})"));
   assert.ok(html.includes(" return his.concat(mine).concat(cdx).concat(rps).sort("));
-  assert.ok(html.includes("function ansWho(m){var k=m&&m.src;return k==='codex'?'קודקס':k==='report'?'דוח':k==='itzik'?'אתה':'קלוד';}"));
+  assert.ok(html.includes("function ansWho(m){var k=m&&m.src;return k==='codex'?'קודקס':k==='report'?'דוח':k==='itzik'?'אתה':AI;}"));
+  assert.ok(html.includes("var AI=(INSTANCE&&INSTANCE.name&&INSTANCE.name!=='abaitzik')?'העוזר שלך':'קלוד';"));
   assert.ok(html.includes("'<span class=\"w\">'+ansWho(m)+' · '+esc(stamp(m.at))+mark+'</span>'"));
   // His own message is never unread to him, and offers no reply button.
   assert.ok(html.includes("function isFresh(m){if(m&&m.src==='itzik')return false;"));
@@ -1089,7 +1090,8 @@ test('sent is yellow, the answer is red, what he touched is green', () => {
   assert.ok(html.includes('.bub.touched{animation:none;border:2px solid var(--green)'));
   // And the line says when it went out, not only that it is waiting.
   assert.ok(html.includes("var sent=m.at?('נשלח ב'+esc(stamp(m.at))+'. '):'';"));
-  assert.ok(html.includes("'. ממתין לתשובה, '+esc(ago(m.at))+'.'+progressBar(m)+'</div>'"));
+  assert.ok(html.includes("'. ממתין לתשובה, '+esc(ago(m.at))+'.')+progressBar(m)+'</div>'"));
+  assert.ok(html.includes('.ack.ack-open .ack-tx{display:block}'));
 });
 
 // איציק, 20.9: מד התקדמות ליד כל בקשה שלו.
@@ -1234,7 +1236,8 @@ test('every row in what was received carries a manual delete button', () => {
   // The delete button travels with the copy button now, both in the same tail.
   assert.ok(body.includes("+tail(kind||'msg',m)+'</div>'"));
   assert.ok(body.includes("+tail('now',{at:N.at,text:N.text}"));
-  assert.ok(body.includes("return '<span class=\"gr-b\">'+cpBtn(cpText(m,extra))+del(kind,m)+'</span>';"));
+  assert.ok(body.includes("return '<span class=\"gr-b\">'+cpBtn(cpText(m,extra))+cx+del(kind,m)+'</span>';"));
+  assert.ok(body.includes('ביטול הבקשה'));
   assert.ok(body.includes("return row(c,w[0],w[1],'cmd');"));
   // Deleting is local to his phone and silent: no message, no notification.
   assert.ok(html.includes("localStorage.setItem('gotGone',JSON.stringify(a.slice(-2000)));"));

@@ -487,6 +487,33 @@ function recordIncoming(m) {
       try { publishChat(); } catch (e) { /* the next build carries it */ }
       return true;
     }
+    /*
+      8.10, from the reviewer: "ביטול הבקשה" in "מה התקבל". Hiding a row only
+      ever hid it on the phone; this closes the request itself, here and with no
+      model, so no session picks it up afterwards. The line says it was cancelled.
+    */
+    const cxM = codeOk && /^\s*req-cancel\s*(\S+)\s*(?:\n([^\n]*))?/.exec(text);
+    if (cxM) {
+      let hit = '';
+      try {
+        fs.readdirSync(CHAT).filter((f) => f.endsWith('.json')).some((f) => {
+          let d; try { d = JSON.parse(fs.readFileSync(path.join(CHAT, f), 'utf8')); } catch (e) { return false; }
+          if (!d || d.id !== cxM[1] || d.from !== 'itzik') return false;
+          if (d.status !== 'done') {
+            d.status = 'done'; d.cancelled = true; d.cancelledAt = at.toISOString();
+            fs.writeFileSync(path.join(CHAT, f), JSON.stringify(d, null, 1), 'utf8');
+          }
+          hit = String(d.text || '').replace(/\s+/g, ' ').slice(0, 80);
+          return true;
+        });
+      } catch (e) { say('!! ביטול לא נרשם: ' + e.message); }
+      rec.text = hit ? '✖ ביטלתי את הבקשה: ' + hit : 'הבקשה לביטול לא נמצאה (' + cxM[1] + ')';
+      rec.status = 'done';
+      say(hit ? 'בקשה בוטלה: ' + cxM[1] : '!! בקשה לביטול לא נמצאה: ' + cxM[1]);
+      try { fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8'); } catch (e) { /* the line is already there */ }
+      try { publishChat(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
     // 8.10: "↩ להחזיר" on a mark made by mistake, the same way back.
     const undoM = codeOk && inst.shipmentsDir && /^\s*ship-undo\s*([^\n]+?)\s*\n\s*([A-Z_]{2,20})\s*$/.exec(text);
     if (undoM) {

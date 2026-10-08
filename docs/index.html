@@ -584,6 +584,17 @@ section{margin-bottom:30px}
 .repreply{padding:0 14px 14px;border-top:1px solid var(--line);margin-top:2px}
 .repreply .rrow{margin-top:12px}
 .hint{font-size:13px;color:var(--dim);font-weight:300;margin-top:14px;line-height:1.6}
+.hq{width:24px;height:24px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--dim);
+ font-size:14px;font-weight:700;vertical-align:middle;margin-inline-start:6px;padding:0;cursor:pointer}
+.hq.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.hq-t{margin:0 0 12px}
+.hint1{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink);background:var(--sunk);
+ border-radius:10px;padding:8px 12px;margin:0 0 12px}
+.hint1[hidden]{display:none}
+.hint1x{margin-inline-start:auto;background:transparent;border:0;color:var(--dim);font-size:15px;padding:2px 6px;cursor:pointer}
+.gr-cx{flex:0 0 auto;background:transparent;color:#b3261e;border:1px solid #e3b4b0;border-radius:8px;padding:4px 9px;font-size:12px;cursor:pointer}
+.gr-cx.sure{background:#b3261e;color:#fff;border-color:#b3261e}
+.gr-s.gr-c{background:var(--sunk);color:var(--dim)}
 #msgForm,#mailForm{display:flex;flex-direction:column;gap:10px}
 #mailText{width:100%;min-height:64px;resize:vertical;background:var(--surface);
  color:var(--ink);border:1px solid var(--line);border-radius:11px;padding:12px 14px;
@@ -1775,7 +1786,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-08T04:57:38.393Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-08T04:59:01.986Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2348,19 +2359,20 @@ try{
 </section>
 
 <section id="pB" hidden>
- <h2>מה התקבל</h2>
+ <h2>מה התקבל <button type="button" class="hq" data-q="gotHelp" aria-label="הסבר על המסך">?</button></h2>
+ <div class="hint1" data-tip="gotTip" hidden>כאן כל מה ששלחת, לפי מצב. בקשה שלא צריך יותר מבטלים בכפתור שלידה.<button type="button" class="hint1x" aria-label="סגירה">✕</button></div>
+ <div class="hint hq-t" id="gotHelp" hidden>כל מה ששלחת לי, לפי מצב: מה בעבודה עכשיו, מה התקבל ועוד לא התחיל, המשימות הפתוחות, ומה שבוצע. חדש למעלה. ביטול הבקשה עוצר אותה באמת והיא עוברת לבוצע עם הסימן בוטל. הסתרה ליד כל שורה, והסתר הכל למעלה, רק מורידות מהמסך שלך והעבודה ממשיכה. בסוף הדף אפשר להחזיר הכל.</div>
  <div class="gotlist" id="gotBox"></div>
- <div class="hint">כל מה ששלחת לי, לפי מצב: מה בעבודה עכשיו, מה התקבל ועוד לא התחיל, המשימות הפתוחות, ומה שבוצע. חדש למעלה. ליד כל שורה יש מחיקה, ולמעלה נקה הכל. שתיהן מורידות מהמסך שלך בלבד, ובסוף הדף אפשר להחזיר הכל.</div>
 </section>
 
 <section id="pA" hidden>
- <h2>תשובות</h2>
+ <h2>תשובות <button type="button" class="hq" data-q="ansHelp" aria-label="הסבר על המסך">?</button></h2>
+ <div class="hint hq-t" id="ansHelp" hidden>הכל כאן, לפי זמן: מה ששלחת, מה שעניתי, והדוחות המלאים. כלום לא נעלם מכאן. כל תשובה נכנסת באדום, נגיעה בה הופכת אותה לירוקה, ואפשר להעביר אותה לכתום בהמתנה או לצהוב.</div>
  <div class="atip" id="aTip" hidden><b>כל תשובה חדשה מגיעה באדום.</b> נגיעה בה הופכת אותה לירוקה, וכך רואים מה כבר קראת. מה שנשאר אדום עוד מחכה לך.<button type="button" class="ab" id="aTipOk">הבנתי</button></div>
  <div class="achips" id="aChips"></div>
  <div class="alegend"><span><i class="l1"></i>לא נקרא</span><span><i class="l2"></i>קראתי</span><span><i class="l3"></i>בהמתנה</span><span><i class="l4"></i>מסומן</span></div>
  <input type="search" id="aSearch" class="asearch" autocomplete="off" placeholder="חיפוש בתוך התשובות">
  <div id="ansBox"></div>
- <div class="hint">הכל כאן, לפי זמן: מה ששלחת, מה שעניתי, והדוחות המלאים. כלום לא נעלם מכאן. כל תשובה נכנסת באדום, נגיעה בה הופכת אותה לירוקה, ואפשר להעביר אותה לכתום בהמתנה או לצהוב.</div>
 </section>
 
 
@@ -3087,7 +3099,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='74b9423c54';
+var CODE_ID='2ee6d69012';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -3556,6 +3568,19 @@ function ackLine(m,noNote){
 }
 function ackTx(h){return '<span class="ack-tx">'+h+'</span>';}
 document.addEventListener('click',function(e){
+ var q=e.target&&e.target.closest&&e.target.closest('.hq');
+ if(q){var t=document.getElementById(q.getAttribute('data-q'));if(t){t.hidden=!t.hidden;q.classList.toggle('on',!t.hidden);}return;}
+ var x=e.target&&e.target.closest&&e.target.closest('.hint1x');
+ if(x){var l=x.parentNode;l.hidden=true;try{localStorage.setItem(l.getAttribute('data-tip'),'x');}catch(er){}}
+});
+function paintTips(){
+ Array.prototype.forEach.call(document.querySelectorAll('.hint1[data-tip]'),function(l){
+  var k=l.getAttribute('data-tip'),v='';
+  try{v=localStorage.getItem(k)||'';if(!v){v=String(Date.now());localStorage.setItem(k,v);}}catch(e){}
+  l.hidden=v==='x'||(Date.now()-Number(v)>3*86400000);
+ });
+}
+document.addEventListener('click',function(e){
  var b=e.target&&e.target.closest&&e.target.closest('.ack .prg');
  if(!b||e.target.closest('a'))return;
  b.parentNode.classList.toggle('ack-open');
@@ -3933,7 +3958,7 @@ function quoteOf(m){
 }
 var aim=null;
 function aimQuote(m){
- var t=String(m&&m.text||'').replace(/s+/g,' ').trim().slice(0,60);
+ var t=String(m&&m.text||'').replace(/\s+/g,' ').trim().slice(0,60);
  return 'תשובה למה שכתבת לי ב' + stamp(m&&m.at) + ': "' + t + '"';
 }
 function lastAnswer(){
@@ -3962,7 +3987,7 @@ function paintAim(){
  bar.hidden=!aim;
  if(aim){
   var t=document.getElementById('aimTxt');
-  var head=String(aim.text||'').replace(/s+/g,' ').trim().slice(0,40);
+  var head=String(aim.text||'').replace(/\s+/g,' ').trim().slice(0,40);
   if(t)t.innerHTML='<b>המיקרופון מכוון ל</b> '+esc(stamp(aim.at))+' · '+esc(head);
  }
  var k=aim?claudeKey(aim):'';
@@ -5534,9 +5559,18 @@ function gotNumbers(){
  var map={};L.forEach(function(m,i){map[gotKey('msg',m)]=i+1;});
  return map;
 }
+function cancelIds(){return idList('reqCancelled');}
+function isCancelled(m){return !!(m&&(m.cancelled||(m.id&&cancelIds().indexOf(m.id)>-1)));}
+function sendCancel(m){
+ var a=cancelIds();if(a.indexOf(m.id)<0)a.push(m.id);
+ try{localStorage.setItem('reqCancelled',JSON.stringify(a.slice(-500)));}catch(e){}
+ sendOrHold('ביטול בקשה',m.id+String.fromCharCode(10)+String(m.text||'').slice(0,80).split(String.fromCharCode(10)).join(' '),'req-cancel')
+  .then(function(r){toast(r==='held'?HELD_SAY:'הבקשה בוטלה. היא לא תטופל.');});
+}
 function renderGot(){
  var host=document.getElementById('gotBox');
  if(!host)return;
+ paintTips();
  var all=dropGone('msg',gotList());
  var NUM=gotNumbers();
  var work=all.filter(function(m){return m.status==='working';});
@@ -5547,7 +5581,7 @@ function renderGot(){
  var nGone=N&&N.text&&isGone(gotKey('now',{at:N.at,text:N.text}),N);
  function del(kind,x){
   return '<button type="button" class="gr-del" data-k="'+esc(gotKey(kind,x))+'" '
-   +'aria-label="מחיקת השורה">מחיקה</button>';
+   +'aria-label="הסתרת השורה מהמסך">הסתרה</button>';
  }
  function cpBtn(txt){
   return '<button type="button" class="gr-cp" data-copy="'+esc(txt)+'" '
@@ -5562,7 +5596,9 @@ function renderGot(){
   return stamp(m.at)+NL+t+(extra?NL+extra:'');
  }
  function tail(kind,m,extra){
-  return '<span class="gr-b">'+cpBtn(cpText(m,extra))+del(kind,m)+'</span>';
+  var cx=(kind==='msg'&&m.id&&m.status!=='done'&&!isCancelled(m))
+   ?'<button type="button" class="gr-cx" data-id="'+esc(m.id)+'">ביטול הבקשה</button>':'';
+  return '<span class="gr-b">'+cpBtn(cpText(m,extra))+cx+del(kind,m)+'</span>';
  }
  function row(m,k,label,kind){
   var bar=(kind&&kind!=='msg')?'':progressBar(m);
@@ -5572,7 +5608,7 @@ function renderGot(){
    +(no?'<span class="gr-n">#'+no+'</span>':'')
    +'<span class="gr-t">'+esc(stamp(m.at))+'</span>'
    +'<div class="gr-x">'+linkify(m.text||'')+bar+'</div>'
-   +'<span class="gr-s gr-'+k+'">'+label+'</span>'
+   +(isCancelled(m)?'<span class="gr-s gr-c">בוטל</span>':'<span class="gr-s gr-'+k+'">'+label+'</span>')
    +tail(kind||'msg',m)+'</div>';
  }
  var h='';
@@ -5581,12 +5617,12 @@ function renderGot(){
   +(un===1?'תשובה אחת שלא קראת':un+' תשובות שלא קראת')
   +'<small>זה המסך של ההודעות ששלחת לי. התשובות שלי נמצאות כאן, בלחיצה.</small></button>';
  var nShown=all.length+K.length+(N&&N.text&&!nGone?1:0);
- if(nShown)h+='<button type="button" class="gclear" id="gotClear">נקה הכל · '+nShown
-  +'<small>מוריד את כל השורות מהמסך הזה. מה שתשלח מעכשיו יופיע כרגיל, ואפשר להחזיר הכל בסוף הדף.</small></button>';
+ if(nShown)h+='<button type="button" class="gclear" id="gotClear">הסתר הכל · '+nShown
+  +'<small>מסתיר את כל השורות מהמסך הזה בלבד, בלי לבטל כלום. מה שתשלח מעכשיו יופיע כרגיל, ואפשר להחזיר הכל בסוף הדף.</small></button>';
  var nSel=Object.keys(gotSel).length;
  if(nShown)h+='<div class="gselbar"><button type="button" id="gotSelAll">'+(nSel?'ביטול הסימון':'סימון הכל')+'</button>'
   +'<span>'+(nSel?nSel+' מסומנות':'לחיצה על שורה מסמנת אותה')+'</span>'
-  +'<button type="button" id="gotSelDel" class="gseldel"'+(nSel?'':' disabled')+'>מחיקת המסומנות'+(nSel?' · '+nSel:'')+'</button></div>';
+  +'<button type="button" id="gotSelDel" class="gseldel"'+(nSel?'':' disabled')+'>הסתרת המסומנות'+(nSel?' · '+nSel:'')+'</button></div>';
  var P=gotPending();
  if(P.length){
   h+='<h3>נשלח עכשיו, בדרך אליי · '+P.length+'</h3>';
@@ -5615,9 +5651,9 @@ function renderGot(){
  h+=done.slice(0,gotShow).map(function(m){return row(m,'d','בוצע');}).join('');
  if(done.length>gotShow)h+='<button type="button" class="ab" id="gotMore" style="width:100%;padding:14px">להציג עוד ('+(done.length-gotShow)+')</button>';
  var gn=goneKeys().length;
- if(gotCut())h+='<div class="gback">המסך נוקה ב '+esc(stamp(new Date(gotCut()).toISOString()))+'. '
+ if(gotCut())h+='<div class="gback">המסך הוסתר ב '+esc(stamp(new Date(gotCut()).toISOString()))+'. '
   +'<button type="button" id="gotBack">להחזיר הכל</button></div>';
- else if(gn)h+='<div class="gback">נמחקו מהמסך הזה '+gn+' שורות. '
+ else if(gn)h+='<div class="gback">הוסתרו מהמסך הזה '+gn+' שורות. '
   +'<button type="button" id="gotBack">להחזיר הכל</button></div>';
  host.innerHTML=h;
  var ja=document.getElementById('gotToAns');
@@ -5630,7 +5666,7 @@ function renderGot(){
  if(gc)gc.onclick=function(){
   saveCut(Date.now());saveGone([]);
   renderGot();paintGot();
-  toast('המסך נוקה. אפשר להחזיר בסוף הדף.');
+  toast('השורות הוסתרו. אפשר להחזיר בסוף הדף.');
  };
  Array.prototype.forEach.call(host.querySelectorAll('.gr[data-sk]'),function(r){
   r.addEventListener('click',function(e){
@@ -5652,7 +5688,7 @@ function renderGot(){
   var g=goneKeys();ks.forEach(function(k){if(g.indexOf(k)<0)g.push(k);});
   saveGone(g);gotSel={};
   renderGot();paintGot();
-  toast('נמחקו '+ks.length+' שורות. אפשר להחזיר בסוף הדף.');
+  toast('הוסתרו '+ks.length+' שורות. אפשר להחזיר בסוף הדף.');
  };
  Array.prototype.forEach.call(host.querySelectorAll('.gr-cp'),function(b){
   b.onclick=function(e){e.stopPropagation();ansCopy(b,b.getAttribute('data-copy')||'');};
@@ -5664,7 +5700,17 @@ function renderGot(){
    if(g.indexOf(k)<0)g.push(k);
    saveGone(g);
    renderGot();paintGot();
-   toast('נמחק מהמסך. אפשר להחזיר בסוף הדף.');
+   toast('הוסתר מהמסך, העבודה ממשיכה. אפשר להחזיר בסוף הדף.');
+  };
+ });
+ Array.prototype.forEach.call(host.querySelectorAll('.gr-cx'),function(b){
+  b.onclick=function(e){
+   e.stopPropagation();
+   if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent='לבטל באמת?';
+    setTimeout(function(){b.classList.remove('sure');b.textContent='ביטול הבקשה';},4000);return;}
+   var id=b.getAttribute('data-id');
+   var m=(D.chat||[]).filter(function(x){return x.id===id;})[0]||{id:id};
+   sendCancel(m);renderGot();
   };
  });
 }
@@ -6594,13 +6640,13 @@ function renderFiles(){
  box.innerHTML=h;
 }
 function fileWork(n){
- var b=String(n).split('/').pop().replace(/.[a-z0-9]{1,5}$/i,'').toLowerCase();
- return b.replace(/([-_ ,.]*(v|ver|version|גרסה|טיוטה|draft|final|סופי)[-_ ]*d*)+$/i,'').replace(/[-_ ]+$/,'')||b;
+ var b=String(n).split('/').pop().replace(/\.[a-z0-9]{1,5}$/i,'').toLowerCase();
+ return b.replace(/([-_ ,.]+((v|ver|version|גרסה)[-_ ]*\d+|(טיוטה|draft)[-_ ]*\d*|final|סופי))+$/i,'').replace(/[-_ ]+$/,'')||b;
 }
 function fileVer(n){
- var b=String(n).split('/').pop().replace(/.[a-z0-9]{1,5}$/i,'');
+ var b=String(n).split('/').pop().replace(/\.[a-z0-9]{1,5}$/i,'');
  if(/(final|סופי)[-_ ]*$/i.test(b))return 999;
- var m=b.match(/(?:v|ver|version|גרסה|טיוטה|draft)[-_ ]*(d+)[-_ ]*$/i);
+ var m=b.match(/(?:v|ver|version|גרסה|טיוטה|draft)[-_ ]*(\d+)[-_ ]*$/i);
  return m?+m[1]:1;
 }
 on('gFiles',function(){pane('Fi');renderFiles();});
@@ -7891,10 +7937,17 @@ var SHIP_MAIL={
  NO_SHO:function(a){return ['מספר תיק עמילות, הזמנה '+a.po,'בקשה למספר תיק עמילות, הזמנה '+a.po+(a.container?', מכולה '+a.container:'')+(a.eta?', ETA '+shipDate(a.eta):'')+'.'];},
  ETA_PASSED:function(a){return ['סטטוס הזמנה '+a.po,'מה הסטטוס של הזמנה '+a.po+(a.container?', מכולה '+a.container:'')+'? תאריך ההגעה '+shipDate(a.eta)+' עבר.'];}
 };
+function shipMailWho(a){return /^(NO_SHO|ETA_PASSED)$/.test(a.code)?'SHO':String(a.supplier||'').trim().toUpperCase();}
+function shipMailWhoName(a){return shipMailWho(a)==='SHO'?'העמיל (SHO)':String(a.supplier||'הספק');}
+function shipMailBook(){try{var o=JSON.parse(localStorage.getItem('shipMailTo')||'{}');return o&&typeof o==='object'?o:{};}catch(e){return {};}}
+function shipMailAddr(a){
+ var k=shipMailWho(a);
+ return ((D.ship&&D.ship.mailTo)||{})[k]||shipMailBook()[k]||'';
+}
 function shipMailHref(a){
  var m=SHIP_MAIL[a.code];if(!m)return '';
  var t=m(a);
- return 'mailto:?subject='+encodeURIComponent(t[0])+'&body='+encodeURIComponent(t[1]);
+ return 'mailto:'+encodeURIComponent(shipMailAddr(a)).replace(/%40/g,'@')+'?subject='+encodeURIComponent(t[0])+'&body='+encodeURIComponent(t[1]);
 }
 function shipHidden(){
  try{var o=JSON.parse(localStorage.getItem('shipDone')||'{}');return o&&typeof o==='object'?o:{};}catch(e){return {};}
@@ -7954,7 +8007,7 @@ on('gToday',function(){
     return '<div class="srow" data-k="'+esc(a.id+'|'+a.code)+'">'+shipTag(a.level)+'<b>'+esc(a.po)+' · '+esc(a.supplier)+'</b>'
      +'<br>'+esc(a.product||'')+'<br>'+esc(a.text)+'<br><small>'+esc(a.action)
      +(a.etd?' · יציאה '+shipDate(a.etd):'')+(a.eta?' · הגעה '+shipDate(a.eta):'')+(a.container?' · מכולה '+esc(a.container):'')+'</small>'
-     +'<div class="sact">'+(mail?'<a href="'+esc(mail)+'">✉️ מייל מוכן</a>':'')
+     +'<div class="sact">'+(mail?'<a href="'+esc(mail)+'" data-mail="'+i+'">✉️ מייל מוכן'+(shipMailAddr(a)?'':' (בלי כתובת)')+'</a>':'')
      +'<button type="button" data-done="'+i+'">✔ טיפלתי</button></div></div>';
    }).join('')||'<small>'+(q?'לא נמצא.':'אין היום משהו שמחכה לך. הכל בזמן.')+'</small>';
    list._rows=L;
@@ -7962,6 +8015,20 @@ on('gToday',function(){
   draw();
   w.querySelector('#todayQ').addEventListener('input',function(e){q=e.target.value.trim().toLowerCase();draw();});
   list.addEventListener('click',function(e){
+   var ml=e.target.closest&&e.target.closest('[data-mail]');
+   if(ml){
+    var am=(list._rows||[])[+ml.getAttribute('data-mail')];
+    if(!am||shipMailAddr(am))return;
+    var got=prompt('מה כתובת המייל של '+shipMailWhoName(am)+'? פעם אחת, והטלפון יזכור אותה. ריק פותח את המייל בלי כתובת.','');
+    got=String(got||'').trim();
+    if(got&&/^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(got)){
+     var bk=shipMailBook();bk[shipMailWho(am)]=got;
+     try{localStorage.setItem('shipMailTo',JSON.stringify(bk));}catch(e3){}
+     ml.setAttribute('href',shipMailHref(am));
+     setTimeout(draw,500);
+    }else if(got){e.preventDefault();toast(FEM?'זו לא נראית כתובת מייל. נסי שוב.':'זו לא נראית כתובת מייל. תנסה שוב.');}
+    return;
+   }
    var b=e.target.closest&&e.target.closest('[data-done]');if(!b)return;
    var a=(list._rows||[])[+b.getAttribute('data-done')];if(!a)return;
    if(!confirm('לסמן טיפלתי? '+a.po+'. ההתראה תחזור אם לא יתעדכן תוך שבוע.'))return;
@@ -7987,11 +8054,20 @@ on('gShip',function(){
   var h=shipCounts(S.summary)
    +'<input id="shipQ" class="shipq" type="search" placeholder="חיפוש: הזמנה, ספק, מוצר או מכולה" autocomplete="off">'
    +'<button type="button" class="yb yb4" id="shipAll">הצג גם הזמנות שכבר במלאי</button>'
+   +'<div style="display:flex;gap:8px;margin:6px 0"><select id="shipSup" class="shipq" style="flex:1"></select><select id="shipMon" class="shipq" style="flex:1"></select></div>'
    +'<div id="shipList"></div>'
    +'<button type="button" class="yb yb1" id="shipXls">📥 האקסל של היום</button>';
   shipOpen('shipTable','📦 משלוחים',h,function(w){
-   var all=false,q='';
+   var all=false,q='',sup='',mon='',max=150;
    var list=w.querySelector('#shipList');
+   var MON=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+   function monOf(r){return String(r.eta||'').slice(0,7);}
+   function fillFilters(){
+    var open=rows.filter(function(r){return all||!closedRe.test(r.status||'');});
+    var ss={},ms={};open.forEach(function(r){if(r.supplier)ss[r.supplier]=(ss[r.supplier]||0)+1;var m=monOf(r);if(m)ms[m]=(ms[m]||0)+1;});
+    w.querySelector('#shipSup').innerHTML='<option value="">כל הספקים</option>'+Object.keys(ss).sort().map(function(k){return '<option value="'+esc(k)+'"'+(k===sup?' selected':'')+'>'+esc(k)+' ('+ss[k]+')</option>';}).join('');
+    w.querySelector('#shipMon').innerHTML='<option value="">כל חודשי ההגעה</option>'+Object.keys(ms).sort().map(function(k){return '<option value="'+k+'"'+(k===mon?' selected':'')+'>הגעה ב'+MON[+k.slice(5,7)-1]+' '+k.slice(0,4)+' ('+ms[k]+')</option>';}).join('');
+   }
    function worst(r){
     var al=byId[r.id]||[],best='';
     al.forEach(function(a){if(best===''||SHIP_RANK[a.level]<SHIP_RANK[best])best=a.level;});
@@ -8013,24 +8089,30 @@ on('gShip',function(){
    function draw(){
     var L=rows.filter(function(r){
      if(!all&&closedRe.test(r.status||''))return false;
+     if(sup&&r.supplier!==sup)return false;
+     if(mon&&monOf(r)!==mon)return false;
      if(!q)return true;
      return (r.po+' '+r.supplier+' '+r.product+' '+(r.container||'')).toLowerCase().indexOf(q)>-1;
     });
     function rk(r){var l=worst(r);return l===''?3:SHIP_RANK[l];}
     L.sort(function(a,b){return (rk(a)-rk(b))||(a.eta||a.etd||'9999').localeCompare(b.eta||b.etd||'9999');});
-    var n=L.length;L=L.slice(0,150);
+    var n=L.length;L=L.slice(0,max);
     list.innerHTML=L.map(function(r){
      var lv=worst(r);
      return '<div class="srow" data-id="'+esc(r.id)+'">'+(lv?shipTag(lv):'')+'<b>'+esc(r.po)+' · '+esc(r.supplier)+'</b>'
       +'<br>'+esc(r.product)+'<br><small>'+esc(r.status||'ללא סטטוס')+' · יציאה '+shipDate(r.etd)+' · הגעה '+shipDate(r.eta)+'</small>'
       +'<br><small class="smore" style="color:#2563eb">לפרטים ▾</small>'
       +'<div class="sdet" hidden>'+detail(r)+'</div></div>';
-    }).join('')+(n>150?'<small>מוצגות 150 מתוך '+n+'. צמצם בחיפוש.</small>':'')+(n?'':'<small>לא נמצאה הזמנה.</small>');
+    }).join('')+(n>max?'<button type="button" class="yb yb4" id="shipMore">להציג עוד ('+(n-max)+' נוספות)</button>':'')+(n?'':'<small>לא נמצאה הזמנה.</small>');
    }
+   fillFilters();
    draw();
-   w.querySelector('#shipQ').addEventListener('input',function(e){q=e.target.value.trim().toLowerCase();draw();});
-   w.querySelector('#shipAll').addEventListener('click',function(e){all=!all;e.target.textContent=all?'להסתיר הזמנות שכבר במלאי':'הצג גם הזמנות שכבר במלאי';draw();});
+   w.querySelector('#shipSup').addEventListener('change',function(e){sup=e.target.value;max=150;draw();});
+   w.querySelector('#shipMon').addEventListener('change',function(e){mon=e.target.value;max=150;draw();});
+   w.querySelector('#shipQ').addEventListener('input',function(e){q=e.target.value.trim().toLowerCase();max=150;draw();});
+   w.querySelector('#shipAll').addEventListener('click',function(e){all=!all;e.target.textContent=all?'להסתיר הזמנות שכבר במלאי':'הצג גם הזמנות שכבר במלאי';fillFilters();draw();});
    list.addEventListener('click',function(e){
+    if(e.target.id==='shipMore'){max+=150;draw();return;}
     var row=e.target.closest&&e.target.closest('.srow');if(!row)return;
     var d=row.querySelector('.sdet');if(d)d.hidden=!d.hidden;
     var m=row.querySelector('.smore');if(m&&d)m.textContent=d.hidden?'לפרטים ▾':'סגירה ▴';
