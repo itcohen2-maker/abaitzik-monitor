@@ -934,7 +934,7 @@ const TENANT_TILES = {
   gTasks: ['g17', '✅ משימות', 'מה לעשות, לפי יום'],
   gNotes: ['g10', '📝 פתקים', 'נכתב, נשמר, לא הולך לאיבוד'],
   gVoices: ['g4', '🎙️ הקלטות שלא תומללו', 'מה שלא הצלחתי לקרוא'],
-  gAdminReq: ['g3', '📨 בקשה ממנהל', 'לשנות משהו במוניטור? המנהל מאשר'],
+  gAdminReq: ['g3', '📨 בקשה מבונה המוניטור', 'לשנות משהו במוניטור? בונה המוניטור מאשר'],
   // 6.10, Home Style: shipments. Drawn only for an instance that lists them.
   gShip: ['g16', '📦 משלוחים', 'כל ההזמנות הפתוחות, לפי דחיפות'],
   gAlerts: ['g3', '🔔 דורש טיפול', 'מה שלא יכול לחכות'],
@@ -1550,6 +1550,11 @@ section{margin-bottom:30px}
 .ack{margin-top:8px;padding:7px 10px;border-radius:10px;font-size:13px;line-height:1.45;
  background:var(--sunk);color:var(--dim);border-inline-start:3px solid var(--line)}
 .ack-n{display:block;margin-top:4px;color:var(--ink);opacity:.85}
+.ack-tx{display:none}
+.ack.ack-open .ack-tx{display:block}
+.ack .prg{cursor:pointer;margin-top:0}
+.ack.ack-open .prg{margin-top:7px}
+.ack .pulse{float:inline-start;margin-top:7px}
 /*
   התמלול של הקלטה, בתוך ההודעה עצמה.
 
@@ -4808,6 +4813,9 @@ var INSTANCE='__INSTANCE__';
 // what it always said; another copy says its own owner's name.
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
+// Itzik, 8.10: a customer never met Claude, so on his page the other side is
+// just "העוזר שלך". His own page keeps the name he uses.
+var AI=(INSTANCE&&INSTANCE.name&&INSTANCE.name!=='abaitzik')?'העוזר שלך':'קלוד';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
@@ -5443,11 +5451,14 @@ function progressBar(m){
 }
 function ackLine(m,noNote){
  if(m.from!=='itzik')return '';
- if(m.pend)return '<div class="ack ack-wait">נשלח עכשיו. ממתין לתשובה.'+progressBar(m)+'</div>';
+ // Itzik, 8.10, from the reviewer: the full sentence under every message
+ // doubled its height and said what the bar already says. Now only the bar
+ // shows; the times sit behind it and open when the bar is tapped.
+ if(m.pend)return '<div class="ack ack-wait">'+ackTx('נשלח עכשיו. ממתין לתשובה.')+progressBar(m)+'</div>';
  var st=m.status,when=m.ackAt||'';
  if(!st){
-  return '<div class="ack ack-wait">נשלח ב'+esc(stamp(m.at))
-   +'. ממתין לתשובה, '+esc(ago(m.at))+'.'+progressBar(m)+'</div>';
+  return '<div class="ack ack-wait">'+ackTx('נשלח ב'+esc(stamp(m.at))
+   +'. ממתין לתשובה, '+esc(ago(m.at))+'.')+progressBar(m)+'</div>';
  }
  var sent=m.at?('נשלח ב'+esc(stamp(m.at))+'. '):'';
  var head=when?(sent+'קיבלתי את זה ב'+esc(stamp(when))):(sent+'קיבלתי את זה');
@@ -5460,8 +5471,14 @@ function ackLine(m,noNote){
  // הפעימה איטית בכוונה, אחרי שנדחה ההבהוב החד, ומכובה לגמרי למי שביקש
  // פחות תנועה במערכת.
  var dot=(st==='working'||st==='partial')?'<i class="pulse"></i>':'';
- return '<div class="ack ack-'+esc(st)+'">'+dot+head+' '+tail+note+progressBar(m)+'</div>';
+ return '<div class="ack ack-'+esc(st)+'">'+dot+ackTx(head+' '+tail)+note+progressBar(m)+'</div>';
 }
+function ackTx(h){return '<span class="ack-tx">'+h+'</span>';}
+document.addEventListener('click',function(e){
+ var b=e.target&&e.target.closest&&e.target.closest('.ack .prg');
+ if(!b||e.target.closest('a'))return;
+ b.parentNode.classList.toggle('ack-open');
+});
 // A pending copy is dropped once any message of his lands at or after it: I
 // rewrite what he said (a recording becomes its transcript), so matching on the
 // text itself left the same message showing twice.
@@ -5594,12 +5611,12 @@ function bubbleHtml(m,i,fresh,handled){
  var live=isLive(m);
  var vb=voiceBlock(m),vtx=vb?transcriptOf(m):'';
  // מה שמועתק מהודעה קולית הוא המילים, לא שם הקובץ.
- var line=(mine?OWNER:'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'')
+ var line=(mine?OWNER:AI)+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'')
   +(vtx?String.fromCharCode(10)+'תמלול: '+vtx:'');
  return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')+(live?' beat':'')
   +(fresh?' fresh':(handled?' touched':' read'))+'" data-i="'+i+'"'
   +' data-copy="'+esc(line)+'">'
-  +'<span class="w">'+(live?'<i class="lv"></i>':'')+(no?'<b class="bno">#'+no+'</b> ':'')+(mine?'אתה':'קלוד')+' · '+esc(stamp(m.at))
+  +'<span class="w">'+(live?'<i class="lv"></i>':'')+(no?'<b class="bno">#'+no+'</b> ':'')+(mine?'אתה':AI)+' · '+esc(stamp(m.at))
   +(m.pend?' · נשלח, עוד לא נקרא':'')+statusTag(m)
   +(fresh?' · <em class="badge">חדש</em>':(mine?'':' · נקרא'))
   +'<button type="button" class="cp" data-i="'+i+'" aria-label="העתקה">העתקה</button>'
@@ -5748,7 +5765,7 @@ function renderThread(){
    return bubbleHtml(m,i,fresh,handled);
   }).join('');
   var ri2=flat.indexOf(t.root);
-  var whole=t.msgs.map(function(m){return (m.from==='itzik'?OWNER:'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');}).join(String.fromCharCode(10,10));
+  var whole=t.msgs.map(function(m){return (m.from==='itzik'?OWNER:AI)+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');}).join(String.fromCharCode(10,10));
   return '<details class="th th-'+r.status+'" data-k="'+esc(t.key)+'"'+(ri===0&&r.status==='fresh'?' open':'')+'>'
    +'<summary><span class="num">'+r.n+'</span><b>'+esc(head)+'</b>'+tag
    +(proj[t.key]?'<i class="tproj">'+esc(proj[t.key])+'</i>':'')
@@ -6155,7 +6172,7 @@ document.getElementById('copyAll').onclick=function(){
   .slice().sort(function(a,b2){return (a.at||'')<(b2.at||'')?-1:1;});
  if(!all.length)return;
  var t=all.map(function(m){
-  return (m.from==='itzik'?OWNER:'קלוד')+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');
+  return (m.from==='itzik'?OWNER:AI)+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');
  }).join(String.fromCharCode(10,10));
  var done=function(){b.textContent='הועתק';setTimeout(function(){b.textContent='העתקת כל השיחה';},1500);};
  if(navigator.clipboard&&navigator.clipboard.writeText){
@@ -7797,7 +7814,7 @@ function ansReport(m){
  return '<details class="arep"><summary>'+esc(title)+'</summary>'
   +'<div class="atxt">'+linkify(body)+'</div></details>';
 }
-function ansWho(m){var k=m&&m.src;return k==='codex'?'קודקס':k==='report'?'דוח':k==='itzik'?'אתה':'קלוד';}
+function ansWho(m){var k=m&&m.src;return k==='codex'?'קודקס':k==='report'?'דוח':k==='itzik'?'אתה':AI;}
 // Codex answers never had a read mark of their own, so the chat's cut carries
 // them: anything older than the last thing he read counts as read. With no cut
 // at all the window is three days, otherwise a first open would light up forty
@@ -8798,7 +8815,7 @@ function renderUnread(){
  }
  host.innerHTML=list.map(function(m,i){
   return '<div class="bub me fresh" data-i="'+i+'">'
-   +'<span class="w">קלוד · '+esc(stamp(m.at))+' · <em class="badge">חדש</em></span>'
+   +'<span class="w">'+AI+' · '+esc(stamp(m.at))+' · <em class="badge">חדש</em></span>'
    +linkify(m.text)
    +'<div class="rrow">'
    +'<button type="button" class="rb rmic" data-i="'+i+'">🎤 להשיב בקול</button>'
@@ -9131,7 +9148,7 @@ function renderReqs(){
   }
   return '<div class="req big"><div class="rq-t"><b>'+esc(r.text||label)+'</b>'
    +'<small>'+esc(label)+' · יצא ב'+esc(stamp(r.at))+' · '+esc(since(r.at))+'</small>'
-   +'<small>מבצע: קלוד</small></div>'
+   +'<small>מבצע: '+AI+'</small></div>'
    +'<span class="rq-s rq-'+st.k+'">'+esc(st.t)+'</span>'
    +'<div class="rq-m">'+esc(st.missing)+link+'</div></div>';
  }).join('')+more;
@@ -9326,19 +9343,33 @@ function renderTidy(){
    +'<div class="row2"><button type="button" id="tidyBack">להחזיר הכל</button></div></div>');
  }
  // Three days of use and at least three buttons he never touched, and I ask once.
+ /*
+   Reviewer 7.10, approved 8.10: one "להסיר" took every cold tile at once, and
+   a tile used once a week (the decks, the shipments report) vanished with the
+   rest. Each one now has its own box, none ticked, and only what was ticked
+   goes. Whatever is left is not asked about again for a week.
+ */
  if(days>=3&&cold.length>=3&&Date.now()>snooze){
   parts.push('<div class="tidy"><b>המסך עמוס</b>'
-   +'<small>שלושה ימים ולא נגעת ב'+cold.length+' כפתורים: '
-   +cold.map(function(id){return esc(tileLabel(id));}).join(', ')
-   +'. להסיר אותם מהמסך? שום דבר לא נמחק, הם חוזרים בלחיצה.</small>'
-   +'<div class="row2"><button type="button" class="go" id="tidyGo">להסיר</button>'
-   +'<button type="button" id="tidyNo">להשאיר</button></div></div>');
+   +'<small>שלושה ימים ולא נגעת ב'+cold.length+' כפתורים. '+(FEM?'סמני':'תסמן')+' מה להסיר מהמסך. שום דבר לא נמחק, הם חוזרים בלחיצה.</small>'
+   +'<div class="tidyl">'+cold.map(function(id){
+     return '<label style="display:flex;gap:8px;align-items:center;padding:6px 0;font-size:15px"><input type="checkbox" data-tidy="'+esc(id)+'" style="width:22px;height:22px">'+esc(tileLabel(id))+'</label>';
+    }).join('')+'</div>'
+   +'<div class="row2"><button type="button" class="go" id="tidyGo" disabled>להסיר את מה שסימנתי</button>'
+   +'<button type="button" id="tidyNo">להשאיר הכל</button></div></div>');
  }
  host.innerHTML=parts.join('');
  var back=document.getElementById('tidyBack');
  if(back)back.onclick=function(){tileSave('tilesHidden',[]);renderTidy();};
  var go=document.getElementById('tidyGo');
- if(go)go.onclick=function(){tileSave('tilesHidden',hid.concat(cold));renderTidy();};
+ function ticked(){return Array.prototype.filter.call(host.querySelectorAll('[data-tidy]'),function(c){return c.checked;}).map(function(c){return c.getAttribute('data-tidy');});}
+ Array.prototype.forEach.call(host.querySelectorAll('[data-tidy]'),function(c){
+  c.onchange=function(){var n=ticked().length;go.disabled=!n;go.textContent=n?'להסיר '+n+' מהמסך':'להסיר את מה שסימנתי';};
+ });
+ if(go)go.onclick=function(){
+  var t=ticked();if(!t.length)return;
+  tileSave('tilesHidden',hid.concat(t));tileSave('tidySnooze',Date.now()+7*86400000);renderTidy();
+ };
  var no=document.getElementById('tidyNo');
  if(no)no.onclick=function(){tileSave('tidySnooze',Date.now()+7*86400000);renderTidy();};
 }
@@ -11138,9 +11169,9 @@ function adminReqSheet(){
  var old=document.getElementById('arSheet');if(old)old.remove();
  var w=document.createElement('div');
  w.id='arSheet';w.className='ysheet';
- w.setAttribute('role','dialog');w.setAttribute('aria-label','בקשה ממנהל');
- w.innerHTML='<div class="ycard"><b>בקשה ממנהל</b>'
-  +'<small>מה תרצה לשנות במוניטור? כפתור, מסך, עיצוב, איך הוא עונה. המנהל יאשר, והתשובה תגיע אליך בצ׳אט.</small>'
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','בקשה מבונה המוניטור');
+ w.innerHTML='<div class="ycard"><b>בקשה מבונה המוניטור</b>'
+  +'<small>מה תרצה לשנות במוניטור? כפתור, מסך, עיצוב, איך הוא עונה. בונה המוניטור יאשר, והתשובה תגיע אליך בצ׳אט.</small>'
   +'<textarea id="arText" rows="5" style="width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif" placeholder="לדוגמה: תוסיף לי כפתור של רשימת קניות"></textarea>'
   // Itzik, 8.10: offer the customer the choice and show it, an icon on the
   // home screen or a button inside a screen, for the same subject.
@@ -11154,7 +11185,7 @@ function adminReqSheet(){
   +'<button type="button" class="yb" data-k="כפתור בתוך מסך">רוצה כפתור</button>'
   +'<button type="button" class="yb" data-k="">לא משנה</button></div>'
   +'<small>תמיד אפשר לבקש אחר כך למחוק או להוסיף.</small>'
-  +'<button type="button" class="yb yb1" data-a="send">שליחה למנהל</button>'
+  +'<button type="button" class="yb yb1" data-a="send">שליחה לבונה המוניטור</button>'
   +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
  function close(){w.remove();}
  w.onclick=function(e){
@@ -11173,7 +11204,7 @@ function adminReqSheet(){
   if(w.arKind)t+=' (בתור '+w.arKind+')';
   e.target.disabled=true;
   sendText('בקשה ממנהל','בקשה ממנהל: '+t,'משימה').then(function(){
-   markSent('text',t);close();toast('נשלח למנהל. התשובה תגיע בצ׳אט.');
+   markSent('text',t);close();toast('נשלח לבונה המוניטור. התשובה תגיע בצ׳אט.');
   }).catch(function(){e.target.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
  };
  document.body.appendChild(w);
@@ -11578,7 +11609,7 @@ on('gPush',function(){
  document.body.appendChild(w);
 });
 on('gUpgrade',function(){
- var h='<small>מה עוד המוניטור יודע לעשות. לחיצה שולחת בקשה למנהל והוא חוזר אליך.</small>'
+ var h='<small>מה עוד המוניטור יודע לעשות. לחיצה שולחת בקשה לבונה המוניטור והוא חוזר אליך.</small>'
   +SHIP_UPGRADES.map(function(u,i){
    return '<button type="button" class="yb yb'+(i%4+1)+'" data-u="'+i+'">'+esc(u[0])+'<br><small>'+esc(u[1])+'</small></button>';
   }).join('');
@@ -11588,7 +11619,7 @@ on('gUpgrade',function(){
    var u=SHIP_UPGRADES[+b.getAttribute('data-u')];if(!u)return;
    b.disabled=true;
    sendText('בקשה ממנהל','בקשה ממנהל: בקשת שדרוג: '+u[0]+'. '+u[1],'משימה').then(function(){
-    markSent('text',u[0]);toast('נשלח למנהל. הוא יחזור אליך.');
+    markSent('text',u[0]);toast('נשלח לבונה המוניטור. הוא יחזור אליך.');
    }).catch(function(){b.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
   });
  });
@@ -13648,7 +13679,7 @@ function renderMail(){
  host.innerHTML=all.map(function(m,i){
   var mine=m.from==='itzik';
   return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')+'">'
-   +'<span class="w">'+(mine?'אתה':'קלוד')+' · '+esc(stamp(m.at))
+   +'<span class="w">'+(mine?'אתה':AI)+' · '+esc(stamp(m.at))
    +(m.pend?' · נשלח, עוד לא נקרא':'')+'</span>'+linkify(mailBody(m.text))+'</div>';
  }).join('');
 }
