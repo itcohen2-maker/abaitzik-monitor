@@ -135,6 +135,23 @@ function fixer(t, now) {
   console.log('fixer started for ' + t.id);
 }
 
+/*
+  8.10, Itzik: "תן לי התראה ברגע שרינת מתחילה לעבוד עם המוניטור שלה, אני רוצה
+  לדעת מתי היא התקינה". A record with watchFirstUse (an ISO time) rings his
+  phone once, on the first message that reached the tenant's listener after
+  that time. Only the arrival times and texts the listener already exposes in
+  data/status are read; a system test ("בדיקת מערכת") does not count.
+*/
+function firstUse(t) {
+  if (!t.watchFirstUse || t.firstUseAt) return '';
+  const after = Date.parse(t.watchFirstUse);
+  const read = (f) => { try { return JSON.parse(fs.readFileSync(path.join(t.dir, 'data', 'status', f), 'utf8')); } catch (e) { return null; } };
+  const pulls = read('pulls.json');
+  const seen = Array.isArray(pulls) ? pulls : ((read('live.json') || {}).recent || []);
+  const hit = seen.find((x) => x && Date.parse(x.at) > after && !/בדיקת מערכת/.test(x.text || ''));
+  return hit ? hit.at : '';
+}
+
 function main() {
   if (!fs.existsSync(DIR)) { console.log('no tenants'); return; }
   let changed = false;
@@ -182,6 +199,18 @@ function main() {
         } catch (e) { console.log('alert failed: ' + String(e.message).slice(0, 120)); }
       }
     }
+    const used = firstUse(t);
+    if (used && !DRY) {
+      try {
+        execFileSync('node', ['notify.js', '🎉 ' + (t.title || t.id) + ': התחילה לעבוד',
+          'ההודעה הראשונה הגיעה ' + new Date(used).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' })],
+          { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
+        t.firstUseAt = used;
+        fs.writeFileSync(file, JSON.stringify(t, null, 1));
+        changed = true;
+        console.log('first use: ' + t.id);
+      } catch (e) { console.log('first use alert failed: ' + String(e.message).slice(0, 120)); }
+    }
     fixer(t, Date.now());
     console.log((t.state === 'ok' ? 'ok   ' : 'DOWN ') + t.id + (r.problems.length ? ': ' + r.problems.join(', ') : ''));
   }
@@ -203,4 +232,4 @@ function main() {
 }
 
 if (require.main === module) main();
-module.exports = { check, complete };
+module.exports = { check, complete, firstUse };
