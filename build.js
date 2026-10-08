@@ -4062,8 +4062,10 @@ try{
 
 <section id="pMoxy" hidden>
  <h2>מוקסיפן</h2>
- <div class="rephint">שלוש פעמים ביום: 08:00, 16:00 ו 00:00. הכפתור מהבהב כשמגיע הזמן ונעצר כשנכנסת לכאן. גם התראה לנייד בכל מועד.</div>
+ <div class="rephint">שלוש פעמים ביום: 08:00, 16:00 ו 00:00. הכפתור מהבהב כשמגיע הזמן ונעצר כשלוחצים כאן על לקחתי את הכדור. גם התראה לנייד בכל מועד.</div>
  <div class="pillinfo" id="moxyInfo"></div>
+ <!-- איציק, 8.10: כפתור "לקחתי את הכדור" במסך הזה; רק הוא עוצר את ההבהוב. -->
+ <button type="button" class="ask" id="moxyTook">לקחתי את הכדור</button>
 </section>
 
 <section id="pIsra" hidden>
@@ -9971,23 +9973,28 @@ function renderModel(){
 boot('modelswitch',function(){var b=document.getElementById('gModel');if(b)b.classList.toggle('taskblink',!!modelPending());});
 on('gModel',function(){pane('Mo');renderModel();});
 /*ITZIK:BEGIN*/
-// Moxypen. The tile blinks from the moment a dose is due until he opens it.
+// Moxypen. The tile blinks from the moment a dose is due until he presses "took it" inside.
+function moxyTookAt(){try{return Number(localStorage.getItem('moxyTook'))||0;}catch(e){return 0;}}
 function moxyPaint(){
  var b=document.getElementById('gMoxy');if(!b||!window.ML||!ML.moxySlots)return;
- var s=ML.moxySlots(Date.now()),seen=0;
- try{seen=Number(localStorage.getItem('moxySeen'))||0;}catch(e){}
- b.classList.toggle('taskblink',!!s.last&&seen<s.last);
+ var s=ML.moxySlots(Date.now()),due=!!s.last&&moxyTookAt()<s.last;
+ b.classList.toggle('taskblink',due);
  var sm=document.getElementById('gMoxyS');
- if(sm)sm.textContent=(s.last&&seen<s.last)?'הגיע הזמן לכדור':('הבא ב '+hm(new Date(s.next)));
+ if(sm)sm.textContent=due?'הגיע הזמן לכדור':('הבא ב '+hm(new Date(s.next)));
 }
 function renderMoxy(){
- var s=ML.moxySlots(Date.now()),box=document.getElementById('moxyInfo');
- try{localStorage.setItem('moxySeen',String(Date.now()));}catch(e){}
- if(box)box.innerHTML=(s.last?'<b>הגיע הזמן לכדור של '+esc(hm(new Date(s.last)))+'</b>':'<b>עוד לא הגיע הזמן</b>')
+ var s=ML.moxySlots(Date.now()),box=document.getElementById('moxyInfo'),took=moxyTookAt(),due=!!s.last&&took<s.last;
+ var btn=document.getElementById('moxyTook');if(btn)btn.hidden=!due;
+ if(box)box.innerHTML=(due?'<b>הגיע הזמן לכדור של '+esc(hm(new Date(s.last)))+'</b>'
+   :(took&&s.last?'<b>לקחת את הכדור בשעה '+esc(hm(new Date(took)))+'</b>':'<b>עוד לא הגיע הזמן</b>'))
   +'<div>המנה הבאה בשעה '+esc(hm(new Date(s.next)))+'</div>';
  moxyPaint();
 }
 boot('moxy',function(){moxyPaint();setInterval(moxyPaint,30000);});
+on('moxyTook',function(){
+ try{localStorage.setItem('moxyTook',String(Date.now()));}catch(e){}
+ toast('נרשם. הכפתור יהבהב שוב במנה הבאה.');renderMoxy();
+});
 on('gMoxy',function(){pane('Mx');renderMoxy();});
 /*ITZIK:END*/
 on('moDone',function(){
