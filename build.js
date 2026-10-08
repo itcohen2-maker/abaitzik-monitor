@@ -2394,6 +2394,13 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
 .idea button{background:var(--accent);color:var(--on-accent);border:0;border-radius:9px;
  padding:8px 17px;font:500 13.5px Heebo,sans-serif;cursor:pointer}
 .idea button.done{background:var(--green)}
+.idea button.icm{background:transparent;color:var(--accent);border:1px solid var(--accent);margin-inline-start:7px}
+.idea .ib0{margin-inline-start:0}
+.icbox{margin-top:10px;display:none}
+.icbox.open{display:block}
+.icbox textarea{width:100%;box-sizing:border-box;min-height:64px;border:1px solid var(--line);border-radius:9px;
+ padding:8px 10px;font:300 14px Heebo,sans-serif;background:var(--bg);color:inherit;resize:vertical;margin-bottom:7px}
+.icbox small{display:block;font-size:12.5px;color:var(--dim);margin-top:6px}
 .ideabuilt{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
 .ibt{border:0;text-align:start;cursor:pointer;border-radius:var(--r);padding:14px 15px;color:#fff;
  min-height:88px;display:flex;flex-direction:column;justify-content:space-between;
@@ -11714,12 +11721,41 @@ function renderIdeas(){
  IDEAS_SHOWN=L;
  document.getElementById('ideaList').innerHTML=L.map(function(x,n){
   var on=asked.indexOf(x.t)>-1;
-  if(x.built)return '<div class="idea"><small class="itag">'+esc(x.tag)+'</small><b>'+esc(x.t)+'</b><p>'+esc(x.d)+'</p></div>';
+  // Itzik, 8.10: "I need to be able to comment on the ideas." Every idea,
+  // built or not, gets its own comment box that goes to me like a request.
+  var cm='<button type="button" class="icm'+(x.built?' ib0':'')+'" data-c="'+n+'">להגיב</button>'
+   +'<div class="icbox" id="icb'+n+'"><textarea aria-label="תגובה לרעיון"></textarea>'
+   +'<button type="button" data-s="'+n+'">שליחה</button><small></small></div>';
+  if(x.built)return '<div class="idea"><small class="itag">'+esc(x.tag)+'</small><b>'+esc(x.t)+'</b><p>'+esc(x.d)+'</p>'+cm+'</div>';
   return '<div class="idea">'+(x.tag?'<small class="itag">'+esc(x.tag)+'</small>':'')+'<b>'+esc(x.t)+'</b><p>'+esc(x.d)+'</p>'
    +'<button type="button" data-i="'+n+'"'+(on?' class="done"':'')+'>'
-   +(on?'ביקשת. אני על זה':'רוצה את זה')+'</button></div>';
+   +(on?'ביקשת. אני על זה':'רוצה את זה')+'</button>'+cm+'</div>';
  }).join('');
- Array.prototype.forEach.call(document.querySelectorAll('#ideaList button'),function(b){
+ Array.prototype.forEach.call(document.querySelectorAll('#ideaList button[data-c]'),function(b){
+  b.onclick=function(){
+   var box=document.getElementById('icb'+b.getAttribute('data-c'));
+   box.classList.toggle('open');
+   if(box.classList.contains('open'))box.querySelector('textarea').focus();
+  };
+ });
+ Array.prototype.forEach.call(document.querySelectorAll('#ideaList button[data-s]'),function(b){
+  b.onclick=function(){
+   var x=IDEAS_SHOWN[Number(b.getAttribute('data-s'))];
+   var box=b.parentNode,ta=box.querySelector('textarea'),said=box.querySelector('small');
+   var v=ta.value.trim();
+   if(!v){ta.focus();return;}
+   var msg='תגובה לרעיון "'+x.t+'": '+v;
+   b.disabled=true;said.textContent='שולח.';
+   sendText('רעיון מהמוניטור',msg,'רעיון').then(function(){
+    var p=pending();p.push({at:new Date().toISOString(),text:msg});savePending(p);
+    ta.value='';said.textContent='נשלח. אני חוזר אליך על זה.';
+    markSent('text');renderSent();renderThread();
+   }).catch(function(){
+    said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';
+   }).then(function(){b.disabled=false;});
+  };
+ });
+ Array.prototype.forEach.call(document.querySelectorAll('#ideaList button[data-i]'),function(b){
   b.onclick=function(){
    var x=IDEAS_SHOWN[Number(b.getAttribute('data-i'))];
    b.disabled=true;b.textContent='שולח.';
