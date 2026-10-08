@@ -636,6 +636,21 @@ function applyTranscript(text, file, started) {
   try { fs.writeFileSync(full, JSON.stringify(rec, null, 1), 'utf8'); } catch (e) { return; }
   say('תומלל ב' + Math.round((Date.now() - started) / 1000) + ' שניות: ' + text.slice(0, 60));
   publishChat();
+  kickWorker();
+}
+/*
+  8.10: the worker used to find a new message on its next one minute tick, after
+  a further 20 second settle, so an answer started 20 to 80 seconds late. Now the
+  listener touches status/kick a little after the worker's settle window, and a
+  systemd path unit starts the worker on that touch. The one minute timer stays
+  as the fallback if the path unit is missing.
+*/
+const KICK = path.join(STATUS, 'kick');
+function kickWorker() {
+  setTimeout(function () {
+    try { fs.writeFileSync(KICK, new Date().toISOString(), 'utf8'); }
+    catch (e) { say('!! kick failed: ' + e.message); }
+  }, 6000);
 }
 let publishing = false, publishAgain = false;
 function publishChat() {
@@ -768,6 +783,7 @@ async function handleOne(m) {
       : 'בקשת קודקס נמסרה לשיחה: ' + routed.sourceId);
   } else if (recordIncoming(m)) {
     publishChat();
+    kickWorker();
   }
   remember(m);
   await beat();

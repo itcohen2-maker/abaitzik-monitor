@@ -49,7 +49,7 @@ const DRY = process.argv.includes('--dry');
   unanswered. Twenty seconds is enough to let a burst of notes land together
   and be answered in one session rather than three.
 */
-const SETTLE_MS = 20 * 1000;
+const SETTLE_MS = 5 * 1000; // 8.10: was 20s; the listener kicks the worker 6s after a message
 /*
   How many of his messages can be worked at the same time.
 
