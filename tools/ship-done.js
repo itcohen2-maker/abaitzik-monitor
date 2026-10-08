@@ -33,13 +33,37 @@ function shipDone(shipDir, id, code, by, now) {
     if (!Number.isFinite(t) || at - t > (rules.HANDLED_DAYS + 1) * 86400000) delete handled[k];
   }
   handled[rules.handledKey(a)] = { id, code, at: at.toISOString(), by: String(by || 'app').slice(0, 30) };
+  writeHandled(file, handled);
+  return a;
+}
+
+function writeHandled(file, handled) {
   const tmp = file + '.' + process.pid + '.tmp';
   // Replaced whole, never edited in place: the folder lets both writers (Rinat,
   // Yael) rename into it, and the group, which is how Roni reads, only reads.
   fs.writeFileSync(tmp, JSON.stringify(handled, null, 1), { mode: 0o640 });
   fs.chmodSync(tmp, 0o640);
   fs.renameSync(tmp, file);
-  return a;
+}
+
+/*
+  "↩ להחזיר" (reviewer 8.10, approved): a "טיפלתי" pressed on the wrong row is
+  taken back, and the alert is counted again for everyone at the next build.
+*/
+function shipUndo(shipDir, id, code) {
+  id = String(id || '').trim(); code = String(code || '').trim();
+  if (!/^[^\n\r]{1,120}$/.test(id) || !/^[A-Z_]{2,20}$/.test(code)) throw new Error('bad id or code');
+  const file = path.join(shipDir, 'handled.json');
+  let handled = {};
+  try { handled = JSON.parse(fs.readFileSync(file, 'utf8')) || {}; } catch (e) { /* nothing marked */ }
+  const k = rules.handledKey({ id, code });
+  const was = handled[k];
+  if (!was) throw new Error('not marked');
+  delete handled[k];
+  writeHandled(file, handled);
+  let po = id;
+  try { const r = JSON.parse(fs.readFileSync(path.join(shipDir, 'rows.json'), 'utf8')).find((x) => x.id === id); if (r) po = r.po + ', ' + r.supplier; } catch (e) { /* the id says enough */ }
+  return { id, code, po };
 }
 
 if (require.main === module) {
@@ -50,4 +74,4 @@ if (require.main === module) {
   catch (e) { console.error('ship-done: ' + e.message); process.exit(1); }
 }
 
-module.exports = { shipDone };
+module.exports = { shipDone, shipUndo };

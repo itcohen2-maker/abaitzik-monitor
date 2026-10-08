@@ -689,8 +689,13 @@ function build() {
       let handled = {};
       try { handled = JSON.parse(fs.readFileSync(path.join(sd, 'handled.json'), 'utf8')); } catch (e) { /* nothing marked yet */ }
       // "טיפלתי" hides an alert for a week at most, the same way the brief counts.
-      const alerts = rules.applyHandled(rules.evaluate(shipRows, today, sup), handled, today);
-      payload.ship = { today, alerts, summary: rules.summary(shipRows, alerts, today),
+      const all = rules.evaluate(shipRows, today, sup);
+      const alerts = rules.applyHandled(all, handled, today);
+      // What is hidden now, so a mark made on the wrong row can be taken back.
+      const done = all.filter((a) => alerts.indexOf(a) < 0)
+        .map((a) => Object.assign({}, a, { doneAt: (handled[rules.handledKey(a)] || {}).at || '' }))
+        .sort((p, q) => q.doneAt.localeCompare(p.doneAt));
+      payload.ship = { today, alerts, done, summary: rules.summary(shipRows, alerts, today),
         insights: rules.insights(shipRows.filter((r) => /202[67]$/.test(r.sheet))).slice(0, 12),
         brief, importedAt: meta.importedAt || '',
         queue: queue.map((q) => ({ at: q.at || '', subject: q.subject || '', reason: q.reason || '' })) };
@@ -5672,6 +5677,8 @@ function wireProjects(host){
    row.insertAdjacentElement('afterend',p);
    function pick(v){
     v=String(v||'').split(String.fromCharCode(10)).join(' ').trim().slice(0,40);
+    // A name typed again with other capitals joins the one that exists.
+    names.forEach(function(n){if(n.toLowerCase()===v.toLowerCase())v=n;});
     if(v)m[k]=v;else delete m[k];
     saveProjMap(m);
     renderThread();
@@ -11285,20 +11292,55 @@ function shipHide(a){
  o[a.id+'|'+a.code]=now;
  try{localStorage.setItem('shipDone',JSON.stringify(o));}catch(e){}
 }
+/*
+  "↩ להחזיר" (reviewer 8.10, approved): a mark made on the wrong row came off
+  the list for a week with nowhere to see it. What was marked now sits folded
+  at the bottom of the screen, and taking it back shows it here at once and
+  tells the listener, which takes it out of the shared table.
+*/
+function shipBack(){
+ try{var o=JSON.parse(localStorage.getItem('shipBack')||'{}');return o&&typeof o==='object'?o:{};}catch(e){return {};}
+}
+function shipUnhide(a){
+ var k=a.id+'|'+a.code,o=shipHidden(),b=shipBack(),now=Date.now();
+ delete o[k];
+ Object.keys(b).forEach(function(x){if(now-b[x]>2*86400000)delete b[x];});
+ b[k]=now;
+ try{localStorage.setItem('shipDone',JSON.stringify(o));localStorage.setItem('shipBack',JSON.stringify(b));}catch(e){}
+}
+function shipUrgent(a){return a.level==='red'||a.level==='amber';}
 function shipTodayList(){
  var S=D.ship;if(!S)return [];
- var hid=shipHidden();
- return (S.alerts||[]).filter(function(a){return (a.level==='red'||a.level==='amber')&&!hid[a.id+'|'+a.code];});
+ var hid=shipHidden(),back=shipBack();
+ return (S.alerts||[]).filter(function(a){return shipUrgent(a)&&!hid[a.id+'|'+a.code];})
+  .concat((S.done||[]).filter(function(a){return shipUrgent(a)&&back[a.id+'|'+a.code]&&!hid[a.id+'|'+a.code];}));
+}
+function shipDoneList(){
+ var S=D.ship;if(!S)return [];
+ var hid=shipHidden(),back=shipBack();
+ return (S.alerts||[]).filter(function(a){return shipUrgent(a)&&hid[a.id+'|'+a.code];})
+  .concat((S.done||[]).filter(function(a){return shipUrgent(a)&&(hid[a.id+'|'+a.code]||!back[a.id+'|'+a.code]);}));
 }
 on('gToday',function(){
  var S=D.ship;if(!S)return toast('אין נתונים עדיין');
  var A=shipTodayList();
  var h='<small>נכון ל '+esc(shipDate(S.today))+'. הכי דחוף למעלה.</small>'
   +'<input id="todayQ" class="shipq" type="search" placeholder="חיפוש: הזמנה, ספק או מכולה" autocomplete="off">'
-  +'<div id="todayList"></div>';
+  +'<div id="todayList"></div><div id="todayDone"></div>';
  shipOpen('shipToday','📋 היום',h,function(w){
-  var list=w.querySelector('#todayList'),q='';
+  var list=w.querySelector('#todayList'),doneBox=w.querySelector('#todayDone'),q='';
+  function drawDone(){
+   var was=doneBox.querySelector('details'),open=!!(was&&was.open);
+   var L=shipDoneList();
+   doneBox.innerHTML=L.length?'<details'+(open?' open':'')+'><summary>✔ סימנתי השבוע ('+L.length+')</summary>'
+    +L.map(function(a,i){
+     return '<div class="srow">'+shipTag(a.level)+'<b>'+esc(a.po)+' · '+esc(a.supplier)+'</b><br><small>'+esc(a.text)+'</small>'
+      +'<div class="sact"><button type="button" data-back="'+i+'">↩ להחזיר לרשימה</button></div></div>';
+    }).join('')+'</details>':'';
+   doneBox._rows=L;
+  }
   function draw(){
+   drawDone();
    var L=shipTodayList().filter(function(a){return !q||(a.po+' '+a.supplier+' '+(a.container||'')).toLowerCase().indexOf(q)>-1;});
    list.innerHTML=L.map(function(a,i){
     var mail=shipMailHref(a);
@@ -11316,26 +11358,21 @@ on('gToday',function(){
    var b=e.target.closest&&e.target.closest('[data-done]');if(!b)return;
    var a=(list._rows||[])[+b.getAttribute('data-done')];if(!a)return;
    if(!confirm('לסמן טיפלתי? '+a.po+'. ההתראה תחזור אם לא יתעדכן תוך שבוע.'))return;
+   var b0=shipBack();delete b0[a.id+'|'+a.code];try{localStorage.setItem('shipBack',JSON.stringify(b0));}catch(e2){}
    shipHide(a);draw();paintShipLine();
-   sendText('טיפלתי במשלוח',a.id+String.fromCharCode(10)+a.code,'ship-done').then(function(){toast('נרשם. גם רינת תראה שזה טופל.');})
+   // Whoever pressed it is the one reading this, so it names no one in this
+   // office (reviewer 8.10): only Roni's screen, which reads the same table.
+   sendText('טיפלתי במשלוח',a.id+String.fromCharCode(10)+a.code,'ship-done').then(function(){toast('נרשם, גם אצל רוני. טעות? למטה, סימנתי השבוע.');})
     .catch(function(){toast('נשמר בטלפון. השליחה תנסה שוב.');});
   });
+  doneBox.addEventListener('click',function(e){
+   var b=e.target.closest&&e.target.closest('[data-back]');if(!b)return;
+   var a=(doneBox._rows||[])[+b.getAttribute('data-back')];if(!a)return;
+   shipUnhide(a);draw();paintShipLine();
+   sendText('החזרה של טיפלתי',a.id+String.fromCharCode(10)+a.code,'ship-undo').then(function(){toast('הוחזר לרשימה, גם אצל רוני.');})
+    .catch(function(){toast('הוחזר בטלפון הזה. השליחה לא עברה, נסי שוב מאוחר יותר.');});
+  });
  });
-});
-on('gToday',function(){
- var S=D.ship;if(!S)return toast('אין נתונים עדיין');
- var A=(S.alerts||[]).filter(function(a){return a.level==='red' || a.level==='amber';});
- var h='<small>המשימות שמחכות היום, לפי דחיפות</small>';
- A.forEach(function(a){
-  h+='<div class="srow" style="border-left:4px solid '+((a.level==='red')?'#d9534f':'#f0ad4e')+';padding:8px">'
-   +'<b>'+esc(a.po)+'</b> '+esc(a.supplier)+'<br>'
-   +'<small>'+esc(a.text)+'</small><br>'
-   +'<small style="color:#666">'+esc(a.action)+'</small><br>'
-   +'<a href="mailto:?subject='+encodeURIComponent(a.po)+'&body='+encodeURIComponent(a.action)+'">✉️ מייל</a>'
-   +'</div>';
- });
- if(!A.length)h+='<div class="srow"><small>הכל בזמן!</small></div>';
- shipOpen('shipToday','📋 היום',h);
 });
 on('gShip',function(){
  ensure('shipments',function(){
@@ -11473,7 +11510,8 @@ on('gCeo',function(){
 function paintShipLine(){
  var el=document.getElementById('shipLine');if(!el)return;
  var S=D.ship;if(!S||!S.alerts){el.hidden=true;return;}
- var hid=shipHidden(),A=(S.alerts||[]).filter(function(a){return !hid[a.id+'|'+a.code];});
+ var hid=shipHidden(),back=shipBack(),A=(S.alerts||[]).filter(function(a){return !hid[a.id+'|'+a.code];})
+  .concat((S.done||[]).filter(function(a){return back[a.id+'|'+a.code]&&!hid[a.id+'|'+a.code];}));
  function cnt(l){var o={};A.forEach(function(a){if(a.level===l)o[a.id]=1;});return Object.keys(o).length;}
  var r=cnt('red'),am=cnt('amber');
  el.className='shipline '+(r?'red':(am?'amber':'green'));

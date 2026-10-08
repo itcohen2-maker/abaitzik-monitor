@@ -93,3 +93,18 @@ test('ship-done writes only an alert that exists today', () => {
   assert.strictEqual(R.applyHandled(R.evaluate(JSON.parse(fs.readFileSync(path.join(dir, 'rows.json'), 'utf8')), TODAY, SUP), h, TODAY).length, 0);
   fs.rmSync(dir, { recursive: true, force: true });
 });
+
+test('ship-undo takes back a mark, and only a mark that exists', () => {
+  const fs = require('fs'), os = require('os'), path = require('path');
+  const { shipDone, shipUndo } = require('../tools/ship-done.js');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ship-'));
+  fs.writeFileSync(path.join(dir, 'rows.json'), JSON.stringify([row({ po: '6201', eta: '2026-09-14', customs: '1', id: '6201|2026|a' })]));
+  const now = new Date('2026-10-06T09:00:00Z');
+  assert.throws(() => shipUndo(dir, '6201|2026|a', 'ETA_PASSED'));
+  shipDone(dir, '6201|2026|a', 'ETA_PASSED', 'yael', now);
+  assert.strictEqual(shipUndo(dir, '6201|2026|a', 'ETA_PASSED').po, '6201, JEFF');
+  const h = JSON.parse(fs.readFileSync(path.join(dir, 'handled.json'), 'utf8'));
+  assert.deepStrictEqual(h, {});
+  assert.strictEqual(R.applyHandled(R.evaluate(JSON.parse(fs.readFileSync(path.join(dir, 'rows.json'), 'utf8')), TODAY, SUP), h, TODAY).length, 1);
+  fs.rmSync(dir, { recursive: true, force: true });
+});

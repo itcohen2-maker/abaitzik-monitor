@@ -487,6 +487,22 @@ function recordIncoming(m) {
       try { publishChat(); } catch (e) { /* the next build carries it */ }
       return true;
     }
+    // 8.10: "↩ להחזיר" on a mark made by mistake, the same way back.
+    const undoM = codeOk && inst.shipmentsDir && /^\s*ship-undo\s*([^\n]+?)\s*\n\s*([A-Z_]{2,20})\s*$/.exec(text);
+    if (undoM) {
+      try {
+        const a = require('./tools/ship-done.js').shipUndo(inst.shipmentsDir, undoM[1], undoM[2]);
+        rec.text = '↩ הוחזר לרשימה: הזמנה ' + a.po;
+        say('טיפלתי בוטל: ' + a.id + ' ' + a.code);
+      } catch (e) {
+        rec.text = 'ההחזרה לא נרשמה (' + e.message + ')';
+        say('!! ההחזרה לא נרשמה: ' + e.message);
+      }
+      rec.status = 'done';
+      try { fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8'); } catch (e) { /* the line is already there */ }
+      try { publishChat(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
     if (gid) groupFiles.set(gid, { name: name, files: files, caption: caption.trim() });
     if (attach && group.isAudio(attach)) {
       transcribeLater(path.join(DROP, attach), name);
