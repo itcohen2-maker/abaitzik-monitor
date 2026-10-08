@@ -938,6 +938,8 @@ const TENANT_TILES = {
   gCeo: ['g4', '📊 תמונת מצב', 'איפה אנחנו עומדים היום'],
   gUpgrade: ['g10', '🚀 שדרוגים', 'מה עוד המוניטור יודע לעשות'],
   gToday: ['g17', '📋 היום', 'משימות מחכות היום, לפי דחיפות'],
+  // Itzik, 8.10, for Rinat: one tile that connects the ntfy app to her answers.
+  gPush: ['g4', '🔔 התראות לטלפון', 'כל תשובה קופצת בטלפון'],
 };
 // With no screens chosen at intake, only the tiles that fit any work. The whole
 // catalog gave a phone only customer "connect the computer", a client follow up
@@ -11431,6 +11433,55 @@ boot('shipLine',function(){
  var el=document.getElementById('shipLine'),h=document.getElementById('pH'),t=document.getElementById('talkCard');
  if(el&&t&&t.parentNode)t.parentNode.insertBefore(el,t);else if(el&&h)h.insertBefore(el,h.firstChild);
  paintShipLine();setInterval(paintShipLine,60000);});
+/*
+  Itzik, 8.10: a customer gets her answers as a push only after she subscribes
+  the ntfy app to her own outbound topic. The topic is a secret behind the gate,
+  so this sheet reads it after unlock and never puts it in the clear page. The
+  tile blinks until the first time it is opened on this device. Android's app
+  takes the ntfy:// link straight; the iPhone app does not, so it gets the name
+  to copy and paste under the plus.
+*/
+boot('pushTile',function(){
+ var t=document.getElementById('gPush');if(!t)return;
+ var seen=false;try{seen=!!localStorage.getItem('pushSeen');}catch(e){}
+ if(!seen)t.classList.add('taskblink');
+});
+on('gPush',function(){
+ var t=document.getElementById('gPush');
+ try{localStorage.setItem('pushSeen','1');}catch(e){}
+ if(t)t.classList.remove('taskblink');
+ var topic=secret('ntfyOut');
+ var ios=/iPhone|iPad|iPod/i.test(navigator.userAgent||'');
+ var L=function(x){return '<div style="font-size:16px;line-height:1.55">'+x+'</div>';};
+ var w=document.createElement('div');
+ w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','התראות לטלפון');
+ w.innerHTML='<div class="ycard"><b>🔔 התראות לטלפון</b>'
+  +L('כל תשובה שנכתבת לך כאן קופצת בטלפון, כמו הודעה בוואטסאפ.')
+  +L('1. מתקינים את האפליקציה ntfy:')
+  +'<a class="yb yb1" href="https://apps.apple.com/app/ntfy/id1625396347" target="_blank" rel="noopener">אייפון: ntfy בחנות של אפל</a>'
+  +'<a class="yb yb2" href="https://play.google.com/store/apps/details?id=io.heckel.ntfy" target="_blank" rel="noopener">אנדרואיד: ntfy בגוגל פליי</a>'
+  +(topic?(ios
+   ?L('2. לוחצים כאן כדי להעתיק את שם הערוץ שלך.')
+    +'<button type="button" class="yb yb3" data-a="copy">העתקת שם הערוץ</button>'
+    +L('3. פותחים את ntfy, לוחצים על הפלוס, מדביקים בשדה של שם הנושא, ולוחצים Subscribe.')
+   :L('2. לוחצים כאן, האפליקציה נפתחת, ולוחצים Subscribe.')
+    +'<a class="yb yb3" href="ntfy://ntfy.sh/'+encodeURIComponent(topic)+'">חיבור ההתראות</a>'
+    +L('אם לא נפתח: מעתיקים את שם הערוץ, ב ntfy לוחצים על הפלוס ומדביקים.')
+    +'<button type="button" class="yb yb4" data-a="copy">העתקת שם הערוץ</button>')
+   +L('4. כשהאפליקציה שואלת אם לאפשר התראות, מאשרים.')
+   :L('הערוץ עוד לא נטען. סוגרים, מחכים רגע ופותחים שוב.'))
+  +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+ w.onclick=function(e){
+  var a=e.target.getAttribute&&e.target.getAttribute('data-a');
+  if(e.target===w||a==='x'){w.remove();return;}
+  if(a==='copy'){
+   var b=e.target,ok=function(){b.textContent='הועתק. עכשיו מדביקים ב ntfy';};
+   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(topic).then(ok,function(){fallbackCopy(topic,ok);});
+   else fallbackCopy(topic,ok);
+  }
+ };
+ document.body.appendChild(w);
+});
 on('gUpgrade',function(){
  var h='<small>מה עוד המוניטור יודע לעשות. לחיצה שולחת בקשה למנהל והוא חוזר אליך.</small>'
   +SHIP_UPGRADES.map(function(u,i){
