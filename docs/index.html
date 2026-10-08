@@ -1746,7 +1746,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-08T03:33:55.430Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-08T03:34:32.177Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3057,7 +3057,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='78c4629aac';
+var CODE_ID='5bbd488315';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":""};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -7845,6 +7845,7 @@ on('gShip',function(){
      var lv=worst(r);
      return '<div class="srow" data-id="'+esc(r.id)+'">'+(lv?shipTag(lv):'')+'<b>'+esc(r.po)+' · '+esc(r.supplier)+'</b>'
       +'<br>'+esc(r.product)+'<br><small>'+esc(r.status||'ללא סטטוס')+' · יציאה '+shipDate(r.etd)+' · הגעה '+shipDate(r.eta)+'</small>'
+      +'<br><small class="smore" style="color:#2563eb">לפרטים ▾</small>'
       +'<div class="sdet" hidden>'+detail(r)+'</div></div>';
     }).join('')+(n>150?'<small>מוצגות 150 מתוך '+n+'. צמצם בחיפוש.</small>':'')+(n?'':'<small>לא נמצאה הזמנה.</small>');
    }
@@ -7854,6 +7855,7 @@ on('gShip',function(){
    list.addEventListener('click',function(e){
     var row=e.target.closest&&e.target.closest('.srow');if(!row)return;
     var d=row.querySelector('.sdet');if(d)d.hidden=!d.hidden;
+    var m=row.querySelector('.smore');if(m&&d)m.textContent=d.hidden?'לפרטים ▾':'סגירה ▴';
    });
    w.querySelector('#shipXls').addEventListener('click',function(){if(!fileView('shipments.xlsx'))toast('האקסל עוד לא מוכן, ייווצר הלילה');});
   });

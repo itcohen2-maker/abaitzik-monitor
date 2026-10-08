@@ -11217,6 +11217,7 @@ on('gShip',function(){
      var lv=worst(r);
      return '<div class="srow" data-id="'+esc(r.id)+'">'+(lv?shipTag(lv):'')+'<b>'+esc(r.po)+' · '+esc(r.supplier)+'</b>'
       +'<br>'+esc(r.product)+'<br><small>'+esc(r.status||'ללא סטטוס')+' · יציאה '+shipDate(r.etd)+' · הגעה '+shipDate(r.eta)+'</small>'
+      +'<br><small class="smore" style="color:#2563eb">לפרטים ▾</small>'
       +'<div class="sdet" hidden>'+detail(r)+'</div></div>';
     }).join('')+(n>150?'<small>מוצגות 150 מתוך '+n+'. צמצם בחיפוש.</small>':'')+(n?'':'<small>לא נמצאה הזמנה.</small>');
    }
@@ -11226,6 +11227,7 @@ on('gShip',function(){
    list.addEventListener('click',function(e){
     var row=e.target.closest&&e.target.closest('.srow');if(!row)return;
     var d=row.querySelector('.sdet');if(d)d.hidden=!d.hidden;
+    var m=row.querySelector('.smore');if(m&&d)m.textContent=d.hidden?'לפרטים ▾':'סגירה ▴';
    });
    w.querySelector('#shipXls').addEventListener('click',function(){if(!fileView('shipments.xlsx'))toast('האקסל עוד לא מוכן, ייווצר הלילה');});
   });
