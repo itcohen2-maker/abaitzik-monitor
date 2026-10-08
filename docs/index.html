@@ -1788,7 +1788,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-08T08:18:57.539Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-08T08:19:29.914Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3145,7 +3145,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='52a4e0b1eb';
+var CODE_ID='9b4b59286c';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10423,7 +10423,7 @@ function gateUI(){
  w.innerHTML='<div class="gatecard">'
   +'<b class="gt-t">'+esc((INSTANCE&&INSTANCE.name==='abaitzik')?'אבא איציק':(INSTANCE&&INSTANCE.owner||''))+'</b>'
   +(W?'<div class="gt-s">הדף נעול. תקליד את הסיסמה פעם אחת והמכשיר הזה יזכור אותה.'
-    +'<br>חמש מילים, עם רווח בין מילה למילה.</div>'
+    +'<br>הסיסמה היא חמש מילים בעברית שקיבלת כשהדף הוקם. מקלידים אותן בדיוק כמו שקיבלת, עם רווח בין מילה למילה.</div>'
   :'<div class="gt-s">הדף נעול. תקליד את הקוד פעם אחת והמכשיר הזה יזכור אותו.'
   +'<br>'+((INSTANCE&&INSTANCE.name!=='abaitzik')?'זה הקוד שבחרת בהתקנה.':'הקוד נשלח אליך בהתראה לטלפון, בנושא הקוד לפתיחת הדף.')+'</div>')
   +(W?'<form id="gateForm" class="gw"><input id="gateIn" type="password" autocomplete="off" autocapitalize="off"'
