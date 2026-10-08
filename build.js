@@ -359,6 +359,9 @@ function build() {
     .map(x => ({ id: x.id, title: x.title || x.id, state: x.state || 'unknown', paused: x.paused === true,
                  problems: Array.isArray(x.problems) ? x.problems : [], checkedAt: x.checkedAt || '', downSince: x.downSince || '', beatAt: x.beatAt || '',
                  host: /^[a-z0-9.-]+$/.test(x.host || '') ? x.host : '',
+                 // 8.10, Itzik: "תמיד תשמור את הקוד אצלנו בתוך הכפתור או האייקון של רינת".
+                 // The customer's entry code, kept on her card. head.json is sealed by the gate.
+                 code: typeof x.code === 'string' ? x.code : '',
                  // 5.10: what the customer asked to change, waiting for Itzik.
                  requests: (Array.isArray(x.requests) ? x.requests : []).map(r => ({ id: r.id, at: r.at || '', text: r.text || '', status: r.status || 'pending', note: r.note || '' })) }));
   const tasks = loadDocs('tasks')
@@ -2214,6 +2217,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .tk input{width:24px;height:24px;flex:0 0 24px}
 .tk.done span{text-decoration:line-through;opacity:.55}
 .tk.tnc{cursor:default}.tk.tnc span{flex:1}
+.tncode{user-select:all;letter-spacing:1px}.tncopy{margin-top:4px;padding:4px 10px;border-radius:8px;border:0;background:#1e3a5f;color:#9ecbff;font-weight:700}
 .tnopen{flex:none;padding:8px 14px;border-radius:10px;background:#1e3a5f;color:#9ecbff;text-decoration:none;font-weight:700}
 @keyframes tkpop{0%{transform:scale(1)}45%{transform:scale(1.06)}100%{transform:scale(1)}}
 .tk.pop{animation:tkpop .3s ease-out}
@@ -9993,9 +9997,17 @@ function renderTenants(){
   h+='<div class="tk tnc" style="border-inline-start:6px solid '+(ok?'#2e7d32':'#c62828')+'"><span><b>'+(ok?'🟢':'🔴')+' '+esc(t.title)+'</b>'
    +'<br><small>'+(ok?'תקין · נבדק כל דקה':'נתק'+(since?' מאז '+esc(since):''))+'</small>'
    +(!ok&&t.problems&&t.problems.length?'<br><small>'+t.problems.map(esc).join(' · ')+'</small>':'')
+   +(t.code?'<br><small>קוד כניסה: <b dir="ltr" class="tncode">'+esc(t.code)+'</b></small> <button type="button" class="tncopy" data-code="'+esc(t.code)+'">העתקה</button>':'')
    +'</span>'+(t.host?'<a class="tnopen" href="https://'+esc(t.host)+'/" target="_blank" rel="noopener">פתיחה</a>':'')+'</div>';
  });
  host.innerHTML=h||'<div class="empty">אין מוניטורים אחרים בשרת הזה.</div>';
+ Array.prototype.forEach.call(host.querySelectorAll('.tncopy'),function(b){
+  b.onclick=function(){
+   var c=b.getAttribute('data-code'),ok=function(){b.textContent='הועתק';};
+   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(c).then(ok,function(){fallbackCopy(c,ok);});
+   else fallbackCopy(c,ok);
+  };
+ });
  renderChangeReqs(host);
 }
 /*
@@ -14521,7 +14533,7 @@ function gateUI(){
  w.innerHTML='<div class="gatecard">'
   +'<b class="gt-t">'+esc((INSTANCE&&INSTANCE.name==='abaitzik')?'אבא איציק':(INSTANCE&&INSTANCE.owner||''))+'</b>'
   +(W?'<div class="gt-s">הדף נעול. תקליד את הסיסמה פעם אחת והמכשיר הזה יזכור אותה.'
-    +'<br>הסיסמה היא חמש מילים בעברית שקיבלת כשהדף הוקם. מקלידים אותן בדיוק כמו שקיבלת, עם רווח בין מילה למילה.</div>'
+    +'<br>זו הסיסמה שקיבלת כשהדף הוקם. מקלידים אותה בדיוק כמו שקיבלת.</div>'
   :'<div class="gt-s">הדף נעול. תקליד את הקוד פעם אחת והמכשיר הזה יזכור אותו.'
   +'<br>'+((INSTANCE&&INSTANCE.name!=='abaitzik')?'זה הקוד שבחרת בהתקנה.':'הקוד נשלח אליך בהתראה לטלפון, בנושא הקוד לפתיחת הדף.')+'</div>')
   +(W?'<form id="gateForm" class="gw"><input id="gateIn" type="password" autocomplete="off" autocapitalize="off"'
