@@ -1753,7 +1753,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-08T03:43:53.421Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-08T03:45:18.238Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3064,7 +3064,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='544cdcecff';
+var CODE_ID='5bb5b12826';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":""};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -4591,6 +4591,27 @@ document.addEventListener('touchend',function(){touching=false;markScroll();},{c
 document.addEventListener('touchcancel',function(){touching=false;},{capture:true,passive:true});
 window.addEventListener('wheel',markScroll,{capture:true,passive:true});
 function scrollingNow(){return touching||Date.now()-lastScrollAt<20000;}
+var lastActAt=0;
+function markAct(){lastActAt=Date.now();}
+['click','keydown','touchstart','touchmove','wheel'].forEach(function(t){
+ document.addEventListener(t,markAct,{capture:true,passive:true});
+});
+window.addEventListener('scroll',markAct,{capture:true,passive:true});
+function readingNow(){
+ if(document.hidden)return false;
+ return Date.now()-lastActAt<300000;
+}
+function readingInner(){
+ return readingNow()&&typeof panePrev==='string'&&panePrev&&panePrev!=='h';
+}
+var readWait=null;
+function afterReading(){
+ if(readWait)return;
+ readWait=setTimeout(function(){
+  readWait=null;
+  if(readingNow())afterReading();else if(!document.hidden)checkFresh();
+ },Math.max(5000,300500-(Date.now()-lastActAt)));
+}
 function afterScroll(){
  if(scrollWait)return;
  scrollWait=setTimeout(function(){
@@ -4634,6 +4655,10 @@ function checkFresh(){
   if(!v||!v.builtAt||v.builtAt===D.builtAt)return;
   var what=document.getElementById('liveWhat');
   if(scrollingNow()){afterScroll();return;}
+  if(readingInner()){
+   if(what&&liveSeen!==v.builtAt){liveSeen=v.builtAt;what.textContent='יש עדכון. מחכה שתסיים לקרוא.';}
+   afterReading();return;
+  }
   if(v.codeId&&CODE_ID&&v.codeId===CODE_ID){
    if(what&&liveSeen!==v.builtAt){liveSeen=v.builtAt;what.textContent='תשובה חדשה נכנסת.';}
    softRefresh(v);
@@ -4641,6 +4666,7 @@ function checkFresh(){
   }
   if(recStarting||rec){softRefresh(v);return;}
   if(typingNow()){softRefresh(v);return;}
+  if(readingNow()){softRefresh(v);afterReading();return;}
   if(what&&liveSeen!==v.builtAt){liveSeen=v.builtAt;what.textContent='יש תשובה חדשה. טוען.';}
   var seen='';
   try{seen=sessionStorage.getItem('reloadedFor')||'';}catch(e){}
@@ -4669,7 +4695,7 @@ document.addEventListener('click',function(e){
  ringFor(t.tagName==='SUMMARY'?t.parentNode:t,1200);
 },true);
 setInterval(checkFresh,40000);
-setInterval(function(){paintLive(null);paintNew();try{renderSent();}catch(e){}if(!scrollingNow())try{renderReqs();}catch(e){}},20000);
+setInterval(function(){paintLive(null);paintNew();try{renderSent();}catch(e){}if(!scrollingNow()&&!readingInner())try{renderReqs();}catch(e){}},20000);
 function wake(){
  if(document.hidden)return;
  var changed=false;

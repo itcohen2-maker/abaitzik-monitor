@@ -6871,6 +6871,36 @@ document.addEventListener('touchend',function(){touching=false;markScroll();},{c
 document.addEventListener('touchcancel',function(){touching=false;},{capture:true,passive:true});
 window.addEventListener('wheel',markScroll,{capture:true,passive:true});
 function scrollingNow(){return touching||Date.now()-lastScrollAt<20000;}
+/*
+  Reading blocks the reload too (8.10, from his message: "אתה לא יכול לרענן את
+  המוניטור בזמן שאני קורא דוח ... המוניטור יחכה בזמן שאני קורא"). Twenty
+  seconds without scrolling is not the end of reading, it is one paragraph.
+  So: any touch, scroll, tap or key in the last five minutes, and a new build
+  waits. On an inner screen (a report, the answers, any list) even the quiet
+  data repaint waits, because new cards above the one he is on move his text.
+  On the home screen the answers keep coming in by themselves as before.
+*/
+var lastActAt=0;
+function markAct(){lastActAt=Date.now();}
+['click','keydown','touchstart','touchmove','wheel'].forEach(function(t){
+ document.addEventListener(t,markAct,{capture:true,passive:true});
+});
+window.addEventListener('scroll',markAct,{capture:true,passive:true});
+function readingNow(){
+ if(document.hidden)return false;
+ return Date.now()-lastActAt<300000;
+}
+function readingInner(){
+ return readingNow()&&typeof panePrev==='string'&&panePrev&&panePrev!=='h';
+}
+var readWait=null;
+function afterReading(){
+ if(readWait)return;
+ readWait=setTimeout(function(){
+  readWait=null;
+  if(readingNow())afterReading();else if(!document.hidden)checkFresh();
+ },Math.max(5000,300500-(Date.now()-lastActAt)));
+}
 function afterScroll(){
  if(scrollWait)return;
  scrollWait=setTimeout(function(){
@@ -6924,6 +6954,12 @@ function checkFresh(){
   // that arrives without the screen jumping under his hands, and a reload is
   // exactly that jump, plus the draft in the box.
   if(scrollingNow()){afterScroll();return;}
+  // Inside a screen and reading: nothing moves, not even the data. A line says
+  // something new is waiting, and it comes in once he has been still a while.
+  if(readingInner()){
+   if(what&&liveSeen!==v.builtAt){liveSeen=v.builtAt;what.textContent='יש עדכון. מחכה שתסיים לקרוא.';}
+   afterReading();return;
+  }
   if(v.codeId&&CODE_ID&&v.codeId===CODE_ID){
    if(what&&liveSeen!==v.builtAt){liveSeen=v.builtAt;what.textContent='תשובה חדשה נכנסת.';}
    softRefresh(v);
@@ -6937,6 +6973,8 @@ function checkFresh(){
   // Never mid typing either (30.9, voice note: "באמצע הקלדה יש ריענון וזה מוחק
   // לי את הכל"). The new build waits for the next check after he stops.
   if(typingNow()){softRefresh(v);return;}
+  // Reading on the home screen: the data comes in, the reload waits.
+  if(readingNow()){softRefresh(v);afterReading();return;}
   // A new build is up. Say so before reloading, so a reply that landed while
   // he was reading does not just make the screen jump under his hands.
   if(what&&liveSeen!==v.builtAt){liveSeen=v.builtAt;what.textContent='יש תשובה חדשה. טוען.';}
@@ -6969,7 +7007,7 @@ document.addEventListener('click',function(e){
 },true);
 // Forty seconds, not two minutes. He wants to see that something is alive.
 setInterval(checkFresh,40000);
-setInterval(function(){paintLive(null);paintNew();try{renderSent();}catch(e){}if(!scrollingNow())try{renderReqs();}catch(e){}},20000);
+setInterval(function(){paintLive(null);paintNew();try{renderSent();}catch(e){}if(!scrollingNow()&&!readingInner())try{renderReqs();}catch(e){}},20000);
 /*
   Every way a phone can come back to this page.
 
