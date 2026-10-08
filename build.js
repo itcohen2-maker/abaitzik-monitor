@@ -3451,6 +3451,8 @@ try{
   <button type="button" class="gt gRec" id="gRecipes"><b><img class="gi" src="icons/lolos-giraffe.png" alt=""> מתכונים</b><small>חוברת לולוס וספר המתכונים של איציק</small></button>
   <button type="button" class="gt g16" id="gIsra"><b>💳 ישראכרט יואל</b><small>הכרטיסים, מה לבקש, ומה ענו</small></button>
   <!-- איציק, 3.10: "כשאפשר לחסוך, תעצור ותעדכן אותי גם במוניטור בכפתור מהבהב". -->
+  <!-- איציק, 8.10: כפתור לכדור מוקסיפן שמהבהב כשהגיע הזמן ומפסיק כשנכנסתי. -->
+  <button type="button" class="gt g4" id="gMoxy"><b>💊 מוקסיפן</b><small id="gMoxyS">מהבהב כשהגיע הזמן, עד שנכנסת</small></button>
   <button type="button" class="gt g4" id="gModel"><b>🔁 להחליף מודל</b><small>מהבהב כשאפשר לחסוך, עד שהחלפת</small></button>
   <button type="button" class="gt g10" id="gFiles"><b>📁 הקבצים שלי</b><small>כל מה ששלחת, סגור במוניטור</small></button>
   <!--
@@ -4055,6 +4057,12 @@ try{
  <div id="moBox"><div class="empty">אין כרגע בקשה להחליף.</div></div>
  <button type="button" class="ask" id="moDone" hidden>החלפתי</button>
  <div id="moSaid" class="rephint"></div>
+</section>
+
+<section id="pMoxy" hidden>
+ <h2>מוקסיפן</h2>
+ <div class="rephint">שלוש פעמים ביום: 08:00, 16:00 ו 00:00. הכפתור מהבהב כשמגיע הזמן ונעצר כשנכנסת לכאן. גם התראה לנייד בכל מועד.</div>
+ <div class="pillinfo" id="moxyInfo"></div>
 </section>
 
 <section id="pIsra" hidden>
@@ -6607,7 +6615,7 @@ function updateDot(){
  document.title=(fresh?'(1) ':'')+PAGE_TITLE;
 }
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
-var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn',Rc:'pRc',Mo:'pModel',Sa:'pSale',Fi:'pFi',Is:'pIsra'};
+var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn',Rc:'pRc',Mo:'pModel',Sa:'pSale',Fi:'pFi',Is:'pIsra',Mx:'pMoxy'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 /*ITZIK:BEGIN*/
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
@@ -9961,6 +9969,26 @@ function renderModel(){
 }
 boot('modelswitch',function(){var b=document.getElementById('gModel');if(b)b.classList.toggle('taskblink',!!modelPending());});
 on('gModel',function(){pane('Mo');renderModel();});
+/*ITZIK:BEGIN*/
+// Moxypen. The tile blinks from the moment a dose is due until he opens it.
+function moxyPaint(){
+ var b=document.getElementById('gMoxy');if(!b||!window.ML||!ML.moxySlots)return;
+ var s=ML.moxySlots(Date.now()),seen=0;
+ try{seen=Number(localStorage.getItem('moxySeen'))||0;}catch(e){}
+ b.classList.toggle('taskblink',!!s.last&&seen<s.last);
+ var sm=document.getElementById('gMoxyS');
+ if(sm)sm.textContent=(s.last&&seen<s.last)?'הגיע הזמן לכדור':('הבא ב '+hm(new Date(s.next)));
+}
+function renderMoxy(){
+ var s=ML.moxySlots(Date.now()),box=document.getElementById('moxyInfo');
+ try{localStorage.setItem('moxySeen',String(Date.now()));}catch(e){}
+ if(box)box.innerHTML=(s.last?'<b>הגיע הזמן לכדור של '+esc(hm(new Date(s.last)))+'</b>':'<b>עוד לא הגיע הזמן</b>')
+  +'<div>המנה הבאה בשעה '+esc(hm(new Date(s.next)))+'</div>';
+ moxyPaint();
+}
+boot('moxy',function(){moxyPaint();setInterval(moxyPaint,30000);});
+on('gMoxy',function(){pane('Mx');renderMoxy();});
+/*ITZIK:END*/
 on('moDone',function(){
  var m=modelPending(),said=document.getElementById('moSaid'),btn=document.getElementById('moDone');
  if(!m)return;

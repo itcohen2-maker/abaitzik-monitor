@@ -1789,7 +1789,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-08T11:45:20.232Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-08T11:46:12.623Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1916,6 +1916,7 @@ try{
   <button type="button" class="gt g15" id="gSale"><b>⚖️ מכירת לולוס</b><small>התיק לעורך הדין, מה פתוח ומה נמסר</small></button>
   <button type="button" class="gt gRec" id="gRecipes"><b><img class="gi" src="icons/lolos-giraffe.png" alt=""> מתכונים</b><small>חוברת לולוס וספר המתכונים של איציק</small></button>
   <button type="button" class="gt g16" id="gIsra"><b>💳 ישראכרט יואל</b><small>הכרטיסים, מה לבקש, ומה ענו</small></button>
+  <button type="button" class="gt g4" id="gMoxy"><b>💊 מוקסיפן</b><small id="gMoxyS">מהבהב כשהגיע הזמן, עד שנכנסת</small></button>
   <button type="button" class="gt g4" id="gModel"><b>🔁 להחליף מודל</b><small>מהבהב כשאפשר לחסוך, עד שהחלפת</small></button>
   <button type="button" class="gt g10" id="gFiles"><b>📁 הקבצים שלי</b><small>כל מה ששלחת, סגור במוניטור</small></button>
   <button type="button" class="gt g18" id="gAppts"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
@@ -2289,6 +2290,12 @@ try{
  <div id="moBox"><div class="empty">אין כרגע בקשה להחליף.</div></div>
  <button type="button" class="ask" id="moDone" hidden>החלפתי</button>
  <div id="moSaid" class="rephint"></div>
+</section>
+
+<section id="pMoxy" hidden>
+ <h2>מוקסיפן</h2>
+ <div class="rephint">שלוש פעמים ביום: 08:00, 16:00 ו 00:00. הכפתור מהבהב כשמגיע הזמן ונעצר כשנכנסת לכאן. גם התראה לנייד בכל מועד.</div>
+ <div class="pillinfo" id="moxyInfo"></div>
 </section>
 
 <section id="pIsra" hidden>
@@ -3173,7 +3180,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='aa43b401e3';
+var CODE_ID='96104ff050';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -4425,7 +4432,7 @@ function updateDot(){
  document.title=(fresh?'(1) ':'')+PAGE_TITLE;
 }
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
-var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn',Rc:'pRc',Mo:'pModel',Sa:'pSale',Fi:'pFi',Is:'pIsra'};
+var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn',Rc:'pRc',Mo:'pModel',Sa:'pSale',Fi:'pFi',Is:'pIsra',Mx:'pMoxy'};
 
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
 function lastPill(){
@@ -6817,6 +6824,25 @@ function renderModel(){
 }
 boot('modelswitch',function(){var b=document.getElementById('gModel');if(b)b.classList.toggle('taskblink',!!modelPending());});
 on('gModel',function(){pane('Mo');renderModel();});
+
+function moxyPaint(){
+ var b=document.getElementById('gMoxy');if(!b||!window.ML||!ML.moxySlots)return;
+ var s=ML.moxySlots(Date.now()),seen=0;
+ try{seen=Number(localStorage.getItem('moxySeen'))||0;}catch(e){}
+ b.classList.toggle('taskblink',!!s.last&&seen<s.last);
+ var sm=document.getElementById('gMoxyS');
+ if(sm)sm.textContent=(s.last&&seen<s.last)?'הגיע הזמן לכדור':('הבא ב '+hm(new Date(s.next)));
+}
+function renderMoxy(){
+ var s=ML.moxySlots(Date.now()),box=document.getElementById('moxyInfo');
+ try{localStorage.setItem('moxySeen',String(Date.now()));}catch(e){}
+ if(box)box.innerHTML=(s.last?'<b>הגיע הזמן לכדור של '+esc(hm(new Date(s.last)))+'</b>':'<b>עוד לא הגיע הזמן</b>')
+  +'<div>המנה הבאה בשעה '+esc(hm(new Date(s.next)))+'</div>';
+ moxyPaint();
+}
+boot('moxy',function(){moxyPaint();setInterval(moxyPaint,30000);});
+on('gMoxy',function(){pane('Mx');renderMoxy();});
+
 on('moDone',function(){
  var m=modelPending(),said=document.getElementById('moSaid'),btn=document.getElementById('moDone');
  if(!m)return;
