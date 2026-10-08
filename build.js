@@ -3396,7 +3396,7 @@ try{
   <!-- Ilay's two tiles. Hidden on Itzik's copy by the instance screens list. -->
   <button type="button" class="gt g11" id="gCIdeas" hidden><b>💡 רעיונות לתוכן</b><small>מה שעלה לך, לפני שנשכח</small></button>
   <button type="button" class="gt g3" id="gPlan" hidden><b>🗓️ לוח תוכן</b><small>מה עולה מתי, ומה כבר עלה</small></button>
-  <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות</b><small>מה עוד המסך הזה יכול לעשות</small></button>
+  <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות לשיפור המוניטור</b><small>מה עוד המסך הזה יכול לעשות</small></button>
   <!--
     איציק, 23.9, בהקלטה: "אפשר להסיר את כפתור בקשות מיוחדות".
     הכפתור ירד ממסך הבית. המסך עצמו pY וכל הפריטים בו נשארים,
@@ -4058,7 +4058,7 @@ try{
 
 <!--ITZIK:BEGIN-->
 <section id="pI" hidden>
- <h2>רעיונות</h2>
+ <h2>רעיונות לשיפור המוניטור</h2>
  <!--
   הוא ביקש את שלושת הכפתורים האלה מחוץ למסך הבית ובתוך הרעיונות.
   הם לא נמחקו ולא איבדו כלום, הם פשוט יושבים כאן.
