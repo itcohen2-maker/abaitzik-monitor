@@ -12994,6 +12994,7 @@ function reallySend(list,squeezed){
   clearAim();
   paintMics('ok');
   sendSay(how==='backup'?'נשלח בערוץ הגיבוי. הגיע אליי.':'נשלח. קלטתי.');
+  list.forEach(function(f){if(f&&f._more)recOfferMore(f._more.aim,f._more.at);});
   var q=pending();
   q.push({at:new Date().toISOString(),text:cap||deflt});
   savePending(q);
@@ -13132,7 +13133,39 @@ function recTick(){
  var t=document.getElementById('recTime');
  if(t)t.textContent=recClock();
  recSaid.textContent='מקליט '+recClock()+'. לחיצה נוספת עוצרת ושולחת.';
- if(recSec>=480)recStop();
+ /*
+   Reviewer 7.10, approved 8.10: a long description was cut at eight minutes
+   with no word before it. A minute ahead the screen says so and the phone
+   buzzes (nothing is said aloud, it would land in the recording), and a take
+   the clock ended offers to go on after it is sent.
+ */
+ if(recSec>=REC_MAX-60){
+  var left=REC_MAX-recSec,h=document.getElementById('recHint');
+  if(h){h.textContent='נשארה '+(left>=60?'דקה':left+' שניות')+'. אחר כך זה נשלח, ואפשר להמשיך בהקלטה חדשה.';h.style.color='#b91c1c';}
+  if(recSec===REC_MAX-60){try{navigator.vibrate&&navigator.vibrate([200,100,200]);}catch(e){}}
+ }
+ if(recSec>=REC_MAX){recCut=true;recStop();}
+}
+var REC_MAX=480,recCut=false;
+/*
+  After a take the clock cut: one button that opens a new recording aimed at
+  the same thing, and its caption says it continues the one before.
+*/
+function recOfferMore(was,at){
+ var old=document.getElementById('recMore');if(old)old.remove();
+ var b=document.createElement('button');
+ b.type='button';b.id='recMore';
+ b.textContent='🎙️ להמשיך להקליט';
+ b.style.cssText='position:fixed;left:50%;bottom:96px;transform:translateX(-50%);z-index:9999;padding:14px 22px;font-size:18px;border-radius:24px;border:0;background:#b91c1c;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.25)';
+ var gone=setTimeout(function(){b.remove();},90000);
+ b.onclick=function(){
+  clearTimeout(gone);b.remove();
+  if(was)setAim(was);
+  var f=document.getElementById('fCap');
+  if(f)f.value='המשך של ההקלטה מ'+at+(was?'. '+aimQuote(was):'');
+  recStart();
+ };
+ document.body.appendChild(b);
 }
 function recModal(open){
  var m=document.getElementById('recModal');
@@ -13141,7 +13174,8 @@ function recModal(open){
  if(open){
   document.getElementById('recTime').textContent='0:00';
   document.getElementById('recTitle').textContent=FEM?'מדברת אליי':'מדבר אליי';
-  document.getElementById('recHint').textContent='לחיצה עוצרת ושולחת אליי';
+  var rh=document.getElementById('recHint');rh.textContent='לחיצה עוצרת ושולחת אליי';rh.style.color='';
+  var rm=document.getElementById('recMore');if(rm)rm.remove();
  }
 }
 // Cancelling throws the audio away instead of sending it.
@@ -13288,6 +13322,7 @@ function recStart(){
    var stampName='voice-'+d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())
     +p2(d.getHours())+p2(d.getMinutes())+p2(d.getSeconds())+'.'+ext;
    var file=new File([b],stampName,{type:type});
+   if(recCut){recCut=false;file._more={aim:aim,at:p2(d.getHours())+':'+p2(d.getMinutes())};}
    /*
      Itzik, 17.9, by voice: "set it up so I can send a video and a voice and a
      photo and everything together". A recording used to leave on its own and
@@ -13321,6 +13356,7 @@ function recStart(){
   paintMics('rec');
   recBtn.setAttribute('aria-label','עצירת ההקלטה ושליחה');
   recSaid.textContent='מקליט 0:00. לחיצה נוספת עוצרת ושולחת. עד שמונה דקות.';
+  recCut=false;
   recTimer=setInterval(recTick,1000);
  }).catch(function(err){
   clearTimeout(deadline);
