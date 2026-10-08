@@ -11468,7 +11468,7 @@ on('gPush',function(){
     +'<a class="yb yb3" href="ntfy://ntfy.sh/'+encodeURIComponent(topic)+'">חיבור ההתראות</a>'
     +L('אם לא נפתח: מעתיקים את שם הערוץ, ב ntfy לוחצים על הפלוס ומדביקים.')
     +'<button type="button" class="yb yb4" data-a="copy">העתקת שם הערוץ</button>')
-   +L('4. כשהאפליקציה שואלת אם לאפשר התראות, מאשרים.')
+   +L('בסוף, כשהאפליקציה שואלת אם לאפשר התראות, מאשרים.')
    :L('הערוץ עוד לא נטען. סוגרים, מחכים רגע ופותחים שוב.'))
   +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
  w.onclick=function(e){
