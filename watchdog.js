@@ -135,7 +135,13 @@ function check(now) {
     const st = show(UNIT + '.service', 'ActiveState');
     const since = when(show(UNIT + '.service', 'StateChangeTimestamp'));
     if (st === 'activating' && now - since > STUCK_MS) problems.push('המענה האוטומטי תקוע ' + Math.round((now - since) / 60000) + ' דקות');
-    const last = when(show(UNIT + '.timer', 'LastTriggerUSec'));
+    // 8.10: the listener now starts the worker itself the moment a message lands
+    // (monitor-worker-kick.path), and every such start pushes the timer's next tick
+    // a minute further out. So the timer alone can sit quiet for minutes while
+    // the worker is running every few seconds. The last start of either counts.
+    const last = Math.max(
+      when(show(UNIT + '.timer', 'LastTriggerUSec')) || 0,
+      when(show(UNIT + '.service', 'ExecMainStartTimestamp')) || 0) || NaN;
     if (show(UNIT + '.timer', 'ActiveState') !== 'active') problems.push('השעון של המענה לא פעיל');
     else if (!isNaN(last) && now - last > TIMER_MS) problems.push('השעון של המענה לא הופעל ' + Math.round((now - last) / 60000) + ' דקות');
     const g = gitStuck(__dirname, now);
