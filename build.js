@@ -827,8 +827,21 @@ function build() {
   const guides = tenantGuides(inst).map((g) => ({ key: g.key, title: g.title, text: g.text }));
   const screens = Array.isArray(inst.screens) && inst.screens.length
     ? inst.screens.filter((id) => id !== 'gAdminReq').concat(guides.map((g, i) => 'gGuide' + i), ['gAdminReq']) : inst.screens;
+  /*
+    8.10, from the reviewer: "שכחתי את הקוד" on the lock. The page files a request
+    to Itzik carrying a random device mark it keeps; once he approves, the mark is
+    listed here and that one device opens by itself. A mark is meaningless on any
+    other phone, so the list can sit in the clear.
+  */
+  let unlocks = [];
+  try {
+    unlocks = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'status', 'change-requests.json'), 'utf8'))
+      .filter((r) => r && r.status === 'approved')
+      .map((r) => (/מכשיר ([a-f0-9]{12})/.exec(String(r.text || '')) || [])[1])
+      .filter(Boolean);
+  } catch (e) { /* no requests yet */ }
   const instanceJson = JSON.stringify({ name: inst.name, owner: inst.owner, pageTitle: inst.pageTitle,
-    screens,
+    screens, unlocks,
     computer: inst.computer, phone: inst.phone, welcome: inst.welcome, homeTile: inst.homeTile || '', gender: inst.gender || '',
     guides });
   const html = html0.replace('__CODE_ID__', codeId0).replace("'__INSTANCE__'", instanceJson);
@@ -1407,6 +1420,7 @@ button.abtn[disabled]{opacity:.55}
 .rcsteps li{margin-bottom:8px}
 .fview{position:fixed;inset:0;z-index:99990;background:rgba(10,12,18,.94);display:flex;flex-direction:column}
 .fv-bar{display:flex;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;color:#fff}
+.fv-nm{background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:999px;padding:6px 12px;font:600 13px Heebo,sans-serif;flex:none}
 .fv-bar b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
 .fv-x{width:44px;height:44px;border:0;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-size:20px;cursor:pointer}
 .fv-body{flex:1;overflow:auto;padding:12px 16px calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:12px}
@@ -3230,6 +3244,7 @@ try{
    <button type="button" id="lockGo">כניסה</button>
   </div>
   <button type="button" class="alt" id="lockUseCode">כניסה עם הקוד</button>
+  <button type="button" class="alt" id="lockForgot" hidden>שכחתי את הקוד</button>
  </div>
 </div>
 <script>
@@ -4645,7 +4660,44 @@ function fvPrint(body,t){
   saw it too. The name now comes from the line it was listed under in its
   sheet, and a file listed nowhere has its dates and dashes taken off.
 */
+/*
+  Itzik, 8.10, on the same idea: "לראות אם יש שם להודעה ואם לא לבקש, על מנת
+  שיהיה סדר". After the sheet's own title, the words of the message that
+  carried the file name it. A file with neither asks for a name once, and the
+  name given is kept on this phone and used for the bar and for sharing.
+*/
+function fileOwnNames(){try{return JSON.parse(localStorage.getItem('fileNames')||'{}')||{};}catch(e){return {};}}
+function fileMsgName(name){
+ var short=String(name).split('/').pop();if(!short)return '';
+ var NL=String.fromCharCode(10),got='';
+ (window.D&&D.chat||[]).some(function(x){
+  var t=String(x.text||'');if(t.indexOf(short)<0)return false;
+  var cap='';
+  if(x.from==='itzik'){var k=t.lastIndexOf(NL+'(');cap=k>0?t.slice(0,k):'';}
+  else{
+   var ln=t.split(NL).filter(function(l){return l.indexOf(short)>-1;})[0]||'';
+   cap=ln.replace(new RegExp('(https?://|files/)[^ ]+','g'),' ');
+  }
+  cap=cap.split(NL)[0].replace(/[:\s]+$/,'').replace(/^[\s:]+/,'').replace(/ +/g,' ').trim();
+  if(cap.length<3||cap.length>60||cap.indexOf(short)>-1)return false;
+  got=cap;return true;
+ });
+ return got;
+}
+function fileListName(name){
+ var lists=[];
+ ['NER_ITEMS','REEL_ITEMS','FUT_ITEMS','OCC_ITEMS','LAW_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS']
+  .forEach(function(k){if(Array.isArray(window[k]))lists.push(window[k]);});
+ for(var i=0;i<lists.length;i++){
+  var L=lists[i]||[];
+  for(var j=0;j<L.length;j++)if(L[j]&&L[j].r===name&&L[j].t)return String(L[j].t).trim();
+ }
+ return '';
+}
+function fileHasName(name){return !!(fileOwnNames()[name]||fileListName(name)||fileMsgName(name));}
 function fileNiceName(name){
+ var own=fileOwnNames()[name];if(own)return own;
+ var ln=fileListName(name)||fileMsgName(name);if(ln)return ln;
  var short=String(name).split('/').pop();
  var lists=[];
  ['NER_ITEMS','REEL_ITEMS','FUT_ITEMS','OCC_ITEMS','LAW_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS']
@@ -4732,8 +4784,18 @@ function fileView(name){
  var e=fileEntry(name);if(!e||!GKEY)return false;
  var ov=document.createElement('div');ov.className='fview';
  var short=fileShareName(name);
- ov.innerHTML='<div class="fv-bar"><button type="button" class="fv-x" aria-label="סגירה">✕</button><b>'+esc(fileNiceName(name))+'</b></div><div class="fv-body"><div class="empty">פותח.</div></div>';
+ ov.innerHTML='<div class="fv-bar"><button type="button" class="fv-x" aria-label="סגירה">✕</button><b>'+esc(fileNiceName(name))+'</b>'
+  +(fileHasName(name)?'':'<button type="button" class="fv-nm">לתת שם</button>')+'</div><div class="fv-body"><div class="empty">פותח.</div></div>';
  document.body.appendChild(ov);
+ var nm=ov.querySelector('.fv-nm');
+ if(nm)nm.onclick=function(){
+  var v=(prompt('לקובץ הזה אין שם. איך לקרוא לו?','')||'').replace(/\s+/g,' ').trim().slice(0,60);
+  if(!v)return;
+  var all=fileOwnNames();all[name]=v;
+  try{localStorage.setItem('fileNames',JSON.stringify(all));}catch(e){}
+  ov.querySelector('.fv-bar b').textContent=v;nm.remove();short=fileShareName(name);
+  var sv=ov.querySelector('.fv-save');if(sv)sv.setAttribute('download',short);
+ };
  var url='';
  function close(){ov.remove();if(url)setTimeout(function(){URL.revokeObjectURL(url);},1000);}
  ov.querySelector('.fv-x').onclick=close;
@@ -4772,7 +4834,7 @@ function fileView(name){
   var body=ov.querySelector('.fv-body');body.innerHTML=h;
   var zb=body.querySelector('.fv-zoom');if(zb)fvZoom(zb);
   var sb=body.querySelector('.fv-share');
-  if(sb)sb.onclick=function(){navigator.share({files:[sf],title:short}).catch(shareFail);};
+  if(sb)sb.onclick=function(){var f2=sf;try{if(sf.name!==short)f2=new File([b],short,{type:sf.type});}catch(x){}navigator.share({files:[f2],title:short}).catch(shareFail);};
   var pb=body.querySelector('.fv-print');
   /*
     Itzik, 5.10: "הכפתור שליחה להדפסה לא עובד". The monitor runs from his
@@ -10358,9 +10420,38 @@ if(locked()){
  document.getElementById('lockCode').addEventListener('keydown',function(e){
   if(e.key==='Enter')lockGo();
  });
+ /*
+  8.10, from the reviewer: with Face ID failing and the code forgotten there was
+  no way in at all. On a customer's monitor this asks Itzik to open it. The
+  request carries a random mark kept on this phone; when he approves, the next
+  page lists the mark and this phone opens once, with the lock switched off so
+  it can be set again. Only Itzik's approval opens it, never the button itself.
+ */
+ var lockMark=function(){try{return localStorage.getItem('lockReset')||'';}catch(e){return '';}};
+ var lockFree=(INSTANCE.unlocks||[]).indexOf(lockMark())>-1&&lockMark();
+ if(lockFree){
+  try{localStorage.setItem('lockOn','0');localStorage.removeItem('lockReset');}catch(e){}
+  unlock();try{lockToggleRender();}catch(e){}
+  setTimeout(function(){toast('הבקשה אושרה והמוניטור נפתח. הנעילה כבויה, ואפשר להפעיל אותה מחדש בהגדרות.');},400);
+ }else if(INSTANCE.name&&INSTANCE.name!=='abaitzik'&&myCode()){
+  var fg=document.getElementById('lockForgot');
+  fg.hidden=false;
+  if(lockMark())lockSay('הבקשה לפתוח נשלחה. כשבונה המוניטור יאשר, המוניטור ייפתח כאן לבד ותגיע אליך הודעה.');
+  fg.onclick=function(){
+   if(lockMark()){lockSay('הבקשה כבר נשלחה. כשבונה המוניטור יאשר, המוניטור ייפתח כאן לבד ותגיע אליך הודעה.');return;}
+   var a=new Uint8Array(6);crypto.getRandomValues(a);
+   var mark=[].map.call(a,function(x){return ('0'+x.toString(16)).slice(-2);}).join('');
+   fg.disabled=true;lockSay('שולח...');
+   sendText('בקשה ממנהל','בקשה ממנהל: שכחתי את הקוד של הנעילה. בבקשה לפתוח את המוניטור בטלפון שלי (מכשיר '+mark+')','משימה').then(function(){
+    try{localStorage.setItem('lockReset',mark);}catch(e){}
+    fg.disabled=false;
+    lockSay('הבקשה נשלחה לבונה המוניטור. כשהוא יאשר, המוניטור ייפתח כאן לבד ותגיע אליך הודעה.');
+   }).catch(function(){fg.disabled=false;lockSay('לא נשלח. תבדוק חיבור ותנסה שוב.');});
+  };
+ }
  // Face ID is offered the moment the page opens, so in the good case he only
  // looks at the phone and he is in.
- setTimeout(function(){lockFaceTry(true);},220);
+ if(!lockFree)setTimeout(function(){lockFaceTry(true);},220);
 }
 
 showCodeBox();
@@ -13746,6 +13837,78 @@ document.getElementById('recCancel').onclick=function(){
  if(rec&&rec.state==='recording'){recAbort=true;recStop();}
  else{recModal(false);}
 };
+/*
+  Reviewer 7.10, approved 8.10: the iPhone permission steps used to appear only
+  after a recording had failed, which can be in front of a supplier. On the
+  first open, once, a three second check: the phone asks for the microphone
+  now, while there is time, and a bar that moves with the voice shows it works.
+  A microphone already allowed, or a check already done, skips it.
+*/
+function micFirstCheck(){
+ var KEY='micChecked';
+ try{if(localStorage.getItem(KEY)||Date.now()<+(localStorage.getItem('micCheckLater')||0))return;}catch(e){return;}
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder)return;
+ function show(){
+  if(document.getElementById('micFirst')||rec||recStarting)return;
+  var c=document.createElement('div');c.id='micFirst';
+  c.style.cssText='position:fixed;left:12px;right:12px;bottom:88px;z-index:9998;background:var(--surface,#fff);color:var(--ink,#111);border:1px solid var(--line,#ddd);border-radius:16px;padding:14px 16px;box-shadow:0 6px 20px rgba(0,0,0,.18);font-size:15px;line-height:1.5';
+  c.innerHTML='<b style="display:block;font-size:16px;margin-bottom:4px">🎙️ בדיקת מיקרופון, פעם אחת</b>'
+   +'<span id="micFirstSay">שלוש שניות עכשיו, כשיש זמן, כדי שההקלטה תעבוד כשצריך באמת. אם הטלפון שואל, '+(FEM?'לחצי':'תלחץ')+' לאפשר.</span>'
+   +'<div id="micFirstBar" style="height:10px;border-radius:5px;background:var(--line,#ddd);margin:10px 0;overflow:hidden" hidden><i style="display:block;height:100%;width:0;background:#16a34a;transition:width .1s"></i></div>'
+   +'<div style="display:flex;gap:8px;margin-top:8px"><button type="button" id="micFirstGo" style="flex:1;padding:10px;border-radius:12px;border:0;background:var(--ink,#111);color:var(--ground,#fff);font-size:15px">לבדוק עכשיו</button>'
+   +'<button type="button" id="micFirstNo" style="padding:10px 14px;border-radius:12px;border:1px solid var(--line,#ddd);background:transparent;color:inherit;font-size:15px">אחר כך</button></div>';
+  document.body.appendChild(c);
+  var say=c.querySelector('#micFirstSay'),go=c.querySelector('#micFirstGo');
+  c.querySelector('#micFirstNo').onclick=function(){try{localStorage.setItem('micCheckLater',String(Date.now()+86400000));}catch(e){}c.remove();};
+  go.onclick=function(){
+   if(go.getAttribute('data-done')){c.remove();return;}
+   go.disabled=true;say.textContent='פותח את המיקרופון...';
+   audioMode('play-and-record');
+   navigator.mediaDevices.getUserMedia({audio:true}).then(function(st){
+    say.textContent=(FEM?'תגידי':'תגיד')+' משהו, שלוש שניות.';
+    // A real three second take, no audio context: those cut his music (20.9).
+    var bar=c.querySelector('#micFirstBar'),fill=bar.querySelector('i'),got=0,r=null,t0=Date.now(),tm=null;
+    var tr=st.getAudioTracks()[0];
+    bar.hidden=false;
+    try{var mt=recPickType();r=mt?new MediaRecorder(st,{mimeType:mt}):new MediaRecorder(st);r.ondataavailable=function(ev){if(ev.data)got+=ev.data.size;};r.start();}catch(e){r=null;}
+    tm=setInterval(function(){fill.style.width=Math.min(100,(Date.now()-t0)/30)+'%';},100);
+    setTimeout(function(){
+     clearInterval(tm);
+     var fin=function(){
+      var ok=tr&&tr.readyState==='live'&&!tr.muted&&(!r||got>0);
+      try{st.getTracks().forEach(function(t){t.stop();});}catch(e){}
+      audioMode('auto');
+      go.disabled=false;
+      if(!ok){bar.hidden=true;say.textContent='המיקרופון לא קלט. '+(FEM?'נסי':'תנסה')+' שוב.';go.textContent='לבדוק שוב';return;}
+      try{localStorage.setItem(KEY,new Date().toISOString());}catch(e){}
+      bar.hidden=true;
+      say.textContent='המיקרופון עובד ומאושר. מעכשיו אפשר להקליט מכל מסך.';
+      go.textContent='סגירה';go.setAttribute('data-done','1');
+      setTimeout(function(){c.remove();},6000);
+     };
+     if(r&&r.state!=='inactive'){r.onstop=function(){setTimeout(fin,50);};try{r.stop();}catch(e){fin();}}
+     else fin();
+    },3000);
+   }).catch(function(err){
+    audioMode('auto');
+    c.remove();
+    micSheet(((err&&err.name)||'')==='NotAllowedError');
+   });
+  };
+ }
+ var later=function(){setTimeout(show,5000);};
+ try{
+  if(navigator.permissions&&navigator.permissions.query){
+   navigator.permissions.query({name:'microphone'}).then(function(p){
+    if(p.state==='granted'){try{localStorage.setItem(KEY,'granted');}catch(e){}return;}
+    later();
+   }).catch(later);
+   return;
+  }
+ }catch(e){}
+ later();
+}
+micFirstCheck();
 var micBtn=document.getElementById('micBtn');
 var micSaid=document.getElementById('micSaid');
 micBtn.onclick=toggleRec;
