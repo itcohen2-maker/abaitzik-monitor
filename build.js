@@ -9681,10 +9681,40 @@ on('gPlan',function(){pane('P');renderPlan();});
 function renderFiles(){
  var box=document.getElementById('fiBox');if(!box)return;var F=D.files||[];
  if(!F.length){box.innerHTML='<div class="empty">אין כאן קבצים.</div>';return;}
- box.innerHTML=F.map(function(f){
-  var kb=f.s>1048576?(Math.round(f.s/104857.6)/10+' MB'):(Math.max(1,Math.round(f.s/1024))+' KB');
-  return '<a href="files/'+esc(f.n)+'"><span>'+esc(f.n)+'</span><small>'+kb+'</small></a>';
+ /*
+   Reviewer 7.10, approved 8.10: five versions of the same deck one after the
+   other, and a cancelled one among them, and no way to tell which is the one
+   to send. Files with the same name up to a version mark (v3, גרסה 2, טיוטה,
+   draft, final) are one work: the newest is on top with "עדכני", the older
+   ones and anything marked cancelled fold under "גרסאות קודמות".
+ */
+ function kb(f){return f.s>1048576?(Math.round(f.s/104857.6)/10+' MB'):(Math.max(1,Math.round(f.s/1024))+' KB');}
+ function row(f,tag){return '<a href="files/'+esc(f.n)+'"><span>'+(tag?'<b style="font-size:12px;background:#16a34a;color:#fff;border-radius:8px;padding:1px 7px;margin-inline-end:6px">עדכני</b>':'')+esc(f.n)+'</span><small>'+kb(f)+'</small></a>';}
+ var groups={},order=[],old=[];
+ F.forEach(function(f){
+  if(/בוטל|cancel+ed/i.test(f.n)){old.push(f);return;}
+  var k=fileWork(f.n);
+  if(!groups[k]){groups[k]=[];order.push(k);}
+  groups[k].push(f);
+ });
+ var h=order.map(function(k){
+  var g=groups[k].slice().sort(function(a,b){return (fileVer(b.n)-fileVer(a.n))||((a.at||'')<(b.at||'')?1:-1);});
+  old=old.concat(g.slice(1));
+  return row(g[0],g.length>1);
  }).join('');
+ if(old.length)h+='<details style="margin-top:6px"><summary style="padding:10px 4px;color:var(--dim)">גרסאות קודמות ('+old.length+')</summary>'
+  +old.map(function(f){return row(f,false);}).join('')+'</details>';
+ box.innerHTML=h;
+}
+function fileWork(n){
+ var b=String(n).split('/').pop().replace(/\.[a-z0-9]{1,5}$/i,'').toLowerCase();
+ return b.replace(/([-_ ,.]*(v|ver|version|גרסה|טיוטה|draft|final|סופי)[-_ ]*\d*)+$/i,'').replace(/[-_ ]+$/,'')||b;
+}
+function fileVer(n){
+ var b=String(n).split('/').pop().replace(/\.[a-z0-9]{1,5}$/i,'');
+ if(/(final|סופי)[-_ ]*$/i.test(b))return 999;
+ var m=b.match(/(?:v|ver|version|גרסה|טיוטה|draft)[-_ ]*(\d+)[-_ ]*$/i);
+ return m?+m[1]:1;
 }
 on('gFiles',function(){pane('Fi');renderFiles();});
 /*ITZIK:BEGIN*/
