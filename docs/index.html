@@ -1060,6 +1060,11 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .ybwa{display:block;width:100%;text-align:center;text-decoration:none;background:linear-gradient(150deg,#5ee28a,#128c4a);color:#fff}
 a.yb4{display:block;text-align:center;text-decoration:none;background:linear-gradient(150deg,#ffd76a,#d49a00);color:#3a2e00}
 .yx{background:transparent;opacity:.6;min-height:40px;padding:8px}
+.ytopx{position:sticky;top:0;z-index:3;align-self:flex-end;width:40px;height:40px;
+ margin-bottom:-49px;border:0;border-radius:50%;background:#e8eef6;color:#16202c;
+ font:700 18px/40px Heebo,sans-serif;text-align:center;cursor:pointer;
+ box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.ycard.hasx>b:first-of-type{padding-inline-end:46px}
 .yb:active{transform:translateY(1px)}
 .ytoast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:10000;
  background:#16202c;color:#fff;padding:10px 16px;border-radius:12px;
@@ -1763,7 +1768,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-08T04:51:56.065Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-08T04:52:21.747Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3075,7 +3080,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='52c0e37012';
+var CODE_ID='891652b60b';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -7773,6 +7778,24 @@ function shipOpen(id,label,html,after){
  if(after)after(w);
  return w;
 }
+function sheetTopX(w){
+ var c=w.querySelector('.ycard');if(!c||c.querySelector(':scope > .ytopx'))return;
+ var xs=c.querySelectorAll(':scope > .yx');if(!xs.length)return;
+ var x=xs[xs.length-1],t=document.createElement('button');
+ t.type='button';t.className='ytopx';t.textContent='✕';t.setAttribute('aria-label','סגירה');
+ t.onclick=function(e){e.stopPropagation();x.click();};
+ c.insertBefore(t,c.firstChild);c.classList.add('hasx');
+}
+function watchSheets(){
+ new MutationObserver(function(ms){
+  ms.forEach(function(m){[].forEach.call(m.addedNodes,function(n){
+   if(n.nodeType!==1||!n.classList.contains('ysheet'))return;
+   sheetTopX(n);
+   new MutationObserver(function(){if(n.isConnected)sheetTopX(n);}).observe(n,{childList:true,subtree:true});
+  });});
+ }).observe(document.body,{childList:true});
+}
+if(document.body)watchSheets();else document.addEventListener('DOMContentLoaded',watchSheets);
 function shipTag(l){return '<span class="stag '+l+'">'+SHIP_LVL[l]+'</span>';}
 function shipDate(s){return s?s.slice(8,10)+'.'+s.slice(5,7)+'.'+s.slice(2,4):'';}
 function shipCounts(s){
