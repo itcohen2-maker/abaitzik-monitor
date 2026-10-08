@@ -4293,7 +4293,8 @@ try{
   <button type="button" id="copyPicked" class="cpall pickon" hidden>העתקת הנבחרות</button>
   <button type="button" id="copyAll" class="cpall">העתקת כל השיחה</button>
   <button type="button" id="readOld" class="cpall readold">קראתי את הישנות</button>
-  <button type="button" id="clearAll" class="cpall clearall">ניקוי כל ההודעות</button>
+  <button type="button" id="moreBar" class="cpall" aria-expanded="false">עוד</button>
+  <button type="button" id="clearAll" class="cpall clearall" hidden>ניקוי כל ההודעות</button>
  </div>
  <div class="thread" id="thread"></div>
  <form id="msgForm">
@@ -12254,7 +12255,21 @@ function askInChat(prefix){
   is deleted: the files stay where they are and a fresh device sees them
   again, which is the difference between a screen he cleaned and a history I
   destroyed. Asked once first, because it is the whole screen and not one line.
+
+  Behind "עוד" since 8.10: it sat right beside the copy button, and on an
+  iPhone one tap too far wiped the screen. Now it takes a deliberate tap to
+  reach it, and it goes back behind "עוד" once it has run.
 */
+on('moreBar',function(){
+ var c=document.getElementById('clearAll');
+ c.hidden=!c.hidden;
+ this.setAttribute('aria-expanded',c.hidden?'false':'true');
+});
+function hideClearAll(){
+ var c=document.getElementById('clearAll');
+ c.hidden=true;c.removeAttribute('data-armed');c.textContent='ניקוי כל ההודעות';
+ document.getElementById('moreBar').setAttribute('aria-expanded','false');
+}
 on('clearAll',function(){
  var b=this;
  if(b.getAttribute('data-armed')!=='1'){
@@ -12280,7 +12295,7 @@ on('clearAll',function(){
   markAllRead('');
   renderThread();paintDot();
   b.textContent='נוקה';
-  setTimeout(function(){b.textContent='ניקוי כל ההודעות';},2500);
+  setTimeout(hideClearAll,2500);
  });
 });
 document.getElementById('setBtn').onclick=function(){pane('z');};

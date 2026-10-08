@@ -1163,6 +1163,9 @@ test('one button clears every message off the screen, and deletes nothing', () =
   const html = renderPage(fixture({}));
   assert.ok(html.includes('id="clearAll"'));
   assert.ok(html.includes('>ניקוי כל ההודעות<'));
+  // Not beside the copy button: it waits behind "עוד" until asked for.
+  assert.ok(html.includes('id="clearAll" class="cpall clearall" hidden>'));
+  assert.ok(html.includes('id="moreBar"'));
   // Asked once before it fires: it is the whole screen, not one line.
   assert.ok(html.includes("b.textContent='לנקות הכל? לחץ שוב';"));
   // It hides, one key each, the way the x on a single message already works.
