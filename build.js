@@ -1686,9 +1686,11 @@ section{margin-bottom:30px}
 .th .tproj{font-style:normal;font-size:12px;font-weight:700;background:var(--sunk);color:var(--ink);
  border-radius:999px;padding:2px 9px}
 .pbar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
-.pchip{border:2px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;
+.pchip,.ppb{border:2px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;
  padding:6px 12px;font:600 14px Heebo,sans-serif;cursor:pointer}
-.pchip.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.pchip.on,.ppb.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.ppick{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.ppick input{flex:1 1 140px;min-width:0;padding:7px 10px;border:2px solid var(--line);border-radius:10px;font:15px Heebo,sans-serif}
 .thbody{display:flex;flex-direction:column;gap:9px;padding:0 14px 14px;border-top:1px solid var(--line)}
 .thbody .bub{max-width:92%}
 .th-fresh{border-color:var(--red);background:var(--unread);animation:bubglow 1.5s ease-in-out infinite}
@@ -2240,6 +2242,14 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .ybwa{display:block;width:100%;text-align:center;text-decoration:none;background:linear-gradient(150deg,#5ee28a,#128c4a);color:#fff}
 a.yb4{display:block;text-align:center;text-decoration:none;background:linear-gradient(150deg,#ffd76a,#d49a00);color:#3a2e00}
 .yx{background:transparent;opacity:.6;min-height:40px;padding:8px}
+/* 8.10: the way out was only at the end of a long sheet (the shipments list
+   ran to dozens of orders). Every sheet now also has a round X at the top that
+   stays in view while the sheet scrolls; it presses the sheet's own close. */
+.ytopx{position:sticky;top:0;z-index:3;align-self:flex-end;width:40px;height:40px;
+ margin-bottom:-49px;border:0;border-radius:50%;background:#e8eef6;color:#16202c;
+ font:700 18px/40px Heebo,sans-serif;text-align:center;cursor:pointer;
+ box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.ycard.hasx>b:first-of-type{padding-inline-end:46px}
 .yb:active{transform:translateY(1px)}
 .ytoast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:10000;
  background:#16202c;color:#fff;padding:10px 16px;border-radius:12px;
@@ -5645,18 +5655,41 @@ function wireProjects(host){
  Array.prototype.forEach.call(host.querySelectorAll('.rproj'),function(b){
   b.onclick=function(e){
    e.stopPropagation();e.preventDefault();
+   /*
+     Reviewer 8.10, approved: the phone's grey prompt listed the existing
+     names inside a sentence, and one letter off made a second project. Now
+     each existing project is a button, and a new name is typed only on
+     purpose, under "פרויקט חדש".
+   */
    var k=b.getAttribute('data-k');
-   var m=projMap();
-   var names=projNames(m);
-   var v=prompt('שם הפרויקט של השיחה הזאת'+(names.length?' (כבר יש: '+names.join(', ')+')':'')
-    +'. ריק מוציא אותה מהפרויקט.',m[k]||'');
-   if(v===null)return;
-   v=v.replace(/\\s+/g,' ').trim().slice(0,40);
-   if(v)m[k]=v;else delete m[k];
-   saveProjMap(m);
-   renderThread();
-   var open=host.querySelector('details[data-k="'+(window.CSS&&CSS.escape?CSS.escape(k):k)+'"]');
-   if(open)open.open=true;
+   var row=b.parentNode,was=row.nextElementSibling;
+   if(was&&was.classList.contains('ppick')){was.remove();return;}
+   var m=projMap(),names=projNames(m),cur=m[k]||'';
+   var p=document.createElement('div');p.className='ppick';
+   p.innerHTML=names.map(function(n){return '<button type="button" class="ppb'+(n===cur?' on':'')+'" data-v="'+esc(n)+'">'+esc(n)+'</button>';}).join('')
+    +'<button type="button" class="ppb" data-new="1">➕ פרויקט חדש</button>'
+    +(cur?'<button type="button" class="ppb" data-v="">בלי פרויקט</button>':'');
+   row.insertAdjacentElement('afterend',p);
+   function pick(v){
+    v=String(v||'').split(String.fromCharCode(10)).join(' ').trim().slice(0,40);
+    if(v)m[k]=v;else delete m[k];
+    saveProjMap(m);
+    renderThread();
+    var open=host.querySelector('details[data-k="'+(window.CSS&&CSS.escape?CSS.escape(k):k)+'"]');
+    if(open)open.open=true;
+   }
+   p.addEventListener('click',function(ev){
+    var x=ev.target.closest&&ev.target.closest('.ppb');if(!x)return;
+    ev.stopPropagation();ev.preventDefault();
+    if(x.getAttribute('data-new')){
+     p.innerHTML='<input type="text" maxlength="40" placeholder="שם הפרויקט החדש"><button type="button" class="ppb on" data-ok="1">שמירה</button>';
+     var inp=p.querySelector('input');inp.focus();
+     inp.addEventListener('keydown',function(ke){if(ke.key==='Enter'){ke.preventDefault();pick(inp.value);}});
+     return;
+    }
+    if(x.getAttribute('data-ok'))return pick(p.querySelector('input').value);
+    pick(x.getAttribute('data-v'));
+   });
   };
  });
 }
@@ -11175,6 +11208,30 @@ function shipOpen(id,label,html,after){
  if(after)after(w);
  return w;
 }
+/*
+  8.10, from the morning reviewer: "the close button is only at the end of a
+  long list". Every sheet, not only the shipments ones, gets the X at the top.
+  It does not know how each sheet closes; it presses that sheet's own close
+  button at the bottom, so whatever closing does stays the same.
+*/
+function sheetTopX(w){
+ var c=w.querySelector('.ycard');if(!c||c.querySelector(':scope > .ytopx'))return;
+ var xs=c.querySelectorAll(':scope > .yx');if(!xs.length)return;
+ var x=xs[xs.length-1],t=document.createElement('button');
+ t.type='button';t.className='ytopx';t.textContent='✕';t.setAttribute('aria-label','סגירה');
+ t.onclick=function(e){e.stopPropagation();x.click();};
+ c.insertBefore(t,c.firstChild);c.classList.add('hasx');
+}
+function watchSheets(){
+ new MutationObserver(function(ms){
+  ms.forEach(function(m){[].forEach.call(m.addedNodes,function(n){
+   if(n.nodeType!==1||!n.classList.contains('ysheet'))return;
+   sheetTopX(n);
+   new MutationObserver(function(){if(n.isConnected)sheetTopX(n);}).observe(n,{childList:true,subtree:true});
+  });});
+ }).observe(document.body,{childList:true});
+}
+if(document.body)watchSheets();else document.addEventListener('DOMContentLoaded',watchSheets);
 function shipTag(l){return '<span class="stag '+l+'">'+SHIP_LVL[l]+'</span>';}
 function shipDate(s){return s?s.slice(8,10)+'.'+s.slice(5,7)+'.'+s.slice(2,4):'';}
 function shipCounts(s){
