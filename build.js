@@ -2645,6 +2645,8 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
 .ab.astandby.on{background:var(--orange);border-color:var(--orange);color:#fff}
 .ab.astar.on{background:var(--yellow);border-color:var(--yellow);color:#3a2d00}
 .ab.adone.on{background:var(--green);border-color:var(--green);color:#fff}
+.atip{margin:0 0 12px;padding:12px 14px;border-radius:12px;border:2px solid var(--red);background:var(--unread);font-size:15px;line-height:1.5}
+.atip .ab{display:block;margin-top:8px}
 .alegend{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 12px;
  font:400 12.5px Heebo,sans-serif;color:var(--dim)}
 .alegend span{display:flex;align-items:center;gap:5px}
@@ -4049,6 +4051,8 @@ try{
 
 <section id="pA" hidden>
  <h2>תשובות</h2>
+ <!-- Itzik, 8.10: a new customer has to be told, right on this screen, that touching an answer turns it green. Shown until the first touch or הבנתי. -->
+ <div class="atip" id="aTip" hidden><b>כל תשובה חדשה מגיעה באדום.</b> נגיעה בה הופכת אותה לירוקה, וכך רואים מה כבר קראת. מה שנשאר אדום עוד מחכה לך.<button type="button" class="ab" id="aTipOk">הבנתי</button></div>
  <div class="achips" id="aChips"></div>
  <div class="alegend"><span><i class="l1"></i>לא נקרא</span><span><i class="l2"></i>קראתי</span><span><i class="l3"></i>בהמתנה</span><span><i class="l4"></i>מסומן</span></div>
  <input type="search" id="aSearch" class="asearch" autocomplete="off" placeholder="חיפוש בתוך התשובות">
@@ -7830,10 +7834,18 @@ function ansCopy(btn,text){
   navigator.clipboard.writeText(text).then(done,function(){fallbackCopy(text,done);});
  }else fallbackCopy(text,done);
 }
+function ansTipDone(){try{return localStorage.getItem('ansTipDone')==='1';}catch(e){return false;}}
+function closeAnsTip(){try{localStorage.setItem('ansTipDone','1');}catch(e){}paintAnsTip();}
+function paintAnsTip(){
+ var t=document.getElementById('aTip');if(!t)return;
+ t.hidden=ansTipDone();
+ var ok=document.getElementById('aTipOk');if(ok)ok.onclick=closeAnsTip;
+}
 function renderAnswers(){
  var chips=document.getElementById('aChips');
  var host=document.getElementById('ansBox');
  if(!chips||!host)return;
+ paintAnsTip();
  var c=ansCounts();
  var defs=[['all','הכל',c.all],['fresh','לא נקראו',c.fresh],
   ['standby','בהמתנה',c.standby],['star','מסומנות',c.star],['done','טופלו',c.done]];
@@ -7976,6 +7988,7 @@ function renderAnswers(){
    // A starred or parked card outranks green in ansColor, so the colour
    // cannot move and the ring is the only thing that answers his finger.
    ansKeep[claudeKey(m)]=1;
+   if(!ansTipDone())closeAnsTip();
    if(isDone(m)&&!isFresh(m)){ringFor(card);return;}
    markOneSeen(m);renderAnswers();paintDot();renderNew();
    var again=host.querySelector('.ansc[data-i="'+card.getAttribute('data-i')+'"]');
