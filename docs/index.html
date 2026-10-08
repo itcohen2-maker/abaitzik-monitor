@@ -1770,7 +1770,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-08T04:55:30.222Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-08T04:55:38.066Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3082,7 +3082,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='b87376d74e';
+var CODE_ID='0b3a5c9225';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -6284,17 +6284,25 @@ function renderTidy(){
  }
  if(days>=3&&cold.length>=3&&Date.now()>snooze){
   parts.push('<div class="tidy"><b>המסך עמוס</b>'
-   +'<small>שלושה ימים ולא נגעת ב'+cold.length+' כפתורים: '
-   +cold.map(function(id){return esc(tileLabel(id));}).join(', ')
-   +'. להסיר אותם מהמסך? שום דבר לא נמחק, הם חוזרים בלחיצה.</small>'
-   +'<div class="row2"><button type="button" class="go" id="tidyGo">להסיר</button>'
-   +'<button type="button" id="tidyNo">להשאיר</button></div></div>');
+   +'<small>שלושה ימים ולא '+(FEM?'נגעת':'נגעת')+' ב'+cold.length+' כפתורים. '+(FEM?'סמני':'תסמן')+' מה להסיר מהמסך. שום דבר לא נמחק, הם חוזרים בלחיצה.</small>'
+   +'<div class="tidyl">'+cold.map(function(id){
+     return '<label style="display:flex;gap:8px;align-items:center;padding:6px 0;font-size:15px"><input type="checkbox" data-tidy="'+esc(id)+'" style="width:22px;height:22px">'+esc(tileLabel(id))+'</label>';
+    }).join('')+'</div>'
+   +'<div class="row2"><button type="button" class="go" id="tidyGo" disabled>להסיר את מה שסימנתי</button>'
+   +'<button type="button" id="tidyNo">להשאיר הכל</button></div></div>');
  }
  host.innerHTML=parts.join('');
  var back=document.getElementById('tidyBack');
  if(back)back.onclick=function(){tileSave('tilesHidden',[]);renderTidy();};
  var go=document.getElementById('tidyGo');
- if(go)go.onclick=function(){tileSave('tilesHidden',hid.concat(cold));renderTidy();};
+ function ticked(){return Array.prototype.filter.call(host.querySelectorAll('[data-tidy]'),function(c){return c.checked;}).map(function(c){return c.getAttribute('data-tidy');});}
+ Array.prototype.forEach.call(host.querySelectorAll('[data-tidy]'),function(c){
+  c.onchange=function(){var n=ticked().length;go.disabled=!n;go.textContent=n?'להסיר '+n+' מהמסך':'להסיר את מה שסימנתי';};
+ });
+ if(go)go.onclick=function(){
+  var t=ticked();if(!t.length)return;
+  tileSave('tilesHidden',hid.concat(t));tileSave('tidySnooze',Date.now()+7*86400000);renderTidy();
+ };
  var no=document.getElementById('tidyNo');
  if(no)no.onclick=function(){tileSave('tidySnooze',Date.now()+7*86400000);renderTidy();};
 }
