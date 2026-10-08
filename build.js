@@ -2154,8 +2154,9 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .rem{padding:10px 12px;margin:8px 0;border-radius:12px;background:rgba(127,127,127,.12)}
 .rem b{display:block;font-size:1.05em}
 .rem .w{font-size:.85em;opacity:.8}
-.rem.sent{opacity:.6}
-.rem.sent:has(.remreply[open]){opacity:1}
+/* Not .sent: that is the chat bubble row (flex), which squeezed a sent reminder to one word a line, 8.10. */
+.rem.remsent{opacity:.6}
+.rem.remsent:has(.remreply[open]){opacity:1}
 .remreply{margin-top:8px}
 .remreply summary{cursor:pointer;font-weight:700;padding:6px 0}
 .rem .remknow{margin-top:8px;padding:8px 16px;border:0;border-radius:10px;background:var(--yellow);color:#000;font:700 15px Heebo,sans-serif}
@@ -9432,7 +9433,7 @@ function renderReminders(){
   catch(e){return String(iso||'').slice(0,10);}
  };
  host.innerHTML=R.length?R.map(function(r){
-  return '<div class="rem'+(r.sentAt?' sent':'')+'"><b>'+esc(r.text)+'</b>'
+  return '<div class="rem'+(r.sentAt?' remsent':'')+'"><b>'+esc(r.text)+'</b>'
    +'<div class="w">'+(r.sentAt?'נשלחה '+esc(day(r.sentAt)):'תקפוץ '+esc(day(r.due))+' בתשע בבוקר')+'</div>'
    +(remHot(r)?'<button type="button" class="remknow" data-k="'+esc(remKey(r))+'">אני יודע</button>':'')
    +'<button type="button" class="remdel" data-k="'+esc(remKey(r))+'">🗑 למחוק</button>'

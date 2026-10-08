@@ -1003,8 +1003,8 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .rem{padding:10px 12px;margin:8px 0;border-radius:12px;background:rgba(127,127,127,.12)}
 .rem b{display:block;font-size:1.05em}
 .rem .w{font-size:.85em;opacity:.8}
-.rem.sent{opacity:.6}
-.rem.sent:has(.remreply[open]){opacity:1}
+.rem.remsent{opacity:.6}
+.rem.remsent:has(.remreply[open]){opacity:1}
 .remreply{margin-top:8px}
 .remreply summary{cursor:pointer;font-weight:700;padding:6px 0}
 .rem .remknow{margin-top:8px;padding:8px 16px;border:0;border-radius:10px;background:var(--yellow);color:#000;font:700 15px Heebo,sans-serif}
@@ -1753,7 +1753,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-08T03:36:29.887Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-08T03:37:29.918Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3064,7 +3064,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='2391e027a9';
+var CODE_ID='544cdcecff';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":""};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -6397,7 +6397,7 @@ function renderReminders(){
   catch(e){return String(iso||'').slice(0,10);}
  };
  host.innerHTML=R.length?R.map(function(r){
-  return '<div class="rem'+(r.sentAt?' sent':'')+'"><b>'+esc(r.text)+'</b>'
+  return '<div class="rem'+(r.sentAt?' remsent':'')+'"><b>'+esc(r.text)+'</b>'
    +'<div class="w">'+(r.sentAt?'נשלחה '+esc(day(r.sentAt)):'תקפוץ '+esc(day(r.due))+' בתשע בבוקר')+'</div>'
    +(remHot(r)?'<button type="button" class="remknow" data-k="'+esc(remKey(r))+'">אני יודע</button>':'')
    +'<button type="button" class="remdel" data-k="'+esc(remKey(r))+'">🗑 למחוק</button>'
