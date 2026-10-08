@@ -2511,7 +2511,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
 .note-box{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .note-i{padding:11px 14px;border-bottom:1px solid var(--line);cursor:pointer}
 .note-i:last-child{border-bottom:0}
-.note-i{display:flex;align-items:center;gap:8px}
+.note-i{display:flex;align-items:center;gap:8px;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .note-i .note-t{flex:1;min-width:0}
 .note-i .note-sh{flex:none;width:38px;height:38px;border:0;border-radius:999px;background:var(--line);
  color:inherit;font-size:17px;cursor:pointer}
@@ -8540,7 +8540,12 @@ function backBar(sec){
  if(sec.querySelector(':scope > .backbar'))return;
  var b=document.createElement('button');
  b.type='button';b.className='backbar';b.textContent='סגירה וחזרה לבית';
- b.onclick=function(){pane('h');};
+ // Itzik, 8.10: out of an open note, back goes to the notes list, not home.
+ b.onclick=function(){
+  var ne=document.getElementById('noteEdit');
+  if(sec.id==='pN2'&&ne&&!ne.hidden){closeNote();return;}
+  pane('h');
+ };
  sec.insertBefore(b,sec.firstChild);
 }
 /*
@@ -12443,7 +12448,22 @@ function renderNotes(){
  }
  host.innerHTML=box(pinned.length?'📌 מוצמדים':'',pinned)+box(pinned.length?'פתקים':'',rest);
  Array.prototype.forEach.call(host.querySelectorAll('.note-i'),function(el){
-  el.onclick=function(){openNote(el.getAttribute('data-id'));};
+  // Itzik, 8.10: a long press on a note offers to delete it.
+  var lp=null,lpFired=false,lpX=0,lpY=0;
+  function lpStop(){clearTimeout(lp);lp=null;}
+  el.addEventListener('touchstart',function(e){
+   lpFired=false;var t=e.touches[0];lpX=t.clientX;lpY=t.clientY;lpStop();
+   lp=setTimeout(function(){lp=null;lpFired=true;deleteNoteAsk(el.getAttribute('data-id'));},600);
+  },{passive:true});
+  el.addEventListener('touchmove',function(e){
+   var t=e.touches[0];if(Math.abs(t.clientX-lpX)>10||Math.abs(t.clientY-lpY)>10)lpStop();
+  },{passive:true});
+  el.addEventListener('touchend',function(e){lpStop();if(lpFired&&e.cancelable)e.preventDefault();});
+  el.addEventListener('touchcancel',lpStop);
+  el.addEventListener('contextmenu',function(e){
+   e.preventDefault();if(lpFired)return;lpFired=true;deleteNoteAsk(el.getAttribute('data-id'));
+  });
+  el.onclick=function(){if(lpFired){lpFired=false;return;}openNote(el.getAttribute('data-id'));};
   el.querySelector('.note-sh').onclick=function(e){e.stopPropagation();shareNote(el.getAttribute('data-id'));};
  });
 }
@@ -12642,6 +12662,16 @@ document.getElementById('notePin').onclick=function(){
  if(n)this.textContent=n.pin?'ביטול הצמדה':'הצמדה';
 };
 document.getElementById('noteShare').onclick=function(){noteSave();shareNote(noteOpen);};
+function deleteNoteAsk(id){
+ var n=null;
+ notes().forEach(function(x){if(x.id===id)n=x;});
+ if(!n)return;
+ if(!confirm('למחוק את הפתק "'+noteTitle(n.text).head+'"?'))return;
+ noteForget(id);
+ saveNotes(notes().filter(function(x){return x.id!==id;}));
+ toast('הפתק נמחק.');
+ renderNotes();
+}
 document.getElementById('noteDel').onclick=function(){
  if(!confirm('למחוק את הפתק?'))return;
  noteForget(noteOpen);
