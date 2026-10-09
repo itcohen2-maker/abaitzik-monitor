@@ -2200,6 +2200,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .meTxt{white-space:pre-wrap;text-align:right;line-height:1.7;font-size:17px;margin:10px 0 14px}
 .gLaw{background:linear-gradient(150deg,#c0623a,#3a1d12)}
 .gOcc{background:linear-gradient(150deg,#2bb39a,#123d3a)}
+.gManiv{background:linear-gradient(150deg,#3a8fd6,#123150)}
 .gMed{background:linear-gradient(150deg,#4fb3a9,#123a4a)}
 .gInv{background:linear-gradient(150deg,#d9a441,#3a2a12)}
 .gShop{background:linear-gradient(150deg,#3aa55d,#1f6f8b)}
@@ -3557,6 +3558,7 @@ try{
     for the lawyer get one tile on the home screen, numbered.
   -->
   <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>01 הרכבים. 02 משיכה מכרטיס האשראי</small></button>
+  <button type="button" class="gt gManiv" id="gManiv"><b>💧 תשלום למניב</b><small>לקוח 50523290. להתקשר ביום שני בבוקר</small></button>
   <button type="button" class="gt gOcc" id="gOcc"><b>🩺 מרפאה תעסוקתית</b><small>מכבי רמות. טלפון א עד ה 08:00 עד 11:00</small></button>
   <button type="button" class="gt gShop" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
   <!--
@@ -12016,6 +12018,55 @@ function occSheet(){
  document.body.appendChild(w);
 }
 on('gOcc',occSheet);
+/*
+  9.10. Itzik calls Maniv Rishon (Lolos water, Plotitzki 10) on Monday morning
+  and needs the old payments at hand. From the Lolos mail (100lolos). The tile
+  blinks from Monday 12.10 07:00 until he opens it.
+*/
+var MANIV_INFO=[
+ 'מספר לקוח (משלם): 50523290',
+ 'על שם: ליאני יואל ושות׳. הנכס: פלוטיצקי 10',
+ 'מוקד: 1800 35 11 10',
+ '',
+ 'התשלום האחרון: 30.6.26, 706.48 ₪ (חשבון אפריל עד מאי 26). דרך MAST, אישור 0529000, ספח 260455803',
+ 'לפניו: 9.5.26, 205.2 ₪ (פברואר עד מרץ 26). אישור 5178712, ספח 260307565',
+ 'לפניו: 16.4.26, 191.63 ₪ (דצמבר עד ינואר 26). אישור 9528822, ספח 260164874',
+ '',
+ 'לא שולם: חשבון יוני עד יולי 26, 416.67 ₪. הגיע במייל ב 1.9.26',
+ 'בעבר: מכתב דרישת חוב מ 25.11.25 על אותו מספר לקוח',
+ '',
+ 'לחפש במייל של לולוס: מניב (וגם MAST לאישורי תשלום)'
+];
+var MANIV_DUE='2026-10-12T07:00:00+03:00';
+function manivSheet(){
+ var old=document.getElementById('manivSheet');if(old)old.remove();
+ try{if(Date.now()>=Date.parse(MANIV_DUE))localStorage.setItem('manivSeen','1');}catch(e){}
+ var gb=document.getElementById('gManiv');if(gb&&Date.now()>=Date.parse(MANIV_DUE))gb.classList.remove('taskblink');
+ var w=document.createElement('div');
+ w.id='manivSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','תשלום למניב');
+ w.innerHTML='<div class="ycard">'
+  +'<b>💧 מניב ראשון, המים של לולוס</b>'
+  +'<small>'+MANIV_INFO.map(function(x){return esc(x);}).join('<br>')+'</small>'
+  +'<button type="button" class="yb yb1" data-k="tel">📞 התקשרות 1800 35 11 10</button>'
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  if(k==='tel')location.href='tel:1800351110';
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gManiv',manivSheet);
+boot('maniv',function(){var b=document.getElementById('gManiv');if(!b)return;var seen='';try{seen=localStorage.getItem('manivSeen')||'';}catch(e){}b.classList.toggle('taskblink',Date.now()>=Date.parse(MANIV_DUE)&&!seen);});
+
 boot('occ',function(){var o=(D.occ||[])[0],seen='';var sm=document.querySelector('#gOcc small');if(sm)sm.textContent=o?'המרפאה ענתה '+(o.at||'').slice(8,10).replace(/^0/,'')+'.'+(o.at||'').slice(5,7).replace(/^0/,'')+'. לחץ לקריאה':(function(l){var i=l.indexOf(': ');var h=l.slice(0,i).split(' ')[0];return h+': '+l.slice(i+2);})(OCC_LOG[OCC_LOG.length-1]);try{seen=localStorage.getItem('occSeen')||'';}catch(e){}var b=document.getElementById('gOcc');if(b)b.classList.toggle('taskblink',!!(o&&o.id&&seen!==o.id));});
 /*
   4.10. Documents made for the lawyer in the Lolos sale, numbered. A new one
