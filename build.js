@@ -2862,12 +2862,17 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   back, and the choice is remembered.
 */
 #pH.bare > *:not(#talkCard):not(#bareBtn){display:none!important}
-.reloadbig{display:block;width:100%;margin:0 0 14px;min-height:52px;border:0;border-radius:16px;cursor:pointer;
- color:#fff;font:800 16px Heebo,sans-serif;
- background:linear-gradient(180deg,#5cc36f,var(--green));
- box-shadow:0 3px 10px rgba(52,168,83,.4),inset 0 1px 0 rgba(255,255,255,.35)}
-.reloadbig:active{background:linear-gradient(180deg,var(--green),#2b8c45);box-shadow:none;transform:translateY(1px)}
-.reloadbig[disabled]{opacity:.6}
+/*
+  9.10, the improvements reviewer: a wide green bar saying "refresh me" told a
+  new customer the page does not update by itself and needs pressing each
+  time. It does update: wake() checks again whenever the page comes back. So
+  the way home is a small round symbol in the same place, not a call to action.
+*/
+.reloadbig{display:flex;align-items:center;justify-content:center;min-width:40px;height:40px;padding:0 12px;margin:0 0 12px auto;
+ border:1px solid var(--line);border-radius:20px;cursor:pointer;
+ color:var(--dim);font:700 20px Heebo,sans-serif;background:transparent}
+.reloadbig:active{transform:translateY(1px)}
+.reloadbig[disabled]{opacity:.6;font-size:14px}
 .reloadbig:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 /*
   The same microphone as the big one, shrunk.
@@ -3343,7 +3348,7 @@ try{
   </form>
   <div class="msgsaid" id="quickSaid"></div>
  </section>
- <button type="button" class="reloadbig" id="reloadBtn">רענן אותי · חזרה לדף הבית</button>
+ <button type="button" class="reloadbig" id="reloadBtn" aria-label="חזרה לדף הבית" title="חזרה לדף הבית">↻</button>
 
 <section id="pH">
  <!--

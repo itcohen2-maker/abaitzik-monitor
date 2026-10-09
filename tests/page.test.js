@@ -673,9 +673,9 @@ test('the home screen is the microphone and nothing else', () => {
   // Hidden, never removed: every render on this page still writes to the
   // element it always wrote to, and nothing becomes unreachable.
   assert.ok(html.includes('id="bareBtn"'));
-  // The one action at the top says what pressing it does, not what it is
-  // called: it fetches a new copy AND lands him back on the home screen.
-  assert.ok(html.includes('<button type="button" class="reloadbig" id="reloadBtn">רענן אותי · חזרה לדף הבית</button>'));
+  // The way home is a small quiet symbol, not a big bar that reads as if the
+  // page needs pressing to update; its label still says where it goes.
+  assert.ok(html.includes('<button type="button" class="reloadbig" id="reloadBtn" aria-label="חזרה לדף הבית" title="חזרה לדף הבית">↻</button>'));
   // And arranging is in settings, where he put it.
   const settings = html.slice(html.indexOf('<section id="pZ" hidden>'), html.indexOf('<section id="pQ" hidden>'));
   assert.ok(settings.includes('id="arrangeBtn"'), 'arranging must live in settings');
