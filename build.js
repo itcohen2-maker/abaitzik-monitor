@@ -2009,6 +2009,11 @@ body.editing .bn{display:none}
 
 /* The lock covers everything, so it is defined before the app it hides. */
 .lock{display:none}
+/* 10.10: "אין שום סימן כשהטלפון בלי רשת". A strip on top of everything, not a
+   line he has to look for, and it goes away by itself when the signal is back. */
+#offBar{display:none;position:fixed;top:0;left:0;right:0;z-index:98;background:#b3261e;color:#fff;
+ font:600 15px/1.4 system-ui,sans-serif;text-align:center;padding:calc(env(safe-area-inset-top,0px) + 8px) 12px 8px}
+.offline #offBar{display:block}
 .locked .lock{display:grid;position:fixed;inset:0;z-index:99;
  place-items:center;padding:24px;background:var(--bg)}
 .locked .wrap,.locked .bn,.locked .recwrap{display:none!important}
@@ -3251,6 +3256,7 @@ try{
 </script>
 </head>
 <body>
+<div id="offBar" role="status" aria-live="polite">אין רשת. מה שכאן מרגע העדכון האחרון, ומה שתשלח יצא כשהרשת תחזור.</div>
 <div class="lock" id="lockWrap">
  <div class="lockbox">
   <div class="em" aria-hidden="true">&#128274;</div>
@@ -6822,6 +6828,14 @@ var lastCheckFail=false;
 // ago() says "now" for anything under a minute and a half, and "updated ago
 // now" is not a sentence. Reads as one either way.
 function since(iso){var a=ago(iso);return a==='עכשיו'?'עכשיו':'לפני '+a;}
+// The phone's own flag first, it flips the moment the signal drops. A failed
+// check counts too: on wifi with no internet the phone still says online.
+function paintOffline(){
+ var off=(navigator.onLine===false)||!!lastCheckFail;
+ document.documentElement.classList.toggle('offline',off);
+}
+window.addEventListener('offline',paintOffline);
+window.addEventListener('online',function(){paintOffline();checkFresh();});
 function paintStamp(){
  /*
    Two lines, two different clocks, and one of them was lying about the other.
@@ -6845,6 +6859,7 @@ function paintStamp(){
    fresher of the two clocks, and the version number lives in settings and the
    footer. The data line stays in the page, hidden, for the diagnosis.
  */
+ paintOffline();
  var age=since(D.builtAt);
  var ver='גרסה '+(D.buildId||'')+' · '+stamp(D.builtAt)
   +' · הגרסה '+String(age).replace(/^לפני /,'בת ');
@@ -7222,7 +7237,7 @@ function checkFresh(){
    }
   }catch(e){}
   go();
- }).catch(function(){lastCheckFail=true;paintStamp();});
+ }).catch(function(){lastCheckFail=true;paintStamp();setTimeout(function(){if(!document.hidden)checkFresh();},4000);});
 }
 checkFresh();
 paintStamp();
@@ -8577,7 +8592,7 @@ function backBar(sec){
  b.onclick=function(){
   var ne=document.getElementById('noteEdit');
   if(sec.id==='pN2'&&ne&&!ne.hidden){closeNote();return;}
-  pane('h');
+  navBack();
  };
  sec.insertBefore(b,sec.firstChild);
 }
@@ -8632,7 +8647,7 @@ function paneBar(w){
    +'<button type="button" class="pb-r" id="pbReload" aria-label="רענון"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg></button>';
   var hd=document.querySelector('.hd');
   if(hd&&hd.parentNode)hd.parentNode.insertBefore(bar,hd);else document.body.insertBefore(bar,document.body.firstChild);
-  document.getElementById('pbBack').onclick=function(){pane('h');};
+  document.getElementById('pbBack').onclick=function(){navBack();};
   document.getElementById('pbReload').onclick=function(){window.reloadStay=panePrev;var r=document.getElementById('reloadBtn');if(r)r.click();};
  }
  var inner=(w!=='h');
@@ -8643,14 +8658,50 @@ function paneBar(w){
  }
 }
 var panePrev='';
+/*
+  One step back, not home.
+
+  Itzik, 10.10, by voice: "every time I open a button, see the menu, go into
+  something in it and want to come out, it throws me to the main screen. I need
+  one back. It happens in the candle marketing and in lots of things. All the
+  buttons." Every way out of a screen went to pane('h'), and every menu sheet
+  closed itself before opening what was picked, so the menu was simply gone.
+
+  So screens keep a trail: each move pushes where he was, and back pops it. Home
+  clears the trail. Menus are handled once for all of them below the pane code.
+*/
+var navStack=[],navgoing=false;
+function navBack(){
+ var e=navStack.pop();
+ if(!e){pane('h');return;}
+ navgoing=true;
+ try{pane(e.pane);}finally{navgoing=false;}
+ setTimeout(function(){
+  try{window.scrollTo(0,e.y||0);}catch(x){}
+  if(e.sheet&&!document.querySelector('.ysheet,.fview'))document.body.appendChild(e.sheet);
+ },60);
+}
+function navLabels(){
+ var back=navStack.length&&navStack[navStack.length-1].pane!=='h';
+ var pb=document.getElementById('pbBack');
+ if(pb&&pb.lastChild&&pb.lastChild.nodeType===3)pb.lastChild.nodeValue=back?'חזרה':'בית';
+ var bars=document.querySelectorAll('.backbar');
+ for(var i=0;i<bars.length;i++)bars[i].textContent=back?'חזרה אחורה':'סגירה וחזרה לבית';
+}
 function pane(w){
  var moved=(panePrev!==w);
+ if(w==='h')navStack=[];
+ else if(moved&&!navgoing&&panePrev&&PANES[panePrev]){
+  navStack.push({pane:panePrev,y:window.pageYOffset||document.documentElement.scrollTop||0});
+  if(navStack.length>30)navStack.shift();
+ }
  panePrev=w;
  for(var k in PANES){
   var sec=document.getElementById(PANES[k]);
   sec.hidden=(k!==w);
   if(k===w){backBar(sec);replyBar(sec);}
  }
+ navLabels();
  /*
    A screen draws itself when it opens. No caller can forget.
 
@@ -8704,6 +8755,49 @@ function pane(w){
  }catch(e){}
  window.scrollTo(0,0);
 }
+/*
+  Menus remember themselves.
+
+  Every menu sheet closes before it opens what was picked, so closing the file,
+  the caption or the inner screen used to land him on home. This watches every
+  sheet from one place instead of touching twenty of them: a pick inside a
+  sheet keeps the sheet, and when whatever the pick opened goes away, the same
+  sheet comes back as it was. A link that leaves for Drive brings it back at
+  once, so it is there when he returns. A pick that opens an inner screen hands
+  the sheet to that screen's back step.
+*/
+var sheetExt=0;
+(function(){
+ var wo=window.open;
+ if(wo)window.open=function(){sheetExt=Date.now();return wo.apply(window,arguments);};
+})();
+function overlayOpen(not){
+ var l=document.querySelectorAll('.ysheet,.fview');
+ for(var i=0;i<l.length;i++)if(l[i]!==not)return l[i];
+ return null;
+}
+document.addEventListener('click',function(ev){
+ var t=ev.target;if(!t||!t.closest)return;
+ var sh=t.closest('.ysheet');if(!sh||t===sh)return;
+ var btn=t.closest('button,a');
+ if(!btn||btn.classList.contains('yx'))return;
+ if(btn.target==='_blank')sheetExt=Date.now();
+ var p0=panePrev,t0=Date.now();
+ setTimeout(function(){
+  if(sh.isConnected)return;
+  var ov=overlayOpen(sh);
+  if(ov){
+   new MutationObserver(function(_,mo){
+    if(ov.isConnected)return;
+    mo.disconnect();
+    if(!overlayOpen(null)&&panePrev===p0)document.body.appendChild(sh);
+   }).observe(document.body,{childList:true});
+  }else if(panePrev!==p0){
+   var top=navStack[navStack.length-1];
+   if(top&&top.pane===p0)top.sheet=sh;
+  }else if(sheetExt>=t0)document.body.appendChild(sh);
+ },0);
+},true);
 /*
   The draft, kept across a reload.
 
