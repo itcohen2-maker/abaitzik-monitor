@@ -1859,7 +1859,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-10T19:56:38.929Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-10T19:57:41.384Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3335,7 +3335,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='e465758ed6';
+var CODE_ID='42236a7d99';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -8383,7 +8383,7 @@ function captionSheet(it){
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
 }
-var REEL_ITEMS=[{n:'05',t:'חטיף העדשים, מחלים מסרטן',r:'reel-05-adashim.mp4'},{n:'05 כריכה',t:'הכריכה',r:'reel-05-cover.jpg'},{n:'05 פרסום',t:'הכיתוב להדבקה',r:'reel-05-post.txt'},{n:'04',t:'מה אני מתגעגע',r:'reel-04-mitgaagea.mp4'}];
+var REEL_ITEMS=[{n:'05',t:'חטיף העדשים, מחלים מסרטן',r:'reel-05-adashim.mp4'},{n:'05 כריכה',t:'הכריכה',r:'reel-05-cover.jpg'},{n:'05 פרסום',t:'כיתוב, כריכה ומוזיקה לאינסטגרם, טיקטוק ויוטיוב',r:'reel-05-post.txt'},{n:'04',t:'מה אני מתגעגע',r:'reel-04-mitgaagea.mp4'}];
 function reelSheet(){
  var old=document.getElementById('rlSheet');if(old)old.remove();
  var w=document.createElement('div');
