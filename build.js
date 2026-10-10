@@ -3164,6 +3164,8 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
  border-radius:11px;background:var(--bg,#0e1219);color:var(--ink,#e8edf5);
  font:700 14px Heebo,sans-serif;cursor:pointer}
 .gt-e{min-height:20px;margin-top:10px;font:600 13.5px Heebo,sans-serif;color:var(--red,#EA4335)}
+#faceOffer{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;
+ justify-content:center;background:var(--ground,#0f1218);padding:24px}
 .gt-help{margin-top:10px;font:400 14px Heebo,sans-serif;color:var(--dim,#9aa7ba);line-height:1.5}
 .gt-btn{display:block;width:100%;margin-top:10px;padding:12px;border-radius:12px;border:1px solid var(--line,#2a3342);
  background:var(--sunk,#141922);color:var(--ink,#e8edf5);font:700 15px Heebo,sans-serif;cursor:pointer}
@@ -3840,8 +3842,8 @@ try{
  </div>
 </div>
 <div class="codebox" id="codeBox" hidden>
- <b>קוד אישי</b>
- <small>מקלידים פעם אחת בנייד שלך והוא נשמר במכשיר. כל הודעה שתשלח תישא אותו, וכל פנייה בלעדיו אני מתעלם ממנה ומדווח לך. הקוד לעולם לא מוצג על המסך, וכדי לשנות אותו צריך אישור בזיהוי פנים.</small>
+ <b id="codeTitle">קוד אישי</b>
+ <small id="codeAbout">מקלידים פעם אחת בנייד שלך והוא נשמר במכשיר. כל הודעה שתשלח תישא אותו, וכל פנייה בלעדיו אני מתעלם ממנה ומדווח לך. הקוד לעולם לא מוצג על המסך, וכדי לשנות אותו צריך אישור בזיהוי פנים.</small>
  <div class="facerow">
   <button type="button" id="faceSetup">הפעלת זיהוי פנים</button>
   <span id="faceState"></span>
@@ -3850,7 +3852,7 @@ try{
   <input type="password" id="codeInput" inputmode="numeric" autocomplete="off" placeholder="קוד קצר, למשל 4 ספרות">
   <button type="button" id="codeSave">שמירה</button>
  </div>
- <div class="facerow">
+ <div class="facerow" id="codeChangeRow">
   <button type="button" id="codeChange">שינוי הקוד</button>
  </div>
  <div class="facerow">
@@ -10733,9 +10735,58 @@ function renderSent(){
 function myCode(){
  try{return localStorage.getItem('monitorCode')||'';}catch(e){return '';}
 }
+/*
+  One lock on a customer's copy. 10.10, from the reviewer, taken by Itzik:
+  "שתי נעילות שונות באותו דף". She typed the five words on the first screen,
+  and then settings offered a second lock with its own numeric code. Now the
+  words are typed once, on the first open, and after that the only thing
+  asked is the face. When the face fails, the way back in is the same five
+  words, checked against the key this phone already holds, never a new code.
+  Itzik's own copy keeps its personal code: there it also signs every message.
+*/
+function oneLock(){return !!(GATE&&GATE.words&&INSTANCE&&INSTANCE.name&&INSTANCE.name!=='abaitzik');}
+function gateKeyIs(v){
+ var saved='';try{saved=localStorage.getItem('gateKey')||'';}catch(e){}
+ if(!saved||!gnorm(v))return Promise.resolve(false);
+ return gderive(v).then(function(k){return crypto.subtle.exportKey('raw',k);})
+  .then(function(raw){return graw(new Uint8Array(raw))===saved;},function(){return false;});
+}
+// Right after the words open the page for the first time on this phone.
+function faceOffer(){
+ if(!oneLock()||!faceSupported()||faceId()||lockOn())return;
+ var w=document.createElement('div');
+ w.id='faceOffer';
+ w.innerHTML='<div class="gatecard"><b class="gt-t">מעכשיו רק מבט</b>'
+  +'<div class="gt-s">הסיסמה לא תידרש יותר בטלפון הזה. כדי שאף אחד אחר לא יפתח אותו, כל פתיחה תהיה בזיהוי פנים.</div>'
+  +'<button type="button" class="gt-btn pri" id="foYes">להפעיל זיהוי פנים</button>'
+  +'<button type="button" class="gt-eye" id="foNo">לא עכשיו</button>'
+  +'<div class="gt-e" id="foSaid"></div></div>';
+ document.body.appendChild(w);
+ var close=function(){if(w.parentNode)w.parentNode.removeChild(w);};
+ document.getElementById('foNo').onclick=close;
+ document.getElementById('foYes').onclick=function(){
+  document.getElementById('foSaid').textContent='';
+  faceEnroll(function(ok){
+   if(!ok){document.getElementById('foSaid').textContent='זה לא הופעל. אפשר לנסות שוב, או להפעיל אחר כך בהגדרות.';return;}
+   try{localStorage.setItem('lockOn','1');}catch(e){}
+   try{faceRender();lockToggleRender();}catch(e){}
+   close();
+   toast('זיהוי פנים מופעל. מהפתיחה הבאה נכנסים במבט.');
+  });
+ };
+}
 function showCodeBox(){
  var box=document.getElementById('codeBox');
  box.hidden=false;
+ if(oneLock()){
+  document.getElementById('codeTitle').textContent='כניסה בזיהוי פנים';
+  document.getElementById('codeAbout').textContent='את הסיסמה מקלידים רק פעם אחת. מאז נכנסים במבט, ואם הזיהוי לא מצליח, נכנסים עם אותה סיסמה. אין קוד נוסף.';
+  document.getElementById('codeRow').hidden=true;
+  document.getElementById('codeChangeRow').hidden=true;
+  document.getElementById('codeSaid').textContent='';
+  faceRender();
+  return;
+ }
  var c=myCode();
  document.getElementById('codeSaid').textContent=c?'קוד שמור במכשיר הזה.':'עוד לא נקבע קוד. תקליד אחד ותשמור.';
  document.getElementById('codeRow').hidden=!!c;
@@ -10832,8 +10883,8 @@ function lockToggleRender(){
 }
 document.getElementById('lockToggle').onclick=function(){
  var turningOn=!lockOn();
- if(turningOn&&!faceId()&&!myCode()){
-  document.getElementById('lockState').textContent=
+ if(turningOn&&!faceId()&&(oneLock()||!myCode())){
+  document.getElementById('lockState').textContent=oneLock()?'קודם מפעילים זיהוי פנים, כאן למעלה.':
    'קודם מגדירים קוד או זיהוי פנים, אחרת אין דרך להיכנס.';
   return;
  }
@@ -10862,6 +10913,12 @@ function lockFaceTry(auto){
  if(!faceId()){
   // No face enrolled on this device, so the code is the only way in.
   document.getElementById('lockFace').hidden=true;
+  if(oneLock()){
+   document.getElementById('lockRow').hidden=false;
+   document.getElementById('lockUseCode').hidden=true;
+   lockSay('תקליד את הסיסמה כדי להיכנס.');
+   return;
+  }
   if(!myCode()){unlock();return;}
   document.getElementById('lockRow').hidden=false;
   document.getElementById('lockUseCode').hidden=true;
@@ -10871,21 +10928,38 @@ function lockFaceTry(auto){
  lockSay('ממתין לזיהוי פנים...');
  faceCheck(function(ok){
   if(ok){unlock();return;}
-  lockSay(auto?'מזדהים כדי להיכנס.':'הזיהוי נכשל. אפשר לנסות שוב או להיכנס עם הקוד.');
+  lockSay(auto?'מזדהים כדי להיכנס.':'הזיהוי נכשל. אפשר לנסות שוב או להיכנס עם '+(oneLock()?'הסיסמה.':'הקוד.'));
  });
 }
 if(locked()){
  document.getElementById('lockFace').onclick=function(){lockFaceTry(false);};
  // Offering a code entry when no code was ever set would be a door that opens
  // onto a wall, so it is not offered at all.
- if(!myCode())document.getElementById('lockUseCode').hidden=true;
+ if(oneLock()){
+  var lc=document.getElementById('lockCode');
+  lc.removeAttribute('inputmode');lc.setAttribute('placeholder','הסיסמה');
+  lc.setAttribute('autocapitalize','off');lc.setAttribute('spellcheck','false');
+  document.getElementById('lockUseCode').textContent='כניסה עם הסיסמה';
+  document.getElementById('lockForgot').textContent='שכחתי את הסיסמה';
+ }
+ else if(!myCode())document.getElementById('lockUseCode').hidden=true;
  document.getElementById('lockUseCode').onclick=function(){
   document.getElementById('lockRow').hidden=false;
   document.getElementById('lockCode').focus();
-  lockSay('תקליד את הקוד האישי.');
+  lockSay(oneLock()?'תקליד את הסיסמה, אותן חמש מילים מהפעם הראשונה.':'תקליד את הקוד האישי.');
  };
  var lockGo=function(){
   var v=document.getElementById('lockCode').value.trim();
+  if(oneLock()){
+   if(!v)return;
+   lockSay('רגע, בודק.');
+   gateKeyIs(v).then(function(ok){
+    if(ok){unlock();return;}
+    document.getElementById('lockCode').value='';
+    lockSay('הסיסמה לא מתאימה. אלה אותן חמש מילים שהקלדת בפעם הראשונה.');
+   });
+   return;
+  }
   if(v&&v===myCode()){unlock();return;}
   document.getElementById('lockCode').value='';
   lockSay('קוד לא נכון.');
@@ -10907,7 +10981,7 @@ if(locked()){
   try{localStorage.setItem('lockOn','0');localStorage.removeItem('lockReset');}catch(e){}
   unlock();try{lockToggleRender();}catch(e){}
   setTimeout(function(){toast('הבקשה אושרה והמוניטור נפתח. הנעילה כבויה, ואפשר להפעיל אותה מחדש בהגדרות.');},400);
- }else if(INSTANCE.name&&INSTANCE.name!=='abaitzik'&&myCode()){
+ }else if(INSTANCE.name&&INSTANCE.name!=='abaitzik'&&(myCode()||oneLock())){
   var fg=document.getElementById('lockForgot');
   fg.hidden=false;
   if(lockMark())lockSay('הבקשה לפתוח נשלחה. כשמערכת המחשוב של המוניטור תאשר, המוניטור ייפתח כאן לבד ותגיע אליך הודעה.');
@@ -12512,11 +12586,9 @@ var LAW_ITEMS=[
  {n:'02ב',t:'משיכה מכרטיס האשראי, כתמונה לגלריה',r:'law-02.jpg'},
  {n:'03',t:'לרועי ביום ראשון: מכתב התגובה הקצר',r:'law-03.pdf'},
  {n:'03ב',t:'מכתב התגובה כתמונה לגלריה',r:'law-03.jpg'},
- {n:'04',t:'לרועי ביום ראשון: ההסבר לטיוטה',r:'law-04.pdf'},
+ {n:'04',t:'לרועי ביום ראשון: ההסבר למכתב התגובה',r:'law-04.pdf'},
  {n:'04ב',t:'ההסבר כתמונה לגלריה, עמוד 1',r:'law-04a.jpg'},
- {n:'04ג',t:'ההסבר כתמונה לגלריה, עמוד 2',r:'law-04b.jpg'},
- {n:'04ד',t:'ההסבר כתמונה לגלריה, עמוד 3',r:'law-04c.jpg'},
- {n:'04ה',t:'ההסבר כתמונה לגלריה, עמוד 4',r:'law-04d.jpg'}
+ {n:'04ג',t:'ההסבר כתמונה לגלריה, עמוד 2',r:'law-04b.jpg'}
 ];
 function lawSheet(){
  var old=document.getElementById('lawSheet');if(old)old.remove();
