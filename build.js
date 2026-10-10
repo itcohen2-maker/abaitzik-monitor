@@ -1441,6 +1441,14 @@ button.abtn[disabled]{opacity:.55}
 @media print{body.fv-printing>*:not(#fvPrint){display:none!important}body.fv-printing{background:#fff!important}body.fv-printing #fvPrint{display:block}#fvPrint img{display:block;max-width:100%;max-height:96vh;width:auto;height:auto;margin:0 auto;break-after:page;page-break-after:always}#fvPrint img:last-child{break-after:auto;page-break-after:auto}}
 .flist a{display:flex;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--line);margin-bottom:8px;color:var(--ink);text-decoration:none}
 .flist small{color:var(--dim);white-space:nowrap}
+.flist a{align-items:center}
+.flist .fl-n{flex:1;min-width:0;overflow-wrap:anywhere}
+.flist .fl-n small{display:block;margin-top:2px}
+.flist .fl-i{flex:0 0 56px;height:56px;display:flex;align-items:center;justify-content:center;font-size:26px;border-radius:10px;background:var(--sunk,#f2f2f2);overflow:hidden}
+.flist .fl-i .fthumb[data-st="ok"]{margin:0}
+.flist .fl-i .fthumb img{width:56px;height:56px;max-width:none;max-height:none;object-fit:cover;border:0;border-radius:0}
+.flist .fl-i:has(.fthumb[data-st="ok"]) .fl-e{display:none}
+.flist h3{font:700 14px Heebo,sans-serif;color:var(--dim);margin:14px 2px 6px}
 .salecard{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow)}
 .salecard h3{font:800 17px Heebo,sans-serif;margin:0 0 8px;text-align:center}
 .salecard.open{border-color:var(--yellow);box-shadow:0 0 0 2px var(--yellow),var(--shadow)}
@@ -10220,7 +10228,21 @@ function renderFiles(){
    ones and anything marked cancelled fold under "גרסאות קודמות".
  */
  function kb(f){return f.s>1048576?(Math.round(f.s/104857.6)/10+' MB'):(Math.max(1,Math.round(f.s/1024))+' KB');}
- function row(f,tag){return '<a href="files/'+esc(f.n)+'"><span>'+(tag?'<b style="font-size:12px;background:#16a34a;color:#fff;border-radius:8px;padding:1px 7px;margin-inline-end:6px">עדכני</b>':'')+esc(f.n)+'</span><small>'+kb(f)+'</small></a>';}
+ /*
+   10.10, from the reviewer, taken by Itzik: "הקבצים שלי הם רשימת שמות יבשה".
+   Only a name and a size, so a designer looking for one sample had to open
+   them one by one. Now each row has a small picture (the image itself, or the
+   first page of a PDF, the same thumbnails the answers use), the hour it came
+   in, and the list is under a heading for each day.
+ */
+ function ico(f){var t=f.t||'';return t.indexOf('video/')===0?'🎬':t.indexOf('audio/')===0?'🎧':t==='application/pdf'?'📄':t.indexOf('image/')===0?'🖼️':'📎';}
+ function when(f,full){try{var x=new Date(f.at);if(isNaN(x))return '';
+  var h=x.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Jerusalem'});
+  return full?x.toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'2-digit',timeZone:'Asia/Jerusalem'})+' '+h:h;}catch(e){return '';}}
+ function day(f){try{var x=new Date(f.at);if(isNaN(x))return '';return x.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',year:'numeric',timeZone:'Asia/Jerusalem'});}catch(e){return '';}}
+ function row(f,tag,full){var w=when(f,full);return '<a href="files/'+esc(f.n)+'"><span class="fl-i"><span class="fl-e">'+ico(f)+'</span>'+fileThumb(f.n)+'</span>'
+  +'<span class="fl-n">'+(tag?'<b style="font-size:12px;background:#16a34a;color:#fff;border-radius:8px;padding:1px 7px;margin-inline-end:6px">עדכני</b>':'')+esc(f.n.split('/').pop())
+  +'<small>'+(w?esc(w)+' · ':'')+kb(f)+'</small></span></a>';}
  var groups={},order=[],old=[];
  F.forEach(function(f){
   if(/בוטל|cancel+ed/i.test(f.n)){old.push(f);return;}
@@ -10228,13 +10250,19 @@ function renderFiles(){
   if(!groups[k]){groups[k]=[];order.push(k);}
   groups[k].push(f);
  });
- var h=order.map(function(k){
+ var top=order.map(function(k){
   var g=groups[k].slice().sort(function(a,b){return (fileVer(b.n)-fileVer(a.n))||((a.at||'')<(b.at||'')?1:-1);});
   old=old.concat(g.slice(1));
-  return row(g[0],g.length>1);
- }).join('');
+  return {f:g[0],tag:g.length>1};
+ }).sort(function(a,b){return (a.f.at||'')<(b.f.at||'')?1:-1;});
+ var h='',last=null;
+ top.forEach(function(r){
+  var d=day(r.f);
+  if(d!==last){last=d;if(d)h+='<h3>'+esc(d)+'</h3>';}
+  h+=row(r.f,r.tag,false);
+ });
  if(old.length)h+='<details style="margin-top:6px"><summary style="padding:10px 4px;color:var(--dim)">גרסאות קודמות ('+old.length+')</summary>'
-  +old.map(function(f){return row(f,false);}).join('')+'</details>';
+  +old.map(function(f){return row(f,false,true);}).join('')+'</details>';
  box.innerHTML=h;
 }
 function fileWork(n){
@@ -13992,9 +14020,20 @@ function reallySend(list,squeezed){
  if(total>QMAX&&!squeezed&&list.some(isImg)){
   shrinkAll(list,function(out){reallySend(out,true);});return;
  }
+ /*
+   10.10, from the reviewer, taken by Itzik: "קובץ גדול נחסם בלי דרך אחרת",
+   and his note on it: "אם זה קובץ גדול אז צריך להציע שימוש ב we transfer".
+   Telling someone who is not technical to upload to Drive and paste a link
+   was a dead end. Now the message comes with a button that opens WeTransfer,
+   with the three steps under it, and when every file fits on its own it says
+   that sending them one at a time works too.
+ */
  if(total>QMAX){
-  fSaid.textContent=(list.length>1?list.length+' קבצים יחד שוקלים ':'הקובץ שוקל ')+mb(total)
-   +(FEM?' והמגבלה היא 15MB. שלחי פחות קבצים בבת אחת, או העלי לוויטרנספר והדביקי כאן את הקישור.':' והמגבלה היא 15MB. תשלח פחות קבצים בבת אחת, או תעלה לדרייב ותכתוב לי כאן את הקישור.');
+  var each=list.length>1&&list.every(function(f){return f.size<=QMAX;});
+  fSaid.innerHTML=esc((list.length>1?list.length+' קבצים יחד שוקלים ':'הקובץ שוקל ')+mb(total)+' וזה יותר ממה שיוצא מכאן ישר.'
+    +(each?' אפשר לשלוח אותם אחד אחד, או בוויטרנספר:':(FEM?' שלחי בוויטרנספר, זה חינם ובלי הרשמה:':' תשלח בוויטרנספר, זה חינם ובלי הרשמה:')))
+   +'<a class="ask" href="https://wetransfer.com/" target="_blank" rel="noopener" style="display:flex;margin-top:8px">לשלוח בוויטרנספר</a>'
+   +'<span style="display:block;margin-top:6px">'+esc('שם בוחרים את הקובץ, לוחצים העברה ובוחרים קבלת קישור. את הקישור מדביקים כאן בהודעה ושולחים.')+'</span>';
   fBtn.disabled=false;return;
  }
  var cap=document.getElementById('fCap').value.trim();

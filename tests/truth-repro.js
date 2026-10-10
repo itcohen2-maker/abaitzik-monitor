@@ -80,6 +80,7 @@ check('P0-2 a new build is not a round trip', () => {
       pingSay: (t) => { said = t; },
       since: () => 'לפני שעה',
       ago: () => 'שעה',
+      agoAfter: () => 'לפני שעה',
       document: {
         getElementById: () => ({
           classList: { add: (c) => classes.push(`+${c}`), remove: (c) => classes.push(`-${c}`) },
