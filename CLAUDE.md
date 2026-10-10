@@ -41,3 +41,7 @@
   never in a loop: polling it got this IP family blocked by Vercel before. Until Itzik adds the repo to the Vercel
   GitHub app (one click on his side, pending since 1.10), a push only updates the repo and the PC's `deploy.sh` still
   publishes. Never commit `.sendkey`, `.vapid.json`, `.env.local` or `.vercel/`.
+
+- **Every new home tile gets the red waving hand (Itzik, 10.10.2026).** Write the tile button with `data-new="1"`
+  and the `newTiles` boot gives it `taskblink` (the hand) on each device until he first opens it. He asked for this
+  for anything new he opens; do not ship a new tile without it.

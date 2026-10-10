@@ -3657,7 +3657,7 @@ try{
     "like a puppet theatre". One tile to explain each character. Images and
     chat examples are sealed files under stk/, never in this page.
   -->
-  <button type="button" class="gt gStk" id="gStk"><b>🎭 תיאטרון המדבקות</b><small>78 הדמויות שלך ושל אלון. לחץ על דמות והסבר מי היא</small></button>
+  <button type="button" class="gt gStk" id="gStk" data-new="1"><b>🎭 תיאטרון המדבקות</b><small>78 הדמויות שלך ושל אלון. לחץ על דמות והסבר מי היא</small></button>
   <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>03 מכתב התגובה ו 04 ההסבר, לרועי ביום ראשון</small></button>
   <button type="button" class="gt gManiv" id="gManiv"><b>💧 תשלום למניב</b><small>לקוח 50523290. ביום שני המוקד נפתח ב 09:00</small></button>
   <button type="button" class="gt gOcc" id="gOcc"><b>🩺 מרפאה תעסוקתית</b><small>מכבי רמות. טלפון א עד ה 08:00 עד 11:00</small></button>
@@ -12623,6 +12623,20 @@ boot('shipLine',function(){
   takes the ntfy:// link straight; the iPhone app does not, so it gets the name
   to copy and paste under the plus.
 */
+/*
+  10.10, Itzik: "after you make me something new that I open, I should have
+  the waving hand". Any home tile written with data-new gets the red hand
+  (taskblink) on this device until the first time he opens it. A new tile only
+  needs the attribute; nothing else to remember.
+*/
+boot('newTiles',function(){
+ document.querySelectorAll('.gt[data-new]').forEach(function(t){
+  var k='tileSeen:'+t.id,seen=false;try{seen=!!localStorage.getItem(k);}catch(e){}
+  if(seen)return;
+  t.classList.add('taskblink');
+  t.addEventListener('click',function(){try{localStorage.setItem(k,'1');}catch(e){}t.classList.remove('taskblink');});
+ });
+});
 boot('pushTile',function(){
  var t=document.getElementById('gPush');if(!t)return;
  var seen=false;try{seen=!!localStorage.getItem('pushSeen');}catch(e){}
