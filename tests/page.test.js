@@ -1299,9 +1299,13 @@ test('the file ceiling is the one the file channel actually has', () => {
   // the bytes go to ntfy, which takes 15MB. So a video ntfy would have carried
   // was turned away at the door.
   const html = renderPage(fixture({}));
-  assert.ok(html.includes('var QMAX=15*1024*1024;'));
+  // 10.10: ntfy.sh dropped to 2MB a file and 20MB held per sender, so a big
+  // file leaves in slices the listener joins, under an 18MB ceiling.
+  assert.ok(html.includes('var QMAX=18*1024*1024;'));
   assert.ok(!html.includes('var QMAX=10*1024*1024;'));
-  assert.ok(html.includes("t+=' · גדול מדי, המגבלה 15MB יחד'"));
+  assert.ok(html.includes("t+=' · גדול מדי, המגבלה 18MB יחד, אפשר בוויטרנספר'"));
+  assert.ok(html.includes('var PART = 2000000;'));
+  assert.ok(html.includes("f.name + '.part' + (j + 1) + 'of' + k"));
   // And a failed send of a video must not tell him to record again.
   assert.ok(html.includes('הקובץ לא הגיע שלם ולא נשמר.'));
 });
