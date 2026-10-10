@@ -66,6 +66,7 @@ function buildIntakeForm() {
 
   f.addSectionHeaderItem().setTitle('החלק השישי, איך נוח לך לעבוד מול המערכת');
   f.addMultipleChoiceItem().setTitle('איך תעדיף לכתוב למערכת?').setChoiceValues(['להקליד', 'להקליט קול', 'לצלם מסך', 'הכל לפי מצב']).showOtherOption(true);
+  f.addMultipleChoiceItem().setTitle('למה המוניטור ישמש אותך?').setChoiceValues(['רק לצרכי העסק (המוניטור יכול לשמש גם עובד, אך רק לצרכי העסק)', 'גם לניהול החיים הפרטיים שלי']);
   f.addMultipleChoiceItem().setTitle('כמה עדכונים היית רוצה לקבל ביום?').setChoiceValues(['אחד מרוכז', 'שניים שלושה', 'בכל פעם שקורה משהו', 'כמה שפחות']).showOtherOption(true);
   f.addMultipleChoiceItem().setTitle('באיזו שעה נוח לקבל עדכון יומי?').setChoiceValues(['בוקר', 'צהריים', 'ערב', 'לפני השינה']).showOtherOption(true);
   f.addMultipleChoiceItem().setTitle('אתה רוצה התראות לטלפון?').setChoiceValues(['כן, על הכל', 'רק על דחוף', 'לא, אני אכנס לבד']).showOtherOption(true);
