@@ -953,7 +953,7 @@ function build() {
 const TENANT_TILES = {
   gCIdeas: ['g11', '💡 רעיונות לתוכן', 'מה שעלה לך, לפני שנשכח'],
   gPlan: ['g3', '🗓️ לוח תוכן', 'מה עולה מתי, ומה כבר עלה'],
-  gRemote: ['g4', '🖥️ לחבר את המחשב', 'משימה של חמש דקות, פעם אחת'],
+  gRemote: ['g4', '🖥️ לחבר את המחשב', 'רק כשצריך, ועושים את זה יחד בטלפון'],
   gRemind: ['g16', '⏰ לחזור ללקוחות', 'תזכורות, ולקוח שנעלם'],
   gTasks: ['g17', '✅ משימות', 'מה לעשות, לפי יום'],
   gNotes: ['g10', '📝 פתקים', 'נכתב, נשמר, לא הולך לאיבוד'],
@@ -1458,6 +1458,8 @@ button.abtn[disabled]{opacity:.55}
 .salecard .israempty{min-height:90px;border:2px dashed var(--line);border-radius:12px;padding:12px;opacity:.75;text-align:center}
 .rch{font:800 17px Heebo,sans-serif;margin:14px 0 4px;text-align:center}
 .rclast{counter-reset:none;list-style:none;padding-inline-start:0}
+.rcself{margin:10px 0}
+.rcself>summary{cursor:pointer;text-align:center;color:var(--dim);font-size:14px;padding:8px 0}
 #pRc .ask{display:flex;width:100%;margin-top:10px}
 .th-fresh>summary .badge{animation:hardblink .5s steps(1) infinite}
 .bub.fresh .badge{animation:hardblink .5s steps(1) infinite}
@@ -1554,6 +1556,10 @@ section{margin-bottom:30px}
 .report .text{padding:12px 14px 14px;font-size:15px;white-space:pre-wrap;
  overflow-wrap:anywhere;border-top:1px solid var(--line)}
 .rephint{color:var(--dim);font-size:12.5px;margin-bottom:8px}
+.fthumb{display:none}
+.fthumb[data-st="ok"]{display:block;margin:6px 0}
+.fthumb img{display:block;max-width:min(220px,100%);max-height:220px;border-radius:10px;border:1px solid var(--line,#ddd);background:#fff}
+.gotile .fthumb[data-st="ok"]{margin:0 auto 6px}
 .copyrow{display:flex;align-items:center;gap:11px;padding:0 14px 13px}
 .copyrow button{background:transparent;color:var(--accent);border:1px solid var(--line);
  border-radius:8px;padding:6px 14px;font:400 13px Heebo,sans-serif;cursor:pointer}
@@ -4054,34 +4060,42 @@ try{
 -->
 <section id="pRc" hidden>
  <h2>לחבר את המחשב</h2>
- <div class="rephint">פעם אחת, בערך חמש דקות. אחרי זה אפשר לעזור לך במחשב עצמו, רק כשאתה מאשר.</div>
- <!-- One set of steps per kind of device. instance.json says which computer
-      and phone the customer has, from the intake; unknown shows every set,
-      each under its own heading. -->
- <div data-comp="mac">
-  <h3 class="rch">במק</h3>
-  <ol class="rcsteps">
-   <li>נכנסים לדף ההורדות של <b>RustDesk</b> (הכפתור למטה). במק חדש, עם שבב של אפל, מורידים את הקובץ שנגמר ב <b>aarch64.dmg</b>. במק ישן, את הקובץ שנגמר ב <b>x86_64.dmg</b>.</li>
-   <li>פותחים את הקובץ, גוררים את RustDesk לתיקיית <b>Applications</b> ופותחים אותו משם. אם המק אומר שאי אפשר לפתוח, לוחצים עליו בכפתור הימני ובוחרים <b>פתיחה</b>.</li>
-   <li>RustDesk יבקש הרשאות. בהגדרות המערכת, בפרטיות ואבטחה, מדליקים את RustDesk תחת <b>נגישות</b> ותחת <b>הקלטת מסך</b>. אחר כך סוגרים את RustDesk ופותחים אותו שוב.</li>
-  </ol>
- </div>
- <div data-comp="win">
-  <h3 class="rch">בווינדוס</h3>
-  <ol class="rcsteps">
-   <li>נכנסים לדף ההורדות של <b>RustDesk</b> (הכפתור למטה) ומורידים את הקובץ שנגמר ב <b>x86_64.exe</b>.</li>
-   <li>פותחים אותו. אם מופיע חלון כחול של ווינדוס, לוחצים <b>מידע נוסף</b> ואז <b>הפעל בכל זאת</b>.</li>
-   <li>בתוך RustDesk לוחצים <b>התקנה</b>, כדי שיעבוד גם אחרי הפעלה מחדש של המחשב.</li>
-  </ol>
- </div>
- <ol class="rcsteps rclast">
-  <li>זהו. כשנצטרך להתחבר תקבל כאן בקשה: פותחים את RustDesk, שולחים בצ׳אט את <b>המספר</b> ואת <b>הסיסמה</b> שמופיעים בו, ומאשרים בחלון שקופץ. בלי האישור שלך אף אחד לא נכנס, ובכל רגע אפשר לנתק.</li>
- </ol>
- <div class="rephint" data-phone="ios">בונוס לאייפון: באפ סטור יש את <b>RustDesk Remote Desktop</b>, ואיתה נכנסים למחשב שלך מהטלפון.</div>
- <div class="rephint" data-phone="android">בונוס לאנדרואיד: בגוגל פליי יש את <b>RustDesk Remote Desktop</b>, ואיתה נכנסים למחשב שלך מהטלפון.</div>
- <a class="ask" href="https://github.com/rustdesk/rustdesk/releases/latest" target="_blank" rel="noopener">לדף ההורדות של RustDesk</a>
- <button type="button" class="ask" id="rcDone">סיימתי את ההתקנה</button>
- <div class="msgsaid" id="rcSaid"></div>
+ <!-- 10.10, from the reviewer, taken by Itzik: "הוראות שליטה מרחוק שמתאימות
+      לטכנאי". File names in English, system permissions, and at the end a
+      request to send a number and a password in the chat. For a customer on an
+      iPhone that is frightening. Now the first thing is a call where we do it
+      together, the steps for doing it alone are folded away and short, and the
+      number and password are never written in the chat: they are read out on
+      the phone, only while we are connected. -->
+ <div class="rephint">לא צריך לעשות את זה לבד ולא צריך להבין במחשבים. מתקשרים אליך ועושים את זה יחד, בערך חמש דקות, פעם אחת.</div>
+ <button type="button" class="ask" id="rcCall">תתקשרו אליי ונעשה את זה יחד</button>
+ <div class="msgsaid" id="rcCallSaid"></div>
+ <details class="rcself">
+  <summary>מעדיף לבד? ההוראות כאן</summary>
+  <!-- One set of steps per kind of device. instance.json says which computer
+       and phone the customer has, from the intake; unknown shows every set,
+       each under its own heading. -->
+  <div data-comp="mac">
+   <h3 class="rch">במק</h3>
+   <ol class="rcsteps">
+    <li>לוחצים על הכפתור למטה. נפתח דף עם הרבה קבצים. במק חדש מורידים את הקובץ שבסוף השם שלו כתוב aarch64.dmg, ובמק ישן את זה שכתוב בו x86_64.dmg. לא בטוחים? מתקשרים.</li>
+    <li>פותחים את מה שירד, ומושכים את הסמל של התוכנה לתיקיית התוכנות.</li>
+    <li>פותחים את התוכנה. המק ישאל אם לתת לה לראות את המסך ולהזיז את העכבר: עונים כן לשתי השאלות, וסוגרים ופותחים אותה שוב.</li>
+   </ol>
+  </div>
+  <div data-comp="win">
+   <h3 class="rch">בווינדוס</h3>
+   <ol class="rcsteps">
+    <li>לוחצים על הכפתור למטה. נפתח דף עם הרבה קבצים. מורידים את הקובץ שבסוף השם שלו כתוב x86_64.exe. לא בטוחים? מתקשרים.</li>
+    <li>פותחים את מה שירד. אם קופץ חלון כחול של ווינדוס, לוחצים מידע נוסף ואז הפעל בכל זאת.</li>
+    <li>בתוכנה שנפתחה לוחצים התקנה.</li>
+   </ol>
+  </div>
+  <a class="ask" href="https://github.com/rustdesk/rustdesk/releases/latest" target="_blank" rel="noopener">לדף שממנו מורידים את התוכנה</a>
+  <button type="button" class="ask" id="rcDone">סיימתי להתקין</button>
+  <div class="msgsaid" id="rcSaid"></div>
+ </details>
+ <div class="rephint">כשנצטרך להיכנס למחשב שלך נתקשר קודם. את המספר והסיסמה שבתוכנה מקריאים רק בטלפון, אף פעם לא כותבים אותם כאן. בלי שתאשר במחשב אף אחד לא נכנס, ובכל רגע אפשר לנתק.</div>
 </section>
 
 <!--ITZIK:BEGIN-->
@@ -4973,6 +4987,58 @@ function fileNameOf(href){
  if(!m)return '';
  try{return decodeURIComponent(m[2]);}catch(e){return m[2];}
 }
+/*
+  Itzik, 10.10, from the reviewer: "תוצר בשיחה מופיע כמילים בלבד". A design
+  or a document inside an answer was only the words פתיחת הקובץ, so to know
+  what had arrived she had to open each one. Now every picture, and the first
+  page of every PDF, sits in the bubble as a small image, and a tap on it opens
+  the file in full as before. Drawn only when it comes near the screen, one at
+  a time, and kept for the rest of the visit.
+*/
+function fileThumb(n){
+ var e=fileEntry(n),t=e?(e.t||''):'';
+ if(e&&t.indexOf('image/')!==0&&t!=='application/pdf')return '';
+ return '<span class="fthumb" data-fn="'+esc(n)+'"></span>';
+}
+var thumbMemo={},thumbQ=Promise.resolve();
+function thumbSrc(e){
+ var k=e.id+'|'+(e.at||'');
+ if(thumbMemo[k])return thumbMemo[k];
+ var t=e.t||'';
+ thumbMemo[k]=thumbQ=thumbQ.catch(function(){}).then(function(){return fileBlob(e);}).then(function(b){
+  if(t.indexOf('image/')===0)return URL.createObjectURL(b);
+  return Promise.all([loadPdfJs(),b.arrayBuffer()]).then(function(r){
+   return r[0].getDocument({data:new Uint8Array(r[1])}).promise;
+  }).then(function(doc){return doc.getPage(1);}).then(function(p){
+   var v1=p.getViewport({scale:1}),vp=p.getViewport({scale:440/v1.width});
+   var c=document.createElement('canvas');c.width=vp.width;c.height=vp.height;c.dir='ltr';
+   var cx=c.getContext('2d');cx.direction='ltr';cx.fillStyle='#fff';cx.fillRect(0,0,c.width,c.height);
+   return p.render({canvasContext:cx,viewport:vp}).promise.then(function(){return c.toDataURL('image/jpeg',0.8);});
+  });
+ });
+ thumbMemo[k].catch(function(){delete thumbMemo[k];});
+ return thumbMemo[k];
+}
+function thumbsFill(){
+ if(!GKEY||!D.files)return;
+ var H=window.innerHeight||800;
+ document.querySelectorAll('.fthumb:not([data-st])').forEach(function(el){
+  if(!el.parentElement||!el.parentElement.offsetParent)return;
+  var r=el.parentElement.getBoundingClientRect();
+  if(r.bottom<-H||r.top>2*H)return;
+  var e=fileEntry(el.getAttribute('data-fn')),t=e?(e.t||''):'';
+  if(!e||(t.indexOf('image/')!==0&&t!=='application/pdf')){el.setAttribute('data-st','no');return;}
+  el.setAttribute('data-st','wait');
+  thumbSrc(e).then(function(src){
+   el.innerHTML='<img alt="" src="'+src+'">';el.setAttribute('data-st','ok');
+  }).catch(function(){el.setAttribute('data-st','no');});
+ });
+}
+var thumbT=null;
+function thumbsSoon(){clearTimeout(thumbT);thumbT=setTimeout(thumbsFill,150);}
+new MutationObserver(thumbsSoon).observe(document.documentElement,{childList:true,subtree:true});
+window.addEventListener('scroll',thumbsSoon,{passive:true});
+setInterval(thumbsFill,3000);
 document.addEventListener('click',function(ev){
  var a=ev.target&&ev.target.closest&&ev.target.closest('a[href]');
  if(!a||a.origin!==location.origin)return;
@@ -5532,7 +5598,9 @@ function goLinks(m){
   fb.push(n);
  });
  return fb.map(function(n){
-  return '<button type="button" class="gotile" data-file="'+esc(n)+'">קח אותי לשם: '+esc(n.split('/').pop())+'</button>';
+  // 10.10: a file already shown as a picture in the text above is not shown twice.
+  var inText=(t.match(new RegExp('files/[^\\\\s<>"]+','g'))||[]).some(function(h){return fileNameOf(h.replace(new RegExp('[.,;:!?)"]+$'),''))===n;});
+  return '<button type="button" class="gotile" data-file="'+esc(n)+'">'+(inText?'':fileThumb(n))+'קח אותי לשם: '+esc(n.split('/').pop())+'</button>';
  }).join('')+ids.map(function(id){
   var el=document.getElementById(id);
   if(!el||el.hidden)return '';
@@ -5608,7 +5676,7 @@ function linkify(t){
   if(x.indexOf('files/')===0){
    var fn=fileNameOf(x);
    if(!fn||!fileEntry(fn))return esc(x+tail);
-   return '<a href="'+esc(x)+'">פתיחת הקובץ</a>'+esc(tail);
+   return '<a href="'+esc(x)+'">'+fileThumb(fn)+'פתיחת הקובץ</a>'+esc(tail);
   }
   return '<a href="'+esc(x)+'" target="_blank" rel="noopener noreferrer">'
    +esc(x)+'</a>'+esc(tail);
@@ -10253,7 +10321,16 @@ boot('remoteDevices',function(){
  // With one computer known its heading says nothing new.
  if(I.computer)document.querySelectorAll('#pRc .rch').forEach(function(h){h.hidden=true;});
 });
-boot('remote',function(){var b=document.getElementById('gRemote');if(b)b.classList.toggle('taskblink',!remoteDone());});
+// 10.10: the tile no longer blinks at every customer from the first day. The
+// screen is there for when it is needed, and a call does the rest.
+boot('remote',function(){var b=document.getElementById('gRemote');if(b)b.classList.remove('taskblink');});
+on('rcCall',function(){
+ var said=document.getElementById('rcCallSaid'),btn=document.getElementById('rcCall');
+ btn.disabled=true;said.textContent='שולח.';
+ sendText('משימה מהמוניטור','אשמח שתתקשרו אליי ונחבר את המחשב יחד.','משימה').then(function(){
+  said.textContent='נשלח. נתקשר אליך לתאם.';toast(said.textContent);markSent('text');
+ }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';}).then(function(){btn.disabled=false;});
+});
 /* The model switch: the newest request he has not answered blinks the tile. */
 function modelPending(){
  var m=(D.modelswitch||[])[0];if(!m||!m.id)return null;
@@ -10335,7 +10412,7 @@ on('moDone',function(){
 on('rcDone',function(){
  var said=document.getElementById('rcSaid'),btn=document.getElementById('rcDone');
  btn.disabled=true;said.textContent='שולח.';
- sendText('משימה מהמוניטור','התקנתי את RustDesk במק ואישרתי נגישות והקלטת מסך.','משימה').then(function(){
+ sendText('משימה מהמוניטור','התקנתי את תוכנת החיבור מרחוק במחשב.','משימה').then(function(){
   try{localStorage.setItem('remoteDoneRD','1');}catch(e){}
   var b=document.getElementById('gRemote');if(b)b.classList.remove('taskblink');
   said.textContent='נשלח. המשימה סגורה.';toast(said.textContent);markSent('text');
