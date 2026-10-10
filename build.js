@@ -12016,7 +12016,7 @@ function captionSheet(it){
 // 10.10: the title is also the file's name when it is sent or saved on the
 // iPhone, so it stays short like 03ג. A sentence of description made 04 an
 // 80 letter name with dots and commas, the one difference from 03ג when he reported it would not open.
-var REEL_ITEMS=[{n:'05',t:'חטיף העדשים, מחלים מסרטן',r:'reel-05-adashim.mp4'},{n:'05 כריכה',t:'הכריכה',r:'reel-05-cover.jpg'},{n:'05 פרסום',t:'כיתוב, כריכה ומוזיקה לאינסטגרם, טיקטוק ויוטיוב',r:'reel-05-post.txt'},{n:'04',t:'מה אני מתגעגע',r:'reel-04-mitgaagea.mp4'}];
+var REEL_ITEMS=[{n:'05',t:'חטיף העדשים, מחלים מסרטן',r:'reel-05-adashim.mp4'},{n:'05 כריכה',t:'הכריכה',r:'reel-05-cover.jpg'},{n:'05 פרסום',t:'כיתוב, כריכה ומוזיקה לאינסטגרם, טיקטוק ויוטיוב',r:'reel-05-post.txt'},{n:'04',t:'מה אני מתגעגע',r:'reel-04-mitgaagea.mp4'},{n:'04 כריכה',t:'הכריכה, על הטבעות',r:'reel-04-cover.jpg'},{n:'04 פרסום',t:'כיתוב, כריכה ומוזיקה לאינסטגרם, טיקטוק ויוטיוב',r:'reel-04-post.txt'}];
 function reelSheet(){
  var old=document.getElementById('rlSheet');if(old)old.remove();
  var w=document.createElement('div');
