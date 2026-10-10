@@ -440,6 +440,10 @@ section{margin-bottom:30px}
 .report .text{padding:12px 14px 14px;font-size:15px;white-space:pre-wrap;
  overflow-wrap:anywhere;border-top:1px solid var(--line)}
 .rephint{color:var(--dim);font-size:12.5px;margin-bottom:8px}
+.fthumb{display:none}
+.fthumb[data-st="ok"]{display:block;margin:6px 0}
+.fthumb img{display:block;max-width:min(220px,100%);max-height:220px;border-radius:10px;border:1px solid var(--line,#ddd);background:#fff}
+.gotile .fthumb[data-st="ok"]{margin:0 auto 6px}
 .copyrow{display:flex;align-items:center;gap:11px;padding:0 14px 13px}
 .copyrow button{background:transparent;color:var(--accent);border:1px solid var(--line);
  border-radius:8px;padding:6px 14px;font:400 13px Heebo,sans-serif;cursor:pointer}
@@ -1809,7 +1813,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-10T07:04:03.945Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-10T07:04:32.247Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3228,13 +3232,57 @@ function fileNameOf(href){
  if(!m)return '';
  try{return decodeURIComponent(m[2]);}catch(e){return m[2];}
 }
+function fileThumb(n){
+ var e=fileEntry(n),t=e?(e.t||''):'';
+ if(e&&t.indexOf('image/')!==0&&t!=='application/pdf')return '';
+ return '<span class="fthumb" data-fn="'+esc(n)+'"></span>';
+}
+var thumbMemo={},thumbQ=Promise.resolve();
+function thumbSrc(e){
+ var k=e.id+'|'+(e.at||'');
+ if(thumbMemo[k])return thumbMemo[k];
+ var t=e.t||'';
+ thumbMemo[k]=thumbQ=thumbQ.catch(function(){}).then(function(){return fileBlob(e);}).then(function(b){
+  if(t.indexOf('image/')===0)return URL.createObjectURL(b);
+  return Promise.all([loadPdfJs(),b.arrayBuffer()]).then(function(r){
+   return r[0].getDocument({data:new Uint8Array(r[1])}).promise;
+  }).then(function(doc){return doc.getPage(1);}).then(function(p){
+   var v1=p.getViewport({scale:1}),vp=p.getViewport({scale:440/v1.width});
+   var c=document.createElement('canvas');c.width=vp.width;c.height=vp.height;c.dir='ltr';
+   var cx=c.getContext('2d');cx.direction='ltr';cx.fillStyle='#fff';cx.fillRect(0,0,c.width,c.height);
+   return p.render({canvasContext:cx,viewport:vp}).promise.then(function(){return c.toDataURL('image/jpeg',0.8);});
+  });
+ });
+ thumbMemo[k].catch(function(){delete thumbMemo[k];});
+ return thumbMemo[k];
+}
+function thumbsFill(){
+ if(!GKEY||!D.files)return;
+ var H=window.innerHeight||800;
+ document.querySelectorAll('.fthumb:not([data-st])').forEach(function(el){
+  if(!el.parentElement||!el.parentElement.offsetParent)return;
+  var r=el.parentElement.getBoundingClientRect();
+  if(r.bottom<-H||r.top>2*H)return;
+  var e=fileEntry(el.getAttribute('data-fn')),t=e?(e.t||''):'';
+  if(!e||(t.indexOf('image/')!==0&&t!=='application/pdf')){el.setAttribute('data-st','no');return;}
+  el.setAttribute('data-st','wait');
+  thumbSrc(e).then(function(src){
+   el.innerHTML='<img alt="" src="'+src+'">';el.setAttribute('data-st','ok');
+  }).catch(function(){el.setAttribute('data-st','no');});
+ });
+}
+var thumbT=null;
+function thumbsSoon(){clearTimeout(thumbT);thumbT=setTimeout(thumbsFill,150);}
+new MutationObserver(thumbsSoon).observe(document.documentElement,{childList:true,subtree:true});
+window.addEventListener('scroll',thumbsSoon,{passive:true});
+setInterval(thumbsFill,3000);
 document.addEventListener('click',function(ev){
  var a=ev.target&&ev.target.closest&&ev.target.closest('a[href]');
  if(!a||a.origin!==location.origin)return;
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='ce302ab838';
+var CODE_ID='e55e26421c';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -3613,7 +3661,8 @@ function goLinks(m){
   fb.push(n);
  });
  return fb.map(function(n){
-  return '<button type="button" class="gotile" data-file="'+esc(n)+'">קח אותי לשם: '+esc(n.split('/').pop())+'</button>';
+  var inText=(t.match(new RegExp('files/[^\\s<>"]+','g'))||[]).some(function(h){return fileNameOf(h.replace(new RegExp('[.,;:!?)"]+$'),''))===n;});
+  return '<button type="button" class="gotile" data-file="'+esc(n)+'">'+(inText?'':fileThumb(n))+'קח אותי לשם: '+esc(n.split('/').pop())+'</button>';
  }).join('')+ids.map(function(id){
   var el=document.getElementById(id);
   if(!el||el.hidden)return '';
@@ -3677,7 +3726,7 @@ function linkify(t){
   if(x.indexOf('files/')===0){
    var fn=fileNameOf(x);
    if(!fn||!fileEntry(fn))return esc(x+tail);
-   return '<a href="'+esc(x)+'">פתיחת הקובץ</a>'+esc(tail);
+   return '<a href="'+esc(x)+'">'+fileThumb(fn)+'פתיחת הקובץ</a>'+esc(tail);
   }
   return '<a href="'+esc(x)+'" target="_blank" rel="noopener noreferrer">'
    +esc(x)+'</a>'+esc(tail);
