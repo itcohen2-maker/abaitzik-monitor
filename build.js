@@ -6082,7 +6082,7 @@ function renderThread(){
   return '<details class="th th-'+r.status+'" data-k="'+esc(t.key)+'"'+(ri===0&&r.status==='fresh'?' open':'')+'>'
    +'<summary><span class="num">'+r.n+'</span><b>'+esc(head)+'</b>'+tag
    +(proj[t.key]?'<i class="tproj">'+esc(proj[t.key])+'</i>':'')
-   +'<small>'+esc(stamp(t.last))+' · '+esc(ago(t.last))+' · '+msgCount(t.msgs.length)+'</small>'
+   +'<small>'+esc(stampAgo(t.last))+' · '+msgCount(t.msgs.length)+'</small>'
    +'</summary>'
    +'<div class="thbody">'+body
    +'<div class="rrow">'
@@ -7001,6 +7001,8 @@ var lastCheckFail=false;
 // ago() says "now" for anything under a minute and a half, and since 10.10
 // it carries its own "לפני", so since() is the same phrase under its old name.
 function since(iso){return ago(iso);}
+// A full date and then "ago": past a week ago() is a date too, so it is said once.
+function stampAgo(iso){var a=ago(iso);return stamp(iso)+(a&&!/^[0-9]/.test(a)?' · '+a:'');}
 // The phone's own flag first, it flips the moment the signal drops. A failed
 // check counts too: on wifi with no internet the phone still says online.
 function paintOffline(){
@@ -9893,7 +9895,7 @@ function renderReplies(){
  var seen=repliesSeen();
  host.innerHTML=replyBox('על התגובות')+(R.length?R.map(function(r){
   var isNew=(r.at||'')>seen;
-  return '<div class="spec rep"><div class="w">'+esc(stamp(r.at))+' · '+esc(ago(r.at))
+  return '<div class="spec rep"><div class="w">'+esc(stampAgo(r.at))
    +(r.network?' · '+esc(NETNAME[r.network]||r.network):'')
    +(isNew?'<span class="tagnew">חדש</span>':'')+'</div>'
    +(r.video?'<b>'+esc(r.video)+'</b>':'')
@@ -9965,7 +9967,7 @@ function renderSpecial(){
  if(!host)return;
  var S=D.special||[];
  host.innerHTML=replyBox('על הבקשות')+(S.length?S.map(function(u){
-  return '<div class="spec"><div class="w">'+esc(stamp(u.at))+' · '+esc(ago(u.at))+'</div>'
+  return '<div class="spec"><div class="w">'+esc(stampAgo(u.at))+'</div>'
    +'<b>'+esc(u.title)+'</b>'
    +(u.note?'<small>'+esc(u.note)+'</small>':'')
    +(u.copy?'<div class="cptext">'+esc(u.copy)+'</div>'
@@ -10525,7 +10527,7 @@ function renderPegasus(){
  if(!host)return;
  var P=D.pegasus||[];
  host.innerHTML=replyBox('על פגסוס')+(P.length?P.map(function(u,pi){
-  return '<div class="peg'+(u.ask?' waiting':'')+'"><div class="w">'+esc(stamp(u.at))+' · '+esc(ago(u.at))+'</div>'
+  return '<div class="peg'+(u.ask?' waiting':'')+'"><div class="w">'+esc(stampAgo(u.at))+'</div>'
    +(u.did?'<div><b>מה נעשה</b>'+esc(u.did)+'</div>':'')
    +(u.now?'<div><b>מה קורה</b>'+esc(u.now)+'</div>':'')
    +(u.plan?'<div><b>מה מתוכנן</b>'+esc(u.plan)+'</div>':'')
@@ -12140,6 +12142,30 @@ on('gInsights',function(){
   6.10, Roni: four big buttons, each its own sheet, nothing to edit. The money
   has no currency sign until Rinat says which currency that column is in.
 */
+/*
+  10.10, Itzik: the money tile stays, but the sum is not shown until whoever
+  opens it says which currency that column is in. Until then the tile says
+  "לבחור מטבע" and its sheet offers only the choice. Kept on the phone.
+*/
+var SHIP_CUR=[['₪','שקל'],['$','דולר'],['€','אירו'],['¥','יואן']];
+function shipCur(){try{var c=localStorage.getItem('shipCur')||'';return SHIP_CUR.some(function(x){return x[0]===c;})?c:'';}catch(e){return '';}}
+function shipMoneyText(s){var c=shipCur();return c?c+' '+Number(s.openMoney||0).toLocaleString('he-IL'):'לבחור מטבע';}
+function shipMoneyOpen(s,changed){
+ var c=shipCur();
+ var pick='<div class="sbig">'+SHIP_CUR.map(function(x){
+  return '<button type="button" data-cur="'+x[0]+'" style="background:'+(x[0]===c?'#14675a':'#6a4c93')+'">'+x[0]+'<small>'+x[1]+'</small></button>';
+ }).join('')+'</div>';
+ var h=c?'<div class="srow"><b>'+esc(shipMoneyText(s))+'</b><br><small>סכום ההזמנות הפתוחות, לפי עמודת סכום ההזמנה בטבלה.</small></div><small>להחליף מטבע:</small>'+pick
+  :'<small>באיזה מטבע רשום סכום ההזמנה בטבלה? הסכום יוצג רק אחרי שתבחרו.</small>'+pick;
+ shipOpen('shipCeoMoney','💰 כסף בדרך',h,function(w){
+  w.querySelector('.sbig').addEventListener('click',function(e){
+   var b=e.target.closest&&e.target.closest('[data-cur]');if(!b)return;
+   try{localStorage.setItem('shipCur',b.getAttribute('data-cur'));}catch(x){}
+   if(changed)changed();
+   shipMoneyOpen(s,changed);
+  });
+ });
+}
 function shipWeekRows(S){
  var rows=D.shipments||[],t=S.today,closedRe=/^(במלאי|הזמנה מבוטלת|יתרת הסחורה)/;
  var end=new Date(Date.parse(t+'T00:00:00Z')+7*86400000).toISOString().slice(0,10);
@@ -12154,7 +12180,7 @@ on('gCeo',function(){
   +'<div class="sbig">'
   +'<button type="button" data-c="red" style="background:#c62828">🔴 דחוף<small>'+s.red+' הזמנות</small></button>'
   +'<button type="button" data-c="week" style="background:#14675a">📅 מגיע השבוע<small>'+s.arrivingThisWeek+' הזמנות</small></button>'
-  +'<button type="button" data-c="money" style="background:#6a4c93">💰 כסף בדרך<small>'+Number(s.openMoney||0).toLocaleString('he-IL')+'</small></button>'
+  +'<button type="button" data-c="money" style="background:#6a4c93">💰 כסף בדרך<small>'+shipMoneyText(s)+'</small></button>'
   +'<button type="button" data-c="trend" style="background:#ef8f00">📈 מגמה<small>מי מאחר</small></button>'
   +'</div>';
  shipOpen('shipCeo','📊 תמונת מצב',h,function(w){
@@ -12172,7 +12198,7 @@ on('gCeo',function(){
      }).join(''):'<small>שום דבר לא מגיע השבוע.</small>');
     });
    }else if(c==='money'){
-    shipOpen('shipCeoMoney','💰 כסף בדרך','<div class="srow"><b>'+Number(s.openMoney||0).toLocaleString('he-IL')+'</b><br><small>סכום ההזמנות הפתוחות, לפי עמודת סכום ההזמנה בטבלה. המטבע עוד לא אומת, לכן בלי סימן.</small></div>');
+    shipMoneyOpen(s,function(){var m=b.querySelector('small');if(m)m.textContent=shipMoneyText(s);});
    }else{
     var I=S.insights||[];
     shipOpen('shipCeoTrend','📈 מגמה','<small>כמה ימים זז בממוצע תאריך היציאה של כל ספק, לעומת מה שביקשנו.</small>'+(I.length?I.map(function(x){
