@@ -3658,7 +3658,7 @@ try{
     "like a puppet theatre". One tile to explain each character. Images and
     chat examples are sealed files under stk/, never in this page.
   -->
-  <button type="button" class="gt gStk" id="gStk" data-new="1"><b>🎭 תיאטרון המדבקות</b><small>78 הדמויות שלך ושל אלון. לחץ על דמות והסבר מי היא</small></button>
+  <button type="button" class="gt gStk" id="gStk" data-new="1"><b>🎭 תיאטרון המדבקות</b><small>האתר שלך ושל אלון: קישור, העתקה ושליחה לאלון</small></button>
   <!--
     10.10. Itzik: "a link and a button in the monitor, lecture". The edited
     lecture text with slide thumbnails, the new slides and the deck, all in Drive.
@@ -12069,6 +12069,8 @@ on('gFut',futSheet);
   dictate. The pictures and the chat lines are sealed files under stk/.
 */
 var STK=null,STK_URL={},STK_ALON={},STK_LINK='';
+// 10.10: the private site where Itzik and Alon fill in the characters together. Only their two Google accounts get in.
+var STK_SITE='https://bubot-theatre.vercel.app';
 // 10.10: Alon answers on his own page; his words and the link to send him are sealed files here.
 function stkJson(name){var e=fileEntry('stk/'+name);if(!e)return Promise.resolve(null);return fileBlob(e).then(function(b){return b.text();}).then(JSON.parse).catch(function(){return null;});}
 function stkBlob(name){
@@ -12119,7 +12121,11 @@ function stkSheet(){
   var done=stkDone(),na=Object.keys(STK_ALON).length;
   w.innerHTML='<div class="ycard"><div class="stkTop"><b>🎭 תיאטרון המדבקות</b><button type="button" class="yb yx" data-x="1">✕ לדף הראשי</button></div>'
    +'<small>'+list.length+' דמויות, לפי כמה פעמים נשלחו מאז 20.3. ירוק: כבר הסברת. 🔵 אלון ענה'+(na?' ('+na+')':'')+'</small>'
-   +(STK_LINK?'<button type="button" class="yb yb1" data-w="1">💬 לשלוח לאלון בוואטסאפ</button><small>דף משותף: מה שאתה מספר על דמות אלון רואה אצלו, תוך שתי דקות, ונשאל אם יש לו מה להוסיף. מה שהוא כותב נכנס לכאן בכחול ליד שלך</small>':'')
+   +'<a class="yb yb1" style="display:block;text-align:center;text-decoration:none;margin-top:10px" href="'+STK_SITE+'" target="_blank" rel="noopener">🎭 לפתוח את האתר של התיאטרון</a>'
+   +'<small style="direction:ltr;display:block;text-align:center">'+STK_SITE+'</small>'
+   +'<div style="display:flex;gap:8px"><button type="button" class="yb yx" data-c="1" style="flex:1">📋 להעתיק את הקישור</button>'
+   +'<button type="button" class="yb yx" data-w="1" style="flex:1">💬 לשלוח לאלון בוואטסאפ</button></div>'
+   +'<small>אלון נכנס עם הג׳ימייל record4. רק אתה והוא יכולים להיכנס</small>'
    +'<div class="stkg">'+list.map(function(x,i){
      return '<button type="button" class="stkc'+(done[x.n]?' done':'')+'" data-i="'+i+'"><img alt="" data-f="'+x.f+'">#'+x.n+' · '+x.c+(STK_ALON[x.n]?' 🔵':'')+'</button>';
     }).join('')+'</div>'
@@ -12128,10 +12134,16 @@ function stkSheet(){
  },function(){w.innerHTML='<div class="ycard"><b>🎭 תיאטרון המדבקות</b><small>לא הצלחתי לפתוח את המדבקות. נסה שוב בעוד דקה</small><button type="button" class="yb yx" data-x="1">סגירה</button></div>';});
  w.onclick=function(ev){
   if(ev.target===w)return close();
-  var b=ev.target.closest&&ev.target.closest('[data-i],[data-x],[data-w]');if(!b)return;
+  var b=ev.target.closest&&ev.target.closest('[data-i],[data-x],[data-w],[data-c]');if(!b)return;
   if(b.hasAttribute('data-x'))return close();
+  if(b.hasAttribute('data-c')){
+   var ok=function(){toast('הקישור הועתק');};
+   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(STK_SITE).then(ok,function(){fallbackCopy(STK_SITE,ok);});
+   else fallbackCopy(STK_SITE,ok);
+   return;
+  }
   if(b.hasAttribute('data-w')){
-   var txt='אלון, בניתי לנו תיאטרון מדבקות משותף. מה שאני מספר על כל דמות אתה רואה שם, ומה שאתה מוסיף אני רואה אצלי 🎭 '+STK_LINK;
+   var txt='אלון, בניתי לנו אתר לתיאטרון המדבקות. לכל דמות יש שם, סיפור, משפטים בקול שלה ומקום להקליט אותה. נכנסים עם הג׳ימייל record4 🎭 '+STK_SITE;
    window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');return;
   }
   stkOne(STK[+b.getAttribute('data-i')]);

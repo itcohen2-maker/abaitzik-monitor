@@ -1857,7 +1857,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-10T13:05:59.621Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-10T13:16:51.750Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2007,7 +2007,7 @@ try{
   <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>03ג אני אסתדר עם זה</small></button>
   <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 02 אני אסתדר</small></button>
   <button type="button" class="gt gPen" id="gPen"><b>🏦 פנסיה</b><small>קוד מוסד בבנק 28417, 1,211 ש״ח. בדיקה ב 18.10</small></button>
-  <button type="button" class="gt gStk" id="gStk" data-new="1"><b>🎭 תיאטרון המדבקות</b><small>78 הדמויות שלך ושל אלון. לחץ על דמות והסבר מי היא</small></button>
+  <button type="button" class="gt gStk" id="gStk" data-new="1"><b>🎭 תיאטרון המדבקות</b><small>האתר שלך ושל אלון: קישור, העתקה ושליחה לאלון</small></button>
   <button type="button" class="gt gLec" id="gLec" data-new="1"><b>🎤 הרצאה</b><small>כנגד כל הסיכויים: המלל הערוך עם השקפים</small></button>
   <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>03 מכתב התגובה ו 04 ההסבר, לרועי ביום ראשון</small></button>
   <button type="button" class="gt gManiv" id="gManiv"><b>💧 תשלום למניב</b><small>לקוח 50523290. ביום שני המוקד נפתח ב 09:00</small></button>
@@ -3332,7 +3332,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='73c5823292';
+var CODE_ID='5af19bf342';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -8435,6 +8435,7 @@ function futSheet(){
 }
 on('gFut',futSheet);
 var STK=null,STK_URL={},STK_ALON={},STK_LINK='';
+var STK_SITE='https://bubot-theatre.vercel.app';
 function stkJson(name){var e=fileEntry('stk/'+name);if(!e)return Promise.resolve(null);return fileBlob(e).then(function(b){return b.text();}).then(JSON.parse).catch(function(){return null;});}
 function stkBlob(name){
  if(STK_URL[name])return Promise.resolve(STK_URL[name]);
@@ -8477,7 +8478,11 @@ function stkSheet(){
   var done=stkDone(),na=Object.keys(STK_ALON).length;
   w.innerHTML='<div class="ycard"><div class="stkTop"><b>🎭 תיאטרון המדבקות</b><button type="button" class="yb yx" data-x="1">✕ לדף הראשי</button></div>'
    +'<small>'+list.length+' דמויות, לפי כמה פעמים נשלחו מאז 20.3. ירוק: כבר הסברת. 🔵 אלון ענה'+(na?' ('+na+')':'')+'</small>'
-   +(STK_LINK?'<button type="button" class="yb yb1" data-w="1">💬 לשלוח לאלון בוואטסאפ</button><small>דף משותף: מה שאתה מספר על דמות אלון רואה אצלו, תוך שתי דקות, ונשאל אם יש לו מה להוסיף. מה שהוא כותב נכנס לכאן בכחול ליד שלך</small>':'')
+   +'<a class="yb yb1" style="display:block;text-align:center;text-decoration:none;margin-top:10px" href="'+STK_SITE+'" target="_blank" rel="noopener">🎭 לפתוח את האתר של התיאטרון</a>'
+   +'<small style="direction:ltr;display:block;text-align:center">'+STK_SITE+'</small>'
+   +'<div style="display:flex;gap:8px"><button type="button" class="yb yx" data-c="1" style="flex:1">📋 להעתיק את הקישור</button>'
+   +'<button type="button" class="yb yx" data-w="1" style="flex:1">💬 לשלוח לאלון בוואטסאפ</button></div>'
+   +'<small>אלון נכנס עם הג׳ימייל record4. רק אתה והוא יכולים להיכנס</small>'
    +'<div class="stkg">'+list.map(function(x,i){
      return '<button type="button" class="stkc'+(done[x.n]?' done':'')+'" data-i="'+i+'"><img alt="" data-f="'+x.f+'">#'+x.n+' · '+x.c+(STK_ALON[x.n]?' 🔵':'')+'</button>';
     }).join('')+'</div>'
@@ -8486,10 +8491,16 @@ function stkSheet(){
  },function(){w.innerHTML='<div class="ycard"><b>🎭 תיאטרון המדבקות</b><small>לא הצלחתי לפתוח את המדבקות. נסה שוב בעוד דקה</small><button type="button" class="yb yx" data-x="1">סגירה</button></div>';});
  w.onclick=function(ev){
   if(ev.target===w)return close();
-  var b=ev.target.closest&&ev.target.closest('[data-i],[data-x],[data-w]');if(!b)return;
+  var b=ev.target.closest&&ev.target.closest('[data-i],[data-x],[data-w],[data-c]');if(!b)return;
   if(b.hasAttribute('data-x'))return close();
+  if(b.hasAttribute('data-c')){
+   var ok=function(){toast('הקישור הועתק');};
+   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(STK_SITE).then(ok,function(){fallbackCopy(STK_SITE,ok);});
+   else fallbackCopy(STK_SITE,ok);
+   return;
+  }
   if(b.hasAttribute('data-w')){
-   var txt='אלון, בניתי לנו תיאטרון מדבקות משותף. מה שאני מספר על כל דמות אתה רואה שם, ומה שאתה מוסיף אני רואה אצלי 🎭 '+STK_LINK;
+   var txt='אלון, בניתי לנו אתר לתיאטרון המדבקות. לכל דמות יש שם, סיפור, משפטים בקול שלה ומקום להקליט אותה. נכנסים עם הג׳ימייל record4 🎭 '+STK_SITE;
    window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');return;
   }
   stkOne(STK[+b.getAttribute('data-i')]);
