@@ -1857,7 +1857,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-10T11:24:53.745Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-10T11:26:54.137Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3332,7 +3332,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='e63daeda46';
+var CODE_ID='5997adcc18';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -6482,9 +6482,57 @@ function sentSound(){
   sfxIdle();
  }catch(e){}
 }
-function flyMail(){
+var micFrom=null;
+document.addEventListener('pointerdown',function(e){
+ try{
+  var b=e.target&&e.target.closest&&e.target.closest('#micBtn,#micDock,#recBtn,#recBig');
+  var r=b&&b.getBoundingClientRect();
+  if(r&&r.width)micFrom={x:r.left+r.width/2,y:r.top+r.height/2,w:Math.max(36,Math.min(r.width,64))};
+ }catch(err){}
+},true);
+function flyMic(from,to,layer,box,flag,at){
+ var W=window.innerWidth,H=window.innerHeight;
+ if(!from)from={x:W/2,y:H*0.6,w:54};
+ var w=from.w,dir=to.x<from.x?-1:1;
+ var mic=document.createElement('div');
+ mic.className='fm-mic';
+ mic.setAttribute('style','position:absolute;left:0;top:0;width:'+w+'px;height:'+w+'px;border-radius:50%;background:#e5484d;'
+  +'box-shadow:0 8px 22px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center');
+ mic.innerHTML='<svg viewBox="0 0 24 24" width="'+Math.round(w*0.56)+'" height="'+Math.round(w*0.56)+'" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'
+  +'<rect x="9" y="3" width="6" height="11" rx="3" fill="#fff" stroke="none"/>'
+  +'<path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8.5 21h7"/></svg>';
+ layer.appendChild(mic);
+ var base=at(from.x,from.y,w,w);
+ mic.style.transform=base;
+ var squeeze=mic.animate([
+  {transform:base+' scale(1)'},
+  {transform:base+' scale(1.15)',offset:.35},
+  {transform:base+' scale(.55)'}],{duration:300,easing:'ease-in-out',fill:'forwards'});
+ var mx=(from.x+to.x)/2+dir*50,my=Math.min(from.y,to.y)-140;
+ var steps=[],N=24,turns=3;
+ for(var i=0;i<=N;i++){
+  var k=i/N,u=1-k;
+  var x=u*u*from.x+2*u*k*mx+k*k*to.x,y=u*u*from.y+2*u*k*my+k*k*(to.y+4);
+  steps.push({transform:at(x,y,w,w)+' rotate('+(dir*360*turns*k)+'deg) scale('+(0.55-0.4*k)+')',opacity:i===N?0:1});
+ }
+ squeeze.onfinish=function(){
+  var fly=mic.animate(steps,{duration:900,easing:'cubic-bezier(.4,0,.35,1)',fill:'forwards'});
+  fly.onfinish=function(){
+   box.animate([{transform:at(to.x,to.y,58,62)},{transform:at(to.x,to.y,58,62)+' scale(1.12,.92)'},{transform:at(to.x,to.y,58,62)}],{duration:260});
+   flag.animate([{transform:'rotate(90deg)'},{transform:'rotate(-8deg)',offset:.7},{transform:'rotate(0deg)'}],{duration:420,fill:'forwards'});
+   try{navigator.vibrate&&navigator.vibrate(12);}catch(e){}
+   setTimeout(function(){
+    var out=box.animate([{opacity:1},{opacity:0}],{duration:380,fill:'forwards'});
+    out.onfinish=function(){layer.remove();};
+   },650);
+  };
+ };
+ flag.style.transform='rotate(90deg)';
+}
+function flyMail(kind){
  sentSound();
  var from=sendFrom;sendFrom=null;
+ var mFrom=micFrom;micFrom=null;
  if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
  if(!document.body.animate)return;
  var W=window.innerWidth,H=window.innerHeight;
@@ -6517,6 +6565,7 @@ function flyMail(){
  box.style.transform=at(to.x,to.y,58,62);
  box.animate([{opacity:0,transform:at(to.x,to.y,58,62)+' scale(.4)'},{opacity:1,transform:at(to.x,to.y,58,62)+' scale(1.08)',offset:.7},{opacity:1,transform:at(to.x,to.y,58,62)+' scale(1)'}],
   {duration:320,delay:250,fill:'forwards',easing:'ease-out'});
+ if(kind==='voice'){paper.remove();env.remove();flyMic(mFrom,to,layer,box,flag,at);return;}
  paper.animate([
   {transform:at(from.x,from.y,pw,ph),opacity:1},
   {transform:at(from.x,from.y,pw,ph)+' perspective(500px) rotateX(55deg) scale(.5)',opacity:1,offset:.6},
@@ -6557,7 +6606,7 @@ function markSent(kind,text,id){
  reqSave(a);
  try{renderReqs();}catch(e){}
  try{paintGot();renderGot();}catch(e){}
- try{flyMail();}catch(e){}
+ try{flyMail(kind);}catch(e){}
  return rid;
 }
 function recordFor(r){
