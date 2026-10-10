@@ -3187,8 +3187,6 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
  border-radius:11px;background:var(--bg,#0e1219);color:var(--ink,#e8edf5);
  font:700 14px Heebo,sans-serif;cursor:pointer}
 .gt-e{min-height:20px;margin-top:10px;font:600 13.5px Heebo,sans-serif;color:var(--red,#EA4335)}
-#faceOffer{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;
- justify-content:center;background:var(--ground,#0f1218);padding:24px}
 .gt-help{margin-top:10px;font:400 14px Heebo,sans-serif;color:var(--dim,#9aa7ba);line-height:1.5}
 .gt-btn{display:block;width:100%;margin-top:10px;padding:12px;border-radius:12px;border:1px solid var(--line,#2a3342);
  background:var(--sunk,#141922);color:var(--ink,#e8edf5);font:700 15px Heebo,sans-serif;cursor:pointer}
@@ -10786,6 +10784,11 @@ function myCode(){
   asked is the face. When the face fails, the way back in is the same five
   words, checked against the key this phone already holds, never a new code.
   Itzik's own copy keeps its personal code: there it also signs every message.
+
+  10.10 later, Itzik: "זה צריך להיות חד פעמי ... כל פעם בכניסה למוניטור עם
+  זיהוי פנים? את זה אני לא רוצה". So the words are the one time, and after
+  them the monitor opens straight. Nothing offers the face after the words;
+  it stays a choice in settings for whoever wants it.
 */
 function oneLock(){return !!(GATE&&GATE.words&&INSTANCE&&INSTANCE.name&&INSTANCE.name!=='abaitzik');}
 function gateKeyIs(v){
@@ -10794,36 +10797,12 @@ function gateKeyIs(v){
  return gderive(v).then(function(k){return crypto.subtle.exportKey('raw',k);})
   .then(function(raw){return graw(new Uint8Array(raw))===saved;},function(){return false;});
 }
-// Right after the words open the page for the first time on this phone.
-function faceOffer(){
- if(!oneLock()||!faceSupported()||faceId()||lockOn())return;
- var w=document.createElement('div');
- w.id='faceOffer';
- w.innerHTML='<div class="gatecard"><b class="gt-t">מעכשיו רק מבט</b>'
-  +'<div class="gt-s">הסיסמה לא תידרש יותר בטלפון הזה. כדי שאף אחד אחר לא יפתח אותו, כל פתיחה תהיה בזיהוי פנים.</div>'
-  +'<button type="button" class="gt-btn pri" id="foYes">להפעיל זיהוי פנים</button>'
-  +'<button type="button" class="gt-eye" id="foNo">לא עכשיו</button>'
-  +'<div class="gt-e" id="foSaid"></div></div>';
- document.body.appendChild(w);
- var close=function(){if(w.parentNode)w.parentNode.removeChild(w);};
- document.getElementById('foNo').onclick=close;
- document.getElementById('foYes').onclick=function(){
-  document.getElementById('foSaid').textContent='';
-  faceEnroll(function(ok){
-   if(!ok){document.getElementById('foSaid').textContent='זה לא הופעל. אפשר לנסות שוב, או להפעיל אחר כך בהגדרות.';return;}
-   try{localStorage.setItem('lockOn','1');}catch(e){}
-   try{faceRender();lockToggleRender();}catch(e){}
-   close();
-   toast('זיהוי פנים מופעל. מהפתיחה הבאה נכנסים במבט.');
-  });
- };
-}
 function showCodeBox(){
  var box=document.getElementById('codeBox');
  box.hidden=false;
  if(oneLock()){
-  document.getElementById('codeTitle').textContent='כניסה בזיהוי פנים';
-  document.getElementById('codeAbout').textContent='את הסיסמה מקלידים רק פעם אחת. מאז נכנסים במבט, ואם הזיהוי לא מצליח, נכנסים עם אותה סיסמה. אין קוד נוסף.';
+  document.getElementById('codeTitle').textContent='זיהוי פנים, רק אם רוצים';
+  document.getElementById('codeAbout').textContent='את הסיסמה מקלידים רק פעם אחת, ומאז המוניטור נפתח בטלפון הזה ישר. מי שרוצה נעילה גם בכל פתיחה יכול להפעיל כאן זיהוי פנים. אם הזיהוי לא מצליח, נכנסים עם אותה סיסמה.';
   document.getElementById('codeRow').hidden=true;
   document.getElementById('codeChangeRow').hidden=true;
   document.getElementById('codeSaid').textContent='';
@@ -15432,7 +15411,6 @@ function gateBoot(){
    if(!ok){said.textContent=hint(box.value);GKEY=null;return;}
    return crypto.subtle.exportKey('raw',GKEY).then(function(raw){
     try{localStorage.setItem('gateKey',graw(new Uint8Array(raw)));}catch(e){}
-    try{faceOffer();}catch(e){}
    });
   }).catch(function(){
    said.textContent=hint(box.value);GKEY=null;
