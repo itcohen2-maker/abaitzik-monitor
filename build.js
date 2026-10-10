@@ -12654,9 +12654,11 @@ var LAW_ITEMS=[
  {n:'02ב',t:'משיכה מכרטיס האשראי, כתמונה לגלריה',r:'law-02.jpg'},
  {n:'03',t:'לרועי ביום ראשון: מכתב התגובה הקצר',r:'law-03.pdf'},
  {n:'03ב',t:'מכתב התגובה כתמונה לגלריה',r:'law-03.jpg'},
+ {n:'03ג',t:'מכתב התגובה כטקסט, להעתקה ולהדבקה בוואטסאפ',r:'law-03.txt'},
  {n:'04',t:'לרועי ביום ראשון: ההסבר למכתב התגובה',r:'law-04.pdf'},
  {n:'04ב',t:'ההסבר כתמונה לגלריה, עמוד 1',r:'law-04a.jpg'},
- {n:'04ג',t:'ההסבר כתמונה לגלריה, עמוד 2',r:'law-04b.jpg'}
+ {n:'04ג',t:'ההסבר כתמונה לגלריה, עמוד 2',r:'law-04b.jpg'},
+ {n:'04ד',t:'ההסבר כטקסט, להעתקה ולהדבקה בוואטסאפ',r:'law-04.txt'}
 ];
 function lawSheet(){
  var old=document.getElementById('lawSheet');if(old)old.remove();
@@ -12666,7 +12668,7 @@ function lawSheet(){
  w.setAttribute('aria-label','מסמכים לעורך הדין');
  w.innerHTML='<div class="ycard">'
   +'<b>מסמכים לעורך הדין</b>'
-  +'<small>לחיצה פותחת. משם אפשר לשלוח בוואטסאפ או במייל</small>'
+  +'<small>לחיצה פותחת. 03ג ו 04ד הם טקסט: כפתור העתקה, ואז הדבקה בוואטסאפ</small>'
   +LAW_ITEMS.map(function(it,i){
     return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
    }).join('')
