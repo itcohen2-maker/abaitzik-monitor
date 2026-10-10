@@ -296,6 +296,11 @@ function main() {
     + (sp && sp.n ? '  | היום ' + sp.n + ' תשובות, חציון ' + sp.medianMin + ' דק׳, ' + sp.inTarget + '% בתוך שתי דקות' : ''));
   if (DRY) return;
   netDaily(now);
+  // 10.10: Alon's answers in the sticker theatre come back through here.
+  if (inst.name === 'abaitzik') {
+    try { const o = execFileSync(process.execPath, [path.join(__dirname, 'alon.js'), 'pull'], { cwd: __dirname, encoding: 'utf8', timeout: 30000 }); if (o.trim()) console.log(o.trim()); }
+    catch (e) { console.log('!! תשובות אלון: ' + e.message.slice(0, 120)); }
+  }
   doctor(problems, since, now);
   if (fresh.length) {
     try {

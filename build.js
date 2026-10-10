@@ -2260,6 +2260,8 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .stkc{background:#26222b;border:0;border-radius:12px;padding:6px 4px;color:#f2ede4;font:600 13px system-ui;position:relative}
 .stkc img{width:100%;aspect-ratio:1;object-fit:contain;display:block}
 .stkc.done{outline:2px solid #3fb77a}
+.stkTop{position:sticky;top:-18px;z-index:2;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:8px;margin:-18px -16px 0;padding:12px 16px 8px}
+.stkTop .yx{opacity:.8;min-height:36px;padding:6px 10px}
 .stkd img{width:60%;max-width:240px;display:block;margin:6px auto}
 .stkx{background:rgba(127,127,127,.13);color:inherit;border-radius:10px;padding:8px 10px;margin:8px 0;font-size:15px;line-height:1.5;text-align:right}
 .stkx i{opacity:.65;font-style:normal;font-size:13px}
@@ -11982,7 +11984,9 @@ on('gFut',futSheet);
   said around it, and a button puts its number in the chat box for him to
   dictate. The pictures and the chat lines are sealed files under stk/.
 */
-var STK=null,STK_URL={};
+var STK=null,STK_URL={},STK_ALON={},STK_LINK='';
+// 10.10: Alon answers on his own page; his words and the link to send him are sealed files here.
+function stkJson(name){var e=fileEntry('stk/'+name);if(!e)return Promise.resolve(null);return fileBlob(e).then(function(b){return b.text();}).then(JSON.parse).catch(function(){return null;});}
 function stkBlob(name){
  if(STK_URL[name])return Promise.resolve(STK_URL[name]);
  var e=fileEntry('stk/'+name);if(!e)return Promise.reject(0);
@@ -12002,6 +12006,18 @@ function stkDone(){
  });
  return seen;
 }
+/*
+  10.10, Itzik: "I try to leave the sticker theatre, it returns me and in the
+  end does not return me to the main page." The only close button sat under
+  78 characters, and חזרה on a character led back to the grid. Now a close
+  button stays on top of the grid, a character has both חזרה לדמויות and
+  לדף הראשי, and every way out lands on the home screen at its top.
+*/
+function stkHome(){
+ document.querySelectorAll('.ysheet').forEach(function(s){s.remove();});
+ try{pane('h');}catch(er){}
+ window.scrollTo(0,0);
+}
 function stkSheet(){
  if(!GKEY||!D.files){fileOpen('stk/index.json');return;}
  var e=fileEntry('stk/index.json');if(!e){toast('המדבקות עוד לא עלו למוניטור');return;}
@@ -12009,25 +12025,31 @@ function stkSheet(){
  var w=document.createElement('div');w.id='stkSheet';w.className='ysheet';
  w.setAttribute('role','dialog');w.setAttribute('aria-label','תיאטרון המדבקות');
  w.innerHTML='<div class="ycard"><b>🎭 תיאטרון המדבקות</b><small>טוען את הדמויות...</small></div>';
- function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function close(){document.removeEventListener('keydown',esckey);stkHome();}
  function esckey(ev){if(ev.key==='Escape')close();}
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
  var got=STK?Promise.resolve(STK):fileBlob(e).then(function(b){return b.text();}).then(function(t){return STK=JSON.parse(t);});
+ got=Promise.all([got,stkJson('alon.json'),stkJson('alon-link.json')]).then(function(r){STK_ALON=r[1]||{};STK_LINK=(r[2]&&r[2].link)||'';return r[0];});
  got.then(function(list){
-  var done=stkDone();
-  w.innerHTML='<div class="ycard"><b>🎭 תיאטרון המדבקות</b>'
-   +'<small>'+list.length+' דמויות, לפי כמה פעמים נשלחו מאז 20.3. ירוק: כבר הסברת</small>'
+  var done=stkDone(),na=Object.keys(STK_ALON).length;
+  w.innerHTML='<div class="ycard"><div class="stkTop"><b>🎭 תיאטרון המדבקות</b><button type="button" class="yb yx" data-x="1">✕ לדף הראשי</button></div>'
+   +'<small>'+list.length+' דמויות, לפי כמה פעמים נשלחו מאז 20.3. ירוק: כבר הסברת. 🔵 אלון ענה'+(na?' ('+na+')':'')+'</small>'
+   +(STK_LINK?'<button type="button" class="yb yb1" data-w="1">💬 לשלוח לאלון בוואטסאפ</button><small>הוא רואה את הדמויות אחת אחת ועונה מי זו, בלי לראות מה אתה אמרת. התשובות שלו נכנסות לכאן ליד שלך</small>':'')
    +'<div class="stkg">'+list.map(function(x,i){
-     return '<button type="button" class="stkc'+(done[x.n]?' done':'')+'" data-i="'+i+'"><img alt="" data-f="'+x.f+'">#'+x.n+' · '+x.c+'</button>';
+     return '<button type="button" class="stkc'+(done[x.n]?' done':'')+'" data-i="'+i+'"><img alt="" data-f="'+x.f+'">#'+x.n+' · '+x.c+(STK_ALON[x.n]?' 🔵':'')+'</button>';
     }).join('')+'</div>'
-   +'<button type="button" class="yb yx" data-x="1">סגירה</button></div>';
+   +'<button type="button" class="yb yx" data-x="1">לדף הראשי</button></div>';
   w.querySelectorAll('img[data-f]').forEach(function(im){stkBlob(im.getAttribute('data-f')).then(function(u){im.src=u;},function(){});});
  },function(){w.innerHTML='<div class="ycard"><b>🎭 תיאטרון המדבקות</b><small>לא הצלחתי לפתוח את המדבקות. נסה שוב בעוד דקה</small><button type="button" class="yb yx" data-x="1">סגירה</button></div>';});
  w.onclick=function(ev){
   if(ev.target===w)return close();
-  var b=ev.target.closest&&ev.target.closest('[data-i],[data-x]');if(!b)return;
+  var b=ev.target.closest&&ev.target.closest('[data-i],[data-x],[data-w]');if(!b)return;
   if(b.hasAttribute('data-x'))return close();
+  if(b.hasAttribute('data-w')){
+   var txt='אלון, בניתי לנו תיאטרון מדבקות. תגיד לי מי כל דמות, ואז נצליב עם מה שאני אמרתי 🎭 '+STK_LINK;
+   window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');return;
+  }
   stkOne(STK[+b.getAttribute('data-i')]);
  };
 }
@@ -12037,17 +12059,20 @@ function stkOne(x){
  w.innerHTML='<div class="ycard stkd"><b>מדבקה #'+x.n+'</b><img alt="">'
   +'<small>נשלחה '+x.c+' פעמים: אתה '+x.i+', אלון '+x.a+'. מ '+esc(x.first)+' עד '+esc(x.last)+'</small>'
   +(stkDone()[x.n]?'<div class="stkx"><i>מה סיפרת עליה</i><br>'+esc(stkDone()[x.n]).split(String.fromCharCode(10)).join('<br>')+'</div>':'')
+  +(STK_ALON[x.n]?'<div class="stkx" style="background:rgba(70,130,230,.14)"><i>מה אלון אמר</i><br>'+esc(STK_ALON[x.n].t).split(String.fromCharCode(10)).join('<br>')+'</div>':'')
   +(x.ex||[]).map(function(m){
     return '<div class="stkx"><i>'+esc(m.d)+', '+esc(m.w)+' שלח אותה</i><br>'+(m.b?'לפני: '+esc(m.b):'')+(m.a?'<br>אחרי: '+esc(m.a):'')+'</div>';
    }).join('')
   +'<button type="button" class="yb yb1" data-k="say">'+(stkDone()[x.n]?'להוסיף עוד עליה':'להסביר מי זו')+'</button>'
-  +'<button type="button" class="yb yx" data-k="">חזרה</button></div>';
+  +'<button type="button" class="yb yx" data-k="">חזרה לדמויות</button>'
+  +'<button type="button" class="yb yx" data-k="home">לדף הראשי</button></div>';
  stkBlob(x.f).then(function(u){var im=w.querySelector('img');if(im)im.src=u;},function(){});
  w.onclick=function(ev){
   if(ev.target===w)return w.remove();
   var k=ev.target.getAttribute&&ev.target.getAttribute('data-k');
   if(k===null||k===undefined)return;
   w.remove();
+  if(k==='home')return stkHome();
   if(k!=='say')return;
   var s=document.getElementById('stkSheet');if(s)s.remove();
   pane('m');try{renderThread();}catch(er){}
