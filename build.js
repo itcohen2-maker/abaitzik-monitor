@@ -2126,6 +2126,8 @@ body.editing .bn{display:none}
 .way b{font:700 13px Heebo,sans-serif;color:var(--ink)}
 .way small{font:300 11px Heebo,sans-serif;color:var(--dim)}
 .way .wi{font-size:21px;line-height:1}
+.wbig{grid-column:1 / -1;flex-direction:row;justify-content:center;gap:10px;text-decoration:none;border:2px solid var(--accent);background:var(--accent-soft)}
+.wbig span{display:flex;flex-direction:column;align-items:flex-start}
 .way:active{background:var(--accent-soft);border-color:var(--accent)}
 .way:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .mic{width:98px;height:98px;flex:0 0 98px;border-radius:50%;border:0;padding:0;cursor:pointer;position:relative;
@@ -3423,6 +3425,12 @@ try{
     <span class="wi" aria-hidden="true">📷</span>
     <b>צילום</b><small>מצלמה</small>
    </button>
+   <!-- 10.10, Itzik: the WeTransfer way of the file box, also here on the
+        home card, right under the file upload, for files over the limit. -->
+   <a id="wBig" class="way wbig" href="https://wetransfer.com/" target="_blank" rel="noopener">
+    <span class="wi" aria-hidden="true">📦</span>
+    <span><b>העלאת קבצים גדולים</b><small>בוויטרנספר, ואת הקישור מדביקים כאן</small></span>
+   </a>
   </div>
   <!--
     Writing is not a button any more. He asked on 16.9 for one simple thing:
