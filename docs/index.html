@@ -1838,7 +1838,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-10T07:47:33.612Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-10T07:48:09.809Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3307,7 +3307,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='ac82e05980';
+var CODE_ID='0b9dc9153f';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10186,12 +10186,12 @@ function reallySend(list,squeezed){
   if(e&&e.failed){
    clearPick();
    sendSay((list.length-e.failed.length)+' מתוך '+list.length+' הגיעו. לא עלה: '+e.failed.join(', ')
-    +(FEM?'. שלחי רק אותו שוב, ואם הוא גדול העלי לוויטרנספר והדביקי כאן את הקישור.':'. תשלח רק אותו שוב, ואם הוא וידאו גדול תעלה לדרייב ותכתוב לי את הקישור.'));
+    +(FEM?'. שלחי רק אותו שוב, ואם הוא גדול העלי לוויטרנספר והדביקי כאן את הקישור.':'. תשלח רק אותו שוב, ואם הוא גדול תעלה לוויטרנספר ותדביק כאן את הקישור.'));
    return;
   }
   sendSay(hasVoice
    ?(FEM?'ההקלטה לא הגיעה שלמה ולא נשמרה. הקליטי שוב עכשיו, לפני שתשכחי מה אמרת.':'ההקלטה לא הגיעה שלמה ולא נשמרה. תקליט שוב עכשיו, לפני שתשכח מה אמרת.')
-   :(FEM?'הקובץ לא הגיע שלם ולא נשמר. שלחי שוב, ואם הוא גדול העלי לוויטרנספר והדביקי כאן את הקישור.':'הקובץ לא הגיע שלם ולא נשמר. תשלח שוב, ואם הוא גדול תעלה לדרייב ותכתוב לי את הקישור.'));
+   :(FEM?'הקובץ לא הגיע שלם ולא נשמר. שלחי שוב, ואם הוא גדול העלי לוויטרנספר והדביקי כאן את הקישור.':'הקובץ לא הגיע שלם ולא נשמר. תשלח שוב, ואם הוא גדול תעלה לוויטרנספר ותדביק כאן את הקישור.'));
  }).then(function(){fBtn.disabled=false;});
 }
 function sendSay(t){
