@@ -2021,6 +2021,8 @@ body.editing .bn{display:none}
  background:linear-gradient(180deg,#5cc36f,var(--green));
  box-shadow:0 0 0 2px var(--gold),0 14px 34px rgba(52,168,83,.45)}
 .toast.bad{color:#fff;border:0;background:linear-gradient(180deg,#ff6a5e,var(--red))}
+.toast{cursor:pointer}
+.toast .toast-x{display:block;margin-top:8px;font:500 12.5px Heebo,sans-serif;opacity:.85}
 .undobar{position:fixed;z-index:81;inset-inline:12px;bottom:calc(76px + env(safe-area-inset-bottom));
  margin-inline:auto;max-width:420px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;
  background:var(--surface);border:1px solid var(--accent);border-radius:16px;padding:10px 12px;
@@ -5335,6 +5337,9 @@ function sendGroupId() {
  return 'g' + Date.now().toString(36)
   + Math.floor(Math.random() * 1679616).toString(36);
 }
+// ntfy.sh's anonymous ceiling is 2MB a file (2097152) and 20MB held per
+// sender for three hours. Slices stay a little under the first.
+var PART = 2000000;
 function sendFiles(list, note) {
  var gid = sendGroupId();
  var n = list.length;
@@ -5352,21 +5357,45 @@ function sendFiles(list, note) {
    what did not arrive, and only after that does the send report a failure.
  */
  var failed = [];
- function putOne(f, i) {
-  return fetch('https://ntfy.sh/' + NTFYIN() + '?filename=' + encodeURIComponent(f.name),
-   { method: 'PUT', headers: { Title: 'file ' + gid + ' ' + (i + 1) + '/' + n }, body: f })
+ function putBlob(b, name, i) {
+  return fetch('https://ntfy.sh/' + NTFYIN() + '?filename=' + encodeURIComponent(name),
+   { method: 'PUT', headers: { Title: 'file ' + gid + ' ' + (i + 1) + '/' + n }, body: b })
    .then(function (r) {
     if (!r.ok) throw new Error('ntfy');
     return r.json().catch(function () { return null; });
    })
    .then(function (j) {
     var got = j && j.attachment && Number(j.attachment.size);
-    if (!got || got < f.size * 0.98) throw new Error('הקובץ לא הגיע שלם');
+    if (!got || got < b.size * 0.98) throw new Error('הקובץ לא הגיע שלם');
    });
+ }
+ /*
+   Itzik, 10.10, by voice: every video he sent came back as "לא עלו" and he
+   called it a bug that checks nothing. It was real: ntfy.sh cut the anonymous
+   limit to 2MB a file, so every screen recording was refused with 413 while
+   the page still promised 15MB. A file over PART now leaves as numbered
+   slices, name.part1of5 and on, each one checked like a whole file, and the
+   listener joins them back before the chat sees the name. One slice that
+   fails twice fails the file.
+ */
+ function putOne(f, i) {
+  if (f.size <= PART) return putBlob(f, f.name, i);
+  var k = Math.ceil(f.size / PART), j = 0;
+  function next() {
+   if (j >= k) return Promise.resolve();
+   var b = f.slice(j * PART, Math.min(f.size, (j + 1) * PART));
+   var name = f.name + '.part' + (j + 1) + 'of' + k;
+   return putBlob(b, name, i).catch(function () { return putBlob(b, name, i); })
+    .then(function () { j++; return next(); });
+  }
+  return next();
  }
  return list.reduce(function (chain, f, i) {
   return chain.then(function () {
    return putOne(f, i).catch(function () {
+    // A sliced file already retried each slice; sending it all again would
+    // only spend the quota that probably refused it.
+    if (f.size > PART) { failed.push(f.name); return; }
     return putOne(f, i).catch(function () { failed.push(f.name); });
    });
   });
@@ -13851,9 +13880,11 @@ document.getElementById('msgForm').addEventListener('submit',function(e){
 // through FormSubmit a while ago: the bytes go to ntfy and only a line of text
 // goes to the mailbox. So the gate was measuring a channel that no longer
 // carries the file, and it turned away videos that ntfy would have taken.
-// 15MB is ntfy's real per file limit. Itzik, 17.9: he sent a video twice and
-// it never arrived.
-var QMAX=15*1024*1024;
+// 15MB was ntfy's per file limit. Itzik, 17.9: he sent a video twice and
+// it never arrived. 10.10: ntfy.sh now takes 2MB a file and holds 20MB per
+// sender for three hours, so big files leave in slices and the ceiling is
+// what the 20MB leaves room for once a recording or two are already there.
+var QMAX=18*1024*1024;
 // Every file leaves in full quality. Squeezing a photo the WhatsApp way erased
 // the weave and the colour from a textile design, and choosing between photo
 // and document was one more question nobody should have to answer. The choice
@@ -13955,8 +13986,8 @@ function describe(){
  else if(qMode==='normal')t+=' · וידאו וקול נשלחים כמו שהם, אין כיווץ בדפדפן';
  else t+=' · נשלח במקור, איכות מלאה';
  var big=total>QMAX&&!(qMode==='normal'&&allImages);
- if(big&&list.some(isImg)){t+=' · מעל 15MB, התמונות יכווצו כדי שייצאו';big=false;}
- if(big)t+=' · גדול מדי, המגבלה 15MB יחד';
+ if(big&&list.some(isImg)){t+=' · מעל 18MB, התמונות יכווצו כדי שייצאו';big=false;}
+ if(big)t+=' · גדול מדי, המגבלה 18MB יחד, אפשר בוויטרנספר';
  fMeta.className='fmeta'+(big?' bad':'');
  fMeta.textContent=t;
 }
@@ -14088,14 +14119,25 @@ function sendSay(t){
 }
 // Floats above every screen, because the microphone floats above every screen.
 var toastTimer=null;
+// A failure is read first: "לא הגיע שלם" holds the word הגיע and used to flash
+// green for four seconds, so a file that never arrived looked like it did (10.10).
+// A failure stays red on the screen until he touches it.
+var TOAST_BAD=/לא עלה|לא הגיע|לא נשמר|לא נשלח|לא ענו|נכשל|לא הצלחתי|לא נפתח/;
 function toast(t){
  var el=document.getElementById('toast');
  if(!el)return;
+ var bad=TOAST_BAD.test(t);
  el.textContent=t;
- el.className='toast'+(/נשלח|קלטתי|הגיע/.test(t)?' good':(/לא ענו|לא נשלח/.test(t)?' bad':''));
+ el.className='toast'+(bad?' bad':(/נשלח|קלטתי|הגיע/.test(t)?' good':''));
+ el.setAttribute('role',bad?'alert':'status');
  el.hidden=false;
+ el.onclick=function(){clearTimeout(toastTimer);el.hidden=true;};
  clearTimeout(toastTimer);
- toastTimer=setTimeout(function(){el.hidden=true;},4000);
+ if(bad){
+  var x=document.createElement('small');x.className='toast-x';x.textContent='נגיעה כדי לסגור';
+  el.appendChild(x);return;
+ }
+ toastTimer=setTimeout(function(){el.hidden=true;},Math.max(4000,t.length*90));
 }
 // Images are shrunk one after another so the batch is ready before it is sent.
 function shrinkAll(list,done){

@@ -304,12 +304,42 @@ function publishFallback(body, force) {
   }
 }
 
+/*
+  A file over 2MB arrives as name.part1ofK through name.partKofK (ntfy.sh's
+  anonymous limit since October 2026; the page slices, see sendFiles). Each
+  slice is saved like any file. When the last one is on disk they are joined
+  into the real name, the slices are removed, and the message carries the real
+  name from here on, so the chat sees one file. Until then a slice is not a
+  message at all.
+*/
+const PART_RE = /^(.+)\.part(\d+)of(\d+)$/;
+function joinSlices(m) {
+  const hit = PART_RE.exec(String(m.attachment.name || ''));
+  if (!hit) return 'whole';
+  const base = hit[1], k = Number(hit[3]);
+  const names = [];
+  for (let j = 1; j <= k; j++) names.push(path.join(DROP, base + '.part' + j + 'of' + k));
+  if (!names.every(function (f) { return fs.existsSync(f); })) return 'waiting';
+  try {
+    fs.writeFileSync(path.join(DROP, base), Buffer.concat(names.map(function (f) { return fs.readFileSync(f); })));
+    names.forEach(function (f) { try { fs.unlinkSync(f); } catch (e) {} });
+  } catch (e) { say('!! חיבור החלקים נכשל: ' + base + ' ' + e.message); return 'waiting'; }
+  say('קובץ חובר מ-' + k + ' חלקים: ' + base);
+  logPull('file', base);
+  m.attachment = Object.assign({}, m.attachment, { name: base });
+  return 'joined';
+}
+
 async function saveAttachment(m) {
   const out = path.join(DROP, m.attachment.name);
   const res = await fetch(m.attachment.url);
   const bin = Buffer.from(await res.arrayBuffer());
   const expected = Number(m.attachment.size) || 0;
-  const real = res.ok && bin.length > 1024 && (!expected || bin.length >= expected * 0.9);
+  // The last slice of a sliced file can be a few bytes, so a slice is judged
+  // only against the size ntfy says it has.
+  const slice = PART_RE.test(m.attachment.name);
+  const real = res.ok && (bin.length > 1024 || (slice && expected > 0 && bin.length === expected))
+    && (!expected || bin.length >= expected * 0.9);
   if (real) {
     fs.mkdirSync(DROP, { recursive: true });
     fs.writeFileSync(out, bin);
@@ -818,7 +848,10 @@ async function handleOne(m) {
     remember(m);
     return;
   }
-  if (m.attachment) await saveAttachment(m);
+  if (m.attachment) {
+    const saved = await saveAttachment(m);
+    if (saved && joinSlices(m) === 'waiting') { remember(m); await beat(); return; }
+  }
   if (m.message) logPull('text', m.message);
   // With the bridge off, a message that looks like a Codex request is an
   // ordinary message. Routing it anyway would swallow it: matched messages

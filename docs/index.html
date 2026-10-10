@@ -823,6 +823,8 @@ body.editing .bn{display:none}
  background:linear-gradient(180deg,#5cc36f,var(--green));
  box-shadow:0 0 0 2px var(--gold),0 14px 34px rgba(52,168,83,.45)}
 .toast.bad{color:#fff;border:0;background:linear-gradient(180deg,#ff6a5e,var(--red))}
+.toast{cursor:pointer}
+.toast .toast-x{display:block;margin-top:8px;font:500 12.5px Heebo,sans-serif;opacity:.85}
 .undobar{position:fixed;z-index:81;inset-inline:12px;bottom:calc(76px + env(safe-area-inset-bottom));
  margin-inline:auto;max-width:420px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;
  background:var(--surface);border:1px solid var(--accent);border-radius:16px;padding:10px 12px;
@@ -1836,7 +1838,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-10T07:43:13.280Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-10T07:43:57.625Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3305,7 +3307,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='3641c0326e';
+var CODE_ID='ac82e05980';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -3460,25 +3462,39 @@ function sendGroupId() {
  return 'g' + Date.now().toString(36)
   + Math.floor(Math.random() * 1679616).toString(36);
 }
+var PART = 2000000;
 function sendFiles(list, note) {
  var gid = sendGroupId();
  var n = list.length;
  var failed = [];
- function putOne(f, i) {
-  return fetch('https://ntfy.sh/' + NTFYIN() + '?filename=' + encodeURIComponent(f.name),
-   { method: 'PUT', headers: { Title: 'file ' + gid + ' ' + (i + 1) + '/' + n }, body: f })
+ function putBlob(b, name, i) {
+  return fetch('https://ntfy.sh/' + NTFYIN() + '?filename=' + encodeURIComponent(name),
+   { method: 'PUT', headers: { Title: 'file ' + gid + ' ' + (i + 1) + '/' + n }, body: b })
    .then(function (r) {
     if (!r.ok) throw new Error('ntfy');
     return r.json().catch(function () { return null; });
    })
    .then(function (j) {
     var got = j && j.attachment && Number(j.attachment.size);
-    if (!got || got < f.size * 0.98) throw new Error('הקובץ לא הגיע שלם');
+    if (!got || got < b.size * 0.98) throw new Error('הקובץ לא הגיע שלם');
    });
+ }
+ function putOne(f, i) {
+  if (f.size <= PART) return putBlob(f, f.name, i);
+  var k = Math.ceil(f.size / PART), j = 0;
+  function next() {
+   if (j >= k) return Promise.resolve();
+   var b = f.slice(j * PART, Math.min(f.size, (j + 1) * PART));
+   var name = f.name + '.part' + (j + 1) + 'of' + k;
+   return putBlob(b, name, i).catch(function () { return putBlob(b, name, i); })
+    .then(function () { j++; return next(); });
+  }
+  return next();
  }
  return list.reduce(function (chain, f, i) {
   return chain.then(function () {
    return putOne(f, i).catch(function () {
+    if (f.size > PART) { failed.push(f.name); return; }
     return putOne(f, i).catch(function () { failed.push(f.name); });
    });
   });
@@ -9999,7 +10015,7 @@ document.getElementById('msgForm').addEventListener('submit',function(e){
  });
 });
 
-var QMAX=15*1024*1024;
+var QMAX=18*1024*1024;
 var qMode='full';
 var fPick=document.getElementById('fPick');
 var fForm=document.getElementById('fileForm');
@@ -10086,8 +10102,8 @@ function describe(){
  else if(qMode==='normal')t+=' · וידאו וקול נשלחים כמו שהם, אין כיווץ בדפדפן';
  else t+=' · נשלח במקור, איכות מלאה';
  var big=total>QMAX&&!(qMode==='normal'&&allImages);
- if(big&&list.some(isImg)){t+=' · מעל 15MB, התמונות יכווצו כדי שייצאו';big=false;}
- if(big)t+=' · גדול מדי, המגבלה 15MB יחד';
+ if(big&&list.some(isImg)){t+=' · מעל 18MB, התמונות יכווצו כדי שייצאו';big=false;}
+ if(big)t+=' · גדול מדי, המגבלה 18MB יחד, אפשר בוויטרנספר';
  fMeta.className='fmeta'+(big?' bad':'');
  fMeta.textContent=t;
 }
@@ -10185,14 +10201,22 @@ function sendSay(t){
  toast(t);
 }
 var toastTimer=null;
+var TOAST_BAD=/לא עלה|לא הגיע|לא נשמר|לא נשלח|לא ענו|נכשל|לא הצלחתי|לא נפתח/;
 function toast(t){
  var el=document.getElementById('toast');
  if(!el)return;
+ var bad=TOAST_BAD.test(t);
  el.textContent=t;
- el.className='toast'+(/נשלח|קלטתי|הגיע/.test(t)?' good':(/לא ענו|לא נשלח/.test(t)?' bad':''));
+ el.className='toast'+(bad?' bad':(/נשלח|קלטתי|הגיע/.test(t)?' good':''));
+ el.setAttribute('role',bad?'alert':'status');
  el.hidden=false;
+ el.onclick=function(){clearTimeout(toastTimer);el.hidden=true;};
  clearTimeout(toastTimer);
- toastTimer=setTimeout(function(){el.hidden=true;},4000);
+ if(bad){
+  var x=document.createElement('small');x.className='toast-x';x.textContent='נגיעה כדי לסגור';
+  el.appendChild(x);return;
+ }
+ toastTimer=setTimeout(function(){el.hidden=true;},Math.max(4000,t.length*90));
 }
 function shrinkAll(list,done){
  var out=[],i=0;
