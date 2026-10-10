@@ -3629,7 +3629,7 @@ try{
     is amirshwartz1's TikTok comment on the cake video (55 likes).
   -->
   <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
-  <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>03ג אני אסתדר עם זה</small></button>
+  <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>04 מה אני מתגעגע</small></button>
   <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 02 אני אסתדר</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
@@ -12011,7 +12011,7 @@ function captionSheet(it){
   the next number and numbers never change.
 */
 // 4.10 cleared, Itzik uploaded 01 and 02. The next reel is 03.
-var REEL_ITEMS=[{n:'03ג',t:'אני אסתדר עם זה',r:'reel-03g-esteder.mp4'},{n:'03ג כריכה',t:'הכריכה בצהוב ולבן',r:'reel-03g-cover.jpg'}];
+var REEL_ITEMS=[{n:'04',t:'מה אני מתגעגע: מהמיטה בטיפול נמרץ לתרגילים הכי קשים, 28 שניות. בלי כיתוב ובלי מוזיקה, מוסיפים באינסטגרם',r:'reel-04-mitgaagea.mp4'},{n:'03ג',t:'אני אסתדר עם זה',r:'reel-03g-esteder.mp4'},{n:'03ג כריכה',t:'הכריכה בצהוב ולבן',r:'reel-03g-cover.jpg'}];
 function reelSheet(){
  var old=document.getElementById('rlSheet');if(old)old.remove();
  var w=document.createElement('div');
