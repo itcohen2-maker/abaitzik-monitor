@@ -3065,6 +3065,21 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
  :root.calm.motion-soft .newbtn.hot .nb-c,
  :root.calm.motion-soft .th-fresh>summary .badge,
  :root.calm.motion-soft .bub.fresh .badge{animation:none!important}}
+/* 10.10: he found a little hand that jumps and asked for one next to whatever
+   needs him. Every tile that is marked for attention (task, glow, blink) gets
+   a pointing hand in its lower corner that taps, small and soft. It lives on
+   ::before so no tile changes and no state is involved; it goes the moment the
+   tile stops needing him. Calm leaves it moving because he asked for this one
+   by name; the phone's reduce-motion setting still holds it still. */
+@keyframes handtap{
+ 0%,100%{transform:translateY(0) scale(1)}
+ 35%{transform:translateY(-7px) scale(1.08)}
+ 55%{transform:translateY(1px) scale(.94)}
+ 70%{transform:translateY(0) scale(1)}}
+.gt.taskblink::before,.gt.glow::before,.gt.blink::before{content:"👆";position:absolute;
+ bottom:6px;inset-inline-end:8px;font-size:26px;line-height:1;pointer-events:none;z-index:2;
+ text-shadow:0 2px 4px rgba(0,0,0,.35);animation:handtap 1.1s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){.gt.taskblink::before,.gt.glow::before,.gt.blink::before{animation:none}}
 .mob{display:flex;gap:6px;flex:0 0 auto}
 .mob button{background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:10px;
  padding:9px 12px;font:500 13.5px Heebo,sans-serif;cursor:pointer;white-space:nowrap}
