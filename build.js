@@ -3073,14 +3073,19 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
    ::before so no tile changes and no state is involved; it goes the moment the
    tile stops needing him. Calm leaves it moving because he asked for this one
    by name; the phone's reduce-motion setting still holds it still. */
+/* 10.10 later: he sent stills of the one he meant, a red cartoon hand with a
+   face and two legs that rocks from side to side on its feet, with little blue
+   sparks. Drawn here as one inline picture; the sparks blink inside it and the
+   rocking pivots on the feet. */
 @keyframes handtap{
- 0%,100%{transform:translateY(0) scale(1)}
- 35%{transform:translateY(-7px) scale(1.08)}
- 55%{transform:translateY(1px) scale(.94)}
- 70%{transform:translateY(0) scale(1)}}
-.gt.taskblink::before,.gt.glow::before,.gt.blink::before{content:"👆";position:absolute;
- bottom:6px;inset-inline-end:8px;font-size:26px;line-height:1;pointer-events:none;z-index:2;
- text-shadow:0 2px 4px rgba(0,0,0,.35);animation:handtap 1.1s ease-in-out infinite}
+ 0%,100%{transform:rotate(-11deg)}
+ 25%{transform:rotate(0) translateY(-3px)}
+ 50%{transform:rotate(11deg)}
+ 75%{transform:rotate(0) translateY(-3px)}}
+.gt.taskblink::before,.gt.glow::before,.gt.blink::before{content:"";position:absolute;
+ bottom:4px;inset-inline-end:6px;width:42px;height:45px;pointer-events:none;z-index:2;
+ background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 64'%3E%3Cellipse cx='34' cy='61' rx='13' ry='2.2' fill='%23000' opacity='.18'/%3E%3Cg stroke='%232b2024' stroke-width='2.2' stroke-linecap='round' fill='none'%3E%3Cpath d='M30 48l-2 10h-4'/%3E%3Cpath d='M38 48l2 10h4'/%3E%3C/g%3E%3Cpath d='M20 30c-3-3-7-6-9-3s3 7 7 11c3 4 6 10 13 11s13-3 14-11l2-17c0-3-4-3-5 0l-1 6-1-17c0-3-5-3-5 0l-1 15-2-17c0-3-5-3-5 0l1 17-4-13c-1-3-5-2-5 1l3 17z' fill='%23ec4a4f' stroke='%232b2024' stroke-width='2.2' stroke-linejoin='round'/%3E%3Cg stroke='%232b2024' stroke-width='2' stroke-linecap='round' fill='none'%3E%3Cpath d='M27 37q2-2 4 0'/%3E%3Cpath d='M35 36q2-2 4 0'/%3E%3Cpath d='M29 42q5 4 10 0'/%3E%3C/g%3E%3Cg stroke='%234cc3e6' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M6 46l-4 2'%3E%3Canimate attributeName='opacity' values='0%3B1%3B0' dur='1.2s' repeatCount='indefinite'/%3E%3C/path%3E%3Cpath d='M8 52l-3 5'%3E%3Canimate attributeName='opacity' values='1%3B0%3B1' dur='1.2s' repeatCount='indefinite'/%3E%3C/path%3E%3Cpath d='M13 54v5'%3E%3Canimate attributeName='opacity' values='0%3B1%3B0' dur='1.2s' begin='.3s' repeatCount='indefinite'/%3E%3C/path%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat;transform-origin:56% 92%;
+ filter:drop-shadow(0 1px 2px rgba(0,0,0,.25));animation:handtap 1.2s ease-in-out infinite}
 @media(prefers-reduced-motion:reduce){.gt.taskblink::before,.gt.glow::before,.gt.blink::before{animation:none}}
 .mob{display:flex;gap:6px;flex:0 0 auto}
 .mob button{background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:10px;
