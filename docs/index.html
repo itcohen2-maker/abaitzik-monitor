@@ -1050,6 +1050,8 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .stkc{background:#26222b;border:0;border-radius:12px;padding:6px 4px;color:#f2ede4;font:600 13px system-ui;position:relative}
 .stkc img{width:100%;aspect-ratio:1;object-fit:contain;display:block}
 .stkc.done{outline:2px solid #3fb77a}
+.stkTop{position:sticky;top:-18px;z-index:2;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:8px;margin:-18px -16px 0;padding:12px 16px 8px}
+.stkTop .yx{opacity:.8;min-height:36px;padding:6px 10px}
 .stkd img{width:60%;max-width:240px;display:block;margin:6px auto}
 .stkx{background:rgba(127,127,127,.13);color:inherit;border-radius:10px;padding:8px 10px;margin:8px 0;font-size:15px;line-height:1.5;text-align:right}
 .stkx i{opacity:.65;font-style:normal;font-size:13px}
@@ -1847,7 +1849,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-10T10:24:08.814Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-10T10:27:14.046Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3313,7 +3315,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='44ab8e1e4d';
+var CODE_ID='792da4913c';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -8386,6 +8388,11 @@ function stkDone(){
  });
  return seen;
 }
+function stkHome(){
+ document.querySelectorAll('.ysheet').forEach(function(s){s.remove();});
+ try{pane('h');}catch(er){}
+ window.scrollTo(0,0);
+}
 function stkSheet(){
  if(!GKEY||!D.files){fileOpen('stk/index.json');return;}
  var e=fileEntry('stk/index.json');if(!e){toast('המדבקות עוד לא עלו למוניטור');return;}
@@ -8393,19 +8400,19 @@ function stkSheet(){
  var w=document.createElement('div');w.id='stkSheet';w.className='ysheet';
  w.setAttribute('role','dialog');w.setAttribute('aria-label','תיאטרון המדבקות');
  w.innerHTML='<div class="ycard"><b>🎭 תיאטרון המדבקות</b><small>טוען את הדמויות...</small></div>';
- function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function close(){document.removeEventListener('keydown',esckey);stkHome();}
  function esckey(ev){if(ev.key==='Escape')close();}
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
  var got=STK?Promise.resolve(STK):fileBlob(e).then(function(b){return b.text();}).then(function(t){return STK=JSON.parse(t);});
  got.then(function(list){
   var done=stkDone();
-  w.innerHTML='<div class="ycard"><b>🎭 תיאטרון המדבקות</b>'
+  w.innerHTML='<div class="ycard"><div class="stkTop"><b>🎭 תיאטרון המדבקות</b><button type="button" class="yb yx" data-x="1">✕ לדף הראשי</button></div>'
    +'<small>'+list.length+' דמויות, לפי כמה פעמים נשלחו מאז 20.3. ירוק: כבר הסברת</small>'
    +'<div class="stkg">'+list.map(function(x,i){
      return '<button type="button" class="stkc'+(done[x.n]?' done':'')+'" data-i="'+i+'"><img alt="" data-f="'+x.f+'">#'+x.n+' · '+x.c+'</button>';
     }).join('')+'</div>'
-   +'<button type="button" class="yb yx" data-x="1">סגירה</button></div>';
+   +'<button type="button" class="yb yx" data-x="1">לדף הראשי</button></div>';
   w.querySelectorAll('img[data-f]').forEach(function(im){stkBlob(im.getAttribute('data-f')).then(function(u){im.src=u;},function(){});});
  },function(){w.innerHTML='<div class="ycard"><b>🎭 תיאטרון המדבקות</b><small>לא הצלחתי לפתוח את המדבקות. נסה שוב בעוד דקה</small><button type="button" class="yb yx" data-x="1">סגירה</button></div>';});
  w.onclick=function(ev){
@@ -8425,13 +8432,15 @@ function stkOne(x){
     return '<div class="stkx"><i>'+esc(m.d)+', '+esc(m.w)+' שלח אותה</i><br>'+(m.b?'לפני: '+esc(m.b):'')+(m.a?'<br>אחרי: '+esc(m.a):'')+'</div>';
    }).join('')
   +'<button type="button" class="yb yb1" data-k="say">'+(stkDone()[x.n]?'להוסיף עוד עליה':'להסביר מי זו')+'</button>'
-  +'<button type="button" class="yb yx" data-k="">חזרה</button></div>';
+  +'<button type="button" class="yb yx" data-k="">חזרה לדמויות</button>'
+  +'<button type="button" class="yb yx" data-k="home">לדף הראשי</button></div>';
  stkBlob(x.f).then(function(u){var im=w.querySelector('img');if(im)im.src=u;},function(){});
  w.onclick=function(ev){
   if(ev.target===w)return w.remove();
   var k=ev.target.getAttribute&&ev.target.getAttribute('data-k');
   if(k===null||k===undefined)return;
   w.remove();
+  if(k==='home')return stkHome();
   if(k!=='say')return;
   var s=document.getElementById('stkSheet');if(s)s.remove();
   pane('m');try{renderThread();}catch(er){}
