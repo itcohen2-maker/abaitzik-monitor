@@ -1542,6 +1542,11 @@ section{margin-bottom:30px}
  background:var(--accent-soft);color:var(--accent);border:0;border-radius:12px;padding:8px 18px;
  font:700 15px Heebo,sans-serif;text-decoration:none;cursor:pointer}
 .ask:active{transform:translateY(1px)}
+.wetbox{margin-top:10px;padding:10px 12px;border:2px solid var(--accent);border-radius:14px;background:var(--accent-soft)}
+.wetbox .ask{display:flex;width:100%;margin-top:0;background:var(--accent);color:#fff}
+.wetstep{font:500 14px Heebo,sans-serif;margin-top:6px;line-height:1.45}
+.wetbox.hot{animation:wetHot 1s ease-in-out 3}
+@keyframes wetHot{50%{box-shadow:0 0 0 6px var(--accent-soft);transform:scale(1.02)}}
 .abtn{border-radius:12px!important;font-weight:700!important;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
 .ask:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .report{background:var(--surface);border:1px solid var(--line);border-radius:11px;
@@ -4551,8 +4556,15 @@ try{
        camera, files) belongs to the phone and cannot hold it, so WeTransfer
        sits here, open whenever the file box is, not only after a file is
        turned away for its size. -->
-  <a class="ask" id="fWeT" href="https://wetransfer.com/" target="_blank" rel="noopener" style="display:flex;margin-top:8px">קובץ גדול? לשלוח בוויטרנספר</a>
-  <div class="fmeta">שם בוחרים את הקובץ, לוחצים העברה ובוחרים קבלת קישור. את הקישור מדביקים כאן בהודעה ושולחים.</div>
+  <!-- 10.10, Itzik: "צריך להבליט את זה", with a line for the phone (gallery)
+       and one for the computer (a file on it). It lights up the moment a
+       picked file is too big, see describe(). -->
+  <div class="wetbox" id="fWeBox">
+   <a class="ask" id="fWeT" href="https://wetransfer.com/" target="_blank" rel="noopener">קובץ גדול? לשלוח בוויטרנספר</a>
+   <div class="wetstep"><b>בטלפון:</b> לוחצים שם על הפלוס ובוחרים מהגלריה.</div>
+   <div class="wetstep"><b>במחשב:</b> לוחצים שם על הפלוס ובוחרים את הקובץ מהמחשב.</div>
+   <div class="wetstep">לוחצים העברה, בוחרים קבלת קישור, ואת הקישור מדביקים כאן בהודעה ושולחים.</div>
+  </div>
   <div class="pthumbs" id="fThumbs" hidden></div>
   <button type="submit" id="fBtn">שליחת הקובץ</button>
   <div id="recWrap">
@@ -14132,6 +14144,13 @@ function describe(){
  if(big)t+=' · גדול מדי, המגבלה 18MB יחד, אפשר בוויטרנספר';
  fMeta.className='fmeta'+(big?' bad':'');
  fMeta.textContent=t;
+ // A file too big stops right here, at the pick, not after pressing send.
+ var wb=document.getElementById('fWeBox');
+ if(big&&wb){
+  fSaid.textContent='הקובץ גדול מדי לשליחה מכאן. '+(FEM?'בואי':'בוא')+' ננסה להעביר אותו בוויטרנספר, בכפתור המודגש למעלה.';
+  wb.classList.remove('hot');void wb.offsetWidth;wb.classList.add('hot');
+  wb.scrollIntoView({block:'center',behavior:'smooth'});
+ }
 }
 function setQ(m){
  qMode=m;

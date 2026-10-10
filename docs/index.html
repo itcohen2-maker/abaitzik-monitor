@@ -428,6 +428,11 @@ section{margin-bottom:30px}
  background:var(--accent-soft);color:var(--accent);border:0;border-radius:12px;padding:8px 18px;
  font:700 15px Heebo,sans-serif;text-decoration:none;cursor:pointer}
 .ask:active{transform:translateY(1px)}
+.wetbox{margin-top:10px;padding:10px 12px;border:2px solid var(--accent);border-radius:14px;background:var(--accent-soft)}
+.wetbox .ask{display:flex;width:100%;margin-top:0;background:var(--accent);color:#fff}
+.wetstep{font:500 14px Heebo,sans-serif;margin-top:6px;line-height:1.45}
+.wetbox.hot{animation:wetHot 1s ease-in-out 3}
+@keyframes wetHot{50%{box-shadow:0 0 0 6px var(--accent-soft);transform:scale(1.02)}}
 .abtn{border-radius:12px!important;font-weight:700!important;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
 .ask:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .report{background:var(--surface);border:1px solid var(--line);border-radius:11px;
@@ -1849,7 +1854,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-10T10:29:11.589Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-10T10:30:15.113Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2721,8 +2726,12 @@ try{
   <input type="file" id="fPick" name="attachment" multiple>
   <input type="text" id="fCap" placeholder="כיתוב, לא חובה">
   <div class="fmeta" id="fMeta">אפשר לבחור כל קובץ, גם כמה יחד, לכתוב שורה, ואז להקליט. הכל יוצא בהודעה אחת.</div>
-  <a class="ask" id="fWeT" href="https://wetransfer.com/" target="_blank" rel="noopener" style="display:flex;margin-top:8px">קובץ גדול? לשלוח בוויטרנספר</a>
-  <div class="fmeta">שם בוחרים את הקובץ, לוחצים העברה ובוחרים קבלת קישור. את הקישור מדביקים כאן בהודעה ושולחים.</div>
+  <div class="wetbox" id="fWeBox">
+   <a class="ask" id="fWeT" href="https://wetransfer.com/" target="_blank" rel="noopener">קובץ גדול? לשלוח בוויטרנספר</a>
+   <div class="wetstep"><b>בטלפון:</b> לוחצים שם על הפלוס ובוחרים מהגלריה.</div>
+   <div class="wetstep"><b>במחשב:</b> לוחצים שם על הפלוס ובוחרים את הקובץ מהמחשב.</div>
+   <div class="wetstep">לוחצים העברה, בוחרים קבלת קישור, ואת הקישור מדביקים כאן בהודעה ושולחים.</div>
+  </div>
   <div class="pthumbs" id="fThumbs" hidden></div>
   <button type="submit" id="fBtn">שליחת הקובץ</button>
   <div id="recWrap">
@@ -3315,7 +3324,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='d5bc25fd3a';
+var CODE_ID='f99469d7e0';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10212,6 +10221,12 @@ function describe(){
  if(big)t+=' · גדול מדי, המגבלה 18MB יחד, אפשר בוויטרנספר';
  fMeta.className='fmeta'+(big?' bad':'');
  fMeta.textContent=t;
+ var wb=document.getElementById('fWeBox');
+ if(big&&wb){
+  fSaid.textContent='הקובץ גדול מדי לשליחה מכאן. '+(FEM?'בואי':'בוא')+' ננסה להעביר אותו בוויטרנספר, בכפתור המודגש למעלה.';
+  wb.classList.remove('hot');void wb.offsetWidth;wb.classList.add('hot');
+  wb.scrollIntoView({block:'center',behavior:'smooth'});
+ }
 }
 function setQ(m){
  qMode=m;
