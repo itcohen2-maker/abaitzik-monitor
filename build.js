@@ -4531,6 +4531,12 @@ try{
   <input type="file" id="fPick" name="attachment" multiple>
   <input type="text" id="fCap" placeholder="כיתוב, לא חובה">
   <div class="fmeta" id="fMeta">אפשר לבחור כל קובץ, גם כמה יחד, לכתוב שורה, ואז להקליט. הכל יוצא בהודעה אחת.</div>
+  <!-- 10.10, Itzik: "אין לי פה הצעה לwrttanfer?" The iPhone menu (gallery,
+       camera, files) belongs to the phone and cannot hold it, so WeTransfer
+       sits here, open whenever the file box is, not only after a file is
+       turned away for its size. -->
+  <a class="ask" id="fWeT" href="https://wetransfer.com/" target="_blank" rel="noopener" style="display:flex;margin-top:8px">קובץ גדול? לשלוח בוויטרנספר</a>
+  <div class="fmeta">שם בוחרים את הקובץ, לוחצים העברה ובוחרים קבלת קישור. את הקישור מדביקים כאן בהודעה ושולחים.</div>
   <div class="pthumbs" id="fThumbs" hidden></div>
   <button type="submit" id="fBtn">שליחת הקובץ</button>
   <div id="recWrap">
