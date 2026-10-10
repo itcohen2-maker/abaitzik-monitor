@@ -8963,10 +8963,8 @@ function backBar(sec){
  if(sec.querySelector(':scope > .backbar'))return;
  var b=document.createElement('button');
  b.type='button';b.className='backbar';b.textContent='סגירה וחזרה לבית';
- // Itzik, 8.10: out of an open note, back goes to the notes list, not home.
+ // Itzik, 8.10: out of an open note, back goes to the notes list (navBack does it).
  b.onclick=function(){
-  var ne=document.getElementById('noteEdit');
-  if(sec.id==='pN2'&&ne&&!ne.hidden){closeNote();return;}
   navBack();
  };
  sec.insertBefore(b,sec.firstChild);
@@ -9047,6 +9045,10 @@ var panePrev='';
 */
 var navStack=[],navgoing=false;
 function navBack(){
+ // Itzik, 10.10: the top back button skipped the note check and threw him
+ // out of the notes screen from inside a note. Every back starts here now.
+ var ne=document.getElementById('noteEdit'),np=document.getElementById('pN2');
+ if(np&&!np.hidden&&ne&&!ne.hidden){closeNote();window.scrollTo(0,0);return;}
  var e=navStack.pop();
  if(!e){pane('h');return;}
  navgoing=true;
