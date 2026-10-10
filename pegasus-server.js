@@ -40,7 +40,7 @@ const LOCK = path.join(STATUS, 'pegasus-server.lock');
 const PC_FRESH_MS = 5 * 60 * 1000;
 const LIMIT_PAUSE_MS = 30 * 60 * 1000;
 const IDLE_PAUSE_MS = 3 * 60 * 60 * 1000;
-const DAILY_CAP = 30;
+const DAILY_CAP = 72; // 10.10: "מצידי שיעבוד 24 שעות"
 const RUN_TIMEOUT_MS = 45 * 60 * 1000;
 const DRY = process.argv.includes('--dry');
 
@@ -80,18 +80,20 @@ function prompt() {
   return [
     'הפעלה אוטומטית של פגסוס מהשרת (כל 10 דקות, לבקשת איציק, רק כשהמחשב שלו כבוי).',
     'אתה בתיקיית המשחק בשרת, על הענף ' + BRANCH + '. קרא את AGENTS.md ו-CLAUDE.md, ואת התוכניות ב-docs.',
-    'תמשיך לעבוד על המשימה הבאה בתוכנית של פגסוס מאיפה שעצרו, חבילה אחת קטנה ושלמה.',
+    'תמשיך לעבוד על המשימה הבאה בתוכנית של פגסוס מאיפה שעצרו, חבילה אחת קטנה ושלמה. לא מחכים להוראות מאיציק (10.10: "שיעבוד 24 שעות").',
+    'מודלים (איציק 10.10): את התכנון אתה עושה בעצמך, על Opus 5.5. את הביצוע של התוכנית מעבירים לסוכן במודל הזול ביותר (Agent עם model haiku), ואתה בודק את מה שחזר.',
     'אם הענף שלך מאחורי ' + PC_LINE + ', קודם תעשה rebase עליו.',
     'כללים לשרת: אין כאן דפדפן ואין פריסה. לא npm run deploy, לא vercel, לא לגעת בענפים אחרים ולא ב-main.',
     'בודקים עם npx tsc --noEmit ועם הטסטים של החלק שנגעת בו, מקמטים ודוחפים רק את ' + BRANCH + ' (git push origin ' + BRANCH + ').',
     'בסוף תוסיף שורה ב-AGENTS.md: מה נבנה בשרת, שלא נבדק חי, ושהמחשב צריך לבדוק חי ולפרוס.',
-    'אם אין משימה פתוחה שאפשר לעשות בלי דפדפן, אל תמציא עבודה: כתוב שורה אחת מה המצב, ובשורה האחרונה רק PEGASUS-IDLE.',
+    'אם אין משימה פתוחה בתוכנית, תכנן את הצעד הבא לפי התוכניות ב-docs, תרשום אותו שם ותבצע אותו.',
+    'רק אם כל מה שנשאר באמת צריך דפדפן או החלטה של איציק: כתוב שורה אחת מה המצב, ובשורה האחרונה רק PEGASUS-IDLE.',
   ].join('\n');
 }
 
 function runClaude(text) {
   return new Promise((resolve) => {
-    const child = spawn('claude', ['-p', '--dangerously-skip-permissions', '--output-format', 'text'], { cwd: REPO, env: process.env });
+    const child = spawn('claude', ['-p', '--model', 'opus', '--dangerously-skip-permissions', '--output-format', 'text'], { cwd: REPO, env: process.env });
     let out = '';
     const timer = setTimeout(() => { out += '\n[timeout]'; child.kill('SIGTERM'); }, RUN_TIMEOUT_MS);
     child.stdout.on('data', (d) => { out += d; });
