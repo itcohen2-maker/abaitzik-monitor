@@ -2261,8 +2261,8 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .stkc img{width:100%;aspect-ratio:1;object-fit:contain;display:block}
 .stkc.done{outline:2px solid #3fb77a}
 .stkd img{width:60%;max-width:240px;display:block;margin:6px auto}
-.stkx{background:#1f1c24;border-radius:10px;padding:8px 10px;margin:8px 0;font-size:15px;line-height:1.5;text-align:right}
-.stkx i{color:#a99fb5;font-style:normal;font-size:13px}
+.stkx{background:rgba(127,127,127,.13);color:inherit;border-radius:10px;padding:8px 10px;margin:8px 0;font-size:15px;line-height:1.5;text-align:right}
+.stkx i{opacity:.65;font-style:normal;font-size:13px}
 .gOcc{background:linear-gradient(150deg,#2bb39a,#123d3a)}
 .gManiv{background:linear-gradient(150deg,#3a8fd6,#123150)}
 .gMed{background:linear-gradient(150deg,#4fb3a9,#123a4a)}
