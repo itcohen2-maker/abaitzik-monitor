@@ -12011,7 +12011,10 @@ function captionSheet(it){
   the next number and numbers never change.
 */
 // 4.10 cleared, Itzik uploaded 01 and 02. The next reel is 03.
-var REEL_ITEMS=[{n:'04',t:'מה אני מתגעגע: מהמיטה בטיפול נמרץ לתרגילים הכי קשים, 28 שניות. בלי כיתוב ובלי מוזיקה, מוסיפים באינסטגרם',r:'reel-04-mitgaagea.mp4'},{n:'03ג',t:'אני אסתדר עם זה',r:'reel-03g-esteder.mp4'},{n:'03ג כריכה',t:'הכריכה בצהוב ולבן',r:'reel-03g-cover.jpg'}];
+// 10.10: the title is also the file's name when it is sent or saved on the
+// iPhone, so it stays short like 03ג. A sentence of description made 04 an
+// 80 letter name with dots and commas, the one difference from 03ג when he reported it would not open.
+var REEL_ITEMS=[{n:'04',t:'מה אני מתגעגע',r:'reel-04-mitgaagea.mp4'},{n:'03ג',t:'אני אסתדר עם זה',r:'reel-03g-esteder.mp4'},{n:'03ג כריכה',t:'הכריכה בצהוב ולבן',r:'reel-03g-cover.jpg'}];
 function reelSheet(){
  var old=document.getElementById('rlSheet');if(old)old.remove();
  var w=document.createElement('div');
