@@ -12718,6 +12718,21 @@ boot('shipLine',function(){
   (taskblink) on this device until the first time he opens it. A new tile only
   needs the attribute; nothing else to remember.
 */
+// A list tile (reels, future reels, candle work, ...) waves the hand whenever its list holds an item this device
+// has not seen yet, until that tile is opened. First visit seeds silently, except the reels tiles he asked about 10.10.
+boot('listTiles',function(){
+ var L={gReels:'REEL_ITEMS',gFut:'FUT_ITEMS',gNerMkt:'NER_ITEMS',gWin:'WIN_ITEMS',gPen:'PEN_ITEMS',gMed:'MED_ITEMS',gInv:'INV_ITEMS'};
+ var FIRST={gReels:1,gFut:1};
+ Object.keys(L).forEach(function(id){
+  var t=document.getElementById(id),items=window[L[id]];if(!t||!Array.isArray(items))return;
+  var keys=items.map(function(it){return String(it&&(it.r||it.t||it.n)||'');}).filter(Boolean);
+  var k='listSeen:'+id,raw=null,seen=[];try{raw=localStorage.getItem(k);seen=JSON.parse(raw||'[]')||[];}catch(e){}
+  var save=function(){try{localStorage.setItem(k,JSON.stringify(keys));}catch(e){}};
+  if(raw===null&&!FIRST[id]){save();return;}
+  if(keys.some(function(x){return seen.indexOf(x)<0;}))t.classList.add('taskblink');
+  t.addEventListener('click',function(){save();t.classList.remove('taskblink');});
+ });
+});
 boot('newTiles',function(){
  document.querySelectorAll('.gt[data-new]').forEach(function(t){
   var k='tileSeen:'+t.id,seen=false;try{seen=!!localStorage.getItem(k);}catch(e){}
