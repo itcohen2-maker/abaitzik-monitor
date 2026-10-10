@@ -62,6 +62,7 @@ function buildIntakeForm() {
   f.addMultipleChoiceItem().setTitle('מה קורה כשלקוח לא משלם בזמן?').setChoiceValues(['מזכיר מיד', 'מחכה ומתבייש', 'תלוי בלקוח', 'לא קרה']).showOtherOption(true);
   f.addMultipleChoiceItem().setTitle('היית רוצה מסך של כסף במערכת?').setChoiceValues(['כן, חשוב', 'אולי בהמשך', 'לא, מספיק לי מה שיש']).showOtherOption(true);
   f.addMultipleChoiceItem().setTitle('אתה שומר קבלות והוצאות באופן מסודר?').setChoiceValues(['כן', 'חלקית', 'לא']).showOtherOption(true);
+  f.addMultipleChoiceItem().setTitle('באיזה בנק מתנהל חשבון העסק?').setChoiceValues(['בנק הפועלים', 'בנק לאומי', 'בנק דיסקונט', 'מזרחי טפחות', 'הבינלאומי', 'בנק ירושלים', 'וואן זירו', 'אין חשבון עסקי נפרד']).showOtherOption(true);
 
   f.addSectionHeaderItem().setTitle('החלק השישי, איך נוח לך לעבוד מול המערכת');
   f.addMultipleChoiceItem().setTitle('איך תעדיף לכתוב למערכת?').setChoiceValues(['להקליד', 'להקליט קול', 'לצלם מסך', 'הכל לפי מצב']).showOtherOption(true);
@@ -96,5 +97,18 @@ function addDeviceQuestions() {
   var a = f.addMultipleChoiceItem().setTitle('איזה מחשב יש לך?').setChoiceValues(['מק (אפל)', 'ווינדוס', 'אין לי מחשב']).showOtherOption(true);
   var b = f.addMultipleChoiceItem().setTitle('איזה טלפון יש לך?').setChoiceValues(['אייפון', 'אנדרואיד (סמסונג, שיאומי וכו׳)']).showOtherOption(true);
   if (at >= 0) { f.moveItem(a.getIndex(), at + 1); f.moveItem(b.getIndex(), at + 2); }
+  Logger.log('added at ' + (at + 1));
+}
+
+/**
+ * 10.10: the bank question, so the server can read the business account's
+ * export and update income and expenses. Run once against the live form.
+ */
+function addBankQuestion() {
+  var f = FormApp.openById('1gpZQJLada9TffcVMvNozAkQ_d_VS62a6DwYOM-yR8p0');
+  var items = f.getItems(), at = -1;
+  for (var i = 0; i < items.length; i++) if (items[i].getTitle() === 'אתה שומר קבלות והוצאות באופן מסודר?') at = i;
+  var q = f.addMultipleChoiceItem().setTitle('באיזה בנק מתנהל חשבון העסק?').setChoiceValues(['בנק הפועלים', 'בנק לאומי', 'בנק דיסקונט', 'מזרחי טפחות', 'הבינלאומי', 'בנק ירושלים', 'וואן זירו', 'אין חשבון עסקי נפרד']).showOtherOption(true);
+  if (at >= 0) f.moveItem(q.getIndex(), at + 1);
   Logger.log('added at ' + (at + 1));
 }
