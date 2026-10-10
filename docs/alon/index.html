@@ -8,7 +8,9 @@
 <title>תיאטרון המדבקות</title>
 <!--
   10.10. Alon's side of the sticker theatre, built by alon.js. One character
-  at a time, his answer goes to Itzik's monitor. Everything here is sealed:
+  at a time, his answer goes to Itzik's monitor. Since later on 10.10 it is a
+  shared page: he sees what Itzik told about each character and what he wrote
+  himself, and is asked whether he has something to add. Everything here is sealed:
   the key is in the link after the #, kept on this phone after the first open.
 -->
 <style>
@@ -48,6 +50,9 @@ button{border:0;border-radius:14px;padding:14px 10px;font:700 16px system-ui,-ap
 .grid button{padding:0;background:rgba(255,255,255,.08);border-radius:9px;aspect-ratio:1;overflow:hidden;position:relative}
 .grid img{width:100%;height:100%;object-fit:contain}
 .grid button.ok::after{content:"✓";position:absolute;top:1px;left:4px;color:#7ee2a8;font-size:13px}
+.said{background:#efe6d6;border-radius:12px;padding:8px 11px;margin:0 0 8px;font-size:15px;line-height:1.5;white-space:pre-wrap}
+.said i{display:block;font-style:normal;font-size:12px;opacity:.6;margin-bottom:2px}
+.said.me{background:#dfe9fb}
 .err{text-align:center;margin-top:40px;opacity:.85}
 .conf{position:fixed;top:-20px;width:10px;height:14px;z-index:9;animation:fall 1.4s ease-in forwards}
 @keyframes fall{to{transform:translateY(105vh) rotate(720deg);opacity:.7}}
@@ -62,6 +67,9 @@ button{border:0;border-radius:14px;padding:14px 10px;font:700 16px system-ui,-ap
 var app=document.getElementById('app');
 var K=null,M=null,URLS={},i=0;
 var SAVED=JSON.parse(localStorage.getItem('stkAlonAns')||'{}');
+var IT={},AL={};
+// What he wrote, as the monitor holds it, wins over this phone's copy; a send not yet pulled stays on top.
+function mine(n){var s=AL[n]||'',l=SAVED[n]||'';return l&&s.split(String.fromCharCode(10)).indexOf(l)<0&&s.indexOf(l)<0?(s?s+String.fromCharCode(10):'')+l:s;}
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function b64(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';var b=atob(s),a=new Uint8Array(b.length);for(var j=0;j<b.length;j++)a[j]=b.charCodeAt(j);return a;}
 function open(name){
@@ -76,16 +84,20 @@ var raw=(location.hash||'').slice(1)||localStorage.getItem('stkAlonKey')||'';
 if(!raw){app.innerHTML='<p class="err">הקישור הזה חסר. בקש מאיציק לשלוח אותו שוב.</p>';return;}
 crypto.subtle.importKey('raw',b64(raw),'AES-GCM',false,['decrypt']).then(function(k){K=k;return open('m.bin');})
  .then(function(pt){
-  M=JSON.parse(new TextDecoder().decode(pt));
+  M=JSON.parse(new TextDecoder().decode(pt));IT=M.it||{};AL=M.al||{};
   localStorage.setItem('stkAlonKey',raw);
   if(location.hash)history.replaceState(null,'',location.pathname);
   intro();
  },function(){app.innerHTML='<p class="err">הקישור לא נפתח. בקש מאיציק לשלוח אותו שוב.</p>';});
-function left(){return M.list.filter(function(x){return !SAVED[x.n];}).length;}
+document.addEventListener('visibilitychange',function(){
+ if(document.hidden||!M)return;
+ open('m.bin').then(function(pt){var m=JSON.parse(new TextDecoder().decode(pt));IT=m.it||{};AL=m.al||{};M.list=m.list;},function(){});
+});
+function left(){return M.list.filter(function(x){return !mine(x.n);}).length;}
 function intro(){
  var d=M.list.length-left();
- app.innerHTML='<h1>🎭 תיאטרון המדבקות</h1><p class="sub">'+M.list.length+' דמויות שאתה ואיציק בניתם. איציק כבר סיפר מי הן. עכשיו תורך, בלי לראות מה הוא אמר. אחר כך מצליבים.</p>'
-  +'<div class="stage in"><p style="margin:0 0 6px">על כל דמות: מי זו, איך היא נולדה, ומתי שולחים אותה. שורה אחת מספיקה. אפשר להקליט במיקרופון של המקלדת.</p>'
+ app.innerHTML='<h1>🎭 תיאטרון המדבקות</h1><p class="sub">'+M.list.length+' דמויות שאתה ואיציק בניתם. זה דף משותף: מה שאיציק מספר אתה רואה כאן, ומה שאתה כותב הוא רואה אצלו.</p>'
+  +'<div class="stage in"><p style="margin:0 0 6px">על כל דמות: מי זו, איך היא נולדה, ומתי שולחים אותה. איפה שאיציק כבר סיפר, תוסיף מה שאתה זוכר. שורה אחת מספיקה. אפשר להקליט במיקרופון של המקלדת.</p>'
   +(d?'<p style="margin:0;opacity:.7">כבר ענית על '+d+'. ממשיכים מאיפה שעצרת.</p>':'')
   +'<button class="big" id="start">'+(d?'ממשיכים':'מרימים מסך')+'</button></div><div class="grid" id="grid"></div>';
  grid();
@@ -94,22 +106,24 @@ function intro(){
 }
 function grid(){
  var g=document.getElementById('grid');if(!g)return;
- g.innerHTML=M.list.map(function(x,j){return '<button class="'+(SAVED[x.n]?'ok':'')+'" data-j="'+j+'" aria-label="מדבקה '+x.n+'"><img alt=""></button>';}).join('');
+ g.innerHTML=M.list.map(function(x,j){return '<button class="'+(mine(x.n)?'ok':'')+'" data-j="'+j+'" aria-label="מדבקה '+x.n+'"><img alt=""></button>';}).join('');
  g.querySelectorAll('button').forEach(function(b){
   var x=M.list[+b.getAttribute('data-j')];
   pic(x).then(function(u){b.querySelector('img').src=u;},function(){});
   b.onclick=function(){i=+b.getAttribute('data-j');show();};
  });
 }
-function next(from){for(var j=0;j<M.list.length;j++){var t=(from+j)%M.list.length;if(!SAVED[M.list[t].n])return t;}return -1;}
+function next(from){for(var j=0;j<M.list.length;j++){var t=(from+j)%M.list.length;if(!mine(M.list[t].n))return t;}return -1;}
 function show(){
  if(i<0)return finale();
  var x=M.list[i],d=M.list.length-left();
  app.innerHTML='<div class="bar"><b style="width:'+Math.round(100*d/M.list.length)+'%"></b></div><div class="cnt">'+d+' מתוך '+M.list.length+'</div>'
   +'<div class="stage in" id="st"><img class="pic" alt=""><div class="num">מדבקה #'+x.n+'</div>'
   +'<div class="meta">נשלחה '+x.c+' פעמים מאז '+esc(x.first)+'. אתה '+x.a+', איציק '+x.i+'</div>'
-  +'<textarea id="t" placeholder="מי זו? מה הסיפור שלה?">'+esc(SAVED[x.n]||'')+'</textarea>'
-  +'<p class="hint">התשובה הולכת רק לאיציק.</p>'
+  +(IT[x.n]?'<div class="said"><i>מה איציק סיפר</i>'+esc(IT[x.n])+'</div>':'')
+  +(mine(x.n)?'<div class="said me"><i>מה אתה כתבת</i>'+esc(mine(x.n))+'</div>':'')
+  +'<textarea id="t" placeholder="'+(IT[x.n]||mine(x.n)?'יש לך משהו להוסיף?':'מי זו? מה הסיפור שלה?')+'"></textarea>'
+  +'<p class="hint">מה שתכתוב נכנס מתחת למה שכבר נכתב, ואיציק רואה אותו אצלו.</p>'
   +'<div class="row"><button class="skip" id="sk">דלג</button><button class="go" id="go">שליחה והבאה</button></div></div>'
   +'<button class="big" id="all" style="background:rgba(255,255,255,.1);color:#f6efe4;font-size:15px">כל הדמויות</button>';
  pic(x).then(function(u){var im=app.querySelector('.pic');if(im)im.src=u;},function(){});
@@ -120,7 +134,7 @@ function show(){
   var t=document.getElementById('t').value.trim(),b=this;if(!t){document.getElementById('t').focus();return;}
   b.disabled=true;b.textContent='שולח...';
   sealMsg({s:M.sig,n:x.n,t:t}).then(function(body){return fetch('https://ntfy.sh/'+M.topic,{method:'POST',body:body});}).then(function(r){
-   if(!r.ok)throw 0;SAVED[x.n]=t;localStorage.setItem('stkAlonAns',JSON.stringify(SAVED));confetti();
+   if(!r.ok)throw 0;SAVED[x.n]=t;AL[x.n]=mine(x.n);localStorage.setItem('stkAlonAns',JSON.stringify(SAVED));confetti();
    away(function(){i=next(i+1);show();});
   }).catch(function(){b.disabled=false;b.textContent='לא נשלח, לנסות שוב';});
  };
@@ -139,7 +153,7 @@ function confetti(){
 }
 function finale(){
  confetti();setTimeout(confetti,500);
- app.innerHTML='<div class="stage in done"><div style="font-size:54px">👏</div><h1 style="color:#1d1620">ענית על כולן</h1><p>איציק מקבל את זה עכשיו ומצליב עם מה שהוא אמר.</p><button class="big" id="all">לתקן או להוסיף</button></div>';
+ app.innerHTML='<div class="stage in done"><div style="font-size:54px">👏</div><h1 style="color:#1d1620">ענית על כולן</h1><p>איציק רואה את זה אצלו. כשהוא יספר עוד, זה יופיע כאן.</p><button class="big" id="all">להוסיף עוד</button></div>';
  document.getElementById('all').onclick=intro;
 }
 })();

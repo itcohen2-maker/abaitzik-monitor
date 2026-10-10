@@ -12055,7 +12055,7 @@ function stkSheet(){
   var done=stkDone(),na=Object.keys(STK_ALON).length;
   w.innerHTML='<div class="ycard"><div class="stkTop"><b>🎭 תיאטרון המדבקות</b><button type="button" class="yb yx" data-x="1">✕ לדף הראשי</button></div>'
    +'<small>'+list.length+' דמויות, לפי כמה פעמים נשלחו מאז 20.3. ירוק: כבר הסברת. 🔵 אלון ענה'+(na?' ('+na+')':'')+'</small>'
-   +(STK_LINK?'<button type="button" class="yb yb1" data-w="1">💬 לשלוח לאלון בוואטסאפ</button><small>הוא רואה את הדמויות אחת אחת ועונה מי זו, בלי לראות מה אתה אמרת. התשובות שלו נכנסות לכאן ליד שלך</small>':'')
+   +(STK_LINK?'<button type="button" class="yb yb1" data-w="1">💬 לשלוח לאלון בוואטסאפ</button><small>דף משותף: מה שאתה מספר על דמות אלון רואה אצלו, תוך שתי דקות, ונשאל אם יש לו מה להוסיף. מה שהוא כותב נכנס לכאן בכחול ליד שלך</small>':'')
    +'<div class="stkg">'+list.map(function(x,i){
      return '<button type="button" class="stkc'+(done[x.n]?' done':'')+'" data-i="'+i+'"><img alt="" data-f="'+x.f+'">#'+x.n+' · '+x.c+(STK_ALON[x.n]?' 🔵':'')+'</button>';
     }).join('')+'</div>'
@@ -12067,7 +12067,7 @@ function stkSheet(){
   var b=ev.target.closest&&ev.target.closest('[data-i],[data-x],[data-w]');if(!b)return;
   if(b.hasAttribute('data-x'))return close();
   if(b.hasAttribute('data-w')){
-   var txt='אלון, בניתי לנו תיאטרון מדבקות. תגיד לי מי כל דמות, ואז נצליב עם מה שאני אמרתי 🎭 '+STK_LINK;
+   var txt='אלון, בניתי לנו תיאטרון מדבקות משותף. מה שאני מספר על כל דמות אתה רואה שם, ומה שאתה מוסיף אני רואה אצלי 🎭 '+STK_LINK;
    window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');return;
   }
   stkOne(STK[+b.getAttribute('data-i')]);
