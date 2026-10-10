@@ -12819,7 +12819,7 @@ on('gOcc',occSheet);
 */
 var LEC_ITEMS=[
  {t:'01 המלל הערוך עם השקפים',u:'https://docs.google.com/document/d/1B0Kcx-9Dk7vRME0rUiK15IbGwTTu7_JQ/edit'},
- {t:'02 כל השקפים החדשים (12)',u:'https://drive.google.com/drive/folders/19I-nnLDrSyrbbEk9cKIhCg14RgbFGxrE'},
+ {t:'02 כל השקפים החדשים',u:'https://drive.google.com/drive/folders/19I-nnLDrSyrbbEk9cKIhCg14RgbFGxrE'},
  {t:'03 המצגת כנגד כל הסיכויים',u:'https://docs.google.com/presentation/d/1MFYn5h6Bb28j0ZF0kQgZM1zIMtPGOMz0CHkXWIyLKL8/edit'},
  {t:'04 תיקיית ההרצאה בדרייב',u:'https://drive.google.com/drive/folders/1eKSkYILNuqIT_EytCYgGZNbWgiQPCQdv'},
  {t:'05 שקף 18 חדש, חמש אפשרויות',u:'https://drive.google.com/drive/folders/1FybxnrBvr04X2RV3Kv4Dr6e1jVzVmXmf'}
