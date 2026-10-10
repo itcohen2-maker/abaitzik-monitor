@@ -1856,7 +1856,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-10T10:37:59.392Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-10T10:39:45.155Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2006,7 +2006,7 @@ try{
   <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>03ג אני אסתדר עם זה</small></button>
   <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 02 אני אסתדר</small></button>
   <button type="button" class="gt gPen" id="gPen"><b>🏦 פנסיה</b><small>קוד מוסד בבנק 28417, 1,211 ש״ח. בדיקה ב 18.10</small></button>
-  <button type="button" class="gt gStk" id="gStk"><b>🎭 תיאטרון המדבקות</b><small>78 הדמויות שלך ושל אלון. לחץ על דמות והסבר מי היא</small></button>
+  <button type="button" class="gt gStk" id="gStk" data-new="1"><b>🎭 תיאטרון המדבקות</b><small>78 הדמויות שלך ושל אלון. לחץ על דמות והסבר מי היא</small></button>
   <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>03 מכתב התגובה ו 04 ההסבר, לרועי ביום ראשון</small></button>
   <button type="button" class="gt gManiv" id="gManiv"><b>💧 תשלום למניב</b><small>לקוח 50523290. ביום שני המוקד נפתח ב 09:00</small></button>
   <button type="button" class="gt gOcc" id="gOcc"><b>🩺 מרפאה תעסוקתית</b><small>מכבי רמות. טלפון א עד ה 08:00 עד 11:00</small></button>
@@ -3330,7 +3330,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='974e4bc4f7';
+var CODE_ID='9d86e253ac';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -8915,6 +8915,14 @@ boot('shipLine',function(){
  var el=document.getElementById('shipLine'),h=document.getElementById('pH'),t=document.getElementById('talkCard');
  if(el&&t&&t.parentNode)t.parentNode.insertBefore(el,t);else if(el&&h)h.insertBefore(el,h.firstChild);
  paintShipLine();setInterval(paintShipLine,60000);});
+boot('newTiles',function(){
+ document.querySelectorAll('.gt[data-new]').forEach(function(t){
+  var k='tileSeen:'+t.id,seen=false;try{seen=!!localStorage.getItem(k);}catch(e){}
+  if(seen)return;
+  t.classList.add('taskblink');
+  t.addEventListener('click',function(){try{localStorage.setItem(k,'1');}catch(e){}t.classList.remove('taskblink');});
+ });
+});
 boot('pushTile',function(){
  var t=document.getElementById('gPush');if(!t)return;
  var seen=false;try{seen=!!localStorage.getItem('pushSeen');}catch(e){}
