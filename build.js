@@ -2366,6 +2366,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .ybwa{display:block;width:100%;text-align:center;text-decoration:none;background:linear-gradient(150deg,#5ee28a,#128c4a);color:#fff}
 a.yb4{display:block;text-align:center;text-decoration:none;background:linear-gradient(150deg,#ffd76a,#d49a00);color:#3a2e00}
 .yx{background:transparent;opacity:.6;min-height:40px;padding:8px}
+.ygap{margin-top:14px}
 /* 8.10: the way out was only at the end of a long sheet (the shipments list
    ran to dozens of orders). Every sheet now also has a round X at the top that
    stays in view while the sheet scrolls; it presses the sheet's own close. */
@@ -11904,6 +11905,25 @@ function yehudaSheet(){
 }
 on('gYehuda',yehudaSheet);
 /*
+  10.10 Itzik: the menus all looked the same, pale buttons on white with nothing
+  between them. Items that share a number (video, cover, caption) now share one
+  colour family in darker and lighter shades, the next number takes the next
+  colour, and a gap opens between numbers. A list without numbers gives every
+  item its own colour.
+*/
+var YB_HUES=[212,145,12,275,35,190,330,95];
+function ybAttr(a,i){
+ var g=0,s=0,gap=false;
+ for(var j=0;j<=i;j++){
+  if(j===0)continue;
+  var same=a[j].n!==undefined&&a[j].n===a[j-1].n;
+  if(same)s++;else{g++;s=0;}
+  if(j===i)gap=!same&&a[j].n!==undefined;
+ }
+ var h=YB_HUES[g%YB_HUES.length],l=[36,28,21][s%3];
+ return 'class="yb'+(gap?' ygap':'')+'" style="background:linear-gradient(150deg,hsl('+h+',62%,'+(l+14)+'%),hsl('+h+',70%,'+l+'%));color:#fff"';
+}
+/*
   30.9. Candle marketing, same numbered sheet as Rinat's. A new item gets the
   next number and numbers never change.
 */
@@ -11935,8 +11955,8 @@ function nerSheet(){
  w.innerHTML='<div class="ycard">'
   +'<b>שיווק הנרות</b>'
   +'<small>'+(NER_ITEMS.length?'הסטוריז של סוף השבוע':'אין כרגע סטוריז')+'</small>'
-  +NER_ITEMS.map(function(it,i){
-    return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
+  +NER_ITEMS.map(function(it,i,a){
+    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
    }).join('')
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
   +'</div>';
@@ -12001,8 +12021,8 @@ function reelSheet(){
  w.innerHTML='<div class="ycard">'
   +'<b>הרילים שלי</b>'
   +'<small>'+(REEL_ITEMS.length?'ממוספר, הריל החדש מקבל את המספר הבא':'אין כרגע רילים. כל מה שהיה כאן עלה')+'</small>'
-  +REEL_ITEMS.map(function(it,i){
-    return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
+  +REEL_ITEMS.map(function(it,i,a){
+    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
    }).join('')
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
   +'</div>';
@@ -12041,8 +12061,8 @@ function futSheet(){
  w.innerHTML='<div class="ycard">'
   +'<b>רילים עתידיים</b>'
   +'<small>'+(FUT_ITEMS.length?'רעיונות וחומרים לרילים הבאים, ממוספר':'אין כרגע רילים עתידיים. כל מה שהיה כאן עלה')+'</small>'
-  +FUT_ITEMS.map(function(it,i){
-    return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
+  +FUT_ITEMS.map(function(it,i,a){
+    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
    }).join('')
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
   +'</div>';
@@ -12746,8 +12766,8 @@ on('gPush',function(){
 });
 on('gUpgrade',function(){
  var h='<small>מה עוד המוניטור יודע לעשות. לחיצה שולחת בקשה למערכת המחשוב של המוניטור והיא חוזרת אליך.</small>'
-  +SHIP_UPGRADES.map(function(u,i){
-   return '<button type="button" class="yb yb'+(i%4+1)+'" data-u="'+i+'">'+esc(u[0])+'<br><small>'+esc(u[1])+'</small></button>';
+  +SHIP_UPGRADES.map(function(u,i,a){
+   return '<button type="button" '+ybAttr(a,i)+' data-u="'+i+'">'+esc(u[0])+'<br><small>'+esc(u[1])+'</small></button>';
   }).join('');
  shipOpen('shipUp','🚀 שדרוגים',h,function(w){
   w.addEventListener('click',function(e){
@@ -12795,8 +12815,8 @@ function occSheet(){
   +'<small><b>מה קרה עד עכשיו:</b><br>'+OCC_LOG.map(function(x){return esc(x);}).join('<br>')+'</small>'
   +((D.occ||[])[0]?'<small><b>תשובה מהמרפאה, '+esc((D.occ[0].at||'').slice(0,16).replace('T',' '))+':</b><br>'+esc(D.occ[0].text).split(String.fromCharCode(10)).join('<br>')+'</small>':'<small>עוד לא הגיעה תשובה במייל.</small>')
   +'<small>פקס 073 2132632</small>'
-  +OCC_ITEMS.map(function(it,i){
-    return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+esc(it.t)+'</button>';
+  +OCC_ITEMS.map(function(it,i,a){
+    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+esc(it.t)+'</button>';
    }).join('')
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
   +'</div>';
@@ -12824,8 +12844,7 @@ var LEC_ITEMS=[
  {t:'01 המלל הערוך עם השקפים',u:'https://docs.google.com/document/d/1B0Kcx-9Dk7vRME0rUiK15IbGwTTu7_JQ/edit'},
  {t:'02 כל השקפים החדשים',u:'https://drive.google.com/drive/folders/19I-nnLDrSyrbbEk9cKIhCg14RgbFGxrE'},
  {t:'03 המצגת כנגד כל הסיכויים',u:'https://docs.google.com/presentation/d/1MFYn5h6Bb28j0ZF0kQgZM1zIMtPGOMz0CHkXWIyLKL8/edit'},
- {t:'04 תיקיית ההרצאה בדרייב',u:'https://drive.google.com/drive/folders/1eKSkYILNuqIT_EytCYgGZNbWgiQPCQdv'},
- {t:'05 שקף 18 חדש, חמש אפשרויות',u:'https://drive.google.com/drive/folders/1FybxnrBvr04X2RV3Kv4Dr6e1jVzVmXmf'}
+ {t:'04 תיקיית ההרצאה בדרייב',u:'https://drive.google.com/drive/folders/1eKSkYILNuqIT_EytCYgGZNbWgiQPCQdv'}
 ];
 function lecSheet(){
  var old=document.getElementById('lecSheet');if(old)old.remove();
@@ -12836,8 +12855,8 @@ function lecSheet(){
  w.innerHTML='<div class="ycard">'
   +'<b>הרצאה: כנגד כל הסיכויים</b>'
   +'<small>המלל של 10.10 ערוך, עם תמונה קטנה של כל שקף. טקסט בכחול הוא הצעה לחלק של איך הרמת את הראש. מה שבסוגריים מרובעים, רק אתה יודע.</small>'
-  +LEC_ITEMS.map(function(it,i){
-    return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+esc(it.t)+'</button>';
+  +LEC_ITEMS.map(function(it,i,a){
+    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+esc(it.t)+'</button>';
    }).join('')
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
   +'</div>';
@@ -12936,8 +12955,8 @@ function lawSheet(){
  w.innerHTML='<div class="ycard">'
   +'<b>מסמכים לעורך הדין</b>'
   +'<small>לחיצה פותחת. 03ג ו 04ד הם טקסט: כפתור העתקה, ואז הדבקה בוואטסאפ</small>'
-  +LAW_ITEMS.map(function(it,i){
-    return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
+  +LAW_ITEMS.map(function(it,i,a){
+    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
    }).join('')
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
   +'</div>';
@@ -12984,8 +13003,8 @@ function winSheet(){
  w.innerHTML='<div class="ycard">'
   +'<b>משפטים מנצחים</b>'
   +'<small>לחיצה על משפט מעתיקה אותו</small>'
-  +WIN_ITEMS.map(function(it,i){
-    return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)
+  +WIN_ITEMS.map(function(it,i,a){
+    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)
      +(it.f?'<br><small>'+esc(it.f)+'</small>':'')+'</button>';
    }).join('')
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
@@ -13030,8 +13049,8 @@ function penSheet(){
  w.innerHTML='<div class="ycard">'
   +'<b>פנסיה</b>'
   +'<small>עד שרואים שהכל יורד. לחיצה על שורה מעתיקה אותה</small>'
-  +PEN_ITEMS.map(function(it,i){
-    return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+esc(it.t)+'</button>';
+  +PEN_ITEMS.map(function(it,i,a){
+    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+esc(it.t)+'</button>';
    }).join('')
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
   +'</div>';
@@ -13072,8 +13091,8 @@ function medSheet(){
  w.innerHTML='<div class="ycard">'
   +'<b>אחרי הניתוח השני</b>'
   +'<small>ממוספר, מסמך חדש מקבל את המספר הבא</small>'
-  +MED_ITEMS.map(function(it,i){
-    return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
+  +MED_ITEMS.map(function(it,i,a){
+    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
    }).join('')
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
   +'</div>';
@@ -13113,8 +13132,8 @@ function invSheet(){
   +'<b>חשבוניות</b>'
   +'<small>ממוספר, החדשה מקבלת את המספר הבא</small>'
   +(INV_ITEMS.length?'':'<small>עוד אין חשבוניות מ 3.10 והלאה</small>')
-  +INV_ITEMS.map(function(it,i){
-    return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
+  +INV_ITEMS.map(function(it,i,a){
+    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
    }).join('')
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
   +'</div>';
