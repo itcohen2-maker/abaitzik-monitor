@@ -958,7 +958,7 @@ const TENANT_TILES = {
   gTasks: ['g17', '✅ משימות', 'מה לעשות, לפי יום'],
   gNotes: ['g10', '📝 פתקים', 'נכתב, נשמר, לא הולך לאיבוד'],
   gVoices: ['g4', '🎙️ הקלטות שלא תומללו', 'מה שלא הצלחתי לקרוא'],
-  gAdminReq: ['g3', '📨 בקשה מבונה המוניטור', 'לשנות משהו במוניטור? בונה המוניטור מאשר'],
+  gAdminReq: ['g3', '📨 בקשה ממערכת המחשוב', 'לשנות משהו במוניטור? מערכת המחשוב מאשרת'],
   // 6.10, Home Style: shipments. Drawn only for an instance that lists them.
   gShip: ['g16', '📦 משלוחים', 'כל ההזמנות הפתוחות, לפי דחיפות'],
   gAlerts: ['g3', '🔔 דורש טיפול', 'מה שלא יכול לחכות'],
@@ -10816,16 +10816,16 @@ if(locked()){
  }else if(INSTANCE.name&&INSTANCE.name!=='abaitzik'&&myCode()){
   var fg=document.getElementById('lockForgot');
   fg.hidden=false;
-  if(lockMark())lockSay('הבקשה לפתוח נשלחה. כשבונה המוניטור יאשר, המוניטור ייפתח כאן לבד ותגיע אליך הודעה.');
+  if(lockMark())lockSay('הבקשה לפתוח נשלחה. כשמערכת המחשוב של המוניטור תאשר, המוניטור ייפתח כאן לבד ותגיע אליך הודעה.');
   fg.onclick=function(){
-   if(lockMark()){lockSay('הבקשה כבר נשלחה. כשבונה המוניטור יאשר, המוניטור ייפתח כאן לבד ותגיע אליך הודעה.');return;}
+   if(lockMark()){lockSay('הבקשה כבר נשלחה. כשמערכת המחשוב של המוניטור תאשר, המוניטור ייפתח כאן לבד ותגיע אליך הודעה.');return;}
    var a=new Uint8Array(6);crypto.getRandomValues(a);
    var mark=[].map.call(a,function(x){return ('0'+x.toString(16)).slice(-2);}).join('');
    fg.disabled=true;lockSay('שולח...');
    sendText('בקשה ממנהל','בקשה ממנהל: שכחתי את הקוד של הנעילה. בבקשה לפתוח את המוניטור בטלפון שלי (מכשיר '+mark+')','משימה').then(function(){
     try{localStorage.setItem('lockReset',mark);}catch(e){}
     fg.disabled=false;
-    lockSay('הבקשה נשלחה לבונה המוניטור. כשהוא יאשר, המוניטור ייפתח כאן לבד ותגיע אליך הודעה.');
+    lockSay('הבקשה נשלחה למערכת המחשוב של המוניטור. כשהיא תאשר, המוניטור ייפתח כאן לבד ותגיע אליך הודעה.');
    }).catch(function(){fg.disabled=false;lockSay('לא נשלח. תבדוק חיבור ותנסה שוב.');});
   };
  }
@@ -11766,9 +11766,9 @@ function adminReqSheet(){
  var old=document.getElementById('arSheet');if(old)old.remove();
  var w=document.createElement('div');
  w.id='arSheet';w.className='ysheet';
- w.setAttribute('role','dialog');w.setAttribute('aria-label','בקשה מבונה המוניטור');
- w.innerHTML='<div class="ycard"><b>בקשה מבונה המוניטור</b>'
-  +'<small>מה תרצה לשנות במוניטור? כפתור, מסך, עיצוב, איך הוא עונה. בונה המוניטור יאשר, והתשובה תגיע אליך בצ׳אט.</small>'
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','בקשה ממערכת המחשוב של המוניטור');
+ w.innerHTML='<div class="ycard"><b>בקשה ממערכת המחשוב של המוניטור</b>'
+  +'<small>מה תרצה לשנות במוניטור? כפתור, מסך, עיצוב, איך הוא עונה. מערכת המחשוב של המוניטור תאשר, והתשובה תגיע אליך בצ׳אט.</small>'
   +'<textarea id="arText" rows="5" style="width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif" placeholder="לדוגמה: תוסיף לי כפתור של רשימת קניות"></textarea>'
   // Itzik, 8.10: offer the customer the choice and show it, an icon on the
   // home screen or a button inside a screen, for the same subject.
@@ -11782,7 +11782,7 @@ function adminReqSheet(){
   +'<button type="button" class="yb" data-k="כפתור בתוך מסך">רוצה כפתור</button>'
   +'<button type="button" class="yb" data-k="">לא משנה</button></div>'
   +'<small>תמיד אפשר לבקש אחר כך למחוק או להוסיף.</small>'
-  +'<button type="button" class="yb yb1" data-a="send">שליחה לבונה המוניטור</button>'
+  +'<button type="button" class="yb yb1" data-a="send">שליחה למערכת המחשוב</button>'
   +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
  function close(){w.remove();}
  w.onclick=function(e){
@@ -11801,7 +11801,7 @@ function adminReqSheet(){
   if(w.arKind)t+=' (בתור '+w.arKind+')';
   e.target.disabled=true;
   sendText('בקשה ממנהל','בקשה ממנהל: '+t,'משימה').then(function(){
-   markSent('text',t);close();toast('נשלח לבונה המוניטור. התשובה תגיע בצ׳אט.');
+   markSent('text',t);close();toast('נשלח למערכת המחשוב של המוניטור. התשובה תגיע בצ׳אט.');
   }).catch(function(){e.target.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
  };
  document.body.appendChild(w);
@@ -12286,7 +12286,7 @@ on('gPush',function(){
  document.body.appendChild(w);
 });
 on('gUpgrade',function(){
- var h='<small>מה עוד המוניטור יודע לעשות. לחיצה שולחת בקשה לבונה המוניטור והוא חוזר אליך.</small>'
+ var h='<small>מה עוד המוניטור יודע לעשות. לחיצה שולחת בקשה למערכת המחשוב של המוניטור והיא חוזרת אליך.</small>'
   +SHIP_UPGRADES.map(function(u,i){
    return '<button type="button" class="yb yb'+(i%4+1)+'" data-u="'+i+'">'+esc(u[0])+'<br><small>'+esc(u[1])+'</small></button>';
   }).join('');
@@ -12296,7 +12296,7 @@ on('gUpgrade',function(){
    var u=SHIP_UPGRADES[+b.getAttribute('data-u')];if(!u)return;
    b.disabled=true;
    sendText('בקשה ממנהל','בקשה ממנהל: בקשת שדרוג: '+u[0]+'. '+u[1],'משימה').then(function(){
-    markSent('text',u[0]);toast('נשלח לבונה המוניטור. הוא יחזור אליך.');
+    markSent('text',u[0]);toast('נשלח למערכת המחשוב של המוניטור. היא תחזור אליך.');
    }).catch(function(){b.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
   });
  });
@@ -15420,7 +15420,7 @@ function openLiveSheet(){
  if(liveCalm()){
   head.textContent='ההודעות שלך נשמרו';
   body.innerHTML='<div class="lr"><span>כל מה ששלחת נשמר ויטופל ברגע שהמערכת תחזור לעבוד.</span></div>'
-   +'<div class="lr"><span>בונה המוניטור כבר יודע. אין צורך לעשות כלום.</span></div>';
+   +'<div class="lr"><span>מערכת המחשוב של המוניטור כבר יודעת. אין צורך לעשות כלום.</span></div>';
  }else if(!liveLast){
   head.textContent='המאזין';
   body.innerHTML='<div class="lr"><span>אף אחד לא מאזין לערוץ.</span></div>'
