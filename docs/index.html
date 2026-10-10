@@ -1064,6 +1064,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .stkx i{opacity:.65;font-style:normal;font-size:13px}
 .gOcc{background:linear-gradient(150deg,#2bb39a,#123d3a)}
 .gLec{background:linear-gradient(150deg,#c0562b,#4a1d10)}
+.gTalk{background:linear-gradient(150deg,#c0392b,#4a1410)}
 .gManiv{background:linear-gradient(150deg,#3a8fd6,#123150)}
 .gMed{background:linear-gradient(150deg,#4fb3a9,#123a4a)}
 .gInv{background:linear-gradient(150deg,#d9a441,#3a2a12)}
@@ -1858,7 +1859,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-10T19:24:54.812Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-10T19:37:35.985Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2011,6 +2012,7 @@ try{
   <button type="button" class="gt gStk" id="gStk" data-new="1"><b>🎭 תיאטרון המדבקות</b><small>האתר שלך ושל אלון: קישור, העתקה ושליחה לאלון</small></button>
   <button type="button" class="gt gLec" id="gLec" data-new="1"><b>🎤 הרצאה</b><small>כנגד כל הסיכויים: המלל הערוך עם השקפים</small></button>
   <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>03 מכתב התגובה ו 04 ההסבר, לרועי ביום ראשון</small></button>
+  <button type="button" class="gt gTalk" id="gTalk" data-new="1"><b>🎙️ סרטון מדבר</b><small>חמישה ימי צום. התסריט מוכן, מצלמים</small></button>
   <button type="button" class="gt gManiv" id="gManiv"><b>💧 תשלום למניב</b><small>לקוח 50523290. ביום שני המוקד נפתח ב 09:00</small></button>
   <button type="button" class="gt gOcc" id="gOcc"><b>🩺 מרפאה תעסוקתית</b><small>מכבי רמות. טלפון א עד ה 08:00 עד 11:00</small></button>
   <button type="button" class="gt gShop" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
@@ -3333,7 +3335,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='93cd638d45';
+var CODE_ID='54e612da20';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -9151,6 +9153,35 @@ var MANIV_INFO=[
  '',
  'לחפש במייל של לולוס: מניב (וגם MAST לאישורי תשלום)'
 ];
+var TALK_DUE='2026-10-11T10:00:00+03:00';
+var TALK_TEXT="טוב, אז חמישה ימים לא אכלתי כלום.\nלא דיאטה ולא אתגר.\nככה זה אחרי ניתוח בטן פתוחה.\n\nבארבעה עשר בספטמבר נכנסתי לניתוח להוציא את הגידול השני.\nאחר כך חמישה ימים בלי ביס אחד.\nרק אינפוזיה, וזונדה באף.\n\nכשחזרתי הביתה עליתי על המשקל.\nשמונה קילו פחות.\nבשבוע אחד.\n\nותאמינו לי, יש דרכים יותר כיפיות לרזות.\n\nאז עכשיו אני עושה את הדרך ההפוכה.\nכל יום קצת.\nאתמול שישים ותשע ושתיים.\nהיום שבעים עגול.\n\nהגוף זוכר מאיפה הוא בא.\nצריך רק לתת לו סיבה לחזור.\n\nואני רוצה לשאול אתכם משהו.\nמה הדבר הראשון שהייתם אוכלים\nאחרי חמישה ימים בלי אוכל?";
+function talkSheet(){
+ var old=document.getElementById('talkSheet');if(old)old.remove();
+ try{if(Date.now()>=Date.parse(TALK_DUE))localStorage.setItem('talkSeen','1');}catch(e){}
+ var gb=document.getElementById('gTalk');if(gb&&Date.now()>=Date.parse(TALK_DUE))gb.classList.remove('taskblink');
+ var w=document.createElement('div');
+ w.id='talkSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','סרטון מדבר');
+ w.innerHTML='<div class="ycard">'
+  +'<b>🎙️ חמישה ימי צום, סרטון מול המצלמה</b>'
+  +'<small>בערך 45 שניות. מצלמים לאורך, מקריאים בקצב רגיל, ושולחים לי כאן. את החיתוך, הכתוביות והגרפיקה אני עושה.</small>'
+  +'<div style="white-space:pre-wrap;text-align:right;line-height:1.7;font-size:17px;margin:10px 0;user-select:text">'+esc(TALK_TEXT)+'</div>'
+  +'<button type="button" class="yb yb1" data-k="copy">📋 העתקת הטקסט</button>'
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  if(k==='copy'){try{navigator.clipboard.writeText(TALK_TEXT);e.target.textContent='✅ הועתק';}catch(x){}return;}
+  close();
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
 var MANIV_DUE='2026-10-12T07:00:00+03:00';
 function manivSheet(){
  var old=document.getElementById('manivSheet');if(old)old.remove();
@@ -9181,6 +9212,8 @@ function manivSheet(){
  document.body.appendChild(w);
 }
 on('gManiv',manivSheet);
+on('gTalk',talkSheet);
+boot('talk',function(){var b=document.getElementById('gTalk');if(!b)return;var seen='';try{seen=localStorage.getItem('talkSeen')||'';}catch(e){}b.classList.toggle('taskblink',Date.now()>=Date.parse(TALK_DUE)&&!seen);});
 boot('maniv',function(){var b=document.getElementById('gManiv');if(!b)return;var seen='';try{seen=localStorage.getItem('manivSeen')||'';}catch(e){}b.classList.toggle('taskblink',Date.now()>=Date.parse(MANIV_DUE)&&!seen);});
 
 boot('occ',function(){var o=(D.occ||[])[0],seen='';var sm=document.querySelector('#gOcc small');if(sm)sm.textContent=o?'המרפאה ענתה '+(o.at||'').slice(8,10).replace(/^0/,'')+'.'+(o.at||'').slice(5,7).replace(/^0/,'')+'. לחץ לקריאה':(function(l){var i=l.indexOf(': ');var h=l.slice(0,i).split(' ')[0];return h+': '+l.slice(i+2);})(OCC_LOG[OCC_LOG.length-1]);try{seen=localStorage.getItem('occSeen')||'';}catch(e){}var b=document.getElementById('gOcc');if(b)b.classList.toggle('taskblink',!!(o&&o.id&&seen!==o.id));});
