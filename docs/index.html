@@ -1796,7 +1796,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-10T06:55:04.318Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-10T06:55:32.229Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3219,7 +3219,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='b8ff53067b';
+var CODE_ID='38262a4d15';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -8166,6 +8166,10 @@ var SHIP_UPGRADES=[
  ['📁 מסמכים עם שליחה בוואטסאפ','כל מסמך נשלח בלחיצה אחת, בלי לחפש'],
  ['📦 מעקב מלאי ומכירות','מוצר שנגמר, סניף שירד, ספק שהעלה מחיר']
 ];
+function shipEmpty(id,label,what){
+ shipOpen(id,label,'<div class="srow">'+esc(what)+'</div>'
+  +'<small>הנתונים מגיעים מטבלת ההזמנות ומהמיילים של הספקים. המסך יתמלא לבד ברגע שהטבלה הראשונה תיטען למוניטור, ומאז יתעדכן כל יום.</small>');
+}
 function shipOpen(id,label,html,after){
  var old=document.getElementById(id);if(old)old.remove();
  var w=document.createElement('div');
@@ -8215,7 +8219,7 @@ function shipAlertRow(a){
   +'<br>'+esc(a.text)+'<br><small>'+esc(a.action)+'</small></div>';
 }
 on('gAlerts',function(){
- var S=D.ship;if(!S)return toast('אין נתונים עדיין');
+ var S=D.ship;if(!S)return shipEmpty('shipAlerts','🔔 דורש טיפול','הזמנות שהתאריך שלהן זז, אין להן אישור הזמנה או שהן מתקרבות בלי מעקב, וליד כל אחת מייל מוכן לספק.');
  var A=S.alerts||[];
  var h='<small>נכון ל '+esc(shipDate(S.today))+'</small>'+shipCounts(S.summary);
  ['red','amber','track'].forEach(function(l){
@@ -8279,7 +8283,7 @@ function shipDoneList(){
   .concat((S.done||[]).filter(function(a){return shipUrgent(a)&&(hid[a.id+'|'+a.code]||!back[a.id+'|'+a.code]);}));
 }
 on('gToday',function(){
- var S=D.ship;if(!S)return toast('אין נתונים עדיין');
+ var S=D.ship;if(!S)return shipEmpty('shipToday','📋 היום','רשימת המשימות של היום, הכי דחוף למעלה, עם מייל מוכן וכפתור טיפלתי.');
  var A=shipTodayList();
  var h='<small>נכון ל '+esc(shipDate(S.today))+'. הכי דחוף למעלה.</small>'
   +'<input id="todayQ" class="shipq" type="search" placeholder="חיפוש: הזמנה, ספק או מכולה" autocomplete="off">'
@@ -8419,7 +8423,7 @@ on('gShip',function(){
  });
 });
 on('gBrief',function(){
- var S=D.ship;if(!S)return toast('אין נתונים עדיין');
+ var S=D.ship;if(!S)return shipEmpty('shipBrief','☀️ דוח הבוקר','מה השתנה מאתמול, כמה הזמנות מגיעות השבוע ומה מחכה לטיפול.');
  var b=S.brief,s=S.summary;
  var h='<small>'+(b?'הדוח של '+esc(shipDate(b.today)):'נכון ל '+esc(shipDate(S.today)))+'</small>'+shipCounts(s)
   +'<b>מגיעים השבוע: '+s.arrivingThisWeek+'</b>';
@@ -8430,7 +8434,7 @@ on('gBrief',function(){
  shipOpen('shipBrief','☀️ דוח הבוקר',h);
 });
 on('gInsights',function(){
- var S=D.ship;if(!S)return toast('אין נתונים עדיין');
+ var S=D.ship;if(!S)return shipEmpty('shipInsights','📈 תובנות','אילו ספקים מוציאים באיחור ובכמה ימים בממוצע, לפי ההזמנות של השנה.');
  var I=S.insights||[];
  var h='<small>לפי הזמנות 2026 ו 2027: כמה זז התאריך שבו הספק באמת מוציא, לעומת התאריך שביקשנו.</small>'
   +I.map(function(x){
@@ -8447,7 +8451,7 @@ function shipWeekRows(S){
   .sort(function(a,b){return a.eta.localeCompare(b.eta);});
 }
 on('gCeo',function(){
- var S=D.ship;if(!S)return toast('אין נתונים עדיין');
+ var S=D.ship;if(!S)return shipEmpty('shipCeo','📊 תמונת מצב','כמה הזמנות פתוחות, כמה בסדר, כמה באיחור וכמה דורשות טיפול.');
  var s=S.summary;
  var h='<small>נכון ל '+esc(shipDate(S.today))+'</small>'
   +'<div class="srow"><b>'+s.open+'</b> הזמנות פתוחות</div>'

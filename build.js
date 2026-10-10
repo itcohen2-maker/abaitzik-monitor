@@ -4827,6 +4827,38 @@ function shareFail(e){
  if(e&&e.name==='AbortError')return;
  toast('השיתוף נכשל: '+((e&&e.name)||'שגיאה')+(e&&e.message?' · '+String(e.message).slice(0,80):''));
 }
+/*
+  Itzik, 10.10, from the reviewer: "הקובץ עוד נטען" גם כשהוא לא יגיע. The same
+  toast showed for a file that was simply not there, so she tried again forever.
+  Now a page that is still opening waits and opens the file by itself, and a
+  file that is not in the monitor says so, with a button that asks for it again.
+*/
+function fileOpen(name){
+ if(fileView(name))return true;
+ if(!GKEY||!D.files){
+  toast('הקובץ ייפתח לבד ברגע שהדף מוכן');
+  var n=0,iv=setInterval(function(){
+   if(GKEY&&D.files){clearInterval(iv);if(!fileView(name))fileMissing(name);}
+   else if(++n>30){clearInterval(iv);fileMissing(name);}
+  },1000);
+  return false;
+ }
+ fileMissing(name);return false;
+}
+function fileMissing(name){
+ var nice=fileNiceName(name);
+ var ov=document.createElement('div');ov.className='fview';
+ ov.innerHTML='<div class="fv-bar"><button type="button" class="fv-x" aria-label="סגירה">✕</button><b>'+esc(nice)+'</b></div>'
+  +'<div class="fv-body"><div class="empty">הקובץ הזה לא נמצא במוניטור. לנסות שוב לא יעזור, אבל אפשר לבקש אותו מחדש.</div>'
+  +'<button type="button" class="ask fv-again">לבקש את הקובץ שוב מ'+AI+'</button></div>';
+ document.body.appendChild(ov);
+ ov.querySelector('.fv-x').onclick=function(){ov.remove();};
+ ov.querySelector('.fv-again').onclick=function(){
+  ov.remove();pane('m');try{renderThread();}catch(e){}
+  var ta=document.getElementById('msgText');
+  if(ta){ta.value='הקובץ "'+nice+'" לא נפתח לי, אפשר להעלות אותו שוב?';ta.focus();}
+ };
+}
 function fileView(name){
  var e=fileEntry(name);if(!e||!GKEY)return false;
  var ov=document.createElement('div');ov.className='fview';
@@ -5449,7 +5481,7 @@ document.addEventListener('click',function(e){
  if(!b)return;
  e.stopPropagation();e.preventDefault();
  var fn=b.getAttribute('data-file');
- if(fn){if(!fileView(fn))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');return;}
+ if(fn){fileOpen(fn);return;}
  goThere(b);
 },true);
 /*
@@ -11435,7 +11467,7 @@ function nerSheet(){
   var it=NER_ITEMS[+k];if(k===''||!it)return;
   if(it.c)return captionSheet(it);
   if(it.u)window.open(it.u,'_blank','noopener');
-  else if(!fileView(it.r))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');
+  else fileOpen(it.r);
  };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
@@ -11500,7 +11532,7 @@ function reelSheet(){
   close();
   var it=REEL_ITEMS[+k];if(k===''||!it)return;
   if(it.u)window.open(it.u,'_blank','noopener');
-  else if(!fileView(it.r))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');
+  else fileOpen(it.r);
  };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
@@ -11540,7 +11572,7 @@ function futSheet(){
   close();
   var it=FUT_ITEMS[+k];if(k===''||!it)return;
   if(it.u)window.open(it.u,'_blank','noopener');
-  else if(!fileView(it.r))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');
+  else fileOpen(it.r);
  };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
@@ -11648,6 +11680,16 @@ var SHIP_UPGRADES=[
  ['📁 מסמכים עם שליחה בוואטסאפ','כל מסמך נשלח בלחיצה אחת, בלי לחפש'],
  ['📦 מעקב מלאי ומכירות','מוצר שנגמר, סניף שירד, ספק שהעלה מחיר']
 ];
+/*
+  Reviewer 10.10, approved by Itzik: a shipments tile pressed before the first
+  table arrived flashed "אין נתונים עדיין" and nothing else, which reads as a
+  broken button. It opens a normal sheet now: what will be here, from where,
+  and when.
+*/
+function shipEmpty(id,label,what){
+ shipOpen(id,label,'<div class="srow">'+esc(what)+'</div>'
+  +'<small>הנתונים מגיעים מטבלת ההזמנות ומהמיילים של הספקים. המסך יתמלא לבד ברגע שהטבלה הראשונה תיטען למוניטור, ומאז יתעדכן כל יום.</small>');
+}
 function shipOpen(id,label,html,after){
  var old=document.getElementById(id);if(old)old.remove();
  var w=document.createElement('div');
@@ -11703,7 +11745,7 @@ function shipAlertRow(a){
   +'<br>'+esc(a.text)+'<br><small>'+esc(a.action)+'</small></div>';
 }
 on('gAlerts',function(){
- var S=D.ship;if(!S)return toast('אין נתונים עדיין');
+ var S=D.ship;if(!S)return shipEmpty('shipAlerts','🔔 דורש טיפול','הזמנות שהתאריך שלהן זז, אין להן אישור הזמנה או שהן מתקרבות בלי מעקב, וליד כל אחת מייל מוכן לספק.');
  var A=S.alerts||[];
  var h='<small>נכון ל '+esc(shipDate(S.today))+'</small>'+shipCounts(S.summary);
  ['red','amber','track'].forEach(function(l){
@@ -11787,7 +11829,7 @@ function shipDoneList(){
   .concat((S.done||[]).filter(function(a){return shipUrgent(a)&&(hid[a.id+'|'+a.code]||!back[a.id+'|'+a.code]);}));
 }
 on('gToday',function(){
- var S=D.ship;if(!S)return toast('אין נתונים עדיין');
+ var S=D.ship;if(!S)return shipEmpty('shipToday','📋 היום','רשימת המשימות של היום, הכי דחוף למעלה, עם מייל מוכן וכפתור טיפלתי.');
  var A=shipTodayList();
  var h='<small>נכון ל '+esc(shipDate(S.today))+'. הכי דחוף למעלה.</small>'
   +'<input id="todayQ" class="shipq" type="search" placeholder="חיפוש: הזמנה, ספק או מכולה" autocomplete="off">'
@@ -11932,7 +11974,7 @@ on('gShip',function(){
  });
 });
 on('gBrief',function(){
- var S=D.ship;if(!S)return toast('אין נתונים עדיין');
+ var S=D.ship;if(!S)return shipEmpty('shipBrief','☀️ דוח הבוקר','מה השתנה מאתמול, כמה הזמנות מגיעות השבוע ומה מחכה לטיפול.');
  var b=S.brief,s=S.summary;
  var h='<small>'+(b?'הדוח של '+esc(shipDate(b.today)):'נכון ל '+esc(shipDate(S.today)))+'</small>'+shipCounts(s)
   +'<b>מגיעים השבוע: '+s.arrivingThisWeek+'</b>';
@@ -11943,7 +11985,7 @@ on('gBrief',function(){
  shipOpen('shipBrief','☀️ דוח הבוקר',h);
 });
 on('gInsights',function(){
- var S=D.ship;if(!S)return toast('אין נתונים עדיין');
+ var S=D.ship;if(!S)return shipEmpty('shipInsights','📈 תובנות','אילו ספקים מוציאים באיחור ובכמה ימים בממוצע, לפי ההזמנות של השנה.');
  var I=S.insights||[];
  var h='<small>לפי הזמנות 2026 ו 2027: כמה זז התאריך שבו הספק באמת מוציא, לעומת התאריך שביקשנו.</small>'
   +I.map(function(x){
@@ -11964,7 +12006,7 @@ function shipWeekRows(S){
   .sort(function(a,b){return a.eta.localeCompare(b.eta);});
 }
 on('gCeo',function(){
- var S=D.ship;if(!S)return toast('אין נתונים עדיין');
+ var S=D.ship;if(!S)return shipEmpty('shipCeo','📊 תמונת מצב','כמה הזמנות פתוחות, כמה בסדר, כמה באיחור וכמה דורשות טיפול.');
  var s=S.summary;
  var h='<small>נכון ל '+esc(shipDate(S.today))+'</small>'
   +'<div class="srow"><b>'+s.open+'</b> הזמנות פתוחות</div>'
@@ -12235,7 +12277,7 @@ function lawSheet(){
   if(k===null||k===undefined)return;
   close();
   var it=LAW_ITEMS[+k];if(k===''||!it)return;
-  if(!fileView(it.r))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');
+  fileOpen(it.r);
  };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
@@ -12244,7 +12286,7 @@ on('gLaw',lawSheet);
 // 7.10: the open accounts as one file to send on, at the bottom of the debtors.
 document.getElementById('rivShare')&&document.getElementById('rivShare').addEventListener('click',function(e){
  var r=e.target.closest&&e.target.closest('[data-r]');if(!r)return;
- if(!fileView(r.getAttribute('data-r')))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');
+ fileOpen(r.getAttribute('data-r'));
 });
 // 4.10: Itzik could not find these files. The tile blinks until he opens it
 // after a new document was added (the count is what he has seen).
@@ -12327,7 +12369,7 @@ function penSheet(){
   if(k===null||k===undefined)return;
   close();
   var it=PEN_ITEMS[+k];if(k===''||!it)return;
-  if(it.r){if(!fileView(it.r))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');return;}
+  if(it.r){fileOpen(it.r);return;}
   var done=function(){toast('הועתק');};
   if(navigator.clipboard&&navigator.clipboard.writeText){
    navigator.clipboard.writeText(it.t).then(done,function(){fallbackCopy(it.t,done);});
@@ -12368,7 +12410,7 @@ function medSheet(){
   if(k===null||k===undefined)return;
   close();
   var it=MED_ITEMS[+k];if(k===''||!it)return;
-  if(!fileView(it.r))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');
+  fileOpen(it.r);
  };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
@@ -12409,7 +12451,7 @@ function invSheet(){
   if(k===null||k===undefined)return;
   close();
   var it=INV_ITEMS[+k];if(k===''||!it)return;
-  if(!fileView(it.r))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');
+  fileOpen(it.r);
  };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
@@ -13332,7 +13374,7 @@ function visitDays(d,order,LABEL){
 document.getElementById('icVisits').onclick=function(){pane('X');loadVisits();};
 document.getElementById('visitsAgain').onclick=loadVisits;
 document.getElementById('icLand').onclick=function(){pane('g');};
-document.getElementById('icNache').onclick=function(){if(!fileView('tav-nache-teuda.jpg'))toast('הקובץ עוד נטען, נסה שוב בעוד רגע');};
+document.getElementById('icNache').onclick=function(){fileOpen('tav-nache-teuda.jpg');};
 document.getElementById('landList').innerHTML=LANDING.map(function(l){
  return '<div class="item"><div class="top"><span class="who">'+esc(l.name)+'</span>'
   +'<span class="chip">'+esc(l.note)+'</span></div>'
