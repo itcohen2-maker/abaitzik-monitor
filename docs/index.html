@@ -1857,7 +1857,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-10T13:35:41.160Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-10T13:36:52.572Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3332,7 +3332,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='d46f63df61';
+var CODE_ID='4b03b3e98d';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -8463,36 +8463,23 @@ function stkHome(){
  window.scrollTo(0,0);
 }
 function stkSheet(){
- if(!GKEY||!D.files){fileOpen('stk/index.json');return;}
- var e=fileEntry('stk/index.json');if(!e){toast('המדבקות עוד לא עלו למוניטור');return;}
  var old=document.getElementById('stkSheet');if(old)old.remove();
  var w=document.createElement('div');w.id='stkSheet';w.className='ysheet';
  w.setAttribute('role','dialog');w.setAttribute('aria-label','תיאטרון המדבקות');
- w.innerHTML='<div class="ycard"><b>🎭 תיאטרון המדבקות</b><small>טוען את הדמויות...</small></div>';
  function close(){document.removeEventListener('keydown',esckey);stkHome();}
  function esckey(ev){if(ev.key==='Escape')close();}
  document.addEventListener('keydown',esckey);
+ w.innerHTML='<div class="ycard"><div class="stkTop"><b>🎭 תיאטרון המדבקות</b><button type="button" class="yb yx" data-x="1">✕ לדף הראשי</button></div>'
+  +'<small>הדמויות, הסיפורים וההקלטות נמצאים באתר. שם מקליטים איך כל דמות מדברת, ושם אלון רואה ומוסיף</small>'
+  +'<a class="yb yb1" style="display:block;text-align:center;text-decoration:none;margin-top:10px" href="'+STK_SITE+'" target="_blank" rel="noopener">🎭 לפתוח את האתר של התיאטרון</a>'
+  +'<small style="direction:ltr;display:block;text-align:center">'+STK_SITE+'</small>'
+  +'<div style="display:flex;gap:8px"><button type="button" class="yb yx" data-c="1" style="flex:1">📋 להעתיק את הקישור</button>'
+  +'<button type="button" class="yb yx" data-w="1" style="flex:1">💬 לשלוח לאלון בוואטסאפ</button></div>'
+  +'<small>אלון נכנס עם הג׳ימייל record4. רק אתה והוא יכולים להיכנס</small></div>';
  document.body.appendChild(w);
- var got=STK?Promise.resolve(STK):fileBlob(e).then(function(b){return b.text();}).then(function(t){return STK=JSON.parse(t);});
- got=Promise.all([got,stkJson('alon.json'),stkJson('alon-link.json')]).then(function(r){STK_ALON=r[1]||{};STK_LINK=(r[2]&&r[2].link)||'';return r[0];});
- got.then(function(list){
-  var done=stkDone(),na=Object.keys(STK_ALON).length;
-  w.innerHTML='<div class="ycard"><div class="stkTop"><b>🎭 תיאטרון המדבקות</b><button type="button" class="yb yx" data-x="1">✕ לדף הראשי</button></div>'
-   +'<small>'+list.length+' דמויות, לפי כמה פעמים נשלחו מאז 20.3. ירוק: כבר הסברת. 🔵 אלון ענה'+(na?' ('+na+')':'')+'</small>'
-   +'<a class="yb yb1" style="display:block;text-align:center;text-decoration:none;margin-top:10px" href="'+STK_SITE+'" target="_blank" rel="noopener">🎭 לפתוח את האתר של התיאטרון</a>'
-   +'<small style="direction:ltr;display:block;text-align:center">'+STK_SITE+'</small>'
-   +'<div style="display:flex;gap:8px"><button type="button" class="yb yx" data-c="1" style="flex:1">📋 להעתיק את הקישור</button>'
-   +'<button type="button" class="yb yx" data-w="1" style="flex:1">💬 לשלוח לאלון בוואטסאפ</button></div>'
-   +'<small>אלון נכנס עם הג׳ימייל record4. רק אתה והוא יכולים להיכנס</small>'
-   +'<div class="stkg">'+list.map(function(x,i){
-     return '<button type="button" class="stkc'+(done[x.n]?' done':'')+'" data-i="'+i+'"><img alt="" data-f="'+x.f+'">#'+x.n+' · '+x.c+(STK_ALON[x.n]?' 🔵':'')+'</button>';
-    }).join('')+'</div>'
-   +'<button type="button" class="yb yx" data-x="1">לדף הראשי</button></div>';
-  w.querySelectorAll('img[data-f]').forEach(function(im){stkBlob(im.getAttribute('data-f')).then(function(u){im.src=u;},function(){});});
- },function(){w.innerHTML='<div class="ycard"><b>🎭 תיאטרון המדבקות</b><small>לא הצלחתי לפתוח את המדבקות. נסה שוב בעוד דקה</small><button type="button" class="yb yx" data-x="1">סגירה</button></div>';});
  w.onclick=function(ev){
   if(ev.target===w)return close();
-  var b=ev.target.closest&&ev.target.closest('[data-i],[data-x],[data-w],[data-c]');if(!b)return;
+  var b=ev.target.closest&&ev.target.closest('[data-x],[data-w],[data-c]');if(!b)return;
   if(b.hasAttribute('data-x'))return close();
   if(b.hasAttribute('data-c')){
    var ok=function(){toast('הקישור הועתק');};
@@ -8500,11 +8487,8 @@ function stkSheet(){
    else fallbackCopy(STK_SITE,ok);
    return;
   }
-  if(b.hasAttribute('data-w')){
-   var txt='אלון, בניתי לנו אתר לתיאטרון המדבקות. לכל דמות יש שם, סיפור, משפטים בקול שלה ומקום להקליט אותה. נכנסים עם הג׳ימייל record4 🎭 '+STK_SITE;
-   window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');return;
-  }
-  stkOne(STK[+b.getAttribute('data-i')]);
+  var txt='אלון, בניתי לנו אתר לתיאטרון המדבקות. לכל דמות יש שם, סיפור, משפטים בקול שלה ומקום להקליט אותה. נכנסים עם הג׳ימייל record4 🎭 '+STK_SITE;
+  window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
  };
 }
 function stkOne(x){
