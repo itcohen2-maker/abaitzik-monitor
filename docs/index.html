@@ -1821,7 +1821,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-10T06:58:50.610Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-10T07:00:01.394Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2147,7 +2147,9 @@ try{
 
 
 <section id="pD" hidden>
- <h2>גוגל דרייב</h2>
+ <h2>גוגל דרייב <button type="button" class="hq" data-q="drvHelp" aria-label="הסבר על המסך">?</button></h2>
+ <div class="hint1" data-tip="drvTip" hidden>נגיעה בתיקייה פותחת אותה בדרייב.<button type="button" class="hint1x" aria-label="סגירה">✕</button></div>
+ <div class="hint hq-t" id="drvHelp" hidden>חסרה תיקייה? תכתוב לי בשורת הבנייה העצמית ואוסיף אותה לכאן.</div>
  <div class="hint" style="margin-bottom:12px">קיצורים ישירים לתיקיות שאנחנו עובדים איתן. הכל בחשבון itcohen2.</div>
  <nav class="links" aria-label="תיקיות בדרייב">
   <a href="https://drive.google.com/drive/u/0/folders/1k8uEixPICag2S06Xfq_CPcntJvSMR46R" target="_blank" rel="noopener">
@@ -2171,7 +2173,6 @@ try{
   <a href="https://drive.google.com/drive/u/0/my-drive" target="_blank" rel="noopener">
    <span aria-hidden="true">📁</span><div>כל הדרייב<small>הדף הראשי</small></div></a>
  </nav>
- <div class="hint" style="margin-top:14px">חסרה תיקייה? תכתוב לי בשורת הבנייה העצמית ואוסיף אותה לכאן.</div>
 </section>
 
 
@@ -2357,11 +2358,12 @@ try{
 
 <section id="pN2" hidden>
  <div id="noteHome">
-  <h2>פתקים</h2>
+  <h2>פתקים <button type="button" class="hq" data-q="noteHelp" aria-label="הסבר על המסך">?</button></h2>
+  <div class="hint1" data-tip="noteTip" hidden>נגיעה בפתק פותחת אותו לכתיבה.<button type="button" class="hint1x" aria-label="סגירה">✕</button></div>
+  <div class="hint hq-t" id="noteHelp" hidden>הפתקים נשמרים גם אצלנו, כמו ההודעות. נגיעה בפתק פותחת אותו לכתיבה.</div>
   <input type="search" id="noteSearch" class="note-search" autocomplete="off" placeholder="חיפוש">
   <div id="noteList"></div>
   <button type="button" class="note-new" id="noteNew">✎ פתק חדש</button>
-  <div class="hint">הפתקים נשמרים גם אצלנו, כמו ההודעות. נגיעה בפתק פותחת אותו לכתיבה.</div>
  </div>
  <div id="noteEdit" hidden>
   <div class="note-bar">
@@ -2404,9 +2406,10 @@ try{
 </section>
 
 <section id="pU" hidden>
- <h2>מה שלא קראת</h2>
+ <h2>מה שלא קראת <button type="button" class="hq" data-q="unrHelp" aria-label="הסבר על המסך">?</button></h2>
+ <div class="hint1" data-tip="unrTip" hidden>נגיעה בהודעה הופכת אותה לירוקה.<button type="button" class="hint1x" aria-label="סגירה">✕</button></div>
+ <div class="hint hq-t" id="unrHelp" hidden>נגיעה בהודעה מסמנת שקראת אותה והופכת אותה לירוקה. מה שנשאר אדום עוד מחכה לך.</div>
  <div class="ubox" id="unreadBox"></div>
- <div class="hint">נגיעה בהודעה מסמנת שקראת אותה והופכת אותה לירוקה. מה שנשאר אדום עוד מחכה לך.</div>
 </section>
 
 <section id="pB" hidden>
@@ -2478,7 +2481,9 @@ try{
 
 
 <section id="pF" hidden>
- <h2>עקוב אחרי התזונה</h2>
+ <h2>עקוב אחרי התזונה <button type="button" class="hq" data-q="fdHelp" aria-label="הסבר על המסך">?</button></h2>
+ <div class="hint1" data-tip="fdTip" hidden>שולחים תמונה או שורה, ואני מחזיר את הערכים.<button type="button" class="hint1x" aria-label="סגירה">✕</button></div>
+ <div class="hint hq-t" id="fdHelp" hidden>שולחים תמונה או שורה, ואני מחזיר ערך קלורי, חלבון, פחמימות, שומן ואבץ. הכרטיס למעלה אוגר את האבץ של כל מה שנרשם היום, ובסוף היום הוא הסיכום. לחיצה על פריט פותחת את הפירוט המלא.</div>
  <div class="zbox" id="fdZinc">
   <div class="zt"><b>אבץ שנאסף היום</b><span class="zv" id="zVal">0 מ״ג</span></div>
   <div class="zbar"><i id="zBar" style="width:0%"></i></div>
@@ -2503,11 +2508,6 @@ try{
  <div class="msgsaid" id="fdSaid"></div>
  <div id="fdList"></div>
  <div class="zdays" id="zDays"></div>
- <div class="hint">
-  שולחים תמונה או שורה, ואני מחזיר ערך קלורי, חלבון, פחמימות, שומן ואבץ.
-  הכרטיס למעלה אוגר את האבץ של כל מה שנרשם היום, ובסוף היום הוא הסיכום.
-  לחיצה על פריט פותחת את הפירוט המלא.
- </div>
 </section>
 
 
@@ -3246,7 +3246,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='c4e9c31485';
+var CODE_ID='8b6168b7ec';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -3777,8 +3777,8 @@ document.addEventListener('click',function(e){
  var x=e.target&&e.target.closest&&e.target.closest('.hint1x');
  if(x){var l=x.parentNode;l.hidden=true;try{localStorage.setItem(l.getAttribute('data-tip'),'x');}catch(er){}}
 });
-function paintTips(){
- Array.prototype.forEach.call(document.querySelectorAll('.hint1[data-tip]'),function(l){
+function paintTips(root){
+ Array.prototype.forEach.call((root||document).querySelectorAll('.hint1[data-tip]'),function(l){
   var k=l.getAttribute('data-tip'),v='';
   try{v=localStorage.getItem(k)||'';if(!v){v=String(Date.now());localStorage.setItem(k,v);}}catch(e){}
   l.hidden=v==='x'||(Date.now()-Number(v)>3*86400000);
@@ -6046,7 +6046,7 @@ function pane(w){
  for(var k in PANES){
   var sec=document.getElementById(PANES[k]);
   sec.hidden=(k!==w);
-  if(k===w){backBar(sec);replyBar(sec);}
+  if(k===w){backBar(sec);replyBar(sec);paintTips(sec);}
  }
  navLabels();
  var PAINT={a:function(){renderAnswers();paintAnsCount();},b:renderGot,m:renderThread,

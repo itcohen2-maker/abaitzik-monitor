@@ -129,6 +129,21 @@ function livePids() {
       try { execFile('taskkill', ['/pid', pid, '/t', '/f'], () => {}); } catch (e2) {}
       return;
     }
+    /*
+      10.10, Itzik took the reviewer's "מחיקה ברשימת הבקשות לא מבטלת כלום".
+      "ביטול הבקשה" closed the request so nothing new picks it up, but a
+      session already working on it went on to the end. Now it is stopped,
+      when every message it holds was cancelled. A session that also holds
+      a message still wanted keeps running: stopping it would drop that one.
+    */
+    const fl = e.files || [];
+    if (fl.length && fl.every((f) => (readJson(path.join(CHAT, f), {}) || {}).cancelled)) {
+      say('בקשה בוטלה. עוצר את הסשן ' + pid + ' שעבד עליה.');
+      try { execFile('pkill', ['-TERM', '-P', pid], () => {}); } catch (e2) {}
+      try { process.kill(Number(pid)); } catch (e2) {}
+      try { execFile('taskkill', ['/pid', pid, '/t', '/f'], () => {}); } catch (e2) {}
+      return;
+    }
     kept[pid] = e;
   });
   try { fs.writeFileSync(LIVE, JSON.stringify(kept, null, 1), 'utf8'); } catch (e) {}

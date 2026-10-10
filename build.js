@@ -3898,7 +3898,10 @@ try{
 
 <!--ITZIK:BEGIN-->
 <section id="pD" hidden>
- <h2>גוגל דרייב</h2>
+ <!-- Itzik, 10.10, the reviewer's idea again for every screen: no grey paragraph at the bottom. The help moved behind the ? and a short line on top for the first days. -->
+ <h2>גוגל דרייב <button type="button" class="hq" data-q="drvHelp" aria-label="הסבר על המסך">?</button></h2>
+ <div class="hint1" data-tip="drvTip" hidden>נגיעה בתיקייה פותחת אותה בדרייב.<button type="button" class="hint1x" aria-label="סגירה">✕</button></div>
+ <div class="hint hq-t" id="drvHelp" hidden>חסרה תיקייה? תכתוב לי בשורת הבנייה העצמית ואוסיף אותה לכאן.</div>
  <div class="hint" style="margin-bottom:12px">קיצורים ישירים לתיקיות שאנחנו עובדים איתן.${inst.name === 'abaitzik' ? ' הכל בחשבון itcohen2.' : ''}</div>
  <nav class="links" aria-label="תיקיות בדרייב">
   <!-- Itzik, 2.10: "הריל שלי" was missing here and he could not find the folder.
@@ -3937,7 +3940,6 @@ try{
   <a href="https://drive.google.com/drive/u/0/my-drive" target="_blank" rel="noopener">
    <span aria-hidden="true">📁</span><div>כל הדרייב<small>הדף הראשי</small></div></a>
  </nav>
- <div class="hint" style="margin-top:14px">חסרה תיקייה? תכתוב לי בשורת הבנייה העצמית ואוסיף אותה לכאן.</div>
 </section>
 <!--ITZIK:END-->
 
@@ -4142,11 +4144,12 @@ try{
 
 <section id="pN2" hidden>
  <div id="noteHome">
-  <h2>פתקים</h2>
+  <h2>פתקים <button type="button" class="hq" data-q="noteHelp" aria-label="הסבר על המסך">?</button></h2>
+  <div class="hint1" data-tip="noteTip" hidden>נגיעה בפתק פותחת אותו לכתיבה.<button type="button" class="hint1x" aria-label="סגירה">✕</button></div>
+  <div class="hint hq-t" id="noteHelp" hidden>הפתקים נשמרים גם אצלנו, כמו ההודעות. נגיעה בפתק פותחת אותו לכתיבה.</div>
   <input type="search" id="noteSearch" class="note-search" autocomplete="off" placeholder="חיפוש">
   <div id="noteList"></div>
   <button type="button" class="note-new" id="noteNew">✎ פתק חדש</button>
-  <div class="hint">הפתקים נשמרים גם אצלנו, כמו ההודעות. נגיעה בפתק פותחת אותו לכתיבה.</div>
  </div>
  <div id="noteEdit" hidden>
   <div class="note-bar">
@@ -4189,9 +4192,10 @@ try{
 </section>
 
 <section id="pU" hidden>
- <h2>מה שלא קראת</h2>
+ <h2>מה שלא קראת <button type="button" class="hq" data-q="unrHelp" aria-label="הסבר על המסך">?</button></h2>
+ <div class="hint1" data-tip="unrTip" hidden>נגיעה בהודעה הופכת אותה לירוקה.<button type="button" class="hint1x" aria-label="סגירה">✕</button></div>
+ <div class="hint hq-t" id="unrHelp" hidden>נגיעה בהודעה מסמנת שקראת אותה והופכת אותה לירוקה. מה שנשאר אדום עוד מחכה לך.</div>
  <div class="ubox" id="unreadBox"></div>
- <div class="hint">נגיעה בהודעה מסמנת שקראת אותה והופכת אותה לירוקה. מה שנשאר אדום עוד מחכה לך.</div>
 </section>
 
 <section id="pB" hidden>
@@ -4269,7 +4273,9 @@ try{
 
 <!--ITZIK:BEGIN-->
 <section id="pF" hidden>
- <h2>עקוב אחרי התזונה</h2>
+ <h2>עקוב אחרי התזונה <button type="button" class="hq" data-q="fdHelp" aria-label="הסבר על המסך">?</button></h2>
+ <div class="hint1" data-tip="fdTip" hidden>שולחים תמונה או שורה, ואני מחזיר את הערכים.<button type="button" class="hint1x" aria-label="סגירה">✕</button></div>
+ <div class="hint hq-t" id="fdHelp" hidden>שולחים תמונה או שורה, ואני מחזיר ערך קלורי, חלבון, פחמימות, שומן ואבץ. הכרטיס למעלה אוגר את האבץ של כל מה שנרשם היום, ובסוף היום הוא הסיכום. לחיצה על פריט פותחת את הפירוט המלא.</div>
  <div class="zbox" id="fdZinc">
   <div class="zt"><b>אבץ שנאסף היום</b><span class="zv" id="zVal">0 מ״ג</span></div>
   <div class="zbar"><i id="zBar" style="width:0%"></i></div>
@@ -4294,11 +4300,6 @@ try{
  <div class="msgsaid" id="fdSaid"></div>
  <div id="fdList"></div>
  <div class="zdays" id="zDays"></div>
- <div class="hint">
-  שולחים תמונה או שורה, ואני מחזיר ערך קלורי, חלבון, פחמימות, שומן ואבץ.
-  הכרטיס למעלה אוגר את האבץ של כל מה שנרשם היום, ובסוף היום הוא הסיכום.
-  לחיצה על פריט פותחת את הפירוט המלא.
- </div>
 </section>
 <!--ITZIK:END-->
 
@@ -5743,9 +5744,10 @@ document.addEventListener('click',function(e){
  if(x){var l=x.parentNode;l.hidden=true;try{localStorage.setItem(l.getAttribute('data-tip'),'x');}catch(er){}}
 });
 // The short line on top shows for the first three days after it was first
-// seen, or until it is closed, and then the ? is enough.
-function paintTips(){
- Array.prototype.forEach.call(document.querySelectorAll('.hint1[data-tip]'),function(l){
+// seen, or until it is closed, and then the ? is enough. Painted per screen as
+// it opens, so the three days start when he first sees that screen.
+function paintTips(root){
+ Array.prototype.forEach.call((root||document).querySelectorAll('.hint1[data-tip]'),function(l){
   var k=l.getAttribute('data-tip'),v='';
   try{v=localStorage.getItem(k)||'';if(!v){v=String(Date.now());localStorage.setItem(k,v);}}catch(e){}
   l.hidden=v==='x'||(Date.now()-Number(v)>3*86400000);
@@ -8874,7 +8876,7 @@ function pane(w){
  for(var k in PANES){
   var sec=document.getElementById(PANES[k]);
   sec.hidden=(k!==w);
-  if(k===w){backBar(sec);replyBar(sec);}
+  if(k===w){backBar(sec);replyBar(sec);paintTips(sec);}
  }
  navLabels();
  /*

@@ -514,6 +514,7 @@ function recordIncoming(m) {
       rec.text = hit ? '✖ ביטלתי את הבקשה: ' + hit : 'הבקשה לביטול לא נמצאה (' + cxM[1] + ')';
       rec.status = 'done';
       say(hit ? 'בקשה בוטלה: ' + cxM[1] : '!! בקשה לביטול לא נמצאה: ' + cxM[1]);
+      if (hit) kickWorker(); // the worker stops a session still working on it
       try { fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8'); } catch (e) { /* the line is already there */ }
       try { publishChat(); } catch (e) { /* the next build carries it */ }
       return true;

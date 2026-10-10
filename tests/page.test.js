@@ -2058,7 +2058,7 @@ test('a recording I could not read gets its own screen, not a message', () => {
 test('every inner screen gets a reply bar, and the chat does not get a second one', () => {
   const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'build.js'), 'utf8');
   // The bar is hung where the back button is: on every pane the router opens.
-  assert.ok(src.includes('if(k===w){backBar(sec);replyBar(sec);}'));
+  assert.ok(src.includes('if(k===w){backBar(sec);replyBar(sec);paintTips(sec);}'));
   assert.ok(src.includes("if(sec.id==='pH'||sec.id==='pM')return;"));
   // It is the same reply box the cards carry, so mic, camera, file and text
   // all come with it rather than being rebuilt.
@@ -2152,4 +2152,11 @@ test('what was received shows a send from this device at once, and drops it when
   assert.deepStrictEqual(run(log, published.concat({ from: 'itzik', at: iso(25e3) })), []);
   assert.ok(html.includes("+gotPending().length"), 'the count on the button includes them');
   assert.ok(html.includes("נשלח עכשיו, בדרך אליי"));
+});
+
+test('no screen ends in a grey help paragraph: drive, notes, unread and food have the ? and the short top line', () => {
+  const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'build.js'), 'utf8');
+  for (const id of ['drvHelp', 'noteHelp', 'unrHelp', 'fdHelp']) assert.ok(src.includes('data-q="' + id + '"'), id);
+  for (const k of ['drvTip', 'noteTip', 'unrTip', 'fdTip']) assert.ok(src.includes('data-tip="' + k + '"'), k);
+  assert.ok(!src.includes('<div class="hint" style="margin-top:14px">חסרה תיקייה'));
 });
