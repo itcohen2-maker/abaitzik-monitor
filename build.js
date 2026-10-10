@@ -3563,7 +3563,7 @@ try{
     4.10. Itzik could not find the vehicles PDF inside the sale screen. Files
     for the lawyer get one tile on the home screen, numbered.
   -->
-  <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>01 הרכבים. 02 משיכה מכרטיס האשראי</small></button>
+  <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>03 מכתב התגובה ו 04 ההסבר, לרועי ביום ראשון</small></button>
   <button type="button" class="gt gManiv" id="gManiv"><b>💧 תשלום למניב</b><small>לקוח 50523290. להתקשר ביום שני בבוקר</small></button>
   <button type="button" class="gt gOcc" id="gOcc"><b>🩺 מרפאה תעסוקתית</b><small>מכבי רמות. טלפון א עד ה 08:00 עד 11:00</small></button>
   <button type="button" class="gt gShop" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
@@ -12083,7 +12083,14 @@ var LAW_ITEMS=[
  {n:'01ב',t:'הרכבים כתמונה לגלריה, עמוד 1',r:'law-01a.jpg'},
  {n:'01ג',t:'הרכבים כתמונה לגלריה, עמוד 2',r:'law-01b.jpg'},
  {n:'02',t:'משיכה מכרטיס האשראי',r:'yoel-6559-netflix-spotify.pdf'},
- {n:'02ב',t:'משיכה מכרטיס האשראי, כתמונה לגלריה',r:'law-02.jpg'}
+ {n:'02ב',t:'משיכה מכרטיס האשראי, כתמונה לגלריה',r:'law-02.jpg'},
+ {n:'03',t:'לרועי ביום ראשון: מכתב התגובה הקצר',r:'law-03.pdf'},
+ {n:'03ב',t:'מכתב התגובה כתמונה לגלריה',r:'law-03.jpg'},
+ {n:'04',t:'לרועי ביום ראשון: ההסבר לטיוטה',r:'law-04.pdf'},
+ {n:'04ב',t:'ההסבר כתמונה לגלריה, עמוד 1',r:'law-04a.jpg'},
+ {n:'04ג',t:'ההסבר כתמונה לגלריה, עמוד 2',r:'law-04b.jpg'},
+ {n:'04ד',t:'ההסבר כתמונה לגלריה, עמוד 3',r:'law-04c.jpg'},
+ {n:'04ה',t:'ההסבר כתמונה לגלריה, עמוד 4',r:'law-04d.jpg'}
 ];
 function lawSheet(){
  var old=document.getElementById('lawSheet');if(old)old.remove();
