@@ -1857,7 +1857,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-10T13:34:30.978Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-10T13:35:41.160Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3332,7 +3332,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='5af19bf342';
+var CODE_ID='d46f63df61';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -8451,6 +8451,7 @@ function stkDone(){
   all.forEach(function(h,j){
    var said=t.slice(h.at,j+1<all.length?all[j+1].s:t.length).trim();
    if(said.slice(-2)==='🎭')said=said.slice(0,-2).trim();
+   var vq=said.indexOf('(הודעה קולית');if(vq>=0){var ve=said.indexOf(')',vq);said=(said.slice(0,vq)+(ve>=0?said.slice(ve+1):'')).trim();}
    seen[h.n]=seen[h.n]&&said?seen[h.n]+String.fromCharCode(10)+said:(said||seen[h.n]||' ');
   });
  });

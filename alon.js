@@ -83,6 +83,8 @@ function itzikSaid() {
     all.forEach((h, j) => {
       let said = t.slice(h.at, j + 1 < all.length ? all[j + 1].s : t.length).trim();
       if (said.endsWith('🎭')) said = said.slice(0, -2).trim();
+      // A voice note sent while the sticker was open is not words about it (10.10: #2 got one about Pegasus).
+      said = said.replace(/\(הודעה קולית:[^)]*\)/g, '').trim();
       if (said) seen[h.n] = seen[h.n] ? seen[h.n] + '\n' + said : said;
     });
   }

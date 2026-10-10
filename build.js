@@ -12087,6 +12087,7 @@ function stkDone(){
   all.forEach(function(h,j){
    var said=t.slice(h.at,j+1<all.length?all[j+1].s:t.length).trim();
    if(said.slice(-2)==='🎭')said=said.slice(0,-2).trim();
+   var vq=said.indexOf('(הודעה קולית');if(vq>=0){var ve=said.indexOf(')',vq);said=(said.slice(0,vq)+(ve>=0?said.slice(ve+1):'')).trim();}
    seen[h.n]=seen[h.n]&&said?seen[h.n]+String.fromCharCode(10)+said:(said||seen[h.n]||' ');
   });
  });
