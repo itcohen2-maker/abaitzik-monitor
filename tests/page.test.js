@@ -777,12 +777,14 @@ test('the title is his, and the build and the data are two different facts', () 
   // all of 18.9 while the line under it said the data was current. Two clocks,
   // and the first was lying about the second.
   assert.ok(html.includes("var ver='גרסה '+(D.buildId||'')+' · '+stamp(D.builtAt)"));
-  assert.ok(html.includes("+' · הגרסה '+String(age).replace(/^לפני /,'בת ')"));
+  assert.ok(html.includes("+' · הגרסה '+(/^לפני /.test(age)?age.replace(/^לפני /,'בת ')"));
   assert.ok(!html.includes("+' · עודכן '+since(D.builtAt)"));
   // And when the data really is current it says so in words, not in a stamp.
   assert.ok(html.includes("'הנתונים מעודכנים לרגע זה.'"));
-  // "updated ago now" is not a sentence.
-  assert.ok(html.includes("return a==='עכשיו'?'עכשיו':'לפני '+a;"));
+  // "updated ago now" is not a sentence. Since 10.10 ago() carries its own
+  // "לפני", and agoAfter() fits it after a verb.
+  assert.ok(html.includes("function since(iso){return ago(iso);}"));
+  assert.ok(html.includes("function agoAfter(iso){"));
   // And "updated N ago" is recomputed, so it counts up instead of resetting.
   assert.ok(html.includes('setInterval(paintStamp,30000)'));
   // The data line never claims a check that did not happen, and says so when
@@ -1090,7 +1092,8 @@ test('sent is yellow, the answer is red, what he touched is green', () => {
   assert.ok(html.includes('.bub.touched{animation:none;border:2px solid var(--green)'));
   // And the line says when it went out, not only that it is waiting.
   assert.ok(html.includes("var sent=m.at?('נשלח ב'+esc(stamp(m.at))+'. '):'';"));
-  assert.ok(html.includes("'. ממתין לתשובה, '+esc(ago(m.at))+'.')+progressBar(m)+'</div>'"));
+  assert.ok(html.includes("ackTx('נשלח '+esc(agoAfter(m.at))"));
+  assert.ok(html.includes("+'. ממתין לתשובה.')+progressBar(m)+'</div>'"));
   assert.ok(html.includes('.ack.ack-open .ack-tx{display:block}'));
 });
 

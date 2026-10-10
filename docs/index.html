@@ -179,6 +179,7 @@ button.abtn[disabled]{opacity:.55}
 .livepill.up .lp-d{background:var(--green)}
 .livepill.down{border-color:#e5484d;color:#e5484d}
 .livepill.down .lp-d{background:#e5484d}
+.livepill.calm .lp-d{background:var(--dim)}
 .livepill.mute{border-color:#e0a11b;color:#e0a11b}
 .livepill.mute .lp-d{background:#e0a11b}
 @keyframes lpbeat{0%,100%{opacity:1}50%{opacity:.35}}
@@ -597,6 +598,9 @@ section{margin-bottom:30px}
 .gr-cx.sure{background:#b3261e;color:#fff;border-color:#b3261e}
 .gr-s.gr-c{background:var(--sunk);color:var(--dim)}
 #msgForm,#mailForm{display:flex;flex-direction:column;gap:10px}
+#pM #msgForm{position:sticky;bottom:calc(60px + env(safe-area-inset-bottom));z-index:15;
+ background:var(--ground);padding:8px 0 46px;border-top:1px solid var(--line)}
+.rlab{font-size:13px;color:var(--dim);font-weight:500;line-height:1.4}
 #mailText{width:100%;min-height:64px;resize:vertical;background:var(--surface);
  color:var(--ink);border:1px solid var(--line);border-radius:11px;padding:12px 14px;
  font:400 16px/1.6 Heebo,sans-serif;box-shadow:var(--shadow)}
@@ -641,6 +645,18 @@ section{margin-bottom:30px}
 #fBtn[disabled]{opacity:.5;cursor:default}
 .fmeta{font-size:13px;color:var(--dim);font-weight:300;min-height:18px}
 .fmeta.bad{color:#e5484d}
+.pthumbs{display:flex;flex-wrap:wrap;gap:8px;direction:rtl}
+.pthumbs[hidden]{display:none}
+.pthumb{position:relative;width:64px;height:64px;border-radius:10px;overflow:hidden;
+ border:1px solid var(--line);background:var(--sunk);flex:0 0 64px}
+.pthumb img{width:100%;height:100%;object-fit:cover;display:block}
+.pthumb .pthi{display:flex;flex-direction:column;align-items:center;justify-content:center;
+ height:100%;padding:4px;box-sizing:border-box;font-size:22px;line-height:1}
+.pthumb .pthi small{font-size:10px;color:var(--dim);margin-top:4px;max-width:100%;
+ overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr}
+.pthumbs .pthx{position:absolute;top:3px;left:3px;width:24px;height:24px;padding:0;margin:0;
+ border:0;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font:600 14px/24px Heebo,sans-serif;
+ text-align:center;cursor:pointer;align-self:auto}
 #recWrap{display:flex;align-items:center;gap:12px;margin-top:6px}
 #recBtn{width:54px;height:54px;flex:0 0 54px;border-radius:50%;border:0;cursor:pointer;
  background:var(--accent);color:var(--on-accent);font-size:22px;line-height:1;box-shadow:var(--shadow)}
@@ -793,6 +809,15 @@ body.editing .bn{display:none}
  background:linear-gradient(180deg,#5cc36f,var(--green));
  box-shadow:0 0 0 2px var(--gold),0 14px 34px rgba(52,168,83,.45)}
 .toast.bad{color:#fff;border:0;background:linear-gradient(180deg,#ff6a5e,var(--red))}
+.undobar{position:fixed;z-index:81;inset-inline:12px;bottom:calc(76px + env(safe-area-inset-bottom));
+ margin-inline:auto;max-width:420px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;
+ background:var(--surface);border:1px solid var(--accent);border-radius:16px;padding:10px 12px;
+ font:600 15px Heebo,sans-serif;color:var(--ink);box-shadow:0 12px 30px rgba(0,0,0,.45)}
+.undobar[hidden]{display:none}
+.undobar .ub-t{flex:1 1 100%}
+.undobar button{flex:1;min-height:44px;border-radius:12px;border:1px solid var(--line);
+ background:transparent;color:var(--ink);font:700 15px Heebo,sans-serif}
+.undobar .ub-fix{background:var(--accent);color:#fff;border:0}
 .threadbar{display:flex;justify-content:flex-end;margin-bottom:8px}
 .threadbar{gap:8px}
 .cpall.pickon{color:#fff;background:linear-gradient(180deg,#5cc36f,var(--green));border-color:transparent}
@@ -1796,7 +1821,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-10T06:55:32.229Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-10T06:57:57.853Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2647,6 +2672,7 @@ try{
  </div>
  <div class="thread" id="thread"></div>
  <form id="msgForm">
+  <div class="rlab" id="msgLab">בקשה חדשה. נפתחת כשיחה נפרדת. להמשך של שיחה קיימת כותבים בתוך השיחה עצמה.</div>
   <textarea id="msgText" rows="2"
    placeholder="כתוב כאן. בקשה, תשובה, או כל דבר שבא לך שאדע"></textarea>
   <div class="sendrow">
@@ -2666,6 +2692,7 @@ try{
    accept="image/*,video/*,audio/*,application/pdf">
   <input type="text" id="fCap" placeholder="כיתוב, לא חובה">
   <div class="fmeta" id="fMeta">אפשר לבחור תמונות וסרטונים יחד, לכתוב שורה, ואז להקליט. הכל יוצא בהודעה אחת.</div>
+  <div class="pthumbs" id="fThumbs" hidden></div>
   <button type="submit" id="fBtn">שליחת הקובץ</button>
   <div id="recWrap">
    <button type="button" id="recBtn" aria-label="הקלטת הודעה קולית">&#127908;</button>
@@ -3219,7 +3246,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='38262a4d15';
+var CODE_ID='b997b69abd';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -3294,6 +3321,51 @@ function sendOrHold(subject,text,kind,pend){
   return 'held';
  });
 }
+var UNDO_S=15,undoCur=null;
+function undoBar(){
+ var b=document.getElementById('undoBar');
+ if(b)return b;
+ b=document.createElement('div');b.id='undoBar';b.className='undobar';b.hidden=true;
+ b.setAttribute('role','status');
+ b.innerHTML='<span class="ub-t"></span><button type="button" class="ub-fix">תיקון</button>'
+  +'<button type="button" class="ub-no">ביטול</button><button type="button" class="ub-go">שלח עכשיו</button>';
+ document.body.appendChild(b);
+ b.querySelector('.ub-fix').onclick=function(){undoStop('fix');};
+ b.querySelector('.ub-no').onclick=function(){undoStop('drop');};
+ b.querySelector('.ub-go').onclick=function(){undoFire();};
+ return b;
+}
+function undoPaint(){
+ var b=undoBar();if(!undoCur){b.hidden=true;return;}
+ var left=Math.max(0,Math.ceil((undoCur.due-Date.now())/1000));
+ b.querySelector('.ub-t').textContent='ההודעה יוצאת '+(left===1?'בעוד שנייה':'בעוד '+left+' שניות');
+ b.hidden=false;
+}
+function undoSend(text,box,go){
+ undoFire();
+ if(box){box.value='';try{box.dispatchEvent(new Event('input'));}catch(e){}}
+ undoCur={text:text,box:box,go:go,due:Date.now()+UNDO_S*1000};
+ undoCur.tick=setInterval(function(){if(!undoCur)return;if(Date.now()>=undoCur.due)undoFire();else undoPaint();},250);
+ undoPaint();
+}
+function undoFire(){
+ var u=undoCur;if(!u)return;
+ clearInterval(u.tick);undoCur=null;undoPaint();
+ u.go();
+}
+function undoStop(how){
+ var u=undoCur;if(!u)return;
+ clearInterval(u.tick);undoCur=null;undoPaint();
+ if(how==='fix'&&u.box){
+  if(!document.body.contains(u.box))u.box=document.getElementById('msgText')||u.box;
+  u.box.value=u.box.value.trim()?u.text+String.fromCharCode(10)+u.box.value:u.text;
+  try{u.box.dispatchEvent(new Event('input'));}catch(e){}
+  try{u.box.focus();u.box.setSelectionRange(u.box.value.length,u.box.value.length);}catch(e){}
+  toast('ההודעה חזרה לתיבה. אפשר לתקן ולשלוח שוב.');
+ }else toast('ההודעה בוטלה ולא יצאה.');
+}
+document.addEventListener('visibilitychange',function(){if(document.hidden)undoFire();});
+window.addEventListener('pagehide',undoFire);
 var heldBusy=false,heldTimer=null;
 function flushHeldSoon(){
  if(!heldTimer)heldTimer=setInterval(flushHeld,30000);
@@ -3367,9 +3439,21 @@ function sendFiles(list, note) {
 }
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){
  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function ilParts(ms){var x=new Date(ms),o={};
+ try{new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'numeric',hourCycle:'h23'})
+  .formatToParts(x).forEach(function(p){o[p.type]=+p.value;});}catch(e){}
+ if(!o.year)o={year:x.getFullYear(),month:x.getMonth()+1,day:x.getDate(),hour:x.getHours(),minute:x.getMinutes()};
+ o.hour=o.hour%24;o.dn=Date.UTC(o.year,o.month-1,o.day)/864e5;o.dow=new Date(o.dn*864e5).getUTCDay();return o;}
+var DAYN=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
 function ago(iso){if(!iso)return'';var d=Date.parse(iso);if(isNaN(d))return'';
- var s=(Date.now()-d)/1000;if(s<90)return'עכשיו';if(s<3600)return Math.round(s/60)+' דקות';
- if(s<86400)return Math.round(s/3600)+' שעות';return Math.round(s/86400)+' ימים';}
+ var s=(Date.now()-d)/1000;if(s<90)return'עכשיו';
+ var a=ilParts(d),b=ilParts(Date.now()),days=b.dn-a.dn;
+ if(s<3600||days<=0&&s<86400){var m=Math.floor(s/60);if(m<60)return m<2?'לפני דקה':m===2?'לפני שתי דקות':'לפני '+m+' דקות';
+  var h=Math.round(s/3600);return h<2?'לפני שעה':h===2?'לפני שעתיים':'לפני '+h+' שעות';}
+ var t=(a.hour<10?'0':'')+a.hour+':'+(a.minute<10?'0':'')+a.minute;
+ if(days===1)return'אתמול ב '+t;if(days<7)return'יום '+DAYN[a.dow]+' ב '+t;
+ return a.day+'.'+a.month+(a.year!==b.year?'.'+a.year:'');}
+function agoAfter(iso){var a=ago(iso);return /^(לפני|אתמול|עכשיו)/.test(a)||!a?a:/^יום/.test(a)?'ב'+a:'ב '+a;}
 function row(i){
  var cls='item'+(i.repliedAt?' answered':(i.category==='pain'?' pain':''));
  return '<div class="'+cls+'"><div class="top"><span class="who">'+esc(i.author)+'</span>'
@@ -3673,8 +3757,8 @@ function ackLine(m,noNote){
  if(m.pend)return '<div class="ack ack-wait">'+ackTx('נשלח עכשיו. ממתין לתשובה.')+progressBar(m)+'</div>';
  var st=m.status,when=m.ackAt||'';
  if(!st){
-  return '<div class="ack ack-wait">'+ackTx('נשלח ב'+esc(stamp(m.at))
-   +'. ממתין לתשובה, '+esc(ago(m.at))+'.')+progressBar(m)+'</div>';
+  return '<div class="ack ack-wait">'+ackTx('נשלח '+esc(agoAfter(m.at))
+   +'. ממתין לתשובה.')+progressBar(m)+'</div>';
  }
  var sent=m.at?('נשלח ב'+esc(stamp(m.at))+'. '):'';
  var head=when?(sent+'קיבלתי את זה ב'+esc(stamp(when))):(sent+'קיבלתי את זה');
@@ -3816,6 +3900,22 @@ function rootKeyFor(m){
  return ML.rootKeyOf(m,byKey);
 }
 function msgCount(n){return n===1?'הודעה אחת':n+' הודעות';}
+function threadNames(){
+ try{var m=JSON.parse(localStorage.getItem('threadName')||'{}');return m&&typeof m==='object'?m:{};}catch(e){return {};}
+}
+function threadTitle(t){
+ var own=threadNames()[t.key];if(own)return own;
+ for(var i=t.msgs.length-1;i>=0;i--)if(t.msgs[i].title)return String(t.msgs[i].title).slice(0,60);
+ var x=String(t.root.text||'').replace(/\s+/g,' ').trim(),was;
+ var lead=/^(היי|הי|שלום|בוקר טוב|צהריים טובים|ערב טוב|לילה טוב|קלוד|רעיון|רוצה את זה|תודה רבה|תודה|תוכלי בבקשה|תוכל בבקשה|אפשר בבקשה|בבקשה|את יכולה|אתה יכול|תוכלי|תוכל|אפשר)(?=[\s,.!?:;]|$)[\s,.!?:;]*/;
+ do{was=x;x=x.replace(lead,'');}while(x!==was&&x);
+ if(!x)x=String(t.root.text||'').replace(/\s+/g,' ').trim();
+ var cut=x.search(/[.?!](\s|$)/);
+ if(cut>=12)x=x.slice(0,cut+(x.charAt(cut)==='?'?1:0));
+ x=x.replace(/["״]/g,'').trim();
+ if(x.length>48){x=x.slice(0,48);var sp=x.lastIndexOf(' ');if(sp>24)x=x.slice(0,sp);x+='…';}
+ return x;
+}
 function projMap(){
  try{var m=JSON.parse(localStorage.getItem('threadProject')||'{}');return m&&typeof m==='object'?m:{};}catch(e){return {};}
 }
@@ -3827,6 +3927,19 @@ function projNames(m){
 }
 function projFilter(){try{return localStorage.getItem('threadProjectOnly')||'';}catch(e){return '';}}
 function wireProjects(host){
+ Array.prototype.forEach.call(host.querySelectorAll('.rname'),function(b){
+  b.onclick=function(e){
+   e.stopPropagation();e.preventDefault();
+   var k=b.getAttribute('data-k'),m=threadNames();
+   var card=b.closest('.th'),cur=card?(card.querySelector('summary b')||{}).textContent||'':'';
+   var v=prompt('שם לשיחה הזאת',cur);if(v===null)return;
+   v=v.replace(/\s+/g,' ').trim().slice(0,60);
+   if(v)m[k]=v;else delete m[k];
+   try{localStorage.setItem('threadName',JSON.stringify(m));}catch(x){}
+   renderThread();
+   var again=document.querySelector('#thread .th[data-k="'+(window.CSS&&CSS.escape?CSS.escape(k):k)+'"]');if(again)again.open=true;
+  };
+ });
  Array.prototype.forEach.call(host.querySelectorAll('.pchip'),function(b){
   b.onclick=function(){
    try{localStorage.setItem('threadProjectOnly',b.getAttribute('data-p')||'');}catch(e){}
@@ -3881,7 +3994,7 @@ function renderThread(){
  var still=dropSettled(pending(),baked);
  savePending(still.concat(pending().filter(isMail)));
  var all=baked.map(function(m){return{id:m.id,re:m.re||'',at:m.at,from:m.from,text:m.text,
-   status:m.status,note:m.note||'',ackAt:m.ackAt||'',go:m.go||'',pend:false};})
+   status:m.status,note:m.note||'',ackAt:m.ackAt||'',go:m.go||'',title:m.title||'',pend:false};})
    .concat(still.map(function(p){return{id:'',re:p.re||'',at:p.at,from:'itzik',text:p.text,pend:true};}));
  var host=document.getElementById('thread');
  if(!all.length){
@@ -3901,7 +4014,7 @@ function renderThread(){
  var flat=[];
  host.innerHTML=bar+rows.map(function(r,ri){
   var t=r.thread;
-  var head=String(t.root.text||'').replace(/s+/g,' ').trim().slice(0,70);
+  var head=threadTitle(t);
   var tag=r.status==='fresh'?(ri===0?'<em class="badge latest">האחרונה שהגיעה</em>':'<em class="badge">חדש</em>')
    :r.status==='standby'?'<em class="st st-working">ממתין לתשובה</em>'
    :'<em class="badge ok">נקרא</em>';
@@ -3921,6 +4034,7 @@ function renderThread(){
    +'<div class="thbody">'+body
    +'<div class="rrow">'
    +'<button type="button" class="cp rcopyall" data-copy="'+esc(whole)+'" aria-label="העתקת השרשור">📋 העתקת השרשור</button>'
+   +'<button type="button" class="rb rname" data-k="'+esc(t.key)+'">✏️ שינוי השם</button>'
    +'<button type="button" class="rb rproj" data-k="'+esc(t.key)+'">🏷️ '+(proj[t.key]?'פרויקט: '+esc(proj[t.key]):'שיוך לפרויקט')+'</button>'
    +'</div><div class="rrow">'
    +'<button type="button" class="rb rmic" data-i="'+ri2+'">🎤 להשיב בקול</button>'
@@ -3929,6 +4043,7 @@ function renderThread(){
    +'<button type="button" class="rb rfile" data-i="'+ri2+'">📎 קובץ</button>'
    +'</div>'
    +'<form class="rform" data-i="'+ri2+'" data-k="'+esc(t.key)+'">'
+   +'<div class="rlab">המשך לשיחה הזאת. '+AI+' יקבל את זה כהמשך של אותה בקשה.</div>'
    +'<textarea placeholder="התשובה שלך בשרשור הזה"></textarea>'
    +pasteRow()
    +'<span class="rsaid"></span></form>'
@@ -4200,23 +4315,26 @@ function wireReplies(host,all){
    var said=f.querySelector('.rsaid');
    var text=box.value.trim();
    if(!text)return;
+   said.textContent='';
+   undoSend(text,box,function(){
    btn.disabled=true;
    said.textContent='שולח.';
    var full=quoteOf(m)+String.fromCharCode(10)+text;
    sendOrHold('תשובה מהמוניטור',full,'תשובה',{at:new Date().toISOString(),text:full,re:rootKeyFor(m)}).then(function(how){
-    if(how==='held'){box.value='';said.textContent=HELD_SAY;setStandby(f.getAttribute('data-k')||rootKeyFor(m));return;}
+    if(how==='held'){said.textContent=HELD_SAY;setStandby(f.getAttribute('data-k')||rootKeyFor(m));return;}
     var p=pending();
     p.push({at:new Date().toISOString(),text:full,re:rootKeyFor(m)});
     savePending(p);
     setStandby(f.getAttribute('data-k')||rootKeyFor(m));
-    box.value='';
     said.textContent=how==='backup'?'נשלח בערוץ הגיבוי.':'נשלח.';
     markTouched(m);markOneSeen(m);
     markSent('text');renderSent();
     setTimeout(renderThread,900);
    }).catch(function(){
+    if(!box.value.trim())box.value=text;
     said.textContent='שני הערוצים לא ענו. תנסה שוב.';
    }).then(function(){btn.disabled=false;});
+   });
   });
  });
 }
@@ -4610,7 +4728,7 @@ function paintLive(v){
 }
 var lastCheckAt=0;
 var lastCheckFail=false;
-function since(iso){var a=ago(iso);return a==='עכשיו'?'עכשיו':'לפני '+a;}
+function since(iso){return ago(iso);}
 function paintOffline(){
  var off=(navigator.onLine===false)||!!lastCheckFail;
  document.documentElement.classList.toggle('offline',off);
@@ -4621,11 +4739,11 @@ function paintStamp(){
  paintOffline();
  var age=since(D.builtAt);
  var ver='גרסה '+(D.buildId||'')+' · '+stamp(D.builtAt)
-  +' · הגרסה '+String(age).replace(/^לפני /,'בת ');
+  +' · הגרסה '+(/^לפני /.test(age)?age.replace(/^לפני /,'בת '):age==='עכשיו'?'חדשה':'מ'+age);
  var el=document.getElementById('built');
  if(el){
   var fresh=Math.max(lastCheckAt||0,Date.parse(D.builtAt)||0);
-  var when=fresh?since(new Date(fresh).toISOString()):'';
+  var when=fresh?agoAfter(new Date(fresh).toISOString()):'';
   el.textContent=lastCheckFail?'אין חיבור כרגע. מה שרואים כאן הוא מרגע העדכון האחרון.'
    :(!when||when==='עכשיו')?'הכל תקין, עודכן לפני רגע.'
    :('הכל תקין, עודכן '+when+'.');
@@ -4639,7 +4757,7 @@ function paintStamp(){
  if(lastCheckFail){
   line.textContent='אין חיבור לנתונים. המספרים כאן הם מרגע הפרסום.';
  }else if(lastCheckAt){
-  var ago=since(new Date(lastCheckAt).toISOString());
+  var ago=agoAfter(new Date(lastCheckAt).toISOString());
   line.textContent=/עכשיו/.test(ago)?'הנתונים מעודכנים לרגע זה.'
    :('הנתונים נבדקו '+ago+'.');
  }else{
@@ -4998,7 +5116,7 @@ function pingPaint(){
    +(mins>0?', '+(mins===1?'דקה':mins+' דקות')+' אחרי הלחיצה':'')+'. החיבור עובד.');
  }else{
   box.classList.remove('ok');
-  pingSay('נשלח '+since(st.at)+' ועוד לא חזרתי עם הקוד. גרסה חדשה של האתר אינה תשובה, '
+  pingSay('נשלח '+agoAfter(st.at)+' ועוד לא חזרתי עם הקוד. גרסה חדשה של האתר אינה תשובה, '
    +'אז השורה הזאת לא תתחלף לבד. אם עוברת יותר משעה, משהו אצלי תקוע.');
  }
 }
@@ -9456,19 +9574,22 @@ on2('quickForm','submit',function(e){
  if(!box||!said||!btn)return;
  var text=box.value.trim();
  if(!text)return;
+ said.textContent='';
+ undoSend(text,box,function(){
  btn.disabled=true;said.textContent='שולח.';
  sendOrHold('הודעה מהמוניטור',text,'הודעה').then(function(how){
-  if(how==='held'){box.value='';growQuick();said.textContent=HELD_SAY;toast(HELD_SAY);return;}
+  if(how==='held'){said.textContent=HELD_SAY;toast(HELD_SAY);return;}
   var p=pending();
   p.push({at:new Date().toISOString(),text:text});
   savePending(p);
-  box.value='';growQuick();
   said.textContent=how==='backup'?'נשלח בערוץ הגיבוי. הגיע אליי.':'נשלח. קלטתי.';
   markSent('text');renderSent();renderThread();
   toast(said.textContent);
  }).catch(function(){
+  if(!box.value.trim()){box.value=text;growQuick();}
   said.textContent='שני הערוצים לא ענו. תבדוק חיבור ותנסה שוב.';
  }).then(function(){btn.disabled=false;});
+ });
 });
 
 function askInChat(prefix){
@@ -9698,21 +9819,24 @@ document.getElementById('msgForm').addEventListener('submit',function(e){
   return;
  }
  if(!text)return;
+ said.textContent='';
+ undoSend(text,box,function(){
  btn.disabled=true;
  said.textContent='שולח.';
  sendOrHold('הודעה מהמוניטור',text,'הודעה').then(function(how){
-  if(how==='held'){box.value='';try{localStorage.removeItem(DRAFT);}catch(err){}said.textContent=HELD_SAY;return;}
+  if(!box.value.trim()){try{localStorage.removeItem(DRAFT);}catch(err){}}
+  if(how==='held'){said.textContent=HELD_SAY;return;}
   var p=pending();
   p.push({at:new Date().toISOString(),text:text});
   savePending(p);
-  box.value='';
-  try{localStorage.removeItem(DRAFT);}catch(err){}
   said.textContent=how==='backup'?'נשלח בערוץ הגיבוי. הגיע אליי.':'נשלח.';
   markSent('text');renderSent();
   renderThread();
  }).catch(function(){
+  if(!box.value.trim())box.value=text;
   said.textContent='שני הערוצים לא ענו. תבדוק חיבור ותנסה שוב.';
  }).then(function(){btn.disabled=false;});
+ });
 });
 
 var QMAX=15*1024*1024;
@@ -9724,8 +9848,52 @@ var fSaid=document.getElementById('fSaid');
 var fBtn=document.getElementById('fBtn');
 function mb(n){return (n/1048576).toFixed(1)+'MB';}
 function isImg(f){return !!f&&String(f.type).indexOf('image/')===0;}
-function picked(){
- return fPick.files?Array.prototype.slice.call(fPick.files):[];
+var pickArr=[],pickUrls=[];
+function picked(){return pickArr.slice();}
+function absorbPick(){
+ var add=fPick.files?Array.prototype.slice.call(fPick.files):[];
+ add.forEach(function(f){
+  for(var i=0;i<pickArr.length;i++){var g=pickArr[i];if(g.name===f.name&&g.size===f.size&&g.lastModified===f.lastModified)return;}
+  pickArr.push(f);
+ });
+ try{fPick.value='';}catch(e){}
+}
+function dropUrls(){pickUrls.forEach(function(u){try{URL.revokeObjectURL(u);}catch(e){}});pickUrls=[];}
+function pickIcon(f){
+ var t=String(f.type||'');
+ return t.indexOf('image/')===0?'🖼️':t.indexOf('video/')===0?'🎬':t.indexOf('audio/')===0?'🎵':/pdf/.test(t)?'📄':'📎';
+}
+function pickTile(f){
+ return '<span class="pthi" aria-hidden="true">'+pickIcon(f)+'<small>'+esc(f.name||'')+'</small></span>';
+}
+function paintThumbs(){
+ var row=document.getElementById('fThumbs');if(!row)return;
+ var b=window.fileBox,home=b&&b.querySelector('.rform'),sd=home&&home.querySelector('.rsaid');
+ if(sd){if(row.nextSibling!==sd)home.insertBefore(row,sd);}
+ else if(row.previousElementSibling!==fMeta)fMeta.parentNode.insertBefore(row,fMeta.nextSibling);
+ dropUrls();
+ row.innerHTML='';
+ row.hidden=!pickArr.length;
+ pickArr.forEach(function(f,i){
+  var el=document.createElement('div');el.className='pthumb';el.title=f.name||'';
+  var u=null;
+  if(isImg(f)){try{u=URL.createObjectURL(f);pickUrls.push(u);}catch(e){u=null;}}
+  if(u){
+   var im=document.createElement('img');im.alt=f.name||'תמונה';
+   im.onerror=function(){el.removeChild(im);el.insertAdjacentHTML('afterbegin',pickTile(f));};
+   im.src=u;el.appendChild(im);
+  }else el.innerHTML=pickTile(f);
+  var x=document.createElement('button');x.type='button';x.className='pthx';x.textContent='✕';
+  x.setAttribute('aria-label','להסיר את '+(f.name||'הקובץ')+' מהשליחה');
+  x.onclick=function(e){
+   e.stopPropagation();e.preventDefault();
+   pickArr.splice(i,1);
+   describe();paintBoxPick();
+   if(!pickArr.length){var sd2=window.fileBox&&window.fileBox.querySelector('.rsaid');if(sd2)sd2.textContent='';}
+  };
+  el.appendChild(x);
+  row.appendChild(el);
+ });
 }
 function paintSendBtn(){
  var b=document.getElementById('msgBtn');
@@ -9735,6 +9903,7 @@ function paintSendBtn(){
 }
 function clearPick(){
  try{fPick.value='';}catch(e){}
+ pickArr=[];
  if(window.fileBox){var sb=window.fileBox.querySelector('button[type=submit]');if(sb)sb.textContent='שליחה';window.fileBox=null;}
  var f=document.getElementById('fileForm');
  if(f)f.hidden=true;
@@ -9745,6 +9914,7 @@ function clearPick(){
 }
 function describe(){
  paintSendBtn();
+ paintThumbs();
  var list=picked();
  if(!list.length){fMeta.className='fmeta';
   fMeta.textContent='אפשר לבחור תמונות וסרטונים יחד, לכתוב שורה, ואז להקליט. הכל יוצא בהודעה אחת.';return;}
@@ -9782,6 +9952,7 @@ function paintBoxPick(){
  if(sd&&n)sd.textContent=(n>1?n+' קבצים מחכים':'הקובץ מחכה')+'. כתוב שורה ולחץ שליחה, או הקלט, והוא יוצא איתם. גם שליחה לבד שולחת אותו.';
 }
 fPick.addEventListener('change',function(){
+ absorbPick();
  describe();
  paintBoxPick();
  if(!autoSend)return;
@@ -9793,10 +9964,7 @@ fPick.addEventListener('change',function(){
  if(qMode==='normal')shrinkAll(list,reallySend);
  else reallySend(list);
 });
-function putFiles(list){
- try{var dt=new DataTransfer();list.forEach(function(f){dt.items.add(f);});fPick.files=dt.files;return true;}
- catch(e){return false;}
-}
+function putFiles(list){pickArr=list.slice();describe();paintBoxPick();return true;}
 function totalSize(list){
  return list.reduce(function(n,f){return n+f.size;},0);
 }
@@ -10908,11 +11076,13 @@ function paintPc(){
  p.className='pcpill off';
  t.textContent='💻 המחשב כבוי'+(pc.seen?' מאז '+liveTime(pc.seen).slice(0,-3):'');
 }
+function liveCalm(){return AI!=='קלוד'&&(!liveLast||(Date.now()-Date.parse(liveLast.at))/1000>4800);}
 function paintLive(){
  paintPc();
  var pill=document.getElementById('livePill');
  var txt=document.getElementById('lpText');
  if(!pill||!txt)return;
+ if(liveCalm()){pill.className='livepill calm';txt.textContent='ההודעות שלך נשמרות';return;}
  if(!liveLast){
   pill.className='livepill down';txt.textContent='אין מאזין';return;
  }
@@ -10968,7 +11138,11 @@ function openLiveSheet(){
  var body=document.getElementById('lsBody');
  var head=document.getElementById('lsHead');
  if(!sh||!body)return;
- if(!liveLast){
+ if(liveCalm()){
+  head.textContent='ההודעות שלך נשמרו';
+  body.innerHTML='<div class="lr"><span>כל מה ששלחת נשמר ויטופל ברגע שהמערכת תחזור לעבוד.</span></div>'
+   +'<div class="lr"><span>בונה המוניטור כבר יודע. אין צורך לעשות כלום.</span></div>';
+ }else if(!liveLast){
   head.textContent='המאזין';
   body.innerHTML='<div class="lr"><span>אף אחד לא מאזין לערוץ.</span></div>'
    +'<div class="lr"><span>הודעות שתשלח יחכו עד שמישהו יפעיל אותו.</span></div>';
