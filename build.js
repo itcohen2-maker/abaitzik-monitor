@@ -4601,12 +4601,7 @@ try{
   the same toggle, the same guard, the same state painted on both.
 -->
 <div class="aimbar" id="aimBar" hidden><span id="aimTxt"></span><button type="button" id="aimX" aria-label="לבטל את המענה">×</button></div>
-<button type="button" id="micDock" class="micdock" aria-label="${inst.gender === 'f' ? 'דברי' : 'דבר'} אליי">
- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-  <rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" stroke="none"/>
-  <path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8.5 21h7"/>
- </svg>
-</button>
+<!-- 10.10, Itzik by voice: the small floating microphone sat under the computer pill and he called it unneeded. Removed; the home card and the reply box keep theirs. -->
 <nav class="bn" aria-label="מסכים">
  <button type="button" id="nH" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10.5V20h12v-9.5"/><path d="M10 20v-5h4v5"/></svg>בית</button>
  <button type="button" id="nA" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h16v11h-9l-5 3.5v-3.5H4Z"/><path d="M8 10.5h8M8 14h5"/></svg>תשובות<i class="cnt zero" id="aCnt">0</i></button>
@@ -5271,11 +5266,23 @@ function undoBar(){
 function undoPaint(){
  var b=undoBar();if(!undoCur){b.hidden=true;return;}
  var left=Math.max(0,Math.ceil((undoCur.due-Date.now())/1000));
- b.querySelector('.ub-t').textContent='ההודעה יוצאת '+(left===1?'בעוד שנייה':'בעוד '+left+' שניות');
+ var what=undoCur.file?(undoCur.file>1?'הקבצים יוצאים ':'הקובץ יוצא '):'ההודעה יוצאת ';
+ b.querySelector('.ub-t').textContent=what+(left===1?'בעוד שנייה':'בעוד '+left+' שניות');
+ // A file has no words to put back in a box, so it gets only ביטול and שלח עכשיו.
+ b.querySelector('.ub-fix').hidden=!!undoCur.file;
  b.hidden=false;
 }
-function undoSend(text,box,go){
+/*
+  Itzik, 10.10, by voice: after sending a file he was told there is a cancel
+  button and saw none. The countdown was only on typed messages. A file (not a
+  recording, which goes at once as promised on the microphone) now waits the
+  same fifteen seconds, and ביטול keeps it unsent and still picked.
+*/
+function undoSend(text,box,go,opt){
  undoFire();
+ if(opt&&opt.file){undoCur={file:opt.file,onDrop:opt.onDrop,go:go,due:Date.now()+UNDO_S*1000};
+  undoCur.tick=setInterval(function(){if(!undoCur)return;if(Date.now()>=undoCur.due)undoFire();else undoPaint();},250);
+  undoPaint();return;}
  if(box){box.value='';try{box.dispatchEvent(new Event('input'));}catch(e){}}
  undoCur={text:text,box:box,go:go,due:Date.now()+UNDO_S*1000};
  undoCur.tick=setInterval(function(){if(!undoCur)return;if(Date.now()>=undoCur.due)undoFire();else undoPaint();},250);
@@ -5296,7 +5303,8 @@ function undoStop(how){
   try{u.box.dispatchEvent(new Event('input'));}catch(e){}
   try{u.box.focus();u.box.setSelectionRange(u.box.value.length,u.box.value.length);}catch(e){}
   toast('ההודעה חזרה לתיבה. אפשר לתקן ולשלוח שוב.');
- }else toast('ההודעה בוטלה ולא יצאה.');
+ }else if(u.file){try{u.onDrop&&u.onDrop();}catch(e){}toast(u.file>1?'הקבצים בוטלו ולא יצאו.':'הקובץ בוטל ולא יצא.');}
+ else toast('ההודעה בוטלה ולא יצאה.');
 }
 document.addEventListener('visibilitychange',function(){if(document.hidden)undoFire();});
 window.addEventListener('pagehide',undoFire);
@@ -14082,6 +14090,16 @@ function reallySend(list,squeezed){
  var voice=list.length===1&&hasVoice;
  var deflt=voice?'הודעה קולית מהמוניטור'
    :(list.length>1?list.length+' קבצים מהמוניטור':'קובץ מהמוניטור');
+ if(!hasVoice){
+  sendSay(list.length>1?(list.length+' קבצים יוצאים בעוד 15 שניות. אפשר לבטל בפס למטה.'):'הקובץ יוצא בעוד 15 שניות. אפשר לבטל בפס למטה.');
+  undoSend('',null,function(){goFiles(list,cap,deflt,hasVoice);},{file:list.length,onDrop:function(){
+   if(cap)document.getElementById('fCap').value=cap;
+   sendSay(list.length>1?'בוטל. הקבצים לא יצאו ועדיין בחורים.':'בוטל. הקובץ לא יצא ועדיין בחור.');fBtn.disabled=false;}});
+  return;
+ }
+ goFiles(list,cap,deflt,hasVoice);
+}
+function goFiles(list,cap,deflt,hasVoice){
  markSent(hasVoice?'voice':'file');
  sendSay(list.length>1?('שולח '+list.length+' קבצים.'):'שולח.');
  // This used to be a plain form.submit(), which navigated away. When the

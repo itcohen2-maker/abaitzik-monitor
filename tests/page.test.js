@@ -496,20 +496,10 @@ test('one card holds all four ways in, and nothing floats over the page', () => 
   // whatever was underneath it.
   assert.strictEqual(html.split('micfab').length - 1, 0);
   assert.strictEqual(html.split('id="micFab"').length - 1, 0);
-  // What replaced it is a small dock he asked for and called mandatory: on
-  // every screen, bottom left, and clear of the navigation rather than over it.
-  assert.ok(html.includes('id="micDock"'));
-  assert.ok(html.includes('.micdock{position:fixed;inset-inline-start:12px'));
-  assert.ok(html.includes('bottom:calc(70px + env(safe-area-inset-bottom))'));
-  assert.ok(html.includes('width:48px;height:48px'), 'the dock must stay small');
-  // The same recorder, not a second one: same toggle, same state on both. The
-  // dock aims itself at the last answer first, then toggles that same recorder.
-  assert.ok(html.includes('if(micDock)micDock.onclick=function(){'));
-  assert.ok(html.includes('  if(l)setAim(l);'));
-  assert.ok(html.includes("var ids=['micBtn','micDock','recBtn','recBig'];"));
-  // It lives outside the screen container, so no screen can take it away.
-  assert.ok(html.indexOf('id="micDock"') > html.indexOf('<nav class="bn"') - 900);
-  assert.ok(html.indexOf('id="micDock"') < html.indexOf('<nav class="bn"'));
+  // The small dock that replaced it is gone too (10.10, Itzik by voice: the
+  // computer pill covered it and he called it unneeded). The home card and the
+  // reply box keep their microphones.
+  assert.ok(!html.includes('<button type="button" id="micDock"'));
   // Writing opens the composer and puts the cursor in it; the camera is not
   // asked for until the button is pressed.
   assert.ok(html.includes('id="quickBtn"'));
