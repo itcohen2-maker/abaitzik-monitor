@@ -2053,10 +2053,16 @@ body.editing .bn{display:none}
  display:grid;grid-template-columns:auto 1fr;gap:12px 14px;align-items:center}
 .ways{grid-column:1 / -1;display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:2px}
 .quickwrite{grid-column:1 / -1;display:flex;gap:8px;margin-top:9px}
-.quickwrite input{flex:1;min-width:0;background:var(--sunk);color:var(--ink);
+/* A textarea that grows with the text up to about six lines, so a long
+   request can be read and fixed before it is sent instead of scrolling
+   out of a single line. The script sets the height; past the cap it scrolls. */
+.quickwrite{align-items:flex-end}
+.quickwrite textarea{flex:1;min-width:0;background:var(--sunk);color:var(--ink);
  border:1px solid var(--line);border-radius:12px;padding:12px 13px;
- font:400 15.5px Heebo,sans-serif}
-.quickwrite input:focus{outline:2px solid var(--accent);outline-offset:1px}
+ font:400 15.5px Heebo,sans-serif;line-height:1.4;resize:none;
+ max-height:9.5em;overflow-y:auto;box-sizing:border-box}
+.quickwrite button{min-height:46px}
+.quickwrite textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
 .quickwrite button{flex:0 0 auto;background:var(--accent);color:var(--on-accent);border:0;
  border-radius:12px;padding:0 18px;font:700 15px Heebo,sans-serif;cursor:pointer}
 .quickwrite button:active{transform:scale(.97)}
@@ -3343,8 +3349,8 @@ try{
     This sends the same way the chat does and lands in the same thread.
   -->
   <form class="quickwrite" id="quickForm">
-   <input type="text" id="quickText" autocomplete="off"
-    placeholder="${inst.name === 'abaitzik' ? 'יצחק' : inst.owner}, ${inst.gender === 'f' ? 'כתבי לי מה את צריכה' : 'כתוב לי מה אתה צריך'}">
+   <textarea id="quickText" rows="1" autocomplete="off"
+    placeholder="${inst.name === 'abaitzik' ? 'יצחק' : inst.owner}, ${inst.gender === 'f' ? 'כתבי לי מה את צריכה' : 'כתוב לי מה אתה צריך'}"></textarea>
    <button type="submit" id="quickBtn">שליחה</button>
   </form>
   <div class="msgsaid" id="quickSaid"></div>
@@ -12943,7 +12949,17 @@ document.getElementById('fdForm').onsubmit=function(e){
   button that opened a screen that had a line in it, and he asked for the
   line. The handler never left, so this is the same send path the chat uses:
   recorded, queued, and acknowledged the same way.
+
+  The line grows with the text (up to the cap in the CSS) so a long request
+  stays in view and can be fixed before it goes, and shrinks back once sent.
 */
+function growQuick(){
+ var box=document.getElementById('quickText');
+ if(!box)return;
+ box.style.height='auto';
+ box.style.height=box.scrollHeight+2+'px';
+}
+on2('quickText','input',growQuick);
 on2('quickForm','submit',function(e){
  e.preventDefault();
  var box=document.getElementById('quickText');
@@ -12954,11 +12970,11 @@ on2('quickForm','submit',function(e){
  if(!text)return;
  btn.disabled=true;said.textContent='שולח.';
  sendOrHold('הודעה מהמוניטור',text,'הודעה').then(function(how){
-  if(how==='held'){box.value='';said.textContent=HELD_SAY;toast(HELD_SAY);return;}
+  if(how==='held'){box.value='';growQuick();said.textContent=HELD_SAY;toast(HELD_SAY);return;}
   var p=pending();
   p.push({at:new Date().toISOString(),text:text});
   savePending(p);
-  box.value='';
+  box.value='';growQuick();
   said.textContent=how==='backup'?'נשלח בערוץ הגיבוי. הגיע אליי.':'נשלח. קלטתי.';
   markSent('text');renderSent();renderThread();
   toast(said.textContent);

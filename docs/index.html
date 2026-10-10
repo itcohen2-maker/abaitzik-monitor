@@ -855,10 +855,13 @@ body.editing .bn{display:none}
  display:grid;grid-template-columns:auto 1fr;gap:12px 14px;align-items:center}
 .ways{grid-column:1 / -1;display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:2px}
 .quickwrite{grid-column:1 / -1;display:flex;gap:8px;margin-top:9px}
-.quickwrite input{flex:1;min-width:0;background:var(--sunk);color:var(--ink);
+.quickwrite{align-items:flex-end}
+.quickwrite textarea{flex:1;min-width:0;background:var(--sunk);color:var(--ink);
  border:1px solid var(--line);border-radius:12px;padding:12px 13px;
- font:400 15.5px Heebo,sans-serif}
-.quickwrite input:focus{outline:2px solid var(--accent);outline-offset:1px}
+ font:400 15.5px Heebo,sans-serif;line-height:1.4;resize:none;
+ max-height:9.5em;overflow-y:auto;box-sizing:border-box}
+.quickwrite button{min-height:46px}
+.quickwrite textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
 .quickwrite button{flex:0 0 auto;background:var(--accent);color:var(--on-accent);border:0;
  border-radius:12px;padding:0 18px;font:700 15px Heebo,sans-serif;cursor:pointer}
 .quickwrite button:active{transform:scale(.97)}
@@ -1790,7 +1793,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-10T02:31:16.129Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-10T03:31:04.817Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1877,8 +1880,8 @@ try{
    </button>
   </div>
   <form class="quickwrite" id="quickForm">
-   <input type="text" id="quickText" autocomplete="off"
-    placeholder="יצחק, כתוב לי מה אתה צריך">
+   <textarea id="quickText" rows="1" autocomplete="off"
+    placeholder="יצחק, כתוב לי מה אתה צריך"></textarea>
    <button type="submit" id="quickBtn">שליחה</button>
   </form>
   <div class="msgsaid" id="quickSaid"></div>
@@ -3183,7 +3186,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='5fb0a41372';
+var CODE_ID='704a6229b9';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -9310,6 +9313,13 @@ document.getElementById('fdForm').onsubmit=function(e){
  }).then(function(){btn.disabled=false;});
 };
 
+function growQuick(){
+ var box=document.getElementById('quickText');
+ if(!box)return;
+ box.style.height='auto';
+ box.style.height=box.scrollHeight+2+'px';
+}
+on2('quickText','input',growQuick);
 on2('quickForm','submit',function(e){
  e.preventDefault();
  var box=document.getElementById('quickText');
@@ -9320,11 +9330,11 @@ on2('quickForm','submit',function(e){
  if(!text)return;
  btn.disabled=true;said.textContent='שולח.';
  sendOrHold('הודעה מהמוניטור',text,'הודעה').then(function(how){
-  if(how==='held'){box.value='';said.textContent=HELD_SAY;toast(HELD_SAY);return;}
+  if(how==='held'){box.value='';growQuick();said.textContent=HELD_SAY;toast(HELD_SAY);return;}
   var p=pending();
   p.push({at:new Date().toISOString(),text:text});
   savePending(p);
-  box.value='';
+  box.value='';growQuick();
   said.textContent=how==='backup'?'נשלח בערוץ הגיבוי. הגיע אליי.':'נשלח. קלטתי.';
   markSent('text');renderSent();renderThread();
   toast(said.textContent);
