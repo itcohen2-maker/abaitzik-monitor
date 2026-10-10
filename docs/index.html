@@ -1813,7 +1813,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-10T07:04:32.247Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-10T07:04:43.187Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2275,31 +2275,32 @@ try{
 
 <section id="pRc" hidden>
  <h2>לחבר את המחשב</h2>
- <div class="rephint">פעם אחת, בערך חמש דקות. אחרי זה אפשר לעזור לך במחשב עצמו, רק כשאתה מאשר.</div>
- <div data-comp="mac">
-  <h3 class="rch">במק</h3>
-  <ol class="rcsteps">
-   <li>נכנסים לדף ההורדות של <b>RustDesk</b> (הכפתור למטה). במק חדש, עם שבב של אפל, מורידים את הקובץ שנגמר ב <b>aarch64.dmg</b>. במק ישן, את הקובץ שנגמר ב <b>x86_64.dmg</b>.</li>
-   <li>פותחים את הקובץ, גוררים את RustDesk לתיקיית <b>Applications</b> ופותחים אותו משם. אם המק אומר שאי אפשר לפתוח, לוחצים עליו בכפתור הימני ובוחרים <b>פתיחה</b>.</li>
-   <li>RustDesk יבקש הרשאות. בהגדרות המערכת, בפרטיות ואבטחה, מדליקים את RustDesk תחת <b>נגישות</b> ותחת <b>הקלטת מסך</b>. אחר כך סוגרים את RustDesk ופותחים אותו שוב.</li>
-  </ol>
- </div>
- <div data-comp="win">
-  <h3 class="rch">בווינדוס</h3>
-  <ol class="rcsteps">
-   <li>נכנסים לדף ההורדות של <b>RustDesk</b> (הכפתור למטה) ומורידים את הקובץ שנגמר ב <b>x86_64.exe</b>.</li>
-   <li>פותחים אותו. אם מופיע חלון כחול של ווינדוס, לוחצים <b>מידע נוסף</b> ואז <b>הפעל בכל זאת</b>.</li>
-   <li>בתוך RustDesk לוחצים <b>התקנה</b>, כדי שיעבוד גם אחרי הפעלה מחדש של המחשב.</li>
-  </ol>
- </div>
- <ol class="rcsteps rclast">
-  <li>זהו. כשנצטרך להתחבר תקבל כאן בקשה: פותחים את RustDesk, שולחים בצ׳אט את <b>המספר</b> ואת <b>הסיסמה</b> שמופיעים בו, ומאשרים בחלון שקופץ. בלי האישור שלך אף אחד לא נכנס, ובכל רגע אפשר לנתק.</li>
- </ol>
- <div class="rephint" data-phone="ios">בונוס לאייפון: באפ סטור יש את <b>RustDesk Remote Desktop</b>, ואיתה נכנסים למחשב שלך מהטלפון.</div>
- <div class="rephint" data-phone="android">בונוס לאנדרואיד: בגוגל פליי יש את <b>RustDesk Remote Desktop</b>, ואיתה נכנסים למחשב שלך מהטלפון.</div>
- <a class="ask" href="https://github.com/rustdesk/rustdesk/releases/latest" target="_blank" rel="noopener">לדף ההורדות של RustDesk</a>
- <button type="button" class="ask" id="rcDone">סיימתי את ההתקנה</button>
- <div class="msgsaid" id="rcSaid"></div>
+ <div class="rephint">לא צריך לעשות את זה לבד ולא צריך להבין במחשבים. מתקשרים אליך ועושים את זה יחד, בערך חמש דקות, פעם אחת.</div>
+ <button type="button" class="ask" id="rcCall">תתקשרו אליי ונעשה את זה יחד</button>
+ <div class="msgsaid" id="rcCallSaid"></div>
+ <details class="rcself">
+  <summary>מעדיף לבד? ההוראות כאן</summary>
+  <div data-comp="mac">
+   <h3 class="rch">במק</h3>
+   <ol class="rcsteps">
+    <li>לוחצים על הכפתור למטה. נפתח דף עם הרבה קבצים. במק חדש מורידים את הקובץ שבסוף השם שלו כתוב aarch64.dmg, ובמק ישן את זה שכתוב בו x86_64.dmg. לא בטוחים? מתקשרים.</li>
+    <li>פותחים את מה שירד, ומושכים את הסמל של התוכנה לתיקיית התוכנות.</li>
+    <li>פותחים את התוכנה. המק ישאל אם לתת לה לראות את המסך ולהזיז את העכבר: עונים כן לשתי השאלות, וסוגרים ופותחים אותה שוב.</li>
+   </ol>
+  </div>
+  <div data-comp="win">
+   <h3 class="rch">בווינדוס</h3>
+   <ol class="rcsteps">
+    <li>לוחצים על הכפתור למטה. נפתח דף עם הרבה קבצים. מורידים את הקובץ שבסוף השם שלו כתוב x86_64.exe. לא בטוחים? מתקשרים.</li>
+    <li>פותחים את מה שירד. אם קופץ חלון כחול של ווינדוס, לוחצים מידע נוסף ואז הפעל בכל זאת.</li>
+    <li>בתוכנה שנפתחה לוחצים התקנה.</li>
+   </ol>
+  </div>
+  <a class="ask" href="https://github.com/rustdesk/rustdesk/releases/latest" target="_blank" rel="noopener">לדף שממנו מורידים את התוכנה</a>
+  <button type="button" class="ask" id="rcDone">סיימתי להתקין</button>
+  <div class="msgsaid" id="rcSaid"></div>
+ </details>
+ <div class="rephint">כשנצטרך להיכנס למחשב שלך נתקשר קודם. את המספר והסיסמה שבתוכנה מקריאים רק בטלפון, אף פעם לא כותבים אותם כאן. בלי שתאשר במחשב אף אחד לא נכנס, ובכל רגע אפשר לנתק.</div>
 </section>
 
 
@@ -3282,7 +3283,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='e55e26421c';
+var CODE_ID='a30d0e8e04';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -7078,7 +7079,14 @@ boot('remoteDevices',function(){
  document.querySelectorAll('#pRc [data-phone]').forEach(function(el){if(I.phone&&el.getAttribute('data-phone')!==I.phone)el.hidden=true;});
  if(I.computer)document.querySelectorAll('#pRc .rch').forEach(function(h){h.hidden=true;});
 });
-boot('remote',function(){var b=document.getElementById('gRemote');if(b)b.classList.toggle('taskblink',!remoteDone());});
+boot('remote',function(){var b=document.getElementById('gRemote');if(b)b.classList.remove('taskblink');});
+on('rcCall',function(){
+ var said=document.getElementById('rcCallSaid'),btn=document.getElementById('rcCall');
+ btn.disabled=true;said.textContent='שולח.';
+ sendText('משימה מהמוניטור','אשמח שתתקשרו אליי ונחבר את המחשב יחד.','משימה').then(function(){
+  said.textContent='נשלח. נתקשר אליך לתאם.';toast(said.textContent);markSent('text');
+ }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';}).then(function(){btn.disabled=false;});
+});
 function modelPending(){
  var m=(D.modelswitch||[])[0];if(!m||!m.id)return null;
  var seen='';try{seen=localStorage.getItem('modelSwitchSeen')||'';}catch(e){}
@@ -7157,7 +7165,7 @@ on('moDone',function(){
 on('rcDone',function(){
  var said=document.getElementById('rcSaid'),btn=document.getElementById('rcDone');
  btn.disabled=true;said.textContent='שולח.';
- sendText('משימה מהמוניטור','התקנתי את RustDesk במק ואישרתי נגישות והקלטת מסך.','משימה').then(function(){
+ sendText('משימה מהמוניטור','התקנתי את תוכנת החיבור מרחוק במחשב.','משימה').then(function(){
   try{localStorage.setItem('remoteDoneRD','1');}catch(e){}
   var b=document.getElementById('gRemote');if(b)b.classList.remove('taskblink');
   said.textContent='נשלח. המשימה סגורה.';toast(said.textContent);markSent('text');
