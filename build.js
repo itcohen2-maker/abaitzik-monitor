@@ -2255,6 +2255,14 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .gSelf{background:linear-gradient(150deg,#d98a3a,#3f2416)}
 .meTxt{white-space:pre-wrap;text-align:right;line-height:1.7;font-size:17px;margin:10px 0 14px}
 .gLaw{background:linear-gradient(150deg,#c0623a,#3a1d12)}
+.gStk{background:linear-gradient(150deg,#d6a43a,#4a1d5c)}
+.stkg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}
+.stkc{background:#26222b;border:0;border-radius:12px;padding:6px 4px;color:#f2ede4;font:600 13px system-ui;position:relative}
+.stkc img{width:100%;aspect-ratio:1;object-fit:contain;display:block}
+.stkc.done{outline:2px solid #3fb77a}
+.stkd img{width:60%;max-width:240px;display:block;margin:6px auto}
+.stkx{background:#1f1c24;border-radius:10px;padding:8px 10px;margin:8px 0;font-size:15px;line-height:1.5;text-align:right}
+.stkx i{color:#a99fb5;font-style:normal;font-size:13px}
 .gOcc{background:linear-gradient(150deg,#2bb39a,#123d3a)}
 .gManiv{background:linear-gradient(150deg,#3a8fd6,#123150)}
 .gMed{background:linear-gradient(150deg,#4fb3a9,#123a4a)}
@@ -3629,6 +3637,12 @@ try{
     4.10. Itzik could not find the vehicles PDF inside the sale screen. Files
     for the lawyer get one tile on the home screen, numbered.
   -->
+  <!--
+    10.10. Itzik: the stickers he and Alon Yaglon built over the years, used
+    "like a puppet theatre". One tile to explain each character. Images and
+    chat examples are sealed files under stk/, never in this page.
+  -->
+  <button type="button" class="gt gStk" id="gStk"><b>🎭 תיאטרון המדבקות</b><small>78 הדמויות שלך ושל אלון. לחץ על דמות והסבר מי היא</small></button>
   <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>03 מכתב התגובה ו 04 ההסבר, לרועי ביום ראשון</small></button>
   <button type="button" class="gt gManiv" id="gManiv"><b>💧 תשלום למניב</b><small>לקוח 50523290. ביום שני המוקד נפתח ב 09:00</small></button>
   <button type="button" class="gt gOcc" id="gOcc"><b>🩺 מרפאה תעסוקתית</b><small>מכבי רמות. טלפון א עד ה 08:00 עד 11:00</small></button>
@@ -10279,7 +10293,7 @@ document.addEventListener('change',function(e){
 on('gCIdeas',function(){pane('I');renderContentIdeas();});
 on('gPlan',function(){pane('P');renderPlan();});
 function renderFiles(){
- var box=document.getElementById('fiBox');if(!box)return;var F=D.files||[];
+ var box=document.getElementById('fiBox');if(!box)return;var F=(D.files||[]).filter(function(x){return String(x.n).indexOf('stk/')!==0;});
  if(!F.length){box.innerHTML='<div class="empty">אין כאן קבצים.</div>';return;}
  /*
    Reviewer 7.10, approved 8.10: five versions of the same deck one after the
@@ -11961,6 +11975,81 @@ function futSheet(){
  document.body.appendChild(w);
 }
 on('gFut',futSheet);
+/*
+  10.10. The sticker theatre. Itzik and Alon Yaglon built stickers of people
+  from their lives and play them "like a puppet theatre". Itzik explains each
+  character here: a tap opens the character with when it was sent and what was
+  said around it, and a button puts its number in the chat box for him to
+  dictate. The pictures and the chat lines are sealed files under stk/.
+*/
+var STK=null,STK_URL={};
+function stkBlob(name){
+ if(STK_URL[name])return Promise.resolve(STK_URL[name]);
+ var e=fileEntry('stk/'+name);if(!e)return Promise.reject(0);
+ return fileBlob(e).then(function(b){return STK_URL[name]=URL.createObjectURL(b);});
+}
+function stkDone(){
+ var seen={};
+ (D.chat||[]).forEach(function(m){
+  var t=String((m&&m.text)||''),r=t.match(new RegExp('מדבקה #([0-9]+)','g'))||[];
+  r.forEach(function(x){seen[x.replace('מדבקה #','')]=1;});
+ });
+ return seen;
+}
+function stkSheet(){
+ if(!GKEY||!D.files){fileOpen('stk/index.json');return;}
+ var e=fileEntry('stk/index.json');if(!e){toast('המדבקות עוד לא עלו למוניטור');return;}
+ var old=document.getElementById('stkSheet');if(old)old.remove();
+ var w=document.createElement('div');w.id='stkSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','תיאטרון המדבקות');
+ w.innerHTML='<div class="ycard"><b>🎭 תיאטרון המדבקות</b><small>טוען את הדמויות...</small></div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(ev){if(ev.key==='Escape')close();}
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+ var got=STK?Promise.resolve(STK):fileBlob(e).then(function(b){return b.text();}).then(function(t){return STK=JSON.parse(t);});
+ got.then(function(list){
+  var done=stkDone();
+  w.innerHTML='<div class="ycard"><b>🎭 תיאטרון המדבקות</b>'
+   +'<small>'+list.length+' דמויות, לפי כמה פעמים נשלחו מאז 20.3. ירוק: כבר הסברת</small>'
+   +'<div class="stkg">'+list.map(function(x,i){
+     return '<button type="button" class="stkc'+(done[x.n]?' done':'')+'" data-i="'+i+'"><img alt="" data-f="'+x.f+'">#'+x.n+' · '+x.c+'</button>';
+    }).join('')+'</div>'
+   +'<button type="button" class="yb yx" data-x="1">סגירה</button></div>';
+  w.querySelectorAll('img[data-f]').forEach(function(im){stkBlob(im.getAttribute('data-f')).then(function(u){im.src=u;},function(){});});
+ },function(){w.innerHTML='<div class="ycard"><b>🎭 תיאטרון המדבקות</b><small>לא הצלחתי לפתוח את המדבקות. נסה שוב בעוד דקה</small><button type="button" class="yb yx" data-x="1">סגירה</button></div>';});
+ w.onclick=function(ev){
+  if(ev.target===w)return close();
+  var b=ev.target.closest&&ev.target.closest('[data-i],[data-x]');if(!b)return;
+  if(b.hasAttribute('data-x'))return close();
+  stkOne(STK[+b.getAttribute('data-i')]);
+ };
+}
+function stkOne(x){
+ if(!x)return;
+ var w=document.createElement('div');w.className='ysheet';w.setAttribute('role','dialog');
+ w.innerHTML='<div class="ycard stkd"><b>מדבקה #'+x.n+'</b><img alt="">'
+  +'<small>נשלחה '+x.c+' פעמים: אתה '+x.i+', אלון '+x.a+'. מ '+esc(x.first)+' עד '+esc(x.last)+'</small>'
+  +(x.ex||[]).map(function(m){
+    return '<div class="stkx"><i>'+esc(m.d)+', '+esc(m.w)+' שלח אותה</i><br>'+(m.b?'לפני: '+esc(m.b):'')+(m.a?'<br>אחרי: '+esc(m.a):'')+'</div>';
+   }).join('')
+  +'<button type="button" class="yb yb1" data-k="say">להסביר מי זו</button>'
+  +'<button type="button" class="yb yx" data-k="">חזרה</button></div>';
+ stkBlob(x.f).then(function(u){var im=w.querySelector('img');if(im)im.src=u;},function(){});
+ w.onclick=function(ev){
+  if(ev.target===w)return w.remove();
+  var k=ev.target.getAttribute&&ev.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  w.remove();
+  if(k!=='say')return;
+  var s=document.getElementById('stkSheet');if(s)s.remove();
+  pane('m');try{renderThread();}catch(er){}
+  var ta=document.getElementById('msgText');
+  if(ta){ta.value='🎭 מדבקה #'+x.n+': ';ta.focus();}
+ };
+ document.body.appendChild(w);
+}
+on('gStk',stkSheet);
 /*
   5.10: Itzik dictated how he presents himself (to the boss of Rinat's
   department) and asked for it under its own button. The text is shown in
@@ -15941,7 +16030,7 @@ function walkFiles(dir, base = '') {
   the Ner sheets), the hospital appointment, lead screenshots, and the music.
 */
 const FILE_DAYS = 3;
-const KEEP_FILE = /^(appt-|lead-|music\/)/;
+const KEEP_FILE = /^(appt-|lead-|music\/|stk\/)/;
 function pruneOldFiles(src) {
   // His request, his monitor. A customer's files are theirs to keep.
   if (inst.name !== 'abaitzik') return;
