@@ -2273,6 +2273,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .stkx{background:rgba(127,127,127,.13);color:inherit;border-radius:10px;padding:8px 10px;margin:8px 0;font-size:15px;line-height:1.5;text-align:right}
 .stkx i{opacity:.65;font-style:normal;font-size:13px}
 .gOcc{background:linear-gradient(150deg,#2bb39a,#123d3a)}
+.gLec{background:linear-gradient(150deg,#c0562b,#4a1d10)}
 .gManiv{background:linear-gradient(150deg,#3a8fd6,#123150)}
 .gMed{background:linear-gradient(150deg,#4fb3a9,#123a4a)}
 .gInv{background:linear-gradient(150deg,#d9a441,#3a2a12)}
@@ -3658,6 +3659,11 @@ try{
     chat examples are sealed files under stk/, never in this page.
   -->
   <button type="button" class="gt gStk" id="gStk" data-new="1"><b>🎭 תיאטרון המדבקות</b><small>78 הדמויות שלך ושל אלון. לחץ על דמות והסבר מי היא</small></button>
+  <!--
+    10.10. Itzik: "a link and a button in the monitor, lecture". The edited
+    lecture text with slide thumbnails, the new slides and the deck, all in Drive.
+  -->
+  <button type="button" class="gt gLec" id="gLec" data-new="1"><b>🎤 הרצאה</b><small>כנגד כל הסיכויים: המלל הערוך עם השקפים</small></button>
   <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>03 מכתב התגובה ו 04 ההסבר, לרועי ביום ראשון</small></button>
   <button type="button" class="gt gManiv" id="gManiv"><b>💧 תשלום למניב</b><small>לקוח 50523290. ביום שני המוקד נפתח ב 09:00</small></button>
   <button type="button" class="gt gOcc" id="gOcc"><b>🩺 מרפאה תעסוקתית</b><small>מכבי רמות. טלפון א עד ה 08:00 עד 11:00</small></button>
@@ -12749,6 +12755,44 @@ function occSheet(){
  document.body.appendChild(w);
 }
 on('gOcc',occSheet);
+/*
+  10.10. The lecture "against all odds". Edited text (Word file in Drive, opens
+  in Google Docs), the six new slides, the deck itself and the lecture folder.
+*/
+var LEC_ITEMS=[
+ {t:'01 המלל הערוך עם השקפים',u:'https://docs.google.com/document/d/1B0Kcx-9Dk7vRME0rUiK15IbGwTTu7_JQ/edit'},
+ {t:'02 שישה שקפים חדשים',u:'https://drive.google.com/drive/folders/19I-nnLDrSyrbbEk9cKIhCg14RgbFGxrE'},
+ {t:'03 המצגת כנגד כל הסיכויים',u:'https://docs.google.com/presentation/d/1MFYn5h6Bb28j0ZF0kQgZM1zIMtPGOMz0CHkXWIyLKL8/edit'},
+ {t:'04 תיקיית ההרצאה בדרייב',u:'https://drive.google.com/drive/folders/1eKSkYILNuqIT_EytCYgGZNbWgiQPCQdv'}
+];
+function lecSheet(){
+ var old=document.getElementById('lecSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='lecSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','הרצאה');
+ w.innerHTML='<div class="ycard">'
+  +'<b>הרצאה: כנגד כל הסיכויים</b>'
+  +'<small>המלל של 10.10 ערוך, עם תמונה קטנה של כל שקף. טקסט בכחול הוא הצעה לחלק של איך הרמת את הראש. מה שבסוגריים מרובעים, רק אתה יודע.</small>'
+  +LEC_ITEMS.map(function(it,i){
+    return '<button type="button" class="yb yb'+(i%4+1)+'" data-k="'+i+'">'+esc(it.t)+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=LEC_ITEMS[+k];if(k===''||!it)return;
+  window.open(it.u,'_blank','noopener');
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gLec',lecSheet);
 /*
   9.10. Itzik calls Maniv Rishon (Lolos water, Plotitzki 10) on Monday morning
   and needs the old payments at hand. From the Lolos mail (100lolos). The tile
