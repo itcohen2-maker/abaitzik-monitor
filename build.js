@@ -3164,6 +3164,10 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
  border-radius:11px;background:var(--bg,#0e1219);color:var(--ink,#e8edf5);
  font:700 14px Heebo,sans-serif;cursor:pointer}
 .gt-e{min-height:20px;margin-top:10px;font:600 13.5px Heebo,sans-serif;color:var(--red,#EA4335)}
+.gt-help{margin-top:10px;font:400 14px Heebo,sans-serif;color:var(--dim,#9aa7ba);line-height:1.5}
+.gt-btn{display:block;width:100%;margin-top:10px;padding:12px;border-radius:12px;border:1px solid var(--line,#2a3342);
+ background:var(--sunk,#141922);color:var(--ink,#e8edf5);font:700 15px Heebo,sans-serif;cursor:pointer}
+.gt-btn.pri{background:var(--accent,#4285F4);border-color:transparent;color:#fff}
 </style>
 <script>
 /*
@@ -4494,10 +4498,9 @@ try{
   <input type="hidden" name="_next" id="fNext" value="">
   <input type="hidden" name="הודעה" id="fNote" value="">
   <input type="hidden" name="קוד" id="fCode" value="">
-  <input type="file" id="fPick" name="attachment" multiple
-   accept="image/*,video/*,audio/*,application/pdf">
+  <input type="file" id="fPick" name="attachment" multiple>
   <input type="text" id="fCap" placeholder="כיתוב, לא חובה">
-  <div class="fmeta" id="fMeta">אפשר לבחור תמונות וסרטונים יחד, לכתוב שורה, ואז להקליט. הכל יוצא בהודעה אחת.</div>
+  <div class="fmeta" id="fMeta">אפשר לבחור כל קובץ, גם כמה יחד, לכתוב שורה, ואז להקליט. הכל יוצא בהודעה אחת.</div>
   <div class="pthumbs" id="fThumbs" hidden></div>
   <button type="submit" id="fBtn">שליחת הקובץ</button>
   <div id="recWrap">
@@ -6278,7 +6281,7 @@ function wireBoxes(root){
   box.querySelector('.bfile').onclick=function(e){
    e.stopPropagation();
    window.micBox=box;window.fileBox=box;
-   openPicker('full','image/*,video/*,audio/*,application/pdf',false);
+   openPicker('full','',false);
   };
   // Straight to the camera. On a phone this opens the lens instead of the
   // gallery, which is what he means when he says he wants to show me something.
@@ -6464,7 +6467,7 @@ function wireReplies(host,all){
    markAnswering(host2);
    document.getElementById('fCap').value=quoteOf(m);
    setStandby(rootKeyFor(m));
-   openPicker('full','image/*,video/*,audio/*,application/pdf',true);
+   openPicker('full','',true);
   };
  });
  Array.prototype.forEach.call(host.querySelectorAll('.rtxt'),function(b){
@@ -13842,7 +13845,7 @@ function describe(){
  paintThumbs();
  var list=picked();
  if(!list.length){fMeta.className='fmeta';
-  fMeta.textContent='אפשר לבחור תמונות וסרטונים יחד, לכתוב שורה, ואז להקליט. הכל יוצא בהודעה אחת.';return;}
+  fMeta.textContent='אפשר לבחור כל קובץ, גם כמה יחד, לכתוב שורה, ואז להקליט. הכל יוצא בהודעה אחת.';return;}
  var total=totalSize(list);
  var allImages=list.every(isImg);
  var t=list.length===1?(list[0].name+' · '+mb(total))
@@ -13876,7 +13879,11 @@ function openPicker(mode,accept,auto){
  // The camera tile leaves capture on this same input. Without clearing it,
  // every pick after one photo went straight to the camera with no gallery.
  fPick.removeAttribute('capture');
- fPick.setAttribute('accept',accept);
+ // 10.10: an empty accept is any file at all. The plus and the reply file
+ // button used to list image, video, audio and PDF, and the iPhone then hid
+ // everything else, so an Illustrator, Photoshop, Excel or zip file could not
+ // be chosen. Only the gallery shortcut still narrows it to photos and clips.
+ if(accept)fPick.setAttribute('accept',accept);else fPick.removeAttribute('accept');
  fPick.click();
 }
 // Said under the reply box the photo was chosen from, and on its send button.
@@ -15173,6 +15180,9 @@ function gateUI(){
   :'<form id="gateForm"><input id="gateIn" type="tel" inputmode="numeric" autocomplete="off"'
   +' maxlength="12" placeholder="הקוד"><button type="submit" id="gateGo">פתיחה</button></form>')
   +'<div class="gt-e" id="gateSaid"></div>'
+  +(W&&INSTANCE&&INSTANCE.name!=='abaitzik'?'<button type="button" class="gt-eye" id="gateForgot">שכחתי את הסיסמה</button>'
+    +'<div class="gt-help" id="gateHelp" hidden>מבקשים סיסמה חדשה ממי שהקים לך את הדף. הכפתור פותח וואטסאפ עם הבקשה כבר כתובה, רק בוחרים למי לשלוח.'
+    +'<button type="button" class="gt-btn" id="gateAsk">לבקש סיסמה חדשה בוואטסאפ</button></div>':'')
   +'</div>';
  document.body.appendChild(w);
  return w;
@@ -15190,6 +15200,33 @@ function gateBoot(){
   box.type=hid?'text':'password';
   eye.textContent=hid?'להסתיר':'להציג את מה שהקלדתי';
   try{box.focus();}catch(e){}
+ };
+ /*
+   10.10, from the reviewer, taken by Itzik: "סיסמה של חמש מילים בלי עזרה".
+   A wrong passphrase said only that it did not match, and there was no word
+   on what to do after forgetting it. Which word is wrong cannot be told: the
+   page holds nothing about the words but the salt, and a check per word would
+   let a stolen copy be guessed one word at a time. What can be told safely is
+   what the typing itself shows: how many words there are, and letters from an
+   English keyboard. Before the page opens it has no channel of its own to send
+   on, so the request for a new one goes out through WhatsApp, already written.
+ */
+ function hint(v){
+  if(!GATE.words)return bad;
+  var t=gnorm(v),n=t?t.split(' ').length:0;
+  if(/[A-Za-z]/.test(t))return 'יש כאן אותיות באנגלית. כנראה המקלדת לא על עברית. מחליפים לעברית ומקלידים שוב.';
+  if(n!==5)return 'הקלדת '+(n===1?'מילה אחת':n+' מילים')+'. הסיסמה היא חמש מילים, עם רווח בין מילה למילה.';
+  return 'חמש מילים, אבל אחת מהן לא מדויקת. אפשר ללחוץ להציג ולבדוק כל מילה מול מה שקיבלת.';
+ }
+ var fg=document.getElementById('gateForgot');
+ if(fg)fg.onclick=function(){
+  document.getElementById('gateHelp').hidden=false;fg.hidden=true;
+ };
+ var ask=document.getElementById('gateAsk');
+ if(ask)ask.onclick=function(){
+  var nl=String.fromCharCode(10);
+  window.open('https://wa.me/?text='+encodeURIComponent('שכחתי את הסיסמה של המוניטור'+(INSTANCE.owner?' של '+INSTANCE.owner:'')
+   +'. אפשר סיסמה חדשה?'+nl+location.href.split('#')[0].split('?')[0]),'_blank','noopener');
  };
  function load(){
   return fetch('data/head.json?b='+Date.now(),{cache:'no-store'})
@@ -15259,12 +15296,13 @@ function gateBoot(){
    return load();
   }).then(function(ok){
    if(ok===null){said.textContent='אין רשת כרגע. נסה שוב עוד רגע.';GKEY=null;return;}
-   if(!ok){said.textContent=bad;GKEY=null;return;}
+   if(!ok){said.textContent=hint(box.value);GKEY=null;return;}
    return crypto.subtle.exportKey('raw',GKEY).then(function(raw){
     try{localStorage.setItem('gateKey',graw(new Uint8Array(raw)));}catch(e){}
+    try{faceOffer();}catch(e){}
    });
   }).catch(function(){
-   said.textContent=bad;GKEY=null;
+   said.textContent=hint(box.value);GKEY=null;
   });
  };
  setTimeout(function(){try{box.focus();}catch(e){}},120);
