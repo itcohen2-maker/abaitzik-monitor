@@ -1045,6 +1045,14 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .gSelf{background:linear-gradient(150deg,#d98a3a,#3f2416)}
 .meTxt{white-space:pre-wrap;text-align:right;line-height:1.7;font-size:17px;margin:10px 0 14px}
 .gLaw{background:linear-gradient(150deg,#c0623a,#3a1d12)}
+.gStk{background:linear-gradient(150deg,#d6a43a,#4a1d5c)}
+.stkg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}
+.stkc{background:#26222b;border:0;border-radius:12px;padding:6px 4px;color:#f2ede4;font:600 13px system-ui;position:relative}
+.stkc img{width:100%;aspect-ratio:1;object-fit:contain;display:block}
+.stkc.done{outline:2px solid #3fb77a}
+.stkd img{width:60%;max-width:240px;display:block;margin:6px auto}
+.stkx{background:#1f1c24;border-radius:10px;padding:8px 10px;margin:8px 0;font-size:15px;line-height:1.5;text-align:right}
+.stkx i{color:#a99fb5;font-style:normal;font-size:13px}
 .gOcc{background:linear-gradient(150deg,#2bb39a,#123d3a)}
 .gManiv{background:linear-gradient(150deg,#3a8fd6,#123150)}
 .gMed{background:linear-gradient(150deg,#4fb3a9,#123a4a)}
@@ -1839,7 +1847,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-10T09:30:26.242Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-10T09:45:44.908Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1985,6 +1993,7 @@ try{
   <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>03ג אני אסתדר עם זה</small></button>
   <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 02 אני אסתדר</small></button>
   <button type="button" class="gt gPen" id="gPen"><b>🏦 פנסיה</b><small>קוד מוסד בבנק 28417, 1,211 ש״ח. בדיקה ב 18.10</small></button>
+  <button type="button" class="gt gStk" id="gStk"><b>🎭 תיאטרון המדבקות</b><small>78 הדמויות שלך ושל אלון. לחץ על דמות והסבר מי היא</small></button>
   <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>03 מכתב התגובה ו 04 ההסבר, לרועי ביום ראשון</small></button>
   <button type="button" class="gt gManiv" id="gManiv"><b>💧 תשלום למניב</b><small>לקוח 50523290. ביום שני המוקד נפתח ב 09:00</small></button>
   <button type="button" class="gt gOcc" id="gOcc"><b>🩺 מרפאה תעסוקתית</b><small>מכבי רמות. טלפון א עד ה 08:00 עד 11:00</small></button>
@@ -3304,7 +3313,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='542d259017';
+var CODE_ID='5245117849';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -7021,7 +7030,7 @@ document.addEventListener('change',function(e){
 on('gCIdeas',function(){pane('I');renderContentIdeas();});
 on('gPlan',function(){pane('P');renderPlan();});
 function renderFiles(){
- var box=document.getElementById('fiBox');if(!box)return;var F=D.files||[];
+ var box=document.getElementById('fiBox');if(!box)return;var F=(D.files||[]).filter(function(x){return String(x.n).indexOf('stk/')!==0;});
  if(!F.length){box.innerHTML='<div class="empty">אין כאן קבצים.</div>';return;}
  function kb(f){return f.s>1048576?(Math.round(f.s/104857.6)/10+' MB'):(Math.max(1,Math.round(f.s/1024))+' KB');}
  function ico(f){var t=f.t||'';return t.indexOf('video/')===0?'🎬':t.indexOf('audio/')===0?'🎧':t==='application/pdf'?'📄':t.indexOf('image/')===0?'🖼️':'📎';}
@@ -8357,6 +8366,74 @@ function futSheet(){
  document.body.appendChild(w);
 }
 on('gFut',futSheet);
+var STK=null,STK_URL={};
+function stkBlob(name){
+ if(STK_URL[name])return Promise.resolve(STK_URL[name]);
+ var e=fileEntry('stk/'+name);if(!e)return Promise.reject(0);
+ return fileBlob(e).then(function(b){return STK_URL[name]=URL.createObjectURL(b);});
+}
+function stkDone(){
+ var seen={};
+ (D.chat||[]).forEach(function(m){
+  var t=String((m&&m.text)||''),r=t.match(new RegExp('מדבקה #([0-9]+)','g'))||[];
+  r.forEach(function(x){seen[x.replace('מדבקה #','')]=1;});
+ });
+ return seen;
+}
+function stkSheet(){
+ if(!GKEY||!D.files){fileOpen('stk/index.json');return;}
+ var e=fileEntry('stk/index.json');if(!e){toast('המדבקות עוד לא עלו למוניטור');return;}
+ var old=document.getElementById('stkSheet');if(old)old.remove();
+ var w=document.createElement('div');w.id='stkSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','תיאטרון המדבקות');
+ w.innerHTML='<div class="ycard"><b>🎭 תיאטרון המדבקות</b><small>טוען את הדמויות...</small></div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(ev){if(ev.key==='Escape')close();}
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+ var got=STK?Promise.resolve(STK):fileBlob(e).then(function(b){return b.text();}).then(function(t){return STK=JSON.parse(t);});
+ got.then(function(list){
+  var done=stkDone();
+  w.innerHTML='<div class="ycard"><b>🎭 תיאטרון המדבקות</b>'
+   +'<small>'+list.length+' דמויות, לפי כמה פעמים נשלחו מאז 20.3. ירוק: כבר הסברת</small>'
+   +'<div class="stkg">'+list.map(function(x,i){
+     return '<button type="button" class="stkc'+(done[x.n]?' done':'')+'" data-i="'+i+'"><img alt="" data-f="'+x.f+'">#'+x.n+' · '+x.c+'</button>';
+    }).join('')+'</div>'
+   +'<button type="button" class="yb yx" data-x="1">סגירה</button></div>';
+  w.querySelectorAll('img[data-f]').forEach(function(im){stkBlob(im.getAttribute('data-f')).then(function(u){im.src=u;},function(){});});
+ },function(){w.innerHTML='<div class="ycard"><b>🎭 תיאטרון המדבקות</b><small>לא הצלחתי לפתוח את המדבקות. נסה שוב בעוד דקה</small><button type="button" class="yb yx" data-x="1">סגירה</button></div>';});
+ w.onclick=function(ev){
+  if(ev.target===w)return close();
+  var b=ev.target.closest&&ev.target.closest('[data-i],[data-x]');if(!b)return;
+  if(b.hasAttribute('data-x'))return close();
+  stkOne(STK[+b.getAttribute('data-i')]);
+ };
+}
+function stkOne(x){
+ if(!x)return;
+ var w=document.createElement('div');w.className='ysheet';w.setAttribute('role','dialog');
+ w.innerHTML='<div class="ycard stkd"><b>מדבקה #'+x.n+'</b><img alt="">'
+  +'<small>נשלחה '+x.c+' פעמים: אתה '+x.i+', אלון '+x.a+'. מ '+esc(x.first)+' עד '+esc(x.last)+'</small>'
+  +(x.ex||[]).map(function(m){
+    return '<div class="stkx"><i>'+esc(m.d)+', '+esc(m.w)+' שלח אותה</i><br>'+(m.b?'לפני: '+esc(m.b):'')+(m.a?'<br>אחרי: '+esc(m.a):'')+'</div>';
+   }).join('')
+  +'<button type="button" class="yb yb1" data-k="say">להסביר מי זו</button>'
+  +'<button type="button" class="yb yx" data-k="">חזרה</button></div>';
+ stkBlob(x.f).then(function(u){var im=w.querySelector('img');if(im)im.src=u;},function(){});
+ w.onclick=function(ev){
+  if(ev.target===w)return w.remove();
+  var k=ev.target.getAttribute&&ev.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  w.remove();
+  if(k!=='say')return;
+  var s=document.getElementById('stkSheet');if(s)s.remove();
+  pane('m');try{renderThread();}catch(er){}
+  var ta=document.getElementById('msgText');
+  if(ta){ta.value='🎭 מדבקה #'+x.n+': ';ta.focus();}
+ };
+ document.body.appendChild(w);
+}
+on('gStk',stkSheet);
 var ME_TEXT=['אני איציק. אני עוסק בהמון תחומים, ואחד מהם הוא תוכנה. יש לנו בית תוכנה במשפחה. אנחנו יכולים לעמוד בכל אתגר, ובוחרים את האתגרים שלנו בפינצטה.','התבוננתי, על קצה המזלג, במה שרינת עושה. אני מלווה את רינת מהיום הראשון שהיא נכנסה לאולם העיצוב. רינת היא אשת מקצוע שהולכת לישון עם הרעיונות שלה וקמה בבוקר עם תובנות, בדיוק כמו אבא שלנו, כמוני, כמו האחים שלי והילדים.','עוד קצת על רינת: היא לא מנטורית, וזה גם לא מה שהתפקיד שלה מחייב. התפקיד שלה הוא להביא חדשנות ומקצועיות.','יש לך עכשיו הזדמנות להיות בין הראשונים, להדהים את הלקוחות שלך. אל תתמהמה בנושא, ואל תיקח את מה שאני אומר לך בקלות דעת. היום הכל צריך להיות מקוון, בשביל חדשנות והתקדמות.','הבנתי שאתה רוצה מערכת התראות שתעדכן אותך בכל מה שנוגע לעסק, וזה אפשרי. אני אגיע, אראה במה מדובר ואיך מושכים את המידע, כדי שהכל יהיה בכף היד שלך. תמיד תהיה ראשון לדעת, עוד לפני העובדים שלך.'].join(String.fromCharCode(10,10));
 function meSheet(){
  var old=document.getElementById('meSheet');if(old)old.remove();
