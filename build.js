@@ -11991,8 +11991,14 @@ function stkBlob(name){
 function stkDone(){
  var seen={};
  (D.chat||[]).forEach(function(m){
-  var t=String((m&&m.text)||''),r=t.match(new RegExp('מדבקה #([0-9]+)','g'))||[];
-  r.forEach(function(x){seen[x.replace('מדבקה #','')]=1;});
+  if(!m||m.from!=='itzik')return;
+  var t=String(m.text||''),re=new RegExp('מדבקה #([0-9]+):?','g'),hit,all=[];
+  while((hit=re.exec(t)))all.push({n:hit[1],s:hit.index,at:hit.index+hit[0].length});
+  all.forEach(function(h,j){
+   var said=t.slice(h.at,j+1<all.length?all[j+1].s:t.length).trim();
+   if(said.slice(-2)==='🎭')said=said.slice(0,-2).trim();
+   seen[h.n]=seen[h.n]&&said?seen[h.n]+String.fromCharCode(10)+said:(said||seen[h.n]||' ');
+  });
  });
  return seen;
 }
@@ -12030,10 +12036,11 @@ function stkOne(x){
  var w=document.createElement('div');w.className='ysheet';w.setAttribute('role','dialog');
  w.innerHTML='<div class="ycard stkd"><b>מדבקה #'+x.n+'</b><img alt="">'
   +'<small>נשלחה '+x.c+' פעמים: אתה '+x.i+', אלון '+x.a+'. מ '+esc(x.first)+' עד '+esc(x.last)+'</small>'
+  +(stkDone()[x.n]?'<div class="stkx"><i>מה סיפרת עליה</i><br>'+esc(stkDone()[x.n]).split(String.fromCharCode(10)).join('<br>')+'</div>':'')
   +(x.ex||[]).map(function(m){
     return '<div class="stkx"><i>'+esc(m.d)+', '+esc(m.w)+' שלח אותה</i><br>'+(m.b?'לפני: '+esc(m.b):'')+(m.a?'<br>אחרי: '+esc(m.a):'')+'</div>';
    }).join('')
-  +'<button type="button" class="yb yb1" data-k="say">להסביר מי זו</button>'
+  +'<button type="button" class="yb yb1" data-k="say">'+(stkDone()[x.n]?'להוסיף עוד עליה':'להסביר מי זו')+'</button>'
   +'<button type="button" class="yb yx" data-k="">חזרה</button></div>';
  stkBlob(x.f).then(function(u){var im=w.querySelector('img');if(im)im.src=u;},function(){});
  w.onclick=function(ev){
