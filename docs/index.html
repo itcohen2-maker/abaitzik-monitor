@@ -1678,6 +1678,15 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
  :root.calm.motion-soft .newbtn.hot .nb-c,
  :root.calm.motion-soft .th-fresh>summary .badge,
  :root.calm.motion-soft .bub.fresh .badge{animation:none!important}}
+@keyframes handtap{
+ 0%,100%{transform:translateY(0) scale(1)}
+ 35%{transform:translateY(-7px) scale(1.08)}
+ 55%{transform:translateY(1px) scale(.94)}
+ 70%{transform:translateY(0) scale(1)}}
+.gt.taskblink::before,.gt.glow::before,.gt.blink::before{content:"👆";position:absolute;
+ bottom:6px;inset-inline-end:8px;font-size:26px;line-height:1;pointer-events:none;z-index:2;
+ text-shadow:0 2px 4px rgba(0,0,0,.35);animation:handtap 1.1s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){.gt.taskblink::before,.gt.glow::before,.gt.blink::before{animation:none}}
 .mob{display:flex;gap:6px;flex:0 0 auto}
 .mob button{background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:10px;
  padding:9px 12px;font:500 13.5px Heebo,sans-serif;cursor:pointer;white-space:nowrap}
@@ -1829,7 +1838,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-10T07:29:20.947Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-10T07:30:26.000Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3298,7 +3307,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='525caf6582';
+var CODE_ID='f7a6205997';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
