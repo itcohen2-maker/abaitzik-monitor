@@ -1385,19 +1385,21 @@ test('every saved video gets a permanent page, and nothing is dropped', () => {
   assert.ok(html.includes('href="./"'), 'the page must have a way back to the monitor');
 });
 
-// 17.9, his voice message about the answers button: every answer starts red,
-// a touch turns it green, and he can move it to orange standby or yellow.
-test('answers carry the four colour states of the old chat', () => {
+// 10.10, he took the reviewer's idea: four colours per answer was too much.
+// Red until seen, one orange mark לחזור לזה, and no legend to explain them.
+test('answers carry two colours: new and לחזור לזה', () => {
   const html = renderPage(fixture());
-  for (const css of ['.ansc.fresh', '.ansc.done', '.ansc.standby', '.ansc.star']) {
+  for (const css of ['.ansc.fresh', '.ansc.back']) {
     assert.ok(html.includes(css), 'missing style ' + css);
   }
+  for (const css of ['.ansc.done{', '.ansc.star{', '.ansc.standby{', 'class="alegend"']) {
+    assert.ok(!html.includes(css), 'should be gone: ' + css);
+  }
   assert.ok(html.includes('--orange:'), 'orange must be its own token, not the yellow one');
-  assert.ok(html.includes("localStorage.setItem('chatStandby'"), 'standby must persist');
-  assert.ok(html.includes("['standby','בהמתנה',c.standby]"), 'standby needs its own filter chip');
-  assert.ok(html.includes('class="ab astandby'), 'each card needs a standby button');
+  assert.ok(html.includes("['back','לחזור לזה',c.back]"), 'one filter chip for the one mark');
+  assert.ok(html.includes('class="ab aback'), 'each card needs the לחזור לזה button');
   assert.ok(html.includes('function ansColor(m)'), 'one place decides the colour');
-  assert.ok(html.includes('alegend'), 'the legend explains the four colours');
+  assert.ok(html.includes('function watchSeen(host,list)'), 'a seen answer turns read by itself');
 });
 
 test('a touch anywhere on an answer card marks it read', () => {
@@ -1413,10 +1415,10 @@ test('a touch anywhere on an answer card marks it read', () => {
   }
 });
 
-test('the colour of a card is decided in one order: star, standby, fresh, done', () => {
+test('the colour of a card is decided in one order: back, then fresh', () => {
   const html = renderPage(fixture());
   const src = html.slice(html.indexOf('function ansColor(m)'));
-  const body = src.slice(0, src.indexOf('\nfunction isDone'));
+  const body = src.slice(0, src.indexOf('\nfunction toggleBack'));
   const flags = { star: false, standby: false, fresh: false, done: false };
   const run = new Function('f', body
     + '\nfunction isStar(){return f.star;}function isStandby(){return f.standby;}'
@@ -1424,10 +1426,9 @@ test('the colour of a card is decided in one order: star, standby, fresh, done',
     + '\nreturn ansColor({});');
   assert.equal(run(flags), '');
   assert.equal(run(Object.assign({}, flags, { fresh: true })), 'fresh');
-  assert.equal(run(Object.assign({}, flags, { done: true })), 'done');
-  assert.equal(run(Object.assign({}, flags, { fresh: true, standby: true })), 'standby');
-  assert.equal(run(Object.assign({}, flags, { done: true, standby: true })), 'standby');
-  assert.equal(run(Object.assign({}, flags, { standby: true, star: true })), 'star');
+  assert.equal(run(Object.assign({}, flags, { done: true })), '');
+  assert.equal(run(Object.assign({}, flags, { fresh: true, standby: true })), 'back');
+  assert.equal(run(Object.assign({}, flags, { done: true, star: true })), 'back');
 });
 
 test('switching screens starts the new one at the top', () => {

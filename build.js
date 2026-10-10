@@ -2760,22 +2760,13 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
    old chat and it is the whole system here now. One colour per card, decided in
    one place, with the stripe wide enough to read from across the room. */
 .ansc.fresh{border-inline-start-color:var(--red);background:color-mix(in srgb,var(--red) 7%,var(--surface))}
-.ansc.done{border-inline-start-color:var(--green);background:color-mix(in srgb,var(--green) 7%,var(--surface))}
-.ansc.standby{border-inline-start-color:var(--orange);background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
-.ansc.star{border-inline-start-color:var(--yellow);background:color-mix(in srgb,var(--yellow) 10%,var(--surface))}
-.ab.astandby.on{background:var(--orange);border-color:var(--orange);color:#fff}
-.ab.astar.on{background:var(--yellow);border-color:var(--yellow);color:#3a2d00}
-.ab.adone.on{background:var(--green);border-color:var(--green);color:#fff}
+.ansc.back{border-inline-start-color:var(--orange);background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
+/* 10.10, he took the reviewer's idea: four colours per answer was too much.
+   Now only two: red until it has been on screen, and orange for לחזור לזה.
+   An answer he has seen is plain, with no green to earn by tapping. */
+.ab.aback.on{background:var(--orange);border-color:var(--orange);color:#fff}
 .atip{margin:0 0 12px;padding:12px 14px;border-radius:12px;border:2px solid var(--red);background:var(--unread);font-size:15px;line-height:1.5}
 .atip .ab{display:block;margin-top:8px}
-.alegend{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 12px;
- font:400 12.5px Heebo,sans-serif;color:var(--dim)}
-.alegend span{display:flex;align-items:center;gap:5px}
-.alegend i{width:11px;height:11px;border-radius:50%;display:inline-block}
-.alegend .l1{background:var(--red)}
-.alegend .l2{background:var(--green)}
-.alegend .l3{background:var(--orange)}
-.alegend .l4{background:var(--yellow)}
 /* His own messages sit in the same list now. Indented and quieter, so the
    list still reads as answers with the question above each one, rather than
    as two voices of equal weight. */
@@ -4208,11 +4199,10 @@ try{
 
 <section id="pA" hidden>
  <h2>תשובות <button type="button" class="hq" data-q="ansHelp" aria-label="הסבר על המסך">?</button></h2>
- <div class="hint hq-t" id="ansHelp" hidden>הכל כאן, לפי זמן: מה ששלחת, מה שעניתי, והדוחות המלאים. כלום לא נעלם מכאן. כל תשובה נכנסת באדום, נגיעה בה הופכת אותה לירוקה, ואפשר להעביר אותה לכתום בהמתנה או לצהוב.</div>
+ <div class="hint hq-t" id="ansHelp" hidden>הכל כאן, לפי זמן: מה ששלחת, מה שעניתי, והדוחות המלאים. כלום לא נעלם מכאן. תשובה חדשה מסומנת באדום עד שהיא עוברת מול העיניים שלך, ואז היא נחשבת נקראה לבד. תשובה שרוצים לחזור אליה מסמנים בכפתור לחזור לזה, והיא נצבעת בכתום.</div>
  <!-- Itzik, 8.10: a new customer has to be told, right on this screen, that touching an answer turns it green. Shown until the first touch or הבנתי. -->
- <div class="atip" id="aTip" hidden><b>כל תשובה חדשה מגיעה באדום.</b> נגיעה בה הופכת אותה לירוקה, וכך רואים מה כבר קראת. מה שנשאר אדום עוד מחכה לך.<button type="button" class="ab" id="aTipOk">הבנתי</button></div>
+ <div class="atip" id="aTip" hidden><b>תשובה חדשה מגיעה באדום.</b> כשהיא מופיעה מולך על המסך היא נחשבת נקראה לבד. מה שרוצים לחזור אליו מסמנים בכפתור לחזור לזה.<button type="button" class="ab" id="aTipOk">הבנתי</button></div>
  <div class="achips" id="aChips"></div>
- <div class="alegend"><span><i class="l1"></i>לא נקרא</span><span><i class="l2"></i>קראתי</span><span><i class="l3"></i>בהמתנה</span><span><i class="l4"></i>מסומן</span></div>
  <input type="search" id="aSearch" class="asearch" autocomplete="off" placeholder="חיפוש בתוך התשובות">
  <div id="ansBox"></div>
 </section>
@@ -4470,6 +4460,8 @@ try{
   <button type="button" id="moreBar" class="cpall" aria-expanded="false">עוד</button>
   <button type="button" id="clearAll" class="cpall clearall" hidden>ניקוי כל ההודעות</button>
  </div>
+ <!-- Itzik, 10.10: a customer is told once who answers him, in the monitor's name only: not Claude, not Itzik. -->
+ <div class="rlab aiwho" id="aiWho" hidden>העוזר שלך הוא חלק מהמוניטור. הוא קורא כל הודעה שכותבים כאן ועונה לבד. <button type="button" id="aiWhoOk" class="cpall">הבנתי</button></div>
  <div class="thread" id="thread"></div>
  <form id="msgForm">
   <div class="rlab" id="msgLab">בקשה חדשה. נפתחת כשיחה נפרדת. להמשך של שיחה קיימת כותבים בתוך השיחה עצמה.</div>
@@ -5011,6 +5003,12 @@ var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
 // just "העוזר שלך". His own page keeps the name he uses.
 var AI=(INSTANCE&&INSTANCE.name&&INSTANCE.name!=='abaitzik')?'העוזר שלך':'קלוד';
 var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
+(function(){
+ var box=document.getElementById('aiWho');if(!box||AI==='קלוד')return;
+ try{if(localStorage.getItem('aiWhoSeen'))return;}catch(e){}
+ box.hidden=false;
+ document.getElementById('aiWhoOk').onclick=function(){box.hidden=true;try{localStorage.setItem('aiWhoSeen','1');}catch(e){}};
+})();
 var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
 function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
 function ensure(keys, fn){
@@ -8042,12 +8040,16 @@ function toggleStandby(m){
 }
 // One card, one colour. Yellow beats orange beats red beats green, so a mark he
 // made himself is never painted over by a mark the page made for him.
+// 10.10: star and standby are one mark now, לחזור לזה, and green is gone.
 function ansColor(m){
- if(isStar(m))return 'star';
- if(isStandby(m))return 'standby';
+ if(isBack(m))return 'back';
  if(isFresh(m))return 'fresh';
- if(isDone(m))return 'done';
  return '';
+}
+function isBack(m){return isStar(m)||isStandby(m);}
+function toggleBack(m){
+ if(isBack(m)){if(isStar(m))toggleStar(m);if(isStandby(m))toggleStandby(m);}
+ else{markOneSeen(m);toggleStandby(m);}
 }
 function isDone(m){return touchedIds().indexOf(claudeKey(m))>-1;}
 function unDone(m){
@@ -8216,11 +8218,13 @@ function ansCounts(){
   fresh:a.filter(isFresh).length,
   star:a.filter(isStar).length,
   standby:a.filter(isStandby).length,
+  back:a.filter(isBack).length,
   done:a.filter(function(m){return isDone(m)&&!isFresh(m)&&!isStandby(m)&&!isStar(m);}).length};
 }
 function ansList(){
  var a=liveAnswers();
  if(ansFilter==='fresh')a=a.filter(function(m){return isFresh(m)||ansKeep[claudeKey(m)];});
+ if(ansFilter==='back')a=a.filter(isBack);
  if(ansFilter==='star')a=a.filter(isStar);
  if(ansFilter==='standby')a=a.filter(isStandby);
  if(ansFilter==='done')a=a.filter(function(m){return isDone(m)&&!isFresh(m)&&!isStandby(m)&&!isStar(m);});
@@ -8256,8 +8260,7 @@ function renderAnswers(){
  if(!chips||!host)return;
  paintAnsTip();
  var c=ansCounts();
- var defs=[['all','הכל',c.all],['fresh','לא נקראו',c.fresh],
-  ['standby','בהמתנה',c.standby],['star','מסומנות',c.star],['done','טופלו',c.done]];
+ var defs=[['all','הכל',c.all],['fresh','לא נקראו',c.fresh],['back','לחזור לזה',c.back]];
  chips.innerHTML=defs.map(function(d){
   return '<button type="button" class="achip'+(ansFilter===d[0]?' on':'')
    +'" data-f="'+d[0]+'">'+d[1]+' <b>'+d[2]+'</b></button>';
@@ -8300,10 +8303,10 @@ function renderAnswers(){
   return;
  }
  host.innerHTML=list.map(function(m,i){
-  var fresh=isFresh(m),done=!fresh&&isDone(m),st=isStar(m),sb=isStandby(m);
+  var fresh=isFresh(m),bk=isBack(m);
   var his=m.src==='itzik';
   var mark=his?(m.status==='done'?' · בוצע':(m.status==='working'?' · בעבודה':''))
-   :(fresh?' · <em class="badge">חדש</em>':(sb?' · בהמתנה':(done?' · טופל':' · נקרא')));
+   :(bk?' · לחזור לזה':(fresh?' · <em class="badge">חדש</em>':''));
   // The question sits at the top of the card that answers it. For a recording
   // the text is only the name of the file, so the transcript is what is shown.
   var ask='';
@@ -8337,13 +8340,8 @@ function renderAnswers(){
    +'<div class="arow">'
    +(m.src!=='claude'?'':'<button type="button" class="ab aimb" data-k="'+esc(claudeKey(m))+'">להשיב</button>')
    +'<button type="button" class="ab acopy" data-i="'+i+'">העתקה</button>'
-   +(his?'':'<button type="button" class="ab astar'+(st?' on':'')+'" data-i="'+i+'">'
-   +(st?'★ מסומן':'☆ סימון')+'</button>'
-   +'<button type="button" class="ab astandby'+(sb?' on':'')+'" data-i="'+i+'">'
-   +(sb?'● בהמתנה':'בהמתנה')+'</button>'
-   +'<button type="button" class="ab adone'+(done?' on':'')+'" data-i="'+i+'">'
-   +(done?'✓ טופל':'סמן כטופל')+'</button>'
-   +'<button type="button" class="ab aread" data-i="'+i+'"'+(fresh?'':' hidden')+'>קראתי</button>')
+   +(his?'':'<button type="button" class="ab aback'+(bk?' on':'')+'" data-i="'+i+'">'
+   +(bk?'● לחזור לזה':'לחזור לזה')+'</button>')
    +'</div>'
    +(his?'':replyBox('בקשר לתשובה מ'+ansWho(m)+' מ'+stamp(m.at)))
    +'<span class="asaid" data-i="'+i+'"></span>'
@@ -8359,17 +8357,10 @@ function renderAnswers(){
    var head=m.q?('אתה · '+stamp(m.q.at)+NL+(m.q.note||m.q.text||'')+NL+NL):'';
    ansCopy(b,head+ansWho(m)+' · '+stamp(m.at)+NL+(m.text||''));};
  });
- Array.prototype.forEach.call(host.querySelectorAll('.astar'),function(b){
-  b.onclick=function(e){e.stopPropagation();toggleStar(at(b));renderAnswers();};
+ Array.prototype.forEach.call(host.querySelectorAll('.aback'),function(b){
+  b.onclick=function(e){e.stopPropagation();toggleBack(at(b));renderAnswers();paintDot();renderNew();};
  });
- Array.prototype.forEach.call(host.querySelectorAll('.astandby'),function(b){
-  b.onclick=function(e){e.stopPropagation();
-   var m=at(b);
-   // Standby is a state he reached by looking at the answer, so it also counts
-   // as read. Without that the card would go orange and stay in the red count.
-   if(!isStandby(m))markOneSeen(m);
-   toggleStandby(m);renderAnswers();paintDot();renderNew();};
- });
+ watchSeen(host,list);
  // "The moment I touch them they are green." A touch anywhere on the card that
  // is not a button, a link or a field marks it read.
  Array.prototype.forEach.call(host.querySelectorAll('.ansc'),function(card){
@@ -8411,15 +8402,6 @@ function renderAnswers(){
    if(k)pane(k);
   };
  });
- Array.prototype.forEach.call(host.querySelectorAll('.adone'),function(b){
-  b.onclick=function(e){e.stopPropagation();
-   var m=at(b);
-   if(isDone(m)&&!isFresh(m))unDone(m);else markOneSeen(m);
-   renderAnswers();paintDot();renderNew();};
- });
- Array.prototype.forEach.call(host.querySelectorAll('.aread'),function(b){
-  b.onclick=function(e){e.stopPropagation();markOneSeen(at(b));renderAnswers();paintDot();renderNew();};
- });
  if(full.length>list.length){
   var more=document.createElement('button');
   more.type='button';more.className='ab';more.style.width='100%';more.style.padding='14px';
@@ -8429,6 +8411,38 @@ function renderAnswers(){
  }
  wireBoxes(host);
  wireAim(host);paintAim();
+}
+/*
+  10.10: an answer he has seen counts as read by itself. A red card that stays
+  at least half on screen for a second and a half loses its red in place,
+  without a repaint, so the list does not jump under his thumb. ansKeep holds
+  it in the לא נקראו filter until he leaves, same as a touch.
+*/
+var _seenObs=null;
+function watchSeen(host,list){
+ if(_seenObs){_seenObs.disconnect();_seenObs=null;}
+ if(typeof IntersectionObserver!=='function')return;
+ var timers={};
+ _seenObs=new IntersectionObserver(function(es){
+  es.forEach(function(e){
+   var card=e.target,i=card.getAttribute('data-i');
+   if(e.isIntersecting&&e.intersectionRatio>=0.5){
+    if(timers[i])return;
+    timers[i]=setTimeout(function(){
+     var m=list[Number(i)];
+     if(!m||!card.isConnected||!card.classList.contains('fresh'))return;
+     ansKeep[claudeKey(m)]=1;
+     markOneSeen(m);
+     card.classList.remove('fresh');
+     var bd=card.querySelector('.w .badge');
+     if(bd){var pv=bd.previousSibling;if(pv&&pv.nodeType===3)pv.nodeValue=pv.nodeValue.replace(/ · $/,'');bd.remove();}
+     if(_seenObs)_seenObs.unobserve(card);
+     paintAnsCount();renderNew();
+    },1500);
+   }else if(timers[i]){clearTimeout(timers[i]);delete timers[i];}
+  });
+ },{threshold:[0,0.5]});
+ Array.prototype.forEach.call(host.querySelectorAll('.ansc.fresh'),function(c){_seenObs.observe(c);});
 }
 // ---- what was received: his messages by state, and what is in work ----
 function nowFresh(){
