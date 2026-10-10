@@ -12818,6 +12818,7 @@ on('gOcc',occSheet);
   in Google Docs), the six new slides, the deck itself and the lecture folder.
 */
 var LEC_ITEMS=[
+ {t:'⭐ המצגת המוכנה להרצאה, עם המלל בהערות',u:'https://drive.google.com/file/d/1dQ48u62xYIDIZE5eVZUqKcejzoJ6YjCv/view'},
  {t:'01 המלל הערוך עם השקפים',u:'https://docs.google.com/document/d/1B0Kcx-9Dk7vRME0rUiK15IbGwTTu7_JQ/edit'},
  {t:'02 כל השקפים החדשים',u:'https://drive.google.com/drive/folders/19I-nnLDrSyrbbEk9cKIhCg14RgbFGxrE'},
  {t:'03 המצגת כנגד כל הסיכויים',u:'https://docs.google.com/presentation/d/1MFYn5h6Bb28j0ZF0kQgZM1zIMtPGOMz0CHkXWIyLKL8/edit'},
