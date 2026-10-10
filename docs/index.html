@@ -1829,7 +1829,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-10T07:10:28.154Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-10T07:10:46.612Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -1976,7 +1976,7 @@ try{
   <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 02 אני אסתדר</small></button>
   <button type="button" class="gt gPen" id="gPen"><b>🏦 פנסיה</b><small>קוד מוסד בבנק 28417, 1,211 ש״ח. בדיקה ב 18.10</small></button>
   <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>03 מכתב התגובה ו 04 ההסבר, לרועי ביום ראשון</small></button>
-  <button type="button" class="gt gManiv" id="gManiv"><b>💧 תשלום למניב</b><small>לקוח 50523290. להתקשר ביום שני בבוקר</small></button>
+  <button type="button" class="gt gManiv" id="gManiv"><b>💧 תשלום למניב</b><small>לקוח 50523290. ביום שני המוקד נפתח ב 09:00</small></button>
   <button type="button" class="gt gOcc" id="gOcc"><b>🩺 מרפאה תעסוקתית</b><small>מכבי רמות. טלפון א עד ה 08:00 עד 11:00</small></button>
   <button type="button" class="gt gShop" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
  </div>
@@ -3298,7 +3298,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='f338698e74';
+var CODE_ID='525caf6582';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -8903,7 +8903,9 @@ on('gOcc',occSheet);
 var MANIV_INFO=[
  'מספר לקוח (משלם): 50523290',
  'על שם: ליאני יואל ושות׳. הנכס: פלוטיצקי 10',
- 'מוקד: 1800 35 11 10',
+ 'מוקד: 1800 35 11 10 (חינם רק מטלפון קווי)',
+ 'מהנייד: פניות הציבור 03 9483222',
+ 'שעות המוקד: ביום שני 09:00 עד 19:00. א, ג, ד, ה 08:30 עד 16:30. שישי 08:30 עד 12:30',
  '',
  'התשלום האחרון: 30.6.26, 706.48 ₪ (חשבון אפריל עד מאי 26). דרך MAST, אישור 0529000, ספח 260455803',
  'לפניו: 9.5.26, 205.2 ₪ (פברואר עד מרץ 26). אישור 5178712, ספח 260307565',
@@ -8926,7 +8928,8 @@ function manivSheet(){
  w.innerHTML='<div class="ycard">'
   +'<b>💧 מניב ראשון, המים של לולוס</b>'
   +'<small>'+MANIV_INFO.map(function(x){return esc(x);}).join('<br>')+'</small>'
-  +'<button type="button" class="yb yb1" data-k="tel">📞 התקשרות 1800 35 11 10</button>'
+  +'<button type="button" class="yb yb1" data-k="tel">📞 מוקד 1800 35 11 10</button>'
+  +'<button type="button" class="yb yb2" data-k="tel2">📱 מהנייד 03 9483222</button>'
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
   +'</div>';
  function close(){w.remove();document.removeEventListener('keydown',esckey);}
@@ -8937,6 +8940,7 @@ function manivSheet(){
   if(k===null||k===undefined)return;
   close();
   if(k==='tel')location.href='tel:1800351110';
+  if(k==='tel2')location.href='tel:039483222';
  };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
@@ -8989,8 +8993,10 @@ document.getElementById('rivShare')&&document.getElementById('rivShare').addEven
  var r=e.target.closest&&e.target.closest('[data-r]');if(!r)return;
  fileOpen(r.getAttribute('data-r'));
 });
-boot('lawblink',function(){var b=document.getElementById('gLaw');if(!b)return;var n=0;try{n=+localStorage.getItem('lawSeen')||0;}catch(x){}b.classList.toggle('taskblink',n<LAW_ITEMS.length);});
-document.getElementById('gLaw')&&document.getElementById('gLaw').addEventListener('click',function(){try{localStorage.setItem('lawSeen',String(LAW_ITEMS.length));}catch(x){}this.classList.remove('taskblink');});
+var LAW_DUE='2026-10-11T07:00:00+03:00';
+function lawDueOn(){var s='';try{s=localStorage.getItem('lawSunSeen')||'';}catch(x){}return Date.now()>=Date.parse(LAW_DUE)&&!s;}
+boot('lawblink',function(){var b=document.getElementById('gLaw');if(!b)return;var n=0;try{n=+localStorage.getItem('lawSeen')||0;}catch(x){}b.classList.toggle('taskblink',n<LAW_ITEMS.length||lawDueOn());});
+document.getElementById('gLaw')&&document.getElementById('gLaw').addEventListener('click',function(){try{localStorage.setItem('lawSeen',String(LAW_ITEMS.length));if(Date.now()>=Date.parse(LAW_DUE))localStorage.setItem('lawSunSeen','1');}catch(x){}if(!lawDueOn())this.classList.remove('taskblink');});
 var WIN_ITEMS=[
  {n:'01',t:'מרימים את הראש ולא את הידיים',f:'amirshwartz1, תגובה בטיקטוק על סרטון העוגה'},
  {n:'02',t:'בכל רגע נתון יש לנו שתי אופציות: לצעוד קדימה לצמיחה או לצעוד אחורה לנוחות.',f:'כרטיס שצילמתי, 7.10, #מיאתבוחרתלהיות?'}
