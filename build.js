@@ -3610,7 +3610,7 @@ try{
     for the lawyer get one tile on the home screen, numbered.
   -->
   <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>03 מכתב התגובה ו 04 ההסבר, לרועי ביום ראשון</small></button>
-  <button type="button" class="gt gManiv" id="gManiv"><b>💧 תשלום למניב</b><small>לקוח 50523290. להתקשר ביום שני בבוקר</small></button>
+  <button type="button" class="gt gManiv" id="gManiv"><b>💧 תשלום למניב</b><small>לקוח 50523290. ביום שני המוקד נפתח ב 09:00</small></button>
   <button type="button" class="gt gOcc" id="gOcc"><b>🩺 מרפאה תעסוקתית</b><small>מכבי רמות. טלפון א עד ה 08:00 עד 11:00</small></button>
   <button type="button" class="gt gShop" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
   <!--
@@ -12560,7 +12560,9 @@ on('gOcc',occSheet);
 var MANIV_INFO=[
  'מספר לקוח (משלם): 50523290',
  'על שם: ליאני יואל ושות׳. הנכס: פלוטיצקי 10',
- 'מוקד: 1800 35 11 10',
+ 'מוקד: 1800 35 11 10 (חינם רק מטלפון קווי)',
+ 'מהנייד: פניות הציבור 03 9483222',
+ 'שעות המוקד: ביום שני 09:00 עד 19:00. א, ג, ד, ה 08:30 עד 16:30. שישי 08:30 עד 12:30',
  '',
  'התשלום האחרון: 30.6.26, 706.48 ₪ (חשבון אפריל עד מאי 26). דרך MAST, אישור 0529000, ספח 260455803',
  'לפניו: 9.5.26, 205.2 ₪ (פברואר עד מרץ 26). אישור 5178712, ספח 260307565',
@@ -12583,7 +12585,8 @@ function manivSheet(){
  w.innerHTML='<div class="ycard">'
   +'<b>💧 מניב ראשון, המים של לולוס</b>'
   +'<small>'+MANIV_INFO.map(function(x){return esc(x);}).join('<br>')+'</small>'
-  +'<button type="button" class="yb yb1" data-k="tel">📞 התקשרות 1800 35 11 10</button>'
+  +'<button type="button" class="yb yb1" data-k="tel">📞 מוקד 1800 35 11 10</button>'
+  +'<button type="button" class="yb yb2" data-k="tel2">📱 מהנייד 03 9483222</button>'
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
   +'</div>';
  function close(){w.remove();document.removeEventListener('keydown',esckey);}
@@ -12594,6 +12597,7 @@ function manivSheet(){
   if(k===null||k===undefined)return;
   close();
   if(k==='tel')location.href='tel:1800351110';
+  if(k==='tel2')location.href='tel:039483222';
  };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
@@ -12653,8 +12657,11 @@ document.getElementById('rivShare')&&document.getElementById('rivShare').addEven
 });
 // 4.10: Itzik could not find these files. The tile blinks until he opens it
 // after a new document was added (the count is what he has seen).
-boot('lawblink',function(){var b=document.getElementById('gLaw');if(!b)return;var n=0;try{n=+localStorage.getItem('lawSeen')||0;}catch(x){}b.classList.toggle('taskblink',n<LAW_ITEMS.length);});
-document.getElementById('gLaw')&&document.getElementById('gLaw').addEventListener('click',function(){try{localStorage.setItem('lawSeen',String(LAW_ITEMS.length));}catch(x){}this.classList.remove('taskblink');});
+/* 10.10: Itzik sends 03 and 04 to Roi on Sunday. The tile blinks from Sunday 11.10 07:00 until he opens it. */
+var LAW_DUE='2026-10-11T07:00:00+03:00';
+function lawDueOn(){var s='';try{s=localStorage.getItem('lawSunSeen')||'';}catch(x){}return Date.now()>=Date.parse(LAW_DUE)&&!s;}
+boot('lawblink',function(){var b=document.getElementById('gLaw');if(!b)return;var n=0;try{n=+localStorage.getItem('lawSeen')||0;}catch(x){}b.classList.toggle('taskblink',n<LAW_ITEMS.length||lawDueOn());});
+document.getElementById('gLaw')&&document.getElementById('gLaw').addEventListener('click',function(){try{localStorage.setItem('lawSeen',String(LAW_ITEMS.length));if(Date.now()>=Date.parse(LAW_DUE))localStorage.setItem('lawSunSeen','1');}catch(x){}if(!lawDueOn())this.classList.remove('taskblink');});
 /*
   2.10. Winning lines. Tapping a line copies it. A new line goes at the end
   with the next number, with where it came from.
