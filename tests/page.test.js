@@ -667,7 +667,7 @@ test('the home screen is the microphone and nothing else', () => {
   assert.ok(html.includes('id="bareBtn"'));
   // The way home is a small quiet symbol, not a big bar that reads as if the
   // page needs pressing to update; its label still says where it goes.
-  assert.ok(html.includes('<button type="button" class="reloadbig" id="reloadBtn" aria-label="חזרה לדף הבית" title="חזרה לדף הבית">↻</button>'));
+  assert.ok(html.includes('<button type="button" class="reloadbig" id="reloadBtn" aria-label="רענון וחזרה לדף הבית" title="רענון וחזרה לדף הבית">↻<span class="rlw">רענן</span></button>'));
   // And arranging is in settings, where he put it.
   const settings = html.slice(html.indexOf('<section id="pZ" hidden>'), html.indexOf('<section id="pQ" hidden>'));
   assert.ok(settings.includes('id="arrangeBtn"'), 'arranging must live in settings');
@@ -1295,7 +1295,9 @@ test('the file ceiling is the one the file channel actually has', () => {
   // file leaves in slices the listener joins, under an 18MB ceiling.
   assert.ok(html.includes('var QMAX=18*1024*1024;'));
   assert.ok(!html.includes('var QMAX=10*1024*1024;'));
-  assert.ok(html.includes("t+=' · גדול מדי, המגבלה 18MB יחד, אפשר בוויטרנספר'"));
+  assert.ok(html.includes("t+=' · גדול מדי, המגבלה 18MB יחד'"));
+  // 11.10, Itzik: no WeTransfer anywhere on the page; big files go to our own server.
+  assert.ok(!/ויטרנספר|wetransfer\.com\//.test(html));
   assert.ok(html.includes('var PART = 2000000;'));
   assert.ok(html.includes("f.name + '.part' + (j + 1) + 'of' + k"));
   // And a failed send of a video must not tell him to record again.

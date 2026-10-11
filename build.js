@@ -3028,6 +3028,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
  border:1px solid var(--line);border-radius:20px;cursor:pointer;
  color:var(--dim);font:700 20px Heebo,sans-serif;background:transparent}
 .reloadbig:active{transform:translateY(1px)}
+.reloadbig .rlw{font:700 15px Heebo,sans-serif;margin-inline-start:6px}
 .reloadbig[disabled]{opacity:.6;font-size:14px}
 .reloadbig:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 /*
@@ -3516,12 +3517,6 @@ try{
     <span class="wi" aria-hidden="true">📷</span>
     <b>צילום</b><small>מצלמה</small>
    </button>
-   <!-- 10.10, Itzik: the WeTransfer way of the file box, also here on the
-        home card, right under the file upload, for files over the limit. -->
-   <a id="wBig" class="way wbig" href="https://wetransfer.com/" target="_blank" rel="noopener">
-    <span class="wi" aria-hidden="true">📦</span>
-    <span><b>העלאת קבצים גדולים</b><small>בוויטרנספר, ואת הקישור מדביקים כאן</small></span>
-   </a>
   </div>
   <!--
     Writing is not a button any more. He asked on 16.9 for one simple thing:
@@ -3535,7 +3530,7 @@ try{
   </form>
   <div class="msgsaid" id="quickSaid"></div>
  </section>
- <button type="button" class="reloadbig" id="reloadBtn" aria-label="חזרה לדף הבית" title="חזרה לדף הבית">↻</button>
+ <button type="button" class="reloadbig" id="reloadBtn" aria-label="רענון וחזרה לדף הבית" title="רענון וחזרה לדף הבית">↻<span class="rlw">רענן</span></button>
 
 <section id="pH">
  <!--
@@ -4674,19 +4669,6 @@ __RIVSHARE__
   <input type="file" id="fPick" name="attachment" multiple>
   <input type="text" id="fCap" placeholder="כיתוב, לא חובה">
   <div class="fmeta" id="fMeta">אפשר לבחור כל קובץ, גם כמה יחד, לכתוב שורה, ואז להקליט. הכל יוצא בהודעה אחת.</div>
-  <!-- 10.10, Itzik: "אין לי פה הצעה לwrttanfer?" The iPhone menu (gallery,
-       camera, files) belongs to the phone and cannot hold it, so WeTransfer
-       sits here, open whenever the file box is, not only after a file is
-       turned away for its size. -->
-  <!-- 10.10, Itzik: "צריך להבליט את זה", with a line for the phone (gallery)
-       and one for the computer (a file on it). It lights up the moment a
-       picked file is too big, see describe(). -->
-  <div class="wetbox" id="fWeBox">
-   <a class="ask" id="fWeT" href="https://wetransfer.com/" target="_blank" rel="noopener">קובץ גדול? לשלוח בוויטרנספר</a>
-   <div class="wetstep"><b>בטלפון:</b> לוחצים שם על הפלוס ובוחרים מהגלריה.</div>
-   <div class="wetstep"><b>במחשב:</b> לוחצים שם על הפלוס ובוחרים את הקובץ מהמחשב.</div>
-   <div class="wetstep">לוחצים העברה, בוחרים קבלת קישור, ואת הקישור מדביקים כאן בהודעה ושולחים.</div>
-  </div>
   <div class="pthumbs" id="fThumbs" hidden></div>
   <button type="submit" id="fBtn">שליחת הקובץ</button>
   <div id="recWrap">
@@ -5656,7 +5638,6 @@ function sendFiles(list, note) {
 var UPURL=(INSTANCE&&INSTANCE.uploadUrl)||'';
 var BIGF=15*1024*1024;
 var UPCHUNK=8*1024*1024;
-if(UPURL){['wBig','fWeBox'].forEach(function(i){var e=document.getElementById(i);if(e)e.style.display='none';});}
 // Which files leave by the big path. Past 15MB each, and if what is left for
 // ntfy still passes its 18MB, the largest of those join them.
 function splitSend(list){
@@ -5869,9 +5850,7 @@ function bigFailedSay(e,list){
  pickArr=pickArr.filter(function(f){return e.failed.indexOf(f.name)>=0;});
  describe();paintBoxPick();
  if(e.unreachable){
-  fSaid.innerHTML=esc('ההעלאה הישירה נכשלה, השרת לא ענה. אפשר בוויטרנספר:')
-   +'<a class="ask" href="https://wetransfer.com/" target="_blank" rel="noopener" style="display:flex;margin-top:8px">לשלוח בוויטרנספר</a>'
-   +'<span style="display:block;margin-top:6px">'+esc('שם בוחרים את הקובץ, לוחצים העברה ובוחרים קבלת קישור. את הקישור מדביקים כאן בהודעה ושולחים.')+'</span>';
+  fSaid.textContent='ההעלאה הישירה נכשלה, השרת לא ענה. '+(FEM?'שלחי':'תשלח')+' שוב בעוד כמה דקות, וההעלאה תמשיך מאותו מקום.';
   var r=document.getElementById('recSaid');if(r)r.textContent='ההעלאה הישירה נכשלה, השרת לא ענה.';
   toast('ההעלאה הישירה נכשלה, השרת לא ענה.');
   return;
@@ -6191,12 +6170,12 @@ function linkify(t){
    if(first==='mail')return 'פתיחה במייל';
    if(first==='maps'||path.indexOf('/maps')===0)return 'פתיחה במפה';
   }
-  var NAMES={'wetransfer.com':'הורדה מוויטרנספר','we.tl':'הורדה מוויטרנספר',
+  var NAMES={'wetransfer.com':'הורדת הקובץ','we.tl':'הורדת הקובץ',
    'youtube.com':'צפייה ביוטיוב','youtu.be':'צפייה ביוטיוב','m.youtube.com':'צפייה ביוטיוב',
    'instagram.com':'פתיחה באינסטגרם','tiktok.com':'פתיחה בטיקטוק','facebook.com':'פתיחה בפייסבוק',
    'wa.me':'פתיחה בוואטסאפ','github.com':'פתיחה בגיטהאב'};
   if(NAMES[host])return NAMES[host];
-  if(host.slice(-15)==='.wetransfer.com')return 'הורדה מוויטרנספר';
+  if(host.slice(-15)==='.wetransfer.com')return 'הורדת הקובץ';
   return 'פתיחת הקישור ('+host+')';
  }
  var PHONE_RE='(?<![0-9])(?:0[2-9][0-9]?[ -]?[0-9]{3}[ -]?[0-9]{4}|1[ -]?[78]00[ -]?[0-9]{2,3}[ -]?[0-9]{3,4})(?![0-9])';
@@ -15157,16 +15136,10 @@ function describe(){
  var big=totalSize(sp.small)>QMAX&&!(qMode==='normal'&&allImages);
  if(sp.big.length)t+=sp.big.length>1?(' · '+sp.big.length+' קבצים גדולים עולים ישר לשרת. לא לסגור את הדף.'):' · הקובץ הגדול עולה ישר לשרת. לא לסגור את הדף.';
  if(big&&list.some(isImg)){t+=' · מעל 18MB, התמונות יכווצו כדי שייצאו';big=false;}
- if(big)t+=' · גדול מדי, המגבלה 18MB יחד, אפשר בוויטרנספר';
+ if(big)t+=' · גדול מדי, המגבלה 18MB יחד';
  fMeta.className='fmeta'+(big?' bad':'');
  fMeta.textContent=t;
  // A file too big stops right here, at the pick, not after pressing send.
- var wb=document.getElementById('fWeBox');
- if(big&&wb){
-  fSaid.textContent='הקובץ גדול מדי לשליחה מכאן. '+(FEM?'בואי':'בוא')+' ננסה להעביר אותו בוויטרנספר, בכפתור המודגש למעלה.';
-  wb.classList.remove('hot');void wb.offsetWidth;wb.classList.add('hot');
-  wb.scrollIntoView({block:'center',behavior:'smooth'});
- }
 }
 function setQ(m){
  qMode=m;
@@ -15278,9 +15251,7 @@ function reallySend(list,squeezed){
  if(total>QMAX){
   var each=list.length>1&&list.every(function(f){return f.size<=QMAX;});
   fSaid.innerHTML=esc((list.length>1?list.length+' קבצים יחד שוקלים ':'הקובץ שוקל ')+mb(total)+' וזה יותר ממה שיוצא מכאן ישר.'
-    +(each?' אפשר לשלוח אותם אחד אחד, או בוויטרנספר:':(FEM?' שלחי בוויטרנספר, זה חינם ובלי הרשמה:':' תשלח בוויטרנספר, זה חינם ובלי הרשמה:')))
-   +'<a class="ask" href="https://wetransfer.com/" target="_blank" rel="noopener" style="display:flex;margin-top:8px">לשלוח בוויטרנספר</a>'
-   +'<span style="display:block;margin-top:6px">'+esc('שם בוחרים את הקובץ, לוחצים העברה ובוחרים קבלת קישור. את הקישור מדביקים כאן בהודעה ושולחים.')+'</span>';
+    +(each?' אפשר לשלוח אותם אחד אחד.':''));
   fBtn.disabled=false;return;
  }
  var cap=document.getElementById('fCap').value.trim();
@@ -15329,12 +15300,12 @@ function goFiles(list,cap,deflt,hasVoice){
    // Some arrived and are already in the chat. Only the rest has to go again.
    clearPick();
    sendSay((list.length-e.failed.length)+' מתוך '+list.length+' הגיעו. לא עלה: '+e.failed.join(', ')
-    +(FEM?'. שלחי רק אותו שוב, ואם הוא גדול העלי לוויטרנספר והדביקי כאן את הקישור.':'. תשלח רק אותו שוב, ואם הוא גדול תעלה לוויטרנספר ותדביק כאן את הקישור.'));
+    +(FEM?'. שלחי רק אותו שוב.':'. תשלח רק אותו שוב.'));
    return;
   }
   sendSay(hasVoice
    ?(FEM?'ההקלטה לא הגיעה שלמה ולא נשמרה. הקליטי שוב עכשיו, לפני שתשכחי מה אמרת.':'ההקלטה לא הגיעה שלמה ולא נשמרה. תקליט שוב עכשיו, לפני שתשכח מה אמרת.')
-   :(FEM?'הקובץ לא הגיע שלם ולא נשמר. שלחי שוב, ואם הוא גדול העלי לוויטרנספר והדביקי כאן את הקישור.':'הקובץ לא הגיע שלם ולא נשמר. תשלח שוב, ואם הוא גדול תעלה לוויטרנספר ותדביק כאן את הקישור.'));
+   :(FEM?'הקובץ לא הגיע שלם ולא נשמר. שלחי שוב.':'הקובץ לא הגיע שלם ולא נשמר. תשלח שוב.'));
  }).then(function(){fBtn.disabled=false;});
 }
 function sendSay(t){
