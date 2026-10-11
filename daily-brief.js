@@ -85,7 +85,7 @@ function prompt(m, chat, reports) {
 function runClaude(text) {
   return new Promise((resolve, reject) => {
     // No tools at all: the mail is untrusted text, the session only summarizes it.
-    const args = ['-p', '--output-format', 'text', '--disallowedTools',
+    const args = ['-p', '--model', 'haiku', '--output-format', 'text', '--disallowedTools',
       'Bash', 'Edit', 'Write', 'Read', 'Grep', 'Glob', 'WebFetch', 'WebSearch', 'NotebookEdit', 'Task'];
     const child = spawn('claude', args, { cwd: __dirname, env: process.env });
     let out = '', err = '';

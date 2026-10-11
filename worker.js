@@ -342,6 +342,14 @@ function prompt(list) {
     'שתים עשרה דקות של שקט הן מבחינתו הודעה שנפלה, ולכן עבודה ארוכה מקבלת את זה מיד.',
     '',
     'שלב ב: תעשה בדיוק את מה שהוא ביקש, עד הסוף, ותאמת את התוצאה על הדף החי.',
+    /*
+      11.10, Itzik, for every monitor (his, Ilay, Rinat, every customer to come):
+      plan in Opus 5.5, execute in the cheapest model. The session runs on the
+      planner; the legwork goes to a Haiku subagent, and the planner checks it.
+    */
+    '  חלוקת עבודה בין מודלים: אתה המתכנן. תשובה קצרה או שינוי של שורה עושים לבד.',
+    '  כל ביצוע של יותר מכמה צעדים (הרצת פקודות, עיבוד קבצים, חיפוש, כתיבה של קובץ ארוך) עובר לסוכן',
+    '  עם הכלי Agent ו model: "haiku", עם הוראות מדויקות ופקודות מוכנות. הוא מבצע ומחזיר מספרים; אתה בודק ומחליט.',
     '',
     'שלב ג, בסוף, לכל הודעה, חובה:',
     '  1. בקובץ שלה ב-data/chat/chat: status ל-"done", ו-note עם התמלול אם זו הקלטה.',
@@ -400,6 +408,27 @@ function houseRules() {
   return lines.join('\n');
 }
 
+/*
+  11.10, Itzik: "תעקוב אחרי הצריכה של רינת". Every session's usage, one line in
+  data/status/usage.jsonl: cost at list price and tokens per model, subagents
+  included. usage-watch.js on the server reads every monitor's file, reports
+  and warns on overuse. Never throws: a bad line must not cost him an answer.
+*/
+function logUsage(raw, list) {
+  try {
+    const t = String(raw).trim();
+    const d = JSON.parse(t.slice(t.indexOf('{')));
+    const models = {};
+    for (const [m, u] of Object.entries(d.modelUsage || {})) {
+      models[m] = { in: u.inputTokens || 0, out: u.outputTokens || 0, cr: u.cacheReadInputTokens || 0, cw: u.cacheCreationInputTokens || 0, usd: +(u.costUSD || 0).toFixed(4) };
+    }
+    const line = { at: new Date().toISOString(), who: inst.name, usd: +(d.total_cost_usd || 0).toFixed(4), turns: d.num_turns || 0,
+      ms: d.duration_ms || 0, msgs: list.length, sub: (d.subagent_stats && d.subagent_stats.spawned) || 0, models };
+    fs.appendFileSync(path.join(STATUS, 'usage.jsonl'), JSON.stringify(line) + '\n');
+    return d;
+  } catch (e) { return null; }
+}
+
 function run(list) {
   const text = prompt(list);
   say('מפעיל סשן על ' + list.length + ' הודעות: ' + list.map((m) => m.file).join(', '));
@@ -434,7 +463,8 @@ function run(list) {
     word of his message. Anything that truly needs his browser still waits for
     the PC, which is why the PC worker keeps running too.
   */
-  const args = ['-p', '--dangerously-skip-permissions'];
+  // 11.10: the planner model, and JSON out so every session's usage is logged (logUsage).
+  const args = ['-p', '--dangerously-skip-permissions', '--model', process.env.MONITOR_PLAN_MODEL || 'claude-opus-5-5', '--output-format', 'json'];
   if (process.platform === 'win32') args.splice(1, 0, '--chrome');
   const child = spawn('claude', args,
     { cwd: HERE, shell: true, windowsHide: true });
@@ -449,12 +479,13 @@ function run(list) {
   */
   const sid = child.pid;
   register(sid, list.map((m) => m.file));
-  let out = '';
-  child.stdout.on('data', (b2) => { out += b2; });
+  let out = '', json = '';
+  child.stdout.on('data', (b2) => { out += b2; json += b2; });
   child.stderr.on('data', (b2) => { out += b2; });
   child.on('close', (code) => {
     unregister(sid);
-    say('הסשן הסתיים, קוד ' + code + '. ' + String(out).trim().slice(-300).replace(/\s+/g, ' '));
+    const res = logUsage(json, list);
+    say('הסשן הסתיים, קוד ' + code + '. ' + String(res ? res.result || '' : out).trim().slice(-300).replace(/\s+/g, ' '));
     /*
       The exit code was never the question.
 

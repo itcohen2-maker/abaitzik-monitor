@@ -52,7 +52,7 @@ function prompt(seen) {
 function runClaude(text) {
   return new Promise((resolve, reject) => {
     // Read only: the session may look, it may not touch anything.
-    const args = ['-p', '--allowedTools', 'Read,Grep,Glob', '--output-format', 'text'];
+    const args = ['-p', '--model', 'haiku', '--allowedTools', 'Read,Grep,Glob', '--output-format', 'text'];
     const child = spawn('claude', args, { cwd: __dirname, env: process.env });
     let out = '', err = '';
     const timer = setTimeout(() => { child.kill('SIGTERM'); reject(new Error('timeout')); }, 25 * 60 * 1000);

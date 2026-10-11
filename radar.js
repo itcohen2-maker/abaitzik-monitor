@@ -55,7 +55,7 @@ function prompt(seen) {
 function runClaude(text) {
   return new Promise((resolve, reject) => {
     // Search and read only: the session may look at the web, it may not touch anything here.
-    const args = ['-p', '--allowedTools', 'WebSearch,WebFetch', '--output-format', 'text'];
+    const args = ['-p', '--model', 'haiku', '--allowedTools', 'WebSearch,WebFetch', '--output-format', 'text'];
     const child = spawn('claude', args, { cwd: __dirname, env: process.env });
     let out = '', err = '';
     const timer = setTimeout(() => { child.kill('SIGTERM'); reject(new Error('timeout')); }, 25 * 60 * 1000);
