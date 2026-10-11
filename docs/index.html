@@ -1178,6 +1178,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .ship .sact button{background:#2e7d32}
 .ship .shipq{width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif}
 .micSteps{margin:2px 0 6px;padding-inline-start:20px;font:500 15px/1.5 Heebo,sans-serif}
+.micMore{display:block;margin:0 0 8px;font:500 14px/1.5 Heebo,sans-serif;opacity:.85}
 .ywa{background:#efeae2;border-radius:12px;padding:10px;max-height:40vh;overflow:auto;margin-bottom:4px}
 .ywa i{display:block;font:600 11px Heebo,sans-serif;font-style:normal;color:#54656f;text-align:center;margin-bottom:8px}
 .yshort{white-space:pre-line;font:15px/1.5 Heebo,sans-serif;color:#111b21;
@@ -1904,7 +1905,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-11T16:58:39.911Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-11T16:59:42.964Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3413,7 +3414,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='8a04761c4c';
+var CODE_ID='5a2ef45eaa';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11441,7 +11442,7 @@ function micDiagLine(){
 }
 function diagText(d){return Object.keys(d).map(function(k){return k+'='+d[k];}).join(' ');}
 function micStuck(why){
- try{localStorage.setItem('micDiag',JSON.stringify({why:why,d:diagText(recDiag||{}),at:Date.now()}));}catch(e){}
+ try{localStorage.setItem('micDiag',JSON.stringify({why:why,d:diagText(recDiag||{})+(micAppMode()?' app':' tab'),at:Date.now()}));}catch(e){}
  try{if(recStream){recStream.getTracks().forEach(function(t){t.stop();});recStream=null;}}catch(e){}
  try{if(sfx){sfx.close();sfx=null;}}catch(e){}
  recStarting=false;recBtn.disabled=false;recModal(false);
@@ -11483,6 +11484,7 @@ function micSheet(denied){
     ?'הטלפון לא מרשה לדף להקליט. מתקנים פעם אחת:'
     :'זה קורה לפעמים אחרי מעבר בין חלונות. זו לא תקלה שלך, ורענון לא מספיק. מה שהקלדת נשמר. מתקנים כך:')+'</small>'
   +'<ol class="micSteps">'+steps.map(function(t){return '<li>'+esc(t)+'</li>';}).join('')+'</ol>'
+  +(ios&&!denied?'<small class="micMore">כדי שזה לא יחזור, פעם אחת: הגדרות של האייפון, אפליקציות, ספארי, מיקרופון, לבחור "לאפשר".<br>ובינתיים בלי לסגור כלום: ללחוץ בתיבת הכתיבה ועל המיקרופון של המקלדת, ולדבר. זה עובד תמיד.</small>':'')
   +'<button type="button" class="yb yb1" data-k="again">לנסות שוב עכשיו</button>'
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
   +'</div>';

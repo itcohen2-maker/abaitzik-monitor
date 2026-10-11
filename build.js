@@ -2418,6 +2418,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .ship .sact button{background:#2e7d32}
 .ship .shipq{width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif}
 .micSteps{margin:2px 0 6px;padding-inline-start:20px;font:500 15px/1.5 Heebo,sans-serif}
+.micMore{display:block;margin:0 0 8px;font:500 14px/1.5 Heebo,sans-serif;opacity:.85}
 /* 30.9: the short text was near invisible on the dark theme ("אני רוצה לראות
    איך אני אראה"). It is now shown as the WhatsApp bubble Yehuda will get. */
 .ywa{background:#efeae2;border-radius:12px;padding:10px;max-height:40vh;overflow:auto;margin-bottom:4px}
@@ -15778,7 +15779,7 @@ function micDiagLine(){
 }
 function diagText(d){return Object.keys(d).map(function(k){return k+'='+d[k];}).join(' ');}
 function micStuck(why){
- try{localStorage.setItem('micDiag',JSON.stringify({why:why,d:diagText(recDiag||{}),at:Date.now()}));}catch(e){}
+ try{localStorage.setItem('micDiag',JSON.stringify({why:why,d:diagText(recDiag||{})+(micAppMode()?' app':' tab'),at:Date.now()}));}catch(e){}
  try{if(recStream){recStream.getTracks().forEach(function(t){t.stop();});recStream=null;}}catch(e){}
  try{if(sfx){sfx.close();sfx=null;}}catch(e){}
  recStarting=false;recBtn.disabled=false;recModal(false);
@@ -15822,6 +15823,14 @@ function micSheet(denied){
     ?'הטלפון לא מרשה לדף להקליט. מתקנים פעם אחת:'
     :'זה קורה לפעמים אחרי מעבר בין חלונות. זו לא תקלה שלך, ורענון לא מספיק. מה שהקלדת נשמר. מתקנים כך:')+'</small>'
   +'<ol class="micSteps">'+steps.map(function(t){return '<li>'+esc(t)+'</li>';}).join('')+'</ol>'
+  /*
+    11.10, Itzik: "every time I come back the microphone has to be approved
+    again and it does not work, is there another way". On an iPhone the phone
+    asks again on every return while Safari's microphone setting is "ask", and
+    that second prompt is the one that fails. Setting it to allow once ends
+    the asking, and the keyboard's own microphone never needs the page at all.
+  */
+  +(ios&&!denied?'<small class="micMore">כדי שזה לא יחזור, פעם אחת: הגדרות של האייפון, אפליקציות, ספארי, מיקרופון, לבחור "לאפשר".<br>ובינתיים בלי לסגור כלום: ללחוץ בתיבת הכתיבה ועל המיקרופון של המקלדת, ולדבר. זה עובד תמיד.</small>':'')
   +'<button type="button" class="yb yb1" data-k="again">לנסות שוב עכשיו</button>'
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
   +'</div>';
