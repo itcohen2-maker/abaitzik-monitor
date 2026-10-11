@@ -13668,6 +13668,8 @@ function lawSheet(){
 on('gLaw',lawSheet);
 /* 11.10: temporary, the invoices Itzik sends to Etzel Dudi. Delete the tile when he says. */
 var DUDI_ITEMS=[
+ {n:'★',t:'כל ארבע ביחד, 2,309 ש״ח (PDF אחד)',r:'dudi-4-invoices-2309.pdf'},
+ {n:'★ב',t:'כל ארבע ביחד, תמונה אחת לוואטסאפ',r:'dudi-4-invoices-2309.jpg'},
  {n:'01',t:'יוני, חשבונית 023334, 444 ש״ח (PDF)',r:'dudi-023334-june.pdf'},
  {n:'02',t:'יולי, חשבונית 023388, 888 ש״ח (PDF)',r:'dudi-023388-july.pdf'},
  {n:'01ב',t:'יוני, תמונה לגלריה',r:'dudi-023334-june.jpg'},
