@@ -596,7 +596,7 @@ test('a stuck microphone ends in one sheet with steps, not a reload', () => {
   const ended = body.slice(body.indexOf('track.onended=function(){'), body.indexOf('track.onended=function(){') + 300);
   assert.ok(ended.includes("micStuck('ended');"), 'and so does a track that dies');
   assert.ok(body.includes("micStuck('hang');"), 'a permission call that never answers has a deadline');
-  assert.ok(body.includes("track.muted&&!document.hidden"), 'a muted track is caught at the start');
+  assert.ok(body.includes("if(track.muted){recAbort=true;recMuted=true;recStop();}"), 'a muted track is caught at the start');
   assert.ok(html.includes('function micSheet(denied){'), 'the sheet exists');
   assert.ok(html.includes("document.addEventListener('visibilitychange',micWake);"), 'coming back lets go of what was held');
 });
@@ -2154,4 +2154,67 @@ test('no screen ends in a grey help paragraph: drive, notes, unread and food hav
   for (const id of ['drvHelp', 'noteHelp', 'unrHelp', 'fdHelp']) assert.ok(src.includes('data-q="' + id + '"'), id);
   for (const k of ['drvTip', 'noteTip', 'unrTip', 'fdTip']) assert.ok(src.includes('data-tip="' + k + '"'), k);
   assert.ok(!src.includes('<div class="hint" style="margin-top:14px">חסרה תיקייה'));
+});
+// ---- appended 11.10: the microphone retry must not loop ----
+const vm = require('node:vm');
+test('a microphone that keeps coming back muted gives up after one retry', () => {
+  const html = renderPage(fixture({}));
+  const from = html.indexOf('function recModal(open){');
+  const to = html.indexOf('var wakeLock=null;');
+  assert.ok(from > 0 && to > from);
+  const src = html.slice(from, to);
+  // tiny fake clock
+  let now = 0, id = 0; const timers = new Map();
+  const setTimeout_ = (f, ms) => { timers.set(++id, { f, at: now + ms }); return id; };
+  const clearTimeout_ = (i) => timers.delete(i);
+  const setInterval_ = () => ++id; const clearInterval_ = () => {};
+  function advance(ms) {
+    const end = now + ms;
+    for (;;) {
+      let best = null;
+      for (const [i, t] of timers) if (t.at <= end && (!best || t.at < best[1].at)) best = [i, t];
+      if (!best) break;
+      timers.delete(best[0]); now = Math.max(now, best[1].at); best[1].f();
+    }
+    now = end;
+  }
+  let starts = 0, sheets = 0;
+  const mkTrack = () => ({ readyState: 'live', muted: true, stop() {} });
+  class MR {
+    constructor() { this.state = 'inactive'; }
+    start() { this.state = 'recording'; starts++; }
+    stop() { this.state = 'inactive'; setTimeout_(() => this.onstop && this.onstop(), 0); }
+  }
+  const el = () => ({ style: {}, classList: { add() {}, remove() {} }, setAttribute() {}, set textContent(v) {}, get textContent() { return ''; }, remove() {}, appendChild() {}, querySelector() { return null; } });
+  const ctx = {
+    setTimeout: setTimeout_, clearTimeout: clearTimeout_, setInterval: setInterval_, clearInterval: clearInterval_,
+    Date: { now: () => now }, Blob: class { constructor() { this.size = 0; } }, File: class {},
+    MediaRecorder: MR,
+    navigator: { mediaDevices: { getUserMedia: () => Promise.resolve({ getTracks: () => [], getAudioTracks: () => [ctx.__track] }) } },
+    document: { hidden: false, getElementById: () => el(), createElement: el, body: el(), addEventListener() {}, removeEventListener() {} },
+    recBtn: el(), recSaid: { textContent: '' }, sfx: null, sfxT: 0,
+    recPickType: () => '', audioMode() {}, paintMics() {}, freeScreen() {}, holdScreen() {}, recTick() {}, keepDraft() {},
+    micAppMode: () => false, micDenied: () => Promise.resolve(false), esc: String, FEM: false,
+    rec: null, recChunks: [], recTimer: null, recSec: 0, recStream: null,
+    sessionStorage: { removeItem() {} }, window: { MediaRecorder: MR, addEventListener() {} },
+  };
+  ctx.micSheet = undefined;
+  vm.createContext(ctx);
+  vm.runInContext(src.replace('function micSheet(denied){', 'function micSheet(denied){ __sheets++; return; ').replace(/var rec=null;?/, ''), Object.assign(ctx, { __sheets: 0 }));
+  const run = (code) => vm.runInContext(code, ctx);
+  const flush = () => new Promise((r) => setImmediate(r));
+  return (async () => {
+    ctx.__track = mkTrack();
+    run('toggleRec = typeof toggleRec==="undefined"?function(){micStuckRetried=false;recRetried=false;recStart();}:toggleRec');
+    run('toggleRec()');
+    for (let i = 0; i < 40; i++) { await flush(); advance(500); }
+    assert.ok(starts <= 2, 'started ' + starts + ' times with a track that stays muted');
+    assert.equal(ctx.__sheets, 1, 'and then the one sheet with steps');
+    // a healthy mic proves itself and gets its retry back
+    starts = 0; ctx.__track = Object.assign(mkTrack(), { muted: false });
+    run('toggleRec()');
+    for (let i = 0; i < 10; i++) { await flush(); advance(500); }
+    assert.equal(starts, 1);
+    assert.equal(run('micStuckRetried'), false);
+  })();
 });
