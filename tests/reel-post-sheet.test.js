@@ -53,7 +53,7 @@ function tap(h, b) {
   return el;
 }
 
-for (const num of ['21', '05']) {
+for (const num of ['05', '06']) {
   test(`${num} פרסום opens a sheet with every copy button and the right text`, async () => {
     const h = harness();
     const d = posts[num];
@@ -86,16 +86,16 @@ for (const num of ['21', '05']) {
 test('the reels list sends פרסום items to the sheet, and the full text link opens the txt', async () => {
   assert.ok(html.includes('else if(/פרסום$/.test(it.n))postSheet(it);'));
   const h = harness();
-  vm.runInContext(`postSheet({n:'21 פרסום',r:'reel-21-8kg-post.txt'})`, h.ctx);
+  vm.runInContext(`postSheet({n:'06 פרסום',r:'reel-06-rings-post.txt'})`, h.ctx);
   await flush(); await flush();
   h.sheet().onclick({ target: { getAttribute: (k) => (k === 'data-full' ? '1' : null) } });
-  assert.deepEqual(h.opened, ['reel-21-8kg-post.txt']);
+  assert.deepEqual(h.opened, ['reel-06-rings-post.txt']);
 });
 
 test('a missing data file falls back to the old text viewer', async () => {
   const h = harness();
   h.ctx.fileEntry = () => null;
-  vm.runInContext(`postSheet({n:'21 פרסום',r:'reel-21-8kg-post.txt'})`, h.ctx);
+  vm.runInContext(`postSheet({n:'06 פרסום',r:'reel-06-rings-post.txt'})`, h.ctx);
   await flush(); await flush();
-  assert.deepEqual(h.opened, ['reel-21-8kg-post.txt']);
+  assert.deepEqual(h.opened, ['reel-06-rings-post.txt']);
 });
