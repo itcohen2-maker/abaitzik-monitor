@@ -14778,13 +14778,15 @@ document.getElementById('icAdd').onclick=function(){askInChat('מודול חדש
   returns counts per Israel day, shown under the rows as the last 14 days.
   25.9: "today big, total small, flip it." Today is the row's large number,
   the total moved into the small chip.
+  11.10: reading the counts needs the read only key nerVisit from the sealed
+  keys.json; without it the site answers 403 and the screen says so.
 */
 function loadVisits(){
  var box=document.getElementById('visitsList');
  var again=document.getElementById('visitsAgain');
  again.disabled=true;
  box.innerHTML='<div class="empty">בודק כניסות…</div>';
- fetch('https://candletimes.com/api/visit',{cache:'no-store'})
+ fetch('https://candletimes.com/api/visit',{cache:'no-store',headers:{'x-ner-key':secret('nerVisit')}})
   .then(function(r){return r.ok?r.json():null;})
   .then(function(j){
    again.disabled=false;
