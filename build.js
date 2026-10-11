@@ -2249,6 +2249,11 @@ body.editing .bn{display:none}
 #pH>.dragging{opacity:.6;transform:scale(1.02);outline:2px solid var(--accent);
  outline-offset:4px;border-radius:16px}
 #pH>.dragover{outline:2px dashed var(--accent);outline-offset:4px;border-radius:16px}
+#dropZone{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
+ background:rgba(20,40,80,.55);pointer-events:none}
+#dropZone[hidden]{display:none}
+#dropZone div{border:3px dashed #fff;border-radius:22px;padding:34px 40px;color:#fff;
+ font:700 22px Heebo,sans-serif;text-align:center;background:rgba(0,0,0,.25)}
 .gt b{font:700 14px Heebo,sans-serif;display:block}
 .gt small{font-size:10.5px;opacity:.92;font-weight:300}
 .gt:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
@@ -15115,6 +15120,44 @@ fPick.addEventListener('change',function(){
  else reallySend(list);
 });
 function putFiles(list){pickArr=list.slice();describe();paintBoxPick();return true;}
+/*
+  11.10, Itzik, by voice: on the computer he wants to drag a file and drop it
+  on the monitor, and it uploads and sends. Only a drag that carries files
+  counts, so moving a tile around the home screen is left alone. The drop
+  lands in the chat, joins anything already chosen, and leaves at once with
+  whatever is in the writing box as its line, the same send as the button.
+*/
+(function(){
+ var zone=null,depth=0;
+ function hasFiles(e){var t=e.dataTransfer&&e.dataTransfer.types;if(!t)return false;for(var i=0;i<t.length;i++)if(t[i]==='Files')return true;return false;}
+ function show(on){
+  if(!zone){zone=document.createElement('div');zone.id='dropZone';zone.hidden=true;
+   zone.innerHTML='<div>לשחרר כאן, והקובץ נשלח</div>';document.body.appendChild(zone);}
+  zone.hidden=!on;
+ }
+ document.addEventListener('dragenter',function(e){if(!hasFiles(e))return;e.preventDefault();depth++;show(true);});
+ document.addEventListener('dragover',function(e){if(!hasFiles(e))return;e.preventDefault();e.dataTransfer.dropEffect='copy';});
+ document.addEventListener('dragleave',function(e){if(!hasFiles(e))return;depth=Math.max(0,depth-1);if(!depth)show(false);});
+ document.addEventListener('drop',function(e){
+  if(!hasFiles(e))return;
+  e.preventDefault();depth=0;show(false);
+  var add=Array.prototype.slice.call(e.dataTransfer.files||[]).filter(function(f){return f&&f.size>0;});
+  if(!add.length)return;
+  pane('m');renderThread();
+  var f=document.getElementById('fileForm');if(f)f.hidden=false;
+  var pb=document.getElementById('plusBtn');if(pb)pb.setAttribute('aria-expanded','true');
+  qMode='full';
+  add.forEach(function(x){
+   for(var i=0;i<pickArr.length;i++){var g=pickArr[i];if(g.name===x.name&&g.size===x.size&&g.lastModified===x.lastModified)return;}
+   pickArr.push(x);
+  });
+  describe();paintBoxPick();
+  var list=picked();
+  fBtn.disabled=true;
+  sendSay(list.length>1?('מכין '+list.length+' קבצים.'):'מכין.');
+  reallySend(list);
+ });
+})();
 function totalSize(list){
  return list.reduce(function(n,f){return n+f.size;},0);
 }
