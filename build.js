@@ -12470,7 +12470,7 @@ on('gReels',reelSheet);
   11.10, Itzik: "שים במוניטור בכפתור סטורי". Stories ready to save to the phone,
   newest on top. Same viewer as the reels: fileOpen has the save button.
 */
-var STORY_ITEMS=[{n:'12.10 אסור לי',t:'כרגע אסור לי, הרשימה נמחקת, אז הכנתי לי כריך',r:'story-asur-list-1210.mp4'},{n:'11.10 הלחמניה',t:'אסור לי לאכול כרגע, הצלחת עם הלחמניה',r:'story-asur-leechol-1110.mp4'}];
+var STORY_ITEMS=[{n:'12.10 אסור לי לאכול',t:'כרגע אסור לי לאכול: קטניות, דגנים מלאים, פירות, ירקות, סיבים תזונתיים, פיצוחים. אז הכנתי לי כריך',r:'story-asur-list-1210.mp4'}];
 function storySheet(){
  var old=document.getElementById('stSheet');if(old)old.remove();
  var w=document.createElement('div');
