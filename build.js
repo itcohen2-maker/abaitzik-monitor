@@ -3683,7 +3683,7 @@ try{
   -->
   <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>05 עד 20, גם באיכות גבוהה</small></button>
-  <button type="button" class="gt gStory" id="gStory" data-new="1"><b>🎞️ סטורי</b><small>סטוריז מוכנים לשמירה בטלפון</small></button>
+  <button type="button" class="gt gStory" id="gStory" data-new="1"><b>🎞️ סטורי</b><small>ריק כרגע, הסטורי עלה</small></button>
   <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 02 אני אסתדר</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
@@ -12470,7 +12470,7 @@ on('gReels',reelSheet);
   11.10, Itzik: "שים במוניטור בכפתור סטורי". Stories ready to save to the phone,
   newest on top. Same viewer as the reels: fileOpen has the save button.
 */
-var STORY_ITEMS=[{n:'12.10 אסור לי לאכול',t:'כרגע אסור לי לאכול: קטניות, דגנים מלאים, פירות, ירקות, סיבים תזונתיים, פיצוחים. אז הכנתי לי כריך',r:'story-asur-list-1210.mp4'}];
+var STORY_ITEMS=[];
 function storySheet(){
  var old=document.getElementById('stSheet');if(old)old.remove();
  var w=document.createElement('div');
