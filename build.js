@@ -15921,7 +15921,13 @@ function micSheet(denied){
     that second prompt is the one that fails. Setting it to allow once ends
     the asking, and the keyboard's own microphone never needs the page at all.
   */
-  +(ios&&!denied?'<small class="micMore">כדי שזה לא יחזור, פעם אחת: הגדרות של האייפון, אפליקציות, ספארי, מיקרופון, לבחור "לאפשר".<br>ובינתיים בלי לסגור כלום: ללחוץ בתיבת הכתיבה ועל המיקרופון של המקלדת, ולדבר. זה עובד תמיד.</small>':'')
+  /*
+    11.10, 21:33: his stuck takes all carry "app", the icon on the home screen.
+    There the phone asks again after every switch whatever Safari's setting
+    says, so the lasting fix is opening the monitor in Safari itself.
+  */
+  +(ios&&!denied&&app?'<small class="micMore">כדי שזה לא יחזור: לפתוח את המוניטור בספארי עצמו ולא מהאייקון במסך הבית. באייקון האייפון שואל על המיקרופון מחדש אחרי כל מעבר חלון, ובספארי עם ההגדרה "לאפשר" (הגדרות של האייפון, אפליקציות, ספארי, מיקרופון) הוא לא שואל יותר.<br>ובינתיים בלי לסגור כלום: ללחוץ בתיבת הכתיבה ועל המיקרופון של המקלדת, ולדבר. זה עובד תמיד.</small>':'')
+  +(ios&&!denied&&!app?'<small class="micMore">כדי שזה לא יחזור, פעם אחת: הגדרות של האייפון, אפליקציות, ספארי, מיקרופון, לבחור "לאפשר".<br>ובינתיים בלי לסגור כלום: ללחוץ בתיבת הכתיבה ועל המיקרופון של המקלדת, ולדבר. זה עובד תמיד.</small>':'')
   +'<button type="button" class="yb yb1" data-k="again">לנסות שוב עכשיו</button>'
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
   +'</div>';
