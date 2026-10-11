@@ -2323,3 +2323,17 @@ test('stop after an auto retry ends the new recorder, and the old one finishing 
   assert.ok(second.__stopped, 'the new recorder was stopped');
   assert.equal(h.run('rec'), null);
 });
+test('the story tile sits after the reels tile, opens the same viewer, and its file exists', () => {
+  const html = renderPage(fixture({}));
+  const a = html.indexOf('id="gReels"'), b = html.indexOf('id="gStory"');
+  assert.ok(a > 0 && b > a && b - a < 400, 'tile right after gReels');
+  assert.ok(html.includes('data-new="1"><b>🎞️ סטורי</b>'));
+  assert.ok(html.includes("on('gStory',storySheet);"));
+  assert.ok(html.includes("fileOpen(it.r)") && html.includes("gStory:'STORY_ITEMS'"));
+  assert.equal((html.match(/'REEL_ITEMS','STORY_ITEMS'/g) || []).length, 2, 'name lookups know the story list');
+  const m = html.match(/var STORY_ITEMS=\[\{[^\]]*r:'([^']+)'/);
+  assert.ok(m, 'story item present');
+  const fs = require('node:fs'), path = require('node:path');
+  const root = path.join(__dirname, '..');
+  assert.ok(fs.existsSync(path.join(root, 'data', 'files-private', m[1])) || fs.existsSync(path.join(root, 'docs', 'files', m[1])), 'the file is on the server');
+});

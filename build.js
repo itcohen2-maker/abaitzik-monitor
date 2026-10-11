@@ -2293,6 +2293,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .gt .gi{height:1.35em;width:auto;vertical-align:-0.3em;margin-inline-end:2px}
 .gNer{background:linear-gradient(150deg,#f0a64a,#0f1a3a)}
 .gReel{background:linear-gradient(150deg,#e2574c,#2a1240)}
+.gStory{background:linear-gradient(150deg,#7a3fb0,#2a1240)}
 .gFut{background:linear-gradient(150deg,#3a8fd9,#16243f)}
 .gSelf{background:linear-gradient(150deg,#d98a3a,#3f2416)}
 .meTxt{white-space:pre-wrap;text-align:right;line-height:1.7;font-size:17px;margin:10px 0 14px}
@@ -3682,6 +3683,7 @@ try{
   -->
   <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>04 עד 20, גם באיכות גבוהה</small></button>
+  <button type="button" class="gt gStory" id="gStory" data-new="1"><b>🎞️ סטורי</b><small>סטוריז מוכנים לשמירה בטלפון</small></button>
   <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 02 אני אסתדר</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
@@ -4903,7 +4905,7 @@ function fileMsgName(name){
 }
 function fileListName(name){
  var lists=[];
- ['NER_ITEMS','REEL_ITEMS','FUT_ITEMS','OCC_ITEMS','LAW_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS']
+ ['NER_ITEMS','REEL_ITEMS','STORY_ITEMS','FUT_ITEMS','OCC_ITEMS','LAW_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS']
   .forEach(function(k){if(Array.isArray(window[k]))lists.push(window[k]);});
  for(var i=0;i<lists.length;i++){
   var L=lists[i]||[];
@@ -4917,7 +4919,7 @@ function fileNiceName(name){
  var ln=fileListName(name)||fileMsgName(name);if(ln)return ln;
  var short=String(name).split('/').pop();
  var lists=[];
- ['NER_ITEMS','REEL_ITEMS','FUT_ITEMS','OCC_ITEMS','LAW_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS']
+ ['NER_ITEMS','REEL_ITEMS','STORY_ITEMS','FUT_ITEMS','OCC_ITEMS','LAW_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS']
   .forEach(function(k){if(Array.isArray(window[k]))lists.push(window[k]);});
  for(var i=0;i<lists.length;i++){
   var L=lists[i]||[];
@@ -12465,6 +12467,40 @@ function reelSheet(){
 }
 on('gReels',reelSheet);
 /*
+  11.10, Itzik: "שים במוניטור בכפתור סטורי". Stories ready to save to the phone,
+  newest on top. Same viewer as the reels: fileOpen has the save button.
+*/
+var STORY_ITEMS=[{n:'12.10 אסור לי',t:'כרגע אסור לי, הרשימה נמחקת, אז הכנתי לי כריך',r:'story-asur-list-1210.mp4'}];
+function storySheet(){
+ var old=document.getElementById('stSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='stSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','סטורי');
+ w.innerHTML='<div class="ycard">'
+  +'<b>סטורי</b>'
+  +'<small>'+(STORY_ITEMS.length?'החדש למעלה. פותחים ושומרים בטלפון':'אין כרגע סטוריז')+'</small>'
+  +STORY_ITEMS.map(function(it,i,a){
+    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+esc(it.n)+' · '+esc(it.t)+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=STORY_ITEMS[+k];if(k===''||!it)return;
+  if(it.u)window.open(it.u,'_blank','noopener');
+  else fileOpen(it.r);
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gStory',storySheet);
+/*
   3.10. Future reels: ideas and source clips saved for reels Itzik will shoot
   later, so they do not get lost in the chat. Same numbered sheet as the reels.
 */
@@ -13141,8 +13177,8 @@ boot('shipLine',function(){
 // A list tile (reels, future reels, candle work, ...) waves the hand whenever its list holds an item this device
 // has not seen yet, until that tile is opened. First visit seeds silently, except the reels tiles he asked about 10.10.
 boot('listTiles',function(){
- var L={gReels:'REEL_ITEMS',gFut:'FUT_ITEMS',gNerMkt:'NER_ITEMS',gWin:'WIN_ITEMS',gPen:'PEN_ITEMS',gMed:'MED_ITEMS',gInv:'INV_ITEMS'};
- var FIRST={gReels:1,gFut:1};
+ var L={gReels:'REEL_ITEMS',gStory:'STORY_ITEMS',gFut:'FUT_ITEMS',gNerMkt:'NER_ITEMS',gWin:'WIN_ITEMS',gPen:'PEN_ITEMS',gMed:'MED_ITEMS',gInv:'INV_ITEMS'};
+ var FIRST={gReels:1,gFut:1,gStory:1};
  Object.keys(L).forEach(function(id){
   var t=document.getElementById(id),items=window[L[id]];if(!t||!Array.isArray(items))return;
   var keys=items.map(function(it){return String(it&&(it.r||it.t||it.n)||'');}).filter(Boolean);
