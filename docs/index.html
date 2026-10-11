@@ -1158,6 +1158,8 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .arPick{display:flex;gap:6px}
 .arPick .yb{flex:1;padding:9px 4px;min-height:40px;font-size:13.5px}
 .arPick .yb.on{background:#16202c;color:#fff}
+.inPick{flex-wrap:wrap}
+.inPick .yb{flex:1 1 30%}
 .ship .srow{border-bottom:1px solid rgba(128,128,128,.25);padding:8px 0;font:500 14px/1.45 Heebo,sans-serif}
 .ship .srow b{font:700 14px Heebo,sans-serif}
 .ship .srow small{display:inline}
@@ -1905,7 +1907,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-11T17:47:06.408Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-11T18:17:45.014Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3414,8 +3416,8 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='8285bdc536';
-var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","guides":[]};
+var CODE_ID='ca885dabb4';
+var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
 var AI=(INSTANCE&&INSTANCE.name&&INSTANCE.name!=='abaitzik')?'העוזר שלך':'קלוד';
@@ -9044,6 +9046,55 @@ function adminReqSheet(){
  setTimeout(function(){var x=document.getElementById('arText');if(x)x.focus();},50);
 }
 on('gAdminReq',adminReqSheet);
+var INTAKE_Q=[
+ ['במה המוניטור יכול לעזור לך הכי הרבה?',['עבודה ועסק','בית ומשפחה','בריאות וכושר','תחביבים ויצירה','כסף וחשבונות','ללמוד דברים חדשים']],
+ ['מה הכי גוזל לך זמן?',['מיילים והודעות','סידורים ותורים','לזכור דברים','לחפש מידע','ניירת וחשבונות','כלום מיוחד']],
+ ['על מה היה טוב לקבל תזכורת?',['תורים ופגישות','תשלומים','ימי הולדת','תרופות','משימות','לא צריך']],
+ ['מה התחביבים שלך?',['מוזיקה','ספורט','בישול','טיולים','צילום ווידאו','משחקים','קריאה','הומור ושטויות']],
+ ['מה מעניין לנסות?',['רשימת קניות','תקציב חודשי','מתכונים','יומן אימונים','ארכיון מסמכים','סיכום חדשות יומי','עזרה בכתיבה','חידה או משחק יומי']],
+ ['איך הכי נוח לדבר עם המוניטור?',['כתיבה','הקלטה קולית','תמונות','הכל']],
+ ['מתי לקבל עדכונים?',['מיד על כל דבר','סיכום אחד בבוקר','רק כששואלים']],
+ ['כמה טכנולוגיה זה בשבילך?',['מאוד','בינוני','בכלל לא']]
+];
+function intakeSheet(){
+ var old=document.getElementById('inSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='inSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','שאלות היכרות');
+ w.innerHTML='<div class="ycard"><b>🧭 שאלות היכרות</b>'
+  +'<small>מסמנים כמה שרוצים בכל שאלה. אפשר לדלג. בסוף אציע בצ׳אט מה עוד אפשר לבנות לך במוניטור.</small>'
+  +INTAKE_Q.map(function(q,i){return '<small style="opacity:1;font-weight:700;margin-top:6px">'+esc(q[0])+'</small>'
+   +'<div class="arPick inPick" data-q="'+i+'" role="group" aria-label="'+esc(q[0])+'">'
+   +q[1].map(function(o){return '<button type="button" class="yb" data-o="'+esc(o)+'">'+esc(o)+'</button>';}).join('')+'</div>';}).join('')
+  +'<small style="opacity:1;font-weight:700;margin-top:6px">עוד משהו שחשוב לדעת?</small>'
+  +'<textarea id="inText" rows="3" style="width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif" placeholder="לא חובה"></textarea>'
+  +'<button type="button" class="yb yb1" data-a="send">שליחה</button>'
+  +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+ w.onclick=function(e){
+  if(e.target===w)return w.remove();
+  var a=e.target.getAttribute&&e.target.getAttribute('data-a');
+  if(a==='x')return w.remove();
+  if(e.target.getAttribute&&e.target.getAttribute('data-o')!==null){e.target.classList.toggle('on');return;}
+  if(a!=='send')return;
+  var lines=INTAKE_Q.map(function(q,i){
+   var on=[].map.call(w.querySelectorAll('.inPick[data-q="'+i+'"] .yb.on'),function(b){return b.getAttribute('data-o');});
+   return on.length?q[0]+' '+on.join(', '):'';
+  }).filter(Boolean);
+  var free=(document.getElementById('inText').value||'').trim();
+  if(free)lines.push('עוד: '+free);
+  if(!lines.length){toast('סמן לפחות תשובה אחת');return;}
+  var t='שאלות היכרות:\n'+lines.join('\n')+'\nלפי זה, תציע לי שלושה עד חמישה דברים שאפשר להוסיף למוניטור שלי (אפליקציות, מסכים, תזכורות), כל אחד בשורה, ומה הוא יעשה בשבילי.';
+  e.target.disabled=true;
+  sendText('שאלות היכרות',t,'משימה').then(function(){
+   markSent('text',t);w.remove();toast('נשלח. ההצעות יגיעו בצ׳אט.');
+  }).catch(function(){e.target.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
+ };
+ document.body.appendChild(w);
+}
+on('gIntake',intakeSheet);
+(INSTANCE&&INSTANCE.links||[]).forEach(function(l,i){
+ on('gLink'+i,function(){window.open(l.url,'_blank','noopener');});
+});
 var SHIP_LVL={red:'דחוף',amber:'לבדוק',track:'מעקב'};
 var SHIP_RANK={red:0,amber:1,track:2};
 var SHIP_UPGRADES=[
