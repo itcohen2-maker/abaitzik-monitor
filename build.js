@@ -169,6 +169,8 @@ function slim(html) {
 }
 
 const gate = require('./gate.js');
+const lolosShare = require('./lib/lolos-share.js');
+let RIVSHARE = '';
 
 // Walks a built payload and takes his code out of every string in it.
 function scrubCodes(node) {
@@ -218,6 +220,7 @@ function renderPage(payload) {
       : 'null')
     .replace('__LIB__', () => LIB.replace(/<\/script/gi, '<\\/script'))
     .replace('__DATA__', () => data)
+    .replace('__RIVSHARE__', () => RIVSHARE)
     // The guard at the top of the page needs this page's own stamp as a
     // literal, because it runs before any data exists.
     .replace('__BUILT_AT__', () => payload.builtAt)
@@ -571,6 +574,8 @@ function build() {
     points at exactly one publish.
   */
   const BUILT_AT = new Date().toISOString();
+  // 11.10: the open accounts PDF and pictures are made again when the debts change.
+  RIVSHARE = lolosShare.buttons(lolosShare.ensure(inst.dataPath));
   const files = sealFiles();
   const BUILD_ID = Math.floor(Date.parse(BUILT_AT) / 1000).toString(36).slice(-5);
 
@@ -4408,10 +4413,7 @@ try{
   <h3 class="rivh">דף לשיתוף</h3>
   <div class="hint">כל החשבונות הפתוחים, לקוח לקוח עם החשבוניות. לחיצה פותחת, ומשם שליחה בוואטסאפ.</div>
   <div id="rivShare">
-   <button type="button" class="yb yb1" data-r="lolos-open-accounts-2026-10-07.pdf">📤 חשבונות פתוחים עד 7.10 (PDF)</button>
-   <button type="button" class="yb yb2" data-r="lolos-open-2026-10-07-1.jpg">🖼️ כתמונה לגלריה, עמוד 1</button>
-   <button type="button" class="yb yb3" data-r="lolos-open-2026-10-07-2.jpg">🖼️ כתמונה לגלריה, עמוד 2</button>
-   <button type="button" class="yb yb4" data-r="lolos-open-2026-10-07-3.jpg">🖼️ כתמונה לגלריה, עמוד 3</button>
+__RIVSHARE__
   </div>
  </div>
 </section>
