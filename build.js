@@ -11107,13 +11107,17 @@ function renderTenants(){
   h+='<div class="tk tnc" style="border-inline-start:6px solid '+(ok?'#2e7d32':'#c62828')+'"><span><b>'+(ok?'🟢':'🔴')+' '+esc(t.title)+'</b>'
    +'<br><small>'+(ok?'תקין · נבדק כל דקה':'נתק'+(since?' מאז '+esc(since):''))+'</small>'
    +(!ok&&t.problems&&t.problems.length?'<br><small>'+t.problems.map(esc).join(' · ')+'</small>':'')
+   // 11.10, Itzik: the code alone is not something he can send, so the link sits beside it, with copy and share.
+   +(t.host?'<br><small>קישור: <b dir="ltr" class="tncode">https://'+esc(t.host)+'/</b></small> <button type="button" class="tncopy" data-code="https://'+esc(t.host)+'/">העתקה</button>':'')
    +(t.code?'<br><small>קוד כניסה: <b dir="ltr" class="tncode">'+esc(t.code)+'</b></small> <button type="button" class="tncopy" data-code="'+esc(t.code)+'">העתקה</button>':'')
+   +(t.host?'<br><button type="button" class="tncopy tnshare" data-title="'+esc(t.title)+'" data-code="'+esc('הקישור למוניטור שלך: https://'+t.host+'/'+(t.code?'\\nקוד כניסה: '+t.code:''))+'">📤 לשלוח קישור וקוד</button>':'')
    +'</span>'+(t.host?'<a class="tnopen" href="https://'+esc(t.host)+'/" target="_blank" rel="noopener">פתיחה</a>':'')+'</div>';
  });
  host.innerHTML=h||'<div class="empty">אין מוניטורים אחרים בשרת הזה.</div>';
  Array.prototype.forEach.call(host.querySelectorAll('.tncopy'),function(b){
   b.onclick=function(){
    var c=b.getAttribute('data-code'),ok=function(){b.textContent='הועתק';};
+   if(b.classList.contains('tnshare')&&navigator.share){navigator.share({title:b.getAttribute('data-title')||'',text:c}).catch(function(){});return;}
    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(c).then(ok,function(){fallbackCopy(c,ok);});
    else fallbackCopy(c,ok);
   };
