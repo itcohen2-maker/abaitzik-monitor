@@ -2273,7 +2273,7 @@ test('stop works even if the stop event never fires', async () => {
   await h.flush(); await h.flush();
   assert.equal(h.run('!!rec'), true);
   h.run('recStop()');
-  h.advance(1600);
+  h.advance(6000);
   assert.equal(h.run('rec'), null, 'recorder released');
   assert.ok(h.tracks.every((t) => t.stopped), 'mic tracks released');
   assert.equal(h.sent.length, 1, 'what was caught is sent');
@@ -2292,7 +2292,7 @@ test('stop on a paused recorder, or with nothing to stop, still resets the scree
   await h.flush(); await h.flush();
   h.recs[0].state = 'paused';
   h.run('toggleRec = function(){ if(rec){recStop();return;} recStart(); }; toggleRec()');
-  h.advance(1600);
+  h.advance(6000);
   assert.equal(h.run('rec'), null, 'a paused take is stopped by the same tap');
   // screen says recording but there is no recorder
   h.run('recStream={getTracks:function(){return [];}}; recTimer=1;');
@@ -2319,7 +2319,7 @@ test('stop after an auto retry ends the new recorder, and the old one finishing 
   first.onstop(); // the old one finishes late
   assert.equal(h.run('!!rec'), true, 'the live take is still held');
   h.run('recStop()');
-  h.advance(1600);
+  h.advance(6000);
   assert.ok(second.__stopped, 'the new recorder was stopped');
   assert.equal(h.run('rec'), null);
 });
@@ -2337,6 +2337,32 @@ test('the story tile sits after the reels tile, opens the same viewer, and its f
   const fs = require('node:fs'), path = require('node:path');
   const root = path.join(__dirname, '..');
   assert.ok(fs.existsSync(path.join(root, 'data', 'files-private', m[1])) || fs.existsSync(path.join(root, 'docs', 'files', m[1])), 'the file is on the server');
+});
+test('iPhone: stop reads inactive at once and the audio comes later, the whole take is sent', async () => {
+  // 11.10 17:04, "still not fixed": Safari says inactive the moment stop()
+  // returns and hands over the data and the stop event a moment later. The
+  // take used to be finished on the next tick, before the audio arrived.
+  let pokes = 0;
+  const h = stopHarness((recs) => class {
+    constructor() { this.state = 'inactive'; recs.push(this); }
+    start() { this.state = 'recording'; }
+    requestData() { pokes++; }
+    stop() {
+      this.state = 'inactive';
+      setTimeout(() => { this.ondataavailable({ data: { size: 400000 } }); this.onstop(); }, 0);
+    }
+  });
+  h.run('recStart()');
+  await h.flush(); await h.flush();
+  for (let i = 0; i < 20; i++) h.advance(1000);
+  h.run('recStop()');
+  assert.equal(h.sent.length, 0, 'not finished before the audio arrives');
+  await new Promise((r) => setTimeout(r, 5));
+  assert.equal(h.sent.length, 1);
+  assert.equal(h.sent[0][0].size, 400000, 'the whole take, not the first piece');
+  assert.equal(pokes, 0, 'stop does not ask for data first');
+  h.advance(6000);
+  assert.equal(h.sent.length, 1, 'the backstop does not send it twice');
 });
 test('a muted take keeps recording to the end and is never cut early', async () => {
   // 11.10 15:03: every voice message came out exactly two seconds long,

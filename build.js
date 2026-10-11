@@ -15395,24 +15395,31 @@ function recStop(){
  */
  var r=rec;
  if(r&&!r._done){
-  try{if(r.state!=='inactive'&&r.requestData)r.requestData();}catch(e){}
-  try{if(r.state!=='inactive')r.stop();}catch(e){}
-  if(r.state==='inactive'&&r.onstop){setTimeout(function(){if(!r._done)r.onstop();},0);}
   /*
-    11.10, the deep check: a long take on the iPhone can take more than a
-    second and a half to hand over its audio, and the backstop then sent an
-    empty take and shut the door on the real one. So it waits while nothing
-    has arrived, up to six seconds, and only then finishes by hand.
+    11.10, 17:04, Itzik: "still not fixed" after the 15:05 fix, and not one
+    recording reached the server after it. The requestData right before stop
+    was the other half of the same iPhone fault: the recorder answers it with
+    what it has and then the stop never hands over the rest, so the backstop
+    finished with nothing (the stuck card) or with the first piece only. Stop
+    is now only stop(). The backstop waits for the real stop event, and only
+    if the take still has no data at all after 4 seconds does it ask once.
   */
-  var waited=0;
-  (function backstop(){
+  /*
+    And the root of it: Safari reads 'inactive' the moment stop() returns,
+    before the last data and the stop event arrive. The line that then ran
+    onstop on the next tick finished every take with whatever had come so
+    far: the two second probe piece, or nothing. Only the stop event, or the
+    backstop below, finishes a take.
+  */
+  try{if(r.state!=='inactive')r.stop();}catch(e){}
+  setTimeout(function(){
+   if(r._done)return;
+   if(!recChunks.length){try{if(r.requestData)r.requestData();}catch(e){}}
    setTimeout(function(){
     if(r._done)return;
-    waited+=1500;
-    if(!recChunks.length&&waited<6000)return backstop();
     try{if(r.onstop)r.onstop();else recForceReset();}catch(e){recForceReset();}
    },1500);
-  })();
+  },4000);
   return;
  }
  if(r||recStream||recTimer||recStarting)recForceReset();
@@ -15566,7 +15573,9 @@ function recStart(){
    if(recMuted){recMuted=false;recAbort=false;micStuck('muted');return;}
    if(recAbort){recAbort=false;recModal(false);recSaid.textContent='ההקלטה בוטלה.';recBtn.disabled=false;paintMics('idle');return;}
    recModal(false);
-   var type=(rec&&rec.mimeType)||'audio/webm';
+   // rec is already null here (recCleanup), so the type comes from this
+   // recorder; reading rec named every iPhone mp4 a .webm.
+   var type=me.mimeType||(recChunks[0]&&recChunks[0].type)||'audio/webm';
    var b=new Blob(recChunks,{type:type});
    // The exact thing he described: it talked (the clock ran, the screen said
    // מקליט) and nothing was actually captured. Trying again with the same
