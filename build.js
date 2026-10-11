@@ -2298,6 +2298,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .gSelf{background:linear-gradient(150deg,#d98a3a,#3f2416)}
 .meTxt{white-space:pre-wrap;text-align:right;line-height:1.7;font-size:17px;margin:10px 0 14px}
 .gLaw{background:linear-gradient(150deg,#c0623a,#3a1d12)}
+.gDudi{background:linear-gradient(150deg,#b4413a,#3a1512)}
 .gStk{background:linear-gradient(150deg,#d6a43a,#4a1d5c)}
 .stkg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}
 .stkc{background:#26222b;border:0;border-radius:12px;padding:6px 4px;color:#f2ede4;font:600 13px system-ui;position:relative}
@@ -3728,6 +3729,11 @@ try{
     lecture text with slide thumbnails, the new slides and the deck, all in Drive.
   -->
   <button type="button" class="gt gLec" id="gLec" data-new="1"><b>🎤 הרצאה</b><small>כנגד כל הסיכויים: המלל הערוך עם השקפים</small></button>
+  <!--
+    11.10. Itzik: "a card I can send from, and later we delete it". The June
+    and July invoices of Etzel Dudi, each with the send button. Temporary.
+  -->
+  <button type="button" class="gt gDudi" id="gDudi" data-new="1"><b>🥩 דודי בשר</b><small>חשבוניות יוני ויולי לשליחה</small></button>
   <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
   <button type="button" class="gt gManiv" id="gManiv"><b>💧 תשלום למניב</b><small>לקוח 50523290. ביום שני המוקד נפתח ב 09:00</small></button>
   <button type="button" class="gt gOcc" id="gOcc"><b>🩺 מרפאה תעסוקתית</b><small>מכבי רמות. טלפון א עד ה 08:00 עד 11:00</small></button>
@@ -4914,7 +4920,7 @@ function fileMsgName(name){
 }
 function fileListName(name){
  var lists=[];
- ['NER_ITEMS','REEL_ITEMS','STORY_ITEMS','FUT_ITEMS','OCC_ITEMS','LAW_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS']
+ ['NER_ITEMS','REEL_ITEMS','STORY_ITEMS','FUT_ITEMS','OCC_ITEMS','LAW_ITEMS','DUDI_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS']
   .forEach(function(k){if(Array.isArray(window[k]))lists.push(window[k]);});
  for(var i=0;i<lists.length;i++){
   var L=lists[i]||[];
@@ -4928,7 +4934,7 @@ function fileNiceName(name){
  var ln=fileListName(name)||fileMsgName(name);if(ln)return ln;
  var short=String(name).split('/').pop();
  var lists=[];
- ['NER_ITEMS','REEL_ITEMS','STORY_ITEMS','FUT_ITEMS','OCC_ITEMS','LAW_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS']
+ ['NER_ITEMS','REEL_ITEMS','STORY_ITEMS','FUT_ITEMS','OCC_ITEMS','LAW_ITEMS','DUDI_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS']
   .forEach(function(k){if(Array.isArray(window[k]))lists.push(window[k]);});
  for(var i=0;i<lists.length;i++){
   var L=lists[i]||[];
@@ -13662,6 +13668,41 @@ function lawSheet(){
  document.body.appendChild(w);
 }
 on('gLaw',lawSheet);
+/* 11.10: temporary, the invoices Itzik sends to Etzel Dudi. Delete the tile when he says. */
+var DUDI_ITEMS=[
+ {n:'01',t:'יוני, חשבונית 023334, 444 ש״ח (PDF)',r:'dudi-023334-june.pdf'},
+ {n:'02',t:'יולי, חשבונית 023388, 888 ש״ח (PDF)',r:'dudi-023388-july.pdf'},
+ {n:'01ב',t:'יוני, תמונה לגלריה',r:'dudi-023334-june.jpg'},
+ {n:'02ב',t:'יולי, תמונה לגלריה',r:'dudi-023388-july.jpg'}
+];
+function dudiSheet(){
+ var old=document.getElementById('dudiSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='dudiSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','דודי בשר');
+ w.innerHTML='<div class="ycard">'
+  +'<b>אצל דודי מעדני בשר</b>'
+  +'<small>לחיצה פותחת, ובפנים כפתור שליחה לוואטסאפ</small>'
+  +DUDI_ITEMS.map(function(it,i,a){
+    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=DUDI_ITEMS[+k];if(k===''||!it)return;
+  fileOpen(it.r);
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gDudi',dudiSheet);
 // 7.10: the open accounts as one file to send on, at the bottom of the debtors.
 document.getElementById('rivShare')&&document.getElementById('rivShare').addEventListener('click',function(e){
  var r=e.target.closest&&e.target.closest('[data-r]');if(!r)return;
