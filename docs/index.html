@@ -1896,7 +1896,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-11T12:03:47.719Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-11T12:05:33.529Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3407,7 +3407,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='239fbb5412';
+var CODE_ID='a7f6b610d6';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11265,21 +11265,12 @@ function recStart(){
    micStuck('dead');return;
   }
   recBytes=0;recDiag={m0:track.muted?1:0};
-  (function probe(n){
+  [2000,4500].forEach(function(ms,i){
    setTimeout(function(){
-    if(recStream!==st||document.hidden||!rec||rec!==recMine)return;
-    var can=false;
-    try{if(rec.state==='recording'&&rec.requestData){rec.requestData();can=true;}}catch(e){}
-    setTimeout(function(){
-     if(recStream!==st||document.hidden||!rec||rec!==recMine)return;
-     recDiag['b'+n]=recBytes;recDiag['m'+n]=track.muted?1:0;
-     if(recBytes>0){micStuckRetried=false;return;}
-     if(!can||!track.muted)return; // no proof either way: the end of the take checks it
-     if(n<2)return probe(n+1);
-     recAbort=true;recMuted=true;recStop();
-    },400);
-   },n===1?2000:2500);
-  })(1);
+    if(recStream!==st||!rec||rec!==recMine)return;
+    recDiag['m'+(i+1)]=track.muted?1:0;
+   },ms);
+  });
   var mt=recPickType();
   try{rec=mt?new MediaRecorder(st,{mimeType:mt}):new MediaRecorder(st);}
   catch(e){rec=new MediaRecorder(st);}
@@ -11381,7 +11372,7 @@ function micAppMode(){
 function micDiagLine(){
  var out=[];
  try{var st=JSON.parse(localStorage.getItem('micDiag')||'null');if(st){out.push('נתקע קודם: '+st.why+' '+st.d);localStorage.removeItem('micDiag');}}catch(e){}
- var d=recDiag||{},odd=d.m0||d.m1||d.m2||d.b1===0||d.b2===0;
+ var d=recDiag||{},odd=d.m0||d.m1||d.m2;
  if(odd)out.push('הקלטה: '+diagText(d));
  return out.length?'\nאבחון מיקרופון: '+out.join(' | '):'';
 }
