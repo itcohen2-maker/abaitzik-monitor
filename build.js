@@ -16272,8 +16272,8 @@ function armTiles(grid){
 /*
   11.10, Itzik, in a recording: "תן לי אפשרות שאני יכול ללחוץ על כפתור ולשים אותו
   מהבהב שאני לא אשכח". The ✋ button beside ✎ arms a pick: the next tap on a tile
-  gives it the red hand, and that hand stays even after he opens the tile, until
-  he picks the same tile again. Kept per device, like the order of the tiles.
+  gives it the red hand. (Evening, his voice again: opening the tile is enough
+  to take it off, see the click below.) Kept per device, like the order of the tiles.
 */
 /*
   Later the same day, again in his voice: not with that button, a long press
@@ -16289,15 +16289,17 @@ function pinTiles(grid){
  grid.addEventListener('click',function(e){
   var t=e.target.closest?e.target.closest('.gt'):null;
   if(!t||t.parentNode!==grid||!t.id)return;
-  // The tile's own handler takes the hand off when it opens; a pinned one gets it back.
-  if(get().indexOf(t.id)>=0)setTimeout(paint,0);
+  // Opening it is the reminder done: the hand comes off and stays off until
+  // another long press. "ברגע שנכנסתי אליו ההבהוב צריך להפסיק" (11.10, evening).
+  var a=get(),i=a.indexOf(t.id);
+  if(i>=0){a.splice(i,1);put(a);t.classList.remove('taskblink');}
  },true);
  // Some tiles set their own hand at boot, after this; paint again once they have.
  paint();setTimeout(paint,0);window.addEventListener('load',paint);
  return function(t){
   if(!t||!t.id)return;
   var a=get(),i=a.indexOf(t.id),name=((t.querySelector('b')||t).textContent||'').trim();
-  if(i<0){a.push(t.id);put(a);t.classList.add('taskblink');toast('"'+name+'" מהבהב עכשיו. לכבות: שוב לחיצה ארוכה עליו.');}
+  if(i<0){a.push(t.id);put(a);t.classList.add('taskblink');toast('"'+name+'" מהבהב עכשיו, עד שתיכנס אליו.');}
   else{a.splice(i,1);put(a);t.classList.remove('taskblink');toast('"'+name+'" כבר לא מהבהב.');}
  };
 }
