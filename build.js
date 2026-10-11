@@ -16107,9 +16107,10 @@ function tilesExit(){
   items inside box, key is where the order is kept, inEdit says whether the
   box is in a mode where a move lifts at once without the wait.
 */
-function pressDrag(grid,sel,key,inEdit){
+// still, when given, gets the tile when a long press lets go without moving.
+function pressDrag(grid,sel,key,inEdit,still){
  inEdit=inEdit||function(){return false;};
- var hold=null,sx=0,sy=0,cand=null,held=null,ghost=null,gdx=0,gdy=0,lx=0,ly=0,swallow=false,roll=null;
+ var hold=null,sx=0,sy=0,cand=null,held=null,ghost=null,gdx=0,gdy=0,lx=0,ly=0,swallow=false,roll=null,moved=false;
  function tileAt(x,y){
   var o=document.elementFromPoint(x,y);
   o=o&&o.closest?o.closest(sel):null;
@@ -16133,7 +16134,7 @@ function pressDrag(grid,sel,key,inEdit){
   roll=requestAnimationFrame(edge);
  }
  function lift(t,x,y){
-  hold=null;held=t;swallow=true;
+  hold=null;held=t;swallow=true;moved=false;
   var r=t.getBoundingClientRect();
   gdx=x-r.left;gdy=y-r.top;lx=x;ly=y;
   ghost=t.cloneNode(true);ghost.id='tGhost';
@@ -16149,10 +16150,12 @@ function pressDrag(grid,sel,key,inEdit){
   clearTimeout(hold);hold=null;cand=null;
   if(!held)return;
   cancelAnimationFrame(roll);roll=null;
+  var was=held;
   held.classList.remove('tlift');held=null;
   if(ghost){ghost.remove();ghost=null;}
   document.body.classList.remove('tdrag');
   saveOrder(grid,key);
+  if(still&&!moved&&!inEdit())still(was);
   // The click that may follow the drop is not a tap on the tile. If none
   // comes, the next real tap must not be eaten either.
   setTimeout(function(){swallow=false;},450);
@@ -16167,10 +16170,10 @@ function pressDrag(grid,sel,key,inEdit){
  }
  function move(e,x,y){
   lx=x;ly=y;
-  if(held){if(e.cancelable)e.preventDefault();place(x,y);return;}
+  if(held){if(e.cancelable)e.preventDefault();if(Math.abs(x-sx)>12||Math.abs(y-sy)>12)moved=true;place(x,y);return;}
   if(!cand)return;
   if(Math.abs(x-sx)>10||Math.abs(y-sy)>10){
-   if(inEdit()){if(e.cancelable)e.preventDefault();lift(cand,sx,sy);place(x,y);return;}
+   if(inEdit()){if(e.cancelable)e.preventDefault();lift(cand,sx,sy);moved=true;place(x,y);return;}
    clearTimeout(hold);hold=null;cand=null;
   }
  }
@@ -16206,8 +16209,8 @@ function armTiles(grid){
  tools.id='tileTools';tools.className='tarrs';
  tools.appendChild(arr);
  grid.insertBefore(tools,grid.firstChild);
- pinTiles(grid,tools);
- pressDrag(grid,'.gt','tileOrder',function(){return tEdit;});
+ var pin=pinTiles(grid);
+ pressDrag(grid,'.gt','tileOrder',function(){return tEdit;},pin);
  grid.addEventListener('contextmenu',function(e){if(tEdit)e.preventDefault();});
  grid.addEventListener('click',function(e){
   if(!tEdit||e.target.closest('#tileArr'))return;
@@ -16229,36 +16232,31 @@ function armTiles(grid){
   gives it the red hand, and that hand stays even after he opens the tile, until
   he picks the same tile again. Kept per device, like the order of the tiles.
 */
-function pinTiles(grid,tools){
- var K='pinBlink',picking=false;
+/*
+  Later the same day, again in his voice: not with that button, a long press
+  on the tile itself. So the ✋ button is gone. A long press that lets go
+  where it started gives the tile the red hand, or takes it off; a long press
+  that moves is still the drag. Returns the toggle for pressDrag.
+*/
+function pinTiles(grid){
+ var K='pinBlink';
  var get=function(){try{return JSON.parse(localStorage.getItem(K)||'[]')||[];}catch(e){return [];}};
  var put=function(a){try{localStorage.setItem(K,JSON.stringify(a));}catch(e){}};
  var paint=function(){get().forEach(function(id){var t=document.getElementById(id);if(t)t.classList.add('taskblink');});};
- var b=document.createElement('button');
- b.type='button';b.id='tilePin';b.className='tarr';
- var label=function(){b.textContent=picking?'✋ לחץ על אריח (כאן לביטול)':'✋ להבהב שלא אשכח';};
- label();tools.appendChild(b);
- b.onclick=function(){
-  if(tEdit)return;
-  picking=!picking;label();
-  if(picking)toast('לחץ על אריח והוא יהבהב עד שתסמן אותו שוב. אריח שכבר מהבהב, לחיצה מכבה אותו.');
- };
  grid.addEventListener('click',function(e){
   var t=e.target.closest?e.target.closest('.gt'):null;
   if(!t||t.parentNode!==grid||!t.id)return;
-  if(!picking){
-   // The tile's own handler takes the hand off when it opens; a pinned one gets it back.
-   if(get().indexOf(t.id)>=0)setTimeout(paint,0);
-   return;
-  }
-  e.preventDefault();e.stopImmediatePropagation();
-  picking=false;label();
-  var a=get(),i=a.indexOf(t.id),name=((t.querySelector('b')||t).textContent||'').trim();
-  if(i<0){a.push(t.id);put(a);t.classList.add('taskblink');toast('"'+name+'" מהבהב עכשיו. לכבות: ✋ ואז שוב עליו.');}
-  else{a.splice(i,1);put(a);t.classList.remove('taskblink');toast('"'+name+'" כבר לא מהבהב.');}
+  // The tile's own handler takes the hand off when it opens; a pinned one gets it back.
+  if(get().indexOf(t.id)>=0)setTimeout(paint,0);
  },true);
  // Some tiles set their own hand at boot, after this; paint again once they have.
  paint();setTimeout(paint,0);window.addEventListener('load',paint);
+ return function(t){
+  if(!t||!t.id)return;
+  var a=get(),i=a.indexOf(t.id),name=((t.querySelector('b')||t).textContent||'').trim();
+  if(i<0){a.push(t.id);put(a);t.classList.add('taskblink');toast('"'+name+'" מהבהב עכשיו. לכבות: שוב לחיצה ארוכה עליו.');}
+  else{a.splice(i,1);put(a);t.classList.remove('taskblink');toast('"'+name+'" כבר לא מהבהב.');}
+ };
 }
 var HOME_HEAD=['newBlock','bareBtn','blkIcons','blkTiles'];
 // "איך אני משתפר" is the one block he wants out of the way rather than gone.

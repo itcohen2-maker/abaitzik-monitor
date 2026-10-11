@@ -1899,7 +1899,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-11T14:20:15.999Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-11T14:21:19.346Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3411,7 +3411,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='2db10cd451';
+var CODE_ID='3d529d2840';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11700,9 +11700,9 @@ function tilesExit(){
  tileBar(false);
  var a=document.getElementById('tileArr');if(a)a.textContent='✎ הורדת אריחים';
 }
-function pressDrag(grid,sel,key,inEdit){
+function pressDrag(grid,sel,key,inEdit,still){
  inEdit=inEdit||function(){return false;};
- var hold=null,sx=0,sy=0,cand=null,held=null,ghost=null,gdx=0,gdy=0,lx=0,ly=0,swallow=false,roll=null;
+ var hold=null,sx=0,sy=0,cand=null,held=null,ghost=null,gdx=0,gdy=0,lx=0,ly=0,swallow=false,roll=null,moved=false;
  function tileAt(x,y){
   var o=document.elementFromPoint(x,y);
   o=o&&o.closest?o.closest(sel):null;
@@ -11724,7 +11724,7 @@ function pressDrag(grid,sel,key,inEdit){
   roll=requestAnimationFrame(edge);
  }
  function lift(t,x,y){
-  hold=null;held=t;swallow=true;
+  hold=null;held=t;swallow=true;moved=false;
   var r=t.getBoundingClientRect();
   gdx=x-r.left;gdy=y-r.top;lx=x;ly=y;
   ghost=t.cloneNode(true);ghost.id='tGhost';
@@ -11740,10 +11740,12 @@ function pressDrag(grid,sel,key,inEdit){
   clearTimeout(hold);hold=null;cand=null;
   if(!held)return;
   cancelAnimationFrame(roll);roll=null;
+  var was=held;
   held.classList.remove('tlift');held=null;
   if(ghost){ghost.remove();ghost=null;}
   document.body.classList.remove('tdrag');
   saveOrder(grid,key);
+  if(still&&!moved&&!inEdit())still(was);
   setTimeout(function(){swallow=false;},450);
  }
  function start(e,x,y){
@@ -11756,10 +11758,10 @@ function pressDrag(grid,sel,key,inEdit){
  }
  function move(e,x,y){
   lx=x;ly=y;
-  if(held){if(e.cancelable)e.preventDefault();place(x,y);return;}
+  if(held){if(e.cancelable)e.preventDefault();if(Math.abs(x-sx)>12||Math.abs(y-sy)>12)moved=true;place(x,y);return;}
   if(!cand)return;
   if(Math.abs(x-sx)>10||Math.abs(y-sy)>10){
-   if(inEdit()){if(e.cancelable)e.preventDefault();lift(cand,sx,sy);place(x,y);return;}
+   if(inEdit()){if(e.cancelable)e.preventDefault();lift(cand,sx,sy);moved=true;place(x,y);return;}
    clearTimeout(hold);hold=null;cand=null;
   }
  }
@@ -11790,8 +11792,8 @@ function armTiles(grid){
  tools.id='tileTools';tools.className='tarrs';
  tools.appendChild(arr);
  grid.insertBefore(tools,grid.firstChild);
- pinTiles(grid,tools);
- pressDrag(grid,'.gt','tileOrder',function(){return tEdit;});
+ var pin=pinTiles(grid);
+ pressDrag(grid,'.gt','tileOrder',function(){return tEdit;},pin);
  grid.addEventListener('contextmenu',function(e){if(tEdit)e.preventDefault();});
  grid.addEventListener('click',function(e){
   if(!tEdit||e.target.closest('#tileArr'))return;
@@ -11807,34 +11809,23 @@ function armTiles(grid){
   }
  },true);
 }
-function pinTiles(grid,tools){
- var K='pinBlink',picking=false;
+function pinTiles(grid){
+ var K='pinBlink';
  var get=function(){try{return JSON.parse(localStorage.getItem(K)||'[]')||[];}catch(e){return [];}};
  var put=function(a){try{localStorage.setItem(K,JSON.stringify(a));}catch(e){}};
  var paint=function(){get().forEach(function(id){var t=document.getElementById(id);if(t)t.classList.add('taskblink');});};
- var b=document.createElement('button');
- b.type='button';b.id='tilePin';b.className='tarr';
- var label=function(){b.textContent=picking?'✋ לחץ על אריח (כאן לביטול)':'✋ להבהב שלא אשכח';};
- label();tools.appendChild(b);
- b.onclick=function(){
-  if(tEdit)return;
-  picking=!picking;label();
-  if(picking)toast('לחץ על אריח והוא יהבהב עד שתסמן אותו שוב. אריח שכבר מהבהב, לחיצה מכבה אותו.');
- };
  grid.addEventListener('click',function(e){
   var t=e.target.closest?e.target.closest('.gt'):null;
   if(!t||t.parentNode!==grid||!t.id)return;
-  if(!picking){
-   if(get().indexOf(t.id)>=0)setTimeout(paint,0);
-   return;
-  }
-  e.preventDefault();e.stopImmediatePropagation();
-  picking=false;label();
-  var a=get(),i=a.indexOf(t.id),name=((t.querySelector('b')||t).textContent||'').trim();
-  if(i<0){a.push(t.id);put(a);t.classList.add('taskblink');toast('"'+name+'" מהבהב עכשיו. לכבות: ✋ ואז שוב עליו.');}
-  else{a.splice(i,1);put(a);t.classList.remove('taskblink');toast('"'+name+'" כבר לא מהבהב.');}
+  if(get().indexOf(t.id)>=0)setTimeout(paint,0);
  },true);
  paint();setTimeout(paint,0);window.addEventListener('load',paint);
+ return function(t){
+  if(!t||!t.id)return;
+  var a=get(),i=a.indexOf(t.id),name=((t.querySelector('b')||t).textContent||'').trim();
+  if(i<0){a.push(t.id);put(a);t.classList.add('taskblink');toast('"'+name+'" מהבהב עכשיו. לכבות: שוב לחיצה ארוכה עליו.');}
+  else{a.splice(i,1);put(a);t.classList.remove('taskblink');toast('"'+name+'" כבר לא מהבהב.');}
+ };
 }
 var HOME_HEAD=['newBlock','bareBtn','blkIcons','blkTiles'];
 var HOME_TAIL=[];
