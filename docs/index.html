@@ -1908,7 +1908,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-11T18:18:12.469Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-11T18:19:22.192Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2059,7 +2059,7 @@ try{
   <button type="button" class="gt gStory" id="gStory" data-new="1"><b>🎞️ סטורי</b><small>ריק כרגע, הסטורי עלה</small></button>
   <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 02 אני אסתדר</small></button>
   <button type="button" class="gt gPen" id="gPen"><b>🏦 פנסיה</b><small>קוד מוסד בבנק 28417, 1,211 ש״ח. בדיקה ב 18.10</small></button>
-  <button type="button" class="gt gStk" id="gStk" data-new="1"><b>🎭 תיאטרון המדבקות</b><small>האתר שלך ושל אלון: קישור, העתקה ושליחה לאלון</small></button>
+  <button type="button" class="gt gStk" id="gStk" data-new="1"><b>🎭 תיאטרון רמת הנשיא</b><small>האתר שלך ושל אלון: קישור, העתקה ושליחה לאלון</small></button>
   <button type="button" class="gt gLec" id="gLec" data-new="1"><b>🎤 הרצאה</b><small>כנגד כל הסיכויים: המלל הערוך עם השקפים</small></button>
   <button type="button" class="gt gDudi" id="gDudi" data-new="1"><b>🥩 דודי בשר</b><small>חשבוניות יוני ויולי לשליחה</small></button>
   <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
@@ -3419,7 +3419,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='a4008b4536';
+var CODE_ID='703e8b6d10';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -8926,11 +8926,11 @@ function stkHome(){
 function stkSheet(){
  var old=document.getElementById('stkSheet');if(old)old.remove();
  var w=document.createElement('div');w.id='stkSheet';w.className='ysheet';
- w.setAttribute('role','dialog');w.setAttribute('aria-label','תיאטרון המדבקות');
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','תיאטרון רמת הנשיא');
  function close(){document.removeEventListener('keydown',esckey);stkHome();}
  function esckey(ev){if(ev.key==='Escape')close();}
  document.addEventListener('keydown',esckey);
- w.innerHTML='<div class="ycard"><div class="stkTop"><b>🎭 תיאטרון המדבקות</b><button type="button" class="yb yx" data-x="1">✕ לדף הראשי</button></div>'
+ w.innerHTML='<div class="ycard"><div class="stkTop"><b>🎭 תיאטרון רמת הנשיא</b><button type="button" class="yb yx" data-x="1">✕ לדף הראשי</button></div>'
   +'<small>הדמויות, הסיפורים וההקלטות נמצאים באתר. שם מקליטים איך כל דמות מדברת, ושם אלון רואה ומוסיף</small>'
   +'<a class="yb yb1" style="display:block;text-align:center;text-decoration:none;margin-top:10px" href="'+STK_SITE+'" target="_blank" rel="noopener">🎭 לפתוח את האתר של התיאטרון</a>'
   +'<small style="direction:ltr;display:block;text-align:center">'+STK_SITE+'</small>'
@@ -8948,7 +8948,7 @@ function stkSheet(){
    else fallbackCopy(STK_SITE,ok);
    return;
   }
-  var txt='אלון, בניתי לנו אתר לתיאטרון המדבקות. לכל דמות יש שם, סיפור, משפטים בקול שלה ומקום להקליט אותה. נכנסים עם הג׳ימייל record4 🎭 '+STK_SITE;
+  var txt='אלון, בניתי לנו אתר לתיאטרון רמת הנשיא. לכל דמות יש שם, סיפור, משפטים בקול שלה ומקום להקליט אותה. נכנסים עם הג׳ימייל record4 🎭 '+STK_SITE;
   window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
  };
 }

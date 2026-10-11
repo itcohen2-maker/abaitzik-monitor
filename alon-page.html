@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
-<title>תיאטרון המדבקות</title>
+<title>תיאטרון רמת הנשיא</title>
 <!--
   10.10. Alon's side of the sticker theatre, built by alon.js. One character
   at a time, his answer goes to Itzik's monitor. Since later on 10.10 it is a
@@ -96,7 +96,7 @@ document.addEventListener('visibilitychange',function(){
 function left(){return M.list.filter(function(x){return !mine(x.n);}).length;}
 function intro(){
  var d=M.list.length-left();
- app.innerHTML='<h1>🎭 תיאטרון המדבקות</h1><p class="sub">'+M.list.length+' דמויות שאתה ואיציק בניתם. זה דף משותף: מה שאיציק מספר אתה רואה כאן, ומה שאתה כותב הוא רואה אצלו.</p>'
+ app.innerHTML='<h1>🎭 תיאטרון רמת הנשיא</h1><p class="sub">'+M.list.length+' דמויות שאתה ואיציק בניתם. זה דף משותף: מה שאיציק מספר אתה רואה כאן, ומה שאתה כותב הוא רואה אצלו.</p>'
   +'<div class="stage in"><p style="margin:0 0 6px">על כל דמות: מי זו, איך היא נולדה, ומתי שולחים אותה. איפה שאיציק כבר סיפר, תוסיף מה שאתה זוכר. שורה אחת מספיקה. אפשר להקליט במיקרופון של המקלדת.</p>'
   +(d?'<p style="margin:0;opacity:.7">כבר ענית על '+d+'. ממשיכים מאיפה שעצרת.</p>':'')
   +'<button class="big" id="start">'+(d?'ממשיכים':'מרימים מסך')+'</button></div><div class="grid" id="grid"></div>';

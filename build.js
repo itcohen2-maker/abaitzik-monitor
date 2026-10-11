@@ -3754,7 +3754,7 @@ try{
     "like a puppet theatre". One tile to explain each character. Images and
     chat examples are sealed files under stk/, never in this page.
   -->
-  <button type="button" class="gt gStk" id="gStk" data-new="1"><b>🎭 תיאטרון המדבקות</b><small>האתר שלך ושל אלון: קישור, העתקה ושליחה לאלון</small></button>
+  <button type="button" class="gt gStk" id="gStk" data-new="1"><b>🎭 תיאטרון רמת הנשיא</b><small>האתר שלך ושל אלון: קישור, העתקה ושליחה לאלון</small></button>
   <!--
     10.10. Itzik: "a link and a button in the monitor, lecture". The edited
     lecture text with slide thumbnails, the new slides and the deck, all in Drive.
@@ -12711,11 +12711,11 @@ function stkHome(){
 function stkSheet(){
  var old=document.getElementById('stkSheet');if(old)old.remove();
  var w=document.createElement('div');w.id='stkSheet';w.className='ysheet';
- w.setAttribute('role','dialog');w.setAttribute('aria-label','תיאטרון המדבקות');
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','תיאטרון רמת הנשיא');
  function close(){document.removeEventListener('keydown',esckey);stkHome();}
  function esckey(ev){if(ev.key==='Escape')close();}
  document.addEventListener('keydown',esckey);
- w.innerHTML='<div class="ycard"><div class="stkTop"><b>🎭 תיאטרון המדבקות</b><button type="button" class="yb yx" data-x="1">✕ לדף הראשי</button></div>'
+ w.innerHTML='<div class="ycard"><div class="stkTop"><b>🎭 תיאטרון רמת הנשיא</b><button type="button" class="yb yx" data-x="1">✕ לדף הראשי</button></div>'
   +'<small>הדמויות, הסיפורים וההקלטות נמצאים באתר. שם מקליטים איך כל דמות מדברת, ושם אלון רואה ומוסיף</small>'
   +'<a class="yb yb1" style="display:block;text-align:center;text-decoration:none;margin-top:10px" href="'+STK_SITE+'" target="_blank" rel="noopener">🎭 לפתוח את האתר של התיאטרון</a>'
   +'<small style="direction:ltr;display:block;text-align:center">'+STK_SITE+'</small>'
@@ -12733,7 +12733,7 @@ function stkSheet(){
    else fallbackCopy(STK_SITE,ok);
    return;
   }
-  var txt='אלון, בניתי לנו אתר לתיאטרון המדבקות. לכל דמות יש שם, סיפור, משפטים בקול שלה ומקום להקליט אותה. נכנסים עם הג׳ימייל record4 🎭 '+STK_SITE;
+  var txt='אלון, בניתי לנו אתר לתיאטרון רמת הנשיא. לכל דמות יש שם, סיפור, משפטים בקול שלה ומקום להקליט אותה. נכנסים עם הג׳ימייל record4 🎭 '+STK_SITE;
   window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
  };
 }
