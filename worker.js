@@ -309,7 +309,20 @@ function prompt(list) {
       What needs his PC is no longer sent back to him as "open CLAUDE.cmd".
       It is marked, and pc-pull.js on the PC takes it the next minute it is on.
     */
-    ...(process.platform === 'win32' ? [] : [
+    /*
+      11.10, Rinat's monitor told her twice that "the computer is off" and her
+      Illustrator boards would run "the moment it is on". The PC queue is read
+      only by Itzik's own PC and only from his folder, so a customer's task sat
+      there forever and the sentence was false. A customer has no PC here: the
+      queue is offered to Itzik's instance only, and a customer is told plainly.
+    */
+    ...(inst.name !== 'abaitzik' ? [
+      'אין כאן חיבור לשום מחשב, לא של הלקוח ולא של איציק. אין תור משימות למחשב, ואסור לכתוב "המחשב כבוי" או "זה יתבצע כשיידלק".',
+      'משימה שצריכה תוכנה שמותקנת רק במחשב של הלקוח (אילוסטרייטור, פוטושופ וכדומה): עושים כאן כל מה שאפשר בשרת,',
+      'ואם התוכנה עצמה חיונית, אומרים בשורה אחת ובכנות מה אפשר להפיק כאן (למשל PDF או SVG בשכבות שנפתח באילוסטרייטור',
+      'ונשמר שם כ-AI בלחיצה) ומבקשים ממנהל דרך הכפתור בקשה ממנהל. לא מבטיחים מה שלא יקרה.',
+      '',
+    ] : process.platform === 'win32' ? [] : [
       'משימה שצריכה את המחשב שלו (הדפדפן המחובר ל-itcohen2, ריווחית, קבצים בהורדות או בשולחן העבודה,',
       'הדרייב, הוואטסאפ במחשב) לא מבצעים כאן ולא שולחים אותו לפתוח את CLAUDE.cmd. במקום זה:',
       '  `node pc-task.js add --re <id ההודעה שלו> "<המשימה במלואה: מה לעשות, איפה, ומה צריך לחזור אליו>"`',
