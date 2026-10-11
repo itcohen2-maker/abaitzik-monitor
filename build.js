@@ -15035,7 +15035,7 @@ function reallySend(list,squeezed){
  }
  var hasVoice=list.some(function(f){return /^voice-/.test(f.name);});
  var voice=list.length===1&&hasVoice;
- var deflt=voice?'הודעה קולית מהמוניטור'
+ var deflt=voice?('הודעה קולית מהמוניטור'+micDiagLine())
    :(list.length>1?list.length+' קבצים מהמוניטור':'קובץ מהמוניטור');
  if(!hasVoice){
   sendSay(list.length>1?(list.length+' קבצים יוצאים בעוד 15 שניות. אפשר לבטל בפס למטה.'):'הקובץ יוצא בעוד 15 שניות. אפשר לבטל בפס למטה.');
@@ -15402,27 +15402,36 @@ function recStart(){
    micStuck('dead');return;
   }
   /*
-    11.10, Itzik: the microphone does not stop. A muted track is checked at a
-    second and a half; the one automatic retry in micStuck used to be given
-    back the moment rec.start() succeeded, so a phone that kept answering
-    muted made start, abort, retry, start, abort, forever. The retry allowance
-    is now returned only by a take that proved itself (not muted at the second
-    look) or by a tap of his, never by merely starting.
+    11.10, 13:40, Itzik's screenshot: the stuck card came up on his real phone.
+    track.muted on iOS Safari is not a reliable signal; it can read true for a
+    moment while sound still flows. So muted alone no longer condemns a take.
+    What counts is data: a second in, the recorder is asked for what it has
+    (requestData) and the bytes that come back are counted. Only a take that
+    is muted AND has produced no bytes, twice, about 2.4 and 4.9 seconds in,
+    is stuck. A take that shows any bytes proves itself and returns the one
+    automatic retry. The numbers are kept in recDiag for the voice message.
   */
-  setTimeout(function(){
-   if(recStream!==st||document.hidden)return;
-   if(!track.muted){micStuckRetried=false;return;}
+  recBytes=0;recDiag={m0:track.muted?1:0};
+  (function probe(n){
    setTimeout(function(){
-    if(recStream!==st||document.hidden)return;
-    if(track.muted){recAbort=true;recMuted=true;recStop();}
-    else micStuckRetried=false;
-   },1500);
-  },1500);
+    if(recStream!==st||document.hidden||!rec||rec!==recMine)return;
+    var can=false;
+    try{if(rec.state==='recording'&&rec.requestData){rec.requestData();can=true;}}catch(e){}
+    setTimeout(function(){
+     if(recStream!==st||document.hidden||!rec||rec!==recMine)return;
+     recDiag['b'+n]=recBytes;recDiag['m'+n]=track.muted?1:0;
+     if(recBytes>0){micStuckRetried=false;return;}
+     if(!can||!track.muted)return; // no proof either way: the end of the take checks it
+     if(n<2)return probe(n+1);
+     recAbort=true;recMuted=true;recStop();
+    },400);
+   },n===1?2000:2500);
+  })(1);
   var mt=recPickType();
   try{rec=mt?new MediaRecorder(st,{mimeType:mt}):new MediaRecorder(st);}
   catch(e){rec=new MediaRecorder(st);}
-  rec.ondataavailable=function(ev){if(ev.data&&ev.data.size)recChunks.push(ev.data);};
-  var me=rec;
+  rec.ondataavailable=function(ev){if(ev.data&&ev.data.size){recChunks.push(ev.data);recBytes+=ev.data.size;}};
+  var me=rec;recMine=rec;
   rec.onstop=function(){
    // Runs once per recorder: the real stop event and the 1.5 s backstop in
    // recStop can both reach it. A newer take that is already live is not
@@ -15479,6 +15488,7 @@ function recStart(){
   };
   rec.start();
   recStarting=false;
+  try{var oldSheet=document.getElementById('micSheet');if(oldSheet)oldSheet.remove();}catch(e){}
   holdScreen();
   recModal(true);
   recBtn.disabled=false;
@@ -15564,7 +15574,7 @@ function recStart(){
   paintMics('bad');
  });
 }
-var recAsk=0,recAskAt=0,micStuckRetried=false,recMuted=false;
+var recAsk=0,recAskAt=0,micStuckRetried=false,recMuted=false,recBytes=0,recDiag={},recMine=null;
 function micDenied(){
  try{
   if(navigator.permissions&&navigator.permissions.query)
@@ -15586,7 +15596,16 @@ function micAppMode(){
   so it stops trying and puts a sheet on the screen that says, in steps, what
   to do. What he typed is kept first, so closing the app loses nothing.
 */
+function micDiagLine(){
+ var out=[];
+ try{var st=JSON.parse(localStorage.getItem('micDiag')||'null');if(st){out.push('נתקע קודם: '+st.why+' '+st.d);localStorage.removeItem('micDiag');}}catch(e){}
+ var d=recDiag||{},odd=d.m0||d.m1||d.m2||d.b1===0||d.b2===0;
+ if(odd)out.push('הקלטה: '+diagText(d));
+ return out.length?'\\nאבחון מיקרופון: '+out.join(' | '):'';
+}
+function diagText(d){return Object.keys(d).map(function(k){return k+'='+d[k];}).join(' ');}
 function micStuck(why){
+ try{localStorage.setItem('micDiag',JSON.stringify({why:why,d:diagText(recDiag||{}),at:Date.now()}));}catch(e){}
  try{if(recStream){recStream.getTracks().forEach(function(t){t.stop();});recStream=null;}}catch(e){}
  try{if(sfx){sfx.close();sfx=null;}}catch(e){}
  recStarting=false;recBtn.disabled=false;recModal(false);
@@ -15640,7 +15659,16 @@ function micSheet(denied){
   var k=e.target.getAttribute&&e.target.getAttribute('data-k');
   if(k===null||k===undefined)return;
   close();
-  if(k==='again'){recRetried=false;micStuckRetried=false;recStart();}
+  if(k==='again'){
+   recRetried=false;micStuckRetried=false;
+   // Let go of everything the old attempt held, wait for the phone to
+   // actually free the microphone, then ask for a fresh one.
+   try{if(rec&&rec.state!=='inactive')rec.stop();}catch(e){}
+   try{if(recStream)recStream.getTracks().forEach(function(t){t.stop();});}catch(e){}
+   recStream=null;rec=null;recStarting=false;recAsk++;audioMode('auto');
+   recSaid.textContent='פותח את המיקרופון מחדש...';
+   setTimeout(recStart,300);
+  }
  };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);

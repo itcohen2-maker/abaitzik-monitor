@@ -596,7 +596,7 @@ test('a stuck microphone ends in one sheet with steps, not a reload', () => {
   const ended = body.slice(body.indexOf('track.onended=function(){'), body.indexOf('track.onended=function(){') + 300);
   assert.ok(ended.includes("micStuck('ended');"), 'and so does a track that dies');
   assert.ok(body.includes("micStuck('hang');"), 'a permission call that never answers has a deadline');
-  assert.ok(body.includes("if(track.muted){recAbort=true;recMuted=true;recStop();}"), 'a muted track is caught at the start');
+  assert.ok(body.includes("recAbort=true;recMuted=true;recStop();"), 'a muted track is caught at the start');
   assert.ok(html.includes('function micSheet(denied){'), 'the sheet exists');
   assert.ok(html.includes("document.addEventListener('visibilitychange',micWake);"), 'coming back lets go of what was held');
 });
@@ -2183,6 +2183,7 @@ test('a microphone that keeps coming back muted gives up after one retry', () =>
   class MR {
     constructor() { this.state = 'inactive'; }
     start() { this.state = 'recording'; starts++; }
+    requestData() {}
     stop() { this.state = 'inactive'; setTimeout_(() => this.onstop && this.onstop(), 0); }
   }
   const el = () => ({ style: {}, classList: { add() {}, remove() {} }, setAttribute() {}, set textContent(v) {}, get textContent() { return ''; }, remove() {}, appendChild() {}, querySelector() { return null; } });
@@ -2336,4 +2337,33 @@ test('the story tile sits after the reels tile, opens the same viewer, and its f
   const fs = require('node:fs'), path = require('node:path');
   const root = path.join(__dirname, '..');
   assert.ok(fs.existsSync(path.join(root, 'data', 'files-private', m[1])) || fs.existsSync(path.join(root, 'docs', 'files', m[1])), 'the file is on the server');
+});
+test('muted but with sound flowing is not stuck; muted with no data is', async () => {
+  for (const flows of [true, false]) {
+    const h = stopHarness((recs) => class {
+      constructor() { this.state = 'inactive'; recs.push(this); }
+      start() { this.state = 'recording'; }
+      requestData() { if (flows) this.ondataavailable({ data: { size: 4000 } }); }
+      stop() { this.state = 'inactive'; this.onstop(); }
+    });
+    h.run('recStart()');
+    await h.flush(); await h.flush();
+    h.tracks[0].muted = true; // iOS reports muted either way
+    for (let i = 0; i < 14; i++) { await h.flush(); h.advance(500); }
+    if (flows) {
+      assert.equal(h.run('!!rec'), true, 'still recording');
+      assert.equal(h.ctx.__sheets, 0);
+      assert.equal(h.run('micStuckRetried'), false);
+    } else {
+      assert.ok(h.run('recMuted') === false && (h.recs.length >= 2 || h.ctx.__sheets === 1), 'no data and muted: aborted');
+    }
+  }
+});
+test('"try again" releases the old tracks, waits, and the card closes when a take starts', () => {
+  const html = renderPage(fixture({}));
+  const at = html.indexOf("if(k==='again'){");
+  const body = html.slice(at, at + 700);
+  assert.ok(body.includes('getTracks().forEach') && body.includes('setTimeout(recStart,300)'));
+  assert.ok(html.includes("var oldSheet=document.getElementById('micSheet');if(oldSheet)oldSheet.remove();"));
+  assert.ok(html.includes('function micDiagLine(){'), 'the voice message can carry the evidence');
 });
