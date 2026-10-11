@@ -2218,3 +2218,108 @@ test('a microphone that keeps coming back muted gives up after one retry', () =>
     assert.equal(run('micStuckRetried'), false);
   })();
 });
+// ---- stop must always work ----
+function stopHarness(MRfactory) {
+  const html = renderPage(fixture({}));
+  const from = html.indexOf('function recModal(open){');
+  const to = html.indexOf('var wakeLock=null;');
+  const src = html.slice(from, to).replace('function micSheet(denied){', 'function micSheet(denied){ __sheets++; return; ');
+  let now = 0, id = 0; const timers = new Map();
+  const st_ = (f, ms) => { timers.set(++id, { f, at: now + ms }); return id; };
+  function advance(ms) {
+    const end = now + ms;
+    for (;;) {
+      let best = null;
+      for (const [i, t] of timers) if (t.at <= end && (!best || t.at < best[1].at)) best = [i, t];
+      if (!best) break;
+      timers.delete(best[0]); now = Math.max(now, best[1].at); best[1].f();
+    }
+    now = end;
+  }
+  const sent = [], modal = [];
+  const el = () => ({ style: {}, classList: { add() {}, remove() {} }, setAttribute() {}, textContent: '', remove() {}, appendChild() {}, querySelector() { return null; } });
+  const tracks = [];
+  const recs = [];
+  const MR = MRfactory(recs);
+  const ctx = {
+    setTimeout: st_, clearTimeout: (i) => timers.delete(i), setInterval: () => ++id, clearInterval() {},
+    Date, Blob: class { constructor(p) { this.size = p.reduce((n, x) => n + (x.size || 0), 0); } }, File: class { constructor(p, n) { this.name = n; this.size = p.reduce((n2, x) => n2 + (x.size || 0), 0); } },
+    MediaRecorder: MR,
+    navigator: { mediaDevices: { getUserMedia: () => { const t = { readyState: 'live', muted: false, stopped: false, stop() { this.stopped = true; this.readyState = 'ended'; } }; tracks.push(t); return Promise.resolve({ getTracks: () => [t], getAudioTracks: () => [t] }); } } },
+    document: { hidden: false, getElementById: () => el(), createElement: el, body: el(), addEventListener() {}, removeEventListener() {} },
+    recBtn: el(), recSaid: { textContent: '' }, sfx: null, sfxT: 0,
+    recPickType: () => '', audioMode() {}, paintMics() {}, freeScreen() {}, holdScreen() {}, recTick() {}, keepDraft() {},
+    micAppMode: () => false, micDenied: () => Promise.resolve(false), esc: String, FEM: false,
+    rec: null, recChunks: [], recTimer: null, recSec: 0, recStream: null,
+    sessionStorage: { removeItem() {} }, window: { addEventListener() {} }, __sheets: 0,
+    picked: () => [], mb: () => '1MB', fBtn: { disabled: false }, qMode: 'fast', aim: null,
+    shrinkAll: (b, f) => f(b), reallySend: (b) => sent.push(b),
+  };
+  ctx.window.MediaRecorder = MR;
+  vm.createContext(ctx);
+  vm.runInContext(src, ctx);
+  const run = (c) => vm.runInContext(c, ctx);
+  const flush = () => new Promise((r) => setImmediate(r));
+  return { ctx, run, advance, flush, sent, tracks, recs };
+}
+test('stop works even if the stop event never fires', async () => {
+  const h = stopHarness((recs) => class {
+    constructor() { this.state = 'inactive'; recs.push(this); }
+    start() { this.state = 'recording'; }
+    requestData() { this.ondataavailable({ data: { size: 5000 } }); }
+    stop() { this.state = 'inactive'; /* onstop never comes: iOS */ }
+  });
+  h.run('recStart()');
+  await h.flush(); await h.flush();
+  assert.equal(h.run('!!rec'), true);
+  h.run('recStop()');
+  h.advance(1600);
+  assert.equal(h.run('rec'), null, 'recorder released');
+  assert.ok(h.tracks.every((t) => t.stopped), 'mic tracks released');
+  assert.equal(h.sent.length, 1, 'what was caught is sent');
+  h.run('recStop()'); // and again is harmless
+  h.advance(2000);
+  assert.equal(h.sent.length, 1);
+});
+test('stop on a paused recorder, or with nothing to stop, still resets the screen', async () => {
+  const h = stopHarness((recs) => class {
+    constructor() { this.state = 'inactive'; recs.push(this); }
+    start() { this.state = 'recording'; }
+    requestData() {}
+    stop() { this.state = 'inactive'; this.onstop(); }
+  });
+  h.run('recStart()');
+  await h.flush(); await h.flush();
+  h.recs[0].state = 'paused';
+  h.run('toggleRec = function(){ if(rec){recStop();return;} recStart(); }; toggleRec()');
+  h.advance(1600);
+  assert.equal(h.run('rec'), null, 'a paused take is stopped by the same tap');
+  // screen says recording but there is no recorder
+  h.run('recStream={getTracks:function(){return [];}}; recTimer=1;');
+  h.run('recStop()');
+  assert.equal(h.run('recStream'), null);
+  assert.equal(h.run('recTimer'), null);
+});
+test('stop after an auto retry ends the new recorder, and the old one finishing late does not kill it', async () => {
+  const h = stopHarness((recs) => class {
+    constructor() { this.state = 'inactive'; recs.push(this); }
+    start() { this.state = 'recording'; }
+    requestData() { this.ondataavailable({ data: { size: 100 } }); }
+    stop() { this.state = 'inactive'; this.__stopped = true; }
+  });
+  h.run('recStart()');
+  await h.flush(); await h.flush();
+  const first = h.recs[0];
+  // the page lost track of the first recorder (cleanup ran) and a retry starts a second
+  h.run('rec=null; recStream=null; recStarting=false;');
+  h.run('recStart()');
+  await h.flush(); await h.flush();
+  const second = h.recs[1];
+  assert.ok(second && second !== first);
+  first.onstop(); // the old one finishes late
+  assert.equal(h.run('!!rec'), true, 'the live take is still held');
+  h.run('recStop()');
+  h.advance(1600);
+  assert.ok(second.__stopped, 'the new recorder was stopped');
+  assert.equal(h.run('rec'), null);
+});

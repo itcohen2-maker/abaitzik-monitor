@@ -1886,7 +1886,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-11T09:51:00.673Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-11T09:51:30.423Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3396,7 +3396,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='a40db8966f';
+var CODE_ID='a3148481e6';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11084,7 +11084,28 @@ function recModal(open){
 }
 var recAbort=false;
 function recStop(){
- if(rec&&rec.state!=='inactive')rec.stop();
+ var r=rec;
+ if(r&&!r._done){
+  try{if(r.state!=='inactive'&&r.requestData)r.requestData();}catch(e){}
+  try{if(r.state!=='inactive')r.stop();}catch(e){}
+  if(r.state==='inactive'&&r.onstop){setTimeout(function(){if(!r._done)r.onstop();},0);}
+  setTimeout(function(){
+   if(r._done)return;
+   try{if(r.onstop)r.onstop();else recForceReset();}catch(e){recForceReset();}
+  },1500);
+  return;
+ }
+ if(r||recStream||recTimer||recStarting)recForceReset();
+}
+function recForceReset(){
+ try{if(rec&&rec.state!=='inactive')rec.stop();}catch(e){}
+ try{if(recStream){recStream.getTracks().forEach(function(t){t.stop();});}}catch(e){}
+ try{recCleanup();}catch(e){}
+ recStream=null;rec=null;recStarting=false;recAbort=false;recMuted=false;recAsk++;
+ try{recModal(false);}catch(e){}
+ recBtn.disabled=false;
+ paintMics('idle');
+ recSaid.textContent='ההקלטה נעצרה.';
 }
 function recCleanup(){
  if(recTimer){clearInterval(recTimer);recTimer=null;}
@@ -11148,7 +11169,10 @@ function recStart(){
   try{rec=mt?new MediaRecorder(st,{mimeType:mt}):new MediaRecorder(st);}
   catch(e){rec=new MediaRecorder(st);}
   rec.ondataavailable=function(ev){if(ev.data&&ev.data.size)recChunks.push(ev.data);};
+  var me=rec;
   rec.onstop=function(){
+   if(me._done)return;me._done=true;
+   if(rec&&rec!==me)return;
    recCleanup();
    if(recMuted){recMuted=false;recAbort=false;micStuck('muted');return;}
    if(recAbort){recAbort=false;recModal(false);recSaid.textContent='ההקלטה בוטלה.';recBtn.disabled=false;paintMics('idle');return;}
@@ -11325,7 +11349,7 @@ document.addEventListener('visibilitychange',function(){
 });
 
 function toggleRec(){
- if(rec&&rec.state==='recording'){recStop();return;}
+ if(rec){recStop();return;}
  recRetried=false;
  micStuckRetried=false;
  recStart();
@@ -11339,7 +11363,7 @@ document.getElementById('recBig').onclick=function(){recStop();};
  }catch(e){}
 })();
 document.getElementById('recCancel').onclick=function(){
- if(rec&&rec.state==='recording'){recAbort=true;recStop();}
+ if(rec||recStream){recAbort=true;recStop();}
  else{recModal(false);}
 };
 function micFirstCheck(){

@@ -15225,7 +15225,37 @@ function recModal(open){
 // Cancelling throws the audio away instead of sending it.
 var recAbort=false;
 function recStop(){
- if(rec&&rec.state!=='inactive')rec.stop();
+ /*
+   11.10, Itzik: a recording he could not stop. Stop must always end it.
+   Three ways it did not: the recorder was 'paused' (a phone interruption), so
+   the old test for 'recording' skipped it; stop() threw or the stop event never
+   came on iOS, and nothing else ended the take; and the screen could say
+   recording with no recorder left to stop. So: ask for the last data, stop,
+   and if the stop event has not come within a second and a half, finish with
+   what was caught by hand. With nothing to stop, the screen is reset anyway.
+ */
+ var r=rec;
+ if(r&&!r._done){
+  try{if(r.state!=='inactive'&&r.requestData)r.requestData();}catch(e){}
+  try{if(r.state!=='inactive')r.stop();}catch(e){}
+  if(r.state==='inactive'&&r.onstop){setTimeout(function(){if(!r._done)r.onstop();},0);}
+  setTimeout(function(){
+   if(r._done)return;
+   try{if(r.onstop)r.onstop();else recForceReset();}catch(e){recForceReset();}
+  },1500);
+  return;
+ }
+ if(r||recStream||recTimer||recStarting)recForceReset();
+}
+function recForceReset(){
+ try{if(rec&&rec.state!=='inactive')rec.stop();}catch(e){}
+ try{if(recStream){recStream.getTracks().forEach(function(t){t.stop();});}}catch(e){}
+ try{recCleanup();}catch(e){}
+ recStream=null;rec=null;recStarting=false;recAbort=false;recMuted=false;recAsk++;
+ try{recModal(false);}catch(e){}
+ recBtn.disabled=false;
+ paintMics('idle');
+ recSaid.textContent='ההקלטה נעצרה.';
 }
 function recCleanup(){
  if(recTimer){clearInterval(recTimer);recTimer=null;}
@@ -15356,7 +15386,13 @@ function recStart(){
   try{rec=mt?new MediaRecorder(st,{mimeType:mt}):new MediaRecorder(st);}
   catch(e){rec=new MediaRecorder(st);}
   rec.ondataavailable=function(ev){if(ev.data&&ev.data.size)recChunks.push(ev.data);};
+  var me=rec;
   rec.onstop=function(){
+   // Runs once per recorder: the real stop event and the 1.5 s backstop in
+   // recStop can both reach it. A newer take that is already live is not
+   // touched by an old recorder finishing late.
+   if(me._done)return;me._done=true;
+   if(rec&&rec!==me)return;
    recCleanup();
    if(recMuted){recMuted=false;recAbort=false;micStuck('muted');return;}
    if(recAbort){recAbort=false;recModal(false);recSaid.textContent='ההקלטה בוטלה.';recBtn.disabled=false;paintMics('idle');return;}
@@ -15612,7 +15648,7 @@ document.addEventListener('visibilitychange',function(){
 });
 
 function toggleRec(){
- if(rec&&rec.state==='recording'){recStop();return;}
+ if(rec){recStop();return;}
  recRetried=false;
  micStuckRetried=false;
  recStart();
@@ -15629,7 +15665,7 @@ document.getElementById('recBig').onclick=function(){recStop();};
  }catch(e){}
 })();
 document.getElementById('recCancel').onclick=function(){
- if(rec&&rec.state==='recording'){recAbort=true;recStop();}
+ if(rec||recStream){recAbort=true;recStop();}
  else{recModal(false);}
 };
 /*
