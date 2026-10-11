@@ -120,3 +120,13 @@ test('a customer guide becomes a home tile of its own', () => {
   assert.ok(html.indexOf('id="gGuide0"') < html.indexOf('id="gTasks"'));
   assert.ok(html.includes('קובץ &lt;גדול&gt;'));
 });
+
+// 11.10: a customer's own site behind a tile; only https links are drawn, and
+// the intake questions tile carries the waving hand like every new tile.
+test('a customer link becomes a tile, and only an https one', () => {
+  const html = mod.tenantTiles({ screens: ['gIntake'], links: [
+    { key: 'a', icon: '🎭', title: 'תיאטרון', url: 'https://example.vercel.app' },
+    { key: 'b', title: 'רע', url: 'javascript:alert(1)' }] });
+  assert.ok(html.includes('id="gLink0" data-new="1"') && !html.includes('id="gLink1"'));
+  assert.ok(html.includes('id="gIntake" data-new="1"'));
+});

@@ -841,8 +841,10 @@ function build() {
   // was drawn and then hidden on every customer's page. It is appended here.
   // 8.10: and the guide tiles, which are not in that list either.
   const guides = tenantGuides(inst).map((g) => ({ key: g.key, title: g.title, text: g.text }));
+  // 11.10: and the link tiles, a site of the customer's own behind a tile.
+  const links = tenantLinks(inst).map((l) => ({ key: l.key, url: l.url }));
   const screens = Array.isArray(inst.screens) && inst.screens.length
-    ? inst.screens.filter((id) => id !== 'gAdminReq').concat(guides.map((g, i) => 'gGuide' + i), ['gAdminReq']) : inst.screens;
+    ? inst.screens.filter((id) => id !== 'gAdminReq').concat(guides.map((g, i) => 'gGuide' + i), links.map((l, i) => 'gLink' + i), ['gAdminReq']) : inst.screens;
   /*
     8.10, from the reviewer: "שכחתי את הקוד" on the lock. The page files a request
     to Itzik carrying a random device mark it keeps; once he approves, the mark is
@@ -859,7 +861,7 @@ function build() {
   const instanceJson = JSON.stringify({ name: inst.name, owner: inst.owner, pageTitle: inst.pageTitle,
     screens, unlocks,
     computer: inst.computer, phone: inst.phone, welcome: inst.welcome, homeTile: inst.homeTile || '', gender: inst.gender || '',
-    uploadUrl: inst.uploadUrl || '', guides });
+    uploadUrl: inst.uploadUrl || '', guides, links });
   const html = html0.replace('__CODE_ID__', codeId0).replace("'__INSTANCE__'", instanceJson);
 
   /*
@@ -982,6 +984,9 @@ const TENANT_TILES = {
   gToday: ['g17', '📋 היום', 'משימות מחכות היום, לפי דחיפות'],
   // Itzik, 8.10, for Rinat: one tile that connects the ntfy app to her answers.
   gPush: ['g4', '🔔 התראות לטלפון', 'כל תשובה קופצת בטלפון'],
+  // Itzik, 11.10, for Alon: a few questions, and the answers come back as
+  // suggestions for what else his monitor could hold.
+  gIntake: ['g11', '🧭 שאלות היכרות', 'כמה לחיצות, ואציע מה עוד אפשר לבנות לך'],
 };
 // With no screens chosen at intake, only the tiles that fit any work. The whole
 // catalog gave a phone only customer "connect the computer", a client follow up
@@ -997,6 +1002,14 @@ const TENANT_DEFAULT = ['gTasks', 'gNotes'];
 function tenantGuides(inst) {
   return (Array.isArray(inst.guides) ? inst.guides : []).filter((g) => g && g.key && g.title && g.text);
 }
+/*
+  Itzik, 11.10: a site that belongs to the customer (Alon's sticker theatre)
+  behind a tile of its own. instance.json: links: [{key, icon, title, sub, url}],
+  https only. The tile opens the site in a new tab; the site keeps its own login.
+*/
+function tenantLinks(inst) {
+  return (Array.isArray(inst.links) ? inst.links : []).filter((l) => l && l.key && l.title && /^https:\/\/[^\s"'<>]+$/.test(l.url || ''));
+}
 function tenantTiles(inst) {
   const ids = (Array.isArray(inst.screens) && inst.screens.length ? inst.screens : TENANT_DEFAULT).filter((id) => id !== 'gAdminReq');
   // Itzik, 5.10: a customer does not change the system, he asks. The way to ask
@@ -1006,9 +1019,11 @@ function tenantTiles(inst) {
   const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const guides = tenantGuides(inst).map((g, i) => '\n  <button type="button" class="gt g11" id="gGuide' + i + '"><b>'
     + esc((g.icon ? g.icon + ' ' : '') + g.title) + '</b><small>' + esc(g.sub || 'הסבר קצר, פעם אחת') + '</small></button>').join('');
-  return guides + ids.filter((id) => TENANT_TILES[id]).map((id) => {
+  const links = tenantLinks(inst).map((l, i) => '\n  <button type="button" class="gt g4" id="gLink' + i + '" data-new="1"><b>'
+    + esc((l.icon ? l.icon + ' ' : '') + l.title) + '</b><small>' + esc(l.sub || 'פתיחה בלשונית חדשה') + '</small></button>').join('');
+  return guides + links + ids.filter((id) => TENANT_TILES[id]).map((id) => {
     const [cls, title, sub] = TENANT_TILES[id];
-    return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"' + (id === 'gIntake' ? ' data-new="1"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
 }
 /*
@@ -2397,6 +2412,8 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .arPick{display:flex;gap:6px}
 .arPick .yb{flex:1;padding:9px 4px;min-height:40px;font-size:13.5px}
 .arPick .yb.on{background:#16202c;color:#fff}
+.inPick{flex-wrap:wrap}
+.inPick .yb{flex:1 1 30%}
 /* 6.10: Home Style shipments screens */
 .ship .srow{border-bottom:1px solid rgba(128,128,128,.25);padding:8px 0;font:500 14px/1.45 Heebo,sans-serif}
 .ship .srow b{font:700 14px Heebo,sans-serif}
@@ -12821,6 +12838,61 @@ function adminReqSheet(){
  setTimeout(function(){var x=document.getElementById('arText');if(x)x.focus();},50);
 }
 on('gAdminReq',adminReqSheet);
+/*
+  Itzik, 11.10, for Alon: general questions in chips, a few taps and one free
+  line. The answers go to the chat as one message, and the answer there is a
+  short list of things his monitor could hold (apps, screens, reminders).
+*/
+var INTAKE_Q=[
+ ['במה המוניטור יכול לעזור לך הכי הרבה?',['עבודה ועסק','בית ומשפחה','בריאות וכושר','תחביבים ויצירה','כסף וחשבונות','ללמוד דברים חדשים']],
+ ['מה הכי גוזל לך זמן?',['מיילים והודעות','סידורים ותורים','לזכור דברים','לחפש מידע','ניירת וחשבונות','כלום מיוחד']],
+ ['על מה היה טוב לקבל תזכורת?',['תורים ופגישות','תשלומים','ימי הולדת','תרופות','משימות','לא צריך']],
+ ['מה התחביבים שלך?',['מוזיקה','ספורט','בישול','טיולים','צילום ווידאו','משחקים','קריאה','הומור ושטויות']],
+ ['מה מעניין לנסות?',['רשימת קניות','תקציב חודשי','מתכונים','יומן אימונים','ארכיון מסמכים','סיכום חדשות יומי','עזרה בכתיבה','חידה או משחק יומי']],
+ ['איך הכי נוח לדבר עם המוניטור?',['כתיבה','הקלטה קולית','תמונות','הכל']],
+ ['מתי לקבל עדכונים?',['מיד על כל דבר','סיכום אחד בבוקר','רק כששואלים']],
+ ['כמה טכנולוגיה זה בשבילך?',['מאוד','בינוני','בכלל לא']]
+];
+function intakeSheet(){
+ var old=document.getElementById('inSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='inSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','שאלות היכרות');
+ w.innerHTML='<div class="ycard"><b>🧭 שאלות היכרות</b>'
+  +'<small>מסמנים כמה שרוצים בכל שאלה. אפשר לדלג. בסוף אציע בצ׳אט מה עוד אפשר לבנות לך במוניטור.</small>'
+  +INTAKE_Q.map(function(q,i){return '<small style="opacity:1;font-weight:700;margin-top:6px">'+esc(q[0])+'</small>'
+   +'<div class="arPick inPick" data-q="'+i+'" role="group" aria-label="'+esc(q[0])+'">'
+   +q[1].map(function(o){return '<button type="button" class="yb" data-o="'+esc(o)+'">'+esc(o)+'</button>';}).join('')+'</div>';}).join('')
+  +'<small style="opacity:1;font-weight:700;margin-top:6px">עוד משהו שחשוב לדעת?</small>'
+  +'<textarea id="inText" rows="3" style="width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif" placeholder="לא חובה"></textarea>'
+  +'<button type="button" class="yb yb1" data-a="send">שליחה</button>'
+  +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+ w.onclick=function(e){
+  if(e.target===w)return w.remove();
+  var a=e.target.getAttribute&&e.target.getAttribute('data-a');
+  if(a==='x')return w.remove();
+  if(e.target.getAttribute&&e.target.getAttribute('data-o')!==null){e.target.classList.toggle('on');return;}
+  if(a!=='send')return;
+  var lines=INTAKE_Q.map(function(q,i){
+   var on=[].map.call(w.querySelectorAll('.inPick[data-q="'+i+'"] .yb.on'),function(b){return b.getAttribute('data-o');});
+   return on.length?q[0]+' '+on.join(', '):'';
+  }).filter(Boolean);
+  var free=(document.getElementById('inText').value||'').trim();
+  if(free)lines.push('עוד: '+free);
+  if(!lines.length){toast('סמן לפחות תשובה אחת');return;}
+  var t='שאלות היכרות:\\n'+lines.join('\\n')+'\\nלפי זה, תציע לי שלושה עד חמישה דברים שאפשר להוסיף למוניטור שלי (אפליקציות, מסכים, תזכורות), כל אחד בשורה, ומה הוא יעשה בשבילי.';
+  e.target.disabled=true;
+  sendText('שאלות היכרות',t,'משימה').then(function(){
+   markSent('text',t);w.remove();toast('נשלח. ההצעות יגיעו בצ׳אט.');
+  }).catch(function(){e.target.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
+ };
+ document.body.appendChild(w);
+}
+on('gIntake',intakeSheet);
+// 11.10: a link tile opens the customer's own site in a new tab.
+(INSTANCE&&INSTANCE.links||[]).forEach(function(l,i){
+ on('gLink'+i,function(){window.open(l.url,'_blank','noopener');});
+});
 /*
   6.10.2026, Home Style. The shipments tiles. They are customer tiles: an id
   that is not in TENANT_TILES is never drawn, so on Itzik's page nothing here
