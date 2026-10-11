@@ -225,4 +225,7 @@ systemctl enable --now monitor-listen-$ID.service monitor-worker-$ID.timer monit
 rm -f /run/monitor-maintenance-until
 sleep 4
 systemctl is-active monitor-listen-$ID.service monitor-worker-$ID.timer monitor-watchdog-$ID.timer monitor-sync-$ID.timer
+
+# Itzik, 11.10: every customer gets big file uploads from day one, without asking.
+bash "$(dirname "$0")/enable-upload.sh" "$ID" || echo "העלאת קבצים גדולים לא הופעלה, להריץ setup/enable-upload.sh $ID"
 echo "סיום: $ID"

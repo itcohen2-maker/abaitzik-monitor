@@ -161,7 +161,8 @@ function check(now) {
 function uploadProblems(now) {
   const out = [];
   if (!inst.uploadUrl) return out;
-  const unit = process.env.WATCHDOG_UPLOAD_UNIT || 'monitor-upload.service';
+  // Itzik's is monitor-upload.service; a customer's is monitor-upload-<name>.service (setup/enable-upload.sh).
+  const unit = process.env.WATCHDOG_UPLOAD_UNIT || (inst.name === 'abaitzik' ? 'monitor-upload.service' : 'monitor-upload-' + inst.name + '.service');
   if (show(unit, 'LoadState') === 'loaded' && show(unit, 'ActiveState') !== 'active') out.push('שירות ההעלאה של קבצים גדולים לא פעיל');
   try {
     const dir = path.join(inst.dataPath, 'uploads', 'ready');

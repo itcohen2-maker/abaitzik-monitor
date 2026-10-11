@@ -5673,7 +5673,9 @@ function upKeepAwake(on){
 }
 function upCall(path,opt){
  opt=opt||{};
- var h={'X-Monitor-Code':myCode()};
+ // 11.10: a customer's copy has no personal code (one lock, the words); it
+ // signs uploads with upKey from its sealed keys.json instead.
+ var h={'X-Monitor-Code':myCode()||secret('upKey')};
  if(opt.json)h['Content-Type']='application/json';
  return fetch(UPURL+path,{method:opt.method||'GET',headers:h,body:opt.body}).then(function(r){
   return r.json().catch(function(){return {};}).then(function(b){return {status:r.status,body:b||{}};});

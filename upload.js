@@ -35,7 +35,12 @@ function ownerCode() {
     try {
       cached = process.env.ABAITZIK_OWNER_CODE
         || fs.readFileSync(path.join(inst.dataPath, 'owner-code.txt'), 'utf8').trim();
-    } catch (e) { cached = null; }
+    } catch (e) {
+      // 11.10: a customer has no personal code; setup/enable-upload.sh gives
+      // each one an 8 digit upKey in its own keys.json, sealed in its page.
+      try { cached = String(JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'keys.json'), 'utf8')).upKey || '') || null; }
+      catch (e2) { cached = null; }
+    }
     cachedAt = Date.now();
   }
   return cached;

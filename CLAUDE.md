@@ -19,6 +19,9 @@
   files [name]). The page enables it through `uploadUrl` in instance.json; an instance without it keeps the ntfy path.
   Log /var/log/monitor-upload.log; keepalive and watchdog watch the unit. A customer instance needs its own unit
   as its own user, this one can only write Itzik's folder.
+  Customers (11.10.2026): `bash setup/enable-upload.sh <id>` as root gives one its own unit
+  monitor-upload-<id> (its own user, port 8792 up), an 8 digit upKey in its keys.json that its page signs with,
+  uploadUrl, and a /up/v1/<name>/* route in its Caddy block. new-tenant.sh runs it for every new customer.
 
 - **Shopping list:** the Google Doc "קניות", owned by Jenny Cohen and shared with itcohen2.
   https://docs.google.com/document/d/1A2tvet0ucYNDoDclswaVDybuL8bir3OAerRzXtDUEPU/edit
