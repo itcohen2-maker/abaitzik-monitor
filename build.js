@@ -2366,6 +2366,15 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .ycard>*{flex-shrink:0}
 .ycard b{font:700 16px Heebo,sans-serif}
 .ycard small{font-size:12px;opacity:.7;margin-bottom:4px}
+.pcard{max-height:92%}
+.pcard h4{margin:10px 0 0;font:700 15px Heebo,sans-serif;color:#14675a}
+.pbox{white-space:pre-wrap;user-select:text;-webkit-user-select:text;-webkit-touch-callout:default;direction:rtl;text-align:right;background:#f3f5f8;border-radius:12px;padding:12px;font:400 17px/1.6 Heebo,sans-serif;max-height:38vh;overflow:auto}
+.pcp{min-height:48px;border:0;border-radius:12px;background:#14675a;color:#fff;font:700 17px Heebo,sans-serif;padding:10px 14px}
+.pcp.psm{min-height:40px;font-size:14px;background:#4b5d6b}
+.pcp.pok{background:#1f9d55}
+.psong{font:500 15px/1.4 Heebo,sans-serif;direction:rtl}
+.pnote{font-size:13px;opacity:.75}
+.plink{background:none;border:0;color:#2f6fb5;text-decoration:underline;font:400 14px Heebo,sans-serif;min-height:40px}
 .capTxt{white-space:pre-wrap;user-select:text;-webkit-user-select:text;background:#f3f5f8;border-radius:12px;padding:12px;font:400 15px/1.55 Heebo,sans-serif;max-height:55vh;overflow:auto}
 .arEx{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:start}
 .arEx>div{display:flex;flex-direction:column;gap:5px}
@@ -12460,10 +12469,83 @@ function reelSheet(){
   close();
   var it=REEL_ITEMS[+k];if(k===''||!it)return;
   if(it.u)window.open(it.u,'_blank','noopener');
+  else if(/פרסום$/.test(it.n))postSheet(it);
   else fileOpen(it.r);
  };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
+}
+
+// 11.10, Itzik: "אני לא יכול להעתיק משם כלום, זה לא נותן לי ב iPhone". The
+// פרסום files were a text to open and select. Now each network has its caption
+// in a box and one big button that copies it. The data is one sealed file
+// (reel-posts.json in files-private), opened like any other private file.
+var POSTS=null;
+function postsLoad(){
+ if(POSTS)return Promise.resolve(POSTS);
+ var e=fileEntry('reel-posts.json');
+ if(!e||!GKEY)return Promise.reject(0);
+ return fileBlob(e).then(function(b){return b.text();}).then(function(s){POSTS=JSON.parse(s);return POSTS;});
+}
+// Copy has to start inside the tap. The hidden textarea does that on iPhone;
+// the clipboard API is the second try.
+function postCopy(t,done){
+ var ok=false;
+ try{
+  var a=document.createElement('textarea');
+  a.value=t;a.setAttribute('readonly','');
+  a.style.position='fixed';a.style.top='0';a.style.opacity='0';a.style.fontSize='16px';
+  document.body.appendChild(a);a.focus();a.select();a.setSelectionRange(0,t.length);
+  ok=document.execCommand('copy');
+  document.body.removeChild(a);
+ }catch(x){}
+ if(ok)return done();
+ if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(done,function(){});
+}
+function postSheet(it){
+ var num=String(it.n).split(' ')[0];
+ postsLoad().then(function(P){
+  var d=P[num];if(!d)throw 0;
+  var texts=[];
+  function box(x){return '<div class="pbox" dir="rtl">'+esc(x)+'</div>';}
+  function btn(label,x){texts.push(x);return '<button type="button" class="pcp" data-i="'+(texts.length-1)+'" data-l="'+esc(label)+'">'+label+'</button>';}
+  function song(x,label){return '<div class="psong">🎵 '+label+': '+esc(x)+'</div>'+btn('העתקת שם השיר',x).replace('class="pcp"','class="pcp psm"');}
+  var h='<b>'+esc(it.n)+'</b>';
+  h+='<h4>אינסטגרם</h4>'+box(d.ig||'')+btn('📋 העתקה לאינסטגרם',d.ig||'')+song(d.song||'','שיר');
+  h+='<h4>טיקטוק</h4>'+box(d.tt||'')+btn('📋 העתקה לטיקטוק',d.tt||'');
+  if(d.pin)h+='<div class="psong">📌 תגובה לנעוץ</div>'+box(d.pin)+btn('📋 העתקת התגובה',d.pin);
+  h+=song(d.song_tt||d.song||'','שיר');
+  h+='<h4>יוטיוב שורטס</h4>'+box(d.yt||'')+btn('📋 העתקת כותרת',d.yt||'')
+   +box(d.ytd||'')+btn('📋 העתקת תיאור',d.ytd||'')+song(d.song||'','שיר')
+   +'<div class="pnote">את השיר מוסיפים רק דרך כפתור הצליל באפליקציה</div>';
+  if(d.spare)h+='<div class="psong">אם השיר לא נמצא: '+esc(d.spare)+'</div>'+btn('העתקת שם השיר',d.spare).replace('class="pcp"','class="pcp psm"');
+  h+='<div class="pnote">שיר 15 עד 20 אחוז, צליל מקורי 100</div>';
+  h+='<button type="button" class="plink" data-full="1">הטקסט המלא</button>'
+   +'<button type="button" class="yb yx" data-x="1">סגירה</button>';
+  var old=document.getElementById('postSheet');if(old)old.remove();
+  var w=document.createElement('div');
+  w.id='postSheet';w.className='ysheet';
+  w.setAttribute('role','dialog');w.setAttribute('aria-label',it.n);
+  w.innerHTML='<div class="ycard pcard">'+h+'</div>';
+  function close(){w.remove();document.removeEventListener('keydown',esckey);}
+  function esckey(e){if(e.key==='Escape')close();}
+  w.onclick=function(e){
+   var t=e.target;
+   if(t===w)return close();
+   if(!t.getAttribute)return;
+   if(t.getAttribute('data-x'))return close();
+   if(t.getAttribute('data-full')){close();return fileOpen(it.r);}
+   var i=t.getAttribute('data-i');
+   if(i===null)return;
+   var lab=t.getAttribute('data-l');
+   postCopy(texts[+i],function(){
+    t.textContent='הועתק ✓';t.classList.add('pok');
+    setTimeout(function(){t.textContent=lab;t.classList.remove('pok');},2000);
+   });
+  };
+  document.addEventListener('keydown',esckey);
+  document.body.appendChild(w);
+ }).catch(function(){fileOpen(it.r);});
 }
 on('gReels',reelSheet);
 /*
@@ -16939,7 +17021,7 @@ const MIME = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'im
   mp4: 'video/mp4', mov: 'video/quicktime', webm: 'audio/webm', m4a: 'audio/mp4', mp3: 'audio/mpeg',
   ogg: 'audio/ogg', wav: 'audio/wav', pdf: 'application/pdf', txt: 'text/plain; charset=utf-8',
   doc: 'application/msword', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', csv: 'text/csv; charset=utf-8' };
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', csv: 'text/csv; charset=utf-8', json: 'application/json' };
 function walkFiles(dir, base = '') {
   if (!fs.existsSync(dir)) return [];
   let out = [];
