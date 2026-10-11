@@ -12371,19 +12371,8 @@ function ybAttr(a,i){
 // 7.10 evening: the PC built 15 to 18 but never put them here, so the sheet was
 // empty. They open from Drive until the PC copies the files themselves in.
 // 8.10 Itzik: every video comes with a feed cover and a post caption, same number.
+// 11.10 Itzik: delete all the candle marketing stories, new videos are made this week.
 var NER_ITEMS=[
- {n:'15',t:'סטורי פרסומת, חמישי 8.10, עברית, קול אישה עם מוזיקה',r:'ner-27-thu-he-woman.mp4'},
- {n:'15',t:'כריכה לפיד (4:5)',u:'https://drive.google.com/file/d/1pHUYLKboO974OwoQe5IQOhOHUyeRY-Sj/view'},
- {n:'15',t:'תיאור לפוסט, להעתקה',c:['יום חמישי בשוק, פרחים וחלה, והשאלה של הערב: מתי מדליקים?','זמן הדלקת הנרות לכל עיר בעולם, במקום אחד.','לחיצה אחת על התראה, והטלפון מזכיר לפני ההדלקה.','candletimes.com','ומה אצלכם, מי בבית אחראי לזכור את השעה?','#הדלקתנרות #ערב_שבת #שבתשלום #זמניהדלקתנרות']},
- {n:'16',t:'סטורי פרסומת, חמישי 8.10, אנגלית, קול גבר, נרות ושולחן שבת',r:'ner-28-thu-en-man.mp4'},
- {n:'16',t:'כריכה לפיד (4:5)',u:'https://drive.google.com/file/d/1WJ4rnqtxgZ0cmQ41lH196UOuTRhJb4tP/view'},
- {n:'16',t:'תיאור לפוסט, להעתקה',c:['Shabbat candles, a set table, and one question: what time do we light tonight?','Accurate candle lighting times for any city in the world, free.','One tap on the bell and your phone reminds you before lighting.','candletimes.com','What is always on your Shabbat table?','#candlelighting #shabbatshalom #shabbateve #jewishlife']},
- {n:'17',t:'סטורי פרסומת, שישי 9.10, עברית, קול גבר עם מוזיקה',r:'ner-29-fri-he-man.mp4'},
- {n:'17',t:'כריכה לפיד (4:5)',u:'https://drive.google.com/file/d/12Xz259slLJQvo6rlA_knhWVDIukvXPCH/view'},
- {n:'17',t:'תיאור לפוסט, להעתקה',c:['שישי בצהריים, כל המשפחה מגיעה, והילדים שואלים באיזו שעה להגיע.','זמן הדלקת הנרות של היום, לכל עיר בעולם.','לוחצים על התראה, וכולם יודעים לפני ההדלקה.','candletimes.com','כמה אנשים יושבים אצלכם סביב השולחן הערב?','#הדלקתנרות #ערב_שבת #שבתשלום #ארוחתשישי']},
- {n:'18',t:'סטורי פרסומת, שישי 9.10, אנגלית, קול אישה עם מוזיקה',r:'ner-30-fri-en-woman.mp4'},
- {n:'18',t:'כריכה לפיד (4:5)',u:'https://drive.google.com/file/d/1AMrprIvYxMQDSVyNN24VmrCnsXRVMWx0/view'},
- {n:'18',t:'תיאור לפוסט, להעתקה',c:['New apartment, new city, and Shabbat eve is today.','The candlesticks came out of the boxes first.','Lighting times for any city in the world, and one tap on the bell brings a reminder before lighting.','candletimes.com','What is the first thing you unpack in a new home?','#candlelighting #shabbatshalom #newhome #jewishlife']}
 ];
 function nerSheet(){
  var old=document.getElementById('nSheet');if(old)old.remove();
