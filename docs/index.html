@@ -1046,6 +1046,8 @@ body.editing .bn{display:none}
 .grid .gt,#blkIcons .ic{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 #blkIcons .ic.tlift{opacity:.3}
 .tarr{grid-column:1/-1;justify-self:start;display:block;margin:0;border:0;background:none;color:var(--dim);font:600 12.5px Heebo,sans-serif;cursor:pointer;padding:4px 2px}
+.tarrs{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px 18px}
+.tarrs .tarr{grid-column:auto}
 .tedit .gt{position:relative;animation:wobble .28s infinite alternate ease-in-out}
 .grid .gt.tlift{opacity:.3}
 #tGhost{position:fixed;z-index:80;pointer-events:none;margin:0;transform:scale(1.08);box-shadow:0 18px 34px rgba(0,0,0,.4);opacity:.95;animation:none}
@@ -1897,7 +1899,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-11T14:15:50.272Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-11T14:17:34.420Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3409,7 +3411,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='1b527da994';
+var CODE_ID='2db10cd451';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","guides":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11784,7 +11786,11 @@ function armTiles(grid){
  var arr=document.createElement('button');
  arr.type='button';arr.id='tileArr';arr.className='tarr';arr.textContent='✎ הורדת אריחים';
  arr.onclick=function(){if(tEdit)tilesExit();else tilesEnter(grid);};
- grid.insertBefore(arr,grid.firstChild);
+ var tools=document.createElement('div');
+ tools.id='tileTools';tools.className='tarrs';
+ tools.appendChild(arr);
+ grid.insertBefore(tools,grid.firstChild);
+ pinTiles(grid,tools);
  pressDrag(grid,'.gt','tileOrder',function(){return tEdit;});
  grid.addEventListener('contextmenu',function(e){if(tEdit)e.preventDefault();});
  grid.addEventListener('click',function(e){
@@ -11800,6 +11806,35 @@ function armTiles(grid){
    toast('הורד מהמסך. "להחזיר" מחזיר אותו.');
   }
  },true);
+}
+function pinTiles(grid,tools){
+ var K='pinBlink',picking=false;
+ var get=function(){try{return JSON.parse(localStorage.getItem(K)||'[]')||[];}catch(e){return [];}};
+ var put=function(a){try{localStorage.setItem(K,JSON.stringify(a));}catch(e){}};
+ var paint=function(){get().forEach(function(id){var t=document.getElementById(id);if(t)t.classList.add('taskblink');});};
+ var b=document.createElement('button');
+ b.type='button';b.id='tilePin';b.className='tarr';
+ var label=function(){b.textContent=picking?'✋ לחץ על אריח (כאן לביטול)':'✋ להבהב שלא אשכח';};
+ label();tools.appendChild(b);
+ b.onclick=function(){
+  if(tEdit)return;
+  picking=!picking;label();
+  if(picking)toast('לחץ על אריח והוא יהבהב עד שתסמן אותו שוב. אריח שכבר מהבהב, לחיצה מכבה אותו.');
+ };
+ grid.addEventListener('click',function(e){
+  var t=e.target.closest?e.target.closest('.gt'):null;
+  if(!t||t.parentNode!==grid||!t.id)return;
+  if(!picking){
+   if(get().indexOf(t.id)>=0)setTimeout(paint,0);
+   return;
+  }
+  e.preventDefault();e.stopImmediatePropagation();
+  picking=false;label();
+  var a=get(),i=a.indexOf(t.id),name=((t.querySelector('b')||t).textContent||'').trim();
+  if(i<0){a.push(t.id);put(a);t.classList.add('taskblink');toast('"'+name+'" מהבהב עכשיו. לכבות: ✋ ואז שוב עליו.');}
+  else{a.splice(i,1);put(a);t.classList.remove('taskblink');toast('"'+name+'" כבר לא מהבהב.');}
+ },true);
+ paint();setTimeout(paint,0);window.addEventListener('load',paint);
 }
 var HOME_HEAD=['newBlock','bareBtn','blkIcons','blkTiles'];
 var HOME_TAIL=[];

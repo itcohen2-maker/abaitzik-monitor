@@ -2280,6 +2280,8 @@ body.editing .bn{display:none}
 .grid .gt,#blkIcons .ic{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 #blkIcons .ic.tlift{opacity:.3}
 .tarr{grid-column:1/-1;justify-self:start;display:block;margin:0;border:0;background:none;color:var(--dim);font:600 12.5px Heebo,sans-serif;cursor:pointer;padding:4px 2px}
+.tarrs{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px 18px}
+.tarrs .tarr{grid-column:auto}
 .tedit .gt{position:relative;animation:wobble .28s infinite alternate ease-in-out}
 .grid .gt.tlift{opacity:.3}
 #tGhost{position:fixed;z-index:80;pointer-events:none;margin:0;transform:scale(1.08);box-shadow:0 18px 34px rgba(0,0,0,.4);opacity:.95;animation:none}
@@ -16200,7 +16202,11 @@ function armTiles(grid){
  arr.onclick=function(){if(tEdit)tilesExit();else tilesEnter(grid);};
  // Inside the grid, across the full row: the home screen re-pins its blocks
  // after this runs, and a button standing beside the grid got left behind.
- grid.insertBefore(arr,grid.firstChild);
+ var tools=document.createElement('div');
+ tools.id='tileTools';tools.className='tarrs';
+ tools.appendChild(arr);
+ grid.insertBefore(tools,grid.firstChild);
+ pinTiles(grid,tools);
  pressDrag(grid,'.gt','tileOrder',function(){return tEdit;});
  grid.addEventListener('contextmenu',function(e){if(tEdit)e.preventDefault();});
  grid.addEventListener('click',function(e){
@@ -16216,6 +16222,43 @@ function armTiles(grid){
    toast('הורד מהמסך. "להחזיר" מחזיר אותו.');
   }
  },true);
+}
+/*
+  11.10, Itzik, in a recording: "תן לי אפשרות שאני יכול ללחוץ על כפתור ולשים אותו
+  מהבהב שאני לא אשכח". The ✋ button beside ✎ arms a pick: the next tap on a tile
+  gives it the red hand, and that hand stays even after he opens the tile, until
+  he picks the same tile again. Kept per device, like the order of the tiles.
+*/
+function pinTiles(grid,tools){
+ var K='pinBlink',picking=false;
+ var get=function(){try{return JSON.parse(localStorage.getItem(K)||'[]')||[];}catch(e){return [];}};
+ var put=function(a){try{localStorage.setItem(K,JSON.stringify(a));}catch(e){}};
+ var paint=function(){get().forEach(function(id){var t=document.getElementById(id);if(t)t.classList.add('taskblink');});};
+ var b=document.createElement('button');
+ b.type='button';b.id='tilePin';b.className='tarr';
+ var label=function(){b.textContent=picking?'✋ לחץ על אריח (כאן לביטול)':'✋ להבהב שלא אשכח';};
+ label();tools.appendChild(b);
+ b.onclick=function(){
+  if(tEdit)return;
+  picking=!picking;label();
+  if(picking)toast('לחץ על אריח והוא יהבהב עד שתסמן אותו שוב. אריח שכבר מהבהב, לחיצה מכבה אותו.');
+ };
+ grid.addEventListener('click',function(e){
+  var t=e.target.closest?e.target.closest('.gt'):null;
+  if(!t||t.parentNode!==grid||!t.id)return;
+  if(!picking){
+   // The tile's own handler takes the hand off when it opens; a pinned one gets it back.
+   if(get().indexOf(t.id)>=0)setTimeout(paint,0);
+   return;
+  }
+  e.preventDefault();e.stopImmediatePropagation();
+  picking=false;label();
+  var a=get(),i=a.indexOf(t.id),name=((t.querySelector('b')||t).textContent||'').trim();
+  if(i<0){a.push(t.id);put(a);t.classList.add('taskblink');toast('"'+name+'" מהבהב עכשיו. לכבות: ✋ ואז שוב עליו.');}
+  else{a.splice(i,1);put(a);t.classList.remove('taskblink');toast('"'+name+'" כבר לא מהבהב.');}
+ },true);
+ // Some tiles set their own hand at boot, after this; paint again once they have.
+ paint();setTimeout(paint,0);window.addEventListener('load',paint);
 }
 var HOME_HEAD=['newBlock','bareBtn','blkIcons','blkTiles'];
 // "איך אני משתפר" is the one block he wants out of the way rather than gone.
