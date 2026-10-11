@@ -15398,10 +15398,21 @@ function recStop(){
   try{if(r.state!=='inactive'&&r.requestData)r.requestData();}catch(e){}
   try{if(r.state!=='inactive')r.stop();}catch(e){}
   if(r.state==='inactive'&&r.onstop){setTimeout(function(){if(!r._done)r.onstop();},0);}
-  setTimeout(function(){
-   if(r._done)return;
-   try{if(r.onstop)r.onstop();else recForceReset();}catch(e){recForceReset();}
-  },1500);
+  /*
+    11.10, the deep check: a long take on the iPhone can take more than a
+    second and a half to hand over its audio, and the backstop then sent an
+    empty take and shut the door on the real one. So it waits while nothing
+    has arrived, up to six seconds, and only then finishes by hand.
+  */
+  var waited=0;
+  (function backstop(){
+   setTimeout(function(){
+    if(r._done)return;
+    waited+=1500;
+    if(!recChunks.length&&waited<6000)return backstop();
+    try{if(r.onstop)r.onstop();else recForceReset();}catch(e){recForceReset();}
+   },1500);
+  })();
   return;
  }
  if(r||recStream||recTimer||recStarting)recForceReset();

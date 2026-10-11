@@ -660,9 +660,23 @@ function recordDrain(text, at) {
   the record is already written and the session can still transcribe for
   itself.
 */
+/*
+  11.10, a 133 second note at 08:45 failed both tries: each try is killed at
+  three minutes, and large-v3 on this machine needs more than that for a note
+  over two minutes, so every long note fell through to the session. The limit
+  now grows with the recording: about 23 KB is a second of his webm, and each
+  second of audio gets two and a half seconds of work, never less than three
+  minutes.
+*/
+function transcribeBudget(audio) {
+  let bytes = 0;
+  try { bytes = fs.statSync(audio).size; } catch (e) {}
+  return Math.max(180000, Math.round(bytes / 23000 * 2500));
+}
 function transcribeLater(audio, file) {
   const started = Date.now();
-  execFile('node', ['transcribe.js', audio], { cwd: __dirname, timeout: 180000 },
+  const budget = transcribeBudget(audio);
+  execFile('node', ['transcribe.js', audio], { cwd: __dirname, timeout: budget },
     function (err, out) {
       const text = String(out || '').trim().split(String.fromCharCode(10)).filter(Boolean).pop() || '';
       if (err || !text || /^\(/.test(text)) {
@@ -680,7 +694,7 @@ function transcribeLater(audio, file) {
 
           A retry costs twenty seconds. Silence cost him twenty minutes.
         */
-        execFile('node', ['transcribe.js', audio], { cwd: __dirname, timeout: 180000 },
+        execFile('node', ['transcribe.js', audio], { cwd: __dirname, timeout: budget },
           function (err2, out2) {
             const text2 = String(out2 || '').trim().split(String.fromCharCode(10)).filter(Boolean).pop() || '';
             if (err2 || !text2 || /^\(/.test(text2)) {
