@@ -1,0 +1,18 @@
+{
+  "name": "abaitzik",
+  "owner": "איציק",
+  "publicUrl": "https://itcohen2-maker.github.io/abaitzik-monitor/",
+  "basePath": "/abaitzik-monitor/",
+  "origin": "https://itcohen2-maker.github.io",
+  "mailbox": "",
+  "dataDir": "data",
+  "taskPrefix": "AbaItzik",
+  "pageTitle": "אבא איציק בבנייה עצמית",
+  "appTitle": "המוניטור",
+  "screens": null,
+  "chromeProfile": "Profile 4",
+  "memoryDir": "C:/Users/User/.claude/projects/C--Users-User/memory",
+  "driveFolder": "",
+  "serverHost": "monitor",
+  "uploadUrl": "https://ilay.abaitzik.com/up/v1/abaitzik/uploads"
+}

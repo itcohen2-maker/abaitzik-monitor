@@ -1,0 +1,30 @@
+# Big file uploads from the phone (11.10.2026). Install:
+#   cp setup/monitor-upload.service /etc/systemd/system/ && systemctl daemon-reload
+#   systemctl enable --now monitor-upload.service
+# Caddy route, in the ilay.abaitzik.com block, before file_server:
+#   handle /up/* { reverse_proxy 127.0.0.1:8791 }
+[Unit]
+Description=abaitzik monitor, big file upload service
+After=network-online.target
+
+[Service]
+User=monitor
+Group=monitor
+Environment=HOME=/home/monitor
+Type=simple
+WorkingDirectory=/home/monitor/abaitzik-monitor
+StateDirectory=monitor-upload
+StateDirectoryMode=0700
+ExecStart=/usr/bin/node upload.js
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/home/monitor/abaitzik-monitor/data /var/lib/monitor-upload
+PrivateTmp=true
+StandardOutput=append:/var/log/monitor-upload.log
+StandardError=append:/var/log/monitor-upload.log
+
+[Install]
+WantedBy=multi-user.target

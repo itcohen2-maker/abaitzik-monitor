@@ -1,0 +1,17025 @@
+﻿'use strict';
+// Generates docs/index.html: a standalone page with the data baked in, for
+// GitHub Pages. No server, no database, opens in any browser.
+//
+// Privacy note: GitHub Pages on a free account serves from a PUBLIC repo, so
+// surnames are shortened to an initial and the page asks not to be indexed.
+// Itzik still recognises everyone; a search engine cannot build a profile.
+
+const fs = require('fs');
+const path = require('path');
+// Which monitor this is. Without instance.json this is Itzik's, word for word.
+const inst = require('./lib/instance.js');
+/*
+  27.9: the chat lives on the server since 25.9, and this PC's data/ is a stale
+  copy. Every build made here and pushed put that copy on his page, so the chat
+  went back to 25.9 and the requests he had just reset came back. An instance
+  that runs on a server is built there only. --local builds here anyway, for
+  looking at the page, and must not be pushed.
+*/
+if (require.main === module && process.platform === 'win32' && inst.serverHost && !process.argv.includes('--local')) {
+  console.log('הבנייה של ' + inst.name + ' רצה בשרת (' + inst.serverHost + '). לא בונה כאן. לבדיקה מקומית: node build.js --local, בלי לדחוף.');
+  process.exit(0);
+}
+const store = require('./lib/store');
+const group = require('./lib/group.js');
+const ML = require('./lib/monitor-logic.js');
+
+const OUT_DIR = path.join(__dirname, 'docs');
+const NET = { facebook: 'פייסבוק', instagram: 'אינסטגרם', tiktok: 'טיקטוק', youtube: 'יוטיוב' };
+const CAT = {
+  blessing: 'ברכה', encouragement: 'עידוד', personal: 'אישי', pain: 'שיתוף כאב',
+  medical_advice: 'המלצה רפואית', offer_help: 'הצעת עזרה', donation: 'שאלת תרומות',
+};
+
+function shortName(name) {
+  const parts = String(name || '').trim().split(/\s+/);
+  if (parts.length < 2) return parts[0] || 'ללא שם';
+  return parts[0] + ' ' + parts.slice(1).map(p => p[0] + '.').join(' ');
+}
+
+// Customer names on the accounting screen. A full company name next to an
+// amount owed is a customer list, and this page is served from a public repo,
+// so the corporate suffix goes and only the first two words stay. Itzik knows
+// every one of them from that much; a stranger cannot look them up.
+function rivShort(name) {
+  const clean = String(name || '')
+    .replace(/בע["״']?מ/g, '')
+    .replace(/[,]/g, ' ')
+    .trim();
+  const parts = clean.split(/\s+/).filter(Boolean);
+  return parts.slice(0, 2).join(' ') || 'ללא שם';
+}
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// Contacts and reports are pulled from the artifact database into data/, which
+// is gitignored. Only the fields below reach docs/. Phone numbers and email
+// addresses never do - Itzik asks for those by mail, one person at a time.
+function loadDocs(dir) {
+  const full = path.join(inst.dataPath, dir, dir);
+  if (!fs.existsSync(full)) return [];
+  return fs.readdirSync(full)
+    .filter(f => f.endsWith('.json'))
+    .map(f => {
+      /*
+        11.10: an empty tenant record, left half written by another session,
+        threw here and stopped every push from every session for minutes. One
+        broken file now drops out of the page with a warning instead.
+      */
+      let doc;
+      try { doc = JSON.parse(fs.readFileSync(path.join(full, f), 'utf8')); }
+      catch (e) { console.warn('skipped broken ' + dir + '/' + f + ': ' + e.message); return null; }
+      /*
+        The id inside the document wins over the name of its file.
+
+        This line used to overwrite it, and that quietly cut every thread in
+        the monitor in two. A message of his arrives with the id the sending
+        channel gave it, my answer carries that id in `re`, and the pairing
+        the whole chat screen is built on is `re` pointing at `id`. With the
+        id replaced by a filename, `re` pointed at nothing: 483 messages came
+        out as 483 threads of one, his question and my answer sat as two
+        unrelated lines, and autoClose could never see that a message had
+        been answered. Only the chat documents carry an id of their own, so
+        everything else keeps behaving exactly as before.
+      */
+      doc.file = f.replace(/\.json$/, '');
+      if (!doc.id) doc.id = doc.file;
+      return doc;
+    })
+    .filter(Boolean);
+}
+
+// Which networks a report talks about. An explicit `network` field on the
+// document wins; otherwise the title and body are scanned for the four names,
+// so older reports written as free text still sort themselves.
+const NET_WORDS = {
+  youtube: /יוטיוב|youtube/i,
+  tiktok: /טיקטוק|tiktok/i,
+  facebook: /פייסבוק|facebook/i,
+  instagram: /אינסטגרם|instagram/i,
+};
+function reportNets(r) {
+  if (Array.isArray(r.network)) return r.network;
+  if (typeof r.network === 'string' && r.network) return [r.network];
+  const t = (r.title || '') + ' ' + (r.body || '');
+  return Object.keys(NET_WORDS).filter(k => NET_WORDS[k].test(t));
+}
+
+// The page as a string, from a payload. build() feeds it real data; the
+// tests feed it a fixture. Replacements use a function so that a "$&" inside
+// the JSON or the lib source is not expanded by String.replace.
+const LIB = fs.readFileSync(path.join(__dirname, 'lib', 'monitor-logic.js'), 'utf8');
+// He asked on 11.9 to mark everything read and start the count from zero.
+// A phone that has not applied this stamp yet marks every answer written
+// before it as read once, on its next load. Bump the value to reset again.
+const RESET_SEEN_AT = '2026-09-27T22:32:59';
+// 27.9: he sent a screenshot of the responses screen and asked to reset the
+// numbers on it. The unread count was already zero by then; what was left was
+// the standby and the marked flags, which he sets himself by tapping a card
+// and which never had a way back to zero in one move. Same trick as above: a
+// phone that has not applied this stamp yet clears both lists once, on its
+// next load. Bump the value to reset again.
+//
+// 28.9: bumped again after two days of him saying it never took. The stamp
+// itself was never the problem - wake() now applies it on every return to the
+// page, not only on a load that goes through the gate from scratch. Bumping
+// it here guarantees one clean run even if his phone had already recorded an
+// old stamp as done before that fix existed.
+const RESET_MARKS_AT = '2026-09-28T15:20:00';
+// 28.9, 15:35: with standby and marked at zero he still saw "הכל 808" and
+// asked: "תמחק הכל חוץ מ 10 אחרונות". Of everything written before this stamp
+// only the ten newest stay on the screen; the rest leaves the page, search
+// included. The data itself stays on the server. A message of his with no
+// answer, a standby or a marked card is never hidden; an unread one is, since
+// he asked for the screen itself to be emptied. Bump to clear again.
+const ARCHIVE_BEFORE = '2026-09-28T15:40:00';
+/*
+  The page the phone gets is the page without its own notes.
+
+  Every comment in here is written for whoever reads this file next, and that
+  reader is never the phone. Whole lines that are nothing but a comment are
+  dropped on the way out: 56KB of Hebrew explanation that cost him load time
+  and told him nothing. Only whole lines, and only ones that open a comment,
+  so a line of real code is never touched.
+*/
+function slim(html) {
+  const out = [];
+  let js = false;
+  const NL = String.fromCharCode(10);
+  for (const line of html.split(NL)) {
+    const t = line.trim();
+    if (js) { if (t.endsWith('*/')) js = false; continue; }
+    if (t.startsWith('/*')) { if (!t.endsWith('*/')) js = true; continue; }
+    if (t.startsWith('//')) continue;
+    out.push(line);
+  }
+  const kept = [];
+  let html_c = false;
+  for (const line of out) {
+    const t = line.trim();
+    if (html_c) { if (t.endsWith('-->')) html_c = false; continue; }
+    if (t.startsWith('<!--')) { if (!t.endsWith('-->')) html_c = true; continue; }
+    kept.push(line);
+  }
+  return kept.join(NL);
+}
+
+const gate = require('./gate.js');
+
+// Walks a built payload and takes his code out of every string in it.
+function scrubCodes(node) {
+  if (Array.isArray(node)) { node.forEach(scrubCodes); return; }
+  if (!node || typeof node !== 'object') return;
+  for (const k of Object.keys(node)) {
+    const v = node[k];
+    if (typeof v === 'string') node[k] = group.stripCode(v);
+    else scrubCodes(v);
+  }
+}
+/*
+  The gate fails closed, or it is not a gate.
+
+  enabled() is just "does gate-key.txt exist", and that file is gitignored.
+  So on a fresh clone, on another machine, or the day it is deleted by
+  accident, every build published the whole payload in the clear — his chat,
+  the block list, the drain log, the reports, and the keys to both channels —
+  onto a public repo, with nothing said and a page that looked entirely
+  normal. The tests pass MONITOR_NO_GATE, and that stays the one way to build
+  without it, deliberately and out loud.
+*/
+if (!gate.enabled() && !process.env.MONITOR_NO_GATE) {
+  console.error('אין gate-key.txt. בנייה בלי המפתח מפרסמת את הכל בגלוי, ולכן היא נעצרת כאן.');
+  console.error('אם זו בנייה מכוונת בלי הצפנה: MONITOR_NO_GATE=1 node build.js');
+  process.exit(1);
+}
+
+function renderPage(payload) {
+  // Belt and braces on the promise the settings screen makes. build() scrubs
+  // the payload before it splits it into the sealed files; this catches the
+  // page itself whatever rendered it.
+  scrubCodes(payload);
+  /*
+    With the gate on the page carries no data at all.
+
+    Not "carries it encrypted": carries none. The whole payload moves to
+    data/head.json, sealed, and the page fetches it after he types the code.
+    A stranger with the link gets an empty shell, which is the point, and the
+    page drops to a fraction of its weight as a side effect.
+  */
+  const data = gate.enabled() ? '{}'
+    : JSON.stringify(payload).replace(/</g, '\\u003c');
+  return PAGE
+    .replace('__GATE__', () => gate.enabled()
+      ? JSON.stringify(gate.pageParams())
+      : 'null')
+    .replace('__LIB__', () => LIB.replace(/<\/script/gi, '<\\/script'))
+    .replace('__DATA__', () => data)
+    // The guard at the top of the page needs this page's own stamp as a
+    // literal, because it runs before any data exists.
+    .replace('__BUILT_AT__', () => payload.builtAt)
+    .replace('__NET__', () => JSON.stringify(NET))
+    .replace('__CAT__', () => JSON.stringify(CAT));
+}
+
+function build() {
+  const state = store.load();
+  const items = Object.values(state.items).map(i => ({
+    network: i.network,
+    author: shortName(i.author),
+    text: i.text,
+    category: i.category,
+    seenAt: i.seenAt,
+    repliedAt: i.repliedAt,
+    replyText: i.replyText,
+  }));
+
+  const replied = items.filter(i => i.repliedAt);
+  const pending = items.filter(i => !i.repliedAt);
+  const today = new Date().toDateString();
+  const repliedToday = replied.filter(i => new Date(i.repliedAt).toDateString() === today);
+
+  const contacts = loadDocs('contacts')
+    .map(c => ({
+      name: c.name,
+      network: c.network,
+      source: c.source,
+      note: c.note,
+      at: c.at,
+      status: c.status,
+      // The screenshot of the request itself, when he sent one. A path under
+      // docs/, never the file in data/, which never ships.
+      shot: c.shot || '',
+      shotNote: c.shotNote || '',
+      log: Array.isArray(c.log) ? c.log : [],
+    }))
+    .sort((a, b) => {
+      if ((a.status === 'done') !== (b.status === 'done')) return a.status === 'done' ? 1 : -1;
+      return (a.at || '') < (b.at || '') ? 1 : -1;
+    });
+
+  // Short updates from the pegasus session: what was done, what is
+  // happening, what is planned. He asked for a screen that shows only these.
+  // `ask` is the part of an update that is waiting on him, and `opts` are the
+  // ready answers. He asked to answer on the card itself, not to scroll down
+  // and write a message about which update he means.
+  const pegasus = loadDocs('pegasus')
+    .map(p => ({ at: p.at, did: p.did || '', now: p.now || '', plan: p.plan || '',
+                 ask: p.ask || '', opts: Array.isArray(p.opts) ? p.opts : [] }))
+    .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
+  // How I keep getting better. Each entry is one thing I got wrong or one
+  // thing I changed, in his words: what, why, and what it changes for him.
+  const improve = loadDocs('improve')
+    .map(p => ({
+      at: p.at,
+      what: p.what || '',
+      why: p.why || '',
+      effect: p.effect || '',
+      // How it was checked and where the proof is. Blank on the older records,
+      // and blank is shown as "not verified yet" rather than hidden: a change
+      // nobody checked is exactly the one worth knowing about.
+      verified: p.verified || '',
+      proof: p.proof || '',
+    }))
+    .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
+  // One off things he asked for that are not a report and not a chat message:
+  // a page to print, a file to keep. He asked for a tile that blinks when one
+  // lands so he can find it without asking me where it went.
+  /*
+    Itzik, 3.10: when a plan is done and the work could run on a cheaper
+    model, stop and tell him -- in the chat, and with a tile here that blinks
+    until he says he switched. He changes the model himself; I cannot.
+    Newest first; the tile blinks for the newest one he has not answered.
+  */
+  const modelswitch = loadDocs('modelswitch')
+    .map(x => ({ id: String(x.id || x.at || ''), at: x.at || '', title: x.title || '',
+                 note: x.note || '', model: x.model || '' }))
+    .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
+  /*
+    Itzik, 5.10: replies from the occupational clinic, found by occ-check.js in
+    his mail. The clinic tile blinks for the newest one until he opens it.
+  */
+  const occ = loadDocs('occ')
+    .map(x => ({ id: String(x.id || x.at || ''), at: x.at || '', subject: x.subject || '', text: x.text || '' }))
+    .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
+  const special = loadDocs('special')
+    .map(x => ({ at: x.at, title: x.title || '', url: x.url || '',
+                 note: x.note || '', copy: x.copy || '',
+                 // Files to play in place, for a card that is about listening.
+                 audio: Array.isArray(x.audio) ? x.audio : [] }))
+    .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
+  /*
+    Every reply I sent on the networks that was not a routine thank you: a
+    question about the illness, someone sharing their own pain, anything I had
+    to decide on my own. He asked on 13.9 to see them all in one place, to go
+    over them himself, and for the tile to blink while there are ones he has
+    not read yet.
+
+    No names here on purpose. This page is public and the reply is enough to
+    know what happened; who wrote it stays between me and the network.
+  */
+  /*
+    Reminders he asked me to set for later. Itzik, 21.9: "שים לי תזכורת עוד
+    חודש לבקש תו נכה, תעשה כפתור ייעודי". Each one is a file with the moment it
+    is due and what to do then; remind.js sends it as a push on the day, and
+    this screen shows what is waiting and what already went out. Soonest first.
+  */
+  // One he deleted on the screen (the same key the page uses) is left out.
+  const remGone = ((require('./lib/notes-sync.js').read(path.join(inst.dataPath, 'notes', 'notes')) || {}).remGone) || {};
+  const reminders = loadDocs('reminders')
+    .map(x => ({ at: x.at, due: x.due || '', text: x.text || '',
+                 sentAt: x.sentAt || '' }))
+    .filter(x => !remGone[(x.at || '') + '|' + (x.due || '')])
+    .sort((a, b) => ((a.due || '') < (b.due || '') ? -1 : 1));
+  /*
+    Tasks by day. Itzik, 22.9, a recording: "שיפתח לי כפתור חדש, ממחר בבוקר,
+    ללכת לפטצ'נקו, להתקשר לדוקטור, לקבוע תור". A checklist and not a
+    reminder: a reminder pushes once, this stays on the screen and he ticks
+    each one off. The tick lives on his phone only.
+  */
+  /*
+    Two collections for a brand builder's monitor. Ilay, in his intake on 25.9:
+    content is what eats his time and what he has let slide, ideas get
+    forgotten, there is no content calendar. So: ideas, as they come in, and a
+    plan, by day. On Itzik's copy both folders are absent and both lists are
+    empty, and the tiles that show them are not on his screen.
+  */
+  const ideas = loadDocs('ideas')
+    .map(x => ({ id: x.id, at: x.at || '', text: x.text || '', network: x.network || '', used: !!x.used }))
+    .sort((a, b) => (a.at < b.at ? 1 : -1));
+  // The reviewer's improvements (review.js), newest first. 30.9.
+  const better = loadDocs('better')
+    .map(x => ({ at: x.at || '', t: x.t || '', d: x.d || '', area: x.area || '', size: x.size || '', built: x.built || '' }))
+    .sort((a, b) => (a.at < b.at ? 1 : -1));
+  const plan = loadDocs('plan')
+    .map(x => ({ id: x.id, day: x.day || '', text: x.text || '', network: x.network || '', status: x.status || 'planned' }))
+    .sort((a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : 0));
+  /*
+    Other monitors this server runs, as one colour each. Itzik, 25.9: a button
+    for Ilay's monitor, green when it is fine, red on a break. Only the state
+    and the reasons reach the page; not the folder, not the service names, and
+    never anything from inside the other instance.
+  */
+  const tenants = loadDocs('tenants')
+    .map(x => ({ id: x.id, title: x.title || x.id, state: x.state || 'unknown', paused: x.paused === true,
+                 problems: Array.isArray(x.problems) ? x.problems : [], checkedAt: x.checkedAt || '', downSince: x.downSince || '', beatAt: x.beatAt || '',
+                 host: /^[a-z0-9.-]+$/.test(x.host || '') ? x.host : '',
+                 // 8.10, Itzik: "תמיד תשמור את הקוד אצלנו בתוך הכפתור או האייקון של רינת".
+                 // The customer's entry code, kept on her card. head.json is sealed by the gate.
+                 code: typeof x.code === 'string' ? x.code : '',
+                 // 5.10: what the customer asked to change, waiting for Itzik.
+                 requests: (Array.isArray(x.requests) ? x.requests : []).map(r => ({ id: r.id, at: r.at || '', text: r.text || '', status: r.status || 'pending', note: r.note || '' })) }));
+  const tasks = loadDocs('tasks')
+    .map(x => ({ id: x.id, day: x.day || '', text: x.text || '', n: x.n || 0 }))
+    .sort((a, b) => (a.day === b.day ? a.n - b.n : (a.day < b.day ? -1 : 1)));
+  /*
+    Future appointments. Itzik, 23.9, a recording with a screenshot of the
+    hospital's text: "תפתח לי כפתור חדש עם תורים עתידיים ותכניס את זה לתוך
+    התורים". Soonest first; one that has passed drops off the page by itself.
+  */
+  const appts = loadDocs('appts')
+    .map(x => ({ id: x.id, when: x.when || '', what: x.what || '',
+                 where: x.where || '', note: x.note || '', img: x.img || '',
+                 doc: x.doc || '', docLabel: x.docLabel || '' }))
+    // No date yet ("רופא תעסוקתי", 1.10) goes last, not first.
+    .sort((a, b) => ((a.when || '~') < (b.when || '~') ? -1 : 1));
+  const replies = loadDocs('replies')
+    .map(x => ({ at: x.at, network: x.network || '', video: x.video || '',
+                 comment: x.comment || '', reply: x.reply || '',
+                 why: x.why || '', url: x.url || '' }))
+    .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
+  const reports = loadDocs('reports')
+    .map(r => ({ title: r.title, at: r.at, body: r.body, nets: reportNets(r) }))
+    .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
+
+  function busyIds() {
+    const ids = [];
+    let reg = {};
+    try { reg = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'status', 'worker-live.json'), 'utf8')); } catch (e) { return ids; }
+    Object.keys(reg).forEach((pid) => {
+      try { process.kill(Number(pid), 0); } catch (e) { if (e.code !== 'EPERM') return; }
+      (reg[pid].files || []).forEach((f) => {
+        try { const m = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'chat', 'chat', f), 'utf8')); if (m.id) ids.push(m.id); } catch (e) {}
+      });
+    });
+    return ids;
+  }
+  const chat = loadDocs('chat')
+    // `ackAt` and `note` are what the ack line under each of his messages reads:
+    // when it landed, and for a recording, what it said. They were being
+    // dropped here, so the transcript he asks for never reached his screen.
+    // His code rides on the last line of every send. Stripped here so the
+    // messages already on disk stop putting it back on screen at each refresh.
+    // Security, 30.9: a message that arrived without his code is held on disk
+    // for review and never drawn, so it cannot pose as him or as Claude.
+    .filter(m => m.from !== 'unverified')
+    .map(m => ({ id: m.id, at: m.at, from: m.from, text: group.stripCode(m.text),
+                 status: m.status || '', re: m.re || '', ackAt: m.ackAt || '',
+                 note: group.stripCode(m.note) }))
+    .sort((a, b) => ((a.at || '') < (b.at || '') ? -1 : 1));
+
+  // A message of his that already has an answer is closed here, so the screen
+  // never shows work in progress that finished yesterday. See autoClose.
+  // Except one a session is still running on: its first short reply is not
+  // the end of the work (4.10, "כפתור לא עובד מה בעבודה").
+  const chatClosed = ML.autoClose(chat, busyIds());
+
+  // `who` is who the task is actually waiting on. Without it the list read as
+  // nine things I owe him, when four of them were already done and two are
+  // waiting on a decision of his. A task with nobody named on it rots quietly,
+  // which is exactly what he called out on 17.9.
+  // Not every task file was written with a `text`. Four of the open ones carry
+  // a `title` and a `note` instead, and this read `text` alone, so they came
+  // out as four rows with a date, a tag and nothing between them. Itzik, 20.9:
+  // "סימנתי בדף. מה זה?". Whatever the file calls its headline, the row shows
+  // it, and a task with no headline at all never reaches the screen blank.
+  // A doc whose `state` is "כלל קבוע" is a standing rule, not a task: it has
+  // no `done` field because it never finishes, and without this it inflated
+  // the open count by one permanent line that could never be checked off.
+  // Itzik, 26.9: "עדיין מופיע" on a screenshot of the badge after he closed
+  // out the real open items; the rule about נעמה/מושיקו was the extra one.
+  const cmdLine = c => String(c.text || c.title || c.note || '').trim();
+  const openCmds = loadDocs('commands')
+    .filter(c => !c.done && /^[0-9]/.test(c.id) && c.state !== 'כלל קבוע')
+    .map(c => ({ at: c.at, text: cmdLine(c), who: c.who || 'claude' }))
+    .filter(c => c.text)
+    .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
+  // Open questions I am waiting on an answer for. This is the part a client
+  // sees: the app asks what he wants and changes in front of him.
+  const choices = loadDocs('choices')
+    .filter(c => !c.answer)
+    .map(c => ({ id: c.id, at: c.at, question: c.question, options: c.options || [] }))
+    .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
+  const food = loadDocs('food')
+    // zinc is in milligrams and may be missing on rows written before 17.9.
+    // A missing value is not a zero: the screen says so rather than quietly
+    // adding nothing, because a low total he trusts is worse than one gap.
+    .map(f => ({ at: f.at, name: f.name, kcal: f.kcal, protein: f.protein,
+                 carbs: f.carbs, fat: f.fat,
+                 zinc: (f.zinc === undefined || f.zinc === null) ? null : Number(f.zinc),
+                 note: f.note || '' }))
+    .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
+  // Messages that crossed the bridge to the local agent mailbox. `state` is the
+  // literal truth for each one and never says answered: `received` is something
+  // Codex wrote, `stored` is something of his that is sitting in the mailbox
+  // waiting, because that mailbox stores messages and does not wake Codex.
+  const codex = loadDocs('codex')
+    .map(m => ({ at: m.at, from: m.from || '', to: m.to || '',
+                 text: m.text || '', state: m.state || '' }))
+    .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
+  /*
+    The accounting cross check: what landed in the bank account against what
+    Rivhit already has a receipt for. Customer names are shortened the same way
+    the reply queue shortens people, because this page is served from a public
+    repo and a customer list with amounts next to it is exactly the kind of
+    thing that should not be readable by a stranger. Itzik recognises every one
+    of them from the short form.
+  */
+  /*
+    The sale of Lolos, 27.9: Itzik asked for one button that ties together
+    everything about the sale with the reports prepared for the lawyer. The
+    sections, links and open points live in data/sale, never in the page
+    source, because this page is public and its data is sealed.
+  */
+  /*
+    30.9: a file Itzik sent from the phone lives sealed in the monitor, not in
+    Drive, and its link is files/<name>. The Drive only filter dropped the
+    calibration certificate from the vehicles section without a word, so a
+    link passes when it is Drive or one of those sealed files, nothing else.
+  */
+  const docLinkOk = u => String(u || '').startsWith('https://drive.google.com/') ||
+    /^files\/[^/?#\\]+$/.test(String(u || '')) && !String(u).includes('..');
+  const sale = loadDocs('sale')
+    .map(d => ({ order: Number(d.order) || 0, kind: d.kind || 'section', title: d.title || '',
+                 lines: Array.isArray(d.lines) ? d.lines.map(String) : [],
+                 folder: String(d.folder || '').startsWith('https://drive.google.com/') ? d.folder : '',
+                 files: (Array.isArray(d.files) ? d.files : [])
+                   .filter(f => docLinkOk(f.url))
+                   .map(f => ({ name: String(f.name || ''), url: f.url })) }))
+    .sort((a, b) => a.order - b.order);
+  /*
+    Yoel's Isracard, 28.9: Itzik wanted one button to take into tomorrow's call
+    with Isracard about the two cards of his partner Yoel that are charged to
+    the Lolos business account. Card numbers, the account and the amounts are
+    exactly what must not be readable on a public page, so they live in
+    data/isra on the server and reach the page only sealed, like the sale.
+    `cards` are shown big at the top; links pass only when they are Drive.
+  */
+  const isra = loadDocs('isra')
+    .map(d => ({ order: Number(d.order) || 0, kind: d.kind || 'section', title: d.title || '',
+                 lines: Array.isArray(d.lines) ? d.lines.map(String) : [],
+                 cards: (Array.isArray(d.cards) ? d.cards : [])
+                   .map(c => ({ num: String(c.num || ''), name: String(c.name || '') })),
+                 empty: String(d.empty || ''),
+                 files: (Array.isArray(d.files) ? d.files : [])
+                   .filter(f => docLinkOk(f.url))
+                   .map(f => ({ name: String(f.name || ''), url: f.url })) }))
+    .sort((a, b) => a.order - b.order);
+  const rivhit = loadDocs('rivhit')
+    .map(r => ({
+      at: r.at,
+      kind: r.kind || 'note',
+      date: r.date || '',
+      name: r.kind === 'receipt' ? rivShort(r.name) : (r.name || ''),
+      amount: typeof r.amount === 'number' ? r.amount : null,
+      card: typeof r.card === 'number' ? r.card : null,
+      match: r.match || '',
+      title: r.title || '',
+      note: r.note || '',
+      period: r.period || '',
+      account: r.account || '',
+      balance: typeof r.balance === 'number' ? r.balance : null,
+      toReceipt: typeof r.toReceipt === 'number' ? r.toReceipt : null,
+      count: typeof r.count === 'number' ? r.count : null,
+      // kind debt (30.9): the open invoices behind the total, so a tap on the
+      // customer shows exactly which ones.
+      ...(r.kind === 'debt' && Array.isArray(r.inv) ? {
+        sub: String(r.sub || ''),
+        // what the WhatsApp payments group says about this customer (1.10)
+        ...(r.wa ? { wa: String(r.wa) } : {}),
+        inv: r.inv.map(x => ({
+          n: String(x.n || ''), label: String(x.label || ''), date: String(x.date || ''),
+          amount: typeof x.amount === 'number' ? x.amount : 0,
+          left: typeof x.left === 'number' ? x.left : 0,
+          ...(x.wa ? { wa: String(x.wa) } : {}),
+        })),
+      } : {}),
+      // kind audit: one customer checked invoice by invoice. Only those docs
+      // carry the two arrays, so the other records stay as small as they were.
+      ...(r.kind === 'audit' ? {
+        lines: (Array.isArray(r.lines) ? r.lines : []).map(String),
+        rows: (Array.isArray(r.rows) ? r.rows : []).map(x => ({
+          n: String(x.n || ''), date: String(x.date || ''),
+          amount: typeof x.amount === 'number' ? x.amount : null,
+          paid: String(x.paid || ''),
+          left: typeof x.left === 'number' ? x.left : null,
+          st: String(x.st || ''),
+        })),
+      } : {}),
+    }))
+    .sort((a, b) => (b.amount || 0) - (a.amount || 0));
+
+  const now = loadDocs('status').find(d => d.id === 'now') || null;
+
+  /*
+    One build, one identity. `builtAt` is when this page was written and
+    `BUILD_ID` is a short name for it, derived from that same moment so the two
+    can never disagree: he can read a five character id off his phone and it
+    points at exactly one publish.
+  */
+  const BUILT_AT = new Date().toISOString();
+  const files = sealFiles();
+  const BUILD_ID = Math.floor(Date.parse(BUILT_AT) / 1000).toString(36).slice(-5);
+
+  const payload = {
+    files,
+    now: now ? { at: now.at, text: now.text, next: now.next } : null,
+    openCmds,
+    builtAt: BUILT_AT,
+    buildId: BUILD_ID,
+    resetSeenAt: RESET_SEEN_AT,
+    resetMarksAt: RESET_MARKS_AT,
+    archiveBefore: ARCHIVE_BEFORE,
+    counts: {
+      pending: pending.length,
+      replied: replied.length,
+      today: repliedToday.length,
+      leads: contacts.filter(c => c.status !== 'done').length,
+    },
+    choices,
+    food,
+    /*
+      The drains.
+
+      Itzik, 18.9, five days after the operation to take the second tumour out:
+      "I have four drains in my abdomen, I asked to start tracking, build a
+      button with a plan inside it and I will put the numbers in."
+
+      It is a log, not a diagnosis. What a drain chart is actually for is
+      noticing a direction: output that keeps falling is the ordinary way out,
+      output that climbs again or changes colour is a phone call to the surgeon,
+      and the numbers that decide which is which belong to his surgeon and not
+      to me. So the screen records, totals and shows the direction, and the
+      thresholds are a field he fills in from what the hospital told him.
+    */
+    drains: loadDocs('drains').sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1)),
+    /*
+      Who to cut off, and nobody is cut off until he ticks them.
+
+      Itzik, 18.9: a list of people connected to him through one person he is
+      done with. He asked for it exactly this way, in his words: give me a
+      detailed list first and I will approve, make a lead with a tick box.
+
+      So it is a list and not an action. Blocking somebody is visible to them
+      and hard to walk back, some of these are only a first name so far, and two
+      of them are that man's children. A screen that blocks on a tap would be
+      wrong even when he is sure, and he was right to ask for the ticks.
+    */
+    blocklist: loadDocs('blocklist').sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1)),
+    pending: pending.sort((a, b) => (a.seenAt < b.seenAt ? 1 : -1)),
+    replied: replied.sort((a, b) => (a.repliedAt < b.repliedAt ? 1 : -1)),
+    contacts,
+    reports,
+    pegasus,
+    improve,
+    special,
+    modelswitch,
+    occ,
+    reminders,
+    tasks,
+    tenants,
+    ideas,
+    better,
+    plan,
+    appts,
+    replies,
+    chat: chatClosed,
+    codex,
+    rivhit,
+    sale,
+    isra,
+    // The server copy of the notes and task ticks, which a phone with an empty
+    // storage fills itself from. See lib/notes-sync.js.
+    notesSync: require('./lib/notes-sync.js').read(path.join(inst.dataPath, 'notes', 'notes')),
+  };
+
+  /*
+    Nothing published carries his personal code.
+
+    The settings screen has always promised it is never shown. It was shown:
+    the send form appends it to the body, so a plain message was stored with
+    it and drawn with it, and sessions had also quoted it back in blocklist
+    reasons as proof of who approved a name. Itzik, 19.9: "is the code exposed
+    on screen at every refresh?" It was. One pass over everything about to be
+    published, rather than one guard per field, because the next field that
+    grows a code would be found the same way this one was.
+  */
+  scrubCodes(payload);
+
+  /*
+    The big collections do not travel with the page.
+
+    Itzik, 16.9: the monitor is slow. It was: one 692KB file on every open,
+    and 398KB of that was data, most of it history he was not looking at.
+    Each collection now gets its own file next to the page, and the payload
+    keeps only the newest few of each, enough that the home screen is right
+    the moment it paints. A screen fetches its own file when he opens it.
+
+    The head sizes are not arbitrary. Each one is bigger than the window any
+    home screen counter looks at: unread since the last reset, reports since
+    he last opened the reports screen, and so on. So no count is ever wrong
+    while a file is still in the air.
+
+    That stopped being true for the chat. The reset is days back now and the
+    window behind the red button is 225 answers deep, against a slice of 150,
+    so the oldest 129 of them were outside anything the count could see. The
+    answer is not a bigger slice, which is the weight this whole split was for.
+    It is `ansKeys` below: the window as keys alone.
+  */
+  /*
+    6.10, Home Style. An instance that names a shipments folder gets the table,
+    the alerts the rules draw from it, and the morning brief. Itzik's instance
+    names none, so for him nothing here runs and no file is written.
+  */
+  let shipRows = null;
+  if (inst.shipmentsDir) {
+    try {
+      const rules = require('./lib/ship-rules.js');
+      const sd = inst.shipmentsDir;
+      shipRows = JSON.parse(fs.readFileSync(path.join(sd, 'rows.json'), 'utf8'));
+      let sup = {}, brief = null, meta = {};
+      try { sup = JSON.parse(fs.readFileSync(path.join(sd, '..', 'suppliers.json'), 'utf8')); } catch (e) { /* defaults */ }
+      try { brief = JSON.parse(fs.readFileSync(path.join(sd, 'brief.json'), 'utf8')); } catch (e) { /* none yet */ }
+      try { meta = JSON.parse(fs.readFileSync(path.join(sd, 'meta.json'), 'utf8')); } catch (e) { /* none yet */ }
+      let queue = [];
+      try { queue = JSON.parse(fs.readFileSync(path.join(sd, 'mail-queue.json'), 'utf8')).slice(-20); } catch (e) { /* no mail yet */ }
+      const today = new Date().toLocaleDateString('sv', { timeZone: 'Asia/Jerusalem' });
+      let handled = {};
+      try { handled = JSON.parse(fs.readFileSync(path.join(sd, 'handled.json'), 'utf8')); } catch (e) { /* nothing marked yet */ }
+      // "טיפלתי" hides an alert for a week at most, the same way the brief counts.
+      const all = rules.evaluate(shipRows, today, sup);
+      const alerts = rules.applyHandled(all, handled, today);
+      // What is hidden now, so a mark made on the wrong row can be taken back.
+      const done = all.filter((a) => alerts.indexOf(a) < 0)
+        .map((a) => Object.assign({}, a, { doneAt: (handled[rules.handledKey(a)] || {}).at || '' }))
+        .sort((p, q) => q.doneAt.localeCompare(p.doneAt));
+      // Reviewer 7.10, approved 8.10: the ready mail opened with no address.
+      // suppliers.json may carry "email" per supplier, and the customs agent
+      // under "SHO"; only the addresses go to the page.
+      const mailTo = {};
+      for (const k of Object.keys(sup || {})) {
+        const e = sup[k] && String(sup[k].email || '').trim();
+        if (e && /^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(e)) mailTo[k.toUpperCase()] = e;
+      }
+      payload.ship = { today, alerts, done, mailTo, summary: rules.summary(shipRows, alerts, today),
+        insights: rules.insights(shipRows.filter((r) => /202[67]$/.test(r.sheet))).slice(0, 12),
+        brief, importedAt: meta.importedAt || '',
+        queue: queue.map((q) => ({ at: q.at || '', subject: q.subject || '', reason: q.reason || '' })) };
+      payload.shipments = shipRows;
+    } catch (e) { console.error('shipments: ' + e.message); shipRows = null; }
+  }
+  const HEADS = { chat: 150, reports: 14, codex: 20, special: 8, replies: 8,
+                  improve: 4, food: 12, pegasus: 4, replied: 0, rivhit: 0, sale: 0, isra: 0,
+                  drains: 40, blocklist: 12 };
+  if (shipRows) HEADS.shipments = 0;
+  // A report's body is most of its weight, and only the newest few are read
+  // off the card without opening the screen.
+  const BODY_HEAD = 3;
+  const DATA_DIR = path.join(OUT_DIR, 'data');
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  const lazy = {};
+  // Kept before the loop below trims payload.chat down to its head slice.
+  const fullChat = (payload.chat || []).slice();
+  for (const key of Object.keys(HEADS)) {
+    const all = payload[key] || [];
+    fs.writeFileSync(path.join(DATA_DIR, key + '.json'),
+      gate.enabled() ? gate.seal(JSON.stringify(all)) : JSON.stringify(all), 'utf8');
+    // Newest first by time, then put them back in the collection's own order.
+    // Some of these arrive oldest first and some newest first, and slicing off
+    // the front of an ascending list hands the phone the oldest hundred and
+    // fifty messages, which is the exact opposite of what every counter needs.
+    const newest = new Set(all.slice()
+      .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1))
+      .slice(0, HEADS[key]));
+    let seenBodies = 0;
+    const head = all.filter(x => newest.has(x)).map((x) => {
+      if (key !== 'reports') return x;
+      return (seenBodies++ < BODY_HEAD) ? x : Object.assign({}, x, { body: '' });
+    });
+    payload[key] = head;
+    lazy[key] = { n: all.length };
+  }
+  payload.lazy = lazy;
+  /*
+    The unread window, as keys and nothing else.
+
+    From his diagnostic, 19.9 06:35: 150 messages in memory out of 376, red
+    button 13. The 13 was right, and it was right by luck: it was counted over
+    the slice in memory, and every unread answer happened to be inside it. One
+    older than the slice would simply not have been counted until some screen
+    pulled the whole file down.
+
+    A key is `moment|first forty characters`, which is exactly what the read
+    marks on his phone are written against, so the count needs the keys and
+    never the messages. Two hundred of them weigh a few kilobytes against the
+    hundreds the messages themselves cost. The list he opens is still built
+    from messages really in memory, and pressing the button fetches them
+    first, so the number is right at paint and the cards are there when he
+    arrives.
+  */
+  const MAIL_TAG = 'מייל:';
+  payload.ansKeys = fullChat
+    .filter(m => m.from === 'claude' && String(m.text || '').indexOf(MAIL_TAG) !== 0)
+    .filter(m => !RESET_SEEN_AT || (m.at || '') > RESET_SEEN_AT)
+    .map(m => (m.at || '') + '|' + String(m.text || '').slice(0, 40));
+  /*
+    The channels ride inside the sealed payload, never in the page.
+
+    data/keys.json is gitignored. Without it the page still builds and still
+    works for reading; what stops working is sending, which is the honest
+    failure mode: better a send button that does nothing than his inbox topic
+    printed on a public page for anyone to publish into.
+  */
+  payload.keys = (() => {
+    try {
+      const k = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'keys.json'), 'utf8'));
+      delete k._why;
+      // The rotation window is the listener's business; the page only ever
+      // sends on the current topics.
+      for (const f of Object.keys(k)) if (/Old(Until)?$/.test(f)) delete k[f];
+      return k;
+    } catch (e) {
+      console.warn('אין data/keys.json. הדף ייבנה בלי ערוצי שליחה.');
+      return {};
+    }
+  })();
+
+  /*
+    The same payload, as a file.
+
+    A new answer used to mean reloading the whole page: he lost his place, a
+    half written message and a second of staring. The page can swallow a new
+    payload instead, so this is the identical object it was built with, and a
+    refresh is one small fetch and a repaint.
+  */
+  const DATA_DIR2 = path.join(OUT_DIR, 'data');
+  fs.mkdirSync(DATA_DIR2, { recursive: true });
+  fs.writeFileSync(path.join(DATA_DIR2, 'head.json'),
+    gate.enabled() ? gate.seal(JSON.stringify(payload)) : JSON.stringify(payload), 'utf8');
+
+  // The owner cut runs before slim(), which strips HTML comments and with
+  // them the ITZIK and TENANT markers the cut is made of.
+  const html0 = slim(cutFor(inst, renderPage(payload)));
+  // The code, with everything that moves on every build taken out: the payload
+  // itself, and the build stamp the top of the page carries as a literal. The
+  // first try hashed the stamp too, so the id changed on a data only build and
+  // every new answer still cost a full reload, which is the thing this is for.
+  const codeOnly = html0
+    .split(JSON.stringify(payload).replace(/</g, '\\u003c')).join('')
+    .split(payload.builtAt).join('')
+    .split(payload.buildId).join('');
+  const codeId0 = require('crypto').createHash('sha1').update(codeOnly).digest('hex').slice(0, 10);
+  /*
+    What this copy is, for the page itself.
+
+    Only the fields the page needs: the name, the owner and which home screen
+    tiles stay. No topics and no mailbox, because those are already in
+    payload.keys behind the gate, and this line is in the clear. `screens` is
+    a list of element ids from the home screen; null keeps everything, which
+    is what Itzik's instance says and what an absent instance.json means.
+  */
+  // 6.10: the page hides every home tile whose id is not in `screens`, and the
+  // request-to-admin tile is added to the HTML but was never in that list, so it
+  // was drawn and then hidden on every customer's page. It is appended here.
+  // 8.10: and the guide tiles, which are not in that list either.
+  const guides = tenantGuides(inst).map((g) => ({ key: g.key, title: g.title, text: g.text }));
+  const screens = Array.isArray(inst.screens) && inst.screens.length
+    ? inst.screens.filter((id) => id !== 'gAdminReq').concat(guides.map((g, i) => 'gGuide' + i), ['gAdminReq']) : inst.screens;
+  /*
+    8.10, from the reviewer: "שכחתי את הקוד" on the lock. The page files a request
+    to Itzik carrying a random device mark it keeps; once he approves, the mark is
+    listed here and that one device opens by itself. A mark is meaningless on any
+    other phone, so the list can sit in the clear.
+  */
+  let unlocks = [];
+  try {
+    unlocks = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'status', 'change-requests.json'), 'utf8'))
+      .filter((r) => r && r.status === 'approved')
+      .map((r) => (/מכשיר ([a-f0-9]{12})/.exec(String(r.text || '')) || [])[1])
+      .filter(Boolean);
+  } catch (e) { /* no requests yet */ }
+  const instanceJson = JSON.stringify({ name: inst.name, owner: inst.owner, pageTitle: inst.pageTitle,
+    screens, unlocks,
+    computer: inst.computer, phone: inst.phone, welcome: inst.welcome, homeTile: inst.homeTile || '', gender: inst.gender || '',
+    uploadUrl: inst.uploadUrl || '', guides });
+  const html = html0.replace('__CODE_ID__', codeId0).replace("'__INSTANCE__'", instanceJson);
+
+  /*
+    A page whose script does not parse never goes out.
+
+    6.10, 17:06 to 17:09: one unescaped quote in the shipments sheet killed the
+    whole script, and every phone that reloaded in those minutes sat on a dead
+    page that cannot fetch the next one. The test catches it, but push does not
+    run the tests, so the build itself refuses, and the old page stays live.
+  */
+  {
+    const vm = require('vm');
+    const re = /<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g;
+    let m, i = 0;
+    while ((m = re.exec(html))) {
+      i++;
+      try { new vm.Script(m[1]); }
+      catch (e) { throw new Error('inline script ' + i + ' does not parse: ' + e.message); }
+    }
+  }
+  fs.mkdirSync(OUT_DIR, { recursive: true });
+  fs.writeFileSync(path.join(OUT_DIR, 'index.html'), html, 'utf8');
+  fs.writeFileSync(path.join(OUT_DIR, '.nojekyll'), '', 'utf8');
+  // The live strip reads this every forty seconds. It carries what I am doing
+  // right now and how many answers are waiting, so the screen can say it
+  // without downloading the whole page again.
+  /*
+    Data moved or code moved: not the same event.
+
+    Swallowing a payload is safe while the page's own code is the code that
+    was built with it. When build.js itself changes, the running page is the
+    wrong program for the new data and has to be replaced. codeId is the page
+    with its data taken out, so it moves only when the code does.
+  */
+  const codeId = codeId0;
+  fs.writeFileSync(path.join(OUT_DIR, 'version.json'),
+    JSON.stringify({
+      builtAt: payload.builtAt,
+      buildId: payload.buildId,
+      codeId,
+      /*
+        The live card's text does not travel in the clear.
+
+        version.json is fetched on every open with no-store and cannot be
+        sealed, because the page reads it before it has a key: it is how the
+        page learns there is a new build at all. So with the gate on it carries
+        only stamps. The page already falls back to D.now, which arrives
+        sealed, so nothing is lost on screen.
+      */
+      now: gate.enabled() ? null : (payload.now || null),
+      answers: chat.filter(m => m.from === 'claude').length,
+    }), 'utf8');
+  fs.writeFileSync(path.join(OUT_DIR, 'robots.txt'), 'User-agent: *\nDisallow: /\n', 'utf8');
+  // A missing address used to hand him GitHub's own 404, which inside the
+  // installed app has no chrome and no back button: a dead end. Pages serves
+  // this file for anything missing under the repo, so now every wrong address
+  // ends on a door back to the monitor.
+  fs.writeFileSync(path.join(OUT_DIR, '404.html'), NOT_FOUND, 'utf8');
+  /*
+    The home screen install, for an instance that does not have one.
+
+    Itzik's manifest and icons were written by hand long ago and live in the
+    repo under docs/, so his copy never needed the build to make them. A new
+    instance is built from nothing: without these, "add to home screen" on an
+    iPhone gives a blank tile named after the URL. The build writes them only
+    when they are missing, so Itzik's hand made files are never touched.
+  */
+  const MANIFEST = path.join(OUT_DIR, 'manifest.webmanifest');
+  if (!fs.existsSync(MANIFEST)) {
+    fs.writeFileSync(MANIFEST, JSON.stringify({
+      name: inst.pageTitle, short_name: inst.appTitle,
+      description: 'מה נכנס, מה נענה, ומה עוד מחכה.',
+      start_url: './', scope: './', display: 'standalone', dir: 'rtl', lang: 'he',
+      background_color: '#191714', theme_color: '#14675a',
+      icons: [
+        { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+        { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+      ],
+    }, null, 2), 'utf8');
+  }
+  const ICONS = path.join(OUT_DIR, 'icons');
+  const SRC_ICONS = path.join(__dirname, 'public', 'icons');
+  if (!fs.existsSync(path.join(ICONS, 'icon-192.png')) && fs.existsSync(SRC_ICONS)) {
+    fs.mkdirSync(ICONS, { recursive: true });
+    for (const f of ['icon-180.png', 'icon-192.png', 'icon-512.png']) {
+      const from = path.join(SRC_ICONS, f);
+      if (fs.existsSync(from)) fs.copyFileSync(from, path.join(ICONS, f));
+    }
+  }
+  // איציק, 17.9: "כל הסרטונים שעשינו תשמור, כי את זה אנחנו מעלים לאתר."
+  // כל mp4 ששמור תחת docs/files נכנס לכאן מעצמו בכל בנייה, ושום דבר לא נמחק.
+  fs.writeFileSync(path.join(OUT_DIR, 'videos.html'), videosPage(), 'utf8');
+  console.log('built docs/index.html |', items.length, 'items,',
+    payload.counts.pending, 'pending,', payload.counts.replied, 'replied,',
+    contacts.length, 'contacts,', reports.length, 'reports,',
+    Math.round(html.length / 1024) + 'KB page');
+}
+
+/*
+  The tiles a customer can have, keyed by the ids the page already wires.
+  Which of them appear, and in which order, is the instance's screens list,
+  written from the customer's intake.
+*/
+const TENANT_TILES = {
+  gCIdeas: ['g11', '💡 רעיונות לתוכן', 'מה שעלה לך, לפני שנשכח'],
+  gPlan: ['g3', '🗓️ לוח תוכן', 'מה עולה מתי, ומה כבר עלה'],
+  gRemote: ['g4', '🖥️ לחבר את המחשב', 'רק כשצריך, ועושים את זה יחד בטלפון'],
+  gRemind: ['g16', '⏰ לחזור ללקוחות', 'תזכורות, ולקוח שנעלם'],
+  gTasks: ['g17', '✅ משימות', 'מה לעשות, לפי יום'],
+  gNotes: ['g10', '📝 פתקים', 'נכתב, נשמר, לא הולך לאיבוד'],
+  gVoices: ['g4', '🎙️ הקלטות שלא תומללו', 'מה שלא הצלחתי לקרוא'],
+  gAdminReq: ['g3', '📨 בקשה ממערכת המחשוב', 'לשנות משהו במוניטור? מערכת המחשוב מאשרת'],
+  // 6.10, Home Style: shipments. Drawn only for an instance that lists them.
+  gShip: ['g16', '📦 משלוחים', 'כל ההזמנות הפתוחות, לפי דחיפות'],
+  gAlerts: ['g3', '🔔 דורש טיפול', 'מה שלא יכול לחכות'],
+  gBrief: ['g17', '☀️ דוח הבוקר', 'מה השתנה ומה מגיע השבוע'],
+  gInsights: ['g11', '📈 תובנות', 'אילו ספקים מאחרים'],
+  gCeo: ['g4', '📊 תמונת מצב', 'איפה אנחנו עומדים היום'],
+  gUpgrade: ['g10', '🚀 שדרוגים', 'מה עוד המוניטור יודע לעשות'],
+  gToday: ['g17', '📋 היום', 'משימות מחכות היום, לפי דחיפות'],
+  // Itzik, 8.10, for Rinat: one tile that connects the ntfy app to her answers.
+  gPush: ['g4', '🔔 התראות לטלפון', 'כל תשובה קופצת בטלפון'],
+};
+// With no screens chosen at intake, only the tiles that fit any work. The whole
+// catalog gave a phone only customer "connect the computer", a client follow up
+// and a content plan, some of them empty screens.
+const TENANT_DEFAULT = ['gTasks', 'gNotes'];
+/*
+  Itzik, 8.10, a recording: an explanation the customer has to see, behind a
+  tile of its own on her home screen that blinks until she opens it once.
+  instance.json carries them as guides: [{key, icon, title, sub, text}]; the
+  text is plain, one line per paragraph. They are not secret, since this list
+  sits in the clear part of the page.
+*/
+function tenantGuides(inst) {
+  return (Array.isArray(inst.guides) ? inst.guides : []).filter((g) => g && g.key && g.title && g.text);
+}
+function tenantTiles(inst) {
+  const ids = (Array.isArray(inst.screens) && inst.screens.length ? inst.screens : TENANT_DEFAULT).filter((id) => id !== 'gAdminReq');
+  // Itzik, 5.10: a customer does not change the system, he asks. The way to ask
+  // is on every customer's home screen, whatever his intake chose.
+  ids.push('gAdminReq');
+  // esc() is defined far above; this part is also lifted alone by a test.
+  const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const guides = tenantGuides(inst).map((g, i) => '\n  <button type="button" class="gt g11" id="gGuide' + i + '"><b>'
+    + esc((g.icon ? g.icon + ' ' : '') + g.title) + '</b><small>' + esc(g.sub || 'הסבר קצר, פעם אחת') + '</small></button>').join('');
+  return guides + ids.filter((id) => TENANT_TILES[id]).map((id) => {
+    const [cls, title, sub] = TENANT_TILES[id];
+    return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"><b>' + title + '</b><small>' + sub + '</small></button>';
+  }).join('') + '\n ';
+}
+/*
+  One page, two kinds of owner.
+
+  Itzik's copy keeps every ITZIK block and drops the TENANT ones. A customer's
+  copy drops every ITZIK block, so none of Itzik's links, Drive folders,
+  businesses or screens are in the source of the customer's page. The script
+  still looks those elements up by id at boot, and a null there would stop the
+  whole script, so each cut block leaves hidden empty stand ins for the ids it
+  held, except ids the customer's own blocks already carry.
+*/
+/*
+  The script has Itzik's parts too: pills, Pegasus, the building committee's
+  books, the candle site's visits, his landing pages. They sit between
+  /*ITZIK:BEGIN*\/ and /*ITZIK:END*\/ lines. A customer's copy keeps only
+  empty stand ins for the functions and variables such a block declared, so the
+  shared code that still names them does not throw, and no text, link or
+  number of Itzik's is left in the source.
+*/
+function jsStandIns(body) {
+  const out = [];
+  body.replace(/^function (\w+)\(/gm, (m, n) => { out.push('function ' + n + '(){}'); return m; });
+  body.replace(/^var (\w+)=\s*(\[|\{)?/gm, (m, n, o) => { out.push('var ' + n + '=' + (o === '[' ? '[]' : o === '{' ? '{}' : 'null') + ';'); return m; });
+  return out.join('\n');
+}
+function cutFor(inst, html) {
+  const TEN = /<!--TENANT:BEGIN-->([\s\S]*?)<!--TENANT:END-->/g;
+  const ITZ = /<!--ITZIK:BEGIN-->([\s\S]*?)<!--ITZIK:END-->/g;
+  const ITZJS = /\/\*ITZIK:BEGIN\*\/([\s\S]*?)\/\*ITZIK:END\*\//g;
+  if (inst.name === 'abaitzik') return html.replace(TEN, '').replace(/<!--ITZIK:(BEGIN|END)-->/g, '').replace(/\/\*ITZIK:(BEGIN|END)\*\//g, '');
+  html = html.replace(ITZJS, (m, b) => jsStandIns(b));
+  const own = new Set();
+  html.replace(TEN, (m, b) => { b.replace(/\bid="([^"]+)"/g, (x, id) => own.add(id)); return m; });
+  html = html.replace(ITZ, (m, b) => {
+    const ids = [];
+    b.replace(/\bid="([^"]+)"/g, (x, id) => { if (!own.has(id) && !ids.includes(id)) ids.push(id); return x; });
+    return ids.length ? '<div hidden style="display:none!important">' + ids.map((id) => '<i id="' + id + '" hidden></i>').join('') + '</div>' : '';
+  });
+  return html.replace(/<!--TENANT:(BEGIN|END)-->/g, '');
+}
+
+const PAGE = `<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script>
+/* Reviewer, 11.10, approved by Itzik: every size here is fixed, so a larger
+   text setting on the iPhone changed nothing on this page. Safari reports that
+   setting through the -apple-system-body font (17px at the default), and the
+   whole page's text is scaled by the same ratio. Elsewhere nothing changes. */
+(function(){try{
+ if(!window.CSS||!CSS.supports||!CSS.supports('font','-apple-system-body'))return;
+ var p=document.createElement('span');p.style.font='-apple-system-body';
+ document.documentElement.appendChild(p);
+ var px=parseFloat(getComputedStyle(p).fontSize)||17;p.remove();
+ var r=Math.min(2,px/17);
+ if(r>1.02)document.documentElement.style.webkitTextSizeAdjust=Math.round(r*100)+'%';
+}catch(e){}})();
+</script>
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta name="theme-color" content="#14675a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="${inst.appTitle}">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<title>${inst.pageTitle}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700&family=Heebo:wght@300;400;500;700&display=swap">
+<style>
+:root{--blue:#4285F4;--red:#EA4335;--yellow:#FBBC05;--green:#34A853;--orange:#e8710a;
+ --ground:#f6f8fc;--surface:#fff;--sunk:#eef2fa;--ink:#1f2430;--dim:#5f6b7f;
+ --line:#e3e9f4;--accent:#1a73e8;--accent-soft:#e8f0fe;--wait:#e37400;
+ --gold:#f0b429;--fresh:#e6f6ec;--unread:#fdeceb;
+ --shadow:0 2px 8px rgba(30,40,70,.07);--r:18px;--on-accent:#fff}
+/* Three states, not two. With no choice made the phone decides, which is
+   what he had until now. A choice stamps data-theme on the root and has to
+   win in both directions, so the same tokens are written twice on purpose. */
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ground:#0f1218;--surface:#181d27;--sunk:#141922;
+ --ink:#eef1f7;--dim:#9aa5b8;--line:#252c39;--accent:#8ab4f8;--accent-soft:#1b2b45;
+ --wait:#fbbc05;--orange:#fb8c00;--fresh:#12301f;--unread:#331615;--shadow:0 2px 10px rgba(0,0,0,.4);--on-accent:#0b1a33}}
+:root[data-theme="dark"]{--ground:#0f1218;--surface:#181d27;--sunk:#141922;
+ --ink:#eef1f7;--dim:#9aa5b8;--line:#252c39;--accent:#8ab4f8;--accent-soft:#1b2b45;
+ --wait:#fbbc05;--orange:#fb8c00;--fresh:#12301f;--unread:#331615;--shadow:0 2px 10px rgba(0,0,0,.4);--on-accent:#0b1a33}
+*{box-sizing:border-box}
+/* A class that sets display beats the browser default for [hidden], which is
+   how the recording overlay ended up on screen the moment the page opened. */
+[hidden]{display:none!important}
+/*
+  Room at the foot of every screen for the bar that floats over it.
+
+  Itzik, 18.9: "the answers icon does not respond, the red button does not
+  respond." They responded. His finger was landing on the bottom bar, which is
+  fixed, 76 pixels tall and sits on top of whatever the page ends with. Nothing
+  ever reserved that space, and it went unnoticed only because the red button
+  used to sit higher up. Moving the microphone to the top this morning pushed it
+  down into the bar, and a button you cannot press is a button that is broken.
+
+  Measured on the live page: the red button's centre was at y 532 in a 552 pixel
+  viewport, with the bar starting at 476. elementFromPoint on it returned
+  nothing at all, which is the machine saying the same thing he did.
+*/
+body{margin:0;background:var(--ground);color:var(--ink);direction:rtl;
+ padding-bottom:calc(84px + env(safe-area-inset-bottom));
+ font:400 16px/1.65 Heebo,system-ui,"Segoe UI",Arial,sans-serif;
+ background-image:radial-gradient(120% 60% at 100% 0,var(--accent-soft) 0,transparent 60%);
+ background-repeat:no-repeat}
+.wrap{max-width:620px;margin:0 auto;padding:18px 16px 96px}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+.mark{width:42px;height:42px;flex:0 0 42px;border-radius:13px;display:grid;place-items:center;
+ background:linear-gradient(145deg,var(--accent),color-mix(in srgb,var(--accent) 55%,#000));
+ color:#fff;font:700 19px/1 "Frank Ruhl Libre",Georgia,serif;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+h1{font:700 27px/1.2 "Frank Ruhl Libre",Georgia,serif;margin:0;text-wrap:balance}
+.sub{color:var(--dim);font-size:14px;font-weight:300}
+.pill{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:4px 11px;
+ border-radius:999px;background:var(--accent-soft);color:var(--accent);
+ font:500 12px Heebo,sans-serif}
+.pill i{width:7px;height:7px;border-radius:50%;background:var(--accent);
+ animation:pulse 2.4s infinite;font-style:normal}
+.alerts{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;
+ background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:13px 15px;box-shadow:var(--shadow)}
+.alerts b{display:block;font:500 15px Heebo,sans-serif}
+.alerts small{display:block;color:var(--dim);font-size:12.5px;line-height:1.5;margin-top:2px}
+.abtn{flex:0 0 auto;text-decoration:none;background:var(--accent);color:var(--on-accent);border-radius:10px;
+ padding:10px 16px;font:500 14px Heebo,sans-serif;white-space:nowrap}
+button.abtn{border:0;cursor:pointer}
+.skinrow{display:flex;gap:6px;flex:0 0 auto}
+.skb{background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:10px;
+ padding:9px 12px;font:500 13.5px Heebo,sans-serif;cursor:pointer;white-space:nowrap}
+.skb[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.skb:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.abtn[disabled]{opacity:.55}
+.alerts.ok{border-color:var(--ok,#0B6B5E)}
+.alerts.ok b::after{content:" ¹3";color:var(--ok,#0B6B5E)}
+.codebox{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+ padding:13px 15px;margin-top:14px;box-shadow:var(--shadow)}
+.codebox b{display:block;font:500 15px Heebo,sans-serif}
+.codebox small{display:block;color:var(--dim);font-size:12.5px;line-height:1.5;margin:2px 0 9px}
+.coderow{display:flex;gap:8px}
+#codeInput{flex:1;background:var(--sunk);color:var(--ink);border:1px solid var(--line);
+ border-radius:10px;padding:9px 12px;font:400 16px Heebo,sans-serif}
+#codeSave{background:var(--accent);color:var(--on-accent);border:0;border-radius:10px;padding:9px 18px;
+ font:500 14px Heebo,sans-serif;cursor:pointer}
+.facerow{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+.facerow button{background:var(--sunk);color:var(--ink);border:1px solid var(--line);border-radius:10px;
+ padding:9px 16px;font:500 14px Heebo,sans-serif;cursor:pointer}
+.facerow span{font-size:12.5px;color:var(--dim);font-weight:300}
+.install{font-size:12.5px;color:var(--dim);font-weight:300;line-height:1.5;margin:8px 4px 0}
+@media(display-mode:standalone){.install{display:none}}
+.links{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px;
+ margin:20px 0 4px}
+.links a{display:flex;align-items:center;gap:9px;text-decoration:none;
+ background:var(--surface);border:1px solid var(--line);border-radius:12px;
+ padding:11px 13px;color:var(--ink);font:500 14px Heebo,sans-serif;box-shadow:var(--shadow)}
+.links a span{font-size:17px}
+.links a small{display:block;color:var(--dim);font-weight:300;font-size:12px}
+.cdx{margin-top:12px;background:var(--surface);border:1px solid var(--line);
+ border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.cdx > b{display:block;font:500 15px Heebo,sans-serif;padding:13px 15px 4px}
+.cdx > small{display:block;color:var(--dim);font-size:12.5px;padding:0 15px 11px}
+.cx{padding:11px 15px;border-top:1px solid var(--line)}
+.cx .who{font:500 12.5px Heebo,sans-serif;color:var(--dim)}
+.cx p{margin:3px 0 0;font-size:14.5px;line-height:1.55;white-space:pre-wrap}
+.cx .st{display:inline-block;margin-top:6px;font:500 12px Heebo,sans-serif;
+ padding:3px 10px;border-radius:999px}
+.cx-received .st{background:var(--fresh);color:var(--green)}
+.cx-stored .st{background:var(--sunk);color:var(--dim)}
+.cx-delivered .st{background:var(--accent-soft);color:var(--accent)}
+.cxrow{display:flex;gap:8px;padding:11px 15px;border-top:1px solid var(--line)}
+.cxrow input{flex:1;min-width:0;background:var(--sunk);color:var(--ink);
+ border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:400 16px Heebo,sans-serif}
+.cxrow button{background:var(--accent);color:var(--on-accent);border:0;border-radius:10px;
+ padding:10px 16px;font:500 14px Heebo,sans-serif;cursor:pointer}
+.reqs{margin-top:12px;background:var(--surface);border:1px solid var(--line);
+ border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.reqs > b{display:block;font:500 15px Heebo,sans-serif;padding:13px 15px 9px}
+.req{display:flex;align-items:center;gap:11px;padding:11px 15px;border-top:1px solid var(--line)}
+.req .rq-t{flex:1;min-width:0}
+.req .rq-t b{display:block;font:400 14.5px Heebo,sans-serif;font-weight:500;
+ overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.req .rq-t small{display:block;color:var(--dim);font-size:12.5px}
+.rq-s{flex:0 0 auto;font:500 12.5px Heebo,sans-serif;padding:4px 11px;border-radius:999px;white-space:nowrap}
+.rq-sent{background:var(--sunk);color:var(--dim)}
+.rq-got{background:var(--accent-soft);color:var(--accent)}
+.rq-working{background:var(--hand-soft,#f6ebd3);color:var(--wait)}
+.rq-done{background:var(--fresh);color:var(--green)}
+.rq-after{background:var(--accent-soft);color:var(--accent)}
+/* The two latest get room to be read: the title wraps instead of being cut at
+   the first ellipsis, and the line about what is still missing sits under both
+   of them rather than competing for the same row. */
+.req.big{flex-wrap:wrap;align-items:flex-start;padding:14px 15px 13px}
+.req.big .rq-t b{white-space:normal;overflow:visible;font-size:15.5px;line-height:1.4}
+.req.big .rq-m{flex:1 1 100%;margin-top:8px;color:var(--dim);font-size:12.5px;line-height:1.5}
+.req.big .rq-open{display:inline-block;margin-inline-start:8px;color:var(--accent);font-weight:500}
+.reqall{display:block;width:100%;margin-top:2px;padding:11px 8px;cursor:pointer;
+ background:var(--sunk);color:var(--dim);border:0;border-top:1px solid var(--line);
+ font:500 13px Heebo,sans-serif}
+.reqall:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.sent{display:flex;align-items:center;gap:11px;margin-top:12px;padding:12px 15px;border-radius:var(--r);
+ background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);font-size:14px}
+.sent .s-dot{width:11px;height:11px;flex:0 0 11px;border-radius:50%;background:var(--wait);
+ animation:pulse 1.5s infinite}
+.sent.done .s-dot{background:var(--green);animation:none}
+/* While I am on his request the dot runs through every neon there is, so
+   the card reads as alive and not as a note that was left behind. */
+.sent.working .s-dot{width:14px;height:14px;flex-basis:14px;animation:neon 1.2s linear infinite}
+@keyframes neon{0%{background:#39ff14;box-shadow:0 0 10px #39ff14}25%{background:#00f0ff;box-shadow:0 0 12px #00f0ff}
+ 50%{background:#ff2bd6;box-shadow:0 0 12px #ff2bd6}75%{background:#fff700;box-shadow:0 0 12px #fff700}100%{background:#39ff14;box-shadow:0 0 10px #39ff14}}
+@media(prefers-reduced-motion:reduce){.sent.working .s-dot{animation:none;background:#39ff14}}
+.peg{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin-bottom:10px;box-shadow:var(--shadow);font-size:15px;line-height:1.5}
+.peg .w{color:var(--dim);font-size:12px;margin-bottom:4px;font-variant-numeric:tabular-nums}
+.peg b{display:inline-block;min-width:88px;color:var(--accent);font-weight:600}
+.sent b{display:block;font:500 15px Heebo,sans-serif}
+.sent small{display:block;color:var(--dim);font-size:12px;font-weight:300}
+/* The big button he asked for, right under the microphone and in the same
+   family: one wide pill in the Google colours, so it reads as a twin of the
+   mic and not as another tile. */
+/* An update that is waiting on him says so on the card, and carries the answer
+   right there: the ready options, and the same voice, text, camera and file
+   row as everywhere else. */
+.peg.waiting{border-inline-start:4px solid var(--accent)}
+.pask{margin-top:11px;padding-top:11px;border-top:1px dashed var(--line)}
+.pask .q{font:800 15px Heebo,sans-serif;margin-bottom:9px}
+.popts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.popts button{border:1px solid var(--line);background:var(--surface);color:var(--ink);
+ border-radius:999px;padding:9px 15px;font:700 14px Heebo,sans-serif;cursor:pointer}
+.popts button:active{transform:translateY(1px)}
+.popts button[disabled]{opacity:.55;cursor:default}
+.growbtn{width:100%;display:flex;align-items:center;gap:13px;margin:12px 0 2px;padding:16px 18px;
+ border:0;border-radius:var(--r);cursor:pointer;text-align:start;color:#fff;font-family:Heebo,sans-serif;
+ background:linear-gradient(120deg,#4285F4 0%,#34A853 38%,#FBBC05 70%,#EA4335 100%);
+ box-shadow:0 10px 24px rgba(66,133,244,.32)}
+.growbtn .gb-i{flex:0 0 auto;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;
+ background:rgba(255,255,255,.22);font-size:22px}
+.growbtn .gb-l{flex:1;min-width:0}
+.growbtn b{display:block;font:800 17px Heebo,sans-serif}
+.growbtn small{display:block;font-size:12.5px;opacity:.94;font-weight:300;margin-top:1px}
+.growbtn .gb-c{flex:0 0 auto;min-width:32px;height:32px;border-radius:999px;display:grid;place-items:center;
+ background:rgba(255,255,255,.28);font:800 15px Heebo,sans-serif;padding:0 9px}
+.growbtn:active{transform:translateY(2px) scale(.99)}
+.grow{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+ padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.grow .w{color:var(--dim);font-size:12.5px;margin-bottom:7px}
+.grow div.l{margin-top:8px;font-size:15px;line-height:1.55}
+.grow div.l b{display:block;font:800 13px Heebo,sans-serif;color:var(--accent);margin-bottom:2px}
+.grow div.l a{color:var(--accent);word-break:break-all}
+/* The three newest on the home screen, in the same box as the requests above
+   so the two lists read as one column rather than two designs. */
+/* A fold out he has already been inside: green edge, nothing flashing. The
+   same green the thread cards use, so one mark means one thing everywhere. */
+/* The listener indicator. Fixed to the edge, small, and never in the way of
+   a thumb reaching the bottom navigation. */
+.pcpill{position:fixed;inset-inline-start:10px;bottom:78px;z-index:60;padding:6px 12px;border-radius:999px;
+ font-size:13px;font-weight:700;background:var(--card,#1b1b1f);border:1px solid var(--dim);color:var(--dim)}
+.pcpill.on{border-color:var(--green);color:var(--green)}
+.pcpill.off{border-color:#e5484d;color:#e5484d}
+.livepill{position:fixed;inset-inline-end:10px;bottom:78px;z-index:60;
+ display:flex;align-items:center;gap:6px;border:1px solid var(--line);
+ background:var(--surface);color:var(--dim);border-radius:999px;
+ padding:6px 11px 6px 8px;font:700 11.5px Heebo,sans-serif;cursor:pointer;
+ box-shadow:var(--shadow)}
+.livepill .lp-d{width:8px;height:8px;border-radius:50%;background:var(--dim);
+ flex:0 0 auto}
+.livepill.up{border-color:var(--green);color:var(--green)}
+.livepill.up .lp-d{background:var(--green)}
+.livepill.down{border-color:#e5484d;color:#e5484d}
+.livepill.down .lp-d{background:#e5484d}
+.livepill.calm .lp-d{background:var(--dim)}
+/* Catching him fine, but with no channel left to answer on. Not a failure and
+   not health, so not red and not green. */
+.livepill.mute{border-color:#e0a11b;color:#e0a11b}
+.livepill.mute .lp-d{background:#e0a11b}
+@keyframes lpbeat{0%,100%{opacity:1}50%{opacity:.35}}
+.livepill.up .lp-d{animation:lpbeat 2.4s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){.livepill.up .lp-d{animation:none}}
+/* The far edge from the floating microphone, which sits bottom-start. The
+   first version landed on top of it. */
+.livesheet{position:fixed;inset-inline-end:10px;bottom:112px;z-index:61;
+ max-width:min(320px,calc(100vw - 32px));background:var(--surface);
+ border:1px solid var(--line);border-radius:14px;padding:12px 14px;
+ box-shadow:var(--shadow)}
+.livesheet b{display:block;font:800 14px Heebo,sans-serif;margin-bottom:6px}
+.livesheet .lr{display:flex;gap:8px;justify-content:space-between;
+ font:500 12.5px Heebo,sans-serif;color:var(--dim);padding:3px 0}
+.livesheet #lsClose{margin-top:9px;width:100%;border:0;border-radius:10px;
+ background:var(--sunk);color:var(--ink);padding:8px;
+ font:700 13px Heebo,sans-serif;cursor:pointer}
+.fold.fold-done{border-color:var(--green)}
+.fold>summary b{font:700 15px Heebo,sans-serif}
+.fold>summary small{color:var(--dim);font-size:12.5px;font-weight:400}
+.fold{margin-top:14px;background:var(--surface);border:1px solid var(--line);
+ border-radius:var(--r);box-shadow:var(--shadow);padding:0}
+.fold>summary{list-style:none;cursor:pointer;padding:13px 16px;
+ font:800 15px Heebo,sans-serif;display:flex;align-items:center;gap:8px}
+.fold>summary::-webkit-details-marker{display:none}
+.fold>summary::after{content:"›";margin-inline-start:auto;color:var(--dim);
+ font-size:20px;line-height:1;transform:rotate(90deg);transition:transform .18s ease}
+.fold[open]>summary::after{transform:rotate(-90deg)}
+@media(prefers-reduced-motion:reduce){.fold>summary::after{transition:none}}
+.fold>summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:var(--r)}
+#reqBody,#cdxBody{padding:0 14px 12px}
+.grows{margin-top:14px;background:var(--surface);border:1px solid var(--line);
+ border-radius:var(--r);box-shadow:var(--shadow)}
+.grows>summary{list-style:none;cursor:pointer;padding:13px 16px;
+ font:800 15px Heebo,sans-serif;display:flex;align-items:center;gap:8px}
+.grows>summary::-webkit-details-marker{display:none}
+/* A closed arrow that turns when it opens, so shut looks deliberate rather
+   than broken. */
+.grows>summary::after{content:"›";margin-inline-start:auto;color:var(--dim);
+ font-size:20px;line-height:1;transform:rotate(90deg);transition:transform .18s ease}
+.grows[open]>summary::after{transform:rotate(-90deg)}
+@media(prefers-reduced-motion:reduce){.grows>summary::after{transition:none}}
+.grows>summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:var(--r)}
+#growBody{padding:0 14px 12px}
+.grows .grow{margin-bottom:10px}
+.grows .reqall{border-top:0;border-radius:12px;margin-top:0}
+.newbtn{width:100%;display:flex;align-items:center;gap:12px;margin:14px 0 10px;padding:15px 17px;
+ border:0;border-radius:var(--r);cursor:pointer;text-align:start;color:#fff;font-family:Heebo,sans-serif;
+ background:linear-gradient(150deg,#9aa5b8,#6b7688);box-shadow:0 8px 18px rgba(20,30,60,.16)}
+.newbtn .nb-l{flex:1;min-width:0}
+/* Itzik, 18.9: he pressed the red button and landed on "מה התקבל", which had
+   nothing in it, and wrote "אין מידע". The two buttons were the same size and
+   touching, margin-top:0 under a card sized exactly like it, so a thumb aimed
+   at the bottom of the red one came down on the blue one. It is a second rank
+   button now: shorter, quieter, and no big count disc that makes it read as a
+   twin of the red. The gap that used to sit above it is now the gap beside it.
+*/
+.newbtn.got{padding:11px 13px;
+ background:linear-gradient(150deg,#5aa9fb,var(--blue));box-shadow:0 4px 10px rgba(20,30,60,.12)}
+.newbtn.got b{font-size:15px}
+.newbtn.got .nb-c{min-width:28px;height:28px;font-size:14px}
+.newbtn.got .nb-c.zero{opacity:.55}
+/*
+  Itzik, 20.9 19:28: "ביקשתי לשים את מה התקבל ותשובות באותה שורה על מנת לחסוך
+  מקום". Two full width buttons stacked took the whole first screen of the
+  phone before anything else began. Side by side they take one row, and the
+  tiles under them come up into view without a scroll.
+
+  Equal columns and stretch, so the short blue one is exactly as tall as the
+  red one and the pair reads as one row and not as a big button with a small
+  one hanging off it.
+*/
+#newBlock{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:stretch;
+ margin:14px 0 10px}
+#newBlock .newbtn{width:auto;height:100%;margin:0}
+/* Half the width, so the label and the count cannot both have all the room.
+   The count keeps its size, the words wrap under it. */
+#newBlock .newbtn{gap:8px;padding:13px 13px}
+#newBlock.hasnew .newbtn.hot b{font-size:19px}
+#newBlock .newbtn small{overflow-wrap:anywhere}
+/* The way out of the empty screen, straight to what he actually pressed for. */
+.gjump{width:100%;margin:0 0 14px;padding:14px 16px;border:0;border-radius:var(--r);
+ cursor:pointer;color:#fff;font:800 16px Heebo,sans-serif;text-align:start;
+ background:linear-gradient(150deg,#e85566,#c5221f);box-shadow:0 6px 16px rgba(234,67,53,.22)}
+.gjump small{display:block;font-size:12.5px;font-weight:300;opacity:.92;margin-top:2px}
+.gjump:active{transform:translateY(2px)}
+.gotlist h3{font:800 15px Heebo,sans-serif;margin:18px 0 8px;color:var(--dim)}
+.gr{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;padding:10px 12px;border:1px solid var(--line);
+ border-radius:12px;margin-bottom:8px;background:var(--surface)}
+.gr.now{border-color:var(--blue)}
+.gr[data-sk]{cursor:pointer}
+.bno{font-weight:700;color:var(--accent)}
+.gr.sel{background:#fff1c2;border-color:#e0a800}
+.gr-cb{flex:0 0 auto;width:18px;height:18px;border:2px solid var(--line);border-radius:5px;margin-top:2px}
+.gr.sel .gr-cb{background:#e0a800;border-color:#e0a800}
+.gr-n{flex:0 0 auto;font:700 12px Heebo,sans-serif;color:var(--dim);padding-top:3px}
+.gselbar{position:sticky;top:0;z-index:5;display:flex;gap:8px;align-items:center;justify-content:space-between;
+ background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px;margin:8px 0}
+.gselbar span{font-size:13px;color:var(--dim)}
+.gselbar button{background:transparent;color:var(--accent);border:1px solid var(--line);border-radius:999px;
+ font:700 13px Heebo,sans-serif;padding:6px 12px;cursor:pointer}
+.gselbar .gseldel{background:#c62828;color:#fff;border-color:#c62828}
+.gselbar .gseldel[disabled]{opacity:.4}
+.gr-t{flex:0 0 auto;font-size:12px;color:var(--dim);padding-top:3px}
+.gr-x{flex:1 1 100%;order:9;min-width:0;font-size:15px;line-height:1.45;overflow-wrap:anywhere}
+.gr-x small{display:block;color:var(--dim);font-size:12.5px;margin-top:4px}
+.gr-s{flex:0 0 auto;font-size:12px;border-radius:999px;padding:3px 9px;font-weight:700}
+.gr-w{background:#fff3cd;color:#7a5200}
+.gr-g{background:#e3ecfb;color:#1a4b9c}
+.gr-d{background:#e2f5e6;color:#1b6b34}
+/* Waiting on him. Not red, because nothing here is on fire, but not the same
+   quiet blue as the rest either: this is the one he can move himself. */
+.gr-y{background:#fde7d6;color:#8a4212}
+.gr-del{flex:0 0 auto;background:transparent;color:var(--dim);border:1px solid var(--line);
+ border-radius:999px;font:700 12px Heebo,sans-serif;padding:3px 10px;cursor:pointer}
+.gr-del:active{transform:translateY(1px)}
+/* Copy and delete stack, so a fifth item on the row does not squeeze the text
+   into a column two words wide on a phone. */
+.gr-b{flex:0 0 auto;display:flex;gap:6px;margin-inline-start:auto}
+.gr-cp{background:transparent;color:var(--accent);border:1px solid var(--line);
+ border-radius:999px;font:700 12px Heebo,sans-serif;padding:3px 10px;cursor:pointer;
+ min-height:28px;white-space:nowrap}
+.gr-cp:active{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.gr-del:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.gback{display:flex;gap:10px;align-items:center;justify-content:space-between;
+ color:var(--dim);font-size:13px;font-weight:300;padding:10px 4px 2px}
+.gback button{background:transparent;color:var(--accent);border:1px solid var(--line);
+ border-radius:999px;font:700 13px Heebo,sans-serif;padding:6px 14px;cursor:pointer}
+.gempty{color:var(--dim);font-weight:300;padding:6px 4px 10px}
+.gclear{width:100%;margin:0 0 6px;padding:12px 16px;border:1px solid var(--line);border-radius:var(--r);
+ cursor:pointer;background:var(--surface);color:var(--ink);font:800 15px Heebo,sans-serif;text-align:start}
+.gclear small{display:block;font-size:12px;font-weight:300;color:var(--dim);margin-top:2px}
+.gclear:active{transform:translateY(2px)}
+.newbtn b{display:block;font:800 17px Heebo,sans-serif}
+.newbtn small{display:block;font-size:12px;opacity:.92;font-weight:300;margin-top:1px}
+.newbtn:active{transform:translateY(2px) scale(.99)}
+.newbtn .nb-c{flex:0 0 auto;min-width:34px;height:34px;border-radius:999px;display:grid;place-items:center;
+ background:rgba(255,255,255,.25);font:800 16px Heebo,sans-serif;padding:0 9px}
+/* Still the loudest thing on the screen, because it is the one thing that
+   might need him, but quietly: one flat red, no ring around it, no halo
+   spreading underneath. The count and the words carry it. */
+.newbtn.hot{background:linear-gradient(150deg,#e85566,#c5221f);
+ box-shadow:0 6px 16px rgba(234,67,53,.22);animation:nbeat 1.1s infinite}
+.newbtn.hot b{font-size:20px}
+.newbtn.hot .nb-c{background:#fff;color:var(--red);min-width:42px;height:42px;font-size:19px}
+@keyframes nbeat{
+ 0%{box-shadow:0 10px 26px rgba(234,67,53,.5);transform:scale(1)}
+ 50%{box-shadow:0 14px 46px rgba(234,67,53,.95);transform:scale(1.02)}
+ 100%{box-shadow:0 10px 26px rgba(234,67,53,.5);transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){.newbtn.hot{animation:none}}
+/* He asked for a blink that cannot be missed. Two colours, no easing, twice a
+   second, on the count and on the badges only, so the page itself stays
+   readable while the thing that needs him flashes. */
+@keyframes hardblink{
+ 0%,49%{background:var(--red);color:#fff;box-shadow:0 0 0 4px rgba(234,67,53,.55)}
+ 50%,100%{background:#fff;color:var(--red);box-shadow:0 0 0 4px rgba(255,255,255,.9)}}
+.newbtn.hot .nb-c{animation:hardblink .5s steps(1) infinite}
+.gt.glow .flag{animation:hardblink .5s steps(1) infinite}
+/* A task tile blinks until it is done: a yellow ring pulsing twice a second. */
+@keyframes taskbeat{0%,49%{box-shadow:0 0 0 4px var(--yellow),var(--shadow)}50%,100%{box-shadow:0 0 0 0 transparent,var(--shadow)}}
+.gt.taskblink{animation:taskbeat .8s steps(1) infinite}
+@media(prefers-reduced-motion:reduce){.gt.taskblink{animation:none;box-shadow:0 0 0 4px var(--yellow)}}
+.rcsteps{margin:6px 0 14px;padding-inline-start:22px;line-height:1.7}
+.rcsteps li{margin-bottom:8px}
+.fview{position:fixed;inset:0;z-index:99990;background:rgba(10,12,18,.94);display:flex;flex-direction:column}
+.fv-bar{display:flex;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;color:#fff}
+.fv-nm{background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:999px;padding:6px 12px;font:600 13px Heebo,sans-serif;flex:none}
+.fv-bar b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
+.fv-x{width:44px;height:44px;border:0;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-size:20px;cursor:pointer}
+.fv-body{flex:1;overflow:auto;padding:12px 16px calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:12px}
+.fv-body img,.fv-body video{max-width:100%;max-height:70vh;border-radius:12px}
+.fv-body audio{width:100%}
+.fv-zoom{width:100%;overflow:hidden;display:flex;justify-content:center;border-radius:12px;touch-action:pan-y}
+.fv-zoom img{transform-origin:0 0;will-change:transform;max-height:70vh}
+.fv-zoom.on{touch-action:none}
+.fv-pdf{width:100%;max-width:640px;display:flex;flex-direction:column;gap:10px}
+.fv-pdf canvas{background:#fff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.4)}
+.fv-txt{white-space:pre-wrap;color:#eee;background:rgba(255,255,255,.06);padding:12px;border-radius:12px;width:100%;direction:rtl}
+.fv-body .ask{width:100%;max-width:420px}
+#fvPrint{display:none}
+@media print{body.fv-printing>*:not(#fvPrint){display:none!important}body.fv-printing{background:#fff!important}body.fv-printing #fvPrint{display:block}#fvPrint img{display:block;max-width:100%;max-height:96vh;width:auto;height:auto;margin:0 auto;break-after:page;page-break-after:always}#fvPrint img:last-child{break-after:auto;page-break-after:auto}}
+.flist a{display:flex;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--line);margin-bottom:8px;color:var(--ink);text-decoration:none}
+.flist small{color:var(--dim);white-space:nowrap}
+.flist a{align-items:center}
+.flist .fl-n{flex:1;min-width:0;overflow-wrap:anywhere}
+.flist .fl-n small{display:block;margin-top:2px}
+.flist .fl-i{flex:0 0 56px;height:56px;display:flex;align-items:center;justify-content:center;font-size:26px;border-radius:10px;background:var(--sunk,#f2f2f2);overflow:hidden}
+.flist .fl-i .fthumb[data-st="ok"]{margin:0}
+.flist .fl-i .fthumb img{width:56px;height:56px;max-width:none;max-height:none;object-fit:cover;border:0;border-radius:0}
+.flist .fl-i:has(.fthumb[data-st="ok"]) .fl-e{display:none}
+.flist h3{font:700 14px Heebo,sans-serif;color:var(--dim);margin:14px 2px 6px}
+.salecard{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.salecard h3{font:800 17px Heebo,sans-serif;margin:0 0 8px;text-align:center}
+.salecard.open{border-color:var(--yellow);box-shadow:0 0 0 2px var(--yellow),var(--shadow)}
+.salecard ul{margin:0;padding-inline-start:18px;line-height:1.6}
+.salecard .sfiles{display:flex;flex-direction:column;gap:6px}
+.salecard .sfiles a{display:block;padding:10px 12px;border-radius:12px;background:var(--sunk);color:var(--ink);text-decoration:none;font-weight:500}
+.salecard .sfiles a::before{content:'📄 '}
+.salecard .sfold{display:block;margin-top:10px;text-align:center;color:var(--accent);font-weight:700;text-decoration:none}
+.isracards{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.isracards div{display:flex;align-items:baseline;justify-content:center;gap:12px;padding:12px;border-radius:14px;background:var(--sunk)}
+.isracards b{font:800 34px Heebo,sans-serif;letter-spacing:2px;direction:ltr}
+.isracards span{font:700 17px Heebo,sans-serif}
+.salecard.isratop{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent),var(--shadow)}
+.salecard.isratop ul{font-size:17px;font-weight:600;list-style:none;padding-inline-start:0;text-align:center}
+.salecard .israempty{min-height:90px;border:2px dashed var(--line);border-radius:12px;padding:12px;opacity:.75;text-align:center}
+.rch{font:800 17px Heebo,sans-serif;margin:14px 0 4px;text-align:center}
+.rclast{counter-reset:none;list-style:none;padding-inline-start:0}
+.rcself{margin:10px 0}
+.rcself>summary{cursor:pointer;text-align:center;color:var(--dim);font-size:14px;padding:8px 0}
+#pRc .ask{display:flex;width:100%;margin-top:10px}
+.th-fresh>summary .badge{animation:hardblink .5s steps(1) infinite}
+.bub.fresh .badge{animation:hardblink .5s steps(1) infinite}
+.bn button.hasnew,.bn button.hasnew.blink{animation:hardblink .5s steps(1) infinite}
+@media(prefers-reduced-motion:reduce){.newbtn.hot .nb-c,.gt.glow .flag,.th-fresh>summary .badge,.bub.fresh .badge,.bn button.hasnew,.bn button.hasnew.blink{animation:none}}
+.whatsnew{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+ padding:14px 16px 8px;margin-top:18px;box-shadow:var(--shadow)}
+.whatsnew h2{margin-bottom:8px}
+.wn{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line);font-size:15px}
+.wn:first-of-type{border-top:0}
+.wn .n{font:500 20px/1 "Frank Ruhl Libre",Georgia,serif;min-width:26px;text-align:center;color:var(--accent)}
+.wn .n.hot{color:#e5484d}
+.wn .n.zero{color:var(--dim)}
+.wn small{color:var(--dim);font-weight:300;display:block;font-size:13px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:22px 0 26px}
+.tile{position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--line);
+ border-radius:var(--r);padding:14px 15px;box-shadow:var(--shadow)}
+.tile:before{content:"";position:absolute;inset-block-start:0;inset-inline:0;height:3px;
+ background:var(--accent);opacity:.85}
+.tile.wait:before{background:var(--wait)}
+.tile .k{font-size:12px;color:var(--dim)}
+.tile .v{font:500 28px/1.15 "Frank Ruhl Libre",Georgia,serif;
+ font-variant-numeric:tabular-nums;margin-top:3px}
+.tile.wait .v{color:var(--wait)}
+h2{font:500 15px/1.3 Heebo,sans-serif;margin:0 0 11px;color:var(--dim);letter-spacing:.04em}
+section{margin-bottom:30px}
+.seg{display:flex;gap:4px;background:var(--sunk);border-radius:12px;padding:4px;margin-bottom:14px;
+ border:1px solid var(--line)}
+.seg button{flex:1;position:relative;background:transparent;color:var(--dim);border:0;border-radius:7px;
+ padding:8px 4px;font:500 14px Heebo,sans-serif;cursor:pointer}
+.dot{position:absolute;top:2px;inset-inline-end:4px;width:14px;height:14px;border-radius:50%;
+ border:2px solid var(--surface);
+ background:#e5484d;box-shadow:0 0 0 0 rgba(229,72,77,.7);animation:pulse 1.4s infinite}
+@keyframes pulse{
+ 0%{box-shadow:0 0 0 0 rgba(229,72,77,.7)}
+ 70%{box-shadow:0 0 0 7px rgba(229,72,77,0)}
+ 100%{box-shadow:0 0 0 0 rgba(229,72,77,0)}}
+@media(prefers-reduced-motion:reduce){.dot{animation:none}}
+.seg button[aria-pressed="true"]{background:linear-gradient(150deg,#5aa9fb,var(--blue));color:#fff;
+ font-weight:700;box-shadow:0 6px 14px rgba(66,133,244,.4),inset 0 1px 0 rgba(255,255,255,.4)}
+.seg button:active{transform:scale(.97)}
+.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.item{background:var(--surface);border:1px solid var(--line);border-radius:11px;
+ padding:12px 14px;margin-bottom:9px;box-shadow:var(--shadow);
+ border-inline-start:3px solid var(--line)}
+.item.answered{border-inline-start-color:var(--accent)}
+.item.pain{border-inline-start-color:var(--wait)}
+.item .top{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;
+ font-size:13px;color:var(--dim);margin-bottom:5px}
+.item .who{color:var(--ink);font-weight:500;font-size:14px}
+.chip{background:var(--sunk);border-radius:999px;padding:1px 9px;font-size:11px;color:var(--dim)}
+.item .body{font-size:15px;white-space:pre-wrap;overflow-wrap:anywhere}
+.item .said{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);
+ font-size:14px;color:var(--accent)}
+.empty{color:var(--dim);font-size:15px;font-weight:300;padding:16px 2px}
+.shot{margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.shot>summary{font:700 14px Heebo,sans-serif;color:var(--accent);cursor:pointer}
+.shot small{display:block;color:var(--dim);font-size:12.5px;font-weight:300;margin:6px 0}
+.shot img{display:block;width:100%;max-width:300px;border-radius:10px;margin-top:6px}
+.item.lead{border-inline-start-color:var(--wait)}
+.item.lead.closed{border-inline-start-color:var(--accent)}
+.log{list-style:none;margin:10px 0 0;padding:0 11px 0 0;border-inline-start:1px solid var(--line)}
+.log li{position:relative;padding:0 13px 9px 0;font-size:14px;overflow-wrap:anywhere}
+.log li:last-child{padding-bottom:0}
+.log li::before{content:"";position:absolute;inset-inline-start:-15px;top:8px;
+ width:6px;height:6px;border-radius:50%;background:var(--line)}
+.log li:last-child::before{background:var(--accent)}
+.log .d{display:block;color:var(--dim);font-size:12px;font-weight:300;
+ font-variant-numeric:tabular-nums}
+/* The one secondary button, 26.9: soft accent, rounded, a real touch size. */
+.ask{display:inline-flex;align-items:center;justify-content:center;margin-top:10px;min-height:44px;
+ background:var(--accent-soft);color:var(--accent);border:0;border-radius:12px;padding:8px 18px;
+ font:700 15px Heebo,sans-serif;text-decoration:none;cursor:pointer}
+.ask:active{transform:translateY(1px)}
+.wetbox{margin-top:10px;padding:10px 12px;border:2px solid var(--accent);border-radius:14px;background:var(--accent-soft)}
+.wetbox .ask{display:flex;width:100%;margin-top:0;background:var(--accent);color:#fff}
+.wetstep{font:500 14px Heebo,sans-serif;margin-top:6px;line-height:1.45}
+.wetbox.hot{animation:wetHot 1s ease-in-out 3}
+@keyframes wetHot{50%{box-shadow:0 0 0 6px var(--accent-soft);transform:scale(1.02)}}
+.abtn{border-radius:12px!important;font-weight:700!important;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+.ask:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.report{background:var(--surface);border:1px solid var(--line);border-radius:11px;
+ margin-bottom:9px;box-shadow:var(--shadow);overflow:hidden}
+.report summary{cursor:pointer;padding:12px 14px;list-style:none;
+ display:flex;gap:8px;align-items:baseline}
+.report summary::-webkit-details-marker{display:none}
+.report summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.report summary .t{font-weight:600;font-size:15px}
+.report summary:before{content:"";flex:0 0 auto;width:8px;height:8px;
+ border-inline-start:2px solid var(--dim);border-block-end:2px solid var(--dim);
+ transform:rotate(45deg);transition:transform .15s ease;margin-inline-end:2px}
+.report[open] summary:before{transform:rotate(-45deg) translate(2px,2px);
+ border-color:var(--accent)}
+.report[open]{box-shadow:0 0 0 2px var(--accent-soft),var(--shadow)}
+.report[open] summary{background:var(--accent-soft)}
+.report:not([open]) summary:active{background:var(--sunk)}
+.report summary .d{margin-inline-start:auto;color:var(--dim);font-size:13px;
+ font-weight:300;font-variant-numeric:tabular-nums}
+.report .text{padding:12px 14px 14px;font-size:15px;white-space:pre-wrap;
+ overflow-wrap:anywhere;border-top:1px solid var(--line)}
+.rephint{color:var(--dim);font-size:12.5px;margin-bottom:8px}
+.fthumb{display:none}
+.fthumb[data-st="ok"]{display:block;margin:6px 0}
+.fthumb img{display:block;max-width:min(220px,100%);max-height:220px;border-radius:10px;border:1px solid var(--line,#ddd);background:#fff}
+.gotile .fthumb[data-st="ok"]{margin:0 auto 6px}
+.copyrow{display:flex;align-items:center;gap:11px;padding:0 14px 13px}
+.copyrow button{background:transparent;color:var(--accent);border:1px solid var(--line);
+ border-radius:8px;padding:6px 14px;font:400 13px Heebo,sans-serif;cursor:pointer}
+.copyrow button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.copyrow .msg{font-size:13px;color:var(--accent)}
+.thread{display:flex;flex-direction:column;gap:9px;margin-bottom:16px}
+.bub{max-width:82%;padding:10px 13px;border-radius:14px;font-size:15px;
+ white-space:pre-wrap;overflow-wrap:anywhere;box-shadow:var(--shadow);
+ transition:border-color .4s ease,background-color .4s ease}
+@media(prefers-reduced-motion:reduce){.bub{transition:none}}
+.bub .w{display:block;color:var(--dim);font-size:12.5px;font-weight:500;
+ margin-bottom:3px;font-variant-numeric:tabular-nums}
+.bub.me{align-self:flex-start;background:var(--accent-soft);
+ border-bottom-inline-start-radius:4px}
+.bub.you{align-self:flex-end;background:var(--surface);
+ border:1px solid var(--line);border-bottom-inline-end-radius:4px}
+.st{font-style:normal;font-weight:500;padding:1px 7px;border-radius:999px;font-size:11.5px}
+.st-received{background:var(--sunk);color:var(--dim)}
+/* שורת אישור הקבלה מתחת להודעה שלו. לא תווית, משפט. */
+.ack{margin-top:8px;padding:7px 10px;border-radius:10px;font-size:13px;line-height:1.45;
+ background:var(--sunk);color:var(--dim);border-inline-start:3px solid var(--line)}
+.ack-n{display:block;margin-top:4px;color:var(--ink);opacity:.85}
+.ack-tx{display:none}
+.ack.ack-open .ack-tx{display:block}
+.ack .prg{cursor:pointer;margin-top:0}
+.ack.ack-open .prg{margin-top:7px}
+.ack .pulse{float:inline-start;margin-top:7px}
+/*
+  התמלול של הקלטה, בתוך ההודעה עצמה.
+
+  ביקש ב-18.09: להציג לו את התמלול של מה ששלח. התמלול כבר נשמר לכל
+  הקלטה, אבל בהודעה נקרא שם הקובץ בלבד והמילים ישבו בשורה הקטנה
+  שמתחת לסטטוס. כאן הן במקום שבו הוא קורא את ההודעה.
+*/
+.vtx{margin-top:7px;padding:7px 10px;border-radius:10px;font-size:14px;line-height:1.5;
+ background:var(--sunk);border-inline-start:3px solid var(--accent,#3a7afe);color:var(--ink)}
+.vtx b{display:block;font-size:11px;font-weight:500;color:var(--dim);margin-bottom:2px}
+.vtx.vwait{color:var(--dim);border-inline-start-color:var(--line)}
+/*
+  Itzik, 16.9: sent and waiting is yellow, the answer coming back is red, and
+  what he has touched is green. Three states, three colours, and the colour
+  always says whose turn it is.
+*/
+.ack-wait{background:#f6e7c8;color:#8a5a12;border-inline-start-color:var(--gold)}
+.ack-received{background:#f6e7c8;color:#8a5a12;border-inline-start-color:var(--gold)}
+.ack-working{background:#f6e7c8;color:#8a5a12;border-inline-start-color:var(--gold)}
+.ack-partial{background:var(--accent-soft);color:var(--accent);border-inline-start-color:var(--accent)}
+.ack-done{background:var(--fresh);color:#1d6b3f;border-inline-start-color:#1d6b3f}
+.pulse{display:inline-block;width:8px;height:8px;border-radius:50%;margin-inline-end:7px;
+ background:currentColor;vertical-align:middle;animation:ackpulse 1.8s ease-in-out infinite}
+@keyframes ackpulse{0%,100%{opacity:.35;transform:scale(.82)}50%{opacity:1;transform:scale(1.12)}}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none;opacity:.9}}
+.st-working{background:#f6e7c8;color:#8a5a12}
+.st-done{background:var(--fresh);color:#1d6b3f}
+/*
+  איציק, 20.9: "אני רוצה מד התקדמות במוניטור כל בקשה שלי שתופיע ליד הבקשה."
+
+  המשפט מתחת להודעה אמר את המצב במילים, אבל לא נתן תמונה של כמה נשאר.
+  עכשיו יש פס מתחת לכל בקשה שלו עם אחוז. האחוז נגזר מהמצב ששמור בקובץ
+  ההודעה ולא נע מעצמו, כך שהוא לא מציג התקדמות שלא קרתה.
+*/
+.prg{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:7px;font-size:.82rem}
+.prg-s{padding:2px 9px;border-radius:999px;border:1.5px solid rgba(0,0,0,.14);color:#8b93a1;font-weight:600}
+.prg-s.on{border-color:var(--prgc,#8b93a1);color:var(--prgc,#8b93a1)}
+.prg-s.now{background:var(--prgc,#8b93a1);border-color:var(--prgc,#8b93a1);color:#fff;font-weight:700}
+.prg-l{width:10px;height:2px;background:rgba(0,0,0,.14);border-radius:2px}
+.prg-a{font-weight:700;color:var(--prgc,#1d8a4e);text-decoration:underline}
+/*
+  איציק, 20.9 בקול: "את מד ההתקדמות תצווה בצבעים לפי ההתקדמות."
+
+  הפס היה בצבע אחד לכל השלבים, אז מבט חטוף לא הבדיל בין בקשה שרק יצאה
+  לבין בקשה שנגמרה. עכשיו הצבע נגזר מאותו מצב שממנו נגזר האחוז: אפור
+  בהתחלה, כחול כשהתקבלה, כתום כשהיא בעבודה, ענבר כשיש חלק, ירוק כשבוצעה.
+  אין כאן מצב חדש ואין צבע שמקדים את המצב.
+*/
+.prg-sent{--prgc:#8b93a1}
+.prg-received{--prgc:#2f6fd0}
+.prg-working{--prgc:#c9730a}
+.prg-partial{--prgc:#b8860b}
+.prg-done{--prgc:#1d8a4e}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .prg-s,:root:not([data-theme="light"]) .prg-l{border-color:rgba(255,255,255,.2)}
+ :root:not([data-theme="light"]) .prg-sent{--prgc:#9aa3b2}
+ :root:not([data-theme="light"]) .prg-received{--prgc:#6ba4f0}
+ :root:not([data-theme="light"]) .prg-working{--prgc:#f0a94a}
+ :root:not([data-theme="light"]) .prg-partial{--prgc:#e0b74a}
+ :root:not([data-theme="light"]) .prg-done{--prgc:#45c57e}}
+/*
+  איציק, 17.9: "ברגע שאתה שולח את ההודעה שאני משאיר לך פה, תעשה עבעוב כזה
+  מדליק על התשובה שלי, שאני אדע שאתה בעבודה."
+
+  ההודעה שלו מתחילה לפעום ברגע שהיא נשלחת, וממשיכה כל עוד היא פתוחה.
+  הפעימה נכבית כשהמצב בקובץ ההודעה הופך done. היא לא מוכיחה שנעשתה עבודה,
+  היא אומרת שההודעה נקלטה ופתוחה, וזה בדיוק מה שהוא ביקש לראות.
+
+  The class is beat and not live, because .live further down is the
+  on air strip, and it carries display:flex. A bubble that picked up both
+  turned into a row: the byline, the message and the acknowledgement stood
+  side by side in three narrow columns, the byline sitting across the text.
+  Itzik, 20.9: "יש שם באג. מה זה. תסדר".
+*/
+.bub.you.beat{border:2px solid var(--gold);opacity:1;animation:livebeat 1.6s ease-in-out infinite}
+.bub.you.beat .w{color:#8a5a12}
+@keyframes livebeat{
+ 0%,100%{box-shadow:0 6px 18px rgba(200,150,30,.28),0 0 0 0 rgba(212,160,23,.55)}
+ 55%{box-shadow:0 6px 18px rgba(200,150,30,.28),0 0 0 12px rgba(212,160,23,0)}
+}
+@media(prefers-reduced-motion:reduce){.bub.you.beat{animation:none}}
+.bub.you.beat .lv{display:inline-block;width:8px;height:8px;border-radius:50%;
+ margin-inline-end:6px;background:var(--gold);vertical-align:middle;
+ animation:ackpulse 1.6s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){.bub.you.beat .lv{animation:none;opacity:.9}}
+/* Unread is red and glowing, and it stays that way for days if that is how
+   long it takes him to get to it. Touching it turns it green, which is his
+   own mark that he dealt with it. */
+.bootwarn{margin:0 0 12px;padding:12px 14px;border-radius:12px;border:2px solid var(--red);background:var(--unread);font-size:15px;line-height:1.5}
+.bootwarn button{margin-inline-start:8px;padding:6px 14px;border:0;border-radius:999px;background:var(--red);color:#fff;font:inherit;font-size:14px}
+.bub.fresh{border:3px solid var(--red);border-inline-start:10px solid var(--red);
+ background:var(--unread);animation:bubglow 1.5s ease-in-out infinite}
+.bub.fresh .badge{font-size:13px;padding:3px 12px}
+@keyframes bubglow{
+ 0%,100%{box-shadow:0 8px 22px rgba(234,67,53,.35),0 0 0 0 rgba(234,67,53,.65)}
+ 55%{box-shadow:0 8px 22px rgba(234,67,53,.35),0 0 0 14px rgba(234,67,53,0)}
+}
+@media(prefers-reduced-motion:reduce){.bub.fresh{animation:none}}
+.bub.touched{animation:none;border:2px solid var(--green);background:var(--fresh)}
+.badge.ok{background:var(--green)}
+.badge.latest{background:#fff;color:var(--red);font-size:14px;padding:3px 12px;border:2px solid var(--red)}
+.bub.read{opacity:.72}
+.badge{font-style:normal;font-weight:700;background:var(--red);color:#fff;
+ padding:1px 8px;border-radius:999px;font-size:11px}
+.bub a{color:inherit;text-decoration:underline;word-break:break-all}
+.bub.pend{opacity:.6}
+/* Answering one message and only that one. Every bubble carries its own row of
+   three ways in, because he replies by voice, by writing or by sending a file
+   depending on what he has in his hand at that moment. */
+.rrow{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
+.rb{background:var(--surface);color:var(--accent);border:1px solid var(--line);
+ border-radius:999px;padding:5px 12px;font:400 12.5px Heebo,sans-serif;cursor:pointer}
+.rb:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.rb.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.rform{display:none;flex-direction:column;gap:7px;margin-top:8px}
+.rform.open{display:flex}
+.rform textarea{width:100%;min-height:56px;resize:vertical;background:var(--surface);
+ color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:9px 11px;
+ font:400 14px Heebo,sans-serif}
+.rform button{align-self:flex-start;background:var(--accent);color:var(--on-accent);border:0;
+ border-radius:9px;padding:7px 16px;font:500 13px Heebo,sans-serif;cursor:pointer}
+.rsaid{font-size:12.5px;color:var(--accent)}
+.answering{outline:2px solid var(--accent);outline-offset:2px}
+/* The unread screen. Same bubbles, but nothing else on the page competes with
+   them, and each one is full width because there is no thread to place it in. */
+.ubox{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
+.ubox .bub{max-width:100%;align-self:stretch}
+/* One card per thread. Red until he touches it, amber while he waits on me,
+   green once it is done. The number is its place in the list right now, so
+   it changes when a reply lands and the card jumps up. */
+.th{flex:none;background:var(--surface);border:2px solid var(--line);border-radius:var(--r);
+ margin-bottom:12px;box-shadow:var(--shadow);overflow:hidden}
+.th>summary{list-style:none;display:flex;align-items:center;gap:9px;flex-wrap:wrap;
+ padding:12px 14px;cursor:pointer;font-size:15px}
+.th>summary::-webkit-details-marker{display:none}
+.th>summary b{flex:1 1 60%;min-width:0;font-weight:600;line-height:1.35}
+.th>summary small{color:var(--dim);font-size:12px;font-variant-numeric:tabular-nums}
+.th .num{flex:0 0 auto;min-width:30px;height:30px;border-radius:999px;display:grid;place-items:center;
+ background:var(--sunk);color:var(--ink);font:800 14px Heebo,sans-serif;padding:0 8px}
+.th .tproj{font-style:normal;font-size:12px;font-weight:700;background:var(--sunk);color:var(--ink);
+ border-radius:999px;padding:2px 9px}
+.pbar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.pchip,.ppb{border:2px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;
+ padding:6px 12px;font:600 14px Heebo,sans-serif;cursor:pointer}
+.pchip.on,.ppb.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.ppick{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.ppick input{flex:1 1 140px;min-width:0;padding:7px 10px;border:2px solid var(--line);border-radius:10px;font:15px Heebo,sans-serif}
+.thbody{display:flex;flex-direction:column;gap:9px;padding:0 14px 14px;border-top:1px solid var(--line)}
+.thbody .bub{max-width:92%}
+.th-fresh{border-color:var(--red);background:var(--unread);animation:bubglow 1.5s ease-in-out infinite}
+.th-fresh .num{background:var(--red);color:#fff}
+.th-standby{border-color:#d9a441;background:#fff8ea}
+.th-standby .num{background:#f6e7c8;color:#8a5a12}
+.th-done{border-color:var(--green)}
+.th-done .num{background:var(--fresh);color:var(--green)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .th-standby{background:#33290f}}
+:root[data-theme="dark"] .th-standby{background:#33290f}
+@media(prefers-reduced-motion:reduce){.th-fresh{animation:none}}
+/* A light running around the thing he is working on. He asked to see that this
+   one card, and nothing else, is what has his hand on it right now. */
+.busyring{position:relative;isolation:isolate}
+.busyring::after{
+ content:'';position:absolute;inset:-5px;border-radius:inherit;padding:5px;
+ background:conic-gradient(from var(--ang,0deg),transparent 0 34%,var(--blue) 50%,var(--accent) 62%,
+  #7ad0ff 72%,var(--green) 82%,var(--yellow) 90%,transparent 97%);
+ -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+ -webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+ mask-composite:exclude;animation:ringspin 1.05s linear infinite;pointer-events:none;z-index:2;
+ filter:saturate(1.35) drop-shadow(0 0 7px rgba(122,208,255,.55))}
+@property --ang{syntax:'<angle>';initial-value:0deg;inherits:false}
+@keyframes ringspin{to{--ang:360deg}}
+@media(prefers-reduced-motion:reduce){.busyring::after{animation:none;opacity:.5}}
+.repreply{padding:0 14px 14px;border-top:1px solid var(--line);margin-top:2px}
+.repreply .rrow{margin-top:12px}
+.hint{font-size:13px;color:var(--dim);font-weight:300;margin-top:14px;line-height:1.6}
+.hq{width:24px;height:24px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--dim);
+ font-size:14px;font-weight:700;vertical-align:middle;margin-inline-start:6px;padding:0;cursor:pointer}
+.hq.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.hq-t{margin:0 0 12px}
+.hint1{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink);background:var(--sunk);
+ border-radius:10px;padding:8px 12px;margin:0 0 12px}
+.hint1[hidden]{display:none}
+.hint1x{margin-inline-start:auto;background:transparent;border:0;color:var(--dim);font-size:15px;padding:2px 6px;cursor:pointer}
+.gr-cx{flex:0 0 auto;background:transparent;color:#b3261e;border:1px solid #e3b4b0;border-radius:8px;padding:4px 9px;font-size:12px;cursor:pointer}
+.gr-cx.sure{background:#b3261e;color:#fff;border-color:#b3261e}
+.gr-s.gr-c{background:var(--sunk);color:var(--dim)}
+#msgForm,#mailForm{display:flex;flex-direction:column;gap:10px}
+/* Reviewer 10.10, approved by Itzik: the main box sat after every thread, so
+   twenty topics meant scrolling to the end to write. It stays on the bottom of
+   the chat screen now, above the tab bar, with room under it for the two
+   status pills. */
+#pM #msgForm{position:sticky;bottom:calc(60px + env(safe-area-inset-bottom));z-index:15;
+ background:var(--ground);padding:8px 0 46px;border-top:1px solid var(--line)}
+.rlab{font-size:13px;color:var(--dim);font-weight:500;line-height:1.4}
+#mailText{width:100%;min-height:64px;resize:vertical;background:var(--surface);
+ color:var(--ink);border:1px solid var(--line);border-radius:11px;padding:12px 14px;
+ font:400 16px/1.6 Heebo,sans-serif;box-shadow:var(--shadow)}
+#mailBtn{align-self:flex-start;background:var(--red);color:#fff;border:0;
+ border-radius:10px;padding:11px 26px;font:500 15px Heebo,sans-serif;cursor:pointer}
+#mailBtn[disabled]{opacity:.5;cursor:default}
+#mailThread{margin-top:16px}
+#msgText{width:100%;min-height:74px;resize:vertical;background:var(--surface);
+ color:var(--ink);border:1px solid var(--line);border-radius:11px;padding:12px 14px;
+ font:400 16px/1.6 Heebo,sans-serif;box-shadow:var(--shadow)}
+#msgText::placeholder{color:var(--dim);font-weight:300}
+#msgText:focus-visible,#msgBtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sendrow{display:flex;align-items:center;gap:10px}
+.plusbtn{width:48px;height:48px;flex:0 0 48px;border-radius:50%;border:0;cursor:pointer;
+ background:linear-gradient(150deg,#5aa9fb,var(--blue));color:#fff;font:300 30px/1 Heebo,sans-serif;
+ box-shadow:0 8px 18px rgba(66,133,244,.35),inset 0 2px 0 rgba(255,255,255,.35)}
+.plusbtn:active{transform:scale(.94)}
+.plusbtn[aria-expanded="true"]{transform:rotate(45deg)}
+#msgBtn{align-self:flex-start;background:var(--accent);color:var(--on-accent);border:0;
+ border-radius:10px;padding:11px 26px;font:500 15px Heebo,sans-serif;cursor:pointer}
+#msgBtn[disabled]{opacity:.5;cursor:default}
+.msgsaid{color:var(--accent);font-size:14px;min-height:20px;margin-top:9px}
+#fileForm{display:flex;flex-direction:column;gap:10px;margin-top:22px;
+ border-top:1px solid var(--line);padding-top:18px}
+#fileForm h3{margin:0;font:500 15px Heebo,sans-serif;color:var(--ink)}
+#fPick{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.pickrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pickbtn{border:0;cursor:pointer;border-radius:18px;padding:14px 10px;color:#fff;
+ font-family:Heebo,sans-serif;text-align:center;
+ box-shadow:0 8px 18px rgba(20,30,60,.18),inset 0 2px 0 rgba(255,255,255,.3)}
+.pickbtn span{display:block;font-size:26px;line-height:1;margin-bottom:4px}
+.pickbtn b{display:block;font:800 16px Heebo,sans-serif}
+.pickbtn small{display:block;font-size:11px;opacity:.9;font-weight:300}
+.pickbtn:active{transform:translateY(2px) scale(.985)}
+.pb-img{background:linear-gradient(150deg,#5aa9fb,var(--blue))}
+.pb-doc{background:linear-gradient(150deg,#7d8ba1,#3f4a5c)}
+.pickbtn[aria-pressed="true"]{outline:3px solid var(--ink);outline-offset:2px}
+#fCap{background:var(--surface);color:var(--ink);border:1px solid var(--line);
+ border-radius:11px;padding:11px 14px;font:400 16px Heebo,sans-serif;box-shadow:var(--shadow)}
+#fBtn{align-self:flex-start;background:var(--accent);color:var(--on-accent);border:0;
+ border-radius:10px;padding:11px 26px;font:500 15px Heebo,sans-serif;cursor:pointer}
+#fBtn[disabled]{opacity:.5;cursor:default}
+.fmeta{font-size:13px;color:var(--dim);font-weight:300;min-height:18px}
+.fmeta.bad{color:#e5484d}
+.pthumbs{display:flex;flex-wrap:wrap;gap:8px;direction:rtl}
+.pthumbs[hidden]{display:none}
+.pthumb{position:relative;width:64px;height:64px;border-radius:10px;overflow:hidden;
+ border:1px solid var(--line);background:var(--sunk);flex:0 0 64px}
+.pthumb img{width:100%;height:100%;object-fit:cover;display:block}
+.pthumb .pthi{display:flex;flex-direction:column;align-items:center;justify-content:center;
+ height:100%;padding:4px;box-sizing:border-box;font-size:22px;line-height:1}
+.pthumb .pthi small{font-size:10px;color:var(--dim);margin-top:4px;max-width:100%;
+ overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr}
+.pthumbs .pthx{position:absolute;top:3px;left:3px;width:24px;height:24px;padding:0;margin:0;
+ border:0;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font:600 14px/24px Heebo,sans-serif;
+ text-align:center;cursor:pointer;align-self:auto}
+#recWrap{display:flex;align-items:center;gap:12px;margin-top:6px}
+#recBtn{width:54px;height:54px;flex:0 0 54px;border-radius:50%;border:0;cursor:pointer;
+ background:var(--accent);color:var(--on-accent);font-size:22px;line-height:1;box-shadow:var(--shadow)}
+#recBtn.on{background:#e5484d;animation:pulse 1.4s infinite}
+#recBtn[disabled]{opacity:.5;cursor:default}
+#recSaid{font-size:14px;color:var(--dim);font-weight:300}
+@media(prefers-reduced-motion:reduce){#recBtn.on{animation:none}}
+.note{font-size:13px;color:var(--dim);font-weight:300;border-top:1px solid var(--line);
+ padding-top:14px;margin-top:30px}
+.note b{color:var(--ink);font-weight:500}
+
+/* ===== home screen ===== */
+/* Three buttons, a title and the avatar do not fit across a 390 wide phone in
+   one line, and the row refusing to be narrower than the screen is what gave
+   the whole app its sideways scroll. It wraps now: the title keeps the leftover
+   width down to a floor, and past that the row takes a second line rather than
+   pushing the page wider than the screen. */
+.hd{display:flex;align-items:center;gap:8px 11px;margin-bottom:14px;flex-wrap:wrap}
+/* He asked for the two buttons on the right and the name on the left, so the
+   text block takes the leftover width and the avatar closes the row. */
+.hdtext{flex:1 1 150px;min-width:0;text-align:end}
+.ava{width:46px;height:46px;flex:0 0 46px;border-radius:50%;padding:3px;
+ background:conic-gradient(var(--blue),var(--red),var(--yellow),var(--green),var(--blue))}
+.ava div{width:100%;height:100%;border-radius:50%;background:var(--surface);display:grid;place-items:center;
+ font:700 19px "Frank Ruhl Libre",Georgia,serif;color:var(--ink)}
+.hd .t{font:700 19px/1.15 Heebo,sans-serif}
+.hd .s{font-size:12px;color:var(--dim);font-weight:300}
+.gold{font:800 13.5px Heebo,sans-serif;margin-top:2px;
+ background:linear-gradient(90deg,#b8860b,#ffd76e,#f0b429,#fff3c4,#d4a017);
+ -webkit-background-clip:text;background-clip:text;color:transparent;
+ filter:drop-shadow(0 1px 0 rgba(0,0,0,.25))}
+/* One vocabulary for every microphone: red while recording, amber while it is
+   on its way to me, green when it landed, grey when it did not. */
+#micBtn.sending,#recBtn.sending,#recBig.sending{
+ background:linear-gradient(180deg,#ffd257,var(--yellow))!important;animation:none!important;opacity:1}
+#micBtn.sent,#recBtn.sent,#recBig.sent{
+ background:linear-gradient(180deg,#5cc36f,var(--green))!important;animation:none!important;opacity:1}
+#micBtn.failed,#recBtn.failed,#recBig.failed{
+ background:#5b6472!important;animation:none!important;opacity:1}
+.foodtop{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.foodtop>div{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+ padding:12px 6px;text-align:center;box-shadow:var(--shadow)}
+.foodtop span{display:block;font:800 22px Heebo,sans-serif;color:var(--accent)}
+.foodtop small{display:block;color:var(--dim);font-size:11px;margin-top:2px}
+/*
+  אבץ, לבקשתו ב-17.9: "בסוף היום תאגור את הכל ותגיד לי כמה אבץ היה באוכל".
+  הוא לא עוד מספר בשורת המאקרו, הוא השאלה. לכן כרטיס בפני עצמו מעל הכל,
+  עם מד שמראה כמה מהיעד היומי כבר נאסף, ופירוט מי תרם מה.
+*/
+.zbox{background:var(--surface);border:1px solid var(--line);border-radius:16px;
+ padding:14px 14px 12px;margin-bottom:14px;box-shadow:var(--shadow)}
+.zbox .zt{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.zbox .zt b{font:700 15px Heebo,sans-serif}
+.zbox .zv{font:800 24px Heebo,sans-serif;color:var(--accent);white-space:nowrap}
+.zbox .zbar{height:10px;border-radius:999px;background:var(--line);overflow:hidden;margin:10px 0 8px}
+.zbox .zbar i{display:block;height:100%;border-radius:999px;
+ background:linear-gradient(90deg,#5cc36f,var(--green))}
+.zbox.low .zbar i{background:linear-gradient(90deg,#f0b429,#e08a1e)}
+.zbox.over .zbar i{background:linear-gradient(90deg,#e4884e,#d4603a)}
+.zbox .zsaid{color:var(--dim);font-size:13px;line-height:1.6}
+.zbox .zparts{margin-top:8px;color:var(--dim);font-size:12.5px;line-height:1.7}
+.zbox .zparts div{display:flex;justify-content:space-between;gap:10px}
+.zdays{margin-top:14px}
+.zdays h3{font:700 14px Heebo,sans-serif;margin:0 0 8px}
+.zdays .zd{display:flex;justify-content:space-between;gap:10px;padding:8px 12px;
+ background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:6px;
+ color:var(--dim);font-size:13px}
+.zdays .zd b{color:var(--ink);font:700 13px Heebo,sans-serif}
+.foodrow{margin-bottom:10px}
+.foodcam{width:100%;min-height:56px;border:0;border-radius:18px;cursor:pointer;
+ display:flex;align-items:center;justify-content:center;gap:10px;
+ font:700 16px Heebo,sans-serif;color:#fff;
+ background:linear-gradient(180deg,#5cc36f,var(--green));
+ box-shadow:0 4px 12px rgba(52,168,83,.4),inset 0 1px 0 rgba(255,255,255,.35)}
+.foodcam:active{background:linear-gradient(180deg,var(--green),#2b8c45);box-shadow:none;transform:translateY(1px)}
+.foodcam span{font-size:22px}
+.fitem{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+ padding:12px 14px;margin-bottom:8px;cursor:pointer}
+.fitem .ft{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.fitem b{font:700 15px Heebo,sans-serif}
+.fitem .kc{font:800 16px Heebo,sans-serif;color:var(--accent)}
+.fitem .macros{color:var(--dim);font-size:12.5px;margin-top:4px}
+.fitem .more{display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--line);
+ color:var(--dim);font-size:13px;line-height:1.6;white-space:pre-wrap}
+.fitem.open .more{display:block}
+.quickrow{display:flex;gap:8px;margin-bottom:12px}
+.quickrow input{flex:1;min-height:48px;border-radius:14px;padding:0 14px;
+ border:1px solid var(--line);background:var(--surface);color:var(--ink);
+ font:400 15px Heebo,sans-serif}
+.quickrow button{flex:0 0 92px;min-height:48px;border:0;border-radius:999px;cursor:pointer;
+ font:700 15px Heebo,sans-serif;color:#fff;
+ background:linear-gradient(180deg,#6ea8ff,var(--blue));
+ box-shadow:0 2px 6px rgba(66,133,244,.4),inset 0 1px 0 rgba(255,255,255,.3)}
+.quickrow button:active{background:linear-gradient(180deg,var(--blue),#1b63d6);box-shadow:none}
+.quickrow button[disabled]{opacity:.55}
+/* Three controls do not fit one phone line: the date input alone refuses to
+   shrink below its own width, and it pushed the reminders screen sideways off
+   the phone, 25.9. The date takes a line of its own. */
+#remForm{flex-wrap:wrap}
+#remForm input{min-width:0}
+#remForm #remDate{flex:1 1 100%}
+.nextrep{display:flex;align-items:center;gap:12px;margin-bottom:12px;
+ background:var(--surface);border:1px solid var(--line);border-radius:16px;
+ padding:12px 14px;box-shadow:var(--shadow)}
+.nextrep>div{flex:1}
+.nextrep b{display:block;font:700 15px Heebo,sans-serif}
+.nextrep small{display:block;color:var(--dim);font-size:12.5px;margin-top:2px}
+.nextrep button{flex:0 0 auto;min-height:42px;padding:0 18px;border:0;border-radius:999px;
+ cursor:pointer;font:700 14px Heebo,sans-serif;color:#fff;
+ background:linear-gradient(180deg,#6ea8ff,var(--blue));
+ box-shadow:0 2px 6px rgba(66,133,244,.4),inset 0 1px 0 rgba(255,255,255,.3)}
+.nextrep button:active{background:linear-gradient(180deg,var(--blue),#1b63d6);box-shadow:none}
+.nextrep button[disabled]{opacity:.55}
+/* 26.9: this card and the small link button shared the name .ask, so every
+   "open the page" link wore the card's gold ring. The card has its own name. */
+.askcard{background:var(--surface);border:1px solid var(--line);border-radius:18px;
+ padding:14px 16px;margin-bottom:12px;box-shadow:0 0 0 2px var(--gold),var(--shadow)}
+.askcard .q{font:700 15.5px Heebo,sans-serif;margin-bottom:4px}
+.askcard .sub{color:var(--dim);font-size:12px;margin-bottom:10px}
+.askcard .opts{display:flex;flex-wrap:wrap;gap:8px}
+.askcard .opts button{flex:1 1 44%;min-height:46px;border:0;border-radius:14px;cursor:pointer;
+ font:700 14px Heebo,sans-serif;color:#fff;padding:0 12px;
+ background:linear-gradient(180deg,#6ea8ff,var(--blue));
+ box-shadow:0 2px 6px rgba(66,133,244,.4),inset 0 1px 0 rgba(255,255,255,.3)}
+.askcard .opts button:active{background:linear-gradient(180deg,var(--blue),#1b63d6);box-shadow:none}
+.askcard .opts button[disabled]{opacity:.5}
+.minus{position:absolute;inset-inline-start:6px;top:6px;z-index:6;
+ width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+ font:700 20px/1 Heebo,sans-serif;color:#fff;cursor:pointer;touch-action:none;border:0;
+ background:linear-gradient(180deg,#ff7a6a,#e0402c);
+ box-shadow:0 2px 6px rgba(0,0,0,.35)}
+/* While arranging, the whole board is scaled to fit one screen. Dragging a
+   card used to stall two rows down because the drag could not scroll the page,
+   and the bottom of the list was simply out of reach. */
+.editbox{transform-origin:top center;transition:transform .18s ease}
+.grip{position:absolute;inset-inline-end:6px;top:6px;z-index:5;
+ width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
+ font-size:17px;color:#fff;cursor:grab;touch-action:none;
+ background:linear-gradient(180deg,#6ea8ff,var(--blue));
+ box-shadow:0 2px 6px rgba(0,0,0,.35)}
+/* Beside the grip, because a drag is not something a person discovers. Same
+   size as the grip so they read as one control with three ways to use it. */
+.nudge{position:absolute;top:6px;z-index:5;width:34px;height:34px;border-radius:10px;
+ display:grid;place-items:center;border:0;cursor:pointer;touch-action:none;
+ font:700 13px/1 Heebo,sans-serif;color:#fff;
+ background:linear-gradient(180deg,#8fb9ff,#3f7ddd);box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.nudge-up{inset-inline-end:46px}
+.nudge-down{inset-inline-end:86px}
+.nudge:active{transform:translateY(1px)}
+.nudge:focus-visible{outline:2px solid #fff;outline-offset:2px}
+#pH>.hasgrip{position:relative}
+.editbar{position:fixed;z-index:90;inset-inline:0;bottom:0;display:flex;align-items:center;
+ gap:12px;justify-content:space-between;
+ padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+ background:color-mix(in srgb,var(--surface) 96%,transparent);
+ border-top:1px solid var(--line);box-shadow:0 -8px 24px rgba(0,0,0,.25)}
+.editbar span{font:600 14px Heebo,sans-serif;color:var(--dim)}
+.editbar button{min-height:42px;padding:0 22px;border:0;border-radius:999px;cursor:pointer;
+ font:700 15px Heebo,sans-serif;color:#fff;
+ background:linear-gradient(180deg,#5cc36f,var(--green));
+ box-shadow:0 2px 6px rgba(52,168,83,.4),inset 0 1px 0 rgba(255,255,255,.3)}
+body.editing .editbox>*{animation:wobble .28s infinite alternate ease-in-out;
+ touch-action:none;cursor:grab}
+body.editing .bn{display:none}
+@keyframes wobble{from{transform:rotate(-.5deg)}to{transform:rotate(.5deg)}}
+@media(prefers-reduced-motion:reduce){body.editing .editbox>*{animation:none;
+ outline:1px dashed var(--accent);outline-offset:3px}}
+.stamp{text-align:center;color:var(--dim);font-size:11px;padding:10px 0 4px}
+.toast{position:fixed;z-index:80;inset-inline:16px;bottom:calc(76px + env(safe-area-inset-bottom));
+ margin-inline:auto;max-width:360px;text-align:center;
+ background:var(--surface);border:1px solid var(--line);border-radius:16px;
+ padding:14px 18px;font:600 15px Heebo,sans-serif;color:var(--ink);
+ box-shadow:0 12px 30px rgba(0,0,0,.45)}
+.toast.good{color:#fff;border:0;font:800 17px Heebo,sans-serif;
+ background:linear-gradient(180deg,#5cc36f,var(--green));
+ box-shadow:0 0 0 2px var(--gold),0 14px 34px rgba(52,168,83,.45)}
+.toast.bad{color:#fff;border:0;background:linear-gradient(180deg,#ff6a5e,var(--red))}
+.toast{cursor:pointer}
+.toast .toast-x{display:block;margin-top:8px;font:500 12.5px Heebo,sans-serif;opacity:.85}
+.undobar{position:fixed;z-index:81;inset-inline:12px;bottom:calc(76px + env(safe-area-inset-bottom));
+ margin-inline:auto;max-width:420px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;
+ background:var(--surface);border:1px solid var(--accent);border-radius:16px;padding:10px 12px;
+ font:600 15px Heebo,sans-serif;color:var(--ink);box-shadow:0 12px 30px rgba(0,0,0,.45)}
+.undobar[hidden]{display:none}
+.undobar .ub-t{flex:1 1 100%}
+.undobar button{flex:1;min-height:44px;border-radius:12px;border:1px solid var(--line);
+ background:transparent;color:var(--ink);font:700 15px Heebo,sans-serif}
+.undobar .ub-fix{background:var(--accent);color:#fff;border:0}
+.threadbar{display:flex;justify-content:flex-end;margin-bottom:8px}
+.threadbar{gap:8px}
+.cpall.pickon{color:#fff;background:linear-gradient(180deg,#5cc36f,var(--green));border-color:transparent}
+.picking .bub{cursor:pointer}
+.picking .bub:before{content:"";position:absolute;inset-inline-start:8px;top:10px;
+ width:20px;height:20px;border-radius:6px;border:2px solid var(--line);background:var(--surface)}
+.picking .bub{padding-inline-start:38px;position:relative}
+.picking .bub.picked:before{background:var(--green);border-color:var(--green);
+ content:"¹3";color:#fff;font:700 14px/17px Heebo,sans-serif;text-align:center}
+.cpall.readold{background:var(--green);color:#fff;border-color:var(--green)}
+.cpall.clearall{background:#f6e7c8;color:#8a5a12;border-color:var(--gold)}
+.cpall{font:600 12.5px Heebo,sans-serif;color:var(--accent);cursor:pointer;
+ background:var(--surface);border:1px solid var(--line);border-radius:999px;
+ min-height:34px;padding:0 14px}
+.cpall:active{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+/* Reviewer, 11.10, approved by Itzik: an answer could only be copied, and
+   passing it on meant copy, switch to WhatsApp, paste. .wash is one tap. */
+.cp,.wash{margin-inline-start:8px;font:600 11px Heebo,sans-serif;color:var(--accent);
+ background:transparent;border:1px solid var(--line);border-radius:999px;
+ padding:2px 9px;cursor:pointer;vertical-align:middle}
+.cp:active,.wash:active{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+/* Reviewer, 11.10, approved by Itzik: a writing box under 16px makes the
+   iPhone zoom in the moment it is touched, and the screen stays zoomed after
+   sending. 16px on a touch screen is the size it does not zoom at. */
+@media (pointer:coarse){
+ input:not([type=checkbox]):not([type=radio]):not([type=range]),textarea,select{font-size:max(16px,1em)!important}
+}
+.toast .toast-undo{display:block;margin:10px auto 0;padding:8px 22px;min-height:40px;border-radius:999px;
+ border:2px solid currentColor;background:transparent;color:inherit;font:700 15px Heebo,sans-serif;cursor:pointer}
+
+/* The lock covers everything, so it is defined before the app it hides. */
+.lock{display:none}
+/* 10.10: "אין שום סימן כשהטלפון בלי רשת". A strip on top of everything, not a
+   line he has to look for, and it goes away by itself when the signal is back. */
+#offBar{display:none;position:fixed;top:0;left:0;right:0;z-index:98;background:#b3261e;color:#fff;
+ font:600 15px/1.4 system-ui,sans-serif;text-align:center;padding:calc(env(safe-area-inset-top,0px) + 8px) 12px 8px}
+.offline #offBar{display:block}
+.locked .lock{display:grid;position:fixed;inset:0;z-index:99;
+ place-items:center;padding:24px;background:var(--bg)}
+.locked .wrap,.locked .bn,.locked .recwrap{display:none!important}
+.lockbox{width:100%;max-width:340px;text-align:center;
+ background:var(--surface);border:1px solid var(--line);border-radius:22px;
+ padding:30px 22px;box-shadow:var(--shadow)}
+.lockbox .em{font-size:44px;line-height:1;margin-bottom:12px}
+.lockbox b{display:block;font:700 20px Heebo,sans-serif;margin-bottom:6px}
+.lockbox small{display:block;color:var(--dim);font-size:13px;line-height:1.6;margin-bottom:18px}
+.lockbox button{width:100%;min-height:48px;border:0;border-radius:999px;cursor:pointer;
+ font:700 16px Heebo,sans-serif;color:#fff;
+ background:linear-gradient(180deg,#6ea8ff,var(--blue));
+ box-shadow:0 2px 8px rgba(66,133,244,.45),inset 0 1px 0 rgba(255,255,255,.35)}
+.lockbox button:active{background:linear-gradient(180deg,var(--blue),#1b63d6);box-shadow:none}
+.lockbox .alt{margin-top:10px;background:transparent;color:var(--accent);
+ box-shadow:none;font-weight:500;font-size:14px;min-height:38px}
+.lockrow{display:flex;gap:8px;margin-top:12px}
+.lockrow input{flex:1;min-height:46px;text-align:center;border-radius:14px;
+ border:1px solid var(--line);background:var(--bg);color:var(--ink);
+ font:600 18px Heebo,sans-serif;letter-spacing:.3em}
+.lockrow button{flex:0 0 92px}
+
+.conn{margin-inline-start:auto;font:700 15px Heebo,sans-serif;color:#fff;
+ background:linear-gradient(180deg,#5cc36f,var(--green));flex:0 0 auto;white-space:nowrap;
+ min-height:44px;padding:0 16px;border-radius:999px;border:0;cursor:pointer;
+ box-shadow:0 2px 6px rgba(52,168,83,.4),inset 0 1px 0 rgba(255,255,255,.35)}
+.conn:active{background:linear-gradient(180deg,var(--green),#2b8c45);box-shadow:none;transform:translateY(1px)}
+.conn.arr{margin-inline-start:0;margin-inline-end:8px;
+ background:linear-gradient(180deg,#6ea8ff,var(--blue));
+ box-shadow:0 2px 6px rgba(66,133,244,.4),inset 0 1px 0 rgba(255,255,255,.35)}
+.conn.arr:active{background:linear-gradient(180deg,var(--blue),#1b63d6)}
+#setBtn{margin-inline-start:0;background:linear-gradient(180deg,#9aa5b8,#6b7688);
+ box-shadow:0 2px 6px rgba(20,30,60,.3),inset 0 1px 0 rgba(255,255,255,.28)}
+#setBtn:active{background:linear-gradient(180deg,#6b7688,#4c5566)}
+.conn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* The one place he talks to me. Roomy on purpose: the four ways in were
+   scattered across a strip, a tile and another screen, and one of them floated
+   on top of the page. */
+.talk{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+ box-shadow:var(--shadow);padding:16px 16px 14px;margin-bottom:14px;
+ display:grid;grid-template-columns:auto 1fr;gap:12px 14px;align-items:center}
+.ways{grid-column:1 / -1;display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:2px}
+.quickwrite{grid-column:1 / -1;display:flex;gap:8px;margin-top:9px}
+/* A textarea that grows with the text up to about six lines, so a long
+   request can be read and fixed before it is sent instead of scrolling
+   out of a single line. The script sets the height; past the cap it scrolls. */
+.quickwrite{align-items:flex-end}
+.quickwrite textarea{flex:1;min-width:0;background:var(--sunk);color:var(--ink);
+ border:1px solid var(--line);border-radius:12px;padding:12px 13px;
+ font:400 15.5px Heebo,sans-serif;line-height:1.4;resize:none;
+ max-height:9.5em;overflow-y:auto;box-sizing:border-box;min-height:calc(2.8em + 26px)}
+/* 11.10: on the phone the hint wrapped to a second line that one row cut off,
+   so it was swallowed. Two rows and a clear colour keep it whole and readable. */
+.quickwrite textarea::placeholder{color:var(--ink);opacity:.62;font-weight:400}
+.quickwrite button{min-height:46px}
+.quickwrite textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.quickwrite button{flex:0 0 auto;background:var(--accent);color:var(--on-accent);border:0;
+ border-radius:12px;padding:0 18px;font:700 15px Heebo,sans-serif;cursor:pointer}
+.quickwrite button:active{transform:scale(.97)}
+.way{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;
+ background:var(--sunk);border:1px solid var(--line);border-radius:14px;padding:11px 6px 9px}
+.way b{font:700 13px Heebo,sans-serif;color:var(--ink)}
+.way small{font:300 11px Heebo,sans-serif;color:var(--dim)}
+.way .wi{font-size:21px;line-height:1}
+.wbig{grid-column:1 / -1;flex-direction:row;justify-content:center;gap:10px;text-decoration:none;border:2px solid var(--accent);background:var(--accent-soft)}
+.wbig span{display:flex;flex-direction:column;align-items:flex-start}
+.way:active{background:var(--accent-soft);border-color:var(--accent)}
+.way:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mic{width:98px;height:98px;flex:0 0 98px;border-radius:50%;border:0;padding:0;cursor:pointer;position:relative;
+ display:grid;place-items:center;background:conic-gradient(from 0deg,var(--blue),var(--red),var(--yellow),var(--green),var(--blue));
+ box-shadow:0 12px 28px rgba(66,133,244,.35)}
+.mic:before{content:"";position:absolute;inset:6px;border-radius:50%;
+ background:radial-gradient(circle at 34% 26%,#ffffff 0%,var(--surface) 42%,
+  color-mix(in srgb,var(--surface) 82%,#000) 100%);
+ box-shadow:inset 0 -6px 12px rgba(0,0,0,.18),inset 0 4px 8px rgba(255,255,255,.9)}
+.mic:active{transform:translateY(2px) scale(.97)}
+.mic{transition:transform .09s ease}
+.mic svg{position:relative;z-index:1;width:42px;height:42px}
+.mic.on{animation:mpulse 1.2s infinite}
+.mic.on:before{background:#fdecea}
+@keyframes mpulse{50%{box-shadow:0 12px 40px rgba(234,67,53,.6)}}
+.mic[disabled]{opacity:.55;cursor:default}
+.vtxt{flex:1;display:flex;flex-direction:column;justify-content:center}
+.vtxt b{font:700 16px Heebo,sans-serif}
+.vtxt small{color:var(--dim);font-size:12px;line-height:1.5;font-weight:300}
+.urg{flex:0 0 66px;cursor:pointer;border-radius:20px;color:var(--blue);
+ font:700 12.5px Heebo,sans-serif;line-height:1.25;
+ background:var(--surface);border:2px solid var(--blue);box-shadow:var(--shadow)}
+.urg:active{background:linear-gradient(180deg,#6ea8ff,var(--blue));color:#fff}
+.urg span{font-size:19px;display:block;margin-bottom:2px}
+
+.row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px 8px;padding:2px 2px 12px;
+ justify-items:center}
+.row::-webkit-scrollbar{display:none}
+.ic{width:100%;display:flex;flex-direction:column;align-items:center;gap:5px;
+ font:500 10.5px Heebo,sans-serif;color:var(--dim);text-decoration:none;background:none;border:0;
+ padding:0;cursor:pointer}
+.ic .c{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;position:relative;
+ box-shadow:0 8px 16px rgba(20,30,60,.22),inset 0 2px 0 rgba(255,255,255,.5),inset 0 -3px 0 rgba(0,0,0,.16)}
+.ic .c:after{content:"";position:absolute;top:6px;left:12px;right:12px;height:15px;border-radius:50%;
+ background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,0))}
+.ic svg{width:28px;height:28px;position:relative;z-index:1}
+.ic:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:12px}
+.c-yt{background:#ff0033}.c-tt{background:#111}.c-fb{background:#1877f2}
+.c-ig{background:linear-gradient(45deg,#f9ce34,#ee2a7b,#6228d7)}
+.c-nt{background:linear-gradient(45deg,#ff0033,#ee2a7b,#1877f2)}
+.c-wa{background:#25d366}.c-gm{background:#fff;border:1px solid var(--line)}
+.c-st{background:linear-gradient(160deg,#4285F4,#0b57d0)}
+.c-pg{background:linear-gradient(160deg,#a78bfa,#6d28d9)}
+/* נר. Night behind the flames, the way the site itself looks. */
+.c-nr{background:linear-gradient(160deg,#243a6b,#0B1330)}
+.c-sl{background:linear-gradient(160deg,#f472b6,#be185d)}
+.c-el{background:linear-gradient(160deg,#1f8f7d,#14675a)}
+.c-hs{background:linear-gradient(160deg,#ef8f00,#b26a00)}
+.c-rn{background:linear-gradient(160deg,#d81b60,#8e1046)}
+/* קבלות. Paper, not a brand colour: the page behind it is a ledger. */
+.c-kb{background:linear-gradient(160deg,#34d399,#047857)}
+.c-vd{background:linear-gradient(160deg,#fbbf24,#d97706)}
+.c-hb{background:linear-gradient(160deg,#fbbf24,#b45309)}
+.c-nk{background:linear-gradient(160deg,#a78bfa,#0f4c6b)}
+.c-vs{background:linear-gradient(160deg,#22d3ee,#0e7490)}
+.c-add{background:var(--surface);border:2px dashed var(--line);box-shadow:none}
+.c-add:after{display:none}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:2px}
+.gt{border:0;text-align:start;cursor:pointer;border-radius:var(--r);padding:14px 15px;color:#fff;min-height:88px;
+ position:relative;overflow:hidden;isolation:isolate;
+ transition:transform .09s ease,box-shadow .09s ease,filter .09s ease;
+ display:flex;flex-direction:column;justify-content:space-between;font-family:Heebo,sans-serif;
+ text-shadow:0 1px 2px rgba(0,0,0,.28);
+ box-shadow:0 10px 22px rgba(20,30,60,.22),
+  inset 0 1px 0 rgba(255,255,255,.55),
+  inset 0 -3px 8px rgba(0,0,0,.22),
+  inset 0 0 0 1px rgba(255,255,255,.14)}
+/* The sheen: a soft band of light across the upper half, like moulded plastic. */
+.gt:after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+ background:linear-gradient(180deg,rgba(255,255,255,.34) 0%,rgba(255,255,255,.10) 42%,
+  rgba(255,255,255,0) 55%,rgba(0,0,0,.10) 100%)}
+.gt:active{transform:translateY(2px) scale(.985);filter:saturate(1.15) brightness(.94);
+ box-shadow:0 3px 8px rgba(20,30,60,.26),
+  inset 0 2px 8px rgba(0,0,0,.32),
+  inset 0 0 0 1px rgba(255,255,255,.10)}
+.gt.dragging{opacity:.65;transform:scale(1.04);box-shadow:0 18px 34px rgba(0,0,0,.4)}
+.gt.dragover{outline:2px dashed rgba(255,255,255,.75);outline-offset:-6px}
+#pH>.dragging{opacity:.6;transform:scale(1.02);outline:2px solid var(--accent);
+ outline-offset:4px;border-radius:16px}
+#pH>.dragover{outline:2px dashed var(--accent);outline-offset:4px;border-radius:16px}
+.gt b{font:700 14px Heebo,sans-serif;display:block}
+.gt small{font-size:10.5px;opacity:.92;font-weight:300}
+.gt:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.g1{background:linear-gradient(150deg,#5aa9fb,var(--blue))}
+.g2{background:linear-gradient(150deg,#ff8a80,var(--red))}
+.g3{background:linear-gradient(150deg,#ffd54f,#f9a825);color:#3b2a00}
+.g4{background:linear-gradient(150deg,#7d8ba1,#3f4a5c)}
+.gt:active{transform:translateY(2px) scale(.985);box-shadow:0 4px 10px rgba(20,30,60,.22)}
+.gt:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.g5{background:linear-gradient(150deg,#b39ddb,#673ab7)}
+.g6{background:linear-gradient(150deg,#80deea,#00838f)}
+.g7{background:linear-gradient(150deg,#7bd88f,#1e8e4a)}
+.g8{background:linear-gradient(150deg,#ffb74d,#e65100)}
+.g9{background:linear-gradient(150deg,#f48fb1,#ad1457)}
+.g10{background:linear-gradient(150deg,#ffe082,#f57f17)}
+.g11{background:linear-gradient(150deg,#b9f6ca,#00897b)}
+.g12{background:linear-gradient(150deg,#d1c4e9,#5e35b1)}
+.g13{background:linear-gradient(150deg,#ffd27f,#ef6c00)}
+.g14{background:linear-gradient(150deg,#a5d6a7,#2e7d32)}
+.g15{background:linear-gradient(150deg,#90caf9,#1565c0)}
+.gRec{background:linear-gradient(150deg,#ffd54f,#e06a00)}
+.gt.tdown,.c.tdown{animation:tdown 1s ease-in-out infinite}
+@keyframes tdown{0%,100%{filter:none;box-shadow:0 0 0 0 rgba(239,83,80,.9)}50%{filter:brightness(1.35);box-shadow:0 0 0 8px rgba(239,83,80,0)}}
+.tenalert{display:block;width:100%;text-align:start;border:0;border-radius:14px;padding:12px 14px;margin:0 0 10px;cursor:pointer;
+ color:#fff;background:linear-gradient(180deg,#ef5350,#b71c1c);animation:tdown 1s ease-in-out infinite}
+.tenalert b{display:block;font:700 15px Heebo,sans-serif}
+.tenalert small{display:block;font-size:12px;opacity:.95}
+.idea .itag{display:block;font-size:11px;color:var(--dim);margin-bottom:3px}
+.grid .gt,#blkIcons .ic{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+#blkIcons .ic.tlift{opacity:.3}
+.tarr{grid-column:1/-1;justify-self:start;display:block;margin:0;border:0;background:none;color:var(--dim);font:600 12.5px Heebo,sans-serif;cursor:pointer;padding:4px 2px}
+.tedit .gt{position:relative;animation:wobble .28s infinite alternate ease-in-out}
+.grid .gt.tlift{opacity:.3}
+#tGhost{position:fixed;z-index:80;pointer-events:none;margin:0;transform:scale(1.08);box-shadow:0 18px 34px rgba(0,0,0,.4);opacity:.95;animation:none}
+body.tdrag{-webkit-user-select:none;user-select:none}
+.gt .tx{display:none;position:absolute;top:6px;inset-inline-end:6px;width:28px;height:28px;border-radius:50%;
+ background:#d93025;color:#fff;border:2px solid #fff;font:700 16px/22px Heebo,sans-serif;padding:0;z-index:2;cursor:pointer;text-align:center}
+.tedit .gt .tx{display:block}
+#tileBar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--surface);color:inherit;border-top:1px solid var(--line);box-shadow:0 -2px 12px rgba(0,0,0,.18);
+ padding:10px 14px calc(10px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px}
+#tileBar small{font-size:12.5px;color:var(--dim)}
+#tileBar .row2{display:flex;gap:8px}
+#tileBar button{flex:1;border:0;border-radius:12px;padding:11px;font:700 14px Heebo,sans-serif;cursor:pointer}
+#tileBar .done{background:var(--blue,#1a73e8);color:#fff}
+#tileBar .back{background:#eee;color:#333}
+@media(prefers-reduced-motion:reduce){.tedit .gt{animation:none}}
+.gt .gi{height:1.35em;width:auto;vertical-align:-0.3em;margin-inline-end:2px}
+.gNer{background:linear-gradient(150deg,#f0a64a,#0f1a3a)}
+.gReel{background:linear-gradient(150deg,#e2574c,#2a1240)}
+.gFut{background:linear-gradient(150deg,#3a8fd9,#16243f)}
+.gSelf{background:linear-gradient(150deg,#d98a3a,#3f2416)}
+.meTxt{white-space:pre-wrap;text-align:right;line-height:1.7;font-size:17px;margin:10px 0 14px}
+.gLaw{background:linear-gradient(150deg,#c0623a,#3a1d12)}
+.gStk{background:linear-gradient(150deg,#d6a43a,#4a1d5c)}
+.stkg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}
+.stkc{background:#26222b;border:0;border-radius:12px;padding:6px 4px;color:#f2ede4;font:600 13px system-ui;position:relative}
+.stkc img{width:100%;aspect-ratio:1;object-fit:contain;display:block}
+.stkc.done{outline:2px solid #3fb77a}
+.stkTop{position:sticky;top:-18px;z-index:2;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:8px;margin:-18px -16px 0;padding:12px 16px 8px}
+.stkTop .yx{opacity:.8;min-height:36px;padding:6px 10px}
+.stkd img{width:60%;max-width:240px;display:block;margin:6px auto}
+.stkx{background:rgba(127,127,127,.13);color:inherit;border-radius:10px;padding:8px 10px;margin:8px 0;font-size:15px;line-height:1.5;text-align:right}
+.stkx i{opacity:.65;font-style:normal;font-size:13px}
+.gOcc{background:linear-gradient(150deg,#2bb39a,#123d3a)}
+.gLec{background:linear-gradient(150deg,#c0562b,#4a1d10)}
+.gTalk{background:linear-gradient(150deg,#c0392b,#4a1410)}
+.gManiv{background:linear-gradient(150deg,#3a8fd6,#123150)}
+.gMed{background:linear-gradient(150deg,#4fb3a9,#123a4a)}
+.gInv{background:linear-gradient(150deg,#d9a441,#3a2a12)}
+.gShop{background:linear-gradient(150deg,#3aa55d,#1f6f8b)}
+.gStoryArc{background:linear-gradient(150deg,#d6249f,#285aeb)}
+.gMyDay{background:linear-gradient(150deg,#f0a63a,#9c3d12)}
+.tdSec{font:700 13px Heebo,sans-serif;margin-top:6px;opacity:.85}
+.tdRow{background:#f3f5f8;border-radius:12px;padding:9px 11px;font:400 15px/1.45 Heebo,sans-serif}
+.tdRow i{font-style:normal;font-weight:700;margin-left:6px}
+.tdRow.done{opacity:.5;text-decoration:line-through}
+.tdAdd{display:flex;gap:6px}
+.tdAdd input{flex:1;min-width:0;border:1px solid #cfd6df;border-radius:10px;padding:9px 10px;font:400 15px Heebo,sans-serif}
+.tdAdd button{border:0;border-radius:10px;padding:0 14px;background:#9c3d12;color:#fff;font:700 14px Heebo,sans-serif}
+.gWin{background:linear-gradient(150deg,#f2c94c,#7a2e12)}
+.gPen{background:linear-gradient(150deg,#5a8fd0,#1d2f55)}
+.gCPlan{background:linear-gradient(150deg,#e8743b,#6b2f7a)}
+.g16{background:linear-gradient(150deg,#f8bbd0,#c2185b)}
+.g17{background:linear-gradient(150deg,#c5e1a5,#558b2f)}
+.g18{background:linear-gradient(150deg,#80deea,#00838f)}
+.ap{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:8px 0}
+.ap .d{font-weight:700;font-variant-numeric:tabular-nums}
+.ap .w,.ap .n{color:var(--dim);font-size:14px;margin-top:3px}
+.ap img{display:block;width:100%;max-width:240px;border-radius:10px;margin-top:8px}
+.tk{display:flex;align-items:center;gap:12px;padding:12px;margin:8px 0;border-radius:12px;background:rgba(127,127,127,.12);cursor:pointer;font-size:1.05em}
+.tk input{width:24px;height:24px;flex:0 0 24px}
+.tk.done span{text-decoration:line-through;opacity:.55}
+.tk.tnc{cursor:default}.tk.tnc span{flex:1}
+.tncode{user-select:all;letter-spacing:1px}.tncopy{margin-top:4px;padding:4px 10px;border-radius:8px;border:0;background:#1e3a5f;color:#9ecbff;font-weight:700}
+.tnopen{flex:none;padding:8px 14px;border-radius:10px;background:#1e3a5f;color:#9ecbff;text-decoration:none;font-weight:700}
+@keyframes tkpop{0%{transform:scale(1)}45%{transform:scale(1.06)}100%{transform:scale(1)}}
+.tk.pop{animation:tkpop .3s ease-out}
+@media(prefers-reduced-motion:reduce){.tk.pop{animation:none}}
+.rem{padding:10px 12px;margin:8px 0;border-radius:12px;background:rgba(127,127,127,.12)}
+.rem b{display:block;font-size:1.05em}
+.rem .w{font-size:.85em;opacity:.8}
+/* Not .sent: that is the chat bubble row (flex), which squeezed a sent reminder to one word a line, 8.10. */
+.rem.remsent{opacity:.6}
+.rem.remsent:has(.remreply[open]){opacity:1}
+.remreply{margin-top:8px}
+.remreply summary{cursor:pointer;font-weight:700;padding:6px 0}
+.rem .remknow{margin-top:8px;padding:8px 16px;border:0;border-radius:10px;background:var(--yellow);color:#000;font:700 15px Heebo,sans-serif}
+.rem .remdel{margin-top:8px;margin-inline-start:6px;padding:8px 14px;border:1px solid var(--line,#555);border-radius:10px;background:transparent;color:inherit;font:600 14px Heebo,sans-serif}
+/* The three choices behind the יהודה tile. Its own sheet, so it borrows
+   nothing from the panes and cannot disturb them. */
+.ysheet{position:fixed;inset:0;z-index:9999;background:rgba(10,14,22,.55);
+ display:flex;align-items:flex-end;justify-content:center;padding:14px}
+.ycard{background:#fff;color:#16202c;width:100%;max-width:420px;
+ border-radius:18px;padding:18px 16px 14px;display:flex;flex-direction:column;gap:9px;
+ box-shadow:0 -8px 40px rgba(0,0,0,.35);
+ /* 5.10: a long text (אני מספר על עצמי) grew past the top of the screen and
+    its opening could not be reached. The card now scrolls inside itself. */
+ max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.ycard>*{flex-shrink:0}
+.ycard b{font:700 16px Heebo,sans-serif}
+.ycard small{font-size:12px;opacity:.7;margin-bottom:4px}
+.capTxt{white-space:pre-wrap;user-select:text;-webkit-user-select:text;background:#f3f5f8;border-radius:12px;padding:12px;font:400 15px/1.55 Heebo,sans-serif;max-height:55vh;overflow:auto}
+.arEx{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:start}
+.arEx>div{display:flex;flex-direction:column;gap:5px}
+.arEx .gt{cursor:default;min-height:72px;pointer-events:none}
+.arEx .yb{display:block;text-align:center;pointer-events:none;margin-top:12px;padding:11px 6px;min-height:0}
+.arEx i{font:500 11.5px Heebo,sans-serif;font-style:normal;opacity:.75;text-align:center}
+.arPick{display:flex;gap:6px}
+.arPick .yb{flex:1;padding:9px 4px;min-height:40px;font-size:13.5px}
+.arPick .yb.on{background:#16202c;color:#fff}
+/* 6.10: Home Style shipments screens */
+.ship .srow{border-bottom:1px solid rgba(128,128,128,.25);padding:8px 0;font:500 14px/1.45 Heebo,sans-serif}
+.ship .srow b{font:700 14px Heebo,sans-serif}
+.ship .srow small{display:inline}
+.ship .sdet{margin-top:6px;padding:8px;border-radius:10px;background:rgba(128,128,128,.12)}
+.ship .stag{display:inline-block;border-radius:8px;padding:1px 8px;margin-inline-end:6px;font:700 11px Heebo,sans-serif;color:#fff}
+.ship .stag.red{background:#c62828}.ship .stag.amber{background:#ef8f00}.ship .stag.track{background:#757575}
+.ship .scnt{display:flex;gap:6px}
+.ship .scnt div{flex:1;border-radius:12px;padding:8px 4px;text-align:center;color:#fff;font:700 22px Heebo,sans-serif}
+.ship .scnt small{display:block;font-size:11px;opacity:.95;margin:0}
+.shipline{display:block;width:100%;box-sizing:border-box;border:0;border-radius:14px;padding:12px 14px;margin:0 0 10px;color:#fff;font:700 17px/1.3 Heebo,sans-serif;text-align:start;cursor:pointer}
+.shipline.red{background:#c62828}.shipline.amber{background:#ef8f00}.shipline.green{background:#2e7d32}
+.shipline small{display:block;font:500 12px Heebo,sans-serif;opacity:.95}
+.ship .sbig{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+.ship .sbig button{border:0;border-radius:14px;padding:16px 8px;min-height:84px;color:#fff;font:700 17px/1.3 Heebo,sans-serif;cursor:pointer}
+.ship .sbig small{display:block;font:500 12px Heebo,sans-serif;opacity:.95;margin:0}
+.ship .sact{display:flex;gap:8px;margin-top:6px}
+.ship .sact a,.ship .sact button{flex:1;text-align:center;border:0;border-radius:10px;padding:9px 6px;font:700 14px Heebo,sans-serif;text-decoration:none;color:#fff;background:#14675a;cursor:pointer}
+.ship .sact button{background:#2e7d32}
+.ship .shipq{width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif}
+.micSteps{margin:2px 0 6px;padding-inline-start:20px;font:500 15px/1.5 Heebo,sans-serif}
+/* 30.9: the short text was near invisible on the dark theme ("אני רוצה לראות
+   איך אני אראה"). It is now shown as the WhatsApp bubble Yehuda will get. */
+.ywa{background:#efeae2;border-radius:12px;padding:10px;max-height:40vh;overflow:auto;margin-bottom:4px}
+.ywa i{display:block;font:600 11px Heebo,sans-serif;font-style:normal;color:#54656f;text-align:center;margin-bottom:8px}
+.yshort{white-space:pre-line;font:15px/1.5 Heebo,sans-serif;color:#111b21;
+ background:#d9fdd3;border-radius:10px 0 10px 10px;padding:9px 11px 18px;position:relative;
+ margin-inline-start:14%;box-shadow:0 1px .5px rgba(11,20,26,.13)}
+.yshort u{position:absolute;bottom:4px;left:8px;text-decoration:none;font-size:11px;color:#667781}
+.yb{border:0;border-radius:12px;padding:13px;font:600 15px Heebo,sans-serif;
+ background:#e8eef6;color:#16202c;cursor:pointer;min-height:48px}
+.yb1{background:linear-gradient(150deg,#90caf9,#1565c0);color:#fff}
+.yb2{background:linear-gradient(150deg,#7bd88f,#1e8e4a);color:#fff}
+.yb3{background:linear-gradient(150deg,#e8a38a,#b0482c);color:#fff}
+.ybwa{display:block;width:100%;text-align:center;text-decoration:none;background:linear-gradient(150deg,#5ee28a,#128c4a);color:#fff}
+a.yb4{display:block;text-align:center;text-decoration:none;background:linear-gradient(150deg,#ffd76a,#d49a00);color:#3a2e00}
+.yx{background:transparent;opacity:.6;min-height:40px;padding:8px}
+.ygap{margin-top:14px}
+/* 8.10: the way out was only at the end of a long sheet (the shipments list
+   ran to dozens of orders). Every sheet now also has a round X at the top that
+   stays in view while the sheet scrolls; it presses the sheet's own close. */
+.ytopx{position:sticky;top:0;z-index:3;align-self:flex-end;width:40px;height:40px;
+ margin-bottom:-49px;border:0;border-radius:50%;background:#e8eef6;color:#16202c;
+ font:700 18px/40px Heebo,sans-serif;text-align:center;cursor:pointer;
+ box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.ycard.hasx>b:first-of-type{padding-inline-end:46px}
+.yb:active{transform:translateY(1px)}
+.ytoast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:10000;
+ background:#16202c;color:#fff;padding:10px 16px;border-radius:12px;
+ font:600 13px Heebo,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+@media(min-width:520px){.ysheet{align-items:center}}
+/* The last thing he asked me for, sitting on the home screen itself. He could
+   not find the print page through search and asked to have it pinned. */
+/* The screen gets crowded. He asked me to notice which buttons he never uses,
+   offer to take them off, and keep one button that remembers what we removed. */
+.tidy{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+ padding:13px 15px;margin-top:14px;box-shadow:var(--shadow)}
+.tidy b{display:block;font:800 15px Heebo,sans-serif;margin-bottom:4px}
+.tidy small{display:block;color:var(--dim);font-size:13px;line-height:1.5;margin-bottom:10px}
+.tidy .row2{display:flex;flex-wrap:wrap;gap:8px}
+.tidy button{border:1px solid var(--line);background:var(--bg);color:var(--ink);
+ border-radius:999px;padding:9px 16px;font:800 13.5px Heebo,sans-serif;cursor:pointer}
+/* Same half inversion as the back bar had, same fix. */
+.tidy button.go{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+/* A card about something to listen to gets a button he can tap, not a link he
+   has to go and find. preload none, so opening the screen does not pull two
+   and a half megabytes before he has decided to listen. */
+.tune{margin-top:10px;padding:10px 12px;border-radius:14px;background:var(--sunk);
+ border:1px solid var(--line)}
+.tune b{display:block;font:700 14.5px Heebo,sans-serif}
+.tune small{display:block;color:var(--dim);font-size:12.5px;margin:2px 0 8px;line-height:1.5}
+.tune audio{width:100%;height:38px}
+.hidemsg{margin-inline-start:8px;background:none;border:0;cursor:pointer;color:var(--dim);
+ font:700 16px/1 Heebo,sans-serif;padding:0 4px}
+.hidemsg:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.allmsgs{display:block;width:100%;margin:-4px 0 10px;padding:11px 14px;cursor:pointer;
+ background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:14px;
+ font:500 13.5px Heebo,sans-serif}
+.allmsgs:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/*
+  The bar is meant to be the inverse of the page: dark on a light screen, light
+  on a dark one. It took its background from --ink and its text from a fixed
+  white, which is only half an inversion. In night mode --ink is nearly white,
+  so the bar became white text on a white bar: Itzik saw it as washed out and
+  see through, and he was reading a button he could barely make out.
+
+  The text now inverts with the background instead of being pinned, so the
+  contrast holds in both themes.
+*/
+.backbar{display:block;width:100%;margin:0 0 14px;padding:12px 16px;border:0;cursor:pointer;
+ border-radius:var(--r);background:var(--ink);color:var(--ground);
+ font:800 15px Heebo,sans-serif;text-align:start}
+.backbar:active{transform:translateY(1px)}
+/* "קח אותי לשם" מתחת להודעה, והכפתור הצף שמחזיר לאותו מקום. איציק, 30.9. */
+.gotile{display:block;width:100%;margin:8px 0 0;padding:11px 14px;border:0;cursor:pointer;
+ border-radius:var(--r);background:var(--ink);color:var(--ground);
+ font:800 15px Heebo,sans-serif;text-align:start}
+#goBack{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
+ z-index:9999;padding:13px 22px;border:0;border-radius:999px;cursor:pointer;
+ background:var(--ink);color:var(--ground);font:800 16px Heebo,sans-serif;
+ box-shadow:0 6px 22px rgba(0,0,0,.35)}
+#goBack[hidden]{display:none}
+/* שורת התגובה שיושבת בתחתית כל מסך פנימי. ביקש ב-19.09: תמיד תן לי אפשרות להגיב. */
+/*
+  Inner screens, 26.9. Every screen used to open with the title, the version
+  lines, the avatar on a row of its own, a green refresh bar and a white "close
+  and back home" bar: a third of the phone before the first line of content,
+  and three ways home. Now one slim bar sticks to the top: back on the right,
+  the screen's name, refresh on the left. The home screen keeps its header.
+*/
+.panebar{display:none}
+body.inner .panebar{display:flex;position:sticky;top:0;z-index:60;align-items:center;gap:10px;
+ margin:-18px -16px 14px;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
+ background:var(--ground);border-bottom:1px solid var(--line);box-shadow:var(--shadow)}
+.panebar .pb-back{flex:0 0 auto;min-height:44px;padding:0 16px 0 12px;border:0;border-radius:999px;cursor:pointer;
+ background:var(--accent-soft);color:var(--accent);font:700 16px Heebo,sans-serif;display:flex;align-items:center;gap:4px}
+.panebar .pb-back svg{width:20px;height:20px}
+.panebar .pb-t{flex:1;min-width:0;font:800 21px/1.2 Heebo,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.panebar .pb-r{flex:0 0 44px;height:44px;border:1px solid var(--line);border-radius:50%;background:var(--surface);
+ color:var(--dim);cursor:pointer;display:grid;place-items:center}
+.panebar .pb-r svg{width:20px;height:20px}
+.panebar button:active{transform:scale(.96)}
+/*
+  Itzik, 26.9: "always try to centre the text; right aligned is fine, and some
+  things can be centred." Short lines that stand alone are centred: the screen's
+  name, the explanation under it, an empty screen, a status line, the reply
+  fold, headings. Anything read as a paragraph or a list stays right aligned.
+*/
+.panebar .pb-t{text-align:center}
+.rephint,.empty,.hint,.msgsaid,h2,details.replybar>summary{text-align:center}
+details.replybar>summary{justify-content:center}
+body.inner .hd,body.inner #reloadBtn,body.inner section>.backbar,body.inner #welcomeCard,body.inner #installBar{display:none!important}
+body.inner section:not(#pH)>h2:first-of-type{display:none}
+/* Room under the last line, so the floating microphone never sits on it. */
+body.inner .wrap{padding-bottom:190px}
+/* The reply box folds into one line until he opens it. */
+details.replybar>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;
+ font:700 16px Heebo,sans-serif;color:var(--accent)}
+details.replybar>summary::-webkit-details-marker{display:none}
+details.replybar:not([open]){padding:12px 14px}
+details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
+.replybar{margin:22px 0 4px;padding:14px;border:1px solid var(--line);border-radius:var(--r);
+ background:var(--surface)}
+.replybar .rlead{font:800 19px Heebo,sans-serif;color:var(--ink);margin-bottom:2px}
+.replybar .rbox{margin:0}
+/* The reply box, sized for his thumbs. 19.09: "מיקרופון כפתור גדול, יש לי אצבעות עבות". */
+.rbox .bmic{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;
+ min-height:72px;margin-top:12px;border-radius:18px;background:var(--accent);color:var(--on-accent);
+ border:0;font:800 22px Heebo,sans-serif}
+.rbox .rform{margin-top:12px}
+.rbox .rform textarea{min-height:84px;font:400 19px Heebo,sans-serif;padding:14px;border-radius:14px}
+.rbox .rrow{gap:10px}
+.rbox .rrow .rb,.rbox .rform button{flex:1 1 40%;min-height:58px;padding:10px 16px;
+ font:700 18px Heebo,sans-serif;border-radius:14px}
+.rbox .rform button[type=submit]{align-self:stretch}
+.rbox .bmic,.rbox .rform button[type=submit]{color:var(--ground)}
+.rbox .rform .rpaste{background:var(--surface);color:var(--accent);border:1px solid var(--line)}
+.rbox .rsaid{font-size:16px}
+.rbox .rb:focus-visible,.rbox button:focus-visible,.rbox textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.gsearch{width:100%;margin:14px 0 0;padding:13px 16px;border:1px solid var(--line);border-radius:var(--r);
+ background:var(--surface);color:var(--ink);font:400 15px Heebo,sans-serif}
+.gres{margin-top:10px}
+.gres .r{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+ padding:12px 14px;margin-bottom:9px;cursor:pointer}
+.gres .r b{display:block;font:800 13px Heebo,sans-serif;color:var(--accent);margin-bottom:3px}
+.gres .r small{display:block;color:var(--dim);font-size:12.5px;margin-bottom:4px}
+.gres .r span{display:block;font-size:14.5px;line-height:1.5}
+.gres .none{color:var(--dim);font-size:14px;padding:8px 2px}
+.spec{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+ padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.spec .w{color:var(--dim);font-size:12.5px}
+.spec b{display:block;font:800 16px Heebo,sans-serif;margin:4px 0 3px}
+.spec small{display:block;color:var(--dim);font-size:13.5px;line-height:1.5}
+.cptext{background:var(--bg);border:1px dashed var(--line);border-radius:10px;
+ padding:11px 13px;margin-top:10px;font-size:15px;line-height:1.6;white-space:pre-wrap}
+.cpbtn{display:inline-block;margin-top:10px;margin-inline-end:8px;border:1px solid var(--line);
+ background:var(--surface);color:var(--ink);border-radius:999px;padding:10px 18px;
+ font:800 14px Heebo,sans-serif;cursor:pointer}
+.spec a{display:inline-block;margin-top:10px;background:#1a73e8;color:#fff;text-decoration:none;
+ border-radius:999px;padding:10px 18px;font:800 14px Heebo,sans-serif}
+/* One documented reply. Their words sit in a quiet box, mine in a green one,
+   so he can tell at a glance which half is his voice going out. */
+.rep .said{background:var(--bg);border:1px solid var(--line);border-radius:10px;
+ padding:10px 12px;margin-top:8px;font-size:14.5px;line-height:1.6;white-space:pre-wrap}
+.rep .mine{background:rgba(46,125,50,.10);border:1px solid rgba(46,125,50,.35)}
+.rep .lbl{display:block;color:var(--dim);font-size:12px;font-weight:800;margin-bottom:3px}
+.rep .tagnew{display:inline-block;background:#ef6c00;color:#fff;border-radius:999px;
+ padding:2px 10px;font:800 12px Heebo,sans-serif;margin-inline-start:8px}
+/* A tile with something waiting inside it. He asked for the screen to tell him
+   where to look: the reports tile when a report he has not opened is up, the
+   pill tile when a dose is due. It stops the moment he opens that screen. */
+@keyframes tileglow{
+ 0%,100%{box-shadow:0 10px 22px rgba(20,30,60,.22),0 0 0 0 rgba(234,67,53,.5),
+  inset 0 1px 0 rgba(255,255,255,.55),inset 0 -3px 8px rgba(0,0,0,.22)}
+ 55%{box-shadow:0 10px 22px rgba(20,30,60,.22),0 0 0 9px rgba(234,67,53,0),
+  inset 0 1px 0 rgba(255,255,255,.55),inset 0 -3px 8px rgba(0,0,0,.22)}
+}
+.gt.glow{animation:tileglow 2.1s ease-out infinite}
+.gt .flag{position:absolute;top:9px;inset-inline-end:11px;background:var(--red);color:#fff;
+ font:700 10.5px Heebo,sans-serif;padding:2px 8px;border-radius:999px;text-shadow:none}
+@media(prefers-reduced-motion:reduce){.gt.glow{animation:none}}
+/* On air. He asked to see that someone is actually working, and that an answer
+   can land on its own without waiting for the other nine. The strip talks to
+   version.json every forty seconds, so it moves while the page stays put. */
+.live{display:flex;align-items:center;gap:11px;padding:13px 18px;margin:0 0 14px;
+ background:var(--surface);border:1px solid var(--line);border-radius:18px;
+ font-size:16px;box-shadow:var(--shadow)}
+.live b{font-weight:500;font-size:17px}
+.live.busy{border-color:var(--red);box-shadow:0 8px 20px rgba(234,67,53,.18)}
+.live span:last-child{color:var(--dim);font-weight:300;margin-inline-start:auto;
+ font-size:13.5px;text-align:end;font-variant-numeric:tabular-nums}
+.live .pulse{width:13px;height:13px;flex:0 0 13px;border-radius:50%;background:var(--green);
+ box-shadow:0 0 0 0 rgba(52,168,83,.55);animation:onair 2s infinite}
+.live.busy .pulse{background:var(--red);box-shadow:0 0 0 0 rgba(234,67,53,.55)}
+@keyframes onair{
+ 0%{box-shadow:0 0 0 0 rgba(52,168,83,.5)}
+ 70%{box-shadow:0 0 0 11px rgba(52,168,83,0)}
+ 100%{box-shadow:0 0 0 0 rgba(52,168,83,0)}
+}
+@media(prefers-reduced-motion:reduce){.live .pulse{animation:none}}
+/* The idea list. Each one is a real thing the screen could do, with a button
+   that asks for it, because a new user does not know what to ask for until he
+   sees a sentence that describes his own week. */
+.idea{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+ padding:15px 17px;margin-bottom:11px;box-shadow:var(--shadow)}
+.idea b{display:block;font-size:16px;font-weight:500;margin-bottom:4px}
+.idea p{margin:0 0 11px;font-size:14px;color:var(--dim);font-weight:300;line-height:1.6}
+.idea button{background:var(--accent);color:var(--on-accent);border:0;border-radius:9px;
+ padding:8px 17px;font:500 13.5px Heebo,sans-serif;cursor:pointer}
+.idea button.done{background:var(--green)}
+.idea button.icm{background:transparent;color:var(--accent);border:1px solid var(--accent);margin-inline-start:7px}
+.idea .ib0{margin-inline-start:0}
+.icbox{margin-top:10px;display:none}
+.icbox.open{display:block}
+.icbox textarea{width:100%;box-sizing:border-box;min-height:64px;border:1px solid var(--line);border-radius:9px;
+ padding:8px 10px;font:300 14px Heebo,sans-serif;background:var(--bg);color:inherit;resize:vertical;margin-bottom:7px}
+.icbox small{display:block;font-size:12.5px;color:var(--dim);margin-top:6px}
+.ideabuilt{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
+.ibt{border:0;text-align:start;cursor:pointer;border-radius:var(--r);padding:14px 15px;color:#fff;
+ min-height:88px;display:flex;flex-direction:column;justify-content:space-between;
+ font-family:Heebo,sans-serif;text-shadow:0 1px 2px rgba(0,0,0,.28);
+ box-shadow:0 10px 22px rgba(20,30,60,.22),inset 0 1px 0 rgba(255,255,255,.55),
+  inset 0 -3px 8px rgba(0,0,0,.22),inset 0 0 0 1px rgba(255,255,255,.14)}
+.ibt b{font-size:16px;font-weight:600}
+.ibt small{font-size:12px;opacity:.92;font-weight:300;line-height:1.45}
+.ibt:active{transform:translateY(1px)}
+.ib1{background:linear-gradient(150deg,#b39ddb,#673ab7)}
+.ib2{background:linear-gradient(150deg,#80deea,#00838f)}
+.ib3{background:linear-gradient(150deg,#7bd88f,#1e8e4a)}
+.ideahead{font-size:13.5px;color:var(--dim);font-weight:300;margin-bottom:14px;line-height:1.65}
+.opcard{background:var(--surface);border:1px solid var(--line);border-radius:18px;
+ padding:6px 16px;margin-bottom:14px;box-shadow:var(--shadow)}
+.opline{display:flex;justify-content:space-between;gap:12px;align-items:baseline;
+ padding:12px 0;border-bottom:1px solid var(--line)}
+.opline:last-child{border-bottom:0}
+.opline span{color:var(--dim);font-size:13px;flex:0 0 auto}
+.opline b{font:700 15px Heebo,sans-serif;text-align:end}
+.note-search{width:100%;min-height:42px;border-radius:12px;padding:0 14px;margin-bottom:12px;
+ border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:15px}
+.note-grp{color:var(--dim);font-size:12.5px;font-weight:500;margin:14px 4px 6px}
+.note-box{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.note-i{padding:11px 14px;border-bottom:1px solid var(--line);cursor:pointer}
+.note-i:last-child{border-bottom:0}
+.note-i{display:flex;align-items:center;gap:8px;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.note-i .note-t{flex:1;min-width:0}
+.note-i .note-sh{flex:none;width:38px;height:38px;border:0;border-radius:999px;background:var(--line);
+ color:inherit;font-size:17px;cursor:pointer}
+.note-i:active{background:var(--line)}
+.note-i b{display:block;font-size:15.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.note-i small{display:block;color:var(--dim);font-size:13px;margin-top:2px;overflow:hidden;
+ text-overflow:ellipsis;white-space:nowrap}
+.note-new{display:block;width:100%;min-height:50px;margin-top:14px;border:0;border-radius:999px;
+ background:#f5c400;color:#222;font:600 16px Heebo,sans-serif;cursor:pointer}
+.note-bar{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.note-bar button{min-height:40px;padding:0 14px;border:0;border-radius:999px;cursor:pointer;
+ background:var(--surface);color:#c89600;font:600 15px Heebo,sans-serif}
+.note-bar span{flex:1;text-align:center;color:var(--dim);font-size:12.5px}
+.note-bar .note-del{color:#d33}
+#noteBody{width:100%;min-height:58vh;border:0;border-radius:14px;padding:14px 16px 40px;outline:0;
+ background:var(--surface);color:var(--ink);font:inherit;font-size:17px;line-height:1.55;
+ overflow-wrap:anywhere;-webkit-user-select:text;user-select:text}
+#noteBody.blank:before{content:'כותרת';color:var(--dim);font-size:26px;font-weight:700;position:absolute;pointer-events:none}
+#noteBody h1,#noteBody h2,#noteBody h3{text-align:start;color:var(--ink);letter-spacing:0}
+#noteBody h1{font-size:26px;font-weight:700;margin:0 0 6px;line-height:1.3}
+#noteBody h2{font-size:21px;font-weight:700;margin:6px 0 4px;line-height:1.35}
+#noteBody h3{font-size:18px;font-weight:600;margin:4px 0 2px}
+#noteBody p,#noteBody div{margin:0}
+#noteBody pre{font:15px ui-monospace,Menlo,monospace;white-space:pre-wrap;margin:2px 0;
+ background:var(--line);border-radius:6px;padding:2px 6px}
+#noteBody ul,#noteBody ol{margin:2px 0;padding-inline-start:26px}
+#noteBody ul.dash{list-style:none}
+#noteBody ul.dash>li:before{content:'–';display:inline-block;width:20px;margin-inline-start:-20px}
+#noteBody ul.chk{list-style:none;padding-inline-start:34px}
+#noteBody ul.chk>li{position:relative;min-height:28px;padding:2px 0}
+#noteBody ul.chk>li:before{content:'';position:absolute;inset-inline-start:-32px;top:4px;width:20px;height:20px;
+ border:1.6px solid #b8b8b8;border-radius:50%;box-sizing:border-box}
+#noteBody ul.chk>li.on{color:var(--dim)}
+#noteBody ul.chk>li.on:before{background:#f5c400;border-color:#f5c400}
+#noteBody ul.chk>li.on:after{content:'✓';position:absolute;inset-inline-start:-28px;top:3px;
+ color:#fff;font-size:13px;font-weight:700;pointer-events:none}
+.note-tools{display:flex;justify-content:space-around;align-items:center;margin-bottom:8px;
+ background:var(--surface);border-radius:14px;padding:4px}
+.note-tools button{min-width:48px;min-height:42px;border:0;background:none;color:#c89600;cursor:pointer;
+ font:600 19px Heebo,sans-serif;border-radius:10px}
+.note-tools button.on{background:var(--line)}
+.note-tools .note-copy{font-size:15px;padding:0 10px}
+.note-tools .note-copy.ok{background:#2e9b4f;color:#fff}
+.note-fmt{background:var(--surface);border:1px solid var(--line);border-radius:16px;
+ padding:8px;margin:0 0 8px}
+.note-fmt .row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.note-fmt .row:last-child{margin-bottom:0}
+.note-fmt button{flex:1 1 auto;min-height:40px;padding:0 8px;border:0;border-radius:10px;cursor:pointer;
+ background:var(--line);color:var(--ink);font:500 15px Heebo,sans-serif}
+.note-fmt button.on{background:#f5c400;color:#222}
+.lolos{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.lbtn{display:flex;align-items:center;gap:12px;text-align:start;cursor:pointer;
+ border:0;border-radius:18px;padding:14px 16px;color:#fff;text-decoration:none;
+ position:relative;overflow:hidden;isolation:isolate;
+ text-shadow:0 1px 2px rgba(0,0,0,.28);
+ box-shadow:0 8px 18px rgba(20,30,60,.2),inset 0 1px 0 rgba(255,255,255,.5),
+  inset 0 -3px 8px rgba(0,0,0,.2)}
+.lbtn:after{content:"";position:absolute;inset:0;z-index:-1;
+ background:linear-gradient(180deg,rgba(255,255,255,.3),rgba(255,255,255,0) 55%,rgba(0,0,0,.1))}
+.lbtn:active{transform:translateY(2px) scale(.99);box-shadow:0 3px 8px rgba(20,30,60,.26),
+ inset 0 2px 8px rgba(0,0,0,.3)}
+.lbtn span{font-size:26px;line-height:1}
+.lbtn b{display:block;font:700 16px Heebo,sans-serif}
+.lbtn small{font-size:11.5px;opacity:.93;font-weight:300}
+/* The cross check block. A row is one line he can act on: who, how much, and
+   whether it closes the card. Amounts stay readable on a phone held in one
+   hand, which is where he reads this. */
+.rivsum{border-radius:18px;padding:14px 16px;margin-bottom:12px;
+ background:linear-gradient(150deg,#ffb74d,#e65100);color:#fff;
+ text-shadow:0 1px 2px rgba(0,0,0,.28);box-shadow:0 8px 18px rgba(20,30,60,.2)}
+.rivsum b{display:block;font:700 17px Heebo,sans-serif}
+.rivsum small{display:block;font-size:12px;opacity:.95;font-weight:300;margin-top:3px}
+.rivsum b.rvtot{font-size:24px;margin-bottom:4px}
+.rivh{font:700 14px Heebo,sans-serif;color:var(--dim);margin:16px 0 8px}
+.rivrow{display:flex;align-items:center;gap:10px;padding:11px 13px;margin-bottom:7px;
+ border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.rivrow .d{font-size:11.5px;color:var(--dim);min-width:34px}
+.rivrow .t{flex:1;min-width:0}
+.rivrow .t b{display:block;font:600 14px Heebo,sans-serif}
+.rivrow .t small{display:block;font-size:11.5px;color:var(--dim);font-weight:300}
+.rivrow .a{font:700 15px Heebo,sans-serif;white-space:nowrap}
+.rivtag{display:inline-block;font-size:10.5px;font-weight:600;border-radius:999px;
+ padding:2px 8px;margin-top:4px}
+.rv-exact{background:#e6f4ea;color:#137333}
+.rv-near{background:#fef7e0;color:#8a6100}
+.rv-partial{background:#e8f0fe;color:#1a56c4}
+.rvcust{background:var(--surface);border:1px solid var(--line);color:var(--text,inherit);border-radius:14px;padding:11px 13px;margin-bottom:9px}
+.rvcust .rvh{display:flex;align-items:baseline;gap:8px}
+.rvcust .rvh b{flex:1;font:700 15px Heebo,sans-serif}
+.rvcust .rvh .a{font:700 16px Heebo,sans-serif;white-space:nowrap}
+.rvcust>small{display:block;font-size:12px;color:var(--dim);margin:2px 0 6px}
+.rvinv{list-style:none;margin:0;padding:0}
+.rvinv li{display:flex;gap:8px;align-items:center;padding:7px 2px;border-top:1px solid var(--line);font-size:13.5px;cursor:pointer}
+.rvinv li .n{flex:1;min-width:0}
+.rvinv li .dt{color:var(--dim);font-size:12.5px;white-space:nowrap}
+.rvwa{display:block;color:#1a9e5a;font-size:12.5px;margin-top:2px}
+.rvinv li .m{font-weight:700;white-space:nowrap;min-width:64px;text-align:left}
+.rvinv li small{display:block;font-size:11px;color:var(--dim)}
+.rivtalk{margin:0 0 14px}
+#rivBox .rivrow{cursor:pointer}
+#rivBox .rivrow:after{content:"💬";font-size:13px;opacity:.55;margin-inline-start:6px;flex:0 0 auto}
+.rivon{font:600 14px Heebo,sans-serif;color:var(--ink);margin:0 2px 8px}
+.rvcust summary{list-style:none;cursor:pointer}
+.rvcust summary::-webkit-details-marker{display:none}
+.rvcust summary b::before{content:'◂ ';color:var(--dim);font-weight:400}
+.rvcust[open] summary b::before{content:'▾ '}
+.rvf{display:flex;gap:6px;margin-top:8px}
+.rvf input{flex:1;min-width:0;background:transparent;color:inherit;border:1px solid var(--line);border-radius:10px;padding:9px 10px;font:400 14px Heebo,sans-serif}
+.rvf button{border:0;border-radius:10px;padding:9px 14px;background:#1a73e8;color:#fff;font:700 13.5px Heebo,sans-serif}
+.rvsaid{font-size:12px;color:var(--dim);margin-top:4px}
+.rvc{margin-top:6px;border:0;border-radius:999px;padding:6px 14px;font:600 12.5px Heebo,sans-serif;background:#e8f0fe;color:#1a56c4;cursor:pointer}
+.rivaud{border:1px solid var(--line);border-radius:16px;background:var(--surface);
+ padding:13px 14px;margin-bottom:10px}
+.rivaud>b{display:block;font:700 15px Heebo,sans-serif}
+.rivaud>small{display:block;font-size:11.5px;color:var(--dim);margin-top:2px}
+.rivaud ul{margin:10px 0 4px;padding:0 18px 0 0}
+.rivaud li{font-size:13px;line-height:1.5;margin-bottom:5px}
+.rivaud table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}
+.rivaud th{text-align:right;font-weight:600;color:var(--dim);padding:5px 4px;
+ border-bottom:1px solid var(--line)}
+.rivaud td{padding:6px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+.rivaud td.m{white-space:nowrap;font-weight:600}
+.rivaud tr.st-open td{background:#fdecea}
+.rivaud tr.st-extra td{background:#fef7e0}
+.rivaud tr.st-info td{color:var(--dim)}
+.rivaud tr.st-total td{font-weight:700;border-bottom:none}
+/*
+  The home screen, stripped to one thing.
+
+  Itzik asked for a main screen with nothing on it but the way to reach me:
+  talk, write, attach a file, or take a photo. Everything else that used to
+  pile up here, the tiles, the shortcuts, the search, the counters and the
+  fold outs, is hidden rather than deleted, so every handler and renderer
+  behind them keeps working and any of it can come back by deleting a line.
+
+  Only on the home screen. The same elements on inner screens are untouched,
+  and the bottom navigation stays, because a screen you cannot leave is not a
+  simpler screen.
+*/
+/*
+  This list used to hide unconditionally, which quietly broke the promise the
+  comment above makes. "עוד כלים" took the bare class off and nothing came
+  back: the tiles, the shortcut row and the search stayed hidden forever, and
+  the swap button in the arrange bar was moving two blocks nobody could see.
+  He reported both, and both were the same line. Scoped to .bare, so the
+  screen still opens stripped and the button actually brings the rest back.
+*/
+#pH.bare #newBlock, #pH.bare #growBtn, #pH.bare .whatsnew, #pH.bare #askBox,
+#pH.bare #blkTiles, #pH.bare #tidyBox, #pH.bare #gSearch, #pH.bare .gres,
+#pH.bare #blkIcons, #pH.bare #reqBox, #pH.bare #codexBox{
+ display:none!important}
+#pH{padding-top:10px}
+#pH #talkCard{margin-top:0}
+.lb-riv{background:linear-gradient(150deg,#ffb74d,#e65100)}
+.lb-cal{background:linear-gradient(150deg,#5aa9fb,var(--blue))}
+.lb-x{background:linear-gradient(150deg,#b39ddb,#5e35b1)}
+
+.c-dr{background:#fff;border:1px solid var(--line)}
+.item .src{font-size:12.5px;color:var(--accent);font-weight:500;margin-top:4px}
+@keyframes hue{0%,100%{background:var(--accent-soft);color:var(--accent)}
+ 50%{background:color-mix(in srgb,var(--wait) 22%,transparent);color:var(--wait)}}
+.bn button.blink,.gt.blink{animation:hue 2.6s ease-in-out infinite;border-radius:10px}
+.wn.blink .n{animation:hue 2.6s ease-in-out infinite;border-radius:8px}
+.stat{display:flex;gap:6px;margin-top:9px}
+.stat button{flex:1;border:1px solid var(--line);background:var(--sunk);color:var(--dim);
+ border-radius:9px;padding:7px 4px;font:500 12.5px Heebo,sans-serif;cursor:pointer}
+.stat button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.stat button[aria-pressed="true"][data-s="standby"]{background:color-mix(in srgb,var(--wait) 18%,transparent);
+ color:var(--wait);border-color:var(--wait)}
+.thread{max-height:52vh;overflow-y:auto}
+.filebox{background:var(--surface);border:1px solid var(--line);border-radius:13px;
+ padding:2px 14px;margin-top:12px;box-shadow:var(--shadow)}
+
+/* ===== self build slot ===== */
+.slot{display:flex;gap:12px;align-items:flex-start;padding:4px 0 10px}
+.slot .plus{flex:0 0 44px;height:44px;border-radius:14px;border:2px dashed var(--line);
+ background:var(--sunk);color:var(--dim);font:300 26px/1 Heebo,sans-serif;display:grid;place-items:center}
+.slot b{display:block;font:500 15px Heebo,sans-serif}
+.slot small{display:block;color:var(--dim);font-weight:300;font-size:13px;line-height:1.55;margin-top:2px}
+.slotForm{display:flex;gap:7px;align-items:center;margin-top:4px}
+.slotForm input{flex:1;min-width:0;background:var(--sunk);border:1px solid var(--line);border-radius:11px;
+ padding:11px 13px;color:var(--ink);font:400 15px Heebo,sans-serif}
+.slotForm button{flex:0 0 auto;border:0;border-radius:11px;padding:11px 14px;cursor:pointer;
+ background:var(--accent);color:var(--on-accent);font:500 14px Heebo,sans-serif}
+.slotForm button.ghost{background:var(--sunk);color:var(--ink);border:1px solid var(--line);font-size:17px}
+#slotSaid{color:var(--dim);font-size:13px;font-weight:300;margin-top:7px;min-height:18px}
+
+/* ===== my answers ===== */
+.achips{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 12px}
+.achip{background:var(--surface);border:1px solid var(--line);border-radius:999px;
+ padding:8px 14px;font:500 13.5px Heebo,sans-serif;color:var(--dim);cursor:pointer}
+.achip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.achip.allread{margin-inline-start:auto;border-color:var(--red);color:var(--red)}
+.achip b{font-weight:800}
+.asearch{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:12px;
+ padding:12px 14px;font:400 15px Heebo,sans-serif;color:var(--ink);margin-bottom:14px}
+.ansc{background:var(--surface);border:1px solid var(--line);border-radius:16px;
+ padding:13px 15px;margin-bottom:12px;box-shadow:var(--shadow);line-height:1.75;
+ border-inline-start:5px solid var(--line)}
+/* 17.9, his voice message: "every answer sits on red, the moment I touch it it
+   is green, and I can move it to orange on standby or to yellow". That was the
+   old chat and it is the whole system here now. One colour per card, decided in
+   one place, with the stripe wide enough to read from across the room. */
+.ansc.fresh{border-inline-start-color:var(--red);background:color-mix(in srgb,var(--red) 7%,var(--surface))}
+.ansc.back{border-inline-start-color:var(--orange);background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
+/* 10.10, he took the reviewer's idea: four colours per answer was too much.
+   Now only two: red until it has been on screen, and orange for לחזור לזה.
+   An answer he has seen is plain, with no green to earn by tapping. */
+.ab.aback.on{background:var(--orange);border-color:var(--orange);color:#fff}
+.atip{margin:0 0 12px;padding:12px 14px;border-radius:12px;border:2px solid var(--red);background:var(--unread);font-size:15px;line-height:1.5}
+.atip .ab{display:block;margin-top:8px}
+/* His own messages sit in the same list now. Indented and quieter, so the
+   list still reads as answers with the question above each one, rather than
+   as two voices of equal weight. */
+.ansc.mine{background:var(--sunk);box-shadow:none;margin-inline-start:22px;
+ border-inline-start-color:var(--blue)}
+.ansc.mine .atxt{font-weight:300}
+/* The question inside the card that answers it. Sunk, thin and cut off after
+   a few lines, so the answer stays the thing the eye lands on. */
+.ansc .aq{background:var(--sunk);border-inline-start:3px solid var(--blue);
+ border-radius:10px;padding:6px 10px;margin:0 0 8px;
+ display:flex;align-items:baseline;gap:8px;font:300 13.5px Heebo,sans-serif}
+.ansc .aq .w{margin-bottom:0;flex:0 0 auto;white-space:nowrap;flex-wrap:nowrap}
+/* The message itself takes the rest of that row and no more. min-width:0 is
+   what lets a flex child shrink far enough for the ellipsis to appear at all;
+   without it the long line pushes the card wider than the phone. */
+.ansc .aq .qline,.ansc .aq .qfold{flex:1 1 auto;min-width:0;overflow:hidden;
+ text-overflow:ellipsis;white-space:nowrap}
+.ansc .aq .qfold summary{cursor:pointer;overflow:hidden;text-overflow:ellipsis;
+ white-space:nowrap;list-style:none}
+.ansc .aq .qfold summary::-webkit-details-marker{display:none}
+.ansc .aq .qfold[open]{white-space:normal}
+/* Open, the summary stays the clipped one line: letting it wrap printed the
+   whole message twice, once in the summary and once in the body. */
+.ansc .aq .qfold[open] summary{color:var(--dim);margin-bottom:5px}
+.ansc .aq .atxt{font-weight:300}
+.ansc .w{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--dim);
+ font:500 12.5px Heebo,sans-serif;margin-bottom:7px}
+.ansc .atxt{white-space:pre-wrap;word-break:break-word}
+.arow{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+.ab{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:9px 13px;
+ font:500 13px Heebo,sans-serif;color:var(--ink);cursor:pointer}
+.ab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.aempty{color:var(--dim);text-align:center;padding:26px 10px;font-weight:300}
+.asaid{display:block;color:var(--green);font-size:12.5px;margin-top:7px;min-height:16px}
+.bn .cnt{position:absolute;top:-2px;inset-inline-end:0;min-width:19px;height:19px;
+ border-radius:10px;background:var(--red);color:#fff;font:800 11px/19px Heebo,sans-serif;
+ text-align:center;padding:0 5px;font-style:normal}
+.bn .cnt.zero{background:var(--line);color:var(--dim)}
+/* ===== bottom nav ===== */
+/* The floating microphone was removed with its styles. */
+.pillbox{text-align:center;padding:10px 0 4px}
+.pillbig{width:min(230px,66vw);height:min(230px,66vw);border-radius:50%;border:0;cursor:pointer;
+ display:grid;place-items:center;gap:4px;color:#fff;font-family:Heebo,sans-serif;
+ background:linear-gradient(180deg,#b39ddb,#5e35b1);
+ box-shadow:0 18px 44px rgba(94,53,177,.45),inset 0 4px 0 rgba(255,255,255,.4)}
+.pillbig .pb-i{font-size:56px;line-height:1}
+.pillbig .pb-t{font:800 22px Heebo,sans-serif}
+.pillbig:active{transform:scale(.96)}
+.pillbig.done{background:linear-gradient(180deg,#69f0ae,var(--green));
+ box-shadow:0 18px 44px rgba(52,168,83,.45),inset 0 4px 0 rgba(255,255,255,.4)}
+/* The question before the count starts. He reports late sometimes, and eight
+   hours from the tap would drift the next dose. So the tap asks first. */
+.sheet{margin-top:14px;padding:14px 16px;border-radius:var(--r);background:var(--surface);
+ border:2px solid var(--accent);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}
+.sheet b{font:600 16px Heebo,sans-serif;line-height:1.45}
+.sheetrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sheetrow label{font-size:13px;color:var(--dim)}
+.sheet input[type=time]{font:500 18px Heebo,sans-serif;padding:8px 12px;border-radius:12px;
+ border:1px solid var(--line);background:var(--sunk);color:var(--ink)}
+.sbtn{border:1px solid var(--line);background:var(--sunk);color:var(--ink);border-radius:999px;
+ padding:9px 16px;font:500 14px Heebo,sans-serif;cursor:pointer}
+.sbtn.main{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.sbtn.quiet{align-self:flex-start;background:transparent;color:var(--dim)}
+.pillinfo{margin-top:20px;font-size:16px;color:var(--ink);line-height:1.9}
+.pillinfo b{display:block;font:800 22px Heebo,sans-serif;color:var(--accent)}
+.pillinfo small{display:block;color:var(--dim);font-size:13px;font-weight:300}
+/* He talks to me about a message he is looking at, so the recorder must not
+   cover it. It floats at the bottom and lets the screen show through, and it
+   ignores taps everywhere except on its own buttons. */
+.recwrap{position:fixed;inset:0;z-index:60;display:grid;align-items:end;justify-items:center;
+ padding-bottom:calc(78px + env(safe-area-inset-bottom));background:transparent;pointer-events:none}
+.recbox{width:min(340px,88vw);background:color-mix(in srgb,var(--surface) 78%,transparent);
+ backdrop-filter:blur(9px);border:1px solid var(--line);border-radius:26px;padding:16px 20px 14px;
+ text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.35);pointer-events:auto}
+.rectitle{font:700 20px Heebo,sans-serif;color:var(--ink)}
+.rectime{font:800 30px "Frank Ruhl Libre",Georgia,serif;color:var(--red);
+ font-variant-numeric:tabular-nums;margin:6px 0 16px}
+.recbig{width:96px;height:96px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;
+ background:linear-gradient(180deg,#ff6b84,var(--red));
+ box-shadow:0 14px 34px rgba(234,67,53,.5),inset 0 3px 0 rgba(255,255,255,.45);
+ animation:mpulse 1.2s infinite}
+.recbig svg{width:38px;height:38px}
+.recbig:active{transform:scale(.95)}
+.rechint{color:var(--dim);font-size:13.5px;font-weight:300;margin-top:14px}
+.reccancel{margin-top:12px;background:var(--sunk);color:var(--ink);border:1px solid var(--line);
+ border-radius:12px;padding:11px 26px;font:500 15px Heebo,sans-serif;cursor:pointer;width:100%}
+.bn{position:fixed;inset-inline:0;bottom:0;z-index:20;display:flex;justify-content:space-around;
+ background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(12px);
+ border-top:1px solid var(--line);padding:7px 4px calc(7px + env(safe-area-inset-bottom))}
+.bn button{position:relative;background:none;border:0;cursor:pointer;color:var(--dim);
+ font:500 10px Heebo,sans-serif;display:flex;flex-direction:column;align-items:center;gap:2px;
+ /* Six tabs with fixed side padding came to 408px on a 390px phone, and those
+    eighteen pixels were the horizontal scroll on every screen of the app. They
+    share the row now instead of each demanding a width. */
+ flex:1 1 0;min-width:0;padding:4px 2px}
+.bn button span{font-size:19px;line-height:1}
+/* The emoji row was the one part of the screen that looked like a default.
+   These are drawn instead: same stroke weight as the rest of the app, and
+   they take the button's own colour, so the selected tab colours its icon. */
+.bn button svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.7;
+ stroke-linecap:round;stroke-linejoin:round}
+.bn button[aria-pressed="true"] svg{stroke-width:2}
+/* Something new on a screen he is not looking at. The tab breathes until he
+   opens it, and stops the moment he does. */
+@keyframes tabnudge{
+ 0%,100%{transform:translateY(0)}
+ 50%{transform:translateY(-3px)}
+}
+.bn button.hasnew svg{animation:tabnudge 1.8s ease-in-out infinite}
+.bn button.hasnew{color:var(--red)}
+.bn button[aria-pressed="true"].hasnew{color:#fff}
+@media(prefers-reduced-motion:reduce){.bn button.hasnew svg{animation:none}}
+.bn button[aria-pressed="true"]{color:#fff;background:linear-gradient(150deg,#5aa9fb,var(--blue));
+ border-radius:14px;box-shadow:0 5px 12px rgba(66,133,244,.35)}
+.bn button:active{transform:scale(.94)}
+.bn button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:10px}
+
+/*
+  The bare home: one card, and nothing else.
+
+  He asked for the main screen to hold the microphone and the four ways of
+  reaching me, and nothing more. Everything else is hidden rather than removed,
+  so every render on this page keeps writing to the element it always wrote to
+  and nothing becomes unreachable: one button in the header brings the rest
+  back, and the choice is remembered.
+*/
+#pH.bare > *:not(#talkCard):not(#bareBtn){display:none!important}
+/*
+  9.10, the improvements reviewer: a wide green bar saying "refresh me" told a
+  new customer the page does not update by itself and needs pressing each
+  time. It does update: wake() checks again whenever the page comes back. So
+  the way home is a small round symbol in the same place, not a call to action.
+*/
+.reloadbig{display:flex;align-items:center;justify-content:center;min-width:40px;height:40px;padding:0 12px;margin:0 0 12px auto;
+ border:1px solid var(--line);border-radius:20px;cursor:pointer;
+ color:var(--dim);font:700 20px Heebo,sans-serif;background:transparent}
+.reloadbig:active{transform:translateY(1px)}
+.reloadbig[disabled]{opacity:.6;font-size:14px}
+.reloadbig:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/*
+  The same microphone as the big one, shrunk.
+
+  The first version was a flat blue disc and he could not see it, which is fair:
+  it looked like a chip rather than like the thing it is. This is the card
+  microphone's own treatment at 54px, the coloured ring around a lit sphere, so
+  it reads as the same object wherever he meets it.
+*/
+.micdock{position:fixed;inset-inline-start:12px;z-index:30;
+ bottom:calc(70px + env(safe-area-inset-bottom));
+ width:54px;height:54px;flex:0 0 54px;border-radius:50%;border:0;padding:0;cursor:pointer;
+ position:fixed;display:grid;place-items:center;
+ background:conic-gradient(from 0deg,var(--blue),var(--red),var(--yellow),var(--green),var(--blue));
+ box-shadow:0 6px 18px rgba(0,0,0,.4)}
+.micdock:before{content:"";position:absolute;inset:4px;border-radius:50%;
+ background:radial-gradient(circle at 34% 26%,#ffffff 0%,var(--surface) 42%,
+  color-mix(in srgb,var(--surface) 82%,#000) 100%);
+ box-shadow:inset 0 -4px 8px rgba(0,0,0,.18),inset 0 3px 6px rgba(255,255,255,.9)}
+.micdock svg{position:relative;z-index:1;width:26px;height:26px;stroke:var(--ink)}
+.micdock svg rect{fill:var(--ink)}
+.micdock.on:before{background:#fdecea}
+.micdock.on svg{stroke:var(--red)}
+.micdock.on svg rect{fill:var(--red)}
+.micdock:active{transform:scale(.94)}
+.micdock:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.locked .micdock{display:none}
+/*
+  Itzik, 16.9, by voice: in every answer I give him he has no way to reply, and
+  the icon at the foot of the screen does not reply to anything either. It
+  recorded a new subject every time. Now an answer can be aimed at: this strip
+  sits above the microphone and says what the next recording is answering.
+*/
+.aimbar{position:fixed;inset-inline-start:12px;z-index:30;
+ bottom:calc(132px + env(safe-area-inset-bottom));
+ max-width:min(74vw,320px);display:flex;align-items:center;gap:8px;
+ background:var(--surface);border:1px solid var(--accent);border-radius:14px;
+ padding:8px 10px;box-shadow:0 6px 18px rgba(0,0,0,.35);font-size:13px;color:var(--ink)}
+.aimbar b{font-weight:600;color:var(--accent)}
+.aimbar span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.aimbar button{background:none;border:0;color:var(--dim);font-size:19px;
+ line-height:1;padding:0 2px;cursor:pointer}
+.locked .aimbar{display:none}
+.aimb{background:var(--accent);color:var(--on-accent);border:0}
+.bubaim{margin-inline-start:8px;font:600 11px Heebo,sans-serif;border-radius:999px;
+ padding:3px 11px;cursor:pointer;vertical-align:middle}
+.aimb.on{background:var(--green)}
+/*
+  Round buttons along the bottom, because he asked for ours rather than for a
+  row of outlines. Each icon sits in its own lit disc, the selected one takes
+  the accent, and the label stays underneath so nothing is a guess.
+*/
+.bn button svg{border-radius:50%;padding:6px;box-sizing:content-box;
+ background:var(--sunk);border:1px solid var(--line)}
+.bn button[aria-pressed="true"]{background:none;box-shadow:none;border-radius:0;color:var(--accent)}
+.bn button[aria-pressed="true"] svg{background:linear-gradient(150deg,#5aa9fb,var(--blue));
+ border-color:transparent;color:#fff;stroke:#fff;
+ box-shadow:0 4px 10px rgba(66,133,244,.4)}
+.bn button.hasnew svg{border-color:var(--red)}
+.morebtn{display:block;width:100%;margin:2px 0 0;padding:12px 14px;cursor:pointer;
+ background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:14px;
+ font:500 13.5px Heebo,sans-serif}
+.morebtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#pH.bare{padding-top:6px}
+#bareBtn{margin-inline-start:0;background:linear-gradient(180deg,#b39ddb,#5e35b1);
+ box-shadow:0 2px 6px rgba(94,53,177,.4),inset 0 1px 0 rgba(255,255,255,.28);
+ /* 26.9: dim grey text on purple read as a disabled button. */
+ color:#fff;font:700 16px Heebo,sans-serif;min-height:50px;border:0}
+#bareBtn:active{background:linear-gradient(180deg,#5e35b1,#4527a0)}
+/* ---------- מצב רגוע ----------
+   Itzik said the flashing in the monitor is stressful and asked for calm and
+   control. Nothing on this page flashes any more. The count, the badges and
+   the button all stay exactly where they were and keep their red, which is
+   what tells him something is waiting; only the movement is gone. This block
+   is last in the sheet on purpose, so it wins over the older attention rules
+   without deleting them and without touching any state or data. Motion is off
+   by default; the soft option below is a ten second colour breath, saved per
+   device, and the phone's reduce-motion setting still turns it off. */
+:root.calm .newbtn.hot,
+:root.calm .newbtn.hot .nb-c,
+:root.calm .gt.glow,
+:root.calm .gt.glow .flag,
+:root.calm .gt.blink,
+:root.calm .th-fresh,
+:root.calm .th-fresh>summary .badge,
+:root.calm .bub.fresh,
+:root.calm .bub.fresh .badge,
+:root.calm .bn button.hasnew,
+:root.calm .bn button.hasnew.blink,
+:root.calm .bn button.blink,
+:root.calm .bn button.hasnew svg,
+:root.calm .wn.blink .n,
+:root.calm .sent .s-dot,
+:root.calm .sent.working .s-dot,
+:root.calm .dot,
+:root.calm .pill i,
+:root.calm .live .pulse,
+:root.calm body.editing .editbox>*{animation:none!important}
+/* Whatever the killed frame happened to leave behind, put back a still shape. */
+:root.calm .newbtn.hot{transform:none;box-shadow:0 6px 16px rgba(234,67,53,.22)}
+:root.calm .newbtn.hot .nb-c{background:#fff;color:var(--red);box-shadow:none}
+:root.calm .gt.glow .flag,
+:root.calm .th-fresh>summary .badge,
+:root.calm .bub.fresh .badge{background:var(--red);color:#fff;box-shadow:none}
+:root.calm .bn button.hasnew svg{transform:none}
+:root.calm .bn button.hasnew,
+:root.calm .bn button.hasnew.blink{background:none;color:var(--red);box-shadow:none}
+:root.calm .bn button[aria-pressed="true"].hasnew{color:#fff}
+:root.calm .sent.working .s-dot{background:var(--green);box-shadow:none}
+:root.calm .dot{box-shadow:0 0 0 0 rgba(229,72,77,0)}
+:root.calm .live .pulse{box-shadow:none}
+:root.calm body.editing .editbox>*{transform:none}
+/* The record button only exists while he is actually recording, so it keeps a
+   breath to show it is live, just a slow one. Shadow only, no flash. */
+:root.calm .recbig{animation:mpulse 2.8s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){:root.calm .recbig{animation:none}}
+/* The opt-in. A ring that fades in and out over ten seconds, no colour flip,
+   no size change, on the three places that actually mean "something new". */
+/* The two home blocks after the swap button moves them. A ring that says
+   "this is what moved", and nothing more. */
+@keyframes swapmark{
+ 0%,100%{box-shadow:0 0 0 0 rgba(37,99,235,0)}
+ 30%,60%{box-shadow:0 0 0 6px rgba(37,99,235,.30)}}
+#blkTiles.swapped,#blkIcons.swapped{border-radius:14px;animation:swapmark 2.4s ease-in-out}
+@media(prefers-reduced-motion:reduce){#blkTiles.swapped,#blkIcons.swapped{animation:none;
+ box-shadow:0 0 0 4px rgba(37,99,235,.28)}}
+@keyframes softmark{
+ 0%,100%{box-shadow:0 0 0 0 rgba(234,67,53,0)}
+ 50%{box-shadow:0 0 0 5px rgba(234,67,53,.26)}}
+/*
+  The opt in is an addition to calm, never a replacement for it.
+
+  The first version took the calm class off when he chose the soft hint, which
+  put every one of the hard animations back: the half second blink on the
+  count, the beating button, the glowing bubbles, the nudging tabs. Choosing
+  "a gentle hint" turned the whole thing back on. So the calm class stays on
+  the element in both modes and this re-animates exactly three things, with
+  !important because it has to beat calm's own blanket cancellation.
+*/
+:root.calm.motion-soft .newbtn.hot .nb-c,
+:root.calm.motion-soft .th-fresh>summary .badge,
+:root.calm.motion-soft .bub.fresh .badge{animation:softmark 10s ease-in-out infinite!important}
+@media(prefers-reduced-motion:reduce){
+ :root.calm.motion-soft .newbtn.hot .nb-c,
+ :root.calm.motion-soft .th-fresh>summary .badge,
+ :root.calm.motion-soft .bub.fresh .badge{animation:none!important}}
+/* 10.10: he found a little hand that jumps and asked for one next to whatever
+   needs him. Every tile that is marked for attention (task, glow, blink) gets
+   a pointing hand in its lower corner that taps, small and soft. It lives on
+   ::before so no tile changes and no state is involved; it goes the moment the
+   tile stops needing him. Calm leaves it moving because he asked for this one
+   by name; the phone's reduce-motion setting still holds it still. */
+/* 10.10 later: he sent stills of the one he meant, a red cartoon hand with a
+   face and two legs that rocks from side to side on its feet, with little blue
+   sparks. Drawn here as one inline picture; the sparks blink inside it and the
+   rocking pivots on the feet. */
+@keyframes handtap{
+ 0%,100%{transform:rotate(-11deg)}
+ 25%{transform:rotate(0) translateY(-3px)}
+ 50%{transform:rotate(11deg)}
+ 75%{transform:rotate(0) translateY(-3px)}}
+.gt.taskblink::before,.gt.glow::before,.gt.blink::before{content:"";position:absolute;
+ bottom:4px;inset-inline-end:6px;width:42px;height:45px;pointer-events:none;z-index:2;
+ background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 64'%3E%3Cellipse cx='34' cy='61' rx='13' ry='2.2' fill='%23000' opacity='.18'/%3E%3Cg stroke='%232b2024' stroke-width='2.2' stroke-linecap='round' fill='none'%3E%3Cpath d='M30 48l-2 10h-4'/%3E%3Cpath d='M38 48l2 10h4'/%3E%3C/g%3E%3Cpath d='M20 30c-3-3-7-6-9-3s3 7 7 11c3 4 6 10 13 11s13-3 14-11l2-17c0-3-4-3-5 0l-1 6-1-17c0-3-5-3-5 0l-1 15-2-17c0-3-5-3-5 0l1 17-4-13c-1-3-5-2-5 1l3 17z' fill='%23ec4a4f' stroke='%232b2024' stroke-width='2.2' stroke-linejoin='round'/%3E%3Cg stroke='%232b2024' stroke-width='2' stroke-linecap='round' fill='none'%3E%3Cpath d='M27 37q2-2 4 0'/%3E%3Cpath d='M35 36q2-2 4 0'/%3E%3Cpath d='M29 42q5 4 10 0'/%3E%3C/g%3E%3Cg stroke='%234cc3e6' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M6 46l-4 2'%3E%3Canimate attributeName='opacity' values='0%3B1%3B0' dur='1.2s' repeatCount='indefinite'/%3E%3C/path%3E%3Cpath d='M8 52l-3 5'%3E%3Canimate attributeName='opacity' values='1%3B0%3B1' dur='1.2s' repeatCount='indefinite'/%3E%3C/path%3E%3Cpath d='M13 54v5'%3E%3Canimate attributeName='opacity' values='0%3B1%3B0' dur='1.2s' begin='.3s' repeatCount='indefinite'/%3E%3C/path%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat;transform-origin:56% 92%;
+ filter:drop-shadow(0 1px 2px rgba(0,0,0,.25));animation:handtap 1.2s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){.gt.taskblink::before,.gt.glow::before,.gt.blink::before{animation:none}}
+.mob{display:flex;gap:6px;flex:0 0 auto}
+.mob button{background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:10px;
+ padding:9px 12px;font:500 13.5px Heebo,sans-serif;cursor:pointer;white-space:nowrap}
+.mob button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.mob button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* The lock screen. Covers everything, because behind it there is nothing to
+   see anyway: with the gate on the page ships without any data at all. */
+#gateWrap{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;
+ justify-content:center;background:var(--ground,#0f1218);padding:24px}
+.gatecard{width:min(340px,100%);background:var(--surface,#181d27);border:1px solid var(--line,#2a3342);
+ border-radius:18px;padding:22px 18px;text-align:center;
+ box-shadow:0 18px 50px rgba(0,0,0,.28)}
+.gt-t{display:block;font:800 21px Heebo,sans-serif;color:var(--ink,#e8edf5);letter-spacing:.5px}
+.gt-s{margin:8px 0 16px;font:400 14.5px Heebo,sans-serif;color:var(--dim,#9aa7ba);line-height:1.5}
+#gateForm{display:flex;gap:8px}
+#gateIn{flex:1;min-width:0;background:var(--sunk,#141922);color:var(--ink,#e8edf5);border:1px solid var(--line,#2a3342);
+ border-radius:12px;padding:13px;font:700 19px Heebo,sans-serif;text-align:center;letter-spacing:3px}
+#gateIn:focus{outline:2px solid var(--accent);outline-offset:1px}
+#gateForm.gw{flex-direction:column}
+#gateForm.gw #gateIn{letter-spacing:0;font:600 17px Heebo,sans-serif;text-align:right}
+#gateForm.gw #gateGo{padding:12px 18px}
+.gt-eye{background:none;border:0;margin-top:10px;color:var(--dim,#9aa7ba);font:600 13.5px Heebo,sans-serif;
+ text-decoration:underline;cursor:pointer}
+#gateGo{flex:0 0 auto;background:var(--accent,#4285F4);color:#fff;border:0;border-radius:12px;
+ padding:0 18px;font:700 15px Heebo,sans-serif;cursor:pointer}
+.ansc .arep{margin:0}
+.ansc .arep>summary{cursor:pointer;font:700 15px Heebo,sans-serif;color:var(--ink,#e8edf5);
+ list-style:none;padding:2px 0;line-height:1.45}
+.ansc .arep>summary::-webkit-details-marker{display:none}
+.ansc .arep>summary::before{content:'C2 ';color:var(--dim,#9aa7ba);font-size:12px}
+.ansc .arep[open]>summary::before{content:'BE '}
+.ansc .arep>.atxt{margin-top:8px;padding-top:8px;border-top:1px solid var(--line,#2a3342)}
+/* The drain log. Four tubes, one row a day, and the only thing worth reading
+   off it is the direction, so the arrow gets the colour and not the number. */
+.drform{display:flex;flex-direction:column;gap:9px;margin:12px 0}
+.drrow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.drrow label{display:flex;flex-direction:column;gap:4px;font:700 13px Heebo,sans-serif;color:var(--dim,#9aa7ba);text-align:center}
+.drrow input{width:100%;box-sizing:border-box;background:var(--sunk,#141922);color:var(--ink,#e8edf5);
+ border:1px solid var(--line,#2a3342);border-radius:11px;padding:11px 6px;
+ font:700 17px Heebo,sans-serif;text-align:center}
+#drNote{background:var(--sunk,#141922);color:var(--ink,#e8edf5);border:1px solid var(--line,#2a3342);
+ border-radius:11px;padding:11px 12px;font:400 14.5px Heebo,sans-serif}
+.drrow input:focus,#drNote:focus{outline:2px solid var(--accent,#4285F4);outline-offset:1px}
+#drSend{background:var(--accent,#4285F4);color:#fff;border:0;border-radius:12px;padding:13px;
+ font:700 15.5px Heebo,sans-serif;cursor:pointer}
+.drwrap{background:var(--surface,#181d27);border:1px solid var(--line,#2a3342);
+ border-radius:14px;padding:6px 8px 8px;overflow-x:auto}
+.drtab{width:100%;border-collapse:collapse;text-align:center}
+.drtab caption{caption-side:top;padding:6px 4px 9px;text-align:right;
+ font:400 12.5px Heebo,sans-serif;color:var(--dim,#9aa7ba);line-height:1.5}
+.drtab th,.drtab td{padding:9px 4px;border-bottom:1px solid var(--line,#2a3342)}
+.drtab thead th{font:700 13px Heebo,sans-serif;color:var(--dim,#9aa7ba)}
+.drtab tbody th.drday{font:600 13px Heebo,sans-serif;color:var(--dim,#9aa7ba);
+ text-align:right;white-space:nowrap}
+.drrw.newest td,.drrw.newest th{background:rgba(66,133,244,.10)}
+.drrw.newest b{font-size:19px}
+.drc{font:400 14.5px Heebo,sans-serif;color:var(--ink,#e8edf5)}
+.drc b{font-weight:800;font-size:16.5px;display:block}
+.drc em{font-style:normal;font-size:12px;color:var(--dim,#9aa7ba)}
+.drc.down em{color:var(--green,#34A853)}
+.drc.up em{color:var(--red,#EA4335)}
+.drc.dim{color:var(--dim,#9aa7ba)}
+.drtot{font:800 16.5px Heebo,sans-serif;color:var(--ink,#e8edf5)}
+.drnrow.newest td{background:rgba(66,133,244,.10)}
+.drnote{text-align:right;font:400 13px Heebo,sans-serif;color:var(--dim,#9aa7ba);line-height:1.5}
+/* Urine is on the same row but it is not a drain, so the column is set apart
+   rather than blended in with the four. */
+.drtab .drpee{border-inline-start:2px solid var(--line,#2a3342)}
+.drpeein{display:flex;flex-direction:column;gap:4px;font:700 13px Heebo,sans-serif;color:var(--dim,#9aa7ba)}
+.drpeein input{background:var(--sunk,#141922);color:var(--ink,#e8edf5);border:1px solid var(--line,#2a3342);
+ border-radius:11px;padding:11px 12px;font:700 16px Heebo,sans-serif;text-align:center}
+.drpeein input:focus{outline:2px solid var(--accent,#4285F4);outline-offset:1px}
+/* A list he ticks. Deliberately plain: a screen that decides who gets cut off
+   should look like a form, not like a button. */
+.blrow{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:start;
+ background:var(--surface,#181d27);border:1px solid var(--line,#2a3342);border-radius:13px;
+ padding:12px 13px;margin-bottom:9px;cursor:pointer}
+.blrow.on{border-color:var(--red,#EA4335)}
+.blrow input{width:22px;height:22px;accent-color:var(--red,#EA4335);grid-row:1 / span 2;margin:2px 0 0}
+.blwho{font:400 15px Heebo,sans-serif;color:var(--ink,#e8edf5)}
+.blwho b{font-weight:800}
+.blwho em{font-style:normal;margin-inline-start:7px;font-size:13px;color:var(--dim,#9aa7ba)}
+.blwho em.blnone{color:var(--gold,#FBBC05)}
+.blwhy{grid-column:2;font:400 13.5px Heebo,sans-serif;color:var(--dim,#9aa7ba);line-height:1.5}
+.blwarn{color:var(--gold,#FBBC05);font-weight:700}
+.blstate{grid-column:2;display:inline-block;margin-inline-start:6px;font:700 12px Heebo,sans-serif;font-style:normal;color:var(--gold,#FBBC05)}
+.blstate.done{color:var(--ok,#34A853)}
+.blhead{margin:16px 0 8px;font:800 16px Heebo,sans-serif}
+.bldone{margin-top:16px}
+.bldone summary{cursor:pointer;padding:10px 2px;font:700 15px Heebo,sans-serif;color:var(--ok,#34A853)}
+/* He asked for the leftovers as a list he can search, so the leftovers get
+   their own block above the form. A handle he has to retype is a handle he
+   will mistype; every line here is a link that opens the profile. */
+.blopen{background:var(--surface,#181d27);border:1px solid var(--gold,#FBBC05);
+ border-radius:13px;padding:12px 13px;margin-bottom:13px}
+.blopen h3{margin:0 0 3px;font:800 15px Heebo,sans-serif;color:var(--gold,#FBBC05)}
+.blopen p{margin:0 0 9px;font:400 13px Heebo,sans-serif;color:var(--dim,#9aa7ba);line-height:1.5}
+.blopen ol{margin:0;padding-inline-start:20px}
+.blopen li{margin-bottom:7px;font:400 14px Heebo,sans-serif;color:var(--ink,#e8edf5)}
+.blopen li b{font-weight:700}
+.blopen a{display:block;font:400 13px Heebo,sans-serif;color:var(--accent,#4285F4);
+ text-decoration:none;word-break:break-all;direction:ltr;text-align:start}
+.blopen a:hover{text-decoration:underline}
+.blcopy{margin-top:10px;width:100%;padding:11px;border:1px solid var(--line,#2a3342);
+ border-radius:11px;background:var(--bg,#0e1219);color:var(--ink,#e8edf5);
+ font:700 14px Heebo,sans-serif;cursor:pointer}
+.gt-e{min-height:20px;margin-top:10px;font:600 13.5px Heebo,sans-serif;color:var(--red,#EA4335)}
+.gt-help{margin-top:10px;font:400 14px Heebo,sans-serif;color:var(--dim,#9aa7ba);line-height:1.5}
+.gt-btn{display:block;width:100%;margin-top:10px;padding:12px;border-radius:12px;border:1px solid var(--line,#2a3342);
+ background:var(--sunk,#141922);color:var(--ink,#e8edf5);font:700 15px Heebo,sans-serif;cursor:pointer}
+.gt-btn.pri{background:var(--accent,#4285F4);border-color:transparent;color:#fff}
+</style>
+<script>
+/*
+  A page that dies has to say so.
+
+  Tonight one character of a regex broke the whole inline script, and a page in
+  that state is not a page with a bug in it: every button on it is dead,
+  including the microphone, and every counter reads zero. It looks exactly like
+  a screen that is simply ignoring him, which is precisely what he reported.
+  The tab can also sit on that build for hours, because the thing that fetches
+  a newer one is itself in the script that died.
+
+  So this runs first, alone, and holds nothing but a flag. If the main script
+  never reaches its own last line, or throws on the way, this puts one bar on
+  the screen with one button. No dependency on anything below it, because
+  everything below it is what may be broken.
+*/
+(function(){
+ var ok=false;
+ window.__monAlive=function(){ok=true;};
+ function bar(why){
+  if(document.getElementById('deadbar'))return;
+  var d=document.createElement('div');
+  d.id='deadbar';
+  d.setAttribute('dir','rtl');
+  d.style.cssText='position:fixed;inset-inline:0;top:0;z-index:9999;padding:14px 16px;'
+   +'background:#7f1d1d;color:#fff;font:600 14px/1.5 Heebo,system-ui,sans-serif;text-align:center';
+  d.innerHTML='<div>המסך לא נטען כמו שצריך, ולכן הכפתורים והמיקרופון לא יגיבו.</div>';
+  var b=document.createElement('button');
+  b.type='button';
+  b.textContent='טעינה מחדש';
+  b.style.cssText='margin-top:10px;padding:11px 26px;border:0;border-radius:12px;cursor:pointer;'
+   +'background:#fff;color:#7f1d1d;font:700 15px Heebo,system-ui,sans-serif';
+  b.onclick=function(){
+   b.disabled=true;b.textContent='טוען מחדש';
+   // The stored copy is the likeliest thing keeping a dead build alive, so it
+   // goes first. A plain reload would hand him the same broken page again.
+   var go=function(){location.replace(location.pathname+'?fix='+Date.now());};
+   try{
+    if(window.caches&&caches.keys){
+     caches.keys().then(function(k){
+      return Promise.all(k.map(function(n){return caches.delete(n);}));
+     }).catch(function(){}).then(go);
+     return;
+    }
+   }catch(e){}
+   go();
+  };
+  d.appendChild(b);
+  (document.body||document.documentElement).appendChild(d);
+  try{console.error('monitor did not boot:',why);}catch(e){}
+ }
+ window.addEventListener('error',function(ev){
+  if(ok)return;
+  var t=ev&&ev.target;
+  if(t&&t!==window&&t.tagName)return;
+  bar((ev&&ev.message)||'error');
+ },true);
+ // And the silent case: no error we saw, but the script never finished either.
+ window.addEventListener('load',function(){
+  setTimeout(function(){if(!ok)bar('never signalled');},1500);
+ });
+
+ /*
+   A stale copy has to be able to replace itself.
+
+   The page already checks for a newer build every forty seconds, but that
+   check lives in the main script, so a page whose script died cannot fetch the
+   fix for the thing that killed it. He sat on a dead build for hours for
+   exactly this reason, and reloading by hand did not help because the copy on
+   his phone is what a reload serves.
+
+   So the freshness check runs HERE too, in the one script that cannot be
+   broken by anything below it. It compares this page's own stamp against the
+   live one and replaces itself once, with a fresh query string so the stored
+   copy is bypassed rather than served again. Once per session, so a server
+   that answers oddly cannot put the page in a reload loop.
+ */
+ try{
+  if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
+   .then(function(r){return r.ok?r.json():null;})
+   .then(function(v){
+    if(!v||!v.builtAt||v.builtAt==='__BUILT_AT__')return;
+    var key='staleFixedFor';
+    var seen='';
+    try{seen=sessionStorage.getItem(key)||'';}catch(e){}
+    if(seen===v.builtAt)return;
+    try{sessionStorage.setItem(key,v.builtAt);}catch(e){}
+    var go=function(){location.replace(location.pathname+'?fresh='+encodeURIComponent(v.builtAt));};
+    try{
+     if(window.caches&&caches.keys){
+      caches.keys().then(function(k){
+       return Promise.all(k.map(function(n){return caches.delete(n);}));
+      }).catch(function(){}).then(go);
+      return;
+     }
+    }catch(e){}
+    go();
+   }).catch(function(){});
+ }catch(e){}
+})();
+</script>
+<script>
+/* Runs before the body exists on purpose. A skin applied after first paint is a
+   white flash on a phone at night, and that flash is the whole complaint. */
+(function(){try{
+ var t=localStorage.getItem('skin')||'';
+ if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);
+}catch(e){}
+// Same reason: the calm class has to be on the element before the first paint,
+// or the old flash gets one frame on screen every time he opens the page.
+try{
+ document.documentElement.classList.add('calm');
+ if(localStorage.getItem('motion')==='soft')document.documentElement.classList.add('motion-soft');
+}catch(e){document.documentElement.classList.add('calm');}})();
+</script>
+</head>
+<body>
+<div id="offBar" role="status" aria-live="polite">אין רשת. מה שכאן מרגע העדכון האחרון, ומה שתשלח יצא כשהרשת תחזור.</div>
+<div class="lock" id="lockWrap">
+ <div class="lockbox">
+  <div class="em" aria-hidden="true">&#128274;</div>
+  <b>המוניטור נעול</b>
+  <small id="lockSaid">מזדהים כדי להיכנס.</small>
+  <button type="button" id="lockFace">כניסה בזיהוי פנים</button>
+  <div class="lockrow" id="lockRow" hidden>
+   <input type="password" id="lockCode" inputmode="numeric" autocomplete="off" placeholder="הקוד">
+   <button type="button" id="lockGo">כניסה</button>
+  </div>
+  <button type="button" class="alt" id="lockUseCode">כניסה עם הקוד</button>
+  <button type="button" class="alt" id="lockForgot" hidden>שכחתי את הקוד</button>
+ </div>
+</div>
+<script>
+// This runs before the page is painted on purpose. Itzik asked for the lock to
+// be the first thing on screen, not something that appears a moment later over
+// content that was already readable. Nothing here can wait for the main script.
+(function(){try{
+ if(localStorage.getItem('lockOn')==='1'
+   &&(localStorage.getItem('faceCred')||localStorage.getItem('monitorCode'))){
+  document.documentElement.className+=' locked';
+ }
+}catch(e){}})();
+</script>
+<div class="wrap">
+<!--
+  One big action at the top, then who this is, then the microphone.
+
+  He asked exactly this, in this order, and asked the refresh button to say what
+  it does rather than what it is called: pressing it fetches a new copy AND
+  puts him back on the home screen, and now it says so. Arranging moved into
+  settings, where he put it, because it is something you do once and not a
+  thing you need beside the title every day. And he asked what כלים was even
+  for, which was fair: it is the only way back to the pill, the food, the drive
+  and the special requests, so it stays, but as a quiet line under the card
+  rather than as a pill in the header competing with the one action that
+  matters.
+-->
+<!--
+  The title first, the microphone right under it.
+
+  Itzik, 18.9, by voice: "the monitor title will be at the top, and under it the
+  mockup of the microphone." Earlier the same day he had asked for the opposite,
+  nothing above the microphone, so the header had been pushed below it. Now he
+  wants the name of the screen to be the first line he reads and the microphone
+  to sit directly beneath it, which means only two things are allowed between
+  them: nothing.
+
+  So the big refresh button leaves the header, where it had order:-1 and was the
+  first row of the page, and moves below the microphone. It is still one full
+  width green bar, just not in front of the title any more. The microphone stays
+  outside the home section and out of the arrange list, hidden on every other
+  screen by pane(), so nothing can drag it away from under the title.
+-->
+<header class="hd">
+ <button type="button" class="conn" id="homeBtn" title="חזרה לבית" hidden>בית</button>
+ <button type="button" class="conn" id="setBtn" title="הגדרות" aria-label="הגדרות">הגדרות</button>
+ <div class="hdtext">
+  <!--
+    The exact title he gave. Under it two different facts that were one line
+    before: which version of the screen this is, and when its numbers were last
+    checked against the server. A page can be five minutes old and its data an
+    hour stale, and saying so is the difference between a monitor and a poster.
+  -->
+  <div class="t">${inst.name === 'abaitzik' ? 'מוניטור בבנייה עצמית' : 'המוניטור של ' + inst.owner}</div>
+  <div class="s" id="built"></div>
+  <div class="s dim" id="checked" hidden></div>
+ </div>
+ <div class="ava" aria-hidden="true"><div>${String(inst.owner || 'א').charAt(0)}</div></div>
+</header>
+ <section class="talk" id="talkCard" aria-label="פנייה אליי">
+  <button type="button" id="micBtn" class="mic" aria-label="${inst.gender === 'f' ? 'דברי' : 'דבר'} אליי">
+   <svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="9" y="3" width="6" height="11" rx="3" fill="var(--ink)" stroke="none"/>
+    <path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8.5 21h7"/>
+   </svg>
+  </button>
+  <div class="vtxt">
+   <b>${inst.gender === 'f' ? 'דברי' : 'דבר'} אליי</b>
+   <small id="micSaid">לוחצים, מדברים, לוחצים שוב. ההקלטה נשלחת אליי מיד.</small>
+  </div>
+  <div class="ways">
+   <button type="button" id="urgBtn" class="way">
+    <span class="wi" aria-hidden="true">📎</span>
+    <b>העלאת קובץ</b><small>גם תמונה</small>
+   </button>
+   <button type="button" id="wShoot" class="way">
+    <span class="wi" aria-hidden="true">📷</span>
+    <b>צילום</b><small>מצלמה</small>
+   </button>
+   <!-- 10.10, Itzik: the WeTransfer way of the file box, also here on the
+        home card, right under the file upload, for files over the limit. -->
+   <a id="wBig" class="way wbig" href="https://wetransfer.com/" target="_blank" rel="noopener">
+    <span class="wi" aria-hidden="true">📦</span>
+    <span><b>העלאת קבצים גדולים</b><small>בוויטרנספר, ואת הקישור מדביקים כאן</small></span>
+   </a>
+  </div>
+  <!--
+    Writing is not a button any more. He asked on 16.9 for one simple thing:
+    a line he types into, not a button that opens a screen that has a line.
+    This sends the same way the chat does and lands in the same thread.
+  -->
+  <form class="quickwrite" id="quickForm">
+   <textarea id="quickText" rows="2" autocomplete="off"
+    placeholder="${inst.name === 'abaitzik' ? 'יצחק' : inst.owner}, ${inst.gender === 'f' ? 'כתבי לי מה את צריכה' : 'כתוב לי מה אתה צריך'}"></textarea>
+   <button type="submit" id="quickBtn">שליחה</button>
+  </form>
+  <div class="msgsaid" id="quickSaid"></div>
+ </section>
+ <button type="button" class="reloadbig" id="reloadBtn" aria-label="חזרה לדף הבית" title="חזרה לדף הבית">↻</button>
+
+<section id="pH">
+ <!--
+   One card, four ways in, and nothing floating over it.
+
+   The microphone and the paperclip used to sit in a cramped strip, the camera
+   was a tile fourteen rows down, and writing meant finding the chat screen
+   first. Worse, a second microphone floated over the page and covered whatever
+   was underneath it. There is one microphone now and it is this one; the other
+   three sit under it at the same size, so none of them is hidden and none of
+   them is a guess.
+
+   Nothing here asks for a permission until it is pressed, and nothing starts
+   recording or sends a file on its own.
+ -->
+<!-- The unread button and the archive button are one block. Apart, arranging
+     treated a one line control as a card of its own, gave it a grip, and let
+     it be dragged away from the button that reveals it. -->
+<div id="newBlock">
+ <button type="button" id="newBtn" class="newbtn">
+  <span class="nb-l"><b id="nbTitle">מה חדש</b><small id="nbSub"></small></span>
+  <span class="nb-c" id="nbCount">0</span>
+ </button>
+ <!--
+   Itzik asked on 16.9 for a button under the red one: what was received.
+   His messages with where each one stands, and what is being worked on, as
+   one ordered list. The number is what is still open: received, in work,
+   and open tasks. It replaces the Codex fold that used to sit lower down.
+ -->
+ <button type="button" id="gotBtn" class="newbtn got">
+  <span class="nb-l"><b>מה התקבל</b><small>מה בעבודה ומה בוצע</small></span>
+  <span class="nb-c" id="gotCount">0</span>
+ </button>
+ <!--
+   The archive button that used to sit here is gone. Itzik asked on 13.9 for
+   one button for messages and nothing beside it: the button above is the chat,
+   whether there is something unread or not. A second control that revealed a
+   third control was the opposite of that.
+ -->
+</div>
+
+ <!-- "איך אני משתפר" came off the home screen on 16.9. The screen itself is
+      still reachable, it just does not sit on the way to everything else. -->
+
+  <div class="sent" id="sentCard" hidden></div>
+<!--ITZIK:BEGIN-->
+  <button type="button" id="bareBtn" class="morebtn">עוד כלים</button>
+<!--ITZIK:END-->
+  <!--
+    The music card is gone from here too. Itzik pointed out on 13.9 that the
+    same thing is already announced in the messages, so the card was a second
+    copy of an item he had read once. The recordings themselves are untouched:
+    they are on the special requests screen, which has its own tile.
+  -->
+  <!-- "שתי הבקשות האחרונות" came off on 16.9 at his word. The same two sit in
+       "מה התקבל", under the red button, with their state next to them. -->
+  <!--
+    "מה השתפר" used to live here as a fold out, and "איך אני משתפר" at the foot
+    of the screen opens the same list from the same data. Itzik called it a
+    duplication on 13.9 and it was: two counters of the same sixteen items on
+    one screen. The button at the foot is the one that stays.
+
+    "האחרון שביקשת ולפני זה" is gone with it. The two most recent special
+    requests already have their own tile and their own screen, and he asked for
+    the card off the home screen.
+  -->
+  <!--
+    The Codex fold that sat here is gone. Itzik asked on 16.9 to remove the
+    "requests from Codex" button; Codex answers already live on the answers
+    screen, and what he sends goes through the ordinary chat.
+  -->
+<!--ITZIK:BEGIN-->
+<section class="whatsnew" aria-label="מה חדש">
+  <div class="wn" id="wnCmds"></div>
+ </section>
+<!--ITZIK:END-->
+
+<!--
+  The three counters that used to sit here are gone.
+
+  "ממתין לתשובה", "נענה היום" and "לידים פתוחים" were fed by the networks queue,
+  and nothing has written to that queue since the networks went read only. So
+  they sat on the home screen reading zero, zero, zero, which is not a quiet
+  state: it is a claim that there is nothing waiting, made by a number with no
+  source behind it. He called it a mockup that is not connected to anything and
+  asked for it off the screen, and he was right on both counts.
+-->
+
+ <div id="askBox"></div>
+<!--ITZIK:BEGIN-->
+ <div class="grid" id="blkTiles">
+  <!--
+    איציק, 28.9: "תסיר את כפתור מייל, אין לי צורך בו". ירדו גם האריח וגם הסמל
+    בשורת הרשתות, שניהם פתחו את אותו מסך. המסך pE עצמו נשאר.
+  -->
+  <!-- The reports tile came off on 17.9. The reports are in "תשובות" now,
+       which is the one button he asked for. -->
+  <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>מי חייב כסף ומאיזה חודש</small></button>
+  <button type="button" class="gt g8" id="gVaad"><b>🏠 ועד הבית</b><small>מי שילם ומה פתוח</small></button>
+  <button type="button" class="gt g15" id="gSale"><b>⚖️ מכירת לולוס</b><small>התיק לעורך הדין, מה פתוח ומה נמסר</small></button>
+  <!--
+    איציק, 28.9: "תשים אצלי במוניטור עם אייקון לולוס". The recipe booklet, 19
+    recipes from the Lolos drive (מתכונים תקינים למהדרין 2024). The PDF is a
+    private file, opened sealed like every other one.
+  -->
+  <button type="button" class="gt gRec" id="gRecipes"><b><img class="gi" src="icons/lolos-giraffe.png" alt=""> מתכונים</b><small>חוברת לולוס וספר המתכונים של איציק</small></button>
+  <button type="button" class="gt g16" id="gIsra"><b>💳 ישראכרט יואל</b><small>הכרטיסים, מה לבקש, ומה ענו</small></button>
+  <!-- איציק, 11.10: "כפתור להחליף מודל תמחק אותו". הכפתור gModel ירד ממסך הבית; הקוד שלו בודק שהוא קיים. -->
+  <!-- איציק, 8.10: כפתור לכדור מוקסיפן שמהבהב כשהגיע הזמן ומפסיק כשנכנסתי. -->
+  <button type="button" class="gt g4" id="gMoxy"><b>💊 מוקסיפן</b><small id="gMoxyS">מהבהב כשהגיע הזמן, עד שנכנסת</small></button>
+  <button type="button" class="gt g10" id="gFiles"><b>📁 הקבצים שלי</b><small>כל מה ששלחת, סגור במוניטור</small></button>
+  <!--
+    איציק, 20.9: "על המסך ניקוזים אתה יכול למחוק את הכפתור. אין לי יותר צורך בזה".
+    הכפתור ירד ממסך הבית. המסך עצמו pDr וכל הרישומים שלו נשארים במקום,
+    עדיין נפתחים במסלול #j, כדי שלא יאבד מה שכבר נמדד.
+  -->
+  <!--
+    איציק, 28.9: "תסיר את כפתור לחסימה בלבד, חסמנו כבר את מי שצריך, הוא לא נחוץ יותר".
+    הכפתור ירד ממסך הבית. המסך pBl והרשימה נשארים, כמו הניקוזים.
+  -->
+  <!--
+    איציק, 28.9, בהקלטה: "תסיר את הכפתור הקלטות שלא תומללו". הכפתור ירד ממסך הבית.
+    המסך pVc נשאר, נפתח במסלול #voices, והקלטה שלא תומללה עדיין מתנגנת בתוך ההודעה בצ׳אט.
+  -->
+  <!--
+    איציק, 7.10, בהקלטה: "תסיר את כפתור משימות". הכפתור ירד ממסך הבית שלו.
+    המסך עצמו נשאר בקוד, והאריח אצל הלקוחות לא נגע.
+  -->
+  <!--
+    איציק, 11.10, בהקלטה: "צור לי כפתור מה יש לי היום לעשות... אני צריך לדעת שאני לא
+    אשכח שום דבר". One screen for today: the appointments, the reminders and the
+    tasks of today, and a peek at tomorrow.
+  -->
+  <button type="button" class="gt gMyDay" id="gMyDay" data-new="1"><b>📅 מה יש לי היום</b><small>תורים, תזכורות ומשימות של היום</small></button>
+  <button type="button" class="gt g18" id="gAppts"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
+  <button type="button" class="gt g16" id="gRemind"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
+  <button type="button" class="gt g10" id="gNotes"><b>📝 פתקים</b><small>נכתב, נשמר, לא הולך לאיבוד</small></button>
+  <!-- Other monitors on this server, one colour each. Hidden when there are none. -->
+  <button type="button" class="gt g3" id="gTenants" hidden><b>🟢 מוניטורים אחרים</b><small>ירוק תקין, אדום נתק</small></button>
+  <!-- Ilay's two tiles. Hidden on Itzik's copy by the instance screens list. -->
+  <button type="button" class="gt g11" id="gCIdeas" hidden><b>💡 רעיונות לתוכן</b><small>מה שעלה לך, לפני שנשכח</small></button>
+  <button type="button" class="gt g3" id="gPlan" hidden><b>🗓️ לוח תוכן</b><small>מה עולה מתי, ומה כבר עלה</small></button>
+  <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות לשיפור המוניטור</b><small>מה עוד המסך הזה יכול לעשות</small></button>
+  <!--
+    איציק, 23.9, בהקלטה: "אפשר להסיר את כפתור בקשות מיוחדות".
+    הכפתור ירד ממסך הבית. המסך עצמו pY וכל הפריטים בו נשארים,
+    נפתחים במסלול #special ומהחיפוש.
+  -->
+  <!--
+    איציק, 23.9, בהקלטה: "תסירי את כפתור תגובות מיוחדות".
+    הכפתור ירד ממסך הבית. המסך עצמו pK נשאר, נפתח במסלול #replies ומהחיפוש.
+  -->
+  <!--
+    יהודה, 20.9. A tile of his own, because the happymeal work is a client
+    job and not part of the networks queue. It opens the file straight from
+    docs/files, so it needs no login and no Drive on the phone. One file
+    today; when there is a second, this becomes a list instead of a link.
+  -->
+  <button type="button" class="gt g15" id="gYehuda"><b>📄 יהודה</b><small>גרסה קצרה לשליחה, והסקירה המלאה לזיכרון</small></button>
+  <!--
+    איציק, 30.9: "במוניטור שים את זה בכפתור, שיהיה לי נוח להתייעץ". Everything
+    made for pushing candletimes, numbered like Rinat's list: the bio
+    comparison, the how-to page, the live candle stories.
+  -->
+  <button type="button" class="gt gNer" id="gNerMkt"><b>🕯️ שיווק הנרות</b><small>ארבעת הסטוריז של חמישי ושישי</small></button>
+  <!--
+    איציק, 1.10: "שים כפתור יעודי במוניטור, ככה אני לא מוצא". Every finished
+    reel, numbered like Rinat's list. The full quality copy is on Drive in
+    סרטונים; the one here is lighter so it opens and shares from the phone.
+  -->
+  <!--
+    1.10. Itzik: "שים לי במוניטור תחת כפתור חדש אחרי הניתוח השני". The medical
+    papers after the 14.9 surgery, numbered like the reels. Private files only,
+    never PUBLIC_FILES: this is pathology and a doctor's summary.
+  -->
+  <button type="button" class="gt gMed" id="gMed"><b>🩺 אחרי הניתוח השני</b><small>ממוספר. המסמכים מהביקורת אצל הפרופסור</small></button>
+  <!--
+    1.10. Itzik, in a voice note: "תעשה לי כפתור של חשבוניות", ChatGPT, Claude
+    and Google from August on (before that he filed them himself). Pulled from
+    his mail; private files only, numbered, a new one gets the next number.
+  -->
+  <button type="button" class="gt gInv" id="gInv"><b>🧾 חשבוניות</b><small>ממוספר. מ 3.10 והלאה</small></button>
+  <!--
+    2.10. Itzik, in a voice note: a new tile with winning lines. The first one
+    is amirshwartz1's TikTok comment on the cake video (55 likes).
+  -->
+  <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
+  <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>04 עד 20, גם באיכות גבוהה</small></button>
+  <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 02 אני אסתדר</small></button>
+  <!--
+    27.9. The content plan, shared with Ilay who runs the socials. Public on
+    purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
+  -->
+  <!--
+    27.9. Itzik asked for this several times in voice notes and it was lost:
+    sessions on the server did not know where the list lives. It is the Google
+    Doc "קניות", owned by Jenny and shared with him (see CLAUDE.md).
+  -->
+  <!--
+    4.10. Itzik, in a voice note with a photo of his note: a tile for the
+    pension until we see the payments go through. Stays until he says it works.
+  -->
+  <button type="button" class="gt gPen" id="gPen"><b>🏦 פנסיה</b><small>קוד מוסד בבנק 28417, 1,211 ש״ח. בדיקה ב 18.10</small></button>
+  <!--
+    4.10. Itzik, from the Maccabi page on his phone: everything about the
+    occupational clinic in one place until he gets there. Phone answers
+    Sun to Thu 08:00 to 11:00 only.
+  -->
+  <!--
+    4.10. Itzik could not find the vehicles PDF inside the sale screen. Files
+    for the lawyer get one tile on the home screen, numbered.
+  -->
+  <!--
+    10.10. Itzik: the stickers he and Alon Yaglon built over the years, used
+    "like a puppet theatre". One tile to explain each character. Images and
+    chat examples are sealed files under stk/, never in this page.
+  -->
+  <button type="button" class="gt gStk" id="gStk" data-new="1"><b>🎭 תיאטרון המדבקות</b><small>האתר שלך ושל אלון: קישור, העתקה ושליחה לאלון</small></button>
+  <!--
+    10.10. Itzik: "a link and a button in the monitor, lecture". The edited
+    lecture text with slide thumbnails, the new slides and the deck, all in Drive.
+  -->
+  <button type="button" class="gt gLec" id="gLec" data-new="1"><b>🎤 הרצאה</b><small>כנגד כל הסיכויים: המלל הערוך עם השקפים</small></button>
+  <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
+  <button type="button" class="gt gManiv" id="gManiv"><b>💧 תשלום למניב</b><small>לקוח 50523290. ביום שני המוקד נפתח ב 09:00</small></button>
+  <button type="button" class="gt gOcc" id="gOcc"><b>🩺 מרפאה תעסוקתית</b><small>מכבי רמות. טלפון א עד ה 08:00 עד 11:00</small></button>
+  <button type="button" class="gt gShop" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
+  <button type="button" class="gt gStoryArc" id="gStoryArc" data-new="1"><b>📸 הסטוריז שלי</b><small>הארכיון באינסטגרם: גם סטורי שכבר ירד</small></button>
+  <!--
+    איציק, 28.9, בהקלטה: "תסיר את כפתור תוכניות תוכן". הכפתור ירד ממסך הבית.
+    הקובץ והגיליון שלו נשארים, הקישור שכבר נשלח לאיליי ממשיך להיפתח.
+  -->
+  <!--
+    איציק, 1.10, בהקלטה: יומן החזרה לא צריך יותר. הכפתור והדף נמחקו.
+  -->
+  <!--
+    איציק, 1.10, בהקלטה: כפתור הדפדפן לא עובד, אי אפשר להתחבר בתוכו. הכפתור והדף נמחקו.
+  -->
+ </div>
+
+ <!-- "מה הסתרנו" came off on 16.9. Hiding a tile is his to undo in settings. -->
+
+ <input type="search" id="gSearch" class="gsearch" autocomplete="off"
+  placeholder="חיפוש בכל מה שכתבתי לך">
+ <div class="gres" id="gResults"></div>
+
+ <div class="row" id="blkIcons" role="group" aria-label="קיצורים">
+  <!--
+    איציק, 6.10, בהקלטה: "לצמצם את הכפתור של ניטור רשתות וכל האייקונים של כל
+    הרשתות, הכל אייקון אחד". The tile and the four network circles became this
+    one circle. Inside, the screen still has a tab per network and the button
+    out to each network's own app.
+  -->
+  <!-- איציק, 6.10, בהקלטה: "תכין לי אייקון עגול עם התעודת נכה בפנים". Opens
+       the card itself, decrypted, with the share button for the licensing office. -->
+  <button type="button" class="ic" id="icNache"><span class="c c-nk">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="4.5" r="1.6"/><path d="M11 7.5v6h5l2 5"/><path d="M11 10.5h4"/><path d="M8 11.2a5.5 5.5 0 1 0 7.6 6.3"/></svg></span>תעודת נכה</button>
+  <a class="ic" data-net="all" id="icNet" href="#"><span class="c c-nt">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M10 20V5M15 20v-6M20 20V8"/></svg></span>ניטור רשתות</a>
+  <a class="ic" href="https://abaitzik.com/" target="_blank" rel="noopener"><span class="c c-st">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c3 3 3 13 0 16M12 4c-3 3-3 13 0 16"/></svg></span>האתר</a>
+  <button type="button" class="ic" id="icLand"><span class="c c-vd">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 13h5"/></svg></span>דפי נחיתה</button>
+  <a class="ic" href="https://salinda-mobile.vercel.app/" target="_blank" rel="noopener"><span class="c c-sl">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/></svg></span>סלינדה</a>
+  <!--
+    נר. Two candles in the round, same as the site they open.
+
+    This used to open the hub at ner/, which is a page of links: the site,
+    two PDFs of the name options, the design sheet. On a phone that reads as
+    a button that sends you to a PDF, which is not what a candle icon should
+    do. It goes straight to the site now. The hub is still at ner/ for when
+    the PDFs are wanted.
+  -->
+  <a class="ic" href="https://candletimes.com" target="_blank" rel="noopener"><span class="c c-nr">
+   <svg viewBox="0 0 24 24">
+    <path fill="#F4EFE6" d="M8.4 11.6h2.2v8.8H8.4zM13.4 11.6h2.2v8.8h-2.2z"/>
+    <path fill="#F5A623" d="M9.5 10.9c2.6-1.9 2-4.3 0-6.2-2 1.9-2.6 4.3 0 6.2z"/>
+    <path fill="#F5A623" d="M14.5 10.9c2.6-1.9 2-4.3 0-6.2-2 1.9-2.6 4.3 0 6.2z"/>
+    <path fill="#FFF3D6" d="M9.5 10.3c1.2-1 .9-2.3 0-3.4-.9 1.1-1.2 2.4 0 3.4z"/>
+    <path fill="#FFF3D6" d="M14.5 10.3c1.2-1 .9-2.3 0-3.4-.9 1.1-1.2 2.4 0 3.4z"/>
+   </svg></span>נרות</a>
+  <!--
+    איליי. איציק, 25.9: "אני לא רואה כפתור איליי", and then, when it opened
+    the old mockup page: "כפתור על מסך הבית, לא כאתר". It is a button of the
+    monitor now, not a link out. Pressing it opens the status of Ilay's
+    monitor, and the circle itself is green when his monitor is fine and red
+    on a break, painted by paintTenantsTile from the health check. Nothing of
+    Ilay's content reaches this page, only that one colour.
+  -->
+  <a class="ic" href="#" id="icIly"><span class="c c-el" id="icIlyC">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 21c1.2-4 4-6 7.5-6s6.3 2 7.5 6"/></svg></span>איליי</a>
+  <!--
+    רינת. Itzik, 8.10, by voice: "תעשה אייקון של המוניטור של רינת, שיראה תמיד
+    אם הוא אדום או ירוק, ליד איליי". Same as Ilay's: only the colour of her
+    monitor's health check, painted by paintTenantsTile, nothing of hers.
+  -->
+  <a class="ic" href="#" id="icRn"><span class="c c-rn" id="icRnC">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.8 1.6-1.6 0-1.2-1-1.5-1-2.6 0-1 .8-1.6 1.8-1.6H17a4 4 0 0 0 4-4C21 6.6 17 3 12 3z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7" r="1"/></svg></span>רינת</a>
+  <a class="ic" href="#" id="icHs"><span class="c c-hs" id="icHsC">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>הום סטייל</a>
+  <!--
+    קבלות goes here. The markup and the .c-kb colour are ready, and so is
+    build-kabalot.js, but the button stays out until data/receipts.json
+    exists: a round button that opens a 404 is worse than no button.
+
+    <a class="ic" href="kabalot/" target="_blank" rel="noopener"><span class="c c-kb">
+     <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9"
+          stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 3h12v17l-2-1.4-2 1.4-2-1.4-2 1.4-2-1.4z"/>
+      <path d="M9.5 8h5M9.5 12h5"/>
+     </svg></span>קבלות</a>
+  -->
+  <a class="ic" href="https://pegasusgame.vercel.app" target="_blank" rel="noopener"><span class="c c-pg">
+   <svg viewBox="0 0 24 24"><path fill="#fff" d="M4 14c2-5 6-8 11-8l5-2-2 5c0 5-3 9-8 11l-1-3-3-1z"/><circle cx="14" cy="10" r="1.3" fill="#6d28d9"/></svg></span>פגסוס</a>
+  <button type="button" class="ic" id="icDrive"><span class="c c-dr">
+   <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M9.4 3h5.2l6 10.4h-5.2z"/><path fill="#34A853" d="M3 18.6 5.6 14h12.8l-2.6 4.6z"/><path fill="#FBBC05" d="M9.4 3 3 14l2.6 4.6L12 7.6z"/></svg></span>דרייב</button>
+  <!-- איציק, 30.9: "תסיר את האייקון לועד הבית, יש לי אותו גם בכפתור". The tile gVaad stays. -->
+  <!--
+    כניסות. One shared beacon (ner-site's /api/visit) every one of the four
+    sites/apps now pings on load; this button reads it back. A toast, not a
+    new pane -- the screen is already stacked and waiting for a redesign, so
+    this stays the smallest thing that could answer "how many people came".
+  -->
+  <button type="button" class="ic" id="icVisits"><span class="c c-vs">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></span>כניסות</button>
+  <button type="button" class="ic" id="icAdd"><span class="c c-add">
+   <svg viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>חדש</button>
+ </div>
+<!--ITZIK:END-->
+<!--TENANT:BEGIN-->
+  <!--
+    A customer's home screen, built from his intake answers and not filtered
+    out of Itzik's. 25.9: the first version hid Itzik's tiles by id, the round
+    icons had no id, and Ilay opened a monitor full of his father's Pegasus,
+    candles and networks. Here nothing of Itzik's is in the page at all: the
+    build cuts every ITZIK block out of a customer's copy and keeps this one.
+  -->
+  <!-- 6.10, Home Style: one coloured line over the tiles, filled from D.ship. Hidden without a shipments table. -->
+  <button type="button" class="shipline" id="shipLine" hidden></button>
+  <div class="grid" id="blkTiles">${tenantTiles(inst)}</div>
+<!--TENANT:END-->
+
+
+
+
+</section>
+
+<!--
+  Everything that is a setting, on one screen instead of stacked under the home
+  page. Not one control changed and not one value moved: the same elements,
+  the same ids, the same handlers, in a different place. Moving a switch is not
+  the same as changing what it does, and the security block in particular is
+  untouched.
+-->
+<section id="pZ" hidden>
+ <h2>הגדרות</h2>
+<p class="stamp" id="builtSet"></p>
+<div class="alerts" id="skinBox">
+ <div>
+  <b>מצב יום ולילה</b>
+  <small id="skinSaid">אפשר להשאיר על מה שהטלפון מחליט, או לקבוע בעצמך.</small>
+ </div>
+ <div class="skinrow" role="group" aria-label="מצב יום ולילה">
+  <button type="button" class="skb" data-skin="auto">הטלפון</button>
+  <button type="button" class="skb" data-skin="light">יום</button>
+  <button type="button" class="skb" data-skin="dark">לילה</button>
+ </div>
+</div>
+<!--
+  This closing tag was missing.
+
+  .alerts is a flex row that does not wrap, and without the close everything
+  below became a child of it: the install hint, the notifications card, the
+  quick links and the connection test were all squeezed into columns of one
+  flex row and pushed off the side of the screen. Itzik sent a photo of it from
+  his phone with the notifications card sliced in half at the edge.
+-->
+<div class="install" id="installHint">להתקנה כאפליקציה על מסך הבית: בספארי לוחצים שיתוף ואז "הוספה למסך הבית". באנדרואיד: תפריט ואז "התקנת אפליקציה".</div>
+<div class="alerts" id="alerts">
+ <div>
+  <b>התראות לנייד</b>
+  <small>מתקינים את האפליקציה ntfy, לוחצים על הכפתור, ובוחרים הרשמה. מאז כל תשובה שלי קופצת כמו וואטסאפ.</small>
+ </div>
+ <a class="abtn" id="ntfyBtn" href="#" target="_blank" rel="noopener">הפעלת התראות</a>
+</div>
+
+<!-- The build plan is Itzik's internal page, so a customer's copy leaves the link out. -->
+<!--ITZIK:BEGIN-->
+<nav class="links" aria-label="קישורים מהירים">
+ <a href="plan.html">
+  <span aria-hidden="true">&#128736;</span>
+  <div>תוכנית הבנייה<small>מה נבנה ומה עוד מתוכנן</small></div>
+ </a>
+</nav>
+<!--ITZIK:END-->
+
+
+<div class="alerts" id="pingBox">
+ <div>
+  <b>בדיקת חיבור</b>
+  <small id="pingSaid">לוחצים, ההודעה יוצאת אליי, והשורה הזאת אומרת מה עבר ומתי חזרתי.</small>
+ </div>
+ <button type="button" class="abtn" id="pingBtn">בדיקה</button>
+</div>
+<!--
+  Called what it is.
+
+  This control has been here all along, as "screen colour" with לבן and שחור
+  on it, and he asked twice this evening for a night mode he could not find. He
+  was not looking for a colour, he was looking for night, so it says night. It
+  is also first on the settings screen now, because sitting in the dark is not
+  something to scroll for.
+
+  The stray closing tag that used to sit here belonged to the day and night
+  card far above, which is what turned this whole screen into one flex row.
+-->
+<!--
+  "Reset everything, everything reset."
+
+  What that can honestly mean here: every answer of mine counts as read, the
+  count goes to zero, and only what arrives from now on turns red again. It
+  deletes nothing. The history is still in the chat, because throwing away what
+  I wrote him is not something a button on a settings screen should be able to
+  do.
+-->
+<div class="alerts" id="arrangeBox">
+ <div>
+  <b>סידור המסך</b>
+  <small>מזיז את הכרטיסים לסדר שנוח לך. הידית הכחולה גוררת, ולידה מעלה ומטה.</small>
+ </div>
+ <button type="button" class="abtn" id="arrangeBtn">סידור</button>
+</div>
+<div class="alerts" id="clearBox">
+ <div>
+  <b>לנקות את ההודעות מהמסך</b>
+  <small id="clearSaid">מסתיר את כל ההודעות מהצ׳אט במכשיר הזה. לא מוחק אותן מהרישום, ואפשר להחזיר הכל בלחיצה. אפשר גם להעיף הודעה אחת בהחלקה הצידה או ב-× שלידה.</small>
+ </div>
+ <button type="button" class="abtn" id="clearBtn">ניקוי</button>
+</div>
+<div class="alerts" id="resetBox">
+ <div>
+  <b>לאפס את ההודעות</b>
+  <small id="resetSaid">כל מה שכתבתי עד עכשיו נחשב נקרא והמונה יורד לאפס. רק מה שיגיע מכאן והלאה יידלק. שום דבר לא נמחק.</small>
+ </div>
+ <button type="button" class="abtn" id="resetBtn">איפוס</button>
+</div>
+<div class="alerts" id="sfxBox">
+ <div>
+  <b>צלילים</b>
+  <small id="sfxSaid">תקתוק קטן בכל לחיצה, וצליל כשהודעה עפה במעטפה לתיבת הדואר. הצלילים לא עוצרים מוזיקה שמתנגנת.</small>
+ </div>
+ <button type="button" class="abtn" id="sfxBtn">כיבוי</button>
+</div>
+<div class="alerts" id="motionBox">
+ <div>
+  <b>תנועה על המסך</b>
+  <small id="motionSaid">רגוע: שום דבר לא מהבהב. הסימון האדום נשאר במקומו.</small>
+ </div>
+ <div class="mob" role="group" aria-label="תנועה על המסך">
+  <button type="button" class="mob-b" data-motion="off">רגוע</button>
+  <button type="button" class="mob-b" data-motion="soft">רמז עדין</button>
+ </div>
+</div>
+<div class="codebox" id="codeBox" hidden>
+ <b id="codeTitle">קוד אישי</b>
+ <small id="codeAbout">מקלידים פעם אחת בנייד שלך והוא נשמר במכשיר. כל הודעה שתשלח תישא אותו, וכל פנייה בלעדיו אני מתעלם ממנה ומדווח לך. הקוד לעולם לא מוצג על המסך, וכדי לשנות אותו צריך אישור בזיהוי פנים.</small>
+ <div class="facerow">
+  <button type="button" id="faceSetup">הפעלת זיהוי פנים</button>
+  <span id="faceState"></span>
+ </div>
+ <div class="coderow" id="codeRow" hidden>
+  <input type="password" id="codeInput" inputmode="numeric" autocomplete="off" placeholder="קוד קצר, למשל 4 ספרות">
+  <button type="button" id="codeSave">שמירה</button>
+ </div>
+ <div class="facerow" id="codeChangeRow">
+  <button type="button" id="codeChange">שינוי הקוד</button>
+ </div>
+ <div class="facerow">
+  <button type="button" id="lockToggle">נעילה בפתיחה</button>
+  <span id="lockState"></span>
+ </div>
+ <div class="msgsaid" id="codeSaid"></div>
+</div>
+ <!--
+   Itzik, 18.9, for the third time in a day: "no change in the red button." On
+   my browser it has worked every single time I have looked, which means the
+   thing that is broken lives on his phone and I have been guessing at it from
+   here. Guessing cost him a day.
+
+   This is the end of the guessing. One tap collects what his device actually
+   holds and sends it down the same channel as everything else he says, so it
+   lands in the chat where I read it. No numbers he has to copy, no screenshots
+   to interpret.
+ -->
+ <div class="alerts" id="diagBox">
+  <div>
+   <b>משהו לא מתנהג כמו שצריך?</b>
+   <small>לחיצה אחת שולחת לי מה בדיוק קורה במכשיר שלך. בלי להעתיק כלום.</small>
+  </div>
+  <button type="button" class="abtn" id="diagBtn">שליחת אבחון</button>
+ </div>
+ <div class="msgsaid" id="diagSaid"></div>
+</section>
+
+<!--ITZIK:BEGIN-->
+<section id="pQ" hidden>
+ <div class="seg" role="group" aria-label="סינון">
+  <button type="button" id="bP" aria-pressed="true">ממתין</button>
+  <button type="button" id="bD" aria-pressed="false">נענה</button>
+ </div>
+ <div id="list"></div>
+</section>
+<!--ITZIK:END-->
+
+<!--ITZIK:BEGIN-->
+<section id="pL" hidden>
+ <h2>לידים: מי פנה ורוצה המשך</h2>
+ <div id="leads"></div>
+</section>
+<!--ITZIK:END-->
+
+<!--ITZIK:BEGIN-->
+<section id="pD" hidden>
+ <!-- Itzik, 10.10, the reviewer's idea again for every screen: no grey paragraph at the bottom. The help moved behind the ? and a short line on top for the first days. -->
+ <h2>גוגל דרייב <button type="button" class="hq" data-q="drvHelp" aria-label="הסבר על המסך">?</button></h2>
+ <div class="hint1" data-tip="drvTip" hidden>נגיעה בתיקייה פותחת אותה בדרייב.<button type="button" class="hint1x" aria-label="סגירה">✕</button></div>
+ <div class="hint hq-t" id="drvHelp" hidden>חסרה תיקייה? תכתוב לי בשורת הבנייה העצמית ואוסיף אותה לכאן.</div>
+ <div class="hint" style="margin-bottom:12px">קיצורים ישירים לתיקיות שאנחנו עובדים איתן.${inst.name === 'abaitzik' ? ' הכל בחשבון itcohen2.' : ''}</div>
+ <nav class="links" aria-label="תיקיות בדרייב">
+  <!-- Itzik, 2.10: "הריל שלי" was missing here and he could not find the folder.
+       Only the latest version of each reel is kept in it, with its cover and post text. -->
+  <a href="https://drive.google.com/drive/u/0/folders/1k8uEixPICag2S06Xfq_CPcntJvSMR46R" target="_blank" rel="noopener">
+   <span aria-hidden="true">🎬</span><div>הרילים שלי<small>הגרסה האחרונה של כל ריל ב-4K, עם כריכה ותיאור לפוסט</small></div></a>
+  <!-- Itzik, 16.9: the Drive button took him straight to the stories and he
+       could not find the new sign photo. Posts get their own entry, first. -->
+  <a href="https://drive.google.com/drive/u/0/folders/1DsAP6qZwcKMz5nVuXT3DSKJ3Ox-74Qh3" target="_blank" rel="noopener">
+   <span aria-hidden="true">🖼️</span><div>פוסטים<small>תמונות לפוסט, כמו השלט מבית החולים</small></div></a>
+  <!-- Itzik, 21.9: the series moved to a folder with the character intro.
+       Inside it, "עלה לרשת" holds what was already published. -->
+  <a href="https://drive.google.com/drive/u/0/folders/1W0sj-5Nc_Xy9beI_HApwHLEG_qAswVw3" target="_blank" rel="noopener">
+   <span aria-hidden="true">🎬</span><div>מה בצלחת עם דמות<small>הסרטונים עם הפתיח, ובפנים "עלה לרשת"</small></div></a>
+  <a href="https://drive.google.com/drive/u/0/folders/1VK_2ZFOVVnN6mj2_hwWorFWgmD5Tqvoi" target="_blank" rel="noopener">
+   <span aria-hidden="true">📝</span><div>תסריטים<small>תסריט לכל ריל</small></div></a>
+  <a href="https://drive.google.com/drive/u/0/folders/1ZG-haqGM-j2WwwB-1PAGKCltDvCqS9Ce" target="_blank" rel="noopener">
+   <span aria-hidden="true">📊</span><div>דוח רשת<small>דוחות הניטור</small></div></a>
+  <!-- Itzik, 24.9: the summonses out of the mail and into Drive, so printing
+       one does not depend on finding the right email. -->
+  <a href="https://drive.google.com/drive/u/0/folders/1PO2J-fpjcIgO2JsNXqsrIMMOz3kl9Num" target="_blank" rel="noopener">
+   <span aria-hidden="true">🏥</span><div>תורים עתידיים<small>הזימונים, וקובץ אחד להדפסה של כולם</small></div></a>
+  <!-- Itzik, 23.9: the folder he will hand to the lawyer as a link, so he
+       wanted it one tap away. The draft notice to Barzani lives in 06. -->
+  <a href="https://drive.google.com/drive/u/0/folders/1Waun6RZNoBJV7hGof3M7Xzn6Qt-VNuOj" target="_blank" rel="noopener">
+   <span aria-hidden="true">⚖️</span><div>מכירת לולוס, לעורך דין<small>התיק המלא. המכתב לברזני ב 06 שכירות וחוזים</small></div></a>
+  <!-- Itzik, 25.9: "תמיד תשים בתיקייה, אני לא מוצא ככה". The folders were
+       there; what was missing is a way to reach them from the phone. Every
+       folder I create for him gets a button here on the same day.
+       29.9: there used to be a second "candle videos" button pointing at
+       this same folder, and he took them for two folders. One button now. -->
+  <a href="https://drive.google.com/drive/u/0/folders/1IIrVvePNMBGThVUCJ6vlTzvWg2anmSf3" target="_blank" rel="noopener">
+   <span aria-hidden="true">🕯️</span><div>שיווק נרות candletimes<small>כל סרטוני הנרות. הדרייב שלי ← שיווק נרות candletimes</small></div></a>
+  <a href="https://drive.google.com/drive/u/0/folders/1sVcaRvN3ii3XMUgmYzgYH_P7fkzyisic" target="_blank" rel="noopener">
+   <span aria-hidden="true">📋</span><div>שאלון אפיון למוניטור<small>השאלון ללקוח חדש, להעברה בוואטסאפ</small></div></a>
+  <a href="https://drive.google.com/drive/u/0/my-drive" target="_blank" rel="noopener">
+   <span aria-hidden="true">📁</span><div>כל הדרייב<small>הדף הראשי</small></div></a>
+ </nav>
+</section>
+<!--ITZIK:END-->
+
+<!--ITZIK:BEGIN-->
+<section id="pBl" hidden>
+ <h2>רשימה לחסימה</h2>
+ <div class="hint">
+  <b>כלום כאן לא מבוצע.</b> זו רשימה לאישור שלך. מסמן את מי שאתה רוצה,
+  לוחץ שליחה, ואני חוסם רק אותם ומדווח לך אחד אחד.
+  מי שנמסר בשם פרטי בלבד עדיין צריך זיהוי, ואני לא חוסם על סמך שם שאין לו חשבון.
+ </div>
+ <div id="blOpen"></div>
+ <div id="blBody"></div>
+ <form class="drform" id="blForm">
+  <label class="bllab" for="blNote">משהו להגיד לי על הרשימה</label>
+  <textarea id="blNote" rows="3" placeholder="מי זה, מה לא נכון, את מי להוריד, את מי להוסיף. אפשר לשלוח גם בלי לסמן אף אחד."></textarea>
+  <button type="submit" id="blSend">שליחה</button>
+ </form>
+ <div class="msgsaid" id="blSaid"></div>
+</section>
+<!--ITZIK:END-->
+
+<section id="pVc" hidden>
+ <h2>הקלטות שלא תומללו</h2>
+ <div class="hint">
+  <b>אלה ההודעות הקוליות שלך שלא הצלחתי להפוך למילים.</b>
+<!--ITZIK:BEGIN-->
+  איציק, 19.9: "אם אתה לא מצליח לתמלל שלח לי שאני אקשיב". אז הן כאן.
+<!--ITZIK:END-->
+  אפשר ללחוץ ולשמוע. כשתדע מה אמרת שם, תכתוב לי בצ׳אט ואני ממשיך מזה.
+  אם המסך ריק, זה אומר שהכל תומלל.
+ </div>
+ <div id="vcBody"></div>
+</section>
+
+<!--ITZIK:BEGIN-->
+<section id="pDr" hidden>
+ <h2>ניקוזים</h2>
+ <!--
+   A log, not a diagnosis. The numbers that decide what is normal came from his
+   surgeon, so they are a field he fills in rather than something I state.
+ -->
+ <div class="hint" id="drPlan">
+  <b>איך עובדים עם זה.</b>
+  מודדים בכל בוקר באותה שעה, ומרוקנים לפני המדידה כדי שהמספר יהיה של יממה שלמה.
+  רושמים כל ניקוז בנפרד, גם אם יצא אפס. אפס הוא נתון, לא חוסר נתון.
+  מה שחשוב הוא <b>הכיוון לאורך ימים</b>, לא מספר בודד: ירידה מתמשכת היא הדרך הרגילה החוצה.
+  עלייה אחרי ירידה, או שינוי בצבע ובריח, זו שיחת טלפון למנתח ולא שאלה בשבילי.
+  את הסף המדויק להוצאת ניקוז נותנים לך בבית החולים. תכתוב לי אותו ואני אשמור אותו כאן ואתריע כשמתקרבים אליו.
+ </div>
+ <form class="drform" id="drForm">
+  <div class="drrow">
+   <label>1<input type="number" inputmode="decimal" min="0" step="1" id="dr1" placeholder="מ״ל"></label>
+   <label>2<input type="number" inputmode="decimal" min="0" step="1" id="dr2" placeholder="מ״ל"></label>
+   <label>3<input type="number" inputmode="decimal" min="0" step="1" id="dr3" placeholder="מ״ל"></label>
+   <label>4<input type="number" inputmode="decimal" min="0" step="1" id="dr4" placeholder="מ״ל"></label>
+  </div>
+  <label class="drpeein">שתן<input type="number" inputmode="decimal" min="0" step="1" id="drUrine" placeholder="מ״ל, אפשר להשאיר ריק"></label>
+  <input type="text" id="drNote" autocomplete="off" placeholder="צבע, ריח, כאב, כל דבר חריג. אפשר להשאיר ריק">
+  <button type="submit" id="drSend">רישום המדידה</button>
+ </form>
+ <div class="msgsaid" id="drSaid"></div>
+ <div id="drBody"></div>
+</section>
+<!--ITZIK:END-->
+
+<!--ITZIK:BEGIN-->
+<section id="pN" hidden>
+ <h2>ניטור לפי רשת</h2>
+ <div class="seg" id="netSeg" role="group" aria-label="בחירת רשת">
+  <button type="button" data-net="all" aria-pressed="true">הכל</button>
+  <button type="button" data-net="youtube" aria-pressed="false">יוטיוב</button>
+  <button type="button" data-net="tiktok" aria-pressed="false">טיקטוק</button>
+  <button type="button" data-net="facebook" aria-pressed="false">פייסבוק</button>
+  <button type="button" data-net="instagram" aria-pressed="false">אינסטגרם</button>
+ </div>
+ <div id="netBody"></div>
+</section>
+<!--ITZIK:END-->
+
+<!--ITZIK:BEGIN-->
+<section id="pS" hidden>
+ <h2>ניתוח</h2>
+ <div class="opcard">
+  <div class="opline"><span>מתי</span><b id="opWhen">יום ראשון הקרוב</b></div>
+  <div class="opline"><span>אשפוז</span><b>במוצאי החג, הערב שלפני</b></div>
+  <div class="opline"><span>איפה</span><b>בניין אריסון, קומה 5, כירורגית א׳</b></div>
+  <div class="opline"><span>שעה</span><b>16:00</b></div>
+ </div>
+ <div class="msgsaid" id="opSaid"></div>
+ <form class="quickrow" id="opForm">
+  <input type="text" id="opText" autocomplete="off" placeholder="להוסיף פרט או לתקן">
+  <button type="submit" id="opBtn">שליחה</button>
+ </form>
+ <div id="opList"></div>
+</section>
+<!--ITZIK:END-->
+
+<!--ITZIK:BEGIN-->
+<section id="pTn" hidden>
+ <h2>מוניטורים אחרים</h2>
+ <div class="rephint">רק האם הם חיים. שום דבר מהתוכן שלהם לא מגיע לכאן.</div>
+ <div id="tnBox"></div>
+</section>
+<!--ITZIK:END-->
+
+<section id="pCI" hidden>
+ <h2>רעיונות לתוכן</h2>
+ <div class="rephint">כל רעיון ששלחת נשמר כאן. לחיצה מסמנת שהשתמשת בו.</div>
+ <div id="ciBox"></div>
+</section>
+
+<!--
+  Connecting a customer's computer, 26.9. Itzik: "Ilay got no offer to connect
+  his computer. Why? Give him a blinking button with a task." The step had been
+  taken off his start page on 25.9 because it ran through Itzik's profile. This
+  is the customer's own part. Same day: Chrome Remote Desktop needs a Google
+  account on our side too, and Itzik cannot open another one, so it is
+  RustDesk: no account anywhere, and nothing connects without the number and
+  one time password he sends himself and the yes he gives, each time.
+-->
+<section id="pRc" hidden>
+ <h2>לחבר את המחשב</h2>
+ <!-- 10.10, from the reviewer, taken by Itzik: "הוראות שליטה מרחוק שמתאימות
+      לטכנאי". File names in English, system permissions, and at the end a
+      request to send a number and a password in the chat. For a customer on an
+      iPhone that is frightening. Now the first thing is a call where we do it
+      together, the steps for doing it alone are folded away and short, and the
+      number and password are never written in the chat: they are read out on
+      the phone, only while we are connected. -->
+ <div class="rephint">לא צריך לעשות את זה לבד ולא צריך להבין במחשבים. מתקשרים אליך ועושים את זה יחד, בערך חמש דקות, פעם אחת.</div>
+ <button type="button" class="ask" id="rcCall">תתקשרו אליי ונעשה את זה יחד</button>
+ <div class="msgsaid" id="rcCallSaid"></div>
+ <details class="rcself">
+  <summary>מעדיף לבד? ההוראות כאן</summary>
+  <!-- One set of steps per kind of device. instance.json says which computer
+       and phone the customer has, from the intake; unknown shows every set,
+       each under its own heading. -->
+  <div data-comp="mac">
+   <h3 class="rch">במק</h3>
+   <ol class="rcsteps">
+    <li>לוחצים על הכפתור למטה. נפתח דף עם הרבה קבצים. במק חדש מורידים את הקובץ שבסוף השם שלו כתוב aarch64.dmg, ובמק ישן את זה שכתוב בו x86_64.dmg. לא בטוחים? מתקשרים.</li>
+    <li>פותחים את מה שירד, ומושכים את הסמל של התוכנה לתיקיית התוכנות.</li>
+    <li>פותחים את התוכנה. המק ישאל אם לתת לה לראות את המסך ולהזיז את העכבר: עונים כן לשתי השאלות, וסוגרים ופותחים אותה שוב.</li>
+   </ol>
+  </div>
+  <div data-comp="win">
+   <h3 class="rch">בווינדוס</h3>
+   <ol class="rcsteps">
+    <li>לוחצים על הכפתור למטה. נפתח דף עם הרבה קבצים. מורידים את הקובץ שבסוף השם שלו כתוב x86_64.exe. לא בטוחים? מתקשרים.</li>
+    <li>פותחים את מה שירד. אם קופץ חלון כחול של ווינדוס, לוחצים מידע נוסף ואז הפעל בכל זאת.</li>
+    <li>בתוכנה שנפתחה לוחצים התקנה.</li>
+   </ol>
+  </div>
+  <a class="ask" href="https://github.com/rustdesk/rustdesk/releases/latest" target="_blank" rel="noopener">לדף שממנו מורידים את התוכנה</a>
+  <button type="button" class="ask" id="rcDone">סיימתי להתקין</button>
+  <div class="msgsaid" id="rcSaid"></div>
+ </details>
+ <div class="rephint">כשנצטרך להיכנס למחשב שלך נתקשר קודם. את המספר והסיסמה שבתוכנה מקריאים רק בטלפון, אף פעם לא כותבים אותם כאן. בלי שתאשר במחשב אף אחד לא נכנס, ובכל רגע אפשר לנתק.</div>
+</section>
+
+<!--ITZIK:BEGIN-->
+<section id="pSale" hidden>
+ <h2>מכירת לולוס</h2>
+ <div class="rephint">כל התיק שהוכן לעורך הדין, מסודר לפי החלקים שלו. כל שורה פותחת את הדוח עצמו בדרייב.</div>
+ <div id="saleBox"><div class="empty">טוען.</div></div>
+</section>
+<!--ITZIK:END-->
+
+<!--ITZIK:BEGIN-->
+<section id="pModel" hidden>
+ <h2>להחליף מודל</h2>
+ <div class="rephint">כשהתכנון גמור והעבודה יכולה לרוץ על מודל זול יותר, אני עוצר ומבקש כאן. ההחלפה אצלך, במחשב.</div>
+ <div id="moBox"><div class="empty">אין כרגע בקשה להחליף.</div></div>
+ <button type="button" class="ask" id="moDone" hidden>החלפתי</button>
+ <div id="moSaid" class="rephint"></div>
+</section>
+
+<section id="pMoxy" hidden>
+ <h2>מוקסיפן</h2>
+ <div class="rephint">שלוש פעמים ביום: 08:00, 16:00 ו 00:00. הכפתור מהבהב כשמגיע הזמן ונעצר כשלוחצים כאן על לקחתי עכשיו או לקחתי מוקדם יותר. גם התראה לנייד בכל מועד.</div>
+ <div class="pillinfo" id="moxyInfo"></div>
+ <!-- איציק, 8.10: כפתור "לקחתי את הכדור" במסך הזה; רק הוא עוצר את ההבהוב. -->
+ <!-- איציק, 10.10: לקח ב 8 וסימן מאוחר יותר; השעה שנרשמת נבחרת כאן ואפשר לתקן אותה אחר כך. -->
+ <!-- איציק, 10.10 (קולית): לחיצה שואלת לקחתי עכשיו או מוקדם יותר; מוקדם יותר פותח את בחירת השעה. -->
+ <button type="button" class="ask" id="moxyNow" hidden>לקחתי עכשיו</button>
+ <button type="button" class="ask" id="moxyEarly" hidden>לקחתי מוקדם יותר</button>
+ <label class="rephint" id="moxyAtL" hidden>באיזו שעה לקחת: <input type="time" id="moxyAt"></label>
+ <button type="button" class="ask" id="moxyTook" hidden>שמור את השעה</button>
+</section>
+
+<section id="pIsra" hidden>
+ <h2>ישראכרט יואל</h2>
+ <div class="rephint">הכל לשיחה עם ישראכרט על שני הכרטיסים של יואל, לפי הסדר.</div>
+ <div id="israBox"><div class="empty">טוען.</div></div>
+</section>
+<!--ITZIK:END-->
+
+<section id="pFi" hidden>
+ <h2>הקבצים שלי</h2>
+ <div class="rephint">כל קובץ ששלחת או שנשמר בשבילך. הם סגורים ונפתחים רק כאן, אחרי הקוד שלך.</div>
+ <div id="fiBox" class="flist"></div>
+</section>
+
+<section id="pPl" hidden>
+ <h2>לוח תוכן</h2>
+ <div class="rephint">מה מתוכנן לעלות, לפי יום. לחיצה מסמנת שעלה.</div>
+ <div id="plBox"></div>
+</section>
+
+<section id="pN2" hidden>
+ <div id="noteHome">
+  <h2>פתקים <button type="button" class="hq" data-q="noteHelp" aria-label="הסבר על המסך">?</button></h2>
+  <div class="hint1" data-tip="noteTip" hidden>נגיעה בפתק פותחת אותו לכתיבה.<button type="button" class="hint1x" aria-label="סגירה">✕</button></div>
+  <div class="hint hq-t" id="noteHelp" hidden>הפתקים נשמרים גם אצלנו, כמו ההודעות. נגיעה בפתק פותחת אותו לכתיבה.</div>
+  <input type="search" id="noteSearch" class="note-search" autocomplete="off" placeholder="חיפוש">
+  <div id="noteList"></div>
+  <button type="button" class="note-new" id="noteNew">✎ פתק חדש</button>
+ </div>
+ <div id="noteEdit" hidden>
+  <div class="note-bar">
+   <button type="button" id="noteDone">סיום</button>
+   <span id="noteWhen"></span>
+   <button type="button" id="notePin">הצמדה</button>
+   <button type="button" id="noteShare">שיתוף</button>
+   <button type="button" id="noteDel" class="note-del">מחיקה</button>
+  </div>
+  <div class="note-fmt" id="noteFmt" hidden>
+   <div class="row">
+    <button type="button" data-blk="h1" style="font-weight:700;font-size:18px">כותרת</button>
+    <button type="button" data-blk="h2" style="font-weight:700">כותרת משנה</button>
+    <button type="button" data-blk="h3" style="font-weight:600">תת כותרת</button>
+    <button type="button" data-blk="div">גוף</button>
+    <button type="button" data-blk="pre" style="font-family:monospace">מונו</button>
+   </div>
+   <div class="row">
+    <button type="button" data-cmd="bold" style="font-weight:800">B</button>
+    <button type="button" data-cmd="italic" style="font-style:italic;font-family:serif">I</button>
+    <button type="button" data-cmd="underline" style="text-decoration:underline">U</button>
+    <button type="button" data-cmd="strikeThrough" style="text-decoration:line-through">S</button>
+   </div>
+   <div class="row">
+    <button type="button" data-list="bul">• רשימה</button>
+    <button type="button" data-list="dash">– רשימה</button>
+    <button type="button" data-list="num">1. רשימה</button>
+    <button type="button" data-cmd="outdent">⇥</button>
+    <button type="button" data-cmd="indent">⇤</button>
+   </div>
+  </div>
+  <div class="note-tools">
+   <button type="button" id="noteAa" title="עיצוב">Aa</button>
+   <button type="button" id="noteChk" title="רשימת סימון">☑</button>
+   <button type="button" id="noteUndo" title="ביטול">↶</button>
+   <button type="button" id="noteRedo" title="חזרה">↷</button>
+   <button type="button" id="noteCopy" class="note-copy" title="העתקת כל הפתק">העתקת הכל</button>
+   <button type="button" id="noteCopyPart" class="note-copy" title="העתקת החלק המסומן">העתקת חלק</button>
+  </div>
+  <div id="noteBody" contenteditable="true" dir="auto" spellcheck="true"></div>
+ </div>
+</section>
+
+<section id="pU" hidden>
+ <h2>מה שלא קראת <button type="button" class="hq" data-q="unrHelp" aria-label="הסבר על המסך">?</button></h2>
+ <div class="hint1" data-tip="unrTip" hidden>נגיעה בהודעה הופכת אותה לירוקה.<button type="button" class="hint1x" aria-label="סגירה">✕</button></div>
+ <div class="hint hq-t" id="unrHelp" hidden>נגיעה בהודעה מסמנת שקראת אותה והופכת אותה לירוקה. מה שנשאר אדום עוד מחכה לך.</div>
+ <div class="ubox" id="unreadBox"></div>
+</section>
+
+<section id="pB" hidden>
+ <!-- Itzik, 8.10, from the reviewer: the explanation sat as a grey paragraph under the whole list, where nobody new scrolls. Now one short line on top for the first days, and the rest behind the ? next to the title. -->
+ <h2>מה התקבל <button type="button" class="hq" data-q="gotHelp" aria-label="הסבר על המסך">?</button></h2>
+ <div class="hint1" data-tip="gotTip" hidden>כאן כל מה ששלחת, לפי מצב. בקשה שלא צריך יותר מבטלים בכפתור שלידה.<button type="button" class="hint1x" aria-label="סגירה">✕</button></div>
+ <div class="hint hq-t" id="gotHelp" hidden>כל מה ששלחת לי, לפי מצב: מה בעבודה עכשיו, מה התקבל ועוד לא התחיל, המשימות הפתוחות, ומה שבוצע. חדש למעלה. ביטול הבקשה עוצר אותה באמת והיא עוברת לבוצע עם הסימן בוטל. הסתרה ליד כל שורה, והסתר הכל למעלה, רק מורידות מהמסך שלך והעבודה ממשיכה. בסוף הדף אפשר להחזיר הכל.</div>
+ <div class="gotlist" id="gotBox"></div>
+</section>
+
+<section id="pA" hidden>
+ <h2>תשובות <button type="button" class="hq" data-q="ansHelp" aria-label="הסבר על המסך">?</button></h2>
+ <div class="hint hq-t" id="ansHelp" hidden>הכל כאן, לפי זמן: מה ששלחת, מה שעניתי, והדוחות המלאים. כלום לא נעלם מכאן. תשובה חדשה מסומנת באדום עד שהיא עוברת מול העיניים שלך, ואז היא נחשבת נקראה לבד. תשובה שרוצים לחזור אליה מסמנים בכפתור לחזור לזה, והיא נצבעת בכתום.</div>
+ <!-- Itzik, 8.10: a new customer has to be told, right on this screen, that touching an answer turns it green. Shown until the first touch or הבנתי. -->
+ <div class="atip" id="aTip" hidden><b>תשובה חדשה מגיעה באדום.</b> כשהיא מופיעה מולך על המסך היא נחשבת נקראה לבד. מה שרוצים לחזור אליו מסמנים בכפתור לחזור לזה.<button type="button" class="ab" id="aTipOk">הבנתי</button></div>
+ <div class="achips" id="aChips"></div>
+ <input type="search" id="aSearch" class="asearch" autocomplete="off" placeholder="חיפוש בתוך התשובות">
+ <div id="ansBox"></div>
+</section>
+
+<!--ITZIK:BEGIN-->
+<section id="pI" hidden>
+ <h2>רעיונות לשיפור המוניטור</h2>
+ <!--
+  הוא ביקש את שלושת הכפתורים האלה מחוץ למסך הבית ובתוך הרעיונות.
+  הם לא נמחקו ולא איבדו כלום, הם פשוט יושבים כאן.
+ -->
+ <div class="ideabuilt">
+  <button type="button" class="ibt ib1" id="iPill"><b>⏰ לקחתי כדור</b><small>מסמן את המנה ומעדכן אותי</small></button>
+  <button type="button" class="ibt ib2" id="iCam"><b>📷 שלח לי תמונה</b><small>נפתחת המצלמה ומצלמים</small></button>
+  <button type="button" class="ibt ib3" id="iFood"><b>🥗 עקוב אחרי התזונה</b><small>מצלמים או כותבים, ואני מחשב</small></button>
+ </div>
+ <div class="ideahead">אלה כבר עובדים וירדו ממסך הבית לפי בקשתך. לחיצה פותחת אותם מכאן.</div>
+ <div class="ideahead">אלה דברים שהמסך הזה כבר יודע לעשות או שאני יכול לבנות. לחיצה על "רוצה את זה" שולחת לי את הבקשה, ואני בונה ומעדכן.</div>
+ <div id="ideaList"></div>
+ <form class="quickrow" id="ideaForm">
+  <input type="text" id="ideaText" autocomplete="off" placeholder="רעיון משלך">
+  <button type="submit" id="ideaBtn">שליחה</button>
+ </form>
+ <div class="msgsaid" id="ideaSaid"></div>
+</section>
+<!--ITZIK:END-->
+
+<!--ITZIK:BEGIN-->
+<section id="pL2" hidden>
+ <h2>הנהלת חשבונות</h2>
+ <div class="rivtalk" id="rivTalk"></div>
+ <div class="hint" id="rivWait">טוען את הנתונים...</div>
+ <div id="rivBox" hidden>
+  <div class="rivsum" id="rivSum"></div>
+  <h3 class="rivh" id="rivH5" hidden>בדיקת לקוח</h3>
+  <div id="rivAudit" hidden></div>
+  <h3 class="rivh" id="rivH1">מי חייב כסף</h3>
+  <div id="rivList"></div>
+  <h3 class="rivh" id="rivH6" hidden>נרשם כאן בנפרד, לא בריווחית</h3>
+  <div id="rivManual" hidden></div>
+  <h3 class="rivh" id="rivH2">נכנס לבנק באפריל עד יוני ואין עליו קבלה</h3>
+  <div id="rivOpen"></div>
+  <h3 class="rivh" id="rivH4">לאן הלך הכסף, שנתיים אחורה</h3>
+  <div id="rivBank"></div>
+  <h3 class="rivh" id="rivH3">שים לב</h3>
+  <div id="rivAlerts"></div>
+  <h3 class="rivh">דף לשיתוף</h3>
+  <div class="hint">כל החשבונות הפתוחים, לקוח לקוח עם החשבוניות. לחיצה פותחת, ומשם שליחה בוואטסאפ.</div>
+  <div id="rivShare">
+   <button type="button" class="yb yb1" data-r="lolos-open-accounts-2026-10-07.pdf">📤 חשבונות פתוחים עד 7.10 (PDF)</button>
+   <button type="button" class="yb yb2" data-r="lolos-open-2026-10-07-1.jpg">🖼️ כתמונה לגלריה, עמוד 1</button>
+   <button type="button" class="yb yb3" data-r="lolos-open-2026-10-07-2.jpg">🖼️ כתמונה לגלריה, עמוד 2</button>
+   <button type="button" class="yb yb4" data-r="lolos-open-2026-10-07-3.jpg">🖼️ כתמונה לגלריה, עמוד 3</button>
+  </div>
+ </div>
+</section>
+<!--ITZIK:END-->
+
+<!--ITZIK:BEGIN-->
+<section id="pF" hidden>
+ <h2>עקוב אחרי התזונה <button type="button" class="hq" data-q="fdHelp" aria-label="הסבר על המסך">?</button></h2>
+ <div class="hint1" data-tip="fdTip" hidden>שולחים תמונה או שורה, ואני מחזיר את הערכים.<button type="button" class="hint1x" aria-label="סגירה">✕</button></div>
+ <div class="hint hq-t" id="fdHelp" hidden>שולחים תמונה או שורה, ואני מחזיר ערך קלורי, חלבון, פחמימות, שומן ואבץ. הכרטיס למעלה אוגר את האבץ של כל מה שנרשם היום, ובסוף היום הוא הסיכום. לחיצה על פריט פותחת את הפירוט המלא.</div>
+ <div class="zbox" id="fdZinc">
+  <div class="zt"><b>אבץ שנאסף היום</b><span class="zv" id="zVal">0 מ״ג</span></div>
+  <div class="zbar"><i id="zBar" style="width:0%"></i></div>
+  <div class="zsaid" id="zSaid"></div>
+  <div class="zparts" id="zParts"></div>
+ </div>
+ <div class="foodtop">
+  <div><span id="fdKcal">0</span><small>קלוריות היום</small></div>
+  <div><span id="fdP">0</span><small>חלבון</small></div>
+  <div><span id="fdC">0</span><small>פחמימות</small></div>
+  <div><span id="fdF">0</span><small>שומן</small></div>
+ </div>
+ <div class="foodrow">
+  <button type="button" class="foodcam" id="fdCam">
+   <span aria-hidden="true">&#128247;</span>צילום של מה שאכלת</button>
+  <input type="file" id="fdPick" accept="image/*" capture="environment" hidden>
+ </div>
+ <form class="quickrow" id="fdForm">
+  <input type="text" id="fdText" autocomplete="off" placeholder="או תכתוב לי מה אכלת">
+  <button type="submit" id="fdBtn">שליחה</button>
+ </form>
+ <div class="msgsaid" id="fdSaid"></div>
+ <div id="fdList"></div>
+ <div class="zdays" id="zDays"></div>
+</section>
+<!--ITZIK:END-->
+
+<!--ITZIK:BEGIN-->
+<section id="pV" hidden>
+ <h2>ועד הבית</h2>
+ <!--
+   His address, his neighbours' names and what each of them owes were written
+   here as plain text on a public page. An audit on 18.9 found them. Naming a
+   neighbour as a debtor in public is his business to publish or not, and he
+   never chose to; the address tells a stranger where a man recovering from
+   surgery sleeps. Both now arrive in the sealed payload and are written in
+   after he unlocks, so the page on its own says nothing.
+ -->
+ <div class="item">
+  <div class="top"><span class="who" id="vaadWho"></span><span class="chip" id="vaadFlats"></span></div>
+  <div class="body" id="vaadAbout"></div>
+  <a class="ask" id="vaadExp" href="#" hidden>🧾 הוצאות הבניין 2026, לשליחה לדיירים</a>
+  <a class="ask" id="vaadExpImg1" href="#" hidden>🧾 ההוצאות כתמונה, עמוד 1</a>
+  <a class="ask" id="vaadExpImg2" href="#" hidden>🧾 ההוצאות כתמונה, עמוד 2</a>
+  <a class="ask" id="vaadReport" href="#" hidden>📊 דוח מי שילם, 7.10</a>
+  <a class="ask" id="vaadReportImg" href="#" hidden>📊 הדוח כתמונה, לשמירה בגלריה</a>
+  <a class="ask" id="vaadLetter" href="#" hidden>המכתב לבניין: ביטוח המבנה</a>
+  <a class="ask" id="vaadLetterImg" href="#" hidden>המכתב כתמונה, לשמירה בגלריה</a>
+  <a class="ask" id="vaadSheet" href="#" target="_blank" rel="noopener" hidden>פתיחת הקובץ</a>
+  <a class="ask" id="vaadFolder" href="#" target="_blank" rel="noopener" hidden>תיקיית ועד הבית</a>
+ </div>
+ <div class="item">
+  <div class="top"><span class="who">מה פתוח</span></div>
+  <div class="body" id="vaadOpen"></div>
+  <button type="button" class="ask" id="vaadAsk">שאלה על ועד הבית</button>
+ </div>
+</section>
+<!--ITZIK:END-->
+
+<!--ITZIK:BEGIN-->
+<section id="pP" hidden>
+ <h2>הכדור</h2>
+ <div class="pillbox">
+  <button type="button" id="pillBig" class="pillbig">
+   <span class="pb-i">✓</span>
+   <span class="pb-t">לקחתי כדור</span>
+  </button>
+  <div class="pillinfo" id="pillInfo"></div>
+  <div class="sheet" id="pillSheet" hidden>
+   <b id="pillQ">השעה עכשיו. לקחת את הכדור מוקדם יותר?</b>
+   <div class="sheetrow">
+    <button type="button" id="pillNow" class="sbtn main">לא, עכשיו</button>
+    <button type="button" id="pillEarlier" class="sbtn">כן, בשעה אחרת</button>
+   </div>
+   <div class="sheetrow" id="pillTimeRow" hidden>
+    <label for="pillTime">השעה שבה לקחת</label>
+    <input type="time" id="pillTime">
+    <button type="button" id="pillOk" class="sbtn main">אישור</button>
+   </div>
+   <button type="button" id="pillCancel" class="sbtn quiet">ביטול</button>
+  </div>
+ </div>
+</section>
+<!--ITZIK:END-->
+
+<!--ITZIK:BEGIN-->
+<section id="pVs" hidden>
+ <h2>כניסות</h2>
+ <div id="visitsList"></div>
+ <button type="button" id="visitsAgain" class="sbtn quiet">רענון</button>
+</section>
+<!--ITZIK:END-->
+
+<!--ITZIK:BEGIN-->
+<section id="pG" hidden>
+ <h2>דפי נחיתה</h2>
+ <div id="landList"></div>
+</section>
+<!--ITZIK:END-->
+
+<section id="pTk" hidden>
+ <h2>משימות</h2>
+ <div class="rephint">לחיצה על משימה מסמנת שבוצעה. הסימון נשמר בטלפון שלך.</div>
+ <div id="tkBox"></div>
+</section>
+
+<!--ITZIK:BEGIN-->
+<section id="pAp" hidden>
+ <h2>תורים עתידיים</h2>
+ <div id="apBox"></div>
+</section>
+<!--ITZIK:END-->
+
+<section id="pRm" hidden>
+ <h2>תזכורות</h2>
+ <div class="rephint">כל תזכורת קופצת לך בטלפון ביום שלה בתשע בבוקר.</div>
+ <div id="remBox"></div>
+ <form class="quickrow" id="remForm">
+  <input type="date" id="remDate">
+  <input type="text" id="remText" autocomplete="off" placeholder="על מה להזכיר">
+  <button type="submit" id="remBtn">קביעה</button>
+ </form>
+ <div class="msgsaid" id="remSaid"></div>
+</section>
+
+<!--ITZIK:BEGIN-->
+<section id="pY" hidden>
+ <h2>בקשות מיוחדות</h2>
+ <div class="rephint">מה שביקשת ואני הכנתי, עם קישור ישיר. החדש למעלה.</div>
+ <div id="specBox"></div>
+</section>
+<!--ITZIK:END-->
+
+<!--ITZIK:BEGIN-->
+<section id="pK" hidden>
+ <h2>תגובות מיוחדות</h2>
+ <div class="rephint">כל תשובה שכתבתי בשמך ולא הייתה סתם תודה. החדש למעלה, ומה שעוד לא ראית מסומן.</div>
+ <div id="repBox"></div>
+</section>
+<!--ITZIK:END-->
+
+<!--ITZIK:BEGIN-->
+<section id="pW" hidden>
+ <h2>איך אני משתפר</h2>
+ <div class="rephint">כל שורה היא דבר אחד שיצא לי לא טוב ומה שיניתי בעקבות זה. החדש למעלה.</div>
+ <div id="growBox"></div>
+</section>
+<!--ITZIK:END-->
+
+<!--ITZIK:BEGIN-->
+<section id="pX" hidden>
+ <h2>פגסוס</h2>
+ <div class="rephint">עדכונים קצרים מהסשן של המשחק. לדבר איתי על זה כאן למטה.</div>
+ <div id="pegBox"></div>
+</section>
+<!--ITZIK:END-->
+
+<!--ITZIK:BEGIN-->
+<section id="pR" hidden>
+ <h2>דוחות הסבבים</h2>
+ <div class="nextrep">
+  <div><b id="repNext">הדוח הבא</b><small id="repWhen"></small></div>
+  <button type="button" id="repNow">דוח עכשיו</button>
+ </div>
+ <div class="msgsaid" id="repSaid"></div>
+ <div id="reports"></div>
+</section>
+<!--ITZIK:END-->
+
+<!--ITZIK:BEGIN-->
+<section id="pE" hidden>
+ <h2>מייל</h2>
+ <div class="hint" style="margin-bottom:12px">
+  כותבים כאן בקשה בשפה חופשית, ואני מחפש בתיבה ומחזיר את התשובה לכאן.
+  לדוגמה: הגיע משהו מבית חולים? תמצא את המייל מהעירייה מהשנה שעברה. מי שלח לי קובץ בשבוע האחרון?
+ </div>
+ <form id="mailForm">
+  <textarea id="mailText" rows="2" placeholder="מה לחפש לך בתיבה?"></textarea>
+  <button type="submit" id="mailBtn">שליחת הבקשה</button>
+ </form>
+ <div class="msgsaid" id="mailSaid"></div>
+ <div class="thread" id="mailThread"></div>
+</section>
+<!--ITZIK:END-->
+
+<section id="pM" hidden>
+ <div class="threadbar">
+  <button type="button" id="pickMode" class="cpall">בחירת הודעות</button>
+  <button type="button" id="copyPicked" class="cpall pickon" hidden>העתקת הנבחרות</button>
+  <button type="button" id="copyAll" class="cpall">העתקת כל השיחה</button>
+  <button type="button" id="readOld" class="cpall readold">קראתי את הישנות</button>
+  <button type="button" id="moreBar" class="cpall" aria-expanded="false">עוד</button>
+  <button type="button" id="clearAll" class="cpall clearall" hidden>ניקוי כל ההודעות</button>
+ </div>
+ <!-- Itzik, 10.10: a customer is told once who answers him, in the monitor's name only: not Claude, not Itzik. -->
+ <div class="rlab aiwho" id="aiWho" hidden>העוזר שלך הוא חלק מהמוניטור. הוא קורא כל הודעה שכותבים כאן ועונה לבד. <button type="button" id="aiWhoOk" class="cpall">הבנתי</button></div>
+ <div class="thread" id="thread"></div>
+ <form id="msgForm">
+  <div class="rlab" id="msgLab">בקשה חדשה. נפתחת כשיחה נפרדת. להמשך של שיחה קיימת כותבים בתוך השיחה עצמה.</div>
+  <textarea id="msgText" rows="2"
+   placeholder="כתוב כאן. בקשה, תשובה, או כל דבר שבא לך שאדע"></textarea>
+  <div class="sendrow">
+   <button type="button" id="plusBtn" class="plusbtn" aria-label="צירוף תמונה או קובץ">+</button>
+   <button type="submit" id="msgBtn">שליחה</button>
+  </div>
+ </form>
+ <div class="msgsaid" id="msgSaid"></div>
+
+ <form id="fileForm" class="filebox" method="POST" enctype="multipart/form-data" hidden>
+  <input type="hidden" name="_captcha" value="false">
+  <input type="hidden" name="_subject" value="קובץ מהמוניטור">
+  <input type="hidden" name="_next" id="fNext" value="">
+  <input type="hidden" name="הודעה" id="fNote" value="">
+  <input type="hidden" name="קוד" id="fCode" value="">
+  <input type="file" id="fPick" name="attachment" multiple>
+  <input type="text" id="fCap" placeholder="כיתוב, לא חובה">
+  <div class="fmeta" id="fMeta">אפשר לבחור כל קובץ, גם כמה יחד, לכתוב שורה, ואז להקליט. הכל יוצא בהודעה אחת.</div>
+  <!-- 10.10, Itzik: "אין לי פה הצעה לwrttanfer?" The iPhone menu (gallery,
+       camera, files) belongs to the phone and cannot hold it, so WeTransfer
+       sits here, open whenever the file box is, not only after a file is
+       turned away for its size. -->
+  <!-- 10.10, Itzik: "צריך להבליט את זה", with a line for the phone (gallery)
+       and one for the computer (a file on it). It lights up the moment a
+       picked file is too big, see describe(). -->
+  <div class="wetbox" id="fWeBox">
+   <a class="ask" id="fWeT" href="https://wetransfer.com/" target="_blank" rel="noopener">קובץ גדול? לשלוח בוויטרנספר</a>
+   <div class="wetstep"><b>בטלפון:</b> לוחצים שם על הפלוס ובוחרים מהגלריה.</div>
+   <div class="wetstep"><b>במחשב:</b> לוחצים שם על הפלוס ובוחרים את הקובץ מהמחשב.</div>
+   <div class="wetstep">לוחצים העברה, בוחרים קבלת קישור, ואת הקישור מדביקים כאן בהודעה ושולחים.</div>
+  </div>
+  <div class="pthumbs" id="fThumbs" hidden></div>
+  <button type="submit" id="fBtn">שליחת הקובץ</button>
+  <div id="recWrap">
+   <button type="button" id="recBtn" aria-label="הקלטת הודעה קולית">&#127908;</button>
+   <span id="recSaid">לחיצה מתחילה הקלטה. לחיצה שנייה עוצרת ושולחת. אם בחרת קבצים או כתבת משהו, הכל יוצא יחד בהודעה אחת.</span>
+  </div>
+ </form>
+ <div class="msgsaid" id="fSaid"></div>
+
+</section>
+
+<!-- The floating microphone is gone. One microphone, on the card above. -->
+
+<div class="editbar" id="editBar" hidden>
+ <span>סידור המסך. גרור מה שתרצה, ומינוס מסיר.</span>
+ <button type="button" id="editBack" hidden>החזרת הכל</button>
+ <button type="button" id="swapBlocks">החלפה בין הריבועים לעיגולים</button>
+ <button type="button" id="editDone">סיום</button>
+</div>
+
+<!--
+  Is the thing running at all.
+
+  On 13.9 six of his voice memos sat on the channel for up to ninety seven
+  minutes, and the screen looked exactly the same as it does when everything
+  is fine. That is the failure worth fixing: not the delay itself, but a page
+  that cannot tell him the difference. The listener publishes a pulse every
+  minute on its own topic, and this reads it. Green means a pulse in the last
+  three minutes. Red means nobody is listening, and now he knows.
+-->
+<!-- 2.10: whether his PC is on, so he knows if PC tasks run now or later. -->
+<div class="pcpill" id="pcPill" aria-live="polite"><span id="pcText">💻 בודק</span></div>
+<button type="button" class="livepill" id="livePill" aria-live="polite">
+ <i class="lp-d"></i><span class="lp-t" id="lpText">בודק</span>
+</button>
+<div class="livesheet" id="liveSheet" hidden>
+ <b id="lsHead">המאזין</b>
+ <div id="lsBody"></div>
+ <button type="button" id="lsClose">סגירה</button>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<div class="recwrap" id="recModal" hidden>
+ <div class="recbox">
+  <div class="rectitle" id="recTitle">${inst.gender === 'f' ? 'מדברת' : 'מדבר'} אליי</div>
+  <div class="rectime" id="recTime">0:00</div>
+  <button type="button" id="recBig" class="recbig" aria-label="עצירה ושליחה">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="7" y="7" width="10" height="10" rx="2" fill="#fff" stroke="none"/>
+   </svg>
+  </button>
+  <div class="rechint" id="recHint">לחיצה עוצרת ושולחת אליי</div>
+  <button type="button" id="recCancel" class="reccancel">ביטול</button>
+ </div>
+</div>
+
+<!--
+  A microphone on every screen, small, bottom left.
+
+  He asked for it and called it mandatory, and it is the opposite of the one I
+  removed last night: that one was a large glowing button that floated over
+  whatever was underneath it, and he was right that it covered content. This is
+  small, parked in the corner the thumb of his other hand reaches, and it is
+  outside the screen container so it belongs to no screen in particular and
+  disappears on none of them.
+
+  It is the same recorder as the card on the home screen, not a second one:
+  the same toggle, the same guard, the same state painted on both.
+-->
+<div class="aimbar" id="aimBar" hidden><span id="aimTxt"></span><button type="button" id="aimX" aria-label="לבטל את המענה">×</button></div>
+<!-- 10.10, Itzik by voice: the small floating microphone sat under the computer pill and he called it unneeded. Removed; the home card and the reply box keep theirs. -->
+<nav class="bn" aria-label="מסכים">
+ <button type="button" id="nH" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10.5V20h12v-9.5"/><path d="M10 20v-5h4v5"/></svg>בית</button>
+ <button type="button" id="nA" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h16v11h-9l-5 3.5v-3.5H4Z"/><path d="M8 10.5h8M8 14h5"/></svg>תשובות<i class="cnt zero" id="aCnt">0</i></button>
+ <button type="button" id="nQ" aria-pressed="false"${inst.name === 'abaitzik' ? '' : ' hidden'}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"/><path d="M7 19v-6"/><path d="M12 19V7"/><path d="M17 19v-9"/></svg>רשתות</button>
+ <button type="button" id="nL" aria-pressed="false"${inst.name === 'abaitzik' ? '' : ' hidden'}><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>לידים<i class="dot" id="lDot" hidden></i></button>
+ <button type="button" id="nR" aria-pressed="false"${inst.name === 'abaitzik' ? '' : ' hidden'}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6Z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h4"/></svg>דוחות</button>
+</nav>
+
+<div class="stamp"><span id="builtFoot"></span></div>
+</div>
+
+<script>__LIB__</script>
+<script>
+var D = __DATA__, NET = __NET__, CAT = __CAT__, tab = 'pending';
+/*
+  The lock.
+
+  Itzik, 17.9: "move all the details to private storage." A free GitHub account
+  will not serve a private repository through Pages, so the page cannot be made
+  private where it stands. It can be made unreadable, which is what this is: the
+  data is sealed before it is published and opened here, in his browser, with a
+  code he types once per device.
+
+  He picked this over a real login after I laid out what a login costs him: a
+  code by email is four screens between him and a message he wants to read now.
+  This keeps the address, the shortcut on his home screen and the push links
+  untouched.
+
+  Say plainly what it is: a lock on a public door. Anybody holding both the link
+  and the code reads everything. It stops the link alone from being enough, and
+  that was the actual exposure.
+
+  The derived key is cached, not the code, because a cached code is a code
+  sitting in storage for anyone with the phone. Deriving takes about a second on
+  an old phone and happens once.
+*/
+var GATE = __GATE__, GKEY = null;
+function gbytes(b64){var x=atob(b64),a=new Uint8Array(x.length);for(var i=0;i<x.length;i++)a[i]=x.charCodeAt(i);return a;}
+function graw(a){var s='';for(var i=0;i<a.length;i++)s+=String.fromCharCode(a[i]);return btoa(s);}
+/*
+  The same folding as gate.normalize on the server, step for step: NFC, no
+  niqqud, no direction marks, one space between words, none at the ends, and
+  final letters as regular ones. An iPhone that adds a space after the last
+  word, or a finger that doubles one, must not lock him out. Digits pass
+  through untouched, so a six digit code derives what it always did.
+*/
+function gnorm(s){return String(s==null?'':s).normalize('NFC').replace(/[\\u0591-\\u05C7]/g,'').replace(/[\\u200B-\\u200F\\u202A-\\u202E\\u2066-\\u2069\\uFEFF]/g,'').replace(/\\s+/g,' ').trim().replace(/[ךםןףץ]/g,function(c){return 'כמנפצ'.charAt('ךםןףץ'.indexOf(c));});}
+function gderive(code){
+ var enc=new TextEncoder();
+ return crypto.subtle.importKey('raw',enc.encode(gnorm(code)),'PBKDF2',false,['deriveKey'])
+  .then(function(base){
+   return crypto.subtle.deriveKey(
+    {name:'PBKDF2',salt:gbytes(GATE.salt),iterations:GATE.rounds,hash:'SHA-256'},
+    base,{name:'AES-GCM',length:256},true,['decrypt']);
+  });
+}
+function gopen(blob){
+ var parts=String(blob).split('.');
+ var iv=gbytes(parts[0]),body=gbytes(parts[1]);
+ return crypto.subtle.decrypt({name:'AES-GCM',iv:iv},GKEY,body)
+  .then(function(buf){return new TextDecoder().decode(buf);});
+}
+/*
+  Every fetch of a data file goes through here.
+
+  Sealed files are text, not JSON, so r.json() on one throws and the screen
+  that asked keeps its head slice for ever. One helper, used by both the lazy
+  loader and the soft refresh, so a file cannot be read one way in one place and
+  another way somewhere else.
+*/
+function gjson(r){
+ if(!GATE)return r.json();
+ return r.text().then(gopen).then(function(t){return JSON.parse(t);});
+}
+/*
+  Private files, 27.9. A link to files/<name> is caught here: the sealed copy
+  is fetched, opened with the same key as the data, and shown on the page as a
+  picture, a player or a document, with a button to save it. Nothing goes to a
+  public address. No backslash in the regex below, the template strips them.
+*/
+function fileEntry(name){var F=D.files||[];for(var i=0;i<F.length;i++)if(F[i].n===name)return F[i];return null;}
+function fileBlob(e){
+ // 29.9: a file replaced under the same name kept its address, so the phone
+ // played its cached old copy. The version in the address forces the new one.
+ return fetch('f/'+e.id+'.bin?v='+encodeURIComponent(e.at||''),{cache:'no-cache'}).then(function(r){if(!r.ok)throw 0;return r.arrayBuffer();})
+  .then(function(buf){var a=new Uint8Array(buf);return crypto.subtle.decrypt({name:'AES-GCM',iv:a.slice(0,12)},GKEY,a.slice(12));})
+  .then(function(pt){return new Blob([pt],{type:e.t});});
+}
+/*
+  Itzik, 2.10, on the basbousa: "אני רוצה לראות בתצוגה המקדימה את ה PDF".
+  A PDF used to open as one link, so before sending a recipe he could not see
+  what he was sending. Its pages are drawn here now, and the send button under
+  them carries the file itself. pdf.js is fetched only when a PDF is opened,
+  and both files are checked against a fixed hash first, because this page
+  holds the key to everything sealed in it.
+*/
+var PDFJS='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+var pdfLib=null;
+function loadPdfJs(){
+ if(pdfLib)return pdfLib;
+ pdfLib=new Promise(function(ok,bad){
+  var s=document.createElement('script');
+  s.src=PDFJS+'pdf.min.js';
+  s.integrity='sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e';
+  s.crossOrigin='anonymous';
+  s.onload=function(){
+   fetch(PDFJS+'pdf.worker.min.js',{integrity:'sha384-SnzOobpRMLXZ52iJvZm/C0fYw0OQemTXzTjIsdsfMcrCtCEe9qgzxTd3RSklO5x2'})
+    .then(function(r){if(!r.ok)throw 0;return r.blob();})
+    .then(function(wb){
+     window.pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(wb);
+     ok(window.pdfjsLib);
+    }).catch(bad);
+  };
+  s.onerror=bad;
+  document.head.appendChild(s);
+ });
+ pdfLib.catch(function(){pdfLib=null;});
+ return pdfLib;
+}
+function pdfPages(blob,host){
+ if(!host)return;
+ Promise.all([loadPdfJs(),blob.arrayBuffer()]).then(function(r){
+  return r[0].getDocument({data:new Uint8Array(r[1])}).promise;
+ }).then(function(doc){
+  host.innerHTML='';
+  var chain=Promise.resolve();
+  for(var i=1;i<=doc.numPages;i++)(function(n){
+   chain=chain.then(function(){return doc.getPage(n);}).then(function(p){
+    var w=Math.min(host.clientWidth||360,900),v1=p.getViewport({scale:1});
+    var dpr=Math.min(window.devicePixelRatio||1,2);
+    var vp=p.getViewport({scale:w/v1.width*dpr});
+    var c=document.createElement('canvas');
+    c.width=vp.width;c.height=vp.height;c.style.width='100%';
+    // Itzik, 4.10, on the debtors list: "הכל נראה שם ג׳יבריש". A canvas takes
+    // the page's rtl, pdf.js draws each glyph with fillText, and every Hebrew
+    // letter landed shifted onto its neighbour. The page is a picture: ltr.
+    c.dir='ltr';c.style.direction='ltr';
+    host.appendChild(c);
+    var cx=c.getContext('2d');cx.direction='ltr';
+    return p.render({canvasContext:cx,viewport:vp}).promise;
+   });
+  })(i);
+  return chain;
+ }).catch(function(){
+  host.innerHTML='<div class="empty">לא הצלחתי להציג את העמודים כאן. פתיחת הקובץ למטה מראה אותו.</div>';
+ });
+}
+function fvPrint(body,t){
+ var srcs=[];
+ if(t.indexOf('image/')===0){var im=body.querySelector('img');if(im)srcs.push(im.src);}
+ else body.querySelectorAll('.fv-pdf canvas').forEach(function(c){try{srcs.push(c.toDataURL('image/png'));}catch(x){}});
+ if(!srcs.length){toast('העמודים עוד נטענים, נסה שוב בעוד רגע');return;}
+ var old=document.getElementById('fvPrint');if(old)old.remove();
+ var d=document.createElement('div');d.id='fvPrint';
+ d.innerHTML=srcs.map(function(u){return '<img src="'+u+'" alt="">';}).join('');
+ document.body.appendChild(d);document.body.classList.add('fv-printing');
+ function done(){document.body.classList.remove('fv-printing');d.remove();window.removeEventListener('afterprint',done);}
+ window.addEventListener('afterprint',done);
+ var imgs=d.querySelectorAll('img'),left=imgs.length;
+ function go(){setTimeout(function(){window.print();},50);}
+ imgs.forEach(function(i){if(i.complete){if(!--left)go();}else i.onload=i.onerror=function(){if(!--left)go();};});
+}
+/*
+  A file is called by what it is, not by how it was saved.
+
+  The improvements reviewer, 5.10, approved by Itzik the same day: the bar
+  over an open file showed the stored name, numbers and extension, and the
+  file shared on to WhatsApp carried the same name, so the person it went to
+  saw it too. The name now comes from the line it was listed under in its
+  sheet, and a file listed nowhere has its dates and dashes taken off.
+*/
+/*
+  Itzik, 8.10, on the same idea: "לראות אם יש שם להודעה ואם לא לבקש, על מנת
+  שיהיה סדר". After the sheet's own title, the words of the message that
+  carried the file name it. A file with neither asks for a name once, and the
+  name given is kept on this phone and used for the bar and for sharing.
+*/
+function fileOwnNames(){try{return JSON.parse(localStorage.getItem('fileNames')||'{}')||{};}catch(e){return {};}}
+function fileMsgName(name){
+ var short=String(name).split('/').pop();if(!short)return '';
+ var NL=String.fromCharCode(10),got='';
+ (window.D&&D.chat||[]).some(function(x){
+  var t=String(x.text||'');if(t.indexOf(short)<0)return false;
+  var cap='';
+  if(x.from==='itzik'){var k=t.lastIndexOf(NL+'(');cap=k>0?t.slice(0,k):'';}
+  else{
+   var ln=t.split(NL).filter(function(l){return l.indexOf(short)>-1;})[0]||'';
+   cap=ln.replace(new RegExp('(https?://|files/)[^ ]+','g'),' ');
+  }
+  cap=cap.split(NL)[0].replace(/[:\\s]+$/,'').replace(/^[\\s:]+/,'').replace(/ +/g,' ').trim();
+  if(cap.length<3||cap.length>60||cap.indexOf(short)>-1)return false;
+  got=cap;return true;
+ });
+ return got;
+}
+function fileListName(name){
+ var lists=[];
+ ['NER_ITEMS','REEL_ITEMS','FUT_ITEMS','OCC_ITEMS','LAW_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS']
+  .forEach(function(k){if(Array.isArray(window[k]))lists.push(window[k]);});
+ for(var i=0;i<lists.length;i++){
+  var L=lists[i]||[];
+  for(var j=0;j<L.length;j++)if(L[j]&&L[j].r===name&&L[j].t)return String(L[j].t).trim();
+ }
+ return '';
+}
+function fileHasName(name){return !!(fileOwnNames()[name]||fileListName(name)||fileMsgName(name));}
+function fileNiceName(name){
+ var own=fileOwnNames()[name];if(own)return own;
+ var ln=fileListName(name)||fileMsgName(name);if(ln)return ln;
+ var short=String(name).split('/').pop();
+ var lists=[];
+ ['NER_ITEMS','REEL_ITEMS','FUT_ITEMS','OCC_ITEMS','LAW_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS']
+  .forEach(function(k){if(Array.isArray(window[k]))lists.push(window[k]);});
+ for(var i=0;i<lists.length;i++){
+  var L=lists[i]||[];
+  for(var j=0;j<L.length;j++)if(L[j]&&L[j].r===name&&L[j].t)return String(L[j].t).trim();
+ }
+ var base=short.replace(/[.][A-Za-z0-9]{1,5}$/,'')
+  .replace(/(^|[-_ ])20[0-9]{2}[-_.]?[01][0-9][-_.]?[0-3][0-9]([-_]?[0-9]{4,6})?(?=[-_ ]|$)/g,' ')
+  .replace(/[-_]+/g,' ').replace(/ +/g,' ').trim();
+ return base||short;
+}
+function fileShareName(name){
+ var short=String(name).split('/').pop();
+ var ext=(short.match(/[.][A-Za-z0-9]{1,5}$/)||[''])[0];
+ var bad='/:*?"<>|'+String.fromCharCode(92);
+ var nice=fileNiceName(name).split('').filter(function(c){return bad.indexOf(c)<0;}).join('').slice(0,80).trim();
+ return (nice||short.replace(ext,''))+ext;
+}
+/*
+  A picture is looked at up close.
+
+  The improvements reviewer, 5.10, approved by Itzik: an image always opened
+  fitted to the screen with no way in, and a designer has to see the weave,
+  the line and the colour. Two fingers zoom around the point between them, a
+  double tap zooms in where it landed, and a second double tap goes back.
+  At normal size a finger still scrolls the window, so nothing else changes.
+*/
+function fvZoom(box){
+ var img=box.querySelector('img');if(!img)return;
+ var s=1,x=0,y=0,st=null,lastTap=0;
+ function apply(){img.style.transform=s>1?'translate('+x+'px,'+y+'px) scale('+s+')':'';box.classList.toggle('on',s>1);}
+ function clamp(){
+  if(s<=1.01){s=1;x=0;y=0;return;}
+  var w=img.offsetWidth,h=img.offsetHeight;
+  x=Math.min(0,Math.max(w-w*s,x));y=Math.min(0,Math.max(h-h*s,y));
+ }
+ function at(t){var r=img.getBoundingClientRect();return {x:t.clientX-r.left+x,y:t.clientY-r.top+y};}
+ function toggle(p){
+  if(s>1){s=1;x=0;y=0;}
+  else{var ns=2.5;x=p.x-(p.x-x)*ns/s;y=p.y-(p.y-y)*ns/s;s=ns;clamp();}
+  img.style.transition='transform .2s';apply();setTimeout(function(){img.style.transition='';},220);
+ }
+ box.addEventListener('touchstart',function(e){
+  var t=e.touches;
+  if(t.length===2){
+   var a=at(t[0]),b=at(t[1]);
+   st={two:true,d:Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY)||1,s:s,x:x,y:y,mx:(a.x+b.x)/2,my:(a.y+b.y)/2};
+  }else if(t.length===1){
+   var now=Date.now(),p=at(t[0]);
+   if(now-lastTap<300){lastTap=0;st=null;e.preventDefault();toggle(p);return;}
+   lastTap=now;
+   st={two:false,cx:t[0].clientX,cy:t[0].clientY,x:x,y:y};
+  }
+ },{passive:false});
+ box.addEventListener('touchmove',function(e){
+  if(!st)return;
+  var t=e.touches;
+  if(st.two&&t.length===2){
+   e.preventDefault();
+   var d=Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+   var ns=Math.max(1,Math.min(6,st.s*d/st.d));
+   var cx=(st.mx-st.x)/st.s,cy=(st.my-st.y)/st.s;
+   s=ns;x=st.mx-cx*ns;y=st.my-cy*ns;clamp();apply();
+  }else if(!st.two&&t.length===1&&s>1){
+   e.preventDefault();
+   x=st.x+t[0].clientX-st.cx;y=st.y+t[0].clientY-st.cy;clamp();apply();
+  }
+ },{passive:false});
+ box.addEventListener('touchend',function(e){if(!e.touches.length){st=null;clamp();apply();}});
+ box.addEventListener('dblclick',function(e){e.preventDefault();toggle({x:e.clientX-img.getBoundingClientRect().left+x,y:e.clientY-img.getBoundingClientRect().top+y});});
+}
+/*
+  Itzik, 5.10: "למה אני לא מצליח לשלוח בוואצאפ". A failed share used to end in silence,
+  so nobody could tell why. Closing the sheet by hand is not an error; anything else
+  is shown with its name, which is what tells the phone's refusal apart from a bug.
+*/
+function shareFail(e){
+ if(e&&e.name==='AbortError')return;
+ toast('השיתוף נכשל: '+((e&&e.name)||'שגיאה')+(e&&e.message?' · '+String(e.message).slice(0,80):''));
+}
+/*
+  Itzik, 10.10, from the reviewer: "הקובץ עוד נטען" גם כשהוא לא יגיע. The same
+  toast showed for a file that was simply not there, so she tried again forever.
+  Now a page that is still opening waits and opens the file by itself, and a
+  file that is not in the monitor says so, with a button that asks for it again.
+*/
+function fileOpen(name){
+ if(fileView(name))return true;
+ if(!GKEY||!D.files){
+  toast('הקובץ ייפתח לבד ברגע שהדף מוכן');
+  var n=0,iv=setInterval(function(){
+   if(GKEY&&D.files){clearInterval(iv);if(!fileView(name))fileMissing(name);}
+   else if(++n>30){clearInterval(iv);fileMissing(name);}
+  },1000);
+  return false;
+ }
+ fileMissing(name);return false;
+}
+function fileMissing(name){
+ var nice=fileNiceName(name);
+ var ov=document.createElement('div');ov.className='fview';
+ ov.innerHTML='<div class="fv-bar"><button type="button" class="fv-x" aria-label="סגירה">✕</button><b>'+esc(nice)+'</b></div>'
+  +'<div class="fv-body"><div class="empty">הקובץ הזה לא נמצא במוניטור. לנסות שוב לא יעזור, אבל אפשר לבקש אותו מחדש.</div>'
+  +'<button type="button" class="ask fv-again">לבקש את הקובץ שוב מ'+AI+'</button></div>';
+ document.body.appendChild(ov);
+ ov.querySelector('.fv-x').onclick=function(){ov.remove();};
+ ov.querySelector('.fv-again').onclick=function(){
+  ov.remove();pane('m');try{renderThread();}catch(e){}
+  var ta=document.getElementById('msgText');
+  if(ta){ta.value='הקובץ "'+nice+'" לא נפתח לי, אפשר להעלות אותו שוב?';ta.focus();}
+ };
+}
+function fileView(name){
+ var e=fileEntry(name);if(!e||!GKEY)return false;
+ var ov=document.createElement('div');ov.className='fview';
+ var short=fileShareName(name);
+ ov.innerHTML='<div class="fv-bar"><button type="button" class="fv-x" aria-label="סגירה">✕</button><b>'+esc(fileNiceName(name))+'</b>'
+  +(fileHasName(name)?'':'<button type="button" class="fv-nm">לתת שם</button>')+'</div><div class="fv-body"><div class="empty">פותח.</div></div>';
+ document.body.appendChild(ov);
+ var nm=ov.querySelector('.fv-nm');
+ if(nm)nm.onclick=function(){
+  var v=(prompt('לקובץ הזה אין שם. איך לקרוא לו?','')||'').replace(/\\s+/g,' ').trim().slice(0,60);
+  if(!v)return;
+  var all=fileOwnNames();all[name]=v;
+  try{localStorage.setItem('fileNames',JSON.stringify(all));}catch(e){}
+  ov.querySelector('.fv-bar b').textContent=v;nm.remove();short=fileShareName(name);
+  var sv=ov.querySelector('.fv-save');if(sv)sv.setAttribute('download',short);
+ };
+ var url='';
+ function close(){ov.remove();if(url)setTimeout(function(){URL.revokeObjectURL(url);},1000);}
+ ov.querySelector('.fv-x').onclick=close;
+ fileBlob(e).then(function(b){
+  url=URL.createObjectURL(b);var t=e.t||'',h='';
+  if(t.indexOf('image/')===0)h='<div class="fv-zoom"><img src="'+url+'" alt=""></div><div class="empty" style="font-size:13px">שתי אצבעות או לחיצה כפולה מגדילות</div>';
+  else if(t.indexOf('video/')===0)h='<video src="'+url+'" controls playsinline></video>';
+  else if(t.indexOf('audio/')===0)h='<audio src="'+url+'" controls></audio>';
+  // Itzik, 4.10: "אין לי אפשרות לשלוח את הקובץ טקסט לרינת". The iPhone will not
+  // hand a text file to WhatsApp, so a text goes out as the message itself, and
+  // can be copied whole for pasting anywhere.
+  else if(t.indexOf('text/')===0){h='<pre class="fv-txt"></pre>'
+   +(navigator.share?'<button type="button" class="ask fv-tshare">שליחה בוואטסאפ כהודעה</button>':'')
+   +'<button type="button" class="ask fv-tcopy">העתקת כל הטקסט</button>';}
+  else if(t==='application/pdf')h='<div class="fv-pdf"><div class="empty">מציג את העמודים.</div></div>'
+   +'<a class="ask" href="'+url+'" target="_blank" rel="noopener">פתיחת הקובץ</a>';
+  else h='<a class="ask" href="'+url+'" target="_blank" rel="noopener">פתיחת הקובץ</a>';
+  // Itzik, 29.9: the machine sale document has to go out to the buyer from the
+  // phone. Safari does not keep a blob download, so the share sheet carries the
+  // file itself (WhatsApp, mail) wherever it can.
+  // Itzik, 5.10, on the reel script: "תוסיף באופציות שליחה להדפסה". iPhone
+  // Safari prints the page and not a PDF held in a blob, so the pages that
+  // are already drawn on screen go into a print-only sheet and the page prints.
+  if(t==='application/pdf'||t.indexOf('image/')===0)h+='<button type="button" class="ask fv-print">שליחה להדפסה</button>'+((/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1))?'<div class="empty" style="font-size:13px">בחלון שנפתח: גלול למטה ובחר הדפסה</div>':'');
+  var sf=null;try{sf=new File([b],short,{type:(t.split(';')[0])||'application/octet-stream'});}catch(x){}
+  if(sf&&navigator.share&&navigator.canShare&&navigator.canShare({files:[sf]}))h+='<button type="button" class="ask fv-share">שליחה בוואטסאפ, במסנג׳ר או במייל</button>';
+  // Itzik, 1.10: "עשיתי שמירה לגלריה ואני לא מוצא". On the iPhone a blob
+  // download lands in Files, not in Photos. For a picture or a video the share
+  // sheet is the only road to the gallery (its "Save Video" line), so there the
+  // save button opens it and says which line to tap.
+  var ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  var media=t.indexOf('video/')===0||t.indexOf('image/')===0;
+  var gal=ios&&media&&sf&&navigator.share&&navigator.canShare&&navigator.canShare({files:[sf]});
+  if(gal)h+='<button type="button" class="ask fv-gal">שמירה לגלריה</button><div class="empty" style="font-size:13px">בחלון שנפתח: '+(t.indexOf('video/')===0?'שמור וידאו':'שמור תמונה')+'</div>';
+  else h+='<a class="ask fv-save" href="'+url+'" download="'+esc(short)+'">שמירה בטלפון</a>';
+  var body=ov.querySelector('.fv-body');body.innerHTML=h;
+  var zb=body.querySelector('.fv-zoom');if(zb)fvZoom(zb);
+  var sb=body.querySelector('.fv-share');
+  if(sb)sb.onclick=function(){var f2=sf;try{if(sf.name!==short)f2=new File([b],short,{type:sf.type});}catch(x){}navigator.share({files:[f2],title:short}).catch(shareFail);};
+  var pb=body.querySelector('.fv-print');
+  /*
+    Itzik, 5.10: "הכפתור שליחה להדפסה לא עובד". The monitor runs from his
+    home screen, and an iPhone web app opened that way ignores window.print
+    without a word. The share sheet is the iPhone's road to the printer: it
+    carries the file itself and has a Print line. The page print stays for a
+    computer.
+  */
+  if(pb)pb.onclick=function(){
+   if(ios&&sf&&navigator.share&&navigator.canShare&&navigator.canShare({files:[sf]})){
+    navigator.share({files:[sf],title:short}).catch(function(){});
+   }else fvPrint(body,t);
+  };
+  var gb=body.querySelector('.fv-gal');
+  if(gb)gb.onclick=function(){navigator.share({files:[sf]}).catch(shareFail);};
+  if(t.indexOf('text/')===0)b.text().then(function(s){
+   body.querySelector('.fv-txt').textContent=s;
+   var ts=body.querySelector('.fv-tshare');
+   if(ts)ts.onclick=function(){navigator.share({text:s}).catch(function(){});};
+   var tc=body.querySelector('.fv-tcopy');
+   if(tc)tc.onclick=function(){
+    var ok=function(){tc.textContent='הועתק. אפשר להדביק בוואטסאפ';};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(s).then(ok,function(){fallbackCopy(s,ok);});
+    else fallbackCopy(s,ok);
+   };
+  });
+  if(t==='application/pdf')pdfPages(b,body.querySelector('.fv-pdf'));
+ }).catch(function(){ov.querySelector('.fv-body').innerHTML='<div class="empty">לא הצלחתי לפתוח את הקובץ. רענן ונסה שוב.</div>';});
+ return true;
+}
+/*
+  Itzik, 11.10: "למה אני לא מצליח לשלוח לאיליי את הסטורי, הכפתור בוואצאפ.
+  זה נכשל". The וואטסאפ button on an answer sent only its words, and the
+  story (the weight collage and video) was in them as files/... paths that
+  open only inside this locked page, so Ilay got text with nothing he could
+  open. An answer that carries files now hands the files themselves to the
+  share sheet, where he picks WhatsApp and Ilay. The iPhone opens that sheet
+  only inside the tap itself, never after a download finishes, so the files
+  are fetched and opened ahead (when the thread opens, or the moment the
+  button is touched) and the tap shares what is ready. Words without files
+  still open WhatsApp with the text, without the private paths.
+*/
+function msgFileNames(m){
+ var out=[],t=String((m&&m.text)||'').split(String.fromCharCode(10)).join(' ');
+ var re=/files[/]([^ <>"')]+)/g,x;
+ while((x=re.exec(t))){
+  var n=x[1].replace(/[.,;:!?]+$/,'');
+  try{n=decodeURIComponent(n);}catch(e){}
+  if(n&&out.indexOf(n)<0&&fileEntry(n))out.push(n);
+ }
+ ((m&&m.files)||[]).forEach(function(n){if(out.indexOf(n)<0&&fileEntry(n))out.push(n);});
+ return out;
+}
+var waPrep={};
+function waFiles(m){
+ var names=msgFileNames(m);if(!names.length)return null;
+ var k=names.join('|');
+ if(waPrep[k])return waPrep[k];
+ var st={files:null,p:null};
+ st.p=Promise.all(names.map(function(n){
+  var e=fileEntry(n);
+  return fileBlob(e).then(function(b){
+   return new File([b],fileShareName(n),{type:(String(e.t||'').split(';')[0])||'application/octet-stream'});
+  });
+ })).then(function(fs){st.files=fs;return fs;},function(er){delete waPrep[k];throw er;});
+ st.p.catch(function(){});
+ waPrep[k]=st;return st;
+}
+function waText(m){
+ var NL=String.fromCharCode(10);
+ return String((m&&m.text)||'').split(NL).map(function(l){
+  return l.replace(/(https?:[/][/][^ ]*)?files[/][^ ]+/g,'').replace(/ +/g,' ').replace(/[ :]+$/,'');
+ }).filter(function(l,i,a){return l.trim()||(i>0&&a[i-1].trim());}).join(NL).trim();
+}
+function fileNameOf(href){
+ var m=String(href||'').match(/(^|[/])files[/]([^?#]+)$/);
+ if(!m)return '';
+ try{return decodeURIComponent(m[2]);}catch(e){return m[2];}
+}
+/*
+  Itzik, 10.10, from the reviewer: "תוצר בשיחה מופיע כמילים בלבד". A design
+  or a document inside an answer was only the words פתיחת הקובץ, so to know
+  what had arrived she had to open each one. Now every picture, and the first
+  page of every PDF, sits in the bubble as a small image, and a tap on it opens
+  the file in full as before. Drawn only when it comes near the screen, one at
+  a time, and kept for the rest of the visit.
+*/
+function fileThumb(n){
+ var e=fileEntry(n),t=e?(e.t||''):'';
+ if(e&&t.indexOf('image/')!==0&&t!=='application/pdf')return '';
+ return '<span class="fthumb" data-fn="'+esc(n)+'"></span>';
+}
+var thumbMemo={},thumbQ=Promise.resolve();
+function thumbSrc(e){
+ var k=e.id+'|'+(e.at||'');
+ if(thumbMemo[k])return thumbMemo[k];
+ var t=e.t||'';
+ thumbMemo[k]=thumbQ=thumbQ.catch(function(){}).then(function(){return fileBlob(e);}).then(function(b){
+  if(t.indexOf('image/')===0)return URL.createObjectURL(b);
+  return Promise.all([loadPdfJs(),b.arrayBuffer()]).then(function(r){
+   return r[0].getDocument({data:new Uint8Array(r[1])}).promise;
+  }).then(function(doc){return doc.getPage(1);}).then(function(p){
+   var v1=p.getViewport({scale:1}),vp=p.getViewport({scale:440/v1.width});
+   var c=document.createElement('canvas');c.width=vp.width;c.height=vp.height;c.dir='ltr';
+   var cx=c.getContext('2d');cx.direction='ltr';cx.fillStyle='#fff';cx.fillRect(0,0,c.width,c.height);
+   return p.render({canvasContext:cx,viewport:vp}).promise.then(function(){return c.toDataURL('image/jpeg',0.8);});
+  });
+ });
+ thumbMemo[k].catch(function(){delete thumbMemo[k];});
+ return thumbMemo[k];
+}
+function thumbsFill(){
+ if(!GKEY||!D.files)return;
+ var H=window.innerHeight||800;
+ document.querySelectorAll('.fthumb:not([data-st])').forEach(function(el){
+  if(!el.parentElement||!el.parentElement.offsetParent)return;
+  var r=el.parentElement.getBoundingClientRect();
+  if(r.bottom<-H||r.top>2*H)return;
+  var e=fileEntry(el.getAttribute('data-fn')),t=e?(e.t||''):'';
+  if(!e||(t.indexOf('image/')!==0&&t!=='application/pdf')){el.setAttribute('data-st','no');return;}
+  el.setAttribute('data-st','wait');
+  thumbSrc(e).then(function(src){
+   el.innerHTML='<img alt="" src="'+src+'">';el.setAttribute('data-st','ok');
+  }).catch(function(){el.setAttribute('data-st','no');});
+ });
+}
+var thumbT=null;
+function thumbsSoon(){clearTimeout(thumbT);thumbT=setTimeout(thumbsFill,150);}
+new MutationObserver(thumbsSoon).observe(document.documentElement,{childList:true,subtree:true});
+window.addEventListener('scroll',thumbsSoon,{passive:true});
+setInterval(thumbsFill,3000);
+document.addEventListener('click',function(ev){
+ var a=ev.target&&ev.target.closest&&ev.target.closest('a[href]');
+ if(!a||a.origin!==location.origin)return;
+ var n=fileNameOf(a.getAttribute('href'));
+ if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
+},true);
+/*
+  Data that does not travel with the page.
+
+  Itzik, 16.9: the monitor is slow. It was carrying every message, report and
+  receipt inline, 692KB on every open. Now each big collection sits in its own
+  file next to the page and D holds only the newest few, enough that every
+  count on the home screen is right the moment it paints. A screen fetches its
+  own file the first time it is opened, once per build, and the browser keeps
+  it after that.
+
+  ensure() never blocks a render: the screen draws with what it has and draws
+  again when the file lands. A failed fetch leaves the head in place rather
+  than emptying the screen, because a short list is a smaller lie than none.
+*/
+var CODE_ID='__CODE_ID__';
+var INSTANCE='__INSTANCE__';
+// Who this page belongs to, for every line that names him. Itzik's copy says
+// what it always said; another copy says its own owner's name.
+var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
+var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
+// Itzik, 8.10: a customer never met Claude, so on his page the other side is
+// just "העוזר שלך". His own page keeps the name he uses.
+var AI=(INSTANCE&&INSTANCE.name&&INSTANCE.name!=='abaitzik')?'העוזר שלך':'קלוד';
+var PAGE_TITLE=(INSTANCE&&INSTANCE.pageTitle)||'אבא איציק בבנייה עצמית';
+(function(){
+ var box=document.getElementById('aiWho');if(!box||AI==='קלוד')return;
+ try{if(localStorage.getItem('aiWhoSeen'))return;}catch(e){}
+ box.hidden=false;
+ document.getElementById('aiWhoOk').onclick=function(){box.hidden=true;try{localStorage.setItem('aiWhoSeen','1');}catch(e){}};
+})();
+var LAZY = D.lazy || {}, lazyDone = {}, lazyWait = {};
+function lazyTotal(k){ return LAZY[k] ? LAZY[k].n : ((D[k]||[]).length); }
+function ensure(keys, fn){
+ var list=(typeof keys==='string'?[keys]:keys).filter(function(k){
+  return LAZY[k]&&!lazyDone[k];
+ });
+ if(!list.length){if(fn)fn();return;}
+ var left=list.length;
+ function step(){if(!--left&&fn)fn();}
+ list.forEach(function(k){
+  if(lazyWait[k]){lazyWait[k].push(step);return;}
+  lazyWait[k]=[step];
+  var url='data/'+k+'.json?b='+encodeURIComponent(D.buildId||'');
+  var end=function(){
+   var q=lazyWait[k]||[];lazyWait[k]=null;
+   q.forEach(function(g){try{g();}catch(e){}});
+   // The counters on the home screen were computed from the head. Now that the
+   // whole collection is here they are computed again, so a number never sits
+   // there stale behind a screen he has already opened.
+   try{paintDot();}catch(e){}
+   // And the red button with them. It counts the answers the screen can show,
+   // and those arrive in these files, so a count painted before they landed is
+   // a count of a page that was still half empty. Painted again here it climbs
+   // to the truth by itself instead of waiting for the next press.
+   try{renderNew();}catch(e){}
+  };
+  if(!window.fetch){lazyDone[k]=true;end();return;}
+  /*
+    One retry, off the cache.
+
+    A sealed file is decrypted here, and a decrypt that throws used to be
+    swallowed into an empty function: the key stayed not done, nothing tried
+    again, and the screen sat on whatever head slice it had. With the gate on
+    that head is nothing at all, so one bad response - a cached body from
+    before the seal, a truncated file, an offline moment - made the answers
+    screen permanently empty for the rest of that page's life. The second
+    attempt asks the network rather than the cache, which is the one thing
+    that changes the answer.
+  */
+  var attempt=function(opts,again){
+   return fetch(url,opts).then(function(r){
+    return r.ok?gjson(r):null;
+   }).then(function(v){
+    if(Array.isArray(v)){D[k]=v;lazyDone[k]=true;return;}
+    if(again)return attempt({cache:'reload'},false);
+    lazyDone[k]=true;
+   },function(){
+    if(again)return attempt({cache:'reload'},false);
+   });
+  };
+  attempt({cache:'force-cache'},true).then(end,end);
+ });
+}
+// Split so a scraper crawling the page source does not lift a plain address.
+// This is obfuscation, not security - anyone reading the code can reassemble it.
+/*
+  The addresses and channels move behind the lock.
+
+  An audit on 18.9 found them all sitting in the page as literals: the inbound
+  ntfy topic, the live topic, the outbound topic as a clickable link, and his
+  email twice. An ntfy topic has no authentication at all, so the name IS the
+  credential: anyone reading the page could subscribe to everything that
+  reaches his phone, and publish messages into his inbox that would arrive on
+  the real channel and defeat the impersonation check from underneath.
+
+  They live in the sealed payload now, so an unlocked page has them and a
+  stranger with the link has an empty string. Everything that used them reads
+  through here instead of from a literal.
+*/
+function secret(k, fallback){ return (D && D.keys && D.keys[k]) || fallback || ''; }
+/*
+  Read at the moment of use, not at the moment the script parses.
+
+  The first version captured these into vars while D was still empty, because
+  with the gate on the page starts with no data at all. They stayed empty for
+  ever, and the first thing that broke was the microphone: the one control the
+  whole screen exists for, posting to the empty string. Caught on the live page
+  before he touched it. A secret that arrives later has to be asked for later.
+*/
+function MAILBOX(){ return secret('mail'); }
+// ntfy is the primary channel for everything the page sends, and FormSubmit is
+// the fallback under it. It was the other way round until 17.9, and the mailbox
+// being first had two costs. FormSubmit's free tier has a daily cap, so on a
+// busy day Itzik hit it mid sentence and got a Rate Limit page instead of a
+// send. And the mailbox is his own: every button press landed as an email in
+// his inbox, which is what he asked about by voice at 21:47 that evening. ntfy
+// has no such cap and the listener is holding it open, so a message sent this
+// way is in the chat the same second instead of waiting for a mailbox round.
+// The topic sits in the page source, so it is public: every message carries
+// his code, and anything unsigned is ignored on my side.
+function NTFYIN(){ return secret('ntfyIn'); }
+function ntfyText(kind, text, gid) {
+ // Headers have to stay ASCII, so the Hebrew all rides in the body.
+ return fetch('https://ntfy.sh/' + NTFYIN(), {
+  method: 'POST', headers: { Title: 'monitor' + (gid ? ' ' + gid + ' cap' : ''), 'X-Tags': 'memo' },
+  // The page is emitted from a template literal, so a backslash escape here
+  // would be eaten at build time. The newline is built from its code point.
+  body: [kind, text, '', 'קוד ' + myCode()].join(String.fromCharCode(10))
+ }).then(function (r) { if (!r.ok) throw new Error('ntfy'); return 'ok'; });
+}
+// Returns 'ok' when the primary channel carried it and 'backup' when the
+// mailbox had to, so the page can tell him which one it went out on rather
+// than naming a channel he has no reason to care about.
+function sendText(subject, text, kind) {
+ return ntfyText(kind, text).catch(function () {
+  return fetch('https://formsubmit.co/ajax/' + MAILBOX(), {
+   method: 'POST',
+   headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+   body: JSON.stringify({ _subject: subject, _template: 'table', 'הודעה': text, 'קוד': myCode() })
+  }).then(function (r) {
+   if (!r.ok) throw new Error('quota');
+   return 'backup';
+  });
+ });
+}
+/*
+  A message that did not leave waits and goes by itself. Reviewer, 4.10,
+  approved 5.10: with no signal (a warehouse, a showroom) the line said both
+  channels did not answer and it was on her to remember to send again. Now the
+  text is kept on this device and resolves as 'held'; it is tried again when
+  the phone says it is back online, when the screen comes back, and every 30
+  seconds while anything is waiting. Once out, it joins the pending bubbles the
+  same way a message sent the first time does.
+*/
+var HELD_SAY='אין קליטה כרגע. ההודעה שמורה ותישלח לבד כשתחזור קליטה.';
+function heldList(){
+ try{var a=JSON.parse(localStorage.getItem('heldMsgs')||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}
+}
+function saveHeld(a){try{localStorage.setItem('heldMsgs',JSON.stringify(a));}catch(e){}}
+function sendOrHold(subject,text,kind,pend){
+ return sendText(subject,text,kind).catch(function(){
+  var a=heldList();
+  a.push({subject:subject,text:text,kind:kind,pend:pend||{at:new Date().toISOString(),text:text}});
+  saveHeld(a);
+  flushHeldSoon();
+  return 'held';
+ });
+}
+/*
+  Fifteen seconds to take it back. Reviewer 9.10, and Itzik 10.10: "כמו בג׳ימייל,
+  15 שניות לחשוב טוב אם אתה רוצה לבטל". A typed message no longer leaves the
+  moment send is pressed. The box empties, a bar at the bottom counts down, and
+  until it reaches zero "תיקון" puts the words back in the box and "ביטול" drops
+  them. Leaving the page, or sending another message, sends the waiting one at
+  once, so nothing is lost by walking away.
+*/
+var UNDO_S=15,undoCur=null;
+function undoBar(){
+ var b=document.getElementById('undoBar');
+ if(b)return b;
+ b=document.createElement('div');b.id='undoBar';b.className='undobar';b.hidden=true;
+ b.setAttribute('role','status');
+ b.innerHTML='<span class="ub-t"></span><button type="button" class="ub-fix">תיקון</button>'
+  +'<button type="button" class="ub-no">ביטול</button><button type="button" class="ub-go">שלח עכשיו</button>';
+ document.body.appendChild(b);
+ b.querySelector('.ub-fix').onclick=function(){undoStop('fix');};
+ b.querySelector('.ub-no').onclick=function(){undoStop('drop');};
+ b.querySelector('.ub-go').onclick=function(){undoFire();};
+ return b;
+}
+function undoPaint(){
+ var b=undoBar();if(!undoCur){b.hidden=true;return;}
+ var left=Math.max(0,Math.ceil((undoCur.due-Date.now())/1000));
+ var what=undoCur.file?(undoCur.file>1?'הקבצים יוצאים ':'הקובץ יוצא '):'ההודעה יוצאת ';
+ b.querySelector('.ub-t').textContent=what+(left===1?'בעוד שנייה':'בעוד '+left+' שניות');
+ // A file has no words to put back in a box, so it gets only ביטול and שלח עכשיו.
+ b.querySelector('.ub-fix').hidden=!!undoCur.file;
+ b.hidden=false;
+}
+/*
+  Itzik, 10.10, by voice: after sending a file he was told there is a cancel
+  button and saw none. The countdown was only on typed messages. A file (not a
+  recording, which goes at once as promised on the microphone) now waits the
+  same fifteen seconds, and ביטול keeps it unsent and still picked.
+*/
+function undoSend(text,box,go,opt){
+ undoFire();
+ if(opt&&opt.file){undoCur={file:opt.file,onDrop:opt.onDrop,go:go,due:Date.now()+UNDO_S*1000};
+  undoCur.tick=setInterval(function(){if(!undoCur)return;if(Date.now()>=undoCur.due)undoFire();else undoPaint();},250);
+  undoPaint();return;}
+ if(box){box.value='';try{box.dispatchEvent(new Event('input'));}catch(e){}}
+ undoCur={text:text,box:box,go:go,due:Date.now()+UNDO_S*1000};
+ undoCur.tick=setInterval(function(){if(!undoCur)return;if(Date.now()>=undoCur.due)undoFire();else undoPaint();},250);
+ undoPaint();
+}
+function undoFire(){
+ var u=undoCur;if(!u)return;
+ clearInterval(u.tick);undoCur=null;undoPaint();
+ u.go();
+}
+function undoStop(how){
+ var u=undoCur;if(!u)return;
+ clearInterval(u.tick);undoCur=null;undoPaint();
+ if(how==='fix'&&u.box){
+  // A reply box can be redrawn away while the bar counts; the words then go to the main box.
+  if(!document.body.contains(u.box))u.box=document.getElementById('msgText')||u.box;
+  u.box.value=u.box.value.trim()?u.text+String.fromCharCode(10)+u.box.value:u.text;
+  try{u.box.dispatchEvent(new Event('input'));}catch(e){}
+  try{u.box.focus();u.box.setSelectionRange(u.box.value.length,u.box.value.length);}catch(e){}
+  toast('ההודעה חזרה לתיבה. אפשר לתקן ולשלוח שוב.');
+ }else if(u.file){try{u.onDrop&&u.onDrop();}catch(e){}toast(u.file>1?'הקבצים בוטלו ולא יצאו.':'הקובץ בוטל ולא יצא.');}
+ else toast('ההודעה בוטלה ולא יצאה.');
+}
+document.addEventListener('visibilitychange',function(){if(document.hidden)undoFire();});
+window.addEventListener('pagehide',undoFire);
+var heldBusy=false,heldTimer=null;
+function flushHeldSoon(){
+ if(!heldTimer)heldTimer=setInterval(flushHeld,30000);
+}
+function flushHeld(){
+ var a=heldList();
+ if(!a.length){if(heldTimer){clearInterval(heldTimer);heldTimer=null;}return;}
+ if(heldBusy||(navigator.onLine===false))return;
+ heldBusy=true;
+ var first=a[0];
+ sendText(first.subject,first.text,first.kind).then(function(){
+  var rest=heldList().filter(function(x){return !(x.text===first.text&&x.pend&&first.pend&&x.pend.at===first.pend.at);});
+  saveHeld(rest);
+  var p=pending();
+  p.push({at:new Date().toISOString(),text:first.pend.text,re:first.pend.re||undefined});
+  savePending(p);
+  try{toast('ההודעה שחיכתה לקליטה נשלחה.');}catch(e){}
+  try{renderThread();}catch(e){}
+  heldBusy=false;
+  if(rest.length)setTimeout(flushHeld,800);
+ },function(){heldBusy=false;});
+}
+window.addEventListener('online',function(){setTimeout(flushHeld,1500);});
+document.addEventListener('visibilitychange',function(){if(!document.hidden)flushHeld();});
+setTimeout(function(){if(heldList().length){flushHeldSoon();flushHeld();}},4000);
+// Files do NOT go through FormSubmit's ajax endpoint. It answers 200 and then
+// silently drops the attachment, so two recordings arrived as a note with no
+// audio and nothing looked wrong at either end. That endpoint is for text.
+//
+// The bytes go to ntfy, which carries files reliably, and a line goes to the
+// mailbox as well so there is a record that a recording existed even if the
+// audio expires before I fetch it.
+//
+// Itzik, 17.9, by voice: "set it up so I can send a video and a voice and a
+// photo and everything together". Every file is still its own upload, because
+// ntfy carries one file per message, but they all leave stamped with the same
+// token and so does the caption. The listener joins them back into one line in
+// the chat instead of four, so one send is one thing to answer.
+function sendGroupId() {
+ return 'g' + Date.now().toString(36)
+  + Math.floor(Math.random() * 1679616).toString(36);
+}
+// ntfy.sh's anonymous ceiling is 2MB a file (2097152) and 20MB held per
+// sender for three hours. Slices stay a little under the first.
+var PART = 2000000;
+function sendFiles(list, note) {
+ var gid = sendGroupId();
+ var n = list.length;
+ // Every upload is checked against what came back. A recording that does not
+ // arrive whole must fail here and say so on his screen, because the last time
+ // one was dropped silently he kept talking into nothing and then could not
+ // remember what he had asked for.
+ /*
+   Itzik, 2.10 19:45: the logo and two more files in one send. The logo
+   arrived, the next file failed, and the failure stopped the chain before the
+   caption. The caption is the only part that carries his code, so the logo
+   that did arrive sat on the server as a stranger's file and nobody answered
+   it. He sent it four times and waited an hour. Now one file that fails is
+   tried once more and then skipped, the caption always goes out, it names
+   what did not arrive, and only after that does the send report a failure.
+ */
+ var failed = [];
+ function putBlob(b, name, i) {
+  return fetch('https://ntfy.sh/' + NTFYIN() + '?filename=' + encodeURIComponent(name),
+   { method: 'PUT', headers: { Title: 'file ' + gid + ' ' + (i + 1) + '/' + n }, body: b })
+   .then(function (r) {
+    if (!r.ok) throw new Error('ntfy');
+    return r.json().catch(function () { return null; });
+   })
+   .then(function (j) {
+    var got = j && j.attachment && Number(j.attachment.size);
+    if (!got || got < b.size * 0.98) throw new Error('הקובץ לא הגיע שלם');
+   });
+ }
+ /*
+   Itzik, 10.10, by voice: every video he sent came back as "לא עלו" and he
+   called it a bug that checks nothing. It was real: ntfy.sh cut the anonymous
+   limit to 2MB a file, so every screen recording was refused with 413 while
+   the page still promised 15MB. A file over PART now leaves as numbered
+   slices, name.part1of5 and on, each one checked like a whole file, and the
+   listener joins them back before the chat sees the name. One slice that
+   fails twice fails the file.
+ */
+ function putOne(f, i) {
+  if (f.size <= PART) return putBlob(f, f.name, i);
+  var k = Math.ceil(f.size / PART), j = 0;
+  function next() {
+   if (j >= k) return Promise.resolve();
+   var b = f.slice(j * PART, Math.min(f.size, (j + 1) * PART));
+   var name = f.name + '.part' + (j + 1) + 'of' + k;
+   return putBlob(b, name, i).catch(function () { return putBlob(b, name, i); })
+    .then(function () { j++; return next(); });
+  }
+  return next();
+ }
+ return list.reduce(function (chain, f, i) {
+  return chain.then(function () {
+   return putOne(f, i).catch(function () {
+    // A sliced file already retried each slice; sending it all again would
+    // only spend the quota that probably refused it.
+    if (f.size > PART) { failed.push(f.name); return; }
+    return putOne(f, i).catch(function () { failed.push(f.name); });
+   });
+  });
+ }, Promise.resolve()).then(function () {
+  if (failed.length) note = (note ? note + String.fromCharCode(10) : '')
+   + 'לא עלו: ' + failed.join(', ');
+  // notSent: nothing arrived and no caption left, so the whole send can be
+  // tried again elsewhere without doubling anything (sendAll, 11.10).
+  if (failed.length === n) { var none = new Error('הקובץ לא הגיע שלם'); none.notSent = failed.slice(); throw none; }
+ }).then(function () {
+  // The caption carries the group token, so it is the line that joins the
+  // uploads back into one item in the chat. It used to be followed by a copy
+  // to the mailbox on every single send, as a record in case the audio expired
+  // before I fetched it. The listener fetches within the second, so that copy
+  // was never read and only put an email in his own inbox for every recording
+  // he made. Now it is what it should have been: a fallback, sent only when
+  // the caption itself did not get through.
+  return ntfyText('קובץ', note, gid).catch(function () {
+   return fetch('https://formsubmit.co/ajax/' + MAILBOX(), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ _subject: 'קובץ מהמוניטור', _template: 'table',
+      'הודעה': note + ' (הקובץ עצמו נשלח בערוץ הקבצים)', 'קוד': myCode() })
+   }).then(function (r) { if (!r.ok) throw new Error('quota'); return 'backup'; });
+  });
+ }).then(function (how) {
+  if (!failed.length) return how;
+  var e = new Error('partial');
+  e.failed = failed;
+  throw e;
+ });
+}
+/*
+  Big files, 11.10.2026. Itzik approved a direct path to our own server for any
+  file over 15MB: ntfy.sh takes 2MB a file and 20MB in three hours, so a video
+  had nowhere to go but WeTransfer. Files up to 15MB keep the old ntfy path,
+  untouched (sendFiles; sendAll chooses). Bigger ones go in 8MB slices to /up on our server with
+  the same personal code every message carries, each slice retried, and a file
+  picked again resumes at the byte the server already has.
+
+  Only a page whose instance.json names an uploadUrl does this; a customer's
+  copy without one behaves exactly as before. The WeTransfer box is hidden on
+  such a page and comes back as the answer only when the server cannot be reached.
+*/
+var UPURL=(INSTANCE&&INSTANCE.uploadUrl)||'';
+var BIGF=15*1024*1024;
+var UPCHUNK=8*1024*1024;
+if(UPURL){['wBig','fWeBox'].forEach(function(i){var e=document.getElementById(i);if(e)e.style.display='none';});}
+// Which files leave by the big path. Past 15MB each, and if what is left for
+// ntfy still passes its 18MB, the largest of those join them.
+function splitSend(list){
+ if(!UPURL)return {small:list.slice(),big:[]};
+ var big=list.filter(function(f){return f.size>BIGF;});
+ var rest=list.filter(function(f){return big.indexOf(f)<0;});
+ var sum=rest.reduce(function(n,f){return n+f.size;},0);
+ while(sum>QMAX&&rest.length){
+  var k=0;
+  for(var i=1;i<rest.length;i++){if(rest[i].size>rest[k].size)k=i;}
+  sum-=rest[k].size;
+  big.push(rest.splice(k,1)[0]);
+ }
+ return {small:rest,big:big};
+}
+function bigKey(f){return f.name+'|'+f.size+'|'+(f.lastModified||0);}
+var upLock=null;
+function upPanel(on,text,pct,note){
+ var el=document.getElementById('upProg');
+ if(!el){
+  if(!on)return;
+  el=document.createElement('div');el.id='upProg';el.setAttribute('role','status');
+  el.style.cssText='position:fixed;z-index:90;inset-inline:16px;bottom:calc(76px + env(safe-area-inset-bottom));padding:14px 16px;border-radius:16px;background:#14213d;color:#fff;font:700 16px Heebo,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.35);text-align:center';
+  el.innerHTML='<div id="upTxt"></div><div style="height:10px;border-radius:99px;background:rgba(255,255,255,.25);margin:10px 0 6px;overflow:hidden"><div id="upFill" style="height:100%;width:0;background:#4ade80;transition:width .3s"></div></div><small id="upNote" style="font:500 13px Heebo,sans-serif;opacity:.9"></small>';
+  document.body.appendChild(el);
+ }
+ el.hidden=!on;
+ if(!on)return;
+ document.getElementById('upTxt').textContent=text;
+ document.getElementById('upFill').style.width=Math.max(0,Math.min(100,pct||0))+'%';
+ document.getElementById('upNote').textContent=note||'לא לסגור את הדף';
+}
+function upKeepAwake(on){
+ try{
+  if(on&&navigator.wakeLock&&navigator.wakeLock.request){navigator.wakeLock.request('screen').then(function(l){upLock=l;},function(){});}
+  else if(!on&&upLock){upLock.release();upLock=null;}
+ }catch(e){}
+ window.onbeforeunload=on?function(e){e.preventDefault();e.returnValue='';return '';}:null;
+}
+function upCall(path,opt){
+ opt=opt||{};
+ var h={'X-Monitor-Code':myCode()};
+ if(opt.json)h['Content-Type']='application/json';
+ return fetch(UPURL+path,{method:opt.method||'GET',headers:h,body:opt.body}).then(function(r){
+  return r.json().catch(function(){return {};}).then(function(b){return {status:r.status,body:b||{}};});
+ });
+}
+// 2xx is the answer. A refusal that no retry can change is fatal and carries
+// the sentence for his screen; everything else (network, 429, 5xx) is retried.
+function upCheck(r){
+ if(r.status>=200&&r.status<300)return r.body;
+ var er=r.body&&r.body.error,e=new Error('upload '+r.status+' '+(er||''));
+ e.status=r.status;e.code=er;
+ if(r.status===401){e.fatal=true;e.msg='הקוד האישי לא מתקבל, ההעלאה נקטעה. בהגדרות מכניסים אותו מחדש.';}
+ else if(r.status===413){e.fatal=true;e.msg='הקובץ גדול מדי, ההעלאה נקטעה. המגבלה 4 ג׳יגה.';}
+ else if(r.status===507){e.fatal=true;e.msg='אין כרגע מקום בשרת לקובץ הזה, ההעלאה נקטעה.';}
+ else if(r.status===403||r.status===503){e.fatal=true;e.unreachable=true;}
+ else if(r.status===404){e.fatal=true;e.gone=true;}
+ else if(r.status===400||r.status===411||r.status===405){e.fatal=true;}
+ return Promise.reject(e);
+}
+function upWait(ms){return new Promise(function(r){setTimeout(r,ms);});}
+function upOnline(){
+ if(navigator.onLine!==false)return Promise.resolve();
+ return new Promise(function(res){
+  function h(){window.removeEventListener('online',h);res();}
+  window.addEventListener('online',h);setTimeout(h,20000);
+ });
+}
+function upRetry(fn,tries){
+ var n=0;
+ function go(){
+  return fn().catch(function(e){
+   if(e&&e.fatal)throw e;
+   n++;
+   if(n>=tries){if(e){e.exhausted=true;}throw e;}
+   return upOnline().then(function(){return upWait(Math.min(15000,1000*Math.pow(2,n-1)));}).then(go);
+  });
+ }
+ return go();
+}
+// One file: create or resume, slices, finish. onProg gets a 0..1 share.
+function bigUpload(f,caption,onProg){
+ var id=null,off=0,started=false;
+ function create(){
+  return upRetry(function(){
+   return upCall('',{method:'POST',json:1,body:JSON.stringify({name:f.name,size:f.size,type:f.type||'',key:bigKey(f),lastModified:f.lastModified||0})}).then(upCheck);
+  },3).then(function(b){id=b.id;off=b.offset||0;started=true;if(off)onProg(off/f.size);},function(e){
+   // Nothing was ever accepted: the server is not there, so WeTransfer is offered.
+   if(!e.fatal||e.unreachable)e.unreachable=true;
+   throw e;
+  });
+ }
+ function slices(){
+  if(off>=f.size)return Promise.resolve();
+  var from=off,end=Math.min(f.size,off+UPCHUNK);
+  return upRetry(function(){
+   return upCall('/'+id+'?offset='+from,{method:'PUT',body:f.slice(from,end)}).then(function(r){
+    if(r.status===409&&r.body&&r.body.error==='offset'&&typeof r.body.offset==='number')return r.body;
+    return upCheck(r);
+   });
+  },12).then(function(b){
+   off=b.offset;
+   onProg(off/f.size);
+   return slices();
+  });
+ }
+ function fin(){
+  return upRetry(function(){
+   return upCall('/'+id+'/finish',{method:'POST',json:1,body:JSON.stringify({caption:caption||''})}).then(function(r){
+    if(r.status===409&&r.body&&r.body.error==='size-mismatch'&&typeof r.body.offset==='number')return {again:r.body.offset};
+    return upCheck(r);
+   });
+  },8).then(function(b){
+   if(b&&typeof b.again==='number'){off=b.again;return slices().then(fin);}
+   return b;
+  });
+ }
+ return create().then(slices).then(fin).catch(function(e){
+  if(e&&e.gone&&started)e.msg='ההעלאה פגה בשרת, ההעלאה נקטעה. אפשר להתחיל מחדש.';
+  throw e;
+ });
+}
+// All the big files of a send, one after the other. Never rejects: it reports
+// which ones did not make it, and whether the server was out of reach.
+function sendBigs(bigs,note,quiet){
+ var out={names:[],unreachable:false,msg:''};
+ var n=bigs.length;
+ upKeepAwake(true);
+ return bigs.reduce(function(chain,f,i){
+  return chain.then(function(){
+   var label=(f.name.length>28?f.name.slice(0,25)+'...':f.name)+(n>1?' ('+(i+1)+' מתוך '+n+')':'');
+   if(!quiet)upPanel(true,'מעלה '+label+' 0%',0);
+   return bigUpload(f,i===0?note:'',function(share){
+    if(quiet)return;
+    var pct=Math.floor(share*100);
+    upPanel(true,'מעלה '+label+' '+pct+'%',pct);
+    fSaid.textContent='מעלה קובץ גדול: '+pct+'%. לא לסגור את הדף.';
+   }).then(function(){
+    if(!quiet)upPanel(true,'התקבל ✓',100,f.name);
+   },function(e){
+    out.names.push(f.name);
+    if(e&&e.unreachable)out.unreachable=true;
+    if(e&&e.msg)out.msg=e.msg;
+   });
+  });
+ },Promise.resolve()).then(function(){
+  upKeepAwake(false);
+  var bad=out.names.length;
+  if(bad)upPanel(false);
+  else setTimeout(function(){upPanel(false);},2500);
+  return out;
+ });
+}
+/*
+  11.10.2026, Itzik: "אי אפשר לשלוח הודעות קוליות". ntfy.sh gives an anonymous
+  sender 20MB of attachments per IP, held for three hours (its /v1/account says
+  attachment_total_size 20971520, expiry 10800). At 11:54 he sent eleven
+  photos, about 15MB, on top of a morning of recordings. The next send already
+  lost two photos as "לא עלו", and from then on every recording was refused by
+  ntfy and reported as "ההקלטה לא הגיעה שלמה", for up to three hours.
+
+  So a small file ntfy refuses now goes to our own server the same way a big
+  file does (upload.js, the personal code in every call), quietly. Nothing
+  arrived on ntfy for those files, so nothing is doubled: when the whole send
+  failed the caption goes with them; when only some failed, the caption already
+  went with the rest and they follow with the same caption. A page without an
+  uploadUrl behaves exactly as before.
+*/
+function sendSmall(files,note){
+ if(!UPURL||!files.length)return sendFiles(files,note);
+ return sendFiles(files,note).catch(function(e){
+  var names=(e&&(e.notSent||e.failed))||null;
+  if(!names||!names.length)throw e;
+  var again=files.filter(function(f){return names.indexOf(f.name)>=0;});
+  if(!again.length)throw e;
+  return sendBigs(again,note,true).then(function(bf){
+   if(!bf.names.length)return 'ok';
+   if(e.notSent&&bf.names.length===files.length)throw e;
+   var e2=new Error('partial');
+   e2.failed=bf.names.slice();
+   throw e2;
+  });
+ });
+}
+function sendAll(list,note){
+ var sp=splitSend(list);
+ if(!sp.big.length)return sendSmall(sp.small,note);
+ var err=null;
+ var first=sp.small.length?sendSmall(sp.small,note).catch(function(e){err=e;return 'ok';}):Promise.resolve('ok');
+ return first.then(function(how){
+  return sendBigs(sp.big,sp.small.length?'':note).then(function(bf){
+   var failed=[];
+   if(err)failed=err.failed?err.failed.slice():sp.small.map(function(f){return f.name;});
+   bf.names.forEach(function(nm){failed.push(nm);});
+   if(!failed.length)return how;
+   var e=new Error('partial');
+   e.failed=failed;
+   e.bigFailed=bf.names;
+   e.unreachable=bf.unreachable;
+   e.msg=bf.msg;
+   if(!bf.names.length){delete e.bigFailed;}
+   throw e;
+  });
+ });
+}
+function bigFailedSay(e,list){
+ pickArr=pickArr.filter(function(f){return e.failed.indexOf(f.name)>=0;});
+ describe();paintBoxPick();
+ if(e.unreachable){
+  fSaid.innerHTML=esc('ההעלאה הישירה נכשלה, השרת לא ענה. אפשר בוויטרנספר:')
+   +'<a class="ask" href="https://wetransfer.com/" target="_blank" rel="noopener" style="display:flex;margin-top:8px">לשלוח בוויטרנספר</a>'
+   +'<span style="display:block;margin-top:6px">'+esc('שם בוחרים את הקובץ, לוחצים העברה ובוחרים קבלת קישור. את הקישור מדביקים כאן בהודעה ושולחים.')+'</span>';
+  var r=document.getElementById('recSaid');if(r)r.textContent='ההעלאה הישירה נכשלה, השרת לא ענה.';
+  toast('ההעלאה הישירה נכשלה, השרת לא ענה.');
+  return;
+ }
+ sendSay(e.msg||('ההעלאה נקטעה: '+e.bigFailed.join(', ')+'. '+(FEM?'שלחי':'תשלח')+' שוב והיא תמשיך מאותו מקום.'));
+}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+// 10.10: "1 דקות", "12 ימים" read as broken Hebrew. ago() now returns the whole
+// phrase, Israel time: עכשיו, לפני דקה, לפני שעתיים, אתמול ב 14:30,
+// יום שלישי ב 09:10, 3.10. agoAfter() is for after a verb: "עודכן ב 3.10".
+function ilParts(ms){var x=new Date(ms),o={};
+ try{new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'numeric',hourCycle:'h23'})
+  .formatToParts(x).forEach(function(p){o[p.type]=+p.value;});}catch(e){}
+ if(!o.year)o={year:x.getFullYear(),month:x.getMonth()+1,day:x.getDate(),hour:x.getHours(),minute:x.getMinutes()};
+ o.hour=o.hour%24;o.dn=Date.UTC(o.year,o.month-1,o.day)/864e5;o.dow=new Date(o.dn*864e5).getUTCDay();return o;}
+var DAYN=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+function ago(iso){if(!iso)return'';var d=Date.parse(iso);if(isNaN(d))return'';
+ var s=(Date.now()-d)/1000;if(s<90)return'עכשיו';
+ var a=ilParts(d),b=ilParts(Date.now()),days=b.dn-a.dn;
+ if(s<3600||days<=0&&s<86400){var m=Math.floor(s/60);if(m<60)return m<2?'לפני דקה':m===2?'לפני שתי דקות':'לפני '+m+' דקות';
+  var h=Math.round(s/3600);return h<2?'לפני שעה':h===2?'לפני שעתיים':'לפני '+h+' שעות';}
+ var t=(a.hour<10?'0':'')+a.hour+':'+(a.minute<10?'0':'')+a.minute;
+ if(days===1)return'אתמול ב '+t;if(days<7)return'יום '+DAYN[a.dow]+' ב '+t;
+ return a.day+'.'+a.month+(a.year!==b.year?'.'+a.year:'');}
+function agoAfter(iso){var a=ago(iso);return /^(לפני|אתמול|עכשיו)/.test(a)||!a?a:/^יום/.test(a)?'ב'+a:'ב '+a;}
+function row(i){
+ var cls='item'+(i.repliedAt?' answered':(i.category==='pain'?' pain':''));
+ return '<div class="'+cls+'"><div class="top"><span class="who">'+esc(i.author)+'</span>'
+  +'<span class="chip">'+esc(NET[i.network]||i.network)+'</span>'
+  +(i.category?'<span class="chip">'+esc(CAT[i.category]||i.category)+'</span>':'')
+  +'<span>'+ago(i.repliedAt||i.seenAt)+'</span></div>'
+  +'<div class="body">'+esc(i.text)+'</div>'
+  +(i.replyText?'<div class="said">'+esc(i.replyText)+'</div>':'')+'</div>';
+}
+function stamp(iso){var d=new Date(iso);if(isNaN(d.getTime()))return'';
+ function p(n){return (n<10?'0':'')+n;}
+ return p(d.getDate())+'.'+p(d.getMonth()+1)+' '+p(d.getHours())+':'+p(d.getMinutes());}
+function logHtml(log){
+ if(!log||!log.length)return'';
+ return '<ol class="log">'+log.slice().sort(function(a,b){
+   return (a.at||'')<(b.at||'')?-1:1;
+ }).map(function(e){
+   return '<li><span class="d">'+esc(stamp(e.at))+'</span>'+esc(e.text)+'</li>';
+ }).join('')+'</ol>';
+}
+var SRC={site:'טופס יצירת קשר באתר',tiktok:'הודעה פרטית בטיקטוק',facebook:'פייסבוק',instagram:'אינסטגרם',youtube:'יוטיוב',phone:'טלפון',person:'הכרות אישית'};
+var STAT={open:'לטיפול',standby:'בהמתנה',done:'טופל'};
+function leadStatus(c){
+ var k=c.name||'';
+ try{var o=JSON.parse(localStorage.getItem('leadStatus')||'{}');if(o[k])return o[k];}catch(e){}
+ return c.status||'open';
+}
+function setLeadStatus(name,st){
+ var o={};try{o=JSON.parse(localStorage.getItem('leadStatus')||'{}');}catch(e){}
+ o[name]=st;
+ try{localStorage.setItem('leadStatus',JSON.stringify(o));}catch(e){}
+ sendLine('סטטוס ליד: '+name+' · '+(STAT[st]||st));
+}
+function leadRow(c){
+ var st=leadStatus(c);
+ var closed=st==='done';
+ var subject='פרטים: '+(c.name||'');
+ var body='שלח לי את פרטי ההתקשרות ואת מה שסוכם.';
+ return '<div class="item lead'+(closed?' closed':'')+'">'
+  +'<div class="top"><span class="who">'+esc(c.name||'ללא שם')+'</span>'
+  +'<span class="chip">'+esc(NET[c.network]||c.network||'אחר')+'</span>'
+  +'<span class="chip">'+esc(STAT[st]||st)+'</span>'
+  +'<span>'+ago(c.at)+'</span></div>'
+  +'<div class="src">מקור: '+esc(c.source||SRC[c.network]||NET[c.network]||'לא ידוע')+'</div>'
+  +(c.note?'<div class="body">'+esc(c.note)+'</div>':'')
+  /*
+     צילום המסך של הפנייה יושב בתוך הליד עצמו, לפי בקשתו ב-16.9 בלילה.
+     סגור בברירת מחדל: הדף הזה פתוח לכל מי שיש לו הקישור, והתמונה מראה
+     פרצוף והודעה של נער.
+  */
+  +(c.shot?'<details class="shot"><summary>צילום המסך של הפנייה</summary>'
+    +(c.shotNote?'<small>'+esc(c.shotNote)+'</small>':'')
+    +'<a href="'+esc(c.shot)+'" target="_blank" rel="noopener">'
+    +'<img src="'+esc(c.shot)+'" alt="צילום מסך של הפנייה" loading="lazy"></a></details>':'')
+  +logHtml(c.log)
+  +'<a class="ask" href="mailto:?subject='+encodeURIComponent(subject)
+  +'&body='+encodeURIComponent(body)+'">בקשת פרטי התקשרות</a>'
+  +'<div class="stat" data-lead="'+esc(c.name||'')+'">'+['open','standby','done'].map(function(k){return '<button type="button" data-s="'+k+'" aria-pressed="'+(k===st)+'">'+STAT[k]+'</button>';}).join('')+'</div>'
+  +'</div>';
+}
+function reportRow(r,n){
+ return '<details class="report"'+(n===0?' open':'')+'>'
+  +'<summary><span class="t">'+esc(r.title||'דוח')+'</span>'
+  +'<span class="d">'+esc(stamp(r.at))+'</span></summary>'
+  +'<div class="text">'+esc(r.body)+'</div>'
+  +'<div class="copyrow"><button type="button" data-copy="'+n+'">העתקת הדוח</button>'
+  +'<button type="button" data-share="'+n+'">שיתוף הדוח</button>'
+  +'<span class="msg" data-copied="'+n+'"></span></div>'
+  +'<div class="repreply">'+replyBox('על הדוח "'+(r.title||'דוח')+'" מ'+stamp(r.at))+'</div>'
+  +'</details>';
+}
+// He said the three tiles are not connected to anything: he sends me messages
+// and the counter still says nothing. So the first tile now counts what HE
+// sent that I have not answered yet, and the second what I answered today.
+function myPending(){
+ var c=(D.chat||[]).slice().sort(function(a,b){return (a.at||'')<(b.at||'')?-1:1;});
+ var last='';
+ for(var i=c.length-1;i>=0;i--){if(c[i].from==='claude'){last=c[i].at||'';break;}}
+ var n=0;
+ for(var j=0;j<c.length;j++){
+  if(c[j].from!=='claude'&&(c[j].at||'')>last&&c[j].status!=='done')n++;
+ }
+ return n;
+}
+function answeredToday(){
+ var d=new Date();
+ var day=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+ return (D.chat||[]).filter(function(m){
+  return m.from==='claude'&&String(m.at||'').slice(0,10)===day;
+ }).length;
+}
+function render(){
+ // The three home counters this used to paint are gone; nothing fed them.
+ document.getElementById('bP').setAttribute('aria-pressed',tab==='pending');
+ document.getElementById('bD').setAttribute('aria-pressed',tab==='done');
+ // Both are lazy, so at boot they can be undefined while every other list
+ // on this screen already guards itself. Without the guard render throws on
+ // rows.length, boot catches it, and the whole screen never paints.
+ var rows=(tab==='pending'?D.pending:D.replied)||[];
+ document.getElementById('list').innerHTML=rows.length?rows.map(row).join('')
+  :'<div class="empty">'+(tab==='pending'?'התור ריק. כל מי שפנה קיבל תשובה.':'עוד לא נשלחו תשובות.')+'</div>';
+ var C=D.contacts||[];
+ document.getElementById('leads').innerHTML=C.length?C.map(leadRow).join('')
+  :'<div class="empty">אף אחד ברשימה עדיין.</div>';
+ var R=D.reports||[];
+ var head=R.length>1?'<div class="rephint">הדוח האחרון פתוח. לחיצה על כותרת פותחת דוח קודם.</div>':'';
+ document.getElementById('reports').innerHTML=R.length?head+R.map(reportRow).join('')
+  :'<div class="empty">עוד לא נכתב דוח.</div>';
+ paintStamp();
+ wireBoxes(document.getElementById('reports'));
+}
+function pending(){
+ return idList('pendingMsgs');
+}
+function savePending(a){
+ try{localStorage.setItem('pendingMsgs',JSON.stringify(a));}catch(e){}
+}
+/* The old class here was [^ <>], which stops only at a space. A link on its
+   own line therefore swallowed the newline and the first word of the next
+   line, and the href he tapped was an address that never existed: a 404 with
+   nothing to go back to. Stop at any whitespace, and hand back the trailing
+   punctuation that belongs to the sentence, not to the address.
+   The backslashes are written four deep: this page is a template literal,
+   and the result is a string handed to RegExp, so each layer eats one. */
+/*
+  A word he can press, straight to the screen the answer is on.
+
+  Itzik, 19.9: "תשים גם בתשובות שיש תשובה עם לינק". An answer that says the
+  report is in the monitor is not much use if he then has to find which
+  button it is under. So #reports, #block, #drains, #voices and the rest
+  become buttons inside the answer itself, and the page already knows how to
+  route those names.
+*/
+var SCREENWORD={reports:'הדוחות',block:'לחסימה',drains:'הניקוזים',voices:'ההקלטות',answers:'התשובות',chat:'הצ׳אט',got:'מה שהתקבל',replies:'התשובות ברשתות',special:'הבקשות',improve:'מה השתפר'};
+/*ITZIK:BEGIN*/
+SCREENWORD.pegasus='פגסוס';
+/*ITZIK:END*/
+function screenLinks(t){
+ var out='';
+ var seen={};
+ String(t==null?'':t).replace(new RegExp('#([a-z]+)','g'),function(all,name){
+  if(SCREENWORD[name]&&!seen[name]){
+   seen[name]=1;
+   out+='<button type="button" class="ab goscreen" data-screen="'+esc(name)+'">לפתוח: '+esc(SCREENWORD[name])+'</button>';
+  }
+  return all;
+ });
+ return out;
+}
+/*
+  "קח אותי לשם", ומשם חזרה בדיוק לאותו מקום.
+
+  איציק, 30.9, בהקלטה: כשאני כותב לו שמשהו עשוי ונמצא בכפתור מסוים, הוא
+  רוצה מתחת להודעה לחיצה שלוקחת אותו לשם, ושם כפתור חזרה למקום שבו קרא.
+  השמות נקראים מהאריחים שעל הדף עצמו, כך שאריח חדש נכנס מעצמו בלי לגעת כאן.
+  הודעה יכולה גם לציין אריח במפורש בשדה go.
+*/
+var GOALIAS={'דוח החייבים':'gLolos','החייבים':'gLolos'};
+var goTiles=null;
+function goIsLetter(c){
+ var n=c.charCodeAt(0);
+ return (n>=0x05D0&&n<=0x05EA)||(n>=65&&n<=90)||(n>=97&&n<=122);
+}
+function goClean(s){
+ s=String(s||'');
+ var a=0,b=s.length;
+ while(a<b&&!goIsLetter(s.charAt(a)))a++;
+ while(b>a&&!goIsLetter(s.charAt(b-1)))b--;
+ return s.slice(a,b);
+}
+function tileNames(){
+ if(goTiles)return goTiles;
+ var out=[];
+ Array.prototype.forEach.call(document.querySelectorAll('button.gt[id]'),function(t){
+  var el=t.querySelector('b');
+  var name=goClean(el?el.textContent:'');
+  if(name.length>=3)out.push({id:t.id,name:name});
+ });
+ for(var k in GOALIAS)out.push({id:GOALIAS[k],name:k});
+ // השם הארוך קודם, כדי ש"דוח החייבים" לא ייבלע בשם קצר ממנו.
+ out.sort(function(x,y){return y.name.length-x.name.length;});
+ if(out.length>2)goTiles=out;
+ return out;
+}
+function goLinks(m){
+ if(!m||m.from==='itzik')return '';
+ var ids=[],names={};
+ if(m.go){String(m.go).split(',').forEach(function(id){id=id.trim();if(id&&ids.indexOf(id)<0)ids.push(id);});}
+ var t=String(m.text||'');
+ tileNames().forEach(function(x){
+  if(ids.length>=3||ids.indexOf(x.id)>-1)return;
+  if(t.indexOf(x.name)>-1){ids.push(x.id);names[x.id]=x.name;}
+ });
+ // Itzik, 1.10: "איפה זה ממוקם ולמה אין לי כפתור קח אותי לשם". A file named
+ // in an answer as files/<name> was plain text. Now it gets its own button.
+ // Itzik, 4.10, on "the updated link will come here": the file came in a
+ // later answer in the same thread, and the card that promised it had no
+ // button. A file named anywhere in the thread gets its button on every card.
+ var ft=t;
+ if(m.re)(D.chat||[]).forEach(function(x){if(x.from==='claude'&&x.re===m.re&&x.text!==m.text)ft+=' '+x.text;});
+ var fb=[];
+ (ft.match(new RegExp('files/[^\\\\s<>"]+','g'))||[]).forEach(function(h){
+  var n=fileNameOf(h.replace(new RegExp('[.,;:!?)"]+$'),''));
+  if(!n||fb.indexOf(n)>-1||!fileEntry(n))return;
+  fb.push(n);
+ });
+ return fb.map(function(n){
+  // 10.10: a file already shown as a picture in the text above is not shown twice.
+  var inText=(t.match(new RegExp('files/[^\\\\s<>"]+','g'))||[]).some(function(h){return fileNameOf(h.replace(new RegExp('[.,;:!?)"]+$'),''))===n;});
+  return '<button type="button" class="gotile" data-file="'+esc(n)+'">'+(inText?'':fileThumb(n))+'קח אותי לשם: '+esc(n.split('/').pop())+'</button>';
+ }).join('')+ids.map(function(id){
+  var el=document.getElementById(id);
+  if(!el||el.hidden)return '';
+  var name=names[id]||goClean((el.querySelector('b')||el).textContent);
+  return '<button type="button" class="gotile" data-tile="'+esc(id)+'">קח אותי לשם: '+esc(name)+'</button>';
+ }).join('');
+}
+var goBack=null;
+function goBackBtn(){
+ var b=document.getElementById('goBack');
+ if(!b){
+  b=document.createElement('button');
+  b.type='button';b.id='goBack';b.hidden=true;
+  b.textContent='↩ חזרה למקום שהייתי';
+  b.onclick=function(e){e.stopPropagation();goReturn();};
+  document.body.appendChild(b);
+ }
+ return b;
+}
+function goThere(btn){
+ var t=document.getElementById(btn.getAttribute('data-tile')||'');
+ if(!t)return;
+ var th=btn.closest('details.th');
+ goBack={pane:panePrev||'h',y:window.pageYOffset||document.documentElement.scrollTop||0,
+  th:th?th.getAttribute('data-k'):''};
+ t.click();
+ goBackBtn().hidden=false;
+}
+function goReturn(){
+ var g=goBack;goBack=null;
+ goBackBtn().hidden=true;
+ if(!g)return;
+ pane(g.pane);
+ setTimeout(function(){
+  if(g.th){
+   var sel='details.th[data-k="'+(window.CSS&&CSS.escape?CSS.escape(g.th):g.th)+'"]';
+   var d=document.querySelector(sel);
+   if(d)d.open=true;
+  }
+  window.scrollTo(0,g.y);
+ },80);
+}
+document.addEventListener('click',function(e){
+ var b=e.target.closest&&e.target.closest('.gotile');
+ if(!b)return;
+ e.stopPropagation();e.preventDefault();
+ var fn=b.getAttribute('data-file');
+ if(fn){fileOpen(fn);return;}
+ goThere(b);
+},true);
+/*
+  Itzik, 4.10, on the debtors PDF: "אני לא רואה את הקובץ", "הכל נראה ג'יבריש".
+  An answer naming files/<name> showed that path as plain English text in
+  every view but the chat bubble, with nothing to tap. Now it is a link that
+  says what it does, and the click handler above opens it in the viewer.
+*/
+/*
+  Itzik, 7.10, on Harel's number: "תשים לי את הטלפון כדי שאני אוכל ללחוץ
+  וישר לחייג". A phone number in any answer (03-7547777, 050 1234567,
+  1-800-...) is now a tel: link. Star codes like *2735 stay plain text:
+  iPhone refuses to dial a tel: link that has * in it.
+*/
+function linkify(t){
+ // Reviewer, 11.10, approved by Itzik the same morning: a Drive or WeTransfer
+ // link showed as a long line of English broken over several lines, and
+ // nothing said where it leads. It now reads as a short Hebrew name; the copy
+ // button still copies the address itself. Kept inside linkify so the test
+ // that lifts linkify out of the page gets it too.
+ function linkName(u){
+  var rest=String(u).replace(new RegExp('^https?://(www[.])?','i'),'');
+  var host=rest.split('/')[0].split('?')[0].toLowerCase(),path=rest.slice(host.length).toLowerCase();
+  var first=host.split('.')[0];
+  if(host.indexOf('google.')>-1){
+   if(first==='docs'){
+    if(path.indexOf('/document')===0)return 'פתיחת המסמך';
+    if(path.indexOf('/spreadsheets')===0)return 'פתיחת הגיליון';
+    if(path.indexOf('/presentation')===0)return 'פתיחת המצגת';
+    if(path.indexOf('/forms')===0)return 'פתיחת הטופס';
+   }
+   if(first==='drive')return 'פתיחה בדרייב';
+   if(first==='mail')return 'פתיחה במייל';
+   if(first==='maps'||path.indexOf('/maps')===0)return 'פתיחה במפה';
+  }
+  var NAMES={'wetransfer.com':'הורדה מוויטרנספר','we.tl':'הורדה מוויטרנספר',
+   'youtube.com':'צפייה ביוטיוב','youtu.be':'צפייה ביוטיוב','m.youtube.com':'צפייה ביוטיוב',
+   'instagram.com':'פתיחה באינסטגרם','tiktok.com':'פתיחה בטיקטוק','facebook.com':'פתיחה בפייסבוק',
+   'wa.me':'פתיחה בוואטסאפ','github.com':'פתיחה בגיטהאב'};
+  if(NAMES[host])return NAMES[host];
+  if(host.slice(-15)==='.wetransfer.com')return 'הורדה מוויטרנספר';
+  return 'פתיחת הקישור ('+host+')';
+ }
+ var PHONE_RE='(?<![0-9])(?:0[2-9][0-9]?[ -]?[0-9]{3}[ -]?[0-9]{4}|1[ -]?[78]00[ -]?[0-9]{2,3}[ -]?[0-9]{3,4})(?![0-9])';
+ var parts=String(t==null?'':t).split(new RegExp('(https?://[^\\\\s<>"]+|files/[^\\\\s<>"]+|'+PHONE_RE+')','g'));
+ return parts.map(function(x,i){
+  if(!(i%2))return esc(x);
+  var tail='';
+  var m=x.match(new RegExp('[.,;:!?)"]+$'));
+  if(m){tail=m[0];x=x.slice(0,x.length-tail.length);}
+  if(!x)return esc(tail);
+  if(/^[0-9]/.test(x))return '<a href="tel:'+x.replace(/[^0-9]/g,'')+'">'+esc(x)+'</a>'+esc(tail);
+  if(x.indexOf('files/')===0){
+   var fn=fileNameOf(x);
+   if(!fn||!fileEntry(fn))return esc(x+tail);
+   return '<a href="'+esc(x)+'">'+fileThumb(fn)+'פתיחת הקובץ</a>'+esc(tail);
+  }
+  return '<a href="'+esc(x)+'" target="_blank" rel="noopener noreferrer" title="'+esc(x)+'">'
+   +esc(linkName(x))+'</a>'+esc(tail);
+ }).join('');
+}
+var STATUS={received:'התקבל',working:'בעבודה',partial:'יש לי חלק',done:'בוצע'};
+function statusTag(m){
+ if(m.from!=='itzik'||!m.status||!STATUS[m.status])return '';
+ return ' · <em class="st st-'+m.status+'">'+STATUS[m.status]+'</em>';
+}
+/*
+  משפט מתחת לכל הודעה שלו, במקום תווית קטנה בשורת המטא.
+
+  הוא אמר שהמוניטור לא מחזיר לו תשובות. הסיבה האמיתית היא שכשאין
+  סשן של קלוד רץ, אין מי שקורא את התיבה, ולכן ההודעה נשארת בלי סימן.
+  השתיקה הזאת נראת כמו תקלה. עכשיו היא אומרת במפורש כמה זמן ההודעה מחכה.
+
+  אף מצב כאן לא נכתב מעצמו. כל אחד מהם מגיע משדה שאני כותב לקובץ
+  ההודעה, ולכן אין כאן מצג של עבודה שלא קרתה.
+*/
+/*
+  התמלול כטקסט של ההודעה.
+
+  שם הקובץ הוא לא מה שהוא אמר. כשיש תמלול הוא נקרא בתוך ההודעה, וכשהוא
+  עוד לא חזר ההודעה אומרת את זה במפורש במקום להשאיר שורה עם שם קובץ.
+  הכתובית הזאת נכתבת רק משדה שנשמר בקובץ ההודעה, ולכן אין כאן הצגה של
+  תמלול שלא קרה.
+*/
+// לוכסן כפול בכוונה: הקטע הזה יושב בתבנית מחרוזת, ולוכסן יחיד נבלע בדרך לדף
+// ומשאיר ביטוי רגולרי אחר לגמרי.
+var VOICE_RE=/\\.(webm|m4a|mp3|ogg|wav)\\b/i;
+function hasVoice(m){
+ var t=m.text||'';
+ return m.from==='itzik'&&VOICE_RE.test(t)&&/הודעה קולית|קבצים יחד/.test(t);
+}
+function transcriptOf(m){
+ var n=String(m.note||'');
+ return /^\\s*תמלול:/.test(n)?n.replace(/^\\s*תמלול:\\s*/,'').trim():'';
+}
+// איציק, 25.9: "אם יש הקלטה לא טובה, תביא אותה פה בתשובה, אני לא הולך לחפש
+// אותה". הקלטה שלא תומללה מתנגנת כאן, בתוך ההודעה, ולא רק במסך ההקלטות.
+// בלי לוכסן בביטוי, מאותה סיבה כמו ב renderVoices.
+function voiceAudio(m){
+ var link=String((m&&m.note)||'').match(/files[/]voice-[^ ]+/);
+ return link?'<audio controls preload="none" src="'+esc(link[0])+'" style="width:100%;margin-top:6px"></audio>':'';
+}
+function voiceBlock(m){
+ if(!hasVoice(m))return '';
+ var t=transcriptOf(m);
+ if(t)return '<div class="vtx"><b>תמלול</b>'+esc(t)+'</div>';
+ var au=voiceAudio(m);
+ if(au)return '<div class="vtx vwait"><b>לא תומלל</b>ההקלטה כאן, אפשר להאזין.'+au+'</div>';
+ // הקלטה ישנה שאין לה תמלול שמור לא מתמללת את עצמה עכשיו. השורה אומרת
+ // מה קרה ולא מבטיחה טקסט שלא יגיע.
+ var age=Date.now()-(Date.parse(m.at||'')||0);
+ return age>600000?'<div class="vtx vwait"><b>תמלול</b>לא נשמר תמלול להקלטה הזאת.</div>'
+  :'<div class="vtx vwait"><b>תמלול</b>מתמלל את ההקלטה, התמלול יופיע כאן.</div>';
+}
+// מד ההתקדמות. כל אחוז כאן יושב על מצב שכתוב בקובץ ההודעה: נשלחה,
+// התקבלה, בעבודה, יש חלק, בוצעה. אין כאן מונה שרץ לבד.
+var PRG={received:25,working:60,partial:80,done:100};
+function progress(m){
+ if(m.pend)return 10;
+ var p=PRG[m.status];
+ return typeof p==='number'?p:10;
+}
+// הצבע יושב על אותו מצב שממנו נגזר האחוז, ולא על האחוז עצמו, כדי ששניהם
+// לא יוכלו להיפרד זה מזה.
+function progStage(m){
+ if(m.pend)return 'sent';
+ return PRG[m.status]?m.status:'sent';
+}
+var PRGW={sent:'נשלחה',received:'התקבלה',working:'בעבודה',partial:'יש חלק',done:'בוצעה'};
+// איציק, 5.10, מהבודק: "אחוזים שנתקעים נראים כמו תקלה". בקשה עמדה על
+// שישים אחוז שעות, ונראתה תקועה. במקום מספר יש שלושה שלבים במילים, וכל
+// שלב נדלק לפי אותו מצב שכתוב בקובץ ההודעה. ליד מוכן יש קישור לתוצר
+// כשתשובה בשרשור הביאה אחד.
+var PRGS={sent:0,received:1,working:2,partial:2,done:3};
+function prgLink(m){
+ if(!m.id)return '';
+ var u='';
+ (D.chat||[]).forEach(function(x){
+  if(x.from!=='claude'||x.re!==m.id)return;
+  var h=String(x.text||'').match(new RegExp('(https?://|files/)[^\\\\s<>"]+'));
+  if(h)u=h[0].replace(new RegExp('[.,;:!?)"]+$'),'');
+ });
+ return u;
+}
+function progressBar(m){
+ var p=progress(m),st=progStage(m),n=PRGS[st]||0;
+ var w=['קיבלתי','עובד על זה','מוכן'];
+ var u=n===3?prgLink(m):'';
+ return '<div class="prg prg-'+st+'" role="progressbar" aria-valuemin="0" aria-valuemax="100"'
+  +' aria-valuenow="'+p+'" aria-valuetext="'+esc(PRGW[st]||'')+'"'
+  +' aria-label="התקדמות הבקשה">'
+  +w.map(function(t,i){
+   return '<span class="prg-s'+(i<n?' on':'')+(i===n-1?' now':'')+'">'+t+'</span>';
+  }).join('<i class="prg-l" aria-hidden="true"></i>')
+  +(u?'<a class="prg-a" href="'+esc(u)+'" target="_blank" rel="noopener">לתוצר</a>':'')
+  +'</div>';
+}
+function ackLine(m,noNote){
+ if(m.from!=='itzik')return '';
+ // Itzik, 8.10, from the reviewer: the full sentence under every message
+ // doubled its height and said what the bar already says. Now only the bar
+ // shows; the times sit behind it and open when the bar is tapped.
+ if(m.pend)return '<div class="ack ack-wait">'+ackTx('נשלח עכשיו. ממתין לתשובה.')+progressBar(m)+'</div>';
+ var st=m.status,when=m.ackAt||'';
+ if(!st){
+  return '<div class="ack ack-wait">'+ackTx('נשלח '+esc(agoAfter(m.at))
+   +'. ממתין לתשובה.')+progressBar(m)+'</div>';
+ }
+ var sent=m.at?('נשלח ב'+esc(stamp(m.at))+'. '):'';
+ var head=when?(sent+'קיבלתי את זה ב'+esc(stamp(when))):(sent+'קיבלתי את זה');
+ var tail=st==='working'?'ממתין לתשובה.'
+  :st==='partial'?'ויש לי חלק מהתשובות. השאר בדרך.'
+  :st==='done'?'וזה בוצע.'
+  :'ועוד לא התחלתי.';
+ var note=(m.note&&!noNote)?'<span class="ack-n">'+esc(m.note)+'</span>':'';
+ // נקודה פועמת רק כשבאמת עובדים. ביקש ב-11.09 שיהיה סימן חי ליד הסטטוס.
+ // הפעימה איטית בכוונה, אחרי שנדחה ההבהוב החד, ומכובה לגמרי למי שביקש
+ // פחות תנועה במערכת.
+ var dot=(st==='working'||st==='partial')?'<i class="pulse"></i>':'';
+ return '<div class="ack ack-'+esc(st)+'">'+dot+ackTx(head+' '+tail)+note+progressBar(m)+'</div>';
+}
+function ackTx(h){return '<span class="ack-tx">'+h+'</span>';}
+document.addEventListener('click',function(e){
+ var q=e.target&&e.target.closest&&e.target.closest('.hq');
+ if(q){var t=document.getElementById(q.getAttribute('data-q'));if(t){t.hidden=!t.hidden;q.classList.toggle('on',!t.hidden);}return;}
+ var x=e.target&&e.target.closest&&e.target.closest('.hint1x');
+ if(x){var l=x.parentNode;l.hidden=true;try{localStorage.setItem(l.getAttribute('data-tip'),'x');}catch(er){}}
+});
+// The short line on top shows for the first three days after it was first
+// seen, or until it is closed, and then the ? is enough. Painted per screen as
+// it opens, so the three days start when he first sees that screen.
+function paintTips(root){
+ Array.prototype.forEach.call((root||document).querySelectorAll('.hint1[data-tip]'),function(l){
+  var k=l.getAttribute('data-tip'),v='';
+  try{v=localStorage.getItem(k)||'';if(!v){v=String(Date.now());localStorage.setItem(k,v);}}catch(e){}
+  l.hidden=v==='x'||(Date.now()-Number(v)>3*86400000);
+ });
+}
+document.addEventListener('click',function(e){
+ var b=e.target&&e.target.closest&&e.target.closest('.ack .prg');
+ if(!b||e.target.closest('a'))return;
+ b.parentNode.classList.toggle('ack-open');
+});
+// A pending copy is dropped once any message of his lands at or after it: I
+// rewrite what he said (a recording becomes its transcript), so matching on the
+// text itself left the same message showing twice.
+function dropSettled(list,baked){
+ var mine=baked.filter(function(m){return m.from==='itzik';})
+   .map(function(m){return m.at||'';}).sort();
+ return list.filter(function(p){
+  if(isMail(p))return false;
+  return !mine.some(function(at){return at>=p.at;});
+ });
+}
+// A thread he answered and is waiting on. Kept per device, cleared by itself
+// the moment my reply with the same re lands.
+function standbyMap(){
+ /*
+   An array is truthy, so the old ||{} guard let one straight through and
+   every lookup on it came back undefined. That is how the waiting mark on
+   the chat threads died quietly on the phones that had the old shape.
+ */
+ try{var v=JSON.parse(localStorage.getItem('chatStandby')||'{}');
+  return (v&&typeof v==='object'&&!Array.isArray(v))?v:{};}catch(e){return {};}
+}
+function setStandby(key){
+ if(!key)return;
+ try{
+  var m=standbyMap();
+  m[key]=new Date().toISOString();
+  var keys=Object.keys(m);
+  if(keys.length>200){keys.sort().slice(0,keys.length-200).forEach(function(k){delete m[k];});}
+  localStorage.setItem('chatStandby',JSON.stringify(m));
+ }catch(e){}
+}
+function threadState(){
+ var unread=new Set(unreadList().map(ML.keyOf));
+ return {unread:unread,standby:standbyMap()};
+}
+/*
+  Messages he has cleared away, kept on this device.
+
+  He asked to be able to delete messages from the history and to swipe them
+  away like a phone does. What this does is hide them here, and it says so:
+  the chat is the record of what we asked each other and what was answered, and
+  a button on a phone that quietly destroys that record is not something I am
+  going to build without him saying that is what he means. Hidden is reversible
+  and it clears his screen, which is what the complaint was about.
+*/
+/*
+  A list from the device is a list, whatever the device kept there.
+
+  Itzik's diagnostic, 18.9, straight off his iPhone:
+    standbyIds().indexOf is not a function
+  Every one of these read a key out of storage, handed it to JSON.parse and
+  trusted the result to be an array. JSON.parse is happy to return {} or null
+  or a number, none of which have Array's indexOf, and one key on his phone was
+  holding exactly that. The throw took the whole answers screen down: he had a
+  red button reading 32 and nothing behind it, all day, while the same code on
+  my machine drew thirty cards every time I looked.
+
+  I cannot know how that key got written, and it does not matter. Storage is
+  not something to trust: it survives builds, it is edited by versions of this
+  page that no longer exist, and it comes back from a browser that may have
+  truncated it. One reader, and it always hands back an array.
+*/
+/*
+  Every answer card checks isStar/isDone/isStandby against these lists, so one
+  tap on the answers screen used to reparse the same localStorage string a
+  few dozen times before the button could repaint. The raw string is the
+  cheap thing to compare; only a real change earns a fresh JSON.parse.
+*/
+var _idListCache={};
+function idList(key,keep){
+ var raw;
+ try{raw=localStorage.getItem(key);}catch(e){raw=null;}
+ var c=_idListCache[key];
+ if(!c||c.raw!==raw){
+  var list;
+  try{
+   var v=JSON.parse(raw||'[]');
+   if(Array.isArray(v)){
+    list=v;
+   }else{
+    // Not an array. Where this key belongs to one feature, repairing it stops
+    // the same throw from coming back on the next paint and on every paint
+    // after. Where a key is shared (chatStandby held a map before the parked
+    // list moved out of it), keep says read it and leave it alone: clearing
+    // it there would throw away the other feature's state to fix this one.
+    if(!keep){
+     try{localStorage.removeItem(key);}catch(e2){}
+     try{console.warn('storage key '+key+' was not a list, cleared');}catch(e2){}
+    }
+    list=[];
+   }
+  }catch(e){list=[];}
+  c={raw:raw,list:list};
+  _idListCache[key]=c;
+ }
+ // A copy, never the cached array itself: callers push/splice straight into
+ // what idList hands back and then write it out, and a shared reference would
+ // let that in-place edit leak into the cache even on the runs where the
+ // write after it fails.
+ return c.list.slice();
+}
+function hiddenMsgs(){ return idList('msgHidden'); }
+function hideMsg(key){
+ if(!key)return;
+ var h=hiddenMsgs();
+ if(h.indexOf(key)<0)h.push(key);
+ try{localStorage.setItem('msgHidden',JSON.stringify(h.slice(-4000)));}catch(e){}
+}
+function unhideMsg(key){
+ var h=hiddenMsgs(),at=h.indexOf(key);
+ if(at<0)return;
+ h.splice(at,1);
+ try{localStorage.setItem('msgHidden',JSON.stringify(h));}catch(e){}
+}
+// Reviewer, 11.10, approved by Itzik: the × hid a message without a word and
+// the swipe only said everything comes back in settings. Every hide now offers
+// to bring back that one message.
+function hideWithUndo(key){
+ if(!key)return;
+ hideMsg(key);
+ renderThread();renderNew();
+ toast('ההודעה הוסתרה');
+ var el=document.getElementById('toast');
+ if(!el)return;
+ var u=document.createElement('button');
+ u.type='button';u.className='toast-undo';u.textContent='ביטול';
+ u.onclick=function(e){
+  e.stopPropagation();clearTimeout(toastTimer);el.hidden=true;
+  unhideMsg(key);renderThread();renderNew();
+ };
+ el.appendChild(u);
+ clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.hidden=true;},6000);
+}
+function msgKey(m){return (m.id||'')||((m.from||'')+'|'+(m.at||''));}
+// פועם כל עוד ההודעה שלו פתוחה: מרגע השליחה, דרך התקבל ובעבודה, ועד done.
+function isLive(m){
+ if(m.from!=='itzik')return false;
+ if(m.pend)return true;
+ return !m.status||m.status==='received'||m.status==='working'||m.status==='partial';
+}
+/*
+  27.9: a number on every message of his, the same one the "what was received"
+  screen shows, so "#12" is one message everywhere. Built once per chat size.
+*/
+var numCache={n:-1,map:{}};
+function numOf(m){
+ var C=D.chat||[];
+ if(numCache.n!==C.length){numCache={n:C.length,map:gotNumbers()};}
+ return numCache.map[gotKey('msg',m)]||0;
+}
+function bubbleHtml(m,i,fresh,handled){
+ var mine=m.from==='itzik';
+ var no=mine&&!m.pend?numOf(m):0;
+ var live=isLive(m);
+ var vb=voiceBlock(m),vtx=vb?transcriptOf(m):'';
+ // מה שמועתק מהודעה קולית הוא המילים, לא שם הקובץ.
+ var line=(mine?OWNER:AI)+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'')
+  +(vtx?String.fromCharCode(10)+'תמלול: '+vtx:'');
+ return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')+(live?' beat':'')
+  +(fresh?' fresh':(handled?' touched':' read'))+'" data-i="'+i+'"'
+  +' data-copy="'+esc(line)+'">'
+  +'<span class="w">'+(live?'<i class="lv"></i>':'')+(no?'<b class="bno">#'+no+'</b> ':'')+(mine?'אתה':AI)+' · '+esc(stamp(m.at))
+  +(m.pend?' · נשלח, עוד לא נקרא':'')+statusTag(m)
+  +(fresh?' · <em class="badge">חדש</em>':'')
+  +'<button type="button" class="cp" data-i="'+i+'" aria-label="העתקה">העתקה</button>'
+  +(mine?'':'<button type="button" class="wash" data-i="'+i+'" aria-label="שליחה בוואטסאפ">וואטסאפ</button>')
+  +'<button type="button" class="hidemsg" data-k="'+esc(msgKey(m))+'" aria-label="להסתיר">×</button>'
+  +(mine?'':'<button type="button" class="aimb bubaim" data-k="'+esc(claudeKey(m))+'">להשיב</button>')
+  +'</span>'+linkify(m.text)+goLinks(m)+vb+ackLine(m,!!vtx)+'</div>';
+}
+// Copy, paste and send on every reply form, whatever screen it is on.
+function pasteRow(){
+ return '<div class="rrow"><button type="button" class="rb rpaste">📋 הדבקה</button>'
+  +'<button type="submit">שליחה</button></div>';
+}
+function wirePaste(root){
+ Array.prototype.forEach.call((root||document).querySelectorAll('.rpaste'),function(b){
+  if(b.getAttribute('data-wired'))return;
+  b.setAttribute('data-wired','1');
+  b.onclick=function(e){
+   e.stopPropagation();e.preventDefault();
+   var ta=b.closest('form').querySelector('textarea');
+   if(navigator.clipboard&&navigator.clipboard.readText){
+    navigator.clipboard.readText().then(function(t){ta.value=(ta.value?ta.value+' ':'')+t;ta.focus();},
+     function(){ta.focus();b.textContent='לחיצה ארוכה בתיבה, ואז הדבקה';});
+   }else{ta.focus();b.textContent='לחיצה ארוכה בתיבה, ואז הדבקה';}
+  };
+ });
+}
+// The unread screen has no data-k on the form, so a reply from there must
+// resolve the root itself, the same way the thread cards already are keyed.
+function rootKeyFor(m){
+ var byKey={};
+ (D.chat||[]).forEach(function(x){byKey[ML.keyOf(x)]=x;});
+ return ML.rootKeyOf(m,byKey);
+}
+/*
+  Projects on threads. Reviewer, 4.10, approved 5.10: a designer works on a few
+  collections at once and every request lands in one long list by time. Each
+  thread can carry a project name, and tapping a name above the list shows only
+  that project. Kept on this device, like the rest of how the list is arranged.
+*/
+function msgCount(n){return n===1?'הודעה אחת':n+' הודעות';}
+/*
+  Reviewer 10.10, approved by Itzik: the title of a thread was the first seventy
+  letters of the message, so "היי" and "תוכל בבקשה" made every title look the
+  same. A title is now the subject: a name given in the thread wins (one typed
+  here, or a "title" a session wrote on a message), otherwise the opening
+  greetings and polite words are dropped and the first sentence is kept short.
+*/
+function threadNames(){
+ try{var m=JSON.parse(localStorage.getItem('threadName')||'{}');return m&&typeof m==='object'?m:{};}catch(e){return {};}
+}
+function threadTitle(t){
+ var own=threadNames()[t.key];if(own)return own;
+ for(var i=t.msgs.length-1;i>=0;i--)if(t.msgs[i].title)return String(t.msgs[i].title).slice(0,60);
+ var x=String(t.root.text||'').replace(/\\s+/g,' ').trim(),was;
+ var lead=/^(היי|הי|שלום|בוקר טוב|צהריים טובים|ערב טוב|לילה טוב|קלוד|רעיון|רוצה את זה|תודה רבה|תודה|תוכלי בבקשה|תוכל בבקשה|אפשר בבקשה|בבקשה|את יכולה|אתה יכול|תוכלי|תוכל|אפשר)(?=[\\s,.!?:;]|$)[\\s,.!?:;]*/;
+ do{was=x;x=x.replace(lead,'');}while(x!==was&&x);
+ if(!x)x=String(t.root.text||'').replace(/\\s+/g,' ').trim();
+ var cut=x.search(/[.?!](\\s|$)/);
+ if(cut>=12)x=x.slice(0,cut+(x.charAt(cut)==='?'?1:0));
+ x=x.replace(/["״]/g,'').trim();
+ if(x.length>48){x=x.slice(0,48);var sp=x.lastIndexOf(' ');if(sp>24)x=x.slice(0,sp);x+='…';}
+ return x;
+}
+function projMap(){
+ try{var m=JSON.parse(localStorage.getItem('threadProject')||'{}');return m&&typeof m==='object'?m:{};}catch(e){return {};}
+}
+function saveProjMap(m){try{localStorage.setItem('threadProject',JSON.stringify(m));}catch(e){}}
+function projNames(m){
+ var seen=[];
+ Object.keys(m).forEach(function(k){if(m[k]&&seen.indexOf(m[k])<0)seen.push(m[k]);});
+ return seen.sort(function(a,b){return a.localeCompare(b,'he');});
+}
+function projFilter(){try{return localStorage.getItem('threadProjectOnly')||'';}catch(e){return '';}}
+function wireProjects(host){
+ Array.prototype.forEach.call(host.querySelectorAll('.rname'),function(b){
+  b.onclick=function(e){
+   e.stopPropagation();e.preventDefault();
+   var k=b.getAttribute('data-k'),m=threadNames();
+   var card=b.closest('.th'),cur=card?(card.querySelector('summary b')||{}).textContent||'':'';
+   var v=prompt('שם לשיחה הזאת',cur);if(v===null)return;
+   v=v.replace(/\\s+/g,' ').trim().slice(0,60);
+   if(v)m[k]=v;else delete m[k];
+   try{localStorage.setItem('threadName',JSON.stringify(m));}catch(x){}
+   renderThread();
+   var again=document.querySelector('#thread .th[data-k="'+(window.CSS&&CSS.escape?CSS.escape(k):k)+'"]');if(again)again.open=true;
+  };
+ });
+ Array.prototype.forEach.call(host.querySelectorAll('.pchip'),function(b){
+  b.onclick=function(){
+   try{localStorage.setItem('threadProjectOnly',b.getAttribute('data-p')||'');}catch(e){}
+   renderThread();
+  };
+ });
+ Array.prototype.forEach.call(host.querySelectorAll('.rproj'),function(b){
+  b.onclick=function(e){
+   e.stopPropagation();e.preventDefault();
+   /*
+     Reviewer 8.10, approved: the phone's grey prompt listed the existing
+     names inside a sentence, and one letter off made a second project. Now
+     each existing project is a button, and a new name is typed only on
+     purpose, under "פרויקט חדש".
+   */
+   var k=b.getAttribute('data-k');
+   var row=b.parentNode,was=row.nextElementSibling;
+   if(was&&was.classList.contains('ppick')){was.remove();return;}
+   var m=projMap(),names=projNames(m),cur=m[k]||'';
+   var p=document.createElement('div');p.className='ppick';
+   p.innerHTML=names.map(function(n){return '<button type="button" class="ppb'+(n===cur?' on':'')+'" data-v="'+esc(n)+'">'+esc(n)+'</button>';}).join('')
+    +'<button type="button" class="ppb" data-new="1">➕ פרויקט חדש</button>'
+    +(cur?'<button type="button" class="ppb" data-v="">בלי פרויקט</button>':'');
+   row.insertAdjacentElement('afterend',p);
+   function pick(v){
+    v=String(v||'').split(String.fromCharCode(10)).join(' ').trim().slice(0,40);
+    // A name typed again with other capitals joins the one that exists.
+    names.forEach(function(n){if(n.toLowerCase()===v.toLowerCase())v=n;});
+    if(v)m[k]=v;else delete m[k];
+    saveProjMap(m);
+    renderThread();
+    var open=host.querySelector('details[data-k="'+(window.CSS&&CSS.escape?CSS.escape(k):k)+'"]');
+    if(open)open.open=true;
+   }
+   p.addEventListener('click',function(ev){
+    var x=ev.target.closest&&ev.target.closest('.ppb');if(!x)return;
+    ev.stopPropagation();ev.preventDefault();
+    if(x.getAttribute('data-new')){
+     p.innerHTML='<input type="text" maxlength="40" placeholder="שם הפרויקט החדש"><button type="button" class="ppb on" data-ok="1">שמירה</button>';
+     var inp=p.querySelector('input');inp.focus();
+     inp.addEventListener('keydown',function(ke){if(ke.key==='Enter'){ke.preventDefault();pick(inp.value);}});
+     return;
+    }
+    if(x.getAttribute('data-ok'))return pick(p.querySelector('input').value);
+    pick(x.getAttribute('data-v'));
+   });
+  };
+ });
+}
+function renderThread(){
+ // Whoever opened the chat, the history follows, and the screen redraws when
+ // it lands. Only when the chat is actually on screen: this also runs at boot,
+ // and pulling 300KB nobody asked for is the thing this change exists to stop.
+ var pM=document.getElementById('pM');
+ if(pM&&!pM.hidden&&LAZY.chat&&!lazyDone.chat)ensure('chat',renderThread);
+ var unreadKeys=unreadList().map(claudeKey);
+ var touched=touchedIds();
+ var hidden=hiddenMsgs();
+ var baked=(D.chat||[]).filter(function(m){
+  return !isMail(m) && hidden.indexOf(msgKey(m))<0;
+ });
+ var still=dropSettled(pending(),baked);
+ savePending(still.concat(pending().filter(isMail)));
+ // note ו-ackAt נוסעים איתה. בלעדיהם התמלול נשמר בקובץ, נסע עד הדף,
+ // ונמחק כאן בשורה אחת של העתקת שדות, כך שמתחת להודעה לא הופיע כלום.
+ var all=baked.map(function(m){return{id:m.id,re:m.re||'',at:m.at,from:m.from,text:m.text,
+   status:m.status,note:m.note||'',ackAt:m.ackAt||'',go:m.go||'',title:m.title||'',pend:false};})
+   .concat(still.map(function(p){return{id:'',re:p.re||'',at:p.at,from:'itzik',text:p.text,pend:true};}));
+ var host=document.getElementById('thread');
+ if(!all.length){
+  host.innerHTML='<div class="empty">עוד לא דיברנו כאן. '+(FEM?'כתבי':'תכתוב')+' משהו למטה.</div>';
+  return;
+ }
+ var rows=ML.orderThreads(ML.splitThreads(all),threadState());
+ var proj=projMap();
+ var names=projNames(proj);
+ var only=projFilter();
+ if(only&&names.indexOf(only)<0)only='';
+ if(only)rows=rows.filter(function(r){return proj[r.thread.key]===only;});
+ var bar=names.length?'<div class="pbar" role="group" aria-label="סינון לפי פרויקט">'
+  +'<button type="button" class="pchip'+(only?'':' on')+'" data-p="">הכל</button>'
+  +names.map(function(n){return '<button type="button" class="pchip'+(n===only?' on':'')+'" data-p="'+esc(n)+'">'+esc(n)+'</button>';}).join('')
+  +'</div>':'';
+ var flat=[];
+ host.innerHTML=bar+rows.map(function(r,ri){
+  var t=r.thread;
+  var head=threadTitle(t);
+  var tag=r.status==='fresh'?(ri===0?'<em class="badge latest">האחרונה שהגיעה</em>':'<em class="badge">חדש</em>')
+   :r.status==='standby'?'<em class="st st-working">ממתין לתשובה</em>'
+   // Reviewer, 11.10, approved by Itzik: "נקרא" read like WhatsApp's mark
+   // that the other side read it. Only new answers are marked now.
+   :'';
+  var body=t.msgs.map(function(m){
+   var i=flat.push(m)-1;
+   var fresh=m.from!=='itzik'&&unreadKeys.indexOf(claudeKey(m))>-1;
+   var handled=!fresh&&touched.indexOf(claudeKey(m))>-1;
+   return bubbleHtml(m,i,fresh,handled);
+  }).join('');
+  var ri2=flat.indexOf(t.root);
+  var whole=t.msgs.map(function(m){return (m.from==='itzik'?OWNER:AI)+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');}).join(String.fromCharCode(10,10));
+  return '<details class="th th-'+r.status+'" data-k="'+esc(t.key)+'"'+(ri===0&&r.status==='fresh'?' open':'')+'>'
+   +'<summary><span class="num">'+r.n+'</span><b>'+esc(head)+'</b>'+tag
+   +(proj[t.key]?'<i class="tproj">'+esc(proj[t.key])+'</i>':'')
+   +'<small>'+esc(stampAgo(t.last))+' · '+msgCount(t.msgs.length)+'</small>'
+   +'</summary>'
+   +'<div class="thbody">'+body
+   +'<div class="rrow">'
+   // The copy button used to sit on the same line he taps to open the thread,
+   // and on an iPhone a few millimetres off copied instead of opening (reviewer,
+   // 4.10, approved 5.10). It lives inside the open thread now.
+   +'<button type="button" class="cp rcopyall" data-copy="'+esc(whole)+'" aria-label="העתקת השרשור">📋 העתקת השרשור</button>'
+   +'<button type="button" class="rb rname" data-k="'+esc(t.key)+'">✏️ שינוי השם</button>'
+   +'<button type="button" class="rb rproj" data-k="'+esc(t.key)+'">🏷️ '+(proj[t.key]?'פרויקט: '+esc(proj[t.key]):'שיוך לפרויקט')+'</button>'
+   +'</div><div class="rrow">'
+   +'<button type="button" class="rb rmic" data-i="'+ri2+'">🎤 להשיב בקול</button>'
+   +'<button type="button" class="rb rtxt" data-i="'+ri2+'">✍️ בכתב</button>'
+   +'<button type="button" class="rb rcam" data-i="'+ri2+'">📷 מצלמה</button>'
+   +'<button type="button" class="rb rfile" data-i="'+ri2+'">📎 קובץ</button>'
+   +'</div>'
+   +'<form class="rform" data-i="'+ri2+'" data-k="'+esc(t.key)+'">'
+   +'<div class="rlab">המשך לשיחה הזאת. '+AI+' יקבל את זה כהמשך של אותה בקשה.</div>'
+   +'<textarea placeholder="התשובה שלך בשרשור הזה"></textarea>'
+   +pasteRow()
+   +'<span class="rsaid"></span></form>'
+   +'</div></details>';
+ }).join('');
+ wireReplies(host,flat);
+ wireProjects(host);
+ wirePaste(host);
+ wireAim(host);paintAim();
+ if(picking)host.classList.add('picking');
+ // Touching a card, or any bubble in it, turns every unread answer in it green.
+ Array.prototype.forEach.call(host.querySelectorAll('.th'),function(card){
+  var key=card.getAttribute('data-k');
+  function touch(){
+   var any=false;
+   Array.prototype.forEach.call(card.querySelectorAll('.bub.fresh'),function(el){
+    var m=flat[Number(el.getAttribute('data-i'))];
+    el.classList.remove('fresh');el.classList.add('touched');
+    var w=el.querySelector('.w .badge');
+    if(w&&w.parentNode){var sep=w.previousSibling;if(sep&&sep.nodeType===3&&sep.nodeValue===' · ')sep.parentNode.removeChild(sep);w.parentNode.removeChild(w);}
+    markOneSeen(m);any=true;
+   });
+   if(any){
+    card.classList.remove('th-fresh');card.classList.add('th-done');
+    var tag=card.querySelector('summary .badge');
+    if(tag&&tag.parentNode)tag.parentNode.removeChild(tag);
+    ringFor(card);renderNew();
+   }
+  }
+  card.querySelector('summary').addEventListener('click',function(e){
+   if(e.target.closest&&e.target.closest('.rcopyall'))return;
+   touch();
+  });
+  Array.prototype.forEach.call(card.querySelectorAll('.bub'),function(el){
+   el.addEventListener('click',function(){
+    if(picking){el.classList.toggle('picked');return;}
+    touch();
+   });
+  });
+ });
+ Array.prototype.forEach.call(host.querySelectorAll('.wash'),function(b){
+  var m=flat[Number(b.getAttribute('data-i'))];
+  var card=b.closest&&b.closest('details');
+  function prep(){if(GKEY&&navigator.share&&msgFileNames(m).length)waFiles(m);}
+  // Fetched ahead, so the tap itself can open the share sheet.
+  if(card&&card.open)prep();
+  if(card)card.addEventListener('toggle',function(){if(card.open)prep();});
+  b.addEventListener('touchstart',prep,{passive:true});
+  b.addEventListener('pointerdown',prep);
+  b.onclick=function(e){
+   e.stopPropagation();e.preventDefault();
+   var st=(GKEY&&navigator.share&&msgFileNames(m).length)?waFiles(m):null;
+   if(st&&st.files){
+    if(!navigator.canShare||navigator.canShare({files:st.files})){
+     navigator.share({files:st.files}).catch(shareFail);return;
+    }
+   }else if(st){
+    b.textContent='מכין…';
+    toast('מכין את הקבצים לשליחה, עוד רגע לחץ שוב על וואטסאפ');
+    st.p.then(function(){b.textContent='וואטסאפ ✓';},function(){b.textContent='וואטסאפ';toast('לא הצלחתי להכין את הקובץ, נסה שוב');});
+    return;
+   }
+   var txt=waText(m);
+   if(!txt){toast('אין כאן מה לשלוח בוואטסאפ');return;}
+   window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank','noopener');
+  };
+ });
+ Array.prototype.forEach.call(host.querySelectorAll('.cp'),function(b){
+  b.onclick=function(e){
+   e.stopPropagation();e.preventDefault();
+   var t=b.classList.contains('rcopyall')?(b.getAttribute('data-copy')||''):(flat[Number(b.getAttribute('data-i'))].text||'');
+   var was=b.textContent;
+   var done=function(){b.textContent='הועתק';setTimeout(function(){b.textContent=was;},1400);};
+   if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(done,function(){fallbackCopy(t,done);});
+   }else fallbackCopy(t,done);
+  };
+ });
+}
+// The same three ways in, next to anything I put on his screen: a report, a
+// notice, a message. He asked for it beside every one of them, because an
+// answer that is not written where the thing is gets lost by the evening.
+/*
+  Itzik, 19.9, with a screenshot of this box: "put a writing line instead of
+  the icon, make it all accessible, the microphone a big button, I have thick
+  fingers." The writing button only opened a line he then had to find, so the
+  line is simply there now, and every target is at least a thumb high.
+*/
+function replyBox(quote){
+ return '<div class="rbox" data-q="'+esc(quote)+'">'
+  +'<button type="button" class="rb bmic" aria-label="להשיב בקול">🎤 להשיב בקול</button>'
+  +'<form class="rform open"><textarea aria-label="כתוב לי כאן" placeholder="כתוב לי כאן"></textarea>'
+  +pasteRow()+'<span class="rsaid" role="status" aria-live="polite"></span></form>'
+  +'<div class="rrow rside">'
+  +'<button type="button" class="rb bcam">📷 מצלמה</button>'
+  +'<button type="button" class="rb bfile">📎 קובץ</button>'
+  +'</div>'
+  +'</div>';
+}
+function wireBoxes(root){
+ Array.prototype.forEach.call((root||document).querySelectorAll('.rbox'),function(box){
+  if(box.getAttribute('data-wired'))return;
+  box.setAttribute('data-wired','1');
+  wirePaste(box);
+  // Read on every tap, not once: a screen can point the same box at another
+  // line (the bookkeeping screen does, per invoice).
+  var qOf=function(){return box.getAttribute('data-q')||'';};
+  var f=box.querySelector('.rform');
+  var txt=box.querySelector('.btxt');
+  /*
+    A photo waits for the words that go with it.
+
+    Itzik, 30.9, by voice: "I can't attach a picture and send a message with
+    it, by voice or in writing, it all disappears." A pick from a reply box
+    used to leave on its own the moment it was chosen, with only the quote as
+    its caption, and cleared itself. The line he typed or the voice he then
+    recorded went out alone, and the photo he meant them for was already gone
+    from the screen. Now the photo stays chosen and says so under the box, and
+    whichever comes next, the send button or the microphone, takes it along.
+  */
+  var boxText=function(){
+   var ta=f.querySelector('textarea'),t=ta?ta.value.trim():'';
+   return {ta:ta,full:t?(qOf()?qOf()+String.fromCharCode(10)+t:t):qOf()};
+  };
+  box.querySelector('.bmic').onclick=function(e){
+   e.stopPropagation();
+   window.micBox=box;
+   if(!(rec&&rec.state==='recording')){
+    var bt=boxText();
+    document.getElementById('fCap').value=bt.full;
+    if(bt.ta)bt.ta.value='';
+   }
+   toggleRec();
+  };
+  box.querySelector('.bfile').onclick=function(e){
+   e.stopPropagation();
+   window.micBox=box;window.fileBox=box;
+   openPicker('full','',false);
+  };
+  // Straight to the camera. On a phone this opens the lens instead of the
+  // gallery, which is what he means when he says he wants to show me something.
+  box.querySelector('.bcam').onclick=function(e){
+   e.stopPropagation();
+   window.micBox=box;window.fileBox=box;
+   shoot(false);
+  };
+  if(txt)txt.onclick=function(e){
+   e.stopPropagation();
+   var open=!f.classList.contains('open');
+   f.classList.toggle('open',open);
+   txt.classList.toggle('on',open);
+   if(open)f.querySelector('textarea').focus();
+  };
+  f.addEventListener('click',function(e){e.stopPropagation();});
+  f.addEventListener('submit',function(e){
+   e.preventDefault();
+   var box2=f.querySelector('textarea');
+   var btn=f.querySelector('button[type=submit]');
+   var said=f.querySelector('.rsaid');
+   var text=box2.value.trim();
+   var withFiles=window.fileBox===box?picked():[];
+   if(withFiles.length){
+    // The chosen photo leaves with this line, as one message.
+    window.micBox=box;
+    document.getElementById('fCap').value=boxText().full;
+    box2.value='';
+    fBtn.disabled=true;
+    sendSay(withFiles.length>1?('מכין '+withFiles.length+' קבצים.'):'מכין.');
+    if(qMode==='normal')shrinkAll(withFiles,reallySend);
+    else reallySend(withFiles);
+    return;
+   }
+   if(!text)return;
+   btn.disabled=true;
+   said.textContent='שולח.';
+   var card=box.closest('.report')||box.parentNode;
+   if(card)card.classList.add('busyring');
+   var full=qOf()+String.fromCharCode(10)+text;
+   sendOrHold('הערה מהמוניטור',full,'הערה').then(function(how){
+    if(how==='held'){box2.value='';said.textContent=HELD_SAY;return;}
+    var p=pending();
+    p.push({at:new Date().toISOString(),text:full});
+    savePending(p);
+    box2.value='';
+    said.textContent=how==='backup'?'נשלח בערוץ הגיבוי.':'נשלח. קלטתי.';
+    markSent('text');renderSent();renderThread();
+   }).catch(function(){
+    said.textContent='שני הערוצים לא ענו. תנסה שוב.';
+   }).then(function(){
+    btn.disabled=false;
+    if(card)card.classList.remove('busyring');
+   });
+  });
+ });
+}
+// A reply has to say what it is answering, or it arrives here as a sentence
+// with no subject. The quote is short on purpose: enough for me to find the
+// message, not so much that a voice note becomes a wall of text.
+function quoteOf(m){
+ var t=String(m.text||'').replace(/\s+/g,' ').trim().slice(0,60);
+ return 'תשובה ל' + (m.from==='itzik'?'הודעה שלי':'הודעה שלך') + ' מ' + stamp(m.at)
+  + ': "' + t + '"';
+}
+/*
+  The answer the next recording is aimed at.
+
+  Itzik, 16.9, by voice: "in every answer you give me I have no way to reply,
+  with the icon at the bottom of the screen I have no way to reply to you." The
+  microphone at the foot of the screen always opened a new subject, so a spoken
+  answer arrived here as a sentence with no question attached. Now every answer
+  of mine carries a reply button that aims the microphone at it, the strip above
+  the microphone says out loud what is aimed, and the x takes the aim off and
+  gives him back a fresh subject.
+
+  With nothing aimed by hand the microphone aims itself at the newest answer I
+  wrote, because that is the one he is standing in front of when he presses it.
+*/
+var aim=null;
+function aimQuote(m){
+ var t=String(m&&m.text||'').replace(/\\s+/g,' ').trim().slice(0,60);
+ return 'תשובה למה שכתבת לי ב' + stamp(m&&m.at) + ': "' + t + '"';
+}
+function lastAnswer(){
+ var c=(D.chat||[]).filter(function(m){return m.from==='claude'&&!isMail(m);})
+  .sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
+ return c[0]||null;
+}
+function setAim(m){
+ aim=m||null;
+ paintAim();
+ if(aim){
+  var f=document.getElementById('fCap');
+  if(f)f.value=aimQuote(aim);
+  try{setStandby(rootKeyFor(aim));}catch(e){}
+ }
+}
+function clearAim(){
+ aim=null;
+ var f=document.getElementById('fCap');
+ if(f)f.value='';
+ paintAim();
+}
+function paintAim(){
+ var bar=document.getElementById('aimBar');
+ if(!bar)return;
+ bar.hidden=!aim;
+ if(aim){
+  var t=document.getElementById('aimTxt');
+  var head=String(aim.text||'').replace(/\\s+/g,' ').trim().slice(0,40);
+  if(t)t.innerHTML='<b>המיקרופון מכוון ל</b> '+esc(stamp(aim.at))+' · '+esc(head);
+ }
+ // Every reply button on the page wears the current aim, so a redraw does not
+ // lose the mark and two answers can never both look aimed at.
+ var k=aim?claudeKey(aim):'';
+ Array.prototype.forEach.call(document.querySelectorAll('.aimb'),function(b){
+  var on=k&&b.getAttribute('data-k')===k;
+  b.classList.toggle('on',!!on);
+  b.textContent=on?'✓ המיקרופון מכוון לזה':'להשיב';
+ });
+}
+// Every reply button on the page, wherever an answer of mine is drawn.
+function wireAim(root){
+ Array.prototype.forEach.call((root||document).querySelectorAll('.aimb'),function(b){
+  if(b.getAttribute('data-wired'))return;
+  b.setAttribute('data-wired','1');
+  b.onclick=function(e){
+   e.stopPropagation();e.preventDefault();
+   var k=b.getAttribute('data-k');
+   var cur=aim&&claudeKey(aim)===k;
+   if(cur){clearAim();return;}
+   var m=(D.chat||[]).filter(function(x){return claudeKey(x)===k;})[0];
+   if(!m)return;
+   setAim(m);
+  };
+ });
+}
+// Marks which bubble is being answered, so a recording started here is not
+// mistaken later for a new subject.
+var answering=null;
+function markAnswering(el){
+ var host=document.getElementById('thread');
+ Array.prototype.forEach.call(host.querySelectorAll('.bub,.th'),function(b){
+  b.classList.remove('answering');
+ });
+ if(el)el.classList.add('answering');
+}
+function wireReplies(host,all){
+ function at(b){return all[Number(b.getAttribute('data-i'))];}
+ Array.prototype.forEach.call(host.querySelectorAll('.rmic'),function(b){
+  b.onclick=function(e){
+   e.stopPropagation();
+   var m=at(b);
+   answering=m;
+   var host2=b.closest('.bub')||b.closest('.th');
+   markAnswering(host2);
+   // The recorder already knows how to send; it just needs to be told what
+   // this recording is an answer to. The caption rides along with the audio.
+   document.getElementById('fCap').value=quoteOf(m);
+   setStandby(rootKeyFor(m));
+   toggleRec();
+  };
+ });
+ Array.prototype.forEach.call(host.querySelectorAll('.rcam'),function(b){
+  b.onclick=function(e){
+   e.stopPropagation();
+   var m=at(b);
+   answering=m;
+   var host2=b.closest('.bub')||b.closest('.th');
+   markAnswering(host2);
+   document.getElementById('fCap').value=quoteOf(m);
+   setStandby(rootKeyFor(m));
+   shoot(true);
+  };
+ });
+ Array.prototype.forEach.call(host.querySelectorAll('.rfile'),function(b){
+  b.onclick=function(e){
+   e.stopPropagation();
+   var m=at(b);
+   answering=m;
+   var host2=b.closest('.bub')||b.closest('.th');
+   markAnswering(host2);
+   document.getElementById('fCap').value=quoteOf(m);
+   setStandby(rootKeyFor(m));
+   openPicker('full','',true);
+  };
+ });
+ Array.prototype.forEach.call(host.querySelectorAll('.rtxt'),function(b){
+  b.onclick=function(e){
+   e.stopPropagation();
+   var host2=b.closest('.bub')||b.closest('.th');
+   var f=host2.querySelector('.rform');
+   var open=!f.classList.contains('open');
+   f.classList.toggle('open',open);
+   b.classList.toggle('on',open);
+   markAnswering(open?host2:null);
+   if(open)f.querySelector('textarea').focus();
+  };
+ });
+ Array.prototype.forEach.call(host.querySelectorAll('.rform'),function(f){
+  f.addEventListener('click',function(e){e.stopPropagation();});
+  f.addEventListener('submit',function(e){
+   e.preventDefault();
+   var m=at(f);
+   var box=f.querySelector('textarea');
+   var btn=f.querySelector('button[type=submit]');
+   var said=f.querySelector('.rsaid');
+   var text=box.value.trim();
+   if(!text)return;
+   said.textContent='';
+   undoSend(text,box,function(){
+   btn.disabled=true;
+   said.textContent='שולח.';
+   var full=quoteOf(m)+String.fromCharCode(10)+text;
+   sendOrHold('תשובה מהמוניטור',full,'תשובה',{at:new Date().toISOString(),text:full,re:rootKeyFor(m)}).then(function(how){
+    if(how==='held'){said.textContent=HELD_SAY;setStandby(f.getAttribute('data-k')||rootKeyFor(m));return;}
+    var p=pending();
+    p.push({at:new Date().toISOString(),text:full,re:rootKeyFor(m)});
+    savePending(p);
+    setStandby(f.getAttribute('data-k')||rootKeyFor(m));
+    said.textContent=how==='backup'?'נשלח בערוץ הגיבוי.':'נשלח.';
+    markTouched(m);markOneSeen(m);
+    markSent('text');renderSent();
+    // renderThread redraws every bubble, so the confirmation is shown first.
+    setTimeout(renderThread,900);
+   }).catch(function(){
+    if(!box.value.trim())box.value=text;
+    said.textContent='שני הערוצים לא ענו. תנסה שוב.';
+   }).then(function(){btn.disabled=false;});
+   });
+  });
+ });
+}
+// Safari refuses the clipboard API in some contexts, so a hidden textarea and
+// execCommand stay as the way that always works.
+function fallbackCopy(t,done){
+ var a=document.createElement('textarea');
+ a.value=t;a.setAttribute('readonly','');
+ a.style.position='fixed';a.style.opacity='0';
+ document.body.appendChild(a);a.select();a.setSelectionRange(0,t.length);
+ try{document.execCommand('copy');done();}catch(e){}
+ document.body.removeChild(a);
+}
+// Selecting particular messages. The bubbles are drawn newest first, so the
+// copy is reordered oldest first, which is how a transcript reads.
+var picking=false;
+on('pickMode',function(){
+ picking=!picking;
+ var host=document.getElementById('thread');
+ host.classList.toggle('picking',picking);
+ this.textContent=picking?'ביטול בחירה':'בחירת הודעות';
+ this.classList.toggle('pickon',picking);
+ document.getElementById('copyPicked').hidden=!picking;
+ if(!picking)Array.prototype.forEach.call(host.querySelectorAll('.bub'),function(b){
+  b.classList.remove('picked');
+ });
+});
+on('copyPicked',function(){
+ var b=this;
+ var host=document.getElementById('thread');
+ var chosen=Array.prototype.slice.call(host.querySelectorAll('.bub.picked'));
+ if(!chosen.length){b.textContent='לא סימנת כלום';
+  setTimeout(function(){b.textContent='העתקת הנבחרות';},1500);return;}
+ var t=chosen.map(function(el){return el.getAttribute('data-copy')||'';})
+   .reverse().join(String.fromCharCode(10,10));
+ var done=function(){b.textContent='הועתק '+chosen.length;
+  setTimeout(function(){b.textContent='העתקת הנבחרות';},1600);};
+ if(navigator.clipboard&&navigator.clipboard.writeText){
+  navigator.clipboard.writeText(t).then(done,function(){fallbackCopy(t,done);});
+ }else fallbackCopy(t,done);
+});
+
+document.getElementById('copyAll').onclick=function(){
+ var b=this;
+ var all=(D.chat||[]).filter(function(m){return !isMail(m);})
+  .slice().sort(function(a,b2){return (a.at||'')<(b2.at||'')?-1:1;});
+ if(!all.length)return;
+ var t=all.map(function(m){
+  return (m.from==='itzik'?OWNER:AI)+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');
+ }).join(String.fromCharCode(10,10));
+ var done=function(){b.textContent='הועתק';setTimeout(function(){b.textContent='העתקת כל השיחה';},1500);};
+ if(navigator.clipboard&&navigator.clipboard.writeText){
+  navigator.clipboard.writeText(t).then(done,function(){fallbackCopy(t,done);});
+ }else fallbackCopy(t,done);
+};
+function newestClaude(){
+ var c=(D.chat||[]).filter(function(m){return m.from==='claude';});
+ return c.length?c[c.length-1].at||'':'';
+}
+function chatSeen(){
+ try{return localStorage.getItem('chatSeen')||'';}catch(e){return'';}
+}
+// Opening the chat used to mark everything read at once. He told me what that
+// costs: he opens the screen, does not manage to read it all, and the red is
+// gone as if he had. Now nothing is marked by opening. A message stays red
+// until he touches it, and turns green the moment he does.
+//
+// The one exception is the very first time this device shows the chat: the
+// whole history would light up red, so it is marked read once and never again.
+function markChatSeen(){
+ try{
+  if(!localStorage.getItem('chatBooted')){
+   localStorage.setItem('chatBooted','1');
+   localStorage.setItem('chatSeen',newestClaude());
+   var seen=seenIds();
+   (D.chat||[]).forEach(function(m){
+    if(m.from!=='claude')return;
+    var k=claudeKey(m);
+    if(seen.indexOf(k)<0)seen.push(k);
+   });
+   if(seen.length>2000)seen=seen.slice(-2000);
+   localStorage.setItem('chatSeenIds',JSON.stringify(seen));
+  }
+ }catch(e){}
+ paintDot();
+}
+// Which bubbles he has already dealt with. Being seen and being handled are
+// not the same thing: the first happens once on a new device for the whole
+// history, the second only when his finger lands on that message. The green
+// has to survive a reload, so it is kept here and not only in the class.
+function touchedIds(){ return idList('chatTouched'); }
+function markTouched(m){
+ if(!m)return;
+ try{
+  var t=touchedIds();
+  var k=claudeKey(m);
+  if(t.indexOf(k)<0)t.push(k);
+  if(t.length>2000)t=t.slice(-2000);
+  localStorage.setItem('chatTouched',JSON.stringify(t));
+ }catch(e){}
+}
+// One message, when he actually touches it.
+function markOneSeen(m){
+ markTouched(m);
+ try{
+  var seen=seenIds();
+  var k=claudeKey(m);
+  if(seen.indexOf(k)<0)seen.push(k);
+  if(seen.length>2000)seen=seen.slice(-2000);
+  localStorage.setItem('chatSeenIds',JSON.stringify(seen));
+ }catch(e){}
+ paintDot();
+}
+// The ring runs for a moment on whatever he just touched, and stays on while
+// something is actually being sent from that card.
+function ringFor(el,ms){
+ if(!el)return;
+ el.classList.add('busyring');
+ setTimeout(function(){el.classList.remove('busyring');},ms||2400);
+}
+function paintDot(){
+ var d=document.getElementById('mDot');
+ if(d)d.hidden=!unreadTally();
+ paintNew();
+ paintAnsCount();
+}
+// How many reports are newer than the last one he opened. The mark itself
+// lives further down in reportsSeen, which keeps the newest timestamp.
+function newReports(){
+ var cut=reportsSeen();
+ return (D.reports||[]).filter(function(r){return (r.at||'')>cut;});
+}
+// He asked the screen to point at what needs him. A tile glows and wears a
+// count, and the tab at the bottom breathes, until he opens that screen.
+function paintNew(){
+ var msgs=unreadTally();
+ var reps=newReports().length;
+ var t=lastPill();
+ var pillNow=!t||(Date.now()-t)>=PILLGAP;
+ function mark(id,on,label){
+  var el=document.getElementById(id);
+  if(!el)return;
+  el.classList.toggle('glow',!!on);
+  var f=el.querySelector(':scope > .flag');
+  if(on&&!f){
+   f=document.createElement('span');f.className='flag';el.appendChild(f);
+  }
+  if(f)f.textContent=label||'';
+  if(f&&!on)f.remove();
+ }
+ // The special requests tile blinks until he opens it once for that item.
+ var sp=(D.special||[]);
+ var spTop=sp.length?(sp[0].at||''):'';
+ var spSeen='';
+ try{spSeen=localStorage.getItem('specialSeen')||'';}catch(e){}
+ var spNew=!!spTop&&spSeen<spTop;
+ mark('gSpecial',spNew,'חדש');
+ // The replies I sent in his name. The tile carries how many he has not gone
+ // over yet, not just that there is something, because the number is the whole
+ // point: he asked to be told there are more waiting.
+ var rpNew=repliesNew().length;
+ mark('gReplies',rpNew>0,String(rpNew));
+ floatTile('gReplies',rpNew>0);
+ // His own principle, applied for real: the thing that is new rises to the top
+ // instead of sitting fourteen tiles down where he has to hunt for it. Once he
+ // has opened it, it goes back to wherever he put it.
+ floatTile('gSpecial',spNew);
+ // The reports tile is gone; its count is carried by the answers badge.
+ /*
+   The button that holds the answer is the one that blinks.
+
+   Itzik, 19.9: "תהבהב את הכפתור היכן התשובה". Until now only three tiles
+   could light up, so an answer that landed on the reports screen or the
+   block screen or the recordings screen arrived in total silence and he had
+   to go looking for it. Each of these keeps its own seen stamp, so a screen
+   stops blinking the moment he opens it and not before.
+ */
+ function newerThan(list,key){
+  var top=(list&&list.length)?(list[0].at||''):'';
+  if(!top)return false;
+  var seen='';
+  try{seen=localStorage.getItem(key)||'';}catch(e){}
+  return seen<top;
+ }
+ function stampSeen(key,list){
+  var top=(list&&list.length)?(list[0].at||''):'';
+  if(!top)return;
+  try{localStorage.setItem(key,top);}catch(e){}
+ }
+ window.stampSeen=stampSeen;
+ // אין אריח דוחות במסך הבית, המונה שלו רוכב על התג של התשובות, וסימון
+ // מזהה שלא קיים הוא פעולה שקטה שנראית כמו תכונה.
+ var bl=[];
+ (D.blocklist||[]).forEach(function(l){(l.people||[]).forEach(function(p){if(p.state==='ממתין')bl.push(p);});});
+ mark('gBlock',bl.length>0,String(bl.length));
+ // Itzik, 19.9: "עדכן את כפתור חסימות". The line under the button said the
+ // same thing whatever the list held, so approved names that were never
+ // carried out looked settled. It now says what waits on him and what on me.
+ (function(){
+  var todo=0,done=0;
+  (D.blocklist||[]).forEach(function(l){(l.people||[]).forEach(function(p){
+   var st=p.state||'';
+   if(st.indexOf('אושר')===0||st.indexOf('פייסבוק ב')>-1)todo++;
+   else if(st==='נחסם'||st==='חסום')done++;
+  });});
+  var sm=document.querySelector('#gBlock small');
+  if(!sm||!(D.blocklist||[]).length)return;
+  var parts=[];
+  if(bl.length)parts.push(bl.length+' מחכים להחלטה שלך');
+  if(todo)parts.push(todo+' אושרו ועוד לא בוצעו');
+  parts.push(done+' חסומים');
+  sm.textContent=parts.join(' · ');
+ })();
+ var vc=(typeof voiceList==='function')?voiceList():[];
+ mark('gVoices',newerThan(vc,'voicesSeen'),'חדש');
+ floatTile('gVoices',newerThan(vc,'voicesSeen'));
+ var dr=(D.drains||[]).slice().sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
+ mark('gDrains',newerThan(dr,'drainsSeen'),'חדש');
+
+ mark('gPill',pillNow,'עכשיו');
+ // One tab now, so one place for the mark. Chat and reports used to light up
+ // their own tabs beside it, which is exactly the three doors he reported.
+ var nA=document.getElementById('nA');
+ if(nA)nA.classList.toggle('hasnew',msgs>0||reps>0);
+}
+// Lift one tile to the front of the grid while it is new, and put it back in
+// its saved place the moment it is not. Nothing else moves.
+function floatTile(id,up){
+ var el=document.getElementById(id),box=document.getElementById('blkTiles');
+ if(!el||!box)return;
+ if(up){
+  if(!el.dataset.homeIdx){
+   el.dataset.homeIdx=String(Array.prototype.indexOf.call(box.children,el));
+  }
+  if(box.firstChild!==el)box.insertBefore(el,box.firstChild);
+ }else if(el.dataset.homeIdx){
+  var i=parseInt(el.dataset.homeIdx,10);
+  delete el.dataset.homeIdx;
+  var kids=Array.prototype.slice.call(box.children);
+  var ref=kids[i]||null;
+  if(ref!==el)box.insertBefore(el,ref);
+ }
+}
+
+// Unread used to mean newer than the last time he opened the chat. That broke
+// the moment I wrote a reply with a timestamp earlier than one already there:
+// a real answer arrived and the button stayed grey. Seen messages are now
+// remembered one by one, so the order they were written in cannot hide one.
+function seenIds(){ return idList('chatSeenIds'); }
+function claudeKey(m){return (m.at||'')+'|'+String(m.text||'').slice(0,40);}
+function unreadList(){
+ var seen=seenIds();
+ var cut=chatSeen();
+ var floor=D.resetSeenAt||'';
+ return (D.chat||[]).filter(function(m){
+  if(m.from!=='claude')return false;
+  /*
+    Counted and shown have to be the same set.
+
+    Itzik, 18.9: "it says nineteen unread, I press the red button, zero
+    messages." Both numbers were honest and they counted different things. This
+    list took every answer of mine; the screen it opens is built by
+    allAnswers(), which drops the mail ones. A backlog made of mail therefore
+    produced a badge with nothing behind it, and a red button that opens on an
+    empty screen is the monitor telling him it lost his messages.
+  */
+  if(isMail(m))return false;
+  // The floor matters now that the history arrives after the page. Without it,
+  // every old answer would turn red the moment the chat file landed, because
+  // the read marks only cover what was on screen when he read them.
+  if(floor&&(m.at||'')<=floor)return false;
+  if(seen.indexOf(claudeKey(m))>-1)return false;
+  // Anything already on screen before this change counts as read, so he does
+  // not get a hundred old answers marked new once.
+  if(!seen.length&&cut&&(m.at||'')<=cut)return false;
+  return true;
+ });
+}
+/*
+  How many are unread, including the ones not in memory yet.
+
+  unreadList can only look at the messages this page is holding, and that is
+  the newest slice, not the whole window the count runs over. So the head
+  carries ansKeys: every answer since the last reset, as the same key the
+  read marks are written against. Counted here, the number is whole from the
+  first paint instead of climbing when a file lands.
+
+  It is never smaller than the list, only ever wider than it, so a count can
+  still not drop below what is already on the screen.
+*/
+function unreadTally(){
+ var n=unreadList().length;
+ var keys=D.ansKeys;
+ if(!keys||!keys.length)return n;
+ var seen=seenIds(),cut=chatSeen();
+ var m=0;
+ for(var i=0;i<keys.length;i++){
+  var k=keys[i];
+  if(seen.indexOf(k)>-1)continue;
+  if(!seen.length&&cut&&k.slice(0,k.indexOf('|'))<=cut)continue;
+  m++;
+ }
+ return m>n?m:n;
+}
+/*
+  The number on the red button is the length of the list it opens. Nothing else.
+
+  Itzik, 18.09 08:43, on a button reading five: "כתוב 5 הודעות שלא קראת. אין
+  כלום שם". It had been counted from unreadList and shown from the answers
+  list, and those are two different sets: a mail answer, or anything else the
+  answers screen does not carry, was counted here and could never appear
+  there. Patching the landing was treating the symptom. The count is now taken
+  from the very cards the fresh filter renders, so a button saying five cannot
+  open on nothing: if there is nothing to show it says nothing to show.
+
+  It reads zero while the chat file is still on its way, which is the honest
+  answer at that moment, and it goes red by itself when the file lands.
+*/
+function unreadCount(){
+ var shown=allAnswers().filter(isFresh).length;
+ var wide=unreadTally()+codexFresh().length;
+ return wide>shown?wide:shown;
+}
+function renderNew(){
+ renderSent();
+ paintAnsCount();
+ paintGot();
+ var c=unreadCount();
+ var btn=document.getElementById('newBtn');
+ btn.classList.toggle('hot',c>0);
+ // The block knows when the red one is live, so the button under it can step
+ // further back exactly then and not be in the way of the thumb.
+ var blk=document.getElementById('newBlock');
+ if(blk)blk.classList.toggle('hasnew',c>0);
+ document.getElementById('nbCount').textContent=c?c:'✓';
+ // Said in words as well as in colour. He told me a colour blind person would
+ // not notice the old marking at all, and he was right.
+ //
+ // Idle, the button used to be labelled 'הכל נקרא'. He asked on 17.9 whether
+ // 'תשובות' would be better there and it is: the button opens the answers
+ // either way, so a state was standing where the destination belongs. The
+ // count beside it already says everything is read.
+ /*
+   The button is named after where it goes, always.
+
+   Itzik, 18.9: "the red button is for alerts and not for answers, fix it
+   immediately." It read "N הודעות שלא קראת", which is the language of a
+   notification, so the one control he presses to reach my answers announced
+   itself as something else. It only ever opened the answers screen; the label
+   was describing a state where the destination belongs, and a button that
+   names a state makes you guess where it leads.
+
+   The count keeps saying how many are waiting, in the badge and in the line
+   underneath, where a number belongs.
+ */
+ document.getElementById('nbTitle').textContent='תשובות';
+ // Short, because the button is half a screen wide since 20.9 and a sentence
+ // here pushed the pair three lines taller than the row he asked for.
+ document.getElementById('nbSub').textContent=c
+  ?(c===1?'אחת שלא קראת':c+' שלא קראת')
+  :'הכל נקרא';
+ var K=D.openCmds||[];
+ document.getElementById('wnCmds').innerHTML='<span class="n '+(K.length?'':'zero')+'">'+K.length+'</span><div>'+(K.length?'משימות פתוחות ממך':'אין משימות פתוחות')+(K.length?'<small>'+esc(K[0].text).slice(0,90)+'</small>':'')+'</div>';
+}
+// The "no current work report" line under open tasks is gone. Itzik, 25.9:
+// "unnecessary and not updated, delete". It only ever repeated an old report.
+function updateDot(){
+ renderNew();
+ var n=newestClaude(),fresh=!!(n&&n>chatSeen());
+ var d=document.getElementById('mDot');if(d)d.hidden=!fresh;
+ document.title=(fresh?'(1) ':'')+PAGE_TITLE;
+}
+var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
+var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn',Rc:'pRc',Mo:'pModel',Sa:'pSale',Fi:'pFi',Is:'pIsra',Mx:'pMoxy'};
+// Itzik set the rhythm on 9.9: every eight hours from the morning dose.
+/*ITZIK:BEGIN*/
+var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
+// The last dose. From the chat it is read out of the message text, because he
+// confirms the hour he took it and that hour is what the count runs from.
+function lastPill(){
+ var c=(D.chat||[]).filter(function(m){return m.from==='itzik'&&/לקחתי כדור/.test(m.text||'');});
+ var last=c.length?c[c.length-1]:null;
+ var fromChat=last?ML.parsePillTime(last.text,last.at):0;
+ var chatAt=last?(Date.parse(last.at||'')||0):0;
+ var rec=null;
+ try{
+  var raw=localStorage.getItem('lastPill')||'';
+  rec=raw.charAt(0)==='{'?JSON.parse(raw):(Number(raw)?{taken:Number(raw),recordedAt:Number(raw)}:null);
+ }catch(e){rec=null;}
+ // The most recent record wins, not the largest hour: a correction to an
+ // earlier time is still the newest thing he said.
+ if(rec&&rec.taken&&rec.recordedAt>=chatAt)return rec.taken;
+ return fromChat||(rec&&rec.taken)||0;
+}
+function hm(x){return x.getHours()+':'+String(x.getMinutes()).padStart(2,'0');}
+function renderPill(){
+ var box=document.getElementById('pillInfo');
+ var btn=document.getElementById('pillBig');
+ if(!box||!btn)return;
+ var t=lastPill();
+ if(!t){
+  btn.className='pillbig';
+  box.innerHTML='<b>עוד לא נרשמה מנה</b><small>לחיצה על העיגול שואלת מתי לקחת, ומשם מתחילה הספירה למנה הבאה.</small>';
+  return;
+ }
+ var s=ML.pillState(t,Date.now());
+ btn.className='pillbig'+(s.due?'':' done');
+ var when=s.due?'עכשיו'
+  :('בעוד '+Math.floor(s.left/3600000)+' שעות ו'+Math.round(s.left%3600000/60000)+' דקות');
+ box.innerHTML='<b>המנה הבאה '+esc(when)+'</b>'
+  +'<div>בשעה '+esc(hm(new Date(s.next)))+'</div>'
+  +'<small>המנה האחרונה נרשמה ב'+esc(hm(new Date(t)))+'. אזכיר לך גם בהתראה לנייד.</small>';
+}
+// The sheet. Nothing is counted until he answers it.
+function openPillSheet(){
+ var sh=document.getElementById('pillSheet');
+ if(!sh)return;
+ document.getElementById('pillQ').textContent='השעה עכשיו '+hm(new Date())+'. לקחת את הכדור מוקדם יותר?';
+ document.getElementById('pillTimeRow').hidden=true;
+ document.getElementById('pillTime').value=hm(new Date()).padStart(5,'0');
+ sh.hidden=false;
+ sh.scrollIntoView({block:'center'});
+}
+function closePillSheet(){
+ var sh=document.getElementById('pillSheet');
+ if(sh)sh.hidden=true;
+}
+function recordPill(takenMs){
+ var box=document.getElementById('msgText');
+ box.value='לקחתי כדור בשעה '+hm(new Date(takenMs))+'.';
+ document.getElementById('msgForm').dispatchEvent(new Event('submit',{cancelable:true}));
+ try{localStorage.setItem('lastPill',JSON.stringify({taken:takenMs,recordedAt:Date.now()}));}catch(e){}
+ closePillSheet();
+ renderPill();
+ paintNew();
+}
+// More landing pages are coming, so each one is a line here.
+var LANDING=[
+ {name:'כלל עשר הדקות',note:'מילת המפתח: שום',url:'https://abaitzik.com/shum'},
+ {name:'שיטת הפירה',note:'מילת המפתח: גזר',url:'https://abaitzik.com/gezer'},
+ {name:'סלינדה',note:'אתר',url:'https://salinda-mobile.vercel.app/'}
+];
+/*ITZIK:END*/
+/*
+  Reports got a tab of their own.
+
+  They were reachable only through a card on the home screen titled "דוח רשת",
+  and he went looking for a button called reports and did not find one. Itzik,
+  20.9, on the bottom bar: "we have answers, networks and leads down there."
+  The reports are what he reads at the end of every round, and they were the
+  one screen of the four he uses with no way in from the bar.
+*/
+var NAVS={h:'nH',q:'nQ',l:'nL',a:'nA',r:'nR'};
+
+// Per network monitoring. Tapping a network circle opens its own screen:
+// what is waiting there, and only the report lines about that network.
+/*ITZIK:BEGIN*/
+var APPS={youtube:{t:'יוטיוב סטודיו',u:'https://studio.youtube.com/'},
+ tiktok:{t:'טיקטוק סטודיו',u:'https://www.tiktok.com/tiktokstudio/comment'},
+ facebook:{t:'מנהל התגובות',u:'https://www.facebook.com/professional_dashboard/engagement/comments_manager/'},
+ instagram:{t:'אינסטגרם',u:'https://www.instagram.com/abaitzik/'}};
+/*ITZIK:END*/
+var HOT={personal:1,pain:1,offer_help:1,donation:1,medical_advice:1};
+var curNet='all';
+function netLines(body,k){
+ var re=NETRE[k];if(!re)return body;
+ var keep=String(body||'').split(String.fromCharCode(10)).filter(function(l){return re.test(l);});
+ return keep.join(String.fromCharCode(10));
+}
+var NETRE={youtube:/יוטיוב|youtube/i,tiktok:/טיקטוק|tiktok/i,
+ facebook:/פייסבוק|facebook/i,instagram:/אינסטגרם|instagram/i};
+function renderNet(){
+ var seg=document.getElementById('netSeg');
+ var bs=seg.querySelectorAll('button');
+ for(var i=0;i<bs.length;i++){bs[i].setAttribute('aria-pressed',bs[i].getAttribute('data-net')===curNet);}
+ var all=curNet==='all';
+ var pend=(D.pending||[]).filter(function(x){return all||x.network===curNet;});
+ var done=(D.replied||[]).filter(function(x){return all||x.network===curNet;});
+ var hot=pend.filter(function(x){return HOT[x.category];});
+ var out='';
+ var app=APPS[curNet];
+ out+='<div class="alerts"><div><b>'+(all?'כל הרשתות':esc(NET[curNet]))+'</b>'
+  +'<small>'+pend.length+' ממתינים, '+hot.length+' מהם דחופים, '+done.length+' נענו.</small></div>'
+  +(app?'<a class="abtn" href="'+app.u+'" target="_blank" rel="noopener">'+app.t+'</a>':'')+'</div>';
+ out+='<h2 style="margin-top:22px">מה דחוף</h2>';
+ out+=hot.length?hot.map(row).join(''):'<div class="empty">אין כרגע משהו דחוף כאן.</div>';
+ // Itzik, 24.9: under TikTok and Instagram he got every old session and every
+ // exchange we ever had about them, and asked for all of it to go. One screen,
+ // one report: the newest about this network, or the newest per network on
+ // the all tab. Older reports stay on the reports screen.
+ var R=ML.latestPerNet(D.reports||[],all?Object.keys(NETNAME):[curNet]);
+ out+='<h2 style="margin-top:26px">הדוח האחרון</h2>';
+ if(!R.length){out+='<div class="empty">עוד לא נכתב דוח על הרשת הזאת.</div>';}
+ else{out+=R.map(function(r,n){
+  var body=all?r.body:netLines(r.body,curNet);
+  if(!String(body||'').trim())body=r.body;
+  return '<details class="report"'+(n===0?' open':'')+'>'
+   +'<summary><span class="t">'+esc(r.title||'דוח')+'</span>'
+   +'<span class="d">'+esc(stamp(r.at))+'</span></summary>'
+   +'<div class="text">'+esc(body)+'</div>'
+   +'<div class="repreply">'+replyBox('על הדוח "'+(r.title||'דוח')+'" מ'+stamp(r.at))+'</div>'
+   +'</details>';
+  }).join('');}
+ document.getElementById('netBody').innerHTML=out;
+ wireBoxes(document.getElementById('netBody'));
+}
+function openNet(k){curNet=k||'all';pane('n');renderNet();ensure(['reports','replied'],renderNet);}
+document.getElementById('netSeg').addEventListener('click',function(e){
+ var b=e.target.closest?e.target.closest('[data-net]'):null;
+ if(!b)return;curNet=b.getAttribute('data-net');renderNet();
+});
+(function(){
+ var ics=document.querySelectorAll('.ic[data-net]');
+ for(var i=0;i<ics.length;i++){
+  ics[i].addEventListener('click',function(ev){ev.preventDefault();openNet(this.getAttribute('data-net'));});
+ }
+})();
+
+// The page is one HTML file, so a phone that cached it keeps showing an old
+// screen. version.json is fetched with no-store on every open; when it names
+// a newer build than the one baked in here, the page reloads itself once.
+// Painted from whatever the last poll brought back. Red pulse while a round is
+// running, green while I am listening, and the answer count updates on its own
+// so one reply can arrive without waiting for the rest.
+var liveSeen=null;
+function paintLive(v){
+ var bar=document.getElementById('liveBar');
+ // The strip was removed from the home screen at his request. Everything else
+ // in here still runs, so if it ever comes back nothing needs rewiring.
+ if(!bar)return;
+ var now=(v&&v.now)||D.now;
+ var what=document.getElementById('liveWhat');
+ var when=document.getElementById('liveWhen');
+ var fresh=now&&now.at&&(Date.now()-Date.parse(now.at))<25*60*1000;
+ bar.classList.toggle('busy',!!fresh);
+ what.textContent=fresh?(now.text||'עובד עכשיו'):'אני מקשיב לך. אפשר גם לכתוב כאן';
+ var n=unreadTally();
+ when.textContent=(n?(n===1?'תשובה אחת מחכה · ':n+' תשובות מחכות · '):'')
+  +(now&&now.at?ago(now.at):ago(D.builtAt));
+}
+/*
+  The two lines under the title.
+
+  They answer different questions and used to be one sentence, which is how a
+  page that had not talked to the server in an hour could still look current.
+  The first is the build: its short id, the absolute moment it was published,
+  and how long ago that was. The second is the data: when the numbers on this
+  screen were last confirmed against the server, and nothing at all is claimed
+  when that has not happened yet.
+
+  "Updated N ago" is computed from the published timestamp every time it is
+  painted, so it counts up while the page stays open instead of resetting to
+  "now" every time he opens it. It is repainted on a timer for the same reason.
+*/
+var lastCheckAt=0;
+var lastCheckFail=false;
+// ago() says "now" for anything under a minute and a half, and since 10.10
+// it carries its own "לפני", so since() is the same phrase under its old name.
+function since(iso){return ago(iso);}
+// A full date and then "ago": past a week ago() is a date too, so it is said once.
+function stampAgo(iso){var a=ago(iso);return stamp(iso)+(a&&!/^[0-9]/.test(a)?' · '+a:'');}
+// The phone's own flag first, it flips the moment the signal drops. A failed
+// check counts too: on wifi with no internet the phone still says online.
+function paintOffline(){
+ var off=(navigator.onLine===false)||!!lastCheckFail;
+ document.documentElement.classList.toggle('offline',off);
+}
+window.addEventListener('offline',paintOffline);
+window.addEventListener('online',function(){paintOffline();checkFresh();});
+function paintStamp(){
+ /*
+   Two lines, two different clocks, and one of them was lying about the other.
+
+   Itzik spent 18.9 telling me the monitor was not updating. The top line said
+   "עודכן לפני 15 דקות" and the line under it said "נתונים נבדקו עכשיו". Both
+   were true and they measure different things: the first is how old this
+   BUILD is, the second is when the page last asked the server for news. He
+   read the first one, the way anybody would, as "this thing has not updated in
+   fifteen minutes", and he was not wrong to. A screen whose whole job is to
+   tell him he is being heard cannot have a line on it that reads like neglect.
+
+   So it says what it is. Age of the version, in the words "בת 15 דקות", and
+   the live line below keeps the word that matters, נתונים.
+ */
+ /*
+   5.10: and then it was one line again, on purpose. The reviewer read it as a
+   new customer would: a version number and a date are noise in the first line
+   she reads under her own name. Itzik said "רוצה את זה". So the top says one
+   plain sentence about whether things are fine and how fresh they are, the
+   fresher of the two clocks, and the version number lives in settings and the
+   footer. The data line stays in the page, hidden, for the diagnosis.
+ */
+ paintOffline();
+ var age=since(D.builtAt);
+ var ver='גרסה '+(D.buildId||'')+' · '+stamp(D.builtAt)
+  +' · הגרסה '+(/^לפני /.test(age)?age.replace(/^לפני /,'בת '):age==='עכשיו'?'חדשה':'מ'+age);
+ var el=document.getElementById('built');
+ if(el){
+  var fresh=Math.max(lastCheckAt||0,Date.parse(D.builtAt)||0);
+  var when=fresh?agoAfter(new Date(fresh).toISOString()):'';
+  el.textContent=lastCheckFail?'אין חיבור כרגע. מה שרואים כאן הוא מרגע העדכון האחרון.'
+   :(!when||when==='עכשיו')?'הכל תקין, עודכן לפני רגע.'
+   :('הכל תקין, עודכן '+when+'.');
+ }
+ var set=document.getElementById('builtSet');
+ if(set)set.textContent=ver;
+ var foot=document.getElementById('builtFoot');
+ if(foot)foot.textContent='גרסה '+(D.buildId||'')+' · '+stamp(D.builtAt);
+ var line=document.getElementById('checked');
+ if(!line)return;
+ if(lastCheckFail){
+  // Quietly, and without pretending the numbers above are live.
+  line.textContent='אין חיבור לנתונים. המספרים כאן הם מרגע הפרסום.';
+ }else if(lastCheckAt){
+  var ago=agoAfter(new Date(lastCheckAt).toISOString());
+  line.textContent=/עכשיו/.test(ago)?'הנתונים מעודכנים לרגע זה.'
+   :('הנתונים נבדקו '+ago+'.');
+ }else{
+  line.textContent='נתונים עוד לא נבדקו מול השרת.';
+ }
+}
+// Every half minute, so "updated 4 minutes ago" does not sit on 4 all evening.
+setInterval(paintStamp,30000);
+
+/*
+  A new answer without a new page.
+
+  The head file is the payload this page would have been built with, so
+  swallowing it replaces every counter and every head slice in place. Whatever
+  he had already pulled down is pulled again, because a chat screen that is
+  open when the answer lands has to show it. Then the screen he is standing on
+  is drawn again, and nothing else moves: not the scroll, not the draft, not
+  the fold he opened.
+*/
+var softBusy=false;
+function softRefresh(v){
+ if(softBusy||!window.fetch)return;
+ softBusy=true;
+ var again=Object.keys(lazyDone).filter(function(k){return lazyDone[k];});
+ var urls=['data/head.json?b='+encodeURIComponent(v.buildId||'')]
+  .concat(again.map(function(k){return 'data/'+k+'.json?b='+encodeURIComponent(v.buildId||'');}));
+ Promise.all(urls.map(function(u){
+  return fetch(u,{cache:'no-store'}).then(function(r){return r.ok?gjson(r):null;},function(){return null;});
+ })).then(function(res){
+  var head=res[0];
+  if(!head){softBusy=false;return;}
+  Object.keys(head).forEach(function(k){D[k]=head[k];});
+  LAZY=D.lazy||{};
+  again.forEach(function(k,i){
+   var v2=res[i+1];
+   if(Array.isArray(v2))D[k]=v2;else lazyDone[k]=false;
+  });
+  softBusy=false;
+  repaintAll();
+ },function(){softBusy=false;});
+}
+/*
+  What he was in the middle of, carried across the repaint.
+
+  Redrawing a screen throws away the boxes he was typing in and shuts the
+  thread he had opened. He lost a draft to a refresh once already and said so,
+  and a soft update that eats a half written answer is worse than the reload
+  it replaced. Every box with something in it and every open fold is written
+  down first and put back after, along with the cursor.
+*/
+function fieldKey(el){
+ var f=el.closest?el.closest('form,details,section'):null;
+ var owner=f?(f.getAttribute('data-k')||f.getAttribute('data-i')||f.id||''):'';
+ var peers=f?f.querySelectorAll('textarea,input'):[el];
+ var n=Array.prototype.indexOf.call(peers,el);
+ return [owner,el.id||'',el.className||'',n].join('|');
+}
+function foldKey(d){
+ var s1=d.querySelector('summary');
+ return d.getAttribute('data-k')||d.id||(s1?s1.textContent.slice(0,40):'');
+}
+function keepState(){
+ var ae=document.activeElement,st={drafts:{},open:{},focus:null,sel:null};
+ Array.prototype.forEach.call(document.querySelectorAll('textarea,input'),function(el){
+  if(el.type==='file'||el.type==='checkbox'||el.type==='radio')return;
+  var k=fieldKey(el);
+  if(el.value)st.drafts[k]=el.value;
+  if(el===ae){
+   st.focus=k;
+   try{st.sel=[el.selectionStart,el.selectionEnd];}catch(e){}
+  }
+ });
+ Array.prototype.forEach.call(document.querySelectorAll('details'),function(d){
+  if(d.open)st.open[foldKey(d)]=1;
+ });
+ return st;
+}
+function putState(st){
+ if(!st)return;
+ Array.prototype.forEach.call(document.querySelectorAll('details'),function(d){
+  if(st.open[foldKey(d)])d.open=true;
+ });
+ Array.prototype.forEach.call(document.querySelectorAll('textarea,input'),function(el){
+  if(el.type==='file'||el.type==='checkbox'||el.type==='radio')return;
+  var k=fieldKey(el);
+  if(st.drafts[k]&&!el.value)el.value=st.drafts[k];
+  if(st.focus===k){
+   try{el.focus();if(st.sel)el.setSelectionRange(st.sel[0],st.sel[1]);}catch(e){}
+  }
+ });
+}
+// Every screen that can be standing open when a new payload lands. Each one
+// redraws from D, so calling them all is cheaper than remembering which.
+/*
+  The things that were literals in the page, written in after he unlocks.
+
+  Everything here was public text until 18.9: the outbound notification topic
+  as a clickable link that subscribed anyone who opened it, his address, and
+  his neighbours by name with what each of them owes. None of it is mine to
+  publish and none of it belongs in a file a stranger can fetch.
+*/
+function paintSecrets(){
+ var out=secret('ntfyOut');
+ var b=document.getElementById('ntfyBtn');
+ if(b&&out)b.href='https://ntfy.sh/'+out;
+ var v=(D&&D.keys&&D.keys.vaad)||null;
+ if(!v)return;
+ var put=function(id,txt){var el=document.getElementById(id);if(el&&txt)el.textContent=txt;};
+ put('vaadWho',v.who); put('vaadFlats',v.flats); put('vaadAbout',v.about); put('vaadOpen',v.open);
+ [['vaadSheet',v.sheet],['vaadFolder',v.folder]].forEach(function(p){
+  var el=document.getElementById(p[0]);
+  if(el&&p[1]){el.href=p[1];el.hidden=false;}
+ });
+ // 7.10: who paid, as a file to keep and send on.
+ [['vaadReport',v.report],['vaadReportImg',v.reportImg],['vaadExp',v.expenses],['vaadExpImg1',(v.expensesImg||[])[0]],['vaadExpImg2',(v.expensesImg||[])[1]]].forEach(function(p){
+  var el=document.getElementById(p[0]);
+  if(el&&p[1]&&fileEntry(p[1])){el.setAttribute('href','files/'+p[1]);el.hidden=false;}
+ });
+ // 4.10: the notice for the stairwell sits on this screen, one tap from the tile.
+ var lt=document.getElementById('vaadLetter');
+ if(lt&&v.letter&&fileEntry(v.letter)){lt.setAttribute('href','files/'+v.letter);lt.hidden=false;}
+ // 4.10: Itzik prints and forwards from the gallery, easier than Files on the iPhone.
+ var li=document.getElementById('vaadLetterImg');
+ if(li&&v.letterImg&&fileEntry(v.letterImg)){li.setAttribute('href','files/'+v.letterImg);li.hidden=false;}
+}
+function repaintAll(){
+ var st=keepState(),y=window.scrollY;
+ /*
+   Named, because a repaint that throws used to disappear into an empty catch.
+   The names are the ones boot() uses, so a failure here and a failure at boot
+   are the same word on the diagnostic he sends me.
+ */
+ var jobs=[['dot',paintDot],['new',renderNew],['thread',renderThread],
+  ['answers',renderAnswers],['got',renderGot],['net',renderNet],['items',render],
+  ['pegasus',renderPegasus],['improve',renderImprove],['special',renderSpecial],
+  ['reminders',renderReminders],['tasks',renderTasks],['appts',renderAppts],['replies',renderReplies],['rivhit',renderRivhit],['food',renderFood],
+  ['reqs',renderReqs],['stamp',paintStamp],['secrets',paintSecrets],
+  ['drains',renderDrains],['block',renderBlock],['tenants',paintTenantsTile]];
+ var bad=[],ran={};
+ jobs.forEach(function(j){
+  ran[j[0]]=1;
+  try{if(typeof j[1]==='function')j[1]();}
+  catch(e){
+   bad.push(j[0]);
+   /*
+     The message, not just the name.
+
+     "answers" on its own told me a render was throwing on his iPhone and
+     nothing about what. The console it is written to is on a phone I cannot
+     open. Keeping the last message here means one more tap of the diagnostic
+     carries the actual line back to me, instead of another day of me guessing
+     at a device from a different device.
+   */
+   try{
+    window.__lastFail=window.__lastFail||{};
+    window.__lastFail[j[0]]=String(e&&e.message||e)
+     +' @ '+String((e&&e.stack||'').split(String.fromCharCode(10))[1]||'').trim().slice(0,90);
+   }catch(_){}
+   try{console.error('repaint '+j[0],e);}catch(_){}
+  }
+ });
+ /*
+   A failure held from the locked boot is only real if the same render fails
+   again now that there is data to render. He tapped the diagnostic hours after
+   unlocking and it still reported items as a load failure, which by then was a
+   render that had thrown on an empty page and worked ever since. Anything that
+   came back clean stops being reported, because he reads that line as a fault.
+ */
+ var held=window.__heldBootFails;
+ if(held&&held.length){
+  window.__heldBootFails=held.filter(function(n){
+   return !ran[n]||bad.indexOf(n)>-1;
+  });
+ }
+ /*
+   And the same mercy for the list that is already showing.
+
+   Itzik's first diagnostic today, 19:23, said "כשלי טעינה: answers" and
+   nothing else: no message, no failing render. It was a name pushed here
+   hours earlier that nothing ever took off again. bootFailed only grew. So
+   the line on his screen was not telling him what is broken now, it was
+   telling him what broke once, for as long as the tab stayed open, and after
+   a fix he would have had to know to reload before the page stopped accusing
+   itself. A render that ran and passed is not a failure, and is removed.
+ */
+ if(typeof bootFailed!=='undefined'&&bootFailed.length){
+  for(var bi=bootFailed.length-1;bi>=0;bi--){
+   if(ran[bootFailed[bi]]&&bad.indexOf(bootFailed[bi])<0)bootFailed.splice(bi,1);
+  }
+ }
+ // The stored message goes with it. Otherwise the diagnostic reads "כשלי
+ // טעינה: אין" and then quotes an error underneath it, which is worse than
+ // either line alone.
+ try{
+  if(window.__lastFail)Object.keys(ran).forEach(function(n){
+   if(bad.indexOf(n)<0)delete window.__lastFail[n];
+  });
+ }catch(e){}
+ if(bad.length){
+  window.__repaintFailed=bad;
+  if(typeof bootFailed!=='undefined'&&!(GATE&&!GKEY)){
+   bad.forEach(function(n){if(bootFailed.indexOf(n)<0)bootFailed.push(n);});
+  }
+ }else{window.__repaintFailed=null;}
+ try{putState(st);}catch(e){}
+ try{takeCarried();}catch(e){}
+ if(Math.abs(window.scrollY-y)>2)window.scrollTo(0,y);
+}
+/*
+  Typing blocks the automatic reload, and whatever is written survives one.
+
+  Only the composer's draft used to be kept, so a reply box, a note, anything
+  else he was halfway through went with the page. Now: a box in focus, or a
+  key pressed in the last half minute, means the new build waits. And every
+  box with text in it is put down before any reload and filled back in after.
+*/
+var lastTypeAt=0,CARRY='carryState',carried=null,carriedUntil=0;
+document.addEventListener('input',function(){lastTypeAt=Date.now();},true);
+/*
+  Scrolling blocks both refreshes too (30.9, voice note: "גם כשאני גולל
+  בתשובות ... אין צורך לרענן, זה מקפיץ את כל השורות"). A finger on the screen,
+  or any scroll in the last twenty seconds, and the new answer waits; once he
+  has stood still that long it comes in by itself.
+*/
+var lastScrollAt=0,touching=false,scrollWait=null;
+function markScroll(){lastScrollAt=Date.now();}
+window.addEventListener('scroll',markScroll,{capture:true,passive:true});
+document.addEventListener('touchstart',function(){touching=true;markScroll();},{capture:true,passive:true});
+document.addEventListener('touchmove',markScroll,{capture:true,passive:true});
+document.addEventListener('touchend',function(){touching=false;markScroll();},{capture:true,passive:true});
+document.addEventListener('touchcancel',function(){touching=false;},{capture:true,passive:true});
+window.addEventListener('wheel',markScroll,{capture:true,passive:true});
+function scrollingNow(){return touching||Date.now()-lastScrollAt<20000;}
+/*
+  Reading blocks the reload too (8.10, from his message: "אתה לא יכול לרענן את
+  המוניטור בזמן שאני קורא דוח ... המוניטור יחכה בזמן שאני קורא"). Twenty
+  seconds without scrolling is not the end of reading, it is one paragraph.
+  So: any touch, scroll, tap or key in the last five minutes, and a new build
+  waits. On an inner screen (a report, the answers, any list) even the quiet
+  data repaint waits, because new cards above the one he is on move his text.
+  On the home screen the answers keep coming in by themselves as before.
+*/
+var lastActAt=0;
+function markAct(){lastActAt=Date.now();}
+['click','keydown','touchstart','touchmove','wheel'].forEach(function(t){
+ document.addEventListener(t,markAct,{capture:true,passive:true});
+});
+window.addEventListener('scroll',markAct,{capture:true,passive:true});
+function readingNow(){
+ if(document.hidden)return false;
+ return Date.now()-lastActAt<300000;
+}
+function readingInner(){
+ return readingNow()&&typeof panePrev==='string'&&panePrev&&panePrev!=='h';
+}
+var readWait=null;
+function afterReading(){
+ if(readWait)return;
+ readWait=setTimeout(function(){
+  readWait=null;
+  if(readingNow())afterReading();else if(!document.hidden)checkFresh();
+ },Math.max(5000,300500-(Date.now()-lastActAt)));
+}
+function afterScroll(){
+ if(scrollWait)return;
+ scrollWait=setTimeout(function(){
+  scrollWait=null;
+  if(scrollingNow())afterScroll();else if(!document.hidden)checkFresh();
+ },Math.max(1000,20500-(Date.now()-lastScrollAt)));
+}
+function typingNow(){
+ // An empty box that still holds the focus is not typing. On the iPhone the
+ // box stays focused after a send and after the keyboard is put away, and
+ // this used to hold every new build off the screen for hours (6.10, voice
+ // note: the yellow card on top "לא מתעדכן ... כבר שעות").
+ var a=document.activeElement;
+ if(a&&(a.tagName==='TEXTAREA'||(a.tagName==='INPUT'&&/^(text|search|email|tel|url|number|)$/.test(a.type||''))||a.isContentEditable)
+   &&String(a.value!=null?a.value:(a.textContent||'')).trim())return true;
+ return Date.now()-lastTypeAt<30000;
+}
+function carryState(){
+ try{
+  var st=keepState();st.focus=null;st.sel=null;
+  if(Object.keys(st.drafts).length)sessionStorage.setItem(CARRY,JSON.stringify(st));
+ }catch(e){}
+}
+function takeCarried(){
+ try{
+  var raw=sessionStorage.getItem(CARRY);
+  if(raw){carried=JSON.parse(raw);carriedUntil=Date.now()+120000;sessionStorage.removeItem(CARRY);}
+ }catch(e){}
+ if(carried&&Date.now()>carriedUntil)carried=null;
+ if(carried)try{putState(carried);}catch(e){}
+}
+window.addEventListener('pagehide',carryState);
+function checkFresh(){
+ if(!window.fetch)return;
+ fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){
+  return r.ok?r.json():null;
+ }).then(function(v){
+  if(v){lastCheckAt=Date.now();lastCheckFail=false;}
+  else{
+   lastCheckFail=true;
+   // One quick retry, because the usual reason is a second without signal as
+   // the phone wakes, and making him wait a full minute for that is the same
+   // complaint in a smaller size.
+   setTimeout(function(){if(!document.hidden)checkFresh();},4000);
+  }
+  paintStamp();
+  if(v)paintLive(v);
+  if(!v||!v.builtAt||v.builtAt===D.builtAt)return;
+  var what=document.getElementById('liveWhat');
+  // Only the data moved: take it in where he stands. He asked for an answer
+  // that arrives without the screen jumping under his hands, and a reload is
+  // exactly that jump, plus the draft in the box.
+  if(scrollingNow()){afterScroll();return;}
+  // Inside a screen and reading: nothing moves, not even the data. A line says
+  // something new is waiting, and it comes in once he has been still a while.
+  if(readingInner()){
+   if(what&&liveSeen!==v.builtAt){liveSeen=v.builtAt;what.textContent='יש עדכון. מחכה שתסיים לקרוא.';}
+   afterReading();return;
+  }
+  if(v.codeId&&CODE_ID&&v.codeId===CODE_ID){
+   if(what&&liveSeen!==v.builtAt){liveSeen=v.builtAt;what.textContent='תשובה חדשה נכנסת.';}
+   softRefresh(v);
+   return;
+  }
+  // Never mid microphone: a reload closes the phone's permission prompt, which
+  // is exactly the prompt he saw vanish under his finger (30.9).
+  // The answers still come in while the reload waits: only the code waits,
+  // never the data. Holding both is what froze the card on top for hours.
+  if(recStarting||rec){softRefresh(v);return;}
+  // Never mid typing either (30.9, voice note: "באמצע הקלדה יש ריענון וזה מוחק
+  // לי את הכל"). The new build waits for the next check after he stops.
+  if(typingNow()){softRefresh(v);return;}
+  // Reading on the home screen: the data comes in, the reload waits.
+  if(readingNow()){softRefresh(v);afterReading();return;}
+  // A new build is up. Say so before reloading, so a reply that landed while
+  // he was reading does not just make the screen jump under his hands.
+  if(what&&liveSeen!==v.builtAt){liveSeen=v.builtAt;what.textContent='יש תשובה חדשה. טוען.';}
+  var seen='';
+  try{seen=sessionStorage.getItem('reloadedFor')||'';}catch(e){}
+  if(seen===v.builtAt)return;
+  try{sessionStorage.setItem('reloadedFor',v.builtAt);}catch(e){}
+  carryState();
+  var go=function(){location.replace(location.pathname+'?b='+encodeURIComponent(v.builtAt));};
+  try{
+   if(window.caches&&caches.keys){
+    caches.keys().then(function(keys){
+     return Promise.all(keys.map(function(k){return caches.delete(k);}));
+    }).catch(function(){}).then(go);
+    return;
+   }
+  }catch(e){}
+  go();
+ }).catch(function(){lastCheckFail=true;paintStamp();setTimeout(function(){if(!document.hidden)checkFresh();},4000);});
+}
+checkFresh();
+paintStamp();
+paintLive(null);
+paintNew();
+// Anything he taps says so for a moment: a tile, a report, a reply button.
+document.addEventListener('click',function(e){
+ var t=e.target.closest?e.target.closest('.gt,.rb,.report > summary'):null;
+ if(!t)return;
+ ringFor(t.tagName==='SUMMARY'?t.parentNode:t,1200);
+},true);
+// Forty seconds, not two minutes. He wants to see that something is alive.
+setInterval(checkFresh,40000);
+setInterval(function(){paintLive(null);paintNew();try{renderSent();}catch(e){}if(!scrollingNow()&&!readingInner())try{renderReqs();}catch(e){}},20000);
+/*
+  Every way a phone can come back to this page.
+
+  Itzik, 18.9, looking at a page whose own line said it had last checked
+  twenty four minutes ago: "why, because the phone locked? it does not work
+  behind the scenes? that does not interest me. the moment I open it, it should
+  update for me." He is right, and it is not his job to know why.
+
+  visibilitychange alone was the gap. Coming back to a page on a phone does not
+  reliably fire it: the browser often restores the whole page from its back
+  forward cache instead, which fires pageshow with persisted set, and switching
+  between apps can deliver focus without a visibility change at all. So all
+  three wake it, and a check that failed on a dead bar of signal tries again
+  shortly rather than leaving a stale line sitting there until the next minute.
+
+  28.9: a reset stamp only ever got applied inside gateBoot's decrypt, which
+  only runs on a true fresh load. A phone restored from the back forward cache
+  never goes through that again - the script resumes exactly where it was
+  suspended, D already holds the stamp from before, and nothing ever compares
+  it against localStorage a second time. That is why closing and reopening did
+  not help: on this phone "reopening" is usually this restore, not a fresh
+  load. Checking the two stamps here as well, on every single wake, means the
+  reset gets a chance every time the page comes back to life, not only on the
+  loads that happen to be a real navigation.
+*/
+function wake(){
+ if(document.hidden)return;
+ var changed=false;
+ try{if(applyResetSeen())changed=true;}catch(e){}
+ try{if(applyResetMarks())changed=true;}catch(e){}
+ if(changed){try{repaintAll();}catch(e){}}
+ checkFresh();
+}
+document.addEventListener('visibilitychange',wake);
+window.addEventListener('pageshow',wake);
+window.addEventListener('focus',wake);
+window.addEventListener('online',wake);
+
+
+// The skin. Three states: let the phone decide, force white, force black. The
+// choice lives on the device, like every other per device preference here, so
+// his phone and the laptop can differ without fighting each other.
+function skinGet(){
+ try{return localStorage.getItem('skin')||'auto';}catch(e){return 'auto';}
+}
+function skinApply(v){
+ var r=document.documentElement;
+ if(v==='dark'||v==='light')r.setAttribute('data-theme',v);
+ else r.removeAttribute('data-theme');
+ // The phone paints the status bar from this, so it has to move with the skin
+ // or the top strip stays the colour of the theme he just left.
+ var m=document.querySelector('meta[name="theme-color"]');
+ if(m){
+  var dark=v==='dark'||(v==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme:dark)').matches);
+  m.setAttribute('content',dark?'#0f1218':'#14675a');
+ }
+ var said=document.getElementById('skinSaid');
+ if(said)said.textContent=v==='auto'?'הטלפון מחליט, לפי מצב הלילה שלו.'
+  :v==='light'?'מצב יום קבוע, גם בלילה.':'מצב לילה קבוע, גם ביום.';
+ Array.prototype.forEach.call(document.querySelectorAll('.skb'),function(b){
+  b.setAttribute('aria-pressed',b.getAttribute('data-skin')===v?'true':'false');
+ });
+}
+function skinBind(){
+ Array.prototype.forEach.call(document.querySelectorAll('.skb'),function(b){
+  b.addEventListener('click',function(){
+   var v=b.getAttribute('data-skin');
+   try{if(v==='auto')localStorage.removeItem('skin');else localStorage.setItem('skin',v);}catch(e){}
+   skinApply(v);
+  });
+ });
+ skinApply(skinGet());
+}
+skinBind();
+
+// The flashing. He said it stresses him, so calm is the default and the choice
+// is saved on the device like the skin. Nothing about the unread state changes
+// here: the button, the count and the red badge stay. Only the movement is a
+// preference. The class is also written before first paint, above, so the old
+// flash never gets a frame.
+function motionGet(){
+ try{return localStorage.getItem('motion')==='soft'?'soft':'off';}catch(e){return 'off';}
+}
+function motionApply(v){
+ var r=document.documentElement;
+ // Calm is the floor in both modes. Taking it off was the bug: it did not
+ // soften anything, it restored every hard animation the class cancels.
+ r.classList.add('calm');
+ r.classList.toggle('motion-soft',v==='soft');
+ var said=document.getElementById('motionSaid');
+ if(said)said.textContent=v==='soft'
+  ?'רמז עדין: טבעת שנכנסת ויוצאת לאט על הסימון החדש בלבד.'
+  :'רגוע: שום דבר לא מהבהב. הסימון האדום נשאר במקומו.';
+ Array.prototype.forEach.call(document.querySelectorAll('.mob-b'),function(b){
+  b.setAttribute('aria-pressed',b.getAttribute('data-motion')===v?'true':'false');
+ });
+}
+function motionBind(){
+ Array.prototype.forEach.call(document.querySelectorAll('.mob-b'),function(b){
+  b.addEventListener('click',function(){
+   var v=b.getAttribute('data-motion')==='soft'?'soft':'off';
+   try{localStorage.setItem('motion',v);}catch(e){}
+   motionApply(v);
+  });
+ });
+ motionApply(motionGet());
+}
+motionBind();
+
+// The connection test. He asked for it after a night where he sent messages and
+// could not tell whether anything reached me. A green light that is always green
+// would be worse than nothing, so this one is measured end to end: the send is a
+// real send and it reports which channel carried it, and the answer only counts
+// when a build newer than his tap actually lands on his phone. Nothing here is
+// simulated, and if both channels are down the line says so.
+function pingState(){
+ try{return JSON.parse(localStorage.getItem('pingState')||'{}')||{};}catch(e){return {};}
+}
+function savePingState(s){
+ try{localStorage.setItem('pingState',JSON.stringify(s));}catch(e){}
+}
+function pingSay(t){
+ var e=document.getElementById('pingSaid');if(e)e.textContent=t;
+}
+/*
+  Whether the connection works, answered only by an answer.
+
+  This used to say "החיבור עובד" whenever a build newer than the tap existed.
+  Reproduced: tap at 10:00, an unrelated publish at 11:00, zero replies, and the
+  line read "חזרתי אליך 60 דקות אחרי הלחיצה. החיבור עובד." It was reporting that
+  a deploy happened, which it always does, and calling it a round trip.
+
+  A connection test that cannot fail is not a test. So the tap carries a code
+  of its own, and only a message of mine carrying that same code turns the line
+  green. A new build proves nothing and is not consulted.
+*/
+function pingPaint(){
+ var st=pingState(),box=document.getElementById('pingBox');
+ if(!box||!st.at)return;
+ var code=st.code||'';
+ var back=null;
+ if(code){
+  var all=(D.chat||[]);
+  for(var i=0;i<all.length;i++){
+   var m=all[i];
+   if(m.from!=='claude')continue;
+   if(String(m.text||'').indexOf(code)>-1||(m.requestId||m.re||'')===code){back=m;break;}
+  }
+ }
+ if(back){
+  var ms=Math.max(0,Date.parse(back.at||'')-Date.parse(st.at));
+  var mins=Math.round(ms/60000);
+  box.classList.add('ok');
+  pingSay('חזרתי אליך עם הקוד של הבדיקה'
+   +(mins>0?', '+(mins===1?'דקה':mins+' דקות')+' אחרי הלחיצה':'')+'. החיבור עובד.');
+ }else{
+  box.classList.remove('ok');
+  pingSay('נשלח '+agoAfter(st.at)+' ועוד לא חזרתי עם הקוד. גרסה חדשה של האתר אינה תשובה, '
+   +'אז השורה הזאת לא תתחלף לבד. אם עוברת יותר משעה, משהו אצלי תקוע.');
+ }
+}
+function pingBind(){
+ var btn=document.getElementById('pingBtn');
+ if(!btn)return;
+ btn.addEventListener('click',function(){
+  btn.disabled=true;
+  pingSay('שולח.');
+  var at=new Date().toISOString();
+  // The code the answer has to carry back. Short enough to read off a phone.
+  var code='PING-'+Date.now().toString(36).toUpperCase().slice(-6);
+  sendText('בדיקת חיבור','בדיקת חיבור מהמוניטור. תחזור אליי עם הקוד '+code
+   +' כדי שאדע שאתה מחובר. בלי הקוד הזה המסך לא יסמן שהחיבור עובד.','בדיקה')
+  .then(function(how){
+   savePingState({at:at,code:code});
+   document.getElementById('pingBox').classList.remove('ok');
+   pingSay((how==='backup'?'יצא בערוץ הגיבוי. ':'יצא. ')
+    +'מחכה שאחזור עם הקוד '+code+'.');
+  }).catch(function(){
+   pingSay('לא יצא. שני הערוצים לא ענו, ואין טעם ללחוץ שוב עד שיש רשת.');
+  }).then(function(){btn.disabled=false;});
+ });
+ pingPaint();
+}
+pingBind();
+setInterval(pingPaint,60000);
+
+// One line straight into the same channel the chat uses, for the small
+// signals: a lead moved to standby, a folder is missing, and so on.
+function sendLine(text){
+ sendText('עדכון מהמוניטור',text,'עדכון').then(function(){
+  var p=pending();p.push({at:new Date().toISOString(),text:text});savePending(p);
+ }).catch(function(){});
+}
+
+// The reports button breathes until he opens it.
+function newestReport(){
+ var R=D.reports||[];return R.length?(R[0].at||''):'';
+}
+function reportsSeen(){
+ try{return localStorage.getItem('reportsSeen')||'';}catch(e){return'';}
+}
+function markReportsSeen(){
+ try{localStorage.setItem('reportsSeen',newestReport());}catch(e){}
+ paintReportDot();
+ paintNew();
+}
+function paintReportDot(){
+ var fresh=newestReport()&&newestReport()>reportsSeen();
+ var n=document.getElementById('nA');if(n)n.classList.toggle('blink',!!fresh);
+ var t=document.getElementById('gReports');if(t)t.classList.toggle('blink',!!fresh); // tile removed 17.9, guarded
+}
+
+// The two big blocks on the home screen: the square tiles and the round app
+// icons. He wanted one above the other and the freedom to flip them whenever,
+// without hunting for a grip. One button does it and the order is kept.
+function swapHomeBlocks(){
+ var tiles=document.getElementById('blkTiles');
+ var icons=document.getElementById('blkIcons');
+ if(!tiles||!icons||!tiles.parentNode)return;
+ var box=tiles.parentNode;
+ var kids=Array.prototype.slice.call(box.children);
+ var iconsFirst=kids.indexOf(icons)<kids.indexOf(tiles);
+ if(!iconsFirst)box.insertBefore(icons,tiles);
+ else box.insertBefore(tiles,icons);
+ saveOrder(box,'blockOrder');
+ // The two blocks sit far down the home screen. Pressing the button while
+ // scrolled to the top swapped them out of sight, and it looked like the
+ // button was wired to nothing. Now the screen goes to them and they are
+ // marked for a moment, so the change is something he can see.
+ var top=iconsFirst?tiles:icons;
+ try{top.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){top.scrollIntoView();}
+ [tiles,icons].forEach(function(el){
+  el.classList.remove('swapped');
+  void el.offsetWidth;
+  el.classList.add('swapped');
+  setTimeout(function(){el.classList.remove('swapped');},2400);
+ });
+ toast(iconsFirst?'הריבועים למעלה, העיגולים מתחת.':'העיגולים למעלה, הריבועים מתחת.');
+}
+on('swapBlocks',swapHomeBlocks);
+
+// ---- his own order ----
+// He asked to arrange the tiles himself. A long press picks one up, and the
+// order is kept on the device. This is also the first thing a client will be
+// allowed to do on his own copy: add and arrange, never restructure.
+// Anything that can be rearranged needs a stable name to be remembered by.
+// The tiles already have ids; the blocks on the home screen do not, so they
+// are given one from their position the first time they are seen.
+function nameChildren(box,prefix){
+ Array.prototype.forEach.call(box.children,function(el,i){
+  if(!el.id)el.id=prefix+'-'+i;
+ });
+}
+function readOrder(key){
+ try{return JSON.parse(localStorage.getItem(key)||'null');}catch(e){return null;}
+}
+function saveOrder(box,key){
+ if(!box)return;
+ var ids=Array.prototype.map.call(box.children,function(el){return el.id;});
+ try{localStorage.setItem(key,JSON.stringify(ids));}catch(e){}
+}
+function applyOrder(box,key){
+ var order=readOrder(key);
+ if(!box||!order)return;
+ order.forEach(function(id){
+  var el=document.getElementById(id);
+  // Only move a child of this box: an id from an older layout must not drag
+  // some unrelated element in here.
+  if(el&&el.parentNode===box)box.appendChild(el);
+ });
+ // Anything added since he last arranged simply stays at the end.
+}
+// The iPhone method, which is what he asked for and what the first attempt got
+// wrong: a long press does not drag anything. It puts the screen into edit
+// mode, everything wobbles, and from then on he can move blocks as many times
+// as he likes with ordinary drags. A Done bar ends it.
+//
+// The first version tied the drag to the same press, so letting go ended
+// everything and he could only ever move one block one place.
+var editing=null;
+function armDrag(box,key){
+ if(!box)return;
+ var hold=null,held=null,startY=0;
+ function tidy(){
+  Array.prototype.forEach.call(box.children,function(c){c.classList.remove('dragover');});
+ }
+ function enterEdit(){
+  if(editing)return;
+  editing={box:box,key:key};
+  // Start from the top, or the shrink happens around wherever he was scrolled
+  // to and the board jumps under his finger.
+  try{window.scrollTo({top:0,behavior:'auto'});}catch(e){window.scrollTo(0,0);}
+  document.body.classList.add('editing');
+  box.classList.add('editbox');
+  addHandles(box);
+  try{navigator.vibrate&&navigator.vibrate(18);}catch(e){}
+  showEditBar();
+ }
+ box.addEventListener('pointerdown',function(e){
+  var t=e.target;
+  if(t&&t.closest&&t.closest('input,textarea,select'))return;
+  // A long press on a tile lifts the tile, not the whole block.
+  if(t&&t.closest&&t.closest('#blkTiles .gt,#blkIcons .ic'))return;
+  if(editing)return;
+  startY=e.clientY;
+  hold=setTimeout(enterEdit,500);
+ });
+ box.addEventListener('pointermove',function(e){
+  // A scroll is not a long press.
+  if(hold&&Math.abs(e.clientY-startY)>10){clearTimeout(hold);hold=null;}
+ });
+ ['pointerup','pointercancel','pointerleave'].forEach(function(ev){
+  box.addEventListener(ev,function(){clearTimeout(hold);hold=null;});
+ });
+
+ // In edit mode a press on the handle picks its block up.
+ box.addEventListener('pointerdown',function(e){
+  if(!editing||editing.box!==box)return;
+  var t=e.target;
+  if(box===document.getElementById('pH')&&!(t.classList&&t.classList.contains('grip')))return;
+  var el=t;
+  while(el&&el.parentNode!==box)el=el.parentNode;
+  if(!el)return;
+  held=el;el.classList.add('dragging');
+  e.preventDefault();
+ });
+ box.addEventListener('pointermove',function(e){
+  if(!held)return;
+  e.preventDefault();
+  var over=document.elementFromPoint(e.clientX,e.clientY);
+  while(over&&over.parentNode!==box)over=over.parentNode;
+  if(!over||over===held)return;
+  tidy();
+  over.classList.add('dragover');
+  var kids=Array.prototype.slice.call(box.children);
+  if(kids.indexOf(held)<kids.indexOf(over))box.insertBefore(over,held);
+  else box.insertBefore(held,over);
+ });
+ ['pointerup','pointercancel'].forEach(function(ev){
+  box.addEventListener(ev,function(){
+   if(!held)return;
+   held.classList.remove('dragging');held=null;tidy();
+   saveOrder(box,key);
+  });
+ });
+ /*
+   Nothing is clickable while arranging, exactly as on the phone, except the
+   controls that arranging itself puts there.
+
+   This ran in the capture phase, so it stopped the click before it ever
+   reached the button it was aimed at: the up and down buttons did nothing at
+   all, and so did the minus. Measured on the live page, a nudge left the order
+   untouched and wrote nothing.
+ */
+ box.addEventListener('click',function(e){
+  if(!editing||editing.box!==box)return;
+  var t=e.target;
+  if(t&&t.closest&&t.closest('.nudge,.minus'))return;
+  e.preventDefault();e.stopPropagation();
+ },true);
+}
+// A visible grip on each block, because on a phone there is no other way to
+// say move this whole thing rather than move what is inside it.
+// Only the master may take a card off the screen. In the client build this is
+// false, the minus turns into a request, and the removal waits for us. That is
+// the line the whole product is sold on: he adds, he never dismantles.
+var CAN_REMOVE = true;
+
+function blockKey(el){
+ return el.id || el.getAttribute('data-blk') || '';
+}
+function blocksHidden(){return tileStore('blocksHidden',[]);}
+function applyBlocksHidden(){
+ var hid=blocksHidden(),box=document.getElementById('pH');
+ if(!box)return;
+ Array.prototype.forEach.call(box.children,function(el){
+  var k=blockKey(el);
+  if(k)el.hidden=hid.indexOf(k)>=0;
+ });
+ var back=document.getElementById('editBack');
+ if(back)back.hidden=!hid.length;
+}
+function hideBlock(el){
+ var k=blockKey(el);
+ if(!k)return;
+ if(!CAN_REMOVE){
+  sendLine('בקשה להסיר מהמסך: '+k);
+  toast('הבקשה נשלחה. ההסרה מחכה לאישור.');
+  return;
+ }
+ var hid=blocksHidden();
+ if(hid.indexOf(k)<0)hid.push(k);
+ tileSave('blocksHidden',hid);
+ applyBlocksHidden();
+ fitEdit();
+}
+function restoreBlocks(){
+ tileSave('blocksHidden',[]);
+ applyBlocksHidden();
+ fitEdit();
+}
+
+// Shrink the board so the whole thing sits on one screen while arranging, the
+// way a phone does when the icons start to wobble. Without this the bottom of
+// the list cannot be reached by a finger that is already holding a card.
+function fitEdit(){
+ var box=document.getElementById('pH');
+ if(!box)return;
+ if(!document.body.classList.contains('editing')){
+  box.style.transform='';box.style.height='';return;
+ }
+ box.style.transform='';box.style.height='';
+ var natural=box.getBoundingClientRect().height;
+ if(!natural)return;
+ var room=window.innerHeight-box.getBoundingClientRect().top-96;
+ var k=Math.min(1,Math.max(.45,room/natural));
+ if(k>=.999)return;
+ box.style.transform='scale('+k+')';
+ box.style.height=(natural*k)+'px';
+}
+window.addEventListener('resize',function(){if(document.body.classList.contains('editing'))fitEdit();});
+
+function addHandles(box){
+ if(box!==document.getElementById('pH'))return;
+ Array.prototype.forEach.call(box.children,function(el){
+  if(el.querySelector&&el.querySelector(':scope > .grip'))return;
+  var g=document.createElement('div');
+  g.className='grip';
+  g.textContent='⠿';
+  g.setAttribute('aria-hidden','true');
+  el.insertBefore(g,el.firstChild);
+  /*
+    Up and down, beside the grip.
+
+    The drag itself works: measured on this page with a real touch drag and
+    with a mouse, the block moves and the new order survives a reload. What a
+    drag cannot do is announce itself. A grip you have to know to pull is not a
+    control a person finds, and "arranging does nothing" is what that feels
+    like. These two say what they do, move exactly one place, and save on the
+    spot, so nothing depends on ending the drag in the right place.
+  */
+  ['up','down'].forEach(function(dir){
+   var m=document.createElement('button');
+   m.type='button';
+   m.className='nudge nudge-'+dir;
+   m.textContent=dir==='up'?'▲':'▼';
+   m.setAttribute('aria-label',dir==='up'?'להזיז למעלה':'להזיז למטה');
+   m.addEventListener('pointerdown',function(ev){ev.stopPropagation();});
+   m.addEventListener('click',function(ev){
+    ev.preventDefault();ev.stopPropagation();nudgeBlock(el,dir);
+   });
+   el.insertBefore(m,el.firstChild);
+  });
+  if(blockKey(el)){
+   var m=document.createElement('button');
+   m.type='button';
+   m.className='minus';
+   m.textContent='−';
+   m.setAttribute('aria-label',CAN_REMOVE?'להסיר מהמסך':'לבקש הסרה');
+   m.addEventListener('pointerdown',function(ev){ev.stopPropagation();});
+   m.addEventListener('click',function(ev){
+    ev.preventDefault();ev.stopPropagation();hideBlock(el);
+   });
+   el.insertBefore(m,el.firstChild);
+  }
+  el.classList.add('hasgrip');
+ });
+}
+/*
+  One place up or down, past whatever is actually visible.
+
+  Skipping the hidden blocks matters: half the cards on this screen only appear
+  when they have something to say, so a move that counted them would look like
+  a button that did nothing at all.
+*/
+function nudgeBlock(el,dir){
+ var box=el.parentNode;
+ if(!box)return;
+ var kids=Array.prototype.filter.call(box.children,function(c){return !c.hidden;});
+ var i=kids.indexOf(el);
+ if(i<0)return;
+ if(dir==='up'){
+  if(i===0)return;
+  box.insertBefore(el,kids[i-1]);
+ }else{
+  if(i>=kids.length-1)return;
+  box.insertBefore(kids[i+1],el);
+ }
+ saveOrder(box,editing&&editing.box===box?editing.key:'blockOrder');
+ try{el.scrollIntoView({block:'nearest'});}catch(e){}
+}
+function dropHandles(){
+ Array.prototype.forEach.call(document.querySelectorAll('.grip,.minus,.nudge'),function(g){
+  var p=g.parentNode;
+  if(p){p.removeChild(g);p.classList.remove('hasgrip');}
+ });
+}
+function showEditBar(){
+ var bar=document.getElementById('editBar');
+ if(!bar)return;
+ bar.hidden=false;
+ applyBlocksHidden();
+ fitEdit();
+}
+function endEdit(){
+ if(!editing)return;
+ var pH=document.getElementById('pH');
+ if(pH){pH.style.transform='';pH.style.height='';}
+ saveOrder(editing.box,editing.key);
+ pinHome(document.getElementById('pH'));
+ dropHandles();
+ editing.box.classList.remove('editbox');
+ editing=null;
+ document.body.classList.remove('editing');
+ var bar=document.getElementById('editBar');
+ if(bar)bar.hidden=true;
+}
+
+/*
+  איציק, 20.9 בקול: "אם אני מפעיל את המוניטור בלי להפעיל את המיקרופון בזמן
+  ששמעתי מוזיקה המוניטור מחביא את המוזיקה. תסתכל איך אפשר שרק כשאני מפעיל
+  את המיקרופון זה מחביא, ואז מחזיר אותה."
+
+  זה היה כאן. הקלקה קטנה על כל לחיצה פתחה ערוץ שמע של הדף, והטלפון מוסר את
+  פס הקול לדף שפותח אותו: המוזיקה שרצה ברקע נחתכת. ה-context גם נשמר
+  במשתנה ולא נסגר, אז המוזיקה לא חזרה עד רענון. אותו דבר בצפצוף של
+  הכפתור הגדול.
+
+  הדף כבר לא מייצר קול בעצמו. הדבר היחיד שנוגע בשמע הוא ההקלטה, והיא
+  משחררת את המיקרופון ב-recCleanup ברגע שהיא נגמרת, כך שהמוזיקה חוזרת
+  לבד. משוב הלחיצה נשאר בוויברציה, שלא נוגעת בשמע בכלל.
+*/
+function click(){
+ try{if(navigator.vibrate)navigator.vibrate(8);}catch(e){}
+}
+document.addEventListener('pointerdown',function(e){
+ if(e.target.closest&&e.target.closest('.gt,.mic,.way,.recbig,.foodcam,.conn'))click();
+},{passive:true});
+
+function on2(id,ev,fn){var el=document.getElementById(id);if(el)el.addEventListener(ev,fn);}
+function on(id,fn){
+ var el=document.getElementById(id);
+ if(el)el.onclick=fn;
+}
+// He said it plainly: my answers vanish. The unread screen empties itself the
+// moment he touches a message, and after that the only copy sits buried in the
+// thread among his own messages. This screen keeps every answer I ever wrote.
+// Nothing here removes a message from view - the filters only narrow it.
+var ansFilter='all',ansQ='',ansAuto=false;
+/*
+  Cards he touched in this render stay on screen.
+
+  18.9: the red button opens the fresh filter, so touching a card made it
+  not fresh and the next render dropped it off the list. From his side the
+  answer vanished instead of turning green, which is the same complaint
+  again with a different cause. Touch the last one and the screen said there
+  was nothing here. He keeps what he touched until he leaves the screen.
+*/
+var ansKeep={};
+// Two hundred cards, each with a recorder and an attach form, is more than a
+// phone should build at once. It draws a page at a time.
+var ansShow=30;
+function starIds(){ return idList('chatStar'); }
+function isStar(m){return starIds().indexOf(claudeKey(m))>-1;}
+function toggleStar(m){
+ try{
+  var s=starIds(),k=claudeKey(m),i=s.indexOf(k);
+  if(i>-1)s.splice(i,1);else s.push(k);
+  if(s.length>400)s=s.slice(-400);
+  localStorage.setItem('chatStar',JSON.stringify(s));
+ }catch(e){}
+}
+// Orange, the third colour he asked for on 17.9. Red and green are decided for
+/*
+  Two different things were living in one storage key, and one of them threw.
+
+  Itzik's diagnostic off his iPhone, 18.9: standbyIds().indexOf is not a
+  function. Two unrelated features had both picked the name chatStandby. The
+  one above keeps a MAP of threads he is waiting on, written as {}. This one
+  keeps a LIST of answers he parked, written as []. Whichever wrote last
+  decided the shape, and when the map won, every paint of the answers screen
+  died on the first line that asked the list for indexOf.
+
+  That is why his red button read 32 with nothing behind it all day, and why I
+  could never reproduce it: my own storage happened to hold the list.
+
+  The parked list moves to its own name. Anything already written under the old
+  one is read once and carried across, so a card he parked yesterday does not
+  come back red today.
+*/
+function standbyIds(){
+ var own=idList('chatParked');
+ if(own.length)return own;
+ // The old key, only if it still holds the shape this feature meant.
+ var old=idList('chatStandby',true);
+ if(old.length){
+  // Copied once and the old key is dropped, or the day he unparks his last
+  // card the fallback below hands every old one back to him.
+  try{localStorage.setItem('chatParked',JSON.stringify(old));localStorage.removeItem('chatStandby');}catch(e){}
+ }
+ return old;
+}
+function isStandby(m){return standbyIds().indexOf(claudeKey(m))>-1;}
+function toggleStandby(m){
+ try{
+  var s=standbyIds(),k=claudeKey(m),i=s.indexOf(k);
+  if(i>-1)s.splice(i,1);else s.push(k);
+  if(s.length>400)s=s.slice(-400);
+  localStorage.setItem('chatParked',JSON.stringify(s));
+ }catch(e){}
+}
+// One card, one colour. Yellow beats orange beats red beats green, so a mark he
+// made himself is never painted over by a mark the page made for him.
+// 10.10: star and standby are one mark now, לחזור לזה, and green is gone.
+function ansColor(m){
+ if(isBack(m))return 'back';
+ if(isFresh(m))return 'fresh';
+ return '';
+}
+function isBack(m){return isStar(m)||isStandby(m);}
+function toggleBack(m){
+ if(isBack(m)){if(isStar(m))toggleStar(m);if(isStandby(m))toggleStandby(m);}
+ else{markOneSeen(m);toggleStandby(m);}
+}
+function isDone(m){return touchedIds().indexOf(claudeKey(m))>-1;}
+function unDone(m){
+ try{
+  var t=touchedIds(),k=claudeKey(m),i=t.indexOf(k);
+  if(i>-1){t.splice(i,1);localStorage.setItem('chatTouched',JSON.stringify(t));}
+ }catch(e){}
+}
+// One list, two sources. Itzik asked on 16.9 for everything Codex answered and
+// everything I answered in a single cluster instead of a fold on the home
+// screen and a screen at the foot of the app. The cards carry who said it.
+/*
+  Everything I produce, in one list, behind one button.
+
+  Itzik, 17.9: "I do not see your report in the monitor, where exactly does it
+  appear, in answers or in reports. Cancel all of it, I want only one button."
+  He was right to ask, because the answer was both: the short message went to
+  the chat and the full report to a separate screen behind a separate tile, so
+  finding out what happened meant knowing which of two places to look in, and
+  the honest answer to "where is it" was "depends".
+
+  There is one place now. A report is an answer that happens to have a title,
+  and it sorts into the same list by time with everything else. The search box
+  and the filter chips above already cover the whole list, so a report is
+  findable by a word in it rather than by remembering which screen it lives on.
+*/
+/*
+  ansCounts and ansList each used to rebuild and resort the whole merged list
+  from scratch, so one tap on the answers screen paid for the merge twice
+  before either the chip count or the card list could draw. Kept here and
+  reused instead - but D.chat/D.codex/D.reports arrive piecemeal (the head
+  first, then each one lazy-loaded in over the network), so the cache has to
+  drop the moment one of them actually grows, not just once forever.
+*/
+var _allAnswersCache=null,_allAnswersSig=null;
+function allAnswers(){
+ var sig=(D.chat?D.chat.length:0)+'|'+(D.codex?D.codex.length:0)+'|'+(D.reports?D.reports.length:0);
+ if(_allAnswersCache&&_allAnswersSig===sig)return _allAnswersCache;
+ _allAnswersSig=sig;
+ _allAnswersCache=allAnswersUncached();
+ return _allAnswersCache;
+}
+function allAnswersUncached(){
+ // 17.9: "three doors to the same room". His own messages were only in the
+ // chat, my answers only here, so neither screen was the conversation. They
+ // are one list now, his side included, sorted by time like everything else.
+ /*
+   His message and the answer to it are one card.
+
+   Itzik, 20.9: "put the answers and what came in on the same line". They were
+   two rows sorted by time, so reading one exchange meant finding his message,
+   then scrolling to wherever my answer had landed, sometimes past everything
+   that arrived in between. An answer carries the id of the message it answers,
+   so it can show that message above itself and the pair reads in one place.
+   A message of his with no answer yet stays a card of its own, which is the
+   one thing the list must never hide.
+ */
+ var byId={};
+ (D.chat||[]).forEach(function(m){if(m.from==='itzik'&&m.id)byId[m.id]=m;});
+ var answered={};
+ var mine=(D.chat||[]).filter(function(m){return m.from==='claude'&&!isMail(m);})
+  .map(function(m){
+   var q=(m.re&&byId[m.re])||null;
+   if(q)answered[m.re]=true;
+   return {at:m.at,text:m.text,src:'claude',q:q,re:m.re};
+  });
+ var his=(D.chat||[]).filter(function(m){return m.from==='itzik'&&!answered[m.id];})
+  .map(function(m){return {at:m.at,text:m.text,src:'itzik',note:m.note,status:m.status};});
+ var cdx=(D.codex||[]).filter(function(m){return m.from==='codex';})
+  .map(function(m){return {at:m.at,text:m.text,src:'codex'};});
+ var rps=(D.reports||[]).map(function(r){
+  return {at:r.at,text:(r.title||'')+String.fromCharCode(10)+(r.body||''),src:'report'};
+ });
+ return his.concat(mine).concat(cdx).concat(rps).sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
+}
+/*
+  A report is a title until he asks for the rest.
+
+  Putting the reports in with the answers was right: he asked where a report
+  lives and the honest answer had been "one of two screens, depending". But
+  dropping a thousand word round summary in among one line replies turned the
+  screen into what he called a salad, and a list nobody can skim is not one
+  button, it is one heap.
+
+  So a report shows its first line and nothing else until it is opened. The
+  body is in the page either way, so search still finds a word inside a report
+  that is folded shut.
+*/
+function ansReport(m){
+ var t=String(m.text||'');
+ var cut=t.indexOf(String.fromCharCode(10));
+ var title=cut<0?t:t.slice(0,cut);
+ var body=cut<0?'':t.slice(cut+1).trim();
+ if(!body)return '<div class="atxt">'+linkify(title)+'</div>';
+ return '<details class="arep"><summary>'+esc(title)+'</summary>'
+  +'<div class="atxt">'+linkify(body)+'</div></details>';
+}
+function ansWho(m){var k=m&&m.src;return k==='codex'?'קודקס':k==='report'?'דוח':k==='itzik'?'אתה':AI;}
+// Codex answers never had a read mark of their own, so the chat's cut carries
+// them: anything older than the last thing he read counts as read. With no cut
+// at all the window is three days, otherwise a first open would light up forty
+// four old answers as if they had just arrived.
+function codexFresh(){
+ var seen=seenIds();
+ var cut=chatSeen()||new Date(Date.now()-3*864e5).toISOString();
+ if((D.resetSeenAt||'')>cut)cut=D.resetSeenAt;
+ return (D.codex||[]).filter(function(m){
+  if(m.from!=='codex')return false;
+  if(seen.indexOf(claudeKey(m))>-1)return false;
+  if((m.at||'')<=cut)return false;
+  return true;
+ });
+}
+/*
+  ansCounts and every card in renderAnswers ask isFresh one message at a
+  time, and this used to rebuild unreadList+codexFresh - a full pass over
+  D.chat and D.codex each - from scratch for every single one of them. On a
+  history of any real size that turned one tap into hundreds of full passes
+  before the tapped button could even repaint, which is what read on his
+  phone as the buttons being stuck. Built once per read state and reused.
+*/
+var _ansFreshCache=null;
+function ansFreshSig(){
+ var rawSeen;
+ try{rawSeen=localStorage.getItem('chatSeenIds')||'';}catch(e){rawSeen='';}
+ return rawSeen+'|'+chatSeen()+'|'+(D.resetSeenAt||'')
+  +'|'+(D.chat?D.chat.length:0)+'|'+(D.codex?D.codex.length:0);
+}
+function ansFreshKeys(){
+ var sig=ansFreshSig();
+ if(_ansFreshCache&&_ansFreshCache.sig===sig)return _ansFreshCache.keys;
+ var k=unreadList().map(claudeKey).concat(codexFresh().map(claudeKey));
+ var keys=new Set(k);
+ _ansFreshCache={sig:sig,keys:keys};
+ return keys;
+}
+function isFresh(m){if(m&&m.src==='itzik')return false;return ansFreshKeys().has(claudeKey(m));}
+// Cleared off the screen: before the archive stamp, not among the ten newest
+// of those, and nothing about it still asks for him. Times are compared as
+// instants, since chat stamps carry +03:00 and the stamp is local time.
+var ARCHIVE_KEEP=10,_archCache=null,_archSig='';
+function archivedSet(){
+ var cut=D.archiveBefore||'',all=allAnswers();
+ var sig=cut+'|'+_allAnswersSig;
+ if(_archCache&&_archSig===sig)return _archCache;
+ var set=new Set();
+ if(cut){
+  var c=new Date(cut),kept=0;
+  all.forEach(function(m){
+   if(!m.at||new Date(m.at)>=c)return;
+   if(kept<ARCHIVE_KEEP){kept++;return;}
+   set.add(m);
+  });
+ }
+ _archSig=sig;_archCache=set;
+ return set;
+}
+function isArchived(m){
+ if(!archivedSet().has(m))return false;
+ return !(m.src==='itzik'||isStandby(m)||isStar(m));
+}
+function liveAnswers(){return allAnswers().filter(function(m){return !isArchived(m);});}
+function ansCounts(){
+ var a=liveAnswers();
+ return {all:a.length,
+  fresh:a.filter(isFresh).length,
+  star:a.filter(isStar).length,
+  standby:a.filter(isStandby).length,
+  back:a.filter(isBack).length,
+  done:a.filter(function(m){return isDone(m)&&!isFresh(m)&&!isStandby(m)&&!isStar(m);}).length};
+}
+function ansList(){
+ var a=liveAnswers();
+ if(ansFilter==='fresh')a=a.filter(function(m){return isFresh(m)||ansKeep[claudeKey(m)];});
+ if(ansFilter==='back')a=a.filter(isBack);
+ if(ansFilter==='star')a=a.filter(isStar);
+ if(ansFilter==='standby')a=a.filter(isStandby);
+ if(ansFilter==='done')a=a.filter(function(m){return isDone(m)&&!isFresh(m)&&!isStandby(m)&&!isStar(m);});
+ if(ansQ){
+  var q=ansQ.toLowerCase();
+  // The question folded into a card is searchable text too, otherwise a word
+  // he wrote himself stopped finding the exchange it opened.
+  a=a.filter(function(m){
+   var t=String(m.text||'');
+   if(m.q)t+=' '+String(m.q.text||'')+' '+String(m.q.note||'');
+   return t.toLowerCase().indexOf(q)>-1;
+  });
+ }
+ return a;
+}
+function ansCopy(btn,text){
+ var done=function(){var o=btn.textContent;btn.textContent='הועתק';
+  setTimeout(function(){btn.textContent=o;},1500);};
+ if(navigator.clipboard&&navigator.clipboard.writeText){
+  navigator.clipboard.writeText(text).then(done,function(){fallbackCopy(text,done);});
+ }else fallbackCopy(text,done);
+}
+function ansTipDone(){try{return localStorage.getItem('ansTipDone')==='1';}catch(e){return false;}}
+function closeAnsTip(){try{localStorage.setItem('ansTipDone','1');}catch(e){}paintAnsTip();}
+function paintAnsTip(){
+ var t=document.getElementById('aTip');if(!t)return;
+ t.hidden=ansTipDone();
+ var ok=document.getElementById('aTipOk');if(ok)ok.onclick=closeAnsTip;
+}
+function renderAnswers(){
+ var chips=document.getElementById('aChips');
+ var host=document.getElementById('ansBox');
+ if(!chips||!host)return;
+ paintAnsTip();
+ var c=ansCounts();
+ var defs=[['all','הכל',c.all],['fresh','לא נקראו',c.fresh],['back','לחזור לזה',c.back]];
+ chips.innerHTML=defs.map(function(d){
+  return '<button type="button" class="achip'+(ansFilter===d[0]?' on':'')
+   +'" data-f="'+d[0]+'">'+d[1]+' <b>'+d[2]+'</b></button>';
+ }).join('');
+ Array.prototype.forEach.call(chips.querySelectorAll('.achip'),function(b){
+  b.onclick=function(){ansAuto=false;ansFilter=b.getAttribute('data-f');ansShow=30;renderAnswers();};
+ });
+ // The chat tab used to hold "קראתי את הישנות", and it was the only way to put the red
+ // count back to zero in one move. The tab is gone, so the button lives here.
+ if(c.fresh){
+  var all=document.createElement('button');
+  all.type='button';all.className='achip allread';all.textContent='סימון הכל כנקרא';
+  all.onclick=function(){markAllRead();renderAnswers();};
+  chips.appendChild(all);
+ }
+ var full=ansList();
+ var list=full.slice(0,ansShow);
+ if(!full.length){
+  /*
+    An empty screen has to say which empty it is.
+
+    "אין כאן כלום בסינון הזה" is true only when there is something here and
+    the filter hides it. With the gate on the page ships with no data at all,
+    so a data file that fails to arrive leaves this screen genuinely empty,
+    and the old line then blamed a filter he never touched. Whichever it is,
+    he gets the reason and a way out of it.
+  */
+  if(!allAnswers().length){
+   host.innerHTML='<div class="aempty">התשובות עוד לא נטענו.'
+    +'<button type="button" class="ab" id="ansRetry">טעינה מחדש</button></div>';
+   var rb=document.getElementById('ansRetry');
+   if(rb)rb.onclick=function(){
+    lazyDone={};lazyWait={};
+    ensure(['chat','codex','reports'],function(){renderAnswers();paintAnsCount();});
+    toast('מנסה לטעון שוב.');
+   };
+   return;
+  }
+  host.innerHTML='<div class="aempty">אין כאן כלום בסינון הזה.</div>';
+  return;
+ }
+ host.innerHTML=list.map(function(m,i){
+  var fresh=isFresh(m),bk=isBack(m);
+  var his=m.src==='itzik';
+  var mark=his?(m.status==='done'?' · בוצע':(m.status==='working'?' · בעבודה':''))
+   :(bk?' · לחזור לזה':(fresh?' · <em class="badge">חדש</em>':''));
+  // The question sits at the top of the card that answers it. For a recording
+  // the text is only the name of the file, so the transcript is what is shown.
+  var ask='';
+  if(m.q){
+   var qt=String(m.q.text||'');
+   var qn=String(m.q.note||'').replace(/^תמלול:\s*/,'');
+   if(qn&&/הודעה קולית|voice-/.test(qt))qt=qn;
+   else if(qn)qt=qt+String.fromCharCode(10)+qn;
+   /*
+     20.9, second time he asked: "the answers and what came in on the same
+     line, to save space". The question used to be a block of its own, its
+     byline on one row and its text under it, so every pair cost four lines
+     before the answer started. Now the byline and the message share one row,
+     the message clipped to what fits, and the rest is a tap away. A pair that
+     used to run a screen and a half fits on a phone without scrolling.
+   */
+   var one=qt.replace(/\s+/g,' ').trim();
+   var qb=one.length>45
+    ?'<details class="qfold"><summary>'+esc(one)+'</summary>'
+     +'<div class="atxt">'+linkify(qt)+'</div></details>'
+    :'<span class="qline">'+linkify(one)+'</span>';
+   var qau=/^ *תמלול:/.test(String(m.q.note||''))?'':voiceAudio(m.q);
+   ask='<div class="aq"><span class="w">אתה · '+esc(stamp(m.q.at))+'</span>'+qb+qau+'</div>';
+  }
+  return '<div class="ansc'+(his?' mine':' '+ansColor(m))+(m.q?' pair':'')+'" data-i="'+i+'">'
+   +ask
+   +'<span class="w">'+ansWho(m)+' · '+esc(stamp(m.at))+mark+'</span>'
+   +(m.src==='report'?ansReport(m):'<div class="atxt">'+linkify(m.text)+'</div>')
+   +screenLinks(m.text)
+   +goLinks(m)
+   +'<div class="arow">'
+   +(m.src!=='claude'?'':'<button type="button" class="ab aimb" data-k="'+esc(claudeKey(m))+'">להשיב</button>')
+   +'<button type="button" class="ab acopy" data-i="'+i+'">העתקה</button>'
+   +(his?'':'<button type="button" class="ab aback'+(bk?' on':'')+'" data-i="'+i+'">'
+   +(bk?'● לחזור לזה':'לחזור לזה')+'</button>')
+   +'</div>'
+   +(his?'':replyBox('בקשר לתשובה מ'+ansWho(m)+' מ'+stamp(m.at)))
+   +'<span class="asaid" data-i="'+i+'"></span>'
+   +'</div>';
+ }).join('');
+ var at=function(b){return list[Number(b.getAttribute('data-i'))];};
+ Array.prototype.forEach.call(host.querySelectorAll('.acopy'),function(b){
+  b.onclick=function(e){e.stopPropagation();
+   var m=at(b);
+   var NL=String.fromCharCode(10);
+   // Copying a pair copies the pair. Half an exchange pasted into a mail is
+   // an answer to a question nobody can see.
+   var head=m.q?('אתה · '+stamp(m.q.at)+NL+(m.q.note||m.q.text||'')+NL+NL):'';
+   ansCopy(b,head+ansWho(m)+' · '+stamp(m.at)+NL+(m.text||''));};
+ });
+ Array.prototype.forEach.call(host.querySelectorAll('.aback'),function(b){
+  b.onclick=function(e){e.stopPropagation();toggleBack(at(b));renderAnswers();paintDot();renderNew();};
+ });
+ watchSeen(host,list);
+ // "The moment I touch them they are green." A touch anywhere on the card that
+ // is not a button, a link or a field marks it read.
+ Array.prototype.forEach.call(host.querySelectorAll('.ansc'),function(card){
+  if(card.className.indexOf('mine')>-1)return;
+  card.addEventListener('click',function(e){
+   var t=e.target;
+   while(t&&t!==card){
+    var n=(t.tagName||'').toLowerCase();
+    if(n==='button'||n==='a'||n==='input'||n==='textarea'||n==='label'||n==='select')return;
+    t=t.parentNode;
+   }
+   var sel=window.getSelection&&window.getSelection();
+   if(sel&&String(sel).length>2)return;
+   var m=list[Number(card.getAttribute('data-i'))];
+   if(!m)return;
+   /*
+     18.9, and he has said it more than once: "your answers do not turn colour
+     when I touch them." The guard here used to be !isFresh(m), so a card that
+     had stopped being new did nothing at all when he tapped it. It could not
+     go green, because the only path to green ran through fresh. Every answer
+     he came back to a second time was a dead card.
+     Touching means green. Already green stays green; the טופל button is the
+     only way back.
+   */
+   // A starred or parked card outranks green in ansColor, so the colour
+   // cannot move and the ring is the only thing that answers his finger.
+   ansKeep[claudeKey(m)]=1;
+   if(!ansTipDone())closeAnsTip();
+   if(isDone(m)&&!isFresh(m)){ringFor(card);return;}
+   markOneSeen(m);renderAnswers();paintDot();renderNew();
+   var again=host.querySelector('.ansc[data-i="'+card.getAttribute('data-i')+'"]');
+   if(again)ringFor(again);
+  });
+ });
+ // לחיצה על לפתוח הולכת ישר לשם, במקום שיחפש מתחת לאיזה כפתור זה יושב.
+ Array.prototype.forEach.call(host.querySelectorAll('.goscreen'),function(b){
+  b.onclick=function(e){e.stopPropagation();
+   var k=paneOf(b.getAttribute('data-screen')||'');
+   if(k)pane(k);
+  };
+ });
+ if(full.length>list.length){
+  var more=document.createElement('button');
+  more.type='button';more.className='ab';more.style.width='100%';more.style.padding='14px';
+  more.textContent='להציג עוד ('+(full.length-list.length)+')';
+  more.onclick=function(){ansShow+=30;renderAnswers();};
+  host.appendChild(more);
+ }
+ wireBoxes(host);
+ wireAim(host);paintAim();
+}
+/*
+  10.10: an answer he has seen counts as read by itself. A red card that stays
+  at least half on screen for a second and a half loses its red in place,
+  without a repaint, so the list does not jump under his thumb. ansKeep holds
+  it in the לא נקראו filter until he leaves, same as a touch.
+*/
+var _seenObs=null;
+function watchSeen(host,list){
+ if(_seenObs){_seenObs.disconnect();_seenObs=null;}
+ if(typeof IntersectionObserver!=='function')return;
+ var timers={};
+ _seenObs=new IntersectionObserver(function(es){
+  es.forEach(function(e){
+   var card=e.target,i=card.getAttribute('data-i');
+   if(e.isIntersecting&&e.intersectionRatio>=0.5){
+    if(timers[i])return;
+    timers[i]=setTimeout(function(){
+     var m=list[Number(i)];
+     if(!m||!card.isConnected||!card.classList.contains('fresh'))return;
+     ansKeep[claudeKey(m)]=1;
+     markOneSeen(m);
+     card.classList.remove('fresh');
+     var bd=card.querySelector('.w .badge');
+     if(bd){var pv=bd.previousSibling;if(pv&&pv.nodeType===3)pv.nodeValue=pv.nodeValue.replace(/ · $/,'');bd.remove();}
+     if(_seenObs)_seenObs.unobserve(card);
+     paintAnsCount();renderNew();
+    },1500);
+   }else if(timers[i]){clearTimeout(timers[i]);delete timers[i];}
+  });
+ },{threshold:[0,0.5]});
+ Array.prototype.forEach.call(host.querySelectorAll('.ansc.fresh'),function(c){_seenObs.observe(c);});
+}
+// ---- what was received: his messages by state, and what is in work ----
+function nowFresh(){
+ var n=D.now;
+ return (n&&n.at&&(Date.now()-Date.parse(n.at))<25*60*1000)?n:null;
+}
+function gotList(){
+ return (D.chat||[]).filter(function(m){return m.from==='itzik';})
+  .slice().sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
+}
+function gotOpen(m){return !m.status||m.status==='received'||m.status==='working';}
+var gotShow=30;
+/*
+  מחיקה ידנית של בקשות ישנות. איציק, 16.9 בלילה: על המסך ישבה שורה מ-10.9
+  שאומרת "עובד על הבקשות שלך", והוא ביקש כפתור שיוריד ממנו שורות כאלה בעצמו.
+
+  המחיקה היא במכשיר שלו בלבד, ב-localStorage, כי הדף סטטי ואין לו כתיבה
+  לקבצים. לכן היא גם שקטה: לא נשלחת שום הודעה ולא נוגעת במכסת ההתראות,
+  ומה שנמחק חוזר בלחיצה אחת כל עוד לא ניקה את הדפדפן.
+*/
+function goneKeys(){
+ return idList('gotGone');
+}
+function saveGone(a){
+ try{localStorage.setItem('gotGone',JSON.stringify(a.slice(-2000)));}catch(e){}
+}
+function gotKey(kind,x){
+ return kind+'|'+String(x.id||x.at||'')+'|'+String(x.text||'').replace(/\s+/g,' ').trim().slice(0,40);
+}
+/*
+  Itzik, 23.9 15:28: "בכפתור מה התקבל אין מחיקה כללית, איך נפטרים מכל
+  ההודעות?". One press clears the whole screen. It stores a moment rather than
+  a key per row: the per row list keeps only the last 400, and he has sent more
+  than that, so a list of keys would have let the oldest ones creep back.
+  Anything sent after the press shows up as usual.
+*/
+function gotCut(){
+ try{return Number(localStorage.getItem('gotCut'))||0;}catch(e){return 0;}
+}
+function saveCut(t){
+ try{if(t)localStorage.setItem('gotCut',String(t));else localStorage.removeItem('gotCut');}catch(e){}
+}
+function beforeCut(x){
+ var c=gotCut();
+ if(!c)return false;
+ var t=Date.parse(x&&x.at||'');
+ return !isNaN(t)&&t<=c;
+}
+function isGone(k,x){return goneKeys().indexOf(k)>-1||beforeCut(x);}
+function dropGone(kind,list){
+ var g=goneKeys();
+ return list.filter(function(x){return g.indexOf(gotKey(kind,x))<0&&!beforeCut(x);});
+}
+/*
+  Itzik, 4.10, three times in one morning: "כפתור מה התקבל לא עובד", and the
+  last time "תבדוק מהיסוד". The root: every send ends with an envelope flying
+  into this very button, he taps it, and the message he just sent is not there.
+  The screen only knew what the server had published, and that lands a minute
+  or two after the send. So what this device sent and the server has not shown
+  yet is listed here at once, as on its way, and drops out by itself when the
+  real row arrives. Paired by time, oldest first, since the published message
+  does not carry the device's id.
+*/
+function gotPending(){
+ var now=Date.now(),SKEW=120000;
+ var mine=reqLog().filter(function(r){
+  var t=Date.parse(r&&r.at||'');
+  return r&&r.kind!=='mail'&&!isNaN(t)&&now-t<60*60*1000;
+ }).sort(function(a,b){return (a.at||'')<(b.at||'')?-1:1;});
+ if(!mine.length)return [];
+ var from=Date.parse(mine[0].at)-SKEW;
+ var pub=(D.chat||[]).filter(function(m){return m.from==='itzik';})
+  .map(function(m){return Date.parse(m.at||'');})
+  .filter(function(t){return !isNaN(t)&&t>=from;})
+  .sort(function(a,b){return a-b;});
+ var used={},out=[];
+ mine.forEach(function(r){
+  var t=Date.parse(r.at)-SKEW,hit=-1;
+  for(var i=0;i<pub.length;i++)if(!used[i]&&pub[i]>=t){hit=i;break;}
+  if(hit<0)out.push(r);else used[hit]=true;
+ });
+ return out.reverse();
+}
+function paintGot(){
+ var el=document.getElementById('gotCount');
+ if(!el)return;
+ var n=dropGone('msg',gotList().filter(gotOpen)).length
+  +gotPending().length
+  +dropGone('cmd',D.openCmds||[]).length;
+ el.textContent=String(n);
+ el.classList.toggle('zero',!n);
+}
+/*
+  Itzik, 27.9: "שום דבר לא ממוספר" and a list he can mark and delete in one go,
+  "גם אם זה 200 הודעות". Every message of his gets a fixed number, oldest is 1,
+  so a number means the same message on every screen and every day. Marking is
+  a tap on the row; the bar on top deletes all marked rows at once, through the
+  same on-device list the single delete already used.
+*/
+var gotSel={};
+function gotNumbers(){
+ var L=(D.chat||[]).filter(function(m){return m.from==='itzik';})
+  .slice().sort(function(a,b){return (a.at||'')<(b.at||'')?-1:1;});
+ var map={};L.forEach(function(m,i){map[gotKey('msg',m)]=i+1;});
+ return map;
+}
+/*
+  Itzik, 8.10, from the reviewer: "מחיקה" on a row only hid it on this phone and
+  the work went on, so whoever deleted a request believed she had cancelled it.
+  Now hiding is called hiding, and a request still open has its own
+  "ביטול הבקשה": two taps, and it goes to the server, which closes the request
+  so no session picks it up. The phone remembers what it cancelled so the row
+  says so at once, before the server's copy comes back.
+*/
+function cancelIds(){return idList('reqCancelled');}
+function isCancelled(m){return !!(m&&(m.cancelled||(m.id&&cancelIds().indexOf(m.id)>-1)));}
+function sendCancel(m){
+ var a=cancelIds();if(a.indexOf(m.id)<0)a.push(m.id);
+ try{localStorage.setItem('reqCancelled',JSON.stringify(a.slice(-500)));}catch(e){}
+ sendOrHold('ביטול בקשה',m.id+String.fromCharCode(10)+String(m.text||'').slice(0,80).split(String.fromCharCode(10)).join(' '),'req-cancel')
+  .then(function(r){toast(r==='held'?HELD_SAY:'הבקשה בוטלה. היא לא תטופל.');});
+}
+function renderGot(){
+ var host=document.getElementById('gotBox');
+ if(!host)return;
+ paintTips();
+ var all=dropGone('msg',gotList());
+ var NUM=gotNumbers();
+ var work=all.filter(function(m){return m.status==='working';});
+ var got=all.filter(function(m){return !m.status||m.status==='received';});
+ var done=all.filter(function(m){return m.status==='done';});
+ var K=dropGone('cmd',D.openCmds||[]);
+ /*
+   Itzik, 4.10, voice: "למה כפתור מה התקבל הכחול לא עובד?". The screen opened,
+   and under its "in work now" heading sat a report from 02.10 as if it were being
+   done right now. A report goes stale; the same 25 minutes the live strip uses
+   decide here too whether it is still "now".
+ */
+ var N=nowFresh();
+ var nGone=N&&N.text&&isGone(gotKey('now',{at:N.at,text:N.text}),N);
+ function del(kind,x){
+  return '<button type="button" class="gr-del" data-k="'+esc(gotKey(kind,x))+'" '
+   +'aria-label="הסתרת השורה מהמסך">הסתרה</button>';
+ }
+ /*
+   Itzik, 20.9 23:15, on his own message asking for the followers total:
+   "למה אין לי אפשרות העתקה?". Every other screen that shows words carries a
+   copy button next to them, the chat bubbles and the answer cards both, and
+   this screen, the one that lists the messages he sent me, carried only a
+   delete. So the one place he goes to find a thing he wrote was the one place
+   he could not take it out of.
+ */
+ function cpBtn(txt){
+  return '<button type="button" class="gr-cp" data-copy="'+esc(txt)+'" '
+   +'aria-label="העתקת השורה">העתקה</button>';
+ }
+ // A voice message stores the file name as its text, so what gets copied is
+ // the words, the same as in the chat.
+ function cpText(m,extra){
+  var NL=String.fromCharCode(10);
+  var t=String(m.text||'');
+  var n=String(m.note||'').replace(/^תמלול:\s*/,'');
+  if(n&&/הודעה קולית|voice-/.test(t))t=n;
+  else if(n)t=t+NL+n;
+  return stamp(m.at)+NL+t+(extra?NL+extra:'');
+ }
+ function tail(kind,m,extra){
+  var cx=(kind==='msg'&&m.id&&m.status!=='done'&&!isCancelled(m))
+   ?'<button type="button" class="gr-cx" data-id="'+esc(m.id)+'">ביטול הבקשה</button>':'';
+  return '<span class="gr-b">'+cpBtn(cpText(m,extra))+cx+del(kind,m)+'</span>';
+ }
+ function row(m,k,label,kind){
+  // מד ההתקדמות יושב גם כאן, ליד כל בקשה שלו, ולא רק בצ׳אט.
+  var bar=(kind&&kind!=='msg')?'':progressBar(m);
+  var gk=gotKey(kind||'msg',m),no=(kind||'msg')==='msg'?NUM[gk]:0;
+  return '<div class="gr'+(gotSel[gk]?' sel':'')+'" data-sk="'+esc(gk)+'">'
+   +'<span class="gr-cb" aria-hidden="true"></span>'
+   +(no?'<span class="gr-n">#'+no+'</span>':'')
+   +'<span class="gr-t">'+esc(stamp(m.at))+'</span>'
+   +'<div class="gr-x">'+linkify(m.text||'')+bar+'</div>'
+   +(isCancelled(m)?'<span class="gr-s gr-c">בוטל</span>':'<span class="gr-s gr-'+k+'">'+label+'</span>')
+   +tail(kind||'msg',m)+'</div>';
+ }
+ /*
+   Itzik, 18.9: "אין מידע". He wanted the answers, opened this screen by
+   mistake, and its first three sections were empty, so the screen told him
+   nothing while eight unread answers sat one tab away. A screen that is not
+   what he was after has to say where the thing he was after is.
+ */
+ var h='';
+ var un=unreadCount();
+ if(un)h+='<button type="button" class="gjump" id="gotToAns">'
+  +(un===1?'תשובה אחת שלא קראת':un+' תשובות שלא קראת')
+  +'<small>זה המסך של ההודעות ששלחת לי. התשובות שלי נמצאות כאן, בלחיצה.</small></button>';
+ var nShown=all.length+K.length+(N&&N.text&&!nGone?1:0);
+ if(nShown)h+='<button type="button" class="gclear" id="gotClear">הסתר הכל · '+nShown
+  +'<small>מסתיר את כל השורות מהמסך הזה בלבד, בלי לבטל כלום. מה שתשלח מעכשיו יופיע כרגיל, ואפשר להחזיר הכל בסוף הדף.</small></button>';
+ var nSel=Object.keys(gotSel).length;
+ if(nShown)h+='<div class="gselbar"><button type="button" id="gotSelAll">'+(nSel?'ביטול הסימון':'סימון הכל')+'</button>'
+  +'<span>'+(nSel?nSel+' מסומנות':'לחיצה על שורה מסמנת אותה')+'</span>'
+  +'<button type="button" id="gotSelDel" class="gseldel"'+(nSel?'':' disabled')+'>הסתרת המסומנות'+(nSel?' · '+nSel:'')+'</button></div>';
+ var P=gotPending();
+ if(P.length){
+  h+='<h3>נשלח עכשיו, בדרך אליי · '+P.length+'</h3>';
+  h+=P.map(function(r){
+   return '<div class="gr"><span class="gr-t">'+esc(stamp(r.at))+'</span>'
+    +'<div class="gr-x">'+esc(r.text||('ה'+(SENTLABEL[r.kind]||'הודעה')+' ששלחת עכשיו'))
+    +'<small>יצא מהמכשיר. תוך דקה או שתיים יופיע כאן כהתקבל.</small></div>'
+    +'<span class="gr-s gr-g">בדרך</span></div>';
+  }).join('');
+ }
+ h+='<h3>בעבודה עכשיו</h3>';
+ if(N&&N.text&&!nGone)h+='<div class="gr now"><span class="gr-t">'+esc(stamp(N.at))+'</span>'
+  +'<div class="gr-x">'+esc(N.text)+(N.next?'<small>אחר כך: '+esc(N.next)+'</small>':'')+'</div>'
+  +'<span class="gr-s gr-w">דיווח</span>'
+  +tail('now',{at:N.at,text:N.text},N.next?'אחר כך: '+N.next:'')+'</div>';
+ h+=work.map(function(m){return row(m,'w','עובד על זה');}).join('');
+ if(!work.length&&!(N&&N.text&&!nGone))h+='<div class="gempty">אין הודעה שמסומנת בעבודה.</div>';
+ h+='<h3>התקבלו, עוד לא התחלתי · '+got.length+'</h3>';
+ h+=got.length?got.map(function(m){return row(m,'g','התקבל');}).join(''):'<div class="gempty">הכל נקרא והתחיל.</div>';
+ h+='<h3>משימות פתוחות ממך · '+K.length+'</h3>';
+ // Each line says who it is stuck on, so the list cannot quietly turn into a
+ // pile of things that look like they are all on me.
+ h+=K.length?K.map(function(c){
+  // No internal tool names on a line a customer reads: a task with Codex is just in progress.
+  var w=c.who==='itzik'?['y','ממתין לך']:c.who==='codex'?['g','בטיפול']:['g','אצלי'];
+  return row(c,w[0],w[1],'cmd');
+ }).join(''):'<div class="gempty">אין משימות פתוחות.</div>';
+ h+='<h3>בוצע · '+done.length+'</h3>';
+ h+=done.slice(0,gotShow).map(function(m){return row(m,'d','בוצע');}).join('');
+ if(done.length>gotShow)h+='<button type="button" class="ab" id="gotMore" style="width:100%;padding:14px">להציג עוד ('+(done.length-gotShow)+')</button>';
+ var gn=goneKeys().length;
+ if(gotCut())h+='<div class="gback">המסך הוסתר ב '+esc(stamp(new Date(gotCut()).toISOString()))+'. '
+  +'<button type="button" id="gotBack">להחזיר הכל</button></div>';
+ else if(gn)h+='<div class="gback">הוסתרו מהמסך הזה '+gn+' שורות. '
+  +'<button type="button" id="gotBack">להחזיר הכל</button></div>';
+ host.innerHTML=h;
+ var ja=document.getElementById('gotToAns');
+ if(ja)ja.onclick=function(){openAnswers('fresh',true);};
+ var mb=document.getElementById('gotMore');
+ if(mb)mb.onclick=function(){gotShow+=30;renderGot();};
+ var bb=document.getElementById('gotBack');
+ if(bb)bb.onclick=function(){saveGone([]);saveCut(0);renderGot();paintGot();toast('השורות חזרו.');};
+ var gc=document.getElementById('gotClear');
+ if(gc)gc.onclick=function(){
+  saveCut(Date.now());saveGone([]);
+  renderGot();paintGot();
+  toast('השורות הוסתרו. אפשר להחזיר בסוף הדף.');
+ };
+ Array.prototype.forEach.call(host.querySelectorAll('.gr[data-sk]'),function(r){
+  r.addEventListener('click',function(e){
+   if(e.target.closest('button,a,textarea,input'))return;
+   var k=r.getAttribute('data-sk');
+   if(gotSel[k])delete gotSel[k];else gotSel[k]=1;
+   renderGot();
+  });
+ });
+ var sa=document.getElementById('gotSelAll');
+ if(sa)sa.onclick=function(){
+  if(Object.keys(gotSel).length){gotSel={};}
+  else{gotShow=100000;renderGot();Array.prototype.forEach.call(host.querySelectorAll('.gr[data-sk]'),function(r){gotSel[r.getAttribute('data-sk')]=1;});}
+  renderGot();
+ };
+ var sd=document.getElementById('gotSelDel');
+ if(sd)sd.onclick=function(){
+  var ks=Object.keys(gotSel);if(!ks.length)return;
+  var g=goneKeys();ks.forEach(function(k){if(g.indexOf(k)<0)g.push(k);});
+  saveGone(g);gotSel={};
+  renderGot();paintGot();
+  toast('הוסתרו '+ks.length+' שורות. אפשר להחזיר בסוף הדף.');
+ };
+ Array.prototype.forEach.call(host.querySelectorAll('.gr-cp'),function(b){
+  b.onclick=function(e){e.stopPropagation();ansCopy(b,b.getAttribute('data-copy')||'');};
+ });
+ Array.prototype.forEach.call(host.querySelectorAll('.gr-del'),function(b){
+  b.onclick=function(){
+   var k=b.getAttribute('data-k')||'';
+   var g=goneKeys();
+   if(g.indexOf(k)<0)g.push(k);
+   saveGone(g);
+   renderGot();paintGot();
+   toast('הוסתר מהמסך, העבודה ממשיכה. אפשר להחזיר בסוף הדף.');
+  };
+ });
+ Array.prototype.forEach.call(host.querySelectorAll('.gr-cx'),function(b){
+  b.onclick=function(e){
+   e.stopPropagation();
+   if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent='לבטל באמת?';
+    setTimeout(function(){b.classList.remove('sure');b.textContent='ביטול הבקשה';},4000);return;}
+   var id=b.getAttribute('data-id');
+   var m=(D.chat||[]).filter(function(x){return x.id===id;})[0]||{id:id};
+   sendCancel(m);renderGot();
+  };
+ });
+}
+/*
+  Itzik, 20.9 19:27: "שוב אתה לא מעדכן את הכפתורים. תשובות". Two buttons for
+  the same thing said two different numbers on his screen at the same moment:
+  the red one 307, the tab at the foot 111. Both were painted from the same
+  call, and they disagreed because they counted different sets. ansFreshKeys
+  can only see the answers this page is holding, and the whole collection is
+  not fetched until a screen asks for it, so the tab sat on the head slice
+  until he happened to open the answers. The red button counts the window
+  itself and was right the whole time.
+
+  One number now, unreadCount, the one the red button shows. A second counter
+  of the same thing is not a second opinion, it is a button that looks broken.
+*/
+function paintAnsCount(){
+ var el=document.getElementById('aCnt');
+ if(!el)return;
+ var n=unreadCount();
+ el.textContent=n?String(n):'✓';
+ el.classList.toggle('zero',!n);
+}
+// Every inner screen gets a way back and its own address. He asked for both:
+// a link that opens the screen I am talking about, and a way out of it.
+/*
+  Names for the screens he can be sent straight to.
+
+  Itzik, 18.9, twice in a row: "where is the list, where are you sending me?"
+  I had told him to find a tile in a grid, on a home screen that is taller than
+  his phone, on a page he had not refreshed since before the screen existed. A
+  link he taps is not a nicety here, it is the difference between a thing that
+  exists and a thing he can reach.
+*/
+var PANENAME={x:'pegasus',y:'special',w:'improve',r:'reports',a:'answers',m:'chat',k:'replies',b:'got',c:'block',j:'drains',V:'voices',R:'reminders',X:'visits'};
+function paneOf(name){
+ for(var k in PANENAME){if(PANENAME[k]===name)return k;}
+ return PANES[name]?name:'';
+}
+function backBar(sec){
+ if(sec.id==='pH')return;
+ if(sec.querySelector(':scope > .backbar'))return;
+ var b=document.createElement('button');
+ b.type='button';b.className='backbar';b.textContent='סגירה וחזרה לבית';
+ // Itzik, 8.10: out of an open note, back goes to the notes list (navBack does it).
+ b.onclick=function(){
+  navBack();
+ };
+ sec.insertBefore(b,sec.firstChild);
+}
+/*
+  A way to answer, on every screen, without going anywhere first.
+
+  Itzik, 19.9, with a screenshot of the recordings screen: "always give me an
+  option to reply." That screen had a refresh button and a way out and nothing
+  else, so anything he wanted to say about what was on it meant leaving the
+  screen, finding the chat, and typing it without the thing in front of him.
+
+  The bar is the same reply box the report cards carry, quoted with the name of
+  the screen it sits on, so what arrives here says what he was looking at. The
+  chat pane is the one screen that skips it: its whole body is a send form
+  already, and a second one under it is noise.
+*/
+function replyBar(sec){
+ if(sec.id==='pH'||sec.id==='pM')return;
+ // pL2 carries its own box, open at the top.
+ if(sec.id==='pL2')return;
+ if(sec.querySelector(':scope > .replybar'))return;
+ var h=sec.querySelector('h2');
+ var name=h?String(h.textContent||'').trim():'';
+ // 26.9: folded to one line until opened, so it stops pushing the screen down.
+ var wrap=document.createElement('details');
+ wrap.className='replybar';
+ wrap.innerHTML='<summary><span aria-hidden="true">💬</span>יש לך מה להגיד על המסך הזה?</summary>'
+  +replyBox(name?('על המסך '+name):'על המסך הזה');
+ sec.appendChild(wrap);
+ try{wireBoxes(wrap);}catch(e){try{console.error('replyBar',e);}catch(_){}}
+}
+/*
+  The screen he lands on has to start at the top.
+
+  Itzik, 17.9: "I press the red button and I do not see the answers." They were
+  there the whole time. The home screen is taller than a phone, the red button
+  sits well down it, and switching panes only toggled the hidden flag: the window kept
+  the scroll position it had. So the answers screen opened already scrolled past
+  its own list, and on a phone that is a blank screen with the answers above the
+  fold he cannot see. On a desktop the page is short enough that it never shows,
+  which is why it took a phone to find it.
+
+  Only on a real change of pane. A soft refresh repaints without moving him, and
+  yanking him to the top mid read would be a worse bug than the one this fixes.
+*/
+function paneBar(w){
+ var bar=document.getElementById('paneBar');
+ if(!bar){
+  bar=document.createElement('div');bar.id='paneBar';bar.className='panebar';
+  bar.innerHTML='<button type="button" class="pb-back" id="pbBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>בית</button>'
+   +'<div class="pb-t" id="pbTitle"></div>'
+   +'<button type="button" class="pb-r" id="pbReload" aria-label="רענון"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg></button>';
+  var hd=document.querySelector('.hd');
+  if(hd&&hd.parentNode)hd.parentNode.insertBefore(bar,hd);else document.body.insertBefore(bar,document.body.firstChild);
+  document.getElementById('pbBack').onclick=function(){navBack();};
+  document.getElementById('pbReload').onclick=function(){window.reloadStay=panePrev;var r=document.getElementById('reloadBtn');if(r)r.click();};
+ }
+ var inner=(w!=='h');
+ document.body.classList.toggle('inner',inner);
+ if(inner){
+  var sec=document.getElementById(PANES[w]),h=sec&&sec.querySelector('h2');
+  document.getElementById('pbTitle').textContent=h?String(h.textContent||'').trim():'';
+ }
+}
+var panePrev='';
+/*
+  One step back, not home.
+
+  Itzik, 10.10, by voice: "every time I open a button, see the menu, go into
+  something in it and want to come out, it throws me to the main screen. I need
+  one back. It happens in the candle marketing and in lots of things. All the
+  buttons." Every way out of a screen went to pane('h'), and every menu sheet
+  closed itself before opening what was picked, so the menu was simply gone.
+
+  So screens keep a trail: each move pushes where he was, and back pops it. Home
+  clears the trail. Menus are handled once for all of them below the pane code.
+*/
+var navStack=[],navgoing=false;
+function navBack(){
+ // Itzik, 10.10: the top back button skipped the note check and threw him
+ // out of the notes screen from inside a note. Every back starts here now.
+ var ne=document.getElementById('noteEdit'),np=document.getElementById('pN2');
+ if(np&&!np.hidden&&ne&&!ne.hidden){closeNote();window.scrollTo(0,0);return;}
+ var e=navStack.pop();
+ if(!e){pane('h');return;}
+ navgoing=true;
+ try{pane(e.pane);}finally{navgoing=false;}
+ setTimeout(function(){
+  try{window.scrollTo(0,e.y||0);}catch(x){}
+  if(e.sheet&&!document.querySelector('.ysheet,.fview'))document.body.appendChild(e.sheet);
+ },60);
+}
+function navLabels(){
+ var back=navStack.length&&navStack[navStack.length-1].pane!=='h';
+ var pb=document.getElementById('pbBack');
+ if(pb&&pb.lastChild&&pb.lastChild.nodeType===3)pb.lastChild.nodeValue=back?'חזרה':'בית';
+ var bars=document.querySelectorAll('.backbar');
+ for(var i=0;i<bars.length;i++)bars[i].textContent=back?'חזרה אחורה':'סגירה וחזרה לבית';
+}
+function pane(w){
+ var moved=(panePrev!==w);
+ if(w==='h')navStack=[];
+ else if(moved&&!navgoing&&panePrev&&PANES[panePrev]){
+  navStack.push({pane:panePrev,y:window.pageYOffset||document.documentElement.scrollTop||0});
+  if(navStack.length>30)navStack.shift();
+ }
+ panePrev=w;
+ for(var k in PANES){
+  var sec=document.getElementById(PANES[k]);
+  sec.hidden=(k!==w);
+  if(k===w){backBar(sec);replyBar(sec);paintTips(sec);}
+ }
+ navLabels();
+ /*
+   A screen draws itself when it opens. No caller can forget.
+
+   Itzik, 18.9, on a screenshot of the answers screen with nothing on it at all,
+   not even the filter chips, while the button said 26: "the monitor still does
+   not update, thirty three minutes and I am waiting. Stop everything and put
+   it all on the monitor."
+
+   The chips and the cards are both painted by renderAnswers. Their absence
+   together means it never ran on his phone, not that it ran and found nothing,
+   because finding nothing still draws chips reading zero. Every route into a
+   pane used to be responsible for painting it, and a route that forgets leaves
+   a screen that is blank rather than empty, which is indistinguishable from
+   lost data.
+
+   So the pane paints itself, from here, whatever opened it. A second paint
+   costs a few milliseconds. A blank screen costs him his trust in the thing.
+ */
+ var PAINT={a:function(){renderAnswers();paintAnsCount();},b:renderGot,m:renderThread,
+  n:renderNet,r:render,p:renderPegasus,w:renderImprove,s:renderSpecial,
+  e:renderReplies,f:renderFood,j:renderDrains,c:renderBlock,
+  // 30.9: the bookkeeping screen sometimes opened blank. Its data loads late
+  // and only one route asked for it, so it is asked for here, by the pane.
+  v:function(){ensure('rivhit',renderRivhit);},o:function(){ensure('rivhit',renderRivhit);}};
+ if(PAINT[w]){try{PAINT[w]();}catch(e){try{console.error('pane paint '+w,e);}catch(_){}}}
+ // It lives above the header now, outside every pane, so nothing hides it but
+ // this line. On any screen other than home it would be a microphone following
+ // him around.
+ var talk=document.getElementById('talkCard');
+ if(talk)talk.hidden=(w!=='h');
+ paneBar(w);
+ if(moved){
+  try{window.scrollTo(0,0);}catch(e){}
+  try{document.documentElement.scrollTop=0;document.body.scrollTop=0;}catch(e){}
+ }
+ for(var n in NAVS){var nb=document.getElementById(NAVS[n]);if(nb)nb.setAttribute('aria-pressed',n===w);}
+ // The reports screen has no button left pointing at it, but a saved link can
+ // still open it, and it must not paint the head slice and call that the list.
+ if(w==='r')ensure('reports',function(){render();renderNextReport();});
+ // He asked twice for a way home from wherever he is. The bottom tab was
+ // always there, but the button he reaches for is at the top, next to the one
+ // that took him off the home screen in the first place.
+ var hb=document.getElementById('homeBtn');
+ if(hb)hb.hidden=(w==='h');
+ // הלך הביתה בעצמו: אין עוד לאן לחזור.
+ if(w==='h'&&goBack){goBack=null;var gbk=document.getElementById('goBack');if(gbk)gbk.hidden=true;}
+ // The hash is only an incoming address. Writing it on every move made the
+ // app reopen on an inner screen and feel like it jumped on its own.
+ try{
+  if(location.hash&&history&&history.replaceState)history.replaceState(null,'',location.pathname);
+ }catch(e){}
+ window.scrollTo(0,0);
+}
+/*
+  Menus remember themselves.
+
+  Every menu sheet closes before it opens what was picked, so closing the file,
+  the caption or the inner screen used to land him on home. This watches every
+  sheet from one place instead of touching twenty of them: a pick inside a
+  sheet keeps the sheet, and when whatever the pick opened goes away, the same
+  sheet comes back as it was. A link that leaves for Drive brings it back at
+  once, so it is there when he returns. A pick that opens an inner screen hands
+  the sheet to that screen's back step.
+*/
+var sheetExt=0;
+(function(){
+ var wo=window.open;
+ if(wo)window.open=function(){sheetExt=Date.now();return wo.apply(window,arguments);};
+})();
+function overlayOpen(not){
+ var l=document.querySelectorAll('.ysheet,.fview');
+ for(var i=0;i<l.length;i++)if(l[i]!==not)return l[i];
+ return null;
+}
+document.addEventListener('click',function(ev){
+ var t=ev.target;if(!t||!t.closest)return;
+ var sh=t.closest('.ysheet');if(!sh||t===sh)return;
+ var btn=t.closest('button,a');
+ if(!btn||btn.classList.contains('yx'))return;
+ if(btn.target==='_blank')sheetExt=Date.now();
+ var p0=panePrev,t0=Date.now();
+ setTimeout(function(){
+  if(sh.isConnected)return;
+  var ov=overlayOpen(sh);
+  if(ov){
+   new MutationObserver(function(_,mo){
+    if(ov.isConnected)return;
+    mo.disconnect();
+    if(!overlayOpen(null)&&panePrev===p0)document.body.appendChild(sh);
+   }).observe(document.body,{childList:true});
+  }else if(panePrev!==p0){
+   var top=navStack[navStack.length-1];
+   if(top&&top.pane===p0)top.sheet=sh;
+  }else if(sheetExt>=t0)document.body.appendChild(sh);
+ },0);
+},true);
+/*
+  The draft, kept across a reload.
+
+  רענון throws the page away and fetches it again, which is exactly what it is
+  for, and until now it also threw away whatever he had half written in the
+  composer. Nothing about a refresh should cost him a message, so the text is
+  put down before the page goes and picked up on the way back in.
+*/
+var DRAFT='msgDraft';
+function keepDraft(){
+ var box=document.getElementById('msgText');
+ if(!box)return;
+ try{
+  if(box.value&&box.value.trim())localStorage.setItem(DRAFT,box.value);
+  else localStorage.removeItem(DRAFT);
+ }catch(e){}
+}
+function restoreDraft(){
+ var box=document.getElementById('msgText');
+ if(!box)return;
+ try{
+  var d=localStorage.getItem(DRAFT);
+  // Only ever fills an empty box, so a restore can never overwrite something
+  // he has already started typing.
+  if(d&&!box.value)box.value=d;
+ }catch(e){}
+}
+// Anything that takes the page away, not just the button: a swipe to another
+// app and back has the same shape.
+window.addEventListener('pagehide',keepDraft);
+document.addEventListener('visibilitychange',function(){if(document.hidden)keepDraft();});
+restoreDraft();
+try{takeCarried();}catch(e){}
+
+// Pulled out of the refresh button so the microphone can do the same thing on
+// its own. He asked for this by name: a permission that silently disappears
+// should not wait for him to notice and press רענן himself.
+function hardReload(){
+ // He reported the header still showing a build fifty minutes old after
+ // pressing this, so a fresh query string was not enough. Anything the
+ // browser has stored for this page is cleared first: a page added to the
+ // home screen keeps its own copy that a normal reload never touches.
+ // The draft is written down first, because this is the one button here that
+ // is allowed to throw the whole page away.
+ keepDraft();
+ carryState();
+ // The refresh in an inner screen's bar comes back to that same screen.
+ var stay=window.reloadStay||'';window.reloadStay='';
+ var done=function(){location.replace(location.pathname+'?v='+Date.now()+(stay?'#'+stay:''));};
+ try{
+  if(window.caches&&caches.keys){
+   caches.keys().then(function(keys){
+    return Promise.all(keys.map(function(k){return caches.delete(k);}));
+   }).catch(function(){}).then(done);
+   return;
+  }
+ }catch(e){}
+ done();
+}
+document.getElementById('reloadBtn').onclick=function(){
+ // And it says what it is doing. A button that looks like it did nothing, on a
+ // fast connection, is how רענון came to be read as a second way home.
+ var btn=this;
+ btn.textContent='מרענן';
+ btn.disabled=true;
+ hardReload();
+};
+// הסימן שיש משהו שמחכה. היה צפצוף, והצפצוף חתך לו את המוזיקה ברקע, אז
+// הוא ויברציה קצרה. ויברציה לא נוגעת בפס הקול של הטלפון.
+function beep(){
+ try{if(navigator.vibrate)navigator.vibrate([12,40,12]);}catch(e){}
+}
+// The attach form stays out of the way until the plus is pressed.
+document.getElementById('plusBtn').onclick=function(){
+ var f=document.getElementById('fileForm');
+ var open=f.hidden;
+ f.hidden=!open;
+ this.setAttribute('aria-expanded',open?'true':'false');
+ if(open)f.scrollIntoView({behavior:'smooth',block:'nearest'});
+};
+// The big button used to drop him into the full thread, two hundred bubbles
+// deep, and he said plainly that he could not find the new messages. It opens
+// a screen that holds only what he has not read.
+/*
+  With something unread, this opens it. With nothing unread, it does not.
+
+  He reported that pressing it opened messages he could not close, and this is
+  where that starts: with the counter at zero the button still threw the whole
+  archive on screen, which is a screenful he never asked for. Nothing is
+  deleted and nothing is marked read to make that go away; the archive simply
+  stopped opening itself, and the button under it is the deliberate way in.
+*/
+/*
+  Clearing one message: a tap on its ×, or a swipe across it.
+
+  The swipe is the way a phone does it and the way he asked for it, so it is
+  here as well as the button rather than instead of it: a swipe is easy to
+  discover and easy to do by accident, and a visible control is neither.
+*/
+(function(){
+ var thread=document.getElementById('thread');
+ if(!thread)return;
+ thread.addEventListener('click',function(e){
+  var b=e.target.closest&&e.target.closest('.hidemsg');
+  if(!b)return;
+  e.preventDefault();e.stopPropagation();
+  hideWithUndo(b.getAttribute('data-k')||'');
+ });
+ var startX=0,startY=0,onBub=null;
+ thread.addEventListener('pointerdown',function(e){
+  onBub=e.target.closest?e.target.closest('.bub'):null;
+  startX=e.clientX;startY=e.clientY;
+ });
+ thread.addEventListener('pointerup',function(e){
+  if(!onBub)return;
+  var dx=e.clientX-startX, dy=e.clientY-startY;
+  onBub=null;
+  // Sideways, far, and not while scrolling: a list that deletes on a scroll is
+  // worse than one that never deletes at all.
+  if(Math.abs(dx)<90||Math.abs(dy)>40)return;
+  var bub=e.target.closest?e.target.closest('.bub'):null;
+  var k=bub&&bub.querySelector('.hidemsg');
+  if(!k)return;
+  hideWithUndo(k.getAttribute('data-k')||'');
+ });
+})();
+/*
+  Itzik, 17.9: "three messages you did not read on the red button, answers at
+  the bottom, chat at the bottom, all the same thing. I want one button."
+
+  They were the same thing, and that was the whole fault: the red button opened
+  the thread, the תשובות tab opened the flat list, the צ׳אט tab opened the
+  thread again, and none of the three was wrong, which is why he could not tell
+  which one to press. Everything lands on תשובות now, red button included,
+  and it opens on what he has not read when there is something to read.
+*/
+/*
+  The red button may never land on an empty screen.
+
+  The count on it comes from unreadList, the 'fresh' filter comes from
+  isFresh, and the two are not the same set: a mail answer counts as unread
+  but never appears in the answers list, so a red 1 could open on
+  "אין כאן כלום בסינון הזה". The chosen filter stands only if it has
+  something in it; otherwise he gets the whole list, which is never empty.
+*/
+/*
+  Landing on the list, and not next to it.
+
+  Itzik, 18.9 07:47, with a screenshot of the red button reading
+  "12 הודעות שלא קראת": "הכפתור האדום לא עובד ואין לו תשובות. ריק".
+
+  pane() already resets the scroll, and on 17.9 that was the whole fix. It is
+  not enough, and the order is why: pane() moves the window while the pane it
+  just opened is still empty, because renderAnswers runs after it. The document
+  is short for that instant, the browser clamps the offset to the short page,
+  and the answers are then poured in underneath a viewport that mobile Chrome
+  is free to anchor back where his finger left it. A screen that is blank with
+  the list above the fold is, from where he sits, a button that does nothing.
+
+  So the landing happens after the paint and not before it, and it aims at the
+  heading of the pane rather than at the top of the document, which is true no
+  matter how tall the page turns out to be. Twice: once on the next frame, and
+  once when the lazy files land and the list grows again.
+*/
+function landPane(id){
+ var go=function(){
+  var sec=document.getElementById(id);
+  if(!sec||sec.hidden)return;
+  var h=sec.querySelector('h2')||sec;
+  var top=h.getBoundingClientRect().top+(window.pageYOffset||0);
+  // Near the top of the document it goes to the actual top, so the refresh bar
+  // and the way home stay on screen. Only a pane that starts below the fold is
+  // pulled up to its own heading.
+  try{window.scrollTo(0,top<260?0:top-12);}catch(e){}
+ };
+ go();
+ if(window.requestAnimationFrame)requestAnimationFrame(function(){requestAnimationFrame(go);});
+ else setTimeout(go,60);
+}
+/*
+  A search he typed ten minutes ago may not empty this screen.
+
+  Itzik, 18.9 19:21: "יש לי התראה של שלושים תשובות בכפתור האדום, ואין לי
+  תשובות בפנים". Found it, and it was never the counter: ansList filters by
+  ansFilter AND by the search box, and the guard below only ever second guessed
+  the filter. So one word left in the search field survived going home, and the
+  red button then opened on "אין כאן כלום בסינון הזה" while the badge honestly
+  said thirty. Reproduced on the live page: badge 133, cards 0.
+
+  The button means "show me the answers", so it now owns the whole screen and
+  clears the search with it. Filtering stays available inside the screen, where
+  he can see the field he is typing in.
+*/
+function clearAnsSearch(){
+ ansQ='';
+ var el=document.getElementById('aSearch');
+ if(el)el.value='';
+}
+function openAnswers(filter,wipe){
+ ansShow=30;
+ // The red button wipes it outright. The nav button is pressed from inside the
+ // screen too, where a search he can see in the field is his and stays, and
+ // the guard below still refuses to leave him on an empty list.
+ if(wipe)clearAnsSearch();
+ ansKeep={};
+ var pick=function(f){
+  ansFilter=f||'all';
+  // Last resort. With the search cleared this cannot be empty while there is
+  // data, but it costs nothing and it is the property the button needs.
+  if(!ansList().length){clearAnsSearch();ansFilter='all';}
+ };
+ ansAuto=true;
+ pick(filter);
+ pane('a');renderAnswers();landPane('pA');
+ ensure(['chat','codex','reports'],function(){
+  // Only second guess a filter nobody chose by hand. A chip he pressed while
+  // the file was still landing outranks anything the button decided.
+  if(ansAuto&&ansFilter==='all')pick(filter);
+  renderAnswers();paintAnsCount();landPane('pA');
+ });
+}
+/*
+  The press has to be audible in the screen, not only in the code.
+
+  He has now read this button as broken twice, and both times it had fired.
+  A line saying what opened and how big it is costs nothing and removes the
+  one reading that kept coming back. It is also the only thing that still
+  reports honestly if the scroll lands somewhere unexpected on a phone I do
+  not have, and the try/catch is there so a throw in any one of these steps
+  cannot leave him on a half switched screen with no word about it.
+*/
+/*
+  The red button opens the answers. That is all it does now.
+
+  Itzik, 18.9, three times in one morning, the last one exact: "it says
+  nineteen unread, I press the red button, zero messages." Every version of
+  this button so far decided WHICH answers to show him, and every version found
+  a new way to decide "none". First the counter and the list read different
+  sets. Then a filter came up empty for a reason neither of us could see from
+  where we each stood, because on my browser the two agreed perfectly and on
+  his they did not.
+
+  The cure is in openAnswers, which now refuses any filter that would come up
+  empty and opens everything instead. So the button may still ask for the
+  unread ones, and the screen decides whether that request can be honoured. A
+  screen with everything on it cannot be empty while he has messages, and that
+  is the only property this button actually needs.
+
+  What was actually wrong underneath: unreadList counted every answer of mine
+  and allAnswers drops the mail ones, so a backlog made of mail produced a
+  badge with nothing behind it. That is fixed where both of them read from.
+*/
+document.getElementById('newBtn').onclick=function(){
+ var n=0;
+ try{
+  n=unreadCount();
+  if(n)beep();
+  openAnswers(n?'fresh':'all',true);
+  // Counted off the screen and not off the data, so the line cannot promise
+  // cards that are not there.
+  var shown=document.querySelectorAll('#ansBox .ansc').length;
+  // The screen shows a page at a time, so a line promising all of them would
+  // be the same lie in a smaller place.
+  toast(n?(shown?(shown<n?('נפתחו '+shown+' מתוך '+n+' שלא קראת')
+     :('נפתחו '+n+' תשובות שלא קראת'))
+    :'המסך נפתח ריק. לחיצה על רענן ואז שוב.')
+   :('מסך התשובות, '+shown+' פריטים. הכל נקרא.'));
+ }catch(e){
+  toast('מסך התשובות לא נפתח. לחיצה על רענן ואז שוב.');
+ }
+};
+function renderUnread(){
+ var host=document.getElementById('unreadBox');
+ if(!host)return;
+ var list=unreadList();
+ if(!list.length){
+  host.innerHTML='<div class="empty">אין הודעות חדשות. הכל נקרא.</div>';
+  return;
+ }
+ host.innerHTML=list.map(function(m,i){
+  return '<div class="bub me fresh" data-i="'+i+'">'
+   +'<span class="w">'+AI+' · '+esc(stamp(m.at))+' · <em class="badge">חדש</em></span>'
+   +linkify(m.text)
+   +'<div class="rrow">'
+   +'<button type="button" class="rb rmic" data-i="'+i+'">🎤 להשיב בקול</button>'
+   +'<button type="button" class="rb rtxt" data-i="'+i+'">✍️ בכתב</button>'
+   +'<button type="button" class="rb rcam" data-i="'+i+'">📷 מצלמה</button>'
+   +'<button type="button" class="rb rfile" data-i="'+i+'">📎 קובץ</button>'
+   +'</div>'
+   +'<form class="rform" data-i="'+i+'">'
+   +'<textarea placeholder="התשובה שלך להודעה הזאת"></textarea>'
+   +pasteRow()
+   +'<span class="rsaid"></span></form>'
+   +'</div>';
+ }).join('');
+ wireReplies(host,list);
+ wirePaste(host);
+ Array.prototype.forEach.call(host.querySelectorAll('.bub'),function(el,n){
+  el.addEventListener('click',function(){
+   if(!el.classList.contains('fresh'))return;
+   el.classList.remove('fresh');
+   el.classList.add('touched');
+   ringFor(el);
+   markOneSeen(list[n]);
+   var b=el.querySelector('.badge');
+   if(b){b.className='badge ok';b.textContent='נקרא';}
+   renderNew();
+  });
+ });
+}
+var aSearchEl=document.getElementById('aSearch');
+if(aSearchEl)aSearchEl.oninput=function(){ansQ=this.value.trim();ansShow=30;renderAnswers();};
+document.getElementById('nH').onclick=function(){pane('h');};
+/*
+  Escape closes whatever is open, on a keyboard. Nothing is deleted, nothing is
+  marked read and no draft is touched: it is the same move as the button at the
+  top of the screen. Ignored while he is typing, or it would eat the key in the
+  middle of a message.
+*/
+document.addEventListener('keydown',function(e){
+ if(e.key!=='Escape')return;
+ var t=e.target,tag=t&&t.tagName;
+ if(tag==='INPUT'||tag==='TEXTAREA'||(t&&t.isContentEditable))return;
+ if(document.getElementById('pH').hidden)pane('h');
+});
+document.getElementById('nQ').onclick=function(){pane('q');ensure(['replied'],render);};
+document.getElementById('nL').onclick=function(){pane('l');};
+document.getElementById('nR').onclick=function(){pane('r');};
+document.getElementById('nA').onclick=function(){openAnswers(ansFilter);};
+document.getElementById('gotBtn').onclick=function(){pane('b');renderGot();ensure('chat',renderGot);};
+
+// Home shortcuts. The mail and "new module" circles have no screen of their
+// own yet, so they open the chat with the request already started.
+// He said the thing that breaks him is sending and not knowing. So every send
+// is written down on the device the moment it leaves, and the list below says
+// what happened to each one. The wording is deliberately literal: the page can
+// prove the message reached my mailbox, so it says that, and only says I read
+// it once I have actually written back.
+function reqLog(){
+ return idList('myRequests');
+}
+function reqSave(a){
+ try{localStorage.setItem('myRequests',JSON.stringify(a.slice(0,25)));}catch(e){}
+}
+/*
+  An id per request, so one request can never speak for another.
+
+  Without one, status was matched by time: the first message of mine at or
+  after a request's clock decided that request's state. Reproduced: request A
+  at 10:00, an unrelated request B at 11:00 marked done, nothing answered about
+  A at all, and A displayed בוצע. The screen was reporting B.
+*/
+function newRequestId(){
+ return 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+/*
+  A sent message you can see leave. Itzik, 26.9: "even a message that was
+  received should fold up in the graphics and go into a mailbox that flies to
+  you." The paper folds into an envelope where it was written, the envelope
+  flies into a mailbox by the "what was received" button (or the corner, when
+  that button is not on screen), the flag goes up, and a short whoosh and ding
+  say it without looking. It runs on every successful send, since every send
+  path ends in markSent. With reduced motion only the sound plays, and the
+  sound can be switched off in the settings.
+*/
+var sendFrom=null,sfx=null;
+document.addEventListener('submit',function(e){
+ try{
+  var f=e.target,r=f&&f.getBoundingClientRect&&f.getBoundingClientRect();
+  if(r&&r.width)sendFrom={x:r.left+r.width/2,y:r.top+r.height/2,w:Math.min(r.width,300)};
+  sfxCtx();
+ }catch(err){}
+},true);
+/*
+  A soft tick on every press, 26.9: "are there sounds on the taps? I want
+  them." A press is the one moment a page may make a sound on an iPhone, so the
+  context is made here, inside the tap, never at load. The microphone is left
+  silent, so nothing plays into a recording.
+*/
+document.addEventListener('click',function(e){
+ try{
+  var el=e.target&&e.target.closest&&e.target.closest('button,a,summary,[role="button"],label,input[type="checkbox"]');
+  if(!el||el.id==='micBtn'||el.closest('#micDock'))return;
+  if(!sfxCtx())return;
+  var nav=!!el.closest('nav,.panebar');
+  sfxTone(nav?1320:1700,nav?880:1150,0,0.04,0.03,'sine');
+ }catch(err){}
+},true);
+var sfxT=0;
+/*
+  27.9: "the monitor's microphone does not work well." It was this. Every tap
+  set the phone's audio to ambient and nothing set it back, and on an iPhone
+  an ambient page is a page that plays, not one that records. So no sound is
+  made while a recording is opening or running, the recording itself asks for
+  play and record, and the phone gets its own audio mode back ('auto') as soon
+  as a sound or a recording is over.
+*/
+function sfxRecording(){return !!(typeof rec!=='undefined'&&rec)||!!(typeof recStarting!=='undefined'&&recStarting)||!!(typeof recStream!=='undefined'&&recStream);}
+function audioMode(m){try{if(navigator.audioSession)navigator.audioSession.type=m;}catch(e){}}
+function sfxCtx(){
+ if(sfxRecording())return null;
+ if(!sfxOn()||!sfxCanMix()||!(window.AudioContext||window.webkitAudioContext))return null;
+ sfx=sfx||new (window.AudioContext||window.webkitAudioContext)();
+ if(sfx.state==='suspended')sfx.resume();
+ sfxIdle();
+ return sfx;
+}
+// Let go of the phone's audio eight seconds after the last sound.
+function sfxIdle(){
+ clearTimeout(sfxT);
+ sfxT=setTimeout(function(){var c=sfx;sfx=null;try{if(c)c.close();}catch(e){}if(!sfxRecording())audioMode('auto');},8000);
+}
+/*
+  20.9: opening the monitor cut the music he had playing, because on an iPhone
+  any sound a page makes takes over the phone's audio. So nothing is opened
+  when the page loads. The sound exists only for the moment of a send, and on
+  an iPhone only where the page can declare itself ambient, which mixes with
+  the music instead of stopping it. An older iPhone gets the vibration alone.
+  The context is closed again two seconds after the ding.
+*/
+function sfxCanMix(){
+ var ios=/iPhone|iPad|iPod/i.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+ try{if(navigator.audioSession){navigator.audioSession.type='ambient';return true;}}catch(e){}
+ return !ios;
+}
+function sfxOn(){try{return localStorage.getItem('sfxOff')!=='1';}catch(e){return true;}}
+function sfxTone(f0,f1,at,len,vol,type){
+ var o=sfx.createOscillator(),g=sfx.createGain(),n=sfx.currentTime+at;
+ o.type=type||'sine';o.frequency.setValueAtTime(f0,n);
+ if(f1)o.frequency.exponentialRampToValueAtTime(f1,n+len);
+ g.gain.setValueAtTime(0.0001,n);g.gain.exponentialRampToValueAtTime(vol,n+0.02);
+ g.gain.exponentialRampToValueAtTime(0.0001,n+len);
+ o.connect(g);g.connect(sfx.destination);o.start(n);o.stop(n+len+0.05);
+}
+function sfxWhoosh(at,len){
+ var n=sfx.currentTime+at,b=sfx.createBuffer(1,Math.floor(sfx.sampleRate*len),sfx.sampleRate),d=b.getChannelData(0);
+ for(var i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.sin(Math.PI*i/d.length);
+ var s=sfx.createBufferSource(),f=sfx.createBiquadFilter(),g=sfx.createGain();
+ s.buffer=b;f.type='bandpass';f.Q.value=0.9;
+ f.frequency.setValueAtTime(500,n);f.frequency.exponentialRampToValueAtTime(2600,n+len);
+ g.gain.value=0.09;s.connect(f);f.connect(g);g.connect(sfx.destination);s.start(n);
+}
+function sentSound(){
+ if(!sfxOn()||!sfx)return;
+ try{
+  sfxTone(520,780,0,0.09,0.05,'triangle');
+  sfxWhoosh(0.28,0.55);
+  sfxTone(1175,0,0.86,0.5,0.07);sfxTone(1568,0,0.96,0.6,0.06);
+  sfxIdle();
+ }catch(e){}
+}
+/*
+  Itzik, 10.10, by voice: when a recording is sent, the microphone itself
+  should shrink and tumble a few times on its way into the mailbox. So the
+  microphone he pressed is remembered at the press, and a voice send flies a
+  copy of it from there instead of the folding page.
+*/
+var micFrom=null;
+document.addEventListener('pointerdown',function(e){
+ try{
+  var b=e.target&&e.target.closest&&e.target.closest('#micBtn,#micDock,#recBtn,#recBig');
+  var r=b&&b.getBoundingClientRect();
+  if(r&&r.width)micFrom={x:r.left+r.width/2,y:r.top+r.height/2,w:Math.max(36,Math.min(r.width,64))};
+ }catch(err){}
+},true);
+function flyMic(from,to,layer,box,flag,at){
+ var W=window.innerWidth,H=window.innerHeight;
+ if(!from)from={x:W/2,y:H*0.6,w:54};
+ var w=from.w,dir=to.x<from.x?-1:1;
+ var mic=document.createElement('div');
+ mic.className='fm-mic';
+ mic.setAttribute('style','position:absolute;left:0;top:0;width:'+w+'px;height:'+w+'px;border-radius:50%;background:#e5484d;'
+  +'box-shadow:0 8px 22px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center');
+ mic.innerHTML='<svg viewBox="0 0 24 24" width="'+Math.round(w*0.56)+'" height="'+Math.round(w*0.56)+'" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'
+  +'<rect x="9" y="3" width="6" height="11" rx="3" fill="#fff" stroke="none"/>'
+  +'<path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8.5 21h7"/></svg>';
+ layer.appendChild(mic);
+ var base=at(from.x,from.y,w,w);
+ mic.style.transform=base;
+ // First it gathers itself: a small swell, then it shrinks down.
+ var squeeze=mic.animate([
+  {transform:base+' scale(1)'},
+  {transform:base+' scale(1.15)',offset:.35},
+  {transform:base+' scale(.55)'}],{duration:300,easing:'ease-in-out',fill:'forwards'});
+ var mx=(from.x+to.x)/2+dir*50,my=Math.min(from.y,to.y)-140;
+ var steps=[],N=24,turns=3;
+ for(var i=0;i<=N;i++){
+  var k=i/N,u=1-k;
+  var x=u*u*from.x+2*u*k*mx+k*k*to.x,y=u*u*from.y+2*u*k*my+k*k*(to.y+4);
+  steps.push({transform:at(x,y,w,w)+' rotate('+(dir*360*turns*k)+'deg) scale('+(0.55-0.4*k)+')',opacity:i===N?0:1});
+ }
+ squeeze.onfinish=function(){
+  var fly=mic.animate(steps,{duration:900,easing:'cubic-bezier(.4,0,.35,1)',fill:'forwards'});
+  fly.onfinish=function(){
+   box.animate([{transform:at(to.x,to.y,58,62)},{transform:at(to.x,to.y,58,62)+' scale(1.12,.92)'},{transform:at(to.x,to.y,58,62)}],{duration:260});
+   flag.animate([{transform:'rotate(90deg)'},{transform:'rotate(-8deg)',offset:.7},{transform:'rotate(0deg)'}],{duration:420,fill:'forwards'});
+   try{navigator.vibrate&&navigator.vibrate(12);}catch(e){}
+   setTimeout(function(){
+    var out=box.animate([{opacity:1},{opacity:0}],{duration:380,fill:'forwards'});
+    out.onfinish=function(){layer.remove();};
+   },650);
+  };
+ };
+ flag.style.transform='rotate(90deg)';
+}
+function flyMail(kind){
+ sentSound();
+ var from=sendFrom;sendFrom=null;
+ var mFrom=micFrom;micFrom=null;
+ if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ if(!document.body.animate)return;
+ var W=window.innerWidth,H=window.innerHeight;
+ if(!from)from={x:W/2,y:H*0.45,w:240};
+ var tb=document.getElementById('gotBtn'),tr=tb&&tb.getBoundingClientRect();
+ var to=(tr&&tr.width&&tr.bottom>0&&tr.top<H)?{x:tr.left+34,y:tr.top+tr.height/2}:{x:40,y:56};
+ var layer=document.createElement('div');
+ layer.setAttribute('style','position:fixed;inset:0;pointer-events:none;z-index:99999');
+ layer.innerHTML=
+  '<div class="fm-paper" style="position:absolute;left:0;top:0;width:'+from.w+'px;height:'+Math.round(from.w*0.62)+'px;'
+  +'border-radius:10px;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.35);padding:14px 16px;box-sizing:border-box">'
+  +'<i style="display:block;height:7px;border-radius:4px;background:#c9d4e6;margin:4px 0 9px;width:88%"></i>'
+  +'<i style="display:block;height:7px;border-radius:4px;background:#dbe3f0;margin-bottom:9px;width:70%"></i>'
+  +'<i style="display:block;height:7px;border-radius:4px;background:#dbe3f0;width:52%"></i></div>'
+  +'<svg class="fm-env" width="64" height="46" viewBox="0 0 64 46" style="position:absolute;left:0;top:0;opacity:0;overflow:visible">'
+  +'<rect x="1" y="4" width="62" height="41" rx="6" fill="#fff" stroke="#1a73e8" stroke-width="2"/>'
+  +'<path d="M3 43 L26 24 M61 43 L38 24" stroke="#c9d4e6" stroke-width="2" fill="none"/>'
+  +'<path class="fm-flap" d="M2 6 L32 28 L62 6" fill="#e8f0fe" stroke="#1a73e8" stroke-width="2" stroke-linejoin="round"/></svg>'
+  +'<svg class="fm-box" width="58" height="62" viewBox="0 0 58 62" style="position:absolute;left:0;top:0;opacity:0;overflow:visible">'
+  +'<rect x="26" y="34" width="6" height="28" rx="2" fill="#8a6d3b"/>'
+  +'<path d="M6 16 Q6 4 20 4 H40 Q52 4 52 16 V38 H6 Z" fill="#FBBC05" stroke="#7a5a00" stroke-width="2"/>'
+  +'<rect x="10" y="20" width="30" height="6" rx="3" fill="#5c4300"/>'
+  +'<g class="fm-flag" style="transform-origin:48px 30px"><rect x="47" y="10" width="3" height="22" fill="#555"/>'
+  +'<rect x="47" y="10" width="12" height="8" rx="1" fill="#EA4335"/></g></svg>';
+ document.body.appendChild(layer);
+ var paper=layer.querySelector('.fm-paper'),env=layer.querySelector('.fm-env'),box=layer.querySelector('.fm-box');
+ var flag=layer.querySelector('.fm-flag'),flap=layer.querySelector('.fm-flap');
+ var pw=from.w,ph=Math.round(from.w*0.62);
+ function at(x,y,w,h){return 'translate('+(x-w/2)+'px,'+(y-h/2)+'px)';}
+ box.style.transform=at(to.x,to.y,58,62);
+ box.animate([{opacity:0,transform:at(to.x,to.y,58,62)+' scale(.4)'},{opacity:1,transform:at(to.x,to.y,58,62)+' scale(1.08)',offset:.7},{opacity:1,transform:at(to.x,to.y,58,62)+' scale(1)'}],
+  {duration:320,delay:250,fill:'forwards',easing:'ease-out'});
+ if(kind==='voice'){paper.remove();env.remove();flyMic(mFrom,to,layer,box,flag,at);return;}
+ paper.animate([
+  {transform:at(from.x,from.y,pw,ph),opacity:1},
+  {transform:at(from.x,from.y,pw,ph)+' perspective(500px) rotateX(55deg) scale(.5)',opacity:1,offset:.6},
+  {transform:at(from.x,from.y,pw,ph)+' perspective(500px) rotateX(80deg) scale(.22)',opacity:0}],
+  {duration:340,easing:'ease-in',fill:'forwards'});
+ env.style.transform=at(from.x,from.y,64,46);
+ flap.animate([{transform:'scaleY(-1)',transformOrigin:'32px 6px'},{transform:'scaleY(1)',transformOrigin:'32px 6px'}],{duration:220,delay:250,fill:'both'});
+ var mx=(from.x+to.x)/2+(to.x<from.x?-40:40),my=Math.min(from.y,to.y)-120;
+ var steps=[],N=14;
+ for(var i=0;i<=N;i++){
+  var k=i/N,u=1-k;
+  var x=u*u*from.x+2*u*k*mx+k*k*to.x,y=u*u*from.y+2*u*k*my+k*k*(to.y+4);
+  var s=1-0.55*k,rot=(to.x<from.x?-1:1)*Math.sin(k*Math.PI)*18;
+  steps.push({transform:at(x,y,64,46)+' rotate('+rot+'deg) scale('+s+')',opacity:i===N?0:1});
+ }
+ steps[0].opacity=1;
+ env.animate([{opacity:0,transform:at(from.x,from.y,64,46)+' scale(.6)'},{opacity:1,transform:at(from.x,from.y,64,46)+' scale(1)'}],{duration:180,delay:230,fill:'forwards'});
+ setTimeout(function(){
+  var fly=env.animate(steps,{duration:620,easing:'cubic-bezier(.45,0,.3,1)',fill:'forwards'});
+  fly.onfinish=function(){
+   box.animate([{transform:at(to.x,to.y,58,62)},{transform:at(to.x,to.y,58,62)+' scale(1.12,.92)'},{transform:at(to.x,to.y,58,62)}],{duration:260});
+   flag.animate([{transform:'rotate(90deg)'},{transform:'rotate(-8deg)',offset:.7},{transform:'rotate(0deg)'}],{duration:420,fill:'forwards'});
+   try{navigator.vibrate&&navigator.vibrate(12);}catch(e){}
+   setTimeout(function(){
+    var out=box.animate([{opacity:1},{opacity:0}],{duration:380,fill:'forwards'});
+    out.onfinish=function(){layer.remove();};
+   },650);
+  };
+ },440);
+ flag.style.transform='rotate(90deg)';
+}
+function markSent(kind,text,id){
+ var at=new Date().toISOString();
+ var rid=id||newRequestId();
+ try{localStorage.setItem('lastSent',JSON.stringify({at:at,kind:kind,id:rid}));}catch(e){}
+ var a=reqLog();
+ a.unshift({id:rid,at:at,kind:kind,text:String(text||'').replace(/\s+/g,' ').trim().slice(0,80)});
+ reqSave(a);
+ try{renderReqs();}catch(e){}
+ try{paintGot();renderGot();}catch(e){}
+ try{flyMail(kind);}catch(e){}
+ return rid;
+}
+/*
+  Where one request stands, and what is still missing from it.
+
+  The old version called a request answered the moment *any* message of mine
+  landed after it, which is not the same claim at all: a reply about something
+  else made every open request look closed. So the state now says exactly what
+  is known, and the second line says what has not happened yet, because "got
+  it" with nothing after it is the state he most often needs to chase.
+*/
+/*
+  Where ONE request stands. Matched by its own id, never by the clock.
+
+  Two rules, both learned from the same bug:
+
+  1. A record only speaks for a request if it carries that request's id. A
+     message that merely happens to be later is not about it.
+  2. What is not known is said as not known. "אין לי עדיין קישור" is a worse
+     looking card and a true one; בוצע borrowed from another request is a
+     better looking card that sent him to check work that was never done.
+
+  Until the send pipeline carries the id back, most requests will sit on
+  "left the device". That is the honest floor, and it is the point.
+*/
+function recordFor(r){
+ if(!r.id)return null;
+ var all=(D.chat||[]);
+ for(var i=0;i<all.length;i++){
+  var m=all[i];
+  if(m.from!=='itzik')continue;
+  if((m.requestId||m.re||'')===r.id)return m;
+ }
+ return null;
+}
+function replyFor(r){
+ if(!r.id)return null;
+ var all=(D.chat||[]);
+ for(var i=0;i<all.length;i++){
+  var m=all[i];
+  if(m.from!=='claude')continue;
+  if((m.requestId||m.re||'')===r.id)return m;
+ }
+ return null;
+}
+function reqStatus(r){
+ var mine=recordFor(r);
+ var reply=replyFor(r);
+ var st=mine?(mine.status||'received'):'';
+ if(st==='done')return {k:'done',t:'בוצע',
+  missing:'סימנתי שזה בוצע. שווה שתעבור על זה.',reply:reply};
+ if(reply)return {k:'after',t:'ענתי על זה',
+  missing:'יש תשובה שמקושרת לבקשה הזאת.',reply:reply};
+ if(st==='working')return {k:'working',t:'עובד על זה',missing:'עוד אין תוצר.',reply:null};
+ if(st)return {k:'got',t:'קראתי',missing:'קראתי, עוד לא התחלתי.',reply:null};
+ return {k:'sent',t:'יצא מהמכשיר',
+  missing:'עוד לא קישרתי אליה שום תשובה שלי. אם ענינו עליה בצ׳אט, זה לא מופיע כאן.',reply:null};
+}
+/*
+  The two last things he asked for, as cards he can actually read.
+
+  They were a six line strip of one line each, which is where a request goes to
+  be forgotten. Two, bigger, with the time, who is on it, the exact state and
+  what is still missing. If there is something to open it is linked; if there
+  is not, nothing is shown, because a card pretending to hold a result is worse
+  than an empty screen. One request makes one card and no request makes none.
+*/
+function renderReqs(){
+ var box=document.getElementById('reqBox');
+ if(!box)return;
+ var a=reqLog();
+ if(!a.length){box.hidden=true;return;}
+ box.hidden=false;
+ foldCard(box,'reqSum','שתי הבקשות האחרונות · '+a.length,'reqOpen');
+ var body=document.getElementById('reqBody');
+ var more=a.length>2?'<button type="button" class="reqall" id="reqAll">כל מה ששלחתי ('+a.length+')</button>':'';
+ body.innerHTML=a.slice(0,2).map(function(r){
+  var st=reqStatus(r),label=SENTLABEL[r.kind]||'הודעה';
+  var link='';
+  if(st.reply){
+   // Built rather than written as a literal: this file is a template string,
+   // so a backslash in a regex here never survives into the page.
+   var url=String(st.reply.text||'').match(new RegExp('https?://[^ <>"]+'));
+   if(url)link='<a class="rq-open" href="'+esc(url[0])+'" target="_blank" rel="noopener">פתיחת מה ששלחתי</a>';
+  }
+  return '<div class="req big"><div class="rq-t"><b>'+esc(r.text||label)+'</b>'
+   +'<small>'+esc(label)+' · יצא ב'+esc(stamp(r.at))+' · '+esc(since(r.at))+'</small>'
+   +'<small>מבצע: '+AI+'</small></div>'
+   +'<span class="rq-s rq-'+st.k+'">'+esc(st.t)+'</span>'
+   +'<div class="rq-m">'+esc(st.missing)+link+'</div></div>';
+ }).join('')+more;
+ var all=document.getElementById('reqAll');
+ if(all)all.onclick=function(){
+  body.innerHTML=a.map(function(r){
+   var st=reqStatus(r),label=SENTLABEL[r.kind]||'הודעה';
+   return '<div class="req"><div class="rq-t"><b>'+esc(r.text||label)+'</b>'
+    +'<small>'+esc(label)+' · יצא ב'+esc(stamp(r.at))+'</small></div>'
+    +'<span class="rq-s rq-'+st.k+'">'+esc(st.t)+'</span></div>';
+  }).join('')+'<button type="button" class="reqall" id="reqFew">רק השתיים האחרונות</button>';
+  var few=document.getElementById('reqFew');
+  if(few)few.onclick=renderReqs;
+ };
+}
+function lastSent(){
+ try{return JSON.parse(localStorage.getItem('lastSent')||'null');}catch(e){return null;}
+}
+var SENTLABEL={text:'הודעה',mail:'בקשת מייל',file:'קובץ',voice:'הקלטה'};
+// The status comes from the message I write back into the chat: until it is
+// there, the send is still on its way to me.
+// One card per pegasus update, newest first, three lines each. The reply
+// box on top is the place he asked for to talk about the game.
+// The screen behind the big button: what I got wrong, what I changed, and what
+// it changes for him. He asked to be told how I keep improving myself.
+/*
+  One improvement, written the same way every time: what went wrong, what
+  changed, what it changes for him, when, and whether it was checked.
+
+  The verification line is the one that matters and the one that was missing.
+  A change nobody checked is not a smaller achievement, it is a different
+  thing, and saying so is what keeps this list from turning into a list of
+  claims. Nothing here is a claim about the model teaching itself; it is the
+  record of work on this project.
+*/
+/*
+  A long card that opens on a tap instead of taking the screen.
+
+  Said plainly: these two were taller than the phone. The two latest requests
+  and the Codex thread are both paragraphs, and stacked open above everything
+  else they buried the screen he actually came to use. Shut is the default and
+  the choice is remembered, the same way the improvements list works.
+*/
+function foldCard(box,sumId,title,key){
+ var sum=document.getElementById(sumId);
+ if(sum)sum.textContent=title;
+ var open='0';
+ try{open=localStorage.getItem(key)||'0';}catch(e){}
+ box.open=open==='1';
+ box.ontoggle=function(){try{localStorage.setItem(key,box.open?'1':'0');}catch(e){}};
+}
+function growCard(u){
+ var proof='';
+ if(u.proof){
+  proof=/^https?:/.test(u.proof)
+   ? '<a href="'+esc(u.proof)+'" target="_blank" rel="noopener">'+esc(u.proof)+'</a>'
+   : esc(u.proof);
+ }
+ return '<div class="grow"><div class="w">'+esc(stamp(u.at))+' · '+esc(since(u.at))+'</div>'
+  +(u.why?'<div class="l"><b>מה לא עבד</b>'+esc(u.why)+'</div>':'')
+  +(u.what?'<div class="l"><b>מה שיניתי</b>'+esc(u.what)+'</div>':'')
+  +(u.effect?'<div class="l"><b>מה זה משנה לך</b>'+esc(u.effect)+'</div>':'')
+  +'<div class="l"><b>נבדק</b>'+(u.verified?esc(u.verified):'עוד לא נבדק.')
+  +(proof?' · '+proof:'')+'</div>'
+  +'</div>';
+}
+function renderImprove(){
+ var G=D.improve||[];
+ var c=document.getElementById('growCount');
+ if(c)c.textContent=lazyTotal('improve');
+ // The fold out that used to repeat the three newest here is gone. It counted
+ // the same items as the button at the foot of the screen and opened the same
+ // screen, and Itzik called it a duplication on 13.9. The count on the button
+ // above is the only one now.
+ var host=document.getElementById('growBox');
+ if(!host)return;
+ host.innerHTML=replyBox('על השיפורים')+(G.length?G.map(growCard).join('')
+  :'<div class="empty">עוד לא רשמתי כאן שיפור.</div>');
+ wireBoxes(host);
+}
+
+// One search over everything I ever wrote him: chat, reports, the special
+// requests and the improvements. He lost the link to the print page in the
+// chat and asked for a way to find it again.
+function searchAll(q){
+ q=(q||'').trim();
+ if(q.length<2)return [];
+ var out=[];
+ function add(kind,pane,title,at,text){
+  if((text||'').indexOf(q)<0&&(title||'').indexOf(q)<0)return;
+  out.push({kind:kind,pane:pane,title:title,at:at,text:text});
+ }
+ (D.special||[]).forEach(function(x){add('בקשות מיוחדות','y',x.title,x.at,(x.note||'')+' '+(x.url||''));});
+ (D.replies||[]).forEach(function(x){add('תגובות מיוחדות','k',x.video||(NETNAME[x.network]||x.network||'תגובה'),x.at,(x.comment||'')+' '+(x.reply||'')+' '+(x.why||''));});
+ (D.reports||[]).forEach(function(x){add('דוח','r',x.title,x.at,x.body);});
+ (D.chat||[]).forEach(function(x){add(x.from==='claude'?'הודעה ממני':'הודעה ממך','m','',x.at,x.text);});
+ (D.improve||[]).forEach(function(x){add('שיפור','w',x.what,x.at,(x.why||'')+' '+(x.effect||''));});
+ out.sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
+ return out.slice(0,25);
+}
+function renderSearch(){
+ var box=document.getElementById('gResults');
+ var inp=document.getElementById('gSearch');
+ if(!box||!inp)return;
+ var q=inp.value.trim();
+ if(q.length<2){box.innerHTML='';return;}
+ var hits=searchAll(q);
+ if(!hits.length){box.innerHTML='<div class="none">לא מצאתי כלום על '+esc(q)+'</div>';return;}
+ box.innerHTML=hits.map(function(h,i){
+  var t=String(h.text||'');
+  var at=t.indexOf(q);
+  var snip=at<0?t.slice(0,150):t.slice(Math.max(0,at-60),at+110);
+  return '<div class="r" data-i="'+i+'"><b>'+esc(h.kind)+'</b>'
+   +'<small>'+esc(stamp(h.at))+(h.title?' · '+esc(h.title):'')+'</small>'
+   +'<span>'+esc(snip)+'</span></div>';
+ }).join('');
+ Array.prototype.forEach.call(box.querySelectorAll('.r'),function(el){
+  el.onclick=function(){
+   var h=hits[Number(el.getAttribute('data-i'))];
+   pane(h.pane);
+   if(h.pane==='y')renderSpecial();
+   if(h.pane==='k'){renderReplies();markRepliesSeen();}
+   if(h.pane==='w')renderImprove();
+   // Land on the line he searched for, not at the top of a long screen.
+   setTimeout(function(){
+    var host=document.getElementById(PANES[h.pane]);
+    if(!host)return;
+    var all=host.querySelectorAll('div,p,li');
+    for(var i=0;i<all.length;i++){
+     if((all[i].textContent||'').indexOf(q)>=0&&all[i].children.length<3){
+      try{all[i].scrollIntoView({block:'center'});}catch(e){}
+      all[i].style.outline='3px solid var(--accent)';
+      all[i].style.borderRadius='10px';
+      setTimeout(function(el2){return function(){el2.style.outline='';};}(all[i]),2600);
+      break;
+     }
+    }
+   },60);
+  };
+ });
+}
+
+// Which tile he actually taps, and which ones just take up room. Everything
+// here lives in the browser, per device, and nothing is ever deleted: a hidden
+// tile is one line away from coming back.
+function tileStore(k,d){try{return JSON.parse(localStorage.getItem(k)||'')||d;}catch(e){return d;}}
+function tileSave(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+function tileLabel(id){
+ var el=document.getElementById(id);
+ var b=el&&el.querySelector('b');
+ return b?b.textContent.replace(/^[^ ]+ /,''):id;
+}
+function tileIds(){
+ return Array.prototype.map.call(document.querySelectorAll('#blkTiles .gt'),function(e){return e.id;});
+}
+function applyHidden(){
+ var hid=tileStore('tilesHidden',[]);
+ tileIds().forEach(function(id){
+  var el=document.getElementById(id);
+  if(el)el.hidden=hid.indexOf(id)>=0;
+ });
+ var back=document.getElementById('tidyBack');
+ if(back)back.hidden=!hid.length;
+}
+function countTiles(){
+ var since=tileStore('tilesSince',0);
+ if(!since){since=Date.now();tileSave('tilesSince',since);}
+ tileIds().forEach(function(id){
+  var el=document.getElementById(id);
+  if(!el||el.dataset.counted)return;
+  el.dataset.counted='1';
+  el.addEventListener('click',function(){
+   var u=tileStore('tileUse',{});
+   u[id]=(u[id]||0)+1;tileSave('tileUse',u);
+  });
+ });
+}
+function renderTidy(){
+ var host=document.getElementById('tidyBox');
+ if(!host)return;
+ applyHidden();
+ var since=tileStore('tilesSince',Date.now());
+ var days=(Date.now()-since)/86400000;
+ var hid=tileStore('tilesHidden',[]);
+ var use=tileStore('tileUse',{});
+ var snooze=tileStore('tidySnooze',0);
+ var cold=tileIds().filter(function(id){return hid.indexOf(id)<0&&!use[id];});
+ var parts=[];
+ if(hid.length){
+  parts.push('<div class="tidy"><b>מה הסתרנו</b>'
+   +'<small>'+hid.map(function(id){return esc(tileLabel(id));}).join(', ')+'</small>'
+   +'<div class="row2"><button type="button" id="tidyBack">להחזיר הכל</button></div></div>');
+ }
+ // Three days of use and at least three buttons he never touched, and I ask once.
+ /*
+   Reviewer 7.10, approved 8.10: one "להסיר" took every cold tile at once, and
+   a tile used once a week (the decks, the shipments report) vanished with the
+   rest. Each one now has its own box, none ticked, and only what was ticked
+   goes. Whatever is left is not asked about again for a week.
+ */
+ if(days>=3&&cold.length>=3&&Date.now()>snooze){
+  parts.push('<div class="tidy"><b>המסך עמוס</b>'
+   +'<small>שלושה ימים ולא נגעת ב'+cold.length+' כפתורים. '+(FEM?'סמני':'תסמן')+' מה להסיר מהמסך. שום דבר לא נמחק, הם חוזרים בלחיצה.</small>'
+   +'<div class="tidyl">'+cold.map(function(id){
+     return '<label style="display:flex;gap:8px;align-items:center;padding:6px 0;font-size:15px"><input type="checkbox" data-tidy="'+esc(id)+'" style="width:22px;height:22px">'+esc(tileLabel(id))+'</label>';
+    }).join('')+'</div>'
+   +'<div class="row2"><button type="button" class="go" id="tidyGo" disabled>להסיר את מה שסימנתי</button>'
+   +'<button type="button" id="tidyNo">להשאיר הכל</button></div></div>');
+ }
+ host.innerHTML=parts.join('');
+ var back=document.getElementById('tidyBack');
+ if(back)back.onclick=function(){tileSave('tilesHidden',[]);renderTidy();};
+ var go=document.getElementById('tidyGo');
+ function ticked(){return Array.prototype.filter.call(host.querySelectorAll('[data-tidy]'),function(c){return c.checked;}).map(function(c){return c.getAttribute('data-tidy');});}
+ Array.prototype.forEach.call(host.querySelectorAll('[data-tidy]'),function(c){
+  c.onchange=function(){var n=ticked().length;go.disabled=!n;go.textContent=n?'להסיר '+n+' מהמסך':'להסיר את מה שסימנתי';};
+ });
+ if(go)go.onclick=function(){
+  var t=ticked();if(!t.length)return;
+  tileSave('tilesHidden',hid.concat(t));tileSave('tidySnooze',Date.now()+7*86400000);renderTidy();
+ };
+ var no=document.getElementById('tidyNo');
+ if(no)no.onclick=function(){tileSave('tidySnooze',Date.now()+7*86400000);renderTidy();};
+}
+
+// Codex. The wording here is the whole point: the mailbox stores messages and
+// does not wake a Codex session, so a message of his says it is waiting in the
+// mailbox and never says it was delivered or answered. The moment an adapter to
+// a real Codex session exists, this is the one place that changes.
+var CX_STATE={received:'הגיע מקודקס',
+ stored:'מחכה בתיבה, לא נמסר לשיחה',
+ delivered:'נמסר לשיחה של קודקס'};
+function renderCodex(){
+ var box=document.getElementById('codexBox');
+ if(!box)return;
+ var C=(D.codex||[]);
+ var q=cxQueue();
+ if(!C.length&&!q.length){box.hidden=true;return;}
+ box.hidden=false;
+ foldCard(box,'cdxSum','קודקס · '+(C.length+q.length),'cdxOpen');
+ // The answers Codex sent used to be listed here as well as on the answers
+ // screen. Itzik asked on 16.9 for one cluster, so this is the way in only:
+ // what is waiting to go out, and the line to write on.
+ var pend=q.map(function(t){
+  return '<div class="cx cx-stored"><div class="who">אתה · עכשיו</div>'
+   +'<p>'+esc(t.text)+'</p>'
+   +'<span class="st">יצא אליי, עוד לא הועבר לתיבה</span></div>';
+ }).join('');
+ document.getElementById('cdxBody').innerHTML=
+  '<small>מה שאתה שולח נמסר לשיחה החיה של קודקס. התשובות שלו יושבות במסך תשובות, יחד עם שלי.</small>'
+  +pend
+  +'<div class="cxrow"><input id="cxIn" placeholder="הודעה לקודקס" autocomplete="off">'
+  +'<button type="button" id="cxSend">שליחה</button></div>';
+ var b=document.getElementById('cxSend');
+ if(b)b.onclick=cxSubmit;
+}
+function cxQueue(){
+ return idList('codexQueue');
+}
+function cxSubmit(){
+ var el=document.getElementById('cxIn');
+ var t=(el&&el.value||'').trim();
+ if(!t)return;
+ // The phone cannot reach the mailbox: it listens on this machine only and
+ // refuses anything with an Origin header. So the message rides my channel and
+ // I carry it across on the next round.
+ sendText('קודקס','קודקס: '+t,'קודקס').then(function(){
+  var q=cxQueue();q.unshift({at:new Date().toISOString(),text:t});
+  try{localStorage.setItem('codexQueue',JSON.stringify(q.slice(0,10)));}catch(e){}
+  el.value='';
+  renderCodex();
+ }).catch(function(){
+  toast('לא נשלח. אין רשת כרגע.');
+ });
+}
+
+/*
+  The replies I sent in his name, on his networks.
+
+  repliesSeen holds the timestamp of the newest one he has already opened.
+  Anything newer than that is what the tile counts and what gets a mark on the
+  card, so opening the screen is what clears it and nothing clears by itself.
+*/
+function repliesSeen(){
+ try{return localStorage.getItem('repliesSeen')||'';}catch(e){return '';}
+}
+function repliesNew(){
+ var seen=repliesSeen();
+ return (D.replies||[]).filter(function(r){return (r.at||'')>seen;});
+}
+function markRepliesSeen(){
+ var R=D.replies||[];
+ if(!R.length)return;
+ try{localStorage.setItem('repliesSeen',R[0].at||'');}catch(e){}
+ var el=document.getElementById('gReplies');
+ if(el){el.classList.remove('glow');var f=el.querySelector(':scope > .flag');if(f)f.remove();}
+}
+function renderReplies(){
+ var host=document.getElementById('repBox');
+ if(!host)return;
+ var R=D.replies||[];
+ var seen=repliesSeen();
+ host.innerHTML=replyBox('על התגובות')+(R.length?R.map(function(r){
+  var isNew=(r.at||'')>seen;
+  return '<div class="spec rep"><div class="w">'+esc(stampAgo(r.at))
+   +(r.network?' · '+esc(NETNAME[r.network]||r.network):'')
+   +(isNew?'<span class="tagnew">חדש</span>':'')+'</div>'
+   +(r.video?'<b>'+esc(r.video)+'</b>':'')
+   +(r.comment?'<div class="said"><span class="lbl">מה שכתבו</span>'+esc(r.comment)+'</div>':'')
+   +(r.reply?'<div class="said mine"><span class="lbl">מה שעניתי בשמך</span>'+esc(r.reply)+'</div>':'')
+   +(r.why?'<small>'+esc(r.why)+'</small>':'')
+   +(r.url?'<a href="'+esc(r.url)+'" target="_blank" rel="noopener">פתיחה ברשת</a>':'')
+   +'</div>';
+ }).join(''):'<div class="empty">עוד לא כתבתי תשובה מיוחדת בשמך.</div>');
+ wireBoxes(host);
+}
+
+function markSpecialSeen(){
+ var sp=(D.special||[]);
+ if(!sp.length)return;
+ try{localStorage.setItem('specialSeen',sp[0].at||'');}catch(e){}
+ var el=document.getElementById('gSpecial');
+ if(el){el.classList.remove('glow');var f=el.querySelector(':scope > .flag');if(f)f.remove();}
+}
+
+/*
+  The green mark on the home fold outs.
+
+  The thread cards already work this way: a card he has been inside stops
+  shouting and turns green. The cards on the home screen did not, so he had no
+  way to tell apart what he had already looked at. Same convention, same
+  wording, remembered on the device like every other preference here.
+*/
+// Every fold out on the home screen, marked the same way.
+function paintHomeFolds(){
+ var home=document.getElementById('pH');
+ if(!home)return;
+ Array.prototype.forEach.call(
+  home.querySelectorAll('details.fold'),armFold);
+}
+function foldSeen(){
+ return idList('foldSeen');
+}
+function foldBadge(id){
+ return foldSeen().indexOf(id)>-1
+  ? '<em class="badge ok">נקרא</em>'
+  : '<em class="badge">חדש</em>';
+}
+function armFold(el){
+ if(!el)return;
+ var sum=el.querySelector('summary');
+ // The mark is put here rather than in each renderer, so a card added later
+ // gets it without anyone remembering to.
+ if(sum&&!sum.querySelector('.badge')){
+  sum.insertAdjacentHTML('beforeend',foldBadge(el.id));
+ }
+ el.classList.toggle('fold-done',foldSeen().indexOf(el.id)>-1);
+ if(el.getAttribute('data-armed'))return;
+ el.setAttribute('data-armed','1');
+ el.addEventListener('toggle',function(){
+  if(!el.open)return;
+  var f=foldSeen();
+  if(f.indexOf(el.id)<0){
+   f.push(el.id);
+   try{localStorage.setItem('foldSeen',JSON.stringify(f.slice(-200)));}catch(e){}
+  }
+  el.classList.add('fold-done');
+  var b=el.querySelector('summary .badge');
+  if(b){b.className='badge ok';b.textContent='נקרא';}
+ });
+}
+function renderSpecial(){
+ var host=document.getElementById('specBox');
+ if(!host)return;
+ var S=D.special||[];
+ host.innerHTML=replyBox('על הבקשות')+(S.length?S.map(function(u){
+  return '<div class="spec"><div class="w">'+esc(stampAgo(u.at))+'</div>'
+   +'<b>'+esc(u.title)+'</b>'
+   +(u.note?'<small>'+esc(u.note)+'</small>':'')
+   +(u.copy?'<div class="cptext">'+esc(u.copy)+'</div>'
+     +'<button type="button" class="cpbtn" data-t="'+esc(u.copy)+'">העתקת הטקסט</button>':'')
+   +((u.audio||[]).map(function(a){
+     return '<div class="tune"><b>'+esc(a.title)+'</b>'
+      +(a.note?'<small>'+esc(a.note)+'</small>':'')
+      +'<audio controls preload="none" src="'+esc(a.src)+'"></audio></div>';
+    }).join(''))
+   +(u.url?'<a href="'+esc(u.url)+'">פתיחה</a>':'')
+   +'</div>';
+ }).join(''):'<div class="empty">עוד אין בקשה מוכנה כאן.</div>');
+ Array.prototype.forEach.call(host.querySelectorAll('.cpbtn'),function(b){
+  b.onclick=function(){
+   var t=b.getAttribute('data-t')||'';
+   var done=function(){b.textContent='הועתק';setTimeout(function(){b.textContent='העתקת הטקסט';},1600);};
+   if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(done,function(){fallbackCopy(t,done);});
+   }else fallbackCopy(t,done);
+  };
+ });
+ wireBoxes(host);
+}
+
+/*
+  Itzik, 28.9, a recording: "כשמגיעה תזכורת, קצת לפני, יום לפני, תתחיל להבהב
+  את הכפתור ואז אני אסמן אני יודע". From a day before a reminder is due the
+  reminders tile blinks, and keeps blinking past the due day until he taps
+  "אני יודע" on that reminder. The tick lives on his phone, like the tasks.
+  Anything more than three days past due stops on its own.
+  29.9, a recording: the reminder for a Thursday appointment already fires on
+  Wednesday ("מחר יש לך תור"), so blinking a day before that lit it up on
+  Tuesday. The reminder is itself the day-before, so it blinks from its own
+  due time only.
+*/
+function remKnown(){try{return JSON.parse(localStorage.getItem('remKnown')||'{}');}catch(e){return {};}}
+function remKey(r){return (r.at||'')+'|'+(r.due||'');}
+function remHot(r){
+ var u=Date.parse(r.due),now=Date.now();
+ return !isNaN(u)&&now>=u&&now<u+3*864e5&&!remKnown()[remKey(r)];
+}
+function remBlink(){
+ var b=document.getElementById('gRemind');
+ if(b)b.classList.toggle('taskblink',remLive().some(remHot));
+}
+// Itzik, 7.10: "צריך אפשרות בתזכורות למחוק". Gone at once on the phone, and
+// through the notes sync on the server, which then never sends it.
+function remLive(){var g=clearedIds('remGone');return (D.reminders||[]).filter(function(r){return !g[remKey(r)];});}
+function renderReminders(){
+ remBlink();
+ var host=document.getElementById('remBox');
+ if(!host)return;
+ var R=remLive();
+ var day=function(iso){
+  try{return new Date(iso).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',year:'numeric'});}
+  catch(e){return String(iso||'').slice(0,10);}
+ };
+ host.innerHTML=R.length?R.map(function(r){
+  return '<div class="rem'+(r.sentAt?' remsent':'')+'"><b>'+esc(r.text)+'</b>'
+   +'<div class="w">'+(r.sentAt?'נשלחה '+esc(day(r.sentAt)):'תקפוץ '+esc(day(r.due))+' בתשע בבוקר')+'</div>'
+   +(remHot(r)?'<button type="button" class="remknow" data-k="'+esc(remKey(r))+'">אני יודע</button>':'')
+   +'<button type="button" class="remdel" data-k="'+esc(remKey(r))+'">🗑 למחוק</button>'
+   // Itzik, 4.10: "בתיזכורת אין לי אפשרות להגיב". Each reminder answers in place.
+   +'<details class="remreply"><summary>💬 להגיב על התזכורת</summary>'+replyBox('על התזכורת "'+r.text+'"')+'</details></div>';
+ }).join(''):'<div class="empty">אין תזכורת פתוחה.</div>';
+ wireBoxes(host);
+ Array.prototype.forEach.call(host.querySelectorAll('.remknow'),function(b){
+  b.onclick=function(){
+   var k=remKnown();k[b.getAttribute('data-k')]=1;
+   try{localStorage.setItem('remKnown',JSON.stringify(k));}catch(e){}
+   renderReminders();
+  };
+ });
+ Array.prototype.forEach.call(host.querySelectorAll('.remdel'),function(b){
+  b.onclick=function(){
+   if(!confirm('למחוק את התזכורת?'))return;
+   clearIds('remGone',[b.getAttribute('data-k')]);
+   notesSend(false);
+   renderReminders();
+  };
+ });
+}
+function renderAppts(){
+ var host=document.getElementById('apBox');
+ if(!host)return;
+ var now=Date.now();
+ var A=(D.appts||[]).filter(function(a){var t=Date.parse(a.when);return isNaN(t)||t>now-3*3600e3;});
+ host.innerHTML=A.length?A.map(function(a){
+  var d=a.when||'עוד בלי תאריך',h='',t0=Date.parse(a.when);
+  var rm=remLive().filter(function(r){var u=Date.parse(r.due);return !r.sentAt&&u<t0&&t0-u<3*864e5;})[0];
+  if(!isNaN(t0))try{var x=new Date(a.when);
+   d=x.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',year:'numeric',timeZone:'Asia/Jerusalem'});
+   if(!a.noTime)h=x.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Jerusalem'});}catch(e){}
+  return '<div class="ap"><div class="d">'+esc(d)+(h?' בשעה '+esc(h):'')+'</div>'
+   +'<b>'+esc(a.what)+'</b>'
+   +(a.where?'<div class="w">'+esc(a.where)+'</div>':'')
+   +(a.note?'<div class="n">'+esc(a.note)+'</div>':'')
+   +(rm?'<div class="n">⏰ תזכורת '+esc(new Date(rm.due).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'}))+' בתשע בבוקר</div>':'')
+   +(a.doc?'<div class="n"><a href="'+esc(a.doc)+'" target="_blank" rel="noopener">'+esc(a.docLabel||'ההפניה')+'</a></div>':'')
+   +(a.img?'<a href="'+esc(a.img)+'" target="_blank" rel="noopener"><img src="'+esc(a.img)+'" alt="ההודעה מבית החולים" loading="lazy"></a>':'')+'</div>';
+ }).join(''):'<div class="empty">אין תור עתידי.</div>';
+}
+function tkDone(){try{return JSON.parse(localStorage.getItem('tasksDone')||'{}');}catch(e){return {};}}
+/*
+  Ideas and the plan, for a brand builder's copy. Same shape as the tasks: a
+  list from the payload, a checkbox state kept on the phone. Marking an idea
+  used or a post published is his gesture and stays his; the server only ever
+  adds rows.
+*/
+function ciDone(){try{return JSON.parse(localStorage.getItem('ideasUsed')||'{}');}catch(e){return {};}}
+function renderContentIdeas(){
+ // Not renderIdeas: that name is taken by Itzik's own ideas screen further
+ // down, and a later function declaration silently replaces an earlier one,
+ // so the content ideas tile opened and painted nothing. Found on the preview.
+ var host=document.getElementById('ciBox');
+ if(!host)return;
+ var used=ciDone(),h='';
+ (D.ideas||[]).forEach(function(t){
+  var when='';
+  try{when=new Date(t.at).toLocaleDateString('he-IL',{day:'numeric',month:'numeric'});}catch(e){}
+  h+='<label class="tk'+(used[t.id]||t.used?' done':'')+'"><input type="checkbox" data-ci="'+esc(t.id)+'"'
+   +(used[t.id]||t.used?' checked':'')+'><span>'+esc(t.text)+(t.network?' <small>'+esc(t.network)+'</small>':'')
+   +(when?' <small>'+esc(when)+'</small>':'')+'</span></label>';
+ });
+ host.innerHTML=h||'<div class="empty">עוד אין רעיונות. כל רעיון שתשלח למוניטור יופיע כאן.</div>';
+}
+function plDone(){try{return JSON.parse(localStorage.getItem('planDone')||'{}');}catch(e){return {};}}
+function renderPlan(){
+ var host=document.getElementById('plBox');
+ if(!host)return;
+ var done=plDone(),h='',last='';
+ (D.plan||[]).forEach(function(t){
+  if(t.day!==last){
+   last=t.day;
+   var lbl=t.day;
+   try{lbl=new Date(t.day+'T09:00:00').toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'});}catch(e){}
+   h+='<h3>'+esc(lbl)+'</h3>';
+  }
+  var isDone=done[t.id]||t.status==='published';
+  h+='<label class="tk'+(isDone?' done':'')+'"><input type="checkbox" data-pl="'+esc(t.id)+'"'
+   +(isDone?' checked':'')+'><span>'+esc(t.text)+(t.network?' <small>'+esc(t.network)+'</small>':'')+'</span></label>';
+ });
+ host.innerHTML=h||'<div class="empty">הלוח ריק. תגיד למוניטור מה אתה רוצה להעלות השבוע והוא יסדר.</div>';
+}
+document.addEventListener('change',function(e){
+ var t=e.target;if(!t||!t.getAttribute)return;
+ var ci=t.getAttribute('data-ci'),pl=t.getAttribute('data-pl');
+ if(ci){var d=ciDone();if(t.checked)d[ci]=new Date().toISOString();else delete d[ci];try{localStorage.setItem('ideasUsed',JSON.stringify(d));}catch(err){}renderContentIdeas();}
+ if(pl){var d2=plDone();if(t.checked)d2[pl]=new Date().toISOString();else delete d2[pl];try{localStorage.setItem('planDone',JSON.stringify(d2));}catch(err){}renderPlan();}
+});
+on('gCIdeas',function(){pane('I');renderContentIdeas();});
+on('gPlan',function(){pane('P');renderPlan();});
+function renderFiles(){
+ var box=document.getElementById('fiBox');if(!box)return;var F=(D.files||[]).filter(function(x){return String(x.n).indexOf('stk/')!==0;});
+ if(!F.length){box.innerHTML='<div class="empty">אין כאן קבצים.</div>';return;}
+ /*
+   Reviewer 7.10, approved 8.10: five versions of the same deck one after the
+   other, and a cancelled one among them, and no way to tell which is the one
+   to send. Files with the same name up to a version mark (v3, גרסה 2, טיוטה,
+   draft, final) are one work: the newest is on top with "עדכני", the older
+   ones and anything marked cancelled fold under "גרסאות קודמות".
+ */
+ function kb(f){return f.s>1048576?(Math.round(f.s/104857.6)/10+' MB'):(Math.max(1,Math.round(f.s/1024))+' KB');}
+ /*
+   10.10, from the reviewer, taken by Itzik: "הקבצים שלי הם רשימת שמות יבשה".
+   Only a name and a size, so a designer looking for one sample had to open
+   them one by one. Now each row has a small picture (the image itself, or the
+   first page of a PDF, the same thumbnails the answers use), the hour it came
+   in, and the list is under a heading for each day.
+ */
+ function ico(f){var t=f.t||'';return t.indexOf('video/')===0?'🎬':t.indexOf('audio/')===0?'🎧':t==='application/pdf'?'📄':t.indexOf('image/')===0?'🖼️':'📎';}
+ function when(f,full){try{var x=new Date(f.at);if(isNaN(x))return '';
+  var h=x.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Jerusalem'});
+  return full?x.toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'2-digit',timeZone:'Asia/Jerusalem'})+' '+h:h;}catch(e){return '';}}
+ function day(f){try{var x=new Date(f.at);if(isNaN(x))return '';return x.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',year:'numeric',timeZone:'Asia/Jerusalem'});}catch(e){return '';}}
+ function row(f,tag,full){var w=when(f,full);return '<a href="files/'+esc(f.n)+'"><span class="fl-i"><span class="fl-e">'+ico(f)+'</span>'+fileThumb(f.n)+'</span>'
+  +'<span class="fl-n">'+(tag?'<b style="font-size:12px;background:#16a34a;color:#fff;border-radius:8px;padding:1px 7px;margin-inline-end:6px">עדכני</b>':'')+esc(f.n.split('/').pop())
+  +'<small>'+(w?esc(w)+' · ':'')+kb(f)+'</small></span></a>';}
+ var groups={},order=[],old=[];
+ F.forEach(function(f){
+  if(/בוטל|cancel+ed/i.test(f.n)){old.push(f);return;}
+  var k=fileWork(f.n);
+  if(!groups[k]){groups[k]=[];order.push(k);}
+  groups[k].push(f);
+ });
+ var top=order.map(function(k){
+  var g=groups[k].slice().sort(function(a,b){return (fileVer(b.n)-fileVer(a.n))||((a.at||'')<(b.at||'')?1:-1);});
+  old=old.concat(g.slice(1));
+  return {f:g[0],tag:g.length>1};
+ }).sort(function(a,b){return (a.f.at||'')<(b.f.at||'')?1:-1;});
+ var h='',last=null;
+ top.forEach(function(r){
+  var d=day(r.f);
+  if(d!==last){last=d;if(d)h+='<h3>'+esc(d)+'</h3>';}
+  h+=row(r.f,r.tag,false);
+ });
+ if(old.length)h+='<details style="margin-top:6px"><summary style="padding:10px 4px;color:var(--dim)">גרסאות קודמות ('+old.length+')</summary>'
+  +old.map(function(f){return row(f,false,true);}).join('')+'</details>';
+ box.innerHTML=h;
+}
+function fileWork(n){
+ var b=String(n).split('/').pop().replace(/\\.[a-z0-9]{1,5}$/i,'').toLowerCase();
+ return b.replace(/([-_ ,.]+((v|ver|version|גרסה)[-_ ]*\\d+|(טיוטה|draft)[-_ ]*\\d*|final|סופי))+$/i,'').replace(/[-_ ]+$/,'')||b;
+}
+function fileVer(n){
+ var b=String(n).split('/').pop().replace(/\\.[a-z0-9]{1,5}$/i,'');
+ if(/(final|סופי)[-_ ]*$/i.test(b))return 999;
+ var m=b.match(/(?:v|ver|version|גרסה|טיוטה|draft)[-_ ]*(\\d+)[-_ ]*$/i);
+ return m?+m[1]:1;
+}
+on('gFiles',function(){pane('Fi');renderFiles();});
+/*ITZIK:BEGIN*/
+function renderSale(){
+ var box=document.getElementById('saleBox');if(!box)return;
+ var S=D.sale||[];
+ if(!S.length){box.innerHTML='<div class="empty">עוד אין כאן תיק.</div>';return;}
+ box.innerHTML=S.map(function(d){
+  var h='<div class="salecard'+(d.kind==='open'?' open':'')+'"><h3>'+esc(d.title)+'</h3>';
+  if(d.lines&&d.lines.length)h+='<ul>'+d.lines.map(function(l){return '<li>'+esc(l)+'</li>';}).join('')+'</ul>';
+  if(d.files&&d.files.length)h+='<div class="sfiles"'+(d.lines&&d.lines.length?' style="margin-top:10px"':'')+'>'+d.files.map(function(f){
+   return '<a href="'+esc(f.url)+'" target="_blank" rel="noopener">'+esc(f.name)+'</a>';}).join('')+'</div>';
+  if(d.folder)h+='<a class="sfold" href="'+esc(d.folder)+'" target="_blank" rel="noopener">'+(d.kind==='status'?'פתיחת כל התיק בדרייב':'פתיחת התיקייה')+'</a>';
+  return h+'</div>';
+ }).join('');
+}
+on('gSale',function(){pane('Sa');renderSale();ensure('sale',renderSale);});
+/*
+  איציק, 29.9: "יהיו שתי ספרים, אחד לולוס אחד איציק", "הכל באותו כפתור".
+  One tile, a choice of two books, each its own sealed file.
+*/
+function recipesSheet(){
+ var old=document.getElementById('rSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='rSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','מתכונים');
+ w.innerHTML='<div class="ycard">'
+  +'<b>מתכונים</b>'
+  +'<small>איזה ספר לפתוח</small>'
+  +'<button type="button" class="yb yb1" data-r="lolos-recipes-2026.pdf">חוברת מתכונים לולוס 2026</button>'
+  +'<button type="button" class="yb yb2" data-r="itzik-recipes.pdf">ספר המתכונים של איציק</button>'
+  // Itzik, 2.10: a WhatsApp button for the basbousa, and then: see the PDF
+  // first, then send it. So it opens the PDF with its pages on screen, and the
+  // send button there carries the file itself to WhatsApp.
+  +'<button type="button" class="yb ybwa" data-r="basbousa-shlish-8.pdf">בסבוסה בשליש, לראות ולשלוח בוואטסאפ</button>'
+  // Itzik, 8.10: "שיהיה לי אחד כזה, אחד כזה", the same sheet with the full
+  // recipe for the 30 by 40 tray and the book's original syrup.
+  +'<button type="button" class="yb ybwa" data-r="basbousa-full.pdf">בסבוסה מלאה, המתכון המקורי</button>'
+  +'<button type="button" class="yb yx" data-r="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-r');
+  if(k===null||k===undefined)return;
+  close();
+  if(k&&!fileView(k))toast('הספר עוד נטען, נסה שוב בעוד רגע');
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gRecipes',recipesSheet);
+function renderIsra(){
+ var box=document.getElementById('israBox');if(!box)return;
+ var S=D.isra||[];
+ if(!S.length){box.innerHTML='<div class="empty">עוד אין כאן כלום.</div>';return;}
+ box.innerHTML=S.map(function(d){
+  var h='<div class="salecard'+(d.kind==='cards'?' isratop':'')+'"><h3>'+esc(d.title)+'</h3>';
+  if(d.cards&&d.cards.length)h+='<div class="isracards">'+d.cards.map(function(c){
+   return '<div><b>'+esc(c.num)+'</b><span>'+esc(c.name)+'</span></div>';}).join('')+'</div>';
+  if(d.lines&&d.lines.length)h+='<ul>'+d.lines.map(function(l){return '<li>'+esc(l)+'</li>';}).join('')+'</ul>';
+  else if(d.kind==='answers')h+='<div class="israempty">'+esc(d.empty||'עוד ריק.')+'</div>';
+  if(d.files&&d.files.length)h+='<div class="sfiles" style="margin-top:10px">'+d.files.map(function(f){
+   return '<a href="'+esc(f.url)+'" target="_blank" rel="noopener">'+esc(f.name)+'</a>';}).join('')+'</div>';
+  return h+'</div>';
+ }).join('');
+}
+on('gIsra',function(){pane('Is');renderIsra();ensure('isra',renderIsra);});
+/*ITZIK:END*/
+on('gRemote',function(){pane('Rc');});
+function remoteDone(){try{return localStorage.getItem('remoteDoneRD')==='1';}catch(e){return false;}}
+boot('remoteDevices',function(){
+ var I=INSTANCE||{};
+ document.querySelectorAll('#pRc [data-comp]').forEach(function(el){if(I.computer&&el.getAttribute('data-comp')!==I.computer)el.hidden=true;});
+ document.querySelectorAll('#pRc [data-phone]').forEach(function(el){if(I.phone&&el.getAttribute('data-phone')!==I.phone)el.hidden=true;});
+ // With one computer known its heading says nothing new.
+ if(I.computer)document.querySelectorAll('#pRc .rch').forEach(function(h){h.hidden=true;});
+});
+// 10.10: the tile no longer blinks at every customer from the first day. The
+// screen is there for when it is needed, and a call does the rest.
+boot('remote',function(){var b=document.getElementById('gRemote');if(b)b.classList.remove('taskblink');});
+on('rcCall',function(){
+ var said=document.getElementById('rcCallSaid'),btn=document.getElementById('rcCall');
+ btn.disabled=true;said.textContent='שולח.';
+ sendText('משימה מהמוניטור','אשמח שתתקשרו אליי ונחבר את המחשב יחד.','משימה').then(function(){
+  said.textContent='נשלח. נתקשר אליך לתאם.';toast(said.textContent);markSent('text');
+ }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';}).then(function(){btn.disabled=false;});
+});
+/* The model switch: the newest request he has not answered blinks the tile. */
+function modelPending(){
+ var m=(D.modelswitch||[])[0];if(!m||!m.id)return null;
+ var seen='';try{seen=localStorage.getItem('modelSwitchSeen')||'';}catch(e){}
+ return seen===m.id?null:m;
+}
+function renderModel(){
+ var box=document.getElementById('moBox'),btn=document.getElementById('moDone');
+ if(!box)return;
+ var m=modelPending(),last=(D.modelswitch||[])[0];
+ if(!m){
+  box.innerHTML='<div class="empty">אין כרגע בקשה להחליף.'+(last?' הבקשה האחרונה, '+esc(last.title)+', כבר סומנה.':'')+'</div>';
+  if(btn)btn.hidden=true;return;
+ }
+ box.innerHTML='<div class="card"><b>'+esc(m.title)+'</b>'
+  +(m.note?'<p>'+esc(m.note).split(String.fromCharCode(10)).join('<br>')+'</p>':'')
+  +'<p>מה עושים: במחשב, בחלון של קלוד, מקלידים <b dir="ltr">/model</b> ובוחרים <b dir="ltr">'+esc(m.model||'Haiku')+'</b>. אחר כך לוחצים כאן "החלפתי".</p></div>';
+ if(btn)btn.hidden=false;
+}
+boot('modelswitch',function(){var b=document.getElementById('gModel');if(b)b.classList.toggle('taskblink',!!modelPending());});
+on('gModel',function(){pane('Mo');renderModel();});
+/*ITZIK:BEGIN*/
+// Moxypen. The tile blinks from the moment a dose is due until he presses "took it" inside.
+function moxyTookAt(){try{return Number(localStorage.getItem('moxyTook'))||0;}catch(e){return 0;}}
+// The hour he actually took it; moxyTook itself never drops below the dose time, so a fix to 08:00 doesn't restart the blinking.
+function moxyShownAt(){var t=moxyTookAt();try{var v=Number(localStorage.getItem('moxyTookShow'))||0;if(v&&t-v<12*3600000&&v<=t)return v;}catch(e){}return t;}
+// Itzik, 11.10: took it a little before 08:00, marked it, and the tile blinked again at 08:00. A mark up to two hours before a dose covers that dose.
+var MOXY_EARLY=2*3600000;
+function moxyCovered(slot){return moxyTookAt()>=slot-MOXY_EARLY;}
+function moxyNextOpen(s){var n=s.next;if(n&&moxyCovered(n)){var f=ML.moxySlots(n+1).next;if(f)n=f;}return n;}
+function moxyPaint(){
+ var b=document.getElementById('gMoxy');if(!b||!window.ML||!ML.moxySlots)return;
+ var s=ML.moxySlots(Date.now()),due=!!s.last&&!moxyCovered(s.last);s.next=moxyNextOpen(s);
+ b.classList.toggle('taskblink',due);
+ var sm=document.getElementById('gMoxyS');
+ if(sm)sm.textContent=due?'הגיע הזמן לכדור':('הבא ב '+hm(new Date(s.next)));
+}
+function renderMoxy(){
+ var s=ML.moxySlots(Date.now()),box=document.getElementById('moxyInfo'),took=moxyTookAt(),due=!!s.last&&!moxyCovered(s.last);s.next=moxyNextOpen(s);
+ var shown=moxyShownAt(),has=due||(took&&s.last);
+ var bn=document.getElementById('moxyNow'),be=document.getElementById('moxyEarly'),bt=document.getElementById('moxyTook');
+ if(bn)bn.hidden=!due;
+ if(be){be.hidden=!has;be.textContent=due?'לקחתי מוקדם יותר':'תקן את השעה';}
+ if(bt)bt.hidden=true;
+ var lab=document.getElementById('moxyAtL'),inp=document.getElementById('moxyAt');
+ if(lab)lab.hidden=true;
+ if(inp)inp.value=hm(new Date(due?s.last:shown)).padStart(5,'0');
+ if(box)box.innerHTML=(due?'<b>הגיע הזמן לכדור של '+esc(hm(new Date(s.last)))+'</b>'
+   :(took&&s.last?'<b>לקחת את הכדור בשעה '+esc(hm(new Date(shown)))+'</b>':'<b>עוד לא הגיע הזמן</b>'))
+  +'<div>המנה הבאה בשעה '+esc(hm(new Date(s.next)))+'</div>';
+ moxyPaint();
+}
+boot('moxy',function(){moxyPaint();setInterval(moxyPaint,30000);});
+function moxySave(t){
+ var s=ML.moxySlots(Date.now());
+ if(s.last&&t<s.last-6*3600000)t=s.last;
+ try{localStorage.setItem('moxyTook',String(Math.max(t,s.last||0)));localStorage.setItem('moxyTookShow',String(t));}catch(e){}
+ toast('נרשם בשעה '+hm(new Date(t))+'. הכפתור יהבהב שוב במנה הבאה.');renderMoxy();
+}
+on('moxyNow',function(){moxySave(Date.now());});
+on('moxyEarly',function(){
+ ['moxyNow','moxyEarly'].forEach(function(i){var e=document.getElementById(i);if(e)e.hidden=true;});
+ ['moxyAtL','moxyTook'].forEach(function(i){var e=document.getElementById(i);if(e)e.hidden=false;});
+ var inp=document.getElementById('moxyAt');if(inp)inp.focus();
+});
+on('moxyTook',function(){
+ var now=Date.now(),t=now,v=(document.getElementById('moxyAt')||{}).value||'',m=/^(\\d{1,2}):(\\d{2})$/.exec(v);
+ if(m){var d=new Date(now);d.setHours(+m[1],+m[2],0,0);t=d.getTime();if(t>now)t-=86400000;}
+ moxySave(t);
+});
+on('gMoxy',function(){pane('Mx');renderMoxy();});
+/*ITZIK:END*/
+on('moDone',function(){
+ var m=modelPending(),said=document.getElementById('moSaid'),btn=document.getElementById('moDone');
+ if(!m)return;
+ btn.disabled=true;said.textContent='שולח.';
+ sendText('החלפת מודל','החלפתי מודל ל-'+(m.model||'Haiku')+' ('+m.title+')','משימה').then(function(){
+  try{localStorage.setItem('modelSwitchSeen',m.id);}catch(e){}
+  var b=document.getElementById('gModel');if(b)b.classList.remove('taskblink');
+  said.textContent='נשלח. ממשיכים בביצוע.';toast(said.textContent);markSent('text');renderModel();
+ }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';}).then(function(){btn.disabled=false;});
+});
+on('rcDone',function(){
+ var said=document.getElementById('rcSaid'),btn=document.getElementById('rcDone');
+ btn.disabled=true;said.textContent='שולח.';
+ sendText('משימה מהמוניטור','התקנתי את תוכנת החיבור מרחוק במחשב.','משימה').then(function(){
+  try{localStorage.setItem('remoteDoneRD','1');}catch(e){}
+  var b=document.getElementById('gRemote');if(b)b.classList.remove('taskblink');
+  said.textContent='נשלח. המשימה סגורה.';toast(said.textContent);markSent('text');
+ }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';}).then(function(){btn.disabled=false;});
+});
+function renderTenants(){
+ var host=document.getElementById('tnBox');
+ if(!host)return;
+ var h='';
+ (D.tenants||[]).forEach(function(t){
+  /*
+    7.10, Itzik, with a screenshot: "הכל חיתוכים, בלגן ... זה צריך להתעדכן כל
+    הזמן". A healthy customer wore the "done" class, which strikes the whole
+    card through, and the time shown was of the last publish, an hour old,
+    while the server checks every minute and republishes on any change. So no
+    strike, no stale clock: green says it is checked every minute, red says
+    since when it is down.
+  */
+  // 8.10: on hold by his decision, grey and not an alarm.
+  if(t.paused){h+='<div class="tk tnc" style="border-inline-start:6px solid #9e9e9e;opacity:.7"><span><b>⏸️ '+esc(t.title)+'</b><br><small>מושהה, לא עונה ולא רץ</small></span></div>';return;}
+  var ok=t.state==='ok',since='';
+  try{if(!ok&&t.downSince)since=new Date(t.downSince).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});}catch(e){}
+  h+='<div class="tk tnc" style="border-inline-start:6px solid '+(ok?'#2e7d32':'#c62828')+'"><span><b>'+(ok?'🟢':'🔴')+' '+esc(t.title)+'</b>'
+   +'<br><small>'+(ok?'תקין · נבדק כל דקה':'נתק'+(since?' מאז '+esc(since):''))+'</small>'
+   +(!ok&&t.problems&&t.problems.length?'<br><small>'+t.problems.map(esc).join(' · ')+'</small>':'')
+   +(t.code?'<br><small>קוד כניסה: <b dir="ltr" class="tncode">'+esc(t.code)+'</b></small> <button type="button" class="tncopy" data-code="'+esc(t.code)+'">העתקה</button>':'')
+   +'</span>'+(t.host?'<a class="tnopen" href="https://'+esc(t.host)+'/" target="_blank" rel="noopener">פתיחה</a>':'')+'</div>';
+ });
+ host.innerHTML=h||'<div class="empty">אין מוניטורים אחרים בשרת הזה.</div>';
+ Array.prototype.forEach.call(host.querySelectorAll('.tncopy'),function(b){
+  b.onclick=function(){
+   var c=b.getAttribute('data-code'),ok=function(){b.textContent='הועתק';};
+   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(c).then(ok,function(){fallbackCopy(c,ok);});
+   else fallbackCopy(c,ok);
+  };
+ });
+ renderChangeReqs(host);
+}
+/*
+  Itzik, 5.10: "רק אני מאשר שינויים". A customer's request waits here until he
+  presses one of the two buttons. The press is a message to his own monitor,
+  which makes the change and tells the customer.
+*/
+function crSentGet(){try{return JSON.parse(localStorage.getItem('crSent')||'{}');}catch(e){return {};}}
+function renderChangeReqs(host){
+ var sent=crSentGet(),h='';
+ (D.tenants||[]).forEach(function(t){
+  (t.requests||[]).slice().reverse().forEach(function(r){
+   var k=t.id+'/'+r.id,when='';
+   try{when=new Date(r.at).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){}
+   var head='<b>📨 '+esc(t.title)+'</b> <small>'+esc(when)+'</small><br>'+esc(r.text);
+   if(r.status==='pending'){
+    h+='<div class="tk" style="border-inline-start:6px solid #f9a825"><span>'+head
+     +(sent[k]?'<br><small>'+(sent[k]==='ok'?'אישרת. המוניטור מבצע ומעדכן את הלקוח.':'דחית. הלקוח יקבל תשובה.')+'</small>'
+      :'<br><button type="button" class="ask" data-cr="'+esc(k)+'" data-act="ok">אישור וביצוע</button> <button type="button" class="ask" data-cr="'+esc(k)+'" data-act="no">דחייה</button>')
+     +'</span></div>';
+   }else{
+    h+='<div class="tk tnc" style="opacity:.6"><span>'+head+'<br><small>'+(r.status==='approved'?'✅ אושר':'❌ נדחה')+(r.note?' · '+esc(r.note):'')+'</small></span></div>';
+   }
+  });
+ });
+ if(!h)return;
+ var box=document.createElement('div');
+ box.innerHTML='<h3 style="margin:16px 0 8px">בקשות שינוי של לקוחות</h3>'+h;
+ host.appendChild(box);
+ box.onclick=function(e){
+  var btn=e.target.closest&&e.target.closest('[data-cr]');if(!btn)return;
+  var k=btn.getAttribute('data-cr'),ok=btn.getAttribute('data-act')==='ok';
+  var parts=k.split('/'),t=(D.tenants||[]).filter(function(x){return x.id===parts[0];})[0]||{};
+  var r=(t.requests||[]).filter(function(x){return x.id===parts[1];})[0]||{};
+  box.querySelectorAll('[data-cr="'+k+'"]').forEach(function(x){x.disabled=true;});
+  sendText('בקשת שינוי',(ok?'אישור':'דחיית')+' בקשת שינוי '+k+': '+(r.text||''),'משימה').then(function(){
+   var s=crSentGet();s[k]=ok?'ok':'no';try{localStorage.setItem('crSent',JSON.stringify(s));}catch(x){}
+   markSent('text');toast(ok?'אושר. המוניטור מבצע.':'נדחה. הלקוח יקבל תשובה.');renderTenants();paintTenantsTile();
+  }).catch(function(){toast('לא נשלח. תבדוק חיבור ותנסה שוב.');box.querySelectorAll('[data-cr="'+k+'"]').forEach(function(x){x.disabled=false;});});
+ };
+}
+// The tile itself carries the colour, so he sees it without opening anything.
+// Runs from the boot list, after the payload is open, like every other screen.
+function paintTenantsTile(){
+ var b=document.getElementById('gTenants');
+ if(!b)return;
+ var T=D.tenants||[];
+ if(!T.length)return;
+ b.hidden=!!document.getElementById('icIly');
+ var bad=T.filter(function(t){return t.state!=='ok';});
+ b.querySelector('b').textContent=(bad.length?'🔴 ':'🟢 ')+(T.length===1?T[0].title:'מוניטורים אחרים');
+ b.querySelector('small').textContent=bad.length?'נתק: '+bad.map(function(t){return t.title;}).join(', '):'הכל תקין';
+ b.style.background=bad.length?'linear-gradient(180deg,#ef5350,#b71c1c)':'linear-gradient(180deg,#66bb6a,#1b5e20)';
+ var c=document.getElementById('icIlyC');
+ var badIly=T.filter(function(t){return t.id==='ily'&&t.state!=='ok';});
+ if(c)c.style.background=badIly.length?'linear-gradient(160deg,#ef5350,#b71c1c)':'linear-gradient(160deg,#66bb6a,#1b5e20)';
+ var rc=document.getElementById('icRnC');
+ var badRn=T.filter(function(t){return t.id==='rinat'&&t.state!=='ok'&&!t.paused;});
+ if(rc&&T.some(function(t){return t.id==='rinat';})){rc.style.background=badRn.length?'linear-gradient(160deg,#ef5350,#b71c1c)':'linear-gradient(160deg,#66bb6a,#1b5e20)';rc.classList.toggle('tdown',!!badRn.length);}
+ var hc=document.getElementById('icHsC');
+ var badHs=T.filter(function(t){return (t.id==='homestyle'||t.id==='roni')&&t.state!=='ok';});
+ if(hc){hc.style.background=badHs.length?'linear-gradient(160deg,#ef5350,#b71c1c)':'linear-gradient(160deg,#66bb6a,#1b5e20)';hc.classList.toggle('tdown',!!badHs.length);}
+ /*
+   30.9, Itzik: "the red button has to blink, not just be red. It is an alarm,
+   it is a customer, the most important thing we have." So a customer that is
+   down blinks on the tile, on the round icon, and on a bar at the very top of
+   the home screen, which stays visible even in the microphone only view. The
+   tile also jumps to the front of the grid until the customer is back.
+ */
+ b.classList.toggle('tdown',!!bad.length);
+ if(c)c.classList.toggle('tdown',!!badIly.length);
+ /*
+   7.10, Itzik, with a screenshot: "why do I have these bars on top? I asked
+   that on top there is only the monitor." So no bar above the talk card any
+   more. A customer that is down, or a change request waiting for him, shows
+   on the customers tile instead: it comes out of hiding, blinks red or turns
+   orange, and jumps to the front of the grid.
+ */
+ ['tenAlert','crAlert'].forEach(function(id){var x=document.getElementById(id);if(x)x.remove();});
+ var sent=crSentGet(),pend=[];
+ T.forEach(function(t){(t.requests||[]).forEach(function(r){if(r.status==='pending'&&!sent[t.id+'/'+r.id])pend.push(t.title+': '+r.text);});});
+ if(pend.length){
+  b.hidden=false;
+  b.querySelector('small').textContent=(bad.length?'נתק: '+bad.map(function(t){return t.title;}).join(', ')+' · ':'')
+   +(pend.length===1?'בקשת שינוי אחת מחכה לך':pend.length+' בקשות שינוי מחכות לך');
+  if(!bad.length)b.style.background='linear-gradient(180deg,#fbc02d,#e65100)';
+ }
+ if(bad.length)b.hidden=false;
+ try{floatTile('gTenants',!!(bad.length||pend.length));}catch(e){}
+}
+on('gTenants',function(){pane('N3');renderTenants();});
+(function(){
+ var a=document.getElementById('icIly');
+ if(a)a.onclick=function(e){e.preventDefault();pane('N3');renderTenants();};
+ var r=document.getElementById('icRn');
+ if(r)r.onclick=function(e){e.preventDefault();pane('N3');renderTenants();};
+ var h=document.getElementById('icHs');
+ if(h)h.onclick=function(e){e.preventDefault();pane('N3');renderTenants();};
+})();
+function renderTasks(){
+ try{notesPull();notesPush();}catch(e){}
+ var host=document.getElementById('tkBox');
+ if(!host)return;
+ /*
+   איציק, 25.9, בהקלטה: "רשימת מטלות, בכפתור עשיתי הכל תאפס". The button
+   hides every task on the screen now, on his phone only. A task added later
+   has a new id, so it shows up as usual.
+ */
+ var gone=clearedIds('tasksCleared');
+ var T=(D.tasks||[]).filter(function(t){return !gone[t.id];}),done=tkDone(),h='',last='';
+ if(T.length)h+='<button type="button" class="gclear" id="tkClear">עשיתי הכל · '+T.length
+  +'<small>מנקה את הרשימה. משימה חדשה תופיע כרגיל.</small></button>';
+ T.forEach(function(t){
+  if(t.day!==last){
+   last=t.day;
+   var lbl=t.day;
+   try{lbl=new Date(t.day+'T09:00:00').toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'});}catch(e){}
+   h+='<h3>'+esc(lbl)+'</h3>';
+  }
+  h+='<label class="tk'+(done[t.id]?' done':'')+'"><input type="checkbox" data-tk="'+esc(t.id)+'"'
+   +(done[t.id]?' checked':'')+'><span>'+esc(t.text)+'</span></label>';
+ });
+ // An empty screen says in one line what it is for, like the ideas screen does.
+ host.innerHTML=h||'<div class="empty">אין משימות. כל משימה שתשלח למוניטור תופיע כאן לפי היום שלה.</div>';
+ var b=document.getElementById('tkClear');
+ if(b)b.onclick=function(){clearIds('tasksCleared',T.map(function(t){return t.id;}));notesPush();renderTasks();};
+}
+function clearedIds(k){try{return JSON.parse(localStorage.getItem(k)||'{}');}catch(e){return {};}}
+function clearIds(k,ids){
+ var d=clearedIds(k),now=new Date().toISOString();
+ ids.forEach(function(i){if(i)d[i]=now;});
+ try{localStorage.setItem(k,JSON.stringify(d));}catch(e){}
+}
+document.addEventListener('change',function(e){
+ var k=e.target&&e.target.getAttribute&&e.target.getAttribute('data-tk');
+ if(!k)return;
+ var d=tkDone();
+ var justDone=e.target.checked;
+ if(justDone)d[k]=new Date().toISOString();else delete d[k];
+ try{localStorage.setItem('tasksDone',JSON.stringify(d));}catch(err){}
+ var un=tkUndone().filter(function(x){return x!==k;});
+ if(!justDone)un.push(k);
+ try{localStorage.setItem('tasksUndone',JSON.stringify(un.slice(-500)));}catch(err){}
+ notesPush();
+ // A task just done gets a small bounce before the strike-through lands,
+ // so ticking one off feels like something instead of a flat state flip.
+ var lbl=e.target.closest('label');
+ if(justDone&&lbl){lbl.classList.add('pop');setTimeout(renderTasks,300);}
+ else renderTasks();
+});
+on2('remForm','submit',function(e){
+ e.preventDefault();
+ var d=document.getElementById('remDate'),t=document.getElementById('remText');
+ var said=document.getElementById('remSaid');
+ var v=t.value.trim();
+ if(!v||!d.value){said.textContent='צריך תאריך ועל מה להזכיר.';return;}
+ var msg='תזכורת: '+d.value.split('-').reverse().join('.')+' '+v;
+ said.textContent='שולח.';
+ sendText('תזכורת מהמוניטור',msg,'תזכורת').then(function(){
+  var p=pending();p.push({at:new Date().toISOString(),text:msg});savePending(p);
+  t.value='';said.textContent='נשלח. היא תופיע כאן ברשימה כשאקבע אותה.';
+  markSent('text');renderSent();renderThread();
+ }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';});
+});
+
+/*ITZIK:BEGIN*/
+function renderPegasus(){
+ var host=document.getElementById('pegBox');
+ if(!host)return;
+ var P=D.pegasus||[];
+ host.innerHTML=replyBox('על פגסוס')+(P.length?P.map(function(u,pi){
+  return '<div class="peg'+(u.ask?' waiting':'')+'"><div class="w">'+esc(stampAgo(u.at))+'</div>'
+   +(u.did?'<div><b>מה נעשה</b>'+esc(u.did)+'</div>':'')
+   +(u.now?'<div><b>מה קורה</b>'+esc(u.now)+'</div>':'')
+   +(u.plan?'<div><b>מה מתוכנן</b>'+esc(u.plan)+'</div>':'')
+   +(u.ask?'<div class="pask"><div class="q">מחכה לך: '+esc(u.ask)+'</div>'
+     +(u.opts.length?'<div class="popts" data-p="'+pi+'">'+u.opts.map(function(o,oi){
+        return '<button type="button" data-o="'+oi+'">'+esc(o)+'</button>';}).join('')+'</div>':'')
+     +replyBox('פגסוס: '+u.ask)+'</div>':'')
+   +'</div>';
+ }).join(''):'<div class="empty">עוד אין עדכון מפגסוס.</div>');
+ Array.prototype.forEach.call(host.querySelectorAll('.popts'),function(row){
+  var u=P[Number(row.getAttribute('data-p'))];
+  Array.prototype.forEach.call(row.querySelectorAll('button'),function(b){
+   b.onclick=function(){
+    var pick=u.opts[Number(b.getAttribute('data-o'))];
+    Array.prototype.forEach.call(row.querySelectorAll('button'),function(x){x.disabled=true;});
+    b.textContent='נבחר';
+    sendText('תשובה מהמוניטור','פגסוס: '+u.ask+' ← '+pick,'בחירה').then(function(){
+     toast('נבחר: '+pick+'. אני ממשיך לפי זה.');
+    }).catch(function(){
+     Array.prototype.forEach.call(row.querySelectorAll('button'),function(x){x.disabled=false;});
+     b.textContent=pick;
+     toast('הבחירה לא נשלחה. תנסה שוב.');
+    });
+   };
+  });
+ });
+ wireBoxes(host);
+}
+on('gPegasus',function(){pane('x');renderPegasus();ensure('pegasus',renderPegasus);});
+/*ITZIK:END*/
+on('growBtn',function(){pane('w');renderImprove();ensure('improve',renderImprove);});
+on('gSpecial',function(){pane('y');renderSpecial();markSpecialSeen();ensure('special',renderSpecial);});
+// Render first, mark second: the cards he is about to read still carry their
+// "new" mark, and only the tile goes quiet.
+on('gReplies',function(){pane('k');renderReplies();markRepliesSeen();ensure('replies',renderReplies);});
+(function(){
+ var inp=document.getElementById('gSearch');
+ if(!inp)return;
+ // The example in the box was "ראש השנה" on every customer's screen, which is
+ // Itzik's world (reviewer, 4.10, approved 5.10). instance.json may name one;
+ // otherwise it is the word this owner writes most, and with nothing written
+ // yet there is no example at all rather than someone else's.
+ function hint(){
+  var ex=(INSTANCE&&INSTANCE.searchHint)||'';
+  if(!ex&&(!INSTANCE||INSTANCE.name==='abaitzik'))ex='ראש השנה';
+  if(!ex){
+   var stop=' אני אתה הוא היא אנחנו זה זאת את של על עם גם אבל אם כי לא כן מה איך למה מתי איפה שלי שלך יש אין רק עוד כל היום עכשיו תודה בבקשה רוצה צריך אפשר תעשה תבדוק ';
+   var n={},best='',top=1;
+   (D.chat||[]).forEach(function(m){
+    if(m.from==='claude')return;
+    String(m.text||'').split(/[^֐-׿a-zA-Z]+/).forEach(function(w){
+     if(w.length<4||stop.indexOf(' '+w+' ')>-1)return;
+     n[w]=(n[w]||0)+1;
+     if(n[w]>top){top=n[w];best=w;}
+    });
+   });
+   ex=best;
+  }
+  inp.placeholder='חיפוש בכל מה שכתבתי לך'+(ex?', למשל '+ex:'');
+ }
+ hint();
+ inp.addEventListener('focus',function(){if(!INSTANCE||!INSTANCE.searchHint)ensure('chat',hint);});
+ inp.oninput=renderSearch;
+ // Search reaches into every collection, so touching the box pulls them all
+ // in once, and re-runs whatever he had already typed when they land.
+ inp.addEventListener('focus',function(){
+  ensure(['chat','reports','special','improve','replies'],function(){
+   if(inp.value.trim())renderSearch();
+  });
+ });
+})();
+function renderSent(){
+ var L=lastSent();var card=document.getElementById('sentCard');
+ // Itzik, 6.10, a recording: "תסיר את המוקאפ הצהוב בתחילת הדף למעלה". The
+ // card stays hidden; where a message stands is in the chat and in "מה התקבל".
+ card.hidden=true;return;
+ if(!L){card.hidden=true;return;}
+ card.hidden=false;
+ // By the clock, not by the text: half the answers are written with +03:00
+ // and half with Z, and as strings those two do not sort.
+ var t0=Date.parse(L.at)||0,tm=function(m){return Date.parse(m.at||'')||0;};
+ var mine=(D.chat||[]).filter(function(m){return m.from==='itzik'&&tm(m)>=t0-5000;})
+  .sort(function(a,b){return tm(a)-tm(b);});
+ var st=mine.length?(mine[mine.length-1].status||'received'):'';
+ var reply=(D.chat||[]).some(function(m){return m.from==='claude'&&tm(m)>t0;});
+ var label=SENTLABEL[L.kind]||'הודעה';
+ var t,sub,done=false,working=false;
+ if(st==='done'||reply){t=label+' טופלה';sub='עניתי לך. לחץ כאן כדי לקרוא את התשובה.';done=true;}
+ else if(st==='working'){
+  // He said he loses track here: what did I get, and what am I doing with
+  // it. So the card names the request and what is happening right now.
+  var last=mine[mine.length-1];
+  var what=String(last.text||'').replace(/\s+/g,' ').trim().slice(0,70);
+  var doing=(nowFresh()&&D.now.text)?D.now.text:'';
+  t=label+' בעבודה';
+  sub='קיבלתי: '+what+(doing?' · עכשיו: '+doing:'');
+  working=true;
+ }
+ else if(st){t=label+' התקבלה';sub='נכנסה אליי, מחכה לטיפול.';}
+ else{t=label+' נשלחה';sub='בדרך אליי. אני קולט הודעות ברגע שהן מגיעות.';}
+ card.className='sent'+(done?' done':'')+(working?' working':'');
+ card.innerHTML='<span class="s-dot"></span><div><b>'+esc(t)+'</b><small>'+esc(sub)+' · '+esc(stamp(L.at))+'</small></div>';
+ card.style.cursor=done?'pointer':'';
+ card.style.cursor=(done||working)?'pointer':'';
+ card.onclick=(done||working)?function(){pane('m');renderThread();markChatSeen();}:null;
+}
+function myCode(){
+ try{return localStorage.getItem('monitorCode')||'';}catch(e){return '';}
+}
+/*
+  One lock on a customer's copy. 10.10, from the reviewer, taken by Itzik:
+  "שתי נעילות שונות באותו דף". She typed the five words on the first screen,
+  and then settings offered a second lock with its own numeric code. Now the
+  words are typed once, on the first open, and after that the only thing
+  asked is the face. When the face fails, the way back in is the same five
+  words, checked against the key this phone already holds, never a new code.
+  Itzik's own copy keeps its personal code: there it also signs every message.
+
+  10.10 later, Itzik: "זה צריך להיות חד פעמי ... כל פעם בכניסה למוניטור עם
+  זיהוי פנים? את זה אני לא רוצה". So the words are the one time, and after
+  them the monitor opens straight. Nothing offers the face after the words;
+  it stays a choice in settings for whoever wants it.
+*/
+function oneLock(){return !!(GATE&&GATE.words&&INSTANCE&&INSTANCE.name&&INSTANCE.name!=='abaitzik');}
+function gateKeyIs(v){
+ var saved='';try{saved=localStorage.getItem('gateKey')||'';}catch(e){}
+ if(!saved||!gnorm(v))return Promise.resolve(false);
+ return gderive(v).then(function(k){return crypto.subtle.exportKey('raw',k);})
+  .then(function(raw){return graw(new Uint8Array(raw))===saved;},function(){return false;});
+}
+function showCodeBox(){
+ var box=document.getElementById('codeBox');
+ box.hidden=false;
+ if(oneLock()){
+  document.getElementById('codeTitle').textContent='זיהוי פנים, רק אם רוצים';
+  document.getElementById('codeAbout').textContent='את הסיסמה מקלידים רק פעם אחת, ומאז המוניטור נפתח בטלפון הזה ישר. מי שרוצה נעילה גם בכל פתיחה יכול להפעיל כאן זיהוי פנים. אם הזיהוי לא מצליח, נכנסים עם אותה סיסמה.';
+  document.getElementById('codeRow').hidden=true;
+  document.getElementById('codeChangeRow').hidden=true;
+  document.getElementById('codeSaid').textContent='';
+  faceRender();
+  return;
+ }
+ var c=myCode();
+ document.getElementById('codeSaid').textContent=c?'קוד שמור במכשיר הזה.':'עוד לא נקבע קוד. תקליד אחד ותשמור.';
+ document.getElementById('codeRow').hidden=!!c;
+ faceRender();
+}
+// Face ID through the platform authenticator. There is no server behind this,
+// so it gates the screen rather than encrypting anything, and the text below
+// says exactly that.
+function faceId(){
+ try{return localStorage.getItem('faceCred')||'';}catch(e){return '';}
+}
+function b64(buf){
+ var b='';new Uint8Array(buf).forEach(function(c){b+=String.fromCharCode(c);});
+ return btoa(b);
+}
+function unb64(str){
+ var raw=atob(str),a=new Uint8Array(raw.length);
+ for(var i=0;i<raw.length;i++)a[i]=raw.charCodeAt(i);
+ return a.buffer;
+}
+function faceSupported(){
+ return !!(window.PublicKeyCredential&&navigator.credentials&&location.protocol==='https:');
+}
+function faceEnroll(cb){
+ if(!faceSupported()){cb(false,'הדפדפן הזה לא תומך בזיהוי פנים.');return;}
+ var ch=new Uint8Array(32);crypto.getRandomValues(ch);
+ var uid=new Uint8Array(16);crypto.getRandomValues(uid);
+ navigator.credentials.create({publicKey:{
+  challenge:ch,
+  rp:{name:PAGE_TITLE},
+  user:{id:uid,name:(INSTANCE&&INSTANCE.name)||'itzik',displayName:OWNER},
+  pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
+  authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},
+  timeout:60000,attestation:'none'
+ }}).then(function(c){
+  try{localStorage.setItem('faceCred',b64(c.rawId));}catch(e){}
+  cb(true,'זיהוי פנים מופעל במכשיר הזה.');
+ }).catch(function(){cb(false,'ההפעלה בוטלה או נכשלה.');});
+}
+function faceCheck(cb){
+ var id=faceId();
+ if(!id){cb(false,'צריך קודם להפעיל זיהוי פנים.');return;}
+ var ch=new Uint8Array(32);crypto.getRandomValues(ch);
+ navigator.credentials.get({publicKey:{
+  challenge:ch,
+  allowCredentials:[{type:'public-key',id:unb64(id)}],
+  userVerification:'required',timeout:60000
+ }}).then(function(){cb(true,'');}).catch(function(){cb(false,'הזיהוי נכשל. לא נפתח.');});
+}
+function faceRender(){
+ var st=document.getElementById('faceState');
+ var btn=document.getElementById('faceSetup');
+ if(!faceSupported()){st.textContent='לא נתמך בדפדפן הזה.';btn.disabled=true;return;}
+ var on=!!faceId();
+ st.textContent=on?'מופעל במכשיר הזה.':'עדיין לא הופעל במכשיר הזה.';
+ btn.textContent=on?'הפעלה מחדש':'הפעלת זיהוי פנים';
+}
+document.getElementById('faceSetup').onclick=function(){
+ var st=document.getElementById('faceState');
+ st.textContent='ממתין לזיהוי...';
+ faceEnroll(function(ok,msg){st.textContent=msg;faceRender();});
+};
+document.getElementById('codeChange').onclick=function(){
+ var said=document.getElementById('codeSaid');
+ var row=document.getElementById('codeRow');
+ if(!faceId()){said.textContent='קודם מפעילים זיהוי פנים, ורק אחר כך אפשר לשנות את הקוד.';return;}
+ said.textContent='ממתין לזיהוי פנים...';
+ faceCheck(function(ok,msg){
+  if(!ok){said.textContent=msg;row.hidden=true;return;}
+  row.hidden=false;
+  document.getElementById('codeInput').value='';
+  said.textContent='זוהית. תקליד קוד חדש ותשמור.';
+ });
+};
+document.getElementById('codeSave').onclick=function(){
+ var v=document.getElementById('codeInput').value.trim();
+ var said=document.getElementById('codeSaid');
+ if(!v){said.textContent='תקליד קוד קודם.';return;}
+ try{localStorage.setItem('monitorCode',v);said.textContent='נשמר. מעכשיו כל הודעה מהמכשיר הזה נושאת אותו.';
+  document.getElementById('codeInput').value='';
+  document.getElementById('codeRow').hidden=true;}
+ catch(e){said.textContent='הדפדפן לא נתן לשמור. נסה בלי גלישה פרטית.';}
+};
+function lockOn(){
+ try{return localStorage.getItem('lockOn')==='1';}catch(e){return false;}
+}
+function lockToggleRender(){
+ var st=document.getElementById('lockState');
+ var btn=document.getElementById('lockToggle');
+ var on=lockOn();
+ st.textContent=on?'מופעלת. המוניטור נעול בכל פתיחה.'
+  :'כבויה. המוניטור נפתח ישר, בלי זיהוי.';
+ btn.textContent=on?'כיבוי הנעילה':'הפעלת הנעילה';
+}
+document.getElementById('lockToggle').onclick=function(){
+ var turningOn=!lockOn();
+ if(turningOn&&!faceId()&&(oneLock()||!myCode())){
+  document.getElementById('lockState').textContent=oneLock()?'קודם מפעילים זיהוי פנים, כאן למעלה.':
+   'קודם מגדירים קוד או זיהוי פנים, אחרת אין דרך להיכנס.';
+  return;
+ }
+ try{localStorage.setItem('lockOn',turningOn?'1':'0');}catch(e){}
+ lockToggleRender();
+};
+lockToggleRender();
+
+// ---- the lock ----
+// The class was already put on <html> by the early script, so by the time this
+// runs the app is hidden. All that is left is a way back in.
+//
+// This gates the screen on this device. It is not encryption: the page is
+// public and the code lives in this browser's storage, so anyone with the
+// address still sees the built page. It stops the person standing next to him,
+// which is exactly what he asked for. A real gate needs a server.
+function locked(){return /(^| )locked( |$)/.test(document.documentElement.className);}
+function unlock(){
+ document.documentElement.className=
+  document.documentElement.className.replace(/(^| )locked( |$)/,' ').trim();
+ // The bubbles were laid out while hidden, so the thread is drawn again.
+ try{renderThread();renderSent();}catch(e){}
+}
+function lockSay(t){document.getElementById('lockSaid').textContent=t;}
+function lockFaceTry(auto){
+ if(!faceId()){
+  // No face enrolled on this device, so the code is the only way in.
+  document.getElementById('lockFace').hidden=true;
+  if(oneLock()){
+   document.getElementById('lockRow').hidden=false;
+   document.getElementById('lockUseCode').hidden=true;
+   lockSay('תקליד את הסיסמה כדי להיכנס.');
+   return;
+  }
+  if(!myCode()){unlock();return;}
+  document.getElementById('lockRow').hidden=false;
+  document.getElementById('lockUseCode').hidden=true;
+  lockSay('תקליד את הקוד האישי כדי להיכנס.');
+  return;
+ }
+ lockSay('ממתין לזיהוי פנים...');
+ faceCheck(function(ok){
+  if(ok){unlock();return;}
+  lockSay(auto?'מזדהים כדי להיכנס.':'הזיהוי נכשל. אפשר לנסות שוב או להיכנס עם '+(oneLock()?'הסיסמה.':'הקוד.'));
+ });
+}
+if(locked()){
+ document.getElementById('lockFace').onclick=function(){lockFaceTry(false);};
+ // Offering a code entry when no code was ever set would be a door that opens
+ // onto a wall, so it is not offered at all.
+ if(oneLock()){
+  var lc=document.getElementById('lockCode');
+  lc.removeAttribute('inputmode');lc.setAttribute('placeholder','הסיסמה');
+  lc.setAttribute('autocapitalize','off');lc.setAttribute('spellcheck','false');
+  document.getElementById('lockUseCode').textContent='כניסה עם הסיסמה';
+  document.getElementById('lockForgot').textContent='שכחתי את הסיסמה';
+ }
+ else if(!myCode())document.getElementById('lockUseCode').hidden=true;
+ document.getElementById('lockUseCode').onclick=function(){
+  document.getElementById('lockRow').hidden=false;
+  document.getElementById('lockCode').focus();
+  lockSay(oneLock()?'תקליד את הסיסמה, אותן חמש מילים מהפעם הראשונה.':'תקליד את הקוד האישי.');
+ };
+ var lockGo=function(){
+  var v=document.getElementById('lockCode').value.trim();
+  if(oneLock()){
+   if(!v)return;
+   lockSay('רגע, בודק.');
+   gateKeyIs(v).then(function(ok){
+    if(ok){unlock();return;}
+    document.getElementById('lockCode').value='';
+    lockSay('הסיסמה לא מתאימה. אלה אותן חמש מילים שהקלדת בפעם הראשונה.');
+   });
+   return;
+  }
+  if(v&&v===myCode()){unlock();return;}
+  document.getElementById('lockCode').value='';
+  lockSay('קוד לא נכון.');
+ };
+ document.getElementById('lockGo').onclick=lockGo;
+ document.getElementById('lockCode').addEventListener('keydown',function(e){
+  if(e.key==='Enter')lockGo();
+ });
+ /*
+  8.10, from the reviewer: with Face ID failing and the code forgotten there was
+  no way in at all. On a customer's monitor this asks Itzik to open it. The
+  request carries a random mark kept on this phone; when he approves, the next
+  page lists the mark and this phone opens once, with the lock switched off so
+  it can be set again. Only Itzik's approval opens it, never the button itself.
+ */
+ var lockMark=function(){try{return localStorage.getItem('lockReset')||'';}catch(e){return '';}};
+ var lockFree=(INSTANCE.unlocks||[]).indexOf(lockMark())>-1&&lockMark();
+ if(lockFree){
+  try{localStorage.setItem('lockOn','0');localStorage.removeItem('lockReset');}catch(e){}
+  unlock();try{lockToggleRender();}catch(e){}
+  setTimeout(function(){toast('הבקשה אושרה והמוניטור נפתח. הנעילה כבויה, ואפשר להפעיל אותה מחדש בהגדרות.');},400);
+ }else if(INSTANCE.name&&INSTANCE.name!=='abaitzik'&&(myCode()||oneLock())){
+  var fg=document.getElementById('lockForgot');
+  fg.hidden=false;
+  if(lockMark())lockSay('הבקשה לפתוח נשלחה. כשמערכת המחשוב של המוניטור תאשר, המוניטור ייפתח כאן לבד ותגיע אליך הודעה.');
+  fg.onclick=function(){
+   if(lockMark()){lockSay('הבקשה כבר נשלחה. כשמערכת המחשוב של המוניטור תאשר, המוניטור ייפתח כאן לבד ותגיע אליך הודעה.');return;}
+   var a=new Uint8Array(6);crypto.getRandomValues(a);
+   var mark=[].map.call(a,function(x){return ('0'+x.toString(16)).slice(-2);}).join('');
+   fg.disabled=true;lockSay('שולח...');
+   sendText('בקשה ממנהל','בקשה ממנהל: שכחתי את הקוד של הנעילה. בבקשה לפתוח את המוניטור בטלפון שלי (מכשיר '+mark+')','משימה').then(function(){
+    try{localStorage.setItem('lockReset',mark);}catch(e){}
+    fg.disabled=false;
+    lockSay('הבקשה נשלחה למערכת המחשוב של המוניטור. כשהיא תאשר, המוניטור ייפתח כאן לבד ותגיע אליך הודעה.');
+   }).catch(function(){fg.disabled=false;lockSay('לא נשלח. תבדוק חיבור ותנסה שוב.');});
+  };
+ }
+ // Face ID is offered the moment the page opens, so in the good case he only
+ // looks at the phone and he is in.
+ if(!lockFree)setTimeout(function(){lockFaceTry(true);},220);
+}
+
+showCodeBox();
+
+// Straight to the phone camera, no picker in between. Used by the camera tile
+// and by the camera button that sits beside every message and every report.
+function shoot(auto){
+ var f=document.getElementById('fileForm');
+ if(f)f.hidden=false;
+ var pick=document.getElementById('fPick');
+ if(!pick)return;
+ autoSend=!!auto;
+ setQ('full');
+ pick.setAttribute('accept','image/*');
+ pick.setAttribute('capture','environment');
+ pick.click();
+}
+function openCam(){pane('m');renderThread();shoot();}
+on('gCam',openCam);on('iCam',openCam);
+
+// ---- what he ate ----
+// He sends a photo or a line; I look the values up and write the row back into
+// the food collection. The screen only adds up and displays what is there.
+var REPHOURS=[[8,17],[20,17]];
+function nextReport(){
+ var now=new Date();
+ for(var i=0;i<REPHOURS.length;i++){
+  var d=new Date(now);
+  d.setHours(REPHOURS[i][0],REPHOURS[i][1],0,0);
+  if(d>now)return d;
+ }
+ var t=new Date(now);
+ t.setDate(t.getDate()+1);
+ t.setHours(REPHOURS[0][0],REPHOURS[0][1],0,0);
+ return t;
+}
+// Questions I am waiting on. Answering one sends it back through the same
+// channel as everything else, and hides the card so it is not asked twice.
+function answeredChoices(){
+ return idList('choicesDone');
+}
+function renderAsk(){
+ var host=document.getElementById('askBox');
+ if(!host)return;
+ var done=answeredChoices();
+ var open=(D.choices||[]).filter(function(c){return done.indexOf(c.id)<0;});
+ if(!open.length){host.innerHTML='';return;}
+ var c=open[0];
+ host.innerHTML='<div class="askcard"><div class="q">'+esc(c.question)+'</div>'
+  +'<div class="sub">תבחר אחת, ואני בונה לפי זה</div><div class="opts">'
+  +c.options.map(function(o,i){return '<button type="button" data-i="'+i+'">'+esc(o)+'</button>';}).join('')
+  +'</div></div>';
+ Array.prototype.forEach.call(host.querySelectorAll('button'),function(b){
+  b.onclick=function(){
+   var pick=c.options[Number(b.getAttribute('data-i'))];
+   Array.prototype.forEach.call(host.querySelectorAll('button'),function(x){x.disabled=true;});
+   b.textContent='נבחר';
+   sendText('תשובה מהמוניטור','בחירה: '+c.question+' ← '+pick,'בחירה').then(function(){
+    var d=answeredChoices();d.push(c.id);
+    try{localStorage.setItem('choicesDone',JSON.stringify(d));}catch(e){}
+    toast('נבחר: '+pick+'. אני בונה לפי זה.');
+    setTimeout(renderAsk,900);
+   }).catch(function(){
+    Array.prototype.forEach.call(host.querySelectorAll('button'),function(x){x.disabled=false;});
+    b.textContent=pick;
+    toast('הבחירה לא נשלחה. תנסה שוב.');
+   });
+  };
+ });
+}
+function renderNextReport(){
+ var el=document.getElementById('repWhen');
+ if(!el)return;
+ var d=nextReport();
+ var mins=Math.max(0,Math.round((d-new Date())/60000));
+ var hh=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+ var when=d.toDateString()===new Date().toDateString()?'היום':'מחר';
+ var left=mins<60?('בעוד '+mins+' דקות'):('בעוד '+Math.round(mins/60)+' שעות');
+ el.textContent=when+' ב-'+hh+', '+left;
+}
+setInterval(renderNextReport,60000);
+on('repNow',function(){
+ var b=this,said=document.getElementById('repSaid');
+ b.disabled=true;said.textContent='מבקש.';
+ sendText('בקשת דוח מהמוניטור','דוח עכשיו: תן לי דוח רשתות מעודכן','דוח').then(function(){
+  said.textContent='ביקשתי. הדוח ייכנס לכאן בסבב הקרוב.';
+  toast(said.textContent);
+  markSent('text');renderSent();
+ }).catch(function(){
+  said.textContent='הבקשה לא עברה. תנסה שוב.';
+ }).then(function(){b.disabled=false;});
+});
+/*
+  The drain log.
+
+  Four tubes, one row a day, and the only thing worth reading off it is the
+  direction. So the newest row is the big one, each drain carries the change
+  since the day before, and the total is what a surgeon asks for first.
+
+  Nothing here judges a number. Rising output, a change of colour or a smell is
+  a phone call to his surgeon, and the screen says so rather than reassuring
+  him, because a log that reassures is worse than no log.
+*/
+function drainRows(){
+ return (D.drains||[]).slice().sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
+}
+function drainTotal(r){
+ var t=0,n=0;
+ [1,2,3,4].forEach(function(i){var v=r['d'+i];if(typeof v==='number'){t+=v;n++;}});
+ return n?t:null;
+}
+function renderDrains(){
+ var host=document.getElementById('drBody');
+ if(!host)return;
+ var rows=drainRows();
+ if(!rows.length){
+  host.innerHTML='<div class="empty">עוד לא נרשמה מדידה. תמלא את המספרים למעלה ותשלח, גם אם אחד מהם אפס.</div>';
+  return;
+ }
+ /*
+   Itzik, 18.09, by voice: "תוסיף טבלה פה בניקוזים".
+
+   A card a day reads fine for one day and badly for ten: the only thing worth
+   seeing here is one tube down the page over a week, and cards put the four
+   tubes across the page instead. A table puts a day on a line and a tube in a
+   column, so the column is the direction and the eye does the work.
+
+   The arrow stays with the number and keeps the colour, because green and red
+   on the number itself would be the screen judging the measurement, and it
+   does not. A note hangs under its own day, across the width, where it cannot
+   push a column out of line.
+ */
+ /*
+   Urine is a column here and not a screen of its own.
+
+   Itzik, 18.9: "make a column for urine, 280, add it to the table." It is not
+   a drain, and it is set apart in the table for that reason, but it is
+   measured in the same jug at the same hour and it answers the other half of
+   the same question after an abdominal operation: what came out, and by which
+   route. Two screens to answer one question is one screen too many.
+ */
+ var head='<tr><th>יום</th><th>1</th><th>2</th><th>3</th><th>4</th><th>סה״כ</th><th class="drpee">שתן</th></tr>';
+ var body='';
+ /*
+   The arrow looks back to the last time that tube was measured, not to the
+   line above it.
+
+   19.9, 00:02: he sent all four tubes, and the round before it was a partial
+   one, drain 1 and drain 4 only. Comparing line to line left drains 2 and 3
+   with no arrow at all, so the screen hid the one thing on it worth seeing:
+   drain 2 had gone from 25 to 0. A row is partial whenever he empties one
+   tube and puts the jug down, which is most rounds, so the comparison has to
+   follow the tube down the column and skip the dots.
+ */
+ function lastOf(from,key){
+  for(var j=from;j<rows.length;j++){if(typeof rows[j][key]==='number')return rows[j][key];}
+  return null;
+ }
+ rows.slice(0,30).forEach(function(r,i){
+  var cells=[1,2,3,4].map(function(n){
+   var v=r['d'+n];
+   if(typeof v!=='number')return '<td class="drc dim">·</td>';
+   var was=lastOf(i+1,'d'+n);
+   var d=was===null?'':(v-was);
+   var arrow=d===''?'':(d<0?'▼':(d>0?'▲':'='));
+   var cls=d===''?'':(d<0?' down':(d>0?' up':''));
+   return '<td class="drc'+cls+'"><b>'+v+'</b>'
+    +(d===''?'':'<em>'+arrow+' '+Math.abs(d)+'</em>')+'</td>';
+  }).join('');
+  var tot=drainTotal(r);
+  var pee=r.urine;
+  var peeWas=lastOf(i+1,'urine');
+  var peeD=(typeof pee!=='number'||peeWas===null)?'':(pee-peeWas);
+  body+='<tr class="drrw'+(i?'':' newest')+'">'
+   +'<th class="drday">'+esc(stamp(r.at))+'</th>'
+   +cells
+   +'<td class="drtot">'+(tot===null?'·':tot)+'</td>'
+   +'<td class="drc drpee">'+(typeof pee==='number'?('<b>'+pee+'</b>'
+     +(peeD===''?'':'<em>'+(peeD<0?'▼':(peeD>0?'▲':'='))+' '+Math.abs(peeD)+'</em>')):'·')+'</td>'
+   +'</tr>';
+  if(r.note)body+='<tr class="drnrow'+(i?'':' newest')+'"><td colspan="7" class="drnote">'
+   +esc(r.note)+'</td></tr>';
+ });
+ host.innerHTML='<div class="drwrap"><table class="drtab">'
+  +'<caption>מ״ל, החדש למעלה. החץ הוא ההפרש מהמדידה הקודמת של אותו ניקוז. סה״כ הוא ארבעת הניקוזים בלבד, בלי שתן.</caption>'
+  +'<thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>';
+}
+/*
+  The list he ticks. Nothing here acts on its own.
+
+  Itzik, 18.9: "give me a detailed list and I will approve, prepare a lead with
+  a tick box, I will tell you what to do." Blocking is visible to the person and
+  hard to walk back, some of these are a first name with no account yet, and two
+  of them are that man's children. So the screen collects a decision and sends
+  it; the blocking happens afterwards, by me, one at a time, reported back.
+
+  The ticks live in the browser so a half finished list survives a refresh.
+*/
+function blTicks(){ return idList('blockTicks'); }
+function blToggle(id){
+ var t=blTicks(),i=t.indexOf(id);
+ if(i>-1)t.splice(i,1);else t.push(id);
+ try{localStorage.setItem('blockTicks',JSON.stringify(t));}catch(e){}
+}
+/*
+  A handle is not a link. He reads this on a phone, and "facebook.com/rwth.ppy.swyly"
+  typed by hand from a screen is one dropped letter away from the wrong person's
+  profile. So the leftover list carries the opened address, not the name of it.
+*/
+function blUrl(h){
+ if(!h)return '';
+ var s=String(h).replace(/^@/,'');
+ var low=s.toLowerCase();
+ if(low.indexOf('http')===0)return s;
+ if(low.indexOf('www.')===0)s=s.slice(4);
+ if(s.toLowerCase().indexOf('facebook.com/')===0)return 'https://www.'+s;
+ if(s.toLowerCase().indexOf('tiktok.com/')===0)return 'https://www.'+s;
+ return 'https://www.instagram.com/'+s+'/';
+}
+function blOpenPeople(){
+ var out=[];
+ (D.blocklist||[]).forEach(function(l){(l.people||[]).forEach(function(p){
+  // Some rows carry a search hint instead of a handle. Those cannot become a
+  // link, and printing them as one gave him a URL that opens nothing.
+  if(p.handle&&p.handle.indexOf('חיפוש')!==0&&p.state!=='נחסם')out.push(p);
+ });});
+ return out;
+}
+function renderBlockOpen(){
+ var host=document.getElementById('blOpen');
+ if(!host)return;
+ var left=blOpenPeople();
+ if(!left.length){ host.innerHTML=''; return; }
+ host.innerHTML='<h3>קישורים ישירים, '+left.length+'</h3>'
+  +'<p>כל שורה כאן היא קישור שנפתח בפרופיל עצמו, בלי להקליד ובלי לחפש.</p>'
+  +'<ol>'+left.map(function(p){
+   return '<li><b>'+esc(p.name||p.id)+'</b>'
+    +(p.state?' <i class="blstate">'+esc(p.state)+'</i>':'')
+    +'<a href="'+esc(blUrl(p.handle))+'" target="_blank" rel="noopener">'
+    +esc(blUrl(p.handle))+'</a></li>';
+  }).join('')+'</ol>'
+  +'<button type="button" class="blcopy" id="blCopy">העתקת הרשימה</button>';
+ var btn=document.getElementById('blCopy');
+ if(btn)btn.onclick=function(){
+  var txt=left.map(function(p){return (p.name||p.id)+'  '+blUrl(p.handle);}).join('\\n');
+  var done=function(){btn.textContent='הועתק';setTimeout(function(){btn.textContent='העתקת הרשימה';},3000);};
+  try{
+   if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done,function(){fallbackCopy(txt,done);});
+   }else fallbackCopy(txt,done);
+  }catch(e){fallbackCopy(txt,done);}
+ };
+}
+function fallbackCopy(txt,done){
+ try{
+  var ta=document.createElement('textarea');
+  ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.select();
+  document.execCommand('copy');document.body.removeChild(ta);
+  done();
+ }catch(e){}
+}
+function renderBlock(){
+ renderBlockOpen();
+ var host=document.getElementById('blBody');
+ if(!host)return;
+ var lists=(D.blocklist||[]);
+ var people=[];
+ lists.forEach(function(l){(l.people||[]).forEach(function(p){people.push(p);});});
+ if(!people.length){
+  host.innerHTML='<div class="empty">אין כרגע שמות ברשימה.</div>';
+  return;
+ }
+ var t=blTicks();
+ // Names he already decided on kept filling the screen, so what still waits for
+ // him was buried. Waiting names stay open, blocked ones fold away.
+ var row=function(p){
+  var on=t.indexOf(p.id)>-1;
+  return '<label class="blrow'+(on?' on':'')+'">'
+   +'<input type="checkbox" data-id="'+esc(p.id)+'"'+(on?' checked':'')+'>'
+   +'<span class="blwho"><b>'+esc(p.name||p.id)+'</b>'
+   +(p.handle?'<em>@'+esc(p.handle)+'</em>':'<em class="blnone">עוד אין חשבון מזוהה</em>')
+   +(p.state&&p.state!=='ממתין'?'<i class="blstate'+(p.state==='נחסם'?' done':'')+'">'+esc(p.state)+'</i>':'')
+   +'</span>'
+   +'<span class="blwhy">'+esc(p.why||'')
+   +(p.minorCheck?' <b class="blwarn">ילד שלו. תחליט עליו בנפרד.</b>':'')+'</span>'
+   +'</label>';
+ };
+ var waiting=people.filter(function(p){return p.state!=='נחסם';});
+ var blocked=people.filter(function(p){return p.state==='נחסם';});
+ host.innerHTML=(waiting.length
+   ?'<h3 class="blhead">מחכים להחלטה שלך, '+waiting.length+'</h3>'+waiting.map(row).join('')
+   :'<div class="empty">אין כרגע מי שמחכה להחלטה שלך.</div>')
+  +(blocked.length
+   ?'<details class="bldone"><summary>כבר חסומים, '+blocked.length+'</summary>'
+     +blocked.map(row).join('')+'</details>'
+   :'');
+ Array.prototype.forEach.call(host.querySelectorAll('input[type=checkbox]'),function(b){
+  b.onchange=function(){blToggle(b.getAttribute('data-id'));renderBlock();};
+ });
+}
+function openBlock(){pane('c');renderBlock();ensure('blocklist',renderBlock);}
+on('gBlock',openBlock);
+(function(){
+ var f=document.getElementById('blForm');
+ if(!f)return;
+ f.onsubmit=function(e){
+  e.preventDefault();
+  var said=document.getElementById('blSaid');
+  var t=blTicks();
+  var nEl=document.getElementById('blNote');
+  var note=nEl?String(nEl.value||'').trim():'';
+  if(!t.length&&!note){ if(said)said.textContent='לא סימנת אף אחד ולא כתבת כלום.'; return; }
+  var lists=(D.blocklist||[]),names=[];
+  lists.forEach(function(l){(l.people||[]).forEach(function(p){
+   if(t.indexOf(p.id)>-1)names.push(p.name+(p.handle?(' @'+p.handle):' (בלי חשבון מזוהה)'));
+  });});
+  if(said)said.textContent='שולח.';
+  var body=names.length?('אישור לחסימה, '+names.length+' שמות: '+names.join(' · ')):'בלי סימון אף אחד.';
+  if(note)body+=String.fromCharCode(10)+String.fromCharCode(10)+'הוא כתב: '+note;
+  sendText('חסימה',body,'חסימה')
+   .then(function(){
+    if(nEl)nEl.value='';
+    if(said)said.textContent=names.length?'נשלח. חוסם רק את מי שסימנת ומדווח אחד אחד.':'נשלח. קראתי מה שכתבת.';
+    setTimeout(function(){if(said)said.textContent='';},7000);
+   }).catch(function(){ if(said)said.textContent='לא נשלח. אין רשת כרגע.'; });
+ };
+})();
+/*
+  What I could not read, in his own voice.
+
+  19.9: four of his notes failed to transcribe inside ten minutes while the
+  machine was loaded, and the page showed him a filename. He asked for the
+  recording itself instead, and then for a button to find them in. Nothing
+  extra is stored for this: the listener already copies a twice-failed
+  recording into docs/files and writes the link into the note, so the screen
+  is just a reader over the chat he already has.
+*/
+function voiceList(){
+ return (D.chat||[]).filter(function(m){
+  // Anything whose note carries the recording itself. That covers a twice
+  // failed transcript, and also one a session recovered by hand afterwards,
+  // because he still wants to hear it and check the words I put in his mouth.
+  return m && m.from==='itzik' && /files[/]voice-/.test(String(m.note||''));
+ }).sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
+}
+function renderVoices(){
+ var host=document.getElementById('vcBody');
+ if(!host)return;
+ // איציק, 25.9: "שים גם שם כפתור איפוס". Same as the tasks button: clears
+ // this screen on his phone, and a recording that fails later still shows.
+ var gone=clearedIds('voicesCleared');
+ var list=voiceList().filter(function(m){return !gone[m.id||m.at];});
+ if(!list.length){
+  host.innerHTML='<div class="empty">אין כאן כלום. כל ההקלטות שלך תומללו.</div>';
+  return;
+ }
+ host.innerHTML='<button type="button" class="gclear" id="vcClear">איפוס · '+list.length
+  +'<small>מנקה את המסך הזה. הקלטה חדשה שלא תתומלל תופיע כאן כרגיל.</small></button>'
+  +list.map(function(m){
+  // No backslash in this regex on purpose. The page template strips one on its
+  // way out, so /files\/[^\s]+/ reached the browser as /files/[^s]+/ and the
+  // whole script stopped parsing — every screen below it died at once.
+  var link=String(m.note||'').match(/files[/][^ ]+/);
+  return '<div class="ansc">'
+   +'<span class="w">'+esc(stamp(m.at))+'</span>'
+   +(link&&fileEntry(fileNameOf(link[0]))?'<a class="ask" href="'+esc(link[0])+'">▶ השמעה</a>'
+    :link?'<audio controls preload="none" src="'+esc(link[0])+'" style="width:100%;margin-top:8px"></audio>'
+         :'<div class="atxt">ההקלטה עצמה לא הגיעה לדף. תגיד לי מה ביקשת שם.</div>')
+   +'</div>';
+ }).join('');
+ document.getElementById('vcClear').onclick=function(){
+  clearIds('voicesCleared',list.map(function(m){return m.id||m.at;}));renderVoices();
+ };
+}
+function openVoices(){
+ pane('V');renderVoices();ensure('chat',renderVoices);
+ try{window.stampSeen&&window.stampSeen('voicesSeen',voiceList());renderNew();}catch(e){}
+}
+on('gVoices',openVoices);
+function openDrains(){
+ pane('j');renderDrains();ensure('drains',renderDrains);
+ try{window.stampSeen&&window.stampSeen('drainsSeen',(D.drains||[]).slice().sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;}));renderNew();}catch(e){}
+}
+on('gDrains',openDrains);
+/*
+  The form sends, it does not write.
+
+  Everything he records travels the same road as everything else he says: out
+  through the channel, into the chat, and a session writes the record. One road
+  means one place where a message can go missing, and this screen is not the
+  place to invent a second.
+*/
+(function(){
+ var f=document.getElementById('drForm');
+ if(!f)return;
+ /*
+   The first real measurement arrived as four messages, 08:41:26 to 08:41:50,
+   each one carrying a single tube and three "לא נמדד". That is not how he
+   filled it in: Enter on a phone keyboard submits the form from inside the
+   first field, so every tube he typed sent the form again before the next one
+   was in it. Enter now walks to the next field, and only the last one sends.
+ */
+ ['dr1','dr2','dr3','dr4','drNote'].forEach(function(id,i,all){
+  var el=document.getElementById(id);
+  if(!el)return;
+  el.addEventListener('keydown',function(e){
+   if(e.key!=='Enter')return;
+   var next=all[i+1]&&document.getElementById(all[i+1]);
+   if(!next)return;
+   e.preventDefault();
+   next.focus();
+  });
+ });
+ f.onsubmit=function(e){
+  e.preventDefault();
+  var said=document.getElementById('drSaid');
+  var vals=[1,2,3,4].map(function(n){
+   var el=document.getElementById('dr'+n);
+   var v=(el&&el.value||'').trim();
+   return v===''?null:Number(v);
+  });
+  var peeNow=((document.getElementById('drUrine')||{}).value||'').trim();
+  if(vals.every(function(v){return v===null;})&&!peeNow){
+   if(said)said.textContent='תמלא לפחות ניקוז אחד, או שתן.';
+   return;
+  }
+  var note=(document.getElementById('drNote')||{}).value||'';
+  var pee=((document.getElementById('drUrine')||{}).value||'').trim();
+  var line='ניקוזים '+vals.map(function(v,i){
+   return (i+1)+'='+(v===null?'לא נמדד':v);
+  }).join(' ')+(pee?(' שתן='+Number(pee)):'')+(note.trim()?(' · '+note.trim()):'');
+  if(said)said.textContent='שולח.';
+  sendText('ניקוזים',line,'ניקוזים').then(function(){
+   if(said)said.textContent='נרשם. ירשם כאן ברגע שאעדכן.';
+   [1,2,3,4].forEach(function(n){var el=document.getElementById('dr'+n);if(el)el.value='';});
+   var nt=document.getElementById('drNote');if(nt)nt.value='';
+   var pu=document.getElementById('drUrine');if(pu)pu.value='';
+   setTimeout(function(){if(said)said.textContent='';},5000);
+  }).catch(function(){
+   if(said)said.textContent='לא נשלח. אין רשת כרגע.';
+  });
+ };
+})();
+/*
+  What his phone actually holds, in one tap.
+
+  Everything here is read off the live page rather than assumed, because every
+  wrong turn today came from me reasoning about his device from mine. It reads
+  the counts from both sides of the answers screen at once, which is where the
+  count and the list have already disagreed once, and it counts the cards that
+  are really in the DOM rather than the ones the data says should be.
+*/
+function diagnose(){
+ var q=function(id){var e=document.getElementById(id);return e?(e.textContent||'').trim():'-';};
+ var cards=document.querySelectorAll('#ansBox .ansc').length;
+ var chips=document.querySelectorAll('#aChips .achip').length;
+ var pA=document.getElementById('pA');
+ var num=function(f){try{return f();}catch(e){return 'שגיאה: '+e.message;}};
+ var L=[];
+ L.push('אבחון מהמכשיר של '+OWNER);
+ L.push('גרסה '+(D.buildId||'?')+' · קוד '+(typeof CODE_ID!=='undefined'?CODE_ID:'?'));
+ L.push('נעילה: '+(GATE?(GKEY?'נפתחה':'עדיין סגורה'):'כבויה'));
+ /*
+   The rest is not missing, it is not fetched yet: the page ships a first slice
+   and pulls the tail when a screen asks for it. Written out, because "150 out
+   of 231" on a page that says nothing else reads like 81 lost messages.
+ */
+ var lazyNote=function(k){
+  var have=(D[k]||[]).length,all=num(function(){return lazyTotal(k);});
+  return have+' מתוך '+all+(typeof all==='number'&&all>have?' · השאר נטען כשפותחים את המסך':'');
+ };
+ L.push('הודעות בזיכרון: '+lazyNote('chat'));
+ L.push('דוחות: '+lazyNote('reports'));
+ L.push('מונה הכפתור האדום: '+num(function(){return unreadCount();})+' · על המסך כתוב '+q('nbCount'));
+ L.push('כל התשובות: '+num(function(){return allAnswers().length;})+' · בסינון הנוכחי: '+num(function(){return ansList().length;}));
+ L.push('סינון: '+(typeof ansFilter!=='undefined'?ansFilter:'?')+' · מציג עד '+(typeof ansShow!=='undefined'?ansShow:'?'));
+ var ansOpen=!!(pA&&!pA.hidden);
+ /*
+   Zero cards while the screen is shut is what a shut screen can look like, and
+   saying so on the same line stops the number from reading as a fault. It is
+   only said when the count really is zero: on this machine the cards are built
+   and sit hidden, so the same note on a line reading 30 would be a lie.
+ */
+ L.push('כרטיסים בפועל על המסך: '+cards+' · צ׳יפים: '+chips
+  +((!ansOpen&&!cards)?' (מסך התשובות סגור)':''));
+ L.push('מסך התשובות פתוח: '+(ansOpen?'כן':'לא'));
+ L.push('סומנו כנקראו במכשיר: '+num(function(){return seenIds().length;}));
+ var fails=(window.bootFailed&&bootFailed.length?bootFailed.join(','):'')
+   ||(window.__heldBootFails&&__heldBootFails.length?__heldBootFails.join(',')+' (בזמן נעילה)':'אין');
+ L.push('כשלי טעינה: '+fails);
+ // And what each one actually said, which is the part I cannot get any other way.
+ var lf=window.__lastFail||{};
+ Object.keys(lf).forEach(function(k){ L.push('   ' + k + ': ' + lf[k]); });
+ // Forced once here too: a render that only fails while a screen is closed
+ // would never appear above, and that is exactly where this one has been hiding.
+ try{ renderAnswers(); L.push('ציור התשובות עכשיו: עבר'); }
+ catch(e){ L.push('ציור התשובות עכשיו: נפל · '+String(e&&e.message||e)
+   +' @ '+String((e&&e.stack||'').split(String.fromCharCode(10))[1]||'').trim().slice(0,90)); }
+ L.push('בדיקה אחרונה: '+q('checked'));
+ L.push('מסך '+window.innerWidth+'x'+window.innerHeight+' · '+(navigator.onLine?'מחובר':'בלי רשת'));
+ L.push('דפדפן: '+String(navigator.userAgent||'').slice(0,120));
+ return L.join(String.fromCharCode(10));
+}
+on('diagBtn',function(){
+ var said=document.getElementById('diagSaid');
+ var txt;
+ try{ txt=diagnose(); }
+ catch(e){ txt='אבחון מהמכשיר של '+OWNER+String.fromCharCode(10)+'האבחון עצמו נפל: '+e.message; }
+ if(said)said.textContent='שולח.';
+ sendText('אבחון',txt,'אבחון').then(function(){
+  if(said)said.textContent='נשלח. אני רואה את זה עכשיו.';
+  setTimeout(function(){if(said)said.textContent='';},6000);
+ }).catch(function(){
+  if(said)said.textContent='לא נשלח. אין רשת כרגע.';
+ });
+});
+function openFood(){pane('f');renderFood();ensure('food',renderFood);}
+on('gFood',openFood);on('iFood',openFood);
+on('gLolos',function(){pane('o');ensure('rivhit',renderRivhit);});
+on('gVaad',function(){pane('v');});
+/*
+  יהודה. The report lives next to the page under docs/files, so this is a
+  plain open and not a screen: no login, no Drive app, no key. Opening in a
+  new tab keeps the monitor where it was, which matters on a phone where
+  going back into a pane means finding your place again.
+*/
+/*ITZIK:BEGIN*/
+/*
+  יהודה. Opening the file was not enough: on a phone the PDF opens in a
+  viewer with no obvious way back, and what he actually wants to do with it
+  is send it to the client. So the tile raises three choices instead of one.
+
+  שליחה prefers the real Web Share sheet with the file attached, which is how
+  it reaches WhatsApp as a document rather than as a link someone has to open.
+  Where that is not available it shares the address, and where nothing is
+  available it copies the address and says so. Every step falls back rather
+  than failing, because a dead button on his phone is worse than a plain one.
+*/
+var YEHUDA_PDF='files/happymeal-sekira-yehuda.pdf';
+/*
+  ASCII on purpose. Android does not reliably honour a non ASCII download
+  name: the file arrives called something else, and then it is not in his
+  Downloads as far as he is concerned. A plain short name he can spot beats
+  a pretty one he cannot find.
+*/
+var YEHUDA_NAME='happymeal.pdf';
+/*
+  What he sends and what he reads are two different addresses on purpose.
+
+  The client gets the short one: a page that introduces the document before
+  it opens, on a name that reads like a job and not like a build artifact.
+  The file itself is still pulled from here, same origin, so attaching it to
+  a share needs no network permission and no second copy to keep in step.
+*/
+var YEHUDA_LINK='https://happymeal-sekira.vercel.app/';
+function yehudaUrl(){return YEHUDA_LINK;}
+function yehudaOpen(){window.open(YEHUDA_LINK,'_blank','noopener');}
+/*
+  He asked for the wording itself to sit inside the button, not just a link
+  he has to caption by hand each time. This is the note he already wrote and
+  signed at the end of the document itself, so what he sends matches what
+  Yehuda reads when he opens it.
+*/
+var YEHUDA_MSG='עברתי על האתר שלך לעומק והכנתי סקירה עם מה שהייתי עושה בו לו היה שלי. '
+ +'רוב הממצאים ניתנים לתיקון מהיר, וחלקם בשינוי הגדרה בודד.'+String.fromCharCode(10)+String.fromCharCode(10)
+ +'אשמח לעזור לך לבצע את זה. אפשר להתחיל משלב אחד בלבד ולראות תוצאה מדידה תוך שבוע.'+String.fromCharCode(10)+String.fromCharCode(10)
+ +'מוזמן לחזור אליי בכל שאלה, גם אם בסוף תבחר לבצע את זה בעצמך.';
+/*
+  A plain <a download> to a PDF does not download on Android: Chrome hands
+  the file to its viewer instead, the viewer takes over the screen, and he
+  is standing in a document with no way back. That is the dead end he hit.
+
+  A blob address has no content type for the browser to be clever about, so
+  the download attribute is honoured and the file lands in Downloads while
+  the page he is standing on does not move at all. The file is usually
+  already in hand from the prefetch; if not we pull it, and only if that
+  fails do we fall back to the old behaviour, with a word of warning first.
+*/
+function yehudaSave(blob){
+ var u=URL.createObjectURL(blob);
+ var a=document.createElement('a');
+ a.href=u;a.download=YEHUDA_NAME;a.rel='noopener';
+ document.body.appendChild(a);a.click();a.remove();
+ setTimeout(function(){URL.revokeObjectURL(u);},4000);
+ toastY('הקובץ ירד. תמצא אותו בהורדות');
+}
+/*
+  He is on an iPhone. Safari does not save a blob address, it opens it, and
+  there is no Downloads folder waiting at the other end either. So on Apple
+  the honest move is to open the file and let Safari's own share button do
+  the saving and the sending, and to say that out loud rather than promise a
+  folder that does not exist on his phone.
+*/
+function yehudaApple(){
+ return /iPad|iPhone|iPod/.test(navigator.userAgent)||
+  (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+}
+function yehudaDownload(){
+ if(yehudaApple()){
+  toastY('נפתח. כפתור השיתוף בספארי שומר או שולח');
+  window.open(YEHUDA_PDF,'_blank','noopener');
+  return;
+ }
+ if(yFile)return yehudaSave(yFile);
+ toastY('מוריד');
+ fetch(YEHUDA_PDF).then(function(r){
+  if(!r.ok)throw 0;return r.blob();
+ }).then(yehudaSave).catch(function(){
+  toastY('ההורדה נכשלה, פותח את הקובץ');
+  window.open(YEHUDA_PDF,'_blank','noopener');
+ });
+}
+/*
+  The first version fetched the PDF inside the tap and then called share.
+  That is the bug: Android spends the transient user activation on the await,
+  so by the time share is called the gesture is gone and the sheet never
+  opens. Nothing throws in a way he can see, so it reads as "does nothing".
+
+  So the file is fetched when the sheet opens, a beat before he chooses, and
+  the share call itself is synchronous inside the tap. If the file is not
+  ready yet we do not await it: we share the address instead, which still
+  opens WhatsApp, rather than trading a working sheet for a prettier one.
+*/
+var yFile=null,yFileTried=false;
+function yehudaPrefetch(){
+ if(yFileTried)return;yFileTried=true;
+ if(!navigator.canShare)return;
+ fetch(YEHUDA_PDF).then(function(r){return r.ok?r.blob():null;}).then(function(b){
+  if(!b)return;
+  var f=new File([b],YEHUDA_NAME,{type:'application/pdf'});
+  if(navigator.canShare({files:[f]}))yFile=f;
+ }).catch(function(){});
+}
+function yehudaShare(){
+ var url=yehudaUrl();
+ // Synchronous, inside the tap. No await before this point.
+ if(yFile&&navigator.share){
+  navigator.share({files:[yFile],title:'סקירת פיתוח happymeal',text:YEHUDA_MSG})
+   .catch(function(e){ if(e&&e.name!=='AbortError')yehudaShareLink(url); });
+  return;
+ }
+ yehudaShareLink(url);
+}
+function yehudaShareLink(url){
+ if(navigator.share){
+  navigator.share({title:'סקירת פיתוח happymeal',text:YEHUDA_MSG,url:url})
+   .catch(function(e){ if(e&&e.name!=='AbortError')yehudaCopy(url); });
+  return;
+ }
+ yehudaCopy(url);
+}
+function yehudaCopy(url){
+ if(navigator.clipboard&&navigator.clipboard.writeText){
+  navigator.clipboard.writeText(url)
+   .then(function(){toastY('הקישור הועתק, אפשר להדביק בוואטסאפ');})
+   .catch(function(){toastY('לא הצלחתי לשתף. תפתח ותוריד, ותצרף ידנית');});
+  return;
+ }
+ toastY('לא הצלחתי לשתף. תפתח ותוריד, ותצרף ידנית');
+}
+/*
+  The one that cannot fail. wa.me opens WhatsApp with the address already in
+  the box, on every phone and every browser, with no permission and no API.
+  It sends a link and not a document, which is the trade, and it is the right
+  trade for a button whose job is to never leave him stuck.
+*/
+/*
+  30.9, בהקלטה: "תשאיר אותה אבל, שנזכור מה צריך, וגרסה קצרה לשליחה אליו ...
+  אנחנו לא מוציאים את השירותים שלנו, אנחנו רק אומרים מה לא בסדר באתר". The
+  full review stays here to read, with no way to send it. What goes to Yehuda
+  is this short note: the three problems and nothing else. No offer, no link to
+  the full document, no how to fix.
+*/
+var NL=String.fromCharCode(10);
+var YEHUDA_SHORT='היי יהודה, עברתי על האתר ושמתי לב לשלושה דברים שכדאי שתדע.'+NL+NL
+ +'האתר לא מופיע בגוגל. בכל עמוד יש הגדרה שאומרת למנועי חיפוש לא להציג אותו, ואין מפת אתר.'+NL+NL
+ +'נשארו באוויר שאריות מהתבנית: תפריטים באנגלית, כתובות מייל של יצרן התבנית, מספר טלפון הודי ועמודי הדגמה פתוחים.'+NL+NL
+ +'האתר לא עומד בתקן הנגישות: אין כותרת ראשית, 109 קישורים בלי שם נגיש ו 63 תמונות בלי תיאור. זו חובה בחוק לעסק שנותן שירות לציבור.';
+function yehudaShortWa(){
+ window.open('https://wa.me/?text='+encodeURIComponent(YEHUDA_SHORT),'_blank','noopener');
+}
+function yehudaShortCopy(){
+ if(navigator.clipboard&&navigator.clipboard.writeText){
+  navigator.clipboard.writeText(YEHUDA_SHORT)
+   .then(function(){toastY('הגרסה הקצרה הועתקה, אפשר להדביק בוואטסאפ');})
+   .catch(function(){toastY('לא הצלחתי להעתיק. תשתמש בכפתור הוואטסאפ');});
+  return;
+ }
+ toastY('לא הצלחתי להעתיק. תשתמש בכפתור הוואטסאפ');
+}
+function yehudaWhatsapp(){
+ window.open('https://wa.me/?text='+encodeURIComponent(YEHUDA_MSG+String.fromCharCode(10)+String.fromCharCode(10)+yehudaUrl()),'_blank','noopener');
+}
+function toastY(msg){
+ var t=document.createElement('div');
+ t.className='ytoast';t.textContent=msg;document.body.appendChild(t);
+ setTimeout(function(){t.remove();},2600);
+}
+function yehudaSheet(){
+ var old=document.getElementById('ySheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='ySheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','סקירת happymeal ליהודה');
+ w.innerHTML='<div class="ycard">'
+  +'<b>יהודה, happymeal</b>'
+  +'<small>הגרסה הקצרה נשלחת אליו. הסקירה המלאה נשארת כאן לזיכרון ולא נשלחת.</small>'
+  +'<div class="ywa"><i>כך זה ייראה אצלו בוואטסאפ</i><div class="yshort">'+esc(YEHUDA_SHORT)+'<u>✓✓</u></div></div>'
+  +'<button type="button" class="yb yb2" data-y="swa">שליחת הגרסה הקצרה בוואטסאפ</button>'
+  +'<button type="button" class="yb" data-y="scopy">העתקת הגרסה הקצרה</button>'
+  +'<small>הסקירה המלאה, 12 עמודים, לא לשליחה</small>'
+  +'<button type="button" class="yb" data-y="open">פתיחת הסקירה המלאה</button>'
+  +'<button type="button" class="yb" data-y="down">שמירת הסקירה המלאה למכשיר</button>'
+  +'<button type="button" class="yb yx" data-y="close">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-y');
+  if(!k)return;
+  if(k==='open'){yehudaOpen();close();}
+  else if(k==='down'){yehudaDownload();close();}
+  else if(k==='swa'){yehudaShortWa();close();}
+  else if(k==='scopy'){yehudaShortCopy();close();}
+  else close();
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+ var first=w.querySelector('.yb');if(first)first.focus();
+}
+on('gYehuda',yehudaSheet);
+/*
+  10.10 Itzik: the menus all looked the same, pale buttons on white with nothing
+  between them. Items that share a number (video, cover, caption) now share one
+  colour family in darker and lighter shades, the next number takes the next
+  colour, and a gap opens between numbers. A list without numbers gives every
+  item its own colour.
+*/
+var YB_HUES=[212,145,12,275,35,190,330,95];
+function ybAttr(a,i){
+ var g=0,s=0,gap=false;
+ for(var j=0;j<=i;j++){
+  if(j===0)continue;
+  var same=a[j].n!==undefined&&a[j].n===a[j-1].n;
+  if(same)s++;else{g++;s=0;}
+  if(j===i)gap=!same&&a[j].n!==undefined;
+ }
+ var h=YB_HUES[g%YB_HUES.length],l=[36,28,21][s%3];
+ return 'class="yb'+(gap?' ygap':'')+'" style="background:linear-gradient(150deg,hsl('+h+',62%,'+(l+14)+'%),hsl('+h+',70%,'+l+'%));color:#fff"';
+}
+/*
+  30.9. Candle marketing, same numbered sheet as Rinat's. A new item gets the
+  next number and numbers never change.
+*/
+// 7.10 Itzik: delete all of these, keep only four stories with speech (two Thursday,
+// two Friday), with music under a looser voice. The PC remakes them as 15 to 18.
+// 7.10 evening: the PC built 15 to 18 but never put them here, so the sheet was
+// empty. They open from Drive until the PC copies the files themselves in.
+// 8.10 Itzik: every video comes with a feed cover and a post caption, same number.
+var NER_ITEMS=[
+ {n:'15',t:'סטורי פרסומת, חמישי 8.10, עברית, קול אישה עם מוזיקה',r:'ner-27-thu-he-woman.mp4'},
+ {n:'15',t:'כריכה לפיד (4:5)',u:'https://drive.google.com/file/d/1pHUYLKboO974OwoQe5IQOhOHUyeRY-Sj/view'},
+ {n:'15',t:'תיאור לפוסט, להעתקה',c:['יום חמישי בשוק, פרחים וחלה, והשאלה של הערב: מתי מדליקים?','זמן הדלקת הנרות לכל עיר בעולם, במקום אחד.','לחיצה אחת על התראה, והטלפון מזכיר לפני ההדלקה.','candletimes.com','ומה אצלכם, מי בבית אחראי לזכור את השעה?','#הדלקתנרות #ערב_שבת #שבתשלום #זמניהדלקתנרות']},
+ {n:'16',t:'סטורי פרסומת, חמישי 8.10, אנגלית, קול גבר, נרות ושולחן שבת',r:'ner-28-thu-en-man.mp4'},
+ {n:'16',t:'כריכה לפיד (4:5)',u:'https://drive.google.com/file/d/1WJ4rnqtxgZ0cmQ41lH196UOuTRhJb4tP/view'},
+ {n:'16',t:'תיאור לפוסט, להעתקה',c:['Shabbat candles, a set table, and one question: what time do we light tonight?','Accurate candle lighting times for any city in the world, free.','One tap on the bell and your phone reminds you before lighting.','candletimes.com','What is always on your Shabbat table?','#candlelighting #shabbatshalom #shabbateve #jewishlife']},
+ {n:'17',t:'סטורי פרסומת, שישי 9.10, עברית, קול גבר עם מוזיקה',r:'ner-29-fri-he-man.mp4'},
+ {n:'17',t:'כריכה לפיד (4:5)',u:'https://drive.google.com/file/d/12Xz259slLJQvo6rlA_knhWVDIukvXPCH/view'},
+ {n:'17',t:'תיאור לפוסט, להעתקה',c:['שישי בצהריים, כל המשפחה מגיעה, והילדים שואלים באיזו שעה להגיע.','זמן הדלקת הנרות של היום, לכל עיר בעולם.','לוחצים על התראה, וכולם יודעים לפני ההדלקה.','candletimes.com','כמה אנשים יושבים אצלכם סביב השולחן הערב?','#הדלקתנרות #ערב_שבת #שבתשלום #ארוחתשישי']},
+ {n:'18',t:'סטורי פרסומת, שישי 9.10, אנגלית, קול אישה עם מוזיקה',r:'ner-30-fri-en-woman.mp4'},
+ {n:'18',t:'כריכה לפיד (4:5)',u:'https://drive.google.com/file/d/1AMrprIvYxMQDSVyNN24VmrCnsXRVMWx0/view'},
+ {n:'18',t:'תיאור לפוסט, להעתקה',c:['New apartment, new city, and Shabbat eve is today.','The candlesticks came out of the boxes first.','Lighting times for any city in the world, and one tap on the bell brings a reminder before lighting.','candletimes.com','What is the first thing you unpack in a new home?','#candlelighting #shabbatshalom #newhome #jewishlife']}
+];
+function nerSheet(){
+ var old=document.getElementById('nSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='nSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','שיווק הנרות');
+ w.innerHTML='<div class="ycard">'
+  +'<b>שיווק הנרות</b>'
+  +'<small>'+(NER_ITEMS.length?'הסטוריז של סוף השבוע':'אין כרגע סטוריז')+'</small>'
+  +NER_ITEMS.map(function(it,i,a){
+    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=NER_ITEMS[+k];if(k===''||!it)return;
+  if(it.c)return captionSheet(it);
+  if(it.u)window.open(it.u,'_blank','noopener');
+  else fileOpen(it.r);
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gNerMkt',nerSheet);
+// 8.10 Itzik: copying the caption out of a Drive file is awkward on the phone.
+// The caption lives here, shown in full, with one button that copies all of it.
+function captionSheet(it){
+ var txt=it.c.join(String.fromCharCode(10));
+ var w=document.createElement('div');
+ w.id='capSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','תיאור לפוסט');
+ w.innerHTML='<div class="ycard">'
+  +'<b>'+esc(it.n)+' · תיאור לפוסט</b>'
+  +'<div class="capTxt" dir="auto">'+esc(txt)+'</div>'
+  +'<button type="button" class="yb yb1" data-c="copy">העתקה</button>'
+  +'<button type="button" class="yb yx" data-c="">חזרה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-c');
+  if(k===null||k===undefined)return;
+  if(k!=='copy'){close();return nerSheet();}
+  var b=e.target;
+  var done=function(){b.textContent='הועתק, אפשר להדביק';setTimeout(function(){b.textContent='העתקה';},2000);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+   navigator.clipboard.writeText(txt).then(done,function(){fallbackCopy(txt,done);});
+  }else fallbackCopy(txt,done);
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+/*
+  1.10. Finished reels, same numbered sheet as the candles. A new reel gets
+  the next number and numbers never change.
+*/
+// 4.10 cleared, Itzik uploaded 01 and 02. The next reel is 03.
+// 10.10: the title is also the file's name when it is sent or saved on the
+// iPhone, so it stays short like 03ג. A sentence of description made 04 an
+// 80 letter name with dots and commas, the one difference from 03ג when he reported it would not open.
+var REEL_ITEMS=[{n:'📤 התיקייה בדרייב',t:'לשלוח לאיליי, כל הרילים במקום אחד',u:'https://drive.google.com/drive/folders/1k8uEixPICag2S06Xfq_CPcntJvSMR46R'},{n:'04',t:'מה אני מתגעגע',r:'reel-04-r04.mp4'},{n:'04 איכות גבוהה',t:'לשמירה בטלפון, נפתח בדרייב',u:'https://drive.google.com/file/d/1mnS9AtWyuXUKFAp4cbe0Fu548OYvtzXf/view'},{n:'04 כריכה',t:'הכריכה',r:'reel-04-r04-cover.jpg'},{n:'04 פרסום',t:'כיתוב, כריכה ומוזיקה לאינסטגרם, טיקטוק ויוטיוב',r:'reel-04-post.txt'},{n:'05',t:'חטיף העדשים, עם מעל מיליון צפיות',r:'reel-05-million.mp4'},{n:'05 איכות גבוהה',t:'לשמירה בטלפון, נפתח בדרייב',u:'https://drive.google.com/file/d/193tnI38F6JY7gYyc997NPD25QDEURFmR/view'},{n:'05 כריכה',t:'הכריכה',r:'reel-05-cover.jpg'},{n:'05 פרסום',t:'כיתוב, כריכה ומוזיקה לאינסטגרם, טיקטוק ויוטיוב',r:'reel-05-post.txt'},{n:'06',t:'הטבעות',r:'reel-06-rings.mp4'},{n:'06 איכות גבוהה',t:'לשמירה בטלפון, נפתח בדרייב',u:'https://drive.google.com/file/d/1RbeVtFCNKb3VQHVkr8pEeh66OIxGDumg/view'},{n:'06 כריכה',t:'הכריכה',r:'reel-06-rings-cover.jpg'},{n:'06 פרסום',t:'כיתוב ומוזיקה לאינסטגרם, טיקטוק ויוטיוב',r:'reel-06-rings-post.txt'},{n:'07',t:'הפויל',r:'reel-07-foil.mp4'},{n:'07 איכות גבוהה',t:'לשמירה בטלפון, נפתח בדרייב',u:'https://drive.google.com/file/d/1XWiGtMGIjtLrdeMY8CWN2NtLiImdt8jb/view'},{n:'07 כריכה',t:'הכריכה',r:'reel-07-foil-cover.jpg'},{n:'07 פרסום',t:'כיתוב ומוזיקה לאינסטגרם, טיקטוק ויוטיוב',r:'reel-07-foil-post.txt'},{n:'08',t:'עמידות ידיים',r:'reel-08-hands.mp4'},{n:'08 איכות גבוהה',t:'לשמירה בטלפון, נפתח בדרייב',u:'https://drive.google.com/file/d/12JPTGn7v1PuAKuVjfveKug9n79l-XiqI/view'},{n:'08 כריכה',t:'הכריכה',r:'reel-08-hands-cover.jpg'},{n:'08 פרסום',t:'כיתוב ומוזיקה לאינסטגרם, טיקטוק ויוטיוב',r:'reel-08-hands-post.txt'},{n:'09',t:'האופניים',r:'reel-09-bike.mp4'},{n:'09 איכות גבוהה',t:'לשמירה בטלפון, נפתח בדרייב',u:'https://drive.google.com/file/d/1mlDF3VEIWmbDiFuIREcYti8BZrsIyIVo/view'},{n:'09 כריכה',t:'הכריכה',r:'reel-09-bike-cover.jpg'},{n:'09 פרסום',t:'כיתוב ומוזיקה לאינסטגרם, טיקטוק ויוטיוב',r:'reel-09-bike-post.txt'},{n:'10',t:'הלהקה',r:'reel-10-band.mp4'},{n:'10 איכות גבוהה',t:'לשמירה בטלפון, נפתח בדרייב',u:'https://drive.google.com/file/d/1V82yOZtZQK7FoI486DpnKALsfupKcAIw/view'},{n:'10 כריכה',t:'הכריכה',r:'reel-10-band-cover.jpg'},{n:'10 פרסום',t:'כיתוב ומוזיקה לאינסטגרם, טיקטוק ויוטיוב',r:'reel-10-band-post.txt'},{n:'11',t:'הגג',r:'reel-11-roof.mp4'},{n:'11 איכות גבוהה',t:'לשמירה בטלפון, נפתח בדרייב',u:'https://drive.google.com/file/d/1p-5x8rzuz2v156UXw51vqv-VkD7lhpVb/view'},{n:'11 כריכה',t:'הכריכה',r:'reel-11-roof-cover.jpg'},{n:'11 פרסום',t:'כיתוב ומוזיקה לאינסטגרם, טיקטוק ויוטיוב',r:'reel-11-roof-post.txt'},{n:'12',t:'הכוח',r:'reel-12-power.mp4'},{n:'12 איכות גבוהה',t:'לשמירה בטלפון, נפתח בדרייב',u:'https://drive.google.com/file/d/1JAvFfq9IgkNqcloNFRoNL_v-ES0E9fi4/view'},{n:'12 כריכה',t:'הכריכה',r:'reel-12-power-cover.jpg'},{n:'12 פרסום',t:'כיתוב ומוזיקה לאינסטגרם, טיקטוק ויוטיוב',r:'reel-12-power-post.txt'},{n:'13',t:'תאיו',r:'reel-13-tayo.mp4'},{n:'13 איכות גבוהה',t:'לשמירה בטלפון, נפתח בדרייב',u:'https://drive.google.com/file/d/1_kVMuvIOksID7kQh_4MWHhjCMkaLd65b/view'},{n:'13 כריכה',t:'הכריכה',r:'reel-13-tayo-cover.jpg'},{n:'13 פרסום',t:'כיתוב ומוזיקה לאינסטגרם, טיקטוק ויוטיוב',r:'reel-13-tayo-post.txt'},{n:'14',t:'הים',r:'reel-14-beach.mp4'},{n:'14 איכות גבוהה',t:'לשמירה בטלפון, נפתח בדרייב',u:'https://drive.google.com/file/d/1I_oTWuY5Vw_hZcELBBRlQrHWGlDslLFD/view'},{n:'14 כריכה',t:'הכריכה',r:'reel-14-beach-cover.jpg'},{n:'14 פרסום',t:'כיתוב ומוזיקה לאינסטגרם, טיקטוק ויוטיוב',r:'reel-14-beach-post.txt'},{n:'15',t:'הקייט',r:'reel-15-kite.mp4'},{n:'15 איכות גבוהה',t:'לשמירה בטלפון, נפתח בדרייב',u:'https://drive.google.com/file/d/1MQMbLgQa6gD62B2cS4IbdPpf6nFA99BW/view'},{n:'15 כריכה',t:'הכריכה',r:'reel-15-kite-cover.jpg'},{n:'15 פרסום',t:'כיתוב ומוזיקה לאינסטגרם, טיקטוק ויוטיוב',r:'reel-15-kite-post.txt'},{n:'16',t:'הבר',r:'reel-16-bar.mp4'},{n:'16 איכות גבוהה',t:'לשמירה בטלפון, נפתח בדרייב',u:'https://drive.google.com/file/d/185xxdShoBPdPi_6NO8IaSDQgDF8EKO8k/view'},{n:'16 כריכה',t:'הכריכה',r:'reel-16-bar-cover.jpg'},{n:'16 פרסום',t:'כיתוב ומוזיקה לאינסטגרם, טיקטוק ויוטיוב',r:'reel-16-bar-post.txt'},{n:'18',t:'חדר הכושר',r:'reel-18-gym.mp4'},{n:'18 איכות גבוהה',t:'לשמירה בטלפון, נפתח בדרייב',u:'https://drive.google.com/file/d/1PGAo8JWFxmvSP5jqAA7r7HCxo_OyNEV9/view'},{n:'18 כריכה',t:'הכריכה',r:'reel-18-gym-cover.jpg'},{n:'18 פרסום',t:'כיתוב ומוזיקה לאינסטגרם, טיקטוק ויוטיוב',r:'reel-18-gym-post.txt'},{n:'19',t:'אימון על החוף',r:'reel-19-shore.mp4'},{n:'19 איכות גבוהה',t:'לשמירה בטלפון, נפתח בדרייב',u:'https://drive.google.com/file/d/143qwAOshCmb3oFY7-QXYYpRTFOQCW6zv/view'},{n:'19 כריכה',t:'הכריכה',r:'reel-19-shore-cover.jpg'},{n:'19 פרסום',t:'כיתוב ומוזיקה לאינסטגרם, טיקטוק ויוטיוב',r:'reel-19-shore-post.txt'},{n:'20',t:'הבוקר בחדר הכושר',r:'reel-20-hotel.mp4'},{n:'20 איכות גבוהה',t:'לשמירה בטלפון, נפתח בדרייב',u:'https://drive.google.com/file/d/1xpDbH4KC3OZLSjQaeOMP_nTtqUuuCjnw/view'},{n:'20 כריכה',t:'הכריכה',r:'reel-20-hotel-cover.jpg'},{n:'20 פרסום',t:'כיתוב ומוזיקה לאינסטגרם, טיקטוק ויוטיוב',r:'reel-20-hotel-post.txt'}];
+function reelSheet(){
+ var old=document.getElementById('rlSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='rlSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','הרילים שלי');
+ w.innerHTML='<div class="ycard">'
+  +'<b>הרילים שלי</b>'
+  +'<small>'+(REEL_ITEMS.length?'ממוספר, הריל החדש מקבל את המספר הבא':'אין כרגע רילים. כל מה שהיה כאן עלה')+'</small>'
+  +REEL_ITEMS.map(function(it,i,a){
+    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=REEL_ITEMS[+k];if(k===''||!it)return;
+  if(it.u)window.open(it.u,'_blank','noopener');
+  else fileOpen(it.r);
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gReels',reelSheet);
+/*
+  3.10. Future reels: ideas and source clips saved for reels Itzik will shoot
+  later, so they do not get lost in the chat. Same numbered sheet as the reels.
+*/
+var FUT_ITEMS=[
+ {n:'01',t:'החנייה: הקטע הראשון עם כיתוב בעברית. אחריו מצלמים אותך מגיב (4 שניות)',r:'parking-part1-he.mp4'},
+ {n:'01ב',t:'החנייה: אותו קטע עם הכיתוב המקורי באנגלית',r:'parking-part1.mp4'},
+ {n:'01ג',t:'החנייה: הסרטון המקורי המלא',r:'parking-original.mp4'},
+ {n:'02',t:'אני אסתדר עם זה: התסריט להדפסה ואיך מצלמים',r:'fut02-handle-it-script.pdf'},
+ {n:'02ב',t:'אני אסתדר עם זה: הריל המקורי (השראה)',r:'fut02-handle-it-original.mp4'}
+];
+function futSheet(){
+ var old=document.getElementById('ftSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='ftSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','רילים עתידיים');
+ w.innerHTML='<div class="ycard">'
+  +'<b>רילים עתידיים</b>'
+  +'<small>'+(FUT_ITEMS.length?'רעיונות וחומרים לרילים הבאים, ממוספר':'אין כרגע רילים עתידיים. כל מה שהיה כאן עלה')+'</small>'
+  +FUT_ITEMS.map(function(it,i,a){
+    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=FUT_ITEMS[+k];if(k===''||!it)return;
+  if(it.u)window.open(it.u,'_blank','noopener');
+  else fileOpen(it.r);
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gFut',futSheet);
+/*
+  10.10. The sticker theatre. Itzik and Alon Yaglon built stickers of people
+  from their lives and play them "like a puppet theatre". Itzik explains each
+  character here: a tap opens the character with when it was sent and what was
+  said around it, and a button puts its number in the chat box for him to
+  dictate. The pictures and the chat lines are sealed files under stk/.
+*/
+var STK=null,STK_URL={},STK_ALON={},STK_LINK='';
+// 10.10: the private site where Itzik and Alon fill in the characters together. Only their two Google accounts get in.
+var STK_SITE='https://bubot-theatre.vercel.app';
+// 10.10: Alon answers on his own page; his words and the link to send him are sealed files here.
+function stkJson(name){var e=fileEntry('stk/'+name);if(!e)return Promise.resolve(null);return fileBlob(e).then(function(b){return b.text();}).then(JSON.parse).catch(function(){return null;});}
+function stkBlob(name){
+ if(STK_URL[name])return Promise.resolve(STK_URL[name]);
+ var e=fileEntry('stk/'+name);if(!e)return Promise.reject(0);
+ return fileBlob(e).then(function(b){return STK_URL[name]=URL.createObjectURL(b);});
+}
+function stkDone(){
+ var seen={};
+ (D.chat||[]).forEach(function(m){
+  if(!m||m.from!=='itzik')return;
+  var t=String(m.text||''),re=new RegExp('מדבקה #([0-9]+):?','g'),hit,all=[];
+  while((hit=re.exec(t)))all.push({n:hit[1],s:hit.index,at:hit.index+hit[0].length});
+  all.forEach(function(h,j){
+   var said=t.slice(h.at,j+1<all.length?all[j+1].s:t.length).trim();
+   if(said.slice(-2)==='🎭')said=said.slice(0,-2).trim();
+   var vq=said.indexOf('(הודעה קולית');if(vq>=0){var ve=said.indexOf(')',vq);said=(said.slice(0,vq)+(ve>=0?said.slice(ve+1):'')).trim();}
+   seen[h.n]=seen[h.n]&&said?seen[h.n]+String.fromCharCode(10)+said:(said||seen[h.n]||' ');
+  });
+ });
+ return seen;
+}
+/*
+  10.10, Itzik: "I try to leave the sticker theatre, it returns me and in the
+  end does not return me to the main page." The only close button sat under
+  78 characters, and חזרה on a character led back to the grid. Now a close
+  button stays on top of the grid, a character has both חזרה לדמויות and
+  לדף הראשי, and every way out lands on the home screen at its top.
+*/
+function stkHome(){
+ document.querySelectorAll('.ysheet').forEach(function(s){s.remove();});
+ try{pane('h');}catch(er){}
+ window.scrollTo(0,0);
+}
+/*
+  10.10, Itzik: "the recording has to be in the site, Alon has no monitor".
+  The characters, the stories and the voices live only on bubot-theatre now.
+  This sheet is just the way there: open, copy, or send to Alon.
+*/
+function stkSheet(){
+ var old=document.getElementById('stkSheet');if(old)old.remove();
+ var w=document.createElement('div');w.id='stkSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','תיאטרון המדבקות');
+ function close(){document.removeEventListener('keydown',esckey);stkHome();}
+ function esckey(ev){if(ev.key==='Escape')close();}
+ document.addEventListener('keydown',esckey);
+ w.innerHTML='<div class="ycard"><div class="stkTop"><b>🎭 תיאטרון המדבקות</b><button type="button" class="yb yx" data-x="1">✕ לדף הראשי</button></div>'
+  +'<small>הדמויות, הסיפורים וההקלטות נמצאים באתר. שם מקליטים איך כל דמות מדברת, ושם אלון רואה ומוסיף</small>'
+  +'<a class="yb yb1" style="display:block;text-align:center;text-decoration:none;margin-top:10px" href="'+STK_SITE+'" target="_blank" rel="noopener">🎭 לפתוח את האתר של התיאטרון</a>'
+  +'<small style="direction:ltr;display:block;text-align:center">'+STK_SITE+'</small>'
+  +'<div style="display:flex;gap:8px"><button type="button" class="yb yx" data-c="1" style="flex:1">📋 להעתיק את הקישור</button>'
+  +'<button type="button" class="yb yx" data-w="1" style="flex:1">💬 לשלוח לאלון בוואטסאפ</button></div>'
+  +'<small>אלון נכנס עם הג׳ימייל record4. רק אתה והוא יכולים להיכנס</small></div>';
+ document.body.appendChild(w);
+ w.onclick=function(ev){
+  if(ev.target===w)return close();
+  var b=ev.target.closest&&ev.target.closest('[data-x],[data-w],[data-c]');if(!b)return;
+  if(b.hasAttribute('data-x'))return close();
+  if(b.hasAttribute('data-c')){
+   var ok=function(){toast('הקישור הועתק');};
+   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(STK_SITE).then(ok,function(){fallbackCopy(STK_SITE,ok);});
+   else fallbackCopy(STK_SITE,ok);
+   return;
+  }
+  var txt='אלון, בניתי לנו אתר לתיאטרון המדבקות. לכל דמות יש שם, סיפור, משפטים בקול שלה ומקום להקליט אותה. נכנסים עם הג׳ימייל record4 🎭 '+STK_SITE;
+  window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
+ };
+}
+function stkOne(x){
+ if(!x)return;
+ var w=document.createElement('div');w.className='ysheet';w.setAttribute('role','dialog');
+ w.innerHTML='<div class="ycard stkd"><b>מדבקה #'+x.n+'</b><img alt="">'
+  +'<small>נשלחה '+x.c+' פעמים: אתה '+x.i+', אלון '+x.a+'. מ '+esc(x.first)+' עד '+esc(x.last)+'</small>'
+  +(stkDone()[x.n]?'<div class="stkx"><i>מה סיפרת עליה</i><br>'+esc(stkDone()[x.n]).split(String.fromCharCode(10)).join('<br>')+'</div>':'')
+  +(STK_ALON[x.n]?'<div class="stkx" style="background:rgba(70,130,230,.14)"><i>מה אלון אמר</i><br>'+esc(STK_ALON[x.n].t).split(String.fromCharCode(10)).join('<br>')+'</div>':'')
+  +(x.ex||[]).map(function(m){
+    return '<div class="stkx"><i>'+esc(m.d)+', '+esc(m.w)+' שלח אותה</i><br>'+(m.b?'לפני: '+esc(m.b):'')+(m.a?'<br>אחרי: '+esc(m.a):'')+'</div>';
+   }).join('')
+  +'<button type="button" class="yb yb1" data-k="say">'+(stkDone()[x.n]?'להוסיף עוד עליה':'להסביר מי זו')+'</button>'
+  +'<button type="button" class="yb yx" data-k="">חזרה לדמויות</button>'
+  +'<button type="button" class="yb yx" data-k="home">לדף הראשי</button></div>';
+ stkBlob(x.f).then(function(u){var im=w.querySelector('img');if(im)im.src=u;},function(){});
+ w.onclick=function(ev){
+  if(ev.target===w)return w.remove();
+  var k=ev.target.getAttribute&&ev.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  w.remove();
+  if(k==='home')return stkHome();
+  if(k!=='say')return;
+  var s=document.getElementById('stkSheet');if(s)s.remove();
+  pane('m');try{renderThread();}catch(er){}
+  var ta=document.getElementById('msgText');
+  if(ta){ta.value='🎭 מדבקה #'+x.n+': ';ta.focus();}
+ };
+ document.body.appendChild(w);
+}
+on('gStk',stkSheet);
+/*
+  5.10: Itzik dictated how he presents himself (to the boss of Rinat's
+  department) and asked for it under its own button. The text is shown in
+  full, with copy and WhatsApp, so he can read it out or send it as is.
+*/
+var ME_TEXT=['אני איציק. אני עוסק בהמון תחומים, ואחד מהם הוא תוכנה. יש לנו בית תוכנה במשפחה. אנחנו יכולים לעמוד בכל אתגר, ובוחרים את האתגרים שלנו בפינצטה.','התבוננתי, על קצה המזלג, במה שרינת עושה. אני מלווה את רינת מהיום הראשון שהיא נכנסה לאולם העיצוב. רינת היא אשת מקצוע שהולכת לישון עם הרעיונות שלה וקמה בבוקר עם תובנות, בדיוק כמו אבא שלנו, כמוני, כמו האחים שלי והילדים.','עוד קצת על רינת: היא לא מנטורית, וזה גם לא מה שהתפקיד שלה מחייב. התפקיד שלה הוא להביא חדשנות ומקצועיות.','יש לך עכשיו הזדמנות להיות בין הראשונים, להדהים את הלקוחות שלך. אל תתמהמה בנושא, ואל תיקח את מה שאני אומר לך בקלות דעת. היום הכל צריך להיות מקוון, בשביל חדשנות והתקדמות.','הבנתי שאתה רוצה מערכת התראות שתעדכן אותך בכל מה שנוגע לעסק, וזה אפשרי. אני אגיע, אראה במה מדובר ואיך מושכים את המידע, כדי שהכל יהיה בכף היד שלך. תמיד תהיה ראשון לדעת, עוד לפני העובדים שלך.'].join(String.fromCharCode(10,10));
+function meSheet(){
+ var old=document.getElementById('meSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='meSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','אני מספר על עצמי');
+ w.innerHTML='<div class="ycard">'
+  +'<b>אני מספר על עצמי</b>'
+  +'<div class="meTxt">'+esc(ME_TEXT)+'</div>'
+  +'<button type="button" class="yb yb1" data-k="copy">העתקה</button>'
+  +'<button type="button" class="yb yb2" data-k="wa">שליחה בוואטסאפ</button>'
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  if(k==='copy'){try{navigator.clipboard.writeText(ME_TEXT).then(function(){toast('הועתק');},function(){toast('לא הצלחתי להעתיק');});}catch(x){toast('לא הצלחתי להעתיק');}return;}
+  if(k==='wa'){window.open('https://wa.me/?text='+encodeURIComponent(ME_TEXT),'_blank','noopener');return;}
+  close();
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gSelf',meSheet);
+/*ITZIK:END*/
+/*
+  The customer's side of 5.10: he writes what he wants changed and it goes to
+  his monitor as a request, which files it for Itzik. Nothing changes until
+  Itzik approves; the answer arrives in his chat.
+*/
+function adminReqSheet(){
+ var old=document.getElementById('arSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='arSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','בקשה ממערכת המחשוב של המוניטור');
+ w.innerHTML='<div class="ycard"><b>בקשה ממערכת המחשוב של המוניטור</b>'
+  +'<small>מה תרצה לשנות במוניטור? כפתור, מסך, עיצוב, איך הוא עונה. מערכת המחשוב של המוניטור תאשר, והתשובה תגיע אליך בצ׳אט.</small>'
+  +'<textarea id="arText" rows="5" style="width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif" placeholder="לדוגמה: תוסיף לי כפתור של רשימת קניות"></textarea>'
+  // Itzik, 8.10: offer the customer the choice and show it, an icon on the
+  // home screen or a button inside a screen, for the same subject.
+  +'<small style="opacity:1;font-weight:600">איך זה ייראה? לדוגמה, נושא של דוחות:</small>'
+  +'<div class="arEx">'
+  +'<div><span class="gt g1" aria-hidden="true"><b>📊 דוחות</b><small>כל הדוחות במקום אחד</small></span><i>אייקון: ריבוע במסך הבית</i></div>'
+  +'<div><span class="yb yb2" aria-hidden="true">פתיחת הדוחות</span><i>כפתור: בתוך מסך שכבר יש לך</i></div>'
+  +'</div>'
+  +'<div class="arPick" role="group" aria-label="אייקון או כפתור">'
+  +'<button type="button" class="yb" data-k="אייקון במסך הבית">רוצה אייקון</button>'
+  +'<button type="button" class="yb" data-k="כפתור בתוך מסך">רוצה כפתור</button>'
+  +'<button type="button" class="yb" data-k="">לא משנה</button></div>'
+  +'<small>תמיד אפשר לבקש אחר כך למחוק או להוסיף.</small>'
+  +'<button type="button" class="yb yb1" data-a="send">שליחה למערכת המחשוב</button>'
+  +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+ function close(){w.remove();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var a=e.target.getAttribute&&e.target.getAttribute('data-a');
+  if(a==='x')return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k!==null&&k!==undefined){
+   w.arKind=k;
+   [].forEach.call(w.querySelectorAll('.arPick .yb'),function(b){b.classList.toggle('on',b===e.target);});
+   return;
+  }
+  if(a!=='send')return;
+  var t=(document.getElementById('arText').value||'').trim();
+  if(!t){toast('כתוב מה תרצה לשנות');return;}
+  if(w.arKind)t+=' (בתור '+w.arKind+')';
+  e.target.disabled=true;
+  sendText('בקשה ממנהל','בקשה ממנהל: '+t,'משימה').then(function(){
+   markSent('text',t);close();toast('נשלח למערכת המחשוב של המוניטור. התשובה תגיע בצ׳אט.');
+  }).catch(function(){e.target.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
+ };
+ document.body.appendChild(w);
+ setTimeout(function(){var x=document.getElementById('arText');if(x)x.focus();},50);
+}
+on('gAdminReq',adminReqSheet);
+/*
+  6.10.2026, Home Style. The shipments tiles. They are customer tiles: an id
+  that is not in TENANT_TILES is never drawn, so on Itzik's page nothing here
+  has an element to attach to. The data is D.ship (alerts, summary, insights,
+  brief, all small and always there) and the lazy collection D.shipments, the
+  whole table, loaded when the table screen opens.
+*/
+var SHIP_LVL={red:'דחוף',amber:'לבדוק',track:'מעקב'};
+var SHIP_RANK={red:0,amber:1,track:2};
+var SHIP_UPGRADES=[
+ ['📬 דוח בוקר מכל המייל','כל מה שחשוב מהתיבה שלך, בכמה שורות, כל בוקר'],
+ ['🎙️ הודעה קולית שנענית תוך דקה','אומרים במקום להקליד, והמוניטור עונה'],
+ ['⏰ תזכורות ומשימות','מה לעשות ומתי, ותזכורת כשמשהו נתקע'],
+ ['💰 דוח חייבים','מי חייב, כמה, ומאיזה יום'],
+ ['📁 מסמכים עם שליחה בוואטסאפ','כל מסמך נשלח בלחיצה אחת, בלי לחפש'],
+ ['📦 מעקב מלאי ומכירות','מוצר שנגמר, סניף שירד, ספק שהעלה מחיר']
+];
+/*
+  Reviewer 10.10, approved by Itzik: a shipments tile pressed before the first
+  table arrived flashed "אין נתונים עדיין" and nothing else, which reads as a
+  broken button. It opens a normal sheet now: what will be here, from where,
+  and when.
+*/
+function shipEmpty(id,label,what){
+ shipOpen(id,label,'<div class="srow">'+esc(what)+'</div>'
+  +'<small>הנתונים מגיעים מטבלת ההזמנות ומהמיילים של הספקים. המסך יתמלא לבד ברגע שהטבלה הראשונה תיטען למוניטור, ומאז יתעדכן כל יום.</small>');
+}
+function shipOpen(id,label,html,after){
+ var old=document.getElementById(id);if(old)old.remove();
+ var w=document.createElement('div');
+ w.id=id;w.className='ysheet';
+ w.setAttribute('role','dialog');w.setAttribute('aria-label',label);
+ w.innerHTML='<div class="ycard ship"><b>'+esc(label)+'</b>'+html+'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+ function close(){w.remove();document.removeEventListener('keydown',key);}
+ function key(e){if(e.key==='Escape')close();}
+ w.addEventListener('click',function(e){
+  if(e.target===w)return close();
+  var a=e.target.getAttribute&&e.target.getAttribute('data-a');
+  if(a==='x')close();
+ });
+ document.addEventListener('keydown',key);
+ document.body.appendChild(w);
+ if(after)after(w);
+ return w;
+}
+/*
+  8.10, from the morning reviewer: "the close button is only at the end of a
+  long list". Every sheet, not only the shipments ones, gets the X at the top.
+  It does not know how each sheet closes; it presses that sheet's own close
+  button at the bottom, so whatever closing does stays the same.
+*/
+function sheetTopX(w){
+ var c=w.querySelector('.ycard');if(!c||c.querySelector(':scope > .ytopx'))return;
+ var xs=c.querySelectorAll(':scope > .yx');if(!xs.length)return;
+ var x=xs[xs.length-1],t=document.createElement('button');
+ t.type='button';t.className='ytopx';t.textContent='✕';t.setAttribute('aria-label','סגירה');
+ t.onclick=function(e){e.stopPropagation();x.click();};
+ c.insertBefore(t,c.firstChild);c.classList.add('hasx');
+}
+function watchSheets(){
+ new MutationObserver(function(ms){
+  ms.forEach(function(m){[].forEach.call(m.addedNodes,function(n){
+   if(n.nodeType!==1||!n.classList.contains('ysheet'))return;
+   sheetTopX(n);
+   new MutationObserver(function(){if(n.isConnected)sheetTopX(n);}).observe(n,{childList:true,subtree:true});
+  });});
+ }).observe(document.body,{childList:true});
+}
+if(document.body)watchSheets();else document.addEventListener('DOMContentLoaded',watchSheets);
+function shipTag(l){return '<span class="stag '+l+'">'+SHIP_LVL[l]+'</span>';}
+function shipDate(s){return s?s.slice(8,10)+'.'+s.slice(5,7)+'.'+s.slice(2,4):'';}
+function shipCounts(s){
+ return '<div class="scnt"><div style="background:#c62828">'+s.red+'<small>דחוף</small></div>'
+  +'<div style="background:#ef8f00">'+s.amber+'<small>לבדוק</small></div>'
+  +'<div style="background:#2e7d32">'+s.green+'<small>תקין</small></div>'
+  +'<div style="background:#757575">'+s.track+'<small>מעקב שופרסל</small></div></div>';
+}
+function shipAlertRow(a){
+ return '<div class="srow">'+shipTag(a.level)+'<b>'+esc(a.po)+' · '+esc(a.supplier)+'</b>'
+  +'<br>'+esc(a.text)+'<br><small>'+esc(a.action)+'</small></div>';
+}
+on('gAlerts',function(){
+ var S=D.ship;if(!S)return shipEmpty('shipAlerts','🔔 דורש טיפול','הזמנות שהתאריך שלהן זז, אין להן אישור הזמנה או שהן מתקרבות בלי מעקב, וליד כל אחת מייל מוכן לספק.');
+ var A=S.alerts||[];
+ var h='<small>נכון ל '+esc(shipDate(S.today))+'</small>'+shipCounts(S.summary);
+ ['red','amber','track'].forEach(function(l){
+  var L=A.filter(function(a){return a.level===l;});
+  if(!L.length)return;
+  h+='<b>'+(l==='track'?'מעקב, הזמנות שופרסל':SHIP_LVL[l])+' ('+L.length+')</b>'+L.map(shipAlertRow).join('');
+ });
+ var Q=S.queue||[];
+ if(Q.length)h+='<b>מיילים שלא שויכו להזמנה ('+Q.length+')</b>'+Q.slice().reverse().map(function(q){return '<div class="srow"><b>'+esc(q.subject)+'</b><br><small>'+esc(q.reason)+'</small></div>';}).join('');
+ if(!A.length&&!Q.length)h+='<small>אין התראות. הכל תקין.</small>';
+ shipOpen('shipAlerts','🔔 דורש טיפול',h);
+});
+/*
+  6.10, Yael's work list for today: the red and amber alerts, most urgent
+  first, each with a ready mail and "טיפלתי". The mail has no recipient (we
+  hold no supplier addresses), no name and no signature: she picks the contact
+  in Outlook. "טיפלתי" hides the card here at once and sends the id and code;
+  the listener writes it to the shared table with no model in between.
+*/
+var SHIP_MAIL={
+ NO_BOOKING:function(a){return ['PO '+a.po+': booking confirmation','PO '+a.po+': please send booking confirmation. Requested ETD '+shipDate(a.retd||a.etd)+'.'];},
+ ETD_SLIP:function(a){return ['PO '+a.po+': ETD','PO '+a.po+': ETD moved from '+shipDate(a.retd)+' to '+shipDate(a.etd)+'. Please confirm the earliest possible date.'];},
+ NO_SHO:function(a){return ['מספר תיק עמילות, הזמנה '+a.po,'בקשה למספר תיק עמילות, הזמנה '+a.po+(a.container?', מכולה '+a.container:'')+(a.eta?', ETA '+shipDate(a.eta):'')+'.'];},
+ ETA_PASSED:function(a){return ['סטטוס הזמנה '+a.po,'מה הסטטוס של הזמנה '+a.po+(a.container?', מכולה '+a.container:'')+'? תאריך ההגעה '+shipDate(a.eta)+' עבר.'];}
+};
+/*
+  Reviewer 7.10, approved 8.10: the ready mail opened with the "to" line empty,
+  and she looked up every supplier's address herself. The Hebrew ones go to the
+  customs agent, the English ones to the supplier. The address comes from the
+  supplier table, and when it has none the button asks for it once and this
+  phone keeps it.
+*/
+function shipMailWho(a){return /^(NO_SHO|ETA_PASSED)$/.test(a.code)?'SHO':String(a.supplier||'').trim().toUpperCase();}
+function shipMailWhoName(a){return shipMailWho(a)==='SHO'?'העמיל (SHO)':String(a.supplier||'הספק');}
+function shipMailBook(){try{var o=JSON.parse(localStorage.getItem('shipMailTo')||'{}');return o&&typeof o==='object'?o:{};}catch(e){return {};}}
+function shipMailAddr(a){
+ var k=shipMailWho(a);
+ return ((D.ship&&D.ship.mailTo)||{})[k]||shipMailBook()[k]||'';
+}
+function shipMailHref(a){
+ var m=SHIP_MAIL[a.code];if(!m)return '';
+ var t=m(a);
+ return 'mailto:'+encodeURIComponent(shipMailAddr(a)).replace(/%40/g,'@')+'?subject='+encodeURIComponent(t[0])+'&body='+encodeURIComponent(t[1]);
+}
+function shipHidden(){
+ try{var o=JSON.parse(localStorage.getItem('shipDone')||'{}');return o&&typeof o==='object'?o:{};}catch(e){return {};}
+}
+function shipHide(a){
+ var o=shipHidden(),now=Date.now();
+ Object.keys(o).forEach(function(k){if(now-o[k]>8*86400000)delete o[k];});
+ o[a.id+'|'+a.code]=now;
+ try{localStorage.setItem('shipDone',JSON.stringify(o));}catch(e){}
+}
+/*
+  "↩ להחזיר" (reviewer 8.10, approved): a mark made on the wrong row came off
+  the list for a week with nowhere to see it. What was marked now sits folded
+  at the bottom of the screen, and taking it back shows it here at once and
+  tells the listener, which takes it out of the shared table.
+*/
+function shipBack(){
+ try{var o=JSON.parse(localStorage.getItem('shipBack')||'{}');return o&&typeof o==='object'?o:{};}catch(e){return {};}
+}
+function shipUnhide(a){
+ var k=a.id+'|'+a.code,o=shipHidden(),b=shipBack(),now=Date.now();
+ delete o[k];
+ Object.keys(b).forEach(function(x){if(now-b[x]>2*86400000)delete b[x];});
+ b[k]=now;
+ try{localStorage.setItem('shipDone',JSON.stringify(o));localStorage.setItem('shipBack',JSON.stringify(b));}catch(e){}
+}
+function shipUrgent(a){return a.level==='red'||a.level==='amber';}
+function shipTodayList(){
+ var S=D.ship;if(!S)return [];
+ var hid=shipHidden(),back=shipBack();
+ return (S.alerts||[]).filter(function(a){return shipUrgent(a)&&!hid[a.id+'|'+a.code];})
+  .concat((S.done||[]).filter(function(a){return shipUrgent(a)&&back[a.id+'|'+a.code]&&!hid[a.id+'|'+a.code];}));
+}
+function shipDoneList(){
+ var S=D.ship;if(!S)return [];
+ var hid=shipHidden(),back=shipBack();
+ return (S.alerts||[]).filter(function(a){return shipUrgent(a)&&hid[a.id+'|'+a.code];})
+  .concat((S.done||[]).filter(function(a){return shipUrgent(a)&&(hid[a.id+'|'+a.code]||!back[a.id+'|'+a.code]);}));
+}
+on('gToday',function(){
+ var S=D.ship;if(!S)return shipEmpty('shipToday','📋 היום','רשימת המשימות של היום, הכי דחוף למעלה, עם מייל מוכן וכפתור טיפלתי.');
+ var A=shipTodayList();
+ var h='<small>נכון ל '+esc(shipDate(S.today))+'. הכי דחוף למעלה.</small>'
+  +'<input id="todayQ" class="shipq" type="search" placeholder="חיפוש: הזמנה, ספק או מכולה" autocomplete="off">'
+  +'<div id="todayList"></div><div id="todayDone"></div>';
+ shipOpen('shipToday','📋 היום',h,function(w){
+  var list=w.querySelector('#todayList'),doneBox=w.querySelector('#todayDone'),q='';
+  function drawDone(){
+   var was=doneBox.querySelector('details'),open=!!(was&&was.open);
+   var L=shipDoneList();
+   doneBox.innerHTML=L.length?'<details'+(open?' open':'')+'><summary>✔ סימנתי השבוע ('+L.length+')</summary>'
+    +L.map(function(a,i){
+     return '<div class="srow">'+shipTag(a.level)+'<b>'+esc(a.po)+' · '+esc(a.supplier)+'</b><br><small>'+esc(a.text)+'</small>'
+      +'<div class="sact"><button type="button" data-back="'+i+'">↩ להחזיר לרשימה</button></div></div>';
+    }).join('')+'</details>':'';
+   doneBox._rows=L;
+  }
+  function draw(){
+   drawDone();
+   var L=shipTodayList().filter(function(a){return !q||(a.po+' '+a.supplier+' '+(a.container||'')).toLowerCase().indexOf(q)>-1;});
+   list.innerHTML=L.map(function(a,i){
+    var mail=shipMailHref(a);
+    return '<div class="srow" data-k="'+esc(a.id+'|'+a.code)+'">'+shipTag(a.level)+'<b>'+esc(a.po)+' · '+esc(a.supplier)+'</b>'
+     +'<br>'+esc(a.product||'')+'<br>'+esc(a.text)+'<br><small>'+esc(a.action)
+     +(a.etd?' · יציאה '+shipDate(a.etd):'')+(a.eta?' · הגעה '+shipDate(a.eta):'')+(a.container?' · מכולה '+esc(a.container):'')+'</small>'
+     +'<div class="sact">'+(mail?'<a href="'+esc(mail)+'" data-mail="'+i+'">✉️ מייל מוכן'+(shipMailAddr(a)?'':' (בלי כתובת)')+'</a>':'')
+     +'<button type="button" data-done="'+i+'">✔ טיפלתי</button></div></div>';
+   }).join('')||'<small>'+(q?'לא נמצא.':'אין היום משהו שמחכה לך. הכל בזמן.')+'</small>';
+   list._rows=L;
+  }
+  draw();
+  w.querySelector('#todayQ').addEventListener('input',function(e){q=e.target.value.trim().toLowerCase();draw();});
+  list.addEventListener('click',function(e){
+   var ml=e.target.closest&&e.target.closest('[data-mail]');
+   if(ml){
+    var am=(list._rows||[])[+ml.getAttribute('data-mail')];
+    if(!am||shipMailAddr(am))return;
+    var got=prompt('מה כתובת המייל של '+shipMailWhoName(am)+'? פעם אחת, והטלפון יזכור אותה. ריק פותח את המייל בלי כתובת.','');
+    got=String(got||'').trim();
+    if(got&&/^[^\\s@,;]+@[^\\s@,;]+\\.[^\\s@,;]+$/.test(got)){
+     var bk=shipMailBook();bk[shipMailWho(am)]=got;
+     try{localStorage.setItem('shipMailTo',JSON.stringify(bk));}catch(e3){}
+     ml.setAttribute('href',shipMailHref(am));
+     setTimeout(draw,500);
+    }else if(got){e.preventDefault();toast(FEM?'זו לא נראית כתובת מייל. נסי שוב.':'זו לא נראית כתובת מייל. תנסה שוב.');}
+    return;
+   }
+   var b=e.target.closest&&e.target.closest('[data-done]');if(!b)return;
+   var a=(list._rows||[])[+b.getAttribute('data-done')];if(!a)return;
+   if(!confirm('לסמן טיפלתי? '+a.po+'. ההתראה תחזור אם לא יתעדכן תוך שבוע.'))return;
+   var b0=shipBack();delete b0[a.id+'|'+a.code];try{localStorage.setItem('shipBack',JSON.stringify(b0));}catch(e2){}
+   shipHide(a);draw();paintShipLine();
+   // Whoever pressed it is the one reading this, so it names no one in this
+   // office (reviewer 8.10): only Roni's screen, which reads the same table.
+   sendText('טיפלתי במשלוח',a.id+String.fromCharCode(10)+a.code,'ship-done').then(function(){toast('נרשם, גם אצל רוני. טעות? למטה, סימנתי השבוע.');})
+    .catch(function(){toast('נשמר בטלפון. השליחה תנסה שוב.');});
+  });
+  doneBox.addEventListener('click',function(e){
+   var b=e.target.closest&&e.target.closest('[data-back]');if(!b)return;
+   var a=(doneBox._rows||[])[+b.getAttribute('data-back')];if(!a)return;
+   shipUnhide(a);draw();paintShipLine();
+   sendText('החזרה של טיפלתי',a.id+String.fromCharCode(10)+a.code,'ship-undo').then(function(){toast('הוחזר לרשימה, גם אצל רוני.');})
+    .catch(function(){toast('הוחזר בטלפון הזה. השליחה לא עברה, נסי שוב מאוחר יותר.');});
+  });
+ });
+});
+on('gShip',function(){
+ ensure('shipments',function(){
+  var S=D.ship||{summary:{red:0,amber:0,green:0,track:0},alerts:[]},rows=D.shipments||[];
+  var byId={};(S.alerts||[]).forEach(function(a){(byId[a.id]=byId[a.id]||[]).push(a);});
+  var closedRe=/^(במלאי|הזמנה מבוטלת|יתרת הסחורה)/;
+  var h=shipCounts(S.summary)
+   +'<input id="shipQ" class="shipq" type="search" placeholder="חיפוש: הזמנה, ספק, מוצר או מכולה" autocomplete="off">'
+   +'<button type="button" class="yb yb4" id="shipAll">הצג גם הזמנות שכבר במלאי</button>'
+   // Reviewer 7.10, approved 8.10: past 150 rows the list was cut with a line
+   // telling her to narrow it, without saying how. Two ready filters on top,
+   // and "להציג עוד" at the bottom instead of the cut.
+   +'<div style="display:flex;gap:8px;margin:6px 0"><select id="shipSup" class="shipq" style="flex:1"></select><select id="shipMon" class="shipq" style="flex:1"></select></div>'
+   +'<div id="shipList"></div>'
+   +'<button type="button" class="yb yb1" id="shipXls">📥 האקסל של היום</button>';
+  shipOpen('shipTable','📦 משלוחים',h,function(w){
+   var all=false,q='',sup='',mon='',max=150;
+   var list=w.querySelector('#shipList');
+   var MON=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+   function monOf(r){return String(r.eta||'').slice(0,7);}
+   function fillFilters(){
+    var open=rows.filter(function(r){return all||!closedRe.test(r.status||'');});
+    var ss={},ms={};open.forEach(function(r){if(r.supplier)ss[r.supplier]=(ss[r.supplier]||0)+1;var m=monOf(r);if(m)ms[m]=(ms[m]||0)+1;});
+    w.querySelector('#shipSup').innerHTML='<option value="">כל הספקים</option>'+Object.keys(ss).sort().map(function(k){return '<option value="'+esc(k)+'"'+(k===sup?' selected':'')+'>'+esc(k)+' ('+ss[k]+')</option>';}).join('');
+    w.querySelector('#shipMon').innerHTML='<option value="">כל חודשי ההגעה</option>'+Object.keys(ms).sort().map(function(k){return '<option value="'+k+'"'+(k===mon?' selected':'')+'>הגעה ב'+MON[+k.slice(5,7)-1]+' '+k.slice(0,4)+' ('+ms[k]+')</option>';}).join('');
+   }
+   function worst(r){
+    var al=byId[r.id]||[],best='';
+    al.forEach(function(a){if(best===''||SHIP_RANK[a.level]<SHIP_RANK[best])best=a.level;});
+    return best;
+   }
+   function detail(r){
+    var d=[];
+    if(r.customs)d.push('תיק עמילות: '+esc(r.customs));
+    if(r.container)d.push('מכולה: '+esc(r.container));
+    if(r.notes)d.push('הערות: '+esc(r.notes));
+    if(r.payStatus)d.push('תשלום: '+esc(r.payStatus));
+    (byId[r.id]||[]).forEach(function(a){d.push(shipTag(a.level)+' '+esc(a.text)+'<br><small>'+esc(a.action)+'</small>');});
+    var hs=(r.history||[]).slice(-5).reverse().map(function(x){
+     return shipDate(String(x.at||'').slice(0,10))+' '+esc(x.field==='row'?x.to:(x.field+': '+x.from+' ← '+x.to));
+    });
+    if(hs.length)d.push('<small>היסטוריה:<br>'+hs.join('<br>')+'</small>');
+    return d.join('<br>')||'<small>אין פרטים נוספים</small>';
+   }
+   function draw(){
+    var L=rows.filter(function(r){
+     if(!all&&closedRe.test(r.status||''))return false;
+     if(sup&&r.supplier!==sup)return false;
+     if(mon&&monOf(r)!==mon)return false;
+     if(!q)return true;
+     return (r.po+' '+r.supplier+' '+r.product+' '+(r.container||'')).toLowerCase().indexOf(q)>-1;
+    });
+    function rk(r){var l=worst(r);return l===''?3:SHIP_RANK[l];}
+    L.sort(function(a,b){return (rk(a)-rk(b))||(a.eta||a.etd||'9999').localeCompare(b.eta||b.etd||'9999');});
+    var n=L.length;L=L.slice(0,max);
+    list.innerHTML=L.map(function(r){
+     var lv=worst(r);
+     return '<div class="srow" data-id="'+esc(r.id)+'">'+(lv?shipTag(lv):'')+'<b>'+esc(r.po)+' · '+esc(r.supplier)+'</b>'
+      +'<br>'+esc(r.product)+'<br><small>'+esc(r.status||'ללא סטטוס')+' · יציאה '+shipDate(r.etd)+' · הגעה '+shipDate(r.eta)+'</small>'
+      +'<br><small class="smore" style="color:#2563eb">לפרטים ▾</small>'
+      +'<div class="sdet" hidden>'+detail(r)+'</div></div>';
+    }).join('')+(n>max?'<button type="button" class="yb yb4" id="shipMore">להציג עוד ('+(n-max)+' נוספות)</button>':'')+(n?'':'<small>לא נמצאה הזמנה.</small>');
+   }
+   fillFilters();
+   draw();
+   w.querySelector('#shipSup').addEventListener('change',function(e){sup=e.target.value;max=150;draw();});
+   w.querySelector('#shipMon').addEventListener('change',function(e){mon=e.target.value;max=150;draw();});
+   w.querySelector('#shipQ').addEventListener('input',function(e){q=e.target.value.trim().toLowerCase();max=150;draw();});
+   w.querySelector('#shipAll').addEventListener('click',function(e){all=!all;e.target.textContent=all?'להסתיר הזמנות שכבר במלאי':'הצג גם הזמנות שכבר במלאי';fillFilters();draw();});
+   list.addEventListener('click',function(e){
+    if(e.target.id==='shipMore'){max+=150;draw();return;}
+    var row=e.target.closest&&e.target.closest('.srow');if(!row)return;
+    var d=row.querySelector('.sdet');if(d)d.hidden=!d.hidden;
+    var m=row.querySelector('.smore');if(m&&d)m.textContent=d.hidden?'לפרטים ▾':'סגירה ▴';
+   });
+   w.querySelector('#shipXls').addEventListener('click',function(){if(!fileView('shipments.xlsx'))toast('האקסל עוד לא מוכן, ייווצר הלילה');});
+  });
+ });
+});
+on('gBrief',function(){
+ var S=D.ship;if(!S)return shipEmpty('shipBrief','☀️ דוח הבוקר','מה השתנה מאתמול, כמה הזמנות מגיעות השבוע ומה מחכה לטיפול.');
+ var b=S.brief,s=S.summary;
+ var h='<small>'+(b?'הדוח של '+esc(shipDate(b.today)):'נכון ל '+esc(shipDate(S.today)))+'</small>'+shipCounts(s)
+  +'<b>מגיעים השבוע: '+s.arrivingThisWeek+'</b>';
+ if(b&&b.changes&&b.changes.length)h+='<b>מה השתנה מאתמול</b>'+b.changes.map(function(c){return '<div class="srow">'+esc(c)+'</div>';}).join('');
+ else if(b)h+='<small>לא השתנה כלום מאתמול.</small>';
+ var reds=(S.alerts||[]).filter(function(a){return a.level==='red';}).slice(0,8);
+ if(reds.length)h+='<b>הכי דחוף</b>'+reds.map(shipAlertRow).join('');
+ shipOpen('shipBrief','☀️ דוח הבוקר',h);
+});
+on('gInsights',function(){
+ var S=D.ship;if(!S)return shipEmpty('shipInsights','📈 תובנות','אילו ספקים מוציאים באיחור ובכמה ימים בממוצע, לפי ההזמנות של השנה.');
+ var I=S.insights||[];
+ var h='<small>לפי הזמנות 2026 ו 2027: כמה זז התאריך שבו הספק באמת מוציא, לעומת התאריך שביקשנו.</small>'
+  +I.map(function(x){
+   return '<div class="srow"><b>'+esc(x.supplier)+'</b><br>'+x.orders+' הזמנות, זז בממוצע '+x.avgSlipDays+' ימים'
+    +(x.overThreeWeeks?', '+x.overThreeWeeks+' מהן יותר משלושה שבועות':'')+'</div>';
+  }).join('');
+ if(!I.length)h+='<small>אין עדיין מספיק נתונים.</small>';
+ shipOpen('shipInsights','📈 תובנות',h);
+});
+/*
+  6.10, Roni: four big buttons, each its own sheet, nothing to edit. The money
+  has no currency sign until Rinat says which currency that column is in.
+*/
+/*
+  10.10, Itzik: the money tile stays, but the sum is not shown until whoever
+  opens it says which currency that column is in. Until then the tile says
+  "לבחור מטבע" and its sheet offers only the choice. Kept on the phone.
+*/
+var SHIP_CUR=[['₪','שקל'],['$','דולר'],['€','אירו'],['¥','יואן']];
+function shipCur(){try{var c=localStorage.getItem('shipCur')||'';return SHIP_CUR.some(function(x){return x[0]===c;})?c:'';}catch(e){return '';}}
+function shipMoneyText(s){var c=shipCur();return c?c+' '+Number(s.openMoney||0).toLocaleString('he-IL'):'לבחור מטבע';}
+function shipMoneyOpen(s,changed){
+ var c=shipCur();
+ var pick='<div class="sbig">'+SHIP_CUR.map(function(x){
+  return '<button type="button" data-cur="'+x[0]+'" style="background:'+(x[0]===c?'#14675a':'#6a4c93')+'">'+x[0]+'<small>'+x[1]+'</small></button>';
+ }).join('')+'</div>';
+ var h=c?'<div class="srow"><b>'+esc(shipMoneyText(s))+'</b><br><small>סכום ההזמנות הפתוחות, לפי עמודת סכום ההזמנה בטבלה.</small></div><small>להחליף מטבע:</small>'+pick
+  :'<small>באיזה מטבע רשום סכום ההזמנה בטבלה? הסכום יוצג רק אחרי שתבחרו.</small>'+pick;
+ shipOpen('shipCeoMoney','💰 כסף בדרך',h,function(w){
+  w.querySelector('.sbig').addEventListener('click',function(e){
+   var b=e.target.closest&&e.target.closest('[data-cur]');if(!b)return;
+   try{localStorage.setItem('shipCur',b.getAttribute('data-cur'));}catch(x){}
+   if(changed)changed();
+   shipMoneyOpen(s,changed);
+  });
+ });
+}
+function shipWeekRows(S){
+ var rows=D.shipments||[],t=S.today,closedRe=/^(במלאי|הזמנה מבוטלת|יתרת הסחורה)/;
+ var end=new Date(Date.parse(t+'T00:00:00Z')+7*86400000).toISOString().slice(0,10);
+ return rows.filter(function(r){return r.eta&&r.eta>=t&&r.eta<=end&&!closedRe.test(r.status||'');})
+  .sort(function(a,b){return a.eta.localeCompare(b.eta);});
+}
+on('gCeo',function(){
+ var S=D.ship;if(!S)return shipEmpty('shipCeo','📊 תמונת מצב','כמה הזמנות פתוחות, כמה בסדר, כמה באיחור וכמה דורשות טיפול.');
+ var s=S.summary;
+ var h='<small>נכון ל '+esc(shipDate(S.today))+'</small>'
+  +'<div class="srow"><b>'+s.open+'</b> הזמנות פתוחות</div>'
+  +'<div class="sbig">'
+  +'<button type="button" data-c="red" style="background:#c62828">🔴 דחוף<small>'+s.red+' הזמנות</small></button>'
+  +'<button type="button" data-c="week" style="background:#14675a">📅 מגיע השבוע<small>'+s.arrivingThisWeek+' הזמנות</small></button>'
+  +'<button type="button" data-c="money" style="background:#6a4c93">💰 כסף בדרך<small>'+shipMoneyText(s)+'</small></button>'
+  +'<button type="button" data-c="trend" style="background:#ef8f00">📈 מגמה<small>מי מאחר</small></button>'
+  +'</div>';
+ shipOpen('shipCeo','📊 תמונת מצב',h,function(w){
+  w.querySelector('.sbig').addEventListener('click',function(e){
+   var b=e.target.closest&&e.target.closest('[data-c]');if(!b)return;
+   var c=b.getAttribute('data-c');
+   if(c==='red'){
+    var top=(S.alerts||[]).filter(function(a){return a.level==='red';}).slice(0,5);
+    shipOpen('shipCeoRed','🔴 דחוף',top.length?top.map(shipAlertRow).join(''):'<small>אין כרגע משלוח דחוף.</small>');
+   }else if(c==='week'){
+    ensure('shipments',function(){
+     var L=shipWeekRows(S);
+     shipOpen('shipCeoWeek','📅 מגיע השבוע',L.length?L.map(function(r){
+      return '<div class="srow"><b>'+esc(r.po)+' · '+esc(r.supplier)+'</b><br>'+esc(r.product)+'<br><small>הגעה '+shipDate(r.eta)+(r.container?' · מכולה '+esc(r.container):'')+'</small></div>';
+     }).join(''):'<small>שום דבר לא מגיע השבוע.</small>');
+    });
+   }else if(c==='money'){
+    shipMoneyOpen(s,function(){var m=b.querySelector('small');if(m)m.textContent=shipMoneyText(s);});
+   }else{
+    var I=S.insights||[];
+    shipOpen('shipCeoTrend','📈 מגמה','<small>כמה ימים זז בממוצע תאריך היציאה של כל ספק, לעומת מה שביקשנו.</small>'+(I.length?I.map(function(x){
+     return '<div class="srow"><b>'+esc(x.supplier)+'</b><br>'+x.orders+' הזמנות, זז בממוצע '+x.avgSlipDays+' ימים'+(x.overThreeWeeks?', '+x.overThreeWeeks+' מהן יותר משלושה שבועות':'')+'</div>';
+    }).join(''):'<small>אין עדיין מספיק נתונים.</small>'));
+   }
+  });
+ });
+});
+/*
+  The coloured line over a customer's tiles: red with the urgent count, amber
+  with what to check, or green. It opens the instance's main tile (homeTile).
+  The phone's own "טיפלתי" marks are taken off at once, before the next build.
+*/
+function paintShipLine(){
+ var el=document.getElementById('shipLine');if(!el)return;
+ var S=D.ship;if(!S||!S.alerts){el.hidden=true;return;}
+ var hid=shipHidden(),back=shipBack(),A=(S.alerts||[]).filter(function(a){return !hid[a.id+'|'+a.code];})
+  .concat((S.done||[]).filter(function(a){return back[a.id+'|'+a.code]&&!hid[a.id+'|'+a.code];}));
+ function cnt(l){var o={};A.forEach(function(a){if(a.level===l)o[a.id]=1;});return Object.keys(o).length;}
+ var r=cnt('red'),am=cnt('amber');
+ el.className='shipline '+(r?'red':(am?'amber':'green'));
+ el.innerHTML=(r?(r===1?'דחוף אחד':r+' דחופים'):(am?am+' לבדוק':'הכל בזמן'))+(r&&am?', '+am+' לבדוק':'')+'<small>נכון ל '+esc(shipDate(S.today))+'. לחיצה פותחת את הפירוט.</small>';
+ el.hidden=false;
+}
+on('shipLine',function(){
+ var t=(INSTANCE&&INSTANCE.homeTile)||'';
+ var b=document.getElementById(t)||document.getElementById('gToday')||document.getElementById('gAlerts')||document.getElementById('gCeo');
+ if(b)b.click();
+});
+boot('shipLine',function(){
+ // The tiles below can be rearranged and reordered; the line stays first on the home screen.
+ var el=document.getElementById('shipLine'),h=document.getElementById('pH'),t=document.getElementById('talkCard');
+ if(el&&t&&t.parentNode)t.parentNode.insertBefore(el,t);else if(el&&h)h.insertBefore(el,h.firstChild);
+ paintShipLine();setInterval(paintShipLine,60000);});
+/*
+  Itzik, 8.10: a customer gets her answers as a push only after she subscribes
+  the ntfy app to her own outbound topic. The topic is a secret behind the gate,
+  so this sheet reads it after unlock and never puts it in the clear page. The
+  tile blinks until the first time it is opened on this device. Android's app
+  takes the ntfy:// link straight; the iPhone app does not, so it gets the name
+  to copy and paste under the plus.
+*/
+/*
+  10.10, Itzik: "after you make me something new that I open, I should have
+  the waving hand". Any home tile written with data-new gets the red hand
+  (taskblink) on this device until the first time he opens it. A new tile only
+  needs the attribute; nothing else to remember.
+*/
+// A list tile (reels, future reels, candle work, ...) waves the hand whenever its list holds an item this device
+// has not seen yet, until that tile is opened. First visit seeds silently, except the reels tiles he asked about 10.10.
+boot('listTiles',function(){
+ var L={gReels:'REEL_ITEMS',gFut:'FUT_ITEMS',gNerMkt:'NER_ITEMS',gWin:'WIN_ITEMS',gPen:'PEN_ITEMS',gMed:'MED_ITEMS',gInv:'INV_ITEMS'};
+ var FIRST={gReels:1,gFut:1};
+ Object.keys(L).forEach(function(id){
+  var t=document.getElementById(id),items=window[L[id]];if(!t||!Array.isArray(items))return;
+  var keys=items.map(function(it){return String(it&&(it.r||it.t||it.n)||'');}).filter(Boolean);
+  var k='listSeen:'+id,raw=null,seen=[];try{raw=localStorage.getItem(k);seen=JSON.parse(raw||'[]')||[];}catch(e){}
+  var save=function(){try{localStorage.setItem(k,JSON.stringify(keys));}catch(e){}};
+  if(raw===null&&!FIRST[id]){save();return;}
+  if(keys.some(function(x){return seen.indexOf(x)<0;}))t.classList.add('taskblink');
+  t.addEventListener('click',function(){save();t.classList.remove('taskblink');});
+ });
+});
+boot('newTiles',function(){
+ document.querySelectorAll('.gt[data-new]').forEach(function(t){
+  var k='tileSeen:'+t.id,seen=false;try{seen=!!localStorage.getItem(k);}catch(e){}
+  if(seen)return;
+  t.classList.add('taskblink');
+  t.addEventListener('click',function(){try{localStorage.setItem(k,'1');}catch(e){}t.classList.remove('taskblink');});
+ });
+});
+boot('pushTile',function(){
+ var t=document.getElementById('gPush');if(!t)return;
+ var seen=false;try{seen=!!localStorage.getItem('pushSeen');}catch(e){}
+ if(!seen)t.classList.add('taskblink');
+});
+on('gPush',function(){
+ var t=document.getElementById('gPush');
+ try{localStorage.setItem('pushSeen','1');}catch(e){}
+ if(t)t.classList.remove('taskblink');
+ var topic=secret('ntfyOut');
+ var ios=/iPhone|iPad|iPod/i.test(navigator.userAgent||'');
+ var L=function(x){return '<div style="font-size:16px;line-height:1.55">'+x+'</div>';};
+ var w=document.createElement('div');
+ w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','התראות לטלפון');
+ w.innerHTML='<div class="ycard"><b>🔔 התראות לטלפון</b>'
+  +L('כל תשובה שנכתבת לך כאן קופצת בטלפון, כמו הודעה בוואטסאפ.')
+  +L('1. מתקינים את האפליקציה ntfy:')
+  +'<a class="yb yb1" href="https://apps.apple.com/app/ntfy/id1625396347" target="_blank" rel="noopener">אייפון: ntfy בחנות של אפל</a>'
+  +'<a class="yb yb2" href="https://play.google.com/store/apps/details?id=io.heckel.ntfy" target="_blank" rel="noopener">אנדרואיד: ntfy בגוגל פליי</a>'
+  +(topic?(ios
+   ?L('2. לוחצים כאן כדי להעתיק את שם הערוץ שלך.')
+    +'<button type="button" class="yb yb3" data-a="copy">העתקת שם הערוץ</button>'
+    +L('3. פותחים את ntfy, לוחצים על הפלוס, מדביקים בשדה של שם הנושא, ולוחצים Subscribe.')
+   :L('2. לוחצים כאן, האפליקציה נפתחת, ולוחצים Subscribe.')
+    +'<a class="yb yb3" href="ntfy://ntfy.sh/'+encodeURIComponent(topic)+'">חיבור ההתראות</a>'
+    +L('אם לא נפתח: מעתיקים את שם הערוץ, ב ntfy לוחצים על הפלוס ומדביקים.')
+    +'<button type="button" class="yb yb4" data-a="copy">העתקת שם הערוץ</button>')
+   +L('בסוף, כשהאפליקציה שואלת אם לאפשר התראות, מאשרים.')
+   :L('הערוץ עוד לא נטען. סוגרים, מחכים רגע ופותחים שוב.'))
+  +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+ w.onclick=function(e){
+  var a=e.target.getAttribute&&e.target.getAttribute('data-a');
+  if(e.target===w||a==='x'){w.remove();return;}
+  if(a==='copy'){
+   var b=e.target,ok=function(){b.textContent='הועתק. עכשיו מדביקים ב ntfy';};
+   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(topic).then(ok,function(){fallbackCopy(topic,ok);});
+   else fallbackCopy(topic,ok);
+  }
+ };
+ document.body.appendChild(w);
+});
+on('gUpgrade',function(){
+ var h='<small>מה עוד המוניטור יודע לעשות. לחיצה שולחת בקשה למערכת המחשוב של המוניטור והיא חוזרת אליך.</small>'
+  +SHIP_UPGRADES.map(function(u,i,a){
+   return '<button type="button" '+ybAttr(a,i)+' data-u="'+i+'">'+esc(u[0])+'<br><small>'+esc(u[1])+'</small></button>';
+  }).join('');
+ shipOpen('shipUp','🚀 שדרוגים',h,function(w){
+  w.addEventListener('click',function(e){
+   var b=e.target.closest&&e.target.closest('[data-u]');if(!b)return;
+   var u=SHIP_UPGRADES[+b.getAttribute('data-u')];if(!u)return;
+   b.disabled=true;
+   sendText('בקשה ממנהל','בקשה ממנהל: בקשת שדרוג: '+u[0]+'. '+u[1],'משימה').then(function(){
+    markSent('text',u[0]);toast('נשלח למערכת המחשוב של המוניטור. היא תחזור אליך.');
+   }).catch(function(){b.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
+  });
+ });
+});
+/*ITZIK:BEGIN*/
+/*
+  4.10. Occupational clinic (Maccabi Ramot, Rishon). Details from the Maccabi
+  service page. Appointments by phone only; the mail is for forms.
+*/
+/*
+  Itzik, 5.10: "always update the button when something happens in it". Every
+  step with the clinic goes here, newest last; the tile shows the last one.
+*/
+var OCC_LOG=[
+ '4.10 בבוקר: נשלח מייל לבקשת תור דחוף.',
+ '4.10 13:05: המרפאה ענתה וביקשה מספר תעודת זהות.',
+ '5.10 11:53: נשלח שוב, עם מספר תעודת הזהות. מחכים לתשובה.',
+ '6.10 08:23: נשלח מייל חוזר, ניסה בטלפון ואין מענה.'
+];
+var OCC_ITEMS=[
+ {t:'📞 התקשרות 03 9541310',u:'tel:039541310'},
+ {t:'✉️ מייל occmedshf@mac.org.il (לטפסים בלבד)',u:'mailto:occmedshf@mac.org.il'},
+ {t:'📍 רוטשילד 15 ראשון לציון, קומה 5',u:'https://maps.google.com/?q=%D7%A8%D7%95%D7%98%D7%A9%D7%99%D7%9C%D7%93+15+%D7%A8%D7%90%D7%A9%D7%95%D7%9F+%D7%9C%D7%A6%D7%99%D7%95%D7%9F'},
+ {t:'🔗 הדף במכבי',u:'https://serguide.maccabi4u.co.il/heb/labsandtherapists/labsandtherapistssearchresults/labsandtherapistsinfopage/?ItemKeyIndex=2AF85BD23ADB152E6BC6DE4856326ECA'}
+];
+function occSheet(){
+ var old=document.getElementById('occSheet');if(old)old.remove();
+ var o=(D.occ||[])[0];if(o){try{localStorage.setItem('occSeen',o.id);}catch(e){}var gb=document.getElementById('gOcc');if(gb)gb.classList.remove('taskblink');}
+ var w=document.createElement('div');
+ w.id='occSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','מרפאה תעסוקתית');
+ w.innerHTML='<div class="ycard">'
+  +'<b>מרפאה תעסוקתית, מכבי רמות</b>'
+  +'<small>מענה טלפוני: א עד ה, 08:00 עד 11:00 בלבד. קבלת קהל: א עד ה, 08:00 עד 14:00. שישי ושבת סגור.</small>'
+  +'<small>תור רק בטלפון ובהפניית רופא. הרופאה: ד״ר נטלי מתן. התור האחרון היה ב 2.7.26.</small>'
+  +'<small><b>מה קרה עד עכשיו:</b><br>'+OCC_LOG.map(function(x){return esc(x);}).join('<br>')+'</small>'
+  +((D.occ||[])[0]?'<small><b>תשובה מהמרפאה, '+esc((D.occ[0].at||'').slice(0,16).replace('T',' '))+':</b><br>'+esc(D.occ[0].text).split(String.fromCharCode(10)).join('<br>')+'</small>':'<small>עוד לא הגיעה תשובה במייל.</small>')
+  +'<small>פקס 073 2132632</small>'
+  +OCC_ITEMS.map(function(it,i,a){
+    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+esc(it.t)+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=OCC_ITEMS[+k];if(k===''||!it)return;
+  if(/^(tel|mailto):/.test(it.u))location.href=it.u;
+  else window.open(it.u,'_blank','noopener');
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gOcc',occSheet);
+/*
+  11.10, Itzik in a recording: "צור לי כפתור מה יש לי היום לעשות, למשל היום יש
+  לי תור אצל רופא השיניים בערב". Today in Israel time: the appointments, the
+  reminders due today (or still not acknowledged), the tasks of today and any
+  earlier one not ticked. Tomorrow's appointments below, so the evening before
+  is covered too. A line typed at the bottom goes to me as a task for today.
+*/
+function tdDay(off){var d=new Date(Date.now()+(off||0)*864e5);return d.toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'});}
+function tdOf(iso){var t=Date.parse(iso);return isNaN(t)?'':new Date(t).toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'});}
+function tdHour(iso){try{return new Date(iso).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Jerusalem'});}catch(e){return '';}}
+function todayItems(){
+ var t0=tdDay(0),t1=tdDay(1),done=tkDone(),gone=clearedIds('tasksCleared'),known=remKnown();
+ var ap=(D.appts||[]).filter(function(a){return tdOf(a.when)===t0;});
+ var ap1=(D.appts||[]).filter(function(a){return tdOf(a.when)===t1;});
+ var rm=remLive().filter(function(r){return tdOf(r.due)===t0||remHot(r);});
+ var tk=(D.tasks||[]).filter(function(t){return !gone[t.id]&&(t.day===t0||(t.day&&t.day<t0&&!done[t.id]));});
+ return {ap:ap,ap1:ap1,rm:rm,tk:tk,done:done,known:known};
+}
+function todayTile(){
+ var b=document.getElementById('gMyDay');if(!b)return;
+ var x=todayItems(),sm=b.querySelector('small');
+ var n=x.ap.length+x.rm.length+x.tk.filter(function(t){return !x.done[t.id];}).length;
+ if(sm)sm.textContent=x.ap.length?x.ap.map(function(a){return a.what+(a.noTime?'':' '+tdHour(a.when));}).join(', ')
+  :(n?n+' דברים להיום':'היום אין תור ואין משימה');
+}
+function todaySheet(){
+ var old=document.getElementById('tdSheet');if(old)old.remove();
+ var x=todayItems(),h='';
+ var day=new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'});
+ function apRow(a){return '<div class="tdRow">'+(a.noTime?'':'<i>'+esc(tdHour(a.when))+'</i>')+esc(a.what)
+  +(a.where&&a.where!==a.what?'<br><small>'+esc(a.where)+'</small>':'')+'</div>';}
+ h+='<div class="tdSec">🏥 תורים</div>'+(x.ap.length?x.ap.map(apRow).join(''):'<small>אין תור היום.</small>');
+ h+='<div class="tdSec">⏰ תזכורות</div>'+(x.rm.length?x.rm.map(function(r){return '<div class="tdRow">'+esc(r.text)+'</div>';}).join(''):'<small>אין תזכורת להיום.</small>');
+ h+='<div class="tdSec">✅ משימות</div>'+(x.tk.length?x.tk.map(function(t){
+   return '<label class="tdRow tk'+(x.done[t.id]?' done':'')+'"><input type="checkbox" data-tk="'+esc(t.id)+'"'+(x.done[t.id]?' checked':'')+'> '+esc(t.text)+'</label>';
+  }).join(''):'<small>אין משימה פתוחה להיום.</small>');
+ if(x.ap1.length)h+='<div class="tdSec">מחר</div>'+x.ap1.map(apRow).join('');
+ h+='<div class="tdSec">להוסיף משהו להיום</div><form class="tdAdd" id="tdForm"><input id="tdText" placeholder="למשל: להתקשר לבנק" autocomplete="off"><button type="submit">שליחה</button></form><small id="tdSaid"></small>';
+ var w=document.createElement('div');
+ w.id='tdSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','מה יש לי היום');
+ w.innerHTML='<div class="ycard"><b>מה יש לי היום, '+esc(day)+'</b>'+h
+  +'<button type="button" class="yb yx" id="tdClose">סגירה</button></div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);todayTile();}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){if(e.target===w||e.target.id==='tdClose')close();};
+ w.addEventListener('change',function(e){var l=e.target.closest&&e.target.closest('label');if(l)l.classList.toggle('done',e.target.checked);});
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+ document.getElementById('tdForm').onsubmit=function(e){
+  e.preventDefault();
+  var t=document.getElementById('tdText'),said=document.getElementById('tdSaid'),v=t.value.trim();
+  if(!v)return;
+  said.textContent='שולח.';
+  sendText('משימה להיום','משימה להיום, '+day+': '+v,'משימה').then(function(){
+   t.value='';said.textContent='נשלח. זה יופיע כאן ברשימת המשימות.';
+   markSent('text');renderSent();renderThread();
+  }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';});
+ };
+}
+on('gMyDay',todaySheet);
+boot('today',todayTile);
+
+/*
+  10.10. The lecture "against all odds". Edited text (Word file in Drive, opens
+  in Google Docs), the six new slides, the deck itself and the lecture folder.
+*/
+var LEC_ITEMS=[
+ {t:'⭐ המצגת המוכנה להרצאה, עם המלל בהערות',u:'https://drive.google.com/file/d/1dQ48u62xYIDIZE5eVZUqKcejzoJ6YjCv/view'},
+ {t:'🎈 סרטון הבלונים לסיום ההרצאה',u:'https://drive.google.com/file/d/1H7gNrwAmE_ANBflHdeeeIV4RLkh_tiwl/view'},
+ {t:'01 המלל הערוך עם השקפים',u:'https://docs.google.com/document/d/1B0Kcx-9Dk7vRME0rUiK15IbGwTTu7_JQ/edit'},
+ {t:'02 כל השקפים החדשים',u:'https://drive.google.com/drive/folders/19I-nnLDrSyrbbEk9cKIhCg14RgbFGxrE'},
+ {t:'03 תיקיית ההרצאה בדרייב',u:'https://drive.google.com/drive/folders/1eKSkYILNuqIT_EytCYgGZNbWgiQPCQdv'},
+ {t:'📤 לשלוח לאיליי בוואטסאפ',wa:1}
+];
+/* 11.10, Itzik: share the lecture with Ilay only. No number here (public
+   page): WhatsApp opens with the text and he picks Ilay. */
+var LEC_WA='איליי, ההרצאה שלי, כנגד כל הסיכויים.'+String.fromCharCode(10)
+ +'המצגת המוכנה: '+LEC_ITEMS[0].u+String.fromCharCode(10)
+ +'סרטון הבלונים לסיום: '+LEC_ITEMS[1].u+String.fromCharCode(10)
+ +'המלל הערוך עם השקפים בקטן: '+LEC_ITEMS[2].u+String.fromCharCode(10)
+ +'כל השקפים החדשים: '+LEC_ITEMS[3].u+String.fromCharCode(10)
+ +'כל התיקייה: '+LEC_ITEMS[4].u;
+function lecSheet(){
+ var old=document.getElementById('lecSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='lecSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','הרצאה');
+ w.innerHTML='<div class="ycard">'
+  +'<b>הרצאה: כנגד כל הסיכויים</b>'
+  +'<small>המלל של 10.10 ערוך, עם תמונה קטנה של כל שקף. טקסט בכחול הוא הצעה לחלק של איך הרמת את הראש. מה שבסוגריים מרובעים, רק אתה יודע.</small>'
+  +LEC_ITEMS.map(function(it,i,a){
+    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+esc(it.t)+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=LEC_ITEMS[+k];if(k===''||!it)return;
+  if(it.wa){window.open('https://wa.me/?text='+encodeURIComponent(LEC_WA),'_blank','noopener');return;}
+  window.open(it.u,'_blank','noopener');
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gLec',lecSheet);
+/*
+  9.10. Itzik calls Maniv Rishon (Lolos water, Plotitzki 10) on Monday morning
+  and needs the old payments at hand. From the Lolos mail (100lolos). The tile
+  blinks from Monday 12.10 07:00 until he opens it.
+*/
+var MANIV_INFO=[
+ 'מספר לקוח (משלם): 50523290',
+ 'על שם: ליאני יואל ושות׳. הנכס: פלוטיצקי 10',
+ 'מוקד: 1800 35 11 10 (חינם רק מטלפון קווי)',
+ 'מהנייד: פניות הציבור 03 9483222',
+ 'שעות המוקד: ביום שני 09:00 עד 19:00. א, ג, ד, ה 08:30 עד 16:30. שישי 08:30 עד 12:30',
+ '',
+ 'התשלום האחרון: 30.6.26, 706.48 ₪ (חשבון אפריל עד מאי 26). דרך MAST, אישור 0529000, ספח 260455803',
+ 'לפניו: 9.5.26, 205.2 ₪ (פברואר עד מרץ 26). אישור 5178712, ספח 260307565',
+ 'לפניו: 16.4.26, 191.63 ₪ (דצמבר עד ינואר 26). אישור 9528822, ספח 260164874',
+ '',
+ 'לא שולם: חשבון יוני עד יולי 26, 416.67 ₪. הגיע במייל ב 1.9.26',
+ 'בעבר: מכתב דרישת חוב מ 25.11.25 על אותו מספר לקוח',
+ '',
+ 'לחפש במייל של לולוס: מניב (וגם MAST לאישורי תשלום)'
+];
+var TALK_DUE='2026-10-11T10:00:00+03:00';
+var TALK_TEXT="חמישה ימים לא אכלתי כלום.\\nלא דיאטה ולא אתגר.\\n\\nבארבעה עשר בספטמבר נכנסתי לניתוח להוציא את הגידול הסרטני השני.\\nכשהתעוררתי, הבנתי שאת חמשת הימים הקרובים אעביר בלי ביס אחד.\\nרק אינפוזיה, וזונדה באף.\\n\\nכשחזרתי הביתה עליתי על המשקל.\\nשמונה קילו פחות.\\nבשבוע אחד.\\n\\nתאמינו לי, יש דרכים יותר כיפיות לרזות.\\n\\nאז עכשיו אני עושה את הדרך ההפוכה.\\nכל יום קצת.\\nאתמול שישים ותשע ושתיים.\\nהיום שבעים עגול.\\n\\nהגוף זוכר מאיפה הוא בא.\\nצריך רק לתת לו סיבה לחזור.\\n\\nואני רוצה לשאול אתכם משהו.\\nמה הדבר הראשון שהייתם אוכלים\\nאחרי חמישה ימים בלי אוכל?";
+// 11.10: he asked to change the words and send a note back, and to read it
+// off the screen while filming. Edits stay on the phone until he sends them.
+// A draft counts only against the text it was edited from, so a new version
+// from me replaces an old draft on the phone instead of hiding behind it.
+function talkGet(){try{if(localStorage.getItem('talkBase')!==TALK_TEXT)return TALK_TEXT;return localStorage.getItem('talkDraft')||TALK_TEXT;}catch(e){return TALK_TEXT;}}
+function talkPrompter(t){
+ var p=document.createElement('div');
+ p.id='talkPrompt';
+ p.style.cssText='position:fixed;inset:0;z-index:99999;background:#000;color:#fff;overflow-y:auto;direction:rtl;text-align:center;padding:40vh 7vw 60vh;font-size:30px;line-height:1.6;white-space:pre-wrap';
+ p.textContent=t;
+ var bar=document.createElement('div');
+ bar.style.cssText='position:fixed;left:0;right:0;bottom:0;display:flex;gap:8px;padding:10px;background:rgba(0,0,0,.8);z-index:100000;direction:rtl';
+ bar.innerHTML='<button type="button" class="yb yb1" data-p="go" style="flex:2">▶️ גלילה</button><button type="button" class="yb yb2" data-p="slow" style="flex:1">איטי</button><button type="button" class="yb yb2" data-p="fast" style="flex:1">מהיר</button><button type="button" class="yb yx" data-p="x" style="flex:1">יציאה</button>';
+ var sp=1,run=false,tm=null;
+ function stop(){run=false;clearInterval(tm);bar.querySelector('[data-p=go]').textContent='▶️ גלילה';}
+ bar.onclick=function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-p');if(!k)return;
+  if(k==='x'){stop();p.remove();bar.remove();return;}
+  if(k==='slow'){sp=Math.max(.5,sp-.5);return;}
+  if(k==='fast'){sp=Math.min(5,sp+.5);return;}
+  if(run)return stop();
+  run=true;e.target.textContent='⏸️ עצירה';tm=setInterval(function(){p.scrollTop+=sp;},40);
+ };
+ p.onclick=function(){if(run)stop();};
+ document.body.appendChild(p);document.body.appendChild(bar);
+}
+function talkSheet(){
+ var old=document.getElementById('talkSheet');if(old)old.remove();
+ try{if(Date.now()>=Date.parse(TALK_DUE))localStorage.setItem('talkSeen','1');}catch(e){}
+ var gb=document.getElementById('gTalk');if(gb&&Date.now()>=Date.parse(TALK_DUE))gb.classList.remove('taskblink');
+ var w=document.createElement('div');
+ w.id='talkSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','סרטון מדבר');
+ w.innerHTML='<div class="ycard">'
+  +'<b>🎙️ חמישה ימי צום, סרטון מול המצלמה</b>'
+  +'<small>בערך 45 שניות. אפשר לשנות כאן כל מילה. "מצב צילום" מציג את הטקסט גדול וגולל לאט, מקריאים ממנו ומצלמים לאורך.</small>'
+  +'<textarea id="talkTxt" dir="rtl" style="width:100%;box-sizing:border-box;min-height:46vh;text-align:right;line-height:1.7;font-size:17px;margin:10px 0;padding:10px;border-radius:12px;font-family:inherit">'+esc(talkGet())+'</textarea>'
+  +'<textarea id="talkNote" dir="rtl" placeholder="הערה אליי, לא חובה" style="width:100%;box-sizing:border-box;min-height:60px;text-align:right;font-size:16px;margin:0 0 10px;padding:10px;border-radius:12px;font-family:inherit"></textarea>'
+  +'<button type="button" class="yb yb1" data-k="cam">🎬 מצב צילום</button>'
+  +'<button type="button" class="yb yb2" data-k="send">📨 לשלוח לי את השינויים</button>'
+  +'<button type="button" class="yb yb2" data-k="copy">📋 העתקת הטקסט</button>'
+  +'<button type="button" class="yb yb2" data-k="reset">↩️ לחזור לטקסט המקורי</button>'
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.oninput=function(e){if(e.target.id==='talkTxt'){try{localStorage.setItem('talkDraft',e.target.value);localStorage.setItem('talkBase',TALK_TEXT);}catch(x){}}};
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  var ta=document.getElementById('talkTxt'),t=ta?ta.value:TALK_TEXT;
+  if(k==='copy'){try{navigator.clipboard.writeText(t);e.target.textContent='✅ הועתק';}catch(x){}return;}
+  if(k==='reset'){if(ta)ta.value=TALK_TEXT;try{localStorage.removeItem('talkDraft');}catch(x){}return;}
+  if(k==='cam'){talkPrompter(t);return;}
+  if(k==='send'){
+   var n=(document.getElementById('talkNote')||{}).value||'';
+   var body='הסרטון המדבר, חמישה ימי צום. '+(t===TALK_TEXT?'הטקסט בלי שינוי.':'הטקסט אחרי השינויים שלי:')+'\\n\\n'+(t===TALK_TEXT?'':t+'\\n\\n')+(n?'הערה: '+n:'');
+   e.target.textContent='שולח...';
+   sendText('הסרטון המדבר',body.trim(),'עדכון').then(function(){e.target.textContent='✅ נשלח';toast('נשלח, אני מעדכן את הטקסט');}).catch(function(){e.target.textContent='לא נשלח, לנסות שוב';});
+   return;
+  }
+  close();
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+var MANIV_DUE='2026-10-12T07:00:00+03:00';
+function manivSheet(){
+ var old=document.getElementById('manivSheet');if(old)old.remove();
+ try{if(Date.now()>=Date.parse(MANIV_DUE))localStorage.setItem('manivSeen','1');}catch(e){}
+ var gb=document.getElementById('gManiv');if(gb&&Date.now()>=Date.parse(MANIV_DUE))gb.classList.remove('taskblink');
+ var w=document.createElement('div');
+ w.id='manivSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','תשלום למניב');
+ w.innerHTML='<div class="ycard">'
+  +'<b>💧 מניב ראשון, המים של לולוס</b>'
+  +'<small>'+MANIV_INFO.map(function(x){return esc(x);}).join('<br>')+'</small>'
+  +'<button type="button" class="yb yb1" data-k="tel">📞 מוקד 1800 35 11 10</button>'
+  +'<button type="button" class="yb yb2" data-k="tel2">📱 מהנייד 03 9483222</button>'
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  if(k==='tel')location.href='tel:1800351110';
+  if(k==='tel2')location.href='tel:039483222';
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gManiv',manivSheet);
+on('gTalk',talkSheet);
+boot('talk',function(){var b=document.getElementById('gTalk');if(!b)return;var seen='';try{seen=localStorage.getItem('talkSeen')||'';}catch(e){}b.classList.toggle('taskblink',Date.now()>=Date.parse(TALK_DUE)&&!seen);});
+boot('maniv',function(){var b=document.getElementById('gManiv');if(!b)return;var seen='';try{seen=localStorage.getItem('manivSeen')||'';}catch(e){}b.classList.toggle('taskblink',Date.now()>=Date.parse(MANIV_DUE)&&!seen);});
+
+boot('occ',function(){var o=(D.occ||[])[0],seen='';var sm=document.querySelector('#gOcc small');if(sm)sm.textContent=o?'המרפאה ענתה '+(o.at||'').slice(8,10).replace(/^0/,'')+'.'+(o.at||'').slice(5,7).replace(/^0/,'')+'. לחץ לקריאה':(function(l){var i=l.indexOf(': ');var h=l.slice(0,i).split(' ')[0];return h+': '+l.slice(i+2);})(OCC_LOG[OCC_LOG.length-1]);try{seen=localStorage.getItem('occSeen')||'';}catch(e){}var b=document.getElementById('gOcc');if(b)b.classList.toggle('taskblink',!!(o&&o.id&&seen!==o.id));});
+/*
+  4.10. Documents made for the lawyer in the Lolos sale, numbered. A new one
+  gets the next number. Same sheet as the future reels.
+*/
+/* 11.10: Itzik no longer needs the lawyer documents; the list was cleared. */
+var LAW_ITEMS=[];
+function lawSheet(){
+ var old=document.getElementById('lawSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='lawSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','מסמכים לעורך הדין');
+ w.innerHTML='<div class="ycard">'
+  +'<b>מסמכים לעורך הדין</b>'
+  +'<small>'+(LAW_ITEMS.length?'לחיצה פותחת':'אין מסמכים כרגע')+'</small>'
+  +LAW_ITEMS.map(function(it,i,a){
+    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=LAW_ITEMS[+k];if(k===''||!it)return;
+  fileOpen(it.r);
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gLaw',lawSheet);
+// 7.10: the open accounts as one file to send on, at the bottom of the debtors.
+document.getElementById('rivShare')&&document.getElementById('rivShare').addEventListener('click',function(e){
+ var r=e.target.closest&&e.target.closest('[data-r]');if(!r)return;
+ fileOpen(r.getAttribute('data-r'));
+});
+// 4.10: Itzik could not find these files. The tile blinks until he opens it
+// after a new document was added (the count is what he has seen).
+/* 11.10: the letter to Roi was sent; its items and the Sunday blink are gone. */
+boot('lawblink',function(){var b=document.getElementById('gLaw');if(!b||!LAW_ITEMS.length)return;var r='';try{r=localStorage.getItem('lawSeenR')||'';if(!r&&localStorage.getItem('lawSeen')){r=LAW_ITEMS[LAW_ITEMS.length-1].r;localStorage.setItem('lawSeenR',r);}}catch(x){}b.classList.toggle('taskblink',r!==LAW_ITEMS[LAW_ITEMS.length-1].r);});
+document.getElementById('gLaw')&&document.getElementById('gLaw').addEventListener('click',function(){if(LAW_ITEMS.length)try{localStorage.setItem('lawSeenR',LAW_ITEMS[LAW_ITEMS.length-1].r);}catch(x){}this.classList.remove('taskblink');});
+/*
+  2.10. Winning lines. Tapping a line copies it. A new line goes at the end
+  with the next number, with where it came from.
+*/
+var WIN_ITEMS=[
+ {n:'01',t:'מרימים את הראש ולא את הידיים',f:'amirshwartz1, תגובה בטיקטוק על סרטון העוגה'},
+ {n:'02',t:'בכל רגע נתון יש לנו שתי אופציות: לצעוד קדימה לצמיחה או לצעוד אחורה לנוחות.',f:'כרטיס שצילמתי, 7.10, #מיאתבוחרתלהיות?'}
+];
+function winSheet(){
+ var old=document.getElementById('winSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='winSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','משפטים מנצחים');
+ w.innerHTML='<div class="ycard">'
+  +'<b>משפטים מנצחים</b>'
+  +'<small>לחיצה על משפט מעתיקה אותו</small>'
+  +WIN_ITEMS.map(function(it,i,a){
+    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)
+     +(it.f?'<br><small>'+esc(it.f)+'</small>':'')+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var el=e.target.closest&&e.target.closest('[data-k]');
+  var k=el&&el.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=WIN_ITEMS[+k];if(k===''||!it)return;
+  var done=function(){toast('הועתק');};
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+   navigator.clipboard.writeText(it.t).then(done,function(){fallbackCopy(it.t,done);});
+  }else fallbackCopy(it.t,done);
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gWin',winSheet);
+/*
+  4.10. Pension follow up. Itzik spoke with Arel, the old standing orders were
+  cancelled and the form went to the bank. Check on 18.10 that it all goes
+  through. Lines copy on tap; the photo of his note opens as a private file.
+*/
+var PEN_ITEMS=[
+ {t:'קוד מוסד בבנק 28417'},
+ {t:'הסכום 1,211 ש״ח בחודש (16% מ 7,566)'},
+ {t:'4.10: דיברתי עם אראל, ביטלו את הפעולות הישנות'},
+ {t:'4.10: הטופס נשלח לבנק'},
+ {t:'18.10: לבדוק שהכל יורד כמו שצריך'},
+ {t:'הפתק שצילמתי',r:'pension-01-note.jpg'}
+];
+function penSheet(){
+ var old=document.getElementById('penSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='penSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','פנסיה');
+ w.innerHTML='<div class="ycard">'
+  +'<b>פנסיה</b>'
+  +'<small>עד שרואים שהכל יורד. לחיצה על שורה מעתיקה אותה</small>'
+  +PEN_ITEMS.map(function(it,i,a){
+    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+esc(it.t)+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var el=e.target.closest&&e.target.closest('[data-k]');
+  var k=el&&el.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=PEN_ITEMS[+k];if(k===''||!it)return;
+  if(it.r){fileOpen(it.r);return;}
+  var done=function(){toast('הועתק');};
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+   navigator.clipboard.writeText(it.t).then(done,function(){fallbackCopy(it.t,done);});
+  }else fallbackCopy(it.t,done);
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gPen',penSheet);
+/*
+  1.10. Medical papers after the second surgery (14.9). Same numbered sheet
+  as the reels; a new paper gets the next number and numbers never change.
+  Papers only: Itzik, 1.10, the two clips from the visit belong to his reels,
+  not here.
+*/
+var MED_ITEMS=[
+ {n:'01',t:'ביקורת אצל פרופ׳ גיא להט, 1.10, עם הפתולוגיה',r:'med-01-lahat-review.pdf'}
+];
+function medSheet(){
+ var old=document.getElementById('mdSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='mdSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','אחרי הניתוח השני');
+ w.innerHTML='<div class="ycard">'
+  +'<b>אחרי הניתוח השני</b>'
+  +'<small>ממוספר, מסמך חדש מקבל את המספר הבא</small>'
+  +MED_ITEMS.map(function(it,i,a){
+    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=MED_ITEMS[+k];if(k===''||!it)return;
+  fileOpen(it.r);
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gMed',medSheet);
+/*
+  1.10. Invoices for his subscriptions (ChatGPT, Claude, Google) from August
+  on, taken from his mail. Same numbered sheet; numbers never change.
+  1.10, second voice note: everything paid to the lawyer Roy Shaya goes in too
+  (his invoices come from ezcount with a download link, not an attachment).
+*/
+/*
+  4.10, voice note: "תאפס את כפתור חשבוניות... אנחנו מודדים רק מאתמול והלאה".
+  The eight August/September entries (inv-01..08) were dropped from the list;
+  the files stay in private storage. Counting starts again at 01 from 3.10.
+*/
+var INV_ITEMS=[];
+function invSheet(){
+ var old=document.getElementById('ivSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='ivSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','חשבוניות');
+ w.innerHTML='<div class="ycard">'
+  +'<b>חשבוניות</b>'
+  +'<small>ממוספר, החדשה מקבלת את המספר הבא</small>'
+  +(INV_ITEMS.length?'':'<small>עוד אין חשבוניות מ 3.10 והלאה</small>')
+  +INV_ITEMS.map(function(it,i,a){
+    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=INV_ITEMS[+k];if(k===''||!it)return;
+  fileOpen(it.r);
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gInv',invSheet);
+/*
+  27.9. The content plan for Ilay. Same sheet as Yehuda's, because the first
+  version only opened the PDF and he asked where the share was. The file is
+  prefetched when the sheet opens so the share call stays inside the tap.
+*/
+var PLAN_PDF='files/content-plan-ilay.pdf',PLAN_NAME='תוכנית תוכן.pdf';
+var PLAN_LINK='https://itcohen2-maker.github.io/abaitzik-monitor/files/content-plan-ilay.pdf';
+var PLAN_MSG='תוכנית התוכן להמשך: סוגי פוסטים, שבוע לדוגמה ותסריטים.';
+var pFile=null,pFileTried=false;
+function planPrefetch(){
+ if(pFileTried)return;pFileTried=true;
+ if(!navigator.canShare)return;
+ fetch(PLAN_PDF).then(function(r){return r.ok?r.blob():null;}).then(function(b){
+  if(!b)return;
+  var f=new File([b],PLAN_NAME,{type:'application/pdf'});
+  if(navigator.canShare({files:[f]}))pFile=f;
+ }).catch(function(){pFileTried=false;});
+}
+function planShare(){
+ if(pFile&&navigator.share){
+  navigator.share({files:[pFile],title:'תוכנית תוכן',text:PLAN_MSG})
+   .catch(function(e){ if(e&&e.name!=='AbortError')planShareLink(); });
+  return;
+ }
+ planShareLink();
+}
+function planShareLink(){
+ if(navigator.share){
+  navigator.share({title:'תוכנית תוכן',text:PLAN_MSG,url:PLAN_LINK})
+   .catch(function(e){ if(e&&e.name!=='AbortError')yehudaCopy(PLAN_LINK); });
+  return;
+ }
+ yehudaCopy(PLAN_LINK);
+}
+function planSheet(){
+ var old=document.getElementById('ySheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='ySheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','תוכנית תוכן');
+ w.innerHTML='<div class="ycard">'
+  +'<b>תוכנית תוכן</b>'
+  +'<small>לשיתוף עם איליי</small>'
+  +'<button type="button" class="yb" data-y="open">פתיחה</button>'
+  +'<button type="button" class="yb yb1" data-y="share">שליחה, עם הקובץ מצורף</button>'
+  +'<button type="button" class="yb yb2" data-y="wa">וואטסאפ, שליחת קישור</button>'
+  +'<button type="button" class="yb" data-y="copy">העתקת הקישור</button>'
+  +'<button type="button" class="yb yx" data-y="close">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-y');
+  if(!k)return;
+  if(k==='open')window.open(PLAN_PDF,'_blank','noopener');
+  else if(k==='share')planShare();
+  else if(k==='wa')window.open('https://wa.me/?text='+encodeURIComponent(PLAN_MSG+String.fromCharCode(10)+PLAN_LINK),'_blank','noopener');
+  else if(k==='copy')yehudaCopy(PLAN_LINK);
+  close();
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+ planPrefetch();
+ var first=w.querySelector('.yb');if(first)first.focus();
+}
+on('gContentPlan',planSheet);
+on('gShopList',function(){window.open('https://docs.google.com/document/d/1A2tvet0ucYNDoDclswaVDybuL8bir3OAerRzXtDUEPU/edit','_blank','noopener');});
+on('gStoryArc',function(){window.open('https://www.instagram.com/archive/stories/','_blank','noopener');});
+/*ITZIK:END*/
+on('gOp',function(){pane('s');});
+on('gNotes',function(){pane('t');renderNotes();});
+on('gRemind',function(){pane('R');renderReminders();});
+on('gTasks',function(){pane('T');renderTasks();});
+on('gAppts',function(){pane('Q');renderAppts();});
+on('gIdeas',function(){pane('i');renderIdeas();});
+// The same list a new client sees on the first visit. Every line is written as
+// his week, not as a feature: he recognises the problem before he understands
+// the screen. What he taps becomes a request in my inbox.
+var IDEAS_SHOWN=[];
+var IDEAS=[
+ {t:'לתעד כל דבר שאני אוכל',d:'מצלמים או אומרים במילה, וזה נרשם עם הקלוריות. בסוף השבוע יש תמונה של מה שבאמת אכלת, בלי לשאול אף אחד.'},
+ {t:'לדעת מי פנה ולא קיבל תשובה',d:'כל פנייה מכל מקום נכנסת לתור אחד, ומי שמחכה יותר מדי נצבע.'},
+ {t:'דוח בוקר על הטלפון',d:'מה קרה אתמול בעסק, בשלוש שורות, לפני הקפה הראשון.'},
+ {t:'תזכורות שלא מפספסים',d:'ביטוח, רישיון, תשלום לספק, מסמך לרשות. המסך זוכר במקומך.'},
+ {t:'מה נכנס החודש',d:'הכנסות והוצאות במקום אחד, בלי לחכות לרואה החשבון בסוף הרבעון.'},
+ {t:'סריקת חשבוניות וקבלות',d:'מצלמים קבלה והיא נכנסת לרשימה מסודרת, גם לעסק וגם לחשבון הפרטי.'},
+ {t:'מי הלקוחות שלי ומאיפה הם הגיעו',d:'רשימה אחת של אנשים, עם המקור שממנו כל אחד הגיע.'},
+ {t:'עובד חדש שיודע איך עובדים כאן',d:'מה שכתוב במסך הוא ההדרכה. אין תלות במי שיושב פה חמש שנים.'},
+ {t:'הכל נשאר גם כשאני בחופש',d:'המסך ממשיך לענות ולתעד, ואתה קורא כשנוח לך.'},
+ {t:'תיק מסודר לעסק',d:'שנתיים של תיעוד מסודר הן ההבדל בין להראות לקונה תיק לבין לספר לו סיפור.'}
+];
+function ideaKey(t){return 'idea:'+t;}
+function ideaDone(){
+ return idList('ideasAsked');
+}
+function renderIdeas(){
+ var asked=ideaDone();
+ // What the daily reviewer found comes first, marked with the day it found it.
+ // What the improver (improve.js) already built says so instead of asking him.
+ // The weekly radar (radar.js) brings new open source tools, each with its link.
+ var L=(D.better||[]).map(function(x){return {t:x.t,d:x.d,u:x.u,built:!!x.built,tag:(x.built?'🛠 נבנה לבד · '+stamp(x.built):(x.by==='radar'?'🔭 כלים חדשים':'🔍 בודק השיפורים')+(x.at?' · '+stamp(x.at):''))+(x.size?' · '+x.size:'')};}).concat(IDEAS);
+ IDEAS_SHOWN=L;
+ document.getElementById('ideaList').innerHTML=L.map(function(x,n){
+  var on=asked.indexOf(x.t)>-1;
+  // Itzik, 8.10: "I need to be able to comment on the ideas." Every idea,
+  // built or not, gets its own comment box that goes to me like a request.
+  var cm='<button type="button" class="icm'+(x.built?' ib0':'')+'" data-c="'+n+'">להגיב</button>'
+   +'<div class="icbox" id="icb'+n+'"><textarea aria-label="תגובה לרעיון"></textarea>'
+   +'<button type="button" data-s="'+n+'">שליחה</button><small></small></div>';
+  if(x.built)return '<div class="idea"><small class="itag">'+esc(x.tag)+'</small><b>'+esc(x.t)+'</b><p>'+esc(x.d)+'</p>'+cm+'</div>';
+  return '<div class="idea">'+(x.tag?'<small class="itag">'+esc(x.tag)+'</small>':'')+'<b>'+esc(x.t)+'</b><p>'+esc(x.d)+'</p>'
+   +(String(x.u||'').indexOf('https://')===0?'<p><a href="'+esc(x.u)+'" target="_blank" rel="noopener">לפתוח את הכלי</a></p>':'')
+   +'<button type="button" data-i="'+n+'"'+(on?' class="done"':'')+'>'
+   +(on?'ביקשת. אני על זה':'רוצה את זה')+'</button>'+cm+'</div>';
+ }).join('');
+ Array.prototype.forEach.call(document.querySelectorAll('#ideaList button[data-c]'),function(b){
+  b.onclick=function(){
+   var box=document.getElementById('icb'+b.getAttribute('data-c'));
+   box.classList.toggle('open');
+   if(box.classList.contains('open'))box.querySelector('textarea').focus();
+  };
+ });
+ Array.prototype.forEach.call(document.querySelectorAll('#ideaList button[data-s]'),function(b){
+  b.onclick=function(){
+   var x=IDEAS_SHOWN[Number(b.getAttribute('data-s'))];
+   var box=b.parentNode,ta=box.querySelector('textarea'),said=box.querySelector('small');
+   var v=ta.value.trim();
+   if(!v){ta.focus();return;}
+   var msg='תגובה לרעיון "'+x.t+'": '+v;
+   b.disabled=true;said.textContent='שולח.';
+   sendText('רעיון מהמוניטור',msg,'רעיון').then(function(){
+    var p=pending();p.push({at:new Date().toISOString(),text:msg});savePending(p);
+    ta.value='';said.textContent='נשלח. אני חוזר אליך על זה.';
+    markSent('text');renderSent();renderThread();
+   }).catch(function(){
+    said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';
+   }).then(function(){b.disabled=false;});
+  };
+ });
+ Array.prototype.forEach.call(document.querySelectorAll('#ideaList button[data-i]'),function(b){
+  b.onclick=function(){
+   var x=IDEAS_SHOWN[Number(b.getAttribute('data-i'))];
+   b.disabled=true;b.textContent='שולח.';
+   sendText('רעיון מהמוניטור','רוצה את זה: '+x.t,'רעיון').then(function(){
+    var a=ideaDone();
+    if(a.indexOf(x.t)<0)a.push(x.t);
+    try{localStorage.setItem('ideasAsked',JSON.stringify(a));}catch(e){}
+    b.className='done';b.textContent='ביקשת. אני על זה';
+    var p=pending();p.push({at:new Date().toISOString(),text:'רוצה את זה: '+x.t});savePending(p);
+    markSent('text');renderSent();renderThread();
+   }).catch(function(){
+    b.textContent='לא נשלח. תנסה שוב';
+   }).then(function(){b.disabled=false;});
+  };
+ });
+}
+on2('ideaForm','submit',function(e){
+ e.preventDefault();
+ var box=document.getElementById('ideaText');
+ var said=document.getElementById('ideaSaid');
+ var t=box.value.trim();
+ if(!t)return;
+ said.textContent='שולח.';
+ sendText('רעיון מהמוניטור','רעיון שלי: '+t,'רעיון').then(function(){
+  var p=pending();p.push({at:new Date().toISOString(),text:'רעיון שלי: '+t});savePending(p);
+  box.value='';said.textContent='נשלח. אני חוזר אליך עם שתי דרכים לעשות את זה.';
+  markSent('text');renderSent();renderThread();
+ }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';});
+});
+
+// Anything he adds about the operation goes to me as well as onto the screen,
+// so a correction is never only on one device.
+/*ITZIK:BEGIN*/
+document.getElementById('opForm').onsubmit=function(e){
+ e.preventDefault();
+ var box=document.getElementById('opText');
+ var said=document.getElementById('opSaid');
+ var v=box.value.trim();
+ if(!v)return;
+ said.textContent='שולח.';
+ sendText('ניתוח','ניתוח: '+v,'ניתוח').then(function(){
+  box.value='';said.textContent='נשלח. אני מוסיף את זה.';toast(said.textContent);
+ }).catch(function(){said.textContent='לא נשלח. תנסה שוב.';});
+};
+/*ITZIK:END*/
+
+// Notes live on the device. He asked for somewhere nothing gets lost, and
+// that means not depending on a round trip through me to save a line.
+//
+// Itzik, 28.9: "I added one note and it does not let me add beyond that. The
+// app is so poor. Take the iPhone app and copy it here." So it is the iPhone
+// Notes shape now: a list with search, a button for a new note, and a note
+// that opens to a full page and keeps what you type as you type it. The first
+// line is the title. Nothing is saved empty, and a note can be pinned.
+function notes(){
+ var l=idList('notes'),n=0;
+ l.forEach(function(x){if(!x.id){x.id='n'+Date.parse(x.at||0)+'-'+(n++);}if(!x.upd)x.upd=x.at;});
+ return l;
+}
+function saveNotes(list){
+ try{localStorage.setItem('notes',JSON.stringify(list));}catch(e){}
+ notesPush();
+}
+/*
+  The notes and the task ticks are kept on the server too.
+
+  The improvements reviewer, 5.10, and Itzik said he wants it: they lived only
+  in this phone's storage, so a new phone or a cleared Safari wiped them with
+  no warning. A few seconds after a change the whole set goes up as one small
+  file on the same channel the messages use, and the copy that comes back
+  with the page fills in whatever this phone does not have. The merge keeps
+  the newer edit of each note and never brings back one that was deleted.
+*/
+function notesGone(){try{return JSON.parse(localStorage.getItem('notesGone')||'{}')||{};}catch(e){return {};}}
+function tkUndone(){try{return JSON.parse(localStorage.getItem('tasksUndone')||'[]')||[];}catch(e){return [];}}
+function noteForget(id){
+ if(!id)return;
+ var g=notesGone();g[id]=new Date().toISOString();
+ try{localStorage.setItem('notesGone',JSON.stringify(g));}catch(e){}
+}
+var nsPulled='',nsTimer=null;
+function notesPull(){
+ var S=D&&D.notesSync;
+ if(!S||!S.at||nsPulled===S.at)return;
+ nsPulled=S.at;
+ var raw;try{raw=JSON.parse(localStorage.getItem('notes')||'[]');}catch(e){return;}
+ if(!Array.isArray(raw))return;
+ var gone=notesGone(),ch=false;
+ Object.keys(S.gone||{}).forEach(function(k){if(!gone[k]){gone[k]=S.gone[k];ch=true;}});
+ var out=raw.filter(function(n){return !(n&&n.id&&gone[n.id]);});
+ if(out.length!==raw.length)ch=true;
+ var by={};out.forEach(function(n,i){if(n&&n.id)by[n.id]=i;});
+ (S.notes||[]).forEach(function(n){
+  if(!n||!n.id||gone[n.id]||n.id===noteOpen)return;
+  if(by[n.id]===undefined){out.push(n);ch=true;}
+  else if(String(n.upd||'')>String(out[by[n.id]].upd||'')){out[by[n.id]]=n;ch=true;}
+ });
+ if(ch){
+  try{localStorage.setItem('notes',JSON.stringify(out));localStorage.setItem('notesGone',JSON.stringify(gone));}catch(e){}
+ }
+ var td=tkDone(),un=tkUndone(),tch=false;
+ Object.keys(S.tasksDone||{}).forEach(function(k){if(!td[k]&&un.indexOf(k)<0){td[k]=S.tasksDone[k];tch=true;}});
+ if(tch)try{localStorage.setItem('tasksDone',JSON.stringify(td));}catch(e){}
+ var tc=clearedIds('tasksCleared'),cch=false;
+ Object.keys(S.tasksCleared||{}).forEach(function(k){if(!tc[k]){tc[k]=S.tasksCleared[k];cch=true;}});
+ if(cch)try{localStorage.setItem('tasksCleared',JSON.stringify(tc));}catch(e){}
+ var rg=clearedIds('remGone'),rch=false;
+ Object.keys(S.remGone||{}).forEach(function(k){if(!rg[k]){rg[k]=S.remGone[k];rch=true;}});
+ if(rch){try{localStorage.setItem('remGone',JSON.stringify(rg));}catch(e){}try{renderReminders();}catch(e){}}
+ if(ch){try{renderNotes();}catch(e){}}
+}
+function notesPush(){clearTimeout(nsTimer);nsTimer=setTimeout(function(){notesSend(false);},8000);}
+function nsHash(t){var h=5381;for(var i=0;i<t.length;i++)h=((h*33)^t.charCodeAt(i))>>>0;return t.length+':'+h;}
+function notesSend(keep){
+ clearTimeout(nsTimer);nsTimer=null;
+ if(!NTFYIN())return;
+ var raw=notes();
+ var body={notes:raw.filter(function(n){return n&&n.id;}),gone:notesGone(),tasksDone:tkDone(),
+  tasksUndone:tkUndone(),tasksCleared:clearedIds('tasksCleared'),remGone:clearedIds('remGone')};
+ var sig=nsHash(JSON.stringify(body)),last='';
+ try{last=localStorage.getItem('notesSyncSig')||'';}catch(e){}
+ if(sig===last)return;
+ body.at=new Date().toISOString();body.code=myCode();
+ fetch('https://ntfy.sh/'+NTFYIN()+'?filename=notes-sync.json',
+  {method:'PUT',headers:{Title:'notes-sync'},body:JSON.stringify(body),keepalive:!!keep})
+  .then(function(r){if(r.ok)try{localStorage.setItem('notesSyncSig',sig);}catch(e){}},function(){});
+}
+document.addEventListener('visibilitychange',function(){if(document.hidden&&nsTimer)notesSend(true);});
+var noteOpen=null;
+function noteTitle(t){
+ var ls=String(t||'').split('\\n').map(function(x){return x.trim();}).filter(Boolean);
+ return {head:ls[0]||'פתק חדש',rest:ls.slice(1).join(' ')};
+}
+function noteDay(iso){
+ var d=new Date(iso),now=new Date();
+ if(isNaN(d))return '';
+ if(d.toDateString()===now.toDateString())return d.toTimeString().slice(0,5);
+ var y=new Date(now);y.setDate(y.getDate()-1);
+ if(d.toDateString()===y.toDateString())return 'אתמול';
+ return d.getDate()+'.'+(d.getMonth()+1)+'.'+String(d.getFullYear()).slice(2);
+}
+function renderNotes(){
+ var host=document.getElementById('noteList');
+ if(!host)return;
+ document.getElementById('noteHome').hidden=false;
+ document.getElementById('noteEdit').hidden=true;
+ noteOpen=null;
+ var q=(document.getElementById('noteSearch').value||'').trim();
+ var list=notes().filter(function(n){return String(n.text||'').trim();});
+ if(q)list=list.filter(function(n){return String(n.text).indexOf(q)>=0;});
+ list.sort(function(a,b){return String(b.upd).localeCompare(String(a.upd));});
+ if(!list.length){
+  host.innerHTML='<div class="empty">'+(q?'לא נמצא פתק עם זה.':'אין פתקים. לוחצים על פתק חדש למטה.')+'</div>';
+  return;
+ }
+ var pinned=list.filter(function(n){return n.pin;}),rest=list.filter(function(n){return !n.pin;});
+ function box(title,l){
+  if(!l.length)return '';
+  return (title?'<div class="note-grp">'+title+'</div>':'')+'<div class="note-box">'+l.map(function(n){
+   var t=noteTitle(n.text);
+   return '<div class="note-i" data-id="'+esc(n.id)+'"><div class="note-t"><b>'+esc(t.head)+'</b><small>'
+    +esc(noteDay(n.upd))+'  '+esc(t.rest||'אין עוד טקסט')+'</small></div>'
+    +'<button type="button" class="note-sh" aria-label="שיתוף" title="שיתוף">⤴</button></div>';
+  }).join('')+'</div>';
+ }
+ host.innerHTML=box(pinned.length?'📌 מוצמדים':'',pinned)+box(pinned.length?'פתקים':'',rest);
+ Array.prototype.forEach.call(host.querySelectorAll('.note-i'),function(el){
+  // Itzik, 8.10: a long press on a note offers to delete it.
+  var lp=null,lpFired=false,lpX=0,lpY=0;
+  function lpStop(){clearTimeout(lp);lp=null;}
+  el.addEventListener('touchstart',function(e){
+   lpFired=false;var t=e.touches[0];lpX=t.clientX;lpY=t.clientY;lpStop();
+   lp=setTimeout(function(){lp=null;lpFired=true;deleteNoteAsk(el.getAttribute('data-id'));},600);
+  },{passive:true});
+  el.addEventListener('touchmove',function(e){
+   var t=e.touches[0];if(Math.abs(t.clientX-lpX)>10||Math.abs(t.clientY-lpY)>10)lpStop();
+  },{passive:true});
+  el.addEventListener('touchend',function(e){lpStop();if(lpFired&&e.cancelable)e.preventDefault();});
+  el.addEventListener('touchcancel',lpStop);
+  el.addEventListener('contextmenu',function(e){
+   e.preventDefault();if(lpFired)return;lpFired=true;deleteNoteAsk(el.getAttribute('data-id'));
+  });
+  el.onclick=function(){if(lpFired){lpFired=false;return;}openNote(el.getAttribute('data-id'));};
+  el.querySelector('.note-sh').onclick=function(e){e.stopPropagation();shareNote(el.getAttribute('data-id'));};
+ });
+}
+// Itzik, 4.10: "add a share option to every note." The phone's own share
+// sheet when there is one (WhatsApp, mail, messages), and a copy otherwise.
+function shareNote(id){
+ var n=null;
+ notes().forEach(function(x){if(x.id===id)n=x;});
+ if(!n)return;
+ var txt=String(n.text||'').trim();
+ if(!txt){toast('הפתק ריק.');return;}
+ if(navigator.share){
+  navigator.share({title:noteTitle(txt).head,text:txt}).catch(function(){});
+  return;
+ }
+ var done=function(){toast('הפתק הועתק. אפשר להדביק איפה שרוצים.');};
+ if(navigator.clipboard&&navigator.clipboard.writeText){
+  navigator.clipboard.writeText(txt).then(done,function(){fallbackCopy(txt,done);});
+ }else fallbackCopy(txt,done);
+}
+function openNote(id){
+ noteSel='';
+ var n=null;
+ notes().forEach(function(x){if(x.id===id)n=x;});
+ if(!n){
+  var at=new Date().toISOString();
+  n={id:'n'+Date.now()+Math.random().toString(36).slice(2,6),text:'',at:at,upd:at};
+  var l=notes();l.unshift(n);saveNotes(l);
+ }
+ noteOpen=n.id;
+ document.getElementById('noteHome').hidden=true;
+ document.getElementById('noteEdit').hidden=false;
+ document.getElementById('noteWhen').textContent=noteDay(n.upd);
+ document.getElementById('notePin').textContent=n.pin?'ביטול הצמדה':'הצמדה';
+ var ed=document.getElementById('noteBody');
+ ed.innerHTML=n.html||noteHtmlFromText(n.text);
+ document.getElementById('noteFmt').hidden=true;
+ document.getElementById('noteAa').classList.remove('on');
+ noteBlank();
+ ed.focus();
+ if(!String(n.text||'').trim()){
+  var r=document.createRange();r.setStart(ed.firstChild||ed,0);r.collapse(true);
+  var s=window.getSelection();s.removeAllRanges();s.addRange(r);
+ }
+}
+// Itzik, 28.9 evening: "What is special about this notes app? I asked you to
+// copy the iPhone app with all the editing." So the page is a rich editor
+// now, with the iPhone's Aa panel (title, heading, subheading, body, mono,
+// B I U S, three kinds of list, indent) and its round checklist. A note keeps
+// its html for the editor and its plain text for the list and the search.
+// Old notes that were plain text open with their first line as the title.
+function noteHtmlFromText(t){
+ var ls=String(t||'').split(String.fromCharCode(10));
+ if(!ls.join('').trim())return '<h1><br></h1>';
+ return ls.map(function(x,i){
+  var v=esc(x)||'<br>';
+  return i===0?'<h1>'+v+'</h1>':'<div>'+v+'</div>';
+ }).join('');
+}
+function noteBlank(){
+ var ed=document.getElementById('noteBody');
+ ed.classList.toggle('blank',!ed.textContent.trim()&&!ed.querySelector('li,img'));
+}
+var noteRange=null;
+document.addEventListener('selectionchange',function(){
+ var s=window.getSelection(),ed=document.getElementById('noteBody');
+ if(s.rangeCount&&ed.contains(s.anchorNode))noteRange=s.getRangeAt(0).cloneRange();
+ if(!document.getElementById('noteFmt').hidden)noteFmtState();
+});
+function noteSel(){
+ var ed=document.getElementById('noteBody'),s=window.getSelection();
+ if(document.activeElement!==ed)ed.focus();
+ if(noteRange&&!(s.rangeCount&&ed.contains(s.anchorNode))){s.removeAllRanges();s.addRange(noteRange);}
+}
+function noteSave(){
+ var ed=document.getElementById('noteBody');
+ var html=ed.innerHTML,txt=ed.innerText;
+ noteBlank();
+ var n=editNote(function(x){x.html=html;x.text=txt;x.upd=new Date().toISOString();});
+ if(n)document.getElementById('noteWhen').textContent=noteDay(n.upd);
+}
+function noteNode(tag){
+ var s=window.getSelection(),ed=document.getElementById('noteBody');
+ if(!s.rangeCount)return null;
+ var el=s.anchorNode;
+ while(el&&el!==ed){if(el.nodeType===1&&el.tagName.toLowerCase()===tag)return el;el=el.parentNode;}
+ return null;
+}
+function noteList(kind){
+ noteSel();
+ var ul=noteNode('ul'),ol=noteNode('ol');
+ var cur=ol?'num':ul?(ul.classList.contains('chk')?'chk':ul.classList.contains('dash')?'dash':'bul'):'';
+ if(cur===kind){document.execCommand(kind==='num'?'insertOrderedList':'insertUnorderedList');noteSave();return;}
+ if(kind==='num'){document.execCommand('insertOrderedList');}
+ else{
+  if(ol||!ul)document.execCommand('insertUnorderedList');
+  ul=noteNode('ul');
+  if(ul){ul.classList.remove('chk','dash');if(kind!=='bul')ul.classList.add(kind);}
+ }
+ noteSave();noteFmtState();
+}
+function noteFmtState(){
+ var fmt=document.getElementById('noteFmt');
+ ['bold','italic','underline','strikeThrough'].forEach(function(c){
+  var b=fmt.querySelector('[data-cmd="'+c+'"]');
+  var on=false;try{on=document.queryCommandState(c);}catch(e){}
+  if(b)b.classList.toggle('on',on);
+ });
+ var blk='div';
+ ['h1','h2','h3','pre'].forEach(function(t){if(noteNode(t))blk=t;});
+ Array.prototype.forEach.call(fmt.querySelectorAll('[data-blk]'),function(b){
+  b.classList.toggle('on',b.getAttribute('data-blk')===blk);
+ });
+ var ul=noteNode('ul'),ol=noteNode('ol');
+ var cur=ol?'num':ul?(ul.classList.contains('dash')?'dash':ul.classList.contains('chk')?'chk':'bul'):'';
+ Array.prototype.forEach.call(fmt.querySelectorAll('[data-list]'),function(b){
+  b.classList.toggle('on',b.getAttribute('data-list')===cur);
+ });
+}
+// Tapping a toolbar button must not take the cursor out of the note, or the
+// iPhone closes the keyboard and the style lands nowhere.
+Array.prototype.forEach.call(document.querySelectorAll('#noteFmt button,.note-tools button'),function(b){
+ b.addEventListener('mousedown',function(e){e.preventDefault();});
+});
+Array.prototype.forEach.call(document.querySelectorAll('#noteFmt [data-blk]'),function(b){
+ b.onclick=function(){
+  noteSel();
+  var t=b.getAttribute('data-blk');
+  if(noteNode('li'))document.execCommand(noteNode('ol')?'insertOrderedList':'insertUnorderedList');
+  document.execCommand('formatBlock',false,'<'+t+'>');
+  noteSave();noteFmtState();
+ };
+});
+Array.prototype.forEach.call(document.querySelectorAll('#noteFmt [data-cmd]'),function(b){
+ b.onclick=function(){noteSel();document.execCommand(b.getAttribute('data-cmd'));noteSave();noteFmtState();};
+});
+Array.prototype.forEach.call(document.querySelectorAll('#noteFmt [data-list]'),function(b){
+ b.onclick=function(){noteList(b.getAttribute('data-list'));};
+});
+document.getElementById('noteAa').onclick=function(){
+ var f=document.getElementById('noteFmt');
+ f.hidden=!f.hidden;this.classList.toggle('on',!f.hidden);
+ if(!f.hidden){noteSel();noteFmtState();}
+};
+document.getElementById('noteChk').onclick=function(){noteList('chk');};
+document.getElementById('noteUndo').onclick=function(){noteSel();document.execCommand('undo');noteSave();};
+document.getElementById('noteRedo').onclick=function(){noteSel();document.execCommand('redo');noteSave();};
+// The round circle of a checklist line is drawn by css, so a tap on it is
+// found by where the finger landed: the start side of the line, before the text.
+document.getElementById('noteBody').addEventListener('click',function(e){
+ var li=e.target;
+ while(li&&li!==this&&!(li.tagName==='LI'&&li.parentNode.classList.contains('chk')))li=li.parentNode;
+ if(!li||li===this)return;
+ var r=li.getBoundingClientRect(),rtl=getComputedStyle(li).direction==='rtl';
+ var gap=rtl?e.clientX-r.right:r.left-e.clientX;
+ if(gap>=-4&&gap<=40){li.classList.toggle('on');e.preventDefault();noteSave();}
+});
+// A paste comes in as plain text, so a web page does not drag its fonts in.
+document.getElementById('noteBody').addEventListener('paste',function(e){
+ var t=(e.clipboardData||window.clipboardData).getData('text/plain');
+ if(t==null)return;
+ e.preventDefault();document.execCommand('insertText',false,t);
+});
+function editNote(fn){
+ var l=notes(),hit=null;
+ l.forEach(function(x){if(x.id===noteOpen)hit=x;});
+ if(!hit)return null;
+ fn(hit,l);
+ saveNotes(l);
+ return hit;
+}
+function closeNote(){
+ // An empty note is dropped on the way out, like the iPhone does.
+ var l=notes().filter(function(x){return x.id!==noteOpen||String(x.text||'').trim();});
+ if(l.length<notes().length)noteForget(noteOpen);
+ saveNotes(l);
+ document.getElementById('noteSearch').value='';
+ renderNotes();
+}
+document.getElementById('noteBody').addEventListener('input',function(){
+ // Emptied all the way down, the note starts again from a title line.
+ if(!this.textContent.trim()&&!this.querySelector('li')&&this.children.length<=1&&!this.querySelector('h1')){
+  this.innerHTML='<h1><br></h1>';
+  var r=document.createRange();r.setStart(this.firstChild,0);r.collapse(true);
+  var s=window.getSelection();s.removeAllRanges();s.addRange(r);
+ }
+ Array.prototype.forEach.call(this.querySelectorAll('ul.chk>li.on'),function(li){
+  if(!li.textContent.trim())li.classList.remove('on');
+ });
+ noteSave();
+});
+try{document.execCommand('defaultParagraphSeparator',false,'div');}catch(e){}
+document.getElementById('noteNew').onclick=function(){openNote(null);};
+document.getElementById('noteDone').onclick=closeNote;
+document.getElementById('notePin').onclick=function(){
+ var n=editNote(function(x){x.pin=!x.pin;});
+ if(n)this.textContent=n.pin?'ביטול הצמדה':'הצמדה';
+};
+document.getElementById('noteShare').onclick=function(){noteSave();shareNote(noteOpen);};
+// "Copy all the text in one go": on the iPhone share opens the share sheet, so
+// copying needs its own button. Whole note, plain text, straight to the clipboard.
+// Itzik, 11.10: "it copies, it just isn't clear that it copied", and "give an
+// option to copy part of the text". So the button itself turns green and says
+// so for a few seconds, and a second button copies only what he marked.
+var noteSel='';
+document.addEventListener('selectionchange',function(){
+ var sel=window.getSelection&&window.getSelection(),body=document.getElementById('noteBody');
+ if(!sel||!sel.rangeCount||!body)return;
+ var t=String(sel).trim();
+ if(t&&body.contains(sel.getRangeAt(0).commonAncestorContainer))noteSel=t;
+ else if(!t&&document.activeElement===body)noteSel='';
+});
+function noteCopyText(btn,txt,label,msg){
+ var done=function(){
+  btn.textContent='✓ הועתק';btn.classList.add('ok');
+  toast(msg);
+  clearTimeout(btn._t);
+  btn._t=setTimeout(function(){btn.textContent=label;btn.classList.remove('ok');},2500);
+ };
+ if(navigator.clipboard&&navigator.clipboard.writeText){
+  navigator.clipboard.writeText(txt).then(done,function(){fallbackCopy(txt,done);});
+ }else fallbackCopy(txt,done);
+}
+document.getElementById('noteCopy').onclick=function(){
+ noteSave();
+ var n=null;
+ notes().forEach(function(x){if(x.id===noteOpen)n=x;});
+ var txt=String(n&&n.text||'').trim();
+ if(!txt){toast('הפתק ריק.');return;}
+ noteCopyText(this,txt,'העתקת הכל','כל הטקסט הועתק. אפשר להדביק איפה שרוצים.');
+};
+// pointerdown keeps the marking alive: without it the tap on the button can
+// clear the selection on the iPhone before the click arrives.
+document.getElementById('noteCopyPart').addEventListener('pointerdown',function(e){e.preventDefault();});
+document.getElementById('noteCopyPart').onclick=function(){
+ var sel=window.getSelection&&window.getSelection(),body=document.getElementById('noteBody');
+ var t=sel&&sel.rangeCount&&body.contains(sel.getRangeAt(0).commonAncestorContainer)?String(sel).trim():'';
+ t=t||noteSel;
+ if(!t){toast('קודם מסמנים באצבע את החלק שרוצים, ואז לוחצים העתקת חלק.');return;}
+ noteCopyText(this,t,'העתקת חלק','החלק שסימנת הועתק. אפשר להדביק איפה שרוצים.');
+};
+function deleteNoteAsk(id){
+ var n=null;
+ notes().forEach(function(x){if(x.id===id)n=x;});
+ if(!n)return;
+ if(!confirm('למחוק את הפתק "'+noteTitle(n.text).head+'"?'))return;
+ noteForget(id);
+ saveNotes(notes().filter(function(x){return x.id!==id;}));
+ toast('הפתק נמחק.');
+ renderNotes();
+}
+document.getElementById('noteDel').onclick=function(){
+ if(!confirm('למחוק את הפתק?'))return;
+ noteForget(noteOpen);
+ saveNotes(notes().filter(function(x){return x.id!==noteOpen;}));
+ toast('הפתק נמחק.');
+ renderNotes();
+};
+document.getElementById('noteSearch').addEventListener('input',renderNotes);
+function todayKey(){return new Date().toISOString().slice(0,10);}
+/*
+  אבץ.
+
+  "כל מה שאני אצלם היום מה שאכלתי, בסוף היום תאגור את הכל ותגיד לי כמה אבץ
+  היה באוכל." אז האיסוף רץ כל היום, והכרטיס הוא הסיכום בכל רגע שהוא פותח
+  אותו, כולל בסוף. היעד היומי לגבר בוגר הוא 11 מ״ג. שורה שאין בה ערך אבץ
+  לא נספרת כאפס אלא נאמרת בשמה, כדי שלא יסתכל על מספר נמוך ויחשוב שחסר לו.
+*/
+var ZINC_TARGET=11;
+function zincDays(){
+ var by={};
+ (D.food||[]).forEach(function(f){
+  var k=String(f.at||'').slice(0,10);
+  if(!k)return;
+  if(!by[k])by[k]={mg:0,items:0,missing:0};
+  by[k].items++;
+  if(f.zinc===null||f.zinc===undefined||f.zinc==='')by[k].missing++;
+  else by[k].mg+=Number(f.zinc)||0;
+ });
+ return by;
+}
+function mg(n){return (Math.round(n*10)/10)+' מ״ג';}
+function renderZinc(all){
+ var box=document.getElementById('fdZinc');
+ if(!box)return;
+ var known=all.filter(function(f){return f.zinc!==null&&f.zinc!==undefined&&f.zinc!=='';});
+ var missing=all.length-known.length;
+ var total=known.reduce(function(a,f){return a+(Number(f.zinc)||0);},0);
+ var pct=Math.min(100,Math.round(total/ZINC_TARGET*100));
+ box.className='zbox'+(total>=ZINC_TARGET?(total>ZINC_TARGET*2.5?' over':''):' low');
+ document.getElementById('zVal').textContent=mg(total);
+ document.getElementById('zBar').style.width=pct+'%';
+ var said;
+ if(!all.length)said='עוד לא נרשם היום כלום, אז אין מה לאגור. תצלם את הצלחת ואני ארשום כמה אבץ היה בה.';
+ else if(total>=ZINC_TARGET)said='זה '+pct+' אחוז מהיעד היומי של '+ZINC_TARGET+' מ״ג. היום סגור מבחינת אבץ.';
+ else said='זה '+pct+' אחוז מהיעד היומי של '+ZINC_TARGET+' מ״ג. חסרים '+mg(ZINC_TARGET-total)+'.';
+ if(missing)said+=' '+(missing===1?'פריט אחד עוד בלי ערך אבץ':missing+' פריטים עוד בלי ערך אבץ')+', אז המספר יכול לעלות.';
+ document.getElementById('zSaid').textContent=said;
+ var parts=known.slice().sort(function(a,b){return (Number(b.zinc)||0)-(Number(a.zinc)||0);});
+ document.getElementById('zParts').innerHTML=parts.map(function(f){
+  return '<div><span>'+esc(f.name||'פריט')+'</span><span>'+mg(Number(f.zinc)||0)+'</span></div>';
+ }).join('');
+ var host=document.getElementById('zDays');
+ if(!host)return;
+ var by=zincDays(),keys=Object.keys(by).filter(function(k){return k!==todayKey();}).sort().reverse().slice(0,7);
+ if(!keys.length){host.innerHTML='';return;}
+ host.innerHTML='<h3>אבץ בימים הקודמים</h3>'+keys.map(function(k){
+  var d=by[k],p=k.slice(8,10)+'.'+k.slice(5,7);
+  return '<div class="zd"><span>'+p+' · '+d.items+' פריטים'
+   +(d.missing?' · '+d.missing+' בלי ערך':'')+'</span><b>'+mg(d.mg)+'</b></div>';
+ }).join('');
+}
+function renderFood(){
+ var all=(D.food||[]).filter(function(f){return String(f.at||'').slice(0,10)===todayKey();});
+ var sum=function(k){return all.reduce(function(a,f){return a+(Number(f[k])||0);},0);};
+ document.getElementById('fdKcal').textContent=Math.round(sum('kcal'));
+ document.getElementById('fdP').textContent=Math.round(sum('protein'))+'g';
+ document.getElementById('fdC').textContent=Math.round(sum('carbs'))+'g';
+ document.getElementById('fdF').textContent=Math.round(sum('fat'))+'g';
+ renderZinc(all);
+ var host=document.getElementById('fdList');
+ if(!all.length){
+  host.innerHTML='<div class="empty">עוד לא רשמנו היום כלום. תצלם את הצלחת או תכתוב מה אכלת, ואני מחזיר את הערכים.</div>';
+  return;
+ }
+ host.innerHTML=all.map(function(f,i){
+  return '<div class="fitem" data-i="'+i+'">'
+   +'<div class="ft"><b>'+esc(f.name||'פריט')+'</b>'
+   +'<span class="kc">'+Math.round(Number(f.kcal)||0)+' קלוריות</span></div>'
+   +'<div class="macros">חלבון '+(Number(f.protein)||0)+'g · פחמימות '+(Number(f.carbs)||0)
+   +'g · שומן '+(Number(f.fat)||0)+'g · אבץ '
+   +((f.zinc===null||f.zinc===undefined||f.zinc==='')?'עוד לא נמדד':mg(Number(f.zinc)||0))
+   +' · '+esc(stamp(f.at))+'</div>'
+   +(f.note?'<div class="more">'+esc(f.note)+'</div>':'')
+   +'</div>';
+ }).join('');
+ Array.prototype.forEach.call(host.querySelectorAll('.fitem'),function(el){
+  el.onclick=function(){el.classList.toggle('open');};
+ });
+}
+document.getElementById('fdCam').onclick=function(){
+ document.getElementById('fdPick').click();
+};
+document.getElementById('fdPick').addEventListener('change',function(){
+ var list=this.files?Array.prototype.slice.call(this.files):[];
+ if(!list.length)return;
+ var said=document.getElementById('fdSaid');
+ said.textContent='שולח את התמונה.';
+ var typed=document.getElementById('fdText');
+ var cap='תזונה: תמונה של מה שאכלתי';
+ if(typed&&typed.value.trim()){cap='תזונה: '+typed.value.trim();typed.value='';}
+ sendAll(list,cap).then(function(how){
+  said.textContent=how==='backup'?'נשלח בערוץ הגיבוי. אני מחשב ומחזיר לך.'
+   :'נשלח. אני מחשב ומחזיר לך את הערכים.';
+  toast(said.textContent);
+  markSent('file');renderSent();
+ }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';});
+ this.value='';
+});
+document.getElementById('fdForm').onsubmit=function(e){
+ e.preventDefault();
+ var box=document.getElementById('fdText');
+ var said=document.getElementById('fdSaid');
+ var btn=document.getElementById('fdBtn');
+ var text=box.value.trim();
+ if(!text)return;
+ btn.disabled=true;said.textContent='שולח.';
+ sendText('תזונה מהמוניטור','תזונה: '+text,'תזונה').then(function(how){
+  box.value='';
+  said.textContent='נשלח. אני מחשב ומחזיר לך את הערכים.';
+  toast(said.textContent);
+  markSent('text');renderSent();
+ }).catch(function(){
+  said.textContent='שני הערוצים לא ענו. תנסה שוב.';
+ }).then(function(){btn.disabled=false;});
+};
+
+/*
+  The line he types into on the home screen.
+
+  It was taken off once and is back on 16.9 at his word: "כתוב לי" was a
+  button that opened a screen that had a line in it, and he asked for the
+  line. The handler never left, so this is the same send path the chat uses:
+  recorded, queued, and acknowledged the same way.
+
+  The line grows with the text (up to the cap in the CSS) so a long request
+  stays in view and can be fixed before it goes, and shrinks back once sent.
+*/
+function growQuick(){
+ var box=document.getElementById('quickText');
+ if(!box)return;
+ box.style.height='auto';
+ box.style.height=box.scrollHeight+2+'px';
+}
+on2('quickText','input',growQuick);
+on2('quickForm','submit',function(e){
+ e.preventDefault();
+ var box=document.getElementById('quickText');
+ var said=document.getElementById('quickSaid');
+ var btn=document.getElementById('quickBtn');
+ if(!box||!said||!btn)return;
+ var text=box.value.trim();
+ if(!text)return;
+ said.textContent='';
+ undoSend(text,box,function(){
+ btn.disabled=true;said.textContent='שולח.';
+ sendOrHold('הודעה מהמוניטור',text,'הודעה').then(function(how){
+  if(how==='held'){said.textContent=HELD_SAY;toast(HELD_SAY);return;}
+  var p=pending();
+  p.push({at:new Date().toISOString(),text:text});
+  savePending(p);
+  said.textContent=how==='backup'?'נשלח בערוץ הגיבוי. הגיע אליי.':'נשלח. קלטתי.';
+  markSent('text');renderSent();renderThread();
+  toast(said.textContent);
+ }).catch(function(){
+  if(!box.value.trim()){box.value=text;growQuick();}
+  said.textContent='שני הערוצים לא ענו. תבדוק חיבור ותנסה שוב.';
+ }).then(function(){btn.disabled=false;});
+ });
+});
+
+function askInChat(prefix){
+ pane('m');markChatSeen();
+ var box=document.getElementById('msgText');
+ box.value=prefix;box.focus();
+ try{box.setSelectionRange(box.value.length,box.value.length);}catch(e){}
+}
+/*
+  Clear every message off the screen.
+
+  Itzik, 16.9: a button that clears all the messages. It hides them, one key
+  each, exactly the way the small x on a single message already works. Nothing
+  is deleted: the files stay where they are and a fresh device sees them
+  again, which is the difference between a screen he cleaned and a history I
+  destroyed. Asked once first, because it is the whole screen and not one line.
+
+  Behind "עוד" since 8.10: it sat right beside the copy button, and on an
+  iPhone one tap too far wiped the screen. Now it takes a deliberate tap to
+  reach it, and it goes back behind "עוד" once it has run.
+*/
+on('moreBar',function(){
+ var c=document.getElementById('clearAll');
+ c.hidden=!c.hidden;
+ this.setAttribute('aria-expanded',c.hidden?'false':'true');
+});
+function hideClearAll(){
+ var c=document.getElementById('clearAll');
+ c.hidden=true;c.removeAttribute('data-armed');c.textContent='ניקוי כל ההודעות';
+ document.getElementById('moreBar').setAttribute('aria-expanded','false');
+}
+on('clearAll',function(){
+ var b=this;
+ if(b.getAttribute('data-armed')!=='1'){
+  b.setAttribute('data-armed','1');
+  b.textContent='לנקות הכל? לחץ שוב';
+  setTimeout(function(){
+   if(b.getAttribute('data-armed')==='1'){
+    b.removeAttribute('data-armed');b.textContent='ניקוי כל ההודעות';
+   }
+  },5000);
+  return;
+ }
+ b.removeAttribute('data-armed');
+ // The whole history first, or this clears the head slice and the rest comes
+ // back the next time the chat file lands.
+ ensure('chat',function(){
+  var h=hiddenMsgs();
+  (D.chat||[]).forEach(function(m){
+   var k=msgKey(m);
+   if(k&&h.indexOf(k)<0)h.push(k);
+  });
+  try{localStorage.setItem('msgHidden',JSON.stringify(h.slice(-6000)));}catch(e){}
+  markAllRead('');
+  renderThread();paintDot();
+  b.textContent='נוקה';
+  setTimeout(hideClearAll,2500);
+ });
+});
+document.getElementById('setBtn').onclick=function(){pane('z');};
+document.getElementById('homeBtn').onclick=function(){pane('h');};
+/*
+  One card, or everything.
+
+  Default is bare, because that is what he asked for. The button says which way
+  it will take him rather than what the screen is now, and the choice survives
+  a reload like every other preference here.
+*/
+function bareGet(){
+ // A customer's copy has no tools button to leave the microphone-only view,
+ // so it never starts in it: 25.9, Ilay's first screen showed nothing but
+ // the talk card, and his own tiles were there, hidden behind a switch he
+ // did not have.
+ if(INSTANCE&&INSTANCE.name!=='abaitzik')return false;
+ try{return localStorage.getItem('bareHome')!=='0';}catch(e){return true;}
+}
+function bareApply(on){
+ var home=document.getElementById('pH');
+ if(home)home.classList.toggle('bare',!!on);
+ var btn=document.getElementById('bareBtn');
+ if(btn)btn.textContent=on?'עוד כלים':'רק המיקרופון';
+}
+document.getElementById('bareBtn').onclick=function(){
+ var next=!bareGet();
+ try{localStorage.setItem('bareHome',next?'1':'0');}catch(e){}
+ bareApply(next);
+ window.scrollTo(0,0);
+};
+bareApply(bareGet());
+// The chat tile is gone with the archive button, for the same reason: one
+// button for messages. The tile's counter is gone with it; the count lives on
+// that one button.
+var gChatEl=document.getElementById('gChat');
+if(gChatEl)gChatEl.onclick=function(){openAnswers('all',true);};
+/*
+  Writing and the camera, from the card at the top instead of from a tile most
+  of the way down the screen. Both land in the same place everything else does,
+  so there is one thread and not four.
+
+  The camera does not ask for the camera until it is pressed: shoot() opens the
+  picker inside the tap, which is also the only way iOS allows it at all.
+*/
+document.getElementById('wShoot').onclick=function(){
+ pane('m');renderThread();
+ shoot();
+};
+// The reports screen is still built and still reachable from inside, but it
+// is no longer a tile on the way to everything else.
+(function(){var b=document.getElementById('gReports');if(!b)return;
+ b.onclick=function(){markReportsSeen();openAnswers('all',true);};})();
+on('gMail',function(){pane('e');});
+/*ITZIK:BEGIN*/
+function openPill(){pane('p');renderPill();openPillSheet();}
+on('gPill',openPill);on('iPill',openPill);
+document.getElementById('pillBig').onclick=function(){openPillSheet();};
+on('pillNow',function(){recordPill(Date.now());});
+on('pillEarlier',function(){
+ document.getElementById('pillTimeRow').hidden=false;
+ document.getElementById('pillTime').focus();
+});
+on('pillOk',function(){
+ var v=document.getElementById('pillTime').value;
+ recordPill(ML.resolveTaken(v,Date.now()));
+});
+on('pillCancel',closePillSheet);
+/*ITZIK:END*/
+on('gAsk',function(){askInChat('');});
+paintReportDot();
+document.getElementById('leads').addEventListener('click',function(e){
+ var b=e.target.closest?e.target.closest('.stat button'):null;
+ if(!b)return;
+ var host=b.parentNode;
+ var name=host.getAttribute('data-lead');
+ var st=b.getAttribute('data-s');
+ setLeadStatus(name,st);
+ render();
+});
+on('icMail',function(){pane('e');});
+document.getElementById('icDrive').onclick=function(){pane('d');};
+/*ITZIK:BEGIN*/
+document.getElementById('vaadAsk').onclick=function(){askInChat('ועד הבית: ');};
+/*ITZIK:END*/
+document.getElementById('icAdd').onclick=function(){askInChat('מודול חדש שאני רוצה: ');};
+/*ITZIK:BEGIN*/
+/*
+  כניסות. GET back the same beacon every site/app now posts to on load
+  (ner-site's own /api/visit, on its Vercel Blob store). Site labels are
+  fixed here rather than trusting the response's keys, so a malformed or
+  unexpected payload cannot inject text into the screen.
+
+  Itzik, 22.9: "the visits button gives me details and then it disappears."
+  The counts used to arrive in a toast, gone after a few seconds. They get
+  their own screen now, one row per site, and stay until he leaves it.
+  Same day, later: "collect data, I'll check every day." The beacon now also
+  returns counts per Israel day, shown under the rows as the last 14 days.
+  25.9: "today big, total small, flip it." Today is the row's large number,
+  the total moved into the small chip.
+*/
+function loadVisits(){
+ var box=document.getElementById('visitsList');
+ var again=document.getElementById('visitsAgain');
+ again.disabled=true;
+ box.innerHTML='<div class="empty">בודק כניסות…</div>';
+ fetch('https://candletimes.com/api/visit',{cache:'no-store'})
+  .then(function(r){return r.ok?r.json():null;})
+  .then(function(j){
+   again.disabled=false;
+   var c=j&&j.counts;
+   if(!c){box.innerHTML='<div class="empty">לא הצלחתי לקרוא את הכניסות.</div>';return;}
+   var LABEL={pegasus:'פגסוס',ner:'נר','itzik-site':'האתר',salinda:'סלינדה'};
+   var order=['pegasus','ner','itzik-site','salinda'];
+   box.innerHTML=order.map(function(k){
+    var s=c[k]||{total:0,today:0};
+    return '<div class="item"><div class="top"><span class="who">'+esc(LABEL[k])+'</span>'
+     +'<span class="chip">סך הכל '+esc(String(Number(s.total)||0))+'</span></div>'
+     +'<div style="font-size:22px;font-weight:700">היום '+esc(String(Number(s.today)||0))+'</div></div>';
+   }).join('')+visitDays(j.days,order,LABEL)+'<div id="fixCount"></div><div class="empty">נבדק בשעה '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})+'</div>';
+   loadFixCount();
+  },function(){again.disabled=false;box.innerHTML='<div class="empty">הכניסות לא נטענו. תנסה שוב.</div>';});
+}
+/*
+  Itzik, 22.9: translations on נר should be checked by people who speak the
+  language. Under each blessing in every language but Hebrew there is a
+  "found a mistake?" link that stores a report on ner-site (/api/fix). Only
+  the count is public; the text needs the send key, so I read the reports
+  and bring them here in the chat. This row says how many are waiting.
+*/
+function loadFixCount(){
+ fetch('https://candletimes.com/api/fix',{cache:'no-store'})
+  .then(function(r){return r.ok?r.json():null;})
+  .then(function(j){
+   var el=document.getElementById('fixCount');
+   if(!el||!j)return;
+   var n=Number(j.count)||0;
+   el.innerHTML='<div class="item"><div class="top"><span class="who">דיווחי תרגום בנר</span>'
+    +'<span class="chip">'+esc(String(n))+'</span></div>'
+    +'<div>'+(n?'יש דיווחים שממתינים. אני קורא אותם ומביא לך בצ׳אט.':'אין דיווחים על טעויות בתרגום.')+'</div></div>';
+  },function(){});
+}
+function visitDays(d,order,LABEL){
+ if(!d)return '';
+ var fmt=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jerusalem'});
+ var first=null,rows=[];
+ for(var i=0;i<14;i++){
+  var key=fmt.format(new Date(Date.now()-i*864e5));
+  var n=order.map(function(k){return Number(d[k]&&d[k][key])||0;});
+  rows.push({key:key,n:n});
+  if(n.some(Boolean))first=i;
+ }
+ if(first===null)return '';
+ rows=rows.slice(0,first+1);
+ var th='<th style="text-align:right;padding:4px 6px">יום</th>'+order.map(function(k){return '<th style="padding:4px 6px">'+esc(LABEL[k])+'</th>';}).join('');
+ var tr=rows.map(function(r){
+  var p=r.key.split('-');
+  return '<tr><td style="padding:4px 6px">'+esc(Number(p[2])+'.'+Number(p[1]))+'</td>'
+   +r.n.map(function(v){return '<td style="text-align:center;padding:4px 6px">'+v+'</td>';}).join('')+'</tr>';
+ }).join('');
+ return '<div class="item"><div class="top"><span class="who">לפי ימים</span></div>'
+  +'<table style="width:100%;border-collapse:collapse"><thead><tr>'+th+'</tr></thead><tbody>'+tr+'</tbody></table></div>';
+}
+document.getElementById('icVisits').onclick=function(){pane('X');loadVisits();};
+document.getElementById('visitsAgain').onclick=loadVisits;
+document.getElementById('icLand').onclick=function(){pane('g');};
+document.getElementById('icNache').onclick=function(){fileOpen('tav-nache-teuda.jpg');};
+document.getElementById('landList').innerHTML=LANDING.map(function(l){
+ return '<div class="item"><div class="top"><span class="who">'+esc(l.name)+'</span>'
+  +'<span class="chip">'+esc(l.note)+'</span></div>'
+  +'<a class="ask" href="'+esc(l.url)+'" target="_blank" rel="noopener">פתיחת הדף</a></div>';
+}).join('')+'<div class="empty">דף נחיתה חדש נכנס לכאן. תשלח לי בצ׳אט את הכתובת ואת מילת המפתח שמפעילה אותו.</div>';
+/*ITZIK:END*/
+// The old urgent shortcut became the file upload: chat pane, attach form open.
+document.getElementById('urgBtn').onclick=function(){
+ pane('m');renderThread();
+ var f=document.getElementById('fileForm');
+ f.hidden=false;
+ document.getElementById('plusBtn').setAttribute('aria-expanded','true');
+ setTimeout(function(){f.scrollIntoView({behavior:'smooth',block:'center'});},60);
+ // Straight into the roll, photos and clips both, in full quality.
+ // This has to run inside the tap itself: iOS ignores a file picker opened
+ // from a timer, because by then the gesture is over.
+ openPicker('full','image/*,video/*');
+};
+document.getElementById('bP').onclick=function(){tab='pending';render();};
+document.getElementById('bD').onclick=function(){tab='done';render();};
+
+function copyReportText(text,said){
+ function ok(){if(said)said.textContent='הועתק.';}
+ function bad(){if(said)said.textContent='ההעתקה לא עברה. סמן ידנית.';}
+ if(navigator.clipboard&&navigator.clipboard.writeText){
+  navigator.clipboard.writeText(text).then(ok,bad);return;
+ }
+ var ta=document.createElement('textarea');
+ ta.value=text;ta.setAttribute('readonly','');
+ ta.style.position='fixed';ta.style.opacity='0';
+ document.body.appendChild(ta);ta.select();
+ try{document.execCommand('copy')?ok():bad();}catch(err){bad();}
+ document.body.removeChild(ta);
+}
+document.getElementById('reports').addEventListener('click',function(e){
+ var sb=e.target.closest?e.target.closest('[data-share]'):null;
+ if(sb){
+  var sr=(D.reports||[])[Number(sb.getAttribute('data-share'))];
+  if(!sr)return;
+  var stext=(sr.title||'דוח')+'\\n\\n'+(sr.body||'');
+  if(navigator.share){navigator.share({title:sr.title||'דוח',text:stext}).catch(function(){});}
+  else{copyReportText(stext,document.querySelector('[data-copied="'+sb.getAttribute('data-share')+'"]'));}
+  return;
+ }
+ var b=e.target.closest?e.target.closest('[data-copy]'):null;
+ if(!b)return;
+ var r=(D.reports||[])[Number(b.getAttribute('data-copy'))];
+ if(!r)return;
+ var said=document.querySelector('[data-copied="'+b.getAttribute('data-copy')+'"]');
+ var text=(r.title||'דוח')+'\\n\\n'+(r.body||'');
+ copyReportText(text,said);
+});
+
+/*
+  One press, one message.
+
+  Itzik, 17.9: "I noticed that I attach a file and send what I write with it,
+  it is not sent together, it is one message." He is right, and it cost him the
+  video he wanted me to watch: the writing box and the attach box were two
+  forms with two send buttons, so a sentence and its file left as two separate
+  things, or the sentence left alone and the file stayed behind on the phone.
+  Nothing on the screen said which of the two had happened.
+
+  Now the send button under the writing box is the only one he needs. If a file
+  is chosen it goes out with the text as its caption, in one send, and the file
+  send button below is the same send for anyone who presses it there.
+*/
+document.getElementById('msgForm').addEventListener('submit',function(e){
+ e.preventDefault();
+ var box=document.getElementById('msgText');
+ var btn=document.getElementById('msgBtn');
+ var said=document.getElementById('msgSaid');
+ var text=box.value.trim();
+ var withFiles=picked();
+ if(withFiles.length){
+  // reallySend takes the writing box as the caption when no caption was typed,
+  // so the text and the file leave as one message and the box empties itself.
+  said.textContent='';
+  fBtn.disabled=true;
+  sendSay(withFiles.length>1?('מכין '+withFiles.length+' קבצים.'):'מכין.');
+  if(qMode==='normal')shrinkAll(withFiles,reallySend);
+  else reallySend(withFiles);
+  return;
+ }
+ if(!text)return;
+ said.textContent='';
+ undoSend(text,box,function(){
+ btn.disabled=true;
+ said.textContent='שולח.';
+ sendOrHold('הודעה מהמוניטור',text,'הודעה').then(function(how){
+  if(!box.value.trim()){try{localStorage.removeItem(DRAFT);}catch(err){}}
+  if(how==='held'){said.textContent=HELD_SAY;return;}
+  var p=pending();
+  p.push({at:new Date().toISOString(),text:text});
+  savePending(p);
+  said.textContent=how==='backup'?'נשלח בערוץ הגיבוי. הגיע אליי.':'נשלח.';
+  markSent('text');renderSent();
+  renderThread();
+ }).catch(function(){
+  if(!box.value.trim())box.value=text;
+  said.textContent='שני הערוצים לא ענו. תבדוק חיבור ותנסה שוב.';
+ }).then(function(){btn.disabled=false;});
+ });
+});
+
+// The ceiling used to be 10MB, which was FormSubmit's. Files stopped going
+// through FormSubmit a while ago: the bytes go to ntfy and only a line of text
+// goes to the mailbox. So the gate was measuring a channel that no longer
+// carries the file, and it turned away videos that ntfy would have taken.
+// 15MB was ntfy's per file limit. Itzik, 17.9: he sent a video twice and
+// it never arrived. 10.10: ntfy.sh now takes 2MB a file and holds 20MB per
+// sender for three hours, so big files leave in slices and the ceiling is
+// what the 20MB leaves room for once a recording or two are already there.
+var QMAX=18*1024*1024;
+// Every file leaves in full quality. Squeezing a photo the WhatsApp way erased
+// the weave and the colour from a textile design, and choosing between photo
+// and document was one more question nobody should have to answer. The choice
+// is gone; a batch over the ceiling is still squeezed rather than refused.
+var qMode='full';
+var fPick=document.getElementById('fPick');
+var fForm=document.getElementById('fileForm');
+var fMeta=document.getElementById('fMeta');
+var fSaid=document.getElementById('fSaid');
+var fBtn=document.getElementById('fBtn');
+function mb(n){return (n/1048576).toFixed(1)+'MB';}
+function isImg(f){return !!f&&String(f.type).indexOf('image/')===0;}
+/*
+  Reviewer, approved: "no small picture before sending". He saw only
+  IMG_4512.HEIC 2.3 MB and could not tell the right photo was chosen. What is
+  chosen now lives in pickArr, not in the input, so a small X can take one out
+  before it leaves, and a second pick adds to the first instead of wiping it.
+  Every send path reads picked(), so what is shown is exactly what is sent.
+*/
+var pickArr=[],pickUrls=[];
+function picked(){return pickArr.slice();}
+function absorbPick(){
+ var add=fPick.files?Array.prototype.slice.call(fPick.files):[];
+ add.forEach(function(f){
+  for(var i=0;i<pickArr.length;i++){var g=pickArr[i];if(g.name===f.name&&g.size===f.size&&g.lastModified===f.lastModified)return;}
+  pickArr.push(f);
+ });
+ try{fPick.value='';}catch(e){}
+}
+function dropUrls(){pickUrls.forEach(function(u){try{URL.revokeObjectURL(u);}catch(e){}});pickUrls=[];}
+function pickIcon(f){
+ var t=String(f.type||'');
+ return t.indexOf('image/')===0?'🖼️':t.indexOf('video/')===0?'🎬':t.indexOf('audio/')===0?'🎵':/pdf/.test(t)?'📄':'📎';
+}
+function pickTile(f){
+ return '<span class="pthi" aria-hidden="true">'+pickIcon(f)+'<small>'+esc(f.name||'')+'</small></span>';
+}
+// One row of thumbnails, under the reply box the pick came from or under the
+// picker itself. Rebuilt whole on every change; old previews are let go first.
+function paintThumbs(){
+ var row=document.getElementById('fThumbs');if(!row)return;
+ var b=window.fileBox,home=b&&b.querySelector('.rform'),sd=home&&home.querySelector('.rsaid');
+ if(sd){if(row.nextSibling!==sd)home.insertBefore(row,sd);}
+ else if(row.previousElementSibling!==fMeta)fMeta.parentNode.insertBefore(row,fMeta.nextSibling);
+ dropUrls();
+ row.innerHTML='';
+ row.hidden=!pickArr.length;
+ pickArr.forEach(function(f,i){
+  var el=document.createElement('div');el.className='pthumb';el.title=f.name||'';
+  var u=null;
+  if(isImg(f)){try{u=URL.createObjectURL(f);pickUrls.push(u);}catch(e){u=null;}}
+  if(u){
+   var im=document.createElement('img');im.alt=f.name||'תמונה';
+   im.onerror=function(){el.removeChild(im);el.insertAdjacentHTML('afterbegin',pickTile(f));};
+   im.src=u;el.appendChild(im);
+  }else el.innerHTML=pickTile(f);
+  var x=document.createElement('button');x.type='button';x.className='pthx';x.textContent='✕';
+  x.setAttribute('aria-label','להסיר את '+(f.name||'הקובץ')+' מהשליחה');
+  x.onclick=function(e){
+   e.stopPropagation();e.preventDefault();
+   pickArr.splice(i,1);
+   describe();paintBoxPick();
+   if(!pickArr.length){var sd2=window.fileBox&&window.fileBox.querySelector('.rsaid');if(sd2)sd2.textContent='';}
+  };
+  el.appendChild(x);
+  row.appendChild(el);
+ });
+}
+// The send button says what it is about to send, so a chosen file is never a
+// thing he has to remember he chose.
+function paintSendBtn(){
+ var b=document.getElementById('msgBtn');
+ if(!b)return;
+ var n=picked().length;
+ b.textContent=n?(n>1?('שליחה עם '+n+' הקבצים'):'שליחה עם הקובץ'):'שליחה';
+}
+function clearPick(){
+ try{fPick.value='';}catch(e){}
+ pickArr=[];
+ if(window.fileBox){var sb=window.fileBox.querySelector('button[type=submit]');if(sb)sb.textContent='שליחה';window.fileBox=null;}
+ var f=document.getElementById('fileForm');
+ if(f)f.hidden=true;
+ var p=document.getElementById('plusBtn');
+ if(p)p.setAttribute('aria-expanded','false');
+ describe();
+ paintSendBtn();
+}
+function describe(){
+ paintSendBtn();
+ paintThumbs();
+ var list=picked();
+ if(!list.length){fMeta.className='fmeta';
+  fMeta.textContent='אפשר לבחור כל קובץ, גם כמה יחד, לכתוב שורה, ואז להקליט. הכל יוצא בהודעה אחת.';return;}
+ var total=totalSize(list);
+ var allImages=list.every(isImg);
+ var t=list.length===1?(list[0].name+' · '+mb(total))
+   :(list.length+' קבצים · '+mb(total)+' יחד');
+ if(qMode==='normal'&&allImages)t+=' · יכווצו כמו בוואטסאפ';
+ else if(qMode==='normal')t+=' · וידאו וקול נשלחים כמו שהם, אין כיווץ בדפדפן';
+ else t+=' · נשלח במקור, איכות מלאה';
+ var sp=splitSend(list);
+ var big=totalSize(sp.small)>QMAX&&!(qMode==='normal'&&allImages);
+ if(sp.big.length)t+=sp.big.length>1?(' · '+sp.big.length+' קבצים גדולים עולים ישר לשרת. לא לסגור את הדף.'):' · הקובץ הגדול עולה ישר לשרת. לא לסגור את הדף.';
+ if(big&&list.some(isImg)){t+=' · מעל 18MB, התמונות יכווצו כדי שייצאו';big=false;}
+ if(big)t+=' · גדול מדי, המגבלה 18MB יחד, אפשר בוויטרנספר';
+ fMeta.className='fmeta'+(big?' bad':'');
+ fMeta.textContent=t;
+ // A file too big stops right here, at the pick, not after pressing send.
+ var wb=document.getElementById('fWeBox');
+ if(big&&wb){
+  fSaid.textContent='הקובץ גדול מדי לשליחה מכאן. '+(FEM?'בואי':'בוא')+' ננסה להעביר אותו בוויטרנספר, בכפתור המודגש למעלה.';
+  wb.classList.remove('hot');void wb.offsetWidth;wb.classList.add('hot');
+  wb.scrollIntoView({block:'center',behavior:'smooth'});
+ }
+}
+function setQ(m){
+ qMode=m;
+ describe();
+}
+// Two things were broken when the picker was opened from a reply row next to a
+// message. The file input lives inside a form that starts hidden, and a phone
+// ignores a click on an input inside a hidden container, so nothing happened
+// at all. And even when it did open, the send button was inside that same
+// hidden form, so a chosen photo had nowhere to go.
+//
+// The form is opened first, and a pick started from a reply sends itself.
+var autoSend=false;
+function openPicker(mode,accept,auto){
+ var f=document.getElementById('fileForm');
+ if(f)f.hidden=false;
+ autoSend=!!auto;
+ setQ(mode);
+ // The camera tile leaves capture on this same input. Without clearing it,
+ // every pick after one photo went straight to the camera with no gallery.
+ fPick.removeAttribute('capture');
+ // 10.10: an empty accept is any file at all. The plus and the reply file
+ // button used to list image, video, audio and PDF, and the iPhone then hid
+ // everything else, so an Illustrator, Photoshop, Excel or zip file could not
+ // be chosen. Only the gallery shortcut still narrows it to photos and clips.
+ if(accept)fPick.setAttribute('accept',accept);else fPick.removeAttribute('accept');
+ fPick.click();
+}
+// Said under the reply box the photo was chosen from, and on its send button.
+function paintBoxPick(){
+ var b=window.fileBox;if(!b)return;
+ var n=picked().length,sb=b.querySelector('button[type=submit]'),sd=b.querySelector('.rsaid');
+ if(sb)sb.textContent=n?(n>1?'שליחה עם '+n+' הקבצים':'שליחה עם הקובץ'):'שליחה';
+ if(sd&&n)sd.textContent=(n>1?n+' קבצים מחכים':'הקובץ מחכה')+'. כתוב שורה ולחץ שליחה, או הקלט, והוא יוצא איתם. גם שליחה לבד שולחת אותו.';
+}
+fPick.addEventListener('change',function(){
+ absorbPick();
+ describe();
+ paintBoxPick();
+ if(!autoSend)return;
+ autoSend=false;
+ var list=picked();
+ if(!list.length)return;
+ fBtn.disabled=true;
+ sendSay(list.length>1?('מכין '+list.length+' קבצים.'):'מכין.');
+ if(qMode==='normal')shrinkAll(list,reallySend);
+ else reallySend(list);
+});
+function putFiles(list){pickArr=list.slice();describe();paintBoxPick();return true;}
+function totalSize(list){
+ return list.reduce(function(n,f){return n+f.size;},0);
+}
+// FormSubmit weighs the whole batch against one 10MB ceiling, so the check is
+// on the sum and the message says which files made it up.
+function reallySend(list,squeezed){
+ if(!Array.isArray(list))list=[list];
+ var total=totalSize(splitSend(list).small);
+ // Full quality is the default, so only a batch too heavy to leave as it is
+ // gets its photos squeezed, once, before it is turned away.
+ if(total>QMAX&&!squeezed&&list.some(isImg)){
+  shrinkAll(list,function(out){reallySend(out,true);});return;
+ }
+ /*
+   10.10, from the reviewer, taken by Itzik: "קובץ גדול נחסם בלי דרך אחרת",
+   and his note on it: "אם זה קובץ גדול אז צריך להציע שימוש ב we transfer".
+   Telling someone who is not technical to upload to Drive and paste a link
+   was a dead end. Now the message comes with a button that opens WeTransfer,
+   with the three steps under it, and when every file fits on its own it says
+   that sending them one at a time works too.
+ */
+ if(total>QMAX){
+  var each=list.length>1&&list.every(function(f){return f.size<=QMAX;});
+  fSaid.innerHTML=esc((list.length>1?list.length+' קבצים יחד שוקלים ':'הקובץ שוקל ')+mb(total)+' וזה יותר ממה שיוצא מכאן ישר.'
+    +(each?' אפשר לשלוח אותם אחד אחד, או בוויטרנספר:':(FEM?' שלחי בוויטרנספר, זה חינם ובלי הרשמה:':' תשלח בוויטרנספר, זה חינם ובלי הרשמה:')))
+   +'<a class="ask" href="https://wetransfer.com/" target="_blank" rel="noopener" style="display:flex;margin-top:8px">לשלוח בוויטרנספר</a>'
+   +'<span style="display:block;margin-top:6px">'+esc('שם בוחרים את הקובץ, לוחצים העברה ובוחרים קבלת קישור. את הקישור מדביקים כאן בהודעה ושולחים.')+'</span>';
+  fBtn.disabled=false;return;
+ }
+ var cap=document.getElementById('fCap').value.trim();
+ if(!cap){
+  var m=document.getElementById('msgText');
+  if(m&&m.value.trim()){cap=m.value.trim();m.value='';}
+ }
+ var hasVoice=list.some(function(f){return /^voice-/.test(f.name);});
+ var voice=list.length===1&&hasVoice;
+ var deflt=voice?'הודעה קולית מהמוניטור'
+   :(list.length>1?list.length+' קבצים מהמוניטור':'קובץ מהמוניטור');
+ if(!hasVoice){
+  sendSay(list.length>1?(list.length+' קבצים יוצאים בעוד 15 שניות. אפשר לבטל בפס למטה.'):'הקובץ יוצא בעוד 15 שניות. אפשר לבטל בפס למטה.');
+  undoSend('',null,function(){goFiles(list,cap,deflt,hasVoice);},{file:list.length,onDrop:function(){
+   if(cap)document.getElementById('fCap').value=cap;
+   sendSay(list.length>1?'בוטל. הקבצים לא יצאו ועדיין בחורים.':'בוטל. הקובץ לא יצא ועדיין בחור.');fBtn.disabled=false;}});
+  return;
+ }
+ goFiles(list,cap,deflt,hasVoice);
+}
+function goFiles(list,cap,deflt,hasVoice){
+ markSent(hasVoice?'voice':'file');
+ sendSay(list.length>1?('שולח '+list.length+' קבצים.'):'שולח.');
+ // This used to be a plain form.submit(), which navigated away. When the
+ // mailbox was over quota the whole page became a Rate Limit notice and the
+ // recording was simply lost. Sending in place keeps the page, and lets the
+ // backup channel take over without him noticing.
+ sendAll(list,cap||deflt).then(function(how){
+  document.getElementById('fCap').value='';
+  // The file left with the message. Leaving it selected would attach it again
+  // to the next thing he writes.
+  clearPick();
+  try{localStorage.removeItem(DRAFT);}catch(err){}
+  clearAim();
+  paintMics('ok');
+  sendSay(how==='backup'?'נשלח בערוץ הגיבוי. הגיע אליי.':'נשלח. קלטתי.');
+  list.forEach(function(f){if(f&&f._more)recOfferMore(f._more.aim,f._more.at);});
+  var q=pending();
+  q.push({at:new Date().toISOString(),text:cap||deflt});
+  savePending(q);
+  renderSent();renderThread();
+ }).catch(function(e){
+  paintMics('bad');
+  if(e&&e.bigFailed){bigFailedSay(e,list);return;}
+  if(e&&e.failed){
+   // Some arrived and are already in the chat. Only the rest has to go again.
+   clearPick();
+   sendSay((list.length-e.failed.length)+' מתוך '+list.length+' הגיעו. לא עלה: '+e.failed.join(', ')
+    +(FEM?'. שלחי רק אותו שוב, ואם הוא גדול העלי לוויטרנספר והדביקי כאן את הקישור.':'. תשלח רק אותו שוב, ואם הוא גדול תעלה לוויטרנספר ותדביק כאן את הקישור.'));
+   return;
+  }
+  sendSay(hasVoice
+   ?(FEM?'ההקלטה לא הגיעה שלמה ולא נשמרה. הקליטי שוב עכשיו, לפני שתשכחי מה אמרת.':'ההקלטה לא הגיעה שלמה ולא נשמרה. תקליט שוב עכשיו, לפני שתשכח מה אמרת.')
+   :(FEM?'הקובץ לא הגיע שלם ולא נשמר. שלחי שוב, ואם הוא גדול העלי לוויטרנספר והדביקי כאן את הקישור.':'הקובץ לא הגיע שלם ולא נשמר. תשלח שוב, ואם הוא גדול תעלה לוויטרנספר ותדביק כאן את הקישור.'));
+ }).then(function(){fBtn.disabled=false;});
+}
+function sendSay(t){
+ fSaid.textContent=t;
+ var r=document.getElementById('recSaid');
+ if(r)r.textContent=t;
+ toast(t);
+}
+// Floats above every screen, because the microphone floats above every screen.
+var toastTimer=null;
+// A failure is read first: "לא הגיע שלם" holds the word הגיע and used to flash
+// green for four seconds, so a file that never arrived looked like it did (10.10).
+// A failure stays red on the screen until he touches it.
+var TOAST_BAD=/לא עלה|לא הגיע|לא נשמר|לא נשלח|לא ענו|נכשל|לא הצלחתי|לא נפתח|נקטעה|לא מתקבל/;
+function toast(t){
+ var el=document.getElementById('toast');
+ if(!el)return;
+ var bad=TOAST_BAD.test(t);
+ el.textContent=t;
+ el.className='toast'+(bad?' bad':(/נשלח|קלטתי|הגיע/.test(t)?' good':''));
+ el.setAttribute('role',bad?'alert':'status');
+ el.hidden=false;
+ el.onclick=function(){clearTimeout(toastTimer);el.hidden=true;};
+ clearTimeout(toastTimer);
+ if(bad){
+  var x=document.createElement('small');x.className='toast-x';x.textContent='נגיעה כדי לסגור';
+  el.appendChild(x);return;
+ }
+ toastTimer=setTimeout(function(){el.hidden=true;},Math.max(4000,t.length*90));
+}
+// Images are shrunk one after another so the batch is ready before it is sent.
+function shrinkAll(list,done){
+ var out=[],i=0;
+ (function next(){
+  if(i>=list.length){done(out);return;}
+  var f=list[i++];
+  if(!isImg(f)){out.push(f);return next();}
+  shrink(f,function(r){out.push(r);next();});
+ })();
+}
+function shrink(file,done){
+ var url=URL.createObjectURL(file);var im=new Image();
+ im.onload=function(){
+  var max=1600,w=im.width,h=im.height;
+  var r=Math.min(1,max/Math.max(w,h));
+  var c=document.createElement('canvas');
+  c.width=Math.round(w*r);c.height=Math.round(h*r);
+  c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+  c.toBlob(function(b){
+   URL.revokeObjectURL(url);
+   if(!b){done(file);return;}
+   var dot=file.name.lastIndexOf('.');var base=dot>0?file.name.slice(0,dot):file.name;var n=base+'.jpg';
+   done(new File([b],n,{type:'image/jpeg'}));
+  },'image/jpeg',0.75);
+ };
+ im.onerror=function(){URL.revokeObjectURL(url);done(file);};
+ im.src=url;
+}
+fForm.addEventListener('submit',function(e){
+ e.preventDefault();
+ var list=picked();
+ if(!list.length){fSaid.textContent='קודם תבחר קובץ.';return;}
+ fBtn.disabled=true;
+ fSaid.textContent=list.length>1?('מכין '+list.length+' קבצים.'):'מכין.';
+ if(qMode==='normal')shrinkAll(list,reallySend);
+ else reallySend(list);
+});
+// Arriving from a push notification. He taps the banner, lands in the chat,
+// and then cannot find the message it was about: the thread is long and the
+// answer sits among two hundred others. Now the screen jumps to the first
+// unread bubble and lights it for a moment.
+function jumpToUnread(){
+ var host=document.getElementById('thread');
+ if(!host)return;
+ var el=host.querySelector('.bub.fresh');
+ if(!el)return;
+ try{el.scrollIntoView({block:'center',behavior:'smooth'});}catch(e){el.scrollIntoView();}
+ ringFor(el,2200);
+}
+/*
+  A second instance shows only its own tiles.
+
+  Ilay's monitor is built from this same page, but he is a brand builder with
+  four to ten clients and no medical appointments, no bookkeeping and no
+  networks queue of his father's. The tiles he does not need are not deleted
+  from the markup, which would fork the page; they are hidden here at boot from
+  a list the instance provides. With no list, nothing is hidden, and that is
+  the case for Itzik's own copy.
+*/
+// Tiles that belong to another instance start hidden in the markup, so with
+// no list at all, Itzik's case, they never appear on his screen either.
+(function(){
+ var keep=INSTANCE&&INSTANCE.screens;
+ if(!keep||!keep.length)return;
+ ['blkTiles','blkIcons'].forEach(function(id){
+  var box=document.getElementById(id);
+  if(!box)return;
+  Array.prototype.forEach.call(box.children,function(el){
+   if(!el.id)return;
+   el.hidden=keep.indexOf(el.id)<0;
+  });
+ });
+})();
+// A push notification lands here. It goes where every other way in goes now:
+// the one screen, opened on what he has not read.
+if(location.hash==='#new'){
+ openAnswers('fresh',true);
+}
+if(location.hash==='#chat'){
+ openAnswers('all',true);
+}
+if(location.hash==='#sent'){
+ fSaid.textContent='הקובץ נשלח. הוא מחכה לי במייל.';
+ pane('m');
+}
+var rec=null,recChunks=[],recTimer=null,recSec=0,recStream=null;
+var recBtn=document.getElementById('recBtn');
+var recSaid=document.getElementById('recSaid');
+function recPickType(){
+ var want=['audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg'];
+ if(!window.MediaRecorder||!MediaRecorder.isTypeSupported)return '';
+ for(var i=0;i<want.length;i++){if(MediaRecorder.isTypeSupported(want[i]))return want[i];}
+ return '';
+}
+function recClock(){
+ var m=Math.floor(recSec/60),ss=recSec%60;
+ return m+':'+(ss<10?'0':'')+ss;
+}
+function recTick(){
+ recSec++;
+ var t=document.getElementById('recTime');
+ if(t)t.textContent=recClock();
+ recSaid.textContent='מקליט '+recClock()+'. לחיצה נוספת עוצרת ושולחת.';
+ /*
+   Reviewer 7.10, approved 8.10: a long description was cut at eight minutes
+   with no word before it. A minute ahead the screen says so and the phone
+   buzzes (nothing is said aloud, it would land in the recording), and a take
+   the clock ended offers to go on after it is sent.
+ */
+ if(recSec>=REC_MAX-60){
+  var left=REC_MAX-recSec,h=document.getElementById('recHint');
+  if(h){h.textContent='נשארה '+(left>=60?'דקה':left+' שניות')+'. אחר כך זה נשלח, ואפשר להמשיך בהקלטה חדשה.';h.style.color='#b91c1c';}
+  if(recSec===REC_MAX-60){try{navigator.vibrate&&navigator.vibrate([200,100,200]);}catch(e){}}
+ }
+ if(recSec>=REC_MAX){recCut=true;recStop();}
+}
+var REC_MAX=480,recCut=false;
+/*
+  After a take the clock cut: one button that opens a new recording aimed at
+  the same thing, and its caption says it continues the one before.
+*/
+function recOfferMore(was,at){
+ var old=document.getElementById('recMore');if(old)old.remove();
+ var b=document.createElement('button');
+ b.type='button';b.id='recMore';
+ b.textContent='🎙️ להמשיך להקליט';
+ b.style.cssText='position:fixed;left:50%;bottom:96px;transform:translateX(-50%);z-index:9999;padding:14px 22px;font-size:18px;border-radius:24px;border:0;background:#b91c1c;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.25)';
+ var gone=setTimeout(function(){b.remove();},90000);
+ b.onclick=function(){
+  clearTimeout(gone);b.remove();
+  if(was)setAim(was);
+  var f=document.getElementById('fCap');
+  if(f)f.value='המשך של ההקלטה מ'+at+(was?'. '+aimQuote(was):'');
+  recStart();
+ };
+ document.body.appendChild(b);
+}
+function recModal(open){
+ var m=document.getElementById('recModal');
+ if(!m)return;
+ m.hidden=!open;
+ if(open){
+  document.getElementById('recTime').textContent='0:00';
+  document.getElementById('recTitle').textContent=FEM?'מדברת אליי':'מדבר אליי';
+  var rh=document.getElementById('recHint');rh.textContent='לחיצה עוצרת ושולחת אליי';rh.style.color='';
+  var rm=document.getElementById('recMore');if(rm)rm.remove();
+ }
+}
+// Cancelling throws the audio away instead of sending it.
+var recAbort=false;
+function recStop(){
+ if(rec&&rec.state!=='inactive')rec.stop();
+}
+function recCleanup(){
+ if(recTimer){clearInterval(recTimer);recTimer=null;}
+ if(recStream){recStream.getTracks().forEach(function(t){t.stop();});recStream=null;}
+ audioMode('auto');
+ /*
+   Let go of the recorder, or the next tap is refused forever.
+
+   He reported it exactly: after sending one message he could not record again
+   until he pressed refresh. This is mine. I added a guard on recStarting and rec
+   last night to stop a second tap opening a second permission prompt, and it
+   did stop that, but nothing ever put rec back to null when a recording
+   finished. So the guard that was supposed to prevent one double tap ended up
+   refusing every recording after the first for the rest of the session.
+
+   A guard has to be released by the thing that ends what it was guarding, and
+   this is that thing: it runs on stop, on abort and on a recorder error alike.
+ */
+ rec=null;
+ recStarting=false;
+ recBtn.classList.remove('on');
+ freeScreen();
+ paintMics('send');
+}
+/*
+  Starting a recording, and saying so before the phone has decided.
+
+  He reported twice that the microphone does not respond, and the gap is here
+  rather than in the button: between the tap and the browser resolving the
+  permission prompt, nothing on this screen changed at all. On a phone that
+  wait is seconds long, so a working microphone and a broken one look exactly
+  the same, and the honest reading of "it does not respond" is that it never
+  said it had heard the tap.
+
+  Three things were missing and all three are cheap:
+
+  - a word the moment he taps, before anything async begins;
+  - a guard, because only recBtn was disabled while the main microphone stayed
+    live, so a second tap launched a second permission request;
+  - an error that says what actually failed. Every failure was reported as a
+    refused permission, including a device that is busy and a MediaRecorder
+    that will not start, which sends him to a settings screen where there is
+    nothing to fix.
+*/
+var recStarting=false,recRetried=false;
+function recStart(){
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){
+  recSaid.textContent='הדפדפן הזה לא תומך בהקלטה. תשלח קובץ קול דרך בחירת קובץ.';
+  paintMics('bad');
+  return;
+ }
+ // One attempt at a time. Two permission prompts is how a tap that did work
+ // ends up looking like a tap that did nothing.
+ /*
+   And it answers, instead of just refusing.
+
+   A silent return here is the same dead tap he has reported on three other
+   screens: he presses, nothing moves, and there is nothing on the page that
+   tells him why. One sentence costs nothing.
+ */
+ if(recStarting||rec){
+  if(recSaid)recSaid.textContent=rec?'כבר מקליט. לחיצה נוספת עוצרת ושולחת.':'רגע, המיקרופון נפתח.';
+  return;
+ }
+ recStarting=true;
+ recBtn.disabled=true;
+ // Said first, synchronously, so the screen answers the finger and not the
+ // browser. Everything below this line can take seconds.
+ recSaid.textContent='פותח את המיקרופון. אם הדפדפן שואל, תאשר.';
+ paintMics('sending');
+ // No page sound in the way of the microphone, and a mode that records.
+ clearTimeout(sfxT);try{if(sfx){sfx.close();sfx=null;}}catch(e){}
+ var askAt=Date.now(),ask=++recAsk;
+ recAskAt=askAt;
+ /*
+   1.10, Itzik: after a few trips to other windows and back the microphone
+   stops answering, and refresh does not fix it. One way that shows is a
+   permission call that never comes back at all: recStarting stays true and
+   every tap after that says "the microphone is opening" forever. So it gets
+   a deadline, and a late answer is closed instead of used.
+ */
+ var deadline=setTimeout(function(){
+  if(ask!==recAsk||!recStarting||document.hidden)return;
+  recAsk++;recStarting=false;recBtn.disabled=false;
+  micStuck('hang');
+ },12000);
+  audioMode('play-and-record');
+ navigator.mediaDevices.getUserMedia({audio:true}).then(function(st){
+  clearTimeout(deadline);
+  if(ask!==recAsk){try{st.getTracks().forEach(function(t){t.stop();});}catch(e){}return;}
+  try{sessionStorage.removeItem('micReloaded');}catch(e){}
+  recStream=st;recChunks=[];recSec=0;
+  // He reported the mic dying mid-take too, not only at the permission
+  // prompt: the clock kept counting with nothing behind it. A track that
+  // ends on its own is the same "permission gone" failure, just discovered
+  // later, so it gets the same fix instead of a dead recording he has to
+  // notice himself.
+  var track=st.getAudioTracks()[0];
+  if(track)track.onended=function(){
+   if(document.hidden)return; // the phone cut it while he was away; rec.onstop sends what was caught
+   micStuck('ended');
+  };
+  // 1.10: a track that comes back muted is the stuck microphone after
+  // switching windows. It records silence, so it is caught here, not after.
+  if(!track||track.readyState!=='live'){
+   try{st.getTracks().forEach(function(t){t.stop();});}catch(e){}
+   recStream=null;recStarting=false;recBtn.disabled=false;
+   micStuck('dead');return;
+  }
+  /*
+    11.10, Itzik: the microphone does not stop. A muted track is checked at a
+    second and a half; the one automatic retry in micStuck used to be given
+    back the moment rec.start() succeeded, so a phone that kept answering
+    muted made start, abort, retry, start, abort, forever. The retry allowance
+    is now returned only by a take that proved itself (not muted at the second
+    look) or by a tap of his, never by merely starting.
+  */
+  setTimeout(function(){
+   if(recStream!==st||document.hidden)return;
+   if(!track.muted){micStuckRetried=false;return;}
+   setTimeout(function(){
+    if(recStream!==st||document.hidden)return;
+    if(track.muted){recAbort=true;recMuted=true;recStop();}
+    else micStuckRetried=false;
+   },1500);
+  },1500);
+  var mt=recPickType();
+  try{rec=mt?new MediaRecorder(st,{mimeType:mt}):new MediaRecorder(st);}
+  catch(e){rec=new MediaRecorder(st);}
+  rec.ondataavailable=function(ev){if(ev.data&&ev.data.size)recChunks.push(ev.data);};
+  rec.onstop=function(){
+   recCleanup();
+   if(recMuted){recMuted=false;recAbort=false;micStuck('muted');return;}
+   if(recAbort){recAbort=false;recModal(false);recSaid.textContent='ההקלטה בוטלה.';recBtn.disabled=false;paintMics('idle');return;}
+   recModal(false);
+   var type=(rec&&rec.mimeType)||'audio/webm';
+   var b=new Blob(recChunks,{type:type});
+   // The exact thing he described: it talked (the clock ran, the screen said
+   // מקליט) and nothing was actually captured. Trying again with the same
+   // stuck permission just repeats it, so this reaches for the same fix as a
+   // denied prompt instead of leaving him to find the refresh button.
+   if(!b.size){
+    recBtn.disabled=false;
+    micStuck('empty');
+    return;
+   }
+   var ext=type.indexOf('mp4')>-1?'m4a':(type.indexOf('ogg')>-1?'ogg':'webm');
+   // The name used to come from toISOString, which is UTC. Every memo then
+   // carried a time three hours behind his, and a pill he took at 10:00 was
+   // filed at 07:00. The stamp is built from the phone's own clock instead.
+   var d=new Date(),p2=function(n){return (n<10?'0':'')+n;};
+   var stampName='voice-'+d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())
+    +p2(d.getHours())+p2(d.getMinutes())+p2(d.getSeconds())+'.'+ext;
+   var file=new File([b],stampName,{type:type});
+   if(recCut){recCut=false;file._more={aim:aim,at:p2(d.getHours())+':'+p2(d.getMinutes())};}
+   /*
+     Itzik, 17.9, by voice: "set it up so I can send a video and a voice and a
+     photo and everything together". A recording used to leave on its own and
+     then clear the picker, so a photo he had already chosen was wiped without
+     ever being sent and nothing on the screen said so. Now the recording joins
+     whatever is already waiting and the whole thing leaves as one send: the
+     files, the voice over them, and the writing box as the caption.
+   */
+   var batch=picked();
+   batch.push(file);
+   recSaid.textContent=batch.length>1
+    ?('ההקלטה מוכנה. שולח אותה עם '+(batch.length-1)+' הקבצים.')
+    :('ההקלטה מוכנה, '+mb(file.size)+'. שולח.');
+   recBtn.disabled=false;
+   fBtn.disabled=true;
+   if(batch.length>1&&qMode==='normal')shrinkAll(batch,reallySend);
+   else reallySend(batch);
+  };
+  // A recorder that dies mid take used to leave the screen recording forever.
+  rec.onerror=function(){
+   recCleanup();recModal(false);
+   recSaid.textContent='ההקלטה נקטעה. תנסה שוב, ואם זה חוזר תשלח קובץ קול.';
+   recBtn.disabled=false;paintMics('bad');
+  };
+  rec.start();
+  recStarting=false;
+  holdScreen();
+  recModal(true);
+  recBtn.disabled=false;
+  paintMics('rec');
+  recBtn.setAttribute('aria-label','עצירת ההקלטה ושליחה');
+  recSaid.textContent='מקליט 0:00. לחיצה נוספת עוצרת ושולחת. עד שמונה דקות.';
+  recCut=false;
+  recTimer=setInterval(recTick,1000);
+ }).catch(function(err){
+  clearTimeout(deadline);
+  if(ask!==recAsk)return;
+  recStarting=false;
+  /*
+    Let the recorder go on the way out too.
+
+    recCleanup already exists for the end of a recording, and the comment in
+    it describes this exact regression: a guard that nothing released refused
+    every recording after the first until he reloaded. This path had the same
+    hole. If start() throws, rec stays set and the stream stays open, so the
+    microphone is dead for the rest of the session and the indicator light
+    stays on. His voice is how he uses this page at all.
+  */
+  try{recCleanup();}catch(e){}
+  rec=null;
+  recBtn.disabled=false;recModal(false);
+  // What actually went wrong. Sending him to the permission screen for a
+  // microphone another app is holding is a wasted trip.
+  var name=(err&&err.name)||'';
+  // This is the failure he called out by name: the permission is gone and
+  // every retry just asks again with nothing changed. A refresh is what
+  // actually clears it, so it happens on its own instead of sending him to a
+  // settings screen or waiting for him to find רענן himself.
+  /*
+    30.9: "I press and it disappears." A refusal that comes back in under a
+    second and a half is not his answer, nobody reads a prompt that fast: the
+    phone closed its own prompt. So first one quiet second try, then one
+    reload, and if the phone still refuses, it stops reloading and says in
+    plain words where the switch is. A loop of reloads is what made the
+    prompt vanish every time, and a client would never guess why.
+  */
+  if(name==='NotAllowedError'||name==='SecurityError'){
+   if(Date.now()-askAt<1500&&!recRetried){
+    recRetried=true;
+    recSaid.textContent='החלון של האישור נסגר לבד. פותח אותו שוב, תלחץ "אישור".';
+    paintMics('sending');
+    setTimeout(recStart,700);
+    return;
+   }
+   /*
+     1.10, Itzik: "refresh does not fix it, and a client does not know he has
+     to close the window and open it again." The automatic reload is gone. If
+     the phone itself says the permission is denied, the sheet shows where the
+     switch is; otherwise the permission is fine and the phone's microphone is
+     stuck, and the sheet says to close the app fully, in steps.
+   */
+   micDenied().then(function(denied){micStuck(denied?'denied':'refused');});
+   return;
+  }
+  /*
+    27.9, the screenshot: InvalidStateError, right after the permission fix
+    went up. This is not a refused permission, it is WebKit refusing the mic
+    because the tap tick a moment earlier left the phone's audio session on
+    'ambient', and 'play-and-record' is set on the very same line that calls
+    getUserMedia, with no time for iOS to actually move between the two. A
+    reload does nothing for a timing gap, so this does not reach for one.
+    recCleanup just ran above and already returned the session to 'auto', a
+    neutral state either side accepts, and one retry after it has actually
+    landed is what closes the gap instead of just reporting it.
+  */
+  if(name==='InvalidStateError'&&!recRetried){
+   recRetried=true;
+   recSaid.textContent='רגע, פותח שוב את המיקרופון...';
+   paintMics('sending');
+   setTimeout(recStart,300);
+   return;
+  }
+  recSaid.textContent=
+   name==='NotFoundError'||name==='OverconstrainedError'
+    ? 'לא נמצא מיקרופון במכשיר הזה.'
+   :name==='NotReadableError'||name==='AbortError'
+    ? 'המיקרופון תפוס. תסגור שיחה או אפליקציה שמקליטה ותנסה שוב.'
+    : 'לא הצלחתי לפתוח את המיקרופון'+(name?' ('+name+')':'')+'. תנסה שוב, או תשלח קובץ קול.';
+  paintMics('bad');
+ });
+}
+var recAsk=0,recAskAt=0,micStuckRetried=false,recMuted=false;
+function micDenied(){
+ try{
+  if(navigator.permissions&&navigator.permissions.query)
+   return navigator.permissions.query({name:'microphone'}).then(function(r){return r.state==='denied';},function(){return false;});
+ }catch(e){}
+ return Promise.resolve(false);
+}
+function micAppMode(){
+ return !!((window.navigator&&window.navigator.standalone)||
+  (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches));
+}
+/*
+  The one place a stuck microphone ends up, whichever way it showed itself.
+
+  First a quiet second try with everything let go: the stream, the page's
+  sound, the phone's audio mode. That alone clears the cases where the audio
+  session was left in the wrong state while he was in another window. If the
+  second try fails too, nothing on this page can fix it, a reload included,
+  so it stops trying and puts a sheet on the screen that says, in steps, what
+  to do. What he typed is kept first, so closing the app loses nothing.
+*/
+function micStuck(why){
+ try{if(recStream){recStream.getTracks().forEach(function(t){t.stop();});recStream=null;}}catch(e){}
+ try{if(sfx){sfx.close();sfx=null;}}catch(e){}
+ recStarting=false;recBtn.disabled=false;recModal(false);
+ audioMode('auto');
+ // Only a start that failed is tried again by itself. A take that broke in
+ // the middle has already been sent, and starting a new one unasked is wrong.
+ if(why!=='denied'&&why!=='ended'&&why!=='empty'&&!micStuckRetried){
+  micStuckRetried=true;
+  recSaid.textContent='המיקרופון לא ענה. מנסה שוב...';
+  paintMics('sending');
+  setTimeout(function(){recRetried=true;recStart();},700);
+  return;
+ }
+ micStuckRetried=false;
+ paintMics('bad');
+ try{keepDraft();}catch(e){}
+ micSheet(why==='denied');
+}
+function micSheet(denied){
+ var old=document.getElementById('micSheet');if(old)old.remove();
+ var app=micAppMode(),ios=/iPhone|iPad|iPod/.test(navigator.userAgent||'')||(navigator.maxTouchPoints>1&&/Mac/.test(navigator.platform||''));
+ var steps;
+ if(denied){
+  steps=app||ios
+   ?['להיכנס להגדרות של האייפון','אפליקציות, ספארי, מיקרופון','לבחור "לאפשר"','לסגור את המוניטור לגמרי ולפתוח שוב']
+   :['ללחוץ על המנעול ליד כתובת האתר','מיקרופון, "לאפשר"','ללחוץ שוב על המיקרופון'];
+ }else if(app){
+  steps=['להחליק מלמטה למעלה ולעצור באמצע המסך','להחליק את החלון של המוניטור למעלה עד שהוא נעלם','לפתוח את המוניטור שוב וללחוץ על המיקרופון'];
+ }else if(ios){
+  steps=['להחליק מלמטה למעלה ולעצור באמצע המסך','להחליק את ספארי למעלה עד שהוא נעלם','לפתוח את ספארי ואת המוניטור שוב וללחוץ על המיקרופון'];
+ }else{
+  steps=['לסגור את החלון של המוניטור','לפתוח אותו שוב וללחוץ על המיקרופון'];
+ }
+ var w=document.createElement('div');
+ w.id='micSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','המיקרופון נתקע');
+ w.innerHTML='<div class="ycard">'
+  +'<b>'+(denied?'המיקרופון חסום לדף הזה':'המיקרופון של הטלפון נתקע')+'</b>'
+  +'<small>'+(denied
+    ?'הטלפון לא מרשה לדף להקליט. מתקנים פעם אחת:'
+    :'זה קורה לפעמים אחרי מעבר בין חלונות. זו לא תקלה שלך, ורענון לא מספיק. מה שהקלדת נשמר. מתקנים כך:')+'</small>'
+  +'<ol class="micSteps">'+steps.map(function(t){return '<li>'+esc(t)+'</li>';}).join('')+'</ol>'
+  +'<button type="button" class="yb yb1" data-k="again">לנסות שוב עכשיו</button>'
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  if(k==='again'){recRetried=false;micStuckRetried=false;recStart();}
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+ recSaid.textContent=denied?'המיקרופון חסום. ההסבר על המסך.':'המיקרופון נתקע. ההסבר על המסך.';
+}
+/*
+  Coming back from another window. Whatever the page was holding when he left
+  is let go here, before he taps: a permission call that never came back, a
+  stream with no recorder, the page's own sound. The microphone then starts
+  from a clean state instead of from whatever the phone left behind.
+*/
+function micWake(){
+ if(document.hidden)return;
+ if(rec&&rec.state==='recording')return;
+ if(recStarting&&Date.now()-recAskAt<12000)return; // a permission prompt he may be answering
+ if(recStarting){recAsk++;recStarting=false;}
+ if(!rec&&recStream){try{recStream.getTracks().forEach(function(t){t.stop();});}catch(e){}recStream=null;}
+ if(!rec){try{if(sfx){sfx.close();sfx=null;}}catch(e){}audioMode('auto');recBtn.disabled=false;}
+}
+document.addEventListener('visibilitychange',micWake);
+window.addEventListener('pageshow',micWake);
+window.addEventListener('focus',micWake);
+// Keeping the screen alive while recording. Without it the phone sleeps and
+// the recording ends mid sentence, which is exactly what he was seeing.
+var wakeLock=null;
+function holdScreen(){
+ try{
+  if(!navigator.wakeLock)return;
+  navigator.wakeLock.request('screen').then(function(l){
+   wakeLock=l;
+   // iOS drops the lock when the tab is backgrounded, so take it again.
+   l.addEventListener('release',function(){wakeLock=null;});
+  }).catch(function(){});
+ }catch(e){}
+}
+function freeScreen(){
+ try{if(wakeLock){wakeLock.release();wakeLock=null;}}catch(e){}
+}
+document.addEventListener('visibilitychange',function(){
+ if(document.visibilityState==='visible'&&rec&&rec.state==='recording')holdScreen();
+});
+
+function toggleRec(){
+ if(rec&&rec.state==='recording'){recStop();return;}
+ recRetried=false;
+ micStuckRetried=false;
+ recStart();
+}
+recBtn.onclick=toggleRec;
+document.getElementById('recBig').onclick=function(){recStop();};
+// The floating microphone is gone: one microphone, on the card at the top of
+// the home screen. Anything a previous version saved about where it sat is
+// cleared so nothing is left pinned to a corner.
+(function(){
+ try{
+  localStorage.removeItem('micPos');
+  localStorage.removeItem('micCentred');
+ }catch(e){}
+})();
+document.getElementById('recCancel').onclick=function(){
+ if(rec&&rec.state==='recording'){recAbort=true;recStop();}
+ else{recModal(false);}
+};
+/*
+  Reviewer 7.10, approved 8.10: the iPhone permission steps used to appear only
+  after a recording had failed, which can be in front of a supplier. On the
+  first open, once, a three second check: the phone asks for the microphone
+  now, while there is time, and a bar that moves with the voice shows it works.
+  A microphone already allowed, or a check already done, skips it.
+*/
+function micFirstCheck(){
+ var KEY='micChecked';
+ try{if(localStorage.getItem(KEY)||Date.now()<+(localStorage.getItem('micCheckLater')||0))return;}catch(e){return;}
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder)return;
+ function show(){
+  if(document.getElementById('micFirst')||rec||recStarting)return;
+  var c=document.createElement('div');c.id='micFirst';
+  c.style.cssText='position:fixed;left:12px;right:12px;bottom:88px;z-index:9998;background:var(--surface,#fff);color:var(--ink,#111);border:1px solid var(--line,#ddd);border-radius:16px;padding:14px 16px;box-shadow:0 6px 20px rgba(0,0,0,.18);font-size:15px;line-height:1.5';
+  c.innerHTML='<b style="display:block;font-size:16px;margin-bottom:4px">🎙️ בדיקת מיקרופון, פעם אחת</b>'
+   +'<span id="micFirstSay">שלוש שניות עכשיו, כשיש זמן, כדי שההקלטה תעבוד כשצריך באמת. אם הטלפון שואל, '+(FEM?'לחצי':'תלחץ')+' לאפשר.</span>'
+   +'<div id="micFirstBar" style="height:10px;border-radius:5px;background:var(--line,#ddd);margin:10px 0;overflow:hidden" hidden><i style="display:block;height:100%;width:0;background:#16a34a;transition:width .1s"></i></div>'
+   +'<div style="display:flex;gap:8px;margin-top:8px"><button type="button" id="micFirstGo" style="flex:1;padding:10px;border-radius:12px;border:0;background:var(--ink,#111);color:var(--ground,#fff);font-size:15px">לבדוק עכשיו</button>'
+   +'<button type="button" id="micFirstNo" style="padding:10px 14px;border-radius:12px;border:1px solid var(--line,#ddd);background:transparent;color:inherit;font-size:15px">אחר כך</button></div>';
+  document.body.appendChild(c);
+  var say=c.querySelector('#micFirstSay'),go=c.querySelector('#micFirstGo');
+  c.querySelector('#micFirstNo').onclick=function(){try{localStorage.setItem('micCheckLater',String(Date.now()+86400000));}catch(e){}c.remove();};
+  go.onclick=function(){
+   if(go.getAttribute('data-done')){c.remove();return;}
+   go.disabled=true;say.textContent='פותח את המיקרופון...';
+   audioMode('play-and-record');
+   navigator.mediaDevices.getUserMedia({audio:true}).then(function(st){
+    say.textContent=(FEM?'תגידי':'תגיד')+' משהו, שלוש שניות.';
+    // A real three second take, no audio context: those cut his music (20.9).
+    var bar=c.querySelector('#micFirstBar'),fill=bar.querySelector('i'),got=0,r=null,t0=Date.now(),tm=null;
+    var tr=st.getAudioTracks()[0];
+    bar.hidden=false;
+    try{var mt=recPickType();r=mt?new MediaRecorder(st,{mimeType:mt}):new MediaRecorder(st);r.ondataavailable=function(ev){if(ev.data)got+=ev.data.size;};r.start();}catch(e){r=null;}
+    tm=setInterval(function(){fill.style.width=Math.min(100,(Date.now()-t0)/30)+'%';},100);
+    setTimeout(function(){
+     clearInterval(tm);
+     var fin=function(){
+      var ok=tr&&tr.readyState==='live'&&!tr.muted&&(!r||got>0);
+      try{st.getTracks().forEach(function(t){t.stop();});}catch(e){}
+      audioMode('auto');
+      go.disabled=false;
+      if(!ok){bar.hidden=true;say.textContent='המיקרופון לא קלט. '+(FEM?'נסי':'תנסה')+' שוב.';go.textContent='לבדוק שוב';return;}
+      try{localStorage.setItem(KEY,new Date().toISOString());}catch(e){}
+      bar.hidden=true;
+      say.textContent='המיקרופון עובד ומאושר. מעכשיו אפשר להקליט מכל מסך.';
+      go.textContent='סגירה';go.setAttribute('data-done','1');
+      setTimeout(function(){c.remove();},6000);
+     };
+     if(r&&r.state!=='inactive'){r.onstop=function(){setTimeout(fin,50);};try{r.stop();}catch(e){fin();}}
+     else fin();
+    },3000);
+   }).catch(function(err){
+    audioMode('auto');
+    c.remove();
+    micSheet(((err&&err.name)||'')==='NotAllowedError');
+   });
+  };
+ }
+ var later=function(){setTimeout(show,5000);};
+ try{
+  if(navigator.permissions&&navigator.permissions.query){
+   navigator.permissions.query({name:'microphone'}).then(function(p){
+    if(p.state==='granted'){try{localStorage.setItem(KEY,'granted');}catch(e){}return;}
+    later();
+   }).catch(later);
+   return;
+  }
+ }catch(e){}
+ later();
+}
+micFirstCheck();
+var micBtn=document.getElementById('micBtn');
+var micSaid=document.getElementById('micSaid');
+micBtn.onclick=toggleRec;
+// The same recorder, from wherever he is standing.
+var micDock=document.getElementById('micDock');
+// Nothing aimed by hand means the microphone answers the last thing I wrote,
+// which is what he was pressing it for. The strip above it says so before a
+// word is recorded, and the x on the strip takes it back to a new subject.
+if(micDock)micDock.onclick=function(){
+ if(!(rec&&rec.state==='recording')&&!aim){
+  var l=lastAnswer();
+  if(l)setAim(l);
+ }
+ toggleRec();
+};
+var aimX=document.getElementById('aimX');
+if(aimX)aimX.onclick=function(e){e.stopPropagation();clearAim();};
+paintAim();
+
+// recSaid lives in the chat pane; mirror it onto the home screen so the timer
+// and any error are visible wherever the recording was started from.
+/*
+  And onto the reply box whose microphone was tapped.
+
+  Itzik, 30.9, from the bookkeeping screen: "the little microphone at the
+  bottom does not start." It did start, or said why not, but it said so on the
+  chat screen he was not looking at, so from where he stood the tap did
+  nothing. The words now land under the button he pressed.
+*/
+new MutationObserver(function(){
+ micSaid.textContent=recSaid.textContent;
+ var mb=window.micBox,ms=mb&&mb.querySelector('.rsaid');
+ if(ms&&mb.offsetParent)ms.textContent=recSaid.textContent;
+}).observe(recSaid,{childList:true,characterData:true,subtree:true});
+
+// idle, rec, send, ok, bad. Every microphone on the page wears the same one.
+var micTimer=null;
+function paintMics(state){
+ clearTimeout(micTimer);
+ var ids=['micBtn','micDock','recBtn','recBig'];
+ var label={rec:'מקליט, לחיצה עוצרת ושולחת',send:'שולח אליי',
+  ok:'נשלח',bad:'לא נשלח',idle:'דבר אליי'}[state]||'דבר אליי';
+ ids.forEach(function(id){
+  var el=document.getElementById(id);
+  if(!el)return;
+  el.classList.remove('on','sending','sent','failed');
+  if(state==='rec')el.classList.add('on');
+  if(state==='send')el.classList.add('sending');
+  if(state==='ok')el.classList.add('sent');
+  if(state==='bad')el.classList.add('failed');
+  el.setAttribute('aria-label',label);
+ });
+ // The finished states are a flash, not a mode, so they clear themselves.
+ if(state==='ok'||state==='bad')micTimer=setTimeout(function(){paintMics('idle');},2600);
+}
+// The mail pane is the same channel as the chat, filtered to the mail thread:
+// every message on either side that starts with "מייל:" belongs here.
+var MAILTAG='מייל:';
+function isMail(m){return String(m.text||'').indexOf(MAILTAG)===0;}
+function mailBody(t){return String(t).slice(MAILTAG.length).trim();}
+function renderMail(){
+ var baked=(D.chat||[]).filter(isMail);
+ var still=pending().filter(isMail);
+ var all=baked.map(function(m){return{at:m.at,from:m.from,text:m.text,pend:false};})
+  .concat(still.map(function(p){return{at:p.at,from:'itzik',text:p.text,pend:true};}))
+  .sort(function(a,b){return (a.at||'')<(b.at||'')?-1:1;});
+ var host=document.getElementById('mailThread');
+ if(!all.length){
+  host.innerHTML='<div class="empty">עוד לא ביקשת ממני כלום מהתיבה.</div>';
+  return;
+ }
+ host.innerHTML=all.map(function(m,i){
+  var mine=m.from==='itzik';
+  return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')+'">'
+   +'<span class="w">'+(mine?'אתה':AI)+' · '+esc(stamp(m.at))
+   +(m.pend?' · נשלח, עוד לא נקרא':'')+'</span>'+linkify(mailBody(m.text))+'</div>';
+ }).join('');
+}
+document.getElementById('mailForm').addEventListener('submit',function(e){
+ e.preventDefault();
+ var box=document.getElementById('mailText');
+ var btn=document.getElementById('mailBtn');
+ var said=document.getElementById('mailSaid');
+ var text=box.value.trim();
+ if(!text)return;
+ var full=MAILTAG+' '+text;
+ btn.disabled=true;
+ said.textContent='שולח.';
+ sendOrHold('בקשת מייל מהמוניטור',full,'בקשת מייל').then(function(how){
+  if(how==='held'){box.value='';said.textContent=HELD_SAY;return;}
+  var q=pending();
+  q.push({at:new Date().toISOString(),text:full});
+  savePending(q);
+  box.value='';
+  said.textContent=how==='backup'?'נשלח למייל, כגיבוי. אני אבדוק שם בקרוב.'
+   :'נשלח. הגיע אליי.';
+  markSent('mail');renderSent();
+  renderMail();renderThread();
+ }).catch(function(){
+  said.textContent='שני הערוצים לא ענו. תבדוק חיבור ותנסה שוב.';
+ }).then(function(){btn.disabled=false;});
+});
+
+/*
+  The head of the home screen, in the order Itzik asked for on 17.9.
+
+  Talking to me comes first, because that is what the screen is for. The
+  comment here has said that since 13.9, but the list underneath it said
+  otherwise and the list is what the browser reads, so the microphone sat
+  second for four days. It is first now in the markup and in this list both.
+
+  Under it the two message buttons, in the order he named them: the one that
+  opens the answers, then what was received. After those the one button that
+  opens the rest, the round shortcuts, and the tiles.
+
+  The order below wins over anything he has dragged, and only for these five.
+  The rest of the screen is still his to arrange.
+*/
+// talkCard came out of this list on 18.9: it is above the header now and is
+// not his to drag, because "nothing above it" is the whole point of it.
+/*
+  Arranging the tiles, by dragging. 30.9 in his voice: the taps way (pick one,
+  tap another) was clumsy and not understood, "I want to press a button and
+  just drag it on the screen".
+
+  A press held for a moment lifts the tile, a copy of it follows the finger
+  and the others make room under it, letting go drops it there and the order
+  is saved on the device. A finger that moves before the moment is up is a
+  scroll, as always. Touch events and not pointer events on the phone: once a
+  pointer drag starts, Safari takes it over as a scroll and cancels it, which
+  is why the drag before the taps version failed half the time. A touchmove
+  that is not passive and refuses the scroll while a tile is held is the one
+  thing Safari respects.
+
+  The ✎ button still opens the mode with the red ✕ for taking a tile off this
+  device's screen. In that mode a tile drags without the wait.
+*/
+var tEdit=false;
+function tileBar(show){
+ var b=document.getElementById('tileBar');
+ if(!show){if(b)b.remove();return;}
+ if(!b){b=document.createElement('div');b.id='tileBar';document.body.appendChild(b);}
+ var hid=tileStore('tilesHidden',[]);
+ b.innerHTML='<small>גוררים אריח למקום שרוצים. ה ✕ האדום מוריד אריח מהמסך.</small>'
+  +'<div class="row2"><button type="button" class="done" id="tileDone">סיום</button>'
+  +(hid.length?'<button type="button" class="back" id="tileBack">להחזיר '+hid.length+' שהורדו</button>':'')+'</div>';
+ document.getElementById('tileDone').onclick=tilesExit;
+ var bk=document.getElementById('tileBack');
+ if(bk)bk.onclick=function(){tileSave('tilesHidden',[]);applyHidden();tileBar(true);toast('כל האריחים חזרו.');};
+}
+function tilesEnter(grid){
+ if(tEdit)return;
+ tEdit=true;
+ grid.classList.add('tedit');
+ Array.prototype.forEach.call(grid.querySelectorAll('.gt'),function(el){
+  if(el.querySelector(':scope > .tx'))return;
+  var x=document.createElement('span');
+  x.className='tx';x.textContent='✕';x.setAttribute('role','button');x.setAttribute('aria-label','להוריד מהמסך');
+  el.appendChild(x);
+ });
+ try{navigator.vibrate&&navigator.vibrate(18);}catch(e){}
+ tileBar(true);
+ var a=document.getElementById('tileArr');if(a)a.textContent='✓ סיום';
+}
+function tilesExit(){
+ var grid=document.getElementById('blkTiles');
+ tEdit=false;
+ if(grid){grid.classList.remove('tedit');saveOrder(grid,'tileOrder');}
+ tileBar(false);
+ var a=document.getElementById('tileArr');if(a)a.textContent='✎ הורדת אריחים';
+}
+/*
+  The press and drag itself, shared by the square tiles and, from 30.9 in his
+  voice ("now do it with the round icons too"), the round icons. sel picks the
+  items inside box, key is where the order is kept, inEdit says whether the
+  box is in a mode where a move lifts at once without the wait.
+*/
+function pressDrag(grid,sel,key,inEdit){
+ inEdit=inEdit||function(){return false;};
+ var hold=null,sx=0,sy=0,cand=null,held=null,ghost=null,gdx=0,gdy=0,lx=0,ly=0,swallow=false,roll=null;
+ function tileAt(x,y){
+  var o=document.elementFromPoint(x,y);
+  o=o&&o.closest?o.closest(sel):null;
+  return o&&o.parentNode===grid?o:null;
+ }
+ function place(x,y){
+  if(!ghost)return;
+  ghost.style.left=(x-gdx)+'px';ghost.style.top=(y-gdy)+'px';
+  var over=tileAt(x,y);
+  if(!over||over===held)return;
+  var kids=Array.prototype.slice.call(grid.children);
+  if(kids.indexOf(held)<kids.indexOf(over))grid.insertBefore(held,over.nextSibling);
+  else grid.insertBefore(held,over);
+ }
+ // Near the top or bottom edge the page scrolls by itself, so a tile can
+ // travel further than one screen.
+ function edge(){
+  if(!held)return;
+  var h=window.innerHeight,d=ly<70?-(70-ly)/4:ly>h-70?(ly-(h-70))/4:0;
+  if(d){window.scrollBy(0,d);place(lx,ly);}
+  roll=requestAnimationFrame(edge);
+ }
+ function lift(t,x,y){
+  hold=null;held=t;swallow=true;
+  var r=t.getBoundingClientRect();
+  gdx=x-r.left;gdy=y-r.top;lx=x;ly=y;
+  ghost=t.cloneNode(true);ghost.id='tGhost';
+  ghost.style.width=r.width+'px';ghost.style.height=r.height+'px';
+  ghost.style.left=r.left+'px';ghost.style.top=r.top+'px';
+  document.body.appendChild(ghost);
+  t.classList.add('tlift');
+  document.body.classList.add('tdrag');
+  try{navigator.vibrate&&navigator.vibrate(18);}catch(e){}
+  roll=requestAnimationFrame(edge);
+ }
+ function drop(){
+  clearTimeout(hold);hold=null;cand=null;
+  if(!held)return;
+  cancelAnimationFrame(roll);roll=null;
+  held.classList.remove('tlift');held=null;
+  if(ghost){ghost.remove();ghost=null;}
+  document.body.classList.remove('tdrag');
+  saveOrder(grid,key);
+  // The click that may follow the drop is not a tap on the tile. If none
+  // comes, the next real tap must not be eaten either.
+  setTimeout(function(){swallow=false;},450);
+ }
+ function start(e,x,y){
+  if(held)return;
+  var t=tileAt(x,y);
+  if(!t||(e.target.closest&&e.target.closest('.tx')))return;
+  cand=t;sx=x;sy=y;
+  if(inEdit())return; // in the ✕ mode the first real move lifts it
+  hold=setTimeout(function(){lift(t,sx,sy);},350);
+ }
+ function move(e,x,y){
+  lx=x;ly=y;
+  if(held){if(e.cancelable)e.preventDefault();place(x,y);return;}
+  if(!cand)return;
+  if(Math.abs(x-sx)>10||Math.abs(y-sy)>10){
+   if(inEdit()){if(e.cancelable)e.preventDefault();lift(cand,sx,sy);place(x,y);return;}
+   clearTimeout(hold);hold=null;cand=null;
+  }
+ }
+ grid.addEventListener('touchstart',function(e){
+  if(e.touches.length!==1){drop();return;}
+  start(e,e.touches[0].clientX,e.touches[0].clientY);
+ },{passive:true});
+ document.addEventListener('touchmove',function(e){
+  if(!cand&&!held)return;
+  move(e,e.touches[0].clientX,e.touches[0].clientY);
+ },{passive:false});
+ document.addEventListener('touchend',drop);
+ document.addEventListener('touchcancel',drop);
+ // A mouse, for the computer.
+ grid.addEventListener('mousedown',function(e){if(e.button===0)start(e,e.clientX,e.clientY);});
+ document.addEventListener('mousemove',function(e){if(cand||held)move(e,e.clientX,e.clientY);});
+ document.addEventListener('mouseup',drop);
+ grid.addEventListener('contextmenu',function(e){if(swallow||held)e.preventDefault();});
+ // Registered before any other click handler on the box, so stopping it here
+ // stops them too.
+ grid.addEventListener('click',function(e){
+  if(swallow){swallow=false;e.preventDefault();e.stopImmediatePropagation();return;}
+ },true);
+}
+function armTiles(grid){
+ if(!grid)return;
+ var arr=document.createElement('button');
+ arr.type='button';arr.id='tileArr';arr.className='tarr';arr.textContent='✎ הורדת אריחים';
+ arr.onclick=function(){if(tEdit)tilesExit();else tilesEnter(grid);};
+ // Inside the grid, across the full row: the home screen re-pins its blocks
+ // after this runs, and a button standing beside the grid got left behind.
+ grid.insertBefore(arr,grid.firstChild);
+ pressDrag(grid,'.gt','tileOrder',function(){return tEdit;});
+ grid.addEventListener('contextmenu',function(e){if(tEdit)e.preventDefault();});
+ grid.addEventListener('click',function(e){
+  if(!tEdit||e.target.closest('#tileArr'))return;
+  e.preventDefault();e.stopPropagation();
+  var t=e.target.closest?e.target.closest('.gt'):null;
+  if(!t||t.parentNode!==grid)return;
+  if(e.target.closest('.tx')){
+   var hid=tileStore('tilesHidden',[]);
+   if(hid.indexOf(t.id)<0)hid.push(t.id);
+   tileSave('tilesHidden',hid);
+   applyHidden();tileBar(true);
+   toast('הורד מהמסך. "להחזיר" מחזיר אותו.');
+  }
+ },true);
+}
+var HOME_HEAD=['newBlock','bareBtn','blkIcons','blkTiles'];
+// "איך אני משתפר" is the one block he wants out of the way rather than gone.
+// It is a log of my own mistakes and fixes: worth keeping, never worth the top
+// of his screen.
+// Nothing is pinned to the foot of the home screen since "איך אני משתפר"
+// came off it on 16.9.
+var HOME_TAIL=[];
+function pinHome(home){
+ if(!home)return;
+ var at=null;
+ HOME_HEAD.forEach(function(id){
+  var el=document.getElementById(id);
+  if(!el||el.parentNode!==home)return;
+  if(at)home.insertBefore(el,at.nextSibling);
+  else home.insertBefore(el,home.firstChild);
+  at=el;
+ });
+ HOME_TAIL.forEach(function(id){
+  var el=document.getElementById(id);
+  if(el&&el.parentNode===home)home.appendChild(el);
+ });
+ // The phone alerts and the personal code used to be pinned to the bottom of
+ // this screen. They live on the settings screen now, so there is nothing left
+ // to pin down there and nothing here to drag them back up.
+}
+(function(){
+ var grid=document.querySelector('.grid');
+ var home=document.getElementById('pH');
+ if(grid){nameChildren(grid,'tile');applyOrder(grid,'tileOrder');armTiles(grid);}
+ // The round icons: named by what they say, not where they stand, so a new
+ // icon added in the middle does not shuffle his order.
+ var icons=document.getElementById('blkIcons');
+ if(icons){
+  Array.prototype.forEach.call(icons.children,function(el){
+   if(!el.id)el.id='ic-'+(el.getAttribute('data-net')||el.textContent.trim());
+  });
+  applyOrder(icons,'iconOrder');pressDrag(icons,'.ic','iconOrder');
+ }
+ if(home){nameChildren(home,'blk');applyOrder(home,'blockOrder');pinHome(home);armDrag(home,'blockOrder');}
+})();
+on('editDone',endEdit);
+on('editBack',restoreBlocks);
+boot('blocksHidden',applyBlocksHidden);
+// The explicit way into arranging, for when the long press is not obvious.
+on('arrangeBtn',function(){
+ if(editing){endEdit();return;}
+ var home=document.getElementById('pH');
+ if(!home)return;
+ pane('h');
+ editing={box:home,key:'blockOrder'};
+ document.body.classList.add('editing');
+ home.classList.add('editbox');
+ addHandles(home);
+ showEditBar();
+ toast('סידור המסך. גרור מהידית הכחולה.');
+});
+// Boot. Every one of these draws a different part of the page, and until now a
+// throw in any of them stopped the rest, including the pane() at the end that
+// decides which screen is visible. The result on his phone was a blank page and
+// "the site is not coming up", with nothing to say what happened. Each step is
+// now on its own, and the screen opens even if one of them fails.
+// One button for the backlog: every answer of mine up to the cutoff (or all
+// of them) becomes read and handled, the count drops to zero, and only what
+// arrives afterwards turns red again.
+function markAllRead(cutoff){
+ try{
+  var seen=seenIds(),t=touchedIds();
+  // Codex answers are counted on the button too, so this has to be able to
+  // clear them. Without them here the count would stick above zero right after
+  // a press that promises everything is read, which is the same complaint in
+  // a new place.
+  var keys=(D.chat||[]).concat(D.codex||[]).filter(function(m){
+   return m.from==='claude'||m.from==='codex';
+  }).map(claudeKey);
+  // And the rest of the window, which is counted now and is mostly not in
+  // memory. Without these the press would promise everything is read and the
+  // number would sit there unmoved, which is the old complaint in a new place.
+  keys=keys.concat(D.ansKeys||[]);
+  keys.forEach(function(k){
+   if(cutoff&&k.slice(0,k.indexOf('|'))>cutoff)return;
+   if(seen.indexOf(k)<0)seen.push(k);
+   if(t.indexOf(k)<0)t.push(k);
+  });
+  localStorage.setItem('chatSeenIds',JSON.stringify(seen.slice(-2000)));
+  localStorage.setItem('chatTouched',JSON.stringify(t.slice(-2000)));
+  // Up to the cutoff when there is one. The reset boot passes one, and writing
+  // the newest answer here instead would have said everything is read when
+  // only the older half was meant.
+  localStorage.setItem('chatSeen',cutoff||newestClaude());
+ }catch(e){}
+ paintDot();renderNew();renderThread();
+}
+on('readOld',function(){markAllRead();toast('הכל סומן כנקרא. מה שיגיע מעכשיו יהיה אדום.');});
+on('clearBtn',function(){
+ var said=document.getElementById('clearSaid');
+ var btn=document.getElementById('clearBtn');
+ if(btn&&btn.textContent==='החזרה'){
+  try{localStorage.removeItem('msgHidden');}catch(e){}
+  btn.textContent='ניקוי';
+  if(said)said.textContent='הכל חזר.';
+  renderThread();renderNew();
+  return;
+ }
+ // The whole history first, exactly like the big clear on the messages screen.
+ // Without this it hid only the head slice that ships inside the page, and the
+ // rest came back the moment the full chat file landed a second later. Itzik,
+ // 17.9: "כפתור ניקוי ההודעות לא עובד", and then a minute later that it does.
+ // Both were true: it cleared what was on screen and the older half returned.
+ if(said)said.textContent='מנקה.';
+ ensure('chat',function(){
+  var keys=(D.chat||[]).map(msgKey);
+  try{localStorage.setItem('msgHidden',JSON.stringify(keys.slice(-6000)));}catch(e){}
+  if(btn)btn.textContent='החזרה';
+  if(said)said.textContent='נוקה מהמסך. הרישום עצמו שלם, ולחיצה נוספת מחזירה הכל.';
+  renderThread();renderNew();paintDot();
+  toast('הצ׳אט נוקה מהמסך.');
+ });
+});
+(function(){
+ var b=document.getElementById('sfxBtn');if(!b)return;
+ function paint(){b.textContent=sfxOn()?'כיבוי':'הפעלה';}
+ paint();
+ b.onclick=function(){try{localStorage.setItem('sfxOff',sfxOn()?'1':'0');}catch(e){}paint();toast(sfxOn()?'הצלילים פועלים.':'הצלילים כבויים.');};
+})();
+on('resetBtn',function(){
+ markAllRead();
+ renderNew();updateDot();paintDot();
+ var said=document.getElementById('resetSaid');
+ if(said)said.textContent='אופס. המונה על אפס, ורק מה שיגיע מעכשיו יידלק.';
+ toast('אופס. רק מה שיגיע מעכשיו יידלק.');
+});
+/*ITZIK:BEGIN*/
+/*
+  The accounting screen. Every row is money that is already in the bank and has
+  no receipt behind it, so the list is the work itself and not a summary of it.
+  The match field says what the receipt will do to the customer card: exact closes it,
+  partial leaves a remainder, near is a small old difference worth a look.
+*/
+var RIVTAG={exact:['rv-exact','חיוב חדש, טרם הגיע מועד'],near:['rv-near','חלקו ישן וחלקו חדש'],partial:['rv-partial','חוב ישן לגמרי']};
+// Thousands separators, and a negative written as a word. A minus sign in
+// front of a number inside a right to left line lands visually at the wrong
+// end and reads like a typo, so the sign is said out loud instead.
+function ils(n){
+ if(n==null)return '';
+ return Math.round(Math.abs(n)).toString().replace(/\\B(?=(\\d{3})+(?!\\d))/g,',')
+  +(n<0?' במינוס':'');
+}
+function rivRow(r){
+ var tag=RIVTAG[r.match];
+ return '<div class="rivrow"><span class="d">'+esc(r.date)+'</span>'
+  +'<span class="t"><b>'+esc(r.name)+'</b>'
+  +(r.card?'<small>מתוכו חוב ישן '+ils(r.card)+'</small>':'')
+  +(r.note?'<small>'+esc(r.note)+'</small>':'')
+  +(tag?'<span class="rivtag '+tag[0]+'">'+tag[1]+'</span>':'')
+  +'</span><span class="a">'+ils(r.amount)+'</span></div>';
+}
+/*
+  The debtors, the way he asked on 30.9: one line per customer, "סלאס 6,966",
+  and a tap opens exactly which invoices are open, with a small line to write
+  a note on that customer right there. The note goes to me like any message,
+  without throwing him into the chat or the microphone.
+*/
+function rivDebt(r){
+ if(!r.inv)return rivRow(r);
+ var li=r.inv.map(function(x){
+  return '<li><span class="n">'+(x.n?'חשבונית '+esc(x.n):esc(x.label||'חוב ישן'))
+   +(x.left<x.amount-0.5?'<small>שולם חלק, מתוך '+ils(x.amount)+'</small>':'')
+   +(x.wa?'<small class="rvwa">'+esc(x.wa)+'</small>':'')+'</span>'
+   +'<span class="dt">'+esc(x.date)+'</span><span class="m">'+ils(x.left)+'</span></li>';
+ }).join('');
+ return '<details class="rvcust"><summary class="rvh"><b>'+esc(r.name)+'</b><span class="a">'+ils(r.amount)+'</span></summary>'
+  +'<small>'+esc(r.sub||'')+'</small>'+(r.wa?'<small class="rvwa">'+esc(r.wa)+'</small>':'')+'<ul class="rvinv">'+li+'</ul>'
+  +'<form class="rvf" data-name="'+esc(r.name)+'"><input type="text" placeholder="הערה על '+esc(r.name)+'" autocomplete="off">'
+  +'<button type="submit">שליחה</button></form><div class="rvsaid"></div></details>';
+}
+function renderRivhit(){
+ var R=D.rivhit||[],box=document.getElementById('rivBox');
+ if(!box)return;
+ var wt=document.getElementById('rivWait');
+ if(wt){wt.hidden=!!R.length;wt.textContent=lazyDone.rivhit?'אין כרגע נתונים להציג.':'טוען את הנתונים...';}
+ if(!R.length){box.hidden=true;return;}
+ box.hidden=false;
+ var s=R.filter(function(r){return r.kind==='sum';})[0];
+ var host=document.getElementById('rivSum');
+ if(host){
+  // The total out there, added back on his ask of 30.9: summed from the very
+  // lines below, so it can never disagree with the list.
+  var out=R.reduce(function(a,r){return r.kind==='debt'?a+(+r.amount||0):a;},0);
+  host.innerHTML=s
+   ?(out?'<b class="rvtot">סה״כ בחוץ '+ils(out)+'</b>':'')+'<b>'+esc(s.title)+'</b><small>'+esc(s.period)+' · '+esc(s.account)+'</small>'
+    +(s.toReceipt?'<small>יתרה בבנק '+ils(s.balance)+' · ממתין לקבלה '+ils(s.toReceipt)+' על פני '+esc(String(s.count))+' לקוחות</small>':'')
+    +'<small>'+esc(s.note)+'</small>'
+   :'';
+  host.hidden=!s;
+ }
+ var by=function(k){return R.filter(function(r){return r.kind===k;});};
+ var put=function(id,rows,head){
+  var el=document.getElementById(id),h=document.getElementById(head);
+  if(!el)return;
+  el.innerHTML=rows.map(rivRow).join('');
+  el.hidden=!rows.length;
+  if(h)h.hidden=!rows.length;
+ };
+ var dl=document.getElementById('rivList');
+ if(dl){
+  var open={};
+  // A data refresh redraws this list; whatever he had open or half typed stays.
+  Array.prototype.forEach.call(dl.querySelectorAll('details[open] form'),function(f){open[f.getAttribute('data-name')]={v:f.querySelector('input').value};});
+  dl.innerHTML=by('debt').map(rivDebt).join('');
+  Array.prototype.forEach.call(dl.querySelectorAll('form.rvf'),function(f){var o=open[f.getAttribute('data-name')];if(o){f.parentNode.open=true;f.querySelector('input').value=o.v;}});
+  dl.onsubmit=function(e){
+   var f=e.target.closest('form.rvf');if(!f)return;
+   e.preventDefault();
+   var inp=f.querySelector('input'),said=f.parentNode.querySelector('.rvsaid'),btn=f.querySelector('button[type=submit]');
+   var v=inp.value.trim();if(!v)return;
+   var text='חייבים, '+f.getAttribute('data-name')+': '+v;
+   btn.disabled=true;said.textContent='שולח...';
+   sendText('הערה על חייב',text,'עדכון').then(function(){
+    var p=pending();p.push({at:new Date().toISOString(),text:text});savePending(p);
+    inp.value='';said.textContent='✓ נשלח אליי. התשובה תגיע בצ׳אט.';
+   }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';})
+   .then(function(){btn.disabled=false;});
+  };
+ }
+ // kind manual (30.9): money he asked to keep here and not in Rivhit.
+ put('rivManual',by('manual'),'rivH6');
+ put('rivOpen',by('open'),'rivH2');
+ put('rivBank',by('bank'),'rivH4');
+ var U=by('audit'),ue=document.getElementById('rivAudit'),uh=document.getElementById('rivH5');
+ if(ue){
+  ue.innerHTML=U.map(function(a){
+   var rows=(a.rows||[]).map(function(x){
+    return '<tr class="st-'+esc(x.st)+'"><td>'+esc(x.n)+'</td><td>'+esc(x.date)+'</td>'
+     +'<td class="m">'+ils(x.amount)+'</td><td>'+esc(x.paid)+'</td><td class="m">'+ils(x.left)+'</td></tr>';
+   }).join('');
+   return '<div class="rivaud"><b>'+esc(a.title)+'</b>'
+    +(a.name?'<small>'+esc(a.name)+'</small>':'')
+    +(a.period?'<small>'+esc(a.period)+'</small>':'')
+    +((a.lines||[]).length?'<ul>'+a.lines.map(function(l){return '<li>'+esc(l)+'</li>';}).join('')+'</ul>':'')
+    +(rows?'<table><thead><tr><th>חשבונית</th><th>תאריך</th><th>סכום</th><th>שולם</th><th>נשאר</th></tr></thead><tbody>'+rows+'</tbody></table>':'')
+    +'</div>';
+  }).join('');
+  ue.hidden=!U.length;
+ }
+ if(uh)uh.hidden=!U.length;
+ var A=by('alert'),ae=document.getElementById('rivAlerts'),ah=document.getElementById('rivH3');
+ if(ae){
+  ae.innerHTML=A.map(function(a){
+   return '<div class="rivrow"><span class="t"><b>'+esc(a.title)+'</b><small>'+esc(a.note)+'</small></span></div>';
+  }).join('');
+  ae.hidden=!A.length;
+ }
+ if(ah)ah.hidden=!A.length;
+}
+/*ITZIK:END*/
+var bootFailed=[];
+function boot(name,fn){try{fn();}catch(e){bootFailed.push(name);try{console.error('boot '+name,e);}catch(_){}}}
+/*
+  The unlock, and what he sees while it is shut.
+
+  The page boots empty on purpose: with the gate on, index.html carries no data
+  at all, so the only thing a stranger with the link can read is an empty shell
+  and a box asking for a code. The whole payload arrives sealed and is opened
+  here.
+
+  The overlay is drawn from script rather than sitting in the markup, so a build
+  without a gate ships nothing of it and the page is exactly what it was.
+*/
+/*
+  30.9: a copy whose gate is a passphrase (GATE.words) gets a plain text
+  keyboard, no length cap, no autocorrect that could swap a word, and a way to
+  see what was typed. A copy still on a six digit code keeps the keypad it had.
+*/
+function gateUI(){
+ var W=!!(GATE&&GATE.words);
+ var w=document.createElement('div');
+ w.id='gateWrap';
+ w.innerHTML='<div class="gatecard">'
+  +'<b class="gt-t">'+esc((INSTANCE&&INSTANCE.name==='abaitzik')?'אבא איציק':(INSTANCE&&INSTANCE.owner||''))+'</b>'
+  +(W?'<div class="gt-s">הדף נעול. תקליד את הסיסמה פעם אחת והמכשיר הזה יזכור אותה.'
+    +'<br>זו הסיסמה שקיבלת כשהדף הוקם. מקלידים אותה בדיוק כמו שקיבלת.</div>'
+  :'<div class="gt-s">הדף נעול. תקליד את הקוד פעם אחת והמכשיר הזה יזכור אותו.'
+  +'<br>'+((INSTANCE&&INSTANCE.name!=='abaitzik')?'זה הקוד שבחרת בהתקנה.':'הקוד נשלח אליך בהתראה לטלפון, בנושא הקוד לפתיחת הדף.')+'</div>')
+  +(W?'<form id="gateForm" class="gw"><input id="gateIn" type="password" autocomplete="off" autocapitalize="off"'
+    +' autocorrect="off" spellcheck="false" dir="rtl" lang="he" placeholder="הסיסמה">'
+    +'<button type="submit" id="gateGo">פתיחה</button></form>'
+    +'<button type="button" class="gt-eye" id="gateEye">להציג את מה שהקלדתי</button>'
+  :'<form id="gateForm"><input id="gateIn" type="tel" inputmode="numeric" autocomplete="off"'
+  +' maxlength="12" placeholder="הקוד"><button type="submit" id="gateGo">פתיחה</button></form>')
+  +'<div class="gt-e" id="gateSaid"></div>'
+  +(W&&INSTANCE&&INSTANCE.name!=='abaitzik'?'<button type="button" class="gt-eye" id="gateForgot">שכחתי את הסיסמה</button>'
+    +'<div class="gt-help" id="gateHelp" hidden>מבקשים סיסמה חדשה ממי שהקים לך את הדף. הכפתור פותח וואטסאפ עם הבקשה כבר כתובה, רק בוחרים למי לשלוח.'
+    +'<button type="button" class="gt-btn" id="gateAsk">לבקש סיסמה חדשה בוואטסאפ</button></div>':'')
+  +'</div>';
+ document.body.appendChild(w);
+ return w;
+}
+function gateBoot(){
+ if(!GATE)return;
+ var wrap=gateUI();
+ var said=document.getElementById('gateSaid');
+ var form=document.getElementById('gateForm');
+ var box=document.getElementById('gateIn');
+ var eye=document.getElementById('gateEye');
+ var bad=GATE.words?'הסיסמה לא מתאימה. אפשר ללחוץ להציג ולבדוק.':'הקוד לא מתאים.';
+ if(eye)eye.onclick=function(){
+  var hid=box.type==='password';
+  box.type=hid?'text':'password';
+  eye.textContent=hid?'להסתיר':'להציג את מה שהקלדתי';
+  try{box.focus();}catch(e){}
+ };
+ /*
+   10.10, from the reviewer, taken by Itzik: "סיסמה של חמש מילים בלי עזרה".
+   A wrong passphrase said only that it did not match, and there was no word
+   on what to do after forgetting it. Which word is wrong cannot be told: the
+   page holds nothing about the words but the salt, and a check per word would
+   let a stolen copy be guessed one word at a time. What can be told safely is
+   what the typing itself shows: how many words there are, and letters from an
+   English keyboard. Before the page opens it has no channel of its own to send
+   on, so the request for a new one goes out through WhatsApp, already written.
+ */
+ function hint(v){
+  if(!GATE.words)return bad;
+  var t=gnorm(v),n=t?t.split(' ').length:0;
+  if(/[A-Za-z]/.test(t))return 'יש כאן אותיות באנגלית. כנראה המקלדת לא על עברית. מחליפים לעברית ומקלידים שוב.';
+  if(n!==5)return 'הקלדת '+(n===1?'מילה אחת':n+' מילים')+'. הסיסמה היא חמש מילים, עם רווח בין מילה למילה.';
+  return 'חמש מילים, אבל אחת מהן לא מדויקת. אפשר ללחוץ להציג ולבדוק כל מילה מול מה שקיבלת.';
+ }
+ var fg=document.getElementById('gateForgot');
+ if(fg)fg.onclick=function(){
+  document.getElementById('gateHelp').hidden=false;fg.hidden=true;
+ };
+ var ask=document.getElementById('gateAsk');
+ if(ask)ask.onclick=function(){
+  var nl=String.fromCharCode(10);
+  window.open('https://wa.me/?text='+encodeURIComponent('שכחתי את הסיסמה של המוניטור'+(INSTANCE.owner?' של '+INSTANCE.owner:'')
+   +'. אפשר סיסמה חדשה?'+nl+location.href.split('#')[0].split('?')[0]),'_blank','noopener');
+ };
+ function load(){
+  return fetch('data/head.json?b='+Date.now(),{cache:'no-store'})
+   .then(function(r){return r.ok?r.text():null;})
+   // A file that never arrived says nothing about the key. Null means retry,
+   // and only a decrypt that threw means the key is wrong.
+   .then(function(t){return t?gopen(t).then(function(x){return x;},function(){return false;}):null;})
+   .then(function(txt){
+    if(txt===false)return false;
+    if(!txt)return null;
+    var head=JSON.parse(txt);
+    Object.keys(head).forEach(function(k){D[k]=head[k];});
+    LAZY=D.lazy||{};
+    // The first boot pass ran against an empty D, before this fetch, so a
+    // reset stamp that only exists inside the sealed payload never got its
+    // chance until now.
+    try{applyResetSeen();}catch(e){}
+    try{applyResetMarks();}catch(e){}
+    repaintAll();
+    wrap.parentNode.removeChild(wrap);
+    return true;
+   });
+ }
+ // A key that was cached by an earlier visit. If the code was changed since,
+ // the decrypt simply fails and he is asked again, which is the right
+ // behaviour and needs no version number of its own.
+ var saved=null;
+ try{saved=localStorage.getItem('gateKey');}catch(e){}
+ /*
+   No lock card on a phone that already has the key.
+
+   Itzik, 25.9: "every time I open the monitor I see the code box for a
+   second, can it disappear". It could: the card was drawn first and taken
+   away only after the saved key had decrypted the page, so every single open
+   flashed it. With a saved key the card now stays invisible. It shows only if
+   the key is proven wrong, or if four seconds pass without the page opening,
+   so a slow network never leaves him staring at nothing.
+ */
+ if(saved){
+  wrap.style.visibility='hidden';
+  var reveal=setTimeout(function(){if(wrap.parentNode)wrap.style.visibility='';},4000);
+  /*
+    A saved key is dropped only when it is proven wrong.
+
+    The first version threw it away whenever the unlock did not complete, which
+    includes a fetch that failed because the phone was on a bad bar of signal.
+    He reported the code being asked for on every single open, and that was
+    this: one flaky request and the device forgot him. A key that decrypts
+    nothing is wrong; a key that never got a file to try is unproven, and
+    unproven is not a reason to make a man retype a code.
+  */
+  crypto.subtle.importKey('raw',gbytes(saved),{name:'AES-GCM'},true,['decrypt'])
+   .then(function(k){GKEY=k;return load();})
+   .then(function(ok){
+    if(ok===false){GKEY=null;try{localStorage.removeItem('gateKey');}catch(e){}clearTimeout(reveal);wrap.style.visibility='';}
+    else if(ok===true)clearTimeout(reveal);
+   })
+   .catch(function(){GKEY=null;clearTimeout(reveal);wrap.style.visibility='';});
+ }
+ form.onsubmit=function(e){
+  e.preventDefault();
+  var code=gnorm(box.value);
+  if(!code)return;
+  said.textContent='רגע, פותח.';
+  gderive(code).then(function(k){
+   GKEY=k;
+   return load();
+  }).then(function(ok){
+   if(ok===null){said.textContent='אין רשת כרגע. נסה שוב עוד רגע.';GKEY=null;return;}
+   if(!ok){said.textContent=hint(box.value);GKEY=null;return;}
+   return crypto.subtle.exportKey('raw',GKEY).then(function(raw){
+    try{localStorage.setItem('gateKey',graw(new Uint8Array(raw)));}catch(e){}
+   });
+  }).catch(function(){
+   said.textContent=hint(box.value);GKEY=null;
+  });
+ };
+ setTimeout(function(){try{box.focus();}catch(e){}},120);
+}
+boot('report',renderNextReport);
+boot('pegasus',renderPegasus);
+boot('improve',renderImprove);
+boot('special',renderSpecial);
+boot('reminders',renderReminders);
+boot('tasks',renderTasks);
+boot('tenants',paintTenantsTile);
+/*
+  An app, not a website.
+
+  Itzik, 25.9, about Ilay: "הוא מקבל את זה בתור דפדפן, ואני רוצה שזה יראה כמו
+  אצלי בלי שורת כתובת". A page cannot remove Safari's address bar by itself;
+  on an iPhone that only happens when it is opened from its own icon on the
+  home screen, and only the owner of the phone can put the icon there. So
+  every time this page is opened inside the browser, a bar at the bottom says
+  exactly how, with the two taps drawn out, until it is opened from the icon.
+  On Android, Chrome offers the install itself and the bar becomes one button.
+
+  Not on Itzik's copy: his icon has been on his screen since September.
+*/
+/*
+  A customer's first screen greets him. Itzik, 25.9: "put in a greeting:
+  welcome to Aba Itzik's monitor, good luck." It sits at the top of the home
+  screen until he closes it, and closed it stays closed on that device.
+  instance.json may carry its own welcome text; without one this is the text.
+*/
+boot('welcome',function(){
+ if(INSTANCE&&INSTANCE.name==='abaitzik')return;
+ try{if(localStorage.getItem('welcomeSeen'))return;}catch(e){}
+ // Above the talk card, the first thing under his name.
+ var top=document.getElementById('talkCard')||document.getElementById('pH');
+ if(!top||!top.parentNode)return;
+ var w=document.createElement('div');
+ w.id='welcomeCard';
+ w.setAttribute('style','margin:0 0 14px;padding:16px 18px;border-radius:18px;color:#fff;'
+  +'background:linear-gradient(135deg,#1a73e8,#14675a);box-shadow:0 4px 16px rgba(0,0,0,.25);line-height:1.5');
+ var text=(INSTANCE&&INSTANCE.welcome)||'ברוכים הבאים למוניטור של אבא איציק';
+ w.innerHTML='<div style="font-size:21px;font-weight:700">'+esc(text)+'</div>'
+  +'<div style="font-size:18px;margin-top:2px">בהצלחה!</div>'
+  +'<button type="button" id="welcomeClose" style="margin-top:10px;padding:8px 18px;border:1px solid rgba(255,255,255,.6);'
+  +'border-radius:999px;background:transparent;color:#fff;font-size:15px">סגירה</button>';
+ top.parentNode.insertBefore(w,top);
+ document.getElementById('welcomeClose').onclick=function(){
+  try{localStorage.setItem('welcomeSeen','1');}catch(e){}
+  w.remove();
+ };
+});
+// A guide tile blinks until she has opened it once on this device.
+boot('guides',function(){
+ (INSTANCE&&INSTANCE.guides||[]).forEach(function(g,i){
+  var t=document.getElementById('gGuide'+i);if(!t)return;
+  var k='guideSeen:'+g.key,seen=false;
+  try{seen=!!localStorage.getItem(k);}catch(e){}
+  if(!seen)t.classList.add('taskblink');
+  t.onclick=function(){
+   try{localStorage.setItem(k,'1');}catch(e){}
+   t.classList.remove('taskblink');
+   var w=document.createElement('div');
+   w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label',g.title);
+   w.innerHTML='<div class="ycard"><b>'+esc(g.title)+'</b>'
+    +String(g.text).split('\\n').filter(Boolean).map(function(l){return '<div style="font-size:16px;line-height:1.55">'+esc(l)+'</div>';}).join('')
+    +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+   w.onclick=function(e){if(e.target===w||(e.target.getAttribute&&e.target.getAttribute('data-a')==='x'))w.remove();};
+   document.body.appendChild(w);
+  };
+ });
+});
+boot('install',function(){
+ if(INSTANCE&&INSTANCE.name==='abaitzik')return;
+ var standalone=(window.navigator&&window.navigator.standalone)||
+  (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches);
+ if(standalone)return;
+ var ios=/iPhone|iPad|iPod/i.test(navigator.userAgent||'');
+ var bar=document.createElement('div');
+ bar.id='installBar';
+ // In the flow of the home screen, above the tiles. Pinned to the bottom it sat
+ // on top of the customer's own tiles, 25.9, and a tile you cannot see is lost.
+ bar.setAttribute('style','margin:14px 0;background:#14675a;color:#fff;'
+  +'border-radius:16px;padding:14px 16px;font-size:16px;line-height:1.5;box-shadow:0 4px 16px rgba(0,0,0,.25)');
+ bar.innerHTML=ios
+  ?'<b>להפוך את המוניטור לאפליקציה</b><br>1. למטה בספארי לוחצים על כפתור השיתוף <span style="font-size:20px">⬆️</span><br>'
+   +'2. גוללים ולוחצים <b>הוספה למסך הבית</b><br>3. פותחים מהאייקון החדש. בלי שורת כתובת, כמו כל אפליקציה.'
+  :'<b>להפוך את המוניטור לאפליקציה</b><br><span id="installHow">בתפריט של כרום (שלוש הנקודות): <b>התקנת האפליקציה</b> או <b>הוספה למסך הבית</b>.</span>';
+ bar.innerHTML+='<button type="button" id="installLater" style="margin-top:8px;width:100%;padding:10px;border:1px solid rgba(255,255,255,.5);'
+  +'border-radius:10px;background:transparent;color:#fff;font-size:15px">אחר כך</button>';
+ var tiles=document.getElementById('newBlock')||document.getElementById('blkTiles');
+ if(tiles&&tiles.parentNode)tiles.parentNode.insertBefore(bar,tiles);
+ else document.body.appendChild(bar);
+ document.getElementById('installLater').onclick=function(){bar.remove();};
+ window.addEventListener('beforeinstallprompt',function(e){
+  e.preventDefault();
+  var how=document.getElementById('installHow');
+  if(!how)return;
+  how.innerHTML='<button type="button" id="installGo" style="margin-top:8px;width:100%;padding:12px;border:0;border-radius:10px;'
+   +'background:#fff;color:#14675a;font-size:17px;font-weight:700">התקנה במסך הבית</button>';
+  document.getElementById('installGo').onclick=function(){e.prompt();};
+ });
+});
+boot('appts',renderAppts);
+boot('replies',renderReplies);
+boot('reqs',renderReqs);
+// boot('codex',renderCodex) is retired with the fold; the function stays for the tests and the answers screen.
+boot('rivhit',renderRivhit);
+/*
+  The listener indicator.
+
+  His phone cannot see a file on the machine at home, so the listener puts a
+  pulse on a second ntfy topic once a minute at minimum priority, and this
+  reads that topic. Nothing here can start, stop or repair the listener: it
+  only reports, which is the whole point. A screen that cannot go red is a
+  screen that told him everything was fine for ninety seven minutes.
+*/
+function LIVE_TOPIC(){ return secret('ntfyLive'); }
+var liveLast=null;
+function liveTime(iso){
+ var d=new Date(iso);
+ return isNaN(d)?'':(d.getHours()+':'+String(d.getMinutes()).padStart(2,'0')
+  +':'+String(d.getSeconds()).padStart(2,'0'));
+}
+function paintPc(){
+ var p=document.getElementById('pcPill'),t=document.getElementById('pcText');
+ if(!p||!t)return;
+ // 6.10: the PC pill is for a monitor that is wired to its owner's computer. A customer
+ // whose screens do not include the connect-a-computer tile has no such computer.
+ var scr=INSTANCE&&INSTANCE.screens;
+ if(scr&&scr.length&&scr.indexOf('gRemote')<0){p.style.display='none';return;}
+ var pc=liveLast&&liveLast.pc;
+ if(!pc||(Date.now()-Date.parse(liveLast.at))/1000>4800){p.className='pcpill';t.textContent='💻 לא ידוע';return;}
+ if(pc.on){p.className='pcpill on';t.textContent='💻 המחשב דלוק';return;}
+ p.className='pcpill off';
+ t.textContent='💻 המחשב כבוי'+(pc.seen?' מאז '+liveTime(pc.seen).slice(0,-3):'');
+}
+/*
+  Reviewer 9.10, approved by Itzik 10.10: on a customer's page a red "אין מאזין"
+  said nothing about whether her message was lost or what to do. There the
+  stopped state is a calm grey line that says her messages are kept. Itzik's own
+  page keeps the red, because he is the one who acts on it.
+*/
+function liveCalm(){return AI!=='קלוד'&&(!liveLast||(Date.now()-Date.parse(liveLast.at))/1000>4800);}
+function paintLive(){
+ paintPc();
+ var pill=document.getElementById('livePill');
+ var txt=document.getElementById('lpText');
+ if(!pill||!txt)return;
+ if(liveCalm()){pill.className='livepill calm';txt.textContent='ההודעות שלך נשמרות';return;}
+ if(!liveLast){
+  pill.className='livepill down';txt.textContent='אין מאזין';return;
+ }
+ var age=(Date.now()-Date.parse(liveLast.at))/1000;
+ /*
+   This threshold has to stay behind the listener's idle interval, and twice
+   now it has not. The pulse moved from sixty seconds to fifteen minutes to an
+   hour as the quota was brought under control, and this number was left at
+   thirty five minutes. So for twenty five minutes out of every hour the pill
+   told Itzik the monitor was disconnected while the listener was up, had
+   caught everything and had a full allowance waiting. He read it at 05:23
+   from a hospital bed and asked why he was cut off. He was not. This line was
+   lying to him.
+
+   Eighty minutes: comfortably past an hourly pulse, still short enough that a
+   genuinely dead listener shows up well inside a morning. If BEAT_MS in
+   listen.js moves again, this moves with it.
+
+   None of this governs the thing he actually watches. Every catch pulses at
+   once, so "did what I just sent get through" is still answered in seconds.
+ */
+ if(age>4800){
+  pill.className='livepill down';
+  txt.textContent='נפל ב'+liveTime(liveLast.at);
+  return;
+ }
+ // Alive, but with no way to reach him, is its own state and it is not green.
+ // That is exactly the situation that went unnoticed on 13.9.
+ var B=liveLast.budget||{};
+ var mute=Object.keys(B).length&&Object.keys(B).every(function(k){
+  return B[k].blockedUntil||B[k].left===0;});
+ if(mute){
+  pill.className='livepill mute';
+  txt.textContent='קולט, לא יכול להתריע';
+  return;
+ }
+ pill.className='livepill up';
+ txt.textContent=liveLast.last?('נקלט '+liveTime(liveLast.last)):'מאזין';
+}
+/*
+  Two sources, and the fresher one wins.
+
+  The fast one is ntfy, which carries a pulse every fifteen minutes and one on
+  every catch. The problem with it alone is that it is the same channel that
+  can be down: when ntfy refuses, no pulse goes out, the pill goes red, and it
+  cannot say the true thing, which is "I hear you, I just cannot answer".
+
+  The second source is a file next to this page, written by the listener only
+  when the state changes shape. It is slower and coarser, and it is on our own
+  origin, so it keeps working precisely when the other one cannot.
+*/
+async function liveFromNtfy(){
+ /*
+   The window has to be wider than the gap between pulses, and it was not.
+   The pulse slowed to hourly while this stayed at twenty minutes, so most of
+   the time the query came back empty and the page silently fell back to the
+   file, which only updates when the state changes shape. Between them the
+   newest thing Itzik could see was hours old and the pill called it dead.
+   Three hours: several pulses inside the window even if one or two are lost.
+ */
+ var r=await fetch('https://ntfy.sh/'+LIVE_TOPIC()+'/json?poll=1&since=3h',{cache:'no-store'});
+ var t=(await r.text()).trim();
+ var rows=t?t.split(String.fromCharCode(10)):[];
+ for(var i=rows.length-1;i>=0;i--){
+  var m=null;
+  try{m=JSON.parse(rows[i]);}catch(e){continue;}
+  if(m.event!=='message'||!m.message)continue;
+  try{return JSON.parse(m.message);}catch(e){continue;}
+ }
+ return null;
+}
+async function liveFromDocs(){
+ var r=await fetch('live.json?t='+Date.now(),{cache:'no-store'});
+ if(!r.ok)return null;
+ return await r.json();
+}
+async function pollLive(){
+ var got=await Promise.all([
+  liveFromNtfy().catch(function(){return null;}),
+  liveFromDocs().catch(function(){return null;})
+ ]);
+ var best=null;
+ got.forEach(function(c){
+  if(!c||!c.at)return;
+  if(!best||Date.parse(c.at)>Date.parse(best.at))best=c;
+ });
+ if(best)liveLast=best;
+ paintLive();
+}
+function openLiveSheet(){
+ var sh=document.getElementById('liveSheet');
+ var body=document.getElementById('lsBody');
+ var head=document.getElementById('lsHead');
+ if(!sh||!body)return;
+ if(liveCalm()){
+  head.textContent='ההודעות שלך נשמרו';
+  body.innerHTML='<div class="lr"><span>כל מה ששלחת נשמר ויטופל ברגע שהמערכת תחזור לעבוד.</span></div>'
+   +'<div class="lr"><span>מערכת המחשוב של המוניטור כבר יודעת. אין צורך לעשות כלום.</span></div>';
+ }else if(!liveLast){
+  head.textContent='המאזין';
+  body.innerHTML='<div class="lr"><span>אף אחד לא מאזין לערוץ.</span></div>'
+   +'<div class="lr"><span>הודעות שתשלח יחכו עד שמישהו יפעיל אותו.</span></div>';
+ }else{
+  var up=Math.round((liveLast.up||0)/60);
+  head.textContent='המאזין פעיל';
+  var rows=[['פעימה אחרונה',liveTime(liveLast.at)],
+   ['מחובר מאז',liveTime(liveLast.since)],
+   ['רץ',up<60?(up+' דקות'):(Math.round(up/60)+' שעות')],
+   ['נקלטו',String(liveLast.n||0)],
+   ['פעימה כל','רבע שעה']];
+  // What is left of today's sending budget. On 13.9 both notification
+  // channels ran out inside an hour with no warning anywhere, and the first
+  // anyone knew was Itzik asking why the monitor had fallen. This is the
+  // warning that did not exist.
+  var B=liveLast.budget||{};
+  Object.keys(B).forEach(function(k){
+   var c=B[k];
+   // A daily wall gets said in words. Showing "blocked until 21:42" and then
+   // "blocked until 22:58" an hour later taught him to distrust the number.
+   rows.push([c.label,c.daily
+    ?'המכסה היומית נגמרה'
+    :(c.blockedUntil?('חסום עד '+liveTime(c.blockedUntil)):(c.left+' מתוך '+c.cap))]);
+  });
+  if(liveLast.queued)rows.push(['ממתינות בתור',String(liveLast.queued)]);
+  /*
+    Itzik, 17.9, by voice: "if we run out of the 150 sends, do we have another
+    backup channel, or is that it for today". The panel showed him a channel at
+    its wall and stopped there, which reads like the line went dead. It does
+    not: the send drops to the next channel, and what no channel will take sits
+    on the queue until one opens. This says so, in the one place he looks when
+    he suspects the monitor has fallen.
+  */
+  var spent=Object.keys(B).filter(function(k){
+   return B[k].daily||B[k].blockedUntil||Number(B[k].left)===0;});
+  if(spent.length||liveLast.queued){
+   rows.push(['כשנגמרת המכסה','עובר לערוץ הבא, ומה שנשאר ממתין בתור ויוצא. כלום לא נמחק.']);
+  }
+  body.innerHTML=rows.map(function(r){
+   return '<div class="lr"><span>'+esc(r[0])+'</span><b>'+esc(r[1])+'</b></div>';
+  }).join('')
+  +((liveLast.recent||[]).length
+    ?'<div class="lr"><span>הקליטות האחרונות</span></div>'
+     +liveLast.recent.slice().reverse().map(function(r){
+       return '<div class="lr"><span>'+esc(r.kind==='file'?'קובץ':r.kind==='lost'?'אבד':'הודעה')
+        +'</span><b>'+esc(liveTime(r.at))+'</b></div>';
+      }).join('')
+    :'');
+ }
+ sh.hidden=false;
+}
+on('livePill',openLiveSheet);
+on('lsClose',function(){var sh=document.getElementById('liveSheet');if(sh)sh.hidden=true;});
+boot('live',function(){pollLive();setInterval(pollLive,30000);setInterval(paintLive,15000);});
+boot('folds',paintHomeFolds);
+boot('tidy',function(){countTiles();renderTidy();});
+// A link like #pegasus or #special lands straight on that screen.
+boot('hash',function(){
+ var h=(location.hash||'').replace('#','');
+ if(!h)return;
+ var k=paneOf(h);
+ if(!k||k==='h')return;
+ pane(k);
+ if(k==='x')renderPegasus();
+ if(k==='y'){renderSpecial();markSpecialSeen();}
+ if(k==='w')renderImprove();
+ if(k==='c'){renderBlock();ensure('blocklist',renderBlock);}
+ if(k==='j'){renderDrains();ensure('drains',renderDrains);}
+ if(k==='k'){renderReplies();markRepliesSeen();}
+ if(k==='R')renderReminders();
+});
+boot('ask',renderAsk);
+boot('items',render);
+boot('thread',renderThread);
+boot('pill',renderPill);
+boot('mail',renderMail);
+boot('dot',updateDot);
+// The last word on which screen opens. This runs after everything else, so a
+// plain pane('h') here quietly undid the notification landing above: he tapped
+// the banner and got the home screen with no sign of what was new.
+//
+// Named on their own, not just handed to boot() inline, because with the gate
+// on D starts as {} and these stamps only exist once head.json is fetched and
+// decrypted, well after this first pass ran and found nothing to do. Without
+// a way to run them again after that fetch, a reset stamp shipped the night
+// of 27.9 never actually fired on his phone, and he kept seeing the same old
+// standby and star counts no matter how many times the page said otherwise.
+function applyResetSeen(){
+ var stamp=D.resetSeenAt||'';
+ if(!stamp)return false;
+ var done='';
+ try{done=localStorage.getItem('seenResetAt')||'';}catch(e){}
+ if(done>=stamp)return false;
+ markAllRead(stamp);
+ try{localStorage.setItem('seenResetAt',stamp);}catch(e){}
+ return true;
+}
+// Same move, for the two counts markAllRead never touched: standby and
+// marked. Those are flags he set himself on individual cards, so there is no
+// cutoff date to compare against - the only reset that means anything is
+// clearing both lists outright.
+function applyResetMarks(){
+ var stamp=D.resetMarksAt||'';
+ if(!stamp)return false;
+ var done='';
+ try{done=localStorage.getItem('marksResetAt')||'';}catch(e){}
+ if(done>=stamp)return false;
+ try{
+  localStorage.removeItem('chatStar');
+  localStorage.removeItem('chatParked');
+  localStorage.removeItem('chatStandby');
+  localStorage.setItem('marksResetAt',stamp);
+ }catch(e){}
+ return true;
+}
+boot('reset',applyResetSeen);
+boot('resetMarks',applyResetMarks);
+boot('gate',gateBoot);
+boot('pane',function(){
+ if(location.hash==='#new'||location.hash==='#chat'){
+  pane('a');renderAnswers();landPane('pA');
+ }
+ else pane('h');
+});
+// If the pane itself could not be chosen, the page would be blank. Home is the
+// one screen that is always in the HTML, so it is the floor to fall back to.
+if(bootFailed.indexOf('pane')>-1){try{pane('h');}catch(e){var h=document.getElementById('pH');if(h)h.hidden=false;}}
+/*
+  Not while the page is still locked.
+
+  With the gate on the screen boots with no data at all and several renders
+  throw on the way past, which is expected and harmless: they run again the
+  moment he unlocks. Counting those as failures put a red "part of the screen
+  did not load" across the top of a page that was working perfectly, which is
+  how he saw it on his phone this morning.
+*/
+/*
+  Silent only while the page is still locked, and never after.
+
+  The first version of this cleared the list outright, which was right for the
+  renders that throw before he has typed the code and wrong for everything
+  after: a real failure then had no way to reach the screen. The list is kept
+  and simply not shown until the gate opens.
+*/
+if(GATE&&!GKEY){
+ var held=bootFailed.slice();
+ bootFailed.length=0;
+ window.__heldBootFails=held;
+}
+if(bootFailed.length){
+ var w=document.createElement('div');
+ w.className='bootwarn';
+ w.innerHTML='<b>חלק מהמסך לא נטען.</b><br>מה שכן נטען עובד. תלחץ רענון, ואם זה חוזר תגיד לי.'
+  +' <button type="button" id="bootReload">רענון</button>';
+ var host=document.getElementById('pH')||document.body;
+ host.insertBefore(w,host.firstChild);
+ var rb=document.getElementById('bootReload');
+ if(rb)rb.onclick=function(){location.reload();};
+}
+// The last line of the script, and the only thing that clears the dead page
+// guard at the top. If anything above threw hard enough to skip this, the bar
+// appears and he has a way out instead of a screen that ignores him.
+try{window.__monAlive();}catch(e){}
+</script>
+</body>
+</html>`;
+
+/*
+  ארכיון הסרטונים. איציק, 17.9: את הסרטונים שנעשים כאן מעלים לאתר, ולכן הם
+  לא יכולים לשבת רק בקישור בתוך הודעה בצאט. כל mp4 תחת docs/files נכנס לדף
+  הזה מעצמו בכל בנייה, החדש למעלה, ושום קובץ לא נמחק בדרך.
+*/
+/*
+  Attachments are private, 27.9. Itzik: "move them." Anything a session or the
+  listener drops into docs/files is moved to data/files-private on the next
+  build, before anything is committed, and published only sealed under
+  docs/f/<keyed hash>.bin. A sealed copy is written once and kept while its
+  source exists, so an unchanged file does not change in git on every build.
+  The Yehuda review stays public: it is shared with him by link on purpose.
+  Without a gate nothing moves, because then the page itself is public anyway.
+*/
+const PUBLIC_FILES = new Set(['happymeal-sekira-yehuda.pdf', 'content-plan-ilay.pdf']);
+const MIME = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp',
+  mp4: 'video/mp4', mov: 'video/quicktime', webm: 'audio/webm', m4a: 'audio/mp4', mp3: 'audio/mpeg',
+  ogg: 'audio/ogg', wav: 'audio/wav', pdf: 'application/pdf', txt: 'text/plain; charset=utf-8',
+  doc: 'application/msword', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', csv: 'text/csv; charset=utf-8' };
+function walkFiles(dir, base = '') {
+  if (!fs.existsSync(dir)) return [];
+  let out = [];
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const rel = base ? base + '/' + e.name : e.name;
+    if (e.isDirectory()) out = out.concat(walkFiles(path.join(dir, e.name), rel));
+    else if (!e.name.startsWith('.')) out.push(rel);
+  }
+  return out;
+}
+/*
+  Old files go, 30.9. Itzik: "why do you keep every file I got in the monitor,
+  I have no need for old ones." 162MB had piled up, most of it drafts nobody
+  opens again. A file older than FILE_DAYS is deleted from the files screen,
+  and a voice note older than that from the inbox (its transcript stays in the
+  chat). Kept anyway: anything this page names on purpose (Rinat's catalogue,
+  the Ner sheets), the hospital appointment, lead screenshots, and the music.
+*/
+const FILE_DAYS = 3;
+const KEEP_FILE = /^(appt-|lead-|music\/|stk\/)/;
+function pruneOldFiles(src) {
+  // His request, his monitor. A customer's files are theirs to keep.
+  if (inst.name !== 'abaitzik') return;
+  const cutoff = Date.now() - FILE_DAYS * 864e5;
+  let named = '';
+  try { named = fs.readFileSync(__filename, 'utf8'); } catch (e) { return; }
+  for (const rel of walkFiles(src)) {
+    // 8.10: the recipe books were named in a button as data-r="...", in double
+    // quotes, so this missed them and they were deleted after three days.
+    if (KEEP_FILE.test(rel) || named.includes("'" + rel + "'") || named.includes('"' + rel + '"')) continue;
+    const full = path.join(src, rel);
+    if (fs.statSync(full).mtimeMs < cutoff) fs.unlinkSync(full);
+  }
+  const inbox = path.join(inst.dataPath, 'inbox');
+  for (const n of fs.existsSync(inbox) ? fs.readdirSync(inbox) : []) {
+    const full = path.join(inbox, n);
+    try { if (fs.statSync(full).isFile() && fs.statSync(full).mtimeMs < cutoff) fs.unlinkSync(full); } catch (e) {}
+  }
+}
+/*
+  Itzik, 5.10: "the original reel does not work, I can't see it." Reels saved
+  from Instagram are VP9 inside mp4, which the iPhone will not play. Every video
+  is turned into H.264 at 720 wide before it is sealed, once, in place.
+*/
+function phoneVideo(full) {
+  if (!/\.(mp4|mov)$/i.test(full)) return;
+  const { execFileSync } = require('child_process');
+  try {
+    const c = execFileSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=codec_name',
+      '-of', 'csv=p=0', full], { encoding: 'utf8' }).trim();
+    if (!c || c === 'h264') return;
+    const tmp = full + '.h264.mp4';
+    execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', full, '-vf', "scale='min(720,iw)':-2", '-c:v', 'libx264',
+      '-pix_fmt', 'yuv420p', '-crf', '24', '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', tmp]);
+    fs.renameSync(tmp, full);
+  } catch (e) { console.error('phoneVideo', full, e.message); }
+}
+function sealFiles() {
+  if (!gate.enabled()) return [];
+  const src = path.join(inst.dataPath, 'files-private');
+  const pub = path.join(OUT_DIR, 'files');
+  const outDir = path.join(OUT_DIR, 'f');
+  fs.mkdirSync(src, { recursive: true });
+  fs.mkdirSync(outDir, { recursive: true });
+  for (const rel of walkFiles(pub)) {
+    if (PUBLIC_FILES.has(rel)) continue;
+    const to = path.join(src, rel);
+    fs.mkdirSync(path.dirname(to), { recursive: true });
+    if (!fs.existsSync(to)) fs.copyFileSync(path.join(pub, rel), to);
+    fs.unlinkSync(path.join(pub, rel));
+  }
+  // Empty folders left behind in docs/files go too.
+  (function prune(d) {
+    if (!fs.existsSync(d)) return;
+    for (const e of fs.readdirSync(d, { withFileTypes: true })) if (e.isDirectory()) prune(path.join(d, e.name));
+    if (d !== pub && !fs.readdirSync(d).length) fs.rmdirSync(d);
+  })(pub);
+  pruneOldFiles(src);
+  const list = [], keep = new Set();
+  for (const rel of walkFiles(src)) {
+    const id = gate.fileId(rel), target = path.join(outDir, id + '.bin');
+    const full = path.join(src, rel);
+    // 29.9: a file replaced under the same name kept its old sealed copy, so
+    // the monitor showed the previous version. A newer source is sealed again.
+    if (!fs.existsSync(target) || fs.statSync(full).mtimeMs > fs.statSync(target).mtimeMs) {
+      phoneVideo(full);
+      fs.writeFileSync(target, gate.sealBytes(fs.readFileSync(full)));
+    }
+    keep.add(id + '.bin');
+    const ext = (rel.split('.').pop() || '').toLowerCase();
+    list.push({ n: rel, id, s: fs.statSync(full).size, t: MIME[ext] || 'application/octet-stream',
+                at: new Date(fs.statSync(full).mtimeMs).toISOString() });
+  }
+  for (const f of fs.readdirSync(outDir)) if (!keep.has(f)) fs.unlinkSync(path.join(outDir, f));
+  return list.sort((a, b) => (a.at < b.at ? 1 : -1));
+}
+
+function videosPage() {
+  let files = [];
+  const dir = path.join(OUT_DIR, 'files');
+  if (gate.enabled()) return '<!DOCTYPE html><html lang="he" dir="rtl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>הסרטונים</title><body style="margin:0;background:#191714;color:#f2ede4;font:400 18px/1.6 system-ui,sans-serif;padding:24px;text-align:center"><p>הסרטונים עברו למוניטור, למסך הקבצים שלי. שם הם סגורים ונפתחים רק אחרי הקוד.</p><p><a style="color:#8ab4f8" href="./">חזרה למוניטור</a></p></body></html>';
+  try {
+    files = fs.readdirSync(dir)
+      .filter(n => n.toLowerCase().endsWith('.mp4'))
+      .map(n => ({ n, t: fs.statSync(path.join(dir, n)).mtimeMs,
+                   mb: Math.round(fs.statSync(path.join(dir, n)).size / 104857.6) / 10 }))
+      .sort((a, b) => b.t - a.t);
+  } catch (e) { files = []; }
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const body = files.length
+    ? files.map(f => '<div class="v"><video controls preload="metadata" src="files/' + esc(f.n) + '"></video>'
+        + '<div class="m"><b>' + esc(f.n) + '</b><span>' + f.mb + ' MB</span></div>'
+        + '<a class="b" href="files/' + esc(f.n) + '" download>הורדה</a></div>').join('')
+    : '<p class="e">עוד אין כאן סרטונים שמורים.</p>';
+  return [
+    '<!DOCTYPE html>',
+    '<html lang="he" dir="rtl">',
+    '<meta charset="utf-8">',
+    '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">',
+    '<meta name="robots" content="noindex">',
+    '<title>הסרטונים השמורים</title>',
+    '<style>',
+    'body{margin:0;background:#191714;color:#f2ede4;font:400 17px/1.6 Heebo,system-ui,sans-serif;padding:18px}',
+    'h1{font:700 22px/1.3 Heebo,system-ui,sans-serif;margin:0 0 4px}',
+    'p.s{margin:0 0 18px;color:#cdc4b6;font-size:15px}',
+    '.v{background:#221f1b;border:1px solid #3a352e;border-radius:14px;padding:12px;margin:0 0 16px}',
+    '.v video{width:100%;border-radius:10px;background:#000;display:block}',
+    '.m{display:flex;justify-content:space-between;gap:10px;margin:10px 0 0;font-size:14px;color:#cdc4b6}',
+    '.m b{font-weight:500;direction:ltr;word-break:break-all}',
+    'a.b{display:block;margin-top:10px;background:#14675a;color:#fff;text-decoration:none;border-radius:12px;padding:12px 16px;font-weight:700;text-align:center}',
+    'a.home{display:block;margin:22px 0 0;color:#9fb8b2;text-align:center;font-size:15px}',
+    'p.e{color:#cdc4b6}',
+    '</style>',
+    '<h1>הסרטונים השמורים</h1>',
+    '<p class="s">כל סרטון שנעשה כאן נשמר בדף הזה ונשאר בו. '
+      + (files.length === 1 ? 'סרטון אחד' : files.length + ' סרטונים') + '.</p>',
+    body,
+    '<a class="home" href="./">חזרה למוניטור</a>',
+    '</html>',
+  ].join('\n');
+}
+
+const NOT_FOUND = `<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>הכתובת לא נמצאה</title>
+<style>
+html,body{margin:0;height:100%}
+body{background:#191714;color:#f2ede4;font:400 17px/1.6 Heebo,system-ui,sans-serif;
+ display:flex;align-items:center;justify-content:center;padding:24px}
+.box{max-width:420px;width:100%;text-align:center}
+h1{font:700 22px/1.3 Heebo,system-ui,sans-serif;margin:0 0 10px}
+p{margin:0 0 14px;color:#cdc4b6}
+code{display:block;direction:ltr;text-align:left;word-break:break-all;
+ background:#221f1b;border:1px solid #3a352e;border-radius:10px;
+ padding:10px 12px;font-size:13px;color:#a79d8e;margin:0 0 18px}
+a.b{display:block;background:#14675a;color:#fff;text-decoration:none;
+ border-radius:12px;padding:14px 18px;font-weight:700}
+a.s{display:inline-block;margin-top:14px;color:#9fb8b2;font-size:15px}
+</style>
+<div class="box">
+<h1>הכתובת הזאת לא קיימת</h1>
+<p>הקישור שנפתח מצביע על מקום שאין בו קובץ. לא נתקעת, יש דרך חזרה.</p>
+<code id="u"></code>
+<a class="b" href="${inst.basePath}">חזרה למוניטור</a>
+<a class="s" href="#" id="back">חזרה לדף הקודם</a>
+</div>
+<script>
+document.getElementById('u').textContent=location.pathname+location.search;
+document.getElementById('back').onclick=function(e){
+ e.preventDefault();
+ if(history.length>1){history.back();return;}
+ location.href='${inst.basePath}';
+};
+</script>
+</html>`;
+
+module.exports = { renderPage, build, loadDocs };
+if (require.main === module) build();
+
+

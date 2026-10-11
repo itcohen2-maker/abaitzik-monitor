@@ -1,0 +1,1 @@
+scale=900:-1,pad=1080:1920:(ow-iw)/2:560:color=0x0b0e14,drawtext=fontfile=fontb.ttf:text='המסך הראשי':fontcolor=white:fontsize=76:x=(w-text_w)/2:y=300,drawtext=fontfile=font.ttf:text='מה חדש ומה דחוף במבט אחד':fontcolor=0x9aa5b8:fontsize=40:x=(w-text_w)/2:y=415

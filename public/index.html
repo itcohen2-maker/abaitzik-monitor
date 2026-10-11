@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוניטור אבא איציק</title>
+<style>
+  :root{
+    --bg:#0f1115; --card:#171a21; --line:#252a34; --ink:#e8eaed;
+    --dim:#9aa3af; --accent:#5b8def; --ok:#3fb27f; --warn:#e0a33e;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.6 system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+  header{padding:20px 24px;border-bottom:1px solid var(--line);
+    display:flex;flex-wrap:wrap;gap:12px;align-items:baseline}
+  h1{margin:0;font-size:20px;font-weight:650}
+  .muted{color:var(--dim);font-size:13px}
+  main{padding:24px;max-width:1100px;margin:0 auto}
+  .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));margin-bottom:26px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .card h3{margin:0 0 10px;font-size:13px;font-weight:600;color:var(--dim);
+    letter-spacing:.02em}
+  .big{font-size:30px;font-weight:680;line-height:1.1}
+  .row{display:flex;justify-content:space-between;font-size:13px;color:var(--dim);padding:3px 0}
+  .row b{color:var(--ink);font-weight:600}
+  section{margin-bottom:30px}
+  section>h2{font-size:16px;margin:0 0 12px;font-weight:640}
+  .item{background:var(--card);border:1px solid var(--line);border-radius:10px;
+    padding:13px 15px;margin-bottom:9px}
+  .item .meta{font-size:12px;color:var(--dim);margin-bottom:5px;
+    display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+  .tag{background:#1e2430;border:1px solid var(--line);border-radius:999px;
+    padding:1px 9px;font-size:11px}
+  .txt{white-space:pre-wrap;word-break:break-word}
+  .reply{margin-top:7px;padding-top:7px;border-top:1px dashed var(--line);
+    color:var(--ok);font-size:14px}
+  form{display:flex;gap:9px;flex-wrap:wrap}
+  textarea{flex:1;min-width:260px;min-height:74px;background:var(--card);
+    color:var(--ink);border:1px solid var(--line);border-radius:10px;
+    padding:11px 13px;font:inherit;resize:vertical}
+  button{background:var(--accent);color:#fff;border:0;border-radius:10px;
+    padding:11px 22px;font:inherit;font-weight:600;cursor:pointer;align-self:flex-start}
+  button:hover{filter:brightness(1.08)}
+  .cmd{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--accent);
+    border-radius:10px;padding:11px 14px;margin-bottom:8px}
+  .banner{background:#2a2113;border:1px solid #5c4a1e;color:#f0cd8a;
+    border-radius:10px;padding:12px 15px;margin-bottom:20px;font-size:14px}
+  .empty{color:var(--dim);font-size:14px;padding:14px 0}
+</style>
+</head>
+<body>
+<header>
+  <h1>מוניטור אבא איציק</h1>
+  <span class="muted" id="updated"></span>
+</header>
+<main>
+  <div id="quiet"></div>
+  <div class="grid" id="stats"></div>
+
+  <section>
+    <h2>פקודה חדשה</h2>
+    <form id="cmdForm">
+      <textarea id="cmdText" placeholder="מה לעשות בסבב הבא. למשל: תתרכז בטיקטוק, או תעבור על התגובות הישנות של הריל מהאשפוז"></textarea>
+      <button type="submit">שמירה</button>
+    </form>
+    <div id="cmds" style="margin-top:14px"></div>
+  </section>
+
+  <section>
+    <h2>ממתין לתשובה <span class="muted" id="pendCount"></span></h2>
+    <div id="pending"></div>
+  </section>
+
+  <section>
+    <h2>נענה לאחרונה</h2>
+    <div id="recent"></div>
+  </section>
+</main>
+
+<script>
+const NET = {facebook:'פייסבוק', instagram:'אינסטגרם', tiktok:'טיקטוק', youtube:'יוטיוב'};
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function when(iso){
+  if(!iso) return '';
+  const d=new Date(iso), diff=(Date.now()-d)/1000;
+  if(diff<60) return 'עכשיו';
+  if(diff<3600) return Math.floor(diff/60)+' דקות';
+  if(diff<86400) return Math.floor(diff/3600)+' שעות';
+  return Math.floor(diff/86400)+' ימים';
+}
+
+function itemHtml(i, showReply){
+  return '<div class="item"><div class="meta">'
+    + '<span class="tag">'+esc(NET[i.network]||i.network)+'</span>'
+    + '<b>'+esc(i.author||'ללא שם')+'</b>'
+    + (i.postTitle?'<span>'+esc(i.postTitle)+'</span>':'')
+    + '<span>'+when(i.repliedAt||i.seenAt)+'</span>'
+    + '</div><div class="txt">'+esc(i.text)+'</div>'
+    + (showReply&&i.replyText?'<div class="reply">'+esc(i.replyText)+'</div>':'')
+    + '</div>';
+}
+
+async function refresh(){
+  const s = await (await fetch('/api/state')).json();
+  document.getElementById('updated').textContent =
+    s.updatedAt ? 'עודכן לפני '+when(s.updatedAt) : 'אין נתונים עדיין';
+
+  document.getElementById('quiet').innerHTML = s.quietHours
+    ? '<div class="banner">שעות שקט. המערכת לא פועלת בין 23:00 ל־07:00 כדי לשמור על קצב אנושי.</div>' : '';
+
+  let g = '<div class="card"><h3>ממתין לתשובה</h3><div class="big">'+s.counts.pending+'</div></div>'
+        + '<div class="card"><h3>נענה סך הכל</h3><div class="big">'+s.counts.replied+'</div></div>';
+  for(const [net,d] of Object.entries(s.byNetwork)){
+    if(!d.total && !d.repliesToday) continue;
+    g += '<div class="card"><h3>'+esc(NET[net]||net)+'</h3>'
+      + '<div class="row"><span>ממתין</span><b>'+d.pending+'</b></div>'
+      + '<div class="row"><span>נענה היום</span><b>'+d.repliesToday+'</b></div>'
+      + '<div class="row"><span>נשאר במכסה</span><b>'+(d.repliesLeft===null?'∞':d.repliesLeft)+'</b></div>'
+      + '</div>';
+  }
+  document.getElementById('stats').innerHTML = g;
+
+  document.getElementById('cmds').innerHTML = s.commands.length
+    ? s.commands.map(c=>'<div class="cmd"><div class="muted">'+when(c.at)+'</div>'+esc(c.text)+'</div>').join('')
+    : '<div class="empty">אין פקודות פתוחות.</div>';
+
+  document.getElementById('pendCount').textContent = s.counts.pending ? '('+s.counts.pending+')' : '';
+  document.getElementById('pending').innerHTML = s.pending.length
+    ? s.pending.map(i=>itemHtml(i,false)).join('')
+    : '<div class="empty">התור ריק. כל מי שפנה קיבל תשובה.</div>';
+
+  document.getElementById('recent').innerHTML = s.recent.length
+    ? s.recent.map(i=>itemHtml(i,true)).join('')
+    : '<div class="empty">עוד לא נשלחו תשובות.</div>';
+}
+
+document.getElementById('cmdForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const el = document.getElementById('cmdText');
+  const text = el.value.trim();
+  if(!text) return;
+  await fetch('/api/command',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({text})});
+  el.value='';
+  refresh();
+});
+
+refresh();
+setInterval(refresh, 20000);
+</script>
+</body>
+</html>
