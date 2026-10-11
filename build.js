@@ -15484,31 +15484,21 @@ function recStart(){
    micStuck('dead');return;
   }
   /*
-    11.10, 13:40, Itzik's screenshot: the stuck card came up on his real phone.
-    track.muted on iOS Safari is not a reliable signal; it can read true for a
-    moment while sound still flows. So muted alone no longer condemns a take.
-    What counts is data: a second in, the recorder is asked for what it has
-    (requestData) and the bytes that come back are counted. Only a take that
-    is muted AND has produced no bytes, twice, about 2.4 and 4.9 seconds in,
-    is stuck. A take that shows any bytes proves itself and returns the one
-    automatic retry. The numbers are kept in recDiag for the voice message.
+    11.10, 15:03, Itzik: every recording since the 13:40 change came out exactly
+    two seconds long. The probe asked the recorder for its data mid-take
+    (requestData) and on his iPhone the recorder hands over that first piece
+    and never anything after it, so the rest of what he said was lost. Nothing
+    touches the recorder during a take any more. Muted is only noted for the
+    voice message; a take that truly caught nothing is caught when it ends
+    (an empty recording opens the stuck card).
   */
   recBytes=0;recDiag={m0:track.muted?1:0};
-  (function probe(n){
+  [2000,4500].forEach(function(ms,i){
    setTimeout(function(){
-    if(recStream!==st||document.hidden||!rec||rec!==recMine)return;
-    var can=false;
-    try{if(rec.state==='recording'&&rec.requestData){rec.requestData();can=true;}}catch(e){}
-    setTimeout(function(){
-     if(recStream!==st||document.hidden||!rec||rec!==recMine)return;
-     recDiag['b'+n]=recBytes;recDiag['m'+n]=track.muted?1:0;
-     if(recBytes>0){micStuckRetried=false;return;}
-     if(!can||!track.muted)return; // no proof either way: the end of the take checks it
-     if(n<2)return probe(n+1);
-     recAbort=true;recMuted=true;recStop();
-    },400);
-   },n===1?2000:2500);
-  })(1);
+    if(recStream!==st||!rec||rec!==recMine)return;
+    recDiag['m'+(i+1)]=track.muted?1:0;
+   },ms);
+  });
   var mt=recPickType();
   try{rec=mt?new MediaRecorder(st,{mimeType:mt}):new MediaRecorder(st);}
   catch(e){rec=new MediaRecorder(st);}
@@ -15681,7 +15671,7 @@ function micAppMode(){
 function micDiagLine(){
  var out=[];
  try{var st=JSON.parse(localStorage.getItem('micDiag')||'null');if(st){out.push('נתקע קודם: '+st.why+' '+st.d);localStorage.removeItem('micDiag');}}catch(e){}
- var d=recDiag||{},odd=d.m0||d.m1||d.m2||d.b1===0||d.b2===0;
+ var d=recDiag||{},odd=d.m0||d.m1||d.m2;
  if(odd)out.push('הקלטה: '+diagText(d));
  return out.length?'\\nאבחון מיקרופון: '+out.join(' | '):'';
 }

@@ -596,7 +596,9 @@ test('a stuck microphone ends in one sheet with steps, not a reload', () => {
   const ended = body.slice(body.indexOf('track.onended=function(){'), body.indexOf('track.onended=function(){') + 300);
   assert.ok(ended.includes("micStuck('ended');"), 'and so does a track that dies');
   assert.ok(body.includes("micStuck('hang');"), 'a permission call that never answers has a deadline');
-  assert.ok(body.includes("recAbort=true;recMuted=true;recStop();"), 'a muted track is caught at the start');
+  // 11.10 15:03: asking the iPhone recorder for data mid take cut every
+  // recording at two seconds. Nothing may poke the recorder while it records.
+  assert.ok(!/rec\.requestData\(\)/.test(body), 'no requestData while a take runs');
   assert.ok(html.includes('function micSheet(denied){'), 'the sheet exists');
   assert.ok(html.includes("document.addEventListener('visibilitychange',micWake);"), 'coming back lets go of what was held');
 });
@@ -2183,7 +2185,7 @@ test('a microphone that keeps coming back muted gives up after one retry', () =>
   class MR {
     constructor() { this.state = 'inactive'; }
     start() { this.state = 'recording'; starts++; }
-    requestData() {}
+    requestData() { ctx.__pokes++; }
     stop() { this.state = 'inactive'; setTimeout_(() => this.onstop && this.onstop(), 0); }
   }
   const el = () => ({ style: {}, classList: { add() {}, remove() {} }, setAttribute() {}, set textContent(v) {}, get textContent() { return ''; }, remove() {}, appendChild() {}, querySelector() { return null; } });
@@ -2201,7 +2203,7 @@ test('a microphone that keeps coming back muted gives up after one retry', () =>
   };
   ctx.micSheet = undefined;
   vm.createContext(ctx);
-  vm.runInContext(src.replace('function micSheet(denied){', 'function micSheet(denied){ __sheets++; return; ').replace(/var rec=null;?/, ''), Object.assign(ctx, { __sheets: 0 }));
+  vm.runInContext(src.replace('function micSheet(denied){', 'function micSheet(denied){ __sheets++; return; ').replace(/var rec=null;?/, ''), Object.assign(ctx, { __sheets: 0, __pokes: 0 }));
   const run = (code) => vm.runInContext(code, ctx);
   const flush = () => new Promise((r) => setImmediate(r));
   return (async () => {
@@ -2209,14 +2211,11 @@ test('a microphone that keeps coming back muted gives up after one retry', () =>
     run('toggleRec = typeof toggleRec==="undefined"?function(){micStuckRetried=false;recRetried=false;recStart();}:toggleRec');
     run('toggleRec()');
     for (let i = 0; i < 40; i++) { await flush(); advance(500); }
-    assert.ok(starts <= 2, 'started ' + starts + ' times with a track that stays muted');
-    assert.equal(ctx.__sheets, 1, 'and then the one sheet with steps');
-    // a healthy mic proves itself and gets its retry back
-    starts = 0; ctx.__track = Object.assign(mkTrack(), { muted: false });
-    run('toggleRec()');
-    for (let i = 0; i < 10; i++) { await flush(); advance(500); }
-    assert.equal(starts, 1);
-    assert.equal(run('micStuckRetried'), false);
+    // 11.10 15:03: muted on iOS says nothing; the take is left alone and
+    // only an empty recording, at its end, counts as stuck.
+    assert.equal(starts, 1, 'a muted track is not stopped and restarted mid take');
+    assert.equal(ctx.__sheets, 0, 'and no stuck sheet while he talks');
+    assert.equal(ctx.__pokes, 0, 'the recorder is never asked for data mid take');
   })();
 });
 // ---- stop must always work ----
@@ -2339,26 +2338,24 @@ test('the story tile sits after the reels tile, opens the same viewer, and its f
   const root = path.join(__dirname, '..');
   assert.ok(fs.existsSync(path.join(root, 'data', 'files-private', m[1])) || fs.existsSync(path.join(root, 'docs', 'files', m[1])), 'the file is on the server');
 });
-test('muted but with sound flowing is not stuck; muted with no data is', async () => {
-  for (const flows of [true, false]) {
-    const h = stopHarness((recs) => class {
-      constructor() { this.state = 'inactive'; recs.push(this); }
-      start() { this.state = 'recording'; }
-      requestData() { if (flows) this.ondataavailable({ data: { size: 4000 } }); }
-      stop() { this.state = 'inactive'; this.onstop(); }
-    });
-    h.run('recStart()');
-    await h.flush(); await h.flush();
-    h.tracks[0].muted = true; // iOS reports muted either way
-    for (let i = 0; i < 14; i++) { await h.flush(); h.advance(500); }
-    if (flows) {
-      assert.equal(h.run('!!rec'), true, 'still recording');
-      assert.equal(h.ctx.__sheets, 0);
-      assert.equal(h.run('micStuckRetried'), false);
-    } else {
-      assert.ok(h.run('recMuted') === false && (h.recs.length >= 2 || h.ctx.__sheets === 1), 'no data and muted: aborted');
-    }
-  }
+test('a muted take keeps recording to the end and is never cut early', async () => {
+  // 11.10 15:03: every voice message came out exactly two seconds long,
+  // because the recorder was asked for data two seconds in.
+  let pokes = 0;
+  const h = stopHarness((recs) => class {
+    constructor() { this.state = 'inactive'; recs.push(this); }
+    start() { this.state = 'recording'; }
+    requestData() { pokes++; }
+    stop() { this.state = 'inactive'; this.onstop(); }
+  });
+  h.run('recStart()');
+  await h.flush(); await h.flush();
+  h.tracks[0].muted = true;
+  for (let i = 0; i < 30; i++) { await h.flush(); h.advance(500); }
+  assert.equal(h.run('!!rec'), true, 'still recording after 15 seconds');
+  assert.equal(h.ctx.__sheets, 0);
+  assert.equal(pokes, 0, 'nothing asked the recorder for data mid take');
+  assert.equal(h.run('recDiag.m1'), 1, 'muted is still noted for the voice message');
 });
 test('"try again" releases the old tracks, waits, and the card closes when a take starts', () => {
   const html = renderPage(fixture({}));
