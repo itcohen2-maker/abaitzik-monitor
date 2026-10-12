@@ -11516,9 +11516,12 @@ function renderSent(){
 function myCode(){
  try{return localStorage.getItem('monitorCode')||'';}catch(e){return '';}
 }
-// What a send is signed with: the code saved on this device, else the one in the
-// sealed payload (12.10). The device lock keeps reading myCode() alone.
-function sendCode(){return myCode()||secret('ownerCode');}
+// What a send is signed with: the code in the sealed payload first, the one the
+// server checks against, and the code saved on this device only where the
+// payload has none (12.10). The device used it first and on Itzik's phone it was
+// an old lock code, 1800, so a whole afternoon of sends was held. The device lock
+// keeps reading myCode() alone.
+function sendCode(){return secret('ownerCode')||myCode();}
 /*
   One lock on a customer's copy. 10.10, from the reviewer, taken by Itzik:
   "שתי נעילות שונות באותו דף". She typed the five words on the first screen,
