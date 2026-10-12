@@ -74,6 +74,15 @@
   tasks of today plus earlier unticked ones (`data/tasks/tasks`, `{"id","day":"YYYY-MM-DD","text","n"}`), and tomorrow's
   appointments. A message "משימה להיום, <day>: <text>" comes from its add box: write it as a task file for that day.
 
+- **"העסק שלי", the small business CRM (12.10.2026), only when `instance.json` has `"biz": true`:** a message (text or
+  voice) about a lead, a customer, a payment received or an expense is written as one record file in `data/biz/biz/`,
+  named `biz-<yyyymmddhhmmss>-<4 random>.json`, with the fields `id`, `kind` (lead, customer, income, expense), `name`,
+  `phone`, `status` (חדש, בשיחה, הצעה, נסגר, אבד), `amount` (a number, shekels), `note`, `next`, `nextAt` (ISO date or ""),
+  `at` and `updatedAt`. If a record with the same name or phone already exists, update that file instead of making a
+  second one, and set `updatedAt`. Then `node push.js`. A message titled "עדכון עסק" is an update to the record named in
+  it. A question like "מה הכי דחוף" is answered from `require('./lib/biz.js').summary(load(require('./lib/instance.js').dataPath))` and the
+  records themselves: names and numbers, the way an advisor would, not a general statement.
+
 - **Hebrew read aloud, Phonikud (11.10.2026):** `node say.js "<text>" [name]` makes an mp3 in the private files and
   prints `files/<name>.mp3`; put that link in the answer and the monitor plays it. A message "תקריא לי: <text>" asks
   for exactly this. Installed in `/home/monitor/tts` (venv, models, `say.py`), about 9 seconds and 900MB RAM per run,

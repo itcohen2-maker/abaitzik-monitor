@@ -129,6 +129,23 @@ function usageBlock() {
   } catch (e) { return '\n\nצריכה: אין סיכום (' + e.message.slice(0, 60) + ').'; }
 }
 
+/*
+  "העסק שלי" (12.10): only for an instance with "biz": true. The block is the
+  one line that matters most (the urgent sentence) and four numbers. Never throws.
+*/
+function bizBlock() {
+  try {
+    if (!inst.biz) return '';
+    const biz = require('./lib/biz.js');
+    const recs = biz.load(inst.dataPath);
+    if (!recs.length) return '';
+    const s = biz.summary(recs, Date.now());
+    const n = v => Math.round(v).toLocaleString('he-IL');
+    return '\n\nהעסק שלי: ' + s.urgent + '\nלידים פתוחים: ' + s.counts.lead + ', ציון: ' + s.score +
+      ', הכנסות החודש: ₪' + n(s.monthIncome) + ', הוצאות: ₪' + n(s.monthExpense) + '.';
+  } catch (e) { return ''; }
+}
+
 async function main() {
   const m = mail();
   const chat = docs('chat');
@@ -138,7 +155,7 @@ async function main() {
   const doc = {
     at: new Date().toISOString(),
     title: 'דוח בוקר ' + day + ': ' + r.title,
-    body: r.body + usageBlock() + (m.error ? '\n\nהתיבה לא נקראה הבוקר (' + m.error + '), הדוח בלי המיילים.' : ''),
+    body: r.body + usageBlock() + bizBlock() + (m.error ? '\n\nהתיבה לא נקראה הבוקר (' + m.error + '), הדוח בלי המיילים.' : ''),
   };
   if (DRY) { console.log(doc.title + '\n\n' + doc.body); return; }
   const dir = path.join(inst.dataPath, 'reports', 'reports');

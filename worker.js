@@ -471,6 +471,41 @@ function logUsage(raw, list) {
   } catch (e) { return null; }
 }
 
+/*
+  12.10, Itzik: "גם עם רינת ככה". The rule since 11.10 was a line in the prompt:
+  plan in Opus, hand the legwork to a Haiku agent. The sessions ignored it. Of
+  Rinat's last 16 sessions none used Haiku, and of his own 60, one. So on a
+  customer's monitor the split is no longer the session's choice: a short Opus
+  run that may only read writes the plan, and the session that does the work
+  runs on Haiku with that plan under the prompt. A planner that fails or comes
+  back empty does not cost her the answer: the work still runs, on Haiku,
+  without a plan. Itzik's own monitor keeps one Opus session for now (null).
+*/
+const EXEC_MODEL = process.env.MONITOR_EXEC_MODEL || 'claude-haiku-5-5';
+function planFirst(text, list) {
+  if (inst.name === 'abaitzik' || process.platform === 'win32' || process.env.MONITOR_ONE_STAGE) return null;
+  const ask = text + '\n\n' + [
+    '=== שלב תכנון בלבד ===',
+    'אתה המתכנן. מותר לך רק לקרוא קבצים (Read, Grep, Glob). אל תכתוב, אל תריץ ואל תענה.',
+    'מי שיבצע אחריך הוא מודל זול ומהיר, שיקבל את ההודעות למעלה ואת התוכנית שלך.',
+    'כתוב לו תוכנית מדויקת וקצרה: אילו קבצים, אילו פקודות בדיוק, מה לבדוק בסוף,',
+    'ואם צריך לענות, את נוסח התשובה המלא בעברית כמו שהוא צריך להיכתב.',
+    'אם זו רק תשובה קצרה, כתוב רק את נוסח התשובה.',
+  ].join('\n');
+  const args = ['-p', '--model', process.env.MONITOR_PLAN_MODEL || 'claude-opus-5-5', '--output-format', 'json',
+    '--allowedTools', 'Read', 'Grep', 'Glob', '--max-turns', '15'];
+  if (!ownAccount()) args.push('--max-budget-usd', '0.8');
+  let out = '';
+  try {
+    out = require('child_process').execFileSync('claude', args,
+      { cwd: HERE, input: ask, encoding: 'utf8', timeout: 4 * 60 * 1000, maxBuffer: 16 << 20 });
+  } catch (e) { out = String(e.stdout || ''); say('!! התכנון נכשל, הביצוע ממשיך בלי תוכנית: ' + String(e.message).slice(0, 120)); }
+  const d = logUsage(out, list);
+  const p = d && typeof d.result === 'string' ? d.result.trim() : '';
+  say('תוכנית מאופוס: ' + (p ? p.length + ' תווים' : 'אין') + '. הביצוע ב ' + EXEC_MODEL);
+  return p ? '=== התוכנית מהמתכנן (אופוס). בצע אותה עד הסוף, כולל שלב ג ===\n' + p : '';
+}
+
 function run(list) {
   const text = prompt(list);
   say('מפעיל סשן על ' + list.length + ' הודעות: ' + list.map((m) => m.file).join(', '));
@@ -506,13 +541,16 @@ function run(list) {
     the PC, which is why the PC worker keeps running too.
   */
   // 11.10: the planner model, and JSON out so every session's usage is logged (logUsage).
-  const args = ['-p', '--dangerously-skip-permissions', '--model', process.env.MONITOR_PLAN_MODEL || 'claude-opus-5-5', '--output-format', 'json'];
+  // 12.10: on a customer's monitor Opus only plans, and the session runs on Haiku (planFirst).
+  const plan = planFirst(text, list);
+  const model = plan === null ? (process.env.MONITOR_PLAN_MODEL || 'claude-opus-5-5') : EXEC_MODEL;
+  const args = ['-p', '--dangerously-skip-permissions', '--model', model, '--output-format', 'json'];
   if (process.platform === 'win32') args.splice(1, 0, '--chrome');
   // 12.10: one customer session can not run away either (see overBudget).
   if (inst.name !== 'abaitzik' && !ownAccount()) args.push('--max-budget-usd', String(SESSION_USD));
   const child = spawn('claude', args,
     { cwd: HERE, shell: true, windowsHide: true });
-  child.stdin.end(text, 'utf8');
+  child.stdin.end(plan ? text + '\n\n' + plan : text, 'utf8');
   /*
     The session, not the thing that started it.
 

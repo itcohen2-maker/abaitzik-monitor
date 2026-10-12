@@ -736,10 +736,36 @@ function build() {
       payload.shipments = shipRows;
     } catch (e) { console.error('shipments: ' + e.message); shipRows = null; }
   }
+  /*
+    12.10, "העסק שלי": the small business records (leads, customers, income,
+    expenses). Only an instance with biz: true gets them. lib/biz.js is written
+    beside this file; if it is missing or throws, the build goes on without it.
+    The records are sealed like the shipments and fetched on open, so the head
+    carries only the summary (names included, so it sits behind the gate too).
+  */
+  let bizOn = false;
+  if (inst.biz) {
+    try {
+      const biz = require('./lib/biz.js');
+      const recs = biz.load(inst.dataPath) || [];
+      const BIZ_FIELDS = ['id', 'kind', 'name', 'phone', 'status', 'amount', 'note', 'next', 'nextAt', 'at', 'updatedAt'];
+      const rows = recs.map((r) => {
+        const o = {};
+        BIZ_FIELDS.forEach((f) => { if (r && r[f] != null) o[f] = r[f]; });
+        return o;
+      }).sort((a, b) => String(b.updatedAt || b.at || '').localeCompare(String(a.updatedAt || a.at || '')));
+      const sum = biz.summary(recs, Date.now());
+      // Both or neither: records without the summary would reach the head unsealed.
+      payload.biz = rows;
+      payload.bizSum = sum;
+      bizOn = true;
+    } catch (e) { console.error('biz: ' + e.message); }
+  }
   const HEADS = { chat: 150, reports: 14, codex: 20, special: 8, replies: 8,
                   improve: 4, food: 12, pegasus: 4, replied: 0, rivhit: 0, sale: 0, isra: 0,
                   drains: 40, blocklist: 12 };
   if (shipRows) HEADS.shipments = 0;
+  if (bizOn) HEADS.biz = 0;
   // A report's body is most of its weight, and only the newest few are read
   // off the card without opening the screen.
   const BODY_HEAD = 3;
@@ -1007,6 +1033,9 @@ const TENANT_TILES = {
   gIntake: ['g11', '🧭 שאלות היכרות', 'כמה לחיצות, ואציע מה עוד אפשר לבנות לך'],
   // Rinat, 12.10: the files sent to her, each with a download button.
   gFiles: ['g10', '📁 הקבצים שלי', 'מה ששלחת ומה שנשלח לך, עם הורדה'],
+  // 12.10, the small business records. A customer lists it in screens; Itzik's
+  // own copy gets the tile from the shared block after the ITZIK one (bizTile).
+  gBiz: ['g16', '💼 העסק שלי', 'לידים, לקוחות, כסף, ומה לחזור אליו'],
 };
 // With no screens chosen at intake, only the tiles that fit any work. The whole
 // catalog gave a phone only customer "connect the computer", a client follow up
@@ -1058,7 +1087,7 @@ function tenantTiles(inst) {
     + esc((l.icon ? l.icon + ' ' : '') + l.title) + '</b><small>' + esc(l.sub || 'פתיחה בלשונית חדשה') + '</small></button>').join('');
   return guides + links + ids.filter((id) => TENANT_TILES[id]).map((id) => {
     const [cls, title, sub] = TENANT_TILES[id];
-    return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' ? ' data-new="1"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
 }
 /*
@@ -2502,6 +2531,26 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .ship .sact a,.ship .sact button{flex:1;text-align:center;border:0;border-radius:10px;padding:9px 6px;font:700 14px Heebo,sans-serif;text-decoration:none;color:#fff;background:#14675a;cursor:pointer}
 .ship .sact button{background:#2e7d32}
 .ship .shipq{width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif}
+/* 12.10: העסק שלי, the small business sheet */
+.biz{display:flex;flex-direction:column;gap:8px}
+.biz .bzTop{display:flex;align-items:center;gap:12px}
+.bzScore{flex:0 0 64px;width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font:700 22px Heebo,sans-serif;text-align:center}
+.bzScore.g{background:#2e7d32}.bzScore.a{background:#ef8f00}.bzScore.r{background:#c62828}
+.bzScore.n{background:#757575;font:600 11px/1.3 Heebo,sans-serif;padding:4px}
+.bzUrg{margin:0;font:500 15px/1.45 Heebo,sans-serif}
+.bzTabs{display:flex;gap:6px}
+.bzTabs .yb{flex:1;padding:9px 4px;min-height:40px;font-size:13.5px}
+.bzTabs .yb.on{background:#16202c;color:#fff}
+.bzSec{font:700 14px Heebo,sans-serif;margin:10px 0 2px;color:#14675a}
+.bzRow{border-bottom:1px solid rgba(128,128,128,.25);padding:8px 0;font:500 14px/1.45 Heebo,sans-serif;display:flex;flex-direction:column;gap:2px}
+.bzRow b{font:700 14px Heebo,sans-serif}
+.bzRow small{opacity:.85}
+.bzRow .yb{align-self:flex-start;padding:6px 12px;min-height:36px;font-size:13px;margin-top:4px}
+.bzEd{display:flex;gap:6px;margin-top:4px}
+.bzEd[hidden]{display:none}
+.bzEd input{flex:1;min-width:0;border-radius:10px;border:1px solid #ccd;padding:9px;font:15px Heebo,sans-serif}
+.bzEd .yb{min-height:40px;padding:8px 12px}
+.bzEmpty{font:500 14px/1.5 Heebo,sans-serif;opacity:.85;margin:6px 0}
 .micSteps{margin:2px 0 6px;padding-inline-start:20px;font:500 15px/1.5 Heebo,sans-serif}
 .micMore{display:block;margin:0 0 8px;font:500 14px/1.5 Heebo,sans-serif;opacity:.85}
 /* 30.9: the short text was near invisible on the dark theme ("אני רוצה לראות
@@ -3955,6 +4004,13 @@ try{
    <svg viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>חדש</button>
  </div>
 <!--ITZIK:END-->
+  <!--
+    12.10, "העסק שלי". This sits outside both the ITZIK and the TENANT blocks, so
+    it survives cutFor for either copy. It shows when instance.json has biz: true
+    and no screens list (Itzik's copy). A customer with a screens list gets the
+    tile from tenantTiles, only when gBiz is in that list.
+  -->
+${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz"><button type="button" class="gt g16" id="gBiz" data-new="1"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>' : ''}
 <!--TENANT:BEGIN-->
   <!--
     A customer's home screen, built from his intake answers and not filtered
@@ -14361,6 +14417,108 @@ function healthSheet(){
  document.body.appendChild(w);
 }
 on('gHealth',healthSheet);
+/*
+  12.10, "העסק שלי". The records come sealed on open (data/biz.json), the summary
+  came with the head. Nothing here writes a file: a new lead, or an update to a
+  record, goes to Itzik as a message, like every other answer on this page.
+*/
+var BZ_ORDER=['חדש','בשיחה','הצעה','נסגר','אבד'];
+var BZ_KIND={lead:'ליד',customer:'לקוח',income:'הכנסה',expense:'הוצאה'};
+function bzMoney(n){return '₪'+Number(n||0).toLocaleString('he-IL');}
+function bzDays(r){var t=Date.parse(r.updatedAt||r.at||'');return isNaN(t)?-1:Math.max(0,Math.floor((Date.now()-t)/86400000));}
+function bzAgo(r){var d=bzDays(r);return d<0?'':(d===0?'עודכן היום':'עודכן לפני '+d+' ימים');}
+function bzTel(p){var d=String(p||'').replace(/[^0-9+]/g,'');return d?'<a href="tel:'+esc(d)+'">'+esc(p)+'</a>':'';}
+function bzById(id){var a=D.biz||[];for(var i=0;i<a.length;i++){if(a[i].id===id)return a[i];}return null;}
+function bzHowTo(){return '<p class="bzEmpty">כתוב או אמור בהודעה: ליד חדש, שם, טלפון ומה הוא רוצה. אני ארשום ואעקוב.</p>';}
+function bzRow(r,extra){
+ var k=BZ_KIND[r.kind]||'';
+ return '<div class="bzRow"><b>'+esc(r.name||'בלי שם')+'</b>'
+  +'<small>'+esc((k?k:'')+(r.status?(k?' · ':'')+r.status:''))+(r.amount?' · '+esc(bzMoney(r.amount)):'')+'</small>'
+  +(r.phone?'<small>'+bzTel(r.phone)+'</small>':'')
+  +(r.note?'<small>'+esc(r.note)+'</small>':'')
+  +(bzAgo(r)?'<small>'+esc(bzAgo(r))+'</small>':'')
+  +(extra||'')
+  +'<button type="button" class="yb" data-bz="edit">עדכן</button></div>';
+}
+function bizSheet(){
+ ensure('biz',function(){
+  var S=D.bizSum||null,recs=D.biz||[],tab='leads';
+  function scoreHtml(){
+   if(!S||S.score==null)return '<div class="bzScore n">אין עדיין נתונים</div>';
+   return '<div class="bzScore '+(S.score>=75?'g':S.score>=50?'a':'r')+'">'+esc(String(S.score))+'</div>';
+  }
+  function leadsHtml(){
+   var list=recs.filter(function(r){return r.kind==='lead'||r.kind==='customer';});
+   if(!list.length)return bzHowTo();
+   var groups={};
+   list.forEach(function(r){var g=BZ_ORDER.indexOf(r.status)>-1?r.status:'בלי סטטוס';(groups[g]=groups[g]||[]).push(r);});
+   return BZ_ORDER.concat(['בלי סטטוס']).filter(function(g){return groups[g];}).map(function(g){
+    return '<div class="bzSec">'+esc(g)+' ('+groups[g].length+')</div>'+groups[g].map(function(r){return bzRow(r);}).join('');
+   }).join('');
+  }
+  function moneyHtml(){
+   var ym=new Date().toLocaleDateString('sv',{timeZone:'Asia/Jerusalem'}).slice(0,7);
+   var list=recs.filter(function(r){return (r.kind==='income'||r.kind==='expense')&&String(r.at||'').slice(0,7)===ym;});
+   var inc=0,exp=0;
+   list.forEach(function(r){if(r.kind==='income')inc+=Number(r.amount)||0;else exp+=Number(r.amount)||0;});
+   if(S){inc=Number(S.monthIncome)||0;exp=Number(S.monthExpense)||0;}
+   var h='<div class="bzSec">החודש: נכנס '+esc(bzMoney(inc))+', יצא '+esc(bzMoney(exp))+'</div>';
+   if(!list.length)return h+bzHowTo();
+   return h+list.map(function(r){return bzRow(r);}).join('');
+  }
+  function dueHtml(){
+   var st=(S&&S.staleLeads)||[],du=(S&&S.due)||[];
+   if(!st.length&&!du.length)return '<p class="bzEmpty">אין כרגע מה לחזור אליו. כשיהיה, זה יופיע כאן.</p>';
+   var h='';
+   if(st.length){h+='<div class="bzSec">ליד שלא נגעו בו</div>';
+    st.forEach(function(s){var r=bzById(s.id)||{name:s.name,status:s.status,kind:'lead'};
+     h+=bzRow(r,'<small>לא נגעו בו '+esc(String(s.days))+' ימים</small>');});}
+   if(du.length){h+='<div class="bzSec">זמן לחזור</div>';
+    du.forEach(function(d){var r=bzById(d.id)||{name:d.name,kind:'lead'};
+     h+=bzRow(r,'<small>'+esc(d.next||'')+(d.nextAt?' · '+esc(d.nextAt):'')+'</small>');});}
+   return h;
+  }
+  function body(){return tab==='money'?moneyHtml():tab==='due'?dueHtml():leadsHtml();}
+  var tabs=[['leads','לידים ולקוחות'],['money','כסף החודש'],['due','צריך לחזור']];
+  var html='<div class="biz"><div class="bzTop">'+scoreHtml()+'<p class="bzUrg"><b>'+esc((S&&S.urgent)||'אין עדיין נתונים.')+'</b></p></div>'
+   +'<button type="button" class="yb yb1" data-bz="newtoggle">➕ ליד חדש</button>'
+   +'<div class="bzEd" data-bz="newbox" hidden><input id="bzNewIn" placeholder="שם, טלפון ומה הוא רוצה"><button type="button" class="yb yb2" data-bz="newsend">שלח</button></div>'
+   +'<div class="bzTabs">'+tabs.map(function(t){return '<button type="button" class="yb'+(t[0]===tab?' on':'')+'" data-bz="tab" data-t="'+t[0]+'">'+t[1]+'</button>';}).join('')+'</div>'
+   +'<div id="bzBody">'+body()+'</div></div>';
+  shipOpen('bizSheet','💼 העסק שלי',html,function(el){
+   el.addEventListener('click',function(e){
+    var t=e.target.closest?e.target.closest('[data-bz]'):null;if(!t)return;
+    var a=t.getAttribute('data-bz');
+    if(a==='tab'){
+     tab=t.getAttribute('data-t');
+     el.querySelectorAll('[data-bz="tab"]').forEach(function(b){b.classList.toggle('on',b===t);});
+     el.querySelector('#bzBody').innerHTML=body();return;
+    }
+    if(a==='newtoggle'){var nb=el.querySelector('[data-bz="newbox"]');nb.hidden=!nb.hidden;if(!nb.hidden)el.querySelector('#bzNewIn').focus();return;}
+    if(a==='newsend'){
+     var inp=el.querySelector('#bzNewIn'),v=inp.value.trim();
+     if(!v){inp.focus();return;}
+     sendText('ליד חדש',v,'ליד חדש').then(function(){inp.value='';el.querySelector('[data-bz="newbox"]').hidden=true;toast('נרשם, אני עוקב אחריו.');})
+      .catch(function(){toast('לא נשלח, נסה שוב מאוחר יותר.');});
+     return;
+    }
+    if(a==='edit'){
+     var row=t.closest('.bzRow');if(!row||row.querySelector('.bzEd'))return;
+     row.insertAdjacentHTML('beforeend','<div class="bzEd"><input placeholder="מה השתנה? לדוגמה: סגר, או קבע לשלישי"><button type="button" class="yb yb2" data-bz="send">שלח</button></div>');
+     row.querySelector('.bzEd input').focus();return;
+    }
+    if(a==='send'){
+     var r2=t.closest('.bzRow'),box=t.parentNode,inp2=box.querySelector('input'),txt=inp2.value.trim();
+     if(!txt){inp2.focus();return;}
+     var nm=r2.querySelector('b').textContent;
+     sendText('עדכון עסק',nm+': '+txt,'עדכון עסק').then(function(){box.remove();toast('נשלח, אני מעדכן את הרשומה.');})
+      .catch(function(){toast('לא נשלח, נסה שוב מאוחר יותר.');});
+    }
+   });
+  });
+ });
+}
+on('gBiz',bizSheet);
 // The same list a new client sees on the first visit. Every line is written as
 // his week, not as a feature: he recognises the problem before he understands
 // the screen. What he taps becomes a request in my inbox.
