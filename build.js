@@ -797,6 +797,14 @@ function build() {
       // The rotation window is the listener's business; the page only ever
       // sends on the current topics.
       for (const f of Object.keys(k)) if (/Old(Until)?$/.test(f)) delete k[f];
+      /*
+        12.10: his messages kept arriving held. The code lives in localStorage,
+        and the home screen icon on the iPhone has a storage of its own, so a
+        phone that opened the gate still sent "קוד " with nothing after it. The
+        code now rides in the sealed payload beside the topics it guards: who
+        opened the gate is the owner, and the page signs with it by itself.
+      */
+      try { const oc = fs.readFileSync(path.join(inst.dataPath, 'owner-code.txt'), 'utf8').trim(); if (/^[0-9]{3,8}$/.test(oc)) k.ownerCode = oc; } catch (e) {}
       return k;
     } catch (e) {
       console.warn('אין data/keys.json. הדף ייבנה בלי ערוצי שליחה.');
@@ -5428,7 +5436,7 @@ function ntfyText(kind, text, gid) {
   method: 'POST', headers: { Title: 'monitor' + (gid ? ' ' + gid + ' cap' : ''), 'X-Tags': 'memo' },
   // The page is emitted from a template literal, so a backslash escape here
   // would be eaten at build time. The newline is built from its code point.
-  body: [kind, text, '', 'קוד ' + myCode()].join(String.fromCharCode(10))
+  body: [kind, text, '', 'קוד ' + sendCode()].join(String.fromCharCode(10))
  }).then(function (r) { if (!r.ok) throw new Error('ntfy'); return 'ok'; });
 }
 // Returns 'ok' when the primary channel carried it and 'backup' when the
@@ -5439,7 +5447,7 @@ function sendText(subject, text, kind) {
   return fetch('https://formsubmit.co/ajax/' + MAILBOX(), {
    method: 'POST',
    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-   body: JSON.stringify({ _subject: subject, _template: 'table', 'הודעה': text, 'קוד': myCode() })
+   body: JSON.stringify({ _subject: subject, _template: 'table', 'הודעה': text, 'קוד': sendCode() })
   }).then(function (r) {
    if (!r.ok) throw new Error('quota');
    return 'backup';
@@ -5659,7 +5667,7 @@ function sendFiles(list, note) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify({ _subject: 'קובץ מהמוניטור', _template: 'table',
-      'הודעה': note + ' (הקובץ עצמו נשלח בערוץ הקבצים)', 'קוד': myCode() })
+      'הודעה': note + ' (הקובץ עצמו נשלח בערוץ הקבצים)', 'קוד': sendCode() })
    }).then(function (r) { if (!r.ok) throw new Error('quota'); return 'backup'; });
   });
  }).then(function (how) {
@@ -5727,7 +5735,7 @@ function upCall(path,opt){
  opt=opt||{};
  // 11.10: a customer's copy has no personal code (one lock, the words); it
  // signs uploads with upKey from its sealed keys.json instead.
- var h={'X-Monitor-Code':myCode()||secret('upKey')};
+ var h={'X-Monitor-Code':sendCode()||secret('upKey')};
  if(opt.json)h['Content-Type']='application/json';
  return fetch(UPURL+path,{method:opt.method||'GET',headers:h,body:opt.body}).then(function(r){
   return r.json().catch(function(){return {};}).then(function(b){return {status:r.status,body:b||{}};});
@@ -11498,6 +11506,9 @@ function renderSent(){
 function myCode(){
  try{return localStorage.getItem('monitorCode')||'';}catch(e){return '';}
 }
+// What a send is signed with: the code saved on this device, else the one in the
+// sealed payload (12.10). The device lock keeps reading myCode() alone.
+function sendCode(){return myCode()||secret('ownerCode');}
 /*
   One lock on a customer's copy. 10.10, from the reviewer, taken by Itzik:
   "שתי נעילות שונות באותו דף". She typed the five words on the first screen,
@@ -14333,7 +14344,7 @@ function notesSend(keep){
  var sig=nsHash(JSON.stringify(body)),last='';
  try{last=localStorage.getItem('notesSyncSig')||'';}catch(e){}
  if(sig===last)return;
- body.at=new Date().toISOString();body.code=myCode();
+ body.at=new Date().toISOString();body.code=sendCode();
  fetch('https://ntfy.sh/'+NTFYIN()+'?filename=notes-sync.json',
   {method:'PUT',headers:{Title:'notes-sync'},body:JSON.stringify(body),keepalive:!!keep})
   .then(function(r){if(r.ok)try{localStorage.setItem('notesSyncSig',sig);}catch(e){}},function(){});
