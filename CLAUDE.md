@@ -90,3 +90,7 @@
 
 - **His son's name is written איליי** (Itzik, 25.9 and again 12.10.2026): never אילי, עילאי or אלי, in any
   answer, mail or document, server or PC.
+
+- **"⏰ שעון מעורר" (12.10.2026):** the home tile opens the iPhone Clock app on the alarms tab, or sends the message
+  "שעון מעורר HH:MM[: text]". For that message run `node alarm.js "HH:MM" "<text or שעון מעורר>"` (Israel time, a time
+  already passed means tomorrow; ntfy rings it at priority 5), add it to `data/appts` only if he asks, and answer one line.

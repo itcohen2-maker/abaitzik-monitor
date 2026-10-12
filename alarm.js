@@ -3,6 +3,8 @@
 // itself, so this does not depend on my session still being alive at 1am.
 //
 // Usage: node alarm.js "HH:MM" "message"
+// The server runs in UTC; the time he writes is Israel time.
+if (!process.env.TZ) process.env.TZ = 'Asia/Jerusalem';
 const fs = require('fs');
 const path = require('path');
 const https = require('https');

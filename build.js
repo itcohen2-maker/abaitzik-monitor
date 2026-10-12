@@ -2440,6 +2440,8 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .gMed{background:linear-gradient(150deg,#4fb3a9,#123a4a)}
 .gInv{background:linear-gradient(150deg,#d9a441,#3a2a12)}
 .gShop{background:linear-gradient(150deg,#3aa55d,#1f6f8b)}
+.gAlarm{background:linear-gradient(150deg,#e0a030,#5a2a0a)}
+#alTime{flex:0 0 96px}
 .gStoryArc{background:linear-gradient(150deg,#d6249f,#285aeb)}
 .gMyDay{background:linear-gradient(150deg,#f0a63a,#9c3d12)}
 .tdSec{font:700 13px Heebo,sans-serif;margin-top:6px;opacity:.85}
@@ -3895,6 +3897,11 @@ try{
   <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
   <button type="button" class="gt gOcc" id="gOcc"><b>🩺 מרפאה תעסוקתית</b><small>מכבי רמות. טלפון א עד ה 08:00 עד 11:00</small></button>
   <button type="button" class="gt gShop" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
+  <!--
+    12.10. Itzik: "a shortcut to the alarm clock". Opens the iPhone Clock app on
+    the alarms tab, or sets a loud monitor push for a time he picks.
+  -->
+  <button type="button" class="gt gAlarm" id="gAlarm" data-new="1"><b>⏰ שעון מעורר</b><small>השעון של האייפון, או צלצול מהמוניטור</small></button>
   <button type="button" class="gt gStoryArc" id="gStoryArc" data-new="1"><b>📸 הסטוריז שלי</b><small>הארכיון באינסטגרם: גם סטורי שכבר ירד</small></button>
   <!--
     איציק, 28.9, בהקלטה: "תסיר את כפתור תוכניות תוכן". הכפתור ירד ממסך הבית.
@@ -13833,6 +13840,36 @@ function todaySheet(){
  };
 }
 on('gMyDay',todaySheet);
+function alarmSheet(){
+ var old=document.getElementById('alarmSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='alarmSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','שעון מעורר');
+ w.innerHTML='<div class="ycard"><b>⏰ שעון מעורר</b>'
+  +'<button type="button" class="yb yb1" id="alClock">📱 לפתוח את השעון המעורר באייפון</button>'
+  +'<div class="tdSec">או צלצול מהמוניטור</div>'
+  +'<form class="tdAdd" id="alForm"><input id="alTime" type="time" value="07:00" required><input id="alText" placeholder="למה? למשל: לקום לצלם" autocomplete="off"><button type="submit">לכוון</button></form><small id="alSaid"></small>'
+  +'<button type="button" class="yb yx" id="alClose">סגירה</button></div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w||e.target.id==='alClose')return close();
+  if(e.target.id==='alClock'){close();location.href='clock-alarm://';}
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+ document.getElementById('alForm').onsubmit=function(e){
+  e.preventDefault();
+  var tm=document.getElementById('alTime').value,tx=document.getElementById('alText').value.trim(),said=document.getElementById('alSaid');
+  if(!/^\d\d:\d\d$/.test(tm))return;
+  said.textContent='שולח.';
+  sendText('שעון מעורר','שעון מעורר '+tm+(tx?': '+tx:''),'תזכורת').then(function(){
+   said.textContent='נשלח. הצלצול יגיע בהתראה ב '+tm+'.';
+   markSent('text');renderSent();renderThread();
+  }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';});
+ };
+}
+on('gAlarm',alarmSheet);
 boot('today',todayTile);
 
 /*
