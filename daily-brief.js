@@ -110,6 +110,24 @@ function parse(out) {
   return { title: clean(r.title), body: clean(r.body) };
 }
 
+/*
+  12.10, Itzik: "בדו"חות תכניס גם כמה טוקנים ושימוש המוניטורים השתמשו".
+  usage-watch.js (root, hourly) leaves the summary of every monitor; the brief
+  adds yesterday's line for each. Missing or old summary: the brief says so.
+*/
+function usageBlock() {
+  try {
+    const u = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'status', 'usage-summary.json'), 'utf8'));
+    if (Date.now() - Date.parse(u.at) > 3 * 36e5) return '\n\nצריכה: הסיכום לא התעדכן מאז ' + u.at.slice(0, 16).replace('T', ' ') + '.';
+    const { tk } = require('./usage-watch');
+    const rows = u.monitors.filter(m => m.yesterday).map(m => m.label + ': ' + tk(m.yesterday.tok) + ' טוקנים, $' + m.yesterday.usd.toFixed(2));
+    if (!rows.length) return '';
+    const all = u.monitors.reduce((n, m) => n + ((m.yesterday && m.yesterday.tok) || 0), 0);
+    const usd = u.monitors.reduce((n, m) => n + ((m.yesterday && m.yesterday.usd) || 0), 0);
+    return '\n\nצריכה אתמול:\n' + rows.join('\n') + '\nסך הכל: ' + tk(all) + ' טוקנים, $' + usd.toFixed(2) + '.';
+  } catch (e) { return '\n\nצריכה: אין סיכום (' + e.message.slice(0, 60) + ').'; }
+}
+
 async function main() {
   const m = mail();
   const chat = docs('chat');
@@ -119,7 +137,7 @@ async function main() {
   const doc = {
     at: new Date().toISOString(),
     title: 'דוח בוקר ' + day + ': ' + r.title,
-    body: r.body + (m.error ? '\n\nהתיבה לא נקראה הבוקר (' + m.error + '), הדוח בלי המיילים.' : ''),
+    body: r.body + usageBlock() + (m.error ? '\n\nהתיבה לא נקראה הבוקר (' + m.error + '), הדוח בלי המיילים.' : ''),
   };
   if (DRY) { console.log(doc.title + '\n\n' + doc.body); return; }
   const dir = path.join(inst.dataPath, 'reports', 'reports');

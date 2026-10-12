@@ -99,24 +99,40 @@ function prompt(t) {
   ].join('\n');
 }
 
+// 12.10: JSON out, so each session's tokens reach the server's usage.jsonl.
+function usageOf(d) {
+  const models = {};
+  for (const [m, u] of Object.entries(d.modelUsage || {})) {
+    models[m] = { in: u.inputTokens || 0, out: u.outputTokens || 0, cr: u.cacheReadInputTokens || 0, cw: u.cacheCreationInputTokens || 0, usd: +(u.costUSD || 0).toFixed(4) };
+  }
+  return { usd: +(d.total_cost_usd || 0).toFixed(4), turns: d.num_turns || 0, ms: d.duration_ms || 0,
+    sub: (d.subagent_stats && d.subagent_stats.spawned) || 0, models };
+}
+
 function work(t) {
   return new Promise((resolve) => {
     say('מתחיל משימה ' + t.id + ': ' + t.task.slice(0, 80));
-    const child = spawn('claude', ['-p', '--chrome', '--dangerously-skip-permissions'], { cwd: HERE, shell: true, windowsHide: true });
+    const child = spawn('claude', ['-p', '--chrome', '--output-format', 'json', '--dangerously-skip-permissions'], { cwd: HERE, shell: true, windowsHide: true });
     setLive(child.pid, { id: t.id, at: new Date().toISOString() });
-    let out = '';
+    let out = '', err = '';
     child.stdout.on('data', (b) => { out += b; });
-    child.stderr.on('data', (b) => { out += b; });
+    child.stderr.on('data', (b) => { err += b; });
     const timer = setTimeout(() => { say('!! עברו 30 דקות, עוצר ' + t.id); try { child.kill(); } catch (e) {} }, MAX_SESSION_MS);
     child.stdin.end(prompt(t), 'utf8');
     child.on('error', (e) => { clearTimeout(timer); setLive(child.pid, null); resolve({ ok: false, why: 'הסשן לא עלה: ' + e.message }); });
     child.on('close', (code) => {
       clearTimeout(timer);
       setLive(child.pid, null);
-      const m = String(out).match(/<<<ANSWER\s*([\s\S]*?)\s*ANSWER>>>/g);
+      let text = String(out), usage = null;
+      try {
+        const d = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
+        usage = usageOf(d);
+        text = String(d.result || '');
+      } catch (e) {}
+      const m = text.match(/<<<ANSWER\s*([\s\S]*?)\s*ANSWER>>>/g);
       const last = m && m[m.length - 1].replace(/^<<<ANSWER\s*|\s*ANSWER>>>$/g, '').trim();
-      if (last) resolve({ ok: true, text: last });
-      else resolve({ ok: false, why: 'קוד ' + code + ', בלי תשובה. ' + String(out).trim().slice(-200) });
+      if (last) resolve({ ok: true, text: last, usage });
+      else resolve({ ok: false, why: 'קוד ' + code + ', בלי תשובה. ' + (text + ' ' + err).trim().slice(-200), usage });
     });
   });
 }
@@ -144,6 +160,10 @@ async function main() {
 async function one(b64) {
   const t = JSON.parse(Buffer.from(b64, 'base64').toString('utf8'));
   const res = await work(t);
+  if (res.usage) {
+    const u = await remote('usage ' + t.id, JSON.stringify(res.usage));
+    if (u.code !== 0) say('!! הצריכה לא נרשמה: ' + t.id + ' ' + u.err.trim().slice(-120));
+  }
   if (res.ok) {
     const r = await remote('done ' + t.id, res.text);
     say((r.code === 0 ? 'הוחזר לשרת: ' : '!! ההחזרה נכשלה: ') + t.id + ' ' + r.err.trim().slice(-200));

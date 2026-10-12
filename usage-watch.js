@@ -35,6 +35,9 @@ const STATE = path.join(ME, 'data', 'status', 'usage-alerts.json');
 const ilDay = (d) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem' }).format(d);
 const ilHour = (d) => Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Jerusalem', hour: '2-digit', hourCycle: 'h23' }).format(d));
 const usd = (n) => '$' + n.toFixed(2);
+// 12.10, Itzik: "בדו"חות תכניס גם כמה טוקנים". All four kinds count; most are cache reads.
+const toks = (u) => Object.values(u.models || {}).reduce((n, x) => n + (x.in || 0) + (x.out || 0) + (x.cr || 0) + (x.cw || 0), 0);
+const tk = (n) => n >= 1e6 ? (n / 1e6).toFixed(1) + ' מיליון' : n >= 1e3 ? Math.round(n / 1e3) + ' אלף' : String(n);
 
 function monitors() {
   const out = [{ id: 'abaitzik', label: 'המוניטור שלך', dir: ME }];
@@ -65,14 +68,16 @@ function summarize(now) {
   const days = [];
   for (let i = 0; i < 8; i++) days.push(ilDay(new Date(now - i * 864e5)));
   return monitors().map((mon) => {
-    const byDay = {}, models = {};
-    let sessions = 0, longSolo = 0;
+    const byDay = {}, tokDay = {}, models = {};
+    let sessions = 0, longSolo = 0, pc = 0;
     for (const u of lines(mon.dir)) {
       const d = ilDay(new Date(u.at));
       if (!days.includes(d)) continue;
       byDay[d] = (byDay[d] || 0) + (u.usd || 0);
+      tokDay[d] = (tokDay[d] || 0) + toks(u);
       if (d === today) {
         sessions++;
+        if (u.src === 'pc') pc++;
         for (const [m, x] of Object.entries(u.models || {})) {
           const k = /haiku/.test(m) ? 'haiku' : /opus/.test(m) ? 'opus' : /sonnet/.test(m) ? 'sonnet' : m;
           models[k] = (models[k] || 0) + (x.usd || 0);
@@ -83,7 +88,10 @@ function summarize(now) {
     }
     const past = days.slice(1).map((d) => byDay[d] || 0).filter((x) => x > 0).sort((a, b) => a - b);
     const usual = past.length ? past[Math.floor(past.length / 2)] : 0;
-    return { id: mon.id, label: mon.label, today: byDay[today] || 0, usual, week: days.slice(0, 7).reduce((s, d) => s + (byDay[d] || 0), 0), sessions, longSolo, models };
+    const week = days.slice(0, 7);
+    return { id: mon.id, label: mon.label, today: byDay[today] || 0, usual, week: week.reduce((s, d) => s + (byDay[d] || 0), 0), sessions, longSolo, models, pc,
+      tokToday: tokDay[today] || 0, tokWeek: week.reduce((s, d) => s + (tokDay[d] || 0), 0),
+      yesterday: { usd: byDay[days[1]] || 0, tok: tokDay[days[1]] || 0 } };
   });
 }
 
@@ -102,8 +110,9 @@ function reasons(sum) {
 function text(sum) {
   return sum.map((s) => {
     const m = Object.entries(s.models).sort((a, b) => b[1] - a[1]).map(([k, v]) => k + ' ' + usd(v)).join(', ');
-    return s.label + ': היום ' + usd(s.today) + ' ב ' + s.sessions + ' סשנים' + (m ? ' (' + m + ')' : '') + ', שבוע ' + usd(s.week) + (s.usual ? ', יום רגיל ' + usd(s.usual) : '') + '.';
-  }).join('\n');
+    return s.label + ': היום ' + tk(s.tokToday) + ' טוקנים, ' + usd(s.today) + ' ב ' + s.sessions + ' סשנים' + (s.pc ? ' (' + s.pc + ' במחשב)' : '') + (m ? ' (' + m + ')' : '') +
+      ', שבוע ' + tk(s.tokWeek) + ' טוקנים, ' + usd(s.week) + (s.usual ? ', יום רגיל ' + usd(s.usual) : '') + '.';
+  }).join('\n') + '\nסך הכל היום: ' + tk(sum.reduce((n, s) => n + s.tokToday, 0)) + ' טוקנים, ' + usd(sum.reduce((n, s) => n + s.today, 0)) + '.';
 }
 
 function asMonitor(args) {
@@ -147,4 +156,4 @@ function main() {
 }
 
 if (require.main === module) main();
-module.exports = { summarize, reasons, text };
+module.exports = { summarize, reasons, text, tk };

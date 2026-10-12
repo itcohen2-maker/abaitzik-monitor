@@ -181,9 +181,20 @@ if (cmd === 'add') {
     push('משימת מחשב נכשלה: ' + t.task.slice(0, 60));
   }
   console.log(t.status);
+} else if (cmd === 'usage') {
+  // 12.10, Itzik: "בדו"חות תכניס גם כמה טוקנים". The PC's sessions run on his
+  // subscription too, so pc-pull.js sends each one's usage line here and it
+  // lands in the same usage.jsonl that usage-watch.js counts.
+  try {
+    const u = JSON.parse(stdin());
+    const line = { at: new Date().toISOString(), who: inst.name, src: 'pc', task: String(rest[0] || ''),
+      usd: +u.usd || 0, turns: +u.turns || 0, ms: +u.ms || 0, sub: +u.sub || 0, models: u.models || {} };
+    fs.appendFileSync(path.join(inst.dataPath, 'status', 'usage.jsonl'), JSON.stringify(line) + '\n');
+    console.log('ok');
+  } catch (e) { console.error('bad usage line: ' + e.message); process.exit(2); }
 } else if (cmd === 'list') {
   all().forEach((t) => console.log([t.id, t.status, t.at, t.task.slice(0, 80)].join('  ')));
 } else {
-  console.error('usage: node pc-task.js add|next|done|fail|list');
+  console.error('usage: node pc-task.js add|next|done|fail|usage|list');
   process.exit(2);
 }
