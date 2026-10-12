@@ -13942,7 +13942,9 @@ var DUDI_ITEMS=[
  {n:'★',t:'כל ארבע ביחד, 2,309 ש״ח (PDF אחד)',r:'dudi-4-invoices-2309.pdf'},
  {n:'★ב',t:'כל ארבע ביחד, תמונה אחת לוואטסאפ',r:'dudi-4-invoices-2309.jpg'},
  {n:'01',t:'יוני, חשבונית 023334, 444 ש״ח (PDF)',r:'dudi-023334-june.pdf'},
+ {n:'02',t:'יולי, חשבונית 023388, 888 ש״ח (PDF)',r:'dudi-023388-july.pdf'},
  {n:'01ב',t:'יוני, תמונה לגלריה',r:'dudi-023334-june.jpg'},
+ {n:'02ב',t:'יולי, תמונה לגלריה',r:'dudi-023388-july.jpg'}
 ];
 function dudiSheet(){
  var old=document.getElementById('dudiSheet');if(old)old.remove();
@@ -13988,6 +13990,7 @@ document.getElementById('gLaw')&&document.getElementById('gLaw').addEventListene
 */
 var WIN_ITEMS=[
  {n:'01',t:'מרימים את הראש ולא את הידיים',f:'amirshwartz1, תגובה בטיקטוק על סרטון העוגה'},
+ {n:'02',t:'בכל רגע נתון יש לנו שתי אופציות: לצעוד קדימה לצמיחה או לצעוד אחורה לנוחות.',f:'כרטיס שצילמתי, 7.10, #מיאתבוחרתלהיות?'}
 ];
 function winSheet(){
  var old=document.getElementById('winSheet');if(old)old.remove();
@@ -17527,13 +17530,26 @@ function pruneOldFiles(src) {
   const cutoff = Date.now() - FILE_DAYS * 864e5;
   let named = '';
   try { named = fs.readFileSync(__filename, 'utf8'); } catch (e) { return; }
+  // 12.10, Itzik: "delete it from the server too, free space automatically."
+  // A file the page named on the last build and no longer names was taken off
+  // a screen on purpose, so it goes now instead of waiting FILE_DAYS. Capped,
+  // so a broken edit that drops a whole list does not wipe its files.
+  const namedLog = path.join(inst.dataPath, '.named-files.json');
+  let wasNamed = [];
+  try { wasNamed = JSON.parse(fs.readFileSync(namedLog, 'utf8')); } catch (e) {}
+  const nowNamed = [], dropped = [];
   for (const rel of walkFiles(src)) {
     // 8.10: the recipe books were named in a button as data-r="...", in double
     // quotes, so this missed them and they were deleted after three days.
-    if (KEEP_FILE.test(rel) || named.includes("'" + rel + "'") || named.includes('"' + rel + '"')) continue;
+    const isNamed = named.includes("'" + rel + "'") || named.includes('"' + rel + '"');
+    if (isNamed) nowNamed.push(rel);
+    if (KEEP_FILE.test(rel) || isNamed) continue;
     const full = path.join(src, rel);
-    if (fs.statSync(full).mtimeMs < cutoff) fs.unlinkSync(full);
+    if (wasNamed.includes(rel)) dropped.push(full);
+    else if (fs.statSync(full).mtimeMs < cutoff) fs.unlinkSync(full);
   }
+  if (dropped.length <= 10) for (const full of dropped) fs.unlinkSync(full);
+  try { fs.writeFileSync(namedLog, JSON.stringify(nowNamed)); } catch (e) { console.error('named files log: ' + e.message); }
   const inbox = path.join(inst.dataPath, 'inbox');
   for (const n of fs.existsSync(inbox) ? fs.readdirSync(inbox) : []) {
     const full = path.join(inbox, n);
