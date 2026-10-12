@@ -359,6 +359,11 @@ function build() {
                  by: x.by === 'radar' ? 'radar' : 'review', u: /^https:\/\//.test(x.u || '') ? x.u : '' }))
     // 12.10, Itzik: "כל זמן אותם רעיונות". What is already done sinks under what is still open.
     .sort((a, b) => (!a.built !== !b.built ? (a.built ? 1 : -1) : (a.at < b.at ? 1 : -1)));
+  // 12.10: what the other side changed in the theatre (theatre-news.js), newest first.
+  const stkNews = loadDocs('stknews')
+    .map(x => ({ at: x.at || '', by: x.by === 'alon' ? 'alon' : 'itzik', text: x.text || '' }))
+    .filter(x => x.at && x.text)
+    .sort((a, b) => (a.at < b.at ? 1 : -1)).slice(0, 20);
   const plan = loadDocs('plan')
     .map(x => ({ id: x.id, day: x.day || '', text: x.text || '', network: x.network || '', status: x.status || 'planned' }))
     .sort((a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : 0));
@@ -640,6 +645,7 @@ function build() {
     tenants,
     ideas,
     better,
+    stkNews,
     plan,
     appts,
     replies,
@@ -3771,7 +3777,7 @@ try{
   <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>05 עד 20, גם באיכות גבוהה</small></button>
   <button type="button" class="gt gStory" id="gStory" data-new="1"><b>🎞️ סטורי</b><small>ריק כרגע, הסטורי עלה</small></button>
-  <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 02 אני אסתדר</small></button>
+  <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 02 אני אסתדר, 03 חמישה דברים</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
@@ -12748,7 +12754,8 @@ var FUT_ITEMS=[
  {n:'01ב',t:'החנייה: אותו קטע עם הכיתוב המקורי באנגלית',r:'parking-part1.mp4'},
  {n:'01ג',t:'החנייה: הסרטון המקורי המלא',r:'parking-original.mp4'},
  {n:'02',t:'אני אסתדר עם זה: התסריט להדפסה ואיך מצלמים',r:'fut02-handle-it-script.pdf'},
- {n:'02ב',t:'אני אסתדר עם זה: הריל המקורי (השראה)',r:'fut02-handle-it-original.mp4'}
+ {n:'02ב',t:'אני אסתדר עם זה: הריל המקורי (השראה)',r:'fut02-handle-it-original.mp4'},
+ {n:'03',t:'חמישה דברים ששיניתי: צילום החיפוש בטיקטוק עם הדוגמאות (השראה)',r:'fut03-five-things-search.png'}
 ];
 function futSheet(){
  var old=document.getElementById('ftSheet');if(old)old.remove();

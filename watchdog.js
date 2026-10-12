@@ -323,6 +323,9 @@ function main() {
     try { const o = execFileSync(process.execPath, [path.join(__dirname, 'alon.js'), 'pull'], { cwd: __dirname, encoding: 'utf8', timeout: 30000 }); if (o.trim()) console.log(o.trim()); }
     catch (e) { console.log('!! תשובות אלון: ' + e.message.slice(0, 120)); }
   }
+  // 12.10: what the other side changed in the theatre, so the tile waves. At most once in ten minutes, inside.
+  try { const o = execFileSync(process.execPath, [path.join(__dirname, 'theatre-news.js'), 'pull'], { cwd: __dirname, encoding: 'utf8', timeout: 30000 }); if (o.trim()) console.log(o.trim()); }
+  catch (e) { console.log('!! חדשות התיאטרון: ' + e.message.slice(0, 120)); }
   doctor(problems, since, now);
   if (fresh.length) {
     try {
