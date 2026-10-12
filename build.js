@@ -1421,6 +1421,10 @@ button.abtn[disabled]{opacity:.55}
 .gselbar .gseldel[disabled]{opacity:.4}
 .gr-t{flex:0 0 auto;font-size:12px;color:var(--dim);padding-top:3px}
 .gr-x{flex:1 1 100%;order:9;min-width:0;font-size:15px;line-height:1.45;overflow-wrap:anywhere}
+.gr-more summary{cursor:pointer;list-style:none}
+.gr-more summary::-webkit-details-marker{display:none}
+.gr-more summary span{color:var(--accent,#2b7cd3);font-weight:600;white-space:nowrap}
+.gr-more[open] summary{display:none}
 .gr-x small{display:block;color:var(--dim);font-size:12.5px;margin-top:4px}
 .gr-s{flex:0 0 auto;font-size:12px;border-radius:999px;padding:3px 9px;font-weight:700}
 .gr-w{background:#fff3cd;color:#7a5200}
@@ -9297,6 +9301,23 @@ function renderGot(){
    ?'<button type="button" class="gr-cx" data-id="'+esc(m.id)+'">ביטול הבקשה</button>':'';
   return '<span class="gr-b">'+cpBtn(cpText(m,extra))+cx+del(kind,m)+'</span>';
  }
+ /*
+   Itzik, 12.10, voice: "בהודעות שהתקבלו ביקשתי שתעשה תחילתו של מלל שאפשר
+   לראות מה באמת ההודעה, אם לוחצים רואים את כל המלל". A voice row showed only
+   "הודעה קולית מהמוניטור" and a file name, and a long one filled the screen.
+   Now each row opens with the first words of what he actually said (the
+   transcript for a recording), and a tap on them opens the rest.
+ */
+ function gotWords(m){
+  var t=String(m.text||'');
+  var n=String(m.note||'').replace(/^תמלול:\s*/,'');
+  if(n&&/הודעה קולית|voice-/.test(t))t=n;
+  t=t.replace(/\s+/g,' ').trim();
+  if(t.length<=110)return linkify(t);
+  var cut=t.slice(0,110).replace(/\s+\S*$/,'');
+  return '<details class="gr-more"><summary>'+esc(cut)+'… <span>הכל</span></summary>'
+   +'<div>'+linkify(t)+'</div></details>';
+ }
  function row(m,k,label,kind){
   // מד ההתקדמות יושב גם כאן, ליד כל בקשה שלו, ולא רק בצ׳אט.
   var bar=(kind&&kind!=='msg')?'':progressBar(m);
@@ -9305,7 +9326,7 @@ function renderGot(){
    +'<span class="gr-cb" aria-hidden="true"></span>'
    +(no?'<span class="gr-n">#'+no+'</span>':'')
    +'<span class="gr-t">'+esc(stamp(m.at))+'</span>'
-   +'<div class="gr-x">'+linkify(m.text||'')+bar+'</div>'
+   +'<div class="gr-x">'+gotWords(m)+bar+'</div>'
    +(isCancelled(m)?'<span class="gr-s gr-c">בוטל</span>':'<span class="gr-s gr-'+k+'">'+label+'</span>')
    +tail(kind||'msg',m)+'</div>';
  }
@@ -9377,7 +9398,7 @@ function renderGot(){
  };
  Array.prototype.forEach.call(host.querySelectorAll('.gr[data-sk]'),function(r){
   r.addEventListener('click',function(e){
-   if(e.target.closest('button,a,textarea,input'))return;
+   if(e.target.closest('button,a,textarea,input,details'))return;
    var k=r.getAttribute('data-sk');
    if(gotSel[k])delete gotSel[k];else gotSel[k]=1;
    renderGot();
