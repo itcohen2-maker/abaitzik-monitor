@@ -643,6 +643,8 @@ function build() {
     reminders,
     tasks,
     tenants,
+    // 12.10: the 🩺 board, every monitor's faults in one file (health-board.js). His copy only.
+    health: inst.name === 'abaitzik' ? (() => { try { return JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'status', 'health-board.json'), 'utf8')); } catch (e) { return null; } })() : null,
     ideas,
     better,
     stkNews,
@@ -2333,6 +2335,14 @@ body.editing .bn{display:none}
 .g9{background:linear-gradient(150deg,#f48fb1,#ad1457)}
 .g10{background:linear-gradient(150deg,#ffe082,#f57f17)}
 .g11{background:linear-gradient(150deg,#b9f6ca,#00897b)}
+.gHealth{background:linear-gradient(150deg,#66bb6a,#1b5e20)}
+.gHealth.hbad{background:linear-gradient(150deg,#ef5350,#b71c1c)}
+.hbc{border-radius:12px;padding:10px 12px;border:1px solid #dfe5ec;background:#f6faf6;display:flex;flex-direction:column;gap:4px}
+.hbc.bad{background:#fff3f2;border-color:#f3b5ae}
+.hbc h4{margin:0;font:700 15px Heebo,sans-serif}
+.hbc p{margin:0;font-size:13px;line-height:1.45}
+.hbc .hbm{opacity:.65;font-size:12px}
+.hbc ul{margin:0;padding-inline-start:18px;font-size:13px;line-height:1.45}
 .g12{background:linear-gradient(150deg,#d1c4e9,#5e35b1)}
 .g13{background:linear-gradient(150deg,#ffd27f,#ef6c00)}
 .g14{background:linear-gradient(150deg,#a5d6a7,#2e7d32)}
@@ -3725,6 +3735,8 @@ try{
   <button type="button" class="gt g18" id="gAppts"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
   <button type="button" class="gt g16" id="gRemind"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
   <button type="button" class="gt g10" id="gNotes"><b>📝 פתקים</b><small>נכתב, נשמר, לא הולך לאיבוד</small></button>
+  <!-- 12.10, Itzik: "תקים אפליקציה לבדוק מה כל הקלקולים האלה". Every monitor's faults on one screen. -->
+  <button type="button" class="gt gHealth" id="gHealth" data-new="1"><b>🩺 תקלות</b><small>מה תקוע, מה נעצר, ולמה</small></button>
   <!-- Other monitors on this server, one colour each. Hidden when there are none. -->
   <button type="button" class="gt g3" id="gTenants" hidden><b>🟢 מוניטורים אחרים</b><small>ירוק תקין, אדום נתק</small></button>
   <!-- Ilay's two tiles. Hidden on Itzik's copy by the instance screens list. -->
@@ -13882,6 +13894,7 @@ on('gTalk',talkSheet);
 boot('talk',function(){var b=document.getElementById('gTalk');if(!b)return;var seen='';try{seen=localStorage.getItem('talkSeen')||'';}catch(e){}b.classList.toggle('taskblink',Date.now()>=Date.parse(TALK_DUE)&&!seen);});
 boot('maniv',function(){var b=document.getElementById('gManiv');if(!b)return;var seen='';try{seen=localStorage.getItem('manivSeen')||'';}catch(e){}b.classList.toggle('taskblink',Date.now()>=Date.parse(MANIV_DUE)&&!seen);});
 
+boot('health',paintHealthTile);
 boot('occ',function(){var o=(D.occ||[])[0],seen='';var sm=document.querySelector('#gOcc small');if(sm)sm.textContent=o?'המרפאה ענתה '+(o.at||'').slice(8,10).replace(/^0/,'')+'.'+(o.at||'').slice(5,7).replace(/^0/,'')+'. לחץ לקריאה':(function(l){var i=l.indexOf(': ');var h=l.slice(0,i).split(' ')[0];return h+': '+l.slice(i+2);})(OCC_LOG[OCC_LOG.length-1]);try{seen=localStorage.getItem('occSeen')||'';}catch(e){}var b=document.getElementById('gOcc');if(b)b.classList.toggle('taskblink',!!(o&&o.id&&seen!==o.id));});
 /*
   4.10. Documents made for the lawyer in the Lolos sale, numbered. A new one
@@ -14211,6 +14224,51 @@ on('gRemind',function(){
 on('gTasks',function(){pane('T');renderTasks();});
 on('gAppts',function(){pane('Q');renderAppts();});
 on('gIdeas',function(){pane('i');renderIdeas();});
+/*
+  12.10, the 🩺 board. One card per monitor from D.health (health-board.js on
+  the server, every two minutes): green or red, what is wrong now, what waits,
+  what was held and why, when the answering worker last moved, and the last
+  faults with when they began and ended. Read only: nothing here changes a thing.
+*/
+function hbTime(at){if(!at)return '';try{return new Date(at).toLocaleTimeString('he-IL',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit'});}catch(e){return '';}}
+function hbDay(at){if(!at)return '';try{return new Date(at).toLocaleString('he-IL',{timeZone:'Asia/Jerusalem',day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return '';}}
+function hbAge(min){return min<60?min+' דק׳':min<1440?Math.round(min/60)+' שעות':Math.round(min/1440)+' ימים';}
+function paintHealthTile(){
+ var b=document.getElementById('gHealth');if(!b)return;
+ var H=D.health;if(!H||!H.cards){b.hidden=true;return;}
+ b.hidden=false;
+ var bad=H.cards.filter(function(c){return !c.ok;});
+ b.classList.toggle('hbad',!!bad.length);
+ b.querySelector('b').textContent=(bad.length?'🔴':'🩺')+' תקלות';
+ b.querySelector('small').textContent=bad.length?bad.map(function(c){return c.title+': '+(c.problems[0]||'');}).join(' · ').slice(0,90):'הכל תקין · נכון ל '+hbTime(H.at);
+}
+function healthSheet(){
+ var old=document.getElementById('hbSheet');if(old)old.remove();
+ var H=D.health||{cards:[]};
+ var why={'wrong-code':'קוד שגוי (קוד ישן שמור בטלפון)','no-code':'בלי קוד'};
+ var h='<div class="ycard"><b>🩺 תקלות בכל המוניטורים</b><small>נכון ל '+esc(hbTime(H.at))+'. מתעדכן כל שתי דקות בשרת, והדף נבנה מחדש כשמשהו משנה צבע.</small>';
+ H.cards.forEach(function(c){
+  h+='<div class="hbc'+(c.ok?'':' bad')+'"><h4>'+(c.paused?'⏸️ ':c.ok?'🟢 ':'🔴 ')+esc(c.title)+'</h4>';
+  if(c.paused)h+='<p>מושהה בהחלטה שלך, לא נבדק.</p>';
+  else if(!c.problems.length)h+='<p>תקין.</p>';
+  else h+='<ul>'+c.problems.map(function(p){return '<li>'+esc(p)+'</li>';}).join('')+'</ul>';
+  h+='<p class="hbm">מאזין: '+(c.listener===false?'לא רץ':'רץ')+(c.worker&&c.worker.at?' · מענה אחרון: '+esc(hbTime(c.worker.at)):'')+(c.worker&&c.worker.what?' ('+esc(c.worker.what)+')':'')+'</p>';
+  if(c.waiting&&c.waiting.length)h+='<p><b>מחכות לתשובה ('+c.waiting.length+'):</b></p><ul>'+c.waiting.map(function(m){return '<li>'+esc(hbAge(m.min))+(m.t?': '+esc(m.t):'')+'</li>';}).join('')+'</ul>';
+  if(c.held&&c.held.length)h+='<p><b>נעצרו היום ('+c.held.length+'):</b></p><ul>'+c.held.map(function(m){return '<li>'+esc(hbTime(m.at))+', '+esc(why[m.why]||m.why)+(m.t?': '+esc(m.t):'')+'</li>';}).join('')+'</ul>';
+  if(c.history&&c.history.length)h+='<p class="hbm">תקלות אחרונות:</p><ul class="hbm">'+c.history.slice(0,8).map(function(x){return '<li>'+esc(hbDay(x.at))+(x.end?' עד '+esc(hbTime(x.end)):' (עדיין)')+': '+esc(x.text)+'</li>';}).join('')+'</ul>';
+  h+='</div>';
+ });
+ if(!H.cards.length)h+='<small>עוד אין נתונים מהשרת.</small>';
+ h+='<button type="button" class="yb yx" data-k="">סגירה</button></div>';
+ var w=document.createElement('div');w.id='hbSheet';w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','תקלות');
+ w.innerHTML=h;
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){if(e.target===w||(e.target.getAttribute&&e.target.getAttribute('data-k')===''))close();};
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gHealth',healthSheet);
 // The same list a new client sees on the first visit. Every line is written as
 // his week, not as a feature: he recognises the problem before he understands
 // the screen. What he taps becomes a request in my inbox.

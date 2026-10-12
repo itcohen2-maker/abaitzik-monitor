@@ -58,8 +58,61 @@ function heldProblem(all, now) {
   const held = all.filter((m) => m.from === 'unverified' && m.status === 'held'
     && now - Date.parse(m.at) > 3 * 60 * 1000 && now - Date.parse(m.at) < 24 * 3600 * 1000);
   if (!held.length) return '';
+  // 12.10: eight sends signed with an old device code read as "without the
+  // code", and nothing told him the phone held a wrong one. The listener now
+  // says why (heldWhy), so the alarm can.
+  const wrong = held.filter((m) => m.heldWhy === 'wrong-code').length;
   return (held.length === 1 ? 'הודעה אחת' : held.length + ' הודעות')
-    + ' הגיעו בלי הקוד ונעצרו, למשל ' + String(held[0].text || '').slice(0, 40);
+    + (wrong ? ' הגיעו עם קוד שגוי ונעצרו (קוד ישן שמור בטלפון), למשל ' : ' הגיעו בלי הקוד ונעצרו, למשל ')
+    + String(held[0].text || '').slice(0, 40);
+}
+
+/*
+  12.10, Itzik: "תקים אפליקציה לבדוק מה כל הקלקולים האלה". What the 🩺 screen
+  shows for this instance, beside the problems: what waits, what is held and
+  why, and when the worker last moved. Only Itzik's own instance puts words of
+  a message in it; a customer's gives times and counts only, because his board
+  reads every customer's file and he does not see their content.
+*/
+function snapshot(now) {
+  const own = inst.name === 'abaitzik';
+  let files = [];
+  try { files = fs.readdirSync(CHAT); } catch (e) { return null; }
+  const all = files.map((f) => readJson(path.join(CHAT, f), null)).filter(Boolean);
+  const answered = new Set(all.filter((m) => m.from === 'claude' && m.re).map((m) => m.re));
+  const words = (m) => (own ? { t: String(m.text || '').replace(/\s+/g, ' ').slice(0, 60) } : {});
+  const waiting = all.filter((m) => m.from === 'itzik' && m.status !== 'done' && !(m.id && answered.has(m.id))
+    && now - Date.parse(m.at) < 3 * 24 * 3600 * 1000)
+    .map((m) => Object.assign({ at: m.at, min: Math.round((now - Date.parse(m.at)) / 60000) }, words(m)));
+  const held = all.filter((m) => m.from === 'unverified' && m.status === 'held' && now - Date.parse(m.at) < 24 * 3600 * 1000)
+    .map((m) => Object.assign({ at: m.at, why: m.heldWhy || 'no-code' }, words(m)));
+  const byAt = (a, b) => (a.at < b.at ? -1 : 1);
+  const w = { at: '', what: '' };
+  if (process.platform !== 'win32') {
+    const t = Math.max(when(show(UNIT + '.timer', 'LastTriggerUSec')) || 0, when(show(UNIT + '.service', 'ExecMainStartTimestamp')) || 0);
+    if (t) w.at = new Date(t).toISOString();
+  }
+  try {
+    const line = fs.readFileSync(path.join(STATUS, 'worker.log'), 'utf8').trim().split('\n').pop() || '';
+    w.what = /הסשן הסתיים, קוד 0/.test(line) ? 'סשן סיים ועבר'
+      : /הסשן הסתיים/.test(line) ? 'סשן נגמר בתקלה'
+      : /עבר 10 דקות/.test(line) ? 'סשן נעצר אחרי עשר דקות'
+      : /מפעיל סשן/.test(line) ? 'התחיל לטפל בהודעות'
+      : /אין הודעות שמחכות/.test(line) ? 'אין הודעות שמחכות'
+      : /ממתין לטיק/.test(line) ? 'מחכה למקום פנוי' : '';
+    w.line = (line.match(/^\d\d?:\d\d:\d\d/) || [''])[0];
+    if (own) w.text = line.replace(/^\S+\s+/, '').slice(0, 120);
+  } catch (e) {}
+  return { waiting: waiting.sort(byAt), held: held.sort(byAt), worker: w };
+}
+// Each fault once, when it began and when it ended, the last twenty.
+function history(prev, problems, now) {
+  const h = (prev.history || []).slice();
+  const cur = new Set(problems.map(key));
+  const iso = new Date(now).toISOString();
+  problems.forEach((p) => { if (!h.some((x) => x.k === key(p) && !x.end)) h.push({ k: key(p), text: p, at: iso }); });
+  h.forEach((x) => { if (!x.end && !cur.has(x.k)) x.end = iso; });
+  return h.slice(-20);
 }
 /*
   The PC leaves data/status/pc-seen.json every minute it is on (pc-task.js).
@@ -334,8 +387,14 @@ function main() {
     } catch (e) { console.log('!! ההתראה לא נשלחה: ' + e.message); }
   }
   Object.keys(told).forEach((k) => { if (now - Date.parse(told[k]) > 24 * 3600 * 1000) delete told[k]; });
-  try { fs.mkdirSync(STATUS, { recursive: true }); fs.writeFileSync(OUT, JSON.stringify({ at: new Date(now).toISOString(), problems, told, since, speed: sp, pcOnSince: pc.on ? new Date(pc.since).toISOString() : null }, null, 1)); } catch (e) {}
+  let board = null;
+  try { board = snapshot(now); } catch (e) { console.log('!! תמונת מצב: ' + e.message); }
+  try { fs.mkdirSync(STATUS, { recursive: true }); fs.writeFileSync(OUT, JSON.stringify({ at: new Date(now).toISOString(), problems, told, since, speed: sp, pcOnSince: pc.on ? new Date(pc.since).toISOString() : null, board, history: history(prev, problems, now) }, null, 1)); } catch (e) {}
+  // 12.10: Itzik's instance gathers every monitor into the 🩺 board.
+  if (inst.name === 'abaitzik') {
+    try { require('./health-board.js').run(now); } catch (e) { console.log('!! לוח התקלות: ' + e.message); }
+  }
 }
 
 if (require.main === module) main();
-module.exports = { uploadProblems, refused, check, when, speed, gitStuck, heldProblem, pcProblems, doctorFaults };
+module.exports = { uploadProblems, refused, check, when, speed, gitStuck, heldProblem, pcProblems, doctorFaults, history };

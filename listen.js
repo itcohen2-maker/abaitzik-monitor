@@ -442,6 +442,10 @@ function ownerCodeOk(text) {
   });
 }
 
+function heldWhy(text) {
+  return /קוד\s*[0-9]{3,8}/.test(String(text || '')) ? 'wrong-code' : 'no-code';
+}
+
 function recordIncoming(m) {
   const gid = group.groupOf(m.title);
   const held = gid ? groupFiles.get(gid) : null;
@@ -474,6 +478,7 @@ function recordIncoming(m) {
     if (rec.status === 'done') { groupFiles.delete(gid); return false; }
     rec.text = group.groupText(held.caption, held.files);
     if (codeOk && rec.from === 'unverified') { rec.from = 'itzik'; rec.status = 'working'; say('הקוד אומת, ההודעה עוברת לעבודה'); }
+    else if (rec.from === 'unverified' && !m.attachment && heldWhy(m.message) === 'wrong-code') rec.heldWhy = 'wrong-code';
     rec.files = held.files.slice();
     try { fs.writeFileSync(path.join(CHAT, held.name), JSON.stringify(rec, null, 1), 'utf8'); }
     catch (e) { say('!! לא עודכן בצ׳אט: ' + e.message); return false; }
@@ -491,6 +496,14 @@ function recordIncoming(m) {
   const name = chatName(at);
   const rec = { at: at.toISOString(), from: codeOk ? 'itzik' : 'unverified', text: text, status: codeOk ? 'working' : 'held',
     ackAt: at.toISOString(), id: 'ntfy-' + m.id, auto: true };
+  /*
+    12.10: a whole afternoon was held because his phone signed with an old code,
+    1800, and the alarm said only "arrived without the code". Why it was held is
+    kept on the record now, never the code itself: wrong-code when the word and
+    digits were there and did not match, no-code when nothing came. The 🩺 screen
+    shows it.
+  */
+  if (!codeOk) rec.heldWhy = heldWhy(m.message);
   if (files.length) rec.files = files.slice();
   try {
     fs.mkdirSync(CHAT, { recursive: true });

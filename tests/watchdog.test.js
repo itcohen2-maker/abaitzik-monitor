@@ -83,3 +83,16 @@ test('an answer that has not yet been marked done is a fault only after ten minu
   assert.ok(problems.includes('1 הודעות נענו ועדיין מסומנות בטיפול'), problems.join(' | '));
   fs.rmSync(dir, { recursive: true, force: true });
 });
+
+test('12.10: a send held for a wrong code says so, and the history opens and closes each fault once', () => {
+  const { history } = require('../watchdog.js');
+  const now = Date.parse('2026-10-12T14:00:00Z');
+  const m = { from: 'unverified', status: 'held', at: '2026-10-12T13:50:00Z', text: 'הודעה קולית', heldWhy: 'wrong-code' };
+  assert.match(heldProblem([m], now), /קוד שגוי/);
+  assert.match(heldProblem([Object.assign({}, m, { heldWhy: undefined })], now), /בלי הקוד/);
+  let h = history({}, ['2 הודעות מחכות'], now);
+  h = history({ history: h }, ['3 הודעות מחכות'], now + 60000);
+  assert.equal(h.length, 1);
+  h = history({ history: h }, [], now + 120000);
+  assert.ok(h[0].end);
+});
