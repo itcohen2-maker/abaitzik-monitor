@@ -4478,6 +4478,8 @@ try{
   <div id="rivAudit" hidden></div>
   <h3 class="rivh" id="rivH1">מי חייב כסף</h3>
   <div id="rivList"></div>
+  <h3 class="rivh" id="rivH7" hidden>צ׳קים עתידיים שאצלנו</h3>
+  <div id="rivCheq" hidden></div>
   <h3 class="rivh" id="rivH6" hidden>נרשם כאן בנפרד, לא בריווחית</h3>
   <div id="rivManual" hidden></div>
   <h3 class="rivh" id="rivH2">נכנס לבנק באפריל עד יוני ואין עליו קבלה</h3>
@@ -16772,6 +16774,10 @@ function renderRivhit(){
   };
  }
  // kind manual (30.9): money he asked to keep here and not in Rivhit.
+ // kind cheque (12.10): a post dated cheque he holds. It is not a debt any
+ // more, so it leaves the list above and the share page, and waits here,
+ // soonest first, until the day it can be deposited.
+ put('rivCheq',by('cheque').sort(function(a,b){return String(a.at).localeCompare(String(b.at));}),'rivH7');
  put('rivManual',by('manual'),'rivH6');
  put('rivOpen',by('open'),'rivH2');
  put('rivBank',by('bank'),'rivH4');

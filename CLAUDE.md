@@ -75,3 +75,6 @@
   prints `files/<name>.mp3`; put that link in the answer and the monitor plays it. A message "תקריא לי: <text>" asks
   for exactly this. Installed in `/home/monitor/tts` (venv, models, `say.py`), about 9 seconds and 900MB RAM per run,
   so one at a time. License is non commercial: Itzik's own use only, never in a paid client deliverable.
+
+- **His son's name is written איליי** (Itzik, 25.9 and again 12.10.2026): never אילי, עילאי or אלי, in any
+  answer, mail or document, server or PC.
