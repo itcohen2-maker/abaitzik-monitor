@@ -29,4 +29,6 @@ date -u +%FT%TZ > "/root/tenant-tokens/$id.own"
 # usage-watch.js (root) reads this to show the row as on the customer's own account.
 mkdir -p /srv/monitor-changes && date -u +%FT%TZ > "/srv/monitor-changes/$id.own" && chmod 644 "/srv/monitor-changes/$id.own"
 say "המוניטור מחובר עכשיו לחשבון שלך. מעכשיו כל העבודה כאן רצה על המנוי שלך."
+# Itzik hears it on his phone too.
+(cd /home/monitor/abaitzik-monitor && sudo -u monitor node notify.js "🔑 $id עברה לחשבון משלה" "מעכשיו העבודה שלה לא על המנוי שלך" >/dev/null 2>&1) || true
 echo "$(date -u +%FT%T) $id own key applied" >> /var/log/monitor-owntoken.log
