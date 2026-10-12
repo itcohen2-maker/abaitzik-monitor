@@ -2268,7 +2268,6 @@ body.editing .bn{display:none}
 .c-nr{background:linear-gradient(160deg,#243a6b,#0B1330)}
 .c-sl{background:linear-gradient(160deg,#f472b6,#be185d)}
 .c-el{background:linear-gradient(160deg,#1f8f7d,#14675a)}
-.c-hs{background:linear-gradient(160deg,#ef8f00,#b26a00)}
 .c-al{background:linear-gradient(160deg,#7e57c2,#4527a0)}
 .c-rn{background:linear-gradient(160deg,#d81b60,#8e1046)}
 /* 12.10: an empty place a customer can ask to fill. Dashed, no gloss. */
@@ -3803,7 +3802,6 @@ try{
   -->
   <button type="button" class="gt gDudi" id="gDudi" data-new="1"><b>🥩 דודי בשר</b><small>חשבוניות יוני ויולי לשליחה</small></button>
   <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
-  <button type="button" class="gt gManiv" id="gManiv"><b>💧 תשלום למניב</b><small>לקוח 50523290. ביום שני המוקד נפתח ב 09:00</small></button>
   <button type="button" class="gt gOcc" id="gOcc"><b>🩺 מרפאה תעסוקתית</b><small>מכבי רמות. טלפון א עד ה 08:00 עד 11:00</small></button>
   <button type="button" class="gt gShop" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
   <button type="button" class="gt gStoryArc" id="gStoryArc" data-new="1"><b>📸 הסטוריז שלי</b><small>הארכיון באינסטגרם: גם סטורי שכבר ירד</small></button>
@@ -3885,8 +3883,6 @@ try{
   -->
   <a class="ic" href="#" id="icAl" data-new="1"><span class="c c-al" id="icAlC">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-2 9a6 6 0 0 1-12 0z"/><circle cx="9" cy="9.5" r="1"/><circle cx="15" cy="9.5" r="1"/><path d="M9.5 13c1.5 1.3 3.5 1.3 5 0"/></svg></span>אלון</a>
-  <a class="ic" href="#" id="icHs"><span class="c c-hs" id="icHsC">
-   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>הום סטייל</a>
   <!--
     קבלות goes here. The markup and the .c-kb colour are ready, and so is
     build-kabalot.js, but the button stays out until data/receipts.json
@@ -11282,9 +11278,6 @@ function paintTenantsTile(){
  var ac=document.getElementById('icAlC');
  var badAl=T.filter(function(t){return t.id==='alon'&&t.state!=='ok'&&!t.paused;});
  if(ac&&T.some(function(t){return t.id==='alon';})){ac.style.background=badAl.length?'linear-gradient(160deg,#ef5350,#b71c1c)':'linear-gradient(160deg,#66bb6a,#1b5e20)';ac.classList.toggle('tdown',!!badAl.length);}
- var hc=document.getElementById('icHsC');
- var badHs=T.filter(function(t){return (t.id==='homestyle'||t.id==='roni')&&t.state!=='ok';});
- if(hc){hc.style.background=badHs.length?'linear-gradient(160deg,#ef5350,#b71c1c)':'linear-gradient(160deg,#66bb6a,#1b5e20)';hc.classList.toggle('tdown',!!badHs.length);}
  /*
    30.9, Itzik: "the red button has to blink, not just be red. It is an alarm,
    it is a customer, the most important thing we have." So a customer that is
@@ -11321,8 +11314,6 @@ on('gTenants',function(){pane('N3');renderTenants();});
  if(r)r.onclick=function(e){e.preventDefault();pane('N3');renderTenants();};
  var al=document.getElementById('icAl');
  if(al)al.onclick=function(e){e.preventDefault();pane('N3');renderTenants();};
- var h=document.getElementById('icHs');
- if(h)h.onclick=function(e){e.preventDefault();pane('N3');renderTenants();};
 })();
 function renderTasks(){
  try{notesPull();notesPush();}catch(e){}
