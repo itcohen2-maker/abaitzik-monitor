@@ -1119,6 +1119,10 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .gLec{background:linear-gradient(150deg,#c0562b,#4a1d10)}
 .gTalk{background:linear-gradient(150deg,#c0392b,#4a1410)}
 .gManiv{background:linear-gradient(150deg,#3a8fd6,#123150)}
+.gDv{background:linear-gradient(150deg,#b08a3e,#3b2a10)}
+.dvv{font:700 16px/1.6 'Frank Ruhl Libre',David,serif;margin-top:8px}
+.dvv i{display:block;font:400 12px Heebo,sans-serif;opacity:.6;font-style:normal}
+.dvx{font-size:14px;line-height:1.55;opacity:.85;border-right:3px solid #b08a3e;padding-right:8px}
 .gMed{background:linear-gradient(150deg,#4fb3a9,#123a4a)}
 .gInv{background:linear-gradient(150deg,#d9a441,#3a2a12)}
 .gShop{background:linear-gradient(150deg,#3aa55d,#1f6f8b)}
@@ -1940,7 +1944,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-12T17:55:00.955Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-12T17:55:41.520Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2089,6 +2093,7 @@ try{
   <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית</small></button>
   <button type="button" class="gt gPen" id="gPen"><b>🏦 פנסיה</b><small>קוד מוסד בבנק 28417, 1,211 ש״ח. בדיקה ב 18.10</small></button>
   <button type="button" class="gt gStk" id="gStk"><b>🎭 תיאטרון רמת הנשיא</b><small>האתר שלך ושל אלון: קישור, העתקה ושליחה לאלון</small></button>
+  <button type="button" class="gt gDv" id="gDv" data-new="1"><b>📜 סוף התורה</b><small>הפסוקים האחרונים וההסבר מתחתם</small></button>
   <button type="button" class="gt gLec" id="gLec" data-new="1"><b>🎤 הרצאה</b><small>כנגד כל הסיכויים: המלל הערוך עם השקפים</small></button>
   <button type="button" class="gt gDudi" id="gDudi" data-new="1"><b>🥩 דודי בשר</b><small>חשבוניות יוני ויולי לשליחה</small></button>
   <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
@@ -3455,7 +3460,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='7f24cfaf5f';
+var CODE_ID='0a4738114d';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -9836,6 +9841,42 @@ function lecSheet(){
  document.body.appendChild(w);
 }
 on('gLec',lecSheet);
+var DV_ITEMS=[
+ {r:'דברים ל״ב, ל״ט',v:'ראו עתה כי אני אני הוא ואין אלהים עמדי, אני אמית ואחיה, מחצתי ואני ארפא, ואין מידי מציל.',x:'הפגיעה והריפוי באים מאותו מקור, ולכן אין ייאוש גם אחרי מכה.'},
+ {r:'דברים ל״ב, מ״ז',v:'כי לא דבר רק הוא מכם, כי הוא חייכם, ובדבר הזה תאריכו ימים על האדמה.',x:'התורה אינה חובה צדדית, היא החיים עצמם. מכאן "ובחרת בחיים".'},
+ {r:'דברים ל״ב, מ״ט ונ״ב',v:'עלה אל הר העברים הזה הר נבו... וראה את ארץ כנען. כי מנגד תראה את הארץ, ושמה לא תבוא.',x:'משה מקבל לראות את היעד מרחוק ולא להיכנס אליו. התורה נגמרת דווקא במנהיג שלא מגיע ליעד.'},
+ {r:'דברים ל״ג, א׳',v:'וזאת הברכה אשר ברך משה איש האלהים את בני ישראל לפני מותו.',x:'משה מברך כל שבט בנפרד: כל אחד מקבל כוח משלו, ואין ברכה אחת שמתאימה לכולם.'},
+ {r:'דברים ל״ג, כ״ט',v:'אשריך ישראל מי כמוך, עם נושע בה׳.',x:'הסוף של הברכות הוא מבט של אהבה, לא של תוכחה.'},
+ {r:'דברים ל״ד, ז׳',v:'ומשה בן מאה ועשרים שנה במותו, לא כהתה עינו ולא נס לחה.',x:'הוא הולך בשיא הכוח, לא מתוך חולשה. העבודה נעצרת, לא האדם.'},
+ {r:'דברים ל״ד, ט׳',v:'ויהושע בן נון מלא רוח חכמה כי סמך משה את ידיו עליו.',x:'יהושע ממשיך: עבודה טובה לא חייבת להסתיים בידיים שלך, ומי שמעביר אותה הלאה לא נכשל.'},
+ {r:'דברים ל״ד, י׳',v:'ולא קם נביא עוד בישראל כמשה, אשר ידעו ה׳ פנים אל פנים.',x:'המילה האחרונה על משה היא הקרבה, לא ההישגים.'}
+];
+function dvSheet(){
+ var old=document.getElementById('dvSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='dvSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','סוף התורה');
+ w.innerHTML='<div class="ycard">'
+  +'<b>📜 סוף התורה: הפסוקים האחרונים</b>'
+  +'<small>מפרק ל״ב פסוק ל״ט ועד סוף הספר. מתחת לכל פסוק, מה הוא אומר.</small>'
+  +DV_ITEMS.map(function(it){
+    return '<div class="dvv"><i>'+esc(it.r)+'</i>'+esc(it.v)+'</div><div class="dvx">'+esc(it.x)+'</div>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gDv',dvSheet);
 var MANIV_INFO=[
  'מספר לקוח (משלם): 50523290',
  'על שם: ליאני יואל ושות׳. הנכס: פלוטיצקי 10',

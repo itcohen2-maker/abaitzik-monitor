@@ -2404,6 +2404,10 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .gLec{background:linear-gradient(150deg,#c0562b,#4a1d10)}
 .gTalk{background:linear-gradient(150deg,#c0392b,#4a1410)}
 .gManiv{background:linear-gradient(150deg,#3a8fd6,#123150)}
+.gDv{background:linear-gradient(150deg,#b08a3e,#3b2a10)}
+.dvv{font:700 16px/1.6 'Frank Ruhl Libre',David,serif;margin-top:8px}
+.dvv i{display:block;font:400 12px Heebo,sans-serif;opacity:.6;font-style:normal}
+.dvx{font-size:14px;line-height:1.55;opacity:.85;border-right:3px solid #b08a3e;padding-right:8px}
 .gMed{background:linear-gradient(150deg,#4fb3a9,#123a4a)}
 .gInv{background:linear-gradient(150deg,#d9a441,#3a2a12)}
 .gShop{background:linear-gradient(150deg,#3aa55d,#1f6f8b)}
@@ -3829,6 +3833,11 @@ try{
     10.10. Itzik: "a link and a button in the monitor, lecture". The edited
     lecture text with slide thumbnails, the new slides and the deck, all in Drive.
   -->
+  <!--
+    12.10. Itzik: "an icon with the verses and the explanation under them",
+    about the 55 last verses of the Torah (Deuteronomy 32:39 to the end).
+  -->
+  <button type="button" class="gt gDv" id="gDv" data-new="1"><b>📜 סוף התורה</b><small>הפסוקים האחרונים וההסבר מתחתם</small></button>
   <button type="button" class="gt gLec" id="gLec" data-new="1"><b>🎤 הרצאה</b><small>כנגד כל הסיכויים: המלל הערוך עם השקפים</small></button>
   <!--
     11.10. Itzik: "a card I can send from, and later we delete it". The June
@@ -13817,6 +13826,42 @@ function lecSheet(){
  document.body.appendChild(w);
 }
 on('gLec',lecSheet);
+var DV_ITEMS=[
+ {r:'דברים ל״ב, ל״ט',v:'ראו עתה כי אני אני הוא ואין אלהים עמדי, אני אמית ואחיה, מחצתי ואני ארפא, ואין מידי מציל.',x:'הפגיעה והריפוי באים מאותו מקור, ולכן אין ייאוש גם אחרי מכה.'},
+ {r:'דברים ל״ב, מ״ז',v:'כי לא דבר רק הוא מכם, כי הוא חייכם, ובדבר הזה תאריכו ימים על האדמה.',x:'התורה אינה חובה צדדית, היא החיים עצמם. מכאן "ובחרת בחיים".'},
+ {r:'דברים ל״ב, מ״ט ונ״ב',v:'עלה אל הר העברים הזה הר נבו... וראה את ארץ כנען. כי מנגד תראה את הארץ, ושמה לא תבוא.',x:'משה מקבל לראות את היעד מרחוק ולא להיכנס אליו. התורה נגמרת דווקא במנהיג שלא מגיע ליעד.'},
+ {r:'דברים ל״ג, א׳',v:'וזאת הברכה אשר ברך משה איש האלהים את בני ישראל לפני מותו.',x:'משה מברך כל שבט בנפרד: כל אחד מקבל כוח משלו, ואין ברכה אחת שמתאימה לכולם.'},
+ {r:'דברים ל״ג, כ״ט',v:'אשריך ישראל מי כמוך, עם נושע בה׳.',x:'הסוף של הברכות הוא מבט של אהבה, לא של תוכחה.'},
+ {r:'דברים ל״ד, ז׳',v:'ומשה בן מאה ועשרים שנה במותו, לא כהתה עינו ולא נס לחה.',x:'הוא הולך בשיא הכוח, לא מתוך חולשה. העבודה נעצרת, לא האדם.'},
+ {r:'דברים ל״ד, ט׳',v:'ויהושע בן נון מלא רוח חכמה כי סמך משה את ידיו עליו.',x:'יהושע ממשיך: עבודה טובה לא חייבת להסתיים בידיים שלך, ומי שמעביר אותה הלאה לא נכשל.'},
+ {r:'דברים ל״ד, י׳',v:'ולא קם נביא עוד בישראל כמשה, אשר ידעו ה׳ פנים אל פנים.',x:'המילה האחרונה על משה היא הקרבה, לא ההישגים.'}
+];
+function dvSheet(){
+ var old=document.getElementById('dvSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='dvSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','סוף התורה');
+ w.innerHTML='<div class="ycard">'
+  +'<b>📜 סוף התורה: הפסוקים האחרונים</b>'
+  +'<small>מפרק ל״ב פסוק ל״ט ועד סוף הספר. מתחת לכל פסוק, מה הוא אומר.</small>'
+  +DV_ITEMS.map(function(it){
+    return '<div class="dvv"><i>'+esc(it.r)+'</i>'+esc(it.v)+'</div><div class="dvx">'+esc(it.x)+'</div>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gDv',dvSheet);
 /*
   9.10. Itzik calls Maniv Rishon (Lolos water, Plotitzki 10) on Monday morning
   and needs the old payments at hand. From the Lolos mail (100lolos). The tile
