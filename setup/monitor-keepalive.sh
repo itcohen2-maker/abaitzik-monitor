@@ -26,15 +26,7 @@ monitor-tenants-sync.timer|/home/monitor/abaitzik-monitor
 monitor-listen-ily.service|/home/monitor/ily-monitor
 monitor-worker-ily.timer|/home/monitor/ily-monitor
 monitor-remind.timer|/home/monitor/abaitzik-monitor
-monitor-watchdog-ily.timer|/home/monitor/ily-monitor
-monitor-listen-homestyle.service|/home/hs/homestyle-monitor
-monitor-worker-homestyle.timer|/home/hs/homestyle-monitor
-monitor-watchdog-homestyle.timer|/home/hs/homestyle-monitor
-monitor-sync-homestyle.timer|/home/hs/homestyle-monitor
-monitor-listen-yael.service|/home/yael/yael-monitor
-monitor-worker-yael.timer|/home/yael/yael-monitor
-monitor-watchdog-yael.timer|/home/yael/yael-monitor
-monitor-sync-yael.timer|/home/yael/yael-monitor"
+monitor-watchdog-ily.timer|/home/monitor/ily-monitor"
 
 restarted=""
 while IFS='|' read -r unit dir; do
