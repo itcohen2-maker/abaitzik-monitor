@@ -334,7 +334,7 @@ function build() {
   const remGone = ((require('./lib/notes-sync.js').read(path.join(inst.dataPath, 'notes', 'notes')) || {}).remGone) || {};
   const reminders = loadDocs('reminders')
     .map(x => ({ at: x.at, due: x.due || '', text: x.text || '',
-                 sentAt: x.sentAt || '' }))
+                 sentAt: x.sentAt || '', task: x.task || '' }))
     .filter(x => !remGone[(x.at || '') + '|' + (x.due || '')])
     .sort((a, b) => ((a.due || '') < (b.due || '') ? -1 : 1));
   /*
@@ -13778,8 +13778,16 @@ function todayItems(){
  var t0=tdDay(0),t1=tdDay(1),done=tkDone(),gone=clearedIds('tasksCleared'),known=remKnown();
  var ap=(D.appts||[]).filter(function(a){return tdOf(a.when)===t0;});
  var ap1=(D.appts||[]).filter(function(a){return tdOf(a.when)===t1;});
- var rm=remLive().filter(function(r){return tdOf(r.due)===t0||remHot(r);});
  var tk=(D.tasks||[]).filter(function(t){return !gone[t.id]&&(t.day===t0||(t.day&&t.day<t0&&!done[t.id]));});
+ // Itzik, 13.10 "יש פה כפילויות": a task written twice, or a reminder that only
+ // pushes tasks already listed (its "task" names them, or the same text), shows once.
+ var seen={};tk=tk.filter(function(t){var k=(t.text||'').trim();if(seen[k])return false;seen[k]=1;return true;});
+ var rm=remLive().filter(function(r){
+  if(!(tdOf(r.due)===t0||remHot(r)))return false;
+  var ids=[].concat(r.task||[]);
+  if(seen[(r.text||'').trim()])return false;
+  return !(ids.length&&ids.every(function(i){return (D.tasks||[]).some(function(t){return t.id===i;});}));
+ });
  return {ap:ap,ap1:ap1,rm:rm,tk:tk,done:done,known:known};
 }
 function todayTile(){

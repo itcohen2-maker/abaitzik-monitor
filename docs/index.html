@@ -1963,7 +1963,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-12T21:15:06.870Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-12T21:16:07.155Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3481,7 +3481,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='1c628080cb';
+var CODE_ID='c4fd1a29a1';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -9763,8 +9763,14 @@ function todayItems(){
  var t0=tdDay(0),t1=tdDay(1),done=tkDone(),gone=clearedIds('tasksCleared'),known=remKnown();
  var ap=(D.appts||[]).filter(function(a){return tdOf(a.when)===t0;});
  var ap1=(D.appts||[]).filter(function(a){return tdOf(a.when)===t1;});
- var rm=remLive().filter(function(r){return tdOf(r.due)===t0||remHot(r);});
  var tk=(D.tasks||[]).filter(function(t){return !gone[t.id]&&(t.day===t0||(t.day&&t.day<t0&&!done[t.id]));});
+ var seen={};tk=tk.filter(function(t){var k=(t.text||'').trim();if(seen[k])return false;seen[k]=1;return true;});
+ var rm=remLive().filter(function(r){
+  if(!(tdOf(r.due)===t0||remHot(r)))return false;
+  var ids=[].concat(r.task||[]);
+  if(seen[(r.text||'').trim()])return false;
+  return !(ids.length&&ids.every(function(i){return (D.tasks||[]).some(function(t){return t.id===i;});}));
+ });
  return {ap:ap,ap1:ap1,rm:rm,tk:tk,done:done,known:known};
 }
 function todayTile(){
