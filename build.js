@@ -12764,10 +12764,7 @@ on('gStory',storySheet);
 var FUT_ITEMS=[
  {n:'01',t:'החנייה: הקטע הראשון עם כיתוב בעברית. אחריו מצלמים אותך מגיב (4 שניות)',r:'parking-part1-he.mp4'},
  {n:'01ב',t:'החנייה: אותו קטע עם הכיתוב המקורי באנגלית',r:'parking-part1.mp4'},
- {n:'01ג',t:'החנייה: הסרטון המקורי המלא',r:'parking-original.mp4'},
- {n:'02',t:'אני אסתדר עם זה: התסריט להדפסה ואיך מצלמים',r:'fut02-handle-it-script.pdf'},
- {n:'02ב',t:'אני אסתדר עם זה: הריל המקורי (השראה)',r:'fut02-handle-it-original.mp4'},
- {n:'03',t:'חמישה דברים ששיניתי: צילום החיפוש בטיקטוק עם הדוגמאות (השראה)',r:'fut03-five-things-search.png'}
+ {n:'01ג',t:'החנייה: הסרטון המקורי המלא',r:'parking-original.mp4'}
 ];
 function futSheet(){
  var old=document.getElementById('ftSheet');if(old)old.remove();
@@ -13945,9 +13942,7 @@ var DUDI_ITEMS=[
  {n:'★',t:'כל ארבע ביחד, 2,309 ש״ח (PDF אחד)',r:'dudi-4-invoices-2309.pdf'},
  {n:'★ב',t:'כל ארבע ביחד, תמונה אחת לוואטסאפ',r:'dudi-4-invoices-2309.jpg'},
  {n:'01',t:'יוני, חשבונית 023334, 444 ש״ח (PDF)',r:'dudi-023334-june.pdf'},
- {n:'02',t:'יולי, חשבונית 023388, 888 ש״ח (PDF)',r:'dudi-023388-july.pdf'},
  {n:'01ב',t:'יוני, תמונה לגלריה',r:'dudi-023334-june.jpg'},
- {n:'02ב',t:'יולי, תמונה לגלריה',r:'dudi-023388-july.jpg'}
 ];
 function dudiSheet(){
  var old=document.getElementById('dudiSheet');if(old)old.remove();
@@ -13993,7 +13988,6 @@ document.getElementById('gLaw')&&document.getElementById('gLaw').addEventListene
 */
 var WIN_ITEMS=[
  {n:'01',t:'מרימים את הראש ולא את הידיים',f:'amirshwartz1, תגובה בטיקטוק על סרטון העוגה'},
- {n:'02',t:'בכל רגע נתון יש לנו שתי אופציות: לצעוד קדימה לצמיחה או לצעוד אחורה לנוחות.',f:'כרטיס שצילמתי, 7.10, #מיאתבוחרתלהיות?'}
 ];
 function winSheet(){
  var old=document.getElementById('winSheet');if(old)old.remove();
