@@ -591,8 +591,11 @@ test('a stuck microphone ends in one sheet with steps, not a reload', () => {
   assert.ok(denied.slice(0, 1600).includes("micDenied().then(function(denied){micStuck(denied?'denied':'refused');});"),
     'a refused permission goes to the sheet and says which case it is');
   assert.ok(!body.includes('setTimeout(hardReload,'), 'no reload: he said refresh does not fix it');
-  const empty = body.slice(body.indexOf('if(!b.size){'), body.indexOf('if(!b.size){') + 200);
-  assert.ok(empty.includes("micStuck('empty');"), 'an empty take reaches the same place');
+  const empty = body.slice(body.indexOf('if(!b.size){'), body.indexOf('if(!b.size){') + 900);
+  assert.ok(empty.includes("micStuck('empty');"), 'an empty take from a muted track reaches the same place');
+  // 12.10: empty with the track never muted is a missed take, not a stuck mic.
+  assert.ok(empty.includes("if(!(dd.m0||dd.m1||dd.m2)){"), 'an unmuted empty take only asks to tap again');
+  assert.ok(body.includes('if(!recChunks.length&&!me._waited){'), 'an empty stop waits once for late data');
   const ended = body.slice(body.indexOf('track.onended=function(){'), body.indexOf('track.onended=function(){') + 300);
   assert.ok(ended.includes("micStuck('ended');"), 'and so does a track that dies');
   assert.ok(body.includes("micStuck('hang');"), 'a permission call that never answers has a deadline');
