@@ -3073,6 +3073,16 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
 .reloadbig[disabled]{opacity:.6;font-size:14px}
 .reloadbig:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 /*
+  12.10, Itzik, voice note: "כפתור הענן לא נראה לעין, ולפעמים יש עדכון, תעשה
+  אותו מהבהב כדי שנוכל ללחוץ ולראות את העדכון". So the button is a real button
+  now, and when a new build is held back (he was reading or typing) it turns
+  yellow, blinks and says so, here and on the round one in the inner screens.
+*/
+.reloadbig{height:46px;color:var(--accent);border:2px solid var(--accent);background:var(--accent-soft)}
+.reloadbig.hasupd,.panebar .pb-r.hasupd{background:#fbc02d;border-color:#e65100;color:#3e2000;animation:updbeat 1s steps(1) infinite}
+@keyframes updbeat{50%{background:#e65100;color:#fff}}
+@media(prefers-reduced-motion:reduce){.reloadbig.hasupd,.panebar .pb-r.hasupd{animation:none}}
+/*
   The same microphone as the big one, shrunk.
 
   The first version was a flat blue disc and he could not see it, which is fair:
@@ -7662,6 +7672,11 @@ document.getElementById('netSeg').addEventListener('click',function(e){
 // running, green while I am listening, and the answer count updates on its own
 // so one reply can arrive without waiting for the rest.
 var liveSeen=null;
+// A newer build is waiting for him: the refresh buttons blink until he presses.
+function markUpd(on){
+ ['reloadBtn','pbReload'].forEach(function(id){var b=document.getElementById(id);if(b)b.classList.toggle('hasupd',!!on);});
+ var w=document.querySelector('#reloadBtn .rlw');if(w)w.textContent=on?'יש עדכון, לחץ':'רענן';
+}
 function paintLive(v){
  var bar=document.getElementById('liveBar');
  // The strip was removed from the home screen at his request. Everything else
@@ -8062,17 +8077,18 @@ function checkFresh(){
   }
   paintStamp();
   if(v)paintLive(v);
+  if(v&&v.builtAt===D.builtAt)markUpd(false);
   if(!v||!v.builtAt||v.builtAt===D.builtAt)return;
   var what=document.getElementById('liveWhat');
   // Only the data moved: take it in where he stands. He asked for an answer
   // that arrives without the screen jumping under his hands, and a reload is
   // exactly that jump, plus the draft in the box.
-  if(scrollingNow()){afterScroll();return;}
+  if(scrollingNow()){markUpd(true);afterScroll();return;}
   // Inside a screen and reading: nothing moves, not even the data. A line says
   // something new is waiting, and it comes in once he has been still a while.
   if(readingInner()){
    if(what&&liveSeen!==v.builtAt){liveSeen=v.builtAt;what.textContent='יש עדכון. מחכה שתסיים לקרוא.';}
-   afterReading();return;
+   markUpd(true);afterReading();return;
   }
   if(v.codeId&&CODE_ID&&v.codeId===CODE_ID){
    if(what&&liveSeen!==v.builtAt){liveSeen=v.builtAt;what.textContent='תשובה חדשה נכנסת.';}
@@ -8083,12 +8099,12 @@ function checkFresh(){
   // is exactly the prompt he saw vanish under his finger (30.9).
   // The answers still come in while the reload waits: only the code waits,
   // never the data. Holding both is what froze the card on top for hours.
-  if(recStarting||rec){softRefresh(v);return;}
+  if(recStarting||rec){softRefresh(v);markUpd(true);return;}
   // Never mid typing either (30.9, voice note: "באמצע הקלדה יש ריענון וזה מוחק
   // לי את הכל"). The new build waits for the next check after he stops.
-  if(typingNow()){softRefresh(v);return;}
+  if(typingNow()){softRefresh(v);markUpd(true);return;}
   // Reading on the home screen: the data comes in, the reload waits.
-  if(readingNow()){softRefresh(v);afterReading();return;}
+  if(readingNow()){softRefresh(v);markUpd(true);afterReading();return;}
   // A new build is up. Say so before reloading, so a reply that landed while
   // he was reading does not just make the screen jump under his hands.
   if(what&&liveSeen!==v.builtAt){liveSeen=v.builtAt;what.textContent='יש תשובה חדשה. טוען.';}
