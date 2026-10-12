@@ -653,9 +653,29 @@ function overBudget() {
   return true;
 }
 
+/*
+  12.10, Itzik on Rinat: "אני לא יכול לספוג את זה את הכל על המנוי שלי הוא יגמר",
+  and he chose to stop her until she has an account of her own. Root puts
+  /srv/monitor-changes/<id>.hold (the customer cannot write there); while it is
+  there no session runs on his token, and she is told once a day that her
+  messages are kept. Deleting the file, once her own token is in, resumes.
+*/
+function onHold() {
+  if (inst.name === 'abaitzik' || !fs.existsSync('/srv/monitor-changes/' + inst.name + '.hold')) return false;
+  say('ממתין לחשבון משלו. לא מפעיל סשן.');
+  const flag = path.join(STATUS, 'hold-told.json');
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
+  if (!DRY && readJson(flag, {}).day !== today && waiting().length) {
+    try { fs.writeFileSync(flag, JSON.stringify({ day: today })); } catch (e) {}
+    tell('העבודה ממתינה לחיבור חשבון', 'ההודעות שלך נשמרו ויטופלו מיד אחרי שהמוניטור יחובר לחשבון משלך.');
+  }
+  return true;
+}
+
 function main() {
   // 8.10: a paused customer gets no sessions at all.
   if (inst.paused) { say('מושהה. לא עונה.'); return; }
+  if (onHold()) return;
   if (overBudget()) return;
   const live = livePids();
   if (!DRY) reconcile(live);

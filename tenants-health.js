@@ -186,7 +186,8 @@ function main() {
     */
     let admin = false;
     try { admin = JSON.parse(fs.readFileSync(path.join(t.dir, 'instance.json'), 'utf8')).admin === true; } catch (e) {}
-    if (admin && !DRY) {
+    // A customer on hold (worker.js onHold) gets nothing done on Itzik's account either.
+    if (admin && !DRY && !fs.existsSync('/srv/monitor-changes/' + t.id + '.hold')) {
       const done = new Set(t.autoApproved || []);
       for (const x of reqs.filter((q) => q.status === 'pending' && !done.has(q.id))) {
         const at = new Date();
