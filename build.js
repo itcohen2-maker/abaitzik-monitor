@@ -989,6 +989,8 @@ const TENANT_TILES = {
   // Itzik, 11.10, for Alon: a few questions, and the answers come back as
   // suggestions for what else his monitor could hold.
   gIntake: ['g11', '🧭 שאלות היכרות', 'כמה לחיצות, ואציע מה עוד אפשר לבנות לך'],
+  // Rinat, 12.10: the files sent to her, each with a download button.
+  gFiles: ['g10', '📁 הקבצים שלי', 'מה ששלחת ומה שנשלח לך, עם הורדה'],
 };
 // With no screens chosen at intake, only the tiles that fit any work. The whole
 // catalog gave a phone only customer "connect the computer", a client follow up
@@ -1040,7 +1042,7 @@ function tenantTiles(inst) {
     + esc((l.icon ? l.icon + ' ' : '') + l.title) + '</b><small>' + esc(l.sub || 'פתיחה בלשונית חדשה') + '</small></button>').join('');
   return guides + links + ids.filter((id) => TENANT_TILES[id]).map((id) => {
     const [cls, title, sub] = TENANT_TILES[id];
-    return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"' + (id === 'gIntake' ? ' data-new="1"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' ? ' data-new="1"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
 }
 /*
