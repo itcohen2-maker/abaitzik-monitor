@@ -393,19 +393,20 @@ function adminRules() {
     '',
   ];
   /*
-    12.10, Itzik on Rinat: "תהפוך את רינת למנהלת ... תן לה יד חופשית". The
-    owner of this monitor is its admin: what she asks to change is changed now,
-    in her own files, with no request. The shared code is still not hers to
-    edit (the sync puts it back within 5 minutes and it serves every customer).
+    12.10, Itzik on Rinat: "תהפוך את רינת למנהלת ... תן לה יד חופשית".
+    Narrowed the same evening: "לא מעוניין שתשנה דברים מהותיים במוניטור, אלא
+    רק תוסיף לעצמה בקשות ומענות, לא משהו שקשור בממשק". So the admin changes
+    only how her assistant answers (profile.md, CLAUDE.md); anything on the
+    page itself goes to Itzik as a request, like any customer.
   */
   if (inst.admin) return [
-    inst.owner + ' היא המנהלת של המוניטור הזה. שינוי שהיא מבקשת מבצעים מיד, בלי בקשה ממנהל ובלי לשאול אף אחד.',
-    'מה משנים ואיך: האריחים, המסכים, הכותרות, הברכה, ההסברים והקישורים ב-instance.json (screens, guides, links, welcome,',
-    'pageTitle, homeTile, emptyCircles); איך העוזר עונה ב-data/profile.md וב-CLAUDE.md; ואז `node build.js` ו-`node push.js "<מה השתנה>"`.',
-    'אחרי כל שינוי בודקים שהדף נבנה (build.js בלי שגיאה) ומספרים לה בשורה אחת מה השתנה.',
-    'לא נוגעים ב-name, publicUrl, basePath, origin, uploadUrl, ntfy, admin, ולא בקבצי המפתחות: מזה המוניטור שלה נשבר.',
-    'קוד המוצר עצמו (קבצי js) לא עורכים כאן: הוא משותף לכל המוניטורים ומוחזר תוך חמש דקות. תכונה חדשה שדורשת קוד:',
-    '`node change-request.js add --re <id ההודעה שלה> "<מה היא רוצה>"`, ותענה שזה בדרך, בלי לבקש ממנה אישור.',
+    inst.owner + ' מנהלת את התוכן של המוניטור הזה, לא את הממשק שלו.',
+    'מה היא משנה מיד, בלי בקשה ממנהל: איך העוזר שלה עונה ומה הוא עושה בשבילה, כלומר כללים, בקשות קבועות ומענים,',
+    'ב-data/profile.md וב-CLAUDE.md בלבד. אחרי שינוי: `node push.js "<מה השתנה>"`, ומספרים לה בשורה אחת מה השתנה.',
+    'כל מה שקשור בממשק לא משנים כאן: instance.json כולו (אריחים, מסכים, כותרות, ברכה, הסברים, קישורים, צבעים), העיצוב,',
+    'קבצי המפתחות וקוד המוצר (קבצי js). בקשה כזו: `node change-request.js add --re <id ההודעה שלה> "<מה היא רוצה, במילים שלה>"`,',
+    'ותענה: "שלחתי את הבקשה למנהל. כשהוא יחליט, תקבלי כאן תשובה."',
+    'שימוש רגיל (הודעות, תזכורות, משימות, פתקים, רעיונות, שאלות) מבצעים כרגיל.',
     'מי שעונה כאן הוא "העוזר שלך" של המוניטור. בתשובות לא מזכירים את השם קלוד, Claude, איציק או אבא איציק.',
     '',
   ];

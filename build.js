@@ -862,7 +862,7 @@ function build() {
   // 11.10: and the link tiles, a site of the customer's own behind a tile.
   const links = tenantLinks(inst).map((l) => ({ key: l.key, url: l.url }));
   const screens = Array.isArray(inst.screens) && inst.screens.length
-    ? inst.screens.filter((id) => id !== 'gAdminReq').concat(guides.map((g, i) => 'gGuide' + i), links.map((l, i) => 'gLink' + i), inst.admin ? [] : ['gAdminReq']) : inst.screens;
+    ? inst.screens.filter((id) => id !== 'gAdminReq').concat(guides.map((g, i) => 'gGuide' + i), links.map((l, i) => 'gLink' + i), ['gAdminReq']) : inst.screens;
   /*
     8.10, from the reviewer: "שכחתי את הקוד" on the lock. The page files a request
     to Itzik carrying a random device mark it keeps; once he approves, the mark is
@@ -1048,8 +1048,8 @@ function tenantTiles(inst) {
   const ids = (Array.isArray(inst.screens) && inst.screens.length ? inst.screens : TENANT_DEFAULT).filter((id) => id !== 'gAdminReq');
   // Itzik, 5.10: a customer does not change the system, he asks. The way to ask
   // is on every customer's home screen, whatever his intake chose.
-  // 12.10: a customer who is her own admin (Rinat) has nobody to ask.
-  if (!inst.admin) ids.push('gAdminReq');
+  // 12.10 evening: an admin (Rinat) asks too, for anything on the page.
+  ids.push('gAdminReq');
   // esc() is defined far above; this part is also lifted alone by a test.
   const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const guides = tenantGuides(inst).map((g, i) => '\n  <button type="button" class="gt g11" id="gGuide' + i + '"><b>'
