@@ -900,6 +900,18 @@ async function handleOne(m) {
     remember(m);
     return;
   }
+  // A long text that ntfy turned into attachment.txt: read it back as the
+  // message, so its code line is checked like any other send (see group.js).
+  if (group.isLongText(m.attachment)) {
+    let raw = '';
+    try { const res = await fetch(m.attachment.url); raw = res.ok ? await res.text() : ''; }
+    catch (e) { raw = ''; }
+    if (raw.trim()) {
+      say('הודעה ארוכה הגיעה כקובץ, נקראת כטקסט');
+      m = Object.assign({}, m, { message: raw });
+      delete m.attachment;
+    }
+  }
   if (m.attachment) {
     const saved = await saveAttachment(m);
     if (saved && joinSlices(m) === 'waiting') { remember(m); await beat(); return; }

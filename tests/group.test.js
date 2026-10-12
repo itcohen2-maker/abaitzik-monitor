@@ -211,3 +211,11 @@ test('a send without his code is held, and the coded part releases it', () => {
   delete process.env.ABAITZIK_OWNER_CODE;
   delete require.cache[require.resolve('../listen.js')];
 });
+
+test('a long text ntfy turned into attachment.txt is read as text, a real file is not', () => {
+  const g = require('../lib/group.js');
+  assert.equal(g.isLongText({ name: 'attachment.txt', size: 7354 }), true);
+  assert.equal(g.isLongText({ name: 'attachment.txt', size: 900000 }), false);
+  assert.equal(g.isLongText({ name: 'photo.jpg', size: 7354 }), false);
+  assert.equal(g.isLongText(null), false);
+});
