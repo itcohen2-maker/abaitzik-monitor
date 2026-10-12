@@ -178,7 +178,31 @@ function main() {
     const fresh = reqs.filter((x) => x.status === 'pending' && !known.has(x.id));
     if (JSON.stringify(reqs) !== JSON.stringify(t.requests || [])) changed = true;
     t.requests = reqs;
-    if (fresh.length && !DRY) {
+    /*
+      12.10, Itzik on Rinat: "שהיא לא תצטרך לבקש ממני יותר אישורים". A customer
+      who is her own admin has every request approved here, by code: it lands in
+      his chat as the same "אישור בקשת שינוי" his button sends, and his worker
+      carries it out. Nothing rings and nothing waits for him.
+    */
+    let admin = false;
+    try { admin = JSON.parse(fs.readFileSync(path.join(t.dir, 'instance.json'), 'utf8')).admin === true; } catch (e) {}
+    if (admin && !DRY) {
+      const done = new Set(t.autoApproved || []);
+      for (const x of reqs.filter((q) => q.status === 'pending' && !done.has(q.id))) {
+        const at = new Date();
+        const stamp = at.toISOString().replace(/[-:]/g, '').slice(0, 13).replace('T', '-');
+        const chat = path.join(inst.dataPath, 'chat', 'chat');
+        fs.mkdirSync(chat, { recursive: true });
+        fs.writeFileSync(path.join(chat, stamp + '-itzik-auto-approve-' + x.id + '.json'), JSON.stringify({
+          at: at.toISOString(), from: 'itzik', id: 'auto-' + x.id, status: 'working', auto: true, autoApproved: true,
+          text: 'אישור בקשת שינוי ' + t.id + '/' + x.id + '\n(אישור אוטומטי: ' + (t.title || t.id) + ' מנהלת את המוניטור שלה)\n' + x.text,
+        }, null, 1), 'utf8');
+        done.add(x.id);
+        console.log('auto approved ' + t.id + '/' + x.id);
+      }
+      t.autoApproved = [...done].slice(-50);
+    }
+    if (fresh.length && !DRY && !admin) {
       try {
         execFileSync('node', ['notify.js', '📨 ' + (t.title || t.id) + ' מבקש שינוי', fresh.map((x) => x.text).join(' · ').slice(0, 300)],
           { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
