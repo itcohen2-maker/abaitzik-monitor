@@ -1963,7 +1963,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-12T21:12:19.295Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-12T21:13:15.665Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2109,7 +2109,7 @@ try{
   <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>05 עד 20, גם באיכות גבוהה</small></button>
   <button type="button" class="gt gStory" id="gStory" data-new="1"><b>🎞️ סטורי</b><small>ריק כרגע, הסטורי עלה</small></button>
-  <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית</small></button>
+  <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה</small></button>
   <button type="button" class="gt gPen" id="gPen"><b>🏦 פנסיה</b><small>קוד מוסד בבנק 28417, 1,211 ש״ח. בדיקה ב 18.10</small></button>
   <button type="button" class="gt gStk" id="gStk"><b>🎭 תיאטרון רמת הנשיא</b><small>האתר שלך ושל אלון: קישור, העתקה ושליחה לאלון</small></button>
   <button type="button" class="gt gLec" id="gLec" data-new="1"><b>🎤 הרצאה</b><small>כנגד כל הסיכויים: המלל הערוך עם השקפים</small></button>
@@ -3481,7 +3481,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='1a2aef00cb';
+var CODE_ID='1c628080cb';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -8994,7 +8994,8 @@ var FUT_ITEMS=[
  {n:'01',t:'החנייה: הקטע הראשון עם כיתוב בעברית. אחריו מצלמים אותך מגיב (4 שניות)',r:'parking-part1-he.mp4'},
  {n:'01ב',t:'החנייה: אותו קטע עם הכיתוב המקורי באנגלית',r:'parking-part1.mp4'},
  {n:'01ג',t:'החנייה: הסרטון המקורי המלא',r:'parking-original.mp4'},
- {n:'04',t:'מאכלים להפחית: בשר מעובד, בשר אדום, אלכוהול ומזון אולטרה מעובד (צילום מסך מגוגל)',r:'fut04-foods-to-cut.png'}
+ {n:'04',t:'מאכלים להפחית: בשר מעובד, בשר אדום, אלכוהול ומזון אולטרה מעובד (צילום מסך מגוגל)',r:'fut04-foods-to-cut.png'},
+ {n:'05',t:'תפסיקו לישון עם הטלפון ליד הפנים: שמונה נזקים, משינה ועד הלב (צילום מסך מאינסטגרם)',r:'fut05-phone-by-bed.png'}
 ];
 function futSheet(){
  var old=document.getElementById('ftSheet');if(old)old.remove();
