@@ -21,8 +21,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="המוניטור">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icons/icon-180.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png?v=2">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=2">
 <title>אבא איציק בבנייה עצמית</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -986,6 +986,9 @@ body.editing .bn{display:none}
 .c-hs{background:linear-gradient(160deg,#ef8f00,#b26a00)}
 .c-al{background:linear-gradient(160deg,#7e57c2,#4527a0)}
 .c-rn{background:linear-gradient(160deg,#d81b60,#8e1046)}
+.ic .c.c-empty{background:transparent;border:2px dashed var(--line);box-shadow:none;color:var(--dim);font:300 28px Heebo,sans-serif;box-sizing:border-box}
+.ic .c.c-empty:after{display:none}
+.emptyNote{margin:0 4px 12px;color:var(--dim);font:300 12.5px Heebo,sans-serif;text-align:center}
 .c-kb{background:linear-gradient(160deg,#34d399,#047857)}
 .c-vd{background:linear-gradient(160deg,#fbbf24,#d97706)}
 .c-hb{background:linear-gradient(160deg,#fbbf24,#b45309)}
@@ -1910,7 +1913,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-12T06:43:56.811Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-12T06:44:29.655Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3412,7 +3415,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='6057431139';
+var CODE_ID='fe7abf47f3';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -9047,6 +9050,9 @@ function adminReqSheet(){
  setTimeout(function(){var x=document.getElementById('arText');if(x)x.focus();},50);
 }
 on('gAdminReq',adminReqSheet);
+Array.prototype.forEach.call(document.querySelectorAll('.icEmpty'),function(b){
+ b.onclick=function(){adminReqSheet();var t=document.getElementById('arText');if(t){t.value='בעיגול הריק במסך הבית '+'הייתי רוצה'+': ';t.focus();}};
+});
 var INTAKE_Q=[
  ['במה המוניטור יכול לעזור לך הכי הרבה?',['עבודה ועסק','בית ומשפחה','בריאות וכושר','תחביבים ויצירה','כסף וחשבונות','ללמוד דברים חדשים']],
  ['מה הכי גוזל לך זמן?',['מיילים והודעות','סידורים ותורים','לזכור דברים','לחפש מידע','ניירת וחשבונות','כלום מיוחד']],

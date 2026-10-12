@@ -1010,6 +1010,20 @@ function tenantGuides(inst) {
 function tenantLinks(inst) {
   return (Array.isArray(inst.links) ? inst.links : []).filter((l) => l && l.key && l.title && /^https:\/\/[^\s"'<>]+$/.test(l.url || ''));
 }
+/*
+  Itzik, 12.10: "שים להם לאלון ולרינת כמה אייקונים עגולים ותרשום שזה ריק ואפשר
+  להוסיף שם משהו אם בא להם". instance.json: emptyCircles: N (up to 8). Empty round
+  places on the home screen; a tap opens the request to Itzik, since a customer
+  asks and does not change the system himself. No id, so the screens filter
+  never hides them.
+*/
+function tenantCircles(inst) {
+  const n = Math.max(0, Math.min(8, Number(inst.emptyCircles) || 0));
+  if (!n) return '';
+  const one = '\n   <button type="button" class="ic icEmpty"><span class="c c-empty" aria-hidden="true">+</span>ריק</button>';
+  return '\n  <div class="row" id="blkEmpty" role="group" aria-label="מקומות ריקים">' + one.repeat(n) + '\n  </div>'
+    + '\n  <p class="emptyNote">העיגולים ריקים. אפשר להוסיף בהם משהו, אם בא לך: לוחצים על אחד וכותבים מה.</p>';
+}
 function tenantTiles(inst) {
   const ids = (Array.isArray(inst.screens) && inst.screens.length ? inst.screens : TENANT_DEFAULT).filter((id) => id !== 'gAdminReq');
   // Itzik, 5.10: a customer does not change the system, he asks. The way to ask
@@ -1093,8 +1107,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="${inst.appTitle}">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icons/icon-180.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png?v=2">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=2">
 <title>${inst.pageTitle}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2233,6 +2247,10 @@ body.editing .bn{display:none}
 .c-hs{background:linear-gradient(160deg,#ef8f00,#b26a00)}
 .c-al{background:linear-gradient(160deg,#7e57c2,#4527a0)}
 .c-rn{background:linear-gradient(160deg,#d81b60,#8e1046)}
+/* 12.10: an empty place a customer can ask to fill. Dashed, no gloss. */
+.ic .c.c-empty{background:transparent;border:2px dashed var(--line);box-shadow:none;color:var(--dim);font:300 28px Heebo,sans-serif;box-sizing:border-box}
+.ic .c.c-empty:after{display:none}
+.emptyNote{margin:0 4px 12px;color:var(--dim);font:300 12.5px Heebo,sans-serif;text-align:center}
 /* קבלות. Paper, not a brand colour: the page behind it is a ledger. */
 .c-kb{background:linear-gradient(160deg,#34d399,#047857)}
 .c-vd{background:linear-gradient(160deg,#fbbf24,#d97706)}
@@ -3890,7 +3908,7 @@ try{
   -->
   <!-- 6.10, Home Style: one coloured line over the tiles, filled from D.ship. Hidden without a shipments table. -->
   <button type="button" class="shipline" id="shipLine" hidden></button>
-  <div class="grid" id="blkTiles">${tenantTiles(inst)}</div>
+  <div class="grid" id="blkTiles">${tenantTiles(inst)}</div>${tenantCircles(inst)}
 <!--TENANT:END-->
 
 
@@ -12840,6 +12858,10 @@ function adminReqSheet(){
  setTimeout(function(){var x=document.getElementById('arText');if(x)x.focus();},50);
 }
 on('gAdminReq',adminReqSheet);
+// 12.10: an empty circle opens the same request, already started.
+Array.prototype.forEach.call(document.querySelectorAll('.icEmpty'),function(b){
+ b.onclick=function(){adminReqSheet();var t=document.getElementById('arText');if(t){t.value='בעיגול הריק במסך הבית '+'הייתי רוצה'+': ';t.focus();}};
+});
 /*
   Itzik, 11.10, for Alon: general questions in chips, a few taps and one free
   line. The answers go to the chat as one message, and the answer there is a
