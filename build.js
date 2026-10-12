@@ -5143,7 +5143,7 @@ function fileView(name){
   var body=ov.querySelector('.fv-body');body.innerHTML=h;
   var zb=body.querySelector('.fv-zoom');if(zb)fvZoom(zb);
   var sb=body.querySelector('.fv-share');
-  if(sb)sb.onclick=function(){var f2=sf;try{if(sf.name!==short)f2=new File([b],short,{type:sf.type});}catch(x){}navigator.share({files:[f2],title:short}).catch(shareFail);};
+  if(sb)sb.onclick=function(){var f2=sf;try{if(sf.name!==short)f2=new File([b],short,{type:sf.type});}catch(x){}navigator.share({files:[f2]}).catch(shareFail);};
   var pb=body.querySelector('.fv-print');
   /*
     Itzik, 5.10: "הכפתור שליחה להדפסה לא עובד". The monitor runs from his
@@ -5211,6 +5211,18 @@ function waFiles(m){
  })).then(function(fs){st.files=fs;return fs;},function(er){delete waPrep[k];throw er;});
  st.p.catch(function(){});
  waPrep[k]=st;return st;
+}
+function waPick(names){
+ var w=document.createElement('div');w.className='ysheet';w.setAttribute('role','dialog');
+ w.innerHTML='<div class="ycard"><b>איזה קובץ לשלוח?</b><small>וואטסאפ מקבל קובץ אחד בכל פעם</small>'
+  +names.map(function(n,i,a){return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+esc(fileNiceName(n))+'</button>';}).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button></div>';
+ w.onclick=function(e){
+  if(e.target===w)return w.remove();
+  var k=e.target.closest&&e.target.closest('[data-k]');if(!k)return;
+  w.remove();k=k.getAttribute('data-k');if(k!=='')fileOpen(names[+k]);
+ };
+ document.body.appendChild(w);
 }
 function waText(m){
  var NL=String.fromCharCode(10);
@@ -6787,6 +6799,14 @@ function renderThread(){
   b.addEventListener('pointerdown',prep);
   b.onclick=function(e){
    e.stopPropagation();e.preventDefault();
+   /*
+     Itzik, 12.10, on Dudi's invoices: "אני לא מצליח לשלוח דרך הוואטסאפ".
+     A message with a PDF and a picture handed both to the share sheet at once,
+     and WhatsApp on the iPhone refuses several files unless all are pictures.
+     Now such a message asks which file, and that one goes alone.
+   */
+   var ns=(GKEY&&navigator.share)?msgFileNames(m):[];
+   if(ns.length>1&&!ns.every(function(n){return String((fileEntry(n)||{}).t||'').indexOf('image/')===0;})){waPick(ns);return;}
    var st=(GKEY&&navigator.share&&msgFileNames(m).length)?waFiles(m):null;
    if(st&&st.files){
     if(!navigator.canShare||navigator.canShare({files:st.files})){
