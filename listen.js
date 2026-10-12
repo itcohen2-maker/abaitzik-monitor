@@ -888,11 +888,43 @@ async function handle(m) {
   checkSources();
 }
 
+/*
+  12.10, Itzik: Rinat's work should run on her own Claude subscription. She makes
+  a key on her computer (`claude setup-token`) and sends it here, in the chat,
+  as "חיבור חשבון: sk-ant-oat...". The key never reaches the log, the chat or a
+  session: it goes to data/status/own-token.txt (600), and root's
+  monitor-owntoken@<id>.path puts it in /etc/<id>.env, tests it and deletes the
+  file (setup/apply-own-token.sh). The page sends it with Cache: no, so ntfy
+  keeps no copy. Itzik's own monitor never takes one.
+*/
+function ownToken(m) {
+  const body = String(m.message || '');
+  const key = (/sk-ant-oat[0-9A-Za-z_-]{20,}/.exec(body) || [])[0];
+  if (!key) return false;
+  if (inst.name === 'abaitzik' || !ownerCodeOk(body)) { say('הגיע מפתח חשבון שלא מכאן או בלי קוד. נמחק בלי לשמור.'); return true; }
+  try {
+    const f = path.join(inst.dataPath, 'status', 'own-token.txt');
+    fs.writeFileSync(f, key + '\n', { mode: 0o600 });
+    fs.chmodSync(f, 0o600);
+    const at = new Date();
+    const stamp = at.toISOString().replace(/[-:]/g, '').slice(0, 15).replace('T', '-');
+    fs.mkdirSync(CHAT, { recursive: true });
+    const id = 'owntoken-' + at.getTime().toString(36);
+    fs.writeFileSync(path.join(CHAT, stamp + '-itzik-owntoken.json'), JSON.stringify({ at: at.toISOString(), from: 'itzik', id,
+      text: 'חיבור חשבון (המפתח נשמר במקום נעול ולא מוצג כאן)', status: 'done' }, null, 1), 'utf8');
+    fs.writeFileSync(path.join(CHAT, stamp + '-claude-owntoken.json'), JSON.stringify({ at: at.toISOString(), from: 'claude', re: id,
+      text: 'המפתח התקבל. תוך דקה המוניטור עובר לעבוד על החשבון שלך, ותקבלי כאן אישור.', status: 'done' }, null, 1), 'utf8');
+    say('מפתח חשבון התקבל ונשמר (לא מוצג).');
+  } catch (e) { say('!! מפתח חשבון לא נשמר: ' + e.message); }
+  return true;
+}
+
 async function handleOne(m) {
   const seen = mark();
   if (m.time === seen.time && seen.ids.includes(m.id)) return;
   received++;
   lastMsgAt = Date.now();
+  if (ownToken(m)) { remember(m); return; }
   say('הודעה: ' + group.stripCode(String(m.message || '(צרופה)')).slice(0, 80));
   // The notes and task ticks the page keeps on the server too. Not a message:
   // it never enters the chat, it only refreshes the copy a new phone fills from.

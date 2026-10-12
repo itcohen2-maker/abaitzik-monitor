@@ -497,7 +497,7 @@ function run(list) {
   const args = ['-p', '--dangerously-skip-permissions', '--model', process.env.MONITOR_PLAN_MODEL || 'claude-opus-5-5', '--output-format', 'json'];
   if (process.platform === 'win32') args.splice(1, 0, '--chrome');
   // 12.10: one customer session can not run away either (see overBudget).
-  if (inst.name !== 'abaitzik') args.push('--max-budget-usd', String(SESSION_USD));
+  if (inst.name !== 'abaitzik' && !ownAccount()) args.push('--max-budget-usd', String(SESSION_USD));
   const child = spawn('claude', args,
     { cwd: HERE, shell: true, windowsHide: true });
   child.stdin.end(text, 'utf8');
@@ -639,8 +639,12 @@ function spentToday() {
       .reduce((n, l) => { try { const u = JSON.parse(l); return day(new Date(u.at)) === today ? n + (u.usd || 0) : n; } catch (e) { return n; } }, 0);
   } catch (e) { return 0; }
 }
+// 12.10: a customer whose own Claude key is in (setup/apply-own-token.sh) spends its own
+// subscription, so Itzik's ceilings no longer apply to it.
+function ownAccount() { return fs.existsSync('/srv/monitor-changes/' + inst.name + '.own'); }
+
 function overBudget() {
-  if (inst.name === 'abaitzik') return false;
+  if (inst.name === 'abaitzik' || ownAccount()) return false;
   const spent = spentToday();
   if (spent < DAY_USD) return false;
   say('הגיע לתקרה היומית: $' + spent.toFixed(2) + ' מתוך $' + DAY_USD + '. לא מפעיל סשן עד מחר.');

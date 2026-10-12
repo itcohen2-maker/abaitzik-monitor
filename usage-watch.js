@@ -108,7 +108,7 @@ function summarize(now, sub) {
     const past = days.slice(1).map((d) => byDay[d] || 0).filter((x) => x > 0).sort((a, b) => a - b);
     const usual = past.length ? past[Math.floor(past.length / 2)] : 0;
     const week = days.slice(0, 7);
-    return { id: mon.id, label: mon.label, today: byDay[today] || 0, usual, week: week.reduce((s, d) => s + (byDay[d] || 0), 0), sessions, longSolo, models, pc,
+    return { id: mon.id, label: mon.label, own: fs.existsSync('/srv/monitor-changes/' + mon.id + '.own'), today: byDay[today] || 0, usual, week: week.reduce((s, d) => s + (byDay[d] || 0), 0), sessions, longSolo, models, pc,
       tokToday: tokDay[today] || 0, tokWeek: week.reduce((s, d) => s + (tokDay[d] || 0), 0),
       yesterday: { usd: byDay[days[1]] || 0, tok: tokDay[days[1]] || 0 } };
   }).concat(pcRow ? [(() => {
@@ -142,6 +142,9 @@ function subText(sum, sub, now) {
     if (sub.five) out.push('5 שעות  ' + bar(sub.five.pct, 20) + ' ' + Math.round(sub.five.pct) + '%' + (sub.five.resets ? ', מתאפס ' + when(sub.five.resets) : '') + '.');
     if (sub.ageH > 2) out.push('(נקרא לאחרונה ' + when(sub.at) + ', המחשב כבוי מאז.)');
   }
+  // A customer on its own account (setup/apply-own-token.sh) is not on his meter.
+  const own = sum.filter((s) => s.own);
+  sum = sum.filter((s) => !s.own);
   const tot = sum.reduce((n, s) => n + s.week, 0);
   if (tot > 0) {
     out.push('', 'מי לקח כמה השבוע (מחיר מחירון, ובערך מה זה מהמכסה השבועית):');
@@ -150,6 +153,7 @@ function subText(sum, sub, now) {
       out.push(bar(share, 12) + ' ' + Math.round(share) + '%  ' + s.label + ': ' + usd(s.week) + (sub && sub.week ? ', בערך ' + Math.round(share / 100 * sub.week.pct) + '% מהמכסה' : '') + '. היום ' + usd(s.today) + '.');
     }
   }
+  if (own.length) out.push('על חשבון משלהם, לא על המנוי שלך: ' + own.map((s) => s.label + ' ' + usd(s.week) + ' השבוע').join(', ') + '.');
   return out.join('\n');
 }
 

@@ -5439,7 +5439,8 @@ function NTFYIN(){ return secret('ntfyIn'); }
 function ntfyText(kind, text, gid) {
  // Headers have to stay ASCII, so the Hebrew all rides in the body.
  return fetch('https://ntfy.sh/' + NTFYIN(), {
-  method: 'POST', headers: { Title: 'monitor' + (gid ? ' ' + gid + ' cap' : ''), 'X-Tags': 'memo' },
+  // 12.10: an account key (listen.js ownToken) is never kept on ntfy's side.
+  method: 'POST', headers: Object.assign({ Title: 'monitor' + (gid ? ' ' + gid + ' cap' : ''), 'X-Tags': 'memo' }, String(text).indexOf('sk-ant-oat') > -1 ? { Cache: 'no' } : {}),
   // The page is emitted from a template literal, so a backslash escape here
   // would be eaten at build time. The newline is built from its code point.
   body: [kind, text, '', 'קוד ' + sendCode()].join(String.fromCharCode(10))
@@ -5449,7 +5450,9 @@ function ntfyText(kind, text, gid) {
 // mailbox had to, so the page can tell him which one it went out on rather
 // than naming a channel he has no reason to care about.
 function sendText(subject, text, kind) {
- return ntfyText(kind, text).catch(function () {
+ return ntfyText(kind, text).catch(function (e) {
+  // An account key never goes by mail.
+  if (String(text).indexOf('sk-ant-oat') > -1) throw e;
   return fetch('https://formsubmit.co/ajax/' + MAILBOX(), {
    method: 'POST',
    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },

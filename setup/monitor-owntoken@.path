@@ -1,0 +1,8 @@
+[Unit]
+Description=A customer's own Claude key arrived (%i)
+
+[Path]
+PathExists=/home/%i/%i-monitor/data/status/own-token.txt
+
+[Install]
+WantedBy=multi-user.target

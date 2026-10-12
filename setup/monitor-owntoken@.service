@@ -1,0 +1,6 @@
+[Unit]
+Description=Apply a customer's own Claude key (%i)
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /home/monitor/abaitzik-monitor/setup/apply-own-token.sh %i
