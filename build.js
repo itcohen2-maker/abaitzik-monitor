@@ -1445,6 +1445,12 @@ button.abtn[disabled]{opacity:.55}
 .gr-more summary span{color:var(--accent,#2b7cd3);font-weight:600;white-space:nowrap}
 .gr-more[open] summary{display:none}
 .gr-x small{display:block;color:var(--dim);font-size:12.5px;margin-top:4px}
+.gr-ans{flex:1 1 100%;order:10;min-width:0;border-top:1px dashed var(--line);padding-top:8px;cursor:auto}
+.gr-a{font-size:15px;line-height:1.5;overflow-wrap:anywhere;background:var(--ground,#f4f6f9);
+ border-radius:10px;padding:8px 10px;margin-bottom:6px;white-space:pre-line}
+.gr-at{display:block;font-size:12px;color:var(--dim);margin-bottom:2px}
+.gr-wait{color:var(--dim);font-weight:300;background:transparent;padding:2px 0}
+.gr-rep summary{font-size:14px;color:var(--accent)}
 .gr-s{flex:0 0 auto;font-size:12px;border-radius:999px;padding:3px 9px;font-weight:700}
 .gr-w{background:#fff3cd;color:#7a5200}
 .gr-g{background:#e3ecfb;color:#1a4b9c}
@@ -4447,8 +4453,8 @@ try{
 <section id="pB" hidden>
  <!-- Itzik, 8.10, from the reviewer: the explanation sat as a grey paragraph under the whole list, where nobody new scrolls. Now one short line on top for the first days, and the rest behind the ? next to the title. -->
  <h2>מה התקבל <button type="button" class="hq" data-q="gotHelp" aria-label="הסבר על המסך">?</button></h2>
- <div class="hint1" data-tip="gotTip" hidden>כאן כל מה ששלחת, לפי מצב. בקשה שלא צריך יותר מבטלים בכפתור שלידה.<button type="button" class="hint1x" aria-label="סגירה">✕</button></div>
- <div class="hint hq-t" id="gotHelp" hidden>כל מה ששלחת לי, לפי מצב: מה בעבודה עכשיו, מה התקבל ועוד לא התחיל, המשימות הפתוחות, ומה שבוצע. חדש למעלה. ביטול הבקשה עוצר אותה באמת והיא עוברת לבוצע עם הסימן בוטל. הסתרה ליד כל שורה, והסתר הכל למעלה, רק מורידות מהמסך שלך והעבודה ממשיכה. בסוף הדף אפשר להחזיר הכל.</div>
+ <div class="hint1" data-tip="gotTip" hidden>כל הודעה שלך בכרטיס אחד, והתשובה שלי מתחתיה.<button type="button" class="hint1x" aria-label="סגירה">✕</button></div>
+ <div class="hint hq-t" id="gotHelp" hidden>כל הודעה ששלחת היא כרטיס אחד, חדש למעלה: מה שלחת והמצב שלה (התקבל, בעבודה, בוצע), ומתחת התשובות שלי אליה ברגע שהן נכתבות. בכל כרטיס אפשר להגיב, להעתיק ולמחוק. ביטול הבקשה עוצר אותה באמת. מחיקה והסתר הכל מורידות רק מהמסך שלך, ובסוף הדף אפשר להחזיר הכל.</div>
  <div class="gotlist" id="gotBox"></div>
 </section>
 
@@ -9312,6 +9318,38 @@ function renderGot(){
  var done=all.filter(function(m){return m.status==='done';});
  var K=dropGone('cmd',D.openCmds||[]);
  /*
+   Itzik, 12.10, voice: "כל הודעה עם מה שהתקבל מופיע במוקאפ אחד, אם זה בעבודה
+   אז זה בעבודה, וברגע שזה מתעדכן אז זה מתעדכן מתחת עם המלל, שיהיה אפשר גם
+   להגיב או רק להסתכל וכמובן למחוק". His message and my answers to it were on
+   two different screens. Now one card per message, newest first: what he sent
+   and where it stands on top, every answer of mine to it underneath as it
+   lands, and under them a reply box and a delete.
+ */
+ var ANS={};
+ (D.chat||[]).forEach(function(x){
+  if(x.from==='claude'&&x.re)(ANS[x.re]=ANS[x.re]||[]).push(x);
+ });
+ function ansWords(t){
+  t=String(t||'').trim();
+  if(t.length<=260)return linkify(t);
+  var cut=t.slice(0,260).replace(/\s+\S*$/,'');
+  return '<details class="gr-more"><summary>'+esc(cut)+'… <span>הכל</span></summary>'
+   +'<div>'+linkify(t)+'</div></details>';
+ }
+ function under(m){
+  var A=(m.id&&ANS[m.id]||[]).slice().sort(function(a,b){return (a.at||'')<(b.at||'')?-1:1;});
+  var h='<div class="gr-ans">';
+  h+=A.map(function(a){
+   return '<div class="gr-a"><span class="gr-at">'+esc(stamp(a.at))+'</span>'+ansWords(a.text)+'</div>';
+  }).join('');
+  if(!A.length&&!isCancelled(m))h+='<div class="gr-a gr-wait">'
+   +(m.status==='working'?'בעבודה. התשובה תופיע כאן ברגע שתהיה.'
+    :m.status==='done'?'בוצע.':'התקבל. התשובה תופיע כאן.')+'</div>';
+  h+='<details class="remreply gr-rep"><summary>💬 להגיב על ההודעה הזו</summary>'
+   +replyBox('בקשר להודעה שלי מ'+stamp(m.at))+'</details>';
+  return h+'</div>';
+ }
+ /*
    Itzik, 4.10, voice: "למה כפתור מה התקבל הכחול לא עובד?". The screen opened,
    and under its "in work now" heading sat a report from 02.10 as if it were being
    done right now. A report goes stale; the same 25 minutes the live strip uses
@@ -9321,7 +9359,7 @@ function renderGot(){
  var nGone=N&&N.text&&isGone(gotKey('now',{at:N.at,text:N.text}),N);
  function del(kind,x){
   return '<button type="button" class="gr-del" data-k="'+esc(gotKey(kind,x))+'" '
-   +'aria-label="הסתרת השורה מהמסך">הסתרה</button>';
+   +'aria-label="מחיקה מהמסך">מחיקה</button>';
  }
  /*
    Itzik, 20.9 23:15, on his own message asking for the followers total:
@@ -9377,7 +9415,7 @@ function renderGot(){
    +'<span class="gr-t">'+esc(stamp(m.at))+'</span>'
    +'<div class="gr-x">'+gotWords(m)+bar+'</div>'
    +(isCancelled(m)?'<span class="gr-s gr-c">בוטל</span>':'<span class="gr-s gr-'+k+'">'+label+'</span>')
-   +tail(kind||'msg',m)+'</div>';
+   +tail(kind||'msg',m)+((kind||'msg')==='msg'?under(m):'')+'</div>';
  }
  /*
    Itzik, 18.9: "אין מידע". He wanted the answers, opened this screen by
@@ -9407,15 +9445,16 @@ function renderGot(){
     +'<span class="gr-s gr-g">בדרך</span></div>';
   }).join('');
  }
- h+='<h3>בעבודה עכשיו</h3>';
- if(N&&N.text&&!nGone)h+='<div class="gr now"><span class="gr-t">'+esc(stamp(N.at))+'</span>'
+ if(N&&N.text&&!nGone)h+='<h3>בעבודה עכשיו</h3><div class="gr now"><span class="gr-t">'+esc(stamp(N.at))+'</span>'
   +'<div class="gr-x">'+esc(N.text)+(N.next?'<small>אחר כך: '+esc(N.next)+'</small>':'')+'</div>'
   +'<span class="gr-s gr-w">דיווח</span>'
   +tail('now',{at:N.at,text:N.text},N.next?'אחר כך: '+N.next:'')+'</div>';
- h+=work.map(function(m){return row(m,'w','עובד על זה');}).join('');
- if(!work.length&&!(N&&N.text&&!nGone))h+='<div class="gempty">אין הודעה שמסומנת בעבודה.</div>';
- h+='<h3>התקבלו, עוד לא התחלתי · '+got.length+'</h3>';
- h+=got.length?got.map(function(m){return row(m,'g','התקבל');}).join(''):'<div class="gempty">הכל נקרא והתחיל.</div>';
+ h+='<h3>ההודעות שלך · '+(work.length?work.length+' בעבודה, ':'')+(got.length?got.length+' התקבלו, ':'')+done.length+' בוצעו</h3>';
+ h+=all.slice(0,gotShow).map(function(m){
+  return m.status==='working'?row(m,'w','בעבודה'):m.status==='done'?row(m,'d','בוצע'):row(m,'g','התקבל');
+ }).join('');
+ if(!all.length)h+='<div class="gempty">אין הודעות על המסך.</div>';
+ if(all.length>gotShow)h+='<button type="button" class="ab" id="gotMore" style="width:100%;padding:14px">להציג עוד ('+(all.length-gotShow)+')</button>';
  h+='<h3>משימות פתוחות ממך · '+K.length+'</h3>';
  // Each line says who it is stuck on, so the list cannot quietly turn into a
  // pile of things that look like they are all on me.
@@ -9424,15 +9463,13 @@ function renderGot(){
   var w=c.who==='itzik'?['y','ממתין לך']:c.who==='codex'?['g','בטיפול']:['g','אצלי'];
   return row(c,w[0],w[1],'cmd');
  }).join(''):'<div class="gempty">אין משימות פתוחות.</div>';
- h+='<h3>בוצע · '+done.length+'</h3>';
- h+=done.slice(0,gotShow).map(function(m){return row(m,'d','בוצע');}).join('');
- if(done.length>gotShow)h+='<button type="button" class="ab" id="gotMore" style="width:100%;padding:14px">להציג עוד ('+(done.length-gotShow)+')</button>';
  var gn=goneKeys().length;
  if(gotCut())h+='<div class="gback">המסך הוסתר ב '+esc(stamp(new Date(gotCut()).toISOString()))+'. '
   +'<button type="button" id="gotBack">להחזיר הכל</button></div>';
  else if(gn)h+='<div class="gback">הוסתרו מהמסך הזה '+gn+' שורות. '
   +'<button type="button" id="gotBack">להחזיר הכל</button></div>';
  host.innerHTML=h;
+ wireBoxes(host);
  var ja=document.getElementById('gotToAns');
  if(ja)ja.onclick=function(){openAnswers('fresh',true);};
  var mb=document.getElementById('gotMore');
@@ -9447,7 +9484,7 @@ function renderGot(){
  };
  Array.prototype.forEach.call(host.querySelectorAll('.gr[data-sk]'),function(r){
   r.addEventListener('click',function(e){
-   if(e.target.closest('button,a,textarea,input,details'))return;
+   if(e.target.closest('button,a,textarea,input,details,.gr-ans'))return;
    var k=r.getAttribute('data-sk');
    if(gotSel[k])delete gotSel[k];else gotSel[k]=1;
    renderGot();
@@ -9477,7 +9514,7 @@ function renderGot(){
    if(g.indexOf(k)<0)g.push(k);
    saveGone(g);
    renderGot();paintGot();
-   toast('הוסתר מהמסך, העבודה ממשיכה. אפשר להחזיר בסוף הדף.');
+   toast('נמחק מהמסך. אפשר להחזיר בסוף הדף.');
   };
  });
  Array.prototype.forEach.call(host.querySelectorAll('.gr-cx'),function(b){

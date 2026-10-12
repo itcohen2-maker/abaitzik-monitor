@@ -1021,11 +1021,11 @@ test('what was received sits under the red button as one ordered list', () => {
   // then what was received. The two message buttons stay in that order and
   // stay one under the other.
   assert.ok(talk > -1 && red > talk && got > red);
-  // One screen, four sections in a fixed order: in work, received, open tasks, done.
+  // 12.10: one card per message with its answers under it, then the open tasks.
   assert.ok(html.includes('<section id="pB" hidden>'));
   assert.ok(html.includes("b:'pB'"));
   const body = html.slice(html.indexOf('function renderGot(){'));
-  const order = ['בעבודה עכשיו', 'התקבלו, עוד לא התחלתי', 'משימות פתוחות ממך', 'בוצע'].map((h) => body.indexOf(h));
+  const order = ['בעבודה עכשיו', 'ההודעות שלך', 'משימות פתוחות ממך'].map((h) => body.indexOf(h));
   assert.ok(order.every((i, n) => i > -1 && (n === 0 || i > order[n - 1])), String(order));
   // The count is what is still open and not deleted by hand, and it is painted
   // with the home screen.
@@ -1232,7 +1232,11 @@ test('every row in what was received carries a manual delete button', () => {
   // hand.
   const body = html.slice(html.indexOf('function renderGot(){'), html.indexOf('function paintAnsCount(){'));
   // The delete button travels with the copy button now, both in the same tail.
-  assert.ok(body.includes("+tail(kind||'msg',m)+'</div>'"));
+  assert.ok(body.includes("+tail(kind||'msg',m)+((kind||'msg')==='msg'?under(m):'')+'</div>'"));
+  // 12.10: each message card carries my answers to it and a reply box under them.
+  assert.ok(body.includes("if(x.from==='claude'&&x.re)(ANS[x.re]=ANS[x.re]||[]).push(x);"));
+  assert.ok(body.includes('להגיב על ההודעה הזו'));
+  assert.ok(body.includes('wireBoxes(host);'));
   assert.ok(body.includes("+tail('now',{at:N.at,text:N.text}"));
   assert.ok(body.includes("return '<span class=\"gr-b\">'+cpBtn(cpText(m,extra))+cx+del(kind,m)+'</span>';"));
   assert.ok(body.includes('ביטול הבקשה'));
