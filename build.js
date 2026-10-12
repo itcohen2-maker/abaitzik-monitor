@@ -2441,6 +2441,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .gInv{background:linear-gradient(150deg,#d9a441,#3a2a12)}
 .gShop{background:linear-gradient(150deg,#3aa55d,#1f6f8b)}
 .gAlarm{background:linear-gradient(150deg,#e0a030,#5a2a0a)}
+.alHow{margin:10px 0;font-size:14px;line-height:1.6}.alHow summary{cursor:pointer;font-weight:600}.alHow ol{margin:6px 0;padding-inline-start:20px}.alHow a{color:#7fb8ff}
 #alTime{flex:0 0 96px}
 .gStoryArc{background:linear-gradient(150deg,#d6249f,#285aeb)}
 .gMyDay{background:linear-gradient(150deg,#f0a63a,#9c3d12)}
@@ -13846,15 +13847,23 @@ function alarmSheet(){
  w.id='alarmSheet';w.className='ysheet';
  w.setAttribute('role','dialog');w.setAttribute('aria-label','שעון מעורר');
  w.innerHTML='<div class="ycard"><b>⏰ שעון מעורר</b>'
-  +'<button type="button" class="yb yb1" id="alClock">📱 לפתוח את השעון המעורר באייפון</button>'
-  +'<div class="tdSec">או צלצול מהמוניטור</div>'
-  +'<form class="tdAdd" id="alForm"><input id="alTime" type="time" value="07:00" required><input id="alText" placeholder="למה? למשל: לקום לצלם" autocomplete="off"><button type="submit">לכוון</button></form><small id="alSaid"></small>'
+  +'<form class="tdAdd" id="alForm"><input id="alTime" type="time" value="07:00" required><input id="alText" placeholder="למה? למשל: לקום לצלם" autocomplete="off"><button type="submit">צלצול מהמוניטור</button></form><small id="alSaid"></small>'
+  +'<button type="button" class="yb yb1" id="alClock">📱 לכוון את השעה הזאת בשעון של האייפון</button>'
+  +'<details class="alHow"><summary>פעם ראשונה? בונים קיצור דרך אחד, דקה</summary><ol>'
+  +'<li><a href="shortcuts://create-shortcut">לפתוח קיצור חדש באפליקציית קיצורים</a></li>'
+  +'<li>למעלה לקרוא לו בדיוק: שעון מעורר</li>'
+  +'<li>הוספת פעולה, לחפש "שעון מעורר" ולבחור "יצירת שעון מעורר"</li>'
+  +'<li>ללחוץ על השעה בפעולה ולבחור "קלט קיצור"</li>'
+  +'<li>לשמור. מעכשיו הכפתור הכחול כאן מכוון שעון אמיתי, שמצלצל גם על שקט</li>'
+  +'</ol></details>'
   +'<button type="button" class="yb yx" id="alClose">סגירה</button></div>';
  function close(){w.remove();document.removeEventListener('keydown',esckey);}
  function esckey(e){if(e.key==='Escape')close();}
  w.onclick=function(e){
   if(e.target===w||e.target.id==='alClose')return close();
-  if(e.target.id==='alClock'){close();location.href='clock-alarm://';}
+  // clock-alarm:// is not a real scheme: Safari said the address is invalid (12.10).
+  // A shortcut named שעון מעורר gets the time as text and makes a real alarm.
+  if(e.target.id==='alClock'){var tm=document.getElementById('alTime').value;if(!/^\d\d:\d\d$/.test(tm))return;location.href='shortcuts://run-shortcut?name='+encodeURIComponent('שעון מעורר')+'&input=text&text='+encodeURIComponent(tm);}
  };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
