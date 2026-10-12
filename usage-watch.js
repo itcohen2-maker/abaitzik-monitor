@@ -28,7 +28,8 @@ const { execFileSync } = require('child_process');
 
 const ME = '/home/monitor/abaitzik-monitor';
 const DAY_USD = Number(process.env.USAGE_DAY_USD) || 15;
-const ALL_USD = Number(process.env.USAGE_ALL_USD) || 60;
+const CUSTOMER_DAY_USD = 8; // same default as worker.js DAY_USD
+const ALL_USD =Number(process.env.USAGE_ALL_USD) || 60;
 const DRY = process.argv.includes('--dry');
 const STATE = path.join(ME, 'data', 'status', 'usage-alerts.json');
 
@@ -98,7 +99,9 @@ function summarize(now) {
 function reasons(sum) {
   const out = [];
   for (const s of sum) {
-    if (s.today > DAY_USD) out.push([s.id + ':day', s.label + ': ' + usd(s.today) + ' היום, מעל הסף של ' + usd(DAY_USD) + '.']);
+    // 12.10: a customer stops at its own ceiling (worker.js overBudget); he hears it here.
+    if (s.id !== 'abaitzik' && s.today >= CUSTOMER_DAY_USD) out.push([s.id + ':cap', s.label + ' הגיע לתקרה היומית (' + usd(s.today) + '). ההודעות מחכות למחר. להעלות: MONITOR_DAY_USD בקובץ /etc/' + s.id + '.env.']);
+    else if (s.today > DAY_USD) out.push([s.id + ':day', s.label + ': ' + usd(s.today) + ' היום, מעל הסף של ' + usd(DAY_USD) + '.']);
     else if (s.usual >= 2 && s.today > 3 * s.usual) out.push([s.id + ':x3', s.label + ': ' + usd(s.today) + ' היום, פי ' + (s.today / s.usual).toFixed(1) + ' מיום רגיל (' + usd(s.usual) + ').']);
     if (s.longSolo >= 3) out.push([s.id + ':solo', s.label + ': ' + s.longSolo + ' סשנים ארוכים היום בלי להעביר עבודה למודל הזול.']);
   }

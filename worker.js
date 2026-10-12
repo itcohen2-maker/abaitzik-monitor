@@ -479,6 +479,8 @@ function run(list) {
   // 11.10: the planner model, and JSON out so every session's usage is logged (logUsage).
   const args = ['-p', '--dangerously-skip-permissions', '--model', process.env.MONITOR_PLAN_MODEL || 'claude-opus-5-5', '--output-format', 'json'];
   if (process.platform === 'win32') args.splice(1, 0, '--chrome');
+  // 12.10: one customer session can not run away either (see overBudget).
+  if (inst.name !== 'abaitzik') args.push('--max-budget-usd', String(SESSION_USD));
   const child = spawn('claude', args,
     { cwd: HERE, shell: true, windowsHide: true });
   child.stdin.end(text, 'utf8');
@@ -600,9 +602,44 @@ function reconcile(live) {
   try { fs.writeFileSync(RETRY, JSON.stringify(retry, null, 1), 'utf8'); } catch (e) {}
 }
 
+/*
+  12.10, Itzik: "הריצה דברים של חברה ענקית על החשבון הקטן שלי ועלולה לגמור לי
+  את כל הטוקנים". A customer runs on his subscription, and the prompt's rule to
+  hand work to the cheap model was ignored in every one of Rinat's sessions
+  (sub 0, Opus only). So a hard ceiling, in code: a customer whose sessions
+  today (Israel) cost MONITOR_DAY_USD (default $8) at list price gets no new
+  session until tomorrow. Messages stay waiting, nothing is lost; she is told
+  once. usage-watch.js (root) pushes Itzik. His own monitor has no ceiling.
+  To raise one customer's: MONITOR_DAY_USD in /etc/<id>.env.
+*/
+const DAY_USD = Number(process.env.MONITOR_DAY_USD) || 8;
+const SESSION_USD = Number(process.env.MONITOR_SESSION_USD) || 2.5;
+function spentToday() {
+  const day = (d) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem' }).format(d);
+  const today = day(new Date());
+  try {
+    return fs.readFileSync(path.join(STATUS, 'usage.jsonl'), 'utf8').split('\n').filter(Boolean)
+      .reduce((n, l) => { try { const u = JSON.parse(l); return day(new Date(u.at)) === today ? n + (u.usd || 0) : n; } catch (e) { return n; } }, 0);
+  } catch (e) { return 0; }
+}
+function overBudget() {
+  if (inst.name === 'abaitzik') return false;
+  const spent = spentToday();
+  if (spent < DAY_USD) return false;
+  say('הגיע לתקרה היומית: $' + spent.toFixed(2) + ' מתוך $' + DAY_USD + '. לא מפעיל סשן עד מחר.');
+  const flag = path.join(STATUS, 'budget-told.json');
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
+  if (!DRY && readJson(flag, {}).day !== today && waiting().length) {
+    try { fs.writeFileSync(flag, JSON.stringify({ day: today, spent })); } catch (e) {}
+    tell('המכסה היומית נגמרה', 'ההודעות שלך נשמרו ויטופלו מחר בבוקר.');
+  }
+  return true;
+}
+
 function main() {
   // 8.10: a paused customer gets no sessions at all.
   if (inst.paused) { say('מושהה. לא עונה.'); return; }
+  if (overBudget()) return;
   const live = livePids();
   if (!DRY) reconcile(live);
   const room = MAX_LIVE - Object.keys(live).length;
