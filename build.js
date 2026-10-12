@@ -2341,6 +2341,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .gLec{background:linear-gradient(150deg,#c0562b,#4a1d10)}
 .gTalk{background:linear-gradient(150deg,#c0392b,#4a1410)}
 .gManiv{background:linear-gradient(150deg,#3a8fd6,#123150)}
+.gDubin{background:linear-gradient(150deg,#e08a2c,#5a2a0c)}
 .gMed{background:linear-gradient(150deg,#4fb3a9,#123a4a)}
 .gInv{background:linear-gradient(150deg,#d9a441,#3a2a12)}
 .gShop{background:linear-gradient(150deg,#3aa55d,#1f6f8b)}
@@ -3763,6 +3764,11 @@ try{
   <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
   <button type="button" class="gt gManiv" id="gManiv"><b>💧 תשלום למניב</b><small>לקוח 50523290. ביום שני המוקד נפתח ב 09:00</small></button>
   <button type="button" class="gt gOcc" id="gOcc"><b>🩺 מרפאה תעסוקתית</b><small>מכבי רמות. טלפון א עד ה 08:00 עד 11:00</small></button>
+  <!--
+    12.10. Itzik goes to Dubin in Holon to buy the microwave turntable plate.
+    Address, phone, hours and what to ask for. Temporary: remove after he buys it.
+  -->
+  <button type="button" class="gt gDubin" id="gDubin" data-new="1"><b>🍽️ צלחת למיקרו</b><small>דובין, הסדן 5 חולון. כתובת, טלפון ומה לבקש</small></button>
   <button type="button" class="gt gShop" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
   <button type="button" class="gt gStoryArc" id="gStoryArc" data-new="1"><b>📸 הסטוריז שלי</b><small>הארכיון באינסטגרם: גם סטורי שכבר ירד</small></button>
   <!--
@@ -13698,6 +13704,58 @@ function manivSheet(){
  document.body.appendChild(w);
 }
 on('gManiv',manivSheet);
+/*
+  12.10. The glass turntable plate for the Midea microwave EM823A2GU, at Dubin
+  Holon (spare parts for home appliances). From dubin.co.il, nons and B144.
+*/
+var DUBIN_INFO=[
+ 'דובין אלקטרו מכני, חלקי חילוף למוצרי חשמל',
+ 'הסדן 5, חולון. אזור התעשייה ליד צומת טמפו',
+ '(בבזק 144 כתוב הסדן 6, הבניינים צמודים)',
+ 'טלפון: 03 5595950',
+ 'שעות: ראשון עד חמישי 08:00 עד 17:30. שישי 08:00 עד 13:00',
+ '',
+ 'מה לבקש:',
+ 'צלחת זכוכית למיקרוגל Midea, דגם EM823A2GU',
+ 'קוטר 27 ס״מ, עם ציר משולש באמצע (החיבור לגלגלת)',
+ 'באתר שלהם היא מופיעה ב 106 ₪ לפני משלוח',
+ '',
+ 'לפני שיוצאים:',
+ 'להתקשר ולשאול אם יש במלאי לדגם הזה. ההתאמה לדגם לא כתובה באתר',
+ 'לקחת איתך את הצלחת הישנה, או תמונה של הציר במרכז המיקרו',
+ 'אם הטבעת עם הגלגלים מתחת לצלחת שבורה, לבקש גם אותה'
+];
+var DUBIN_ASK='שלום, אני צריך צלחת זכוכית למיקרוגל Midea דגם EM823A2GU. קוטר 27 ס״מ עם ציר משולש באמצע. יש לכם במלאי? כמה זה עולה?';
+function dubinSheet(){
+ var old=document.getElementById('dubinSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='dubinSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','צלחת למיקרו');
+ w.innerHTML='<div class="ycard">'
+  +'<b>🍽️ צלחת למיקרו, דובין חולון</b>'
+  +'<small>'+DUBIN_INFO.map(function(x){return esc(x);}).join('<br>')+'</small>'
+  +'<small style="display:block;margin-top:10px"><b>מה להגיד בטלפון או בדלפק:</b><br>'+esc(DUBIN_ASK)+'</small>'
+  +'<button type="button" class="yb yb1" data-k="tel">📞 להתקשר 03 5595950</button>'
+  +'<button type="button" class="yb yb2" data-k="waze">🚗 ניווט בוויז להסדן 5</button>'
+  +'<button type="button" class="yb yb2" data-k="copy">📋 להעתיק את מה לבקש</button>'
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  if(k==='copy'){try{navigator.clipboard.writeText(DUBIN_ASK);e.target.textContent='✅ הועתק';}catch(x){}return;}
+  close();
+  if(k==='tel')location.href='tel:035595950';
+  if(k==='waze')location.href='https://waze.com/ul?q='+encodeURIComponent('הסדן 5 חולון')+'&navigate=yes';
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gDubin',dubinSheet);
 on('gTalk',talkSheet);
 boot('talk',function(){var b=document.getElementById('gTalk');if(!b)return;var seen='';try{seen=localStorage.getItem('talkSeen')||'';}catch(e){}b.classList.toggle('taskblink',Date.now()>=Date.parse(TALK_DUE)&&!seen);});
 boot('maniv',function(){var b=document.getElementById('gManiv');if(!b)return;var seen='';try{seen=localStorage.getItem('manivSeen')||'';}catch(e){}b.classList.toggle('taskblink',Date.now()>=Date.parse(MANIV_DUE)&&!seen);});
