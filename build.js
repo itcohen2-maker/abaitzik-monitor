@@ -9130,7 +9130,7 @@ function renderAnswers(){
   var ask='';
   if(m.q){
    var qt=String(m.q.text||'');
-   var qn=String(m.q.note||'').replace(/^תמלול:\s*/,'');
+   var qn=String(m.q.note||'').replace(/^תמלול:\\s*/,'');
    if(qn&&/הודעה קולית|voice-/.test(qt))qt=qn;
    else if(qn)qt=qt+String.fromCharCode(10)+qn;
    /*
@@ -9454,7 +9454,7 @@ function renderGot(){
  function cpText(m,extra){
   var NL=String.fromCharCode(10);
   var t=String(m.text||'');
-  var n=String(m.note||'').replace(/^תמלול:\s*/,'');
+  var n=String(m.note||'').replace(/^תמלול:\\s*/,'');
   if(n&&/הודעה קולית|voice-/.test(t))t=n;
   else if(n)t=t+NL+n;
   return stamp(m.at)+NL+t+(extra?NL+extra:'');
@@ -9473,7 +9473,7 @@ function renderGot(){
  */
  function gotWords(m){
   var t=String(m.text||'');
-  var n=String(m.note||'').replace(/^תמלול:\s*/,'');
+  var n=String(m.note||'').replace(/^תמלול:\\s*/,'');
   if(n&&/הודעה קולית|voice-/.test(t))t=n;
   t=t.replace(/\s+/g,' ').trim();
   if(t.length<=110)return linkify(t);
@@ -13863,14 +13863,14 @@ function alarmSheet(){
   if(e.target===w||e.target.id==='alClose')return close();
   // clock-alarm:// is not a real scheme: Safari said the address is invalid (12.10).
   // A shortcut named שעון מעורר gets the time as text and makes a real alarm.
-  if(e.target.id==='alClock'){var tm=document.getElementById('alTime').value;if(!/^\d\d:\d\d$/.test(tm))return;location.href='shortcuts://run-shortcut?name='+encodeURIComponent('שעון מעורר')+'&input=text&text='+encodeURIComponent(tm);}
+  if(e.target.id==='alClock'){var tm=document.getElementById('alTime').value;if(!/^[0-9][0-9]:[0-9][0-9]$/.test(tm))return;location.href='shortcuts://run-shortcut?name='+encodeURIComponent('שעון מעורר')+'&input=text&text='+encodeURIComponent(tm);}
  };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
  document.getElementById('alForm').onsubmit=function(e){
   e.preventDefault();
   var tm=document.getElementById('alTime').value,tx=document.getElementById('alText').value.trim(),said=document.getElementById('alSaid');
-  if(!/^\d\d:\d\d$/.test(tm))return;
+  if(!/^[0-9][0-9]:[0-9][0-9]$/.test(tm))return;
   said.textContent='שולח.';
   sendText('שעון מעורר','שעון מעורר '+tm+(tx?': '+tx:''),'תזכורת').then(function(){
    said.textContent='נשלח. הצלצול יגיע בהתראה ב '+tm+'.';
