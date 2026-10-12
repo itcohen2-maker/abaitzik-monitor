@@ -3806,7 +3806,7 @@ try{
     "like a puppet theatre". One tile to explain each character. Images and
     chat examples are sealed files under stk/, never in this page.
   -->
-  <button type="button" class="gt gStk" id="gStk" data-new="1"><b>🎭 תיאטרון רמת הנשיא</b><small>האתר שלך ושל אלון: קישור, העתקה ושליחה לאלון</small></button>
+  <button type="button" class="gt gStk" id="gStk"><b>🎭 תיאטרון רמת הנשיא</b><small>האתר שלך ושל אלון: קישור, העתקה ושליחה לאלון</small></button>
   <!--
     10.10. Itzik: "a link and a button in the monitor, lecture". The edited
     lecture text with slide thumbnails, the new slides and the deck, all in Drive.
@@ -12844,6 +12844,7 @@ function stkSheet(){
  document.addEventListener('keydown',esckey);
  w.innerHTML='<div class="ycard"><div class="stkTop"><b>🎭 תיאטרון רמת הנשיא</b><button type="button" class="yb yx" data-x="1">✕ לדף הראשי</button></div>'
   +'<small>הדמויות, הסיפורים וההקלטות נמצאים באתר. שם מקליטים איך כל דמות מדברת, ושם אלון רואה ומוסיף</small>'
+  +((D.stkNews||[]).length?'<div class="stkx"><i>מה אלון עדכן לאחרונה</i><br>'+(D.stkNews||[]).slice(0,5).map(function(x){return esc(x.text)+' · '+stamp(x.at);}).join('<br>')+'</div>':'')
   +'<a class="yb yb1" style="display:block;text-align:center;text-decoration:none;margin-top:10px" href="'+STK_SITE+'" target="_blank" rel="noopener">🎭 לפתוח את האתר של התיאטרון</a>'
   +'<small style="direction:ltr;display:block;text-align:center">'+STK_SITE+'</small>'
   +'<div style="display:flex;gap:8px"><button type="button" class="yb yx" data-c="1" style="flex:1">📋 להעתיק את הקישור</button>'
@@ -13501,6 +13502,37 @@ boot('newTiles',function(){
   t.classList.add('taskblink');
   t.addEventListener('click',function(){try{localStorage.setItem(k,'1');}catch(e){}t.classList.remove('taskblink');});
  });
+});
+/*
+  12.10, Itzik by voice: the theatre tile waves only when there is an update, by
+  him or by Alon, and says what: "there is an update of such and such sticker".
+  D.stkNews holds only what the other side changed (theatre-news.js pulls it
+  from the site). The tile is gStk on his page and the bubot link on Alon's.
+  It no longer waves as a new tile, only for news this device has not seen.
+*/
+function stkNewsTile(){
+ var t=document.getElementById('gStk');
+ if(!t)(INSTANCE&&INSTANCE.links||[]).forEach(function(l,i){if(/^bubot/.test(l.key||''))t=document.getElementById('gLink'+i);});
+ return t;
+}
+function stkNewsWho(x){return x.by==='alon'?'אלון':'איציק';}
+function stkNewsSeen(){
+ var L=D.stkNews||[],t=stkNewsTile();
+ if(L.length)try{localStorage.setItem('stkNewsSeen',L[0].at);}catch(e){}
+ if(t)t.classList.remove('taskblink');
+}
+boot('stkNews',function(){
+ var t=stkNewsTile(),L=D.stkNews||[];if(!t)return;
+ try{localStorage.setItem('tileSeen:'+t.id,'1');}catch(e){}
+ t.classList.remove('taskblink');
+ t.addEventListener('click',stkNewsSeen);
+ if(!L.length)return;
+ var seen='';try{seen=localStorage.getItem('stkNewsSeen')||'';}catch(e){}
+ var fresh=L.filter(function(x){return x.at>seen;});
+ if(!fresh.length)return;
+ t.classList.add('taskblink');
+ var sm=t.querySelector('small');
+ if(sm)sm.textContent='חדש מ'+stkNewsWho(fresh[0])+': '+fresh[0].text+(fresh.length>1?' ועוד '+(fresh.length-1):'');
 });
 boot('pushTile',function(){
  var t=document.getElementById('gPush');if(!t)return;
