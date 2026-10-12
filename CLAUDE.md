@@ -39,6 +39,9 @@
 - **The improvements reviewer:** `review.js`, timer `monitor-review.timer` every morning 05:30 Israel. A read only
   Claude session that returns up to six improvements from a new customer's point of view into `data/better/better/`,
   shown first on the "💡 רעיונות" screen. Log: `/var/log/monitor-review.log`.
+  When an idea he took ("רוצה את זה") is built, or turns out already built, set `"built":"<ISO>"` in its file: it then
+  shows as done at the bottom and the reviewer is told not to bring it again (12.10, "כל זמן אותם רעיונות").
+  Nothing for Rinat B's Home Style monitor (shipments, orders, suppliers): no approval to develop there (12.10).
 
 - **The tool radar (11.10.2026):** `radar.js`, timer `monitor-radar.timer` every Sunday 08:00 Israel. A Claude session
   with WebSearch and WebFetch only finds up to five new open source tools that fit Rinat, the reels, the monitor or new

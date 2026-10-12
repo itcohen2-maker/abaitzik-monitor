@@ -355,8 +355,10 @@ function build() {
     .sort((a, b) => (a.at < b.at ? 1 : -1));
   // The reviewer's improvements (review.js), newest first. 30.9.
   const better = loadDocs('better')
-    .map(x => ({ at: x.at || '', t: x.t || '', d: x.d || '', area: x.area || '', size: x.size || '', built: x.built || '' }))
-    .sort((a, b) => (a.at < b.at ? 1 : -1));
+    .map(x => ({ at: x.at || '', t: x.t || '', d: x.d || '', area: x.area || '', size: x.size || '', built: x.built || '',
+                 by: x.by === 'radar' ? 'radar' : 'review', u: /^https:\/\//.test(x.u || '') ? x.u : '' }))
+    // 12.10, Itzik: "כל זמן אותם רעיונות". What is already done sinks under what is still open.
+    .sort((a, b) => (!a.built !== !b.built ? (a.built ? 1 : -1) : (a.at < b.at ? 1 : -1)));
   const plan = loadDocs('plan')
     .map(x => ({ id: x.id, day: x.day || '', text: x.text || '', network: x.network || '', status: x.status || 'planned' }))
     .sort((a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : 0));
@@ -14136,7 +14138,7 @@ function renderIdeas(){
  // What the daily reviewer found comes first, marked with the day it found it.
  // What the improver (improve.js) already built says so instead of asking him.
  // The weekly radar (radar.js) brings new open source tools, each with its link.
- var L=(D.better||[]).map(function(x){return {t:x.t,d:x.d,u:x.u,built:!!x.built,tag:(x.built?'🛠 נבנה לבד · '+stamp(x.built):(x.by==='radar'?'🔭 כלים חדשים':'🔍 בודק השיפורים')+(x.at?' · '+stamp(x.at):''))+(x.size?' · '+x.size:'')};}).concat(IDEAS);
+ var L=(D.better||[]).map(function(x){return {t:x.t,d:x.d,u:x.u,built:!!x.built,tag:(x.built?'✅ כבר בוצע · '+stamp(x.built):(x.by==='radar'?'🔭 כלים חדשים':'🔍 בודק השיפורים')+(x.at?' · '+stamp(x.at):''))+(x.size?' · '+x.size:'')};}).concat(IDEAS);
  IDEAS_SHOWN=L;
  document.getElementById('ideaList').innerHTML=L.map(function(x,n){
   var on=asked.indexOf(x.t)>-1;
