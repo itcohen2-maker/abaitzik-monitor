@@ -14,5 +14,6 @@
   "memoryDir": "C:/Users/User/.claude/projects/C--Users-User/memory",
   "driveFolder": "",
   "serverHost": "monitor",
-  "uploadUrl": "https://ilay.abaitzik.com/up/v1/abaitzik/uploads"
+  "uploadUrl": "https://ilay.abaitzik.com/up/v1/abaitzik/uploads",
+  "biz": true
 }
