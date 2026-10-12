@@ -156,6 +156,8 @@ function subText(sum, sub, now) {
 function reasons(sum, sub) {
   const out = [];
   for (const s of sum) {
+    // The PC row is his own sessions, not a monitor: no ceiling, no per monitor alarm.
+    if (s.id === 'pc') continue;
     // 12.10: a customer stops at its own ceiling (worker.js overBudget); he hears it here.
     if (s.id !== 'abaitzik' && s.today >= CUSTOMER_DAY_USD) out.push([s.id + ':cap', s.label + ' הגיע לתקרה היומית (' + usd(s.today) + '). ההודעות מחכות למחר. להעלות: MONITOR_DAY_USD בקובץ /etc/' + s.id + '.env.']);
     else if (s.today > DAY_USD) out.push([s.id + ':day', s.label + ': ' + usd(s.today) + ' היום, מעל הסף של ' + usd(DAY_USD) + '.']);
@@ -176,7 +178,7 @@ function reasons(sum, sub) {
 function text(sum) {
   return sum.map((s) => {
     const m = Object.entries(s.models).sort((a, b) => b[1] - a[1]).map(([k, v]) => k + ' ' + usd(v)).join(', ');
-    return s.label + ': היום ' + tk(s.tokToday) + ' טוקנים, ' + usd(s.today) + ' ב ' + s.sessions + ' סשנים' + (s.pc ? ' (' + s.pc + ' במחשב)' : '') + (m ? ' (' + m + ')' : '') +
+    return s.label + ': היום ' + tk(s.tokToday) + ' טוקנים, ' + usd(s.today) + (s.id === 'pc' ? '' : ' ב ' + s.sessions + ' סשנים') + (s.pc ? ' (' + s.pc + ' במחשב)' : '') + (m ? ' (' + m + ')' : '') +
       ', שבוע ' + tk(s.tokWeek) + ' טוקנים, ' + usd(s.week) + (s.usual ? ', יום רגיל ' + usd(s.usual) : '') + '.';
   }).join('\n') + '\nסך הכל היום: ' + tk(sum.reduce((n, s) => n + s.tokToday, 0)) + ' טוקנים, ' + usd(sum.reduce((n, s) => n + s.today, 0)) + '.';
 }
