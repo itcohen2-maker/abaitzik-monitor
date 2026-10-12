@@ -1512,6 +1512,13 @@ button.abtn[disabled]{opacity:.55}
 .flist .fl-i .fthumb img{width:56px;height:56px;max-width:none;max-height:none;object-fit:cover;border:0;border-radius:0}
 .flist .fl-i:has(.fthumb[data-st="ok"]) .fl-e{display:none}
 .flist h3{font:700 14px Heebo,sans-serif;color:var(--dim);margin:14px 2px 6px}
+.flist .fl-r{display:flex;gap:6px;align-items:stretch;margin-bottom:8px}
+.flist .fl-r a{flex:1;min-width:0;margin-bottom:0}
+.flist .fl-dl{flex:0 0 64px;border-radius:12px;background:var(--surface);border:1px solid var(--line);color:var(--ink);font-size:20px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.flist .fl-dl small{font-size:12px;color:var(--dim)}
+.flist .fl-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
+.flist .fl-tabs button{padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:500 15px Heebo,sans-serif;cursor:pointer}
+.flist .fl-tabs button.on{background:var(--ink);color:var(--surface)}
 .salecard{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow)}
 .salecard h3{font:800 17px Heebo,sans-serif;margin:0 0 8px;text-align:center}
 .salecard.open{border-color:var(--yellow);box-shadow:0 0 0 2px var(--yellow),var(--shadow)}
@@ -3666,7 +3673,7 @@ try{
   <!-- איציק, 11.10: "כפתור להחליף מודל תמחק אותו". הכפתור gModel ירד ממסך הבית; הקוד שלו בודק שהוא קיים. -->
   <!-- איציק, 8.10: כפתור לכדור מוקסיפן שמהבהב כשהגיע הזמן ומפסיק כשנכנסתי. -->
   <button type="button" class="gt g4" id="gMoxy"><b>💊 מוקסיפן</b><small id="gMoxyS">מהבהב כשהגיע הזמן, עד שנכנסת</small></button>
-  <button type="button" class="gt g10" id="gFiles"><b>📁 הקבצים שלי</b><small>כל מה ששלחת, סגור במוניטור</small></button>
+  <button type="button" class="gt g10" id="gFiles" data-new="1"><b>📁 הקבצים שלי</b><small>מה ששלחת ומה שנשלח לך, עם הורדה</small></button>
   <!--
     איציק, 20.9: "על המסך ניקוזים אתה יכול למחוק את הכפתור. אין לי יותר צורך בזה".
     הכפתור ירד ממסך הבית. המסך עצמו pDr וכל הרישומים שלו נשארים במקום,
@@ -4335,7 +4342,7 @@ try{
 
 <section id="pFi" hidden>
  <h2>הקבצים שלי</h2>
- <div class="rephint">כל קובץ ששלחת או שנשמר בשבילך. הם סגורים ונפתחים רק כאן, אחרי הקוד שלך.</div>
+ <div class="rephint">כל קובץ ששלחת וכל קובץ שנשלח לך. הם סגורים ונפתחים רק כאן, אחרי הקוד שלך. הכפתור ⬇ מוריד את הקובץ.</div>
  <div id="fiBox" class="flist"></div>
 </section>
 
@@ -5138,7 +5145,7 @@ function fileView(name){
   var media=t.indexOf('video/')===0||t.indexOf('image/')===0;
   var gal=ios&&media&&sf&&navigator.share&&navigator.canShare&&navigator.canShare({files:[sf]});
   if(gal)h+='<button type="button" class="ask fv-gal">שמירה לגלריה</button><div class="empty" style="font-size:13px">בחלון שנפתח: '+(t.indexOf('video/')===0?'שמור וידאו':'שמור תמונה')+'</div>';
-  else h+='<a class="ask fv-save" href="'+url+'" download="'+esc(short)+'">שמירה בטלפון</a>';
+  else h+='<a class="ask fv-save" href="'+url+'" download="'+esc(short)+'">'+((ios||/Android/i.test(navigator.userAgent||''))?'שמירה בטלפון':'הורדה למחשב')+'</a>';
   var body=ov.querySelector('.fv-body');body.innerHTML=h;
   var zb=body.querySelector('.fv-zoom');if(zb)fvZoom(zb);
   var sb=body.querySelector('.fv-share');
@@ -10890,9 +10897,48 @@ document.addEventListener('change',function(e){
 });
 on('gCIdeas',function(){pane('I');renderContentIdeas();});
 on('gPlan',function(){pane('P');renderPlan();});
+/*
+  Rinat, 12.10: "כפתור שאני רואה את הקבצים שאתה שולח לי, עם אפשרות להורדה".
+  The list mixed what she sent with what came back to her. Two tabs split them:
+  a file linked in one of the answers is one that was sent to her. Each row has
+  its own download button: a computer saves it straight to Downloads, a phone
+  opens the file with its save and share buttons (a blob download does not
+  stay on an iPhone).
+*/
+var fiMode='all';
+function filesSentToOwner(){
+ var s={};
+ (D.chat||[]).forEach(function(m){
+  if(m.from!=='claude')return;
+  String(m.text||'').replace(/files\\/([^\\s)"'<>\\]]+)/g,function(_,n){try{n=decodeURIComponent(n);}catch(e){}s[n.replace(/[.,;:!?]+$/,'')]=1;});
+ });
+ return s;
+}
+function fileDownload(n){
+ var e=fileEntry(n);if(!e)return;
+ var mob=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+ if(mob||!GKEY){fileView(n);return;}
+ toast('מוריד.');
+ fileBlob(e).then(function(b){
+  var u=URL.createObjectURL(b),a=document.createElement('a');
+  a.href=u;a.download=fileShareName(n);a.rel='noopener';document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(u);},60000);
+ }).catch(function(){toast('ההורדה לא הצליחה. אפשר לפתוח את הקובץ ולשמור משם.');});
+}
+document.addEventListener('click',function(e){
+ var b=e.target&&e.target.closest&&e.target.closest('[data-fdl],[data-fimode]');if(!b)return;
+ e.preventDefault();e.stopPropagation();
+ if(b.hasAttribute('data-fdl'))fileDownload(b.getAttribute('data-fdl'));
+ else{fiMode=b.getAttribute('data-fimode');renderFiles();}
+},true);
 function renderFiles(){
- var box=document.getElementById('fiBox');if(!box)return;var F=(D.files||[]).filter(function(x){return String(x.n).indexOf('stk/')!==0;});
- if(!F.length){box.innerHTML='<div class="empty">אין כאן קבצים.</div>';return;}
+ var box=document.getElementById('fiBox');if(!box)return;var All=(D.files||[]).filter(function(x){return String(x.n).indexOf('stk/')!==0;});
+ if(!All.length){box.innerHTML='<div class="empty">אין כאן קבצים.</div>';return;}
+ var sent=filesSentToOwner();
+ var F=All.filter(function(f){return fiMode==='all'||(fiMode==='in'?!!sent[f.n]:!sent[f.n]);});
+ var tabs='<div class="fl-tabs">'+[['all','הכל'],['in',FEM?'מה שנשלח אלייך':'מה שנשלח אליך'],['out',FEM?'מה ששלחת את':'מה ששלחת']].map(function(t){
+  return '<button type="button" data-fimode="'+t[0]+'"'+(fiMode===t[0]?' class="on"':'')+'>'+t[1]+'</button>';}).join('')+'</div>';
+ if(!F.length){box.innerHTML=tabs+'<div class="empty">'+(fiMode==='in'?'עוד לא נשלחו לכאן קבצים.':'אין כאן קבצים.')+'</div>';return;}
  /*
    Reviewer 7.10, approved 8.10: five versions of the same deck one after the
    other, and a cancelled one among them, and no way to tell which is the one
@@ -10913,9 +10959,10 @@ function renderFiles(){
   var h=x.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Jerusalem'});
   return full?x.toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'2-digit',timeZone:'Asia/Jerusalem'})+' '+h:h;}catch(e){return '';}}
  function day(f){try{var x=new Date(f.at);if(isNaN(x))return '';return x.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',year:'numeric',timeZone:'Asia/Jerusalem'});}catch(e){return '';}}
- function row(f,tag,full){var w=when(f,full);return '<a href="files/'+esc(f.n)+'"><span class="fl-i"><span class="fl-e">'+ico(f)+'</span>'+fileThumb(f.n)+'</span>'
+ function row(f,tag,full){var w=when(f,full);return '<div class="fl-r"><a href="files/'+esc(f.n)+'"><span class="fl-i"><span class="fl-e">'+ico(f)+'</span>'+fileThumb(f.n)+'</span>'
   +'<span class="fl-n">'+(tag?'<b style="font-size:12px;background:#16a34a;color:#fff;border-radius:8px;padding:1px 7px;margin-inline-end:6px">עדכני</b>':'')+esc(f.n.split('/').pop())
-  +'<small>'+(w?esc(w)+' · ':'')+kb(f)+'</small></span></a>';}
+  +'<small>'+(w?esc(w)+' · ':'')+kb(f)+'</small></span></a>'
+  +'<button type="button" class="fl-dl" data-fdl="'+esc(f.n)+'" aria-label="הורדה">⬇<small>הורדה</small></button></div>';}
  var groups={},order=[],old=[];
  F.forEach(function(f){
   if(/בוטל|cancel+ed/i.test(f.n)){old.push(f);return;}
@@ -10936,7 +10983,7 @@ function renderFiles(){
  });
  if(old.length)h+='<details style="margin-top:6px"><summary style="padding:10px 4px;color:var(--dim)">גרסאות קודמות ('+old.length+')</summary>'
   +old.map(function(f){return row(f,false,true);}).join('')+'</details>';
- box.innerHTML=h;
+ box.innerHTML=tabs+h;
 }
 function fileWork(n){
  var b=String(n).split('/').pop().replace(/\\.[a-z0-9]{1,5}$/i,'').toLowerCase();
