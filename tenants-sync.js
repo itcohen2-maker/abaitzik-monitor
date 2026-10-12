@@ -27,6 +27,14 @@ const inst = require('./lib/instance.js');
 const DIR = path.join(inst.dataPath, 'tenants', 'tenants');
 const FORCE = process.argv.includes('--force');
 
+// 12.10: a record written in place is empty for a moment, and the other script
+// reading it then crashed on every run. homestyle.json stayed empty from 11.10
+// 07:13 and no customer got a code update for a day. Write aside, then rename.
+function writeRec(file, obj) {
+  const tmp = file + '.' + process.pid + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(obj, null, 1));
+  fs.renameSync(tmp, file);
+}
 function git(cwd, args) { return execFileSync('git', args, { cwd, encoding: 'utf8' }).trim(); }
 
 function sync(t) {
@@ -62,7 +70,8 @@ function main() {
   if (!fs.existsSync(DIR)) return;
   for (const f of fs.readdirSync(DIR).filter((x) => x.endsWith('.json'))) {
     const file = path.join(DIR, f);
-    const t = JSON.parse(fs.readFileSync(file, 'utf8'));
+    let t;
+    try { t = JSON.parse(fs.readFileSync(file, 'utf8')); } catch (e) { console.log(f + ' unreadable, skipped'); continue; }
     if (!t.dir || t.selfSync) continue;
     try {
       const r = sync(t);
@@ -75,11 +84,12 @@ function main() {
       console.log(new Date().toISOString().slice(11, 19) + '  ' + t.id + ' SYNC FAILED: ' + t.syncError);
     }
     // Re-read before writing: the health check writes this file every minute.
-    const now = JSON.parse(fs.readFileSync(file, 'utf8'));
+    let now;
+    try { now = JSON.parse(fs.readFileSync(file, 'utf8')); } catch (e) { now = Object.assign({}, t); }
     for (const k of ['syncedTo', 'syncedAt', 'syncError']) {
       if (k in t) now[k] = t[k]; else delete now[k];
     }
-    fs.writeFileSync(file, JSON.stringify(now, null, 1));
+    writeRec(file, now);
   }
 }
 

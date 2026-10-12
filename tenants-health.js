@@ -33,6 +33,14 @@ const DRY = process.argv.includes('--dry');
 // beat stopped, whatever systemd says about the process.
 const STALE_MS = 75 * 60 * 1000;
 
+// 12.10: a record written in place is empty for a moment, and the other script
+// reading it then crashed on every run. homestyle.json stayed empty from 11.10
+// 07:13 and no customer got a code update for a day. Write aside, then rename.
+function writeRec(file, obj) {
+  const tmp = file + '.' + process.pid + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(obj, null, 1));
+  fs.renameSync(tmp, file);
+}
 function active(unit) {
   try { return execFileSync('systemctl', ['is-active', unit], { encoding: 'utf8' }).trim() === 'active'; }
   catch (e) { return false; }
@@ -157,7 +165,8 @@ function main() {
   let changed = false;
   for (const f of fs.readdirSync(DIR).filter(x => x.endsWith('.json'))) {
     const file = path.join(DIR, f);
-    const t = complete(JSON.parse(fs.readFileSync(file, 'utf8')));
+    let t;
+    try { t = complete(JSON.parse(fs.readFileSync(file, 'utf8'))); } catch (e) { console.log(f + ' unreadable, skipped'); continue; }
     const r = check(t);
     const before = t.state;
     /*
@@ -178,7 +187,7 @@ function main() {
     delete t.paused;
     Object.assign(t, r, { checkedAt: new Date().toISOString() });
     if (r.state === 'ok') delete t.downSince; else if (!t.downSince) t.downSince = new Date().toISOString();
-    if (!DRY) fs.writeFileSync(file, JSON.stringify(t, null, 1));
+    if (!DRY) writeRec(file, t);
     if (before !== t.state) changed = true;
     /*
       30.9: a customer going down is an alarm, not a colour. The phone rings
@@ -194,7 +203,7 @@ function main() {
         try {
           execFileSync('node', ['notify.js', title, msg], { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
           if (down) t.alertedAt = new Date().toISOString(); else delete t.alertedAt;
-          fs.writeFileSync(file, JSON.stringify(t, null, 1));
+          writeRec(file, t);
           console.log('alerted: ' + title);
         } catch (e) { console.log('alert failed: ' + String(e.message).slice(0, 120)); }
       }
@@ -206,7 +215,7 @@ function main() {
           'ההודעה הראשונה הגיעה ' + new Date(used).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' })],
           { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
         t.firstUseAt = used;
-        fs.writeFileSync(file, JSON.stringify(t, null, 1));
+        writeRec(file, t);
         changed = true;
         console.log('first use: ' + t.id);
       } catch (e) { console.log('first use alert failed: ' + String(e.message).slice(0, 120)); }

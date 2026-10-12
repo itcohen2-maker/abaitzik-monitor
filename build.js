@@ -14101,7 +14101,13 @@ on('gStoryArc',function(){window.open('https://www.instagram.com/archive/stories
 /*ITZIK:END*/
 on('gOp',function(){pane('s');});
 on('gNotes',function(){pane('t');renderNotes();});
-on('gRemind',function(){pane('R');renderReminders();});
+// 11.10, a recording: "תפתור את התזכורות, אחרי שהוא מהבהב נכנסתי, הוא צריך להפסיק להבהב".
+// Opening the tile is the "I know" for every reminder that was waving it.
+on('gRemind',function(){
+ var k=remKnown();remLive().filter(remHot).forEach(function(r){k[remKey(r)]=1;});
+ try{localStorage.setItem('remKnown',JSON.stringify(k));}catch(e){}
+ pane('R');renderReminders();
+});
 on('gTasks',function(){pane('T');renderTasks();});
 on('gAppts',function(){pane('Q');renderAppts();});
 on('gIdeas',function(){pane('i');renderIdeas();});
