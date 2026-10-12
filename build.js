@@ -2433,7 +2433,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .gLec{background:linear-gradient(150deg,#c0562b,#4a1d10)}
 .gTalk{background:linear-gradient(150deg,#c0392b,#4a1410)}
 .gManiv{background:linear-gradient(150deg,#3a8fd6,#123150)}
-.gDv{background:linear-gradient(150deg,#b08a3e,#3b2a10)}
+.c-dv{background:linear-gradient(160deg,#b08a3e,#3b2a10)}
 .dvv{font:700 16px/1.6 'Frank Ruhl Libre',David,serif;margin-top:8px}
 .dvv i{display:block;font:400 12px Heebo,sans-serif;opacity:.6;font-style:normal}
 .dvx{font-size:14px;line-height:1.55;opacity:.85;border-right:3px solid #b08a3e;padding-right:8px}
@@ -3886,7 +3886,6 @@ try{
     12.10. Itzik: "an icon with the verses and the explanation under them",
     about the 55 last verses of the Torah (Deuteronomy 32:39 to the end).
   -->
-  <button type="button" class="gt gDv" id="gDv" data-new="1"><b>📜 סוף התורה</b><small>הפסוקים האחרונים וההסבר מתחתם</small></button>
   <button type="button" class="gt gLec" id="gLec" data-new="1"><b>🎤 הרצאה</b><small>כנגד כל הסיכויים: המלל הערוך עם השקפים</small></button>
   <!--
     11.10. Itzik: "a card I can send from, and later we delete it". The June
@@ -3975,6 +3974,10 @@ try{
   -->
   <a class="ic" href="#" id="icAl" data-new="1"><span class="c c-al" id="icAlC">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-2 9a6 6 0 0 1-12 0z"/><circle cx="9" cy="9.5" r="1"/><circle cx="15" cy="9.5" r="1"/><path d="M9.5 13c1.5 1.3 3.5 1.3 5 0"/></svg></span>אלון</a>
+  <!-- סוף התורה. Itzik, 12.10 evening, by voice: "הפוך את האריח דברי התורה
+       לאייקון עגול". Same sheet as the tile it was, now a scroll in the round. -->
+  <button type="button" class="ic" id="gDv" data-new="1"><span class="c c-dv">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h11a2 2 0 0 1 0 4h-2v10a2 2 0 0 1-2 2H6a2 2 0 0 1 0-4h2V6a2 2 0 0 0-1-2z"/><path d="M8 16h6a2 2 0 0 1-2 4M11 9h3M11 12h3"/></svg></span>סוף התורה</button>
   <!--
     קבלות goes here. The markup and the .c-kb colour are ready, and so is
     build-kabalot.js, but the button stays out until data/receipts.json
