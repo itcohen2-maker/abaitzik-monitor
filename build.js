@@ -3795,7 +3795,7 @@ try{
   <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>05 עד 20, גם באיכות גבוהה</small></button>
   <button type="button" class="gt gStory" id="gStory" data-new="1"><b>🎞️ סטורי</b><small>ריק כרגע, הסטורי עלה</small></button>
-  <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 02 אני אסתדר, 03 חמישה דברים</small></button>
+  <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
@@ -12803,7 +12803,8 @@ on('gStory',storySheet);
 var FUT_ITEMS=[
  {n:'01',t:'החנייה: הקטע הראשון עם כיתוב בעברית. אחריו מצלמים אותך מגיב (4 שניות)',r:'parking-part1-he.mp4'},
  {n:'01ב',t:'החנייה: אותו קטע עם הכיתוב המקורי באנגלית',r:'parking-part1.mp4'},
- {n:'01ג',t:'החנייה: הסרטון המקורי המלא',r:'parking-original.mp4'}
+ {n:'01ג',t:'החנייה: הסרטון המקורי המלא',r:'parking-original.mp4'},
+ {n:'04',t:'מאכלים להפחית: בשר מעובד, בשר אדום, אלכוהול ומזון אולטרה מעובד (צילום מסך מגוגל)',r:'fut04-foods-to-cut.png'}
 ];
 function futSheet(){
  var old=document.getElementById('ftSheet');if(old)old.remove();
