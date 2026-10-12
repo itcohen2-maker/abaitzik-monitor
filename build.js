@@ -502,13 +502,17 @@ function build() {
   */
   const docLinkOk = u => String(u || '').startsWith('https://drive.google.com/') ||
     /^files\/[^/?#\\]+$/.test(String(u || '')) && !String(u).includes('..');
+  // 12.10: the debtors file in the sale screen is always the current one, the
+  // same PDF the bookkeeping screen makes again whenever the debts change.
+  const openPdf = (lolosShare.ensure(inst.dataPath) || {}).pdf;
+  const saleUrl = u => openPdf && /^files\/lolos-open-accounts/.test(u) ? 'files/' + openPdf : u;
   const sale = loadDocs('sale')
     .map(d => ({ order: Number(d.order) || 0, kind: d.kind || 'section', title: d.title || '',
                  lines: Array.isArray(d.lines) ? d.lines.map(String) : [],
                  folder: String(d.folder || '').startsWith('https://drive.google.com/') ? d.folder : '',
                  files: (Array.isArray(d.files) ? d.files : [])
                    .filter(f => docLinkOk(f.url))
-                   .map(f => ({ name: String(f.name || ''), url: f.url })) }))
+                   .map(f => ({ name: String(f.name || ''), url: saleUrl(f.url) })) }))
     .sort((a, b) => a.order - b.order);
   /*
     Yoel's Isracard, 28.9: Itzik wanted one button to take into tomorrow's call
@@ -2680,6 +2684,18 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
  background:var(--surface)}
 .replybar .rlead{font:800 19px Heebo,sans-serif;color:var(--ink);margin-bottom:2px}
 .replybar .rbox{margin:0}
+/* 13.10: the hand that carries the box onto one line of the screen. */
+.replybar .rdrag{margin-inline-start:auto;padding:8px 12px;border-radius:999px;border:1px dashed var(--accent);
+ font:700 14px Heebo,sans-serif;color:var(--accent);touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+.rdghost{position:fixed;z-index:9999;transform:translate(-50%,-120%);font-size:40px;pointer-events:none;
+ filter:drop-shadow(0 4px 8px rgba(0,0,0,.3))}
+body.rdragging{user-select:none;-webkit-user-select:none}
+.rdover{outline:3px dashed var(--accent);outline-offset:3px;border-radius:12px}
+.rdpicked{outline:3px solid var(--accent);outline-offset:3px;border-radius:12px}
+.replybar .rdchip{display:flex;align-items:center;gap:8px;margin:0 0 10px;padding:8px 12px;border-radius:12px;
+ background:var(--bg);border:1px solid var(--line);font:600 15px Heebo,sans-serif;color:var(--ink)}
+.replybar .rdchip span{flex:1}
+.replybar .rdchip button{min-width:40px;min-height:40px;border:0;background:none;font-size:18px;color:var(--ink)}
 /* The reply box, sized for his thumbs. 19.09: "מיקרופון כפתור גדול, יש לי אצבעות עבות". */
 .rbox .bmic{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;
  min-height:72px;margin-top:12px;border-radius:18px;background:var(--accent);color:var(--on-accent);
@@ -9678,6 +9694,102 @@ function replyBar(sec){
   +replyBox(name?('על המסך '+name):'על המסך הזה');
  sec.appendChild(wrap);
  try{wireBoxes(wrap);}catch(e){try{console.error('replyBar',e);}catch(_){}}
+ try{dragBar(sec,wrap,name);}catch(e){try{console.error('dragBar',e);}catch(_){}}
+}
+/*
+  Drag the box onto the line it is about.
+
+  Itzik, 13.10, on the appointments screen: "I would like to drag this onto
+  one of the answers above, let go on it, and reply." The box at the bottom
+  only ever said which screen it came from, so a note about one appointment
+  arrived without saying which. The hand on the folded line is picked up with
+  a finger, carried over any line of the screen and dropped: the line lights
+  up, the box opens with it quoted, and what he says leaves tied to it.
+  The box itself stays where it is: the lists repaint, and a box moved into
+  one would vanish with his half written words.
+*/
+function dragItemAt(sec,wrap,x,y){
+ var hit=document.elementFromPoint(x,y);
+ if(!hit||!sec.contains(hit)||wrap.contains(hit))return null;
+ var el=hit;
+ while(el&&el.parentElement&&el.parentElement!==sec){
+  var par=el.parentElement;
+  if(par.parentElement===sec&&par.children.length>1)return el;
+  el=par;
+ }
+ if(!el||el===sec||el.tagName==='H2'||(el.className&&String(el.className).indexOf('rephint')>=0))return null;
+ return el;
+}
+function dragBar(sec,wrap,name){
+ var sum=wrap.querySelector('summary'),box=wrap.querySelector('.rbox');
+ if(!sum||!box)return;
+ var base=box.getAttribute('data-q')||'';
+ var h=document.createElement('span');
+ h.className='rdrag';h.setAttribute('role','button');
+ h.setAttribute('aria-label','לגרור אל שורה במסך');
+ h.textContent='✋ לגרור לשורה';
+ sum.appendChild(h);
+ var chip=document.createElement('div');chip.className='rdchip';chip.hidden=true;
+ wrap.insertBefore(chip,box);
+ var ghost=null,over=null,scr=0,lastY=0,lastX=0;
+ var mark=function(el){
+  if(over===el)return;
+  if(over)over.classList.remove('rdover');
+  over=el;if(over)over.classList.add('rdover');
+ };
+ var stop=function(){
+  clearInterval(scr);scr=0;
+  if(ghost&&ghost.parentNode)ghost.parentNode.removeChild(ghost);ghost=null;
+  document.body.classList.remove('rdragging');
+ };
+ h.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();});
+ h.addEventListener('pointerdown',function(e){
+  e.preventDefault();e.stopPropagation();
+  try{h.setPointerCapture(e.pointerId);}catch(_){}
+  ghost=document.createElement('div');ghost.className='rdghost';ghost.textContent='💬';
+  document.body.appendChild(ghost);
+  document.body.classList.add('rdragging');
+  lastX=e.clientX;lastY=e.clientY;
+  ghost.style.left=lastX+'px';ghost.style.top=lastY+'px';
+  // Lines above the fold: hold near the top edge and the page scrolls up.
+  scr=setInterval(function(){
+   var vh=window.innerHeight||600;
+   if(lastY<90)window.scrollBy(0,-14);
+   else if(lastY>vh-90)window.scrollBy(0,14);
+   else return;
+   mark(dragItemAt(sec,wrap,lastX,lastY));
+  },30);
+ });
+ h.addEventListener('pointermove',function(e){
+  if(!ghost)return;
+  e.preventDefault();
+  lastX=e.clientX;lastY=e.clientY;
+  ghost.style.left=lastX+'px';ghost.style.top=lastY+'px';
+  mark(dragItemAt(sec,wrap,lastX,lastY));
+ });
+ var drop=function(e){
+  if(!ghost)return;
+  var el=over||dragItemAt(sec,wrap,e.clientX,e.clientY);
+  stop();
+  if(over)over.classList.remove('rdover');over=null;
+  if(!el)return;
+  var t=String(el.innerText||el.textContent||'').split(String.fromCharCode(10)).map(function(x){return x.trim();}).filter(Boolean).join(', ');
+  if(t.length>140)t=t.slice(0,140)+'…';
+  box.setAttribute('data-q',base+', על השורה: '+t);
+  chip.innerHTML='<span>על: '+esc(t)+'</span><button type="button" aria-label="לבטל את השורה">✕</button>';
+  chip.hidden=false;
+  chip.querySelector('button').onclick=function(){
+   box.setAttribute('data-q',base);chip.hidden=true;chip.innerHTML='';
+  };
+  el.classList.add('rdpicked');
+  setTimeout(function(){el.classList.remove('rdpicked');},2200);
+  wrap.open=true;
+  var ta=box.querySelector('textarea');
+  try{wrap.scrollIntoView({block:'center',behavior:'smooth'});}catch(_){}
+  if(ta)setTimeout(function(){ta.focus();},350);
+ };
+ h.addEventListener('pointerup',drop);
+ h.addEventListener('pointercancel',function(){stop();if(over)over.classList.remove('rdover');over=null;});
 }
 /*
   The screen he lands on has to start at the top.
@@ -17836,6 +17948,15 @@ function pruneOldFiles(src) {
   const cutoff = Date.now() - FILE_DAYS * 864e5;
   let named = '';
   try { named = fs.readFileSync(__filename, 'utf8'); } catch (e) { return; }
+  // 12.10: the sale screen and the contacts name their files in their own data,
+  // not in this file, so seven of the Lolos sale files were deleted after three
+  // days. A file a screen's data names is kept like one the page names.
+  for (const d of ['sale/sale', 'contacts/contacts']) {
+    const dir = path.join(inst.dataPath, d);
+    for (const f of fs.existsSync(dir) ? fs.readdirSync(dir) : []) {
+      try { named += fs.readFileSync(path.join(dir, f), 'utf8'); } catch (e) {}
+    }
+  }
   // 12.10, Itzik: "delete it from the server too, free space automatically."
   // A file the page named on the last build and no longer names was taken off
   // a screen on purpose, so it goes now instead of waiting FILE_DAYS. Capped,
