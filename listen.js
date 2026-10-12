@@ -488,7 +488,8 @@ function recordIncoming(m) {
       and closed before any session sees it. Itzik's own monitor never takes this path.
       The page sends the kind first ("משימה"), and it arrives glued to the text.
     */
-    if (codeOk && inst.name !== 'abaitzik' && /^\s*(?:משימה)?\s*בקשה ממנהל\s*[:：]/.test(text)) {
+    // A customer who is her own admin (12.10, Rinat) is not filed: her worker just does it.
+    if (codeOk && inst.name !== 'abaitzik' && !inst.admin && /^\s*(?:משימה)?\s*בקשה ממנהל\s*[:：]/.test(text)) {
       try {
         const cr = require('./lib/change-requests.js');
         const crId = cr.add(text.replace(/^\s*(?:משימה)?\s*בקשה ממנהל\s*[:：]\s*/, ''), rec.id);
