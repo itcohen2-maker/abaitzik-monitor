@@ -313,13 +313,28 @@ function publishFallback(body, force) {
   message at all.
 */
 const PART_RE = /^(.+)\.part(\d+)of(\d+)$/;
+/*
+  12.10: two cheque photos sent together from the iPhone were both called
+  image.jpg, and the second one wrote over the first on disk. A file never
+  replaces another one: the newcomer becomes image-2.jpg and the message
+  carries that name.
+*/
+function freeName(name) {
+  if (!fs.existsSync(path.join(DROP, name))) return name;
+  const ext = path.extname(name), stem = name.slice(0, name.length - ext.length);
+  for (let i = 2; ; i++) {
+    const n = stem + '-' + i + ext;
+    if (!fs.existsSync(path.join(DROP, n))) return n;
+  }
+}
 function joinSlices(m) {
   const hit = PART_RE.exec(String(m.attachment.name || ''));
   if (!hit) return 'whole';
-  const base = hit[1], k = Number(hit[3]);
+  const k = Number(hit[3]);
   const names = [];
-  for (let j = 1; j <= k; j++) names.push(path.join(DROP, base + '.part' + j + 'of' + k));
+  for (let j = 1; j <= k; j++) names.push(path.join(DROP, hit[1] + '.part' + j + 'of' + k));
   if (!names.every(function (f) { return fs.existsSync(f); })) return 'waiting';
+  const base = freeName(hit[1]);
   try {
     fs.writeFileSync(path.join(DROP, base), Buffer.concat(names.map(function (f) { return fs.readFileSync(f); })));
     names.forEach(function (f) { try { fs.unlinkSync(f); } catch (e) {} });
@@ -331,6 +346,9 @@ function joinSlices(m) {
 }
 
 async function saveAttachment(m) {
+  if (!PART_RE.test(String(m.attachment.name || ''))) {
+    m.attachment = Object.assign({}, m.attachment, { name: freeName(String(m.attachment.name || 'file')) });
+  }
   const out = path.join(DROP, m.attachment.name);
   const res = await fetch(m.attachment.url);
   const bin = Buffer.from(await res.arrayBuffer());
