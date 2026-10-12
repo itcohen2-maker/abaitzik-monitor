@@ -1923,7 +1923,7 @@ details.replybar[open]>summary{margin-bottom:10px;color:var(--ink)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-12T10:59:05.600Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-12T11:02:47.708Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3436,7 +3436,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='ce74c889f7';
+var CODE_ID='fa4f370af2';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -3488,7 +3488,7 @@ function NTFYIN(){ return secret('ntfyIn'); }
 function ntfyText(kind, text, gid) {
  return fetch('https://ntfy.sh/' + NTFYIN(), {
   method: 'POST', headers: { Title: 'monitor' + (gid ? ' ' + gid + ' cap' : ''), 'X-Tags': 'memo' },
-  body: [kind, text, '', 'קוד ' + myCode()].join(String.fromCharCode(10))
+  body: [kind, text, '', 'קוד ' + sendCode()].join(String.fromCharCode(10))
  }).then(function (r) { if (!r.ok) throw new Error('ntfy'); return 'ok'; });
 }
 function sendText(subject, text, kind) {
@@ -3496,7 +3496,7 @@ function sendText(subject, text, kind) {
   return fetch('https://formsubmit.co/ajax/' + MAILBOX(), {
    method: 'POST',
    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-   body: JSON.stringify({ _subject: subject, _template: 'table', 'הודעה': text, 'קוד': myCode() })
+   body: JSON.stringify({ _subject: subject, _template: 'table', 'הודעה': text, 'קוד': sendCode() })
   }).then(function (r) {
    if (!r.ok) throw new Error('quota');
    return 'backup';
@@ -3643,7 +3643,7 @@ function sendFiles(list, note) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify({ _subject: 'קובץ מהמוניטור', _template: 'table',
-      'הודעה': note + ' (הקובץ עצמו נשלח בערוץ הקבצים)', 'קוד': myCode() })
+      'הודעה': note + ' (הקובץ עצמו נשלח בערוץ הקבצים)', 'קוד': sendCode() })
    }).then(function (r) { if (!r.ok) throw new Error('quota'); return 'backup'; });
   });
  }).then(function (how) {
@@ -3695,7 +3695,7 @@ function upKeepAwake(on){
 }
 function upCall(path,opt){
  opt=opt||{};
- var h={'X-Monitor-Code':myCode()||secret('upKey')};
+ var h={'X-Monitor-Code':sendCode()||secret('upKey')};
  if(opt.json)h['Content-Type']='application/json';
  return fetch(UPURL+path,{method:opt.method||'GET',headers:h,body:opt.body}).then(function(r){
   return r.json().catch(function(){return {};}).then(function(b){return {status:r.status,body:b||{}};});
@@ -7987,6 +7987,7 @@ function renderSent(){
 function myCode(){
  try{return localStorage.getItem('monitorCode')||'';}catch(e){return '';}
 }
+function sendCode(){return myCode()||secret('ownerCode');}
 function oneLock(){return !!(GATE&&GATE.words&&INSTANCE&&INSTANCE.name&&INSTANCE.name!=='abaitzik');}
 function gateKeyIs(v){
  var saved='';try{saved=localStorage.getItem('gateKey')||'';}catch(e){}
@@ -10320,7 +10321,7 @@ function notesSend(keep){
  var sig=nsHash(JSON.stringify(body)),last='';
  try{last=localStorage.getItem('notesSyncSig')||'';}catch(e){}
  if(sig===last)return;
- body.at=new Date().toISOString();body.code=myCode();
+ body.at=new Date().toISOString();body.code=sendCode();
  fetch('https://ntfy.sh/'+NTFYIN()+'?filename=notes-sync.json',
   {method:'PUT',headers:{Title:'notes-sync'},body:JSON.stringify(body),keepalive:!!keep})
   .then(function(r){if(r.ok)try{localStorage.setItem('notesSyncSig',sig);}catch(e){}},function(){});
