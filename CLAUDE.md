@@ -35,6 +35,9 @@
   request. The 12.9 records are in `data/_archive/`. September bank deposits were all covered by receipts. Rivhit
   is a Windows desktop app on Itzik's PC only, so issuing receipts or invoices happens from the PC session, never
   the server; see the rule above.
+  **Every cheque he sends (12.10.2026) goes into the report**: a `c-<customer>-<YYYYMMDD>.json` there, kind `cheque`,
+  with `no` (cheque number), `bank`, `amount`, `name`, `date`, `at` (deposit day); take it off the debtors. When it is
+  deposited set `"got":"<date>"` and it moves to "צ׳קים שנגבו" with its number and amount. Never delete one.
 
 - **The improvements reviewer:** `review.js`, timer `monitor-review.timer` every morning 05:30 Israel. A read only
   Claude session that returns up to six improvements from a new customer's point of view into `data/better/better/`,

@@ -4498,6 +4498,8 @@ try{
   <div id="rivList"></div>
   <h3 class="rivh" id="rivH7" hidden>צ׳קים עתידיים שאצלנו</h3>
   <div id="rivCheq" hidden></div>
+  <h3 class="rivh" id="rivH8" hidden>צ׳קים שנגבו</h3>
+  <div id="rivCheqGot" hidden></div>
   <h3 class="rivh" id="rivH6" hidden>נרשם כאן בנפרד, לא בריווחית</h3>
   <div id="rivManual" hidden></div>
   <h3 class="rivh" id="rivH2">נכנס לבנק באפריל עד יוני ואין עליו קבלה</h3>
@@ -16805,6 +16807,7 @@ function rivRow(r){
  return '<div class="rivrow"><span class="d">'+esc(r.date)+'</span>'
   +'<span class="t"><b>'+esc(r.name)+'</b>'
   +(r.card?'<small>מתוכו חוב ישן '+ils(r.card)+'</small>':'')
+  +(r.no?'<small>צ׳ק '+esc(r.no)+(r.bank?', '+esc(r.bank):'')+(r.got?', נגבה '+esc(r.got):'')+'</small>':'')
   +(r.note?'<small>'+esc(r.note)+'</small>':'')
   +(tag?'<span class="rivtag '+tag[0]+'">'+tag[1]+'</span>':'')
   +'</span><span class="a">'+ils(r.amount)+'</span></div>';
@@ -16881,7 +16884,11 @@ function renderRivhit(){
  // kind cheque (12.10): a post dated cheque he holds. It is not a debt any
  // more, so it leaves the list above and the share page, and waits here,
  // soonest first, until the day it can be deposited.
- put('rivCheq',by('cheque').sort(function(a,b){return String(a.at).localeCompare(String(b.at));}),'rivH7');
+ // Since 12.10 every cheque he hands me stays here: future ones until
+ // deposited, then (got set) under the collected list, newest first.
+ var CQ=by('cheque');
+ put('rivCheq',CQ.filter(function(r){return !r.got;}).sort(function(a,b){return String(a.at).localeCompare(String(b.at));}),'rivH7');
+ put('rivCheqGot',CQ.filter(function(r){return r.got;}).sort(function(a,b){return String(b.at).localeCompare(String(a.at));}),'rivH8');
  put('rivManual',by('manual'),'rivH6');
  put('rivOpen',by('open'),'rivH2');
  put('rivBank',by('bank'),'rivH4');
