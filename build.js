@@ -13731,7 +13731,8 @@ var LEC_ITEMS=[
  {t:'01 המלל הערוך עם השקפים',u:'https://docs.google.com/document/d/1B0Kcx-9Dk7vRME0rUiK15IbGwTTu7_JQ/edit'},
  {t:'02 כל השקפים החדשים',u:'https://drive.google.com/drive/folders/19I-nnLDrSyrbbEk9cKIhCg14RgbFGxrE'},
  {t:'03 תיקיית ההרצאה בדרייב',u:'https://drive.google.com/drive/folders/1eKSkYILNuqIT_EytCYgGZNbWgiQPCQdv'},
- {t:'📤 לשלוח לאיליי בוואטסאפ',wa:1}
+ {t:'📤 לשלוח לאיליי בוואטסאפ',wa:1},
+ {t:'📤 לשלוח לאיליי: המלל המלא והסרטונים',wa:2}
 ];
 /* 11.10, Itzik: share the lecture with Ilay only. No number here (public
    page): WhatsApp opens with the text and he picks Ilay. */
@@ -13741,6 +13742,15 @@ var LEC_WA='איליי, ההרצאה שלי, כנגד כל הסיכויים.'+St
  +'המלל הערוך עם השקפים בקטן: '+LEC_ITEMS[2].u+String.fromCharCode(10)
  +'כל השקפים החדשים: '+LEC_ITEMS[3].u+String.fromCharCode(10)
  +'כל התיקייה: '+LEC_ITEMS[4].u;
+/* 12.10, Itzik: a separate send for the long text with the lecture's videos.
+   The Doc holds the whole talk in order with a video link at each spot. */
+var LEC_WA2='איליי, המלל המלא של ההרצאה, כנגד כל הסיכויים, עם קישור לכל סרטון במקום שלו:'+String.fromCharCode(10)
+ +'https://docs.google.com/document/d/19UUrExkQX_m3rd16Y6gsr7jjhn_atmwz1lJw7oAEVaE/edit'+String.fromCharCode(10)+String.fromCharCode(10)
+ +'הסרטונים:'+String.fromCharCode(10)
+ +'לא ויתרתי על המנגל: https://drive.google.com/file/d/1e4vZQiyM24aPYqClxp9EZIkyznvYlMdV/view'+String.fromCharCode(10)
+ +'דודה לבנה: https://drive.google.com/file/d/18bJgjSkRaLhIDzTz_jWKWIuTcLaH0GFk/view'+String.fromCharCode(10)
+ +'הביקורת, לפני ואחרי: https://drive.google.com/file/d/18OrxIiE2PpWjBrXhc3POJ07jRS2dXG5x/view'+String.fromCharCode(10)
+ +'בלונים לסיום: '+LEC_ITEMS[1].u;
 function lecSheet(){
  var old=document.getElementById('lecSheet');if(old)old.remove();
  var w=document.createElement('div');
@@ -13763,7 +13773,7 @@ function lecSheet(){
   if(k===null||k===undefined)return;
   close();
   var it=LEC_ITEMS[+k];if(k===''||!it)return;
-  if(it.wa){window.open('https://wa.me/?text='+encodeURIComponent(LEC_WA),'_blank','noopener');return;}
+  if(it.wa){window.open('https://wa.me/?text='+encodeURIComponent(it.wa===2?LEC_WA2:LEC_WA),'_blank','noopener');return;}
   window.open(it.u,'_blank','noopener');
  };
  document.addEventListener('keydown',esckey);
