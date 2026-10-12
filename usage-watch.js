@@ -64,8 +64,25 @@ function lines(dir) {
   } catch (e) { return []; }
 }
 
-function summarize(now) {
+/*
+  12.10, Itzik: "דו"ח מסכם כמה החשבון שלי עומד מה המכסה החודשית מה המכסה השבועית
+  ... כמה כל מוניטור לקח ... איזה מצב אני עומד לגבי המנוי שלי במאה דולר".
+  The meter itself (week and 5 hours, in percent) is read on the PC every 20
+  minutes (pc-pull.js subSnapshot) and lands in subscription.json, with what the
+  Claude Code sessions on the PC used per day. Those sessions are a row of their
+  own, so the PC tasks already inside them are not counted twice.
+*/
+function subscription(now) {
+  try {
+    const s = JSON.parse(fs.readFileSync(path.join(ME, 'data', 'status', 'subscription.json'), 'utf8'));
+    s.ageH = (now - Date.parse(s.at)) / 36e5;
+    return s;
+  } catch (e) { return null; }
+}
+
+function summarize(now, sub) {
   const today = ilDay(now);
+  const pcRow = sub && sub.pc && sub.ageH < 26;
   const days = [];
   for (let i = 0; i < 8; i++) days.push(ilDay(new Date(now - i * 864e5)));
   return monitors().map((mon) => {
@@ -74,6 +91,7 @@ function summarize(now) {
     for (const u of lines(mon.dir)) {
       const d = ilDay(new Date(u.at));
       if (!days.includes(d)) continue;
+      if (pcRow && u.src === 'pc') continue;
       byDay[d] = (byDay[d] || 0) + (u.usd || 0);
       tokDay[d] = (tokDay[d] || 0) + toks(u);
       if (d === today) {
@@ -93,10 +111,49 @@ function summarize(now) {
     return { id: mon.id, label: mon.label, today: byDay[today] || 0, usual, week: week.reduce((s, d) => s + (byDay[d] || 0), 0), sessions, longSolo, models, pc,
       tokToday: tokDay[today] || 0, tokWeek: week.reduce((s, d) => s + (tokDay[d] || 0), 0),
       yesterday: { usd: byDay[days[1]] || 0, tok: tokDay[days[1]] || 0 } };
-  });
+  }).concat(pcRow ? [(() => {
+    const g = (d) => sub.pc[d] || { usd: 0, tok: 0 };
+    const week = days.slice(0, 7);
+    return { id: 'pc', label: 'המחשב (סשנים שאתה פותח)', today: g(today).usd, usual: 0, week: week.reduce((n, d) => n + g(d).usd, 0),
+      sessions: 0, longSolo: 0, models: {}, pc: 0, tokToday: g(today).tok, tokWeek: week.reduce((n, d) => n + g(d).tok, 0),
+      yesterday: g(days[1]) };
+  })()] : []);
 }
 
-function reasons(sum) {
+const bar = (pct, w) => { const n = Math.max(0, Math.min(w, Math.round(pct / 100 * w))); return '█'.repeat(n) + '░'.repeat(w - n); };
+const when = (iso) => new Intl.DateTimeFormat('he-IL', { timeZone: 'Asia/Jerusalem', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
+
+// The subscription in plain words, with bars: the table he asked for, readable on the phone.
+function subText(sum, sub, now) {
+  const out = [];
+  if (!sub) out.push('מצב המנוי: עוד לא נקרא מהמחשב.');
+  else {
+    const plan = /max_20x/.test(sub.tier) ? 'Max פי 20, 200 דולר לחודש' : /max/.test(sub.plan) ? 'Max פי 5, 100 דולר לחודש' : sub.plan;
+    out.push('המנוי: ' + plan + '. מחיר קבוע, בלי חיוב נוסף' + (sub.extra ? ' (שימוש נוסף בתשלום מופעל!)' : '') + '.');
+    out.push('אין מכסה חודשית ואין יומית. יש שתיים: שבועית, וחלון של 5 שעות.');
+    if (sub.week) {
+      const left = Date.parse(sub.week.resets) - now;
+      const gone = Math.max(0.01, 1 - left / (7 * 864e5));
+      const pace = sub.week.pct / gone;
+      out.push('שבועית  ' + bar(sub.week.pct, 20) + ' ' + Math.round(sub.week.pct) + '%, מתאפסת ' + when(sub.week.resets) + '.');
+      out.push('   עברו ' + Math.round(gone * 100) + '% מהשבוע. ' + (pace <= 100 ? 'בקצב הזה תסיים את השבוע בערך ב ' + Math.round(pace) + '%.'
+        : 'בקצב הזה המכסה נגמרת בערך ' + when(new Date(now + (100 - sub.week.pct) / (sub.week.pct / (gone * 7 * 864e5))).toISOString()) + ', לפני האיפוס.'));
+    }
+    if (sub.five) out.push('5 שעות  ' + bar(sub.five.pct, 20) + ' ' + Math.round(sub.five.pct) + '%' + (sub.five.resets ? ', מתאפס ' + when(sub.five.resets) : '') + '.');
+    if (sub.ageH > 2) out.push('(נקרא לאחרונה ' + when(sub.at) + ', המחשב כבוי מאז.)');
+  }
+  const tot = sum.reduce((n, s) => n + s.week, 0);
+  if (tot > 0) {
+    out.push('', 'מי לקח כמה השבוע (מחיר מחירון, ובערך מה זה מהמכסה השבועית):');
+    for (const s of sum.slice().sort((a, b) => b.week - a.week)) {
+      const share = s.week / tot * 100;
+      out.push(bar(share, 12) + ' ' + Math.round(share) + '%  ' + s.label + ': ' + usd(s.week) + (sub && sub.week ? ', בערך ' + Math.round(share / 100 * sub.week.pct) + '% מהמכסה' : '') + '. היום ' + usd(s.today) + '.');
+    }
+  }
+  return out.join('\n');
+}
+
+function reasons(sum, sub) {
   const out = [];
   for (const s of sum) {
     // 12.10: a customer stops at its own ceiling (worker.js overBudget); he hears it here.
@@ -104,6 +161,12 @@ function reasons(sum) {
     else if (s.today > DAY_USD) out.push([s.id + ':day', s.label + ': ' + usd(s.today) + ' היום, מעל הסף של ' + usd(DAY_USD) + '.']);
     else if (s.usual >= 2 && s.today > 3 * s.usual) out.push([s.id + ':x3', s.label + ': ' + usd(s.today) + ' היום, פי ' + (s.today / s.usual).toFixed(1) + ' מיום רגיל (' + usd(s.usual) + ').']);
     if (s.longSolo >= 3) out.push([s.id + ':solo', s.label + ': ' + s.longSolo + ' סשנים ארוכים היום בלי להעביר עבודה למודל הזול.']);
+  }
+  if (sub && sub.week && sub.ageH < 3) {
+    const left = Date.parse(sub.week.resets) - Date.now();
+    const gone = Math.max(0.01, 1 - left / (7 * 864e5));
+    if (sub.week.pct >= 80) out.push(['sub:80', 'המכסה השבועית ב ' + Math.round(sub.week.pct) + '%, מתאפסת ' + when(sub.week.resets) + '.']);
+    else if (sub.week.pct / gone > 110 && sub.week.pct >= 30) out.push(['sub:pace', 'בקצב הנוכחי המכסה השבועית תיגמר לפני האיפוס (' + Math.round(sub.week.pct) + '% אחרי ' + Math.round(gone * 100) + '% מהשבוע).']);
   }
   const all = sum.reduce((n, s) => n + s.today, 0);
   if (all > ALL_USD) out.push(['all:day', 'כל המוניטורים יחד: ' + usd(all) + ' היום, מעל ' + usd(ALL_USD) + '. זה בא על חשבון פגסוס והלקוחות.']);
@@ -131,12 +194,13 @@ function writeAsMonitor(file, data) {
 
 function main() {
   const now = new Date();
-  const sum = summarize(now);
-  const body = text(sum);
-  const why = reasons(sum);
+  const sub = subscription(now);
+  const sum = summarize(now, sub);
+  const body = subText(sum, sub, now) + '\n\n' + text(sum);
+  const why = reasons(sum, sub);
   if (DRY) { console.log(body); console.log(why.map((r) => '! ' + r[1]).join('\n') || 'אין שימוש יתר'); return; }
 
-  writeAsMonitor(path.join(ME, 'data', 'status', 'usage-summary.json'), JSON.stringify({ at: now.toISOString(), monitors: sum }, null, 1));
+  writeAsMonitor(path.join(ME, 'data', 'status', 'usage-summary.json'), JSON.stringify({ at: now.toISOString(), monitors: sum, sub, subText: subText(sum, sub, now) }, null, 1));
 
   let state = {};
   try { state = JSON.parse(fs.readFileSync(STATE, 'utf8')); } catch (e) {}
@@ -159,4 +223,4 @@ function main() {
 }
 
 if (require.main === module) main();
-module.exports = { summarize, reasons, text, tk };
+module.exports = { summarize, reasons, text, tk, subText, subscription };

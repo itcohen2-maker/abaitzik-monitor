@@ -124,7 +124,8 @@ function usageBlock() {
     if (!rows.length) return '';
     const all = u.monitors.reduce((n, m) => n + ((m.yesterday && m.yesterday.tok) || 0), 0);
     const usd = u.monitors.reduce((n, m) => n + ((m.yesterday && m.yesterday.usd) || 0), 0);
-    return '\n\nצריכה אתמול:\n' + rows.join('\n') + '\nסך הכל: ' + tk(all) + ' טוקנים, $' + usd.toFixed(2) + '.';
+    // 12.10: the subscription table (week, 5 hours, who took what) heads the block.
+    return '\n\n' + (u.subText ? u.subText + '\n\n' : '') + 'צריכה אתמול:\n' + rows.join('\n') + '\nסך הכל: ' + tk(all) + ' טוקנים, $' + usd.toFixed(2) + '.';
   } catch (e) { return '\n\nצריכה: אין סיכום (' + e.message.slice(0, 60) + ').'; }
 }
 

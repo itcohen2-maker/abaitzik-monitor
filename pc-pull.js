@@ -137,7 +137,37 @@ function work(t) {
   });
 }
 
+/*
+  12.10, Itzik: "דו"ח מסכם כמה החשבון שלי עומד מה המכסה ... איזה מצב אני עומד
+  לגבי המנוי שלי במאה דולר". The real numbers (the 5 hour window and the week)
+  are only on Anthropic's side and need the full Claude login, which exists on
+  this PC and not on the server (its token is inference only). Every 20 minutes
+  the PC asks, read only, and hands the answer to the server (pc-task.js sub),
+  where usage-watch.js and the morning brief read it. No Claude session, no tokens.
+*/
+async function subSnapshot() {
+  const mark = path.join(STATUS, 'sub-last.json');
+  if (Date.now() - ((readJson(mark, {}).at) || 0) < 20 * 60 * 1000) return;
+  try { fs.writeFileSync(mark, JSON.stringify({ at: Date.now() })); } catch (e) {}
+  try {
+    const cred = readJson(path.join(process.env.USERPROFILE || 'C:/Users/User', '.claude', '.credentials.json'), {}).claudeAiOauth || {};
+    if (!cred.accessToken) return;
+    const r = await fetch('https://api.anthropic.com/api/oauth/usage', { headers: {
+      Authorization: 'Bearer ' + cred.accessToken, 'anthropic-beta': 'oauth-2025-04-20' }, signal: AbortSignal.timeout(20000) });
+    if (!r.ok) { say('!! מצב המנוי לא נקרא: ' + r.status); return; }
+    const d = await r.json();
+    const w = (x) => x ? { pct: x.utilization, resets: x.resets_at } : null;
+    const snap = { plan: cred.subscriptionType || '', tier: cred.rateLimitTier || '', five: w(d.five_hour), week: w(d.seven_day),
+      weekOpus: w(d.seven_day_opus), weekSonnet: w(d.seven_day_sonnet), extra: d.extra_usage ? !!d.extra_usage.is_enabled : false,
+      // the Claude Code sessions opened on this PC, which log nothing of their own
+      pc: require('./lib/pc-claude-usage.js').pcUsage(path.join(process.env.USERPROFILE || 'C:/Users/User', '.claude', 'projects')) };
+    const s = await remote('sub', JSON.stringify(snap));
+    if (s.code !== 0) say('!! מצב המנוי לא נשלח: ' + s.err.trim().slice(-120));
+  } catch (e) { say('!! מצב המנוי: ' + e.message); }
+}
+
 async function main() {
+  if (!DRY) await subSnapshot();
   const live = liveNow();
   const room = MAX_LIVE - Object.keys(live).length;
   if (room <= 0) return;

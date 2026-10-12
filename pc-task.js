@@ -192,9 +192,19 @@ if (cmd === 'add') {
     fs.appendFileSync(path.join(inst.dataPath, 'status', 'usage.jsonl'), JSON.stringify(line) + '\n');
     console.log('ok');
   } catch (e) { console.error('bad usage line: ' + e.message); process.exit(2); }
+} else if (cmd === 'sub') {
+  // 12.10: the subscription's own meter, read on the PC (pc-pull.js subSnapshot).
+  // The latest goes to subscription.json, every reading to subscription.jsonl for the trend.
+  try {
+    const u = JSON.parse(stdin());
+    const snap = Object.assign({ at: new Date().toISOString() }, u);
+    fs.writeFileSync(path.join(inst.dataPath, 'status', 'subscription.json'), JSON.stringify(snap, null, 1));
+    fs.appendFileSync(path.join(inst.dataPath, 'status', 'subscription.jsonl'), JSON.stringify(snap) + '\n');
+    console.log('ok');
+  } catch (e) { console.error('bad subscription line: ' + e.message); process.exit(2); }
 } else if (cmd === 'list') {
   all().forEach((t) => console.log([t.id, t.status, t.at, t.task.slice(0, 80)].join('  ')));
 } else {
-  console.error('usage: node pc-task.js add|next|done|fail|usage|list');
+  console.error('usage: node pc-task.js add|next|done|fail|usage|sub|list');
   process.exit(2);
 }
