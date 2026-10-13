@@ -2642,6 +2642,7 @@ a.yb4{display:block;text-align:center;text-decoration:none;background:linear-gra
 .gotile{display:block;width:100%;margin:8px 0 0;padding:11px 14px;border:0;cursor:pointer;
  border-radius:var(--r);background:var(--ink);color:var(--ground);
  font:800 15px Heebo,sans-serif;text-align:start}
+.gotile.fsave{margin-top:6px;background:var(--ground);color:var(--ink);box-shadow:inset 0 0 0 2px var(--ink);text-align:center}
 #goBack{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
  z-index:9999;padding:13px 22px;border:0;border-radius:999px;cursor:pointer;
  background:var(--ink);color:var(--ground);font:800 16px Heebo,sans-serif;
@@ -6290,7 +6291,10 @@ function goLinks(m){
  return fb.map(function(n){
   // 10.10: a file already shown as a picture in the text above is not shown twice.
   var inText=(t.match(new RegExp('files/[^\\\\s<>"]+','g'))||[]).some(function(h){return fileNameOf(h.replace(new RegExp('[.,;:!?)"]+$'),''))===n;});
-  return '<button type="button" class="gotile" data-file="'+esc(n)+'">'+(inText?'':fileThumb(n))+'קח אותי לשם: '+esc(n.split('/').pop())+'</button>';
+  // Reviewer idea taken by Itzik, 13.10: "כפתור הורדה ברור לקבצים מצ'אט".
+  // Every file in an answer gets its own save button right under it.
+  return '<button type="button" class="gotile" data-file="'+esc(n)+'">'+(inText?'':fileThumb(n))+'קח אותי לשם: '+esc(n.split('/').pop())+'</button>'
+   +'<button type="button" class="gotile fsave" data-fdl="'+esc(n)+'">⬇ '+(fileMobile()?'שמירה בטלפון':'הורדה למחשב')+'</button>';
  }).join('')+ids.map(function(id){
   var el=document.getElementById(id);
   if(!el||el.hidden)return '';
@@ -6334,7 +6338,7 @@ function goReturn(){
  },80);
 }
 document.addEventListener('click',function(e){
- var b=e.target.closest&&e.target.closest('.gotile');
+ var b=e.target.closest&&e.target.closest('.gotile:not(.fsave)');
  if(!b)return;
  e.stopPropagation();e.preventDefault();
  var fn=b.getAttribute('data-file');
@@ -11207,10 +11211,10 @@ function filesSentToOwner(){
  });
  return s;
 }
+function fileMobile(){return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
 function fileDownload(n){
  var e=fileEntry(n);if(!e)return;
- var mob=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
- if(mob||!GKEY){fileView(n);return;}
+ if(fileMobile()||!GKEY){fileView(n);return;}
  toast('מוריד.');
  fileBlob(e).then(function(b){
   var u=URL.createObjectURL(b),a=document.createElement('a');

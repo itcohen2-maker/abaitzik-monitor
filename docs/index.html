@@ -1293,6 +1293,7 @@ a.yb4{display:block;text-align:center;text-decoration:none;background:linear-gra
 .gotile{display:block;width:100%;margin:8px 0 0;padding:11px 14px;border:0;cursor:pointer;
  border-radius:var(--r);background:var(--ink);color:var(--ground);
  font:800 15px Heebo,sans-serif;text-align:start}
+.gotile.fsave{margin-top:6px;background:var(--ground);color:var(--ink);box-shadow:inset 0 0 0 2px var(--ink);text-align:center}
 #goBack{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
  z-index:9999;padding:13px 22px;border:0;border-radius:999px;cursor:pointer;
  background:var(--ink);color:var(--ground);font:800 16px Heebo,sans-serif;
@@ -1983,7 +1984,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-13T08:42:01.272Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-13T08:42:37.780Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3513,7 +3514,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='f8d3663527';
+var CODE_ID='076cdf68eb';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -4111,7 +4112,8 @@ function goLinks(m){
  });
  return fb.map(function(n){
   var inText=(t.match(new RegExp('files/[^\\s<>"]+','g'))||[]).some(function(h){return fileNameOf(h.replace(new RegExp('[.,;:!?)"]+$'),''))===n;});
-  return '<button type="button" class="gotile" data-file="'+esc(n)+'">'+(inText?'':fileThumb(n))+'קח אותי לשם: '+esc(n.split('/').pop())+'</button>';
+  return '<button type="button" class="gotile" data-file="'+esc(n)+'">'+(inText?'':fileThumb(n))+'קח אותי לשם: '+esc(n.split('/').pop())+'</button>'
+   +'<button type="button" class="gotile fsave" data-fdl="'+esc(n)+'">⬇ '+(fileMobile()?'שמירה בטלפון':'הורדה למחשב')+'</button>';
  }).join('')+ids.map(function(id){
   var el=document.getElementById(id);
   if(!el||el.hidden)return '';
@@ -4155,7 +4157,7 @@ function goReturn(){
  },80);
 }
 document.addEventListener('click',function(e){
- var b=e.target.closest&&e.target.closest('.gotile');
+ var b=e.target.closest&&e.target.closest('.gotile:not(.fsave)');
  if(!b)return;
  e.stopPropagation();e.preventDefault();
  var fn=b.getAttribute('data-file');
@@ -7677,10 +7679,10 @@ function filesSentToOwner(){
  });
  return s;
 }
+function fileMobile(){return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
 function fileDownload(n){
  var e=fileEntry(n);if(!e)return;
- var mob=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
- if(mob||!GKEY){fileView(n);return;}
+ if(fileMobile()||!GKEY){fileView(n);return;}
  toast('מוריד.');
  fileBlob(e).then(function(b){
   var u=URL.createObjectURL(b),a=document.createElement('a');
