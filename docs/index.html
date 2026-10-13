@@ -1139,6 +1139,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .tdRow.done{opacity:.5;text-decoration:line-through}
 .tdAdd{display:flex;gap:6px}
 .tdAdd input{flex:1;min-width:0;border:1px solid #cfd6df;border-radius:10px;padding:9px 10px;font:400 15px Heebo,sans-serif}
+.tdAdd select{border:1px solid #cfd6df;border-radius:10px;padding:0 6px;background:#fff;font:400 14px Heebo,sans-serif;max-width:40%}
 .tdAdd button{border:0;border-radius:10px;padding:0 14px;background:#9c3d12;color:#fff;font:700 14px Heebo,sans-serif}
 .gWin{background:linear-gradient(150deg,#f2c94c,#7a2e12)}
 .gPen{background:linear-gradient(150deg,#5a8fd0,#1d2f55)}
@@ -1979,7 +1980,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-13T08:40:26.451Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-13T08:41:03.421Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3500,7 +3501,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='1ca4430a42';
+var CODE_ID='0e0c7a781a';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -9895,7 +9896,9 @@ function todaySheet(){
    return '<label class="tdRow tk'+(x.done[t.id]?' done':'')+'"><input type="checkbox" data-tk="'+esc(t.id)+'"'+(x.done[t.id]?' checked':'')+'> '+esc(t.text)+'</label>';
   }).join(''):'<small>אין משימה פתוחה להיום.</small>');
  if(x.ap1.length)h+='<div class="tdSec">מחר</div>'+x.ap1.map(apRow).join('');
- h+='<div class="tdSec">להוסיף משהו להיום</div><form class="tdAdd" id="tdForm"><input id="tdText" placeholder="למשל: להתקשר לבנק" autocomplete="off"><button type="submit">שליחה</button></form><small id="tdSaid"></small>';
+ var tdOpts='';for(var k=0;k<8;k++){var dd=new Date(Date.now()+k*864e5);
+  tdOpts+='<option value="'+tdDay(k)+'">'+(k===0?'היום':k===1?'מחר':esc(dd.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'})))+'</option>';}
+ h+='<div class="tdSec">להוסיף משימה</div><form class="tdAdd" id="tdForm"><select id="tdDay" aria-label="לאיזה יום">'+tdOpts+'</select><input id="tdText" placeholder="למשל: להתקשר לבנק" autocomplete="off"><button type="submit">שליחה</button></form><small id="tdSaid"></small>';
  var w=document.createElement('div');
  w.id='tdSheet';w.className='ysheet';
  w.setAttribute('role','dialog');w.setAttribute('aria-label','מה יש לי היום');
@@ -9910,10 +9913,12 @@ function todaySheet(){
  document.getElementById('tdForm').onsubmit=function(e){
   e.preventDefault();
   var t=document.getElementById('tdText'),said=document.getElementById('tdSaid'),v=t.value.trim();
+  var sel=document.getElementById('tdDay'),iso=sel.value,today=iso===tdDay(0);
+  var lbl=today?day:sel.options[sel.selectedIndex].text;
   if(!v)return;
   said.textContent='שולח.';
-  sendText('משימה להיום','משימה להיום, '+day+': '+v,'משימה').then(function(){
-   t.value='';said.textContent='נשלח. זה יופיע כאן ברשימת המשימות.';
+  sendText(today?'משימה להיום':'משימה ליום אחר',(today?'משימה להיום, ':'משימה ליום ')+lbl+' ('+iso+'): '+v,'משימה').then(function(){
+   t.value='';said.textContent=today?'נשלח. זה יופיע כאן ברשימת המשימות.':'נשלח. זה יופיע כאן ביום שבחרת.';
    markSent('text');renderSent();renderThread();
   }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';});
  };
