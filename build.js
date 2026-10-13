@@ -2463,6 +2463,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .gOcc{background:linear-gradient(150deg,#2bb39a,#123d3a)}
 .gLec{background:linear-gradient(150deg,#c0562b,#4a1d10)}
 .gClalit{background:linear-gradient(150deg,#1f6fa8,#0e2a45)}
+.gTom{background:linear-gradient(150deg,#0b7f8f,#0a0a0f)}
 .gTalk{background:linear-gradient(150deg,#c0392b,#4a1410)}
 .gManiv{background:linear-gradient(150deg,#3a8fd6,#123150)}
 .c-dv{background:linear-gradient(160deg,#b08a3e,#3b2a10)}
@@ -3945,6 +3946,9 @@ try{
     about the 55 last verses of the Torah (Deuteronomy 32:39 to the end).
   -->
   <button type="button" class="gt gLec" id="gLec" data-new="1" data-upd="2026-10-13-reel06"><b>🎤 הרצאה</b><small>כנגד כל הסיכויים: המלל הערוך עם השקפים</small></button>
+  <!-- 13.10. Itzik: "תעשה תקייה של טום ממליץ ואריח טום ממליץ". Scripts of
+       Tom's posts, four ad images, the site copy, and the draft of his own site. -->
+  <button type="button" class="gt gTom" id="gTom" data-new="1"><b>🧭 טום ממליץ</b><small>התסריטים, 4 תמונות לפרסום, ההעתק והאתר שלך</small></button>
   <!-- 13.10. Itzik: the corrected Clalit lecture agreement in its own tile. -->
   <button type="button" class="gt gClalit" id="gClalit" data-new="1"><b>🏥 הסכם כללית</b><small>אשקלון ובאר שבע, מתוקן עם הלוגו</small></button>
   <!--
@@ -14446,6 +14450,56 @@ function clalitSheet(){
  document.body.appendChild(w);
 }
 on('gClalit',clalitSheet);
+/*
+  13.10. Itzik: "תעשה תקייה של טום ממליץ ואריח טום ממליץ". Five Facebook posts
+  of Tom (two videos transcribed, three image ads), four ad images for him,
+  a one to one copy of trtechsolutions.online, and the draft of his own site.
+  Nothing is published: "אבל אתה לא מפרסם כלום עדיין". Private files (r) show
+  only once they are in the monitor; Drive links (u) open the folder.
+*/
+var TOM_ITEMS=[
+ {n:'📁',t:'התיקייה טום ממליץ בדרייב',u:'https://drive.google.com/drive/folders/1AnxEXSB1WKaSqW6Qr8l-WuW3Qdd5hcjz'},
+ {n:'01',t:'התסריטים של חמשת הפוסטים, מסודרים',r:'tom-scripts.docx'},
+ {n:'01ב',t:'התסריטים כטקסט',r:'tom-scripts.txt'},
+ {n:'02',t:'פרסום ממומן, תמונה 1: יש לך רעיון',r:'tom-ad-01.png'},
+ {n:'03',t:'פרסום ממומן, תמונה 2: לא מבין בטכנולוגיה',r:'tom-ad-02.png'},
+ {n:'04',t:'פרסום ממומן, תמונה 3: תוך יום',r:'tom-ad-03.png'},
+ {n:'05',t:'פרסום ממומן, תמונה 4: בן 55',r:'tom-ad-04.png'},
+ {n:'06',t:'האתר שלך, טיוטה, מסך מחשב',r:'tom-mysite-desktop.jpg'},
+ {n:'06ב',t:'האתר שלך, טיוטה, בטלפון',r:'tom-mysite-mobile.jpg'},
+ {n:'07',t:'ההעתק של האתר של טום (תיקייה בדרייב)',u:'https://drive.google.com/drive/folders/1DEc7wKn9R2PTspohvvbf6i3_Qyg1VJC1'}
+];
+function tomSheet(){
+ var old=document.getElementById('tomSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='tomSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','טום ממליץ');
+ w.innerHTML='<div class="ycard">'
+  +'<b>טום ממליץ</b>'
+  +'<small>שום דבר לא פורסם. האתר שלך הוא טיוטה במחשב, עולה לאוויר רק כשתגיד.</small>'
+  +TOM_ITEMS.map(function(it,i,a){
+    if(it.r&&!fileEntry(it.r))return '';
+    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=TOM_ITEMS[+k];if(k===''||!it)return;
+  if(it.r){fileOpen(it.r);return;}
+  window.open(it.u,'_blank','noopener');
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gTom',tomSheet);
+
 /* 11.10: temporary, the invoices Itzik sends to Etzel Dudi. Delete the tile when he says. */
 var DUDI_ITEMS=[
  {n:'★',t:'כל ארבע ביחד, 2,309 ש״ח (PDF אחד)',r:'dudi-4-invoices-2309.pdf'},
