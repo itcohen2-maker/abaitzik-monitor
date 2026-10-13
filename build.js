@@ -992,11 +992,22 @@ function build() {
   }
   const ICONS = path.join(OUT_DIR, 'icons');
   const SRC_ICONS = path.join(__dirname, 'public', 'icons');
-  if (!fs.existsSync(path.join(ICONS, 'icon-192.png')) && fs.existsSync(SRC_ICONS)) {
+  /*
+    Itzik, 13.10: "אני מקווה ששינית את האייקון גם אצל אלון". The 12.10 icon reached
+    only his own copy: an instance that already had icons kept the old ones. So an
+    icon that is still one of our earlier defaults is replaced too; one a customer
+    made himself (any other content) is still never touched.
+  */
+  const OLD_ICONS = new Set(['de35af33d237c0e277e63fcc6478ba2f', 'e676b326d78a5f51eb5b3cb9ca35e0a2', '136d78e0dee8a24a6e19f4e51475009b']);
+  if (fs.existsSync(SRC_ICONS) && path.resolve(ICONS) !== path.resolve(SRC_ICONS)) {
     fs.mkdirSync(ICONS, { recursive: true });
     for (const f of ['icon-180.png', 'icon-192.png', 'icon-512.png']) {
       const from = path.join(SRC_ICONS, f);
-      if (fs.existsSync(from)) fs.copyFileSync(from, path.join(ICONS, f));
+      const to = path.join(ICONS, f);
+      if (!fs.existsSync(from)) continue;
+      const stale = fs.existsSync(to)
+        && OLD_ICONS.has(require('crypto').createHash('md5').update(fs.readFileSync(to)).digest('hex'));
+      if (!fs.existsSync(to) || stale) fs.copyFileSync(from, to);
     }
   }
   // איציק, 17.9: "כל הסרטונים שעשינו תשמור, כי את זה אנחנו מעלים לאתר."
