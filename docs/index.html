@@ -1991,7 +1991,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-13T12:33:39.709Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-13T13:07:33.527Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3538,7 +3538,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='aa730b42b6';
+var CODE_ID='7e173e1b23';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10062,7 +10062,7 @@ var LEC_ITEMS=[
  {t:'02 כל השקפים החדשים',u:'https://drive.google.com/drive/folders/19I-nnLDrSyrbbEk9cKIhCg14RgbFGxrE'},
  {t:'03 תיקיית ההרצאה בדרייב',u:'https://drive.google.com/drive/folders/1eKSkYILNuqIT_EytCYgGZNbWgiQPCQdv'},
  {t:'04 השקפים החדשים 13.10',u:'https://drive.google.com/drive/folders/1sTWop4xGX4gz5f-YTsUWr6rTfcwada1Y'},
- {t:'📄 05 ההסכם מול כללית, אשקלון ובאר שבע',r:'clalit-agreement.pdf'},
+ {t:'📄 05 הסכם מול קופת חולים כללית',r:'clalit-agreement-v3.pdf'},
  {t:'📤 לשלוח לאיליי בוואטסאפ',wa:1},
  {t:'📤 לשלוח לאיליי: המלל המלא והסרטונים',wa:2}
 ];
@@ -10293,10 +10293,10 @@ function lawSheet(){
 }
 on('gLaw',lawSheet);
 var CLALIT_ITEMS=[
- {n:'★',t:'כל ההסכם בתמונה אחת, לגלריה ולוואטסאפ',r:'clalit-agreement-all.jpg'},
- {n:'01',t:'ההסכם המתוקן, PDF לשליחה',r:'clalit-agreement-v3.pdf'},
- {n:'01ב',t:'עמוד 1, תמונה לגלריה',r:'clalit-agreement-p1.jpg'},
- {n:'01ג',t:'עמוד 2, תמונה לגלריה',r:'clalit-agreement-p2.jpg'}
+ {n:'★',t:'הסכם מול קופת חולים כללית, תמונה אחת',r:'clalit-agreement-all.jpg'},
+ {n:'01',t:'הסכם מול קופת חולים כללית',r:'clalit-agreement-v3.pdf'},
+ {n:'01ב',t:'הסכם מול קופת חולים כללית עמוד 1',r:'clalit-agreement-p1.jpg'},
+ {n:'01ג',t:'הסכם מול קופת חולים כללית עמוד 2',r:'clalit-agreement-p2.jpg'}
 ];
 function sheetAllPrep(items){
  if(!GKEY||!navigator.share)return null;

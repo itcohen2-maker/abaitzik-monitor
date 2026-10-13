@@ -14126,7 +14126,7 @@ var LEC_ITEMS=[
  {t:'02 כל השקפים החדשים',u:'https://drive.google.com/drive/folders/19I-nnLDrSyrbbEk9cKIhCg14RgbFGxrE'},
  {t:'03 תיקיית ההרצאה בדרייב',u:'https://drive.google.com/drive/folders/1eKSkYILNuqIT_EytCYgGZNbWgiQPCQdv'},
  {t:'04 השקפים החדשים 13.10',u:'https://drive.google.com/drive/folders/1sTWop4xGX4gz5f-YTsUWr6rTfcwada1Y'},
- {t:'📄 05 ההסכם מול כללית, אשקלון ובאר שבע',r:'clalit-agreement.pdf'},
+ {t:'📄 05 הסכם מול קופת חולים כללית',r:'clalit-agreement-v3.pdf'},
  {t:'📤 לשלוח לאיליי בוואטסאפ',wa:1},
  {t:'📤 לשלוח לאיליי: המלל המלא והסרטונים',wa:2}
 ];
@@ -14377,10 +14377,10 @@ function lawSheet(){
 on('gLaw',lawSheet);
 /* 13.10: the Clalit lecture agreement, corrected (one hour, lateness inside cancellation, filming for marketing, logo, two pages). */
 var CLALIT_ITEMS=[
- {n:'★',t:'כל ההסכם בתמונה אחת, לגלריה ולוואטסאפ',r:'clalit-agreement-all.jpg'},
- {n:'01',t:'ההסכם המתוקן, PDF לשליחה',r:'clalit-agreement-v3.pdf'},
- {n:'01ב',t:'עמוד 1, תמונה לגלריה',r:'clalit-agreement-p1.jpg'},
- {n:'01ג',t:'עמוד 2, תמונה לגלריה',r:'clalit-agreement-p2.jpg'}
+ {n:'★',t:'הסכם מול קופת חולים כללית, תמונה אחת',r:'clalit-agreement-all.jpg'},
+ {n:'01',t:'הסכם מול קופת חולים כללית',r:'clalit-agreement-v3.pdf'},
+ {n:'01ב',t:'הסכם מול קופת חולים כללית עמוד 1',r:'clalit-agreement-p1.jpg'},
+ {n:'01ג',t:'הסכם מול קופת חולים כללית עמוד 2',r:'clalit-agreement-p2.jpg'}
 ];
 /*
   Itzik, 13.10, on the Clalit agreement: "אני לא מצליח להעביר בוואטסאפ, לקבץ את
