@@ -14129,35 +14129,18 @@ boot('today',todayTile);
   in Google Docs), the six new slides, the deck itself and the lecture folder.
 */
 var LEC_ITEMS=[
- {t:'⭐ המצגת המוכנה להרצאה, עם המלל בהערות',u:'https://drive.google.com/file/d/1dQ48u62xYIDIZE5eVZUqKcejzoJ6YjCv/view'},
- {t:'🎬 ההרצאה עם השקפים והסרטונים בקטן',r:'lecture-01-text-slides-videos.pdf'},
- {t:'🎈 סרטון הבלונים לסיום ההרצאה',u:'https://drive.google.com/file/d/1H7gNrwAmE_ANBflHdeeeIV4RLkh_tiwl/view'},
- {t:'01 המלל הערוך עם השקפים',u:'https://docs.google.com/document/d/1B0Kcx-9Dk7vRME0rUiK15IbGwTTu7_JQ/edit'},
- {t:'🖨️ 01 להדפסה ולשליחה לאיליי',r:'lecture-01-text-slides.pdf'},
- {t:'02 כל השקפים החדשים',u:'https://drive.google.com/drive/folders/19I-nnLDrSyrbbEk9cKIhCg14RgbFGxrE'},
- {t:'03 תיקיית ההרצאה בדרייב',u:'https://drive.google.com/drive/folders/1eKSkYILNuqIT_EytCYgGZNbWgiQPCQdv'},
- {t:'04 השקפים החדשים 13.10',u:'https://drive.google.com/drive/folders/1sTWop4xGX4gz5f-YTsUWr6rTfcwada1Y'},
- {t:'📄 05 הסכם מול קופת חולים כללית',r:'clalit-agreement-v3.pdf'},
- {t:'📤 לשלוח לאיליי בוואטסאפ',wa:1},
- {t:'📤 לשלוח לאיליי: המלל המלא והסרטונים',wa:2}
+ {t:'01 המלל המלא',r:'lecture-full-text.pdf',u:'https://drive.google.com/file/d/1ZjRua0t3UA8SDRPmA4HIV-W1WJ1PTx51/view'},
+ {t:'02 המצגת, כל השקפים',u:'https://drive.google.com/file/d/1Nn_zPsUeqddr_dGF1Ou4q104NStl2nVA/view'},
+ {t:'03 לאימון: המלל עם השקפים בקטן',r:'lecture-practice-small-slides.pdf',u:'https://drive.google.com/file/d/1h-ja7UYp2wBL4aAa3iDKvEbQf4_QEPZ_/view'},
+ {t:'📤 לשלוח לאיליי בוואטסאפ',wa:1}
 ];
-/* 11.10, Itzik: share the lecture with Ilay only. No number here (public
-   page): WhatsApp opens with the text and he picks Ilay. */
+/* 13.10 evening, Itzik: "everything is duplicates, it's complicated". One
+   copy of each: the text, the deck, the practice PDF, and one send to Ilay.
+   The Ner site part moved out of the talk into an appendix at the end. */
 var LEC_WA='איליי, ההרצאה שלי, כנגד כל הסיכויים.'+String.fromCharCode(10)
- +'המצגת המוכנה: '+LEC_ITEMS[0].u+String.fromCharCode(10)
- +'סרטון הבלונים לסיום: '+LEC_ITEMS[1].u+String.fromCharCode(10)
- +'המלל הערוך עם השקפים בקטן: '+LEC_ITEMS[2].u+String.fromCharCode(10)
- +'כל השקפים החדשים: '+LEC_ITEMS[4].u+String.fromCharCode(10)
- +'כל התיקייה: '+LEC_ITEMS[5].u;
-/* 12.10, Itzik: a separate send for the long text with the lecture's videos.
-   The Doc holds the whole talk in order with a video link at each spot. */
-var LEC_WA2='איליי, המלל המלא של ההרצאה, כנגד כל הסיכויים, עם קישור לכל סרטון במקום שלו:'+String.fromCharCode(10)
- +'https://docs.google.com/document/d/19UUrExkQX_m3rd16Y6gsr7jjhn_atmwz1lJw7oAEVaE/edit'+String.fromCharCode(10)+String.fromCharCode(10)
- +'הסרטונים:'+String.fromCharCode(10)
- +'לא ויתרתי על המנגל: https://drive.google.com/file/d/1e4vZQiyM24aPYqClxp9EZIkyznvYlMdV/view'+String.fromCharCode(10)
- +'דודה לבנה: https://drive.google.com/file/d/18bJgjSkRaLhIDzTz_jWKWIuTcLaH0GFk/view'+String.fromCharCode(10)
- +'הביקורת, לפני ואחרי: https://drive.google.com/file/d/18OrxIiE2PpWjBrXhc3POJ07jRS2dXG5x/view'+String.fromCharCode(10)
- +'בלונים לסיום: '+LEC_ITEMS[1].u;
+ +'המלל המלא: '+LEC_ITEMS[0].u+String.fromCharCode(10)
+ +'המצגת: '+LEC_ITEMS[1].u+String.fromCharCode(10)
+ +'המלל עם השקפים בקטן: '+LEC_ITEMS[2].u;
 function lecSheet(){
  var old=document.getElementById('lecSheet');if(old)old.remove();
  var w=document.createElement('div');
@@ -14166,7 +14149,7 @@ function lecSheet(){
  w.setAttribute('aria-label','הרצאה');
  w.innerHTML='<div class="ycard">'
   +'<b>הרצאה: כנגד כל הסיכויים</b>'
-  +'<small>המלל של 10.10 ערוך, עם תמונה קטנה של כל שקף. טקסט בכחול הוא הצעה לחלק של איך הרמת את הראש. מה שבסוגריים מרובעים, רק אתה יודע.</small>'
+  +'<small>אתר הנרות יצא מההרצאה ונמצא בנספח בסוף.</small>'
   +LEC_ITEMS.map(function(it,i,a){
     /* 13.10: a private file (r) shows only once it is in the monitor. */
     if(it.r&&!fileEntry(it.r))return '';
@@ -14182,7 +14165,7 @@ function lecSheet(){
   if(k===null||k===undefined)return;
   close();
   var it=LEC_ITEMS[+k];if(k===''||!it)return;
-  if(it.wa){window.open('https://wa.me/?text='+encodeURIComponent(it.wa===2?LEC_WA2:LEC_WA),'_blank','noopener');return;}
+  if(it.wa){window.open('https://wa.me/?text='+encodeURIComponent(LEC_WA),'_blank','noopener');return;}
   if(it.r){fileOpen(it.r);return;}
   window.open(it.u,'_blank','noopener');
  };
