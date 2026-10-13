@@ -14113,6 +14113,7 @@ var LEC_ITEMS=[
  {t:'02 כל השקפים החדשים',u:'https://drive.google.com/drive/folders/19I-nnLDrSyrbbEk9cKIhCg14RgbFGxrE'},
  {t:'03 תיקיית ההרצאה בדרייב',u:'https://drive.google.com/drive/folders/1eKSkYILNuqIT_EytCYgGZNbWgiQPCQdv'},
  {t:'04 השקפים החדשים 13.10',u:'https://drive.google.com/drive/folders/1sTWop4xGX4gz5f-YTsUWr6rTfcwada1Y'},
+ {t:'📄 05 ההסכם מול כללית, אשקלון ובאר שבע',r:'clalit-agreement.pdf'},
  {t:'📤 לשלוח לאיליי בוואטסאפ',wa:1},
  {t:'📤 לשלוח לאיליי: המלל המלא והסרטונים',wa:2}
 ];
