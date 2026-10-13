@@ -14107,6 +14107,7 @@ boot('today',todayTile);
 */
 var LEC_ITEMS=[
  {t:'⭐ המצגת המוכנה להרצאה, עם המלל בהערות',u:'https://drive.google.com/file/d/1dQ48u62xYIDIZE5eVZUqKcejzoJ6YjCv/view'},
+ {t:'🎬 ההרצאה עם השקפים והסרטונים בקטן',r:'lecture-01-text-slides-videos.pdf'},
  {t:'🎈 סרטון הבלונים לסיום ההרצאה',u:'https://drive.google.com/file/d/1H7gNrwAmE_ANBflHdeeeIV4RLkh_tiwl/view'},
  {t:'01 המלל הערוך עם השקפים',u:'https://docs.google.com/document/d/1B0Kcx-9Dk7vRME0rUiK15IbGwTTu7_JQ/edit'},
  {t:'🖨️ 01 להדפסה ולשליחה לאיליי',r:'lecture-01-text-slides.pdf'},
