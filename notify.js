@@ -5,6 +5,7 @@
   Usage: node notify.js "title" "message"
          node notify.js --budget          what is left today, and what is queued
          node notify.js --drain           retry whatever could not go out
+         node notify.js --urgent "t" "m"  rings even inside quiet hours (lib/quiet.js)
 
   This used to post straight to ntfy and ignore the answer. On 13.9 that meant
   the daily quota ran out in complete silence and he found out by asking why
@@ -47,8 +48,10 @@ function line(b) {
   const title = rest[0] || 'עדכון מהמוניטור';
   const body = rest.slice(1).join(' ') || title;
 
-  const r = await ch.notify(title, body);
-  if (r.ok) {
+  const r = await ch.notify(title, body, { urgent: args.includes('--urgent') });
+  if (r.held) {
+    console.log('שעות שקטות: ההתראה נשמרה ותצא בבוקר בהתראה אחת. התשובה כבר בשיחה.');
+  } else if (r.ok) {
     console.log('נשלח דרך ' + r.channel);
   } else {
     console.log('!! לא נשלח לאף ערוץ. ההודעה בתור ותנוסה שוב.');

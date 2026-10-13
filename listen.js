@@ -511,6 +511,24 @@ function recordIncoming(m) {
     say((codeOk ? 'נרשם בצ׳אט עם אישור קבלה: ' : 'נרשם בלי קוד, ממתין לאימות: ') + text.slice(0, 60));
     recordDrain(text, at);
     /*
+      13.10: the quiet hours line from the settings screen is applied here, with
+      no model, and answered in one line.
+    */
+    const qv = codeOk && require('./lib/quiet.js').parse(text);
+    if (qv) {
+      try {
+        const qc = require('./lib/quiet.js').set(qv);
+        rec.status = 'done';
+        fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+        fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-quiet.json')),
+          JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id,
+            text: require('./lib/quiet.js').said(qc), status: 'done' }, null, 1), 'utf8');
+        say('שעות שקטות: ' + JSON.stringify(qv));
+        try { publishChat(); } catch (e) { /* the next build carries it */ }
+        return true;
+      } catch (e) { say('!! שעות שקטות לא נשמרו: ' + e.message); }
+    }
+    /*
       6.10: a customer's request to the admin is filed by this code, not by a model.
       Until now the answering session was told to run `change-request.js add`, and in a
       test on Home Style's monitor one session said it had filed the request and had not.
@@ -1070,6 +1088,10 @@ async function connect() {
 // same clock as the pulse. Nothing here shouts: if it still cannot go out it
 // stays on the queue and the count travels on the next beat.
 async function drainQueue() {
+  try {
+    const q = await ch.releaseQuiet();
+    if (q.sent) say('שעות שקטות נגמרו: ' + q.sent + ' התראות יצאו בהתראה אחת.');
+  } catch (e) { say('!! התראת הבוקר של השעות השקטות: ' + e.message); }
   try {
     const before = ch.queueLength();
     if (!before) return;

@@ -1227,6 +1227,7 @@ button.abtn{border:0;cursor:pointer}
 .skinrow{display:flex;gap:6px;flex:0 0 auto}
 .skb{background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:10px;
  padding:9px 12px;font:500 13.5px Heebo,sans-serif;cursor:pointer;white-space:nowrap}
+#quietBox input[type=time]{background:var(--sunk);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:6px;font:inherit}
 .skb[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
 .skb:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 button.abtn[disabled]{opacity:.55}
@@ -2246,6 +2247,11 @@ body.editing .bn{display:none}
 .talk{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
  box-shadow:var(--shadow);padding:16px 16px 14px;margin-bottom:14px;
  display:grid;grid-template-columns:auto 1fr;gap:12px 14px;align-items:center}
+.firsthint{grid-column:1 / -1;display:flex;gap:10px;align-items:center;background:var(--sunk);
+ border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:500 14.5px Heebo,sans-serif;line-height:1.45}
+.firsthint[hidden]{display:none}
+.firsthint span{flex:1}
+.firsthint button{flex:none;border:0;border-radius:10px;padding:8px 12px;background:var(--ink);color:var(--surface);font:600 14px Heebo,sans-serif}
 .ways{grid-column:1 / -1;display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:2px}
 .quickwrite{grid-column:1 / -1;display:flex;gap:8px;margin-top:9px}
 /* A textarea that grows with the text up to about six lines, so a long
@@ -3650,6 +3656,12 @@ try{
  <div class="ava" aria-hidden="true"><div>${String(inst.owner || 'א').charAt(0)}</div></div>
 </header>
  <section class="talk" id="talkCard" aria-label="פנייה אליי">
+  <!-- 13.10, idea from the reviewer he took: on the first visit nobody knows
+       what this card is for. One line says it, until "הבנתי" or the first send. -->
+  <div class="firsthint" id="firstHint" hidden>
+   <span>${inst.gender === 'f' ? 'כאן מבקשים ממני: לחצי על המיקרופון ודברי, או כתבי בתיבה למטה ושלחי. התשובה תגיע לכאן.' : 'כאן מבקשים ממני: לחץ על המיקרופון ודבר, או כתוב בתיבה למטה ושלח. התשובה תגיע לכאן.'}</span>
+   <button type="button" id="firstHintOk">הבנתי</button>
+  </div>
   <button type="button" id="micBtn" class="mic" aria-label="${inst.gender === 'f' ? 'דברי' : 'דבר'} אליי">
    <svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
     <rect x="9" y="3" width="6" height="11" rx="3" fill="var(--ink)" stroke="none"/>
@@ -4098,6 +4110,18 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   flex row and pushed off the side of the screen. Itzik sent a photo of it from
   his phone with the notifications card sliced in half at the edge.
 -->
+<div class="alerts" id="quietBox">
+ <div>
+  <b>שעות שקטות</b>
+  <small id="quietSaid">בשעות האלה התשובות נכנסות לשיחה בלי צלצול, ובסוף הלילה מגיעה התראה אחת. תזכורות שקבעת והשעון המעורר מצלצלים תמיד.</small>
+ </div>
+ <div class="skinrow" role="group" aria-label="שעות שקטות">
+  <input type="time" id="quietFrom" value="22:00" aria-label="מתחילות ב">
+  <input type="time" id="quietTo" value="07:00" aria-label="נגמרות ב">
+  <button type="button" class="skb" id="quietOn">שמירה</button>
+  <button type="button" class="skb" id="quietOff">כבוי</button>
+ </div>
+</div>
 <div class="install" id="installHint">להתקנה כאפליקציה על מסך הבית: בספארי לוחצים שיתוף ואז "הוספה למסך הבית". באנדרואיד: תפריט ואז "התקנת אפליקציה".</div>
 <div class="alerts" id="alerts">
  <div>
@@ -8470,6 +8494,32 @@ function pingBind(){
  pingPaint();
 }
 pingBind();
+/* 13.10 quiet hours: the line goes to the listener, which applies it with no model. */
+(function(){
+ var f=document.getElementById('quietFrom'),t=document.getElementById('quietTo');
+ if(!f||!t)return;
+ var said=document.getElementById('quietSaid');
+ var st={};try{st=JSON.parse(localStorage.getItem('quietSet')||'{}');}catch(e){}
+ if(st.from)f.value=st.from;if(st.to)t.value=st.to;
+ function paint(){
+  document.getElementById('quietOn').setAttribute('aria-pressed',st.on===false?'false':'true');
+  document.getElementById('quietOff').setAttribute('aria-pressed',st.on===false?'true':'false');
+  if(st.at)said.textContent=st.on===false?'כבוי. כל תשובה מצלצלת, גם בלילה.'
+   :'פעיל מ '+(st.from||'22:00')+' עד '+(st.to||'07:00')+'. התשובות בלילה בלי צלצול, ובבוקר התראה אחת. תזכורות שקבעת והשעון המעורר מצלצלים תמיד.';
+ }
+ function go(on){
+  if(on&&(!f.value||!t.value||f.value===t.value)){toast('צריך שעת התחלה ושעת סיום שונות.');return;}
+  var line=on?'שעות שקטות '+f.value+' עד '+t.value:'שעות שקטות כבוי';
+  sendText('שעות שקטות',line,'הגדרה').then(function(){
+   st={on:on,from:f.value,to:t.value,at:new Date().toISOString()};
+   try{localStorage.setItem('quietSet',JSON.stringify(st));}catch(e){}
+   paint();toast(on?'נשמר. השעות השקטות פעילות.':'נשמר. השעות השקטות כבויות.');
+  }).catch(function(){toast('לא יצא, אין רשת. לנסות שוב.');});
+ }
+ document.getElementById('quietOn').addEventListener('click',function(){go(true);});
+ document.getElementById('quietOff').addEventListener('click',function(){go(false);});
+ paint();
+})();
 setInterval(pingPaint,60000);
 
 // One line straight into the same channel the chat uses, for the small
@@ -10567,7 +10617,18 @@ function flyMail(kind){
  },440);
  flag.style.transform='rotate(90deg)';
 }
+function firstHintDone(){
+ try{localStorage.setItem('firstHintSeen','1');}catch(e){}
+ var h=document.getElementById('firstHint');if(h)h.hidden=true;
+}
+(function(){
+ var h=document.getElementById('firstHint');if(!h)return;
+ var seen=null;try{seen=localStorage.getItem('firstHintSeen');}catch(e){}
+ if(!seen)h.hidden=false;
+ var b=document.getElementById('firstHintOk');if(b)b.addEventListener('click',firstHintDone);
+})();
 function markSent(kind,text,id){
+ firstHintDone();
  var at=new Date().toISOString();
  var rid=id||newRequestId();
  try{localStorage.setItem('lastSent',JSON.stringify({at:at,kind:kind,id:rid}));}catch(e){}
