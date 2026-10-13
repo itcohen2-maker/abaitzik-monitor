@@ -14460,7 +14460,7 @@ on('gClalit',clalitSheet);
   only once they are in the monitor; Drive links (u) open the folder.
 */
 var TOM_ITEMS=[
- {n:'🌐',t:'האתר שלך, באוויר מ 13.10',u:'https://abaitzik-tech.vercel.app'},
+ {n:'🌐',t:'האתר שלך, במבנה של טום, באוויר',u:'https://abaitzik-tech.vercel.app'},
  {n:'★',t:'התסריטים של חמשת הפוסטים, PDF לטלפון',r:'tom-scripts.pdf'},
  {n:'📁',t:'התיקייה טום ממליץ בדרייב',u:'https://drive.google.com/drive/folders/1AnxEXSB1WKaSqW6Qr8l-WuW3Qdd5hcjz'},
  {n:'01',t:'התסריטים של חמשת הפוסטים, מסודרים',r:'tom-scripts.docx'},
