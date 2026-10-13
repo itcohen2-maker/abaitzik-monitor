@@ -104,3 +104,8 @@
   (`node drive.js share <name> <email>`, then `put`/`get`/`ls`). Nothing private of Itzik's goes there. Dropped 13.10: Itzik prefers no Google; subscribers get files through the "📁 הקבצים שלי" tile on our server instead. Earlier: Itzik asked
   "do we need this?" and the answer was not yet, only when a subscriber who works in Google asks; then he opens the Gmail account, a PC task runs `rclone authorize "drive"` signed in as it and the server runs
   `node drive.js setup '<token>'`. `node drive.js status` says whether it is connected.
+
+- **Quiet hours (13.10.2026):** inside the window (default 22:00 to 07:00 Israel, `data/status/quiet.json`) every
+  notification is kept, not sent, and the listener sends one summary push when it ends (lib/quiet.js). Reminders and
+  the alarm still ring; anything that must ring at night goes `node notify.js --urgent "t" "m"`. He changes it in
+  Settings, box "שעות שקטות"; the listener applies the line "שעות שקטות HH:MM עד HH:MM" / "שעות שקטות כבוי" itself.
