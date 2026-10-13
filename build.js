@@ -13963,31 +13963,28 @@ function todaySheet(){
 on('gMyDay',todaySheet);
 function alarmSheet(){
  var old=document.getElementById('alarmSheet');if(old)old.remove();
- // 13.10: pressing the blue button before the shortcut exists left Shortcuts stuck on "does not exist".
- // It shows only after he says he built it, kept per device.
- var scOk=false;try{scOk=localStorage.getItem('alarmShortcut')==='1';}catch(_){}
+ // 13.10: his iPhone already has Apple's ready shortcut "הוספת שעון מעורר" (screenshot IMG_4807),
+ // so the blue button runs it and nothing has to be built first.
  var w=document.createElement('div');
  w.id='alarmSheet';w.className='ysheet';
  w.setAttribute('role','dialog');w.setAttribute('aria-label','שעון מעורר');
  w.innerHTML='<div class="ycard"><b>⏰ שעון מעורר</b>'
   +'<form class="tdAdd" id="alForm"><input id="alTime" type="time" value="07:00" required><input id="alText" placeholder="למה? למשל: לקום לצלם" autocomplete="off"><button type="submit">צלצול מהמוניטור</button></form><small id="alSaid"></small>'
-  +(scOk?'<button type="button" class="yb yb1" id="alClock">📱 לכוון את השעה הזאת בשעון של האייפון</button>':'<small>לשעון האמיתי של האייפון צריך קודם לבנות קיצור דרך אחד, לפי הצעדים כאן. עד אז הצלצול מהמוניטור עובד.</small>')
-  +'<details class="alHow"'+(scOk?'':' open')+'><summary>פעם ראשונה? בונים קיצור דרך אחד, דקה</summary><ol>'
-  +'<li><a href="shortcuts://create-shortcut">לפתוח קיצור חדש באפליקציית קיצורים</a></li>'
-  +'<li>למעלה לקרוא לו בדיוק: שעון מעורר</li>'
-  +'<li>הוספת פעולה, לחפש "שעון מעורר" ולבחור "יצירת שעון מעורר"</li>'
+  +'<button type="button" class="yb yb1" id="alClock">📱 לכוון בשעון של האייפון</button>'
+  +'<small>זה מפעיל את הקיצור "הוספת שעון מעורר" שכבר יש לך באייפון. הוא ישאל את השעה, ובוחרים אותה שם.</small>'
+  +'<details class="alHow"><summary>שלא ישאל את השעה כל פעם</summary><ol>'
+  +'<li>באפליקציית קיצורים ללחוץ לחיצה ארוכה על "הוספת שעון מעורר" ולבחור עריכה</li>'
   +'<li>ללחוץ על השעה בפעולה ולבחור "קלט קיצור"</li>'
-  +'<li>לשמור, ולחזור לכאן</li>'
-  +'</ol>'+(scOk?'<button type="button" class="yb yx" id="alScNo">הקיצור נמחק? להסתיר את הכפתור הכחול</button>':'<button type="button" class="yb yb1" id="alScYes">בניתי את הקיצור</button>')+'</details>'
+  +'<li>לסיים. מעכשיו השעה שבחרת כאן נכנסת לבד</li>'
+  +'</ol></details>'
   +'<button type="button" class="yb yx" id="alClose">סגירה</button></div>';
  function close(){w.remove();document.removeEventListener('keydown',esckey);}
  function esckey(e){if(e.key==='Escape')close();}
  w.onclick=function(e){
   if(e.target===w||e.target.id==='alClose')return close();
-  if(e.target.id==='alScYes'||e.target.id==='alScNo'){try{localStorage.setItem('alarmShortcut',e.target.id==='alScYes'?'1':'0');}catch(_){}close();return alarmSheet();}
   // clock-alarm:// is not a real scheme: Safari said the address is invalid (12.10).
-  // A shortcut named שעון מעורר gets the time as text and makes a real alarm.
-  if(e.target.id==='alClock'){var tm=document.getElementById('alTime').value;if(!/^[0-9][0-9]:[0-9][0-9]$/.test(tm))return;location.href='shortcuts://run-shortcut?name='+encodeURIComponent('שעון מעורר')+'&input=text&text='+encodeURIComponent(tm);}
+  // Apple's ready shortcut הוספת שעון מעורר; it takes the time as input once he sets it to.
+  if(e.target.id==='alClock'){var tm=document.getElementById('alTime').value;if(!/^[0-9][0-9]:[0-9][0-9]$/.test(tm))return;location.href='shortcuts://run-shortcut?name='+encodeURIComponent('הוספת שעון מעורר')+'&input=text&text='+encodeURIComponent(tm);}
  };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
