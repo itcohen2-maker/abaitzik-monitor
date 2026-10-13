@@ -1991,7 +1991,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-13T12:27:07.529Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-13T12:28:06.454Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3538,7 +3538,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='f509e8d0cf';
+var CODE_ID='aa730b42b6';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -5305,6 +5305,8 @@ document.getElementById('netSeg').addEventListener('click',function(e){
 })();
 
 var liveSeen=null;
+var ansBase=null;
+function newAnswers(v){return ansBase!=null&&!!v&&typeof v.answers==='number'&&v.answers>ansBase;}
 function markUpd(on){
  ['reloadBtn','pbReload'].forEach(function(id){var b=document.getElementById(id);if(b)b.classList.toggle('hasupd',!!on);});
  var w=document.querySelector('#reloadBtn .rlw');if(w)w.textContent=on?'יש עדכון, לחץ':'רענן';
@@ -5567,22 +5569,23 @@ function checkFresh(){
   }
   paintStamp();
   if(v)paintLive(v);
-  if(v&&v.builtAt===D.builtAt)markUpd(false);
+  if(v&&v.builtAt===D.builtAt){if(typeof v.answers==='number')ansBase=v.answers;markUpd(false);}
+  if(v&&ansBase==null&&typeof v.answers==='number')ansBase=v.answers;
   if(!v||!v.builtAt||v.builtAt===D.builtAt)return;
   var what=document.getElementById('liveWhat');
-  if(scrollingNow()){markUpd(true);afterScroll();return;}
+  if(scrollingNow()){markUpd(newAnswers(v));afterScroll();return;}
   if(readingInner()){
-   if(what&&liveSeen!==v.builtAt){liveSeen=v.builtAt;what.textContent='יש עדכון. מחכה שתסיים לקרוא.';}
-   markUpd(true);afterReading();return;
+   if(what&&liveSeen!==v.builtAt&&newAnswers(v)){liveSeen=v.builtAt;what.textContent='יש תשובה חדשה. מחכה שתסיים לקרוא.';}
+   markUpd(newAnswers(v));afterReading();return;
   }
   if(v.codeId&&CODE_ID&&v.codeId===CODE_ID){
    if(what&&liveSeen!==v.builtAt){liveSeen=v.builtAt;what.textContent='תשובה חדשה נכנסת.';}
    softRefresh(v);
    return;
   }
-  if(recStarting||rec){softRefresh(v);markUpd(true);return;}
-  if(typingNow()){softRefresh(v);markUpd(true);return;}
-  if(readingNow()){softRefresh(v);markUpd(true);afterReading();return;}
+  if(recStarting||rec){softRefresh(v);markUpd(false);return;}
+  if(typingNow()){softRefresh(v);markUpd(false);return;}
+  if(readingNow()){softRefresh(v);markUpd(false);afterReading();return;}
   if(what&&liveSeen!==v.builtAt){liveSeen=v.builtAt;what.textContent='יש תשובה חדשה. טוען.';}
   var seen='';
   try{seen=sessionStorage.getItem('reloadedFor')||'';}catch(e){}

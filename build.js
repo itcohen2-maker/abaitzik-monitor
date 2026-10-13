@@ -7847,6 +7847,14 @@ document.getElementById('netSeg').addEventListener('click',function(e){
 // running, green while I am listening, and the answer count updates on its own
 // so one reply can arrive without waiting for the rest.
 var liveSeen=null;
+/*
+  13.10, Itzik, voice note: "אומר שיש עדכון ואז כשאני נכנס אין לי תשובות".
+  Every push made a new build, including the listener's "received" stamp and
+  the live status line, and every one of them lit the button. Now it lights
+  only when version.json counts more answers than the screen already holds.
+*/
+var ansBase=null;
+function newAnswers(v){return ansBase!=null&&!!v&&typeof v.answers==='number'&&v.answers>ansBase;}
 // A newer build is waiting for him: the refresh buttons blink until he presses.
 function markUpd(on){
  ['reloadBtn','pbReload'].forEach(function(id){var b=document.getElementById(id);if(b)b.classList.toggle('hasupd',!!on);});
@@ -8252,18 +8260,19 @@ function checkFresh(){
   }
   paintStamp();
   if(v)paintLive(v);
-  if(v&&v.builtAt===D.builtAt)markUpd(false);
+  if(v&&v.builtAt===D.builtAt){if(typeof v.answers==='number')ansBase=v.answers;markUpd(false);}
+  if(v&&ansBase==null&&typeof v.answers==='number')ansBase=v.answers;
   if(!v||!v.builtAt||v.builtAt===D.builtAt)return;
   var what=document.getElementById('liveWhat');
   // Only the data moved: take it in where he stands. He asked for an answer
   // that arrives without the screen jumping under his hands, and a reload is
   // exactly that jump, plus the draft in the box.
-  if(scrollingNow()){markUpd(true);afterScroll();return;}
+  if(scrollingNow()){markUpd(newAnswers(v));afterScroll();return;}
   // Inside a screen and reading: nothing moves, not even the data. A line says
   // something new is waiting, and it comes in once he has been still a while.
   if(readingInner()){
-   if(what&&liveSeen!==v.builtAt){liveSeen=v.builtAt;what.textContent='יש עדכון. מחכה שתסיים לקרוא.';}
-   markUpd(true);afterReading();return;
+   if(what&&liveSeen!==v.builtAt&&newAnswers(v)){liveSeen=v.builtAt;what.textContent='יש תשובה חדשה. מחכה שתסיים לקרוא.';}
+   markUpd(newAnswers(v));afterReading();return;
   }
   if(v.codeId&&CODE_ID&&v.codeId===CODE_ID){
    if(what&&liveSeen!==v.builtAt){liveSeen=v.builtAt;what.textContent='תשובה חדשה נכנסת.';}
@@ -8274,12 +8283,12 @@ function checkFresh(){
   // is exactly the prompt he saw vanish under his finger (30.9).
   // The answers still come in while the reload waits: only the code waits,
   // never the data. Holding both is what froze the card on top for hours.
-  if(recStarting||rec){softRefresh(v);markUpd(true);return;}
+  if(recStarting||rec){softRefresh(v);markUpd(false);return;}
   // Never mid typing either (30.9, voice note: "באמצע הקלדה יש ריענון וזה מוחק
   // לי את הכל"). The new build waits for the next check after he stops.
-  if(typingNow()){softRefresh(v);markUpd(true);return;}
+  if(typingNow()){softRefresh(v);markUpd(false);return;}
   // Reading on the home screen: the data comes in, the reload waits.
-  if(readingNow()){softRefresh(v);markUpd(true);afterReading();return;}
+  if(readingNow()){softRefresh(v);markUpd(false);afterReading();return;}
   // A new build is up. Say so before reloading, so a reply that landed while
   // he was reading does not just make the screen jump under his hands.
   if(what&&liveSeen!==v.builtAt){liveSeen=v.builtAt;what.textContent='יש תשובה חדשה. טוען.';}
