@@ -2077,6 +2077,9 @@ section{margin-bottom:30px}
 #remForm{flex-wrap:wrap}
 #remForm input{min-width:0}
 #remForm #remDate{flex:1 1 100%}
+#apForm{flex-wrap:wrap}
+#apForm input{min-width:0;flex:1 1 40%}
+#apForm #apWhat,#apForm #apWhere{flex:1 1 100%}
 .nextrep{display:flex;align-items:center;gap:12px;margin-bottom:12px;
  background:var(--surface);border:1px solid var(--line);border-radius:16px;
  padding:12px 14px;box-shadow:var(--shadow)}
@@ -4738,6 +4741,16 @@ __RIVSHARE__
 <section id="pAp" hidden>
  <h2>תורים עתידיים</h2>
  <div id="apBox"></div>
+ <!-- 13.10, idea he took: "תורים אי אפשר להוסיף, וגם לא כתוב איך". The form sends one line "תור חדש: ..." and the server writes it to the list. -->
+ <div class="rephint">להוסיף תור: ממלאים כאן תאריך, שעה, מה ואיפה, ושולחים. אפשר גם לכתוב או להקליט בצ׳אט "תור חדש" עם הפרטים, או לשלוח צילום של ההודעה מהקופה.</div>
+ <form class="quickrow" id="apForm">
+  <input type="date" id="apDate" required aria-label="תאריך">
+  <input type="time" id="apTime" aria-label="שעה">
+  <input type="text" id="apWhat" autocomplete="off" placeholder="מה, למשל: רופא עור">
+  <input type="text" id="apWhere" autocomplete="off" placeholder="איפה, למשל: מכבי רמות">
+  <button type="submit">הוספת תור</button>
+ </form>
+ <div class="msgsaid" id="apSaid"></div>
 </section>
 <!--ITZIK:END-->
 
@@ -11125,7 +11138,7 @@ function renderAppts(){
    +(rm?'<div class="n">⏰ תזכורת '+esc(new Date(rm.due).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'}))+' בתשע בבוקר</div>':'')
    +(a.doc?'<div class="n"><a href="'+esc(a.doc)+'" target="_blank" rel="noopener">'+esc(a.docLabel||'ההפניה')+'</a></div>':'')
    +(a.img?'<a href="'+esc(a.img)+'" target="_blank" rel="noopener"><img src="'+esc(a.img)+'" alt="ההודעה מבית החולים" loading="lazy"></a>':'')+'</div>';
- }).join(''):'<div class="empty">אין תור עתידי.</div>';
+ }).join(''):'<div class="empty">אין תור עתידי. מוסיפים תור בטופס כאן למטה.</div>';
 }
 function tkDone(){try{return JSON.parse(localStorage.getItem('tasksDone')||'{}');}catch(e){return {};}}
 /*
@@ -11639,6 +11652,21 @@ document.addEventListener('change',function(e){
  var lbl=e.target.closest('label');
  if(justDone&&lbl){lbl.classList.add('pop');setTimeout(renderTasks,300);}
  else renderTasks();
+});
+on2('apForm','submit',function(e){
+ e.preventDefault();
+ var d=document.getElementById('apDate'),tm=document.getElementById('apTime');
+ var w=document.getElementById('apWhat'),wh=document.getElementById('apWhere');
+ var said=document.getElementById('apSaid');
+ var v=w.value.trim(),p=wh.value.trim();
+ if(!v||!d.value){said.textContent='צריך תאריך ומה התור.';return;}
+ var msg='תור חדש: '+v+', '+d.value.split('-').reverse().join('.')+' ('+d.value+')'+(tm.value?' בשעה '+tm.value:' בלי שעה')+(p?', מקום: '+p:'');
+ said.textContent='שולח.';
+ sendText('תור חדש',msg,'תור').then(function(){
+  w.value='';wh.value='';tm.value='';d.value='';
+  said.textContent='נשלח. התור יופיע כאן ברשימה, וגם במה יש לי היום ביום שלו.';
+  markSent('text');renderSent();renderThread();
+ }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';});
 });
 on2('remForm','submit',function(e){
  e.preventDefault();
@@ -13932,7 +13960,7 @@ function todaySheet(){
  var day=new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'});
  function apRow(a){return '<div class="tdRow">'+(a.noTime?'':'<i>'+esc(tdHour(a.when))+'</i>')+esc(a.what)
   +(a.where&&a.where!==a.what?'<br><small>'+esc(a.where)+'</small>':'')+'</div>';}
- h+='<div class="tdSec">🏥 תורים</div>'+(x.ap.length?x.ap.map(apRow).join(''):'<small>אין תור היום.</small>');
+ h+='<div class="tdSec">🏥 תורים</div>'+(x.ap.length?x.ap.map(apRow).join(''):'<small>אין תור היום. תור חדש מוסיפים באריח 🏥 תורים עתידיים, בטופס למטה.</small>');
  h+='<div class="tdSec">⏰ תזכורות</div>'+(x.rm.length?x.rm.map(function(r){return '<div class="tdRow">'+esc(r.text)+'</div>';}).join(''):'<small>אין תזכורת להיום.</small>');
  h+='<div class="tdSec">✅ משימות</div>'+(x.tk.length?x.tk.map(function(t){
    return '<label class="tdRow tk'+(x.done[t.id]?' done':'')+'"><input type="checkbox" data-tk="'+esc(t.id)+'"'+(x.done[t.id]?' checked':'')+'> '+esc(t.text)+'</label>';

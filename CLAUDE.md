@@ -74,6 +74,10 @@
   tasks of today plus earlier unticked ones (`data/tasks/tasks`, `{"id","day":"YYYY-MM-DD","text","n"}`), and tomorrow's
   appointments. A message "משימה להיום, <day> (<YYYY-MM-DD>): <text>" or "משימה ליום <day> (<YYYY-MM-DD>): <text>" (13.10, the box has a day picker) comes from its add box: write it as a task file for that date.
 
+- **A new appointment (13.10.2026):** the form on the "🏥 תורים עתידיים" screen sends "תור חדש: <what>, <DD.MM.YYYY> (<YYYY-MM-DD>)
+  בשעה HH:MM | בלי שעה[, מקום: <where>]". Write it as `data/appts/appts/<YYYYMMDD>-<slug>.json` with `id` ("a" + the name),
+  `at`, `when` (ISO with +03:00; with no hour use 09:00 and `"noTime":true`), `what`, `where`. Then push and answer one line.
+
 - **"העסק שלי", the small business CRM (12.10.2026), only when `instance.json` has `"biz": true`:** a message (text or
   voice) about a lead, a customer, a payment received or an expense is written as one record file in `data/biz/biz/`,
   named `biz-<yyyymmddhhmmss>-<4 random>.json`, with the fields `id`, `kind` (lead, customer, income, expense), `name`,
