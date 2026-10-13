@@ -3945,12 +3945,11 @@ try{
     12.10. Itzik: "an icon with the verses and the explanation under them",
     about the 55 last verses of the Torah (Deuteronomy 32:39 to the end).
   -->
-  <button type="button" class="gt gLec" id="gLec" data-new="1" data-upd="2026-10-13-reel06"><b>🎤 הרצאה</b><small>כנגד כל הסיכויים: המלל הערוך עם השקפים</small></button>
+  <button type="button" class="gt gLec" id="gLec" data-new="1" data-upd="2026-10-13-clalit"><b>🎤 הרצאה</b><small>כנגד כל הסיכויים: המלל, השקפים והסכם כללית</small></button>
   <!-- 13.10. Itzik: "תעשה תקייה של טום ממליץ ואריח טום ממליץ". Scripts of
        Tom's posts, four ad images, the site copy, and the draft of his own site. -->
   <button type="button" class="gt gTom" id="gTom" data-new="1"><b>🧭 טום ממליץ</b><small>האתר שלך באוויר, התסריטים, 4 תמונות לפרסום</small></button>
-  <!-- 13.10. Itzik: the corrected Clalit lecture agreement in its own tile. -->
-  <button type="button" class="gt gClalit" id="gClalit" data-new="1"><b>🏥 הסכם כללית</b><small>אשקלון ובאר שבע, מתוקן עם הלוגו</small></button>
+  <!-- 13.10 night: the Clalit agreement moved inside the lecture tile (item 05). -->
   <!--
     11.10. Itzik: "a card I can send from, and later we delete it". The June
     and July invoices of Etzel Dudi, each with the send button. Temporary.
@@ -14158,6 +14157,8 @@ var LEC_ITEMS=[
  {t:'03 לאימון: המלל עם השקפים בקטן',r:'lecture-practice-small-slides.pdf',u:'https://drive.google.com/file/d/1h-ja7UYp2wBL4aAa3iDKvEbQf4_QEPZ_/view'},
  /* 13.10 night: the Reel that announces the lectures, from his two voice notes. Drive: תסריטים, סיפורים אישיים. */
  {t:'04 הריל שמבשר על ההרצאות: תסריט ריל 06, מאיפה הכוחות',r:'reel-06-meefo-hakohot.txt'},
+ /* 13.10 night, Itzik: "שים את הסכם כללית ביחד עם ההרצאה". The agreement moved in here; its own tile is gone. */
+ {t:'05 🏥 הסכם כללית: אשקלון ובאר שבע',cl:1},
  {t:'📤 לשלוח לאיליי בוואטסאפ',wa:1}
 ];
 /* 13.10 evening, Itzik: "everything is duplicates, it's complicated". One
@@ -14191,6 +14192,7 @@ function lecSheet(){
   if(k===null||k===undefined)return;
   close();
   var it=LEC_ITEMS[+k];if(k===''||!it)return;
+  if(it.cl){clalitSheet();return;}
   if(it.wa){window.open('https://wa.me/?text='+encodeURIComponent(LEC_WA),'_blank','noopener');return;}
   if(it.r){fileOpen(it.r);return;}
   window.open(it.u,'_blank','noopener');
