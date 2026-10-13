@@ -14010,6 +14010,7 @@ var LEC_ITEMS=[
  {t:'⭐ המצגת המוכנה להרצאה, עם המלל בהערות',u:'https://drive.google.com/file/d/1dQ48u62xYIDIZE5eVZUqKcejzoJ6YjCv/view'},
  {t:'🎈 סרטון הבלונים לסיום ההרצאה',u:'https://drive.google.com/file/d/1H7gNrwAmE_ANBflHdeeeIV4RLkh_tiwl/view'},
  {t:'01 המלל הערוך עם השקפים',u:'https://docs.google.com/document/d/1B0Kcx-9Dk7vRME0rUiK15IbGwTTu7_JQ/edit'},
+ {t:'🖨️ 01 להדפסה ולשליחה לאיליי',r:'lecture-01-text-slides.pdf'},
  {t:'02 כל השקפים החדשים',u:'https://drive.google.com/drive/folders/19I-nnLDrSyrbbEk9cKIhCg14RgbFGxrE'},
  {t:'03 תיקיית ההרצאה בדרייב',u:'https://drive.google.com/drive/folders/1eKSkYILNuqIT_EytCYgGZNbWgiQPCQdv'},
  {t:'📤 לשלוח לאיליי בוואטסאפ',wa:1},
@@ -14021,8 +14022,8 @@ var LEC_WA='איליי, ההרצאה שלי, כנגד כל הסיכויים.'+St
  +'המצגת המוכנה: '+LEC_ITEMS[0].u+String.fromCharCode(10)
  +'סרטון הבלונים לסיום: '+LEC_ITEMS[1].u+String.fromCharCode(10)
  +'המלל הערוך עם השקפים בקטן: '+LEC_ITEMS[2].u+String.fromCharCode(10)
- +'כל השקפים החדשים: '+LEC_ITEMS[3].u+String.fromCharCode(10)
- +'כל התיקייה: '+LEC_ITEMS[4].u;
+ +'כל השקפים החדשים: '+LEC_ITEMS[4].u+String.fromCharCode(10)
+ +'כל התיקייה: '+LEC_ITEMS[5].u;
 /* 12.10, Itzik: a separate send for the long text with the lecture's videos.
    The Doc holds the whole talk in order with a video link at each spot. */
 var LEC_WA2='איליי, המלל המלא של ההרצאה, כנגד כל הסיכויים, עם קישור לכל סרטון במקום שלו:'+String.fromCharCode(10)
@@ -14042,6 +14043,8 @@ function lecSheet(){
   +'<b>הרצאה: כנגד כל הסיכויים</b>'
   +'<small>המלל של 10.10 ערוך, עם תמונה קטנה של כל שקף. טקסט בכחול הוא הצעה לחלק של איך הרמת את הראש. מה שבסוגריים מרובעים, רק אתה יודע.</small>'
   +LEC_ITEMS.map(function(it,i,a){
+    /* 13.10: a private file (r) shows only once it is in the monitor. */
+    if(it.r&&!fileEntry(it.r))return '';
     return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+esc(it.t)+'</button>';
    }).join('')
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
@@ -14055,6 +14058,7 @@ function lecSheet(){
   close();
   var it=LEC_ITEMS[+k];if(k===''||!it)return;
   if(it.wa){window.open('https://wa.me/?text='+encodeURIComponent(it.wa===2?LEC_WA2:LEC_WA),'_blank','noopener');return;}
+  if(it.r){fileOpen(it.r);return;}
   window.open(it.u,'_blank','noopener');
  };
  document.addEventListener('keydown',esckey);

@@ -1979,7 +1979,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-13T05:34:42.961Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-13T05:35:59.722Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3499,7 +3499,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='0dd2b323c6';
+var CODE_ID='c2c48d4466';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -9959,6 +9959,7 @@ var LEC_ITEMS=[
  {t:'⭐ המצגת המוכנה להרצאה, עם המלל בהערות',u:'https://drive.google.com/file/d/1dQ48u62xYIDIZE5eVZUqKcejzoJ6YjCv/view'},
  {t:'🎈 סרטון הבלונים לסיום ההרצאה',u:'https://drive.google.com/file/d/1H7gNrwAmE_ANBflHdeeeIV4RLkh_tiwl/view'},
  {t:'01 המלל הערוך עם השקפים',u:'https://docs.google.com/document/d/1B0Kcx-9Dk7vRME0rUiK15IbGwTTu7_JQ/edit'},
+ {t:'🖨️ 01 להדפסה ולשליחה לאיליי',r:'lecture-01-text-slides.pdf'},
  {t:'02 כל השקפים החדשים',u:'https://drive.google.com/drive/folders/19I-nnLDrSyrbbEk9cKIhCg14RgbFGxrE'},
  {t:'03 תיקיית ההרצאה בדרייב',u:'https://drive.google.com/drive/folders/1eKSkYILNuqIT_EytCYgGZNbWgiQPCQdv'},
  {t:'📤 לשלוח לאיליי בוואטסאפ',wa:1},
@@ -9968,8 +9969,8 @@ var LEC_WA='איליי, ההרצאה שלי, כנגד כל הסיכויים.'+St
  +'המצגת המוכנה: '+LEC_ITEMS[0].u+String.fromCharCode(10)
  +'סרטון הבלונים לסיום: '+LEC_ITEMS[1].u+String.fromCharCode(10)
  +'המלל הערוך עם השקפים בקטן: '+LEC_ITEMS[2].u+String.fromCharCode(10)
- +'כל השקפים החדשים: '+LEC_ITEMS[3].u+String.fromCharCode(10)
- +'כל התיקייה: '+LEC_ITEMS[4].u;
+ +'כל השקפים החדשים: '+LEC_ITEMS[4].u+String.fromCharCode(10)
+ +'כל התיקייה: '+LEC_ITEMS[5].u;
 var LEC_WA2='איליי, המלל המלא של ההרצאה, כנגד כל הסיכויים, עם קישור לכל סרטון במקום שלו:'+String.fromCharCode(10)
  +'https://docs.google.com/document/d/19UUrExkQX_m3rd16Y6gsr7jjhn_atmwz1lJw7oAEVaE/edit'+String.fromCharCode(10)+String.fromCharCode(10)
  +'הסרטונים:'+String.fromCharCode(10)
@@ -9987,6 +9988,7 @@ function lecSheet(){
   +'<b>הרצאה: כנגד כל הסיכויים</b>'
   +'<small>המלל של 10.10 ערוך, עם תמונה קטנה של כל שקף. טקסט בכחול הוא הצעה לחלק של איך הרמת את הראש. מה שבסוגריים מרובעים, רק אתה יודע.</small>'
   +LEC_ITEMS.map(function(it,i,a){
+    if(it.r&&!fileEntry(it.r))return '';
     return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+esc(it.t)+'</button>';
    }).join('')
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
@@ -10000,6 +10002,7 @@ function lecSheet(){
   close();
   var it=LEC_ITEMS[+k];if(k===''||!it)return;
   if(it.wa){window.open('https://wa.me/?text='+encodeURIComponent(it.wa===2?LEC_WA2:LEC_WA),'_blank','noopener');return;}
+  if(it.r){fileOpen(it.r);return;}
   window.open(it.u,'_blank','noopener');
  };
  document.addEventListener('keydown',esckey);
