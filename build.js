@@ -2443,6 +2443,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .meTxt{white-space:pre-wrap;text-align:right;line-height:1.7;font-size:17px;margin:10px 0 14px}
 .gLaw{background:linear-gradient(150deg,#c0623a,#3a1d12)}
 .gDudi{background:linear-gradient(150deg,#b4413a,#3a1512)}
+.gScript{background:linear-gradient(150deg,#2f8f6a,#0f2e22)}
 .gStk{background:linear-gradient(150deg,#d6a43a,#4a1d5c)}
 .stkg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}
 .stkc{background:#26222b;border:0;border-radius:12px;padding:6px 4px;color:#f2ede4;font:600 13px system-ui;position:relative}
@@ -3938,6 +3939,8 @@ try{
     about the 55 last verses of the Torah (Deuteronomy 32:39 to the end).
   -->
   <button type="button" class="gt gLec" id="gLec" data-new="1"><b>🎤 הרצאה</b><small>כנגד כל הסיכויים: המלל הערוך עם השקפים</small></button>
+  <!-- 13.10. Itzik: "say where in the monitor, or make a blinking tile". The talking head script announcing the lectures, from his two voice notes. -->
+  <button type="button" class="gt gScript" id="gScript" data-new="1"><b>🎬 תסריט ריל 06</b><small>מאיפה הכוחות: הריל שמבשר על ההרצאות</small></button>
   <!-- 13.10. Itzik: the corrected Clalit lecture agreement in its own tile. -->
   <button type="button" class="gt gClalit" id="gClalit" data-new="1"><b>🏥 הסכם כללית</b><small>אשקלון ובאר שבע, מתוקן עם הלוגו</small></button>
   <!--
@@ -5165,7 +5168,7 @@ function fileMsgName(name){
 }
 function fileListName(name){
  var lists=[];
- ['NER_ITEMS','REEL_ITEMS','STORY_ITEMS','FUT_ITEMS','OCC_ITEMS','LAW_ITEMS','DUDI_ITEMS','CLALIT_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS']
+ ['NER_ITEMS','REEL_ITEMS','STORY_ITEMS','FUT_ITEMS','OCC_ITEMS','LAW_ITEMS','DUDI_ITEMS','SCRIPT_ITEMS','CLALIT_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS']
   .forEach(function(k){if(Array.isArray(window[k]))lists.push(window[k]);});
  for(var i=0;i<lists.length;i++){
   var L=lists[i]||[];
@@ -5179,7 +5182,7 @@ function fileNiceName(name){
  var ln=fileListName(name)||fileMsgName(name);if(ln)return ln;
  var short=String(name).split('/').pop();
  var lists=[];
- ['NER_ITEMS','REEL_ITEMS','STORY_ITEMS','FUT_ITEMS','OCC_ITEMS','LAW_ITEMS','DUDI_ITEMS','CLALIT_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS']
+ ['NER_ITEMS','REEL_ITEMS','STORY_ITEMS','FUT_ITEMS','OCC_ITEMS','LAW_ITEMS','DUDI_ITEMS','SCRIPT_ITEMS','CLALIT_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS']
   .forEach(function(k){if(Array.isArray(window[k]))lists.push(window[k]);});
  for(var i=0;i<lists.length;i++){
   var L=lists[i]||[];
@@ -14428,6 +14431,39 @@ function clalitSheet(){
 }
 on('gClalit',clalitSheet);
 /* 11.10: temporary, the invoices Itzik sends to Etzel Dudi. Delete the tile when he says. */
+var SCRIPT_ITEMS=[
+ {n:'01',t:'ריל 06, מאיפה הכוחות: התסריט לקריאה (טקסט)',r:'reel-06-meefo-hakohot.txt'},
+ {n:'02',t:'אותו תסריט בדרייב, תיקיית תסריטים, סיפורים אישיים',u:'https://drive.google.com/drive/u/0/folders/1VK_2ZFOVVnN6mj2_hwWorFWgmD5Tqvoi'}
+];
+function scriptSheet(){
+ var old=document.getElementById('scriptSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='scriptSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','תסריט ריל 06');
+ w.innerHTML='<div class="ycard">'
+  +'<b>תסריט ריל 06, מאיפה הכוחות</b>'
+  +'<small>טוקינג הד שמבשר על ההרצאות, לפי שתי ההודעות הקוליות מ 13.10. בערך 55 שניות. הפתיחה בסגירת המפעל, הסיום בהוראה לכתוב הרצאה בפרטי.</small>'
+  +SCRIPT_ITEMS.map(function(it,i,a){
+    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=SCRIPT_ITEMS[+k];if(k===''||!it)return;
+  if(it.u){window.open(it.u,'_blank');return;}
+  fileOpen(it.r);
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gScript',scriptSheet);
 var DUDI_ITEMS=[
  {n:'★',t:'כל ארבע ביחד, 2,309 ש״ח (PDF אחד)',r:'dudi-4-invoices-2309.pdf'},
  {n:'★ב',t:'כל ארבע ביחד, תמונה אחת לוואטסאפ',r:'dudi-4-invoices-2309.jpg'},
