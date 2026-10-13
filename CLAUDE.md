@@ -94,3 +94,9 @@
 - **"⏰ שעון מעורר" (12.10.2026):** the home tile runs his iPhone shortcut "שעון מעורר" with the picked time (a real alarm; `clock-alarm://` is invalid in Safari, setup steps are in the sheet), or sends the message
   "שעון מעורר HH:MM[: text]". For that message run `node alarm.js "HH:MM" "<text or שעון מעורר>"` (Israel time, a time
   already passed means tomorrow; ntfy rings it at priority 5), add it to `data/appts` only if he asks, and answer one line.
+
+- **The subscribers' Drive folder (13.10.2026):** `drive.js` (rclone at ~/bin/rclone, remote `subs`) works in a separate
+  Google account, never itcohen2: folder "מנויים", one subfolder per subscriber shared only with them
+  (`node drive.js share <name> <email>`, then `put`/`get`/`ls`). Nothing private of Itzik's goes there. Waiting for him
+  to open the new Gmail account; then a PC task runs `rclone authorize "drive"` signed in as it and the server runs
+  `node drive.js setup '<token>'`. `node drive.js status` says whether it is connected.
