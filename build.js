@@ -2446,7 +2446,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .gMed{background:linear-gradient(150deg,#4fb3a9,#123a4a)}
 .gInv{background:linear-gradient(150deg,#d9a441,#3a2a12)}
 .gShop{background:linear-gradient(150deg,#3aa55d,#1f6f8b)}
-.gAlarm{background:linear-gradient(150deg,#e0a030,#5a2a0a)}
+.c-alm{background:linear-gradient(150deg,#e0a030,#5a2a0a)}
 .alHow{margin:10px 0;font-size:14px;line-height:1.6}.alHow summary{cursor:pointer;font-weight:600}.alHow ol{margin:6px 0;padding-inline-start:20px}.alHow a{color:#7fb8ff}
 #alTime{flex:0 0 96px}
 .gStoryArc{background:linear-gradient(150deg,#d6249f,#285aeb)}
@@ -3916,11 +3916,7 @@ try{
   <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
   <button type="button" class="gt gOcc" id="gOcc"><b>🩺 מרפאה תעסוקתית</b><small>מכבי רמות. טלפון א עד ה 08:00 עד 11:00</small></button>
   <button type="button" class="gt gShop" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
-  <!--
-    12.10. Itzik: "a shortcut to the alarm clock". Opens the iPhone Clock app on
-    the alarms tab, or sets a loud monitor push for a time he picks.
-  -->
-  <button type="button" class="gt gAlarm" id="gAlarm" data-new="1"><b>⏰ שעון מעורר</b><small>השעון של האייפון, או צלצול מהמוניטור</small></button>
+  <!-- 12.10 alarm tile: moved 13.10 to the round icons, see gAlarm next to gStk. -->
   <button type="button" class="gt gStoryArc" id="gStoryArc" data-new="1"><b>📸 הסטוריז שלי</b><small>הארכיון באינסטגרם: גם סטורי שכבר ירד</small></button>
   <!--
     איציק, 28.9, בהקלטה: "תסיר את כפתור תוכניות תוכן". הכפתור ירד ממסך הבית.
@@ -4005,6 +4001,10 @@ try{
        into its title since a round icon has no small text. -->
   <button type="button" class="ic" id="gStk"><span class="c c-stk">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h9v6a4.5 4.5 0 0 1-9 0z"/><path d="M5.5 7.5h.01M9.5 7.5h.01M5.5 11c1 .8 3 .8 4 0"/><path d="M14 9h7v5a3.5 3.5 0 0 1-7 0z"/><path d="M16 11.5h.01M19 11.5h.01M16 15c.8-.6 2.2-.6 3 0"/></svg></span>תיאטרון</button>
+  <!-- שעון מעורר. 12.10 a tile; Itzik, 13.10 by voice: "תשים לי אייקון קטן של
+       שעון מעורר". Same id, so the same sheet (iPhone shortcut or monitor ring). -->
+  <button type="button" class="ic" id="gAlarm" data-new="1"><span class="c c-alm">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="7"/><path d="M12 9.5V13l2.5 1.5M4 5.5 6.5 3M20 5.5 17.5 3M7 19.5 5.5 21M17 19.5l1.5 1.5"/></svg></span>שעון מעורר</button>
   <!-- סוף התורה. Itzik, 12.10 evening, by voice: "הפוך את האריח דברי התורה
        לאייקון עגול". Same sheet as the tile it was, now a scroll in the round. -->
   <button type="button" class="ic" id="gDv" data-new="1"><span class="c c-dv">
