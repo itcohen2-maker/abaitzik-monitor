@@ -14013,6 +14013,7 @@ var LEC_ITEMS=[
  {t:'🖨️ 01 להדפסה ולשליחה לאיליי',r:'lecture-01-text-slides.pdf'},
  {t:'02 כל השקפים החדשים',u:'https://drive.google.com/drive/folders/19I-nnLDrSyrbbEk9cKIhCg14RgbFGxrE'},
  {t:'03 תיקיית ההרצאה בדרייב',u:'https://drive.google.com/drive/folders/1eKSkYILNuqIT_EytCYgGZNbWgiQPCQdv'},
+ {t:'04 השקפים החדשים 13.10',u:'https://drive.google.com/drive/folders/1sTWop4xGX4gz5f-YTsUWr6rTfcwada1Y'},
  {t:'📤 לשלוח לאיליי בוואטסאפ',wa:1},
  {t:'📤 לשלוח לאיליי: המלל המלא והסרטונים',wa:2}
 ];
