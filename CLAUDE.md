@@ -97,6 +97,6 @@
 
 - **The subscribers' Drive folder (13.10.2026):** `drive.js` (rclone at ~/bin/rclone, remote `subs`) works in a separate
   Google account, never itcohen2: folder "מנויים", one subfolder per subscriber shared only with them
-  (`node drive.js share <name> <email>`, then `put`/`get`/`ls`). Nothing private of Itzik's goes there. Parked 13.10: Itzik asked
+  (`node drive.js share <name> <email>`, then `put`/`get`/`ls`). Nothing private of Itzik's goes there. Dropped 13.10: Itzik prefers no Google; subscribers get files through the "📁 הקבצים שלי" tile on our server instead. Earlier: Itzik asked
   "do we need this?" and the answer was not yet, only when a subscriber who works in Google asks; then he opens the Gmail account, a PC task runs `rclone authorize "drive"` signed in as it and the server runs
   `node drive.js setup '<token>'`. `node drive.js status` says whether it is connected.
