@@ -2457,6 +2457,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .tdRow.done{opacity:.5;text-decoration:line-through}
 .tdAdd{display:flex;gap:6px}
 .tdAdd input{flex:1;min-width:0;border:1px solid #cfd6df;border-radius:10px;padding:9px 10px;font:400 15px Heebo,sans-serif}
+.tdAdd select{border:1px solid #cfd6df;border-radius:10px;padding:0 6px;background:#fff;font:400 14px Heebo,sans-serif;max-width:40%}
 .tdAdd button{border:0;border-radius:10px;padding:0 14px;background:#9c3d12;color:#fff;font:700 14px Heebo,sans-serif}
 .gWin{background:linear-gradient(150deg,#f2c94c,#7a2e12)}
 .gPen{background:linear-gradient(150deg,#5a8fd0,#1d2f55)}
@@ -13937,7 +13938,10 @@ function todaySheet(){
    return '<label class="tdRow tk'+(x.done[t.id]?' done':'')+'"><input type="checkbox" data-tk="'+esc(t.id)+'"'+(x.done[t.id]?' checked':'')+'> '+esc(t.text)+'</label>';
   }).join(''):'<small>אין משימה פתוחה להיום.</small>');
  if(x.ap1.length)h+='<div class="tdSec">מחר</div>'+x.ap1.map(apRow).join('');
- h+='<div class="tdSec">להוסיף משהו להיום</div><form class="tdAdd" id="tdForm"><input id="tdText" placeholder="למשל: להתקשר לבנק" autocomplete="off"><button type="submit">שליחה</button></form><small id="tdSaid"></small>';
+ // 13.10, idea he took: "משימה להיום אפשר לכתוב רק לאותו יום". A day picker, today by default.
+ var tdOpts='';for(var k=0;k<8;k++){var dd=new Date(Date.now()+k*864e5);
+  tdOpts+='<option value="'+tdDay(k)+'">'+(k===0?'היום':k===1?'מחר':esc(dd.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'})))+'</option>';}
+ h+='<div class="tdSec">להוסיף משימה</div><form class="tdAdd" id="tdForm"><select id="tdDay" aria-label="לאיזה יום">'+tdOpts+'</select><input id="tdText" placeholder="למשל: להתקשר לבנק" autocomplete="off"><button type="submit">שליחה</button></form><small id="tdSaid"></small>';
  var w=document.createElement('div');
  w.id='tdSheet';w.className='ysheet';
  w.setAttribute('role','dialog');w.setAttribute('aria-label','מה יש לי היום');
@@ -13952,10 +13956,12 @@ function todaySheet(){
  document.getElementById('tdForm').onsubmit=function(e){
   e.preventDefault();
   var t=document.getElementById('tdText'),said=document.getElementById('tdSaid'),v=t.value.trim();
+  var sel=document.getElementById('tdDay'),iso=sel.value,today=iso===tdDay(0);
+  var lbl=today?day:sel.options[sel.selectedIndex].text;
   if(!v)return;
   said.textContent='שולח.';
-  sendText('משימה להיום','משימה להיום, '+day+': '+v,'משימה').then(function(){
-   t.value='';said.textContent='נשלח. זה יופיע כאן ברשימת המשימות.';
+  sendText(today?'משימה להיום':'משימה ליום אחר',(today?'משימה להיום, ':'משימה ליום ')+lbl+' ('+iso+'): '+v,'משימה').then(function(){
+   t.value='';said.textContent=today?'נשלח. זה יופיע כאן ברשימת המשימות.':'נשלח. זה יופיע כאן ביום שבחרת.';
    markSent('text');renderSent();renderThread();
   }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';});
  };
