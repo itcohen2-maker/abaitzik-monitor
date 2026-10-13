@@ -1991,7 +1991,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-13T10:37:02.965Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-13T10:37:39.017Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3538,7 +3538,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='77e979086b';
+var CODE_ID='4ef7f39b0b';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10290,10 +10290,22 @@ function lawSheet(){
 }
 on('gLaw',lawSheet);
 var CLALIT_ITEMS=[
+ {n:'★',t:'כל ההסכם בתמונה אחת, לגלריה ולוואטסאפ',r:'clalit-agreement-all.jpg'},
  {n:'01',t:'ההסכם המתוקן, PDF לשליחה',r:'clalit-agreement-v3.pdf'},
  {n:'01ב',t:'עמוד 1, תמונה לגלריה',r:'clalit-agreement-p1.jpg'},
  {n:'01ג',t:'עמוד 2, תמונה לגלריה',r:'clalit-agreement-p2.jpg'}
 ];
+function sheetAllPrep(items){
+ if(!GKEY||!navigator.share)return null;
+ var names=items.map(function(it){return it.r;}).filter(function(n){return n&&fileEntry(n);});
+ return names.length?waFiles({files:names}):null;
+}
+function sheetAllShare(st){
+ if(!st){toast('הקבצים עוד לא נטענו. נסה שוב בעוד רגע');return;}
+ if(!st.files){toast('מכין את הקבצים, לחץ שוב בעוד שנייה');return;}
+ if(navigator.canShare&&!navigator.canShare({files:st.files})){toast('הטלפון לא מקבל כמה קבצים יחד. פתח את התמונה האחת ושלח אותה');return;}
+ navigator.share({files:st.files}).catch(shareFail);
+}
 function clalitSheet(){
  var old=document.getElementById('clalitSheet');if(old)old.remove();
  var w=document.createElement('div');
@@ -10306,12 +10318,15 @@ function clalitSheet(){
   +CLALIT_ITEMS.map(function(it,i,a){
     return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
    }).join('')
+  +(navigator.share?'<button type="button" class="yb" data-all="1">★★ כל הקבצים ביחד, שליחה אחת</button>':'')
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
   +'</div>';
  function close(){w.remove();document.removeEventListener('keydown',esckey);}
  function esckey(e){if(e.key==='Escape')close();}
+ var all=sheetAllPrep(CLALIT_ITEMS);
  w.onclick=function(e){
   if(e.target===w)return close();
+  if(e.target.closest&&e.target.closest('[data-all]')){sheetAllShare(all);return;}
   var k=e.target.getAttribute&&e.target.getAttribute('data-k');
   if(k===null||k===undefined)return;
   close();

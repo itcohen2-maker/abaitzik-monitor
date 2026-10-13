@@ -14368,10 +14368,28 @@ function lawSheet(){
 on('gLaw',lawSheet);
 /* 13.10: the Clalit lecture agreement, corrected (one hour, lateness inside cancellation, filming for marketing, logo, two pages). */
 var CLALIT_ITEMS=[
+ {n:'★',t:'כל ההסכם בתמונה אחת, לגלריה ולוואטסאפ',r:'clalit-agreement-all.jpg'},
  {n:'01',t:'ההסכם המתוקן, PDF לשליחה',r:'clalit-agreement-v3.pdf'},
  {n:'01ב',t:'עמוד 1, תמונה לגלריה',r:'clalit-agreement-p1.jpg'},
  {n:'01ג',t:'עמוד 2, תמונה לגלריה',r:'clalit-agreement-p2.jpg'}
 ];
+/*
+  Itzik, 13.10, on the Clalit agreement: "אני לא מצליח להעביר בוואטסאפ, לקבץ את
+  כל הקבצים או לתת לי אפשרות לשמור את זה כתמונה". A sheet of a document now
+  fetches all its files the moment it opens, so one tap hands them together to
+  the share sheet inside the tap itself (the iPhone opens it only there).
+*/
+function sheetAllPrep(items){
+ if(!GKEY||!navigator.share)return null;
+ var names=items.map(function(it){return it.r;}).filter(function(n){return n&&fileEntry(n);});
+ return names.length?waFiles({files:names}):null;
+}
+function sheetAllShare(st){
+ if(!st){toast('הקבצים עוד לא נטענו. נסה שוב בעוד רגע');return;}
+ if(!st.files){toast('מכין את הקבצים, לחץ שוב בעוד שנייה');return;}
+ if(navigator.canShare&&!navigator.canShare({files:st.files})){toast('הטלפון לא מקבל כמה קבצים יחד. פתח את התמונה האחת ושלח אותה');return;}
+ navigator.share({files:st.files}).catch(shareFail);
+}
 function clalitSheet(){
  var old=document.getElementById('clalitSheet');if(old)old.remove();
  var w=document.createElement('div');
@@ -14384,12 +14402,15 @@ function clalitSheet(){
   +CLALIT_ITEMS.map(function(it,i,a){
     return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
    }).join('')
+  +(navigator.share?'<button type="button" class="yb" data-all="1">★★ כל הקבצים ביחד, שליחה אחת</button>':'')
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
   +'</div>';
  function close(){w.remove();document.removeEventListener('keydown',esckey);}
  function esckey(e){if(e.key==='Escape')close();}
+ var all=sheetAllPrep(CLALIT_ITEMS);
  w.onclick=function(e){
   if(e.target===w)return close();
+  if(e.target.closest&&e.target.closest('[data-all]')){sheetAllShare(all);return;}
   var k=e.target.getAttribute&&e.target.getAttribute('data-k');
   if(k===null||k===undefined)return;
   close();
