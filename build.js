@@ -5330,7 +5330,10 @@ function fileView(name){
   // Itzik, 5.10, on the reel script: "תוסיף באופציות שליחה להדפסה". iPhone
   // Safari prints the page and not a PDF held in a blob, so the pages that
   // are already drawn on screen go into a print-only sheet and the page prints.
-  if(t==='application/pdf'||t.indexOf('image/')===0)h+='<button type="button" class="ask fv-print">שליחה להדפסה</button>'+((/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1))?'<div class="empty" style="font-size:13px">בחלון שנפתח: גלול למטה ובחר הדפסה</div>':'');
+  // Itzik, 13.10, on the lecture files: "אין לי אפשרות לשלוח להדפסה". The
+  // button sat under 28 pages of PDF, so for a PDF it now stands above them.
+  var prt=(t==='application/pdf'||t.indexOf('image/')===0)?'<button type="button" class="ask fv-print">🖨️ שליחה להדפסה</button>'+((/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1))?'<div class="empty" style="font-size:13px">בחלון שנפתח: גלול למטה ובחר הדפסה</div>':''):'';
+  if(t==='application/pdf')h=prt+h;else h+=prt;
   var sf=null;try{sf=new File([b],short,{type:(t.split(';')[0])||'application/octet-stream'});}catch(x){}
   if(sf&&navigator.share&&navigator.canShare&&navigator.canShare({files:[sf]}))h+='<button type="button" class="ask fv-share">שליחה בוואטסאפ, במסנג׳ר או במייל</button>';
   // Itzik, 1.10: "עשיתי שמירה לגלריה ואני לא מוצא". On the iPhone a blob
@@ -14149,7 +14152,7 @@ function lecSheet(){
  w.setAttribute('aria-label','הרצאה');
  w.innerHTML='<div class="ycard">'
   +'<b>הרצאה: כנגד כל הסיכויים</b>'
-  +'<small>אתר הנרות יצא מההרצאה ונמצא בנספח בסוף.</small>'
+  +'<small>אתר הנרות יצא מההרצאה ונמצא בנספח בסוף. בכל קובץ, הכפתור הראשון למעלה הוא שליחה להדפסה.</small>'
   +LEC_ITEMS.map(function(it,i,a){
     /* 13.10: a private file (r) shows only once it is in the monitor. */
     if(it.r&&!fileEntry(it.r))return '';

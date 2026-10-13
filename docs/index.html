@@ -1991,7 +1991,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-13T16:20:29.019Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-13T16:21:16.027Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3403,7 +3403,8 @@ function fileView(name){
   else if(t==='application/pdf')h='<div class="fv-pdf"><div class="empty">מציג את העמודים.</div></div>'
    +'<a class="ask" href="'+url+'" target="_blank" rel="noopener">פתיחת הקובץ</a>';
   else h='<a class="ask" href="'+url+'" target="_blank" rel="noopener">פתיחת הקובץ</a>';
-  if(t==='application/pdf'||t.indexOf('image/')===0)h+='<button type="button" class="ask fv-print">שליחה להדפסה</button>'+((/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1))?'<div class="empty" style="font-size:13px">בחלון שנפתח: גלול למטה ובחר הדפסה</div>':'');
+  var prt=(t==='application/pdf'||t.indexOf('image/')===0)?'<button type="button" class="ask fv-print">🖨️ שליחה להדפסה</button>'+((/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1))?'<div class="empty" style="font-size:13px">בחלון שנפתח: גלול למטה ובחר הדפסה</div>':''):'';
+  if(t==='application/pdf')h=prt+h;else h+=prt;
   var sf=null;try{sf=new File([b],short,{type:(t.split(';')[0])||'application/octet-stream'});}catch(x){}
   if(sf&&navigator.share&&navigator.canShare&&navigator.canShare({files:[sf]}))h+='<button type="button" class="ask fv-share">שליחה בוואטסאפ, במסנג׳ר או במייל</button>';
   var ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
@@ -3537,7 +3538,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='f1a0ffb463';
+var CODE_ID='898986cdcd';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10070,7 +10071,7 @@ function lecSheet(){
  w.setAttribute('aria-label','הרצאה');
  w.innerHTML='<div class="ycard">'
   +'<b>הרצאה: כנגד כל הסיכויים</b>'
-  +'<small>אתר הנרות יצא מההרצאה ונמצא בנספח בסוף.</small>'
+  +'<small>אתר הנרות יצא מההרצאה ונמצא בנספח בסוף. בכל קובץ, הכפתור הראשון למעלה הוא שליחה להדפסה.</small>'
   +LEC_ITEMS.map(function(it,i,a){
     if(it.r&&!fileEntry(it.r))return '';
     return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+esc(it.t)+'</button>';
