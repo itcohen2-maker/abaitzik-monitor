@@ -1552,6 +1552,13 @@ button.abtn[disabled]{opacity:.55}
 @keyframes taskbeat{0%,49%{box-shadow:0 0 0 4px var(--yellow),var(--shadow)}50%,100%{box-shadow:0 0 0 0 transparent,var(--shadow)}}
 .gt.taskblink{animation:taskbeat .8s steps(1) infinite}
 @media(prefers-reduced-motion:reduce){.gt.taskblink{animation:none;box-shadow:0 0 0 4px var(--yellow)}}
+/* 13.10 Itzik: "every update blinks, in every monitor. Not a strong blink.
+   An update is a slow, soft blink." New tile = taskblink (the hand, fast).
+   Something new inside an existing tile = data-upd="<stamp>" on the tile,
+   and the updTiles boot gives it this slow pulse until he opens it. */
+@keyframes updbeat{0%,100%{box-shadow:0 0 0 0 rgba(255,214,0,0),var(--shadow)}50%{box-shadow:0 0 0 5px rgba(255,214,0,.55),var(--shadow)}}
+.gt.updblink{animation:updbeat 2.6s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){.gt.updblink{animation:none;box-shadow:0 0 0 3px rgba(255,214,0,.55)}}
 .rcsteps{margin:6px 0 14px;padding-inline-start:22px;line-height:1.7}
 .rcsteps li{margin-bottom:8px}
 .fview{position:fixed;inset:0;z-index:99990;background:rgba(10,12,18,.94);display:flex;flex-direction:column}
@@ -3937,7 +3944,7 @@ try{
     12.10. Itzik: "an icon with the verses and the explanation under them",
     about the 55 last verses of the Torah (Deuteronomy 32:39 to the end).
   -->
-  <button type="button" class="gt gLec" id="gLec" data-new="1"><b>🎤 הרצאה</b><small>כנגד כל הסיכויים: המלל הערוך עם השקפים</small></button>
+  <button type="button" class="gt gLec" id="gLec" data-new="1" data-upd="2026-10-13-reel06"><b>🎤 הרצאה</b><small>כנגד כל הסיכויים: המלל הערוך עם השקפים</small></button>
   <!-- 13.10. Itzik: the corrected Clalit lecture agreement in its own tile. -->
   <button type="button" class="gt gClalit" id="gClalit" data-new="1"><b>🏥 הסכם כללית</b><small>אשקלון ובאר שבע, מתוקן עם הלוגו</small></button>
   <!--
@@ -13858,6 +13865,16 @@ boot('listTiles',function(){
   if(raw===null&&!FIRST[id]){save();return;}
   if(keys.some(function(x){return seen.indexOf(x)<0;}))t.classList.add('taskblink');
   t.addEventListener('click',function(){save();t.classList.remove('taskblink');});
+ });
+});
+/* 13.10: a changed tile pulses slowly until opened. Bump data-upd whenever
+   something new goes into a tile that already exists; new tiles use data-new. */
+boot('updTiles',function(){
+ document.querySelectorAll('.gt[data-upd]').forEach(function(t){
+  var k='tileUpd:'+t.id,stamp=t.getAttribute('data-upd')||'',seen='';try{seen=localStorage.getItem(k)||'';}catch(e){}
+  if(seen===stamp||t.classList.contains('taskblink'))return;
+  t.classList.add('updblink');
+  t.addEventListener('click',function(){try{localStorage.setItem(k,stamp);}catch(e){}t.classList.remove('updblink');});
  });
 });
 boot('newTiles',function(){

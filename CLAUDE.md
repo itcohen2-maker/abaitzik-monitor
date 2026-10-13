@@ -109,3 +109,8 @@
   notification is kept, not sent, and the listener sends one summary push when it ends (lib/quiet.js). Reminders and
   the alarm still ring; anything that must ring at night goes `node notify.js --urgent "t" "m"`. He changes it in
   Settings, box "שעות שקטות"; the listener applies the line "שעות שקטות HH:MM עד HH:MM" / "שעות שקטות כבוי" itself.
+
+- **Every update blinks, in every monitor (Itzik, 13.10.2026).** A new tile gets `data-new="1"` (the hand, fast blink).
+  Something new placed inside an existing tile gets a bumped `data-upd="<date-slug>"` on that tile button; the `updTiles`
+  boot gives it `updblink`, a slow soft pulse (2.6s), until he opens it once. "Not a strong blink. An update is a slow,
+  gentle blink." No deliverable goes into an existing tile without bumping its `data-upd`. Applies to every tenant.
