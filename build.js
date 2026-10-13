@@ -3948,7 +3948,7 @@ try{
   <button type="button" class="gt gLec" id="gLec" data-new="1" data-upd="2026-10-13-reel06"><b>🎤 הרצאה</b><small>כנגד כל הסיכויים: המלל הערוך עם השקפים</small></button>
   <!-- 13.10. Itzik: "תעשה תקייה של טום ממליץ ואריח טום ממליץ". Scripts of
        Tom's posts, four ad images, the site copy, and the draft of his own site. -->
-  <button type="button" class="gt gTom" id="gTom" data-new="1"><b>🧭 טום ממליץ</b><small>התסריטים, 4 תמונות לפרסום, ההעתק והאתר שלך</small></button>
+  <button type="button" class="gt gTom" id="gTom" data-new="1"><b>🧭 טום ממליץ</b><small>האתר שלך באוויר, התסריטים, 4 תמונות לפרסום</small></button>
   <!-- 13.10. Itzik: the corrected Clalit lecture agreement in its own tile. -->
   <button type="button" class="gt gClalit" id="gClalit" data-new="1"><b>🏥 הסכם כללית</b><small>אשקלון ובאר שבע, מתוקן עם הלוגו</small></button>
   <!--
@@ -14458,6 +14458,8 @@ on('gClalit',clalitSheet);
   only once they are in the monitor; Drive links (u) open the folder.
 */
 var TOM_ITEMS=[
+ {n:'🌐',t:'האתר שלך, באוויר מ 13.10',u:'https://abaitzik-tech.vercel.app'},
+ {n:'★',t:'התסריטים של חמשת הפוסטים, PDF לטלפון',r:'tom-scripts.pdf'},
  {n:'📁',t:'התיקייה טום ממליץ בדרייב',u:'https://drive.google.com/drive/folders/1AnxEXSB1WKaSqW6Qr8l-WuW3Qdd5hcjz'},
  {n:'01',t:'התסריטים של חמשת הפוסטים, מסודרים',r:'tom-scripts.docx'},
  {n:'01ב',t:'התסריטים כטקסט',r:'tom-scripts.txt'},
@@ -14477,7 +14479,7 @@ function tomSheet(){
  w.setAttribute('aria-label','טום ממליץ');
  w.innerHTML='<div class="ycard">'
   +'<b>טום ממליץ</b>'
-  +'<small>שום דבר לא פורסם. האתר שלך הוא טיוטה במחשב, עולה לאוויר רק כשתגיד.</small>'
+  +'<small>האתר שלך עלה לאוויר 13.10 באישורך. השאר בדרייב ובקבצים כאן.</small>'
   +TOM_ITEMS.map(function(it,i,a){
     if(it.r&&!fileEntry(it.r))return '';
     return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';

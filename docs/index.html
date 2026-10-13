@@ -1995,7 +1995,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-13T17:33:08.369Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-13T17:46:06.170Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2148,7 +2148,7 @@ try{
   <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה</small></button>
   <button type="button" class="gt gPen" id="gPen"><b>🏦 פנסיה</b><small>קוד מוסד בבנק 28417, 1,211 ש״ח. בדיקה ב 18.10</small></button>
   <button type="button" class="gt gLec" id="gLec" data-new="1" data-upd="2026-10-13-reel06"><b>🎤 הרצאה</b><small>כנגד כל הסיכויים: המלל הערוך עם השקפים</small></button>
-  <button type="button" class="gt gTom" id="gTom" data-new="1"><b>🧭 טום ממליץ</b><small>התסריטים, 4 תמונות לפרסום, ההעתק והאתר שלך</small></button>
+  <button type="button" class="gt gTom" id="gTom" data-new="1"><b>🧭 טום ממליץ</b><small>האתר שלך באוויר, התסריטים, 4 תמונות לפרסום</small></button>
   <button type="button" class="gt gClalit" id="gClalit" data-new="1"><b>🏥 הסכם כללית</b><small>אשקלון ובאר שבע, מתוקן עם הלוגו</small></button>
   <button type="button" class="gt gDudi" id="gDudi" data-new="1"><b>🥩 דודי בשר</b><small>חשבוניות יוני ויולי לשליחה</small></button>
   <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
@@ -3543,7 +3543,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='cbc84ad53a';
+var CODE_ID='665b5478f2';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10339,6 +10339,8 @@ function clalitSheet(){
 }
 on('gClalit',clalitSheet);
 var TOM_ITEMS=[
+ {n:'🌐',t:'האתר שלך, באוויר מ 13.10',u:'https://abaitzik-tech.vercel.app'},
+ {n:'★',t:'התסריטים של חמשת הפוסטים, PDF לטלפון',r:'tom-scripts.pdf'},
  {n:'📁',t:'התיקייה טום ממליץ בדרייב',u:'https://drive.google.com/drive/folders/1AnxEXSB1WKaSqW6Qr8l-WuW3Qdd5hcjz'},
  {n:'01',t:'התסריטים של חמשת הפוסטים, מסודרים',r:'tom-scripts.docx'},
  {n:'01ב',t:'התסריטים כטקסט',r:'tom-scripts.txt'},
@@ -10358,7 +10360,7 @@ function tomSheet(){
  w.setAttribute('aria-label','טום ממליץ');
  w.innerHTML='<div class="ycard">'
   +'<b>טום ממליץ</b>'
-  +'<small>שום דבר לא פורסם. האתר שלך הוא טיוטה במחשב, עולה לאוויר רק כשתגיד.</small>'
+  +'<small>האתר שלך עלה לאוויר 13.10 באישורך. השאר בדרייב ובקבצים כאן.</small>'
   +TOM_ITEMS.map(function(it,i,a){
     if(it.r&&!fileEntry(it.r))return '';
     return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
