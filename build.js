@@ -16306,15 +16306,28 @@ document.addEventListener('paste',function(e){
   if(!rb&&typeof pane==='function'){try{pane('m');renderThread();}catch(err){}}
  }
  var cd=e.clipboardData;if(!cd)return;
- // Copied text that also carries a picture (a web page, a document) stays text.
- if((cd.getData('text/plain')||'').trim())return;
+ var txt=(cd.getData('text/plain')||'').trim();
  var imgs=[];
  if(cd.items)Array.prototype.forEach.call(cd.items,function(it){
   if(it.kind==='file'&&String(it.type).indexOf('image/')===0){var g=it.getAsFile();if(g)imgs.push(g);}
  });
  if(!imgs.length&&cd.files)imgs=Array.prototype.filter.call(cd.files,isImg);
- if(!imgs.length)return;
- e.preventDefault();
+ /*
+   14.10, Rinat: Ctrl+V still did nothing. A picture copied from Illustrator,
+   Photoshop, PowerPoint or a web page comes with a line of text beside it, and
+   that text used to win, so the picture was dropped. Now a picture always goes
+   in; the text is kept only when it was pasted into a writing box. And when the
+   clipboard holds no picture at all (a screenshot saved to a file and shared,
+   not copied), she is told what to do instead of nothing happening.
+ */
+ if(!imgs.length){
+  if(!txt){
+   var tps=[];if(cd.items)Array.prototype.forEach.call(cd.items,function(it){tps.push(it.kind+':'+it.type);});
+   toast('אין תמונה בהדבקה. מצלמים מסך עם Win+Shift+S ואז Ctrl+V כאן. קובץ ששמרת: גוררים אותו לכאן או 📎 קובץ.'+(tps.length?' ('+tps.join(', ')+')':''));
+  }
+  return;
+ }
+ if(!ours||!txt)e.preventDefault();
  pasteImgs(imgs,ta);
 });
 /*
