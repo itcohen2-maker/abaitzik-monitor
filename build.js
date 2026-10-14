@@ -380,6 +380,8 @@ function build() {
                  // 8.10, Itzik: "תמיד תשמור את הקוד אצלנו בתוך הכפתור או האייקון של רינת".
                  // The customer's entry code, kept on her card. head.json is sealed by the gate.
                  code: typeof x.code === 'string' ? x.code : '',
+                 // 14.10: an admin customer (Alon, Rinat) whose requests need no approval.
+                 pre: x.preApproved === true,
                  // 5.10: what the customer asked to change, waiting for Itzik.
                  requests: (Array.isArray(x.requests) ? x.requests : []).map(r => ({ id: r.id, at: r.at || '', text: r.text || '', status: r.status || 'pending', note: r.note || '' })) }));
   const tasks = loadDocs('tasks')
@@ -11717,7 +11719,9 @@ function renderChangeReqs(host){
    var k=t.id+'/'+r.id,when='';
    try{when=new Date(r.at).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){}
    var head='<b>📨 '+esc(t.title)+'</b> <small>'+esc(when)+'</small><br>'+esc(r.text);
-   if(r.status==='pending'){
+   if(r.status==='pending'&&t.pre){
+    h+='<div class="tk" style="border-inline-start:6px solid #42a5f5"><span>'+head+'<br><small>אושר מראש, בביצוע עכשיו. תקבל עדכון כשזה מוכן.</small></span></div>';
+   }else if(r.status==='pending'){
     h+='<div class="tk" style="border-inline-start:6px solid #f9a825"><span>'+head
      +(sent[k]?'<br><small>'+(sent[k]==='ok'?'אישרת. המוניטור מבצע ומעדכן את הלקוח.':'דחית. הלקוח יקבל תשובה.')+'</small>'
       :'<br><button type="button" class="ask" data-cr="'+esc(k)+'" data-act="ok">אישור וביצוע</button> <button type="button" class="ask" data-cr="'+esc(k)+'" data-act="no">דחייה</button>')
@@ -11729,7 +11733,7 @@ function renderChangeReqs(host){
  });
  if(!h)return;
  var box=document.createElement('div');
- box.innerHTML='<h3 style="margin:16px 0 8px">בקשות שינוי של לקוחות</h3>'+h;
+ box.innerHTML='<h3 style="margin:16px 0 8px">מה הלקוחות ביקשו</h3>'+h;
  host.appendChild(box);
  box.onclick=function(e){
   var btn=e.target.closest&&e.target.closest('[data-cr]');if(!btn)return;
@@ -11782,7 +11786,20 @@ function paintTenantsTile(){
  */
  ['tenAlert','crAlert'].forEach(function(id){var x=document.getElementById(id);if(x)x.remove();});
  var sent=crSentGet(),pend=[];
- T.forEach(function(t){(t.requests||[]).forEach(function(r){if(r.status==='pending'&&!sent[t.id+'/'+r.id])pend.push(t.title+': '+r.text);});});
+ T.forEach(function(t){(t.requests||[]).forEach(function(r){if(r.status==='pending'&&!t.pre&&!sent[t.id+'/'+r.id])pend.push(t.title+': '+r.text);});});
+ /*
+   14.10, Itzik: "אריח מוניטורים אחרים צריך להיות מעודכן כל הזמן". Alon and Rinat
+   approve their own requests, so nothing waits for him; what they asked is news.
+   The newest one shows on the tile, which pulses softly until he opens it.
+ */
+ var last=null;
+ T.forEach(function(t){(t.requests||[]).forEach(function(r){if(r.at&&(!last||r.at>last.at))last={at:r.at,who:t.title,text:r.text};});});
+ var tnSeen='';try{tnSeen=localStorage.getItem('tnReqSeen')||'';}catch(e){}
+ if(last&&!pend.length&&!bad.length){
+  b.hidden=false;
+  b.querySelector('small').textContent='אחרון: '+last.who.replace(/^המוניטור של /,'')+', '+last.text.slice(0,60);
+ }
+ b.classList.toggle('updblink',!!(last&&last.at>tnSeen));
  if(pend.length){
   b.hidden=false;
   b.querySelector('small').textContent=(bad.length?'נתק: '+bad.map(function(t){return t.title;}).join(', ')+' · ':'')
@@ -11792,7 +11809,12 @@ function paintTenantsTile(){
  if(bad.length)b.hidden=false;
  try{floatTile('gTenants',!!(bad.length||pend.length));}catch(e){}
 }
-on('gTenants',function(){pane('N3');renderTenants();});
+on('gTenants',function(){
+ var m='';(D.tenants||[]).forEach(function(t){(t.requests||[]).forEach(function(r){if(r.at>m)m=r.at;});});
+ try{if(m)localStorage.setItem('tnReqSeen',m);}catch(e){}
+ var b=document.getElementById('gTenants');if(b)b.classList.remove('updblink');
+ pane('N3');renderTenants();
+});
 (function(){
  var a=document.getElementById('icIly');
  if(a)a.onclick=function(e){e.preventDefault();pane('N3');renderTenants();};
