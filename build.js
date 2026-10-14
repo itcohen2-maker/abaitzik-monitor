@@ -3889,8 +3889,10 @@ try{
     job and not part of the networks queue. It opens the file straight from
     docs/files, so it needs no login and no Drive on the phone. One file
     today; when there is a second, this becomes a list instead of a link.
+    איציק, 14.10, בהקלטה: "תסיר לבינתיים את האריח של יהודה, כשיחזור להיות
+    בקשר נחזיר". Hidden, not deleted: to restore, drop the hidden attribute.
   -->
-  <button type="button" class="gt g15" id="gYehuda"><b>📄 יהודה</b><small>גרסה קצרה לשליחה, והסקירה המלאה לזיכרון</small></button>
+  <button type="button" class="gt g15" id="gYehuda" hidden><b>📄 יהודה</b><small>גרסה קצרה לשליחה, והסקירה המלאה לזיכרון</small></button>
   <!--
     איציק, 30.9: "במוניטור שים את זה בכפתור, שיהיה לי נוח להתייעץ". Everything
     made for pushing candletimes, numbered like Rinat's list: the bio
