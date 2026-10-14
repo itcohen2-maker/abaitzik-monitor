@@ -800,9 +800,11 @@ function reconcile(live) {
     the note it came with.
   */
   const autoFile = (m) => m.auto && Array.isArray(m.files) && /^קובץ:/.test(String(m.text || ''));
-  all.filter((m) => m.from === 'itzik' && seen[m.file] && !(m.id && got.has(m.id)) && !held.has(m.file))
-    .filter((m) => m.status !== 'done' || (m.id && !autoFile(m)))
-    .filter((m) => now - Date.parse(seen[m.file]) > MAX_SESSION_MS + 2 * 60 * 1000)
+  const handed = new Set(require('./lib/pc-handed.js')());
+  const takenAt = (m) => Date.parse(seen[m.file] || m.at);
+  all.filter((m) => m.from === 'itzik' && !(m.id && (got.has(m.id) || handed.has(m.id))) && !held.has(m.file))
+    .filter((m) => (seen[m.file] && m.status !== 'done') || (m.status === 'done' && m.id && !autoFile(m)))
+    .filter((m) => now - takenAt(m) > MAX_SESSION_MS + 2 * 60 * 1000)
     .forEach((m) => {
       if (!retry[m.file]) {
         retry[m.file] = new Date().toISOString();

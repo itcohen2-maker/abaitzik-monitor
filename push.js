@@ -54,7 +54,7 @@ function take() {
 }
 function release() { try { const c = readLock(); if (c && c.pid === process.pid) fs.unlinkSync(LOCK); } catch (e) {} }
 
-const git = (...a) => execFileSync('git', a, { cwd: HERE, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
+const git = (...a) => execFileSync('git', a, { cwd: HERE, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] });
 
 async function main() {
   const until = Date.now() + WAIT_MS;
