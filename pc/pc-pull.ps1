@@ -238,5 +238,16 @@ function One() {
   } finally { Remove-Item $Lock -Force -ErrorAction SilentlyContinue }
 }
 
-if ($Loop) { while ($true) { try { One } catch { Say ('!! ' + $_.Exception.Message) }; Start-Sleep -Seconds 60 } }
+if ($Loop) {
+  # 14.10: one loop per machine. A second install stops the loop before it, and the
+  # server hears that a loop started, so "the computer is not connected" is never a guess.
+  $pidFile = Join-Path $Here 'loop.pid'
+  try {
+    $old = [int](Get-Content $pidFile -ErrorAction Stop)
+    if ($old -ne $PID) { $op = Get-Process -Id $old -ErrorAction SilentlyContinue; if ($op -and $op.ProcessName -match 'powershell') { Stop-Process -Id $old -Force } }
+  } catch {}
+  try { Set-Content -Path $pidFile -Value $PID -Encoding ASCII } catch {}
+  try { Call 'GET' ('ping?step=' + [uri]::EscapeDataString('loop started pid ' + $PID + ' on ' + $env:COMPUTERNAME)) $null | Out-Null } catch {}
+  while ($true) { try { One } catch { Say ('!! ' + $_.Exception.Message) }; Start-Sleep -Seconds 60 }
+}
 else { try { One } catch { Say ('!! ' + $_.Exception.Message); try { Call 'GET' ('ping?step=' + [uri]::EscapeDataString('pull error: ' + $_.Exception.Message)) $null | Out-Null } catch {}; exit 1 } }

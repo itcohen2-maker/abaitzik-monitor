@@ -112,15 +112,47 @@ if ($works) {
   Ok ('בדיקה כל דקה פועלת (' + $works + ')'); Report ('runs every minute via ' + $works)
 } else {
   & schtasks.exe /Delete /F /TN $Task 2>&1 | Out-Null
-  # No scheduled task runs here: a hidden loop that starts now and with every login.
-  $startup = [Environment]::GetFolderPath('Startup')
-  $cmd = Join-Path $startup 'MonitorPc.cmd'
-  [IO.File]::WriteAllText($cmd, ('@start "" /min powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "' + $pull + '" -Loop' + "`r`n"), (New-Object Text.ASCIIEncoding))
+  # 14.10 afternoon, Rinat's PC: schtasks said "Access is denied" three times and then nothing
+  # reached the server, so the old order (write to Startup, then start the loop) died on the
+  # first blocked write. Now the loop starts first, and every later step is tried on its own
+  # and reported, so a blocked folder or key never stops the one thing that matters: a loop
+  # running right now. Itzik: "אני חייב שהעבודה לא תהיה על המחשב שלי, רק על שלה".
+  Report 'schtasks blocked, starting the background loop'
   $since = Get-Date
-  Start-Process powershell.exe -WindowStyle Hidden -ArgumentList @('-NoProfile', '-WindowStyle', 'Hidden', '-ExecutionPolicy', 'Bypass', '-File', $pull, '-Loop')
-  for ($i = 0; $i -lt 20 -and -not (Ran $since); $i++) { Start-Sleep -Seconds 1 }
-  if (Ran $since) { Ok 'בדיקה כל דקה פועלת (לולאה ברקע)'; Report 'runs every minute via startup loop' }
-  else { Bad 'הבדיקה כל דקה לא הצליחה לרוץ במחשב הזה.'; Report 'nothing runs every minute'; exit 1 }
+  $launched = 'not started'
+  try {
+    $p = Start-Process powershell.exe -WindowStyle Hidden -PassThru -ArgumentList @('-NoProfile', '-WindowStyle', 'Hidden', '-ExecutionPolicy', 'Bypass', '-File', $pull, '-Loop')
+    $launched = 'pid ' + $p.Id
+  } catch { Report ('loop start failed: ' + $_.Exception.Message) }
+  for ($i = 0; $i -lt 30 -and -not (Ran $since); $i++) { Start-Sleep -Seconds 1 }
+  $loopOk = Ran $since
+  Report ('loop ' + $(if ($loopOk) { 'runs' } else { 'did not run' }) + ' (' + $launched + ')')
+  # Start it again with every login: the Run key, then the Startup folder. Either may be
+  # blocked by company policy; whatever works is reported, and a launcher on the desktop
+  # is the last resort after a restart.
+  $cmdLine = 'powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "' + $pull + '" -Loop'
+  $auto = @()
+  try {
+    New-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Name 'MonitorPc' -Value $cmdLine -PropertyType String -Force -ErrorAction Stop | Out-Null
+    $auto += 'run key'
+  } catch { Report ('run key failed: ' + $_.Exception.Message) }
+  try {
+    $startup = [Environment]::GetFolderPath('Startup')
+    [IO.File]::WriteAllText((Join-Path $startup 'MonitorPc.cmd'), ('@start "" /min ' + $cmdLine + "`r`n"), (New-Object Text.ASCIIEncoding))
+    $auto += 'startup folder'
+  } catch { Report ('startup folder failed: ' + $_.Exception.Message) }
+  try {
+    $desk = [Environment]::GetFolderPath('Desktop')
+    [IO.File]::WriteAllText((Join-Path $desk 'MonitorPc.cmd'), ('@start "" /min ' + $cmdLine + "`r`n"), (New-Object Text.ASCIIEncoding))
+    $auto += 'desktop launcher'
+  } catch { Report ('desktop launcher failed: ' + $_.Exception.Message) }
+  Report ('autostart: ' + $(if ($auto.Count) { $auto -join ', ' } else { 'none' }))
+  if ($loopOk) {
+    Ok 'בדיקה כל דקה פועלת (לולאה ברקע)'; Report 'runs every minute via startup loop'
+    if ($auto -notcontains 'run key' -and $auto -notcontains 'startup folder') {
+      Bad 'המחשב הזה לא מרשה הפעלה אוטומטית. אחרי הפעלה מחדש של המחשב: לחיצה כפולה על MonitorPc בשולחן העבודה.'
+    }
+  } else { Bad 'הבדיקה כל דקה לא הצליחה לרוץ במחשב הזה.'; Report 'nothing runs every minute'; exit 1 }
 }
 Report 'installed'
 Ok 'מותקן. מעכשיו המוניטור יכול לשלוח למחשב הזה משימות, והתשובות חוזרות לצ׳אט לבד.'
