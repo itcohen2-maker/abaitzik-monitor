@@ -2002,7 +2002,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-14T08:29:50.529Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-14T08:35:01.031Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3553,7 +3553,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='ea7254089f';
+var CODE_ID='da68177bdb';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11898,14 +11898,20 @@ document.addEventListener('paste',function(e){
   if(!rb&&typeof pane==='function'){try{pane('m');renderThread();}catch(err){}}
  }
  var cd=e.clipboardData;if(!cd)return;
- if((cd.getData('text/plain')||'').trim())return;
+ var txt=(cd.getData('text/plain')||'').trim();
  var imgs=[];
  if(cd.items)Array.prototype.forEach.call(cd.items,function(it){
   if(it.kind==='file'&&String(it.type).indexOf('image/')===0){var g=it.getAsFile();if(g)imgs.push(g);}
  });
  if(!imgs.length&&cd.files)imgs=Array.prototype.filter.call(cd.files,isImg);
- if(!imgs.length)return;
- e.preventDefault();
+ if(!imgs.length){
+  if(!txt){
+   var tps=[];if(cd.items)Array.prototype.forEach.call(cd.items,function(it){tps.push(it.kind+':'+it.type);});
+   toast('אין תמונה בהדבקה. מצלמים מסך עם Win+Shift+S ואז Ctrl+V כאן. קובץ ששמרת: גוררים אותו לכאן או 📎 קובץ.'+(tps.length?' ('+tps.join(', ')+')':''));
+  }
+  return;
+ }
+ if(!ours||!txt)e.preventDefault();
  pasteImgs(imgs,ta);
 });
 (function(){
