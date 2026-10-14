@@ -119,3 +119,6 @@
   the cheap one, in every monitor and every session. On a customer's monitor the server only passes text; all
   execution runs on the customer's computer and account (worker.js planFirst + allow list, pc-pull.js haiku). A
   session working here hands its own legwork, polling and checks to a Haiku agent, never runs them itself.
+  **Quota hold (14.10.2026):** a customer without its own token stops at 80 percent of Itzik's five hour or weekly
+  window, or at its daily cap (lib/quota-hold.js, worker.js quotaHold), files "חסימת מכסה: ..." as a manager request
+  and tells the customer once; it resumes only on his approval, which writes a pass until the window resets.
