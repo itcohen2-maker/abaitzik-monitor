@@ -2002,7 +2002,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-14T09:05:51.409Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-14T09:15:33.641Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2131,6 +2131,7 @@ try{
  <div id="askBox"></div>
 
  <div class="grid" id="blkTiles">
+  <button type="button" class="gt gStory" id="gStory" data-upd="2026-10-14-weight"><b>🎞️ סטורי</b><small>הדרך חזרה: 69.2 ואז 70.7 ואז 71.2</small></button>
   <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>מי חייב כסף ומאיזה חודש</small></button>
   <button type="button" class="gt g8" id="gVaad"><b>🏠 ועד הבית</b><small>מי שילם ומה פתוח</small></button>
   <button type="button" class="gt g15" id="gSale"><b>⚖️ מכירת לולוס</b><small>התיק לעורך הדין, מה פתוח ומה נמסר</small></button>
@@ -2153,11 +2154,10 @@ try{
   <button type="button" class="gt gInv" id="gInv"><b>🧾 חשבוניות</b><small>ממוספר. מ 3.10 והלאה</small></button>
   <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>05 עד 20, גם באיכות גבוהה</small></button>
-  <button type="button" class="gt gStory" id="gStory" data-new="1"><b>🎞️ סטורי</b><small>ריק כרגע, הסטורי עלה</small></button>
   <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה</small></button>
   <button type="button" class="gt gPen" id="gPen"><b>🏦 פנסיה</b><small>קוד מוסד בבנק 28417, 1,211 ש״ח. בדיקה ב 18.10</small></button>
   <button type="button" class="gt gLec" id="gLec" data-new="1" data-upd="2026-10-13-clalit"><b>🎤 הרצאה</b><small>כנגד כל הסיכויים: המלל, השקפים והסכם כללית</small></button>
-  <button type="button" class="gt gTom" id="gTom" data-new="1"><b>🧭 טום ממליץ</b><small>האתר שלך באוויר, התסריטים, 4 תמונות לפרסום</small></button>
+  <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-14-works"><b>🧭 טום ממליץ</b><small>14.10: העבודות של טום באתר שלך, הריפו בגיטהאב</small></button>
   <button type="button" class="gt gDudi" id="gDudi" data-new="1"><b>🥩 דודי בשר</b><small>חשבוניות יוני ויולי לשליחה</small></button>
   <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
   <button type="button" class="gt gOcc" id="gOcc"><b>🩺 מרפאה תעסוקתית</b><small>מכבי רמות. טלפון א עד ה 08:00 עד 11:00</small></button>
@@ -3553,7 +3553,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='da68177bdb';
+var CODE_ID='52796e08dd';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -9273,7 +9273,7 @@ function postSheet(it){
  }).catch(function(){fileOpen(it.r);});
 }
 on('gReels',reelSheet);
-var STORY_ITEMS=[];
+var STORY_ITEMS=[{n:'14.10',t:'הדרך חזרה על המשקל: 69.2 מפה התחלתי, 70.7 אתמול, 71.2 היום',r:'story-weight-1014.jpg'}];
 function storySheet(){
  var old=document.getElementById('stSheet');if(old)old.remove();
  var w=document.createElement('div');
@@ -10455,6 +10455,9 @@ function clalitSheet(){
 on('gClalit',clalitSheet);
 var TOM_ITEMS=[
  {n:'🌐',t:'האתר שלך, במבנה של טום, באוויר',u:'https://abaitzik-tech.vercel.app'},
+ {n:'🆕',t:'14.10: שורת העבודות של טום באתר, איך זה נראה',r:'tom-works-row.png'},
+ {n:'🆕',t:'14.10: תשעת הקישורים שטום שלח והודעות הקול שלו מתומללות',r:'tom-works-14-10.txt'},
+ {n:'🐙',t:'הריפו של האתר בגיטהאב, טום הוזמן אליו',u:'https://github.com/itcohen2-maker/abaitzik-tech'},
  {n:'★',t:'התסריטים של חמשת הפוסטים, PDF לטלפון',r:'tom-scripts.pdf'},
  {n:'📁',t:'התיקייה טום ממליץ בדרייב',u:'https://drive.google.com/drive/folders/1AnxEXSB1WKaSqW6Qr8l-WuW3Qdd5hcjz'},
  {n:'01',t:'התסריטים של חמשת הפוסטים, מסודרים',r:'tom-scripts.docx'},
@@ -10475,7 +10478,7 @@ function tomSheet(){
  w.setAttribute('aria-label','טום ממליץ');
  w.innerHTML='<div class="ycard">'
   +'<b>טום ממליץ</b>'
-  +'<small>האתר שלך עלה לאוויר 13.10 באישורך. השאר בדרייב ובקבצים כאן.</small>'
+  +'<small>14.10: שורת העבודות של טום נוספה לאתר באישורך. ריפו בגיטהאב, טום מוזמן אליו.</small>'
   +TOM_ITEMS.map(function(it,i,a){
     if(it.r&&!fileEntry(it.r))return '';
     return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
