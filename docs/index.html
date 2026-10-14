@@ -2035,7 +2035,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-14T12:31:20.915Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-14T12:33:25.229Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2171,7 +2171,7 @@ try{
   <button type="button" class="gt gRec" id="gRecipes"><b><img class="gi" src="icons/lolos-giraffe.png" alt=""> מתכונים</b><small>חוברת לולוס וספר המתכונים של איציק</small></button>
   <button type="button" class="gt g16" id="gIsra"><b>💳 ישראכרט יואל</b><small>הכרטיסים, מה לבקש, ומה ענו</small></button>
   <button type="button" class="gt g4" id="gMoxy"><b>💊 מוקסיפן</b><small id="gMoxyS">מהבהב כשהגיע הזמן, עד שנכנסת</small></button>
-  <button type="button" class="gt g10" id="gFiles" data-new="1"><b>📁 הקבצים שלי</b><small>מה ששלחת ומה שנשלח לך, עם הורדה</small></button>
+  <button type="button" class="gt g10" id="gFiles" data-new="1" data-upd="20261014-folder"><b>📁 הקבצים שלי</b><small>מה ששלחת ומה שנשלח לך, עם הורדה</small></button>
   <button type="button" class="gt gMyDay" id="gMyDay" data-new="1"><b>📅 מה יש לי היום</b><small>תורים, תזכורות ומשימות של היום</small></button>
   <button type="button" class="gt g18" id="gAppts"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
   <button type="button" class="gt g16" id="gRemind"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
@@ -3744,7 +3744,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='d95cdf4d34';
+var CODE_ID='1e9dc76e2d';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -4324,6 +4324,24 @@ function tileNames(){
  if(out.length>2)goTiles=out;
  return out;
 }
+function folderBtns(t){
+ var BS=String.fromCharCode(92),BR=BS+BS,out=[],seen=[];
+ var seg='[^'+BR+'\\s<>"]+(?: [^'+BR+'\\s<>"]+)*';
+ var win=new RegExp('[A-Z]:'+BR+'(?:'+seg+BR+')*[^'+BR+'\\s<>"]*','g');
+ var web=new RegExp('files/[^\\s<>"]*/','g');
+ var trail=new RegExp('[.,;:!?)"]+$');
+ function add(path,pc){
+  path=path.replace(trail,'');
+  if(!path||seen.indexOf(path)>-1)return;seen.push(path);
+  var parts=path.split(pc?BS:'/').filter(function(x){return x;});
+  var name=parts[parts.length-1]||path;
+  if(pc)out.push('<button type="button" class="gotile fsave" data-rq="'+esc('פתח במחשב את התיקייה: '+path)+'">קח אותי לשם: '+esc(name)+'</button>');
+  else out.push('<button type="button" class="gotile" data-folder="'+esc(path.slice(6))+'">קח אותי לשם: '+esc(name)+'</button>');
+ }
+ (String(t).match(web)||[]).forEach(function(h){add(h,false);});
+ (String(t).match(win)||[]).forEach(function(h){add(h,true);});
+ return out.join('');
+}
 function goLinks(m){
  if(!m||m.from==='itzik')return '';
  var ids=[],names={};
@@ -4336,6 +4354,7 @@ function goLinks(m){
  t=fileCap(fileSpaces(t));
  var ft=t;
  if(m.re)(D.chat||[]).forEach(function(x){if(x.from==='claude'&&x.re===m.re&&x.text!==m.text)ft+=' '+fileCap(fileSpaces(x.text));});
+ var fold=folderBtns(ft);
  var fb=[];
  (ft.match(new RegExp('files/[^\\s<>"]+','g'))||[]).forEach(function(h){
   var n=fileNameOf(h.replace(new RegExp('[.,;:!?)"]+$'),''));
@@ -4352,7 +4371,7 @@ function goLinks(m){
     +'</div>';
   }).join('')
    +'<div class="resact"><button type="button" class="gotile fsave resok" data-rq="'+esc(fem?'מאשרת, מעולה':'מאשר, מעולה')+'">👍 '+(fem?'מאשרת':'מאשר')+'</button>'
-   +'<button type="button" class="gotile fsave resfix" data-rfix="1">✏️ לתקן</button></div>';
+   +'<button type="button" class="gotile fsave resfix" data-rfix="1">✏️ לתקן</button></div>'+fold;
  }
  return fb.map(function(n){
   var inText=(t.match(new RegExp('files/[^\\s<>"]+','g'))||[]).some(function(h){return fileNameOf(h.replace(new RegExp('[.,;:!?)"]+$'),''))===n;});
@@ -4363,7 +4382,7 @@ function goLinks(m){
   if(!el||el.hidden)return '';
   var name=names[id]||goClean((el.querySelector('b')||el).textContent);
   return '<button type="button" class="gotile" data-tile="'+esc(id)+'">קח אותי לשם: '+esc(name)+'</button>';
- }).join('');
+ }).join('')+fold;
 }
 var goBack=null;
 function goBackBtn(){
@@ -4406,6 +4425,8 @@ document.addEventListener('click',function(e){
  e.stopPropagation();e.preventDefault();
  var fn=b.getAttribute('data-file');
  if(fn){fileOpen(fn);return;}
+ var fd=b.getAttribute('data-folder');
+ if(fd){fiFolder=fd;fiMode='all';pane('Fi');renderFiles();return;}
  goThere(b);
 },true);
 function linkify(t){
@@ -7995,6 +8016,7 @@ document.addEventListener('change',function(e){
 on('gCIdeas',function(){pane('I');renderContentIdeas();});
 on('gPlan',function(){pane('P');renderPlan();});
 var fiMode='all';
+var fiFolder='';
 function filesSentToOwner(){
  var s={};
  (D.chat||[]).forEach(function(m){
@@ -8036,15 +8058,16 @@ document.addEventListener('click',function(e){
  var b=e.target&&e.target.closest&&e.target.closest('[data-fdl],[data-fimode]');if(!b)return;
  e.preventDefault();e.stopPropagation();
  if(b.hasAttribute('data-fdl'))fileDownload(b.getAttribute('data-fdl'));
- else{fiMode=b.getAttribute('data-fimode');renderFiles();}
+ else{fiMode=b.getAttribute('data-fimode');fiFolder='';renderFiles();}
 },true);
 function renderFiles(){
- var box=document.getElementById('fiBox');if(!box)return;var All=(D.files||[]).filter(function(x){return String(x.n).indexOf('stk/')!==0;});
+ var box=document.getElementById('fiBox');if(!box)return;var All=(D.files||[]).filter(function(x){return String(x.n).indexOf('stk/')!==0&&(!fiFolder||String(x.n).indexOf(fiFolder)===0);});
  if(!All.length){box.innerHTML='<div class="empty">אין כאן קבצים.</div>';return;}
  var sent=filesSentToOwner();
  var F=All.filter(function(f){return fiMode==='all'||(fiMode==='in'?!!sent[f.n]:!sent[f.n]);});
  var tabs='<div class="fl-tabs">'+[['all','הכל'],['in',FEM?'מה שנשלח אלייך':'מה שנשלח אליך'],['out',FEM?'מה ששלחת את':'מה ששלחת']].map(function(t){
   return '<button type="button" data-fimode="'+t[0]+'"'+(fiMode===t[0]?' class="on"':'')+'>'+t[1]+'</button>';}).join('')+'</div>';
+ if(fiFolder)tabs='<div style="padding:6px 4px;color:var(--dim)">בתיקייה: '+esc(fiFolder)+' · לחזרה לכל הקבצים לחצי על "הכל"</div>'+tabs;
  if(!F.length){box.innerHTML=tabs+'<div class="empty">'+(fiMode==='in'?'עוד לא נשלחו לכאן קבצים.':'אין כאן קבצים.')+'</div>';return;}
  function kb(f){return f.s>1048576?(Math.round(f.s/104857.6)/10+' MB'):(Math.max(1,Math.round(f.s/1024))+' KB');}
  function ico(f){var t=f.t||'';return t.indexOf('video/')===0?'🎬':t.indexOf('audio/')===0?'🎧':t==='application/pdf'?'📄':t.indexOf('image/')===0?'🖼️':'📎';}

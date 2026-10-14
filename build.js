@@ -3896,7 +3896,7 @@ try{
   <!-- איציק, 11.10: "כפתור להחליף מודל תמחק אותו". הכפתור gModel ירד ממסך הבית; הקוד שלו בודק שהוא קיים. -->
   <!-- איציק, 8.10: כפתור לכדור מוקסיפן שמהבהב כשהגיע הזמן ומפסיק כשנכנסתי. -->
   <button type="button" class="gt g4" id="gMoxy"><b>💊 מוקסיפן</b><small id="gMoxyS">מהבהב כשהגיע הזמן, עד שנכנסת</small></button>
-  <button type="button" class="gt g10" id="gFiles" data-new="1"><b>📁 הקבצים שלי</b><small>מה ששלחת ומה שנשלח לך, עם הורדה</small></button>
+  <button type="button" class="gt g10" id="gFiles" data-new="1" data-upd="20261014-folder"><b>📁 הקבצים שלי</b><small>מה ששלחת ומה שנשלח לך, עם הורדה</small></button>
   <!--
     איציק, 20.9: "על המסך ניקוזים אתה יכול למחוק את הכפתור. אין לי יותר צורך בזה".
     הכפתור ירד ממסך הבית. המסך עצמו pDr וכל הרישומים שלו נשארים במקום,
@@ -6452,6 +6452,30 @@ function tileNames(){
  if(out.length>2)goTiles=out;
  return out;
 }
+/*
+  14.10, Rinat (through Itzik, rinat/crmv837hw8): "קח אותי לשם" also for a folder
+  named in an answer. A folder under files/ opens the files tile on that folder;
+  a Windows folder (C:\... or G:\My Drive\...) is asked for on her PC, through
+  the same reply line the result buttons use.
+*/
+function folderBtns(t){
+ var BS=String.fromCharCode(92),BR=BS+BS,out=[],seen=[];
+ var seg='[^'+BR+'\\\\s<>"]+(?: [^'+BR+'\\\\s<>"]+)*';
+ var win=new RegExp('[A-Z]:'+BR+'(?:'+seg+BR+')*[^'+BR+'\\\\s<>"]*','g');
+ var web=new RegExp('files/[^\\\\s<>"]*/','g');
+ var trail=new RegExp('[.,;:!?)"]+$');
+ function add(path,pc){
+  path=path.replace(trail,'');
+  if(!path||seen.indexOf(path)>-1)return;seen.push(path);
+  var parts=path.split(pc?BS:'/').filter(function(x){return x;});
+  var name=parts[parts.length-1]||path;
+  if(pc)out.push('<button type="button" class="gotile fsave" data-rq="'+esc('פתח במחשב את התיקייה: '+path)+'">קח אותי לשם: '+esc(name)+'</button>');
+  else out.push('<button type="button" class="gotile" data-folder="'+esc(path.slice(6))+'">קח אותי לשם: '+esc(name)+'</button>');
+ }
+ (String(t).match(web)||[]).forEach(function(h){add(h,false);});
+ (String(t).match(win)||[]).forEach(function(h){add(h,true);});
+ return out.join('');
+}
 function goLinks(m){
  if(!m||m.from==='itzik')return '';
  var ids=[],names={};
@@ -6469,6 +6493,7 @@ function goLinks(m){
  t=fileCap(fileSpaces(t));
  var ft=t;
  if(m.re)(D.chat||[]).forEach(function(x){if(x.from==='claude'&&x.re===m.re&&x.text!==m.text)ft+=' '+fileCap(fileSpaces(x.text));});
+ var fold=folderBtns(ft);
  var fb=[];
  (ft.match(new RegExp('files/[^\\\\s<>"]+','g'))||[]).forEach(function(h){
   var n=fileNameOf(h.replace(new RegExp('[.,;:!?)"]+$'),''));
@@ -6492,7 +6517,7 @@ function goLinks(m){
     +'</div>';
   }).join('')
    +'<div class="resact"><button type="button" class="gotile fsave resok" data-rq="'+esc(fem?'מאשרת, מעולה':'מאשר, מעולה')+'">👍 '+(fem?'מאשרת':'מאשר')+'</button>'
-   +'<button type="button" class="gotile fsave resfix" data-rfix="1">✏️ לתקן</button></div>';
+   +'<button type="button" class="gotile fsave resfix" data-rfix="1">✏️ לתקן</button></div>'+fold;
  }
  return fb.map(function(n){
   // 10.10: a file already shown as a picture in the text above is not shown twice.
@@ -6506,7 +6531,7 @@ function goLinks(m){
   if(!el||el.hidden)return '';
   var name=names[id]||goClean((el.querySelector('b')||el).textContent);
   return '<button type="button" class="gotile" data-tile="'+esc(id)+'">קח אותי לשם: '+esc(name)+'</button>';
- }).join('');
+ }).join('')+fold;
 }
 var goBack=null;
 function goBackBtn(){
@@ -6549,6 +6574,8 @@ document.addEventListener('click',function(e){
  e.stopPropagation();e.preventDefault();
  var fn=b.getAttribute('data-file');
  if(fn){fileOpen(fn);return;}
+ var fd=b.getAttribute('data-folder');
+ if(fd){fiFolder=fd;fiMode='all';pane('Fi');renderFiles();return;}
  goThere(b);
 },true);
 /*
@@ -11509,6 +11536,7 @@ on('gPlan',function(){pane('P');renderPlan();});
   stay on an iPhone).
 */
 var fiMode='all';
+var fiFolder='';
 function filesSentToOwner(){
  var s={};
  (D.chat||[]).forEach(function(m){
@@ -11552,15 +11580,16 @@ document.addEventListener('click',function(e){
  var b=e.target&&e.target.closest&&e.target.closest('[data-fdl],[data-fimode]');if(!b)return;
  e.preventDefault();e.stopPropagation();
  if(b.hasAttribute('data-fdl'))fileDownload(b.getAttribute('data-fdl'));
- else{fiMode=b.getAttribute('data-fimode');renderFiles();}
+ else{fiMode=b.getAttribute('data-fimode');fiFolder='';renderFiles();}
 },true);
 function renderFiles(){
- var box=document.getElementById('fiBox');if(!box)return;var All=(D.files||[]).filter(function(x){return String(x.n).indexOf('stk/')!==0;});
+ var box=document.getElementById('fiBox');if(!box)return;var All=(D.files||[]).filter(function(x){return String(x.n).indexOf('stk/')!==0&&(!fiFolder||String(x.n).indexOf(fiFolder)===0);});
  if(!All.length){box.innerHTML='<div class="empty">אין כאן קבצים.</div>';return;}
  var sent=filesSentToOwner();
  var F=All.filter(function(f){return fiMode==='all'||(fiMode==='in'?!!sent[f.n]:!sent[f.n]);});
  var tabs='<div class="fl-tabs">'+[['all','הכל'],['in',FEM?'מה שנשלח אלייך':'מה שנשלח אליך'],['out',FEM?'מה ששלחת את':'מה ששלחת']].map(function(t){
   return '<button type="button" data-fimode="'+t[0]+'"'+(fiMode===t[0]?' class="on"':'')+'>'+t[1]+'</button>';}).join('')+'</div>';
+ if(fiFolder)tabs='<div style="padding:6px 4px;color:var(--dim)">בתיקייה: '+esc(fiFolder)+' · לחזרה לכל הקבצים לחצי על "הכל"</div>'+tabs;
  if(!F.length){box.innerHTML=tabs+'<div class="empty">'+(fiMode==='in'?'עוד לא נשלחו לכאן קבצים.':'אין כאן קבצים.')+'</div>';return;}
  /*
    Reviewer 7.10, approved 8.10: five versions of the same deck one after the
