@@ -180,7 +180,16 @@ function One() {
   }
   $r = Call 'GET' 'next' $null
   if ($r.code -eq 204) { return }
-  if ($r.code -ne 200) { Say ('!! השרת לא ענה: ' + $r.code + ' ' + $r.text); return }
+  if ($r.code -ne 200) {
+    Say ('!! השרת לא ענה: ' + $r.code + ' ' + $r.text)
+    # 14.10: a next call that fails is reported once per hour, so a loop that pings and then
+    # goes quiet (Rinat's PC, 10:50) can be told apart from a loop that died.
+    if (-not $script:nextErrAt -or ((Get-Date) - $script:nextErrAt).TotalMinutes -gt 60) {
+      $script:nextErrAt = Get-Date
+      try { Call 'GET' ('ping?step=' + [uri]::EscapeDataString('next failed: ' + $r.code + ' ' + [string]$r.text)) $null | Out-Null } catch {}
+    }
+    return
+  }
   $t = $r.text | ConvertFrom-Json
   if ($Dry) { Say ('יש משימה (dry, לא מבצע): ' + $t.id); return }
   Set-Content -Path $Lock -Value $t.id -Encoding UTF8
@@ -248,6 +257,13 @@ if ($Loop) {
   } catch {}
   try { Set-Content -Path $pidFile -Value $PID -Encoding ASCII } catch {}
   try { Call 'GET' ('ping?step=' + [uri]::EscapeDataString('loop started pid ' + $PID + ' on ' + $env:COMPUTERNAME)) $null | Out-Null } catch {}
-  while ($true) { try { One } catch { Say ('!! ' + $_.Exception.Message) }; Start-Sleep -Seconds 60 }
+  $polls = 0
+  while ($true) {
+    try { One } catch { Say ('!! ' + $_.Exception.Message); try { Call 'GET' ('ping?step=' + [uri]::EscapeDataString('loop error: ' + $_.Exception.Message)) $null | Out-Null } catch {} }
+    $polls++
+    # the first poll and then one an hour say "alive", so the server log shows the loop is up
+    if ($polls -eq 1 -or ($polls % 60) -eq 0) { try { Call 'GET' ('ping?step=' + [uri]::EscapeDataString('loop alive, poll ' + $polls)) $null | Out-Null } catch {} }
+    Start-Sleep -Seconds 60
+  }
 }
 else { try { One } catch { Say ('!! ' + $_.Exception.Message); try { Call 'GET' ('ping?step=' + [uri]::EscapeDataString('pull error: ' + $_.Exception.Message)) $null | Out-Null } catch {}; exit 1 } }
