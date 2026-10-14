@@ -3822,6 +3822,11 @@ try{
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
   <!--
+    14.10 Itzik: a new story goes into this tile, and the tile moves to the top
+    of the grid every time there is something new in it. Newest on top inside.
+  -->
+  <button type="button" class="gt gStory" id="gStory" data-upd="2026-10-14-weight"><b>🎞️ סטורי</b><small>הדרך חזרה: 69.2 ואז 70.7 ואז 71.2</small></button>
+  <!--
     איציק, 28.9: "תסיר את כפתור מייל, אין לי צורך בו". ירדו גם האריח וגם הסמל
     בשורת הרשתות, שניהם פתחו את אותו מסך. המסך pE עצמו נשאר.
   -->
@@ -3922,7 +3927,6 @@ try{
   -->
   <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>05 עד 20, גם באיכות גבוהה</small></button>
-  <button type="button" class="gt gStory" id="gStory" data-new="1"><b>🎞️ סטורי</b><small>ריק כרגע, הסטורי עלה</small></button>
   <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
@@ -13239,7 +13243,7 @@ on('gReels',reelSheet);
   11.10, Itzik: "שים במוניטור בכפתור סטורי". Stories ready to save to the phone,
   newest on top. Same viewer as the reels: fileOpen has the save button.
 */
-var STORY_ITEMS=[];
+var STORY_ITEMS=[{n:'14.10',t:'הדרך חזרה על המשקל: 69.2 מפה התחלתי, 70.7 אתמול, 71.2 היום',r:'story-weight-1014.jpg'}];
 function storySheet(){
  var old=document.getElementById('stSheet');if(old)old.remove();
  var w=document.createElement('div');
