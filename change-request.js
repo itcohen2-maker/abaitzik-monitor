@@ -6,6 +6,8 @@
       on a customer's monitor: files the request for Itzik.
     node change-request.js decide <customer> <request id> approved|rejected|deleted "<one line for the customer>"
       on Itzik's: records his decision. The customer hears it within a minute.
+    node change-request.js notice <customer> "<message>"
+      on Itzik's: a message from the admin, in the customer's chat within a minute.
 */
 const cr = require('./lib/change-requests.js');
 
@@ -20,6 +22,8 @@ try {
   } else if (a[0] === 'decide') {
     cr.decide(a[1], a[2], a[3], a.slice(4).join(' '));
     console.log('נרשם: ' + a[1] + '/' + a[2] + ' ' + a[3]);
+  } else if (a[0] === 'notice') {
+    console.log('נשלח: ' + a[1] + '/' + cr.notice(a[1], a.slice(2).join(' ')));
   } else {
     console.error('add --re <id> "<text>" | decide <customer> <id> approved|rejected "<note>"');
     process.exit(2);

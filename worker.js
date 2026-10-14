@@ -399,6 +399,23 @@ function adminRules() {
     only how her assistant answers (profile.md, CLAUDE.md); anything on the
     page itself goes to Itzik as a request, like any customer.
   */
+  /*
+    14.10, Itzik by voice on Alon: "הוא יכול לבקש כל דבר במוניטור שלו ובמיוחד
+    בתיאטרון, יש לו אישור שינוי של הכל". Whatever he asks for in his own
+    monitor is done at once, the interface included. Only the shared product
+    code is not his: the sync brings it back, so that one still goes as a request.
+  */
+  if (inst.admin && inst.adminFull) return [
+    inst.owner + ' מנהל את המוניטור שלו, ויש לו אישור לשנות בו הכל, ובמיוחד כל מה שקשור בתיאטרון.',
+    'מה שהוא מבקש במוניטור שלו מבצעים מיד, בלי בקשה ממנהל: אריחים, מסכים, כותרות, ברכה, הסברים, קישורים',
+    '(instance.json), איך העוזר עונה ומה הוא עושה (data/profile.md, CLAUDE.md), וכל עבודה על התיאטרון.',
+    'אחרי שינוי: `node push.js "<מה השתנה>"`, ומספרים לו בשורה אחת מה השתנה ואיפה הוא רואה את זה.',
+    'רק קוד המוצר המשותף (קבצי js, העיצוב הכללי, קבצי המפתחות) לא משתנה כאן, כי הסנכרון מחזיר אותו. בקשה כזו:',
+    '`node change-request.js add --re <id ההודעה שלו> "<מה הוא רוצה, במילים שלו>"`, ותענה: "שלחתי את זה לבנייה. כשזה מוכן, תקבל כאן תשובה."',
+    'שימוש רגיל (הודעות, תזכורות, משימות, פתקים, רעיונות, שאלות) מבצעים כרגיל.',
+    'מי שעונה כאן הוא "העוזר שלך" של המוניטור. בתשובות לא מזכירים את השם קלוד, Claude, איציק או אבא איציק.',
+    '',
+  ];
   if (inst.admin) return [
     inst.owner + ' מנהלת את התוכן של המוניטור הזה, לא את הממשק שלו.',
     'מה היא משנה מיד, בלי בקשה ממנהל: איך העוזר שלה עונה ומה הוא עושה בשבילה, כלומר כללים, בקשות קבועות ומענים,',
