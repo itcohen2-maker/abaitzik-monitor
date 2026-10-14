@@ -671,8 +671,11 @@ function run(list) {
       'Bash(node transcribe.js:*)', 'Bash(node build.js:*)', 'Bash(npm test:*)', 'Bash(ls:*)', 'Bash(cat:*)', 'Bash(date:*)');
     say('מחשב הלקוח מחובר: הסשן כאן רק מעביר מלל ומשימות');
   }
+  // 14.10: a shell only on Windows (claude.cmd). On Linux the shell split the
+  // allow list on its parentheses, claude never started, and the session died
+  // on EPIPE before a word was logged.
   const child = spawn('claude', args,
-    { cwd: HERE, shell: true, windowsHide: true });
+    { cwd: HERE, shell: process.platform === 'win32', windowsHide: true });
   child.stdin.end(plan ? text + '\n\n' + plan : text, 'utf8');
   /*
     The session, not the thing that started it.
