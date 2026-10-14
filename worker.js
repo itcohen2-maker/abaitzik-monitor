@@ -38,6 +38,8 @@ const STATUS = path.join(inst.dataPath, 'status');
 const LOCK = path.join(STATUS, 'worker.lock');
 const LOG = path.join(STATUS, 'worker.log');
 const SEEN = path.join(STATUS, 'worker-seen.json');
+const QHOLD = path.join(STATUS, 'quota-hold.json');
+const QPASS = path.join(STATUS, 'quota-pass.json');
 const DRY = process.argv.includes('--dry');
 /*
   A message needs a moment to settle, but a minute was never that moment.
@@ -468,6 +470,7 @@ function adminRules() {
     '  תכונה במוצר עצמו נכנסת לקוד כרגיל, ומגיעה לכל הלקוחות.',
     '  בסוף: `node change-request.js decide <לקוח> <מזהה> approved "<משפט אחד ללקוח: מה השתנה>"`.',
     '  הודעה שמתחילה ב"דחיית בקשת שינוי <לקוח>/<מזהה>": רק `node change-request.js decide <לקוח> <מזהה> rejected "<הסיבה, אם כתב>"`.',
+    '  בקשה שמתחילה ב"חסימת מכסה": אין שינוי לבצע. אישור = `node change-request.js decide <לקוח> <מזהה> approved "המוניטור שוחרר"`, דחייה = rejected "עדיין חסום בגלל מכסה".',
     // 14.10, Itzik: Alon and Rinat are admins, their approval was given in advance.
     '  "אושר מראש" באישור כזה: הלקוח מנהל, איציק לא אישר אותו בעצמו ולא מחכה לשאלה. מבצעים הכל כדי שיהיה לו הכי נוח,',
     '  חוץ משינוי שיפגע במערכת: אבטחה, הפרדה בין לקוחות, מוניטור של מישהו אחר, מחיקת נתונים, או שבירה של קוד משותף.',
@@ -664,7 +667,7 @@ function run(list) {
   const model = plan === null ? (process.env.MONITOR_PLAN_MODEL || 'claude-opus-5-5') : EXEC_MODEL;
   const args = ['-p', '--dangerously-skip-permissions', '--model', model, '--output-format', 'json'];
   if (process.platform === 'win32') args.splice(1, 0, '--chrome');
-  // 12.10: one customer session can not run away either (see overBudget).
+  // 12.10: one customer session can not run away either (the day cap is in quotaHold).
   if (inst.name !== 'abaitzik' && !ownAccount()) args.push('--max-budget-usd', String(SESSION_USD));
   /*
     14.10, Itzik: "חוץ ממעבר מלל במוניטור אך שום ביצוע לא בשרת שלי". With the customer's
@@ -829,17 +832,49 @@ function spentToday() {
 // subscription, so Itzik's ceilings no longer apply to it.
 function ownAccount() { return fs.existsSync('/srv/monitor-changes/' + inst.name + '.own'); }
 
-function overBudget() {
+/*
+  Itzik, 14.10.2026: "if a customer eats our daily or weekly quota, stop it and
+  tell them it is blocked because of quota until manager approval." Replaces the
+  overnight daily ceiling above: a hit is no longer just a wait until tomorrow,
+  it is a request to Itzik that he releases (lib/quota-hold.js decides the rule).
+  QHOLD holds the open request; announceDecisions releases it on his approval.
+*/
+function quotaHold() {
   if (inst.name === 'abaitzik' || ownAccount()) return false;
-  const spent = spentToday();
-  if (spent < DAY_USD) return false;
-  say('הגיע לתקרה היומית: $' + spent.toFixed(2) + ' מתוך $' + DAY_USD + '. לא מפעיל סשן עד מחר.');
-  const flag = path.join(STATUS, 'budget-told.json');
-  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
-  if (!DRY && readJson(flag, {}).day !== today && waiting().length) {
-    try { fs.writeFileSync(flag, JSON.stringify({ day: today, spent })); } catch (e) {}
-    tell('המכסה היומית נגמרה', 'ההודעות שלך נשמרו ויטופלו מחר בבוקר.');
+  if (fs.existsSync(QHOLD)) {
+    say('חסום בגלל מכסה עד אישור מנהל.');
+    const flag = path.join(STATUS, 'quota-told.json');
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
+    if (!DRY && readJson(flag, {}).day !== today && waiting().length) {
+      try { fs.writeFileSync(flag, JSON.stringify({ day: today })); } catch (e) {}
+      tell('המוניטור חסום בגלל מכסה', 'המוניטור חסום בגלל מכסה עד אישור מנהל. ההודעות שלך נשמרו ויטופלו אחרי האישור.');
+    }
+    return true;
   }
+  const r = require('./lib/quota-hold.js').check({
+    quota: readJson('/srv/monitor-changes/quota.json', null),
+    limitPct: Number(process.env.MONITOR_QUOTA_PCT) || 80,
+    spentToday: spentToday(),
+    dayUsd: DAY_USD,
+    pass: readJson(QPASS, null),
+    now: Date.now(),
+  });
+  if (!r.hold) return false;
+  if (DRY) { say('חסימת מכסה: ' + r.reason); return true; }
+  const text = 'המוניטור חסום בגלל מכסה עד אישור מנהל. ההודעות שלך נשמרו ויטופלו אחרי האישור.';
+  try {
+    const id = require('./lib/change-requests.js').add('חסימת מכסה: ' + r.reason + '. לשחרר את המוניטור?', '');
+    fs.writeFileSync(QHOLD, JSON.stringify({ at: new Date().toISOString(), kind: r.kind, reason: r.reason, reqId: id }));
+    // Israel time stamp, the same shape as the chat files elsewhere: YYYYMMDD-HHMM.
+    const p = {};
+    new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Jerusalem', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+      .formatToParts(new Date()).forEach((x) => { p[x.type] = x.value; });
+    const stamp = p.year + p.month + p.day + '-' + p.hour + p.minute;
+    fs.writeFileSync(path.join(CHAT, stamp + '-claude-quota-hold.json'),
+      JSON.stringify({ at: new Date().toISOString(), from: 'claude', text, status: 'done' }, null, 1), 'utf8');
+    tell('המוניטור חסום בגלל מכסה', text);
+    say('!! חסימת מכסה: ' + r.reason + ', בקשה ' + id);
+  } catch (e) { say('!! חסימת מכסה, לא הצלחתי לרשום: ' + e.message); }
   return true;
 }
 
@@ -866,7 +901,7 @@ function main() {
   // 8.10: a paused customer gets no sessions at all.
   if (inst.paused) { say('מושהה. לא עונה.'); return; }
   if (onHold()) return;
-  if (overBudget()) return;
+  if (quotaHold()) return;
   const live = livePids();
   if (!DRY) reconcile(live);
   const room = MAX_LIVE - Object.keys(live).length;
@@ -926,10 +961,29 @@ function runDetached(batch) {
 function announceDecisions() {
   try {
     const n = require('./lib/change-requests.js').announce();
-    if (!n) return;
-    say('תשובות מנהל לבקשות שינוי: ' + n);
-    execFile('node', ['push.js', 'admin decision on a change request'], { cwd: HERE, timeout: 240000 }, () => {});
+    if (n) {
+      say('תשובות מנהל לבקשות שינוי: ' + n);
+      execFile('node', ['push.js', 'admin decision on a change request'], { cwd: HERE, timeout: 240000 }, () => {});
+    }
   } catch (e) { say('!! תשובות מנהל: ' + e.message); }
+  releaseQuota();
+}
+
+// Runs every tick, whether or not there was an answer above. Release is the
+// manager's approval of the quota request filed by quotaHold.
+function releaseQuota() {
+  const hold = readJson(QHOLD, null);
+  if (!hold || !hold.reqId) return;
+  try {
+    const dec = readJson(path.join(require('./lib/change-requests.js').SPOOL, inst.name + '.json'), {});
+    const d = dec[hold.reqId];
+    if (!d || d.status !== 'approved') return;
+    const pass = require('./lib/quota-hold.js').passFor(hold.kind, readJson('/srv/monitor-changes/quota.json', null), Date.now());
+    fs.writeFileSync(QPASS, JSON.stringify(pass));
+    fs.unlinkSync(QHOLD);
+    try { fs.unlinkSync(path.join(STATUS, 'quota-told.json')); } catch (e) {}
+    say('המנהל שחרר את חסימת המכסה.');
+  } catch (e) { say('!! שחרור מכסה: ' + e.message); }
 }
 
 const si = process.argv.indexOf('--session');

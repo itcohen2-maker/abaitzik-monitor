@@ -214,7 +214,26 @@ function preApprove(t, x) {
   } catch (e) { console.log('pre approve failed: ' + String(e.message).slice(0, 120)); return false; }
 }
 
+/*
+  14.10.2026: the customers' quota gate (worker.js quotaHold) reads
+  /srv/monitor-changes/quota.json, which only this instance may write. It is
+  copied from the subscription status every run, written aside and renamed so
+  a reader never sees half a file. Never throws: a missing status is no quota.
+*/
+function writeQuota() {
+  if (DRY) return;
+  try {
+    const s = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'status', 'subscription.json'), 'utf8'));
+    const file = '/srv/monitor-changes/quota.json';
+    const tmp = file + '.tmp';
+    fs.writeFileSync(tmp, JSON.stringify({ at: s.at, five: s.five, week: s.week }, null, 1));
+    try { fs.chmodSync(tmp, 0o644); } catch (e) {}
+    fs.renameSync(tmp, file);
+  } catch (e) {}
+}
+
 function main() {
+  writeQuota();
   if (!fs.existsSync(DIR)) { console.log('no tenants'); return; }
   let changed = false;
   for (const f of fs.readdirSync(DIR).filter(x => x.endsWith('.json'))) {
