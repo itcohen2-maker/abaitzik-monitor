@@ -13975,7 +13975,7 @@ function stkNewsTile(){
  if(!t)(INSTANCE&&INSTANCE.links||[]).forEach(function(l,i){if(/^bubot/.test(l.key||''))t=document.getElementById('gLink'+i);});
  return t;
 }
-function stkNewsWho(x){return x.by==='alon'?'אלון':'איציק';}
+function stkNewsWho(x){return x.by==='alon'?'אלון':x.by==='claude'?'קלוד':'איציק';}
 function stkNewsSeen(){
  var L=D.stkNews||[],t=stkNewsTile();
  if(L.length)try{localStorage.setItem('stkNewsSeen',L[0].at);}catch(e){}

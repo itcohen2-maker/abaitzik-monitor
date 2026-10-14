@@ -180,7 +180,8 @@ function selfArena(t, x) {
     execFileSync('node', ['pc-task.js', 'add', '--re', root,
       'זירה חדשה בתיאטרון רמת הנשיא (bubot-theatre, הקוד במחשב ב C:\\Users\\User\\bubot-theatre), לבקשת ' + (t.title || t.id)
       + ' שמנהל את התיאטרון יחד עם איציק ולא צריך אישור לזירות. לבנות אותה כמו הזירות הקיימות, לפרוס לייצור ולבדוק אותה חיה. הבקשה במילים שלו: '
-      + x.text + '\nבסוף לענות בשורה אחת מה נבנה והקישור לזירה.'], { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
+      + x.text + '\nאחרי הפריסה לרשום ביומן החדשות של האתר (מה ש /api/news מחזיר) שורה אחת עם by "claude" ומה נבנה, כדי שהאריח של התיאטרון יהבהב אצל איציק ואצל ' + (t.title || t.id) + '.'
+      + '\nבסוף לענות בשורה אחת מה נבנה והקישור לזירה.'], { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
     cr.decide(t.id, x.id, 'approved', 'זירה בתיאטרון לא צריכה אישור. הבקשה עברה ישר לבנייה, והזירה תופיע באתר של התיאטרון כשתהיה מוכנה.');
     return true;
   } catch (e) { console.log('self arena failed: ' + String(e.message).slice(0, 120)); return false; }

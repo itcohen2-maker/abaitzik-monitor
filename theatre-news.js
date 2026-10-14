@@ -42,9 +42,11 @@ function config() {
 }
 
 // Only what the other side did, with a safe id and short text.
+// 14.10, Itzik ("עם הבהוב"): what Claude built there (an arena from the PC) is
+// logged as "claude" and waves the tile on both sides.
 function pick(items, me) {
   return (Array.isArray(items) ? items : [])
-    .filter((x) => x && (x.by === 'itzik' || x.by === 'alon') && x.by !== me
+    .filter((x) => x && (x.by === 'itzik' || x.by === 'alon' || x.by === 'claude') && x.by !== me
       && /^[A-Za-z0-9_-]{4,64}$/.test(String(x.id || '')) && !isNaN(Date.parse(x.at)) && typeof x.text === 'string' && x.text.trim())
     .map((x) => ({ id: String(x.id), at: new Date(x.at).toISOString(), by: x.by, text: x.text.trim().slice(0, 140) }));
 }
