@@ -2613,6 +2613,21 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .pj-next{opacity:.7}
 .pjAg{padding:6px 0;border-bottom:1px solid var(--line,#333)}
 .pjF{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pjBox[hidden]{display:none}
+.pjBox input{font:inherit;padding:10px;border-radius:10px;border:1px solid var(--line,#333);background:transparent;color:inherit}
+.pjFbox textarea{min-height:48px}
+.pjTabs{display:flex;flex-wrap:wrap;gap:6px}
+.pjTab{background:none;border:0;border-bottom:2px solid transparent;padding:6px 4px;font:inherit;color:var(--dim);cursor:pointer}
+.pjTab.on{font-weight:700;color:inherit;border-bottom-color:var(--accent)}
+.pjGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:start}
+.pjH{font-weight:700;color:var(--dim);font-size:13px}
+.pjReq,.pjRes{border:1px solid var(--line,#333);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:6px;min-width:0;overflow-wrap:anywhere}
+.pjReq small,.pjRes small,.pjFu small{color:var(--dim)}
+.pjOne{display:flex;flex-direction:column;gap:4px}
+.pjOne+.pjOne{border-top:1px dashed var(--line,#333);padding-top:6px}
+.pjFu{margin-inline-start:10px;padding:6px 0 6px 8px;border-inline-start:2px solid var(--line,#333);display:flex;flex-direction:column;gap:4px}
+.pjAns{color:var(--dim);font-size:13px;margin:0}
+@media (max-width:700px){.pjGrid{grid-template-columns:1fr}.pjH{display:none}}
 .biz .bzTop{display:flex;align-items:center;gap:12px}
 .bzScore{flex:0 0 64px;width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font:700 22px Heebo,sans-serif;text-align:center}
 .bzScore.g{background:#2e7d32}.bzScore.a{background:#ef8f00}.bzScore.r{background:#c62828}
@@ -15227,9 +15242,9 @@ function projTiles(){
  var P=(D&&D.projects)||[];
  host.hidden=!P.length;
  host.innerHTML=P.map(function(p,i){
-  var c=projCur(p);
+  var c=projCur(p),w=projWaiting(p);
   return '<button type="button" class="gt '+esc(p.cls||'g11')+'" id="gProj'+i+'"><b>'+esc((p.icon||'📁')+' '+p.title)+'</b>'
-   +'<small>'+esc(c?('עכשיו: '+c.title):(p.sub||''))+'</small></button>';
+   +'<small>'+esc(c?('עכשיו: '+c.title+(w?' · ממתין: '+w:'')):(p.sub||''))+'</small></button>';
  }).join('');
  P.forEach(function(p,i){
   var t=document.getElementById('gProj'+i);if(!t)return;
@@ -15242,6 +15257,64 @@ function projTiles(){
    projSheet(p);
   });
  });
+}
+/* 14.10, Rinat: the tile says how many of her requests still wait for a result. */
+function projWaiting(p){
+ var B=ML.projBoard((D&&D.chat)||[],pending(),p,stamp),n=0;
+ B.topics.forEach(function(t){t.rows.forEach(function(r){if(!r.results.length&&!isCancelled(r.root))n++;});});
+ return n;
+}
+/*
+  14.10, Rinat: one notebook page per topic. Her request sits on the right, and
+  what came back sits facing it on the left, with its files. A comment that
+  improves the same request goes under the result as a follow-up, so it stays
+  attached to that request. Each topic ends with a box for a new request in it.
+  The board is rebuilt from D.chat and pending() on every paint; the event
+  handler lives on the sheet and is never re-attached.
+*/
+function projTopicName(s){return String(s==null?'':s).replace(/[:：\\/\\n]/g,' ').replace(/\\s+/g,' ').trim();}
+function projResHtml(m){
+ var t=fileCap(fileSpaces(m.text)),names=[];
+ (t.match(/files\\/[^\\s<>"]+/g)||[]).forEach(function(h){
+  var n=h.slice(6);try{n=decodeURIComponent(n);}catch(e){}
+  if(names.indexOf(n)<0&&fileEntry(n))names.push(n);
+ });
+ var fl=names.map(function(n){
+  return '<div class="pjF"><button type="button" class="gotile" data-file="'+esc(n)+'">'+fileThumb(n)+esc(n.split('/').pop())+'</button>'
+   +'<button type="button" class="gotile fsave" data-fdl="'+esc(n)+'">⬇ הורדה</button></div>';
+ }).join('');
+ return '<div class="pjOne"><small>'+esc(stamp(m.at))+'</small><div>'+linkify(t)+'</div>'+fl+'</div>';
+}
+function projRowHtml(r,topic,fem){
+ var root=r.root,body=(ML.projTopicOf(root.text)||{body:root.text}).body;
+ var req='<div class="pjReq"><small>'+esc(stamp(root.at))+(root.pend?' · נשלח':'')+'</small><div>'+linkify(body)+'</div></div>';
+ var inner=r.results.length?r.results.map(projResHtml).join('')
+  :'<small class="pjAns">'+(root.status==='working'?'בעבודה...':'התקבל. התוצאה תופיע כאן.')+'</small>';
+ inner+=r.follows.map(function(f){
+  var fb=(ML.projTopicOf(f.msg.text)||{body:f.msg.text}).body;
+  return '<div class="pjFu"><small>'+esc('הערה לשיפור · '+stamp(f.msg.at))+'</small><div>'+linkify(fb)+'</div>'+f.results.map(projResHtml).join('')+'</div>';
+ }).join('');
+ inner+='<div class="pjBox pjFbox"><textarea placeholder="'+(fem?'כתבי כאן מה לשפר':'הערה לשיפור')+'"></textarea>'
+  +'<button type="button" class="yb yb2" data-pj="fu" data-t="'+esc(topic)+'" data-at="'+esc(root.at||'')+'" data-rid="'+esc(root.id||'')+'">שליחת הערה</button></div>';
+ return req+'<div class="pjRes">'+inner+'</div>';
+}
+function projBoardHtml(p,fem,tab,newOpen){
+ var B=ML.projBoard((D&&D.chat)||[],pending(),p,stamp),T=B.topics,cur=null;
+ T.forEach(function(t){if(t.title===tab)cur=t;});
+ if(!cur&&T.length)cur=T[0];
+ var tabs='<div class="pjTabs">'+T.map(function(t){
+  return '<button type="button" class="pjTab'+(cur&&t.title===cur.title?' on':'')+'" data-pj="tab" data-t="'+esc(t.title)+'">'+esc((t.icon?t.icon+' ':'')+t.title)+'</button>';
+ }).join('')+'<button type="button" class="pjTab" data-pj="newtopic">+ נושא</button></div>';
+ var nt='<div class="pjBox pjNewT"'+(newOpen?'':' hidden')+'><input id="pjNT" type="text" maxlength="40" placeholder="שם הנושא, למשל: בדים">'
+  +'<textarea placeholder="'+(fem?'כתבי':'כתוב')+' כאן את הבקשה לנושא הזה"></textarea>'
+  +'<button type="button" class="yb yb2" data-pj="nreq">שליחה</button></div>';
+ if(!cur)return tabs+nt;
+ var body=cur.rows.length
+  ?'<div class="pjGrid"><div class="pjH">בקשה</div><div class="pjH">תוצאה</div>'+cur.rows.map(function(r){return projRowHtml(r,cur.title,fem);}).join('')+'</div>'
+  :'<small class="pjAns">עוד אין כאן בקשות. '+(fem?'כתבי':'כתוב')+' למטה.</small>';
+ return tabs+nt+body
+  +'<div class="pjBox pjNewReq"><textarea placeholder="בקשה חדשה ב'+esc(cur.title)+'"></textarea>'
+  +'<button type="button" class="yb yb2" data-pj="req" data-t="'+esc(cur.title)+'">שליחה</button></div>';
 }
 function projSheet(p){
  var fem=projFem(),c=projCur(p);
@@ -15269,23 +15342,56 @@ function projSheet(p){
  var html='<div class="pj">'
   +(p.goal?'<p class="pjGoal">'+esc(p.goal)+'</p>':'')
   +now
-  +'<div class="pjBox"><textarea id="pjIn" placeholder="'+(fem?'כתבי':'כתוב')+' כאן מה צריך בפרויקט הזה"></textarea>'
-  +'<button type="button" class="yb yb2" data-pj="send">שליחה</button></div>'
+  +'<div id="pjBoard"></div>'
   +(files?'<div class="pjSec">הקבצים של הפרויקט</div>'+files:'')
   +(stages?'<div class="pjSec">הדרך, שלב אחרי שלב</div>'+stages:'')
   +(agents?'<details class="pjAgs"><summary>הסוכנים של הפרויקט</summary>'+agents+'</details>':'')
   +'</div>';
  shipOpen('projSheet',(p.icon||'📁')+' '+p.title,html,function(el){
+  var tab='',newOpen=false,tk='projTab:'+p.id;
+  try{tab=localStorage.getItem(tk)||'';}catch(e){}
+  function paint(){
+   var host=el.querySelector('#pjBoard');
+   if(host)host.innerHTML=projBoardHtml(p,fem,tab,newOpen);
+  }
+  paint();
   el.addEventListener('click',function(e){
    var b=e.target.closest?e.target.closest('[data-pj]'):null;if(!b)return;
-   var a=b.getAttribute('data-pj'),line='';
-   if(a==='ok')line=(fem?'מאשרת':'מאשר')+' את השלב '+(c?c.title:'')+'. אפשר לעבור לשלב הבא.';
-   if(a==='send'){var inp=el.querySelector('#pjIn');line=inp.value.trim();if(!line){inp.focus();return;}}
-   if(!line)return;
+   var a=b.getAttribute('data-pj');
+   if(a==='tab'){tab=b.getAttribute('data-t')||'';try{localStorage.setItem(tk,tab);}catch(x){}paint();return;}
+   if(a==='newtopic'){newOpen=!newOpen;paint();if(newOpen){var ni=el.querySelector('#pjNT');if(ni)ni.focus();}return;}
+   if(a==='ok'){
+    b.disabled=true;
+    sendOrHold('פרויקט','פרויקט '+p.title+': '+(fem?'מאשרת':'מאשר')+' את השלב '+(c?c.title:'')+'. אפשר לעבור לשלב הבא.','פרויקט').then(function(how){
+     toast(how==='held'?'נשמר, יישלח כשתהיה קליטה.':'נשלח לפרויקט.');
+    }).catch(function(){toast('לא נשלח. אפשר לנסות שוב.');}).then(function(){b.disabled=false;});
+    return;
+   }
+   var ta=b.parentNode?b.parentNode.querySelector('textarea'):null;
+   var body=ta?ta.value.trim():'';
+   var topic=b.getAttribute('data-t')||'';
+   var re=undefined,txt='',stampAt='';
+   if(a==='nreq'){
+    var ni2=el.querySelector('#pjNT');
+    topic=projTopicName(ni2?ni2.value:'');
+    if(!topic){if(ni2)ni2.focus();return;}
+   }
+   if(!body){if(ta)ta.focus();return;}
+   if(a==='fu'){
+    re=b.getAttribute('data-rid')||undefined;
+    stampAt=b.getAttribute('data-at')||'';
+    txt='פרויקט '+p.title+' / '+topic+': הערה לשיפור על הבקשה מ'+stamp(stampAt)+': '+body;
+   }else{
+    txt='פרויקט '+p.title+' / '+topic+': '+body;
+   }
+   var at=new Date().toISOString();
    b.disabled=true;
-   sendOrHold('פרויקט','פרויקט '+p.title+': '+line,'פרויקט').then(function(how){
-    if(a==='send')el.querySelector('#pjIn').value='';
+   sendOrHold('פרויקט',txt,'פרויקט',{at:at,text:txt,re:re}).then(function(how){
+    if(how!=='held'){var pl=pending();pl.push({at:at,text:txt,re:re});savePending(pl);}
+    if(ta)ta.value='';
+    if(a==='nreq'){var ni3=el.querySelector('#pjNT');if(ni3)ni3.value='';newOpen=false;tab=topic;try{localStorage.setItem(tk,tab);}catch(x){}}
     toast(how==='held'?'נשמר, יישלח כשתהיה קליטה.':'נשלח לפרויקט.');
+    paint();
    }).catch(function(){toast('לא נשלח. אפשר לנסות שוב.');}).then(function(){b.disabled=false;});
   });
  });
