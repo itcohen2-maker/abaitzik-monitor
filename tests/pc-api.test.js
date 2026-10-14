@@ -79,10 +79,10 @@ test('pc api: a file from the computer lands in files-private/pc-out with a safe
   try {
     const r = await call('POST', '/up/v1/rinat/pc/file/pc-abc123-zzzz?name=' + encodeURIComponent('../וילון.jpg'), 'IMG', 'a'.repeat(32));
     assert.equal(r.status, 200);
-    assert.equal(r.text, 'files/pc-out/וילון.jpg');
-    assert.equal(fs.readFileSync(path.join(dataPath, 'files-private', 'pc-out', 'וילון.jpg'), 'utf8'), 'IMG');
+    assert.equal(r.text, 'files/pc-out/pc-abc123-zzzz/וילון.jpg');
+    assert.equal(fs.readFileSync(path.join(dataPath, 'files-private', 'pc-out', 'pc-abc123-zzzz', 'וילון.jpg'), 'utf8'), 'IMG');
     const r2 = await call('POST', '/up/v1/rinat/pc/file/pc-abc123-zzzz?name=' + encodeURIComponent('וילון.jpg'), 'B', 'a'.repeat(32));
-    assert.equal(r2.text, 'files/pc-out/וילון-2.jpg');
+    assert.equal(r2.text, 'files/pc-out/pc-abc123-zzzz/וילון-2.jpg');
   } finally { server.close(); }
 });
 

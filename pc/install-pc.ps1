@@ -97,6 +97,9 @@ foreach ($w in $ways) {
   & schtasks.exe /Run /TN $Task | Out-Null
   for ($i = 0; $i -lt 20 -and -not (Ran $since); $i++) { Start-Sleep -Seconds 1 }
   if (Ran $since) { $works = $w.name; break }
+  # A run already in progress (a long task) means the task works; /Run is ignored then.
+  $busy = & schtasks.exe /Query /TN $Task /FO LIST 2>&1 | Select-String 'Running' 
+  if ($busy -and (Test-Path $stamp)) { $works = $w.name + ' (already running a task)'; break }
   $q = & schtasks.exe /Query /TN $Task /V /FO LIST 2>&1 | Select-String 'Last Result|Status' | Out-String
   Report ('schtasks ' + $w.name + ' did not run: ' + ($q -replace '\s+', ' ').Trim())
 }

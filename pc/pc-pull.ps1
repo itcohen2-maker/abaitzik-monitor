@@ -205,6 +205,9 @@ function One() {
         } catch { Say ('!! לא עלה: ' + $f.Name + ' ' + $_.Exception.Message) }
       }
     }
+    # 14.10: a collection of hundreds of files would be hundreds of buttons. Over 12,
+    # the answer names the first 6 and says how many went up; all of them are on the server.
+    if ($links.Count -gt 12) { $n = $links.Count; $links = @($links[0..5]) + @('הועלו ' + $n + ' קבצים למוניטור.') }
     if ($links.Count -gt 0) {
       if ($res.ok) { $res.text = $res.text + "`n" + ($links -join "`n") }
       else { $res = @{ ok = $true; text = ('הקבצים מוכנים.' + "`n" + ($links -join "`n")); usage = $res.usage } }
