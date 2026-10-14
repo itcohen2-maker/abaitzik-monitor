@@ -767,6 +767,24 @@ function build() {
       bizOn = true;
     } catch (e) { console.error('biz: ' + e.message); }
   }
+  /*
+    14.10, Itzik for Rinat: "תסדר לה הכל לפי פרויקטים, באריח שונה לכל פרויקט, ולכל
+    פרויקט תבנה סוכנים שמתאימים ... תלמד אותו לשלב הבא ... הכל תשמור בזיכרון".
+    One record per project in data/projects/projects/<id>.json (stages, the agent
+    of each stage, files, the next step). They ride inside the sealed payload, so
+    no project name is in the clear page; the tiles are drawn after unlock.
+  */
+  if (inst.name !== 'abaitzik') {
+    try {
+      const pdir = path.join(inst.dataPath, 'projects', 'projects');
+      if (fs.existsSync(pdir)) {
+        payload.projects = fs.readdirSync(pdir).filter((f) => f.endsWith('.json'))
+          .map((f) => { try { return JSON.parse(fs.readFileSync(path.join(pdir, f), 'utf8')); } catch (e) { return null; } })
+          .filter((p) => p && p.id && p.title && p.status !== 'archived')
+          .sort((a, b) => (Number(a.order) || 99) - (Number(b.order) || 99));
+      }
+    } catch (e) { console.error('projects: ' + e.message); }
+  }
   const HEADS = { chat: 150, reports: 14, codex: 20, special: 8, replies: 8,
                   improve: 4, food: 12, pegasus: 4, replied: 0, rivhit: 0, sale: 0, isra: 0,
                   drains: 40, blocklist: 12 };
@@ -2577,6 +2595,21 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .ship .shipq{width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif}
 /* 12.10: העסק שלי, the small business sheet */
 .biz{display:flex;flex-direction:column;gap:8px}
+.pj{display:flex;flex-direction:column;gap:10px}
+.pjGoal{margin:0;color:var(--dim)}
+.pjNow{border:1px solid var(--accent);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.pjNow p{margin:0}
+.pjWait{color:#f5b041}
+.pjBox{display:flex;flex-direction:column;gap:6px}
+.pjBox textarea{min-height:70px;font:inherit;padding:10px;border-radius:10px}
+.pjSec{font-weight:700;margin-top:6px}
+.pjSt{display:flex;gap:10px;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--line,#333)}
+.pjSt small,.pjAg small{display:block;color:var(--dim)}
+.pjM{width:18px;text-align:center}
+.pj-now b{color:var(--accent)}
+.pj-next{opacity:.7}
+.pjAg{padding:6px 0;border-bottom:1px solid var(--line,#333)}
+.pjF{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .biz .bzTop{display:flex;align-items:center;gap:12px}
 .bzScore{flex:0 0 64px;width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font:700 22px Heebo,sans-serif;text-align:center}
 .bzScore.g{background:#2e7d32}.bzScore.a{background:#ef8f00}.bzScore.r{background:#c62828}
@@ -4116,6 +4149,8 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   -->
   <!-- 6.10, Home Style: one coloured line over the tiles, filled from D.ship. Hidden without a shipments table. -->
   <button type="button" class="shipline" id="shipLine" hidden></button>
+  <!-- 14.10: one tile per project, drawn from D.projects after unlock (projTiles). -->
+  <div class="grid" id="blkProj" hidden></div>
   <div class="grid" id="blkTiles">${tenantTiles(inst)}</div>${tenantCircles(inst)}
 <!--TENANT:END-->
 
@@ -4928,7 +4963,7 @@ __RIVSHARE__
   <input type="text" id="fCap" placeholder="כיתוב, לא חובה">
   <div class="fmeta" id="fMeta">אפשר לבחור כל קובץ, גם כמה יחד, לכתוב שורה, ואז להקליט. הכל יוצא בהודעה אחת.</div>
   <div class="pthumbs" id="fThumbs" hidden></div>
-  <button type="submit" id="fBtn">שליחת הקובץ</button>
+  <button type="submit" id="fBtn">שליחה</button>
   <div id="recWrap">
    <button type="button" id="recBtn" aria-label="הקלטת הודעה קולית">&#127908;</button>
    <span id="recSaid">לחיצה מתחילה הקלטה. לחיצה שנייה עוצרת ושולחת. אם בחרת קבצים או כתבת משהו, הכל יוצא יחד בהודעה אחת.</span>
@@ -15119,6 +15154,87 @@ function bizSheet(){
  });
 }
 on('gBiz',bizSheet);
+/*
+  14.10, Itzik for Rinat: a tile for every project, and inside it the road:
+  every stage with its agent, where she is now, what the agent hands to the
+  next one, the project's files, and a box that writes to this project only.
+  The records come in the sealed payload (D.projects); nothing here writes a
+  file, every action is a message, like everywhere else on this page.
+  A tile waves until it is first opened, and pulses softly when the project
+  changed since this device last opened it.
+*/
+function projFem(){return INSTANCE&&INSTANCE.gender==='f';}
+function projCur(p){var s=p.stages||[];for(var i=0;i<s.length;i++){if(s[i].key===p.current)return s[i];}return null;}
+function projAgent(p,key){var a=p.agents||[];for(var i=0;i<a.length;i++){if(a[i].key===key)return a[i];}return null;}
+function projTiles(){
+ var host=document.getElementById('blkProj');if(!host)return;
+ var P=(D&&D.projects)||[];
+ host.hidden=!P.length;
+ host.innerHTML=P.map(function(p,i){
+  var c=projCur(p);
+  return '<button type="button" class="gt '+esc(p.cls||'g11')+'" id="gProj'+i+'"><b>'+esc((p.icon||'📁')+' '+p.title)+'</b>'
+   +'<small>'+esc(c?('עכשיו: '+c.title):(p.sub||''))+'</small></button>';
+ }).join('');
+ P.forEach(function(p,i){
+  var t=document.getElementById('gProj'+i);if(!t)return;
+  var k='projSeen:'+p.id,seen=null;try{seen=localStorage.getItem(k);}catch(e){}
+  if(!seen)t.classList.add('taskblink');
+  else if(p.updatedAt&&seen!==p.updatedAt)t.classList.add('updblink');
+  t.addEventListener('click',function(){
+   try{localStorage.setItem(k,p.updatedAt||'1');}catch(e){}
+   t.classList.remove('taskblink');t.classList.remove('updblink');
+   projSheet(p);
+  });
+ });
+}
+function projSheet(p){
+ var fem=projFem(),c=projCur(p);
+ var mark={done:'✓',now:'●',next:'○'};
+ var stages=(p.stages||[]).map(function(s){
+  var a=projAgent(p,s.agent);
+  var st=s.key===p.current?'now':(s.status==='done'?'done':'next');
+  return '<div class="pjSt pj-'+st+'"><span class="pjM">'+mark[st]+'</span><div><b>'+esc(s.title)+'</b>'
+   +(a?'<small>'+esc((a.icon||'🤖')+' '+a.name)+'</small>':'')
+   +(st==='now'&&s.out?'<small>מה ייצא מכאן: '+esc(s.out)+'</small>':'')+'</div></div>';
+ }).join('');
+ var agents=(p.agents||[]).map(function(a){
+  var nx=a.next?projAgent(p,a.next):null;
+  return '<div class="pjAg"><b>'+esc((a.icon||'🤖')+' '+a.name)+'</b><small>'+esc(a.role||'')+'</small>'
+   +(nx?'<small>מעביר ל'+esc(nx.name)+': '+esc(a.handoff||'')+'</small>':'')+'</div>';
+ }).join('');
+ var files=(p.files||[]).slice(-12).reverse().filter(function(n){return fileEntry(n);}).map(function(n){
+  return '<div class="pjF"><button type="button" class="gotile" data-file="'+esc(n)+'">'+fileThumb(n)+esc(n.split('/').pop())+'</button>'
+   +'<button type="button" class="gotile fsave" data-fdl="'+esc(n)+'">⬇ הורדה</button></div>';
+ }).join('');
+ var now=c?'<div class="pjNow"><b>עכשיו: '+esc(c.title)+'</b>'
+   +(p.nextStep?'<p>'+esc(p.nextStep)+'</p>':'')
+   +(p.waiting?'<p class="pjWait">'+esc(p.waiting)+'</p>':'')
+   +'<button type="button" class="yb yb1" data-pj="ok">👍 '+(fem?'מאשרת':'מאשר')+' את השלב, '+(fem?'אפשר':'אפשר')+' להמשיך</button></div>':'';
+ var html='<div class="pj">'
+  +(p.goal?'<p class="pjGoal">'+esc(p.goal)+'</p>':'')
+  +now
+  +'<div class="pjBox"><textarea id="pjIn" placeholder="'+(fem?'כתבי':'כתוב')+' כאן מה צריך בפרויקט הזה"></textarea>'
+  +'<button type="button" class="yb yb2" data-pj="send">שליחה</button></div>'
+  +(files?'<div class="pjSec">הקבצים של הפרויקט</div>'+files:'')
+  +(stages?'<div class="pjSec">הדרך, שלב אחרי שלב</div>'+stages:'')
+  +(agents?'<details class="pjAgs"><summary>הסוכנים של הפרויקט</summary>'+agents+'</details>':'')
+  +'</div>';
+ shipOpen('projSheet',(p.icon||'📁')+' '+p.title,html,function(el){
+  el.addEventListener('click',function(e){
+   var b=e.target.closest?e.target.closest('[data-pj]'):null;if(!b)return;
+   var a=b.getAttribute('data-pj'),line='';
+   if(a==='ok')line=(fem?'מאשרת':'מאשר')+' את השלב '+(c?c.title:'')+'. אפשר לעבור לשלב הבא.';
+   if(a==='send'){var inp=el.querySelector('#pjIn');line=inp.value.trim();if(!line){inp.focus();return;}}
+   if(!line)return;
+   b.disabled=true;
+   sendOrHold('פרויקט','פרויקט '+p.title+': '+line,'פרויקט').then(function(how){
+    if(a==='send')el.querySelector('#pjIn').value='';
+    toast(how==='held'?'נשמר, יישלח כשתהיה קליטה.':'נשלח לפרויקט.');
+   }).catch(function(){toast('לא נשלח. אפשר לנסות שוב.');}).then(function(){b.disabled=false;});
+  });
+ });
+}
+boot('projects',projTiles);
 // The same list a new client sees on the first visit. Every line is written as
 // his week, not as a feature: he recognises the problem before he understands
 // the screen. What he taps becomes a request in my inbox.
