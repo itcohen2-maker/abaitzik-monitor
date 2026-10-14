@@ -14,6 +14,11 @@ function Bad($s) { Write-Host ('   ' + $s) -ForegroundColor Red }
 
 Step 'מחפש את Claude Code במחשב הזה'
 $cfg = Get-Content -Raw -Encoding UTF8 (Join-Path $Src 'config.json') | ConvertFrom-Json
+function Report($step) {
+  try { Invoke-WebRequest -UseBasicParsing -Uri ($cfg.url.TrimEnd('/') + '/ping?step=' + [uri]::EscapeDataString($step)) -Headers @{ 'X-Pc-Key' = $cfg.key } -TimeoutSec 20 | Out-Null } catch {}
+}
+trap { Report ('crash: ' + $_.Exception.Message + ' line ' + $_.InvocationInfo.ScriptLineNumber); Bad ('Error: ' + $_.Exception.Message); exit 1 }
+Report ('start ' + $env:COMPUTERNAME + ' user ' + $env:USERNAME + ' ps ' + $PSVersionTable.PSVersion)
 $cands = @()
 if ($cfg.claude) { $cands += $cfg.claude }
 $cands += (Join-Path $env:USERPROFILE '.local\bin\claude.exe')
@@ -28,11 +33,12 @@ if (-not $found) {
   if ($hits) { $found = $hits.FullName }
 }
 if (-not $found) {
+  Report 'claude not found'
   Bad 'לא נמצא claude.exe. איפה הוא מותקן? אפשר למצוא עם: where claude'
   $found = Read-Host 'הנתיב המלא של claude.exe'
   if (-not (Test-Path $found)) { Bad 'אין קובץ כזה. עוצר.'; exit 1 }
 }
-Ok ('נמצא: ' + $found)
+Ok ('נמצא: ' + $found); Report ('claude ' + $found)
 
 Step 'מעתיק את הקבצים'
 New-Item -ItemType Directory -Force $Dst | Out-Null
@@ -52,6 +58,7 @@ try {
 Step 'בודק ש Claude Code מחובר לחשבון'
 try {
   $out = & $found -p --output-format text --model haiku 'ענה במילה אחת: מוכן' 2>&1 | Out-String
+  Report ('claude says: ' + $out.Trim())
   if ($out -match 'מוכן|ready|Ready') { Ok 'Claude Code עונה' } else { Bad ('Claude Code ענה משהו אחר: ' + $out.Trim().Substring(0, [Math]::Min(200, $out.Trim().Length))) }
 } catch { Bad ('Claude Code לא רץ: ' + $_.Exception.Message) }
 
@@ -63,6 +70,7 @@ try {
   $o = & schtasks.exe /Create /F /SC MINUTE /MO 1 /TN $Task /TR $tr 2>&1 | Out-String
   if ($LASTEXITCODE -eq 0) { $made = $true; Ok ('משימה מתוזמנת ' + $Task + ' נרשמה') } else { Bad ('schtasks: ' + $o.Trim()) }
 } catch { Bad ('schtasks: ' + $_.Exception.Message) }
+Report ('schtasks made=' + $made)
 if (-not $made) {
   # No scheduled task allowed here: a hidden loop starts with every login instead.
   $startup = [Environment]::GetFolderPath('Startup')
@@ -77,5 +85,6 @@ if (-not $made) {
 
 Step 'הריצה הראשונה'
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Dst 'pc-pull.ps1') -Dry
+Report 'installed'
 Ok 'מותקן. מעכשיו המוניטור יכול לשלוח למחשב הזה משימות, והתשובות חוזרות לצ׳אט לבד.'
 Ok ('יומן: ' + (Join-Path $Dst 'pc-pull.log'))
