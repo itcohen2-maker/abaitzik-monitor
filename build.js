@@ -4004,7 +4004,7 @@ try{
   <button type="button" class="gt gLec" id="gLec" data-new="1" data-upd="2026-10-13-clalit"><b>🎤 הרצאה</b><small>כנגד כל הסיכויים: המלל, השקפים והסכם כללית</small></button>
   <!-- 13.10. Itzik: "תעשה תקייה של טום ממליץ ואריח טום ממליץ". Scripts of
        Tom's posts, four ad images, the site copy, and the draft of his own site. -->
-  <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-14-works"><b>🧭 טום ממליץ</b><small>14.10: העבודות של טום באתר שלך, הריפו בגיטהאב</small></button>
+  <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-14-missing"><b>🧭 טום ממליץ</b><small>האתר אחד לאחד באוויר. בפנים: מה חסר לי ממך, 12 סעיפים</small></button>
   <!-- 13.10 night: the Clalit agreement moved inside the lecture tile (item 05). -->
   <!--
     11.10. Itzik: "a card I can send from, and later we delete it". The June
@@ -14720,7 +14720,9 @@ on('gClalit',clalitSheet);
   only once they are in the monitor; Drive links (u) open the folder.
 */
 var TOM_ITEMS=[
- {n:'🌐',t:'האתר שלך, במבנה של טום, באוויר',u:'https://abaitzik-tech.vercel.app'},
+ {n:'🌐',t:'האתר שלך, אחד לאחד עם טום, באוויר',u:'https://abaitzik-tech.vercel.app'},
+ {n:'❓',t:'14.10: מה חסר לי ממך כדי לסיים (12 סעיפים)',r:'tom-missing-14-10.txt'},
+ {n:'🖥️',t:'עמוד ההסבר על המוניטור באתר',u:'https://abaitzik-tech.vercel.app/#monitor'},
  {n:'🆕',t:'14.10: שורת העבודות של טום באתר, איך זה נראה',r:'tom-works-row.png'},
  {n:'🆕',t:'14.10: תשעת הקישורים שטום שלח והודעות הקול שלו מתומללות',r:'tom-works-14-10.txt'},
  {n:'🐙',t:'הריפו של האתר בגיטהאב, טום הוזמן אליו',u:'https://github.com/itcohen2-maker/abaitzik-tech'},
