@@ -160,8 +160,16 @@ async function subSnapshot() {
       Authorization: 'Bearer ' + cred.accessToken, 'anthropic-beta': 'oauth-2025-04-20' }, signal: AbortSignal.timeout(20000) });
     if (!r.ok) { say('!! מצב המנוי לא נקרא: ' + r.status); return; }
     const d = await r.json();
+    // 14.10: the tier in .credentials.json is frozen at login time. Itzik moved to
+    // Max 20x and the report kept saying 5x. The profile endpoint has the live one.
+    let tier = cred.rateLimitTier || '';
+    try {
+      const pr = await fetch('https://api.anthropic.com/api/oauth/profile', { headers: {
+        Authorization: 'Bearer ' + cred.accessToken, 'anthropic-beta': 'oauth-2025-04-20' }, signal: AbortSignal.timeout(20000) });
+      if (pr.ok) { const org = (await pr.json()).organization || {}; if (org.rate_limit_tier) tier = org.rate_limit_tier; }
+    } catch (e) { /* the cached tier is still a tier */ }
     const w = (x) => x ? { pct: x.utilization, resets: x.resets_at } : null;
-    const snap = { plan: cred.subscriptionType || '', tier: cred.rateLimitTier || '', five: w(d.five_hour), week: w(d.seven_day),
+    const snap = { plan: cred.subscriptionType || '', tier, five: w(d.five_hour), week: w(d.seven_day),
       weekOpus: w(d.seven_day_opus), weekSonnet: w(d.seven_day_sonnet), extra: d.extra_usage ? !!d.extra_usage.is_enabled : false,
       // the Claude Code sessions opened on this PC, which log nothing of their own
       pc: require('./lib/pc-claude-usage.js').pcUsage(path.join(process.env.USERPROFILE || 'C:/Users/User', '.claude', 'projects')) };
