@@ -2595,6 +2595,9 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .ship .shipq{width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif}
 /* 12.10: העסק שלי, the small business sheet */
 .biz{display:flex;flex-direction:column;gap:8px}
+@keyframes upBl{0%,100%{box-shadow:0 6px 24px rgba(0,0,0,.35),0 0 0 0 rgba(250,204,21,.9)}50%{box-shadow:0 6px 24px rgba(0,0,0,.35),0 0 0 6px rgba(250,204,21,.9)}}
+#upProg.upBlink{animation:upBl 1.2s ease-in-out infinite}
+#upProg.upBlink #upNote{color:#facc15}
 .pj{display:flex;flex-direction:column;gap:10px}
 .pjGoal{margin:0;color:var(--dim)}
 .pjNow{border:1px solid var(--accent);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px}
@@ -5996,7 +5999,10 @@ function upPanel(on,text,pct,note){
  if(!on)return;
  document.getElementById('upTxt').textContent=text;
  document.getElementById('upFill').style.width=Math.max(0,Math.min(100,pct||0))+'%';
- document.getElementById('upNote').textContent=note||'לא לסגור את הדף';
+ // 14.10, Itzik for Rinat: while a file goes up it blinks, says not to close the page,
+ // and says that writing and replying open again the moment the upload ends.
+ document.getElementById('upNote').textContent=note||'לא לסגור את הדף. כשההעלאה תסתיים אפשר יהיה לכתוב הודעה ולהגיב.';
+ el.className=pct>=100?'':'upBlink';
 }
 function upKeepAwake(on){
  try{
@@ -8220,7 +8226,9 @@ function repaintAll(){
   ['pegasus',renderPegasus],['improve',renderImprove],['special',renderSpecial],
   ['reminders',renderReminders],['tasks',renderTasks],['appts',renderAppts],['replies',renderReplies],['rivhit',renderRivhit],['food',renderFood],
   ['reqs',renderReqs],['stamp',paintStamp],['secrets',paintSecrets],
-  ['drains',renderDrains],['block',renderBlock],['tenants',paintTenantsTile]];
+  ['drains',renderDrains],['block',renderBlock],['tenants',paintTenantsTile],
+  // 14.10: the project tiles live in the sealed payload, so they are drawn after unlock too.
+  ['projects',function(){if(typeof projTiles==='function')projTiles();}]];
  var bad=[],ran={};
  jobs.forEach(function(j){
   ran[j[0]]=1;
