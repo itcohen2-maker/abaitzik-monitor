@@ -594,8 +594,10 @@ function planFirst(text, list) {
       'בתוכנית כתוב את המשימה היבשה המלאה, צעדים ממוספרים עם תוכן מוחלט, והמבצע רק מריץ node pc-task.js add --re <id> עם המשימה, ועונה לפי pc: on או off.'] : []),
   ].join('\n');
   const args = ['-p', '--model', process.env.MONITOR_PLAN_MODEL || 'claude-opus-5-5', '--output-format', 'json',
-    '--allowedTools', 'Read', 'Grep', 'Glob', '--max-turns', '15'];
-  if (!ownAccount()) args.push('--max-budget-usd', '0.8');
+    '--allowedTools', 'Read', 'Grep', 'Glob', '--max-turns', '6'];
+  // 14.10: the planner took $7.08 of Rinat's $8 day (30 runs, up to 15 turns of reading).
+  // It plans, the computer does the reading; six turns and $0.30 are enough for a plan.
+  if (!ownAccount()) args.push('--max-budget-usd', '0.3');
   let out = '';
   try {
     out = require('child_process').execFileSync('claude', args,
