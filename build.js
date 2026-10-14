@@ -16709,7 +16709,7 @@ function reallySend(list,squeezed){
  var deflt=voice?('הודעה קולית מהמוניטור'+micDiagLine())
    :(list.length>1?list.length+' קבצים מהמוניטור':'קובץ מהמוניטור');
  if(!hasVoice){
-  sendSay(list.length>1?(list.length+' קבצים יוצאים בעוד 15 שניות. אפשר לבטל בפס למטה.'):'הקובץ יוצא בעוד 15 שניות. אפשר לבטל בפס למטה.');
+  sendSay(bundleWhat(list,cap)+(list.length>1||cap?' יוצאים ביחד, בהודעה אחת,':' יוצא')+' בעוד 15 שניות. אפשר לבטל בפס למטה.');
   undoSend('',null,function(){goFiles(list,cap,deflt,hasVoice);},{file:list.length,onDrop:function(){
    if(cap)document.getElementById('fCap').value=cap;
    sendSay(list.length>1?'בוטל. הקבצים לא יצאו ועדיין בחורים.':'בוטל. הקובץ לא יצא ועדיין בחור.');fBtn.disabled=false;}});
@@ -16717,9 +16717,26 @@ function reallySend(list,squeezed){
  }
  goFiles(list,cap,deflt,hasVoice);
 }
+/*
+  Rinat, 14.10 (through Itzik): "they do not understand" what left when a few
+  files go with a sentence or a recording. So every line around the send names
+  the whole bundle: how many files, the recording, the writing, and that it all
+  leaves together as one message. The confirmation at the end repeats it.
+*/
+function bundleWhat(list,cap){
+ var files=list.filter(function(f){return !/^voice-/.test(f.name);}).length;
+ var voices=list.length-files;
+ var parts=[];
+ if(files)parts.push(files>1?files+' קבצים':'קובץ אחד');
+ if(voices)parts.push(voices>1?voices+' הקלטות קוליות':'הקלטה קולית');
+ if(cap)parts.push('מה שכתבת');
+ if(parts.length<2)return parts[0]||'הקובץ';
+ return parts.slice(0,-1).join(', ')+' וגם '+parts[parts.length-1];
+}
 function goFiles(list,cap,deflt,hasVoice){
  markSent(hasVoice?'voice':'file');
- sendSay(list.length>1?('שולח '+list.length+' קבצים.'):'שולח.');
+ var many=list.length>1||!!cap;
+ sendSay((FEM?'שולחת ':'שולח ')+bundleWhat(list,cap)+(many?', הכל ביחד בהודעה אחת.':'.'));
  // This used to be a plain form.submit(), which navigated away. When the
  // mailbox was over quota the whole page became a Rate Limit notice and the
  // recording was simply lost. Sending in place keeps the page, and lets the
@@ -16732,7 +16749,8 @@ function goFiles(list,cap,deflt,hasVoice){
   try{localStorage.removeItem(DRAFT);}catch(err){}
   clearAim();
   paintMics('ok');
-  sendSay(how==='backup'?'נשלח בערוץ הגיבוי. הגיע אליי.':'נשלח. קלטתי.');
+  var what=bundleWhat(list,cap);
+  sendSay(how==='backup'?('נשלח בערוץ הגיבוי: '+what+'. הגיע אליי ביחד.'):('נשלח: '+what+(many?'. הכל הגיע אליי ביחד, בהודעה אחת.':'. קלטתי.')));
   list.forEach(function(f){if(f&&f._more)recOfferMore(f._more.aim,f._more.at);});
   var q=pending();
   q.push({at:new Date().toISOString(),text:cap||deflt});
