@@ -3968,7 +3968,7 @@ try{
   <button type="button" class="gt gLec" id="gLec" data-new="1" data-upd="2026-10-13-clalit"><b>🎤 הרצאה</b><small>כנגד כל הסיכויים: המלל, השקפים והסכם כללית</small></button>
   <!-- 13.10. Itzik: "תעשה תקייה של טום ממליץ ואריח טום ממליץ". Scripts of
        Tom's posts, four ad images, the site copy, and the draft of his own site. -->
-  <button type="button" class="gt gTom" id="gTom" data-new="1"><b>🧭 טום ממליץ</b><small>האתר שלך באוויר, התסריטים, 4 תמונות לפרסום</small></button>
+  <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-14-works"><b>🧭 טום ממליץ</b><small>14.10: העבודות של טום באתר שלך, הריפו בגיטהאב</small></button>
   <!-- 13.10 night: the Clalit agreement moved inside the lecture tile (item 05). -->
   <!--
     11.10. Itzik: "a card I can send from, and later we delete it". The June
@@ -14613,6 +14613,9 @@ on('gClalit',clalitSheet);
 */
 var TOM_ITEMS=[
  {n:'🌐',t:'האתר שלך, במבנה של טום, באוויר',u:'https://abaitzik-tech.vercel.app'},
+ {n:'🆕',t:'14.10: שורת העבודות של טום באתר, איך זה נראה',r:'tom-works-row.png'},
+ {n:'🆕',t:'14.10: תשעת הקישורים שטום שלח והודעות הקול שלו מתומללות',r:'tom-works-14-10.txt'},
+ {n:'🐙',t:'הריפו של האתר בגיטהאב, טום הוזמן אליו',u:'https://github.com/itcohen2-maker/abaitzik-tech'},
  {n:'★',t:'התסריטים של חמשת הפוסטים, PDF לטלפון',r:'tom-scripts.pdf'},
  {n:'📁',t:'התיקייה טום ממליץ בדרייב',u:'https://drive.google.com/drive/folders/1AnxEXSB1WKaSqW6Qr8l-WuW3Qdd5hcjz'},
  {n:'01',t:'התסריטים של חמשת הפוסטים, מסודרים',r:'tom-scripts.docx'},
@@ -14633,7 +14636,7 @@ function tomSheet(){
  w.setAttribute('aria-label','טום ממליץ');
  w.innerHTML='<div class="ycard">'
   +'<b>טום ממליץ</b>'
-  +'<small>האתר שלך עלה לאוויר 13.10 באישורך. השאר בדרייב ובקבצים כאן.</small>'
+  +'<small>14.10: שורת העבודות של טום נוספה לאתר באישורך. ריפו בגיטהאב, טום מוזמן אליו.</small>'
   +TOM_ITEMS.map(function(it,i,a){
     if(it.r&&!fileEntry(it.r))return '';
     return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
