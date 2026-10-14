@@ -11613,11 +11613,13 @@ function moxyPaint(){
  var s=ML.moxySlots(Date.now()),due=!!s.last&&!moxyCovered(s.last);s.next=moxyNextOpen(s);
  b.classList.toggle('taskblink',due);
  var sm=document.getElementById('gMoxyS');
- if(sm)sm.textContent=due?'הגיע הזמן לכדור':('הבא ב '+hm(new Date(s.next)));
+ if(sm)sm.textContent=s.ended?'הטיפול הסתיים':due?'הגיע הזמן לכדור':('הבא ב '+hm(new Date(s.next)));
 }
 function renderMoxy(){
  var s=ML.moxySlots(Date.now()),box=document.getElementById('moxyInfo'),took=moxyTookAt(),due=!!s.last&&!moxyCovered(s.last);s.next=moxyNextOpen(s);
  var shown=moxyShownAt(),has=due||(took&&s.last);
+ if(s.ended){['moxyNow','moxyEarly','moxyTook','moxyAtL'].forEach(function(i){var e=document.getElementById(i);if(e)e.hidden=true;});
+  if(box)box.innerHTML='<b>הטיפול במוקסיפן הסתיים</b><div>אין עוד מנות ואין תזכורות.</div>';moxyPaint();return;}
  var bn=document.getElementById('moxyNow'),be=document.getElementById('moxyEarly'),bt=document.getElementById('moxyTook');
  if(bn)bn.hidden=!due;
  if(be){be.hidden=!has;be.textContent=due?'לקחתי מוקדם יותר':'תקן את השעה';}
