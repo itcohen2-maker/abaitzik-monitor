@@ -4045,7 +4045,7 @@ try{
   <button type="button" class="gt gLec" id="gLec" data-new="1" data-upd="2026-10-13-clalit"><b>🎤 הרצאה</b><small>כנגד כל הסיכויים: המלל, השקפים והסכם כללית</small></button>
   <!-- 13.10. Itzik: "תעשה תקייה של טום ממליץ ואריח טום ממליץ". Scripts of
        Tom's posts, four ad images, the site copy, and the draft of his own site. -->
-  <button type="button" class="gt gSite" id="gSite" data-new="1" data-upd="2026-10-14-logo"><b>🌐 האתר שלי</b><small>abaitzik-tech.vercel.app. הלוגו החדש באוויר. לחיצה פותחת את האתר</small></button>
+  <button type="button" class="gt gSite" id="gSite" data-new="1" data-upd="2026-10-14-name"><b>🌐 האתר שלי</b><small>ITsolution. itsolution-il.vercel.app. לחיצה פותחת את האתר</small></button>
   <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-14-missing"><b>🧭 טום ממליץ</b><small>האתר אחד לאחד באוויר. בפנים: מה חסר לי ממך, 12 סעיפים</small></button>
   <!-- 13.10 night: the Clalit agreement moved inside the lecture tile (item 05). -->
   <!--
@@ -14861,7 +14861,7 @@ function tomSheet(){
  document.body.appendChild(w);
 }
 on('gTom',tomSheet);
-on('gSite',function(){window.open('https://abaitzik-tech.vercel.app','_blank','noopener');});
+on('gSite',function(){window.open('https://itsolution-il.vercel.app','_blank','noopener');});
 
 /* 11.10: temporary, the invoices Itzik sends to Etzel Dudi. Delete the tile when he says. */
 var DUDI_ITEMS=[
