@@ -91,11 +91,28 @@ async function main() {
       if (/nothing to commit/i.test(out)) { say('אין מה לדחוף.'); return; }
       throw new Error(out.slice(-200));
     }
+    /*
+      14.10: a customer's page is served straight from this server's docs by
+      Caddy, so the build above is the publish; GitHub is only a backup that an
+      instance may not have (no key, no repository yet). Sessions in Rinat's
+      monitor read the push error as "the reply will not reach her", spent
+      their turn on it and left notes unanswered. For a customer a failed push
+      is one calm line and exit 0. Itzik's own page is GitHub Pages, so there
+      it stays an error.
+    */
+    let ownPage = true;
+    try { ownPage = JSON.parse(fs.readFileSync(path.join(HERE, 'instance.json'), 'utf8')).name === 'abaitzik'; } catch (e) {}
     try { git('push'); }
     catch (e) {
-      say('הדחיפה נדחתה, מושך ומנסה שוב.');
-      git('pull', '--rebase', '--autostash');
-      git('push');
+      try {
+        say('הדחיפה נדחתה, מושך ומנסה שוב.');
+        git('pull', '--rebase', '--autostash');
+        git('push');
+      } catch (e2) {
+        if (ownPage) throw e2;
+        say('נבנה ופורסם בשרת. גיבוי לגיטהאב לא מחובר למופע הזה, זה בסדר, לא צריך לעשות כלום.');
+        return;
+      }
     }
     say('נדחף: ' + msg.split('\n')[0].slice(0, 70));
   } finally {

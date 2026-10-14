@@ -791,13 +791,27 @@ function reconcile(live) {
   const retry = readJson(RETRY, {});
   const now = Date.now();
   let changed = false;
-  all.filter((m) => m.from === 'itzik' && m.status !== 'done' && seen[m.file] && !(m.id && got.has(m.id)) && !held.has(m.file))
+  /*
+    14.10, Rinat: "המון דברים לא ביצעת מהבקשות שלי". Two of her notes that day
+    were marked done by a session that wrote no reply (it had spent its turn on
+    a git error), and a done mark hid them from this check for good. A note of
+    hers with an id and no reply is not done, whatever the file says; only the
+    automatic "קובץ:" line of an upload may stay silent, its text travels with
+    the note it came with.
+  */
+  const autoFile = (m) => m.auto && Array.isArray(m.files) && /^קובץ:/.test(String(m.text || ''));
+  all.filter((m) => m.from === 'itzik' && seen[m.file] && !(m.id && got.has(m.id)) && !held.has(m.file))
+    .filter((m) => m.status !== 'done' || (m.id && !autoFile(m)))
     .filter((m) => now - Date.parse(seen[m.file]) > MAX_SESSION_MS + 2 * 60 * 1000)
     .forEach((m) => {
       if (!retry[m.file]) {
         retry[m.file] = new Date().toISOString();
         delete seen[m.file];
         changed = true;
+        if (m.status === 'done') {
+          const d = readJson(path.join(CHAT, m.file), null);
+          if (d) { d.status = 'working'; try { fs.writeFileSync(path.join(CHAT, m.file), JSON.stringify(d, null, 1), 'utf8'); } catch (e) {} }
+        }
         say('!! הודעה נלקחה ולא נענתה. מחזיר לתור פעם אחת: ' + m.file);
       } else if (retry[m.file] !== 'told') {
         retry[m.file] = 'told';
