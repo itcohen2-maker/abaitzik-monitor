@@ -5124,6 +5124,22 @@ function fileEntry(name){var F=D.files||[];for(var i=0;i<F.length;i++)if(F[i].n=
   reloaded the page into its lock. Every known file name with a space is written
   back with %20 before anything reads the text, so the whole name is one link.
 */
+/*
+  14.10, Rinat: an answer listing 762 files made one card 150,000 pixels tall,
+  and the answers screen could no longer be scrolled down to its reply boxes, so
+  she copied the text to the home screen instead. Past twelve file links, only
+  the first six stay, and one line says how many more are in the files tile.
+*/
+function fileCap(t){
+ t=String(t==null?'':t);
+ var re=new RegExp('files/[^\\\\s<>"]+','g');
+ var all=t.match(re)||[];
+ if(all.length<=12)return t;
+ var n=0;
+ t=t.replace(re,function(h){n++;return n<=6?h:'';});
+ t=t.split(String.fromCharCode(10)).filter(function(l,i,a){return l.trim()||(i>0&&a[i-1].trim());}).join(String.fromCharCode(10));
+ return t+String.fromCharCode(10)+'ועוד '+(all.length-6)+' קבצים באריח 📁 הקבצים שלי.';
+}
 function fileSpaces(t){
  t=String(t==null?'':t);
  if(t.indexOf('files/')<0)return t;
@@ -5577,11 +5593,37 @@ function thumbsSoon(){clearTimeout(thumbT);thumbT=setTimeout(thumbsFill,150);}
 new MutationObserver(thumbsSoon).observe(document.documentElement,{childList:true,subtree:true});
 window.addEventListener('scroll',thumbsSoon,{passive:true});
 setInterval(thumbsFill,3000);
+/*
+  14.10, Rinat's monitor: a files/ link in a fresh answer sent her to the
+  password screen. The page did not know the file yet (its list is the one it
+  was opened with), so the click fell through to a real navigation, and Caddy
+  answers every unknown path with index.html, which is the gate. Under the
+  gate a files/ address can never be navigated to, so the click is always
+  taken here: refresh the list, open, and if the file is still not there, say
+  so instead of leaving the page.
+*/
+function fileLinkOpen(n){
+ var ok=false;
+ try{ok=!!(fileEntry(n)&&fileView(n));}catch(e){ok=false;}
+ if(ok)return;
+ if(!GKEY){toast('הדף נעול. פותחים את הקובץ אחרי הקוד.');return;}
+ toast('מביא את הקובץ.');
+ fetch('data/head.json?b='+Date.now(),{cache:'no-store'})
+  .then(function(r){return r.ok?gjson(r):null;},function(){return null;})
+  .then(function(head){
+   if(head&&typeof head==='object'){Object.keys(head).forEach(function(k){D[k]=head[k];});LAZY=D.lazy||{};}
+   var ok2=false;
+   try{ok2=!!(fileEntry(n)&&fileView(n));}catch(e){ok2=false;}
+   if(!ok2)toast('הקובץ עוד לא הגיע לדף. עוד דקה ושוב.');
+  });
+}
 document.addEventListener('click',function(ev){
  var a=ev.target&&ev.target.closest&&ev.target.closest('a[href]');
  if(!a||a.origin!==location.origin)return;
  var n=fileNameOf(a.getAttribute('href'));
- if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
+ if(!n)return;
+ ev.preventDefault();
+ fileLinkOpen(n);
 },true);
 /*
   Data that does not travel with the page.
@@ -6409,9 +6451,9 @@ function goLinks(m){
  // Itzik, 4.10, on "the updated link will come here": the file came in a
  // later answer in the same thread, and the card that promised it had no
  // button. A file named anywhere in the thread gets its button on every card.
- t=fileSpaces(t);
+ t=fileCap(fileSpaces(t));
  var ft=t;
- if(m.re)(D.chat||[]).forEach(function(x){if(x.from==='claude'&&x.re===m.re&&x.text!==m.text)ft+=' '+fileSpaces(x.text);});
+ if(m.re)(D.chat||[]).forEach(function(x){if(x.from==='claude'&&x.re===m.re&&x.text!==m.text)ft+=' '+fileCap(fileSpaces(x.text));});
  var fb=[];
  (ft.match(new RegExp('files/[^\\\\s<>"]+','g'))||[]).forEach(function(h){
   var n=fileNameOf(h.replace(new RegExp('[.,;:!?)"]+$'),''));
@@ -6537,6 +6579,7 @@ function linkify(t){
  }
  var PHONE_RE='(?<![0-9])(?:0[2-9][0-9]?[ -]?[0-9]{3}[ -]?[0-9]{4}|1[ -]?[78]00[ -]?[0-9]{2,3}[ -]?[0-9]{3,4})(?![0-9])';
  if(typeof fileSpaces==='function')t=fileSpaces(t);
+ if(typeof fileCap==='function')t=fileCap(t);
  var parts=String(t==null?'':t).split(new RegExp('(https?://[^\\\\s<>"]+|files/[^\\\\s<>"]+|'+PHONE_RE+')','g'));
  return parts.map(function(x,i){
   if(!(i%2))return esc(x);
@@ -6547,7 +6590,10 @@ function linkify(t){
   if(/^[0-9]/.test(x))return '<a href="tel:'+x.replace(/[^0-9]/g,'')+'">'+esc(x)+'</a>'+esc(tail);
   if(x.indexOf('files/')===0){
    var fn=fileNameOf(x);
-   if(!fn||!fileEntry(fn))return esc(x+tail);
+   if(!fn)return esc(x+tail);
+   // 14.10: a file the page does not know yet is still a link. The click
+   // handler refreshes the list and opens it, instead of a dead address.
+   if(!fileEntry(fn))return '<a href="'+esc(x)+'">פתיחת הקובץ</a>'+esc(tail);
    return '<a href="'+esc(x)+'">'+fileThumb(fn)+'פתיחת הקובץ</a>'+esc(tail);
   }
   return '<a href="'+esc(x)+'" target="_blank" rel="noopener noreferrer" title="'+esc(x)+'">'
