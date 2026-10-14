@@ -146,6 +146,22 @@ function One() {
     Remove-Item $Lock -Force -ErrorAction SilentlyContinue
   }
   if ($Dry) { $r = Call 'GET' 'ping' $null; Say ('dry: השרת ענה ' + $r.code); return }
+  # 14.10: every 20 minutes, the subscription meter of the account signed in here
+  # (plan, 5 hour window, week), read with the local login and sent to the server.
+  # Only percentages and reset times leave this computer, never the token.
+  $subMark = Join-Path $Here 'sub-last.txt'
+  if (-not (Test-Path $subMark) -or ((Get-Date) - (Get-Item $subMark).LastWriteTime).TotalMinutes -gt 20) {
+    Set-Content -Path $subMark -Value (Get-Date).ToString('s') -Encoding ASCII
+    try {
+      $cf = Join-Path $env:USERPROFILE '.claude\.credentials.json'
+      $o = (Get-Content -Raw -Encoding UTF8 $cf | ConvertFrom-Json).claudeAiOauth
+      $u = Invoke-RestMethod -Uri 'https://api.anthropic.com/api/oauth/usage' -Headers @{ Authorization = ('Bearer ' + $o.accessToken); 'anthropic-beta' = 'oauth-2025-04-20' } -TimeoutSec 20
+      $w = { param($x) if ($x) { @{ pct = $x.utilization; resets = $x.resets_at } } else { $null } }
+      $snap = @{ plan = [string]$o.subscriptionType; tier = [string]$o.rateLimitTier; five = (& $w $u.five_hour); week = (& $w $u.seven_day);
+        weekOpus = (& $w $u.seven_day_opus); extra = [bool]($u.extra_usage -and $u.extra_usage.is_enabled) }
+      Call 'POST' 'sub' ($snap | ConvertTo-Json -Compress -Depth 4) | Out-Null
+    } catch { Say ('!! מכסת המנוי: ' + $_.Exception.Message); Call 'GET' ('ping?step=' + [uri]::EscapeDataString('sub error: ' + $_.Exception.Message)) $null | Out-Null }
+  }
   # 14.10: once an hour, take the newest copy of this script from the server.
   # The new copy runs from the next minute on; a copy that does not parse is not taken.
   $mark = Join-Path $Here 'self-check.txt'
