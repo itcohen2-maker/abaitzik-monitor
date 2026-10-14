@@ -259,6 +259,12 @@ function unmarkHandled(list) {
   say('הבאטץ׳ הוחזר לתור: ' + list.map((m) => m.file).join(', '));
 }
 
+// 14.10: a customer's computer is wired when its keys.json holds a pcKey (setup/enable-pc.sh).
+function pcWired() {
+  try { return String(JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'keys.json'), 'utf8')).pcKey || '').length >= 16; }
+  catch (e) { return false; }
+}
+
 function prompt(list) {
   const lines = list.map((m) => '- [' + m.at + '] (id ' + (m.id || m.file) + ') ' + String(m.text || '').replace(/\s+/g, ' '));
   return [
@@ -316,7 +322,26 @@ function prompt(list) {
       there forever and the sentence was false. A customer has no PC here: the
       queue is offered to Itzik's instance only, and a customer is told plainly.
     */
-    ...(inst.name !== 'abaitzik' ? [
+    /*
+      14.10, Itzik at Rinat's computer: "המוניטור והקלוד שלי יהיו המוח והקלוד
+      שלה רק יעבוד". A customer whose computer was wired (setup/enable-pc.sh,
+      pcKey in keys.json) has the same queue as Itzik: pc-task.js here, and
+      pc/pc-pull.ps1 on that computer, over HTTPS (lib/pc-api.js). The session
+      here plans; the computer's own Claude, on the customer's own account,
+      does what needs that machine (Illustrator, Photoshop, its files).
+    */
+    ...(inst.name !== 'abaitzik' && pcWired() ? [
+      'המחשב של ' + inst.owner + ' מחובר למוניטור: הוא בודק כל דקה אם יש לו משימה, ומריץ אותה עם Claude Code שמותקן שם,',
+      'על החשבון שלו. משימה שצריכה את המחשב ההוא (אילוסטרייטור, פוטושופ, הקבצים שבמחשב ובכונן החיצוני, תוכנה שמותקנת רק שם)',
+      'לא מבצעים כאן ולא מבקשים ממנהל. במקום זה:',
+      '  `node pc-task.js add --re <id ההודעה> "<המשימה במלואה: מה לעשות, איפה הקבצים, ומה צריך לחזור>"`',
+      '  הפקודה מדפיסה אם המחשב דלוק עכשיו (pc: on) או כבוי (pc: off). לפי זה:',
+      '    דלוק: לא כותבים שום תשובה. התשובה של המחשב היא התשובה היחידה. רק מסמנים את ההודעה status "done" ודוחפים.',
+      '    כבוי: תשובה אחת בשורה אחת: "המחשב כבוי מאז <שעה>. זה יתבצע לבד ברגע שידליקו אותו."',
+      '  המחשב יענה באותו שרשור כשסיים. את החלק שאפשר לעשות כאן עושים כאן, ומעבירים למחשב רק מה שבאמת צריך אותו.',
+      '  המחשב ההוא לא מכיר את המוניטור הזה ואת הקבצים כאן: כותבים לו במשימה את כל מה שהוא צריך לדעת, כולל נתיבים אם ידועים.',
+      '',
+    ] : inst.name !== 'abaitzik' ? [
       'אין כאן חיבור לשום מחשב, לא של הלקוח ולא של איציק. אין תור משימות למחשב, ואסור לכתוב "המחשב כבוי" או "זה יתבצע כשיידלק".',
       'משימה שצריכה תוכנה שמותקנת רק במחשב של הלקוח (אילוסטרייטור, פוטושופ וכדומה): עושים כאן כל מה שאפשר בשרת,',
       'ואם התוכנה עצמה חיונית, אומרים בשורה אחת ובכנות מה אפשר להפיק כאן (למשל PDF או SVG בשכבות שנפתח באילוסטרייטור',

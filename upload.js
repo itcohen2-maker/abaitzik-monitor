@@ -53,6 +53,19 @@ if (require.main === module) {
   const tenants = {};
   tenants[inst.name] = { dataPath: inst.dataPath, origins: origins(), code: ownerCode };
   const up = createUploadServer({ root: ROOT, tenants, log });
+  /*
+    14.10: the PC queue for a customer's computer rides on this same service
+    (lib/pc-api.js): /up/v1/<name>/pc/* is answered here, with the pcKey from
+    keys.json, before the upload routes see the request. Without a pcKey the
+    routes are 404 and nothing changes for an instance that has no computer.
+  */
+  const pc = require('./lib/pc-api.js').pcApi({ name: inst.name, dir: __dirname, dataPath: inst.dataPath, log });
+  const uploads = up.server.listeners('request').slice();
+  up.server.removeAllListeners('request');
+  up.server.on('request', (req, res) => {
+    pc.handle(req, res).then((done) => { if (!done) uploads.forEach((fn) => fn(req, res)); })
+      .catch((e) => { log('pc error ' + (e && e.message)); if (!res.headersSent) { res.writeHead(500); res.end(); } });
+  });
   up.server.listen(PORT, '127.0.0.1', () => log('listening on 127.0.0.1:' + PORT + ' for ' + inst.name + ', origins ' + origins().join(' ')));
   up.sweep();
   setInterval(() => { try { const r = up.sweep(); if (r.partial || r.finished) log('sweep ' + JSON.stringify(r)); } catch (e) { log('sweep failed: ' + e.message); } }, 3600 * 1000);
