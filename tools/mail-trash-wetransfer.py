@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Moves WeTransfer notices out of Itzik's Gmail, by his request (8.10.2026).
+"""Moves WeTransfer notices and read Pegasus update mails out of Itzik's Gmail, by his request (8.10.2026).
 
 "Every WeTransfer mail, throw it away, every time one comes, after I see it,
 they fill the mail." So: only mail from wetransfer.com, only once it is read
@@ -17,7 +17,9 @@ sys.path.insert(0, os.path.dirname(__file__))
 from importlib import import_module
 creds = import_module('mail-search').creds
 
-QUERY = 'from:wetransfer.com'
+# 14.10 Itzik: the Pegasus live-update mails (sent by the PC to himself) go the same
+# way: the moment he has opened one, it goes to the trash.
+QUERY = '(from:wetransfer.com OR (from:itcohen2@gmail.com to:itcohen2@gmail.com subject:פגסוס))'
 
 
 def main():
