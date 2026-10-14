@@ -906,11 +906,13 @@ function build() {
       .map((r) => (/מכשיר ([a-f0-9]{12})/.exec(String(r.text || '')) || [])[1])
       .filter(Boolean);
   } catch (e) { /* no requests yet */ }
+  const openPin = /^[0-9a-f]{64}$/.test(inst.openPin) ? inst.openPin : '';
   const instanceJson = JSON.stringify({ name: inst.name, owner: inst.owner, pageTitle: inst.pageTitle,
     screens, unlocks,
     computer: inst.computer, phone: inst.phone, welcome: inst.welcome, homeTile: inst.homeTile || '', gender: inst.gender || '',
-    uploadUrl: inst.uploadUrl || '', guides, links });
-  const html = html0.replace('__CODE_ID__', codeId0).replace("'__INSTANCE__'", instanceJson);
+    uploadUrl: inst.uploadUrl || '', openPin, guides, links });
+  const html = html0.replace('__CODE_ID__', codeId0).replace("'__INSTANCE__'", instanceJson)
+    .replace('__OPENPIN__', openPin);
 
   /*
     A page whose script does not parse never goes out.
@@ -3624,6 +3626,9 @@ try{
 // be the first thing on screen, not something that appears a moment later over
 // content that was already readable. Nothing here can wait for the main script.
 (function(){try{
+ // 14.10: a monitor with an opening code is locked on every opening.
+ var OPENPIN='__OPENPIN__';
+ if(OPENPIN&&sessionStorage.getItem('pinOk')!==OPENPIN){document.documentElement.className+=' locked';return;}
  if(localStorage.getItem('lockOn')==='1'
    &&(localStorage.getItem('faceCred')||localStorage.getItem('monitorCode'))){
   document.documentElement.className+=' locked';
@@ -12055,6 +12060,7 @@ lockToggleRender();
 // which is exactly what he asked for. A real gate needs a server.
 function locked(){return /(^| )locked( |$)/.test(document.documentElement.className);}
 function unlock(){
+ try{if(INSTANCE.openPin)sessionStorage.setItem('pinOk',INSTANCE.openPin);}catch(e){}
  document.documentElement.className=
   document.documentElement.className.replace(/(^| )locked( |$)/,' ').trim();
  // The bubbles were laid out while hidden, so the thread is drawn again.
@@ -12083,7 +12089,30 @@ function lockFaceTry(auto){
   lockSay(auto?'מזדהים כדי להיכנס.':'הזיהוי נכשל. אפשר לנסות שוב או להיכנס עם '+(oneLock()?'הסיסמה.':'הקוד.'));
  });
 }
-if(locked()){
+/*
+  14.10, Itzik on Rinat's monitor: "רק עם סיסמה ספציפית של 007 זה ייפתח".
+  instance.json openPin holds the hash of that code, and this lock asks for it
+  on every opening, with no face and no other way around it.
+*/
+if(locked()&&INSTANCE.openPin){
+ document.getElementById('lockFace').hidden=true;
+ document.getElementById('lockUseCode').hidden=true;
+ document.getElementById('lockRow').hidden=false;
+ lockSay('תקליד את הקוד כדי להיכנס.');
+ var pinGo=function(){
+  var el=document.getElementById('lockCode'),v=el.value.trim();
+  if(!v)return;
+  crypto.subtle.digest('SHA-256',new TextEncoder().encode('openpin:'+v)).then(function(b){
+   var h=[].map.call(new Uint8Array(b),function(x){return ('0'+x.toString(16)).slice(-2);}).join('');
+   if(h===INSTANCE.openPin){unlock();return;}
+   el.value='';lockSay('קוד לא נכון.');
+  });
+ };
+ document.getElementById('lockGo').onclick=pinGo;
+ document.getElementById('lockCode').addEventListener('keydown',function(e){if(e.key==='Enter')pinGo();});
+ setTimeout(function(){try{document.getElementById('lockCode').focus();}catch(e){}},220);
+}
+if(locked()&&!INSTANCE.openPin){
  document.getElementById('lockFace').onclick=function(){lockFaceTry(false);};
  // Offering a code entry when no code was ever set would be a door that opens
  // onto a wall, so it is not offered at all.

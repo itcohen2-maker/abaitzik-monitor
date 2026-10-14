@@ -26,13 +26,14 @@ test('the page declares the instance placeholder exactly once, as a string the b
 // 8.10: and the owner's grammatical gender, so Rinat is addressed as a woman.
 // 8.10: and her guide tiles, an explanation each, nothing secret.
 // 11.10: and uploadUrl, the public address of the big file upload service (it needs the code).
+// 14.10: and openPin, the hash of the opening code, a screen lock and no secret.
 // 8.10: and the device marks Itzik approved after "שכחתי את הקוד", random and
 // meaningless on any other phone.
 test('the build hands the page only name, owner, title, screens, devices, greeting, home tile, gender, guides, links and unlocks', () => {
   const m = /const instanceJson = JSON\.stringify\(\{([^}]*)\}\)/.exec(src);
   assert.ok(m, 'instanceJson is built from an object literal');
   const fields = m[1].split(',').map(f => f.trim().split(':')[0].trim()).sort();
-  assert.deepEqual(fields, ['computer', 'gender', 'guides', 'homeTile', 'links', 'name', 'owner', 'pageTitle', 'phone', 'screens', 'unlocks', 'uploadUrl', 'welcome']);
+  assert.deepEqual(fields, ['computer', 'gender', 'guides', 'homeTile', 'links', 'name', 'openPin', 'owner', 'pageTitle', 'phone', 'screens', 'unlocks', 'uploadUrl', 'welcome']);
   // Never the topics, never the mailbox: this line is outside the gate.
   assert.ok(!/instanceJson[^\n]*ntfy/.test(src));
 });

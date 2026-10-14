@@ -1995,7 +1995,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-14T06:35:36.417Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-14T06:36:54.581Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2044,6 +2044,8 @@ try{
 </div>
 <script>
 (function(){try{
+ var OPENPIN='';
+ if(OPENPIN&&sessionStorage.getItem('pinOk')!==OPENPIN){document.documentElement.className+=' locked';return;}
  if(localStorage.getItem('lockOn')==='1'
    &&(localStorage.getItem('faceCred')||localStorage.getItem('monitorCode'))){
   document.documentElement.className+=' locked';
@@ -3542,8 +3544,8 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='87c9f02cad';
-var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","guides":[],"links":[]};
+var CODE_ID='c5313fa505';
+var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
 var AI=(INSTANCE&&INSTANCE.name&&INSTANCE.name!=='abaitzik')?'העוזר שלך':'קלוד';
@@ -8380,6 +8382,7 @@ lockToggleRender();
 
 function locked(){return /(^| )locked( |$)/.test(document.documentElement.className);}
 function unlock(){
+ try{if(INSTANCE.openPin)sessionStorage.setItem('pinOk',INSTANCE.openPin);}catch(e){}
  document.documentElement.className=
   document.documentElement.className.replace(/(^| )locked( |$)/,' ').trim();
  try{renderThread();renderSent();}catch(e){}
@@ -8406,7 +8409,25 @@ function lockFaceTry(auto){
   lockSay(auto?'מזדהים כדי להיכנס.':'הזיהוי נכשל. אפשר לנסות שוב או להיכנס עם '+(oneLock()?'הסיסמה.':'הקוד.'));
  });
 }
-if(locked()){
+if(locked()&&INSTANCE.openPin){
+ document.getElementById('lockFace').hidden=true;
+ document.getElementById('lockUseCode').hidden=true;
+ document.getElementById('lockRow').hidden=false;
+ lockSay('תקליד את הקוד כדי להיכנס.');
+ var pinGo=function(){
+  var el=document.getElementById('lockCode'),v=el.value.trim();
+  if(!v)return;
+  crypto.subtle.digest('SHA-256',new TextEncoder().encode('openpin:'+v)).then(function(b){
+   var h=[].map.call(new Uint8Array(b),function(x){return ('0'+x.toString(16)).slice(-2);}).join('');
+   if(h===INSTANCE.openPin){unlock();return;}
+   el.value='';lockSay('קוד לא נכון.');
+  });
+ };
+ document.getElementById('lockGo').onclick=pinGo;
+ document.getElementById('lockCode').addEventListener('keydown',function(e){if(e.key==='Enter')pinGo();});
+ setTimeout(function(){try{document.getElementById('lockCode').focus();}catch(e){}},220);
+}
+if(locked()&&!INSTANCE.openPin){
  document.getElementById('lockFace').onclick=function(){lockFaceTry(false);};
  if(oneLock()){
   var lc=document.getElementById('lockCode');
