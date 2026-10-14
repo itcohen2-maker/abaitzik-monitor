@@ -1110,8 +1110,26 @@ function tenantCircles(inst) {
   return '\n  <div class="row" id="blkEmpty" role="group" aria-label="מקומות ריקים">' + one.repeat(n) + '\n  </div>'
     + '\n  <p class="emptyNote">העיגולים ריקים. אפשר להוסיף בהם משהו, אם בא לך: לוחצים על אחד וכותבים מה.</p>';
 }
+/*
+  14.10, Itzik by voice: the candle icon, the small round one, on Alon's and Rinat's
+  home screen as on his, and for Alon also the Ramat HaNasi theatre. instance.json:
+  circles: [{key, kind: "ner" | "theatre", title, url}], https only. Drawn as round
+  icons like the empty ones; each new one carries data-new so it waves until opened.
+*/
+function tenantCircleLinks(inst) {
+  const list = (Array.isArray(inst.circles) ? inst.circles : []).filter((c) => c && c.key && c.title && /^https:\/\/[^\s"'<>]+$/.test(c.url || ''));
+  if (!list.length) return '';
+  const candle = '<svg viewBox="0 0 24 24"><path fill="#F4EFE6" d="M8.4 11.6h2.2v8.8H8.4zM13.4 11.6h2.2v8.8h-2.2z"/><path fill="#F5A623" d="M9.5 10.9c2.6-1.9 2-4.3 0-6.2-2 1.9-2.6 4.3 0 6.2z"/><path fill="#F5A623" d="M14.5 10.9c2.6-1.9 2-4.3 0-6.2-2 1.9-2.6 4.3 0 6.2z"/><path fill="#FFF3D6" d="M9.5 10.3c1.2-1 .9-2.3 0-3.4-.9 1.1-1.2 2.4 0 3.4z"/><path fill="#FFF3D6" d="M14.5 10.3c1.2-1 .9-2.3 0-3.4-.9 1.1-1.2 2.4 0 3.4z"/></svg>';
+  const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const one = (c, i) => {
+    const theatre = c.kind === 'theatre';
+    const face = theatre ? '<span class="c c-th" aria-hidden="true">🎭</span>' : '<span class="c c-nr" aria-hidden="true">' + candle + '</span>';
+    return '\n   <a class="ic icNew" id="icCircle' + i + '" href="' + esc(c.url) + '" target="_blank" rel="noopener" data-new="1">' + face + esc(c.title) + '</a>';
+  };
+  return '\n  <div class="row" id="blkCircles" role="group" aria-label="קיצורים לאתרים">' + list.map(one).join('') + '\n  </div>';
+}
 function tenantTiles(inst) {
-  const ids = (Array.isArray(inst.screens) && inst.screens.length ? inst.screens : TENANT_DEFAULT).filter((id) => id !== 'gAdminReq');
+  const ids =(Array.isArray(inst.screens) && inst.screens.length ? inst.screens : TENANT_DEFAULT).filter((id) => id !== 'gAdminReq');
   // Itzik, 5.10: a customer does not change the system, he asks. The way to ask
   // is on every customer's home screen, whatever his intake chose.
   // 12.10 evening: an admin (Rinat) asks too, for anything on the page.
@@ -2362,6 +2380,8 @@ body.editing .bn{display:none}
 .c-pg{background:linear-gradient(160deg,#a78bfa,#6d28d9)}
 /* נר. Night behind the flames, the way the site itself looks. */
 .c-nr{background:linear-gradient(160deg,#243a6b,#0B1330)}
+/* 14.10: the theatre's round icon on a customer's home screen (instance circles). */
+.c-th{background:linear-gradient(160deg,#8b1e3f,#3a0a1c);font-size:26px}
 .c-sl{background:linear-gradient(160deg,#f472b6,#be185d)}
 .c-el{background:linear-gradient(160deg,#1f8f7d,#14675a)}
 .c-al{background:linear-gradient(160deg,#7e57c2,#4527a0)}
@@ -4174,7 +4194,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <button type="button" class="shipline" id="shipLine" hidden></button>
   <!-- 14.10: one tile per project, drawn from D.projects after unlock (projTiles). -->
   <div class="grid" id="blkProj" hidden></div>
-  <div class="grid" id="blkTiles">${tenantTiles(inst)}</div>${tenantCircles(inst)}
+  <div class="grid" id="blkTiles">${tenantTiles(inst)}</div>${tenantCircleLinks(inst)}${tenantCircles(inst)}
 <!--TENANT:END-->
 
 
@@ -14212,7 +14232,7 @@ boot('updTiles',function(){
  });
 });
 boot('newTiles',function(){
- document.querySelectorAll('.gt[data-new]').forEach(function(t){
+ document.querySelectorAll('.gt[data-new],.icNew[data-new]').forEach(function(t){
   var k='tileSeen:'+t.id,seen=false;try{seen=!!localStorage.getItem(k);}catch(e){}
   if(seen)return;
   t.classList.add('taskblink');
