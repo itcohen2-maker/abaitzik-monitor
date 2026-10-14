@@ -603,11 +603,21 @@ function planFirst(text, list) {
   // 14.10: the planner took $7.08 of Rinat's $8 day (30 runs, up to 15 turns of reading).
   // It plans, the computer does the reading; six turns and $0.30 are enough for a plan.
   if (!ownAccount()) args.push('--max-budget-usd', '0.3');
-  let out = '';
-  try {
-    out = require('child_process').execFileSync('claude', args,
-      { cwd: HERE, input: ask, encoding: 'utf8', timeout: 4 * 60 * 1000, maxBuffer: 16 << 20 });
-  } catch (e) { out = String(e.stdout || ''); say('!! התכנון נכשל, הביצוע ממשיך בלי תוכנית: ' + String(e.message).slice(0, 120)); }
+  // 14.10: Rinat's company account answers Opus only at effort low ("400 Invalid effort
+  // level" on the default). MONITOR_PLAN_EFFORT in /etc/<id>.env sets it; without it, a
+  // planner that fails on effort is run once more at low.
+  if (process.env.MONITOR_PLAN_EFFORT) args.push('--effort', process.env.MONITOR_PLAN_EFFORT);
+  const runPlanner = (a) => {
+    try {
+      return require('child_process').execFileSync('claude', a,
+        { cwd: HERE, input: ask, encoding: 'utf8', timeout: 4 * 60 * 1000, maxBuffer: 16 << 20 });
+    } catch (e) { say('!! התכנון נכשל, הביצוע ממשיך בלי תוכנית: ' + String(e.message).slice(0, 120)); return String(e.stdout || ''); }
+  };
+  let out = runPlanner(args);
+  if (/Invalid effort level/.test(out) && !args.includes('--effort')) {
+    say('המתכנן נדחה על רמת מאמץ, מנסה שוב ב low');
+    out = runPlanner(args.concat('--effort', 'low'));
+  }
   const d = logUsage(out, list);
   const p = d && typeof d.result === 'string' ? d.result.trim() : '';
   say('תוכנית מאופוס: ' + (p ? p.length + ' תווים' : 'אין') + '. הביצוע ב ' + EXEC_MODEL);
