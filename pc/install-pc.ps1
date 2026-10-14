@@ -43,8 +43,8 @@ Ok $Dst
 
 Step 'בודק את החיבור לשרת'
 try {
-  $r = Invoke-WebRequest -UseBasicParsing -Method GET -Uri ($cfg.url.TrimEnd('/') + '/next') -Headers @{ 'X-Pc-Key' = $cfg.key } -TimeoutSec 30
-  if ($r.StatusCode -eq 204 -or $r.StatusCode -eq 200) { Ok ('השרת עונה (' + $r.StatusCode + ')') } else { Bad ('תשובה לא צפויה: ' + $r.StatusCode) }
+  $r = Invoke-WebRequest -UseBasicParsing -Method GET -Uri ($cfg.url.TrimEnd("/") + "/ping") -Headers @{ 'X-Pc-Key' = $cfg.key } -TimeoutSec 30
+  if ($r.StatusCode -eq 200) { Ok ('השרת עונה (' + $r.StatusCode + ')') } else { Bad ('תשובה לא צפויה: ' + $r.StatusCode) }
 } catch {
   Bad ('השרת לא ענה: ' + $_.Exception.Message); Bad 'בלי חיבור לשרת אין מה להמשיך. לבדוק אינטרנט או חסימה של המחשוב.'; exit 1
 }

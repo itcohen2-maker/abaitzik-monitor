@@ -62,6 +62,6 @@ chmod 600 "$PRIV/$NAME-pc.zip"; chmod -R go-rwx "$PRIV/pc"
 (cd "$DIR" && sudo -u "$U" node build.js | tail -1)
 
 # the route answers only with the key: 401 without it means it is alive
-echo "route: $(curl -s -o /dev/null -w '%{http_code}' https://$HOST/up/v1/$NAME/pc/next) without key (401 is right)"
-echo "queue: $(curl -s -o /dev/null -w '%{http_code}' -H "X-Pc-Key: $KEY" https://$HOST/up/v1/$NAME/pc/next) with key (204 is empty, right)"
+echo "route: $(curl -s -o /dev/null -w '%{http_code}' https://$HOST/up/v1/$NAME/pc/ping) without key (401 is right)"
+echo "key: $(curl -s -o /dev/null -w '%{http_code}' -H "X-Pc-Key: $KEY" https://$HOST/up/v1/$NAME/pc/ping) with key (200 is right, nothing claimed)"
 echo "done: $ID, the install zip is files/$NAME-pc.zip in the customer's private files; key in /root/tenant-codes/$ID-pc.txt"

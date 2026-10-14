@@ -37,6 +37,8 @@ test('pc api: wrong key is refused, right key hands out the next task, done post
     assert.equal((await call('GET', '/up/v1/rinat/pc/next')).status, 401);
     assert.equal((await call('GET', '/up/v1/rinat/pc/next', undefined, 'b'.repeat(32))).status, 401);
     assert.equal((await call('GET', '/up/v1/other/pc/next', undefined, 'a'.repeat(32))).status, 404);
+    assert.equal((await call('GET', '/up/v1/rinat/pc/ping', undefined, 'a'.repeat(32))).status, 200);
+    assert.equal(calls.length, 0);
     const n = await call('GET', '/up/v1/rinat/pc/next', undefined, 'a'.repeat(32));
     assert.equal(n.status, 200);
     assert.equal(JSON.parse(n.text).id, 'pc-abc123-zzzz');
