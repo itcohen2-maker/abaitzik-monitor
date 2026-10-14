@@ -2618,6 +2618,9 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .pjFbox textarea{min-height:48px}
 .pjTabs{display:flex;flex-wrap:wrap;gap:6px}
 .pjTopic{border:1px solid var(--line,#333);border-radius:12px;padding:10px;margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.ansPj{margin-bottom:18px}
+.ansPjH{font-size:17px;margin:14px 0 6px;font-weight:700}
+.ansRest{color:var(--dim);border-top:1px solid var(--line,#333);padding-top:10px}
 .pjTLabel{align-self:flex-start;border:1px solid var(--line,#333);border-radius:8px;padding:4px 12px;font-weight:700}
 .pjTab{background:none;border:0;border-bottom:2px solid transparent;padding:6px 4px;font:inherit;color:var(--dim);cursor:pointer}
 .pjTab.on{font-weight:700;color:inherit;border-bottom-color:var(--accent)}
@@ -9406,6 +9409,9 @@ function paintAnsTip(){
  t.hidden=ansTipDone();
  var ok=document.getElementById('aTipOk');if(ok)ok.onclick=closeAnsTip;
 }
+// One state per project for the boards on the answers screen, same shape as the
+// project tile's state, so projBindBoard serves both.
+var ANS_PJ={};
 function renderAnswers(){
  var chips=document.getElementById('aChips');
  var host=document.getElementById('ansBox');
@@ -9428,7 +9434,24 @@ function renderAnswers(){
   all.onclick=function(){markAllRead();renderAnswers();};
   chips.appendChild(all);
  }
- var full=ansList();
+ var P=(D&&D.projects)||[];
+ var boardsHtml='';
+ var bindBoards=function(){
+  P.forEach(function(p,i){
+   var bel=document.getElementById('ansPjB'+i);
+   if(!bel)return;
+   projBindBoard(bel,p,ANS_PJ[p.id],function(){bel.innerHTML=projBoardHtml(p,projFem(),ANS_PJ[p.id].tab,ANS_PJ[p.id].newOpen);});
+  });
+ };
+ P.forEach(function(p,i){
+  ANS_PJ[p.id]=ANS_PJ[p.id]||{tab:'',newOpen:false,tk:'ansTab:'+p.id};
+  boardsHtml+='<section class="ansPj" data-proj="'+esc(p.id)+'"><h3 class="ansPjH">'+esc((p.icon||'📁')+' שם הפרויקט: '+p.title)+'</h3><div class="pj" id="ansPjB'+i+'">'+projBoardHtml(p,projFem(),ANS_PJ[p.id].tab,ANS_PJ[p.id].newOpen)+'</div></section>';
+ });
+ // The messages the boards already show are not repeated in the list below.
+ var full=ansList().filter(function(m){
+  if(!P.length)return true;
+  return !ML.projTopicOf(String(m.text||''))&&!(m.q&&ML.projTopicOf(String(m.q.text||'')));
+ });
  var list=full.slice(0,ansShow);
  if(!full.length){
   /*
@@ -9451,10 +9474,11 @@ function renderAnswers(){
    };
    return;
   }
-  host.innerHTML='<div class="aempty">אין כאן כלום בסינון הזה.</div>';
+  host.innerHTML=boardsHtml+'<div class="aempty">אין כאן כלום בסינון הזה.</div>';
+  bindBoards();
   return;
  }
- host.innerHTML=list.map(function(m,i){
+ host.innerHTML=boardsHtml+(P.length?'<h3 class="ansPjH ansRest">שאר ההודעות</h3>':'')+list.map(function(m,i){
   var fresh=isFresh(m),bk=isBack(m);
   var his=m.src==='itzik';
   var mark=his?(m.status==='done'?' · בוצע':(m.status==='working'?' · בעבודה':''))
@@ -9499,6 +9523,7 @@ function renderAnswers(){
    +'<span class="asaid" data-i="'+i+'"></span>'
    +'</div>';
  }).join('');
+ bindBoards();
  var at=function(b){return list[Number(b.getAttribute('data-i'))];};
  Array.prototype.forEach.call(host.querySelectorAll('.acopy'),function(b){
   b.onclick=function(e){e.stopPropagation();
@@ -15343,6 +15368,51 @@ function projBoardHtml(p,fem,tab,newOpen){
   +'<button type="button" class="yb yb2" data-pj="nreq">שליחה</button></div>';
  return sections+'<div class="pjTabs"><button type="button" class="pjTab" data-pj="newtopic">+ נושא</button></div>'+nt;
 }
+// The click logic for a project board. The tile and the answers screen both
+// use it; state carries the open topic and the new-topic box, and paint()
+// redraws whichever board the listener sits in.
+function projBindBoard(el,p,state,paint){
+ var fem=projFem(),c=projCur(p);
+ el.addEventListener('click',function(e){
+  var b=e.target.closest?e.target.closest('[data-pj]'):null;if(!b)return;
+  var a=b.getAttribute('data-pj');
+  if(a==='tab'){state.tab=b.getAttribute('data-t')||'';try{localStorage.setItem(state.tk,state.tab);}catch(x){}paint();return;}
+  if(a==='newtopic'){state.newOpen=!state.newOpen;paint();if(state.newOpen){var ni=el.querySelector('#pjNT');if(ni)ni.focus();}return;}
+  if(a==='ok'){
+   b.disabled=true;
+   sendOrHold('פרויקט','פרויקט '+p.title+': '+(fem?'מאשרת':'מאשר')+' את השלב '+(c?c.title:'')+'. אפשר לעבור לשלב הבא.','פרויקט').then(function(how){
+    toast(how==='held'?'נשמר, יישלח כשתהיה קליטה.':'נשלח לפרויקט.');
+   }).catch(function(){toast('לא נשלח. אפשר לנסות שוב.');}).then(function(){b.disabled=false;});
+   return;
+  }
+  var ta=b.parentNode?b.parentNode.querySelector('textarea'):null;
+  var body=ta?ta.value.trim():'';
+  var topic=b.getAttribute('data-t')||'';
+  var re=undefined,txt='',stampAt='';
+  if(a==='nreq'){
+   var ni2=el.querySelector('#pjNT');
+   topic=projTopicName(ni2?ni2.value:'');
+   if(!topic){if(ni2)ni2.focus();return;}
+  }
+  if(!body){if(ta)ta.focus();return;}
+  if(a==='fu'){
+   re=b.getAttribute('data-rid')||undefined;
+   stampAt=b.getAttribute('data-at')||'';
+   txt='פרויקט '+p.title+' / '+topic+': הערה לשיפור על הבקשה מ'+stamp(stampAt)+': '+body;
+  }else{
+   txt='פרויקט '+p.title+' / '+topic+': '+body;
+  }
+  var at=new Date().toISOString();
+  b.disabled=true;
+  sendOrHold('פרויקט',txt,'פרויקט',{at:at,text:txt,re:re}).then(function(how){
+   if(how!=='held'){var pl=pending();pl.push({at:at,text:txt,re:re});savePending(pl);}
+   if(ta)ta.value='';
+   if(a==='nreq'){var ni3=el.querySelector('#pjNT');if(ni3)ni3.value='';state.newOpen=false;state.tab=topic;try{localStorage.setItem(state.tk,state.tab);}catch(x){}}
+   toast(how==='held'?'נשמר, יישלח כשתהיה קליטה.':'נשלח לפרויקט.');
+   paint();
+  }).catch(function(){toast('לא נשלח. אפשר לנסות שוב.');}).then(function(){b.disabled=false;});
+ });
+}
 function projSheet(p){
  var fem=projFem(),c=projCur(p);
  var mark={done:'✓',now:'●',next:'○'};
@@ -15375,52 +15445,14 @@ function projSheet(p){
   +(agents?'<details class="pjAgs"><summary>הסוכנים של הפרויקט</summary>'+agents+'</details>':'')
   +'</div>';
  shipOpen('projSheet',(p.icon||'📁')+' '+p.title,html,function(el){
-  var tab='',newOpen=false,tk='projTab:'+p.id;
-  try{tab=localStorage.getItem(tk)||'';}catch(e){}
+  var st={tab:'',newOpen:false,tk:'projTab:'+p.id};
+  try{st.tab=localStorage.getItem(st.tk)||'';}catch(e){}
   function paint(){
    var host=el.querySelector('#pjBoard');
-   if(host)host.innerHTML=projBoardHtml(p,fem,tab,newOpen);
+   if(host)host.innerHTML=projBoardHtml(p,fem,st.tab,st.newOpen);
   }
   paint();
-  el.addEventListener('click',function(e){
-   var b=e.target.closest?e.target.closest('[data-pj]'):null;if(!b)return;
-   var a=b.getAttribute('data-pj');
-   if(a==='tab'){tab=b.getAttribute('data-t')||'';try{localStorage.setItem(tk,tab);}catch(x){}paint();return;}
-   if(a==='newtopic'){newOpen=!newOpen;paint();if(newOpen){var ni=el.querySelector('#pjNT');if(ni)ni.focus();}return;}
-   if(a==='ok'){
-    b.disabled=true;
-    sendOrHold('פרויקט','פרויקט '+p.title+': '+(fem?'מאשרת':'מאשר')+' את השלב '+(c?c.title:'')+'. אפשר לעבור לשלב הבא.','פרויקט').then(function(how){
-     toast(how==='held'?'נשמר, יישלח כשתהיה קליטה.':'נשלח לפרויקט.');
-    }).catch(function(){toast('לא נשלח. אפשר לנסות שוב.');}).then(function(){b.disabled=false;});
-    return;
-   }
-   var ta=b.parentNode?b.parentNode.querySelector('textarea'):null;
-   var body=ta?ta.value.trim():'';
-   var topic=b.getAttribute('data-t')||'';
-   var re=undefined,txt='',stampAt='';
-   if(a==='nreq'){
-    var ni2=el.querySelector('#pjNT');
-    topic=projTopicName(ni2?ni2.value:'');
-    if(!topic){if(ni2)ni2.focus();return;}
-   }
-   if(!body){if(ta)ta.focus();return;}
-   if(a==='fu'){
-    re=b.getAttribute('data-rid')||undefined;
-    stampAt=b.getAttribute('data-at')||'';
-    txt='פרויקט '+p.title+' / '+topic+': הערה לשיפור על הבקשה מ'+stamp(stampAt)+': '+body;
-   }else{
-    txt='פרויקט '+p.title+' / '+topic+': '+body;
-   }
-   var at=new Date().toISOString();
-   b.disabled=true;
-   sendOrHold('פרויקט',txt,'פרויקט',{at:at,text:txt,re:re}).then(function(how){
-    if(how!=='held'){var pl=pending();pl.push({at:at,text:txt,re:re});savePending(pl);}
-    if(ta)ta.value='';
-    if(a==='nreq'){var ni3=el.querySelector('#pjNT');if(ni3)ni3.value='';newOpen=false;tab=topic;try{localStorage.setItem(tk,tab);}catch(x){}}
-    toast(how==='held'?'נשמר, יישלח כשתהיה קליטה.':'נשלח לפרויקט.');
-    paint();
-   }).catch(function(){toast('לא נשלח. אפשר לנסות שוב.');}).then(function(){b.disabled=false;});
-  });
+  projBindBoard(el,p,st,paint);
  });
 }
 boot('projects',projTiles);
