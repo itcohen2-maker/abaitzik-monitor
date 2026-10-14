@@ -55,6 +55,11 @@ try {
   Bad ('השרת לא ענה: ' + $_.Exception.Message); Bad 'בלי חיבור לשרת אין מה להמשיך. לבדוק אינטרנט או חסימה של המחשוב.'; exit 1
 }
 
+# 14.10, Rinat's PC: schtasks (and claude.exe) wrote "ERROR: Access is denied." to stderr, and under 'Stop'
+# PowerShell 5.1 turns native stderr into a terminating error, so the trap ended the install
+# before the startup loop below, which needs no task at all, was ever tried. From here on
+# every native call is judged by its exit code and output, not by stderr.
+$ErrorActionPreference = 'Continue'
 Step 'בודק ש Claude Code מחובר לחשבון'
 try {
   $out = & $found -p --output-format text --model haiku 'ענה במילה אחת: מוכן' 2>&1 | Out-String
