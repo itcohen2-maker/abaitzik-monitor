@@ -6816,8 +6816,12 @@ function wirePaste(root){
     navigator.clipboard.read().then(function(items){
      var waits=[];
      items.forEach(function(it){it.types.forEach(function(t){if(t.indexOf('image/')===0)waits.push(it.getType(t));});});
-     if(!waits.length)throw 0;
-     return Promise.all(waits).then(function(blobs){pasteImgs(blobs,ta);});
+     if(waits.length)return Promise.all(waits).then(function(blobs){pasteImgs(blobs,ta);});
+     // Text came in the same read, so no second paste prompt on the iPhone.
+     var tx=null;
+     items.forEach(function(it){if(!tx&&it.types.indexOf('text/plain')>=0)tx=it.getType('text/plain');});
+     if(!tx)throw 0;
+     return tx.then(function(bl){return bl.text();}).then(function(t){ta.value=(ta.value?ta.value+' ':'')+t;ta.focus();});
     }).catch(function(){pasteText();});
    }else pasteText();
   };
@@ -10717,7 +10721,38 @@ function markSent(kind,text,id){
  try{renderReqs();}catch(e){}
  try{paintGot();renderGot();}catch(e){}
  try{flyMail(kind);}catch(e){}
+ cleanDeskSoon();
  return rid;
+}
+/*
+  A clean desk after every send. Rinat, 14.10 (approved by Itzik): "after I
+  send a message, clear the window and leave a clean desk, so I know the
+  request went and I move on". The box itself was already emptied at send;
+  what stayed was the "נשלח" lines, the reply box still open under the bubble
+  and the keyboard up. Once the envelope has landed, all of that goes and the
+  screen is back at the top. A line typed meanwhile is never touched.
+*/
+var cleanDeskT=null;
+function cleanDeskSoon(){
+ clearTimeout(cleanDeskT);
+ cleanDeskT=setTimeout(cleanDesk,2600);
+}
+function cleanDesk(){
+ if(typeof undoCur!=='undefined'&&undoCur)return;
+ var a=document.activeElement;
+ if(a&&a.tagName==='TEXTAREA'&&a.value.trim())return;
+ Array.prototype.forEach.call(document.querySelectorAll('.msgsaid,.rsaid'),function(x){x.textContent='';});
+ Array.prototype.forEach.call(document.querySelectorAll('.rtxt.on'),function(b){
+  var host=b.closest('.bub')||b.closest('.th')||b.parentNode;
+  var f=host&&host.querySelector('.rform.open');
+  var t=f&&f.querySelector('textarea');
+  if(t&&t.value.trim())return;
+  b.classList.remove('on');
+  if(f)f.classList.remove('open');
+ });
+ try{markAnswering(null);}catch(e){}
+ try{if(a&&a.blur)a.blur();}catch(e){}
+ try{window.scrollTo({top:0,behavior:'smooth'});}catch(e){}
 }
 /*
   Where one request stands, and what is still missing from it.

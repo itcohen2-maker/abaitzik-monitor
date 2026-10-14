@@ -2002,7 +2002,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-14T08:00:42.257Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-14T08:01:11.151Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3551,7 +3551,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='616e5da3ad';
+var CODE_ID='95bd1c3356';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -4480,8 +4480,11 @@ function wirePaste(root){
     navigator.clipboard.read().then(function(items){
      var waits=[];
      items.forEach(function(it){it.types.forEach(function(t){if(t.indexOf('image/')===0)waits.push(it.getType(t));});});
-     if(!waits.length)throw 0;
-     return Promise.all(waits).then(function(blobs){pasteImgs(blobs,ta);});
+     if(waits.length)return Promise.all(waits).then(function(blobs){pasteImgs(blobs,ta);});
+     var tx=null;
+     items.forEach(function(it){if(!tx&&it.types.indexOf('text/plain')>=0)tx=it.getType('text/plain');});
+     if(!tx)throw 0;
+     return tx.then(function(bl){return bl.text();}).then(function(t){ta.value=(ta.value?ta.value+' ':'')+t;ta.focus();});
     }).catch(function(){pasteText();});
    }else pasteText();
   };
@@ -7279,7 +7282,30 @@ function markSent(kind,text,id){
  try{renderReqs();}catch(e){}
  try{paintGot();renderGot();}catch(e){}
  try{flyMail(kind);}catch(e){}
+ cleanDeskSoon();
  return rid;
+}
+var cleanDeskT=null;
+function cleanDeskSoon(){
+ clearTimeout(cleanDeskT);
+ cleanDeskT=setTimeout(cleanDesk,2600);
+}
+function cleanDesk(){
+ if(typeof undoCur!=='undefined'&&undoCur)return;
+ var a=document.activeElement;
+ if(a&&a.tagName==='TEXTAREA'&&a.value.trim())return;
+ Array.prototype.forEach.call(document.querySelectorAll('.msgsaid,.rsaid'),function(x){x.textContent='';});
+ Array.prototype.forEach.call(document.querySelectorAll('.rtxt.on'),function(b){
+  var host=b.closest('.bub')||b.closest('.th')||b.parentNode;
+  var f=host&&host.querySelector('.rform.open');
+  var t=f&&f.querySelector('textarea');
+  if(t&&t.value.trim())return;
+  b.classList.remove('on');
+  if(f)f.classList.remove('open');
+ });
+ try{markAnswering(null);}catch(e){}
+ try{if(a&&a.blur)a.blur();}catch(e){}
+ try{window.scrollTo({top:0,behavior:'smooth'});}catch(e){}
 }
 function recordFor(r){
  if(!r.id)return null;
