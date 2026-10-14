@@ -187,6 +187,33 @@ function selfArena(t, x) {
   } catch (e) { console.log('self arena failed: ' + String(e.message).slice(0, 120)); return false; }
 }
 
+/*
+  14.10, Itzik: "אלון ורינת מנהלים אז אין צורך לבקש ממני אישורים ... האישורים הם
+  נתנו כבר מראש. הם יכולים לעשות מה שהם רוצים חוץ משינויים שיפגעו במערכת".
+  A tenant record with "preApproved": true has each new request handed straight
+  to Itzik's worker as an approved one, the same line his approve button sends,
+  marked as approved in advance. The worker builds it unless it would harm the
+  system, and tells the customer. Itzik gets one line of news, not a question.
+*/
+function preApprove(t, x) {
+  if (!t.preApproved) return false;
+  try {
+    const id = 'pre-' + t.id + '-' + x.id;
+    const at = new Date();
+    const stamp = at.toISOString().replace(/[-:]/g, '').slice(0, 13).replace('T', '-');
+    const f = path.join(__dirname, 'data', 'chat', 'chat', stamp + '-itzik-' + id + '.json');
+    if (fs.existsSync(f)) return true;
+    fs.writeFileSync(f, JSON.stringify({
+      at: at.toISOString(), from: 'itzik', id, auto: true, preApproved: true, status: 'working',
+      text: 'אישור בקשת שינוי ' + t.id + '/' + x.id + ' (אושר מראש: ' + (t.title || t.id)
+        + ' מנהל ולא צריך אישור, רק לא שינוי שיפגע במערכת): ' + x.text,
+    }, null, 1), 'utf8');
+    execFileSync('node', ['notify.js', '📨 ' + (t.title || t.id) + ' ביקש, בביצוע', String(x.text).slice(0, 300)],
+      { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
+    return true;
+  } catch (e) { console.log('pre approve failed: ' + String(e.message).slice(0, 120)); return false; }
+}
+
 function main() {
   if (!fs.existsSync(DIR)) { console.log('no tenants'); return; }
   let changed = false;
@@ -213,6 +240,8 @@ function main() {
     const own = DRY ? [] : fresh.filter((x) => selfArena(t, x));
     own.forEach((x) => { x.status = 'approved'; });
     fresh.splice(0, fresh.length, ...fresh.filter((x) => !own.includes(x)));
+    const pre = DRY ? [] : fresh.filter((x) => preApprove(t, x));
+    fresh.splice(0, fresh.length, ...fresh.filter((x) => !pre.includes(x)));
     if (fresh.length && !DRY) {
       try {
         execFileSync('node', ['notify.js', '📨 ' + (t.title || t.id) + ' מבקש שינוי', fresh.map((x) => x.text).join(' · ').slice(0, 300)],
@@ -276,4 +305,4 @@ function main() {
 }
 
 if (require.main === module) main();
-module.exports = { check, complete, firstUse, selfArena };
+module.exports = { check, complete, firstUse, selfArena, preApprove };

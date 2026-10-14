@@ -546,7 +546,7 @@ function recordIncoming(m) {
         fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
         fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-admin-ack.json')),
           JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id,
-            text: 'הבקשה נשלחה למנהל. כשהוא יחליט, תקבל כאן תשובה.', status: 'done' }, null, 1), 'utf8');
+            text: inst.adminFull ? 'הבקשה עברה לבנייה. כשהיא מוכנה, תקבל כאן תשובה.' : 'הבקשה נשלחה למנהל. כשהוא יחליט, תקבל כאן תשובה.', status: 'done' }, null, 1), 'utf8');
         say('בקשה ממנהל נרשמה: ' + crId);
       } catch (e) { say('!! בקשה ממנהל לא נרשמה: ' + e.message); }
     }
