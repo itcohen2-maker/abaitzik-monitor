@@ -114,3 +114,8 @@
   Something new placed inside an existing tile gets a bumped `data-upd="<date-slug>"` on that tile button; the `updTiles`
   boot gives it `updblink`, a slow soft pulse (2.6s), until he opens it once. "Not a strong blink. An update is a slow,
   gentle blink." No deliverable goes into an existing tile without bumping its `data-upd`. Applies to every tenant.
+
+- **Iron rule (Itzik, 14.10.2026, after paying another $100 in one day):** plan on the high model, execute only on
+  the cheap one, in every monitor and every session. On a customer's monitor the server only passes text; all
+  execution runs on the customer's computer and account (worker.js planFirst + allow list, pc-pull.js haiku). A
+  session working here hands its own legwork, polling and checks to a Haiku agent, never runs them itself.
