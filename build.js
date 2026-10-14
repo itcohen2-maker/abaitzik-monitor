@@ -16287,9 +16287,24 @@ function pasteImgs(blobs,ta){
  if(ta)try{ta.focus();}catch(e){}
  return true;
 }
+/*
+  14.10, Rinat (through Itzik): "היא לא מצליחה להדביק תמונות שהיא מצלמת מסך".
+  A screenshot was taken only when the cursor stood in one of the chat writing
+  boxes; anywhere else on the page (a tile, an answer card, nothing focused) the
+  paste was dropped without a word. Now a picture pasted anywhere goes to the
+  reply box of the card under the cursor's focus, else to the chat's own box,
+  and only another app's own field (a note, a settings input) is left alone.
+*/
 document.addEventListener('paste',function(e){
  var ta=e.target;
- if(!ta||ta.tagName!=='TEXTAREA'||!ta.closest||!(ta.closest('#msgForm')||ta.closest('.rbox')))return;
+ var ours=ta&&ta.tagName==='TEXTAREA'&&ta.closest&&(ta.closest('#msgForm')||ta.closest('.rbox'));
+ if(!ours){
+  if(ta&&(ta.tagName==='TEXTAREA'||ta.tagName==='INPUT'||ta.isContentEditable))return;
+  var near=ta&&ta.closest&&ta.closest('.ansc,.report');
+  var rb=near&&near.querySelector('.rbox textarea');
+  ta=rb||document.querySelector('#msgForm textarea');
+  if(!rb&&typeof pane==='function'){try{pane('m');renderThread();}catch(err){}}
+ }
  var cd=e.clipboardData;if(!cd)return;
  // Copied text that also carries a picture (a web page, a document) stays text.
  if((cd.getData('text/plain')||'').trim())return;
