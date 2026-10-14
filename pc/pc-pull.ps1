@@ -27,11 +27,12 @@ function Say($line) {
   try { Add-Content -Path $Log -Value $l -Encoding UTF8 } catch {}
   Write-Output $l
 }
-function Claude() {
+function Find-Claude() {
   if ($Cfg.claude -and (Test-Path $Cfg.claude)) { return $Cfg.claude }
   $c = Join-Path $env:USERPROFILE '.local\bin\claude.exe'
   if (Test-Path $c) { return $c }
-  $g = Get-Command claude -ErrorAction SilentlyContinue
+  # an npm install has claude.ps1, claude.cmd and claude; only the .cmd can be started directly
+  $g = Get-Command claude.exe, claude.cmd -ErrorAction SilentlyContinue | Select-Object -First 1
   if ($g) { return $g.Source }
   throw 'claude.exe not found'
 }
@@ -46,8 +47,8 @@ function Call($method, $p, $body) {
       $r = Invoke-WebRequest -UseBasicParsing -Method $method -Uri $u -Headers $h -TimeoutSec 60
     }
     $text = ''
-    if ($r.Content) { $text = [Text.Encoding]::UTF8.GetString($r.Content) }
     if ($r.Content -is [string]) { $text = $r.Content }
+    elseif ($r.Content) { $text = [Text.Encoding]::UTF8.GetString($r.Content) }
     return @{ code = [int]$r.StatusCode; text = $text }
   } catch {
     $code = -1; $text = $_.Exception.Message
@@ -82,20 +83,24 @@ function Prompt($t) {
   ) -join "`n"
 }
 function RunClaude($t) {
-  $exe = Claude
+  $exe = Find-Claude
   New-Item -ItemType Directory -Force $Work | Out-Null
   $pf = Join-Path $Here ('prompt-' + $t.id + '.txt')
   [IO.File]::WriteAllText($pf, (Prompt $t), (New-Object Text.UTF8Encoding $false))
   $model = if ($Cfg.model) { $Cfg.model } else { 'haiku' }
   $modes = @('--dangerously-skip-permissions', '--permission-mode acceptEdits')
   foreach ($mode in $modes) {
-    $args = '/c ""' + $exe + '" -p --output-format json --model ' + $model + ' ' + $mode + ' < "' + $pf + '""'
     $psi = New-Object Diagnostics.ProcessStartInfo
-    $psi.FileName = 'cmd.exe'; $psi.Arguments = $args; $psi.WorkingDirectory = $Work
+    $cl = '-p --output-format json --model ' + $model + ' ' + $mode
+    if ($exe -like '*.exe') { $psi.FileName = $exe; $psi.Arguments = $cl }
+    else { $psi.FileName = 'cmd.exe'; $psi.Arguments = '/d /s /c ""' + $exe + '" ' + $cl + '"' }
+    $psi.WorkingDirectory = $Work
     $psi.UseShellExecute = $false; $psi.CreateNoWindow = $true
-    $psi.RedirectStandardOutput = $true; $psi.RedirectStandardError = $true
+    $psi.RedirectStandardInput = $true; $psi.RedirectStandardOutput = $true; $psi.RedirectStandardError = $true
     $psi.StandardOutputEncoding = [Text.Encoding]::UTF8; $psi.StandardErrorEncoding = [Text.Encoding]::UTF8
     $p = [Diagnostics.Process]::Start($psi)
+    $inp = New-Object IO.StreamWriter($p.StandardInput.BaseStream, (New-Object Text.UTF8Encoding $false))
+    $inp.Write([IO.File]::ReadAllText($pf, [Text.Encoding]::UTF8)); $inp.Close()
     $outTask = $p.StandardOutput.ReadToEndAsync(); $errTask = $p.StandardError.ReadToEndAsync()
     if (-not $p.WaitForExit($MaxMinutes * 60 * 1000)) {
       Say ('!! ' + $MaxMinutes + ' דקות עברו, עוצר ' + $t.id)
