@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 // Generates docs/index.html: a standalone page with the data baked in, for
 // GitHub Pages. No server, no database, opens in any browser.
 //
@@ -3244,6 +3244,13 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   recorded a new subject every time. Now an answer can be aimed at: this strip
   sits above the microphone and says what the next recording is answering.
 */
+.resf{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+.resf .resv{padding:0;border:0;background:none;width:100%}
+.resf .resv .fthumb img{max-width:100%;max-height:360px;margin:0 auto;border-radius:12px}
+.resf .resdl{flex:1 1 100%;font-size:18px;padding:14px;font-weight:600;background:var(--accent);color:#fff;border-radius:12px}
+.resf .respick{flex:1 1 100%;font-size:16px;padding:10px;border-radius:12px}
+.resact{display:flex;gap:8px;margin:6px 0 10px}
+.resact button{flex:1;font-size:17px;padding:12px;border-radius:12px}
 .aimbar{position:fixed;inset-inline-start:12px;z-index:30;
  bottom:calc(132px + env(safe-area-inset-bottom));
  max-width:min(74vw,320px);display:flex;align-items:center;gap:8px;
@@ -6344,6 +6351,25 @@ function goLinks(m){
   if(!n||fb.indexOf(n)>-1||!fileEntry(n))return;
   fb.push(n);
  });
+ /*
+   14.10, Rinat (through Itzik): "כל הקבצים שאני מבקשת, כפתור שאני לוחצת ויורד
+   לי ישר להורדות של המחשב ... מאוד מאוד פשוט ... להראות לה את התוצאה עם כפתורים
+   בפנים ושליחה". On a customer's monitor a card with files is the result page:
+   each file is a picture and one big download button, a pick button when there
+   are several, and under them "approve" and "fix" that answer in this thread.
+ */
+ if(INSTANCE&&INSTANCE.name&&INSTANCE.name!=='abaitzik'&&fb.length){
+  var fem=INSTANCE.gender==='f';
+  return fb.map(function(n){
+   var inText=(t.match(new RegExp('files/[^\\\\s<>"]+','g'))||[]).some(function(h){return fileNameOf(h.replace(new RegExp('[.,;:!?)"]+$'),''))===n;});
+   return '<div class="resf">'+(inText?'':'<button type="button" class="gotile resv" data-file="'+esc(n)+'">'+fileThumb(n)+'</button>')
+    +'<button type="button" class="gotile fsave resdl" data-fdl="'+esc(n)+'">⬇ '+(fileMobile()?'שמירה בטלפון':'להורדה למחשב')+': '+esc(n.split('/').pop())+'</button>'
+    +(fb.length>1?'<button type="button" class="gotile fsave respick" data-rq="'+esc((fem?'בוחרת':'בוחר')+' בזה: '+n.split('/').pop())+'">✓ '+(fem?'בוחרת':'בוחר')+' בזה</button>':'')
+    +'</div>';
+  }).join('')
+   +'<div class="resact"><button type="button" class="gotile fsave resok" data-rq="'+esc(fem?'מאשרת, מעולה':'מאשר, מעולה')+'">👍 '+(fem?'מאשרת':'מאשר')+'</button>'
+   +'<button type="button" class="gotile fsave resfix" data-rfix="1">✏️ לתקן</button></div>';
+ }
  return fb.map(function(n){
   // 10.10: a file already shown as a picture in the text above is not shown twice.
   var inText=(t.match(new RegExp('files/[^\\\\s<>"]+','g'))||[]).some(function(h){return fileNameOf(h.replace(new RegExp('[.,;:!?)"]+$'),''))===n;});
@@ -11324,6 +11350,26 @@ function fileDownload(n){
   setTimeout(function(){URL.revokeObjectURL(u);},60000);
  }).catch(function(){toast('ההורדה לא הצליחה. אפשר לפתוח את הקובץ ולשמור משם.');});
 }
+// 14.10: the result buttons on a customer's answer card (goLinks). One tap sends
+// the line as a reply in this thread; "fix" opens the card's own reply box.
+document.addEventListener('click',function(e){
+ var b=e.target&&e.target.closest&&e.target.closest('[data-rq],[data-rfix]');if(!b)return;
+ e.preventDefault();e.stopPropagation();
+ var card=b.closest('.ansc')||b.parentNode.parentNode;
+ var box=card&&card.querySelector('.rbox');
+ var q=box?box.getAttribute('data-q')||'':'';
+ if(b.hasAttribute('data-rfix')){
+  var ta=box&&box.querySelector('textarea');
+  if(ta){ta.value=ta.value||'לתקן: ';ta.focus();ta.scrollIntoView({block:'center'});}
+  return;
+ }
+ var line=b.getAttribute('data-rq');
+ b.disabled=true;
+ sendOrHold('הערה מהמוניטור',(q?q+String.fromCharCode(10):'')+line,'הערה').then(function(how){
+  b.textContent=how==='held'?'נשמר, יישלח כשיהיה קליטה':'✓ נשלח';
+  if(how!=='held'){var p=pending();p.push({at:new Date().toISOString(),text:line});savePending(p);markSent('text');renderSent();}
+ }).catch(function(){b.disabled=false;toast('לא נשלח. אפשר לנסות שוב.');});
+},true);
 document.addEventListener('click',function(e){
  var b=e.target&&e.target.closest&&e.target.closest('[data-fdl],[data-fimode]');if(!b)return;
  e.preventDefault();e.stopPropagation();

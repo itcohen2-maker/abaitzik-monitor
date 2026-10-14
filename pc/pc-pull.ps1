@@ -21,6 +21,8 @@ $Log = Join-Path $Here 'pc-pull.log'
 $Lock = Join-Path $Here 'running.lock'
 $Work = Join-Path $env:USERPROFILE 'MonitorWork'
 $MaxMinutes = 30
+# 14.10: proof for the installer (and for us) that a scheduled run really started.
+try { Set-Content -Path (Join-Path $Here 'last-run.txt') -Value (Get-Date).ToString('s') -Encoding ASCII } catch {}
 
 function Say($line) {
   $l = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss') + ' ' + $line
@@ -71,8 +73,11 @@ function Prompt($t) {
     '',
     'חשוב:',
     '  - עובדים על עותק. קובץ מקור בכונן או בתיקייה לא משנים ולא מוחקים; תוצר חדש נשמר ליד המקור או בתיקייה MonitorWork בפרופיל.',
-    '  - קובץ שהפקת נשאר במחשב הזה. בתשובה כתוב במילים פשוטות איפה הוא (איזו תיקייה, איזה שם), כדי שהלקוח ימצא אותו.',
-    '  - אל תפתח דפדפן ואל תשלח כלום לאף אחד. לא מיילים, לא הודעות, לא העלאות.',
+    ('  - כל תוצר שהלקוח צריך לקבל (תמונה, PDF, קובץ AI או PSD, מצגת) שומרים גם בתיקייה הזאת: ' + (Join-Path $Work ('out-' + $t.id))),
+    '    כל קובץ שם עולה למוניטור לבד אחרי שתסיים, ומופיע ללקוח עם תמונה וכפתור הורדה. שם קובץ בעברית פשוטה שאומר מה זה.',
+    '    תמונה לתצוגה: גם JPG או PNG, לא רק AI או PSD, כדי שהלקוח יראה את התוצאה בלי לפתוח תוכנה.',
+    '  - אל תפתח דפדפן ואל תשלח כלום לאף אחד. לא מיילים, לא הודעות.',
+    '  - התשובה פשוטה מאוד: משפט אחד מה עשית, ושאלה אחת אם צריך החלטה. בלי נתיבים ובלי שמות טכניים.',
     '  - בלי מקפים ובלי אימוג׳י בתשובה.',
     '',
     'בסוף, הדבר האחרון שאתה מדפיס: התשובה ללקוח, בין שתי השורות האלה בדיוק:',
@@ -136,6 +141,7 @@ function One() {
     if ($age.TotalMinutes -lt ($MaxMinutes + 2)) { return }
     Remove-Item $Lock -Force -ErrorAction SilentlyContinue
   }
+  if ($Dry) { $r = Call 'GET' 'ping' $null; Say ('dry: השרת ענה ' + $r.code); return }
   $r = Call 'GET' 'next' $null
   if ($r.code -eq 204) { return }
   if ($r.code -ne 200) { Say ('!! השרת לא ענה: ' + $r.code + ' ' + $r.text); return }
@@ -149,6 +155,24 @@ function One() {
       $u = Call 'POST' ('usage/' + $t.id) ($res.usage | ConvertTo-Json -Compress -Depth 5)
       if ($u.code -ne 200) { Say ('!! הצריכה לא נרשמה: ' + $u.code + ' ' + $u.text) }
     }
+    # 14.10: every file in out-<id> goes up to the monitor; its files/... line is added
+    # to the answer, and the page shows it as a picture with a download button.
+    $outDir = Join-Path $Work ('out-' + $t.id)
+    $links = @()
+    if (Test-Path $outDir) {
+      foreach ($f in (Get-ChildItem -Path $outDir -File -Recurse | Where-Object { $_.Length -le 300MB })) {
+        $u = $Cfg.url.TrimEnd('/') + '/file/' + $t.id + '?name=' + [uri]::EscapeDataString($f.Name)
+        try {
+          $r2 = Invoke-WebRequest -UseBasicParsing -Method POST -Uri $u -Headers @{ 'X-Pc-Key' = $Cfg.key } -InFile $f.FullName -ContentType 'application/octet-stream' -TimeoutSec 900
+          $l = if ($r2.Content -is [string]) { $r2.Content } else { [Text.Encoding]::UTF8.GetString($r2.Content) }
+          $links += $l.Trim(); Say ('עלה: ' + $f.Name)
+        } catch { Say ('!! לא עלה: ' + $f.Name + ' ' + $_.Exception.Message) }
+      }
+    }
+    if ($links.Count -gt 0) {
+      if ($res.ok) { $res.text = $res.text + "`n" + ($links -join "`n") }
+      else { $res = @{ ok = $true; text = ('הקבצים מוכנים.' + "`n" + ($links -join "`n")); usage = $res.usage } }
+    }
     if ($res.ok) {
       $d = Call 'POST' ('done/' + $t.id) $res.text
       Say ($(if ($d.code -eq 200) { 'הוחזר לשרת: ' } else { '!! ההחזרה נכשלה (' + $d.code + '): ' }) + $t.id + ' ' + $d.text)
@@ -160,4 +184,4 @@ function One() {
 }
 
 if ($Loop) { while ($true) { try { One } catch { Say ('!! ' + $_.Exception.Message) }; Start-Sleep -Seconds 60 } }
-else { try { One } catch { Say ('!! ' + $_.Exception.Message); exit 1 } }
+else { try { One } catch { Say ('!! ' + $_.Exception.Message); try { Call 'GET' ('ping?step=' + [uri]::EscapeDataString('pull error: ' + $_.Exception.Message)) $null | Out-Null } catch {}; exit 1 } }

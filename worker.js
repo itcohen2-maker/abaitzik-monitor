@@ -330,6 +330,19 @@ function prompt(list) {
       here plans; the computer's own Claude, on the customer's own account,
       does what needs that machine (Illustrator, Photoshop, its files).
     */
+    /*
+      14.10, Rinat through Itzik: "כל הקבצים שאני מבקשת ... כפתור שאני לוחצת ויורד
+      לי ישר להורדות ... הכל יהיה מאוד מאוד פשוט, גם התשובות". The page turns every
+      files/<name> in an answer into the picture, a big download button, and the
+      approve / pick / fix buttons, so the answer itself stays a sentence.
+    */
+    ...(inst.name !== 'abaitzik' ? [
+      'כל תוצר שהלקוח ביקש (תמונה, PDF, קובץ עבודה) נשמר ב data/files-private/<שם בעברית פשוטה> ונכתב בתשובה כשורה files/<שם>.',
+      'הדף מציג כל קובץ כזה עם תמונה, כפתור הורדה גדול שיורד ישר להורדות במחשב, וכפתורי "מאשרת", "בוחרת בזה" ו"לתקן".',
+      'לכן התשובה עצמה קצרה מאוד: משפט אחד מה מוכן, שורות ה files, ושאלה אחת אם צריך החלטה. בלי הסברים, בלי נתיבים, בלי מונחים טכניים.',
+      'כשיש כמה אפשרויות, כל אפשרות היא קובץ נפרד עם שם שאומר מה היא, והלקוח בוחר בלחיצה.',
+      '',
+    ] : []),
     ...(inst.name !== 'abaitzik' && pcWired() ? [
       'המחשב של ' + inst.owner + ' מחובר למוניטור: הוא בודק כל דקה אם יש לו משימה, ומריץ אותה עם Claude Code שמותקן שם,',
       'על החשבון שלו. משימה שצריכה את המחשב ההוא (אילוסטרייטור, פוטושופ, הקבצים שבמחשב ובכונן החיצוני, תוכנה שמותקנת רק שם)',

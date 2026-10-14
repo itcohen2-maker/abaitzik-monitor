@@ -62,29 +62,58 @@ try {
   if ($out -match 'מוכן|ready|Ready') { Ok 'Claude Code עונה' } else { Bad ('Claude Code ענה משהו אחר: ' + $out.Trim().Substring(0, [Math]::Min(200, $out.Trim().Length))) }
 } catch { Bad ('Claude Code לא רץ: ' + $_.Exception.Message) }
 
-Step 'רושם בדיקה כל דקה ברקע'
-$ps = 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "' + (Join-Path $Dst 'pc-pull.ps1') + '"'
-$tr = 'wscript.exe "' + (Join-Path $Dst 'run-hidden.vbs') + '" ' + $ps
-$made = $false
+Step 'בודק איזה מנוי Claude מחובר כאן'
+# 14.10, Itzik: "תבדוק גם אם יש לה מנוי מתקדם". Only the plan and tier fields, never a token.
 try {
-  $o = & schtasks.exe /Create /F /SC MINUTE /MO 1 /TN $Task /TR $tr 2>&1 | Out-String
-  if ($LASTEXITCODE -eq 0) { $made = $true; Ok ('משימה מתוזמנת ' + $Task + ' נרשמה') } else { Bad ('schtasks: ' + $o.Trim()) }
-} catch { Bad ('schtasks: ' + $_.Exception.Message) }
-Report ('schtasks made=' + $made)
-if (-not $made) {
-  # No scheduled task allowed here: a hidden loop starts with every login instead.
-  $startup = [Environment]::GetFolderPath('Startup')
-  $vbs = Join-Path $startup 'MonitorPc.vbs'
-  $loop = 'CreateObject("WScript.Shell").Run "powershell.exe -NoProfile -ExecutionPolicy Bypass -File ""' + (Join-Path $Dst 'pc-pull.ps1') + '"" -Loop", 0, False'
-  [IO.File]::WriteAllText($vbs, $loop, (New-Object Text.UTF8Encoding $false))
-  Start-Process wscript.exe -ArgumentList ('"' + $vbs + '"') -WindowStyle Hidden
-  Ok ('במקום זה: לולאה מוסתרת שעולה עם כל כניסה, ' + $vbs)
-} else {
-  & schtasks.exe /Run /TN $Task | Out-Null
-}
+  $cf = Join-Path $env:USERPROFILE '.claude\.credentials.json'
+  $plan = 'no credentials file'
+  if (Test-Path $cf) {
+    $c = (Get-Content -Raw -Encoding UTF8 $cf | ConvertFrom-Json).claudeAiOauth
+    $plan = 'plan=' + $c.subscriptionType + ' tier=' + $c.rateLimitTier + ' scopes=' + (($c.scopes) -join ',')
+  }
+  if ($env:ANTHROPIC_API_KEY) { $plan += ' api-key-env=yes' }
+  $st = & $found -p --output-format json --model haiku 'ok' 2>&1 | Out-String
+  try { $sj = $st.Substring($st.IndexOf('{')) | ConvertFrom-Json; $plan += ' model=' + (($sj.modelUsage.PSObject.Properties | Select-Object -First 1).Name) + ' cost=' + $sj.total_cost_usd } catch {}
+  Ok $plan; Report ('subscription ' + $plan)
+} catch { Report ('subscription check failed: ' + $_.Exception.Message) }
 
-Step 'הריצה הראשונה'
-& powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Dst 'pc-pull.ps1') -Dry
+Step 'רושם בדיקה כל דקה ברקע'
+# 14.10, Rinat's PC: the task was made, but the run every minute never reached the server
+# (wscript is often blocked on company machines). So each way is tried in turn, and a way
+# counts only when pc-pull.ps1 really ran: it writes last-run.txt at its very start.
+$pull = Join-Path $Dst 'pc-pull.ps1'
+$stamp = Join-Path $Dst 'last-run.txt'
+$ps = 'powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ' + $pull
+$ways = @()
+if (Test-Path "$env:WINDIR\System32\conhost.exe") { $ways += @{ name = 'conhost'; tr = 'conhost.exe --headless ' + $ps } }
+$ways += @{ name = 'wscript'; tr = 'wscript.exe ' + (Join-Path $Dst 'run-hidden.vbs') + ' ' + $ps }
+$ways += @{ name = 'powershell'; tr = $ps }
+function Ran($since) { (Test-Path $stamp) -and ((Get-Item $stamp).LastWriteTime -gt $since) }
+$works = $null
+foreach ($w in $ways) {
+  $o = & schtasks.exe /Create /F /SC MINUTE /MO 1 /TN $Task /TR $w.tr 2>&1 | Out-String
+  if ($LASTEXITCODE -ne 0) { Report ('schtasks ' + $w.name + ' create failed: ' + $o.Trim()); continue }
+  $since = Get-Date
+  & schtasks.exe /Run /TN $Task | Out-Null
+  for ($i = 0; $i -lt 20 -and -not (Ran $since); $i++) { Start-Sleep -Seconds 1 }
+  if (Ran $since) { $works = $w.name; break }
+  $q = & schtasks.exe /Query /TN $Task /V /FO LIST 2>&1 | Select-String 'Last Result|Status' | Out-String
+  Report ('schtasks ' + $w.name + ' did not run: ' + ($q -replace '\s+', ' ').Trim())
+}
+if ($works) {
+  Ok ('בדיקה כל דקה פועלת (' + $works + ')'); Report ('runs every minute via ' + $works)
+} else {
+  & schtasks.exe /Delete /F /TN $Task 2>&1 | Out-Null
+  # No scheduled task runs here: a hidden loop that starts now and with every login.
+  $startup = [Environment]::GetFolderPath('Startup')
+  $cmd = Join-Path $startup 'MonitorPc.cmd'
+  [IO.File]::WriteAllText($cmd, ('@start "" /min powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "' + $pull + '" -Loop' + "`r`n"), (New-Object Text.ASCIIEncoding))
+  $since = Get-Date
+  Start-Process powershell.exe -WindowStyle Hidden -ArgumentList @('-NoProfile', '-WindowStyle', 'Hidden', '-ExecutionPolicy', 'Bypass', '-File', $pull, '-Loop')
+  for ($i = 0; $i -lt 20 -and -not (Ran $since); $i++) { Start-Sleep -Seconds 1 }
+  if (Ran $since) { Ok 'בדיקה כל דקה פועלת (לולאה ברקע)'; Report 'runs every minute via startup loop' }
+  else { Bad 'הבדיקה כל דקה לא הצליחה לרוץ במחשב הזה.'; Report 'nothing runs every minute'; exit 1 }
+}
 Report 'installed'
 Ok 'מותקן. מעכשיו המוניטור יכול לשלוח למחשב הזה משימות, והתשובות חוזרות לצ׳אט לבד.'
 Ok ('יומן: ' + (Join-Path $Dst 'pc-pull.log'))

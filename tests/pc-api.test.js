@@ -71,3 +71,17 @@ test('pc api: an empty queue is 204 and ten wrong keys lock the address', async 
     assert.equal((await call('GET', '/up/v1/rinat/pc/next', undefined, 'a'.repeat(32))).status, 429);
   } finally { server.close(); }
 });
+
+test('pc api: a file from the computer lands in files-private/pc-out with a safe name', async () => {
+  const dataPath = tmp();
+  const api = pcApi({ name: 'rinat', dir: '/x', dataPath, log: () => {}, run: async () => ({ code: 0, out: '', err: '' }) });
+  const { server, call } = await serve(api);
+  try {
+    const r = await call('POST', '/up/v1/rinat/pc/file/pc-abc123-zzzz?name=' + encodeURIComponent('../וילון.jpg'), 'IMG', 'a'.repeat(32));
+    assert.equal(r.status, 200);
+    assert.equal(r.text, 'files/pc-out/וילון.jpg');
+    assert.equal(fs.readFileSync(path.join(dataPath, 'files-private', 'pc-out', 'וילון.jpg'), 'utf8'), 'IMG');
+    const r2 = await call('POST', '/up/v1/rinat/pc/file/pc-abc123-zzzz?name=' + encodeURIComponent('וילון.jpg'), 'B', 'a'.repeat(32));
+    assert.equal(r2.text, 'files/pc-out/וילון-2.jpg');
+  } finally { server.close(); }
+});
