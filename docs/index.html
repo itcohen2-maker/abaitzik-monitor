@@ -2002,7 +2002,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-14T08:00:07.357Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-14T08:00:35.664Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3551,7 +3551,7 @@ document.addEventListener('click',function(ev){
  var n=fileNameOf(a.getAttribute('href'));
  if(n&&fileEntry(n)&&fileView(n))ev.preventDefault();
 },true);
-var CODE_ID='f03c4ad823';
+var CODE_ID='616e5da3ad';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -4476,11 +4476,22 @@ function wirePaste(root){
   b.onclick=function(e){
    e.stopPropagation();e.preventDefault();
    var ta=b.closest('form').querySelector('textarea');
+   if(navigator.clipboard&&navigator.clipboard.read){
+    navigator.clipboard.read().then(function(items){
+     var waits=[];
+     items.forEach(function(it){it.types.forEach(function(t){if(t.indexOf('image/')===0)waits.push(it.getType(t));});});
+     if(!waits.length)throw 0;
+     return Promise.all(waits).then(function(blobs){pasteImgs(blobs,ta);});
+    }).catch(function(){pasteText();});
+   }else pasteText();
+  };
+  function pasteText(){
+   var ta=b.closest('form').querySelector('textarea');
    if(navigator.clipboard&&navigator.clipboard.readText){
     navigator.clipboard.readText().then(function(t){ta.value=(ta.value?ta.value+' ':'')+t;ta.focus();},
      function(){ta.focus();b.textContent='לחיצה ארוכה בתיבה, ואז הדבקה';});
    }else{ta.focus();b.textContent='לחיצה ארוכה בתיבה, ואז הדבקה';}
-  };
+  }
  });
 }
 function rootKeyFor(m){
@@ -11808,6 +11819,43 @@ fPick.addEventListener('change',function(){
  else reallySend(list);
 });
 function putFiles(list){pickArr=list.slice();describe();paintBoxPick();return true;}
+function pasteImgs(blobs,ta){
+ var add=[],t=Date.now();
+ blobs.forEach(function(b,i){
+  if(!b||!b.size)return;
+  var ext=(String(b.type).split('/')[1]||'png').replace('jpeg','jpg').replace(/[^a-z0-9]/gi,'');
+  var nm='paste-'+t+(i?'-'+i:'')+'.'+ext;
+  try{add.push(new File([b],nm,{type:b.type||'image/png',lastModified:t}));}
+  catch(e){b.name=nm;b.lastModified=t;add.push(b);}
+ });
+ if(!add.length)return false;
+ var box=ta&&ta.closest&&ta.closest('.rbox');
+ if(box){window.micBox=box;window.fileBox=box;}
+ else if(window.fileBox&&!(ta&&window.fileBox.contains(ta)))window.fileBox=null;
+ var f=document.getElementById('fileForm');if(f)f.hidden=false;
+ var pb=document.getElementById('plusBtn');if(pb)pb.setAttribute('aria-expanded','true');
+ qMode='full';
+ add.forEach(function(x){pickArr.push(x);});
+ describe();paintBoxPick();
+ if(!box){var sd=document.getElementById('msgSaid');
+  if(sd)sd.textContent=(add.length>1?add.length+' תמונות הודבקו':'התמונה הודבקה')+'. אפשר לכתוב שורה וללחוץ שליחה.';}
+ if(ta)try{ta.focus();}catch(e){}
+ return true;
+}
+document.addEventListener('paste',function(e){
+ var ta=e.target;
+ if(!ta||ta.tagName!=='TEXTAREA'||!ta.closest||!(ta.closest('#msgForm')||ta.closest('.rbox')))return;
+ var cd=e.clipboardData;if(!cd)return;
+ if((cd.getData('text/plain')||'').trim())return;
+ var imgs=[];
+ if(cd.items)Array.prototype.forEach.call(cd.items,function(it){
+  if(it.kind==='file'&&String(it.type).indexOf('image/')===0){var g=it.getAsFile();if(g)imgs.push(g);}
+ });
+ if(!imgs.length&&cd.files)imgs=Array.prototype.filter.call(cd.files,isImg);
+ if(!imgs.length)return;
+ e.preventDefault();
+ pasteImgs(imgs,ta);
+});
 (function(){
  var zone=null,depth=0;
  function hasFiles(e){var t=e.dataTransfer&&e.dataTransfer.types;if(!t)return false;for(var i=0;i<t.length;i++)if(t[i]==='Files')return true;return false;}

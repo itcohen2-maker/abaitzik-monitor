@@ -6811,11 +6811,23 @@ function wirePaste(root){
   b.onclick=function(e){
    e.stopPropagation();e.preventDefault();
    var ta=b.closest('form').querySelector('textarea');
+   // A screenshot on the clipboard goes in as a picture; text as before.
+   if(navigator.clipboard&&navigator.clipboard.read){
+    navigator.clipboard.read().then(function(items){
+     var waits=[];
+     items.forEach(function(it){it.types.forEach(function(t){if(t.indexOf('image/')===0)waits.push(it.getType(t));});});
+     if(!waits.length)throw 0;
+     return Promise.all(waits).then(function(blobs){pasteImgs(blobs,ta);});
+    }).catch(function(){pasteText();});
+   }else pasteText();
+  };
+  function pasteText(){
+   var ta=b.closest('form').querySelector('textarea');
    if(navigator.clipboard&&navigator.clipboard.readText){
     navigator.clipboard.readText().then(function(t){ta.value=(ta.value?ta.value+' ':'')+t;ta.focus();},
      function(){ta.focus();b.textContent='לחיצה ארוכה בתיבה, ואז הדבקה';});
    }else{ta.focus();b.textContent='לחיצה ארוכה בתיבה, ואז הדבקה';}
-  };
+  }
  });
 }
 // The unread screen has no data-k on the form, so a reply from there must
@@ -16184,6 +16196,51 @@ fPick.addEventListener('change',function(){
  else reallySend(list);
 });
 function putFiles(list){pickArr=list.slice();describe();paintBoxPick();return true;}
+/*
+  14.10, Rinat's request, approved by Itzik: "אני צריכה אופציה להדביק לעוזר
+  צילום מסך (תמונה) ישר בתיבת ההודעה, לא רק טקסט". A picture pasted into the
+  writing box, or brought in by the paste button, joins the chosen files with
+  its small preview and leaves with the line on send, like a picked photo.
+  Every pasted screenshot is called image.png, so each gets its own name.
+*/
+function pasteImgs(blobs,ta){
+ var add=[],t=Date.now();
+ blobs.forEach(function(b,i){
+  if(!b||!b.size)return;
+  var ext=(String(b.type).split('/')[1]||'png').replace('jpeg','jpg').replace(/[^a-z0-9]/gi,'');
+  var nm='paste-'+t+(i?'-'+i:'')+'.'+ext;
+  try{add.push(new File([b],nm,{type:b.type||'image/png',lastModified:t}));}
+  catch(e){b.name=nm;b.lastModified=t;add.push(b);}
+ });
+ if(!add.length)return false;
+ var box=ta&&ta.closest&&ta.closest('.rbox');
+ if(box){window.micBox=box;window.fileBox=box;}
+ else if(window.fileBox&&!(ta&&window.fileBox.contains(ta)))window.fileBox=null;
+ var f=document.getElementById('fileForm');if(f)f.hidden=false;
+ var pb=document.getElementById('plusBtn');if(pb)pb.setAttribute('aria-expanded','true');
+ qMode='full';
+ add.forEach(function(x){pickArr.push(x);});
+ describe();paintBoxPick();
+ if(!box){var sd=document.getElementById('msgSaid');
+  if(sd)sd.textContent=(add.length>1?add.length+' תמונות הודבקו':'התמונה הודבקה')+'. אפשר לכתוב שורה וללחוץ שליחה.';}
+ if(ta)try{ta.focus();}catch(e){}
+ return true;
+}
+document.addEventListener('paste',function(e){
+ var ta=e.target;
+ if(!ta||ta.tagName!=='TEXTAREA'||!ta.closest||!(ta.closest('#msgForm')||ta.closest('.rbox')))return;
+ var cd=e.clipboardData;if(!cd)return;
+ // Copied text that also carries a picture (a web page, a document) stays text.
+ if((cd.getData('text/plain')||'').trim())return;
+ var imgs=[];
+ if(cd.items)Array.prototype.forEach.call(cd.items,function(it){
+  if(it.kind==='file'&&String(it.type).indexOf('image/')===0){var g=it.getAsFile();if(g)imgs.push(g);}
+ });
+ if(!imgs.length&&cd.files)imgs=Array.prototype.filter.call(cd.files,isImg);
+ if(!imgs.length)return;
+ e.preventDefault();
+ pasteImgs(imgs,ta);
+});
 /*
   11.10, Itzik, by voice: on the computer he wants to drag a file and drop it
   on the monitor, and it uploads and sends. Only a drag that carries files
