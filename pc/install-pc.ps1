@@ -1,4 +1,4 @@
-# Installs the PC half of the monitor queue on a customer's computer (14.10.2026).
+﻿# Installs the PC half of the monitor queue on a customer's computer (14.10.2026).
 # No admin: everything lives under the user's own profile, and the minute task is
 # registered for the current user only. Run through install-pc.cmd (one click).
 $ErrorActionPreference = 'Stop'

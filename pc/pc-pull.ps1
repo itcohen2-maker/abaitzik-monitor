@@ -1,4 +1,4 @@
-# The computer half of the PC queue for a customer (14.10.2026). PowerShell 5.1 only:
+﻿# The computer half of the PC queue for a customer (14.10.2026). PowerShell 5.1 only:
 # no node, no ssh, no admin, nothing installed beyond Claude Code itself.
 #
 # Itzik, at Rinat's computer: "המוניטור והקלוד שלי יהיו המוח והקלוד שלה רק יעבוד".
