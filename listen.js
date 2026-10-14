@@ -171,10 +171,29 @@ function beatBody() {
   published file, so a flip publishes at once and nothing else does.
 */
 const PC_SEEN = path.join(STATUS, "pc-seen.json");
+// 14.10: the customer loop is sequential, so while a task runs (up to 30
+// minutes) it sends no ping. Rinat's Illustrator job made the page say "not
+// connected" for a machine that was busy. A task claimed inside that window
+// counts as on.
+const PC_TASKS = path.join(inst.dataPath, "pc", "pc");
+const PC_TASK_MAX_MS = 31 * 60 * 1000;
+function pcBusy() {
+  let files = [];
+  try { files = fs.readdirSync(PC_TASKS); } catch (e) { return false; }
+  for (const f of files) {
+    if (!f.endsWith(".json")) continue;
+    const t = readJson(path.join(PC_TASKS, f), null);
+    if (!t || t.status !== "claimed" || !t.claimedAt) continue;
+    const age = Date.now() - Date.parse(t.claimedAt);
+    if (age >= 0 && age < PC_TASK_MAX_MS) return true;
+  }
+  return false;
+}
 function pcState() {
   const s = readJson(PC_SEEN, null);
   const at = s && Date.parse(s.at);
-  return { on: Boolean(at && Date.now() - at < 180000), seen: s ? s.at : "" };
+  const seen = Boolean(at && Date.now() - at < 180000);
+  return { on: seen || pcBusy(), seen: s ? s.at : "" };
 }
 let pcLastOn = null;
 function pcWatch() {
