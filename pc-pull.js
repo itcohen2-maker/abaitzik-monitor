@@ -112,7 +112,11 @@ function usageOf(d) {
 function work(t) {
   return new Promise((resolve) => {
     say('מתחיל משימה ' + t.id + ': ' + t.task.slice(0, 80));
-    const child = spawn('claude', ['-p', '--chrome', '--output-format', 'json', '--dangerously-skip-permissions'], { cwd: HERE, shell: true, windowsHide: true });
+    // 14.10, Itzik: the theatre (and every PC task) keeps running, but cheaply. Six theatre
+    // tasks on the default model cost $30.67 in one morning. Planning is the server's job
+    // (Opus); this computer only executes, on the cheapest model. PC_MODEL overrides.
+    const model = process.env.PC_MODEL || 'haiku';
+    const child = spawn('claude', ['-p', '--chrome', '--model', model, '--output-format', 'json', '--dangerously-skip-permissions'], { cwd: HERE, shell: true, windowsHide: true });
     setLive(child.pid, { id: t.id, at: new Date().toISOString() });
     let out = '', err = '';
     child.stdout.on('data', (b) => { out += b; });
