@@ -5079,6 +5079,23 @@ function gjson(r){
   public address. No backslash in the regex below, the template strips them.
 */
 function fileEntry(name){var F=D.files||[];for(var i=0;i<F.length;i++)if(F[i].n===name)return F[i];return null;}
+/*
+  14.10, Rinat: "הלינק שבור ולא נכון". An answer wrote files/מחקר מעוצב קולקציית
+  חורף 27-28.pdf with plain spaces, and every reader of files/ links stops at the
+  first space, so the link pointed at files/מחקר: no such file, and the tap
+  reloaded the page into its lock. Every known file name with a space is written
+  back with %20 before anything reads the text, so the whole name is one link.
+*/
+function fileSpaces(t){
+ t=String(t==null?'':t);
+ if(t.indexOf('files/')<0)return t;
+ var F=(typeof D!=='undefined'&&D&&D.files)||[];
+ F.slice().sort(function(a,b){return b.n.length-a.n.length;}).forEach(function(f){
+  if(f.n.indexOf(' ')<0)return;
+  t=t.split('files/'+f.n).join('files/'+f.n.split(' ').join('%20'));
+ });
+ return t;
+}
 function fileBlob(e){
  // 29.9: a file replaced under the same name kept its address, so the phone
  // played its cached old copy. The version in the address forces the new one.
@@ -6351,8 +6368,9 @@ function goLinks(m){
  // Itzik, 4.10, on "the updated link will come here": the file came in a
  // later answer in the same thread, and the card that promised it had no
  // button. A file named anywhere in the thread gets its button on every card.
+ t=fileSpaces(t);
  var ft=t;
- if(m.re)(D.chat||[]).forEach(function(x){if(x.from==='claude'&&x.re===m.re&&x.text!==m.text)ft+=' '+x.text;});
+ if(m.re)(D.chat||[]).forEach(function(x){if(x.from==='claude'&&x.re===m.re&&x.text!==m.text)ft+=' '+fileSpaces(x.text);});
  var fb=[];
  (ft.match(new RegExp('files/[^\\\\s<>"]+','g'))||[]).forEach(function(h){
   var n=fileNameOf(h.replace(new RegExp('[.,;:!?)"]+$'),''));
@@ -6477,6 +6495,7 @@ function linkify(t){
   return 'פתיחת הקישור ('+host+')';
  }
  var PHONE_RE='(?<![0-9])(?:0[2-9][0-9]?[ -]?[0-9]{3}[ -]?[0-9]{4}|1[ -]?[78]00[ -]?[0-9]{2,3}[ -]?[0-9]{3,4})(?![0-9])';
+ if(typeof fileSpaces==='function')t=fileSpaces(t);
  var parts=String(t==null?'':t).split(new RegExp('(https?://[^\\\\s<>"]+|files/[^\\\\s<>"]+|'+PHONE_RE+')','g'));
  return parts.map(function(x,i){
   if(!(i%2))return esc(x);
@@ -11390,7 +11409,7 @@ function filesSentToOwner(){
  var s={};
  (D.chat||[]).forEach(function(m){
   if(m.from!=='claude')return;
-  String(m.text||'').replace(/files\\/([^\\s)"'<>\\]]+)/g,function(_,n){try{n=decodeURIComponent(n);}catch(e){}s[n.replace(/[.,;:!?]+$/,'')]=1;});
+  fileSpaces(m.text||'').replace(/files\\/([^\\s)"'<>\\]]+)/g,function(_,n){try{n=decodeURIComponent(n);}catch(e){}s[n.replace(/[.,;:!?]+$/,'')]=1;});
  });
  return s;
 }

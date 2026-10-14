@@ -76,6 +76,7 @@ function Prompt($t) {
     '',
     'חשוב:',
     '  - עובדים על עותק. קובץ מקור בכונן או בתיקייה לא משנים ולא מוחקים; תוצר חדש נשמר ליד המקור או בתיקייה MonitorWork בפרופיל.',
+    ('  - קבצים מהמוניטור שהמשימה מזכירה כבר הורדו לתיקייה הזאת, בשם המקורי: ' + (Join-Path $Work ('in-' + $t.id))),
     ('  - כל תוצר שהלקוח צריך לקבל (תמונה, PDF, קובץ AI או PSD, מצגת) שומרים גם בתיקייה הזאת: ' + (Join-Path $Work ('out-' + $t.id))),
     '    כל קובץ שם עולה למוניטור לבד אחרי שתסיים, ומופיע ללקוח עם תמונה וכפתור הורדה. שם קובץ בעברית פשוטה שאומר מה זה.',
     '    תמונה לתצוגה: גם JPG או PNG, לא רק AI או PSD, כדי שהלקוח יראה את התוצאה בלי לפתוח תוכנה.',
@@ -145,6 +146,22 @@ function One() {
     Remove-Item $Lock -Force -ErrorAction SilentlyContinue
   }
   if ($Dry) { $r = Call 'GET' 'ping' $null; Say ('dry: השרת ענה ' + $r.code); return }
+  # 14.10: once an hour, take the newest copy of this script from the server.
+  # The new copy runs from the next minute on; a copy that does not parse is not taken.
+  $mark = Join-Path $Here 'self-check.txt'
+  if (-not (Test-Path $mark) -or ((Get-Date) - (Get-Item $mark).LastWriteTime).TotalMinutes -gt 60) {
+    Set-Content -Path $mark -Value (Get-Date).ToString('s') -Encoding ASCII
+    try {
+      $tmp = Join-Path $Here 'pc-pull.new'
+      Invoke-WebRequest -UseBasicParsing -Uri ($Cfg.url.TrimEnd('/') + '/self') -Headers @{ 'X-Pc-Key' = $Cfg.key } -OutFile $tmp -TimeoutSec 60
+      $me = $MyInvocation.PSCommandPath; if (-not $me) { $me = Join-Path $Here 'pc-pull.ps1' }
+      if ((Get-FileHash $tmp).Hash -ne (Get-FileHash (Join-Path $Here 'pc-pull.ps1')).Hash) {
+        $errs = $null; [void][System.Management.Automation.Language.Parser]::ParseFile($tmp, [ref]$null, [ref]$errs)
+        if ($errs.Count -eq 0) { Copy-Item $tmp (Join-Path $Here 'pc-pull.ps1') -Force; Say 'עודכן מהשרת'; Call 'GET' ('ping?step=' + [uri]::EscapeDataString('self-updated')) $null | Out-Null }
+      }
+      Remove-Item $tmp -Force -ErrorAction SilentlyContinue
+    } catch { Say ('!! עדכון עצמי: ' + $_.Exception.Message) }
+  }
   $r = Call 'GET' 'next' $null
   if ($r.code -eq 204) { return }
   if ($r.code -ne 200) { Say ('!! השרת לא ענה: ' + $r.code + ' ' + $r.text); return }
@@ -153,6 +170,22 @@ function One() {
   Set-Content -Path $Lock -Value $t.id -Encoding UTF8
   try {
     Say ('מתחיל משימה ' + $t.id + ': ' + ([string]$t.task).Substring(0, [Math]::Min(80, ([string]$t.task).Length)))
+    # 14.10: monitor files the task names are downloaded first, into in-<id>,
+    # so the dry steps can say "the file in the in folder" and it is there.
+    $inDir = Join-Path $Work ('in-' + $t.id)
+    $l = Call 'GET' 'list' $null
+    if ($l.code -eq 200) {
+      $all = ([string]$t.task + "`n" + [string]$t.message) -replace '%20', ' '
+      foreach ($n in ($l.text | ConvertFrom-Json)) {
+        if ($all.IndexOf($n) -lt 0) { continue }
+        New-Item -ItemType Directory -Force $inDir | Out-Null
+        $dst = Join-Path $inDir (Split-Path $n -Leaf)
+        try {
+          Invoke-WebRequest -UseBasicParsing -Uri ($Cfg.url.TrimEnd('/') + '/get?name=' + [uri]::EscapeDataString($n)) -Headers @{ 'X-Pc-Key' = $Cfg.key } -OutFile $dst -TimeoutSec 900
+          Say ('ירד מהמוניטור: ' + $n)
+        } catch { Say ('!! לא ירד: ' + $n + ' ' + $_.Exception.Message) }
+      }
+    }
     $res = RunClaude $t
     if ($res.usage) {
       $u = Call 'POST' ('usage/' + $t.id) ($res.usage | ConvertTo-Json -Compress -Depth 5)

@@ -85,3 +85,20 @@ test('pc api: a file from the computer lands in files-private/pc-out with a safe
     assert.equal(r2.text, 'files/pc-out/וילון-2.jpg');
   } finally { server.close(); }
 });
+
+test('pc api: list and get serve files-private only, never pc/ or outside', async () => {
+  const dataPath = tmp();
+  fs.mkdirSync(path.join(dataPath, 'files-private', 'pc'), { recursive: true });
+  fs.writeFileSync(path.join(dataPath, 'files-private', 'מחקר מעוצב.pdf'), 'PDF');
+  fs.writeFileSync(path.join(dataPath, 'files-private', 'pc', 'config.json'), 'SECRET');
+  const api = pcApi({ name: 'rinat', dir: '/x', dataPath, log: () => {}, run: async () => ({ code: 0, out: '', err: '' }) });
+  const { server, call } = await serve(api);
+  try {
+    const l = await call('GET', '/up/v1/rinat/pc/list', undefined, 'a'.repeat(32));
+    assert.deepEqual(JSON.parse(l.text), ['מחקר מעוצב.pdf']);
+    const g = await call('GET', '/up/v1/rinat/pc/get?name=' + encodeURIComponent('מחקר מעוצב.pdf'), undefined, 'a'.repeat(32));
+    assert.equal(g.text, 'PDF');
+    assert.equal((await call('GET', '/up/v1/rinat/pc/get?name=' + encodeURIComponent('pc/config.json'), undefined, 'a'.repeat(32))).status, 404);
+    assert.equal((await call('GET', '/up/v1/rinat/pc/get?name=' + encodeURIComponent('../keys.json'), undefined, 'a'.repeat(32))).status, 404);
+  } finally { server.close(); }
+});
