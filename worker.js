@@ -584,7 +584,9 @@ function logUsage(raw, list) {
 */
 const EXEC_MODEL = process.env.MONITOR_EXEC_MODEL || 'claude-haiku-5-5';
 function planFirst(text, list) {
-  if (inst.name === 'abaitzik' || process.platform === 'win32' || process.env.MONITOR_ONE_STAGE) return null;
+  // 14.10, Itzik: "בדיקה נוספת גם במוניטור שלי". His own server monitor splits too: Opus
+  // plans, Haiku executes. Only his Windows PC worker (--chrome) stays a single session.
+  if (process.platform === 'win32' || process.env.MONITOR_ONE_STAGE) return null;
   const ask = text + '\n\n' + [
     '=== שלב תכנון בלבד ===',
     'אתה המתכנן. מותר לך רק לקרוא קבצים (Read, Grep, Glob). אל תכתוב, אל תריץ ואל תענה.',
@@ -654,6 +656,21 @@ function run(list) {
   if (process.platform === 'win32') args.splice(1, 0, '--chrome');
   // 12.10: one customer session can not run away either (see overBudget).
   if (inst.name !== 'abaitzik' && !ownAccount()) args.push('--max-budget-usd', String(SESSION_USD));
+  /*
+    14.10, Itzik: "חוץ ממעבר מלל במוניטור אך שום ביצוע לא בשרת שלי". With the customer's
+    computer wired, the server session may only read, write text (chat, project memory)
+    and hand tasks to her computer. No Agent, no web, no free shell: the prompt said so
+    since noon and 33 Haiku sessions still ran work here. Now it is the tool list.
+  */
+  if (inst.name !== 'abaitzik' && plan !== null && pcWired()) {
+    // Without skip-permissions a headless session simply gets "denied" on any tool
+    // outside this list; with it, the list would not limit anything.
+    args.splice(args.indexOf('--dangerously-skip-permissions'), 1);
+    args.push('--allowedTools', 'Read', 'Grep', 'Glob', 'Write', 'Edit',
+      'Bash(node pc-task.js:*)', 'Bash(node push.js:*)', 'Bash(node change-request.js:*)',
+      'Bash(node transcribe.js:*)', 'Bash(node build.js:*)', 'Bash(npm test:*)', 'Bash(ls:*)', 'Bash(cat:*)', 'Bash(date:*)');
+    say('מחשב הלקוח מחובר: הסשן כאן רק מעביר מלל ומשימות');
+  }
   const child = spawn('claude', args,
     { cwd: HERE, shell: true, windowsHide: true });
   child.stdin.end(plan ? text + '\n\n' + plan : text, 'utf8');
