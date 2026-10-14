@@ -2617,6 +2617,8 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .pjBox input{font:inherit;padding:10px;border-radius:10px;border:1px solid var(--line,#333);background:transparent;color:inherit}
 .pjFbox textarea{min-height:48px}
 .pjTabs{display:flex;flex-wrap:wrap;gap:6px}
+.pjTopic{border:1px solid var(--line,#333);border-radius:12px;padding:10px;margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.pjTLabel{align-self:flex-start;border:1px solid var(--line,#333);border-radius:8px;padding:4px 12px;font-weight:700}
 .pjTab{background:none;border:0;border-bottom:2px solid transparent;padding:6px 4px;font:inherit;color:var(--dim);cursor:pointer}
 .pjTab.on{font-weight:700;color:inherit;border-bottom-color:var(--accent)}
 .pjGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:start}
@@ -2627,7 +2629,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .pjOne+.pjOne{border-top:1px dashed var(--line,#333);padding-top:6px}
 .pjFu{margin-inline-start:10px;padding:6px 0 6px 8px;border-inline-start:2px solid var(--line,#333);display:flex;flex-direction:column;gap:4px}
 .pjAns{color:var(--dim);font-size:13px;margin:0}
-@media (max-width:700px){.pjGrid{grid-template-columns:1fr}.pjH{display:none}}
+@media (max-width:700px){.pjGrid{gap:6px;font-size:14px}.pjReq,.pjRes{padding:6px}}
 .biz .bzTop{display:flex;align-items:center;gap:12px}
 .bzScore{flex:0 0 64px;width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font:700 22px Heebo,sans-serif;text-align:center}
 .bzScore.g{background:#2e7d32}.bzScore.a{background:#ef8f00}.bzScore.r{background:#c62828}
@@ -15328,22 +15330,18 @@ function projRowHtml(r,topic,fem){
  return req+'<div class="pjRes">'+inner+'</div>';
 }
 function projBoardHtml(p,fem,tab,newOpen){
- var B=ML.projBoard((D&&D.chat)||[],pending(),p,stamp),T=B.topics,cur=null;
- T.forEach(function(t){if(t.title===tab)cur=t;});
- if(!cur&&T.length)cur=T[0];
- var tabs='<div class="pjTabs">'+T.map(function(t){
-  return '<button type="button" class="pjTab'+(cur&&t.title===cur.title?' on':'')+'" data-pj="tab" data-t="'+esc(t.title)+'">'+esc((t.icon?t.icon+' ':'')+t.title)+'</button>';
- }).join('')+'<button type="button" class="pjTab" data-pj="newtopic">+ נושא</button></div>';
+ var B=ML.projBoard((D&&D.chat)||[],pending(),p,stamp),T=B.topics;
+ var sections=T.map(function(t){
+  return '<div class="pjTopic"><div class="pjTLabel">'+esc((t.icon?t.icon+' ':'')+t.title)+'</div>'
+   +(t.rows.length?'<div class="pjGrid"><div class="pjH">בקשות</div><div class="pjH">תוצאה</div>'+t.rows.map(function(r){return projRowHtml(r,t.title,fem);}).join('')+'</div>'
+   :'<small class="pjAns">עוד אין כאן בקשות.</small>')
+   +'<div class="pjBox pjNewReq"><textarea placeholder="בקשה חדשה ב'+esc(t.title)+'"></textarea>'
+   +'<button type="button" class="yb yb2" data-pj="req" data-t="'+esc(t.title)+'">שליחה</button></div></div>';
+ }).join('');
  var nt='<div class="pjBox pjNewT"'+(newOpen?'':' hidden')+'><input id="pjNT" type="text" maxlength="40" placeholder="שם הנושא, למשל: בדים">'
   +'<textarea placeholder="'+(fem?'כתבי':'כתוב')+' כאן את הבקשה לנושא הזה"></textarea>'
   +'<button type="button" class="yb yb2" data-pj="nreq">שליחה</button></div>';
- if(!cur)return tabs+nt;
- var body=cur.rows.length
-  ?'<div class="pjGrid"><div class="pjH">בקשה</div><div class="pjH">תוצאה</div>'+cur.rows.map(function(r){return projRowHtml(r,cur.title,fem);}).join('')+'</div>'
-  :'<small class="pjAns">עוד אין כאן בקשות. '+(fem?'כתבי':'כתוב')+' למטה.</small>';
- return tabs+nt+body
-  +'<div class="pjBox pjNewReq"><textarea placeholder="בקשה חדשה ב'+esc(cur.title)+'"></textarea>'
-  +'<button type="button" class="yb yb2" data-pj="req" data-t="'+esc(cur.title)+'">שליחה</button></div>';
+ return sections+'<div class="pjTabs"><button type="button" class="pjTab" data-pj="newtopic">+ נושא</button></div>'+nt;
 }
 function projSheet(p){
  var fem=projFem(),c=projCur(p);
