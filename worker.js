@@ -805,6 +805,8 @@ function reconcile(live) {
   all.filter((m) => m.from === 'itzik' && !(m.id && (got.has(m.id) || handed.has(m.id))) && !held.has(m.file))
     .filter((m) => (seen[m.file] && m.status !== 'done') || (m.status === 'done' && m.id && !autoFile(m)))
     .filter((m) => now - takenAt(m) > MAX_SESSION_MS + 2 * 60 * 1000)
+    // Only today's notes: older done notes were answered in days when replies carried no re.
+    .filter((m) => now - Date.parse(m.at) < 12 * 60 * 60 * 1000)
     .forEach((m) => {
       if (!retry[m.file]) {
         retry[m.file] = new Date().toISOString();
