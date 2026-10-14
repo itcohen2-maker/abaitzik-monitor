@@ -160,6 +160,32 @@ function firstUse(t) {
   return hit ? hit.at : '';
 }
 
+/*
+  14.10, Itzik approved Alon's request: he runs the theatre with Itzik, so a new
+  arena there is his own call, not a change to his monitor. A tenant record with
+  "selfArenas": true has every request for an arena (זירה) go straight to the PC
+  queue, where the theatre's code lives, and the customer hears it is in the
+  works. No phone ring, nothing waiting for approval. Returns true when handled.
+*/
+function selfArena(t, x) {
+  if (!t.selfArenas || !/זיר[הות]/.test(x.text || '')) return false;
+  try {
+    const root = 'tenant-' + t.id + '-' + x.id;
+    const at = new Date();
+    const stamp = at.toISOString().replace(/[-:]/g, '').slice(0, 13).replace('T', '-');
+    fs.writeFileSync(path.join(__dirname, 'data', 'chat', 'chat', stamp + '-claude-' + root + '.json'), JSON.stringify({
+      at: at.toISOString(), from: 'claude', id: root, status: 'done',
+      text: (t.title || t.id) + ' ביקש זירה חדשה בתיאטרון, והיא עברה לבנייה במחשב בלי אישור: ' + x.text,
+    }, null, 1), 'utf8');
+    execFileSync('node', ['pc-task.js', 'add', '--re', root,
+      'זירה חדשה בתיאטרון רמת הנשיא (bubot-theatre, הקוד במחשב ב C:\\Users\\User\\bubot-theatre), לבקשת ' + (t.title || t.id)
+      + ' שמנהל את התיאטרון יחד עם איציק ולא צריך אישור לזירות. לבנות אותה כמו הזירות הקיימות, לפרוס לייצור ולבדוק אותה חיה. הבקשה במילים שלו: '
+      + x.text + '\nבסוף לענות בשורה אחת מה נבנה והקישור לזירה.'], { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
+    cr.decide(t.id, x.id, 'approved', 'זירה בתיאטרון לא צריכה אישור. הבקשה עברה ישר לבנייה, והזירה תופיע באתר של התיאטרון כשתהיה מוכנה.');
+    return true;
+  } catch (e) { console.log('self arena failed: ' + String(e.message).slice(0, 120)); return false; }
+}
+
 function main() {
   if (!fs.existsSync(DIR)) { console.log('no tenants'); return; }
   let changed = false;
@@ -183,6 +209,9 @@ function main() {
       The morning's auto approval for an admin customer is gone: her requests
       wait for him like everyone's.
     */
+    const own = DRY ? [] : fresh.filter((x) => selfArena(t, x));
+    own.forEach((x) => { x.status = 'approved'; });
+    fresh.splice(0, fresh.length, ...fresh.filter((x) => !own.includes(x)));
     if (fresh.length && !DRY) {
       try {
         execFileSync('node', ['notify.js', '📨 ' + (t.title || t.id) + ' מבקש שינוי', fresh.map((x) => x.text).join(' · ').slice(0, 300)],
@@ -246,4 +275,4 @@ function main() {
 }
 
 if (require.main === module) main();
-module.exports = { check, complete, firstUse };
+module.exports = { check, complete, firstUse, selfArena };
