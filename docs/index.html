@@ -2042,7 +2042,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-14T19:22:09.605Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-14T20:15:12.165Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2197,7 +2197,7 @@ try{
   <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה</small></button>
   <button type="button" class="gt gPen" id="gPen"><b>🏦 פנסיה</b><small>קוד מוסד בבנק 28417, 1,211 ש״ח. בדיקה ב 18.10</small></button>
   <button type="button" class="gt gLec" id="gLec" data-new="1" data-upd="2026-10-13-clalit"><b>🎤 הרצאה</b><small>כנגד כל הסיכויים: המלל, השקפים והסכם כללית</small></button>
-  <button type="button" class="gt gSite" id="gSite" data-new="1" data-upd="2026-10-14-logo"><b>🌐 האתר שלי</b><small>abaitzik-tech.vercel.app. הלוגו החדש באוויר. לחיצה פותחת את האתר</small></button>
+  <button type="button" class="gt gSite" id="gSite" data-new="1" data-upd="2026-10-14-name"><b>🌐 האתר שלי</b><small>ITsolution. itsolution-il.vercel.app. לחיצה פותחת את האתר</small></button>
   <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-14-missing"><b>🧭 טום ממליץ</b><small>האתר אחד לאחד באוויר. בפנים: מה חסר לי ממך, 12 סעיפים</small></button>
   <button type="button" class="gt gDudi" id="gDudi" data-new="1"><b>🥩 דודי בשר</b><small>חשבוניות יוני ויולי לשליחה</small></button>
   <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
@@ -3752,7 +3752,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='a10aceb4ae';
+var CODE_ID='eeceeb6947';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10749,7 +10749,7 @@ function tomSheet(){
  document.body.appendChild(w);
 }
 on('gTom',tomSheet);
-on('gSite',function(){window.open('https://abaitzik-tech.vercel.app','_blank','noopener');});
+on('gSite',function(){window.open('https://itsolution-il.vercel.app','_blank','noopener');});
 
 var DUDI_ITEMS=[
  {n:'★',t:'כל ארבע ביחד, 2,309 ש״ח (PDF אחד)',r:'dudi-4-invoices-2309.pdf'},
