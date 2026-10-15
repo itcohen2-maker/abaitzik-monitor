@@ -2049,7 +2049,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-15T17:31:17.128Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-15T17:32:40.705Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2178,7 +2178,7 @@ try{
  <div id="askBox"></div>
 
  <div class="grid" id="blkTiles">
-  <button type="button" class="gt gLec" id="gLec" data-new="1" data-upd="2026-10-15-ilay-cover"><b>🎤 הרצאה</b><small>חדש 06: הריל של איליי, הקאבר, ההוק והכיתוב</small></button>
+  <button type="button" class="gt gLec" id="gLec" data-new="1" data-upd="20261015-clalit"><b>🎤 הרצאה</b><small>חדש 06: הריל של איליי, הקאבר, ההוק והכיתוב</small></button>
   <button type="button" class="gt gStory" id="gStory" data-upd="2026-10-15-ner-bio"><b>🎞️ סטורי</b><small>4 סטורי נרות חדשים: תמונות על כל המסך, הטקסט באמצע</small></button>
   <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>מי חייב כסף ומאיזה חודש</small></button>
   <button type="button" class="gt g8" id="gVaad"><b>🏠 ועד הבית</b><small>מי שילם ומה פתוח</small></button>
@@ -2258,7 +2258,7 @@ try{
    <svg viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>חדש</button>
  </div>
 
-<div class="grid" id="blkBiz"><button type="button" class="gt g16" id="gBiz" data-new="1" data-upd="2026-10-15-leadnotes"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>
+<div class="grid" id="blkBiz"><button type="button" class="gt g16" id="gBiz" data-new="1" data-upd="20261015-clalit"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>
 
 
 
@@ -3768,7 +3768,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='f6b8a18732';
+var CODE_ID='a9a5f1934f';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10450,7 +10450,6 @@ var LEC_ITEMS=[
  {t:'02 המצגת, כל השקפים',u:'https://docs.google.com/presentation/d/13lOa3wpgkhMpcZallab84mkLkzy9vc1o_nPHIvQFsUQ/present'},
  {t:'03 לאימון: המלל עם השקפים בקטן',r:'lecture-practice-small-slides.pdf',u:'https://drive.google.com/file/d/1h-ja7UYp2wBL4aAa3iDKvEbQf4_QEPZ_/view'},
  {t:'04 הריל שמבשר על ההרצאות: תסריט ריל 06, מאיפה הכוחות',r:'reel-06-meefo-hakohot.txt'},
- {t:'05 🏥 הסכם כללית: אשקלון ובאר שבע',cl:1},
  {t:'06 🎬 הריל של איליי על ההרצאה (15.10)',r:'reel-lecture-ilay-1510.mp4'},
  {t:'06ב 🖼️ הקאבר לריל, מאיליי',r:'reel-lecture-ilay-1510-cover.jpg'},
  {t:'06ג הוק ויזואלי וכיתוב לפוסט, מאיליי',r:'lecture-ilay-1510-text.txt'},
@@ -10484,7 +10483,6 @@ function lecSheet(){
   if(k===null||k===undefined)return;
   close();
   var it=LEC_ITEMS[+k];if(k===''||!it)return;
-  if(it.cl){clalitSheet();return;}
   if(it.wa){window.open('https://wa.me/?text='+encodeURIComponent(LEC_WA),'_blank','noopener');return;}
   if(it.r){fileOpen(it.r);return;}
   window.open(it.u,'_blank','noopener');
@@ -11114,6 +11112,8 @@ function bizSheet(){
   function body(){return tab==='money'?moneyHtml():tab==='due'?dueHtml():leadsHtml();}
   var tabs=[['leads','לידים ולקוחות'],['money','כסף החודש'],['due','צריך לחזור']];
   var html='<div class="biz"><div class="bzTop">'+scoreHtml()+'<p class="bzUrg"><b>'+esc((S&&S.urgent)||'אין עדיין נתונים.')+'</b></p></div>'
+   +'<div class="bzSec">מסמכים</div>'
+   +'<button type="button" class="yb" data-bz="clalit">🏥 מסמכים: הסכם כללית</button>'
    +'<button type="button" class="yb yb1" data-bz="newtoggle">➕ ליד חדש</button>'
    +'<div class="bzEd" data-bz="newbox" hidden><input id="bzNewIn" placeholder="שם, טלפון ומה הוא רוצה"><button type="button" class="yb yb2" data-bz="newsend">שלח</button></div>'
    +'<div class="bzTabs">'+tabs.map(function(t){return '<button type="button" class="yb'+(t[0]===tab?' on':'')+'" data-bz="tab" data-t="'+t[0]+'">'+t[1]+'</button>';}).join('')+'</div>'
@@ -11122,6 +11122,7 @@ function bizSheet(){
    el.addEventListener('click',function(e){
     var t=e.target.closest?e.target.closest('[data-bz]'):null;if(!t)return;
     var a=t.getAttribute('data-bz');
+    if(a==='clalit'){clalitSheet();return;}
     if(a==='tab'){
      tab=t.getAttribute('data-t');
      el.querySelectorAll('[data-bz="tab"]').forEach(function(b){b.classList.toggle('on',b===t);});

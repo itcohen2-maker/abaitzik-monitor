@@ -1142,7 +1142,7 @@ function tenantTiles(inst) {
     + esc((l.icon ? l.icon + ' ' : '') + l.title) + '</b><small>' + esc(l.sub || 'פתיחה בלשונית חדשה') + '</small></button>').join('');
   return guides + links + ids.filter((id) => TENANT_TILES[id]).map((id) => {
     const [cls, title, sub] = TENANT_TILES[id];
-    return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="2026-10-15-leadnotes"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261015-clalit"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
 }
 /*
@@ -3908,7 +3908,7 @@ try{
  <div id="askBox"></div>
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
-  <button type="button" class="gt gLec" id="gLec" data-new="1" data-upd="2026-10-15-ilay-cover"><b>🎤 הרצאה</b><small>חדש 06: הריל של איליי, הקאבר, ההוק והכיתוב</small></button>
+  <button type="button" class="gt gLec" id="gLec" data-new="1" data-upd="20261015-clalit"><b>🎤 הרצאה</b><small>חדש 06: הריל של איליי, הקאבר, ההוק והכיתוב</small></button>
   <button type="button" class="gt gStory" id="gStory" data-upd="2026-10-15-ner-bio"><b>🎞️ סטורי</b><small>4 סטורי נרות חדשים: תמונות על כל המסך, הטקסט באמצע</small></button>
   <!--
     14.10 Itzik: a new story goes into this tile, and the tile moves to the top
@@ -4194,7 +4194,7 @@ try{
     and no screens list (Itzik's copy). A customer with a screens list gets the
     tile from tenantTiles, only when gBiz is in that list.
   -->
-${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz"><button type="button" class="gt g16" id="gBiz" data-new="1" data-upd="2026-10-15-leadnotes"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>' : ''}
+${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz"><button type="button" class="gt g16" id="gBiz" data-new="1" data-upd="20261015-clalit"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>' : ''}
 <!--TENANT:BEGIN-->
   <!--
     A customer's home screen, built from his intake answers and not filtered
@@ -14542,8 +14542,7 @@ var LEC_ITEMS=[
  {t:'03 לאימון: המלל עם השקפים בקטן',r:'lecture-practice-small-slides.pdf',u:'https://drive.google.com/file/d/1h-ja7UYp2wBL4aAa3iDKvEbQf4_QEPZ_/view'},
  /* 13.10 night: the Reel that announces the lectures, from his two voice notes. Drive: תסריטים, סיפורים אישיים. */
  {t:'04 הריל שמבשר על ההרצאות: תסריט ריל 06, מאיפה הכוחות',r:'reel-06-meefo-hakohot.txt'},
- /* 13.10 night, Itzik: "שים את הסכם כללית ביחד עם ההרצאה". The agreement moved in here; its own tile is gone. */
- {t:'05 🏥 הסכם כללית: אשקלון ובאר שבע',cl:1},
+ // 15.10, Itzik: the Clalit agreement moved from here to the "💼 העסק שלי" tile (its file list is in its own sheet there).
  // 15.10: Ilay's folder "אבא איציק" (shared, ilayco10): the reel that announces the lectures, three hooks and the post caption.
  {t:'06 🎬 הריל של איליי על ההרצאה (15.10)',r:'reel-lecture-ilay-1510.mp4'},
  {t:'06ב 🖼️ הקאבר לריל, מאיליי',r:'reel-lecture-ilay-1510-cover.jpg'},
@@ -14582,7 +14581,6 @@ function lecSheet(){
   if(k===null||k===undefined)return;
   close();
   var it=LEC_ITEMS[+k];if(k===''||!it)return;
-  if(it.cl){clalitSheet();return;}
   if(it.wa){window.open('https://wa.me/?text='+encodeURIComponent(LEC_WA),'_blank','noopener');return;}
   if(it.r){fileOpen(it.r);return;}
   window.open(it.u,'_blank','noopener');
@@ -15294,6 +15292,9 @@ function bizSheet(){
   function body(){return tab==='money'?moneyHtml():tab==='due'?dueHtml():leadsHtml();}
   var tabs=[['leads','לידים ולקוחות'],['money','כסף החודש'],['due','צריך לחזור']];
   var html='<div class="biz"><div class="bzTop">'+scoreHtml()+'<p class="bzUrg"><b>'+esc((S&&S.urgent)||'אין עדיין נתונים.')+'</b></p></div>'
+   // 15.10, Itzik: the Clalit agreement lives here now, as a link at the top of the sheet.
+   +'<div class="bzSec">מסמכים</div>'
+   +'<button type="button" class="yb" data-bz="clalit">🏥 מסמכים: הסכם כללית</button>'
    +'<button type="button" class="yb yb1" data-bz="newtoggle">➕ ליד חדש</button>'
    +'<div class="bzEd" data-bz="newbox" hidden><input id="bzNewIn" placeholder="שם, טלפון ומה הוא רוצה"><button type="button" class="yb yb2" data-bz="newsend">שלח</button></div>'
    +'<div class="bzTabs">'+tabs.map(function(t){return '<button type="button" class="yb'+(t[0]===tab?' on':'')+'" data-bz="tab" data-t="'+t[0]+'">'+t[1]+'</button>';}).join('')+'</div>'
@@ -15302,6 +15303,7 @@ function bizSheet(){
    el.addEventListener('click',function(e){
     var t=e.target.closest?e.target.closest('[data-bz]'):null;if(!t)return;
     var a=t.getAttribute('data-bz');
+    if(a==='clalit'){clalitSheet();return;}
     if(a==='tab'){
      tab=t.getAttribute('data-t');
      el.querySelectorAll('[data-bz="tab"]').forEach(function(b){b.classList.toggle('on',b===t);});
