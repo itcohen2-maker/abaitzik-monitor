@@ -13467,7 +13467,7 @@ on('gReels',reelSheet);
   11.10, Itzik: "שים במוניטור בכפתור סטורי". Stories ready to save to the phone,
   newest on top. Same viewer as the reels: fileOpen has the save button.
 */
-var STORY_ITEMS=[{n:'חמישי',t:'נרות, עברית: תמונות אמיתיות, בחינם ובאהבה לכל עם ישראל',r:'story-ner-real-thu-he.mp4'},{n:'חמישי',t:'נרות, אנגלית: Free. With love.',r:'story-ner-real-thu-en.mp4'},{n:'שישי',t:'נרות, עברית: היום ערב שבת, שבת שלום',r:'story-ner-real-fri-he.mp4'},{n:'שישי',t:'נרות, אנגלית: Shabbat begins tonight',r:'story-ner-real-fri-en.mp4'},{n:'14.10',t:'הדרך חזרה על המשקל: 69.2 מפה התחלתי, 70.7 אתמול, 71.2 היום',r:'story-weight-1014.jpg'}];
+var STORY_ITEMS=[{n:'חמישי',t:'נרות, עברית: תמונות אמיתיות, בחינם ובאהבה לכל עם ישראל',r:'story-ner-real-thu-he.mp4'},{n:'חמישי',t:'נרות, אנגלית: Free. With love.',r:'story-ner-real-thu-en.mp4'},{n:'שישי',t:'נרות, עברית: היום ערב שבת, שבת שלום',r:'story-ner-real-fri-he.mp4'},{n:'שישי',t:'נרות, אנגלית: Shabbat begins tonight',r:'story-ner-real-fri-en.mp4'}];
 function storySheet(){
  var old=document.getElementById('stSheet');if(old)old.remove();
  var w=document.createElement('div');
