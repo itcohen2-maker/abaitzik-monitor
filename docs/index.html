@@ -2049,7 +2049,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-15T05:57:07.206Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-15T06:00:02.609Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2204,7 +2204,7 @@ try{
   <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה</small></button>
   <button type="button" class="gt gPen" id="gPen"><b>🏦 פנסיה</b><small>קוד מוסד בבנק 28417, 1,211 ש״ח. בדיקה ב 18.10</small></button>
   <button type="button" class="gt gLec" id="gLec" data-new="1" data-upd="2026-10-13-clalit"><b>🎤 הרצאה</b><small>כנגד כל הסיכויים: המלל, השקפים והסכם כללית</small></button>
-  <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-15-practice"><b>🧭 טום ממליץ</b><small>חדש: אימון על שני הסרטונים של טום, והקישורים לפוסטים</small></button>
+  <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-15-links"><b>🧭 טום ממליץ</b><small>חדש: אימון על שני הסרטונים של טום, והקישורים לפוסטים</small></button>
   <button type="button" class="gt gDudi" id="gDudi" data-new="1"><b>🥩 דודי בשר</b><small>חשבוניות יוני ויולי לשליחה</small></button>
   <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
   <button type="button" class="gt gOcc" id="gOcc"><b>🩺 מרפאה תעסוקתית</b><small>מכבי רמות. טלפון א עד ה 08:00 עד 11:00</small></button>
@@ -3769,7 +3769,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='389f9d40d9';
+var CODE_ID='878f450923';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10723,8 +10723,8 @@ function clalitSheet(){
 on('gClalit',clalitSheet);
 var TOM_ITEMS=[
  {n:'🎬',t:'15.10: אימון, המלל של שני הסרטונים של טום, משפט בשורה (PDF)',r:'tom-practice.pdf'},
- {n:'▶️',t:'הפוסט של טום, סרטון 1 (16.4)',u:'https://www.facebook.com/61562766016152/posts/122180814122425533/'},
- {n:'▶️',t:'הפוסט של טום, סרטון 2 (2.8)',u:'https://www.facebook.com/61562766016152/posts/122190317660425533/'},
+ {n:'▶️',t:'הפוסט של טום, סרטון 1 (16.4)',u:'https://www.facebook.com/reel/1495110975557164'},
+ {n:'▶️',t:'הפוסט של טום, סרטון 2 (2.8)',u:'https://www.facebook.com/reel/907250209120101'},
  {n:'🌐',t:'האתר שלך, אחד לאחד עם טום, באוויר',u:'https://abaitzik-tech.vercel.app'},
  {n:'❓',t:'14.10: מה חסר לי ממך כדי לסיים (12 סעיפים)',r:'tom-missing-14-10.txt'},
  {n:'🖥️',t:'עמוד ההסבר על המוניטור באתר',u:'https://abaitzik-tech.vercel.app/#monitor'},
