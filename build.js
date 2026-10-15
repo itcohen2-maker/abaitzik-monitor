@@ -1257,6 +1257,7 @@ body{margin:0;background:var(--ground);color:var(--ink);direction:rtl;
  background-image:radial-gradient(120% 60% at 100% 0,var(--accent-soft) 0,transparent 60%);
  background-repeat:no-repeat}
 .wrap{max-width:620px;margin:0 auto;padding:18px 16px 96px}
+@media (min-width:900px){.wrap:has(>#pA:not([hidden])){max-width:none}}
 .brand{display:flex;align-items:center;gap:12px;margin-bottom:4px}
 .mark{width:42px;height:42px;flex:0 0 42px;border-radius:13px;display:grid;place-items:center;
  background:linear-gradient(145deg,var(--accent),color-mix(in srgb,var(--accent) 55%,#000));

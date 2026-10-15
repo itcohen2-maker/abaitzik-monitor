@@ -47,6 +47,7 @@ body{margin:0;background:var(--ground);color:var(--ink);direction:rtl;
  background-image:radial-gradient(120% 60% at 100% 0,var(--accent-soft) 0,transparent 60%);
  background-repeat:no-repeat}
 .wrap{max-width:620px;margin:0 auto;padding:18px 16px 96px}
+@media (min-width:900px){.wrap:has(>#pA:not([hidden])){max-width:none}}
 .brand{display:flex;align-items:center;gap:12px;margin-bottom:4px}
 .mark{width:42px;height:42px;flex:0 0 42px;border-radius:13px;display:grid;place-items:center;
  background:linear-gradient(145deg,var(--accent),color-mix(in srgb,var(--accent) 55%,#000));
@@ -2042,7 +2043,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-15T04:12:29.767Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-15T04:14:34.955Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3752,7 +3753,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='eeceeb6947';
+var CODE_ID='76601804b2';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
