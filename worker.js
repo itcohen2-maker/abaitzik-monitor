@@ -182,11 +182,22 @@ function waiting() {
   const now = Date.now();
   return all.filter((m) => m.from === 'itzik')
     .filter((m) => m.status !== 'done')
-    .filter((m) => !(m.id && answeredIds.has(m.id)))
-    .filter((m) => !done[m.file])
+    .filter((m) => !(m.id && answeredIds.has(m.id)) || reopened(m, all))
+    .filter((m) => !done[m.file] || (m.reopenAt && m.reopenAt > done[m.file]))
     .filter((m) => now - Date.parse(m.at) > SETTLE_MS)
     .filter((m) => heard(m, now))
     .sort((a, b) => (a.at < b.at ? -1 : 1));
+}
+
+/*
+  15.10: a message can be opened again after it was answered (pc-task.js reopen, or
+  done on a task added with --then). It carries reopenAt and reopenNote, and it waits
+  until a reply of mine is written after reopenAt. The earlier answer stays on the page.
+*/
+function reopened(m, all) {
+  if (!m.reopenAt || !m.id) return false;
+  const after = all.some((r) => r.from === 'claude' && r.re === m.id && Date.parse(r.at) > Date.parse(m.reopenAt));
+  return !after;
 }
 
 /*
@@ -268,7 +279,8 @@ function pcWired() {
 }
 
 function prompt(list) {
-  const lines = list.map((m) => '- [' + m.at + '] (id ' + (m.id || m.file) + ') ' + String(m.text || '').replace(/\s+/g, ' '));
+  const lines = list.map((m) => '- [' + m.at + '] (id ' + (m.id || m.file) + ') ' + String(m.text || '').replace(/\s+/g, ' ') +
+    (m.reopenAt && m.reopenNote ? '\n  נפתחה מחדש ב ' + m.reopenAt + ' להמשך עבודה: ' + String(m.reopenNote).replace(/\s+/g, ' ') : ''));
   return [
     'זו הרצה אוטומטית. אין אדם בצד השני של הפלט הזה ואף אחד לא יקרא אותו.',
     'אל תבקש אישור ואל תציע לעשות משהו: תבצע. אל תסיים בלי לכתוב תשובה ולדחוף אותה.',
@@ -765,7 +777,7 @@ function reconcile(live) {
   // 4.10: the first short reply comes within two minutes, so closing on any
   // reply emptied "in work now" while the session was still on it. A session
   // that is alive closes its own message; this only catches the ones it forgot.
-  all.filter((m) => m.from === 'itzik' && m.status !== 'done' && m.id && got.has(m.id) && !held.has(m.file)).forEach((m) => {
+  all.filter((m) => m.from === 'itzik' && m.status !== 'done' && m.id && got.has(m.id) && !held.has(m.file) && !reopened(m, all)).forEach((m) => {
     const d = readJson(path.join(CHAT, m.file), null);
     if (!d) return;
     d.status = 'done';

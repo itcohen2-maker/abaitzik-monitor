@@ -113,16 +113,74 @@ function push(msg) {
 
 const [cmd, ...rest] = process.argv.slice(2);
 
+/*
+  15.10, Rinat's research collection: the computer sent back 1,025 files and a
+  76KB "done" body; the API took 64KB, dropped the connection, and nothing was
+  logged. Twice. After the second try nothing ever claimed the task again and
+  nothing failed it, so it sat "claimed" for hours and the watchdog shouted
+  every hour. Three rules from that evening:
+    - the answer is cut here, not refused: over 12 files/ lines become 6 and a
+      count, and the text is capped, whatever the computer's script version;
+    - a claimed task past its stale time with no tries left is failed here, in
+      next, so the queue never holds a task forever;
+    - add --then "<what the server does with the result>" reopens the original
+      message when the computer is done (reopenAt, reopenNote), so the server
+      session that promised "when the material is back I will..." actually runs.
+*/
+const MAX_ANSWER = 12000;
+function trimAnswer(text) {
+  let lines = String(text || '').split('\n');
+  const files = lines.filter((l) => /^files\//.test(l.trim()));
+  if (files.length > 12) {
+    const first = files.slice(0, 6);
+    const dir = (files[0].match(/^(files\/pc-out\/[^/]+\/)/) || [])[1];
+    lines = lines.filter((l) => !/^files\//.test(l.trim())).concat(first,
+      ['הועלו ' + files.length + ' קבצים למוניטור' + (dir ? ', כולם בתיקייה ' + dir : '') + '.']);
+  }
+  let out = lines.join('\n');
+  if (out.length > MAX_ANSWER) out = out.slice(0, MAX_ANSWER) + '\n(התשובה קוצרה)';
+  return out;
+}
+function reopen(re, note) {
+  let files = [];
+  try { files = fs.readdirSync(CHAT); } catch (e) { return false; }
+  for (const f of files) {
+    const p = path.join(CHAT, f);
+    const d = readJson(p, null);
+    if (!d || d.id !== re) continue;
+    d.status = 'working';
+    d.reopenAt = new Date().toISOString();
+    d.reopenNote = String(note || '').slice(0, 2000);
+    fs.writeFileSync(p, JSON.stringify(d, null, 1), 'utf8');
+    const seenP = path.join(inst.dataPath, 'status', 'worker-seen.json');
+    const seen = readJson(seenP, {});
+    if (seen[f]) { delete seen[f]; try { fs.writeFileSync(seenP, JSON.stringify(seen, null, 1), 'utf8'); } catch (e) {} }
+    return true;
+  }
+  return false;
+}
+function failExhausted() {
+  const now = Date.now();
+  const dead = locked(() => all().filter((x) => x.status === 'claimed' && now - Date.parse(x.claimedAt) > STALE_MS && (x.tries || 0) >= MAX_TRIES)
+    .map((x) => { x.status = 'failed'; x.lastError = 'המחשב לקח את המשימה ' + x.tries + ' פעמים ולא החזיר תשובה'; write(x); return x; }));
+  dead.filter((t) => !t.test).forEach((t) => {
+    reply(t, 'המחשב ניסה פעמיים ולא החזיר תשובה על זה. מה שנתקע: הסשן במחשב נגמר בלי להודיע. אפשר לבקש שוב.', 'failed');
+    push('משימת מחשב נכשלה: ' + t.task.slice(0, 60));
+  });
+}
+
 if (cmd === 'add') {
   const test = rest.includes('--test');
   const quiet = rest.includes('--quiet');
   const ri = rest.indexOf('--re');
   const re = ri > -1 ? rest[ri + 1] : '';
-  const task = rest.filter((x, i) => x !== '--test' && x !== '--quiet' && i !== ri && i !== ri + 1).join(' ').trim();
-  if ((!re && !test) || !task) { console.error('usage: node pc-task.js add --re <id> "<task>"'); process.exit(2); }
+  const ti = rest.indexOf('--then');
+  const then = ti > -1 ? String(rest[ti + 1] || '').trim() : '';
+  const task = rest.filter((x, i) => x !== '--test' && x !== '--quiet' && i !== ri && i !== ri + 1 && i !== ti && i !== ti + 1).join(' ').trim();
+  if ((!re && !test) || !task) { console.error('usage: node pc-task.js add --re <id> [--then "<what the server does next>"] "<task>"'); process.exit(2); }
   const id = 'pc-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
   write(Object.assign({ id, re, at: new Date().toISOString(), task, status: 'pending', tries: 0 },
-    test ? { test: true } : {}, quiet ? { quiet: true } : {}));
+    test ? { test: true } : {}, quiet ? { quiet: true } : {}, then ? { then } : {}));
   const o = pcOnline();
   console.log(id);
   console.log(o.on ? 'pc: on' : 'pc: off, last seen ' + (o.at || 'never'));
@@ -133,6 +191,7 @@ if (cmd === 'add') {
   // The PC asks every minute it is awake, so this is also its heartbeat.
   // pegasus-server.js reads it to stand in for the PC only while it is off.
   try { fs.writeFileSync(path.join(inst.dataPath, 'status', 'pc-seen.json'), JSON.stringify({ at: new Date().toISOString() })); } catch (e) {}
+  failExhausted();
   const t = locked(() => {
     const now = Date.now();
     const free = all().find((x) => x.status === 'pending' ||
@@ -149,7 +208,7 @@ if (cmd === 'add') {
     console.log(JSON.stringify(Object.assign({}, t, { message: m ? (m.note || m.text || '') : '' })));
   }
 } else if (cmd === 'done') {
-  const text = stdin();
+  const text = trimAnswer(stdin());
   if (!text) { console.error('empty answer'); process.exit(2); }
   const t = locked(() => {
     const x = get(rest[0]);
@@ -166,7 +225,17 @@ if (cmd === 'add') {
     process.exit(0);
   }
   reply(t, text, 'done');
+  if (t.then && t.re) {
+    const ok = reopen(t.re, 'המחשב סיים את המשימה "' + t.task.slice(0, 80) + '" והחזיר: ' + text.slice(0, 600) + '\nהמשך לפי התוכנית: ' + t.then);
+    console.log(ok ? 'ההודעה המקורית נפתחה מחדש להמשך בשרת' : 'ההודעה המקורית לא נמצאה, אין המשך');
+  }
   push('המחשב סיים משימה: ' + t.task.slice(0, 60));
+} else if (cmd === 'reopen') {
+  // node pc-task.js reopen <message id> "<note for the session>": a message of his goes
+  // back to the worker with the note, even though an answer already hangs on it.
+  const ok = reopen(rest[0], rest.slice(1).join(' '));
+  console.log(ok ? 'reopened' : 'no such message');
+  if (!ok) process.exit(2);
 } else if (cmd === 'fail') {
   const why = stdin() || 'הסשן במחשב נגמר בלי תשובה';
   const t = locked(() => {

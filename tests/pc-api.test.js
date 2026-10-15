@@ -102,3 +102,21 @@ test('pc api: list and get serve files-private only, never pc/ or outside', asyn
     assert.equal((await call('GET', '/up/v1/rinat/pc/get?name=' + encodeURIComponent('../keys.json'), undefined, 'a'.repeat(32))).status, 404);
   } finally { server.close(); }
 });
+
+test('pc api: a long done body (a thousand file lines) reaches pc-task, only a huge one is refused', async () => {
+  const calls = [];
+  const dataPath = tmp();
+  const api = pcApi({ name: 'rinat', dir: '/x', dataPath, log: () => {},
+    run: async (cmd, id, input) => { calls.push([cmd, id, input.length]); return { code: 0, out: 'ok', err: '' }; } });
+  const { server, call } = await serve(api);
+  try {
+    const long = Array.from({ length: 1025 }, (_, i) => 'files/pc-out/pc-abc123-zzzz/מצגת כיווני קולקציה חורף 27-28 - עמוד ' + i + '.jpg').join('\n');
+    assert.ok(long.length > 64 * 1024);
+    const d = await call('POST', '/up/v1/rinat/pc/done/pc-abc123-zzzz', long, 'a'.repeat(32));
+    assert.equal(d.status, 200);
+    assert.deepEqual(calls[0], ['done', 'pc-abc123-zzzz', long.length]);
+    const huge = await call('POST', '/up/v1/rinat/pc/done/pc-abc123-zzzz', 'x'.repeat(3 * 1024 * 1024), 'a'.repeat(32));
+    assert.equal(huge.status, 413);
+    assert.equal(calls.length, 1);
+  } finally { server.close(); }
+});

@@ -173,7 +173,7 @@ function One() {
       $me = $MyInvocation.PSCommandPath; if (-not $me) { $me = Join-Path $Here 'pc-pull.ps1' }
       if ((Get-FileHash $tmp).Hash -ne (Get-FileHash (Join-Path $Here 'pc-pull.ps1')).Hash) {
         $errs = $null; [void][System.Management.Automation.Language.Parser]::ParseFile($tmp, [ref]$null, [ref]$errs)
-        if ($errs.Count -eq 0) { Copy-Item $tmp (Join-Path $Here 'pc-pull.ps1') -Force; Say 'עודכן מהשרת'; Call 'GET' ('ping?step=' + [uri]::EscapeDataString('self-updated')) $null | Out-Null }
+        if ($errs.Count -eq 0) { Copy-Item $tmp (Join-Path $Here 'pc-pull.ps1') -Force; Say 'עודכן מהשרת'; Call 'GET' ('ping?step=' + [uri]::EscapeDataString('self-updated')) $null | Out-Null; $script:updated = $true }
       }
       Remove-Item $tmp -Force -ErrorAction SilentlyContinue
     } catch { Say ('!! עדכון עצמי: ' + $_.Exception.Message) }
@@ -237,6 +237,9 @@ function One() {
       if ($res.ok) { $res.text = $res.text + "`n" + ($links -join "`n") }
       else { $res = @{ ok = $true; text = ('הקבצים מוכנים.' + "`n" + ($links -join "`n")); usage = $res.usage } }
     }
+    # 15.10, Rinat: a session that listed 1,000 files in its answer made a 76KB "done" the
+    # server refused, and the task hung. The answer is a few lines; anything longer is cut here too.
+    if ($res.ok -and $res.text.Length -gt 12000) { $res.text = $res.text.Substring(0, 12000) + "`n(התשובה קוצרה)" }
     if ($res.ok) {
       $d = Call 'POST' ('done/' + $t.id) $res.text
       Say ($(if ($d.code -eq 200) { 'הוחזר לשרת: ' } else { '!! ההחזרה נכשלה (' + $d.code + '): ' }) + $t.id + ' ' + $d.text)
@@ -260,6 +263,15 @@ if ($Loop) {
   $polls = 0
   while ($true) {
     try { One } catch { Say ('!! ' + $_.Exception.Message); try { Call 'GET' ('ping?step=' + [uri]::EscapeDataString('loop error: ' + $_.Exception.Message)) $null | Out-Null } catch {} }
+    # 15.10: the functions of a running loop are the old ones even after the file changed
+    # (Rinat's loop from 14.10 never saw a fix). A fresh copy starts a new loop, which
+    # stops this one through loop.pid, and this one ends.
+    if ($script:updated) {
+      Say 'מפעיל מחדש עם הגרסה החדשה'
+      try { Start-Process powershell.exe -WindowStyle Hidden -ArgumentList @('-NoProfile', '-WindowStyle', 'Hidden', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $Here 'pc-pull.ps1'), '-Loop') | Out-Null } catch { Say ('!! ההפעלה מחדש נכשלה: ' + $_.Exception.Message) }
+      Start-Sleep -Seconds 5
+      exit 0
+    }
     $polls++
     # the first poll and then one an hour say "alive", so the server log shows the loop is up
     if ($polls -eq 1 -or ($polls % 60) -eq 0) { try { Call 'GET' ('ping?step=' + [uri]::EscapeDataString('loop alive, poll ' + $polls)) $null | Out-Null } catch {} }

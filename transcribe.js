@@ -33,11 +33,20 @@ text = " ".join(s.text.strip() for s in segs).strip()
 print(json.dumps({"text": text, "seconds": round(info.duration, 1)}, ensure_ascii=False))
 `;
 
+// 15.10: on the server the model lives once, in /opt/hf (the monitor user's cache).
+// A customer's instance runs as its own user, whose empty cache would mean a 3GB
+// download per user; so every user reads the shared copy, offline, when it is there.
+// Rinat's voice notes failed all day on "No module named faster_whisper" before this;
+// the package itself is installed per user (pip install --user faster-whisper av==18.1.0).
+const shared = process.env.MONITOR_HF_HOME || '/opt/hf';
+const sharedModel = fs.existsSync(path.join(shared, 'hub', 'models--Systran--faster-whisper-large-v3', 'snapshots'));
+const hfEnv = !process.env.HF_HOME && sharedModel ? { HF_HOME: shared, HF_HUB_OFFLINE: '1' } : {};
+
 try {
   // Without PYTHONIOENCODING the Windows console codec cannot print Hebrew.
   const out = execFileSync('python', ['-c', py, wav], {
     encoding: 'utf8', maxBuffer: 1 << 24,
-    env: Object.assign({}, process.env, { PYTHONIOENCODING: 'utf-8' }),
+    env: Object.assign({}, process.env, { PYTHONIOENCODING: 'utf-8' }, hfEnv),
   });
   const line = out.trim().split('\n').pop();
   const res = JSON.parse(line);
