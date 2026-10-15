@@ -6353,8 +6353,6 @@ function setLeadStatus(name,st){
 function leadRow(c){
  var st=leadStatus(c);
  var closed=st==='done';
- var subject='פרטים: '+(c.name||'');
- var body='שלח לי את פרטי ההתקשרות ואת מה שסוכם.';
  return '<div class="item lead'+(closed?' closed':'')+'">'
   +'<div class="top"><span class="who">'+esc(c.name||'ללא שם')+'</span>'
   +'<span class="chip">'+esc(NET[c.network]||c.network||'אחר')+'</span>'
@@ -6372,8 +6370,10 @@ function leadRow(c){
     +'<a href="'+esc(c.shot)+'" target="_blank" rel="noopener">'
     +'<img src="'+esc(c.shot)+'" alt="צילום מסך של הפנייה" loading="lazy"></a></details>':'')
   +logHtml(c.log)
-  +'<a class="ask" href="mailto:?subject='+encodeURIComponent(subject)
-  +'&body='+encodeURIComponent(body)+'">בקשת פרטי התקשרות</a>'
+  // 15.10: the mailto opened his mail app instead of giving him the details.
+  // Contact details are not kept on the server, so the button asks in the chat
+  // and the answer comes back there.
+  +'<button type="button" class="ask" data-askc="'+esc(c.name||'')+'">בקשת פרטי התקשרות</button>'
   +'<div class="stat" data-lead="'+esc(c.name||'')+'">'+['open','standby','done'].map(function(k){return '<button type="button" data-s="'+k+'" aria-pressed="'+(k===st)+'">'+STAT[k]+'</button>';}).join('')+'</div>'
   +'</div>';
 }
@@ -16300,6 +16300,18 @@ on('pillCancel',closePillSheet);
 on('gAsk',function(){askInChat('');});
 paintReportDot();
 document.getElementById('leads').addEventListener('click',function(e){
+ var a=e.target.closest?e.target.closest('[data-askc]'):null;
+ if(a){
+  if(a.disabled)return;
+  var who=a.getAttribute('data-askc');
+  var txt='שלח לי כאן בצ׳אט את פרטי ההתקשרות של '+who+' מהלידים, ואת מה שסוכם.';
+  a.disabled=true;a.textContent='שולח...';
+  sendOrHold('בקשת פרטי התקשרות',txt,'משימה').then(function(r){
+   if(r!=='held'){var p=pending();p.push({at:new Date().toISOString(),text:txt});savePending(p);}
+   a.textContent=r==='held'?HELD_SAY:'נשלח. הפרטים יגיעו אליך בצ׳אט.';
+  });
+  return;
+ }
  var b=e.target.closest?e.target.closest('.stat button'):null;
  if(!b)return;
  var host=b.parentNode;

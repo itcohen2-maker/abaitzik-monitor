@@ -2049,7 +2049,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-15T13:20:52.126Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-15T13:43:36.964Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3768,7 +3768,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='a071bc4288';
+var CODE_ID='4719f04806';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -4237,8 +4237,6 @@ function setLeadStatus(name,st){
 function leadRow(c){
  var st=leadStatus(c);
  var closed=st==='done';
- var subject='פרטים: '+(c.name||'');
- var body='שלח לי את פרטי ההתקשרות ואת מה שסוכם.';
  return '<div class="item lead'+(closed?' closed':'')+'">'
   +'<div class="top"><span class="who">'+esc(c.name||'ללא שם')+'</span>'
   +'<span class="chip">'+esc(NET[c.network]||c.network||'אחר')+'</span>'
@@ -4251,8 +4249,7 @@ function leadRow(c){
     +'<a href="'+esc(c.shot)+'" target="_blank" rel="noopener">'
     +'<img src="'+esc(c.shot)+'" alt="צילום מסך של הפנייה" loading="lazy"></a></details>':'')
   +logHtml(c.log)
-  +'<a class="ask" href="mailto:?subject='+encodeURIComponent(subject)
-  +'&body='+encodeURIComponent(body)+'">בקשת פרטי התקשרות</a>'
+  +'<button type="button" class="ask" data-askc="'+esc(c.name||'')+'">בקשת פרטי התקשרות</button>'
   +'<div class="stat" data-lead="'+esc(c.name||'')+'">'+['open','standby','done'].map(function(k){return '<button type="button" data-s="'+k+'" aria-pressed="'+(k===st)+'">'+STAT[k]+'</button>';}).join('')+'</div>'
   +'</div>';
 }
@@ -11993,6 +11990,18 @@ on('pillCancel',closePillSheet);
 on('gAsk',function(){askInChat('');});
 paintReportDot();
 document.getElementById('leads').addEventListener('click',function(e){
+ var a=e.target.closest?e.target.closest('[data-askc]'):null;
+ if(a){
+  if(a.disabled)return;
+  var who=a.getAttribute('data-askc');
+  var txt='שלח לי כאן בצ׳אט את פרטי ההתקשרות של '+who+' מהלידים, ואת מה שסוכם.';
+  a.disabled=true;a.textContent='שולח...';
+  sendOrHold('בקשת פרטי התקשרות',txt,'משימה').then(function(r){
+   if(r!=='held'){var p=pending();p.push({at:new Date().toISOString(),text:txt});savePending(p);}
+   a.textContent=r==='held'?HELD_SAY:'נשלח. הפרטים יגיעו אליך בצ׳אט.';
+  });
+  return;
+ }
  var b=e.target.closest?e.target.closest('.stat button'):null;
  if(!b)return;
  var host=b.parentNode;
