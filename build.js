@@ -1598,7 +1598,7 @@ button.abtn[disabled]{opacity:.55}
    Something new inside an existing tile = data-upd="<stamp>" on the tile,
    and the updTiles boot gives it this slow pulse until he opens it. */
 @keyframes updbeat{0%,100%{box-shadow:0 0 0 0 rgba(255,214,0,0),var(--shadow)}50%{box-shadow:0 0 0 5px rgba(255,214,0,.55),var(--shadow)}}
-.gt.updblink{animation:updbeat 2.6s ease-in-out infinite}
+.gt.updblink,.newbtn.updblink{animation:updbeat 2.6s ease-in-out infinite}
 @media(prefers-reduced-motion:reduce){.gt.updblink{animation:none;box-shadow:0 0 0 3px rgba(255,214,0,.55)}}
 .rcsteps{margin:6px 0 14px;padding-inline-start:22px;line-height:1.7}
 .rcsteps li{margin-bottom:8px}
@@ -14238,7 +14238,7 @@ boot('listTiles',function(){
 /* 13.10: a changed tile pulses slowly until opened. Bump data-upd whenever
    something new goes into a tile that already exists; new tiles use data-new. */
 boot('updTiles',function(){
- document.querySelectorAll('.gt[data-upd],.ic[data-upd]').forEach(function(t){
+ document.querySelectorAll('.gt[data-upd],.ic[data-upd],.newbtn[data-upd]').forEach(function(t){
   var k='tileUpd:'+t.id,stamp=t.getAttribute('data-upd')||'',seen='';try{seen=localStorage.getItem(k)||'';}catch(e){}
   if(seen===stamp||t.classList.contains('taskblink'))return;
   t.classList.add('updblink');

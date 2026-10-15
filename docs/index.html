@@ -330,7 +330,7 @@ button.abtn[disabled]{opacity:.55}
 .gt.taskblink{animation:taskbeat .8s steps(1) infinite}
 @media(prefers-reduced-motion:reduce){.gt.taskblink{animation:none;box-shadow:0 0 0 4px var(--yellow)}}
 @keyframes updbeat{0%,100%{box-shadow:0 0 0 0 rgba(255,214,0,0),var(--shadow)}50%{box-shadow:0 0 0 5px rgba(255,214,0,.55),var(--shadow)}}
-.gt.updblink{animation:updbeat 2.6s ease-in-out infinite}
+.gt.updblink,.newbtn.updblink{animation:updbeat 2.6s ease-in-out infinite}
 @media(prefers-reduced-motion:reduce){.gt.updblink{animation:none;box-shadow:0 0 0 3px rgba(255,214,0,.55)}}
 .rcsteps{margin:6px 0 14px;padding-inline-start:22px;line-height:1.7}
 .rcsteps li{margin-bottom:8px}
@@ -2049,7 +2049,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-15T05:37:17.766Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-15T05:37:55.553Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3760,7 +3760,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='289426a5ad';
+var CODE_ID='61b3c83cea';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10189,7 +10189,7 @@ boot('listTiles',function(){
  });
 });
 boot('updTiles',function(){
- document.querySelectorAll('.gt[data-upd],.ic[data-upd]').forEach(function(t){
+ document.querySelectorAll('.gt[data-upd],.ic[data-upd],.newbtn[data-upd]').forEach(function(t){
   var k='tileUpd:'+t.id,stamp=t.getAttribute('data-upd')||'',seen='';try{seen=localStorage.getItem(k)||'';}catch(e){}
   if(seen===stamp||t.classList.contains('taskblink'))return;
   t.classList.add('updblink');
