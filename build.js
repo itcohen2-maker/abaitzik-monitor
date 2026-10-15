@@ -4066,7 +4066,6 @@ try{
   <button type="button" class="gt gOcc" id="gOcc"><b>🩺 מרפאה תעסוקתית</b><small>מכבי רמות. טלפון א עד ה 08:00 עד 11:00</small></button>
   <button type="button" class="gt gShop" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
   <!-- 12.10 alarm tile: moved 13.10 to the round icons, see gAlarm next to gStk. -->
-  <button type="button" class="gt gStoryArc" id="gStoryArc" data-new="1"><b>📸 הסטוריז שלי</b><small>הארכיון באינסטגרם: גם סטורי שכבר ירד</small></button>
   <!--
     איציק, 28.9, בהקלטה: "תסיר את כפתור תוכניות תוכן". הכפתור ירד ממסך הבית.
     הקובץ והגיליון שלו נשארים, הקישור שכבר נשלח לאיליי ממשיך להיפתח.
@@ -15159,7 +15158,7 @@ function planSheet(){
 }
 on('gContentPlan',planSheet);
 on('gShopList',function(){window.open('https://docs.google.com/document/d/1A2tvet0ucYNDoDclswaVDybuL8bir3OAerRzXtDUEPU/edit','_blank','noopener');});
-on('gStoryArc',function(){window.open('https://www.instagram.com/archive/stories/','_blank','noopener');});
+/* 15.10 Itzik: the tile came off the screen for good. */ false&&on('gStoryArc',function(){window.open('https://www.instagram.com/archive/stories/','_blank','noopener');});
 /*ITZIK:END*/
 on('gOp',function(){pane('s');});
 on('gNotes',function(){pane('t');renderNotes();});
