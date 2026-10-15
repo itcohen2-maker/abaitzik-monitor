@@ -4007,7 +4007,7 @@ try{
     and Google from August on (before that he filed them himself). Pulled from
     his mail; private files only, numbered, a new one gets the next number.
   -->
-  <button type="button" class="gt gInv" id="gInv"><b>🧾 חשבוניות</b><small>ממוספר. מ 3.10 והלאה</small></button>
+  <button type="button" class="gt gInv" id="gInv" data-upd="2026-10-15-inv"><b>🧾 חשבוניות</b><small>ממוספר. מ 3.10 והלאה</small></button>
   <!--
     2.10. Itzik, in a voice note: a new tile with winning lines. The first one
     is amirshwartz1's TikTok comment on the cake video (55 likes).
@@ -15063,7 +15063,7 @@ on('gMed',medSheet);
   The eight August/September entries (inv-01..08) were dropped from the list;
   the files stay in private storage. Counting starts again at 01 from 3.10.
 */
-var INV_ITEMS=[];
+var INV_ITEMS=[{n:'01',t:'Anthropic, קבלה 14.10.2026',r:'inv-anthropic-20261014.pdf'}];
 function invSheet(){
  var old=document.getElementById('ivSheet');if(old)old.remove();
  var w=document.createElement('div');
