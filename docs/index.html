@@ -2049,7 +2049,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-15T12:32:07.569Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-15T12:33:18.823Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2258,7 +2258,7 @@ try{
    <svg viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>חדש</button>
  </div>
 
-<div class="grid" id="blkBiz"><button type="button" class="gt g16" id="gBiz" data-new="1"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>
+<div class="grid" id="blkBiz"><button type="button" class="gt g16" id="gBiz" data-new="1" data-upd="2026-10-15-leadnotes"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>
 
 
 
@@ -3768,7 +3768,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='c34094f441';
+var CODE_ID='8a11298f3b';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11068,6 +11068,7 @@ function bzRow(r,extra){
   +(r.note?'<small>'+esc(r.note)+'</small>':'')
   +(bzAgo(r)?'<small>'+esc(bzAgo(r))+'</small>':'')
   +(extra||'')
+  +'<button type="button" class="yb" data-bz="note">📝 הערה</button>'
   +'<button type="button" class="yb" data-bz="edit">עדכן</button></div>';
 }
 function bizSheet(){
@@ -11132,16 +11133,18 @@ function bizSheet(){
       .catch(function(){toast('לא נשלח, נסה שוב מאוחר יותר.');});
      return;
     }
-    if(a==='edit'){
+    if(a==='edit'||a==='note'){
      var row=t.closest('.bzRow');if(!row||row.querySelector('.bzEd'))return;
-     row.insertAdjacentHTML('beforeend','<div class="bzEd"><input placeholder="מה השתנה? לדוגמה: סגר, או קבע לשלישי"><button type="button" class="yb yb2" data-bz="send">שלח</button></div>');
+     var isNote=a==='note';
+     row.insertAdjacentHTML('beforeend','<div class="bzEd"><input placeholder="'+(isNote?'כתוב הערה על הליד':'מה השתנה? לדוגמה: סגר, או קבע לשלישי')+'"><button type="button" class="yb yb2" data-bz="'+(isNote?'sendnote':'send')+'">שלח</button></div>');
      row.querySelector('.bzEd input').focus();return;
     }
-    if(a==='send'){
+    if(a==='send'||a==='sendnote'){
      var r2=t.closest('.bzRow'),box=t.parentNode,inp2=box.querySelector('input'),txt=inp2.value.trim();
      if(!txt){inp2.focus();return;}
      var nm=r2.querySelector('b').textContent;
-     sendText('עדכון עסק',nm+': '+txt,'עדכון עסק').then(function(){box.remove();toast('נשלח, אני מעדכן את הרשומה.');})
+     var msg=a==='sendnote'?nm+' | הערה: '+txt:nm+': '+txt;
+     sendText('עדכון עסק',msg,'עדכון עסק').then(function(){box.remove();toast('נשלח, אני מעדכן את הרשומה.');})
       .catch(function(){toast('לא נשלח, נסה שוב מאוחר יותר.');});
     }
    });

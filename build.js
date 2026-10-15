@@ -1142,7 +1142,7 @@ function tenantTiles(inst) {
     + esc((l.icon ? l.icon + ' ' : '') + l.title) + '</b><small>' + esc(l.sub || 'פתיחה בלשונית חדשה') + '</small></button>').join('');
   return guides + links + ids.filter((id) => TENANT_TILES[id]).map((id) => {
     const [cls, title, sub] = TENANT_TILES[id];
-    return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="2026-10-15-leadnotes"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
 }
 /*
@@ -4194,7 +4194,7 @@ try{
     and no screens list (Itzik's copy). A customer with a screens list gets the
     tile from tenantTiles, only when gBiz is in that list.
   -->
-${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz"><button type="button" class="gt g16" id="gBiz" data-new="1"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>' : ''}
+${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz"><button type="button" class="gt g16" id="gBiz" data-new="1" data-upd="2026-10-15-leadnotes"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>' : ''}
 <!--TENANT:BEGIN-->
   <!--
     A customer's home screen, built from his intake answers and not filtered
@@ -15244,6 +15244,7 @@ function bzRow(r,extra){
   +(r.note?'<small>'+esc(r.note)+'</small>':'')
   +(bzAgo(r)?'<small>'+esc(bzAgo(r))+'</small>':'')
   +(extra||'')
+  +'<button type="button" class="yb" data-bz="note">📝 הערה</button>'
   +'<button type="button" class="yb" data-bz="edit">עדכן</button></div>';
 }
 function bizSheet(){
@@ -15308,16 +15309,19 @@ function bizSheet(){
       .catch(function(){toast('לא נשלח, נסה שוב מאוחר יותר.');});
      return;
     }
-    if(a==='edit'){
+    if(a==='edit'||a==='note'){
+     // 15.10: "📝 הערה" opens the same box, but what is sent is a note on the record
      var row=t.closest('.bzRow');if(!row||row.querySelector('.bzEd'))return;
-     row.insertAdjacentHTML('beforeend','<div class="bzEd"><input placeholder="מה השתנה? לדוגמה: סגר, או קבע לשלישי"><button type="button" class="yb yb2" data-bz="send">שלח</button></div>');
+     var isNote=a==='note';
+     row.insertAdjacentHTML('beforeend','<div class="bzEd"><input placeholder="'+(isNote?'כתוב הערה על הליד':'מה השתנה? לדוגמה: סגר, או קבע לשלישי')+'"><button type="button" class="yb yb2" data-bz="'+(isNote?'sendnote':'send')+'">שלח</button></div>');
      row.querySelector('.bzEd input').focus();return;
     }
-    if(a==='send'){
+    if(a==='send'||a==='sendnote'){
      var r2=t.closest('.bzRow'),box=t.parentNode,inp2=box.querySelector('input'),txt=inp2.value.trim();
      if(!txt){inp2.focus();return;}
      var nm=r2.querySelector('b').textContent;
-     sendText('עדכון עסק',nm+': '+txt,'עדכון עסק').then(function(){box.remove();toast('נשלח, אני מעדכן את הרשומה.');})
+     var msg=a==='sendnote'?nm+' | הערה: '+txt:nm+': '+txt;
+     sendText('עדכון עסק',msg,'עדכון עסק').then(function(){box.remove();toast('נשלח, אני מעדכן את הרשומה.');})
       .catch(function(){toast('לא נשלח, נסה שוב מאוחר יותר.');});
     }
    });
