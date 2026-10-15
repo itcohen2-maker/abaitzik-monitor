@@ -14534,7 +14534,7 @@ boot('today',todayTile);
 */
 var LEC_ITEMS=[
  {t:'01 המלל המלא',r:'lecture-full-text.pdf',u:'https://drive.google.com/file/d/1ZjRua0t3UA8SDRPmA4HIV-W1WJ1PTx51/view'},
- {t:'02 המצגת, כל השקפים',u:'https://drive.google.com/file/d/1Nn_zPsUeqddr_dGF1Ou4q104NStl2nVA/view'},
+ {t:'02 המצגת, כל השקפים',u:'https://docs.google.com/presentation/d/13lOa3wpgkhMpcZallab84mkLkzy9vc1o_nPHIvQFsUQ/present'},
  {t:'03 לאימון: המלל עם השקפים בקטן',r:'lecture-practice-small-slides.pdf',u:'https://drive.google.com/file/d/1h-ja7UYp2wBL4aAa3iDKvEbQf4_QEPZ_/view'},
  /* 13.10 night: the Reel that announces the lectures, from his two voice notes. Drive: תסריטים, סיפורים אישיים. */
  {t:'04 הריל שמבשר על ההרצאות: תסריט ריל 06, מאיפה הכוחות',r:'reel-06-meefo-hakohot.txt'},
