@@ -11247,9 +11247,12 @@ function countTiles(){
  });
 }
 function renderTidy(){
+ // 15.10 Itzik: "I take a tile off and the moment I open it again it is back".
+ // The tidyBox card left the page, this returned before applyHidden, and no
+ // hidden tile stayed hidden past a reload. Hiding comes first, always.
+ applyHidden();
  var host=document.getElementById('tidyBox');
  if(!host)return;
- applyHidden();
  var since=tileStore('tilesSince',Date.now());
  var days=(Date.now()-since)/86400000;
  var hid=tileStore('tilesHidden',[]);
