@@ -22,6 +22,14 @@ creds = import_module('mail-search').creds
 QUERY = '(from:wetransfer.com OR (from:itcohen2@gmail.com to:itcohen2@gmail.com subject:פגסוס))'
 
 
+# 15.10 Itzik: "אני ממשיך לקבל מיילים של הום סטייל ... לא נקבל מיילים יותר". ICL keep
+# him on their list and Yael answers all, so her replies got past the ilcargo
+# filter. Shipment mail goes to the trash at once, read or not. Rinat his sister
+# (rinata@) and Roni are not in it.
+NOW = ('(from:ilcargo.com OR from:yaele@extraretail.co.il OR from:rinatb@extraretail.co.il'
+       ' OR from:yael@homestyle.co.il OR subject:"תיק עמילות" OR subject:"הודעת חוסר בניירת")')
+
+
 def main():
     take_all = '--all' in sys.argv
     user, pw = creds()
@@ -33,7 +41,12 @@ def main():
     uids = data[0].split()
     if uids:
         m.uid('STORE', b','.join(uids).decode(), '+X-GM-LABELS', '(\\Trash)')
-    print(f'moved to trash: {len(uids)}')
+    m.literal = (NOW + ' -in:trash').encode('utf8')
+    _, data = m.uid('SEARCH', 'CHARSET', 'UTF-8', 'X-GM-RAW')
+    ship = data[0].split()
+    if ship:
+        m.uid('STORE', b','.join(ship).decode(), '+X-GM-LABELS', '(\Trash)')
+    print(f'moved to trash: {len(uids)}, shipments: {len(ship)}')
     m.logout()
 
 
