@@ -3908,7 +3908,8 @@ try{
  <div id="askBox"></div>
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
-  <button type="button" class="gt gStory" id="gStory" data-upd="2026-10-15-ner-bio"><b>🎞️ סטורי</b><small>4 סטורי נרות חדשים: תמונות על כל המסך, הטקסט באמצע</small></button>
+  <button type="button" class="gt gStory" id="gStory" data-upd="2026-10-15-lecture-story"><b>🎞️ סטורי</b><small>חדש: 15 שניות על ההרצאה, מהריל של איליי</small></button>
+  <button type="button" class="gt gLec" id="gLec" data-new="1" data-upd="2026-10-15-ilay-reel"><b>🎤 הרצאה</b><small>חדש 06: הריל של איליי, ההוק, הכיתוב והסטורי</small></button>
   <!--
     14.10 Itzik: a new story goes into this tile, and the tile moves to the top
     of the grid every time there is something new in it. Newest on top inside.
@@ -4052,7 +4053,6 @@ try{
     12.10. Itzik: "an icon with the verses and the explanation under them",
     about the 55 last verses of the Torah (Deuteronomy 32:39 to the end).
   -->
-  <button type="button" class="gt gLec" id="gLec" data-new="1" data-upd="2026-10-15-clalit-sig"><b>🎤 הרצאה</b><small>כנגד כל הסיכויים: המלל, השקפים והסכם כללית</small></button>
   <!-- 13.10. Itzik: "תעשה תקייה של טום ממליץ ואריח טום ממליץ". Scripts of
        Tom's posts, four ad images, the site copy, and the draft of his own site. -->
   <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-15-logo"><b>🧭 טום ממליץ</b><small>אימון, הסרטונים של טום, והתמונות לממומן</small></button>
@@ -13469,7 +13469,7 @@ on('gReels',reelSheet);
   11.10, Itzik: "שים במוניטור בכפתור סטורי". Stories ready to save to the phone,
   newest on top. Same viewer as the reels: fileOpen has the save button.
 */
-var STORY_ITEMS=[{n:'חמישי',t:'נרות, עברית: בחינם, מתנה ממני לכל היהודים בעולם',r:'story-ner-full-thu-he.mp4'},{n:'חמישי',t:'נרות, אנגלית: Free, a gift from me',r:'story-ner-full-thu-en.mp4'},{n:'שישי',t:'נרות, עברית: היום ערב שבת, שבת שלום',r:'story-ner-full-fri-he.mp4'},{n:'שישי',t:'נרות, אנגלית: Shabbat begins tonight',r:'story-ner-full-fri-en.mp4'}];
+var STORY_ITEMS=[{n:'הרצאה',t:'15 שניות על ההרצאה, מהריל של איליי: הסרטן סגר לי את עסק חיי',r:'story-lecture-15s.mp4'},{n:'חמישי',t:'נרות, עברית: בחינם, מתנה ממני לכל היהודים בעולם',r:'story-ner-full-thu-he.mp4'},{n:'חמישי',t:'נרות, אנגלית: Free, a gift from me',r:'story-ner-full-thu-en.mp4'},{n:'שישי',t:'נרות, עברית: היום ערב שבת, שבת שלום',r:'story-ner-full-fri-he.mp4'},{n:'שישי',t:'נרות, אנגלית: Shabbat begins tonight',r:'story-ner-full-fri-en.mp4'}];
 function storySheet(){
  var old=document.getElementById('stSheet');if(old)old.remove();
  var w=document.createElement('div');
@@ -14543,6 +14543,11 @@ var LEC_ITEMS=[
  {t:'04 הריל שמבשר על ההרצאות: תסריט ריל 06, מאיפה הכוחות',r:'reel-06-meefo-hakohot.txt'},
  /* 13.10 night, Itzik: "שים את הסכם כללית ביחד עם ההרצאה". The agreement moved in here; its own tile is gone. */
  {t:'05 🏥 הסכם כללית: אשקלון ובאר שבע',cl:1},
+ // 15.10: Ilay's folder "אבא איציק" (shared, ilayco10): the reel that announces the lectures, three hooks and the post caption.
+ {t:'06 🎬 הריל של איליי על ההרצאה (15.10)',r:'reel-lecture-ilay-1510.mp4'},
+ {t:'06ב הוק ויזואלי וכיתוב לפוסט, מאיליי',r:'lecture-ilay-1510-text.txt'},
+ {t:'06ג הסטורי: 15 שניות מרגשות על ההרצאה',r:'story-lecture-15s.mp4'},
+ {t:'06ד התיקייה של איליי בדרייב (הריל באיכות מלאה)',u:'https://drive.google.com/drive/folders/1sMV34K4dCaW3kALyEqxd_xVV6TgF7U1g'},
  {t:'📤 לשלוח לאיליי בוואטסאפ',wa:1}
 ];
 /* 13.10 evening, Itzik: "everything is duplicates, it's complicated". One
