@@ -178,6 +178,17 @@ if (cmd === 'add') {
   const then = ti > -1 ? String(rest[ti + 1] || '').trim() : '';
   const task = rest.filter((x, i) => x !== '--test' && x !== '--quiet' && i !== ri && i !== ri + 1 && i !== ti && i !== ti + 1).join(' ').trim();
   if ((!re && !test) || !task) { console.error('usage: node pc-task.js add --re <id> [--then "<what the server does next>"] "<task>"'); process.exit(2); }
+  // 15.10, Rinat's deck: the session queued the task and wrote the synthesis file after it.
+  // Her computer claimed the task 23 seconds later, listed the monitor's files, the file
+  // was not there yet, and the session there gave up: "the content file is not on the
+  // computer". A task that names files/<name> is refused until every such file exists.
+  const priv = path.join(inst.dataPath, 'files-private');
+  const named = (task.match(/files\/[^\s"'`)<>|]+/g) || []).map((s) => decodeURIComponent(s.slice(6)).replace(/[.,;:]+$/, ''));
+  const missing = named.filter((n) => !fs.existsSync(path.join(priv, n)));
+  if (missing.length && !test) {
+    console.error('הקבצים האלה עדיין לא קיימים ב data/files-private, לכתוב אותם קודם ואז להוסיף את המשימה: ' + missing.join(', '));
+    process.exit(2);
+  }
   const id = 'pc-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
   write(Object.assign({ id, re, at: new Date().toISOString(), task, status: 'pending', tries: 0 },
     test ? { test: true } : {}, quiet ? { quiet: true } : {}, then ? { then } : {}));
