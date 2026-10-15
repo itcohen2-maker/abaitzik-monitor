@@ -15161,7 +15161,10 @@ function planSheet(){
 }
 on('gContentPlan',planSheet);
 on('gShopList',function(){window.open('https://docs.google.com/document/d/1A2tvet0ucYNDoDclswaVDybuL8bir3OAerRzXtDUEPU/edit','_blank','noopener');});
-/* 15.10 Itzik: the tile came off the screen for good. */ false&&on('gStoryArc',function(){window.open('https://www.instagram.com/archive/stories/','_blank','noopener');});
+// 15.10 Itzik: the stories archive tile came off the screen for good; its button and handler are gone.
+// (15.10 later: that line was a one line /* */ comment followed by code, and the build's comment
+// stripper took it as the start of a block that ran to the next standalone */, which swallowed the
+// gOp, gNotes, gRemind, gTasks, gAppts and gIdeas handlers. Four tiles stopped opening.)
 /*ITZIK:END*/
 on('gOp',function(){pane('s');});
 on('gNotes',function(){pane('t');renderNotes();});
