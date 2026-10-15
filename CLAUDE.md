@@ -114,6 +114,7 @@
   Something new placed inside an existing tile gets a bumped `data-upd="<date-slug>"` on that tile button; the `updTiles`
   boot gives it `updblink`, a slow soft pulse (2.6s), until he opens it once. "Not a strong blink. An update is a slow,
   gentle blink." No deliverable goes into an existing tile without bumping its `data-upd`. Applies to every tenant.
+  When a site's address (or anything a tile links to) changes, update the tile's link in the same step (Itzik, 15.10.2026).
 
 - **Iron rule (Itzik, 14.10.2026, after paying another $100 in one day):** plan on the high model, execute only on
   the cheap one, in every monitor and every session. On a customer's monitor the server only passes text; all
