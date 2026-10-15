@@ -3908,11 +3908,11 @@ try{
  <div id="askBox"></div>
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
+  <button type="button" class="gt gStory" id="gStory" data-upd="2026-10-15-ner-real"><b>🎞️ סטורי</b><small>4 סטורי נרות, חמישי ושישי, עברית ואנגלית, תמונות אמיתיות</small></button>
   <!--
     14.10 Itzik: a new story goes into this tile, and the tile moves to the top
     of the grid every time there is something new in it. Newest on top inside.
   -->
-  <button type="button" class="gt gStory" id="gStory" data-upd="2026-10-14-weight"><b>🎞️ סטורי</b><small>הדרך חזרה: 69.2 ואז 70.7 ואז 71.2</small></button>
   <!--
     איציק, 28.9: "תסיר את כפתור מייל, אין לי צורך בו". ירדו גם האריח וגם הסמל
     בשורת הרשתות, שניהם פתחו את אותו מסך. המסך pE עצמו נשאר.
@@ -13467,7 +13467,7 @@ on('gReels',reelSheet);
   11.10, Itzik: "שים במוניטור בכפתור סטורי". Stories ready to save to the phone,
   newest on top. Same viewer as the reels: fileOpen has the save button.
 */
-var STORY_ITEMS=[{n:'14.10',t:'הדרך חזרה על המשקל: 69.2 מפה התחלתי, 70.7 אתמול, 71.2 היום',r:'story-weight-1014.jpg'}];
+var STORY_ITEMS=[{n:'חמישי',t:'נרות, עברית: תמונות אמיתיות, בחינם ובאהבה לכל עם ישראל',r:'story-ner-real-thu-he.mp4'},{n:'חמישי',t:'נרות, אנגלית: Free. With love.',r:'story-ner-real-thu-en.mp4'},{n:'שישי',t:'נרות, עברית: היום ערב שבת, שבת שלום',r:'story-ner-real-fri-he.mp4'},{n:'שישי',t:'נרות, אנגלית: Shabbat begins tonight',r:'story-ner-real-fri-en.mp4'},{n:'14.10',t:'הדרך חזרה על המשקל: 69.2 מפה התחלתי, 70.7 אתמול, 71.2 היום',r:'story-weight-1014.jpg'}];
 function storySheet(){
  var old=document.getElementById('stSheet');if(old)old.remove();
  var w=document.createElement('div');
