@@ -5260,7 +5260,18 @@ function pdfPages(blob,host){
     // the page's rtl, pdf.js draws each glyph with fillText, and every Hebrew
     // letter landed shifted onto its neighbour. The page is a picture: ltr.
     c.dir='ltr';c.style.direction='ltr';
-    host.appendChild(c);
+    // Itzik, 15.10, on Tom's practice sheet: "הלינקים ... לא עובדים". The page
+    // is a picture, so every link in the PDF gets a tappable box on top of it.
+    var pg=document.createElement('div');pg.style.position='relative';
+    pg.appendChild(c);host.appendChild(pg);
+    p.getAnnotations().then(function(an){an.forEach(function(a){
+     if(a.subtype!=='Link'||!a.url||!/^https?:/.test(a.url))return;
+     var r=vp.convertToViewportRectangle(a.rect),x=Math.min(r[0],r[2]),y=Math.min(r[1],r[3]);
+     var l=document.createElement('a');l.href=a.url;l.target='_blank';l.rel='noopener';
+     l.setAttribute('aria-label',a.url);
+     l.style.cssText='position:absolute;left:'+(x/vp.width*100)+'%;top:'+(y/vp.height*100)+'%;width:'+(Math.abs(r[2]-r[0])/vp.width*100)+'%;height:'+(Math.abs(r[3]-r[1])/vp.height*100)+'%';
+     pg.appendChild(l);
+    });}).catch(function(){});
     var cx=c.getContext('2d');cx.direction='ltr';
     return p.render({canvasContext:cx,viewport:vp}).promise;
    });
