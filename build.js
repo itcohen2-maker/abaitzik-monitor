@@ -4055,7 +4055,7 @@ try{
   <button type="button" class="gt gLec" id="gLec" data-new="1" data-upd="2026-10-13-clalit"><b>🎤 הרצאה</b><small>כנגד כל הסיכויים: המלל, השקפים והסכם כללית</small></button>
   <!-- 13.10. Itzik: "תעשה תקייה של טום ממליץ ואריח טום ממליץ". Scripts of
        Tom's posts, four ad images, the site copy, and the draft of his own site. -->
-  <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-15-links"><b>🧭 טום ממליץ</b><small>חדש: אימון על שני הסרטונים של טום, והקישורים לפוסטים</small></button>
+  <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-15-tidy"><b>🧭 טום ממליץ</b><small>אימון, הסרטונים של טום, והתמונות לממומן</small></button>
   <!-- 13.10 night: the Clalit agreement moved inside the lecture tile (item 05). -->
   <!--
     11.10. Itzik: "a card I can send from, and later we delete it". The June
@@ -14841,26 +14841,11 @@ on('gClalit',clalitSheet);
   only once they are in the monitor; Drive links (u) open the folder.
 */
 var TOM_ITEMS=[
- {n:'🎬',t:'15.10: אימון, המלל של שני הסרטונים של טום, משפט בשורה (PDF)',r:'tom-practice.pdf'},
- {n:'▶️',t:'הפוסט של טום, סרטון 1 (16.4)',u:'https://www.facebook.com/reel/1495110975557164'},
- {n:'▶️',t:'הפוסט של טום, סרטון 2 (2.8)',u:'https://www.facebook.com/reel/907250209120101'},
- {n:'🌐',t:'האתר שלך, אחד לאחד עם טום, באוויר',u:'https://abaitzik-tech.vercel.app'},
- {n:'❓',t:'14.10: מה חסר לי ממך כדי לסיים (12 סעיפים)',r:'tom-missing-14-10.txt'},
- {n:'🖥️',t:'עמוד ההסבר על המוניטור באתר',u:'https://abaitzik-tech.vercel.app/#monitor'},
- {n:'🆕',t:'14.10: שורת העבודות של טום באתר, איך זה נראה',r:'tom-works-row.png'},
- {n:'🆕',t:'14.10: תשעת הקישורים שטום שלח והודעות הקול שלו מתומללות',r:'tom-works-14-10.txt'},
- {n:'🐙',t:'הריפו של האתר בגיטהאב, טום הוזמן אליו',u:'https://github.com/itcohen2-maker/abaitzik-tech'},
- {n:'★',t:'התסריטים של חמשת הפוסטים, PDF לטלפון',r:'tom-scripts.pdf'},
- {n:'📁',t:'התיקייה טום ממליץ בדרייב',u:'https://drive.google.com/drive/folders/1AnxEXSB1WKaSqW6Qr8l-WuW3Qdd5hcjz'},
- {n:'01',t:'התסריטים של חמשת הפוסטים, מסודרים',r:'tom-scripts.docx'},
- {n:'01ב',t:'התסריטים כטקסט',r:'tom-scripts.txt'},
- {n:'02',t:'פרסום ממומן, תמונה 1: יש לך רעיון',r:'tom-ad-01.png'},
- {n:'03',t:'פרסום ממומן, תמונה 2: לא מבין בטכנולוגיה',r:'tom-ad-02.png'},
- {n:'04',t:'פרסום ממומן, תמונה 3: תוך יום',r:'tom-ad-03.png'},
- {n:'05',t:'פרסום ממומן, תמונה 4: בן 55',r:'tom-ad-04.png'},
- {n:'06',t:'האתר שלך, טיוטה, מסך מחשב',r:'tom-mysite-desktop.jpg'},
- {n:'06ב',t:'האתר שלך, טיוטה, בטלפון',r:'tom-mysite-mobile.jpg'},
- {n:'07',t:'ההעתק של האתר של טום (תיקייה בדרייב)',u:'https://drive.google.com/drive/folders/1DEc7wKn9R2PTspohvvbf6i3_Qyg1VJC1'}
+ {n:'🎬',t:'אימון: המלל של שני הסרטונים של טום',r:'tom-practice.pdf'},
+ {n:'▶️',t:'הסרטון של טום, 1',u:'https://www.facebook.com/reel/1495110975557164'},
+ {n:'▶️',t:'הסרטון של טום, 2',u:'https://www.facebook.com/reel/907250209120101'},
+ {n:'🖼️',t:'ארבע התמונות לפרסום ממומן, ביחד',r:'tom-ads-all.jpg'},
+ {n:'📁',t:'כל השאר: התיקייה טום ממליץ בדרייב',u:'https://drive.google.com/drive/folders/1AnxEXSB1WKaSqW6Qr8l-WuW3Qdd5hcjz'}
 ];
 function tomSheet(){
  var old=document.getElementById('tomSheet');if(old)old.remove();
@@ -14870,7 +14855,7 @@ function tomSheet(){
  w.setAttribute('aria-label','טום ממליץ');
  w.innerHTML='<div class="ycard">'
   +'<b>טום ממליץ</b>'
-  +'<small>14.10: שורת העבודות של טום נוספה לאתר באישורך. ריפו בגיטהאב, טום מוזמן אליו.</small>'
+  +'<small>אימון, הסרטונים של טום, והתמונות לממומן.</small>'
   +TOM_ITEMS.map(function(it,i,a){
     if(it.r&&!fileEntry(it.r))return '';
     return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
