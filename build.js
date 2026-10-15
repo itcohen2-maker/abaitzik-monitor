@@ -2508,6 +2508,9 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .gClalit{background:linear-gradient(150deg,#1f6fa8,#0e2a45)}
 .gTom{background:linear-gradient(150deg,#0b7f8f,#0a0a0f)}
 .gSite{background:linear-gradient(150deg,#06b6d4,#0a0a0f)}
+.gt.gSiteIco{min-height:0;width:48px;height:48px;padding:0;border-radius:50%;justify-self:start;display:flex;align-items:center;justify-content:center}
+.gt.gSiteIco b{font-size:22px;line-height:1;margin:0}
+.gt.gSiteIco small{display:none}
 .gTalk{background:linear-gradient(150deg,#c0392b,#4a1410)}
 .gManiv{background:linear-gradient(150deg,#3a8fd6,#123150)}
 .c-dv{background:linear-gradient(160deg,#b08a3e,#3b2a10)}
@@ -4046,7 +4049,8 @@ try{
   <button type="button" class="gt gLec" id="gLec" data-new="1" data-upd="2026-10-13-clalit"><b>🎤 הרצאה</b><small>כנגד כל הסיכויים: המלל, השקפים והסכם כללית</small></button>
   <!-- 13.10. Itzik: "תעשה תקייה של טום ממליץ ואריח טום ממליץ". Scripts of
        Tom's posts, four ad images, the site copy, and the draft of his own site. -->
-  <button type="button" class="gt gSite" id="gSite" data-new="1" data-upd="2026-10-14-name"><b>🌐 האתר שלי</b><small>ITsolution. itsolution-il.vercel.app. לחיצה פותחת את האתר</small></button>
+  <!-- 15.10. Itzik: "תחליף את האריח האתר שלי לאייקון, קטן". Same tile, icon only. -->
+  <button type="button" class="gt gSite gSiteIco" id="gSite" data-new="1" data-upd="20261015-site-icon" title="האתר שלי" aria-label="האתר שלי"><b>🌐</b><small>ITsolution. itsolution-il.vercel.app. לחיצה פותחת את האתר</small></button>
   <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-14-missing"><b>🧭 טום ממליץ</b><small>האתר אחד לאחד באוויר. בפנים: מה חסר לי ממך, 12 סעיפים</small></button>
   <!-- 13.10 night: the Clalit agreement moved inside the lecture tile (item 05). -->
   <!--
