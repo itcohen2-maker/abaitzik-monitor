@@ -309,6 +309,10 @@ function publishFallback(body, force) {
     git(['commit', '-m', 'live: ' + shape, '--', 'docs/live.json'], function (err, out) {
       if (/nothing to commit|no changes added|did not match/i.test(out)) return;
       if (err) { say('!! מצב המאזין לא נשמר: ' + out.trim().slice(0, 120)); return; }
+      // 15.10: a customer's page is served from docs here (Caddy); GitHub is only Itzik's
+      // backup and a customer instance has no key for it. Rinat's log said "פרסום נכשל"
+      // every hour for a day over nothing. The file on disk is the publication.
+      if (inst.name !== 'abaitzik') return;
       push(0);
     });
   });

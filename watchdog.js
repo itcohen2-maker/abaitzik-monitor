@@ -150,9 +150,14 @@ function check(now) {
   const firstAnswer = {};
   all.forEach((m) => { if (m.from === 'claude' && m.re) { const t = Date.parse(m.at); if (!(firstAnswer[m.re] <= t)) firstAnswer[m.re] = t; } });
   const mine = all.filter((m) => m.from === 'itzik' && m.status !== 'done');
-  const late = mine.filter((m) => !(m.id && answered.has(m.id)) && now - Date.parse(m.at) > WAIT_MS);
+  // 15.10: a message opened again (pc-task.js reopen, reopenAt) is a new question from
+  // that moment: it waits like one, and its old answer does not make it "answered and still in work".
+  const reopenedOpen = (m) => Boolean(m.reopenAt && m.id) &&
+    !all.some((r) => r.from === 'claude' && r.re === m.id && Date.parse(r.at) > Date.parse(m.reopenAt));
+  const since = (m) => Math.max(Date.parse(m.at), m.reopenAt ? Date.parse(m.reopenAt) : 0);
+  const late = mine.filter((m) => (!(m.id && answered.has(m.id)) || reopenedOpen(m)) && now - since(m) > WAIT_MS);
   if (late.length) problems.push(late.length === 1 ? 'הודעה אחת מחכה יותר מחמש דקות בלי תשובה' : late.length + ' הודעות מחכות יותר מחמש דקות בלי תשובה');
-  const stale = mine.filter((m) => m.id && answered.has(m.id) && now - Date.parse(m.at) > WAIT_MS && now - firstAnswer[m.id] > 2 * WAIT_MS);
+  const stale = mine.filter((m) => m.id && answered.has(m.id) && !reopenedOpen(m) && now - Date.parse(m.at) > WAIT_MS && now - firstAnswer[m.id] > 2 * WAIT_MS);
   if (stale.length) problems.push(stale.length + ' הודעות נענו ועדיין מסומנות בטיפול');
   /*
     2.10 19:45: his logo arrived four times and sat as 'held', because the file
