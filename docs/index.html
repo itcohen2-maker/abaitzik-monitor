@@ -1139,6 +1139,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .c-dv{background:linear-gradient(160deg,#b08a3e,#3b2a10)}
 .c-stk{background:#2a0a1e;overflow:hidden}.c-stk img{width:100%;height:100%;display:block;border-radius:50%}.c-stk:after{display:none}
 .ic.taskblink .c{animation:taskbeat .8s steps(1) infinite}
+.ic.updblink .c{animation:updbeat 2.6s ease-in-out infinite}
 .dvv{font:700 16px/1.6 'Frank Ruhl Libre',David,serif;margin-top:8px}
 .dvv i{display:block;font:400 12px Heebo,sans-serif;opacity:.6;font-style:normal}
 .dvx{font-size:14px;line-height:1.55;opacity:.85;border-right:3px solid #b08a3e;padding-right:8px}
@@ -2043,7 +2044,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-15T04:57:39.863Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-15T04:57:59.664Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3754,7 +3755,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='fa0c75ba5d';
+var CODE_ID='4aa9cecb1a';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10183,7 +10184,7 @@ boot('listTiles',function(){
  });
 });
 boot('updTiles',function(){
- document.querySelectorAll('.gt[data-upd]').forEach(function(t){
+ document.querySelectorAll('.gt[data-upd],.ic[data-upd]').forEach(function(t){
   var k='tileUpd:'+t.id,stamp=t.getAttribute('data-upd')||'',seen='';try{seen=localStorage.getItem(k)||'';}catch(e){}
   if(seen===stamp||t.classList.contains('taskblink'))return;
   t.classList.add('updblink');

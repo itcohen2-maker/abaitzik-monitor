@@ -14231,7 +14231,7 @@ boot('listTiles',function(){
 /* 13.10: a changed tile pulses slowly until opened. Bump data-upd whenever
    something new goes into a tile that already exists; new tiles use data-new. */
 boot('updTiles',function(){
- document.querySelectorAll('.gt[data-upd]').forEach(function(t){
+ document.querySelectorAll('.gt[data-upd],.ic[data-upd]').forEach(function(t){
   var k='tileUpd:'+t.id,stamp=t.getAttribute('data-upd')||'',seen='';try{seen=localStorage.getItem(k)||'';}catch(e){}
   if(seen===stamp||t.classList.contains('taskblink'))return;
   t.classList.add('updblink');
