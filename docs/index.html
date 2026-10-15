@@ -2049,7 +2049,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-15T07:30:14.183Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-15T08:29:39.754Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2178,7 +2178,7 @@ try{
  <div id="askBox"></div>
 
  <div class="grid" id="blkTiles">
-  <button type="button" class="gt gStory" id="gStory" data-upd="2026-10-15-ner-real"><b>🎞️ סטורי</b><small>4 סטורי נרות, חמישי ושישי, עברית ואנגלית, תמונות אמיתיות</small></button>
+  <button type="button" class="gt gStory" id="gStory" data-upd="2026-10-15-ner-full"><b>🎞️ סטורי</b><small>4 סטורי נרות חדשים: תמונות על כל המסך, הטקסט באמצע</small></button>
   <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>מי חייב כסף ומאיזה חודש</small></button>
   <button type="button" class="gt g8" id="gVaad"><b>🏠 ועד הבית</b><small>מי שילם ומה פתוח</small></button>
   <button type="button" class="gt g15" id="gSale"><b>⚖️ מכירת לולוס</b><small>התיק לעורך הדין, מה פתוח ומה נמסר</small></button>
@@ -3769,7 +3769,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='3ac6510c72';
+var CODE_ID='fce5ed817c';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -9537,7 +9537,7 @@ function postSheet(it){
  }).catch(function(){fileOpen(it.r);});
 }
 on('gReels',reelSheet);
-var STORY_ITEMS=[{n:'חמישי',t:'נרות, עברית: תמונות אמיתיות, בחינם ובאהבה לכל עם ישראל',r:'story-ner-real-thu-he.mp4'},{n:'חמישי',t:'נרות, אנגלית: Free. With love.',r:'story-ner-real-thu-en.mp4'},{n:'שישי',t:'נרות, עברית: היום ערב שבת, שבת שלום',r:'story-ner-real-fri-he.mp4'},{n:'שישי',t:'נרות, אנגלית: Shabbat begins tonight',r:'story-ner-real-fri-en.mp4'}];
+var STORY_ITEMS=[{n:'חמישי',t:'נרות, עברית: בחינם, מתנה ממני לכל היהודים בעולם',r:'story-ner-full-thu-he.mp4'},{n:'חמישי',t:'נרות, אנגלית: Free, a gift from me',r:'story-ner-full-thu-en.mp4'},{n:'שישי',t:'נרות, עברית: היום ערב שבת, שבת שלום',r:'story-ner-full-fri-he.mp4'},{n:'שישי',t:'נרות, אנגלית: Shabbat begins tonight',r:'story-ner-full-fri-en.mp4'}];
 function storySheet(){
  var old=document.getElementById('stSheet');if(old)old.remove();
  var w=document.createElement('div');

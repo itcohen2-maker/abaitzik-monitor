@@ -3908,7 +3908,7 @@ try{
  <div id="askBox"></div>
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
-  <button type="button" class="gt gStory" id="gStory" data-upd="2026-10-15-ner-real"><b>🎞️ סטורי</b><small>4 סטורי נרות, חמישי ושישי, עברית ואנגלית, תמונות אמיתיות</small></button>
+  <button type="button" class="gt gStory" id="gStory" data-upd="2026-10-15-ner-full"><b>🎞️ סטורי</b><small>4 סטורי נרות חדשים: תמונות על כל המסך, הטקסט באמצע</small></button>
   <!--
     14.10 Itzik: a new story goes into this tile, and the tile moves to the top
     of the grid every time there is something new in it. Newest on top inside.
@@ -13467,7 +13467,7 @@ on('gReels',reelSheet);
   11.10, Itzik: "שים במוניטור בכפתור סטורי". Stories ready to save to the phone,
   newest on top. Same viewer as the reels: fileOpen has the save button.
 */
-var STORY_ITEMS=[{n:'חמישי',t:'נרות, עברית: תמונות אמיתיות, בחינם ובאהבה לכל עם ישראל',r:'story-ner-real-thu-he.mp4'},{n:'חמישי',t:'נרות, אנגלית: Free. With love.',r:'story-ner-real-thu-en.mp4'},{n:'שישי',t:'נרות, עברית: היום ערב שבת, שבת שלום',r:'story-ner-real-fri-he.mp4'},{n:'שישי',t:'נרות, אנגלית: Shabbat begins tonight',r:'story-ner-real-fri-en.mp4'}];
+var STORY_ITEMS=[{n:'חמישי',t:'נרות, עברית: בחינם, מתנה ממני לכל היהודים בעולם',r:'story-ner-full-thu-he.mp4'},{n:'חמישי',t:'נרות, אנגלית: Free, a gift from me',r:'story-ner-full-thu-en.mp4'},{n:'שישי',t:'נרות, עברית: היום ערב שבת, שבת שלום',r:'story-ner-full-fri-he.mp4'},{n:'שישי',t:'נרות, אנגלית: Shabbat begins tonight',r:'story-ner-full-fri-en.mp4'}];
 function storySheet(){
  var old=document.getElementById('stSheet');if(old)old.remove();
  var w=document.createElement('div');
