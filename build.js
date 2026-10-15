@@ -4015,7 +4015,7 @@ try{
   -->
   <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>05 עד 20, גם באיכות גבוהה</small></button>
-  <button type="button" class="gt gFut" id="gFut"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה</small></button>
+  <button type="button" class="gt gFut" id="gFut" data-upd="20261015-fut06"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
@@ -13508,7 +13508,8 @@ var FUT_ITEMS=[
  {n:'01ב',t:'החנייה: אותו קטע עם הכיתוב המקורי באנגלית',r:'parking-part1.mp4'},
  {n:'01ג',t:'החנייה: הסרטון המקורי המלא',r:'parking-original.mp4'},
  {n:'04',t:'מאכלים להפחית: בשר מעובד, בשר אדום, אלכוהול ומזון אולטרה מעובד (צילום מסך מגוגל)',r:'fut04-foods-to-cut.png'},
- {n:'05',t:'תפסיקו לישון עם הטלפון ליד הפנים: שמונה נזקים, משינה ועד הלב (צילום מסך מאינסטגרם)',r:'fut05-phone-by-bed.png'}
+ {n:'05',t:'תפסיקו לישון עם הטלפון ליד הפנים: שמונה נזקים, משינה ועד הלב (צילום מסך מאינסטגרם)',r:'fut05-phone-by-bed.png'},
+ {n:'06',t:'קידום להרצאה: "אתם כל הזמן שואלים אותי, השראה, אלוף, מאיפה הכוחות", הודעות ממלאות את המסך ובסוף הזמנה להרצאה',r:'fut06-lecture-promo.txt'}
 ];
 function futSheet(){
  var old=document.getElementById('ftSheet');if(old)old.remove();
