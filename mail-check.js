@@ -99,12 +99,12 @@ function main() {
   fs.mkdirSync(path.dirname(STATE), { recursive: true });
   fs.writeFileSync(STATE, JSON.stringify(state, null, 1));
 
+  // No new mail: nothing is sent, no chat line, no push, no pop-up (Itzik, 16.10.2026).
   const k = fresh.length;
-  const text = k === 0
-    ? `בדיקת מייל ${state.n}: אין חדש.`
-    : `בדיקת מייל ${state.n} (${hm(now)}): ${k} מיילים חדשים.\n` +
-      fresh.slice(0, 8).map(r => `${r.from}: ${r.subject}`).join('\n') +
-      (k > 8 ? `\nועוד ${k - 8}.` : '');
+  if (k === 0) return;
+  const text = `בדיקת מייל ${state.n} (${hm(now)}): ${k} מיילים חדשים.\n` +
+    fresh.slice(0, 8).map(r => `${r.from}: ${r.subject}`).join('\n') +
+    (k > 8 ? `\nועוד ${k - 8}.` : '');
   say(now, state, text, 'בדיקת מייל', `${k} חדשים`);
 }
 
