@@ -2652,7 +2652,9 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .ansPj{margin-bottom:18px}
 .ansPjH{font-size:17px;margin:14px 0 6px;font-weight:700}
 .ansPj{scroll-margin-top:12px}
-.ansPj .ansPjH{color:var(--pc);border-inline-start:6px solid var(--pc);padding-inline-start:10px}
+.ansPj{border:2px solid var(--pc);border-radius:14px;padding:0 10px 8px;margin-bottom:14px}
+.ansPj .ansPjH{background:var(--pc);color:#fff;margin:0 -10px 8px;padding:10px 12px;border-radius:12px 12px 0 0}
+details.ansPj:not([open]) .ansPjH{border-radius:12px;margin-bottom:-8px}
 .ansPjNav{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 14px}
 .ansPjGo{border:2px solid var(--pc);color:var(--pc);background:var(--surface);border-radius:12px;padding:8px 12px;font-weight:700;font-size:15px;line-height:1.2}
 .ansPjGo small{display:block;font-size:11px;font-weight:600}
@@ -9479,7 +9481,10 @@ var ANS_PJ_COLORS=['#e03131','#1c7ed6','#2b8a3e','#ae3ec9','#e67700','#0c8599','
 function projColor(p){
  var P=(D&&D.projects)||[],i=0;
  for(var k=0;k<P.length;k++){if(P[k].id===p.id){i=k;break;}}
- return ANS_PJ_COLORS[i%ANS_PJ_COLORS.length];
+ // Itzik 16.10: "כל פרויקט יהיה בצבע אחר". Past the palette, a new hue per
+ // project (golden angle), so no two projects ever share a colour.
+ if(i<ANS_PJ_COLORS.length)return ANS_PJ_COLORS[i];
+ return 'hsl('+Math.round((i*137.508)%360)+',62%,42%)';
 }
 function projColorByTitle(t){
  var P=(D&&D.projects)||[];
