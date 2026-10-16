@@ -2657,6 +2657,15 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .ansPjGo{border:2px solid var(--pc);color:var(--pc);background:var(--surface);border-radius:12px;padding:8px 12px;font-weight:700;font-size:15px;line-height:1.2}
 .ansPjGo small{display:block;font-size:11px;font-weight:600}
 .ansPjGo.hot{background:var(--pc);color:#fff;animation:pjHot 1.6s ease-in-out infinite}
+.ansPjW{display:inline-block;min-width:20px;border-radius:999px;background:var(--pc);color:#fff;font-size:12px;padding:1px 6px;margin-inline-start:4px}
+.ansPjGo.hot .ansPjW{background:#fff;color:var(--pc)}
+details.ansPj>summary.ansPjH{cursor:pointer;list-style:none;padding-block:6px}
+details.ansPj>summary.ansPjH::-webkit-details-marker{display:none}
+details.ansPj>summary.ansPjH::after{content:' ▾';font-weight:400}
+details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
+.ansUp{position:fixed;left:14px;bottom:88px;z-index:30;border:0;border-radius:999px;padding:9px 14px;font-weight:700;font-size:14px;background:var(--ink);color:var(--ground);box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.gt.pjc{box-shadow:inset 0 5px 0 var(--pc)}
+.tproj.pjc,.pchip.pjc{border:2px solid var(--pc);color:var(--pc)}
 @keyframes pjHot{50%{opacity:.55}}
 .ansRest{color:var(--dim);border-top:1px solid var(--line,#333);padding-top:10px}
 .pjTLabel{align-self:flex-start;border:1px solid var(--line,#333);border-radius:8px;padding:4px 12px;font-weight:700}
@@ -7189,7 +7198,7 @@ function renderThread(){
  if(only)rows=rows.filter(function(r){return proj[r.thread.key]===only;});
  var bar=names.length?'<div class="pbar" role="group" aria-label="סינון לפי פרויקט">'
   +'<button type="button" class="pchip'+(only?'':' on')+'" data-p="">הכל</button>'
-  +names.map(function(n){return '<button type="button" class="pchip'+(n===only?' on':'')+'" data-p="'+esc(n)+'">'+esc(n)+'</button>';}).join('')
+  +names.map(function(n){var pc=projColorByTitle(n);return '<button type="button" class="pchip'+(n===only?' on':'')+(pc?' pjc" style="--pc:'+pc:'')+'" data-p="'+esc(n)+'">'+esc(n)+'</button>';}).join('')
   +'</div>':'';
  var flat=[];
  host.innerHTML=bar+rows.map(function(r,ri){
@@ -7210,7 +7219,7 @@ function renderThread(){
   var whole=t.msgs.map(function(m){return (m.from==='itzik'?OWNER:AI)+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');}).join(String.fromCharCode(10,10));
   return '<details class="th th-'+r.status+'" data-k="'+esc(t.key)+'"'+(ri===0&&r.status==='fresh'?' open':'')+'>'
    +'<summary><span class="num">'+r.n+'</span><b>'+esc(head)+'</b>'+tag
-   +(proj[t.key]?'<i class="tproj">'+esc(proj[t.key])+'</i>':'')
+   +(proj[t.key]?(function(pc){return '<i class="tproj'+(pc?' pjc" style="--pc:'+pc:'')+'">'+esc(proj[t.key])+'</i>';})(projColorByTitle(proj[t.key])):'')
    +'<small>'+esc(stampAgo(t.last))+' · '+msgCount(t.msgs.length)+'</small>'
    +'</summary>'
    +'<div class="thbody">'+body
@@ -9465,6 +9474,18 @@ function paintAnsTip(){
 // project tile's state, so projBindBoard serves both.
 var ANS_PJ={};
 var ANS_PJ_COLORS=['#e03131','#1c7ed6','#2b8a3e','#ae3ec9','#e67700','#0c8599','#c2255c','#5f3dc4'];
+// A project keeps one colour everywhere: answers screen, home tile, chat tag.
+// It follows the project's place in D.projects, not the answers screen order.
+function projColor(p){
+ var P=(D&&D.projects)||[],i=0;
+ for(var k=0;k<P.length;k++){if(P[k].id===p.id){i=k;break;}}
+ return ANS_PJ_COLORS[i%ANS_PJ_COLORS.length];
+}
+function projColorByTitle(t){
+ var P=(D&&D.projects)||[];
+ for(var k=0;k<P.length;k++){if(P[k].title===t)return projColor(P[k]);}
+ return '';
+}
 // The newest result anywhere on a project's board, '' when none came back yet.
 function ansPjLatest(p){
  var B=ML.projBoard((D&&D.chat)||[],pending(),p,stamp),last='';
@@ -9494,7 +9515,10 @@ function renderAnswers(){
   all.onclick=function(){markAllRead();renderAnswers();};
   chips.appendChild(all);
  }
- var P=(D&&D.projects)||[];
+ // Itzik 16.10: the project that got the newest answer comes first.
+ var P=((D&&D.projects)||[]).slice();
+ var LAST={};P.forEach(function(p){LAST[p.id]=ansPjLatest(p);});
+ P.sort(function(a,b){return LAST[a.id]<LAST[b.id]?1:LAST[a.id]>LAST[b.id]?-1:0;});
  var boardsHtml='';
  var bindBoards=function(){
   P.forEach(function(p,i){
@@ -9509,29 +9533,44 @@ function renderAnswers(){
    device has not jumped to yet, and a tap takes him straight to that project.
  */
  var navHtml='';
+ /*
+   Itzik 16.10, "את הכל": each button also says how many requests still wait for
+   a result; a project with nothing new is folded to its title line; a floating
+   button brings him back up to the row of projects.
+ */
+ var HOT={};
  P.forEach(function(p,i){
-  var col=ANS_PJ_COLORS[i%ANS_PJ_COLORS.length],last=ansPjLatest(p),seen='';
+  var col=projColor(p),last=LAST[p.id],seen='',w=projWaiting(p);
   try{seen=localStorage.getItem('ansPjSeen:'+p.id)||'';}catch(e){}
-  var hot=last&&last>seen;
+  var hot=HOT[p.id]=!!(last&&last>seen);
   navHtml+='<button type="button" class="ansPjGo'+(hot?' hot':'')+'" style="--pc:'+col+'" data-go="'+i+'" data-last="'+esc(last)+'" data-id="'+esc(p.id)+'">'
-   +esc((p.icon||'📁')+' '+p.title)+(hot?'<small>תשובה חדשה</small>':'')+'</button>';
+   +esc((p.icon||'📁')+' '+p.title)+(w?' <b class="ansPjW">'+w+'</b>':'')+(hot?'<small>תשובה חדשה</small>':'')+'</button>';
  });
- if(navHtml)boardsHtml='<div class="ansPjNav" role="navigation" aria-label="מעבר לפרויקט">'+navHtml+'</div>';
+ if(navHtml)boardsHtml='<div class="ansPjNav" id="ansPjNav" role="navigation" aria-label="מעבר לפרויקט">'+navHtml+'</div>'
+  +'<button type="button" class="ansUp" id="ansUp" aria-label="חזרה לפרויקטים">⬆ פרויקטים</button>';
  var bindNav=function(){
   Array.prototype.forEach.call(host.querySelectorAll('.ansPjGo'),function(b){
    b.onclick=function(){
-    try{localStorage.setItem('ansPjSeen:'+b.getAttribute('data-id'),b.getAttribute('data-last')||'');}catch(e){}
+    var id=b.getAttribute('data-id');
+    try{localStorage.setItem('ansPjSeen:'+id,b.getAttribute('data-last')||'');}catch(e){}
+    if(ANS_PJ[id])ANS_PJ[id].open=true;
     b.classList.remove('hot');var s=b.querySelector('small');if(s)s.remove();
     var sec=document.getElementById('ansPj'+b.getAttribute('data-go'));
-    if(sec)sec.scrollIntoView({behavior:'smooth',block:'start'});
+    if(sec){sec.open=true;sec.scrollIntoView({behavior:'smooth',block:'start'});}
    };
   });
+  Array.prototype.forEach.call(host.querySelectorAll('details.ansPj'),function(d){
+   d.addEventListener('toggle',function(){var st=ANS_PJ[d.getAttribute('data-proj')];if(st)st.open=d.open;});
+  });
+  var up=document.getElementById('ansUp'),nav=document.getElementById('ansPjNav');
+  if(up&&nav)up.onclick=function(){nav.scrollIntoView({behavior:'smooth',block:'start'});};
  };
  var bindBoards0=bindBoards;
  bindBoards=function(){bindBoards0();bindNav();};
  P.forEach(function(p,i){
-  ANS_PJ[p.id]=ANS_PJ[p.id]||{tab:'',newOpen:false,tk:'ansTab:'+p.id};
-  boardsHtml+='<section class="ansPj" id="ansPj'+i+'" style="--pc:'+ANS_PJ_COLORS[i%ANS_PJ_COLORS.length]+'" data-proj="'+esc(p.id)+'"><h3 class="ansPjH">'+esc((p.icon||'📁')+' שם הפרויקט: '+p.title)+'</h3><div class="pj" id="ansPjB'+i+'">'+projBoardHtml(p,projFem(),ANS_PJ[p.id].tab,ANS_PJ[p.id].newOpen)+'</div></section>';
+  ANS_PJ[p.id]=ANS_PJ[p.id]||{tab:'',newOpen:false,tk:'ansTab:'+p.id,open:false};
+  var open=HOT[p.id]||ANS_PJ[p.id].open;
+  boardsHtml+='<details class="ansPj" id="ansPj'+i+'"'+(open?' open':'')+' style="--pc:'+projColor(p)+'" data-proj="'+esc(p.id)+'"><summary class="ansPjH">'+esc((p.icon||'📁')+' שם הפרויקט: '+p.title)+'</summary><div class="pj" id="ansPjB'+i+'">'+projBoardHtml(p,projFem(),ANS_PJ[p.id].tab,ANS_PJ[p.id].newOpen)+'</div></details>';
  });
  // The messages the boards already show are not repeated in the list below.
  var full=ansList().filter(function(m){
@@ -15399,7 +15438,7 @@ function projTiles(){
  host.hidden=!P.length;
  host.innerHTML=P.map(function(p,i){
   var c=projCur(p),w=projWaiting(p);
-  return '<button type="button" class="gt '+esc(p.cls||'g11')+'" id="gProj'+i+'"><b>'+esc((p.icon||'📁')+' '+p.title)+'</b>'
+  return '<button type="button" class="gt pjc '+esc(p.cls||'g11')+'" style="--pc:'+projColor(p)+'" id="gProj'+i+'"><b>'+esc((p.icon||'📁')+' '+p.title)+'</b>'
    +'<small>'+esc(c?('עכשיו: '+c.title+(w?' · ממתין: '+w:'')):(p.sub||''))+'</small></button>';
  }).join('');
  P.forEach(function(p,i){
