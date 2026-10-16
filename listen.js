@@ -552,6 +552,45 @@ function recordIncoming(m) {
       } catch (e) { say('!! שעות שקטות לא נשמרו: ' + e.message); }
     }
     /*
+      16.10: a tap on a decision card of the Pegasus screen ("פגסוס: <ask> ← <pick>")
+      is applied here with no model: the card gets his answer, the work goes to
+      the PC queue (pc-pull.js, Haiku, the game repo on his PC), and he gets one
+      line. "תמיד תחשבו איך אנחנו חוסכים": no session on the server for a tap.
+    */
+    const pa = codeOk && inst.name === 'abaitzik' && require('./lib/pegasus-work.js').parseAnswer(text);
+    if (pa) {
+      try {
+        const pw = require('./lib/pegasus-work.js');
+        const dir = path.join(inst.dataPath, 'pegasus', 'pegasus');
+        const card = pw.answer(dir, pa.ask, pa.pick, at.toISOString());
+        let said;
+        if (card) {
+          const job = ['משימת פגסוס מהמוניטור. עובדים בתיקיית המשחק C:\\Users\\User\\OneDrive\\Documents\\pegasus (קרא קודם AGENTS.md ו-CLAUDE.md שם, ועבוד לפי הנוהל: ענף, בדיקה חיה בדפדפן, פריסה רק לפי AGENTS.md).',
+            pw.task(card),
+            'בצע בדיוק את מה שאיציק בחר, חבילה אחת שלמה. אם הבחירה דורשת SQL במסד הייצור, הכן את הקובץ ואת השורה להרצה והחזר אותה לאיציק במקום להריץ בעצמך. בסוף: שורה אחת מה נעשה ואיפה רואים.'].join('\n');
+          const r = require('child_process').spawnSync(process.execPath, ['pc-task.js', 'add', '--re', rec.id, job], { cwd: __dirname, encoding: 'utf8', timeout: 60000 });
+          if (r.status !== 0) throw new Error('pc-task add: ' + String(r.stderr || r.stdout).trim().slice(0, 200));
+          pw.take(dir, card.file, at.toISOString());
+          try {
+            const cf = path.join(dir, card.file);
+            const cd = JSON.parse(fs.readFileSync(cf, 'utf8'));
+            cd.now = 'בחרת: ' + pa.pick + '. המשימה במחשב, תקבל תשובה בשרשור הזה כשתסתיים.';
+            fs.writeFileSync(cf, JSON.stringify(cd, null, 1), 'utf8');
+          } catch (e) {}
+          said = 'קיבלתי: ' + pa.pick + '. המשימה נשלחה למחשב ותרוץ כשהוא דולק. תקבל כאן תשובה כשתסתיים.';
+        } else {
+          said = 'קיבלתי: ' + pa.pick + ', אבל לא מצאתי כרטיס פתוח עם השאלה הזאת. אולי כבר נענתה.';
+        }
+        rec.status = 'done';
+        fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+        fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-pegasus-pick.json')),
+          JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id, text: said, status: 'done' }, null, 1), 'utf8');
+        say('החלטת פגסוס: ' + pa.pick + (card ? ' (' + card.file + ')' : ' (בלי כרטיס)'));
+        try { publishChat(); } catch (e) { /* the next build carries it */ }
+        return true;
+      } catch (e) { say('!! החלטת פגסוס לא נרשמה: ' + e.message); }
+    }
+    /*
       6.10: a customer's request to the admin is filed by this code, not by a model.
       Until now the answering session was told to run `change-request.js add`, and in a
       test on Home Style's monitor one session said it had filed the request and had not.

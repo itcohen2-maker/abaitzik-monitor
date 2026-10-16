@@ -216,7 +216,11 @@ if (cmd === 'add') {
   });
   if (t) {
     const m = hisMessage(t.re);
-    console.log(JSON.stringify(Object.assign({}, t, { message: m ? (m.note || m.text || '') : '' })));
+    // 16.10: every task the PC gets carries the savings rules on top (skill saving).
+    const sv = require('./lib/saving.js').promptLines();
+    console.log(JSON.stringify(Object.assign({}, t, { task: (sv.length ? sv.join('
+') + '
+' : '') + t.task, message: m ? (m.note || m.text || '') : '' })));
   }
 } else if (cmd === 'done') {
   const text = trimAnswer(stdin());

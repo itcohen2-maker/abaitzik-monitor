@@ -309,6 +309,8 @@ function prompt(list) {
     */
     houseRules(),
     ...adminRules(),
+    // 16.10: the savings skill, in every monitor's every session.
+    ...require('./lib/saving.js').promptLines(),
     /*
       How an answer reads, 26.9. Itzik asked for the whole monitor to be gone
       over, "all your answers and how you bring them", and the answers screen
