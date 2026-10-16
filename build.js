@@ -2445,6 +2445,7 @@ body.editing .bn{display:none}
 .g8{background:linear-gradient(150deg,#ffb74d,#e65100)}
 .g9{background:linear-gradient(150deg,#f48fb1,#ad1457)}
 .g10{background:linear-gradient(150deg,#ffe082,#f57f17)}
+.roundTile{width:72px;height:72px;min-height:72px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;font-size:30px;}
 .g11{background:linear-gradient(150deg,#b9f6ca,#00897b)}
 .gHealth{background:linear-gradient(150deg,#66bb6a,#1b5e20)}
 .gHealth.hbad{background:linear-gradient(150deg,#ef5350,#b71c1c)}
@@ -3978,7 +3979,7 @@ try{
   <button type="button" class="gt gMyDay" id="gMyDay" data-new="1"><b>📅 מה יש לי היום</b><small>תורים, תזכורות ומשימות של היום</small></button>
   <button type="button" class="gt g18" id="gAppts"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
   <button type="button" class="gt g16" id="gRemind"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
-  <button type="button" class="gt g10" id="gNotes"><b>📝 פתקים</b><small>נכתב, נשמר, לא הולך לאיבוד</small></button>
+  <button type="button" class="gt g10 roundTile" id="gNotes" title="פתקים" aria-label="פתקים" data-upd="20261016-notes-round">📝</button>
   <!-- 12.10, Itzik: "תקים אפליקציה לבדוק מה כל הקלקולים האלה". Every monitor's faults on one screen. -->
   <button type="button" class="gt gHealth" id="gHealth" data-new="1"><b>🩺 תקלות</b><small>מה תקוע, מה נעצר, ולמה</small></button>
   <!-- Other monitors on this server, one colour each. Hidden when there are none. -->
