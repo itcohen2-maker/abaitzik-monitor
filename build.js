@@ -269,9 +269,13 @@ function build() {
   // `ask` is the part of an update that is waiting on him, and `opts` are the
   // ready answers. He asked to answer on the card itself, not to scroll down
   // and write a message about which update he means.
+  // 16.10: a decided card kept its question and buttons on every visit, because
+  // the answer never reached the page. `answer` (tapped here) and `chosen` (set
+  // by the session) now come through, and a decided card shows what he picked.
   const pegasus = loadDocs('pegasus')
     .map(p => ({ at: p.at, did: p.did || '', now: p.now || '', plan: p.plan || '',
-                 ask: p.ask || '', opts: Array.isArray(p.opts) ? p.opts : [] }))
+                 ask: p.ask || '', opts: Array.isArray(p.opts) ? p.opts : [],
+                 answer: p.answer || p.chosen || '' }))
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
   // How I keep getting better. Each entry is one thing I got wrong or one
   // thing I changed, in his words: what, why, and what it changes for him.
@@ -3927,7 +3931,7 @@ try{
  <div id="askBox"></div>
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
-  <button type="button" class="gt gStory" id="gPegasus" data-new="1" data-upd="20261016-decisions"><b>🐎 פגסוס</b><small>9 החלטות מחכות לך, כפתור לכל אחת</small></button>
+  <button type="button" class="gt gStory" id="gPegasus" data-new="1" data-upd="20261016-answered"><b>🐎 פגסוס</b><small>9 החלטות מחכות לך, כפתור לכל אחת</small></button>
   <button type="button" class="gt gLec" id="gLec" data-new="1" data-upd="20261015-clalit"><b>🎤 הרצאה</b><small>חדש 06: הריל של איליי, הקאבר, ההוק והכיתוב</small></button>
   <button type="button" class="gt gStory" id="gStory" data-upd="2026-10-15-ner-bio"><b>🎞️ סטורי</b><small>4 סטורי נרות חדשים: תמונות על כל המסך, הטקסט באמצע</small></button>
   <!--
@@ -12233,11 +12237,12 @@ function renderPegasus(){
  if(!host)return;
  var P=D.pegasus||[];
  host.innerHTML=replyBox('על פגסוס')+(P.length?P.map(function(u,pi){
-  return '<div class="peg'+(u.ask?' waiting':'')+'"><div class="w">'+esc(stampAgo(u.at))+'</div>'
+  return '<div class="peg'+(u.ask&&!u.answer?' waiting':'')+'"><div class="w">'+esc(stampAgo(u.at))+'</div>'
    +(u.did?'<div><b>מה נעשה</b>'+esc(u.did)+'</div>':'')
    +(u.now?'<div><b>מה קורה</b>'+esc(u.now)+'</div>':'')
    +(u.plan?'<div><b>מה מתוכנן</b>'+esc(u.plan)+'</div>':'')
-   +(u.ask?'<div class="pask"><div class="q">מחכה לך: '+esc(u.ask)+'</div>'
+   +(u.ask&&u.answer?'<div><b>נבחר</b>'+esc(u.ask)+' ← '+esc(u.answer)+'</div>':'')
+   +(u.ask&&!u.answer?'<div class="pask"><div class="q">מחכה לך: '+esc(u.ask)+'</div>'
      +(u.opts.length?'<div class="popts" data-p="'+pi+'">'+u.opts.map(function(o,oi){
         return '<button type="button" data-o="'+oi+'">'+esc(o)+'</button>';}).join('')+'</div>':'')
      +replyBox('פגסוס: '+u.ask)+'</div>':'')
