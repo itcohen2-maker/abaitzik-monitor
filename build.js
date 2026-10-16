@@ -2651,6 +2651,13 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .pjTopic{border:1px solid var(--line,#333);border-radius:12px;padding:10px;margin-top:14px;display:flex;flex-direction:column;gap:8px}
 .ansPj{margin-bottom:18px}
 .ansPjH{font-size:17px;margin:14px 0 6px;font-weight:700}
+.ansPj{scroll-margin-top:12px}
+.ansPj .ansPjH{color:var(--pc);border-inline-start:6px solid var(--pc);padding-inline-start:10px}
+.ansPjNav{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 14px}
+.ansPjGo{border:2px solid var(--pc);color:var(--pc);background:var(--surface);border-radius:12px;padding:8px 12px;font-weight:700;font-size:15px;line-height:1.2}
+.ansPjGo small{display:block;font-size:11px;font-weight:600}
+.ansPjGo.hot{background:var(--pc);color:#fff;animation:pjHot 1.6s ease-in-out infinite}
+@keyframes pjHot{50%{opacity:.55}}
 .ansRest{color:var(--dim);border-top:1px solid var(--line,#333);padding-top:10px}
 .pjTLabel{align-self:flex-start;border:1px solid var(--line,#333);border-radius:8px;padding:4px 12px;font-weight:700}
 .pjTab{background:none;border:0;border-bottom:2px solid transparent;padding:6px 4px;font:inherit;color:var(--dim);cursor:pointer}
@@ -9457,6 +9464,14 @@ function paintAnsTip(){
 // One state per project for the boards on the answers screen, same shape as the
 // project tile's state, so projBindBoard serves both.
 var ANS_PJ={};
+var ANS_PJ_COLORS=['#e03131','#1c7ed6','#2b8a3e','#ae3ec9','#e67700','#0c8599','#c2255c','#5f3dc4'];
+// The newest result anywhere on a project's board, '' when none came back yet.
+function ansPjLatest(p){
+ var B=ML.projBoard((D&&D.chat)||[],pending(),p,stamp),last='';
+ var take=function(rs){rs.forEach(function(m){var a=String(m.at||'');if(a>last)last=a;});};
+ B.topics.forEach(function(t){t.rows.forEach(function(r){take(r.results);r.follows.forEach(function(f){take(f.results);});});});
+ return last;
+}
 function renderAnswers(){
  var chips=document.getElementById('aChips');
  var host=document.getElementById('ansBox');
@@ -9488,9 +9503,35 @@ function renderAnswers(){
    projBindBoard(bel,p,ANS_PJ[p.id],function(){bel.innerHTML=projBoardHtml(p,projFem(),ANS_PJ[p.id].tab,ANS_PJ[p.id].newOpen);});
   });
  };
+ /*
+   Itzik 16.10: every project title in its own colour, and on top of the screen
+   a button per project. A button lights up while the project has an answer this
+   device has not jumped to yet, and a tap takes him straight to that project.
+ */
+ var navHtml='';
+ P.forEach(function(p,i){
+  var col=ANS_PJ_COLORS[i%ANS_PJ_COLORS.length],last=ansPjLatest(p),seen='';
+  try{seen=localStorage.getItem('ansPjSeen:'+p.id)||'';}catch(e){}
+  var hot=last&&last>seen;
+  navHtml+='<button type="button" class="ansPjGo'+(hot?' hot':'')+'" style="--pc:'+col+'" data-go="'+i+'" data-last="'+esc(last)+'" data-id="'+esc(p.id)+'">'
+   +esc((p.icon||'📁')+' '+p.title)+(hot?'<small>תשובה חדשה</small>':'')+'</button>';
+ });
+ if(navHtml)boardsHtml='<div class="ansPjNav" role="navigation" aria-label="מעבר לפרויקט">'+navHtml+'</div>';
+ var bindNav=function(){
+  Array.prototype.forEach.call(host.querySelectorAll('.ansPjGo'),function(b){
+   b.onclick=function(){
+    try{localStorage.setItem('ansPjSeen:'+b.getAttribute('data-id'),b.getAttribute('data-last')||'');}catch(e){}
+    b.classList.remove('hot');var s=b.querySelector('small');if(s)s.remove();
+    var sec=document.getElementById('ansPj'+b.getAttribute('data-go'));
+    if(sec)sec.scrollIntoView({behavior:'smooth',block:'start'});
+   };
+  });
+ };
+ var bindBoards0=bindBoards;
+ bindBoards=function(){bindBoards0();bindNav();};
  P.forEach(function(p,i){
   ANS_PJ[p.id]=ANS_PJ[p.id]||{tab:'',newOpen:false,tk:'ansTab:'+p.id};
-  boardsHtml+='<section class="ansPj" data-proj="'+esc(p.id)+'"><h3 class="ansPjH">'+esc((p.icon||'📁')+' שם הפרויקט: '+p.title)+'</h3><div class="pj" id="ansPjB'+i+'">'+projBoardHtml(p,projFem(),ANS_PJ[p.id].tab,ANS_PJ[p.id].newOpen)+'</div></section>';
+  boardsHtml+='<section class="ansPj" id="ansPj'+i+'" style="--pc:'+ANS_PJ_COLORS[i%ANS_PJ_COLORS.length]+'" data-proj="'+esc(p.id)+'"><h3 class="ansPjH">'+esc((p.icon||'📁')+' שם הפרויקט: '+p.title)+'</h3><div class="pj" id="ansPjB'+i+'">'+projBoardHtml(p,projFem(),ANS_PJ[p.id].tab,ANS_PJ[p.id].newOpen)+'</div></section>';
  });
  // The messages the boards already show are not repeated in the list below.
  var full=ansList().filter(function(m){
