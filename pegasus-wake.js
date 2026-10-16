@@ -33,6 +33,7 @@ const PROJECTS = 'C:/Users/User/.claude/projects';
 // Pegasus has worked from the main repo and from the audit worktree.
 const DIRS = ['C--Users-User-OneDrive-Documents-pegasus', 'C--Users-User-AppData-Local-Temp-pegasus-audit-scoreboard-20260908'];
 const BUSY_MS = 8 * 60 * 1000;
+const REPO = 'C:/Users/User/OneDrive/Documents/pegasus';
 const MAX_RUN_MS = 2 * 60 * 60 * 1000;
 const DRY = process.argv.includes('--dry');
 const MESSAGE = 'הפעלה אוטומטית של פגסוס (כל 10 דקות, 24 שעות, לבקשת איציק 10.10): אל תחכה להוראות מאיציק ותמשיך לעבוד כל הזמן. תמשיך את המשימה הבאה בתוכנית מאיפה שעצרת. אם אין משימה פתוחה, תתכנן את הצעד הבא לפי התוכניות ב-docs, תרשום אותו ב-docs ותבצע אותו; אל תעצור עם שורת מצב. התכנון שלך על Opus 5.5; את הביצוע תעביר לסוכן במודל הזול ביותר (כלי Agent עם model: haiku), ותבדוק בעצמך את מה שחזר לפני קומיט, פריסה או דיווח.';
@@ -100,27 +101,42 @@ function main() {
     fs.unlinkSync(LOCK);
   }
 
+  /*
+    16.10.2026, Itzik: "תמיד תחשבו איך אנחנו חוסכים". The ten minute wake that
+    resumed one giant session (1,688 wakes) and answered "nothing new" 144
+    times a day burned 200 dollars of API credit in nine hours. From now on a
+    wake starts Claude only when there is work it alone can do: commits on the
+    server branch that need a live check and a deploy. Decisions Itzik makes on
+    the Pegasus screen reach the PC through the task queue (pc-pull.js, Haiku),
+    not through this. And it is a fresh short session each time, never a resume.
+  */
   const s = newestSession();
-  if (!s || !s.cwd || !fs.existsSync(s.cwd)) { say('error: no Pegasus session found ' + JSON.stringify(s)); process.exitCode = 1; return; }
-  const idle = Date.now() - s.mtime;
-  if (idle < BUSY_MS) { say('skip: Pegasus is working (session ' + s.id + ' written ' + Math.round(idle / 1000) + 's ago)'); return; }
-
-  say('wake: session ' + s.id + ' idle ' + Math.round(idle / 60000) + ' min, cwd ' + s.cwd);
-  const pending = serverWork(s.cwd);
-  const message = pending ? MESSAGE + SERVER_NOTE.replace('%N', pending) : MESSAGE;
-  say('server/pegasus: ' + pending + ' commits not in ' + MAIN_BRANCH);
+  if (s && Date.now() - s.mtime < BUSY_MS) { say('skip: Pegasus is working (session ' + s.id + ' written ' + Math.round((Date.now() - s.mtime) / 1000) + 's ago)'); return; }
+  const cwd = REPO;
+  const pending = serverWork(cwd);
+  if (!pending) { say('skip: no work (server branch merged; decisions travel through the PC queue)'); return; }
+  say('wake: ' + pending + ' commits on server/pegasus to verify and deploy, fresh session in ' + cwd);
   if (DRY) { say('dry: not starting'); return; }
 
-  fs.writeFileSync(LOCK, JSON.stringify({ pid: process.pid, at: Date.now(), session: s.id }));
-  // 14.10.2026: Pegasus runs on the $200 monthly API credit of the Max 20x plan
-  // (key in ~/.claude/pegasus-api-key.txt, valid to 13.11), not on the subscription.
+  fs.writeFileSync(LOCK, JSON.stringify({ pid: process.pid, at: Date.now(), session: 'fresh' }));
   const env = Object.assign({}, process.env);
-  try { env.ANTHROPIC_API_KEY = require('fs').readFileSync('C:/Users/User/.claude/pegasus-api-key.txt', 'utf8').trim(); delete env.CLAUDE_CODE_OAUTH_TOKEN; } catch (e) {}
-  const child = spawn('claude', ['--resume', s.id, '--model', 'haiku', '-p', '--dangerously-skip-permissions'], { cwd: s.cwd, shell: true, windowsHide: true, env });
+  const message = 'הפעלה אוטומטית של פגסוס (לבקשת איציק). קרא קודם AGENTS.md ו-CLAUDE.md בתיקייה הזאת.' + SERVER_NOTE.replace('%N', pending)
+    + ' עבודה אחת שלמה ואז עצור. בסוף: שורה אחת מה נעשה ואיפה רואים.';
+  // Plan on Opus with read only tools, execute on Haiku: the iron rule of 14.10.
+  let plan = '';
+  try {
+    const r = require('child_process').spawnSync('claude', ['-p', '--model', 'claude-opus-5-5', '--output-format', 'json', '--allowedTools', 'Read', 'Grep', 'Glob', '--max-turns', '6'],
+      { cwd, shell: true, windowsHide: true, env, encoding: 'utf8', timeout: 10 * 60 * 1000,
+        input: 'תכנן בלבד, אל תשנה קבצים. כתוב תוכנית קצרה וממוספרת (עד 15 שורות) לביצוע על ידי סוכן זול:\n' + message });
+    const j = JSON.parse(r.stdout || '{}');
+    if (j && !j.is_error && j.result) plan = String(j.result).slice(0, 6000);
+    say('plan: ' + plan.length + ' chars from opus');
+  } catch (e) { say('warn: planning failed, executing without a plan: ' + e.message.slice(0, 200)); }
+  const child = spawn('claude', ['--model', 'haiku', '-p', '--dangerously-skip-permissions'], { cwd, shell: true, windowsHide: true, env });
   let out = '';
   child.stdout.on('data', d => { out += d; });
   child.stderr.on('data', d => { out += d; });
-  child.stdin.end(message);
+  child.stdin.end(message + (plan ? '\n\nהתוכנית (מאופוס):\n' + plan : ''));
   const timer = setTimeout(() => { say('timeout: killing after ' + MAX_RUN_MS / 60000 + ' min'); child.kill(); }, MAX_RUN_MS);
   child.on('close', code => {
     clearTimeout(timer);
