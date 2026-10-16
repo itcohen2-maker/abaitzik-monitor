@@ -3908,6 +3908,7 @@ try{
  <div id="askBox"></div>
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
+  <button type="button" class="gt gStory" id="gPegasus" data-new="1" data-upd="20261016-decisions"><b>🐎 פגסוס</b><small>9 החלטות מחכות לך, כפתור לכל אחת</small></button>
   <button type="button" class="gt gLec" id="gLec" data-new="1" data-upd="20261015-clalit"><b>🎤 הרצאה</b><small>חדש 06: הריל של איליי, הקאבר, ההוק והכיתוב</small></button>
   <button type="button" class="gt gStory" id="gStory" data-upd="2026-10-15-ner-bio"><b>🎞️ סטורי</b><small>4 סטורי נרות חדשים: תמונות על כל המסך, הטקסט באמצע</small></button>
   <!--
