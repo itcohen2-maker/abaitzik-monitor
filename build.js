@@ -1142,7 +1142,7 @@ function tenantTiles(inst) {
     + esc((l.icon ? l.icon + ' ' : '') + l.title) + '</b><small>' + esc(l.sub || 'פתיחה בלשונית חדשה') + '</small></button>').join('');
   return guides + links + ids.filter((id) => TENANT_TILES[id]).map((id) => {
     const [cls, title, sub] = TENANT_TILES[id];
-    return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261015-clalit"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261015-clalit"' : '') + (id === 'gTasks' ? ' data-upd="tasks-1610"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
 }
 /*
@@ -12068,8 +12068,10 @@ function renderTasks(){
  */
  var gone=clearedIds('tasksCleared');
  var T=(D.tasks||[]).filter(function(t){return !gone[t.id];}),done=tkDone(),h='',last='';
- if(T.length)h+='<button type="button" class="gclear" id="tkClear">עשיתי הכל · '+T.length
-  +'<small>מנקה את הרשימה. משימה חדשה תופיע כרגיל.</small></button>';
+ // 16.10: the button clears only ticked tasks; unticked ones stay (idea he took).
+ var D2=T.filter(function(t){return done[t.id];});
+ if(D2.length)h+='<button type="button" class="gclear" id="tkClear">עשיתי הכל · '+D2.length
+  +'<small>מנקה רק את מה שסימנת. מה שלא סומן נשאר.</small></button>';
  T.forEach(function(t){
   if(t.day!==last){
    last=t.day;
