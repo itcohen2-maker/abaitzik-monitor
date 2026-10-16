@@ -189,6 +189,11 @@ function check(now) {
     const wl = fs.readFileSync(process.env.WORKER_LOG || '/var/log/monitor-worker.log', 'utf8').split('\n').slice(-60).join('\n');
     if (refused(wl)) problems.push('סשנים בשרת נדחים, כנראה הכניסה של קלוד פגה');
   } catch (e) {}
+  // 16.10: Alon's key ran out of credit and the tile said only "messages waiting".
+  try {
+    const ah = JSON.parse(fs.readFileSync(path.join(STATUS, 'account-hold.json'), 'utf8'));
+    if (ah && ah.at) problems.push('החשבון של המפתח דוחה סשנים: ' + (ah.reason || 'לא ידוע'));
+  } catch (e) {}
   if (process.platform !== 'win32') {
     const st = show(UNIT + '.service', 'ActiveState');
     const since = when(show(UNIT + '.service', 'StateChangeTimestamp'));

@@ -40,6 +40,8 @@ const LOG = path.join(STATUS, 'worker.log');
 const SEEN = path.join(STATUS, 'worker-seen.json');
 const QHOLD = path.join(STATUS, 'quota-hold.json');
 const QPASS = path.join(STATUS, 'quota-pass.json');
+// 16.10: the account behind the key said no (credit gone, key revoked).
+const AHOLD = path.join(STATUS, 'account-hold.json');
 const DRY = process.argv.includes('--dry');
 /*
   A message needs a moment to settle, but a minute was never that moment.
@@ -718,7 +720,10 @@ function run(list) {
   child.on('close', (code) => {
     unregister(sid);
     const res = logUsage(json, list);
+    if (code === 0 && res && !res.is_error && fs.existsSync(AHOLD)) { try { fs.unlinkSync(AHOLD); say('החשבון עונה שוב, החסימה הוסרה.'); } catch (e) {} }
     say('הסשן הסתיים, קוד ' + code + '. ' + String(res ? res.result || '' : out).trim().slice(-300).replace(/\s+/g, ' '));
+    const why = accountFailure(String(res ? res.result || '' : out));
+    if (why) holdAccount(why);
     /*
       The exit code was never the question.
 
@@ -927,11 +932,77 @@ function onHold() {
   return true;
 }
 
+/*
+  16.10.2026, Alon: his key's credit ran out at 19:35 UTC the evening before,
+  and nothing noticed. Every minute three sessions started, each died in two
+  seconds on "Credit balance is too low", the batch went back to the queue,
+  and the next minute did it again: a thousand attempts in nine hours, four
+  messages waiting, and Itzik's tile said only "messages waiting". The account
+  saying no is not a session failing; it is a stop until a human loads credit
+  or swaps the key. One try an hour from then on, a request to the manager
+  once, the customer told once a day, and the watchdog shows the real reason.
+*/
+function accountFailure(text) {
+  const m = /credit balance is too low|invalid x-api-key|authentication_error|organization has been disabled|api key (is )?(invalid|expired|revoked)/i.exec(String(text || ''));
+  return m ? m[0] : '';
+}
+function holdAccount(reason) {
+  if (DRY) return;
+  const hold = readJson(AHOLD, {}) || {};
+  hold.at = new Date().toISOString();
+  hold.reason = reason;
+  hold.count = (hold.count || 0) + 1;
+  try {
+    if (!hold.reqId) {
+      hold.reqId = require('./lib/change-requests.js').add('החשבון של המפתח דחה את הסשנים: ' + reason + '. צריך לטעון קרדיט בקונסול או לחבר מפתח אחר, ואז לאשר כאן כדי לשחרר.', '');
+      say('!! החשבון דחה את הסשן (' + reason + '), בקשה ' + hold.reqId);
+    }
+    fs.writeFileSync(AHOLD, JSON.stringify(hold));
+    const flag = path.join(STATUS, 'account-told.json');
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
+    if (readJson(flag, {}).day !== today) {
+      fs.writeFileSync(flag, JSON.stringify({ day: today }));
+      const text = 'המוניטור עצר כי החשבון שמאחוריו לא מאשר סשנים כרגע (' + reason + '). ההודעות שלך נשמרו ויטופלו מיד אחרי שהמנהל יסדר את החשבון.';
+      const p = {};
+      new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Jerusalem', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+        .formatToParts(new Date()).forEach((x) => { p[x.type] = x.value; });
+      const stamp = p.year + p.month + p.day + '-' + p.hour + p.minute;
+      fs.writeFileSync(path.join(CHAT, stamp + '-claude-account-hold.json'),
+        JSON.stringify({ at: new Date().toISOString(), from: 'claude', text, status: 'done' }, null, 1), 'utf8');
+      tell('המוניטור עצר, החשבון לא מאשר סשנים', text);
+    }
+  } catch (e) { say('!! רישום חסימת חשבון: ' + e.message); }
+}
+const ACCOUNT_RETRY_MS = 60 * 60 * 1000;
+function accountHeld() {
+  const hold = readJson(AHOLD, null);
+  if (!hold || !hold.at) return false;
+  const left = ACCOUNT_RETRY_MS - (Date.now() - Date.parse(hold.at));
+  if (left <= 0) return false;
+  say('החשבון דחה את הסשנים (' + hold.reason + '). ניסיון הבא בעוד ' + Math.ceil(left / 60000) + ' דקות.');
+  return true;
+}
+// The manager's approval of the request filed by holdAccount, or the key
+// working again on the hourly try, ends the hold.
+function releaseAccount() {
+  const hold = readJson(AHOLD, null);
+  if (!hold || !hold.reqId) return;
+  try {
+    const dec = readJson(path.join(require('./lib/change-requests.js').SPOOL, inst.name + '.json'), {});
+    const d = dec[hold.reqId];
+    if (!d || d.status !== 'approved') return;
+    fs.unlinkSync(AHOLD);
+    try { fs.unlinkSync(path.join(STATUS, 'account-told.json')); } catch (e) {}
+    say('המנהל שחרר את חסימת החשבון.');
+  } catch (e) { say('!! שחרור חשבון: ' + e.message); }
+}
+
 function main() {
   // 8.10: a paused customer gets no sessions at all.
   if (inst.paused) { say('מושהה. לא עונה.'); return; }
   if (onHold()) return;
   if (quotaHold()) return;
+  if (accountHeld()) return;
   const live = livePids();
   if (!DRY) reconcile(live);
   const room = MAX_LIVE - Object.keys(live).length;
@@ -997,6 +1068,7 @@ function announceDecisions() {
     }
   } catch (e) { say('!! תשובות מנהל: ' + e.message); }
   releaseQuota();
+  releaseAccount();
 }
 
 // Runs every tick, whether or not there was an answer above. Release is the
