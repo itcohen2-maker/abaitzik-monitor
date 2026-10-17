@@ -1071,7 +1071,7 @@ const TENANT_TILES = {
   gPush: ['g4', '🔔 התראות לטלפון', 'כל תשובה קופצת בטלפון'],
   // Itzik, 11.10, for Alon: a few questions, and the answers come back as
   // suggestions for what else his monitor could hold.
-  gIntake: ['g11', '🧭 שאלות היכרות', 'כמה לחיצות, ואציע מה עוד אפשר לבנות לך'],
+  gIntake: ['g11', '🧭 שאלות היכרות', 'חמש שאלות, דקה, ואציע מה עוד אפשר לבנות לך'],
   // Rinat, 12.10: the files sent to her, each with a download button.
   gFiles: ['g10', '📁 הקבצים שלי', 'מה ששלחת ומה שנשלח לך, עם הורדה'],
   // 12.10, the small business records. A customer lists it in screens; Itzik's
@@ -1146,7 +1146,7 @@ function tenantTiles(inst) {
     + esc((l.icon ? l.icon + ' ' : '') + l.title) + '</b><small>' + esc(l.sub || 'פתיחה בלשונית חדשה') + '</small></button>').join('');
   return guides + links + ids.filter((id) => TENANT_TILES[id]).map((id) => {
     const [cls, title, sub] = TENANT_TILES[id];
-    return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261015-clalit"' : '') + (id === 'gTasks' ? ' data-upd="tasks-1610"' : '') + (id === 'gIntake' ? ' data-upd="20261017-techq"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261015-clalit"' : '') + (id === 'gTasks' ? ' data-upd="20261017-tasks-add"' : '') + (id === 'gIntake' ? ' data-upd="20261017-intake"' : '') + (id === 'gUpgrade' ? ' data-upd="20261017-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
 }
 /*
@@ -2547,6 +2547,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .tdAdd input{flex:1;min-width:0;border:1px solid #cfd6df;border-radius:10px;padding:9px 10px;font:400 15px Heebo,sans-serif}
 .tdAdd select{border:1px solid #cfd6df;border-radius:10px;padding:0 6px;background:#fff;font:400 14px Heebo,sans-serif;max-width:40%}
 .tdAdd button{border:0;border-radius:10px;padding:0 14px;background:#9c3d12;color:#fff;font:700 14px Heebo,sans-serif}
+.upgOn{color:#0a7d3b;font-weight:700;font-size:13px}
 .gWin{background:linear-gradient(150deg,#f2c94c,#7a2e12)}
 .gPen{background:linear-gradient(150deg,#5a8fd0,#1d2f55)}
 .gCPlan{background:linear-gradient(150deg,#e8743b,#6b2f7a)}
@@ -4919,6 +4920,10 @@ __RIVSHARE__
  <h2>משימות</h2>
  <div class="rephint">לחיצה על משימה מסמנת שבוצעה. הסימון נשמר בטלפון שלך.</div>
  <div id="tkBox"></div>
+ <!-- 17.10, idea he took: "במסך המשימות אין איך להוסיף משימה". The same box as מה יש לי היום, with a day picker. -->
+ <div class="tdSec">להוסיף משימה</div>
+ <form class="tdAdd" id="tkForm"><select id="tkDay" aria-label="לאיזה יום"></select><input id="tkText" placeholder="למשל: להתקשר לבנק" autocomplete="off"><button type="submit">שליחה</button></form>
+ <small id="tkSaid"></small>
 </section>
 
 <!--ITZIK:BEGIN-->
@@ -12150,6 +12155,7 @@ on('gTenants',function(){
 })();
 function renderTasks(){
  try{notesPull();notesPush();}catch(e){}
+ tkAddInit();
  var host=document.getElementById('tkBox');
  if(!host)return;
  /*
@@ -12200,6 +12206,27 @@ document.addEventListener('change',function(e){
  var lbl=e.target.closest('label');
  if(justDone&&lbl){lbl.classList.add('pop');setTimeout(renderTasks,300);}
  else renderTasks();
+});
+// 17.10: the day list of the box on the tasks screen, filled once (a re-render would reset the pick).
+function tkAddInit(){
+ var sel=document.getElementById('tkDay');
+ if(!sel||sel.options.length)return;
+ var o='';for(var k=0;k<8;k++){var dd=new Date(Date.now()+k*864e5);
+  o+='<option value="'+tdDay(k)+'">'+(k===0?'היום':k===1?'מחר':esc(dd.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'})))+'</option>';}
+ sel.innerHTML=o;
+}
+on2('tkForm','submit',function(e){
+ e.preventDefault();
+ var t=document.getElementById('tkText'),said=document.getElementById('tkSaid'),sel=document.getElementById('tkDay');
+ var v=t.value.trim();
+ if(!v)return;
+ var iso=sel.value,today=iso===tdDay(0);
+ var lbl=new Date(iso+'T12:00:00').toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'});
+ said.textContent='שולח.';
+ sendText(today?'משימה להיום':'משימה ליום אחר',(today?'משימה להיום, ':'משימה ליום ')+lbl+' ('+iso+'): '+v,'משימה').then(function(){
+  t.value='';said.textContent='נשלח. זה יופיע כאן ברשימה, ביום שבחרת.';
+  markSent('text');renderSent();renderThread();
+ }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';});
 });
 on2('apForm','submit',function(e){
  e.preventDefault();
@@ -13839,11 +13866,8 @@ Array.prototype.forEach.call(document.querySelectorAll('.icEmpty'),function(b){
 var INTAKE_Q=[
  ['במה המוניטור יכול לעזור לך הכי הרבה?',['עבודה ועסק','בית ומשפחה','בריאות וכושר','תחביבים ויצירה','כסף וחשבונות','ללמוד דברים חדשים']],
  ['מה הכי גוזל לך זמן?',['מיילים והודעות','סידורים ותורים','לזכור דברים','לחפש מידע','ניירת וחשבונות','כלום מיוחד']],
- ['על מה היה טוב לקבל תזכורת?',['תורים ופגישות','תשלומים','ימי הולדת','תרופות','משימות','לא צריך']],
  ['מה התחביבים שלך?',['מוזיקה','ספורט','בישול','טיולים','צילום ווידאו','משחקים','קריאה','הומור ושטויות']],
  ['מה מעניין לנסות?',['רשימת קניות','תקציב חודשי','מתכונים','יומן אימונים','ארכיון מסמכים','סיכום חדשות יומי','עזרה בכתיבה','חידה או משחק יומי']],
- ['איך הכי נוח לדבר עם המוניטור?',['כתיבה','הקלטה קולית','תמונות','הכל']],
- ['מתי לקבל עדכונים?',['מיד על כל דבר','סיכום אחד בבוקר','רק כששואלים']],
  ['איך נוח לך לקבל תשובות?',['קצר ולעניין','עם קצת הסבר','צעד אחרי צעד']]
 ];
 function intakeSheet(){
@@ -13852,7 +13876,7 @@ function intakeSheet(){
  w.id='inSheet';w.className='ysheet';
  w.setAttribute('role','dialog');w.setAttribute('aria-label','שאלות היכרות');
  w.innerHTML='<div class="ycard"><b>🧭 שאלות היכרות</b>'
-  +'<small>מסמנים כמה שרוצים בכל שאלה. אפשר לדלג. בסוף אציע בצ׳אט מה עוד אפשר לבנות לך במוניטור.</small>'
+  +'<small>חמש שאלות, דקה בערך. מסמנים כמה שרוצים בכל שאלה. אפשר לדלג. בסוף אציע בצ׳אט מה עוד אפשר לבנות לך במוניטור.</small>'
   +INTAKE_Q.map(function(q,i){return '<small style="opacity:1;font-weight:700;margin-top:6px">'+esc(q[0])+'</small>'
    +'<div class="arPick inPick" data-q="'+i+'" role="group" aria-label="'+esc(q[0])+'">'
    +q[1].map(function(o){return '<button type="button" class="yb" data-o="'+esc(o)+'">'+esc(o)+'</button>';}).join('')+'</div>';}).join('')
@@ -13895,13 +13919,14 @@ on('gIntake',intakeSheet);
 */
 var SHIP_LVL={red:'דחוף',amber:'לבדוק',track:'מעקב'};
 var SHIP_RANK={red:0,amber:1,track:2};
+// 3rd item: the tiles that already do it here. A tile the page draws means it is on for this monitor.
 var SHIP_UPGRADES=[
- ['📬 דוח בוקר מכל המייל','כל מה שחשוב מהתיבה שלך, בכמה שורות, כל בוקר'],
+ ['📬 דוח בוקר מכל המייל','כל מה שחשוב מהתיבה שלך, בכמה שורות, כל בוקר',['gBrief']],
  ['🎙️ הודעה קולית שנענית תוך דקה','אומרים במקום להקליד, והמוניטור עונה'],
- ['⏰ תזכורות ומשימות','מה לעשות ומתי, ותזכורת כשמשהו נתקע'],
+ ['⏰ תזכורות ומשימות','מה לעשות ומתי, ותזכורת כשמשהו נתקע',['gRemind','gTasks']],
  ['💰 דוח חייבים','מי חייב, כמה, ומאיזה יום'],
  ['📁 מסמכים עם שליחה בוואטסאפ','כל מסמך נשלח בלחיצה אחת, בלי לחפש'],
- ['📦 מעקב מלאי ומכירות','מוצר שנגמר, סניף שירד, ספק שהעלה מחיר']
+ ['📦 מעקב מלאי ומכירות','מוצר שנגמר, סניף שירד, ספק שהעלה מחיר',['gShip']]
 ];
 /*
   Reviewer 10.10, approved by Itzik: a shipments tile pressed before the first
@@ -14437,7 +14462,8 @@ on('gPush',function(){
 on('gUpgrade',function(){
  var h='<small>מה עוד המוניטור יודע לעשות. לחיצה שולחת בקשה למערכת המחשוב של המוניטור והיא חוזרת אליך.</small>'
   +SHIP_UPGRADES.map(function(u,i,a){
-   return '<button type="button" '+ybAttr(a,i)+' data-u="'+i+'">'+esc(u[0])+'<br><small>'+esc(u[1])+'</small></button>';
+   var on=(u[2]||[]).some(function(id){return document.getElementById(id);});
+   return '<button type="button" '+ybAttr(a,i)+' data-u="'+i+'">'+esc(u[0])+(on?' <b class="upgOn">✓ פעיל</b>':'')+'<br><small>'+esc(u[1])+'</small></button>';
   }).join('');
  shipOpen('shipUp','🚀 שדרוגים',h,function(w){
   w.addEventListener('click',function(e){
