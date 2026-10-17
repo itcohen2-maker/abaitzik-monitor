@@ -2068,7 +2068,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-17T07:58:30.862Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-17T07:58:46.315Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3788,7 +3788,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='516da75391';
+var CODE_ID='201357968a';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -9844,7 +9844,7 @@ var INTAKE_Q=[
  ['מה מעניין לנסות?',['רשימת קניות','תקציב חודשי','מתכונים','יומן אימונים','ארכיון מסמכים','סיכום חדשות יומי','עזרה בכתיבה','חידה או משחק יומי']],
  ['איך הכי נוח לדבר עם המוניטור?',['כתיבה','הקלטה קולית','תמונות','הכל']],
  ['מתי לקבל עדכונים?',['מיד על כל דבר','סיכום אחד בבוקר','רק כששואלים']],
- ['כמה טכנולוגיה זה בשבילך?',['מאוד','בינוני','בכלל לא']]
+ ['איך נוח לך לקבל תשובות?',['קצר ולעניין','עם קצת הסבר','צעד אחרי צעד']]
 ];
 function intakeSheet(){
  var old=document.getElementById('inSheet');if(old)old.remove();
