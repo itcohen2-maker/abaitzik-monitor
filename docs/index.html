@@ -2069,7 +2069,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-17T15:39:46.899Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-17T15:41:38.396Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2199,7 +2199,8 @@ try{
 
  <div class="grid" id="blkTiles">
   <button type="button" class="gt gStory" id="gPegasus" data-new="1" data-upd="20261016-answered"><b>🐎 פגסוס</b><small>9 החלטות מחכות לך, כפתור לכל אחת</small></button>
-  <button type="button" class="gt gLec" id="gLec" data-new="1" data-upd="20261017-gefen"><b>🎤 הרצאה</b><small>חדש 07: סילבוס לגפ״ן של משרד החינוך</small></button>
+  <button type="button" class="gt gLec" id="gGefen" data-new="1" data-upd="20261017-gefen"><b>🏫 גפן</b><small>משרד החינוך: מה צריך, הסילבוס ושלוש שאלות אליך</small></button>
+  <button type="button" class="gt gLec" id="gLec" data-upd="20261015-clalit"><b>🎤 הרצאה</b><small>06: הריל של איליי, הקאבר, ההוק והכיתוב</small></button>
   <button type="button" class="gt gStory" id="gStory" data-upd="2026-10-15-ner-bio"><b>🎞️ סטורי</b><small>4 סטורי נרות חדשים: תמונות על כל המסך, הטקסט באמצע</small></button>
   <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>מי חייב כסף ומאיזה חודש</small></button>
   <button type="button" class="gt g8" id="gVaad"><b>🏠 ועד הבית</b><small>מי שילם ומה פתוח</small></button>
@@ -3797,7 +3798,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='2abe993348';
+var CODE_ID='5fad298088';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10610,8 +10611,6 @@ var LEC_ITEMS=[
  {t:'06ב 🖼️ הקאבר לריל, מאיליי',r:'reel-lecture-ilay-1510-cover.jpg'},
  {t:'06ג הוק ויזואלי וכיתוב לפוסט, מאיליי',r:'lecture-ilay-1510-text.txt'},
  {t:'06ד התיקייה של איליי בדרייב (הריל באיכות מלאה)',u:'https://drive.google.com/drive/folders/1sMV34K4dCaW3kALyEqxd_xVV6TgF7U1g'},
- {t:'07 🏫 גפ״ן: הסילבוס להגשה (לעריכה בפתקים)',r:'gefen-syllabus.txt'},
- {t:'07ב גפ״ן: הסילבוס ב Google Docs',u:'https://docs.google.com/document/d/1ZGEgWKE23-EDBmDsEN_UOY4QCyPGfIm9nUB0oZgdspE/edit'},
  {t:'📤 לשלוח לאיליי בוואטסאפ',wa:1}
 ];
 var LEC_WA='איליי, ההרצאה שלי, כנגד כל הסיכויים.'+String.fromCharCode(10)
@@ -10649,6 +10648,42 @@ function lecSheet(){
  document.body.appendChild(w);
 }
 on('gLec',lecSheet);
+var GEFEN_ITEMS=[
+ {t:'01 מה צריך כדי להיכנס, ושלוש שאלות אליך',r:'gefen-requirements.txt'},
+ {t:'02 הסילבוס להגשה (לעריכה בפתקים)',r:'gefen-syllabus.txt'},
+ {t:'02ב הסילבוס ב Google Docs',u:'https://docs.google.com/document/d/1ZGEgWKE23-EDBmDsEN_UOY4QCyPGfIm9nUB0oZgdspE/edit'},
+ {t:'03 מסמך המכרז הרשמי',u:'https://meyda.education.gov.il/files/PortalBaaluyot/POB/educational-program-sapakim-criteria.pdf'}
+];
+function gefenSheet(){
+ var old=document.getElementById('gefenSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='gefenSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','גפן');
+ w.innerHTML='<div class="ycard">'
+  +'<b>גפן, משרד החינוך</b>'
+  +'<small>כל מה שצריך כדי להיכנס למאגר. בכל קובץ טקסט יש כפתור לפתקים לעריכה.</small>'
+  +GEFEN_ITEMS.map(function(it,i,a){
+    if(it.r&&!fileEntry(it.r))return '';
+    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+esc(it.t)+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=GEFEN_ITEMS[+k];if(k===''||!it)return;
+  if(it.r){fileOpen(it.r);return;}
+  window.open(it.u,'_blank','noopener');
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gGefen',gefenSheet);
 var DV_ITEMS=[
  {r:'דברים ל״ב, ל״ט',v:'ראו עתה כי אני אני הוא ואין אלהים עמדי, אני אמית ואחיה, מחצתי ואני ארפא, ואין מידי מציל.',x:'הפגיעה והריפוי באים מאותו מקור, ולכן אין ייאוש גם אחרי מכה.'},
  {r:'דברים ל״ב, מ״ז',v:'כי לא דבר רק הוא מכם, כי הוא חייכם, ובדבר הזה תאריכו ימים על האדמה.',x:'התורה אינה חובה צדדית, היא החיים עצמם. מכאן "ובחרת בחיים".'},
