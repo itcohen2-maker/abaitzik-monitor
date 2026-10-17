@@ -5519,7 +5519,8 @@ function fileView(name){
   // can be copied whole for pasting anywhere.
   else if(t.indexOf('text/')===0){h='<pre class="fv-txt"></pre>'
    +(navigator.share?'<button type="button" class="ask fv-tshare">שליחה בוואטסאפ כהודעה</button>':'')
-   +'<button type="button" class="ask fv-tcopy">העתקת כל הטקסט</button>';}
+   +'<button type="button" class="ask fv-tcopy">העתקת כל הטקסט</button>'
+   +'<button type="button" class="ask fv-tnote">📝 לפתקים שלי, לעריכה</button>';}
   else if(t==='application/pdf')h='<div class="fv-pdf"><div class="empty">מציג את העמודים.</div></div>'
    +'<a class="ask" href="'+url+'" target="_blank" rel="noopener">פתיחת הקובץ</a>';
   else h='<a class="ask" href="'+url+'" target="_blank" rel="noopener">פתיחת הקובץ</a>';
@@ -5567,6 +5568,8 @@ function fileView(name){
    body.querySelector('.fv-txt').textContent=s;
    var ts=body.querySelector('.fv-tshare');
    if(ts)ts.onclick=function(){navigator.share({text:s}).catch(function(){});};
+   var tn=body.querySelector('.fv-tnote');
+   if(tn)tn.onclick=function(){close();toNote(fileNiceName(name),s);};
    var tc=body.querySelector('.fv-tcopy');
    if(tc)tc.onclick=function(){
     var ok=function(){tc.textContent='הועתק. אפשר להדביק בוואטסאפ';};
@@ -7034,6 +7037,7 @@ function bubbleHtml(m,i,fresh,handled){
   +(fresh?' · <em class="badge">חדש</em>':'')
   +'<button type="button" class="cp" data-i="'+i+'" aria-label="העתקה">העתקה</button>'
   +(mine?'':'<button type="button" class="wash" data-i="'+i+'" aria-label="שליחה בוואטסאפ">וואטסאפ</button>')
+  +(mine?'':'<button type="button" class="wash tonote" data-i="'+i+'" aria-label="לפתקים שלי, לעריכה">לפתקים</button>')
   +'<button type="button" class="hidemsg" data-k="'+esc(msgKey(m))+'" aria-label="להסתיר">×</button>'
   +(mine?'':'<button type="button" class="aimb bubaim" data-k="'+esc(claudeKey(m))+'">להשיב</button>')
   +'</span>'+linkify(m.text)+goLinks(m)+vb+ackLine(m,!!vtx)+'</div>';
@@ -7295,7 +7299,13 @@ function renderThread(){
    });
   });
  });
- Array.prototype.forEach.call(host.querySelectorAll('.wash'),function(b){
+ Array.prototype.forEach.call(host.querySelectorAll('.tonote'),function(b){
+  b.onclick=function(e){
+   e.stopPropagation();e.preventDefault();
+   toNote('',flat[Number(b.getAttribute('data-i'))].text||'');
+  };
+ });
+ Array.prototype.forEach.call(host.querySelectorAll('.wash:not(.tonote)'),function(b){
   var m=flat[Number(b.getAttribute('data-i'))];
   var card=b.closest&&b.closest('details');
   function prep(){if(GKEY&&navigator.share&&msgFileNames(m).length)waFiles(m);}
@@ -13704,10 +13714,7 @@ function futText(it){
   if(a==='back')return futSheet();
   if(a==='src')return window.open(it.u,'_blank','noopener');
   if(a==='note'){
-   var at=new Date().toISOString();
-   var n={id:'n'+Date.now()+Math.random().toString(36).slice(2,6),text:'ריל עתידי '+it.n+String.fromCharCode(10,10)+body,at:at,upd:at};
-   var l=notes();l.unshift(n);saveNotes(l);notesPush();
-   pane('t');renderNotes();openNote(n.id);
+   toNote('ריל עתידי '+it.n,body);
   }
  };
  document.addEventListener('keydown',esckey);
@@ -15952,6 +15959,15 @@ function shareNote(id){
  if(navigator.clipboard&&navigator.clipboard.writeText){
   navigator.clipboard.writeText(txt).then(done,function(){fallbackCopy(txt,done);});
  }else fallbackCopy(txt,done);
+}
+// 17.10, Itzik: every text I hand him (a reel idea, the music and captions
+// for Instagram and TikTok, a translation) has to open in his notes for
+// editing in one tap. This is that tap: a new note with the text, opened.
+function toNote(title,text){
+ var at=new Date().toISOString();
+ var n={id:'n'+Date.now()+Math.random().toString(36).slice(2,6),text:(title?title+String.fromCharCode(10,10):'')+String(text||''),at:at,upd:at};
+ var l=notes();l.unshift(n);saveNotes(l);notesPush();
+ pane('t');renderNotes();openNote(n.id);
 }
 function openNote(id){
  noteSel='';
