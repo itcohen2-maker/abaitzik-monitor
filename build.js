@@ -3962,8 +3962,6 @@ try{
   <button type="button" class="gt gRec" id="gRecipes"><b><img class="gi" src="icons/lolos-giraffe.png" alt=""> מתכונים</b><small>חוברת לולוס וספר המתכונים של איציק</small></button>
   <button type="button" class="gt g16" id="gIsra"><b>💳 ישראכרט יואל</b><small>הכרטיסים, מה לבקש, ומה ענו</small></button>
   <!-- איציק, 11.10: "כפתור להחליף מודל תמחק אותו". הכפתור gModel ירד ממסך הבית; הקוד שלו בודק שהוא קיים. -->
-  <!-- איציק, 8.10: כפתור לכדור מוקסיפן שמהבהב כשהגיע הזמן ומפסיק כשנכנסתי. -->
-  <button type="button" class="gt g4" id="gMoxy"><b>💊 מוקסיפן</b><small id="gMoxyS">מהבהב כשהגיע הזמן, עד שנכנסת</small></button>
   <button type="button" class="gt g10" id="gFiles" data-new="1" data-upd="20261014-folder"><b>📁 הקבצים שלי</b><small>מה ששלחת ומה שנשלח לך, עם הורדה</small></button>
   <!--
     איציק, 20.9: "על המסך ניקוזים אתה יכול למחוק את הכפתור. אין לי יותר צורך בזה".
