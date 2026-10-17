@@ -3938,7 +3938,7 @@ try{
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
   <button type="button" class="gt gStory" id="gPegasus" data-new="1" data-upd="20261016-answered"><b>🐎 פגסוס</b><small>9 החלטות מחכות לך, כפתור לכל אחת</small></button>
-  <button type="button" class="gt gLec" id="gGefen" data-new="1" data-upd="20261017-gefen"><b>🏫 גפן</b><small>משרד החינוך: מה צריך, הסילבוס ושלוש שאלות אליך</small></button>
+  <button type="button" class="gt gLec" id="gGefen" data-new="1" data-upd="20261017-gefen-rec"><b>🏫 גפן</b><small>מגישים בשנה הבאה. עכשיו: כתב המלצה מכל הרצאה</small></button>
   <button type="button" class="gt gLec" id="gLec" data-upd="20261015-clalit"><b>🎤 הרצאה</b><small>06: הריל של איליי, הקאבר, ההוק והכיתוב</small></button>
   <button type="button" class="gt gStory" id="gStory" data-upd="2026-10-15-ner-bio"><b>🎞️ סטורי</b><small>4 סטורי נרות חדשים: תמונות על כל המסך, הטקסט באמצע</small></button>
   <!--
@@ -14783,7 +14783,9 @@ on('gLec',lecSheet);
    The Ministry of Education Gefen tender: what it asks for, the syllabus draft
    (text files, so each one has the notes button), and the sources. */
 var GEFEN_ITEMS=[
- {t:'01 מה צריך כדי להיכנס, ושלוש שאלות אליך',r:'gefen-requirements.txt'},
+ // 17.10, Itzik: "נמתין לשנה הבאה. רק מבקש כתב המלצה מכל מקום או ארגון". First, so it is at hand after every lecture.
+ {t:'⭐ כתב המלצה: ההודעה לשלוח וטיוטה לממליץ',r:'gefen-recommendation.txt'},
+ {t:'01 מה צריך כדי להיכנס',r:'gefen-requirements.txt'},
  {t:'02 הסילבוס להגשה (לעריכה בפתקים)',r:'gefen-syllabus.txt'},
  {t:'02ב הסילבוס ב Google Docs',u:'https://docs.google.com/document/d/1ZGEgWKE23-EDBmDsEN_UOY4QCyPGfIm9nUB0oZgdspE/edit'},
  {t:'03 מסמך המכרז הרשמי',u:'https://meyda.education.gov.il/files/PortalBaaluyot/POB/educational-program-sapakim-criteria.pdf'}
@@ -14796,7 +14798,7 @@ function gefenSheet(){
  w.setAttribute('aria-label','גפן');
  w.innerHTML='<div class="ycard">'
   +'<b>גפן, משרד החינוך</b>'
-  +'<small>כל מה שצריך כדי להיכנס למאגר. בכל קובץ טקסט יש כפתור לפתקים לעריכה.</small>'
+  +'<small>מגישים בשנה הבאה. עד אז: כתב המלצה מכל מקום שבו הרצית, צריך לפחות 5.</small>'
   +GEFEN_ITEMS.map(function(it,i,a){
     if(it.r&&!fileEntry(it.r))return '';
     return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+esc(it.t)+'</button>';
