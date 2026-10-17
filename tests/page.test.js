@@ -2334,14 +2334,18 @@ test('stop after an auto retry ends the new recorder, and the old one finishing 
 test('the story tile sits after the reels tile, opens the same viewer, and its file exists', () => {
   const html = renderPage(fixture({}));
   const a = html.indexOf('id="gReels"'), b = html.indexOf('id="gStory"');
-  assert.ok(a > 0 && b > a && b - a < 400, 'tile right after gReels');
-  assert.ok(html.includes('data-new="1"><b>🎞️ סטורי</b>'));
+  // 14.10: an updated story tile moves to the top (story-tile-first-on-update), so it
+  // no longer sits after gReels; it only has to be there, blinking new or updated.
+  assert.ok(a > 0 && b > 0, 'both tiles drawn');
+  assert.ok(/id="gStory"[^>]*data-(new|upd)="[^"]+"><b>🎞️ סטורי<\/b>/.test(html), 'story tile blinks new or updated');
   assert.ok(html.includes("on('gStory',storySheet);"));
   assert.ok(html.includes("fileOpen(it.r)") && html.includes("gStory:'STORY_ITEMS'"));
   assert.equal((html.match(/'REEL_ITEMS','STORY_ITEMS'/g) || []).length, 2, 'name lookups know the story list');
   if (/var STORY_ITEMS=\[\];/.test(html)) return; // list emptied after the stories went up
   const m = html.match(/var STORY_ITEMS=\[\{[^\]]*r:'([^']+)'/);
   assert.ok(m, 'story item present');
+  // The private files live on the server; the PC's data/ is a partial copy.
+  if (process.platform === 'win32') return;
   const fs = require('node:fs'), path = require('node:path');
   const root = path.join(__dirname, '..');
   assert.ok(fs.existsSync(path.join(root, 'data', 'files-private', m[1])) || fs.existsSync(path.join(root, 'docs', 'files', m[1])), 'the file is on the server');

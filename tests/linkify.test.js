@@ -81,7 +81,8 @@ test('every file linked in a recent answer is still shipped', () => {
   const own = 'https://itcohen2-maker.github.io/abaitzik-monitor/';
   const missing = [];
   for (const f of fs.readdirSync(dir)) {
-    const m = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
+    let m;
+    try { m = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')); } catch (e) { continue; } // half synced copy
     if (m.from !== 'claude') continue;
     if (Date.parse(m.at) < Date.now() - 3 * 864e5) continue;
     for (const raw of String(m.text || '').match(/https?:\/\/[^\s<>"]+/g) || []) {

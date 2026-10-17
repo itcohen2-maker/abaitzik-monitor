@@ -16,7 +16,14 @@ const count = (s, re) => (s.match(re) || []).length;
 
 test('biz is a known instance field, off by default', () => {
   assert.strictEqual(inst.DEFAULTS.biz, false);
-  assert.strictEqual(inst.load().biz, false);
+  // 17.10: on a fresh instance file, not this machine's: Itzik's own has biz: true on purpose.
+  const os = require('os');
+  const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'biz-')), 'instance.json');
+  fs.writeFileSync(file, '{}');
+  const was = process.env.ABAITZIK_INSTANCE_FILE;
+  process.env.ABAITZIK_INSTANCE_FILE = file;
+  try { assert.strictEqual(inst.load().biz, false); }
+  finally { if (was === undefined) delete process.env.ABAITZIK_INSTANCE_FILE; else process.env.ABAITZIK_INSTANCE_FILE = was; }
 });
 
 test('gBiz is absent from a customer home screen by default', () => {

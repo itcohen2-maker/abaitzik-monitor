@@ -10,6 +10,9 @@ const fixture = () => ({ now: null, openCmds: [], builtAt: '2026-10-11T08:00:00.
 
 // 11.10, Itzik: the פרסום files could not be copied on the iPhone. Each one
 // now opens a sheet with a caption box and a copy button per network.
+// data/ is not in the repository; the sheet is checked where the posts file lives.
+const POSTS_FILE = path.join(__dirname, '..', 'data', 'files-private', 'reel-posts.json');
+if (!fs.existsSync(POSTS_FILE)) { test('reel post sheet', { skip: 'reel-posts.json is not on this machine' }, () => {}); return; }
 const html = renderPage(fixture({}));
 const src = html.slice(html.indexOf('var POSTS=null;'), html.indexOf("on('gReels',reelSheet);"));
 const posts = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'files-private', 'reel-posts.json'), 'utf8'));
