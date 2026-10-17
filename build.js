@@ -1011,8 +1011,8 @@ function build() {
       start_url: './', scope: './', display: 'standalone', dir: 'rtl', lang: 'he',
       background_color: '#191714', theme_color: '#14675a',
       icons: [
-        { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-        { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+        { src: 'icons/icon-192.png?v=20261017', sizes: '192x192', type: 'image/png' },
+        { src: 'icons/icon-512.png?v=20261017', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
       ],
     }, null, 2), 'utf8');
   }
@@ -1221,8 +1221,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="${inst.appTitle}">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icons/icon-180.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png?v=20261017">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=20261017">
 <title>${inst.pageTitle}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
