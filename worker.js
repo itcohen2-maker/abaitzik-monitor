@@ -313,6 +313,8 @@ function prompt(list) {
     ...adminRules(),
     // 16.10: the savings skill, in every monitor's every session.
     ...require('./lib/saving.js').promptLines(),
+    // 17.10: the lessons skill, in every monitor's every session.
+    ...require('./lib/lessons.js').promptLines(),
     ...require('./lib/tier.js').promptLines(TIER),
     /*
       How an answer reads, 26.9. Itzik asked for the whole monitor to be gone

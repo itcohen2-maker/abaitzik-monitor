@@ -217,7 +217,8 @@ if (cmd === 'add') {
   if (t) {
     const m = hisMessage(t.re);
     // 16.10: every task the PC gets carries the savings rules on top (skill saving).
-    const sv = require('./lib/saving.js').promptLines();
+    // 17.10: and the lessons (skill lessons).
+    const sv = require('./lib/saving.js').promptLines().concat(require('./lib/lessons.js').promptLines());
     console.log(JSON.stringify(Object.assign({}, t, { task: (sv.length ? sv.join('\n') + '\n' : '') + t.task, message: m ? (m.note || m.text || '') : '' })));
   }
 } else if (cmd === 'done') {
