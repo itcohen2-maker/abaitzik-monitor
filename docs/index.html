@@ -2069,7 +2069,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-17T10:27:41.122Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-17T10:40:42.123Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2223,7 +2223,7 @@ try{
   <button type="button" class="gt gInv" id="gInv" data-upd="2026-10-15-inv"><b>🧾 חשבוניות</b><small>ממוספר. מ 3.10 והלאה</small></button>
   <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>05 עד 20, גם באיכות גבוהה</small></button>
-  <button type="button" class="gt gFut" id="gFut" data-upd="20261015-fut06"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה</small></button>
+  <button type="button" class="gt gFut" id="gFut" data-upd="20261017-fut07"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור</small></button>
   <button type="button" class="gt gPen" id="gPen"><b>🏦 פנסיה</b><small>קוד מוסד בבנק 28417, 1,211 ש״ח. בדיקה ב 18.10</small></button>
   <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-15-logo"><b>🧭 טום ממליץ</b><small>אימון, הסרטונים של טום, והתמונות לממומן</small></button>
   <button type="button" class="gt gDudi" id="gDudi" data-new="1"><b>🥩 דודי בשר</b><small>חשבוניות יוני ויולי לשליחה</small></button>
@@ -3792,7 +3792,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='231f62618f';
+var CODE_ID='5e2d503efe';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -9667,7 +9667,8 @@ var FUT_ITEMS=[
  {n:'01ג',t:'החנייה: הסרטון המקורי המלא',r:'parking-original.mp4'},
  {n:'04',t:'מאכלים להפחית: בשר מעובד, בשר אדום, אלכוהול ומזון אולטרה מעובד (צילום מסך מגוגל)',r:'fut04-foods-to-cut.png'},
  {n:'05',t:'תפסיקו לישון עם הטלפון ליד הפנים: שמונה נזקים, משינה ועד הלב (צילום מסך מאינסטגרם)',r:'fut05-phone-by-bed.png'},
- {n:'06',t:'קידום להרצאה: "אתם כל הזמן שואלים אותי, השראה, אלוף, מאיפה הכוחות", הודעות ממלאות את המסך ובסוף הזמנה להרצאה',r:'fut06-lecture-promo.txt'}
+ {n:'06',t:'קידום להרצאה: "אתם כל הזמן שואלים אותי, השראה, אלוף, מאיפה הכוחות", הודעות ממלאות את המסך ובסוף הזמנה להרצאה',r:'fut06-lecture-promo.txt'},
+ {n:'07',t:'אחות עם 35 שנות ותק: לחיות עכשיו, כי אף אחד לא ביקש בסוף משהו חוץ מעוד זמן. המלל המלא (אנגלית): Do you think you’re too fat for that swimsuit? Go buy it. You think the trip is too expensive? Take it. You think that piece of cake is going to make you gain 20 pounds? Eat it. You know what? Have a second piece. Life is way too short. Take the trip. Buy the shoes. Eat the cake. You know what? Then buy a second pair of shoes. Never has anyone ever come to the end of their life and wished for anything else but more time. I’ve been a nurse for 35 years. I have watched many people die. Never have I ever seen any of them want anything but more time. Take the trip, buy the shoes, eat the cake. Go live. Go live life. Thank you.',u:'https://www.instagram.com/reel/DefkNZDPsb9/'}
 ];
 function futSheet(){
  var old=document.getElementById('ftSheet');if(old)old.remove();
