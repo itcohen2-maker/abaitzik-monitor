@@ -622,7 +622,9 @@ function planFirst(text, list) {
     ...(pcWired() ? ['המחשב של הלקוח מחובר ומבצע על החשבון שלו. כל עבודה (מסמך, מצגת, מחקר, תמונה, קובץ) לא נעשית כאן:',
       'בתוכנית כתוב את המשימה היבשה המלאה, צעדים ממוספרים עם תוכן מוחלט, והמבצע רק מריץ node pc-task.js add --re <id> עם המשימה, ועונה לפי pc: on או off.'] : []),
   ].join('\n');
-  const args = ['-p', '--model', process.env.MONITOR_PLAN_MODEL || 'claude-opus-5-5', '--output-format', 'json',
+  // 17.10: the plan model per monitor, and Opus kept for 3D and design (lib/plan-model.js).
+  const planModel = require('./lib/plan-model.js').pick(text);
+  const args = ['-p', '--model', planModel, '--output-format', 'json',
     '--allowedTools', 'Read', 'Grep', 'Glob', '--max-turns', '6'];
   // 14.10: the planner took $7.08 of Rinat's $8 day (30 runs, up to 15 turns of reading).
   // It plans, the computer does the reading; six turns and $0.30 are enough for a plan.
@@ -644,7 +646,7 @@ function planFirst(text, list) {
   }
   const d = logUsage(out, list);
   const p = d && typeof d.result === 'string' ? d.result.trim() : '';
-  say('תוכנית מאופוס: ' + (p ? p.length + ' תווים' : 'אין') + '. הביצוע ב ' + EXEC_MODEL);
+  say('תוכנית מ ' + planModel + ': ' + (p ? p.length + ' תווים' : 'אין') + '. הביצוע ב ' + EXEC_MODEL);
   return p ? '=== התוכנית מהמתכנן (אופוס). בצע אותה עד הסוף, כולל שלב ג ===\n' + p : '';
 }
 
