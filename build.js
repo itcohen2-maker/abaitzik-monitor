@@ -1146,7 +1146,7 @@ function tenantTiles(inst) {
     + esc((l.icon ? l.icon + ' ' : '') + l.title) + '</b><small>' + esc(l.sub || 'פתיחה בלשונית חדשה') + '</small></button>').join('');
   return guides + links + ids.filter((id) => TENANT_TILES[id]).map((id) => {
     const [cls, title, sub] = TENANT_TILES[id];
-    return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261015-clalit"' : '') + (id === 'gTasks' ? ' data-upd="tasks-1610"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261015-clalit"' : '') + (id === 'gTasks' ? ' data-upd="tasks-1610"' : '') + (id === 'gIntake' ? ' data-upd="20261017-techq"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
 }
 /*
@@ -13844,7 +13844,7 @@ var INTAKE_Q=[
  ['מה מעניין לנסות?',['רשימת קניות','תקציב חודשי','מתכונים','יומן אימונים','ארכיון מסמכים','סיכום חדשות יומי','עזרה בכתיבה','חידה או משחק יומי']],
  ['איך הכי נוח לדבר עם המוניטור?',['כתיבה','הקלטה קולית','תמונות','הכל']],
  ['מתי לקבל עדכונים?',['מיד על כל דבר','סיכום אחד בבוקר','רק כששואלים']],
- ['כמה טכנולוגיה זה בשבילך?',['מאוד','בינוני','בכלל לא']]
+ ['איך נוח לך לקבל תשובות?',['קצר ולעניין','עם קצת הסבר','צעד אחרי צעד']]
 ];
 function intakeSheet(){
  var old=document.getElementById('inSheet');if(old)old.remove();
