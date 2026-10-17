@@ -2069,7 +2069,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-17T15:39:17.743Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-17T15:39:46.899Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2199,7 +2199,7 @@ try{
 
  <div class="grid" id="blkTiles">
   <button type="button" class="gt gStory" id="gPegasus" data-new="1" data-upd="20261016-answered"><b>🐎 פגסוס</b><small>9 החלטות מחכות לך, כפתור לכל אחת</small></button>
-  <button type="button" class="gt gLec" id="gLec" data-new="1" data-upd="20261015-clalit"><b>🎤 הרצאה</b><small>חדש 06: הריל של איליי, הקאבר, ההוק והכיתוב</small></button>
+  <button type="button" class="gt gLec" id="gLec" data-new="1" data-upd="20261017-gefen"><b>🎤 הרצאה</b><small>חדש 07: סילבוס לגפ״ן של משרד החינוך</small></button>
   <button type="button" class="gt gStory" id="gStory" data-upd="2026-10-15-ner-bio"><b>🎞️ סטורי</b><small>4 סטורי נרות חדשים: תמונות על כל המסך, הטקסט באמצע</small></button>
   <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>מי חייב כסף ומאיזה חודש</small></button>
   <button type="button" class="gt g8" id="gVaad"><b>🏠 ועד הבית</b><small>מי שילם ומה פתוח</small></button>
@@ -3797,7 +3797,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='419b778b5d';
+var CODE_ID='2abe993348';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10610,6 +10610,8 @@ var LEC_ITEMS=[
  {t:'06ב 🖼️ הקאבר לריל, מאיליי',r:'reel-lecture-ilay-1510-cover.jpg'},
  {t:'06ג הוק ויזואלי וכיתוב לפוסט, מאיליי',r:'lecture-ilay-1510-text.txt'},
  {t:'06ד התיקייה של איליי בדרייב (הריל באיכות מלאה)',u:'https://drive.google.com/drive/folders/1sMV34K4dCaW3kALyEqxd_xVV6TgF7U1g'},
+ {t:'07 🏫 גפ״ן: הסילבוס להגשה (לעריכה בפתקים)',r:'gefen-syllabus.txt'},
+ {t:'07ב גפ״ן: הסילבוס ב Google Docs',u:'https://docs.google.com/document/d/1ZGEgWKE23-EDBmDsEN_UOY4QCyPGfIm9nUB0oZgdspE/edit'},
  {t:'📤 לשלוח לאיליי בוואטסאפ',wa:1}
 ];
 var LEC_WA='איליי, ההרצאה שלי, כנגד כל הסיכויים.'+String.fromCharCode(10)

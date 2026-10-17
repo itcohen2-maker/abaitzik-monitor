@@ -3938,7 +3938,7 @@ try{
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
   <button type="button" class="gt gStory" id="gPegasus" data-new="1" data-upd="20261016-answered"><b>🐎 פגסוס</b><small>9 החלטות מחכות לך, כפתור לכל אחת</small></button>
-  <button type="button" class="gt gLec" id="gLec" data-new="1" data-upd="20261015-clalit"><b>🎤 הרצאה</b><small>חדש 06: הריל של איליי, הקאבר, ההוק והכיתוב</small></button>
+  <button type="button" class="gt gLec" id="gLec" data-new="1" data-upd="20261017-gefen"><b>🎤 הרצאה</b><small>חדש 07: סילבוס לגפ״ן של משרד החינוך</small></button>
   <button type="button" class="gt gStory" id="gStory" data-upd="2026-10-15-ner-bio"><b>🎞️ סטורי</b><small>4 סטורי נרות חדשים: תמונות על כל המסך, הטקסט באמצע</small></button>
   <!--
     14.10 Itzik: a new story goes into this tile, and the tile moves to the top
@@ -14739,6 +14739,9 @@ var LEC_ITEMS=[
  {t:'06ב 🖼️ הקאבר לריל, מאיליי',r:'reel-lecture-ilay-1510-cover.jpg'},
  {t:'06ג הוק ויזואלי וכיתוב לפוסט, מאיליי',r:'lecture-ilay-1510-text.txt'},
  {t:'06ד התיקייה של איליי בדרייב (הריל באיכות מלאה)',u:'https://drive.google.com/drive/folders/1sMV34K4dCaW3kALyEqxd_xVV6TgF7U1g'},
+ // 17.10, Itzik: the Ministry of Education Gefen tender. The syllabus as text (notes button) and as a Google Doc.
+ {t:'07 🏫 גפ״ן: הסילבוס להגשה (לעריכה בפתקים)',r:'gefen-syllabus.txt'},
+ {t:'07ב גפ״ן: הסילבוס ב Google Docs',u:'https://docs.google.com/document/d/1ZGEgWKE23-EDBmDsEN_UOY4QCyPGfIm9nUB0oZgdspE/edit'},
  {t:'📤 לשלוח לאיליי בוואטסאפ',wa:1}
 ];
 /* 13.10 evening, Itzik: "everything is duplicates, it's complicated". One
