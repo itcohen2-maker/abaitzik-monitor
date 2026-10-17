@@ -19,6 +19,9 @@ if [ "$until" -gt "$now" ] && [ $((until - now)) -le 1800 ]; then exit 0; fi
 # unit|instance dir that owns it (for the alert)
 UNITS="monitor-listen.service|/home/monitor/abaitzik-monitor
 monitor-upload.service|/home/monitor/abaitzik-monitor
+monitor-upload-alon.service|/home/alon/alon-monitor
+monitor-upload-ily.service|/home/ily/ily-monitor
+monitor-upload-rinat.service|/home/rinat/rinat-monitor
 monitor-worker.timer|/home/monitor/abaitzik-monitor
 monitor-watchdog.timer|/home/monitor/abaitzik-monitor
 monitor-tenants.timer|/home/monitor/abaitzik-monitor
@@ -46,3 +49,14 @@ done <<< "$UNITS"
 if [ -n "$restarted" ]; then
   cd /home/monitor/abaitzik-monitor && sudo -u monitor node notify.js "המוניטור הופעל מחדש" "שירותים שהיו כבויים יותר מעשר דקות הופעלו מחדש אוטומטית:$restarted" >> "$LOG" 2>&1
 fi
+
+# קבצים של root בתוך docs או data חוסמים את הבנייה בשקט (17.10: תשובות לא עלו לדף שעות).
+for pair in monitor:/home/monitor/abaitzik-monitor alon:/home/alon/alon-monitor ily:/home/ily/ily-monitor rinat:/home/rinat/rinat-monitor; do
+  u=${pair%%:*}; d=${pair#*:}
+  [ -d "$d" ] || continue
+  bad=$(find "$d/docs" "$d/data" "$d/.git" -user root 2>/dev/null | head -1)
+  if [ -n "$bad" ]; then
+    chown -R "$u:$u" "$d/docs" "$d/data" "$d/.git"
+    echo "$(date "+%F %T")  fixed root-owned files in $d ($bad)" >> "$LOG"
+  fi
+done
