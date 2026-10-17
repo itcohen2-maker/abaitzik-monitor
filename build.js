@@ -4045,7 +4045,7 @@ try{
   -->
   <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>05 חטיף העדשים, גם באיכות גבוהה</small></button>
-  <button type="button" class="gt gFut" id="gFut" data-upd="20261017-fut07"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור</small></button>
+  <button type="button" class="gt gFut" id="gFut" data-upd="20261017-futback"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
@@ -13650,9 +13650,15 @@ var FUT_ITEMS=[
  {n:'06',t:'קידום להרצאה: "אתם כל הזמן שואלים אותי, השראה, אלוף, מאיפה הכוחות", הודעות ממלאות את המסך ובסוף הזמנה להרצאה',r:'fut06-lecture-promo.txt'},
  {n:'07',t:'אחות עם 35 שנות ותק: לחיות עכשיו, כי אף אחד לא ביקש בסוף משהו חוץ מעוד זמן',he:'חושבים שאתם שמנים מדי בשביל בגד הים הזה? לכו תקנו אותו.\\n\\nחושבים שהטיול יקר מדי? סעו.\\n\\nחושבים שחתיכת העוגה הזאת תעלה לכם עשרה קילו? תאכלו אותה. ויודעים מה? קחו עוד חתיכה.\\n\\nהחיים קצרים מדי. סעו לטיול. תקנו את הנעליים. תאכלו את העוגה. ויודעים מה? אחר כך תקנו עוד זוג נעליים.\\n\\nאף אחד, אף פעם, לא הגיע לסוף החיים שלו וביקש משהו חוץ מעוד זמן.\\n\\nאני אחות כבר 35 שנה. ראיתי הרבה אנשים מתים. אף פעם לא ראיתי אחד מהם שרצה משהו חוץ מעוד זמן.\\n\\nסעו לטיול, תקנו את הנעליים, תאכלו את העוגה. לכו לחיות. לכו לחיות את החיים. תודה.',tx:'Do you think you’re too fat for that swimsuit? Go buy it. You think the trip is too expensive? Take it. You think that piece of cake is going to make you gain 20 pounds? Eat it. You know what? Have a second piece. Life is way too short. Take the trip. Buy the shoes. Eat the cake. You know what? Then buy a second pair of shoes. Never has anyone ever come to the end of their life and wished for anything else but more time. I’ve been a nurse for 35 years. I have watched many people die. Never have I ever seen any of them want anything but more time. Take the trip, buy the shoes, eat the cake. Go live. Go live life. Thank you.',u:'https://www.instagram.com/reel/DefkNZDPsb9/'}
 ];
+// 17.10, Itzik: "אי אפשר לצאת". "אחר כך" leaves the note unmarked, so going
+// back to this list must not ask about it again: only opening the screen asks,
+// the list itself never re-checks. Otherwise the ask loops with no way out.
 function futSheet(){
  var pend=srcPendingAll('fut:');
- if(pend.length)return srcAsk(pend[0],futSheet);
+ if(pend.length)return srcAsk(pend[0],futList);
+ futList();
+}
+function futList(){
  var old=document.getElementById('ftSheet');if(old)old.remove();
  var w=document.createElement('div');
  w.id='ftSheet';w.className='ysheet';
@@ -13716,7 +13722,7 @@ function futText(it){
    return;
   }
   close();
-  if(a==='back')return futSheet();
+  if(a==='back')return futList();
   if(a==='src')return window.open(it.u,'_blank','noopener');
   if(a==='note'){
    toNote('ריל עתידי '+it.n,body,'fut:'+it.n);
