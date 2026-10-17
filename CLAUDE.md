@@ -129,3 +129,4 @@
   **Quota hold (14.10.2026):** a customer without its own token stops at 80 percent of Itzik's five hour or weekly
   window, or at its daily cap (lib/quota-hold.js, worker.js quotaHold), files "חסימת מכסה: ..." as a manager request
   and tells the customer once; it resumes only on his approval, which writes a pass until the window resets.
+- **Error messages only after verifying (Itzik, 17.10.2026, iron rule):** never send Itzik or a customer an error message until you have checked again, at the source or on the live page, that it really fails. A passing glitch is fixed or retried once quietly. A real error says what was tried and the next step.

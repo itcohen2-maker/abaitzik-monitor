@@ -7223,6 +7223,11 @@ function renderThread(){
   +names.map(function(n){var pc=projColorByTitle(n);return '<button type="button" class="pchip'+(n===only?' on':'')+(pc?' pjc" style="--pc:'+pc:'')+'" data-p="'+esc(n)+'">'+esc(n)+'</button>';}).join('')
   +'</div>':'';
  var flat=[];
+ // Itzik, 17.10: after an answer the whole list is rebuilt, and the thread he
+ // was in closed, so the page shrank and jumped to the top. Open threads and
+ // the place on the page are kept across the rebuild.
+ var openKeys=[],wasY=window.pageYOffset||0;
+ Array.prototype.forEach.call(host.querySelectorAll('details.th[open]'),function(d){openKeys.push(d.getAttribute('data-k'));});
  host.innerHTML=bar+rows.map(function(r,ri){
   var t=r.thread;
   var head=threadTitle(t);
@@ -7265,6 +7270,8 @@ function renderThread(){
    +'<span class="rsaid"></span></form>'
    +'</div></details>';
  }).join('');
+ Array.prototype.forEach.call(host.querySelectorAll('details.th'),function(d){if(openKeys.indexOf(d.getAttribute('data-k'))>-1)d.open=true;});
+ if(Math.abs((window.pageYOffset||0)-wasY)>2)window.scrollTo(0,wasY);
  wireReplies(host,flat);
  wireProjects(host);
  wirePaste(host);
