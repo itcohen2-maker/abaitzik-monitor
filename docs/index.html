@@ -2069,7 +2069,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-17T12:51:02.889Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-17T12:54:14.304Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3663,11 +3663,13 @@ function fileView(name){
   var gb=body.querySelector('.fv-gal');
   if(gb)gb.onclick=function(){navigator.share({files:[sf]}).catch(shareFail);};
   if(t.indexOf('text/')===0)b.text().then(function(s){
+   var mine=srcText('file:'+name);if(mine){s=mine;var mk=document.createElement('div');mk.className='empty';mk.style.fontSize='13px';mk.textContent='✏️ הגרסה שערכת בפתקים';body.insertBefore(mk,body.firstChild);}
    body.querySelector('.fv-txt').textContent=s;
+   var fp=srcPendingAll('file:'+name);if(fp.length)srcAsk(fp[0],function(){close();fileOpen(name);});
    var ts=body.querySelector('.fv-tshare');
    if(ts)ts.onclick=function(){navigator.share({text:s}).catch(function(){});};
    var tn=body.querySelector('.fv-tnote');
-   if(tn)tn.onclick=function(){close();toNote(fileNiceName(name),s);};
+   if(tn)tn.onclick=function(){close();toNote(fileNiceName(name),s,'file:'+name);};
    var tc=body.querySelector('.fv-tcopy');
    if(tc)tc.onclick=function(){
     var ok=function(){tc.textContent='הועתק. אפשר להדביק בוואטסאפ';};
@@ -3795,7 +3797,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='15dd1e936e';
+var CODE_ID='5c7cc7a086';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -9496,7 +9498,7 @@ function nerSheet(){
   +'<b>שיווק הנרות</b>'
   +'<small>'+(NER_ITEMS.length?'הסטוריז של סוף השבוע':'אין כרגע סטוריז')+'</small>'
   +NER_ITEMS.map(function(it,i,a){
-    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
+    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+(srcText('fut:'+it.n)?' ✏️':'')+'</button>';
    }).join('')
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
   +'</div>';
@@ -9681,6 +9683,8 @@ var FUT_ITEMS=[
  {n:'07',t:'אחות עם 35 שנות ותק: לחיות עכשיו, כי אף אחד לא ביקש בסוף משהו חוץ מעוד זמן',he:'חושבים שאתם שמנים מדי בשביל בגד הים הזה? לכו תקנו אותו.\n\nחושבים שהטיול יקר מדי? סעו.\n\nחושבים שחתיכת העוגה הזאת תעלה לכם עשרה קילו? תאכלו אותה. ויודעים מה? קחו עוד חתיכה.\n\nהחיים קצרים מדי. סעו לטיול. תקנו את הנעליים. תאכלו את העוגה. ויודעים מה? אחר כך תקנו עוד זוג נעליים.\n\nאף אחד, אף פעם, לא הגיע לסוף החיים שלו וביקש משהו חוץ מעוד זמן.\n\nאני אחות כבר 35 שנה. ראיתי הרבה אנשים מתים. אף פעם לא ראיתי אחד מהם שרצה משהו חוץ מעוד זמן.\n\nסעו לטיול, תקנו את הנעליים, תאכלו את העוגה. לכו לחיות. לכו לחיות את החיים. תודה.',tx:'Do you think you’re too fat for that swimsuit? Go buy it. You think the trip is too expensive? Take it. You think that piece of cake is going to make you gain 20 pounds? Eat it. You know what? Have a second piece. Life is way too short. Take the trip. Buy the shoes. Eat the cake. You know what? Then buy a second pair of shoes. Never has anyone ever come to the end of their life and wished for anything else but more time. I’ve been a nurse for 35 years. I have watched many people die. Never have I ever seen any of them want anything but more time. Take the trip, buy the shoes, eat the cake. Go live. Go live life. Thank you.',u:'https://www.instagram.com/reel/DefkNZDPsb9/'}
 ];
 function futSheet(){
+ var pend=srcPendingAll('fut:');
+ if(pend.length)return srcAsk(pend[0],futSheet);
  var old=document.getElementById('ftSheet');if(old)old.remove();
  var w=document.createElement('div');
  w.id='ftSheet';w.className='ysheet';
@@ -9715,11 +9719,12 @@ function futText(it){
  w.id='ftText';w.className='ysheet';
  w.setAttribute('role','dialog');
  w.setAttribute('aria-label','המלל של הריל');
- var body=it.he||it.tx;
+ var mine=srcText('fut:'+it.n);
+ var body=mine||it.he||it.tx;
  w.innerHTML='<div class="ycard">'
   +'<b>'+esc(it.n)+' · המלל</b>'
-  +'<small>'+esc(it.t)+'</small>'
-  +(it.he?'<div class="fttx" dir="rtl">'+esc(it.he)+'</div>':'')
+  +'<small>'+esc(it.t)+(mine?' · ✏️ הגרסה שערכת בפתקים':'')+'</small>'
+  +(mine||it.he?'<div class="fttx" dir="rtl">'+esc(body)+'</div>':'')
   +(it.tx?'<details class="fttx-en"><summary>המקור באנגלית</summary><div dir="ltr">'+esc(it.tx)+'</div></details>':'')
   +'<button type="button" class="yb" data-a="copy">📋 העתקת התרגום</button>'
   +'<button type="button" class="yb" data-a="note">📝 לפתקים שלי, לעריכה</button>'
@@ -9743,7 +9748,7 @@ function futText(it){
   if(a==='back')return futSheet();
   if(a==='src')return window.open(it.u,'_blank','noopener');
   if(a==='note'){
-   toNote('ריל עתידי '+it.n,body);
+   toNote('ריל עתידי '+it.n,body,'fut:'+it.n);
   }
  };
  document.addEventListener('keydown',esckey);
@@ -11604,6 +11609,9 @@ function notesPull(){
  Object.keys(S.remGone||{}).forEach(function(k){if(!rg[k]){rg[k]=S.remGone[k];rch=true;}});
  if(rch){try{localStorage.setItem('remGone',JSON.stringify(rg));}catch(e){}try{renderReminders();}catch(e){}}
  if(ch){try{renderNotes();}catch(e){}}
+ var se=srcEdits(),sch=false;
+ Object.keys(S.srcEdits||{}).forEach(function(k){var x=S.srcEdits[k];if(x&&(!se[k]||String(x.at)>String(se[k].at))){se[k]=x;sch=true;}});
+ if(sch)try{localStorage.setItem('srcEdits',JSON.stringify(se));}catch(e){}
 }
 function notesPush(){clearTimeout(nsTimer);nsTimer=setTimeout(function(){notesSend(false);},8000);}
 function nsHash(t){var h=5381;for(var i=0;i<t.length;i++)h=((h*33)^t.charCodeAt(i))>>>0;return t.length+':'+h;}
@@ -11611,7 +11619,7 @@ function notesSend(keep){
  clearTimeout(nsTimer);nsTimer=null;
  if(!NTFYIN())return;
  var raw=notes();
- var body={notes:raw.filter(function(n){return n&&n.id;}),gone:notesGone(),tasksDone:tkDone(),
+ var body={notes:raw.filter(function(n){return n&&n.id;}),gone:notesGone(),srcEdits:srcEdits(),tasksDone:tkDone(),
   tasksUndone:tkUndone(),tasksCleared:clearedIds('tasksCleared'),remGone:clearedIds('remGone')};
  var sig=nsHash(JSON.stringify(body)),last='';
  try{last=localStorage.getItem('notesSyncSig')||'';}catch(e){}
@@ -11694,12 +11702,76 @@ function shareNote(id){
   navigator.clipboard.writeText(txt).then(done,function(){fallbackCopy(txt,done);});
  }else fallbackCopy(txt,done);
 }
-function toNote(title,text){
+function toNote(title,text,src){
  var at=new Date().toISOString();
  var n={id:'n'+Date.now()+Math.random().toString(36).slice(2,6),text:(title?title+String.fromCharCode(10,10):'')+String(text||''),at:at,upd:at};
+ if(src){n.src=src;n.srcTitle=title||'';n.srcBody=String(text||'').trim();}
  var l=notes();l.unshift(n);saveNotes(l);notesPush();
  pane('t');renderNotes();openNote(n.id);
 }
+function srcEdits(){try{return JSON.parse(localStorage.getItem('srcEdits')||'{}')||{};}catch(e){return {};}}
+function srcText(src){var e=srcEdits()[src];return e&&e.text?e.text:'';}
+function srcLabel(src){
+ src=String(src||'');
+ if(src.indexOf('fut:')===0)return 'ריל עתידי '+src.slice(4);
+ if(src.indexOf('file:')===0)return fileNiceName(src.slice(5));
+ return src;
+}
+function srcBodyOf(n){
+ var ls=String(n.text||'').split(String.fromCharCode(10));
+ while(ls.length&&!ls[0].trim())ls.shift();
+ if(n.srcTitle&&ls.length&&ls[0].trim()===n.srcTitle)ls.shift();
+ return ls.join(String.fromCharCode(10)).trim();
+}
+function srcPending(n){
+ if(!n||!n.src)return false;
+ var b=srcBodyOf(n);if(!b)return false;
+ var cur=srcText(n.src)||String(n.srcBody||'').trim();
+ return b!==cur&&n.srcAsked!==nsHash(b);
+}
+function srcPendingAll(pre){
+ return notes().filter(function(n){return srcPending(n)&&(!pre||String(n.src).indexOf(pre)===0);})
+  .sort(function(a,b){return String(b.upd).localeCompare(String(a.upd));});
+}
+function srcMark(id,fn){
+ var l=notes();l.forEach(function(x){if(x.id===id)fn(x);});
+ try{localStorage.setItem('notes',JSON.stringify(l));}catch(e){}
+ notesPush();
+}
+function srcAsk(n,after){
+ var old=document.getElementById('srcAskSheet');if(old)old.remove();
+ var body=srcBodyOf(n),sig=nsHash(body);
+ var w=document.createElement('div');
+ w.id='srcAskSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','להחליף את המלל');
+ w.innerHTML='<div class="ycard">'
+  +'<b>ערכת בפתקים את המלל של '+esc(srcLabel(n.src))+'</b>'
+  +'<small>להחליף שם את המלל בגרסה שערכת?</small>'
+  +'<div class="fttx" dir="rtl">'+esc(body)+'</div>'
+  +'<button type="button" class="yb" data-a="yes">✅ כן, להחליף</button>'
+  +'<button type="button" class="yb" data-a="no">לא, להשאיר את המקור</button>'
+  +'<button type="button" class="yb yx" data-a="later">אחר כך</button>'
+  +'</div>';
+ function close(){w.remove();}
+ w.onclick=function(e){
+  if(e.target===w){close();return;}
+  var a=e.target.getAttribute&&e.target.getAttribute('data-a');
+  if(!a)return;
+  close();
+  if(a==='yes'){
+   var all=srcEdits();all[n.src]={text:body,at:new Date().toISOString()};
+   try{localStorage.setItem('srcEdits',JSON.stringify(all));}catch(x){}
+   srcMark(n.id,function(x){x.srcAsked=sig;});
+   toast('הוחלף. ב'+srcLabel(n.src)+' מופיע עכשיו המלל שערכת.');
+  }else if(a==='no'){
+   srcMark(n.id,function(x){x.srcAsked=sig;});
+  }
+  if(after)after();
+ };
+ document.body.appendChild(w);
+}
+setTimeout(function(){try{var p=srcPendingAll();if(p.length)srcAsk(p[0]);}catch(e){}},5000);
 function openNote(id){
  noteSel='';
  var n=null;
@@ -11846,6 +11918,8 @@ function closeNote(){
  saveNotes(l);
  document.getElementById('noteSearch').value='';
  renderNotes();
+ var was=null;l.forEach(function(x){if(x.id===noteOpen)was=x;});
+ if(srcPending(was))srcAsk(was);
 }
 document.getElementById('noteBody').addEventListener('input',function(){
  if(!this.textContent.trim()&&!this.querySelector('li')&&this.children.length<=1&&!this.querySelector('h1')){
