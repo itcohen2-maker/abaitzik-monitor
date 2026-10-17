@@ -3875,7 +3875,7 @@ try{
    one ordered list. The number is what is still open: received, in work,
    and open tasks. It replaces the Codex fold that used to sit lower down.
  -->
- <button type="button" id="gotBtn" class="newbtn got" data-upd="rename-20261015">
+ <button type="button" id="gotBtn" class="newbtn got">
   <span class="nb-l"><b>איזה הוראות שלחתי למוניטור</b><small>מה בעבודה ומה בוצע</small></span>
   <span class="nb-c" id="gotCount">0</span>
  </button>
