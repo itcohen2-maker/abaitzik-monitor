@@ -71,7 +71,9 @@ const SETTLE_MS = 5 * 1000; // 8.10: was 20s; the listener kicks the worker 6s a
   his repo, and past three they spend more time waiting on that one queue than
   working.
 */
-const MAX_LIVE = 3;
+// 17.10: the tier of this monitor (lib/tier.js), null for a regular one.
+const TIER = require('./lib/tier.js').current();
+const MAX_LIVE = TIER ? TIER.maxLive : 3;
 const LIVE = path.join(STATUS, 'worker-live.json');
 // A session gets ten minutes. The prompt makes it answer inside the first two,
 // so a cap costs the tail of the work and never the reply.
@@ -311,6 +313,7 @@ function prompt(list) {
     ...adminRules(),
     // 16.10: the savings skill, in every monitor's every session.
     ...require('./lib/saving.js').promptLines(),
+    ...require('./lib/tier.js').promptLines(TIER),
     /*
       How an answer reads, 26.9. Itzik asked for the whole monitor to be gone
       over, "all your answers and how you bring them", and the answers screen
@@ -605,7 +608,7 @@ const EXEC_MODEL = process.env.MONITOR_EXEC_MODEL || 'claude-haiku-5-5';
 function planFirst(text, list) {
   // 14.10, Itzik: "בדיקה נוספת גם במוניטור שלי". His own server monitor splits too: Opus
   // plans, Haiku executes. Only his Windows PC worker (--chrome) stays a single session.
-  if (process.platform === 'win32' || process.env.MONITOR_ONE_STAGE) return null;
+  if (process.platform === 'win32' || process.env.MONITOR_ONE_STAGE || (TIER && TIER.oneStage)) return null;
   const ask = text + '\n\n' + [
     '=== שלב תכנון בלבד ===',
     'אתה המתכנן. מותר לך רק לקרוא קבצים (Read, Grep, Glob). אל תכתוב, אל תריץ ואל תענה.',
@@ -680,11 +683,13 @@ function run(list) {
   // 11.10: the planner model, and JSON out so every session's usage is logged (logUsage).
   // 12.10: on a customer's monitor Opus only plans, and the session runs on Haiku (planFirst).
   const plan = planFirst(text, list);
-  const model = plan === null ? (process.env.MONITOR_PLAN_MODEL || 'claude-opus-5-5') : EXEC_MODEL;
+  const model = plan === null ? (TIER ? TIER.model : (process.env.MONITOR_PLAN_MODEL || 'claude-opus-5-5')) : EXEC_MODEL;
   const args = ['-p', '--dangerously-skip-permissions', '--model', model, '--output-format', 'json'];
   if (process.platform === 'win32') args.splice(1, 0, '--chrome');
   // 12.10: one customer session can not run away either (the day cap is in quotaHold).
-  if (inst.name !== 'abaitzik' && !ownAccount()) args.push('--max-budget-usd', String(SESSION_USD));
+  // 17.10: a tier sets its own per session ceiling, on his own account too.
+  if (TIER) args.push('--max-budget-usd', String(TIER.sessionUsd), '--max-turns', String(TIER.maxTurns));
+  else if (inst.name !== 'abaitzik' && !ownAccount()) args.push('--max-budget-usd', String(SESSION_USD));
   /*
     14.10, Itzik: "חוץ ממעבר מלל במוניטור אך שום ביצוע לא בשרת שלי". With the customer's
     computer wired, the server session may only read, write text (chat, project memory)
@@ -725,7 +730,10 @@ function run(list) {
     if (code === 0 && res && !res.is_error && fs.existsSync(AHOLD)) { try { fs.unlinkSync(AHOLD); say('החשבון עונה שוב, החסימה הוסרה.'); } catch (e) {} }
     say('הסשן הסתיים, קוד ' + code + '. ' + String(res ? res.result || '' : out).trim().slice(-300).replace(/\s+/g, ' '));
     const why = accountFailure(String(res ? res.result || '' : out));
+    // 17.10: a subscription at its usage limit is a wait, not a broken account.
+    const lim = (!res || res.is_error || code !== 0) ? limitFailure(String(res ? res.result || '' : out)) : '';
     if (why) holdAccount(why);
+    else if (lim) holdLimit(lim);
     /*
       The exit code was never the question.
 
@@ -877,30 +885,45 @@ function ownAccount() { return fs.existsSync('/srv/monitor-changes/' + inst.name
   QHOLD holds the open request; announceDecisions releases it on his approval.
 */
 function quotaHold() {
-  if (inst.name === 'abaitzik' || ownAccount()) return false;
+  // 17.10: a tier keeps its day ceiling on the customer's own account as well.
+  if (inst.name === 'abaitzik' || (ownAccount() && !TIER)) return false;
+  const selfPaid = !!TIER && ownAccount();
+  // On his own account a day hold ends with the day; nothing for the manager to approve.
+  if (selfPaid && fs.existsSync(QHOLD)) {
+    const h = readJson(QHOLD, {}) || {};
+    const day = (d) => new Date(d).toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
+    if (h.kind === 'day' && h.at && day(h.at) !== day(Date.now())) {
+      try { fs.unlinkSync(QHOLD); fs.unlinkSync(path.join(STATUS, 'quota-told.json')); } catch (e) {}
+      say('יום חדש, חסימת התקרה היומית הוסרה.');
+    }
+  }
   if (fs.existsSync(QHOLD)) {
     say('חסום בגלל מכסה עד אישור מנהל.');
     const flag = path.join(STATUS, 'quota-told.json');
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
     if (!DRY && readJson(flag, {}).day !== today && waiting().length) {
       try { fs.writeFileSync(flag, JSON.stringify({ day: today })); } catch (e) {}
-      tell('המוניטור חסום בגלל מכסה', 'המוניטור חסום בגלל מכסה עד אישור מנהל. ההודעות שלך נשמרו ויטופלו אחרי האישור.');
+      tell('המוניטור חסום בגלל מכסה', selfPaid
+        ? 'הגעת לתקרה היומית של המוניטור, כדי לשמור על המנוי שלך. ההודעות נשמרו ויטופלו מחר בבוקר.'
+        : 'המוניטור חסום בגלל מכסה עד אישור מנהל. ההודעות שלך נשמרו ויטופלו אחרי האישור.');
     }
     return true;
   }
   const r = require('./lib/quota-hold.js').check({
-    quota: readJson('/srv/monitor-changes/quota.json', null),
+    quota: selfPaid ? null : readJson('/srv/monitor-changes/quota.json', null),
     limitPct: Number(process.env.MONITOR_QUOTA_PCT) || 80,
     spentToday: spentToday(),
-    dayUsd: DAY_USD,
+    dayUsd: TIER ? TIER.dayUsd : DAY_USD,
     pass: readJson(QPASS, null),
     now: Date.now(),
   });
   if (!r.hold) return false;
   if (DRY) { say('חסימת מכסה: ' + r.reason); return true; }
-  const text = 'המוניטור חסום בגלל מכסה עד אישור מנהל. ההודעות שלך נשמרו ויטופלו אחרי האישור.';
+  const text = selfPaid
+    ? 'הגעת לתקרה היומית של המוניטור, כדי לשמור על המנוי שלך. ההודעות נשמרו ויטופלו מחר בבוקר.'
+    : 'המוניטור חסום בגלל מכסה עד אישור מנהל. ההודעות שלך נשמרו ויטופלו אחרי האישור.';
   try {
-    const id = require('./lib/change-requests.js').add('חסימת מכסה: ' + r.reason + '. לשחרר את המוניטור?', '');
+    const id = selfPaid ? null : require('./lib/change-requests.js').add('חסימת מכסה: ' + r.reason + '. לשחרר את המוניטור?', '');
     fs.writeFileSync(QHOLD, JSON.stringify({ at: new Date().toISOString(), kind: r.kind, reason: r.reason, reqId: id }));
     // Israel time stamp, the same shape as the chat files elsewhere: YYYYMMDD-HHMM.
     const p = {};
@@ -947,6 +970,26 @@ function onHold() {
 function accountFailure(text) {
   const m = /credit balance is too low|invalid x-api-key|authentication_error|organization has been disabled|api key (is )?(invalid|expired|revoked)/i.exec(String(text || ''));
   return m ? m[0] : '';
+}
+// 17.10: a Pro or Max plan at its five hour or weekly limit. Nothing for the
+// manager to fix; the session simply waits the hour like an account hold.
+function limitFailure(text) {
+  const m = /usage limit reached|(?:5-hour|five hour|weekly|session) limit reached|rate_limit_error/i.exec(String(text || ''));
+  return m ? m[0] : '';
+}
+function holdLimit(reason) {
+  if (DRY) return;
+  try {
+    const prev = readJson(AHOLD, {}) || {};
+    fs.writeFileSync(AHOLD, JSON.stringify({ at: new Date().toISOString(), reason, limit: true, count: (prev.count || 0) + 1 }));
+    say('!! המנוי הגיע למגבלת השימוש (' + reason + '). ניסיון הבא בעוד שעה.');
+    const flag = path.join(STATUS, 'limit-told.json');
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
+    if (readJson(flag, {}).day !== today) {
+      fs.writeFileSync(flag, JSON.stringify({ day: today }));
+      tell('המנוי הגיע למכסה', 'המנוי של Claude הגיע למכסת השימוש שלו. ההודעות שלך נשמרו, והמוניטור ימשיך לבד כשהמכסה תתפנה.');
+    }
+  } catch (e) { say('!! רישום מגבלת שימוש: ' + e.message); }
 }
 function holdAccount(reason) {
   if (DRY) return;
