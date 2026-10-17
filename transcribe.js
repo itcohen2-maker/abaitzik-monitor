@@ -1,6 +1,6 @@
 'use strict';
 // Turns a voice memo from the monitor into Hebrew text.
-// Usage: node transcribe.js <audio file>
+// Usage: node transcribe.js <audio file> [--lang en|auto]
 //
 // The recorder in the page sends m4a on iPhone and webm elsewhere, so the file
 // goes through ffmpeg to 16kHz mono wav first - faster-whisper reads that
@@ -10,9 +10,14 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-const input = process.argv[2];
+const args = process.argv.slice(2);
+const li = args.indexOf("--lang");
+// 17.10: a reel in English came out as garbled Hebrew four times, because the
+// language was forced. Voice memos stay "he"; anything else passes --lang (auto = detect).
+const lang = li >= 0 ? args.splice(li, 2)[1] : "he";
+const input = args[0];
 if (!input || !fs.existsSync(input)) {
-  console.error('usage: node transcribe.js <audio file>');
+  console.error('usage: node transcribe.js <audio file> [--lang en|auto]');
   process.exit(1);
 }
 
@@ -27,7 +32,8 @@ const py = `
 import sys, json
 from faster_whisper import WhisperModel
 m = WhisperModel("large-v3", device="cpu", compute_type="int8")
-segs, info = m.transcribe(sys.argv[1], language="he", vad_filter=False,
+lang = None if sys.argv[2] == "auto" else sys.argv[2]
+segs, info = m.transcribe(sys.argv[1], language=lang, vad_filter=False,
                           beam_size=5, condition_on_previous_text=False)
 text = " ".join(s.text.strip() for s in segs).strip()
 print(json.dumps({"text": text, "seconds": round(info.duration, 1)}, ensure_ascii=False))
@@ -44,7 +50,7 @@ const hfEnv = !process.env.HF_HOME && sharedModel ? { HF_HOME: shared, HF_HUB_OF
 
 try {
   // Without PYTHONIOENCODING the Windows console codec cannot print Hebrew.
-  const out = execFileSync('python', ['-c', py, wav], {
+  const out = execFileSync('python', ['-c', py, wav, lang], {
     encoding: 'utf8', maxBuffer: 1 << 24,
     env: Object.assign({}, process.env, { PYTHONIOENCODING: 'utf-8' }, hfEnv),
   });

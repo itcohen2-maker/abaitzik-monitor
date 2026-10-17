@@ -4040,7 +4040,7 @@ try{
   -->
   <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <button type="button" class="gt gReel" id="gReels"><b>🎬 הרילים שלי</b><small>05 עד 20, גם באיכות גבוהה</small></button>
-  <button type="button" class="gt gFut" id="gFut" data-upd="20261015-fut06"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה</small></button>
+  <button type="button" class="gt gFut" id="gFut" data-upd="20261017-fut07"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
@@ -13630,7 +13630,8 @@ var FUT_ITEMS=[
  {n:'01ג',t:'החנייה: הסרטון המקורי המלא',r:'parking-original.mp4'},
  {n:'04',t:'מאכלים להפחית: בשר מעובד, בשר אדום, אלכוהול ומזון אולטרה מעובד (צילום מסך מגוגל)',r:'fut04-foods-to-cut.png'},
  {n:'05',t:'תפסיקו לישון עם הטלפון ליד הפנים: שמונה נזקים, משינה ועד הלב (צילום מסך מאינסטגרם)',r:'fut05-phone-by-bed.png'},
- {n:'06',t:'קידום להרצאה: "אתם כל הזמן שואלים אותי, השראה, אלוף, מאיפה הכוחות", הודעות ממלאות את המסך ובסוף הזמנה להרצאה',r:'fut06-lecture-promo.txt'}
+ {n:'06',t:'קידום להרצאה: "אתם כל הזמן שואלים אותי, השראה, אלוף, מאיפה הכוחות", הודעות ממלאות את המסך ובסוף הזמנה להרצאה',r:'fut06-lecture-promo.txt'},
+ {n:'07',t:'אחות עם 35 שנות ותק: לחיות עכשיו, כי אף אחד לא ביקש בסוף משהו חוץ מעוד זמן. המלל המלא (אנגלית): Do you think you’re too fat for that swimsuit? Go buy it. You think the trip is too expensive? Take it. You think that piece of cake is going to make you gain 20 pounds? Eat it. You know what? Have a second piece. Life is way too short. Take the trip. Buy the shoes. Eat the cake. You know what? Then buy a second pair of shoes. Never has anyone ever come to the end of their life and wished for anything else but more time. I’ve been a nurse for 35 years. I have watched many people die. Never have I ever seen any of them want anything but more time. Take the trip, buy the shoes, eat the cake. Go live. Go live life. Thank you.',u:'https://www.instagram.com/reel/DefkNZDPsb9/'}
 ];
 function futSheet(){
  var old=document.getElementById('ftSheet');if(old)old.remove();
