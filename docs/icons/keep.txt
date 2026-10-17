@@ -1,0 +1,1 @@
+Itzik 17.10.2026: the old monitor icon stays. Read by build.js; do not delete.

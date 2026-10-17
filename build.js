@@ -1025,7 +1025,12 @@ function build() {
     made himself (any other content) is still never touched.
   */
   const OLD_ICONS = new Set(['de35af33d237c0e277e63fcc6478ba2f', 'e676b326d78a5f51eb5b3cb9ca35e0a2', '136d78e0dee8a24a6e19f4e51475009b']);
-  if (fs.existsSync(SRC_ICONS) && path.resolve(ICONS) !== path.resolve(SRC_ICONS)) {
+  /*
+    17.10, Itzik: "החזר את האייקון הישן של המוניטור". The old files are in the list above,
+    so a build would swap them back. A folder with keep.txt in it is the owner's choice
+    and is never touched; no other instance has one, so nothing else changes.
+  */
+  if (fs.existsSync(SRC_ICONS) && path.resolve(ICONS) !== path.resolve(SRC_ICONS) && !fs.existsSync(path.join(ICONS, 'keep.txt'))) {
     fs.mkdirSync(ICONS, { recursive: true });
     for (const f of ['icon-180.png', 'icon-192.png', 'icon-512.png']) {
       const from = path.join(SRC_ICONS, f);
@@ -1216,8 +1221,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="${inst.appTitle}">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icons/icon-180.png?v=2">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=2">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <title>${inst.pageTitle}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
