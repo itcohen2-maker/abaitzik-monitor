@@ -4043,7 +4043,7 @@ try{
     is amirshwartz1's TikTok comment on the cake video (55 likes).
   -->
   <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
-  <button type="button" class="gt gReel" id="gReels" data-upd="20261018-reel22c4k"><b>🎬 הרילים שלי</b><small>חדש: 22ג בסגנון של איליי</small></button>
+  <button type="button" class="gt gReel" id="gReels" data-upd="20261018-reel22cdrive"><b>🎬 הרילים שלי</b><small>חדש: 22ג, וקישור לדרייב למעלה</small></button>
   <button type="button" class="gt gFut" id="gFut" data-upd="20261017-futfix"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
@@ -13507,7 +13507,7 @@ function captionSheet(it){
 // 10.10: the title is also the file's name when it is sent or saved on the
 // iPhone, so it stays short like 03ג. A sentence of description made 04 an
 // 80 letter name with dots and commas, the one difference from 03ג when he reported it would not open.
-var REEL_ITEMS=[{n:'📤 התיקייה בדרייב',t:'לשלוח לאיליי, כל הרילים במקום אחד',u:'https://drive.google.com/drive/folders/1k8uEixPICag2S06Xfq_CPcntJvSMR46R'},{n:'05',t:'חטיף העדשים, עם מעל מיליון צפיות',r:'reel-05-million.mp4'},{n:'05 איכות גבוהה',t:'לשמירה בטלפון, נפתח בדרייב',u:'https://drive.google.com/file/d/193tnI38F6JY7gYyc997NPD25QDEURFmR/view'},{n:'05 כריכה',t:'הכריכה',r:'reel-05-cover.jpg'},{n:'05 פרסום',t:'כיתוב, כריכה ומוזיקה לאינסטגרם, טיקטוק ויוטיוב',r:'reel-05-post.txt'},{n:'22',t:'החיים קצרים מדי, עם כתוביות',r:'reel-22-hachaim.mp4'},{n:'22ב',t:'אחרי בדיקה: כתוביות מדויקות יותר וסיום רך',r:'reel-22b-hachaim.mp4'},{n:'22ג',t:'בסגנון של איליי: דיבור רצוף, כתוביות לפי משמעות',r:'reel-22c-hachaim.mp4'},{n:'22ג איכות גבוהה',t:'4K לשמירה בטלפון, נפתח בדרייב',u:'https://drive.google.com/file/d/1q1-fTtgg-SpZacLemic-9R78MWf0ChGY/view'},{n:'22 כריכה',t:'הכריכה',r:'reel-22-cover.jpg'},{n:'22 פרסום',t:'כיתוב, האשטגים וצליל בלי זכויות יוצרים',r:'reel-22-post.txt'}];
+var REEL_ITEMS=[{n:'📤 התיקייה בדרייב',t:'לשלוח לאיליי, כל הרילים במקום אחד',u:'https://drive.google.com/drive/folders/1k8uEixPICag2S06Xfq_CPcntJvSMR46R'},{n:'🔗 22ג בגוגל דרייב',t:'הסרטון ב 4K, לשמירה בטלפון',u:'https://drive.google.com/file/u/0/d/1q1-fTtgg-SpZacLemic-9R78MWf0ChGY/view'},{n:'05',t:'חטיף העדשים, עם מעל מיליון צפיות',r:'reel-05-million.mp4'},{n:'05 איכות גבוהה',t:'לשמירה בטלפון, נפתח בדרייב',u:'https://drive.google.com/file/d/193tnI38F6JY7gYyc997NPD25QDEURFmR/view'},{n:'05 כריכה',t:'הכריכה',r:'reel-05-cover.jpg'},{n:'05 פרסום',t:'כיתוב, כריכה ומוזיקה לאינסטגרם, טיקטוק ויוטיוב',r:'reel-05-post.txt'},{n:'22',t:'החיים קצרים מדי, עם כתוביות',r:'reel-22-hachaim.mp4'},{n:'22ב',t:'אחרי בדיקה: כתוביות מדויקות יותר וסיום רך',r:'reel-22b-hachaim.mp4'},{n:'22ג',t:'בסגנון של איליי: דיבור רצוף, כתוביות לפי משמעות',r:'reel-22c-hachaim.mp4'},{n:'22 כריכה',t:'הכריכה',r:'reel-22-cover.jpg'},{n:'22 פרסום',t:'כיתוב, האשטגים וצליל בלי זכויות יוצרים',r:'reel-22-post.txt'}];
 function reelSheet(){
  var old=document.getElementById('rlSheet');if(old)old.remove();
  var w=document.createElement('div');
