@@ -3948,7 +3948,6 @@ try{
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
   <button type="button" class="gt gStory" id="gPegasus" data-new="1" data-upd="20261018-peg-reset"><b>🐎 פגסוס</b><small>השאלות הישנות נסגרו, כל החלטה חדשה תופיע כאן</small></button>
-  <button type="button" class="gt gLec" id="gGefen" data-new="1" data-upd="20261017-gefen-rec"><b>🏫 גפן</b><small>מגישים בשנה הבאה. עכשיו: כתב המלצה מכל הרצאה</small></button>
   <button type="button" class="gt gLec" id="gLec" data-upd="20261015-clalit"><b>🎤 הרצאה</b><small>06: הריל של איליי, הקאבר, ההוק והכיתוב</small></button>
   <button type="button" class="gt gStory" id="gStory" data-upd="2026-10-15-ner-bio"><b>🎞️ סטורי</b><small>4 סטורי נרות חדשים: תמונות על כל המסך, הטקסט באמצע</small></button>
   <!--

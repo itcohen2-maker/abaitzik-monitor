@@ -2079,7 +2079,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-18T18:54:53.571Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-18T18:55:41.014Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2209,7 +2209,6 @@ try{
 
  <div class="grid" id="blkTiles">
   <button type="button" class="gt gStory" id="gPegasus" data-new="1" data-upd="20261018-peg-reset"><b>🐎 פגסוס</b><small>השאלות הישנות נסגרו, כל החלטה חדשה תופיע כאן</small></button>
-  <button type="button" class="gt gLec" id="gGefen" data-new="1" data-upd="20261017-gefen-rec"><b>🏫 גפן</b><small>מגישים בשנה הבאה. עכשיו: כתב המלצה מכל הרצאה</small></button>
   <button type="button" class="gt gLec" id="gLec" data-upd="20261015-clalit"><b>🎤 הרצאה</b><small>06: הריל של איליי, הקאבר, ההוק והכיתוב</small></button>
   <button type="button" class="gt gStory" id="gStory" data-upd="2026-10-15-ner-bio"><b>🎞️ סטורי</b><small>4 סטורי נרות חדשים: תמונות על כל המסך, הטקסט באמצע</small></button>
   <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>מי חייב כסף ומאיזה חודש</small></button>
@@ -3812,7 +3811,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='e061a7de21';
+var CODE_ID='24927ba8d1';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
