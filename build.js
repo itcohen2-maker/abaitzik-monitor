@@ -4084,7 +4084,7 @@ try{
   -->
   <!-- 13.10. Itzik: "תעשה תקייה של טום ממליץ ואריח טום ממליץ". Scripts of
        Tom's posts, four ad images, the site copy, and the draft of his own site. -->
-  <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-15-logo"><b>🧭 טום ממליץ</b><small>אימון, הסרטונים של טום, והתמונות לממומן</small></button>
+  <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-18-back"><b>🧭 טום ממליץ</b><small>אימון, הסרטונים של טום, והתמונות לממומן</small></button>
   <!-- 13.10 night: the Clalit agreement moved inside the lecture tile (item 05). -->
   <!--
     11.10. Itzik: "a card I can send from, and later we delete it". The June
