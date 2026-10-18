@@ -2983,6 +2983,16 @@ body.rdragging{user-select:none;-webkit-user-select:none}
  background:var(--surface);color:#c89600;font:600 15px Heebo,sans-serif}
 .note-bar span{flex:1;text-align:center;color:var(--dim);font-size:12.5px}
 .note-bar .note-del{color:#d33}
+.note-ai{margin-bottom:10px}
+#noteAi{display:block;width:100%;min-height:44px;border:0;border-radius:999px;cursor:pointer;
+ background:#f5c400;color:#222;font:600 15px Heebo,sans-serif}
+#noteAiBox{margin-top:8px}
+#noteAiAsk{width:100%;box-sizing:border-box;border:0;border-radius:14px;padding:10px 12px;
+ background:var(--surface);color:var(--ink);font:16px Heebo,sans-serif;resize:vertical}
+.note-ai-row{display:flex;gap:8px;margin-top:6px}
+.note-ai-row button{flex:1;min-height:42px;border:0;border-radius:999px;cursor:pointer;
+ background:var(--surface);color:#c89600;font:600 15px Heebo,sans-serif}
+.note-ai-row #noteAiGo{background:#f5c400;color:#222}
 #noteBody{width:100%;min-height:58vh;border:0;border-radius:14px;padding:14px 16px 40px;outline:0;
  background:var(--surface);color:var(--ink);font:inherit;font-size:17px;line-height:1.55;
  overflow-wrap:anywhere;-webkit-user-select:text;user-select:text}
@@ -4700,6 +4710,13 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
    <button type="button" id="notePin">הצמדה</button>
    <button type="button" id="noteShare">שיתוף</button>
    <button type="button" id="noteDel" class="note-del">מחיקה</button>
+  </div>
+  <div class="note-ai">
+   <button type="button" id="noteAi">✍️ לכתוב את התסריט עם המוניטור</button>
+   <div id="noteAiBox" hidden>
+    <textarea id="noteAiAsk" rows="2" dir="auto" placeholder="מה לעשות? למשל: תכתוב איתי תסריט מהרעיון, תקצר, תחליף את הפתיחה"></textarea>
+    <div class="note-ai-row"><button type="button" id="noteAiGo">שליחה למוניטור</button><button type="button" id="noteAiNo">ביטול</button></div>
+   </div>
   </div>
   <div class="note-fmt" id="noteFmt" hidden>
    <div class="row">
@@ -8316,6 +8333,7 @@ function softRefresh(v){
    if(Array.isArray(v2))D[k]=v2;else lazyDone[k]=false;
   });
   softBusy=false;
+  try{notesPull();}catch(e){}
   repaintAll();
  },function(){softBusy=false;});
 }
@@ -15909,13 +15927,26 @@ function notesPull(){
  var out=raw.filter(function(n){return !(n&&n.id&&gone[n.id]);});
  if(out.length!==raw.length)ch=true;
  var by={};out.forEach(function(n,i){if(n&&n.id)by[n.id]=i;});
+ // 18.10: the open note is left alone, unless the monitor wrote a script into
+ // it after his last keystroke. Then it goes straight into the editor.
+ var openNew=null;
  (S.notes||[]).forEach(function(n){
-  if(!n||!n.id||gone[n.id]||n.id===noteOpen)return;
+  if(!n||!n.id||gone[n.id])return;
+  if(n.id===noteOpen){
+   if(n.by==='monitor'&&by[n.id]!==undefined&&String(n.upd||'')>String(out[by[n.id]].upd||'')){out[by[n.id]]=n;openNew=n;}
+   return;
+  }
   if(by[n.id]===undefined){out.push(n);ch=true;}
   else if(String(n.upd||'')>String(out[by[n.id]].upd||'')){out[by[n.id]]=n;ch=true;}
  });
- if(ch){
+ if(ch||openNew){
   try{localStorage.setItem('notes',JSON.stringify(out));localStorage.setItem('notesGone',JSON.stringify(gone));}catch(e){}
+ }
+ if(openNew){
+  var oed=document.getElementById('noteBody');
+  if(oed){oed.innerHTML=openNew.html||noteHtmlFromText(openNew.text);noteBlank();}
+  document.getElementById('noteWhen').textContent=noteDay(openNew.upd);
+  toast('המוניטור כתב את התסריט בפתק, תחת ✍️ התסריט.');
  }
  var td=tkDone(),un=tkUndone(),tch=false;
  Object.keys(S.tasksDone||{}).forEach(function(k){if(!td[k]&&un.indexOf(k)<0){td[k]=S.tasksDone[k];tch=true;}});
@@ -15926,7 +15957,8 @@ function notesPull(){
  var rg=clearedIds('remGone'),rch=false;
  Object.keys(S.remGone||{}).forEach(function(k){if(!rg[k]){rg[k]=S.remGone[k];rch=true;}});
  if(rch){try{localStorage.setItem('remGone',JSON.stringify(rg));}catch(e){}try{renderReminders();}catch(e){}}
- if(ch){try{renderNotes();}catch(e){}}
+ // A redraw of the list closes the note he is writing in, so only when none is open.
+ if(ch&&!noteOpen){try{renderNotes();}catch(e){}}
  var se=srcEdits(),sch=false;
  Object.keys(S.srcEdits||{}).forEach(function(k){var x=S.srcEdits[k];if(x&&(!se[k]||String(x.at)>String(se[k].at))){se[k]=x;sch=true;}});
  if(sch)try{localStorage.setItem('srcEdits',JSON.stringify(se));}catch(e){}
@@ -16283,6 +16315,32 @@ document.getElementById('notePin').onclick=function(){
  if(n)this.textContent=n.pin?'ביטול הצמדה':'הצמדה';
 };
 document.getElementById('noteShare').onclick=function(){noteSave();shareNote(noteOpen);};
+// Itzik, 18.10: "בכל פתק לינק להתייעץ עם המוניטור, ואז הוא יכתוב איתי את
+// התסריט בתוך הפתק עצמו". The button sends his request and the whole note to
+// the chat; the session there writes the script under "✍️ התסריט" in this
+// same note (note-write.js), and notesPull puts it in front of him.
+document.getElementById('noteAi').onclick=function(){
+ var b=document.getElementById('noteAiBox');b.hidden=!b.hidden;
+ if(!b.hidden)document.getElementById('noteAiAsk').focus();
+};
+document.getElementById('noteAiNo').onclick=function(){
+ document.getElementById('noteAiAsk').value='';document.getElementById('noteAiBox').hidden=true;
+};
+document.getElementById('noteAiGo').onclick=function(){
+ noteSave();
+ var n=null;notes().forEach(function(x){if(x.id===noteOpen)n=x;});
+ if(!n||!String(n.text||'').trim()){toast('הפתק ריק. כותבים קודם את הרעיון, ואז שולחים.');return;}
+ var box=document.getElementById('noteAiAsk'),NL=String.fromCharCode(10);
+ var ask=box.value.trim()||'תכתוב איתי תסריט לסרטון מהרעיון שבפתק';
+ var txt='✍️ פתק לתסריט [note:'+n.id+']'+NL+'הבקשה: '+ask+NL+NL+'הפתק:'+NL+String(n.text).trim();
+ notesSend(true);
+ var at=new Date().toISOString();
+ sendOrHold('פתק לתסריט',txt,'פתק',{at:at,text:txt}).then(function(how){
+  if(how!=='held'){var pl=pending();pl.push({at:at,text:txt});savePending(pl);}
+  toast(how==='held'?HELD_SAY:'נשלח למוניטור. התסריט ייכתב כאן בתוך הפתק, תחת ✍️ התסריט.');
+ });
+ box.value='';document.getElementById('noteAiBox').hidden=true;
+};
 // "Copy all the text in one go": on the iPhone share opens the share sheet, so
 // copying needs its own button. Whole note, plain text, straight to the clipboard.
 // Itzik, 11.10: "it copies, it just isn't clear that it copied", and "give an
