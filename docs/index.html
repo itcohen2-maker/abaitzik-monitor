@@ -2069,7 +2069,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-18T11:47:26.006Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-18T11:53:17.807Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2222,7 +2222,7 @@ try{
   <button type="button" class="gt gMed" id="gMed"><b>🩺 אחרי הניתוח השני</b><small>ממוספר. המסמכים מהביקורת אצל הפרופסור</small></button>
   <button type="button" class="gt gInv" id="gInv" data-upd="2026-10-15-inv"><b>🧾 חשבוניות</b><small>ממוספר. מ 3.10 והלאה</small></button>
   <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
-  <button type="button" class="gt gReel" id="gReels" data-upd="20261018-reel22c"><b>🎬 הרילים שלי</b><small>חדש: 22ג בסגנון של איליי</small></button>
+  <button type="button" class="gt gReel" id="gReels" data-upd="20261018-reel22c4k"><b>🎬 הרילים שלי</b><small>חדש: 22ג בסגנון של איליי</small></button>
   <button type="button" class="gt gFut" id="gFut" data-upd="20261017-futfix"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור</small></button>
   <button type="button" class="gt gPen" id="gPen"><b>🏦 פנסיה</b><small>קוד מוסד בבנק 28417, 1,211 ש״ח. בדיקה ב 18.10</small></button>
   <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-18-back"><b>🧭 טום ממליץ</b><small>אימון, הסרטונים של טום, והתמונות לממומן</small></button>
@@ -3797,7 +3797,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='76c21bb8ca';
+var CODE_ID='277a40deb6';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -9550,7 +9550,7 @@ function captionSheet(it){
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
 }
-var REEL_ITEMS=[{n:'📤 התיקייה בדרייב',t:'לשלוח לאיליי, כל הרילים במקום אחד',u:'https://drive.google.com/drive/folders/1k8uEixPICag2S06Xfq_CPcntJvSMR46R'},{n:'05',t:'חטיף העדשים, עם מעל מיליון צפיות',r:'reel-05-million.mp4'},{n:'05 איכות גבוהה',t:'לשמירה בטלפון, נפתח בדרייב',u:'https://drive.google.com/file/d/193tnI38F6JY7gYyc997NPD25QDEURFmR/view'},{n:'05 כריכה',t:'הכריכה',r:'reel-05-cover.jpg'},{n:'05 פרסום',t:'כיתוב, כריכה ומוזיקה לאינסטגרם, טיקטוק ויוטיוב',r:'reel-05-post.txt'},{n:'22',t:'החיים קצרים מדי, עם כתוביות',r:'reel-22-hachaim.mp4'},{n:'22ב',t:'אחרי בדיקה: כתוביות מדויקות יותר וסיום רך',r:'reel-22b-hachaim.mp4'},{n:'22ג',t:'בסגנון של איליי: דיבור רצוף, כתוביות לפי משמעות',r:'reel-22c-hachaim.mp4'},{n:'22 כריכה',t:'הכריכה',r:'reel-22-cover.jpg'},{n:'22 פרסום',t:'כיתוב, האשטגים וצליל בלי זכויות יוצרים',r:'reel-22-post.txt'}];
+var REEL_ITEMS=[{n:'📤 התיקייה בדרייב',t:'לשלוח לאיליי, כל הרילים במקום אחד',u:'https://drive.google.com/drive/folders/1k8uEixPICag2S06Xfq_CPcntJvSMR46R'},{n:'05',t:'חטיף העדשים, עם מעל מיליון צפיות',r:'reel-05-million.mp4'},{n:'05 איכות גבוהה',t:'לשמירה בטלפון, נפתח בדרייב',u:'https://drive.google.com/file/d/193tnI38F6JY7gYyc997NPD25QDEURFmR/view'},{n:'05 כריכה',t:'הכריכה',r:'reel-05-cover.jpg'},{n:'05 פרסום',t:'כיתוב, כריכה ומוזיקה לאינסטגרם, טיקטוק ויוטיוב',r:'reel-05-post.txt'},{n:'22',t:'החיים קצרים מדי, עם כתוביות',r:'reel-22-hachaim.mp4'},{n:'22ב',t:'אחרי בדיקה: כתוביות מדויקות יותר וסיום רך',r:'reel-22b-hachaim.mp4'},{n:'22ג',t:'בסגנון של איליי: דיבור רצוף, כתוביות לפי משמעות',r:'reel-22c-hachaim.mp4'},{n:'22ג איכות גבוהה',t:'4K לשמירה בטלפון, נפתח בדרייב',u:'https://drive.google.com/file/d/1q1-fTtgg-SpZacLemic-9R78MWf0ChGY/view'},{n:'22 כריכה',t:'הכריכה',r:'reel-22-cover.jpg'},{n:'22 פרסום',t:'כיתוב, האשטגים וצליל בלי זכויות יוצרים',r:'reel-22-post.txt'}];
 function reelSheet(){
  var old=document.getElementById('rlSheet');if(old)old.remove();
  var w=document.createElement('div');
