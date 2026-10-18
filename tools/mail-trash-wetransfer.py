@@ -30,6 +30,26 @@ NOW = ('(from:ilcargo.com OR from:yaele@extraretail.co.il OR from:rinatb@extrare
        ' OR from:yael@homestyle.co.il OR subject:"תיק עמילות" OR subject:"הודעת חוסר בניירת")')
 
 
+LABEL = 'הום סטייל'
+
+
+def mutf7(name):
+    # IMAP folder names are modified UTF-7 (RFC 3501), quoted.
+    import base64
+    out, buf = [], ''
+    for ch in name + '\0':
+        if 0x20 <= ord(ch) <= 0x7e or ch == '\0':
+            if buf:
+                enc = base64.b64encode(buf.encode('utf-16-be')).decode().rstrip('=')
+                out.append('&' + enc.replace('/', ',') + '-')
+                buf = ''
+            if ch != '\0':
+                out.append('&-' if ch == '&' else ch)
+        else:
+            buf += ch
+    return '"' + ''.join(out) + '"'
+
+
 def main():
     take_all = '--all' in sys.argv
     user, pw = creds()
@@ -41,12 +61,27 @@ def main():
     uids = data[0].split()
     if uids:
         m.uid('STORE', b','.join(uids).decode(), '+X-GM-LABELS', '(\\Trash)')
-    m.literal = (NOW + ' -in:trash').encode('utf8')
+    # 18.10 Itzik: "עד שהום סטייל יחליטו איך מתקדמים ... תעשה תווית מיוחדת
+    # ... שמה נוכל לעקוב אחרי זה, אני לא רוצה לראות את זה בפרונט". Shipment mail
+    # is no longer thrown away: it gets the label and leaves the inbox. The old
+    # Gmail filter still sends ilcargo mail to the trash, so the trash is
+    # emptied of it first, back into the label.
+    box = mutf7(LABEL)
+    m.select('"[Gmail]/Trash"')
+    m.literal = NOW.encode('utf8')
+    _, data = m.uid('SEARCH', 'CHARSET', 'UTF-8', 'X-GM-RAW')
+    back = data[0].split()
+    if back:
+        m.uid('MOVE', b','.join(back).decode(), box)
+    m.select('"[Gmail]/All Mail"')
+    m.literal = (NOW + ' (in:inbox OR -label:' + LABEL.replace(' ', '-') + ')').encode('utf8')
     _, data = m.uid('SEARCH', 'CHARSET', 'UTF-8', 'X-GM-RAW')
     ship = data[0].split()
     if ship:
-        m.uid('STORE', b','.join(ship).decode(), '+X-GM-LABELS', '(\Trash)')
-    print(f'moved to trash: {len(uids)}, shipments: {len(ship)}')
+        ids = b','.join(ship).decode()
+        m.uid('STORE', ids, '+X-GM-LABELS', '(' + box + ')')
+        m.uid('STORE', ids, '-X-GM-LABELS', '(\\Inbox)')
+    print(f'moved to trash: {len(uids)}, shipments labelled: {len(ship)}, out of trash: {len(back)}')
     m.logout()
 
 
