@@ -129,13 +129,15 @@
   **Quota hold (14.10.2026):** a customer without its own token stops at 80 percent of Itzik's five hour or weekly
   window, or at its daily cap (lib/quota-hold.js, worker.js quotaHold), files "חסימת מכסה: ..." as a manager request
   and tells the customer once; it resumes only on his approval, which writes a pass until the window resets.
-- **A script inside a note (18.10.2026):** a message that starts "✍️ פתק לתסריט [note:<id>]" comes from the
-  button in one of his notes. It carries his request ("הבקשה:") and the whole note ("הפתק:"). Write the script he
-  asked for (the hebrew-reel-script skill for a reel, his voice, no dashes), into a file, then
-  `node note-write.js <id> <script.txt> <note.txt>` (note.txt = the note text from the message, used only if the note
-  has not synced yet) and `node push.js "note: script"`. It goes under "✍️ התסריט" in that same note, replacing
-  an earlier script there, and the open note on his phone shows it on the next refresh. Answer in the chat in one
-  line, and say where: "כתבתי את התסריט בפתק <first line>, תחת ✍️ התסריט". Questions you have for him go in that
-  line, not in the note. A follow up from the same note ("תקצר", "תחליף פתיחה") works on the script already there.
+- **Help inside a note (18.10.2026):** a message that starts "🤖 עזרה בפתק [note:<id>]" (earlier "✍️ פתק לתסריט")
+  comes from the button "🤖 אני המוניטור, כאן כדי לעזור לך בפתק" in a note, in every monitor. It carries the request
+  ("הבקשה:") and the whole note ("הפתק:"). Do what was asked (write a script with him, finish an idea, fix the
+  wording; for a reel use the hebrew-reel-script skill, his voice, no dashes), write the result to a file, then
+  `node note-write.js <id> <text.txt> <note.txt>` (note.txt = the note text from the message, used only if the note
+  has not synced yet) and `node push.js "note: help"`. It goes under "🤖 מהמוניטור" in that same note, replacing
+  an earlier answer there. For "תסדר לי את הפתק" use `--whole`: the text replaces the whole note, so keep every
+  idea of his, only in order. The open note on the phone shows it on the next refresh. Answer in the chat in one
+  line and say where: "כתבתי בפתק <first line>". Questions go in that line, not in the note. A follow up from the
+  same note works on what is already there. The person's notes are theirs: never send them anywhere else.
 
 - **Error messages only after verifying (Itzik, 17.10.2026, iron rule):** never send Itzik or a customer an error message until you have checked again, at the source or on the live page, that it really fails. A passing glitch is fixed or retried once quietly. A real error says what was tried and the next step.

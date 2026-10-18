@@ -3998,7 +3998,7 @@ try{
   <button type="button" class="gt gMyDay" id="gMyDay" data-new="1"><b>📅 מה יש לי היום</b><small>תורים, תזכורות ומשימות של היום</small></button>
   <button type="button" class="gt g18" id="gAppts"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
   <button type="button" class="gt g16" id="gRemind"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
-  <button type="button" class="gt g10 roundTile" id="gNotes" title="פתקים" aria-label="פתקים" data-upd="20261016-notes-round">📝</button>
+  <button type="button" class="gt g10 roundTile" id="gNotes" title="פתקים" aria-label="פתקים" data-upd="20261018-notes-ai">📝</button>
   <!-- 12.10, Itzik: "תקים אפליקציה לבדוק מה כל הקלקולים האלה". Every monitor's faults on one screen. -->
   <button type="button" class="gt gHealth" id="gHealth" data-new="1"><b>🩺 תקלות</b><small>מה תקוע, מה נעצר, ולמה</small></button>
   <!-- Other monitors on this server, one colour each. Hidden when there are none. -->
@@ -4710,9 +4710,9 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
    <button type="button" id="noteDel" class="note-del">מחיקה</button>
   </div>
   <div class="note-ai">
-   <button type="button" id="noteAi">✍️ לכתוב את התסריט עם המוניטור</button>
+   <button type="button" id="noteAi">🤖 אני המוניטור, כאן כדי לעזור לך בפתק</button>
    <div id="noteAiBox" hidden>
-    <textarea id="noteAiAsk" rows="2" dir="auto" placeholder="מה לעשות? למשל: תכתוב איתי תסריט מהרעיון, תקצר, תחליף את הפתיחה"></textarea>
+    <textarea id="noteAiAsk" rows="2" dir="auto" placeholder="במה לעזור? לסדר את הפתק, להשלים רעיון, לכתוב איתך תסריט, לתקן ניסוח"></textarea>
     <div class="note-ai-row"><button type="button" id="noteAiGo">שליחה למוניטור</button><button type="button" id="noteAiNo">ביטול</button></div>
    </div>
   </div>
@@ -15943,7 +15943,7 @@ function notesPull(){
   var oed=document.getElementById('noteBody');
   if(oed){oed.innerHTML=openNew.html||noteHtmlFromText(openNew.text);noteBlank();}
   document.getElementById('noteWhen').textContent=noteDay(openNew.upd);
-  toast('המוניטור כתב את התסריט בפתק, תחת ✍️ התסריט.');
+  toast('המוניטור כתב בפתק.');
  }
  var td=tkDone(),un=tkUndone(),tch=false;
  Object.keys(S.tasksDone||{}).forEach(function(k){if(!td[k]&&un.indexOf(k)<0){td[k]=S.tasksDone[k];tch=true;}});
@@ -16313,9 +16313,10 @@ document.getElementById('notePin').onclick=function(){
 };
 document.getElementById('noteShare').onclick=function(){noteSave();shareNote(noteOpen);};
 // Itzik, 18.10: "בכל פתק לינק להתייעץ עם המוניטור, ואז הוא יכתוב איתי את
-// התסריט בתוך הפתק עצמו". The button sends his request and the whole note to
-// the chat; the session there writes the script under "✍️ התסריט" in this
-// same note (note-write.js), and notesPull puts it in front of him.
+// התסריט בתוך הפתק עצמו", and then: not only a script, "אני המוניטור כאן כדי
+// לעזור לך", so a customer sees an AI that can step into the note itself.
+// The button sends his request and the whole note to the chat; the session
+// there writes into this same note (note-write.js), and notesPull shows it.
 document.getElementById('noteAi').onclick=function(){
  var b=document.getElementById('noteAiBox');b.hidden=!b.hidden;
  if(!b.hidden)document.getElementById('noteAiAsk').focus();
@@ -16328,13 +16329,13 @@ document.getElementById('noteAiGo').onclick=function(){
  var n=null;notes().forEach(function(x){if(x.id===noteOpen)n=x;});
  if(!n||!String(n.text||'').trim()){toast('הפתק ריק. כותבים קודם את הרעיון, ואז שולחים.');return;}
  var box=document.getElementById('noteAiAsk'),NL=String.fromCharCode(10);
- var ask=box.value.trim()||'תכתוב איתי תסריט לסרטון מהרעיון שבפתק';
- var txt='✍️ פתק לתסריט [note:'+n.id+']'+NL+'הבקשה: '+ask+NL+NL+'הפתק:'+NL+String(n.text).trim();
+ var ask=box.value.trim()||'תעזור לי עם הפתק הזה';
+ var txt='🤖 עזרה בפתק [note:'+n.id+']'+NL+'הבקשה: '+ask+NL+NL+'הפתק:'+NL+String(n.text).trim();
  notesSend(true);
  var at=new Date().toISOString();
- sendOrHold('פתק לתסריט',txt,'פתק',{at:at,text:txt}).then(function(how){
+ sendOrHold('עזרה בפתק',txt,'פתק',{at:at,text:txt}).then(function(how){
   if(how!=='held'){var pl=pending();pl.push({at:at,text:txt});savePending(pl);}
-  toast(how==='held'?HELD_SAY:'נשלח למוניטור. התסריט ייכתב כאן בתוך הפתק, תחת ✍️ התסריט.');
+  toast(how==='held'?HELD_SAY:'נשלח למוניטור. התשובה תיכתב כאן, בתוך הפתק.');
  });
  box.value='';document.getElementById('noteAiBox').hidden=true;
 };

@@ -8,11 +8,16 @@
   request and the whole note. The session that answers writes the script
   here, and the phone puts it into the open note on the next refresh.
 
-  His own lines stay as they are. The script goes under one heading,
-  "✍️ התסריט", and a second request replaces what is under it, so the note
-  holds his idea and the newest script, never a pile of drafts.
+  Then, the same day: not only scripts. "אני המוניטור כאן כדי לעזור לך",
+  tidy the note, finish an idea, write with him.
 
-  Usage: node note-write.js <note id> <script.txt> [<note text.txt>]
+  His own lines stay as they are. What the monitor writes goes under one
+  heading, "🤖 מהמוניטור", and a second request replaces what is under it, so
+  the note holds his words and the newest answer, never a pile of drafts.
+  With --whole the text replaces the whole note: for "תסדר לי את הפתק",
+  where the answer is his own note, put in order.
+
+  Usage: node note-write.js [--whole] <note id> <text.txt> [<note text.txt>]
   The third file is the note as it came in the message, used only when the
   note has not reached the server yet. Then: node push.js "note: script".
 */
@@ -20,7 +25,9 @@ const fs = require('fs');
 const path = require('path');
 const ns = require('./lib/notes-sync.js');
 
-const HEAD = '✍️ התסריט';
+const HEAD = '🤖 מהמוניטור';
+// The heading of the first version, 18.10 afternoon. A note written then is still found.
+const OLD = ['✍️ התסריט'];
 const NL = '\n';
 
 function esc(s) {
@@ -33,20 +40,25 @@ function htmlFromText(t) {
 }
 
 // The note with the script under HEAD, replacing an earlier one.
-function withScript(note, script) {
-  const body = String(script || '').trim().split(NL);
-  let text = String(note.text || '');
-  const ti = text.indexOf(HEAD);
-  if (ti >= 0) text = text.slice(0, ti);
-  text = text.replace(/\s+$/, '') + NL + NL + HEAD + NL + body.join(NL);
-  let html = note.html || htmlFromText(note.text);
-  const hi = html.indexOf('<h2>' + HEAD);
-  if (hi >= 0) html = html.slice(0, hi);
-  html += '<div><br></div><h2>' + HEAD + '</h2>' + body.map(x => '<div>' + (esc(x) || '<br>') + '</div>').join('');
-  return Object.assign({}, note, { text, html, upd: new Date().toISOString(), by: 'monitor' });
+function cut(s, marks) {
+  let at = -1;
+  marks.forEach(m => { const i = s.indexOf(m); if (i >= 0 && (at < 0 || i < at)) at = i; });
+  return at >= 0 ? s.slice(0, at) : s;
 }
 
-function write(dir, id, script, fallbackText) {
+function withScript(note, script, whole) {
+  const body = String(script || '').trim();
+  const stamp = { upd: new Date().toISOString(), by: 'monitor' };
+  if (whole) return Object.assign({}, note, { text: body, html: htmlFromText(body) }, stamp);
+  const ls = body.split(NL);
+  const heads = [HEAD].concat(OLD);
+  const text = cut(String(note.text || ''), heads).replace(/\s+$/, '') + NL + NL + HEAD + NL + body;
+  const html = cut(note.html || htmlFromText(note.text), heads.map(h => '<h2>' + h))
+    + '<div><br></div><h2>' + HEAD + '</h2>' + ls.map(x => '<div>' + (esc(x) || '<br>') + '</div>').join('');
+  return Object.assign({}, note, { text, html }, stamp);
+}
+
+function write(dir, id, script, fallbackText, whole) {
   const have = ns.read(dir) || { notes: [] };
   if ((have.gone || {})[id]) throw new Error('the note ' + id + ' was deleted');
   let note = (have.notes || []).find(n => n && n.id === id);
@@ -55,7 +67,7 @@ function write(dir, id, script, fallbackText) {
     const at = new Date().toISOString();
     note = { id, text: String(fallbackText).trim(), at, upd: at };
   }
-  const out = withScript(note, script);
+  const out = withScript(note, script, whole);
   ns.record(dir, { at: out.upd, notes: [out] });
   return out;
 }
@@ -63,12 +75,14 @@ function write(dir, id, script, fallbackText) {
 module.exports = { withScript, write, HEAD };
 
 if (require.main === module) {
-  const [id, scriptFile, noteFile] = process.argv.slice(2);
+  const args = process.argv.slice(2);
+  const whole = args[0] === '--whole';
+  const [id, scriptFile, noteFile] = whole ? args.slice(1) : args;
   if (!id || !scriptFile) {
-    console.error('usage: node note-write.js <note id> <script.txt> [<note text.txt>]');
+    console.error('usage: node note-write.js [--whole] <note id> <text.txt> [<note text.txt>]');
     process.exit(2);
   }
   const dir = path.join(require('./lib/instance.js').dataPath, 'notes', 'notes');
-  const n = write(dir, id, fs.readFileSync(scriptFile, 'utf8'), noteFile ? fs.readFileSync(noteFile, 'utf8') : '');
+  const n = write(dir, id, fs.readFileSync(scriptFile, 'utf8'), noteFile ? fs.readFileSync(noteFile, 'utf8') : '', whole);
   console.log('written into the note ' + n.id + ' (' + n.text.split(NL)[0] + ')');
 }
