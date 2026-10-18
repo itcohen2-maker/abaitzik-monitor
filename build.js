@@ -3937,7 +3937,7 @@ try{
  <div id="askBox"></div>
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
-  <button type="button" class="gt gStory" id="gPegasus" data-new="1" data-upd="20261016-answered"><b>🐎 פגסוס</b><small>9 החלטות מחכות לך, כפתור לכל אחת</small></button>
+  <button type="button" class="gt gStory" id="gPegasus" data-new="1" data-upd="20261018-peg-reset"><b>🐎 פגסוס</b><small>השאלות הישנות נסגרו, כל החלטה חדשה תופיע כאן</small></button>
   <button type="button" class="gt gLec" id="gGefen" data-new="1" data-upd="20261017-gefen-rec"><b>🏫 גפן</b><small>מגישים בשנה הבאה. עכשיו: כתב המלצה מכל הרצאה</small></button>
   <button type="button" class="gt gLec" id="gLec" data-upd="20261015-clalit"><b>🎤 הרצאה</b><small>06: הריל של איליי, הקאבר, ההוק והכיתוב</small></button>
   <button type="button" class="gt gStory" id="gStory" data-upd="2026-10-15-ner-bio"><b>🎞️ סטורי</b><small>4 סטורי נרות חדשים: תמונות על כל המסך, הטקסט באמצע</small></button>
@@ -12285,7 +12285,8 @@ on2('remForm','submit',function(e){
 function renderPegasus(){
  var host=document.getElementById('pegBox');
  if(!host)return;
- var P=D.pegasus||[];
+ // 18.10: a card closed by the reset ("נתחיל מההתחלה") is not shown; the file stays.
+ var P=(D.pegasus||[]).filter(function(u){return !u.closed;});
  host.innerHTML=replyBox('על פגסוס')+(P.length?P.map(function(u,pi){
   return '<div class="peg'+(u.ask&&!u.answer?' waiting':'')+'"><div class="w">'+esc(stampAgo(u.at))+'</div>'
    +(u.did?'<div><b>מה נעשה</b>'+esc(u.did)+'</div>':'')
