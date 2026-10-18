@@ -4005,7 +4005,6 @@ try{
   <button type="button" class="gt g3" id="gTenants" hidden><b>🟢 מוניטורים אחרים</b><small>ירוק תקין, אדום נתק</small></button>
   <!-- Ilay's two tiles. Hidden on Itzik's copy by the instance screens list. -->
   <button type="button" class="gt g11" id="gCIdeas" hidden><b>💡 רעיונות לתוכן</b><small>מה שעלה לך, לפני שנשכח</small></button>
-  <button type="button" class="gt g3" id="gPlan" hidden><b>🗓️ לוח תוכן</b><small>מה עולה מתי, ומה כבר עלה</small></button>
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות לשיפור המוניטור</b><small>מה עוד המסך הזה יכול לעשות</small></button>
   <!--
     איציק, 23.9, בהקלטה: "אפשר להסיר את כפתור בקשות מיוחדות".
@@ -4024,7 +4023,6 @@ try{
     איציק, 14.10, בהקלטה: "תסיר לבינתיים את האריח של יהודה, כשיחזור להיות
     בקשר נחזיר". Hidden, not deleted: to restore, drop the hidden attribute.
   -->
-  <button type="button" class="gt g15" id="gYehuda" hidden><b>📄 יהודה</b><small>גרסה קצרה לשליחה, והסקירה המלאה לזיכרון</small></button>
   <!--
     איציק, 30.9: "במוניטור שים את זה בכפתור, שיהיה לי נוח להתייעץ". Everything
     made for pushing candletimes, numbered like Rinat's list: the bio
@@ -4053,7 +4051,7 @@ try{
     is amirshwartz1's TikTok comment on the cake video (55 likes).
   -->
   <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
-  <button type="button" class="gt gReel" id="gReels" data-upd="20261018-reel22cdrive"><b>🎬 הרילים שלי</b><small>חדש: 22ג, וקישור לדרייב למעלה</small></button>
+  <button type="button" class="gt gReel" id="gReels" data-upd="20261018-reels-clean"><b>🎬 הרילים שלי</b><small>חדש: 22ג, וקישור לדרייב למעלה</small></button>
   <button type="button" class="gt gFut" id="gFut" data-upd="20261017-futfix"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
@@ -11737,7 +11735,6 @@ document.addEventListener('change',function(e){
  if(pl){var d2=plDone();if(t.checked)d2[pl]=new Date().toISOString();else delete d2[pl];try{localStorage.setItem('planDone',JSON.stringify(d2));}catch(err){}renderPlan();}
 });
 on('gCIdeas',function(){pane('I');renderContentIdeas();});
-on('gPlan',function(){pane('P');renderPlan();});
 /*
   Rinat, 12.10: "כפתור שאני רואה את הקבצים שאתה שולח לי, עם אפשרות להורדה".
   The list mixed what she sent with what came back to her. Two tabs split them:
@@ -13525,7 +13522,7 @@ function captionSheet(it){
 // 10.10: the title is also the file's name when it is sent or saved on the
 // iPhone, so it stays short like 03ג. A sentence of description made 04 an
 // 80 letter name with dots and commas, the one difference from 03ג when he reported it would not open.
-var REEL_ITEMS=[{n:'📤 התיקייה בדרייב',t:'לשלוח לאיליי, כל הרילים במקום אחד',u:'https://drive.google.com/drive/folders/1k8uEixPICag2S06Xfq_CPcntJvSMR46R'},{n:'🔗 22ג בגוגל דרייב',t:'הסרטון ב 4K, לשמירה בטלפון',u:'https://drive.google.com/file/u/0/d/1q1-fTtgg-SpZacLemic-9R78MWf0ChGY/view'},{n:'05',t:'חטיף העדשים, עם מעל מיליון צפיות',r:'reel-05-million.mp4'},{n:'05 איכות גבוהה',t:'לשמירה בטלפון, נפתח בדרייב',u:'https://drive.google.com/file/d/193tnI38F6JY7gYyc997NPD25QDEURFmR/view'},{n:'05 כריכה',t:'הכריכה',r:'reel-05-cover.jpg'},{n:'05 פרסום',t:'כיתוב, כריכה ומוזיקה לאינסטגרם, טיקטוק ויוטיוב',r:'reel-05-post.txt'},{n:'22',t:'החיים קצרים מדי, עם כתוביות',r:'reel-22-hachaim.mp4'},{n:'22ב',t:'אחרי בדיקה: כתוביות מדויקות יותר וסיום רך',r:'reel-22b-hachaim.mp4'},{n:'22ג',t:'בסגנון של איליי: דיבור רצוף, כתוביות לפי משמעות',r:'reel-22c-hachaim.mp4'},{n:'22 כריכה',t:'הכריכה',r:'reel-22-cover.jpg'},{n:'22 פרסום',t:'כיתוב, האשטגים וצליל בלי זכויות יוצרים',r:'reel-22-post.txt'}];
+var REEL_ITEMS=[{n:'📤 התיקייה בדרייב',t:'לשלוח לאיליי, כל הרילים במקום אחד',u:'https://drive.google.com/drive/folders/1k8uEixPICag2S06Xfq_CPcntJvSMR46R'},{n:'🔗 22ג בגוגל דרייב',t:'הסרטון ב 4K, לשמירה בטלפון',u:'https://drive.google.com/file/u/0/d/1q1-fTtgg-SpZacLemic-9R78MWf0ChGY/view'},{n:'22',t:'החיים קצרים מדי, עם כתוביות',r:'reel-22-hachaim.mp4'},{n:'22ב',t:'אחרי בדיקה: כתוביות מדויקות יותר וסיום רך',r:'reel-22b-hachaim.mp4'},{n:'22ג',t:'בסגנון של איליי: דיבור רצוף, כתוביות לפי משמעות',r:'reel-22c-hachaim.mp4'},{n:'22 כריכה',t:'הכריכה',r:'reel-22-cover.jpg'},{n:'22 פרסום',t:'כיתוב, האשטגים וצליל בלי זכויות יוצרים',r:'reel-22-post.txt'}];
 function reelSheet(){
  var old=document.getElementById('rlSheet');if(old)old.remove();
  var w=document.createElement('div');
