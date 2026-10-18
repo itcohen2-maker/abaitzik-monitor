@@ -13655,7 +13655,7 @@ var FUT_ITEMS=[
  {n:'04',t:'מאכלים להפחית: בשר מעובד, בשר אדום, אלכוהול ומזון אולטרה מעובד (צילום מסך מגוגל)',r:'fut04-foods-to-cut.png'},
  {n:'05',t:'תפסיקו לישון עם הטלפון ליד הפנים: שמונה נזקים, משינה ועד הלב (צילום מסך מאינסטגרם)',r:'fut05-phone-by-bed.png'},
  {n:'06',t:'קידום להרצאה: "אתם כל הזמן שואלים אותי, השראה, אלוף, מאיפה הכוחות", הודעות ממלאות את המסך ובסוף הזמנה להרצאה',r:'fut06-lecture-promo.txt'},
- {n:'07',t:'אחות עם 35 שנות ותק: לחיות עכשיו, כי אף אחד לא ביקש בסוף משהו חוץ מעוד זמן',he:'חושבים שאתם שמנים מדי בשביל בגד הים הזה? לכו תקנו אותו.\\n\\nחושבים שהטיול יקר מדי? סעו.\\n\\nחושבים שחתיכת העוגה הזאת תעלה לכם עשרה קילו? תאכלו אותה. ויודעים מה? קחו עוד חתיכה.\\n\\nהחיים קצרים מדי. סעו לטיול. תקנו את הנעליים. תאכלו את העוגה. ויודעים מה? אחר כך תקנו עוד זוג נעליים.\\n\\nאף אחד, אף פעם, לא הגיע לסוף החיים שלו וביקש משהו חוץ מעוד זמן.\\n\\nאני אחות כבר 35 שנה. ראיתי הרבה אנשים מתים. אף פעם לא ראיתי אחד מהם שרצה משהו חוץ מעוד זמן.\\n\\nסעו לטיול, תקנו את הנעליים, תאכלו את העוגה. לכו לחיות. לכו לחיות את החיים. תודה.',tx:'Do you think you’re too fat for that swimsuit? Go buy it. You think the trip is too expensive? Take it. You think that piece of cake is going to make you gain 20 pounds? Eat it. You know what? Have a second piece. Life is way too short. Take the trip. Buy the shoes. Eat the cake. You know what? Then buy a second pair of shoes. Never has anyone ever come to the end of their life and wished for anything else but more time. I’ve been a nurse for 35 years. I have watched many people die. Never have I ever seen any of them want anything but more time. Take the trip, buy the shoes, eat the cake. Go live. Go live life. Thank you.',u:'https://www.instagram.com/reel/DefkNZDPsb9/'}
+ {n:'07',t:'אחות עם 35 שנות ותק: לחיות עכשיו, כי אף אחד לא ביקש בסוף משהו חוץ מעוד זמן',he:'חושבים שאתם שמנים מדי בשביל בגד הים הזה? אז לכו תקנו אותו.\\n\\nחושבים שהטיול שכל כך בא לכם יקר מדי? סעו.\\n\\nחושבים שחתיכת העוגה הזאת תעלה אתכם במשקל ? תאכלו אותה. ויודעים מה? תקחו עוד חתיכה.\\nבא לכם לקנות את הטלפון הכי חדש שיש. רוצו לקנות\\n\\nהחיים קצרים מדי. סעו לטיול. תקנו את הנעליים. תאכלו את העוגה. ויודעים מה? אחר כך תקנו עוד זוג נעליים.\\n\\nאף אחד, אף פעם, לא הגיע לסוף החיים שלו וביקש משהו חוץ מעוד זמן.\\n\\nבשנתיים האחרונות ראיתי הרבה אנשים במחלקות בבתי החולים וגם אנשים שמתו. כולם רוצים עוד קצת זמן\\n\\nלכו לעשות ולקנות את הדברים שאת אוהבים ורוצים .\\nלכו לחיות את החיים.הם קצרים מידיי',tx:'Do you think you’re too fat for that swimsuit? Go buy it. You think the trip is too expensive? Take it. You think that piece of cake is going to make you gain 20 pounds? Eat it. You know what? Have a second piece. Life is way too short. Take the trip. Buy the shoes. Eat the cake. You know what? Then buy a second pair of shoes. Never has anyone ever come to the end of their life and wished for anything else but more time. I’ve been a nurse for 35 years. I have watched many people die. Never have I ever seen any of them want anything but more time. Take the trip, buy the shoes, eat the cake. Go live. Go live life. Thank you.',u:'https://www.instagram.com/reel/DefkNZDPsb9/'}
 ];
 // 17.10, Itzik: "אי אפשר לצאת". "אחר כך" leaves the note unmarked, so going
 // back to this list must not ask about it again: only opening the screen asks,
@@ -16030,6 +16030,10 @@ function toNote(title,text,src){
  var at=new Date().toISOString();
  var n={id:'n'+Date.now()+Math.random().toString(36).slice(2,6),text:(title?title+String.fromCharCode(10,10):'')+String(text||''),at:at,upd:at};
  if(src){n.src=src;n.srcTitle=title||'';n.srcBody=String(text||'').trim();}
+ // 18.10: one note per source. Pressing again opens the note he already
+ // edited instead of a fresh copy that would fight it.
+ var had=src?srcNewest(src):null;
+ if(had){pane('t');renderNotes();openNote(had.id);return;}
  var l=notes();l.unshift(n);saveNotes(l);notesPush();
  pane('t');renderNotes();openNote(n.id);
 }
@@ -16040,6 +16044,25 @@ function toNote(title,text,src){
 // the note and again whenever he next opens the monitor or that place. A yes
 // goes into srcEdits, which syncs to the server with the notes and survives
 // the note being deleted. Every place that shows the text reads srcText first.
+// 18.10, Itzik: "אחרי שתיקנתי בפתקים זה אמור לעדכן גם את הריל". The ask was
+// missed (he left the note without Done), so the edit now goes in by itself
+// as he types, and leaving the note says where it went. Only the newest note
+// of a source counts, so an older copy never writes over a newer edit.
+function srcNewest(src){
+ var best=null;
+ notes().forEach(function(x){if(x&&x.src===src&&(!best||String(x.upd||x.at)>String(best.upd||best.at)))best=x;});
+ return best;
+}
+function srcApply(n){
+ if(!n||!n.src)return false;
+ var b=srcBodyOf(n);if(!b)return false;
+ if(b===(srcText(n.src)||String(n.srcBody||'').trim()))return false;
+ var nw=srcNewest(n.src);if(nw&&nw.id!==n.id)return false;
+ var all=srcEdits();all[n.src]={text:b,at:new Date().toISOString()};
+ try{localStorage.setItem('srcEdits',JSON.stringify(all));}catch(x){}
+ return true;
+}
+var srcTouched='';
 function srcEdits(){try{return JSON.parse(localStorage.getItem('srcEdits')||'{}')||{};}catch(e){return {};}}
 function srcText(src){var e=srcEdits()[src];return e&&e.text?e.text:'';}
 function srcLabel(src){
@@ -16058,7 +16081,8 @@ function srcPending(n){
  if(!n||!n.src)return false;
  var b=srcBodyOf(n);if(!b)return false;
  var cur=srcText(n.src)||String(n.srcBody||'').trim();
- return b!==cur&&n.srcAsked!==nsHash(b);
+ if(b===cur)return false;
+ var nw=srcNewest(n.src);return !nw||nw.id===n.id;
 }
 function srcPendingAll(pre){
  return notes().filter(function(n){return srcPending(n)&&(!pre||String(n.src).indexOf(pre)===0);})
@@ -16070,37 +16094,8 @@ function srcMark(id,fn){
  notesPush();
 }
 function srcAsk(n,after){
- var old=document.getElementById('srcAskSheet');if(old)old.remove();
- var body=srcBodyOf(n),sig=nsHash(body);
- var w=document.createElement('div');
- w.id='srcAskSheet';w.className='ysheet';
- w.setAttribute('role','dialog');
- w.setAttribute('aria-label','להחליף את המלל');
- w.innerHTML='<div class="ycard">'
-  +'<b>ערכת בפתקים את המלל של '+esc(srcLabel(n.src))+'</b>'
-  +'<small>להחליף שם את המלל בגרסה שערכת?</small>'
-  +'<div class="fttx" dir="rtl">'+esc(body)+'</div>'
-  +'<button type="button" class="yb" data-a="yes">✅ כן, להחליף</button>'
-  +'<button type="button" class="yb" data-a="no">לא, להשאיר את המקור</button>'
-  +'<button type="button" class="yb yx" data-a="later">אחר כך</button>'
-  +'</div>';
- function close(){w.remove();}
- w.onclick=function(e){
-  if(e.target===w){close();return;}
-  var a=e.target.getAttribute&&e.target.getAttribute('data-a');
-  if(!a)return;
-  close();
-  if(a==='yes'){
-   var all=srcEdits();all[n.src]={text:body,at:new Date().toISOString()};
-   try{localStorage.setItem('srcEdits',JSON.stringify(all));}catch(x){}
-   srcMark(n.id,function(x){x.srcAsked=sig;});
-   toast('הוחלף. ב'+srcLabel(n.src)+' מופיע עכשיו המלל שערכת.');
-  }else if(a==='no'){
-   srcMark(n.id,function(x){x.srcAsked=sig;});
-  }
-  if(after)after();
- };
- document.body.appendChild(w);
+ if(srcApply(n))toast('עודכן. ב'+srcLabel(n.src)+' מופיע עכשיו המלל שערכת בפתקים.');
+ if(after)after();
 }
 // On opening the monitor: a note edited and not yet asked about is asked now.
 setTimeout(function(){try{var p=srcPendingAll();if(p.length)srcAsk(p[0]);}catch(e){}},5000);
@@ -16164,6 +16159,7 @@ function noteSave(){
  noteBlank();
  var n=editNote(function(x){x.html=html;x.text=txt;x.upd=new Date().toISOString();});
  if(n)document.getElementById('noteWhen').textContent=noteDay(n.upd);
+ if(n&&srcApply(n))srcTouched=n.src;
 }
 function noteNode(tag){
  var s=window.getSelection(),ed=document.getElementById('noteBody');
@@ -16264,6 +16260,8 @@ function closeNote(){
  renderNotes();
  var was=null;l.forEach(function(x){if(x.id===noteOpen)was=x;});
  if(srcPending(was))srcAsk(was);
+ else if(srcTouched)toast('עודכן גם ב'+srcLabel(srcTouched)+'.');
+ srcTouched='';
 }
 document.getElementById('noteBody').addEventListener('input',function(){
  // Emptied all the way down, the note starts again from a title line.
