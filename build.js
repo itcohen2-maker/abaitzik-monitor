@@ -15111,6 +15111,9 @@ var TOM_ITEMS=[
  {n:'🎬',t:'אימון: המלל של שני הסרטונים של טום',r:'tom-practice.pdf'},
  {n:'▶️',t:'הסרטון של טום, 1',u:'https://www.facebook.com/reel/1495110975557164'},
  {n:'▶️',t:'הסרטון של טום, 2',u:'https://www.facebook.com/reel/907250209120101'},
+ {n:'🎬',t:'23 בניתם בלאבאבל, כתוביות רגילות',r:'tom-reel-23-a.mp4'},
+ {n:'🖼️',t:'23 כריכה',r:'tom-reel-23-cover.jpg'},
+ {n:'📝',t:'23 פרסום',r:'tom-reel-23-post.txt'},
  {n:'🖼️',t:'ארבע התמונות לפרסום ממומן, ביחד',r:'tom-ads-all.jpg'},
  {n:'📁',t:'כל השאר: התיקייה טום ממליץ בדרייב',u:'https://drive.google.com/drive/folders/1AnxEXSB1WKaSqW6Qr8l-WuW3Qdd5hcjz'}
 ];
