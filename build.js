@@ -4050,7 +4050,7 @@ try{
     is amirshwartz1's TikTok comment on the cake video (55 likes).
   -->
   <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
-  <button type="button" class="gt gReel" id="gReels" data-upd="20261018-reels-clean"><b>🎬 הרילים שלי</b><small>חדש: 22ג, וקישור לדרייב למעלה</small></button>
+  <button type="button" class="gt gReel" id="gReels" data-upd="20261019-autosubs"><b>🎬 הרילים שלי</b><small>חדש: 22ג, וכלי חינמי לכתוביות במחשב</small></button>
   <button type="button" class="gt gFut" id="gFut" data-upd="20261017-futfix"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
@@ -13534,6 +13534,9 @@ function reelSheet(){
   +REEL_ITEMS.map(function(it,i,a){
     return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
    }).join('')
+  // 19.10, the radar: a free tool that makes subtitles on the computer, no cloud, no subscription.
+  // Kept outside REEL_ITEMS so it stays when the list is cleared. Hebrew is not promised, so test first.
+  +'<button type="button" class="yb" data-k="autosubs">כתוביות בחינם במחשב, בלי ענן: AutoSubs · לנסות קודם על ריל אחד אם העברית יוצאת טוב. אחד מכלי התזמון שבו רק לשימוש פרטי</button>'
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
   +'</div>';
  function close(){w.remove();document.removeEventListener('keydown',esckey);}
@@ -13543,6 +13546,7 @@ function reelSheet(){
   var k=e.target.getAttribute&&e.target.getAttribute('data-k');
   if(k===null||k===undefined)return;
   close();
+  if(k==='autosubs')return window.open('https://github.com/tmoroney/auto-subs','_blank','noopener');
   var it=REEL_ITEMS[+k];if(k===''||!it)return;
   if(it.u)window.open(it.u,'_blank','noopener');
   else if(/פרסום$/.test(it.n))postSheet(it);
