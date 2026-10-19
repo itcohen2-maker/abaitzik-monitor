@@ -4092,7 +4092,7 @@ try{
   -->
   <!-- 13.10. Itzik: "תעשה תקייה של טום ממליץ ואריח טום ממליץ". Scripts of
        Tom's posts, four ad images, the site copy, and the draft of his own site. -->
-  <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-19-reel23q"><b>🧭 טום ממליץ</b><small>ריל 23 עם סימני שאלה, ריל 24, 7 תמונות לממומן, אימון, הסרטונים של טום</small></button>
+  <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-19-order"><b>🧭 טום ממליץ</b><small>מסודר: שני סרטונים ו 7 תמונות לממומן</small></button>
   <!-- 13.10 night: the Clalit agreement moved inside the lecture tile (item 05). -->
   <!--
     11.10. Itzik: "a card I can send from, and later we delete it". The June
@@ -15108,23 +15108,22 @@ on('gClalit',clalitSheet);
   only once they are in the monitor; Drive links (u) open the folder.
 */
 var TOM_ITEMS=[
+ {n:'🎬',t:'סרטון 23: בניתם בלאבאבל',r:'tom-reel-23-a.mp4'},
+ {n:'🖼️',t:'סרטון 23: כריכה',r:'tom-reel-23-cover.jpg'},
+ {n:'📝',t:'סרטון 23: מלל לפרסום',r:'tom-reel-23-post.txt'},
+ {n:'🎬',t:'סרטון 24: סם אלטמן',r:'tom-reel-24-a.mp4'},
+ {n:'🖼️',t:'סרטון 24: כריכה',r:'tom-reel-24-cover.jpg'},
+ {n:'📝',t:'סרטון 24: מלל לפרסום',r:'tom-reel-24-post.txt'},
+ {n:'📣',t:'תמונה 1: יש לך רעיון',r:'tom-ad-01_original.png'},
+ {n:'📣',t:'תמונה 2: לא מבין בטכנולוגיה',r:'tom-ad-02_original.png'},
+ {n:'📣',t:'תמונה 3: תוך יום',r:'tom-ad-03_original.png'},
+ {n:'📣',t:'תמונה 4: בן 55',r:'tom-ad-04_original.png'},
+ {n:'📣',t:'תמונה 5: כל העסק במסך אחד',r:'tom-ad-04_monitor.png'},
+ {n:'📣',t:'תמונה 6: בינה מלאכותית',r:'tom-ad-04_ai.png'},
+ {n:'📣',t:'תמונה 7: אתר, אפליקציה, מערכת',r:'tom-ad-04_build.png'},
  {n:'🎬',t:'אימון: המלל של שני הסרטונים של טום',r:'tom-practice.pdf'},
  {n:'▶️',t:'הסרטון של טום, 1',u:'https://www.facebook.com/reel/1495110975557164'},
  {n:'▶️',t:'הסרטון של טום, 2',u:'https://www.facebook.com/reel/907250209120101'},
- {n:'🎬',t:'23 בניתם בלאבאבל, כתוביות רגילות',r:'tom-reel-23-a.mp4'},
- {n:'🖼️',t:'23 כריכה',r:'tom-reel-23-cover.jpg'},
- {n:'📝',t:'23 פרסום',r:'tom-reel-23-post.txt'},
- {n:'🎬',t:'24 סם אלטמן, כתוביות רגילות',r:'tom-reel-24-a.mp4'},
- {n:'🖼️',t:'24 כריכה',r:'tom-reel-24-cover.jpg'},
- {n:'📝',t:'24 פרסום',r:'tom-reel-24-post.txt'},
- {n:'📣',t:'תמונות לממומן: כל הארבע ביחד',r:'tom-ads-all.jpg'},
- {n:'📣',t:'תמונות לממומן: 01 יש לך רעיון',r:'tom-ad-01_original.png'},
- {n:'📣',t:'תמונות לממומן: 02 לא מבין בטכנולוגיה',r:'tom-ad-02_original.png'},
- {n:'📣',t:'תמונות לממומן: 03 תוך יום',r:'tom-ad-03_original.png'},
- {n:'📣',t:'תמונות לממומן: 04 בן 55',r:'tom-ad-04_original.png'},
- {n:'📣',t:'תמונות לממומן: 04 כל העסק במסך אחד',r:'tom-ad-04_monitor.png'},
- {n:'📣',t:'תמונות לממומן: 04 בינה מלאכותית',r:'tom-ad-04_ai.png'},
- {n:'📣',t:'תמונות לממומן: 04 אתר, אפליקציה, מערכת',r:'tom-ad-04_build.png'},
  {n:'📁',t:'כל השאר: התיקייה טום ממליץ בדרייב',u:'https://drive.google.com/drive/folders/1AnxEXSB1WKaSqW6Qr8l-WuW3Qdd5hcjz'}
 ];
 function tomSheet(){
@@ -15135,7 +15134,7 @@ function tomSheet(){
  w.setAttribute('aria-label','טום ממליץ');
  w.innerHTML='<div class="ycard">'
   +'<b>טום ממליץ</b>'
-  +'<small>אימון, הסרטונים של טום, והתמונות לממומן.</small>'
+  +'<small>שני סרטונים, 7 תמונות לממומן, ובסוף האימון והסרטונים של טום.</small>'
   +TOM_ITEMS.map(function(it,i,a){
     if(it.r&&!fileEntry(it.r))return '';
     return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
