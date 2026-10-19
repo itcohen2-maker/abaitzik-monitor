@@ -4092,7 +4092,7 @@ try{
   -->
   <!-- 13.10. Itzik: "תעשה תקייה של טום ממליץ ואריח טום ממליץ". Scripts of
        Tom's posts, four ad images, the site copy, and the draft of his own site. -->
-  <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-19-reel23b"><b>🧭 טום ממליץ</b><small>ריל 23 בכתוביות חדשות, 7 תמונות לממומן חדשות, ריל 24, ריל 23, אימון, הסרטונים של טום והתמונות</small></button>
+  <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-19-reel24-newa"><b>🧭 טום ממליץ</b><small>ריל 24 בכתוביות חדשות א, ריל 23 בכתוביות חדשות, 7 תמונות לממומן חדשות, ריל 24, ריל 23, אימון, הסרטונים של טום והתמונות</small></button>
   <!-- 13.10 night: the Clalit agreement moved inside the lecture tile (item 05). -->
   <!--
     11.10. Itzik: "a card I can send from, and later we delete it". The June
@@ -15116,6 +15116,7 @@ var TOM_ITEMS=[
  {n:'🖼️',t:'23 כריכה',r:'tom-reel-23-cover.jpg'},
  {n:'📝',t:'23 פרסום',r:'tom-reel-23-post.txt'},
  {n:'🎬',t:'24 סם אלטמן, כתוביות רגילות',r:'tom-reel-24-a.mp4'},
+ {n:'🎬',t:'24 סם אלטמן, כתוביות חדשות א (ניסיון)',r:'tom-reel-24-new-a.mp4'},
  {n:'🖼️',t:'24 כריכה',r:'tom-reel-24-cover.jpg'},
  {n:'📝',t:'24 פרסום',r:'tom-reel-24-post.txt'},
  {n:'📣',t:'תמונות לממומן: כל הארבע ביחד',r:'tom-ads-all.jpg'},
