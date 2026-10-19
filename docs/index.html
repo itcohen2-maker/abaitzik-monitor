@@ -2080,7 +2080,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-19T13:34:54.175Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-19T13:38:45.028Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2233,7 +2233,7 @@ try{
   <button type="button" class="gt gReel" id="gReels" data-upd="20261019-autosubs"><b>🎬 הרילים שלי</b><small>חדש: 22ג, וכלי חינמי לכתוביות במחשב</small></button>
   <button type="button" class="gt gFut" id="gFut" data-upd="20261017-futfix"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור</small></button>
   <button type="button" class="gt gPen" id="gPen"><b>🏦 פנסיה</b><small>קוד מוסד בבנק 28417, 1,211 ש״ח. בדיקה ב 18.10</small></button>
-  <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-19-ads7"><b>🧭 טום ממליץ</b><small>7 תמונות לממומן חדשות, ריל 24, ריל 23, אימון, הסרטונים של טום והתמונות</small></button>
+  <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-19-reel23b"><b>🧭 טום ממליץ</b><small>ריל 23 בכתוביות חדשות, 7 תמונות לממומן חדשות, ריל 24, ריל 23, אימון, הסרטונים של טום והתמונות</small></button>
   <button type="button" class="gt gDudi" id="gDudi" data-new="1"><b>🥩 דודי בשר</b><small>חשבוניות יוני ויולי לשליחה</small></button>
   <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
   <button type="button" class="gt gOcc" id="gOcc"><b>🩺 מרפאה תעסוקתית</b><small>מכבי רמות. טלפון א עד ה 08:00 עד 11:00</small></button>
@@ -3813,7 +3813,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='21b742894e';
+var CODE_ID='4484adac08';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10940,6 +10940,7 @@ var TOM_ITEMS=[
  {n:'▶️',t:'הסרטון של טום, 1',u:'https://www.facebook.com/reel/1495110975557164'},
  {n:'▶️',t:'הסרטון של טום, 2',u:'https://www.facebook.com/reel/907250209120101'},
  {n:'🎬',t:'23 בניתם בלאבאבל, כתוביות רגילות',r:'tom-reel-23-a.mp4'},
+ {n:'🎬',t:'23 בניתם בלאבאבל, כתוביות חדשות (ניסיון)',r:'tom-reel-23-b.mp4'},
  {n:'🖼️',t:'23 כריכה',r:'tom-reel-23-cover.jpg'},
  {n:'📝',t:'23 פרסום',r:'tom-reel-23-post.txt'},
  {n:'🎬',t:'24 סם אלטמן, כתוביות רגילות',r:'tom-reel-24-a.mp4'},
