@@ -2080,7 +2080,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-19T14:10:31.541Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-19T15:06:48.571Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2233,7 +2233,7 @@ try{
   <button type="button" class="gt gReel" id="gReels" data-upd="20261019-autosubs"><b>🎬 הרילים שלי</b><small>חדש: 22ג, וכלי חינמי לכתוביות במחשב</small></button>
   <button type="button" class="gt gFut" id="gFut" data-upd="20261017-futfix"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור</small></button>
   <button type="button" class="gt gPen" id="gPen"><b>🏦 פנסיה</b><small>קוד מוסד בבנק 28417, 1,211 ש״ח. בדיקה ב 18.10</small></button>
-  <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-19-reel23q"><b>🧭 טום ממליץ</b><small>ריל 23 עם סימני שאלה, ריל 24, 7 תמונות לממומן, אימון, הסרטונים של טום</small></button>
+  <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-19-order"><b>🧭 טום ממליץ</b><small>מסודר: שני סרטונים ו 7 תמונות לממומן</small></button>
   <button type="button" class="gt gDudi" id="gDudi" data-new="1"><b>🥩 דודי בשר</b><small>חשבוניות יוני ויולי לשליחה</small></button>
   <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
   <button type="button" class="gt gOcc" id="gOcc"><b>🩺 מרפאה תעסוקתית</b><small>מכבי רמות. טלפון א עד ה 08:00 עד 11:00</small></button>
@@ -3813,7 +3813,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='fb12c7ea36';
+var CODE_ID='886ee81834';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10936,23 +10936,22 @@ function clalitSheet(){
 }
 on('gClalit',clalitSheet);
 var TOM_ITEMS=[
+ {n:'🎬',t:'סרטון 23: בניתם בלאבאבל',r:'tom-reel-23-a.mp4'},
+ {n:'🖼️',t:'סרטון 23: כריכה',r:'tom-reel-23-cover.jpg'},
+ {n:'📝',t:'סרטון 23: מלל לפרסום',r:'tom-reel-23-post.txt'},
+ {n:'🎬',t:'סרטון 24: סם אלטמן',r:'tom-reel-24-a.mp4'},
+ {n:'🖼️',t:'סרטון 24: כריכה',r:'tom-reel-24-cover.jpg'},
+ {n:'📝',t:'סרטון 24: מלל לפרסום',r:'tom-reel-24-post.txt'},
+ {n:'📣',t:'תמונה 1: יש לך רעיון',r:'tom-ad-01_original.png'},
+ {n:'📣',t:'תמונה 2: לא מבין בטכנולוגיה',r:'tom-ad-02_original.png'},
+ {n:'📣',t:'תמונה 3: תוך יום',r:'tom-ad-03_original.png'},
+ {n:'📣',t:'תמונה 4: בן 55',r:'tom-ad-04_original.png'},
+ {n:'📣',t:'תמונה 5: כל העסק במסך אחד',r:'tom-ad-04_monitor.png'},
+ {n:'📣',t:'תמונה 6: בינה מלאכותית',r:'tom-ad-04_ai.png'},
+ {n:'📣',t:'תמונה 7: אתר, אפליקציה, מערכת',r:'tom-ad-04_build.png'},
  {n:'🎬',t:'אימון: המלל של שני הסרטונים של טום',r:'tom-practice.pdf'},
  {n:'▶️',t:'הסרטון של טום, 1',u:'https://www.facebook.com/reel/1495110975557164'},
  {n:'▶️',t:'הסרטון של טום, 2',u:'https://www.facebook.com/reel/907250209120101'},
- {n:'🎬',t:'23 בניתם בלאבאבל, כתוביות רגילות',r:'tom-reel-23-a.mp4'},
- {n:'🖼️',t:'23 כריכה',r:'tom-reel-23-cover.jpg'},
- {n:'📝',t:'23 פרסום',r:'tom-reel-23-post.txt'},
- {n:'🎬',t:'24 סם אלטמן, כתוביות רגילות',r:'tom-reel-24-a.mp4'},
- {n:'🖼️',t:'24 כריכה',r:'tom-reel-24-cover.jpg'},
- {n:'📝',t:'24 פרסום',r:'tom-reel-24-post.txt'},
- {n:'📣',t:'תמונות לממומן: כל הארבע ביחד',r:'tom-ads-all.jpg'},
- {n:'📣',t:'תמונות לממומן: 01 יש לך רעיון',r:'tom-ad-01_original.png'},
- {n:'📣',t:'תמונות לממומן: 02 לא מבין בטכנולוגיה',r:'tom-ad-02_original.png'},
- {n:'📣',t:'תמונות לממומן: 03 תוך יום',r:'tom-ad-03_original.png'},
- {n:'📣',t:'תמונות לממומן: 04 בן 55',r:'tom-ad-04_original.png'},
- {n:'📣',t:'תמונות לממומן: 04 כל העסק במסך אחד',r:'tom-ad-04_monitor.png'},
- {n:'📣',t:'תמונות לממומן: 04 בינה מלאכותית',r:'tom-ad-04_ai.png'},
- {n:'📣',t:'תמונות לממומן: 04 אתר, אפליקציה, מערכת',r:'tom-ad-04_build.png'},
  {n:'📁',t:'כל השאר: התיקייה טום ממליץ בדרייב',u:'https://drive.google.com/drive/folders/1AnxEXSB1WKaSqW6Qr8l-WuW3Qdd5hcjz'}
 ];
 function tomSheet(){
@@ -10963,7 +10962,7 @@ function tomSheet(){
  w.setAttribute('aria-label','טום ממליץ');
  w.innerHTML='<div class="ycard">'
   +'<b>טום ממליץ</b>'
-  +'<small>אימון, הסרטונים של טום, והתמונות לממומן.</small>'
+  +'<small>שני סרטונים, 7 תמונות לממומן, ובסוף האימון והסרטונים של טום.</small>'
   +TOM_ITEMS.map(function(it,i,a){
     if(it.r&&!fileEntry(it.r))return '';
     return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
