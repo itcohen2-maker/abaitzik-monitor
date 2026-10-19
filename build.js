@@ -2987,6 +2987,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
 #noteAi{display:block;width:100%;min-height:44px;border:0;border-radius:999px;cursor:pointer;
  background:#f5c400;color:#222;font:600 15px Heebo,sans-serif}
 #noteAiBox{margin-top:8px}
+.note-ai-say{background:var(--surface);color:var(--ink);border-radius:14px 14px 14px 4px;padding:10px 12px;margin-bottom:6px;font:500 15px Heebo,sans-serif;line-height:1.45}
 #noteAiAsk{width:100%;box-sizing:border-box;border:0;border-radius:14px;padding:10px 12px;
  background:var(--surface);color:var(--ink);font:16px Heebo,sans-serif;resize:vertical}
 .note-ai-row{display:flex;gap:8px;margin-top:6px}
@@ -4711,6 +4712,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <div class="note-ai">
    <button type="button" id="noteAi">🤖 אני המוניטור, כאן כדי לעזור לך בפתק</button>
    <div id="noteAiBox" hidden>
+    <div class="note-ai-say">🤖 אני כאן, המוניטור. פה בשביל לעזור לך גם בפתק. מה תרצה?</div>
     <textarea id="noteAiAsk" rows="2" dir="auto" placeholder="במה לעזור? לסדר את הפתק, להשלים רעיון, לכתוב איתך תסריט, לתקן ניסוח"></textarea>
     <div class="note-ai-row"><button type="button" id="noteAiGo">שליחה למוניטור</button><button type="button" id="noteAiNo">ביטול</button></div>
    </div>
