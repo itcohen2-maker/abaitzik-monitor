@@ -1540,6 +1540,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
 #noteAi{display:block;width:100%;min-height:44px;border:0;border-radius:999px;cursor:pointer;
  background:#f5c400;color:#222;font:600 15px Heebo,sans-serif}
 #noteAiBox{margin-top:8px}
+.note-ai-say{background:var(--surface);color:var(--ink);border-radius:14px 14px 14px 4px;padding:10px 12px;margin-bottom:6px;font:500 15px Heebo,sans-serif;line-height:1.45}
 #noteAiAsk{width:100%;box-sizing:border-box;border:0;border-radius:14px;padding:10px 12px;
  background:var(--surface);color:var(--ink);font:16px Heebo,sans-serif;resize:vertical}
 .note-ai-row{display:flex;gap:8px;margin-top:6px}
@@ -2079,7 +2080,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-19T04:35:35.608Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-19T05:18:25.621Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2663,6 +2664,7 @@ try{
   <div class="note-ai">
    <button type="button" id="noteAi">🤖 אני המוניטור, כאן כדי לעזור לך בפתק</button>
    <div id="noteAiBox" hidden>
+    <div class="note-ai-say">🤖 אני כאן, המוניטור. פה בשביל לעזור לך גם בפתק. מה תרצה?</div>
     <textarea id="noteAiAsk" rows="2" dir="auto" placeholder="במה לעזור? לסדר את הפתק, להשלים רעיון, לכתוב איתך תסריט, לתקן ניסוח"></textarea>
     <div class="note-ai-row"><button type="button" id="noteAiGo">שליחה למוניטור</button><button type="button" id="noteAiNo">ביטול</button></div>
    </div>
@@ -3811,7 +3813,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='5c52eec0ce';
+var CODE_ID='71e000c275';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
