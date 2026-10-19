@@ -4092,7 +4092,7 @@ try{
   -->
   <!-- 13.10. Itzik: "תעשה תקייה של טום ממליץ ואריח טום ממליץ". Scripts of
        Tom's posts, four ad images, the site copy, and the draft of his own site. -->
-  <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-19-order"><b>🧭 טום ממליץ</b><small>מסודר: שני סרטונים ו 7 תמונות לממומן</small></button>
+  <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-19-no4"><b>🧭 טום ממליץ</b><small>שני סרטונים ו 6 תמונות לממומן</small></button>
   <!-- 13.10 night: the Clalit agreement moved inside the lecture tile (item 05). -->
   <!--
     11.10. Itzik: "a card I can send from, and later we delete it". The June
@@ -15117,10 +15117,9 @@ var TOM_ITEMS=[
  {n:'📣',t:'תמונה 1: יש לך רעיון',r:'tom-ad-01_original.png'},
  {n:'📣',t:'תמונה 2: לא מבין בטכנולוגיה',r:'tom-ad-02_original.png'},
  {n:'📣',t:'תמונה 3: תוך יום',r:'tom-ad-03_original.png'},
- {n:'📣',t:'תמונה 4: בן 55',r:'tom-ad-04_original.png'},
- {n:'📣',t:'תמונה 5: כל העסק במסך אחד',r:'tom-ad-04_monitor.png'},
- {n:'📣',t:'תמונה 6: בינה מלאכותית',r:'tom-ad-04_ai.png'},
- {n:'📣',t:'תמונה 7: אתר, אפליקציה, מערכת',r:'tom-ad-04_build.png'},
+ {n:'📣',t:'תמונה 4: כל העסק במסך אחד',r:'tom-ad-04_monitor.png'},
+ {n:'📣',t:'תמונה 5: בינה מלאכותית',r:'tom-ad-04_ai.png'},
+ {n:'📣',t:'תמונה 6: אתר, אפליקציה, מערכת',r:'tom-ad-04_build.png'},
  {n:'🎬',t:'אימון: המלל של שני הסרטונים של טום',r:'tom-practice.pdf'},
  {n:'▶️',t:'הסרטון של טום, 1',u:'https://www.facebook.com/reel/1495110975557164'},
  {n:'▶️',t:'הסרטון של טום, 2',u:'https://www.facebook.com/reel/907250209120101'},
@@ -15134,7 +15133,7 @@ function tomSheet(){
  w.setAttribute('aria-label','טום ממליץ');
  w.innerHTML='<div class="ycard">'
   +'<b>טום ממליץ</b>'
-  +'<small>שני סרטונים, 7 תמונות לממומן, ובסוף האימון והסרטונים של טום.</small>'
+  +'<small>שני סרטונים, 6 תמונות לממומן, ובסוף האימון והסרטונים של טום.</small>'
   +TOM_ITEMS.map(function(it,i,a){
     if(it.r&&!fileEntry(it.r))return '';
     return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
