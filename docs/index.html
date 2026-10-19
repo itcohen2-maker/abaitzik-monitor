@@ -2080,7 +2080,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-19T12:48:17.127Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-19T13:34:54.175Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2233,7 +2233,7 @@ try{
   <button type="button" class="gt gReel" id="gReels" data-upd="20261019-autosubs"><b>🎬 הרילים שלי</b><small>חדש: 22ג, וכלי חינמי לכתוביות במחשב</small></button>
   <button type="button" class="gt gFut" id="gFut" data-upd="20261017-futfix"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור</small></button>
   <button type="button" class="gt gPen" id="gPen"><b>🏦 פנסיה</b><small>קוד מוסד בבנק 28417, 1,211 ש״ח. בדיקה ב 18.10</small></button>
-  <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-19-reel24"><b>🧭 טום ממליץ</b><small>ריל 24 חדש, ריל 23, אימון, הסרטונים של טום והתמונות</small></button>
+  <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-19-ads7"><b>🧭 טום ממליץ</b><small>7 תמונות לממומן חדשות, ריל 24, ריל 23, אימון, הסרטונים של טום והתמונות</small></button>
   <button type="button" class="gt gDudi" id="gDudi" data-new="1"><b>🥩 דודי בשר</b><small>חשבוניות יוני ויולי לשליחה</small></button>
   <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
   <button type="button" class="gt gOcc" id="gOcc"><b>🩺 מרפאה תעסוקתית</b><small>מכבי רמות. טלפון א עד ה 08:00 עד 11:00</small></button>
@@ -3813,7 +3813,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='3890698eed';
+var CODE_ID='21b742894e';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10945,7 +10945,14 @@ var TOM_ITEMS=[
  {n:'🎬',t:'24 סם אלטמן, כתוביות רגילות',r:'tom-reel-24-a.mp4'},
  {n:'🖼️',t:'24 כריכה',r:'tom-reel-24-cover.jpg'},
  {n:'📝',t:'24 פרסום',r:'tom-reel-24-post.txt'},
- {n:'🖼️',t:'ארבע התמונות לפרסום ממומן, ביחד',r:'tom-ads-all.jpg'},
+ {n:'📣',t:'תמונות לממומן: כל הארבע ביחד',r:'tom-ads-all.jpg'},
+ {n:'📣',t:'תמונות לממומן: 01 יש לך רעיון',r:'tom-ad-01_original.png'},
+ {n:'📣',t:'תמונות לממומן: 02 לא מבין בטכנולוגיה',r:'tom-ad-02_original.png'},
+ {n:'📣',t:'תמונות לממומן: 03 תוך יום',r:'tom-ad-03_original.png'},
+ {n:'📣',t:'תמונות לממומן: 04 בן 55',r:'tom-ad-04_original.png'},
+ {n:'📣',t:'תמונות לממומן: 04 כל העסק במסך אחד',r:'tom-ad-04_monitor.png'},
+ {n:'📣',t:'תמונות לממומן: 04 בינה מלאכותית',r:'tom-ad-04_ai.png'},
+ {n:'📣',t:'תמונות לממומן: 04 אתר, אפליקציה, מערכת',r:'tom-ad-04_build.png'},
  {n:'📁',t:'כל השאר: התיקייה טום ממליץ בדרייב',u:'https://drive.google.com/drive/folders/1AnxEXSB1WKaSqW6Qr8l-WuW3Qdd5hcjz'}
 ];
 function tomSheet(){
