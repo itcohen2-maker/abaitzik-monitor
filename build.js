@@ -4092,7 +4092,7 @@ try{
   -->
   <!-- 13.10. Itzik: "תעשה תקייה של טום ממליץ ואריח טום ממליץ". Scripts of
        Tom's posts, four ad images, the site copy, and the draft of his own site. -->
-  <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-20-campaign2"><b>🧭 טום ממליץ</b><small>תוכנית קמפיין ממומן חדשה, שני סרטונים ו 6 תמונות לממומן</small></button>
+  <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-20-campaign3"><b>🧭 טום ממליץ</b><small>תוכנית קמפיין ממומן חדשה, שני סרטונים ו 6 תמונות לממומן</small></button>
   <!-- 13.10 night: the Clalit agreement moved inside the lecture tile (item 05). -->
   <!--
     11.10. Itzik: "a card I can send from, and later we delete it". The June
@@ -15108,7 +15108,7 @@ on('gClalit',clalitSheet);
   only once they are in the monitor; Drive links (u) open the folder.
 */
 var TOM_ITEMS=[
- {n:'📣',t:'תוכנית הקמפיין הממומן, גרסה 2 (רק ממומן)',r:'tom-campaign-plan.pdf'},
+ {n:'📣',t:'תוכנית הקמפיין הממומן, גרסה 3',r:'tom-campaign-plan.pdf'},
  {n:'🎬',t:'סרטון 23: בניתם בלאבאבל',r:'tom-reel-23-a.mp4'},
  {n:'🖼️',t:'סרטון 23: כריכה',r:'tom-reel-23-cover.jpg'},
  {n:'📝',t:'סרטון 23: מלל לפרסום',r:'tom-reel-23-post.txt'},
