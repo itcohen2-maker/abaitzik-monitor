@@ -17215,6 +17215,9 @@ function pasteImgs(blobs,ta){
   and only another app's own field (a note, a settings input) is left alone.
 */
 document.addEventListener('paste',function(e){
+ // An open note takes its own paste as plain text (the note's own handler).
+ // Here it must not reach the reply boxes, or the screen jumps to the answers.
+ if(noteOpen)return;
  var ta=e.target;
  var ours=ta&&ta.tagName==='TEXTAREA'&&ta.closest&&(ta.closest('#msgForm')||ta.closest('.rbox'));
  if(!ours){
