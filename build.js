@@ -1299,7 +1299,7 @@ button.abtn[disabled]{opacity:.55}
 .codebox b{display:block;font:500 15px Heebo,sans-serif}
 .codebox small{display:block;color:var(--dim);font-size:12.5px;line-height:1.5;margin:2px 0 9px}
 .coderow{display:flex;gap:8px}
-#codeInput{flex:1;background:var(--sunk);color:var(--ink);border:1px solid var(--line);
+#codeInput,#codeOld{flex:1;background:var(--sunk);color:var(--ink);border:1px solid var(--line);
  border-radius:10px;padding:9px 12px;font:400 16px Heebo,sans-serif}
 #codeSave{background:var(--accent);color:var(--on-accent);border:0;border-radius:10px;padding:9px 18px;
  font:500 14px Heebo,sans-serif;cursor:pointer}
@@ -1618,6 +1618,14 @@ button.abtn[disabled]{opacity:.55}
 .fv-x{width:44px;height:44px;border:0;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-size:20px;cursor:pointer}
 .fv-body{flex:1;overflow:auto;padding:12px 16px calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:12px}
 .fv-body img,.fv-body video{max-width:100%;max-height:70vh;border-radius:12px}
+.ui-dlg-bg{position:fixed;inset:0;z-index:99995;background:rgba(10,12,18,.55);display:flex;align-items:center;justify-content:center;padding:20px}
+.ui-dlg{width:100%;max-width:360px;background:var(--surface);color:var(--ink);border-radius:18px;padding:20px 18px 16px;box-shadow:0 12px 40px rgba(0,0,0,.35);font:500 16px Heebo,sans-serif;line-height:1.5;direction:rtl;text-align:right}
+.ui-dlg b{display:block;font:600 17px Heebo,sans-serif;margin-bottom:4px}
+.ui-dlg input{width:100%;box-sizing:border-box;margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--sunk);color:var(--ink);font:500 16px Heebo,sans-serif}
+.ui-btns{display:flex;gap:10px;margin-top:16px}
+.ui-ok{border:0;border-radius:12px;padding:11px 18px;background:var(--accent);color:#fff;font:600 15px Heebo,sans-serif;cursor:pointer}
+.ui-ok.danger{background:var(--red)}
+.ui-no{border:1px solid var(--line);border-radius:12px;padding:11px 18px;background:transparent;color:var(--ink);font:600 15px Heebo,sans-serif;cursor:pointer}
 .fv-body audio{width:100%}
 .fv-zoom{width:100%;overflow:hidden;display:flex;justify-content:center;border-radius:12px;touch-action:pan-y}
 .fv-zoom img{transform-origin:0 0;will-change:transform;max-height:70vh}
@@ -2307,6 +2315,7 @@ body.editing .bn{display:none}
 #setBtn{margin-inline-start:0;background:linear-gradient(180deg,#9aa5b8,#6b7688);
  box-shadow:0 2px 6px rgba(20,30,60,.3),inset 0 1px 0 rgba(255,255,255,.28)}
 #setBtn:active{background:linear-gradient(180deg,#6b7688,#4c5566)}
+#setBtn.updblink{animation:updbeat 2.6s ease-in-out infinite}
 .conn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 /* The one place he talks to me. Roomy on purpose: the four ways in were
@@ -3804,7 +3813,7 @@ try{
 -->
 <header class="hd">
  <button type="button" class="conn" id="homeBtn" title="חזרה לבית" hidden>בית</button>
- <button type="button" class="conn" id="setBtn" title="הגדרות" aria-label="הגדרות">הגדרות</button>
+ <button type="button" class="conn" id="setBtn" title="הגדרות" aria-label="הגדרות" data-upd="20261020-settings">הגדרות</button>
  <div class="hdtext">
   <!--
     The exact title he gave. Under it two different facts that were one line
@@ -4384,12 +4393,15 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
 </div>
 <div class="codebox" id="codeBox" hidden>
  <b id="codeTitle">קוד אישי</b>
- <small id="codeAbout">מקלידים פעם אחת בנייד שלך והוא נשמר במכשיר. כל הודעה שתשלח תישא אותו, וכל פנייה בלעדיו אני מתעלם ממנה ומדווח לך. הקוד לעולם לא מוצג על המסך, וכדי לשנות אותו צריך אישור בזיהוי פנים.</small>
+ <small id="codeAbout">מקלידים פעם אחת בנייד שלך והוא נשמר במכשיר. כל הודעה שתשלח תישא אותו, וכל פנייה בלעדיו אני מתעלם ממנה ומדווח לך. הקוד לעולם לא מוצג על המסך, וכדי לשנות אותו צריך אישור בזיהוי פנים, או את הקוד הישן אם אין זיהוי פנים בטלפון הזה.</small>
+ <small>טלפון שני? פותחים את המוניטור בו, נכנסים להגדרות, מקלידים את אותו קוד בשדה למטה ושומרים. בלי אותו קוד ההודעות מהטלפון השני לא נקלטות.</small>
  <div class="facerow">
   <button type="button" id="faceSetup">הפעלת זיהוי פנים</button>
   <span id="faceState"></span>
  </div>
+ <small id="codeOldSay" hidden>אין זיהוי פנים בטלפון הזה? הקלידו את הקוד הישן ואז את החדש.</small>
  <div class="coderow" id="codeRow" hidden>
+  <input type="password" id="codeOld" inputmode="numeric" autocomplete="off" placeholder="הקוד הישן" hidden>
   <input type="password" id="codeInput" inputmode="numeric" autocomplete="off" placeholder="קוד קצר, למשל 4 ספרות">
   <button type="button" id="codeSave">שמירה</button>
  </div>
@@ -5525,8 +5537,8 @@ function fileView(name){
   +(fileHasName(name)?'':'<button type="button" class="fv-nm">לתת שם</button>')+'</div><div class="fv-body"><div class="empty">פותח.</div></div>';
  document.body.appendChild(ov);
  var nm=ov.querySelector('.fv-nm');
- if(nm)nm.onclick=function(){
-  var v=(prompt('לקובץ הזה אין שם. איך לקרוא לו?','')||'').replace(/\\s+/g,' ').trim().slice(0,60);
+ if(nm)nm.onclick=async function(){
+  var v=((await uiPrompt('לקובץ הזה אין שם. איך לקרוא לו?',''))||'').replace(/\\s+/g,' ').trim().slice(0,60);
   if(!v)return;
   var all=fileOwnNames();all[name]=v;
   try{localStorage.setItem('fileNames',JSON.stringify(all));}catch(e){}
@@ -7155,11 +7167,11 @@ function projNames(m){
 function projFilter(){try{return localStorage.getItem('threadProjectOnly')||'';}catch(e){return '';}}
 function wireProjects(host){
  Array.prototype.forEach.call(host.querySelectorAll('.rname'),function(b){
-  b.onclick=function(e){
+  b.onclick=async function(e){
    e.stopPropagation();e.preventDefault();
    var k=b.getAttribute('data-k'),m=threadNames();
    var card=b.closest('.th'),cur=card?(card.querySelector('summary b')||{}).textContent||'':'';
-   var v=prompt('שם לשיחה הזאת',cur);if(v===null)return;
+   var v=await uiPrompt('שם לשיחה הזאת',cur);if(v===null)return;
    v=v.replace(/\\s+/g,' ').trim().slice(0,60);
    if(v)m[k]=v;else delete m[k];
    try{localStorage.setItem('threadName',JSON.stringify(m));}catch(x){}
@@ -11671,8 +11683,8 @@ function renderReminders(){
   };
  });
  Array.prototype.forEach.call(host.querySelectorAll('.remdel'),function(b){
-  b.onclick=function(){
-   if(!confirm('למחוק את התזכורת?'))return;
+  b.onclick=async function(){
+   if(!await uiConfirm('למחוק את התזכורת?','מחיקה',true))return;
    clearIds('remGone',[b.getAttribute('data-k')]);
    notesSend(false);
    renderReminders();
@@ -11700,10 +11712,10 @@ function renderAppts(){
    +'<button type="button" class="apDel" data-del="'+esc(a.id)+'" style="font-size:13px;margin-top:6px">🗑️ למחוק</button></div>';
  }).join(''):'<div class="empty">אין תור עתידי. מוסיפים תור בטופס כאן למטה.</div>';
  // 20.10, idea he took: "אי אפשר למחוק תור שנכנס בטעות". The button sends "מחיקת תור: <id>" and the server deletes the file.
- host.onclick=function(e){
+ host.onclick=async function(e){
   var b=e.target.closest&&e.target.closest('[data-del]');if(!b)return;
   var row=b.closest('.ap'),what=row?row.querySelector('b').textContent:'',when=row?row.querySelector('.d').textContent:'';
-  if(!confirm('למחוק את התור '+what+'?'))return;
+  if(!await uiConfirm('למחוק את התור '+what+'?','מחיקה',true))return;
   var id=b.getAttribute('data-del');
   if(row){row.style.transition='opacity .4s';row.style.opacity='0';setTimeout(function(){row.style.display='none';},420);}
   sendText('מחיקת תור','מחיקת תור: '+id+' ('+what+', '+when+')','תור').catch(function(){
@@ -12540,10 +12552,27 @@ document.getElementById('faceSetup').onclick=function(){
  st.textContent='ממתין לזיהוי...';
  faceEnroll(function(ok,msg){st.textContent=msg;faceRender();});
 };
+// 20.10: without Face ID on this phone, the old code is typed first (checked
+// the same way the lock checks it) and then the new one.
+function codeOldHide(){
+ document.getElementById('codeOldSay').hidden=true;
+ document.getElementById('codeOld').hidden=true;
+ document.getElementById('codeOld').value='';
+}
 document.getElementById('codeChange').onclick=function(){
  var said=document.getElementById('codeSaid');
  var row=document.getElementById('codeRow');
- if(!faceId()){said.textContent='קודם מפעילים זיהוי פנים, ורק אחר כך אפשר לשנות את הקוד.';return;}
+ if(!faceId()){
+  if(!myCode()){said.textContent='עוד לא נקבע קוד. תקליד אחד ותשמור.';row.hidden=false;return;}
+  document.getElementById('codeOldSay').hidden=false;
+  document.getElementById('codeOld').hidden=false;
+  document.getElementById('codeOld').value='';
+  document.getElementById('codeInput').value='';
+  row.hidden=false;
+  said.textContent='';
+  return;
+ }
+ codeOldHide();
  said.textContent='ממתין לזיהוי פנים...';
  faceCheck(function(ok,msg){
   if(!ok){said.textContent=msg;row.hidden=true;return;}
@@ -12554,10 +12583,13 @@ document.getElementById('codeChange').onclick=function(){
 };
 document.getElementById('codeSave').onclick=function(){
  var v=document.getElementById('codeInput').value.trim();
+ var old=document.getElementById('codeOld');
  var said=document.getElementById('codeSaid');
  if(!v){said.textContent='תקליד קוד קודם.';return;}
+ if(!old.hidden&&(!old.value.trim()||old.value.trim()!==myCode())){said.textContent='הקוד הישן לא נכון. הקוד לא השתנה.';return;}
  try{localStorage.setItem('monitorCode',v);said.textContent='נשמר. מעכשיו כל הודעה מהמכשיר הזה נושאת אותו.';
   document.getElementById('codeInput').value='';
+  codeOldHide();
   document.getElementById('codeRow').hidden=true;}
  catch(e){said.textContent='הדפדפן לא נתן לשמור. נסה בלי גלישה פרטית.';}
 };
@@ -14231,7 +14263,7 @@ on('gToday',function(){
   }
   draw();
   w.querySelector('#todayQ').addEventListener('input',function(e){q=e.target.value.trim().toLowerCase();draw();});
-  list.addEventListener('click',function(e){
+  list.addEventListener('click',async function(e){
    var ml=e.target.closest&&e.target.closest('[data-mail]');
    if(ml){
     var am=(list._rows||[])[+ml.getAttribute('data-mail')];
@@ -14248,7 +14280,7 @@ on('gToday',function(){
    }
    var b=e.target.closest&&e.target.closest('[data-done]');if(!b)return;
    var a=(list._rows||[])[+b.getAttribute('data-done')];if(!a)return;
-   if(!confirm('לסמן טיפלתי? '+a.po+'. ההתראה תחזור אם לא יתעדכן תוך שבוע.'))return;
+   if(!await uiConfirm('לסמן טיפלתי? '+a.po+'. ההתראה תחזור אם לא יתעדכן תוך שבוע.','סימון'))return;
    var b0=shipBack();delete b0[a.id+'|'+a.code];try{localStorage.setItem('shipBack',JSON.stringify(b0));}catch(e2){}
    shipHide(a);draw();paintShipLine();
    // Whoever pressed it is the one reading this, so it names no one in this
@@ -14493,7 +14525,7 @@ boot('listTiles',function(){
 /* 13.10: a changed tile pulses slowly until opened. Bump data-upd whenever
    something new goes into a tile that already exists; new tiles use data-new. */
 boot('updTiles',function(){
- document.querySelectorAll('.gt[data-upd],.ic[data-upd],.newbtn[data-upd]').forEach(function(t){
+ document.querySelectorAll('.gt[data-upd],.ic[data-upd],.newbtn[data-upd],#setBtn[data-upd]').forEach(function(t){
   var k='tileUpd:'+t.id,stamp=t.getAttribute('data-upd')||'',seen='';try{seen=localStorage.getItem(k)||'';}catch(e){}
   if(seen===stamp||t.classList.contains('taskblink'))return;
   t.classList.add('updblink');
@@ -16457,18 +16489,18 @@ document.getElementById('noteCopyPart').onclick=function(){
  if(!t){toast('קודם מסמנים באצבע את החלק שרוצים, ואז לוחצים העתקת חלק.');return;}
  noteCopyText(this,t,'העתקת חלק','החלק שסימנת הועתק. אפשר להדביק איפה שרוצים.');
 };
-function deleteNoteAsk(id){
+async function deleteNoteAsk(id){
  var n=null;
  notes().forEach(function(x){if(x.id===id)n=x;});
  if(!n)return;
- if(!confirm('למחוק את הפתק "'+noteTitle(n.text).head+'"?'))return;
+ if(!await uiConfirm('למחוק את הפתק "'+noteTitle(n.text).head+'"? הפתק יימחק ולא יחזור.','מחיקה',true))return;
  noteForget(id);
  saveNotes(notes().filter(function(x){return x.id!==id;}));
  toast('הפתק נמחק.');
  renderNotes();
 }
-document.getElementById('noteDel').onclick=function(){
- if(!confirm('למחוק את הפתק?'))return;
+document.getElementById('noteDel').onclick=async function(){
+ if(!await uiConfirm('למחוק את הפתק? הפתק יימחק ולא יחזור.','מחיקה',true))return;
  noteForget(noteOpen);
  saveNotes(notes().filter(function(x){return x.id!==noteOpen;}));
  toast('הפתק נמחק.');
@@ -17366,6 +17398,37 @@ var toastTimer=null;
 // green for four seconds, so a file that never arrived looked like it did (10.10).
 // A failure stays red on the screen until he touches it.
 var TOAST_BAD=/לא עלה|לא הגיע|לא נשמר|לא נשלח|לא ענו|נכשל|לא הצלחתי|לא נפתח|נקטעה|לא מתקבל/;
+// 20.10, idea he took: the browser's own boxes look foreign on the phone, so the page draws its own.
+// msg is the question; value is null for a yes/no box, or the starting text for a box that asks for text.
+// Enter confirms, Esc or the grey button cancels, a tap outside cancels. Resolves true/false, or the text/null.
+function uiDialog(msg,value,okLabel,danger){
+ return new Promise(function(done){
+  var bg=document.createElement('div');bg.className='ui-dlg-bg';
+  var box=document.createElement('div');box.className='ui-dlg';box.setAttribute('role','dialog');box.setAttribute('aria-modal','true');
+  var txt=document.createElement('b');txt.textContent=msg;box.appendChild(txt);
+  var inp=null;
+  if(value!==null){inp=document.createElement('input');inp.type='text';inp.value=value;box.appendChild(inp);}
+  var row=document.createElement('div');row.className='ui-btns';
+  var ok=document.createElement('button');ok.type='button';ok.className='ui-ok'+(danger?' danger':'');ok.textContent=okLabel;
+  var no=document.createElement('button');no.type='button';no.className='ui-no';no.textContent='ביטול';
+  row.appendChild(ok);row.appendChild(no);box.appendChild(row);
+  bg.appendChild(box);
+  function end(r){document.removeEventListener('keydown',key,true);bg.remove();done(r);}
+  function cancel(){end(inp?null:false);}
+  function yes(){end(inp?inp.value:true);}
+  function key(e){
+   if(e.key==='Escape'){e.preventDefault();e.stopPropagation();cancel();}
+   else if(e.key==='Enter'){e.preventDefault();e.stopPropagation();yes();}
+  }
+  ok.onclick=yes;no.onclick=cancel;
+  bg.onclick=function(e){if(e.target===bg)cancel();};
+  document.addEventListener('keydown',key,true);
+  document.body.appendChild(bg);
+  if(inp){inp.focus();inp.select();}else ok.focus();
+ });
+}
+function uiConfirm(msg,okLabel,danger){return uiDialog(msg,null,okLabel||'אישור',danger);}
+function uiPrompt(msg,value){return uiDialog(msg,value||'','שמירה',false);}
 function toast(t){
  var el=document.getElementById('toast');
  if(!el)return;
