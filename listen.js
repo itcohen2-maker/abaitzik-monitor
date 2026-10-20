@@ -473,13 +473,14 @@ function heldWhy(text) {
 /*
   20.10: Itzik, about the ITsolution campaign: "כן גם במייל וגם בטלפון". A lead
   from the site form (api/contact.js, "ליד מהאתר") goes to his phone and to his
-  mail the moment it lands, so he can call back within the hour. One ntfy push
-  carries both (its Email header); FormSubmit answers this server with a 403.
-  Inside quiet hours both wait for the morning.
+  mail the moment it lands, so he can call back within the hour. The push goes
+  from here. The mail cannot: FormSubmit answers this server with a Cloudflare
+  403 and ntfy refuses anonymous email (40053), so the site's form mails him
+  from the visitor's browser instead. Inside quiet hours the push waits.
 */
 function alertLead(text) {
   const body = String(text || '').replace(/^\s*ליד מהאתר[^\n]*\n/, '');
-  ch.notify('ליד חדש מהאתר', body, { email: inst.mailbox }).then((r) => say('ליד: התראה ' + (r.channel || 'בתור')))
+  ch.notify('ליד חדש מהאתר', body).then((r) => say('ליד: התראה ' + (r.channel || 'בתור')))
     .catch((e) => say('!! ליד: ההתראה נכשלה ' + e.message));
 }
 
