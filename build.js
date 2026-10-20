@@ -1151,7 +1151,7 @@ function tenantTiles(inst) {
     + esc((l.icon ? l.icon + ' ' : '') + l.title) + '</b><small>' + esc(l.sub || 'פתיחה בלשונית חדשה') + '</small></button>').join('');
   return guides + links + ids.filter((id) => TENANT_TILES[id]).map((id) => {
     const [cls, title, sub] = TENANT_TILES[id];
-    return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261015-clalit"' : '') + (id === 'gTasks' ? ' data-upd="20261017-tasks-add"' : '') + (id === 'gIntake' ? ' data-upd="20261017-intake"' : '') + (id === 'gUpgrade' ? ' data-upd="20261017-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261015-clalit"' : '') + (id === 'gTasks' ? ' data-upd="tasks60-1020"' : '') + (id === 'gIntake' ? ' data-upd="20261017-intake"' : '') + (id === 'gUpgrade' ? ' data-upd="20261017-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
 }
 /*
@@ -12262,7 +12262,7 @@ document.addEventListener('change',function(e){
 function tkAddInit(){
  var sel=document.getElementById('tkDay');
  if(!sel||sel.options.length)return;
- var o='';for(var k=0;k<8;k++){var dd=new Date(Date.now()+k*864e5);
+ var o='';for(var k=0;k<60;k++){var dd=new Date(Date.now()+k*864e5);
   o+='<option value="'+tdDay(k)+'">'+(k===0?'היום':k===1?'מחר':esc(dd.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'})))+'</option>';}
  sel.innerHTML=o;
 }
@@ -14722,7 +14722,7 @@ function todaySheet(){
   }).join(''):'<small>אין משימה פתוחה להיום.</small>');
  if(x.ap1.length)h+='<div class="tdSec">מחר</div>'+x.ap1.map(apRow).join('');
  // 13.10, idea he took: "משימה להיום אפשר לכתוב רק לאותו יום". A day picker, today by default.
- var tdOpts='';for(var k=0;k<8;k++){var dd=new Date(Date.now()+k*864e5);
+ var tdOpts='';for(var k=0;k<60;k++){var dd=new Date(Date.now()+k*864e5);
   tdOpts+='<option value="'+tdDay(k)+'">'+(k===0?'היום':k===1?'מחר':esc(dd.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'})))+'</option>';}
  h+='<div class="tdSec">להוסיף משימה</div><form class="tdAdd" id="tdForm"><select id="tdDay" aria-label="לאיזה יום">'+tdOpts+'</select><input id="tdText" placeholder="למשל: להתקשר לבנק" autocomplete="off"><button type="submit">שליחה</button></form><small id="tdSaid"></small>';
  var w=document.createElement('div');
