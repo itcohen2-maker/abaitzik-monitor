@@ -15152,7 +15152,7 @@ var TOM_ITEMS=[
  {n:'🎬',t:'סרטון 24: סם אלטמן',r:'tom-reel-24-a.mp4'},
  {n:'🖼️',t:'סרטון 24: כריכה',r:'tom-reel-24-cover.jpg'},
  {n:'📝',t:'סרטון 24: מלל לפרסום',r:'tom-reel-24-post.txt'},
- {n:'🎬',t:'סרטון חדש: מדמו למוצר אמיתי',r:'tom-reel-demo-a.mp4'},
+ {n:'🎬',t:'מדמו למוצר אמיתי 24ב, הגרסה לקמפיין',r:'tom-reel-demo-b.mp4'},
  {n:'🖼️',t:'מדמו למוצר אמיתי: כריכה',r:'tom-reel-demo-cover.jpg'},
  {n:'📝',t:'מדמו למוצר אמיתי: מלל לפרסום',r:'tom-reel-demo-post.txt'},
  {n:'📣',t:'תמונה 1: יש לך רעיון',r:'tom-ad-01_original.png'},
