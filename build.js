@@ -5294,7 +5294,10 @@ function loadPdfJs(){
 }
 function pdfPages(blob,host){
  if(!host)return;
- Promise.all([loadPdfJs(),blob.arrayBuffer()]).then(function(r){
+ // Itzik, 20.10, on the printed lecture sheet: page 11 came out half drawn and
+ // pages 12 to 18 were missing. Print took the canvases drawn so far, so it
+ // now waits on host._ready, which settles once the last page is drawn.
+ host._ready=Promise.all([loadPdfJs(),blob.arrayBuffer()]).then(function(r){
   return r[0].getDocument({data:new Uint8Array(r[1])}).promise;
  }).then(function(doc){
   host.innerHTML='';
@@ -5326,12 +5329,19 @@ function pdfPages(blob,host){
     return p.render({canvasContext:cx,viewport:vp}).promise;
    });
   })(i);
-  return chain;
+  return chain.then(function(){host.dataset.done='1';});
  }).catch(function(){
   host.innerHTML='<div class="empty">לא הצלחתי להציג את העמודים כאן. פתיחת הקובץ למטה מראה אותו.</div>';
  });
 }
 function fvPrint(body,t){
+ var h=t.indexOf('image/')===0?null:body.querySelector('.fv-pdf');
+ if(h&&h._ready&&!h.dataset.done){
+  if(h._wait)return;h._wait=1;
+  toast('מחכה שכל העמודים ייטענו, ההדפסה תיפתח לבד');
+  h._ready.then(function(){h._wait=0;if(h.dataset.done)fvPrint(body,t);});
+  return;
+ }
  var srcs=[];
  if(t.indexOf('image/')===0){var im=body.querySelector('img');if(im)srcs.push(im.src);}
  else body.querySelectorAll('.fv-pdf canvas').forEach(function(c){try{srcs.push(c.toDataURL('image/png'));}catch(x){}});
