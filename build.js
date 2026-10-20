@@ -4051,7 +4051,7 @@ try{
     2.10. Itzik, in a voice note: a new tile with winning lines. The first one
     is amirshwartz1's TikTok comment on the cake video (55 likes).
   -->
-  <button type="button" class="gt gWin" id="gWin"><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
+  <button type="button" class="gt gWin" id="gWin" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <button type="button" class="gt gReel" id="gReels" data-upd="20261020-reel24b"><b>🎬 הרילים שלי</b><small>חדש: 24ב מדמו למוצר אמיתי</small></button>
   <button type="button" class="gt gFut" id="gFut" data-upd="20261017-futfix"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור</small></button>
   <!--
@@ -4093,14 +4093,14 @@ try{
   -->
   <!-- 13.10. Itzik: "תעשה תקייה של טום ממליץ ואריח טום ממליץ". Scripts of
        Tom's posts, four ad images, the site copy, and the draft of his own site. -->
-  <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-20-demo"><b>🧭 טום ממליץ</b><small>סרטון חדש מדמו למוצר אמיתי, תוכנית קמפיין ממומן חדשה, שני סרטונים ו 6 תמונות לממומן</small></button>
+  <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-20-campaign"><b>🧭 טום ממליץ</b><small>הקמפיין הממומן: תוכנית, סרטון 24ב ו 6 תמונות</small></button>
   <!-- 13.10 night: the Clalit agreement moved inside the lecture tile (item 05). -->
   <!--
     11.10. Itzik: "a card I can send from, and later we delete it". The June
     and July invoices of Etzel Dudi, each with the send button. Temporary.
   -->
   <button type="button" class="gt gDudi" id="gDudi" data-new="1"><b>🥩 דודי בשר</b><small>חשבוניות יוני ויולי לשליחה</small></button>
-  <button type="button" class="gt gLaw" id="gLaw"><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
+  <button type="button" class="gt gLaw" id="gLaw" hidden><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
   <button type="button" class="gt gOcc" id="gOcc"><b>🩺 מרפאה תעסוקתית</b><small>מכבי רמות. טלפון א עד ה 08:00 עד 11:00</small></button>
   <button type="button" class="gt gShop" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
   <button type="button" class="gt gElect" id="gElect" data-new="1"><b>🗳️ בחירות 2026</b><small>יום שלישי 27.10, קלפי 277, בי״ס אשלים</small></button>
@@ -15146,12 +15146,6 @@ on('gClalit',clalitSheet);
 */
 var TOM_ITEMS=[
  {n:'📣',t:'תוכנית הקמפיין הממומן, גרסה 3',r:'tom-campaign-plan.pdf'},
- {n:'🎬',t:'סרטון 23: בניתם בלאבאבל',r:'tom-reel-23-a.mp4'},
- {n:'🖼️',t:'סרטון 23: כריכה',r:'tom-reel-23-cover.jpg'},
- {n:'📝',t:'סרטון 23: מלל לפרסום',r:'tom-reel-23-post.txt'},
- {n:'🎬',t:'סרטון 24: סם אלטמן',r:'tom-reel-24-a.mp4'},
- {n:'🖼️',t:'סרטון 24: כריכה',r:'tom-reel-24-cover.jpg'},
- {n:'📝',t:'סרטון 24: מלל לפרסום',r:'tom-reel-24-post.txt'},
  {n:'🎬',t:'מדמו למוצר אמיתי 24ב, הגרסה לקמפיין',r:'tom-reel-demo-b.mp4'},
  {n:'🖼️',t:'מדמו למוצר אמיתי: כריכה',r:'tom-reel-demo-cover.jpg'},
  {n:'📝',t:'מדמו למוצר אמיתי: מלל לפרסום',r:'tom-reel-demo-post.txt'},
@@ -15161,9 +15155,6 @@ var TOM_ITEMS=[
  {n:'📣',t:'תמונה 4: כל העסק במסך אחד',r:'tom-ad-04_monitor.png'},
  {n:'📣',t:'תמונה 5: בינה מלאכותית',r:'tom-ad-04_ai.png'},
  {n:'📣',t:'תמונה 6: אתר, אפליקציה, מערכת',r:'tom-ad-04_build.png'},
- {n:'🎬',t:'אימון: המלל של שני הסרטונים של טום',r:'tom-practice.pdf'},
- {n:'▶️',t:'הסרטון של טום, 1',u:'https://www.facebook.com/reel/1495110975557164'},
- {n:'▶️',t:'הסרטון של טום, 2',u:'https://www.facebook.com/reel/907250209120101'},
  {n:'📁',t:'כל השאר: התיקייה טום ממליץ בדרייב',u:'https://drive.google.com/drive/folders/1AnxEXSB1WKaSqW6Qr8l-WuW3Qdd5hcjz'}
 ];
 function tomSheet(){
