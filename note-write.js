@@ -53,8 +53,10 @@ function withScript(note, script, whole) {
   const ls = body.split(NL);
   const heads = [HEAD].concat(OLD);
   const text = cut(String(note.text || ''), heads).replace(/\s+$/, '') + NL + NL + HEAD + NL + body;
-  const html = cut(note.html || htmlFromText(note.text), heads.map(h => '<h2>' + h))
-    + '<div><br></div><h2>' + HEAD + '</h2>' + ls.map(x => '<div>' + (esc(x) || '<br>') + '</div>').join('');
+  // 20.10: the monitor's part is boxed in its own frame (div.mon-ans), so it reads apart from his lines.
+  // Cutting starts at the frame, or at an older heading that has no frame.
+  const html = cut(note.html || htmlFromText(note.text), ['<div class="mon-ans">'].concat(heads.map(h => '<h2>' + h)))
+    + '<div class="mon-ans"><h2>' + HEAD + '</h2>' + ls.map(x => '<div>' + (esc(x) || '<br>') + '</div>').join('') + '</div>';
   return Object.assign({}, note, { text, html }, stamp);
 }
 

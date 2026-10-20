@@ -2993,10 +2993,11 @@ body.rdragging{user-select:none;-webkit-user-select:none}
  background:var(--surface);color:#c89600;font:600 15px Heebo,sans-serif}
 .note-bar span{flex:1;text-align:center;color:var(--dim);font-size:12.5px}
 .note-bar .note-del{color:#d33}
-.note-ai{margin-bottom:10px}
-#noteAi{display:block;width:100%;min-height:44px;border:0;border-radius:999px;cursor:pointer;
- background:#f5c400;color:#222;font:600 15px Heebo,sans-serif}
-#noteAiBox{margin-top:8px}
+.note-ai{margin:0}
+#noteAi{min-width:42px;font-size:20px}
+/* 20.10: the monitor's help is a small window above the toolbar, not a big button at the top of the note */
+#noteAiBox{position:fixed;z-index:90;inset-inline:10px;bottom:calc(72px + env(safe-area-inset-bottom));
+ background:var(--surface);border-radius:18px;padding:12px;box-shadow:0 8px 28px rgba(0,0,0,.22)}
 .note-ai-say{background:var(--surface);color:var(--ink);border-radius:14px 14px 14px 4px;padding:10px 12px;margin-bottom:6px;font:500 15px Heebo,sans-serif;line-height:1.45}
 #noteAiAsk{width:100%;box-sizing:border-box;border:0;border-radius:14px;padding:10px 12px;
  background:var(--surface);color:var(--ink);font:16px Heebo,sans-serif;resize:vertical}
@@ -3026,8 +3027,15 @@ body.rdragging{user-select:none;-webkit-user-select:none}
 #noteBody ul.chk>li.on:before{background:#f5c400;border-color:#f5c400}
 #noteBody ul.chk>li.on:after{content:'✓';position:absolute;inset-inline-start:-28px;top:3px;
  color:#fff;font-size:13px;font-weight:700;pointer-events:none}
-.note-tools{display:flex;justify-content:space-around;align-items:center;margin-bottom:8px;
- background:var(--surface);border-radius:14px;padding:4px}
+/* 20.10: the toolbar sits above the keyboard and scrolls sideways, like the iPhone's */
+.note-tools{display:flex;justify-content:flex-start;align-items:center;gap:2px;margin-bottom:8px;
+ background:var(--surface);border-radius:14px;padding:4px;overflow-x:auto;position:sticky;bottom:6px;z-index:5;
+ scrollbar-width:none}
+.note-tools button{flex:0 0 auto}
+.mon-ans{border:1.5px solid #f5c400;border-radius:14px;padding:8px 12px;margin:14px 0 4px;background:rgba(245,196,0,.08)}
+.mon-ans h2{margin:0 0 4px}
+#noteBody img{display:block;max-width:100%;height:auto;border-radius:10px;margin:6px 0}
+#noteBody hr{border:0;border-top:1px solid var(--line);margin:12px 0}
 .note-tools button{min-width:48px;min-height:42px;border:0;background:none;color:#c89600;cursor:pointer;
  font:600 19px Heebo,sans-serif;border-radius:10px}
 .note-tools button.on{background:var(--line)}
@@ -4008,7 +4016,7 @@ try{
   <button type="button" class="gt gMyDay" id="gMyDay" data-new="1"><b>📅 מה יש לי היום</b><small>תורים, תזכורות ומשימות של היום</small></button>
   <button type="button" class="gt g18" id="gAppts" data-upd="appt-del-2026-10-20"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
   <button type="button" class="gt g16" id="gRemind"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
-  <button type="button" class="gt g10 roundTile" id="gNotes" title="פתקים" aria-label="פתקים" data-upd="20261018-notes-ai">📝</button>
+  <button type="button" class="gt g10 roundTile" id="gNotes" title="פתקים" aria-label="פתקים" data-upd="notes-20261020">📝</button>
   <!-- 12.10, Itzik: "תקים אפליקציה לבדוק מה כל הקלקולים האלה". Every monitor's faults on one screen. -->
   <button type="button" class="gt gHealth" id="gHealth" data-new="1"><b>🩺 תקלות</b><small>מה תקוע, מה נעצר, ולמה</small></button>
   <!-- Other monitors on this server, one colour each. Hidden when there are none. -->
@@ -4724,7 +4732,6 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
    <button type="button" id="noteDel" class="note-del">מחיקה</button>
   </div>
   <div class="note-ai">
-   <button type="button" id="noteAi">🤖 אני המוניטור, כאן כדי לעזור לך בפתק</button>
    <div id="noteAiBox" hidden>
     <div class="note-ai-say">🤖 אני כאן, המוניטור. פה בשביל לעזור לך גם בפתק. מה תרצה?</div>
     <textarea id="noteAiAsk" rows="2" dir="auto" placeholder="במה לעזור? לסדר את הפתק, להשלים רעיון, לכתוב איתך תסריט, לתקן ניסוח"></textarea>
@@ -4755,9 +4762,18 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   </div>
   <div class="note-tools">
    <button type="button" id="noteAa" title="עיצוב">Aa</button>
+   <button type="button" data-blk="h1" title="כותרת" style="font-weight:700">H1</button>
+   <button type="button" data-blk="h2" title="כותרת משנה" style="font-weight:700">H2</button>
+   <button type="button" data-list="bul" title="רשימת תבליטים">•</button>
+   <button type="button" data-list="num" title="רשימה ממוספרת">1.</button>
    <button type="button" id="noteChk" title="רשימת סימון">☑</button>
+   <button type="button" id="noteRule" title="קו מפריד">―</button>
    <button type="button" id="noteUndo" title="ביטול">↶</button>
    <button type="button" id="noteRedo" title="חזרה">↷</button>
+   <button type="button" id="notePaste" title="הדבקה נקייה">📋</button>
+   <button type="button" id="noteScan" title="סריקת מסמך במצלמה">📷</button>
+   <input type="file" id="noteScanIn" accept="image/*" capture="environment" hidden>
+   <button type="button" id="noteAi" title="אני המוניטור, כאן כדי לעזור לך בפתק">🤖</button>
    <button type="button" id="noteCopy" class="note-copy" title="העתקת כל הפתק">העתקת הכל</button>
    <button type="button" id="noteCopyPart" class="note-copy" title="העתקת החלק המסומן">העתקת חלק</button>
   </div>
@@ -16050,7 +16066,7 @@ function notesPull(){
  }
  if(openNew){
   var oed=document.getElementById('noteBody');
-  if(oed){oed.innerHTML=openNew.html||noteHtmlFromText(openNew.text);noteBlank();}
+  if(oed){oed.innerHTML=openNew.html||noteHtmlFromText(openNew.text);noteBlank();histReset(oed.innerHTML);}
   document.getElementById('noteWhen').textContent=noteDay(openNew.upd);
   toast('המוניטור כתב בפתק.');
  }
@@ -16238,7 +16254,7 @@ function srcAsk(n,after){
 // On opening the monitor: a note edited and not yet asked about is asked now.
 setTimeout(function(){try{var p=srcPendingAll();if(p.length)srcAsk(p[0]);}catch(e){}},5000);
 function openNote(id){
- noteSel='';
+ noteMarked='';
  var n=null;
  notes().forEach(function(x){if(x.id===id)n=x;});
  if(!n){
@@ -16253,6 +16269,7 @@ function openNote(id){
  document.getElementById('notePin').textContent=n.pin?'ביטול הצמדה':'הצמדה';
  var ed=document.getElementById('noteBody');
  ed.innerHTML=n.html||noteHtmlFromText(n.text);
+ histReset(ed.innerHTML);
  document.getElementById('noteFmt').hidden=true;
  document.getElementById('noteAa').classList.remove('on');
  noteBlank();
@@ -16291,9 +16308,45 @@ function noteSel(){
  if(document.activeElement!==ed)ed.focus();
  if(noteRange&&!(s.rangeCount&&ed.contains(s.anchorNode))){s.removeAllRanges();s.addRange(noteRange);}
 }
+// 20.10, Itzik: undo and redo did nothing on the iPhone. execCommand('undo')
+// has no history once the note was set from script, so the editor keeps its
+// own: a snapshot after each pause of 400ms while typing, up to 100 steps.
+var noteHist={s:[],i:-1,t:null,p:null,busy:false};
+function histReset(html){
+ clearTimeout(noteHist.t);
+ noteHist.s=[html];noteHist.i=0;noteHist.p=html;noteHist.t=null;
+}
+function histNote(html){
+ if(noteHist.busy||noteHist.i<0)return;
+ noteHist.p=html;
+ clearTimeout(noteHist.t);
+ noteHist.t=setTimeout(histFlush,400);
+}
+function histFlush(){
+ var h=noteHist;
+ clearTimeout(h.t);h.t=null;
+ if(h.i<0||h.s[h.i]===h.p)return;
+ h.s=h.s.slice(0,h.i+1);h.s.push(h.p);
+ if(h.s.length>100)h.s.shift();
+ h.i=h.s.length-1;
+}
+function histStep(d){
+ var h=noteHist;
+ histFlush();
+ var j=h.i+d;
+ if(j<0||j>=h.s.length)return;
+ h.i=j;h.p=h.s[j];
+ var ed=document.getElementById('noteBody');
+ ed.innerHTML=h.s[j];
+ var r=document.createRange();r.selectNodeContents(ed);r.collapse(false);
+ var s=window.getSelection();s.removeAllRanges();s.addRange(r);
+ h.busy=true;noteSave();h.busy=false;
+ noteFmtState();
+}
 function noteSave(){
  var ed=document.getElementById('noteBody');
  var html=ed.innerHTML,txt=ed.innerText;
+ histNote(html);
  noteBlank();
  var n=editNote(function(x){x.html=html;x.text=txt;x.upd=new Date().toISOString();});
  if(n)document.getElementById('noteWhen').textContent=noteDay(n.upd);
@@ -16342,7 +16395,7 @@ function noteFmtState(){
 Array.prototype.forEach.call(document.querySelectorAll('#noteFmt button,.note-tools button'),function(b){
  b.addEventListener('mousedown',function(e){e.preventDefault();});
 });
-Array.prototype.forEach.call(document.querySelectorAll('#noteFmt [data-blk]'),function(b){
+Array.prototype.forEach.call(document.querySelectorAll('#noteFmt [data-blk],.note-tools [data-blk]'),function(b){
  b.onclick=function(){
   noteSel();
   var t=b.getAttribute('data-blk');
@@ -16354,7 +16407,7 @@ Array.prototype.forEach.call(document.querySelectorAll('#noteFmt [data-blk]'),fu
 Array.prototype.forEach.call(document.querySelectorAll('#noteFmt [data-cmd]'),function(b){
  b.onclick=function(){noteSel();document.execCommand(b.getAttribute('data-cmd'));noteSave();noteFmtState();};
 });
-Array.prototype.forEach.call(document.querySelectorAll('#noteFmt [data-list]'),function(b){
+Array.prototype.forEach.call(document.querySelectorAll('#noteFmt [data-list],.note-tools [data-list]'),function(b){
  b.onclick=function(){noteList(b.getAttribute('data-list'));};
 });
 document.getElementById('noteAa').onclick=function(){
@@ -16363,8 +16416,46 @@ document.getElementById('noteAa').onclick=function(){
  if(!f.hidden){noteSel();noteFmtState();}
 };
 document.getElementById('noteChk').onclick=function(){noteList('chk');};
-document.getElementById('noteUndo').onclick=function(){noteSel();document.execCommand('undo');noteSave();};
-document.getElementById('noteRedo').onclick=function(){noteSel();document.execCommand('redo');noteSave();};
+document.getElementById('noteUndo').onclick=function(){noteSel();histStep(-1);};
+document.getElementById('noteRedo').onclick=function(){noteSel();histStep(1);};
+// On a computer the keys do the same; the browser's own undo would skip our history.
+document.getElementById('noteBody').addEventListener('keydown',function(e){
+ if(!(e.ctrlKey||e.metaKey)||e.altKey)return;
+ var k=e.key.toLowerCase();
+ if(k==='z'){e.preventDefault();histStep(e.shiftKey?1:-1);}
+ else if(k==='y'){e.preventDefault();histStep(1);}
+});
+document.getElementById('noteRule').onclick=function(){noteSel();document.execCommand('insertHTML',false,'<hr><div><br></div>');noteSave();};
+// Paste as plain text, the same way a paste with the finger does it.
+document.getElementById('notePaste').onclick=function(){
+ if(!(navigator.clipboard&&navigator.clipboard.readText)){toast('הדביקו בדרך הרגילה: לחיצה ארוכה על המסך.');return;}
+ navigator.clipboard.readText().then(function(t){
+  if(!t)return;
+  noteSel();document.execCommand('insertText',false,t);noteSave();
+ },function(){toast('לא הצלחתי לקרוא את הלוח. הדביקו בדרך הרגילה.');});
+};
+// Scanning: the camera opens, the picture is shrunk to a readable page and goes
+// into the note at the cursor. It stays in the note, so it syncs with the note.
+document.getElementById('noteScan').onclick=function(){document.getElementById('noteScanIn').click();};
+document.getElementById('noteScanIn').onchange=function(){
+ var f=this.files&&this.files[0];this.value='';
+ if(!f)return;
+ var rd=new FileReader();
+ rd.onload=function(){
+  var im=new Image();
+  im.onload=function(){
+   var k=Math.min(1,1400/Math.max(im.width,im.height)),c=document.createElement('canvas');
+   c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);
+   c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+   noteSel();
+   document.execCommand('insertHTML',false,'<img src="'+c.toDataURL('image/jpeg',0.8)+'" alt="סריקה"><div><br></div>');
+   noteSave();
+  };
+  im.onerror=function(){toast('התמונה לא נפתחה. נסו שוב.');};
+  im.src=rd.result;
+ };
+ rd.readAsDataURL(f);
+};
 // The round circle of a checklist line is drawn by css, so a tap on it is
 // found by where the finger landed: the start side of the line, before the text.
 document.getElementById('noteBody').addEventListener('click',function(e){
@@ -16453,13 +16544,16 @@ document.getElementById('noteAiGo').onclick=function(){
 // Itzik, 11.10: "it copies, it just isn't clear that it copied", and "give an
 // option to copy part of the text". So the button itself turns green and says
 // so for a few seconds, and a second button copies only what he marked.
-var noteSel='';
+// 20.10: this was named noteSel, the same name as the function that puts the
+// cursor back into the note. The var overwrote the function, so every toolbar
+// button (undo, lists, bold) threw before it did anything.
+var noteMarked='';
 document.addEventListener('selectionchange',function(){
  var sel=window.getSelection&&window.getSelection(),body=document.getElementById('noteBody');
  if(!sel||!sel.rangeCount||!body)return;
  var t=String(sel).trim();
- if(t&&body.contains(sel.getRangeAt(0).commonAncestorContainer))noteSel=t;
- else if(!t&&document.activeElement===body)noteSel='';
+ if(t&&body.contains(sel.getRangeAt(0).commonAncestorContainer))noteMarked=t;
+ else if(!t&&document.activeElement===body)noteMarked='';
 });
 function noteCopyText(btn,txt,label,msg){
  var done=function(){
@@ -16486,7 +16580,7 @@ document.getElementById('noteCopyPart').addEventListener('pointerdown',function(
 document.getElementById('noteCopyPart').onclick=function(){
  var sel=window.getSelection&&window.getSelection(),body=document.getElementById('noteBody');
  var t=sel&&sel.rangeCount&&body.contains(sel.getRangeAt(0).commonAncestorContainer)?String(sel).trim():'';
- t=t||noteSel;
+ t=t||noteMarked;
  if(!t){toast('קודם מסמנים באצבע את החלק שרוצים, ואז לוחצים העתקת חלק.');return;}
  noteCopyText(this,t,'העתקת חלק','החלק שסימנת הועתק. אפשר להדביק איפה שרוצים.');
 };
