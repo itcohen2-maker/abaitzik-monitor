@@ -4093,7 +4093,7 @@ try{
   -->
   <!-- 13.10. Itzik: "תעשה תקייה של טום ממליץ ואריח טום ממליץ". Scripts of
        Tom's posts, four ad images, the site copy, and the draft of his own site. -->
-  <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-20-lp"><b>🧭 טום ממליץ</b><small>דף נחיתה לקמפיין, תוכנית קמפיין ממומן חדשה, שני סרטונים ו 6 תמונות לממומן</small></button>
+  <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd=\"2026-10-20-demo\"><b>🧭 טום ממליץ</b><small>סרטון חדש מדמו למוצר אמיתי, דף נחיתה לקמפיין, תוכנית קמפיין ממומן חדשה, שני סרטונים ו 6 תמונות לממומן</small></button>
   <!-- 13.10 night: the Clalit agreement moved inside the lecture tile (item 05). -->
   <!--
     11.10. Itzik: "a card I can send from, and later we delete it". The June
@@ -15153,6 +15153,9 @@ var TOM_ITEMS=[
  {n:'🎬',t:'סרטון 24: סם אלטמן',r:'tom-reel-24-a.mp4'},
  {n:'🖼️',t:'סרטון 24: כריכה',r:'tom-reel-24-cover.jpg'},
  {n:'📝',t:'סרטון 24: מלל לפרסום',r:'tom-reel-24-post.txt'},
+ {n:'🎬',t:'סרטון חדש: מדמו למוצר אמיתי',r:'tom-reel-demo-a.mp4'},
+ {n:'🖼️',t:'מדמו למוצר אמיתי: כריכה',r:'tom-reel-demo-cover.jpg'},
+ {n:'📝',t:'מדמו למוצר אמיתי: מלל לפרסום',r:'tom-reel-demo-post.txt'},
  {n:'📣',t:'תמונה 1: יש לך רעיון',r:'tom-ad-01_original.png'},
  {n:'📣',t:'תמונה 2: לא מבין בטכנולוגיה',r:'tom-ad-02_original.png'},
  {n:'📣',t:'תמונה 3: תוך יום',r:'tom-ad-03_original.png'},
