@@ -1582,7 +1582,6 @@ body.rdragging{user-select:none;-webkit-user-select:none}
 .note-tools{display:flex;justify-content:flex-start;align-items:center;gap:2px;margin-bottom:8px;
  background:var(--surface);border-radius:14px;padding:4px;overflow-x:auto;position:sticky;bottom:6px;z-index:5;
  scrollbar-width:none}
-.note-tools [hidden]{display:none}
 .note-tools button{flex:0 0 auto}
 .mon-ans{border:1.5px solid #f5c400;border-radius:14px;padding:8px 12px;margin:14px 0 4px;background:rgba(245,196,0,.08)}
 .mon-ans h2{margin:0 0 4px}
@@ -2097,7 +2096,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-20T12:56:11.904Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-20T12:56:32.848Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3849,7 +3848,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='ecf1a29510';
+var CODE_ID='43dbd2f769';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
