@@ -2090,7 +2090,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-20T12:51:44.921Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-20T12:51:48.799Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2240,7 +2240,7 @@ try{
   <button type="button" class="gt gMed" id="gMed"><b>🩺 אחרי הניתוח השני</b><small>ממוספר. המסמכים מהביקורת אצל הפרופסור</small></button>
   <button type="button" class="gt gInv" id="gInv" data-upd="2026-10-15-inv"><b>🧾 חשבוניות</b><small>ממוספר. מ 3.10 והלאה</small></button>
   <button type="button" class="gt gWin" id="gWin" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
-  <button type="button" class="gt gReel" id="gReels" data-upd="20261020-reel25"><b>🎬 הרילים שלי</b><small>חדש: 25 המלל לחוף, לצלם בים</small></button>
+  <button type="button" class="gt gReel" id="gReels" data-upd="20261020-reels-clean"><b>🎬 הרילים שלי</b><small>חדש: 25 המלל לחוף, לצלם בים</small></button>
   <button type="button" class="gt gFut" id="gFut" data-upd="20261017-futfix"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור</small></button>
   <button type="button" class="gt gPen" id="gPen"><b>🏦 פנסיה</b><small>קוד מוסד בבנק 28417, 1,211 ש״ח. בדיקה ב 18.10</small></button>
   <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-20-campaign"><b>🧭 טום ממליץ</b><small>הקמפיין הממומן: תוכנית, שלושה סרטונים ו 6 תמונות</small></button>
@@ -3834,7 +3834,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='9c3058ef34';
+var CODE_ID='0b3004e6c3';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
