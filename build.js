@@ -3997,7 +3997,7 @@ try{
     tasks of today, and a peek at tomorrow.
   -->
   <button type="button" class="gt gMyDay" id="gMyDay" data-new="1"><b>📅 מה יש לי היום</b><small>תורים, תזכורות ומשימות של היום</small></button>
-  <button type="button" class="gt g18" id="gAppts"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
+  <button type="button" class="gt g18" id="gAppts" data-upd="appt-del-2026-10-20"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
   <button type="button" class="gt g16" id="gRemind"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
   <button type="button" class="gt g10 roundTile" id="gNotes" title="פתקים" aria-label="פתקים" data-upd="20261018-notes-ai">📝</button>
   <!-- 12.10, Itzik: "תקים אפליקציה לבדוק מה כל הקלקולים האלה". Every monitor's faults on one screen. -->
@@ -11696,8 +11696,20 @@ function renderAppts(){
    +(a.note?'<div class="n">'+esc(a.note)+'</div>':'')
    +(rm?'<div class="n">⏰ תזכורת '+esc(new Date(rm.due).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'}))+' בתשע בבוקר</div>':'')
    +(a.doc?'<div class="n"><a href="'+esc(a.doc)+'" target="_blank" rel="noopener">'+esc(a.docLabel||'ההפניה')+'</a></div>':'')
-   +(a.img?'<a href="'+esc(a.img)+'" target="_blank" rel="noopener"><img src="'+esc(a.img)+'" alt="ההודעה מבית החולים" loading="lazy"></a>':'')+'</div>';
+   +(a.img?'<a href="'+esc(a.img)+'" target="_blank" rel="noopener"><img src="'+esc(a.img)+'" alt="ההודעה מבית החולים" loading="lazy"></a>':'')
+   +'<button type="button" class="apDel" data-del="'+esc(a.id)+'" style="font-size:13px;margin-top:6px">🗑️ למחוק</button></div>';
  }).join(''):'<div class="empty">אין תור עתידי. מוסיפים תור בטופס כאן למטה.</div>';
+ // 20.10, idea he took: "אי אפשר למחוק תור שנכנס בטעות". The button sends "מחיקת תור: <id>" and the server deletes the file.
+ host.onclick=function(e){
+  var b=e.target.closest&&e.target.closest('[data-del]');if(!b)return;
+  var row=b.closest('.ap'),what=row?row.querySelector('b').textContent:'',when=row?row.querySelector('.d').textContent:'';
+  if(!confirm('למחוק את התור '+what+'?'))return;
+  var id=b.getAttribute('data-del');
+  if(row){row.style.transition='opacity .4s';row.style.opacity='0';setTimeout(function(){row.style.display='none';},420);}
+  sendText('מחיקת תור','מחיקת תור: '+id+' ('+what+', '+when+')','תור').catch(function(){
+   if(row){row.style.display='';row.style.opacity='1';}
+  });
+ };
 }
 function tkDone(){try{return JSON.parse(localStorage.getItem('tasksDone')||'{}');}catch(e){return {};}}
 /*

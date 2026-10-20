@@ -77,6 +77,7 @@
 - **A new appointment (13.10.2026):** the form on the "🏥 תורים עתידיים" screen sends "תור חדש: <what>, <DD.MM.YYYY> (<YYYY-MM-DD>)
   בשעה HH:MM | בלי שעה[, מקום: <where>]". Write it as `data/appts/appts/<YYYYMMDD>-<slug>.json` with `id` ("a" + the name),
   `at`, `when` (ISO with +03:00; with no hour use 09:00 and `"noTime":true`), `what`, `where`. Then push and answer one line.
+- **Deleting an appointment (20.10.2026):** the 🗑️ button on the appointments screen sends "מחיקת תור: <id> (<what>, <date>)". Delete data/appts/appts/<file whose id matches>.json (an explicit request, so deleting is allowed), push, answer one line.
 
 - **"העסק שלי", the small business CRM (12.10.2026), only when `instance.json` has `"biz": true`:** a message (text or
   voice) about a lead, a customer, a payment received or an expense is written as one record file in `data/biz/biz/`,
