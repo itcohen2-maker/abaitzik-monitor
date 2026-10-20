@@ -55,7 +55,8 @@ function refused(log) {
   return /((?<![\w-])401(?![\w-])|unauthori[sz]ed|invalid (api key|token)|oauth token (has )?expired|please run \/login)/i.test(log);
 }
 function heldProblem(all, now) {
-  const held = all.filter((m) => m.from === 'unverified' && m.status === 'held'
+  // 20.10: a site lead is held on purpose and already rang (listen.js alertLead).
+  const held = all.filter((m) => m.from === 'unverified' && m.status === 'held' && m.heldWhy !== 'lead'
     && now - Date.parse(m.at) > 3 * 60 * 1000 && now - Date.parse(m.at) < 24 * 3600 * 1000);
   if (!held.length) return '';
   // 12.10: eight sends signed with an old device code read as "without the

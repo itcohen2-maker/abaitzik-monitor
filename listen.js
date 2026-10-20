@@ -466,7 +466,23 @@ function ownerCodeOk(text) {
 }
 
 function heldWhy(text) {
+  if (/^\s*ליד מהאתר/.test(String(text || ''))) return 'lead';
   return /קוד\s*[0-9]{3,8}/.test(String(text || '')) ? 'wrong-code' : 'no-code';
+}
+
+/*
+  20.10: Itzik, about the ITsolution campaign: "כן גם במייל וגם בטלפון". A lead
+  from the site form (api/contact.js, "ליד מהאתר") goes to his phone and to his
+  mail the moment it lands, so he can call back within the hour. Quiet hours
+  still apply to the phone; the mail goes anyway.
+*/
+function alertLead(text) {
+  const body = String(text || '').replace(/^\s*ליד מהאתר[^\n]*\n/, '');
+  ch.notify('ליד חדש מהאתר', body).then((r) => say('ליד: התראה ' + (r.channel || 'בתור')))
+    .catch((e) => say('!! ליד: ההתראה נכשלה ' + e.message));
+  const p = execFile(process.execPath, ['mailme.js', 'ליד חדש מהאתר ITsolution'], { cwd: __dirname, timeout: 60000 },
+    (e) => say(e ? '!! ליד: המייל נכשל ' + e.message : 'ליד: נשלח מייל'));
+  p.stdin.end(body);
 }
 
 function recordIncoming(m) {
@@ -532,6 +548,7 @@ function recordIncoming(m) {
     fs.mkdirSync(CHAT, { recursive: true });
     fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
     say((codeOk ? 'נרשם בצ׳אט עם אישור קבלה: ' : 'נרשם בלי קוד, ממתין לאימות: ') + text.slice(0, 60));
+    if (rec.heldWhy === 'lead') alertLead(text);
     recordDrain(text, at);
     /*
       13.10: the quiet hours line from the settings screen is applied here, with
