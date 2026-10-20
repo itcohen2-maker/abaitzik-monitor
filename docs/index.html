@@ -2096,7 +2096,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-20T16:50:57.525Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-20T16:56:37.287Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3848,7 +3848,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='93f0b4ab22';
+var CODE_ID='e4e5de25a1';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -9630,7 +9630,7 @@ function captionSheet(it){
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
 }
-var REEL_ITEMS=[{n:'25ג',t:'מתחיל ישר מ כששכבתי, בסוף רק המשך בתיאור',r:'reel-25c-beach.mp4'},{n:'25ג פרסום',t:'המלל שלך בכל הרשתות, הכיתוב ל 3 השניות',r:'reel-25c-post.txt'},{n:'25ב',t:'גרסה חדשה: הסוף עולה מלמטה ומתהפך, המלל החדש שלך',r:'reel-25b-beach.mp4'},{n:'25ב פרסום',t:'המלל החדש בכל הרשתות, טיקטוק הכל בתיאור',r:'reel-25b-post.txt'},{n:'25',t:'בריאות זאת פריבילגיה, מהים',r:'reel-25-beach.mp4'},{n:'25 כריכה',t:'הכריכה',r:'reel-25-cover.jpg'},{n:'25 פרסום',t:'הכיתוב ל 3 השניות, תיאור, מוזיקה לכל רשת',r:'reel-25-post.txt'}];
+var REEL_ITEMS=[{n:'25ג 4K',t:'האיכות המלאה, לשמירה בגלריה ולהעלאה',r:'reel-25c-beach-4k.mp4'},{n:'25ג',t:'מתחיל ישר מ כששכבתי, בסוף רק המשך בתיאור',r:'reel-25c-beach.mp4'},{n:'25ג פרסום',t:'המלל שלך בכל הרשתות, הכיתוב ל 3 השניות',r:'reel-25c-post.txt'},{n:'25ב',t:'גרסה חדשה: הסוף עולה מלמטה ומתהפך, המלל החדש שלך',r:'reel-25b-beach.mp4'},{n:'25ב פרסום',t:'המלל החדש בכל הרשתות, טיקטוק הכל בתיאור',r:'reel-25b-post.txt'},{n:'25',t:'בריאות זאת פריבילגיה, מהים',r:'reel-25-beach.mp4'},{n:'25 כריכה',t:'הכריכה',r:'reel-25-cover.jpg'},{n:'25 פרסום',t:'הכיתוב ל 3 השניות, תיאור, מוזיקה לכל רשת',r:'reel-25-post.txt'}];
 function reelSheet(){
  var old=document.getElementById('rlSheet');if(old)old.remove();
  var w=document.createElement('div');
