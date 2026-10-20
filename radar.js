@@ -22,11 +22,15 @@ const DRY = process.argv.includes('--dry');
 const DIR = path.join(inst.dataPath, 'better', 'better');
 const MAX = 5;
 
+// Tools Itzik removed (20.10): kept here so the scan never brings them back.
+const REJECTED = path.join(inst.dataPath, 'better', 'rejected-tools.json');
+
 function seenFinds() {
-  if (!fs.existsSync(DIR)) return [];
+  const rejected = fs.existsSync(REJECTED) ? JSON.parse(fs.readFileSync(REJECTED, 'utf8')) : [];
+  if (!fs.existsSync(DIR)) return rejected;
   return fs.readdirSync(DIR).filter(f => f.endsWith('.json')).map(f => {
     try { return JSON.parse(fs.readFileSync(path.join(DIR, f), 'utf8')); } catch (e) { return null; }
-  }).filter(x => x && x.by === 'radar');
+  }).filter(x => x && x.by === 'radar').concat(rejected);
 }
 
 function prompt(seen) {
