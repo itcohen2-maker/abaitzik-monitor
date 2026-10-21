@@ -176,6 +176,7 @@ button.abtn[disabled]{opacity:.55}
 .grow div.l{margin-top:8px;font-size:15px;line-height:1.55}
 .grow div.l b{display:block;font:800 13px Heebo,sans-serif;color:var(--accent);margin-bottom:2px}
 .grow div.l a{color:var(--accent);word-break:break-all}
+.holdline{margin:0 0 10px;padding:9px 12px;border-radius:12px;background:#fff7e0;border:1px solid #e0a11b;color:#7a5200;font-weight:600;font-size:14px}
 .pcpill{position:fixed;inset-inline-start:10px;bottom:78px;z-index:60;padding:6px 12px;border-radius:999px;
  font-size:13px;font-weight:700;background:var(--card,#1b1b1f);border:1px solid var(--dim);color:var(--dim)}
 .pcpill.on{border-color:var(--green);color:var(--green)}
@@ -2098,7 +2099,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-21T08:41:56.579Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-21T08:42:20.003Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2751,6 +2752,7 @@ try{
 
 <section id="pA" hidden>
  <h2>תשובות <button type="button" class="hq" data-q="ansHelp" aria-label="הסבר על המסך">?</button></h2>
+ <div class="holdline" id="holdLine" hidden>המוניטור מחכה לאישור, ההודעות שלך שמורות</div>
  <div class="hint hq-t" id="ansHelp" hidden>הכל כאן, לפי זמן: מה ששלחת, מה שעניתי, והדוחות המלאים. כלום לא נעלם מכאן. תשובה חדשה מסומנת באדום עד שהיא עוברת מול העיניים שלך, ואז היא נחשבת נקראה לבד. תשובה שרוצים לחזור אליה מסמנים בכפתור לחזור לזה, והיא נצבעת בכתום.</div>
  <div class="atip" id="aTip" hidden><b>תשובה חדשה מגיעה באדום.</b> כשהיא מופיעה מולך על המסך היא נחשבת נקראה לבד. מה שרוצים לחזור אליו מסמנים בכפתור לחזור לזה.<button type="button" class="ab" id="aTipOk">הבנתי</button></div>
  <div class="achips" id="aChips"></div>
@@ -3852,7 +3854,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='afdb1f26df';
+var CODE_ID='db4b60578f';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -14152,8 +14154,13 @@ function paintPc(){
  t.textContent='💻 המחשב כבוי'+(pc.seen?' מאז '+liveTime(pc.seen).slice(0,-3):'');
 }
 function liveCalm(){return AI!=='קלוד'&&(!liveLast||(Date.now()-Date.parse(liveLast.at))/1000>4800);}
+function paintHold(){
+ var h=document.getElementById('holdLine');
+ if(h)h.hidden=!(liveLast&&liveLast.hold);
+}
 function paintLive(){
  paintPc();
+ paintHold();
  var pill=document.getElementById('livePill');
  var txt=document.getElementById('lpText');
  if(!pill||!txt)return;
