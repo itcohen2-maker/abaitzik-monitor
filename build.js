@@ -4102,7 +4102,6 @@ try{
     4.10. Itzik, in a voice note with a photo of his note: a tile for the
     pension until we see the payments go through. Stays until he says it works.
   -->
-  <button type="button" class="gt gPen" id="gPen"><b>🏦 פנסיה</b><small>קוד מוסד בבנק 28417, 1,211 ש״ח. בדיקה ב 18.10</small></button>
   <!--
     4.10. Itzik, from the Maccabi page on his phone: everything about the
     occupational clinic in one place until he gets there. Phone answers
@@ -4136,7 +4135,6 @@ try{
   -->
   <button type="button" class="gt gDudi" id="gDudi" data-new="1"><b>🥩 דודי בשר</b><small>חשבוניות יוני ויולי לשליחה</small></button>
   <button type="button" class="gt gLaw" id="gLaw" hidden><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
-  <button type="button" class="gt gOcc" id="gOcc"><b>🩺 מרפאה תעסוקתית</b><small>מכבי רמות. טלפון א עד ה 08:00 עד 11:00</small></button>
   <button type="button" class="gt gShop" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
   <button type="button" class="gt gElect" id="gElect" data-new="1"><b>🗳️ בחירות 2026</b><small>יום שלישי 27.10, קלפי 277, בי״ס אשלים</small></button>
   <!-- 12.10 alarm tile: moved 13.10 to the round icons, see gAlarm next to gStk. -->

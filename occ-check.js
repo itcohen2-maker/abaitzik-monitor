@@ -50,7 +50,7 @@ if (ids.length) {
     fs.mkdirSync(path.join(ROOT, 'data/occ/occ'), { recursive: true });
     fs.writeFileSync(path.join(ROOT, 'data/occ/occ', `${id}.json`), JSON.stringify(doc, null, 1) + '\n');
   }
-  chat('occ-reply', `המרפאה התעסוקתית ענתה במייל:\n${body}\n\nזה גם בכפתור של המרפאה במסך הבית, שמהבהב עכשיו.`);
+  chat('occ-reply', `המרפאה התעסוקתית ענתה במייל:\n${body}`);
   if (!dry) {
     run('node', ['push.js', 'occ: clinic replied by mail']);
     try { run('node', ['notify.js', 'המרפאה ענתה', body.slice(0, 200)]); } catch (e) { console.error('notify', e.message); }
