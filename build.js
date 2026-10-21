@@ -2026,7 +2026,7 @@ section{margin-bottom:30px}
 #msgText::placeholder{color:var(--dim);font-weight:300}
 #msgText:focus-visible,#msgBtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .sendrow{display:flex;align-items:center;gap:10px}
-.plusbtn{width:48px;height:48px;flex:0 0 48px;border-radius:50%;border:0;cursor:pointer;
+.plusbtn{width:auto;height:48px;padding:0 12px;white-space:nowrap;flex:0 0 auto;border-radius:24px;border:0;cursor:pointer;font-size:15px!important;
  background:linear-gradient(150deg,#5aa9fb,var(--blue));color:#fff;font:300 30px/1 Heebo,sans-serif;
  box-shadow:0 8px 18px rgba(66,133,244,.35),inset 0 2px 0 rgba(255,255,255,.35)}
 .plusbtn:active{transform:scale(.94)}
@@ -5106,7 +5106,7 @@ __RIVSHARE__
   <textarea id="msgText" rows="2"
    placeholder="כתוב כאן. בקשה, תשובה, או כל דבר שבא לך שאדע"></textarea>
   <div class="sendrow">
-   <button type="button" id="plusBtn" class="plusbtn" aria-label="צירוף תמונה או קובץ">+</button>
+   <button type="button" id="plusBtn" class="plusbtn" aria-label="צירוף תמונה או קובץ" title="צירוף תמונה או קובץ">📎 צרף</button>
    <button type="submit" id="msgBtn">שליחה</button>
   </div>
  </form>
