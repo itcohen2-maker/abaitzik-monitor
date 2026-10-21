@@ -68,7 +68,7 @@ function siteLeads() {
   const day = (d) => new Date(d).toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
   // The test sends of 20.10 (phone 0500000000, a name with בדיקה, source
   // test-...) are not leads. Itzik: "אני לא ראיתי 5 לידים".
-  const isTest = (t) => /0500000000|^שם:.*בדיקה|^מקור:\s*test/m.test(String(t || ''));
+  const isTest = require('./lib/biz.js').isTestLead;
   const ats = loadDocs('chat').filter(m => m.heldWhy === 'lead' && m.at && !isTest(m.text)).map(m => m.at);
   siteLeadsMemo = { n: ats.length, today: ats.filter(a => day(a) === day(Date.now())).length };
   return siteLeadsMemo;

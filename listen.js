@@ -484,6 +484,17 @@ function alertLead(text) {
     .catch((e) => say('!! ליד: ההתראה נכשלה ' + e.message));
 }
 
+// 21.10: the same lead also lands in העסק שלי, so he sees it in the monitor
+// and can mark it handled. See leadFromSite in lib/biz.js.
+function saveSiteLead(text, at) {
+  const id = 'biz-' + at.replace(/\D/g, '').slice(0, 14) + '-site';
+  const r = require('./lib/biz.js').leadFromSite(text, at, id);
+  if (!r) return;
+  const dir = path.join(inst.dataPath, 'biz', 'biz');
+  try { fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(path.join(dir, id + '.json'), JSON.stringify(r, null, 1), 'utf8'); say('ליד נכנס לעסק שלי: ' + r.name); }
+  catch (e) { say('!! ליד לא נכנס לעסק שלי: ' + e.message); }
+}
+
 function recordIncoming(m) {
   const gid = group.groupOf(m.title);
   const held = gid ? groupFiles.get(gid) : null;
@@ -547,7 +558,7 @@ function recordIncoming(m) {
     fs.mkdirSync(CHAT, { recursive: true });
     fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
     say((codeOk ? 'נרשם בצ׳אט עם אישור קבלה: ' : 'נרשם בלי קוד, ממתין לאימות: ') + text.slice(0, 60));
-    if (rec.heldWhy === 'lead') alertLead(text);
+    if (rec.heldWhy === 'lead') { alertLead(text); saveSiteLead(text, rec.at); }
     recordDrain(text, at);
     /*
       13.10: the quiet hours line from the settings screen is applied here, with

@@ -116,3 +116,16 @@ test('load reads biz/biz, skips broken files', () => {
   assert.deepStrictEqual(got.map(r => r.id), ['A']);
   assert.deepStrictEqual(load(path.join(root, 'missing')), []);
 });
+
+test('a lead from the site chat becomes a new lead in the business', () => {
+  const t = 'ליד מהאתר abaitzik-tech\nשם: דני לוי\nאימייל: לא ניתן\nטלפון: 0521234567\nמקור: chat\n\nצריך אתר לעסק';
+  const r = require('../lib/biz.js').leadFromSite(t, '2026-10-21T06:00:00.000Z', 'biz-x');
+  assert.equal(r.kind, 'lead'); assert.equal(r.status, 'חדש'); assert.equal(r.name, 'דני לוי');
+  assert.equal(r.phone, '0521234567'); assert.match(r.note, /צריך אתר לעסק/); assert.doesNotMatch(r.note, /מייל:/);
+});
+
+test('the test sends from the site are not leads', () => {
+  const b = require('../lib/biz.js');
+  assert.equal(b.leadFromSite('ליד מהאתר x\nשם: בדיקה של קלוד\nטלפון: 0500000000', '2026-10-21T06:00:00.000Z', 'i'), null);
+  assert.equal(b.leadFromSite('הודעה רגילה', '2026-10-21T06:00:00.000Z', 'i'), null);
+});
