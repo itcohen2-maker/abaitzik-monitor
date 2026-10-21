@@ -62,6 +62,10 @@ const SEEN = path.join(inst.dataPath, 'ntfy-seen.json');
 const DROP = path.join(inst.dataPath, 'inbox');
 const STATUS = path.join(inst.dataPath, 'status');
 const LIVEFILE = path.join(STATUS, 'live.json');
+// 21.10: the worker writes this file while a customer's monitor waits for the manager's
+// approval of a quota hold (worker.js quotaHold). The page shows a line for it.
+const QHOLD = path.join(STATUS, 'quota-hold.json');
+function holdOn() { return fs.existsSync(QHOLD); }
 const PULLS = path.join(STATUS, 'pulls.json');
 // The chat folder can be pointed somewhere else so the merge can be exercised
 // against real files without writing into his actual conversation.
@@ -160,7 +164,8 @@ function beatBody() {
     recent: recent,
     budget: money,
     queued: queued,
-    pc: pcState()
+    pc: pcState(),
+    hold: holdOn()
   };
 }
 
@@ -196,6 +201,7 @@ function pcState() {
   return { on: seen || pcBusy(), seen: s ? s.at : "" };
 }
 let pcLastOn = null;
+let holdLast = null;
 function pcWatch() {
   const on = pcState().on;
   if (pcLastOn !== null && on !== pcLastOn) {
@@ -204,6 +210,13 @@ function pcWatch() {
     publishFallback(beatBody(), true);
   }
   pcLastOn = on;
+  // 21.10: the hold banner appears and goes at once, not at the next hourly pulse.
+  const onHold = holdOn();
+  if (holdLast !== null && onHold !== holdLast) {
+    lastFallbackAt = 0;
+    publishFallback(beatBody(), true);
+  }
+  holdLast = onHold;
 }
 
 // Minimum priority and no tags: this is a pulse, not a notification. If it ever
@@ -284,7 +297,7 @@ function shapeOf(body) {
     Object.keys(b).map(function (k) {
       return k + (b[k].blockedUntil ? ':blocked' : ':' + (b[k].left > 0 ? 'ok' : 'empty'));
     }).join(','),
-    body.queued ? 'queued' : '', body.pc && body.pc.on ? 'pc:on' : 'pc:off'].join('|');
+    body.queued ? 'queued' : '', body.pc && body.pc.on ? 'pc:on' : 'pc:off', body.hold ? 'hold' : ''].join('|');
 }
 function publishFallback(body, force) {
   const shape = shapeOf(body);
