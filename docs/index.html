@@ -2098,7 +2098,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-21T06:56:43.101Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-21T06:56:58.903Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3852,7 +3852,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='839e8c4c90';
+var CODE_ID='5b5a2328ba';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10992,8 +10992,7 @@ function lawSheet(){
 on('gLaw',lawSheet);
 var CLALIT_ITEMS=[
  {n:'★',t:'הסכם כללית 15.10.26, תמונה אחת',r:'clalit-agreement-2026-10-15.png'},
- {n:'01',t:'הסכם כללית 15.10.26',r:'clalit-agreement-2026-10-15.pdf'},
- {n:'02',t:'הנוסח הקודם מ 13.10, לפני התיקון',r:'clalit-agreement-v3.pdf'}
+ {n:'01',t:'הסכם כללית 15.10.26',r:'clalit-agreement-2026-10-15.pdf'}
 ];
 function sheetAllPrep(items){
  if(!GKEY||!navigator.share)return null;

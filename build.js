@@ -15177,9 +15177,9 @@ on('gLaw',lawSheet);
 var CLALIT_ITEMS=[
  /* 15.10, Itzik: "תקן את ההסכם מול כללית. שוטף +90. מחיר ההרצאה 3500 שח" and "תכין לי ב pdf במוניטור בשם הסכם כללית 15.10.26". */
  {n:'★',t:'הסכם כללית 15.10.26, תמונה אחת',r:'clalit-agreement-2026-10-15.png'},
- {n:'01',t:'הסכם כללית 15.10.26',r:'clalit-agreement-2026-10-15.pdf'},
- {n:'02',t:'הנוסח הקודם מ 13.10, לפני התיקון',r:'clalit-agreement-v3.pdf'}
+ {n:'01',t:'הסכם כללית 15.10.26',r:'clalit-agreement-2026-10-15.pdf'}
 ];
+/* 21.10, Itzik: "בהסכם כללית אין מה לשמור את ההסכם הקודם". The 13.10 version is no longer listed. */
 /*
   Itzik, 13.10, on the Clalit agreement: "אני לא מצליח להעביר בוואטסאפ, לקבץ את
   כל הקבצים או לתת לי אפשרות לשמור את זה כתמונה". A sheet of a document now
