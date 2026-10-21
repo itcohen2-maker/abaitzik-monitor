@@ -1427,6 +1427,7 @@ button.abtn[disabled]{opacity:.55}
    same green the thread cards use, so one mark means one thing everywhere. */
 /* The listener indicator. Fixed to the edge, small, and never in the way of
    a thumb reaching the bottom navigation. */
+.holdline{margin:0 0 10px;padding:9px 12px;border-radius:12px;background:#fff7e0;border:1px solid #e0a11b;color:#7a5200;font-weight:600;font-size:14px}
 .pcpill{position:fixed;inset-inline-start:10px;bottom:78px;z-index:60;padding:6px 12px;border-radius:999px;
  font-size:13px;font-weight:700;background:var(--card,#1b1b1f);border:1px solid var(--dim);color:var(--dim)}
 .pcpill.on{border-color:var(--green);color:var(--green)}
@@ -4007,7 +4008,7 @@ try{
   <button type="button" class="gt gRec" id="gRecipes"><b><img class="gi" src="icons/lolos-giraffe.png" alt=""> מתכונים</b><small>חוברת לולוס וספר המתכונים של איציק</small></button>
   <button type="button" class="gt g16" id="gIsra"><b>💳 ישראכרט יואל</b><small>הכרטיסים, מה לבקש, ומה ענו</small></button>
   <!-- איציק, 11.10: "כפתור להחליף מודל תמחק אותו". הכפתור gModel ירד ממסך הבית; הקוד שלו בודק שהוא קיים. -->
-  <button type="button" class="gt g10" id="gFiles" data-new="1" data-upd="20261014-folder"><b>📁 הקבצים שלי</b><small>מה ששלחת ומה שנשלח לך, עם הורדה</small></button>
+  <button type="button" class="gt g10" id="gFiles" data-new="1" data-upd="20261021-search"><b>📁 הקבצים שלי</b><small>מה ששלחת ומה שנשלח לך, עם הורדה</small></button>
   <!--
     איציק, 20.9: "על המסך ניקוזים אתה יכול למחוק את הכפתור. אין לי יותר צורך בזה".
     הכפתור ירד ממסך הבית. המסך עצמו pDr וכל הרישומים שלו נשארים במקום,
@@ -4725,6 +4726,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
 <section id="pFi" hidden>
  <h2>הקבצים שלי</h2>
  <div class="rephint">כל קובץ ששלחת וכל קובץ שנשלח לך. הם סגורים ונפתחים רק כאן, אחרי הקוד שלך. הכפתור ⬇ מוריד את הקובץ.</div>
+ <input type="search" id="fiQ" class="note-search" autocomplete="off" placeholder="🔍 חיפוש לפי שם קובץ">
  <div id="fiBox" class="flist"></div>
 </section>
 
@@ -4818,6 +4820,8 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
 
 <section id="pA" hidden>
  <h2>תשובות <button type="button" class="hq" data-q="ansHelp" aria-label="הסבר על המסך">?</button></h2>
+ <!-- 21.10: the monitor waits for the manager's quota approval; shown only while the hold lasts (paintHold). -->
+ <div class="holdline" id="holdLine" hidden>המוניטור מחכה לאישור, ההודעות שלך שמורות</div>
  <div class="hint hq-t" id="ansHelp" hidden>הכל כאן, לפי זמן: מה ששלחת, מה שעניתי, והדוחות המלאים. כלום לא נעלם מכאן. תשובה חדשה מסומנת באדום עד שהיא עוברת מול העיניים שלך, ואז היא נחשבת נקראה לבד. תשובה שרוצים לחזור אליה מסמנים בכפתור לחזור לזה, והיא נצבעת בכתום.</div>
  <!-- Itzik, 8.10: a new customer has to be told, right on this screen, that touching an answer turns it green. Shown until the first touch or הבנתי. -->
  <div class="atip" id="aTip" hidden><b>תשובה חדשה מגיעה באדום.</b> כשהיא מופיעה מולך על המסך היא נחשבת נקראה לבד. מה שרוצים לחזור אליו מסמנים בכפתור לחזור לזה.<button type="button" class="ab" id="aTipOk">הבנתי</button></div>
@@ -11867,11 +11871,12 @@ function renderFiles(){
  var box=document.getElementById('fiBox');if(!box)return;var All=(D.files||[]).filter(function(x){return String(x.n).indexOf('stk/')!==0&&(!fiFolder||String(x.n).indexOf(fiFolder)===0);});
  if(!All.length){box.innerHTML='<div class="empty">אין כאן קבצים.</div>';return;}
  var sent=filesSentToOwner();
- var F=All.filter(function(f){return fiMode==='all'||(fiMode==='in'?!!sent[f.n]:!sent[f.n]);});
+ var q=((document.getElementById('fiQ')||{}).value||'').trim().toLowerCase();
+ var F=All.filter(function(f){return fiMode==='all'||(fiMode==='in'?!!sent[f.n]:!sent[f.n]);}).filter(function(f){return !q||String(f.n).split('/').pop().toLowerCase().indexOf(q)>=0;});
  var tabs='<div class="fl-tabs">'+[['all','הכל'],['in',FEM?'מה שנשלח אלייך':'מה שנשלח אליך'],['out',FEM?'מה ששלחת את':'מה ששלחת']].map(function(t){
   return '<button type="button" data-fimode="'+t[0]+'"'+(fiMode===t[0]?' class="on"':'')+'>'+t[1]+'</button>';}).join('')+'</div>';
  if(fiFolder)tabs='<div style="padding:6px 4px;color:var(--dim)">בתיקייה: '+esc(fiFolder)+' · לחזרה לכל הקבצים לחצי על "הכל"</div>'+tabs;
- if(!F.length){box.innerHTML=tabs+'<div class="empty">'+(fiMode==='in'?'עוד לא נשלחו לכאן קבצים.':'אין כאן קבצים.')+'</div>';return;}
+ if(!F.length){box.innerHTML=tabs+(q?'<div class="rephint">לא נמצא קובץ בשם הזה</div>':'<div class="empty">'+(fiMode==='in'?'עוד לא נשלחו לכאן קבצים.':'אין כאן קבצים.')+'</div>');return;}
  /*
    Reviewer 7.10, approved 8.10: five versions of the same deck one after the
    other, and a cancelled one among them, and no way to tell which is the one
@@ -11929,6 +11934,8 @@ function fileVer(n){
  return m?+m[1]:1;
 }
 on('gFiles',function(){pane('Fi');renderFiles();});
+/* 21.10, Itzik's idea "חיפוש בתוך הקבצים שלי": the list narrows as he types a part of the name. */
+document.addEventListener('input',function(e){if(e.target&&e.target.id==='fiQ')renderFiles();});
 /*ITZIK:BEGIN*/
 function renderSale(){
  var box=document.getElementById('saleBox');if(!box)return;
@@ -19193,8 +19200,13 @@ function paintPc(){
   page keeps the red, because he is the one who acts on it.
 */
 function liveCalm(){return AI!=='קלוד'&&(!liveLast||(Date.now()-Date.parse(liveLast.at))/1000>4800);}
+function paintHold(){
+ var h=document.getElementById('holdLine');
+ if(h)h.hidden=!(liveLast&&liveLast.hold);
+}
 function paintLive(){
  paintPc();
+ paintHold();
  var pill=document.getElementById('livePill');
  var txt=document.getElementById('lpText');
  if(!pill||!txt)return;
