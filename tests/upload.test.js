@@ -232,7 +232,7 @@ test('CORS: only the tenant page origin, preflight needs no code', async () => {
   await s.close();
 });
 
-test('cleanup: partials after 48h, finished big files after 30 days unless moved', async () => {
+test('cleanup: partials after 48h, finished big files after 7 days unless moved', async () => {
   const s = await setup();
   const p = await create(s, { name: 'p.mp4', size: 100 });
   const d = await create(s, { name: 'd.mp4', size: 3 });
@@ -250,7 +250,7 @@ test('cleanup: partials after 48h, finished big files after 30 days unless moved
   assert.deepStrictEqual(s.up.sweep(), { partial: 1, finished: 0 });
   assert.ok(!fs.existsSync(path.join(s.base, 'stage', 'acme', p.body.id + '.part')));
   assert.ok(fs.existsSync(path.join(s.data, 'inbox', 'd.mp4')));
-  s.state.t = Date.now() + 31 * 24 * 3600 * 1000;
+  s.state.t = Date.now() + 8 * 24 * 3600 * 1000;
   assert.deepStrictEqual(s.up.sweep(), { partial: 0, finished: 1 });
   assert.ok(!fs.existsSync(path.join(s.data, 'inbox', 'd.mp4')));
   assert.strictEqual(fs.readFileSync(path.join(s.data, 'inbox', 'm.mp4'), 'utf8'), 'other file here');

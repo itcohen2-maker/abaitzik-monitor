@@ -11215,7 +11215,10 @@ function cleanDesk(){
  });
  try{markAnswering(null);}catch(e){}
  try{if(a&&a.blur)a.blur();}catch(e){}
- try{window.scrollTo({top:0,behavior:'smooth'});}catch(e){}
+ // The ideas list is where he scrolls and taps "רוצה את זה" again and again;
+ // jumping him back to the top after each tap made him scroll from the start.
+ // 21.10: stay where he is on that screen.
+ if(panePrev!=='i'){try{window.scrollTo({top:0,behavior:'smooth'});}catch(e){}}
 }
 /*
   Where one request stands, and what is still missing from it.
