@@ -59,6 +59,18 @@ function esc(s) {
 // Contacts and reports are pulled from the artifact database into data/, which
 // is gitignored. Only the fields below reach docs/. Phone numbers and email
 // addresses never do - Itzik asks for those by mail, one person at a time.
+// 21.10: Itzik, "שים את זה באייקון במוניטור. אפשר לשים שם גם מונה?" The
+// round site icon counts the leads the site's chat sent in. They are held
+// records (heldWhy lead, see listen.js), so they never reach the chat itself.
+let siteLeadsMemo = null;
+function siteLeads() {
+  if (siteLeadsMemo) return siteLeadsMemo;
+  const day = (d) => new Date(d).toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
+  const ats = loadDocs('chat').filter(m => m.heldWhy === 'lead' && m.at).map(m => m.at);
+  siteLeadsMemo = { n: ats.length, today: ats.filter(a => day(a) === day(Date.now())).length };
+  return siteLeadsMemo;
+}
+
 function loadDocs(dir) {
   const full = path.join(inst.dataPath, dir, dir);
   if (!fs.existsSync(full)) return [];
@@ -2390,6 +2402,8 @@ body.editing .bn{display:none}
 .ic .c:after{content:"";position:absolute;top:6px;left:12px;right:12px;height:15px;border-radius:50%;
  background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,0))}
 .ic svg{width:28px;height:28px;position:relative;z-index:1}
+.ic .icN{position:absolute;top:-4px;left:-4px;z-index:2;min-width:22px;height:22px;padding:0 5px;box-sizing:border-box;border-radius:11px;background:#fff;color:#0a4a5a;border:2px solid #06b6d4;font:700 12px/18px Heebo,sans-serif;font-style:normal;text-align:center}
+.ic .icN.hot{background:var(--red);color:#fff;border-color:#fff}
 .ic:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:12px}
 .c-yt{background:#ff0033}.c-tt{background:#111}.c-fb{background:#1877f2}
 .c-ig{background:linear-gradient(45deg,#f9ce34,#ee2a7b,#6228d7)}
@@ -4177,7 +4191,7 @@ try{
     <path fill="#FFF3D6" d="M14.5 10.3c1.2-1 .9-2.3 0-3.4-.9 1.1-1.2 2.4 0 3.4z"/>
    </svg></span>נרות</a>
   <!-- 15.10. Itzik: "תחליף את האריח האתר שלי לאייקון עגול, כמו הנרות וסלינדה". The site tile is gone from the grid; this is its round icon in the row. -->
-  <a class="ic icNew" id="icSite" href="https://itsolution-il.vercel.app" target="_blank" rel="noopener" data-new="1"><span class="c c-its">
+  <a class="ic icNew" id="icSite" href="https://itsolution-il.vercel.app/#chat" target="_blank" rel="noopener" data-new="1" data-upd="20261021-leads" title="${'לידים מהצ׳אט באתר: ' + siteLeads().n + ' בסך הכל, ' + siteLeads().today + ' היום'}"><span class="c c-its"><em class="icN${siteLeads().today ? ' hot' : ''}">${siteLeads().n}</em>
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M9 20h6M12 16v4"/></svg></span>האתר שלי</a>
   <!--
     איליי. איציק, 25.9: "אני לא רואה כפתור איליי", and then, when it opened
