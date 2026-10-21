@@ -1012,6 +1012,8 @@ body.editing .bn{display:none}
 .ic .c:after{content:"";position:absolute;top:6px;left:12px;right:12px;height:15px;border-radius:50%;
  background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,0))}
 .ic svg{width:28px;height:28px;position:relative;z-index:1}
+.ic .icN{position:absolute;top:-4px;left:-4px;z-index:2;min-width:22px;height:22px;padding:0 5px;box-sizing:border-box;border-radius:11px;background:#fff;color:#0a4a5a;border:2px solid #06b6d4;font:700 12px/18px Heebo,sans-serif;font-style:normal;text-align:center}
+.ic .icN.hot{background:var(--red);color:#fff;border-color:#fff}
 .ic:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:12px}
 .c-yt{background:#ff0033}.c-tt{background:#111}.c-fb{background:#1877f2}
 .c-ig{background:linear-gradient(45deg,#f9ce34,#ee2a7b,#6228d7)}
@@ -2096,7 +2098,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-21T05:14:48.663Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-21T05:25:27.641Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2281,7 +2283,7 @@ try{
     <path fill="#FFF3D6" d="M9.5 10.3c1.2-1 .9-2.3 0-3.4-.9 1.1-1.2 2.4 0 3.4z"/>
     <path fill="#FFF3D6" d="M14.5 10.3c1.2-1 .9-2.3 0-3.4-.9 1.1-1.2 2.4 0 3.4z"/>
    </svg></span>נרות</a>
-  <a class="ic icNew" id="icSite" href="https://itsolution-il.vercel.app" target="_blank" rel="noopener" data-new="1"><span class="c c-its">
+  <a class="ic icNew" id="icSite" href="https://itsolution-il.vercel.app/#chat" target="_blank" rel="noopener" data-new="1" data-upd="20261021-leads" title="לידים מהצ׳אט באתר: 5 בסך הכל, 0 היום"><span class="c c-its"><em class="icN">5</em>
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M9 20h6M12 16v4"/></svg></span>האתר שלי</a>
   <a class="ic" href="#" id="icIly"><span class="c c-el" id="icIlyC">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 21c1.2-4 4-6 7.5-6s6.3 2 7.5 6"/></svg></span>איליי</a>
@@ -3848,7 +3850,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='8bf1376cc6';
+var CODE_ID='f2b998010e';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
