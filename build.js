@@ -4032,7 +4032,7 @@ try{
     tasks of today, and a peek at tomorrow.
   -->
   <button type="button" class="gt gMyDay" id="gMyDay" data-new="1"><b>📅 מה יש לי היום</b><small>תורים, תזכורות ומשימות של היום</small></button>
-  <button type="button" class="gt g18" id="gAppts" data-upd="appt-del-2026-10-20"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
+  <button type="button" class="gt g18" id="gAppts" data-upd="appt-map-1021"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
   <button type="button" class="gt g16" id="gRemind"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
   <button type="button" class="gt g10 roundTile" id="gNotes" title="פתקים" aria-label="פתקים" data-upd="notes-20261020">📝</button>
   <!-- 12.10, Itzik: "תקים אפליקציה לבדוק מה כל הקלקולים האלה". Every monitor's faults on one screen. -->
@@ -10439,6 +10439,39 @@ function navBack(){
   if(e.sheet&&!document.querySelector('.ysheet,.fview'))document.body.appendChild(e.sheet);
  },60);
 }
+/*
+  The phone's back button (Itzik's idea, 18.10, and again 21.10). Every open
+  screen, note or window adds one step to the browser history here, so back
+  closes what is open first and goes one screen back, instead of leaving the
+  monitor. Only the history step is added and removed here; navBack and the
+  window close stay as they are.
+*/
+var histOn=false,histQuiet=false;
+function histWanted(){
+ var ne=document.getElementById('noteEdit'),np=document.getElementById('pN2');
+ var note=!!(np&&!np.hidden&&ne&&!ne.hidden);
+ return navStack.length>0||note||!!overlayOpen(null);
+}
+function histSync(){
+ var want=histWanted();
+ if(want&&!histOn){
+  histOn=true;
+  try{history.pushState({m:1},'');}catch(e){}
+ }else if(!want&&histOn){
+  histOn=false;
+  histQuiet=true;
+  try{history.back();}catch(e){histQuiet=false;}
+ }
+}
+window.addEventListener('popstate',function(){
+ if(histQuiet){histQuiet=false;return;}
+ histOn=false;
+ var ov=overlayOpen(null);
+ if(ov)ov.remove();
+ else navBack();
+ histSync();
+});
+new MutationObserver(histSync).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden','class']});
 function navLabels(){
  var back=navStack.length&&navStack[navStack.length-1].pane!=='h';
  var pb=document.getElementById('pbBack');
@@ -10454,6 +10487,7 @@ function pane(w){
   if(navStack.length>30)navStack.shift();
  }
  panePrev=w;
+ histSync();
  for(var k in PANES){
   var sec=document.getElementById(PANES[k]);
   sec.hidden=(k!==w);
@@ -11744,7 +11778,7 @@ function renderAppts(){
    if(!a.noTime)h=x.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Jerusalem'});}catch(e){}
   return '<div class="ap"><div class="d">'+esc(d)+(h?' בשעה '+esc(h):'')+'</div>'
    +'<b>'+esc(a.what)+'</b>'
-   +(a.where?'<div class="w">'+esc(a.where)+'</div>':'')
+   +(a.where?'<div class="w"><a href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(a.where)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">📍 '+esc(a.where)+'</a></div>':'')
    +(a.note?'<div class="n">'+esc(a.note)+'</div>':'')
    +(rm?'<div class="n">⏰ תזכורת '+esc(new Date(rm.due).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'}))+' בתשע בבוקר</div>':'')
    +(a.doc?'<div class="n"><a href="'+esc(a.doc)+'" target="_blank" rel="noopener">'+esc(a.docLabel||'ההפניה')+'</a></div>':'')
@@ -14802,7 +14836,7 @@ function todaySheet(){
  var x=todayItems(),h='';
  var day=new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'});
  function apRow(a){return '<div class="tdRow">'+(a.noTime?'':'<i>'+esc(tdHour(a.when))+'</i>')+esc(a.what)
-  +(a.where&&a.where!==a.what?'<br><small>'+esc(a.where)+'</small>':'')+'</div>';}
+  +(a.where&&a.where!==a.what?'<br><small><a href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(a.where)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">📍 '+esc(a.where)+'</a></small>':'')+'</div>';}
  h+='<div class="tdSec">🏥 תורים</div>'+(x.ap.length?x.ap.map(apRow).join(''):'<small>אין תור היום. תור חדש מוסיפים באריח 🏥 תורים עתידיים, בטופס למטה.</small>');
  h+='<div class="tdSec">⏰ תזכורות</div>'+(x.rm.length?x.rm.map(function(r){return '<div class="tdRow">'+esc(r.text)+'</div>';}).join(''):'<small>אין תזכורת להיום.</small>');
  h+='<div class="tdSec">✅ משימות</div>'+(x.tk.length?x.tk.map(function(t){
