@@ -14886,7 +14886,7 @@ var LEC_ITEMS=[
  // 18.10, Itzik: the 'what held me' slide is five decisions now, the review video and every blue note are out.
  {t:'01ב המלל המלא לעריכה (Google Docs)',u:'https://docs.google.com/document/d/1gyj8Wt-3g8QhmOecP2MmmbZW69RepTzDNZKOsjf-3Vk/edit'},
  {t:'02 המצגת, כל השקפים',u:'https://docs.google.com/presentation/d/13lOa3wpgkhMpcZallab84mkLkzy9vc1o_nPHIvQFsUQ/present'},
- {t:'03 לאימון: המלל עם השקפים בקטן (עודכן 20.10)',r:'lecture-practice-small-slides.pdf',u:'https://drive.google.com/file/d/1h-ja7UYp2wBL4aAa3iDKvEbQf4_QEPZ_/view'},
+ {t:'03 לאימון: המלל עם השקפים בקטן (עודכן 21.10)',r:'lecture-practice-small-slides.pdf',u:'https://drive.google.com/file/d/1h-ja7UYp2wBL4aAa3iDKvEbQf4_QEPZ_/view'},
  /* 13.10 night: the Reel that announces the lectures, from his two voice notes. Drive: תסריטים, סיפורים אישיים. */
  {t:'04 הריל שמבשר על ההרצאות: תסריט ריל 06, מאיפה הכוחות',r:'reel-06-meefo-hakohot.txt'},
  // 15.10, Itzik: the Clalit agreement moved from here to the "💼 העסק שלי" tile (its file list is in its own sheet there).
