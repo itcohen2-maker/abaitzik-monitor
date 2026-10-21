@@ -2245,6 +2245,7 @@ try{
   <button type="button" class="gt g3" id="gTenants" hidden><b>🟢 מוניטורים אחרים</b><small>ירוק תקין, אדום נתק</small></button>
   <button type="button" class="gt g11" id="gCIdeas" hidden><b>💡 רעיונות לתוכן</b><small>מה שעלה לך, לפני שנשכח</small></button>
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות לשיפור המוניטור</b><small>מה עוד המסך הזה יכול לעשות</small></button>
+  <button type="button" class="gt gNer" id="gNerStyles" data-new="1"><b>🕯️ סגנונות הנרות</b><small>כל הדוגמאות, סימון והערות</small></button>
   <button type="button" class="gt gNer" id="gNerMkt"><b>🕯️ שיווק הנרות</b><small>ארבעת הסטוריז של חמישי ושישי</small></button>
   <button type="button" class="gt gMed" id="gMed"><b>🩺 אחרי הניתוח השני</b><small>ממוספר. המסמכים מהביקורת אצל הפרופסור</small></button>
   <button type="button" class="gt gInv" id="gInv" data-upd="2026-10-15-inv"><b>🧾 חשבוניות</b><small>ממוספר. מ 3.10 והלאה</small></button>
@@ -9642,6 +9643,7 @@ function nerSheet(){
  document.body.appendChild(w);
 }
 on('gNerMkt',nerSheet);
+on('gNerStyles',function(){location.href='ner/styles.html';});
 function captionSheet(it){
  var txt=it.c.join(String.fromCharCode(10));
  var w=document.createElement('div');

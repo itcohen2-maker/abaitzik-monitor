@@ -22,6 +22,8 @@
   .grid{max-width:980px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
   @media(min-width:640px){.grid{grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}}
   .card{position:relative;background:rgba(255,255,255,.05);border:2px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+  .note{margin:0 10px 10px;min-height:44px;resize:vertical;background:rgba(255,255,255,.08);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px;font:inherit;font-size:15px}
+  video{cursor:pointer}
   .card.sel{border-color:var(--glow);box-shadow:0 0 0 2px rgba(245,166,35,.25)}
   .media{background:#000;aspect-ratio:9/16;width:100%;display:block}
   .media.post{aspect-ratio:4/5}
@@ -44,7 +46,8 @@
 <body>
 <header>
   <h1>סגנונות חדשים לחשבון הנרות</h1>
-  <p class="lede">מסמנים את מה שאוהבים ולוחצים על שליחה אחת. כל דוגמה היא קובץ אמיתי, בלי צלילים שמתנגנים לבד.</p>
+  <p class="lede">מסמנים את מה שאוהבים, כותבים הערה מתחת לכל דוגמה, ולוחצים על שליחה אחת. נגיעה בסרטון משמיעה את הקול.</p>
+  <p class="lede"><a href="../" style="color:inherit">חזרה למוניטור</a></p>
   <div class="bar" id="bar"></div>
 </header>
 <div id="gal"></div>
@@ -93,6 +96,9 @@ var ALL = [];
 G.forEach(function(g){ g[1].forEach(function(c){ ALL.push(c); }); });
 var chosen = {}, filter = 'הכל', KEY = 'nerStylePick';
 try { var s = JSON.parse(localStorage.getItem(KEY) || '{}'); if (s && typeof s === 'object') chosen = s; } catch (e) {}
+var notes = {}, NKEY = 'nerStyleNotes';
+try { var sn = JSON.parse(localStorage.getItem(NKEY) || '{}'); if (sn && typeof sn === 'object') notes = sn; } catch (e) {}
+function saveNotes(){ try { localStorage.setItem(NKEY, JSON.stringify(notes)); } catch (e) {} }
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(chosen)); } catch (e) {} }
 function esc(t){ return String(t).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 function build(){
@@ -111,7 +117,8 @@ function build(){
         + '<div class="media' + (post ? ' post' : '') + '">' + m + '</div>'
         + '<div class="meta"><div class="nm">' + esc(c[1]) + '</div>'
         + '<div class="tp">' + esc(c[2]) + '<span class="tag">' + esc(c[3]) + '</span></div></div>'
-        + '<label class="pick"><input type="checkbox" data-id="' + id + '"' + (chosen[id] ? ' checked' : '') + '> אהבתי</label></div>';
+        + '<label class="pick"><input type="checkbox" data-id="' + id + '"' + (chosen[id] ? ' checked' : '') + '> אהבתי</label>'
+        + '<textarea class="note" data-note="' + id + '" placeholder="הערה">' + esc(notes[id] || '') + '</textarea></div>';
     });
     h += '</div>';
   });
@@ -121,8 +128,18 @@ function build(){
 function count(){
   var n = Object.keys(chosen).length;
   document.getElementById('cnt').textContent = n + ' נבחרו';
-  document.getElementById('send').disabled = !n;
+  document.getElementById('send').disabled = !n && !Object.keys(notes).length;
 }
+document.getElementById('gal').addEventListener('input', function(e){
+  var el = e.target; if (!el.dataset || !el.dataset.note) return;
+  var v = el.value.trim(); if (v) notes[el.dataset.note] = v; else delete notes[el.dataset.note];
+  saveNotes(); count();
+});
+document.getElementById('gal').addEventListener('click', function(e){
+  var v = e.target; if (v.tagName !== 'VIDEO') return;
+  document.querySelectorAll('video').forEach(function(x){ if (x !== v) x.muted = true; });
+  v.muted = !v.muted; if (!v.muted) { v.currentTime = 0; var p = v.play(); if (p && p.catch) p.catch(function(){}); }
+});
 document.getElementById('gal').addEventListener('change', function(e){
   var el = e.target; if (!el.dataset || !el.dataset.id) return;
   if (el.checked) chosen[el.dataset.id] = 1; else delete chosen[el.dataset.id];
@@ -175,7 +192,8 @@ function summary(){
   var nl = String.fromCharCode(10);
   var ids = ALL.filter(function(c){ return chosen[c[0]]; });
   return 'נבחרו ' + ids.length + ' סגנונות. המזהים: ' + ids.map(function(c){ return c[0]; }).join(', ') + nl
-    + ids.map(function(c){ return c[0] + ' ' + c[1] + ' (' + c[2] + ')'; }).join(nl);
+    + ids.map(function(c){ return c[0] + ' ' + c[1] + ' (' + c[2] + ')'; }).join(nl)
+    + (Object.keys(notes).length ? nl + nl + 'הערות:' + nl + ALL.filter(function(c){ return notes[c[0]]; }).map(function(c){ return c[0] + ' ' + c[1] + ': ' + notes[c[0]]; }).join(nl) : '');
 }
 document.getElementById('send').onclick = function(){
   var said = document.getElementById('said'), man = document.getElementById('manual'), btn = this;
