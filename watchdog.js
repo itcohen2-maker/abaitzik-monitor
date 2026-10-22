@@ -228,7 +228,7 @@ function check(now) {
   removed is a fault unless build.js changed in a commit from twenty minutes
   before it to ten minutes after it.
 */
-const CLAIM_RE = /(?:^|[^א-ת])(?<!לא )(הקמתי|הכנתי|פתחתי|הוספתי|הורדתי|הסרתי|העליתי)[^.\n]{0,40}אריח|אריח[^.\n]{0,40}(?<!לא )(הקמתי|הוספתי|הורדתי|הסרתי)/;
+const CLAIM_RE = /(?:^|[^א-ת])(?<!לא )(הקמתי|הכנתי|פתחתי|הוספתי|הורדתי|הסרתי|העליתי)[^.\n]{0,40}אריח|אריח[^.\n]{0,40}(?<!לא )(הקמתי|הוספתי|הורדתי|הסרתי)|באריח החדש/;
 function claimProblems(all, now, repo) {
   const bad = all.filter((m) => m.from === 'claude' && m.text && now - Date.parse(m.at) < 2 * 3600 * 1000 && CLAIM_RE.test(m.text))
     .filter((m) => {
