@@ -4019,7 +4019,7 @@ try{
   <!-- איציק, 11.10: "כפתור להחליף מודל תמחק אותו". הכפתור gModel ירד ממסך הבית; הקוד שלו בודק שהוא קיים. -->
   <button type="button" class="gt g10" id="gFiles" data-new="1" data-upd="20261021-search"><b>📁 הקבצים שלי</b><small>מה ששלחת ומה שנשלח לך, עם הורדה</small></button>
   <button type="button" class="gt g8" id="gHomestyle" data-new="1"><b>🏠 הום סטייל</b><small>בקשת הגישה למחשוב, ומדברים בשבוע הבא</small></button>
-  <button type="button" class="gt g10" id="gCams" data-new="1"><b>📹 מצלמות</b><small>האפליקציה, הברקוד והסיסמה לדיירים</small></button>
+  <button type="button" class="gt g10" id="gCams" data-new="1" data-upd="cams-20261022b"><b>📹 מצלמות</b><small>האפליקציה, הברקוד והסיסמה לדיירים</small></button>
   <!--
     איציק, 20.9: "על המסך ניקוזים אתה יכול למחוק את הכפתור. אין לי יותר צורך בזה".
     הכפתור ירד ממסך הבית. המסך עצמו pDr וכל הרישומים שלו נשארים במקום,

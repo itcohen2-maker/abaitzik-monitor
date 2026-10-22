@@ -212,8 +212,63 @@ function check(now) {
     if (g) problems.push(g);
     const up = uploadProblems(now);
     up.forEach((p) => problems.push(p));
+    const c = claimProblems(all, now, __dirname);
+    if (c) problems.push(c);
+    const l = liveBehind(now);
+    if (l) problems.push(l);
   }
   return problems;
+}
+
+/*
+  22.10: twice in one day an answer told him "I set up the Homestyle tile", and
+  no commit had touched build.js. The 15:40 cameras answer said the same. Every
+  check here passed, because the message was answered and marked done. An
+  answer from the last two hours that says a tile was set up, added, opened or
+  removed is a fault unless build.js changed in a commit from twenty minutes
+  before it to ten minutes after it.
+*/
+const CLAIM_RE = /(?:^|[^א-ת])(?<!לא )(הקמתי|הכנתי|פתחתי|הוספתי|הורדתי|הסרתי|העליתי)[^.\n]{0,40}אריח|אריח[^.\n]{0,40}(?<!לא )(הקמתי|הוספתי|הורדתי|הסרתי)/;
+function claimProblems(all, now, repo) {
+  const bad = all.filter((m) => m.from === 'claude' && m.text && now - Date.parse(m.at) < 2 * 3600 * 1000 && CLAIM_RE.test(m.text))
+    .filter((m) => {
+      const t = Date.parse(m.at);
+      try {
+        const o = execFileSync('git', ['log', '--format=%h', '--since=' + new Date(t - 20 * 60000).toISOString(),
+          '--until=' + new Date(t + 10 * 60000).toISOString(), '--', 'build.js'], { cwd: repo, encoding: 'utf8', timeout: 10000 });
+        return !o.trim() && now - t > 10 * 60000;
+      } catch (e) { return false; }
+    });
+  return bad.length ? (bad.length === 1 ? 'תשובה אחת אמרה שאריח השתנה, ובקוד אין שינוי' : bad.length + ' תשובות אמרו שאריח השתנה, ובקוד אין שינוי') : '';
+}
+
+/*
+  22.10: GitHub Pages failed eleven builds in a row between 13:01 and 13:10 and
+  nothing here knew; only the build at the end of a burst is published. So
+  compare the live version.json with the one built here: live more than ten
+  minutes behind is a fault. One small fetch every ten minutes while it is fine,
+  every run only while it is not (feedback: never poll the live site in a loop).
+*/
+function liveBehind(now) {
+  if (!inst.publicUrl) return '';
+  const f = path.join(STATUS, 'live-check.json');
+  const prev = readJson(f, {});
+  if (prev.ok && now - Date.parse(prev.at) < 10 * 60000) return '';
+  const local = readJson(path.join(__dirname, 'docs', 'version.json'), null);
+  if (!local || !local.builtAt) return '';
+  let live = null;
+  try { live = JSON.parse(execFileSync('curl', ['-s', '-m', '15', inst.publicUrl + 'version.json?w=' + now], { encoding: 'utf8', timeout: 20000 })); } catch (e) {}
+  // pending: the oldest build made here that the live site has not shown yet. The
+  // local build changes every few minutes, so its own age says nothing.
+  const liveAt = live && live.builtAt ? Date.parse(live.builtAt) : NaN;
+  let pending = prev.pending && !(liveAt >= Date.parse(prev.pending)) ? prev.pending : null;
+  if (!(liveAt >= Date.parse(local.builtAt)) && !pending) pending = local.builtAt;
+  if (liveAt >= Date.parse(local.builtAt)) pending = null;
+  const ok = !isNaN(liveAt) && (!pending || now - Date.parse(pending) < 10 * 60000);
+  try { fs.writeFileSync(f, JSON.stringify({ at: new Date(now).toISOString(), ok, pending, live: live && live.builtAt, local: local.builtAt })); } catch (e) {}
+  if (ok) return '';
+  if (!live) return 'האתר החי לא עונה';
+  return 'האתר החי לא התעדכן ' + Math.round((now - Date.parse(pending)) / 60000) + ' דקות, הבנייה בגיטהאב נכשלת';
 }
 
 /*
@@ -408,4 +463,4 @@ function main() {
 }
 
 if (require.main === module) main();
-module.exports = { uploadProblems, refused, check, when, speed, gitStuck, heldProblem, pcProblems, doctorFaults, history };
+module.exports = { claimProblems, liveBehind, uploadProblems, refused, check, when, speed, gitStuck, heldProblem, pcProblems, doctorFaults, history };
