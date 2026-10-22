@@ -41,15 +41,43 @@
   #cnt{font-size:16px}
   #said{max-width:980px;margin:14px auto 0;text-align:center;font-size:15.5px;min-height:24px}
   #manual{display:none;max-width:560px;margin:10px auto;padding:12px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.06);font-size:14px;white-space:pre-wrap}
+  .view{display:flex;gap:8px;justify-content:center;margin:0 0 14px}
+  .wk{max-width:980px;margin:0 auto}
+  .day{margin:18px 0 8px;font-size:19px;font-weight:500;color:var(--glow)}
+  .wrow{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  @media(min-width:640px){.wrow{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}}
+  .cap{white-space:pre-wrap;font-size:13.5px;color:var(--dim);margin:0;padding:0 10px 10px;direction:auto}
+  .soon{border:1px dashed var(--line);border-radius:14px;padding:14px;color:var(--dim);font-size:15px}
+  body.week #bar,body.week #gal,body.week .dock,body.week #lede2{display:none}
+  body:not(.week) #wk{display:none}
 </style>
 </head>
 <body>
 <header>
   <h1>סגנונות חדשים לחשבון הנרות</h1>
-  <p class="lede">מסמנים את מה שאוהבים, כותבים הערה מתחת לכל דוגמה, ולוחצים על שליחה אחת. נגיעה בסרטון משמיעה את הקול.</p>
+  <div class="view"><button type="button" class="chip on" id="vWeek">עולה השבוע</button><button type="button" class="chip" id="vAll">כל הדוגמאות</button></div>
+  <p class="lede" id="lede2">מסמנים את מה שאוהבים, כותבים הערה מתחת לכל דוגמה, ולוחצים על שליחה אחת. נגיעה בסרטון משמיעה את הקול.</p>
   <p class="lede"><a href="../" style="color:inherit">חזרה למוניטור</a></p>
   <div class="bar" id="bar"></div>
 </header>
+<div class="wk" id="wk">
+ <p class="lede">רק מה שמתוכנן לעלות השבוע. כלום לא עולה עד שתכתוב לי "תעלה".</p>
+ <div class="day">חמישי 22.10, בבוקר</div>
+ <div class="wrow"><div class="card"><div class="media"><video src="styles/s35.mp4" controls playsinline preload="metadata"></video></div><div class="meta"><span class="nm">פוסט בעברית, בואנוס איירס</span><span class="tp">מוזיקה: Der Heyser Bulgar, כלייזמר בלי זכויות</span></div><p class="cap">בבואנוס איירס, ובכל עיר בעולם 🕯️
+זמני הדלקת נרות וצאת שבת לפי המיקום שלך, גם לפי רבנו תם, עם תפילות בנוסח אשכנז ובנוסח ספרד.
+בחינם, מתנה ממני על כל התמיכה שנתתם לי. לכל יהודי באשר הוא, ב 15 שפות.
+הלינק בביו ✨</p></div><div class="card"><div class="media"><video src="styles/s32.mp4" controls playsinline preload="metadata"></video></div><div class="meta"><span class="nm">פוסט באנגלית, ברוקלין</span><span class="tp">מוזיקה: Carefree, Kevin MacLeod</span></div><p class="cap">In Brooklyn, and in every city around the world 🕯️
+Candle lighting and Shabbat end times for your exact location, Rabbeinu Tam too, with Ashkenaz and Sephard prayers.
+Free, a gift from me for all the support you gave me. For every Jew, wherever you are, in 15 languages.
+Link in bio ✨
+Music: "Carefree" by Kevin MacLeod (incompetech.com), CC BY 3.0</p></div><div class="card"><div class="media"><video src="styles/s39.mp4" controls playsinline preload="metadata"></video></div><div class="meta"><span class="nm">סטורי בעברית, לוס אנג׳לס</span><span class="tp">סטורי, בלי כיתוב</span></div></div><div class="card"><div class="media"><video src="styles/s40.mp4" controls playsinline preload="metadata"></video></div><div class="meta"><span class="nm">סטורי באנגלית, מיאמי</span><span class="tp">סטורי, בלי כיתוב</span></div></div></div>
+ <div class="day">חמישי 22.10, בערב</div>
+ <div class="soon">2 סטוריז "מחר ערב שבת", בהכנה. יופיעו כאן לפני שיעלו.</div>
+ <div class="day">שישי 23.10, בבוקר</div>
+ <div class="soon">2 סטוריז "היום ערב שבת", בהכנה. יופיעו כאן לפני שיעלו.</div>
+ <div class="day">שבת</div>
+ <div class="soon">לא עולה כלום.</div>
+</div>
 <div id="gal"></div>
 <div id="said" role="status"></div>
 <div id="manual"></div>
@@ -68,9 +96,6 @@ var G = [
   ["s36","מלבורן, מתנה ו 15 שפות","סטורי","EN","mp4"],
   ["s37","רומא, נר נשמה חדש","סטורי","עב","mp4"],
   ["s38","טורונטו, אשכנז, ספרד ורבנו תם","סטורי","EN","mp4"]]],
- ["סטוריז להיום",[
-  ["s39","לוס אנג׳לס, אשכנז, ספרד ורבנו תם","סטורי","עב","mp4"],
-  ["s40","מיאמי, השעה המדויקת ב 15 שפות","סטורי","EN","mp4"]]],
  ["צילום אמיתי על כל המסך",[
   ["s11","תמונה אמיתית, בחינם מתנה ממני","פוסט","עב","jpg"]]],
  ["גרפיקה ומלל",[
@@ -212,6 +237,12 @@ document.getElementById('send').onclick = function(){
     });
 };
 build();
+</script>
+<script>
+(function(){var b=document.body;b.classList.add('week');
+ function v(w){b.classList.toggle('week',w);document.getElementById('vWeek').classList.toggle('on',w);document.getElementById('vAll').classList.toggle('on',!w);
+  if(w)document.querySelectorAll('#gal video').forEach(function(x){x.pause();});else document.querySelectorAll('#wk video').forEach(function(x){x.pause();});}
+ document.getElementById('vWeek').onclick=function(){v(true);};document.getElementById('vAll').onclick=function(){v(false);};})();
 </script>
 </body>
 </html>
