@@ -13636,7 +13636,7 @@ function nerSheet(){
  document.body.appendChild(w);
 }
 on('gNerMkt',nerSheet);
-on('gNerStyles',function(){location.href='ner/styles.html';});
+on('gNerStyles',function(){location.href='ner/styles.html?v='+Date.now();});
 // 8.10 Itzik: copying the caption out of a Drive file is awkward on the phone.
 // The caption lives here, shown in full, with one button that copies all of it.
 function captionSheet(it){
