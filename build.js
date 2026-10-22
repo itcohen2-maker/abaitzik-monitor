@@ -14942,7 +14942,7 @@ boot('today',todayTile);
   in Google Docs), the six new slides, the deck itself and the lecture folder.
 */
 var LEC_ITEMS=[
- {t:'01 המלל המלא (עודכן 20.10)',r:'lecture-full-text.pdf',u:'https://drive.google.com/file/d/1ZjRua0t3UA8SDRPmA4HIV-W1WJ1PTx51/view'},
+ {t:'01 המלל המלא (עודכן 22.10)',r:'lecture-full-text.pdf',u:'https://drive.google.com/file/d/1ZjRua0t3UA8SDRPmA4HIV-W1WJ1PTx51/view'},
  // 18.10, Itzik: the 'what held me' slide is five decisions now, the review video and every blue note are out.
  {t:'01ב המלל המלא לעריכה (Google Docs)',u:'https://docs.google.com/document/d/1gyj8Wt-3g8QhmOecP2MmmbZW69RepTzDNZKOsjf-3Vk/edit'},
  {t:'02 המצגת, כל השקפים',u:'https://docs.google.com/presentation/d/13lOa3wpgkhMpcZallab84mkLkzy9vc1o_nPHIvQFsUQ/present'},
