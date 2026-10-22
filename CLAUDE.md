@@ -141,6 +141,8 @@
   line and say where: "כתבתי בפתק <first line>". Questions go in that line, not in the note. A follow up from the
   same note works on what is already there. The person's notes are theirs: never send them anywhere else.
 
+- **The lecture text (22.10.2026):** the Google Doc "כנגד כל הסיכויים, המלל המלא לעריכה" is the source of the lecture words. On the PC, lec-watch.js (task AbaItzikLecWatch, every 10 minutes) syncs any edit in it into work/lec14/text.html and practice.html and runs publish.sh, with no Claude. So a change to the words is made in the Doc first; a change made only in practice.html is undone by the next sync. Slides (images, order) are still changed in practice.html by hand.
+
 - **A claim is checked against the disk (Itzik, 22.10.2026):** when a session closes, worker.js (lib/claim-check.js) holds every answer that says השלמתי, עדכנתי, הוספתי, תיקנתי and the like against what changed since the session began. Nothing changed outside docs/ and the chat: a correction is written under it and his message opens again once. So change the file, push, check the live page, and only then write that it is done.
   A tile that shows private files gets `data-files="a.png,b.txt"`; build.js adds the newest file time to its data-upd, so it blinks by itself when one changes.
 
