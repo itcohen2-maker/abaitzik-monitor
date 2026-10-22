@@ -1209,6 +1209,12 @@ function cutFor(inst, html) {
   return html.replace(/<!--TENANT:(BEGIN|END)-->/g, '');
 }
 
+// 22.10, Itzik: the lecture tile must follow every change by itself. Dates come
+// from the files' own times, so a new PDF in files-private updates the tile.
+function lecWhen(f){try{return fs.statSync(path.join(__dirname,'data','files-private',f)).mtime;}catch(e){return null;}}
+function lecFmt(d,withTime){if(!d)return '';var o={timeZone:'Asia/Jerusalem',day:'numeric',month:'numeric'};if(withTime){o.hour='2-digit';o.minute='2-digit';o.hour12=false;}return d.toLocaleString('he-IL',o).replace(/\//g,'.').replace(',','');}
+const LEC_PRAC=lecWhen('lecture-practice-small-slides.pdf'),LEC_TEXT=lecWhen('lecture-full-text.pdf');
+const LEC_LAST=[LEC_PRAC,LEC_TEXT].filter(Boolean).sort((a,b)=>b-a)[0]||null;
 const PAGE = `<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
@@ -3985,7 +3991,7 @@ try{
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
   <button type="button" class="gt gStory" id="gPegasus" data-new="1" data-upd="20261021-peg-rotate"><b>🐎 פגסוס</b><small>רק ההודעה האחרונה והשאלה שמחכה לך, הישנות נעלמות</small></button>
-  <button type="button" class="gt gLec" id="gLec" data-upd="20261015-clalit"><b>🎤 הרצאה</b><small>06: הריל של איליי, הקאבר, ההוק והכיתוב</small></button>
+  <button type="button" class="gt gLec" id="gLec" data-upd="lec-${LEC_LAST?LEC_LAST.getTime():0}"><b>🎤 הרצאה</b><small>03 לאימון, עודכן ${lecFmt(LEC_LAST,1)}</small></button>
   <button type="button" class="gt gStory" id="gStory" data-upd="2026-10-15-ner-bio"><b>🎞️ סטורי</b><small>4 סטורי נרות חדשים: תמונות על כל המסך, הטקסט באמצע</small></button>
   <!--
     14.10 Itzik: a new story goes into this tile, and the tile moves to the top
@@ -14942,11 +14948,11 @@ boot('today',todayTile);
   in Google Docs), the six new slides, the deck itself and the lecture folder.
 */
 var LEC_ITEMS=[
- {t:'01 המלל המלא (עודכן 22.10)',r:'lecture-full-text.pdf',u:'https://drive.google.com/file/d/1ZjRua0t3UA8SDRPmA4HIV-W1WJ1PTx51/view'},
+ {t:'01 המלל המלא (עודכן ${lecFmt(LEC_TEXT,1)})',r:'lecture-full-text.pdf',u:'https://drive.google.com/file/d/1ZjRua0t3UA8SDRPmA4HIV-W1WJ1PTx51/view'},
  // 18.10, Itzik: the 'what held me' slide is five decisions now, the review video and every blue note are out.
  {t:'01ב המלל המלא לעריכה (Google Docs)',u:'https://docs.google.com/document/d/1gyj8Wt-3g8QhmOecP2MmmbZW69RepTzDNZKOsjf-3Vk/edit'},
  {t:'02 המצגת, כל השקפים',u:'https://docs.google.com/presentation/d/13lOa3wpgkhMpcZallab84mkLkzy9vc1o_nPHIvQFsUQ/present'},
- {t:'03 לאימון: המלל עם השקפים, ממוספרים (עודכן 22.10)',r:'lecture-practice-small-slides.pdf',u:'https://drive.google.com/file/d/1h-ja7UYp2wBL4aAa3iDKvEbQf4_QEPZ_/view'},
+ {t:'03 לאימון: המלל עם השקפים, ממוספרים (עודכן ${lecFmt(LEC_PRAC,1)})',r:'lecture-practice-small-slides.pdf',u:'https://drive.google.com/file/d/1h-ja7UYp2wBL4aAa3iDKvEbQf4_QEPZ_/view'},
  /* 13.10 night: the Reel that announces the lectures, from his two voice notes. Drive: תסריטים, סיפורים אישיים. */
  {t:'04 הריל שמבשר על ההרצאות: תסריט ריל 06, מאיפה הכוחות',r:'reel-06-meefo-hakohot.txt'},
  // 15.10, Itzik: the Clalit agreement moved from here to the "💼 העסק שלי" tile (its file list is in its own sheet there).
