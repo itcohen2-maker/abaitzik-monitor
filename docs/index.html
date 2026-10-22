@@ -2099,7 +2099,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-22T04:06:54.554Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-22T04:55:33.951Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3854,7 +3854,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='5a834fb681';
+var CODE_ID='62d232560c';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -9646,7 +9646,7 @@ function nerSheet(){
  document.body.appendChild(w);
 }
 on('gNerMkt',nerSheet);
-on('gNerStyles',function(){location.href='ner/styles.html';});
+on('gNerStyles',function(){location.href='ner/styles.html?v='+Date.now();});
 function captionSheet(it){
  var txt=it.c.join(String.fromCharCode(10));
  var w=document.createElement('div');
