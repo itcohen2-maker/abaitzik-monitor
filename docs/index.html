@@ -2099,7 +2099,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-22T16:07:19.823Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-22T16:14:17.006Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2229,7 +2229,7 @@ try{
 
  <div class="grid" id="blkTiles">
   <button type="button" class="gt gStory" id="gPegasus" data-new="1" data-upd="20261021-peg-rotate"><b>🐎 פגסוס</b><small>רק ההודעה האחרונה והשאלה שמחכה לך, הישנות נעלמות</small></button>
-  <button type="button" class="gt gLec" id="gLec" data-upd="lec-1792685236965"><b>🎤 הרצאה</b><small>עודכן 22.10 19:07: שקף 46 מה כתבתם לי, צילומי מסך של תגובות טובות; שקף 48 חזר למקור</small></button>
+  <button type="button" class="gt gLec" id="gLec" data-upd="lec-1792685654278"><b>🎤 הרצאה</b><small>עודכן 22.10 19:14: שקף 40 בלי הכיתוב החיים לא צפויים</small></button>
   <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>מי חייב כסף ומאיזה חודש</small></button>
   <button type="button" class="gt g8" id="gVaad"><b>🏠 ועד הבית</b><small>מי שילם ומה פתוח</small></button>
   <button type="button" class="gt g15" id="gSale" data-upd="lawyer-docs-1018"><b>⚖️ מכירת לולוס</b><small>התיק לעורך הדין, מה פתוח ומה נמסר</small></button>
@@ -2237,7 +2237,7 @@ try{
   <button type="button" class="gt g16" id="gIsra"><b>💳 ישראכרט יואל</b><small>הכרטיסים, מה לבקש, ומה ענו</small></button>
   <button type="button" class="gt g10" id="gFiles" data-new="1" data-upd="20261021-search"><b>📁 הקבצים שלי</b><small>מה ששלחת ומה שנשלח לך, עם הורדה</small></button>
   <button type="button" class="gt g8" id="gHomestyle" data-new="1"><b>🏠 הום סטייל</b><small>בקשת הגישה למחשוב, ומדברים בשבוע הבא</small></button>
-  <button type="button" class="gt g10" id="gCams" data-new="1" data-upd="cams-20261022b"><b>📹 מצלמות</b><small>האפליקציה, הברקוד והסיסמה לדיירים</small></button>
+  <button type="button" class="gt g10" id="gCams" data-new="1" data-upd="cams" data-files="cameras-tenants.png,cameras-tenants.pdf,cameras-erocam.txt"><b>📹 מצלמות</b><small>דף לדיירים: הברקוד, הסיסמה ושמונה שלבים</small></button>
   <button type="button" class="gt gMyDay" id="gMyDay" data-new="1"><b>📅 מה יש לי היום</b><small>תורים, תזכורות ומשימות של היום</small></button>
   <button type="button" class="gt g18" id="gAppts" data-upd="appt-map-1021"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
   <button type="button" class="gt g16" id="gRemind"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
@@ -3855,7 +3855,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='2df5ea9a57';
+var CODE_ID='a27c9abc69';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -8341,7 +8341,7 @@ function fileVer(n){
  return m?+m[1]:1;
 }
 on('gFiles',function(){pane('Fi');renderFiles();});
-on('gCams',function(){fileOpen('cameras-erocam.txt');});
+on('gCams',function(){fileOpen('cameras-tenants.png');});
 document.addEventListener('input',function(e){if(e.target&&e.target.id==='fiQ')renderFiles();});
 
 function renderSale(){
@@ -10768,10 +10768,10 @@ on('gAlarm',alarmSheet);
 boot('today',todayTile);
 
 var LEC_ITEMS=[
- {t:'01 המלל המלא (עודכן 22.10 19:07)',r:'lecture-full-text.pdf',u:'https://drive.google.com/file/d/1ZjRua0t3UA8SDRPmA4HIV-W1WJ1PTx51/view'},
+ {t:'01 המלל המלא (עודכן 22.10 19:14)',r:'lecture-full-text.pdf',u:'https://drive.google.com/file/d/1ZjRua0t3UA8SDRPmA4HIV-W1WJ1PTx51/view'},
  {t:'01ב המלל המלא לעריכה (Google Docs)',u:'https://docs.google.com/document/d/1gyj8Wt-3g8QhmOecP2MmmbZW69RepTzDNZKOsjf-3Vk/edit'},
- {t:'02 המצגת, 62 שקפים, עודכן 22.10 19:07',u:'https://docs.google.com/presentation/d/13lOa3wpgkhMpcZallab84mkLkzy9vc1o_nPHIvQFsUQ/present'},
- {t:'03 לאימון: המלל עם 62 שקפים, ממוספרים (עודכן 22.10 19:07)',r:'lecture-practice-small-slides.pdf',u:'https://drive.google.com/file/d/1h-ja7UYp2wBL4aAa3iDKvEbQf4_QEPZ_/view'},
+ {t:'02 המצגת, 62 שקפים, עודכן 22.10 19:14',u:'https://docs.google.com/presentation/d/13lOa3wpgkhMpcZallab84mkLkzy9vc1o_nPHIvQFsUQ/present'},
+ {t:'03 לאימון: המלל עם 62 שקפים, ממוספרים (עודכן 22.10 19:14)',r:'lecture-practice-small-slides.pdf',u:'https://drive.google.com/file/d/1h-ja7UYp2wBL4aAa3iDKvEbQf4_QEPZ_/view'},
  {t:'04 הריל שמבשר על ההרצאות: תסריט ריל 06, מאיפה הכוחות',r:'reel-06-meefo-hakohot.txt'},
  {t:'06 🎬 הריל של איליי על ההרצאה (15.10)',r:'reel-lecture-ilay-1510.mp4'},
  {t:'06ב 🖼️ הקאבר לריל, מאיליי',r:'reel-lecture-ilay-1510-cover.jpg'},
