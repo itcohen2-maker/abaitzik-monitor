@@ -5461,8 +5461,10 @@ function fileNiceName(name){
  var ln=fileListName(name)||fileMsgName(name);if(ln)return ln;
  var short=String(name).split('/').pop();
  var lists=[];
- ['NER_ITEMS','REEL_ITEMS','STORY_ITEMS','FUT_ITEMS','OCC_ITEMS','LAW_ITEMS','DUDI_ITEMS','CLALIT_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS']
+ ['NER_ITEMS','REEL_ITEMS','STORY_ITEMS','FUT_ITEMS','OCC_ITEMS','LAW_ITEMS','DUDI_ITEMS','CLALIT_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS','LEC_ITEMS']
   .forEach(function(k){if(Array.isArray(window[k]))lists.push(window[k]);});
+ // 22.10: the lecture PDF opened under its English file name. Any other *_ITEMS list counts too.
+ Object.keys(window).forEach(function(k){if(/_ITEMS$/.test(k)&&Array.isArray(window[k])&&lists.indexOf(window[k])<0)lists.push(window[k]);});
  for(var i=0;i<lists.length;i++){
   var L=lists[i]||[];
   for(var j=0;j<L.length;j++)if(L[j]&&L[j].r===name&&L[j].t)return String(L[j].t).trim();

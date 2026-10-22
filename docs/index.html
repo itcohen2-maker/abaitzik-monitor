@@ -2099,7 +2099,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-22T09:14:21.376Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-22T09:15:11.151Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3574,8 +3574,9 @@ function fileNiceName(name){
  var ln=fileListName(name)||fileMsgName(name);if(ln)return ln;
  var short=String(name).split('/').pop();
  var lists=[];
- ['NER_ITEMS','REEL_ITEMS','STORY_ITEMS','FUT_ITEMS','OCC_ITEMS','LAW_ITEMS','DUDI_ITEMS','CLALIT_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS']
+ ['NER_ITEMS','REEL_ITEMS','STORY_ITEMS','FUT_ITEMS','OCC_ITEMS','LAW_ITEMS','DUDI_ITEMS','CLALIT_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS','LEC_ITEMS']
   .forEach(function(k){if(Array.isArray(window[k]))lists.push(window[k]);});
+ Object.keys(window).forEach(function(k){if(/_ITEMS$/.test(k)&&Array.isArray(window[k])&&lists.indexOf(window[k])<0)lists.push(window[k]);});
  for(var i=0;i<lists.length;i++){
   var L=lists[i]||[];
   for(var j=0;j<L.length;j++)if(L[j]&&L[j].r===name&&L[j].t)return String(L[j].t).trim();
@@ -3853,7 +3854,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='691ab475bc';
+var CODE_ID='6e6a3c2b27';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
