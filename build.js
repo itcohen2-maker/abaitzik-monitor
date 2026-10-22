@@ -4019,6 +4019,7 @@ try{
   <button type="button" class="gt g16" id="gIsra"><b>💳 ישראכרט יואל</b><small>הכרטיסים, מה לבקש, ומה ענו</small></button>
   <!-- איציק, 11.10: "כפתור להחליף מודל תמחק אותו". הכפתור gModel ירד ממסך הבית; הקוד שלו בודק שהוא קיים. -->
   <button type="button" class="gt g10" id="gFiles" data-new="1" data-upd="20261021-search"><b>📁 הקבצים שלי</b><small>מה ששלחת ומה שנשלח לך, עם הורדה</small></button>
+  <button type="button" class="gt g10" id="gCams" data-new="1"><b>📹 מצלמות</b><small>האפליקציה, הברקוד והסיסמה לדיירים</small></button>
   <!--
     איציק, 20.9: "על המסך ניקוזים אתה יכול למחוק את הכפתור. אין לי יותר צורך בזה".
     הכפתור ירד ממסך הבית. המסך עצמו pDr וכל הרישומים שלו נשארים במקום,
@@ -11986,6 +11987,8 @@ function fileVer(n){
  return m?+m[1]:1;
 }
 on('gFiles',function(){pane('Fi');renderFiles();});
+// 22.10, Itzik: the building cameras tile. The steps and the password live in a private text file, not in this code.
+on('gCams',function(){fileOpen('cameras-erocam.txt');});
 /* 21.10, Itzik's idea "חיפוש בתוך הקבצים שלי": the list narrows as he types a part of the name. */
 document.addEventListener('input',function(e){if(e.target&&e.target.id==='fiQ')renderFiles();});
 /*ITZIK:BEGIN*/
