@@ -2099,7 +2099,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-22T13:15:34.915Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-22T13:16:18.930Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2236,6 +2236,7 @@ try{
   <button type="button" class="gt gRec" id="gRecipes"><b><img class="gi" src="icons/lolos-giraffe.png" alt=""> מתכונים</b><small>חוברת לולוס וספר המתכונים של איציק</small></button>
   <button type="button" class="gt g16" id="gIsra"><b>💳 ישראכרט יואל</b><small>הכרטיסים, מה לבקש, ומה ענו</small></button>
   <button type="button" class="gt g10" id="gFiles" data-new="1" data-upd="20261021-search"><b>📁 הקבצים שלי</b><small>מה ששלחת ומה שנשלח לך, עם הורדה</small></button>
+  <button type="button" class="gt g8" id="gHomestyle" data-new="1"><b>🏠 הום סטייל</b><small>בקשת הגישה למחשוב, ומדברים בשבוע הבא</small></button>
   <button type="button" class="gt g10" id="gCams" data-new="1"><b>📹 מצלמות</b><small>האפליקציה, הברקוד והסיסמה לדיירים</small></button>
   <button type="button" class="gt gMyDay" id="gMyDay" data-new="1"><b>📅 מה יש לי היום</b><small>תורים, תזכורות ומשימות של היום</small></button>
   <button type="button" class="gt g18" id="gAppts" data-upd="appt-map-1021"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
@@ -3854,7 +3855,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='fde9772550';
+var CODE_ID='c1724bec99';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10813,6 +10814,36 @@ function lecSheet(){
  document.body.appendChild(w);
 }
 on('gLec',lecSheet);
+var HS_ITEMS=[
+ {t:'01 בקשת הגישה למחשוב הום סטייל (הודפס 22.10)',r:'homestyle-it-access.pdf'},
+ {t:'02 הערות: מדברים בשבוע הבא, ותזכורת לעורך הדין',r:'homestyle-next.txt'}
+];
+function hsSheet(){
+ var old=document.getElementById('hsSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='hsSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','הום סטייל');
+ w.innerHTML='<div class="ycard"><b>🏠 הום סטייל</b>'
+  +HS_ITEMS.map(function(it,i,a){
+    if(!fileEntry(it.r))return '';
+    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+esc(it.t)+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button></div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=HS_ITEMS[+k];if(k===''||!it)return;
+  fileOpen(it.r);
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gHomestyle',hsSheet);
 var GEFEN_ITEMS=[
  {t:'⭐ כתב המלצה: ההודעה לשלוח וטיוטה לממליץ',r:'gefen-recommendation.txt'},
  {t:'01 מה צריך כדי להיכנס',r:'gefen-requirements.txt'},

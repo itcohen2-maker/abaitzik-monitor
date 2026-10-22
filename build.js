@@ -4018,6 +4018,7 @@ try{
   <button type="button" class="gt g16" id="gIsra"><b>💳 ישראכרט יואל</b><small>הכרטיסים, מה לבקש, ומה ענו</small></button>
   <!-- איציק, 11.10: "כפתור להחליף מודל תמחק אותו". הכפתור gModel ירד ממסך הבית; הקוד שלו בודק שהוא קיים. -->
   <button type="button" class="gt g10" id="gFiles" data-new="1" data-upd="20261021-search"><b>📁 הקבצים שלי</b><small>מה ששלחת ומה שנשלח לך, עם הורדה</small></button>
+  <button type="button" class="gt g8" id="gHomestyle" data-new="1"><b>🏠 הום סטייל</b><small>בקשת הגישה למחשוב, ומדברים בשבוע הבא</small></button>
   <button type="button" class="gt g10" id="gCams" data-new="1"><b>📹 מצלמות</b><small>האפליקציה, הברקוד והסיסמה לדיירים</small></button>
   <!--
     איציק, 20.9: "על המסך ניקוזים אתה יכול למחוק את הכפתור. אין לי יותר צורך בזה".
@@ -15010,6 +15011,38 @@ function lecSheet(){
  document.body.appendChild(w);
 }
 on('gLec',lecSheet);
+/* 22.10, Itzik (asked twice): a Homestyle tile with the access request we printed
+   for their IT security person, and the notes: talk again next Sunday or Monday. */
+var HS_ITEMS=[
+ {t:'01 בקשת הגישה למחשוב הום סטייל (הודפס 22.10)',r:'homestyle-it-access.pdf'},
+ {t:'02 הערות: מדברים בשבוע הבא, ותזכורת לעורך הדין',r:'homestyle-next.txt'}
+];
+function hsSheet(){
+ var old=document.getElementById('hsSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='hsSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','הום סטייל');
+ w.innerHTML='<div class="ycard"><b>🏠 הום סטייל</b>'
+  +HS_ITEMS.map(function(it,i,a){
+    if(!fileEntry(it.r))return '';
+    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+esc(it.t)+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button></div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var it=HS_ITEMS[+k];if(k===''||!it)return;
+  fileOpen(it.r);
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gHomestyle',hsSheet);
 /* 17.10, Itzik: "כל התשובות באריח החדש שנקרא גפן, לא לערבב את זה עם ההרצאה".
    The Ministry of Education Gefen tender: what it asks for, the syllabus draft
    (text files, so each one has the notes button), and the sources. */
