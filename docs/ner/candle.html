@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>candle.times</title>
+<meta name="theme-color" content="#0F1A3A">
+<style>
+  :root{--ink:#F2F5FA;--dim:rgba(242,245,250,.66);--line:rgba(255,255,255,.14);--glow:#F5A623;--ok:#3ccf8e}
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:linear-gradient(180deg,#0F1A3A 0%,#0B1330 58%,#070B1A 100%);background-attachment:fixed;color:var(--ink);
+    font-family:Heebo,"Segoe UI",system-ui,sans-serif;font-weight:300;line-height:1.55;padding:0 16px calc(env(safe-area-inset-bottom,0px) + 40px)}
+  header,main{max-width:980px;margin:0 auto}
+  header{padding:calc(env(safe-area-inset-top,0px) + 22px) 0 4px;text-align:center}
+  h1{font-size:26px;font-weight:500;margin:0 0 4px;direction:ltr}
+  .lede{color:var(--dim);font-size:15px;margin:0 0 6px}
+  a{color:var(--glow)}
+  .next{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0 6px}
+  h2{margin:22px 0 10px;font-size:19px;font-weight:500;color:var(--glow)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  @media(min-width:640px){.grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}}
+  .card{background:rgba(255,255,255,.05);border:2px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+  .card.hero{border-color:var(--glow)}
+  .media{background:#000;aspect-ratio:9/16;width:100%}
+  .media video{width:100%;height:100%;object-fit:cover;display:block}
+  .meta{padding:9px 10px;display:flex;flex-direction:column;gap:3px}
+  .k{font-size:13px;color:var(--glow);font-weight:500}
+  .nm{font-size:15px;font-weight:500}
+  .tp{font-size:13px;color:var(--dim)}
+  .st{display:inline-block;border-radius:6px;padding:0 7px;font-size:12px;border:1px solid var(--line)}
+  .st.ok{color:var(--ok);border-color:var(--ok)}
+  .st.wait{color:var(--glow);border-color:var(--glow)}
+  details{padding:0 10px 10px}
+  summary{cursor:pointer;font-size:13px;color:var(--dim)}
+  .cap{white-space:pre-wrap;font-size:13.5px;color:var(--dim);margin:6px 0 0;direction:auto}
+  .empty{border:1px dashed var(--line);border-radius:14px;padding:14px;color:var(--dim)}
+</style>
+</head>
+<body>
+<header>
+  <h1>🕯️ candle.times</h1>
+  <p class="lede">מה עולה הבא, לפי הסדר. ראשון עד חמישי 20:00, שישי 09:00, בשבת וחגים כלום.</p>
+  <p class="lede"><a href="../">חזרה למוניטור</a></p>
+</header>
+<main id="m"><p class="empty">טוען…</p></main>
+<script>
+(function(){
+ function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+ var DAYS=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+ function when(it){var d=new Date(it.date+'T12:00:00');return 'יום '+DAYS[d.getDay()]+' '+d.getDate()+'.'+(d.getMonth()+1)+', '+it.time;}
+ function st(it){
+  if(it.posted)return '<span class="st ok">עלה</span>';
+  if(it.failed)return '<span class="st">נכשל</span>';
+  if(it.hold)return '<span class="st">נעצר</span>';
+  return it.approved?'<span class="st ok">מאושר, יעלה לבד</span>':'<span class="st wait">מחכה ל"תעלה" שלך</span>';
+ }
+ function card(it,label,hero){
+  var kind=it.kind==='story'?'סטורי':'פוסט',lang=it.lang==='en'?'באנגלית':'בעברית';
+  return '<div class="card'+(hero?' hero':'')+'"><div class="media"><video src="'+esc(it.file)+'" controls playsinline preload="metadata"></video></div>'
+   +'<div class="meta">'+(label?'<span class="k">'+label+'</span>':'')
+   +'<span class="nm">'+kind+' '+lang+(it.city?', '+esc(it.city):'')+'</span>'
+   +'<span class="tp">'+when(it)+'</span><span>'+st(it)+'</span></div>'
+   +(it.caption?'<details><summary>הכיתוב שיעלה</summary><p class="cap">'+esc(it.caption)+'</p></details>':'')
+   +'</div>';
+ }
+ fetch('queue.json?v='+Date.now()).then(function(r){return r.json();}).then(function(q){
+  q.sort(function(a,b){return (a.date+a.time).localeCompare(b.date+b.time);});
+  var up=q.filter(function(x){return !x.posted;}),done=q.filter(function(x){return x.posted;}).reverse().slice(0,8);
+  var np=up.find(function(x){return x.kind!=='story';}),ns=up.find(function(x){return x.kind==='story';});
+  var h='<div class="next">'+(np?card(np,'הפוסט הבא',1):'<div class="empty">אין פוסט בתור</div>')+(ns?card(ns,'הסטורי הבא',1):'<div class="empty">אין סטורי בתור</div>')+'</div>';
+  var rest=up.filter(function(x){return x!==np&&x!==ns;});
+  if(rest.length)h+='<h2>אחר כך</h2><div class="grid">'+rest.map(function(x){return card(x);}).join('')+'</div>';
+  if(done.length)h+='<h2>עלה לאחרונה</h2><div class="grid">'+done.map(function(x){return card(x);}).join('')+'</div>';
+  document.getElementById('m').innerHTML=h;
+  document.addEventListener('play',function(e){document.querySelectorAll('video').forEach(function(v){if(v!==e.target)v.pause();});},true);
+ }).catch(function(){document.getElementById('m').innerHTML='<p class="empty">לא הצלחתי לטעון את התור</p>';});
+})();
+</script>
+</body>
+</html>

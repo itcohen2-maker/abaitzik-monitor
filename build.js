@@ -4064,8 +4064,7 @@ try{
     made for pushing candletimes, numbered like Rinat's list: the bio
     comparison, the how-to page, the live candle stories.
   -->
-  <button type="button" class="gt gNer" id="gNerStyles" data-new="1"><b>🕯️ סגנונות הנרות</b><small>כל הדוגמאות, סימון והערות</small></button>
-  <button type="button" class="gt gNer" id="gNerMkt"><b>🕯️ שיווק הנרות</b><small>ארבעת הסטוריז של חמישי ושישי</small></button>
+  <button type="button" class="gt gNer" id="gNerStyles" data-new="1"><b>🕯️ candle.times</b><small>הפוסט והסטורי הבאים, לפי הסדר</small></button>
   <!--
     איציק, 1.10: "שים כפתור יעודי במוניטור, ככה אני לא מוצא". Every finished
     reel, numbered like Rinat's list. The full quality copy is on Drive in
@@ -13636,7 +13635,8 @@ function nerSheet(){
  document.body.appendChild(w);
 }
 on('gNerMkt',nerSheet);
-on('gNerStyles',function(){location.href='ner/styles.html?v='+Date.now();});
+// 22.10 Itzik: one tile, candle.times, next post and next story in order; the styles and marketing tiles are gone.
+on('gNerStyles',function(){location.href='ner/candle.html?v='+Date.now();});
 // 8.10 Itzik: copying the caption out of a Drive file is awkward on the phone.
 // The caption lives here, shown in full, with one button that copies all of it.
 function captionSheet(it){

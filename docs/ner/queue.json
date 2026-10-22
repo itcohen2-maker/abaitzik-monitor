@@ -1,0 +1,116 @@
+[
+ {
+  "name": "post-he-buenosaires",
+  "date": "2026-10-22",
+  "time": "09:00",
+  "kind": "post",
+  "lang": "he",
+  "city": "בואנוס איירס",
+  "file": "styles/s35.mp4",
+  "caption": "",
+  "approved": true,
+  "posted": "web"
+ },
+ {
+  "name": "post-en-brooklyn",
+  "date": "2026-10-22",
+  "time": "09:00",
+  "kind": "post",
+  "lang": "en",
+  "city": "Brooklyn",
+  "file": "styles/s32.mp4",
+  "caption": "",
+  "approved": true,
+  "posted": "web"
+ },
+ {
+  "name": "story-he-la",
+  "date": "2026-10-22",
+  "time": "09:15",
+  "kind": "story",
+  "lang": "he",
+  "city": "לוס אנג׳לס",
+  "file": "media/story-he-la-1022.mp4",
+  "caption": "",
+  "approved": true,
+  "posted": "18071055062769716"
+ },
+ {
+  "name": "story-en-miami",
+  "date": "2026-10-22",
+  "time": "09:15",
+  "kind": "story",
+  "lang": "en",
+  "city": "Miami",
+  "file": "media/story-en-miami-1022.mp4",
+  "caption": "",
+  "approved": true,
+  "posted": "18640335616016832"
+ },
+ {
+  "name": "post-he-thu",
+  "date": "2026-10-22",
+  "time": "20:00",
+  "kind": "post",
+  "lang": "he",
+  "city": "Amsterdam",
+  "file": "media/post-he-thu.mp4",
+  "caption": "זמני הדלקת נרות לכל עיר בעולם, לפי המיקום המדויק שלכם.\nוחדש באתר: נר נשמה, לזכור את מי שאהבנו.\nבחינם, מתנה ממני על כל התמיכה.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #נרנשמה #זמניהדלקתנרות #candletimes\n\nתמונות: ויקישיתוף, CC0. מוזיקה: נחלת הכלל (USAF Band of the Rockies).",
+  "approved": false
+ },
+ {
+  "name": "post-en-thu",
+  "date": "2026-10-22",
+  "time": "20:00",
+  "kind": "post",
+  "lang": "en",
+  "city": "Rio de Janeiro",
+  "file": "media/post-en-thu.mp4",
+  "caption": "Candle lighting times for every city in the world, by your exact location, in 15 languages.\nFree for every Jew, a gift from me for all your support.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes\n\nPhotos: Wikimedia Commons, CC0. Music: public domain (USAF Band of the Rockies).",
+  "approved": false
+ },
+ {
+  "name": "story-he-thu",
+  "date": "2026-10-22",
+  "time": "20:00",
+  "kind": "story",
+  "lang": "he",
+  "city": "Prague",
+  "file": "media/story-he-thu.mp4",
+  "caption": "",
+  "approved": false
+ },
+ {
+  "name": "story-en-thu",
+  "date": "2026-10-22",
+  "time": "20:00",
+  "kind": "story",
+  "lang": "en",
+  "city": "Sydney",
+  "file": "media/story-en-thu.mp4",
+  "caption": "",
+  "approved": false
+ },
+ {
+  "name": "story-he-fri",
+  "date": "2026-10-23",
+  "time": "09:00",
+  "kind": "story",
+  "lang": "he",
+  "city": "Budapest",
+  "file": "media/story-he-fri.mp4",
+  "caption": "",
+  "approved": false
+ },
+ {
+  "name": "story-en-fri",
+  "date": "2026-10-23",
+  "time": "09:00",
+  "kind": "story",
+  "lang": "en",
+  "city": "Chicago",
+  "file": "media/story-en-fri.mp4",
+  "caption": "",
+  "approved": false
+ }
+]

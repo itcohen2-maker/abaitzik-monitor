@@ -88,5 +88,16 @@ async function publish(it) {
     catch (e) { it.failed = e.message; notify('נרות: העלאה נכשלה', it.name + ': ' + e.message); }
     fs.writeFileSync(QUEUE, JSON.stringify(q, null, 1));
   }
+  if (DRY) return;
+  mirror(q);
   if (done.length) notify('נרות: עלה לאינסטגרם', done.length + ' פריטים עלו ל candle.times: ' + done.join(', '));
 })();
+
+// The candle.times tile (docs/ner/candle.html) reads this copy, so it always shows what goes up next.
+function mirror(q) {
+  try {
+    fs.writeFileSync(path.join(__dirname, 'docs', 'ner', 'queue.json'), JSON.stringify(q, null, 1));
+    execFileSync('node', [path.join(__dirname, 'push.js'), 'ner: candle.times queue'], { stdio: 'inherit' });
+  } catch (e) {}
+}
+if (process.argv.includes('--mirror')) mirror(JSON.parse(fs.readFileSync(QUEUE, 'utf8')));
