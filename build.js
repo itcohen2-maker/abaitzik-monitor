@@ -904,7 +904,7 @@ function build() {
 
   // The owner cut runs before slim(), which strips HTML comments and with
   // them the ITZIK and TENANT markers the cut is made of.
-  const html0 = slim(cutFor(inst, renderPage(payload)));
+  const html0 = filesUpd(slim(cutFor(inst, renderPage(payload))));
   // The code, with everything that moves on every build taken out: the payload
   // itself, and the build stamp the top of the page carries as a literal. The
   // first try hashed the stamp too, so the id changed on a data only build and
@@ -1211,6 +1211,22 @@ function cutFor(inst, html) {
 
 // 22.10, Itzik: the lecture tile must follow every change by itself. Dates come
 // from the files' own times, so a new PDF in files-private updates the tile.
+/*
+  22.10, Itzik: "כולם צריכים להתעדכן בכל דבר שמעדכן אותם". A tile that shows
+  private files names them in data-files="a.png,b.txt", and its data-upd gets
+  the newest of their times, so replacing a file blinks the tile by itself.
+  Before this, every session had to remember to bump data-upd by hand, and the
+  cameras tile kept its old stamp after its file changed.
+*/
+function filesUpd(html){
+ return html.replace(/<button[^>]*data-files="([^"]*)"[^>]*>/g,function(tag,list){
+  var t=list.split(',').map(function(f){try{return fs.statSync(path.join(inst.dataPath,'files-private',f.trim())).mtimeMs;}catch(e){return 0;}})
+   .reduce(function(a,b){return Math.max(a,b);},0);
+  if(!t)return tag;
+  var stamp='f'+Math.round(t/1000);
+  return /data-upd="/.test(tag)?tag.replace(/data-upd="([^"]*)"/,function(m,v){return 'data-upd="'+v.replace(/-f\d+$/,'')+'-'+stamp+'"';}):tag.replace(/>$/,' data-upd="'+stamp+'">');
+ });
+}
 function lecWhen(f){try{return fs.statSync(path.join(__dirname,'data','files-private',f)).mtime;}catch(e){return null;}}
 function lecFmt(d,withTime){if(!d)return '';var o={timeZone:'Asia/Jerusalem',day:'numeric',month:'numeric'};if(withTime){o.hour='2-digit';o.minute='2-digit';o.hour12=false;}return d.toLocaleString('he-IL',o).replace(/\//g,'.').replace(',','');}
 const LEC_PRAC=lecWhen('lecture-practice-small-slides.pdf'),LEC_TEXT=lecWhen('lecture-full-text.pdf');
@@ -4019,7 +4035,7 @@ try{
   <!-- איציק, 11.10: "כפתור להחליף מודל תמחק אותו". הכפתור gModel ירד ממסך הבית; הקוד שלו בודק שהוא קיים. -->
   <button type="button" class="gt g10" id="gFiles" data-new="1" data-upd="20261021-search"><b>📁 הקבצים שלי</b><small>מה ששלחת ומה שנשלח לך, עם הורדה</small></button>
   <button type="button" class="gt g8" id="gHomestyle" data-new="1"><b>🏠 הום סטייל</b><small>בקשת הגישה למחשוב, ומדברים בשבוע הבא</small></button>
-  <button type="button" class="gt g10" id="gCams" data-new="1" data-upd="cams-20261022b"><b>📹 מצלמות</b><small>האפליקציה, הברקוד והסיסמה לדיירים</small></button>
+  <button type="button" class="gt g10" id="gCams" data-new="1" data-upd="cams" data-files="cameras-tenants.png,cameras-tenants.pdf,cameras-erocam.txt"><b>📹 מצלמות</b><small>דף לדיירים: הברקוד, הסיסמה ושמונה שלבים</small></button>
   <!--
     איציק, 20.9: "על המסך ניקוזים אתה יכול למחוק את הכפתור. אין לי יותר צורך בזה".
     הכפתור ירד ממסך הבית. המסך עצמו pDr וכל הרישומים שלו נשארים במקום,
@@ -11988,7 +12004,8 @@ function fileVer(n){
 }
 on('gFiles',function(){pane('Fi');renderFiles();});
 // 22.10, Itzik: the building cameras tile. The steps and the password live in a private text file, not in this code.
-on('gCams',function(){fileOpen('cameras-erocam.txt');});
+// 22.10: the page he forwards to the tenants, barcode and steps in one image (the text and a PDF beside it).
+on('gCams',function(){fileOpen('cameras-tenants.png');});
 /* 21.10, Itzik's idea "חיפוש בתוך הקבצים שלי": the list narrows as he types a part of the name. */
 document.addEventListener('input',function(e){if(e.target&&e.target.id==='fiQ')renderFiles();});
 /*ITZIK:BEGIN*/

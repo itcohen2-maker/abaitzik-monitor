@@ -712,6 +712,7 @@ function run(list) {
   // 14.10: a shell only on Windows (claude.cmd). On Linux the shell split the
   // allow list on its parentheses, claude never started, and the session died
   // on EPIPE before a word was logged.
+  const began = Date.now();
   const child = spawn('claude', args,
     { cwd: HERE, shell: process.platform === 'win32', windowsHide: true });
   child.stdin.end(plan ? text + '\n\n' + plan : text, 'utf8');
@@ -762,6 +763,8 @@ function run(list) {
         '. הוחזרו לתור: ' + missed.map((m) => String(m.text || m.file).slice(0, 60)).join(' · ')
       );
     }
+    // 22.10: an answer that says it did the work while nothing changed (lib/claim-check.js).
+    try { checkClaims(list, began); } catch (e) { say('!! בדיקת הטענות נכשלה: ' + e.message); }
   });
   child.on('error', (e) => {
     unregister(sid);
@@ -769,6 +772,46 @@ function run(list) {
     unmarkHandled(list);
     tell('הסשן לא עלה', e.message);
   });
+}
+
+/*
+  22.10: "למה שאני מבקש משהו במוניטור זה לא נעשה". An answer said "השלמתי" and
+  no file had changed. Such an answer gets a correction under it, and his
+  message opens again once with the reason; the correction is written a moment
+  before reopenAt so it does not count as the answer to the reopened message.
+  A second empty claim on the same message is told to him, not looped.
+*/
+function checkClaims(list, began) {
+  let all = [];
+  try { all = fs.readdirSync(CHAT).map((f) => { const d = readJson(path.join(CHAT, f), null); return d ? Object.assign({ file: f }, d) : null; }).filter(Boolean); }
+  catch (e) { return; }
+  const empty = require('./lib/claim-check.js').emptyClaims(all, list, began, HERE, inst.dataPath);
+  if (!empty.length) return;
+  const p = {};
+  new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Jerusalem', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+    .formatToParts(new Date()).forEach((x) => { p[x.type] = x.value; });
+  const stamp = p.year + p.month + p.day + '-' + p.hour + p.minute;
+  empty.forEach(({ msg, answer }) => {
+    const f = path.join(CHAT, msg.file);
+    const d = readJson(f, null);
+    if (!d) return;
+    if (d.claimRedo) {
+      tell('תשובה אמרה שבוצע ולא בוצע', 'פעם שנייה על אותה בקשה: ' + String(d.text || '').slice(0, 80));
+      say('!! טענה ריקה שנייה על ' + msg.file);
+      return;
+    }
+    const at = new Date();
+    fs.writeFileSync(path.join(CHAT, stamp + '-claude-claim-fix-' + Math.random().toString(36).slice(2, 6) + '.json'),
+      JSON.stringify({ at: at.toISOString(), from: 'claude', re: msg.id, status: 'done',
+        text: 'תיקון: התשובה הקודמת אמרה שזה בוצע, אבל שום קובץ לא השתנה, כלומר זה לא בוצע. זה חזר לעבודה עכשיו.' }, null, 1), 'utf8');
+    d.status = 'working';
+    d.claimRedo = d.reopenAt = new Date(at.getTime() + 1000).toISOString();
+    d.reopenNote = 'התשובה הקודמת אמרה שבוצע ("' + String(answer.text || '').replace(/\s+/g, ' ').slice(0, 160) +
+      '"), ושום קובץ לא השתנה. לבצע באמת: לשנות את הקובץ עצמו, לבנות, לדחוף, ולבדוק באתר החי שהשינוי שם לפני שכותבים שבוצע.';
+    fs.writeFileSync(f, JSON.stringify(d, null, 1), 'utf8');
+    say('טענה ריקה, נפתח מחדש: ' + msg.file);
+  });
+  execFile('node', ['push.js', 'chat: correction, an answer claimed work that did not happen'], { cwd: HERE, timeout: 240000 }, () => {});
 }
 
 /*

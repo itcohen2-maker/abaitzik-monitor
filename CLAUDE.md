@@ -141,4 +141,7 @@
   line and say where: "כתבתי בפתק <first line>". Questions go in that line, not in the note. A follow up from the
   same note works on what is already there. The person's notes are theirs: never send them anywhere else.
 
+- **A claim is checked against the disk (Itzik, 22.10.2026):** when a session closes, worker.js (lib/claim-check.js) holds every answer that says השלמתי, עדכנתי, הוספתי, תיקנתי and the like against what changed since the session began. Nothing changed outside docs/ and the chat: a correction is written under it and his message opens again once. So change the file, push, check the live page, and only then write that it is done.
+  A tile that shows private files gets `data-files="a.png,b.txt"`; build.js adds the newest file time to its data-upd, so it blinks by itself when one changes.
+
 - **Error messages only after verifying (Itzik, 17.10.2026, iron rule):** never send Itzik or a customer an error message until you have checked again, at the source or on the live page, that it really fails. A passing glitch is fixed or retried once quietly. A real error says what was tried and the next step.
