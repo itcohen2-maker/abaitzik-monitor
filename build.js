@@ -1219,12 +1219,12 @@ function cutFor(inst, html) {
   cameras tile kept its old stamp after its file changed.
 */
 function filesUpd(html){
- return html.replace(/<button[^>]*data-files="([^"]*)"[^>]*>/g,function(tag,list){
+ return html.replace(/<button[^>]*data-files="([^"]*)"[^>]*>/g,function(tag,list){
   var t=list.split(',').map(function(f){try{return fs.statSync(path.join(inst.dataPath,'files-private',f.trim())).mtimeMs;}catch(e){return 0;}})
    .reduce(function(a,b){return Math.max(a,b);},0);
   if(!t)return tag;
   var stamp='f'+Math.round(t/1000);
-  return /data-upd="/.test(tag)?tag.replace(/data-upd="([^"]*)"/,function(m,v){return 'data-upd="'+v.replace(/-f\d+$/,'')+'-'+stamp+'"';}):tag.replace(/>$/,' data-upd="'+stamp+'">');
+  return /data-upd="/.test(tag)?tag.replace(/data-upd="([^"]*)"/,function(m,v){return 'data-upd="'+v.replace(/-f\d+$/,'')+'-'+stamp+'"';}):tag.replace(/>$/,' data-upd="'+stamp+'">');
  });
 }
 function lecWhen(f){try{return fs.statSync(path.join(__dirname,'data','files-private',f)).mtime;}catch(e){return null;}}
