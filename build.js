@@ -6192,6 +6192,11 @@ function sendFiles(list, note) {
 var UPURL=(INSTANCE&&INSTANCE.uploadUrl)||'';
 var BIGF=15*1024*1024;
 var UPCHUNK=8*1024*1024;
+// Reviewer 22.10: the page never said a big file is deleted after a while, so a
+// customer assumed it stays for good. The server keeps it 7 days (upload-server
+// finishedTtl); Itzik's own inbox is cleared after 3 (build FILE_DAYS). The
+// "received" panel says so, and stays up long enough to read it.
+var UPKEEP='הקובץ נשמר אצלנו '+((INSTANCE&&INSTANCE.name)==='abaitzik'?3:7)+' ימים, כדאי לשמור עותק במכשיר.';
 // Which files leave by the big path. Past 15MB each, and if what is left for
 // ntfy still passes its 18MB, the largest of those join them.
 function splitSend(list){
@@ -6336,7 +6341,7 @@ function sendBigs(bigs,note,quiet){
     upPanel(true,'מעלה '+label+' '+pct+'%',pct);
     fSaid.textContent='מעלה קובץ גדול: '+pct+'%. לא לסגור את הדף.';
    }).then(function(){
-    if(!quiet)upPanel(true,'התקבל ✓',100,f.name);
+    if(!quiet)upPanel(true,'התקבל ✓',100,f.name+'. '+UPKEEP);
    },function(e){
     out.names.push(f.name);
     if(e&&e.unreachable)out.unreachable=true;
@@ -6347,7 +6352,7 @@ function sendBigs(bigs,note,quiet){
   upKeepAwake(false);
   var bad=out.names.length;
   if(bad)upPanel(false);
-  else setTimeout(function(){upPanel(false);},2500);
+  else setTimeout(function(){upPanel(false);},6000);
   return out;
  });
 }
