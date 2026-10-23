@@ -43,13 +43,16 @@
   .nw.low{border-color:var(--glow);animation:nwb 1.2s ease-in-out infinite}
   @keyframes nwb{50%{box-shadow:0 0 0 6px rgba(245,166,35,.35)}}
   .nw small{display:block;color:var(--dim);font-size:13px;margin-top:4px}
+  .chg summary{font-size:13px;color:var(--glow)}
+  .chg textarea{width:100%;margin:6px 0;font:inherit;font-size:15px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--ink);padding:8px}
+  .chg button{font:inherit;font-size:14px;background:var(--glow);color:#1a1000;border:0;border-radius:10px;padding:6px 14px;cursor:pointer}
   .empty{border:1px dashed var(--line);border-radius:14px;padding:14px;color:var(--dim)}
 </style>
 </head>
 <body>
 <header>
   <h1>🕯️ candle.times</h1>
-  <p class="lede">מה עולה הבא, לפי הסדר. ראשון עד חמישי 20:00, שישי 09:00, בשבת וחגים כלום.</p>
+  <p class="lede">רק מה שעוד לא עלה, לפי הסדר. מה שעלה נמחק. ראשון עד חמישי 20:00, שישי 09:00, בשבת וחגים כלום.</p>
   <p class="lede"><a href="../">חזרה למוניטור</a></p>
 </header>
 <main id="m"><p class="empty">טוען…</p></main>
@@ -70,7 +73,8 @@
    +'<div class="meta">'+(label?'<span class="k">'+label+'</span>':'')
    +'<span class="nm">'+kind+' '+lang+(it.city?', '+esc(it.city):'')+'</span>'
    +'<span class="tp">'+when(it)+'</span><span>'+st(it)+'</span>'
-   +(it.posted?'':'<label class="ok-box"><input type="checkbox" data-n="'+esc(it.name)+'"'+(it.approved?' checked':'')+'> מאשר</label>')+'</div>'
+   +(it.posted?'':'<label class="ok-box"><input type="checkbox" data-n="'+esc(it.name)+'"'+(it.approved?' checked':'')+'> מאשר</label>')
+   +(it.posted?'':'<details class="chg"><summary>רוצה לשנות או להוסיף</summary><textarea rows="3" data-c="'+esc(it.name)+'" placeholder="מה לשנות? מלל, עיר, תמונה, יום, או מה להוסיף"></textarea><button type="button" data-cs="'+esc(it.name)+'">שלח</button></details>')+'</div>'
    +(it.caption?'<details><summary>הכיתוב שיעלה</summary><p class="cap">'+esc(it.caption)+'</p></details>':'')
    +'</div>';
  }
@@ -90,7 +94,7 @@
   var h='<div class="next">'+(np?card(np,'הפוסט הבא',1):'<div class="empty">אין פוסט בתור</div>')+(ns?card(ns,'הסטורי הבא',1):'<div class="empty">אין סטורי בתור</div>')+'</div>';
   var rest=up.filter(function(x){return x!==np&&x!==ns;});
   if(rest.length)h+='<h2>אחר כך</h2><div class="grid">'+rest.map(function(x){return card(x);}).join('')+'</div>';
-  if(done.length)h+='<h2>עלה לאחרונה</h2><div class="grid">'+done.map(function(x){return card(x);}).join('')+'</div>';
+
   var last=q.filter(function(x){return x.approved&&!x.failed;}).map(function(x){return x.date;}).sort().pop()||'';
   var left=last?Math.round((Date.parse(last)-Date.parse(new Date(Date.now()+3*36e5).toISOString().slice(0,10)))/864e5):0;
   var nw='<div class="nw'+(left<=1&&REQ.status!=='building'?' low':'')+'" id="nw">'
@@ -114,6 +118,13 @@
    if(!ok){b.checked=!on;return;}b.checked=on;var s=b.closest('.meta').querySelector('.st');s.className='st'+(on?' ok':' wait');s.textContent=on?'אושר, נשלח לשרת':'האישור בוטל';});}
   document.querySelectorAll('input[data-n]').forEach(function(b){b.addEventListener('change',function(){
    var on=b.checked;approve([b.getAttribute('data-n')],on,function(ok){mark([b.getAttribute('data-n')],on,ok);});});});
+  document.querySelectorAll('button[data-cs]').forEach(function(b){b.addEventListener('click',function(){
+   var n=b.getAttribute('data-cs'),ta=document.querySelector('textarea[data-c="'+n+'"]'),t=(ta.value||'').trim();
+   if(!t)return;if(!SEND||!SEND.t){alert('פתח את הדף מהאריח במוניטור');return;}
+   var it=q.find(function(x){return x.name===n;})||{};b.disabled=true;
+   var msg='candle.times, שינוי בפריט '+n+' ('+when(it)+', '+(it.city||'')+'): '+t;
+   fetch('https://ntfy.sh/'+SEND.t,{method:'POST',headers:{Title:'monitor','X-Tags':'memo'},body:['משימה',msg,'','קוד '+SEND.c].join(String.fromCharCode(10))})
+    .then(function(r){b.textContent=r.ok?'נשלח ✓':'לא נשלח, נסה שוב';b.disabled=r.ok;if(r.ok)ta.disabled=true;},function(){b.textContent='לא נשלח, נסה שוב';b.disabled=false;});});});
   var wb=document.getElementById('wk');
   if(wb)wb.addEventListener('click',function(){wb.disabled=true;approve(wk,true,function(ok){mark(wk,true,ok);wb.textContent=ok?'השבוע אושר ✓':'לא נשלח, נסה שוב';wb.disabled=ok;});});
   document.addEventListener('play',function(e){document.querySelectorAll('video').forEach(function(v){if(v!==e.target)v.pause();});},true);

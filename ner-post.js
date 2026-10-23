@@ -67,8 +67,44 @@ async function publish(it) {
   return m.id;
 }
 
+/*
+  Itzik, 23.10: "ברגע שעלו, אין מה לראות אותם יותר באריח ... תמחק ... תפנה מקום".
+  An item that went up, or whose time passed without going up, leaves the queue
+  and its video is deleted from docs/ner. A short line per item stays in
+  ner-posted.json, so a city or a video is not repeated. Returns true if it
+  changed anything.
+*/
+const POSTED = '/home/monitor/ner-posted.json';
+function tidy(q, now) {
+  const gone = [];
+  const keep = q.filter(function (it) {
+    const dueAt = Date.parse(it.date + 'T' + it.time + ':00');
+    const cur = Date.parse(now.date + 'T' + now.hm + ':00');
+    const over = it.posted || it.failed || cur - dueAt >= 3 * 3600 * 1000;
+    if (over) gone.push(it);
+    return !over;
+  });
+  if (!gone.length) return null;
+  let log = [];
+  try { log = JSON.parse(fs.readFileSync(POSTED, 'utf8')); } catch (e) {}
+  gone.forEach(function (it) {
+    log.push({ name: it.name, date: it.date, kind: it.kind, lang: it.lang, city: it.city, posted: it.posted || null, failed: it.failed || null });
+    const f = path.join(__dirname, 'docs', 'ner', String(it.file || ''));
+    const used = keep.some(function (k) { return k.file === it.file; });
+    if (!used && /^media\/[^/]+\.mp4$/.test(String(it.file || ''))) { try { fs.unlinkSync(f); } catch (e) {} }
+  });
+  fs.writeFileSync(POSTED, JSON.stringify(log, null, 1));
+  return keep;
+}
+
 (async function () {
   const now = israelNow();
+  {
+    let q0;
+    try { q0 = JSON.parse(fs.readFileSync(QUEUE, 'utf8')); } catch (e) { q0 = null; }
+    const kept = q0 && !DRY && tidy(q0, now);
+    if (kept) { fs.writeFileSync(QUEUE, JSON.stringify(kept, null, 1)); if (!process.argv.includes('--mirror')) mirror(kept); }
+  }
   if (now.wd === 'Sat' || await yomTov(now.date)) return;
   let q;
   try { q = JSON.parse(fs.readFileSync(QUEUE, 'utf8')); } catch (e) { return; }
@@ -89,6 +125,8 @@ async function publish(it) {
     fs.writeFileSync(QUEUE, JSON.stringify(q, null, 1));
   }
   if (DRY) return;
+  q = tidy(q, now) || q;
+  fs.writeFileSync(QUEUE, JSON.stringify(q, null, 1));
   mirror(q);
   if (done.length) notify('נרות: עלה לאינסטגרם', done.length + ' פריטים עלו ל candle.times: ' + done.join(', '));
 })();
