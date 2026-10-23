@@ -56,7 +56,7 @@
   "city": "Amsterdam",
   "file": "media/post-he-thu.mp4",
   "caption": "זמני הדלקת נרות לכל עיר בעולם, לפי המיקום המדויק שלכם.\nוחדש באתר: נר נשמה, לזכור את מי שאהבנו.\nבחינם, מתנה ממני על כל התמיכה.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #נרנשמה #זמניהדלקתנרות #candletimes\n\nתמונות: ויקישיתוף, CC0. מוזיקה: נחלת הכלל (USAF Band of the Rockies).",
-  "approved": false
+  "approved": true
  },
  {
   "name": "post-en-fri",
@@ -67,7 +67,7 @@
   "city": "Rio de Janeiro",
   "file": "media/post-en-thu.mp4",
   "caption": "Candle lighting times for every city in the world, by your exact location, in 15 languages.\nFree for every Jew, a gift from me for all your support.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes\n\nPhotos: Wikimedia Commons, CC0. Music: public domain (USAF Band of the Rockies).",
-  "approved": false
+  "approved": true
  },
  {
   "name": "story-he-thu",
@@ -100,7 +100,7 @@
   "city": "Budapest",
   "file": "media/story-he-fri.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  },
  {
   "name": "story-en-fri",
