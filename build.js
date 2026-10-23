@@ -4049,7 +4049,7 @@ try{
   <button type="button" class="gt g16" id="gIsra"><b>💳 ישראכרט יואל</b><small>הכרטיסים, מה לבקש, ומה ענו</small></button>
   <!-- איציק, 11.10: "כפתור להחליף מודל תמחק אותו". הכפתור gModel ירד ממסך הבית; הקוד שלו בודק שהוא קיים. -->
   <button type="button" class="gt g10" id="gFiles" data-new="1" data-upd="20261021-search"><b>📁 הקבצים שלי</b><small>מה ששלחת ומה שנשלח לך, עם הורדה</small></button>
-  <button type="button" class="gt g8" id="gHomestyle" data-new="1" data-upd="20261023-hs-demo"><b>🏠 הום סטייל</b><small>חדש: דוגמה למוניטור של רינת, 4 עיצובים</small></button>
+  <button type="button" class="gt g8" id="gHomestyle" data-new="1" data-upd="20261023-hs-quote"><b>🏠 הום סטייל</b><small>חדש: הצעת מחיר ובקשה לאיש המחשבים</small></button>
   <button type="button" class="gt g10" id="gCams" data-new="1" data-upd="20261022-privacy" data-files="cameras-tenants.png,cameras-tenants.pdf,cameras-erocam.txt"><b>📹 מצלמות</b><small>דף לדיירים: הברקוד, הסיסמה ושמונה שלבים</small></button>
   <!--
     איציק, 20.9: "על המסך ניקוזים אתה יכול למחוק את הכפתור. אין לי יותר צורך בזה".
@@ -15047,7 +15047,10 @@ var HS_ITEMS=[
  {t:'01 בקשת הגישה למחשוב הום סטייל (הודפס 22.10)',r:'homestyle-it-access.pdf'},
  {t:'02 הערות: מדברים בשבוע הבא, ותזכורת לעורך הדין',r:'homestyle-next.txt'},
  // 23.10, Itzik: a sample of Rinat B's monitor, four looks, made up data, to show them.
- {t:'⭐ דוגמה: המוניטור של רינת, 4 עיצובים',u:'hs-demo.html'}
+ {t:'⭐ דוגמה: המוניטור של רינת, 4 עיצובים',u:'hs-demo.html'},
+ // 23.10: the cloud setup request for their IT, and the price quote (private files).
+ {t:'03 בקשה לאיש המחשבים: שרת ענן ו Claude שלהם',r:'hs-it-request.pdf'},
+ {t:'04 הצעת מחיר 2026/001',r:'hs-quote-2026-001.pdf'}
 ];
 function hsSheet(){
  var old=document.getElementById('hsSheet');if(old)old.remove();
