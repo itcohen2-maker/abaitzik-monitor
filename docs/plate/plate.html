@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>מה בצלחת</title>
+<meta name="theme-color" content="#1E3A32">
+<style>
+  /* 23.10.2026, Itzik: "אריח חדש מה בצלחת. הסטורי שם יסודרו לפי סדר, עם אפשרות למחוק,
+     וכל סטורי שיאושר יעלה לאתר של אבא איציק לקטגוריה של מה בצלחת". */
+  :root{--ink:#F2F5FA;--dim:rgba(242,245,250,.66);--line:rgba(255,255,255,.14);--glow:#7FD1B0;--ok:#3ccf8e;--warn:#F5A623;--bad:#ff7a7a}
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:linear-gradient(180deg,#1E3A32 0%,#142A24 60%,#0B1A16 100%);background-attachment:fixed;color:var(--ink);
+    font-family:Heebo,"Segoe UI",system-ui,sans-serif;font-weight:300;line-height:1.55;padding:0 16px calc(env(safe-area-inset-bottom,0px) + 40px)}
+  header,main{max-width:980px;margin:0 auto}
+  header{padding:calc(env(safe-area-inset-top,0px) + 22px) 0 4px;text-align:center}
+  h1{font-size:26px;font-weight:500;margin:0 0 4px}
+  .lede{color:var(--dim);font-size:15px;margin:0 0 6px}
+  a{color:var(--glow)}
+  h2{margin:22px 0 10px;font-size:19px;font-weight:500;color:var(--glow)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  @media(min-width:640px){.grid{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}}
+  .card{background:rgba(255,255,255,.05);border:2px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+  .card.first{border-color:var(--glow)}
+  .card.done{opacity:.75}
+  .media{background:#000;aspect-ratio:9/16;width:100%}
+  .media video{width:100%;height:100%;object-fit:cover;display:block}
+  .meta{padding:9px 10px;display:flex;flex-direction:column;gap:5px}
+  .k{font-size:13px;color:var(--glow);font-weight:500}
+  .nm{font-size:17px;font-weight:500}
+  .st{display:inline-block;border-radius:6px;padding:0 7px;font-size:12px;border:1px solid var(--line)}
+  .st.ok{color:var(--ok);border-color:var(--ok)}
+  .st.wait{color:var(--warn);border-color:var(--warn)}
+  .ok-box{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:500;cursor:pointer;padding:2px 0}
+  .ok-box input{width:22px;height:22px;accent-color:var(--ok)}
+  .row{display:flex;gap:6px;flex-wrap:wrap}
+  .row button{font:inherit;font-size:14px;background:rgba(255,255,255,.12);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:6px 10px;cursor:pointer;min-height:36px}
+  .row button.del{color:var(--bad);border-color:rgba(255,122,122,.5)}
+  .row button:disabled{opacity:.4}
+  .empty{border:1px dashed var(--line);border-radius:14px;padding:14px;color:var(--dim)}
+  .note{font-size:13px;color:var(--dim)}
+</style>
+</head>
+<body>
+<header>
+  <h1>🍽️ מה בצלחת</h1>
+  <p class="lede">הסטוריז לפי סדר ההעלאה. מסמנים "מאשר" והסטורי עולה לאתר, לעמוד מה בצלחת.</p>
+  <p class="lede"><a href="../">חזרה למוניטור</a> · <a href="https://abaitzik.com/plate/" rel="noopener">העמוד באתר</a></p>
+</header>
+<main id="m"><p class="empty">טוען…</p></main>
+<script>
+(function(){
+ function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+ var SEND=null;try{SEND=JSON.parse(sessionStorage.getItem('nerSend')||'null');}catch(e){}
+ // every action goes to the server through the same channel as the candle.times page, with his code
+ function act(action,id,extra,done){
+  if(!SEND||!SEND.t){alert('פתח את הדף מהאריח במוניטור');done(false);return;}
+  var body={action:action,id:id,code:SEND.c,at:new Date().toISOString()};for(var k in extra)body[k]=extra[k];
+  fetch('https://ntfy.sh/'+SEND.t+'?filename=plate-action.json',{method:'PUT',headers:{Title:'plate-action'},body:JSON.stringify(body)})
+   .then(function(r){done(r.ok);},function(){done(false);});
+ }
+ function st(it){
+  if(it.onSite)return '<span class="st ok">באתר</span>';
+  if(it.approved)return '<span class="st ok">אושר, עולה לאתר</span>';
+  return '<span class="st wait">מחכה לאישור</span>';
+ }
+ function card(it,i,len){
+  return '<div class="card'+(i===0&&!it.approved?' first':'')+(it.onSite?' done':'')+'" data-id="'+esc(it.id)+'">'
+   +'<div class="media"><video src="'+esc(it.file)+'" poster="'+esc(it.poster)+'" controls playsinline preload="none"></video></div>'
+   +'<div class="meta"><span class="k">'+(i+1)+(i===0&&!it.approved?' · הבא בתור':'')+'</span>'
+   +'<span class="nm">'+esc(it.name)+'</span><span>'+st(it)+'</span>'
+   +(it.onSite?'':'<label class="ok-box"><input type="checkbox" data-ok="'+esc(it.id)+'"'+(it.approved?' checked disabled':'')+'> מאשר, להעלות לאתר</label>')
+   +'<div class="row">'
+   +'<button type="button" data-up="'+esc(it.id)+'"'+(i===0?' disabled':'')+' aria-label="למעלה">↑</button>'
+   +'<button type="button" data-down="'+esc(it.id)+'"'+(i===len-1?' disabled':'')+' aria-label="למטה">↓</button>'
+   +'<button type="button" data-dl="'+esc(it.file)+'" data-nm="'+esc(it.id)+'">⬇️ הורדה</button>'
+   +'<button type="button" class="del" data-del="'+esc(it.id)+'">🗑️ מחק</button>'
+   +'</div></div></div>';
+ }
+ function draw(q){
+  q.sort(function(a,b){return a.order-b.order;});
+  var h=q.length?'<div class="grid">'+q.map(function(x,i){return card(x,i,q.length);}).join('')+'</div>':'<p class="empty">אין סטוריז בתור</p>';
+  h+='<p class="note">שינוי מגיע לשרת ומתעדכן כאן תוך דקה. אישור מעלה לאתר כשהמחשב דלוק.</p>';
+  document.getElementById('m').innerHTML=h;
+  document.addEventListener('play',function(e){document.querySelectorAll('video').forEach(function(v){if(v!==e.target)v.pause();});},true);
+  function swap(id,dir){var i=q.findIndex(function(x){return x.id===id;}),j=i+dir;if(j<0||j>=q.length)return;
+   var t=q[i].order;q[i].order=q[j].order;q[j].order=t;draw(q);}
+  document.querySelectorAll('[data-up],[data-down]').forEach(function(b){b.addEventListener('click',function(){
+   var id=b.getAttribute('data-up')||b.getAttribute('data-down'),dir=b.hasAttribute('data-up')?-1:1;
+   b.disabled=true;act('move',id,{dir:dir},function(ok){if(ok)swap(id,dir);else{b.disabled=false;alert('לא נשלח, נסה שוב');}});});});
+  document.querySelectorAll('[data-del]').forEach(function(b){b.addEventListener('click',function(){
+   var id=b.getAttribute('data-del'),it=q.find(function(x){return x.id===id;});
+   if(b.getAttribute('data-sure')!=='1'){b.setAttribute('data-sure','1');b.textContent='בטוח? לחץ שוב';return;}
+   b.disabled=true;act('delete',id,{},function(ok){if(ok){q.splice(q.indexOf(it),1);draw(q);}else{b.disabled=false;alert('לא נשלח, נסה שוב');}});});});
+  document.querySelectorAll('[data-ok]').forEach(function(b){b.addEventListener('change',function(){
+   if(!b.checked)return;var id=b.getAttribute('data-ok');b.disabled=true;
+   act('approve',id,{},function(ok){if(ok){var it=q.find(function(x){return x.id===id;});it.approved=true;
+    var s=b.closest('.meta').querySelector('.st');s.className='st ok';s.textContent='אושר, עולה לאתר';}
+    else{b.checked=false;b.disabled=false;alert('לא נשלח, נסה שוב');}});});});
+  document.querySelectorAll('[data-dl]').forEach(function(b){b.addEventListener('click',function(){
+   var src=b.getAttribute('data-dl'),nm=b.getAttribute('data-nm')+'.mp4',t0=b.textContent;
+   function plain(){var a=document.createElement('a');a.href=src;a.download=nm;document.body.appendChild(a);a.click();a.remove();b.textContent=t0;}
+   if(!(navigator.canShare&&window.File)){plain();return;}
+   b.textContent='מכין…';b.disabled=true;
+   fetch(src).then(function(r){return r.blob();}).then(function(bl){var fl=new File([bl],nm,{type:'video/mp4'});
+    b.disabled=false;if(!navigator.canShare({files:[fl]})){plain();return;}
+    b.textContent='לחץ שוב לשמירה';
+    b.onclick=function(e){e.stopImmediatePropagation();navigator.share({files:[fl]}).then(function(){b.textContent='נשמר ✓';},function(){b.textContent=t0;});};
+   },function(){b.disabled=false;plain();});});});
+ }
+ fetch('queue.json?v='+Date.now()).then(function(r){return r.json();}).then(draw)
+  .catch(function(){document.getElementById('m').innerHTML='<p class="empty">לא הצלחתי לטעון את התור</p>';});
+})();
+</script>
+</body>
+</html>

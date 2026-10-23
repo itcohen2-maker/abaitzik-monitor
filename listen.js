@@ -1074,6 +1074,43 @@ async function recordNerWeek(m) {
   execFile(process.execPath, ['push.js', 'ner: next week requested'], { cwd: __dirname, timeout: 120000 }, function () {});
 }
 
+// The "מה בצלחת" tile (docs/plate/plate.html), 23.10. Itzik: the stories in order,
+// a way to delete, and every approved story goes up to the site's /plate/ page.
+// approve marks it and hands the PC clip/plate_tile/publish_plate.py; delete removes
+// it and its video; move swaps it with its neighbour.
+const PLATE_Q = '/home/monitor/plate-queue.json';
+async function recordPlateAction(m) {
+  let got;
+  try { const res = await fetch(m.attachment.url); got = JSON.parse(res.ok ? await res.text() : ''); }
+  catch (e) { got = null; }
+  if (!got || !ownerCodeOk('קוד ' + String(got.code || ''))) { say('!! פעולת מה בצלחת בלי קוד, לא נשמרה'); return; }
+  let q;
+  try { q = JSON.parse(fs.readFileSync(PLATE_Q, 'utf8')); } catch (e) { say('!! תור מה בצלחת לא נקרא'); return; }
+  q.sort(function (a, b) { return a.order - b.order; });
+  const i = q.findIndex(function (x) { return x.id === String(got.id); });
+  if (i < 0) return;
+  const it = q[i];
+  if (got.action === 'delete') {
+    q.splice(i, 1);
+    [it.file, it.poster].forEach(function (f) { if (/^media\/[^/]+$/.test(String(f || ''))) { try { fs.unlinkSync(path.join(__dirname, 'docs', 'plate', f)); } catch (e) {} } });
+  } else if (got.action === 'move') {
+    const j = i + (Number(got.dir) < 0 ? -1 : 1);
+    if (j < 0 || j >= q.length) return;
+    const t = q[i].order; q[i].order = q[j].order; q[j].order = t;
+  } else if (got.action === 'approve') {
+    if (it.approved) return;
+    it.approved = true;
+    const job = 'מה בצלחת: איציק אישר באריח את "' + it.name + '" (id ' + it.id + '). להעלות לאתר: '
+      + 'cd C:/Users/User/clip/plate_tile && python publish_plate.py ' + it.id
+      + ' . אם הסקריפט אומר שאין מלל, לחלץ פריימים מהסרטון, להעתיק את המלל של כל מסך כמו שהוא, לשמור כ texts.json ולהריץ עם --text texts.json. בלי מקפים.';
+    require('child_process').spawnSync(process.execPath, ['pc-task.js', 'add', '--quiet', '--re', 'plate-' + it.id, job], { cwd: __dirname, encoding: 'utf8', timeout: 60000 });
+  } else return;
+  fs.writeFileSync(PLATE_Q, JSON.stringify(q, null, 1));
+  fs.writeFileSync(path.join(__dirname, 'docs', 'plate', 'queue.json'), JSON.stringify(q, null, 1));
+  say('מה בצלחת: ' + got.action + ' ' + it.name);
+  execFile(process.execPath, ['push.js', 'plate: ' + got.action + ' ' + it.id], { cwd: __dirname, timeout: 120000 }, function () {});
+}
+
 // The wrapper exists only so that a throw inside cannot leave the busy flag
 // set and freeze the restart check forever.
 async function handle(m) {
@@ -1125,6 +1162,11 @@ async function handleOne(m) {
   // it never enters the chat, it only refreshes the copy a new phone fills from.
   if (m.attachment && m.title === 'notes-sync') {
     await recordNotesSync(m);
+    remember(m);
+    return;
+  }
+  if (m.attachment && m.title === 'plate-action') {
+    await recordPlateAction(m);
     remember(m);
     return;
   }

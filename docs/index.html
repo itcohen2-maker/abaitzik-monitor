@@ -2099,7 +2099,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-23T09:43:52.009Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-23T09:44:31.021Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2246,6 +2246,7 @@ try{
   <button type="button" class="gt g3" id="gTenants" hidden><b>🟢 מוניטורים אחרים</b><small>ירוק תקין, אדום נתק</small></button>
   <button type="button" class="gt g11" id="gCIdeas" hidden><b>💡 רעיונות לתוכן</b><small>מה שעלה לך, לפני שנשכח</small></button>
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות לשיפור המוניטור</b><small>מה עוד המסך הזה יכול לעשות</small></button>
+  <button type="button" class="gt gNer" id="gPlate" data-new="1"><b>🍽️ מה בצלחת</b><small>הסטוריז לפי הסדר, מאשרים והם עולים לאתר</small></button>
   <button type="button" class="gt gNer" id="gNerStyles" data-new="1"><b>🕯️ candle.times</b><small>הפוסט והסטורי הבאים, לפי הסדר</small></button>
   <button type="button" class="gt gMed" id="gMed"><b>🩺 אחרי הניתוח השני</b><small>ממוספר. המסמכים מהביקורת אצל הפרופסור</small></button>
   <button type="button" class="gt gInv" id="gInv" data-upd="2026-10-15-inv"><b>🧾 חשבוניות</b><small>ממוספר. מ 3.10 והלאה</small></button>
@@ -3855,7 +3856,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='d5d6a9f702';
+var CODE_ID='6671318824';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -9648,6 +9649,7 @@ function nerSheet(){
  document.body.appendChild(w);
 }
 on('gNerMkt',nerSheet);
+on('gPlate',function(){try{sessionStorage.setItem('nerSend',JSON.stringify({t:NTFYIN(),c:sendCode()}));}catch(e){}location.href='plate/plate.html?v='+Date.now();});
 on('gNerStyles',function(){try{sessionStorage.setItem('nerSend',JSON.stringify({t:NTFYIN(),c:sendCode()}));}catch(e){}location.href='ner/candle.html?v='+Date.now();});
 function captionSheet(it){
  var txt=it.c.join(String.fromCharCode(10));

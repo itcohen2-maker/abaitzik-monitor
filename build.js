@@ -4106,6 +4106,7 @@ try{
     made for pushing candletimes, numbered like Rinat's list: the bio
     comparison, the how-to page, the live candle stories.
   -->
+  <button type="button" class="gt gNer" id="gPlate" data-new="1"><b>🍽️ מה בצלחת</b><small>הסטוריז לפי הסדר, מאשרים והם עולים לאתר</small></button>
   <button type="button" class="gt gNer" id="gNerStyles" data-new="1"${NER_LOW?' data-upd="ner-need-'+NER_LOW+'"':''}><b>🕯️ candle.times</b><small>${NER_LOW?'התור נגמר ב '+NER_LOW.slice(8)+'.'+NER_LOW.slice(5,7)+', סמן "תכין לי עוד" בפנים':'הפוסט והסטורי הבאים, לפי הסדר'}</small></button>
   <!--
     איציק, 1.10: "שים כפתור יעודי במוניטור, ככה אני לא מוצא". Every finished
@@ -13683,6 +13684,7 @@ function nerSheet(){
 }
 on('gNerMkt',nerSheet);
 // 22.10 Itzik: one tile, candle.times, next post and next story in order; the styles and marketing tiles are gone.
+on('gPlate',function(){try{sessionStorage.setItem('nerSend',JSON.stringify({t:NTFYIN(),c:sendCode()}));}catch(e){}location.href='plate/plate.html?v='+Date.now();});
 on('gNerStyles',function(){try{sessionStorage.setItem('nerSend',JSON.stringify({t:NTFYIN(),c:sendCode()}));}catch(e){}location.href='ner/candle.html?v='+Date.now();});
 // 8.10 Itzik: copying the caption out of a Drive file is awkward on the phone.
 // The caption lives here, shown in full, with one button that copies all of it.

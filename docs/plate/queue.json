@@ -1,0 +1,141 @@
+[
+ {
+  "id": "tmarim",
+  "name": "תמרים",
+  "order": 1,
+  "file": "media/plate-01-tmarim.mp4",
+  "poster": "media/plate-01-tmarim.jpg",
+  "approved": false
+ },
+ {
+  "id": "selek",
+  "name": "סלק",
+  "order": 2,
+  "file": "media/plate-02-selek.mp4",
+  "poster": "media/plate-02-selek.jpg",
+  "approved": false
+ },
+ {
+  "id": "batata",
+  "name": "בטטה",
+  "order": 3,
+  "file": "media/plate-03-batata.mp4",
+  "poster": "media/plate-03-batata.jpg",
+  "approved": false
+ },
+ {
+  "id": "avocado",
+  "name": "אבוקדו",
+  "order": 4,
+  "file": "media/plate-04-avocado.mp4",
+  "poster": "media/plate-04-avocado.jpg",
+  "approved": false
+ },
+ {
+  "id": "limon",
+  "name": "לימון",
+  "order": 5,
+  "file": "media/plate-05-limon.mp4",
+  "poster": "media/plate-05-limon.jpg",
+  "approved": false
+ },
+ {
+  "id": "kiwi",
+  "name": "קיווי",
+  "order": 6,
+  "file": "media/plate-06-kiwi.mp4",
+  "poster": "media/plate-06-kiwi.jpg",
+  "approved": false,
+  "screens": [
+   [
+    "מה בצלחת? קיווי"
+   ],
+   [
+    "כולם מכירים קיווי",
+    "אבל רובנו זורקים",
+    "את החלק הכי טוב"
+   ],
+   [
+    "הקליפה אכילה",
+    "שוטפים ומשפשפים את השערות",
+    "וקיבלתם פי אחד וחצי סיבים"
+   ],
+   [
+    "קיווי אחד ביום",
+    "נותן כמעט את כל",
+    "הוויטמין C שצריך"
+   ],
+   [
+    "לא מערבבים קיווי ביוגורט מראש",
+    "האנזים שבו הופך אותו למר",
+    "חותכים רגע לפני שאוכלים"
+   ],
+   [
+    "ואיך בוחרים",
+    "לוחצים בעדינות, מתרכך קצת? בשל",
+    "קשה? בשקית ליד תפוח, יום יומיים"
+   ],
+   [
+    "זה לא תרופה, זה אוכל נכון",
+    "עם קליפה או בלי?",
+    "ספרו לי בתגובות"
+   ]
+  ]
+ },
+ {
+  "id": "gezer",
+  "name": "גזר",
+  "order": 7,
+  "file": "media/plate-07-gezer.mp4",
+  "poster": "media/plate-07-gezer.jpg",
+  "approved": false
+ },
+ {
+  "id": "cherry",
+  "name": "עגבניות שרי",
+  "order": 8,
+  "file": "media/plate-08-cherry.mp4",
+  "poster": "media/plate-08-cherry.jpg",
+  "approved": false
+ },
+ {
+  "id": "cottage",
+  "name": "קוטג׳ עם סלק",
+  "order": 9,
+  "file": "media/plate-09-cottage.mp4",
+  "poster": "media/plate-09-cottage.jpg",
+  "approved": false
+ },
+ {
+  "id": "yogurt",
+  "name": "יוגורט",
+  "order": 10,
+  "file": "media/plate-10-yogurt.mp4",
+  "poster": "media/plate-10-yogurt.jpg",
+  "approved": false
+ },
+ {
+  "id": "afuna",
+  "name": "אפונה קפואה",
+  "order": 11,
+  "file": "media/plate-11-afuna.mp4",
+  "poster": "media/plate-11-afuna.jpg",
+  "approved": false
+ },
+ {
+  "id": "orez",
+  "name": "אורז",
+  "order": 12,
+  "file": "media/plate-12-orez.mp4",
+  "poster": "media/plate-12-orez.jpg",
+  "approved": false
+ },
+ {
+  "id": "harif",
+  "name": "אוכל חריף",
+  "order": 13,
+  "file": "media/plate-13-harif.mp4",
+  "poster": "media/plate-13-harif.jpg",
+  "approved": false
+ }
+]
