@@ -13668,7 +13668,7 @@ function nerSheet(){
 }
 on('gNerMkt',nerSheet);
 // 22.10 Itzik: one tile, candle.times, next post and next story in order; the styles and marketing tiles are gone.
-on('gNerStyles',function(){location.href='ner/candle.html?v='+Date.now();});
+on('gNerStyles',function(){try{sessionStorage.setItem('nerSend',JSON.stringify({t:NTFYIN(),c:sendCode()}));}catch(e){}location.href='ner/candle.html?v='+Date.now();});
 // 8.10 Itzik: copying the caption out of a Drive file is awkward on the phone.
 // The caption lives here, shown in full, with one button that copies all of it.
 function captionSheet(it){

@@ -1030,6 +1030,30 @@ async function recordNotesSync(m) {
   publishChat();
 }
 
+// The approval ticks on the candle.times page (docs/ner/candle.html), 23.10.
+// Itzik: "תכין תיבת סימון ליד אם אישור ואז יהיה לך אישור לכל השבוע". A tick
+// sets approved on the named queue items; ner-post.js still does the posting.
+const NER_QUEUE = '/home/monitor/ner-queue.json';
+async function recordNerApprove(m) {
+  let got;
+  try { const res = await fetch(m.attachment.url); got = JSON.parse(res.ok ? await res.text() : ''); }
+  catch (e) { got = null; }
+  if (!got || !ownerCodeOk('קוד ' + String(got.code || ''))) { say('!! אישור נרות בלי קוד, לא נשמר'); return; }
+  const names = Array.isArray(got.names) ? got.names.map(String) : [];
+  let q;
+  try { q = JSON.parse(fs.readFileSync(NER_QUEUE, 'utf8')); } catch (e) { say('!! תור הנרות לא נקרא'); return; }
+  let n = 0;
+  q.forEach(function (it) {
+    if (names.indexOf(it.name) < 0 || it.posted) return;
+    it.approved = !!got.approved;
+    n++;
+  });
+  if (!n) return;
+  fs.writeFileSync(NER_QUEUE, JSON.stringify(q, null, 1));
+  say('נרות: ' + n + ' פריטים ' + (got.approved ? 'אושרו' : 'בוטל האישור') + ' מהדף');
+  execFile(process.execPath, ['ner-post.js', '--mirror'], { cwd: __dirname, timeout: 120000 }, function () {});
+}
+
 // The wrapper exists only so that a throw inside cannot leave the busy flag
 // set and freeze the restart check forever.
 async function handle(m) {
@@ -1081,6 +1105,11 @@ async function handleOne(m) {
   // it never enters the chat, it only refreshes the copy a new phone fills from.
   if (m.attachment && m.title === 'notes-sync') {
     await recordNotesSync(m);
+    remember(m);
+    return;
+  }
+  if (m.attachment && m.title === 'ner-approve') {
+    await recordNerApprove(m);
     remember(m);
     return;
   }

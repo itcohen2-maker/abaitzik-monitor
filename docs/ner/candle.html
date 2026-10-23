@@ -35,6 +35,10 @@
   details{padding:0 10px 10px}
   summary{cursor:pointer;font-size:13px;color:var(--dim)}
   .cap{white-space:pre-wrap;font-size:13.5px;color:var(--dim);margin:6px 0 0;direction:auto}
+  .ok-box{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:500;cursor:pointer;padding:4px 0}
+  .ok-box input{width:22px;height:22px;accent-color:var(--ok)}
+  .week{display:flex;justify-content:center;margin:10px 0 0}
+  .week button{font:inherit;font-size:16px;font-weight:500;background:var(--ok);color:#06210f;border:0;border-radius:12px;padding:10px 18px;cursor:pointer}
   .empty{border:1px dashed var(--line);border-radius:14px;padding:14px;color:var(--dim)}
 </style>
 </head>
@@ -61,9 +65,17 @@
   return '<div class="card'+(hero?' hero':'')+'"><div class="media"><video src="'+esc(it.file)+'" controls playsinline preload="metadata"></video></div>'
    +'<div class="meta">'+(label?'<span class="k">'+label+'</span>':'')
    +'<span class="nm">'+kind+' '+lang+(it.city?', '+esc(it.city):'')+'</span>'
-   +'<span class="tp">'+when(it)+'</span><span>'+st(it)+'</span></div>'
+   +'<span class="tp">'+when(it)+'</span><span>'+st(it)+'</span>'
+   +(it.posted?'':'<label class="ok-box"><input type="checkbox" data-n="'+esc(it.name)+'"'+(it.approved?' checked':'')+'> מאשר</label>')+'</div>'
    +(it.caption?'<details><summary>הכיתוב שיעלה</summary><p class="cap">'+esc(it.caption)+'</p></details>':'')
    +'</div>';
+ }
+ var SEND=null;try{SEND=JSON.parse(sessionStorage.getItem('nerSend')||'null');}catch(e){}
+ function approve(names,on,done){
+  if(!SEND||!SEND.t){alert('פתח את הדף מהאריח במוניטור כדי לאשר');done(false);return;}
+  fetch('https://ntfy.sh/'+SEND.t+'?filename=ner-approve.json',{method:'PUT',headers:{Title:'ner-approve'},
+   body:JSON.stringify({names:names,approved:on,code:SEND.c,at:new Date().toISOString()})})
+   .then(function(r){done(r.ok);},function(){done(false);});
  }
  fetch('queue.json?v='+Date.now()).then(function(r){return r.json();}).then(function(q){
   q.sort(function(a,b){return (a.date+a.time).localeCompare(b.date+b.time);});
@@ -73,7 +85,15 @@
   var rest=up.filter(function(x){return x!==np&&x!==ns;});
   if(rest.length)h+='<h2>אחר כך</h2><div class="grid">'+rest.map(function(x){return card(x);}).join('')+'</div>';
   if(done.length)h+='<h2>עלה לאחרונה</h2><div class="grid">'+done.map(function(x){return card(x);}).join('')+'</div>';
+  var wk=up.filter(function(x){return !x.approved;}).map(function(x){return x.name;});
+  if(wk.length)h='<div class="week"><button type="button" id="wk">מאשר את כל השבוע ('+wk.length+')</button></div>'+h;
   document.getElementById('m').innerHTML=h;
+  function mark(names,on,ok){names.forEach(function(n){var b=document.querySelector('input[data-n="'+n+'"]');if(!b)return;
+   if(!ok){b.checked=!on;return;}b.checked=on;var s=b.closest('.meta').querySelector('.st');s.className='st'+(on?' ok':' wait');s.textContent=on?'אושר, נשלח לשרת':'האישור בוטל';});}
+  document.querySelectorAll('input[data-n]').forEach(function(b){b.addEventListener('change',function(){
+   var on=b.checked;approve([b.getAttribute('data-n')],on,function(ok){mark([b.getAttribute('data-n')],on,ok);});});});
+  var wb=document.getElementById('wk');
+  if(wb)wb.addEventListener('click',function(){wb.disabled=true;approve(wk,true,function(ok){mark(wk,true,ok);wb.textContent=ok?'השבוע אושר ✓':'לא נשלח, נסה שוב';wb.disabled=ok;});});
   document.addEventListener('play',function(e){document.querySelectorAll('video').forEach(function(v){if(v!==e.target)v.pause();});},true);
  }).catch(function(){document.getElementById('m').innerHTML='<p class="empty">לא הצלחתי לטעון את התור</p>';});
 })();
