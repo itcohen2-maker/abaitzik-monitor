@@ -32,17 +32,9 @@
   "approved": false
  },
  {
-  "id": "limon",
-  "name": "לימון",
-  "order": 6,
-  "file": "media/plate-05-limon.mp4",
-  "poster": "media/plate-05-limon.jpg",
-  "approved": false
- },
- {
   "id": "kiwi",
   "name": "קיווי",
-  "order": 5,
+  "order": 6,
   "file": "media/plate-06-kiwi.mp4",
   "poster": "media/plate-06-kiwi.jpg",
   "approved": false,
@@ -81,6 +73,14 @@
     "ספרו לי בתגובות"
    ]
   ]
+ },
+ {
+  "id": "limon",
+  "name": "לימון",
+  "order": 5,
+  "file": "media/plate-05-limon.mp4",
+  "poster": "media/plate-05-limon.jpg",
+  "approved": false
  },
  {
   "id": "gezer",
