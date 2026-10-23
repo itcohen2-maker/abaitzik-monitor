@@ -41,13 +41,16 @@
   .row button:disabled{opacity:.4}
   .empty{border:1px dashed var(--line);border-radius:14px;padding:14px;color:var(--dim)}
   .note{font-size:13px;color:var(--dim)}
+  /* 23.10.2026, Itzik: "תגדיל את הכפתור לינק חזרה למוניטור, זה דק לי ולא נח לי". */
+  .backbtn{display:inline-block;padding:14px 22px;margin:8px 0 4px;font-size:20px;font-weight:700;line-height:1.2;min-height:48px;border-radius:14px;background:#20242c;color:#fff;text-decoration:none;border:1px solid var(--line)}
 </style>
 </head>
 <body>
 <header>
   <h1>🍽️ מה בצלחת</h1>
   <p class="lede">הסטוריז לפי סדר ההעלאה. מסמנים "מאשר" והסטורי עולה לאתר, לעמוד מה בצלחת. מורידים את הסימון והאישור מתבטל.</p>
-  <p class="lede"><a href="../">חזרה למוניטור</a> · <a href="https://abaitzik.com/plate/" rel="noopener">העמוד באתר</a></p>
+  <p class="lede"><a class="backbtn" href="../">⬅️ חזרה למוניטור</a></p>
+  <p class="lede"><a href="https://abaitzik.com/plate/" rel="noopener">העמוד באתר</a></p>
 </header>
 <main id="m"><p class="empty">טוען…</p></main>
 <script>
