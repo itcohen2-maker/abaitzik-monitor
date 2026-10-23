@@ -46,7 +46,7 @@
 <body>
 <header>
   <h1>🍽️ מה בצלחת</h1>
-  <p class="lede">הסטוריז לפי סדר ההעלאה. מסמנים "מאשר" והסטורי עולה לאתר, לעמוד מה בצלחת.</p>
+  <p class="lede">הסטוריז לפי סדר ההעלאה. מסמנים "מאשר" והסטורי עולה לאתר, לעמוד מה בצלחת. מורידים את הסימון והאישור מתבטל.</p>
   <p class="lede"><a href="../">חזרה למוניטור</a> · <a href="https://abaitzik.com/plate/" rel="noopener">העמוד באתר</a></p>
 </header>
 <main id="m"><p class="empty">טוען…</p></main>
@@ -71,7 +71,8 @@
    +'<div class="media"><video src="'+esc(it.file)+'" poster="'+esc(it.poster)+'" controls playsinline preload="none"></video></div>'
    +'<div class="meta"><span class="k">'+(i+1)+(i===0&&!it.approved?' · הבא בתור':'')+'</span>'
    +'<span class="nm">'+esc(it.name)+'</span><span>'+st(it)+'</span>'
-   +(it.onSite?'':'<label class="ok-box"><input type="checkbox" data-ok="'+esc(it.id)+'"'+(it.approved?' checked disabled':'')+'> מאשר, להעלות לאתר</label>')
+   +'<label class="ok-box"><input type="checkbox" data-ok="'+esc(it.id)+'"'+(it.approved||it.onSite?' checked':'')+'> '+(it.onSite?'באתר. להוריד? מורידים את הסימון':'מאשר, להעלות לאתר')+'</label>'
+   +((it.approved||it.onSite)?'<span class="note">סימנת בטעות? מורידים את הסימון והאישור מתבטל'+(it.onSite?' והסטורי יורד מהאתר':'')+'</span>':'')
    +'<div class="row">'
    +'<button type="button" data-up="'+esc(it.id)+'"'+(i===0?' disabled':'')+' aria-label="למעלה">↑</button>'
    +'<button type="button" data-down="'+esc(it.id)+'"'+(i===len-1?' disabled':'')+' aria-label="למטה">↓</button>'
@@ -95,10 +96,12 @@
    if(b.getAttribute('data-sure')!=='1'){b.setAttribute('data-sure','1');b.textContent='בטוח? לחץ שוב';return;}
    b.disabled=true;act('delete',id,{},function(ok){if(ok){q.splice(q.indexOf(it),1);draw(q);}else{b.disabled=false;alert('לא נשלח, נסה שוב');}});});});
   document.querySelectorAll('[data-ok]').forEach(function(b){b.addEventListener('change',function(){
-   if(!b.checked)return;var id=b.getAttribute('data-ok');b.disabled=true;
-   act('approve',id,{},function(ok){if(ok){var it=q.find(function(x){return x.id===id;});it.approved=true;
-    var s=b.closest('.meta').querySelector('.st');s.className='st ok';s.textContent='אושר, עולה לאתר';}
-    else{b.checked=false;b.disabled=false;alert('לא נשלח, נסה שוב');}});});});
+   var id=b.getAttribute('data-ok'),on=b.checked,it=q.find(function(x){return x.id===id;});b.disabled=true;
+   act(on?'approve':'unapprove',id,{},function(ok){b.disabled=false;
+    if(!ok){b.checked=!on;alert('לא נשלח, נסה שוב');return;}
+    var s=b.closest('.meta').querySelector('.st');
+    if(on){it.approved=true;s.className='st ok';s.textContent='אושר, עולה לאתר';}
+    else{var was=it.onSite;it.approved=false;s.className='st wait';s.textContent=was?'האישור בוטל, יורד מהאתר':'האישור בוטל';}});});});
   document.querySelectorAll('[data-dl]').forEach(function(b){b.addEventListener('click',function(){
    var src=b.getAttribute('data-dl'),nm=b.getAttribute('data-nm')+'.mp4',t0=b.textContent;
    function plain(){var a=document.createElement('a');a.href=src;a.download=nm;document.body.appendChild(a);a.click();a.remove();b.textContent=t0;}

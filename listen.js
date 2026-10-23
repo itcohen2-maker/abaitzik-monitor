@@ -1104,6 +1104,17 @@ async function recordPlateAction(m) {
       + 'cd C:/Users/User/clip/plate_tile && python publish_plate.py ' + it.id
       + ' . אם הסקריפט אומר שאין מלל, לחלץ פריימים מהסרטון, להעתיק את המלל של כל מסך כמו שהוא, לשמור כ texts.json ולהריץ עם --text texts.json. בלי מקפים.';
     require('child_process').spawnSync(process.execPath, ['pc-task.js', 'add', '--quiet', '--re', 'plate-' + it.id, job], { cwd: __dirname, encoding: 'utf8', timeout: 60000 });
+  } else if (got.action === 'unapprove') {
+    // 23.10, Itzik: a tick by mistake can be undone. Not yet on the site: publish_plate.py stops on its own.
+    // Already on the site: the PC takes it off.
+    if (!it.approved && !it.onSite) return;
+    const wasOn = !!it.onSite;
+    it.approved = false;
+    if (wasOn) {
+      const job = 'מה בצלחת: איציק ביטל באריח את האישור של "' + it.name + '" (id ' + it.id + '). להוריד מהאתר: '
+        + 'cd C:/Users/User/clip/plate_tile && python unpublish_plate.py ' + it.id;
+      require('child_process').spawnSync(process.execPath, ['pc-task.js', 'add', '--quiet', '--re', 'plate-' + it.id, job], { cwd: __dirname, encoding: 'utf8', timeout: 60000 });
+    }
   } else return;
   fs.writeFileSync(PLATE_Q, JSON.stringify(q, null, 1));
   fs.writeFileSync(path.join(__dirname, 'docs', 'plate', 'queue.json'), JSON.stringify(q, null, 1));
