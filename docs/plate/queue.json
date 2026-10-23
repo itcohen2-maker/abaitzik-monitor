@@ -32,17 +32,9 @@
   "approved": false
  },
  {
-  "id": "limon",
-  "name": "לימון",
-  "order": 5,
-  "file": "media/plate-05-limon.mp4",
-  "poster": "media/plate-05-limon.jpg",
-  "approved": false
- },
- {
   "id": "kiwi",
   "name": "קיווי",
-  "order": 6,
+  "order": 5,
   "file": "media/plate-06-kiwi.mp4",
   "poster": "media/plate-06-kiwi.jpg",
   "approved": true,
@@ -80,9 +72,17 @@
   ]
  },
  {
+  "id": "limon",
+  "name": "לימון",
+  "order": 7,
+  "file": "media/plate-05-limon.mp4",
+  "poster": "media/plate-05-limon.jpg",
+  "approved": false
+ },
+ {
   "id": "gezer",
   "name": "גזר",
-  "order": 7,
+  "order": 6,
   "file": "media/plate-07-gezer.mp4",
   "poster": "media/plate-07-gezer.jpg",
   "approved": false
