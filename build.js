@@ -6,11 +6,11 @@ const NER_LOW = (function () {
     const q = JSON.parse(require('fs').readFileSync('/home/monitor/ner-queue.json', 'utf8'));
     let req = {};
     try { req = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, 'docs', 'ner', 'request.json'), 'utf8')); } catch (e) {}
-    if (req.status === 'building') return '';
+    if (req.status === 'building' && Date.now() - Date.parse(req.at || 0) < 12 * 3600 * 1000) return '';
     const last = q.filter(function (x) { return x.approved && !x.failed; }).map(function (x) { return x.date; }).sort().pop();
     if (!last) return '';
     const today = new Date(Date.now() + 3 * 3600 * 1000).toISOString().slice(0, 10);
-    return (Date.parse(last) - Date.parse(today)) / 864e5 <= 2 ? last : '';
+    return (Date.parse(last) - Date.parse(today)) / 864e5 <= 1 ? last : '';
   } catch (e) { return ''; }
 })();
 

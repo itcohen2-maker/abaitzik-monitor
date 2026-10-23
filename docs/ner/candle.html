@@ -83,7 +83,7 @@
  }
  var REQ={};
  fetch('request.json?v='+Date.now()).then(function(r){return r.ok?r.json():{};}).catch(function(){return {};}).then(function(x){REQ=x||{};
-  return fetch('queue.json?v='+Date.now());}).then(function(r){return r.json();}).then(function(q){
+  if(REQ.status==='building'&&Date.now()-Date.parse(REQ.at||0)>12*36e5)REQ={};return fetch('queue.json?v='+Date.now());}).then(function(r){return r.json();}).then(function(q){
   q.sort(function(a,b){return (a.date+a.time).localeCompare(b.date+b.time);});
   var up=q.filter(function(x){return !x.posted;}),done=q.filter(function(x){return x.posted;}).reverse().slice(0,8);
   var np=up.find(function(x){return x.kind!=='story';}),ns=up.find(function(x){return x.kind==='story';});
@@ -93,7 +93,7 @@
   if(done.length)h+='<h2>עלה לאחרונה</h2><div class="grid">'+done.map(function(x){return card(x);}).join('')+'</div>';
   var last=q.filter(function(x){return x.approved&&!x.failed;}).map(function(x){return x.date;}).sort().pop()||'';
   var left=last?Math.round((Date.parse(last)-Date.parse(new Date(Date.now()+3*36e5).toISOString().slice(0,10)))/864e5):0;
-  var nw='<div class="nw'+(left<=2&&REQ.status!=='building'?' low':'')+'" id="nw">'
+  var nw='<div class="nw'+(left<=1&&REQ.status!=='building'?' low':'')+'" id="nw">'
    +(REQ.status==='building'?'<b>🛠️ השבוע הבא בבנייה במחשב</b><small>יעלה לתור מאושר, בלי שתצטרך לעשות כלום</small>'
    :'<label class="ok-box"><input type="checkbox" id="nwBox"> תכין לי עוד סטוריז ופוסטים לכל השבוע הבא</label>'
     +'<small>'+(last?'התור מלא עד '+last.slice(8)+'.'+last.slice(5,7)+'. ':'')+'מסמנים, והכל נבנה ועולה לבד, מאושר.</small>')+'</div>';
