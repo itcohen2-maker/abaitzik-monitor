@@ -4049,7 +4049,7 @@ try{
   <button type="button" class="gt g16" id="gIsra"><b>💳 ישראכרט יואל</b><small>הכרטיסים, מה לבקש, ומה ענו</small></button>
   <!-- איציק, 11.10: "כפתור להחליף מודל תמחק אותו". הכפתור gModel ירד ממסך הבית; הקוד שלו בודק שהוא קיים. -->
   <button type="button" class="gt g10" id="gFiles" data-new="1" data-upd="20261021-search"><b>📁 הקבצים שלי</b><small>מה ששלחת ומה שנשלח לך, עם הורדה</small></button>
-  <button type="button" class="gt g8" id="gHomestyle" data-new="1" data-upd="20261023-hs-quote2"><b>🏠 הום סטייל</b><small>חדש: הצעת מחיר ובקשה לאיש המחשבים</small></button>
+  <button type="button" class="gt g8" id="gHomestyle" data-new="1" data-upd="20261023-hs-quote3"><b>🏠 הום סטייל</b><small>חדש: הצעת מחיר ובקשה לאיש המחשבים</small></button>
   <button type="button" class="gt g10" id="gCams" data-new="1" data-upd="20261022-privacy" data-files="cameras-tenants.png,cameras-tenants.pdf,cameras-erocam.txt"><b>📹 מצלמות</b><small>דף לדיירים: הברקוד, הסיסמה ושמונה שלבים</small></button>
   <!--
     איציק, 20.9: "על המסך ניקוזים אתה יכול למחוק את הכפתור. אין לי יותר צורך בזה".
@@ -5501,10 +5501,11 @@ function fileNiceName(name){
  ['NER_ITEMS','REEL_ITEMS','STORY_ITEMS','FUT_ITEMS','OCC_ITEMS','LAW_ITEMS','DUDI_ITEMS','CLALIT_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS','LEC_ITEMS']
   .forEach(function(k){if(Array.isArray(window[k]))lists.push(window[k]);});
  // 22.10: the lecture PDF opened under its English file name. Any other *_ITEMS list counts too.
+ // 23.10, Itzik: a file goes out under its list name; an item may carry n, the exact name to send it under.
  Object.keys(window).forEach(function(k){if(/_ITEMS$/.test(k)&&Array.isArray(window[k])&&lists.indexOf(window[k])<0)lists.push(window[k]);});
  for(var i=0;i<lists.length;i++){
   var L=lists[i]||[];
-  for(var j=0;j<L.length;j++)if(L[j]&&L[j].r===name&&L[j].t)return String(L[j].t).trim();
+  for(var j=0;j<L.length;j++)if(L[j]&&L[j].r===name&&L[j].t)return String(L[j].n||L[j].t).trim();
  }
  var base=short.replace(/[.][A-Za-z0-9]{1,5}$/,'')
   .replace(/(^|[-_ ])20[0-9]{2}[-_.]?[01][0-9][-_.]?[0-3][0-9]([-_]?[0-9]{4,6})?(?=[-_ ]|$)/g,' ')
@@ -15050,7 +15051,7 @@ var HS_ITEMS=[
  {t:'⭐ דוגמה: המוניטור של רינת, 4 עיצובים',u:'hs-demo.html'},
  // 23.10: the cloud setup request for their IT, and the price quote (private files).
  {t:'03 בקשה לאיש המחשבים: שרת ענן ו Claude שלהם',r:'hs-it-request.pdf'},
- {t:'04 הצעת מחיר 00320',r:'hs-quote-2026-001.pdf'}
+ {t:'04 הצעת מחיר הום סטייל',n:'הצעת מחיר הום סטייל',r:'hs-quote-2026-001.pdf'}
 ];
 function hsSheet(){
  var old=document.getElementById('hsSheet');if(old)old.remove();
