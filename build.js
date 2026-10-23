@@ -1,4 +1,19 @@
 'use strict';
+// candle.times, 23.10: the last day in the queue when it runs out within two days
+// and no new week is being built; the tile blinks and says so.
+const NER_LOW = (function () {
+  try {
+    const q = JSON.parse(require('fs').readFileSync('/home/monitor/ner-queue.json', 'utf8'));
+    let req = {};
+    try { req = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, 'docs', 'ner', 'request.json'), 'utf8')); } catch (e) {}
+    if (req.status === 'building') return '';
+    const last = q.filter(function (x) { return x.approved && !x.failed; }).map(function (x) { return x.date; }).sort().pop();
+    if (!last) return '';
+    const today = new Date(Date.now() + 3 * 3600 * 1000).toISOString().slice(0, 10);
+    return (Date.parse(last) - Date.parse(today)) / 864e5 <= 2 ? last : '';
+  } catch (e) { return ''; }
+})();
+
 // Generates docs/index.html: a standalone page with the data baked in, for
 // GitHub Pages. No server, no database, opens in any browser.
 //
@@ -4091,7 +4106,7 @@ try{
     made for pushing candletimes, numbered like Rinat's list: the bio
     comparison, the how-to page, the live candle stories.
   -->
-  <button type="button" class="gt gNer" id="gNerStyles" data-new="1"><b>🕯️ candle.times</b><small>הפוסט והסטורי הבאים, לפי הסדר</small></button>
+  <button type="button" class="gt gNer" id="gNerStyles" data-new="1"${NER_LOW?' data-upd="ner-need-'+NER_LOW+'"':''}><b>🕯️ candle.times</b><small>${NER_LOW?'התור נגמר ב '+NER_LOW.slice(8)+'.'+NER_LOW.slice(5,7)+', סמן "תכין לי עוד" בפנים':'הפוסט והסטורי הבאים, לפי הסדר'}</small></button>
   <!--
     איציק, 1.10: "שים כפתור יעודי במוניטור, ככה אני לא מוצא". Every finished
     reel, numbered like Rinat's list. The full quality copy is on Drive in

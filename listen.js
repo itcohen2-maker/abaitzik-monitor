@@ -1054,6 +1054,26 @@ async function recordNerApprove(m) {
   execFile(process.execPath, ['ner-post.js', '--mirror'], { cwd: __dirname, timeout: 120000 }, function () {});
 }
 
+// The "next week" tick on the same page, 23.10. Itzik: on Thursday the tile
+// blinks, he ticks "תכין לי עוד סטוריז ופוסטים לכל השבוע הבא", the PC builds it
+// by clip/week_stories/ner_week/RECIPE.md and the week goes into the queue approved.
+const NER_REQ = path.join(__dirname, 'docs', 'ner', 'request.json');
+async function recordNerWeek(m) {
+  let got;
+  try { const res = await fetch(m.attachment.url); got = JSON.parse(res.ok ? await res.text() : ''); }
+  catch (e) { got = null; }
+  if (!got || !ownerCodeOk('קוד ' + String(got.code || ''))) { say('!! בקשת שבוע נרות בלי קוד, לא נשמרה'); return; }
+  let cur = {};
+  try { cur = JSON.parse(fs.readFileSync(NER_REQ, 'utf8')); } catch (e) {}
+  if (cur.status === 'building' && Date.now() - Date.parse(cur.at || 0) < 12 * 3600 * 1000) { say('נרות: שבוע כבר בבנייה'); return; }
+  const job = 'candle.times: לבנות את השבוע הבא של פוסטים וסטוריז לחשבון הנרות, 24 פריטים, '
+    + 'לפי C:/Users/User/clip/week_stories/ner_week/RECIPE.md. הכל עולה מאושר, לא לבקש אישור. איציק סימן באריח.';
+  const r = require('child_process').spawnSync(process.execPath, ['pc-task.js', 'add', '--quiet', '--re', 'ner-week', job], { cwd: __dirname, encoding: 'utf8', timeout: 60000 });
+  fs.writeFileSync(NER_REQ, JSON.stringify({ status: 'building', at: new Date().toISOString(), task: String(r.stdout || '').trim().split(String.fromCharCode(10))[0] }));
+  say('נרות: בקשה לשבוע חדש נשלחה למחשב ' + String(r.stdout || r.stderr || '').trim());
+  execFile(process.execPath, ['push.js', 'ner: next week requested'], { cwd: __dirname, timeout: 120000 }, function () {});
+}
+
 // The wrapper exists only so that a throw inside cannot leave the busy flag
 // set and freeze the restart check forever.
 async function handle(m) {
@@ -1105,6 +1125,11 @@ async function handleOne(m) {
   // it never enters the chat, it only refreshes the copy a new phone fills from.
   if (m.attachment && m.title === 'notes-sync') {
     await recordNotesSync(m);
+    remember(m);
+    return;
+  }
+  if (m.attachment && m.title === 'ner-week') {
+    await recordNerWeek(m);
     remember(m);
     return;
   }
