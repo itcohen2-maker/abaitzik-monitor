@@ -43,6 +43,8 @@
   .nw.low{border-color:var(--glow);animation:nwb 1.2s ease-in-out infinite}
   @keyframes nwb{50%{box-shadow:0 0 0 6px rgba(245,166,35,.35)}}
   .nw small{display:block;color:var(--dim);font-size:13px;margin-top:4px}
+  .dl{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0}
+  .dl button{font:inherit;font-size:14px;background:rgba(255,255,255,.12);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:6px 10px;cursor:pointer}
   .chg summary{font-size:13px;color:var(--glow)}
   .chg textarea{width:100%;margin:6px 0;font:inherit;font-size:15px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--ink);padding:8px}
   .chg button{font:inherit;font-size:14px;background:var(--glow);color:#1a1000;border:0;border-radius:10px;padding:6px 14px;cursor:pointer}
@@ -74,6 +76,8 @@
    +'<span class="nm">'+kind+' '+lang+(it.city?', '+esc(it.city):'')+'</span>'
    +'<span class="tp">'+when(it)+'</span><span>'+st(it)+'</span>'
    +(it.posted?'':'<label class="ok-box"><input type="checkbox" data-n="'+esc(it.name)+'"'+(it.approved?' checked':'')+'> מאשר</label>')
+   +'<div class="dl"><button type="button" data-dl="'+esc(it.file)+'" data-nm="'+esc(it.name)+'">⬇️ הורדה למכשיר</button>'
+   +(it.caption?'<button type="button" data-cp="'+esc(it.name)+'">📋 העתק כיתוב</button>':'')+'</div>'
    +(it.posted?'':'<details class="chg"><summary>רוצה לשנות או להוסיף</summary><textarea rows="3" data-c="'+esc(it.name)+'" placeholder="מה לשנות? מלל, עיר, תמונה, יום, או מה להוסיף"></textarea><button type="button" data-cs="'+esc(it.name)+'">שלח</button></details>')+'</div>'
    +(it.caption?'<details><summary>הכיתוב שיעלה</summary><p class="cap">'+esc(it.caption)+'</p></details>':'')
    +'</div>';
@@ -125,6 +129,23 @@
    var msg='candle.times, שינוי בפריט '+n+' ('+when(it)+', '+(it.city||'')+'): '+t;
    fetch('https://ntfy.sh/'+SEND.t,{method:'POST',headers:{Title:'monitor','X-Tags':'memo'},body:['משימה',msg,'','קוד '+SEND.c].join(String.fromCharCode(10))})
     .then(function(r){b.textContent=r.ok?'נשלח ✓':'לא נשלח, נסה שוב';b.disabled=r.ok;if(r.ok)ta.disabled=true;},function(){b.textContent='לא נשלח, נסה שוב';b.disabled=false;});});});
+  // iPhone: the share sheet has "Save Video", which puts it in Photos for TikTok.
+  // Anywhere without it, a plain download link.
+  document.querySelectorAll('button[data-dl]').forEach(function(b){b.addEventListener('click',function(){
+   var src=b.getAttribute('data-dl'),nm=b.getAttribute('data-nm')+'.mp4',t0=b.textContent;
+   function plain(){var a=document.createElement('a');a.href=src;a.download=nm;document.body.appendChild(a);a.click();a.remove();b.textContent=t0;}
+   if(!(navigator.canShare&&window.File)){plain();return;}
+   b.textContent='מכין…';b.disabled=true;
+   fetch(src).then(function(r){return r.blob();}).then(function(bl){
+    var fl=new File([bl],nm,{type:'video/mp4'});
+    if(!navigator.canShare({files:[fl]})){b.disabled=false;plain();return;}
+    b.disabled=false;b.textContent='לחץ שוב לשמירה';
+    b.onclick=function(e){e.stopImmediatePropagation();navigator.share({files:[fl]}).then(function(){b.textContent='נשמר ✓';},function(){b.textContent=t0;});};
+   },function(){b.disabled=false;plain();});
+  });});
+  document.querySelectorAll('button[data-cp]').forEach(function(b){b.addEventListener('click',function(){
+   var it=q.find(function(x){return x.name===b.getAttribute('data-cp');})||{};
+   (navigator.clipboard?navigator.clipboard.writeText(it.caption||''):Promise.reject()).then(function(){b.textContent='הועתק ✓';},function(){prompt('העתק:',it.caption||'');});});});
   var wb=document.getElementById('wk');
   if(wb)wb.addEventListener('click',function(){wb.disabled=true;approve(wk,true,function(ok){mark(wk,true,ok);wb.textContent=ok?'השבוע אושר ✓':'לא נשלח, נסה שוב';wb.disabled=ok;});});
   document.addEventListener('play',function(e){document.querySelectorAll('video').forEach(function(v){if(v!==e.target)v.pause();});},true);
