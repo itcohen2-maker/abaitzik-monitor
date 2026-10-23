@@ -78,7 +78,7 @@
   "city": "Prague",
   "file": "media/story-he-thu.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  },
  {
   "name": "story-en-thu",
@@ -89,7 +89,7 @@
   "city": "Sydney",
   "file": "media/story-en-thu.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  },
  {
   "name": "story-he-fri",
@@ -122,7 +122,7 @@
   "city": "בואנוס איירס, בלי כיתוב למטה",
   "file": "media/post-he-buenosaires-v2.mp4",
   "caption": "בבואנוס איירס, ובכל עיר בעולם 🕯️\nזמני הדלקת נרות וצאת שבת לפי המיקום שלך, גם לפי רבנו תם, עם תפילות בנוסח אשכנז ובנוסח ספרד.\nבחינם, מתנה ממני על כל התמיכה שנתתם לי. לכל יהודי באשר הוא, ב 15 שפות.\nהלינק בביו ✨\nPhoto: Roberto Fiadone, CC BY 4.0, Wikimedia Commons\n#זמניכניסתשבת #הדלקתנרות #שבתשלום #בואנוסאיירס #candletimes",
-  "approved": false
+  "approved": true
  },
  {
   "name": "post-en-brooklyn-v2",
@@ -133,7 +133,7 @@
   "city": "Brooklyn, בלי כיתוב למטה",
   "file": "media/post-en-brooklyn-v2.mp4",
   "caption": "In Brooklyn, and in every city around the world 🕯️\nCandle lighting and Shabbat end times for your exact location, Rabbeinu Tam too, with Ashkenaz and Sephard prayers.\nFree, a gift from me for all the support you gave me. For every Jew, wherever you are, in 15 languages.\nLink in bio ✨\nPhoto: Adam Jones, CC BY SA 2.0, Wikimedia Commons. Music: \"Carefree\" by Kevin MacLeod (incompetech.com), CC BY 3.0\n#shabbat #candlelighting #shabbatshalom #brooklyn #jewish #candletimes",
-  "approved": false
+  "approved": true
  },
  {
   "name": "post-he-sun-2510",
@@ -144,7 +144,7 @@
   "city": "ירושלים",
   "file": "media/post-he-sun-2510.mp4",
   "caption": "זמני הדלקת נרות לכל עיר בעולם, לפי המיקום המדויק שלכם.\nבחינם, מתנה ממני על כל התמיכה.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #candletimes\n\nתמונות: ויקישיתוף, נחלת הכלל. מוזיקה: Lachaim, Kevin MacLeod (incompetech.com), CC BY 3.0.",
-  "approved": false
+  "approved": true
  },
  {
   "name": "post-en-sun-2510",
@@ -155,7 +155,7 @@
   "city": "Toronto",
   "file": "media/post-en-sun-2510.mp4",
   "caption": "Candle lighting times for every city in the world, by your exact location.\nFree for every Jew, a gift from me for all your support.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Carefree\" by Kevin MacLeod (incompetech.com), CC BY 3.0.",
-  "approved": false
+  "approved": true
  },
  {
   "name": "story-he-sun-2510",
@@ -188,7 +188,7 @@
   "city": "תל אביב",
   "file": "media/post-he-mon-2610.mp4",
   "caption": "חדש באתר: נר נשמה, לזכור את מי שאהבנו.\nוזמני הדלקת נרות לכל עיר בעולם, בחינם.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #candletimes\n\nתמונות: ויקישיתוף, נחלת הכלל. מוזיקה: Wholesome, Kevin MacLeod (incompetech.com), CC BY 4.0.",
-  "approved": false
+  "approved": true
  },
  {
   "name": "post-en-mon-2610",
@@ -199,7 +199,7 @@
   "city": "Melbourne",
   "file": "media/post-en-mon-2610.mp4",
   "caption": "New on the site: Ner Neshama, to remember the ones we loved.\nCandle lighting times for every city, free.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Cheery Monday\" by Kevin MacLeod (incompetech.com), CC BY 4.0.",
-  "approved": false
+  "approved": true
  },
  {
   "name": "story-he-mon-2610",
@@ -210,7 +210,7 @@
   "city": "לונדון",
   "file": "media/story-he-mon-2610.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  },
  {
   "name": "story-en-mon-2610",
@@ -221,7 +221,7 @@
   "city": "Mexico City",
   "file": "media/story-en-mon-2610.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  },
  {
   "name": "post-he-tue-2710",
@@ -232,7 +232,7 @@
   "city": "חיפה",
   "file": "media/post-he-tue-2710.mp4",
   "caption": "ברכות ההדלקה בנוסח אשכנז וספרד, וזמני הדלקה לכל עיר בעולם.\nבחינם, מתנה ממני על כל התמיכה.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #candletimes\n\nתמונות: ויקישיתוף, נחלת הכלל. מוזיקה: Clean Soul, Kevin MacLeod (incompetech.com), CC BY 3.0.",
-  "approved": false
+  "approved": true
  },
  {
   "name": "post-en-tue-2710",
@@ -243,7 +243,7 @@
   "city": "Rome",
   "file": "media/post-en-tue-2710.mp4",
   "caption": "Ashkenaz and Sephard blessings, and candle lighting times for every city in the world.\nFree for every Jew.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Parisian\" by Kevin MacLeod (incompetech.com), CC BY 3.0.",
-  "approved": false
+  "approved": true
  },
  {
   "name": "story-he-tue-2710",
@@ -254,7 +254,7 @@
   "city": "טבריה",
   "file": "media/story-he-tue-2710.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  },
  {
   "name": "story-en-tue-2710",
@@ -265,7 +265,7 @@
   "city": "Johannesburg",
   "file": "media/story-en-tue-2710.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  },
  {
   "name": "post-he-wed-2810",
@@ -276,7 +276,7 @@
   "city": "נתניה",
   "file": "media/post-he-wed-2810.mp4",
   "caption": "זמני הדלקת נרות ב 15 שפות, לפי המיקום המדויק שלכם.\nבחינם, לכל יהודי באשר הוא.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #candletimes\n\nתמונות: ויקישיתוף, נחלת הכלל. מוזיקה: Lachaim, Kevin MacLeod (incompetech.com), CC BY 3.0.",
-  "approved": false
+  "approved": true
  },
  {
   "name": "post-en-wed-2810",
@@ -287,7 +287,7 @@
   "city": "Montreal",
   "file": "media/post-en-wed-2810.mp4",
   "caption": "Candle lighting and Havdalah times in 15 languages, by your exact location.\nFree for every Jew, wherever you are.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Wholesome\" by Kevin MacLeod (incompetech.com), CC BY 4.0.",
-  "approved": false
+  "approved": true
  },
  {
   "name": "story-he-wed-2810",
@@ -298,7 +298,7 @@
   "city": "ברלין",
   "file": "media/story-he-wed-2810.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  },
  {
   "name": "story-en-wed-2810",
@@ -309,7 +309,7 @@
   "city": "Tel Aviv",
   "file": "media/story-en-wed-2810.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  },
  {
   "name": "post-he-thu-2910",
@@ -320,7 +320,7 @@
   "city": "אשקלון",
   "file": "media/post-he-thu-2910.mp4",
   "caption": "מחר ערב שבת. בדקו את זמן הדלקת הנרות לפי המיקום שלכם.\nבחינם, מתנה ממני על כל התמיכה.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #candletimes\n\nתמונות: ויקישיתוף, נחלת הכלל. מוזיקה: Carefree, Kevin MacLeod (incompetech.com), CC BY 3.0.",
-  "approved": false
+  "approved": true
  },
  {
   "name": "post-en-thu-2910",
@@ -331,7 +331,7 @@
   "city": "Paris",
   "file": "media/post-en-thu-2910.mp4",
   "caption": "Tomorrow is Erev Shabbat. Check your candle lighting time by your exact location.\nFree for every Jew.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Parisian\" by Kevin MacLeod (incompetech.com), CC BY 3.0.",
-  "approved": false
+  "approved": true
  },
  {
   "name": "story-he-thu-2910",
@@ -342,7 +342,7 @@
   "city": "וינה",
   "file": "media/story-he-thu-2910.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  },
  {
   "name": "story-en-thu-2910",
@@ -353,7 +353,7 @@
   "city": "Berlin",
   "file": "media/story-en-thu-2910.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  },
  {
   "name": "post-he-fri-3010",
@@ -364,7 +364,7 @@
   "city": "אילת",
   "file": "media/post-he-fri-3010.mp4",
   "caption": "היום ערב שבת. מה השעה המדויקת להדלקת נרות אצלכם?\nבחינם, מתנה ממני. שבת שלום.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #candletimes\n\nתמונות: ויקישיתוף, נחלת הכלל. מוזיקה: Cheery Monday, Kevin MacLeod (incompetech.com), CC BY 4.0.",
-  "approved": false
+  "approved": true
  },
  {
   "name": "post-en-fri-3010",
@@ -375,7 +375,7 @@
   "city": "Jerusalem",
   "file": "media/post-en-fri-3010.mp4",
   "caption": "Today is Erev Shabbat. What is the exact candle lighting time where you are?\nFree for every Jew. Shabbat Shalom.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Lachaim\" by Kevin MacLeod (incompetech.com), CC BY 3.0.",
-  "approved": false
+  "approved": true
  },
  {
   "name": "story-he-fri-3010",
@@ -386,7 +386,7 @@
   "city": "רומא",
   "file": "media/story-he-fri-3010.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  },
  {
   "name": "story-en-fri-3010",
@@ -397,6 +397,6 @@
   "city": "Vienna",
   "file": "media/story-en-fri-3010.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  }
 ]
