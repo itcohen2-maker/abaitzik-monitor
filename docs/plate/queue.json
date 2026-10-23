@@ -33,11 +33,11 @@
  },
  {
   "id": "kiwi",
-  "name": "קיווי",
+  "name": "קיווי עם דמות (חדש)",
   "order": 5,
-  "file": "media/plate-06-kiwi.mp4",
-  "poster": "media/plate-06-kiwi.jpg",
-  "approved": true,
+  "file": "media/plate-07-kiwi.mp4",
+  "poster": "media/plate-07-kiwi.jpg",
+  "approved": false,
   "screens": [
    [
     "קיווי. מה טוב בו, מה פחות,",
@@ -70,7 +70,7 @@
     "ספרו לי בתגובות"
    ]
   ],
-  "onSite": true
+  "onSite": false
  },
  {
   "id": "limon",
