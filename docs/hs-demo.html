@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>מעקב משלוחים, דוגמה</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;900&display=swap">
+<style>
+:root{--bg:#f4f6fa;--card:#fff;--ink:#1c2230;--dim:#6b7486;--line:#e4e8f0;
+ --red:#e5484d;--amber:#f5a524;--green:#2fae66;--blue:#3b82f6;--navy:#14213d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.55 Heebo,system-ui,sans-serif}
+.top{background:var(--navy);color:#fff;padding:18px 16px 0}
+.top h1{margin:0;font:900 22px Heebo}
+.top p{margin:2px 0 12px;opacity:.75;font-size:13px}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:0}
+.tabs button{flex:0 0 auto;border:0;background:rgba(255,255,255,.12);color:#fff;font:500 14px Heebo;
+ padding:9px 14px;border-radius:12px 12px 0 0;cursor:pointer}
+.tabs button.on{background:var(--bg);color:var(--navy);font-weight:700}
+.wrap{max-width:720px;margin:0 auto;padding:16px}
+.view{display:none}.view.on{display:block}
+.note{font-size:12px;color:var(--dim);text-align:center;margin:18px 0 4px}
+.lead{color:var(--dim);font-size:13px;margin:0 0 12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:10px 0;
+ box-shadow:0 4px 14px rgba(20,30,60,.05)}
+h2{font:800 17px Heebo;margin:18px 0 8px}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:99px;color:#fff}
+.r{background:var(--red)}.a{background:var(--amber)}.g{background:var(--green)}.b{background:var(--blue)}
+.mut{color:var(--dim);font-size:13px}
+.btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:7px 12px;font:500 13px Heebo;color:var(--navy);cursor:pointer}
+.btn.p{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+/* 1 dashboard */
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.kpi{background:#fff;border-radius:16px;padding:14px;border:1px solid var(--line)}
+.kpi b{display:block;font:900 34px/1 Heebo}
+.kpi span{font-size:13px;color:var(--dim)}
+.kpi.r b{color:var(--red)}.kpi.a b{color:var(--amber)}.kpi.g b{color:var(--green)}.kpi.b b{color:var(--blue)}
+.kpi.r,.kpi.a,.kpi.g,.kpi.b{background:#fff}
+.row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.dot{width:10px;height:10px;border-radius:50%;margin-top:7px;flex:0 0 auto}
+.row .t{flex:1}
+.row .t b{display:block}
+.bar{height:8px;border-radius:9px;background:var(--line);overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%}
+
+/* 2 container cards */
+.ct{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ct b{font-size:16px}
+.steps{display:flex;margin:14px 0 6px}
+.steps div{flex:1;text-align:center;font-size:10.5px;color:var(--dim);position:relative}
+.steps div::before{content:"";display:block;width:14px;height:14px;border-radius:50%;margin:0 auto 4px;
+ background:var(--line);position:relative;z-index:1}
+.steps div::after{content:"";position:absolute;top:6px;right:50%;width:100%;height:2px;background:var(--line)}
+.steps div:first-child::after{display:none}
+.steps .d::before,.steps .d::after{background:var(--green)}
+.steps .c::before{background:var(--blue);box-shadow:0 0 0 4px rgba(59,130,246,.2)}
+.steps .c::after{background:var(--green)}
+.steps .x::before{background:var(--red);box-shadow:0 0 0 4px rgba(229,72,77,.2)}
+.steps .x::after{background:var(--green)}
+.steps .c,.steps .x{color:var(--ink);font-weight:700}
+.meta{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--dim)}
+.meta b{color:var(--ink);font-weight:500}
+.warn{background:#fff3f3;border-radius:10px;padding:8px 10px;font-size:13px;margin-top:10px;color:#9b1c1f}
+
+/* 3 timeline */
+.tl{overflow-x:auto}
+.grid{min-width:560px}
+.wk{display:grid;grid-template-columns:120px repeat(8,1fr);font-size:11px;color:var(--dim);border-bottom:1px solid var(--line);padding-bottom:4px}
+.wk span{text-align:center}
+.gl{display:grid;grid-template-columns:120px 1fr;align-items:center;padding:7px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.track{position:relative;height:22px}
+.seg{position:absolute;top:3px;height:16px;border-radius:8px}
+.ghost{position:absolute;top:9px;height:4px;background:repeating-linear-gradient(90deg,var(--red) 0 4px,transparent 4px 8px)}
+.today{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--navy)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--dim);margin-top:10px}
+.legend i{display:inline-block;width:14px;height:8px;border-radius:4px;margin-inline-end:4px;vertical-align:middle}
+
+/* 4 morning feed */
+.hello{background:linear-gradient(135deg,#14213d,#2c4a8a);color:#fff;border-radius:18px;padding:16px}
+.hello b{font:900 20px Heebo;display:block}
+.hello p{margin:6px 0 0;opacity:.85;font-size:14px}
+.fd{display:flex;gap:12px}
+.ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:19px;flex:0 0 auto}
+.fd .t{flex:1}
+.src{font-size:12px;color:var(--dim);margin-top:4px}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.draft{background:#f6f8fc;border:1px dashed #c9d3e6;border-radius:10px;padding:8px 10px;font-size:13px;margin-top:8px;display:none}
+.draft.on{display:block}
+
+@media(min-width:620px){.kpis{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<div class="top">
+ <h1>📦 מעקב משלוחים</h1>
+ <p>המוניטור של רינת · נתונים מומצאים להדגמה</p>
+ <div class="tabs" id="tabs">
+  <button class="on" data-v="v1">1 · לוח בקרה</button>
+  <button data-v="v2">2 · כרטיס לכל מכולה</button>
+  <button data-v="v3">3 · ציר זמן</button>
+  <button data-v="v4">4 · הבוקר שלי</button>
+ </div>
+</div>
+
+<div class="wrap">
+
+<!-- 1 -->
+<section class="view on" id="v1">
+ <p class="lead">מבט אחד: כמה בדרך, מה בוער, ומי מהספקים מאחר.</p>
+ <div class="kpis">
+  <div class="kpi b"><b>23</b><span>מכולות בדרך</span></div>
+  <div class="kpi r"><b>4</b><span>דורשות טיפול היום</span></div>
+  <div class="kpi a"><b>6</b><span>מתעכבות</span></div>
+  <div class="kpi g"><b>5</b><span>מגיעות השבוע</span></div>
+ </div>
+
+ <h2>🔴 לטפל היום</h2>
+ <div class="card">
+  <div class="row"><i class="dot" style="background:var(--red)"></i><div class="t"><b>הזמנה 5821 · אין SHO</b><span class="mut">ETD בעוד 8 ימים ולא נפתחה פנייה לסוכן</span></div><span class="pill r">דחוף</span></div>
+  <div class="row"><i class="dot" style="background:var(--red)"></i><div class="t"><b>הזמנה 5794 · סטייה של 26 יום</b><span class="mut">R.ETD 01.11, ETD חדש 27.11. לעדכן את רוני ויעל</span></div><span class="pill r">סטייה</span></div>
+  <div class="row"><i class="dot" style="background:var(--amber)"></i><div class="t"><b>הזמנה 5810 · חסר תיק עמילות</b><span class="mut">מגיעה ב 06.11, שבועיים לפני ההגעה עוד אין מספר תיק</span></div><span class="pill a">עמילות</span></div>
+  <div class="row"><i class="dot" style="background:var(--amber)"></i><div class="t"><b>הזמנה 5833 · חסר מסמך</b><span class="mut">הודעת חוסר בניירת: חסר Packing List</span></div><span class="pill a">ניירת</span></div>
+ </div>
+
+ <h2>⏱ הספקים, ממוצע איחור</h2>
+ <div class="card">
+  <div class="row"><div class="t"><b>Ningbo Home Textile</b><div class="bar"><i style="width:82%;background:var(--red)"></i></div></div><span class="mut">19 יום</span></div>
+  <div class="row"><div class="t"><b>Jaipur Craft House</b><div class="bar"><i style="width:48%;background:var(--amber)"></i></div></div><span class="mut">11 יום</span></div>
+  <div class="row"><div class="t"><b>Foshan Ceramics</b><div class="bar"><i style="width:26%;background:var(--amber)"></i></div></div><span class="mut">6 ימים</span></div>
+  <div class="row"><div class="t"><b>Shanghai Bath & Co</b><div class="bar"><i style="width:8%;background:var(--green)"></i></div></div><span class="mut">2 ימים</span></div>
+ </div>
+ <div style="text-align:center;margin-top:14px"><button class="btn p">⬇ הורדת האקסל המעודכן</button></div>
+</section>
+
+<!-- 2 -->
+<section class="view" id="v2">
+ <p class="lead">כל מכולה היא כרטיס, ופס השלבים אומר בדיוק איפה היא עכשיו.</p>
+
+ <div class="card">
+  <div class="ct"><b>5794 · וילונות</b><span class="pill r">מתעכבת 26 יום</span></div>
+  <div class="mut">Ningbo Home Textile · FCL 40</div>
+  <div class="steps"><div class="d">הוזמן</div><div class="d">בוקינג</div><div class="x">הפלגה</div><div>בים</div><div>בנמל</div><div>עמילות</div><div>במלאי</div></div>
+  <div class="meta"><span>R.ETD <b>01.11</b></span><span>ETD <b>27.11</b></span><span>ETA <b>24.12</b></span><span>אונייה <b>MSC Aurora</b></span></div>
+  <div class="warn">האונייה הוחלפה לפי מייל מ 21.10. סטייה מעל שלושה שבועות: לעדכן את רוני ויעל.</div>
+ </div>
+
+ <div class="card">
+  <div class="ct"><b>5810 · שטיחים</b><span class="pill a">חסר תיק עמילות</span></div>
+  <div class="mut">Jaipur Craft House · FCL 20</div>
+  <div class="steps"><div class="d">הוזמן</div><div class="d">בוקינג</div><div class="d">הפלגה</div><div class="c">בים</div><div>בנמל</div><div>עמילות</div><div>במלאי</div></div>
+  <div class="meta"><span>ETD <b>02.10</b></span><span>ETA <b>06.11</b></span><span>מכולה <b>TGHU 482193</b></span><span>SHO <b>✓</b></span></div>
+ </div>
+
+ <div class="card">
+  <div class="ct"><b>5802 · כלי אמבט</b><span class="pill g">לפי הלוח</span></div>
+  <div class="mut">Shanghai Bath & Co · LCL</div>
+  <div class="steps"><div class="d">הוזמן</div><div class="d">בוקינג</div><div class="d">הפלגה</div><div class="d">בים</div><div class="d">בנמל</div><div class="c">עמילות</div><div>במלאי</div></div>
+  <div class="meta"><span>ETA <b>19.10</b></span><span>תיק עמילות <b>40217</b></span><span>ניירת <b>שודרה</b></span></div>
+ </div>
+
+ <div class="card">
+  <div class="ct"><b>5821 · מגבות</b><span class="pill r">אין SHO</span></div>
+  <div class="mut">Ningbo Home Textile · FCL 40</div>
+  <div class="steps"><div class="x">הוזמן</div><div>בוקינג</div><div>הפלגה</div><div>בים</div><div>בנמל</div><div>עמילות</div><div>במלאי</div></div>
+  <div class="meta"><span>R.ETD <b>31.10</b></span><span>ETD <b>טרם</b></span></div>
+  <div class="warn">ETD בעוד 8 ימים ולא נפתחה פנייה לסוכן.</div>
+ </div>
+</section>
+
+<!-- 3 -->
+<section class="view" id="v3">
+ <p class="lead">כל המכולות על ציר אחד לפי שבועות. רואים מה נוחת מתי, ומה זז.</p>
+ <div class="card tl">
+  <div class="grid" id="gantt"></div>
+  <div class="legend">
+   <span><i style="background:var(--green)"></i>לפי הלוח</span>
+   <span><i style="background:var(--amber)"></i>צריך תשומת לב</span>
+   <span><i style="background:var(--red)"></i>מתעכבת</span>
+   <span><i style="background:repeating-linear-gradient(90deg,var(--red) 0 4px,transparent 4px 8px)"></i>כמה זזה</span>
+   <span><i style="background:var(--navy);width:3px"></i>היום</span>
+  </div>
+ </div>
+ <h2>📅 עומס למחסן</h2>
+ <div class="card">
+  <div class="row"><div class="t"><b>שבוע 3.11</b><div class="bar"><i style="width:60%;background:var(--blue)"></i></div></div><span class="mut">3 מכולות</span></div>
+  <div class="row"><div class="t"><b>שבוע 10.11</b><div class="bar"><i style="width:100%;background:var(--red)"></i></div></div><span class="mut">5 מכולות</span></div>
+  <div class="row"><div class="t"><b>שבוע 17.11</b><div class="bar"><i style="width:20%;background:var(--blue)"></i></div></div><span class="mut">1 מכולה</span></div>
+ </div>
+</section>
+
+<!-- 4 -->
+<section class="view" id="v4">
+ <div class="hello"><b>בוקר טוב, רינת ☀️</b><p>מאתמול הגיעו 37 מיילים על משלוחים. 31 עודכנו לבד באקסל, 6 צריכים אותך.</p></div>
+
+ <div class="card"><div class="fd"><div class="ic" style="background:#ffe9e9">🚢</div><div class="t">
+  <b>האונייה של 5794 הוחלפה</b><div class="mut">ההגעה זזה מ 28.11 ל 24.12. זו סטייה של יותר משלושה שבועות.</div>
+  <div class="src">ממייל של חברת הספנות · 07:12</div>
+  <div class="acts"><button class="btn p" data-d="d1">📝 טיוטה לספק</button><button class="btn">פתיחת המייל</button></div>
+  <div class="draft" id="d1">Hi, we were notified the vessel for PO 5794 was changed and ETA moved to 24.12. Please advise if an earlier sailing is possible.<br><span class="mut">נשמרת כטיוטה באאוטלוק, לא נשלחת לבד.</span></div>
+ </div></div></div>
+
+ <div class="card"><div class="fd"><div class="ic" style="background:#fff4e0">📄</div><div class="t">
+  <b>חסר Packing List ל 5833</b><div class="mut">הודעת חוסר בניירת מהעמיל. בלי המסמך אי אפשר לשדר.</div>
+  <div class="src">ממייל של העמיל · 08:03</div>
+  <div class="acts"><button class="btn p" data-d="d2">📝 טיוטה לספק</button><button class="btn">פתיחת המייל</button></div>
+  <div class="draft" id="d2">Hi, customs is missing the Packing List for PO 5833. Please send it today so we can file.<br><span class="mut">נשמרת כטיוטה באאוטלוק, לא נשלחת לבד.</span></div>
+ </div></div></div>
+
+ <div class="card"><div class="fd"><div class="ic" style="background:#e6f6ec">✅</div><div class="t">
+  <b>5802 קיבלה תיק עמילות 40217</b><div class="mut">עודכן באקסל אוטומטית. הניירת שודרה.</div>
+  <div class="src">ממייל של העמיל · 08:40</div>
+ </div></div></div>
+
+ <div class="card"><div class="fd"><div class="ic" style="background:#e8f0ff">📦</div><div class="t">
+  <b>בוקינג חדש ל 5815</b><div class="mut">ETD נקבע ל 09.11, 3 ימים אחרי R.ETD. תקין.</div>
+  <div class="src">ממייל של הספק · 09:15</div>
+ </div></div></div>
+
+ <p class="mut" style="text-align:center">ועוד 27 עדכונים קטנים שנכנסו לאקסל בלי צורך בך</p>
+</section>
+
+<p class="note">דוגמה בלבד. כל המספרים, הספקים והתאריכים מומצאים.</p>
+</div>
+
+<script>
+document.getElementById('tabs').onclick=function(e){
+ var v=e.target.getAttribute('data-v');if(!v)return;
+ [].forEach.call(this.children,function(b){b.classList.toggle('on',b===e.target)});
+ [].forEach.call(document.querySelectorAll('.view'),function(s){s.classList.toggle('on',s.id===v)});
+ window.scrollTo(0,0);
+};
+document.addEventListener('click',function(e){
+ var d=e.target.getAttribute&&e.target.getAttribute('data-d');
+ if(d)document.getElementById(d).classList.toggle('on');
+});
+// timeline: 8 weeks, each row start/end in weeks, ghost = where it was planned
+var W=['20.10','27.10','3.11','10.11','17.11','24.11','1.12','8.12'];
+var R=[
+ ['5802 כלי אמבט',0,0.4,'g'],
+ ['5810 שטיחים',0,2.3,'a'],
+ ['5815 כריות',1.2,3.6,'g'],
+ ['5807 צלחות',0.5,3.1,'g'],
+ ['5794 וילונות',1.6,7.6,'r',4.1],
+ ['5833 סלסלות',2,3.4,'a'],
+ ['5821 מגבות',1.5,6.2,'r',5.0]
+];
+var C={g:'var(--green)',a:'var(--amber)',r:'var(--red)'};
+var h='<div class="wk"><span></span>'+W.map(function(w){return '<span>'+w+'</span>'}).join('')+'</div>';
+R.forEach(function(r){
+ var s=r[1]/8*100,e=r[2]/8*100;
+ var gh=r[4]?'<i class="ghost" style="right:'+(r[4]/8*100)+'%;width:'+((r[2]-r[4])/8*100)+'%"></i>':'';
+ h+='<div class="gl"><span>'+r[0]+'</span><div class="track"><i class="seg" style="right:'+s+'%;width:'+(e-s)+'%;background:'+C[r[3]]+';opacity:.85"></i>'+gh+'<i class="today" style="right:'+(0.43/8*100)+'%"></i></div></div>';
+});
+document.getElementById('gantt').innerHTML=h;
+</script>
+</body>
+</html>
