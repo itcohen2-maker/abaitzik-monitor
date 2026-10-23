@@ -166,7 +166,7 @@
   "city": "פריז",
   "file": "media/story-he-sun-2510.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  },
  {
   "name": "story-en-sun-2510",
@@ -177,7 +177,7 @@
   "city": "Haifa",
   "file": "media/story-en-sun-2510.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  },
  {
   "name": "post-he-mon-2610",
