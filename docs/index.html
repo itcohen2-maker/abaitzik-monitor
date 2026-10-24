@@ -2278,7 +2278,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-24T08:52:39.286Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-24T08:55:45.486Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4093,7 +4093,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='3a3bf3d43a';
+var CODE_ID='85ff05c8ad';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -7474,7 +7474,7 @@ var histOn=false,histQuiet=false;
 function histWanted(){
  var ne=document.getElementById('noteEdit'),np=document.getElementById('pN2');
  var note=!!(np&&!np.hidden&&ne&&!ne.hidden);
- return navStack.length>0||note||!!overlayOpen(null);
+ return navStack.length>0||note||!!overlayOpen(null)||!!dlgClose();
 }
 function histSync(){
  var want=histWanted();
@@ -7490,8 +7490,10 @@ function histSync(){
 window.addEventListener('popstate',function(){
  if(histQuiet){histQuiet=false;return;}
  histOn=false;
- var ov=overlayOpen(null);
- if(ov)ov.remove();
+ var dc=dlgClose();
+ var ov=dc?null:overlayOpen(null);
+ if(dc)dc();
+ else if(ov)ov.remove();
  else navBack();
  histSync();
 });
@@ -7548,6 +7550,19 @@ var sheetExt=0;
 function overlayOpen(not){
  var l=document.querySelectorAll('.ysheet,.fview');
  for(var i=0;i<l.length;i++)if(l[i]!==not)return l[i];
+ return null;
+}
+function dlgShown(el){return !!(el&&el.isConnected&&!el.hidden&&el.getClientRects().length);}
+function dlgClose(){
+ var q=function(id){return document.getElementById(id);};
+ var d=document.querySelectorAll('.ui-dlg-bg');
+ if(d.length)return function(){d[d.length-1].click();};
+ var tp=q('talkPrompt');
+ if(dlgShown(tp)){var x=document.querySelector('[data-p="x"]');return function(){if(x)x.click();else tp.remove();};}
+ var qs=q('qhSheet');
+ if(qs&&qs.classList.contains('on'))return function(){var sh=q('qhShade');if(sh)sh.click();};
+ if(dlgShown(q('liveSheet'))&&q('lsClose'))return function(){q('lsClose').click();};
+ if(dlgShown(q('noteAiBox'))&&q('noteAiNo'))return function(){q('noteAiNo').click();};
  return null;
 }
 document.addEventListener('click',function(ev){
