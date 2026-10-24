@@ -4432,10 +4432,7 @@ ${inst.name !== 'abaitzik' ? require('./lib/profile-ui.js').entry() : ''}
 <!-- The build plan is Itzik's internal page, so a customer's copy leaves the link out. -->
 <!--ITZIK:BEGIN-->
 <nav class="links" aria-label="קישורים מהירים">
- <a href="plan.html">
-  <span aria-hidden="true">&#128736;</span>
-  <div>תוכנית הבנייה<small>מה נבנה ומה עוד מתוכנן</small></div>
- </a>
+ <!-- 24.10.2026, Itzik: the build plan link was a dead end with no way back; removed until it is rewritten. -->
  <a href="#" id="gActLog">
   <span aria-hidden="true">&#128214;</span>
   <div>יומן פעולות<small>מה נעשה, מתי ובכמה בערך</small></div>

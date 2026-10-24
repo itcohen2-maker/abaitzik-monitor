@@ -120,6 +120,7 @@ body{font-family:Heebo,system-ui,sans-serif;width:100%;min-height:100vh;padding:
 </style>
 </head>
 <body>
+<a id="backMon" href="./" onclick="if(history.length>1&&document.referrer.indexOf(location.host)>-1){history.back();return false;}" style="position:fixed;z-index:99;bottom:calc(92px + env(safe-area-inset-bottom));inset-inline-start:10px;display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:999px;background:rgba(20,20,20,.85);color:#fff;font:700 15px Heebo,system-ui,sans-serif;text-decoration:none;box-shadow:0 4px 12px rgba(0,0,0,.25)">→ חזרה</a>
 <div class="sw" id="sw"></div><div class="nm" id="lbl"></div>
 <div class="wrap">
  <div class="greet"><h1>בוקר טוב</h1><span>מאז שהיית כאן: 3 חדשים</span></div>
