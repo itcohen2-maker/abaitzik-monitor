@@ -2332,6 +2332,7 @@ body.editing .bn{display:none}
 .toast.bad{color:#fff;border:0;background:linear-gradient(180deg,#ff6a5e,var(--red))}
 .toast{cursor:pointer}
 ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').css : ''}
+${require('./lib/profile-ui.js').css}
 ${require('./lib/approvals-ui.js').css}
 ${require('./lib/since-ui.js').css}
 ${require('./lib/activity-ui.js').css}
@@ -4406,6 +4407,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <button type="button" class="skb" data-skin="dark">לילה</button>
  </div>
 </div>
+${inst.name !== 'abaitzik' ? require('./lib/profile-ui.js').entry() : ''}
 <!--
   This closing tag was missing.
 
@@ -4738,6 +4740,11 @@ ${pushUi.html(pushKey())}
  <div id="ciBox"></div>
 </section>
 
+<!--
+  24.10.2026, stage 7: the customer's business facts and the "לתקן" buttons (lib/profile-ui.js).
+  An empty hidden section on Itzik's copy, so pane() finds every id it lists.
+-->
+${require('./lib/profile-ui.js').html(inst)}
 <!--
   Connecting a customer's computer, 26.9. Itzik: "Ilay got no offer to connect
   his computer. Why? Give him a blinking button with a task." The step had been
@@ -8220,7 +8227,7 @@ function updateDot(){
  document.title=(fresh?'(1) ':'')+PAGE_TITLE;
 }
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
-var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn',Rc:'pRc',Mo:'pModel',Sa:'pSale',Fi:'pFi',Is:'pIsra',Mx:'pMoxy',Lg:'pLg'};
+var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn',Rc:'pRc',Mo:'pModel',Sa:'pSale',Fi:'pFi',Is:'pIsra',Mx:'pMoxy',Lg:'pLg',Pf:'pPf'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 /*ITZIK:BEGIN*/
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
@@ -19513,6 +19520,7 @@ boot('guides',function(){
 boot('features',applyFeatures);
 ${require('./lib/features.js').js}
 ${inst.name !== 'abaitzik' ? require('./lib/bank-ui.js').js : ''}
+${require('./lib/profile-ui.js').js}
 boot('install',function(){
  if(INSTANCE&&INSTANCE.name==='abaitzik')return;
  var standalone=(window.navigator&&window.navigator.standalone)||

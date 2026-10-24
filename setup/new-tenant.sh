@@ -2,6 +2,11 @@
 # New customer monitor on this server, hardened. 6.10.2026, Home Style.
 #
 #   bash setup/new-tenant.sh <id> <user> <host> <owner> <title> <welcome> <screens-csv> <profile-file> [shipments-dir] [ro|rw] [home-tile]
+#   bash setup/new-tenant.sh --from-intake <instance.json> <id> <user> <host> <profile-file> [shipments-dir] [ro|rw] [home-tile]
+#
+# --from-intake (24.10.2026): owner, title, welcome and screens come from the proposal that
+# setup/intake-to-instance.js wrote from the questionnaire; computer, phone, biz, profile and
+# intakeNotes are copied into instance.json too. The positional form above is unchanged.
 #
 # Run as root. Everything a customer's monitor needs, and nothing it does not:
 #  - its own Linux user with no login shell, home closed to the other tenants;
@@ -15,7 +20,19 @@
 #    answering worker alone, not the listener or the watchdog.
 # The passphrase is printed once and written to /root/tenant-codes/<id>.txt.
 set -euo pipefail
-ID=$1; U=$2; HOST=$3; OWNER=$4; TITLE=$5; WELCOME=$6; SCREENS=$7; PROFILE=$8; SHIP=${9:-}; RO=${10:-}; HOMETILE=${11:-}
+INTAKE=""
+if [ "${1:-}" = "--from-intake" ]; then
+  INTAKE=$2
+  [ -f "$INTAKE" ] || { echo "אין קובץ הקליטה: $INTAKE"; exit 1; }
+  shift 2
+  ID=$1; U=$2; HOST=$3; PROFILE=$4; SHIP=${5:-}; RO=${6:-}; HOMETILE=${7:-}
+  # node -e, not jq: node is on the server and this repository has no jq use.
+  intake() { node -e 'const i=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));const v=process.argv[2]==="screens"?(Array.isArray(i.screens)?i.screens.join(","):""):(i[process.argv[2]]||"");process.stdout.write(String(v))' "$INTAKE" "$1"; }
+  OWNER=$(intake owner); TITLE=$(intake pageTitle); WELCOME=$(intake welcome); SCREENS=$(intake screens)
+  TIER=$(node -e 'const i=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));process.stdout.write((i.profile&&i.profile.suggestedTier)||"")' "$INTAKE")
+else
+  ID=$1; U=$2; HOST=$3; OWNER=$4; TITLE=$5; WELCOME=$6; SCREENS=$7; PROFILE=$8; SHIP=${9:-}; RO=${10:-}; HOMETILE=${11:-}
+fi
 [ "$RO" = rw ] && RO=""
 DIR=/home/$U/$ID-monitor
 PUB=https://github.com/itcohen2-maker/abaitzik-monitor.git
@@ -47,9 +64,10 @@ chmod 750 data/files-private
 sudo -H -u "$U" git config user.email "$ID@abaitzik.local"; sudo -H -u "$U" git config user.name "$ID monitor"
 
 # instance.json, keys, passphrase, profile
-python3 - "$ID" "$HOST" "$OWNER" "$TITLE" "$WELCOME" "$SCREENS" "$SHIP" "$DIR" "$U" "$HOMETILE" <<'PY'
+python3 - "$ID" "$HOST" "$OWNER" "$TITLE" "$WELCOME" "$SCREENS" "$SHIP" "$DIR" "$U" "$HOMETILE" "$INTAKE" <<'PY'
 import json, os, secrets, sys, base64, pwd, grp
 ID, HOST, OWNER, TITLE, WELCOME, SCREENS, SHIP, DIR, U, HOMETILE = sys.argv[1:11]
+INTAKE = sys.argv[11] if len(sys.argv) > 11 else ""
 uid, gid = pwd.getpwnam(U).pw_uid, pwd.getpwnam(U).pw_gid
 def put(path, text, mode):
     with open(path, 'w', encoding='utf-8') as f: f.write(text)
@@ -64,6 +82,11 @@ inst["samples"] = True
 inst["circles"] = [{"key": "candle", "kind": "ner", "title": "אתר הנר", "url": "https://candletimes.com"}]
 inst["emptyCircles"] = 3
 if HOMETILE: inst["homeTile"] = HOMETILE
+if INTAKE:
+    # 24.10: the rest of the proposal. Name, owner, title, welcome and screens came from the arguments above.
+    src = json.load(open(INTAKE, encoding="utf-8"))
+    for k in ("computer", "phone", "biz", "profile", "intakeNotes"):
+        if k in src: inst[k] = src[k]
 put(DIR + "/instance.json", json.dumps(inst, ensure_ascii=False, indent=1), 0o644)
 keys = {"_why": "נושאי ntfy הם סיסמה. לא נכנסים לגיט.", "ntfyIn": "%s-in-%s" % (ID, secrets.token_hex(16)),
         "ntfyLive": "%s-live-%s" % (ID, secrets.token_hex(16)), "ntfyOut": "%s-out-%s" % (ID, secrets.token_hex(16)), "mail": ""}
@@ -232,4 +255,5 @@ systemctl is-active monitor-listen-$ID.service monitor-worker-$ID.timer monitor-
 
 # Itzik, 11.10: every customer gets big file uploads from day one, without asking.
 bash "$(dirname "$0")/enable-upload.sh" "$ID" || echo "העלאת קבצים גדולים לא הופעלה, להריץ setup/enable-upload.sh $ID"
+if [ -n "${TIER:-}" ]; then echo "הקליטה מציעה פרופיל $TIER: cat setup/profiles/$TIER.env >> /etc/$ID.env (אחרי setup/apply-own-token.sh)"; fi
 echo "סיום: $ID"
