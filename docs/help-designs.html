@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>כפתור עזרה ומכסה: ארבעה כיוונים</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+/* 24.10.2026: design options for the tenant help button, help sheet and quota bar.
+   A demo only, no data. Sounds are synthesized with WebAudio like the monitor's own
+   sentSound(), so there is no audio file and no license to check. */
+:root{--bg:#f3f1ec;--ink:#1d1d24;--mut:#6b6b76;--card:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Heebo,system-ui,sans-serif;line-height:1.5}
+header{padding:28px 16px 8px;max-width:1100px;margin:auto}
+h1{font-size:26px;margin:0 0 6px;font-weight:800}
+header p{margin:0;color:var(--mut);font-size:15px}
+.ctl{max-width:1100px;margin:14px auto 0;padding:0 16px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;font-size:15px}
+.ctl input[type=range]{width:220px;accent-color:#4f7cff}
+.ctl b{min-width:44px;display:inline-block}
+.ctl button{font:inherit;border:1px solid #ccc;background:#fff;border-radius:10px;padding:6px 12px;cursor:pointer}
+.grid{max-width:1100px;margin:18px auto 40px;padding:0 16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:22px}
+.opt h2{font-size:18px;margin:0 0 2px}
+.opt .sub{color:var(--mut);font-size:14px;margin:0 0 10px}
+.pick{margin-top:10px;width:100%;font:inherit;font-weight:600;padding:10px;border-radius:12px;border:2px solid var(--ink);background:transparent;cursor:pointer}
+.pick.on{background:var(--ink);color:#fff}
+
+/* the phone */
+.ph{position:relative;height:500px;border-radius:34px;overflow:hidden;border:8px solid #111;box-shadow:0 18px 40px rgba(0,0,0,.18)}
+.ph .top{padding:18px 16px 10px;font-weight:700;font-size:15px}
+.ph .msgs{padding:0 14px}
+.ph .m{border-radius:14px;padding:8px 12px;margin:8px 0;font-size:13px;max-width:80%}
+.ph .m.me{margin-inline-start:auto}
+.help{position:absolute;bottom:18px;inset-inline-start:16px;border:0;cursor:pointer;font:inherit;display:flex;align-items:center;justify-content:center;gap:6px}
+.sheet{position:absolute;inset-inline:0;bottom:0;transform:translateY(105%);transition:transform .42s cubic-bezier(.2,.9,.25,1.15);padding:10px 16px 22px;border-radius:24px 24px 0 0;z-index:3}
+.ph.open .sheet{transform:none}
+.shade{position:absolute;inset:0;background:rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .3s;z-index:2}
+.ph.open .shade{opacity:1;pointer-events:auto}
+.grab{width:40px;height:5px;border-radius:3px;margin:0 auto 10px;opacity:.35;background:currentColor}
+.sheet h3{margin:0 0 10px;font-size:17px}
+.q{display:block;width:100%;text-align:start;font:inherit;font-size:14px;padding:11px 12px;margin:6px 0;border-radius:12px;cursor:pointer}
+.x{position:absolute;top:10px;inset-inline-end:14px;border:0;background:none;font-size:20px;cursor:pointer;color:inherit}
+.human{margin-top:8px;font-weight:700}
+
+/* quota: capsule */
+.cap{margin:0 14px 6px;height:12px;border-radius:8px;overflow:hidden;position:relative}
+.cap i{display:block;height:100%;width:calc(var(--p)*1%);border-radius:8px;transition:width .5s,background .4s}
+.capt{margin:0 14px 10px;font-size:12px}
+/* quota: battery */
+.bat{margin:0 14px 10px;display:flex;align-items:center;gap:8px;font-size:12px}
+.bat .cell{width:64px;height:24px;border:2px solid currentColor;border-radius:6px;position:relative;overflow:hidden}
+.bat .cell:after{content:"";position:absolute;inset-inline-end:-6px;top:6px;width:4px;height:8px;background:currentColor;border-radius:2px}
+.bat .fill{position:absolute;inset-block:0;inset-inline-start:0;width:calc((100 - var(--p))*1%);transition:width .5s,background .4s}
+.bat .fill:before{content:"";position:absolute;inset:-6px 0 auto;height:10px;background:inherit;filter:brightness(1.15);border-radius:40%;animation:wave 2.4s linear infinite}
+@keyframes wave{to{transform:translateX(-20px)}}
+/* quota: ring around the help button */
+.ring{position:absolute;inset:-6px;pointer-events:none}
+.ring circle{fill:none;stroke-width:4;transition:stroke-dashoffset .5s,stroke .4s}
+
+.warn .cap i,.warn .bat .fill{background:#f59e0b!important}
+.full .cap i,.full .bat .fill{background:#9ca3af!important}
+.toast{position:absolute;top:56px;inset-inline:14px;padding:9px 12px;border-radius:12px;font-size:13px;font-weight:600;opacity:0;transform:translateY(-8px);transition:.35s;z-index:4;pointer-events:none}
+.warn .toast,.full .toast{opacity:1;transform:none}
+
+/* A, soft glass */
+.A .ph{background:linear-gradient(160deg,#eef2ff,#f5f7fb 50%,#e6fbf7);color:#1d2b64}
+.A .m{background:#fff}.A .m.me{background:#4f7cff;color:#fff}
+.A .help{width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.6);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:#1d2b64;font-size:24px;font-weight:800;box-shadow:0 8px 24px rgba(79,124,255,.35);animation:breathe 6s ease-in-out infinite}
+@keyframes breathe{50%{box-shadow:0 8px 34px rgba(79,124,255,.6)}}
+.A .sheet{background:rgba(255,255,255,.85);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.A .q{border:1px solid #dfe5f5;background:#fff;color:#1d2b64}
+.A .human{background:#4f7cff;color:#fff;border:0}
+.A .cap{background:#dfe5f5}.A .cap i{background:linear-gradient(90deg,#2dd4bf,#3b82f6)}
+.A .toast{background:#fff7e6;color:#92400e}
+
+/* B, friendly pill */
+.B .ph{background:#fff8ef;color:#3b2f2f}
+.B .m{background:#fff;border:2px solid #f3e3cf}.B .m.me{background:#2e7d6b;color:#fff;border-color:#2e7d6b}
+.B .help{padding:12px 20px;border-radius:30px;background:#ff8a3d;color:#fff;font-weight:800;font-size:16px;box-shadow:0 5px 0 #c9621f;animation:hop 20s infinite}
+.B .help:active{transform:translateY(4px);box-shadow:0 1px 0 #c9621f}
+@keyframes hop{0%,94%,100%{transform:none}96%{transform:translateY(-8px) rotate(-4deg)}98%{transform:translateY(0) rotate(3deg)}}
+.B .sheet{background:#fff;border-top:3px solid #ffd2b0}
+.B .q{border:2px solid #f3e3cf;background:#fff8ef;color:#3b2f2f;font-weight:600;box-shadow:0 3px 0 #f3e3cf}
+.B .human{background:#2e7d6b;color:#fff;border:0;box-shadow:0 3px 0 #1f5a4d}
+.B .bat .fill{background:#2e7d6b}
+.B .toast{background:#ff8a3d;color:#fff}
+
+/* C, midnight */
+.C .ph{background:radial-gradient(120% 80% at 20% 0,#1b1640,#0b0b12 60%);color:#ededf5}
+.C .m{background:#17172a;border:1px solid #2a2a44}.C .m.me{background:linear-gradient(135deg,#7c5cff,#22d3ee);border:0}
+.C .help{width:54px;height:54px;border-radius:16px;background:#14142a;color:#fff;font-size:22px;font-weight:800;position:absolute}
+.C .help:before{content:"";position:absolute;inset:-2px;border-radius:18px;z-index:-1;background:conic-gradient(from var(--a,0deg),#7c5cff,#22d3ee,#7c5cff);animation:spin 5s linear infinite}
+@property --a{syntax:"<angle>";inherits:false;initial-value:0deg}
+@keyframes spin{to{--a:360deg}}
+.C .sheet{background:rgba(20,20,40,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid #2a2a44}
+.C .q{background:#17172a;border:1px solid #2a2a44;color:#ededf5}
+.C .human{background:linear-gradient(135deg,#7c5cff,#22d3ee);border:0;color:#fff}
+.C .ring circle.bg{stroke:#2a2a44}.C .ring circle.fg{stroke:#22d3ee}
+.C.warn .ring circle.fg{stroke:#f59e0b}.C.full .ring circle.fg{stroke:#ef4444}
+.C .toast{background:#2a1f05;color:#fbbf24;border:1px solid #f59e0b}
+
+/* D, paper notes */
+.D .ph{background:#fbf7f0;color:#0a2540;background-image:repeating-linear-gradient(#fbf7f0 0 27px,#efe7d8 27px 28px)}
+.D .m{background:#fff;box-shadow:2px 2px 0 #e7dcc8}.D .m.me{background:#fff3c4}
+.D .help{width:60px;height:56px;border-radius:50% 50% 50% 8px;background:#0a2540;color:#e9b949;font-size:24px;font-weight:800}
+.D .tip{position:absolute;bottom:84px;inset-inline-start:16px;background:#e9b949;color:#0a2540;font-weight:700;font-size:13px;padding:5px 10px;border-radius:10px 10px 10px 2px;white-space:nowrap;overflow:hidden;width:0;animation:type 1.6s steps(9) 1s forwards}
+@keyframes type{to{width:96px}}
+.D .sheet{background:#fffdf8;border-top:2px dashed #0a2540}
+.D .q{background:#fff;border:1.5px solid #0a2540;color:#0a2540;box-shadow:3px 3px 0 #e9b949}
+.D .human{background:#e9b949;border:1.5px solid #0a2540;color:#0a2540}
+.D .cap{background:#efe7d8;border:1.5px solid #0a2540}.D .cap i{background:#0a2540}
+.D .toast{background:#e9b949;color:#0a2540;border:1.5px solid #0a2540}
+
+.snd{max-width:1100px;margin:0 auto 50px;padding:0 16px}
+.snd h2{font-size:18px}
+.snd .row{display:flex;flex-wrap:wrap;gap:8px}
+.snd button{font:inherit;padding:9px 14px;border-radius:12px;border:1px solid #ccc;background:#fff;cursor:pointer}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.D .tip{width:96px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>כפתור עזרה ומכסה: ארבעה כיוונים</h1>
+  <p>לוחצים על כפתור העזרה בכל טלפון. מזיזים את הפס כדי לראות איך המכסה נראית ב 80% וב 100%. בוחרים כיוון אחד בכפתור שמתחת.</p>
+</header>
+<div class="ctl">
+  <label>מכסה שנוצלה היום: <b id="pv">40%</b></label>
+  <input id="pct" type="range" min="0" max="100" value="40">
+  <button id="snd">🔊 צלילים דלוקים</button>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<section class="snd">
+  <h2>הצלילים</h2>
+  <div class="row">
+    <button data-s="open">פתיחת עזרה</button>
+    <button data-s="tap">בחירת שאלה</button>
+    <button data-s="send">שליחה לאיציק</button>
+    <button data-s="ok">תשובה הגיעה</button>
+    <button data-s="warn">אזהרה ב 80%</button>
+    <button data-s="block">מכסה הסתיימה</button>
+  </div>
+</section>
+
+<script>
+var OPTS = [
+  {k:'A', name:'זכוכית רכה', sub:'שקט ויוקרתי, בהשראת אפל. פס מכסה בצבעי טורקיז.', bar:'cap', label:'?'},
+  {k:'B', name:'כפתור חברותי', sub:'חם ושמח, כמו דואולינגו. טוב למבוגרים. מכסה כסוללה.', bar:'bat', label:'🙋 עזרה'},
+  {k:'C', name:'חצות', sub:'כהה וטכנולוגי, למעצבים. המכסה היא טבעת סביב הכפתור.', bar:'ring', label:'?'},
+  {k:'D', name:'מחברת', sub:'אנושי וכתוב ביד. בועת דיבור שמקלידה "צריך עזרה?".', bar:'cap', label:'?'}
+];
+var QS = ['איפה הקובץ ששלחת לי?','איך מורידים קובץ לטלפון?','למה עוד לא ענה לי?','כמה נשאר לי במכסה?'];
+
+function phone(o){
+  var bar = o.bar==='cap' ? '<div class="cap"><i></i></div><div class="capt"></div>'
+          : o.bar==='bat' ? '<div class="bat"><span class="cell"><span class="fill"></span></span><span class="capt"></span></div>' : '';
+  var ring = o.bar==='ring' ? '<svg class="ring" viewBox="0 0 66 66"><circle class="bg" cx="33" cy="33" r="30"/><circle class="fg" cx="33" cy="33" r="30" stroke-dasharray="188.5" transform="rotate(-90 33 33)"/></svg>' : '';
+  return '<div class="opt '+o.k+'" id="o'+o.k+'"><h2>'+o.k+'. '+o.name+'</h2><p class="sub">'+o.sub+'</p>'+
+    '<div class="ph"><div class="top">המוניטור שלי</div>'+bar+
+    '<div class="toast"></div>'+
+    '<div class="msgs"><div class="m me">תכין לי לוח השראה לחורף</div><div class="m">מוכן ✔ הקובץ באריח 📁 הקבצים שלי</div><div class="m me">איפה אני מוריד אותו?</div></div>'+
+    (o.k==='D'?'<div class="tip">צריך עזרה?</div>':'')+
+    '<button class="help" aria-label="עזרה">'+o.label+ring+'</button>'+
+    '<div class="shade"></div>'+
+    '<div class="sheet" role="dialog" aria-label="עזרה"><div class="grab"></div><button class="x" aria-label="סגירה">✕</button><h3>במה אפשר לעזור?</h3>'+
+      QS.map(function(q){return '<button class="q">'+q+'</button>'}).join('')+
+      '<button class="q human">לא מצאתי, תעביר לאיציק</button></div>'+
+    '</div><button class="pick">אני בוחר בזה</button></div>';
+}
+var grid = document.getElementById('grid');
+grid.innerHTML = OPTS.map(phone).join('');
+
+// sounds, synthesized like sentSound() in build.js
+var ctx=null, on=true;
+try{ on = localStorage.getItem('hdSfxOff')!=='1'; }catch(e){}
+function ac(){ if(!ctx){ var C=window.AudioContext||window.webkitAudioContext; if(!C) return null; ctx=new C(); } if(ctx.state==='suspended') ctx.resume(); return ctx; }
+function tone(f,t0,d,type,vol,f2){
+  var c=ac(); if(!c) return; var o=c.createOscillator(), g=c.createGain(), t=c.currentTime+t0;
+  o.type=type||'sine'; o.frequency.setValueAtTime(f,t); if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+d);
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol||0.22,t+0.015); g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+  o.connect(g).connect(c.destination); o.start(t); o.stop(t+d+0.05);
+}
+var SFX = {
+  open: function(){ tone(520,0,.16,'sine',.18,880); tone(1320,.09,.22,'triangle',.08); },
+  tap:  function(){ tone(1400,0,.05,'triangle',.12); },
+  send: function(){ tone(660,0,.12,'sine',.18,990); tone(1320,.12,.28,'sine',.12); tone(1760,.2,.3,'sine',.07); },
+  ok:   function(){ tone(784,0,.18,'sine',.16); tone(1175,.12,.32,'sine',.14); },
+  warn: function(){ tone(660,0,.2,'triangle',.18); tone(523,.22,.28,'triangle',.16); },
+  block:function(){ tone(196,0,.3,'sine',.25,140); tone(98,0,.3,'sine',.15); }
+};
+function play(n){ if(on && SFX[n]) SFX[n](); }
+
+var sndBtn = document.getElementById('snd');
+function paintSnd(){ sndBtn.textContent = on ? '🔊 צלילים דלוקים' : '🔇 צלילים כבויים'; }
+paintSnd();
+sndBtn.onclick = function(){ on=!on; try{ localStorage.setItem('hdSfxOff', on?'0':'1'); }catch(e){} paintSnd(); if(on) play('tap'); };
+document.querySelectorAll('.snd [data-s]').forEach(function(b){ b.onclick=function(){ var w=on; on=true; play(b.dataset.s); on=w; }; });
+
+document.querySelectorAll('.opt').forEach(function(op){
+  var ph=op.querySelector('.ph');
+  op.querySelector('.help').onclick=function(){ ph.classList.add('open'); play(op.classList.contains('full')?'block':'open'); };
+  op.querySelector('.x').onclick=op.querySelector('.shade').onclick=function(){ ph.classList.remove('open'); };
+  op.querySelectorAll('.q').forEach(function(q){ q.onclick=function(){ play(q.classList.contains('human')?'send':'tap'); }; });
+  op.querySelector('.pick').onclick=function(){
+    document.querySelectorAll('.pick').forEach(function(p){ p.classList.remove('on'); p.textContent='אני בוחר בזה'; });
+    this.classList.add('on'); this.textContent='✔ נבחר'; play('ok');
+  };
+});
+
+var pct=document.getElementById('pct'), pv=document.getElementById('pv'), last='';
+function paintQuota(){
+  var p=+pct.value, st = p>=100?'full':p>=80?'warn':'';
+  pv.textContent=p+'%';
+  document.querySelectorAll('.opt').forEach(function(op){
+    op.style.setProperty('--p',p);
+    op.classList.toggle('warn',st==='warn'); op.classList.toggle('full',st==='full');
+    var t=op.querySelector('.capt'); if(t) t.textContent = st==='full' ? '🔒 המכסה של היום הסתיימה' : 'נשאר לך '+(100-p)+'% להיום';
+    var fg=op.querySelector('.ring .fg'); if(fg) fg.style.strokeDashoffset = 188.5*(1-p/100);
+    op.querySelector('.toast').textContent = st==='full' ? '🔒 המכסה הסתיימה. איציק קיבל הודעה ויאשר בהקדם.' : 'נשארו לך '+(100-p)+'% מהמכסה של היום';
+  });
+  if(st && st!==last) play(st==='full'?'block':'warn');
+  last=st;
+}
+pct.oninput=paintQuota; paintQuota();
+</script>
+</body>
+</html>
