@@ -682,6 +682,12 @@ function build() {
     replied: replied.sort((a, b) => (a.repliedAt < b.repliedAt ? 1 : -1)),
     contacts,
     reports,
+    /*
+      24.10.2026: the morning brief as metrics (lib/brief.js, written by daily-brief.js
+      at 07:00). Only today's or yesterday's finished doc reaches the page; the
+      home screen renders D.brief and falls back to the plain report otherwise.
+    */
+    brief: require('./lib/brief.js').forPage(loadDocs('brief'), Date.now()),
     pegasus,
     improve,
     special,

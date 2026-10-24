@@ -7,8 +7,20 @@
   mail in his box, what he wrote here and what was answered, the reports that
   came in) and asks a Claude session for one short report: who sent what, what
   is urgent, what changed, what is waiting for him. The report lands in
-  data/reports/reports, which the page shows on the "תשובות" screen, and a
-  push tells him it is there.
+  data/reports/reports, which the page shows on the "תשובות" screen.
+
+  24.10.2026 (stage 3): the same run also writes data/brief/brief/<YYYYMMDD>.json,
+  the metrics doc the home screen reads as D.brief (lib/brief.js). That part is
+  plain code and calls no model.
+
+  Cost rules (CLAUDE.md, saving): the model is called only when there is new
+  material (mail, chat or reports in the last day). With nothing new, the
+  metrics doc is still written and the page is still built, but no session starts.
+
+  Notify count per day: at most 1. lib/brief.js notifyPlan() skips a notify
+  when items are empty, when one was already sent today (data/brief/notify.json
+  holds {day, count, sig}), and when the items are the same as the last notify.
+  A manual rerun the same day therefore does not send a second message.
 
   The session gets text only and no tools: the mail is someone else's words,
   so nothing in it can make the session read or run anything. The mail is read
@@ -21,6 +33,7 @@ const fs = require('fs');
 const path = require('path');
 const { spawn, execFileSync } = require('child_process');
 const inst = require('./lib/instance.js');
+const brief = require('./lib/brief.js');
 
 const DRY = process.argv.includes('--dry');
 const DAY = 24 * 3600 * 1000;
@@ -45,12 +58,9 @@ function mail() {
   return { error: null, items };
 }
 
+// Docs of one collection written in the last 24 hours, oldest first.
 function docs(sub) {
-  const dir = path.join(inst.dataPath, sub, sub);
-  if (!fs.existsSync(dir)) return [];
-  return fs.readdirSync(dir).filter(f => f.endsWith('.json')).map(f => {
-    try { return JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')); } catch (e) { return null; }
-  }).filter(x => x && x.at && Date.parse(x.at) >= SINCE)
+  return brief.readAll(inst.dataPath, sub).filter(x => x.at && Date.parse(x.at) >= SINCE)
     .sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
 }
 
@@ -146,27 +156,71 @@ function bizBlock() {
   } catch (e) { return ''; }
 }
 
+function execNode(args, timeout) {
+  execFileSync('node', args, { cwd: __dirname, stdio: 'ignore', timeout });
+}
+
 async function main() {
+  const now = Date.now();
   const m = mail();
   const chat = docs('chat');
   const reports = docs('reports').filter(x => !/^דוח בוקר/.test(x.title || ''));
-  const r = parse(await runClaude(prompt(m, chat, reports)));
+  // Nothing new in the last day: no model session at all (saving rule 2).
+  const fresh = m.items.length > 0 || chat.length > 0 || reports.length > 0;
+  const r = fresh ? parse(await runClaude(prompt(m, chat, reports))) : null;
+
+  // 24.10.2026: the metrics doc. Plain code, no model.
+  const structured = brief.buildBrief(brief.gather(inst.dataPath, now));
   const day = new Date().toLocaleDateString('he-IL', { timeZone: 'Asia/Jerusalem', day: 'numeric', month: 'numeric' });
-  const doc = {
-    at: new Date().toISOString(),
-    title: 'דוח בוקר ' + day + ': ' + r.title,
-    body: r.body + usageBlock() + bizBlock() + (m.error ? '\n\nהתיבה לא נקראה הבוקר (' + m.error + '), הדוח בלי המיילים.' : ''),
-  };
-  if (DRY) { console.log(doc.title + '\n\n' + doc.body); return; }
-  const dir = path.join(inst.dataPath, 'reports', 'reports');
-  fs.mkdirSync(dir, { recursive: true });
-  const stamp = new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Jerusalem' }).slice(0, 16).replace(/[-: ]/g, '').replace(/^(\d{8})/, '$1-');
-  fs.writeFileSync(path.join(dir, stamp + '-morning-brief.json'), JSON.stringify(doc, null, 1));
-  console.log(doc.at.slice(0, 19) + '  brief written, ' + m.items.length + ' mails, ' + chat.length + ' chat');
-  try { execFileSync('node', ['push.js', 'דוח בוקר ' + day], { cwd: __dirname, stdio: 'ignore', timeout: 240000 }); }
+
+  if (DRY) {
+    if (r) console.log('דוח: ' + r.title + '\n\n' + r.body + '\n');
+    else console.log('אין חומר חדש: לא נקרא מודל, הדוח לא נכתב.');
+    console.log(JSON.stringify(structured, null, 1));
+    return;
+  }
+
+  const wrote = [];
+  if (r) {
+    const doc = {
+      at: new Date().toISOString(),
+      title: 'דוח בוקר ' + day + ': ' + r.title,
+      body: r.body + usageBlock() + bizBlock() + (m.error ? '\n\nהתיבה לא נקראה הבוקר (' + m.error + '), הדוח בלי המיילים.' : ''),
+    };
+    const dir = path.join(inst.dataPath, 'reports', 'reports');
+    fs.mkdirSync(dir, { recursive: true });
+    const stamp = new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Jerusalem' }).slice(0, 16).replace(/[-: ]/g, '').replace(/^(\d{8})/, '$1-');
+    fs.writeFileSync(path.join(dir, stamp + '-morning-brief.json'), JSON.stringify(doc, null, 1));
+    wrote.push(doc);
+  }
+
+  const bdir = path.join(inst.dataPath, 'brief', 'brief');
+  fs.mkdirSync(bdir, { recursive: true });
+  const dayFile = brief.dayKey(now).replace(/-/g, '');
+  fs.writeFileSync(path.join(bdir, dayFile + '.json'), JSON.stringify(structured, null, 1));
+
+  console.log(structured.at.slice(0, 19) + '  brief written, ' + m.items.length + ' mails, ' + chat.length + ' chat, ' +
+    structured.items.length + ' items' + (r ? '' : ', no model call (nothing new)'));
+  // One push publishes both (the page reads the metrics doc through build.js).
+  try { execNode(['push.js', r ? 'דוח בוקר ' + day : 'מדדי הבוקר ' + day], 240000); }
   catch (e) { console.log('publish failed: ' + String(e.message).slice(0, 120)); }
-  try { execFileSync('node', ['notify.js', 'דוח הבוקר מוכן', doc.title + ' · במוניטור, כפתור תשובות למטה'], { cwd: __dirname, stdio: 'ignore', timeout: 60000 }); }
+
+  // Notify only on change, at most once a day (see lib/brief.js notifyPlan).
+  const statePath = path.join(inst.dataPath, 'brief', 'notify.json');
+  const state = (() => { try { return JSON.parse(fs.readFileSync(statePath, 'utf8')); } catch (e) { return null; } })();
+  const plan = brief.notifyPlan(structured, state, now);
+  if (!plan.send) { console.log('no notify: ' + plan.why); return; }
+  const title = r ? 'דוח הבוקר מוכן' : 'הבוקר במוניטור';
+  const body = r ? wrote[0].title + ' · במוניטור, כפתור תשובות למטה' : structured.items[0].t;
+  try { execNode(['notify.js', title, body], 60000); }
   catch (e) { console.log('notify failed: ' + String(e.message).slice(0, 120)); }
+  // Recorded after the attempt either way, so a failed send is not repeated the same day.
+  fs.mkdirSync(path.dirname(statePath), { recursive: true });
+  fs.writeFileSync(statePath, JSON.stringify(brief.recordNotify(state, now, plan.sig)));
 }
 
-main().catch(e => { console.log(new Date().toISOString().slice(0, 19) + '  BRIEF FAILED: ' + e.message); process.exit(1); });
+if (require.main === module) {
+  main().catch(e => { console.log(new Date().toISOString().slice(0, 19) + '  BRIEF FAILED: ' + e.message); process.exit(1); });
+}
+
+module.exports = { prompt, parse };
