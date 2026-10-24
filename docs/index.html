@@ -2101,7 +2101,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-24T06:30:20.265Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-24T06:30:51.241Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3045,6 +3045,7 @@ try{
   <div id="recWrap">
    <button type="button" id="recBtn" aria-label="הקלטת הודעה קולית">&#127908;</button>
    <span id="recSaid">לחיצה מתחילה הקלטה. לחיצה שנייה עוצרת ושולחת. אם בחרת קבצים או כתבת משהו, הכל יוצא יחד בהודעה אחת.</span>
+   <button type="button" id="recqBtn" hidden onclick="recqResend()">לשלוח שוב</button>
   </div>
  </form>
  <div class="msgsaid" id="fSaid"></div>
@@ -3861,7 +3862,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='c865eb48bf';
+var CODE_ID='e40c5c9488';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -4482,6 +4483,7 @@ function goLinks(m){
    var inText=(t.match(new RegExp('files/[^\\s<>"]+','g'))||[]).some(function(h){return fileNameOf(h.replace(new RegExp('[.,;:!?)"]+$'),''))===n;});
    return '<div class="resf">'+(inText?'':'<button type="button" class="gotile resv" data-file="'+esc(n)+'">'+fileThumb(n)+'</button>')
     +'<button type="button" class="gotile fsave resdl" data-fdl="'+esc(n)+'">⬇ '+(fileMobile()?'שמירה בטלפון':'להורדה למחשב')+': '+esc(n.split('/').pop())+'</button>'
+    +'<button type="button" class="gotile" data-fcmt="'+esc(n)+'">💬 הערה על זה</button>'
     +(fb.length>1?'<button type="button" class="gotile fsave respick" data-rq="'+esc((fem?'בוחרת':'בוחר')+' בזה: '+n.split('/').pop())+'">✓ '+(fem?'בוחרת':'בוחר')+' בזה</button>':'')
     +'</div>';
   }).join('')
@@ -4491,7 +4493,8 @@ function goLinks(m){
  return fb.map(function(n){
   var inText=(t.match(new RegExp('files/[^\\s<>"]+','g'))||[]).some(function(h){return fileNameOf(h.replace(new RegExp('[.,;:!?)"]+$'),''))===n;});
   return '<button type="button" class="gotile" data-file="'+esc(n)+'">'+(inText?'':fileThumb(n))+'קח אותי לשם: '+esc(n.split('/').pop())+'</button>'
-   +'<button type="button" class="gotile fsave" data-fdl="'+esc(n)+'">⬇ '+(fileMobile()?'שמירה בטלפון':'הורדה למחשב')+'</button>';
+   +'<button type="button" class="gotile fsave" data-fdl="'+esc(n)+'">⬇ '+(fileMobile()?'שמירה בטלפון':'הורדה למחשב')+'</button>'
+   +'<button type="button" class="gotile" data-fcmt="'+esc(n)+'">💬 הערה על זה</button>';
  }).join('')+ids.map(function(id){
   var el=document.getElementById(id);
   if(!el||el.hidden)return '';

@@ -5177,6 +5177,7 @@ __RIVSHARE__
   <div id="recWrap">
    <button type="button" id="recBtn" aria-label="הקלטת הודעה קולית">&#127908;</button>
    <span id="recSaid">לחיצה מתחילה הקלטה. לחיצה שנייה עוצרת ושולחת. אם בחרת קבצים או כתבת משהו, הכל יוצא יחד בהודעה אחת.</span>
+   <button type="button" id="recqBtn" hidden onclick="recqResend()">לשלוח שוב</button>
   </div>
  </form>
  <div class="msgsaid" id="fSaid"></div>
@@ -6742,6 +6743,7 @@ function goLinks(m){
    var inText=(t.match(new RegExp('files/[^\\\\s<>"]+','g'))||[]).some(function(h){return fileNameOf(h.replace(new RegExp('[.,;:!?)"]+$'),''))===n;});
    return '<div class="resf">'+(inText?'':'<button type="button" class="gotile resv" data-file="'+esc(n)+'">'+fileThumb(n)+'</button>')
     +'<button type="button" class="gotile fsave resdl" data-fdl="'+esc(n)+'">⬇ '+(fileMobile()?'שמירה בטלפון':'להורדה למחשב')+': '+esc(n.split('/').pop())+'</button>'
+    +'<button type="button" class="gotile" data-fcmt="'+esc(n)+'">💬 הערה על זה</button>'
     +(fb.length>1?'<button type="button" class="gotile fsave respick" data-rq="'+esc((fem?'בוחרת':'בוחר')+' בזה: '+n.split('/').pop())+'">✓ '+(fem?'בוחרת':'בוחר')+' בזה</button>':'')
     +'</div>';
   }).join('')
@@ -6754,7 +6756,8 @@ function goLinks(m){
   // Reviewer idea taken by Itzik, 13.10: "כפתור הורדה ברור לקבצים מצ'אט".
   // Every file in an answer gets its own save button right under it.
   return '<button type="button" class="gotile" data-file="'+esc(n)+'">'+(inText?'':fileThumb(n))+'קח אותי לשם: '+esc(n.split('/').pop())+'</button>'
-   +'<button type="button" class="gotile fsave" data-fdl="'+esc(n)+'">⬇ '+(fileMobile()?'שמירה בטלפון':'הורדה למחשב')+'</button>';
+   +'<button type="button" class="gotile fsave" data-fdl="'+esc(n)+'">⬇ '+(fileMobile()?'שמירה בטלפון':'הורדה למחשב')+'</button>'
+   +'<button type="button" class="gotile" data-fcmt="'+esc(n)+'">💬 הערה על זה</button>';
  }).join('')+ids.map(function(id){
   var el=document.getElementById(id);
   if(!el||el.hidden)return '';
@@ -11967,9 +11970,11 @@ document.addEventListener('click',function(e){
  }).catch(function(){b.disabled=false;toast('לא נשלח. אפשר לנסות שוב.');});
 },true);
 document.addEventListener('click',function(e){
- var b=e.target&&e.target.closest&&e.target.closest('[data-fdl],[data-fimode]');if(!b)return;
+ var b=e.target&&e.target.closest&&e.target.closest('[data-fdl],[data-fimode],[data-fcmt]');if(!b)return;
  e.preventDefault();e.stopPropagation();
  if(b.hasAttribute('data-fdl'))fileDownload(b.getAttribute('data-fdl'));
+ // 24.10, Itzik's idea: "אי אפשר להעיר על תוצר מסוים". The note button names the file itself.
+ else if(b.hasAttribute('data-fcmt'))askInChat('הערה על '+b.getAttribute('data-fcmt').split('/').pop()+': ');
  else{fiMode=b.getAttribute('data-fimode');fiFolder='';renderFiles();}
 },true);
 function renderFiles(){
