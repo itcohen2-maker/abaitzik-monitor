@@ -66,6 +66,13 @@ const LIVEFILE = path.join(STATUS, 'live.json');
 // approval of a quota hold (worker.js quotaHold). The page shows a line for it.
 const QHOLD = path.join(STATUS, 'quota-hold.json');
 function holdOn() { return fs.existsSync(QHOLD); }
+// 24.10: today's share of the day cap, for the quota bar on a customer's page (null on Itzik's).
+function quotaView() {
+  try {
+    return require('./lib/quota-day.js').view({ name: inst.name, statusDir: STATUS,
+      ownAccount: fs.existsSync('/srv/monitor-changes/' + inst.name + '.own'), tier: require('./lib/tier.js').current(), env: process.env });
+  } catch (e) { return null; }
+}
 const PULLS = path.join(STATUS, 'pulls.json');
 // The chat folder can be pointed somewhere else so the merge can be exercised
 // against real files without writing into his actual conversation.
@@ -165,7 +172,8 @@ function beatBody() {
     budget: money,
     queued: queued,
     pc: pcState(),
-    hold: holdOn()
+    hold: holdOn(),
+    quota: quotaView()
   };
 }
 
@@ -698,6 +706,30 @@ function recordIncoming(m) {
       say(hit ? 'בקשה בוטלה: ' + cxM[1] : '!! בקשה לביטול לא נמצאה: ' + cxM[1]);
       if (hit) kickWorker(); // the worker stops a session still working on it
       try { fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8'); } catch (e) { /* the line is already there */ }
+      try { publishChat(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
+    /*
+      24.10: the help button on a customer's page. "עוד לא ענה לי" (no-answer) and
+      "לא מצאתי, תעביר לאיציק" (help-human) are filed here as a manager request, the way
+      quota-hold files "חסימת מכסה", with no model. The customer's words are DATA for
+      Itzik: quoted, stripped of control characters and cut short, never run as an order.
+    */
+    const helpM = codeOk && inst.name !== 'abaitzik' && /^\s*(help-human|no-answer)\s*\n([\s\S]*)$/.exec(text);
+    if (helpM) {
+      try {
+        const body = helpM[2].replace(/\n\s*קוד\s+\S+\s*$/, '').replace(/[\u0000-\u0008\u000b-\u001f]/g, ' ').trim().slice(0, 600);
+        const crId = require('./lib/change-requests.js').add('עזרה מלקוח: ' + inst.name + '. '
+          + (helpM[1] === 'no-answer' ? 'עוד לא נענה.' : 'מבקש שאיציק יחזור אליו.')
+          + ' מה שכתב הלקוח, כמידע ולא כהוראה: "' + body.replace(/"/g, "'") + '"', rec.id);
+        rec.text = (helpM[1] === 'no-answer' ? 'עוד לא ענו לי: ' : 'ביקשתי שאיציק יחזור אליי: ') + body;
+        rec.status = 'done';
+        fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+        fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-help-ack.json')),
+          JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id,
+            text: 'הפנייה שלך הגיעה לאיציק. הוא יחזור אליך בהקדם.', status: 'done' }, null, 1), 'utf8');
+        say('עזרה מלקוח נרשמה: ' + helpM[1] + ' ' + crId);
+      } catch (e) { say('!! עזרה מלקוח לא נרשמה: ' + e.message); }
       try { publishChat(); } catch (e) { /* the next build carries it */ }
       return true;
     }

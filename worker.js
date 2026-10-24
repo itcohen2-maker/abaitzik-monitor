@@ -910,16 +910,10 @@ function reconcile(live) {
   once. usage-watch.js (root) pushes Itzik. His own monitor has no ceiling.
   To raise one customer's: MONITOR_DAY_USD in /etc/<id>.env.
 */
-const DAY_USD = Number(process.env.MONITOR_DAY_USD) || 8;
+const DAY_USD = require('./lib/quota-day.js').dayCap(process.env, null);
 const SESSION_USD = Number(process.env.MONITOR_SESSION_USD) || 2.5;
-function spentToday() {
-  const day = (d) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem' }).format(d);
-  const today = day(new Date());
-  try {
-    return fs.readFileSync(path.join(STATUS, 'usage.jsonl'), 'utf8').split('\n').filter(Boolean)
-      .reduce((n, l) => { try { const u = JSON.parse(l); return day(new Date(u.at)) === today ? n + (u.usd || 0) : n; } catch (e) { return n; } }, 0);
-  } catch (e) { return 0; }
-}
+// 24.10: shared with the page's quota bar (listen.js), see lib/quota-day.js.
+function spentToday() { return require('./lib/quota-day.js').spentToday(STATUS); }
 // 12.10: a customer whose own Claude key is in (setup/apply-own-token.sh) spends its own
 // subscription, so Itzik's ceilings no longer apply to it.
 function ownAccount() { return fs.existsSync('/srv/monitor-changes/' + inst.name + '.own'); }

@@ -2291,6 +2291,7 @@ body.editing .bn{display:none}
  box-shadow:0 0 0 2px var(--gold),0 14px 34px rgba(52,168,83,.45)}
 .toast.bad{color:#fff;border:0;background:linear-gradient(180deg,#ff6a5e,var(--red))}
 .toast{cursor:pointer}
+${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').css : ''}
 .toast .toast-x{display:block;margin-top:8px;font:500 12.5px Heebo,sans-serif;opacity:.85}
 .undobar{position:fixed;z-index:81;inset-inline:12px;bottom:calc(76px + env(safe-area-inset-bottom));
  margin-inline:auto;max-width:420px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;
@@ -3894,6 +3895,7 @@ try{
  </div>
  <div class="ava" aria-hidden="true"><div>${String(inst.owner || 'א').charAt(0)}</div></div>
 </header>
+${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').bar : ''}
  <section class="talk" id="talkCard" aria-label="פנייה אליי">
   <!-- 13.10, idea from the reviewer he took: on the first visit nobody knows
        what this card is for. One line says it, until "הבנתי" or the first send. -->
@@ -5203,6 +5205,7 @@ __RIVSHARE__
  <button type="button" id="lsClose">סגירה</button>
 </div>
 <div class="toast" id="toast" role="status" hidden></div>
+${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').html : ''}
 
 <div class="recwrap" id="recModal" hidden>
  <div class="recbox">
@@ -19344,6 +19347,7 @@ function paintHold(){
 function paintLive(){
  paintPc();
  paintHold();
+ if(window.paintQuota)paintQuota();
  var pill=document.getElementById('livePill');
  var txt=document.getElementById('lpText');
  if(!pill||!txt)return;
@@ -19498,6 +19502,7 @@ function openLiveSheet(){
  }
  sh.hidden=false;
 }
+${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').js : ''}
 on('livePill',openLiveSheet);
 on('lsClose',function(){var sh=document.getElementById('liveSheet');if(sh)sh.hidden=true;});
 boot('live',function(){pollLive();setInterval(pollLive,30000);setInterval(paintLive,15000);});
