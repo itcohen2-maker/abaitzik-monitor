@@ -4183,7 +4183,7 @@ ${require('./lib/home-ui.js').html}
     is amirshwartz1's TikTok comment on the cake video (55 likes).
   -->
   <button type="button" class="gt gWin" id="gWin" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
-  <button type="button" class="gt gReel" id="gReels" data-upd="20261023-rm"><b>🎬 הרילים שלי</b><small>חדש: 25ג בריאות זאת פריבילגיה, מהים</small></button>
+  <button type="button" class="gt gReel" id="gReels" data-upd="20261024-26"><b>🎬 הרילים שלי</b><small>חדש: 26 כתם הקפה, פרק 2 למותגים</small></button>
   <button type="button" class="gt gFut" id="gFut" data-upd="20261017-futfix"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
@@ -13847,7 +13847,12 @@ function captionSheet(it){
 // iPhone, so it stays short like 03ג. A sentence of description made 04 an
 // 80 letter name with dots and commas, the one difference from 03ג when he reported it would not open.
 // 20.10, Itzik: empty the list. The old 12 are in data/_archive/reel-items-20261020.json. From now on only new finished reels go in.
-var REEL_ITEMS=[];
+// 24.10: 26 is part 2 of the brand post, coffee spilled on the same white shirt.
+var REEL_ITEMS=[
+ {n:'26',t:'כתם הקפה',r:'reel-26-coffee.mp4'},
+ {n:'26 כריכה',t:'הכריכה',r:'reel-26-cover.jpg'},
+ {n:'26 פרסום',t:'כיתוב והאשטגים',r:'reel-26-post.txt'}
+];
 function reelSheet(){
  var old=document.getElementById('rlSheet');if(old)old.remove();
  var w=document.createElement('div');

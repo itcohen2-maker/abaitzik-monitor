@@ -2195,7 +2195,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-24T08:37:31.976Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-24T08:37:58.474Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2352,7 +2352,7 @@ try{
   <button type="button" class="gt gMed" id="gMed"><b>🩺 אחרי הניתוח השני</b><small>ממוספר. המסמכים מהביקורת אצל הפרופסור</small></button>
   <button type="button" class="gt gInv" id="gInv" data-upd="2026-10-15-inv"><b>🧾 חשבוניות</b><small>ממוספר. מ 3.10 והלאה</small></button>
   <button type="button" class="gt gWin" id="gWin" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
-  <button type="button" class="gt gReel" id="gReels" data-upd="20261023-rm"><b>🎬 הרילים שלי</b><small>חדש: 25ג בריאות זאת פריבילגיה, מהים</small></button>
+  <button type="button" class="gt gReel" id="gReels" data-upd="20261024-26"><b>🎬 הרילים שלי</b><small>חדש: 26 כתם הקפה, פרק 2 למותגים</small></button>
   <button type="button" class="gt gFut" id="gFut" data-upd="20261017-futfix"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור</small></button>
   <button type="button" class="gt gTom" id="gTom" data-new="1" data-upd="2026-10-20-campaign"><b>🧭 טום ממליץ</b><small>הקמפיין הממומן: תוכנית, שלושה סרטונים ו 6 תמונות</small></button>
   <button type="button" class="gt gDudi" id="gDudi" data-new="1"><b>🥩 דודי בשר</b><small>חשבוניות יוני ויולי לשליחה</small></button>
@@ -3977,7 +3977,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='823db0c041';
+var CODE_ID='92c4b0489a';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -9839,7 +9839,11 @@ function captionSheet(it){
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
 }
-var REEL_ITEMS=[];
+var REEL_ITEMS=[
+ {n:'26',t:'כתם הקפה',r:'reel-26-coffee.mp4'},
+ {n:'26 כריכה',t:'הכריכה',r:'reel-26-cover.jpg'},
+ {n:'26 פרסום',t:'כיתוב והאשטגים',r:'reel-26-post.txt'}
+];
 function reelSheet(){
  var old=document.getElementById('rlSheet');if(old)old.remove();
  var w=document.createElement('div');
