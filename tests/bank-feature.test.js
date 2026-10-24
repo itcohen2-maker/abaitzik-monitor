@@ -17,7 +17,8 @@ const bankUi = require('../lib/bank-ui.js');
 
 test('features.json gating: off by default, on only for exactly true', () => {
   const d = tmp();
-  assert.deepStrictEqual(features.read(d), { bank: false });
+  // 24.10.2026: 'morning' joined the known flags, off by default like the bank one.
+  assert.deepStrictEqual(features.read(d), { bank: false, morning: false });
   fs.mkdirSync(path.join(d, 'status'));
   fs.writeFileSync(path.join(d, 'status', 'features.json'), '{"bank":"yes"}');
   assert.strictEqual(features.read(d).bank, false);

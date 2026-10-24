@@ -707,6 +707,8 @@ function build() {
     chat: chatClosed,
     codex,
     rivhit,
+    // 24.10.2026: the money numbers from money.js (data/money/money.json), null until it has run.
+    money: (() => { try { return JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'money', 'money.json'), 'utf8')); } catch (e) { return null; } })(),
     sale,
     isra,
     // The server copy of the notes and task ticks, which a phone with an empty
