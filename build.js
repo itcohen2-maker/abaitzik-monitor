@@ -18004,6 +18004,53 @@ function recModal(open){
   var rm=document.getElementById('recMore');if(rm)rm.remove();
  }
 }
+/*
+  12.10.2026, Itzik: after the stop, five seconds to listen to the take (▶️) or
+  throw it away (✖️). Untouched, it sends by itself. Listening holds the send
+  until the playback ends, then the five seconds start again. This only sits
+  between the finished take and the send; the recorder itself is not touched.
+*/
+var recKeepT=null,recKeepAudio=null,recKeepUrl=null;
+function recKeepEnd(){
+ if(recKeepT){clearTimeout(recKeepT);recKeepT=null;}
+ if(recKeepAudio){try{recKeepAudio.onended=null;recKeepAudio.pause();}catch(e){}recKeepAudio=null;}
+ if(recKeepUrl){try{URL.revokeObjectURL(recKeepUrl);}catch(e){}recKeepUrl=null;}
+ var k=document.getElementById('recKeep');if(k)k.remove();
+}
+function recKeep(b,send){
+ recKeepEnd();
+ recBtn.disabled=true;
+ var box=document.createElement('div');box.id='recKeep';
+ box.style.cssText='position:fixed;left:12px;right:12px;bottom:88px;z-index:9999;background:var(--surface,#fff);color:var(--ink,#111);border:1px solid var(--line,#ddd);border-radius:16px;padding:12px 14px;box-shadow:0 6px 20px rgba(0,0,0,.18);font-size:15px;line-height:1.5;display:flex;align-items:center;gap:10px';
+ box.innerHTML='<span id="recKeepSay" style="flex:1">ההקלטה מוכנה. שולח בעוד 5 שניות.</span>'
+  +'<button type="button" id="recKeepPlay" aria-label="לשמוע" style="font-size:20px;padding:6px 12px;border-radius:12px;border:1px solid var(--line,#ddd);background:transparent;color:inherit">▶️</button>'
+  +'<button type="button" id="recKeepNo" aria-label="לבטל" style="font-size:20px;padding:6px 12px;border-radius:12px;border:1px solid var(--line,#ddd);background:transparent;color:inherit">✖️</button>';
+ document.body.appendChild(box);
+ var say=box.querySelector('#recKeepSay');
+ var wait=function(){
+  if(recKeepT)clearTimeout(recKeepT);
+  say.textContent='ההקלטה מוכנה. שולח בעוד 5 שניות.';
+  recKeepT=setTimeout(function(){recKeepEnd();send();},5000);
+ };
+ box.querySelector('#recKeepNo').onclick=function(){
+  recKeepEnd();
+  recBtn.disabled=false;paintMics('idle');
+  recSaid.textContent='ההקלטה בוטלה.';
+ };
+ box.querySelector('#recKeepPlay').onclick=function(){
+  if(!document.getElementById('recKeep'))return;
+  if(recKeepT){clearTimeout(recKeepT);recKeepT=null;}
+  if(!recKeepUrl)recKeepUrl=URL.createObjectURL(b);
+  if(!recKeepAudio){
+   recKeepAudio=new Audio(recKeepUrl);
+   recKeepAudio.onended=function(){if(document.getElementById('recKeep'))wait();};
+  }
+  say.textContent='מנגן. אחרי הנגינה שולח בעוד 5 שניות.';
+  var p=recKeepAudio.play();
+  if(p&&p.catch)p.catch(function(){if(document.getElementById('recKeep'))wait();});
+ };
+ wait();
+}
 // Cancelling throws the audio away instead of sending it.
 var recAbort=false;
 function recStop(){
@@ -18244,15 +18291,17 @@ function recStart(){
      whatever is already waiting and the whole thing leaves as one send: the
      files, the voice over them, and the writing box as the caption.
    */
-   var batch=picked();
-   batch.push(file);
-   recSaid.textContent=batch.length>1
-    ?('ההקלטה מוכנה. שולח אותה עם '+(batch.length-1)+' הקבצים.')
-    :('ההקלטה מוכנה, '+mb(file.size)+'. שולח.');
-   recBtn.disabled=false;
-   fBtn.disabled=true;
-   if(batch.length>1&&qMode==='normal')shrinkAll(batch,reallySend);
-   else reallySend(batch);
+   recKeep(b,function(){
+    var batch=picked();
+    batch.push(file);
+    recSaid.textContent=batch.length>1
+     ?('ההקלטה מוכנה. שולח אותה עם '+(batch.length-1)+' הקבצים.')
+     :('ההקלטה מוכנה, '+mb(file.size)+'. שולח.');
+    recBtn.disabled=false;
+    fBtn.disabled=true;
+    if(batch.length>1&&qMode==='normal')shrinkAll(batch,reallySend);
+    else reallySend(batch);
+   });
   };
   // A recorder that dies mid take used to leave the screen recording forever.
   rec.onerror=function(){

@@ -2196,7 +2196,7 @@ test('a microphone that keeps coming back muted gives up after one retry', () =>
     requestData() { ctx.__pokes++; }
     stop() { this.state = 'inactive'; setTimeout_(() => this.onstop && this.onstop(), 0); }
   }
-  const el = () => ({ style: {}, classList: { add() {}, remove() {} }, setAttribute() {}, set textContent(v) {}, get textContent() { return ''; }, remove() {}, appendChild() {}, querySelector() { return null; } });
+  const el = () => ({ style: {}, classList: { add() {}, remove() {} }, setAttribute() {}, set textContent(v) {}, get textContent() { return ''; }, remove() {}, appendChild() {}, querySelector() { return el(); } });
   const ctx = {
     setTimeout: setTimeout_, clearTimeout: clearTimeout_, setInterval: setInterval_, clearInterval: clearInterval_,
     Date: { now: () => now }, Blob: class { constructor() { this.size = 0; } }, File: class {},
@@ -2245,7 +2245,7 @@ function stopHarness(MRfactory) {
     now = end;
   }
   const sent = [], modal = [];
-  const el = () => ({ style: {}, classList: { add() {}, remove() {} }, setAttribute() {}, textContent: '', remove() {}, appendChild() {}, querySelector() { return null; } });
+  const el = () => ({ style: {}, classList: { add() {}, remove() {} }, setAttribute() {}, textContent: '', remove() {}, appendChild() {}, querySelector() { return el(); } });
   const tracks = [];
   const recs = [];
   const MR = MRfactory(recs);
@@ -2281,7 +2281,7 @@ test('stop works even if the stop event never fires', async () => {
   await h.flush(); await h.flush();
   assert.equal(h.run('!!rec'), true);
   h.run('recStop()');
-  h.advance(6000);
+  h.advance(12000); // backstop 5.5 s, then the 5 s keep window before the send
   assert.equal(h.run('rec'), null, 'recorder released');
   assert.ok(h.tracks.every((t) => t.stopped), 'mic tracks released');
   assert.equal(h.sent.length, 1, 'what was caught is sent');
@@ -2370,6 +2370,7 @@ test('iPhone: stop reads inactive at once and the audio comes later, the whole t
   h.run('recStop()');
   assert.equal(h.sent.length, 0, 'not finished before the audio arrives');
   await new Promise((r) => setTimeout(r, 5));
+  h.advance(5000); // the 5 s keep window (12.10.2026) before the send
   assert.equal(h.sent.length, 1);
   assert.equal(h.sent[0][0].size, 400000, 'the whole take, not the first piece');
   assert.equal(pokes, 0, 'stop does not ask for data first');
