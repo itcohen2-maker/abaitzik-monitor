@@ -866,6 +866,15 @@ function build() {
   }
   payload.lazy = lazy;
   /*
+    24.10.2026: Itzik's activity log and cost per answer (lib/activity-log.js). His copy only:
+    a customer never gets a cost figure. The answers are every claude message, not the head slice.
+  */
+  payload.activity = inst.name === 'abaitzik'
+    ? require('./lib/activity-log.js').summarize(
+      require('./lib/activity-log.js').readUsage(path.join(inst.dataPath, 'status', 'usage.jsonl')),
+      reports, fullChat.filter(m => m.from === 'claude').map(m => m.at), Date.now())
+    : null;
+  /*
     The unread window, as keys and nothing else.
 
     From his diagnostic, 19.9 06:35: 150 messages in memory out of 376, red
@@ -2314,6 +2323,8 @@ body.editing .bn{display:none}
 .toast{cursor:pointer}
 ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').css : ''}
 ${require('./lib/approvals-ui.js').css}
+${require('./lib/since-ui.js').css}
+${require('./lib/activity-ui.js').css}
 .toast .toast-x{display:block;margin-top:8px;font:500 12.5px Heebo,sans-serif;opacity:.85}
 .undobar{position:fixed;z-index:81;inset-inline:12px;bottom:calc(76px + env(safe-area-inset-bottom));
  margin-inline:auto;max-width:420px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;
@@ -4404,6 +4415,10 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <span aria-hidden="true">&#128736;</span>
   <div>תוכנית הבנייה<small>מה נבנה ומה עוד מתוכנן</small></div>
  </a>
+ <a href="#" id="gActLog">
+  <span aria-hidden="true">&#128214;</span>
+  <div>יומן פעולות<small>מה נעשה, מתי ובכמה בערך</small></div>
+ </a>
 </nav>
 <!--ITZIK:END-->
 
@@ -4785,6 +4800,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
  <button type="button" class="ask" id="moxyTook" hidden>שמור את השעה</button>
 </section>
 
+${require('./lib/activity-ui.js').html}
 <section id="pIsra" hidden>
  <h2>ישראכרט יואל</h2>
  <div class="rephint">הכל לשיחה עם ישראכרט על שני הכרטיסים של יואל, לפי הסדר.</div>
@@ -8187,7 +8203,7 @@ function updateDot(){
  document.title=(fresh?'(1) ':'')+PAGE_TITLE;
 }
 var NETNAME={facebook:'פייסבוק',instagram:'אינסטגרם',tiktok:'טיקטוק',youtube:'יוטיוב'};
-var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn',Rc:'pRc',Mo:'pModel',Sa:'pSale',Fi:'pFi',Is:'pIsra',Mx:'pMoxy'};
+var PANES={z:'pZ',x:'pX',a:'pA',b:'pB',h:'pH',q:'pQ',l:'pL',r:'pR',m:'pM',e:'pE',n:'pN',g:'pG',d:'pD',p:'pP',v:'pV',f:'pF',o:'pL2',s:'pS',t:'pN2',i:'pI',u:'pU',w:'pW',y:'pY',R:'pRm',T:'pTk',Q:'pAp',k:'pK',j:'pDr',c:'pBl',V:'pVc',X:'pVs',I:'pCI',P:'pPl',N3:'pTn',Rc:'pRc',Mo:'pModel',Sa:'pSale',Fi:'pFi',Is:'pIsra',Mx:'pMoxy',Lg:'pLg'};
 // Itzik set the rhythm on 9.9: every eight hours from the morning dose.
 /*ITZIK:BEGIN*/
 var PILLGAP=(window.ML&&ML.PILL_GAP)||8*3600*1000;
@@ -10601,7 +10617,7 @@ function pane(w){
   e:renderReplies,f:renderFood,j:renderDrains,c:renderBlock,
   // 30.9: the bookkeeping screen sometimes opened blank. Its data loads late
   // and only one route asked for it, so it is asked for here, by the pane.
-  v:function(){ensure('rivhit',renderRivhit);},o:function(){ensure('rivhit',renderRivhit);}};
+  v:function(){ensure('rivhit',renderRivhit);},o:function(){ensure('rivhit',renderRivhit);},Lg:function(){renderActLog();}};
  if(PAINT[w]){try{PAINT[w]();}catch(e){try{console.error('pane paint '+w,e);}catch(_){}}}
  // It lives above the header now, outside every pane, so nothing hides it but
  // this line. On any screen other than home it would be a microphone following
@@ -19735,9 +19751,15 @@ boot('hash',function(){
  if(k==='k'){renderReplies();markRepliesSeen();}
  if(k==='R')renderReminders();
 });
+${require('./lib/since-ui.js').js}
 ${require('./lib/approvals-ui.js').js}
+/*ITZIK:BEGIN*/
+${require('./lib/activity-ui.js').js}
+on('gActLog',function(){pane('Lg');renderActLog();return false;});
+/*ITZIK:END*/
 boot('ask',renderAsk);
 boot('approvals',renderApprovals);
+boot('since',sinceBoot);
 boot('items',render);
 boot('thread',renderThread);
 boot('pill',renderPill);
