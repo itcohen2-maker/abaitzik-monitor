@@ -59,6 +59,10 @@ inst = {"name": ID, "owner": OWNER, "publicUrl": "https://%s/" % HOST, "basePath
         "screens": [s for s in SCREENS.split(",") if s], "chromeProfile": "none", "memoryDir": None, "driveFolder": "",
         "computer": None, "phone": None, "welcome": WELCOME}
 if SHIP: inst["shipmentsDir"] = SHIP
+# 24.10, Itzik: every new monitor starts with sample tiles, the candle site as a round icon, and three empty round places.
+inst["samples"] = True
+inst["circles"] = [{"key": "candle", "kind": "ner", "title": "אתר הנר", "url": "https://candletimes.com"}]
+inst["emptyCircles"] = 3
 if HOMETILE: inst["homeTile"] = HOMETILE
 put(DIR + "/instance.json", json.dumps(inst, ensure_ascii=False, indent=1), 0o644)
 keys = {"_why": "נושאי ntfy הם סיסמה. לא נכנסים לגיט.", "ntfyIn": "%s-in-%s" % (ID, secrets.token_hex(16)),

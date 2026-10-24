@@ -93,6 +93,7 @@
   for exactly this. Installed in `/home/monitor/tts` (venv, models, `say.py`), about 9 seconds and 900MB RAM per run,
   so one at a time. License is non commercial: Itzik's own use only, never in a paid client deliverable.
 
+- **New monitor default (24.10.2026, Itzik):** every new monitor (setup/new-tenant.sh) gets two sample tiles "לדוגמה, אתה יכול לשים פה מה שאתה רוצה" (instance `samples: true`), the candle site as a round icon (`circles`), and three empty round places (`emptyCircles: 3`, "ריק"). Itzik's own copy has none of it, and the tile "רעיונות לתוכן" is removed from his page.
 - **Chords for a song (17.10.2026):** "תוציא לי אקורדים" means one printable PDF page of the song's tab4u page. Do not
   search and answer "not found", do not retype lyrics, do not send him to the site. Server: find the tab4u song URL
   (WebSearch "tab4u <song> <singer>"), then `node pc-task.js add --re <id> "node tools/print-chords.mjs <url> <out.pdf>"

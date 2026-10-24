@@ -1182,7 +1182,11 @@ function tenantTiles(inst) {
   const links = tenantLinks(inst).map((l, i) => '\n  <button type="button" class="gt g4" id="gLink' + i + '" data-new="1"><b>'
     + esc((l.icon ? l.icon + ' ' : '') + l.title) + '</b><small>' + esc(l.sub || 'פתיחה בלשונית חדשה') + '</small></button>').join('');
   const bank = '\n  <button type="button" class="gt g16" id="gBank" data-new="1" hidden><b>🏦 חיבור הבנק</b><small>שולחים קובץ, אני מסדר</small></button>';
-  return guides + links + bank + ids.filter((id) => TENANT_TILES[id]).map((id) => {
+  // 24.10, Itzik: a new monitor starts with two sample tiles that say what they are for.
+  // instance.json samples: true, written by setup/new-tenant.sh only; existing customers have none.
+  const sample = '\n  <button type="button" class="gt g11" data-new="1"><b>📌 לדוגמה, אתה יכול לשים פה מה שאתה רוצה</b></button>';
+  const samples = inst.samples ? sample + sample.replace('g11', 'g4') : '';
+  return guides + links + bank + samples + ids.filter((id) => TENANT_TILES[id]).map((id) => {
     const [cls, title, sub] = TENANT_TILES[id];
     return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261015-clalit"' : '') + (id === 'gTasks' ? ' data-upd="tasks60-1020"' : '') + (id === 'gIntake' ? ' data-upd="20261017-intake"' : '') + (id === 'gUpgrade' ? ' data-upd="20261017-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
@@ -4087,7 +4091,6 @@ ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').bar : ''}
   <!-- Other monitors on this server, one colour each. Hidden when there are none. -->
   <button type="button" class="gt g3" id="gTenants" hidden><b>🟢 מוניטורים אחרים</b><small>ירוק תקין, אדום נתק</small></button>
   <!-- Ilay's two tiles. Hidden on Itzik's copy by the instance screens list. -->
-  <button type="button" class="gt g11" id="gCIdeas" hidden><b>💡 רעיונות לתוכן</b><small>מה שעלה לך, לפני שנשכח</small></button>
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות לשיפור המוניטור</b><small>מה עוד המסך הזה יכול לעשות</small></button>
   <!--
     איציק, 23.9, בהקלטה: "אפשר להסיר את כפתור בקשות מיוחדות".
