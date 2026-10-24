@@ -34,6 +34,21 @@ const WAIT_MS = 4 * 60 * 1000;
 const msg = process.argv.slice(2).join(' ').trim();
 if (!msg) { console.error('צריך הודעת קומיט'); process.exit(2); }
 
+// 24.10.2026: a session that ran this as root left docs/ owned by root, and every
+// later build by the monitor user failed with EACCES until the files were handed
+// back. On the server the repo belongs to the owner of this folder, so root hands
+// the run to that user instead of writing as itself.
+if (process.getuid && process.getuid() === 0) {
+  const owner = fs.statSync(HERE).uid;
+  if (owner !== 0) {
+    const name = execFileSync('id', ['-nu', String(owner)], { encoding: 'utf8' }).trim();
+    try {
+      execFileSync('sudo', ['-E', '-u', name, process.execPath, __filename, ...process.argv.slice(2)], { stdio: 'inherit' });
+      process.exit(0);
+    } catch (e) { process.exit(e.status || 1); }
+  }
+}
+
 function say(line) {
   const t = new Date().toTimeString().slice(0, 8);
   try { fs.appendFileSync(LOG, t + '  [' + process.pid + '] ' + line + '\n', 'utf8'); } catch (e) {}
