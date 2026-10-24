@@ -9,7 +9,7 @@
 html,body{margin:0;overflow-x:hidden}
 body{font-family:Heebo,system-ui,sans-serif;width:100%;min-height:100vh;padding:0 0 96px;position:relative}
 .n{unicode-bidi:isolate;direction:ltr;display:inline-block;font-variant-numeric:tabular-nums}
-.sw{position:sticky;top:0;z-index:9;display:flex;gap:6px;padding:10px 12px;background:rgba(30,30,30,.92);backdrop-filter:blur(10px);overflow-x:auto}.sw button{flex:1 0 auto;min-height:44px;padding:0 12px;border-radius:12px;border:0;background:#3a3a3a;color:#fff;font:700 14px Heebo,sans-serif}.sw button.on{background:#fff;color:#111}.nm{font:800 18px Heebo,sans-serif;padding:12px 18px 0}.how{margin:18px 16px 0;padding:12px 14px;border-radius:14px;background:rgba(127,127,127,.12);font-size:14px;line-height:1.6}.label{font-size:13px;font-weight:700;letter-spacing:.02em;padding:14px 18px 0;opacity:.7}
+.sw{position:sticky;top:0;z-index:9;display:flex;gap:6px;padding:10px 12px;background:rgba(30,30,30,.92);backdrop-filter:blur(10px);overflow-x:auto}.sw button{flex:1 0 auto;min-height:44px;padding:0 12px;border-radius:12px;border:0;background:#3a3a3a;color:#fff;font:700 14px Heebo,sans-serif}.sw button.on{background:#fff;color:#111}.nm{font:800 18px Heebo,sans-serif;padding:12px 18px 0}.money{background:rgba(127,127,127,.10)!important;color:inherit!important;box-shadow:none!important;border:1px dashed rgba(127,127,127,.45)!important}.how{margin:18px 16px 0;padding:12px 14px;border-radius:14px;background:rgba(127,127,127,.12);font-size:14px;line-height:1.6}.label{font-size:13px;font-weight:700;letter-spacing:.02em;padding:14px 18px 0;opacity:.7}
 .wrap{padding:6px 16px 0}
 .greet{display:flex;justify-content:space-between;align-items:baseline;margin:8px 2px 12px}
 .greet h1{margin:0;font-size:26px;font-weight:800}
@@ -125,25 +125,26 @@ body{font-family:Heebo,system-ui,sans-serif;width:100%;min-height:100vh;padding:
  <div class="greet"><h1>בוקר טוב</h1><span>מאז שהיית כאן: 3 חדשים</span></div>
  <div class="need">
   <div class="k">מחכה לך</div><div class="v"><span class="n">2</span> אישורים</div>
-  <div class="q">לשלוח תזכורת תשלום על חשבונית <span class="n">1043</span></div>
+  <div class="q">לשלוח ללקוח את הצעת המחיר שהכנתי</div>
   <div class="btns"><span class="y">אשר</span><span class="x">לא עכשיו</span></div>
  </div>
  <div class="brief">
   <div class="h">דוח הבוקר<small>עודכן <span class="n">07:00</span></small></div>
-  <div class="it"><div class="num">1</div><div><b>לקוח לא שילם 40 יום</b><small><span class="n">₪3,200</span></small></div><div class="pill">תזכורת</div></div>
+  <div class="it"><div class="num">1</div><div><b>הצעת מחיר מוכנה</b><small>מחכה לבדיקה שלך</small></div><div class="pill">לפתוח</div></div>
   <div class="it"><div class="num">2</div><div><b>3 פגישות היום</b><small>הראשונה ב <span class="n">11:30</span></small></div></div>
   <div class="it"><div class="num">3</div><div><b>ליד חדש מהאתר</b><small>ביקש שיחזרו אליו</small></div><div class="pill">לענות</div></div>
   <div class="end">זהו להיום</div>
  </div>
  <div class="bento">
-  <div class="t c1 d1"><div class="k">בבנק</div><div class="v"><span class="n">₪48,200</span></div>
+  <div class="t c1 d1"><div class="k">תשובות היום</div><div class="v"><span class="n">7</span></div>
    <svg class="spark" viewBox="0 0 100 24" preserveAspectRatio="none"><polyline fill="none" stroke="currentColor" stroke-opacity=".7" stroke-width="2.5" points="0,18 15,16 30,19 45,12 60,13 75,8 100,5"/></svg></div>
-  <div class="t c4 d2"><div class="k">חייבים</div><div class="v"><span class="n">₪12,750</span></div><div class="u">2 באיחור</div></div>
+  <div class="t c4 d2"><div class="k">לידים חדשים</div><div class="v"><span class="n">2</span></div><div class="u">השבוע</div></div>
   <div class="t c2 d3"><div class="k">היום</div><div class="v"><span class="n">3</span> פגישות</div><div class="u">הבאה <span class="n">11:30</span></div></div>
   <div class="t c3 d4"><div class="k">משימות</div><div class="v"><span class="n">5</span> פתוחות</div><div class="u">2 להיום</div></div>
   <div class="t wide c5 d5"><div class="k">עובד ברקע</div><div class="v" style="font-size:18px">מכין הצעת מחיר ללקוח חדש</div><div class="u">שלב <span class="n">3</span> מתוך <span class="n">5</span></div></div>
  </div>
-<div class="how">לבחירה: במוניטור, עוד כלים, השאלה למעלה. או לכתוב לי את המספר.</div>
+<div class="t wide money" style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;min-height:56px"><b style="font-size:16px">💰 הכסף שלי</b><span class="u">מוסתר, לחיצה לפתיחה</span></div>
+<div class="how">רק אצל לקוח שביקש: הבנק והחייבים מקופלים בשורה הזאת, סגורים בכל כניסה, ולא בדוח הבוקר.<br>לבחירה: במוניטור, עוד כלים, השאלה למעלה. או לכתוב לי את המספר.</div>
 </div>
 <div class="tab"><span><i>💬</i>צ׳אט</span><span><i>✅</i>משימות</span><div class="mic">🎙️</div><span><i>📁</i>תוצרים</span><span><i>⚙️</i>עוד</span></div>
 <script>

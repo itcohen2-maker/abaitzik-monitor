@@ -88,7 +88,7 @@ test('home order: one message button on top, the tools next, my log last', () =>
   // away by accident.
   // 24.10.2026: the greeting, the approval card, the brief and the bento sit above
   // these four now (lib/home-ui.js), in the same relative order.
-  assert.ok(html.includes("var HOME_HEAD=['hmGreet','sinceBox','approvalsBox','homeBrief','homeKpis','newBlock','bareBtn','blkIcons','blkTiles'];"));
+  assert.ok(html.includes("var HOME_HEAD=['hmGreet','sinceBox','approvalsBox','homeBrief','homeKpis','homeMoney','newBlock','bareBtn','blkIcons','blkTiles'];"));
   assert.ok(html.includes('HOME_HEAD.forEach'));
   // Nothing is pinned to the foot any more: the block that was, "איך אני
   // משתפר", came off the home screen on 16.9 at his word.

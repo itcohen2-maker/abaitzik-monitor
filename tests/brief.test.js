@@ -19,6 +19,7 @@ function debt(name, amount, invDate) {
 test('items keep importance order whatever the input order', () => {
   const doc = brief.buildBrief({
     now: SAT,
+    features: { money: true },
     choices: [{ ...appr(1, '2026-10-20T10:00:00+03:00'), type: 'approve' }],
     debts: [debt('סלאס', 5000, '01.08.2026')],
     appts: [{ id: 'a1', what: 'רופא', when: '2026-10-24T14:00:00+03:00' }],
@@ -124,7 +125,11 @@ test('spark with no history is just today', () => {
 });
 
 test('money kpis come only from money.json and show the late part as bad', () => {
-  const doc = brief.buildBrief({ now: SAT, money: { cash: 1200, debt: 5000, late: 300 } });
+  // 24.10.2026: without the money feature there is no money and no debtor in the brief at all.
+  const off = brief.buildBrief({ now: SAT, money: { cash: 1200, debt: 5000, late: 300 }, debts: [debt('סלאס', 5000, '01.08.2026')] });
+  assert.equal(off.kpis.some(x => x.u === '₪'), false);
+  assert.equal(off.items.some(x => /סלאס/.test(x.t)), false);
+  const doc = brief.buildBrief({ now: SAT, features: { money: true }, money: { cash: 1200, debt: 5000, late: 300 } });
   const late = doc.kpis.find(x => x.k === 'באיחור');
   assert.equal(late.v, 300);
   assert.equal(late.state, 'bad');

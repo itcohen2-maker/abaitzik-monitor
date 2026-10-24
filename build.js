@@ -19030,7 +19030,7 @@ function pinTiles(grid){
   else{a.splice(i,1);put(a);t.classList.remove('taskblink');toast('"'+name+'" כבר לא מהבהב.');}
  };
 }
-var HOME_HEAD=['hmGreet','sinceBox','approvalsBox','homeBrief','homeKpis','newBlock','bareBtn','blkIcons','blkTiles'];
+var HOME_HEAD=['hmGreet','sinceBox','approvalsBox','homeBrief','homeKpis','homeMoney','newBlock','bareBtn','blkIcons','blkTiles'];
 // "איך אני משתפר" is the one block he wants out of the way rather than gone.
 // It is a log of my own mistakes and fixes: worth keeping, never worth the top
 // of his screen.

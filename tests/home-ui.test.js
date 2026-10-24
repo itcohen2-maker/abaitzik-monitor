@@ -25,7 +25,7 @@ function fixture(overrides) {
 function helpers() {
   const stub = 'var esc=function(s){return String(s).replace(/[&<>"\']/g,function(c){return "&#"+c.charCodeAt(0)+";";});};'
     + 'var sendText=function(){return Promise.resolve();};var toast=function(){};';
-  return new Function(stub + ui.js + '\nreturn {hmBriefHtml:hmBriefHtml,hmCards:hmCards,hmGreeting:hmGreeting,hmSpark:hmSpark,HM_ACTS:function(){return HM_ACTS;}};')();
+  return new Function(stub + ui.js + '\nreturn {hmBriefHtml:hmBriefHtml,hmCards:hmCards,hmMoneyCards:hmMoneyCards,hmGreeting:hmGreeting,hmSpark:hmSpark,HM_ACTS:function(){return HM_ACTS;}};')();
 }
 
 const brief = {
@@ -58,7 +58,7 @@ test('the top of the home screen is greeting, approvals, brief, bento, then the 
   assert.ok(at('id="homeBrief"') < at('id="homeKpis"'));
   assert.ok(at('id="homeKpis"') < at('id="newBlock"'));
   // pinHome moves these to the top at load, so they must be in its list.
-  assert.ok(html.includes("var HOME_HEAD=['hmGreet','sinceBox','approvalsBox','homeBrief','homeKpis','newBlock'"));
+  assert.ok(html.includes("var HOME_HEAD=['hmGreet','sinceBox','approvalsBox','homeBrief','homeKpis','homeMoney','newBlock'"));
 });
 
 test('nothing renders without D.brief or D.money', () => {
@@ -81,21 +81,22 @@ test('the brief lists up to five items, escapes text, and gives each act its own
   assert.ok(out.includes('&#60;script'), 'escaped script tag expected');
 });
 
-test('the money cards: bank, debts with late count as warning, and the forecast sparkline', () => {
+test('money stays out of the open bento and lives in its own folded cards', () => {
   const h = helpers();
-  const cards = h.hmCards(brief, money);
-  const names = cards.map((c) => c.l);
-  assert.deepStrictEqual(names, ['מכירות', 'בבנק', 'חייבים', 'תחזית 90 יום']);
-  const debt = cards[2];
-  assert.strictEqual(debt.st, 'warn');
-  assert.strictEqual(cards[3].st, 'bad', 'a negative month in the forecast is bad');
+  assert.deepStrictEqual(h.hmCards(brief, money).map((c) => c.l), ['מכירות'], 'no bank or debts in the open bento');
+  const cards = h.hmMoneyCards(brief, money);
+  assert.deepStrictEqual(cards.map((c) => c.l), ['בבנק', 'חייבים', 'תחזית 90 יום']);
+  assert.strictEqual(cards[1].st, 'warn');
+  assert.strictEqual(cards[2].st, 'bad', 'a negative month in the forecast is bad');
+  assert.ok(ui.html.includes('<details class="hm-money" id="homeMoney" hidden>'), 'folded and hidden by default');
+  assert.ok(ui.js.includes('F.money?hmMoneyCards'), 'only with the money feature');
   assert.ok(h.hmSpark([1, 2, 3], 'ok').includes('<polyline'));
   assert.strictEqual(h.hmSpark([5], 'ok'), '', 'one point is not a line');
 });
 
 test('amounts are formatted with the shekel sign inside bdi', () => {
   const h = helpers();
-  const bank = h.hmCards(undefined, money)[0];
+  const bank = h.hmMoneyCards(undefined, money)[0];
   assert.ok(bank.v.startsWith('<bdi>') && bank.v.endsWith('</bdi>'));
   assert.ok(bank.v.includes('52'), 'amount missing');
 });

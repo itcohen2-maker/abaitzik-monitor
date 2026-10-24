@@ -184,7 +184,8 @@ async function main() {
   let budget = DAILY_CAP - sentToday;
   const seen = Array.isArray(last.seen) ? last.seen.slice() : [];
   let sent = sentToday;
-  const fresh = anomaly.fresh(all, seen);
+  // 24.10.2026, Itzik: money alerts only for a customer who turned money on.
+  const fresh = feat.money ? anomaly.fresh(all, seen) : [];
   // The notifier is async; the loop waits for each answer so the count is exact.
   for (const a of fresh) {
     if (budget <= 0) break;
