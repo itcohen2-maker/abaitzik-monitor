@@ -3932,7 +3932,7 @@ try{
 -->
 <header class="hd">
  <button type="button" class="conn" id="homeBtn" title="חזרה לבית" hidden>בית</button>
- <button type="button" class="conn" id="setBtn" title="הגדרות" aria-label="הגדרות" data-upd="20261020-settings">הגדרות</button>
+ <button type="button" class="conn" id="setBtn" title="הגדרות" aria-label="הגדרות" data-upd="20261024-daynight">הגדרות</button>
  <div class="hdtext">
   <!--
     The exact title he gave. Under it two different facts that were one line
@@ -8911,7 +8911,8 @@ function skinApply(v){
  var m=document.querySelector('meta[name="theme-color"]');
  if(m){
   var dark=v==='dark'||(v==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme:dark)').matches);
-  m.setAttribute('content',dark?'#0f1218':'#14675a');
+  var pair=window.DZ_META&&DZ_META[r.getAttribute('data-skin')];
+  m.setAttribute('content',pair?pair[dark?1:0]:(dark?'#0f1218':'#14675a'));
  }
  var said=document.getElementById('skinSaid');
  if(said)said.textContent=v==='auto'?'הטלפון מחליט, לפי מצב הלילה שלו.'

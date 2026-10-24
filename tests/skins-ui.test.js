@@ -19,16 +19,18 @@ function fixture(overrides) {
   }, overrides || {});
 }
 
-test('six designs are defined, each with its own skin rules', () => {
-  assert.strictEqual(ui.DESIGNS.length, 6);
-  assert.deepStrictEqual(ui.DESIGNS.map((d) => d.n), ['1', '2', '3', '4', '5', '6']);
-  for (const n of ['2', '3', '4', '5', '6']) {
+test('five designs are defined, each with its own skin rules and a night', () => {
+  assert.strictEqual(ui.DESIGNS.length, 5);
+  assert.deepStrictEqual(ui.DESIGNS.map((d) => d.n), ['1', '3', '4', '5', '6']);
+  for (const n of ['3', '4', '5', '6']) {
+    assert.ok(ui.css.includes(`:root:root[data-skin="${n}"][data-theme="dark"]{`), `night for skin ${n} missing`);
+  }
+  for (const n of ['3', '4', '5', '6']) {
     assert.ok(ui.css.includes(`:root:root[data-skin="${n}"]{`), `token block for skin ${n} missing`);
   }
   // Skin 1 is today's look: no rule of its own.
   assert.ok(!ui.css.includes('data-skin="1"'), 'skin 1 must not override anything');
-  // Skin 2 is the only dark one and it says so.
-  assert.ok(ui.css.includes('color-scheme:dark'));
+  assert.ok(!ui.css.includes('data-skin="2"'), 'skin 2 was dropped');
   // Skin 4 falls back to solid cards when the phone asks for less transparency.
   assert.ok(ui.css.includes('prefers-reduced-transparency:reduce'));
   // Skin 6 has its black floating bar.
@@ -46,7 +48,7 @@ test('the early script is in the built head, before the main style, and reads de
 test('the skin rules come after the base tokens and the dark block', () => {
   const html = renderPage(fixture());
   const base = html.indexOf(':root[data-theme="dark"]{--ground:#0f1218');
-  const skin = html.indexOf(':root:root[data-skin="2"]{');
+  const skin = html.indexOf(':root:root[data-skin="3"]{');
   assert.ok(base > 0 && skin > 0);
   assert.ok(skin > base, 'skin tokens must come after the base tokens');
 });
@@ -54,7 +56,7 @@ test('the skin rules come after the base tokens and the dark block', () => {
 test('the picker is in the built page, with six buttons, outside the ITZIK markers', () => {
   const html = renderPage(fixture());
   assert.ok(html.includes('id="designBox"'));
-  for (const n of ['1', '2', '3', '4', '5', '6']) {
+  for (const n of ['1', '3', '4', '5', '6']) {
     assert.ok(html.includes(`data-design="${n}"`), `button ${n} missing`);
   }
   assert.ok(html.includes('✓ נבחר'));
