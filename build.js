@@ -1095,7 +1095,7 @@ const TENANT_TILES = {
   gTasks: ['g17', '✅ משימות', 'מה לעשות, לפי יום'],
   gNotes: ['g10', '📝 פתקים', 'נכתב, נשמר, לא הולך לאיבוד'],
   gVoices: ['g4', '🎙️ הקלטות שלא תומללו', 'מה שלא הצלחתי לקרוא'],
-  gAdminReq: ['g3', '📨 בקשה ממערכת המחשוב', 'לשנות משהו במוניטור? מערכת המחשוב מאשרת'],
+  gAdminReq: ['g3', '📨 בקשה ממנהל', 'לבקש מ' + (inst.owner || 'איציק') + ' שינוי במוניטור, והתשובה בצ׳אט'],
   // 6.10, Home Style: shipments. Drawn only for an instance that lists them.
   gShip: ['g16', '📦 משלוחים', 'כל ההזמנות הפתוחות, לפי דחיפות'],
   gAlerts: ['g3', '🔔 דורש טיפול', 'מה שלא יכול לחכות'],
@@ -1188,7 +1188,7 @@ function tenantTiles(inst) {
   const samples = inst.samples ? sample + sample.replace('g11', 'g4') : '';
   return guides + links + bank + samples + ids.filter((id) => TENANT_TILES[id]).map((id) => {
     const [cls, title, sub] = TENANT_TILES[id];
-    return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261015-clalit"' : '') + (id === 'gTasks' ? ' data-upd="tasks-del-1024"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261015-clalit"' : '') + (id === 'gTasks' ? ' data-upd="tasks-del-1024"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
 }
 /*
@@ -2122,6 +2122,8 @@ section{margin-bottom:30px}
  background:var(--accent);color:var(--on-accent);font-size:22px;line-height:1;box-shadow:var(--shadow)}
 #recBtn.on{background:#e5484d;animation:pulse 1.4s infinite}
 #recBtn[disabled]{opacity:.5;cursor:default}
+#recqBtn{border:0;border-radius:18px;padding:8px 14px;background:var(--accent);color:var(--on-accent);font:600 14px Heebo,sans-serif;cursor:pointer;white-space:nowrap}
+#recqBtn[disabled]{opacity:.5;cursor:default}
 #recSaid{font-size:14px;color:var(--dim);font-weight:300}
 @media(prefers-reduced-motion:reduce){#recBtn.on{animation:none}}
 .note{font-size:13px;color:var(--dim);font-weight:300;border-top:1px solid var(--line);
@@ -4058,7 +4060,7 @@ ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').bar : ''}
   <button type="button" class="gt gRec" id="gRecipes"><b><img class="gi" src="icons/lolos-giraffe.png" alt=""> מתכונים</b><small>חוברת לולוס וספר המתכונים של איציק</small></button>
   <button type="button" class="gt g16" id="gIsra"><b>💳 ישראכרט יואל</b><small>הכרטיסים, מה לבקש, ומה ענו</small></button>
   <!-- איציק, 11.10: "כפתור להחליף מודל תמחק אותו". הכפתור gModel ירד ממסך הבית; הקוד שלו בודק שהוא קיים. -->
-  <button type="button" class="gt g10" id="gFiles" data-new="1" data-upd="20261021-search"><b>📁 הקבצים שלי</b><small>מה ששלחת ומה שנשלח לך, עם הורדה</small></button>
+  <button type="button" class="gt g10" id="gFiles" data-new="1" data-upd="20261024-comment"><b>📁 הקבצים שלי</b><small>מה ששלחת ומה שנשלח לך, עם הורדה</small></button>
   <button type="button" class="gt g8" id="gHomestyle" data-new="1" data-upd="20261023-hs-quote3"><b>🏠 הום סטייל</b><small>חדש: הצעת מחיר ובקשה לאיש המחשבים</small></button>
   <button type="button" class="gt g10" id="gCams" data-new="1" data-upd="20261022-privacy" data-files="cameras-tenants.png,cameras-tenants.pdf,cameras-erocam.txt"><b>📹 מצלמות</b><small>דף לדיירים: הברקוד, הסיסמה ושמונה שלבים</small></button>
   <!--
@@ -12010,7 +12012,8 @@ function renderFiles(){
  function row(f,tag,full){var w=when(f,full);return '<div class="fl-r"><a href="files/'+esc(f.n)+'"><span class="fl-i"><span class="fl-e">'+ico(f)+'</span>'+fileThumb(f.n)+'</span>'
   +'<span class="fl-n">'+(tag?'<b style="font-size:12px;background:#16a34a;color:#fff;border-radius:8px;padding:1px 7px;margin-inline-end:6px">עדכני</b>':'')+esc(f.n.split('/').pop())
   +'<small>'+(w?esc(w)+' · ':'')+kb(f)+'</small></span></a>'
-  +'<button type="button" class="fl-dl" data-fdl="'+esc(f.n)+'" aria-label="הורדה">⬇<small>הורדה</small></button></div>';}
+  +'<button type="button" class="fl-dl" data-fdl="'+esc(f.n)+'" aria-label="הורדה">⬇<small>הורדה</small></button>'
+  +'<button type="button" class="fl-dl" data-fcmt="'+esc(f.n)+'" aria-label="הערה על זה">💬<small>הערה</small></button></div>';}
  var groups={},order=[],old=[];
  F.forEach(function(f){
   if(/בוטל|cancel+ed/i.test(f.n)){old.push(f);return;}
@@ -17712,11 +17715,69 @@ function goFiles(list,cap,deflt,hasVoice){
     +(FEM?'. שלחי רק אותו שוב.':'. תשלח רק אותו שוב.'));
    return;
   }
-  sendSay(hasVoice
-   ?(FEM?'ההקלטה לא הגיעה שלמה ולא נשמרה. הקליטי שוב עכשיו, לפני שתשכחי מה אמרת.':'ההקלטה לא הגיעה שלמה ולא נשמרה. תקליט שוב עכשיו, לפני שתשכח מה אמרת.')
-   :(FEM?'הקובץ לא הגיע שלם ולא נשמר. שלחי שוב.':'הקובץ לא הגיע שלם ולא נשמר. תשלח שוב.'));
+  // 24.10, from the reviewer, taken by Itzik: a recording that did not leave
+  // is kept on the phone and goes with the "לשלוח שוב" button, not lost.
+  if(hasVoice){
+   recqKeep(list,cap,deflt).then(function(ok){
+    sendSay(ok
+     ?(FEM?'ההקלטה לא הגיעה, אבל היא שמורה בטלפון ולא הולכת לאיבוד. כשהרשת חוזרת לחצי על "לשלוח שוב" מתחת למיקרופון.':'ההקלטה לא הגיעה, אבל היא שמורה בטלפון ולא הולכת לאיבוד. כשהרשת חוזרת תלחץ על "לשלוח שוב" מתחת למיקרופון.')
+     :(FEM?'ההקלטה לא הגיעה שלמה ולא נשמרה. הקליטי שוב עכשיו, לפני שתשכחי מה אמרת.':'ההקלטה לא הגיעה שלמה ולא נשמרה. תקליט שוב עכשיו, לפני שתשכח מה אמרת.'));
+   });
+   return;
+  }
+  sendSay(FEM?'הקובץ לא הגיע שלם ולא נשמר. שלחי שוב.':'הקובץ לא הגיע שלם ולא נשמר. תשלח שוב.');
  }).then(function(){fBtn.disabled=false;});
 }
+// Kept recordings: a small IndexedDB store on the phone, one record per take.
+// The store stays until the take is sent, so a dropped connection never loses it.
+function recqOpen(){
+ return new Promise(function(ok,no){
+  if(!window.indexedDB)return no(new Error('no indexeddb'));
+  var rq=indexedDB.open('recq',1);
+  rq.onupgradeneeded=function(){rq.result.createObjectStore('pending',{keyPath:'id'});};
+  rq.onsuccess=function(){ok(rq.result);};
+  rq.onerror=function(){no(rq.error);};
+ });
+}
+function recqRun(mode,fn){
+ return recqOpen().then(function(db){return new Promise(function(ok,no){
+  var tx=db.transaction('pending',mode);
+  var out=fn(tx.objectStore('pending'));
+  tx.oncomplete=function(){db.close();ok(out&&out.result!==undefined?out.result:true);};
+  tx.onerror=function(){db.close();no(tx.error);};
+ });});
+}
+function recqAll(){
+ return recqRun('readonly',function(st){return st.getAll();}).then(function(a){return a||[];}).catch(function(){return [];});
+}
+function recqKeep(list,cap,deflt){
+ var at=new Date().toISOString();
+ return Promise.all(list.filter(function(f){return /^voice-/.test(f.name);}).map(function(f){
+  return recqRun('readwrite',function(st){return st.put({id:'q'+Date.now()+'-'+Math.random().toString(36).slice(2,7),at:at,file:f,cap:cap||'',deflt:deflt||''});});
+ })).then(function(){recqShow();return true;}).catch(function(){return false;});
+}
+function recqShow(){
+ var b=document.getElementById('recqBtn');
+ if(!b)return;
+ recqAll().then(function(all){
+  b.hidden=!all.length;
+  b.textContent=all.length>1?('לשלוח שוב ('+all.length+' הקלטות)'):'לשלוח שוב';
+ });
+}
+function recqResend(){
+ var b=document.getElementById('recqBtn');
+ if(b)b.disabled=true;
+ recqAll().then(function(all){
+  return all.reduce(function(p,r){return p.then(function(){
+   return sendAll([r.file],r.cap||r.deflt).then(function(){return recqRun('readwrite',function(st){return st.delete(r.id);});});
+  });},Promise.resolve());
+ }).then(function(){
+  sendSay('נשלח. ההקלטה ששמורה בטלפון יצאה.');
+ },function(){
+  sendSay('עדיין לא הגיע. ההקלטה שמורה בטלפון, ואפשר לנסות שוב כשהרשת חוזרת.');
+ }).then(function(){if(b)b.disabled=false;recqShow();});
+}
+boot('recq',function(){recqShow();window.addEventListener('online',recqShow);});
 function sendSay(t){
  fSaid.textContent=t;
  var r=document.getElementById('recSaid');
