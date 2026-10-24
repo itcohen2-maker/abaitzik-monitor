@@ -873,6 +873,7 @@ body.editing .bn{display:none}
  box-shadow:0 0 0 2px var(--gold),0 14px 34px rgba(52,168,83,.45)}
 .toast.bad{color:#fff;border:0;background:linear-gradient(180deg,#ff6a5e,var(--red))}
 .toast{cursor:pointer}
+
 .toast .toast-x{display:block;margin-top:8px;font:500 12.5px Heebo,sans-serif;opacity:.85}
 .undobar{position:fixed;z-index:81;inset-inline:12px;bottom:calc(76px + env(safe-area-inset-bottom));
  margin-inline:auto;max-width:420px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;
@@ -2099,7 +2100,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-24T05:47:47.513Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-24T05:47:56.075Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2167,6 +2168,7 @@ try{
  </div>
  <div class="ava" aria-hidden="true"><div>א</div></div>
 </header>
+
  <section class="talk" id="talkCard" aria-label="פנייה אליי">
   <div class="firsthint" id="firstHint" hidden>
    <span>כאן מבקשים ממני: לחץ על המיקרופון ודבר, או כתוב בתיבה למטה ושלח. התשובה תגיע לכאן.</span>
@@ -3067,6 +3069,7 @@ try{
 </div>
 <div class="toast" id="toast" role="status" hidden></div>
 
+
 <div class="recwrap" id="recModal" hidden>
  <div class="recbox">
   <div class="rectitle" id="recTitle">מדבר אליי</div>
@@ -3856,7 +3859,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='daa8c20a44';
+var CODE_ID='9c9f01638d';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -5831,7 +5834,7 @@ function paintSecrets(){
 }
 function repaintAll(){
  var st=keepState(),y=window.scrollY;
- var jobs=[['dot',paintDot],['new',renderNew],['thread',renderThread],
+ var jobs=[['features',applyFeatures],['dot',paintDot],['new',renderNew],['thread',renderThread],
   ['answers',renderAnswers],['got',renderGot],['net',renderNet],['items',render],
   ['pegasus',renderPegasus],['improve',renderImprove],['special',renderSpecial],
   ['reminders',renderReminders],['tasks',renderTasks],['appts',renderAppts],['replies',renderReplies],['rivhit',renderRivhit],['food',renderFood],
@@ -7924,6 +7927,7 @@ function applyHidden(){
   var el=document.getElementById(id);
   if(el)el.hidden=hid.indexOf(id)>=0;
  });
+ try{applyFeatures();}catch(e){}
  var back=document.getElementById('tidyBack');
  if(back)back.hidden=!hid.length;
 }
@@ -14177,6 +14181,19 @@ boot('guides',function(){
   };
  });
 });
+boot('features',applyFeatures);
+
+function applyFeatures(){
+ var F=(typeof D==='object'&&D&&D.features)||{};
+ [['gBank','bank']].forEach(function(p){
+  var t=document.getElementById(p[0]);
+  var mine=[];
+  try{if(typeof tileStore==='function')mine=tileStore('tilesHidden',[]);}catch(e){}
+  if(t)t.hidden=(F[p[1]]!==true)||mine.indexOf(p[0])>=0;
+ });
+}
+
+
 boot('install',function(){
  if(INSTANCE&&INSTANCE.name==='abaitzik')return;
  var standalone=(window.navigator&&window.navigator.standalone)||
@@ -14236,6 +14253,7 @@ function paintHold(){
 function paintLive(){
  paintPc();
  paintHold();
+ if(window.paintQuota)paintQuota();
  var pill=document.getElementById('livePill');
  var txt=document.getElementById('lpText');
  if(!pill||!txt)return;
@@ -14337,6 +14355,7 @@ function openLiveSheet(){
  }
  sh.hidden=false;
 }
+
 on('livePill',openLiveSheet);
 on('lsClose',function(){var sh=document.getElementById('liveSheet');if(sh)sh.hidden=true;});
 boot('live',function(){pollLive();setInterval(pollLive,30000);setInterval(paintLive,15000);});
