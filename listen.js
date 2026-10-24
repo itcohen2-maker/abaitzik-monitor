@@ -68,9 +68,11 @@ const QHOLD = path.join(STATUS, 'quota-hold.json');
 function holdOn() { return fs.existsSync(QHOLD); }
 // 24.10: today's share of the day cap, for the quota bar on a customer's page (null on Itzik's).
 function quotaView() {
+  // live.json is public on Pages, so only the percent goes out, never dollars.
   try {
-    return require('./lib/quota-day.js').view({ name: inst.name, statusDir: STATUS,
+    const v = require('./lib/quota-day.js').view({ name: inst.name, statusDir: STATUS,
       ownAccount: fs.existsSync('/srv/monitor-changes/' + inst.name + '.own'), tier: require('./lib/tier.js').current(), env: process.env });
+    return v ? { pct: v.pct } : null;
   } catch (e) { return null; }
 }
 const PULLS = path.join(STATUS, 'pulls.json');
