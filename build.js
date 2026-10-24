@@ -1095,7 +1095,7 @@ const TENANT_TILES = {
   gTasks: ['g17', '✅ משימות', 'מה לעשות, לפי יום'],
   gNotes: ['g10', '📝 פתקים', 'נכתב, נשמר, לא הולך לאיבוד'],
   gVoices: ['g4', '🎙️ הקלטות שלא תומללו', 'מה שלא הצלחתי לקרוא'],
-  gAdminReq: ['g3', '📨 בקשה ממנהל', 'לבקש מ' + (inst.owner || 'איציק') + ' שינוי במוניטור, והתשובה בצ׳אט'],
+  gAdminReq: ['g3', '📨 בקשה ממנהל', 'לבקש שינוי במוניטור, והתשובה בצ׳אט'],
   // 6.10, Home Style: shipments. Drawn only for an instance that lists them.
   gShip: ['g16', '📦 משלוחים', 'כל ההזמנות הפתוחות, לפי דחיפות'],
   gAlerts: ['g3', '🔔 דורש טיפול', 'מה שלא יכול לחכות'],
@@ -14224,6 +14224,7 @@ function arWaitMark(){try{localStorage.setItem('arSent',String(Date.now()));}cat
 function arWaitShow(){
  var s=document.querySelector('#gAdminReq small');if(!s)return;
  var at=0;try{at=+localStorage.getItem('arSent')||0;}catch(e){}
+ s.textContent='לבקש מ'+OWNER+' שינוי במוניטור, והתשובה בצ׳אט';
  if(!at)return;
  if(Date.now()-at>172800000){try{localStorage.removeItem('arSent');}catch(e){}return;}
  s.textContent='הבקשה אצל '+OWNER+', מחכה לתשובה';
