@@ -3434,7 +3434,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   and nothing becomes unreachable: one button in the header brings the rest
   back, and the choice is remembered.
 */
-#pH.bare > *:not(#talkCard):not(#bareBtn){display:none!important}
+#pH.bare > *:not(#talkCard):not(#bareBtn):not(#approvalsBox){display:none!important}
 /*
   9.10, the improvements reviewer: a wide green bar saying "refresh me" told a
   new customer the page does not update by itself and needs pressing each
