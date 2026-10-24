@@ -14481,7 +14481,7 @@ on('gToday',function(){
    shipHide(a);draw();paintShipLine();
    // Whoever pressed it is the one reading this, so it names no one in this
    // office (reviewer 8.10): only Roni's screen, which reads the same table.
-   sendText('טיפלתי במשלוח',a.id+String.fromCharCode(10)+a.code,'ship-done').then(function(){toast('נרשם, גם אצל רוני. טעות? למטה, סימנתי השבוע.');})
+   sendText('טיפלתי במשלוח',a.id+String.fromCharCode(10)+a.code,'ship-done').then(function(){toast('נרשם ✔. טעות? למטה, סימנתי השבוע.');})
     .catch(function(){toast('נשמר בטלפון. השליחה תנסה שוב.');});
   });
   doneBox.addEventListener('click',function(e){
