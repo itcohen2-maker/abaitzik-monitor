@@ -930,7 +930,13 @@ body.editing .bn{display:none}
 .hm-greet{margin:6px 2px 12px;font:800 22px/1.25 Heebo,sans-serif;color:var(--ink)}
 .hm-greet[hidden]{display:none}
 .hb{margin:0 0 14px;padding:16px;border-radius:20px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);color:var(--ink)}
-.hb[hidden],.hk-grid[hidden]{display:none}
+.hb[hidden],.hk-grid[hidden],.hm-money[hidden]{display:none}
+.hm-money{margin:0 0 14px;border-radius:18px;background:var(--surface);border:1px solid var(--line)}
+.hm-money>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;min-height:52px;padding:0 16px;font:700 16px Heebo,sans-serif;color:var(--ink);cursor:pointer}
+.hm-money>summary::-webkit-details-marker{display:none}
+.hm-money>summary small{font:500 13px Heebo,sans-serif;color:var(--dim)}
+.hm-money[open]>summary small{display:none}
+.hm-money .hk-grid{margin:0;padding:0 12px 12px}
 .hb-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
 .hb-head b{font:800 17px Heebo,sans-serif}
 .hb-head small{font:500 13px Heebo,sans-serif;color:var(--dim);font-variant-numeric:tabular-nums}
@@ -2195,7 +2201,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-24T08:37:58.474Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-24T08:46:34.784Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2304,6 +2310,7 @@ try{
 <section id="approvalsBox" class="apv" aria-live="polite" hidden></section>
 <section class="hb" id="homeBrief" aria-label="דוח הבוקר" hidden></section>
 <section class="hk-grid" id="homeKpis" aria-label="מספרים" hidden></section>
+<details class="hm-money" id="homeMoney" hidden><summary>💰 הכסף שלי<small>מוסתר, לחיצה לפתיחה</small></summary><div class="hk-grid" id="homeMoneyGrid"></div></details>
 <div id="newBlock">
  <button type="button" id="newBtn" class="newbtn">
   <span class="nb-l"><b id="nbTitle">מה חדש</b><small id="nbSub"></small></span>
@@ -3977,7 +3984,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='92c4b0489a';
+var CODE_ID='7e69ab7421';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -14099,7 +14106,7 @@ function pinTiles(grid){
   else{a.splice(i,1);put(a);t.classList.remove('taskblink');toast('"'+name+'" כבר לא מהבהב.');}
  };
 }
-var HOME_HEAD=['hmGreet','sinceBox','approvalsBox','homeBrief','homeKpis','newBlock','bareBtn','blkIcons','blkTiles'];
+var HOME_HEAD=['hmGreet','sinceBox','approvalsBox','homeBrief','homeKpis','homeMoney','newBlock','bareBtn','blkIcons','blkTiles'];
 var HOME_TAIL=[];
 function pinHome(home){
  if(!home)return;
@@ -14916,9 +14923,13 @@ function hmBriefHtml(b){
 function hmCards(b,m){
  var cards=[],at=b&&b.at?hmHM(b.at):'';
  if(b&&Array.isArray(b.kpis))b.kpis.forEach(function(k){
-  if(!k)return;
+  if(!k||k.u==='₪')return;
   cards.push({l:k.k||'',v:hmNum(k.v),u:k.u||'',st:k.state||'ok',sp:k.spark,at:at});
  });
+return cards;
+}
+function hmMoneyCards(b,m){
+ var cards=[];
  if(m&&typeof m==='object'){
   var mat=m.at?hmHM(m.at):'',late=Number(m.late)||0;
   if(m.cash!=null)cards.push({l:'בבנק',v:hmMoney(m.cash),u:'',st:'ok',sp:null,at:mat});
@@ -14960,6 +14971,9 @@ function renderHome(){
  }
  var cards=hmCards(D0.brief,D0.money);
  if(kpis){kpis.hidden=!cards.length;kpis.innerHTML=cards.map(hmCardHtml).join('');}
+ var mbox=document.getElementById('homeMoney'),mgrid=document.getElementById('homeMoneyGrid');
+ var F=D0.features||{},mc=F.money?hmMoneyCards(D0.brief,D0.money):[];
+ if(mbox&&mgrid){mbox.hidden=!mc.length;mgrid.innerHTML=mc.map(hmCardHtml).join('');}
 }
 
 var PUSH_KEY="";
