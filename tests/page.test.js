@@ -665,7 +665,8 @@ test('the home screen is the microphone and nothing else', () => {
   const html = renderPage(fixture({}));
   // He asked for the main screen to hold the microphone and the four ways of
   // reaching me, and nothing more.
-  assert.ok(html.includes('#pH.bare > *:not(#talkCard):not(#bareBtn){display:none!important}'));
+  // 24.10.2026: the approval card stays on the bare home, a decision waiting for him is not a tool.
+  assert.ok(html.includes('#pH.bare > *:not(#talkCard):not(#bareBtn):not(#approvalsBox){display:none!important}'));
   // Hidden, never removed: every render on this page still writes to the
   // element it always wrote to, and nothing becomes unreachable.
   assert.ok(html.includes('id="bareBtn"'));
