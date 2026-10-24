@@ -27,6 +27,7 @@
 const fs = require('fs');
 const path = require('path');
 const ch = require('./lib/notify-channels.js');
+const wp = require('./lib/webpush.js');
 const codexBridge = require('./codex-bridge.js');
 const codexRoute = require('./lib/codex-route.js');
 const group = require('./lib/group.js');
@@ -516,6 +517,19 @@ function saveSiteLead(text, at) {
   const dir = path.join(inst.dataPath, 'biz', 'biz');
   try { fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(path.join(dir, id + '.json'), JSON.stringify(r, null, 1), 'utf8'); say('ליד נכנס לעסק שלי: ' + r.name); }
   catch (e) { say('!! ליד לא נכנס לעסק שלי: ' + e.message); }
+}
+
+/*
+  24.10.2026, stage 6: the page's "התראות לטלפון" box sends its subscription as
+  "מנוי התראות: {...}". It is saved to data/push (lib/webpush.js) and goes nowhere
+  else. Whoever holds a subscription receives every notification, so the owner code
+  is required, the same check every send passes.
+*/
+function recordPushSub(m, got) {
+  if (!ownerCodeOk(m.message)) { say('מנוי התראות נדחה: אין קוד תקף בהודעה'); return; }
+  if (got.error) { say('!! מנוי התראות לא תקין: ' + got.error); return; }
+  const n = wp.saveSub(got.sub);
+  say('נשמר מנוי התראות לטלפון, סה"כ ' + n);
 }
 
 function recordIncoming(m) {
@@ -1206,6 +1220,9 @@ async function handleOne(m) {
   received++;
   lastMsgAt = Date.now();
   if (ownToken(m)) { remember(m); return; }
+  // 24.10.2026: a phone's push subscription is stored, never chatted or sent to Claude.
+  const pushSub = m.attachment ? null : wp.fromMessage(m.message);
+  if (pushSub) { recordPushSub(m, pushSub); remember(m); return; }
   say('הודעה: ' + group.stripCode(String(m.message || '(צרופה)')).slice(0, 80));
   // The notes and task ticks the page keeps on the server too. Not a message:
   // it never enters the chat, it only refreshes the copy a new phone fills from.
@@ -1382,7 +1399,7 @@ function releaseLock() {
   process.on(sig, function () { releaseLock(); if (sig !== 'exit') process.exit(0); });
 });
 
-module.exports = { recordIncoming, isSystemText, recordDrain, TOPIC, LIVE, inTopics: (now) => inst.inTopics(now) };
+module.exports = { recordIncoming, recordPushSub, isSystemText, recordDrain, TOPIC, LIVE, inTopics: (now) => inst.inTopics(now) };
 
 /*
   Requiring this file must not open a connection or claim the lock. A test that

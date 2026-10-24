@@ -229,6 +229,11 @@ if (!gate.enabled() && !process.env.MONITOR_NO_GATE) {
   process.exit(1);
 }
 
+// 24.10.2026, stage 6: the Web Push public key. From the environment or instance.json,
+// read at render time so a new key needs no code change. Empty means no push box.
+const pushUi = require('./lib/push-ui.js');
+function pushKey() { return process.env.VAPID_PUBLIC || inst.vapidPublic || ''; }
+
 function renderPage(payload) {
   // Belt and braces on the promise the settings screen makes. build() scrubs
   // the payload before it splits it into the sealed files; this catches the
@@ -1043,6 +1048,9 @@ function build() {
       answers: chat.filter(m => m.from === 'claude').length,
     }), 'utf8');
   fs.writeFileSync(path.join(OUT_DIR, 'robots.txt'), 'User-agent: *\nDisallow: /\n', 'utf8');
+  // 24.10.2026, stage 6: the service worker (push and the app shell). Each build writes
+  // its own cache name, so a new build replaces the shell of the one before it.
+  fs.writeFileSync(path.join(OUT_DIR, 'sw.js'), require('./lib/sw.js').source(payload.builtAt), 'utf8');
   // A missing address used to hand him GitHub's own 404, which inside the
   // installed app has no chrome and no back button: a dead end. Pages serves
   // this file for anything missing under the repo, so now every wrong address
@@ -2328,6 +2336,7 @@ ${require('./lib/approvals-ui.js').css}
 ${require('./lib/since-ui.js').css}
 ${require('./lib/activity-ui.js').css}
 ${require('./lib/home-ui.js').css}
+${pushUi.css}
 .toast .toast-x{display:block;margin-top:8px;font:500 12.5px Heebo,sans-serif;opacity:.85}
 .undobar{position:fixed;z-index:81;inset-inline:12px;bottom:calc(76px + env(safe-area-inset-bottom));
  margin-inline:auto;max-width:420px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;
@@ -4432,6 +4441,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
+${pushUi.html(pushKey())}
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -19765,6 +19775,7 @@ ${require('./lib/activity-ui.js').js}
 on('gActLog',function(){pane('Lg');renderActLog();return false;});
 /*ITZIK:END*/
 ${require('./lib/home-ui.js').js}
+${pushUi.js(pushKey())}
 boot('ask',renderAsk);
 boot('approvals',renderApprovals);
 boot('home',renderHome);
