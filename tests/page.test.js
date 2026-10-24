@@ -86,7 +86,9 @@ test('home order: one message button on top, the tools next, my log last', () =>
   // talkCard is out of the arrange list: it is not in the home section any
   // more, and "nothing above it" is not a preference he should be able to drag
   // away by accident.
-  assert.ok(html.includes("var HOME_HEAD=['newBlock','bareBtn','blkIcons','blkTiles'];"));
+  // 24.10.2026: the greeting, the approval card, the brief and the bento sit above
+  // these four now (lib/home-ui.js), in the same relative order.
+  assert.ok(html.includes("var HOME_HEAD=['hmGreet','sinceBox','approvalsBox','homeBrief','homeKpis','newBlock','bareBtn','blkIcons','blkTiles'];"));
   assert.ok(html.includes('HOME_HEAD.forEach'));
   // Nothing is pinned to the foot any more: the block that was, "איך אני
   // משתפר", came off the home screen on 16.9 at his word.
@@ -247,7 +249,7 @@ test('nothing opens by itself, and everything that opens can be closed', () => {
   // screen either way, because it is the same conversation either way.
   assert.ok(html.includes("  openAnswers(n?'fresh':'all',true);"));
   // The way out says what it does, and a keyboard has one too.
-  assert.ok(html.includes("b.textContent='סגירה וחזרה לבית';"));
+  assert.ok(html.includes("b.textContent='חזרה';"));
   assert.ok(html.includes("if(e.key!=='Escape')return;"));
   // Escape must not eat a keystroke in the middle of a message.
   assert.ok(html.includes("if(tag==='INPUT'||tag==='TEXTAREA'||(t&&t.isContentEditable))return;"));

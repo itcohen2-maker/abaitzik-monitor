@@ -1283,7 +1283,7 @@ const PAGE = `<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <script>
 /* Reviewer, 11.10, approved by Itzik: every size here is fixed, so a larger
    text setting on the iPhone changed nothing on this page. Safari reports that
@@ -1315,18 +1315,18 @@ const PAGE = `<!DOCTYPE html>
 <style>
 :root{--blue:#4285F4;--red:#EA4335;--yellow:#FBBC05;--green:#34A853;--orange:#e8710a;
  --ground:#f6f8fc;--surface:#fff;--sunk:#eef2fa;--ink:#1f2430;--dim:#5f6b7f;
- --line:#e3e9f4;--accent:#1a73e8;--accent-soft:#e8f0fe;--wait:#e37400;
+ --line:#e3e9f4;--accent:#0f6e5c;--accent-soft:#e3f1ed;--wait:#e37400;
  --gold:#f0b429;--fresh:#e6f6ec;--unread:#fdeceb;
- --shadow:0 2px 8px rgba(30,40,70,.07);--r:18px;--on-accent:#fff}
+ --shadow:0 2px 8px rgba(30,40,70,.07);--r:18px;--on-accent:#fff;--chip:#fff;--chip-ink:#0a4a5a;--warn-soft:#fff7e0;--warn-ink:#7a5200}
 /* Three states, not two. With no choice made the phone decides, which is
    what he had until now. A choice stamps data-theme on the root and has to
    win in both directions, so the same tokens are written twice on purpose. */
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ground:#0f1218;--surface:#181d27;--sunk:#141922;
- --ink:#eef1f7;--dim:#9aa5b8;--line:#252c39;--accent:#8ab4f8;--accent-soft:#1b2b45;
- --wait:#fbbc05;--orange:#fb8c00;--fresh:#12301f;--unread:#331615;--shadow:0 2px 10px rgba(0,0,0,.4);--on-accent:#0b1a33}}
+ --ink:#eef1f7;--dim:#9aa5b8;--line:#252c39;--accent:#4fd1b0;--accent-soft:#15302a;
+ --wait:#fbbc05;--orange:#fb8c00;--fresh:#12301f;--unread:#331615;--shadow:0 2px 10px rgba(0,0,0,.4);--on-accent:#06231c;--chip:#181d27;--chip-ink:#a5f3fc;--warn-soft:#3a2a0b;--warn-ink:#fbbf24}}
 :root[data-theme="dark"]{--ground:#0f1218;--surface:#181d27;--sunk:#141922;
- --ink:#eef1f7;--dim:#9aa5b8;--line:#252c39;--accent:#8ab4f8;--accent-soft:#1b2b45;
- --wait:#fbbc05;--orange:#fb8c00;--fresh:#12301f;--unread:#331615;--shadow:0 2px 10px rgba(0,0,0,.4);--on-accent:#0b1a33}
+ --ink:#eef1f7;--dim:#9aa5b8;--line:#252c39;--accent:#4fd1b0;--accent-soft:#15302a;
+ --wait:#fbbc05;--orange:#fb8c00;--fresh:#12301f;--unread:#331615;--shadow:0 2px 10px rgba(0,0,0,.4);--on-accent:#06231c;--chip:#181d27;--chip-ink:#a5f3fc;--warn-soft:#3a2a0b;--warn-ink:#fbbf24}
 *{box-sizing:border-box}
 /* A class that sets display beats the browser default for [hidden], which is
    how the recording overlay ended up on screen the moment the page opened. */
@@ -1483,7 +1483,7 @@ button.abtn[disabled]{opacity:.55}
 .growbtn .gb-l{flex:1;min-width:0}
 .growbtn b{display:block;font:800 17px Heebo,sans-serif}
 .growbtn small{display:block;font-size:12.5px;opacity:.94;font-weight:300;margin-top:1px}
-.growbtn .gb-c{flex:0 0 auto;min-width:32px;height:32px;border-radius:999px;display:grid;place-items:center;
+.growbtn .gb-c{flex:0 0 auto;min-width:44px;height:44px;border-radius:999px;display:grid;place-items:center;
  background:rgba(255,255,255,.28);font:800 15px Heebo,sans-serif;padding:0 9px}
 .growbtn:active{transform:translateY(2px) scale(.99)}
 .grow{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
@@ -1498,7 +1498,7 @@ button.abtn[disabled]{opacity:.55}
    same green the thread cards use, so one mark means one thing everywhere. */
 /* The listener indicator. Fixed to the edge, small, and never in the way of
    a thumb reaching the bottom navigation. */
-.holdline{margin:0 0 10px;padding:9px 12px;border-radius:12px;background:#fff7e0;border:1px solid #e0a11b;color:#7a5200;font-weight:600;font-size:14px}
+.holdline{margin:0 0 10px;padding:9px 12px;border-radius:12px;background:var(--warn-soft);border:1px solid #e0a11b;color:var(--warn-ink);font-weight:600;font-size:14px}
 .pcpill{position:fixed;inset-inline-start:10px;bottom:78px;z-index:60;padding:6px 12px;border-radius:999px;
  font-size:13px;font-weight:700;background:var(--card,#1b1b1f);border:1px solid var(--dim);color:var(--dim)}
 .pcpill.on{border-color:var(--green);color:var(--green)}
@@ -1669,7 +1669,7 @@ button.abtn[disabled]{opacity:.55}
    might need him, but quietly: one flat red, no ring around it, no halo
    spreading underneath. The count and the words carry it. */
 .newbtn.hot{background:linear-gradient(150deg,#e85566,#c5221f);
- box-shadow:0 6px 16px rgba(234,67,53,.22);animation:nbeat 1.1s infinite}
+ box-shadow:0 6px 16px rgba(234,67,53,.22);animation:nbeat 1.1s 3}
 .newbtn.hot b{font-size:20px}
 .newbtn.hot .nb-c{background:#fff;color:var(--red);min-width:42px;height:42px;font-size:19px}
 @keyframes nbeat{
@@ -1710,7 +1710,7 @@ button.abtn[disabled]{opacity:.55}
 .ui-dlg b{display:block;font:600 17px Heebo,sans-serif;margin-bottom:4px}
 .ui-dlg input{width:100%;box-sizing:border-box;margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--sunk);color:var(--ink);font:500 16px Heebo,sans-serif}
 .ui-btns{display:flex;gap:10px;margin-top:16px}
-.ui-ok{border:0;border-radius:12px;padding:11px 18px;background:var(--accent);color:#fff;font:600 15px Heebo,sans-serif;cursor:pointer}
+.ui-ok{border:0;border-radius:12px;padding:11px 18px;background:var(--accent);color:var(--on-accent);font:600 15px Heebo,sans-serif;cursor:pointer}
 .ui-ok.danger{background:var(--red)}
 .ui-no{border:1px solid var(--line);border-radius:12px;padding:11px 18px;background:transparent;color:var(--ink);font:600 15px Heebo,sans-serif;cursor:pointer}
 .fv-body audio{width:100%}
@@ -1738,7 +1738,7 @@ button.abtn[disabled]{opacity:.55}
 .flist .fl-dl{flex:0 0 64px;border-radius:12px;background:var(--surface);border:1px solid var(--line);color:var(--ink);font-size:20px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
 .flist .fl-dl small{font-size:12px;color:var(--dim)}
 .flist .fl-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
-.flist .fl-tabs button{padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:500 15px Heebo,sans-serif;cursor:pointer}
+.flist .fl-tabs button{min-height:44px;padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:500 15px Heebo,sans-serif;cursor:pointer}
 .flist .fl-tabs button.on{background:var(--ink);color:var(--surface)}
 .salecard{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow)}
 .salecard h3{font:800 17px Heebo,sans-serif;margin:0 0 8px;text-align:center}
@@ -1788,7 +1788,7 @@ section{margin-bottom:30px}
 .seg{display:flex;gap:4px;background:var(--sunk);border-radius:12px;padding:4px;margin-bottom:14px;
  border:1px solid var(--line)}
 .seg button{flex:1;position:relative;background:transparent;color:var(--dim);border:0;border-radius:7px;
- padding:8px 4px;font:500 14px Heebo,sans-serif;cursor:pointer}
+ min-height:44px;padding:8px 4px;font:500 14px Heebo,sans-serif;cursor:pointer}
 .dot{position:absolute;top:2px;inset-inline-end:4px;width:14px;height:14px;border-radius:50%;
  border:2px solid var(--surface);
  background:#e5484d;box-shadow:0 0 0 0 rgba(229,72,77,.7);animation:pulse 1.4s infinite}
@@ -1834,7 +1834,7 @@ section{margin-bottom:30px}
  font:700 15px Heebo,sans-serif;text-decoration:none;cursor:pointer}
 .ask:active{transform:translateY(1px)}
 .wetbox{margin-top:10px;padding:10px 12px;border:2px solid var(--accent);border-radius:14px;background:var(--accent-soft)}
-.wetbox .ask{display:flex;width:100%;margin-top:0;background:var(--accent);color:#fff}
+.wetbox .ask{display:flex;width:100%;margin-top:0;background:var(--accent);color:var(--on-accent)}
 .wetstep{font:500 14px Heebo,sans-serif;margin-top:6px;line-height:1.45}
 .wetbox.hot{animation:wetHot 1s ease-in-out 3}
 @keyframes wetHot{50%{box-shadow:0 0 0 6px var(--accent-soft);transform:scale(1.02)}}
@@ -2327,6 +2327,7 @@ ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').css : ''}
 ${require('./lib/approvals-ui.js').css}
 ${require('./lib/since-ui.js').css}
 ${require('./lib/activity-ui.js').css}
+${require('./lib/home-ui.js').css}
 .toast .toast-x{display:block;margin-top:8px;font:500 12.5px Heebo,sans-serif;opacity:.85}
 .undobar{position:fixed;z-index:81;inset-inline:12px;bottom:calc(76px + env(safe-area-inset-bottom));
  margin-inline:auto;max-width:420px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;
@@ -2336,7 +2337,7 @@ ${require('./lib/activity-ui.js').css}
 .undobar .ub-t{flex:1 1 100%}
 .undobar button{flex:1;min-height:44px;border-radius:12px;border:1px solid var(--line);
  background:transparent;color:var(--ink);font:700 15px Heebo,sans-serif}
-.undobar .ub-fix{background:var(--accent);color:#fff;border:0}
+.undobar .ub-fix{background:var(--accent);color:var(--on-accent);border:0}
 .threadbar{display:flex;justify-content:flex-end;margin-bottom:8px}
 .threadbar{gap:8px}
 .cpall.pickon{color:#fff;background:linear-gradient(180deg,#5cc36f,var(--green));border-color:transparent}
@@ -2483,7 +2484,7 @@ ${require('./lib/activity-ui.js').css}
 .ic .c:after{content:"";position:absolute;top:6px;left:12px;right:12px;height:15px;border-radius:50%;
  background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,0))}
 .ic svg{width:28px;height:28px;position:relative;z-index:1}
-.ic .icN{position:absolute;top:-4px;left:-4px;z-index:2;min-width:22px;height:22px;padding:0 5px;box-sizing:border-box;border-radius:11px;background:#fff;color:#0a4a5a;border:2px solid #06b6d4;font:700 12px/18px Heebo,sans-serif;font-style:normal;text-align:center}
+.ic .icN{position:absolute;top:-4px;left:-4px;z-index:2;min-width:22px;height:22px;padding:0 5px;box-sizing:border-box;border-radius:11px;background:var(--chip);color:var(--chip-ink);border:2px solid #06b6d4;font:700 12px/18px Heebo,sans-serif;font-style:normal;text-align:center}
 .ic .icN.hot{background:var(--red);color:#fff;border-color:#fff}
 .ic:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:12px}
 .c-yt{background:#ff0033}.c-tt{background:#111}.c-fb{background:#1877f2}
@@ -2515,7 +2516,7 @@ ${require('./lib/activity-ui.js').css}
 .c-add{background:var(--surface);border:2px dashed var(--line);box-shadow:none}
 .c-add:after{display:none}
 
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:2px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:2px}
 .gt{border:0;text-align:start;cursor:pointer;border-radius:var(--r);padding:14px 15px;color:#fff;min-height:88px;
  position:relative;overflow:hidden;isolation:isolate;
  transition:transform .09s ease,box-shadow .09s ease,filter .09s ease;
@@ -2543,8 +2544,8 @@ ${require('./lib/activity-ui.js').css}
 #dropZone[hidden]{display:none}
 #dropZone div{border:3px dashed #fff;border-radius:22px;padding:34px 40px;color:#fff;
  font:700 22px Heebo,sans-serif;text-align:center;background:rgba(0,0,0,.25)}
-.gt b{font:700 14px Heebo,sans-serif;display:block}
-.gt small{font-size:10.5px;opacity:.92;font-weight:300}
+.gt b{font:700 16px Heebo,sans-serif;display:block}
+.gt small{font-size:13px;opacity:.96;font-weight:400;text-shadow:0 1px 3px rgba(0,0,0,.4)}
 .gt:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .g1{background:linear-gradient(150deg,#5aa9fb,var(--blue))}
 .g2{background:linear-gradient(150deg,#ff8a80,var(--red))}
@@ -2553,13 +2554,13 @@ ${require('./lib/activity-ui.js').css}
 .gt:active{transform:translateY(2px) scale(.985);box-shadow:0 4px 10px rgba(20,30,60,.22)}
 .gt:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
 .g5{background:linear-gradient(150deg,#b39ddb,#673ab7)}
-.g6{background:linear-gradient(150deg,#80deea,#00838f)}
+.g6{background:linear-gradient(150deg,#4fb3c4,#00838f)}
 .g7{background:linear-gradient(150deg,#7bd88f,#1e8e4a)}
 .g8{background:linear-gradient(150deg,#ffb74d,#e65100)}
 .g9{background:linear-gradient(150deg,#f48fb1,#ad1457)}
-.g10{background:linear-gradient(150deg,#ffe082,#f57f17)}
+.g10{background:linear-gradient(150deg,#ffd54f,#e65100);color:#3b2a00}
 .roundTile{width:72px;height:72px;min-height:72px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;font-size:30px;}
-.g11{background:linear-gradient(150deg,#b9f6ca,#00897b)}
+.g11{background:linear-gradient(150deg,#4fbf88,#00897b)}
 .gHealth{background:linear-gradient(150deg,#66bb6a,#1b5e20)}
 .gHealth.hbad{background:linear-gradient(150deg,#ef5350,#b71c1c)}
 .hbc{border-radius:12px;padding:10px 12px;border:1px solid #dfe5ec;background:#f6faf6;display:flex;flex-direction:column;gap:4px}
@@ -2568,7 +2569,7 @@ ${require('./lib/activity-ui.js').css}
 .hbc p{margin:0;font-size:13px;line-height:1.45}
 .hbc .hbm{opacity:.65;font-size:12px}
 .hbc ul{margin:0;padding-inline-start:18px;font-size:13px;line-height:1.45}
-.g12{background:linear-gradient(150deg,#d1c4e9,#5e35b1)}
+.g12{background:linear-gradient(150deg,#9e86d6,#5e35b1)}
 .g13{background:linear-gradient(150deg,#ffd27f,#ef6c00)}
 .g14{background:linear-gradient(150deg,#a5d6a7,#2e7d32)}
 .g15{background:linear-gradient(150deg,#90caf9,#1565c0)}
@@ -2589,7 +2590,7 @@ ${require('./lib/activity-ui.js').css}
 .grid .gt.tlift{opacity:.3}
 #tGhost{position:fixed;z-index:80;pointer-events:none;margin:0;transform:scale(1.08);box-shadow:0 18px 34px rgba(0,0,0,.4);opacity:.95;animation:none}
 body.tdrag{-webkit-user-select:none;user-select:none}
-.gt .tx{display:none;position:absolute;top:6px;inset-inline-end:6px;width:28px;height:28px;border-radius:50%;
+.gt .tx{display:none;position:absolute;top:6px;inset-inline-end:6px;width:44px;height:44px;border-radius:50%;
  background:#d93025;color:#fff;border:2px solid #fff;font:700 16px/22px Heebo,sans-serif;padding:0;z-index:2;cursor:pointer;text-align:center}
 .tedit .gt .tx{display:block}
 #tileBar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--surface);color:inherit;border-top:1px solid var(--line);box-shadow:0 -2px 12px rgba(0,0,0,.18);
@@ -2661,9 +2662,9 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .gWin{background:linear-gradient(150deg,#f2c94c,#7a2e12)}
 .gPen{background:linear-gradient(150deg,#5a8fd0,#1d2f55)}
 .gCPlan{background:linear-gradient(150deg,#e8743b,#6b2f7a)}
-.g16{background:linear-gradient(150deg,#f8bbd0,#c2185b)}
-.g17{background:linear-gradient(150deg,#c5e1a5,#558b2f)}
-.g18{background:linear-gradient(150deg,#80deea,#00838f)}
+.g16{background:linear-gradient(150deg,#ec6a9a,#c2185b)}
+.g17{background:linear-gradient(150deg,#689f38,#33691e)}
+.g18{background:linear-gradient(150deg,#4fb3c4,#00838f)}
 .ap{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:8px 0}
 .ap .d{font-weight:700;font-variant-numeric:tabular-nums}
 .ap .w,.ap .n{color:var(--dim);font-size:14px;margin-top:3px}
@@ -2775,7 +2776,7 @@ details.ansPj:not([open]) .ansPjH{border-radius:12px;margin-bottom:-8px}
 .ansPjNav{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 14px}
 .ansPjGo{border:2px solid var(--pc);color:var(--pc);background:var(--surface);border-radius:12px;padding:8px 12px;font-weight:700;font-size:15px;line-height:1.2}
 .ansPjGo small{display:block;font-size:11px;font-weight:600}
-.ansPjGo.hot{background:var(--pc);color:#fff;animation:pjHot 1.6s ease-in-out infinite}
+.ansPjGo.hot{background:var(--pc);color:#fff;animation:pjHot 1.6s ease-in-out 3}
 .ansPjW{display:inline-block;min-width:20px;border-radius:999px;background:var(--pc);color:#fff;font-size:12px;padding:1px 6px;margin-inline-start:4px}
 .ansPjGo.hot .ansPjW{background:#fff;color:var(--pc)}
 details.ansPj>summary.ansPjH{cursor:pointer;list-style:none;padding-block:6px}
@@ -3008,7 +3009,8 @@ body.rdragging{user-select:none;-webkit-user-select:none}
  55%{box-shadow:0 10px 22px rgba(20,30,60,.22),0 0 0 9px rgba(234,67,53,0),
   inset 0 1px 0 rgba(255,255,255,.55),inset 0 -3px 8px rgba(0,0,0,.22)}
 }
-.gt.glow{animation:tileglow 2.1s ease-out infinite}
+.gt.glow{animation:tileglow 2.1s ease-out 3}
+@media(prefers-reduced-motion:reduce){.gt.glow,.gt.blink,.bn button.blink,.wn.blink .n,.ansPjGo.hot{animation:none}}
 .gt .flag{position:absolute;top:9px;inset-inline-end:11px;background:var(--red);color:#fff;
  font:700 10.5px Heebo,sans-serif;padding:2px 8px;border-radius:999px;text-shadow:none}
 @media(prefers-reduced-motion:reduce){.gt.glow{animation:none}}
@@ -3241,6 +3243,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   He reported both, and both were the same line. Scoped to .bare, so the
   screen still opens stripped and the button actually brings the rest back.
 */
+#pH.bare #homeBrief, #pH.bare #homeKpis,
 #pH.bare #newBlock, #pH.bare #growBtn, #pH.bare .whatsnew, #pH.bare #askBox,
 #pH.bare #blkTiles, #pH.bare #tidyBox, #pH.bare #gSearch, #pH.bare .gres,
 #pH.bare #blkIcons, #pH.bare #reqBox, #pH.bare #codexBox{
@@ -3255,8 +3258,8 @@ body.rdragging{user-select:none;-webkit-user-select:none}
 .item .src{font-size:12.5px;color:var(--accent);font-weight:500;margin-top:4px}
 @keyframes hue{0%,100%{background:var(--accent-soft);color:var(--accent)}
  50%{background:color-mix(in srgb,var(--wait) 22%,transparent);color:var(--wait)}}
-.bn button.blink,.gt.blink{animation:hue 2.6s ease-in-out infinite;border-radius:10px}
-.wn.blink .n{animation:hue 2.6s ease-in-out infinite;border-radius:8px}
+.bn button.blink,.gt.blink{animation:hue 2.6s ease-in-out 3;border-radius:10px}
+.wn.blink .n{animation:hue 2.6s ease-in-out 3;border-radius:8px}
 .stat{display:flex;gap:6px;margin-top:9px}
 .stat button{flex:1;border:1px solid var(--line);background:var(--sunk);color:var(--dim);
  border-radius:9px;padding:7px 4px;font:500 12.5px Heebo,sans-serif;cursor:pointer}
@@ -3392,14 +3395,14 @@ body.rdragging{user-select:none;-webkit-user-select:none}
 .reccancel{margin-top:12px;background:var(--sunk);color:var(--ink);border:1px solid var(--line);
  border-radius:12px;padding:11px 26px;font:500 15px Heebo,sans-serif;cursor:pointer;width:100%}
 .bn{position:fixed;inset-inline:0;bottom:0;z-index:20;display:flex;justify-content:space-around;
- background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(12px);
+ background:color-mix(in srgb,var(--ground) 78%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
  border-top:1px solid var(--line);padding:7px 4px calc(7px + env(safe-area-inset-bottom))}
 .bn button{position:relative;background:none;border:0;cursor:pointer;color:var(--dim);
- font:500 10px Heebo,sans-serif;display:flex;flex-direction:column;align-items:center;gap:2px;
+ font:500 12px Heebo,sans-serif;display:flex;flex-direction:column;align-items:center;gap:2px;
  /* Six tabs with fixed side padding came to 408px on a 390px phone, and those
     eighteen pixels were the horizontal scroll on every screen of the app. They
     share the row now instead of each demanding a width. */
- flex:1 1 0;min-width:0;padding:4px 2px}
+ flex:1 1 0;min-width:0;min-height:44px;padding:4px 2px}
 .bn button span{font-size:19px;line-height:1}
 /* The emoji row was the one part of the screen that looked like a default.
    These are drawn instead: same stroke weight as the rest of the app, and
@@ -3490,7 +3493,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
 .resf{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
 .resf .resv{padding:0;border:0;background:none;width:100%}
 .resf .resv .fthumb img{max-width:100%;max-height:360px;margin:0 auto;border-radius:12px}
-.resf .resdl{flex:1 1 100%;font-size:18px;padding:14px;font-weight:600;background:var(--accent);color:#fff;border-radius:12px}
+.resf .resdl{flex:1 1 100%;font-size:18px;padding:14px;font-weight:600;background:var(--accent);color:var(--on-accent);border-radius:12px}
 .resf .respick{flex:1 1 100%;font-size:16px;padding:10px;border-radius:12px}
 .resact{display:flex;gap:8px;margin:6px 0 10px}
 .resact button{flex:1;font-size:17px;padding:12px;border-radius:12px}
@@ -3974,6 +3977,9 @@ ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').bar : ''}
  <button type="button" class="reloadbig" id="reloadBtn" aria-label="רענון וחזרה לדף הבית" title="רענון וחזרה לדף הבית">↻<span class="rlw">רענן</span></button>
 
 <section id="pH">
+${require('./lib/home-ui.js').greet}
+${require('./lib/approvals-ui.js').html}
+${require('./lib/home-ui.js').html}
  <!--
    One card, four ways in, and nothing floating over it.
 
@@ -4060,7 +4066,6 @@ ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').bar : ''}
   asked for it off the screen, and he was right on both counts.
 -->
 
- ${require('./lib/approvals-ui.js').html}
  <div id="askBox"></div>
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
@@ -10349,7 +10354,7 @@ function backBar(sec){
  if(sec.id==='pH')return;
  if(sec.querySelector(':scope > .backbar'))return;
  var b=document.createElement('button');
- b.type='button';b.className='backbar';b.textContent='סגירה וחזרה לבית';
+ b.type='button';b.className='backbar';b.textContent='חזרה';
  // Itzik, 8.10: out of an open note, back goes to the notes list (navBack does it).
  b.onclick=function(){
   navBack();
@@ -10498,7 +10503,7 @@ function paneBar(w){
  var bar=document.getElementById('paneBar');
  if(!bar){
   bar=document.createElement('div');bar.id='paneBar';bar.className='panebar';
-  bar.innerHTML='<button type="button" class="pb-back" id="pbBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>בית</button>'
+  bar.innerHTML='<button type="button" class="pb-back" id="pbBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>חזרה</button>'
    +'<div class="pb-t" id="pbTitle"></div>'
    +'<button type="button" class="pb-r" id="pbReload" aria-label="רענון"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg></button>';
   var hd=document.querySelector('.hd');
@@ -10577,9 +10582,9 @@ new MutationObserver(histSync).observe(document.body,{childList:true,subtree:tru
 function navLabels(){
  var back=navStack.length&&navStack[navStack.length-1].pane!=='h';
  var pb=document.getElementById('pbBack');
- if(pb&&pb.lastChild&&pb.lastChild.nodeType===3)pb.lastChild.nodeValue=back?'חזרה':'בית';
+ if(pb&&pb.lastChild&&pb.lastChild.nodeType===3)pb.lastChild.nodeValue='חזרה';
  var bars=document.querySelectorAll('.backbar');
- for(var i=0;i<bars.length;i++)bars[i].textContent=back?'חזרה אחורה':'סגירה וחזרה לבית';
+ for(var i=0;i<bars.length;i++)bars[i].textContent='חזרה';
 }
 function pane(w){
  var moved=(panePrev!==w);
@@ -19003,7 +19008,7 @@ function pinTiles(grid){
   else{a.splice(i,1);put(a);t.classList.remove('taskblink');toast('"'+name+'" כבר לא מהבהב.');}
  };
 }
-var HOME_HEAD=['newBlock','bareBtn','blkIcons','blkTiles'];
+var HOME_HEAD=['hmGreet','sinceBox','approvalsBox','homeBrief','homeKpis','newBlock','bareBtn','blkIcons','blkTiles'];
 // "איך אני משתפר" is the one block he wants out of the way rather than gone.
 // It is a log of my own mistakes and fixes: worth keeping, never worth the top
 // of his screen.
@@ -19759,8 +19764,10 @@ ${require('./lib/approvals-ui.js').js}
 ${require('./lib/activity-ui.js').js}
 on('gActLog',function(){pane('Lg');renderActLog();return false;});
 /*ITZIK:END*/
+${require('./lib/home-ui.js').js}
 boot('ask',renderAsk);
 boot('approvals',renderApprovals);
+boot('home',renderHome);
 boot('since',sinceBoot);
 boot('items',render);
 boot('thread',renderThread);
