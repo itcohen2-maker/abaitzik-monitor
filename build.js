@@ -495,9 +495,14 @@ function build() {
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
   // Open questions I am waiting on an answer for. This is the part a client
   // sees: the app asks what he wants and changes in front of him.
+  // 24.10: type "approve" docs are the approval inbox (lib/approvals.js). An expired
+  // or blocked one normalizes to null and drops out here.
   const choices = loadDocs('choices')
     .filter(c => !c.answer)
-    .map(c => ({ id: c.id, at: c.at, question: c.question, options: c.options || [] }))
+    .map(c => (c.type === 'approve'
+      ? require('./lib/approvals.js').normalize(c)
+      : { id: c.id, at: c.at, question: c.question, options: c.options || [] }))
+    .filter(Boolean)
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
   const food = loadDocs('food')
     // zinc is in milligrams and may be missing on rows written before 17.9.
@@ -2302,6 +2307,7 @@ body.editing .bn{display:none}
 .toast.bad{color:#fff;border:0;background:linear-gradient(180deg,#ff6a5e,var(--red))}
 .toast{cursor:pointer}
 ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').css : ''}
+${require('./lib/approvals-ui.js').css}
 .toast .toast-x{display:block;margin-top:8px;font:500 12.5px Heebo,sans-serif;opacity:.85}
 .undobar{position:fixed;z-index:81;inset-inline:12px;bottom:calc(76px + env(safe-area-inset-bottom));
  margin-inline:auto;max-width:420px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;
@@ -4035,6 +4041,7 @@ ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').bar : ''}
   asked for it off the screen, and he was right on both counts.
 -->
 
+ ${require('./lib/approvals-ui.js').html}
  <div id="askBox"></div>
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
@@ -13002,7 +13009,8 @@ function renderAsk(){
  var host=document.getElementById('askBox');
  if(!host)return;
  var done=answeredChoices();
- var open=(D.choices||[]).filter(function(c){return done.indexOf(c.id)<0;});
+ // Approve docs are shown by renderApprovals, not here.
+ var open=(D.choices||[]).filter(function(c){return c.type!=='approve'&&done.indexOf(c.id)<0;});
  if(!open.length){host.innerHTML='';return;}
  var c=open[0];
  host.innerHTML='<div class="askcard"><div class="q">'+esc(c.question)+'</div>'
@@ -19721,7 +19729,9 @@ boot('hash',function(){
  if(k==='k'){renderReplies();markRepliesSeen();}
  if(k==='R')renderReminders();
 });
+${require('./lib/approvals-ui.js').js}
 boot('ask',renderAsk);
+boot('approvals',renderApprovals);
 boot('items',render);
 boot('thread',renderThread);
 boot('pill',renderPill);
