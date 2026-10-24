@@ -4082,7 +4082,7 @@ ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').bar : ''}
     אשכח שום דבר". One screen for today: the appointments, the reminders and the
     tasks of today, and a peek at tomorrow.
   -->
-  <button type="button" class="gt gMyDay" id="gMyDay" data-new="1"><b>📅 מה יש לי היום</b><small>תורים, תזכורות ומשימות של היום</small></button>
+  <button type="button" class="gt gMyDay" id="gMyDay" data-new="1" data-upd="20261024-noword"><b>📅 מה יש לי היום</b><small>תורים, תזכורות ומשימות של היום</small></button>
   <button type="button" class="gt g18" id="gAppts" data-upd="appt-map-1021"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
   <button type="button" class="gt g16" id="gRemind"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
   <button type="button" class="gt g10 roundTile" id="gNotes" title="פתקים" aria-label="פתקים" data-upd="notes-20261020">📝</button>
@@ -5344,7 +5344,7 @@ function fileCap(t){
  var n=0;
  t=t.replace(re,function(h){n++;return n<=6?h:'';});
  t=t.split(String.fromCharCode(10)).filter(function(l,i,a){return l.trim()||(i>0&&a[i-1].trim());}).join(String.fromCharCode(10));
- return t+String.fromCharCode(10)+'ועוד '+(all.length-6)+' קבצים באריח 📁 הקבצים שלי.';
+ return t+String.fromCharCode(10)+'ועוד '+(all.length-6)+' קבצים, מהמסך הראשי לוחצים על 📁 הקבצים שלי.';
 }
 function fileSpaces(t){
  t=String(t==null?'':t);
@@ -7315,7 +7315,7 @@ function wireProjects(host){
     var x=ev.target.closest&&ev.target.closest('.ppb');if(!x)return;
     ev.stopPropagation();ev.preventDefault();
     if(x.getAttribute('data-new')){
-     p.innerHTML='<input type="text" maxlength="40" placeholder="שם הפרויקט החדש"><button type="button" class="ppb on" data-ok="1">שמירה</button>';
+     p.innerHTML='<input type="text" maxlength="40" placeholder="שם הפרויקט החדש"><div class="lenhint" style="font-size:12px;opacity:.7"></div><button type="button" class="ppb on" data-ok="1">שמירה</button>';
      var inp=p.querySelector('input');inp.focus();
      inp.addEventListener('keydown',function(ke){if(ke.key==='Enter'){ke.preventDefault();pick(inp.value);}});
      return;
@@ -7603,7 +7603,7 @@ function wireBoxes(root){
     p.push({at:new Date().toISOString(),text:full});
     savePending(p);
     box2.value='';
-    said.textContent=how==='backup'?'נשלח בערוץ הגיבוי.':'נשלח. קלטתי.';
+    said.textContent=how==='backup'?'נשלח. קלטתי.':'נשלח. קלטתי.';
     markSent('text');renderSent();renderThread();
    }).catch(function(){
     said.textContent='שני הערוצים לא ענו. תנסה שוב.';
@@ -7778,7 +7778,7 @@ function wireReplies(host,all){
     p.push({at:new Date().toISOString(),text:full,re:rootKeyFor(m)});
     savePending(p);
     setStandby(f.getAttribute('data-k')||rootKeyFor(m));
-    said.textContent=how==='backup'?'נשלח בערוץ הגיבוי.':'נשלח.';
+    said.textContent=how==='backup'?'נשלח.':'נשלח.';
     markTouched(m);markOneSeen(m);
     markSent('text');renderSent();
     // renderThread redraws every bubble, so the confirmation is shown first.
@@ -8966,7 +8966,7 @@ function pingBind(){
   .then(function(how){
    savePingState({at:at,code:code});
    document.getElementById('pingBox').classList.remove('ok');
-   pingSay((how==='backup'?'יצא בערוץ הגיבוי. ':'יצא. ')
+   pingSay((how==='backup'?'יצא. ':'יצא. ')
     +'מחכה שאחזור עם הקוד '+code+'.');
   }).catch(function(){
    pingSay('לא יצא. שני הערוצים לא ענו, ואין טעם ללחוץ שוב עד שיש רשת.');
@@ -14913,7 +14913,7 @@ function todaySheet(){
  var day=new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'});
  function apRow(a){return '<div class="tdRow">'+(a.noTime?'':'<i>'+esc(tdHour(a.when))+'</i>')+esc(a.what)
   +(a.where&&a.where!==a.what?'<br><small><a href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(a.where)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">📍 '+esc(a.where)+'</a></small>':'')+'</div>';}
- h+='<div class="tdSec">🏥 תורים</div>'+(x.ap.length?x.ap.map(apRow).join(''):'<small>אין תור היום. תור חדש מוסיפים באריח 🏥 תורים עתידיים, בטופס למטה.</small>');
+ h+='<div class="tdSec">🏥 תורים</div>'+(x.ap.length?x.ap.map(apRow).join(''):'<small>אין תור היום. תור חדש מוסיפים מהמסך הראשי: לוחצים על 🏥 תורים עתידיים, בטופס למטה.</small>');
  h+='<div class="tdSec">⏰ תזכורות</div>'+(x.rm.length?x.rm.map(function(r){return '<div class="tdRow">'+esc(r.text)+'</div>';}).join(''):'<small>אין תזכורת להיום.</small>');
  h+='<div class="tdSec">✅ משימות</div>'+(x.tk.length?x.tk.map(function(t){
    return '<label class="tdRow tk'+(x.done[t.id]?' done':'')+'"><input type="checkbox" data-tk="'+esc(t.id)+'"'+(x.done[t.id]?' checked':'')+'> '+esc(t.text)+'</label>';
@@ -15910,7 +15910,7 @@ function projTiles(){
  host.hidden=!P.length;
  host.innerHTML=P.map(function(p,i){
   var c=projCur(p),w=projWaiting(p);
-  return '<button type="button" class="gt pjc '+esc(p.cls||'g11')+'" style="--pc:'+projColor(p)+'" id="gProj'+i+'"><b>'+esc((p.icon||'📁')+' '+p.title)+'</b>'
+  return '<button type="button" class="gt pjc '+esc(p.cls||'g11')+'" style="--pc:'+projColor(p)+'" id="gProj'+i+'" data-upd="20261024-lenhint"><b>'+esc((p.icon||'📁')+' '+p.title)+'</b>'
    +'<small>'+esc(c?('עכשיו: '+c.title+(w?' · ממתין: '+w:'')):(p.sub||''))+'</small></button>';
  }).join('');
  P.forEach(function(p,i){
@@ -15974,11 +15974,19 @@ function projBoardHtml(p,fem,tab,newOpen){
    +'<div class="pjBox pjNewReq"><textarea placeholder="בקשה חדשה ב'+esc(t.title)+'"></textarea>'
    +'<button type="button" class="yb yb2" data-pj="req" data-t="'+esc(t.title)+'">שליחה</button></div></div>';
  }).join('');
- var nt='<div class="pjBox pjNewT"'+(newOpen?'':' hidden')+'><input id="pjNT" type="text" maxlength="40" placeholder="שם הנושא, למשל: בדים">'
+ var nt='<div class="pjBox pjNewT"'+(newOpen?'':' hidden')+'><input id="pjNT" type="text" maxlength="40" placeholder="שם הנושא, למשל: בדים"><div class="lenhint" style="font-size:12px;opacity:.7"></div>'
   +'<textarea placeholder="'+(fem?'כתבי':'כתוב')+' כאן את הבקשה לנושא הזה"></textarea>'
   +'<button type="button" class="yb yb2" data-pj="nreq">שליחה</button></div>';
  return sections+'<div class="pjTabs"><button type="button" class="pjTab" data-pj="newtopic">+ נושא</button></div>'+nt;
 }
+// A name box that stops at 40 characters shows its count under it, and says
+// so at the limit, so a long name is not cut off without a word.
+document.addEventListener('input',function(e){
+ var t=e.target;if(!t||t.getAttribute('maxlength')!=='40')return;
+ var h=t.nextElementSibling;if(!h||!h.classList.contains('lenhint'))return;
+ var n=t.value.length;
+ h.textContent=n+' מתוך 40'+(n>=40?'. הגעת למקסימום, אפשר לקצר את השם':'');
+});
 // The click logic for a project board. The tile and the answers screen both
 // use it; state carries the open topic and the new-topic box, and paint()
 // redraws whichever board the listener sits in.
@@ -16870,7 +16878,7 @@ document.getElementById('fdPick').addEventListener('change',function(){
  var cap='תזונה: תמונה של מה שאכלתי';
  if(typed&&typed.value.trim()){cap='תזונה: '+typed.value.trim();typed.value='';}
  sendAll(list,cap).then(function(how){
-  said.textContent=how==='backup'?'נשלח בערוץ הגיבוי. אני מחשב ומחזיר לך.'
+  said.textContent=how==='backup'?'נשלח. אני מחשב ומחזיר לך את הערכים.'
    :'נשלח. אני מחשב ומחזיר לך את הערכים.';
   toast(said.textContent);
   markSent('file');renderSent();
@@ -16929,7 +16937,7 @@ on2('quickForm','submit',function(e){
   var p=pending();
   p.push({at:new Date().toISOString(),text:text});
   savePending(p);
-  said.textContent=how==='backup'?'נשלח בערוץ הגיבוי. הגיע אליי.':'נשלח. קלטתי.';
+  said.textContent=how==='backup'?'נשלח. קלטתי.':'נשלח. קלטתי.';
   markSent('text');renderSent();renderThread();
   toast(said.textContent);
  }).catch(function(){
@@ -17270,7 +17278,7 @@ document.getElementById('msgForm').addEventListener('submit',function(e){
   var p=pending();
   p.push({at:new Date().toISOString(),text:text});
   savePending(p);
-  said.textContent=how==='backup'?'נשלח בערוץ הגיבוי. הגיע אליי.':'נשלח.';
+  said.textContent=how==='backup'?'נשלח.':'נשלח.';
   markSent('text');renderSent();
   renderThread();
  }).catch(function(){
@@ -17638,7 +17646,7 @@ function goFiles(list,cap,deflt,hasVoice){
   clearAim();
   paintMics('ok');
   var what=bundleWhat(list,cap);
-  sendSay(how==='backup'?('נשלח בערוץ הגיבוי: '+what+'. הגיע אליי ביחד.'):('נשלח: '+what+(many?'. הכל הגיע אליי ביחד, בהודעה אחת.':'. קלטתי.')));
+  sendSay(how==='backup'?('נשלח: '+what+(many?'. הכל הגיע אליי ביחד, בהודעה אחת.':'. קלטתי.')):('נשלח: '+what+(many?'. הכל הגיע אליי ביחד, בהודעה אחת.':'. קלטתי.')));
   list.forEach(function(f){if(f&&f._more)recOfferMore(f._more.aim,f._more.at);});
   var q=pending();
   q.push({at:new Date().toISOString(),text:cap||deflt});
@@ -18597,12 +18605,12 @@ function tileBar(show){
  if(!show){if(b)b.remove();return;}
  if(!b){b=document.createElement('div');b.id='tileBar';document.body.appendChild(b);}
  var hid=tileStore('tilesHidden',[]);
- b.innerHTML='<small>גוררים אריח למקום שרוצים. ה ✕ האדום מוריד אריח מהמסך.</small>'
+ b.innerHTML='<small>גוררים כפתור למקום שרוצים. ה ✕ האדום מוריד כפתור מהמסך.</small>'
   +'<div class="row2"><button type="button" class="done" id="tileDone">סיום</button>'
   +(hid.length?'<button type="button" class="back" id="tileBack">להחזיר '+hid.length+' שהורדו</button>':'')+'</div>';
  document.getElementById('tileDone').onclick=tilesExit;
  var bk=document.getElementById('tileBack');
- if(bk)bk.onclick=function(){tileSave('tilesHidden',[]);applyHidden();tileBar(true);toast('כל האריחים חזרו.');};
+ if(bk)bk.onclick=function(){tileSave('tilesHidden',[]);applyHidden();tileBar(true);toast('כל הכפתורים חזרו.');};
 }
 function tilesEnter(grid){
  if(tEdit)return;

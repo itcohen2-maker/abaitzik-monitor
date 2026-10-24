@@ -733,7 +733,7 @@ function recordIncoming(m) {
         fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
         fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-help-ack.json')),
           JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id,
-            text: bankReq ? 'הבקשה הגיעה לאיציק. אחרי שיאשר, יופיע לך אריח 🏦 חיבור הבנק.' : 'הפנייה שלך הגיעה לאיציק. הוא יחזור אליך בהקדם.', status: 'done' }, null, 1), 'utf8');
+            text: bankReq ? 'הבקשה הגיעה לאיציק. אחרי שיאשר, יופיע לך הכפתור 🏦 חיבור הבנק.' : 'הפנייה שלך הגיעה לאיציק. הוא יחזור אליך בהקדם.', status: 'done' }, null, 1), 'utf8');
         say('עזרה מלקוח נרשמה: ' + helpM[1] + ' ' + crId);
       } catch (e) { say('!! עזרה מלקוח לא נרשמה: ' + e.message); }
       try { publishChat(); } catch (e) { /* the next build carries it */ }

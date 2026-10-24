@@ -61,7 +61,7 @@ test('the help sheet row is only for a feature that is off, and sends feature-ba
   const help = require('../lib/help-ui.js');
   assert.ok(/id="qhBank" hidden>🏦 אני רוצה לחבר את הבנק/.test(help.html));
   assert.ok(help.js.includes("'feature-bank'") && help.js.includes('D.features.bank===true'));
-  assert.ok(help.js.includes('אחרי שיאשר, יופיע לך אריח 🏦 חיבור הבנק.'));
+  assert.ok(help.js.includes('אחרי שיאשר, יופיע לך הכפתור 🏦 חיבור הבנק.'));
 });
 
 test('listen.js routes feature-bank like help-human, through change-requests', () => {
@@ -73,7 +73,7 @@ test('listen.js routes feature-bank like help-human, through change-requests', (
   assert.ok(re.exec('help-human\nx') && re.exec('no-answer\nx'));
   assert.ok(!re.exec('feature-other\nx'));
   assert.ok(src.includes("'בקשה לפתוח חיבור בנק: ' + inst.name, rec.id, 'bank'"));
-  assert.ok(src.includes('הבקשה הגיעה לאיציק. אחרי שיאשר, יופיע לך אריח 🏦 חיבור הבנק.'));
+  assert.ok(src.includes('הבקשה הגיעה לאיציק. אחרי שיאשר, יופיע לך הכפתור 🏦 חיבור הבנק.'));
 });
 
 test('an approved request with a feature opens it, a pending one does not', () => {

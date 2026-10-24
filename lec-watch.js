@@ -94,7 +94,7 @@ async function main() {
       log(pub.trim().split('\n').slice(-1)[0]);
       const again = execFileSync('python3', ['lecsync.py', doc], { cwd: LEC, encoding: 'utf8', env: Object.assign({}, process.env, { PYTHONIOENCODING: 'utf-8' }), timeout: 60000 });
       if (!/changes: 0/.test(again)) throw new Error('after the sync the files still differ from the Doc');
-      tell('הרצאה עודכנה', 'המלל לעריכה השתנה ב ' + n + ' מקומות. קובץ האימון והמלל המלא עודכנו לפיו, באריח 🎤 הרצאה ובדרייב.');
+      tell('הרצאה עודכנה', 'המלל לעריכה השתנה ב ' + n + ' מקומות. קובץ האימון והמלל המלא עודכנו לפיו, בכפתור 🎤 הרצאה ובדרייב.');
     }
     fs.writeFileSync(STATE, JSON.stringify({ seen: t, hash, at: new Date().toISOString(), changes: n }));
   } catch (e) {

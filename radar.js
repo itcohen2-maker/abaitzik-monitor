@@ -103,7 +103,7 @@ async function main() {
   if (!fresh.length) return;
   try { execFileSync('node', ['push.js', 'הרדאר השבועי: ' + fresh.length + ' כלים חדשים'], { cwd: __dirname, stdio: 'ignore', timeout: 240000 }); }
   catch (e) { console.log('publish failed: ' + String(e.message).slice(0, 120)); }
-  try { execFileSync('node', ['notify.js', '🔭 ' + fresh.length + ' כלים חדשים באריח רעיונות', fresh.map(x => x.t).join(' · ')], { cwd: __dirname, stdio: 'ignore', timeout: 60000 }); }
+  try { execFileSync('node', ['notify.js', '🔭 ' + fresh.length + ' כלים חדשים במסך רעיונות', fresh.map(x => x.t).join(' · ')], { cwd: __dirname, stdio: 'ignore', timeout: 60000 }); }
   catch (e) { console.log('notify failed: ' + String(e.message).slice(0, 120)); }
 }
 

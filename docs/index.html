@@ -2100,7 +2100,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-24T06:24:32.692Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-24T06:24:48.914Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3858,7 +3858,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='6c8b13f95a';
+var CODE_ID='44b14bacda';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -4906,7 +4906,7 @@ function wireProjects(host){
     var x=ev.target.closest&&ev.target.closest('.ppb');if(!x)return;
     ev.stopPropagation();ev.preventDefault();
     if(x.getAttribute('data-new')){
-     p.innerHTML='<input type="text" maxlength="40" placeholder="שם הפרויקט החדש"><button type="button" class="ppb on" data-ok="1">שמירה</button>';
+     p.innerHTML='<input type="text" maxlength="40" placeholder="שם הפרויקט החדש"><div class="lenhint" style="font-size:12px;opacity:.7"></div><button type="button" class="ppb on" data-ok="1">שמירה</button>';
      var inp=p.querySelector('input');inp.focus();
      inp.addEventListener('keydown',function(ke){if(ke.key==='Enter'){ke.preventDefault();pick(inp.value);}});
      return;
@@ -11572,7 +11572,7 @@ function projTiles(){
  host.hidden=!P.length;
  host.innerHTML=P.map(function(p,i){
   var c=projCur(p),w=projWaiting(p);
-  return '<button type="button" class="gt pjc '+esc(p.cls||'g11')+'" style="--pc:'+projColor(p)+'" id="gProj'+i+'"><b>'+esc((p.icon||'📁')+' '+p.title)+'</b>'
+  return '<button type="button" class="gt pjc '+esc(p.cls||'g11')+'" style="--pc:'+projColor(p)+'" id="gProj'+i+'" data-upd="20261024-lenhint"><b>'+esc((p.icon||'📁')+' '+p.title)+'</b>'
    +'<small>'+esc(c?('עכשיו: '+c.title+(w?' · ממתין: '+w:'')):(p.sub||''))+'</small></button>';
  }).join('');
  P.forEach(function(p,i){
@@ -11627,11 +11627,17 @@ function projBoardHtml(p,fem,tab,newOpen){
    +'<div class="pjBox pjNewReq"><textarea placeholder="בקשה חדשה ב'+esc(t.title)+'"></textarea>'
    +'<button type="button" class="yb yb2" data-pj="req" data-t="'+esc(t.title)+'">שליחה</button></div></div>';
  }).join('');
- var nt='<div class="pjBox pjNewT"'+(newOpen?'':' hidden')+'><input id="pjNT" type="text" maxlength="40" placeholder="שם הנושא, למשל: בדים">'
+ var nt='<div class="pjBox pjNewT"'+(newOpen?'':' hidden')+'><input id="pjNT" type="text" maxlength="40" placeholder="שם הנושא, למשל: בדים"><div class="lenhint" style="font-size:12px;opacity:.7"></div>'
   +'<textarea placeholder="'+(fem?'כתבי':'כתוב')+' כאן את הבקשה לנושא הזה"></textarea>'
   +'<button type="button" class="yb yb2" data-pj="nreq">שליחה</button></div>';
  return sections+'<div class="pjTabs"><button type="button" class="pjTab" data-pj="newtopic">+ נושא</button></div>'+nt;
 }
+document.addEventListener('input',function(e){
+ var t=e.target;if(!t||t.getAttribute('maxlength')!=='40')return;
+ var h=t.nextElementSibling;if(!h||!h.classList.contains('lenhint'))return;
+ var n=t.value.length;
+ h.textContent=n+' מתוך 40'+(n>=40?'. הגעת למקסימום, אפשר לקצר את השם':'');
+});
 function projBindBoard(el,p,state,paint){
  var fem=projFem(),c=projCur(p);
  el.addEventListener('click',function(e){
