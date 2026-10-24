@@ -132,7 +132,8 @@ test('tokens: light and dark accent, the on-accent token, and the warn and chip 
   const html = renderPage(fixture());
   assert.ok(html.includes('--accent:#0f6e5c;--accent-soft:#e3f1ed'));
   assert.ok(html.includes('--on-accent:#06231c'), 'dark on-accent missing');
-  assert.strictEqual(html.split('--accent:#4fd1b0;--accent-soft:#15302a').length - 1, 2, 'both dark blocks');
+  // 24.10: a third copy, the night choice over the six designs (lib/skins-ui.js)
+  assert.strictEqual(html.split('--accent:#4fd1b0;--accent-soft:#15302a').length - 1, 3, 'all dark blocks');
   assert.ok(html.includes('.holdline{margin:0 0 10px;padding:9px 12px;border-radius:12px;background:var(--warn-soft)'));
   assert.ok(html.includes('background:var(--chip);color:var(--chip-ink)'));
 });
