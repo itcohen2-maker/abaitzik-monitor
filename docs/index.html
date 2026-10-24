@@ -2100,7 +2100,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-24T06:26:05.606Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-24T06:26:42.597Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3643,7 +3643,8 @@ function fvZoom(box){
 }
 function shareFail(e){
  if(e&&e.name==='AbortError')return;
- toast('השיתוף נכשל: '+((e&&e.name)||'שגיאה')+(e&&e.message?' · '+String(e.message).slice(0,80):''));
+ try{console.warn('share',e&&e.name,e&&e.message);}catch(x){}
+ toast('השיתוף לא הצליח. אפשר להעתיק את הקישור וללחוץ שוב.');
 }
 function fileOpen(name){
  if(fileView(name))return true;
@@ -3858,7 +3859,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='44b14bacda';
+var CODE_ID='da85ccb814';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10568,18 +10569,18 @@ on('gPush',function(){
  document.body.appendChild(w);
 });
 on('gUpgrade',function(){
- var h='<small>מה עוד המוניטור יודע לעשות. לחיצה שולחת בקשה למערכת המחשוב של המוניטור והיא חוזרת אליך.</small>'
+ var h='<small>כאן רואים מה עוד אפשר לקבל. לוחצים על מה שמעניין אותך, ואיציק יבדוק ויחזור אליך.</small>'
   +SHIP_UPGRADES.map(function(u,i,a){
    var on=(u[2]||[]).some(function(id){return document.getElementById(id);});
    return '<button type="button" '+ybAttr(a,i)+' data-u="'+i+'">'+esc(u[0])+(on?' <b class="upgOn">✓ פעיל</b>':'')+'<br><small>'+esc(u[1])+'</small></button>';
   }).join('');
- shipOpen('shipUp','🚀 שדרוגים',h,function(w){
+ shipOpen('shipUp','✨ מה עוד אפשר',h,function(w){
   w.addEventListener('click',function(e){
    var b=e.target.closest&&e.target.closest('[data-u]');if(!b)return;
    var u=SHIP_UPGRADES[+b.getAttribute('data-u')];if(!u)return;
    b.disabled=true;
    sendText('בקשה ממנהל','בקשה ממנהל: בקשת שדרוג: '+u[0]+'. '+u[1],'משימה').then(function(){
-    markSent('text',u[0]);toast('נשלח למערכת המחשוב של המוניטור. היא תחזור אליך.');
+    markSent('text',u[0]);toast('נשלח. איציק יבדוק ויחזור אליך.');
    }).catch(function(){b.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
   });
  });
