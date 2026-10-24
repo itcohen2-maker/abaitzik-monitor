@@ -1102,13 +1102,13 @@ const TENANT_TILES = {
   gBrief: ['g17', '☀️ דוח הבוקר', 'מה השתנה ומה מגיע השבוע'],
   gInsights: ['g11', '📈 תובנות', 'אילו ספקים מאחרים'],
   gCeo: ['g4', '📊 תמונת מצב', 'איפה אנחנו עומדים היום'],
-  gUpgrade: ['g10', '🚀 שדרוגים', 'מה עוד המוניטור יודע לעשות'],
+  gUpgrade: ['g10', '✨ מה עוד אפשר', 'מה עוד אפשר לקבל כאן'],
   gToday: ['g17', '📋 היום', 'משימות מחכות היום, לפי דחיפות'],
   // Itzik, 8.10, for Rinat: one tile that connects the ntfy app to her answers.
   gPush: ['g4', '🔔 התראות לטלפון', 'כל תשובה קופצת בטלפון'],
   // Itzik, 11.10, for Alon: a few questions, and the answers come back as
   // suggestions for what else his monitor could hold.
-  gIntake: ['g11', '🧭 שאלות היכרות', 'חמש שאלות, דקה, ואציע מה עוד אפשר לבנות לך'],
+  gIntake: ['g11', '🧭 שאלות היכרות', 'שש שאלות, דקה, ואציע מה עוד אפשר לבנות לך'],
   // Rinat, 12.10: the files sent to her, each with a download button.
   gFiles: ['g10', '📁 הקבצים שלי', 'מה ששלחת ומה שנשלח לך, עם הורדה'],
   // 12.10, the small business records. A customer lists it in screens; Itzik's
@@ -1188,7 +1188,7 @@ function tenantTiles(inst) {
   const samples = inst.samples ? sample + sample.replace('g11', 'g4') : '';
   return guides + links + bank + samples + ids.filter((id) => TENANT_TILES[id]).map((id) => {
     const [cls, title, sub] = TENANT_TILES[id];
-    return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261015-clalit"' : '') + (id === 'gTasks' ? ' data-upd="tasks60-1020"' : '') + (id === 'gIntake' ? ' data-upd="20261017-intake"' : '') + (id === 'gUpgrade' ? ' data-upd="20261017-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261015-clalit"' : '') + (id === 'gTasks' ? ' data-upd="tasks60-1020"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
 }
 /*
@@ -2644,6 +2644,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .tk input{width:24px;height:24px;flex:0 0 24px}
 .tk.done span{text-decoration:line-through;opacity:.55}
 .tk.tnc{cursor:default}.tk.tnc span{flex:1}
+.tkDel{margin-inline-start:auto;border:0;background:none;font-size:18px;padding:4px 6px;cursor:pointer}
 .tncode{user-select:all;letter-spacing:1px}.tncopy{margin-top:4px;padding:4px 10px;border-radius:8px;border:0;background:#1e3a5f;color:#9ecbff;font-weight:700}
 .tnopen{flex:none;padding:8px 14px;border-radius:10px;background:#1e3a5f;color:#9ecbff;text-decoration:none;font-weight:700}
 @keyframes tkpop{0%{transform:scale(1)}45%{transform:scale(1.06)}100%{transform:scale(1)}}
@@ -5061,6 +5062,7 @@ __RIVSHARE__
   <input type="text" id="apWhat" autocomplete="off" placeholder="מה, למשל: רופא עור">
   <input type="text" id="apWhere" autocomplete="off" placeholder="איפה, למשל: מכבי רמות">
   <button type="submit">הוספת תור</button>
+  <button type="button" id="apCancel" hidden onclick="apEditId='';apEditSet(false);this.form.reset();document.getElementById('apSaid').textContent='';">ביטול העריכה</button>
  </form>
  <div class="msgsaid" id="apSaid"></div>
 </section>
@@ -5588,7 +5590,9 @@ function fvZoom(box){
 */
 function shareFail(e){
  if(e&&e.name==='AbortError')return;
- toast('השיתוף נכשל: '+((e&&e.name)||'שגיאה')+(e&&e.message?' · '+String(e.message).slice(0,80):''));
+ // 24.10, idea he took: "שגיאת שיתוף תוצג בעברית פשוטה". The technical name goes to the console only.
+ try{console.warn('share',e&&e.name,e&&e.message);}catch(x){}
+ toast('השיתוף לא הצליח. אפשר להעתיק את הקישור וללחוץ שוב.');
 }
 /*
   Itzik, 10.10, from the reviewer: "הקובץ עוד נטען" גם כשהוא לא יגיע. The same
@@ -11846,10 +11850,14 @@ function renderAppts(){
    +(rm?'<div class="n">⏰ תזכורת '+esc(new Date(rm.due).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'}))+' בתשע בבוקר</div>':'')
    +(a.doc?'<div class="n"><a href="'+esc(a.doc)+'" target="_blank" rel="noopener">'+esc(a.docLabel||'ההפניה')+'</a></div>':'')
    +(a.img?'<a href="'+esc(a.img)+'" target="_blank" rel="noopener"><img src="'+esc(a.img)+'" alt="ההודעה מבית החולים" loading="lazy"></a>':'')
+   +'<button type="button" class="apEdit" data-edit="'+esc(a.id)+'" style="font-size:13px;margin-top:6px">✏️ לשנות</button>'
    +'<button type="button" class="apDel" data-del="'+esc(a.id)+'" style="font-size:13px;margin-top:6px">🗑️ למחוק</button></div>';
  }).join(''):'<div class="empty">אין תור עתידי. מוסיפים תור בטופס כאן למטה.</div>';
  // 20.10, idea he took: "אי אפשר למחוק תור שנכנס בטעות". The button sends "מחיקת תור: <id>" and the server deletes the file.
  host.onclick=async function(e){
+  // 24.10, idea he took: "לשנות תור בלי למחוק ולכתוב מחדש". ✏️ fills the form above; sending it overwrites the same appointment.
+  var ed=e.target.closest&&e.target.closest('[data-edit]');
+  if(ed){var a0=(D.appts||[]).filter(function(a){return a.id===ed.getAttribute('data-edit');})[0];if(a0)apEditFill(a0);return;}
   var b=e.target.closest&&e.target.closest('[data-del]');if(!b)return;
   var row=b.closest('.ap'),what=row?row.querySelector('b').textContent:'',when=row?row.querySelector('.d').textContent:'';
   if(!await uiConfirm('למחוק את התור '+what+'?','מחיקה',true))return;
@@ -12395,12 +12403,43 @@ function renderTasks(){
    h+='<h3>'+esc(lbl)+'</h3>';
   }
   h+='<label class="tk'+(done[t.id]?' done':'')+'"><input type="checkbox" data-tk="'+esc(t.id)+'"'
-   +(done[t.id]?' checked':'')+'><span>'+esc(t.text)+'</span></label>';
+   +(done[t.id]?' checked':'')+'><span>'+esc(t.text)+'</span>'+tkDelBtn(t)+'</label>';
  });
  // An empty screen says in one line what it is for, like the ideas screen does.
  host.innerHTML=h||'<div class="empty">אין משימות. כל משימה שתשלח למוניטור תופיע כאן לפי היום שלה.</div>';
+ host.onclick=function(e){var d=e.target.closest&&e.target.closest('[data-tkdel]');if(d){e.preventDefault();tkDelete(d);}};
  var b=document.getElementById('tkClear');
  if(b)b.onclick=function(){clearIds('tasksCleared',T.map(function(t){return t.id;}));notesPush();renderTasks();};
+}
+// 24.10, idea he took: "אין מחיקה למשימה שנכתבה בטעות". The 🗑 asks first, then sends "מחיקת משימה: <id>" and the server deletes that task.
+// 24.10: the appointment form in edit mode. apEditId is the id of the appointment being changed; empty means a new one.
+var apEditId='';
+function apEditSet(on){
+ var c=document.getElementById('apCancel'),bt=document.querySelector('#apForm button[type=submit]');
+ if(c)c.hidden=!on;
+ if(bt)bt.textContent=on?'שמירת השינוי':'הוספת תור';
+}
+function apEditFill(a){
+ var x=new Date(a.when),ok=!isNaN(x.getTime());
+ document.getElementById('apDate').value=ok?x.toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'}):'';
+ document.getElementById('apTime').value=ok&&!a.noTime?x.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Jerusalem'}):'';
+ document.getElementById('apWhat').value=a.what||'';
+ document.getElementById('apWhere').value=a.where||'';
+ apEditId=a.id;apEditSet(true);
+ document.getElementById('apSaid').textContent='משנים את התור. שנה מה שצריך ושלח, והתור הישן יתעדכן.';
+ document.getElementById('apForm').scrollIntoView({behavior:'smooth',block:'center'});
+}
+function tkDelBtn(t){return '<button type="button" class="tkDel" data-tkdel="'+esc(t.id)+'" data-what="'+esc(t.text)+'" aria-label="למחוק את המשימה">🗑</button>';}
+function tkDelete(b){
+ var row=b.closest('.tk,.tdRow'),id=b.getAttribute('data-tkdel'),what=b.getAttribute('data-what')||'';
+ return uiConfirm('למחוק את המשימה "'+what+'"?','מחיקה',true).then(function(ok){
+  if(!ok)return;
+  if(row){row.style.transition='opacity .4s';row.style.opacity='0';setTimeout(function(){row.style.display='none';},420);}
+  return sendText('מחיקת משימה','מחיקת משימה: '+id+' ('+what+')','משימה').catch(function(){
+   if(row){row.style.display='';row.style.opacity='1';}
+   toast('המחיקה לא נשלחה. תבדוק חיבור ותנסה שוב.');
+  });
+ });
 }
 function clearedIds(k){try{return JSON.parse(localStorage.getItem(k)||'{}');}catch(e){return {};}}
 function clearIds(k,ids){
@@ -12453,11 +12492,13 @@ on2('apForm','submit',function(e){
  var said=document.getElementById('apSaid');
  var v=w.value.trim(),p=wh.value.trim();
  if(!v||!d.value){said.textContent='צריך תאריך ומה התור.';return;}
- var msg='תור חדש: '+v+', '+d.value.split('-').reverse().join('.')+' ('+d.value+')'+(tm.value?' בשעה '+tm.value:' בלי שעה')+(p?', מקום: '+p:'');
+ var rest=v+', '+d.value.split('-').reverse().join('.')+' ('+d.value+')'+(tm.value?' בשעה '+tm.value:' בלי שעה')+(p?', מקום: '+p:'');
+ var editing=apEditId,msg=editing?'עדכון תור: '+editing+' | '+rest:'תור חדש: '+rest;
  said.textContent='שולח.';
- sendText('תור חדש',msg,'תור').then(function(){
+ sendText(editing?'עדכון תור':'תור חדש',msg,'תור').then(function(){
   w.value='';wh.value='';tm.value='';d.value='';
-  said.textContent='נשלח. התור יופיע כאן ברשימה, וגם במה יש לי היום ביום שלו.';
+  if(editing){apEditId='';apEditSet(false);}
+  said.textContent=editing?'נשלח. התור השתנה ברשימה, וגם במה יש לי היום ביום שלו.':'נשלח. התור יופיע כאן ברשימה, וגם במה יש לי היום ביום שלו.';
   markSent('text');renderSent();renderThread();
  }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';});
 });
@@ -14172,8 +14213,9 @@ Array.prototype.forEach.call(document.querySelectorAll('.icEmpty'),function(b){
   short list of things his monitor could hold (apps, screens, reminders).
 */
 var INTAKE_Q=[
+ ['בשביל מה בעיקר תרצה את המוניטור?',['עבודה ועסק','בית ומשפחה','תחביבים ובילוי']],
  ['במה המוניטור יכול לעזור לך הכי הרבה?',['עבודה ועסק','בית ומשפחה','בריאות וכושר','תחביבים ויצירה','כסף וחשבונות','ללמוד דברים חדשים']],
- ['מה הכי גוזל לך זמן?',['מיילים והודעות','סידורים ותורים','לזכור דברים','לחפש מידע','ניירת וחשבונות','כלום מיוחד']],
+ ['מה הכי גוזל לך זמן?',['מיילים והודעות','סידורים ותורים','לזכור דברים','לחפש מידע','ניירת וחשבונות','לקוחות ולידים','חשבוניות ותשלומים','ספקים ומשלוחים','כלום מיוחד']],
  ['מה התחביבים שלך?',['מוזיקה','ספורט','בישול','טיולים','צילום ווידאו','משחקים','קריאה','הומור ושטויות']],
  ['מה מעניין לנסות?',['רשימת קניות','תקציב חודשי','מתכונים','יומן אימונים','ארכיון מסמכים','סיכום חדשות יומי','עזרה בכתיבה','חידה או משחק יומי']],
  ['איך נוח לך לקבל תשובות?',['קצר ולעניין','עם קצת הסבר','צעד אחרי צעד']]
@@ -14184,7 +14226,7 @@ function intakeSheet(){
  w.id='inSheet';w.className='ysheet';
  w.setAttribute('role','dialog');w.setAttribute('aria-label','שאלות היכרות');
  w.innerHTML='<div class="ycard"><b>🧭 שאלות היכרות</b>'
-  +'<small>חמש שאלות, דקה בערך. מסמנים כמה שרוצים בכל שאלה. אפשר לדלג. בסוף אציע בצ׳אט מה עוד אפשר לבנות לך במוניטור.</small>'
+  +'<small>שש שאלות, דקה בערך. מסמנים כמה שרוצים בכל שאלה. אפשר לדלג. בסוף אציע בצ׳אט מה עוד אפשר לבנות לך במוניטור.</small>'
   +INTAKE_Q.map(function(q,i){return '<small style="opacity:1;font-weight:700;margin-top:6px">'+esc(q[0])+'</small>'
    +'<div class="arPick inPick" data-q="'+i+'" role="group" aria-label="'+esc(q[0])+'">'
    +q[1].map(function(o){return '<button type="button" class="yb" data-o="'+esc(o)+'">'+esc(o)+'</button>';}).join('')+'</div>';}).join('')
@@ -14768,18 +14810,18 @@ on('gPush',function(){
  document.body.appendChild(w);
 });
 on('gUpgrade',function(){
- var h='<small>מה עוד המוניטור יודע לעשות. לחיצה שולחת בקשה למערכת המחשוב של המוניטור והיא חוזרת אליך.</small>'
+ var h='<small>כאן רואים מה עוד אפשר לקבל. לוחצים על מה שמעניין אותך, ואיציק יבדוק ויחזור אליך.</small>'
   +SHIP_UPGRADES.map(function(u,i,a){
    var on=(u[2]||[]).some(function(id){return document.getElementById(id);});
    return '<button type="button" '+ybAttr(a,i)+' data-u="'+i+'">'+esc(u[0])+(on?' <b class="upgOn">✓ פעיל</b>':'')+'<br><small>'+esc(u[1])+'</small></button>';
   }).join('');
- shipOpen('shipUp','🚀 שדרוגים',h,function(w){
+ shipOpen('shipUp','✨ מה עוד אפשר',h,function(w){
   w.addEventListener('click',function(e){
    var b=e.target.closest&&e.target.closest('[data-u]');if(!b)return;
    var u=SHIP_UPGRADES[+b.getAttribute('data-u')];if(!u)return;
    b.disabled=true;
    sendText('בקשה ממנהל','בקשה ממנהל: בקשת שדרוג: '+u[0]+'. '+u[1],'משימה').then(function(){
-    markSent('text',u[0]);toast('נשלח למערכת המחשוב של המוניטור. היא תחזור אליך.');
+    markSent('text',u[0]);toast('נשלח. איציק יבדוק ויחזור אליך.');
    }).catch(function(){b.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
   });
  });
@@ -14916,7 +14958,7 @@ function todaySheet(){
  h+='<div class="tdSec">🏥 תורים</div>'+(x.ap.length?x.ap.map(apRow).join(''):'<small>אין תור היום. תור חדש מוסיפים מהמסך הראשי: לוחצים על 🏥 תורים עתידיים, בטופס למטה.</small>');
  h+='<div class="tdSec">⏰ תזכורות</div>'+(x.rm.length?x.rm.map(function(r){return '<div class="tdRow">'+esc(r.text)+'</div>';}).join(''):'<small>אין תזכורת להיום.</small>');
  h+='<div class="tdSec">✅ משימות</div>'+(x.tk.length?x.tk.map(function(t){
-   return '<label class="tdRow tk'+(x.done[t.id]?' done':'')+'"><input type="checkbox" data-tk="'+esc(t.id)+'"'+(x.done[t.id]?' checked':'')+'> '+esc(t.text)+'</label>';
+   return '<label class="tdRow tk'+(x.done[t.id]?' done':'')+'"><input type="checkbox" data-tk="'+esc(t.id)+'"'+(x.done[t.id]?' checked':'')+'> '+esc(t.text)+tkDelBtn(t)+'</label>';
   }).join(''):'<small>אין משימה פתוחה להיום.</small>');
  if(x.ap1.length)h+='<div class="tdSec">מחר</div>'+x.ap1.map(apRow).join('');
  // 13.10, idea he took: "משימה להיום אפשר לכתוב רק לאותו יום". A day picker, today by default.
@@ -14930,7 +14972,10 @@ function todaySheet(){
   +'<button type="button" class="yb yx" id="tdClose">סגירה</button></div>';
  function close(){w.remove();document.removeEventListener('keydown',esckey);todayTile();}
  function esckey(e){if(e.key==='Escape')close();}
- w.onclick=function(e){if(e.target===w||e.target.id==='tdClose')close();};
+ w.onclick=function(e){
+  var d=e.target.closest&&e.target.closest('[data-tkdel]');if(d){e.preventDefault();tkDelete(d);return;}
+  if(e.target===w||e.target.id==='tdClose')close();
+ };
  w.addEventListener('change',function(e){var l=e.target.closest&&e.target.closest('label');if(l)l.classList.toggle('done',e.target.checked);});
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);

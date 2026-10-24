@@ -1194,6 +1194,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .tk input{width:24px;height:24px;flex:0 0 24px}
 .tk.done span{text-decoration:line-through;opacity:.55}
 .tk.tnc{cursor:default}.tk.tnc span{flex:1}
+.tkDel{margin-inline-start:auto;border:0;background:none;font-size:18px;padding:4px 6px;cursor:pointer}
 .tncode{user-select:all;letter-spacing:1px}.tncopy{margin-top:4px;padding:4px 10px;border-radius:8px;border:0;background:#1e3a5f;color:#9ecbff;font-weight:700}
 .tnopen{flex:none;padding:8px 14px;border-radius:10px;background:#1e3a5f;color:#9ecbff;text-decoration:none;font-weight:700}
 @keyframes tkpop{0%{transform:scale(1)}45%{transform:scale(1.06)}100%{transform:scale(1)}}
@@ -2100,7 +2101,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-24T06:26:42.597Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-24T06:27:11.974Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2930,6 +2931,7 @@ try{
   <input type="text" id="apWhat" autocomplete="off" placeholder="מה, למשל: רופא עור">
   <input type="text" id="apWhere" autocomplete="off" placeholder="איפה, למשל: מכבי רמות">
   <button type="submit">הוספת תור</button>
+  <button type="button" id="apCancel" hidden onclick="apEditId='';apEditSet(false);this.form.reset();document.getElementById('apSaid').textContent='';">ביטול העריכה</button>
  </form>
  <div class="msgsaid" id="apSaid"></div>
 </section>
@@ -3859,7 +3861,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='da85ccb814';
+var CODE_ID='e0f9566a11';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -8195,9 +8197,12 @@ function renderAppts(){
    +(rm?'<div class="n">⏰ תזכורת '+esc(new Date(rm.due).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'}))+' בתשע בבוקר</div>':'')
    +(a.doc?'<div class="n"><a href="'+esc(a.doc)+'" target="_blank" rel="noopener">'+esc(a.docLabel||'ההפניה')+'</a></div>':'')
    +(a.img?'<a href="'+esc(a.img)+'" target="_blank" rel="noopener"><img src="'+esc(a.img)+'" alt="ההודעה מבית החולים" loading="lazy"></a>':'')
+   +'<button type="button" class="apEdit" data-edit="'+esc(a.id)+'" style="font-size:13px;margin-top:6px">✏️ לשנות</button>'
    +'<button type="button" class="apDel" data-del="'+esc(a.id)+'" style="font-size:13px;margin-top:6px">🗑️ למחוק</button></div>';
  }).join(''):'<div class="empty">אין תור עתידי. מוסיפים תור בטופס כאן למטה.</div>';
  host.onclick=async function(e){
+  var ed=e.target.closest&&e.target.closest('[data-edit]');
+  if(ed){var a0=(D.appts||[]).filter(function(a){return a.id===ed.getAttribute('data-edit');})[0];if(a0)apEditFill(a0);return;}
   var b=e.target.closest&&e.target.closest('[data-del]');if(!b)return;
   var row=b.closest('.ap'),what=row?row.querySelector('b').textContent:'',when=row?row.querySelector('.d').textContent:'';
   if(!await uiConfirm('למחוק את התור '+what+'?','מחיקה',true))return;
@@ -8649,11 +8654,40 @@ function renderTasks(){
    h+='<h3>'+esc(lbl)+'</h3>';
   }
   h+='<label class="tk'+(done[t.id]?' done':'')+'"><input type="checkbox" data-tk="'+esc(t.id)+'"'
-   +(done[t.id]?' checked':'')+'><span>'+esc(t.text)+'</span></label>';
+   +(done[t.id]?' checked':'')+'><span>'+esc(t.text)+'</span>'+tkDelBtn(t)+'</label>';
  });
  host.innerHTML=h||'<div class="empty">אין משימות. כל משימה שתשלח למוניטור תופיע כאן לפי היום שלה.</div>';
+ host.onclick=function(e){var d=e.target.closest&&e.target.closest('[data-tkdel]');if(d){e.preventDefault();tkDelete(d);}};
  var b=document.getElementById('tkClear');
  if(b)b.onclick=function(){clearIds('tasksCleared',T.map(function(t){return t.id;}));notesPush();renderTasks();};
+}
+var apEditId='';
+function apEditSet(on){
+ var c=document.getElementById('apCancel'),bt=document.querySelector('#apForm button[type=submit]');
+ if(c)c.hidden=!on;
+ if(bt)bt.textContent=on?'שמירת השינוי':'הוספת תור';
+}
+function apEditFill(a){
+ var x=new Date(a.when),ok=!isNaN(x.getTime());
+ document.getElementById('apDate').value=ok?x.toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'}):'';
+ document.getElementById('apTime').value=ok&&!a.noTime?x.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Jerusalem'}):'';
+ document.getElementById('apWhat').value=a.what||'';
+ document.getElementById('apWhere').value=a.where||'';
+ apEditId=a.id;apEditSet(true);
+ document.getElementById('apSaid').textContent='משנים את התור. שנה מה שצריך ושלח, והתור הישן יתעדכן.';
+ document.getElementById('apForm').scrollIntoView({behavior:'smooth',block:'center'});
+}
+function tkDelBtn(t){return '<button type="button" class="tkDel" data-tkdel="'+esc(t.id)+'" data-what="'+esc(t.text)+'" aria-label="למחוק את המשימה">🗑</button>';}
+function tkDelete(b){
+ var row=b.closest('.tk,.tdRow'),id=b.getAttribute('data-tkdel'),what=b.getAttribute('data-what')||'';
+ return uiConfirm('למחוק את המשימה "'+what+'"?','מחיקה',true).then(function(ok){
+  if(!ok)return;
+  if(row){row.style.transition='opacity .4s';row.style.opacity='0';setTimeout(function(){row.style.display='none';},420);}
+  return sendText('מחיקת משימה','מחיקת משימה: '+id+' ('+what+')','משימה').catch(function(){
+   if(row){row.style.display='';row.style.opacity='1';}
+   toast('המחיקה לא נשלחה. תבדוק חיבור ותנסה שוב.');
+  });
+ });
 }
 function clearedIds(k){try{return JSON.parse(localStorage.getItem(k)||'{}');}catch(e){return {};}}
 function clearIds(k,ids){
@@ -8703,11 +8737,13 @@ on2('apForm','submit',function(e){
  var said=document.getElementById('apSaid');
  var v=w.value.trim(),p=wh.value.trim();
  if(!v||!d.value){said.textContent='צריך תאריך ומה התור.';return;}
- var msg='תור חדש: '+v+', '+d.value.split('-').reverse().join('.')+' ('+d.value+')'+(tm.value?' בשעה '+tm.value:' בלי שעה')+(p?', מקום: '+p:'');
+ var rest=v+', '+d.value.split('-').reverse().join('.')+' ('+d.value+')'+(tm.value?' בשעה '+tm.value:' בלי שעה')+(p?', מקום: '+p:'');
+ var editing=apEditId,msg=editing?'עדכון תור: '+editing+' | '+rest:'תור חדש: '+rest;
  said.textContent='שולח.';
- sendText('תור חדש',msg,'תור').then(function(){
+ sendText(editing?'עדכון תור':'תור חדש',msg,'תור').then(function(){
   w.value='';wh.value='';tm.value='';d.value='';
-  said.textContent='נשלח. התור יופיע כאן ברשימה, וגם במה יש לי היום ביום שלו.';
+  if(editing){apEditId='';apEditSet(false);}
+  said.textContent=editing?'נשלח. התור השתנה ברשימה, וגם במה יש לי היום ביום שלו.':'נשלח. התור יופיע כאן ברשימה, וגם במה יש לי היום ביום שלו.';
   markSent('text');renderSent();renderThread();
  }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';});
 });
@@ -10059,8 +10095,9 @@ Array.prototype.forEach.call(document.querySelectorAll('.icEmpty'),function(b){
  b.onclick=function(){adminReqSheet();var t=document.getElementById('arText');if(t){t.value='בעיגול הריק במסך הבית '+'הייתי רוצה'+': ';t.focus();}};
 });
 var INTAKE_Q=[
+ ['בשביל מה בעיקר תרצה את המוניטור?',['עבודה ועסק','בית ומשפחה','תחביבים ובילוי']],
  ['במה המוניטור יכול לעזור לך הכי הרבה?',['עבודה ועסק','בית ומשפחה','בריאות וכושר','תחביבים ויצירה','כסף וחשבונות','ללמוד דברים חדשים']],
- ['מה הכי גוזל לך זמן?',['מיילים והודעות','סידורים ותורים','לזכור דברים','לחפש מידע','ניירת וחשבונות','כלום מיוחד']],
+ ['מה הכי גוזל לך זמן?',['מיילים והודעות','סידורים ותורים','לזכור דברים','לחפש מידע','ניירת וחשבונות','לקוחות ולידים','חשבוניות ותשלומים','ספקים ומשלוחים','כלום מיוחד']],
  ['מה התחביבים שלך?',['מוזיקה','ספורט','בישול','טיולים','צילום ווידאו','משחקים','קריאה','הומור ושטויות']],
  ['מה מעניין לנסות?',['רשימת קניות','תקציב חודשי','מתכונים','יומן אימונים','ארכיון מסמכים','סיכום חדשות יומי','עזרה בכתיבה','חידה או משחק יומי']],
  ['איך נוח לך לקבל תשובות?',['קצר ולעניין','עם קצת הסבר','צעד אחרי צעד']]
@@ -10071,7 +10108,7 @@ function intakeSheet(){
  w.id='inSheet';w.className='ysheet';
  w.setAttribute('role','dialog');w.setAttribute('aria-label','שאלות היכרות');
  w.innerHTML='<div class="ycard"><b>🧭 שאלות היכרות</b>'
-  +'<small>חמש שאלות, דקה בערך. מסמנים כמה שרוצים בכל שאלה. אפשר לדלג. בסוף אציע בצ׳אט מה עוד אפשר לבנות לך במוניטור.</small>'
+  +'<small>שש שאלות, דקה בערך. מסמנים כמה שרוצים בכל שאלה. אפשר לדלג. בסוף אציע בצ׳אט מה עוד אפשר לבנות לך במוניטור.</small>'
   +INTAKE_Q.map(function(q,i){return '<small style="opacity:1;font-weight:700;margin-top:6px">'+esc(q[0])+'</small>'
    +'<div class="arPick inPick" data-q="'+i+'" role="group" aria-label="'+esc(q[0])+'">'
    +q[1].map(function(o){return '<button type="button" class="yb" data-o="'+esc(o)+'">'+esc(o)+'</button>';}).join('')+'</div>';}).join('')
@@ -10699,7 +10736,7 @@ function todaySheet(){
  h+='<div class="tdSec">🏥 תורים</div>'+(x.ap.length?x.ap.map(apRow).join(''):'<small>אין תור היום. תור חדש מוסיפים מהמסך הראשי: לוחצים על 🏥 תורים עתידיים, בטופס למטה.</small>');
  h+='<div class="tdSec">⏰ תזכורות</div>'+(x.rm.length?x.rm.map(function(r){return '<div class="tdRow">'+esc(r.text)+'</div>';}).join(''):'<small>אין תזכורת להיום.</small>');
  h+='<div class="tdSec">✅ משימות</div>'+(x.tk.length?x.tk.map(function(t){
-   return '<label class="tdRow tk'+(x.done[t.id]?' done':'')+'"><input type="checkbox" data-tk="'+esc(t.id)+'"'+(x.done[t.id]?' checked':'')+'> '+esc(t.text)+'</label>';
+   return '<label class="tdRow tk'+(x.done[t.id]?' done':'')+'"><input type="checkbox" data-tk="'+esc(t.id)+'"'+(x.done[t.id]?' checked':'')+'> '+esc(t.text)+tkDelBtn(t)+'</label>';
   }).join(''):'<small>אין משימה פתוחה להיום.</small>');
  if(x.ap1.length)h+='<div class="tdSec">מחר</div>'+x.ap1.map(apRow).join('');
  var tdOpts='';for(var k=0;k<60;k++){var dd=new Date(Date.now()+k*864e5);
@@ -10712,7 +10749,10 @@ function todaySheet(){
   +'<button type="button" class="yb yx" id="tdClose">סגירה</button></div>';
  function close(){w.remove();document.removeEventListener('keydown',esckey);todayTile();}
  function esckey(e){if(e.key==='Escape')close();}
- w.onclick=function(e){if(e.target===w||e.target.id==='tdClose')close();};
+ w.onclick=function(e){
+  var d=e.target.closest&&e.target.closest('[data-tkdel]');if(d){e.preventDefault();tkDelete(d);return;}
+  if(e.target===w||e.target.id==='tdClose')close();
+ };
  w.addEventListener('change',function(e){var l=e.target.closest&&e.target.closest('label');if(l)l.classList.toggle('done',e.target.checked);});
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
