@@ -643,6 +643,8 @@ function build() {
     },
     choices,
     food,
+    // 24.10: features a customer asked for and Itzik approved (lib/features.js). Sealed with the gate.
+    features: require('./lib/features.js').read(inst.dataPath),
     /*
       The drains.
 
@@ -1179,7 +1181,8 @@ function tenantTiles(inst) {
     + esc((g.icon ? g.icon + ' ' : '') + g.title) + '</b><small>' + esc(g.sub || 'הסבר קצר, פעם אחת') + '</small></button>').join('');
   const links = tenantLinks(inst).map((l, i) => '\n  <button type="button" class="gt g4" id="gLink' + i + '" data-new="1"><b>'
     + esc((l.icon ? l.icon + ' ' : '') + l.title) + '</b><small>' + esc(l.sub || 'פתיחה בלשונית חדשה') + '</small></button>').join('');
-  return guides + links + ids.filter((id) => TENANT_TILES[id]).map((id) => {
+  const bank = '\n  <button type="button" class="gt g16" id="gBank" data-new="1" hidden><b>🏦 חיבור הבנק</b><small>שולחים קובץ, אני מסדר</small></button>';
+  return guides + links + bank + ids.filter((id) => TENANT_TILES[id]).map((id) => {
     const [cls, title, sub] = TENANT_TILES[id];
     return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261015-clalit"' : '') + (id === 'gTasks' ? ' data-upd="tasks60-1020"' : '') + (id === 'gIntake' ? ' data-upd="20261017-intake"' : '') + (id === 'gUpgrade' ? ' data-upd="20261017-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
@@ -8543,7 +8546,7 @@ function repaintAll(){
    The names are the ones boot() uses, so a failure here and a failure at boot
    are the same word on the diagnostic he sends me.
  */
- var jobs=[['dot',paintDot],['new',renderNew],['thread',renderThread],
+ var jobs=[['features',applyFeatures],['dot',paintDot],['new',renderNew],['thread',renderThread],
   ['answers',renderAnswers],['got',renderGot],['net',renderNet],['items',render],
   ['pegasus',renderPegasus],['improve',renderImprove],['special',renderSpecial],
   ['reminders',renderReminders],['tasks',renderTasks],['appts',renderAppts],['replies',renderReplies],['rivhit',renderRivhit],['food',renderFood],
@@ -11519,6 +11522,8 @@ function applyHidden(){
   var el=document.getElementById(id);
   if(el)el.hidden=hid.indexOf(id)>=0;
  });
+ // 24.10: a tile for a feature that is off stays hidden whatever this loop says.
+ try{applyFeatures();}catch(e){}
  var back=document.getElementById('tidyBack');
  if(back)back.hidden=!hid.length;
 }
@@ -19268,6 +19273,9 @@ boot('guides',function(){
   };
  });
 });
+boot('features',applyFeatures);
+${require('./lib/features.js').js}
+${inst.name !== 'abaitzik' ? require('./lib/bank-ui.js').js : ''}
 boot('install',function(){
  if(INSTANCE&&INSTANCE.name==='abaitzik')return;
  var standalone=(window.navigator&&window.navigator.standalone)||

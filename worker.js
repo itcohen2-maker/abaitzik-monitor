@@ -1148,7 +1148,9 @@ function runDetached(batch) {
 function announceDecisions() {
   try {
     const n = require('./lib/change-requests.js').announce();
-    if (n) {
+    const opened = require('./lib/change-requests.js').applyApproved();
+    if (opened.length) say('המנהל פתח לו: ' + opened.join(', '));
+    if (n || opened.length) {
       say('תשובות מנהל לבקשות שינוי: ' + n);
       execFile('node', ['push.js', 'admin decision on a change request'], { cwd: HERE, timeout: 240000 }, () => {});
     }

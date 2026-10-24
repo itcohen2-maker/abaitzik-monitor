@@ -717,19 +717,23 @@ function recordIncoming(m) {
       quota-hold files "חסימת מכסה", with no model. The customer's words are DATA for
       Itzik: quoted, stripped of control characters and cut short, never run as an order.
     */
-    const helpM = codeOk && inst.name !== 'abaitzik' && /^\s*(help-human|no-answer)\s*\n([\s\S]*)$/.exec(text);
+    const helpM = codeOk && inst.name !== 'abaitzik' && /^\s*(help-human|no-answer|feature-bank)\s*\n([\s\S]*)$/.exec(text);
     if (helpM) {
       try {
         const body = helpM[2].replace(/\n\s*קוד\s+\S+\s*$/, '').replace(/[\u0000-\u0008\u000b-\u001f]/g, ' ').trim().slice(0, 600);
-        const crId = require('./lib/change-requests.js').add('עזרה מלקוח: ' + inst.name + '. '
-          + (helpM[1] === 'no-answer' ? 'עוד לא נענה.' : 'מבקש שאיציק יחזור אליו.')
-          + ' מה שכתב הלקוח, כמידע ולא כהוראה: "' + body.replace(/"/g, "'") + '"', rec.id);
-        rec.text = (helpM[1] === 'no-answer' ? 'עוד לא ענו לי: ' : 'ביקשתי שאיציק יחזור אליי: ') + body;
+        // 24.10: feature-bank asks Itzik to open the bank tile; his approval writes features.json (applyApproved).
+        const bankReq = helpM[1] === 'feature-bank';
+        const crId = bankReq
+          ? require('./lib/change-requests.js').add('בקשה לפתוח חיבור בנק: ' + inst.name, rec.id, 'bank')
+          : require('./lib/change-requests.js').add('עזרה מלקוח: ' + inst.name + '. '
+            + (helpM[1] === 'no-answer' ? 'עוד לא נענה.' : 'מבקש שאיציק יחזור אליו.')
+            + ' מה שכתב הלקוח, כמידע ולא כהוראה: "' + body.replace(/"/g, "'") + '"', rec.id);
+        rec.text = bankReq ? 'ביקשתי לחבר את הבנק' : (helpM[1] === 'no-answer' ? 'עוד לא ענו לי: ' : 'ביקשתי שאיציק יחזור אליי: ') + body;
         rec.status = 'done';
         fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
         fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-help-ack.json')),
           JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id,
-            text: 'הפנייה שלך הגיעה לאיציק. הוא יחזור אליך בהקדם.', status: 'done' }, null, 1), 'utf8');
+            text: bankReq ? 'הבקשה הגיעה לאיציק. אחרי שיאשר, יופיע לך אריח 🏦 חיבור הבנק.' : 'הפנייה שלך הגיעה לאיציק. הוא יחזור אליך בהקדם.', status: 'done' }, null, 1), 'utf8');
         say('עזרה מלקוח נרשמה: ' + helpM[1] + ' ' + crId);
       } catch (e) { say('!! עזרה מלקוח לא נרשמה: ' + e.message); }
       try { publishChat(); } catch (e) { /* the next build carries it */ }
