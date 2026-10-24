@@ -2316,7 +2316,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-24T17:17:54.642Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-24T17:31:26.329Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2453,7 +2453,7 @@ try{
 
  <div class="grid" id="blkTiles">
   <button type="button" class="gt gStory" id="gPegasus" data-new="1" data-upd="20261021-peg-rotate"><b>🐎 פגסוס</b><small>רק ההודעה האחרונה והשאלה שמחכה לך, הישנות נעלמות</small></button>
-  <button type="button" class="gt gLec" id="gLec" data-upd="lec-1792862231642"><b>🎤 הרצאה</b><small>עודכן 24.10 20:17: שקף 41 תמונה ללצחוק על זה, 43 הצחוק הקטין לי את הפחד, 45 לא עולה, 47 מה אני יכול לתת, 48 מה החזיק אותי בגוף ראשון</small></button>
+  <button type="button" class="gt gLec" id="gLec" data-upd="lec-1792863083304"><b>🎤 הרצאה</b><small>עודכן 24.10 20:31: שקף 39 בלי תמונה, שקף חדש 49 ההסתכלות על החיים השתנתה לי, שקף 56 הניתוח האחרון עם תמונה מטיפול נמרץ</small></button>
   <button type="button" class="gt g8" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>מי חייב כסף ומאיזה חודש</small></button>
   <button type="button" class="gt g8" id="gVaad"><b>🏠 ועד הבית</b><small>מי שילם ומה פתוח</small></button>
   <button type="button" class="gt g15" id="gSale" data-upd="lawyer-docs-1018"><b>⚖️ מכירת לולוס</b><small>התיק לעורך הדין, מה פתוח ומה נמסר</small></button>
@@ -2607,14 +2607,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4133,7 +4126,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='9b4e580ad2';
+var CODE_ID='840ad1b5a5';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11118,10 +11111,10 @@ on('gAlarm',alarmSheet);
 boot('today',todayTile);
 
 var LEC_ITEMS=[
- {t:'01 המלל המלא (עודכן 24.10 20:17)',r:'lecture-full-text.pdf',u:'https://drive.google.com/file/d/1ZjRua0t3UA8SDRPmA4HIV-W1WJ1PTx51/view'},
+ {t:'01 המלל המלא (עודכן 24.10 20:31)',r:'lecture-full-text.pdf',u:'https://drive.google.com/file/d/1ZjRua0t3UA8SDRPmA4HIV-W1WJ1PTx51/view'},
  {t:'01ב המלל המלא לעריכה (Google Docs)',u:'https://docs.google.com/document/d/1gyj8Wt-3g8QhmOecP2MmmbZW69RepTzDNZKOsjf-3Vk/edit'},
- {t:'02 המצגת, 64 שקפים, עודכן 24.10 20:17',u:'https://docs.google.com/presentation/d/13lOa3wpgkhMpcZallab84mkLkzy9vc1o_nPHIvQFsUQ/present'},
- {t:'03 לאימון: המלל עם 64 שקפים, ממוספרים (עודכן 24.10 20:17)',r:'lecture-practice-small-slides.pdf',u:'https://drive.google.com/file/d/1h-ja7UYp2wBL4aAa3iDKvEbQf4_QEPZ_/view'},
+ {t:'02 המצגת, 65 שקפים, עודכן 24.10 20:31',u:'https://docs.google.com/presentation/d/13lOa3wpgkhMpcZallab84mkLkzy9vc1o_nPHIvQFsUQ/present'},
+ {t:'03 לאימון: המלל עם 65 שקפים, ממוספרים (עודכן 24.10 20:31)',r:'lecture-practice-small-slides.pdf',u:'https://drive.google.com/file/d/1h-ja7UYp2wBL4aAa3iDKvEbQf4_QEPZ_/view'},
  {t:'04 הריל שמבשר על ההרצאות: תסריט ריל 06, מאיפה הכוחות',r:'reel-06-meefo-hakohot.txt'},
  {t:'06 🎬 הריל של איליי על ההרצאה (15.10)',r:'reel-lecture-ilay-1510.mp4'},
  {t:'06ב 🖼️ הקאבר לריל, מאיליי',r:'reel-lecture-ilay-1510-cover.jpg'},
@@ -15167,7 +15160,7 @@ function dzBoot(){
 }
 
 boot('design',dzBoot);
-var PUSH_KEY="BDlgL4lKYXBB2yk96UVlN_bNhLBppiq0K8ORV-TQ2jb7k8IMskeWYICec19xE7N5VEcCzVXZU9Pxb9e64KH8OCk";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
