@@ -1188,7 +1188,7 @@ function tenantTiles(inst) {
   const samples = inst.samples ? sample + sample.replace('g11', 'g4') : '';
   return guides + links + bank + samples + ids.filter((id) => TENANT_TILES[id]).map((id) => {
     const [cls, title, sub] = TENANT_TILES[id];
-    return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261015-clalit"' : '') + (id === 'gTasks' ? ' data-upd="tasks60-1020"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '" id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261015-clalit"' : '') + (id === 'gTasks' ? ' data-upd="tasks-del-1024"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
 }
 /*
@@ -4083,8 +4083,8 @@ ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').bar : ''}
     אשכח שום דבר". One screen for today: the appointments, the reminders and the
     tasks of today, and a peek at tomorrow.
   -->
-  <button type="button" class="gt gMyDay" id="gMyDay" data-new="1" data-upd="20261024-noword"><b>📅 מה יש לי היום</b><small>תורים, תזכורות ומשימות של היום</small></button>
-  <button type="button" class="gt g18" id="gAppts" data-upd="appt-map-1021"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
+  <button type="button" class="gt gMyDay" id="gMyDay" data-new="1" data-upd="20261024-tdel"><b>📅 מה יש לי היום</b><small>תורים, תזכורות ומשימות של היום</small></button>
+  <button type="button" class="gt g18" id="gAppts" data-upd="appt-edit-1024"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
   <button type="button" class="gt g16" id="gRemind"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
   <button type="button" class="gt g10 roundTile" id="gNotes" title="פתקים" aria-label="פתקים" data-upd="notes-20261020">📝</button>
   <!-- 12.10, Itzik: "תקים אפליקציה לבדוק מה כל הקלקולים האלה". Every monitor's faults on one screen. -->
