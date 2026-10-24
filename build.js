@@ -10574,7 +10574,7 @@ var histOn=false,histQuiet=false;
 function histWanted(){
  var ne=document.getElementById('noteEdit'),np=document.getElementById('pN2');
  var note=!!(np&&!np.hidden&&ne&&!ne.hidden);
- return navStack.length>0||note||!!overlayOpen(null);
+ return navStack.length>0||note||!!overlayOpen(null)||!!dlgClose();
 }
 function histSync(){
  var want=histWanted();
@@ -10590,8 +10590,10 @@ function histSync(){
 window.addEventListener('popstate',function(){
  if(histQuiet){histQuiet=false;return;}
  histOn=false;
- var ov=overlayOpen(null);
- if(ov)ov.remove();
+ var dc=dlgClose();
+ var ov=dc?null:overlayOpen(null);
+ if(dc)dc();
+ else if(ov)ov.remove();
  else navBack();
  histSync();
 });
@@ -10690,6 +10692,23 @@ var sheetExt=0;
 function overlayOpen(not){
  var l=document.querySelectorAll('.ysheet,.fview');
  for(var i=0;i<l.length;i++)if(l[i]!==not)return l[i];
+ return null;
+}
+// 24.10.2026, Itzik: "תבדוק בכל המוניטור שתמיד יהיה כפתור חזרה". These windows had their own
+// close button but the phone's back gesture skipped them (or left the monitor). Back now
+// closes the top one through that same button. The recorder is left out on purpose:
+// a back swipe must never throw away a take.
+function dlgShown(el){return !!(el&&el.isConnected&&!el.hidden&&el.getClientRects().length);}
+function dlgClose(){
+ var q=function(id){return document.getElementById(id);};
+ var d=document.querySelectorAll('.ui-dlg-bg');
+ if(d.length)return function(){d[d.length-1].click();};
+ var tp=q('talkPrompt');
+ if(dlgShown(tp)){var x=document.querySelector('[data-p="x"]');return function(){if(x)x.click();else tp.remove();};}
+ var qs=q('qhSheet');
+ if(qs&&qs.classList.contains('on'))return function(){var sh=q('qhShade');if(sh)sh.click();};
+ if(dlgShown(q('liveSheet'))&&q('lsClose'))return function(){q('lsClose').click();};
+ if(dlgShown(q('noteAiBox'))&&q('noteAiNo'))return function(){q('noteAiNo').click();};
  return null;
 }
 document.addEventListener('click',function(ev){
