@@ -1320,6 +1320,7 @@ const PAGE = `<!DOCTYPE html>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700&family=Heebo:wght@300;400;500;700&display=swap">
+${require('./lib/skins-ui.js').head}
 <style>
 :root{--blue:#4285F4;--red:#EA4335;--yellow:#FBBC05;--green:#34A853;--orange:#e8710a;
  --ground:#f6f8fc;--surface:#fff;--sunk:#eef2fa;--ink:#1f2430;--dim:#5f6b7f;
@@ -2337,6 +2338,7 @@ ${require('./lib/approvals-ui.js').css}
 ${require('./lib/since-ui.js').css}
 ${require('./lib/activity-ui.js').css}
 ${require('./lib/home-ui.js').css}
+${require('./lib/skins-ui.js').css}
 ${pushUi.css}
 .toast .toast-x{display:block;margin-top:8px;font:500 12.5px Heebo,sans-serif;opacity:.85}
 .undobar{position:fixed;z-index:81;inset-inline:12px;bottom:calc(76px + env(safe-area-inset-bottom));
@@ -4407,6 +4409,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <button type="button" class="skb" data-skin="dark">לילה</button>
  </div>
 </div>
+${require('./lib/skins-ui.js').html}
 ${inst.name !== 'abaitzik' ? require('./lib/profile-ui.js').entry() : ''}
 <!--
   This closing tag was missing.
@@ -19788,6 +19791,8 @@ ${require('./lib/activity-ui.js').js}
 on('gActLog',function(){pane('Lg');renderActLog();return false;});
 /*ITZIK:END*/
 ${require('./lib/home-ui.js').js}
+${require('./lib/skins-ui.js').js}
+boot('design',dzBoot);
 ${pushUi.js(pushKey())}
 boot('ask',renderAsk);
 boot('approvals',renderApprovals);
