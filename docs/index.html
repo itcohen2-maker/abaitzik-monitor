@@ -27,6 +27,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700&family=Heebo:wght@300;400;500;700&display=swap">
+
+<script>
+(function(){try{
+ var s=localStorage.getItem('designSkin')||'';
+ if(s==='1'||s==='2'||s==='3'||s==='4'||s==='5'||s==='6')document.documentElement.setAttribute('data-skin',s);
+}catch(e){}})();
+</script>
+
 <style>
 :root{--blue:#4285F4;--red:#EA4335;--yellow:#FBBC05;--green:#34A853;--orange:#e8710a;
  --ground:#f6f8fc;--surface:#fff;--sunk:#eef2fa;--ink:#1f2430;--dim:#5f6b7f;
@@ -966,6 +974,75 @@ body.editing .bn{display:none}
 .hk-st.warn i{background:var(--wait)}
 .hk-st.bad i{background:var(--red)}
 .cnt,.nb-c,.gb-c,.apv-n,.icN,.tile .v{font-variant-numeric:tabular-nums}
+
+
+:root:root[data-skin="2"]{color-scheme:dark;--ground:#0e1311;--surface:#171e1b;--sunk:#121816;--ink:#edf1ef;--dim:#9fb0a9;
+ --line:#232c28;--accent:#4fd1b0;--on-accent:#06231c;--accent-soft:#20302a;--chip:#171e1b;--chip-ink:#a5f3fc;
+ --wait:#fbbc05;--orange:#fb8c00;--fresh:#12301f;--unread:#331615;--shadow:0 2px 10px rgba(0,0,0,.4);--warn-soft:#3a2a0b;--warn-ink:#fbbf24}
+:root:root[data-skin="3"]{color-scheme:light;--ground:#f6f8fc;--surface:#fff;--sunk:#eef3fb;--ink:#1f2430;--dim:#5f6b7f;
+ --line:#e3e9f4;--accent:#1a73e8;--on-accent:#fff;--accent-soft:#e8f0fe;--chip:#fff;--chip-ink:#1a73e8;
+ --wait:#e37400;--orange:#e37400;--fresh:#e6f4ea;--unread:#fce8e6;--shadow:0 2px 8px rgba(30,50,90,.08);--warn-soft:#fff7e0;--warn-ink:#7a5200}
+:root:root[data-skin="4"]{color-scheme:light;--ground:#eef0f7;--surface:rgba(255,255,255,.55);--sunk:rgba(255,255,255,.7);
+ --ink:#18202e;--dim:#556078;--line:rgba(255,255,255,.8);--accent:#3b5bfd;--on-accent:#fff;--accent-soft:rgba(59,91,253,.12);
+ --chip:rgba(255,255,255,.7);--chip-ink:#2a3f9e;--shadow:0 8px 24px rgba(40,50,90,.10)}
+:root:root[data-skin="5"]{color-scheme:light;--ground:#f6f1e7;--surface:#fffbf3;--sunk:#f1e9da;--ink:#2b241c;--dim:#7a6c5b;
+ --line:#e7dccb;--accent:#b0501a;--on-accent:#fff;--accent-soft:#f6e3d6;--chip:#fffbf3;--chip-ink:#8a3d12;
+ --wait:#b35c00;--orange:#b35c00;--fresh:#eef5e6;--unread:#fbe9e4;--shadow:0 2px 6px rgba(74,52,24,.08);--warn-soft:#fff3d6;--warn-ink:#7a4a00}
+:root:root[data-skin="6"]{color-scheme:light;--ground:#fff;--surface:#f3f0ff;--sunk:#ebe5ff;--ink:#111;--dim:#555;
+ --line:#e5dbff;--accent:#7048e8;--on-accent:#fff;--accent-soft:#e5dbff;--chip:#fff;--chip-ink:#4c2fb0;--r:28px;
+ --wait:#b26a00;--orange:#b26a00;--fresh:#d3f9d8;--unread:#ffe3e3;--shadow:0 4px 14px rgba(112,72,232,.12);--warn-soft:#fff3bf;--warn-ink:#6b4a00}
+
+:root[data-skin="2"] body{background:var(--ground)}
+
+:root[data-skin="3"] .apv{background:linear-gradient(135deg,#9a4b00,#b05800);color:#fff;box-shadow:0 10px 24px rgba(227,116,0,.3)}
+:root[data-skin="3"] .hk{border:0;color:#fff;background:linear-gradient(135deg,#1557b0,#1a66d0);box-shadow:0 6px 16px rgba(30,50,90,.18)}
+:root[data-skin="3"] .hk:nth-child(4n+2){background:linear-gradient(135deg,#a51d1a,#c5221f)}
+:root[data-skin="3"] .hk:nth-child(4n+3){background:linear-gradient(135deg,#0f6b2c,#137a34)}
+:root[data-skin="3"] .hk:nth-child(4n+4){background:linear-gradient(135deg,#6c22b0,#7e2fc8)}
+:root[data-skin="3"] .hk-l,:root[data-skin="3"] .hk-u,:root[data-skin="3"] .hk-f,:root[data-skin="3"] .hk-st,:root[data-skin="3"] .hk-v{color:#fff}
+:root[data-skin="3"] .hk-st i{background:#fff}
+:root[data-skin="3"] .hk-sp{color:#fff}
+
+:root[data-skin="4"] body{background:radial-gradient(120% 60% at 100% 0,#c7d7ff 0,transparent 60%),radial-gradient(90% 50% at 0 40%,#ffd9ec 0,transparent 60%),radial-gradient(100% 60% at 80% 100%,#c9f3e6 0,transparent 60%),#eef0f7}
+:root[data-skin="4"] .hk,:root[data-skin="4"] .hb,:root[data-skin="4"] .apv,:root[data-skin="4"] .alerts,:root[data-skin="4"] .dz-box{
+ background:var(--surface);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.8);box-shadow:0 8px 24px rgba(40,50,90,.10)}
+:root[data-skin="4"] .apv{background:var(--accent)}
+@media (prefers-reduced-transparency:reduce){
+ :root:root[data-skin="4"]{--surface:#fff;--sunk:#f4f6fb;--chip:#fff}
+ :root[data-skin="4"] .hk,:root[data-skin="4"] .hb,:root[data-skin="4"] .apv,:root[data-skin="4"] .alerts,:root[data-skin="4"] .dz-box{
+  -webkit-backdrop-filter:none;backdrop-filter:none}
+}
+
+:root[data-skin="5"] h1,:root[data-skin="5"] h2,:root[data-skin="5"] #hmGreet,:root[data-skin="5"] .hk-v{font-family:'Frank Ruhl Libre',Georgia,serif;font-weight:700}
+:root[data-skin="5"] .apv{background:#2b241c;color:#f6f1e7;box-shadow:0 10px 24px rgba(43,36,28,.3)}
+
+:root[data-skin="6"] .apv{background:#ffd43b;color:#111;box-shadow:0 10px 24px rgba(255,212,59,.35)}
+:root[data-skin="6"] .apv-card{color:#111;background:rgba(255,255,255,.5);border-color:rgba(0,0,0,.12)}
+:root[data-skin="6"] .apv-more,:root[data-skin="6"] .apv-whyt,:root[data-skin="6"] .apv-why{color:#111}
+:root[data-skin="6"] .apv-n{background:#111;color:#ffd43b}
+:root[data-skin="6"] .hk{border:0;border-radius:24px;color:#111}
+:root[data-skin="6"] .hk:nth-child(4n+1){background:#d3f9d8}
+:root[data-skin="6"] .hk:nth-child(4n+2){background:#ffe3e3}
+:root[data-skin="6"] .hk:nth-child(4n+3){background:#d0ebff}
+:root[data-skin="6"] .hk:nth-child(4n+4){background:#fff3bf}
+:root[data-skin="6"] .bn{inset-inline:12px;bottom:12px;border-radius:26px;background:#111;border:0;box-shadow:0 10px 24px rgba(0,0,0,.25)}
+:root[data-skin="6"] .bn button{color:#fff}
+:root[data-skin="6"] .bn button.hasnew{color:#ff8a80}
+:root[data-skin="6"] .bn button[aria-pressed="true"]{color:#111}
+
+.dz-box{margin-top:14px;padding:13px 15px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
+.dz-box>b{display:block;font:500 15px Heebo,sans-serif}
+.dz-box>small{display:block;color:var(--dim);font-size:12.5px;line-height:1.5;margin:2px 0 0}
+.dz-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.dz-btn{min-height:44px;display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:8px;border-radius:14px;
+ border:1px solid var(--line);background:var(--surface);color:var(--ink);font:700 13.5px Heebo,sans-serif;cursor:pointer;text-align:center}
+.dz-btn[aria-pressed="true"]{border:2px solid var(--accent)}
+.dz-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.dz-sw{position:relative;display:block;height:44px;border-radius:10px;border:1px solid rgba(0,0,0,.12)}
+.dz-sw i{position:absolute;inset-inline-end:7px;bottom:7px;width:18px;height:18px;border-radius:50%}
+.dz-mark{min-height:16px;font:700 12px Heebo,sans-serif;color:var(--accent);visibility:hidden}
+.dz-btn[aria-pressed="true"] .dz-mark{visibility:visible}
+@media (max-width:330px){.dz-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 
 .pushGuide{margin:8px 0 0;padding:10px 12px;border-radius:12px;background:var(--sunk);font:500 14.5px/1.6 Heebo,sans-serif;color:var(--ink);text-align:start}
@@ -2201,7 +2278,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-24T08:50:05.274Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-24T08:52:39.286Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2439,6 +2516,42 @@ try{
   <button type="button" class="skb" data-skin="dark">לילה</button>
  </div>
 </div>
+<div class="dz-box" id="designBox" aria-label="עיצוב">
+ <b>עיצוב</b>
+ <small id="designSaid">שישה עיצובים לבחירה. הבחירה נשמרת במכשיר הזה בלבד.</small>
+ <div class="dz-grid" role="group" aria-label="בחירת עיצוב">
+  <button type="button" class="dz-btn" data-design="1" aria-pressed="false">
+   <span class="dz-sw" style="background:#f5f6f4" aria-hidden="true"><i style="background:#0f6e5c"></i></span>
+   <span>1 ירוק רגוע</span>
+   <span class="dz-mark">✓ נבחר</span>
+  </button>
+  <button type="button" class="dz-btn" data-design="2" aria-pressed="false">
+   <span class="dz-sw" style="background:#0e1311" aria-hidden="true"><i style="background:#4fd1b0"></i></span>
+   <span>2 כהה אלגנטי</span>
+   <span class="dz-mark">✓ נבחר</span>
+  </button>
+  <button type="button" class="dz-btn" data-design="3" aria-pressed="false">
+   <span class="dz-sw" style="background:#f6f8fc" aria-hidden="true"><i style="background:#1a73e8"></i></span>
+   <span>3 צבעוני</span>
+   <span class="dz-mark">✓ נבחר</span>
+  </button>
+  <button type="button" class="dz-btn" data-design="4" aria-pressed="false">
+   <span class="dz-sw" style="background:#eef0f7" aria-hidden="true"><i style="background:#3b5bfd"></i></span>
+   <span>4 זכוכית</span>
+   <span class="dz-mark">✓ נבחר</span>
+  </button>
+  <button type="button" class="dz-btn" data-design="5" aria-pressed="false">
+   <span class="dz-sw" style="background:#f6f1e7" aria-hidden="true"><i style="background:#b0501a"></i></span>
+   <span>5 נייר חם</span>
+   <span class="dz-mark">✓ נבחר</span>
+  </button>
+  <button type="button" class="dz-btn" data-design="6" aria-pressed="false">
+   <span class="dz-sw" style="background:#ffffff" aria-hidden="true"><i style="background:#7048e8"></i></span>
+   <span>6 עגול ושמח</span>
+   <span class="dz-mark">✓ נבחר</span>
+  </button>
+ </div>
+</div>
 
 <div class="install" id="installHint">להתקנה כאפליקציה על מסך הבית: בספארי לוחצים שיתוף ואז "הוספה למסך הבית". באנדרואיד: תפריט ואז "התקנת אפליקציה".</div>
 <div class="alerts" id="alerts">
@@ -2451,10 +2564,6 @@ try{
 
 
 <nav class="links" aria-label="קישורים מהירים">
- <a href="plan.html">
-  <span aria-hidden="true">&#128736;</span>
-  <div>תוכנית הבנייה<small>מה נבנה ומה עוד מתוכנן</small></div>
- </a>
  <a href="#" id="gActLog">
   <span aria-hidden="true">&#128214;</span>
   <div>יומן פעולות<small>מה נעשה, מתי ובכמה בערך</small></div>
@@ -2465,14 +2574,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -3991,7 +4093,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='31773fd02b';
+var CODE_ID='3a3bf3d43a';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -14983,7 +15085,36 @@ function renderHome(){
  if(mbox&&mgrid){mbox.hidden=!mc.length;mgrid.innerHTML=mc.map(hmCardHtml).join('');}
 }
 
-var PUSH_KEY="BDlgL4lKYXBB2yk96UVlN_bNhLBppiq0K8ORV-TQ2jb7k8IMskeWYICec19xE7N5VEcCzVXZU9Pxb9e64KH8OCk";
+
+var DZ_GROUND={'2':'#0e1311','3':'#f6f8fc','4':'#eef0f7','5':'#f6f1e7','6':'#ffffff'};
+function dzGet(){try{var s=localStorage.getItem('designSkin')||'';return /^[1-6]$/.test(s)?s:'1';}catch(e){return '1';}}
+function dzApply(v){
+ var r=document.documentElement;
+ r.setAttribute('data-skin',v);
+ var m=document.querySelector('meta[name="theme-color"]');
+ if(m&&DZ_GROUND[v])m.setAttribute('content',DZ_GROUND[v]);
+ else if(m&&typeof skinApply==='function')skinApply(typeof skinGet==='function'?skinGet():'auto');
+ var said=document.getElementById('designSaid');
+ var b=document.querySelector('.dz-btn[data-design="'+v+'"]');
+ if(said&&b)said.textContent='נבחר: '+b.textContent.replace(/^\s*\d\s*/,'')+'. הבחירה נשמרת במכשיר הזה בלבד.';
+ Array.prototype.forEach.call(document.querySelectorAll('.dz-btn'),function(x){
+  x.setAttribute('aria-pressed',x.getAttribute('data-design')===v?'true':'false');
+ });
+}
+function dzBoot(){
+ Array.prototype.forEach.call(document.querySelectorAll('.dz-btn'),function(b){
+  b.addEventListener('click',function(){
+   var v=b.getAttribute('data-design');
+   try{localStorage.setItem('designSkin',v);}catch(e){}
+   dzApply(v);
+   toast('העיצוב הוחלף');
+  });
+ });
+ dzApply(dzGet());
+}
+
+boot('design',dzBoot);
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
