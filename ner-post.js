@@ -130,7 +130,7 @@ function tidy(q, now) {
     fs.writeFileSync(QUEUE, JSON.stringify(q, null, 1));
     // Itzik, 25.10: "סטורי נעלם ופוסט נשאר", and with a gap: a story that went up
     // today goes back into the queue as a post three days later (past Shabbat and
-    // yom tov), with the caption of its day's post in the same language. The video
+    // yom tov, one post per language a day), with FEED_CAPTION. The video
     // stays in docs/ner/media because tidy keeps any file a queued item still uses.
     if (it.kind === 'story' && it.posted && !it.feedQueued && it.asPost !== false) {
       let d = new Date(it.date + 'T12:00:00Z');
