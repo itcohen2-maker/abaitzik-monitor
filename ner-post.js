@@ -88,7 +88,7 @@ function tidy(q, now) {
   let log = [];
   try { log = JSON.parse(fs.readFileSync(POSTED, 'utf8')); } catch (e) {}
   gone.forEach(function (it) {
-    log.push({ name: it.name, date: it.date, kind: it.kind, lang: it.lang, city: it.city, posted: it.posted || null, failed: it.failed || null });
+    log.push({ name: it.name, date: it.date, kind: it.kind, lang: it.lang, city: it.city, posted: it.posted || null, failed: it.failed || null, feedPosted: it.feedPosted || null });
     const f = path.join(__dirname, 'docs', 'ner', String(it.file || ''));
     const used = keep.some(function (k) { return k.file === it.file; });
     if (!used && /^media\/[^/]+\.mp4$/.test(String(it.file || ''))) { try { fs.unlinkSync(f); } catch (e) {} }
@@ -123,6 +123,15 @@ function tidy(q, now) {
     try { it.posted = await publish(it); it.postedAt = new Date().toISOString(); done.push(it.name); }
     catch (e) { it.failed = e.message; notify('נרות: העלאה נכשלה', it.name + ': ' + e.message); }
     fs.writeFileSync(QUEUE, JSON.stringify(q, null, 1));
+    // Itzik, 25.10: "סטורי נעלם ופוסט נשאר". A story that went up goes up again as a
+    // post, with the caption of that day's post in the same language.
+    if (it.kind === 'story' && it.posted && !it.feedPosted && it.asPost !== false) {
+      const twin = q.find(function (k) { return k.kind === 'post' && k.date === it.date && k.lang === it.lang && k.caption; });
+      const cap = it.feedCaption || (twin && twin.caption) || '';
+      try { it.feedPosted = await publish({ kind: 'post', file: it.file, caption: cap }); done.push(it.name + ' (גם כפוסט)'); }
+      catch (e) { it.feedFailed = e.message; notify('נרות: הסטורי כפוסט נכשל', it.name + ': ' + e.message); }
+      fs.writeFileSync(QUEUE, JSON.stringify(q, null, 1));
+    }
   }
   if (DRY) return;
   q = tidy(q, now) || q;
