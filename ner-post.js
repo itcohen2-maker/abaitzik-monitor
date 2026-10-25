@@ -88,7 +88,7 @@ function tidy(q, now) {
   let log = [];
   try { log = JSON.parse(fs.readFileSync(POSTED, 'utf8')); } catch (e) {}
   gone.forEach(function (it) {
-    log.push({ name: it.name, date: it.date, kind: it.kind, lang: it.lang, city: it.city, posted: it.posted || null, failed: it.failed || null, feedPosted: it.feedPosted || null });
+    log.push({ name: it.name, date: it.date, kind: it.kind, lang: it.lang, city: it.city, posted: it.posted || null, failed: it.failed || null, feedQueued: it.feedQueued || null });
     const f = path.join(__dirname, 'docs', 'ner', String(it.file || ''));
     const used = keep.some(function (k) { return k.file === it.file; });
     if (!used && /^media\/[^/]+\.mp4$/.test(String(it.file || ''))) { try { fs.unlinkSync(f); } catch (e) {} }
@@ -123,13 +123,23 @@ function tidy(q, now) {
     try { it.posted = await publish(it); it.postedAt = new Date().toISOString(); done.push(it.name); }
     catch (e) { it.failed = e.message; notify('נרות: העלאה נכשלה', it.name + ': ' + e.message); }
     fs.writeFileSync(QUEUE, JSON.stringify(q, null, 1));
-    // Itzik, 25.10: "סטורי נעלם ופוסט נשאר". A story that went up goes up again as a
-    // post, with the caption of that day's post in the same language.
-    if (it.kind === 'story' && it.posted && !it.feedPosted && it.asPost !== false) {
+    // Itzik, 25.10: "סטורי נעלם ופוסט נשאר", and with a gap: a story that went up
+    // today goes back into the queue as a post three days later (past Shabbat and
+    // yom tov), with the caption of its day's post in the same language. The video
+    // stays in docs/ner/media because tidy keeps any file a queued item still uses.
+    if (it.kind === 'story' && it.posted && !it.feedQueued && it.asPost !== false) {
       const twin = q.find(function (k) { return k.kind === 'post' && k.date === it.date && k.lang === it.lang && k.caption; });
-      const cap = it.feedCaption || (twin && twin.caption) || '';
-      try { it.feedPosted = await publish({ kind: 'post', file: it.file, caption: cap }); done.push(it.name + ' (גם כפוסט)'); }
-      catch (e) { it.feedFailed = e.message; notify('נרות: הסטורי כפוסט נכשל', it.name + ': ' + e.message); }
+      let d = new Date(it.date + 'T12:00:00Z');
+      d.setUTCDate(d.getUTCDate() + 3);
+      for (let i = 0; i < 7; i++) {
+        const ds = d.toISOString().slice(0, 10);
+        if (d.getUTCDay() !== 6 && !(await yomTov(ds))) break;
+        d.setUTCDate(d.getUTCDate() + 1);
+      }
+      const day = d.toISOString().slice(0, 10);
+      q.push({ name: it.name.replace(/^story/, 'post') + '-fromstory', date: day, time: d.getUTCDay() === 5 ? '09:00' : '20:00',
+        kind: 'post', lang: it.lang, city: it.city, file: it.file, caption: it.feedCaption || (twin && twin.caption) || '', approved: true, asPost: false });
+      it.feedQueued = day;
       fs.writeFileSync(QUEUE, JSON.stringify(q, null, 1));
     }
   }
