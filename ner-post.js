@@ -52,6 +52,11 @@ async function yomTov(date) {
     return (j.items || []).some(function (x) { return x.yomtov; });
   } catch (e) { return false; }
 }
+// Caption for a story that goes back up as a post (stories are CC0/PD and have no music, so no credit line).
+const FEED_CAPTION = {
+  he: 'זמני הדלקת נרות לכל עיר בעולם, לפי המיקום המדויק שלכם.\nבחינם, מתנה ממני על כל התמיכה.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #candletimes',
+  en: 'Candle lighting times for every city in the world, by your exact location.\nFree for every Jew, a gift from me for all your support.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes'
+};
 async function publish(it) {
   const p = { video_url: BASE + it.file };
   if (it.kind === 'story') p.media_type = 'STORIES';
@@ -128,17 +133,17 @@ function tidy(q, now) {
     // yom tov), with the caption of its day's post in the same language. The video
     // stays in docs/ner/media because tidy keeps any file a queued item still uses.
     if (it.kind === 'story' && it.posted && !it.feedQueued && it.asPost !== false) {
-      const twin = q.find(function (k) { return k.kind === 'post' && k.date === it.date && k.lang === it.lang && k.caption; });
       let d = new Date(it.date + 'T12:00:00Z');
       d.setUTCDate(d.getUTCDate() + 3);
-      for (let i = 0; i < 7; i++) {
+      for (let i = 0; i < 14; i++) {
         const ds = d.toISOString().slice(0, 10);
-        if (d.getUTCDay() !== 6 && !(await yomTov(ds))) break;
+        const taken = q.some(function (k) { return k.kind === 'post' && k.date === ds && k.lang === it.lang; });
+        if (d.getUTCDay() !== 6 && !taken && !(await yomTov(ds))) break;
         d.setUTCDate(d.getUTCDate() + 1);
       }
       const day = d.toISOString().slice(0, 10);
       q.push({ name: it.name.replace(/^story/, 'post') + '-fromstory', date: day, time: d.getUTCDay() === 5 ? '09:00' : '20:00',
-        kind: 'post', lang: it.lang, city: it.city, file: it.file, caption: it.feedCaption || (twin && twin.caption) || '', approved: true, asPost: false });
+        kind: 'post', lang: it.lang, city: it.city, file: it.file, caption: it.feedCaption || FEED_CAPTION[it.lang] || FEED_CAPTION.he, approved: true, asPost: false });
       it.feedQueued = day;
       fs.writeFileSync(QUEUE, JSON.stringify(q, null, 1));
     }
