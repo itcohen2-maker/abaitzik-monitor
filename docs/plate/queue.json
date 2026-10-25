@@ -35,8 +35,8 @@
   "id": "kiwi",
   "name": "קיווי: נוגדי חמצון (גרסה 12)",
   "order": 5,
-  "file": "media/plate-kiwi-v12b.mp4",
-  "poster": "media/plate-kiwi-v12b.jpg",
+  "file": "media/plate-kiwi-v12c.mp4",
+  "poster": "media/plate-kiwi-v12c.jpg",
   "approved": false,
   "screens": [
    [
@@ -66,7 +66,7 @@
    [
     "אצלי",
     "אני בהחלמה, והוא על הצלחת שלי כל יום",
-    "שניים ביום, עם הקליפה",
+    "שניים ביום",
     "זה לא תרופה, זה אוכל שעוזר לגוף"
    ]
   ],
