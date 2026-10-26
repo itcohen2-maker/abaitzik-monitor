@@ -1153,7 +1153,9 @@ async function recordPlateAction(m) {
     it.postedAt = new Date().toISOString();
     const job = 'מה בצלחת: איציק סימן באריח ש"' + it.name + '" (id ' + it.id + ') עלה לאינסטגרם. להוסיף לאתר: '
       + 'cd C:/Users/User/clip/plate_tile && python publish_plate.py ' + it.id
-      + ' . אם הסקריפט אומר שאין מלל, לחלץ פריימים מהסרטון, להעתיק את המלל של כל מסך כמו שהוא, לשמור כ texts.json ולהריץ עם --text texts.json. בלי מקפים.';
+      + ' . אם הסקריפט אומר שאין מלל, לחלץ פריימים מהסרטון, להעתיק את המלל של כל מסך כמו שהוא, לשמור כ texts.json ולהריץ עם --text texts.json. בלי מקפים.'
+      // 26.10, Itzik: "אפשר להכניס אותו להיילייט. אתה תעשה?" The Instagram API has no highlights, so Chrome does it.
+      + ' אחר כך, בכרום בחשבון abaitzik: לפתוח את הסטורי של היום, "הוספה להיילייט" (Highlight), לבחור את ההיילייט הקיים "מה בצלחת? 🍽️" ולשמור. לא ליצור היילייט חדש, לא לגעת בסטוריז אחרים. לבדוק בפרופיל שהוא נכנס אחרון בהיילייט.';
     require('child_process').spawnSync(process.execPath, ['pc-task.js', 'add', '--quiet', '--re', 'plate-' + it.id, job], { cwd: __dirname, encoding: 'utf8', timeout: 60000 });
   } else if (got.action === 'move') {
     const j = i + (Number(got.dir) < 0 ? -1 : 1);
