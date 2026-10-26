@@ -2424,6 +2424,17 @@ ${pushUi.css}
 #setBtn{margin-inline-start:0;background:linear-gradient(180deg,#9aa5b8,#6b7688);
  box-shadow:0 2px 6px rgba(20,30,60,.3),inset 0 1px 0 rgba(255,255,255,.28)}
 #setBtn:active{background:linear-gradient(180deg,#6b7688,#4c5566)}
+/* Itzik, 26.10: settings sat under the clock at the very top, so getting to it
+   meant two hands and a long reach. On the home screen it also floats at the
+   thumb, bottom left (end side in RTL), above the mic dock; hidden when locked. */
+#thumbSet{display:none;position:fixed;inset-inline-end:12px;z-index:30;
+ bottom:calc(70px + env(safe-area-inset-bottom));min-height:44px;padding:0 16px;border:0;border-radius:999px;cursor:pointer;
+ background:linear-gradient(180deg,#9aa5b8,#6b7688);color:#fff;font:700 15px Heebo,sans-serif;
+ box-shadow:0 2px 8px rgba(0,0,0,.3)}
+body:not(.inner) #thumbSet{display:block}
+.locked #thumbSet{display:none}
+#thumbSet:active{transform:scale(.96)}
+#thumbSet:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 #setBtn.updblink{animation:updbeat 2.6s ease-in-out infinite}
 .conn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
@@ -3936,6 +3947,7 @@ try{
 <header class="hd">
  <button type="button" class="conn" id="homeBtn" title="חזרה לבית" hidden>בית</button>
  <button type="button" class="conn" id="setBtn" title="הגדרות" aria-label="הגדרות" data-upd="20261026-worlds">הגדרות</button>
+ <button type="button" id="thumbSet" title="הגדרות" aria-label="הגדרות" data-new="1">⚙ הגדרות</button>
  <div class="hdtext">
   <!--
     The exact title he gave. Under it two different facts that were one line
@@ -17161,6 +17173,7 @@ on('clearAll',function(){
  });
 });
 document.getElementById('setBtn').onclick=function(){pane('z');};
+document.getElementById('thumbSet').onclick=function(){pane('z');};
 document.getElementById('homeBtn').onclick=function(){pane('h');};
 /*
   One card, or everything.
