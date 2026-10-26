@@ -65,19 +65,23 @@
    .then(function(r){done(r.ok);},function(){done(false);});
  }
  function card(it,i,len){
-  return '<div class="card'+(i===0&&!it.approved?' first':'')+(it.onSite?' done':'')+'" data-id="'+esc(it.id)+'">'
+  return '<div class="card'+(i===0&&!it.approved?' first':'')+(it.onSite||it.posted?' done':'')+'" data-id="'+esc(it.id)+'">'
    +'<div class="media"><video src="'+esc(it.file)+'" poster="'+esc(it.poster)+'" controls playsinline preload="none"></video></div>'
    +'<div class="meta"><span class="k">'+(i+1)+(i===0&&!it.approved?' · הבא בתור':'')+'</span>'
-   +'<span class="nm">'+esc(it.name)+'</span>'
+   +'<span class="nm">'+esc(it.name)+(it.posted?' · עלה היום':'')+'</span>'
    +'<div class="row">'
    +'<button type="button" data-up="'+esc(it.id)+'"'+(i===0?' disabled':'')+' aria-label="למעלה">↑</button>'
    +'<button type="button" data-down="'+esc(it.id)+'"'+(i===len-1?' disabled':'')+' aria-label="למטה">↓</button>'
    +'<button type="button" data-dl="'+esc(it.file)+'" data-nm="'+esc(it.id)+'">⬇️ הורדה</button>'
+   +(it.posted?'':'<button type="button" data-posted="'+esc(it.id)+'">✅ עלה</button>')
    +'<button type="button" class="del" data-del="'+esc(it.id)+'">🗑️ מחק</button>'
    +'</div></div></div>';
  }
+ // 26.10, Itzik: only what went up today and what is still coming.
+ function today(iso){return new Date(iso||0).toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'});}
  function draw(q){
-  q.sort(function(a,b){return a.order-b.order;});
+  var d0=today(Date.now());q=q.filter(function(x){return !x.posted||today(x.postedAt)===d0;});
+  q.sort(function(a,b){return (a.posted?1:0)-(b.posted?1:0)||a.order-b.order;});
   var h=q.length?'<div class="grid">'+q.map(function(x,i){return card(x,i,q.length);}).join('')+'</div>':'<p class="empty">אין סטוריז בתור</p>';
   h+='<p class="note">שינוי מגיע לשרת ומתעדכן כאן תוך דקה.</p>';
   document.getElementById('m').innerHTML=h;
@@ -87,6 +91,9 @@
   document.querySelectorAll('[data-up],[data-down]').forEach(function(b){b.addEventListener('click',function(){
    var id=b.getAttribute('data-up')||b.getAttribute('data-down'),dir=b.hasAttribute('data-up')?-1:1;
    b.disabled=true;act('move',id,{dir:dir},function(ok){if(ok)swap(id,dir);else{b.disabled=false;alert('לא נשלח, נסה שוב');}});});});
+  document.querySelectorAll('[data-posted]').forEach(function(b){b.addEventListener('click',function(){
+   var id=b.getAttribute('data-posted'),it=q.find(function(x){return x.id===id;});
+   b.disabled=true;act('posted',id,{},function(ok){if(ok){it.posted=true;it.postedAt=new Date().toISOString();draw(q);}else{b.disabled=false;alert('לא נשלח, נסה שוב');}});});});
   document.querySelectorAll('[data-del]').forEach(function(b){b.addEventListener('click',function(){
    var id=b.getAttribute('data-del'),it=q.find(function(x){return x.id===id;});
    if(b.getAttribute('data-sure')!=='1'){b.setAttribute('data-sure','1');b.textContent='בטוח? לחץ שוב';return;}

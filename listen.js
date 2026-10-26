@@ -1145,6 +1145,16 @@ async function recordPlateAction(m) {
   if (got.action === 'delete') {
     q.splice(i, 1);
     [it.file, it.poster].forEach(function (f) { if (/^media\/[^/]+$/.test(String(f || ''))) { try { fs.unlinkSync(path.join(__dirname, 'docs', 'plate', f)); } catch (e) {} } });
+  } else if (got.action === 'posted') {
+    // 26.10, Itzik: "תסמן". He uploads the story himself and ticks it here. The tile keeps it
+    // for the day, media-clean.js drops its video after that, and the PC adds it to /plate/.
+    if (it.posted) return;
+    it.posted = true;
+    it.postedAt = new Date().toISOString();
+    const job = 'מה בצלחת: איציק סימן באריח ש"' + it.name + '" (id ' + it.id + ') עלה לאינסטגרם. להוסיף לאתר: '
+      + 'cd C:/Users/User/clip/plate_tile && python publish_plate.py ' + it.id
+      + ' . אם הסקריפט אומר שאין מלל, לחלץ פריימים מהסרטון, להעתיק את המלל של כל מסך כמו שהוא, לשמור כ texts.json ולהריץ עם --text texts.json. בלי מקפים.';
+    require('child_process').spawnSync(process.execPath, ['pc-task.js', 'add', '--quiet', '--re', 'plate-' + it.id, job], { cwd: __dirname, encoding: 'utf8', timeout: 60000 });
   } else if (got.action === 'move') {
     const j = i + (Number(got.dir) < 0 ? -1 : 1);
     if (j < 0 || j >= q.length) return;

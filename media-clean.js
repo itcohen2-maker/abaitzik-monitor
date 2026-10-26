@@ -26,7 +26,7 @@ function waiting(dir) {
   let items = [];
   try { items = JSON.parse(fs.readFileSync(path.join(ROOT, dir, 'queue.json'), 'utf8')); } catch { return null; }
   // Whatever a waiting item points at, under any field name, is in use.
-  return JSON.stringify(items.filter(it => !it.posted));
+  return JSON.stringify(items.filter(it => !it.posted || Date.now() - Date.parse(it.postedAt || it.date || 0) < 1.5 * DAY));
 }
 
 // When the file first came into git. The mtime is no good: every pull rewrites it.

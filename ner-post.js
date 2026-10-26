@@ -85,7 +85,8 @@ function tidy(q, now) {
   const keep = q.filter(function (it) {
     const dueAt = Date.parse(it.date + 'T' + it.time + ':00');
     const cur = Date.parse(now.date + 'T' + now.hm + ':00');
-    const over = it.posted || it.failed || cur - dueAt >= 3 * 3600 * 1000;
+    // 26.10, Itzik: the tile keeps what went up today and what is coming; posted leaves the next day.
+    const over = it.posted ? it.date < now.date : (it.failed || cur - dueAt >= 3 * 3600 * 1000);
     if (over) gone.push(it);
     return !over;
   });
