@@ -73,9 +73,72 @@
   "onSite": false
  },
  {
+  "id": "brokoli",
+  "name": "ברוקולי: סולפורפן ונוגדי חמצון (גרסה 6)",
+  "order": 6,
+  "file": "media/plate-brokoli-v6.mp4",
+  "poster": "media/plate-brokoli-v6.jpg",
+  "approved": false,
+  "screens": [
+   {
+    "head": "ברוקולי",
+    "lines": [
+     "הירק שהתאים שלך אוהבים"
+    ]
+   },
+   {
+    "head": "סולפורפן",
+    "lines": [
+     "✓ במחקרים הוא מפעיל את",
+     "מנגנוני ההגנה של התאים עצמם"
+    ]
+   },
+   {
+    "head": "עוד טוב",
+    "lines": [
+     "✓ ויטמין C ונוגדי חמצון:",
+     "כוס ברוקולי נותנת בערך כמו תפוז שלם",
+     "✓ סיבים: טוב למעי",
+     "ונותן תחושת שובע"
+    ]
+   },
+   {
+    "head": "מה פחות",
+    "lines": [
+     "✕ בישול ארוך במים",
+     "מוציא ממנו חלק גדול מהטוב",
+     "✕ אצל חלק מהאנשים הוא עושה גזים,",
+     "אז להתחיל בכמות קטנה"
+    ]
+   },
+   {
+    "head": "איך בוחרים",
+    "lines": [
+     "ירוק כהה, פרחים סגורים וצפופים,",
+     "בלי צהוב"
+    ]
+   },
+   {
+    "head": "הטיפ",
+    "lines": [
+     "לחתוך ולחכות 40 דקות לפני הבישול.",
+     "במחקר ראו שככה נוצר יותר סולפורפן.",
+     "אחר כך אידוי קצר של 3 עד 4 דקות"
+    ]
+   },
+   {
+    "head": "אצלי",
+    "lines": [
+     "זה לא תרופה, זה אוכל."
+    ]
+   }
+  ],
+  "onSite": false
+ },
+ {
   "id": "limon",
   "name": "לימון",
-  "order": 7,
+  "order": 8,
   "file": "media/plate-05-limon.mp4",
   "poster": "media/plate-05-limon.jpg",
   "approved": false
@@ -83,7 +146,7 @@
  {
   "id": "gezer",
   "name": "גזר",
-  "order": 6,
+  "order": 7,
   "file": "media/plate-07-gezer.mp4",
   "poster": "media/plate-07-gezer.jpg",
   "approved": false
@@ -91,7 +154,7 @@
  {
   "id": "cherry",
   "name": "עגבניות שרי",
-  "order": 8,
+  "order": 9,
   "file": "media/plate-08-cherry.mp4",
   "poster": "media/plate-08-cherry.jpg",
   "approved": false
@@ -99,7 +162,7 @@
  {
   "id": "cottage",
   "name": "קוטג׳ עם סלק",
-  "order": 9,
+  "order": 10,
   "file": "media/plate-09-cottage.mp4",
   "poster": "media/plate-09-cottage.jpg",
   "approved": false
@@ -107,7 +170,7 @@
  {
   "id": "yogurt",
   "name": "יוגורט",
-  "order": 10,
+  "order": 11,
   "file": "media/plate-10-yogurt.mp4",
   "poster": "media/plate-10-yogurt.jpg",
   "approved": false
@@ -115,7 +178,7 @@
  {
   "id": "afuna",
   "name": "אפונה קפואה",
-  "order": 11,
+  "order": 12,
   "file": "media/plate-11-afuna.mp4",
   "poster": "media/plate-11-afuna.jpg",
   "approved": false
@@ -123,7 +186,7 @@
  {
   "id": "orez",
   "name": "אורז",
-  "order": 12,
+  "order": 13,
   "file": "media/plate-12-orez.mp4",
   "poster": "media/plate-12-orez.jpg",
   "approved": false
@@ -131,7 +194,7 @@
  {
   "id": "harif",
   "name": "אוכל חריף",
-  "order": 13,
+  "order": 14,
   "file": "media/plate-13-harif.mp4",
   "poster": "media/plate-13-harif.jpg",
   "approved": false
