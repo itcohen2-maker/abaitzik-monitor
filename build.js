@@ -2707,7 +2707,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 /* The three choices behind the יהודה tile. Its own sheet, so it borrows
    nothing from the panes and cannot disturb them. */
 .fttx{white-space:pre-wrap;text-align:right;line-height:1.6;font-size:16px;margin:10px 0;max-height:45vh;overflow:auto;user-select:text;-webkit-user-select:text}.fttx-en{margin:0 0 10px;font-size:13px;opacity:.75}.fttx-en div{white-space:pre-wrap;user-select:text;-webkit-user-select:text;margin-top:6px}.ysheet{position:fixed;inset:0;z-index:9999;background:rgba(10,14,22,.55);
- display:flex;align-items:flex-end;justify-content:center;padding:14px}
+ display:flex;align-items:flex-end;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 8px) 14px 14px}
 .ycard{background:#fff;color:#16202c;width:100%;max-width:420px;
  border-radius:18px;padding:18px 16px 14px;display:flex;flex-direction:column;gap:9px;
  box-shadow:0 -8px 40px rgba(0,0,0,.35);
