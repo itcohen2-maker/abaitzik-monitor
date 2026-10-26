@@ -993,6 +993,8 @@ body.editing .bn{display:none}
 
 
 .wh-empty{display:none!important}
+#worldHome .gt,#worldHome .ic{background:transparent!important;background-image:none!important;box-shadow:none!important}
+#worldHome details.wg.wg-hot>summary::after{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:currentColor;margin-inline-start:8px;vertical-align:middle}
 body.world #tidyBox,body.world #tileTools,body.world #swapBlocks{display:none!important}
 .wg-none{display:none}
 #worldHome{display:block}
@@ -2599,7 +2601,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-26T06:14:36.413Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-26T06:16:33.332Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4404,7 +4406,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='e6a7ffe041';
+var CODE_ID='1ba380e969';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -15448,8 +15450,9 @@ function wldKnown(g){
  return false;
 }
 function wldGroupOf(el){
- if(el.classList.contains('taskblink')||el.classList.contains('updblink'))return 'upd';
  var g=el.getAttribute('data-grp')||'';
+ if(g==='money')return g;
+ if(el.classList.contains('taskblink')||el.classList.contains('updblink'))return 'upd';
  return wldKnown(g)?g:'more';
 }
 function wldRec(el){
@@ -15477,6 +15480,8 @@ function wldEmpty(){
   var any=Array.prototype.some.call(list.children,function(c){return !c.hidden;});
   var want=!any;
   if(s.classList.contains('wg-none')!==want)s.classList.toggle('wg-none',want);
+  var hot=!!list.querySelector('.taskblink,.updblink');
+  if(s.classList.contains('wg-hot')!==hot)s.classList.toggle('wg-hot',hot);
  });
 }
 function wldCheck(recs){
