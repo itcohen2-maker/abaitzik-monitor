@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex"><title>לוק חדש למסך הבית</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&family=Frank+Ruhl+Libre:wght@500;700;900&display=swap" rel="stylesheet">
+<!-- 26.10.2026, Itzik: "לא יפה", asked to see examples. Three directions for the home screen,
+     static preview only, sample values. Nothing here is wired to the monitor. -->
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;overflow-x:hidden}
+body{font-family:Heebo,system-ui,sans-serif;min-height:100vh;background:#1b1b1b;-webkit-tap-highlight-color:transparent}
+.n{unicode-bidi:isolate;direction:ltr;display:inline-block;font-variant-numeric:tabular-nums}
+svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.sw{position:sticky;top:0;z-index:20;display:flex;gap:6px;padding:10px 12px;background:rgba(27,27,27,.94);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.sw button{flex:1;min-height:44px;border-radius:12px;border:0;background:#333;color:#eee;font:700 14px Heebo,sans-serif}
+.sw button.on{background:#fff;color:#111}
+.note{color:#bbb;font-size:13px;line-height:1.6;padding:10px 16px 0;margin:0}
+.d{display:none;min-height:calc(100vh - 64px);padding-bottom:110px}
+.d.on{display:block}
+.why{margin:20px 16px 0;padding:14px 16px;border-radius:14px;font-size:14px;line-height:1.65}
+.why b{display:block;font-size:15px;margin-bottom:4px}
+.nav{position:sticky;bottom:0;display:flex;justify-content:space-around;padding:8px 6px calc(8px + env(safe-area-inset-bottom));margin-top:24px}
+.nav a{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;font-weight:600;text-decoration:none;color:inherit;min-width:56px;position:relative}
+.nav .dot{position:absolute;top:-4px;inset-inline-start:30px;min-width:18px;height:18px;border-radius:9px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px}
+
+/* A: quiet and clean. One accent, line icons, the unread count is the headline. */
+#a{--g:#f4f5f3;--s:#fff;--ink:#16201d;--dim:#5b6763;--line:#e3e7e4;--acc:#0f6e5c;--acc-s:#e3f1ec;background:var(--g);color:var(--ink)}
+@media (prefers-color-scheme:dark){#a{--g:#101413;--s:#181e1c;--ink:#e9efec;--dim:#9aa8a3;--line:#26302d;--acc:#5fd0b3;--acc-s:#16302a}}
+#a .top{display:flex;justify-content:space-between;align-items:center;padding:18px 18px 4px}
+#a .top h1{margin:0;font-size:22px;font-weight:800}
+#a .top button{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--s);color:var(--dim);display:flex;align-items:center;justify-content:center}
+#a .hero{display:flex;align-items:center;justify-content:space-between;margin:14px 16px 0;padding:18px;border-radius:16px;background:var(--s);border:1px solid var(--line);text-decoration:none;color:inherit}
+#a .hero .big{font-size:56px;font-weight:800;line-height:1;color:var(--acc);letter-spacing:-.02em}
+#a .hero .lbl{font-size:16px;font-weight:700;margin-top:6px}
+#a .hero .sub{font-size:13px;color:var(--dim);margin-top:2px}
+#a .hero .go{width:44px;height:44px;border-radius:50%;background:var(--acc);color:var(--s);display:flex;align-items:center;justify-content:center}
+#a .ask{display:flex;align-items:center;gap:8px;margin:12px 16px 0;padding:6px 6px 6px 14px;border-radius:16px;background:var(--s);border:1px solid var(--line)}
+#a .ask span{flex:1;color:var(--dim);font-size:15px;padding-inline-start:8px}
+#a .ask .ib{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--dim)}
+#a .ask .mic{background:var(--acc);color:var(--s)}
+#a .sec{font-size:15px;font-weight:700;margin:26px 18px 10px}
+#a .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px}
+#a .t{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:14px;padding:14px 12px;border-radius:14px;background:var(--s);border:1px solid var(--line);font-size:14px;font-weight:600;text-decoration:none;color:inherit;min-height:88px}
+#a .t svg{color:var(--acc)}
+#a .t .c{position:absolute;top:10px;inset-inline-end:10px;min-width:20px;height:20px;border-radius:10px;background:var(--acc);color:var(--s);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 6px}
+#a .stat{display:flex;gap:14px;margin:18px 18px 0;font-size:13px;color:var(--dim)}
+#a .stat i{display:inline-block;width:8px;height:8px;border-radius:50%;background:#2fa36b;margin-inline-end:6px}
+#a .nav{background:var(--s);border-top:1px solid var(--line);color:var(--dim)}
+#a .nav a.on{color:var(--acc)}
+#a .nav .dot{background:var(--acc);color:var(--s)}
+#a .why{background:var(--acc-s)}
+
+/* B: warm and personal. Paper ground, a serif voice, two tones only. */
+#b{--g:#f5efe4;--s:#fffaf1;--ink:#2a2219;--dim:#76685a;--line:#e6dac7;--acc:#a8471a;--acc-s:#f3e0d2;--deep:#2f4a3e;background:var(--g);color:var(--ink)}
+#b .top{padding:22px 20px 0}
+#b .top h1{margin:0;font:700 30px/1.15 'Frank Ruhl Libre',serif}
+#b .top p{margin:4px 0 0;color:var(--dim);font-size:15px}
+#b .hero{display:block;margin:18px 16px 0;padding:20px;border-radius:16px;background:var(--deep);color:#f5efe4;text-decoration:none;box-shadow:0 6px 18px rgba(47,74,62,.22)}
+#b .hero .big{font:900 44px/1 'Frank Ruhl Libre',serif}
+#b .hero .lbl{font-size:17px;font-weight:600;margin-top:6px}
+#b .hero .cta{display:inline-flex;align-items:center;gap:6px;margin-top:14px;padding:10px 16px;border-radius:12px;background:#f5efe4;color:var(--deep);font-weight:700;font-size:15px}
+#b .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:18px 16px 0}
+#b .t{position:relative;display:flex;align-items:center;gap:12px;padding:16px 14px;border-radius:16px;background:var(--s);border:1px solid var(--line);font-size:16px;font-weight:600;text-decoration:none;color:inherit;min-height:64px}
+#b .t svg{color:var(--acc)}
+#b .t .c{margin-inline-start:auto;min-width:22px;height:22px;border-radius:11px;background:var(--acc);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 6px}
+#b .fab{position:fixed;bottom:calc(84px + env(safe-area-inset-bottom));inset-inline-end:18px;z-index:5;width:64px;height:64px;border-radius:50%;background:var(--acc);color:#fff;border:0;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px rgba(168,71,26,.35)}
+#b .fab svg{width:28px;height:28px}
+#b .nav{background:var(--s);border-top:1px solid var(--line);color:var(--dim)}
+#b .nav a.on{color:var(--acc)}
+#b .nav .dot{background:var(--acc);color:#fff}
+#b .why{background:var(--acc-s)}
+
+/* C: a list instead of tiles. Sorted by what changed, one status line per row. */
+#c{--g:#0f1115;--s:#171a20;--ink:#eceef2;--dim:#9198a6;--line:#252a33;--acc:#7aa7ff;--new:#ffb547;background:var(--g);color:var(--ink)}
+@media (prefers-color-scheme:light){#c{--g:#f6f7f9;--s:#fff;--ink:#14171c;--dim:#5d6573;--line:#e4e7ec;--acc:#2f62d6;--new:#b5680a}}
+#c .top{display:flex;justify-content:space-between;align-items:center;padding:18px 18px 0}
+#c .top h1{margin:0;font-size:22px;font-weight:800}
+#c .pill{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 14px;border-radius:999px;background:var(--acc);color:var(--g);font-weight:700;font-size:14px;text-decoration:none}
+#c .ask{display:flex;align-items:center;gap:8px;margin:14px 16px 0;padding:6px 14px 6px 6px;border-radius:14px;background:var(--s);border:1px solid var(--line);color:var(--dim)}
+#c .ask span{flex:1;font-size:15px}
+#c .ask .mic{width:44px;height:44px;border-radius:10px;background:var(--acc);color:var(--g);display:flex;align-items:center;justify-content:center}
+#c .grp{font-size:13px;font-weight:700;color:var(--dim);margin:22px 18px 6px}
+#c ul{list-style:none;margin:0 16px;padding:0;border-radius:14px;background:var(--s);border:1px solid var(--line);overflow:hidden}
+#c li a{display:flex;align-items:center;gap:12px;padding:13px 14px;text-decoration:none;color:inherit;min-height:60px}
+#c li+li a{border-top:1px solid var(--line)}
+#c li svg.i{color:var(--dim)}
+#c li .tx{flex:1;min-width:0}
+#c li .nm{font-size:16px;font-weight:600}
+#c li .st{font-size:13px;color:var(--dim);margin-top:1px}
+#c li.new svg.i{color:var(--new)}
+#c li.new .st{color:var(--new)}
+#c li .ch{width:18px;height:18px;color:var(--dim)}
+#c .nav{background:var(--s);border-top:1px solid var(--line);color:var(--dim)}
+#c .nav a.on{color:var(--acc)}
+#c .nav .dot{background:var(--new);color:#111}
+#c .why{background:var(--s);border:1px solid var(--line)}
+::selection{background:#0f6e5c;color:#fff}
+:focus-visible{outline:2px solid #5fd0b3;outline-offset:2px}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="msg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+<symbol id="globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+<symbol id="chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></symbol>
+<symbol id="file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/></symbol>
+<symbol id="phone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+<symbol id="flame" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></symbol>
+<symbol id="screen" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></symbol>
+<symbol id="palette" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="8" cy="10" r="1"/><circle cx="12" cy="7" r="1"/><circle cx="16" cy="10" r="1"/><path d="M12 22a3 3 0 0 1 0-6h2"/></symbol>
+<symbol id="user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+<symbol id="card" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M15 10h3"/><path d="M15 14h3"/><path d="M6 16h6"/></symbol>
+<symbol id="ticket" viewBox="0 0 24 24"><path d="M2 9a3 3 0 0 1 0 6v3a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3a3 3 0 0 1 0-6V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></symbol>
+<symbol id="layout" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></symbol>
+<symbol id="mic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><path d="M12 18v4"/></symbol>
+<symbol id="home" viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></symbol>
+<symbol id="target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+<symbol id="sliders" viewBox="0 0 24 24"><path d="M4 21v-7"/><path d="M4 10V3"/><path d="M12 21v-9"/><path d="M12 8V3"/><path d="M20 21v-5"/><path d="M20 12V3"/><path d="M2 14h4"/><path d="M10 8h4"/><path d="M18 16h4"/></symbol>
+<symbol id="back" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
+<symbol id="clip" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></symbol>
+<symbol id="list" viewBox="0 0 24 24"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></symbol>
+</svg>
+
+<div class="sw" role="tablist">
+ <button class="on" data-d="a">א שקט</button>
+ <button data-d="b">ב חם</button>
+ <button data-d="c">ג רשימה</button>
+</div>
+<p class="note">דוגמה בלבד, המספרים לדוגמה. אפשר ללחוץ בין א, ב ו־ג למעלה.</p>
+
+<!-- A -->
+<section class="d on" id="a">
+ <div class="top"><h1>בוקר טוב</h1><button aria-label="הגדרות"><svg class="i"><use href="#sliders"/></svg></button></div>
+ <a class="hero" href="#"><div><div class="big n">18</div><div class="lbl">תשובות שלא קראת</div><div class="sub">אין הוראות פתוחות</div></div><span class="go"><svg class="i"><use href="#back"/></svg></span></a>
+ <div class="ask"><span>כתוב או דבר...</span><span class="ib"><svg class="i"><use href="#clip"/></svg></span><span class="ib mic"><svg class="i"><use href="#mic"/></svg></span></div>
+ <div class="sec">הכל</div>
+ <div class="grid">
+  <a class="t" href="#"><svg class="i"><use href="#chart"/></svg>ניטור רשתות</a>
+  <a class="t" href="#"><svg class="i"><use href="#globe"/></svg>האתר</a>
+  <a class="t" href="#"><svg class="i"><use href="#layout"/></svg>דפי נחיתה</a>
+  <a class="t" href="#"><span class="c n">2</span><svg class="i"><use href="#msg"/></svg>צ׳אט באתר</a>
+  <a class="t" href="#"><svg class="i"><use href="#screen"/></svg>האתר שלי</a>
+  <a class="t" href="#"><svg class="i"><use href="#flame"/></svg>נרות</a>
+  <a class="t" href="#"><svg class="i"><use href="#phone"/></svg>סלינדה</a>
+  <a class="t" href="#"><svg class="i"><use href="#palette"/></svg>רינת</a>
+  <a class="t" href="#"><svg class="i"><use href="#user"/></svg>אלון</a>
+  <a class="t" href="#"><svg class="i"><use href="#ticket"/></svg>הרצאות</a>
+  <a class="t" href="#"><svg class="i"><use href="#card"/></svg>תעודת נכה</a>
+ </div>
+ <div class="stat"><span><i></i>הכל תקין</span><span>המחשב דלוק</span></div>
+ <div class="why"><b>מה השתנה</b>צבע אחד בלבד. אייקונים דקים במקום עיגולים מבריקים. המספר של התשובות הוא הדבר הכי גדול במסך. המיקרופון וההקלדה בשורה אחת. "המחשב דלוק" עובר לשורה קטנה בתחתית ולא צף מעל האריחים. עובד ביום ובלילה לפי הטלפון.</div>
+ <nav class="nav"><a class="on" href="#"><svg class="i"><use href="#home"/></svg>בית</a><a href="#"><span class="dot n">18</span><svg class="i"><use href="#msg"/></svg>תשובות</a><a href="#"><svg class="i"><use href="#chart"/></svg>רשתות</a><a href="#"><svg class="i"><use href="#target"/></svg>לידים</a><a href="#"><svg class="i"><use href="#file"/></svg>דוחות</a></nav>
+</section>
+
+<!-- B -->
+<section class="d" id="b">
+ <div class="top"><h1>בוקר טוב</h1><p>יום שני, 26 באוקטובר</p></div>
+ <a class="hero" href="#"><div class="big n">18</div><div class="lbl">תשובות מחכות לך</div><span class="cta">לקרוא <svg class="i"><use href="#back"/></svg></span></a>
+ <div class="grid">
+  <a class="t" href="#"><svg class="i"><use href="#chart"/></svg>ניטור רשתות</a>
+  <a class="t" href="#"><svg class="i"><use href="#globe"/></svg>האתר</a>
+  <a class="t" href="#"><svg class="i"><use href="#msg"/></svg>צ׳אט באתר<span class="c n">2</span></a>
+  <a class="t" href="#"><svg class="i"><use href="#flame"/></svg>נרות</a>
+  <a class="t" href="#"><svg class="i"><use href="#palette"/></svg>רינת</a>
+  <a class="t" href="#"><svg class="i"><use href="#user"/></svg>אלון</a>
+  <a class="t" href="#"><svg class="i"><use href="#phone"/></svg>סלינדה</a>
+  <a class="t" href="#"><svg class="i"><use href="#screen"/></svg>האתר שלי</a>
+  <a class="t" href="#"><svg class="i"><use href="#layout"/></svg>דפי נחיתה</a>
+  <a class="t" href="#"><svg class="i"><use href="#ticket"/></svg>הרצאות</a>
+  <a class="t" href="#"><svg class="i"><use href="#card"/></svg>תעודת נכה</a>
+ </div>
+ <div class="why"><b>מה השתנה</b>רקע בצבע נייר וכותרת באות מעוצבת, מרגיש כמו מחברת אישית ולא כמו מערכת. שני גוונים בלבד, ירוק עמוק וכתום שרוף. אריחים רחבים עם שם גדול, קל ללחוץ. המיקרופון הוא כפתור עגול אחד בפינה, תמיד זמין.</div>
+ <button class="fab" aria-label="לדבר"><svg class="i"><use href="#mic"/></svg></button>
+ <nav class="nav"><a class="on" href="#"><svg class="i"><use href="#home"/></svg>בית</a><a href="#"><span class="dot n">18</span><svg class="i"><use href="#msg"/></svg>תשובות</a><a href="#"><svg class="i"><use href="#chart"/></svg>רשתות</a><a href="#"><svg class="i"><use href="#target"/></svg>לידים</a><a href="#"><svg class="i"><use href="#file"/></svg>דוחות</a></nav>
+</section>
+
+<!-- C -->
+<section class="d" id="c">
+ <div class="top"><h1>בוקר טוב</h1><a class="pill" href="#"><svg class="i"><use href="#msg"/></svg><span class="n">18</span> חדשות</a></div>
+ <div class="ask"><span class="mic"><svg class="i"><use href="#mic"/></svg></span><span>כתוב או דבר...</span><svg class="i"><use href="#clip"/></svg></div>
+ <div class="grp">התעדכן היום</div>
+ <ul>
+  <li class="new"><a href="#"><svg class="i"><use href="#msg"/></svg><div class="tx"><div class="nm">צ׳אט באתר</div><div class="st">2 הודעות חדשות</div></div><svg class="i ch"><use href="#back"/></svg></a></li>
+  <li class="new"><a href="#"><svg class="i"><use href="#chart"/></svg><div class="tx"><div class="nm">ניטור רשתות</div><div class="st">דוח בוקר מוכן</div></div><svg class="i ch"><use href="#back"/></svg></a></li>
+  <li class="new"><a href="#"><svg class="i"><use href="#flame"/></svg><div class="tx"><div class="nm">נרות</div><div class="st">סטורי עלה הבוקר</div></div><svg class="i ch"><use href="#back"/></svg></a></li>
+ </ul>
+ <div class="grp">הכל</div>
+ <ul>
+  <li><a href="#"><svg class="i"><use href="#globe"/></svg><div class="tx"><div class="nm">האתר</div><div class="st">אין חדש</div></div><svg class="i ch"><use href="#back"/></svg></a></li>
+  <li><a href="#"><svg class="i"><use href="#palette"/></svg><div class="tx"><div class="nm">רינת</div><div class="st">אין חדש</div></div><svg class="i ch"><use href="#back"/></svg></a></li>
+  <li><a href="#"><svg class="i"><use href="#user"/></svg><div class="tx"><div class="nm">אלון</div><div class="st">אין חדש</div></div><svg class="i ch"><use href="#back"/></svg></a></li>
+  <li><a href="#"><svg class="i"><use href="#phone"/></svg><div class="tx"><div class="nm">סלינדה</div><div class="st">בבחינת אפל</div></div><svg class="i ch"><use href="#back"/></svg></a></li>
+  <li><a href="#"><svg class="i"><use href="#ticket"/></svg><div class="tx"><div class="nm">הרצאות</div><div class="st">אשקלון 11.11</div></div><svg class="i ch"><use href="#back"/></svg></a></li>
+  <li><a href="#"><svg class="i"><use href="#screen"/></svg><div class="tx"><div class="nm">האתר שלי</div><div class="st">אין חדש</div></div><svg class="i ch"><use href="#back"/></svg></a></li>
+ </ul>
+ <div class="why"><b>מה השתנה</b>בלי אריחים בכלל. רשימה אחת, ולמעלה רק מה שהתעדכן היום, עם שורה שאומרת מה קרה. רואים במבט אחד איפה יש משהו חדש בלי לפתוח כלום. הכי מהיר, הכי פחות "יפה" במובן הקלאסי.</div>
+ <nav class="nav"><a class="on" href="#"><svg class="i"><use href="#home"/></svg>בית</a><a href="#"><span class="dot n">18</span><svg class="i"><use href="#msg"/></svg>תשובות</a><a href="#"><svg class="i"><use href="#chart"/></svg>רשתות</a><a href="#"><svg class="i"><use href="#target"/></svg>לידים</a><a href="#"><svg class="i"><use href="#file"/></svg>דוחות</a></nav>
+</section>
+
+<a id="backMon" href="./" onclick="if(history.length>1&&document.referrer.indexOf(location.host)>-1){history.back();return false;}" style="position:fixed;z-index:99;bottom:calc(92px + env(safe-area-inset-bottom));inset-inline-start:10px;display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:999px;background:rgba(20,20,20,.85);color:#fff;font:700 15px Heebo,system-ui,sans-serif;text-decoration:none;box-shadow:0 4px 12px rgba(0,0,0,.25)">→ חזרה</a>
+<script>
+document.querySelectorAll('.sw button').forEach(function(b){b.onclick=function(){
+ document.querySelectorAll('.sw button').forEach(function(x){x.classList.toggle('on',x===b)});
+ document.querySelectorAll('.d').forEach(function(s){s.classList.toggle('on',s.id===b.dataset.d)});
+ scrollTo(0,0);
+}});
+document.querySelectorAll('a[href="#"]').forEach(function(a){a.onclick=function(e){e.preventDefault()}});
+</script>
+</body>
+</html>
