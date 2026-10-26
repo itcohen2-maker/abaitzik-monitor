@@ -69,11 +69,12 @@ function main() {
 
   const state = readState(ymd(now));
 
+  // One quiet retry a minute later before any error reaches Itzik (iron rule 17.10: errors only after checking again).
+  const search = () => parseMail(execFileSync('/usr/bin/python3', ['-I', path.join(ROOT, 'tools/mail-search.py'), '--days', '1', '--limit', '80'],
+    { encoding: 'utf8', timeout: 180000 }));
   let rows;
   try {
-    const out = execFileSync('/usr/bin/python3', ['-I', path.join(ROOT, 'tools/mail-search.py'), '--days', '1', '--limit', '80'],
-      { encoding: 'utf8', timeout: 180000 });
-    rows = parseMail(out);
+    try { rows = search(); } catch { spawnSync('sleep', ['60']); rows = search(); }
   } catch (e) {
     state.n += 1;
     fs.writeFileSync(STATE, JSON.stringify(state, null, 1));

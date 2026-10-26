@@ -41,11 +41,22 @@ def creds():
     return vals['GMAIL_USER'], vals['GMAIL_APP_PASSWORD'].replace(' ', '')
 
 
+def as_text(b, c):
+    # Hebrew mail often says iso-8859-8-i, which Python does not know; an unknown charset falls back to utf8
+    c = (c or 'utf8').lower()
+    if c.endswith('-i'):
+        c = c[:-2]
+    try:
+        return b.decode(c, 'replace')
+    except LookupError:
+        return b.decode('utf8', 'replace')
+
+
 def dec(v):
     if not v:
         return ''
     return ''.join(
-        p.decode(c or 'utf8', 'replace') if isinstance(p, bytes) else p
+        as_text(p, c) if isinstance(p, bytes) else p
         for p, c in email.header.decode_header(v))
 
 
@@ -58,7 +69,7 @@ def body(msg):
         raw = p.get_payload(decode=True)
         if raw is None:
             continue
-        text = raw.decode(p.get_content_charset() or 'utf8', 'replace')
+        text = as_text(raw, p.get_content_charset())
         if p.get_content_type() == 'text/plain':
             return text
         if p.get_content_type() == 'text/html' and not html:
