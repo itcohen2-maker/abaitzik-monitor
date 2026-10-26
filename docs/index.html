@@ -1188,6 +1188,11 @@ body.world #tidyBox,body.world #tileTools,body.world #swapBlocks{display:none!im
 :root:root[data-skin="8"][data-theme="dark"]{--pd-desk:#15110c;--pd-paper:#2a2620;--pd-line:#3c4656;--pd-margin:#8a4a44;--pd-ink:#e8e2d2;--pd-head:#a9c1f0;--pd-dim:#a39c8c;--pd-mark:rgba(255,235,59,.35);--pd-stamp:#ff7b6e;--pd-tick:#7fd39b}
 @media (prefers-color-scheme:dark){:root:root[data-skin="8"]:not([data-theme="light"]){--pd-desk:#15110c;--pd-paper:#2a2620;--pd-line:#3c4656;--pd-margin:#8a4a44;--pd-ink:#e8e2d2;--pd-head:#a9c1f0;--pd-dim:#a39c8c;--pd-mark:rgba(255,235,59,.35);--pd-stamp:#ff7b6e;--pd-tick:#7fd39b}}
 
+:root:root[data-skin="8"] .wh .wg-l>.gt{flex-wrap:wrap;row-gap:0;padding:4px 0}
+:root:root[data-skin="8"] .wh .wg-l>.gt b{white-space:nowrap}
+:root:root[data-skin="8"] .wh .wg-l>.gt small{flex:1 0 100%;padding-inline-start:28px;line-height:1.45;padding-bottom:4px}
+:root:root[data-skin="8"] .wh .wg-l>.gt.taskblink::before,:root:root[data-skin="8"] .wh .wg-l>.gt.glow::before,:root:root[data-skin="8"] .wh .wg-l>.gt.blink::before{position:static;inset:auto;width:18px;height:18px;background:none;filter:none;animation:none;z-index:auto}
+
 
 :root:root[data-skin="9"]{
  --rd-room:#2a1f17;--rd-case1:#f0e4c8;--rd-case2:#dccaa3;--rd-text:#3d2817;--rd-text2:#5a3d22;
@@ -2601,7 +2606,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-26T06:16:33.332Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-26T06:19:45.688Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4406,7 +4411,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='1ba380e969';
+var CODE_ID='c5daea34d3';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
