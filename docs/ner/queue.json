@@ -8,7 +8,9 @@
   "city": "תל אביב",
   "file": "media/post-he-mon-2610.mp4",
   "caption": "חדש באתר: נר נשמה, לזכור את מי שאהבנו.\nוזמני הדלקת נרות לכל עיר בעולם, בחינם.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #candletimes\n\nתמונות: ויקישיתוף, נחלת הכלל. מוזיקה: Wholesome, Kevin MacLeod (incompetech.com), CC BY 4.0.",
-  "approved": true
+  "approved": true,
+  "posted": "18113797151518327",
+  "postedAt": "2026-10-26T18:00:44.204Z"
  },
  {
   "name": "post-en-mon-2610",
@@ -19,7 +21,9 @@
   "city": "Melbourne",
   "file": "media/post-en-mon-2610.mp4",
   "caption": "New on the site: Ner Neshama, to remember the ones we loved.\nCandle lighting times for every city, free.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Cheery Monday\" by Kevin MacLeod (incompetech.com), CC BY 4.0.",
-  "approved": true
+  "approved": true,
+  "posted": "18071831135597993",
+  "postedAt": "2026-10-26T18:01:52.917Z"
  },
  {
   "name": "story-he-mon-2610",
@@ -30,7 +34,10 @@
   "city": "לונדון",
   "file": "media/story-he-mon-2610.mp4",
   "caption": "",
-  "approved": true
+  "approved": true,
+  "posted": "18047632535819642",
+  "postedAt": "2026-10-26T18:03:24.042Z",
+  "feedQueued": "2026-10-29"
  },
  {
   "name": "story-en-mon-2610",
@@ -41,7 +48,10 @@
   "city": "Mexico City",
   "file": "media/story-en-mon-2610.mp4",
   "caption": "",
-  "approved": true
+  "approved": true,
+  "posted": "17917628145263728",
+  "postedAt": "2026-10-26T18:04:01.938Z",
+  "feedQueued": "2026-10-29"
  },
  {
   "name": "post-he-tue-2710",
@@ -173,6 +183,30 @@
   "lang": "en",
   "city": "Haifa",
   "file": "media/story-en-sun-2510.mp4",
+  "caption": "Candle lighting times for every city in the world, by your exact location.\nFree for every Jew, a gift from me for all your support.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes",
+  "approved": true,
+  "asPost": false
+ },
+ {
+  "name": "post-he-mon-2610-fromstory",
+  "date": "2026-10-29",
+  "time": "20:00",
+  "kind": "post",
+  "lang": "he",
+  "city": "לונדון",
+  "file": "media/story-he-mon-2610.mp4",
+  "caption": "זמני הדלקת נרות לכל עיר בעולם, לפי המיקום המדויק שלכם.\nבחינם, מתנה ממני על כל התמיכה.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #candletimes",
+  "approved": true,
+  "asPost": false
+ },
+ {
+  "name": "post-en-mon-2610-fromstory",
+  "date": "2026-10-29",
+  "time": "20:00",
+  "kind": "post",
+  "lang": "en",
+  "city": "Mexico City",
+  "file": "media/story-en-mon-2610.mp4",
   "caption": "Candle lighting times for every city in the world, by your exact location.\nFree for every Jew, a gift from me for all your support.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes",
   "approved": true,
   "asPost": false
