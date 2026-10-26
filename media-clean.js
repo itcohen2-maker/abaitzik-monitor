@@ -37,6 +37,21 @@ function added(f) {
   return t ? t * 1000 : Date.now();
 }
 
+// A video linked in an answer of the last three days stays, so the chat has no
+// dead links (tests/linkify.test.js keeps the same three days).
+function linked() {
+  const dir = path.join(ROOT, 'data/chat/chat');
+  let text = '';
+  for (const f of fs.existsSync(dir) ? fs.readdirSync(dir) : []) {
+    try {
+      const m = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
+      if (m.from === 'claude' && Date.parse(m.at) > Date.now() - 3 * DAY) text += String(m.text || '') + '\n';
+    } catch {}
+  }
+  return text;
+}
+const chat = linked();
+
 const gone = [];
 for (const dir of QUEUES) {
   const used = waiting(dir);
@@ -46,7 +61,7 @@ for (const dir of QUEUES) {
   try { names = fs.readdirSync(media); } catch { continue; }
   for (const n of names) {
     const f = path.join(media, n);
-    if (used.includes(n) || Date.now() - added(f) < DAY) continue;
+    if (used.includes(n) || chat.includes(n) || Date.now() - added(f) < DAY) continue;
     gone.push(path.relative(ROOT, f));
   }
 }
