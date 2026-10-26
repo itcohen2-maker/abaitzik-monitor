@@ -19,9 +19,10 @@ function fixture(overrides) {
   }, overrides || {});
 }
 
-test('one design is defined, with no skin rules of its own', () => {
-  assert.strictEqual(ui.DESIGNS.length, 1);
-  assert.deepStrictEqual(ui.DESIGNS.map((d) => d.n), ['1']);
+test('four designs: today\'s look and the three worlds, with no skin 3 to 6', () => {
+  assert.strictEqual(ui.DESIGNS.length, 4);
+  assert.deepStrictEqual(ui.DESIGNS.map((d) => d.n), ['1', '7', '8', '9']);
+  assert.deepStrictEqual(ui.DESIGNS.map((d) => d.name), ['הרגיל', 'עיתון', 'פנקס', 'רדיו']);
   for (const n of ['3', '4', '5', '6']) {
     assert.ok(!ui.css.includes(`data-skin="${n}"`), `skin ${n} rules must be removed`);
   }

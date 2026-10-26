@@ -2341,6 +2341,7 @@ ${require('./lib/since-ui.js').css}
 ${require('./lib/activity-ui.js').css}
 ${require('./lib/home-ui.js').css}
 ${require('./lib/skins-ui.js').css}
+${require('./lib/worlds-ui.js').css}
 ${pushUi.css}
 .toast .toast-x{display:block;margin-top:8px;font:500 12.5px Heebo,sans-serif;opacity:.85}
 .undobar{position:fixed;z-index:81;inset-inline:12px;bottom:calc(76px + env(safe-area-inset-bottom));
@@ -19813,6 +19814,8 @@ on('gActLog',function(){pane('Lg');renderActLog();return false;});
 /*ITZIK:END*/
 ${require('./lib/home-ui.js').js}
 ${require('./lib/skins-ui.js').js}
+${require('./lib/worlds-ui.js').js}
+boot('worlds',worldSync);
 boot('design',dzBoot);
 ${pushUi.js(pushKey())}
 boot('ask',renderAsk);
