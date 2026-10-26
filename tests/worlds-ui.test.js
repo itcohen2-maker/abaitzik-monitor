@@ -103,3 +103,10 @@ test('dzApply calls worldSync and the label uses the name only', () => {
   assert.ok(skins.js.includes(".replace('✓ נבחר','').trim()"));
   assert.ok(!skins.js.includes('\\\\d'), 'the old number regex must be gone');
 });
+
+test('a money tile never rises to the open top block, even when it changed', () => {
+  const w = require('../lib/worlds-ui.js');
+  const at = w.js.indexOf("if(g==='money')return g;");
+  assert.ok(at > 0, 'money guard missing');
+  assert.ok(at < w.js.indexOf("return 'upd'"), 'money guard must come before the upd rule');
+});
