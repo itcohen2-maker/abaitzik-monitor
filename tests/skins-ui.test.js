@@ -1,9 +1,9 @@
 'use strict';
 /*
-  24.10.2026: the six designs (lib/skins-ui.js). Checks that the six skins are defined,
-  that the early script runs before the main style, that the picker is in the built page
-  outside the ITZIK markers, that the module JS parses, and that every storage call is
-  wrapped in try/catch.
+  24.10.2026: the designs (lib/skins-ui.js). 26.10.2026: only design 1 is left; skins 3 to 6
+  were removed. Checks that the early script runs before the main style, that the picker is in
+  the built page outside the ITZIK markers, that the module JS parses, and that every storage
+  call is wrapped in try/catch.
 */
 const { test } = require('node:test');
 const assert = require('node:assert');
@@ -19,22 +19,14 @@ function fixture(overrides) {
   }, overrides || {});
 }
 
-test('five designs are defined, each with its own skin rules and a night', () => {
-  assert.strictEqual(ui.DESIGNS.length, 5);
-  assert.deepStrictEqual(ui.DESIGNS.map((d) => d.n), ['1', '3', '4', '5', '6']);
+test('one design is defined, with no skin rules of its own', () => {
+  assert.strictEqual(ui.DESIGNS.length, 1);
+  assert.deepStrictEqual(ui.DESIGNS.map((d) => d.n), ['1']);
   for (const n of ['3', '4', '5', '6']) {
-    assert.ok(ui.css.includes(`:root:root[data-skin="${n}"][data-theme="dark"]{`), `night for skin ${n} missing`);
-  }
-  for (const n of ['3', '4', '5', '6']) {
-    assert.ok(ui.css.includes(`:root:root[data-skin="${n}"]{`), `token block for skin ${n} missing`);
+    assert.ok(!ui.css.includes(`data-skin="${n}"`), `skin ${n} rules must be removed`);
   }
   // Skin 1 is today's look: no rule of its own.
   assert.ok(!ui.css.includes('data-skin="1"'), 'skin 1 must not override anything');
-  assert.ok(!ui.css.includes('data-skin="2"'), 'skin 2 was dropped');
-  // Skin 4 falls back to solid cards when the phone asks for less transparency.
-  assert.ok(ui.css.includes('prefers-reduced-transparency:reduce'));
-  // Skin 6 has its black floating bar.
-  assert.ok(ui.css.includes(':root[data-skin="6"] .bn{'));
 });
 
 test('the early script is in the built head, before the main style, and reads designSkin', () => {
@@ -45,20 +37,18 @@ test('the early script is in the built head, before the main style, and reads de
   assert.ok(at < html.indexOf('<body>'));
 });
 
-test('the skin rules come after the base tokens and the dark block', () => {
+test('the picker CSS comes after the base tokens and the dark block', () => {
   const html = renderPage(fixture());
   const base = html.indexOf(':root[data-theme="dark"]{--ground:#0f1218');
-  const skin = html.indexOf(':root:root[data-skin="3"]{');
-  assert.ok(base > 0 && skin > 0);
-  assert.ok(skin > base, 'skin tokens must come after the base tokens');
+  const picker = html.indexOf('.dz-box{');
+  assert.ok(base > 0 && picker > 0);
+  assert.ok(picker > base, 'picker CSS must come after the base tokens');
 });
 
-test('the picker is in the built page, with six buttons, outside the ITZIK markers', () => {
+test('the picker is in the built page, with its button, outside the ITZIK markers', () => {
   const html = renderPage(fixture());
   assert.ok(html.includes('id="designBox"'));
-  for (const n of ['1', '3', '4', '5', '6']) {
-    assert.ok(html.includes(`data-design="${n}"`), `button ${n} missing`);
-  }
+  assert.ok(html.includes('data-design="1"'), 'button 1 missing');
   assert.ok(html.includes('✓ נבחר'));
   const box = html.indexOf('id="designBox"');
   const begin = html.indexOf('<!--ITZIK:BEGIN-->');
