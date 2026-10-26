@@ -3935,7 +3935,7 @@ try{
 -->
 <header class="hd">
  <button type="button" class="conn" id="homeBtn" title="חזרה לבית" hidden>בית</button>
- <button type="button" class="conn" id="setBtn" title="הגדרות" aria-label="הגדרות" data-upd="20261024-daynight">הגדרות</button>
+ <button type="button" class="conn" id="setBtn" title="הגדרות" aria-label="הגדרות" data-upd="20261026-worlds">הגדרות</button>
  <div class="hdtext">
   <!--
     The exact title he gave. Under it two different facts that were one line
