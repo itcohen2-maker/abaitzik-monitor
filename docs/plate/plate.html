@@ -48,7 +48,7 @@
 <body>
 <header>
   <h1>🍽️ מה בצלחת</h1>
-  <p class="lede">הסטוריז לפי סדר ההעלאה. מסמנים "מאשר" והסטורי עולה לאתר, לעמוד מה בצלחת. מורידים את הסימון והאישור מתבטל.</p>
+  <p class="lede">הסטוריז לפי סדר ההעלאה. אפשר לסדר ולמחוק. את הסטורי באתר מעלה איציק בעצמו.</p>
   <p class="lede"><a class="backbtn" href="../">⬅️ חזרה למוניטור</a></p>
   <p class="lede"><a href="https://abaitzik.com/plate/" rel="noopener">העמוד באתר</a></p>
 </header>
@@ -64,18 +64,11 @@
   fetch('https://ntfy.sh/'+SEND.t+'?filename=plate-action.json',{method:'PUT',headers:{Title:'plate-action'},body:JSON.stringify(body)})
    .then(function(r){done(r.ok);},function(){done(false);});
  }
- function st(it){
-  if(it.onSite)return '<span class="st ok">באתר</span>';
-  if(it.approved)return '<span class="st ok">אושר, עולה לאתר</span>';
-  return '<span class="st wait">מחכה לאישור</span>';
- }
  function card(it,i,len){
   return '<div class="card'+(i===0&&!it.approved?' first':'')+(it.onSite?' done':'')+'" data-id="'+esc(it.id)+'">'
    +'<div class="media"><video src="'+esc(it.file)+'" poster="'+esc(it.poster)+'" controls playsinline preload="none"></video></div>'
    +'<div class="meta"><span class="k">'+(i+1)+(i===0&&!it.approved?' · הבא בתור':'')+'</span>'
-   +'<span class="nm">'+esc(it.name)+'</span><span>'+st(it)+'</span>'
-   +'<label class="ok-box"><input type="checkbox" data-ok="'+esc(it.id)+'"'+(it.approved||it.onSite?' checked':'')+'> '+(it.onSite?'באתר. להוריד? מורידים את הסימון':'מאשר, להעלות לאתר')+'</label>'
-   +((it.approved||it.onSite)?'<span class="note">סימנת בטעות? מורידים את הסימון והאישור מתבטל'+(it.onSite?' והסטורי יורד מהאתר':'')+'</span>':'')
+   +'<span class="nm">'+esc(it.name)+'</span>'
    +'<div class="row">'
    +'<button type="button" data-up="'+esc(it.id)+'"'+(i===0?' disabled':'')+' aria-label="למעלה">↑</button>'
    +'<button type="button" data-down="'+esc(it.id)+'"'+(i===len-1?' disabled':'')+' aria-label="למטה">↓</button>'
@@ -86,7 +79,7 @@
  function draw(q){
   q.sort(function(a,b){return a.order-b.order;});
   var h=q.length?'<div class="grid">'+q.map(function(x,i){return card(x,i,q.length);}).join('')+'</div>':'<p class="empty">אין סטוריז בתור</p>';
-  h+='<p class="note">שינוי מגיע לשרת ומתעדכן כאן תוך דקה. אישור מעלה לאתר כשהמחשב דלוק.</p>';
+  h+='<p class="note">שינוי מגיע לשרת ומתעדכן כאן תוך דקה.</p>';
   document.getElementById('m').innerHTML=h;
   document.addEventListener('play',function(e){document.querySelectorAll('video').forEach(function(v){if(v!==e.target)v.pause();});},true);
   function swap(id,dir){var i=q.findIndex(function(x){return x.id===id;}),j=i+dir;if(j<0||j>=q.length)return;
@@ -98,13 +91,6 @@
    var id=b.getAttribute('data-del'),it=q.find(function(x){return x.id===id;});
    if(b.getAttribute('data-sure')!=='1'){b.setAttribute('data-sure','1');b.textContent='בטוח? לחץ שוב';return;}
    b.disabled=true;act('delete',id,{},function(ok){if(ok){q.splice(q.indexOf(it),1);draw(q);}else{b.disabled=false;alert('לא נשלח, נסה שוב');}});});});
-  document.querySelectorAll('[data-ok]').forEach(function(b){b.addEventListener('change',function(){
-   var id=b.getAttribute('data-ok'),on=b.checked,it=q.find(function(x){return x.id===id;});b.disabled=true;
-   act(on?'approve':'unapprove',id,{},function(ok){b.disabled=false;
-    if(!ok){b.checked=!on;alert('לא נשלח, נסה שוב');return;}
-    var s=b.closest('.meta').querySelector('.st');
-    if(on){it.approved=true;s.className='st ok';s.textContent='אושר, עולה לאתר';}
-    else{var was=it.onSite;it.approved=false;s.className='st wait';s.textContent=was?'האישור בוטל, יורד מהאתר':'האישור בוטל';}});});});
   document.querySelectorAll('[data-dl]').forEach(function(b){b.addEventListener('click',function(){
    var src=b.getAttribute('data-dl'),nm=b.getAttribute('data-nm')+'.mp4',t0=b.textContent;
    function plain(){var a=document.createElement('a');a.href=src;a.download=nm;document.body.appendChild(a);a.click();a.remove();b.textContent=t0;}

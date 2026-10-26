@@ -4161,7 +4161,7 @@ ${require('./lib/home-ui.js').html}
     made for pushing candletimes, numbered like Rinat's list: the bio
     comparison, the how-to page, the live candle stories.
   -->
-  <button type="button" class="gt gNer" id="gPlate" data-new="1"><b>🍽️ מה בצלחת</b><small>הסטוריז לפי הסדר, מאשרים והם עולים לאתר</small></button>
+  <button type="button" class="gt gNer" id="gPlate" data-new="1"><b>🍽️ מה בצלחת</b><small>הסטוריז לפי הסדר, אפשר לסדר ולמחוק</small></button>
   <button type="button" class="gt gNer" id="gNerStyles" data-new="1"${NER_LOW?' data-upd="ner-need-'+NER_LOW+'"':''}><b>🕯️ candle.times</b><small>${NER_LOW?'התור נגמר ב '+NER_LOW.slice(8)+'.'+NER_LOW.slice(5,7)+', סמן "תכין לי עוד" בפנים':'הפוסט והסטורי הבאים, לפי הסדר'}</small></button>
   <!--
     איציק, 1.10: "שים כפתור יעודי במוניטור, ככה אני לא מוצא". Every finished
