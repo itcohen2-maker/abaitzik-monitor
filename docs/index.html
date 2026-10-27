@@ -2614,7 +2614,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-27T13:53:08.535Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-27T13:53:58.698Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2774,7 +2774,7 @@ try{
   <button type="button" class="gt gInv" data-grp="money" id="gInv" data-upd="2026-10-15-inv"><b>🧾 חשבוניות</b><small>ממוספר. מ 3.10 והלאה</small></button>
   <button type="button" class="gt gWin" data-grp="net" id="gWin" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <button type="button" class="gt gReel" data-grp="net" id="gReels" data-upd="20261024-26"><b>🎬 הרילים שלי</b><small>חדש: 26 כתם הקפה, פרק 2 למותגים</small></button>
-  <button type="button" class="gt gFut" data-grp="net" id="gFut" data-upd="20261027-fut16"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור, 08 שרירים והגיל, 09 קונטרה למינוס, 16 אורז כמו פסטה</small></button>
+  <button type="button" class="gt gFut" data-grp="net" id="gFut" data-upd="20261027-fut17"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור, 08 שרירים והגיל, 09 קונטרה למינוס, 16 אורז כמו פסטה</small></button>
   <button type="button" class="gt gTom" data-grp="work" id="gTom" data-new="1" data-upd="2026-10-27-profile"><b>🧭 טום ממליץ</b><small>חדש: תמונת פרופיל ו 4 מודעות מתוקנות</small></button>
   <button type="button" class="gt gDudi" data-grp="work" id="gDudi" data-new="1"><b>🥩 דודי בשר</b><small>חשבוניות יוני ויולי לשליחה</small></button>
   <button type="button" class="gt gLaw" data-grp="home" id="gLaw" hidden><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
@@ -4427,7 +4427,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='d04525228d';
+var CODE_ID='ce33bae99d';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10481,9 +10481,7 @@ function futList(){
   if(k===null||k===undefined)return;
   close();
   var it=FUT_ITEMS[+k];if(k===''||!it)return;
-  if(it.he||it.tx)return futText(it);
-  if(it.u)window.open(it.u,'_blank','noopener');
-  else fileOpen(it.r);
+  futText(it);
  };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
@@ -10495,14 +10493,15 @@ function futText(it){
  w.setAttribute('role','dialog');
  w.setAttribute('aria-label','המלל של הריל');
  var mine=srcText('fut:'+it.n);
- var body=mine||it.he||it.tx;
+ var body=mine||it.he||it.tx||'';
  w.innerHTML='<div class="ycard">'
   +'<b>'+esc(it.n)+' · המלל</b>'
   +'<small>'+esc(it.t)+(mine?' · ✏️ הגרסה שערכת בפתקים':'')+'</small>'
-  +(mine||it.he?'<div class="fttx" dir="rtl">'+esc(body)+'</div>':'')
+  +((mine||it.he||it.r)?'<div class="fttx" dir="rtl" id="ftBody">'+esc(body)+'</div>':'')
   +(it.tx?'<details class="fttx-en"><summary>המקור באנגלית</summary><div dir="ltr">'+esc(it.tx)+'</div></details>':'')
   +'<button type="button" class="yb" data-a="copy">📋 העתקת התרגום</button>'
   +'<button type="button" class="yb" data-a="note">📝 לפתקים שלי, לעריכה</button>'
+  +(it.r?'<button type="button" class="yb" data-a="file">▶️ פתיחת הקובץ</button>':'')
   +(it.u?'<button type="button" class="yb" data-a="src">▶️ הסרטון המקורי</button>':'')
   +'<button type="button" class="yb" data-a="back">חזרה לרשימה</button>'
   +'<button type="button" class="yb yx" data-a="close">סגירה</button>'
@@ -10527,12 +10526,20 @@ function futText(it){
   close();
   if(a==='back')return futList();
   if(a==='src')return window.open(it.u,'_blank','noopener');
+  if(a==='file')return fileOpen(it.r);
   if(a==='note'){
    toNote('ריל עתידי '+it.n,body,'fut:'+it.n);
   }
  };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
+ if(!body&&it.r&&/.txt$/i.test(it.r)){
+  var fe=fileEntry(it.r);
+  if(fe)fileBlob(fe).then(function(b){return b.text();}).then(function(t){
+   body=String(t||'').trim();
+   var fb=document.getElementById('ftBody');if(fb)fb.textContent=body;
+  }).catch(function(){});
+ }
 }
 on('gFut',futSheet);
 var STK=null,STK_URL={},STK_ALON={},STK_LINK='';

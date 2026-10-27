@@ -4201,7 +4201,7 @@ ${require('./lib/home-ui.js').html}
   -->
   <button type="button" class="gt gWin" data-grp="net" id="gWin" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <button type="button" class="gt gReel" data-grp="net" id="gReels" data-upd="20261024-26"><b>🎬 הרילים שלי</b><small>חדש: 26 כתם הקפה, פרק 2 למותגים</small></button>
-  <button type="button" class="gt gFut" data-grp="net" id="gFut" data-upd="20261027-fut16"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור, 08 שרירים והגיל, 09 קונטרה למינוס, 16 אורז כמו פסטה</small></button>
+  <button type="button" class="gt gFut" data-grp="net" id="gFut" data-upd="20261027-fut17"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור, 08 שרירים והגיל, 09 קונטרה למינוס, 16 אורז כמו פסטה</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
@@ -14076,9 +14076,10 @@ function futList(){
   if(k===null||k===undefined)return;
   close();
   var it=FUT_ITEMS[+k];if(k===''||!it)return;
-  if(it.he||it.tx)return futText(it);
-  if(it.u)window.open(it.u,'_blank','noopener');
-  else fileOpen(it.r);
+  // 27.10, Itzik: "אין לי אפשרות לשנות או להגיב על הטקסט". Every item opens
+  // its sheet now, also the ones that are only a file: there the words go
+  // to his notes for editing like any other text, and the file is one button.
+  futText(it);
  };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
@@ -14093,14 +14094,15 @@ function futText(it){
  w.setAttribute('role','dialog');
  w.setAttribute('aria-label','המלל של הריל');
  var mine=srcText('fut:'+it.n);
- var body=mine||it.he||it.tx;
+ var body=mine||it.he||it.tx||'';
  w.innerHTML='<div class="ycard">'
   +'<b>'+esc(it.n)+' · המלל</b>'
   +'<small>'+esc(it.t)+(mine?' · ✏️ הגרסה שערכת בפתקים':'')+'</small>'
-  +(mine||it.he?'<div class="fttx" dir="rtl">'+esc(body)+'</div>':'')
+  +((mine||it.he||it.r)?'<div class="fttx" dir="rtl" id="ftBody">'+esc(body)+'</div>':'')
   +(it.tx?'<details class="fttx-en"><summary>המקור באנגלית</summary><div dir="ltr">'+esc(it.tx)+'</div></details>':'')
   +'<button type="button" class="yb" data-a="copy">📋 העתקת התרגום</button>'
   +'<button type="button" class="yb" data-a="note">📝 לפתקים שלי, לעריכה</button>'
+  +(it.r?'<button type="button" class="yb" data-a="file">▶️ פתיחת הקובץ</button>':'')
   +(it.u?'<button type="button" class="yb" data-a="src">▶️ הסרטון המקורי</button>':'')
   +'<button type="button" class="yb" data-a="back">חזרה לרשימה</button>'
   +'<button type="button" class="yb yx" data-a="close">סגירה</button>'
@@ -14127,12 +14129,21 @@ function futText(it){
   close();
   if(a==='back')return futList();
   if(a==='src')return window.open(it.u,'_blank','noopener');
+  if(a==='file')return fileOpen(it.r);
   if(a==='note'){
    toNote('ריל עתידי '+it.n,body,'fut:'+it.n);
   }
  };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
+ // A text kept as a file (item 06) is read into the sheet, so it can be edited too.
+ if(!body&&it.r&&/\.txt$/i.test(it.r)){
+  var fe=fileEntry(it.r);
+  if(fe)fileBlob(fe).then(function(b){return b.text();}).then(function(t){
+   body=String(t||'').trim();
+   var fb=document.getElementById('ftBody');if(fb)fb.textContent=body;
+  }).catch(function(){});
+ }
 }
 on('gFut',futSheet);
 /*
