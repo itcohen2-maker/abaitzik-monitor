@@ -20,6 +20,9 @@ const CHAT = path.join(ROOT, 'data/chat/chat');
 const STATE = path.join(ROOT, 'data/status/mail-check.json');
 const HOURS = [8, 10, 12, 14, 16];
 const LINE = /^\[(\d+)\] (\d{2})\.(\d{2})\.(\d{4}) (\d{2}):(\d{2}) \| (.*)$/;
+// What counts as an invoice or receipt by its subject, and what does not (card statements, ads).
+const RECEIPT = /(קבלה|חשבונית|receipt|invoice)/i;
+const NOT_RECEIPT = /(פירוט|פרסומת|newsletter)/i;
 
 const pad = n => String(n).padStart(2, '0');
 const ymd = d => `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
@@ -106,7 +109,32 @@ function main() {
   const text = `בדיקת מייל ${state.n} (${hm(now)}): ${k} מיילים חדשים.\n` +
     fresh.slice(0, 8).map(r => `${r.from}: ${r.subject}`).join('\n') +
     (k > 8 ? `\nועוד ${k - 8}.` : '');
-  say(now, state, text, 'בדיקת מייל', `${k} חדשים`);
+  say(now, state, text + bills(fresh), 'בדיקת מייל', `${k} חדשים`);
+}
+
+/*
+  27.10.2026, Itzik: invoices and receipts are collected automatically after each mail check,
+  "אם זה לקוח אנחנו שואלים אותו במוניטור". In his own monitor a PC task saves each one as a PDF
+  in his Drive month folder and prints it (iron rule: every invoice is recorded, he is told, it
+  is printed). A customer is asked in the same chat line instead; nothing is collected unasked.
+  A card statement (פירוט) is not an invoice. Returns the note for the chat line.
+*/
+function bills(fresh) {
+  const found = fresh.filter(r => RECEIPT.test(r.subject) && !NOT_RECEIPT.test(r.subject + ' ' + r.from));
+  if (!found.length) return '';
+  const list = found.map(r => `${r.at.toLocaleDateString('he-IL')} ${r.from}: ${r.subject}`).join('\n');
+  if (require('./lib/instance.js').name !== 'abaitzik') {
+    return `\n\n🧾 נמצאו ${found.length} חשבוניות או קבלות:\n${list}\nלשמור אותן אצלך ולהדפיס? כתוב "אסוף חשבוניות".`;
+  }
+  const job = 'חשבוניות וקבלות חדשות מבדיקת המייל (כלל ברזל 27.10: לרשום, להודיע, להדפיס). לכל אחת:\n' + list + '\n\n'
+    + '1) בג׳ימייל בכרום (itcohen2) למצוא את המייל לפי השולח, הנושא והתאריך. '
+    + '2) אם יש PDF מצורף, להוריד אותו; אם אין, להפיק PDF מהמייל עצמו (העתק קבלה: ספק, תאריך, סכום, מספר עסקה). '
+    + 'אם החשבונית רק מאחורי כניסה לאתר הספק, לא להקליד סיסמה: לכתוב לאיציק שצריך להיכנס. '
+    + '3) לשמור ב G:/My Drive/חשבוניות והוצאות 2026/<חודש> (לדוגמה "10 אוקטובר 2026") בשם "YYYY-MM-DD ספק סכום.pdf", בלי כפילות של קובץ שכבר שם. '
+    + '4) להדפיס למדפסת Brother MFC-L2710DW series בשיטת kiosk-printing (זיכרון: print-only-with-approval). '
+    + '5) לענות שורה אחת: מה נשמר, הסכום, ושנשלח להדפסה. לא דפי פירוט אשראי, לא לולוס, לא מסמכים רפואיים.';
+  spawnSync('/usr/bin/node', ['pc-task.js', 'add', '--quiet', '--re', 'mail-check-bills', job], { cwd: ROOT, stdio: 'ignore', timeout: 60000 });
+  return `\n\n🧾 ${found.length} חשבוניות או קבלות: המחשב שומר אותן בדרייב ושולח להדפסה.`;
 }
 
 main();
