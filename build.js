@@ -4240,7 +4240,7 @@ ${require('./lib/home-ui.js').html}
   -->
   <!-- 13.10. Itzik: "תעשה תקייה של טום ממליץ ואריח טום ממליץ". Scripts of
        Tom's posts, four ad images, the site copy, and the draft of his own site. -->
-  <button type="button" class="gt gTom" data-grp="work" id="gTom" data-new="1" data-upd="2026-10-27-campaign"><b>🧭 טום ממליץ</b><small>הקמפיין החדש: 4 סרטונים, 28 מודעות ותוכנית</small></button>
+  <button type="button" class="gt gTom" data-grp="work" id="gTom" data-new="1" data-upd="2026-10-27-profile"><b>🧭 טום ממליץ</b><small>חדש: תמונת פרופיל ו 4 מודעות מתוקנות</small></button>
   <!-- 13.10 night: the Clalit agreement moved inside the lecture tile (item 05). -->
   <!--
     11.10. Itzik: "a card I can send from, and later we delete it". The June
@@ -15572,6 +15572,12 @@ on('gClalit',clalitSheet);
   only once they are in the monitor; Drive links (u) open the folder.
 */
 var TOM_ITEMS=[
+// 27.10 afternoon: the Microsoft profile picture, and the 4 campaign ads with the fixed opening (no white screen).
+ {n:'🖼️',t:'תמונת פרופיל IT Solution (למיקרוסופט)',r:'it-solution-profile.png'},
+ {n:'🎬',t:'מתוקן: העוזר האישי, בלי פתיחה ריקה',r:'ads-fix-v1-assistant.mp4'},
+ {n:'🎬',t:'מתוקן: נתקעת? אנחנו ממשיכים',r:'ads-fix-v2-stuck.mp4'},
+ {n:'✨',t:'מתוקן: בנית ב Base44?',r:'ads-fix-m1-base44.mp4'},
+ {n:'✨',t:'מתוקן: 100 מיילים ביום',r:'ads-fix-m4-emails.mp4'},
 // 27.10: the new campaign. Videos and ads stay in Drive (Pages storage); the plan is a small private file.
  {n:'📣',t:'הקמפיין 27.10: מה מעלים, תקציב ודומיין',r:'tom-campaign-oct27.txt'},
  {n:'🎬',t:'סרטון 1: העוזר האישי (המוניטור)',u:'https://drive.google.com/file/d/1lYfRGw-w_7eV2Pa2yIiwwDdgVzAXAQMK/view'},
