@@ -4312,23 +4312,6 @@ ${require('./lib/home-ui.js').html}
   <a class="ic icNew" data-grp="proj" id="icSiteChat" href="https://itsolution-il.vercel.app/#chat" target="_blank" rel="noopener" data-new="1" title="${'לידים מהצ׳אט באתר: ' + siteLeads().n + ' בסך הכל, ' + siteLeads().today + ' היום'}"><span class="c c-its"><em class="icN${siteLeads().today ? ' hot' : ''}">${siteLeads().n}</em>
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01"/></svg></span>צ׳אט באתר</a>
   <!--
-    איליי. איציק, 25.9: "אני לא רואה כפתור איליי", and then, when it opened
-    the old mockup page: "כפתור על מסך הבית, לא כאתר". It is a button of the
-    monitor now, not a link out. Pressing it opens the status of Ilay's
-    monitor, and the circle itself is green when his monitor is fine and red
-    on a break, painted by paintTenantsTile from the health check. Nothing of
-    Ilay's content reaches this page, only that one colour.
-  -->
-  <a class="ic" data-grp="work" href="#" id="icIly"><span class="c c-el" id="icIlyC">
-   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 21c1.2-4 4-6 7.5-6s6.3 2 7.5 6"/></svg></span>איליי</a>
-  <!--
-    רינת. Itzik, 8.10, by voice: "תעשה אייקון של המוניטור של רינת, שיראה תמיד
-    אם הוא אדום או ירוק, ליד איליי". Same as Ilay's: only the colour of her
-    monitor's health check, painted by paintTenantsTile, nothing of hers.
-  -->
-  <a class="ic" data-grp="work" href="#" id="icRn"><span class="c c-rn" id="icRnC">
-   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.8 1.6-1.6 0-1.2-1-1.5-1-2.6 0-1 .8-1.6 1.8-1.6H17a4 4 0 0 0 4-4C21 6.6 17 3 12 3z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7" r="1"/></svg></span>רינת</a>
-  <!--
     אלון. Itzik, 11.10: "שים לי אייקון כמו של רינת עם קוד שאשלח לו". Same as
     Rinat's: the colour of his monitor's health check, and inside, the card
     with his link and entry code to send him.
@@ -12410,17 +12393,12 @@ function paintTenantsTile(){
  if(!b)return;
  var T=D.tenants||[];
  if(!T.length)return;
- b.hidden=!!document.getElementById('icIly');
+ // 27.10, Itzik: the Ilay and Rinat icons are gone; this generic tile stays hidden as before.
+ b.hidden=true;
  var bad=T.filter(function(t){return t.state!=='ok';});
  b.querySelector('b').textContent=(bad.length?'🔴 ':'🟢 ')+(T.length===1?T[0].title:'מוניטורים אחרים');
  b.querySelector('small').textContent=bad.length?'נתק: '+bad.map(function(t){return t.title;}).join(', '):'הכל תקין';
  b.style.background=bad.length?'linear-gradient(180deg,#ef5350,#b71c1c)':'linear-gradient(180deg,#66bb6a,#1b5e20)';
- var c=document.getElementById('icIlyC');
- var badIly=T.filter(function(t){return t.id==='ily'&&t.state!=='ok';});
- if(c)c.style.background=badIly.length?'linear-gradient(160deg,#ef5350,#b71c1c)':'linear-gradient(160deg,#66bb6a,#1b5e20)';
- var rc=document.getElementById('icRnC');
- var badRn=T.filter(function(t){return t.id==='rinat'&&t.state!=='ok'&&!t.paused;});
- if(rc&&T.some(function(t){return t.id==='rinat';})){rc.style.background=badRn.length?'linear-gradient(160deg,#ef5350,#b71c1c)':'linear-gradient(160deg,#66bb6a,#1b5e20)';rc.classList.toggle('tdown',!!badRn.length);}
  var ac=document.getElementById('icAlC');
  var badAl=T.filter(function(t){return t.id==='alon'&&t.state!=='ok'&&!t.paused;});
  if(ac&&T.some(function(t){return t.id==='alon';})){ac.style.background=badAl.length?'linear-gradient(160deg,#ef5350,#b71c1c)':'linear-gradient(160deg,#66bb6a,#1b5e20)';ac.classList.toggle('tdown',!!badAl.length);}
@@ -12472,10 +12450,6 @@ on('gTenants',function(){
  pane('N3');renderTenants();
 });
 (function(){
- var a=document.getElementById('icIly');
- if(a)a.onclick=function(e){e.preventDefault();pane('N3');renderTenants();};
- var r=document.getElementById('icRn');
- if(r)r.onclick=function(e){e.preventDefault();pane('N3');renderTenants();};
  var al=document.getElementById('icAl');
  if(al)al.onclick=function(e){e.preventDefault();pane('N3');renderTenants();};
 })();
