@@ -23,7 +23,9 @@ function setup(extra) {
   }, extra || {}));
   return new Promise((resolve) => up.server.listen(0, '127.0.0.1', () => {
     const url = 'http://127.0.0.1:' + up.server.address().port;
-    resolve({ up, url, data, base, state, close: () => new Promise((r) => { up.server.closeAllConnections(); up.server.close(r); }) });
+    resolve({ up, url, data, base, state, close: () => new Promise((r) => { up.server.closeAllConnections(); up.server.close(r); })
+      // 27.10: every run left its up-* folder in /tmp, 17,000 of them and 11GB, until the disk filled and push failed.
+      .then(() => fs.rmSync(base, { recursive: true, force: true })) });
   }));
 }
 const H = (code) => ({ 'X-Monitor-Code': code === undefined ? CODE : code });
