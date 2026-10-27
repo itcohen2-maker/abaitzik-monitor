@@ -4240,7 +4240,7 @@ ${require('./lib/home-ui.js').html}
   -->
   <!-- 13.10. Itzik: "תעשה תקייה של טום ממליץ ואריח טום ממליץ". Scripts of
        Tom's posts, four ad images, the site copy, and the draft of his own site. -->
-  <button type="button" class="gt gTom" data-grp="work" id="gTom" data-new="1" data-upd="2026-10-20-campaign"><b>🧭 טום ממליץ</b><small>הקמפיין הממומן: תוכנית, שלושה סרטונים ו 6 תמונות</small></button>
+  <button type="button" class="gt gTom" data-grp="work" id="gTom" data-new="1" data-upd="2026-10-27-campaign"><b>🧭 טום ממליץ</b><small>הקמפיין החדש: 4 סרטונים, 28 מודעות ותוכנית</small></button>
   <!-- 13.10 night: the Clalit agreement moved inside the lecture tile (item 05). -->
   <!--
     11.10. Itzik: "a card I can send from, and later we delete it". The June
@@ -15572,6 +15572,15 @@ on('gClalit',clalitSheet);
   only once they are in the monitor; Drive links (u) open the folder.
 */
 var TOM_ITEMS=[
+// 27.10: the new campaign. Videos and ads stay in Drive (Pages storage); the plan is a small private file.
+ {n:'📣',t:'הקמפיין 27.10: מה מעלים, תקציב ודומיין',r:'tom-campaign-oct27.txt'},
+ {n:'🎬',t:'סרטון 1: העוזר האישי (המוניטור)',u:'https://drive.google.com/file/d/1lYfRGw-w_7eV2Pa2yIiwwDdgVzAXAQMK/view'},
+ {n:'🎬',t:'סרטון 2: נתקעת? אנחנו ממשיכים',u:'https://drive.google.com/file/d/1M3iSnrTTk691VsQwpeFQsZbs16XXt2e5/view'},
+ {n:'🎬',t:'סרטון 3: בניית משחקים (פגסוס)',u:'https://drive.google.com/file/d/1kgZMZs7tQ4JyuGRj-evf7-UpQfhNwLtD/view'},
+ {n:'🎬',t:'סרטון 4: אתר הנרות',u:'https://drive.google.com/file/d/18s9cVNPKgI_Nm16zUr8JT0z7gRYPkI9q/view'},
+ {n:'✨',t:'14 מודעות מונפשות (פיד וסטורי)',u:'https://drive.google.com/drive/folders/1wJ35N0nL10MbCPanij4zwanF5HaK_duC'},
+ {n:'🖼️',t:'14 מודעות תמונה (פיד וסטורי)',u:'https://drive.google.com/drive/folders/1nqnyF7ZnuTqdqIh41i7bkMhLWt8PyBIT'},
+ {n:'📁',t:'התיקייה IT Solution בדרייב',u:'https://drive.google.com/drive/folders/18WsYtx4zrfLYD7MXc02ttrHFIKm-jYnH'},
  {n:'📣',t:'תוכנית הקמפיין הממומן, גרסה 3',r:'tom-campaign-plan.pdf'},
  {n:'🎬',t:'מדמו למוצר אמיתי 24ב, הגרסה לקמפיין',r:'tom-reel-demo-b.mp4'},
  {n:'🖼️',t:'מדמו למוצר אמיתי: כריכה',r:'tom-reel-demo-cover.jpg'},
@@ -15598,7 +15607,7 @@ function tomSheet(){
  w.setAttribute('aria-label','טום ממליץ');
  w.innerHTML='<div class="ycard">'
   +'<b>טום ממליץ</b>'
-  +'<small>שני סרטונים, 6 תמונות לממומן, ובסוף האימון והסרטונים של טום.</small>'
+  +'<small>למעלה הקמפיין החדש מ 27.10. אחריו הקמפיין הקודם, והאימון והסרטונים של טום.</small>'
   +TOM_ITEMS.map(function(it,i,a){
     if(it.r&&!fileEntry(it.r))return '';
     return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
