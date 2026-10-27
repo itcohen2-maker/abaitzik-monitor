@@ -10718,7 +10718,10 @@ document.addEventListener('click',function(ev){
  if(btn.target==='_blank')sheetExt=Date.now();
  var p0=panePrev,t0=Date.now();
  setTimeout(function(){
-  if(sh.isConnected)return;
+  // 27.10, Itzik: a sheet that replaced itself (X or "חזרה לרשימה" in the reel text)
+  // must not come back when the sheet it opened closes, or the text and the list keep
+  // swapping and the monitor is never reached.
+  if(sh.isConnected||sh.hasAttribute('data-replaced'))return;
   var ov=overlayOpen(sh);
   if(ov){
    new MutationObserver(function(_,mo){
@@ -14086,7 +14089,7 @@ function futText(it){
  // Set here, so sheetTopX (which would press the close button) leaves it alone.
  var tx=document.createElement('button');
  tx.type='button';tx.className='ytopx';tx.textContent='✕';tx.setAttribute('aria-label','חזרה לרשימה');
- tx.onclick=function(e){e.stopPropagation();close();futList();};
+ tx.onclick=function(e){e.stopPropagation();w.setAttribute('data-replaced','1');close();futList();};
  w.querySelector('.ycard').insertBefore(tx,w.querySelector('.ycard').firstChild);
  w.querySelector('.ycard').classList.add('hasx');
  function close(){w.remove();document.removeEventListener('keydown',esckey);}
@@ -14095,6 +14098,7 @@ function futText(it){
   if(e.target===w)return close();
   var a=e.target.getAttribute&&e.target.getAttribute('data-a');
   if(!a)return;
+  if(a==='back')w.setAttribute('data-replaced','1');
   if(a==='copy'){
    var done=function(){toast('התרגום הועתק. אפשר להדביק איפה שרוצים.');};
    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(body).then(done,function(){fallbackCopy(body,done);});
