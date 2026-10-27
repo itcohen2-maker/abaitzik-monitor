@@ -36,6 +36,7 @@ async function main() {
   const job = 'הדומיין it-solution.co.il שוחרר ונפתח. לעדכן את 4 המודעות בקמפיין "ITsolution דף חדש 27.10" (campaign 52556959006764, adset 52556959014964, act_191762840889782) כך שהקישור יהיה לדומיין החדש. '
     + 'בכרום (Profile 4) לפתוח את מנהל המודעות, ובכל אחת מהמודעות 52556961240364 (ref ads-assistant), 52556961257764 (ads-stuck), 52556961282964 (ads-emails), 52556961355164 (ads-base44): '
     + 'ליצור קריאייטיב חדש זהה לקיים (אותו page_id 1341874565686928, video_id, image_url, title, message, LEARN_MORE) רק עם הקישור https://it-solution.co.il/?ref=<ref>#chat, ולהחליף אותו במודעה. '
+    + 'באותה עריכה להחליף גם את הסרטון בגרסה עם הפתיחה המתוקנת (27.10, בלי מסך לבן): ads-assistant מ C:/Users/User/Downloads/ITsolution-ads/v/v1.mp4, ads-stuck מ v/v2.mp4, ads-emails מ m/M4-feed.mp4 (סטורי m/M4-story.mp4), ads-base44 מ m/M1-feed.mp4 (סטורי m/M1-story.mp4). לא להעלות שום מודעת נרות. '
     + 'לא להפעיל את הקמפיין ולא לשנות תקציב, מיקומים או סטטוס. בלי אינסטגרם. קודם לוודא בדפדפן ש https://it-solution.co.il/#chat נפתח עם הצ׳אט. '
     + 'בסוף לבדוק שבכל 4 המודעות הקישור החדש, ולענות לאיציק שורה אחת: הקישורים עודכנו, הקמפיין מושהה ומחכה שיפעיל.';
   spawnSync(process.execPath, ['pc-task.js', 'add', '--re', 'domain-watch', job], { cwd: ROOT, stdio: 'ignore', timeout: 60000 });
