@@ -14098,6 +14098,13 @@ function futText(it){
   +'<button type="button" class="yb" data-a="back">חזרה לרשימה</button>'
   +'<button type="button" class="yb yx" data-a="close">סגירה</button>'
   +'</div>';
+ // 27.10, Itzik: the X on this text must go back to the list, not close all.
+ // Set here, so sheetTopX (which would press the close button) leaves it alone.
+ var tx=document.createElement('button');
+ tx.type='button';tx.className='ytopx';tx.textContent='✕';tx.setAttribute('aria-label','חזרה לרשימה');
+ tx.onclick=function(e){e.stopPropagation();close();futList();};
+ w.querySelector('.ycard').insertBefore(tx,w.querySelector('.ycard').firstChild);
+ w.querySelector('.ycard').classList.add('hasx');
  function close(){w.remove();document.removeEventListener('keydown',esckey);}
  function esckey(e){if(e.key==='Escape')close();}
  w.onclick=function(e){
