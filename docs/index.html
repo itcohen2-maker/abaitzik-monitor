@@ -2615,7 +2615,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-28T08:34:17.536Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-28T08:47:03.480Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2774,7 +2774,7 @@ try{
   <button type="button" class="gt gMed" data-grp="day" id="gMed"><b>🩺 אחרי הניתוח השני</b><small>ממוספר. המסמכים מהביקורת אצל הפרופסור</small></button>
   <button type="button" class="gt gInv" data-grp="money" id="gInv" data-upd="2026-10-15-inv"><b>🧾 חשבוניות</b><small>ממוספר. מ 3.10 והלאה</small></button>
   <button type="button" class="gt gWin" data-grp="net" id="gWin" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
-  <button type="button" class="gt gReel" data-grp="net" id="gReels" data-upd="20261028-27g"><b>🎬 הרילים שלי</b><small>חדש: 27ז אורז בלי ארסן</small></button>
+  <button type="button" class="gt gReel" data-grp="net" id="gReels" data-upd="20261028-27h"><b>🎬 הרילים שלי</b><small>חדש: 27ח אורז בלי ארסן</small></button>
   <button type="button" class="gt gFut" data-grp="net" id="gFut" data-upd="20261027-fut17"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור, 08 שרירים והגיל, 09 קונטרה למינוס, 16 אורז כמו פסטה, 17 המבריק במדיח</small></button>
   <button type="button" class="gt gTom" data-grp="work" id="gTom" data-new="1" data-upd="2026-10-27-profile"><b>🧭 טום ממליץ</b><small>חדש: תמונת פרופיל ו 4 מודעות מתוקנות</small></button>
   <button type="button" class="gt gDudi" data-grp="work" id="gDudi" data-new="1"><b>🥩 דודי בשר</b><small>חשבוניות יוני ויולי לשליחה</small></button>
@@ -4416,7 +4416,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='111ad57e92';
+var CODE_ID='3e74c3b697';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10302,7 +10302,10 @@ var REEL_ITEMS=[
 {n:'27ו פרסום',t:'כיתוב והאשטגים, שמן זית',r:'reel-27f-post.txt'},
 {n:'27ז',t:'אורז בלי ארסן, והרבה יותר בריא',r:'reel-27g-rice.mp4'},
 {n:'27ז כריכה',t:'הכריכה',r:'reel-27g-rice.jpg'},
-{n:'27ז פרסום',t:'כיתוב והאשטגים, שמן זית',r:'reel-27g-post.txt'}
+{n:'27ז פרסום',t:'כיתוב והאשטגים, שמן זית',r:'reel-27g-post.txt'},
+{n:'27ח',t:'אורז בלי ארסן, 2 כוסות מים',r:'reel-27h-rice.mp4'},
+{n:'27ח כריכה',t:'הכריכה',r:'reel-27h-rice.jpg'},
+{n:'27ח פרסום',t:'כיתוב והאשטגים, שמן זית',r:'reel-27h-post.txt'}
 ];
 function reelSheet(){
  var old=document.getElementById('rlSheet');if(old)old.remove();
