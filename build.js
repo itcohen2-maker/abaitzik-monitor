@@ -13866,7 +13866,8 @@ var REEL_ITEMS=[
  {n:'26 פרסום',t:'כיתוב והאשטגים',r:'reel-26-post.txt'},
 {n:'27',t:'אורז בלי ארסן · 4K הכי איכותי, לשמירה בגלריה',r:'reel-27m-rice.mp4'},
 {n:'27 כריכה',t:'הכריכה עם ההוק · 4K',r:'reel-27m-rice.jpg'},
-{n:'27 פרסום',t:'כיתוב והאשטגים, שמן זית',r:'reel-27m-post.txt'}
+{n:'27 פרסום',t:'כיתוב והאשטגים, שמן זית',r:'reel-27m-post.txt'},
+{n:'27 סטורי',t:'סטורי ארסן באורז · הכי איכותי, לשמירה בגלריה',r:'story-27-rice.mp4'}
 ];
 function reelSheet(){
  var old=document.getElementById('rlSheet');if(old)old.remove();
