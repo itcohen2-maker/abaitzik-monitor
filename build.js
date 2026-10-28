@@ -993,7 +993,7 @@ function build() {
   const instanceJson = JSON.stringify({ name: inst.name, owner: inst.owner, pageTitle: inst.pageTitle,
     screens, unlocks,
     computer: inst.computer, phone: inst.phone, welcome: inst.welcome, homeTile: inst.homeTile || '', gender: inst.gender || '',
-    uploadUrl: inst.uploadUrl || '', openPin, guides, links });
+    uploadUrl: inst.uploadUrl || '', clalit: !!inst.clalit, openPin, guides, links });
   const html = html0.replace('__CODE_ID__', codeId0).replace("'__INSTANCE__'", instanceJson)
     .replace('__OPENPIN__', openPin);
 
@@ -1220,7 +1220,7 @@ function tenantTiles(inst) {
     const [cls, title, sub] = TENANT_TILES[id];
     // data-grp by visible label: only the two labels in the groups list get one.
     const grp = { gFiles: 'home', gBiz: 'work' }[id];
-    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261015-clalit"' : '') + (id === 'gTasks' ? ' data-upd="tasks-del-1024"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261028-biz"' : '') + (id === 'gTasks' ? ' data-upd="tasks-del-1024"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
 }
 /*
@@ -2838,6 +2838,8 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 .bzRow b{font:700 14px Heebo,sans-serif}
 .bzRow small{opacity:.85}
 .bzRow .yb{align-self:flex-start;padding:6px 12px;min-height:36px;font-size:13px;margin-top:4px}
+.bzStages{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.bzStages .yb{align-self:auto;margin-top:0}
 .bzEd{display:flex;gap:6px;margin-top:4px}
 .bzEd[hidden]{display:none}
 .bzEd input{flex:1;min-width:0;border-radius:10px;border:1px solid #ccd;padding:9px;font:15px Heebo,sans-serif}
@@ -4363,7 +4365,7 @@ ${require('./lib/home-ui.js').html}
     and no screens list (Itzik's copy). A customer with a screens list gets the
     tile from tenantTiles, only when gBiz is in that list.
   -->
-${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz"><button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261015-clalit"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>' : ''}
+${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz"><button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261028-biz"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>' : ''}
 <!--TENANT:BEGIN-->
   <!--
     A customer's home screen, built from his intake answers and not filtered
@@ -15953,6 +15955,7 @@ function bzRow(r,extra){
   +(r.note?'<small>'+esc(r.note)+'</small>':'')
   +(bzAgo(r)?'<small>'+esc(bzAgo(r))+'</small>':'')
   +(extra||'')
+  +((r.kind==='lead'||r.kind==='customer')?'<div class="bzStages">'+BZ_ORDER.filter(function(st){return st!==r.status;}).map(function(st){return '<button type="button" class="yb" data-bz="stage" data-s="'+st+'">'+st+'</button>';}).join('')+'</div>':'')
   +'<button type="button" class="yb" data-bz="note">📝 הערה</button>'
   +'<button type="button" class="yb" data-bz="edit">עדכן</button></div>';
 }
@@ -15997,9 +16000,9 @@ function bizSheet(){
   function body(){return tab==='money'?moneyHtml():tab==='due'?dueHtml():leadsHtml();}
   var tabs=[['leads','לידים ולקוחות'],['money','כסף החודש'],['due','צריך לחזור']];
   var html='<div class="biz"><div class="bzTop">'+scoreHtml()+'<p class="bzUrg"><b>'+esc((S&&S.urgent)||'אין עדיין נתונים.')+'</b></p></div>'
+   +'<p class="bzEmpty">הציון מ-0 עד 100, 100 זה הכי טוב. כל ליד שלא נגעו בו שבוע מוריד 8 נקודות, הצעה שלא חזרו אליה 3 ימים מורידה 12, ותזכורת שהגיעה ולא טופלה מורידה 6.</p>'
    // 15.10, Itzik: the Clalit agreement lives here now, as a link at the top of the sheet.
-   +'<div class="bzSec">מסמכים</div>'
-   +'<button type="button" class="yb" data-bz="clalit">🏥 מסמכים: הסכם כללית</button>'
+   +(INSTANCE&&INSTANCE.clalit?'<div class="bzSec">מסמכים</div><button type="button" class="yb" data-bz="clalit">🏥 מסמכים: הסכם כללית</button>':'')
    +'<button type="button" class="yb yb1" data-bz="newtoggle">➕ ליד חדש</button>'
    +'<div class="bzEd" data-bz="newbox" hidden><input id="bzNewIn" placeholder="שם, טלפון ומה הוא רוצה"><button type="button" class="yb yb2" data-bz="newsend">שלח</button></div>'
    +'<div class="bzTabs">'+tabs.map(function(t){return '<button type="button" class="yb'+(t[0]===tab?' on':'')+'" data-bz="tab" data-t="'+t[0]+'">'+t[1]+'</button>';}).join('')+'</div>'
@@ -16018,7 +16021,7 @@ function bizSheet(){
     if(a==='newsend'){
      var inp=el.querySelector('#bzNewIn'),v=inp.value.trim();
      if(!v){inp.focus();return;}
-     sendText('ליד חדש',v,'ליד חדש').then(function(){inp.value='';el.querySelector('[data-bz="newbox"]').hidden=true;toast('נרשם, אני עוקב אחריו.');})
+     sendText('ליד חדש',v,'ליד חדש').then(function(){inp.value='';el.querySelector('[data-bz="newbox"]').hidden=true;toast('נשלח. הליד ייכנס לרשימה כשהמוניטור ירשום אותו.');})
       .catch(function(){toast('לא נשלח, נסה שוב מאוחר יותר.');});
      return;
     }
@@ -16028,6 +16031,12 @@ function bizSheet(){
      var isNote=a==='note';
      row.insertAdjacentHTML('beforeend','<div class="bzEd"><input placeholder="'+(isNote?'כתוב הערה על הליד':'מה השתנה? לדוגמה: סגר, או קבע לשלישי')+'"><button type="button" class="yb yb2" data-bz="'+(isNote?'sendnote':'send')+'">שלח</button></div>');
      row.querySelector('.bzEd input').focus();return;
+    }
+    if(a==='stage'){
+     var r3=t.closest('.bzRow'),nm3=r3.querySelector('b').textContent,st3=t.getAttribute('data-s');
+     sendText('עדכון עסק',nm3+': '+st3,'עדכון עסק').then(function(){toast('נשלח, אני מעדכן את הרשומה.');})
+      .catch(function(){toast('לא נשלח, נסה שוב מאוחר יותר.');});
+     return;
     }
     if(a==='send'||a==='sendnote'){
      var r2=t.closest('.bzRow'),box=t.parentNode,inp2=box.querySelector('input'),txt=inp2.value.trim();

@@ -1837,6 +1837,8 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 .bzRow b{font:700 14px Heebo,sans-serif}
 .bzRow small{opacity:.85}
 .bzRow .yb{align-self:flex-start;padding:6px 12px;min-height:36px;font-size:13px;margin-top:4px}
+.bzStages{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.bzStages .yb{align-self:auto;margin-top:0}
 .bzEd{display:flex;gap:6px;margin-top:4px}
 .bzEd[hidden]{display:none}
 .bzEd input{flex:1;min-width:0;border-radius:10px;border:1px solid #ccd;padding:9px;font:15px Heebo,sans-serif}
@@ -2613,7 +2615,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-28T05:31:58.558Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-28T05:33:36.017Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2825,7 +2827,7 @@ try{
    <svg viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>חדש</button>
  </div>
 
-<div class="grid" id="blkBiz"><button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261015-clalit"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>
+<div class="grid" id="blkBiz"><button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261028-biz"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>
 
 
 
@@ -4421,8 +4423,8 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='c4885f0586';
-var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","openPin":"","guides":[],"links":[]};
+var CODE_ID='5da8136b1f';
+var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
 var AI=(INSTANCE&&INSTANCE.name&&INSTANCE.name!=='abaitzik')?'העוזר שלך':'קלוד';
@@ -12103,6 +12105,7 @@ function bzRow(r,extra){
   +(r.note?'<small>'+esc(r.note)+'</small>':'')
   +(bzAgo(r)?'<small>'+esc(bzAgo(r))+'</small>':'')
   +(extra||'')
+  +((r.kind==='lead'||r.kind==='customer')?'<div class="bzStages">'+BZ_ORDER.filter(function(st){return st!==r.status;}).map(function(st){return '<button type="button" class="yb" data-bz="stage" data-s="'+st+'">'+st+'</button>';}).join('')+'</div>':'')
   +'<button type="button" class="yb" data-bz="note">📝 הערה</button>'
   +'<button type="button" class="yb" data-bz="edit">עדכן</button></div>';
 }
@@ -12147,8 +12150,8 @@ function bizSheet(){
   function body(){return tab==='money'?moneyHtml():tab==='due'?dueHtml():leadsHtml();}
   var tabs=[['leads','לידים ולקוחות'],['money','כסף החודש'],['due','צריך לחזור']];
   var html='<div class="biz"><div class="bzTop">'+scoreHtml()+'<p class="bzUrg"><b>'+esc((S&&S.urgent)||'אין עדיין נתונים.')+'</b></p></div>'
-   +'<div class="bzSec">מסמכים</div>'
-   +'<button type="button" class="yb" data-bz="clalit">🏥 מסמכים: הסכם כללית</button>'
+   +'<p class="bzEmpty">הציון מ-0 עד 100, 100 זה הכי טוב. כל ליד שלא נגעו בו שבוע מוריד 8 נקודות, הצעה שלא חזרו אליה 3 ימים מורידה 12, ותזכורת שהגיעה ולא טופלה מורידה 6.</p>'
+   +(INSTANCE&&INSTANCE.clalit?'<div class="bzSec">מסמכים</div><button type="button" class="yb" data-bz="clalit">🏥 מסמכים: הסכם כללית</button>':'')
    +'<button type="button" class="yb yb1" data-bz="newtoggle">➕ ליד חדש</button>'
    +'<div class="bzEd" data-bz="newbox" hidden><input id="bzNewIn" placeholder="שם, טלפון ומה הוא רוצה"><button type="button" class="yb yb2" data-bz="newsend">שלח</button></div>'
    +'<div class="bzTabs">'+tabs.map(function(t){return '<button type="button" class="yb'+(t[0]===tab?' on':'')+'" data-bz="tab" data-t="'+t[0]+'">'+t[1]+'</button>';}).join('')+'</div>'
@@ -12167,7 +12170,7 @@ function bizSheet(){
     if(a==='newsend'){
      var inp=el.querySelector('#bzNewIn'),v=inp.value.trim();
      if(!v){inp.focus();return;}
-     sendText('ליד חדש',v,'ליד חדש').then(function(){inp.value='';el.querySelector('[data-bz="newbox"]').hidden=true;toast('נרשם, אני עוקב אחריו.');})
+     sendText('ליד חדש',v,'ליד חדש').then(function(){inp.value='';el.querySelector('[data-bz="newbox"]').hidden=true;toast('נשלח. הליד ייכנס לרשימה כשהמוניטור ירשום אותו.');})
       .catch(function(){toast('לא נשלח, נסה שוב מאוחר יותר.');});
      return;
     }
@@ -12176,6 +12179,12 @@ function bizSheet(){
      var isNote=a==='note';
      row.insertAdjacentHTML('beforeend','<div class="bzEd"><input placeholder="'+(isNote?'כתוב הערה על הליד':'מה השתנה? לדוגמה: סגר, או קבע לשלישי')+'"><button type="button" class="yb yb2" data-bz="'+(isNote?'sendnote':'send')+'">שלח</button></div>');
      row.querySelector('.bzEd input').focus();return;
+    }
+    if(a==='stage'){
+     var r3=t.closest('.bzRow'),nm3=r3.querySelector('b').textContent,st3=t.getAttribute('data-s');
+     sendText('עדכון עסק',nm3+': '+st3,'עדכון עסק').then(function(){toast('נשלח, אני מעדכן את הרשומה.');})
+      .catch(function(){toast('לא נשלח, נסה שוב מאוחר יותר.');});
+     return;
     }
     if(a==='send'||a==='sendnote'){
      var r2=t.closest('.bzRow'),box=t.parentNode,inp2=box.querySelector('input'),txt=inp2.value.trim();

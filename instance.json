@@ -15,5 +15,6 @@
   "driveFolder": "",
   "serverHost": "monitor",
   "uploadUrl": "https://ilay.abaitzik.com/up/v1/abaitzik/uploads",
-  "biz": true
+  "biz": true,
+  "clalit": true
 }
