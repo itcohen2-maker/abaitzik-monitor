@@ -4307,10 +4307,10 @@ ${require('./lib/home-ui.js').html}
     <path fill="#FFF3D6" d="M14.5 10.3c1.2-1 .9-2.3 0-3.4-.9 1.1-1.2 2.4 0 3.4z"/>
    </svg></span>נרות</a>
   <!-- 15.10. Itzik: "תחליף את האריח האתר שלי לאייקון עגול, כמו הנרות וסלינדה". The site tile is gone from the grid; this is its round icon in the row. -->
-  <a class="ic icNew" data-grp="proj" id="icSite" href="https://itsolution-il.vercel.app" target="_blank" rel="noopener" data-new="1"><span class="c c-its">
+  <a class="ic icNew" data-grp="proj" id="icSite" href="https://it-solution.co.il" target="_blank" rel="noopener" data-new="1" data-upd="dom1028"><span class="c c-its">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M9 20h6M12 16v4"/></svg></span>האתר שלי</a>
   <!-- 21.10: Itzik, "תבנה לי אייקון עם קיצור דרך https://itsolution-il.vercel.app/#chat". The site's chat on its own icon, next to the site, with the count of the leads that chat sent in. -->
-  <a class="ic icNew" data-grp="proj" id="icSiteChat" href="https://itsolution-il.vercel.app/#chat" target="_blank" rel="noopener" data-new="1" title="${'לידים מהצ׳אט באתר: ' + siteLeads().n + ' בסך הכל, ' + siteLeads().today + ' היום'}"><span class="c c-its"><em class="icN${siteLeads().today ? ' hot' : ''}">${siteLeads().n}</em>
+  <a class="ic icNew" data-grp="proj" id="icSiteChat" href="https://it-solution.co.il/#chat" target="_blank" rel="noopener" data-new="1" data-upd="dom1028" title="${'לידים מהצ׳אט באתר: ' + siteLeads().n + ' בסך הכל, ' + siteLeads().today + ' היום'}"><span class="c c-its"><em class="icN${siteLeads().today ? ' hot' : ''}">${siteLeads().n}</em>
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01"/></svg></span>צ׳אט באתר</a>
   <!--
     אלון. Itzik, 11.10: "שים לי אייקון כמו של רינת עם קוד שאשלח לו". Same as
