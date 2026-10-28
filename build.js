@@ -4201,7 +4201,7 @@ ${require('./lib/home-ui.js').html}
     is amirshwartz1's TikTok comment on the cake video (55 likes).
   -->
   <button type="button" class="gt gWin" data-grp="net" id="gWin" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
-  <button type="button" class="gt gReel" data-grp="net" id="gReels" data-upd="20261028-27f"><b>🎬 הרילים שלי</b><small>חדש: 27ו אורז בלי ארסן</small></button>
+  <button type="button" class="gt gReel" data-grp="net" id="gReels" data-upd="20261028-27g"><b>🎬 הרילים שלי</b><small>חדש: 27ז אורז בלי ארסן</small></button>
   <button type="button" class="gt gFut" data-grp="net" id="gFut" data-upd="20261027-fut17"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור, 08 שרירים והגיל, 09 קונטרה למינוס, 16 אורז כמו פסטה, 17 המבריק במדיח</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
@@ -13875,7 +13875,10 @@ var REEL_ITEMS=[
 {n:'27ה פרסום',t:'כיתוב והאשטגים, שמן זית',r:'reel-27e-post.txt'},
 {n:'27ו',t:'אורז בלי ארסן, סיום מתוקן',r:'reel-27f-rice.mp4'},
 {n:'27ו כריכה',t:'הכריכה',r:'reel-27f-rice.jpg'},
-{n:'27ו פרסום',t:'כיתוב והאשטגים, שמן זית',r:'reel-27f-post.txt'}
+{n:'27ו פרסום',t:'כיתוב והאשטגים, שמן זית',r:'reel-27f-post.txt'},
+{n:'27ז',t:'אורז בלי ארסן, והרבה יותר בריא',r:'reel-27g-rice.mp4'},
+{n:'27ז כריכה',t:'הכריכה',r:'reel-27g-rice.jpg'},
+{n:'27ז פרסום',t:'כיתוב והאשטגים, שמן זית',r:'reel-27g-post.txt'}
 ];
 function reelSheet(){
  var old=document.getElementById('rlSheet');if(old)old.remove();
