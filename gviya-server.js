@@ -34,6 +34,7 @@ try { TOKEN = fs.readFileSync(TOKF, 'utf8').trim(); } catch (e) {}
 if (!TOKEN) { TOKEN = crypto.randomBytes(9).toString('hex'); fs.writeFileSync(TOKF, TOKEN + '\n'); }
 const MAIL_TO = '100lolos@gmail.com';
 const MAIL_SUBJECT = 'לולוס · עדכוני גבייה מיואל';
+const PASS = '1234';
 
 function readMarks() { try { return JSON.parse(fs.readFileSync(MARKS, 'utf8')); } catch (e) { return {}; } }
 function writeMarks(m) { fs.writeFileSync(MARKS, JSON.stringify(m, null, 1) + '\n'); }
@@ -209,7 +210,7 @@ B.debts.forEach(function(d){
   applyStatus(card,st.status);list.appendChild(card);
 });
 var cq=document.getElementById('cqBox');
-cq.innerHTML=(B.cheques.length?B.cheques:[]).map(function(c){var owes=B.debts.some(function(d){return d.name===c.name;});var done=owes?'<div class="done" style="color:var(--sub)">✓ הצ׳ק נגבה · ללקוח נותר חוב פתוח ברשימה</div>':'<div class="done">✓ הסתיים הטיפול, הכרטיס נסגר · לא קיים יותר חוב</div>';return '<div class="row"><div><span class="cn">'+esc(c.name)+'</span><div class="meta">צ׳ק '+esc(c.no||'')+(c.bank?' · '+esc(c.bank):'')+'</div>'+done+'</div><div style="text-align:left"><div class="ca">'+ils(c.amount)+'</div><div class="meta">לפירעון '+esc(c.date||'')+'</div></div></div>';}).join('')||'<div class="row"><span class="meta">אין</span></div>';
+cq.innerHTML=(B.cheques.length?B.cheques:[]).map(function(c){var owes=B.debts.some(function(d){return d.name===c.name;});var done=owes?'':'<div class="done">✓ הסתיים הטיפול, הכרטיס נסגר · לא קיים יותר חוב</div>';return '<div class="row"><div><span class="cn">'+esc(c.name)+'</span><div class="meta">צ׳ק '+esc(c.no||'')+(c.bank?' · '+esc(c.bank):'')+'</div>'+done+'</div><div style="text-align:left"><div class="ca">'+ils(c.amount)+'</div><div class="meta">לפירעון '+esc(c.date||'')+'</div></div></div>';}).join('')||'<div class="row"><span class="meta">אין</span></div>';
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function fmtT(iso){try{var d=new Date(iso);return d.toLocaleDateString('he-IL')+' '+d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});}catch(e){return '';}}
 function renderThread(card,name){
@@ -266,6 +267,22 @@ setInterval(function(){fetch(BASE+'state').then(function(r){return r.json();}).t
 function send(res, code, type, body) { res.writeHead(code, { 'Content-Type': type, 'Cache-Control': 'no-store' }); res.end(body); }
 function json(res, code, obj) { send(res, code, 'application/json; charset=utf-8', JSON.stringify(obj)); }
 
+function gatePage(err) {
+  return '<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>גבייה לולוס</title>'
+    + '<style>body{font-family:-apple-system,"Segoe UI",Arial,sans-serif;background:#f3f5f8;color:#1d2735;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}'
+    + '.box{background:#fff;border:1px solid #e3e8ef;border-radius:16px;box-shadow:0 2px 12px rgba(20,30,50,.1);padding:28px 22px;width:min(340px,88vw);text-align:center}'
+    + 'h1{font-size:20px;margin:0 0 4px}p{color:#6b7684;font-size:13px;margin:0 0 16px}'
+    + 'input[type=password]{width:100%;font-size:20px;text-align:center;letter-spacing:6px;padding:12px;border:1px solid #e3e8ef;border-radius:10px;margin-bottom:12px;font-family:inherit;box-sizing:border-box}'
+    + '.rem{display:flex;align-items:center;gap:8px;justify-content:center;font-size:13.5px;color:#6b7684;margin-bottom:16px;cursor:pointer}'
+    + 'button{width:100%;border:0;background:#2d6cdf;color:#fff;font-weight:700;font-size:15px;padding:12px;border-radius:10px;cursor:pointer;font-family:inherit}'
+    + '.err{color:#c0392b;font-size:13px;margin-bottom:10px}</style></head><body>'
+    + '<form class="box" method="GET"><h1>גבייה לולוס</h1><p>הכניסו סיסמה כדי להיכנס</p>'
+    + (err ? '<div class="err">סיסמה שגויה</div>' : '')
+    + '<input name="pw" type="password" inputmode="numeric" autocomplete="off" autofocus placeholder="••••">'
+    + '<label class="rem"><input type="checkbox" name="remember" value="1" checked> זכור אותי במכשיר זה</label>'
+    + '<button type="submit">כניסה</button></form></body></html>';
+}
+
 const server = http.createServer((req, res) => {
   const u = new URL(req.url, 'http://x');
   const p = u.pathname;
@@ -273,7 +290,18 @@ const server = http.createServer((req, res) => {
   const m = p.match(/^\/gviya\/([0-9a-f]{8,})\/(.*)$/);
   if (!m || m[1] !== TOKEN) return send(res, 404, 'text/plain; charset=utf-8', 'לא נמצא');
   const rest = m[2];
-  if (req.method === 'GET' && (rest === '' )) return send(res, 200, 'text/html; charset=utf-8', page());
+  const authed = (req.headers.cookie || '').split(';').some(c => c.trim() === 'gva=1');
+  if (req.method === 'GET' && rest === '') {
+    if (authed) return send(res, 200, 'text/html; charset=utf-8', page());
+    const pw = u.searchParams.get('pw');
+    if (pw === PASS) {
+      const ck = 'gva=1; Path=/gviya/; SameSite=Lax' + (u.searchParams.get('remember') === '1' ? '; Max-Age=31536000' : '');
+      res.writeHead(302, { 'Set-Cookie': ck, 'Location': '/gviya/' + TOKEN + '/' });
+      return res.end();
+    }
+    return send(res, 200, 'text/html; charset=utf-8', gatePage(pw != null));
+  }
+  if (!authed) return json(res, 403, { err: 'auth' });
   if (req.method === 'GET' && rest === 'state') return json(res, 200, { marks: readMarks(), at: new Date().toISOString() });
   if (req.method === 'POST' && rest === 'mark') {
     let b = ''; req.on('data', c => { b += c; if (b.length > 1e5) req.destroy(); });

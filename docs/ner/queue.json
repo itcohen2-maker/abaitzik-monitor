@@ -8,7 +8,10 @@
   "city": "ברלין",
   "file": "media/story-he-wed-2810.mp4",
   "caption": "",
-  "approved": true
+  "approved": true,
+  "posted": "18117103493089070",
+  "postedAt": "2026-10-28T18:00:43.584Z",
+  "feedQueued": "2026-11-01"
  },
  {
   "name": "story-en-wed-2810",
@@ -19,7 +22,10 @@
   "city": "Tel Aviv",
   "file": "media/story-en-wed-2810.mp4",
   "caption": "",
-  "approved": true
+  "approved": true,
+  "posted": "17880653937651714",
+  "postedAt": "2026-10-28T18:01:19.831Z",
+  "feedQueued": "2026-11-01"
  },
  {
   "name": "story-he-thu-2910",
@@ -75,7 +81,9 @@
   "file": "media/story-he-sun-2510.mp4",
   "caption": "זמני הדלקת נרות לכל עיר בעולם, לפי המיקום המדויק שלכם.\nבחינם, מתנה ממני על כל התמיכה.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #candletimes",
   "approved": true,
-  "asPost": false
+  "asPost": false,
+  "posted": "18208088077374013",
+  "postedAt": "2026-10-28T18:02:01.335Z"
  },
  {
   "name": "post-en-sun-2510-fromstory",
@@ -87,7 +95,9 @@
   "file": "media/story-en-sun-2510.mp4",
   "caption": "Candle lighting times for every city in the world, by your exact location.\nFree for every Jew, a gift from me for all your support.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes",
   "approved": true,
-  "asPost": false
+  "asPost": false,
+  "posted": "18220462690356981",
+  "postedAt": "2026-10-28T18:02:41.395Z"
  },
  {
   "name": "post-he-mon-2610-fromstory",
@@ -133,6 +143,30 @@
   "lang": "en",
   "city": "Johannesburg",
   "file": "media/story-en-tue-2710.mp4",
+  "caption": "Candle lighting times for every city in the world, by your exact location.\nFree for every Jew, a gift from me for all your support.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes",
+  "approved": true,
+  "asPost": false
+ },
+ {
+  "name": "post-he-wed-2810-fromstory",
+  "date": "2026-11-01",
+  "time": "20:00",
+  "kind": "post",
+  "lang": "he",
+  "city": "ברלין",
+  "file": "media/story-he-wed-2810.mp4",
+  "caption": "זמני הדלקת נרות לכל עיר בעולם, לפי המיקום המדויק שלכם.\nבחינם, מתנה ממני על כל התמיכה.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #candletimes",
+  "approved": true,
+  "asPost": false
+ },
+ {
+  "name": "post-en-wed-2810-fromstory",
+  "date": "2026-11-01",
+  "time": "20:00",
+  "kind": "post",
+  "lang": "en",
+  "city": "Tel Aviv",
+  "file": "media/story-en-wed-2810.mp4",
   "caption": "Candle lighting times for every city in the world, by your exact location.\nFree for every Jew, a gift from me for all your support.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes",
   "approved": true,
   "asPost": false
