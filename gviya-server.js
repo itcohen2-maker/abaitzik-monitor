@@ -283,6 +283,20 @@ function gatePage(err) {
     + '<button type="submit">כניסה</button></form></body></html>';
 }
 
+const DEVF = path.join(GDIR, 'devices.json');
+function readDevices() { try { return JSON.parse(fs.readFileSync(DEVF, 'utf8')); } catch (e) { return {}; } }
+function saveDevices(d) { fs.writeFileSync(DEVF, JSON.stringify(d, null, 1) + '\n'); }
+function enrollOpen() { return fs.existsSync(path.join(GDIR, 'enroll')); }
+function getCookie(req, name) { const c = req.headers.cookie || ''; for (const part of c.split(';')) { const t = part.trim(); if (t.indexOf(name + '=') === 0) return t.slice(name.length + 1); } return ''; }
+function serveHtml(res, code, body, cookies) { const h = { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }; if (cookies && cookies.length) h['Set-Cookie'] = cookies; res.writeHead(code, h); res.end(body); }
+function lockedPage() {
+  return '<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>גבייה לולוס</title>'
+    + '<style>body{font-family:-apple-system,"Segoe UI",Arial,sans-serif;background:#f3f5f8;color:#1d2735;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}'
+    + '.box{background:#fff;border:1px solid #e3e8ef;border-radius:16px;box-shadow:0 2px 12px rgba(20,30,50,.1);padding:30px 24px;width:min(360px,88vw);text-align:center}'
+    + 'h1{font-size:42px;margin:0 0 10px}p{color:#6b7684;font-size:14.5px;line-height:1.55;margin:0}</style></head><body>'
+    + '<div class="box"><h1>🔒</h1><p>הדף נעול למכשיר הזה.<br>הגישה מותרת רק מהמכשירים המאושרים.<br>פנו לאיציק אם צריך גישה.</p></div></body></html>';
+}
+
 const server = http.createServer((req, res) => {
   const u = new URL(req.url, 'http://x');
   const p = u.pathname;
@@ -290,18 +304,33 @@ const server = http.createServer((req, res) => {
   const m = p.match(/^\/gviya\/([0-9a-f]{8,})\/(.*)$/);
   if (!m || m[1] !== TOKEN) return send(res, 404, 'text/plain; charset=utf-8', 'לא נמצא');
   const rest = m[2];
-  const authed = (req.headers.cookie || '').split(';').some(c => c.trim() === 'gva=1');
+  // זיהוי מכשיר קבוע (cookie httpOnly) + רשימת מכשירים מאושרים
+  let devId = getCookie(req, 'gvd');
+  const setCk = [];
+  if (!devId) { devId = crypto.randomBytes(12).toString('hex'); setCk.push('gvd=' + devId + '; Path=/gviya/; Max-Age=31536000; HttpOnly; SameSite=Lax'); }
+  const devs = readDevices();
+  const devOK = !!devs[devId];
+  const authed = getCookie(req, 'gva') === '1';
+  const pw = u.searchParams.get('pw');
+  const mkGva = () => 'gva=1; Path=/gviya/; SameSite=Lax' + (u.searchParams.get('remember') === '1' ? '; Max-Age=31536000' : '');
   if (req.method === 'GET' && rest === '') {
-    if (authed) return send(res, 200, 'text/html; charset=utf-8', page());
-    const pw = u.searchParams.get('pw');
-    if (pw === PASS) {
-      const ck = 'gva=1; Path=/gviya/; SameSite=Lax' + (u.searchParams.get('remember') === '1' ? '; Max-Age=31536000' : '');
-      res.writeHead(302, { 'Set-Cookie': ck, 'Location': '/gviya/' + TOKEN + '/' });
-      return res.end();
+    if (!devOK) {
+      // מכשיר לא מאושר: נכנס רק בחלון רישום. אחרת נעול, גם עם סיסמה.
+      if (!enrollOpen()) return serveHtml(res, 200, lockedPage(), setCk);
+      if (pw === PASS) {
+        devs[devId] = { at: new Date().toISOString(), ua: String(req.headers['user-agent'] || '').slice(0, 140) };
+        saveDevices(devs);
+        setCk.push(mkGva());
+        res.writeHead(302, { 'Set-Cookie': setCk, 'Location': '/gviya/' + TOKEN + '/' }); return res.end();
+      }
+      return serveHtml(res, 200, gatePage(pw != null), setCk);
     }
-    return send(res, 200, 'text/html; charset=utf-8', gatePage(pw != null));
+    if (authed) return serveHtml(res, 200, page(), setCk);
+    if (pw === PASS) { setCk.push(mkGva()); res.writeHead(302, { 'Set-Cookie': setCk, 'Location': '/gviya/' + TOKEN + '/' }); return res.end(); }
+    return serveHtml(res, 200, gatePage(pw != null), setCk);
   }
-  if (!authed) return json(res, 403, { err: 'auth' });
+  // נתונים: רק מכשיר מאושר + סיסמה
+  if (!(devOK && authed)) return json(res, 403, { err: 'auth' });
   if (req.method === 'GET' && rest === 'state') return json(res, 200, { marks: readMarks(), at: new Date().toISOString() });
   if (req.method === 'POST' && rest === 'mark') {
     let b = ''; req.on('data', c => { b += c; if (b.length > 1e5) req.destroy(); });
