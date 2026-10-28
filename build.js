@@ -4248,6 +4248,7 @@ ${require('./lib/home-ui.js').html}
     and July invoices of Etzel Dudi, each with the send button. Temporary.
   -->
   <button type="button" class="gt gDudi" data-grp="work" id="gDudi" data-new="1"><b>🥩 דודי בשר</b><small>חשבוניות יוני ויולי לשליחה</small></button>
+  <button type="button" class="gt gGviya" data-grp="work" id="gGviya" data-new="1"><b>📞 גבייה, יואל</b><small>דף שיואל מסמן, כל סימון מעדכן אותך</small></button>
   <button type="button" class="gt gLaw" data-grp="home" id="gLaw" hidden><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
   <button type="button" class="gt gShop" data-grp="home" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
   <!-- 12.10 alarm tile: moved 13.10 to the round icons, see gAlarm next to gStk. -->
@@ -15877,6 +15878,7 @@ function planSheet(){
 }
 on('gContentPlan',planSheet);
 on('gShopList',function(){window.open('https://docs.google.com/document/d/1A2tvet0ucYNDoDclswaVDybuL8bir3OAerRzXtDUEPU/edit','_blank','noopener');});
+on('gGviya',function(){window.open('https://ilay.abaitzik.com/gviya/1abf2a1f563a0fb3a7/','_blank','noopener');});
 // 15.10 Itzik: the stories archive tile came off the screen for good; its button and handler are gone.
 // (15.10 later: that line was a one line /* */ comment followed by code, and the build's comment
 // stripper took it as the start of a block that ran to the next standalone */, which swallowed the
