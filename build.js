@@ -15535,6 +15535,10 @@ on('gClalit',clalitSheet);
 */
 var TOM_ITEMS=[
 // 28.10: the new campaign in the style Itzik brought (itay.zerem.ai). Ready, not uploaded.
+ {n:"🎵1",t:"לבחור מוזיקה: 1 טכנולוגי",r:"music-oct28-A-m1-tech.mp4"},
+ {n:"🎵2",t:"לבחור מוזיקה: 2 פרסומת אופטימית",r:"music-oct28-A-m2-commercial.mp4"},
+ {n:"🎵3",t:"לבחור מוזיקה: 3 ביט חזק",r:"music-oct28-A-m3-beats.mp4"},
+ {n:"🎵4",t:"לבחור מוזיקה: 4 פאנק",r:"music-oct28-A-m4-funk.mp4"},
  {n:"🆕",t:"קמפיין חדש: סרטון A, הבוקר (לא עלה)",r:"ads-oct28-story-a-morning.mp4"},
  {n:"🆕",t:"קמפיין חדש: סרטון B, סוכני AI (לא עלה)",r:"ads-oct28-story-b-ai.mp4"},
  {n:"📝",t:"קמפיין חדש: הטקסטים וההגדרות",r:"itsolution-campaign-oct28.txt"},
