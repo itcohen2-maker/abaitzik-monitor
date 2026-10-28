@@ -13865,7 +13865,7 @@ var REEL_ITEMS=[
  {n:'26 כריכה',t:'הכריכה',r:'reel-26-cover.jpg'},
  {n:'26 פרסום',t:'כיתוב והאשטגים',r:'reel-26-post.txt'},
 {n:'27',t:'אורז בלי ארסן · 4K הכי איכותי, לשמירה בגלריה',r:'reel-27m-rice.mp4'},
-{n:'27 כריכה',t:'הכריכה',r:'reel-27m-rice.jpg'},
+{n:'27 כריכה',t:'הכריכה עם ההוק · 4K',r:'reel-27m-rice.jpg'},
 {n:'27 פרסום',t:'כיתוב והאשטגים, שמן זית',r:'reel-27m-post.txt'}
 ];
 function reelSheet(){
