@@ -4241,7 +4241,7 @@ ${require('./lib/home-ui.js').html}
   -->
   <!-- 13.10. Itzik: "תעשה תקייה של טום ממליץ ואריח טום ממליץ". Scripts of
        Tom's posts, four ad images, the site copy, and the draft of his own site. -->
-  <button type="button" class="gt gTom" data-grp="work" id="gTom" data-new="1" data-upd="2026-10-27-profile"><b>🧭 טום ממליץ</b><small>חדש: תמונת פרופיל ו 4 מודעות מתוקנות</small></button>
+  <button type="button" class="gt gTom" data-grp="work" id="gTom" data-new="1" data-upd="2026-10-28-story"><b>🧭 טום ממליץ</b><small>חדש: קמפיין "אנחנו בונים לך אחד", 2 סרטונים</small></button>
   <!-- 13.10 night: the Clalit agreement moved inside the lecture tile (item 05). -->
   <!--
     11.10. Itzik: "a card I can send from, and later we delete it". The June
@@ -15534,6 +15534,10 @@ on('gClalit',clalitSheet);
   only once they are in the monitor; Drive links (u) open the folder.
 */
 var TOM_ITEMS=[
+// 28.10: the new campaign in the style Itzik brought (itay.zerem.ai). Ready, not uploaded.
+ {n:"🆕",t:"קמפיין חדש: סרטון A, הבוקר (לא עלה)",r:"ads-oct28-story-a-morning.mp4"},
+ {n:"🆕",t:"קמפיין חדש: סרטון B, סוכני AI (לא עלה)",r:"ads-oct28-story-b-ai.mp4"},
+ {n:"📝",t:"קמפיין חדש: הטקסטים וההגדרות",r:"itsolution-campaign-oct28.txt"},
 // 27.10 afternoon: the Microsoft profile picture, and the 4 campaign ads with the fixed opening (no white screen).
  {n:'🖼️',t:'תמונת פרופיל IT Solution (למיקרוסופט)',r:'it-solution-profile.png'},
  {n:'🎬',t:'מתוקן: העוזר האישי, בלי פתיחה ריקה',r:'ads-fix-v1-assistant.mp4'},
