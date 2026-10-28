@@ -2615,7 +2615,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-28T20:52:52.577Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-28T21:13:24.372Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4417,7 +4417,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='7be55a35e7';
+var CODE_ID='7fddac852a';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11732,6 +11732,10 @@ function clalitSheet(){
 }
 on('gClalit',clalitSheet);
 var TOM_ITEMS=[
+ {n:"🎵1",t:"לבחור מוזיקה: 1 טכנולוגי",r:"music-oct28-A-m1-tech.mp4"},
+ {n:"🎵2",t:"לבחור מוזיקה: 2 פרסומת אופטימית",r:"music-oct28-A-m2-commercial.mp4"},
+ {n:"🎵3",t:"לבחור מוזיקה: 3 ביט חזק",r:"music-oct28-A-m3-beats.mp4"},
+ {n:"🎵4",t:"לבחור מוזיקה: 4 פאנק",r:"music-oct28-A-m4-funk.mp4"},
  {n:"🆕",t:"קמפיין חדש: סרטון A, הבוקר (לא עלה)",r:"ads-oct28-story-a-morning.mp4"},
  {n:"🆕",t:"קמפיין חדש: סרטון B, סוכני AI (לא עלה)",r:"ads-oct28-story-b-ai.mp4"},
  {n:"📝",t:"קמפיין חדש: הטקסטים וההגדרות",r:"itsolution-campaign-oct28.txt"},
