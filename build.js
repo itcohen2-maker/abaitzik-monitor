@@ -4241,7 +4241,7 @@ ${require('./lib/home-ui.js').html}
   -->
   <!-- 13.10. Itzik: "תעשה תקייה של טום ממליץ ואריח טום ממליץ". Scripts of
        Tom's posts, four ad images, the site copy, and the draft of his own site. -->
-  <button type="button" class="gt gTom" data-grp="work" id="gTom" data-new="1" data-upd="2026-10-28-story"><b>🧭 טום ממליץ</b><small>חדש: קמפיין "אנחנו בונים לך אחד", 2 סרטונים</small></button>
+  <button type="button" class="gt gTom" data-grp="work" id="gTom" data-new="1" data-upd="2026-10-28-music"><b>🧭 טום ממליץ</b><small>חדש: לבחור מוזיקה 🎵1 עד 🎵4, ו 2 סרטונים חדשים</small></button>
   <!-- 13.10 night: the Clalit agreement moved inside the lecture tile (item 05). -->
   <!--
     11.10. Itzik: "a card I can send from, and later we delete it". The June
