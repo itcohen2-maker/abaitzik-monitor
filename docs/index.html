@@ -2615,7 +2615,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-28T21:13:24.372Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-28T21:14:03.787Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2807,9 +2807,9 @@ try{
     <path fill="#FFF3D6" d="M9.5 10.3c1.2-1 .9-2.3 0-3.4-.9 1.1-1.2 2.4 0 3.4z"/>
     <path fill="#FFF3D6" d="M14.5 10.3c1.2-1 .9-2.3 0-3.4-.9 1.1-1.2 2.4 0 3.4z"/>
    </svg></span>נרות</a>
-  <a class="ic icNew" data-grp="proj" id="icSite" href="https://itsolution-il.vercel.app" target="_blank" rel="noopener" data-new="1"><span class="c c-its">
+  <a class="ic icNew" data-grp="proj" id="icSite" href="https://it-solution.co.il" target="_blank" rel="noopener" data-new="1" data-upd="dom1028"><span class="c c-its">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M9 20h6M12 16v4"/></svg></span>האתר שלי</a>
-  <a class="ic icNew" data-grp="proj" id="icSiteChat" href="https://itsolution-il.vercel.app/#chat" target="_blank" rel="noopener" data-new="1" title="לידים מהצ׳אט באתר: 1 בסך הכל, 0 היום"><span class="c c-its"><em class="icN">1</em>
+  <a class="ic icNew" data-grp="proj" id="icSiteChat" href="https://it-solution.co.il/#chat" target="_blank" rel="noopener" data-new="1" data-upd="dom1028" title="לידים מהצ׳אט באתר: 1 בסך הכל, 0 היום"><span class="c c-its"><em class="icN">1</em>
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01"/></svg></span>צ׳אט באתר</a>
   <a class="ic" data-grp="work" href="#" id="icAl" data-new="1"><span class="c c-al" id="icAlC">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-2 9a6 6 0 0 1-12 0z"/><circle cx="9" cy="9.5" r="1"/><circle cx="15" cy="9.5" r="1"/><path d="M9.5 13c1.5 1.3 3.5 1.3 5 0"/></svg></span>אלון</a>
@@ -2898,7 +2898,14 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-
+<div class="alerts" id="pushBox" hidden>
+ <div>
+  <b>התראות לטלפון</b>
+  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
+ </div>
+ <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
+ <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
+</div>
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4417,7 +4424,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='7fddac852a';
+var CODE_ID='0edf5d2966';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -15614,7 +15621,7 @@ floatTile=function(id,up){if(document.body.classList.contains('world'))return;re
 
 boot('worlds',worldSync);
 boot('design',dzBoot);
-var PUSH_KEY="";
+var PUSH_KEY="BDlgL4lKYXBB2yk96UVlN_bNhLBppiq0K8ORV-TQ2jb7k8IMskeWYICec19xE7N5VEcCzVXZU9Pxb9e64KH8OCk";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
