@@ -2647,7 +2647,6 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .stkx{background:rgba(127,127,127,.13);color:inherit;border-radius:10px;padding:8px 10px;margin:8px 0;font-size:15px;line-height:1.5;text-align:right}
 .stkx i{opacity:.65;font-style:normal;font-size:13px}
 .gOcc{background:linear-gradient(150deg,#2bb39a,#123d3a)}
-.gElect{background:linear-gradient(150deg,#3b6fd8,#132a5c)}
 .gLec{background:linear-gradient(150deg,#c0562b,#4a1d10)}
 .gClalit{background:linear-gradient(150deg,#1f6fa8,#0e2a45)}
 .gTom{background:linear-gradient(150deg,#0b7f8f,#0a0a0f)}
@@ -4249,7 +4248,6 @@ ${require('./lib/home-ui.js').html}
   <button type="button" class="gt gDudi" data-grp="work" id="gDudi" data-new="1"><b>🥩 דודי בשר</b><small>חשבוניות יוני ויולי לשליחה</small></button>
   <button type="button" class="gt gLaw" data-grp="home" id="gLaw" hidden><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
   <button type="button" class="gt gShop" data-grp="home" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
-  <button type="button" class="gt gElect" data-grp="day" id="gElect" data-new="1"><b>🗳️ בחירות 2026</b><small>יום שלישי 27.10, קלפי 277, בי״ס אשלים</small></button>
   <!-- 12.10 alarm tile: moved 13.10 to the round icons, see gAlarm next to gStk. -->
   <!--
     איציק, 28.9, בהקלטה: "תסיר את כפתור תוכניות תוכן". הכפתור ירד ממסך הבית.
@@ -15008,41 +15006,6 @@ function occSheet(){
  document.body.appendChild(w);
 }
 on('gOcc',occSheet);
-// 20.10 elections tile: the polling station card (Itzik's message ntfy-06qhrlxFvW8Q).
-function electSheet(){
- var old=document.getElementById('electSheet');if(old)old.remove();
- var w=document.createElement('div');
- w.id='electSheet';w.className='ysheet';
- w.setAttribute('role','dialog');
- w.setAttribute('aria-label','בחירות 2026');
- w.innerHTML='<div class="ycard">'
-  +'<b>בחירות לכנסת ה-26</b>'
-  +'<small>יום שלישי, ט״ז בחשוון התשפ״ז, 27.10.2026</small>'
-  +'<small>קלפי 277, בית ספר ממלכתי אשלים, התזמורת 43, ראשון לציון</small>'
-  +'<small>המספר הסידורי שלך בקלפי: 0277</small>'
-  +'<button type="button" class="yb" data-k="0">📞 מוקד איתור קלפיות 073-245-8358</button>'
-  +'<button type="button" class="yb" data-k="1">📍 ניווט לקלפי</button>'
-  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
-  +'</div>';
- var items=[
-  {u:'tel:0732458358'},
-  {u:'https://waze.com/ul?q=%D7%94%D7%AA%D7%96%D7%9E%D7%95%D7%A8%D7%AA%2043%20%D7%A8%D7%90%D7%A9%D7%95%D7%9F%20%D7%9C%D7%A6%D7%99%D7%95%D7%9F'}
- ];
- function close(){w.remove();document.removeEventListener('keydown',esckey);}
- function esckey(e){if(e.key==='Escape')close();}
- w.onclick=function(e){
-  if(e.target===w)return close();
-  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
-  if(k===null||k===undefined)return;
-  close();
-  var it=items[+k];if(k===''||!it)return;
-  if(/^tel:/.test(it.u))location.href=it.u;
-  else window.open(it.u,'_blank','noopener');
- };
- document.addEventListener('keydown',esckey);
- document.body.appendChild(w);
-}
-on('gElect',electSheet);
 /*
   11.10, Itzik in a recording: "צור לי כפתור מה יש לי היום לעשות, למשל היום יש
   לי תור אצל רופא השיניים בערב". Today in Israel time: the appointments, the
