@@ -1,6 +1,6 @@
 {
- "at": "2026-10-28T11:40:43.159Z",
- "up": 22020,
+ "at": "2026-10-28T12:33:43.018Z",
+ "up": 25200,
  "since": "2026-10-28T05:33:43.341Z",
  "last": "",
  "n": 0,
@@ -29,9 +29,9 @@
  "budget": {
   "ntfy": {
    "label": "ntfy",
-   "used": 3,
+   "used": 4,
    "cap": 150,
-   "left": 147,
+   "left": 146,
    "paid": false,
    "blockedUntil": "",
    "daily": false
@@ -58,7 +58,7 @@
  "queued": 0,
  "pc": {
   "on": true,
-  "seen": "2026-10-28T11:39:50.226Z"
+  "seen": "2026-10-28T12:32:46.644Z"
  },
  "hold": false,
  "quota": null
