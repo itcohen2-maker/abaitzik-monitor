@@ -43,6 +43,18 @@ function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '
 
 // --- push to Itzik, debounced so a burst of marks becomes one message ---
 let pushTimer = null, pushSince = 0;
+// 29.10, איציק: "תשלח רק מה שהשתנה, לא כותרות". כל סימון נרשם כאן, וה push מכיל רק אותם.
+let pending = [];
+const STATUS_HE = { collect: 'יואל על זה', paid: 'גבה, הצ׳ק אצלו', future: 'צ׳ק עתידי' };
+function noteChange(name, o, prev) {
+  const bits = [];
+  if ('status' in o && (o.status || null) !== (prev.status || null)) bits.push(o.status ? STATUS_HE[o.status] || o.status : 'הסימון בוטל');
+  if ('paidWhen' in o && o.paidWhen && o.paidWhen !== prev.paidWhen) bits.push('שולם ' + o.paidWhen);
+  if ('dueWhen' in o && o.dueWhen && o.dueWhen !== prev.dueWhen) bits.push('לפירעון ' + o.dueWhen);
+  if ('note' in o && String(o.note || '') !== String(prev.note || '') && String(o.note || '').trim()) bits.push('"' + String(o.note).trim().slice(0, 120) + '"');
+  if (o.addComment && typeof o.addComment.t === 'string' && o.addComment.t.trim()) bits.push('"' + o.addComment.t.trim().slice(0, 120) + '"');
+  if (bits.length) pending.push(name + ': ' + bits.join(', '));
+}
 function schedulePush() {
   const now = Date.now();
   if (!pushSince) pushSince = now;
@@ -76,10 +88,11 @@ function sendPush() {
   if (cmts.length) body += '\n\n💬 תגובות אחרונות:\n' + cmts.slice(0, 8).join('\n');
   body += '\n\nהלוח: ' + link;
   // push קצר לאיציק
-  let short = 'אני על זה: ' + collect.length + ' (' + ils(collectSum) + '), גבה והצ׳ק אצלו: ' + paid.length + '.';
-  if (collect.length) short += '\n' + collect.slice(0, 4).map(c => '• ' + c.n).join('\n');
-  short += '\n' + link;
-  execFile(process.execPath, [path.join(ROOT, 'notify.js'), 'גבייה: יואל עדכן', short], { cwd: ROOT }, () => {});
+  const changes = pending.splice(0);
+  if (!changes.length) return;
+  body = 'מה השתנה:\n' + changes.map(c => ' • ' + c).join('\n') + '\n\n' + body;
+  const title = changes.length === 1 ? 'יואל, גבייה' : 'יואל, ' + changes.length + ' עדכוני גבייה';
+  execFile(process.execPath, [path.join(ROOT, 'notify.js'), title, changes.slice(0, 6).join('\n')], { cwd: ROOT }, () => {});
   // מייל מפורט ל 100lolos דרך SMTP 587, נושא קבוע => שרשור בתיבה המשותפת
   try {
     const mp = spawn('python3', [path.join(ROOT, 'tools', 'lolos-mail-send.py'), MAIL_TO, MAIL_SUBJECT], { cwd: ROOT });
@@ -339,6 +352,7 @@ const server = http.createServer((req, res) => {
       if (!o || typeof o.name !== 'string') return json(res, 400, { err: 'name' });
       const marks = readMarks();
       const cur = marks[o.name] || {};
+      const prev = Object.assign({}, cur);
       if ('status' in o) cur.status = (o.status === 'collect' || o.status === 'paid' || o.status === 'future') ? o.status : null;
       if ('note' in o) cur.note = String(o.note || '').slice(0, 2000);
       if ('paidWhen' in o) cur.paidWhen = String(o.paidWhen || '').slice(0, 20);
@@ -350,6 +364,7 @@ const server = http.createServer((req, res) => {
       }
       cur.at = new Date().toISOString();
       marks[o.name] = cur; writeMarks(marks);
+      noteChange(o.name, o, prev);
       schedulePush();
       return json(res, 200, { ok: true });
     });
