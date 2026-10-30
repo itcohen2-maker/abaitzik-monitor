@@ -15534,6 +15534,8 @@ on('gClalit',clalitSheet);
   only once they are in the monitor; Drive links (u) open the folder.
 */
 var TOM_ITEMS=[
+// 30.10: the offer page turned into an ad. Two posts a day, you approve, it goes up by itself.
+ {n:"🆕",t:"מנהל רשת לעסק: סטורי ופוסט כל יום, אתה מאשר, עולה לבד · 9:16, 25 שנ׳ (לא עלה)",r:"ads-oct30-social-manager.mp4"},
 // 30.10: round two of animated images (cards 5..8). Replacements only, for ads that stay weak after the Sunday or Monday check.
  {n:"📝",t:"סבב שני 30.10: מה מחליפים, שמות וקישורים",r:"itsolution-cards-oct30.txt"},
  {n:"🔁5",t:"סבב שני: לקוח כתב ב 23:14, מי ענה לו · 9:16 רילס וסטוריז (לא עלה)",r:"ads-oct30-card5-story.mp4"},
