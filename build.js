@@ -15539,7 +15539,7 @@ function nerBizSheet(){
   var k=e.target.getAttribute&&e.target.getAttribute('data-k');
   if(k===null||k===undefined)return;
   if(k==='')return close();
-  var it=NER_BIZ_ITEMS[+k];if(it&&it.r)fileOpen(it.r);
+  var it=NER_BIZ_ITEMS[+k];if(it&&it.r){close();fileOpen(it.r);}
  };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
@@ -16079,7 +16079,7 @@ function bizSheet(){
     var t=e.target.closest?e.target.closest('[data-bz]'):null;if(!t)return;
     var a=t.getAttribute('data-bz');
     if(a==='clalit'){clalitSheet();return;}
-    if(a==='ner'){nerBizSheet();return;}
+    if(a==='ner'){var bx=el.querySelector('[data-a="x"]');if(bx)bx.click();nerBizSheet();return;}  // 30.10, Itzik: the X did not get him out, two sheets were stacked; one at a time
     if(a==='tab'){
      tab=t.getAttribute('data-t');
      el.querySelectorAll('[data-bz="tab"]').forEach(function(b){b.classList.toggle('on',b===t);});
