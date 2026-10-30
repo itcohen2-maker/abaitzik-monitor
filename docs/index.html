@@ -2610,7 +2610,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-30T18:44:55.988Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-30T18:50:18.167Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4423,7 +4423,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='18cee0fae3';
+var CODE_ID='e6db7f4820';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11728,6 +11728,7 @@ function lawSheet(){
 }
 on('gLaw',lawSheet);
 var NER_BIZ_ITEMS=[
+ {d:"30.10",t:"הווידג׳ט מוכן ומחכה לאישור: שורת קוד אחת לכל אתר, 15 שפות, אותם זמנים בדיוק כמו עמודי הערים. נבדק שהאתר הקיים לא השתנה בכלל (צילומים זהים לפני ואחרי) ושכל כניסה מקבלת גרסה אחרונה. נמצא באג ישן: שם הפרשה בעמודי הערים זז בשבוע (ב 6.11 כתוב וירא במקום חיי שרה). לא תוקן בלי אישור."},
  {d:"30.10",t:"מחקר: צרכים של הקהילה הדתית שאפשר לבנות להם אתר ולהרוויח. שלושת המובילים: הקדשות ותזכורות בתוך candletimes, מצב עירוב בכל עיר בכמה שפות, יארצייט וקדיש בצרפתית, ספרדית, רוסית ופורטוגזית. בשלב שני: מאגר גמ״חים ומסך זמנים לבתי כנסת.",r:"ner-biz-research-oct30.txt"},
  {d:"30.10",t:"ווידג׳ט בבנייה: שורת קוד אחת שמציגה את זמני השבוע בכל אתר של קהילה, בשפה ובעיר שלה, עם קישור אלינו. נשמר במחשב בלבד, לא עולה לאתר בלי אישור שלך."},
  {d:"30.10",t:"פנייה ל 20 קהילות (לא חב״ד, להם כבר יש זמנים מובנים מ Chabad.org): מייל אישי בשפת הקהילה עם תרגום לעברית ושאלה מה חסר להם. הטיוטות יגיעו במוצאי שבת לאישור. לא שולחים בשבת, ותזמון כך שלא ינחת אצלם בשבת שלהם."},
