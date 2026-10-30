@@ -2610,7 +2610,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-30T18:11:41.138Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-30T18:44:55.988Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2818,7 +2818,7 @@ try{
    <svg viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>חדש</button>
  </div>
 
-<div class="grid" id="blkBiz"><button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261028-biz"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>
+<div class="grid" id="blkBiz"><button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261030-biz"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>
 
 
 
@@ -4423,7 +4423,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='495eb04802';
+var CODE_ID='18cee0fae3';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11727,6 +11727,43 @@ function lawSheet(){
  document.body.appendChild(w);
 }
 on('gLaw',lawSheet);
+var NER_BIZ_ITEMS=[
+ {d:"30.10",t:"מחקר: צרכים של הקהילה הדתית שאפשר לבנות להם אתר ולהרוויח. שלושת המובילים: הקדשות ותזכורות בתוך candletimes, מצב עירוב בכל עיר בכמה שפות, יארצייט וקדיש בצרפתית, ספרדית, רוסית ופורטוגזית. בשלב שני: מאגר גמ״חים ומסך זמנים לבתי כנסת.",r:"ner-biz-research-oct30.txt"},
+ {d:"30.10",t:"ווידג׳ט בבנייה: שורת קוד אחת שמציגה את זמני השבוע בכל אתר של קהילה, בשפה ובעיר שלה, עם קישור אלינו. נשמר במחשב בלבד, לא עולה לאתר בלי אישור שלך."},
+ {d:"30.10",t:"פנייה ל 20 קהילות (לא חב״ד, להם כבר יש זמנים מובנים מ Chabad.org): מייל אישי בשפת הקהילה עם תרגום לעברית ושאלה מה חסר להם. הטיוטות יגיעו במוצאי שבת לאישור. לא שולחים בשבת, ותזמון כך שלא ינחת אצלם בשבת שלהם."},
+ {d:"30.10",t:"כלל ברזל לאתר: כל דבר חדש לא הורס את מה שבנוי, וכל כניסה מקבלת את הגרסה האחרונה."},
+ {d:"30.10",t:"איך נהיים כשרים ואמינים: הסכמה של רב מוכר, עמוד איך אנחנו מחשבים ב 15 שפות, האתר נח בשבת, בלי פרסומות גוגל ובלי מעקב."},
+ {d:"30.10",t:"עוד לבדוק: מאיפה מגיעים הגולשים (Search Console), שנטפרי ורימון לא חוסמים את האתר, וכמה מחפשים בצרפתית, ספרדית ורוסית."},
+ {d:"30.10",t:"השבוע הבא, 1 עד 6.11: 24 סרטונים חדשים לאינסטגרם מחכים לאישור שלך באריח 🕯️ candle.times."}
+];
+function nerBizSheet(){
+ var old=document.getElementById('nerBizSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='nerBizSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','עסק הנרות');
+ w.innerHTML='<div class="ycard">'
+  +'<b>🕯️ עסק הנרות</b>'
+  +'<small>candletimes.com: עדכונים, מהחדש לישן</small>'
+  +NER_BIZ_ITEMS.map(function(it,i){
+    var f=it.r&&fileEntry(it.r);
+    return '<div class="bzRow"><small>'+esc(it.d)+'</small><span>'+esc(it.t)+'</span>'
+     +(f?'<button type="button" class="yb" data-k="'+i+'">📄 לפתוח את הקובץ</button>':'')+'</div>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  if(k==='')return close();
+  var it=NER_BIZ_ITEMS[+k];if(it&&it.r)fileOpen(it.r);
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
 var CLALIT_ITEMS=[
  {n:'★',t:'הסכם כללית 15.10.26, תמונה אחת',r:'clalit-agreement-2026-10-15.png'},
  {n:'01',t:'הסכם כללית 15.10.26',r:'clalit-agreement-2026-10-15.pdf'}
@@ -12179,6 +12216,7 @@ function bizSheet(){
   var html='<div class="biz"><div class="bzTop">'+scoreHtml()+'<p class="bzUrg"><b>'+esc((S&&S.urgent)||'אין עדיין נתונים.')+'</b></p></div>'
    +'<p class="bzEmpty">הציון מ-0 עד 100, 100 זה הכי טוב. כל ליד שלא נגעו בו שבוע מוריד 8 נקודות, הצעה שלא חזרו אליה 3 ימים מורידה 12, ותזכורת שהגיעה ולא טופלה מורידה 6.</p>'
    +(INSTANCE&&INSTANCE.clalit?'<div class="bzSec">מסמכים</div><button type="button" class="yb" data-bz="clalit">🏥 מסמכים: הסכם כללית</button>':'')
+   +'<div class="bzSec">עסקים</div><button type="button" class="yb" data-bz="ner">🕯️ עסק הנרות: עדכונים</button>'
    +'<button type="button" class="yb yb1" data-bz="newtoggle">➕ ליד חדש</button>'
    +'<div class="bzEd" data-bz="newbox" hidden><input id="bzNewIn" placeholder="שם, טלפון ומה הוא רוצה"><button type="button" class="yb yb2" data-bz="newsend">שלח</button></div>'
    +'<div class="bzTabs">'+tabs.map(function(t){return '<button type="button" class="yb'+(t[0]===tab?' on':'')+'" data-bz="tab" data-t="'+t[0]+'">'+t[1]+'</button>';}).join('')+'</div>'
@@ -12188,6 +12226,7 @@ function bizSheet(){
     var t=e.target.closest?e.target.closest('[data-bz]'):null;if(!t)return;
     var a=t.getAttribute('data-bz');
     if(a==='clalit'){clalitSheet();return;}
+    if(a==='ner'){nerBizSheet();return;}
     if(a==='tab'){
      tab=t.getAttribute('data-t');
      el.querySelectorAll('[data-bz="tab"]').forEach(function(b){b.classList.toggle('on',b===t);});

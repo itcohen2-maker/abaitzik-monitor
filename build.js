@@ -1221,7 +1221,7 @@ function tenantTiles(inst) {
     const [cls, title, sub] = TENANT_TILES[id];
     // data-grp by visible label: only the two labels in the groups list get one.
     const grp = { gFiles: 'home', gBiz: 'work' }[id];
-    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261028-biz"' : '') + (id === 'gTasks' ? ' data-upd="tasks-del-1024"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261030-biz"' : '') + (id === 'gTasks' ? ' data-upd="tasks-del-1024"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
 }
 /*
@@ -4335,7 +4335,7 @@ ${require('./lib/home-ui.js').html}
     and no screens list (Itzik's copy). A customer with a screens list gets the
     tile from tenantTiles, only when gBiz is in that list.
   -->
-${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz"><button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261028-biz"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>' : ''}
+${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz"><button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261030-biz"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>' : ''}
 <!--TENANT:BEGIN-->
   <!--
     A customer's home screen, built from his intake answers and not filtered
@@ -15500,6 +15500,48 @@ function lawSheet(){
 }
 on('gLaw',lawSheet);
 /* 13.10: the Clalit lecture agreement, corrected (one hour, lateness inside cancellation, filming for marketing, logo, two pages). */
+/*
+  30.10, Itzik: "תכניס עידכונים בעסק שלי תחת ... עסק הנירות". A candletimes section
+  inside 💼 העסק שלי: dated updates (newest first) and the files behind them.
+  Updates are plain text written here; a file (r) shows only once it is in the monitor.
+*/
+var NER_BIZ_ITEMS=[
+ {d:"30.10",t:"מחקר: צרכים של הקהילה הדתית שאפשר לבנות להם אתר ולהרוויח. שלושת המובילים: הקדשות ותזכורות בתוך candletimes, מצב עירוב בכל עיר בכמה שפות, יארצייט וקדיש בצרפתית, ספרדית, רוסית ופורטוגזית. בשלב שני: מאגר גמ״חים ומסך זמנים לבתי כנסת.",r:"ner-biz-research-oct30.txt"},
+ {d:"30.10",t:"ווידג׳ט בבנייה: שורת קוד אחת שמציגה את זמני השבוע בכל אתר של קהילה, בשפה ובעיר שלה, עם קישור אלינו. נשמר במחשב בלבד, לא עולה לאתר בלי אישור שלך."},
+ {d:"30.10",t:"פנייה ל 20 קהילות (לא חב״ד, להם כבר יש זמנים מובנים מ Chabad.org): מייל אישי בשפת הקהילה עם תרגום לעברית ושאלה מה חסר להם. הטיוטות יגיעו במוצאי שבת לאישור. לא שולחים בשבת, ותזמון כך שלא ינחת אצלם בשבת שלהם."},
+ {d:"30.10",t:"כלל ברזל לאתר: כל דבר חדש לא הורס את מה שבנוי, וכל כניסה מקבלת את הגרסה האחרונה."},
+ {d:"30.10",t:"איך נהיים כשרים ואמינים: הסכמה של רב מוכר, עמוד איך אנחנו מחשבים ב 15 שפות, האתר נח בשבת, בלי פרסומות גוגל ובלי מעקב."},
+ {d:"30.10",t:"עוד לבדוק: מאיפה מגיעים הגולשים (Search Console), שנטפרי ורימון לא חוסמים את האתר, וכמה מחפשים בצרפתית, ספרדית ורוסית."},
+ {d:"30.10",t:"השבוע הבא, 1 עד 6.11: 24 סרטונים חדשים לאינסטגרם מחכים לאישור שלך באריח 🕯️ candle.times."}
+];
+function nerBizSheet(){
+ var old=document.getElementById('nerBizSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='nerBizSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','עסק הנרות');
+ w.innerHTML='<div class="ycard">'
+  +'<b>🕯️ עסק הנרות</b>'
+  +'<small>candletimes.com: עדכונים, מהחדש לישן</small>'
+  +NER_BIZ_ITEMS.map(function(it,i){
+    var f=it.r&&fileEntry(it.r);
+    return '<div class="bzRow"><small>'+esc(it.d)+'</small><span>'+esc(it.t)+'</span>'
+     +(f?'<button type="button" class="yb" data-k="'+i+'">📄 לפתוח את הקובץ</button>':'')+'</div>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  if(k==='')return close();
+  var it=NER_BIZ_ITEMS[+k];if(it&&it.r)fileOpen(it.r);
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
 var CLALIT_ITEMS=[
  /* 15.10, Itzik: "תקן את ההסכם מול כללית. שוטף +90. מחיר ההרצאה 3500 שח" and "תכין לי ב pdf במוניטור בשם הסכם כללית 15.10.26". */
  {n:'★',t:'הסכם כללית 15.10.26, תמונה אחת',r:'clalit-agreement-2026-10-15.png'},
@@ -16025,6 +16067,7 @@ function bizSheet(){
    +'<p class="bzEmpty">הציון מ-0 עד 100, 100 זה הכי טוב. כל ליד שלא נגעו בו שבוע מוריד 8 נקודות, הצעה שלא חזרו אליה 3 ימים מורידה 12, ותזכורת שהגיעה ולא טופלה מורידה 6.</p>'
    // 15.10, Itzik: the Clalit agreement lives here now, as a link at the top of the sheet.
    +(INSTANCE&&INSTANCE.clalit?'<div class="bzSec">מסמכים</div><button type="button" class="yb" data-bz="clalit">🏥 מסמכים: הסכם כללית</button>':'')
+   +'<div class="bzSec">עסקים</div><button type="button" class="yb" data-bz="ner">🕯️ עסק הנרות: עדכונים</button>'
    +'<button type="button" class="yb yb1" data-bz="newtoggle">➕ ליד חדש</button>'
    +'<div class="bzEd" data-bz="newbox" hidden><input id="bzNewIn" placeholder="שם, טלפון ומה הוא רוצה"><button type="button" class="yb yb2" data-bz="newsend">שלח</button></div>'
    +'<div class="bzTabs">'+tabs.map(function(t){return '<button type="button" class="yb'+(t[0]===tab?' on':'')+'" data-bz="tab" data-t="'+t[0]+'">'+t[1]+'</button>';}).join('')+'</div>'
@@ -16034,6 +16077,7 @@ function bizSheet(){
     var t=e.target.closest?e.target.closest('[data-bz]'):null;if(!t)return;
     var a=t.getAttribute('data-bz');
     if(a==='clalit'){clalitSheet();return;}
+    if(a==='ner'){nerBizSheet();return;}
     if(a==='tab'){
      tab=t.getAttribute('data-t');
      el.querySelectorAll('[data-bz="tab"]').forEach(function(b){b.classList.toggle('on',b===t);});
