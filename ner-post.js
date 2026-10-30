@@ -25,6 +25,7 @@ const { execFileSync } = require('child_process');
 const QUEUE = '/home/monitor/ner-queue.json';
 const TOKEN = fs.readFileSync('/home/monitor/.ig-token', 'utf8').trim();
 const BASE = 'https://itcohen2-maker.github.io/abaitzik-monitor/ner/';
+const REPOST_STORIES = false;
 const API = 'https://graph.instagram.com/v23.0/';
 const DRY = process.argv.includes('--dry');
 
@@ -133,7 +134,8 @@ function tidy(q, now) {
     // today goes back into the queue as a post three days later (past Shabbat and
     // yom tov, one post per language a day), with FEED_CAPTION. The video
     // stays in docs/ner/media because tidy keeps any file a queued item still uses.
-    if (it.kind === 'story' && it.posted && !it.feedQueued && it.asPost !== false) {
+    // Itzik, 30.10: "I do not want posts that repeat, everything always new". Off: every post is built new.
+    if (REPOST_STORIES && it.kind === 'story' && it.posted && !it.feedQueued && it.asPost !== false) {
       let d = new Date(it.date + 'T12:00:00Z');
       d.setUTCDate(d.getUTCDate() + 3);
       for (let i = 0; i < 14; i++) {
