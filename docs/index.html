@@ -2614,7 +2614,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-30T17:47:51.977Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-30T17:47:56.176Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2674,7 +2674,7 @@ try{
 <div class="wrap">
 <header class="hd">
  <button type="button" class="conn" id="homeBtn" title="חזרה לבית" hidden>בית</button>
- <button type="button" class="conn" id="setBtn" title="הגדרות" aria-label="הגדרות" data-upd="20261026-worlds">הגדרות</button>
+ <button type="button" class="conn" id="setBtn" title="הגדרות" aria-label="הגדרות" data-upd="20261030-wipe">הגדרות</button>
  <button type="button" id="thumbSet" title="הגדרות" aria-label="הגדרות" data-new="1">⚙ הגדרות</button>
  <div class="hdtext">
   <div class="t">מוניטור בבנייה עצמית</div>
@@ -4430,7 +4430,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='7d21085526';
+var CODE_ID='532cba3633';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -14650,6 +14650,14 @@ on('resetBtn',function(){
  var said=document.getElementById('resetSaid');
  if(said)said.textContent='אופס. המונה על אפס, ורק מה שיגיע מעכשיו יידלק.';
  toast('אופס. רק מה שיגיע מעכשיו יידלק.');
+});
+on('wipeBtn',function(){
+ if(!confirm('בטוח? הכל יימחק ולא יחזור'))return;
+ var w=prompt('כדי לאשר כתוב: למחוק','');
+ if(w!=='למחוק'){toast('לא נשלח. כדי לאשר צריך לכתוב בדיוק: למחוק');return;}
+ sendText('מחיקת כל הנתונים','בקשה למחיקת כל הנתונים','הגדרה').then(function(){
+  toast('נשלחה הבקשה. היא מחכה לאישור.');
+ }).catch(function(){toast('לא יצא, אין רשת. לנסות שוב.');});
 });
 
 var RIVTAG={exact:['rv-exact','חיוב חדש, טרם הגיע מועד'],near:['rv-near','חלקו ישן וחלקו חדש'],partial:['rv-partial','חוב ישן לגמרי']};
