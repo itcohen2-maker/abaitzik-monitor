@@ -1098,11 +1098,16 @@ async function recordNerApprove(m) {
   q.forEach(function (it) {
     if (names.indexOf(it.name) < 0 || it.posted) return;
     it.approved = !!got.approved;
+    // 31.10, the new candle.html: "לא מאשר" sends rejected:true, which holds the
+    // item so ner-post.js never posts it; its undo (or מאשר) sends rejected:false,
+    // which lifts only a hold this page put there.
+    if (got.rejected === true) { it.approved = false; it.hold = true; it.rejected = 'page ' + new Date().toISOString().slice(0, 10); }
+    else if (got.rejected === false && it.rejected) { delete it.rejected; it.hold = false; }
     n++;
   });
   if (!n) return;
   fs.writeFileSync(NER_QUEUE, JSON.stringify(q, null, 1));
-  say('נרות: ' + n + ' פריטים ' + (got.approved ? 'אושרו' : 'בוטל האישור') + ' מהדף');
+  say('נרות: ' + n + ' פריטים ' + (got.rejected === true ? 'סומנו לא מאשר' : got.approved ? 'אושרו' : 'בוטל האישור') + ' מהדף');
   execFile(process.execPath, ['ner-post.js', '--mirror'], { cwd: __dirname, timeout: 120000 }, function () {});
 }
 

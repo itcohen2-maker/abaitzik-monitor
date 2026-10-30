@@ -4152,7 +4152,7 @@ ${require('./lib/home-ui.js').html}
     comparison, the how-to page, the live candle stories.
   -->
   <button type="button" class="gt gNer" data-grp="net" id="gPlate" data-new="1"><b>🍽️ מה בצלחת</b><small>הסטוריז לפי הסדר, אפשר לסדר ולמחוק</small></button>
-  <button type="button" class="gt gNer" data-grp="net" id="gNerStyles" data-new="1"${NER_LOW?' data-upd="ner-need-'+NER_LOW+'"':''}><b>🕯️ candle.times</b><small>${NER_LOW?'התור נגמר ב '+NER_LOW.slice(8)+'.'+NER_LOW.slice(5,7)+', סמן "תכין לי עוד" בפנים':'הפוסט והסטורי הבאים, לפי הסדר'}</small></button>
+  <button type="button" class="gt gNer" data-grp="net" id="gNerStyles" data-new="1" data-upd="ner-tile-20261031"><b>🕯️ candle.times</b><small>סטוריז ופוסטים שמחכים לאישור שלך</small></button>
   <!--
     איציק, 1.10: "שים כפתור יעודי במוניטור, ככה אני לא מוצא". Every finished
     reel, numbered like Rinat's list. The full quality copy is on Drive in
@@ -14004,7 +14004,8 @@ on('gReels',reelSheet);
   11.10, Itzik: "שים במוניטור בכפתור סטורי". Stories ready to save to the phone,
   newest on top. Same viewer as the reels: fileOpen has the save button.
 */
-var STORY_ITEMS=[{n:'חמישי',t:'נרות, עברית: בחינם, מתנה ממני לכל היהודים בעולם',r:'story-ner-full-thu-he.mp4'},{n:'חמישי',t:'נרות, אנגלית: Free, a gift from me',r:'story-ner-full-thu-en.mp4'},{n:'שישי',t:'נרות, עברית: היום ערב שבת, שבת שלום',r:'story-ner-full-fri-he.mp4'},{n:'שישי',t:'נרות, אנגלית: Shabbat begins tonight',r:'story-ner-full-fri-en.mp4'}];
+// 31.10, Itzik: the old candle stories are gone (moved to /home/monitor/trash/ner-media-20261031).
+var STORY_ITEMS=[];
 function storySheet(){
  var old=document.getElementById('stSheet');if(old)old.remove();
  var w=document.createElement('div');

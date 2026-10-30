@@ -2610,7 +2610,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-30T22:16:59.495Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-30T22:30:20.485Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2761,7 +2761,7 @@ try{
   <button type="button" class="gt g3" data-grp="work" id="gTenants" hidden><b>🟢 מוניטורים אחרים</b><small>ירוק תקין, אדום נתק</small></button>
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות לשיפור המוניטור</b><small>מה עוד המסך הזה יכול לעשות</small></button>
   <button type="button" class="gt gNer" data-grp="net" id="gPlate" data-new="1"><b>🍽️ מה בצלחת</b><small>הסטוריז לפי הסדר, אפשר לסדר ולמחוק</small></button>
-  <button type="button" class="gt gNer" data-grp="net" id="gNerStyles" data-new="1"><b>🕯️ candle.times</b><small>הפוסט והסטורי הבאים, לפי הסדר</small></button>
+  <button type="button" class="gt gNer" data-grp="net" id="gNerStyles" data-new="1" data-upd="ner-tile-20261031"><b>🕯️ candle.times</b><small>סטוריז ופוסטים שמחכים לאישור שלך</small></button>
   <button type="button" class="gt gMed" data-grp="day" id="gMed"><b>🩺 אחרי הניתוח השני</b><small>ממוספר. המסמכים מהביקורת אצל הפרופסור</small></button>
   <button type="button" class="gt gInv" data-grp="money" id="gInv" data-upd="2026-10-15-inv"><b>🧾 חשבוניות</b><small>ממוספר. מ 3.10 והלאה</small></button>
   <button type="button" class="gt gWin" data-grp="net" id="gWin" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
@@ -4423,7 +4423,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='86febf055f';
+var CODE_ID='eb90da4cbc';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10433,7 +10433,7 @@ function postSheet(it){
  }).catch(function(){fileOpen(it.r);});
 }
 on('gReels',reelSheet);
-var STORY_ITEMS=[{n:'חמישי',t:'נרות, עברית: בחינם, מתנה ממני לכל היהודים בעולם',r:'story-ner-full-thu-he.mp4'},{n:'חמישי',t:'נרות, אנגלית: Free, a gift from me',r:'story-ner-full-thu-en.mp4'},{n:'שישי',t:'נרות, עברית: היום ערב שבת, שבת שלום',r:'story-ner-full-fri-he.mp4'},{n:'שישי',t:'נרות, אנגלית: Shabbat begins tonight',r:'story-ner-full-fri-en.mp4'}];
+var STORY_ITEMS=[];
 function storySheet(){
  var old=document.getElementById('stSheet');if(old)old.remove();
  var w=document.createElement('div');
