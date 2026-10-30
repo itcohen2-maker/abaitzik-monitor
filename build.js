@@ -15534,6 +15534,16 @@ on('gClalit',clalitSheet);
   only once they are in the monitor; Drive links (u) open the folder.
 */
 var TOM_ITEMS=[
+// 30.10: round two of animated images (cards 5..8). Replacements only, for ads that stay weak after the Sunday or Monday check.
+ {n:"📝",t:"סבב שני 30.10: מה מחליפים, שמות וקישורים",r:"itsolution-cards-oct30.txt"},
+ {n:"🔁5",t:"סבב שני: לקוח כתב ב 23:14, מי ענה לו · 9:16 רילס וסטוריז (לא עלה)",r:"ads-oct30-card5-story.mp4"},
+ {n:"🔁5",t:"סבב שני: לקוח כתב ב 23:14, מי ענה לו · 4:5 פיד (לא עלה)",r:"ads-oct30-card5-feed.mp4"},
+ {n:"🔁6",t:"סבב שני: כמה באמת הרווחת החודש · 9:16 רילס וסטוריז (לא עלה)",r:"ads-oct30-card6-story.mp4"},
+ {n:"🔁6",t:"סבב שני: כמה באמת הרווחת החודש · 4:5 פיד (לא עלה)",r:"ads-oct30-card6-feed.mp4"},
+ {n:"🔁7",t:"סבב שני: הספק העלה מחיר, שמת לב · 9:16 רילס וסטוריז (לא עלה)",r:"ads-oct30-card7-story.mp4"},
+ {n:"🔁7",t:"סבב שני: הספק העלה מחיר, שמת לב · 4:5 פיד (לא עלה)",r:"ads-oct30-card7-feed.mp4"},
+ {n:"🔁8",t:"סבב שני: 9 שעות בשבוע על אקסלים · 9:16 רילס וסטוריז (לא עלה)",r:"ads-oct30-card8-story.mp4"},
+ {n:"🔁8",t:"סבב שני: 9 שעות בשבוע על אקסלים · 4:5 פיד (לא עלה)",r:"ads-oct30-card8-feed.mp4"},
 // 28.10: the new campaign in the style Itzik brought (itay.zerem.ai). Ready, not uploaded.
  {n:"✨1",t:"תמונה מונפשת חדשה: 100 מיילים ביום · 9:16 רילס וסטוריז (לא עלה)",r:"ads-oct28-card1-story.mp4"},
  {n:"✨1",t:"תמונה מונפשת חדשה: 100 מיילים ביום · 4:5 פיד (לא עלה)",r:"ads-oct28-card1-feed.mp4"},
