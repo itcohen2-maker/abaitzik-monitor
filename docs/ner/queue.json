@@ -20,8 +20,10 @@
   "city": "Vienna",
   "file": "media/story-en-fri-3010.mp4",
   "caption": "",
-  "approved": false,
-  "hold": true
+  "approved": true,
+  "posted": "18074972294762221",
+  "postedAt": "2026-10-30T07:07:23.063Z",
+  "feedQueued": "2026-11-02"
  },
  {
   "name": "post-he-tue-2710-fromstory",
@@ -32,9 +34,10 @@
   "city": "טבריה",
   "file": "media/story-he-tue-2710.mp4",
   "caption": "זמני הדלקת נרות לכל עיר בעולם, לפי המיקום המדויק שלכם.\nבחינם, מתנה ממני על כל התמיכה.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #candletimes",
-  "approved": false,
+  "approved": true,
   "asPost": false,
-  "hold": true
+  "posted": "17999890388823134",
+  "postedAt": "2026-10-30T07:08:41.866Z"
  },
  {
   "name": "post-en-tue-2710-fromstory",
@@ -45,9 +48,10 @@
   "city": "Johannesburg",
   "file": "media/story-en-tue-2710.mp4",
   "caption": "Candle lighting times for every city in the world, by your exact location.\nFree for every Jew, a gift from me for all your support.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes",
-  "approved": false,
+  "approved": true,
   "asPost": false,
-  "hold": true
+  "posted": "18066455987789462",
+  "postedAt": "2026-10-30T07:09:19.953Z"
  },
  {
   "name": "post-he-wed-2810-fromstory",
@@ -97,6 +101,18 @@
   "city": "אילת",
   "file": "media/story-he-fri-eilat.mp4",
   "caption": "זמני הדלקת נרות לכל עיר בעולם, לפי המיקום המדויק שלכם.\nבחינם, מתנה ממני על כל התמיכה.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #candletimes",
+  "approved": true,
+  "asPost": false
+ },
+ {
+  "name": "post-en-fri-3010-fromstory",
+  "date": "2026-11-02",
+  "time": "20:00",
+  "kind": "post",
+  "lang": "en",
+  "city": "Vienna",
+  "file": "media/story-en-fri-3010.mp4",
+  "caption": "Candle lighting times for every city in the world, by your exact location.\nFree for every Jew, a gift from me for all your support.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes",
   "approved": true,
   "asPost": false
  }
