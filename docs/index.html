@@ -2616,7 +2616,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-30T17:50:03.014Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-30T17:50:17.610Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4433,7 +4433,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='e05f2fced8';
+var CODE_ID='52b3ac4b33';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -8787,10 +8787,13 @@ function renderAppts(){
    +(rm?'<div class="n">⏰ תזכורת '+esc(new Date(rm.due).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'}))+' בתשע בבוקר</div>':'')
    +(a.doc?'<div class="n"><a href="'+esc(a.doc)+'" target="_blank" rel="noopener">'+esc(a.docLabel||'ההפניה')+'</a></div>':'')
    +(a.img?'<a href="'+esc(a.img)+'" target="_blank" rel="noopener"><img src="'+esc(a.img)+'" alt="ההודעה מבית החולים" loading="lazy"></a>':'')
+   +'<button type="button" class="apCal" data-cal="'+esc(a.id)+'" style="font-size:13px;margin-top:6px">📅 ליומן של האייפון</button>'
    +'<button type="button" class="apEdit" data-edit="'+esc(a.id)+'" style="font-size:13px;margin-top:6px">✏️ לשנות</button>'
    +'<button type="button" class="apDel" data-del="'+esc(a.id)+'" style="font-size:13px;margin-top:6px">🗑️ למחוק</button></div>';
  }).join(''):'<div class="empty">אין תור עתידי. מוסיפים תור בטופס כאן למטה.</div>';
  host.onclick=async function(e){
+  var cal=e.target.closest&&e.target.closest('[data-cal]');
+  if(cal){var a2=(D.appts||[]).filter(function(a){return a.id===cal.getAttribute('data-cal');})[0];if(a2)apCalDownload(a2);return;}
   var ed=e.target.closest&&e.target.closest('[data-edit]');
   if(ed){var a0=(D.appts||[]).filter(function(a){return a.id===ed.getAttribute('data-edit');})[0];if(a0)apEditFill(a0);return;}
   var b=e.target.closest&&e.target.closest('[data-del]');if(!b)return;
@@ -9255,6 +9258,7 @@ function apEditFill(a){
  document.getElementById('apTime').value=ok&&!a.noTime?x.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Jerusalem'}):'';
  document.getElementById('apWhat').value=a.what||'';
  document.getElementById('apWhere').value=a.where||'';
+ document.getElementById('apNoRem').checked=!!a.noRemind;
  apEditId=a.id;apEditSet(true);
  document.getElementById('apSaid').textContent='משנים את התור. שנה מה שצריך ושלח, והתור הישן יתעדכן.';
  document.getElementById('apForm').scrollIntoView({behavior:'smooth',block:'center'});
@@ -9319,11 +9323,12 @@ on2('apForm','submit',function(e){
  var said=document.getElementById('apSaid');
  var v=w.value.trim(),p=wh.value.trim();
  if(!v||!d.value){said.textContent='צריך תאריך ומה התור.';return;}
- var rest=v+', '+d.value.split('-').reverse().join('.')+' ('+d.value+')'+(tm.value?' בשעה '+tm.value:' בלי שעה')+(p?', מקום: '+p:'');
+ var nr=document.getElementById('apNoRem');
+ var rest=v+', '+d.value.split('-').reverse().join('.')+' ('+d.value+')'+(tm.value?' בשעה '+tm.value:' בלי שעה')+(p?', מקום: '+p:'')+(nr&&nr.checked?', בלי תזכורת':'');
  var editing=apEditId,msg=editing?'עדכון תור: '+editing+' | '+rest:'תור חדש: '+rest;
  said.textContent='שולח.';
  sendText(editing?'עדכון תור':'תור חדש',msg,'תור').then(function(){
-  w.value='';wh.value='';tm.value='';d.value='';
+  w.value='';wh.value='';tm.value='';d.value='';if(nr)nr.checked=false;
   if(editing){apEditId='';apEditSet(false);}
   said.textContent=editing?'נשלח. התור השתנה ברשימה, וגם במה יש לי היום ביום שלו.':'נשלח. התור יופיע כאן ברשימה, וגם במה יש לי היום ביום שלו.';
   markSent('text');renderSent();renderThread();
