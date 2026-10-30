@@ -14898,7 +14898,7 @@ boot('stkNews',function(){
  if(!fresh.length)return;
  t.classList.add('taskblink');
  var sm=t.querySelector('small');
- var nt='חדש מ'+stkNewsWho(fresh[0])+': '+fresh[0].text+(fresh.length>1?' ועוד '+(fresh.length-1):'');
+ var nt='עדכון מ'+stkNewsWho(fresh[0])+': '+fresh[0].text+(fresh.length>1?' (+'+(fresh.length-1)+')':'');
  if(sm)sm.textContent=nt;else t.title=nt;
 });
 boot('pushTile',function(){
