@@ -143,8 +143,9 @@ function tidy(q, now) {
         d.setUTCDate(d.getUTCDate() + 1);
       }
       const day = d.toISOString().slice(0, 10);
+      // 30.10 Itzik: "nothing goes up without my approval", so the repost waits for his tick too
       q.push({ name: it.name.replace(/^story/, 'post') + '-fromstory', date: day, time: d.getUTCDay() === 5 ? '09:00' : '20:00',
-        kind: 'post', lang: it.lang, city: it.city, file: it.file, caption: it.feedCaption || FEED_CAPTION[it.lang] || FEED_CAPTION.he, approved: true, asPost: false });
+        kind: 'post', lang: it.lang, city: it.city, file: it.file, caption: it.feedCaption || FEED_CAPTION[it.lang] || FEED_CAPTION.he, approved: false, asPost: false });
       it.feedQueued = day;
       fs.writeFileSync(QUEUE, JSON.stringify(q, null, 1));
     }
