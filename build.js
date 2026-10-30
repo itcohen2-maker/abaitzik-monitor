@@ -1579,29 +1579,11 @@ button.abtn[disabled]{opacity:.55}
  border:0;border-radius:var(--r);cursor:pointer;text-align:start;color:#fff;font-family:Heebo,sans-serif;
  background:linear-gradient(150deg,#9aa5b8,#6b7688);box-shadow:0 8px 18px rgba(20,30,60,.16)}
 .newbtn .nb-l{flex:1;min-width:0}
-/* Itzik, 18.9: he pressed the red button and landed on "מה התקבל", which had
-   nothing in it, and wrote "אין מידע". The two buttons were the same size and
-   touching, margin-top:0 under a card sized exactly like it, so a thumb aimed
-   at the bottom of the red one came down on the blue one. It is a second rank
-   button now: shorter, quieter, and no big count disc that makes it read as a
-   twin of the red. The gap that used to sit above it is now the gap beside it.
-*/
-.newbtn.got{padding:11px 13px;
- background:linear-gradient(150deg,#5aa9fb,var(--blue));box-shadow:0 4px 10px rgba(20,30,60,.12)}
-.newbtn.got b{font-size:15px}
-.newbtn.got .nb-c{min-width:28px;height:28px;font-size:14px}
-.newbtn.got .nb-c.zero{opacity:.55}
 /*
-  Itzik, 20.9 19:28: "ביקשתי לשים את מה התקבל ותשובות באותה שורה על מנת לחסוך
-  מקום". Two full width buttons stacked took the whole first screen of the
-  phone before anything else began. Side by side they take one row, and the
-  tiles under them come up into view without a scroll.
-
-  Equal columns and stretch, so the short blue one is exactly as tall as the
-  red one and the pair reads as one row and not as a big button with a small
-  one hanging off it.
+  30.10: one button only (the second one, "איזה הוראות שלחתי", was merged into
+  it). A single full width cell, so the button is not half a row.
 */
-#newBlock{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:stretch;
+#newBlock{display:grid;grid-template-columns:1fr;gap:12px;align-items:stretch;
  margin:14px 0 10px}
 #newBlock .newbtn{width:auto;height:100%;margin:0}
 /* Half the width, so the label and the count cannot both have all the room.
@@ -4026,19 +4008,10 @@ ${require('./lib/home-ui.js').html}
      treated a one line control as a card of its own, gave it a grip, and let
      it be dragged away from the button that reveals it. -->
 <div id="newBlock">
- <button type="button" id="newBtn" class="newbtn">
+ <!-- 30.10: one button. It holds the count of the answers and of what he sent (received, in work, open tasks), and each of his messages in the screen it opens shows its word: התקבל, בעבודה or מוכן. -->
+ <button type="button" id="newBtn" class="newbtn" data-upd="20261030-one-button">
   <span class="nb-l"><b id="nbTitle">מה חדש</b><small id="nbSub"></small></span>
   <span class="nb-c" id="nbCount">0</span>
- </button>
- <!--
-   Itzik asked on 16.9 for a button under the red one: what was received.
-   His messages with where each one stands, and what is being worked on, as
-   one ordered list. The number is what is still open: received, in work,
-   and open tasks. It replaces the Codex fold that used to sit lower down.
- -->
- <button type="button" id="gotBtn" class="newbtn got">
-  <span class="nb-l"><b>איזה הוראות שלחתי למוניטור</b><small>מה בעבודה ומה בוצע</small></span>
-  <span class="nb-c" id="gotCount">0</span>
  </button>
  <!--
    The archive button that used to sit here is gone. Itzik asked on 13.9 for
@@ -8207,15 +8180,18 @@ function unreadCount(){
 function renderNew(){
  renderSent();
  paintAnsCount();
- paintGot();
+ // 30.10: one counter for the one button. The unread answers and what he sent
+ // that is still open (received, in work, open tasks) are added together.
+ var g=paintGot();
  var c=unreadCount();
+ var tot=c+g;
  var btn=document.getElementById('newBtn');
- btn.classList.toggle('hot',c>0);
+ btn.classList.toggle('hot',tot>0);
  // The block knows when the red one is live, so the button under it can step
  // further back exactly then and not be in the way of the thumb.
  var blk=document.getElementById('newBlock');
- if(blk)blk.classList.toggle('hasnew',c>0);
- document.getElementById('nbCount').textContent=c?c:'✓';
+ if(blk)blk.classList.toggle('hasnew',tot>0);
+ document.getElementById('nbCount').textContent=tot?tot:'✓';
  // Said in words as well as in colour. He told me a colour blind person would
  // not notice the old marking at all, and he was right.
  //
@@ -8239,8 +8215,10 @@ function renderNew(){
  document.getElementById('nbTitle').textContent='תשובות';
  // Short, because the button is half a screen wide since 20.9 and a sentence
  // here pushed the pair three lines taller than the row he asked for.
+ // 30.10: with nothing unread, the open items of his (received, in work) say so.
  document.getElementById('nbSub').textContent=c
   ?(c===1?'אחת שלא קראת':c+' שלא קראת')
+  :g?(g===1?'אחת בטיפול':g+' בטיפול')
   :'הכל נקרא';
  var K=D.openCmds||[];
  document.getElementById('wnCmds').innerHTML='<span class="n '+(K.length?'':'zero')+'">'+K.length+'</span><div>'+(K.length?'משימות פתוחות ממך':'אין משימות פתוחות')+(K.length?'<small>'+esc(K[0].text).slice(0,90)+'</small>':'')+'</div>';
@@ -9877,7 +9855,8 @@ function renderAnswers(){
  host.innerHTML=boardsHtml+(P.length?'<h3 class="ansPjH ansRest">שאר ההודעות</h3>':'')+list.map(function(m,i){
   var fresh=isFresh(m),bk=isBack(m);
   var his=m.src==='itzik';
-  var mark=his?(m.status==='done'?' · בוצע':(m.status==='working'?' · בעבודה':''))
+  // 30.10: his messages carry their word here: התקבל, בעבודה or מוכן.
+  var mark=his?(m.status==='done'?' · מוכן':(m.status==='working'?' · בעבודה':' · התקבל'))
    :(bk?' · לחזור לזה':(fresh?' · <em class="badge">חדש</em>':''));
   // The question sits at the top of the card that answers it. For a recording
   // the text is only the name of the file, so the transcript is what is shown.
@@ -9901,7 +9880,9 @@ function renderAnswers(){
      +'<div class="atxt">'+linkify(qt)+'</div></details>'
     :'<span class="qline">'+linkify(one)+'</span>';
    var qau=/^ *תמלול:/.test(String(m.q.note||''))?'':voiceAudio(m.q);
-   ask='<div class="aq"><span class="w">אתה · '+esc(stamp(m.q.at))+'</span>'+qb+qau+'</div>';
+   // 30.10: the same word as on his own row (התקבל, בעבודה, מוכן).
+   var qw=m.q.status==='done'?'מוכן':m.q.status==='working'?'בעבודה':'התקבל';
+   ask='<div class="aq"><span class="w">אתה · '+esc(stamp(m.q.at))+' · '+qw+'</span>'+qb+qau+'</div>';
   }
   return '<div class="ansc'+(his?' mine':' '+ansColor(m))+(m.q?' pair':'')+'" data-i="'+i+'">'
    +ask
@@ -10099,14 +10080,13 @@ function gotPending(){
  });
  return out.reverse();
 }
+// 30.10: the count of what he sent that is still open (received, in work, open
+// tasks). It used to paint its own button; renderNew now adds it to the one
+// button's count, so this only returns the number.
 function paintGot(){
- var el=document.getElementById('gotCount');
- if(!el)return;
- var n=dropGone('msg',gotList().filter(gotOpen)).length
+ return dropGone('msg',gotList().filter(gotOpen)).length
   +gotPending().length
   +dropGone('cmd',D.openCmds||[]).length;
- el.textContent=String(n);
- el.classList.toggle('zero',!n);
 }
 /*
   Itzik, 27.9: "שום דבר לא ממוספר" and a list he can mark and delete in one go,
@@ -11093,7 +11073,6 @@ document.getElementById('nQ').onclick=function(){pane('q');ensure(['replied'],re
 document.getElementById('nL').onclick=function(){pane('l');};
 document.getElementById('nR').onclick=function(){pane('r');};
 document.getElementById('nA').onclick=function(){openAnswers(ansFilter);};
-document.getElementById('gotBtn').onclick=function(){pane('b');renderGot();ensure('chat',renderGot);};
 
 // Home shortcuts. The mail and "new module" circles have no screen of their
 // own yet, so they open the chat with the request already started.
@@ -11277,7 +11256,7 @@ function flyMail(kind){
  if(!document.body.animate)return;
  var W=window.innerWidth,H=window.innerHeight;
  if(!from)from={x:W/2,y:H*0.45,w:240};
- var tb=document.getElementById('gotBtn'),tr=tb&&tb.getBoundingClientRect();
+ var tb=document.getElementById('newBtn'),tr=tb&&tb.getBoundingClientRect();
  var to=(tr&&tr.width&&tr.bottom>0&&tr.top<H)?{x:tr.left+34,y:tr.top+tr.height/2}:{x:40,y:56};
  var layer=document.createElement('div');
  layer.setAttribute('style','position:fixed;inset:0;pointer-events:none;z-index:99999');

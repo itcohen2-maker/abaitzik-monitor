@@ -249,12 +249,7 @@ button.abtn[disabled]{opacity:.55}
  border:0;border-radius:var(--r);cursor:pointer;text-align:start;color:#fff;font-family:Heebo,sans-serif;
  background:linear-gradient(150deg,#9aa5b8,#6b7688);box-shadow:0 8px 18px rgba(20,30,60,.16)}
 .newbtn .nb-l{flex:1;min-width:0}
-.newbtn.got{padding:11px 13px;
- background:linear-gradient(150deg,#5aa9fb,var(--blue));box-shadow:0 4px 10px rgba(20,30,60,.12)}
-.newbtn.got b{font-size:15px}
-.newbtn.got .nb-c{min-width:28px;height:28px;font-size:14px}
-.newbtn.got .nb-c.zero{opacity:.55}
-#newBlock{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:stretch;
+#newBlock{display:grid;grid-template-columns:1fr;gap:12px;align-items:stretch;
  margin:14px 0 10px}
 #newBlock .newbtn{width:auto;height:100%;margin:0}
 #newBlock .newbtn{gap:8px;padding:13px 13px}
@@ -2615,7 +2610,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-30T17:56:05.921Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-30T17:58:02.329Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2727,13 +2722,9 @@ try{
 <section class="hk-grid" id="homeKpis" aria-label="מספרים" hidden></section>
 <details class="hm-money" id="homeMoney" hidden><summary>💰 הכסף שלי<small>מוסתר, לחיצה לפתיחה</small></summary><div class="hk-grid" id="homeMoneyGrid"></div></details>
 <div id="newBlock">
- <button type="button" id="newBtn" class="newbtn">
+ <button type="button" id="newBtn" class="newbtn" data-upd="20261030-one-button">
   <span class="nb-l"><b id="nbTitle">מה חדש</b><small id="nbSub"></small></span>
   <span class="nb-c" id="nbCount">0</span>
- </button>
- <button type="button" id="gotBtn" class="newbtn got">
-  <span class="nb-l"><b>איזה הוראות שלחתי למוניטור</b><small>מה בעבודה ומה בוצע</small></span>
-  <span class="nb-c" id="gotCount">0</span>
  </button>
 </div>
 
@@ -4432,7 +4423,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='33ad05c5b6';
+var CODE_ID='f3fa1343b6';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -6137,16 +6128,18 @@ function unreadCount(){
 function renderNew(){
  renderSent();
  paintAnsCount();
- paintGot();
+ var g=paintGot();
  var c=unreadCount();
+ var tot=c+g;
  var btn=document.getElementById('newBtn');
- btn.classList.toggle('hot',c>0);
+ btn.classList.toggle('hot',tot>0);
  var blk=document.getElementById('newBlock');
- if(blk)blk.classList.toggle('hasnew',c>0);
- document.getElementById('nbCount').textContent=c?c:'✓';
+ if(blk)blk.classList.toggle('hasnew',tot>0);
+ document.getElementById('nbCount').textContent=tot?tot:'✓';
  document.getElementById('nbTitle').textContent='תשובות';
  document.getElementById('nbSub').textContent=c
   ?(c===1?'אחת שלא קראת':c+' שלא קראת')
+  :g?(g===1?'אחת בטיפול':g+' בטיפול')
   :'הכל נקרא';
  var K=D.openCmds||[];
  document.getElementById('wnCmds').innerHTML='<span class="n '+(K.length?'':'zero')+'">'+K.length+'</span><div>'+(K.length?'משימות פתוחות ממך':'אין משימות פתוחות')+(K.length?'<small>'+esc(K[0].text).slice(0,90)+'</small>':'')+'</div>';
@@ -7311,7 +7304,7 @@ function renderAnswers(){
  host.innerHTML=boardsHtml+(P.length?'<h3 class="ansPjH ansRest">שאר ההודעות</h3>':'')+list.map(function(m,i){
   var fresh=isFresh(m),bk=isBack(m);
   var his=m.src==='itzik';
-  var mark=his?(m.status==='done'?' · בוצע':(m.status==='working'?' · בעבודה':''))
+  var mark=his?(m.status==='done'?' · מוכן':(m.status==='working'?' · בעבודה':' · התקבל'))
    :(bk?' · לחזור לזה':(fresh?' · <em class="badge">חדש</em>':''));
   var ask='';
   if(m.q){
@@ -7325,7 +7318,8 @@ function renderAnswers(){
      +'<div class="atxt">'+linkify(qt)+'</div></details>'
     :'<span class="qline">'+linkify(one)+'</span>';
    var qau=/^ *תמלול:/.test(String(m.q.note||''))?'':voiceAudio(m.q);
-   ask='<div class="aq"><span class="w">אתה · '+esc(stamp(m.q.at))+'</span>'+qb+qau+'</div>';
+   var qw=m.q.status==='done'?'מוכן':m.q.status==='working'?'בעבודה':'התקבל';
+   ask='<div class="aq"><span class="w">אתה · '+esc(stamp(m.q.at))+' · '+qw+'</span>'+qb+qau+'</div>';
   }
   return '<div class="ansc'+(his?' mine':' '+ansColor(m))+(m.q?' pair':'')+'" data-i="'+i+'">'
    +ask
@@ -7476,13 +7470,9 @@ function gotPending(){
  return out.reverse();
 }
 function paintGot(){
- var el=document.getElementById('gotCount');
- if(!el)return;
- var n=dropGone('msg',gotList().filter(gotOpen)).length
+ return dropGone('msg',gotList().filter(gotOpen)).length
   +gotPending().length
   +dropGone('cmd',D.openCmds||[]).length;
- el.textContent=String(n);
- el.classList.toggle('zero',!n);
 }
 var gotSel={};
 function gotNumbers(){
@@ -8125,7 +8115,6 @@ document.getElementById('nQ').onclick=function(){pane('q');ensure(['replied'],re
 document.getElementById('nL').onclick=function(){pane('l');};
 document.getElementById('nR').onclick=function(){pane('r');};
 document.getElementById('nA').onclick=function(){openAnswers(ansFilter);};
-document.getElementById('gotBtn').onclick=function(){pane('b');renderGot();ensure('chat',renderGot);};
 
 function reqLog(){
  return idList('myRequests');
@@ -8254,7 +8243,7 @@ function flyMail(kind){
  if(!document.body.animate)return;
  var W=window.innerWidth,H=window.innerHeight;
  if(!from)from={x:W/2,y:H*0.45,w:240};
- var tb=document.getElementById('gotBtn'),tr=tb&&tb.getBoundingClientRect();
+ var tb=document.getElementById('newBtn'),tr=tb&&tb.getBoundingClientRect();
  var to=(tr&&tr.width&&tr.bottom>0&&tr.top<H)?{x:tr.left+34,y:tr.top+tr.height/2}:{x:40,y:56};
  var layer=document.createElement('div');
  layer.setAttribute('style','position:fixed;inset:0;pointer-events:none;z-index:99999');
