@@ -2615,7 +2615,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-30T17:55:13.996Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-30T17:55:39.973Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3659,7 +3659,7 @@ try{
 <div class="aimbar" id="aimBar" hidden><span id="aimTxt"></span><button type="button" id="aimX" aria-label="לבטל את המענה">×</button></div>
 <nav class="bn" aria-label="מסכים">
  <button type="button" id="nH" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10.5V20h12v-9.5"/><path d="M10 20v-5h4v5"/></svg>בית</button>
- <button type="button" id="nA" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h16v11h-9l-5 3.5v-3.5H4Z"/><path d="M8 10.5h8M8 14h5"/></svg>תשובות<i class="cnt zero" id="aCnt">0</i></button>
+ <button type="button" id="nA" aria-pressed="false" data-upd="20261030-eta"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h16v11h-9l-5 3.5v-3.5H4Z"/><path d="M8 10.5h8M8 14h5"/></svg>תשובות<i class="cnt zero" id="aCnt">0</i></button>
  <button type="button" id="nQ" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"/><path d="M7 19v-6"/><path d="M12 19V7"/><path d="M17 19v-9"/></svg>רשתות</button>
  <button type="button" id="nL" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>לידים<i class="dot" id="lDot" hidden></i></button>
  <button type="button" id="nR" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6Z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h4"/></svg>דוחות</button>
@@ -4432,7 +4432,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='c3cfa98349';
+var CODE_ID='33ad05c5b6';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -5225,17 +5225,22 @@ function progressBar(m){
   +(u?'<a class="prg-a" href="'+esc(u)+'" target="_blank" rel="noopener">לתוצר</a>':'')
   +'</div>';
 }
+function waitTx(m){
+ var late=m.at&&Date.now()-Date.parse(m.at)>15*60000;
+ return late?'זה לוקח יותר מהרגיל. התשובה תגיע לכאן ותקבל התראה.'
+  :'בדרך כלל התשובה מגיעה תוך 2 עד 10 דקות. תקבל התראה כשהיא מוכנה.';
+}
 function ackLine(m,noNote){
  if(m.from!=='itzik')return '';
- if(m.pend)return '<div class="ack ack-wait">'+ackTx('נשלח עכשיו. ממתין לתשובה.')+progressBar(m)+'</div>';
+ if(m.pend)return '<div class="ack ack-wait">'+ackTx('נשלח עכשיו. '+waitTx(m))+progressBar(m)+'</div>';
  var st=m.status,when=m.ackAt||'';
  if(!st){
   return '<div class="ack ack-wait">'+ackTx('נשלח '+esc(agoAfter(m.at))
-   +'. ממתין לתשובה.')+progressBar(m)+'</div>';
+   +'. '+waitTx(m))+progressBar(m)+'</div>';
  }
  var sent=m.at?('נשלח ב'+esc(stamp(m.at))+'. '):'';
  var head=when?(sent+'קיבלתי את זה ב'+esc(stamp(when))):(sent+'קיבלתי את זה');
- var tail=st==='working'?'ממתין לתשובה.'
+ var tail=st==='working'?waitTx(m)
   :st==='partial'?'ויש לי חלק מהתשובות. השאר בדרך.'
   :st==='done'?'וזה בוצע.'
   :'ועוד לא התחלתי.';
@@ -11175,7 +11180,7 @@ boot('listTiles',function(){
  });
 });
 boot('updTiles',function(){
- document.querySelectorAll('.gt[data-upd],.ic[data-upd],.newbtn[data-upd],#setBtn[data-upd]').forEach(function(t){
+ document.querySelectorAll('.gt[data-upd],.ic[data-upd],.newbtn[data-upd],#setBtn[data-upd],#nA[data-upd]').forEach(function(t){
   var k='tileUpd:'+t.id,stamp=t.getAttribute('data-upd')||'',seen='';try{seen=localStorage.getItem(k)||'';}catch(e){}
   if(seen===stamp||t.classList.contains('taskblink'))return;
   t.classList.add('updblink');

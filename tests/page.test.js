@@ -1090,7 +1090,8 @@ test('sent is yellow, the answer is red, what he touched is green', () => {
   // And the line says when it went out, not only that it is waiting.
   assert.ok(html.includes("var sent=m.at?('נשלח ב'+esc(stamp(m.at))+'. '):'';"));
   assert.ok(html.includes("ackTx('נשלח '+esc(agoAfter(m.at))"));
-  assert.ok(html.includes("+'. ממתין לתשובה.')+progressBar(m)+'</div>'"));
+  assert.ok(html.includes("+'. '+waitTx(m))+progressBar(m)+'</div>'"));
+  assert.ok(html.includes('בדרך כלל התשובה מגיעה תוך 2 עד 10 דקות. תקבל התראה כשהיא מוכנה.'));
   assert.ok(html.includes('.ack.ack-open .ack-tx{display:block}'));
 });
 

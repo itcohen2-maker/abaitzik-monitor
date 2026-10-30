@@ -1214,8 +1214,9 @@ function tenantTiles(inst) {
   const bank = '\n  <button type="button" class="gt g16" id="gBank" data-new="1" hidden><b>🏦 חיבור הבנק</b><small>שולחים קובץ, אני מסדר</small></button>';
   // 24.10, Itzik: a new monitor starts with two sample tiles that say what they are for.
   // instance.json samples: true, written by setup/new-tenant.sh only; existing customers have none.
-  const sample = '\n  <button type="button" class="gt g11" data-new="1"><b>📌 לדוגמה, אתה יכול לשים פה מה שאתה רוצה</b></button>';
-  const samples = inst.samples ? sample + sample.replace('g11', 'g4') : '';
+  // 30.10, Itzik: each sample has its own id, so the edit-mode ✕ hides it like any tile ("להחזיר" brings it back).
+  const sample = (n) => '\n  <button type="button" class="gt g11" id="gSample' + n + '" data-new="1" data-sample="1"><b>📌 לדוגמה, אתה יכול לשים פה מה שאתה רוצה</b></button>';
+  const samples = inst.samples ? sample(1) + sample(2).replace('g11', 'g4') : '';
   return guides + links + bank + samples + ids.filter((id) => TENANT_TILES[id]).map((id) => {
     const [cls, title, sub] = TENANT_TILES[id];
     // data-grp by visible label: only the two labels in the groups list get one.
@@ -5309,7 +5310,7 @@ ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').html : ''}
 <!-- 10.10, Itzik by voice: the small floating microphone sat under the computer pill and he called it unneeded. Removed; the home card and the reply box keep theirs. -->
 <nav class="bn" aria-label="מסכים">
  <button type="button" id="nH" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10.5V20h12v-9.5"/><path d="M10 20v-5h4v5"/></svg>בית</button>
- <button type="button" id="nA" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h16v11h-9l-5 3.5v-3.5H4Z"/><path d="M8 10.5h8M8 14h5"/></svg>תשובות<i class="cnt zero" id="aCnt">0</i></button>
+ <button type="button" id="nA" aria-pressed="false" data-upd="20261030-eta"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h16v11h-9l-5 3.5v-3.5H4Z"/><path d="M8 10.5h8M8 14h5"/></svg>תשובות<i class="cnt zero" id="aCnt">0</i></button>
  <button type="button" id="nQ" aria-pressed="false"${inst.name === 'abaitzik' ? '' : ' hidden'}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"/><path d="M7 19v-6"/><path d="M12 19V7"/><path d="M17 19v-9"/></svg>רשתות</button>
  <button type="button" id="nL" aria-pressed="false"${inst.name === 'abaitzik' ? '' : ' hidden'}><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>לידים<i class="dot" id="lDot" hidden></i></button>
  <button type="button" id="nR" aria-pressed="false"${inst.name === 'abaitzik' ? '' : ' hidden'}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6Z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h4"/></svg>דוחות</button>
@@ -7032,20 +7033,27 @@ function progressBar(m){
   +(u?'<a class="prg-a" href="'+esc(u)+'" target="_blank" rel="noopener">לתוצר</a>':'')
   +'</div>';
 }
+// 29.10 (idea "אין הערכה מתי תגיע תשובה"): how long an answer usually takes,
+// and that a notification comes. Past 15 minutes it says it takes longer.
+function waitTx(m){
+ var late=m.at&&Date.now()-Date.parse(m.at)>15*60000;
+ return late?'זה לוקח יותר מהרגיל. התשובה תגיע לכאן ותקבל התראה.'
+  :'בדרך כלל התשובה מגיעה תוך 2 עד 10 דקות. תקבל התראה כשהיא מוכנה.';
+}
 function ackLine(m,noNote){
  if(m.from!=='itzik')return '';
  // Itzik, 8.10, from the reviewer: the full sentence under every message
  // doubled its height and said what the bar already says. Now only the bar
  // shows; the times sit behind it and open when the bar is tapped.
- if(m.pend)return '<div class="ack ack-wait">'+ackTx('נשלח עכשיו. ממתין לתשובה.')+progressBar(m)+'</div>';
+ if(m.pend)return '<div class="ack ack-wait">'+ackTx('נשלח עכשיו. '+waitTx(m))+progressBar(m)+'</div>';
  var st=m.status,when=m.ackAt||'';
  if(!st){
   return '<div class="ack ack-wait">'+ackTx('נשלח '+esc(agoAfter(m.at))
-   +'. ממתין לתשובה.')+progressBar(m)+'</div>';
+   +'. '+waitTx(m))+progressBar(m)+'</div>';
  }
  var sent=m.at?('נשלח ב'+esc(stamp(m.at))+'. '):'';
  var head=when?(sent+'קיבלתי את זה ב'+esc(stamp(when))):(sent+'קיבלתי את זה');
- var tail=st==='working'?'ממתין לתשובה.'
+ var tail=st==='working'?waitTx(m)
   :st==='partial'?'ויש לי חלק מהתשובות. השאר בדרך.'
   :st==='done'?'וזה בוצע.'
   :'ועוד לא התחלתי.';
@@ -14889,7 +14897,7 @@ boot('listTiles',function(){
 /* 13.10: a changed tile pulses slowly until opened. Bump data-upd whenever
    something new goes into a tile that already exists; new tiles use data-new. */
 boot('updTiles',function(){
- document.querySelectorAll('.gt[data-upd],.ic[data-upd],.newbtn[data-upd],#setBtn[data-upd]').forEach(function(t){
+ document.querySelectorAll('.gt[data-upd],.ic[data-upd],.newbtn[data-upd],#setBtn[data-upd],#nA[data-upd]').forEach(function(t){
   var k='tileUpd:'+t.id,stamp=t.getAttribute('data-upd')||'',seen='';try{seen=localStorage.getItem(k)||'';}catch(e){}
   if(seen===stamp||t.classList.contains('taskblink'))return;
   t.classList.add('updblink');
@@ -14903,6 +14911,12 @@ boot('newTiles',function(){
   t.classList.add('taskblink');
   t.addEventListener('click',function(){try{localStorage.setItem(k,'1');}catch(e){}t.classList.remove('taskblink');});
  });
+});
+// 30.10: the sample tiles say what they are for when tapped (they have no page to open yet).
+document.addEventListener('click',function(e){
+ var b=e.target.closest&&e.target.closest('[data-sample]');
+ if(!b)return;
+ toast('זה מקום ריק לאריח משלך. כתוב למוניטור בצ׳אט מה תרצה שיופיע כאן (קישור, מסך, רשימה) ואני אבנה אותו.');
 });
 /*
   12.10, Itzik by voice: the theatre tile waves only when there is an update, by
