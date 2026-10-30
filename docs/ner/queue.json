@@ -68,5 +68,15 @@
   "caption": "Candle lighting times for every city in the world, by your exact location.\nFree for every Jew, a gift from me for all your support.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes",
   "approved": true,
   "asPost": false
+ },
+ {
+  "name": "story-he-fri-eilat",
+  "date": "2026-10-30",
+  "time": "09:00",
+  "kind": "story",
+  "lang": "he",
+  "city": "אילת",
+  "file": "media/story-he-fri-eilat.mp4",
+  "approved": true
  }
 ]
