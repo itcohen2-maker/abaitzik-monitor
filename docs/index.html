@@ -2614,7 +2614,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-30T17:47:28.959Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-30T17:47:51.977Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2983,6 +2983,14 @@ try{
   <span id="lockState"></span>
  </div>
  <div class="msgsaid" id="codeSaid"></div>
+</div>
+<div class="alerts" id="wipeBox">
+ <div>
+  <b>🗑️ למחוק את כל מה שנשמר</b>
+  <small>אפשר לבקש שנמחק את כל מה ששמרת כאן: הודעות, פתקים, קבצים, משימות ותורים. המחיקה סופית ואין דרך לשחזר אחריה. הבקשה מגיעה למנהל, והמחיקה נעשית תוך יום.</small>
+  <small>מה נשאר אצלנו: רק חשבוניות שהחוק מחייב לשמור. לעזרה כתוב לנו בצ׳אט.</small>
+ </div>
+ <button type="button" class="abtn" id="wipeBtn" style="background:#c62828;color:#fff">למחוק הכל</button>
 </div>
 </details>
  <div class="alerts" id="diagBox">
@@ -4422,7 +4430,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='20c306344a';
+var CODE_ID='7d21085526';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');

@@ -4538,6 +4538,14 @@ ${pushUi.html(pushKey())}
  </div>
  <div class="msgsaid" id="codeSaid"></div>
 </div>
+<div class="alerts" id="wipeBox">
+ <div>
+  <b>🗑️ למחוק את כל מה שנשמר</b>
+  <small>אפשר לבקש שנמחק את כל מה ששמרת כאן: הודעות, פתקים, קבצים, משימות ותורים. המחיקה סופית ואין דרך לשחזר אחריה. הבקשה מגיעה למנהל, והמחיקה נעשית תוך יום.</small>
+  <small>מה נשאר אצלנו: רק חשבוניות שהחוק מחייב לשמור. לעזרה כתוב לנו בצ׳אט.</small>
+ </div>
+ <button type="button" class="abtn" id="wipeBtn" style="background:#c62828;color:#fff">למחוק הכל</button>
+</div>
 </details>
  <!--
    Itzik, 18.9, for the third time in a day: "no change in the red button." On
