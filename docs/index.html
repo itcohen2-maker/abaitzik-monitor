@@ -2610,7 +2610,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-30T19:22:13.195Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-30T19:27:48.369Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4423,7 +4423,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='34ec8819f2';
+var CODE_ID='3064e8ff83';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11729,12 +11729,11 @@ function lawSheet(){
 on('gLaw',lawSheet);
 var NER_BIZ_ITEMS=[
  {d:"1",t:"לקרוא ולאשר את 20 המיילים לקהילות (צרפתית, ספרדית, הולנדית, איטלקית, גרמנית, רוסית ואנגלית, עם תרגום לעברית מתחת לכל אחד). אחרי האישור שולחים כ 10 בשבוע, אף פעם לא בשבת שלהם.",r:"ner-emails-oct30.txt"},
- {d:"2",t:"לאשר העלאה של הווידג׳ט לאתר: שורת קוד אחת שקהילה מדביקה ומקבלת את הזמנים שלה בשפה שלה. המיילים מציעים אותו, אז כדאי שיעלה לפני השליחה."},
- {d:"3",t:"להחליט מאיזו כתובת שולחים את המיילים: contact@candletimes.com או הג׳ימייל שלך."},
- {d:"4",t:"לבדוק שנטפרי ורימון לא חוסמים את האתר, ומאיפה מגיעים הגולשים (Google Search Console)."},
- {d:"5",t:"למצוא רב מוכר שייתן הסכמה לאתר, ולבנות עמוד איך אנחנו מחשבים ב 15 שפות."},
- {d:"6",t:"הכנסה ראשונה: משבצת השבת בחסות, הקדשה לעילוי נשמה או עסק, בעמודי הערים הגדולים. נסגרת אוטומטית בכניסת שבת."},
- {d:"7",t:"לאשר את 24 הסרטונים לשבוע הבא באריח 🕯️ candle.times."},
+ {d:"2",t:"להחליט מאיזו כתובת שולחים את המיילים: contact@candletimes.com או הג׳ימייל שלך."},
+ {d:"3",t:"לבדוק שנטפרי ורימון לא חוסמים את האתר, ומאיפה מגיעים הגולשים (Google Search Console)."},
+ {d:"4",t:"למצוא רב מוכר שייתן הסכמה לאתר, ולבנות עמוד איך אנחנו מחשבים ב 15 שפות."},
+ {d:"5",t:"הכנסה ראשונה: משבצת השבת בחסות, הקדשה לעילוי נשמה או עסק, בעמודי הערים הגדולים. נסגרת אוטומטית בכניסת שבת."},
+ {d:"6",t:"לאשר את 24 הסרטונים לשבוע הבא באריח 🕯️ candle.times."},
  {d:"📄",t:"דוח המחקר המלא: צרכים של הקהילה הדתית שאפשר לבנות להם אתר ולהרוויח.",r:"ner-biz-research-oct30.txt"}
 ];
 function nerBizSheet(){
