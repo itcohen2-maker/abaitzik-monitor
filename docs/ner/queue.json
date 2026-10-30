@@ -112,5 +112,159 @@
   "caption": "Candle lighting times for every city in the world, by your exact location.\nFree for every Jew, a gift from me for all your support.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes",
   "approved": false,
   "asPost": false
+ },
+ {
+  "name": "story-he-sun-0111",
+  "date": "2026-11-01",
+  "time": "20:00",
+  "kind": "story",
+  "lang": "he",
+  "city": "עכו",
+  "file": "media/story-he-sun-0111.mp4",
+  "caption": "",
+  "approved": false
+ },
+ {
+  "name": "story-en-sun-0111",
+  "date": "2026-11-01",
+  "time": "20:00",
+  "kind": "story",
+  "lang": "en",
+  "city": "Miami",
+  "file": "media/story-en-sun-0111.mp4",
+  "caption": "",
+  "approved": false
+ },
+ {
+  "name": "story-he-mon-0211",
+  "date": "2026-11-02",
+  "time": "20:00",
+  "kind": "story",
+  "lang": "he",
+  "city": "קיסריה",
+  "file": "media/story-he-mon-0211.mp4",
+  "caption": "",
+  "approved": false
+ },
+ {
+  "name": "story-en-mon-0211",
+  "date": "2026-11-02",
+  "time": "20:00",
+  "kind": "story",
+  "lang": "en",
+  "city": "Los Angeles",
+  "file": "media/story-en-mon-0211.mp4",
+  "caption": "",
+  "approved": false
+ },
+ {
+  "name": "story-he-tue-0311",
+  "date": "2026-11-03",
+  "time": "20:00",
+  "kind": "story",
+  "lang": "he",
+  "city": "צפת",
+  "file": "media/story-he-tue-0311.mp4",
+  "caption": "",
+  "approved": false
+ },
+ {
+  "name": "story-en-tue-0311",
+  "date": "2026-11-03",
+  "time": "20:00",
+  "kind": "story",
+  "lang": "en",
+  "city": "Montreal",
+  "file": "media/story-en-tue-0311.mp4",
+  "caption": "",
+  "approved": false
+ },
+ {
+  "name": "post-he-tue-0311",
+  "date": "2026-11-03",
+  "time": "20:00",
+  "kind": "post",
+  "lang": "he",
+  "city": "אשדוד",
+  "file": "media/post-he-tue-0311.mp4",
+  "caption": "ברכות ההדלקה בנוסח אשכנז וספרד, וזמני הדלקה לכל עיר בעולם.\nבחינם, מתנה ממני על כל התמיכה.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #candletimes\n\nתמונות: ויקישיתוף, נחלת הכלל. מוזיקה: Wholesome, Kevin MacLeod (incompetech.com), CC BY 4.0.",
+  "approved": false
+ },
+ {
+  "name": "post-en-tue-0311",
+  "date": "2026-11-03",
+  "time": "20:00",
+  "kind": "post",
+  "lang": "en",
+  "city": "Antwerp",
+  "file": "media/post-en-tue-0311.mp4",
+  "caption": "Ashkenaz and Sephard blessings, and candle lighting times for every city in the world.\nFree for every Jew.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Carefree\" by Kevin MacLeod (incompetech.com), CC BY 3.0.",
+  "approved": false
+ },
+ {
+  "name": "story-he-wed-0411",
+  "date": "2026-11-04",
+  "time": "20:00",
+  "kind": "story",
+  "lang": "he",
+  "city": "אשקלון",
+  "file": "media/story-he-wed-0411.mp4",
+  "caption": "",
+  "approved": false
+ },
+ {
+  "name": "story-en-wed-0411",
+  "date": "2026-11-04",
+  "time": "20:00",
+  "kind": "story",
+  "lang": "en",
+  "city": "Prague",
+  "file": "media/story-en-wed-0411.mp4",
+  "caption": "",
+  "approved": false
+ },
+ {
+  "name": "story-he-thu-0511",
+  "date": "2026-11-05",
+  "time": "20:00",
+  "kind": "story",
+  "lang": "he",
+  "city": "נתניה",
+  "file": "media/story-he-thu-0511.mp4",
+  "caption": "",
+  "approved": false
+ },
+ {
+  "name": "story-en-thu-0511",
+  "date": "2026-11-05",
+  "time": "20:00",
+  "kind": "story",
+  "lang": "en",
+  "city": "Amsterdam",
+  "file": "media/story-en-thu-0511.mp4",
+  "caption": "",
+  "approved": false
+ },
+ {
+  "name": "story-he-fri-0611",
+  "date": "2026-11-06",
+  "time": "09:00",
+  "kind": "story",
+  "lang": "he",
+  "city": "באר שבע",
+  "file": "media/story-he-fri-0611.mp4",
+  "caption": "",
+  "approved": false
+ },
+ {
+  "name": "story-en-fri-0611",
+  "date": "2026-11-06",
+  "time": "09:00",
+  "kind": "story",
+  "lang": "en",
+  "city": "New York",
+  "file": "media/story-en-fri-0611.mp4",
+  "caption": "",
+  "approved": false
  }
 ]
