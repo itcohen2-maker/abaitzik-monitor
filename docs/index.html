@@ -2616,7 +2616,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-30T17:50:17.610Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-30T17:50:57.483Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4433,7 +4433,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='52b3ac4b33';
+var CODE_ID='ae00897256';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -5354,6 +5354,20 @@ function numOf(m){
  if(numCache.n!==C.length){numCache={n:C.length,map:gotNumbers()};}
  return numCache.map[gotKey('msg',m)]||0;
 }
+document.addEventListener('click',function(e){
+ var b=e.target.closest&&e.target.closest('.rdAloud');if(!b)return;
+ e.preventDefault();e.stopPropagation();
+ if(!('speechSynthesis' in window)){toast('הקראה בקול לא נתמכת בדפדפן הזה.');return;}
+ var was=window.speechSynthesis.speaking;
+ window.speechSynthesis.cancel();
+ Array.prototype.forEach.call(document.querySelectorAll('.rdAloud'),function(x){x.textContent='🔊';});
+ if(was)return;
+ var u=new SpeechSynthesisUtterance(b.getAttribute('data-txt')||'');
+ u.lang='he-IL';
+ u.onend=function(){b.textContent='🔊';};
+ b.textContent='⏹';
+ window.speechSynthesis.speak(u);
+},true);
 function bubbleHtml(m,i,fresh,handled){
  var mine=m.from==='itzik';
  var no=mine&&!m.pend?numOf(m):0;
@@ -5370,6 +5384,7 @@ function bubbleHtml(m,i,fresh,handled){
   +'<button type="button" class="cp" data-i="'+i+'" aria-label="העתקה">העתקה</button>'
   +(mine?'':'<button type="button" class="wash" data-i="'+i+'" aria-label="שליחה בוואטסאפ">וואטסאפ</button>')
   +(mine?'':'<button type="button" class="wash tonote" data-i="'+i+'" aria-label="לפתקים שלי, לעריכה">לפתקים</button>')
+  +(mine?'':'<button type="button" class="wash rdAloud" data-txt="'+esc(m.text||'')+'" aria-label="הקראה בקול">🔊</button>')
   +'<button type="button" class="hidemsg" data-k="'+esc(msgKey(m))+'" aria-label="להסתיר">×</button>'
   +(mine?'':'<button type="button" class="aimb bubaim" data-k="'+esc(claudeKey(m))+'">להשיב</button>')
   +'</span>'+linkify(m.text)+goLinks(m)+vb+ackLine(m,!!vtx)+'</div>';
@@ -9251,6 +9266,19 @@ function apEditSet(on){
  var c=document.getElementById('apCancel'),bt=document.querySelector('#apForm button[type=submit]');
  if(c)c.hidden=!on;
  if(bt)bt.textContent=on?'שמירת השינוי':'הוספת תור';
+}
+function apIcs(a){
+ var s=new Date(a.when);if(isNaN(s.getTime()))return null;
+ var BS=String.fromCharCode(92),NL=String.fromCharCode(10),CR=String.fromCharCode(13);
+ var f=function(d){return d.toISOString().slice(0,19).replace(/[-:]/g,'')+'Z';};
+ var t=function(x){return String(x||'').split(CR).join('').split(BS).join(BS+BS).split(';').join(BS+';').split(',').join(BS+',').split(NL).join(BS+'n');};
+ return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//monitor//HE//','BEGIN:VEVENT','UID:'+t(a.id)+'@monitor','DTSTAMP:'+f(new Date()),'DTSTART:'+f(s),'DTEND:'+f(new Date(s.getTime()+3600e3)),'SUMMARY:'+t(a.what),a.where?'LOCATION:'+t(a.where):''].filter(Boolean).concat('END:VEVENT','END:VCALENDAR').join(CR+NL)+CR+NL;
+}
+function apCalDownload(a){
+ var txt=apIcs(a);if(!txt){toast('אין תאריך לתור הזה, אי אפשר להוסיף ליומן.');return;}
+ var url=URL.createObjectURL(new Blob([txt],{type:'text/calendar;charset=utf-8'}));
+ var l=document.createElement('a');l.href=url;l.download=(a.id||'tor')+'.ics';document.body.appendChild(l);l.click();
+ setTimeout(function(){URL.revokeObjectURL(url);l.remove();},4000);
 }
 function apEditFill(a){
  var x=new Date(a.when),ok=!isNaN(x.getTime());

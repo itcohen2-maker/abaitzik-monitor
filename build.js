@@ -7230,6 +7230,21 @@ function numOf(m){
  if(numCache.n!==C.length){numCache={n:C.length,map:gotNumbers()};}
  return numCache.map[gotKey('msg',m)]||0;
 }
+// 30.10, idea he took: "כפתור הקראה בקול לכל תשובה". The phone's own Hebrew voice reads the answer; a second tap stops it.
+document.addEventListener('click',function(e){
+ var b=e.target.closest&&e.target.closest('.rdAloud');if(!b)return;
+ e.preventDefault();e.stopPropagation();
+ if(!('speechSynthesis' in window)){toast('הקראה בקול לא נתמכת בדפדפן הזה.');return;}
+ var was=window.speechSynthesis.speaking;
+ window.speechSynthesis.cancel();
+ Array.prototype.forEach.call(document.querySelectorAll('.rdAloud'),function(x){x.textContent='🔊';});
+ if(was)return;
+ var u=new SpeechSynthesisUtterance(b.getAttribute('data-txt')||'');
+ u.lang='he-IL';
+ u.onend=function(){b.textContent='🔊';};
+ b.textContent='⏹';
+ window.speechSynthesis.speak(u);
+},true);
 function bubbleHtml(m,i,fresh,handled){
  var mine=m.from==='itzik';
  var no=mine&&!m.pend?numOf(m):0;
@@ -7247,6 +7262,7 @@ function bubbleHtml(m,i,fresh,handled){
   +'<button type="button" class="cp" data-i="'+i+'" aria-label="העתקה">העתקה</button>'
   +(mine?'':'<button type="button" class="wash" data-i="'+i+'" aria-label="שליחה בוואטסאפ">וואטסאפ</button>')
   +(mine?'':'<button type="button" class="wash tonote" data-i="'+i+'" aria-label="לפתקים שלי, לעריכה">לפתקים</button>')
+  +(mine?'':'<button type="button" class="wash rdAloud" data-txt="'+esc(m.text||'')+'" aria-label="הקראה בקול">🔊</button>')
   +'<button type="button" class="hidemsg" data-k="'+esc(msgKey(m))+'" aria-label="להסתיר">×</button>'
   +(mine?'':'<button type="button" class="aimb bubaim" data-k="'+esc(claudeKey(m))+'">להשיב</button>')
   +'</span>'+linkify(m.text)+goLinks(m)+vb+ackLine(m,!!vtx)+'</div>';
@@ -11939,12 +11955,16 @@ function renderAppts(){
    +(rm?'<div class="n">⏰ תזכורת '+esc(new Date(rm.due).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'}))+' בתשע בבוקר</div>':'')
    +(a.doc?'<div class="n"><a href="'+esc(a.doc)+'" target="_blank" rel="noopener">'+esc(a.docLabel||'ההפניה')+'</a></div>':'')
    +(a.img?'<a href="'+esc(a.img)+'" target="_blank" rel="noopener"><img src="'+esc(a.img)+'" alt="ההודעה מבית החולים" loading="lazy"></a>':'')
+   +'<button type="button" class="apCal" data-cal="'+esc(a.id)+'" style="font-size:13px;margin-top:6px">📅 ליומן של האייפון</button>'
    +'<button type="button" class="apEdit" data-edit="'+esc(a.id)+'" style="font-size:13px;margin-top:6px">✏️ לשנות</button>'
    +'<button type="button" class="apDel" data-del="'+esc(a.id)+'" style="font-size:13px;margin-top:6px">🗑️ למחוק</button></div>';
  }).join(''):'<div class="empty">אין תור עתידי. מוסיפים תור בטופס כאן למטה.</div>';
  // 20.10, idea he took: "אי אפשר למחוק תור שנכנס בטעות". The button sends "מחיקת תור: <id>" and the server deletes the file.
  host.onclick=async function(e){
   // 24.10, idea he took: "לשנות תור בלי למחוק ולכתוב מחדש". ✏️ fills the form above; sending it overwrites the same appointment.
+  // 30.10, idea he took: "הוספת תור ליומן של האייפון". 📅 downloads a calendar file; the phone opens it and adds the appointment.
+  var cal=e.target.closest&&e.target.closest('[data-cal]');
+  if(cal){var a2=(D.appts||[]).filter(function(a){return a.id===cal.getAttribute('data-cal');})[0];if(a2)apCalDownload(a2);return;}
   var ed=e.target.closest&&e.target.closest('[data-edit]');
   if(ed){var a0=(D.appts||[]).filter(function(a){return a.id===ed.getAttribute('data-edit');})[0];if(a0)apEditFill(a0);return;}
   var b=e.target.closest&&e.target.closest('[data-del]');if(!b)return;
@@ -12502,12 +12522,27 @@ function apEditSet(on){
  if(c)c.hidden=!on;
  if(bt)bt.textContent=on?'שמירת השינוי':'הוספת תור';
 }
+// 30.10, idea he took: a calendar file the phone opens to add the appointment (UTC times, one hour long).
+function apIcs(a){
+ var s=new Date(a.when);if(isNaN(s.getTime()))return null;
+ var BS=String.fromCharCode(92),NL=String.fromCharCode(10),CR=String.fromCharCode(13);
+ var f=function(d){return d.toISOString().slice(0,19).replace(/[-:]/g,'')+'Z';};
+ var t=function(x){return String(x||'').split(CR).join('').split(BS).join(BS+BS).split(';').join(BS+';').split(',').join(BS+',').split(NL).join(BS+'n');};
+ return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//monitor//HE//','BEGIN:VEVENT','UID:'+t(a.id)+'@monitor','DTSTAMP:'+f(new Date()),'DTSTART:'+f(s),'DTEND:'+f(new Date(s.getTime()+3600e3)),'SUMMARY:'+t(a.what),a.where?'LOCATION:'+t(a.where):''].filter(Boolean).concat('END:VEVENT','END:VCALENDAR').join(CR+NL)+CR+NL;
+}
+function apCalDownload(a){
+ var txt=apIcs(a);if(!txt){toast('אין תאריך לתור הזה, אי אפשר להוסיף ליומן.');return;}
+ var url=URL.createObjectURL(new Blob([txt],{type:'text/calendar;charset=utf-8'}));
+ var l=document.createElement('a');l.href=url;l.download=(a.id||'tor')+'.ics';document.body.appendChild(l);l.click();
+ setTimeout(function(){URL.revokeObjectURL(url);l.remove();},4000);
+}
 function apEditFill(a){
  var x=new Date(a.when),ok=!isNaN(x.getTime());
  document.getElementById('apDate').value=ok?x.toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'}):'';
  document.getElementById('apTime').value=ok&&!a.noTime?x.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Jerusalem'}):'';
  document.getElementById('apWhat').value=a.what||'';
  document.getElementById('apWhere').value=a.where||'';
+ document.getElementById('apNoRem').checked=!!a.noRemind;
  apEditId=a.id;apEditSet(true);
  document.getElementById('apSaid').textContent='משנים את התור. שנה מה שצריך ושלח, והתור הישן יתעדכן.';
  document.getElementById('apForm').scrollIntoView({behavior:'smooth',block:'center'});
@@ -12575,11 +12610,12 @@ on2('apForm','submit',function(e){
  var said=document.getElementById('apSaid');
  var v=w.value.trim(),p=wh.value.trim();
  if(!v||!d.value){said.textContent='צריך תאריך ומה התור.';return;}
- var rest=v+', '+d.value.split('-').reverse().join('.')+' ('+d.value+')'+(tm.value?' בשעה '+tm.value:' בלי שעה')+(p?', מקום: '+p:'');
+ var nr=document.getElementById('apNoRem');
+ var rest=v+', '+d.value.split('-').reverse().join('.')+' ('+d.value+')'+(tm.value?' בשעה '+tm.value:' בלי שעה')+(p?', מקום: '+p:'')+(nr&&nr.checked?', בלי תזכורת':'');
  var editing=apEditId,msg=editing?'עדכון תור: '+editing+' | '+rest:'תור חדש: '+rest;
  said.textContent='שולח.';
  sendText(editing?'עדכון תור':'תור חדש',msg,'תור').then(function(){
-  w.value='';wh.value='';tm.value='';d.value='';
+  w.value='';wh.value='';tm.value='';d.value='';if(nr)nr.checked=false;
   if(editing){apEditId='';apEditSet(false);}
   said.textContent=editing?'נשלח. התור השתנה ברשימה, וגם במה יש לי היום ביום שלו.':'נשלח. התור יופיע כאן ברשימה, וגם במה יש לי היום ביום שלו.';
   markSent('text');renderSent();renderThread();
