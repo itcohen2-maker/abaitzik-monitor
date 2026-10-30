@@ -19552,12 +19552,28 @@ boot('welcome',function(){
  w.id='welcomeCard';
  w.setAttribute('style','margin:0 0 14px;padding:16px 18px;border-radius:18px;color:#fff;'
   +'background:linear-gradient(135deg,#1a73e8,#14675a);box-shadow:0 4px 16px rgba(0,0,0,.25);line-height:1.5');
+ // 30.10.2026 (idea "ברכה ריקה"): three steps, and the notifications button right
+ // here, so nobody has to install the ntfy app to hear an answer.
  var text=(INSTANCE&&INSTANCE.welcome)||'ברוכים הבאים למוניטור של אבא איציק';
+ var steps=['1. שמרו את המוניטור במסך הבית: באייפון שיתוף ואז "הוספה למסך הבית", באנדרואיד תפריט ואז "התקנת אפליקציה".',
+  '2. הפעילו התראות מכאן, בלחיצה אחת. כך כל תשובה קופצת לטלפון, בלי אפליקציה נוספת.',
+  '3. שלחו הודעה ראשונה, למשל: "צלמי בד ובקשי שלושה צבעים שמתאימים לו".'];
+ var pbtn=(typeof PUSH_KEY!=='undefined'&&PUSH_KEY)
+  ?'<button type="button" id="welcomePush" style="margin-top:10px;margin-left:8px;padding:8px 18px;border:0;'
+   +'border-radius:999px;background:#fff;color:#14675a;font-size:15px;font-weight:700">הפעלת התראות</button>'
+  :'';
  w.innerHTML='<div style="font-size:21px;font-weight:700">'+esc(text)+'</div>'
-  +'<div style="font-size:18px;margin-top:2px">בהצלחה!</div>'
+  +'<div style="font-size:18px;margin-top:2px">בהצלחה! שלושה צעדים:</div>'
+  +steps.map(function(s){return '<div style="font-size:16px;margin-top:6px;line-height:1.5">'+esc(s)+'</div>';}).join('')
+  +pbtn
   +'<button type="button" id="welcomeClose" style="margin-top:10px;padding:8px 18px;border:1px solid rgba(255,255,255,.6);'
   +'border-radius:999px;background:transparent;color:#fff;font-size:15px">סגירה</button>';
  top.parentNode.insertBefore(w,top);
+ var pb=document.getElementById('welcomePush');
+ if(pb)pb.onclick=function(){
+  if(pushIsIos()&&!pushStandalone()){toast('קודם מוסיפים את המוניטור למסך הבית (שיתוף, הוספה למסך הבית), ואז פותחים מהאייקון.');return;}
+  pushSubscribe();
+ };
  document.getElementById('welcomeClose').onclick=function(){
   try{localStorage.setItem('welcomeSeen','1');}catch(e){}
   w.remove();

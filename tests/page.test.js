@@ -1014,26 +1014,28 @@ test('the answers tab sits beside home and its badge counts what waits', () => {
   assert.ok(!html.includes('var total=allAnswers().length;'));
 });
 
-test('what was received sits under the red button as one ordered list', () => {
+test('one button for answers and what was received, with its state on each message', () => {
   const html = renderPage(fixture({}));
   const red = html.indexOf('id="newBtn"');
-  const got = html.indexOf('id="gotBtn"');
   const talk = html.indexOf('id="talkCard"');
-  // 17.9: the talking card is first on the screen, then the answers button,
-  // then what was received. The two message buttons stay in that order and
-  // stay one under the other.
-  assert.ok(talk > -1 && red > talk && got > red);
+  // 30.10: "מה התקבל" is merged into the one button. There is no second button.
+  assert.ok(!html.includes('id="gotBtn"'));
+  assert.ok(talk > -1 && red > talk);
+  assert.ok(html.includes('id="newBtn" class="newbtn" data-upd="20261030-one-button"'));
   // 12.10: one card per message with its answers under it, then the open tasks.
   assert.ok(html.includes('<section id="pB" hidden>'));
   assert.ok(html.includes("b:'pB'"));
   const body = html.slice(html.indexOf('function renderGot(){'));
   const order = ['בעבודה עכשיו', 'ההודעות שלך', 'משימות פתוחות ממך'].map((h) => body.indexOf(h));
   assert.ok(order.every((i, n) => i > -1 && (n === 0 || i > order[n - 1])), String(order));
-  // The count is what is still open and not deleted by hand, and it is painted
-  // with the home screen.
-  assert.ok(html.includes("var n=dropGone('msg',gotList().filter(gotOpen)).length"));
+  // The count is what is still open and not deleted by hand, and it is added
+  // to the unread answers on the one button.
+  assert.ok(html.includes("return dropGone('msg',gotList().filter(gotOpen)).length"));
   assert.ok(html.includes("+dropGone('cmd',D.openCmds||[]).length;"));
-  assert.ok(html.includes(' paintGot();\n var c=unreadCount();'));
+  assert.ok(html.includes(' var g=paintGot();\n var c=unreadCount();'));
+  assert.ok(html.includes('var tot=c+g;'));
+  // Each message says where it stands, in words.
+  assert.ok(html.includes("m.status==='working'?row(m,'w','בעבודה')"));
 });
 
 test('the red button cannot be missed and cannot open on nothing', () => {
@@ -1042,10 +1044,9 @@ test('the red button cannot be missed and cannot open on nothing', () => {
   // to it with margin-top:0 and built at the same size.
   // 20.9: the two sit side by side in one row at his word, so the distance
   // between them is the column gap and the blue one is still the quiet one.
-  assert.ok(html.includes('#newBlock{display:grid;grid-template-columns:1fr 1fr;gap:12px;'));
-  assert.ok(html.includes('#newBlock .newbtn{width:auto;height:100%;margin:0}'));
-  assert.ok(html.includes('.newbtn.got b{font-size:15px}'));
-  assert.ok(html.includes("if(blk)blk.classList.toggle('hasnew',c>0);"));
+  // 30.10: one button, so the block is a single full width column.
+  assert.ok(html.includes('#newBlock{display:grid;grid-template-columns:1fr;'));
+  assert.ok(html.includes("if(blk)blk.classList.toggle('hasnew',tot>0);"));
   // The wrong screen says where the right one is, and gets there in one press.
   assert.ok(html.includes('class="gjump" id="gotToAns"'));
   assert.ok(html.includes("if(ja)ja.onclick=function(){openAnswers('fresh',true);};"));
@@ -1874,9 +1875,9 @@ test('the red button is named after where it goes, not after a state', () => {
   assert.ok(html.includes("document.getElementById('nbTitle').textContent='תשובות';"));
   assert.ok(!html.includes("?(c===1?'הודעה אחת שלא קראת':c+' הודעות שלא קראת')"));
   // The number keeps its place, in the badge and in the line underneath.
-  assert.ok(html.includes("document.getElementById('nbCount').textContent=c?c:'✓';"));
-  // Shortened on 20.9 when the button became half a screen wide, next to
-  // "מה התקבל" instead of above it. The number stays in the line underneath.
+  assert.ok(html.includes("document.getElementById('nbCount').textContent=tot?tot:'✓';"));
+  // Shortened on 20.9 when the button was half a screen wide. The number stays
+  // in the line underneath.
   assert.ok(html.includes("?(c===1?'אחת שלא קראת':c+' שלא קראת')"));
 });
 

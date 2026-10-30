@@ -2610,7 +2610,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-30T17:58:02.329Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-30T17:59:00.209Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4423,7 +4423,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='f3fa1343b6';
+var CODE_ID='495eb04802';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -14926,11 +14926,25 @@ boot('welcome',function(){
  w.setAttribute('style','margin:0 0 14px;padding:16px 18px;border-radius:18px;color:#fff;'
   +'background:linear-gradient(135deg,#1a73e8,#14675a);box-shadow:0 4px 16px rgba(0,0,0,.25);line-height:1.5');
  var text=(INSTANCE&&INSTANCE.welcome)||'ברוכים הבאים למוניטור של אבא איציק';
+ var steps=['1. שמרו את המוניטור במסך הבית: באייפון שיתוף ואז "הוספה למסך הבית", באנדרואיד תפריט ואז "התקנת אפליקציה".',
+  '2. הפעילו התראות מכאן, בלחיצה אחת. כך כל תשובה קופצת לטלפון, בלי אפליקציה נוספת.',
+  '3. שלחו הודעה ראשונה, למשל: "צלמי בד ובקשי שלושה צבעים שמתאימים לו".'];
+ var pbtn=(typeof PUSH_KEY!=='undefined'&&PUSH_KEY)
+  ?'<button type="button" id="welcomePush" style="margin-top:10px;margin-left:8px;padding:8px 18px;border:0;'
+   +'border-radius:999px;background:#fff;color:#14675a;font-size:15px;font-weight:700">הפעלת התראות</button>'
+  :'';
  w.innerHTML='<div style="font-size:21px;font-weight:700">'+esc(text)+'</div>'
-  +'<div style="font-size:18px;margin-top:2px">בהצלחה!</div>'
+  +'<div style="font-size:18px;margin-top:2px">בהצלחה! שלושה צעדים:</div>'
+  +steps.map(function(s){return '<div style="font-size:16px;margin-top:6px;line-height:1.5">'+esc(s)+'</div>';}).join('')
+  +pbtn
   +'<button type="button" id="welcomeClose" style="margin-top:10px;padding:8px 18px;border:1px solid rgba(255,255,255,.6);'
   +'border-radius:999px;background:transparent;color:#fff;font-size:15px">סגירה</button>';
  top.parentNode.insertBefore(w,top);
+ var pb=document.getElementById('welcomePush');
+ if(pb)pb.onclick=function(){
+  if(pushIsIos()&&!pushStandalone()){toast('קודם מוסיפים את המוניטור למסך הבית (שיתוף, הוספה למסך הבית), ואז פותחים מהאייקון.');return;}
+  pushSubscribe();
+ };
  document.getElementById('welcomeClose').onclick=function(){
   try{localStorage.setItem('welcomeSeen','1');}catch(e){}
   w.remove();
