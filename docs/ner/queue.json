@@ -63,7 +63,9 @@
   "city": "עכו",
   "file": "media/story-he-sun-0111.mp4",
   "caption": "",
-  "approved": true
+  "approved": false,
+  "hold": true,
+  "rejected": "30.10 Itzik: not approved, posts too dry"
  },
  {
   "name": "story-en-sun-0111",
@@ -74,7 +76,9 @@
   "city": "Miami",
   "file": "media/story-en-sun-0111.mp4",
   "caption": "",
-  "approved": true
+  "approved": false,
+  "hold": true,
+  "rejected": "30.10 Itzik: not approved, posts too dry"
  },
  {
   "name": "post-he-sun-0111",
@@ -85,7 +89,9 @@
   "city": "כרמיאל",
   "file": "media/post-he-sun-0111.mp4",
   "caption": "זמן הדלקת נרות וגם זמן הבדלה במוצאי שבת, מדויקים לכל עיר בעולם.\nבחינם, מתנה ממני על כל התמיכה שנתתם לי.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #נרנשמה #candletimes\n\nתמונות: ויקישיתוף, נחלת הכלל. מוזיקה: Lachaim, Kevin MacLeod (incompetech.com), CC BY 3.0.",
-  "approved": true
+  "approved": false,
+  "hold": true,
+  "rejected": "30.10 Itzik: not approved, posts too dry"
  },
  {
   "name": "post-en-sun-0111",
@@ -96,7 +102,9 @@
   "city": "Boston",
   "file": "media/post-en-sun-0111.mp4",
   "caption": "New on the site: Ner Neshama, a candle to remember the ones we loved. And candle lighting times for every city.\nFree, a gift from me for all your support.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Carefree\" by Kevin MacLeod (incompetech.com), CC BY 3.0.",
-  "approved": true
+  "approved": false,
+  "hold": true,
+  "rejected": "30.10 Itzik: not approved, posts too dry"
  },
  {
   "name": "story-he-mon-0211",
@@ -107,7 +115,9 @@
   "city": "קיסריה",
   "file": "media/story-he-mon-0211.mp4",
   "caption": "",
-  "approved": true
+  "approved": false,
+  "hold": true,
+  "rejected": "30.10 Itzik: not approved, posts too dry"
  },
  {
   "name": "story-en-mon-0211",
@@ -118,7 +128,9 @@
   "city": "Los Angeles",
   "file": "media/story-en-mon-0211.mp4",
   "caption": "",
-  "approved": true
+  "approved": false,
+  "hold": true,
+  "rejected": "30.10 Itzik: not approved, posts too dry"
  },
  {
   "name": "post-he-mon-0211",
@@ -129,7 +141,9 @@
   "city": "מודיעין",
   "file": "media/post-he-mon-0211.mp4",
   "caption": "כפתור אחד באתר, והטלפון מזכיר לכם לפני הדלקת הנרות.\nבחינם, לכל יהודי באשר הוא. מתנה ממני.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #נרנשמה #candletimes\n\nתמונות: ויקישיתוף, נחלת הכלל. מוזיקה: Wholesome, Kevin MacLeod (incompetech.com), CC BY 4.0.",
-  "approved": true
+  "approved": false,
+  "hold": true,
+  "rejected": "30.10 Itzik: not approved, posts too dry"
  },
  {
   "name": "post-en-mon-0211",
@@ -140,7 +154,9 @@
   "city": "Cape Town",
   "file": "media/post-en-mon-0211.mp4",
   "caption": "One tap on the site and your phone reminds you before candle lighting.\nFree for every Jew, wherever you are.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Cheery Monday\" by Kevin MacLeod (incompetech.com), CC BY 4.0.",
-  "approved": true
+  "approved": false,
+  "hold": true,
+  "rejected": "30.10 Itzik: not approved, posts too dry"
  },
  {
   "name": "story-he-tue-0311",
@@ -151,7 +167,9 @@
   "city": "צפת",
   "file": "media/story-he-tue-0311.mp4",
   "caption": "",
-  "approved": true
+  "approved": false,
+  "hold": true,
+  "rejected": "30.10 Itzik: not approved, posts too dry"
  },
  {
   "name": "story-en-tue-0311",
@@ -162,7 +180,9 @@
   "city": "Montreal",
   "file": "media/story-en-tue-0311.mp4",
   "caption": "",
-  "approved": true
+  "approved": false,
+  "hold": true,
+  "rejected": "30.10 Itzik: not approved, posts too dry"
  },
  {
   "name": "post-he-tue-0311",
@@ -173,7 +193,9 @@
   "city": "אשדוד",
   "file": "media/post-he-tue-0311.mp4",
   "caption": "זמני הדלקת נרות בחמש עשרה שפות, לכל עיר בעולם.\nשלחו לחברים ולמשפחה בחו״ל. בחינם, מתנה ממני.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #נרנשמה #candletimes\n\nתמונות: ויקישיתוף, נחלת הכלל. מוזיקה: Clean Soul, Kevin MacLeod (incompetech.com), CC BY 3.0.",
-  "approved": true
+  "approved": false,
+  "hold": true,
+  "rejected": "30.10 Itzik: not approved, posts too dry"
  },
  {
   "name": "post-en-tue-0311",
@@ -184,7 +206,9 @@
   "city": "Antwerp",
   "file": "media/post-en-tue-0311.mp4",
   "caption": "Candle lighting times in 15 languages, for every city in the world.\nSend it to family abroad. Free, a gift from me.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Lachaim\" by Kevin MacLeod (incompetech.com), CC BY 3.0.",
-  "approved": true
+  "approved": false,
+  "hold": true,
+  "rejected": "30.10 Itzik: not approved, posts too dry"
  },
  {
   "name": "story-he-wed-0411",
@@ -195,7 +219,9 @@
   "city": "אשקלון",
   "file": "media/story-he-wed-0411.mp4",
   "caption": "",
-  "approved": true
+  "approved": false,
+  "hold": true,
+  "rejected": "30.10 Itzik: not approved, posts too dry"
  },
  {
   "name": "story-en-wed-0411",
@@ -206,7 +232,9 @@
   "city": "Prague",
   "file": "media/story-en-wed-0411.mp4",
   "caption": "",
-  "approved": true
+  "approved": false,
+  "hold": true,
+  "rejected": "30.10 Itzik: not approved, posts too dry"
  },
  {
   "name": "post-he-wed-0411",
@@ -217,7 +245,9 @@
   "city": "בת ים",
   "file": "media/post-he-wed-0411.mp4",
   "caption": "חדש באתר: נר נשמה, להדליק לזכר מי שאהבנו. וזמני הדלקת נרות לכל עיר בעולם.\nבחינם, מתנה ממני לכל עם ישראל.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #נרנשמה #candletimes\n\nתמונות: ויקישיתוף, נחלת הכלל. מוזיקה: Carefree, Kevin MacLeod (incompetech.com), CC BY 3.0.",
-  "approved": true
+  "approved": false,
+  "hold": true,
+  "rejected": "30.10 Itzik: not approved, posts too dry"
  },
  {
   "name": "post-en-wed-0411",
@@ -228,7 +258,9 @@
   "city": "Lisbon",
   "file": "media/post-en-wed-0411.mp4",
   "caption": "Candle lighting time and Havdalah time when Shabbat ends, exact for your city.\nFree for every Jew, with love.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Wholesome\" by Kevin MacLeod (incompetech.com), CC BY 4.0.",
-  "approved": true
+  "approved": false,
+  "hold": true,
+  "rejected": "30.10 Itzik: not approved, posts too dry"
  },
  {
   "name": "story-he-thu-0511",
@@ -239,7 +271,9 @@
   "city": "נתניה",
   "file": "media/story-he-thu-0511.mp4",
   "caption": "",
-  "approved": true
+  "approved": false,
+  "hold": true,
+  "rejected": "30.10 Itzik: not approved, posts too dry"
  },
  {
   "name": "story-en-thu-0511",
@@ -250,7 +284,9 @@
   "city": "Amsterdam",
   "file": "media/story-en-thu-0511.mp4",
   "caption": "",
-  "approved": true
+  "approved": false,
+  "hold": true,
+  "rejected": "30.10 Itzik: not approved, posts too dry"
  },
  {
   "name": "post-he-thu-0511",
@@ -261,7 +297,9 @@
   "city": "מצפה רמון",
   "file": "media/post-he-thu-0511.mp4",
   "caption": "מחר ערב שבת. בדקו כבר עכשיו את זמן הדלקת הנרות לפי המיקום שלכם.\nבחינם, מתנה ממני.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #נרנשמה #candletimes\n\nתמונות: ויקישיתוף, נחלת הכלל. מוזיקה: Lachaim, Kevin MacLeod (incompetech.com), CC BY 3.0.",
-  "approved": true
+  "approved": false,
+  "hold": true,
+  "rejected": "30.10 Itzik: not approved, posts too dry"
  },
  {
   "name": "post-en-thu-0511",
@@ -272,7 +310,9 @@
   "city": "Philadelphia",
   "file": "media/post-en-thu-0511.mp4",
   "caption": "Tomorrow is Erev Shabbat. Check your candle lighting time now, by your exact location.\nFree, a gift from me.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Clean Soul\" by Kevin MacLeod (incompetech.com), CC BY 3.0.",
-  "approved": true
+  "approved": false,
+  "hold": true,
+  "rejected": "30.10 Itzik: not approved, posts too dry"
  },
  {
   "name": "story-he-fri-0611",
@@ -283,7 +323,9 @@
   "city": "באר שבע",
   "file": "media/story-he-fri-0611.mp4",
   "caption": "",
-  "approved": true
+  "approved": false,
+  "hold": true,
+  "rejected": "30.10 Itzik: not approved, posts too dry"
  },
  {
   "name": "story-en-fri-0611",
@@ -294,7 +336,9 @@
   "city": "New York",
   "file": "media/story-en-fri-0611.mp4",
   "caption": "",
-  "approved": true
+  "approved": false,
+  "hold": true,
+  "rejected": "30.10 Itzik: not approved, posts too dry"
  },
  {
   "name": "post-he-fri-0611",
@@ -305,7 +349,9 @@
   "city": "זכרון יעקב",
   "file": "media/post-he-fri-0611.mp4",
   "caption": "היום ערב שבת. מה השעה המדויקת להדלקת נרות אצלכם?\nבחינם, מתנה ממני לכל בית יהודי. שבת שלום.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #נרנשמה #candletimes\n\nתמונות: ויקישיתוף, נחלת הכלל. מוזיקה: Cheery Monday, Kevin MacLeod (incompetech.com), CC BY 4.0.",
-  "approved": true
+  "approved": false,
+  "hold": true,
+  "rejected": "30.10 Itzik: not approved, posts too dry"
  },
  {
   "name": "post-en-fri-0611",
@@ -316,6 +362,8 @@
   "city": "Vancouver",
   "file": "media/post-en-fri-0611.mp4",
   "caption": "Today is Erev Shabbat. What is the exact candle lighting time where you are?\nFree for every Jew. Shabbat Shalom.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Carefree\" by Kevin MacLeod (incompetech.com), CC BY 3.0.",
-  "approved": true
+  "approved": false,
+  "hold": true,
+  "rejected": "30.10 Itzik: not approved, posts too dry"
  }
 ]
