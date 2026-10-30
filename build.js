@@ -2257,6 +2257,8 @@ section{margin-bottom:30px}
 #apForm{flex-wrap:wrap}
 #apForm input{min-width:0;flex:1 1 40%}
 #apForm #apWhat,#apForm #apWhere{flex:1 1 100%}
+#apForm .apNr{flex:1 1 100%;font-size:15px;display:flex;align-items:center;gap:6px}
+#apForm .apNr input{flex:0 0 auto;min-width:0;width:auto}
 .nextrep{display:flex;align-items:center;gap:12px;margin-bottom:12px;
  background:var(--surface);border:1px solid var(--line);border-radius:16px;
  padding:12px 14px;box-shadow:var(--shadow)}
@@ -4145,7 +4147,7 @@ ${require('./lib/home-ui.js').html}
     tasks of today, and a peek at tomorrow.
   -->
   <button type="button" class="gt gMyDay" data-grp="day" id="gMyDay" data-new="1" data-upd="20261024-tdel"><b>📅 מה יש לי היום</b><small>תורים, תזכורות ומשימות של היום</small></button>
-  <button type="button" class="gt g18" data-grp="day" id="gAppts" data-upd="appt-edit-1024"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
+  <button type="button" class="gt g18" data-grp="day" id="gAppts" data-upd="20261030-ideas"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
   <button type="button" class="gt g16" data-grp="day" id="gRemind"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
   <button type="button" class="gt g10 roundTile" id="gNotes" title="פתקים" aria-label="פתקים" data-upd="notes-20261020">📝</button>
   <!-- 12.10, Itzik: "תקים אפליקציה לבדוק מה כל הקלקולים האלה". Every monitor's faults on one screen. -->
@@ -5121,6 +5123,7 @@ __RIVSHARE__
   <input type="time" id="apTime" aria-label="שעה">
   <input type="text" id="apWhat" autocomplete="off" placeholder="מה, למשל: רופא עור">
   <input type="text" id="apWhere" autocomplete="off" placeholder="איפה, למשל: מכבי רמות">
+  <label class="apNr"><input type="checkbox" id="apNoRem"> בלי תזכורת</label>
   <button type="submit">הוספת תור</button>
   <button type="button" id="apCancel" hidden onclick="apEditId='';apEditSet(false);this.form.reset();document.getElementById('apSaid').textContent='';">ביטול העריכה</button>
  </form>

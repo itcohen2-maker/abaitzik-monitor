@@ -815,6 +815,8 @@ section{margin-bottom:30px}
 #apForm{flex-wrap:wrap}
 #apForm input{min-width:0;flex:1 1 40%}
 #apForm #apWhat,#apForm #apWhere{flex:1 1 100%}
+#apForm .apNr{flex:1 1 100%;font-size:15px;display:flex;align-items:center;gap:6px}
+#apForm .apNr input{flex:0 0 auto;min-width:0;width:auto}
 .nextrep{display:flex;align-items:center;gap:12px;margin-bottom:12px;
  background:var(--surface);border:1px solid var(--line);border-radius:16px;
  padding:12px 14px;box-shadow:var(--shadow)}
@@ -2614,7 +2616,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-30T17:49:59.902Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-30T17:50:03.014Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2762,7 +2764,7 @@ try{
   <button type="button" class="gt g8" data-grp="work" id="gHomestyle" data-new="1" data-upd="20261023-hs-quote3"><b>🏠 הום סטייל</b><small>חדש: הצעת מחיר ובקשה לאיש המחשבים</small></button>
   <button type="button" class="gt g10" data-grp="home" id="gCams" data-new="1" data-upd="20261022-privacy-f1792687912" data-files="cameras-tenants.png,cameras-tenants.pdf,cameras-erocam.txt"><b>📹 מצלמות</b><small>דף לדיירים: הברקוד, הסיסמה ושמונה שלבים</small></button>
   <button type="button" class="gt gMyDay" data-grp="day" id="gMyDay" data-new="1" data-upd="20261024-tdel"><b>📅 מה יש לי היום</b><small>תורים, תזכורות ומשימות של היום</small></button>
-  <button type="button" class="gt g18" data-grp="day" id="gAppts" data-upd="appt-edit-1024"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
+  <button type="button" class="gt g18" data-grp="day" id="gAppts" data-upd="20261030-ideas"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
   <button type="button" class="gt g16" data-grp="day" id="gRemind"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
   <button type="button" class="gt g10 roundTile" id="gNotes" title="פתקים" aria-label="פתקים" data-upd="notes-20261020">📝</button>
   <button type="button" class="gt gHealth" id="gHealth" data-new="1"><b>🩺 תקלות</b><small>מה תקוע, מה נעצר, ולמה</small></button>
@@ -3498,6 +3500,7 @@ try{
   <input type="time" id="apTime" aria-label="שעה">
   <input type="text" id="apWhat" autocomplete="off" placeholder="מה, למשל: רופא עור">
   <input type="text" id="apWhere" autocomplete="off" placeholder="איפה, למשל: מכבי רמות">
+  <label class="apNr"><input type="checkbox" id="apNoRem"> בלי תזכורת</label>
   <button type="submit">הוספת תור</button>
   <button type="button" id="apCancel" hidden onclick="apEditId='';apEditSet(false);this.form.reset();document.getElementById('apSaid').textContent='';">ביטול העריכה</button>
  </form>
@@ -4430,7 +4433,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='532cba3633';
+var CODE_ID='e05f2fced8';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
