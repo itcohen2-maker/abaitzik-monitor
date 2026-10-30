@@ -3154,9 +3154,8 @@ body.rdragging{user-select:none;-webkit-user-select:none}
 #noteBody ul.chk>li.on:after{content:'✓';position:absolute;inset-inline-start:-28px;top:3px;
  color:#fff;font-size:13px;font-weight:700;pointer-events:none}
 /* 20.10: the toolbar sits above the keyboard and scrolls sideways, like the iPhone's */
-.note-tools{display:flex;justify-content:flex-start;align-items:center;gap:2px;margin-bottom:8px;
- background:var(--surface);border-radius:14px;padding:4px;overflow-x:auto;position:sticky;bottom:6px;z-index:5;
- scrollbar-width:none}
+.note-tools{display:flex;flex-wrap:wrap;justify-content:flex-start;align-items:center;gap:6px;margin-bottom:8px;
+ background:var(--surface);border-radius:14px;padding:4px;position:sticky;bottom:6px;z-index:5}
 .note-tools button{flex:0 0 auto}
 .mon-ans{border:1.5px solid #f5c400;border-radius:14px;padding:8px 12px;margin:14px 0 4px;background:rgba(245,196,0,.08)}
 .mon-ans h2{margin:0 0 4px}
