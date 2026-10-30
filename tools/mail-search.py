@@ -53,11 +53,16 @@ def as_text(b, c):
 
 
 def dec(v):
+    # 30.10.2026: one odd header (bad charset) broke every mail check of the day, so a header
+    # that does not decode is shown as is instead of stopping the whole search.
     if not v:
         return ''
-    return ''.join(
-        as_text(p, c) if isinstance(p, bytes) else p
-        for p, c in email.header.decode_header(v))
+    try:
+        return ''.join(
+            as_text(p, c) if isinstance(p, bytes) else p
+            for p, c in email.header.decode_header(v))
+    except Exception:
+        return str(v)
 
 
 def body(msg):
