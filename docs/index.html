@@ -2610,7 +2610,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-30T19:05:16.318Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-30T19:17:07.421Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2888,7 +2888,14 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-
+<div class="alerts" id="pushBox" hidden>
+ <div>
+  <b>התראות לטלפון</b>
+  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
+ </div>
+ <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
+ <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
+</div>
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4416,7 +4423,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='d50e508438';
+var CODE_ID='0b94e47c8b';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11721,15 +11728,14 @@ function lawSheet(){
 }
 on('gLaw',lawSheet);
 var NER_BIZ_ITEMS=[
- {d:"30.10",t:"תוקן ועלה לאתר: שם הפרשה בעמודי הערים ובמסך הראשי (6.11 חיי שרה, לא וירא). נבנה שומר שבודק שנה שלמה בירושלים ובניו יורק בכל פריסה, והוא כבר תפס עוד מקרה: שבת חול המועד פסח 2027. 20 טיוטות מייל לקהילות מוכנות ויגיעו אליך במוצאי שבת."},
- {d:"30.10",t:"הווידג׳ט מוכן ומחכה לאישור: שורת קוד אחת לכל אתר, 15 שפות, אותם זמנים בדיוק כמו עמודי הערים. נבדק שהאתר הקיים לא השתנה בכלל (צילומים זהים לפני ואחרי) ושכל כניסה מקבלת גרסה אחרונה. נמצא באג ישן: שם הפרשה בעמודי הערים זז בשבוע (ב 6.11 כתוב וירא במקום חיי שרה). לא תוקן בלי אישור."},
- {d:"30.10",t:"מחקר: צרכים של הקהילה הדתית שאפשר לבנות להם אתר ולהרוויח. שלושת המובילים: הקדשות ותזכורות בתוך candletimes, מצב עירוב בכל עיר בכמה שפות, יארצייט וקדיש בצרפתית, ספרדית, רוסית ופורטוגזית. בשלב שני: מאגר גמ״חים ומסך זמנים לבתי כנסת.",r:"ner-biz-research-oct30.txt"},
- {d:"30.10",t:"ווידג׳ט בבנייה: שורת קוד אחת שמציגה את זמני השבוע בכל אתר של קהילה, בשפה ובעיר שלה, עם קישור אלינו. נשמר במחשב בלבד, לא עולה לאתר בלי אישור שלך."},
- {d:"30.10",t:"פנייה ל 20 קהילות (לא חב״ד, להם כבר יש זמנים מובנים מ Chabad.org): מייל אישי בשפת הקהילה עם תרגום לעברית ושאלה מה חסר להם. הטיוטות יגיעו במוצאי שבת לאישור. לא שולחים בשבת, ותזמון כך שלא ינחת אצלם בשבת שלהם."},
- {d:"30.10",t:"כלל ברזל לאתר: כל דבר חדש לא הורס את מה שבנוי, וכל כניסה מקבלת את הגרסה האחרונה."},
- {d:"30.10",t:"איך נהיים כשרים ואמינים: הסכמה של רב מוכר, עמוד איך אנחנו מחשבים ב 15 שפות, האתר נח בשבת, בלי פרסומות גוגל ובלי מעקב."},
- {d:"30.10",t:"עוד לבדוק: מאיפה מגיעים הגולשים (Search Console), שנטפרי ורימון לא חוסמים את האתר, וכמה מחפשים בצרפתית, ספרדית ורוסית."},
- {d:"30.10",t:"השבוע הבא, 1 עד 6.11: 24 סרטונים חדשים לאינסטגרם מחכים לאישור שלך באריח 🕯️ candle.times."}
+ {d:"1",t:"לקרוא ולאשר את 20 המיילים לקהילות (צרפתית, ספרדית, הולנדית, איטלקית, גרמנית, רוסית ואנגלית, עם תרגום לעברית מתחת לכל אחד). אחרי האישור שולחים כ 10 בשבוע, אף פעם לא בשבת שלהם.",r:"ner-emails-oct30.txt"},
+ {d:"2",t:"לאשר העלאה של הווידג׳ט לאתר: שורת קוד אחת שקהילה מדביקה ומקבלת את הזמנים שלה בשפה שלה. המיילים מציעים אותו, אז כדאי שיעלה לפני השליחה."},
+ {d:"3",t:"להחליט מאיזו כתובת שולחים את המיילים: contact@candletimes.com או הג׳ימייל שלך."},
+ {d:"4",t:"לבדוק שנטפרי ורימון לא חוסמים את האתר, ומאיפה מגיעים הגולשים (Google Search Console)."},
+ {d:"5",t:"למצוא רב מוכר שייתן הסכמה לאתר, ולבנות עמוד איך אנחנו מחשבים ב 15 שפות."},
+ {d:"6",t:"הכנסה ראשונה: משבצת השבת בחסות, הקדשה לעילוי נשמה או עסק, בעמודי הערים הגדולים. נסגרת אוטומטית בכניסת שבת."},
+ {d:"7",t:"לאשר את 24 הסרטונים לשבוע הבא באריח 🕯️ candle.times."},
+ {d:"📄",t:"דוח המחקר המלא: צרכים של הקהילה הדתית שאפשר לבנות להם אתר ולהרוויח.",r:"ner-biz-research-oct30.txt"}
 ];
 function nerBizSheet(){
  var old=document.getElementById('nerBizSheet');if(old)old.remove();
@@ -11739,7 +11745,7 @@ function nerBizSheet(){
  w.setAttribute('aria-label','עסק הנרות');
  w.innerHTML='<div class="ycard">'
   +'<b>🕯️ עסק הנרות</b>'
-  +'<small>candletimes.com: עדכונים, מהחדש לישן</small>'
+  +'<small>candletimes.com: הצעדים הבאים, לפי הסדר</small>'
   +NER_BIZ_ITEMS.map(function(it,i){
     var f=it.r&&fileEntry(it.r);
     return '<div class="bzRow"><small>'+esc(it.d)+'</small><span>'+esc(it.t)+'</span>'
@@ -12211,7 +12217,7 @@ function bizSheet(){
   var html='<div class="biz"><div class="bzTop">'+scoreHtml()+'<p class="bzUrg"><b>'+esc((S&&S.urgent)||'אין עדיין נתונים.')+'</b></p></div>'
    +'<p class="bzEmpty">הציון מ-0 עד 100, 100 זה הכי טוב. כל ליד שלא נגעו בו שבוע מוריד 8 נקודות, הצעה שלא חזרו אליה 3 ימים מורידה 12, ותזכורת שהגיעה ולא טופלה מורידה 6.</p>'
    +(INSTANCE&&INSTANCE.clalit?'<div class="bzSec">מסמכים</div><button type="button" class="yb" data-bz="clalit">🏥 מסמכים: הסכם כללית</button>':'')
-   +'<div class="bzSec">עסקים</div><button type="button" class="yb" data-bz="ner">🕯️ עסק הנרות: עדכונים</button>'
+   +'<div class="bzSec">עסקים</div><button type="button" class="yb" data-bz="ner">🕯️ עסק הנרות: הצעדים הבאים</button>'
    +'<button type="button" class="yb yb1" data-bz="newtoggle">➕ ליד חדש</button>'
    +'<div class="bzEd" data-bz="newbox" hidden><input id="bzNewIn" placeholder="שם, טלפון ומה הוא רוצה"><button type="button" class="yb yb2" data-bz="newsend">שלח</button></div>'
    +'<div class="bzTabs">'+tabs.map(function(t){return '<button type="button" class="yb'+(t[0]===tab?' on':'')+'" data-bz="tab" data-t="'+t[0]+'">'+t[1]+'</button>';}).join('')+'</div>'
@@ -15690,7 +15696,7 @@ floatTile=function(id,up){if(document.body.classList.contains('world'))return;re
 
 boot('worlds',worldSync);
 boot('design',dzBoot);
-var PUSH_KEY="";
+var PUSH_KEY="BDlgL4lKYXBB2yk96UVlN_bNhLBppiq0K8ORV-TQ2jb7k8IMskeWYICec19xE7N5VEcCzVXZU9Pxb9e64KH8OCk";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
