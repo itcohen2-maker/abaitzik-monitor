@@ -1644,7 +1644,6 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .gSelf{background:linear-gradient(150deg,#d98a3a,#3f2416)}
 .meTxt{white-space:pre-wrap;text-align:right;line-height:1.7;font-size:17px;margin:10px 0 14px}
 .gLaw{background:linear-gradient(150deg,#c0623a,#3a1d12)}
-.gDudi{background:linear-gradient(150deg,#b4413a,#3a1512)}
 .gStk{background:linear-gradient(150deg,#d6a43a,#4a1d5c)}
 .stkg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}
 .stkc{background:#26222b;border:0;border-radius:12px;padding:6px 4px;color:#f2ede4;font:600 13px system-ui;position:relative}
@@ -2615,7 +2614,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-30T17:28:13.453Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-30T17:29:55.503Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2777,7 +2776,6 @@ try{
   <button type="button" class="gt gReel" data-grp="net" id="gReels" data-upd="20261028-27m"><b>🎬 הרילים שלי</b><small>חדש: 27 אורז בלי ארסן</small></button>
   <button type="button" class="gt gFut" data-grp="net" id="gFut" data-upd="20261027-fut17"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור, 08 שרירים והגיל, 09 קונטרה למינוס, 16 אורז כמו פסטה, 17 המבריק במדיח</small></button>
   <button type="button" class="gt gTom" data-grp="work" id="gTom" data-new="1" data-upd="2026-10-28-final"><b>🧭 טום ממליץ</b><small>חדש: קמפיין "אנחנו בונים לך אחד", 2 סרטונים ו 8 תמונות מונפשות, עם מוזיקה 2</small></button>
-  <button type="button" class="gt gDudi" data-grp="work" id="gDudi" data-new="1"><b>🥩 דודי בשר</b><small>חשבוניות יוני ויולי לשליחה</small></button>
   <button type="button" class="gt gGviya" data-grp="work" id="gGviya" data-new="1"><b>📞 גבייה, יואל</b><small>דף שיואל מסמן, כל סימון מעדכן אותך</small></button>
   <button type="button" class="gt gLaw" data-grp="home" id="gLaw" hidden><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
   <button type="button" class="gt gShop" data-grp="home" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
@@ -4424,7 +4422,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='e929e5b64a';
+var CODE_ID='20c306344a';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11817,42 +11815,6 @@ function tomSheet(){
 }
 on('gTom',tomSheet);
 
-var DUDI_ITEMS=[
- {n:'★',t:'כל ארבע ביחד, 2,309 ש״ח (PDF אחד)',r:'dudi-4-invoices-2309.pdf'},
- {n:'★ב',t:'כל ארבע ביחד, תמונה אחת לוואטסאפ',r:'dudi-4-invoices-2309.jpg'},
- {n:'01',t:'יוני, חשבונית 023334, 444 ש״ח (PDF)',r:'dudi-023334-june.pdf'},
- {n:'02',t:'יולי, חשבונית 023388, 888 ש״ח (PDF)',r:'dudi-023388-july.pdf'},
- {n:'01ב',t:'יוני, תמונה לגלריה',r:'dudi-023334-june.jpg'},
- {n:'02ב',t:'יולי, תמונה לגלריה',r:'dudi-023388-july.jpg'}
-];
-function dudiSheet(){
- var old=document.getElementById('dudiSheet');if(old)old.remove();
- var w=document.createElement('div');
- w.id='dudiSheet';w.className='ysheet';
- w.setAttribute('role','dialog');
- w.setAttribute('aria-label','דודי בשר');
- w.innerHTML='<div class="ycard">'
-  +'<b>אצל דודי מעדני בשר</b>'
-  +'<small>לחיצה פותחת, ובפנים כפתור שליחה לוואטסאפ</small>'
-  +DUDI_ITEMS.map(function(it,i,a){
-    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
-   }).join('')
-  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
-  +'</div>';
- function close(){w.remove();document.removeEventListener('keydown',esckey);}
- function esckey(e){if(e.key==='Escape')close();}
- w.onclick=function(e){
-  if(e.target===w)return close();
-  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
-  if(k===null||k===undefined)return;
-  close();
-  var it=DUDI_ITEMS[+k];if(k===''||!it)return;
-  fileOpen(it.r);
- };
- document.addEventListener('keydown',esckey);
- document.body.appendChild(w);
-}
-on('gDudi',dudiSheet);
 document.getElementById('rivShare')&&document.getElementById('rivShare').addEventListener('click',function(e){
  var r=e.target.closest&&e.target.closest('[data-r]');if(!r)return;
  fileOpen(r.getAttribute('data-r'));
