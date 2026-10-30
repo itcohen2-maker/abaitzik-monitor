@@ -29,6 +29,12 @@ function existing() {
   }).filter(Boolean);
 }
 
+// Itzik, 30.10: on Sundays the reviewer also looks at the home tiles and proposes removing the finished ones.
+// Same daily session and the same cap of six, so no extra run and no extra cost on other days.
+function isSunday() {
+  return new Date().toLocaleString('en-US', { timeZone: 'Asia/Jerusalem', weekday: 'short' }).startsWith('Sun');
+}
+
 function prompt(seen) {
   return [
     'אתה בודק את "המוניטור", אפליקציית דף אחד לטלפון שאבא איציק מקים ללקוחות שלא מבינים בטכנולוגיה.',
@@ -51,6 +57,12 @@ function prompt(seen) {
     '',
     'הפלט: JSON בלבד, בלי שום טקסט לפניו או אחריו, מערך של אובייקטים:',
     '[{"t":"כותרת קצרה, עד 8 מילים","d":"שתיים שלוש שורות בעברית פשוטה: מה הבעיה היום ומה השיפור","area":"איפה בדף","size":"קטן|בינוני|גדול"}]',
+    ...(isSunday() ? [
+      '',
+      'היום יום ראשון: לעבור על אריחי הבית ב-docs/index.html. על כל אריח שהעבודה שלו הסתיימה (פרויקט שנסגר, הרצאה שבוטלה, אירוע שעבר, קמפיין שנגמר),',
+      'להחזיר רעיון אחד בכותרת "להסיר את האריח <שם>", עם סיבה של משפט אחד. להחזיר כזה רק אם הסיבה גלויה בקבצים, לא לנחש.',
+      'הרעיונות האלה נכנסים לאותה מכסה של עד שישה רעיונות.',
+    ] : []),
     'עברית פשוטה, בלי מונחים טכניים, בלי מקפים.',
   ].join('\n');
 }
