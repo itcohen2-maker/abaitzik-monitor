@@ -3946,7 +3946,7 @@ try{
 -->
 <header class="hd">
  <button type="button" class="conn" id="homeBtn" title="חזרה לבית" hidden>בית</button>
- <button type="button" class="conn" id="setBtn" title="הגדרות" aria-label="הגדרות" data-upd="20261026-worlds">הגדרות</button>
+ <button type="button" class="conn" id="setBtn" title="הגדרות" aria-label="הגדרות" data-upd="20261030-wipe">הגדרות</button>
  <button type="button" id="thumbSet" title="הגדרות" aria-label="הגדרות" data-new="1">⚙ הגדרות</button>
  <div class="hdtext">
   <!--
@@ -19180,6 +19180,16 @@ on('resetBtn',function(){
  var said=document.getElementById('resetSaid');
  if(said)said.textContent='אופס. המונה על אפס, ורק מה שיגיע מעכשיו יידלק.';
  toast('אופס. רק מה שיגיע מעכשיו יידלק.');
+});
+// Deleting everything is never done by this button. It only asks, and the
+// request waits in "מחכה לך" until he approves it there.
+on('wipeBtn',function(){
+ if(!confirm('בטוח? הכל יימחק ולא יחזור'))return;
+ var w=prompt('כדי לאשר כתוב: למחוק','');
+ if(w!=='למחוק'){toast('לא נשלח. כדי לאשר צריך לכתוב בדיוק: למחוק');return;}
+ sendText('מחיקת כל הנתונים','בקשה למחיקת כל הנתונים','הגדרה').then(function(){
+  toast('נשלחה הבקשה. היא מחכה לאישור.');
+ }).catch(function(){toast('לא יצא, אין רשת. לנסות שוב.');});
 });
 /*ITZIK:BEGIN*/
 /*
