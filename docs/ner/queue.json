@@ -83,7 +83,21 @@
   "lang": "he",
   "city": "אילת",
   "file": "media/story-he-fri-eilat.mp4",
-  "approved": false,
-  "hold": true
+  "approved": true,
+  "posted": "18421817818153319",
+  "postedAt": "2026-10-30T07:06:26.358Z",
+  "feedQueued": "2026-11-02"
+ },
+ {
+  "name": "post-he-fri-eilat-fromstory",
+  "date": "2026-11-02",
+  "time": "20:00",
+  "kind": "post",
+  "lang": "he",
+  "city": "אילת",
+  "file": "media/story-he-fri-eilat.mp4",
+  "caption": "זמני הדלקת נרות לכל עיר בעולם, לפי המיקום המדויק שלכם.\nבחינם, מתנה ממני על כל התמיכה.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #candletimes",
+  "approved": true,
+  "asPost": false
  }
 ]
