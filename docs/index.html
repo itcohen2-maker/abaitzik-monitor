@@ -2610,7 +2610,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-30T22:00:02.468Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-30T22:07:15.625Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4423,7 +4423,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='a7cd2569e2';
+var CODE_ID='0c25a42e86';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11728,12 +11728,15 @@ function lawSheet(){
 }
 on('gLaw',lawSheet);
 var NER_BIZ_ITEMS=[
- {d:"1",t:"לקרוא ולאשר את 20 המיילים לקהילות (צרפתית, ספרדית, הולנדית, איטלקית, גרמנית, רוסית ואנגלית, עם תרגום לעברית מתחת לכל אחד). אחרי האישור שולחים כ 10 בשבוע, אף פעם לא בשבת שלהם.",r:"ner-emails-oct30.txt"},
- {d:"2",t:"להחליט מאיזו כתובת שולחים את המיילים: contact@candletimes.com או הג׳ימייל שלך."},
- {d:"3",t:"האתר נקי מפרסומות מאז 30.10, אז אפשר לבקש פתיחה במסננים: אתרוג דרך בעל האתר (contactus@etrog.net.il), רימון (טופס סינון תכנים או וואטסאפ 052-552-5720), ונטפרי דרך מנוי. טיוטת הבקשה אצלי, יוצאת רק באישור שלך. בנוסף: לחבר את Google Search Console כדי לדעת מאיפה מגיעים הגולשים."},
- {d:"4",t:"למצוא רב מוכר שייתן הסכמה לאתר. עמוד איך אנחנו מחשבים כבר באוויר ב 15 שפות, candletimes.com/how, ואפשר לשלוח אותו לרב."},
- {d:"5",t:"הכנסה ראשונה: משבצת השבת בחסות כבר באוויר בכל עמודי הערים, ונעלמת לבד מהדלקת הנרות עד ההבדלה. צריך להחליט מחיר ולמצוא חסות או הקדשה ראשונה, ואני מכניס אותה תוך דקה."},
- {d:"6",t:"לאשר את 24 הסרטונים לשבוע הבא באריח 🕯️ candle.times."},
+ {d:"1",t:"לבחור כיוון לסרטונים החדשים: דוגמה 2 שולחנות שבת מהעולם (עברית)",r:"ner-sample2-he-1031.mp4"},
+ {d:"1",t:"דוגמה 3 רגע אחד (עברית)",r:"ner-sample3-he-1031.mp4"},
+ {d:"1",t:"אותן שתי דוגמאות באנגלית: שולחנות שבת מהעולם",r:"ner-sample2-en-1031.mp4"},
+ {d:"1",t:"באנגלית: רגע אחד",r:"ner-sample3-en-1031.mp4"},
+ {d:"2",t:"לקרוא ולאשר את 20 המיילים לקהילות (צרפתית, ספרדית, הולנדית, איטלקית, גרמנית, רוסית ואנגלית, עם תרגום לעברית מתחת לכל אחד). אחרי האישור שולחים כ 10 בשבוע, אף פעם לא בשבת שלהם.",r:"ner-emails-oct30.txt"},
+ {d:"3",t:"להחליט מאיזו כתובת שולחים את המיילים: contact@candletimes.com או הג׳ימייל שלך."},
+ {d:"4",t:"מסננים: הבקשות לאתרוג ולרימון מתוזמנות בג׳ימייל למוצאי שבת 31.10 בשעה 20:00. נטפרי רק דרך מנוי. Google Search Console מחובר, ומפת האתר עם 2,857 העמודים הוגשה מחדש."},
+ {d:"5",t:"למצוא רב מוכר שייתן הסכמה לאתר. עמוד איך אנחנו מחשבים כבר באוויר ב 15 שפות, candletimes.com/how, ואפשר לשלוח אותו לרב."},
+ {d:"6",t:"הכנסה ראשונה: משבצת השבת בחסות כבר באוויר בכל עמודי הערים, ונעלמת לבד מהדלקת הנרות עד ההבדלה. צריך להחליט מחיר ולמצוא חסות או הקדשה ראשונה, ואני מכניס אותה תוך דקה."},
  {d:"📄",t:"דוח המחקר המלא: צרכים של הקהילה הדתית שאפשר לבנות להם אתר ולהרוויח.",r:"ner-biz-research-oct30.txt"}
 ];
 function nerBizSheet(){
