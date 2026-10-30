@@ -16800,7 +16800,7 @@ document.getElementById('noteBody').addEventListener('keydown',function(e){
 document.getElementById('noteRule').onclick=function(){noteSel();document.execCommand('insertHTML',false,'<hr><div><br></div>');noteSave();};
 // Paste as plain text, the same way a paste with the finger does it.
 document.getElementById('notePaste').onclick=function(){
- if(!(navigator.clipboard&&navigator.clipboard.readText)){toast('הדביקו בדרך הרגילה: לחיצה ארוכה על המסך.');return;}
+ if(!(navigator.clipboard&&navigator.clipboard.readText)){toast('לחיצה ארוכה בתוך הפתק, ואז הדבקה');return;}
  navigator.clipboard.readText().then(function(t){
   if(!t)return;
   noteSel();document.execCommand('insertText',false,t);noteSave();
