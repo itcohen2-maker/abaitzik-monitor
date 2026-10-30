@@ -8,7 +8,8 @@
   "city": "רומא",
   "file": "media/story-he-fri-3010.mp4",
   "caption": "",
-  "approved": true
+  "approved": false,
+  "hold": true
  },
  {
   "name": "story-en-fri-3010",
@@ -19,7 +20,8 @@
   "city": "Vienna",
   "file": "media/story-en-fri-3010.mp4",
   "caption": "",
-  "approved": true
+  "approved": false,
+  "hold": true
  },
  {
   "name": "post-he-tue-2710-fromstory",
@@ -30,8 +32,9 @@
   "city": "טבריה",
   "file": "media/story-he-tue-2710.mp4",
   "caption": "זמני הדלקת נרות לכל עיר בעולם, לפי המיקום המדויק שלכם.\nבחינם, מתנה ממני על כל התמיכה.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #candletimes",
-  "approved": true,
-  "asPost": false
+  "approved": false,
+  "asPost": false,
+  "hold": true
  },
  {
   "name": "post-en-tue-2710-fromstory",
@@ -42,8 +45,9 @@
   "city": "Johannesburg",
   "file": "media/story-en-tue-2710.mp4",
   "caption": "Candle lighting times for every city in the world, by your exact location.\nFree for every Jew, a gift from me for all your support.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes",
-  "approved": true,
-  "asPost": false
+  "approved": false,
+  "asPost": false,
+  "hold": true
  },
  {
   "name": "post-he-wed-2810-fromstory",
@@ -54,8 +58,9 @@
   "city": "ברלין",
   "file": "media/story-he-wed-2810.mp4",
   "caption": "זמני הדלקת נרות לכל עיר בעולם, לפי המיקום המדויק שלכם.\nבחינם, מתנה ממני על כל התמיכה.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #candletimes",
-  "approved": true,
-  "asPost": false
+  "approved": false,
+  "asPost": false,
+  "hold": true
  },
  {
   "name": "post-en-wed-2810-fromstory",
@@ -66,8 +71,9 @@
   "city": "Tel Aviv",
   "file": "media/story-en-wed-2810.mp4",
   "caption": "Candle lighting times for every city in the world, by your exact location.\nFree for every Jew, a gift from me for all your support.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes",
-  "approved": true,
-  "asPost": false
+  "approved": false,
+  "asPost": false,
+  "hold": true
  },
  {
   "name": "story-he-fri-eilat",
@@ -77,6 +83,7 @@
   "lang": "he",
   "city": "אילת",
   "file": "media/story-he-fri-eilat.mp4",
-  "approved": true
+  "approved": false,
+  "hold": true
  }
 ]
