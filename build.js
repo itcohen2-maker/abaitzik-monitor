@@ -2702,6 +2702,11 @@ body.tdrag{-webkit-user-select:none;user-select:none}
    nothing from the panes and cannot disturb them. */
 .fttx{white-space:pre-wrap;text-align:right;line-height:1.6;font-size:16px;margin:10px 0;max-height:45vh;overflow:auto;user-select:text;-webkit-user-select:text}.fttx-en{margin:0 0 10px;font-size:13px;opacity:.75}.fttx-en div{white-space:pre-wrap;user-select:text;-webkit-user-select:text;margin-top:6px}.ysheet{position:fixed;inset:0;z-index:9999;background:rgba(10,14,22,.55);
  display:flex;align-items:flex-end;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 8px) 14px 14px}
+/* 31.10, Itzik (voice): the translated text card stayed light when he wanted night.
+   Only this card (#ftText), dark whatever the phone's setting. */
+#ftText .ycard{background:#1a1d24;color:#e6e6e6}
+#ftText .yb,#ftText .ytopx{background:#2a2f3a;color:#e6e6e6}
+.rq{font-size:12px;opacity:.7;border-inline-start:3px solid currentColor;padding-inline-start:8px;margin:0 0 6px;line-height:1.4}
 .ycard{background:#fff;color:#16202c;width:100%;max-width:420px;
  border-radius:18px;padding:18px 16px 14px;display:flex;flex-direction:column;gap:9px;
  box-shadow:0 -8px 40px rgba(0,0,0,.35);
@@ -7225,6 +7230,17 @@ document.addEventListener('click',function(e){
  b.textContent='⏹';
  window.speechSynthesis.speak(u);
 },true);
+// 31.10, Itzik (voice): "תתקן ותחבר את התשובות למה ששאלת". An answer shows, above
+// its words, the first words of the message it answers, so he sees what it is about.
+function replyQuote(m){
+ if(m.from!=='claude'||!m.re)return '';
+ var q=null;
+ (D.chat||[]).forEach(function(x){if(x.id===m.re)q=x;});
+ var t=q?String(q.text||'').replace(/\s+/g,' ').trim():'';
+ if(!t)return '';
+ if(t.length>60)t=t.slice(0,60).replace(/\s+\S*$/,'')+'…';
+ return '<div class="rq">בקשר ל: '+esc(t)+'</div>';
+}
 function bubbleHtml(m,i,fresh,handled){
  var mine=m.from==='itzik';
  var no=mine&&!m.pend?numOf(m):0;
@@ -7245,7 +7261,7 @@ function bubbleHtml(m,i,fresh,handled){
   +(mine?'':'<button type="button" class="wash rdAloud" data-txt="'+esc(m.text||'')+'" aria-label="הקראה בקול">🔊</button>')
   +'<button type="button" class="hidemsg" data-k="'+esc(msgKey(m))+'" aria-label="להסתיר">×</button>'
   +(mine?'':'<button type="button" class="aimb bubaim" data-k="'+esc(claudeKey(m))+'">להשיב</button>')
-  +'</span>'+linkify(m.text)+goLinks(m)+vb+ackLine(m,!!vtx)+'</div>';
+  +'</span>'+replyQuote(m)+linkify(m.text)+goLinks(m)+vb+ackLine(m,!!vtx)+'</div>';
 }
 // Copy, paste and send on every reply form, whatever screen it is on.
 function pasteRow(){
