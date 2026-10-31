@@ -8,7 +8,7 @@
   "city": "עכו",
   "file": "media/story-he-sun-0111.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  },
  {
   "name": "story-en-sun-0111",
@@ -19,7 +19,7 @@
   "city": "Miami",
   "file": "media/story-en-sun-0111.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  },
  {
   "name": "post-he-sun-0111",
@@ -30,7 +30,7 @@
   "city": "כרמיאל",
   "file": "media/post-he-sun-0111.mp4",
   "caption": "\"אם לא עכשיו, אימתי?\" (הלל, פרקי אבות)\n\nזמן הדלקת נרות וזמן הבדלה לכל עיר בעולם, ב 15 שפות, בחינם.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #שבתשלום #נרנשמה #candletimes\n\nתמונות: ויקישיתוף, נחלת הכלל. מוזיקה: \"Clean Soul\" by Kevin MacLeod (incompetech.com), CC BY 3.0.",
-  "approved": false
+  "approved": true
  },
  {
   "name": "post-en-sun-0111",
@@ -41,7 +41,7 @@
   "city": "Boston",
   "file": "media/post-en-sun-0111.mp4",
   "caption": "\"Say little and do much.\" (Shammai, Pirkei Avot)\n\nCandle lighting and Havdalah times for every city, in 15 languages, free.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #shabbatshalom #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Wholesome\" by Kevin MacLeod (incompetech.com), CC BY 4.0.",
-  "approved": false
+  "approved": true
  },
  {
   "name": "story-he-mon-0211",
@@ -52,7 +52,7 @@
   "city": "קיסריה",
   "file": "media/story-he-mon-0211.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  },
  {
   "name": "story-en-mon-0211",
@@ -63,7 +63,7 @@
   "city": "Los Angeles",
   "file": "media/story-en-mon-0211.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  },
  {
   "name": "post-he-mon-0211",
@@ -74,7 +74,7 @@
   "city": "מודיעין",
   "file": "media/post-he-mon-0211.mp4",
   "caption": "\"איזהו עשיר? השמח בחלקו.\" (בן זומא, פרקי אבות)\n\nזמן הדלקת נרות וזמן הבדלה לכל עיר בעולם, ב 15 שפות, בחינם.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #שבתשלום #נרנשמה #candletimes\n\nתמונות: ויקישיתוף, נחלת הכלל. מוזיקה: \"Carefree\" by Kevin MacLeod (incompetech.com), CC BY 3.0.",
-  "approved": false
+  "approved": true
  },
  {
   "name": "post-en-mon-0211",
@@ -85,7 +85,7 @@
   "city": "Cape Town",
   "file": "media/post-en-mon-0211.mp4",
   "caption": "\"Who is strong? One who masters himself.\" (Ben Zoma, Pirkei Avot)\n\nCandle lighting and Havdalah times for every city, in 15 languages, free.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #shabbatshalom #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Clean Soul\" by Kevin MacLeod (incompetech.com), CC BY 3.0.",
-  "approved": false
+  "approved": true
  },
  {
   "name": "story-he-tue-0311",
@@ -96,7 +96,7 @@
   "city": "צפת",
   "file": "media/story-he-tue-0311.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  },
  {
   "name": "story-en-tue-0311",
@@ -107,7 +107,7 @@
   "city": "Montreal",
   "file": "media/story-en-tue-0311.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  },
  {
   "name": "post-he-tue-0311",
@@ -118,7 +118,7 @@
   "city": "אשדוד",
   "file": "media/post-he-tue-0311.mp4",
   "caption": "\"איזהו חכם? הלומד מכל אדם.\" (בן זומא, פרקי אבות)\n\nזמן הדלקת נרות וזמן הבדלה לכל עיר בעולם, ב 15 שפות, בחינם.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #שבתשלום #נרנשמה #candletimes\n\nתמונות: ויקישיתוף, נחלת הכלל. מוזיקה: \"Wholesome\" by Kevin MacLeod (incompetech.com), CC BY 4.0.",
-  "approved": false
+  "approved": true
  },
  {
   "name": "post-en-tue-0311",
@@ -129,7 +129,7 @@
   "city": "Antwerp",
   "file": "media/post-en-tue-0311.mp4",
   "caption": "\"Love peace and pursue peace.\" (Hillel, Pirkei Avot)\n\nCandle lighting and Havdalah times for every city, in 15 languages, free.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #shabbatshalom #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Carefree\" by Kevin MacLeod (incompetech.com), CC BY 3.0.",
-  "approved": false
+  "approved": true
  },
  {
   "name": "story-he-wed-0411",
@@ -140,7 +140,7 @@
   "city": "אשקלון",
   "file": "media/story-he-wed-0411.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  },
  {
   "name": "story-en-wed-0411",
@@ -151,7 +151,7 @@
   "city": "Prague",
   "file": "media/story-en-wed-0411.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  },
  {
   "name": "post-he-wed-0411",
@@ -162,7 +162,7 @@
   "city": "בת ים",
   "file": "media/post-he-wed-0411.mp4",
   "caption": "\"כל ישראל ערבים זה בזה.\" (מסכת שבועות)\n\nזמן הדלקת נרות וזמן הבדלה לכל עיר בעולם, ב 15 שפות, בחינם.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #שבתשלום #נרנשמה #candletimes\n\nתמונות: ויקישיתוף, נחלת הכלל. מוזיקה: \"Clean Soul\" by Kevin MacLeod (incompetech.com), CC BY 3.0.",
-  "approved": false
+  "approved": true
  },
  {
   "name": "post-en-wed-0411",
@@ -173,7 +173,7 @@
   "city": "Lisbon",
   "file": "media/post-en-wed-0411.mp4",
   "caption": "\"Do not judge your fellow until you stand in his place.\" (Hillel, Pirkei Avot)\n\nCandle lighting and Havdalah times for every city, in 15 languages, free.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #shabbatshalom #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Wholesome\" by Kevin MacLeod (incompetech.com), CC BY 4.0.",
-  "approved": false
+  "approved": true
  },
  {
   "name": "story-he-thu-0511",
@@ -184,7 +184,7 @@
   "city": "נתניה",
   "file": "media/story-he-thu-0511.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  },
  {
   "name": "story-en-thu-0511",
@@ -195,7 +195,7 @@
   "city": "Amsterdam",
   "file": "media/story-en-thu-0511.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  },
  {
   "name": "post-he-thu-0511",
@@ -206,7 +206,7 @@
   "city": "מצפה רמון",
   "file": "media/post-he-thu-0511.mp4",
   "caption": "\"לא עליך המלאכה לגמור, ולא אתה בן חורין להיבטל ממנה.\" (רבי טרפון, פרקי אבות)\n\nזמן הדלקת נרות וזמן הבדלה לכל עיר בעולם, ב 15 שפות, בחינם.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #שבתשלום #נרנשמה #candletimes\n\nתמונות: ויקישיתוף, נחלת הכלל. מוזיקה: \"Carefree\" by Kevin MacLeod (incompetech.com), CC BY 3.0.",
-  "approved": false
+  "approved": true
  },
  {
   "name": "post-en-thu-0511",
@@ -217,7 +217,7 @@
   "city": "Philadelphia",
   "file": "media/post-en-thu-0511.mp4",
   "caption": "\"Silence is a fence around wisdom.\" (Rabbi Akiva, Pirkei Avot)\n\nCandle lighting and Havdalah times for every city, in 15 languages, free.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #shabbatshalom #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Clean Soul\" by Kevin MacLeod (incompetech.com), CC BY 3.0.",
-  "approved": false
+  "approved": true
  },
  {
   "name": "story-he-fri-0611",
@@ -228,7 +228,7 @@
   "city": "באר שבע",
   "file": "media/story-he-fri-0611.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  },
  {
   "name": "story-en-fri-0611",
@@ -239,7 +239,7 @@
   "city": "New York",
   "file": "media/story-en-fri-0611.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  },
  {
   "name": "post-he-fri-0611",
@@ -250,7 +250,7 @@
   "city": "זכרון יעקב",
   "file": "media/post-he-fri-0611.mp4",
   "caption": "\"כל המקיים נפש אחת, כאילו קיים עולם מלא.\" (מסכת סנהדרין)\n\nזמן הדלקת נרות וזמן הבדלה לכל עיר בעולם, ב 15 שפות, בחינם.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #שבתשלום #נרנשמה #candletimes\n\nתמונות: ויקישיתוף, נחלת הכלל. מוזיקה: \"Wholesome\" by Kevin MacLeod (incompetech.com), CC BY 4.0.",
-  "approved": false
+  "approved": true
  },
  {
   "name": "post-en-fri-0611",
@@ -261,6 +261,6 @@
   "city": "Vancouver",
   "file": "media/post-en-fri-0611.mp4",
   "caption": "\"Who is honored? One who honors others.\" (Ben Zoma, Pirkei Avot)\n\nCandle lighting and Havdalah times for every city, in 15 languages, free.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #shabbatshalom #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Carefree\" by Kevin MacLeod (incompetech.com), CC BY 3.0.",
-  "approved": false
+  "approved": true
  }
 ]
