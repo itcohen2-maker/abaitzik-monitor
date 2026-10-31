@@ -15189,7 +15189,7 @@ boot('today',todayTile);
 */
 var LEC_ITEMS=[
  // 31.10, Itzik: a new abstract for Wolfson, a public page he can share in WhatsApp and mail (photo after the surgery, no caption).
- {t:'00 📤 תקציר ההרצאה, דף לשיתוף בוואטסאפ ובמייל',u:'https://itcohen2-maker.github.io/abaitzik-monitor/lecture/'},
+ {t:'00 📤 תקציר ההרצאה, דף לשיתוף בוואטסאפ ובמייל',u:'lecture/?m=1',same:1},
  {t:'01 המלל המלא (עודכן ${lecFmt(LEC_TEXT,1)})',r:'lecture-full-text.pdf',u:'https://drive.google.com/file/d/1ZjRua0t3UA8SDRPmA4HIV-W1WJ1PTx51/view'},
  // 18.10, Itzik: the 'what held me' slide is five decisions now, the review video and every blue note are out.
  {t:'01ב המלל המלא לעריכה (Google Docs)',u:'https://docs.google.com/document/d/1gyj8Wt-3g8QhmOecP2MmmbZW69RepTzDNZKOsjf-3Vk/edit'},
@@ -15238,6 +15238,8 @@ function lecSheet(){
   var it=LEC_ITEMS[+k];if(k===''||!it)return;
   if(it.wa){window.open('https://wa.me/?text='+encodeURIComponent(LEC_WA),'_blank','noopener');return;}
   if(it.r){fileOpen(it.r);return;}
+  // 31.10, Itzik: no way back from the lecture page. Our own pages open in this tab, and ?m=1 shows its back button.
+  if(it.same){location.href=it.u;return;}
   window.open(it.u,'_blank','noopener');
  };
  document.addEventListener('keydown',esckey);

@@ -49,6 +49,9 @@ ol li:before{content:counter(n);font-family:Georgia,serif;font-size:22px;color:v
 </head>
 <body>
 <div class="wrap">
+<a id="backMon" href="../" hidden style="display:none;align-items:center;justify-content:center;min-height:52px;margin:0 0 12px;border-radius:14px;background:#2b2420;color:#fff;font:bold 19px Arial,Helvetica,sans-serif;text-decoration:none">→ חזרה למוניטור</a>
+<script>/* 31.10, Itzik: from the monitor there was no way back. Shown only when opened from the monitor (?m=1), so people he shares with never see it. */
+if(/[?&]m=1/.test(location.search)){var b=document.getElementById('backMon');b.hidden=false;b.style.display='flex';}</script>
 <div class="card">
  <div class="pad">
   <div class="eyebrow">הרצאה&nbsp;&nbsp;·&nbsp;&nbsp;45 דקות ושאלות</div>
