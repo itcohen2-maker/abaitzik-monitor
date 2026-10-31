@@ -2613,7 +2613,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-31T05:29:51.992Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-31T06:09:12.621Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2747,7 +2747,7 @@ try{
 
  <div class="grid" id="blkTiles">
   <button type="button" class="gt gStory" data-grp="proj" id="gPegasus" data-new="1" data-upd="20261021-peg-rotate"><b>🐎 פגסוס</b><small>רק ההודעה האחרונה והשאלה שמחכה לך, הישנות נעלמות</small></button>
-  <button type="button" class="gt gLec" data-grp="proj" id="gLec" data-upd="lec-1792867430687"><b>🎤 הרצאה</b><small>עודכן 24.10 21:43: שקף 35: צילום הסיטי על כל המסך</small></button>
+  <button type="button" class="gt gLec" data-grp="proj" id="gLec" data-upd="lec-1793426949738"><b>🎤 הרצאה</b><small>עודכן 31.10 08:09: המלל עודכן לפי המסמך לעריכה</small></button>
   <button type="button" class="gt g8" data-grp="money" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>מי חייב כסף ומאיזה חודש</small></button>
   <button type="button" class="gt g8" data-grp="home" id="gVaad"><b>🏠 ועד הבית</b><small>מי שילם ומה פתוח</small></button>
   <button type="button" class="gt g15" data-grp="money" id="gSale" data-upd="lawyer-docs-1018"><b>⚖️ מכירת לולוס</b><small>התיק לעורך הדין, מה פתוח ומה נמסר</small></button>
@@ -2891,14 +2891,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4426,7 +4419,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='482ca418f4';
+var CODE_ID='6aa0290bca';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11441,10 +11434,10 @@ on('gAlarm',alarmSheet);
 boot('today',todayTile);
 
 var LEC_ITEMS=[
- {t:'01 המלל המלא (עודכן 24.10 21:43)',r:'lecture-full-text.pdf',u:'https://drive.google.com/file/d/1ZjRua0t3UA8SDRPmA4HIV-W1WJ1PTx51/view'},
+ {t:'01 המלל המלא (עודכן 31.10 08:09)',r:'lecture-full-text.pdf',u:'https://drive.google.com/file/d/1ZjRua0t3UA8SDRPmA4HIV-W1WJ1PTx51/view'},
  {t:'01ב המלל המלא לעריכה (Google Docs)',u:'https://docs.google.com/document/d/1gyj8Wt-3g8QhmOecP2MmmbZW69RepTzDNZKOsjf-3Vk/edit'},
- {t:'02 המצגת, 65 שקפים, עודכן 24.10 21:43',u:'https://docs.google.com/presentation/d/13lOa3wpgkhMpcZallab84mkLkzy9vc1o_nPHIvQFsUQ/present'},
- {t:'03 לאימון: המלל עם 65 שקפים, ממוספרים (עודכן 24.10 21:43)',r:'lecture-practice-small-slides.pdf',u:'https://drive.google.com/file/d/1h-ja7UYp2wBL4aAa3iDKvEbQf4_QEPZ_/view'},
+ {t:'02 המצגת, 65 שקפים, עודכן 31.10 08:09',u:'https://docs.google.com/presentation/d/13lOa3wpgkhMpcZallab84mkLkzy9vc1o_nPHIvQFsUQ/present'},
+ {t:'03 לאימון: המלל עם 65 שקפים, ממוספרים (עודכן 31.10 08:09)',r:'lecture-practice-small-slides.pdf',u:'https://drive.google.com/file/d/1h-ja7UYp2wBL4aAa3iDKvEbQf4_QEPZ_/view'},
  {t:'04 הריל שמבשר על ההרצאות: תסריט ריל 06, מאיפה הכוחות',r:'reel-06-meefo-hakohot.txt'},
  {t:'06 🎬 הריל של איליי על ההרצאה (15.10)',r:'reel-lecture-ilay-1510.mp4'},
  {t:'06ב 🖼️ הקאבר לריל, מאיליי',r:'reel-lecture-ilay-1510-cover.jpg'},
@@ -15710,7 +15703,7 @@ floatTile=function(id,up){if(document.body.classList.contains('world'))return;re
 
 boot('worlds',worldSync);
 boot('design',dzBoot);
-var PUSH_KEY="BDlgL4lKYXBB2yk96UVlN_bNhLBppiq0K8ORV-TQ2jb7k8IMskeWYICec19xE7N5VEcCzVXZU9Pxb9e64KH8OCk";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
