@@ -4076,7 +4076,7 @@ ${require('./lib/home-ui.js').html}
  <div id="askBox"></div>
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
-  <button type="button" class="gt gStory" data-grp="proj" id="gPegasus" data-new="1" data-upd="20261021-peg-rotate"><b>🐎 פגסוס</b><small>רק ההודעה האחרונה והשאלה שמחכה לך, הישנות נעלמות</small></button>
+  <button type="button" class="gt gStory" data-grp="proj" id="gPegasus" data-new="1" data-upd="20261031-peg-status"><b>🐎 פגסוס</b><small>רק ההודעה האחרונה והשאלה שמחכה לך, הישנות נעלמות</small></button>
   <button type="button" class="gt gLec" data-grp="proj" id="gLec" data-upd="lec-${LEC_LAST?LEC_LAST.getTime():0}"><b>🎤 הרצאה</b><small>${LEC_WHAT?'עודכן '+lecFmt(LEC_LAST,1)+': '+LEC_WHAT:'03 לאימון, עודכן '+lecFmt(LEC_LAST,1)}</small></button>
   <!--
     14.10 Itzik: a new story goes into this tile, and the tile moves to the top
