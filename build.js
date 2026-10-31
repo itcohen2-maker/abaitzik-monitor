@@ -15188,6 +15188,8 @@ boot('today',todayTile);
   in Google Docs), the six new slides, the deck itself and the lecture folder.
 */
 var LEC_ITEMS=[
+ // 31.10, Itzik: a new abstract for Wolfson, a public page he can share in WhatsApp and mail (photo after the surgery, no caption).
+ {t:'00 📤 תקציר ההרצאה, דף לשיתוף בוואטסאפ ובמייל',u:'https://itcohen2-maker.github.io/abaitzik-monitor/lecture/'},
  {t:'01 המלל המלא (עודכן ${lecFmt(LEC_TEXT,1)})',r:'lecture-full-text.pdf',u:'https://drive.google.com/file/d/1ZjRua0t3UA8SDRPmA4HIV-W1WJ1PTx51/view'},
  // 18.10, Itzik: the 'what held me' slide is five decisions now, the review video and every blue note are out.
  {t:'01ב המלל המלא לעריכה (Google Docs)',u:'https://docs.google.com/document/d/1gyj8Wt-3g8QhmOecP2MmmbZW69RepTzDNZKOsjf-3Vk/edit'},
@@ -15207,9 +15209,9 @@ var LEC_ITEMS=[
    copy of each: the text, the deck, the practice PDF, and one send to Ilay.
    The Ner site part moved out of the talk into an appendix at the end. */
 var LEC_WA='איליי, ההרצאה שלי, כנגד כל הסיכויים.'+String.fromCharCode(10)
- +'המלל המלא: '+LEC_ITEMS[0].u+String.fromCharCode(10)
- +'המצגת: '+LEC_ITEMS[2].u+String.fromCharCode(10)
- +'המלל עם השקפים בקטן: '+LEC_ITEMS[3].u;
+ +'המלל המלא: '+LEC_ITEMS[1].u+String.fromCharCode(10)
+ +'המצגת: '+LEC_ITEMS[3].u+String.fromCharCode(10)
+ +'המלל עם השקפים בקטן: '+LEC_ITEMS[4].u;
 function lecSheet(){
  var old=document.getElementById('lecSheet');if(old)old.remove();
  var w=document.createElement('div');
