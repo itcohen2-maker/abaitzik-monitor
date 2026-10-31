@@ -2613,7 +2613,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-31T15:28:19.980Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-31T15:31:23.167Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4419,7 +4419,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='02923e293c';
+var CODE_ID='c91b6970ba';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11434,7 +11434,8 @@ on('gAlarm',alarmSheet);
 boot('today',todayTile);
 
 var LEC_ITEMS=[
- {t:'00 📤 תקציר ההרצאה, דף לשיתוף בוואטסאפ ובמייל',u:'lecture/?m=1',same:1},
+ {t:'00 📄 תקציר ההרצאה, PDF להורדה ולצירוף למייל',r:'lecture-abstract.pdf'},
+ {t:'00ב תקציר ההרצאה, הדף',u:'lecture/?m=1',same:1},
  {t:'01 המלל המלא (עודכן 31.10 08:09)',r:'lecture-full-text.pdf',u:'https://drive.google.com/file/d/1ZjRua0t3UA8SDRPmA4HIV-W1WJ1PTx51/view'},
  {t:'01ב המלל המלא לעריכה (Google Docs)',u:'https://docs.google.com/document/d/1gyj8Wt-3g8QhmOecP2MmmbZW69RepTzDNZKOsjf-3Vk/edit'},
  {t:'02 המצגת, 65 שקפים, עודכן 31.10 08:09',u:'https://docs.google.com/presentation/d/13lOa3wpgkhMpcZallab84mkLkzy9vc1o_nPHIvQFsUQ/present'},
@@ -11447,9 +11448,9 @@ var LEC_ITEMS=[
  {t:'📤 לשלוח לאיליי בוואטסאפ',wa:1}
 ];
 var LEC_WA='איליי, ההרצאה שלי, כנגד כל הסיכויים.'+String.fromCharCode(10)
- +'המלל המלא: '+LEC_ITEMS[1].u+String.fromCharCode(10)
- +'המצגת: '+LEC_ITEMS[3].u+String.fromCharCode(10)
- +'המלל עם השקפים בקטן: '+LEC_ITEMS[4].u;
+ +'המלל המלא: '+LEC_ITEMS[2].u+String.fromCharCode(10)
+ +'המצגת: '+LEC_ITEMS[4].u+String.fromCharCode(10)
+ +'המלל עם השקפים בקטן: '+LEC_ITEMS[5].u;
 function lecSheet(){
  var old=document.getElementById('lecSheet');if(old)old.remove();
  var w=document.createElement('div');

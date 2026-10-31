@@ -30,10 +30,6 @@ ol li:before{content:counter(n);font-family:Georgia,serif;font-size:22px;color:v
 .dark{background:var(--ink);color:var(--card);border-radius:12px;padding:30px 24px;text-align:center;font-family:Georgia,'Times New Roman',serif;font-size:22px;line-height:1.55;margin:4px 0 24px}
 .dark span{color:var(--gold)}
 .facts div{padding:10px 0;border-top:1px solid var(--line);font-size:15px;line-height:1.6}.facts div:last-child{border-bottom:1px solid var(--line)}
-.share{display:flex;gap:10px;margin-top:16px}
-.share a,.share button{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;border-radius:12px;border:0;font:bold 16px Arial,Helvetica,sans-serif;text-decoration:none;cursor:pointer}
-.wa{background:#25d366;color:#fff}.ml{background:var(--ink);color:#fff}.cp{background:var(--card);color:var(--ink);border:1px solid var(--line)!important}
-.share svg{width:22px;height:22px;fill:currentColor}
 .soc{background:var(--soft);border-radius:12px;padding:16px;margin:0 0 24px}
 .soc .main{display:flex;gap:16px;align-items:center;text-decoration:none;color:var(--ink)}
 .soc .main img{width:96px;height:96px;flex:none;background:#fff;border-radius:8px;padding:4px}
@@ -44,7 +40,7 @@ ol li:before{content:counter(n);font-family:Georgia,serif;font-size:22px;color:v
 .soc .more a{flex:1;display:flex;align-items:center;gap:6px;text-decoration:none;color:var(--mute);font-size:12px;background:#fff;border-radius:8px;padding:5px}
 .soc .more img{width:40px;height:40px;flex:none}
 .soc .more svg{width:14px;height:14px;fill:currentColor;flex:none}
-@media (max-width:420px){h1{font-size:34px}.pad{padding:24px 20px}.share{flex-wrap:wrap}.share .cp{flex-basis:100%}}
+@media (max-width:420px){h1{font-size:34px}.pad{padding:24px 20px}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{size:600px 2170px;margin:0}#backMon{display:none!important}}
 </style>
 </head>
 <body>
@@ -60,8 +56,9 @@ if(/[?&]m=1/.test(location.search)){var b=document.getElementById('backMon');b.h
  </div>
  <img src="hero.jpg" width="1080" height="860" alt="">
  <div class="pad">
-  <p>לפני שנה, בחופשה בתאילנד, התחילו כאבי בטן חזקים. חשבתי שזה קלקול קיבה. חזרנו לארץ, הגעתי לרופאת המשפחה, ותוך יום אחד עברתי מ<b>סופרמן שיכול הכל</b> ל<b>חולה סרטן</b>.</p>
+  <p>לפני כשנתיים, בחופשה בתאילנד, התחילו כאבי בטן חזקים. חשבתי שזה קלקול קיבה. חזרנו לארץ, הגעתי לרופאת המשפחה, ותוך יום אחד עברתי מ<b>סופרמן שיכול הכל</b> ל<b>חולה סרטן</b>.</p>
   <p>כילד ראיתי את המחלה הזאת לוקחת בני משפחה צעירים. הפחד הישן ההוא הפך פתאום לחיים שלי.</p>
+  <p>אחרי האבחנה עברתי טיפולים וניתוחים, ובכל הדרך הזאת למדתי איך משאירים את הראש מעל המים. <b>לא מרימים ידיים, מרימים את הראש.</b></p>
   <div class="quote">המטרה היא לא רק לשרוד.<br>המטרה היא ללמוד לחיות את הרגע, להיות כאן ועכשיו.</div>
   <div class="label">מה לוקחים מההרצאה</div>
   <ol>
@@ -86,25 +83,6 @@ if(/[?&]m=1/.test(location.search)){var b=document.getElementById('backMon');b.h
   </div>
  </div>
 </div>
-<div class="share">
- <a class="wa" id="wa" href="#"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .3-3.4-.7-2.9-1.2-4.7-4.1-4.9-4.3-.1-.2-1.2-1.6-1.2-3s.8-2.2 1-2.5c.3-.3.6-.4.8-.4h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .5l-.3.5-.4.5c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1.1c.2-.3.4-.2.6-.1l2 1c.3.1.5.2.5.3.1.1.1.6-.1 1.2z"/></svg>וואטסאפ</a>
- <a class="ml" id="ml" href="#"><svg viewBox="0 0 24 24"><path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm9 7.2L4.4 7H4v.6l8 5.4 8-5.4V7h-.4L12 12.2z"/></svg>מייל</a>
- <button class="cp" id="cp" type="button">העתקת קישור</button>
 </div>
-</div>
-<script>
-(function(){
- var url=location.origin+location.pathname;
- var title='כנגד כל הסיכויים, הרצאה';
- var text='הצעה להרצאה: כנגד כל הסיכויים. איך מרימים את הראש כשהחיים מתהפכים בשנייה.';
- document.getElementById('wa').href='https://wa.me/?text='+encodeURIComponent(text+'\n'+url);
- document.getElementById('ml').href='mailto:?subject='+encodeURIComponent(title)+'&body='+encodeURIComponent(text+'\n\n'+url);
- var cp=document.getElementById('cp');
- cp.onclick=function(){
-  function ok(){cp.textContent='הקישור הועתק';setTimeout(function(){cp.textContent='העתקת קישור';},2000);}
-  if(navigator.clipboard){navigator.clipboard.writeText(url).then(ok,function(){prompt('',url);});}else{prompt('',url);}
- };
-})();
-</script>
 </body>
 </html>
