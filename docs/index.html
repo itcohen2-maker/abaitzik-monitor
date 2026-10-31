@@ -2613,7 +2613,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-31T07:33:20.712Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-31T07:50:49.435Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4426,7 +4426,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='d346a8b046';
+var CODE_ID='206201d997';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11750,6 +11750,7 @@ var NER_BIZ_ITEMS=[
  {d:"5",t:"למצוא רב מוכר שייתן הסכמה לאתר. עמוד איך אנחנו מחשבים כבר באוויר ב 15 שפות, candletimes.com/how, ואפשר לשלוח אותו לרב."},
  {d:"6",t:"הכנסה ראשונה: משבצת השבת בחסות כבר באוויר בכל עמודי הערים, ונעלמת לבד מהדלקת הנרות עד ההבדלה. צריך להחליט מחיר ולמצוא חסות או הקדשה ראשונה, ואני מכניס אותה תוך דקה."},
  {d:"7",t:"אופציונלי, לחיצה אחת: להיכנס ל Bing Webmaster Tools עם חשבון הגוגל ולבחור ייבוא מ Search Console. הדפים כבר נשלחו אליהם אוטומטית (IndexNow)."},
+ {d:"🧪",t:"מבחן עד סוף חנוכה, 13.12: כניסות מגוגל בשבוע (היום 1), עוקבים בערוץ הוואטסאפ, כרטיסי שבת שנשלחו. יש צמיחה: מתחילים למכור הקדשות. אין: האתר נשאר מתנה שרצה לבד, ומבטלים את Forward Email (3 דולר לחודש)."},
  {d:"📄",t:"דוח המחקר המלא: צרכים של הקהילה הדתית שאפשר לבנות להם אתר ולהרוויח.",r:"ner-biz-research-oct30.txt"}
 ];
 function nerBizSheet(){
