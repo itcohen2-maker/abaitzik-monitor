@@ -262,5 +262,27 @@
   "file": "media/post-en-fri-0611.mp4",
   "caption": "\"Who is honored? One who honors others.\" (Ben Zoma, Pirkei Avot)\n\nCandle lighting and Havdalah times for every city, in 15 languages, free.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #shabbatshalom #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Carefree\" by Kevin MacLeod (incompetech.com), CC BY 3.0.",
   "approved": true
+ },
+ {
+  "name": "story-he-chanukah26-0811",
+  "date": "2026-11-08",
+  "time": "20:00",
+  "kind": "story",
+  "lang": "he",
+  "city": "ספירה לאחור לחנוכה",
+  "file": "media/story-he-chanukah26-0811.mp4",
+  "caption": "",
+  "approved": false
+ },
+ {
+  "name": "story-en-chanukah26-0811",
+  "date": "2026-11-08",
+  "time": "20:00",
+  "kind": "story",
+  "lang": "en",
+  "city": "Hanukkah countdown",
+  "file": "media/story-en-chanukah26-0811.mp4",
+  "caption": "",
+  "approved": false
  }
 ]
