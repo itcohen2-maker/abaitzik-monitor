@@ -272,7 +272,7 @@
   "city": "ספירה לאחור לחנוכה",
   "file": "media/story-he-chanukah26-0811.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  },
  {
   "name": "story-en-chanukah26-0811",
@@ -283,6 +283,6 @@
   "city": "Hanukkah countdown",
   "file": "media/story-en-chanukah26-0811.mp4",
   "caption": "",
-  "approved": false
+  "approved": true
  }
 ]
