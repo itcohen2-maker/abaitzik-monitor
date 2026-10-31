@@ -2613,7 +2613,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-31T05:28:35.973Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-31T05:29:51.992Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4426,7 +4426,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='2975008508';
+var CODE_ID='482ca418f4';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11741,16 +11741,14 @@ function lawSheet(){
 }
 on('gLaw',lawSheet);
 var NER_BIZ_ITEMS=[
- {d:"1",t:"לבחור כיוון לסרטונים החדשים: דוגמה 2 שולחנות שבת מהעולם (עברית)",r:"ner-sample2-he-1031.mp4"},
- {d:"1",t:"דוגמה 3 רגע אחד (עברית)",r:"ner-sample3-he-1031.mp4"},
- {d:"1",t:"אותן שתי דוגמאות באנגלית: שולחנות שבת מהעולם",r:"ner-sample2-en-1031.mp4"},
- {d:"1",t:"באנגלית: רגע אחד",r:"ner-sample3-en-1031.mp4"},
- {d:"2",t:"לקרוא ולאשר את 20 המיילים לקהילות (צרפתית, ספרדית, הולנדית, איטלקית, גרמנית, רוסית ואנגלית, עם תרגום לעברית מתחת לכל אחד). אחרי האישור שולחים כ 10 בשבוע, אף פעם לא בשבת שלהם.",r:"ner-emails-oct30.txt"},
- {d:"3",t:"להחליט מאיזו כתובת שולחים את המיילים: contact@candletimes.com או הג׳ימייל שלך."},
- {d:"4",t:"מסננים: הבקשות לאתרוג ולרימון מתוזמנות בג׳ימייל למוצאי שבת 31.10 בשעה 20:00. נטפרי רק דרך מנוי. Google Search Console מחובר, ומפת האתר עם 2,857 העמודים הוגשה מחדש."},
+ {d:"1",t:"לפתוח ערוץ וואטסאפ זמני שבת: דקה מהטלפון, כל הטקסטים מוכנים להעתקה. אחרי הפתיחה לשלוח לי את הקישור, ואני מוסיף אותו לאתר. הודעת שישי 6.11 כבר כתובה עם זמנים אמיתיים.",r:"ner-whatsapp-channel.txt"},
+ {d:"1",t:"תמונת הערוץ",r:"ner-whatsapp-photo.png"},
+ {d:"2",t:"לאשר באריח candle.times את שני סטורי הספירה לאחור לחנוכה, ראשון 8.11 (עוד 26 ימים, נר ראשון שישי 4.12). מכאן סטורי כזה כל ראשון, ובשבוע האחרון כל יום."},
+ {d:"3",t:"לקרוא ולאשר את 20 המיילים לקהילות (צרפתית, ספרדית, הולנדית, איטלקית, גרמנית, רוסית ואנגלית, עם תרגום לעברית מתחת לכל אחד). אחרי האישור שולחים כ 10 בשבוע, אף פעם לא בשבת שלהם.",r:"ner-emails-oct30.txt"},
+ {d:"4",t:"להחליט מאיזו כתובת שולחים את המיילים: contact@candletimes.com או הג׳ימייל שלך."},
  {d:"5",t:"למצוא רב מוכר שייתן הסכמה לאתר. עמוד איך אנחנו מחשבים כבר באוויר ב 15 שפות, candletimes.com/how, ואפשר לשלוח אותו לרב."},
  {d:"6",t:"הכנסה ראשונה: משבצת השבת בחסות כבר באוויר בכל עמודי הערים, ונעלמת לבד מהדלקת הנרות עד ההבדלה. צריך להחליט מחיר ולמצוא חסות או הקדשה ראשונה, ואני מכניס אותה תוך דקה."},
- {d:"7",t:"אופציונלי, לחיצה אחת: להיכנס ל Bing Webmaster Tools עם חשבון הגוגל ולבחור ייבוא מ Search Console. זה נותן דוחות גם מ Bing ו Copilot. הדפים כבר נשלחו אליהם אוטומטית (IndexNow), וחנוכה ב 15 שפות ו 310 ערים באוויר."},
+ {d:"7",t:"אופציונלי, לחיצה אחת: להיכנס ל Bing Webmaster Tools עם חשבון הגוגל ולבחור ייבוא מ Search Console. הדפים כבר נשלחו אליהם אוטומטית (IndexNow)."},
  {d:"📄",t:"דוח המחקר המלא: צרכים של הקהילה הדתית שאפשר לבנות להם אתר ולהרוויח.",r:"ner-biz-research-oct30.txt"}
 ];
 function nerBizSheet(){
