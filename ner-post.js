@@ -127,7 +127,7 @@ function tidy(q, now) {
   const done = [];
   for (const it of due) {
     if (DRY) { console.log('would post', it.kind, it.name, it.file); continue; }
-    try { it.posted = await publish(it); it.postedAt = new Date().toISOString(); done.push(it.name); }
+    try { it.posted = await publish(it); it.postedAt = new Date().toISOString(); done.push(it.name); if (it.kind === 'story') keepLatest(it); }
     catch (e) { it.failed = e.message; notify('נרות: העלאה נכשלה', it.name + ': ' + e.message); }
     fs.writeFileSync(QUEUE, JSON.stringify(q, null, 1));
     // Itzik, 25.10: "סטורי נעלם ופוסט נשאר", and with a gap: a story that went up
@@ -167,3 +167,20 @@ function mirror(q) {
   } catch (e) {}
 }
 if (process.argv.includes('--mirror')) mirror(JSON.parse(fs.readFileSync(QUEUE, 'utf8')));
+
+// Itzik, 31.10: abaitzik.com shows the latest candle story in its story row,
+// also on days nothing went up (Shabbat). tidy deletes media the next day, so a
+// story that went up is copied to docs/ner/latest/<lang>.mp4 and described in
+// docs/ner/latest.json, which the site reads. Pushed with the queue mirror.
+function keepLatest(it) {
+  try {
+    const dir = path.join(__dirname, 'docs', 'ner', 'latest');
+    fs.mkdirSync(dir, { recursive: true });
+    const lang = it.lang === 'en' ? 'en' : 'he';
+    fs.copyFileSync(path.join(__dirname, 'docs', 'ner', it.file), path.join(dir, lang + '.mp4'));
+    const jf = path.join(__dirname, 'docs', 'ner', 'latest.json');
+    let j = {}; try { j = JSON.parse(fs.readFileSync(jf, 'utf8')); } catch (e) {}
+    j[lang] = { file: 'latest/' + lang + '.mp4?v=' + Date.now(), date: it.date, city: it.city || '', name: it.name, postedAt: it.postedAt };
+    fs.writeFileSync(jf, JSON.stringify(j, null, 1));
+  } catch (e) { notify('נרות: הסטורי לא נשמר לאתר', it.name + ': ' + e.message); }
+}
