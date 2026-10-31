@@ -2613,7 +2613,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-10-31T06:18:02.114Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-10-31T07:22:11.510Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4426,7 +4426,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='a081a3fa54';
+var CODE_ID='a7d8db2ed3';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11743,6 +11743,7 @@ on('gLaw',lawSheet);
 var NER_BIZ_ITEMS=[
  {d:"🔔",t:"הערב במוצאי שבת: להעלות סטטוס בוואטסאפ עם הקישור לערוץ. הטקסט מוכן להעתקה, וההוראות בפנים.",r:"ner-whatsapp-status.txt"},
  {d:"1",t:"ערוץ הוואטסאפ פתוח ומקושר מהאתר. ביום חמישי 5.11 מגיעה לאישור הודעת שישי 6.11, ואתה מדביק ושולח בערוץ.",r:"ner-whatsapp-channel.txt"},
+ {d:"🆕",t:"כרטיס שבת שלום באוויר: candletimes.com/card. בשישי לנסות לשלוח אחד למשפחה ולהגיד לי איך יצא."},
  {d:"2",t:"לאשר באריח candle.times את שני סטורי הספירה לאחור לחנוכה, ראשון 8.11 (עוד 26 ימים, נר ראשון שישי 4.12). מכאן סטורי כזה כל ראשון, ובשבוע האחרון כל יום."},
  {d:"3",t:"לקרוא ולאשר את 20 המיילים לקהילות (צרפתית, ספרדית, הולנדית, איטלקית, גרמנית, רוסית ואנגלית, עם תרגום לעברית מתחת לכל אחד). אחרי האישור שולחים כ 10 בשבוע, אף פעם לא בשבת שלהם.",r:"ner-emails-oct30.txt"},
  {d:"4",t:"להחליט מאיזו כתובת שולחים את המיילים: contact@candletimes.com או הג׳ימייל שלך."},
