@@ -14297,14 +14297,18 @@ function futText(it){
  w.setAttribute('aria-label','המלל של הריל');
  var mine=srcText('fut:'+it.n);
  var body=mine||it.he||it.tx||'';
+ var isVid=!!(it.r&&/\.(mp4|mov)$/i.test(it.r));
  w.innerHTML='<div class="ycard">'
   +'<b>'+esc(it.n)+' · המלל</b>'
   +'<small>'+esc(it.t)+(mine?' · ✏️ הגרסה שערכת בפתקים':'')+'</small>'
-  +((mine||it.he||it.r)?'<div class="fttx" dir="rtl" id="ftBody">'+esc(body)+'</div>':'')
+  // 2.11, Itzik: "נותן רק מלל, לא נותן סרטון". A video item plays right here, on top.
+  +(isVid?'<video id="ftVid" controls playsinline preload="metadata" style="width:100%;max-height:60vh;border-radius:14px;background:#000;margin:8px 0"></video>'
+     +'<button type="button" class="yb" data-a="file">▶️ הסרטון, לשמירה בגלריה</button>':'')
+  +((mine||it.he||(it.r&&!isVid))?'<div class="fttx" dir="rtl" id="ftBody">'+esc(body)+'</div>':'')
   +(it.tx?'<details class="fttx-en"><summary>המקור באנגלית</summary><div dir="ltr">'+esc(it.tx)+'</div></details>':'')
-  +'<button type="button" class="yb" data-a="copy">📋 העתקת התרגום</button>'
+  +(body?'<button type="button" class="yb" data-a="copy">📋 העתקת התרגום</button>':'')
   +'<button type="button" class="yb" data-a="note">📝 לפתקים שלי, לעריכה</button>'
-  +(it.r?'<button type="button" class="yb" data-a="file">▶️ פתיחת הקובץ</button>':'')
+  +(it.r&&!isVid?'<button type="button" class="yb" data-a="file">▶️ פתיחת הקובץ</button>':'')
   +(it.u?'<button type="button" class="yb" data-a="src">▶️ הסרטון המקורי</button>':'')
   +'<button type="button" class="yb" data-a="back">חזרה לרשימה</button>'
   +'<button type="button" class="yb yx" data-a="close">סגירה</button>'
@@ -14339,6 +14343,14 @@ function futText(it){
  };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
+ if(isVid){
+  var vfe=fileEntry(it.r),vel=document.getElementById('ftVid');
+  if(vfe&&vel)fileBlob(vfe).then(function(b){
+   var u=URL.createObjectURL(b.type?b:new Blob([b],{type:'video/mp4'}));vel.src=u;
+   var stop=new MutationObserver(function(){if(!document.body.contains(w)){URL.revokeObjectURL(u);stop.disconnect();}});
+   stop.observe(document.body,{childList:true});
+  }).catch(function(){});
+ }
  // A text kept as a file (item 06) is read into the sheet, so it can be edited too.
  if(!body&&it.r&&/\.txt$/i.test(it.r)){
   var fe=fileEntry(it.r);

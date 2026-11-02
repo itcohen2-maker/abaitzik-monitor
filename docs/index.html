@@ -2729,7 +2729,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-02T12:14:06.148Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-02T12:20:50.092Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3095,14 +3095,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4632,7 +4625,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='d5021cdd0f';
+var CODE_ID='9bb81a9a1e';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10758,14 +10751,17 @@ function futText(it){
  w.setAttribute('aria-label','המלל של הריל');
  var mine=srcText('fut:'+it.n);
  var body=mine||it.he||it.tx||'';
+ var isVid=!!(it.r&&/.(mp4|mov)$/i.test(it.r));
  w.innerHTML='<div class="ycard">'
   +'<b>'+esc(it.n)+' · המלל</b>'
   +'<small>'+esc(it.t)+(mine?' · ✏️ הגרסה שערכת בפתקים':'')+'</small>'
-  +((mine||it.he||it.r)?'<div class="fttx" dir="rtl" id="ftBody">'+esc(body)+'</div>':'')
+  +(isVid?'<video id="ftVid" controls playsinline preload="metadata" style="width:100%;max-height:60vh;border-radius:14px;background:#000;margin:8px 0"></video>'
+     +'<button type="button" class="yb" data-a="file">▶️ הסרטון, לשמירה בגלריה</button>':'')
+  +((mine||it.he||(it.r&&!isVid))?'<div class="fttx" dir="rtl" id="ftBody">'+esc(body)+'</div>':'')
   +(it.tx?'<details class="fttx-en"><summary>המקור באנגלית</summary><div dir="ltr">'+esc(it.tx)+'</div></details>':'')
-  +'<button type="button" class="yb" data-a="copy">📋 העתקת התרגום</button>'
+  +(body?'<button type="button" class="yb" data-a="copy">📋 העתקת התרגום</button>':'')
   +'<button type="button" class="yb" data-a="note">📝 לפתקים שלי, לעריכה</button>'
-  +(it.r?'<button type="button" class="yb" data-a="file">▶️ פתיחת הקובץ</button>':'')
+  +(it.r&&!isVid?'<button type="button" class="yb" data-a="file">▶️ פתיחת הקובץ</button>':'')
   +(it.u?'<button type="button" class="yb" data-a="src">▶️ הסרטון המקורי</button>':'')
   +'<button type="button" class="yb" data-a="back">חזרה לרשימה</button>'
   +'<button type="button" class="yb yx" data-a="close">סגירה</button>'
@@ -10798,6 +10794,14 @@ function futText(it){
  };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
+ if(isVid){
+  var vfe=fileEntry(it.r),vel=document.getElementById('ftVid');
+  if(vfe&&vel)fileBlob(vfe).then(function(b){
+   var u=URL.createObjectURL(b.type?b:new Blob([b],{type:'video/mp4'}));vel.src=u;
+   var stop=new MutationObserver(function(){if(!document.body.contains(w)){URL.revokeObjectURL(u);stop.disconnect();}});
+   stop.observe(document.body,{childList:true});
+  }).catch(function(){});
+ }
  if(!body&&it.r&&/.txt$/i.test(it.r)){
   var fe=fileEntry(it.r);
   if(fe)fileBlob(fe).then(function(b){return b.text();}).then(function(t){
@@ -16656,7 +16660,7 @@ floatTile=function(id,up){if(document.body.classList.contains('world'))return;re
 
 boot('worlds',worldSync);
 boot('design',dzBoot);
-var PUSH_KEY="BDlgL4lKYXBB2yk96UVlN_bNhLBppiq0K8ORV-TQ2jb7k8IMskeWYICec19xE7N5VEcCzVXZU9Pxb9e64KH8OCk";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
