@@ -3240,6 +3240,13 @@ body.rdragging{user-select:none;-webkit-user-select:none}
 .note-bar .note-del{color:#d33}
 .note-ai{margin:0}
 #noteAi{min-width:42px;font-size:20px}
+#notePrint{min-width:42px;font-size:20px}
+/* 2.11: "שלח להדפסה" prints only the open note: every other part of the page is hidden for the print */
+#notePrintBox{display:none}
+@media print{body.note-printing>*:not(#notePrintBox){display:none!important}
+ #notePrintBox{display:block!important;font:16px/1.6 Heebo,sans-serif;color:#000;direction:rtl}
+ #notePrintBox h1{font-size:22px;margin:0 0 12px}
+ #notePrintBox p{white-space:pre-wrap;margin:0}}
 /* 20.10: the monitor's help is a small window above the toolbar, not a big button at the top of the note */
 #noteAiBox{position:fixed;z-index:90;inset-inline:10px;bottom:calc(72px + env(safe-area-inset-bottom));
  background:var(--surface);border-radius:18px;padding:12px;box-shadow:0 8px 28px rgba(0,0,0,.22)}
@@ -4260,7 +4267,7 @@ ${require('./lib/home-ui.js').html}
   <button type="button" class="gt gMyDay" data-grp="day" id="gMyDay" data-new="1" data-upd="20261024-tdel"><b>📅 מה יש לי היום</b><small>תורים, תזכורות ומשימות של היום</small></button>
   <button type="button" class="gt g18" data-grp="day" id="gAppts" data-upd="20261030-ideas"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
   <button type="button" class="gt g16" data-grp="day" id="gRemind"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
-  <button type="button" class="gt g10 roundTile" id="gNotes" title="פתקים" aria-label="פתקים" data-upd="notes-20261020">📝</button>
+  <button type="button" class="gt g10 roundTile" id="gNotes" title="פתקים" aria-label="פתקים" data-upd="notes-print-20261102">📝</button>
   <!-- 12.10, Itzik: "תקים אפליקציה לבדוק מה כל הקלקולים האלה". Every monitor's faults on one screen. -->
   <button type="button" class="gt gHealth" id="gHealth" data-new="1"><b>🩺 תקלות</b><small>מה תקוע, מה נעצר, ולמה</small></button>
   <!-- Other monitors on this server, one colour each. Hidden when there are none. -->
@@ -5025,6 +5032,7 @@ ${require('./lib/activity-ui.js').html}
    <button type="button" id="noteScan" title="סריקת מסמך במצלמה">📷</button>
    <input type="file" id="noteScanIn" accept="image/*" capture="environment" hidden>
    <button type="button" id="noteAi" title="אני המוניטור, כאן כדי לעזור לך בפתק">🤖</button>
+   <button type="button" id="notePrint" title="שלח להדפסה">🖨️</button>
    <button type="button" id="noteCopy" class="note-copy" title="העתקת כל הפתק">העתקת הכל</button>
    <button type="button" id="noteCopyPart" class="note-copy" title="העתקת החלק המסומן">העתקת חלק</button>
   </div>
@@ -17394,6 +17402,25 @@ document.getElementById('noteCopy').onclick=function(){
  var txt=String(n&&n.text||'').trim();
  if(!txt){toast('הפתק ריק.');return;}
  noteCopyText(this,txt,'העתקת הכל','כל הטקסט הועתק. אפשר להדביק איפה שרוצים.');
+};
+// 2.11, Itzik (voice note): "add to my notes in the options, send to print".
+// Only the open note goes to the print window; the monitor sends nothing and
+// keeps nothing, the print dialog is his approval.
+document.getElementById('notePrint').onclick=function(){
+ noteSave();
+ var n=null;
+ notes().forEach(function(x){if(x.id===noteOpen)n=x;});
+ var txt=String(n&&n.text||'').trim();
+ if(!txt){toast('הפתק ריק.');return;}
+ var old=document.getElementById('notePrintBox');if(old)old.remove();
+ var d=document.createElement('div');d.id='notePrintBox';
+ var h=document.createElement('h1');h.textContent=noteTitle(txt).head;
+ var p=document.createElement('p');p.textContent=txt;
+ d.appendChild(h);d.appendChild(p);
+ document.body.appendChild(d);document.body.classList.add('note-printing');
+ function done(){document.body.classList.remove('note-printing');d.remove();window.removeEventListener('afterprint',done);}
+ window.addEventListener('afterprint',done);
+ setTimeout(function(){window.print();},50);
 };
 // pointerdown keeps the marking alive: without it the tap on the button can
 // clear the selection on the iPhone before the click arrives.
