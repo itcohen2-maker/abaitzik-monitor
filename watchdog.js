@@ -1,0 +1,469 @@
+'use strict';
+/*
+  The watchdog. Itzik, 27.9: "אפליקציה שתעשה דיבאגינג ותבדוק תקלות מהסוג הזה
+  במשך כל היום". Every fault found that day was silent: a message answered but
+  left in "working", a message taken and never answered, and a worker unit that
+  stayed "activating" for as long as one session ran, so the timer stopped and
+  three notes waited behind the first. Each of them only showed up when he
+  asked why nothing answered.
+
+  This runs every two minutes on the server, once per instance (his, and each
+  customer's, from their own folder). It only looks; the worker's reconcile()
+  does the fixing. What it finds is written to data/status/watchdog.json, which
+  tenants-health.js carries to Itzik's tile, and a new fault is told once
+  through notify-channels (which owns the daily budget), not every run.
+
+  Usage: node watchdog.js [--dry]
+  Env: WATCHDOG_WORKER_UNIT (default monitor-worker), read from the unit file.
+*/
+const fs = require('fs');
+const path = require('path');
+const { execFileSync } = require('child_process');
+const inst = require('./lib/instance.js');
+
+const DRY = process.argv.includes('--dry');
+const CHAT = path.join(inst.dataPath, 'chat', 'chat');
+const STATUS = path.join(inst.dataPath, 'status');
+const OUT = path.join(STATUS, 'watchdog.json');
+const UNIT = process.env.WATCHDOG_WORKER_UNIT || 'monitor-worker';
+// The target is a first answer inside two minutes; five without one is a fault.
+const TARGET_MS = 2 * 60 * 1000;
+const WAIT_MS = 5 * 60 * 1000;
+const STUCK_MS = 3 * 60 * 1000;      // the dispatcher exits in seconds now
+const TIMER_MS = 5 * 60 * 1000;      // the timer fires every minute
+const RETELL_MS = 2 * 60 * 60 * 1000;
+
+function readJson(p, fb) { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return fb; } }
+function show(unit, prop) {
+  try { return execFileSync('systemctl', ['show', unit, '-p', prop, '--value'], { encoding: 'utf8' }).trim(); }
+  catch (e) { return ''; }
+}
+// "Sun 2026-09-27 19:02:22 UTC" -> ms
+function when(s) {
+  const m = String(s || '').match(/(\d{4}-\d\d-\d\d) (\d\d:\d\d:\d\d)(?: (\w+))?/);
+  if (!m) return NaN;
+  return Date.parse(m[1] + 'T' + m[2] + (m[3] === 'UTC' || !m[3] ? 'Z' : 'Z'));
+}
+
+/*
+  1.10: "401" on its own matched 20261001-1401-claude-ner-candles-pc.json, a
+  reply written at 14:01, and he got an alarm that the login had expired while
+  every session was answering. The status code counts only as a number of its
+  own, not inside a file name or a time.
+*/
+function refused(log) {
+  return /((?<![\w-])401(?![\w-])|unauthori[sz]ed|invalid (api key|token)|oauth token (has )?expired|please run \/login)/i.test(log);
+}
+// 2.11: a Shachar waitlist signup or tester feedback is held on purpose and already rang (listen.js leadAlert), like a site lead.
+const HELD_ON_PURPOSE = new Set(['lead', 'waitlist', 'shachar-feedback']);
+function heldProblem(all, now) {
+  // 20.10: a site lead is held on purpose and already rang (listen.js alertLead).
+  const held = all.filter((m) => m.from === 'unverified' && m.status === 'held' && !HELD_ON_PURPOSE.has(m.heldWhy)
+    && now - Date.parse(m.at) > 3 * 60 * 1000 && now - Date.parse(m.at) < 24 * 3600 * 1000);
+  if (!held.length) return '';
+  // 12.10: eight sends signed with an old device code read as "without the
+  // code", and nothing told him the phone held a wrong one. The listener now
+  // says why (heldWhy), so the alarm can.
+  const wrong = held.filter((m) => m.heldWhy === 'wrong-code').length;
+  return (held.length === 1 ? 'הודעה אחת' : held.length + ' הודעות')
+    + (wrong ? ' הגיעו עם קוד שגוי ונעצרו (קוד ישן שמור בטלפון), למשל ' : ' הגיעו בלי הקוד ונעצרו, למשל ')
+    + String(held[0].text || '').slice(0, 40);
+}
+
+/*
+  12.10, Itzik: "תקים אפליקציה לבדוק מה כל הקלקולים האלה". What the 🩺 screen
+  shows for this instance, beside the problems: what waits, what is held and
+  why, and when the worker last moved. Only Itzik's own instance puts words of
+  a message in it; a customer's gives times and counts only, because his board
+  reads every customer's file and he does not see their content.
+*/
+function snapshot(now) {
+  const own = inst.name === 'abaitzik';
+  let files = [];
+  try { files = fs.readdirSync(CHAT); } catch (e) { return null; }
+  const all = files.map((f) => readJson(path.join(CHAT, f), null)).filter(Boolean);
+  const answered = new Set(all.filter((m) => m.from === 'claude' && m.re).map((m) => m.re));
+  const words = (m) => (own ? { t: String(m.text || '').replace(/\s+/g, ' ').slice(0, 60) } : {});
+  const waiting = all.filter((m) => m.from === 'itzik' && m.status !== 'done' && !(m.id && answered.has(m.id))
+    && now - Date.parse(m.at) < 3 * 24 * 3600 * 1000)
+    .map((m) => Object.assign({ at: m.at, min: Math.round((now - Date.parse(m.at)) / 60000) }, words(m)));
+  const held = all.filter((m) => m.from === 'unverified' && m.status === 'held' && now - Date.parse(m.at) < 24 * 3600 * 1000)
+    .map((m) => Object.assign({ at: m.at, why: m.heldWhy || 'no-code' }, words(m)));
+  const byAt = (a, b) => (a.at < b.at ? -1 : 1);
+  const w = { at: '', what: '' };
+  if (process.platform !== 'win32') {
+    const t = Math.max(when(show(UNIT + '.timer', 'LastTriggerUSec')) || 0, when(show(UNIT + '.service', 'ExecMainStartTimestamp')) || 0);
+    if (t) w.at = new Date(t).toISOString();
+  }
+  try {
+    const line = fs.readFileSync(path.join(STATUS, 'worker.log'), 'utf8').trim().split('\n').pop() || '';
+    w.what = /הסשן הסתיים, קוד 0/.test(line) ? 'סשן סיים ועבר'
+      : /הסשן הסתיים/.test(line) ? 'סשן נגמר בתקלה'
+      : /עבר 10 דקות/.test(line) ? 'סשן נעצר אחרי עשר דקות'
+      : /מפעיל סשן/.test(line) ? 'התחיל לטפל בהודעות'
+      : /אין הודעות שמחכות/.test(line) ? 'אין הודעות שמחכות'
+      : /ממתין לטיק/.test(line) ? 'מחכה למקום פנוי' : '';
+    w.line = (line.match(/^\d\d?:\d\d:\d\d/) || [''])[0];
+    if (own) w.text = line.replace(/^\S+\s+/, '').slice(0, 120);
+  } catch (e) {}
+  return { waiting: waiting.sort(byAt), held: held.sort(byAt), worker: w };
+}
+// Each fault once, when it began and when it ended, the last twenty.
+function history(prev, problems, now) {
+  const h = (prev.history || []).slice();
+  const cur = new Set(problems.map(key));
+  const iso = new Date(now).toISOString();
+  problems.forEach((p) => { if (!h.some((x) => x.k === key(p) && !x.end)) h.push({ k: key(p), text: p, at: iso }); });
+  h.forEach((x) => { if (!x.end && !cur.has(x.k)) x.end = iso; });
+  return h.slice(-20);
+}
+/*
+  The PC leaves data/status/pc-seen.json every minute it is on (pc-task.js).
+  Seen in the last three minutes is on. "since" is when this watchdog first saw
+  it on, kept in watchdog.json, so a task marked while it slept gets its ten
+  minutes from the moment the PC woke, not from when it was marked.
+*/
+const PC_ON_MS = 3 * 60 * 1000;
+function pcState(now) {
+  const seen = Date.parse((readJson(path.join(STATUS, 'pc-seen.json'), {}) || {}).at);
+  const on = !isNaN(seen) && now - seen < PC_ON_MS;
+  const prev = (readJson(OUT, {}) || {}).pcOnSince;
+  return { on, since: on ? (Date.parse(prev) || now) : 0 };
+}
+function pcProblems(tasks, on, since, now) {
+  if (!on) return [];
+  const out = [];
+  tasks.forEach((t) => {
+    if (!t || t.test) return;
+    if (t.status === "pending" && now - Math.max(Date.parse(t.at), since || 0) > 10 * 60 * 1000) out.push("משימה למחשב מחכה יותר מעשר דקות: " + String(t.task).slice(0, 40));
+    if (t.status === "claimed" && now - Math.max(Date.parse(t.claimedAt), since || 0) > 25 * 60 * 1000) out.push("המחשב תקוע על משימה יותר מ-25 דקות: " + String(t.task).slice(0, 40));
+  });
+  return out;
+}
+function check(now) {
+  const problems = [];
+  let files = [];
+  try { files = fs.readdirSync(CHAT); } catch (e) { return ['אין תיקיית צ׳אט']; }
+  const all = files.map((f) => { const d = readJson(path.join(CHAT, f), null); return d ? Object.assign({ file: f }, d) : null; }).filter(Boolean);
+  const answered = new Set(all.filter((m) => m.from === 'claude' && m.re).map((m) => m.re));
+  require('./lib/pc-handed.js')().forEach((re) => answered.add(re));
+  // When each message was first answered. 5.10 13:19: three answers landed a
+  // moment before their messages were marked done, and that gap alone woke him.
+  // Only an answer that has sat ten minutes without the done mark is a fault.
+  const firstAnswer = {};
+  all.forEach((m) => { if (m.from === 'claude' && m.re) { const t = Date.parse(m.at); if (!(firstAnswer[m.re] <= t)) firstAnswer[m.re] = t; } });
+  const mine = all.filter((m) => m.from === 'itzik' && m.status !== 'done');
+  // 15.10: a message opened again (pc-task.js reopen, reopenAt) is a new question from
+  // that moment: it waits like one, and its old answer does not make it "answered and still in work".
+  const reopenedOpen = (m) => Boolean(m.reopenAt && m.id) &&
+    !all.some((r) => r.from === 'claude' && r.re === m.id && Date.parse(r.at) > Date.parse(m.reopenAt));
+  const since = (m) => Math.max(Date.parse(m.at), m.reopenAt ? Date.parse(m.reopenAt) : 0);
+  const late = mine.filter((m) => (!(m.id && answered.has(m.id)) || reopenedOpen(m)) && now - since(m) > WAIT_MS);
+  if (late.length) problems.push(late.length === 1 ? 'הודעה אחת מחכה יותר מחמש דקות בלי תשובה' : late.length + ' הודעות מחכות יותר מחמש דקות בלי תשובה');
+  const stale = mine.filter((m) => m.id && answered.has(m.id) && !reopenedOpen(m) && now - Date.parse(m.at) > WAIT_MS && now - firstAnswer[m.id] > 2 * WAIT_MS);
+  if (stale.length) problems.push(stale.length + ' הודעות נענו ועדיין מסומנות בטיפול');
+  /*
+    2.10 19:45: his logo arrived four times and sat as 'held', because the file
+    after it failed and the line with his code never came. Nothing here looked
+    at held messages, so he waited an hour and found out alone. A held message
+    from the last day that is still held after three minutes is a problem: the
+    code that would release it is not coming.
+  */
+  const h = heldProblem(all, now);
+  if (h) problems.push(h);
+
+  /*
+    2.10: a shopping item sat for minutes while he was told the PC was off. A
+    task still waiting 10 minutes after it was marked, or held by the PC for 25,
+    is a problem. 5.10: but not while the PC is off. The seven o'clock report
+    waited for a sleeping PC, he got an alarm, and the doctor was woken three
+    times in four minutes for something no code on the server can fix.
+  */
+  const PCDIR = path.join(path.dirname(CHAT), "..", "pc", "pc");
+  let tasks = [];
+  try { tasks = fs.readdirSync(PCDIR).map((f) => readJson(path.join(PCDIR, f), null)).filter(Boolean); } catch (e) {}
+  const pc = pcState(now);
+  pcProblems(tasks, pc.on, pc.since, now).forEach((p) => problems.push(p));
+  // The Claude login on the server (CLAUDE_CODE_OAUTH_TOKEN, set 25.9.2026)
+  // lasts about a year. Warn a month ahead, and at once if the worker log shows
+  // the sessions being refused.
+  if (now > Date.parse('2027-08-25T00:00:00Z')) problems.push('הכניסה של קלוד בשרת פגה בקרוב, צריך לחדש');
+  try {
+    const wl = fs.readFileSync(process.env.WORKER_LOG || '/var/log/monitor-worker.log', 'utf8').split('\n').slice(-60).join('\n');
+    if (refused(wl)) problems.push('סשנים בשרת נדחים, כנראה הכניסה של קלוד פגה');
+  } catch (e) {}
+  // 16.10: Alon's key ran out of credit and the tile said only "messages waiting".
+  try {
+    const ah = JSON.parse(fs.readFileSync(path.join(STATUS, 'account-hold.json'), 'utf8'));
+    if (ah && ah.at) problems.push('החשבון של המפתח דוחה סשנים: ' + (ah.reason || 'לא ידוע'));
+  } catch (e) {}
+  if (process.platform !== 'win32') {
+    const st = show(UNIT + '.service', 'ActiveState');
+    const since = when(show(UNIT + '.service', 'StateChangeTimestamp'));
+    if (st === 'activating' && now - since > STUCK_MS) problems.push('המענה האוטומטי תקוע ' + Math.round((now - since) / 60000) + ' דקות');
+    // 8.10: the listener now starts the worker itself the moment a message lands
+    // (monitor-worker-kick.path), and every such start pushes the timer's next tick
+    // a minute further out. So the timer alone can sit quiet for minutes while
+    // the worker is running every few seconds. The last start of either counts.
+    const last = Math.max(
+      when(show(UNIT + '.timer', 'LastTriggerUSec')) || 0,
+      when(show(UNIT + '.service', 'ExecMainStartTimestamp')) || 0) || NaN;
+    if (show(UNIT + '.timer', 'ActiveState') !== 'active') problems.push('השעון של המענה לא פעיל');
+    else if (!isNaN(last) && now - last > TIMER_MS) problems.push('השעון של המענה לא הופעל ' + Math.round((now - last) / 60000) + ' דקות');
+    const g = gitStuck(__dirname, now);
+    if (g) problems.push(g);
+    const up = uploadProblems(now);
+    up.forEach((p) => problems.push(p));
+    const c = claimProblems(all, now, __dirname);
+    if (c) problems.push(c);
+    const l = liveBehind(now);
+    if (l) problems.push(l);
+  }
+  return problems;
+}
+
+/*
+  22.10: twice in one day an answer told him "I set up the Homestyle tile", and
+  no commit had touched build.js. The 15:40 cameras answer said the same. Every
+  check here passed, because the message was answered and marked done. An
+  answer from the last two hours that says a tile was set up, added, opened or
+  removed is a fault unless build.js changed in a commit from twenty minutes
+  before it to ten minutes after it.
+*/
+const CLAIM_RE = /(?:^|[^א-ת])(?<!לא )(הקמתי|הכנתי|פתחתי|הוספתי|הורדתי|הסרתי|העליתי)[^.\n]{0,40}אריח|אריח[^.\n]{0,40}(?<!לא )(הקמתי|הוספתי|הורדתי|הסרתי)|באריח החדש/;
+function claimProblems(all, now, repo) {
+  const bad = all.filter((m) => m.from === 'claude' && m.text && now - Date.parse(m.at) < 2 * 3600 * 1000 && CLAIM_RE.test(m.text))
+    .filter((m) => {
+      const t = Date.parse(m.at);
+      try {
+        const o = execFileSync('git', ['log', '--format=%h', '--since=' + new Date(t - 20 * 60000).toISOString(),
+          '--until=' + new Date(t + 10 * 60000).toISOString(), '--', 'build.js'], { cwd: repo, encoding: 'utf8', timeout: 10000 });
+        return !o.trim() && now - t > 10 * 60000;
+      } catch (e) { return false; }
+    });
+  return bad.length ? (bad.length === 1 ? 'תשובה אחת אמרה שאריח השתנה, ובקוד אין שינוי' : bad.length + ' תשובות אמרו שאריח השתנה, ובקוד אין שינוי') : '';
+}
+
+/*
+  22.10: GitHub Pages failed eleven builds in a row between 13:01 and 13:10 and
+  nothing here knew; only the build at the end of a burst is published. So
+  compare the live version.json with the one built here: live more than ten
+  minutes behind is a fault. One small fetch every ten minutes while it is fine,
+  every run only while it is not (feedback: never poll the live site in a loop).
+*/
+function liveBehind(now) {
+  if (!inst.publicUrl) return '';
+  const f = path.join(STATUS, 'live-check.json');
+  const prev = readJson(f, {});
+  if (prev.ok && now - Date.parse(prev.at) < 10 * 60000) return '';
+  const local = readJson(path.join(__dirname, 'docs', 'version.json'), null);
+  if (!local || !local.builtAt) return '';
+  let live = null;
+  try { live = JSON.parse(execFileSync('curl', ['-s', '-m', '15', inst.publicUrl + 'version.json?w=' + now], { encoding: 'utf8', timeout: 20000 })); } catch (e) {}
+  // pending: the oldest build made here that the live site has not shown yet. The
+  // local build changes every few minutes, so its own age says nothing.
+  const liveAt = live && live.builtAt ? Date.parse(live.builtAt) : NaN;
+  let pending = prev.pending && !(liveAt >= Date.parse(prev.pending)) ? prev.pending : null;
+  if (!(liveAt >= Date.parse(local.builtAt)) && !pending) pending = local.builtAt;
+  if (liveAt >= Date.parse(local.builtAt)) pending = null;
+  const ok = !isNaN(liveAt) && (!pending || now - Date.parse(pending) < 10 * 60000);
+  try { fs.writeFileSync(f, JSON.stringify({ at: new Date(now).toISOString(), ok, pending, live: live && live.builtAt, local: local.builtAt })); } catch (e) {}
+  if (ok) return '';
+  if (!live) return 'האתר החי לא עונה';
+  return 'האתר החי לא התעדכן ' + Math.round((now - Date.parse(pending)) / 60000) + ' דקות, הבנייה בגיטהאב נכשלת';
+}
+
+/*
+  11.10: the big file upload service (upload.js). Only the instance that has one
+  (uploadUrl in instance.json) is checked: its unit must be active, and a note
+  in uploads/ready that the listener has not taken inside five minutes means a
+  finished file never reached the chat.
+*/
+function uploadProblems(now) {
+  const out = [];
+  if (!inst.uploadUrl) return out;
+  // Itzik's is monitor-upload.service; a customer's is monitor-upload-<name>.service (setup/enable-upload.sh).
+  const unit = process.env.WATCHDOG_UPLOAD_UNIT || (inst.name === 'abaitzik' ? 'monitor-upload.service' : 'monitor-upload-' + inst.name + '.service');
+  if (show(unit, 'LoadState') === 'loaded' && show(unit, 'ActiveState') !== 'active') out.push('שירות ההעלאה של קבצים גדולים לא פעיל');
+  try {
+    const dir = path.join(inst.dataPath, 'uploads', 'ready');
+    const old = fs.readdirSync(dir).filter((f) => /\.json$/.test(f) && now - fs.statSync(path.join(dir, f)).mtimeMs > 5 * 60 * 1000);
+    if (old.length) out.push('קובץ גדול שהועלה לא נקלט בצ׳אט יותר מחמש דקות');
+  } catch (e) { /* no folder yet: nothing has been uploaded */ }
+  return out;
+}
+
+/*
+  The listener's pull --rebase has stuck twice on docs/live.json and left HEAD
+  detached, which looks like a permissions failure. A rebase is normal for a
+  few seconds, so only one older than STUCK_MS counts. This used to be checked
+  by a Claude loop three times an hour (29.9); it costs nothing here.
+*/
+function gitStuck(repo, now) {
+  const git = path.join(repo, '.git');
+  if (!fs.existsSync(git)) return '';
+  for (const d of ['rebase-merge', 'rebase-apply']) {
+    try { const t = fs.statSync(path.join(git, d)).mtimeMs; if (now - t > STUCK_MS) return 'הגיט בשרת תקוע באמצע rebase'; } catch (e) {}
+  }
+  try {
+    const head = fs.readFileSync(path.join(git, 'HEAD'), 'utf8').trim();
+    const t = fs.statSync(path.join(git, 'HEAD')).mtimeMs;
+    if (!head.startsWith('ref:') && now - t > STUCK_MS) return 'הגיט בשרת במצב HEAD מנותק';
+  } catch (e) {}
+  return '';
+}
+
+/*
+  How fast he is answered today: minutes from his message to my first record
+  that points back at it. The median, because one slow voice note should not
+  hide forty quick answers, and the share inside the two minute target.
+*/
+function speed(now) {
+  let files = [];
+  try { files = fs.readdirSync(CHAT); } catch (e) { return null; }
+  const all = files.map((f) => readJson(path.join(CHAT, f), null)).filter(Boolean);
+  const first = {};
+  all.filter((m) => m.from === 'claude' && m.re).forEach((m) => {
+    const t = Date.parse(m.at);
+    if (!first[m.re] || t < first[m.re]) first[m.re] = t;
+  });
+  const day = new Date(now).toISOString().slice(0, 10);
+  const d = all.filter((m) => m.from === 'itzik' && m.id && String(m.at).slice(0, 10) === day && first[m.id])
+    .map((m) => first[m.id] - Date.parse(m.at)).filter((x) => x >= 0).sort((a, b) => a - b);
+  if (!d.length) return { n: 0 };
+  return { n: d.length, medianMin: Math.round(d[Math.floor(d.length / 2)] / 6000) / 10,
+    inTarget: Math.round(100 * d.filter((x) => x <= TARGET_MS).length / d.length) };
+}
+
+/*
+  The doctor. A fault that is still there after ten minutes is not a blip, and
+  waiting for him to notice is the thing he asked to end. A Claude session is
+  started on the server with the faults and the log tails, in Itzik's repo (a
+  fix made in a tenant folder is overwritten by the next sync). It fixes the
+  cause, runs the tests, pushes through push.js and leaves him one line in the
+  chat. Three a day at most, one at a time, so a fault it cannot fix does not
+  burn the day's Claude budget.
+*/
+const DOCTOR = path.join(STATUS, 'doctor.json');
+const DOCTOR_AFTER_MS = 10 * 60 * 1000;
+const DOCTOR_MAX = 3;
+/*
+  5.10: a session that ends in a minute without fixing anything left the fault
+  standing, so the next tick woke it again, and all three runs of the day went
+  in four minutes. An hour between runs, and never for the PC: no code on the
+  server can wake it or work it.
+*/
+const DOCTOR_GAP_MS = 60 * 60 * 1000;
+function doctorFaults(problems, since, now) {
+  // 1.11: a message held for a missing code is the gate working, not a fault; it burned two of the day's runs on a waitlist form.
+  return problems.filter((p) => !/^(משימה למחשב|המחשב תקוע)/.test(p) && !/בלי הקוד ונעצרו/.test(p)
+    && since[key(p)] && now - Date.parse(since[key(p)]) > DOCTOR_AFTER_MS);
+}
+function alive(pid) { try { process.kill(pid, 0); return true; } catch (e) { return e.code === 'EPERM'; } }
+function tailOf(f, n) {
+  try { const L = fs.readFileSync(f, 'utf8').split('\n'); return L.slice(-n).join('\n'); } catch (e) { return ''; }
+}
+function doctor(problems, since, now) {
+  if (process.platform === 'win32' || !process.env.WATCHDOG_DOCTOR) return;
+  const persistent = doctorFaults(problems, since, now);
+  if (!persistent.length) return;
+  const d = readJson(DOCTOR, { day: '', runs: 0, pid: 0, log: [] });
+  const last = Date.parse(((d.log || []).slice(-1)[0] || {}).at);
+  if (!isNaN(last) && now - last < DOCTOR_GAP_MS) return;
+  const day = new Date(now).toISOString().slice(0, 10);
+  if (d.day !== day) { d.day = day; d.runs = 0; }
+  if (d.pid && alive(d.pid)) return;
+  if (d.runs >= DOCTOR_MAX) return;
+  const repo = process.env.WATCHDOG_DOCTOR;
+  const text = [
+    'אתה הרופא האוטומטי של המוניטור של איציק. השומר מצא תקלות שנמשכות יותר מעשר דקות במופע ' + inst.name + ':',
+    persistent.map((p) => '- ' + p).join('\n'),
+    '',
+    'יומן המענה (סוף):', tailOf(process.env.WORKER_LOG || '/var/log/monitor-worker.log', 40),
+    '',
+    'המשימה: למצוא את הסיבה ולתקן אותה בקוד ב ' + repo + ' (לא בתיקיית לקוח, הסנכרון דורס). לתקן את המשפחה ולא את המופע.',
+    'לא למחוק הודעות, לא לשלוח הודעות לאנשים, לא לשנות קובצי systemd בלי צורך מוכח.',
+    'אחרי התיקון: npm test חייב לעבור, ואז node push.js "doctor: <מה תוקן>".',
+    'בסוף לכתוב לאיציק רשומה אחת ב data/chat/chat/ (from "claude"), בעברית פשוטה, בלי מקפים: מה נשבר ומה תוקן, שורה או שתיים.',
+    'אם אי אפשר לתקן, לכתוב לו את זה באותה רשומה ולעצור.',
+  ].join('\n');
+  const { spawn } = require('child_process');
+  let out = 'ignore';
+  try { if (process.env.WATCHDOG_LOG) out = fs.openSync(process.env.WATCHDOG_LOG, 'a'); } catch (e) {}
+  const c = spawn('claude', ['-p', '--dangerously-skip-permissions'], { cwd: repo, detached: true, stdio: ['pipe', out, out], shell: true });
+  c.stdin.end(text, 'utf8');
+  c.unref();
+  d.runs += 1; d.pid = c.pid;
+  d.log = (d.log || []).concat([{ at: new Date(now).toISOString(), instance: inst.name, problems: persistent }]).slice(-30);
+  try { fs.writeFileSync(DOCTOR, JSON.stringify(d, null, 1)); } catch (e) {}
+  console.log('רופא הופעל (' + d.runs + '/' + DOCTOR_MAX + ' היום): ' + persistent.join(' · '));
+}
+function key(p) { return p.replace(/\d+/g, '#'); }
+
+/*
+  The seven o'clock network report. Itzik, 1.10: "ביקשתי ממך לעשות כל יום בשבע
+  בבוקר בדיקה, אתה לא בודק". The clock lived on the PC and never reached the
+  server. This runs every two minutes anyway, so from 07:00 Israel it marks the
+  job once a day in the PC queue (net-daily.js --queue), and the PC does it the
+  first minute it is on. A stamp per day keeps it to one try, even if the PC
+  job fails. His instance only: the customers' monitors have no such report.
+*/
+const NET_STAMP = path.join(STATUS, 'net-daily-queued.json');
+function netDaily(now) {
+  if (inst.name !== 'abaitzik') return;
+  const p = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' })
+    .formatToParts(new Date(now)).reduce((o, x) => { o[x.type] = x.value; return o; }, {});
+  const day = p.year + '-' + p.month + '-' + p.day;
+  if (+p.hour < 7 || readJson(NET_STAMP, {}).day === day) return;
+  try {
+    const out = execFileSync(process.execPath, [path.join(__dirname, 'net-daily.js'), '--queue'],
+      { cwd: __dirname, encoding: 'utf8', env: Object.assign({}, process.env, { TZ: 'Asia/Jerusalem' }), timeout: 30000 });
+    fs.writeFileSync(NET_STAMP, JSON.stringify({ day, at: new Date(now).toISOString(), out: String(out).trim().slice(0, 300) }));
+    console.log('דוח רשתות: ' + String(out).trim().slice(0, 120));
+  } catch (e) { console.log('!! דוח הרשתות לא סומן למחשב: ' + e.message); }
+}
+
+function main() {
+  // 8.10: a paused customer has nothing to watch and nobody to tell.
+  if (inst.paused) return;
+  const now = Date.now();
+  const problems = check(now);
+  const prev = readJson(OUT, { told: {} });
+  const pc = pcState(now);
+  const told = prev.told || {};
+  const fresh = problems.filter((p) => { const k = key(p); return !told[k] || now - Date.parse(told[k]) > RETELL_MS; });
+  // since: when each current fault was first seen, for the doctor's ten minutes.
+  const since = {};
+  problems.forEach((p) => { since[key(p)] = (prev.since || {})[key(p)] || new Date(now).toISOString(); });
+  const sp = speed(now);
+  console.log(new Date(now).toISOString().slice(11, 19) + '  ' + (problems.length ? 'תקלות: ' + problems.join(' · ') : 'תקין')
+    + (sp && sp.n ? '  | היום ' + sp.n + ' תשובות, חציון ' + sp.medianMin + ' דק׳, ' + sp.inTarget + '% בתוך שתי דקות' : ''));
+  if (DRY) return;
+  netDaily(now);
+  // 10.10: Alon's answers in the sticker theatre come back through here.
+  if (inst.name === 'abaitzik') {
+    try { const o = execFileSync(process.execPath, [path.join(__dirname, 'alon.js'), 'pull'], { cwd: __dirname, encoding: 'utf8', timeout: 30000 }); if (o.trim()) console.log(o.trim()); }
+    catch (e) { console.log('!! תשובות אלון: ' + e.message.slice(0, 120)); }
+  }
+  // 12.10: what the other side changed in the theatre, so the tile waves. At most once in ten minutes, inside.
+  try { const o = execFileSync(process.execPath, [path.join(__dirname, 'theatre-news.js'), 'pull'], { cwd: __dirname, encoding: 'utf8', timeout: 30000 }); if (o.trim()) console.log(o.trim()); }
+  catch (e) { console.log('!! חדשות התיאטרון: ' + e.message.slice(0, 120)); }
+  doctor(problems, since, now);
+  if (fresh.length) {
+    try {
+      require('./lib/notify-channels.js').notify('השומר מצא תקלה', fresh.join('\n'));
+      fresh.forEach((p) => { told[p.replace(/\d+/g, '#')] = new Date(now).toISOString(); });
+    } catch (e) { console.log('!! ההתראה לא נשלחה: ' + e.message); }
+  }
+  Object.keys(told).forEach((k) => { if (now - Date.parse(told[k]) > 24 * 3600 * 1000) delete told[k]; });
+  let board = null;
+  try { board = snapshot(now); } catch (e) { console.log('!! תמונת מצב: ' + e.message); }
+  try { fs.mkdirSync(STATUS, { recursive: true }); fs.writeFileSync(OUT, JSON.stringify({ at: new Date(now).toISOString(), problems, told, since, speed: sp, pcOnSince: pc.on ? new Date(pc.since).toISOString() : null, board, history: history(prev, problems, now) }, null, 1)); } catch (e) {}
+  // 12.10: Itzik's instance gathers every monitor into the 🩺 board.
+  if (inst.name === 'abaitzik') {
+    try { require('./health-board.js').run(now); } catch (e) { console.log('!! לוח התקלות: ' + e.message); }
+  }
+}
+
+if (require.main === module) main();
+module.exports = { claimProblems, liveBehind, uploadProblems, refused, check, when, speed, gitStuck, heldProblem, pcProblems, doctorFaults, history };

@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>שחר · כיווני לוגו</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@100..900&family=Frank+Ruhl+Libre:wght@300..900&family=Suez+One&family=Karantina:wght@300;400;700&display=block" rel="stylesheet">
+<style>
+:root{--paper:#F3F1EC;--ink:#17171A;--mute:#77746D;--line:#DEDAD2}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:'Heebo',sans-serif;-webkit-font-smoothing:antialiased}
+.intro{max-width:1400px;margin:0 auto;padding:72px 48px 40px}
+.intro h1{font-weight:800;font-size:64px;letter-spacing:-.01em;line-height:1}
+.intro p{font-weight:300;font-size:20px;color:var(--mute);margin-top:14px;max-width:760px;line-height:1.5}
+.boards{max-width:1400px;margin:0 auto;padding:0 48px 80px;display:flex;flex-direction:column;gap:48px}
+.board{background:#fff;border:1px solid var(--line);padding:40px;display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+.head{grid-column:1/-1;display:flex;align-items:baseline;gap:22px;padding-bottom:22px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.num{font-weight:200;font-size:56px;line-height:.8;color:var(--mute);font-variant-numeric:tabular-nums;min-width:64px}
+.head h2{font-weight:700;font-size:30px;line-height:1.1}
+.head p{font-weight:300;font-size:18px;color:var(--mute);margin-top:6px}
+.pal{margin-inline-start:auto;display:flex;gap:6px;align-self:center}
+.pal i{width:22px;height:22px;border-radius:50%;border:1px solid rgba(0,0,0,.08);display:block}
+.tile{position:relative;display:flex;align-items:center;justify-content:center;aspect-ratio:1}
+.tile.m{grid-column:span 2}
+.tile.w{grid-column:span 3;aspect-ratio:auto;height:250px}
+.tile svg{display:block}
+.tile.m svg{width:58%;height:58%}
+.tile.w svg{width:78%;height:78%}
+.cap{position:absolute;bottom:10px;inset-inline-start:14px;font-size:12px;font-weight:400;letter-spacing:.02em;opacity:.5}
+.icons{grid-column:span 2;background:#F7F6F3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;aspect-ratio:1;position:relative}
+.icons .app{width:180px;height:180px;border-radius:40px;overflow:hidden;box-shadow:0 1px 0 rgba(0,0,0,.06),0 10px 30px rgba(0,0,0,.08)}
+.icons .app svg{width:180px;height:180px}
+.fav{display:flex;gap:18px;align-items:center}
+.fav span{display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:8px}
+.fav svg{display:block}
+.tabbar{display:flex;align-items:center;gap:8px;background:#E3E1DC;border-radius:8px 8px 0 0;padding:7px 12px;font-size:12px;width:200px}
+.tabbar b{font-weight:500}
+.ov{max-width:1400px;margin:0 auto 48px;padding:40px 48px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;background:var(--paper)}
+.ov .cell{background:#fff;border:1px solid var(--line);padding:22px 20px 18px;display:flex;flex-direction:column;align-items:center;gap:16px}
+.ov .cell .app{width:96px;height:96px;border-radius:22px;overflow:hidden}
+.ov .cell .wm{width:100%;height:84px;display:flex;align-items:center;justify-content:center}
+.ov .cell .wm svg{width:100%;height:100%}
+.ov .cell .lbl{align-self:stretch;display:flex;gap:10px;align-items:baseline;font-size:15px;font-weight:600}
+.ov .cell .lbl span{font-weight:200;color:var(--mute);font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<header class="intro">
+  <h1>שחר</h1>
+  <p>שמונה כיווני לוגו. כל כיוון על לוח משלו: הסימן לבד, הלוגו המלא, אייקון אפליקציה בגודל 180, בדיקת פאביקון ב 32 וב 16, ורקע בהיר מול כהה.</p>
+</header>
+<section class="ov" id="overview"></section>
+<main class="boards" id="boards"></main>
+
+<script>
+let UID=0; const uid=p=>p+(++UID);
+const cv=document.createElement('canvas').getContext('2d');
+cv.direction='ltr'; cv.textAlign='left'; cv.textBaseline='alphabetic';
+/* ink metrics of a string: box relative to a left origin on the baseline */
+function gm(t,f,w,s){cv.font=`${w} ${s}px "${f}"`;const m=cv.measureText(t);
+  return {L:m.actualBoundingBoxLeft,R:m.actualBoundingBoxRight,A:m.actualBoundingBoxAscent,D:m.actualBoundingBoxDescent,w:m.actualBoundingBoxLeft+m.actualBoundingBoxRight}}
+const T=(t,x,y,f,w,s,fill,extra='')=>`<text x="${x.toFixed(2)}" y="${y.toFixed(2)}" direction="ltr" font-family="${f}" font-weight="${w}" font-size="${s}" fill="${fill}" ${extra}>${t}</text>`;
+/* glyph with its ink box centred on cx, sitting with ink bottom at by */
+function G(t,f,w,s,cx,by,fill,extra=''){const m=gm(t,f,w,s);const x=cx-m.w/2+m.L;const y=by-m.D;
+  return {s:T(t,x,y,f,w,s,fill,extra),box:{l:cx-m.w/2,r:cx+m.w/2,t:y-m.A,b:by},m}}
+/* lay items right to left. item: {t,f,w,s,fill,dy,extra} or {draw:(l,base)=>svg,w,top}; returns svg + boxes */
+function lay(items,gap,cx,base){
+  const ms=items.map(it=>it.draw?it:{...it,m:gm(it.t,it.f,it.w,it.s)});
+  const W=ms.reduce((a,it,i)=>a+(it.draw?it.w:it.m.w)+(i?(ms[i-1].gap??gap):0),0);
+  let r=cx+W/2,out='',boxes=[];
+  ms.forEach(it=>{const w=it.draw?it.w:it.m.w,l=r-w,dy=it.dy||0;
+    if(it.draw){out+=it.draw(l,base+dy);boxes.push({l,r,t:base+dy-it.top,b:base+dy});}
+    else{out+=T(it.t,l+it.m.L,base+dy,it.f,it.w,it.s,it.fill,it.extra||'');boxes.push({l,r,t:base+dy-it.m.A,b:base+dy+it.m.D});}
+    r=l-(it.gap??gap);});
+  return {s:out,boxes,W}}
+const clip=(id,y,w=600)=>`<clipPath id="${id}"><rect x="-50" y="-50" width="${w+100}" height="${y+50}"/></clipPath>`;
+
+const C=[];
+
+/* 1 horizon */
+C.push({
+  name:'קו האופק', why:'המילה עולה מתוך קו האופק, רגע לפני שהיא שלמה. בוקר הוא תנועה, לא מצב.',
+  pal:{fg:'#16161A',bg:'#F3EEE4',ac:'#E4572E',dark:'#16161A',darkFg:'#F3EEE4'},
+  mark(fg,ac){const id=uid('c'),g=G('ש','Heebo',900,96,50,78,fg,`clip-path="url(#${id})"`);const h=g.box.b-g.box.t,cy=g.box.b-h*.22;
+    return `<defs>${clip(id,cy,100)}</defs>${g.s}<rect x="8" y="${cy}" width="84" height="5" fill="${ac}"/>`},
+  word(fg,ac){const id=uid('c');const L=lay([{t:'שחר',f:'Heebo',w:900,s:168,fill:fg,extra:`clip-path="url(#${id})"`}],0,300,150);
+    const h=L.boxes[0].b-L.boxes[0].t,cy=150-h*.22;
+    return {vb:'0 0 600 200',s:`<defs>${clip(id,cy)}</defs>${L.s}<rect x="${L.boxes[0].l-36}" y="${cy}" width="${L.W+72}" height="8" fill="${ac}"/>`}},
+  icon(p){const id=uid('c'),g=G('ש','Heebo',900,64,50,72,p.fg,`clip-path="url(#${id})"`);const h=g.box.b-g.box.t,cy=g.box.b-h*.22;
+    return `<defs>${clip(id,cy,100)}</defs><rect width="100" height="100" fill="${p.ac}"/>${g.s}<rect x="0" y="${cy}" width="100" height="40" fill="${p.fg}"/>`}
+});
+
+/* 2 shin of light */
+function shinRays(fg,ac){const id=uid('m'),a=26*Math.PI/180,top=14,cx=50,cy=80,dx=(cy-top)*Math.tan(a),t=6/Math.cos(a);
+  return `<defs><mask id="${id}"><rect x="-10" y="-10" width="120" height="120" fill="#fff"/><circle cx="${cx}" cy="${cy}" r="25" fill="#000"/></mask></defs>
+  <g fill="${fg}" mask="url(#${id})"><rect x="44" y="${top}" width="12" height="70"/>
+  <polygon points="${cx+dx-t},${top} ${cx+dx+t},${top} ${cx+t},${cy} ${cx-t},${cy}"/>
+  <polygon points="${cx-dx-t},${top} ${cx-dx+t},${top} ${cx+t},${cy} ${cx-t},${cy}"/></g>
+  <path d="M31 ${cy} A19 19 0 0 1 69 ${cy} Z" fill="${ac}"/>`}
+C.push({
+  name:'ש של אור', why:'שלוש הזרועות של ה ש הן שלוש קרניים שיוצאות מהשמש. האות והזריחה הן צורה אחת.',
+  pal:{fg:'#1B2230',bg:'#F5F0E8',ac:'#F29E38',dark:'#1B2230',darkFg:'#F5F0E8'},
+  mark:shinRays,
+  word(fg,ac){const k=1.62,x0=50-(80-14)*Math.tan(26*Math.PI/180)-7;const mw=(100-2*x0)*k;
+    const L=lay([{draw:(l,b)=>`<g transform="translate(${l-x0*k} ${b-80*k}) scale(${k})">${shinRays(fg,ac)}</g>`,w:mw,top:66*k,gap:44},
+      {t:'שחר',f:'Heebo',w:700,s:120,fill:fg}],0,300,150);
+    return {vb:'0 0 600 200',s:L.s}}
+});
+
+/* 3 the sliver */
+function sliver(cx,line,half,h,gap,r){const cy=line-gap-h+r;return {cy,r,clipY:line-gap}}
+C.push({
+  name:'הרגע שלפני', why:'פס האור הדק שמופיע לפני שהשמש עולה. לא הבטחה גדולה, רק סימן שזה מתחיל.',
+  pal:{fg:'#0F1B2D',bg:'#ECEDE8',ac:'#FF7A45',dark:'#0F1B2D',darkFg:'#ECEDE8'},
+  mark(fg,ac){const id=uid('c');return `<defs>${clip(id,57.5,100)}</defs>
+    <circle cx="50" cy="${57.5-15+36}" r="36" fill="${ac}" clip-path="url(#${id})"/>
+    <rect x="8" y="61" width="84" height="4" fill="${fg}"/>`},
+  word(fg,ac){const id=uid('c');const L=lay([{t:'שחר',f:'Frank Ruhl Libre',w:500,s:128,fill:fg}],0,300,112);const ln=152;
+    return {vb:'0 0 600 200',s:`<defs>${clip(id,ln-3)}</defs>${L.s}
+    <circle cx="300" cy="${ln-3-17+58}" r="58" fill="${ac}" clip-path="url(#${id})"/>
+    <rect x="${300-L.W/2-30}" y="${ln}" width="${L.W+60}" height="3" fill="${fg}"/>`}},
+  icon(p){const id=uid('c');return `<defs>${clip(id,62,100)}</defs><rect width="100" height="100" fill="${p.fg}"/>
+    <circle cx="50" cy="${62-14+34}" r="34" fill="${p.ac}" clip-path="url(#${id})"/>
+    <rect x="0" y="65" width="100" height="3" fill="${p.darkFg}"/>`}
+});
+
+/* 4 step */
+function stair(fg,ac){return `<g fill="none" stroke-width="12" stroke-linejoin="miter">
+  <path d="M82 90 V62 Q82 50 70 50 H54 V30 Q54 18 42 18 H32" stroke="${fg}"/>
+  <path d="M32.5 18 H12" stroke="${ac}"/></g>`}
+C.push({
+  name:'צעד', why:'ה ר כפולה הופכת למדרגה, והמילה עצמה מטפסת. קמים, ועולים עוד צעד.',
+  pal:{fg:'#1E1E1E',bg:'#F1ECE2',ac:'#D9472B',dark:'#1E1E1E',darkFg:'#F1ECE2'},
+  mark(fg,ac){const o={f:'Heebo',w:800,s:44};const st=13;
+    return lay([{t:'ש',...o,fill:fg},{t:'ח',...o,fill:fg,dy:-st},{t:'ר',...o,fill:ac,dy:-2*st}],4,50,76).s},
+  word(fg,ac){const o={f:'Heebo',w:800,s:132};const st=22;
+    const L=lay([{t:'ש',...o,fill:fg,dy:0},{t:'ח',...o,fill:fg,dy:-st},{t:'ר',...o,fill:ac,dy:-2*st}],15,300,160);
+    return {vb:'0 0 600 200',s:L.s}}
+});
+
+/* 5 gate */
+function gate(x,base,w,h,t,fg,ac){const top=base-h,r=t*1.5,ri=t*.5,g=t*.32,sr=(w-2*t)/2-g,cx=x+w/2;
+  return `<path d="M${x} ${base} V${top+r} Q${x} ${top} ${x+r} ${top} H${x+w} V${base} H${x+w-t} V${top+t} H${x+t+ri} Q${x+t} ${top+t} ${x+t} ${top+t+ri} V${base} Z" fill="${fg}"/>
+  <path d="M${cx-sr} ${base} A${sr} ${sr} 0 0 1 ${cx+sr} ${base} Z" fill="${ac}"/>`}
+C.push({
+  name:'השער', why:'ה ח היא פתח, ובתוכו השמש עולה. יש יציאה, גם מהלילה הכי ארוך.',
+  pal:{fg:'#2A1F1A',bg:'#F2E8D8',ac:'#EE6B2F',dark:'#2A1F1A',darkFg:'#F2E8D8'},
+  mark(fg,ac){return gate(17,88,66,76,14,fg,ac)},
+  word(fg,ac){const o={f:'Heebo',w:800,s:150,fill:fg};const mr=gm('ר',o.f,o.w,o.s),mh=gm('ח',o.f,o.w,o.s),mv=gm('ו',o.f,o.w,o.s);
+    const t=o.s*.15,w=Math.max(mh.w*1.2,t*2+o.s*.3),h=mr.A;
+    const L=lay([{t:'ש',...o},{draw:(l,b)=>gate(l,b,w,h,t,fg,ac),w,top:h},{t:'ר',...o}],20,300,152);
+    return {vb:'0 0 600 200',s:L.s}}
+});
+
+/* 6 stamp */
+function stamp(fg){const id=uid('m'),cl=uid('c');const g=G('ש','Suez One',400,58,50,70,'#000');
+  return `<defs>${clip(cl,78,100)}<mask id="${id}"><rect x="-10" y="-10" width="120" height="120" fill="#fff"/>${g.s}</mask></defs>
+  <circle cx="50" cy="48" r="42" fill="${fg}" clip-path="url(#${cl})" mask="url(#${id})"/>
+  <rect x="2" y="83" width="96" height="4" fill="${fg}"/>`}
+C.push({
+  name:'חותמת בוקר', why:'שמש על קו האופק, ובתוכה ש חתוכה. צבע אחד, עובד על כוס, על חולצה ועל מסך.',
+  pal:{fg:'#C8462B',bg:'#F4EEE3',ac:'#C8462B',dark:'#1A1714',darkFg:'#F4EEE3'},
+  mark:stamp,
+  word(fg,ac){const k=1.55;const L=lay([{draw:(l,b)=>`<g transform="translate(${l-2*k} ${b-87*k}) scale(${k})">${stamp(fg)}</g>`,w:96*k,top:81*k,gap:30},
+      {t:'שחר',f:'Suez One',w:400,s:112,fill:fg}],0,300,166);
+    const tb=L.boxes[1];const tag=gm('כל בוקר מחדש','Heebo',500,22);
+    return {vb:'0 0 600 200',s:L.s.replace(/y="166.00"(?=[^>]*Suez)/,`y="128"`)+T('כל בוקר מחדש',tb.r-tag.w+tag.L,166,'Heebo',500,22,fg)}}
+});
+
+/* 7 shin dot */
+C.push({
+  name:'הנקודה', why:'הנקודה שמעל ה ש היא השמש. סימן קטן שכל קורא עברית מכיר, ופתאום הוא זריחה.',
+  pal:{fg:'#121212',bg:'#F6F2EA',ac:'#F05A28',dark:'#121212',darkFg:'#F6F2EA'},
+  mark(fg,ac){const g=G('ש','Frank Ruhl Libre',700,90,47,86,fg);const r=5.8;
+    return g.s+`<circle cx="${g.box.r-r*.2}" cy="${g.box.t-r-3}" r="${r}" fill="${ac}"/>`},
+  word(fg,ac){const L=lay([{t:'שחר',f:'Frank Ruhl Libre',w:700,s:150,fill:fg}],0,300,168);const b=L.boxes[0],r=10.5;
+    return {vb:'0 0 600 200',s:L.s+`<circle cx="${b.r-r*.2}" cy="${b.t-r-5}" r="${r}" fill="${ac}"/>`}}
+});
+
+/* 8 gaining strength */
+function shinWeights(fg){return `<g fill="${fg}">
+  <path d="M15 12 H33 V70 H64 Q74 70 74 60 V12 H79 V60 Q79 88 55 88 H15 Z"/>
+  <polygon points="50,12 59,12 42,72 32,72"/></g>`}
+C.push({
+  name:'מתחזקים', why:'כל אות עבה מקודמתה. ככה נראה בוקר אחרי לילה קשה: מתעוררים לאט, ונהיים חזקים.',
+  pal:{fg:'#101418',bg:'#EDEAE3',ac:'#F4B23E',dark:'#101418',darkFg:'#EDEAE3'},
+  mark(fg,ac){const s=46;return lay([{t:'ש',f:'Heebo',w:200,s,fill:fg},{t:'ח',f:'Heebo',w:500,s,fill:fg},{t:'ר',f:'Heebo',w:900,s,fill:fg}],5,50,66).s},
+  word(fg,ac){const L=lay([{t:'ש',f:'Heebo',w:200,s:150,fill:fg},{t:'ח',f:'Heebo',w:500,s:150,fill:fg},{t:'ר',f:'Heebo',w:900,s:150,fill:fg}],13,300,155);
+    return {vb:'0 0 600 200',s:L.s}}
+});
+
+/* ===== render ===== */
+const svg=(vb,inner,w,h)=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}"${w?` width="${w}" height="${h}"`:''}>${inner}</svg>`;
+function defaultIcon(c){const p=c.pal;return `<rect width="100" height="100" fill="${p.dark}"/><g transform="translate(19 19) scale(.62)">${c.mark(p.darkFg,p.ac)}</g>`}
+function render(){
+ const root=document.getElementById('boards');
+ C.forEach((c,i)=>{
+  const p=c.pal, ic=()=>c.icon?c.icon(p):defaultIcon(c);
+  const wL=c.word(p.fg,p.ac), wD=c.word(p.darkFg,p.ac);
+  const b=document.createElement('section');b.className='board';b.id='b'+(i+1);
+  b.innerHTML=`
+   <div class="head"><div class="num">${String(i+1).padStart(2,'0')}</div>
+     <div><h2>${c.name}</h2><p>${c.why}</p></div>
+     <div class="pal">${[...new Set([p.fg,p.bg,p.ac,p.dark])].map(x=>`<i style="background:${x}"></i>`).join('')}</div></div>
+   <div class="tile m" style="background:${p.bg}">${svg('0 0 100 100',c.mark(p.fg,p.ac))}<span class="cap" style="color:${p.fg}">סימן, רקע בהיר</span></div>
+   <div class="tile m" style="background:${p.dark}">${svg('0 0 100 100',c.mark(p.darkFg,p.ac))}<span class="cap" style="color:${p.darkFg}">סימן, רקע כהה</span></div>
+   <div class="icons">
+     <div class="app">${svg('0 0 100 100',ic())}</div>
+     <div class="fav">
+       <span style="background:#fff;border:1px solid #e6e3dd">${svg('0 0 100 100',ic(),32,32)}</span>
+       <span style="background:${p.bg}">${svg('0 0 100 100',c.mark(p.fg,p.ac),32,32)}</span>
+       <span style="background:${p.dark}">${svg('0 0 100 100',c.mark(p.darkFg,p.ac),32,32)}</span>
+       <span style="background:#fff;border:1px solid #e6e3dd">${svg('0 0 100 100',ic(),16,16)}</span>
+     </div>
+     <div class="tabbar">${svg('0 0 100 100',ic(),16,16)}<b>שחר</b><span style="opacity:.5">בוקר טוב</span></div>
+     <span class="cap">אייקון 180 · פאביקון 32 ו 16</span>
+   </div>
+   <div class="tile w" style="background:${p.bg}">${svg(wL.vb,wL.s)}<span class="cap" style="color:${p.fg}">לוגו מלא, בהיר</span></div>
+   <div class="tile w" style="background:${p.dark}">${svg(wD.vb,wD.s)}<span class="cap" style="color:${p.darkFg}">לוגו מלא, כהה</span></div>`;
+  root.appendChild(b);
+ });
+ const ov=document.getElementById('overview');
+ C.forEach((c,i)=>{const p=c.pal,w=c.word(p.fg,p.ac);const d=document.createElement('div');d.className='cell';
+  d.innerHTML=`<div class="app">${svg('0 0 100 100',c.icon?c.icon(p):defaultIcon(c))}</div><div class="wm" style="background:${p.bg}">${svg(w.vb,w.s)}</div><div class="lbl"><span>${String(i+1).padStart(2,'0')}</span>${c.name}</div>`;ov.appendChild(d);});
+ document.body.dataset.ready=1;
+}
+const need=['200 50px Heebo','500 50px Heebo','700 50px Heebo','800 50px Heebo','900 50px Heebo','500 50px "Frank Ruhl Libre"','700 50px "Frank Ruhl Libre"','50px "Suez One"'];
+Promise.all(need.map(f=>document.fonts.load(f,'שחרו'))).then(()=>document.fonts.ready).then(render);
+</script>
+</body>
+</html>

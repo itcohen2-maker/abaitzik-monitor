@@ -1,0 +1,6 @@
+#!/bin/bash
+# 28.10.2026 night, Itzik: "תחליף את כל הקמפיין עכשיו. אל תוותר למטא. אני רוצה לקום בבוקר עם קמפיין חדש."
+# 12 new ads were created in review; the old 8 run until the new ones are approved. Runs 04:00 and 06:30 Israel on 29.10.
+[ "$(date +%Y-%m-%d)" = "2026-10-29" ] || exit 0
+cd /home/monitor/abaitzik-monitor || exit 1
+node pc-task.js add --re campaign-swap "החלפת הקמפיין ITsolution דף חדש 27.10 (campaign 52556959006764, act_191762840889782). בכרום Profile 4 במנהל המודעות, דרך adsmanager-graph עם window.__accessToken ו credentials include (נוהל: memory retry-loop-never-give-up; אם נתקע, לטעון מחדש ולנסות שוב עד 5 פעמים). 1) לקרוא effective_status של כל המודעות בקמפיין. 12 החדשות מתחילות ב \"חדש 28.10\". 2) בכל סדרה (52556959014964 רחב, 52557291839964 רימרקטינג): אם לפחות 3 חדשות ACTIVE, להשהות (status PAUSED) את 4 הישנות שלה. ישנות ברחב: 52556961355164, 52556961282964, 52556961240364, 52556961257764. ישנות ברימרקטינג: 52557291840164, 52557291840364, 52557291839764, 52557291839564. לא למחוק. 3) חדשה שנדחתה (DISAPPROVED או WITH_ISSUES): לקרוא את הסיבה (ad_review_feedback), ליצור קריאייטיב מתוקן עם אותו video_id ולעדכן את המודעה. 4) אם הכל עדיין IN_PROCESS או PENDING_REVIEW, לא לשנות כלום. 5) בלי שינוי תקציב. לענות לאיציק בעברית בלי מקפים, קצר: כמה חדשות פעילות, מה הושהה, מה נדחה ותוקן."

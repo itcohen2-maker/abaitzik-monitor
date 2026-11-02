@@ -1,0 +1,11 @@
+# 24.10.2026. Runs money.service at 07:10, 13:10 and 19:10 Israel time.
+# Setup line for the setup docs: copy both files as shown in money.service, then `systemctl enable --now money.timer`.
+[Unit]
+Description=money numbers, three times a day (Israel time)
+[Timer]
+OnCalendar=*-*-* 07:10:00 Asia/Jerusalem
+OnCalendar=*-*-* 13:10:00 Asia/Jerusalem
+OnCalendar=*-*-* 19:10:00 Asia/Jerusalem
+Persistent=true
+[Install]
+WantedBy=timers.target

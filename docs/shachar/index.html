@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>שחר</title>
+<meta name="theme-color" content="#0F1B2E">
+<meta name="color-scheme" content="dark">
+<!--
+  31.10, Itzik: the tile for the closed beta of Shachar. A big link to the app, the waitlist
+  ("שמרו לי מקום") with a one tap invite, and a manual invite form. The lists are personal data:
+  they come from ../data/shachar.json, sealed with the gate, opened here with the key this browser
+  already holds from the monitor page (same as ner/styles.html). One tap sends one ntfy message (listen.js calls
+  the Shachar server): it approves the email and the server delivers the letter from shachar@abaitzik.com; while the
+  server has no mail key the same tap opens the ready Gmail draft instead.
+-->
+<style>
+  :root{--bg:#0F1B2E;--card:#16253D;--ink:#F3F1EC;--dim:#B7C0D2;--faint:#8A95AB;--line:rgba(243,241,236,.14);--sun:#F2B24C;--sun-ink:#2A1800;--ok:#4FD39A;--no:#F08A7E}
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:17px;line-height:1.55;padding:0 16px calc(env(safe-area-inset-bottom,0px) + 48px);overflow-x:hidden}
+  .wrap{max-width:560px;margin:0 auto}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 14px) 0 6px}
+  h1{margin:0;font-size:26px;font-weight:600}
+  h2{margin:0 0 4px;font-size:19px;font-weight:600}
+  a.back{display:inline-flex;align-items:center;min-height:44px;padding:0 6px;color:var(--dim);text-decoration:none;font-size:16px}
+  :focus-visible{outline:3px solid var(--sun);outline-offset:3px;border-radius:10px}
+  button,input,textarea{font:inherit}
+  button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .open{display:flex;align-items:center;justify-content:center;min-height:64px;margin:14px 0 6px;border-radius:16px;background:var(--sun);color:var(--sun-ink);font-size:21px;font-weight:600;text-decoration:none}
+  section{margin-top:26px}
+  p.sub{margin:0 0 10px;color:var(--dim);font-size:15px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-top:8px}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .em{direction:ltr;unicode-bidi:plaintext;overflow-wrap:anywhere;font-size:16px}
+  .meta{color:var(--faint);font-size:14px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 16px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--ink);font-size:16px;font-weight:500;white-space:nowrap}
+  .btn.main{background:var(--sun);border-color:var(--sun);color:var(--sun-ink)}
+  .btn.wide{width:100%;min-height:52px;font-size:18px;margin-top:10px}
+  .tag{display:inline-block;padding:2px 10px;border-radius:999px;font-size:14px;border:1px solid var(--line)}
+  .tag.ok{color:var(--ok);border-color:var(--ok)}
+  .tag.wait{color:var(--sun);border-color:var(--sun)}
+  .tag.no{color:var(--no);border-color:var(--no)}
+  label{display:block;margin:12px 0 4px;color:var(--dim);font-size:15px}
+  input,textarea{width:100%;background:#0B1424;color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:12px;min-height:48px}
+  input.ltr{direction:ltr;text-align:left}
+  textarea{min-height:230px;resize:vertical}
+  .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .msg{margin:10px 0 0;min-height:1.4em;color:var(--dim);font-size:15px}
+  .wlNew{border:2px solid #f59e0b;background:#fff8e6}
+  .empty{color:var(--faint);font-size:15px;margin:8px 0 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>שחר</h1>
+    <a class="back" id="back" href="../index.html">חזרה למוניטור</a>
+  </header>
+
+  <a class="open" href="https://shachar.abaitzik.com" target="_blank" rel="noopener">לפתוח את שחר</a>
+
+  <section>
+    <div class="row"><h2>רשימת המתנה, לפי סדר ההרשמה</h2><button type="button" class="btn" id="refresh">רענון</button></div>
+    <p class="sub" id="wlAt"></p>
+    <div id="wl"></div>
+  </section>
+
+  <section id="newtester">
+    <h2>הזמנת נסיין חדש</h2>
+    <p class="sub" id="how" hidden>לחיצה אחת מאשרת את המייל ושולחת לנסיין את המכתב.</p>
+    <div class="card">
+      <label for="email" style="margin-top:0">מייל של הנסיין</label>
+      <input class="ltr" id="email" type="email" inputmode="email" autocomplete="off" autocapitalize="off" placeholder="name@example.com">
+      <label for="note">הערה (לא חובה)</label>
+      <input id="note" type="text" autocomplete="off">
+      <button type="button" class="btn main wide" id="go">להזמין ולשלוח מכתב</button>
+      <p class="msg" id="said" role="status" aria-live="polite"></p>
+      <details style="margin-top:6px">
+        <summary class="meta" style="min-height:44px;display:flex;align-items:center;cursor:pointer">לערוך את המכתב</summary>
+        <label for="su">נושא</label>
+        <input id="su" type="text" value="הזמנה לנסות את שחר">
+        <label for="bd">המכתב</label>
+        <textarea id="bd">הי,
+
+בתקופות מאתגרות כולנו מחפשים משהו שירים אותנו, ידחוף קדימה וייתן עוגן קטן. אז בניתי אותו. קוראים לו שחר.
+
+שחר הוא בינה מלאכותית, לא בן אדם. אפשר לכתוב לו בכל רגע: כשקשה וגם כשיש הצלחה קטנה.
+
+בכל בוקר שחר שולח לך דחיפה קטנה כדי להתחיל את היום ברגל ימין. אפשר לכתוב לו תמיד, והוא כאן בשבילך.
+
+פתחתי את המערכת הזו קודם כל לכמה אנשים קרובים. אשמח שתנסו, תספרו לי מה עובד לכם ומה פחות.
+
+הכניסה: https://shachar.abaitzik.com
+נכנסים עם כתובת המייל הזאת, או עם Google.
+יאללה, מחכה לשמוע,
+אבא איציק</textarea>
+      </details>
+    </div>
+  </section>
+
+  <section>
+    <h2>הזמנות</h2>
+    <div id="inv"></div>
+  </section>
+
+  <section id="tester">
+    <h2>הודעה לנסיין בוואטסאפ</h2>
+    <div class="card">
+      <p id="tsText" style="margin:0;white-space:pre-line">היי, אתה מהנסיינים הראשונים של שחר 🌅
+שחר זה משהו שאני בונה: מקום רגוע לדבר בו, ששולח לך כל בוקר הודעה קטנה שמרימה. זה עוד בהרצה סגורה, ורק מי שהזמנתי יכול להיכנס.
+
+ככה נכנסים:
+1. פותחים באייפון את shachar.abaitzik.com דרך ספארי
+2. כותבים את המייל שאליו הזמנתי אותך, ומקבלים קוד כניסה למייל. אין סיסמה
+3. מוסיפים למסך הבית: כפתור השיתוף בספארי ואז "הוסף למסך הבית"
+4. פותחים את שחר מהאייקון ומאשרים התראות, ככה הודעת הבוקר תקפוץ לך על המסך
+
+וזה מה שאני באמת צריך ממך: תגיד לי בכנות מה עבד, מה הרגיש מוזר ומה היית משנה.</p>
+      <button type="button" class="btn main wide" id="tsShare">שליחה לנסיין</button>
+      <div class="acts">
+        <a class="btn" id="tsWa" href="#">וואטסאפ</a>
+        <a class="btn" id="tsMsgr" href="fb-messenger://share/?link=https%3A%2F%2Fshachar.abaitzik.com">מסנג׳ר</a>
+        <button type="button" class="btn" id="tsCopy">העתקה</button>
+      </div>
+      <p class="msg" id="tsMsg" role="status" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <script>
+  (function(){
+    var text=document.getElementById('tsText').textContent.trim(), msg=document.getElementById('tsMsg');
+    document.getElementById('tsWa').href='https://wa.me/?text='+encodeURIComponent(text);
+    function copy(){ (navigator.clipboard?navigator.clipboard.writeText(text):Promise.reject()).then(function(){msg.textContent='הועתק. אפשר להדביק בכל צ׳אט.';},function(){msg.textContent='לא הצלחתי להעתיק, אפשר לסמן את הטקסט ולהעתיק.';}); }
+    document.getElementById('tsCopy').onclick=copy;
+    document.getElementById('tsMsgr').onclick=function(){ copy(); };
+    document.getElementById('tsShare').onclick=function(){ if(navigator.share){ navigator.share({text:text}).catch(function(){}); } else copy(); };
+  })();
+  </script>
+
+  <section id="invite">
+    <h2>להזמין לרשימת ההמתנה</h2>
+    <div class="card">
+      <img src="invite.png" alt="תמונת ההזמנה: רשימת המתנה לשחר" style="width:100%;border-radius:10px">
+      <p id="invText" style="margin:10px 0 0">בונה משהו חדש: שחר. הודעת בוקר שנותנת כוח לקום, ומישהו לדבר איתו בימים הקשים. רוצה להיות מהראשונים? שמור לך מקום כאן 🌅
+https://abaitzik.com/shachar/</p>
+      <button type="button" class="btn main wide" id="invShare">שליחה לחבר</button>
+      <div class="acts">
+        <a class="btn" id="invMsgr" href="fb-messenger://share/?link=https%3A%2F%2Fabaitzik.com%2Fshachar%2F">מסנג׳ר</a>
+        <a class="btn" id="invWa" href="#">וואטסאפ</a>
+        <button type="button" class="btn" id="invCopy">העתקה</button>
+      </div>
+      <p class="msg" id="invMsg" role="status" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <script>
+  (function(){
+    var url='https://abaitzik.com/shachar/', text=document.getElementById('invText').textContent.trim(), msg=document.getElementById('invMsg');
+    document.getElementById('invWa').href='https://wa.me/?text='+encodeURIComponent(text);
+    function copy(){ (navigator.clipboard?navigator.clipboard.writeText(text):Promise.reject()).then(function(){msg.textContent='הועתק. אפשר להדביק בכל צ׳אט.';},function(){msg.textContent='לא הצלחתי להעתיק, אפשר לסמן את הטקסט ולהעתיק.';}); }
+    document.getElementById('invCopy').onclick=copy;
+    document.getElementById('invShare').onclick=function(){
+      if(navigator.share){ navigator.share({title:'רשימת המתנה לשחר',text:text.replace(url,'').trim(),url:url}).catch(function(){}); }
+      else copy();
+    };
+  })();
+  </script>
+
+  
+
+  
+
+
+  <!-- 1.11, Itzik: "an analyst for Shachar". Opened from 💼 העסק שלי ← עסקים ← "שחר: מי משתמש ומתי". -->
+  <section id="usView" hidden>
+    <div id="usSum"></div>
+    <h2>באיזה שעות נכנסים</h2>
+    <div id="usHours" class="usBars"></div>
+    <h2>באיזה ימים</h2>
+    <div id="usDays" class="usBars"></div>
+    <h2>14 הימים האחרונים</h2>
+    <div id="usDaily" class="usBars"></div>
+    <h2>כל נסיין</h2>
+    <div id="usUsers"></div>
+  </section>
+  <style>
+  .usK{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:8px 0 14px}
+  .usK div{background:#fff;color:#0f172a;border-radius:14px;padding:12px;text-align:center;border:1px solid rgba(0,0,0,.08)}
+  .usK b{display:block;font-size:24px}
+  .usBars{display:flex;align-items:flex-end;gap:2px;height:120px;background:#fff;border-radius:14px;padding:10px 8px 26px;border:1px solid rgba(0,0,0,.08);position:relative;direction:ltr}
+  .usBars .c{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;position:relative}
+  .usBars .b{width:100%;background:#f59e0b;border-radius:4px 4px 0 0;min-height:1px}
+  .usBars .b.z{background:#e5e7eb}
+  .usBars .n{font-size:10px;color:#334155;margin-bottom:2px}
+  .usBars .l{position:absolute;bottom:-20px;font-size:10px;color:#64748b;white-space:nowrap}
+  .usU{background:#fff;color:#0f172a;border-radius:14px;padding:12px;margin:8px 0;border:1px solid rgba(0,0,0,.08)}
+  .usU .e{font-weight:700}
+  .usU .m{color:#64748b;font-size:14px;margin-top:4px;line-height:1.6}
+  </style>
+  <script>
+  (function(){
+    var on=/[?&]view=usage/.test(location.search);
+    if(on){
+      [].forEach.call(document.querySelectorAll('.wrap > section, .wrap > .open'),function(el){if(el.id!=='usView'){el.hidden=true;el.style.display='none';}});
+      document.getElementById('usView').hidden=false;
+      var h=document.querySelector('header h1');if(h)h.textContent='שחר: מי משתמש ומתי';
+      document.getElementById('usSum').innerHTML='<p class="empty">טוען...</p>';
+    }
+    function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+    function when(iso){var d=new Date(iso);return isNaN(d)?'':d.toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Jerusalem'});}
+    function mins(m){m=Number(m)||0;if(m<60)return Math.round(m)+' דק׳';return Math.floor(m/60)+' שע׳ '+Math.round(m%60)+' דק׳';}
+    function bars(el,vals,labels,every){
+      var max=Math.max.apply(null,vals.concat([1]));
+      document.getElementById(el).innerHTML=vals.map(function(v,i){
+        return '<div class="c">'+(v?'<span class="n">'+v+'</span>':'')+'<div class="b'+(v?'':' z')+'" style="height:'+(v?Math.max(4,Math.round(v/max*100)):1)+'%"></div>'
+          +((i%every===0)?'<span class="l">'+labels[i]+'</span>':'')+'</div>';
+      }).join('');
+    }
+    window.renderUs=function(u){
+      if(!on)return;
+      if(!u){document.getElementById('usSum').innerHTML='<p class="empty">עוד אין נתונים. הספירה התחילה ב 1.11 בערב, ברגע שנסיין ייכנס זה יופיע כאן.</p>';return;}
+      document.getElementById('usSum').innerHTML='<div class="usK">'
+        +'<div><b>'+u.users+'</b>נסיינים שנכנסו</div>'
+        +'<div><b>'+u.active7+'</b>נכנסו השבוע</div>'
+        +'<div><b>'+u.activeToday+'</b>נכנסו היום</div>'
+        +'<div><b>'+(u.avgVisitMin==null?'אין':mins(u.avgVisitMin))+'</b>זמן ממוצע לכניסה</div>'
+        +'<div><b>'+mins(u.minutes)+'</b>זמן כולל</div>'
+        +'<div><b>'+u.messages+'</b>הודעות שכתבו</div></div>'
+        +'<p class="meta">'+u.visits+' כניסות ב 90 הימים האחרונים · בלי הכניסות שלך · עודכן '+esc(when(u.at))+'</p>';
+      var hl=[];for(var i=0;i<24;i++)hl.push(String(i).padStart(2,'0'));
+      bars('usHours',u.hours||[],hl,3);
+      bars('usDays',u.weekdays||[],['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'],1);
+      var dl=(u.daily||[]).map(function(d){var p=d.day.split('-');return Number(p[2])+'.'+Number(p[1]);});
+      bars('usDaily',(u.daily||[]).map(function(d){return d.users;}),dl,2);
+      var us=u.perUser||[];
+      document.getElementById('usUsers').innerHTML=us.length?us.map(function(x){
+        return '<div class="usU"><div class="e">'+esc(x.email)+'</div><div class="m">'
+          +x.visits+' כניסות ב '+x.days+' ימים · '+mins(x.minutes)+' · '+x.messages+' הודעות<br>'
+          +'נכנס לראשונה '+esc(when(x.firstAt))+' · לאחרונה '+esc(when(x.lastAt))+'</div></div>';
+      }).join(''):'<p class="empty">עוד אף נסיין לא נכנס.</p>';
+    };
+  })();
+  </script>
+
+  <!-- 1.11, Itzik: the testers' feedback, opened from 💼 העסק שלי ← עסקים ← "שחר: משוב מהנסיינים". -->
+  <section id="fbView" hidden>
+    <h2>משוב מהנסיינים</h2>
+    <div id="fbSum"></div>
+    <div id="fbList"></div>
+  </section>
+  <style>
+  .fbK{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:8px 0 14px}
+  .fbK div{background:#fff;color:#0f172a;border-radius:14px;padding:12px;text-align:center;border:1px solid rgba(0,0,0,.08)}
+  .fbK b{display:block;font-size:24px}
+  .fbR{background:#fff;color:#0f172a;border-radius:14px;padding:12px;margin:8px 0;border:1px solid rgba(0,0,0,.08)}
+  .fbR.down{border:2px solid #ea4335}
+  .fbR .q{color:#64748b;font-size:14px;margin-top:6px;white-space:pre-wrap}
+  .fbR .t{font-weight:600;margin-top:4px;white-space:pre-wrap}
+  .fbR .m{color:#64748b;font-size:13px}
+  </style>
+  <script>
+  (function(){
+    var on=/[?&]view=feedback/.test(location.search);
+    if(on){
+      [].forEach.call(document.querySelectorAll('.wrap > section, .wrap > .open'),function(el){if(el.id!=='fbView'){el.hidden=true;el.style.display='none';}});
+      var v=document.getElementById('fbView');v.hidden=false;
+      var h=document.querySelector('header h1');if(h)h.textContent='שחר: משוב';
+      document.getElementById('fbSum').innerHTML='<p class="empty">טוען...</p>';
+    }
+    function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+    function when(iso){var d=new Date(iso);return isNaN(d)?'':d.toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'});}
+    window.renderFb=function(f){
+      if(!on)return;
+      if(!f){document.getElementById('fbSum').innerHTML='<p class="empty">עוד אין משוב. ברגע שנסיין יכתוב, זה יופיע כאן.</p>';return;}
+      var w=f.week||{},a=f.all||{};
+      document.getElementById('fbSum').innerHTML='<div class="fbK">'
+        +'<div><b>'+(w.helpedPct==null?'אין':w.helpedPct+'%')+'</b>תשובות שעזרו השבוע</div>'
+        +'<div><b>'+(a.helpedPct==null?'אין':a.helpedPct+'%')+'</b>מאז ההתחלה</div>'
+        +'<div><b>'+(a.up||0)+' 👍 · '+(a.down||0)+' 👎</b>דירוגים</div>'
+        +'<div><b>'+((a.notes||0)+(a.answers||0))+'</b>הערות ותשובות לשאלות</div></div>'
+        +'<p class="meta">עודכן '+esc(when(f.at))+'</p>';
+      var rows=f.rows||[];
+      document.getElementById('fbList').innerHTML=rows.length?rows.map(function(r){
+        var head=r.kind==='rating'?(r.rating===1?'👍 התשובה עזרה':'👎 התשובה לא עזרה'):r.kind==='question'?'❓ '+esc(r.question):'✍️ הערה';
+        return '<div class="fbR'+(r.kind==='rating'&&r.rating===-1?' down':'')+'"><div class="m">'+esc(r.email)+' · '+esc(when(r.at))+'</div><div class="t">'+head+'</div>'
+          +(r.text?'<div class="t">"'+esc(r.text)+'"</div>':'')
+          +(r.asked?'<div class="q">הנסיין כתב: '+esc(r.asked)+'</div>':'')
+          +(r.answer?'<div class="q">שחר ענה: '+esc(r.answer)+'</div>':'')+'</div>';
+      }).join(''):'<p class="empty">עוד אין משוב.</p>';
+    };
+  })();
+  </script>
+</div>
+
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+ function gbytes(b64){var x=atob(b64),a=new Uint8Array(x.length);for(var i=0;i<x.length;i++)a[i]=x.charCodeAt(i);return a;}
+ function say(t){$('said').textContent=t;}
+ function lget(k,d){try{var v=JSON.parse(localStorage.getItem(k)||'null');return v==null?d:v;}catch(e){return d;}}
+ function lset(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+ function day(iso){var d=new Date(iso);if(isNaN(d))return '';return d.getDate()+'.'+(d.getMonth()+1);}
+ function mailUrl(to,su,bd){return 'https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(to)+'&su='+encodeURIComponent(su)+'&body='+encodeURIComponent(bd);}
+
+ var D={invites:[],waitlist:[],waitlistAt:null,mailAuto:false};
+ var PEND=lget('shachPend',{}); // email -> time he tapped, until the server copy agrees
+
+ // The key this browser holds from the monitor page, then the topic and the owner code from head.json.
+ function keyOf(){
+  var saved='';try{saved=localStorage.getItem('gateKey')||'';}catch(e){}
+  if(!saved)return Promise.reject(new Error('nokey'));
+  return crypto.subtle.importKey('raw',gbytes(saved),{name:'AES-GCM'},false,['decrypt']);
+ }
+ function open(k,url){
+  return fetch(url+'?b='+Date.now(),{cache:'no-store'}).then(function(r){if(r.status===404)return null;if(!r.ok)throw new Error('http');return r.text();})
+   .then(function(t){if(t==null)return null;if(t.charAt(0)==='{'||t.charAt(0)==='[')return JSON.parse(t);var p=t.split('.');
+    return crypto.subtle.decrypt({name:'AES-GCM',iv:gbytes(p[0])},k,gbytes(p[1])).then(function(b){return JSON.parse(new TextDecoder().decode(b));});});
+ }
+ var KEYS=null;
+ function keys(){
+  if(KEYS)return Promise.resolve(KEYS);
+  return keyOf().then(function(k){return open(k,'../data/head.json');}).then(function(d){KEYS=(d&&d.keys)||{};return KEYS;});
+ }
+ function load(){
+  return keyOf().then(function(k){return open(k,'../data/shachar.json');}).then(function(d){
+   if(d){D={invites:d.invites||[],waitlist:d.waitlist||[],waitlistAt:d.waitlistAt||null,mailAuto:!!d.mailAuto};}
+   if(d&&window.renderFb)window.renderFb(d.feedback||null);
+   if(d&&window.renderUs)window.renderUs(d.usage||null);
+   render();
+   var qi=new URLSearchParams(location.search).get('invite');
+   if(qi){history.replaceState(null,'','index.html');window.fromBiz=1;invite(qi,'',true);}
+   var old=!D.waitlistAt||Date.now()-Date.parse(D.waitlistAt)>12*3600e3;
+   if(old&&Date.now()-(lget('shachRefreshAt',0))>3600e3){lset('shachRefreshAt',Date.now());post('shachar-refresh',{},function(){});}
+  }).catch(function(e){
+   if(String(e&&e.message)==='nokey')say('כדי לראות את הרשימות פותחים קודם את המוניטור בדפדפן הזה.');
+   else say('לא הצלחתי לטעון את הרשימות. אפשר להזמין, והרשימה תתעדכן אחר כך.');
+   render();
+  });
+ }
+
+ // One ntfy message, signed with the owner code. The server (listen.js) does the rest.
+ function post(title,obj,done){
+  keys().then(function(K){
+   var code=K.ownerCode||'';try{code=code||localStorage.getItem('monitorCode')||'';}catch(e){}
+   obj.code=code;
+   return fetch('https://ntfy.sh/'+K.ntfyIn,{method:'POST',headers:{Title:title},body:JSON.stringify(obj)});
+  }).then(function(r){done(!!r.ok);},function(){done(false);});
+ }
+
+ function rec(email){return D.invites.filter(function(x){return x.email===email;})[0];}
+ function status(email){
+  var i=rec(email);
+  if(i)return i.status==='invited'?'invited':'wait';
+  var w=D.waitlist.filter(function(x){return x.email===email;})[0];
+  if(w&&w.invited)return 'invited';
+  if(PEND[email]&&Date.now()-PEND[email]<30*60e3)return 'wait';
+  return '';
+ }
+ function tags(email){
+  var s=status(email),i=rec(email),t='';
+  if(s==='invited')t+='<span class="tag ok">הוזמן ✓</span>';
+  else if(s)t+='<span class="tag wait">ממתין</span>';
+  if(s==='invited'&&i){
+   if(i.letterMode==='sent')t+=' <span class="tag ok">המכתב נשלח ✓</span>';
+   else if(i.letterMode==='draft')t+=' <span class="tag wait">המכתב נפתח בג׳ימייל</span>';
+   else if(i.letterErr)t+=' <span class="tag no">המכתב לא נשלח</span>';
+  }
+  return t;
+ }
+ function sendLabel(email){
+  var i=rec(email);
+  if(i&&(i.letterMode||i.letterErr))return 'לשלוח שוב את המכתב';
+  return D.mailAuto?'לשלוח את המכתב':'לפתוח את המכתב';
+ }
+ function actions(email){
+  var s=status(email);
+  if(!s)return '<button type="button" class="btn main" data-inv="'+esc(email)+'">'+(D.mailAuto?'להזמין ולשלוח מכתב':'להזמין ולפתוח מכתב')+'</button>';
+  if(s==='invited')return '<button type="button" class="btn" data-letter="'+esc(email)+'">'+sendLabel(email)+'</button>';
+  return '<button type="button" class="btn" data-retry="'+esc(email)+'">נסה שוב</button>';
+ }
+
+ function render(){
+  $('wlAt').textContent=D.waitlistAt?'עודכן '+day(D.waitlistAt):'עוד לא נטען';
+  $('how').textContent=D.mailAuto?'לחיצה אחת מאשרת את המייל ושולחת לנסיין את המכתב מהכתובת של שחר.':'לחיצה אחת מאשרת את המייל ופותחת בג׳ימייל את המכתב, ורק נשאר ללחוץ שליחה.';
+  $('go').textContent=D.mailAuto?'להזמין ולשלוח מכתב':'להזמין ולפתוח מכתב';
+  $('wl').innerHTML=D.waitlist.length?D.waitlist.slice().sort(function(a,b){return String(a.created_at).localeCompare(String(b.created_at));}).map(function(w,i){
+   return '<div class="card'+(w.invited?'':' wlNew')+'"><div class="row"><div><div class="em">'+(i+1)+'. '+esc(w.email)+'</div><div class="meta">נרשם '+esc(day(w.created_at))+'</div></div>'+actions(w.email)+'</div>'
+    +'<div class="acts">'+tags(w.email)+'</div></div>';
+  }).join(''):'<p class="empty">אין אף אחד ברשימה.</p>';
+  $('inv').innerHTML=D.invites.length?D.invites.map(function(x){
+   return '<div class="card"><div class="row"><div class="em">'+esc(x.email)+'</div>'+actions(x.email)+'</div>'
+    +'<div class="meta">'+esc(day(x.at))+(x.note?' · '+esc(x.note):'')+'</div>'
+    +'<div class="acts">'+tags(x.email)+'</div></div>';
+  }).join(''):'<p class="empty">עוד לא הזמנת אף אחד.</p>';
+ }
+
+ // One tap: approve the email and deliver the letter. With server mail the server sends it;
+ // without, the Gmail draft opens right here in the same tap.
+ function invite(email,note,withLetter){
+  email=String(email||'').trim().toLowerCase();
+  if(!/^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+$/.test(email)){say('כתובת המייל לא נראית תקינה.');return;}
+  var su=$('su').value,bd=$('bd').value,draft=!D.mailAuto;
+  say('שולח.');
+  var obj={email:email,note:note||''};
+  if(withLetter)obj.letter={subject:su,body:bd,draft:draft};
+  post('shachar-invite',obj,function(ok){
+   if(!ok){say('לא נשלח. בדוק חיבור ונסה שוב.');return;}
+   PEND[email]=Date.now();lset('shachPend',PEND);
+   if(!rec(email))D.invites.unshift({email:email,note:note||'',at:new Date().toISOString(),status:'pending'});
+   render();
+   if(withLetter&&draft){say('האישור נשלח. פותח את המכתב.');location.href=mailUrl(email,su,bd);}
+   else say(withLetter?'האישור והמכתב נשלחו לטיפול. הסטטוס יתעדכן בעוד דקה או שתיים.':'נשלח.');
+   if(window.fromBiz&&!(withLetter&&draft)){say('המכתב יוצא עכשיו ל '+email+'. חוזר לעסק שלי.');setTimeout(function(){location.href='../index.html';},1800);}
+  });
+ }
+
+ document.addEventListener('click',function(e){
+  var t=e.target.closest('button');if(!t)return;
+  if(t.id==='go'){invite($('email').value,$('note').value.trim(),true);return;}
+  if(t.id==='refresh'){say('מרענן.');post('shachar-refresh',{},function(ok){say(ok?'התבקש רענון. הרשימה מתעדכנת בעוד דקה או שתיים.':'לא נשלח. בדוק חיבור ונסה שוב.');});return;}
+  if(t.hasAttribute('data-inv')){invite(t.getAttribute('data-inv'),'',true);return;}
+  if(t.hasAttribute('data-retry')){invite(t.getAttribute('data-retry'),'',false);return;}
+  if(t.hasAttribute('data-letter')){invite(t.getAttribute('data-letter'),'',true);return;}
+   });
+ render();
+ load();
+})();
+</script>
+</body>
+</html>

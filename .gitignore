@@ -1,0 +1,47 @@
+# Never publish anything holding full names of real people.
+# Only docs/ ships, and build.js shortens surnames there.
+#
+# Anchored to the root on 16.9.2026. Unanchored, this line also swallowed
+# docs/data, the built collections the page now fetches instead of carrying
+# inline, and the phone got a 404 for every screen. Those files are the same
+# payload that used to sit inside docs/index.html, already shortened, already
+# public. The source directory below is the one that must never ship.
+/data/
+seed.js
+seed-rivhit.js
+sync-today.js
+node_modules/
+/data/ntfy-topic.txt
+# His paid ntfy token. Same rule as the topic: never leaves this machine.
+/data/ntfy-token.txt
+backups/
+rivhit/
+
+# SDD scratch (ledger, briefs, review packages)
+.superpowers/
+
+# Generated reel assets: the raw clips and the voice track are rebuildable from
+# video/banana/gen-clips.js and the script, and they are megabytes each. Only
+# the finished reel ships, under docs/files.
+video/banana/clip*.mp4
+video/banana/voice.mp3
+video/banana/banana-reel.mp4
+video/banana/gen.log
+
+# The monitor's passphrase. Never committed: the repo is public.
+gate-key.txt
+gate-params.json
+
+# Lead screenshots. They show other people, one of them a minor, and docs/ is
+# served in the clear. The originals stay in data/files-private.
+docs/files/lead-*
+
+# Database dumps. They carry other people's phone numbers and names in clear
+# text, and this repo is public. Originals live in data/backups-private.
+abaitzik-backup-*.json
+/backups/
+__pycache__/
+
+# 30.9 security: never public
+*.pyc
+promo/first-client-playbook.html

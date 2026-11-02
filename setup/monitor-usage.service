@@ -1,0 +1,11 @@
+# Token usage of every monitor (usage-watch.js), hourly. Runs as root because each
+# customer's folder is private to its own user; it only reads them.
+#   cp setup/monitor-usage.* /etc/systemd/system/ && systemctl daemon-reload && systemctl enable --now monitor-usage.timer
+[Unit]
+Description=abaitzik monitor, token usage of every monitor
+[Service]
+Type=oneshot
+WorkingDirectory=/home/monitor/abaitzik-monitor
+ExecStart=/usr/bin/node usage-watch.js
+StandardOutput=append:/var/log/monitor-usage.log
+StandardError=append:/var/log/monitor-usage.log
