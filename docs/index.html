@@ -2729,7 +2729,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-02T18:30:37.673Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-02T18:32:01.193Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4632,7 +4632,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='fcb45a7020';
+var CODE_ID='f2a25c442a';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10566,9 +10566,7 @@ function captionSheet(it){
 var REEL_ITEMS=[
 {n:'28 סטורי שחר',t:'שחר, אפליקציית המוטיבציה במתנה (מתוקן: לוגו מדורג והרשמה באתר) · 4K הכי איכותי, לשמירה בגלריה',r:'story-28-shachar.mp4'},
 {n:'28 סטורי האתר',t:'יש לי אתר חדש, כולם מוזמנים · 4K הכי איכותי, לשמירה בגלריה',r:'story-28-site.mp4'},
-{n:'31ג',t:'מתוקן: מתחיל בקפיצה לכיסא, ההתחלה בלי חיתוכים, נשימה אחרי תאט ושנייה בסוף · 4K הכי איכותי, לשמירה בגלריה',r:'reel-31c-tafsik.mp4'},
-{n:'31 כריכה',t:'הכריכה · 4K',r:'reel-31-cover.jpg'},
-{n:'31 פרסום',t:'כיתוב והאשטגים לכל רשת',r:'reel-31-post.txt'}
+{n:'31ג',t:'מתוקן: מתחיל בקפיצה לכיסא, ההתחלה בלי חיתוכים, נשימה אחרי תאט ושנייה בסוף · 4K הכי איכותי, לשמירה בגלריה',r:'reel-31c-tafsik.mp4'}
 ];
 function reelSheet(){
  var old=document.getElementById('rlSheet');if(old)old.remove();
