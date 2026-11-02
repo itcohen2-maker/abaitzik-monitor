@@ -351,10 +351,10 @@
  },
  {
   "id": "yogurt",
-  "name": "יוגורט: שתי כוסות בשבוע (גרסה 6)",
+  "name": "יוגורט: שתי כוסות בשבוע (גרסה 7)",
   "order": 11,
-  "file": "media/plate-yogurt-v6.mp4",
-  "poster": "media/plate-yogurt-v6.jpg",
+  "file": "media/plate-yogurt-v7.mp4",
+  "poster": "media/plate-yogurt-v7.jpg",
   "approved": false,
   "screens": [
    {
