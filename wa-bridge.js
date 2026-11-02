@@ -173,6 +173,87 @@ function textOf(m) {
   return null;
 }
 
+/*
+  2.11.2026, Itzik: "אם אני מבקש בוואטסאפ שתקריא לי את התשובות, הוואטסאפ יקריא לי".
+  Voice answers on WhatsApp, with the monitor's own Hebrew TTS (say.py, Phonikud, personal use only).
+    "תקריא לי"            -> from now on every answer also comes as a voice note (and the last answer is read now)
+    "תקריא לי: <טקסט>"    -> a voice note of that text, right away
+    "בלי הקראה"           -> back to text only
+  State: st.voice[number] = true, st.last[number] = the last answer text.
+*/
+const TTS = '/home/monitor/tts';
+function speakable(t) {
+  let x = String(t || '')
+    .replace(/https?:\/\/\S+/g, ' ')
+    .replace(/[*_`#>|~]/g, ' ')
+    .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, ' ')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{2,}/g, '\n')
+    .trim();
+  if (x.length > 1800) x = x.slice(0, 1800).replace(/[^.!?\n]*$/, '') + ' ההמשך בכתב.';
+  return x;
+}
+function run(cmd, args, opts) {
+  return new Promise(function (ok, bad) {
+    const p = require('child_process').execFile(cmd, args, Object.assign({ timeout: 240000, maxBuffer: 1e7 }, opts || {}), function (err) { err ? bad(err) : ok(); });
+    if (opts && opts.input != null) { p.stdin.end(opts.input); }
+  });
+}
+async function ttsOgg(text) {
+  const dir = path.join(ROOT, 'data', 'status', 'wa-voice'); fs.mkdirSync(dir, { recursive: true });
+  const base = path.join(dir, 'v-' + Date.now().toString(36) + crypto.randomBytes(2).toString('hex'));
+  await run(path.join(TTS, 'venv/bin/python'), [path.join(TTS, 'say.py'), base + '.mp3'], { input: text });
+  await run('ffmpeg', ['-v', 'error', '-y', '-i', base + '.mp3', '-ac', '1', '-ar', '48000', '-c:a', 'libopus', '-b:a', '32k', base + '.ogg']);
+  try { fs.unlinkSync(base + '.mp3'); } catch (e) {}
+  // keep the folder small
+  try { fs.readdirSync(dir).forEach(function (f) { const q = path.join(dir, f); if (Date.now() - fs.statSync(q).mtimeMs > 86400e3) fs.unlinkSync(q); }); } catch (e) {}
+  return base + '.ogg';
+}
+async function waUpload(file, mime) {
+  const c = cfg(), b = '----wa' + crypto.randomBytes(8).toString('hex'), NL = '\r\n';
+  const part = function (name, val) { return Buffer.from('--' + b + NL + 'Content-Disposition: form-data; name="' + name + '"' + NL + NL + val + NL, 'utf8'); };
+  const body = Buffer.concat([
+    part('messaging_product', 'whatsapp'), part('type', mime),
+    Buffer.from('--' + b + NL + 'Content-Disposition: form-data; name="file"; filename="' + path.basename(file) + '"' + NL + 'Content-Type: ' + mime + NL + NL, 'utf8'),
+    fs.readFileSync(file), Buffer.from(NL + '--' + b + '--' + NL, 'utf8')]);
+  const r = await req('POST', 'https://graph.facebook.com/' + (c.graph || 'v21.0') + '/' + c.phoneId + '/media',
+    { Authorization: 'Bearer ' + c.token, 'Content-Type': 'multipart/form-data; boundary=' + b, 'Content-Length': body.length }, body);
+  if (r.status !== 200) throw new Error('media up ' + r.status + ' ' + r.body.toString('utf8').slice(0, 200));
+  return JSON.parse(r.body.toString('utf8')).id;
+}
+async function waVoice(to, text) {
+  const t = speakable(text);
+  if (!t) return false;
+  const file = await ttsOgg(t);
+  const id = await waUpload(file, 'audio/ogg');
+  const c = cfg();
+  const send = function (audio) {
+    return req('POST', 'https://graph.facebook.com/' + (c.graph || 'v21.0') + '/' + c.phoneId + '/messages',
+      { Authorization: 'Bearer ' + c.token, 'Content-Type': 'application/json' },
+      Buffer.from(JSON.stringify({ messaging_product: 'whatsapp', to: to, type: 'audio', audio: audio }), 'utf8'));
+  };
+  let r = await send({ id: id, voice: true });
+  if (r.status !== 200) r = await send({ id: id });
+  if (r.status !== 200) throw new Error('voice send ' + r.status + ' ' + r.body.toString('utf8').slice(0, 200));
+  return true;
+}
+// One voice note at a time, so two long answers don't run the TTS together.
+let voiceQ = Promise.resolve();
+function queueVoice(to, text) {
+  voiceQ = voiceQ.then(function () { return waVoice(to, text); })
+    .then(function () { log('voice out -> ' + String(to).slice(0, 5) + '...'); })
+    .catch(function (e) { log('voice failed: ' + e.message); return waSend(to, 'לא הצלחתי להקריא הפעם, התשובה בכתב למעלה.').catch(function () {}); });
+  return voiceQ;
+}
+function voiceCommand(t) {
+  const x = String(t || '').trim();
+  let m = x.match(/^(?:תקריא|תקריאי|הקרא|תקרא)\s+לי\s*[:：\-]\s*([\s\S]+)$/);
+  if (m) return { say: m[1] };
+  if (/^(?:בלי הקראה|בלי קול|תפסיק להקריא|די להקריא|הפסק להקריא|רק בכתב|לא להקריא)[.!]*$/.test(x)) return { off: true };
+  if (/^(?:תקריא|תקריאי|הקרא|תקרא)(?:\s+לי)?(?:\s+את)?(?:\s+ה?תשובות?)?(?:\s+של\s+המוניטור)?[.!]*$/.test(x) || /^(?:הקראה|בקול|הודעות קוליות)[.!]*$/.test(x)) return { on: true };
+  return null;
+}
+
 async function onMessage(m, contactName) {
   const st = loadState();
   if (st.seen[m.id]) return;
@@ -202,6 +283,16 @@ async function onMessage(m, contactName) {
       : 'קיבלתי, אבל את סוג ההודעה הזה אני עוד לא קורא. אפשר לכתוב לי אותה במילים?');
     return;
   }
+  const vc = voiceCommand(t);
+  if (vc) {
+    const sv = loadState(); sv.voice = sv.voice || {}; sv.last = sv.last || {};
+    if (vc.say) { await waSend(m.from, '🔊 מקריא...'); queueVoice(m.from, vc.say); return; }
+    if (vc.off) { delete sv.voice[m.from]; saveState(sv); await waSend(m.from, '✓ חזרנו לכתב בלבד. כדי להקריא שוב: "תקריא לי".'); return; }
+    sv.voice[m.from] = true; saveState(sv);
+    await waSend(m.from, '🔊 מעכשיו כל תשובה של המוניטור תגיע גם כהודעה קולית. לביטול: "בלי הקראה".');
+    if (sv.last[m.from]) queueVoice(m.from, sv.last[m.from]);
+    return;
+  }
   const id = await toMonitor('וואטסאפ', demoOn() ? DEMO_FRAME + t : t);
   const s2 = loadState();
   s2.pending[id] = { to: m.from, at: Date.now(), name: contactName || '' };
@@ -227,7 +318,11 @@ function sweep() {
     st.sent[f] = Date.now();
     saveState(st);
     const to = st.pending[d.re].to;
-    waSend(to, d.text).then(function () { log('out ' + f + ' -> ' + d.re); })
+    waSend(to, d.text).then(function () {
+      log('out ' + f + ' -> ' + d.re);
+      const s5 = loadState(); s5.last = s5.last || {}; s5.last[to] = d.text; saveState(s5);
+      if (s5.voice && s5.voice[to]) queueVoice(to, d.text);
+    })
       .catch(function (e) { log('send failed ' + f + ': ' + e.message); const s3 = loadState(); delete s3.sent[f]; saveState(s3); });
   });
   // a question waits for answers for 6 hours, then is let go
@@ -348,4 +443,4 @@ if (require.main === module) {
   setInterval(function () { try { require('./forms.js').sweep(formNotify); } catch (e) { log('forms sweep: ' + e.message); } }, 60000);
   setInterval(function () { try { require('./setup.js').sweep(formNotify); } catch (e) { log('setup sweep: ' + e.message); } }, 60000);
 }
-module.exports = { textOf, sigOk };
+module.exports = { textOf, sigOk, voiceCommand, speakable };
