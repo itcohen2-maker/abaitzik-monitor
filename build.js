@@ -4327,7 +4327,7 @@ ${require('./lib/home-ui.js').html}
     is amirshwartz1's TikTok comment on the cake video (55 likes).
   -->
   <button type="button" class="gt gWin" data-grp="net" id="gWin" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
-  <button type="button" class="gt gReel" data-grp="net" id="gReels" data-upd="20261102-31b"><b>🎬 הרילים שלי</b><small>חדש: 31ב תפסיק למהר מתוקן</small></button>
+  <button type="button" class="gt gReel" data-grp="net" id="gReels" data-upd="20261102-31c"><b>🎬 הרילים שלי</b><small>חדש: 31ג תפסיק למהר עם הקפיצה</small></button>
   <button type="button" class="gt gFut" data-grp="net" id="gFut" data-upd="20261102-fut21"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 21 איך נכנסים לאתר, 20 תפסיק למהר, 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור, 08 שרירים והגיל, 09 קונטרה למינוס, 16 אורז כמו פסטה, 17 המבריק במדיח</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
@@ -14091,6 +14091,7 @@ var REEL_ITEMS=[
 {n:'28 סטורי האתר',t:'יש לי אתר חדש, כולם מוזמנים · 4K הכי איכותי, לשמירה בגלריה',r:'story-28-site.mp4'},
 {n:'31',t:'תפסיק למהר, החנייה ואז אני ברכב · 4K הכי איכותי, לשמירה בגלריה',r:'reel-31-tafsik.mp4'},
 {n:'31ב',t:'מתוקן: ההתחלה בלי חיתוכים, נשימה אחרי תאט ושנייה בסוף · 4K הכי איכותי, לשמירה בגלריה',r:'reel-31b-tafsik.mp4'},
+{n:'31ג',t:'מתוקן: מתחיל בקפיצה לכיסא, ההתחלה בלי חיתוכים, נשימה אחרי תאט ושנייה בסוף · 4K הכי איכותי, לשמירה בגלריה',r:'reel-31c-tafsik.mp4'},
 {n:'31 כריכה',t:'הכריכה · 4K',r:'reel-31-cover.jpg'},
 {n:'31 פרסום',t:'כיתוב והאשטגים לכל רשת',r:'reel-31-post.txt'}
 ];
