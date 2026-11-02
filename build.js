@@ -8953,6 +8953,23 @@ function takeCarried(){
  if(carried)try{putState(carried);}catch(e){}
 }
 window.addEventListener('pagehide',carryState);
+/*
+  2.11, Itzik: "כל פעם שאני פותח את המוניטור הוא אמור לבדוק את עצמו, כמו באתר
+  הנרות. לא יקרה מצב שמישהו יפתח וזה לא יהיה מעודכן. לבד." A new reel was in
+  the build, his phone kept the old tiles: a new code waited for five quiet
+  minutes (readingNow), and every tap started the five minutes again. Now the
+  first seconds after an open or a wake load a new code at once, and a tap on
+  any tile while a new code is waiting loads it first. Only typing and the
+  microphone still hold it, as before.
+*/
+var wokeAt=Date.now(),pendingCode='';
+document.addEventListener('click',function(e){
+ if(!pendingCode||rec||recStarting||typingNow())return;
+ var t=e.target.closest?e.target.closest('.gt'):null;
+ if(!t)return;
+ e.preventDefault();e.stopPropagation();
+ wokeAt=Date.now();checkFresh();
+},true);
 function checkFresh(){
  if(!window.fetch)return;
  fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){
@@ -8972,13 +8989,16 @@ function checkFresh(){
   if(v&&ansBase==null&&typeof v.answers==='number')ansBase=v.answers;
   if(!v||!v.builtAt||v.builtAt===D.builtAt)return;
   var what=document.getElementById('liveWhat');
+  var codeNew=!(v.codeId&&CODE_ID&&v.codeId===CODE_ID);
+  var jump=codeNew&&Date.now()-wokeAt<10000&&!(recStarting||rec)&&!typingNow();
+  if(codeNew)pendingCode=v.builtAt;
   // Only the data moved: take it in where he stands. He asked for an answer
   // that arrives without the screen jumping under his hands, and a reload is
   // exactly that jump, plus the draft in the box.
-  if(scrollingNow()){markUpd(newAnswers(v));afterScroll();return;}
+  if(!jump&&scrollingNow()){markUpd(newAnswers(v));afterScroll();return;}
   // Inside a screen and reading: nothing moves, not even the data. A line says
   // something new is waiting, and it comes in once he has been still a while.
-  if(readingInner()){
+  if(!jump&&readingInner()){
    if(what&&liveSeen!==v.builtAt&&newAnswers(v)){liveSeen=v.builtAt;what.textContent='יש תשובה חדשה. מחכה שתסיים לקרוא.';}
    markUpd(newAnswers(v));afterReading();return;
   }
@@ -8996,13 +9016,13 @@ function checkFresh(){
   // לי את הכל"). The new build waits for the next check after he stops.
   if(typingNow()){softRefresh(v);markUpd(false);return;}
   // Reading on the home screen: the data comes in, the reload waits.
-  if(readingNow()){softRefresh(v);markUpd(false);afterReading();return;}
+  if(!jump&&readingNow()){softRefresh(v);markUpd(false);afterReading();return;}
   // A new build is up. Say so before reloading, so a reply that landed while
   // he was reading does not just make the screen jump under his hands.
   if(what&&liveSeen!==v.builtAt){liveSeen=v.builtAt;what.textContent='יש תשובה חדשה. טוען.';}
   var seen='';
   try{seen=sessionStorage.getItem('reloadedFor')||'';}catch(e){}
-  if(seen===v.builtAt)return;
+  if(seen===v.builtAt){pendingCode='';return;}
   try{sessionStorage.setItem('reloadedFor',v.builtAt);}catch(e){}
   carryState();
   var go=function(){location.replace(location.pathname+'?b='+encodeURIComponent(v.builtAt));};
@@ -9057,6 +9077,7 @@ setInterval(function(){paintLive(null);paintNew();try{renderSent();}catch(e){}if
 */
 function wake(){
  if(document.hidden)return;
+ wokeAt=Date.now();
  var changed=false;
  try{if(applyResetSeen())changed=true;}catch(e){}
  try{if(applyResetMarks())changed=true;}catch(e){}
