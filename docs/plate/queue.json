@@ -76,7 +76,9 @@
     ]
    }
   ],
-  "onSite": false
+  "onSite": true,
+  "posted": true,
+  "postedAt": "2026-10-26"
  },
  {
   "id": "brokoli",
@@ -139,7 +141,9 @@
     ]
    }
   ],
-  "onSite": false
+  "onSite": true,
+  "posted": true,
+  "postedAt": "2026-11-01"
  },
  {
   "id": "limon",
