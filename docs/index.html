@@ -2021,14 +2021,11 @@ body.inner .panebar{display:flex;position:sticky;top:0;z-index:60;align-items:ce
  background:var(--accent-soft);color:var(--accent);font:700 16px Heebo,sans-serif;display:flex;align-items:center;gap:4px}
 .panebar .pb-back svg{width:20px;height:20px}
 .panebar .pb-t{flex:1;min-width:0;font:800 21px/1.2 Heebo,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.panebar .pb-r{flex:0 0 44px;height:44px;border:1px solid var(--line);border-radius:50%;background:var(--surface);
- color:var(--dim);cursor:pointer;display:grid;place-items:center}
-.panebar .pb-r svg{width:20px;height:20px}
 .panebar button:active{transform:scale(.96)}
 .panebar .pb-t{text-align:center}
 .rephint,.empty,.hint,.msgsaid,h2,details.replybar>summary{text-align:center}
 details.replybar>summary{justify-content:center}
-body.inner .hd,body.inner #reloadBtn,body.inner section>.backbar,body.inner #welcomeCard,body.inner #installBar{display:none!important}
+body.inner .hd,body.inner section>.backbar,body.inner #welcomeCard,body.inner #installBar{display:none!important}
 body.inner section:not(#pH)>h2:first-of-type{display:none}
 body.inner .wrap{padding-bottom:190px}
 details.replybar>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;
@@ -2453,17 +2450,6 @@ body.rdragging{user-select:none;-webkit-user-select:none}
 .bn button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:10px}
 
 #pH.bare > *:not(#talkCard):not(#bareBtn):not(#approvalsBox){display:none!important}
-.reloadbig{display:flex;align-items:center;justify-content:center;min-width:40px;height:40px;padding:0 12px;margin:0 0 12px auto;
- border:1px solid var(--line);border-radius:20px;cursor:pointer;
- color:var(--dim);font:700 20px Heebo,sans-serif;background:transparent}
-.reloadbig:active{transform:translateY(1px)}
-.reloadbig .rlw{font:700 15px Heebo,sans-serif;margin-inline-start:6px}
-.reloadbig[disabled]{opacity:.6;font-size:14px}
-.reloadbig:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.reloadbig{height:46px;color:var(--accent);border:2px solid var(--accent);background:var(--accent-soft)}
-.reloadbig.hasupd,.panebar .pb-r.hasupd{background:#fbc02d;border-color:#e65100;color:#3e2000;animation:updbeat 1s steps(1) infinite}
-@keyframes updbeat{50%{background:#e65100;color:#fff}}
-@media(prefers-reduced-motion:reduce){.reloadbig.hasupd,.panebar .pb-r.hasupd{animation:none}}
 .micdock{position:fixed;inset-inline-start:12px;z-index:30;
  bottom:calc(70px + env(safe-area-inset-bottom));
  width:54px;height:54px;flex:0 0 54px;border-radius:50%;border:0;padding:0;cursor:pointer;
@@ -2729,7 +2715,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-02T12:49:51.526Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-02T12:51:35.231Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2831,7 +2817,6 @@ try{
   </form>
   <div class="msgsaid" id="quickSaid"></div>
  </section>
- <button type="button" class="reloadbig" id="reloadBtn" aria-label="רענון וחזרה לדף הבית" title="רענון וחזרה לדף הבית">↻<span class="rlw">רענן</span></button>
 
 <section id="pH">
 <div class="hm-greet" id="hmGreet" aria-live="off" hidden></div>
@@ -4632,7 +4617,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='6b4c45f04e';
+var CODE_ID='4f3b8a3298';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -8010,12 +7995,10 @@ function paneBar(w){
  if(!bar){
   bar=document.createElement('div');bar.id='paneBar';bar.className='panebar';
   bar.innerHTML='<button type="button" class="pb-back" id="pbBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>חזרה</button>'
-   +'<div class="pb-t" id="pbTitle"></div>'
-   +'<button type="button" class="pb-r" id="pbReload" aria-label="רענון"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg></button>';
+   +'<div class="pb-t" id="pbTitle"></div>';
   var hd=document.querySelector('.hd');
   if(hd&&hd.parentNode)hd.parentNode.insertBefore(bar,hd);else document.body.insertBefore(bar,document.body.firstChild);
   document.getElementById('pbBack').onclick=function(){navBack();};
-  document.getElementById('pbReload').onclick=function(){window.reloadStay=panePrev;var r=document.getElementById('reloadBtn');if(r)r.click();};
  }
  var inner=(w!=='h');
  document.body.classList.toggle('inner',inner);
@@ -8193,12 +8176,6 @@ function hardReload(){
  }catch(e){}
  done();
 }
-document.getElementById('reloadBtn').onclick=function(){
- var btn=this;
- btn.textContent='מרענן';
- btn.disabled=true;
- hardReload();
-};
 function beep(){
  try{if(navigator.vibrate)navigator.vibrate([12,40,12]);}catch(e){}
 }

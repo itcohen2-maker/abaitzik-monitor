@@ -72,7 +72,8 @@ test('home order: one message button on top, the tools next, my log last', () =>
   // still hidden by pane() on every screen that is not home.
   assert.ok(at('<header class="hd">') < at('id="talkCard"'));
   assert.ok(at('class="t">מוניטור') < at('id="talkCard"'));
-  assert.ok(at('id="talkCard"') < at('id="reloadBtn"'));
+  // 2.11.2026: the refresh button is gone; a new build reloads the page by itself.
+  assert.ok(!html.includes('id="reloadBtn"'));
   assert.ok(at('id="talkCard"') < ph);
   assert.ok(html.indexOf('</header>') < at('id="talkCard"'));
   // Nothing between the title block and the microphone.
@@ -223,11 +224,10 @@ test('a refresh never costs him what he was writing', () => {
   const hrAt = html.indexOf('function hardReload(){');
   const hrBody = html.slice(hrAt, hrAt + 900);
   assert.ok(hrBody.includes('keepDraft();'), 'the refresh must save the draft before reloading');
-  const at = html.indexOf("document.getElementById('reloadBtn').onclick=function(){");
-  const body = html.slice(at, at + 300);
-  assert.ok(body.includes("btn.textContent='מרענן';"));
-  assert.ok(body.includes('btn.disabled=true;'));
-  assert.ok(body.includes('hardReload();'), 'the button must use the shared reload');
+  // 2.11.2026: no button any more. A new build reloads the page by itself, after
+  // the same draft save, through checkFresh.
+  assert.ok(!html.includes("getElementById('reloadBtn')"), 'the refresh button is gone');
+  assert.ok(html.includes('fetch(\'version.json?t=\'+Date.now(),{cache:\'no-store\'})'), 'the page checks the version on open');
   // Leaving the page at all has the same shape as pressing the button.
   assert.ok(html.includes("window.addEventListener('pagehide',keepDraft);"));
   assert.ok(html.includes("document.addEventListener('visibilitychange',function(){if(document.hidden)keepDraft();});"));
@@ -672,7 +672,8 @@ test('the home screen is the microphone and nothing else', () => {
   assert.ok(html.includes('id="bareBtn"'));
   // The way home is a small quiet symbol, not a big bar that reads as if the
   // page needs pressing to update; its label still says where it goes.
-  assert.ok(html.includes('<button type="button" class="reloadbig" id="reloadBtn" aria-label="רענון וחזרה לדף הבית" title="רענון וחזרה לדף הבית">↻<span class="rlw">רענן</span></button>'));
+  // 2.11.2026: no refresh button on the home screen; a new build reloads by itself.
+  assert.ok(!html.includes('id="reloadBtn"'));
   // And arranging is in settings, where he put it.
   const settings = html.slice(html.indexOf('<section id="pZ" hidden>'), html.indexOf('<section id="pQ" hidden>'));
   assert.ok(settings.includes('id="arrangeBtn"'), 'arranging must live in settings');

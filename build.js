@@ -3068,9 +3068,6 @@ body.inner .panebar{display:flex;position:sticky;top:0;z-index:60;align-items:ce
  background:var(--accent-soft);color:var(--accent);font:700 16px Heebo,sans-serif;display:flex;align-items:center;gap:4px}
 .panebar .pb-back svg{width:20px;height:20px}
 .panebar .pb-t{flex:1;min-width:0;font:800 21px/1.2 Heebo,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.panebar .pb-r{flex:0 0 44px;height:44px;border:1px solid var(--line);border-radius:50%;background:var(--surface);
- color:var(--dim);cursor:pointer;display:grid;place-items:center}
-.panebar .pb-r svg{width:20px;height:20px}
 .panebar button:active{transform:scale(.96)}
 /*
   Itzik, 26.9: "always try to centre the text; right aligned is fine, and some
@@ -3081,7 +3078,7 @@ body.inner .panebar{display:flex;position:sticky;top:0;z-index:60;align-items:ce
 .panebar .pb-t{text-align:center}
 .rephint,.empty,.hint,.msgsaid,h2,details.replybar>summary{text-align:center}
 details.replybar>summary{justify-content:center}
-body.inner .hd,body.inner #reloadBtn,body.inner section>.backbar,body.inner #welcomeCard,body.inner #installBar{display:none!important}
+body.inner .hd,body.inner section>.backbar,body.inner #welcomeCard,body.inner #installBar{display:none!important}
 body.inner section:not(#pH)>h2:first-of-type{display:none}
 /* Room under the last line, so the floating microphone never sits on it. */
 body.inner .wrap{padding-bottom:190px}
@@ -3597,23 +3594,6 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   time. It does update: wake() checks again whenever the page comes back. So
   the way home is a small round symbol in the same place, not a call to action.
 */
-.reloadbig{display:flex;align-items:center;justify-content:center;min-width:40px;height:40px;padding:0 12px;margin:0 0 12px auto;
- border:1px solid var(--line);border-radius:20px;cursor:pointer;
- color:var(--dim);font:700 20px Heebo,sans-serif;background:transparent}
-.reloadbig:active{transform:translateY(1px)}
-.reloadbig .rlw{font:700 15px Heebo,sans-serif;margin-inline-start:6px}
-.reloadbig[disabled]{opacity:.6;font-size:14px}
-.reloadbig:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-/*
-  12.10, Itzik, voice note: "כפתור הענן לא נראה לעין, ולפעמים יש עדכון, תעשה
-  אותו מהבהב כדי שנוכל ללחוץ ולראות את העדכון". So the button is a real button
-  now, and when a new build is held back (he was reading or typing) it turns
-  yellow, blinks and says so, here and on the round one in the inner screens.
-*/
-.reloadbig{height:46px;color:var(--accent);border:2px solid var(--accent);background:var(--accent-soft)}
-.reloadbig.hasupd,.panebar .pb-r.hasupd{background:#fbc02d;border-color:#e65100;color:#3e2000;animation:updbeat 1s steps(1) infinite}
-@keyframes updbeat{50%{background:#e65100;color:#fff}}
-@media(prefers-reduced-motion:reduce){.reloadbig.hasupd,.panebar .pb-r.hasupd{animation:none}}
 /*
   The same microphone as the big one, shrunk.
 
@@ -4131,7 +4111,6 @@ ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').bar : ''}
   </form>
   <div class="msgsaid" id="quickSaid"></div>
  </section>
- <button type="button" class="reloadbig" id="reloadBtn" aria-label="רענון וחזרה לדף הבית" title="רענון וחזרה לדף הבית">↻<span class="rlw">רענן</span></button>
 
 <section id="pH">
 ${require('./lib/home-ui.js').greet}
@@ -10697,12 +10676,10 @@ function paneBar(w){
  if(!bar){
   bar=document.createElement('div');bar.id='paneBar';bar.className='panebar';
   bar.innerHTML='<button type="button" class="pb-back" id="pbBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>חזרה</button>'
-   +'<div class="pb-t" id="pbTitle"></div>'
-   +'<button type="button" class="pb-r" id="pbReload" aria-label="רענון"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg></button>';
+   +'<div class="pb-t" id="pbTitle"></div>';
   var hd=document.querySelector('.hd');
   if(hd&&hd.parentNode)hd.parentNode.insertBefore(bar,hd);else document.body.insertBefore(bar,document.body.firstChild);
   document.getElementById('pbBack').onclick=function(){navBack();};
-  document.getElementById('pbReload').onclick=function(){window.reloadStay=panePrev;var r=document.getElementById('reloadBtn');if(r)r.click();};
  }
  var inner=(w!=='h');
  document.body.classList.toggle('inner',inner);
@@ -10975,14 +10952,6 @@ function hardReload(){
  }catch(e){}
  done();
 }
-document.getElementById('reloadBtn').onclick=function(){
- // And it says what it is doing. A button that looks like it did nothing, on a
- // fast connection, is how רענון came to be read as a second way home.
- var btn=this;
- btn.textContent='מרענן';
- btn.disabled=true;
- hardReload();
-};
 // הסימן שיש משהו שמחכה. היה צפצוף, והצפצוף חתך לו את המוזיקה ברקע, אז
 // הוא ויברציה קצרה. ויברציה לא נוגעת בפס הקול של הטלפון.
 function beep(){
