@@ -2729,7 +2729,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-02T12:00:55.383Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-02T12:05:41.872Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2887,7 +2887,7 @@ try{
   <button type="button" class="gt gInv" data-grp="money" id="gInv" data-upd="2026-10-15-inv"><b>🧾 חשבוניות</b><small>ממוספר. מ 3.10 והלאה</small></button>
   <button type="button" class="gt gWin" data-grp="net" id="gWin" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <button type="button" class="gt gReel" data-grp="net" id="gReels" data-upd="20261101-28st"><b>🎬 הרילים שלי</b><small>חדש: סטורי שחר וסטורי האתר</small></button>
-  <button type="button" class="gt gFut" data-grp="net" id="gFut" data-upd="20261102-fut20"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 20 תפסיק למהר, 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור, 08 שרירים והגיל, 09 קונטרה למינוס, 16 אורז כמו פסטה, 17 המבריק במדיח</small></button>
+  <button type="button" class="gt gFut" data-grp="net" id="gFut" data-upd="20261102-fut21"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 21 איך נכנסים לאתר, 20 תפסיק למהר, 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור, 08 שרירים והגיל, 09 קונטרה למינוס, 16 אורז כמו פסטה, 17 המבריק במדיח</small></button>
   <button type="button" class="gt gTom" data-grp="work" id="gTom" data-new="1" data-upd="2026-11-02-order"><b>🧭 טום ממליץ</b><small>מסודר וממוספר: הקמפיין שרץ והתמונות המונפשות</small></button>
   <button type="button" class="gt gGviya" data-grp="work" id="gGviya" data-new="1"><b>📞 גבייה, יואל</b><small>דף שיואל מסמן, כל סימון מעדכן אותך</small></button>
   <button type="button" class="gt gLaw" data-grp="home" id="gLaw" hidden><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
@@ -3095,14 +3095,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4632,7 +4625,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='4567136eb4';
+var CODE_ID='4cba9f341a';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10702,6 +10695,7 @@ function storySheet(){
 }
 on('gStory',storySheet);
 var FUT_ITEMS=[
+{n:'21',t:'איך נכנסים לאתר: 10 שניות האתר בטלפון ואז 5 שניות כפתור, לשים עליו מדבקת קישור · 4K הכי איכותי, לשמירה בגלריה',r:'fut21-site-entry-4k.mp4'},
  {n:'20',t:'תפסיק למהר: לצרף לסרטון הרכב הנופל (01)',he:'הערה: לצרף לסרטון הרכב הנופל מהחנייה (פריט 01). קודם הרכב נופל, ואז המסר: תפסיק למהר.\n\nהמלל של הריל, בעברית:\n\nאף אחד לא יגיד לך את זה. זה הסוד לאושר.\nתפסיק למהר. תפסיק לרוץ. תאט. קח את הזמן.\nתהיה איטי. תהיה רגוע. אל תהיה דחוף. אל תלך אחרי כל דחף. אל תיכנס לפאניקה. תאט.\nאם יש דבר אחד, דבר אחד שעשיתי ושינה לי את החיים לגמרי, זה שהפסקתי למהר.\nקח את הזמן. תתפוס זמן ומקום. מותר לך לתפוס זמן ומקום.\nאתה לא חייב להיות מהיר. אתה לא חייב למהר. תאט.\n\nהמקור: jess.onrepeat באינסטגרם, 39 שניות, באנגלית.',tx:'Nobody is ever going to tell you this. This is the secret to happiness. Stop the rush. Stop rushing. Slow down. Take your time. Be slow. Be calm. Do not be urgent. Do not follow urges. Do not panic. Slow down. If there is one thing, one thing that I have done that has totally changed my life, it is to stop rushing. Take the time. Take up time and space. You can take up time and space. You do not need to be quick. You do not need to be rushing. Slow down.',r:'fut20-slowdown-original.mp4'},
  {n:'19',t:'הנר הדולק ואז אתה, עם PiP: אתר הנרות',he:'הרעיון שלך, 31.10: נפתחים על הנר הדולק (הצילום מדוגמה 3), ואז הפוקוס עובר אליך עם PiP.\n\nמבנה, בערך 30 שניות:\n0 עד 3: הנר הדולק במסך מלא, שקט, רק להבה.\n3 עד 5: אתה נכנס בעיגול קטן בפינה (PiP), מדבר.\n5 עד 6: מתחלפים. אתה במסך מלא, הנר עובר לעיגול קטן בפינה ונשאר דולק כל הסרטון.\n6 עד 27: אתה מדבר.\n27 עד 30: חוזרים לנר במסך מלא, candletimes.com, ובצד תג קטן מתנה מאבא איציק @abaitzik.\n\nהצעה למלל, גרסה 2 (31.10, הראשונה נשמעה כמו חזרה בתשובה):\nהייתי חייב להחזיר משהו לעם ישראל, על כל התמיכה שקיבלתי מכם בתקופה של הניתוח.\nאני בונה אתרים, אז בניתי מתנה.\nאתר אחד שאומר לכל יהודי בעולם, בכל עיר ובשפה שלו, מתי נכנסת שבת ומתי היא יוצאת.\nבחינם, בלי פרסומות, בלי הרשמה.\nהכנתי את זה לכל יהודי העולם, באשר הם.\n\nצילום: 9:16, חזה ומעלה, אור חם של ערב, ברקע אפשר פמוטים לא דולקים. מבט לעדשה. 20 עד 30 שניות.\nעריכה לפי הסקיל של איליי. הנר: sample3 בתיקייה clip/week_stories/samples1031.'},
  {n:'01',t:'החנייה: הקטע הראשון עם כיתוב בעברית. אחריו מצלמים אותך מגיב (4 שניות)',r:'parking-part1-he.mp4'},
@@ -16655,7 +16649,7 @@ floatTile=function(id,up){if(document.body.classList.contains('world'))return;re
 
 boot('worlds',worldSync);
 boot('design',dzBoot);
-var PUSH_KEY="BDlgL4lKYXBB2yk96UVlN_bNhLBppiq0K8ORV-TQ2jb7k8IMskeWYICec19xE7N5VEcCzVXZU9Pxb9e64KH8OCk";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
