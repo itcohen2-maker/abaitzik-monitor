@@ -16445,14 +16445,14 @@ function bizSheet(t0){
    if(tab==='anim')return animHtml();
    if(tab==='docs')return docsHtml();
    // 1.11, Itzik: "תשים את ההצעה גם במוניטור". The official quote for Shai Bodek (3 packages), the demo on 3.11.
-   return '<div class="bzHead">👥 לידים ולקוחות</div>'+'<button type="button" class="yb yb1" data-bz="anim" data-f="demo-script-shai.pdf">🎬 תסריט ההדגמה לשי (PDF)</button>'+'<button type="button" class="yb yb2" data-bz="anim" data-f="quote-shai-bodek.pdf">🧾 הצעת מחיר לשי בודק (PDF)</button>'+'<button type="button" class="yb" data-bz="anim" data-f="form-shai-preview.html">👀 טופס האפיון: תצוגה בתוך המוניטור</button>'+'<button type="button" class="yb" data-bz="form-shai">📋 טופס אפיון לשי: לפתוח או לשלוח</button>'+newLeadHtml()+leadsHtml()
+   return '<div class="bzHead">👥 לידים ולקוחות</div>'+'<button type="button" class="yb yb1" data-bz="anim" data-f="demo-script-shai.pdf">🎬 תסריט ההדגמה לשי (PDF)</button>'+'<button type="button" class="yb yb2" data-bz="anim" data-f="quote-shai-bodek.pdf">🧾 הצעת מחיר לשי בודק (PDF)</button>'+'<button type="button" class="yb yb2" data-bz="sign-shai">✍️ הצעת מחיר לשי: לשלוח לחתימה בטלפון</button>'+'<button type="button" class="yb" data-bz="anim" data-f="form-shai-preview.html">👀 טופס האפיון: תצוגה בתוך המוניטור</button>'+'<button type="button" class="yb" data-bz="form-shai">📋 טופס אפיון לשי: לפתוח או לשלוח</button>'+newLeadHtml()+leadsHtml()
     +'<p class="bzEmpty">הציון למעלה מ 0 עד 100, 100 זה הכי טוב. כל ליד שלא נגעו בו שבוע מוריד 8 נקודות, הצעה שלא חזרו אליה 3 ימים מורידה 12, ותזכורת שהגיעה ולא טופלה מורידה 6.</p>';
   }
   var dueN=((S&&S.staleLeads)||[]).length+((S&&S.due)||[]).length;
   var tabs=[['leads','👥','לידים ולקוחות'],['money','💰','כסף החודש'],['due','⏰','צריך לחזור',dueN],['shachar','🌅','שחר']/*ITZIK:BEGIN*/,['ner','🕯️','נרות']/*ITZIK:END*/,['anim','🧠','המשרד']];
   if(INSTANCE&&INSTANCE.clalit)tabs.push(['docs','🏥','מסמכים']);
   // 1.11.2026: the client demo starts from here (lib/demo-mode.js).
-  var html='<button type="button" class="yb bzBackTop" data-bz="back" data-tdy="1">→ חזרה</button>'+(typeof dmoStart==='function'?'<button type="button" class="yb yb1" data-bz="demo" data-tdy="1">🎬 מצב הדגמה ללקוח</button>':'')+'<div class="biz"><div class="bzMicRow"><button type="button" id="bizMic" class="bzMic" aria-label="דבר אליי">'
+  var html='<button type="button" class="yb bzBackTop" data-bz="back" data-tdy="1">→ חזרה</button>'+(typeof dmoStart==='function'?'<button type="button" class="yb yb1" data-bz="demo" data-tdy="1">🎬 מצב הדגמה ללקוח</button>':'')+'<button type="button" class="yb yb2" data-bz="sign-shai" data-tdy="1">✍️ הצעת מחיר לשי: לשלוח לחתימה בטלפון</button>'+'<div class="biz"><div class="bzMicRow"><button type="button" id="bizMic" class="bzMic" aria-label="דבר אליי">'
    +'<svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" stroke="none"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8.5 21h7"/></svg></button></div>'
    +'<div class="bzTop">'+scoreHtml()+'<p class="bzUrg"><b>'+esc((S&&S.urgent)||'אין עדיין נתונים.')+'</b></p></div>'
    +'<div class="bzWrap"><nav class="bzRail">'+tabs.map(function(t){
@@ -16476,6 +16476,12 @@ function bizSheet(t0){
     var a=t.getAttribute('data-bz');
     if(a==='demo'){dmoStart();return;}
     // 1.11, Itzik: "שים לי אותו גם במוניטור". The intake form for Shai (forms.js on form.it-solution.co.il).
+    // 2.11, Itzik: the sign page for Shai's quote, at the top of העסק שלי. It is shared or copied, never opened here:
+    // opening it reports "שי פתח" to the monitor.
+    if(a==='sign-shai'){var su='https://form.it-solution.co.il/q/a9cf9d55064a85b58583',st='שי, מצורפת הצעת המחיר. אפשר לעבור עליה ולחתום ישר מהטלפון:';
+     if(navigator.share){navigator.share({title:'הצעת מחיר, IT Solution',text:st,url:su}).catch(function(){});}
+     else{try{navigator.clipboard.writeText(st+' '+su);toast('הקישור לחתימה הועתק. מדביקים לשי בוואטסאפ או במייל.');}catch(x){toast(su);}}
+     return;}
     if(a==='form-shai'){var fu='https://form.it-solution.co.il/f/db3cf21b5fe4b773cc20',ft='שי, לקראת הפגישה ביום שלישי הכנו שאלון היכרות קצר, רק לסמן, 3 דקות. ככה נבנה לך הדגמה בדיוק לפי העסק שלך:';
      if(navigator.share){navigator.share({title:'שאלון היכרות',text:ft,url:fu}).catch(function(){});}else{window.open(fu,'_blank');}
      return;}
