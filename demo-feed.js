@@ -36,6 +36,7 @@ function clean(o) {
   if (o.kpis && typeof o.kpis === 'object') { it.kpis = {}; Object.keys(o.kpis).slice(0, 8).forEach((k) => { it.kpis[s(k, 30)] = s(o.kpis[k], 30); }); }
   if (Array.isArray(o.items)) it.items = o.items.slice(0, 20).map((r) => [s(r[0], 160), Number(r[1]) || 0, Number(r[2]) || 0]).filter((r) => r[0]);
   if ((type === 'quote' || type === 'invoice') && !(it.items && it.items.length)) throw new Error('להצעת מחיר או חשבונית צריך items');
+  if ((type === 'quote' || type === 'invoice') && !String(it.client || '').trim()) throw new Error('להצעת מחיר או חשבונית צריך client: שם הלקוח המלא כפי שיופיע ב PDF');
   if (!it.title) it.title = type === 'mail' ? (it.subject || 'מייל') : type === 'quote' ? 'הצעת מחיר' : type === 'invoice' ? 'חשבונית' : type === 'lead' ? 'ליד חדש' : type === 'meeting' ? 'פגישה' : type === 'report' ? 'דוח' : type === 'task' ? 'משימה' : 'עדכון';
   return it;
 }
