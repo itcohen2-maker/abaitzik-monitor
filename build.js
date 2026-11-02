@@ -2948,6 +2948,9 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 .bzT{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:62px;padding:8px 4px;border:0;border-radius:0 14px 14px 0;background:#e8eef5;color:#16202c;font:700 12.5px/1.2 Heebo,sans-serif;text-align:center;cursor:pointer;box-shadow:inset -3px 0 0 rgba(0,0,0,.06)}
 .bzT i{font-style:normal;font-size:22px;line-height:1}
 .bzT.on{background:#16202c;color:#fff;box-shadow:none;margin-inline-end:-2px}
+/* 2.11: a tab with something new blinks until opened (BZ_UPD in bizSheet). */
+.bzT.bzTNew{animation:bzTBl 1s steps(1) infinite}
+@keyframes bzTBl{0%{background:#facc15;color:#16202c}50%{background:#e8eef5}}
 .bzT .bzN{display:inline-block;min-width:18px;padding:0 5px;border-radius:9px;background:#c62828;color:#fff;font:700 11px/18px Heebo,sans-serif}
 #bzBody{flex:1;min-width:0;border:2px solid #16202c;border-radius:14px 0 14px 14px;padding:4px 10px 10px;min-height:340px}
 .bzBody .yb,#bzBody>.yb,#bzBody .tdy-row .yb{width:100%;box-sizing:border-box}
@@ -4486,7 +4489,7 @@ ${require('./lib/home-ui.js').html}
     and no screens list (Itzik's copy). A customer with a screens list gets the
     tile from tenantTiles, only when gBiz is in that list.
   -->
-${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261101-back' + newestLead() + '"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
+${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261102-its' + newestLead() + '"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
 <!--TENANT:BEGIN-->
   <!--
     A customer's home screen, built from his intake answers and not filtered
@@ -5832,7 +5835,7 @@ function fileView(name){
   var sv=ov.querySelector('.fv-save');if(sv)sv.setAttribute('download',short);
  };
  var url='';
- function close(){ov.remove();if(url)setTimeout(function(){URL.revokeObjectURL(url);},1000);}
+ function close(){ov.remove();if(url)setTimeout(function(){URL.revokeObjectURL(url);},1000);var cb=window.fvAfterClose;window.fvAfterClose=null;if(typeof cb==='function')cb();}
  ov.querySelector('.fv-x').onclick=close;
  fileBlob(e).then(function(b){
   url=URL.createObjectURL(b);var t=e.t||'',h='';
@@ -16357,7 +16360,7 @@ function bzRow(r,extra){
 }
 function bizSheet(t0){
  ensure('biz',function(){
-  var S=D.bizSum||null,recs=D.biz||[],tab=t0||'leads';
+  var S=D.bizSum||null,recs=D.biz||[],tab=t0||'its';
   function scoreHtml(){
    if(!S||S.score==null)return '<div class="bzScore n">אין עדיין נתונים</div>';
    return '<div class="bzScore '+(S.score>=75?'g':S.score>=50?'a':'r')+'">'+esc(String(S.score))+'</div>';
@@ -16416,6 +16419,19 @@ function bizSheet(t0){
      +'<div class="lbBtns"><button type="button" class="shwCopy" data-t="'+esc(x.email)+'">📋 העתקה</button>'+((x.sent||shwTapped(x.email))?'<span class="shwSent">✓ המכתב נשלח</span>':'<button type="button" class="shwMail" data-t="'+esc(x.email)+'">✉️ הזמנה במייל</button>')+'</div></div>';
    }).join('')+arch;
   }
+  // 2.11, Itzik: everything IT Solution in one tab, so it does not mix with Shachar and the rest.
+  // Something new here? Bump BZ_UPD.its (and the gBiz data-upd) so the tab label and the tile blink.
+  function itsHtml(){
+   return '<div class="bzHead">💻 IT Solution</div>'
+    +'<div class="bzSec">הדגמה ללקוח</div>'
+    +(typeof dmoStart==='function'?'<button type="button" class="yb yb1" data-bz="demo">🎬 מצב הדגמה ללקוח</button>':'')
+    +'<button type="button" class="yb" data-bz="anim" data-f="demo-script-shai.pdf">🎬 תסריט ההדגמה לשי (PDF)</button>'
+    +'<div class="bzSec">שי בודק, יועץ עסקי</div>'
+    +'<button type="button" class="yb yb2" data-bz="anim" data-f="quote-shai-bodek.pdf">🧾 הצעת מחיר לשי בודק (PDF)</button>'
+    +'<button type="button" class="yb yb2" data-bz="sign-shai">✍️ הצעת מחיר לשי: לשלוח לחתימה בטלפון</button>'
+    +'<button type="button" class="yb" data-bz="anim" data-f="form-shai-preview.html">👀 טופס האפיון: תצוגה בתוך המוניטור</button>'
+    +'<button type="button" class="yb" data-bz="form-shai">📋 טופס אפיון לשי: לפתוח או לשלוח</button>';
+  }
   function shacharHtml(){
    return '<div class="bzHead">🌅 שחר</div>'+shWaitHtml()
     +'<div class="bzSec">להזמין ולשלוח מכתב</div>'
@@ -16448,23 +16464,29 @@ function bizSheet(t0){
   function body(){
    if(tab==='money')return '<div class="bzHead">💰 כסף החודש</div>'+moneyHtml();
    if(tab==='due')return '<div class="bzHead">⏰ צריך לחזור</div>'+dueHtml();
+   if(tab==='its')return itsHtml();
    if(tab==='shachar')return shacharHtml();
    /*ITZIK:BEGIN*/if(tab==='ner')return nerHtml();/*ITZIK:END*/
    if(tab==='anim')return animHtml();
    if(tab==='docs')return docsHtml();
    // 1.11, Itzik: "תשים את ההצעה גם במוניטור". The official quote for Shai Bodek (3 packages), the demo on 3.11.
-   return '<div class="bzHead">👥 לידים ולקוחות</div>'+'<button type="button" class="yb yb1" data-bz="anim" data-f="demo-script-shai.pdf">🎬 תסריט ההדגמה לשי (PDF)</button>'+'<button type="button" class="yb yb2" data-bz="anim" data-f="quote-shai-bodek.pdf">🧾 הצעת מחיר לשי בודק (PDF)</button>'+'<button type="button" class="yb yb2" data-bz="sign-shai">✍️ הצעת מחיר לשי: לשלוח לחתימה בטלפון</button>'+'<button type="button" class="yb" data-bz="anim" data-f="form-shai-preview.html">👀 טופס האפיון: תצוגה בתוך המוניטור</button>'+'<button type="button" class="yb" data-bz="form-shai">📋 טופס אפיון לשי: לפתוח או לשלוח</button>'+newLeadHtml()+leadsHtml()
+   return '<div class="bzHead">👥 לידים ולקוחות</div>'+newLeadHtml()+leadsHtml()
     +'<p class="bzEmpty">הציון למעלה מ 0 עד 100, 100 זה הכי טוב. כל ליד שלא נגעו בו שבוע מוריד 8 נקודות, הצעה שלא חזרו אליה 3 ימים מורידה 12, ותזכורת שהגיעה ולא טופלה מורידה 6.</p>';
   }
+  // 2.11, Itzik: a tab with something new blinks until he opens it. The stamp changes whenever something is added there.
+  var BZ_UPD={its:'20261102-1145',shachar:'20261101-shachar-wl'};
+  function bzSeen(){try{return JSON.parse(localStorage.getItem('bzTabSeen')||'{}');}catch(x){return {};}}
+  function bzTabNew(k){return !!BZ_UPD[k]&&bzSeen()[k]!==BZ_UPD[k]&&k!==tab;}
+  function bzMarkSeen(k){if(!BZ_UPD[k])return;var o=bzSeen();o[k]=BZ_UPD[k];try{localStorage.setItem('bzTabSeen',JSON.stringify(o));}catch(x){}}
   var dueN=((S&&S.staleLeads)||[]).length+((S&&S.due)||[]).length;
-  var tabs=[['leads','👥','לידים ולקוחות'],['money','💰','כסף החודש'],['due','⏰','צריך לחזור',dueN],['shachar','🌅','שחר']/*ITZIK:BEGIN*/,['ner','🕯️','נרות']/*ITZIK:END*/,['anim','🧠','המשרד']];
+  var tabs=[['its','💻','IT Solution'],['leads','👥','לידים ולקוחות'],['money','💰','כסף החודש'],['due','⏰','צריך לחזור',dueN],['shachar','🌅','שחר']/*ITZIK:BEGIN*/,['ner','🕯️','נרות']/*ITZIK:END*/,['anim','🧠','המשרד']];
   if(INSTANCE&&INSTANCE.clalit)tabs.push(['docs','🏥','מסמכים']);
   // 1.11.2026: the client demo starts from here (lib/demo-mode.js).
-  var html='<button type="button" class="yb bzBackTop" data-bz="back" data-tdy="1">→ חזרה</button>'+(typeof dmoStart==='function'?'<button type="button" class="yb yb1" data-bz="demo" data-tdy="1">🎬 מצב הדגמה ללקוח</button>':'')+'<button type="button" class="yb yb2" data-bz="sign-shai" data-tdy="1">✍️ הצעת מחיר לשי: לשלוח לחתימה בטלפון</button>'+'<div class="biz"><div class="bzMicRow"><button type="button" id="bizMic" class="bzMic" aria-label="דבר אליי">'
+  var html='<button type="button" class="yb bzBackTop" data-bz="back" data-tdy="1">→ חזרה</button>'+'<div class="biz"><div class="bzMicRow"><button type="button" id="bizMic" class="bzMic" aria-label="דבר אליי">'
    +'<svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" stroke="none"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8.5 21h7"/></svg></button></div>'
    +'<div class="bzTop">'+scoreHtml()+'<p class="bzUrg"><b>'+esc((S&&S.urgent)||'אין עדיין נתונים.')+'</b></p></div>'
    +'<div class="bzWrap"><nav class="bzRail">'+tabs.map(function(t){
-     return '<button type="button" class="bzT'+(t[0]===tab?' on':'')+'" data-bz="tab" data-t="'+t[0]+'" data-tdy="1"><i>'+t[1]+'</i>'+t[2]+(t[3]?' <span class="bzN">'+t[3]+'</span>':'')+'</button>';
+     return '<button type="button" class="bzT'+(t[0]===tab?' on':'')+(bzTabNew(t[0])?' bzTNew':'')+'" data-bz="tab" data-t="'+t[0]+'" data-tdy="1"><i>'+t[1]+'</i>'+t[2]+(t[3]?' <span class="bzN">'+t[3]+'</span>':'')+'</button>';
     }).join('')+'</nav>'
    +'<div id="bzBody">'+body()+'</div></div></div>';
   shipOpen('bizSheet','💼 העסק שלי',html,function(el){
@@ -16474,8 +16496,8 @@ function bizSheet(t0){
    var bizHist=[];
    function bizShow(t2,back){
     if(!back&&t2!==tab)bizHist.push(tab);
-    tab=t2;
-    el.querySelectorAll('[data-bz="tab"]').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-t')===tab);});
+    tab=t2;bzMarkSeen(tab);
+    el.querySelectorAll('[data-bz="tab"]').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-t')===tab);if(b.getAttribute('data-t')===tab)b.classList.remove('bzTNew');});
     el.querySelector('#bzBody').innerHTML=body();
    }
    window.bizStep=function(){if(!bizHist.length)return false;bizShow(bizHist.pop(),true);return true;};
@@ -16499,7 +16521,8 @@ function bizSheet(t0){
     if(a==='shfb'){location.href='shachar/index.html?view=feedback&v='+Date.now();return;}
     if(a==='shus'){location.href='shachar/index.html?view=usage&v='+Date.now();return;}
     // 1.11: every file button on this sheet (the quote, the form preview, Shachar, the office). Restored after it went missing in an edit.
-    if(a==='anim'){var bx2=el.querySelector('[data-a="x"]');if(bx2)bx2.click();fileOpen(t.getAttribute('data-f'));return;}
+    // 2.11, Itzik (iron rule): closing the file goes back to this tab of העסק שלי, never to the main screen.
+    if(a==='anim'){var bx2=el.querySelector('[data-a="x"]'),tb2=tab;if(bx2)bx2.click();window.fvAfterClose=function(){bizSheet(tb2);};fileOpen(t.getAttribute('data-f'));return;}
     /*ITZIK:BEGIN*/if(a==='ner'){var bx=el.querySelector('[data-a="x"]');if(bx)bx.click();nerBizSheet();return;}/*ITZIK:END*/  // 30.10, Itzik: the X did not get him out, two sheets were stacked; one at a time
     if(a==='back'){if(!window.bizStep())el.querySelector('[data-a="x"]').click();return;}
     if(a==='tab'){bizShow(t.getAttribute('data-t'));return;}
