@@ -4327,7 +4327,7 @@ ${require('./lib/home-ui.js').html}
     is amirshwartz1's TikTok comment on the cake video (55 likes).
   -->
   <button type="button" class="gt gWin" data-grp="net" id="gWin" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
-  <button type="button" class="gt gReel" data-grp="net" id="gReels" data-upd="20261101-28st"><b>🎬 הרילים שלי</b><small>חדש: סטורי שחר וסטורי האתר</small></button>
+  <button type="button" class="gt gReel" data-grp="net" id="gReels" data-upd="20261102-31"><b>🎬 הרילים שלי</b><small>חדש: 31 תפסיק למהר</small></button>
   <button type="button" class="gt gFut" data-grp="net" id="gFut" data-upd="20261102-fut21"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 21 איך נכנסים לאתר, 20 תפסיק למהר, 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור, 08 שרירים והגיל, 09 קונטרה למינוס, 16 אורז כמו פסטה, 17 המבריק במדיח</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
@@ -14088,7 +14088,10 @@ var REEL_ITEMS=[
 {n:'27 סטורי',t:'סטורי ארסן באורז, שלט אורז, מוזיקה Happy Cooking · הכי איכותי, לשמירה בגלריה',r:'story-27f-rice.mp4'},
 {n:'27 סטורי 2',t:'סטורי הסיר עם אפקטים · הכי איכותי, לשמירה בגלריה',r:'story-27-pot2.mp4'},
 {n:'28 סטורי שחר',t:'שחר, אפליקציית המוטיבציה במתנה (מתוקן: לוגו מדורג והרשמה באתר) · 4K הכי איכותי, לשמירה בגלריה',r:'story-28-shachar.mp4'},
-{n:'28 סטורי האתר',t:'יש לי אתר חדש, כולם מוזמנים · 4K הכי איכותי, לשמירה בגלריה',r:'story-28-site.mp4'}
+{n:'28 סטורי האתר',t:'יש לי אתר חדש, כולם מוזמנים · 4K הכי איכותי, לשמירה בגלריה',r:'story-28-site.mp4'},
+{n:'31',t:'תפסיק למהר, החנייה ואז אני ברכב · 4K הכי איכותי, לשמירה בגלריה',r:'reel-31-tafsik.mp4'},
+{n:'31 כריכה',t:'הכריכה · 4K',r:'reel-31-cover.jpg'},
+{n:'31 פרסום',t:'כיתוב והאשטגים לכל רשת',r:'reel-31-post.txt'}
 ];
 function reelSheet(){
  var old=document.getElementById('rlSheet');if(old)old.remove();
