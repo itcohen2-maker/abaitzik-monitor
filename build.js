@@ -4357,7 +4357,7 @@ ${require('./lib/home-ui.js').html}
   -->
   <!-- 13.10. Itzik: "תעשה תקייה של טום ממליץ ואריח טום ממליץ". Scripts of
        Tom's posts, four ad images, the site copy, and the draft of his own site. -->
-  <button type="button" class="gt gTom" data-grp="work" id="gTom" data-new="1" data-upd="2026-11-01-numbered"><b>🧭 טום ממליץ</b><small>מסודר וממוספר: הקמפיין שרץ והתמונות המונפשות</small></button>
+  <button type="button" class="gt gTom" data-grp="work" id="gTom" data-new="1" data-upd="2026-11-02-order"><b>🧭 טום ממליץ</b><small>מסודר וממוספר: הקמפיין שרץ והתמונות המונפשות</small></button>
   <!-- 13.10 night: the Clalit agreement moved inside the lecture tile (item 05). -->
   <button type="button" class="gt gGviya" data-grp="work" id="gGviya" data-new="1"><b>📞 גבייה, יואל</b><small>דף שיואל מסמן, כל סימון מעדכן אותך</small></button>
   <button type="button" class="gt gLaw" data-grp="home" id="gLaw" hidden><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
@@ -15965,11 +15965,12 @@ on('gClalit',clalitSheet);
 */
 var TOM_ITEMS=[
 // 2.11, Itzik: "תשאיר באריח רק את מה שאנחנו נעבוד איתו. כל השאר למחוק". 6 in the campaign, 3 in reserve.
+// 2.11 (order), Itzik: "הסרטונים הארוכים למעלה, והקצרים למטה". The long one (29 sec) goes first; the rest are 8 sec. Numbers n stay as they were.
+ {n:"5",t:"רץ מ 2.11: סרטון שרפת קרדיטים, קרוסלה, אנחנו מסדרים · 9:16",r:"ads-nov01-story-c-stuck.mp4"},
  {n:"1",t:"רץ: לא צריך ללמוד קורס AI · 9:16",r:"ads-oct28-card3-story.mp4"},
  {n:"2",t:"רץ: לא צריך ללמוד קורס AI · 4:5 פיד",r:"ads-oct28-card3-feed.mp4"},
  {n:"3",t:"רץ: מי לא שילם לך החודש · 9:16",r:"ads-oct28-card2-story.mp4"},
  {n:"4",t:"רץ: מי לא שילם לך החודש · 4:5 פיד",r:"ads-oct28-card2-feed.mp4"},
- {n:"5",t:"רץ מ 2.11: סרטון שרפת קרדיטים, קרוסלה, אנחנו מסדרים · 9:16",r:"ads-nov01-story-c-stuck.mp4"},
  {n:"6",t:"רץ מ 2.11: שרפת קרדיטים ב Lovable ו Base44 · 9:16",r:"ads-nov01-card9-story.mp4"},
  {n:"7",t:"רץ מ 2.11: שרפת קרדיטים ב Lovable ו Base44 · 4:5 פיד",r:"ads-nov01-card9-feed.mp4"},
  {n:"8",t:"רץ מ 2.11: קרוסלה, מה עוד נתקע לך · 9:16",r:"ads-nov01-card14-story.mp4"},

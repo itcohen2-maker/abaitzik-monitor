@@ -2721,7 +2721,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-02T08:16:42.854Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-02T08:17:22.673Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2880,7 +2880,7 @@ try{
   <button type="button" class="gt gWin" data-grp="net" id="gWin" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <button type="button" class="gt gReel" data-grp="net" id="gReels" data-upd="20261101-28st"><b>🎬 הרילים שלי</b><small>חדש: סטורי שחר וסטורי האתר</small></button>
   <button type="button" class="gt gFut" data-grp="net" id="gFut" data-upd="20261102-fut20"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 20 תפסיק למהר, 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור, 08 שרירים והגיל, 09 קונטרה למינוס, 16 אורז כמו פסטה, 17 המבריק במדיח</small></button>
-  <button type="button" class="gt gTom" data-grp="work" id="gTom" data-new="1" data-upd="2026-11-01-numbered"><b>🧭 טום ממליץ</b><small>מסודר וממוספר: הקמפיין שרץ והתמונות המונפשות</small></button>
+  <button type="button" class="gt gTom" data-grp="work" id="gTom" data-new="1" data-upd="2026-11-02-order"><b>🧭 טום ממליץ</b><small>מסודר וממוספר: הקמפיין שרץ והתמונות המונפשות</small></button>
   <button type="button" class="gt gGviya" data-grp="work" id="gGviya" data-new="1"><b>📞 גבייה, יואל</b><small>דף שיואל מסמן, כל סימון מעדכן אותך</small></button>
   <button type="button" class="gt gLaw" data-grp="home" id="gLaw" hidden><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
   <button type="button" class="gt gShop" data-grp="home" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
@@ -4623,7 +4623,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='9e22cb6dd9';
+var CODE_ID='0a43ce5429';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12202,11 +12202,11 @@ function clalitSheet(){
 }
 on('gClalit',clalitSheet);
 var TOM_ITEMS=[
+ {n:"5",t:"רץ מ 2.11: סרטון שרפת קרדיטים, קרוסלה, אנחנו מסדרים · 9:16",r:"ads-nov01-story-c-stuck.mp4"},
  {n:"1",t:"רץ: לא צריך ללמוד קורס AI · 9:16",r:"ads-oct28-card3-story.mp4"},
  {n:"2",t:"רץ: לא צריך ללמוד קורס AI · 4:5 פיד",r:"ads-oct28-card3-feed.mp4"},
  {n:"3",t:"רץ: מי לא שילם לך החודש · 9:16",r:"ads-oct28-card2-story.mp4"},
  {n:"4",t:"רץ: מי לא שילם לך החודש · 4:5 פיד",r:"ads-oct28-card2-feed.mp4"},
- {n:"5",t:"רץ מ 2.11: סרטון שרפת קרדיטים, קרוסלה, אנחנו מסדרים · 9:16",r:"ads-nov01-story-c-stuck.mp4"},
  {n:"6",t:"רץ מ 2.11: שרפת קרדיטים ב Lovable ו Base44 · 9:16",r:"ads-nov01-card9-story.mp4"},
  {n:"7",t:"רץ מ 2.11: שרפת קרדיטים ב Lovable ו Base44 · 4:5 פיד",r:"ads-nov01-card9-feed.mp4"},
  {n:"8",t:"רץ מ 2.11: קרוסלה, מה עוד נתקע לך · 9:16",r:"ads-nov01-card14-story.mp4"},
