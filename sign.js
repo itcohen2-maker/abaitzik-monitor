@@ -67,13 +67,42 @@ function doneHtml(tok, d, s) {
     + '<a class="pdf" href="/q/' + tok + '/signed" target="_blank">📄 ההצעה החתומה (PDF)</a></div>';
 }
 
+// 2.11, Itzik: the whole quote on one page, no PDF to open. First what he gets (big, on top),
+// then the prices, then the terms, then sign. "לא ישר שיפלו על המחיר בלי לדעת מה יש בפנים."
+// Content lives in the def: intro, includes [[bold, text]], setup {title, text, old, price}, how [[bold, text]], terms [html], date, valid.
+const CSS2 = '.intro{background:#fff;border-radius:20px;padding:20px 18px;margin:0 0 6px;box-shadow:0 2px 12px rgba(15,27,42,.06)}'
+  + '.intro .to{font:500 15px Heebo;color:#4a5a6e;margin:0 0 6px}.intro .to b{color:#0f1b2a}'
+  + '.intro h1{font:900 27px/1.2 Heebo;margin:0 0 10px}.intro .big{font:500 18.5px/1.65 Heebo;color:#0f1b2a;margin:0}'
+  + '.meta{font:500 13px/1.6 Heebo;color:#6b7c90;margin:10px 0 0}'
+  + '.sec{font:900 20px Heebo;margin:26px 0 10px;display:flex;align-items:center;gap:8px}.sec i{font-style:normal;display:inline-flex;width:30px;height:30px;border-radius:50%;background:#0f1b2a;color:#fff;align-items:center;justify-content:center;font:800 15px Heebo}'
+  + '.inc{list-style:none;margin:0;padding:0}.inc li{background:#fff;border-radius:14px;padding:12px 44px 12px 14px;margin:0 0 8px;font:400 15.5px/1.55 Heebo;color:#24364b;position:relative}'
+  + '.inc li:before{content:"✓";position:absolute;right:14px;top:11px;width:22px;height:22px;border-radius:50%;background:#06b6d4;color:#0f1b2a;font:900 13px Heebo;display:flex;align-items:center;justify-content:center}.inc li b{color:#0f1b2a}'
+  + '.card{background:#fff;border-radius:16px;padding:14px 16px;margin:0 0 10px;font:400 15px/1.6 Heebo;color:#24364b}.card b{color:#0f1b2a}.card p{margin:0 0 8px}.card p:last-child{margin:0}'
+  + '.card .ttl{font:800 16.5px Heebo;color:#0f1b2a;margin-bottom:4px}.card del{color:#8a99ab}'
+  + '.terms{margin:0;padding:0 20px 0 0;font:400 14.5px/1.65 Heebo;color:#24364b}.terms li{margin-bottom:6px}.terms b{color:#0f1b2a}'
+  + 'details.card summary{font:800 16px Heebo;color:#0f1b2a;cursor:pointer;list-style:none}details.card summary:after{content:" ▾";color:#0e7490}details.card[open] summary{margin-bottom:10px}'
+  + '.redo{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:8px;background:#fff;border:2px solid #0e7490;color:#0e7490;border-radius:14px;padding:11px;font:800 15.5px Heebo;cursor:pointer}'
+  + '.vat{font:500 13px Heebo;color:#6b7c90;margin:-2px 0 8px}';
+
 function page(tok, d, s) {
-  let h = head(d.title) + '<h1>' + esc(d.title) + '</h1>';
-  if (s.signedAt) return h + doneHtml(tok, d, s) + '</div></body></html>';
-  h += '<p class="hello">שלום ' + esc(d.client) + ', כאן חותמים על ההצעה ישר מהטלפון, בלי להדפיס ובלי לסרוק. שלושה צעדים קצרים.</p>'
-    + '<div class="step"><i>1</i>קוראים את ההצעה</div>'
-    + '<a class="pdf" href="/q/' + tok + '/pdf" target="_blank">📄 פתיחת ההצעה המלאה (PDF)</a>'
-    + '<div class="step"><i>2</i>בוחרים חבילה</div>';
+  let h = head(d.title).replace('</style>', CSS2 + '</style>');
+  if (s.signedAt) return h + '<h1>' + esc(d.title) + '</h1>' + doneHtml(tok, d, s) + '</div></body></html>';
+  h += '<div class="intro"><p class="to">לכבוד: <b>' + esc(d.client) + '</b>' + (d.clientBiz ? ', ' + esc(d.clientBiz) : '') + '</p>'
+    + '<h1>' + esc(d.title) + '</h1>'
+    + '<p class="big">' + esc(d.intro || '') + '</p>'
+    + '<p class="meta">הצעה מספר ' + esc(d.quoteNo) + (d.date ? ' · ' + esc(d.date) : '') + (d.valid ? ' · בתוקף עד ' + esc(d.valid) : '') + '</p></div>';
+  if ((d.includes || []).length) {
+    h += '<div class="sec"><i>1</i>מה מקבלים</div><ul class="inc">'
+      + d.includes.map((x) => '<li><b>' + esc(x[0]) + '</b> ' + esc(x[1]) + '</li>').join('') + '</ul>';
+  }
+  if (d.setup) {
+    h += '<div class="card"><div class="ttl">' + esc(d.setup.title) + '</div><p>' + esc(d.setup.text) + '</p></div>';
+  }
+  if ((d.how || []).length) {
+    h += '<div class="sec"><i>2</i>איך זה עובד</div><div class="card">'
+      + d.how.map((x) => '<p><b>' + esc(x[0]) + '</b> ' + esc(x[1]) + '</p>').join('') + '</div>';
+  }
+  h += '<div class="sec"><i>3</i>בוחרים חבילה</div><p class="vat">המחירים לחודש, לא כולל מע״מ.</p>';
   (d.plans || []).forEach((p) => {
     h += '<button type="button" class="pl" data-id="' + esc(p.id) + '" data-price="' + p.price + '" data-setup="' + p.setup + '"><span class="ok"></span>'
       + '<div class="r"><span class="n">' + esc(p.name) + '</span><span class="p">' + nis(p.price) + ' <small>לחודש</small></span></div>'
@@ -81,14 +110,18 @@ function page(tok, d, s) {
       + (p.setup ? '<span class="su">הקמה: ' + nis(p.setup) + ' חד פעמי</span>' : '<span class="su free">✓ הקמה בחינם</span>')
       + '</button>';
   });
-  h += '<div class="tot" id="tot"></div>'
-    + '<div class="step"><i>3</i>פרטים וחתימה</div>'
+  h += '<div class="tot" id="tot"></div>';
+  if ((d.terms || []).length) {
+    h += '<details class="card"><summary>📋 תנאי ההצעה (' + d.terms.length + ')</summary><ol class="terms">'
+      + d.terms.map((t) => '<li>' + t + '</li>').join('') + '</ol></details>';
+  }
+  h += '<div class="sec"><i>4</i>פרטים וחתימה</div>'
     + '<label>שם מלא</label><input type="text" id="nm" autocomplete="name">'
     + '<label>שם העסק</label><input type="text" id="bz" autocomplete="organization">'
     + '<label>מספר עוסק או תעודת זהות <small>(לחשבונית)</small></label><input type="text" id="idn" inputmode="numeric">'
     + '<label>חתימה <small>(עם האצבע, בתוך המסגרת)</small></label>'
     + '<div class="pad"><canvas id="cv"></canvas><div class="ph" id="ph">✍️ חותמים כאן</div></div>'
-    + '<button type="button" class="clr" id="clr">ניקוי החתימה</button>'
+    + '<button type="button" class="redo" id="clr">🔄 למחוק את החתימה ולחתום מחדש</button>'
     + '<label class="agree"><input type="checkbox" id="ag"><span>קראתי את ההצעה ואת התנאים שבה, ואני מאשר אותם.</span></label>'
     + '<button type="button" class="go" id="go">✍️ חתימה ושליחה</button><div class="err" id="err"></div>'
     + '<script>(function(){var T=' + JSON.stringify(tok) + ',plan=null,inked=false;'
@@ -104,10 +137,10 @@ function page(tok, d, s) {
     + 'cv.addEventListener("pointerdown",function(e){dn=true;cv.setPointerCapture(e.pointerId);var p=pt(e);cx.beginPath();cx.moveTo(p[0],p[1]);cx.lineTo(p[0]+.1,p[1]+.1);cx.stroke();inked=true;$("ph").style.display="none";e.preventDefault()});'
     + 'cv.addEventListener("pointermove",function(e){if(!dn)return;var p=pt(e);cx.lineTo(p[0],p[1]);cx.stroke();e.preventDefault()});'
     + 'cv.addEventListener("pointerup",function(){dn=false});cv.addEventListener("pointercancel",function(){dn=false});'
-    + '$("clr").onclick=function(){cx.clearRect(0,0,cv.width,cv.height);inked=false;$("ph").style.display="flex"};'
+    + '$("clr").onclick=function(){cx.setTransform(1,0,0,1,0,0);cx.clearRect(0,0,cv.width,cv.height);fit();inked=false;$("ph").style.display="flex"};'
     + 'fetch("/api/sign",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:T,open:true})}).catch(function(){});'
     + '$("go").onclick=function(){var er=$("err"),nm=$("nm").value.trim(),bz=$("bz").value.trim();'
-    + 'if(!plan){er.textContent="צריך לבחור חבילה (צעד 2)";return}'
+    + 'if(!plan){er.textContent="צריך לבחור חבילה (שלב 3)";return}'
     + 'if(nm.length<2){er.textContent="צריך למלא שם מלא";$("nm").focus();return}'
     + 'if(!inked){er.textContent="צריך לחתום עם האצבע בתוך המסגרת";return}'
     + 'if(!$("ag").checked){er.textContent="צריך לסמן שקראת ואתה מאשר";return}'
