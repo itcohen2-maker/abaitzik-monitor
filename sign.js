@@ -84,7 +84,7 @@ const CSS2 = '.intro{background:#fff;border-radius:20px;padding:20px 18px;margin
   + '.redo{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:8px;background:#fff;border:2px solid #0e7490;color:#0e7490;border-radius:14px;padding:11px;font:800 15.5px Heebo;cursor:pointer}'
   + '.vat{font:500 13px Heebo;color:#6b7c90;margin:-2px 0 8px}';
 
-function page(tok, d, s) {
+function page(tok, d, s, view) {
   let h = head(d.title).replace('</style>', CSS2 + '</style>');
   if (s.signedAt) return h + '<h1>' + esc(d.title) + '</h1>' + doneHtml(tok, d, s) + '</div></body></html>';
   h += '<div class="intro"><p class="to">לכבוד: <b>' + esc(d.client) + '</b>' + (d.clientBiz ? ', ' + esc(d.clientBiz) : '') + '</p>'
@@ -138,7 +138,8 @@ function page(tok, d, s) {
     + 'cv.addEventListener("pointermove",function(e){if(!dn)return;var p=pt(e);cx.lineTo(p[0],p[1]);cx.stroke();e.preventDefault()});'
     + 'cv.addEventListener("pointerup",function(){dn=false});cv.addEventListener("pointercancel",function(){dn=false});'
     + '$("clr").onclick=function(){cx.setTransform(1,0,0,1,0,0);cx.clearRect(0,0,cv.width,cv.height);fit();inked=false;$("ph").style.display="flex"};'
-    + 'fetch("/api/sign",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:T,open:true})}).catch(function(){});'
+    // 2.11: /q/<token>/view is Itzik's own look from the monitor: no open report, nothing is sent.
+    + (view ? '$("go").disabled=true;$("go").textContent="תצוגה בלבד, כך הלקוח רואה את ההצעה";' : 'fetch("/api/sign",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:T,open:true})}).catch(function(){});')
     + '$("go").onclick=function(){var er=$("err"),nm=$("nm").value.trim(),bz=$("bz").value.trim();'
     + 'if(!plan){er.textContent="צריך לבחור חבילה (שלב 3)";return}'
     + 'if(nm.length<2){er.textContent="צריך למלא שם מלא";$("nm").focus();return}'
@@ -162,7 +163,7 @@ function servePage(tok, sub, s) {
     return fs.createReadStream(f).pipe(s);
   }
   s.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
-  s.end(page(tok, d, state(tok)));
+  s.end(page(tok, d, sub === 'view' ? {} : state(tok), sub === 'view'));
 }
 
 function signedBlock(d, st) {
