@@ -2729,7 +2729,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-02T20:09:50.323Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-02T20:10:42.610Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2888,7 +2888,7 @@ try{
   <button type="button" class="gt gWin" data-grp="net" id="gWin" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <button type="button" class="gt gReel" data-grp="net" id="gReels" data-upd="20261102-31c"><b>🎬 הרילים שלי</b><small>חדש: 31ג תפסיק למהר עם הקפיצה</small></button>
   <button type="button" class="gt gFut" data-grp="net" id="gFut" data-upd="20261102-fut21"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 21 איך נכנסים לאתר, 20 תפסיק למהר, 01 החנייה, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור, 08 שרירים והגיל, 09 קונטרה למינוס, 16 אורז כמו פסטה, 17 המבריק במדיח</small></button>
-  <button type="button" class="gt gTom" data-grp="work" id="gTom" data-new="1" data-upd="2026-11-02-order"><b>🧭 טום ממליץ</b><small>מסודר וממוספר: הקמפיין שרץ והתמונות המונפשות</small></button>
+  <button type="button" class="gt gTom" data-grp="work" id="gTom" data-new="1" data-upd="2026-11-02-rename"><b>🧭 קמפיין פייסבוק</b><small>מסודר וממוספר: הקמפיין שרץ והתמונות המונפשות</small></button>
   <button type="button" class="gt gGviya" data-grp="work" id="gGviya" data-new="1"><b>📞 גבייה, יואל</b><small>דף שיואל מסמן, כל סימון מעדכן אותך</small></button>
   <button type="button" class="gt gLaw" data-grp="home" id="gLaw" hidden><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
   <button type="button" class="gt gShop" data-grp="home" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
@@ -4633,7 +4633,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='192cb5514a';
+var CODE_ID='2f58541e55';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12256,9 +12256,9 @@ function tomSheet(){
  var w=document.createElement('div');
  w.id='tomSheet';w.className='ysheet';
  w.setAttribute('role','dialog');
- w.setAttribute('aria-label','טום ממליץ');
+ w.setAttribute('aria-label','קמפיין פייסבוק');
  w.innerHTML='<div class="ycard">'
-  +'<b>טום ממליץ</b>'
+  +'<b>קמפיין פייסבוק</b>'
   +'<small>1 עד 11 רצים עכשיו בקמפיין הממומן. 12 עד 17 ברזרבה לסבב הבא.</small>'
   +TOM_ITEMS.map(function(it,i,a){
     if(it.r&&!fileEntry(it.r))return '';

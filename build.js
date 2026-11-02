@@ -4367,7 +4367,7 @@ ${require('./lib/home-ui.js').html}
   -->
   <!-- 13.10. Itzik: "תעשה תקייה של טום ממליץ ואריח טום ממליץ". Scripts of
        Tom's posts, four ad images, the site copy, and the draft of his own site. -->
-  <button type="button" class="gt gTom" data-grp="work" id="gTom" data-new="1" data-upd="2026-11-02-order"><b>🧭 טום ממליץ</b><small>מסודר וממוספר: הקמפיין שרץ והתמונות המונפשות</small></button>
+  <button type="button" class="gt gTom" data-grp="work" id="gTom" data-new="1" data-upd="2026-11-02-rename"><b>🧭 קמפיין פייסבוק</b><small>מסודר וממוספר: הקמפיין שרץ והתמונות המונפשות</small></button>
   <!-- 13.10 night: the Clalit agreement moved inside the lecture tile (item 05). -->
   <button type="button" class="gt gGviya" data-grp="work" id="gGviya" data-new="1"><b>📞 גבייה, יואל</b><small>דף שיואל מסמן, כל סימון מעדכן אותך</small></button>
   <button type="button" class="gt gLaw" data-grp="home" id="gLaw" hidden><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
@@ -16032,9 +16032,9 @@ function tomSheet(){
  var w=document.createElement('div');
  w.id='tomSheet';w.className='ysheet';
  w.setAttribute('role','dialog');
- w.setAttribute('aria-label','טום ממליץ');
+ w.setAttribute('aria-label','קמפיין פייסבוק');
  w.innerHTML='<div class="ycard">'
-  +'<b>טום ממליץ</b>'
+  +'<b>קמפיין פייסבוק</b>'
   +'<small>1 עד 11 רצים עכשיו בקמפיין הממומן. 12 עד 17 ברזרבה לסבב הבא.</small>'
   +TOM_ITEMS.map(function(it,i,a){
     if(it.r&&!fileEntry(it.r))return '';
