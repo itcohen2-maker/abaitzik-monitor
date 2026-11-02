@@ -2729,7 +2729,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-02T19:07:24.616Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-02T19:08:05.272Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2892,6 +2892,7 @@ try{
   <button type="button" class="gt gGviya" data-grp="work" id="gGviya" data-new="1"><b>📞 גבייה, יואל</b><small>דף שיואל מסמן, כל סימון מעדכן אותך</small></button>
   <button type="button" class="gt gLaw" data-grp="home" id="gLaw" hidden><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
   <button type="button" class="gt gShop" data-grp="home" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
+  <button type="button" class="gt gBoyGeorge" data-grp="home" id="gBoyGeorge" data-new="1" data-files="boy-george-ticket-1.jpeg,boy-george-ticket-2.jpeg" data-upd="f1793646431"><b>🎤 בוי ג׳ורג׳</b><small>שני הכרטיסים להופעה ב-7.11, מנורה מבטחים</small></button>
  </div>
 
 
@@ -4632,7 +4633,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='90d946ce1e';
+var CODE_ID='35f281ed8c';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12488,6 +12489,22 @@ function planSheet(){
 }
 on('gContentPlan',planSheet);
 on('gShopList',function(){window.open('https://docs.google.com/document/d/1A2tvet0ucYNDoDclswaVDybuL8bir3OAerRzXtDUEPU/edit','_blank','noopener');});
+on('gBoyGeorge',function(){
+ var old=document.getElementById('bgSheet');if(old)old.remove();
+ var w=document.createElement('div');w.id='bgSheet';w.className='ysheet';w.setAttribute('role','dialog');
+ w.innerHTML='<div class="ycard"><b>🎤 Boy George</b><small>We Will Dance Again, היכל מנורה מבטחים, תל אביב-יפו</small>'
+  +'<small>יום שבת 07.11.2026, פתיחת שערים 19:30, הופעה 21:00. יציע 11, שורה 7, כיסאות 86 ו-87</small>'
+  +'<button type="button" class="yb yb1" data-f="1">🎟 כרטיס 1</button>'
+  +'<button type="button" class="yb" data-f="2">🎟 כרטיס 2</button>'
+  +'<button type="button" class="yb yx" data-f="">סגירה</button></div>';
+ w.onclick=function(e){
+  if(e.target===w)return w.remove();
+  var k=e.target.closest&&e.target.closest('[data-f]');if(!k)return;
+  w.remove();var f=k.getAttribute('data-f');
+  if(f)fileOpen(f==='1'?'boy-george-ticket-1.jpeg':'boy-george-ticket-2.jpeg');
+ };
+ document.body.appendChild(w);
+});
 on('gGviya',function(){window.open('https://lolos.abaitzik.com/gviya/1abf2a1f563a0fb3a7/','_blank','noopener');});
 
 on('gOp',function(){pane('s');});

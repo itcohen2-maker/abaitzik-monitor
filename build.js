@@ -4372,6 +4372,7 @@ ${require('./lib/home-ui.js').html}
   <button type="button" class="gt gGviya" data-grp="work" id="gGviya" data-new="1"><b>📞 גבייה, יואל</b><small>דף שיואל מסמן, כל סימון מעדכן אותך</small></button>
   <button type="button" class="gt gLaw" data-grp="home" id="gLaw" hidden><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
   <button type="button" class="gt gShop" data-grp="home" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
+  <button type="button" class="gt gBoyGeorge" data-grp="home" id="gBoyGeorge" data-new="1" data-files="boy-george-ticket-1.jpeg,boy-george-ticket-2.jpeg"><b>🎤 בוי ג׳ורג׳</b><small>שני הכרטיסים להופעה ב-7.11, מנורה מבטחים</small></button>
   <!-- 12.10 alarm tile: moved 13.10 to the round icons, see gAlarm next to gStk. -->
   <!--
     איציק, 28.9, בהקלטה: "תסיר את כפתור תוכניות תוכן". הכפתור ירד ממסך הבית.
@@ -16299,6 +16300,22 @@ function planSheet(){
 }
 on('gContentPlan',planSheet);
 on('gShopList',function(){window.open('https://docs.google.com/document/d/1A2tvet0ucYNDoDclswaVDybuL8bir3OAerRzXtDUEPU/edit','_blank','noopener');});
+on('gBoyGeorge',function(){
+ var old=document.getElementById('bgSheet');if(old)old.remove();
+ var w=document.createElement('div');w.id='bgSheet';w.className='ysheet';w.setAttribute('role','dialog');
+ w.innerHTML='<div class="ycard"><b>🎤 Boy George</b><small>We Will Dance Again, היכל מנורה מבטחים, תל אביב-יפו</small>'
+  +'<small>יום שבת 07.11.2026, פתיחת שערים 19:30, הופעה 21:00. יציע 11, שורה 7, כיסאות 86 ו-87</small>'
+  +'<button type="button" class="yb yb1" data-f="1">🎟 כרטיס 1</button>'
+  +'<button type="button" class="yb" data-f="2">🎟 כרטיס 2</button>'
+  +'<button type="button" class="yb yx" data-f="">סגירה</button></div>';
+ w.onclick=function(e){
+  if(e.target===w)return w.remove();
+  var k=e.target.closest&&e.target.closest('[data-f]');if(!k)return;
+  w.remove();var f=k.getAttribute('data-f');
+  if(f)fileOpen(f==='1'?'boy-george-ticket-1.jpeg':'boy-george-ticket-2.jpeg');
+ };
+ document.body.appendChild(w);
+});
 on('gGviya',function(){window.open('https://lolos.abaitzik.com/gviya/1abf2a1f563a0fb3a7/','_blank','noopener');});
 // 15.10 Itzik: the stories archive tile came off the screen for good; its button and handler are gone.
 // (15.10 later: that line was a one line /* */ comment followed by code, and the build's comment
