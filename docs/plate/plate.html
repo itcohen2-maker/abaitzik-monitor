@@ -68,12 +68,12 @@
   return '<div class="card'+(i===0&&!it.approved?' first':'')+(it.onSite||it.posted?' done':'')+'" data-id="'+esc(it.id)+'">'
    +'<div class="media"><video src="'+esc(it.file)+'" poster="'+esc(it.poster)+'" controls playsinline preload="none"></video></div>'
    +'<div class="meta"><span class="k">'+(i+1)+(i===0&&!it.approved?' · הבא בתור':'')+'</span>'
-   +'<span class="nm">'+esc(it.name)+(it.posted?' · עלה היום':'')+'</span>'
+   +'<span class="nm">'+esc(it.name)+(it.posted?' · ✅ עלה היום':' · עוד לא עלה')+'</span>'
    +'<div class="row">'
    +'<button type="button" data-up="'+esc(it.id)+'"'+(i===0?' disabled':'')+' aria-label="למעלה">↑</button>'
    +'<button type="button" data-down="'+esc(it.id)+'"'+(i===len-1?' disabled':'')+' aria-label="למטה">↓</button>'
    +'<button type="button" data-dl="'+esc(it.file)+'" data-nm="'+esc(it.id)+'">⬇️ הורדה</button>'
-   +(it.posted?'':'<button type="button" data-posted="'+esc(it.id)+'">✅ עלה</button>')
+   +(it.posted?'':'<button type="button" data-posted="'+esc(it.id)+'">☐ סמן שהעליתי</button>')
    +'<button type="button" class="del" data-del="'+esc(it.id)+'">🗑️ מחק</button>'
    +'</div></div></div>';
  }
