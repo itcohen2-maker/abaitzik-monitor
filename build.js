@@ -17466,6 +17466,20 @@ document.getElementById('notePrint').onclick=function(){
  notes().forEach(function(x){if(x.id===noteOpen)n=x;});
  var txt=String(n&&n.text||'').trim();
  if(!txt){toast('הפתק ריק.');return;}
+ /*
+   Itzik, 2.11 (voice note): "שליחת פתק מהנייד להדפסה לא עובדת, רק מהמחשב".
+   The phone runs the monitor from its home screen, and there window.print
+   does nothing, the same as the photo print (fv-print). The share sheet is
+   the way to the printer: it carries the note as a page with a Print line.
+ */
+ var ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+ if(ios&&navigator.share&&navigator.canShare){
+  var pageHtml='<!doctype html><html lang="he" dir="rtl"><meta charset="utf-8"><title>'+esc(noteTitle(txt).head)+'</title>'
+   +'<body style="font:16px/1.6 Heebo,sans-serif;direction:rtl;color:#000;margin:24px"><h1 style="font-size:22px;margin:0 0 12px">'+esc(noteTitle(txt).head)+'</h1>'
+   +'<p style="white-space:pre-wrap;margin:0">'+esc(txt)+'</p></body></html>';
+  var pf=new File([pageHtml],(noteTitle(txt).head.replace(/[\\/:*?"<>|]/g,'').trim()||'פתק')+'.html',{type:'text/html'});
+  if(navigator.canShare({files:[pf]})){navigator.share({files:[pf],title:noteTitle(txt).head}).catch(function(){});return;}
+ }
  var old=document.getElementById('notePrintBox');if(old)old.remove();
  var d=document.createElement('div');d.id='notePrintBox';
  var h=document.createElement('h1');h.textContent=noteTitle(txt).head;

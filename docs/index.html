@@ -2729,7 +2729,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-02T19:06:37.421Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-02T19:07:24.616Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4632,7 +4632,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='d558318eda';
+var CODE_ID='90d946ce1e';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -13512,6 +13512,14 @@ document.getElementById('notePrint').onclick=function(){
  notes().forEach(function(x){if(x.id===noteOpen)n=x;});
  var txt=String(n&&n.text||'').trim();
  if(!txt){toast('הפתק ריק.');return;}
+ var ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+ if(ios&&navigator.share&&navigator.canShare){
+  var pageHtml='<!doctype html><html lang="he" dir="rtl"><meta charset="utf-8"><title>'+esc(noteTitle(txt).head)+'</title>'
+   +'<body style="font:16px/1.6 Heebo,sans-serif;direction:rtl;color:#000;margin:24px"><h1 style="font-size:22px;margin:0 0 12px">'+esc(noteTitle(txt).head)+'</h1>'
+   +'<p style="white-space:pre-wrap;margin:0">'+esc(txt)+'</p></body></html>';
+  var pf=new File([pageHtml],(noteTitle(txt).head.replace(/[\/:*?"<>|]/g,'').trim()||'פתק')+'.html',{type:'text/html'});
+  if(navigator.canShare({files:[pf]})){navigator.share({files:[pf],title:noteTitle(txt).head}).catch(function(){});return;}
+ }
  var old=document.getElementById('notePrintBox');if(old)old.remove();
  var d=document.createElement('div');d.id='notePrintBox';
  var h=document.createElement('h1');h.textContent=noteTitle(txt).head;
