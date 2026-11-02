@@ -389,6 +389,19 @@ const server = http.createServer(function (q, s) {
   // 1.11: client intake forms on form.it-solution.co.il (forms.js).
   const fm = u.pathname.match(/^\/f\/([a-f0-9]{16,40})\/?$/);
   if (fm && q.method === 'GET') { require('./forms.js').servePage(fm[1], s); return; }
+  // 2.11: sign a quote on the phone (sign.js), /q/<token>[/pdf|/signed] and /api/sign.
+  const qm = u.pathname.match(/^\/q\/([a-f0-9]{16,40})(?:\/(pdf|signed))?\/?$/);
+  if (qm && q.method === 'GET') { require('./sign.js').servePage(qm[1], qm[2], s); return; }
+  if (u.pathname === '/api/sign') {
+    if (q.method !== 'POST') { s.writeHead(405); return s.end(); }
+    readBody(q, 600000).then(function (raw) {
+      let b; try { b = JSON.parse(raw.toString('utf8')); } catch (e) { s.writeHead(400); return s.end('{}'); }
+      const ip = String(q.headers['x-forwarded-for'] || q.socket.remoteAddress || '').split(',')[0].trim();
+      const r = require('./sign.js').handlePost(b, formNotify, ip, q.headers['user-agent']);
+      s.writeHead(r.status, { 'Content-Type': 'application/json' }); s.end(JSON.stringify(r.body));
+    }).catch(function () { try { s.writeHead(400); s.end('{}'); } catch (e) {} });
+    return;
+  }
   // 1.11: client setup page (setup.js), /s/<token> and /api/setup.
   const sm = u.pathname.match(/^\/s\/([a-f0-9]{16,40})\/?$/);
   if (sm && q.method === 'GET') { require('./setup.js').servePage(sm[1], s); return; }
