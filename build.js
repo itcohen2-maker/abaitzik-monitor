@@ -17441,9 +17441,10 @@ document.getElementById('notePrint').onclick=function(){
  var p=document.createElement('p');p.textContent=txt;
  d.appendChild(h);d.appendChild(p);
  document.body.appendChild(d);document.body.classList.add('note-printing');
- function done(){document.body.classList.remove('note-printing');d.remove();window.removeEventListener('afterprint',done);}
- window.addEventListener('afterprint',done);
- setTimeout(function(){window.print();},50);
+ // 2.11: the box stays until the next print. On the phone afterprint can fire
+ // before the print sheet has taken the page, so removing it there printed nothing.
+ // On screen the box is hidden (only @media print shows it), so keeping it is harmless.
+ window.print();
 };
 // pointerdown keeps the marking alive: without it the tap on the button can
 // clear the selection on the iPhone before the click arrives.
