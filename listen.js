@@ -493,6 +493,8 @@ function heldWhy(text) {
   if (/^\s*ליד מהאתר/.test(String(text || ''))) return 'lead';
   // 1.11, Itzik: the Shachar waitlist is its own list, not a lead. A push, nothing in העסק שלי.
   if (/^\s*רשימת המתנה לשחר/.test(String(text || ''))) return 'waitlist';
+  // 3.11: the Shachar login screen could not sign someone in and kept the email (motivation-bot app/api/login-wait).
+  if (/^\s*ממתין לכניסה לשחר/.test(String(text || ''))) return 'login-wait';
   // 1.11: a 👎 or a hurt note from a Shachar tester (motivation-bot app/api/feedback).
   if (/^\s*משוב משחר/.test(String(text || ''))) return 'shachar-feedback';
   return /קוד\s*[0-9]{3,8}/.test(String(text || '')) ? 'wrong-code' : 'no-code';
@@ -526,6 +528,13 @@ function alertShacharFeedback(text) {
   try { require('./lib/shachar.js').handleRefresh(shachar.deps()).catch(() => {}); } catch (e) { say('!! משוב שחר: רענון נכשל ' + e.message); }
   ch.notify('🌅 משוב משחר צריך את תשומת לבך', body + '\nבמוניטור: 💼 העסק שלי ← עסקים ← "שחר: משוב מהנסיינים"', { urgent: true, priority: 5, tags: 'warning' })
     .then((r) => say('משוב שחר: התראה ' + (r.channel || 'בתור'))).catch((e) => say('!! משוב שחר: ההתראה נכשלה ' + e.message));
+}
+
+function alertLoginWait(text) {
+  const body = String(text || '').replace(/^\s*ממתין לכניסה לשחר[^\n]*\n?/, '');
+  try { require('./lib/shachar.js').handleRefresh(shachar.deps()).catch(() => {}); } catch (e) { say('!! ממתין לכניסה: רענון נכשל ' + e.message); }
+  ch.notify('🌅 מישהו לא הצליח להיכנס לשחר', body + '\nהמייל נשמר. ברגע שהכניסה תעבוד הוא יקבל קישור לבד.', { urgent: true, priority: 5, tags: 'warning' })
+    .then((r) => say('ממתין לכניסה: התראה ' + (r.channel || 'בתור'))).catch((e) => say('!! ממתין לכניסה: ההתראה נכשלה ' + e.message));
 }
 
 function alertWaitlist(text) {
@@ -624,6 +633,7 @@ function recordIncoming(m) {
     say((codeOk ? 'נרשם בצ׳אט עם אישור קבלה: ' : 'נרשם בלי קוד, ממתין לאימות: ') + text.slice(0, 60));
     if (rec.heldWhy === 'lead') { alertLead(text); saveSiteLead(text, rec.at); }
     if (rec.heldWhy === 'waitlist') alertWaitlist(text);
+    if (rec.heldWhy === 'login-wait') alertLoginWait(text);
     if (rec.heldWhy === 'shachar-feedback') alertShacharFeedback(text);
     recordDrain(text, at);
     /*

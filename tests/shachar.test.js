@@ -293,3 +293,32 @@ test('auto invite: more than 25 in a day stops, the rest wait and Itzik is told 
   await sh.handleRefresh(t.deps);
   assert.equal(t.notes.filter((n) => /עצרתי/.test(n[0])).length, 1);
 });
+
+// 3.11: who could not get in gets one "ready" mail, only once Supabase lets new people sign up.
+function readySetup(open) {
+  const t = setup({ mailToken: 'tok', apiInvites: [{ email: 'hagit@x.co' }, { email: 'itcohen2@gmail.com' }] });
+  const inner = t.deps.fetch;
+  t.deps.fetch = async (url, init) => {
+    if (String(url).includes('/auth/v1/settings')) { t.calls.push({ url, init: init || {} }); return { ok: true, status: 200, json: async () => ({ disable_signup: !open }) }; }
+    if (String(url).endsWith('/api/admin/login-wait')) { t.calls.push({ url, init }); return { ok: true, status: 200, json: async () => [{ email: 'wait@x.co' }] }; }
+    return inner(url, init);
+  };
+  return t;
+}
+const readyMails = (t) => t.calls.filter((c) => String(c.url).startsWith('https://api.forwardemail.net') && JSON.parse(c.init.body).subject === sh.READY_LETTER.subject);
+
+test('ready letters: nothing goes out while sign up is closed', async () => {
+  const t = readySetup(false);
+  await sh.handleRefresh(t.deps);
+  assert.equal(readyMails(t).length, 0);
+});
+
+test('ready letters: once open, the waiting and the invited get one mail each, never Itzik, never twice', async () => {
+  const t = readySetup(true);
+  await sh.handleRefresh(t.deps);
+  const to = readyMails(t).map((c) => JSON.parse(c.init.body).to).sort();
+  assert.deepEqual(to, ['hagit@x.co', 'wait@x.co']);
+  assert.ok(JSON.parse(readyMails(t)[0].init.body).html.includes('login?email='));
+  await sh.handleRefresh(t.deps);
+  assert.equal(readyMails(t).length, 2);
+});
