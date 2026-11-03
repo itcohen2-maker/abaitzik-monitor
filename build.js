@@ -976,6 +976,10 @@ function build() {
       if (fs.existsSync(f)) { payload.demo = JSON.parse(fs.readFileSync(f, 'utf8')); HEADS.demo = 0; }
     } catch (e) { console.error('demo: ' + e.message); }
   }
+  // 3.11.2026: a business customer's home tiles from his own data (lib/biz-home.js). Inside the sealed payload.
+  if (inst.bizHome) {
+    try { payload.bizHome = require('./lib/biz-home.js').view(inst.dataPath, __dirname); } catch (e) { console.error('bizHome: ' + e.message); }
+  }
   // A report's body is most of its weight, and only the newest few are read
   // off the card without opening the screen.
   const BODY_HEAD = 3;
@@ -1287,6 +1291,14 @@ const TENANT_TILES = {
   // 12.10, the small business records. A customer lists it in screens; Itzik's
   // own copy gets the tile from the shared block after the ITZIK one (bizTile).
   gBiz: ['g16', '💼 העסק שלי', 'לידים, לקוחות, כסף, ומה לחזור אליו'],
+  // 3.11.2026, Shai: the tiles he saw in the demo, from his own data (lib/biz-home.js, instance bizHome).
+  gBhMeet: ['g12', '🎙️ סיכומי פגישות', 'סיכום, החלטות ומשימות מכל פגישה'],
+  gBhClients: ['g16', '👥 הלקוחות שלי', 'מה פתוח מול כל לקוח, ומתי נפגשים'],
+  gBhCal: ['g15', '📅 פגישות ויומן', 'מה יש לי היום, ומה בהמשך'],
+  gBhMail: ['g11', '📧 מייל', 'מה חשוב, ולמי לחזור'],
+  gBhQuote: ['g13', '🧾 הצעות מחיר', 'הצעה עם הלוגו שלך, לפני מע״מ, ב PDF'],
+  // 3.11.2026, Itzik: a customer's own shopping list (lib/shop-list.js), not Itzik's shared doc.
+  gShopList: ['gShop', '🛒 קניות', 'הרשימה שלך, מסמנים מה נקנה'],
 };
 // With no screens chosen at intake, only the tiles that fit any work. The whole
 // catalog gave a phone only customer "connect the computer", a client follow up
@@ -1364,7 +1376,7 @@ function tenantTiles(inst) {
     const [cls, title, sub] = TENANT_TILES[id];
     // data-grp by visible label: only the two labels in the groups list get one.
     const grp = { gFiles: 'home', gBiz: 'work' }[id];
-    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261103-view"' : '') + (id === 'gTasks' ? ' data-upd="tasks-del-1024"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' || /^gBh|^gShopList$/.test(id) ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261103-view"' : '') + (id === 'gTasks' ? ' data-upd="tasks-del-1024"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
 }
 /*
@@ -2473,7 +2485,7 @@ ${require('./lib/approvals-ui.js').css}
 ${require('./lib/since-ui.js').css}
 ${require('./lib/activity-ui.js').css}
 ${require('./lib/home-ui.js').css}
-${inst.name === 'abaitzik' ? require('./lib/demo-mode.js').css : ''}
+${inst.name === 'abaitzik' ? require('./lib/demo-mode.js').css : ''}${inst.bizHome ? require('./lib/biz-home.js').css : ''}
 ${require('./lib/skins-ui.js').css}
 ${require('./lib/worlds-ui.js').css}
 ${pushUi.css}
@@ -16617,8 +16629,12 @@ function bizSheet(t0){
     ;
   }
   // 3.11, Itzik: "הזמנה לשחר", a message he can send in WhatsApp or by mail. The words of the post on the site.
-  var SH_INV_URL='https://abaitzik.com/shachar'; // 3.11: this path carries Shachar's share image (the home page carries the site's)
-  var SH_INV_TEXT='איזה כיף, יש עם מי לדבר, ויש מי שיעודד אותי, גם בימים הקשים 🌅\\nבעקבות המחלה שעברתי, ועדיין מתמודד עם החלמה קשה, אני יודע כמה צריך מישהו שירים אותך. אז בניתי משהו שאפשר לדבר איתו כל היום, ושייתן לך מוטיבציה.\\nשחר, האפליקציה שבניתי. פתוח עכשיו, נכנסים עם המייל כאן:';
+  // 3.11: the invitation is Itzik's own; a customer's copy keeps these empty (owner-cut test).
+  var SH_INV_URL='',SH_INV_TEXT='';
+/*ITZIK:BEGIN*/
+  SH_INV_URL='https://abaitzik.com/shachar'; // 3.11: this path carries Shachar's share image (the home page carries the site's)
+  SH_INV_TEXT='איזה כיף, יש עם מי לדבר, ויש מי שיעודד אותי, גם בימים הקשים 🌅\\nבעקבות המחלה שעברתי, ועדיין מתמודד עם החלמה קשה, אני יודע כמה צריך מישהו שירים אותך. אז בניתי משהו שאפשר לדבר איתו כל היום, ושייתן לך מוטיבציה.\\nשחר, האפליקציה שבניתי. פתוח עכשיו, נכנסים עם המייל כאן:';
+/*ITZIK:END*/
   function shacharHtml(){
    return '<div class="bzHead">🌅 שחר</div>'+shWaitHtml()
     +'<div class="bzSec">📤 הזמנה לשחר</div>'
@@ -20605,7 +20621,7 @@ ${require('./lib/activity-ui.js').js}
 on('gActLog',function(){pane('Lg');renderActLog();return false;});
 /*ITZIK:END*/
 ${require('./lib/home-ui.js').js}
-${inst.name === 'abaitzik' ? require('./lib/demo-mode.js').js : ''}
+${inst.name === 'abaitzik' ? require('./lib/demo-mode.js').js : ''}${inst.bizHome ? require('./lib/biz-home.js').js : ''}${inst.name !== 'abaitzik' ? require('./lib/shop-list.js').js : ''}
 ${require('./lib/skins-ui.js').js}
 ${require('./lib/worlds-ui.js').js}
 boot('worlds',worldSync);
