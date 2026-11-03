@@ -1364,7 +1364,7 @@ function tenantTiles(inst) {
     const [cls, title, sub] = TENANT_TILES[id];
     // data-grp by visible label: only the two labels in the groups list get one.
     const grp = { gFiles: 'home', gBiz: 'work' }[id];
-    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261101-back"' : '') + (id === 'gTasks' ? ' data-upd="tasks-del-1024"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261103-form3"' : '') + (id === 'gTasks' ? ' data-upd="tasks-del-1024"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
 }
 /*
@@ -16594,7 +16594,12 @@ function bizSheet(t0){
     +'<button type="button" class="yb" data-bz="anim" data-f="demo-script-shai.pdf">🎬 תסריט ההדגמה לשי (PDF)</button>'
     +'<div class="bzSec">שי בודק, יועץ עסקי</div>'
     // 3.11, Itzik: "לשלוח לו טופס מידע", the connections form (what he has, so we know what to connect).
-    +'<button type="button" class="yb yb1" data-bz="form2-shai">📋 טופס מידע לשי: לשלוח לו</button>'
+    // 3.11 evening, Itzik: "את טופס ההשלמה והחיבורים נמצא במוניטור? איפה?". He sends the completion form in the morning,
+    // the connections page after the signature. Shared or copied, never opened here: opening reports "שי פתח".
+    +'<button type="button" class="yb yb1" data-bz="form3-shai">📝 טופס השלמות לשי: לשלוח לו</button>'
+    +'<button type="button" class="yb yb2" data-bz="setup-shai">🔌 דף החיבורים לשי: לשלוח לו, אחרי חתימה</button>'
+    +'<a class="yb yb2" href="https://shai.it-solution.co.il/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">🖥️ המוניטור של שי</a>'
+    +'<button type="button" class="yb yb2" data-bz="form2-shai">📋 טופס המידע לשי, כבר מולא ✓</button>'
     +'<a class="yb yb2" href="https://form.it-solution.co.il/q/a9cf9d55064a85b58583/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 ההצעה לשי, כמו שהוא רואה אותה</a>'
     +'<button type="button" class="yb yb2" data-bz="sign-shai">✍️ הצעת מחיר לשי: לשלוח לחתימה בטלפון</button>'
     ;
@@ -16644,7 +16649,7 @@ function bizSheet(t0){
     +'<p class="bzEmpty">הציון למעלה מ 0 עד 100, 100 זה הכי טוב. כל ליד שלא נגעו בו שבוע מוריד 8 נקודות, הצעה שלא חזרו אליה 3 ימים מורידה 12, ותזכורת שהגיעה ולא טופלה מורידה 6.</p>';
   }
   // 2.11, Itzik: a tab with something new blinks until he opens it. The stamp changes whenever something is added there.
-  var BZ_UPD={its:'20261103-form2b',shachar:(D.shSum&&D.shSum.upd)||'20261103-shachar-auto'};
+  var BZ_UPD={its:'20261103-form3',shachar:(D.shSum&&D.shSum.upd)||'20261103-shachar-auto'};
   function bzSeen(){try{return JSON.parse(localStorage.getItem('bzTabSeen')||'{}');}catch(x){return {};}}
   function bzTabNew(k){return !!BZ_UPD[k]&&bzSeen()[k]!==BZ_UPD[k]&&k!==tab;}
   function bzMarkSeen(k){if(!BZ_UPD[k])return;var o=bzSeen();o[k]=BZ_UPD[k];try{localStorage.setItem('bzTabSeen',JSON.stringify(o));}catch(x){}}
@@ -16683,6 +16688,12 @@ function bizSheet(t0){
      else{try{navigator.clipboard.writeText(st+' '+su);toast('הקישור לחתימה הועתק. מדביקים לשי בוואטסאפ או במייל.');}catch(x){toast(su);}}
      return;}
     // 3.11: the connections form. Shared or copied, never opened here: opening it reports "שי פתח את טופס האפיון".
+    function shareShai(u,tt,title){
+     if(navigator.share){navigator.share({title:title,text:tt,url:u}).catch(function(){});}
+     else{try{navigator.clipboard.writeText(tt+' '+u);toast('הקישור הועתק. מדביקים לשי בוואטסאפ או במייל.');}catch(x){toast(u);}}
+    }
+    if(a==='form3-shai'){shareShai('https://form.it-solution.co.il/f/15939da3cf0776f57992','שי, תודה על הטופס! נשארו רק כמה פרטים קטנים כדי שנתחיל לחבר, כמה דקות:','עוד כמה פרטים, IT Solution');return;}
+    if(a==='setup-shai'){shareShai('https://form.it-solution.co.il/s/f3d4f77d1278a2a5efdc','שי, כאן מחברים את המוניטור לכלים שלך: המייל, פיירפליס, הפייסבוק והיומן. כל לחיצה נשמרת:','חיבור המוניטור, IT Solution');return;}
     if(a==='form2-shai'){var f2='https://form.it-solution.co.il/f/c94dc7fa0f53147ed133',f2t='שי, כדי שנחבר את המוניטור בדיוק למה שיש לך, הכנו טופס קצר. רוב השאלות רק לסמן, כ 5 דקות:';
      if(navigator.share){navigator.share({title:'טופס חיבורים, IT Solution',text:f2t,url:f2}).catch(function(){});}
      else{try{navigator.clipboard.writeText(f2t+' '+f2);toast('הקישור לטופס הועתק. מדביקים לשי בוואטסאפ או במייל.');}catch(x){toast(f2);}}
