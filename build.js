@@ -1364,7 +1364,7 @@ function tenantTiles(inst) {
     const [cls, title, sub] = TENANT_TILES[id];
     // data-grp by visible label: only the two labels in the groups list get one.
     const grp = { gFiles: 'home', gBiz: 'work' }[id];
-    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261103-form3"' : '') + (id === 'gTasks' ? ' data-upd="tasks-del-1024"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261103-view"' : '') + (id === 'gTasks' ? ' data-upd="tasks-del-1024"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
 }
 /*
@@ -16606,6 +16606,9 @@ function bizSheet(t0){
     // 3.11 evening, Itzik: "את טופס ההשלמה והחיבורים נמצא במוניטור? איפה?". He sends the completion form in the morning,
     // the connections page after the signature. Shared or copied, never opened here: opening reports "שי פתח".
     +'<button type="button" class="yb yb1" data-bz="form3-shai">📝 טופס השלמות לשי: לשלוח לו</button>'
+    // 3.11, Itzik: "אני רוצה לראות את הקובץ, תכין לי אחד בשבילי". Copies that save nothing and report nothing.
+    +'<button type="button" class="yb" data-bz="anim" data-f="shai-form3-view.html">👀 טופס ההשלמות, תצוגה בשבילך</button>'
+    +'<button type="button" class="yb" data-bz="anim" data-f="shai-setup-view.html">👀 דף החיבורים, תצוגה בשבילך</button>'
     +'<button type="button" class="yb yb2" data-bz="setup-shai">🔌 דף החיבורים לשי: לשלוח לו, אחרי חתימה</button>'
     +'<a class="yb yb2" href="https://shai.it-solution.co.il/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">🖥️ המוניטור של שי</a>'
     +'<button type="button" class="yb yb2" data-bz="form2-shai">📋 טופס המידע לשי, כבר מולא ✓</button>'
@@ -16658,7 +16661,7 @@ function bizSheet(t0){
     +'<p class="bzEmpty">הציון למעלה מ 0 עד 100, 100 זה הכי טוב. כל ליד שלא נגעו בו שבוע מוריד 8 נקודות, הצעה שלא חזרו אליה 3 ימים מורידה 12, ותזכורת שהגיעה ולא טופלה מורידה 6.</p>';
   }
   // 2.11, Itzik: a tab with something new blinks until he opens it. The stamp changes whenever something is added there.
-  var BZ_UPD={its:'20261103-form3',shachar:(D.shSum&&D.shSum.upd)||'20261103-shachar-auto'};
+  var BZ_UPD={its:'20261103-view',shachar:(D.shSum&&D.shSum.upd)||'20261103-shachar-auto'};
   function bzSeen(){try{return JSON.parse(localStorage.getItem('bzTabSeen')||'{}');}catch(x){return {};}}
   function bzTabNew(k){return !!BZ_UPD[k]&&bzSeen()[k]!==BZ_UPD[k]&&k!==tab;}
   function bzMarkSeen(k){if(!BZ_UPD[k])return;var o=bzSeen();o[k]=BZ_UPD[k];try{localStorage.setItem('bzTabSeen',JSON.stringify(o));}catch(x){}}
