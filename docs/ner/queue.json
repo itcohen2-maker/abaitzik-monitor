@@ -1,57 +1,5 @@
 [
  {
-  "name": "story-he-tue-0311",
-  "date": "2026-11-03",
-  "time": "20:00",
-  "kind": "story",
-  "lang": "he",
-  "city": "צפת",
-  "file": "media/story-he-tue-0311.mp4",
-  "caption": "",
-  "approved": true,
-  "posted": "18099522590426489",
-  "postedAt": "2026-11-03T18:01:21.662Z"
- },
- {
-  "name": "story-en-tue-0311",
-  "date": "2026-11-03",
-  "time": "20:00",
-  "kind": "story",
-  "lang": "en",
-  "city": "Montreal",
-  "file": "media/story-en-tue-0311.mp4",
-  "caption": "",
-  "approved": true,
-  "posted": "18087549044319936",
-  "postedAt": "2026-11-03T18:01:58.596Z"
- },
- {
-  "name": "post-he-tue-0311",
-  "date": "2026-11-03",
-  "time": "20:00",
-  "kind": "post",
-  "lang": "he",
-  "city": "אשדוד",
-  "file": "media/post-he-tue-0311.mp4",
-  "caption": "\"איזהו חכם? הלומד מכל אדם.\" (בן זומא, פרקי אבות)\n\nזמן הדלקת נרות וזמן הבדלה לכל עיר בעולם, ב 15 שפות, בחינם.\nהלינק בביו: candletimes.com\nזמני שבת בוואטסאפ, כל שישי בבוקר: https://whatsapp.com/channel/0029Vb9JzyM8F2pEgsmP3z3k\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #שבתשלום #נרנשמה #candletimes\n\nתמונות: ויקישיתוף, נחלת הכלל. מוזיקה: \"Wholesome\" by Kevin MacLeod (incompetech.com), CC BY 4.0.",
-  "approved": true,
-  "posted": "18149842477564388",
-  "postedAt": "2026-11-03T18:02:37.737Z"
- },
- {
-  "name": "post-en-tue-0311",
-  "date": "2026-11-03",
-  "time": "20:00",
-  "kind": "post",
-  "lang": "en",
-  "city": "Antwerp",
-  "file": "media/post-en-tue-0311.mp4",
-  "caption": "\"Love peace and pursue peace.\" (Hillel, Pirkei Avot)\n\nCandle lighting and Havdalah times for every city, in 15 languages, free.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #shabbatshalom #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Carefree\" by Kevin MacLeod (incompetech.com), CC BY 3.0.",
-  "approved": true,
-  "posted": "18083152499342449",
-  "postedAt": "2026-11-03T18:03:15.760Z"
- },
- {
   "name": "story-he-wed-0411",
   "date": "2026-11-04",
   "time": "20:00",
