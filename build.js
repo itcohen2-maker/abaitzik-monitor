@@ -14199,6 +14199,8 @@ function postSheet(it){
   h+='<h4>יוטיוב שורטס</h4>'+box(d.yt||'')+btn('📋 העתקת כותרת',d.yt||'')
    +box(d.ytd||'')+btn('📋 העתקת תיאור',d.ytd||'')+song(d.song||'','שיר')
    +'<div class="pnote">את השיר מוסיפים רק דרך כפתור הצליל באפליקציה</div>';
+  // 3.11, Itzik: ready messages to paste when someone writes (we answer only in messages, never in comments)
+  if(d.dm)d.dm.forEach(function(m){h+='<h4>💬 '+esc(m.t)+'</h4>'+box(m.x)+btn('📋 העתקת ההודעה',m.x);});
   if(d.spare)h+='<div class="psong">אם השיר לא נמצא: '+esc(d.spare)+'</div>'+btn('העתקת שם השיר',d.spare).replace('class="pcp"','class="pcp psm"');
   h+='<div class="pnote">שיר 15 עד 20 אחוז, צליל מקורי 100</div>';
   h+='<button type="button" class="plink" data-full="1">הטקסט המלא</button>'
