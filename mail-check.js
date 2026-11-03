@@ -104,12 +104,19 @@ function main() {
   fs.writeFileSync(STATE, JSON.stringify(state, null, 1));
 
   // No new mail: nothing is sent, no chat line, no push, no pop-up (Itzik, 16.10.2026).
+  // 3.11.2026: receipts are found by their own pass. The two-hour window missed every mail
+  // between 16:00 and 08:00 (Meta receipts of 1.11 and 2.11 were never printed). This pass
+  // looks back three days and remembers each receipt uid for good, so none is missed or doubled.
+  const billNote = billsPass();
   const k = fresh.length;
-  if (k === 0) return;
+  if (k === 0) {
+    if (billNote) say(now, state, `בדיקת מייל ${state.n} (${hm(now)}):${billNote}`, 'בדיקת מייל', 'חשבוניות');
+    return;
+  }
   const text = `בדיקת מייל ${state.n} (${hm(now)}): ${k} מיילים חדשים.\n` +
     fresh.slice(0, 8).map(r => `${r.from}: ${r.subject}`).join('\n') +
     (k > 8 ? `\nועוד ${k - 8}.` : '');
-  say(now, state, text + bills(fresh), 'בדיקת מייל', `${k} חדשים`);
+  say(now, state, text + billNote, 'בדיקת מייל', `${k} חדשים`);
 }
 
 /*
@@ -119,6 +126,22 @@ function main() {
   is printed). A customer is asked in the same chat line instead; nothing is collected unasked.
   A card statement (פירוט) is not an invoice. Returns the note for the chat line.
 */
+const BILLS = path.join(ROOT, 'data/status/bills-seen.json');
+function billsPass() {
+  let seen = [];
+  try { seen = JSON.parse(fs.readFileSync(BILLS, 'utf8')); } catch {}
+  let rows;
+  try {
+    rows = parseMail(execFileSync('/usr/bin/python3', ['-I', path.join(ROOT, 'tools/mail-search.py'), '--days', '3', '--limit', '150'],
+      { encoding: 'utf8', timeout: 300000 }));
+  } catch (e) { console.error('bills search failed:', String(e.message || e).slice(0, 300)); return ''; }
+  const fresh = rows.filter(r => !seen.includes(r.uid));
+  const note = bills(fresh);
+  const found = fresh.filter(r => RECEIPT.test(r.subject) && !NOT_RECEIPT.test(r.subject + ' ' + r.from));
+  if (found.length) fs.writeFileSync(BILLS, JSON.stringify(seen.concat(found.map(r => r.uid)).slice(-2000)));
+  return note;
+}
+
 function bills(fresh) {
   const found = fresh.filter(r => RECEIPT.test(r.subject) && !NOT_RECEIPT.test(r.subject + ' ' + r.from));
   if (!found.length) return '';
