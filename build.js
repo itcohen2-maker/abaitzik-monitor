@@ -1156,6 +1156,8 @@ function build() {
       catch (e) { throw new Error('inline script ' + i + ' does not parse: ' + e.message); }
     }
   }
+  // 3.11, IT Solution customers: the help, the quota and the admin request texts say "איציק"; a business customer sees adminName instead.
+  if (inst.adminName && inst.name !== 'abaitzik') html = html.replace(/(^|[^א-ת])([לשמו]?)איציק/g, (m, p, pre) => p + pre + inst.adminName);
   fs.mkdirSync(OUT_DIR, { recursive: true });
   fs.writeFileSync(path.join(OUT_DIR, 'index.html'), html, 'utf8');
   fs.writeFileSync(path.join(OUT_DIR, '.nojekyll'), '', 'utf8');
