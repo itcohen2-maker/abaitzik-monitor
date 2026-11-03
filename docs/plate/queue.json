@@ -140,7 +140,9 @@
     ]
    }
   ],
-  "onSite": false
+  "onSite": false,
+  "posted": true,
+  "postedAt": "2026-11-03T11:03:12.764Z"
  },
  {
   "id": "cherry",
