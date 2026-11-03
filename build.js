@@ -4363,7 +4363,7 @@ ${require('./lib/home-ui.js').html}
     is amirshwartz1's TikTok comment on the cake video (55 likes).
   -->
   <button type="button" class="gt gWin" data-grp="net" id="gWin" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
-  <button type="button" class="gt gReel" data-grp="net" id="gReels" data-upd="20261103-shachar-open"><b>🎬 הרילים שלי</b><small>חדש: כל סרטוני שחר מתוקנים, פתוח עכשיו</small></button>
+  <button type="button" class="gt gReel" data-grp="net" id="gReels" data-upd="20261103-33"><b>🎬 הרילים שלי</b><small>חדש: כל סרטוני שחר מתוקנים, פתוח עכשיו</small></button>
   <button type="button" class="gt gFut" data-grp="net" id="gFut" data-upd="20261103-futclean"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 21 איך נכנסים לאתר, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור, 08 שרירים והגיל, 09 קונטרה למינוס, 17 המבריק במדיח</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
@@ -14156,6 +14156,9 @@ var REEL_ITEMS=[
 {n:'שחר 32',t:'ריל: למי זה, תמיכה רגשית ועם מי לדבר · 4K הכי איכותי, לשמירה בגלריה',r:'reel-32-shachar-open.mp4'},
 {n:'שחר 32 כריכה',t:'הכריכה · 4K',r:'reel-32-cover.jpg'},
 {n:'שחר 32 פרסום',p:'32',t:'כיתוב, מוזיקה והאשטגים לכל רשת',r:'reel-32-post-open.txt'},
+{n:'שחר 33',t:'מודעה: ככה נראה הבוקר שלי · 4K הכי איכותי, לשמירה בגלריה',r:'reel-33-ad-morning.mp4'},
+{n:'שחר 33 כריכה',t:'הכריכה · 4K',r:'reel-33-cover.png'},
+{n:'שחר 33 פרסום',p:'33',t:'כיתוב, מוזיקה והאשטגים לכל רשת',r:'reel-33-post.txt'},
 {n:'33',t:'סוכר, מיתוס: שופך סוכר עם שייק ומדבקת מיתוס, ועד 13 סוגי סרטן · 4K הכי איכותי, לשמירה בגלריה',r:'reel-33-sugar.mp4'},
 {n:'33ב',t:'מתוקן: המדבקה עפה פנימה ונדבקת עם שייק, חצי שנייה עצירה אחרי השאלה, חולה באדום, אפסיק, הכיתוב רק כשאתה מדבר, משפטים מלאים · 4K הכי איכותי, לשמירה בגלריה',r:'reel-33b-sugar.mp4'},
 {n:'33ג',t:'מתוקן: מיתוס כחותמת דיו שנדבקת חזק עם רעד מסביב, וההוק נצבע באדום מילה אחרי מילה · 4K הכי איכותי, לשמירה בגלריה',r:'reel-33c-sugar.mp4'},
