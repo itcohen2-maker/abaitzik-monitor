@@ -2730,7 +2730,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-03T08:14:09.678Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-03T08:26:45.361Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4630,7 +4630,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='78083bcde0';
+var CODE_ID='24d948c245';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12654,7 +12654,7 @@ function bizSheet(t0){
     +'<button type="button" class="yb yb2" data-bz="sign-shai">✍️ הצעת מחיר לשי: לשלוח לחתימה בטלפון</button>'
     ;
   }
-  var SH_INV_URL='https://abaitzik.com';
+  var SH_INV_URL='https://abaitzik.com/shachar'; // 3.11: this path carries Shachar's share image (the home page carries the site's)
   var SH_INV_TEXT='איזה כיף, יש עם מי לדבר, ויש מי שיעודד אותי, גם בימים הקשים 🌅\nבעקבות המחלה שעברתי, ועדיין מתמודד עם החלמה קשה, אני יודע כמה צריך מישהו שירים אותך. אז בניתי משהו שאפשר לדבר איתו כל היום, ושייתן לך מוטיבציה.\nשחר, האפליקציה שאני בונה. בקשת כניסה דרך האתר:';
   function shacharHtml(){
    return '<div class="bzHead">🌅 שחר</div>'+shWaitHtml()

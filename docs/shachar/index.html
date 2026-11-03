@@ -48,7 +48,11 @@
   textarea{min-height:230px;resize:vertical}
   .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
   .msg{margin:10px 0 0;min-height:1.4em;color:var(--dim);font-size:15px}
-  .wlNew{border:2px solid #f59e0b;background:#fff8e6}
+  .wlNew{border:2px solid var(--sun)}
+  details.done{margin-top:10px}
+  details.done>summary{min-height:44px;display:flex;align-items:center;cursor:pointer;color:var(--dim);font-size:16px}
+  .line{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid var(--line)}
+  .line .btn{min-height:40px;padding:0 12px;font-size:15px}
   .empty{color:var(--faint);font-size:15px;margin:8px 0 0}
 </style>
 </head>
@@ -60,6 +64,37 @@
   </header>
 
   <a class="open" href="https://shachar.abaitzik.com" target="_blank" rel="noopener">לפתוח את שחר</a>
+
+  <section id="invite">
+    <h2>להזמין חבר לשחר</h2>
+    <div class="card">
+      <img src="invite.png?v=0311" alt="תמונת ההזמנה: שחר, איזה כיף יש עם מי לדבר" style="width:100%;border-radius:10px">
+      <p id="invText" style="margin:10px 0 0">איזה כיף, יש עם מי לדבר, ויש מי שיעודד אותי, גם בימים הקשים 🌅
+בעקבות המחלה שעברתי, ועדיין מתמודד עם החלמה קשה, אני יודע כמה צריך מישהו שירים אותך. אז בניתי משהו שאפשר לדבר איתו כל היום, ושייתן לך מוטיבציה.
+שחר, האפליקציה שאני בונה. בקשת כניסה דרך האתר:
+https://abaitzik.com/shachar</p>
+      <button type="button" class="btn main wide" id="invShare">שליחה לחבר</button>
+      <div class="acts">
+        <a class="btn" id="invMsgr" href="fb-messenger://share/?link=https%3A%2F%2Fabaitzik.com%2Fshachar">מסנג׳ר</a>
+        <a class="btn" id="invWa" href="#">וואטסאפ</a>
+        <button type="button" class="btn" id="invCopy">העתקה</button>
+      </div>
+      <p class="msg" id="invMsg" role="status" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <script>
+  (function(){
+    var url='https://abaitzik.com/shachar', text=document.getElementById('invText').textContent.trim(), msg=document.getElementById('invMsg');
+    document.getElementById('invWa').href='https://wa.me/?text='+encodeURIComponent(text);
+    function copy(){ (navigator.clipboard?navigator.clipboard.writeText(text):Promise.reject()).then(function(){msg.textContent='הועתק. אפשר להדביק בכל צ׳אט.';},function(){msg.textContent='לא הצלחתי להעתיק, אפשר לסמן את הטקסט ולהעתיק.';}); }
+    document.getElementById('invCopy').onclick=copy;
+    document.getElementById('invShare').onclick=function(){
+      if(navigator.share){ navigator.share({title:'שחר',text:text.replace(url,'').trim(),url:url}).catch(function(){}); }
+      else copy();
+    };
+  })();
+  </script>
 
   <section>
     <div class="row"><h2>רשימת המתנה, לפי סדר ההרשמה</h2><button type="button" class="btn" id="refresh">רענון</button></div>
@@ -139,36 +174,6 @@
   })();
   </script>
 
-  <section id="invite">
-    <h2>להזמין חבר לשחר</h2>
-    <div class="card">
-      <img src="invite.png?v=0311" alt="תמונת ההזמנה: שחר, איזה כיף יש עם מי לדבר" style="width:100%;border-radius:10px">
-      <p id="invText" style="margin:10px 0 0">איזה כיף, יש עם מי לדבר, ויש מי שיעודד אותי, גם בימים הקשים 🌅
-בעקבות המחלה שעברתי, ועדיין מתמודד עם החלמה קשה, אני יודע כמה צריך מישהו שירים אותך. אז בניתי משהו שאפשר לדבר איתו כל היום, ושייתן לך מוטיבציה.
-שחר, האפליקציה שאני בונה. בקשת כניסה דרך האתר:
-https://abaitzik.com</p>
-      <button type="button" class="btn main wide" id="invShare">שליחה לחבר</button>
-      <div class="acts">
-        <a class="btn" id="invMsgr" href="fb-messenger://share/?link=https%3A%2F%2Fabaitzik.com">מסנג׳ר</a>
-        <a class="btn" id="invWa" href="#">וואטסאפ</a>
-        <button type="button" class="btn" id="invCopy">העתקה</button>
-      </div>
-      <p class="msg" id="invMsg" role="status" aria-live="polite"></p>
-    </div>
-  </section>
-
-  <script>
-  (function(){
-    var url='https://abaitzik.com', text=document.getElementById('invText').textContent.trim(), msg=document.getElementById('invMsg');
-    document.getElementById('invWa').href='https://wa.me/?text='+encodeURIComponent(text);
-    function copy(){ (navigator.clipboard?navigator.clipboard.writeText(text):Promise.reject()).then(function(){msg.textContent='הועתק. אפשר להדביק בכל צ׳אט.';},function(){msg.textContent='לא הצלחתי להעתיק, אפשר לסמן את הטקסט ולהעתיק.';}); }
-    document.getElementById('invCopy').onclick=copy;
-    document.getElementById('invShare').onclick=function(){
-      if(navigator.share){ navigator.share({title:'שחר',text:text.replace(url,'').trim(),url:url}).catch(function(){}); }
-      else copy();
-    };
-  })();
-  </script>
 
   
 
@@ -388,15 +393,19 @@ https://abaitzik.com</p>
   $('wlAt').textContent=D.waitlistAt?'עודכן '+day(D.waitlistAt):'עוד לא נטען';
   $('how').textContent=D.mailAuto?'לחיצה אחת מאשרת את המייל ושולחת לנסיין את המכתב מהכתובת של שחר.':'לחיצה אחת מאשרת את המייל ופותחת בג׳ימייל את המכתב, ורק נשאר ללחוץ שליחה.';
   $('go').textContent=D.mailAuto?'להזמין ולשלוח מכתב':'להזמין ולפתוח מכתב';
-  $('wl').innerHTML=D.waitlist.length?D.waitlist.slice().sort(function(a,b){return String(a.created_at).localeCompare(String(b.created_at));}).map(function(w,i){
-   return '<div class="card'+(w.invited?'':' wlNew')+'"><div class="row"><div><div class="em">'+(i+1)+'. '+esc(w.email)+'</div><div class="meta">נרשם '+esc(day(w.created_at))+'</div></div>'+actions(w.email)+'</div>'
+  // 3.11, Itzik: "גליל ארוך שאין לי מה לעשות איתו". Only who still waits is a card; who was
+  // already invited folds into one closed line, opened only when he wants it.
+  var wl=D.waitlist.slice().sort(function(a,b){return String(a.created_at).localeCompare(String(b.created_at));});
+  var todo=wl.filter(function(w){return status(w.email)!=='invited';}),done=wl.filter(function(w){return status(w.email)==='invited';});
+  function line(email,when){return '<div class="line"><div><div class="em">'+esc(email)+'</div><div class="meta">'+esc(when)+'</div></div>'+actions(email)+'</div>';}
+  $('wl').innerHTML=(todo.length?todo.map(function(w,i){
+   return '<div class="card wlNew"><div class="row"><div><div class="em">'+(i+1)+'. '+esc(w.email)+'</div><div class="meta">נרשם '+esc(day(w.created_at))+'</div></div>'+actions(w.email)+'</div>'
     +'<div class="acts">'+tags(w.email)+'</div></div>';
-  }).join(''):'<p class="empty">אין אף אחד ברשימה.</p>';
-  $('inv').innerHTML=D.invites.length?D.invites.map(function(x){
-   return '<div class="card"><div class="row"><div class="em">'+esc(x.email)+'</div>'+actions(x.email)+'</div>'
-    +'<div class="meta">'+esc(day(x.at))+(x.note?' · '+esc(x.note):'')+'</div>'
-    +'<div class="acts">'+tags(x.email)+'</div></div>';
-  }).join(''):'<p class="empty">עוד לא הזמנת אף אחד.</p>';
+  }).join(''):'<p class="empty">'+(wl.length?'אין אף אחד שמחכה להזמנה.':'אין אף אחד ברשימה.')+'</p>')
+   +(done.length?'<details class="done"><summary>כבר הוזמנו ('+done.length+') · הוזמן ✓ המכתב נשלח ✓</summary>'+done.map(function(w){return line(w.email,'נרשם '+day(w.created_at));}).join('')+'</details>':'');
+  $('inv').innerHTML=D.invites.length?'<details class="done"><summary>כל ההזמנות ('+D.invites.length+')</summary>'+D.invites.map(function(x){
+   return line(x.email,day(x.at)+(x.note?' · '+x.note:''));
+  }).join('')+'</details>':'<p class="empty">עוד לא הזמנת אף אחד.</p>';
  }
 
  // One tap: approve the email and deliver the letter. With server mail the server sends it;

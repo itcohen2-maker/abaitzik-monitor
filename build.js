@@ -16495,7 +16495,7 @@ function bizSheet(t0){
     ;
   }
   // 3.11, Itzik: "הזמנה לשחר", a message he can send in WhatsApp or by mail. The words of the post on the site.
-  var SH_INV_URL='https://abaitzik.com';
+  var SH_INV_URL='https://abaitzik.com/shachar'; // 3.11: this path carries Shachar's share image (the home page carries the site's)
   var SH_INV_TEXT='איזה כיף, יש עם מי לדבר, ויש מי שיעודד אותי, גם בימים הקשים 🌅\\nבעקבות המחלה שעברתי, ועדיין מתמודד עם החלמה קשה, אני יודע כמה צריך מישהו שירים אותך. אז בניתי משהו שאפשר לדבר איתו כל היום, ושייתן לך מוטיבציה.\\nשחר, האפליקציה שאני בונה. בקשת כניסה דרך האתר:';
   function shacharHtml(){
    return '<div class="bzHead">🌅 שחר</div>'+shWaitHtml()
