@@ -16515,8 +16515,6 @@ function bizSheet(t0){
     +'<button type="button" class="yb" data-bz="anim" data-f="demo-script-shai.pdf">🎬 תסריט ההדגמה לשי (PDF)</button>'
     +'<div class="bzSec">שי בודק, יועץ עסקי</div>'
     +'<a class="yb yb2" href="https://form.it-solution.co.il/q/a9cf9d55064a85b58583/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 ההצעה לשי, כמו שהוא רואה אותה</a>'
-    // 2.11, Itzik: send the view link to someone for a second opinion. /view never reports an open and cannot sign.
-    +'<a class="yb wa" href="https://wa.me/?text=%D7%A8%D7%95%D7%A6%D7%94%20%D7%9C%D7%A9%D7%9E%D7%95%D7%A2%20%D7%9E%D7%94%20%D7%90%D7%AA%D7%94%20%D7%97%D7%95%D7%A9%D7%91%20%D7%A2%D7%9C%20%D7%94%D7%A6%D7%A2%D7%AA%20%D7%94%D7%9E%D7%97%D7%99%D7%A8%20%D7%94%D7%96%D7%90%D7%AA%20%28%D7%AA%D7%A6%D7%95%D7%92%D7%94%20%D7%91%D7%9C%D7%91%D7%93%2C%20%D7%90%D7%99%20%D7%90%D7%A4%D7%A9%D7%A8%20%D7%9C%D7%97%D7%AA%D7%95%D7%9D%20%D7%9E%D7%9E%D7%A0%D7%94%29%3A%20https%3A//form.it-solution.co.il/q/a9cf9d55064a85b58583/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">💬 לשלוח את ההצעה בוואטסאפ להתייעצות</a>'
     +'<button type="button" class="yb yb2" data-bz="sign-shai">✍️ הצעת מחיר לשי: לשלוח לחתימה בטלפון</button>'
     // 3.11, Itzik: "לשלוח לו טופס מידע", the connections form (what he has, so we know what to connect).
     +'<button type="button" class="yb yb1" data-bz="form2-shai">📋 טופס מידע לשי: לשלוח לו</button>'
