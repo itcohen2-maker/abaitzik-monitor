@@ -12,8 +12,11 @@
       choose?: { q, options: [...] },          one choice
       copy?:   { label, value },               a value to copy (our business ID)
       link?:   { label, url },                 a button that opens a page
-      done?:   "label of the done button" } ] }
-  data/setup/<token>.json      { steps: { id: { choice?, done? } }, openedAt, updatedAt, finishedAt }
+      done?:   "label of the done button",
+      input?:  { label, placeholder?, hint? }  3.11: the client pastes a key (Gmail app password,
+                                               Fireflies API key). Saved only in <token>.secrets.json
+                                               (mode 600), never shown back, never sent in a report. } ] }
+  data/setup/<token>.json      { steps: { id: { choice?, done?, got? } }, openedAt, updatedAt, finishedAt }
 */
 const fs = require('fs');
 const path = require('path');
@@ -24,14 +27,20 @@ function def(tok) { try { return JSON.parse(fs.readFileSync(path.join(DIR, tok +
 function state(tok) { try { return JSON.parse(fs.readFileSync(path.join(DIR, tok + '.json'), 'utf8')); } catch (e) { return { steps: {} }; } }
 function saveState(tok, s) { fs.mkdirSync(DIR, { recursive: true }); fs.writeFileSync(path.join(DIR, tok + '.json.tmp'), JSON.stringify(s, null, 1)); fs.renameSync(path.join(DIR, tok + '.json.tmp'), path.join(DIR, tok + '.json')); }
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
-function complete(st, s) { const x = (s.steps || {})[st.id] || {}; return st.done ? !!x.done : (st.choose ? !!x.choice : false); }
+function saveSecret(tok, id, v) {
+  const f = path.join(DIR, tok + '.secrets.json');
+  let o = {}; try { o = JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) {}
+  o[id] = { value: v, at: new Date().toISOString() };
+  fs.writeFileSync(f + '.tmp', JSON.stringify(o, null, 1), { mode: 0o600 }); fs.renameSync(f + '.tmp', f); fs.chmodSync(f, 0o600);
+}
+function complete(st, s) { const x = (s.steps || {})[st.id] || {}; return st.input ? !!x.got : (st.done ? !!x.done : (st.choose ? !!x.choice : false)); }
 
 function summary(d, s) {
   const NL = '\n';
   let t = 'דף הקמה: ' + d.client + NL;
   d.steps.forEach((st) => {
     const x = (s.steps || {})[st.id] || {};
-    t += (complete(st, s) ? '✓ ' : '○ ') + st.title + (x.choice ? ': ' + x.choice : '') + NL;
+    t += (complete(st, s) ? '✓ ' : '○ ') + st.title + (x.choice ? ': ' + x.choice : '') + (x.got ? ' (המפתח התקבל)' : '') + NL;
   });
   return t;
 }
@@ -44,6 +53,10 @@ function card(st, i, s) {
   if (st.choose) h += '<p class="cq">' + esc(st.choose.q) + '</p><div class="ops">' + st.choose.options.map((o) => '<button type="button" class="op' + (x.choice === o ? ' on' : '') + '">' + esc(o) + '</button>').join('') + '</div>';
   if (st.copy) h += '<div class="cp"><span>' + esc(st.copy.label) + '</span><b dir="ltr">' + esc(st.copy.value) + '</b><button type="button" class="cpb" data-v="' + esc(st.copy.value) + '">העתקה</button></div>';
   if (st.link) h += '<a class="lk" href="' + esc(st.link.url) + '" target="_blank" rel="noopener">' + esc(st.link.label) + ' ↗</a>';
+  if (st.input) h += '<div class="in" data-got="' + (x.got ? 1 : 0) + '"><p class="cq">' + esc(st.input.label) + '</p>'
+    + (st.input.hint ? '<p class="ih">' + esc(st.input.hint) + '</p>' : '')
+    + '<div class="ir"><input type="text" dir="ltr" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="' + esc(st.input.placeholder || '') + '"><button type="button" class="sv">שמירה</button></div>'
+    + '<p class="ig">' + (x.got ? '✓ התקבל ונשמר במקום מאובטח. כדי להחליף, להדביק שוב.' : '') + '</p></div>';
   if (st.done) h += '<button type="button" class="dn' + (x.done ? ' on' : '') + '">' + (x.done ? '✓ ' : '') + esc(st.done) + '</button>';
   return h + '</section>';
 }
@@ -72,6 +85,9 @@ function page(tok, d, s) {
     + '.cpb{border:0;border-radius:10px;background:#0f1b2a;color:#fff;font:700 14px Heebo;padding:9px 14px;cursor:pointer;min-height:40px}'
     + '.lk{display:block;text-align:center;text-decoration:none;border:1.5px solid #0f1b2a;color:#0f1b2a;border-radius:14px;padding:12px;font:700 15.5px Heebo;margin:0 0 10px}'
     + '.dn{display:block;width:100%;border:0;border-radius:14px;background:#06b6d4;color:#0f1b2a;font:800 16px Heebo;padding:13px;cursor:pointer;min-height:48px}.dn.on{background:#e0f7fb;color:#0e7490}'
+    + '.in{background:#f1f5f9;border-radius:12px;padding:10px 12px;margin:0 0 10px}.in .cq{margin:0 0 6px}.ih{font:500 13px/1.5 Heebo;color:#4a5a6e;margin:0 0 8px}'
+    + '.ir{display:flex;gap:8px}.ir input{flex:1;min-width:0;border:1.5px solid #cbd5e1;border-radius:10px;padding:10px;font:500 16px monospace;background:#fff}'
+    + '.sv{border:0;border-radius:10px;background:#0f1b2a;color:#fff;font:700 15px Heebo;padding:0 16px;min-height:44px;cursor:pointer}.ig{font:600 13.5px Heebo;color:#0e7490;margin:8px 0 0}'
     + '.fin{display:block;width:100%;border:0;border-radius:16px;background:#0f1b2a;color:#fff;font:800 18px Heebo;padding:16px;margin-top:8px;cursor:pointer}'
     + '.saved{font:500 13px Heebo;color:#6b7c90;text-align:center;margin-top:10px}'
     + '.thanks{display:none;text-align:center;padding:60px 20px}.thanks b{display:block;font:900 26px Heebo;margin-bottom:8px}.thanks p{font:400 16px/1.6 Heebo;color:#24364b}'
@@ -86,10 +102,12 @@ function page(tok, d, s) {
     + 'function post(o){o.t=T;return fetch("/api/setup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(o)}).then(function(r){if(!r.ok)throw 0;return r.json();});}'
     + 'function msg(t){document.getElementById("saved").textContent=t;}'
     + 'function paint(){var n=C.filter(function(c){return c.classList.contains("ok");}).length;document.getElementById("bar").style.width=Math.round(n/C.length*100)+"%";document.getElementById("cnt").textContent=n+" מתוך "+C.length+" מוכנים";}'
-    + 'function ok(c){var dn=c.querySelector(".dn");c.classList.toggle("ok",dn?dn.classList.contains("on"):!!c.querySelector(".op.on"));paint();}'
+    + 'function ok(c){var dn=c.querySelector(".dn"),inp=c.querySelector(".in");c.classList.toggle("ok",inp?inp.getAttribute("data-got")==="1":(dn?dn.classList.contains("on"):!!c.querySelector(".op.on")));paint();}'
     + 'C.forEach(function(c){var id=c.getAttribute("data-id");c.addEventListener("click",function(e){'
     + 'var b=e.target.closest(".op");if(b){c.querySelectorAll(".op.on").forEach(function(x){if(x!==b)x.classList.remove("on");});b.classList.add("on");ok(c);post({id:id,choice:b.textContent}).then(function(){msg("נשמר ✓");},function(){msg("אין חיבור כרגע. נסו שוב בעוד רגע.");});return;}'
     + 'var p=e.target.closest(".cpb");if(p){var v=p.getAttribute("data-v");(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(function(){p.textContent="הועתק ✓";},function(){p.textContent=v;});return;}'
+    + 'var sv=e.target.closest(".sv");if(sv){var box=c.querySelector(".in"),f=box.querySelector("input"),g=box.querySelector(".ig"),v=f.value.trim();if(!v){g.textContent="צריך להדביק קודם";return;}sv.disabled=true;g.textContent="שומר...";'
+    + 'post({id:id,secret:v}).then(function(){f.value="";box.setAttribute("data-got","1");g.textContent="✓ התקבל ונשמר במקום מאובטח. כדי להחליף, להדביק שוב.";sv.disabled=false;ok(c);msg("נשמר ✓");},function(){sv.disabled=false;g.textContent="לא נשמר. נסו שוב בעוד רגע.";});return;}'
     + 'var d=e.target.closest(".dn");if(d){var on=!d.classList.contains("on");d.classList.toggle("on",on);d.textContent=(on?"✓ ":"")+d.textContent.replace(/^✓ /,"");ok(c);post({id:id,done:on}).then(function(){msg("נשמר ✓");},function(){msg("אין חיבור כרגע. נסו שוב בעוד רגע.");});}'
     + '});});'
     + 'document.getElementById("fin").onclick=function(){var b=this;b.disabled=true;b.textContent="שולח...";post({finish:true}).then(function(){document.body.classList.add("sent");window.scrollTo(0,0);},function(){b.disabled=false;b.textContent="לא נשלח, לנסות שוב";});};'
@@ -125,6 +143,11 @@ function handlePost(b, notify) {
   const x = s.steps[st.id] = s.steps[st.id] || {};
   if (typeof b.choice === 'string' && st.choose && st.choose.options.indexOf(b.choice) > -1) x.choice = b.choice;
   if (typeof b.done === 'boolean' && st.done) x.done = b.done;
+  if (typeof b.secret === 'string' && st.input) {
+    const v = b.secret.trim();
+    if (!v || v.length > 400) return { status: 400, body: { error: 'secret' } };
+    saveSecret(tok, st.id, v); x.got = now;
+  }
   s.updatedAt = now; s.reported = false; saveState(tok, s);
   return { status: 200, body: { ok: true } };
 }
