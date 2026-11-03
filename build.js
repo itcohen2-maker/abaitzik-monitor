@@ -489,7 +489,7 @@ function build() {
   const remGone = ((require('./lib/notes-sync.js').read(path.join(inst.dataPath, 'notes', 'notes')) || {}).remGone) || {};
   const reminders = loadDocs('reminders')
     .map(x => ({ at: x.at, due: x.due || '', text: x.text || '',
-                 sentAt: x.sentAt || '', task: x.task || '' }))
+                 sentAt: x.sentAt || '', task: x.task || '', nag: !!x.nag }))
     .filter(x => !remGone[(x.at || '') + '|' + (x.due || '')])
     .sort((a, b) => ((a.due || '') < (b.due || '') ? -1 : 1));
   /*
@@ -4253,6 +4253,8 @@ ${require('./lib/home-ui.js').html}
  <div id="askBox"></div>
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
+  <!-- 3.11, Itzik: "אני צריך אריח שממש יעבב לי, כמו ליד חדש". First on the grid; shows while a --nag reminder is open, hard blink once it is due, until "✅ עשיתי". -->
+  <button type="button" class="gt g16 leadNew" id="gRemTop" hidden><b>⏰ תזכורת</b><small></small></button>
   <!-- 1.11, Itzik: "ביקשתי אייקון של שחר במוניטור כבר כמה פעמים". First on the grid, so it is seen. -->
   <button type="button" class="gt gNer" data-grp="net" id="gShachar" data-new="1" data-upd="${shState().upd}"><b><img src="icons/shachar.png" alt="" style="height:1.1em;vertical-align:-0.2em;border-radius:4px"> שחר</b><small>${shTileSmall()}</small></button>
   <button type="button" class="gt gStory" data-grp="proj" id="gPegasus" data-new="1" data-upd="20261031-peg-status"><b>🐎 פגסוס</b><small>רק ההודעה האחרונה והשאלה שמחכה לך, הישנות נעלמות</small></button>
@@ -12117,7 +12119,27 @@ function remHot(r){
  var u=Date.parse(r.due),now=Date.now();
  return !isNaN(u)&&now>=u&&now<u+3*864e5&&!remKnown()[remKey(r)];
 }
+function remTopList(){return remLive().filter(function(r){return r.nag;}).sort(function(a,b){return Date.parse(a.due)-Date.parse(b.due);});}
+function remTopSeen(){try{return JSON.parse(localStorage.getItem('remTopSeen')||'{}');}catch(e){return {};}}
+function remWhen(iso){try{var d=new Date(iso),t=d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Jerusalem'}),k=function(x){return x.toLocaleDateString('he-IL',{timeZone:'Asia/Jerusalem'});};
+ if(k(d)===k(new Date()))return 'היום '+t;return d.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'})+' '+t;}catch(e){return '';}}
+function remTopPaint(){
+ var t=document.getElementById('gRemTop');if(!t)return;
+ var L=remTopList();t.hidden=!L.length;if(!L.length)return;
+ var now=Date.now(),due=L.filter(function(r){return Date.parse(r.due)<=now;}),r=due[0]||L[0],s=remTopSeen();
+ t.classList.toggle('lnSeen',!due.length||due.every(function(x){return s[remKey(x)];}));
+ t.querySelector('b').textContent=due.length?'⏰ עכשיו: '+r.text:'⏰ תזכורת';
+ t.querySelector('small').textContent=due.length?(due.length>1?'ועוד '+(due.length-1)+' · ':'')+'לחיצה, ואז ✅ עשיתי':remWhen(r.due)+': '+r.text;
+}
+(function(){
+ function go(){var t=document.getElementById('gRemTop');if(!t)return;
+  t.onclick=function(){var s=remTopSeen(),now=Date.now();remTopList().forEach(function(r){if(Date.parse(r.due)<=now)s[remKey(r)]=1;});
+   try{localStorage.setItem('remTopSeen',JSON.stringify(s));}catch(e){}remTopPaint();pane('R');renderReminders();};
+  try{remTopPaint();}catch(e){}setInterval(function(){try{remTopPaint();}catch(e){}},30000);}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else setTimeout(go,0);
+})();
 function remBlink(){
+ try{remTopPaint();}catch(e){}
  var b=document.getElementById('gRemind');
  if(b)b.classList.toggle('taskblink',remLive().some(remHot));
 }
@@ -12135,7 +12157,8 @@ function renderReminders(){
  };
  host.innerHTML=R.length?R.map(function(r){
   return '<div class="rem'+(r.sentAt?' remsent':'')+'"><b>'+esc(r.text)+'</b>'
-   +'<div class="w">'+(r.sentAt?'נשלחה '+esc(day(r.sentAt)):'תקפוץ '+esc(day(r.due))+' בתשע בבוקר')+'</div>'
+   +'<div class="w">'+(r.sentAt?'נשלחה '+esc(day(r.sentAt)):'תקפוץ '+esc(remWhen(r.due)))+'</div>'
+   +(r.nag&&Date.parse(r.due)<=Date.now()?'<button type="button" class="remdone" data-k="'+esc(remKey(r))+'">✅ עשיתי</button>':'')
    +(remHot(r)?'<button type="button" class="remknow" data-k="'+esc(remKey(r))+'">אני יודע</button>':'')
    +'<button type="button" class="remdel" data-k="'+esc(remKey(r))+'">🗑 למחוק</button>'
    // Itzik, 4.10: "בתיזכורת אין לי אפשרות להגיב". Each reminder answers in place.
@@ -12148,6 +12171,9 @@ function renderReminders(){
    try{localStorage.setItem('remKnown',JSON.stringify(k));}catch(e){}
    renderReminders();
   };
+ });
+ Array.prototype.forEach.call(host.querySelectorAll('.remdone'),function(b){
+  b.onclick=function(){clearIds('remGone',[b.getAttribute('data-k')]);notesSend(false);renderReminders();};
  });
  Array.prototype.forEach.call(host.querySelectorAll('.remdel'),function(b){
   b.onclick=async function(){

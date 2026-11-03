@@ -2730,7 +2730,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-03T16:09:51.179Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-03T16:20:49.237Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2863,6 +2863,7 @@ try{
  <div id="askBox"></div>
 
  <div class="grid" id="blkTiles">
+  <button type="button" class="gt g16 leadNew" id="gRemTop" hidden><b>⏰ תזכורת</b><small></small></button>
   <button type="button" class="gt gNer" data-grp="net" id="gShachar" data-new="1" data-upd="sh-7-6-1-2"><b><img src="icons/shachar.png" alt="" style="height:1.1em;vertical-align:-0.2em;border-radius:4px"> שחר</b><small>פתוח עכשיו · הצטרפו 7 · נכנסו 1 · משובים 2</small></button>
   <button type="button" class="gt gStory" data-grp="proj" id="gPegasus" data-new="1" data-upd="20261031-peg-status"><b>🐎 פגסוס</b><small>רק ההודעה האחרונה והשאלה שמחכה לך, הישנות נעלמות</small></button>
   <button type="button" class="gt gLec" data-grp="proj" id="gLec" data-upd="lec-1793426949738"><b>🎤 הרצאה</b><small>עודכן 31.10 08:09: המלל עודכן לפי המסמך לעריכה</small></button>
@@ -3100,14 +3101,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4637,7 +4631,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='f19ebe5c42';
+var CODE_ID='558148a617';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -8977,7 +8971,27 @@ function remHot(r){
  var u=Date.parse(r.due),now=Date.now();
  return !isNaN(u)&&now>=u&&now<u+3*864e5&&!remKnown()[remKey(r)];
 }
+function remTopList(){return remLive().filter(function(r){return r.nag;}).sort(function(a,b){return Date.parse(a.due)-Date.parse(b.due);});}
+function remTopSeen(){try{return JSON.parse(localStorage.getItem('remTopSeen')||'{}');}catch(e){return {};}}
+function remWhen(iso){try{var d=new Date(iso),t=d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Jerusalem'}),k=function(x){return x.toLocaleDateString('he-IL',{timeZone:'Asia/Jerusalem'});};
+ if(k(d)===k(new Date()))return 'היום '+t;return d.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'})+' '+t;}catch(e){return '';}}
+function remTopPaint(){
+ var t=document.getElementById('gRemTop');if(!t)return;
+ var L=remTopList();t.hidden=!L.length;if(!L.length)return;
+ var now=Date.now(),due=L.filter(function(r){return Date.parse(r.due)<=now;}),r=due[0]||L[0],s=remTopSeen();
+ t.classList.toggle('lnSeen',!due.length||due.every(function(x){return s[remKey(x)];}));
+ t.querySelector('b').textContent=due.length?'⏰ עכשיו: '+r.text:'⏰ תזכורת';
+ t.querySelector('small').textContent=due.length?(due.length>1?'ועוד '+(due.length-1)+' · ':'')+'לחיצה, ואז ✅ עשיתי':remWhen(r.due)+': '+r.text;
+}
+(function(){
+ function go(){var t=document.getElementById('gRemTop');if(!t)return;
+  t.onclick=function(){var s=remTopSeen(),now=Date.now();remTopList().forEach(function(r){if(Date.parse(r.due)<=now)s[remKey(r)]=1;});
+   try{localStorage.setItem('remTopSeen',JSON.stringify(s));}catch(e){}remTopPaint();pane('R');renderReminders();};
+  try{remTopPaint();}catch(e){}setInterval(function(){try{remTopPaint();}catch(e){}},30000);}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else setTimeout(go,0);
+})();
 function remBlink(){
+ try{remTopPaint();}catch(e){}
  var b=document.getElementById('gRemind');
  if(b)b.classList.toggle('taskblink',remLive().some(remHot));
 }
@@ -8993,7 +9007,8 @@ function renderReminders(){
  };
  host.innerHTML=R.length?R.map(function(r){
   return '<div class="rem'+(r.sentAt?' remsent':'')+'"><b>'+esc(r.text)+'</b>'
-   +'<div class="w">'+(r.sentAt?'נשלחה '+esc(day(r.sentAt)):'תקפוץ '+esc(day(r.due))+' בתשע בבוקר')+'</div>'
+   +'<div class="w">'+(r.sentAt?'נשלחה '+esc(day(r.sentAt)):'תקפוץ '+esc(remWhen(r.due)))+'</div>'
+   +(r.nag&&Date.parse(r.due)<=Date.now()?'<button type="button" class="remdone" data-k="'+esc(remKey(r))+'">✅ עשיתי</button>':'')
    +(remHot(r)?'<button type="button" class="remknow" data-k="'+esc(remKey(r))+'">אני יודע</button>':'')
    +'<button type="button" class="remdel" data-k="'+esc(remKey(r))+'">🗑 למחוק</button>'
    +'<details class="remreply"><summary>💬 להגיב על התזכורת</summary>'+replyBox('על התזכורת "'+r.text+'"')+'</details></div>';
@@ -9005,6 +9020,9 @@ function renderReminders(){
    try{localStorage.setItem('remKnown',JSON.stringify(k));}catch(e){}
    renderReminders();
   };
+ });
+ Array.prototype.forEach.call(host.querySelectorAll('.remdone'),function(b){
+  b.onclick=function(){clearIds('remGone',[b.getAttribute('data-k')]);notesSend(false);renderReminders();};
  });
  Array.prototype.forEach.call(host.querySelectorAll('.remdel'),function(b){
   b.onclick=async function(){
@@ -16800,7 +16818,7 @@ floatTile=function(id,up){if(document.body.classList.contains('world'))return;re
 
 boot('worlds',worldSync);
 boot('design',dzBoot);
-var PUSH_KEY="BDlgL4lKYXBB2yk96UVlN_bNhLBppiq0K8ORV-TQ2jb7k8IMskeWYICec19xE7N5VEcCzVXZU9Pxb9e64KH8OCk";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}

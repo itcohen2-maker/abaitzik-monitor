@@ -48,6 +48,8 @@ function add(day, text, re, opt) {
   const name = day.replace(/-/g, '') + '-' + (slug || 'reminder') + '.json';
   const doc = { at: new Date().toISOString(), due: due.toISOString(), text };
   if (opt.daily) doc.every = 'day';
+  // 3.11, Itzik: a reminder that must nag him, like a new lead, waves the top tile ⏰ until he marks it done.
+  if (opt.nag) doc.nag = true;
   if (re) doc.re = re;
   fs.writeFileSync(path.join(DIR, name), JSON.stringify(doc, null, 1) + '\n', 'utf8');
   console.log('נקבעה: ' + name + '  ' + due.toLocaleString('he-IL'));
@@ -66,6 +68,7 @@ function nextRepeat(r) {
   if (fs.existsSync(file)) return;
   const doc = { at: new Date().toISOString(), due: d.toISOString(), text: r.doc.text, every: r.doc.every };
   if (r.doc.re) doc.re = r.doc.re;
+  if (r.doc.nag) doc.nag = true;
   fs.writeFileSync(file, JSON.stringify(doc, null, 1) + '\n', 'utf8');
   console.log('הבאה: ' + name);
 }
@@ -113,10 +116,10 @@ async function run() {
 }
 
 if (args[0] === 'add') {
-  const opt = { daily: args.includes('--daily') };
+  const opt = { daily: args.includes('--daily'), nag: args.includes('--nag') };
   const ai = args.indexOf('--at');
   if (ai >= 0) opt.at = args[ai + 1];
-  const pos = args.slice(1).filter((a, i) => a !== '--daily' && a !== '--at' && args[i] !== '--at');
+  const pos = args.slice(1).filter((a, i) => a !== '--daily' && a !== '--nag' && a !== '--at' && args[i] !== '--at');
   add(pos[0], pos[1], pos[2], opt);
 }
 else run().catch(e => { console.error(e); process.exit(1); });
