@@ -334,6 +334,7 @@ button.abtn[disabled]{opacity:.55}
 .gt.glow .flag{animation:hardblink .5s steps(1) infinite}
 .gt.leadNew{animation:hardblink .6s steps(1) infinite}
 .gt.leadNew[hidden]{display:none}
+.gt.leadNew.lnSeen{animation:none}
 .bzRow.bzNew{background:#fff4d6;color:#0f1b2a;border-right:5px solid #f59e0b;border-radius:10px;padding:8px 10px;margin:4px 0;cursor:pointer}
 .bzNewTag{align-self:flex-start;background:#ea4335;color:#fff;font:700 12px Heebo,sans-serif;border-radius:8px;padding:2px 8px}
 @keyframes taskbeat{0%,49%{box-shadow:0 0 0 4px var(--yellow),var(--shadow)}50%,100%{box-shadow:0 0 0 0 transparent,var(--shadow)}}
@@ -2729,7 +2730,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-03T07:04:51.696Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-03T07:10:07.244Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2949,11 +2950,14 @@ try{
  function fresh(){var s=seen();return all().filter(function(x){return s.indexOf(x.at)<0;});}
  function paint(){
   var t=document.getElementById('gLeadNew');if(!t)return;var f=fresh();t.hidden=!f.length;if(!f.length)return;
+  var ts=tileSeen();t.classList.toggle('lnSeen',f.every(function(x){return ts.indexOf(x.at)>=0;}));
   var l=f.filter(function(x){return x.k==='lead';}).length,w=f.length-l,parts=[];
   if(l)parts.push(l===1?'ליד אחד מהאתר':l+' לידים מהאתר');
   if(w)parts.push(w===1?'נרשם/ה אחד/ת לשחר':w+' נרשמו לשחר');
   var sm=t.querySelector('small');if(sm)sm.textContent=parts.join(' · ')+' · לחיצה לפתיחה';
  }
+ function tileSeen(){try{return JSON.parse(localStorage.getItem('leadTileSeen')||'[]');}catch(e){return [];}}
+ window.leadNewTileSeen=function(){var ts=tileSeen();fresh().forEach(function(x){if(ts.indexOf(x.at)<0)ts.push(x.at);});try{localStorage.setItem('leadTileSeen',JSON.stringify(ts.slice(-300)));}catch(e){}paint();};
  function mark(at){var s=seen();if(s.indexOf(at)<0){s.push(at);try{localStorage.setItem(K,JSON.stringify(s.slice(-300)));}catch(e){}}paint();}
  window.leadNewFresh=fresh;window.leadNewMark=mark;
  window.leadNewAt=function(r){var m=/^biz-(\d{14})-site$/.exec(String(r&&r.id||''));if(!m)return '';var f=fresh();for(var i=0;i<f.length;i++){if(f[i].k==='lead'&&f[i].at.replace(/\D/g,'').slice(0,14)===m[1])return f[i].at;}return '';};
@@ -3024,7 +3028,7 @@ try{
  function mailInvite(em){try{var tp=JSON.parse(localStorage.getItem('shwTapped')||'{}');if(tp[em])return;tp[em]=Date.now();localStorage.setItem('shwTapped',JSON.stringify(tp));}catch(x){}try{sessionStorage.setItem('bizBack',JSON.stringify({t:'shachar',at:Date.now()}));}catch(x){}location.href='shachar/index.html?invite='+encodeURIComponent(em)+'&v='+Date.now();}
  document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.shwCopy,.shwMail');if(!b)return;e.stopPropagation();var s=b.getAttribute('data-t');
   if(b.classList.contains('shwMail'))mailInvite(s);else copy(s,b);},true);
- t.onclick=function(){if(box.hidden){draw();box.hidden=!box.innerHTML;if(!box.hidden)box.scrollIntoView({behavior:'smooth',block:'nearest'});}else box.hidden=true;};
+ t.onclick=function(){if(window.leadNewTileSeen)leadNewTileSeen();if(box.hidden){draw();box.hidden=!box.innerHTML;if(!box.hidden)box.scrollIntoView({behavior:'smooth',block:'nearest'});}else box.hidden=true;};
 })();
 </script>
 
@@ -3096,14 +3100,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4633,7 +4630,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='3bfd3436b8';
+var CODE_ID='95fdc5bd4c';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -16745,7 +16742,7 @@ floatTile=function(id,up){if(document.body.classList.contains('world'))return;re
 
 boot('worlds',worldSync);
 boot('design',dzBoot);
-var PUSH_KEY="BDlgL4lKYXBB2yk96UVlN_bNhLBppiq0K8ORV-TQ2jb7k8IMskeWYICec19xE7N5VEcCzVXZU9Pxb9e64KH8OCk";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
