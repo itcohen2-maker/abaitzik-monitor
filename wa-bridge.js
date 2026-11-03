@@ -239,10 +239,13 @@ async function waVoice(to, text) {
 }
 // One voice note at a time, so two long answers don't run the TTS together.
 let voiceQ = Promise.resolve();
-function queueVoice(to, text) {
+// 3.11, Itzik: "הוא גם כותב וגם מקריא, פעמיים כל הודעה. צריך רק פעם אחת. אם ביקש
+// להקריא, אז בהקראה, ואם לא, אז בכיתוב." An answer goes out once: as a voice note
+// when he asked for voice, otherwise as text. If the voice fails, the text goes instead.
+function queueVoice(to, text, fallback) {
   voiceQ = voiceQ.then(function () { return waVoice(to, text); })
     .then(function () { log('voice out -> ' + String(to).slice(0, 5) + '...'); })
-    .catch(function (e) { log('voice failed: ' + e.message); return waSend(to, 'לא הצלחתי להקריא הפעם, התשובה בכתב למעלה.').catch(function () {}); });
+    .catch(function (e) { log('voice failed: ' + e.message); return waSend(to, fallback ? text : 'לא הצלחתי להקריא הפעם, נסה שוב.').catch(function () {}); });
   return voiceQ;
 }
 function voiceCommand(t) {
@@ -289,13 +292,15 @@ async function onMessage(m, contactName) {
     if (vc.say) { await waSend(m.from, '🔊 מקריא...'); queueVoice(m.from, vc.say); return; }
     if (vc.off) { delete sv.voice[m.from]; saveState(sv); await waSend(m.from, '✓ חזרנו לכתב בלבד. כדי להקריא שוב: "תקריא לי".'); return; }
     sv.voice[m.from] = true; saveState(sv);
-    await waSend(m.from, '🔊 מעכשיו כל תשובה של המוניטור תגיע גם כהודעה קולית. לביטול: "בלי הקראה".');
+    await waSend(m.from, '🔊 מעכשיו כל תשובה של המוניטור תגיע כהודעה קולית, בלי כתב. לחזרה לכתב: "בלי הקראה".');
     if (sv.last[m.from]) queueVoice(m.from, sv.last[m.from]);
     return;
   }
   const id = await toMonitor('וואטסאפ', demoOn() ? DEMO_FRAME + t : t);
   const s2 = loadState();
   s2.pending[id] = { to: m.from, at: Date.now(), name: contactName || '' };
+  // A question that itself asks to be read ("ותקריא לי", "בהקראה") gets this one answer as voice.
+  if (/(?:תקריא|תקריאי|הקרא|תקרא|בהקראה|בקול|הודעה קולית)/.test(t)) s2.pending[id].voice = true;
   saveState(s2);
   log('in ' + m.id + ' -> ntfy-' + id);
   await waSend(m.from, '✓ קיבלתי, אני עובד על זה. התשובה תגיע לכאן.');
@@ -318,10 +323,10 @@ function sweep() {
     st.sent[f] = Date.now();
     saveState(st);
     const to = st.pending[d.re].to;
-    waSend(to, d.text).then(function () {
-      log('out ' + f + ' -> ' + d.re);
-      const s5 = loadState(); s5.last = s5.last || {}; s5.last[to] = d.text; saveState(s5);
-      if (s5.voice && s5.voice[to]) queueVoice(to, d.text);
+    const s5 = loadState(); s5.last = s5.last || {}; s5.last[to] = d.text; saveState(s5);
+    const asVoice = !!((s5.voice && s5.voice[to]) || st.pending[d.re].voice);
+    (asVoice ? queueVoice(to, d.text, true) : waSend(to, d.text)).then(function () {
+      log('out ' + f + ' -> ' + d.re + (asVoice ? ' (voice)' : ''));
     })
       .catch(function (e) { log('send failed ' + f + ': ' + e.message); const s3 = loadState(); delete s3.sent[f]; saveState(s3); });
   });
