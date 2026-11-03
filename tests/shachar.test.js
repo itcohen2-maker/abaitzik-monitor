@@ -159,7 +159,7 @@ test('one tap with a mail token: invited and the letter is delivered from shacha
   assert.equal(b.to, 'dana@x.com');
   assert.match(b.from, /shachar@abaitzik\.com/);
   assert.equal(b.subject, letter.subject);
-  assert.equal(b.text, letter.body);
+  assert.ok(b.text.startsWith(letter.body) && b.text.includes("login?email=dana%40x.com"));
   assert.match(b.html, /dir="rtl"/);
   const s = sh.load(t.dir);
   assert.equal(s.mailAuto, true);
@@ -245,4 +245,51 @@ test('the built monitor page opens the Shachar page from inside העסק שלי 
   assert.match(html, /id="gShachar"/);
   assert.match(html, /data-bz="shachar"/);
   assert.match(html, /shachar\/index\.html/);
+});
+
+// 3.11, Itzik: no manual approval. A waitlist email is invited and gets the welcome letter on the next refresh.
+test('auto invite: a new waitlist email is invited and the welcome letter goes out with the login button', async () => {
+  const t = setup({ mailToken: 'tok', waitlist: [{ email: 'new@x.co', created_at: '2026-11-03T08:00:00Z', invited: false }] });
+  const r = await sh.handleRefresh(t.deps);
+  assert.equal(r.ok, true);
+  const post = t.calls.find((c) => c.init.method === 'POST' && c.url.endsWith('/api/admin/invite'));
+  assert.ok(post, 'invite posted');
+  assert.equal(JSON.parse(post.init.body).email, 'new@x.co');
+  const mail = t.calls.find((c) => String(c.url).startsWith('https://api.forwardemail.net'));
+  assert.ok(mail, 'letter sent');
+  const m = JSON.parse(mail.init.body);
+  assert.equal(m.to, 'new@x.co');
+  assert.equal(m.subject, sh.AUTO_LETTER.subject);
+  assert.ok(m.html.includes('https://shachar.abaitzik.com/login?email=new%40x.co'));
+  assert.ok(m.html.includes('להיכנס לשחר'));
+  assert.ok(m.text.includes('login?email=new%40x.co'));
+  const rec = sh.load(t.dir).invites[0];
+  assert.equal(rec.status, 'invited');
+  assert.equal(rec.letterMode, 'sent');
+  assert.equal(rec.auto, true);
+});
+
+test('auto invite: someone already invited is not mailed again', async () => {
+  const t = setup({ mailToken: 'tok', waitlist: [{ email: 'old@x.co', created_at: '2026-11-01T08:00:00Z', invited: true }] });
+  await sh.handleRefresh(t.deps);
+  assert.equal(t.calls.filter((c) => c.init.method === 'POST').length, 0);
+  await sh.handleRefresh(t.deps);
+  assert.equal(t.calls.filter((c) => c.init.method === 'POST').length, 0);
+});
+
+test('auto invite: a second refresh does not send the letter twice', async () => {
+  const t = setup({ mailToken: 'tok', waitlist: [{ email: 'new@x.co', created_at: '2026-11-03T08:00:00Z', invited: false }] });
+  await sh.handleRefresh(t.deps);
+  await sh.handleRefresh(t.deps);
+  assert.equal(t.calls.filter((c) => String(c.url).startsWith('https://api.forwardemail.net')).length, 1);
+});
+
+test('auto invite: more than 25 in a day stops, the rest wait and Itzik is told once', async () => {
+  const wl = Array.from({ length: 30 }, (_, i) => ({ email: 'p' + i + '@x.co', created_at: '2026-11-03T08:00:00Z', invited: false }));
+  const t = setup({ mailToken: 'tok', waitlist: wl });
+  await sh.handleRefresh(t.deps);
+  assert.equal(t.calls.filter((c) => c.init.method === 'POST' && c.url.endsWith('/api/admin/invite')).length, 25);
+  assert.equal(t.notes.filter((n) => /עצרתי/.test(n[0])).length, 1);
+  await sh.handleRefresh(t.deps);
+  assert.equal(t.notes.filter((n) => /עצרתי/.test(n[0])).length, 1);
 });

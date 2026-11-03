@@ -14130,7 +14130,7 @@ function reelSheet(){
  w.setAttribute('aria-label','הרילים שלי');
  w.innerHTML='<div class="ycard">'
   +'<b>הרילים שלי</b>'
-  +'<small>'+(REEL_ITEMS.length?'ממוספר, הריל החדש מקבל את המספר הבא':'אין כרגע רילים. כל מה שהיה כאן עלה')+'</small>'
+  +'<small>'+(REEL_ITEMS.length?'ממוספר, הריל החדש בראש הרשימה':'אין כרגע רילים. כל מה שהיה כאן עלה')+'</small>'
   +REEL_ITEMS.map(function(it,i,a){
     return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
    }).join('')
@@ -14884,6 +14884,30 @@ function sheetTidy(w){
  if(bs.length)tidyBar(w,c);
  tidyNote(w,c);
  if(bs.length)tidySel(c);
+ sheetNewFirst(c);
+}
+// 3.11, Itzik: "תשים אותו בתחילת הרשימה, לא אחרון. תהפוך את כל הרשימות". Every *_ITEMS list is
+// appended at the end, so the sheet shows it newest first. Items that share a number (31ג, 31 כריכה,
+// 31 פרסום) stay one group in their own order. A sheet that already says החדש למעלה is left as is.
+function sheetNewFirst(c){
+ if(c.getAttribute('data-newfirst'))return;
+ var sm=c.querySelector(':scope > small');if(sm&&/החדש למעלה/.test(sm.textContent))return;
+ var rows=[].slice.call(c.querySelectorAll(':scope > .tdy-row')).filter(function(r){
+  var b=r.querySelector('.yb');return b&&/^\d+$/.test(b.getAttribute('data-k')||'');
+ });
+ if(rows.length<2)return;
+ c.setAttribute('data-newfirst','1');
+ var groups=[],last=null;
+ rows.forEach(function(r){
+  var t=tidyText(r.querySelector('.yb')).split(/[\s·]+/)[0],m=t.match(/^\d+/),k=m?m[0]:t;
+  if(last&&last.k===k)last.r.push(r);else{last={k:k,r:[r]};groups.push(last);}
+ });
+ var anchor=document.createComment('nf');c.insertBefore(anchor,rows[0]);
+ groups.reverse().forEach(function(g,gi){g.r.forEach(function(r,ri){
+  var b=r.querySelector('.yb');b.classList.toggle('ygap',gi>0&&ri===0);
+  c.insertBefore(r,anchor);
+ });});
+ anchor.remove();
 }
 function watchSheets(){
  new MutationObserver(function(ms){

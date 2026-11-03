@@ -532,7 +532,7 @@ function alertWaitlist(text) {
   const body = String(text || '').replace(/^\s*רשימת המתנה לשחר[^\n]*\n?/, '');
   const em = (body.match(/\S+@\S+/) || [''])[0];
   try { require('./lib/shachar.js').handleRefresh(shachar.deps()).catch(() => {}); } catch (e) { say('!! רשימת המתנה: רענון נכשל ' + e.message); }
-  leadAlert('🌅 נרשם/ה לרשימת ההמתנה של שחר' + (em ? ': ' + em : ''), body + '\nבמוניטור: במסך הראשי האריח 🔔 יש ליד שהגיע, או 💼 העסק שלי ← 🌅 שחר ← רשימת ההמתנה', 'sunrise,tada');
+  leadAlert('🌅 בקשת כניסה לשחר, הכניסה נפתחה והמכתב נשלח אוטומטית' + (em ? ': ' + em : ''), body + '\nבמוניטור: במסך הראשי האריח 🔔 יש ליד שהגיע, או 💼 העסק שלי ← 🌅 שחר ← בקשות כניסה', 'sunrise,tada');
 }
 
 // 21.10: the same lead also lands in העסק שלי, so he sees it in the monitor
