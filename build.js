@@ -78,6 +78,38 @@ function esc(s) {
 // round site icon counts the leads the site's chat sent in. They are held
 // records (heldWhy lead, see listen.js), so they never reach the chat itself.
 let siteLeadsMemo = null;
+// 3.11, Itzik: "האריח של שחר לא מעודכן". Entry is automatic now, so the tile shows what happened:
+// who joined, who got the ready letter, who really came in, feedback. Itzik's own test addresses are not counted.
+var shStateMemo = null;
+function shState() {
+  if (shStateMemo) return shStateMemo;
+  const OWN_SH = /^itcohen2(\+[^@]*)?@gmail\.com$/;
+  let s = null;
+  try { s = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'shachar', 'state.json'), 'utf8')); } catch (e) { s = null; }
+  if (!s) return (shStateMemo = { ok: false, joined: 0, ready: 0, visited: 0, fb: 0, upd: 'sh-none' });
+  const inv = (s.invites || []).filter((x) => x && x.status === 'invited' && !OWN_SH.test(x.email))
+    .sort((a, c) => String(c.at).localeCompare(String(a.at)));
+  const ready = Object.keys(s.readySent || {}).filter((e) => !OWN_SH.test(e));
+  const per = ((s.usage && s.usage.perUser) || []).filter((x) => x && x.email && !OWN_SH.test(String(x.email).toLowerCase()))
+    .sort((a, c) => String(c.lastAt).localeCompare(String(a.lastAt)));
+  const rows = (s.feedback && s.feedback.rows) || [];
+  const today = new Date().toISOString().slice(0, 10);
+  shStateMemo = {
+    ok: true, joined: inv.length, auto: inv.filter((x) => x.auto).length,
+    newest: inv[0] ? { email: inv[0].email, at: inv[0].at } : null,
+    ready: ready.length, visited: per.length,
+    visitors: per.map((x) => ({ email: x.email, lastAt: x.lastAt, visits: x.visits, messages: x.messages })),
+    fb: rows.length, helped: s.feedback && s.feedback.all ? s.feedback.all.helpedPct : null,
+    loginWait: (s.loginWait || []).length, autoOff: !!s.autoOff, capToday: s.autoCapDay === today,
+    upd: 'sh-' + inv.length + '-' + ready.length + '-' + per.length + '-' + rows.length,
+  };
+  return shStateMemo;
+}
+function shTileSmall() {
+  const s = shState();
+  if (!s.ok) return 'פתוח עכשיו, הכניסה אוטומטית';
+  return 'פתוח עכשיו · הצטרפו ' + s.joined + ' · נכנסו ' + s.visited + ' · משובים ' + s.fb;
+}
 // 1.11: the site leads and Shachar waitlist signups since 1.11, as kind|time only (no names),
 // for the blinking "יש ליד שהגיע" tile. Which ones he already touched is kept on his phone.
 function leadStamps() {
@@ -131,7 +163,7 @@ const LEAD_BOX_JS = String.raw`<style>
  var grid=document.getElementById('blkBiz');if(grid&&grid.parentNode)grid.parentNode.insertBefore(box,grid.nextSibling);
  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
  function em(x){var m=/[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+/.exec(data[x.at]||'');return m?m[0]:'';}
- function txt(x){return data[x.at]||((x.k==='waitlist'?'נרשם לרשימת ההמתנה של שחר':'ליד מהאתר')+'\n'+new Date(x.at).toLocaleString('he-IL'));}
+ function txt(x){return data[x.at]||((x.k==='waitlist'?'הצטרף לשחר מהאתר, ההזמנה והמכתב יוצאים אוטומטית':'ליד מהאתר')+'\n'+new Date(x.at).toLocaleString('he-IL'));}
  function copy(s,b){
   function ok(){var o=b.textContent;b.textContent='✓ הועתק';setTimeout(function(){b.textContent=o;},1500);}
   function fb(){var a=document.createElement('textarea');a.value=s;a.setAttribute('readonly','');a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.select();a.setSelectionRange(0,s.length);try{document.execCommand('copy');ok();}catch(e){}a.remove();}
@@ -140,7 +172,7 @@ const LEAD_BOX_JS = String.raw`<style>
  function draw(){
   var f=window.leadNewFresh?leadNewFresh():[];
   if(!f.length){box.hidden=true;box.innerHTML='';return;}
-  box.innerHTML=f.map(function(x,i){var d=new Date(x.at);return '<div class="lbCard" data-i="'+i+'"><div class="lbAt">'+d.toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})+'</div><div class="lbTxt">'+esc(txt(x))+'</div><div class="lbBtns"><button type="button" class="lbCopy">📋 העתקה</button>'+(x.k==='waitlist'&&em(x)?'<button type="button" class="lbMail">✉️ הזמנה במייל</button>':'<button type="button" class="lbShare">📤 שליחה</button>')+'<button type="button" class="lbDone">✓ טופל</button></div></div>';}).join('');
+  box.innerHTML=f.map(function(x,i){var d=new Date(x.at);return '<div class="lbCard" data-i="'+i+'"><div class="lbAt">'+d.toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})+'</div><div class="lbTxt">'+esc(txt(x))+'</div><div class="lbBtns"><button type="button" class="lbCopy">📋 העתקה</button>'+(x.k==='waitlist'&&em(x)?'<button type="button" class="lbMail">🌅 לדף של שחר</button>':'<button type="button" class="lbShare">📤 שליחה</button>')+'<button type="button" class="lbDone">✓ טופל</button></div></div>';}).join('');
   [].forEach.call(box.querySelectorAll('.lbCard'),function(c){
    var x=f[+c.getAttribute('data-i')],s=txt(x);
    c.querySelector('.lbCopy').onclick=function(){copy(s,this);};
@@ -149,13 +181,13 @@ const LEAD_BOX_JS = String.raw`<style>
    c.querySelector('.lbDone').onclick=function(){if(window.leadNewMark)leadNewMark(x.at);draw();};
   });
  }
- function mailInvite(em){try{var tp=JSON.parse(localStorage.getItem('shwTapped')||'{}');if(tp[em])return;tp[em]=Date.now();localStorage.setItem('shwTapped',JSON.stringify(tp));}catch(x){}try{sessionStorage.setItem('bizBack',JSON.stringify({t:'shachar',at:Date.now()}));}catch(x){}location.href='shachar/index.html?invite='+encodeURIComponent(em)+'&v='+Date.now();}
+ function mailInvite(em){try{sessionStorage.setItem('bizBack',JSON.stringify({t:'shachar',at:Date.now()}));}catch(x){}location.href='shachar/index.html?v='+Date.now();}
  document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.shwCopy,.shwMail');if(!b)return;e.stopPropagation();var s=b.getAttribute('data-t');
   if(b.classList.contains('shwMail'))mailInvite(s);else copy(s,b);},true);
  t.onclick=function(){if(window.leadNewTileSeen)leadNewTileSeen();if(box.hidden){draw();box.hidden=!box.innerHTML;if(!box.hidden)box.scrollIntoView({behavior:'smooth',block:'nearest'});}else box.hidden=true;};
 })();
 </script>`;
-const LEAD_NEW_JS = "<script>\n/* 1.11, Itzik: a new lead opens its own blinking tile (\"\u05d9\u05e9 \u05dc\u05d9\u05d3 \u05e9\u05d4\u05d2\u05d9\u05e2\"), and in \u05d4\u05e2\u05e1\u05e7 \u05e9\u05dc\u05d9\n   the lead stands out in another color until he touches it. Seen marks live on this phone. */\n(function(){\n var K='leadSeen';\n function seen(){try{return JSON.parse(localStorage.getItem(K)||'[]');}catch(e){return [];}}\n function all(){var t=document.getElementById('gLeadNew');if(!t)return [];return (t.getAttribute('data-leads')||'').split(',').filter(Boolean).map(function(x){var i=x.indexOf('|');return {k:x.slice(0,i),at:x.slice(i+1)};});}\n function fresh(){var s=seen();return all().filter(function(x){return s.indexOf(x.at)<0;});}\n function paint(){\n  var t=document.getElementById('gLeadNew');if(!t)return;var f=fresh();t.hidden=!f.length;if(!f.length)return;\n  var ts=tileSeen();t.classList.toggle('lnSeen',f.every(function(x){return ts.indexOf(x.at)>=0;}));\n  var l=f.filter(function(x){return x.k==='lead';}).length,w=f.length-l,parts=[];\n  if(l)parts.push(l===1?'\u05dc\u05d9\u05d3 \u05d0\u05d7\u05d3 \u05de\u05d4\u05d0\u05ea\u05e8':l+' \u05dc\u05d9\u05d3\u05d9\u05dd \u05de\u05d4\u05d0\u05ea\u05e8');\n  if(w)parts.push(w===1?'\u05e0\u05e8\u05e9\u05dd/\u05d4 \u05d0\u05d7\u05d3/\u05ea \u05dc\u05e9\u05d7\u05e8':w+' \u05e0\u05e8\u05e9\u05de\u05d5 \u05dc\u05e9\u05d7\u05e8');\n  var sm=t.querySelector('small');if(sm)sm.textContent=parts.join(' \u00b7 ')+' \u00b7 \u05dc\u05d7\u05d9\u05e6\u05d4 \u05dc\u05e4\u05ea\u05d9\u05d7\u05d4';\n }\n function tileSeen(){try{return JSON.parse(localStorage.getItem('leadTileSeen')||'[]');}catch(e){return [];}}\n window.leadNewTileSeen=function(){var ts=tileSeen();fresh().forEach(function(x){if(ts.indexOf(x.at)<0)ts.push(x.at);});try{localStorage.setItem('leadTileSeen',JSON.stringify(ts.slice(-300)));}catch(e){}paint();};\n function mark(at){var s=seen();if(s.indexOf(at)<0){s.push(at);try{localStorage.setItem(K,JSON.stringify(s.slice(-300)));}catch(e){}}paint();}\n window.leadNewFresh=fresh;window.leadNewMark=mark;\n window.leadNewAt=function(r){var m=/^biz-(\\d{14})-site$/.exec(String(r&&r.id||''));if(!m)return '';var f=fresh();for(var i=0;i<f.length;i++){if(f[i].k==='lead'&&f[i].at.replace(/\\D/g,'').slice(0,14)===m[1])return f[i].at;}return '';};\n window.leadNewWaitHtml=function(){return fresh().filter(function(x){return x.k==='waitlist';}).map(function(x){\n  var d=new Date(x.at);return '<div class=\"bzRow bzNew\" data-new-at=\"'+x.at+'\" data-wl=\"1\"><span class=\"bzNewTag\">\u05d7\u05d3\u05e9</span><b>\ud83c\udf05 \u05e0\u05e8\u05e9\u05dd/\u05d4 \u05dc\u05e8\u05e9\u05d9\u05de\u05ea \u05d4\u05d4\u05de\u05ea\u05e0\u05d4 \u05e9\u05dc \u05e9\u05d7\u05e8</b><small>'+d.toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})+' \u00b7 \u05dc\u05d7\u05d9\u05e6\u05d4 \u05e4\u05d5\u05ea\u05d7\u05ea \u05d0\u05ea \u05e8\u05e9\u05d9\u05de\u05ea \u05d4\u05d4\u05de\u05ea\u05e0\u05d4</small></div>';}).join('');};\n document.addEventListener('click',function(e){\n  var r=e.target&&e.target.closest&&e.target.closest('.bzNew');if(!r)return;\n  var at=r.getAttribute('data-new-at');if(at)mark(at);\n  r.classList.remove('bzNew');var tg=r.querySelector('.bzNewTag');if(tg)tg.remove();\n  if(r.getAttribute('data-wl')){location.href='shachar/index.html?v='+Date.now();}\n },true);\n var t=document.getElementById('gLeadNew');\n if(t)t.onclick=function(){\n  var f=fresh();\n  if(f.some(function(x){return x.k==='lead';})&&typeof bizSheet==='function'){bizSheet();return;}\n  f.forEach(function(x){mark(x.at);});location.href='shachar/index.html?v='+Date.now();\n };\n paint();\n})();\n</script>\n";
+const LEAD_NEW_JS = "<script>\n/* 1.11, Itzik: a new lead opens its own blinking tile (\"\u05d9\u05e9 \u05dc\u05d9\u05d3 \u05e9\u05d4\u05d2\u05d9\u05e2\"), and in \u05d4\u05e2\u05e1\u05e7 \u05e9\u05dc\u05d9\n   the lead stands out in another color until he touches it. Seen marks live on this phone. */\n(function(){\n var K='leadSeen';\n function seen(){try{return JSON.parse(localStorage.getItem(K)||'[]');}catch(e){return [];}}\n function all(){var t=document.getElementById('gLeadNew');if(!t)return [];return (t.getAttribute('data-leads')||'').split(',').filter(Boolean).map(function(x){var i=x.indexOf('|');return {k:x.slice(0,i),at:x.slice(i+1)};});}\n function fresh(){var s=seen();return all().filter(function(x){return s.indexOf(x.at)<0;});}\n function paint(){\n  var t=document.getElementById('gLeadNew');if(!t)return;var f=fresh();t.hidden=!f.length;if(!f.length)return;\n  var ts=tileSeen();t.classList.toggle('lnSeen',f.every(function(x){return ts.indexOf(x.at)>=0;}));\n  var l=f.filter(function(x){return x.k==='lead';}).length,w=f.length-l,parts=[];\n  if(l)parts.push(l===1?'\u05dc\u05d9\u05d3 \u05d0\u05d7\u05d3 \u05de\u05d4\u05d0\u05ea\u05e8':l+' \u05dc\u05d9\u05d3\u05d9\u05dd \u05de\u05d4\u05d0\u05ea\u05e8');\n  if(w)parts.push(w===1?'\u05d4\u05e6\u05d8\u05e8\u05e3/\u05d4 \u05d0\u05d7\u05d3/\u05ea \u05dc\u05e9\u05d7\u05e8':w+' \u05d4\u05e6\u05d8\u05e8\u05e4\u05d5 \u05dc\u05e9\u05d7\u05e8');\n  var sm=t.querySelector('small');if(sm)sm.textContent=parts.join(' \u00b7 ')+' \u00b7 \u05dc\u05d7\u05d9\u05e6\u05d4 \u05dc\u05e4\u05ea\u05d9\u05d7\u05d4';\n }\n function tileSeen(){try{return JSON.parse(localStorage.getItem('leadTileSeen')||'[]');}catch(e){return [];}}\n window.leadNewTileSeen=function(){var ts=tileSeen();fresh().forEach(function(x){if(ts.indexOf(x.at)<0)ts.push(x.at);});try{localStorage.setItem('leadTileSeen',JSON.stringify(ts.slice(-300)));}catch(e){}paint();};\n function mark(at){var s=seen();if(s.indexOf(at)<0){s.push(at);try{localStorage.setItem(K,JSON.stringify(s.slice(-300)));}catch(e){}}paint();}\n window.leadNewFresh=fresh;window.leadNewMark=mark;\n window.leadNewAt=function(r){var m=/^biz-(\\d{14})-site$/.exec(String(r&&r.id||''));if(!m)return '';var f=fresh();for(var i=0;i<f.length;i++){if(f[i].k==='lead'&&f[i].at.replace(/\\D/g,'').slice(0,14)===m[1])return f[i].at;}return '';};\n window.leadNewWaitHtml=function(){return fresh().filter(function(x){return x.k==='waitlist';}).map(function(x){\n  var d=new Date(x.at);return '<div class=\"bzRow bzNew\" data-new-at=\"'+x.at+'\" data-wl=\"1\"><span class=\"bzNewTag\">\u05d7\u05d3\u05e9</span><b>\ud83c\udf05 \u05d4\u05e6\u05d8\u05e8\u05e3/\u05d4 \u05dc\u05e9\u05d7\u05e8 \u05de\u05d4\u05d0\u05ea\u05e8</b><small>'+d.toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})+' \u00b7 \u05d4\u05d4\u05d6\u05de\u05e0\u05d4 \u05d5\u05d4\u05de\u05db\u05ea\u05d1 \u05d9\u05e6\u05d0\u05d5 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9\u05ea</small></div>';}).join('');};\n document.addEventListener('click',function(e){\n  var r=e.target&&e.target.closest&&e.target.closest('.bzNew');if(!r)return;\n  var at=r.getAttribute('data-new-at');if(at)mark(at);\n  r.classList.remove('bzNew');var tg=r.querySelector('.bzNewTag');if(tg)tg.remove();\n  if(r.getAttribute('data-wl')){location.href='shachar/index.html?v='+Date.now();}\n },true);\n var t=document.getElementById('gLeadNew');\n if(t)t.onclick=function(){\n  var f=fresh();\n  if(f.some(function(x){return x.k==='lead';})&&typeof bizSheet==='function'){bizSheet();return;}\n  f.forEach(function(x){mark(x.at);});location.href='shachar/index.html?v='+Date.now();\n };\n paint();\n})();\n</script>\n";
 
 // 1.11: the time of the newest site lead or Shachar waitlist signup, so 💼 העסק שלי blinks on each one.
 function newestLead() {
@@ -906,7 +938,10 @@ function build() {
       try {
         const shs = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'shachar', 'state.json'), 'utf8'));
         const sentTo = new Set((shs.invites || []).filter((x) => x.letterMode === 'sent').map((x) => x.email));
-        payload.shWait = (shs.waitlist || []).map((w) => ({ email: w.email, created_at: w.created_at, invited: !!w.invited, sent: sentTo.has(w.email) }));
+        const rdy = shs.readySent || {};
+        const vis = new Set(((shs.usage && shs.usage.perUser) || []).map((x) => String((x && x.email) || '').toLowerCase()));
+        payload.shWait = (shs.waitlist || []).map((w) => ({ email: w.email, created_at: w.created_at, invited: !!w.invited, sent: sentTo.has(w.email), ready: !!rdy[w.email], visited: vis.has(String(w.email).toLowerCase()) }));
+        payload.shSum = shState();
       } catch (e) { payload.shWait = []; }
       bizOn = true;
     } catch (e) { console.error('biz: ' + e.message); }
@@ -4219,7 +4254,7 @@ ${require('./lib/home-ui.js').html}
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
   <!-- 1.11, Itzik: "ביקשתי אייקון של שחר במוניטור כבר כמה פעמים". First on the grid, so it is seen. -->
-  <button type="button" class="gt gNer" data-grp="net" id="gShachar" data-new="1" data-upd="20261101-shachar-wl"><b><img src="icons/shachar.png" alt="" style="height:1.1em;vertical-align:-0.2em;border-radius:4px"> שחר</b><small>הזמנות, קישור לרשימת ההמתנה ועיצוב</small></button>
+  <button type="button" class="gt gNer" data-grp="net" id="gShachar" data-new="1" data-upd="${shState().upd}"><b><img src="icons/shachar.png" alt="" style="height:1.1em;vertical-align:-0.2em;border-radius:4px"> שחר</b><small>${shTileSmall()}</small></button>
   <button type="button" class="gt gStory" data-grp="proj" id="gPegasus" data-new="1" data-upd="20261031-peg-status"><b>🐎 פגסוס</b><small>רק ההודעה האחרונה והשאלה שמחכה לך, הישנות נעלמות</small></button>
   <button type="button" class="gt gLec" data-grp="proj" id="gLec" data-upd="lec-${LEC_LAST?LEC_LAST.getTime():0}"><b>🎤 הרצאה</b><small>${LEC_WHAT?'עודכן '+lecFmt(LEC_LAST,1)+': '+LEC_WHAT:'03 לאימון, עודכן '+lecFmt(LEC_LAST,1)}</small></button>
   <!--
@@ -16494,17 +16529,22 @@ function bizSheet(t0){
   }
   function shwTapped(e){try{return (JSON.parse(localStorage.getItem('shwTapped')||'{}'))[e];}catch(x){return false;}}
   function shWaitHtml(){
-   var w=(D.shWait||[]).slice().sort(function(a,b){return String(a.created_at).localeCompare(String(b.created_at));});
-   // 1.11, Itzik: "אחרי ששלחתי הזמנות, תכניס את זה לסוג של ארכיון בצד. רק תמספר אותם."
-   var done=w.filter(function(x){return x.sent||shwTapped(x.email);});
-   w=w.filter(function(x){return !(x.sent||shwTapped(x.email));});
-   var arch=done.length?'<details class="shwArch"><summary>📁 ארכיון: כבר קיבלו הזמנה ('+done.length+')</summary>'+done.map(function(x,i){return '<div class="shwArchRow">'+(i+1)+'. '+esc(x.email)+'</div>';}).join('')+'</details>':'';
-   var h='<div class="bzSec">בקשות כניסה, מחכים להזמנה ('+w.length+')</div>';
-   if(!w.length)return h+'<p class="bzEmpty">אין כרגע מי שמחכה להזמנה.</p>'+arch;
-   return h+w.map(function(x,i){var d=new Date(x.created_at);
-    return '<div class="bzRow'+(x.invited?'':' shwNew')+'"><b>'+(i+1)+'. '+esc(x.email)+'</b><small>נרשם '+d.getDate()+'.'+(d.getMonth()+1)+(x.invited?' · הוזמן ✓':' · עוד לא הוזמן')+'</small>'
-     +'<div class="lbBtns"><button type="button" class="shwCopy" data-t="'+esc(x.email)+'">📋 העתקה</button>'+((x.sent||shwTapped(x.email))?'<span class="shwSent">✓ המכתב נשלח</span>':'<button type="button" class="shwMail" data-t="'+esc(x.email)+'">✉️ הזמנה במייל</button>')+'</div></div>';
-   }).join('')+arch;
+   // 3.11, Itzik: "אני לא מאשר יותר ידני". Entry is automatic, so this is a picture of what happened, not a to do list.
+   var s=D.shSum||{},w=(D.shWait||[]).slice().sort(function(a,b){return String(b.created_at).localeCompare(String(a.created_at));});
+   function dd(iso){var d=new Date(iso);return isNaN(d)?'':d.getDate()+'.'+(d.getMonth()+1);}
+   function em(e){return '<bdi>'+esc(e)+'</bdi>';}
+   var h='<div class="bzSec">פתוח עכשיו, הכניסה אוטומטית</div>'
+    +'<p class="bzEmpty" style="text-align:right">מי שמשאיר מייל באתר מקבל הזמנה ומכתב עם כפתור כניסה, בלי אישור שלך. המוניטור בודק כל רבע שעה.</p>';
+   if(s.autoOff)h+='<div class="bzRow shwNew"><b>⚠️ ההזמנות האוטומטיות כבויות</b><small>את מי שנרשם מזמינים ידנית בדף של שחר.</small></div>';
+   else if(s.capToday)h+='<div class="bzRow shwNew"><b>⚠️ ההזמנות האוטומטיות נעצרו להיום</b><small>נרשמו היום יותר מ 25 כתובות. את השאר מזמינים ידנית בדף של שחר.</small></div>';
+   h+='<div class="bzRow"><b>👥 הצטרפו: '+(s.joined||0)+'</b><small>'+(s.newest?'האחרון: '+em(s.newest.email)+' · '+dd(s.newest.at):'עוד אף אחד')+'</small></div>'
+    +'<div class="bzRow"><b>✉️ קיבלו מכתב שחר מוכן: '+(s.ready||0)+'</b><small>מי שלא הצליח להיכנס קודם קיבל מכתב שהכל מוכן'+(s.loginWait?' · מחכים לכניסה עכשיו: '+s.loginWait:'')+'</small></div>'
+    +'<div class="bzRow"><b>🚪 נכנסו בפועל: '+(s.visited||0)+'</b><small>'+((s.visitors||[]).map(function(x){return em(x.email)+' · לאחרונה '+dd(x.lastAt)+' · '+(x.messages||0)+' הודעות';}).join('<br>')||'עוד אף אחד לא נכנס')+'</small></div>'
+    +'<div class="bzRow"><b>💬 משוב: '+(s.fb||0)+'</b><small>'+(s.helped==null?'עוד אין דירוגים':s.helped+'% מהתשובות עזרו')+'</small></div>';
+   if(w.length)h+='<details class="shwArch"><summary>📁 כל מי שנרשם באתר ('+w.length+')</summary>'+w.map(function(x,i){
+     return '<div class="shwArchRow" style="direction:rtl">'+(i+1)+'. '+em(x.email)+' · '+dd(x.created_at)+(x.invited?' · הוזמן ✓':' · יוזמן אוטומטית')+(x.ready?' · שחר מוכן ✓':'')+(x.visited?' · נכנס ✓':'')+'</div>';
+    }).join('')+'</details>';
+   return h;
   }
   // 2.11, Itzik: everything IT Solution in one tab, so it does not mix with Shachar and the rest.
   // Something new here? Bump BZ_UPD.its (and the gBiz data-upd) so the tab label and the tile blink.
@@ -16532,7 +16572,7 @@ function bizSheet(t0){
     +'<button type="button" class="yb" data-bz="shinv" data-k="mail">✉️ במייל</button>'
     +'<button type="button" class="yb" data-bz="shinv" data-k="copy">📋 העתקת ההזמנה</button>'
     +'<div class="bzSec">ניהול</div>'
-    +'<button type="button" class="yb" data-bz="shachar"><img src="icons/shachar.png" alt="" style="height:1.3em;vertical-align:-0.3em;border-radius:4px"> הדף של שחר: הזמנות לנסיינים</button>'
+    +'<button type="button" class="yb" data-bz="shachar"><img src="icons/shachar.png" alt="" style="height:1.3em;vertical-align:-0.3em;border-radius:4px"> הדף של שחר: מי הצטרף, מכתבים והזמנה ידנית</button>'
     +'<button type="button" class="yb" data-bz="shfb">🌅 שחר: משוב מהנסיינים</button>'
     +'<button type="button" class="yb" data-bz="shus">📊 שחר: מי משתמש ומתי</button>'
     +'<p class="bzEmpty">הסרטונים, הסטוריז והפוסט של שחר נמצאים באריח 🎬 הרילים שלי.</p>';
@@ -16565,7 +16605,7 @@ function bizSheet(t0){
     +'<p class="bzEmpty">הציון למעלה מ 0 עד 100, 100 זה הכי טוב. כל ליד שלא נגעו בו שבוע מוריד 8 נקודות, הצעה שלא חזרו אליה 3 ימים מורידה 12, ותזכורת שהגיעה ולא טופלה מורידה 6.</p>';
   }
   // 2.11, Itzik: a tab with something new blinks until he opens it. The stamp changes whenever something is added there.
-  var BZ_UPD={its:'20261103-form2b',shachar:'20261101-shachar-wl'};
+  var BZ_UPD={its:'20261103-form2b',shachar:(D.shSum&&D.shSum.upd)||'20261103-shachar-auto'};
   function bzSeen(){try{return JSON.parse(localStorage.getItem('bzTabSeen')||'{}');}catch(x){return {};}}
   function bzTabNew(k){return !!BZ_UPD[k]&&bzSeen()[k]!==BZ_UPD[k]&&k!==tab;}
   function bzMarkSeen(k){if(!BZ_UPD[k])return;var o=bzSeen();o[k]=BZ_UPD[k];try{localStorage.setItem('bzTabSeen',JSON.stringify(o));}catch(x){}}

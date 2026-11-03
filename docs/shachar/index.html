@@ -65,6 +65,13 @@
 
   <a class="open" href="https://shachar.abaitzik.com" target="_blank" rel="noopener">לפתוח את שחר</a>
 
+  <!-- 3.11, Itzik: "אני לא מאשר יותר ידני". What happened, not a to do list. -->
+  <section id="status">
+    <h2>פתוח עכשיו, הכניסה אוטומטית</h2>
+    <p class="sub">מי שמשאיר מייל באתר מקבל הזמנה ומכתב עם כפתור כניסה, בלי אישור שלך. המוניטור בודק כל רבע שעה.</p>
+    <div id="stat"></div>
+  </section>
+
   <section id="invite">
     <h2>להזמין חבר לשחר</h2>
     <div class="card">
@@ -97,13 +104,14 @@ https://abaitzik.com/shachar</p>
   </script>
 
   <section>
-    <div class="row"><h2>רשימת המתנה, לפי סדר ההרשמה</h2><button type="button" class="btn" id="refresh">רענון</button></div>
+    <div class="row"><h2>מי הצטרף, לפי סדר ההרשמה</h2><button type="button" class="btn" id="refresh">רענון</button></div>
     <p class="sub" id="wlAt"></p>
     <div id="wl"></div>
   </section>
 
   <section id="newtester">
-    <h2>הזמנת נסיין חדש</h2>
+    <h2>הזמנה ידנית, לא חובה</h2>
+    <p class="sub">רק למי שלא נרשם באתר. מי שנרשם באתר מוזמן לבד.</p>
     <p class="sub" id="how" hidden>לחיצה אחת מאשרת את המייל ושולחת לנסיין את המכתב.</p>
     <div class="card">
       <label for="email" style="margin-top:0">מייל של הנסיין</label>
@@ -144,11 +152,11 @@ https://abaitzik.com/shachar</p>
     <h2>הודעה לנסיין בוואטסאפ</h2>
     <div class="card">
       <p id="tsText" style="margin:0;white-space:pre-line">היי, אתה מהנסיינים הראשונים של שחר 🌅
-שחר זה משהו שאני בונה: מקום רגוע לדבר בו, ששולח לך כל בוקר הודעה קטנה שמרימה. זה עוד בהרצה סגורה, ורק מי שהזמנתי יכול להיכנס.
+שחר זה משהו שאני בונה: מקום רגוע לדבר בו, ששולח לך כל בוקר הודעה קטנה שמרימה. זה פתוח עכשיו, כל אחד נכנס עם המייל שלו.
 
 ככה נכנסים:
 1. פותחים באייפון את shachar.abaitzik.com דרך ספארי
-2. כותבים את המייל שאליו הזמנתי אותך, ומקבלים קוד כניסה למייל. אין סיסמה
+2. כותבים את המייל שלך, ומקבלים קוד כניסה למייל. אין סיסמה
 3. מוסיפים למסך הבית: כפתור השיתוף בספארי ואז "הוסף למסך הבית"
 4. פותחים את שחר מהאייקון ומאשרים התראות, ככה הודעת הבוקר תקפוץ לך על המסך
 
@@ -312,7 +320,7 @@ https://abaitzik.com/shachar</p>
  function day(iso){var d=new Date(iso);if(isNaN(d))return '';return d.getDate()+'.'+(d.getMonth()+1);}
  function mailUrl(to,su,bd){return 'https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(to)+'&su='+encodeURIComponent(su)+'&body='+encodeURIComponent(bd);}
 
- var D={invites:[],waitlist:[],waitlistAt:null,mailAuto:false};
+ var D={invites:[],waitlist:[],waitlistAt:null,mailAuto:false,readySent:{},usage:null,feedback:null,loginWait:[],autoOff:false,autoCapDay:null};
  var PEND=lget('shachPend',{}); // email -> time he tapped, until the server copy agrees
 
  // The key this browser holds from the monitor page, then the topic and the owner code from head.json.
@@ -333,7 +341,7 @@ https://abaitzik.com/shachar</p>
  }
  function load(){
   return keyOf().then(function(k){return open(k,'../data/shachar.json');}).then(function(d){
-   if(d){D={invites:d.invites||[],waitlist:d.waitlist||[],waitlistAt:d.waitlistAt||null,mailAuto:!!d.mailAuto};}
+   if(d){D={invites:d.invites||[],waitlist:d.waitlist||[],waitlistAt:d.waitlistAt||null,mailAuto:!!d.mailAuto,readySent:d.readySent||{},usage:d.usage||null,feedback:d.feedback||null,loginWait:d.loginWait||[],autoOff:!!d.autoOff,autoCapDay:d.autoCapDay||null};}
    if(d&&window.renderFb)window.renderFb(d.feedback||null);
    if(d&&window.renderUs)window.renderUs(d.usage||null);
    render();
@@ -366,6 +374,24 @@ https://abaitzik.com/shachar</p>
   if(PEND[email]&&Date.now()-PEND[email]<30*60e3)return 'wait';
   return '';
  }
+ var OWN=/^itcohen2(\+[^@]*)?@gmail\.com$/;
+ function visitors(){return ((D.usage&&D.usage.perUser)||[]).filter(function(x){return x&&x.email&&!OWN.test(String(x.email).toLowerCase());});}
+ function visited(email){email=String(email||'').toLowerCase();return visitors().some(function(x){return String(x.email).toLowerCase()===email;});}
+ // 3.11: the picture at the top. Who joined, who got the ready letter, who really came in, feedback.
+ function stat(){
+  var joined=D.invites.filter(function(x){return x.status==='invited'&&!OWN.test(x.email);}).sort(function(a,b){return String(b.at).localeCompare(String(a.at));});
+  var ready=Object.keys(D.readySent||{}).filter(function(e){return !OWN.test(e);});
+  var vs=visitors().slice().sort(function(a,b){return String(b.lastAt).localeCompare(String(a.lastAt));});
+  var fb=D.feedback,rows=(fb&&fb.rows)||[],all=(fb&&fb.all)||{};
+  var today=new Date().toISOString().slice(0,10);
+  function card(k,v,sub){return '<div class="card"><div class="row"><b>'+k+'</b><b>'+v+'</b></div>'+(sub?'<div class="meta">'+sub+'</div>':'')+'</div>';}
+  var warn=D.autoOff?card('⚠️ ההזמנות האוטומטיות כבויות','','את מי שנרשם מזמינים ידנית למטה.'):(D.autoCapDay===today?card('⚠️ ההזמנות האוטומטיות נעצרו להיום','','נרשמו היום יותר מ 25 כתובות. את השאר מזמינים ידנית למטה.'):'');
+  $('stat').innerHTML=warn
+   +card('👥 הצטרפו',joined.length,joined[0]?'האחרון: <bdi>'+esc(joined[0].email)+'</bdi> · '+esc(day(joined[0].at)):'עוד אף אחד')
+   +card('✉️ קיבלו מכתב שחר מוכן',ready.length,'מי שלא הצליח להיכנס קודם קיבל מכתב שהכל מוכן'+(D.loginWait&&D.loginWait.length?' · מחכים לכניסה עכשיו: '+D.loginWait.length:''))
+   +card('🚪 נכנסו בפועל',vs.length,(vs.map(function(x){return '<bdi>'+esc(x.email)+'</bdi> · לאחרונה '+esc(day(x.lastAt))+' · '+(x.messages||0)+' הודעות';}).join('<br>')||'עוד אף אחד לא נכנס')+'<br><a href="index.html?view=usage" style="color:var(--sun)">מי משתמש ומתי</a>')
+   +card('💬 משוב',rows.length,(all.helpedPct==null?'עוד אין דירוגים':all.helpedPct+'% מהתשובות עזרו')+'<br><a href="index.html?view=feedback" style="color:var(--sun)">לכל המשוב</a>');
+ }
  function tags(email){
   var s=status(email),i=rec(email),t='';
   if(s==='invited')t+='<span class="tag ok">הוזמן ✓</span>';
@@ -375,6 +401,8 @@ https://abaitzik.com/shachar</p>
    else if(i.letterMode==='draft')t+=' <span class="tag wait">המכתב נפתח בג׳ימייל</span>';
    else if(i.letterErr)t+=' <span class="tag no">המכתב לא נשלח</span>';
   }
+  if(D.readySent&&D.readySent[email])t+=' <span class="tag ok">שחר מוכן נשלח ✓</span>';
+  if(visited(email))t+=' <span class="tag ok">נכנס ✓</span>';else if(s==='invited')t+=' <span class="tag wait">עוד לא נכנס</span>';
   return t;
  }
  function sendLabel(email){
@@ -397,12 +425,13 @@ https://abaitzik.com/shachar</p>
   // already invited folds into one closed line, opened only when he wants it.
   var wl=D.waitlist.slice().sort(function(a,b){return String(a.created_at).localeCompare(String(b.created_at));});
   var todo=wl.filter(function(w){return status(w.email)!=='invited';}),done=wl.filter(function(w){return status(w.email)==='invited';});
-  function line(email,when){return '<div class="line"><div><div class="em">'+esc(email)+'</div><div class="meta">'+esc(when)+'</div></div>'+actions(email)+'</div>';}
+  function line(email,when){return '<div class="line"><div><div class="em">'+esc(email)+'</div><div class="meta">'+esc(when)+'</div><div class="acts">'+tags(email)+'</div></div>'+actions(email)+'</div>';}
+  stat();
   $('wl').innerHTML=(todo.length?todo.map(function(w,i){
-   return '<div class="card wlNew"><div class="row"><div><div class="em">'+(i+1)+'. '+esc(w.email)+'</div><div class="meta">נרשם '+esc(day(w.created_at))+'</div></div>'+actions(w.email)+'</div>'
+   return '<div class="card wlNew"><div class="row"><div><div class="em">'+(i+1)+'. '+esc(w.email)+'</div><div class="meta">נרשם '+esc(day(w.created_at))+((D.autoOff||D.autoCapDay===new Date().toISOString().slice(0,10))?'':' · יוזמן אוטומטית ברבע השעה הקרובה')+'</div></div>'+actions(w.email)+'</div>'
     +'<div class="acts">'+tags(w.email)+'</div></div>';
-  }).join(''):'<p class="empty">'+(wl.length?'אין אף אחד שמחכה להזמנה.':'אין אף אחד ברשימה.')+'</p>')
-   +(done.length?'<details class="done"><summary>כבר הוזמנו ('+done.length+') · הוזמן ✓ המכתב נשלח ✓</summary>'+done.map(function(w){return line(w.email,'נרשם '+day(w.created_at));}).join('')+'</details>':'');
+  }).join(''):'<p class="empty">'+(wl.length?'כולם כבר הוזמנו אוטומטית.':'אין אף אחד ברשימה.')+'</p>')
+   +(done.length?'<details class="done"><summary>כולם ('+done.length+') · הוזמנו, המכתב נשלח</summary>'+done.slice().reverse().map(function(w){return line(w.email,'נרשם '+day(w.created_at));}).join('')+'</details>':'');
   $('inv').innerHTML=D.invites.length?'<details class="done"><summary>כל ההזמנות ('+D.invites.length+')</summary>'+D.invites.map(function(x){
    return line(x.email,day(x.at)+(x.note?' · '+x.note:''));
   }).join('')+'</details>':'<p class="empty">עוד לא הזמנת אף אחד.</p>';

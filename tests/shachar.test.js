@@ -207,14 +207,20 @@ test('the page: back button, big link, the exact invite text, no dashes in visib
   const html = fs.readFileSync(path.join(__dirname, '..', 'docs', 'shachar', 'index.html'), 'utf8');
   assert.match(html, /href="\.\.\/index\.html"/);
   assert.match(html, /href="https:\/\/shachar\.abaitzik\.com"[^>]*>לפתוח את שחר</);
-  assert.match(html, /רשימת המתנה, לפי סדר ההרשמה/);
-  assert.match(html, /הזמנת נסיין חדש/);
+  assert.match(html, /מי הצטרף, לפי סדר ההרשמה/);
+  assert.match(html, /הזמנה ידנית, לא חובה/);
+  // 3.11, Itzik: "אני לא מאשר יותר ידני". The page says entry is open and automatic, first.
+  assert.match(html, /פתוח עכשיו, הכניסה אוטומטית/);
+  assert.ok(html.indexOf('פתוח עכשיו, הכניסה אוטומטית') < html.indexOf('מי הצטרף, לפי סדר ההרשמה'));
+  assert.ok(!html.includes('בהרצה סגורה'));
+  assert.match(html, /שחר מוכן נשלח ✓/);
+  assert.match(html, /נכנס ✓/);
   assert.match(html, /להזמין ולשלוח מכתב/);
   assert.match(html, /לשלוח שוב את המכתב/);
   assert.match(html, /המכתב נשלח ✓/);
   assert.match(html, /הוזמן ✓/);
   // 1.11, Itzik: the waitlist comes first, oldest signup first, and only invitations on the page.
-  assert.ok(html.indexOf('רשימת המתנה, לפי סדר ההרשמה') < html.indexOf('הזמנת נסיין חדש'));
+  assert.ok(html.indexOf('מי הצטרף, לפי סדר ההרשמה') < html.indexOf('הזמנה ידנית, לא חובה'));
   assert.ok(!/id="(motion|voice|posts|logos)"/.test(html));
   assert.ok(html.includes('value="הזמנה לנסות את שחר"'));
   const body = [
@@ -245,6 +251,10 @@ test('the built monitor page opens the Shachar page from inside העסק שלי 
   assert.match(html, /id="gShachar"/);
   assert.match(html, /data-bz="shachar"/);
   assert.match(html, /shachar\/index\.html/);
+  // 3.11: the home tile tells the current state, not the old waitlist wording.
+  assert.match(html, /id="gShachar"[^>]*data-upd="sh-[^"]+"/);
+  assert.match(html, /id="gShachar"[\s\S]{0,400}<small>פתוח עכשיו/);
+  assert.ok(!/רשימת ההמתנה של שחר/.test(html));
 });
 
 // 3.11, Itzik: no manual approval. A waitlist email is invited and gets the welcome letter on the next refresh.
