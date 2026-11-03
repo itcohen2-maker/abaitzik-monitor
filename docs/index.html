@@ -2730,7 +2730,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-03T10:18:55.119Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-03T10:25:45.782Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3100,14 +3100,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4637,7 +4630,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='cdb9313496';
+var CODE_ID='1873dadfe2';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10596,7 +10589,10 @@ var REEL_ITEMS=[
 {n:'31 פרסום',t:'כיתוב, מוזיקה והאשטגים לכל רשת',r:'reel-31-post.txt'},
 {n:'32',t:'שחר, למי זה: תמיכה רגשית, מי שירים אותך, עם מי לדבר · 4K הכי איכותי, לשמירה בגלריה',r:'reel-32-shachar.mp4'},
 {n:'32 כריכה',t:'הכריכה · 4K',r:'reel-32-cover.jpg'},
-{n:'32 פרסום',t:'כיתוב, מוזיקה והאשטגים לכל רשת',r:'reel-32-post.txt'}
+{n:'32 פרסום',t:'כיתוב, מוזיקה והאשטגים לכל רשת',r:'reel-32-post.txt'},
+{n:'33',t:'סוכר, מיתוס: שופך סוכר עם שייק ומדבקת מיתוס, ועד 13 סוגי סרטן · 4K הכי איכותי, לשמירה בגלריה',r:'reel-33-sugar.mp4'},
+{n:'33 כריכה',t:'הכריכה · 4K',r:'reel-33-cover.jpg'},
+{n:'33 פרסום',t:'כיתוב, מוזיקה והאשטגים לכל רשת',r:'reel-33-post.txt'}
 ];
 function reelSheet(){
  var old=document.getElementById('rlSheet');if(old)old.remove();
@@ -16784,7 +16780,7 @@ floatTile=function(id,up){if(document.body.classList.contains('world'))return;re
 
 boot('worlds',worldSync);
 boot('design',dzBoot);
-var PUSH_KEY="BDlgL4lKYXBB2yk96UVlN_bNhLBppiq0K8ORV-TQ2jb7k8IMskeWYICec19xE7N5VEcCzVXZU9Pxb9e64KH8OCk";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
