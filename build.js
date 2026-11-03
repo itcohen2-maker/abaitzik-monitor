@@ -8969,8 +8969,13 @@ document.addEventListener('click',function(e){
  if(!pendingCode||rec||recStarting||typingNow())return;
  var t=e.target.closest?e.target.closest('.gt'):null;
  if(!t)return;
+ // 3.11: a tap is held once, never twice. If no reload came within two
+ // seconds the tap goes through, so a tile can never be locked (he could not
+ // open any tile when pendingCode stayed set after the page caught up).
+ pendingCode='';
  e.preventDefault();e.stopPropagation();
  wokeAt=Date.now();checkFresh();
+ setTimeout(function(){try{t.click();}catch(x){}},2000);
 },true);
 function checkFresh(){
  if(!window.fetch)return;
@@ -8989,7 +8994,7 @@ function checkFresh(){
   if(v)paintLive(v);
   if(v&&v.builtAt===D.builtAt){if(typeof v.answers==='number')ansBase=v.answers;markUpd(false);}
   if(v&&ansBase==null&&typeof v.answers==='number')ansBase=v.answers;
-  if(!v||!v.builtAt||v.builtAt===D.builtAt)return;
+  if(!v||!v.builtAt||v.builtAt===D.builtAt){pendingCode='';return;}
   var what=document.getElementById('liveWhat');
   var codeNew=!(v.codeId&&CODE_ID&&v.codeId===CODE_ID);
   var jump=codeNew&&Date.now()-wokeAt<10000&&!(recStarting||rec)&&!typingNow();
