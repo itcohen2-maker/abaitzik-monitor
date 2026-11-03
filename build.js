@@ -4491,7 +4491,7 @@ ${require('./lib/home-ui.js').html}
     and no screens list (Itzik's copy). A customer with a screens list gets the
     tile from tenantTiles, only when gBiz is in that list.
   -->
-${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261102-its2' + newestLead() + '"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
+${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261103-form2' + newestLead() + '"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
 <!--TENANT:BEGIN-->
   <!--
     A customer's home screen, built from his intake answers and not filtered
@@ -16518,6 +16518,8 @@ function bizSheet(t0){
     // 2.11, Itzik: send the view link to someone for a second opinion. /view never reports an open and cannot sign.
     +'<a class="yb wa" href="https://wa.me/?text=%D7%A8%D7%95%D7%A6%D7%94%20%D7%9C%D7%A9%D7%9E%D7%95%D7%A2%20%D7%9E%D7%94%20%D7%90%D7%AA%D7%94%20%D7%97%D7%95%D7%A9%D7%91%20%D7%A2%D7%9C%20%D7%94%D7%A6%D7%A2%D7%AA%20%D7%94%D7%9E%D7%97%D7%99%D7%A8%20%D7%94%D7%96%D7%90%D7%AA%20%28%D7%AA%D7%A6%D7%95%D7%92%D7%94%20%D7%91%D7%9C%D7%91%D7%93%2C%20%D7%90%D7%99%20%D7%90%D7%A4%D7%A9%D7%A8%20%D7%9C%D7%97%D7%AA%D7%95%D7%9D%20%D7%9E%D7%9E%D7%A0%D7%94%29%3A%20https%3A//form.it-solution.co.il/q/a9cf9d55064a85b58583/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">💬 לשלוח את ההצעה בוואטסאפ להתייעצות</a>'
     +'<button type="button" class="yb yb2" data-bz="sign-shai">✍️ הצעת מחיר לשי: לשלוח לחתימה בטלפון</button>'
+    // 3.11, Itzik: "לשלוח לו טופס מידע", the connections form (what he has, so we know what to connect).
+    +'<button type="button" class="yb yb1" data-bz="form2-shai">📋 טופס מידע לשי: לשלוח לו</button>'
     ;
   }
   // 3.11, Itzik: "הזמנה לשחר", a message he can send in WhatsApp or by mail. The words of the post on the site.
@@ -16565,7 +16567,7 @@ function bizSheet(t0){
     +'<p class="bzEmpty">הציון למעלה מ 0 עד 100, 100 זה הכי טוב. כל ליד שלא נגעו בו שבוע מוריד 8 נקודות, הצעה שלא חזרו אליה 3 ימים מורידה 12, ותזכורת שהגיעה ולא טופלה מורידה 6.</p>';
   }
   // 2.11, Itzik: a tab with something new blinks until he opens it. The stamp changes whenever something is added there.
-  var BZ_UPD={its:'20261102-1250',shachar:'20261101-shachar-wl'};
+  var BZ_UPD={its:'20261103-form2',shachar:'20261101-shachar-wl'};
   function bzSeen(){try{return JSON.parse(localStorage.getItem('bzTabSeen')||'{}');}catch(x){return {};}}
   function bzTabNew(k){return !!BZ_UPD[k]&&bzSeen()[k]!==BZ_UPD[k]&&k!==tab;}
   function bzMarkSeen(k){if(!BZ_UPD[k])return;var o=bzSeen();o[k]=BZ_UPD[k];try{localStorage.setItem('bzTabSeen',JSON.stringify(o));}catch(x){}}
@@ -16602,6 +16604,11 @@ function bizSheet(t0){
     if(a==='sign-shai'){var su='https://form.it-solution.co.il/q/a9cf9d55064a85b58583',st='שי, מצורפת הצעת המחיר. אפשר לעבור עליה ולחתום ישר מהטלפון:';
      if(navigator.share){navigator.share({title:'הצעת מחיר, IT Solution',text:st,url:su}).catch(function(){});}
      else{try{navigator.clipboard.writeText(st+' '+su);toast('הקישור לחתימה הועתק. מדביקים לשי בוואטסאפ או במייל.');}catch(x){toast(su);}}
+     return;}
+    // 3.11: the connections form. Shared or copied, never opened here: opening it reports "שי פתח את טופס האפיון".
+    if(a==='form2-shai'){var f2='https://form.it-solution.co.il/f/c94dc7fa0f53147ed133',f2t='שי, כדי שנחבר את המוניטור בדיוק למה שיש לך, הכנו טופס קצר. רוב השאלות רק לסמן, כ 5 דקות:';
+     if(navigator.share){navigator.share({title:'טופס חיבורים, IT Solution',text:f2t,url:f2}).catch(function(){});}
+     else{try{navigator.clipboard.writeText(f2t+' '+f2);toast('הקישור לטופס הועתק. מדביקים לשי בוואטסאפ או במייל.');}catch(x){toast(f2);}}
      return;}
     if(a==='form-shai'){var fu='https://form.it-solution.co.il/f/db3cf21b5fe4b773cc20',ft='שי, לקראת הפגישה ביום שלישי הכנו שאלון היכרות קצר, רק לסמן, 3 דקות. ככה נבנה לך הדגמה בדיוק לפי העסק שלך:';
      if(navigator.share){navigator.share({title:'שאלון היכרות',text:ft,url:fu}).catch(function(){});}else{window.open(fu,'_blank');}
