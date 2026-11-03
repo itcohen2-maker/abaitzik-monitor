@@ -1184,7 +1184,9 @@ test('the three health buttons left the home screen and live in the ideas screen
   // Itzik, 16.9: take the food button off, take the photo button off, move it
   // all to ideas, and the pill button too. Off the grid, not deleted.
   const grid = html.slice(html.indexOf('id="blkTiles"'), html.indexOf('id="gSearch"'));
-  assert.ok(!grid.includes('id="gPill"'));
+  // 3.11, Itzik: the pill tile is back on the grid, at the top (the one exception).
+  assert.ok(grid.includes('id="gPill" data-new="1"'));
+  assert.ok(grid.indexOf('id="gPill"') < grid.indexOf('id="gShachar"'));
   assert.ok(!grid.includes('id="gCam"'));
   assert.ok(!grid.includes('id="gFood"'));
   // They open from the ideas screen instead, with the same three labels.

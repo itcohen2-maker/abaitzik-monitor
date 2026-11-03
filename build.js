@@ -4255,6 +4255,8 @@ ${require('./lib/home-ui.js').html}
  <div class="grid" id="blkTiles">
   <!-- 3.11, Itzik: "אני צריך אריח שממש יעבב לי, כמו ליד חדש". First on the grid; shows while a --nag reminder is open, hard blink once it is due, until "✅ עשיתי". -->
   <button type="button" class="gt g16 leadNew" id="gRemTop" hidden><b>⏰ תזכורת</b><small></small></button>
+  <!-- 3.11, Itzik: "תחזיר לי את האריח שצריך לקחת כדור", two a day, morning and evening. First on the grid. -->
+  <button type="button" class="gt g16" id="gPill" data-new="1"><b>⏰ הכדור</b><small>בוקר וערב, לחיצה מסמנת שלקחת</small></button>
   <!-- 1.11, Itzik: "ביקשתי אייקון של שחר במוניטור כבר כמה פעמים". First on the grid, so it is seen. -->
   <button type="button" class="gt gNer" data-grp="net" id="gShachar" data-new="1" data-upd="${shState().upd}"><b><img src="icons/shachar.png" alt="" style="height:1.1em;vertical-align:-0.2em;border-radius:4px"> שחר</b><small>${shTileSmall()}</small></button>
   <button type="button" class="gt gStory" data-grp="proj" id="gPegasus" data-new="1" data-upd="20261031-peg-status"><b>🐎 פגסוס</b><small>רק ההודעה האחרונה והשאלה שמחכה לך, הישנות נעלמות</small></button>
