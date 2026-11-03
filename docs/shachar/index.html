@@ -140,14 +140,16 @@
   </script>
 
   <section id="invite">
-    <h2>להזמין לרשימת ההמתנה</h2>
+    <h2>להזמין חבר לשחר</h2>
     <div class="card">
-      <img src="invite.png" alt="תמונת ההזמנה: רשימת המתנה לשחר" style="width:100%;border-radius:10px">
-      <p id="invText" style="margin:10px 0 0">בונה משהו חדש: שחר. הודעת בוקר שנותנת כוח לקום, ומישהו לדבר איתו בימים הקשים. רוצה להיות מהראשונים? שמור לך מקום כאן 🌅
-https://abaitzik.com/shachar/</p>
+      <img src="invite.png?v=0311" alt="תמונת ההזמנה: שחר, איזה כיף יש עם מי לדבר" style="width:100%;border-radius:10px">
+      <p id="invText" style="margin:10px 0 0">איזה כיף, יש עם מי לדבר, ויש מי שיעודד אותי, גם בימים הקשים 🌅
+בעקבות המחלה שעברתי, ועדיין מתמודד עם החלמה קשה, אני יודע כמה צריך מישהו שירים אותך. אז בניתי משהו שאפשר לדבר איתו כל היום, ושייתן לך מוטיבציה.
+שחר, האפליקציה שאני בונה. בקשת כניסה דרך האתר:
+https://abaitzik.com</p>
       <button type="button" class="btn main wide" id="invShare">שליחה לחבר</button>
       <div class="acts">
-        <a class="btn" id="invMsgr" href="fb-messenger://share/?link=https%3A%2F%2Fabaitzik.com%2Fshachar%2F">מסנג׳ר</a>
+        <a class="btn" id="invMsgr" href="fb-messenger://share/?link=https%3A%2F%2Fabaitzik.com">מסנג׳ר</a>
         <a class="btn" id="invWa" href="#">וואטסאפ</a>
         <button type="button" class="btn" id="invCopy">העתקה</button>
       </div>
@@ -157,12 +159,12 @@ https://abaitzik.com/shachar/</p>
 
   <script>
   (function(){
-    var url='https://abaitzik.com/shachar/', text=document.getElementById('invText').textContent.trim(), msg=document.getElementById('invMsg');
+    var url='https://abaitzik.com', text=document.getElementById('invText').textContent.trim(), msg=document.getElementById('invMsg');
     document.getElementById('invWa').href='https://wa.me/?text='+encodeURIComponent(text);
     function copy(){ (navigator.clipboard?navigator.clipboard.writeText(text):Promise.reject()).then(function(){msg.textContent='הועתק. אפשר להדביק בכל צ׳אט.';},function(){msg.textContent='לא הצלחתי להעתיק, אפשר לסמן את הטקסט ולהעתיק.';}); }
     document.getElementById('invCopy').onclick=copy;
     document.getElementById('invShare').onclick=function(){
-      if(navigator.share){ navigator.share({title:'רשימת המתנה לשחר',text:text.replace(url,'').trim(),url:url}).catch(function(){}); }
+      if(navigator.share){ navigator.share({title:'שחר',text:text.replace(url,'').trim(),url:url}).catch(function(){}); }
       else copy();
     };
   })();
