@@ -1157,9 +1157,9 @@ function build() {
     }
   }
   // 3.11, IT Solution customers: the help, the quota and the admin request texts say "איציק"; a business customer sees adminName instead.
-  if (inst.adminName && inst.name !== 'abaitzik') html = html.replace(/(^|[^א-ת])([לשמו]?)איציק/g, (m, p, pre) => p + pre + inst.adminName);
+  const adminOut = (inst.adminName && inst.name !== 'abaitzik') ? html.replace(/(^|[^א-ת])([לשמו]?)איציק/g, (m, p, pre) => p + pre + inst.adminName) : html;
   fs.mkdirSync(OUT_DIR, { recursive: true });
-  fs.writeFileSync(path.join(OUT_DIR, 'index.html'), html, 'utf8');
+  fs.writeFileSync(path.join(OUT_DIR, 'index.html'), adminOut, 'utf8');
   fs.writeFileSync(path.join(OUT_DIR, '.nojekyll'), '', 'utf8');
   // The live strip reads this every forty seconds. It carries what I am doing
   // right now and how many answers are waiting, so the screen can say it
