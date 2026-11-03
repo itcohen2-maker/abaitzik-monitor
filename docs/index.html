@@ -2730,7 +2730,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-03T14:23:22.454Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-03T14:25:14.396Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2942,7 +2942,7 @@ try{
    <svg viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>חדש</button>
  </div>
 
-<div class="grid" id="blkBiz"><button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="waitlist|2026-11-02T11:50:33.790Z,waitlist|2026-11-03T09:55:56.780Z,waitlist|2026-11-03T10:16:43.608Z,waitlist|2026-11-03T10:18:13.943Z,waitlist|2026-11-03T11:07:53.373Z"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button><button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261103-form2-202611031107"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div><script>
+<div class="grid" id="blkBiz"><button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="waitlist|2026-11-02T11:50:33.790Z,waitlist|2026-11-03T09:55:56.780Z,waitlist|2026-11-03T10:16:43.608Z,waitlist|2026-11-03T10:18:13.943Z,waitlist|2026-11-03T11:07:53.373Z"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button><button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261103-form2b-202611031107"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div><script>
 (function(){
  var K='leadSeen';
  function seen(){try{return JSON.parse(localStorage.getItem(K)||'[]');}catch(e){return [];}}
@@ -3100,14 +3100,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4637,7 +4630,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='474f663581';
+var CODE_ID='8ba49ba079';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12678,9 +12671,9 @@ function bizSheet(t0){
     +(typeof dmoStart==='function'?'<button type="button" class="yb yb1" data-bz="demo">🎬 מצב הדגמה ללקוח</button>':'')
     +'<button type="button" class="yb" data-bz="anim" data-f="demo-script-shai.pdf">🎬 תסריט ההדגמה לשי (PDF)</button>'
     +'<div class="bzSec">שי בודק, יועץ עסקי</div>'
+    +'<button type="button" class="yb yb1" data-bz="form2-shai">📋 טופס מידע לשי: לשלוח לו</button>'
     +'<a class="yb yb2" href="https://form.it-solution.co.il/q/a9cf9d55064a85b58583/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 ההצעה לשי, כמו שהוא רואה אותה</a>'
     +'<button type="button" class="yb yb2" data-bz="sign-shai">✍️ הצעת מחיר לשי: לשלוח לחתימה בטלפון</button>'
-    +'<button type="button" class="yb yb1" data-bz="form2-shai">📋 טופס מידע לשי: לשלוח לו</button>'
     ;
   }
   var SH_INV_URL='https://abaitzik.com/shachar'; // 3.11: this path carries Shachar's share image (the home page carries the site's)
@@ -12725,7 +12718,7 @@ function bizSheet(t0){
    return '<div class="bzHead">👥 לידים ולקוחות</div>'+newLeadHtml()+leadsHtml()
     +'<p class="bzEmpty">הציון למעלה מ 0 עד 100, 100 זה הכי טוב. כל ליד שלא נגעו בו שבוע מוריד 8 נקודות, הצעה שלא חזרו אליה 3 ימים מורידה 12, ותזכורת שהגיעה ולא טופלה מורידה 6.</p>';
   }
-  var BZ_UPD={its:'20261103-form2',shachar:'20261101-shachar-wl'};
+  var BZ_UPD={its:'20261103-form2b',shachar:'20261101-shachar-wl'};
   function bzSeen(){try{return JSON.parse(localStorage.getItem('bzTabSeen')||'{}');}catch(x){return {};}}
   function bzTabNew(k){return !!BZ_UPD[k]&&bzSeen()[k]!==BZ_UPD[k]&&k!==tab;}
   function bzMarkSeen(k){if(!BZ_UPD[k])return;var o=bzSeen();o[k]=BZ_UPD[k];try{localStorage.setItem('bzTabSeen',JSON.stringify(o));}catch(x){}}
@@ -16789,7 +16782,7 @@ floatTile=function(id,up){if(document.body.classList.contains('world'))return;re
 
 boot('worlds',worldSync);
 boot('design',dzBoot);
-var PUSH_KEY="BDlgL4lKYXBB2yk96UVlN_bNhLBppiq0K8ORV-TQ2jb7k8IMskeWYICec19xE7N5VEcCzVXZU9Pxb9e64KH8OCk";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
