@@ -4363,7 +4363,7 @@ ${require('./lib/home-ui.js').html}
     is amirshwartz1's TikTok comment on the cake video (55 likes).
   -->
   <button type="button" class="gt gWin" data-grp="net" id="gWin" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
-  <button type="button" class="gt gReel" data-grp="net" id="gReels" data-upd="20261103-33cover"><b>🎬 הרילים שלי</b><small>חדש: 32 שחר, וכל הסרטונים של שחר</small></button>
+  <button type="button" class="gt gReel" data-grp="net" id="gReels" data-upd="20261103-shachar-open"><b>🎬 הרילים שלי</b><small>חדש: כל סרטוני שחר מתוקנים, פתוח עכשיו</small></button>
   <button type="button" class="gt gFut" data-grp="net" id="gFut" data-upd="20261103-futclean"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 21 איך נכנסים לאתר, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור, 08 שרירים והגיל, 09 קונטרה למינוס, 17 המבריק במדיח</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
@@ -14142,26 +14142,31 @@ function captionSheet(it){
 // 20.10, Itzik: empty the list. The old 12 are in data/_archive/reel-items-20261020.json. From now on only new finished reels go in.
 // 24.10: 26 is part 2 of the brand post, coffee spilled on the same white shirt.
 var REEL_ITEMS=[
-{n:'28 סטורי שחר',t:'שחר, אפליקציית המוטיבציה במתנה (מתוקן: לוגו מדורג והרשמה באתר) · 4K הכי איכותי, לשמירה בגלריה',r:'story-28-shachar.mp4'},
-{n:'28 סטורי האתר',t:'יש לי אתר חדש, כולם מוזמנים · 4K הכי איכותי, לשמירה בגלריה',r:'story-28-site.mp4'},
-{n:'28 פוסט שחר',t:'הפוסט של שחר לשיתוף · תמונה',r:'shachar-post.png'},
-{n:'29',t:'ריל שחר 1: איזה כיף, יש עם מי לדבר · 4K הכי איכותי, לשמירה בגלריה',r:'shachar-reel-1.mp4'},
-{n:'30',t:'ריל שחר 2: מאחורי הקלעים · 4K הכי איכותי, לשמירה בגלריה',r:'shachar-reel-2.mp4'},
-{n:'29 30 פרסום',t:'תיאור לרילים של שחר, לטרייל',r:'shachar-reels-trial.txt'},
+{n:'28 סטורי האתר',t:'יש לי אתר חדש, כולם מוזמנים (מתוקן: שחר כבר פתוח, ועם לוגו) · 4K הכי איכותי, לשמירה בגלריה',r:'story-28-site-open.mp4'},
 {n:'31ג',t:'מתוקן: מתחיל בקפיצה לכיסא, ההתחלה בלי חיתוכים, נשימה אחרי תאט ושנייה בסוף · 4K הכי איכותי, לשמירה בגלריה',r:'reel-31c-tafsik.mp4'},
 {n:'31ד',t:'מתוקן: הכתוביות נכנסות כשאתה מתחיל לדבר, ושייק בקפיצה לכיסא · 4K הכי איכותי, לשמירה בגלריה',r:'reel-31d-tafsik.mp4'},
 {n:'31ה',t:'מתוקן: השייק נגמר לפני שאתה מדבר, והרקע לא קופץ בין החיתוכים · 4K הכי איכותי, לשמירה בגלריה',r:'reel-31e-tafsik.mp4'},
 {n:'31 כריכה',t:'הכריכה · 4K',r:'reel-31-cover.jpg'},
 {n:'31 פרסום',t:'כיתוב, מוזיקה והאשטגים לכל רשת',r:'reel-31-post.txt'},
-{n:'32',t:'שחר, למי זה: תמיכה רגשית, מי שירים אותך, עם מי לדבר · 4K הכי איכותי, לשמירה בגלריה',r:'reel-32-shachar.mp4'},
-{n:'32 כריכה',t:'הכריכה · 4K',r:'reel-32-cover.jpg'},
-{n:'32 פרסום',t:'כיתוב, מוזיקה והאשטגים לכל רשת',r:'reel-32-post.txt'},
 {n:'33',t:'סוכר, מיתוס: שופך סוכר עם שייק ומדבקת מיתוס, ועד 13 סוגי סרטן · 4K הכי איכותי, לשמירה בגלריה',r:'reel-33-sugar.mp4'},
 {n:'33ב',t:'מתוקן: המדבקה עפה פנימה ונדבקת עם שייק, חצי שנייה עצירה אחרי השאלה, חולה באדום, אפסיק, הכיתוב רק כשאתה מדבר, משפטים מלאים · 4K הכי איכותי, לשמירה בגלריה',r:'reel-33b-sugar.mp4'},
 {n:'33ג',t:'מתוקן: מיתוס כחותמת דיו שנדבקת חזק עם רעד מסביב, וההוק נצבע באדום מילה אחרי מילה · 4K הכי איכותי, לשמירה בגלריה',r:'reel-33c-sugar.mp4'},
 {n:'33ד',t:'מתוקן: כל כיתוב נכנס בדיוק כשאתה מתחיל לדבר, גם כי כל תא בגוף · 4K הכי איכותי, לשמירה בגלריה',r:'reel-33d-sugar.mp4'},
 {n:'33 כריכה',t:'הכריכה עם ההוק: סוכר מאכיל את הסרטן? · 4K',r:'reel-33-cover.jpg'},
-{n:'33 פרסום',t:'כיתוב עם המקורות לכל רשת, My October, ושתי הודעות מוכנות: המקורות ופט סיטי',r:'reel-33-post.txt'}
+{n:'33 פרסום',t:'כיתוב עם המקורות לכל רשת, My October, ושתי הודעות מוכנות: המקורות ופט סיטי',r:'reel-33-post.txt'},
+// 3.11, Itzik: "אין יותר רשימת המתנה, הרשמה וישר נכנסים". All of Shachar in one group, shown first;
+// 'p' is the reel-posts.json key for a פרסום item whose name does not start with its number.
+{n:'שחר סטורי',t:'שחר פתוח עכשיו, נרשמים ונכנסים מיד · 4K הכי איכותי, לשמירה בגלריה',r:'shachar-story-open.mp4'},
+{n:'שחר פוסט',t:'תמונה לשיתוף: פתוח עכשיו, נרשמים ונכנסים מיד',r:'shachar-post-open.png'},
+{n:'שחר 29',t:'ריל: איזה כיף, יש עם מי לדבר · 4K הכי איכותי, לשמירה בגלריה',r:'shachar-reel-29-open.mp4'},
+{n:'שחר 29 כריכה',t:'הכריכה · 4K',r:'reel-29-cover.jpg'},
+{n:'שחר 29 פרסום',p:'29',t:'כיתוב, מוזיקה והאשטגים לכל רשת',r:'reel-29-post.txt'},
+{n:'שחר 30',t:'ריל: מאחורי הקלעים · 4K הכי איכותי, לשמירה בגלריה',r:'shachar-reel-30-open.mp4'},
+{n:'שחר 30 כריכה',t:'הכריכה · 4K',r:'reel-30-cover.jpg'},
+{n:'שחר 30 פרסום',p:'30',t:'כיתוב, מוזיקה והאשטגים לכל רשת',r:'reel-30-post.txt'},
+{n:'שחר 32',t:'ריל: למי זה, תמיכה רגשית ועם מי לדבר · 4K הכי איכותי, לשמירה בגלריה',r:'reel-32-shachar-open.mp4'},
+{n:'שחר 32 כריכה',t:'הכריכה · 4K',r:'reel-32-cover.jpg'},
+{n:'שחר 32 פרסום',p:'32',t:'כיתוב, מוזיקה והאשטגים לכל רשת',r:'reel-32-post-open.txt'}
 ];
 function reelSheet(){
  var old=document.getElementById('rlSheet');if(old)old.remove();
@@ -14220,7 +14225,7 @@ function postCopy(t,done){
  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(done,function(){});
 }
 function postSheet(it){
- var num=String(it.n).split(' ')[0];
+ var num=it.p||String(it.n).split(' ')[0];
  postsLoad().then(function(P){
   var d=P[num];if(!d)throw 0;
   var texts=[];
