@@ -8,6 +8,8 @@
 
   data/forms/<token>.def.json   the form: { client, title, hello, questions: [
                                   { id, q, multi?, max?, options: [...] } ] }
+                                3.11: a question may be { id, q, text: true, rows?, hint? } (free text),
+                                and the def may set thanks (the text after sending).
   data/forms/<token>.json       the answers, saved on every tap:
                                   { answers: {id: [..]}, openedAt, updatedAt, submittedAt, reported }
 
@@ -32,7 +34,7 @@ function summary(d, s, partial) {
     const a = (s.answers || {})[q.id];
     t += (i + 1) + '. ' + q.q + NL + '   ' + (a && a.length ? a.join(', ') : 'לא ענה') + NL;
   });
-  return t + NL + 'מה מזה כדאי להראות לו בהדגמה, ומה לשאול אותו בשיחה?';
+  return t + NL + (d.ask || 'מה מזה כדאי להראות לו בהדגמה, ומה לשאול אותו בשיחה?');
 }
 
 function page(tok, d, s) {
@@ -40,8 +42,9 @@ function page(tok, d, s) {
     const sel = (s.answers || {})[q.id] || [];
     return '<section class="q" data-id="' + esc(q.id) + '" data-multi="' + (q.multi ? 1 : 0) + '" data-max="' + (q.max || 0) + '">'
       + '<h2><span>' + (i + 1) + '</span>' + esc(q.q) + '</h2>'
-      + (q.multi ? '<p class="hint">' + (q.max ? 'אפשר לסמן עד ' + q.max : 'אפשר לסמן כמה') + '</p>' : '')
-      + '<div class="ops">' + q.options.map((o) => '<button type="button" class="op' + (sel.indexOf(o) > -1 ? ' on' : '') + '">' + esc(o) + '</button>').join('') + '</div></section>';
+      + (q.text ? (q.hint ? '<p class="hint">' + esc(q.hint) + '</p>' : '') + '<textarea class="tx" rows="' + (q.rows || 2) + '">' + esc(sel[0] || '') + '</textarea></section>'
+      : (q.multi ? '<p class="hint">' + (q.max ? 'אפשר לסמן עד ' + q.max : 'אפשר לסמן כמה') + '</p>' : '')
+      + '<div class="ops">' + q.options.map((o) => '<button type="button" class="op' + (sel.indexOf(o) > -1 ? ' on' : '') + '">' + esc(o) + '</button>').join('') + '</div></section>');
   }).join('');
   return '<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
     + '<meta name="robots" content="noindex,nofollow"><title>' + esc(d.title) + ' | IT Solution</title>'
@@ -60,6 +63,7 @@ function page(tok, d, s) {
     + '.hint{font:500 13px Heebo;color:#6b7c90;margin:-4px 0 10px}'
     + '.ops{display:flex;flex-wrap:wrap;gap:8px}.op{border:1.5px solid #cbd5e1;background:#fff;color:#0f1b2a;border-radius:999px;padding:10px 15px;font:500 15px Heebo;cursor:pointer;min-height:44px}'
     + '.op.on{background:#0f1b2a;border-color:#0f1b2a;color:#fff;font-weight:700}'
+    + '.tx{width:100%;border:1.5px solid #cbd5e1;border-radius:14px;padding:10px 12px;font:500 15.5px/1.5 Heebo;color:#0f1b2a;resize:vertical}.tx:focus{outline:none;border-color:#06b6d4}'
     + '.send{display:block;width:100%;border:0;border-radius:16px;background:#06b6d4;color:#0f1b2a;font:800 18px Heebo;padding:16px;margin-top:8px;cursor:pointer}'
     + '.saved{font:500 13px Heebo;color:#6b7c90;text-align:center;margin-top:10px}'
     + '.thanks{display:none;text-align:center;padding:60px 20px}.thanks b{display:block;font:900 26px Heebo;margin-bottom:8px}.thanks p{font:400 16px/1.6 Heebo;color:#24364b}'
@@ -68,16 +72,16 @@ function page(tok, d, s) {
     + '<div class="top"><div class="brand"><span>IT</span><b>IT<i>solution</i></b></div><div class="bar"><i id="bar"></i></div><div class="cnt" id="cnt"></div></div>'
     + '<div class="wrap"><h1>' + esc(d.title) + '</h1><p class="hello">' + esc(d.hello) + '</p>' + qs
     + '<button type="button" class="send" id="send">שליחה</button><p class="saved" id="saved">כל סימון נשמר מיד. אפשר לסגור ולחזור אחר כך.</p></div>'
-    + '<div class="thanks"><b>תודה! ✓</b><p>התשובות הגיעו אלינו. נבנה את ההדגמה בדיוק סביב מה שסימנת.</p></div>'
+    + '<div class="thanks"><b>תודה! ✓</b><p>' + esc(d.thanks || 'התשובות הגיעו אלינו. נבנה את ההדגמה בדיוק סביב מה שסימנת.') + '</p></div>'
     + '<script>(function(){var T=' + JSON.stringify(tok) + ',Q=[].slice.call(document.querySelectorAll(".q")),tm=null;'
-    + 'function ans(){var o={};Q.forEach(function(q){o[q.getAttribute("data-id")]=[].slice.call(q.querySelectorAll(".op.on")).map(function(b){return b.textContent;});});return o;}'
-    + 'function paint(){var n=0;Q.forEach(function(q){var d=q.querySelectorAll(".op.on").length>0;q.classList.toggle("done",d);if(d)n++;});document.getElementById("bar").style.width=Math.round(n/Q.length*100)+"%";document.getElementById("cnt").textContent="ענית על "+n+" מתוך "+Q.length;}'
+    + 'function ans(){var o={};Q.forEach(function(q){var t=q.querySelector(".tx");o[q.getAttribute("data-id")]=t?(t.value.trim()?[t.value.trim()]:[]):[].slice.call(q.querySelectorAll(".op.on")).map(function(b){return b.textContent;});});return o;}'
+    + 'function paint(){var n=0;Q.forEach(function(q){var t=q.querySelector(".tx"),d=t?!!t.value.trim():q.querySelectorAll(".op.on").length>0;q.classList.toggle("done",d);if(d)n++;});document.getElementById("bar").style.width=Math.round(n/Q.length*100)+"%";document.getElementById("cnt").textContent="ענית על "+n+" מתוך "+Q.length;}'
     + 'function post(sub){return fetch("/api/form",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({t:T,answers:ans(),submit:!!sub})}).then(function(r){if(!r.ok)throw 0;return r.json();});}'
     + 'function save(){clearTimeout(tm);tm=setTimeout(function(){post(false).then(function(){document.getElementById("saved").textContent="נשמר ✓";},function(){document.getElementById("saved").textContent="אין חיבור כרגע. הסימונים יישמרו כשיחזור.";});},500);}'
     + 'Q.forEach(function(q){var multi=q.getAttribute("data-multi")==="1",max=+q.getAttribute("data-max")||0;q.addEventListener("click",function(e){var b=e.target.closest(".op");if(!b)return;'
     + 'if(multi){if(!b.classList.contains("on")&&max&&q.querySelectorAll(".op.on").length>=max){q.querySelector(".hint").textContent="אפשר לסמן עד "+max+". כדי להחליף, לבטל קודם אחד";return;}b.classList.toggle("on");}'
     + 'else{q.querySelectorAll(".op.on").forEach(function(x){if(x!==b)x.classList.remove("on");});b.classList.toggle("on");if(b.classList.contains("on")){var nx=q.nextElementSibling;if(nx&&nx.classList.contains("q"))setTimeout(function(){nx.scrollIntoView({behavior:"smooth",block:"center"});},250);}}'
-    + 'paint();save();});});'
+    + 'paint();save();});var tx=q.querySelector(".tx");if(tx)tx.addEventListener("input",function(){paint();save();});});'
     + 'document.getElementById("send").onclick=function(){var b=this;b.disabled=true;b.textContent="שולח...";post(true).then(function(){document.body.classList.add("sent");window.scrollTo(0,0);},function(){b.disabled=false;b.textContent="לא נשלח, לנסות שוב";});};'
     + 'paint();fetch("/api/form",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({t:T,open:true})}).catch(function(){});})();</script>'
     + '</body></html>';
@@ -104,6 +108,7 @@ function handlePost(b, notify) {
   if (b.answers && typeof b.answers === 'object') {
     const clean = {};
     d.questions.forEach((q) => {
+      if (q.text) { const v = Array.isArray(b.answers[q.id]) ? String(b.answers[q.id][0] || '').trim().slice(0, 1500) : ''; clean[q.id] = v ? [v] : []; return; }
       const a = Array.isArray(b.answers[q.id]) ? b.answers[q.id].map(String).filter((x) => q.options.indexOf(x) > -1) : [];
       clean[q.id] = q.multi ? a.slice(0, q.max || q.options.length) : a.slice(0, 1);
     });
