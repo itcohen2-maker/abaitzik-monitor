@@ -2729,7 +2729,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-03T06:07:02.537Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-03T06:08:46.260Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4633,7 +4633,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='634b391d69';
+var CODE_ID='f63aff9482';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -16237,7 +16237,7 @@ document.addEventListener('click',function(e){
 },true);
 function dmoMerge(d){
  var o={};Object.keys(d).forEach(function(k){o[k]=(d[k]||[]).slice();});
- var NL=String.fromCharCode(10),F=Object.keys(dmoFeedItems).map(function(k){return dmoFeedItems[k];});
+ var NL=String.fromCharCode(10),F=Object.keys(dmoFeedItems).filter(function(k){return k.indexOf('seed')!==0;}).map(function(k){return dmoFeedItems[k];});
  F.sort(function(a,b){return String(a.at||'').localeCompare(String(b.at||''));});
  function day(it){try{var t=new Date(it.at);return isNaN(t)?'':t.toLocaleDateString('he-IL')+' '+t.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});}catch(e){return '';}}
  function cli(name){if(!name)return null;var c=null;(o.client||[]).forEach(function(x){if(!c&&x.name&&(x.name===name||x.name.indexOf(name)>-1||name.indexOf(x.name)>-1))c=x;});
@@ -16264,6 +16264,9 @@ function dmoMerge(d){
   } else if(ty==='lead'){
    var c4=cli(it.client||ti);if(c4){c4.status='ליד חדש';if(tx)c4.biz=c4.biz||tx;}
    o.crm=[{name:it.client||ti,what:tx||ti,src:'וואטסאפ',stage:'ליד חדש'}].concat(o.crm||[]);
+  } else if(ty==='quote'||ty==='invoice'){
+   o.made=[it].concat(o.made||[]);
+   var c5=cli(it.client);if(c5)c5.open=(ty==='invoice'?'חשבונית':'הצעת מחיר')+' נשלחה, מחכה לתשובה';
   } else if(ty==='mail'){
    o.mail=[{from:it.from||it.client||'',subject:it.subject||ti,when:day(it),text:tx,tag:'חדש'}].concat(o.mail||[]);
   }
@@ -16305,6 +16308,9 @@ function dmoSheet(key){
    +'<table class="dmo-items" id="dqItems"><tr><td style="width:55%">פריט</td><td>כמות</td><td>מחיר</td></tr>'
    +(q.items||[['','1','']]).concat([['','','']]).map(function(it){return '<tr><td><input value="'+esc(it[0]||'')+'"></td><td><input inputmode="decimal" value="'+esc(String(it[1]||''))+'"></td><td><input inputmode="decimal" value="'+esc(String(it[2]||''))+'"></td></tr>';}).join('')+'</table>'
    +'<div class="dmo-row"><button type="button" class="dmo-b alt" data-dmo-act="qrow">+ שורה</button><button type="button" class="dmo-b" data-dmo-act="qmake">להפיק הצעה</button></div></div><div id="dqOut"></div>';
+  if((d.made||[]).length)h='<div class="dmo-card"><b>הופקו מהוואטסאפ ('+d.made.length+')</b></div>'
+   +d.made.map(function(it){return '<div class="dmo-card" data-fid="'+esc(it.id)+'">'+dmoFeedHtml(it)+'</div>';}).join('')
+   +'<div class="dmo-card"><b>הצעה חדשה</b></div>'+h;
  } else if(key==='meet'){
   label='🎙️ סיכומי פגישות';
   h='<div class="dmo-card"><b>איך זה עובד</b><p>מסיימים פגישה, שולחים למוניטור הודעה קולית בוואטסאפ ("סיכום הפגישה עם...") או מקליטים את הפגישה עצמה. המוניטור מסכם, מוציא החלטות ומשימות, שולח ללקוח את המשימות שלו, ומזכיר לך את שלך.</p></div>'
