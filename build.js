@@ -110,12 +110,12 @@ function shTileSmall() {
   if (!s.ok) return 'פתוח עכשיו, הכניסה אוטומטית';
   return 'פתוח עכשיו · הצטרפו ' + s.joined + ' · נכנסו ' + s.visited + ' · משובים ' + s.fb;
 }
-// 1.11: the site leads and Shachar waitlist signups since 1.11, as kind|time only (no names),
+// 1.11: the site leads since 1.11, as kind|time only (no names). 4.11: Shachar signups left (entry is automatic),
 // for the blinking "יש ליד שהגיע" tile. Which ones he already touched is kept on his phone.
 function leadStamps() {
   try {
     const isTest = require('./lib/biz.js').isTestLead;
-    return loadDocs('chat').filter(m => m.at && m.at >= '2026-11-01' && (m.heldWhy === 'waitlist' || (m.heldWhy === 'lead' && !isTest(m.text))))
+    return loadDocs('chat').filter(m => m.at && m.at >= '2026-11-01' && (m.heldWhy === 'lead' && !isTest(m.text)))
       .map(m => m.heldWhy + '|' + m.at).join(',');
   } catch (e) { return ''; }
 }
@@ -126,7 +126,7 @@ function leadTexts() {
   try {
     const isTest = require('./lib/biz.js').isTestLead;
     const out = {};
-    loadDocs('chat').filter(m => m.at && m.at >= '2026-11-01' && (m.heldWhy === 'waitlist' || (m.heldWhy === 'lead' && !isTest(m.text))))
+    loadDocs('chat').filter(m => m.at && m.at >= '2026-11-01' && (m.heldWhy === 'lead' && !isTest(m.text)))
       .forEach(m => {
         out[m.at] = String(m.text || '').split('\n').map(l => l.trim())
           .filter(l => l && l !== '[Chat Lead]' && !/^Description:\s*N\/A$/i.test(l)).join('\n');
@@ -198,7 +198,7 @@ function shaiSignStamp() {
 }
 
 function newestLead() {
-  try { const a = loadDocs('chat').filter(m => (m.heldWhy === 'lead' || m.heldWhy === 'waitlist') && m.at).map(m => m.at).sort().pop(); return a ? '-' + a.replace(/\D/g, '').slice(0, 12) : ''; } catch (e) { return ''; }
+  try { const a = loadDocs('chat').filter(m => m.heldWhy === 'lead' && m.at).map(m => m.at).sort().pop(); return a ? '-' + a.replace(/\D/g, '').slice(0, 12) : ''; } catch (e) { return ''; }
 }
 
 function siteLeads() {

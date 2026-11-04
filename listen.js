@@ -546,7 +546,10 @@ function alertWaitlist(text) {
   const body = String(text || '').replace(/^\s*רשימת המתנה לשחר[^\n]*\n?/, '');
   const em = (body.match(/\S+@\S+/) || [''])[0];
   try { require('./lib/shachar.js').handleRefresh(shachar.deps()).catch(() => {}); } catch (e) { say('!! רשימת המתנה: רענון נכשל ' + e.message); }
-  leadAlert('🌅 בקשת כניסה לשחר, הכניסה נפתחה והמכתב נשלח אוטומטית' + (em ? ': ' + em : ''), body + '\nבמוניטור: במסך הראשי האריח 🔔 יש ליד שהגיע, או 💼 העסק שלי ← 🌅 שחר ← בקשות כניסה', 'sunrise,tada');
+  // 4.11, Itzik: "אין לנו יותר רשימת המתנה ... אני לא יודע מה לעשות עם הליד הזה". Entry is automatic since 3.11,
+  // so a signup is news, not a lead: a quiet notice, no mail, no "יש ליד שהגיע" blink. Shachar's tab still counts it.
+  ch.notify('🌅 הצטרפו לשחר' + (em ? ': ' + em : ''), 'הכניסה נפתחה והמכתב נשלח אוטומטית. אין מה לעשות.\nבמוניטור: 💼 העסק שלי ← 🌅 שחר', { priority: 2, tags: 'sunrise' })
+    .then((r) => say('הצטרפות לשחר: התראה שקטה ' + (r.channel || 'בתור'))).catch((e) => say('!! הצטרפות לשחר: ' + e.message));
 }
 
 // 21.10: the same lead also lands in העסק שלי, so he sees it in the monitor
