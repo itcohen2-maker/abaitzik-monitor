@@ -173,3 +173,14 @@
 
 - **Approval inbox, "מחכה לך" (24.10.2026):** before any send (an email or a message to someone), pay, delete, or identity change (name, profile, password, login), write one doc to `data/choices/choices/<YYYYMMDD-HHMM>-<slug>.json`: `{"type":"approve","at":"<ISO +03:00>","question":"<what, one line>","preview":"<draft text, optional>","why":"<optional>","kind":"send|pay|delete|identity","expires":"<ISO, optional>"}`. Then carry on with the rest of the task, and act on that one item only after the line "אישור:" arrives. "אישור עם תיקון:" carries his edited text; "לא עכשיו:" means not now. Blocked kinds are never requested: transfer (money moving), dm-cold (a DM to someone who did not write first), friend (add or accept), whatsapp-other (WhatsApp to anyone but himself). lib/approvals.js is the rule; build.js shows only the four approval kinds, and an expired doc is dropped.
 - **Delete everything (30.10.2026):** the red button at the bottom of Settings sends "בקשה למחיקת כל הנתונים". Never delete on it: write an approval doc (kind delete) to data/choices/choices/ with the question "<customer> ביקש למחוק את כל הנתונים שלו", and wipe only after "אישור:".
+
+- **The manager, "🧑‍💼 המנהל" (Itzik, 4.11.2026: "נגדיר אותך כמנהל"):** `manager.js` (timer `monitor-manager.timer`
+  07:25, 13:00, 18:00 Israel; lib/manager.js) writes `data/manager/manager/<YYYYMMDD>.json`, the card at the top of the
+  home screen: morning brief, urgent mail, today in Google Calendar, the customers' monitors, new leads, "מה בצלחת" of
+  today, WhatsApp status of today. One push in the morning with what is open, one at 18:00 only if plate or status is
+  still open, and a ntfy alarm 30 minutes before each timed calendar event (once). The calendar is read only on the PC:
+  `cal-pull.js` (task AbaItzikCalPull, 07:15 and 12:45, Haiku allowed only list_events) writes `data/manager/cal.json`.
+  **From now on every appointment, reminder or dated task he gives also goes into his Google Calendar** (itcohen2, primary).
+  The server has no calendar access: `node pc-task.js add --re <id> "add to Google Calendar: <title>, <date time>, <place>"`.
+  The round circle "יומן" (`icGcal`) opens calendar.google.com/calendar/u/0/r/day. WhatsApp status is never posted
+  automatically (no official API for status; unofficial tools risk his number): it stays the 3 tap tile.
