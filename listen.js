@@ -76,6 +76,10 @@ function quotaView() {
     return v ? { pct: v.pct } : null;
   } catch (e) { return null; }
 }
+// 4.11: the monthly package in actions, for the tile on a customer's page. Never dollars.
+function planView() {
+  try { return require('./lib/plan.js').view(require('./lib/plan-io.js').statusOf(inst.name, STATUS, Date.now())); } catch (e) { return null; }
+}
 const PULLS = path.join(STATUS, 'pulls.json');
 // The chat folder can be pointed somewhere else so the merge can be exercised
 // against real files without writing into his actual conversation.
@@ -176,7 +180,8 @@ function beatBody() {
     queued: queued,
     pc: pcState(),
     hold: holdOn(),
-    quota: quotaView()
+    quota: quotaView(),
+    plan: planView()
   };
 }
 

@@ -491,6 +491,7 @@ function adminRules() {
     '  תכונה במוצר עצמו נכנסת לקוד כרגיל, ומגיעה לכל הלקוחות.',
     '  בסוף: `node change-request.js decide <לקוח> <מזהה> approved "<משפט אחד ללקוח: מה השתנה>"`.',
     '  הודעה שמתחילה ב"דחיית בקשת שינוי <לקוח>/<מזהה>": רק `node change-request.js decide <לקוח> <מזהה> rejected "<הסיבה, אם כתב>"`.',
+    '  בקשה שמתחילה ב"שדרוג חבילה" או "תוספת 200 פעולות": אין שינוי לבצע בקוד. החבילה מתעדכנת לבד בתוך דקה מהאישור, לפי הקובץ של הלקוח ב /srv/monitor-changes. אישור = `node change-request.js decide <לקוח> <מזהה> approved "החבילה עודכנה"`. אם התשלום לא הגיע, לא מאשרים: מחזירים לאיציק שורה אחת.',
     '  בקשה שמתחילה ב"חסימת מכסה": אין שינוי לבצע. אישור = `node change-request.js decide <לקוח> <מזהה> approved "המוניטור שוחרר"`, דחייה = rejected "עדיין חסום בגלל מכסה".',
     // 14.10, Itzik: Alon and Rinat are admins, their approval was given in advance.
     '  "אושר מראש" באישור כזה: הלקוח מנהל, איציק לא אישר אותו בעצמו ולא מחכה לשאלה. מבצעים הכל כדי שיהיה לו הכי נוח,',
@@ -581,7 +582,7 @@ function houseRules() {
   included. usage-watch.js on the server reads every monitor's file, reports
   and warns on overuse. Never throws: a bad line must not cost him an answer.
 */
-function logUsage(raw, list) {
+function logUsage(raw, list, planner) {
   try {
     const t = String(raw).trim();
     const d = JSON.parse(t.slice(t.indexOf('{')));
@@ -590,7 +591,7 @@ function logUsage(raw, list) {
       models[m] = { in: u.inputTokens || 0, out: u.outputTokens || 0, cr: u.cacheReadInputTokens || 0, cw: u.cacheCreationInputTokens || 0, usd: +(u.costUSD || 0).toFixed(4) };
     }
     const line = { at: new Date().toISOString(), who: inst.name, usd: +(d.total_cost_usd || 0).toFixed(4), turns: d.num_turns || 0,
-      ms: d.duration_ms || 0, msgs: list.length, sub: (d.subagent_stats && d.subagent_stats.spawned) || 0, models };
+      ms: d.duration_ms || 0, msgs: planner ? 0 : list.length, planner: planner ? 1 : undefined, sub: (d.subagent_stats && d.subagent_stats.spawned) || 0, models };
     fs.appendFileSync(path.join(STATUS, 'usage.jsonl'), JSON.stringify(line) + '\n');
     return d;
   } catch (e) { return null; }
@@ -611,6 +612,8 @@ function planFirst(text, list) {
   // 14.10, Itzik: "בדיקה נוספת גם במוניטור שלי". His own server monitor splits too: Opus
   // plans, Haiku executes. Only his Windows PC worker (--chrome) stays a single session.
   if (process.platform === 'win32' || process.env.MONITOR_ONE_STAGE || (TIER && TIER.oneStage)) return null;
+  // 4.11: the cost guard of the monthly package: no Opus planner, one cheap session.
+  if (planCheap()) return null;
   const ask = text + '\n\n' + [
     '=== שלב תכנון בלבד ===',
     'אתה המתכנן. מותר לך רק לקרוא קבצים (Read, Grep, Glob). אל תכתוב, אל תריץ ואל תענה.',
@@ -644,7 +647,8 @@ function planFirst(text, list) {
     say('המתכנן נדחה על רמת מאמץ, מנסה שוב ב low');
     out = runPlanner(args.concat('--effort', 'low'));
   }
-  const d = logUsage(out, list);
+  // 4.11: the planner's line counts no actions (lib/plan.js counts msgs, once per message).
+  const d = logUsage(out, list, true);
   const p = d && typeof d.result === 'string' ? d.result.trim() : '';
   say('תוכנית מ ' + planModel + ': ' + (p ? p.length + ' תווים' : 'אין') + '. הביצוע ב ' + EXEC_MODEL);
   return p ? '=== התוכנית מהמתכנן (אופוס). בצע אותה עד הסוף, כולל שלב ג ===\n' + p : '';
@@ -687,7 +691,7 @@ function run(list) {
   // 11.10: the planner model, and JSON out so every session's usage is logged (logUsage).
   // 12.10: on a customer's monitor Opus only plans, and the session runs on Haiku (planFirst).
   const plan = planFirst(text, list);
-  const model = plan === null ? (TIER ? TIER.model : (process.env.MONITOR_PLAN_MODEL || 'claude-opus-5-5')) : EXEC_MODEL;
+  const model = plan === null && !planCheap() ? (TIER ? TIER.model : (process.env.MONITOR_PLAN_MODEL || 'claude-opus-5-5')) : EXEC_MODEL;
   const args = ['-p', '--dangerously-skip-permissions', '--model', model, '--output-format', 'json'];
   if (process.platform === 'win32') args.splice(1, 0, '--chrome');
   // 12.10: one customer session can not run away either (the day cap is in quotaHold).
@@ -1083,11 +1087,62 @@ function releaseAccount() {
   } catch (e) { say('!! שחרור חשבון: ' + e.message); }
 }
 
+/*
+  4.11.2026, Itzik approved the monthly action packages (lib/plan.js). The state is
+  /srv/monitor-changes/<id>.plan.json, written by his instance only; a customer
+  with no such file is not limited. At 80% the customer is told once a month, at 100%
+  no session starts (basic mode: messages wait, the screen, calendar and reminders
+  keep working) and he is told once a day. At 40% of the package price in list price
+  dollars the sessions move to the cheap model and only Itzik hears of it
+  (tenants-health.js); the customer sees nothing about money.
+*/
+function planStatus() {
+  if (inst.name === 'abaitzik') return null;
+  try { return require('./lib/plan-io.js').statusOf(inst.name, STATUS, Date.now()); } catch (e) { return null; }
+}
+function planCheap() { const st = planStatus(); return !!(st && st.cheap); }
+// One line in the customer's chat, in the shape the other worker notices use.
+function planChat(tag, text) {
+  try {
+    const p = {};
+    new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Jerusalem', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+      .formatToParts(new Date()).forEach((x) => { p[x.type] = x.value; });
+    const stamp = p.year + p.month + p.day + '-' + p.hour + p.minute;
+    fs.writeFileSync(path.join(CHAT, stamp + '-claude-plan-' + tag + '.json'),
+      JSON.stringify({ at: new Date().toISOString(), from: 'claude', text, status: 'done' }, null, 1), 'utf8');
+  } catch (e) { say('!! הודעת חבילה, לא הצלחתי לרשום: ' + e.message); }
+}
+function planHold() {
+  const st = planStatus();
+  if (!st || st.level === 'ok') return false;
+  const P = require('./lib/plan.js');
+  const flag = path.join(STATUS, 'plan-told.json');
+  const told = readJson(flag, {}) || {};
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
+  const save = () => { try { fs.writeFileSync(flag, JSON.stringify(told)); } catch (e) {} };
+  if (st.level === 'warn') {
+    if (!DRY && told.warn !== st.month) {
+      told.warn = st.month; save();
+      tell('החבילה החודשית', P.SAY.warn);
+      planChat('warn', P.SAY.warn);
+      say('חבילה: ' + st.used + ' מתוך ' + st.total + ', נשלחה הודעת 80 אחוז.');
+    }
+    return false;
+  }
+  say('החבילה החודשית הסתיימה (' + st.used + ' מתוך ' + st.total + '). לא מפעיל סשן.');
+  if (!DRY && waiting().length) {
+    if (told.fullDay !== today) { told.fullDay = today; save(); tell('החבילה החודשית הסתיימה', P.SAY.full); }
+    if (told.full !== st.month) { told.full = st.month; save(); planChat('full', P.SAY.full); }
+  }
+  return true;
+}
+
 function main() {
   // 8.10: a paused customer gets no sessions at all.
   if (inst.paused) { say('מושהה. לא עונה.'); return; }
   if (onHold()) return;
   if (quotaHold()) return;
+  if (planHold()) return;
   if (accountHeld()) return;
   const live = livePids();
   if (!DRY) reconcile(live);

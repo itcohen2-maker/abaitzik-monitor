@@ -197,6 +197,8 @@ function selfArena(t, x) {
 */
 function preApprove(t, x) {
   if (!t.preApproved) return false;
+  // 4.11: a package request is paid first and approved by Itzik himself, never in advance.
+  if (require('./lib/plan.js').parseRequest(x.text)) return false;
   try {
     const id = 'pre-' + t.id + '-' + x.id;
     const at = new Date();
@@ -232,6 +234,48 @@ function writeQuota() {
   } catch (e) {}
 }
 
+/*
+  4.11.2026, Itzik approved the monthly action packages (lib/plan.js, lib/plan-io.js).
+  The plan file /srv/monitor-changes/<id>.plan.json is written here and nowhere else:
+  an approved "שדרוג חבילה" or "תוספת 200 פעולות" request changes it (the approval is
+  Itzik's, after the payment arrived), and a new month clears the add-on. Itzik also
+  hears, once per customer per month and without the customer knowing: 80% used, 100%
+  used, and the cost guard (list price dollars at 40% of the package price, when
+  worker.js moves that customer to the cheap model). Returns true when the file changed.
+*/
+const PLAN_TOLD = path.join(inst.dataPath, 'status', 'plan-notified.json');
+function planTick(t, reqs) {
+  const io = require('./lib/plan-io.js');
+  const P = require('./lib/plan.js');
+  if (!io.stateOf(t.id)) return false;
+  let changed = false;
+  try {
+    const next = io.applyApproved(t.id, reqs, Date.now());
+    if (next) { io.write(t.id, next); changed = true; console.log('plan updated: ' + t.id); }
+  } catch (e) { console.log('plan update failed: ' + String(e.message).slice(0, 120)); }
+  const st = t.dir ? io.statusOf(t.id, path.join(t.dir, 'data', 'status'), Date.now()) : null;
+  if (!st) return changed;
+  let told = {};
+  try { told = JSON.parse(fs.readFileSync(PLAN_TOLD, 'utf8')); } catch (e) {}
+  const mine = told[t.id] && told[t.id].month === st.month ? told[t.id] : { month: st.month };
+  const name = t.title || t.id;
+  const say = (flag, title, body) => {
+    if (mine[flag]) return;
+    try {
+      execFileSync('node', ['notify.js', title, body], { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
+      mine[flag] = new Date().toISOString();
+    } catch (e) { console.log('plan alert failed: ' + String(e.message).slice(0, 120)); }
+  };
+  const of = st.used + ' מתוך ' + st.total + ' פעולות החודש, חבילת ' + st.label;
+  if (st.level === 'warn') say('warn', '📦 ' + name + ' ב 80 אחוז מהחבילה', of + '. הוא קיבל הודעה ויכול לבקש שדרוג או תוספת.');
+  if (st.level === 'full') say('full', '📦 ' + name + ' סיים את החבילה', of + '. הסשנים שלו עצרו וההודעות מחכות, עד שדרוג, תוספת או החודש הבא.');
+  if (st.cheap) say('cost', '💲 ' + name + ': עבר למודל הזול',
+    'מחיר מחירון החודש ' + st.usd.toFixed(2) + ' דולר, מעל 40 אחוז ממחיר החבילה (' + st.costLimit.toFixed(0) + ' דולר). הלקוח לא רואה כלום.');
+  told[t.id] = mine;
+  try { fs.writeFileSync(PLAN_TOLD, JSON.stringify(told, null, 1)); } catch (e) {}
+  return changed;
+}
+
 function main() {
   writeQuota();
   if (!fs.existsSync(DIR)) { console.log('no tenants'); return; }
@@ -251,6 +295,7 @@ function main() {
     const fresh = reqs.filter((x) => x.status === 'pending' && !known.has(x.id));
     if (JSON.stringify(reqs) !== JSON.stringify(t.requests || [])) changed = true;
     t.requests = reqs;
+    if (!DRY && planTick(t, reqs)) changed = true;
     /*
       12.10 evening, Itzik on Rinat: "לא מעוניין שתשנה דברים מהותיים במוניטור".
       The morning's auto approval for an admin customer is gone: her requests
