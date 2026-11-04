@@ -2733,7 +2733,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-04T09:40:02.620Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-04T09:41:51.678Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4637,7 +4637,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='a22987d521';
+var CODE_ID='66e9c0a343';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12841,8 +12841,14 @@ function bizSheet(t0){
     if(a==='form-shai'){var fu='https://form.it-solution.co.il/f/db3cf21b5fe4b773cc20',ft='שי, לקראת הפגישה ביום שלישי הכנו שאלון היכרות קצר, רק לסמן, 3 דקות. ככה נבנה לך הדגמה בדיוק לפי העסק שלך:';
      if(navigator.share){navigator.share({title:'שאלון היכרות',text:ft,url:fu}).catch(function(){});}else{window.open(fu,'_blank');}
      return;}
-    if(a==='secshare'){var pg=t.getAttribute('data-u')==='monitor'?'monitor':'security';
-     var who=window.prompt('למי שולחים? (שם, כדי לדעת מי פתח)','');if(who===null)return;who=String(who).trim().slice(0,40);
+    if(a==='secshare'){var pg0=t.getAttribute('data-u')==='monitor'?'monitor':'security',k0=t.getAttribute('data-k')==='wa'?'wa':'share';
+     var ob=el.querySelector('.secBox');if(ob)ob.parentNode.removeChild(ob);
+     var bx=document.createElement('div');bx.className='secBox';bx.style.cssText='margin:4px 0 12px;display:flex;gap:6px;align-items:center';
+     bx.innerHTML='<input type="text" maxlength="40" placeholder="למי שולחים? שם הלקוח" style="flex:1;min-width:0;font-size:17px;padding:11px;border-radius:10px;border:1px solid #888;direction:rtl"><button type="button" class="yb yb1" data-bz="secgo" data-u="'+pg0+'" data-k="'+k0+'" style="width:auto;margin:0;white-space:nowrap">'+(k0==='wa'?'💬 לוואטסאפ':'📤 שליחה')+'</button>';
+     t.parentNode.insertBefore(bx,t.nextSibling);try{bx.querySelector('input').focus();}catch(x){}
+     return;}
+    if(a==='secgo'){var pg=t.getAttribute('data-u')==='monitor'?'monitor':'security',inp=t.parentNode.querySelector('input');
+     var who=String(inp&&inp.value||'').trim().slice(0,40);
      var su='https://it-solution.co.il/'+pg+'/'+(who?'?r='+encodeURIComponent(who):''),st=pg==='monitor'?'מסך אחד בטלפון שמנהל איתך את העסק, ככה זה עובד:':'כך המוניטור של IT Solution שומר על המידע שלכם:';
      if(t.getAttribute('data-k')==='wa'){window.open('https://wa.me/?text='+encodeURIComponent(st+'\n'+su),'_blank');return;}
      if(navigator.share){navigator.share({title:pg==='monitor'?'המוניטור לעסק':'אבטחת המידע במוניטור',text:st,url:su}).catch(function(){});return;}
