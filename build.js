@@ -16746,8 +16746,8 @@ function bizSheet(t0){
     // Shared or copied, never opened here: opening reports "שי פתח".
     // 4.11, Itzik: "קודם אשלח לו את הטופס לחתימה, ואז הוא יקבל את הטופס למילוי".
     +'<div class="bzRow"><b>📨 הסדר: קודם חתימה, אחר כך דף החיבורים</b><small>🔴 עוד לא נשלח · 🟠 מצב המתנה · ✅ הושלם. הצבע מתעדכן לבד כשהוא פותח, חותם וממלא.</small></div>'
-    +shaiFormBtn('sign-shai','sign','✍️ שלב 1: הצעת המחיר והסכם השירות לחתימה')
-    +'<a class="yb" href="https://form.it-solution.co.il/q/a9cf9d55064a85b58583/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לראות את ההצעה וההסכם לפני ששולחים</a>'
+    // 4.11, Itzik: "איפה אני יכול לקבל את מה שהוא חתם? אני רוצה לראות את זה במוניטור". Step 1 is done: the signed PDF in its place.
+    +'<button type="button" class="yb yb1" data-bz="anim" data-f="quote-shai-bodek-signed.pdf" data-new="1">✅ שלב 1: שי חתם ב 4.11, ההצעה וההסכם החתומים (PDF)</button>'
     +shaiFormBtn('setup-shai','setup','🔌 שלב 2, אחרי החתימה: דף החיבורים: מייל, פגישות, דרייב, יומן, חשבוניות, לינקדין, פייסבוק')
     +'<a class="yb" href="https://form.it-solution.co.il/s/f3d4f77d1278a2a5efdc/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לראות את דף החיבורים לפני ששולחים</a>'
     // 4.11, Itzik: "תשאיר לי תמיד רק מה שמעודכן". Done items (the completion form, the info form) are gone from here.
