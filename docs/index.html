@@ -889,6 +889,7 @@ body.editing .bn{display:none}
 .toast{cursor:pointer}
 
 
+
 #profEntry{margin-top:10px}
 .pfRow{padding:12px 14px;margin:8px 0;border-radius:14px;border:1px solid var(--line);background:var(--surface)}
 .pfRow .pfTxt small{display:block;opacity:.7;font:600 13px Heebo,sans-serif}
@@ -2733,7 +2734,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-04T11:23:42.229Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-04T11:24:23.129Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4645,7 +4646,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='6d0d7575c7';
+var CODE_ID='3c943540a7';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12730,8 +12731,21 @@ function bizSheet(t0){
    else{cls='ybRed';st='🔴 עוד לא נשלח. לחיצה שולחת';}
    return '<button type="button" class="yb '+cls+'" data-bz="'+a+'" data-sk="'+k+'">'+label+'<small style="display:block;font-weight:500;margin-top:3px">'+st+'</small></button>';
   }
+  function planBoardHtml(){
+   var B=D.planBoard||[];if(!B.length)return '';
+   var h='<div class="bzSec">📦 החבילות החודשיות</div>';
+   B.forEach(function(r){
+    var dot=r.level==='full'?'🔴':r.level==='warn'?'🟠':r.plan?'🟢':'⚪';
+    var pct=r.total?Math.min(100,Math.round(r.used/r.total*100)):0;
+    h+='<div class="bzRow"><b>'+dot+' '+esc(r.title)+' · '+(r.plan?'חבילת '+esc(r.plan):'בלי חבילה')+'</b><small>'
+     +r.used+(r.total?' מתוך '+r.total:'')+' פעולות החודש'+(r.total?' ('+pct+'%)':'')
+     +' · מחיר מחירון החודש: $'+(+r.usd).toFixed(2)+(r.cheap?' · עבר למודל הזול':'')
+     +(r.onHis?'<br>על המנוי שלך: הדולרים הם מחיר מחירון, לא עלות אמיתית':'')+'</small></div>';
+   });
+   return h;
+  }
   function itsHtml(){
-   return '<div class="bzHead">💻 IT Solution</div>'
+   return '<div class="bzHead">💻 IT Solution</div>'+planBoardHtml()
     +'<div class="bzSec">🔒 מוניטור ואבטחה</div>'
     +'<a class="yb yb1" href="https://form.it-solution.co.il/terms" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">📜 הסכם השירות ללקוח, גרסה 1.0</a>'
     +'<button type="button" class="yb" data-bz="anim" data-f="it-solution-contract-1.0.pdf">📄 הסכם השירות כ PDF</button>'
@@ -15780,6 +15794,7 @@ function paintLive(){
  paintPc();
  paintHold();
  if(window.paintQuota)paintQuota();
+ if(window.paintPack)paintPack();
  var pill=document.getElementById('livePill');
  var txt=document.getElementById('lpText');
  if(!pill||!txt)return;
@@ -15881,6 +15896,7 @@ function openLiveSheet(){
  }
  sh.hidden=false;
 }
+
 
 on('livePill',openLiveSheet);
 on('lsClose',function(){var sh=document.getElementById('liveSheet');if(sh)sh.hidden=true;});

@@ -1080,6 +1080,12 @@ function build() {
     payload instead, so this is the identical object it was built with, and a
     refresh is one small fetch and a repaint.
   */
+  // 4.11, the monthly packages (lib/plan.js): a customer sees his own count in actions, Itzik sees every customer's.
+  try {
+    const pio = require('./lib/plan-io.js');
+    if (inst.name === 'abaitzik') payload.planBoard = pio.board(inst.dataPath, Date.now());
+    else payload.plan = require('./lib/plan.js').view(pio.statusOf(inst.name, path.join(inst.dataPath, 'status'), Date.now()));
+  } catch (e) { console.error('plan: ' + e.message); }
   const DATA_DIR2 = path.join(OUT_DIR, 'data');
   fs.mkdirSync(DATA_DIR2, { recursive: true });
   fs.writeFileSync(path.join(DATA_DIR2, 'head.json'),
@@ -1124,6 +1130,8 @@ function build() {
   const links = tenantLinks(inst).map((l) => ({ key: l.key, url: l.url }));
   const screens = Array.isArray(inst.screens) && inst.screens.length
     ? inst.screens.filter((id) => id !== 'gAdminReq').concat(guides.map((g, i) => 'gGuide' + i), links.map((l, i) => 'gLink' + i), ['gAdminReq']) : inst.screens;
+  // 4.11: the monthly package tile is shown only where a package exists (lib/plan-ui.js).
+  if (Array.isArray(screens) && screens.length && require('./lib/plan-ui.js').on(inst.name)) screens.push('gPack');
   /*
     8.10, from the reviewer: "שכחתי את הקוד" on the lock. The page files a request
     to Itzik carrying a random device mark it keeps; once he approves, the mark is
@@ -2483,6 +2491,7 @@ body.editing .bn{display:none}
 .toast.bad{color:#fff;border:0;background:linear-gradient(180deg,#ff6a5e,var(--red))}
 .toast{cursor:pointer}
 ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').css : ''}
+${inst.name !== 'abaitzik' ? require('./lib/plan-ui.js').css : ''}
 ${require('./lib/profile-ui.js').css}
 ${require('./lib/approvals-ui.js').css}
 ${require('./lib/since-ui.js').css}
@@ -4567,7 +4576,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <button type="button" class="shipline" id="shipLine" hidden></button>
   <!-- 14.10: one tile per project, drawn from D.projects after unlock (projTiles). -->
   <div class="grid" id="blkProj" hidden></div>
-  <div class="grid" id="blkTiles">${tenantTiles(inst)}</div>${tenantCircleLinks(inst)}${tenantCircles(inst)}
+  <div class="grid" id="blkTiles">${tenantTiles(inst)}${require('./lib/plan-ui.js').tile(inst.name)}</div>${tenantCircleLinks(inst)}${tenantCircles(inst)}
 <!--TENANT:END-->
 
 
@@ -16624,8 +16633,22 @@ function bizSheet(t0){
    else{cls='ybRed';st='🔴 עוד לא נשלח. לחיצה שולחת';}
    return '<button type="button" class="yb '+cls+'" data-bz="'+a+'" data-sk="'+k+'">'+label+'<small style="display:block;font-weight:500;margin-top:3px">'+st+'</small></button>';
   }
+  // 4.11, Itzik: the monthly packages, one row per customer (lib/plan-io.js board). Dollars are list price.
+  function planBoardHtml(){
+   var B=D.planBoard||[];if(!B.length)return '';
+   var h='<div class="bzSec">📦 החבילות החודשיות</div>';
+   B.forEach(function(r){
+    var dot=r.level==='full'?'🔴':r.level==='warn'?'🟠':r.plan?'🟢':'⚪';
+    var pct=r.total?Math.min(100,Math.round(r.used/r.total*100)):0;
+    h+='<div class="bzRow"><b>'+dot+' '+esc(r.title)+' · '+(r.plan?'חבילת '+esc(r.plan):'בלי חבילה')+'</b><small>'
+     +r.used+(r.total?' מתוך '+r.total:'')+' פעולות החודש'+(r.total?' ('+pct+'%)':'')
+     +' · מחיר מחירון החודש: $'+(+r.usd).toFixed(2)+(r.cheap?' · עבר למודל הזול':'')
+     +(r.onHis?'<br>על המנוי שלך: הדולרים הם מחיר מחירון, לא עלות אמיתית':'')+'</small></div>';
+   });
+   return h;
+  }
   function itsHtml(){
-   return '<div class="bzHead">💻 IT Solution</div>'
+   return '<div class="bzHead">💻 IT Solution</div>'+planBoardHtml()
     // 4.11, Itzik: an insurance agent asks how confidential the monitor is. A page to hand the customer.
     +'<div class="bzSec">🔒 מוניטור ואבטחה</div>'
     // 4.11, Itzik: "אני צריך חוזה מול לקוח" and "שים את זה במוניטור ואבטחה". One service agreement for every client, signed inside the quote page, before any build.
@@ -20485,6 +20508,7 @@ function paintLive(){
  paintPc();
  paintHold();
  if(window.paintQuota)paintQuota();
+ if(window.paintPack)paintPack();
  var pill=document.getElementById('livePill');
  var txt=document.getElementById('lpText');
  if(!pill||!txt)return;
@@ -20640,6 +20664,7 @@ function openLiveSheet(){
  sh.hidden=false;
 }
 ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').js : ''}
+${inst.name !== 'abaitzik' ? require('./lib/plan-ui.js').js : ''}
 on('livePill',openLiveSheet);
 on('lsClose',function(){var sh=document.getElementById('liveSheet');if(sh)sh.hidden=true;});
 boot('live',function(){pollLive();setInterval(pollLive,30000);setInterval(paintLive,15000);});
