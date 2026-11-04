@@ -313,10 +313,45 @@ function lockedPage() {
     + '<div class="box"><h1>🔒</h1><p>הדף נעול למכשיר הזה.<br>הגישה מותרת רק מהמכשירים המאושרים.<br>פנו לאיציק אם צריך גישה.</p></div></body></html>';
 }
 
+// 4.11, איציק: עדכון שקלוד עושה בטופס צריך לצאת במייל כמו סימון של יואל.
+// applyMark משותף לדף ולמסלול הפנימי /internal/mark (לא נחשף ב Caddy, ודורש data/gviya/internal.key).
+function applyMark(o) {
+  const marks = readMarks();
+  const cur = marks[o.name] || {};
+  const prev = Object.assign({}, cur);
+  if ('status' in o) cur.status = (o.status === 'collect' || o.status === 'paid' || o.status === 'future') ? o.status : null;
+  if ('note' in o) cur.note = String(o.note || '').slice(0, 2000);
+  if ('paidWhen' in o) cur.paidWhen = String(o.paidWhen || '').slice(0, 20);
+  if ('dueWhen' in o) cur.dueWhen = String(o.dueWhen || '').slice(0, 20);
+  if (o.addComment && typeof o.addComment.t === 'string' && o.addComment.t.trim()) {
+    if (!Array.isArray(cur.comments)) cur.comments = [];
+    cur.comments.push({ w: String(o.addComment.w || 'אורח').slice(0, 40), t: String(o.addComment.t).slice(0, 2000), at: new Date().toISOString() });
+    cur.comments = cur.comments.slice(-100);
+  }
+  cur.at = new Date().toISOString();
+  marks[o.name] = cur; writeMarks(marks);
+  noteChange(o.name, o, prev);
+  schedulePush();
+}
+function internalKey() { try { return fs.readFileSync(path.join(GDIR, 'internal.key'), 'utf8').trim(); } catch (e) { return ''; } }
+
 const server = http.createServer((req, res) => {
   const u = new URL(req.url, 'http://x');
   const p = u.pathname;
   if (p === '/gviya/health') return json(res, 200, { ok: true });
+  if (p === '/internal/mark' && req.method === 'POST') {
+    const k = internalKey();
+    if (!k || req.headers['x-gviya-key'] !== k) return json(res, 403, { err: 'auth' });
+    let b = ''; req.on('data', c => { b += c; if (b.length > 1e6) req.destroy(); });
+    req.on('end', () => {
+      let list; try { list = JSON.parse(b); } catch (e) { return json(res, 400, { err: 'bad' }); }
+      if (!Array.isArray(list)) list = [list];
+      let n = 0;
+      for (const o of list) if (o && typeof o.name === 'string') { applyMark(o); n++; }
+      return json(res, 200, { ok: true, n });
+    });
+    return;
+  }
   const m = p.match(/^\/gviya\/([0-9a-f]{8,})\/(.*)$/);
   if (!m || m[1] !== TOKEN) return send(res, 404, 'text/plain; charset=utf-8', 'לא נמצא');
   const rest = m[2];
@@ -353,22 +388,7 @@ const server = http.createServer((req, res) => {
     req.on('end', () => {
       let o; try { o = JSON.parse(b); } catch (e) { return json(res, 400, { err: 'bad' }); }
       if (!o || typeof o.name !== 'string') return json(res, 400, { err: 'name' });
-      const marks = readMarks();
-      const cur = marks[o.name] || {};
-      const prev = Object.assign({}, cur);
-      if ('status' in o) cur.status = (o.status === 'collect' || o.status === 'paid' || o.status === 'future') ? o.status : null;
-      if ('note' in o) cur.note = String(o.note || '').slice(0, 2000);
-      if ('paidWhen' in o) cur.paidWhen = String(o.paidWhen || '').slice(0, 20);
-      if ('dueWhen' in o) cur.dueWhen = String(o.dueWhen || '').slice(0, 20);
-      if (o.addComment && typeof o.addComment.t === 'string' && o.addComment.t.trim()) {
-        if (!Array.isArray(cur.comments)) cur.comments = [];
-        cur.comments.push({ w: String(o.addComment.w || 'אורח').slice(0, 40), t: String(o.addComment.t).slice(0, 2000), at: new Date().toISOString() });
-        cur.comments = cur.comments.slice(-100);
-      }
-      cur.at = new Date().toISOString();
-      marks[o.name] = cur; writeMarks(marks);
-      noteChange(o.name, o, prev);
-      schedulePush();
+      applyMark(o);
       return json(res, 200, { ok: true });
     });
     return;
