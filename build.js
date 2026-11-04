@@ -14935,6 +14935,8 @@ function tidyCss(){
  document.head.appendChild(s);
 }
 function tidyNote(w,c){
+ // 4.11.2026, Itzik: a client cannot change the interface, and a box under every menu invites a stream of requests. Only on his own monitor.
+ if(typeof INSTANCE!=='undefined'&&INSTANCE&&INSTANCE.name!=='abaitzik')return;
  if(c.querySelector(':scope > .tdy-note'))return;
  var key=tidyKey(w),title=tidyTitle(w);
  var n=document.createElement('div');n.className='tdy-note';
@@ -20494,7 +20496,7 @@ boot('welcome',function(){
  var save=ph==='ios'?'באייפון: שיתוף ואז "הוספה למסך הבית".':ph==='android'?'תפריט ואז "התקנת אפליקציה".':'באייפון שיתוף ואז "הוספה למסך הבית", באנדרואיד תפריט ואז "התקנת אפליקציה".';
  var steps=['1. שמרו את המוניטור במסך הבית: '+save,
   '2. הפעילו התראות מכאן, בלחיצה אחת. כך כל תשובה קופצת לטלפון, בלי אפליקציה נוספת.',
-  '3. שלחו הודעה ראשונה, למשל: "צלמי בד ובקשי שלושה צבעים שמתאימים לו".'];
+  '3. שלחו הודעה ראשונה, למשל: "מה יש לי היום ביומן?"'];
  var pbtn=(typeof PUSH_KEY!=='undefined'&&PUSH_KEY)
   ?'<button type="button" id="welcomePush" style="margin-top:10px;margin-left:8px;padding:8px 18px;border:0;'
    +'border-radius:999px;background:#fff;color:#14675a;font-size:15px;font-weight:700">הפעלת התראות</button>'
