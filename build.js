@@ -4495,8 +4495,9 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M9.5 13.5h1.5v4M14 13.5h2l-1.5 4"/></svg></span>יומן</a>
   <a class="ic" data-grp="net" data-net="all" id="icNet" href="#"><span class="c c-nt">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M10 20V5M15 20v-6M20 20V8"/></svg></span>ניטור רשתות</a>
-  <a class="ic" data-grp="proj" href="https://abaitzik.com/" target="_blank" rel="noopener"><span class="c c-st">
-   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c3 3 3 13 0 16M12 4c-3 3-3 13 0 16"/></svg></span>האתר</a>
+  <!-- 4.11, Itzik: "באתר של אבא איציק תרשום אבא איציק, כל הזמן. אני מתבלבל בין האתר לאתר שלי". This is the abaitzik.com icon, so its label is the name, always. -->
+  <a class="ic" data-grp="proj" href="https://abaitzik.com/" target="_blank" rel="noopener" data-upd="20261104-abaname"><span class="c c-st">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c3 3 3 13 0 16M12 4c-3 3-3 13 0 16"/></svg></span>אבא איציק</a>
   <button type="button" class="ic" data-grp="proj" id="icLand"><span class="c c-vd">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 13h5"/></svg></span>דפי נחיתה</button>
   <a class="ic" data-grp="proj" href="https://salinda-mobile.vercel.app/" target="_blank" rel="noopener"><span class="c c-sl">
