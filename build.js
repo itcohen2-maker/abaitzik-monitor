@@ -191,6 +191,12 @@ const LEAD_BOX_JS = String.raw`<style>
 const LEAD_NEW_JS = "<script>\n/* 1.11, Itzik: a new lead opens its own blinking tile (\"\u05d9\u05e9 \u05dc\u05d9\u05d3 \u05e9\u05d4\u05d2\u05d9\u05e2\"), and in \u05d4\u05e2\u05e1\u05e7 \u05e9\u05dc\u05d9\n   the lead stands out in another color until he touches it. Seen marks live on this phone. */\n(function(){\n var K='leadSeen';\n function seen(){try{return JSON.parse(localStorage.getItem(K)||'[]');}catch(e){return [];}}\n function all(){var t=document.getElementById('gLeadNew');if(!t)return [];return (t.getAttribute('data-leads')||'').split(',').filter(Boolean).map(function(x){var i=x.indexOf('|');return {k:x.slice(0,i),at:x.slice(i+1)};});}\n function fresh(){var s=seen();return all().filter(function(x){return s.indexOf(x.at)<0;});}\n function paint(){\n  var t=document.getElementById('gLeadNew');if(!t)return;var f=fresh();t.hidden=!f.length;if(!f.length)return;\n  var ts=tileSeen();t.classList.toggle('lnSeen',f.every(function(x){return ts.indexOf(x.at)>=0;}));\n  var l=f.filter(function(x){return x.k==='lead';}).length,w=f.length-l,parts=[];\n  if(l)parts.push(l===1?'\u05dc\u05d9\u05d3 \u05d0\u05d7\u05d3 \u05de\u05d4\u05d0\u05ea\u05e8':l+' \u05dc\u05d9\u05d3\u05d9\u05dd \u05de\u05d4\u05d0\u05ea\u05e8');\n  if(w)parts.push(w===1?'\u05d4\u05e6\u05d8\u05e8\u05e3/\u05d4 \u05d0\u05d7\u05d3/\u05ea \u05dc\u05e9\u05d7\u05e8':w+' \u05d4\u05e6\u05d8\u05e8\u05e4\u05d5 \u05dc\u05e9\u05d7\u05e8');\n  var sm=t.querySelector('small');if(sm)sm.textContent=parts.join(' \u00b7 ')+' \u00b7 \u05dc\u05d7\u05d9\u05e6\u05d4 \u05dc\u05e4\u05ea\u05d9\u05d7\u05d4';\n }\n function tileSeen(){try{return JSON.parse(localStorage.getItem('leadTileSeen')||'[]');}catch(e){return [];}}\n window.leadNewTileSeen=function(){var ts=tileSeen();fresh().forEach(function(x){if(ts.indexOf(x.at)<0)ts.push(x.at);});try{localStorage.setItem('leadTileSeen',JSON.stringify(ts.slice(-300)));}catch(e){}paint();};\n function mark(at){var s=seen();if(s.indexOf(at)<0){s.push(at);try{localStorage.setItem(K,JSON.stringify(s.slice(-300)));}catch(e){}}paint();}\n window.leadNewFresh=fresh;window.leadNewMark=mark;\n window.leadNewAt=function(r){var m=/^biz-(\\d{14})-site$/.exec(String(r&&r.id||''));if(!m)return '';var f=fresh();for(var i=0;i<f.length;i++){if(f[i].k==='lead'&&f[i].at.replace(/\\D/g,'').slice(0,14)===m[1])return f[i].at;}return '';};\n window.leadNewWaitHtml=function(){return fresh().filter(function(x){return x.k==='waitlist';}).map(function(x){\n  var d=new Date(x.at);return '<div class=\"bzRow bzNew\" data-new-at=\"'+x.at+'\" data-wl=\"1\"><span class=\"bzNewTag\">\u05d7\u05d3\u05e9</span><b>\ud83c\udf05 \u05d4\u05e6\u05d8\u05e8\u05e3/\u05d4 \u05dc\u05e9\u05d7\u05e8 \u05de\u05d4\u05d0\u05ea\u05e8</b><small>'+d.toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})+' \u00b7 \u05d4\u05d4\u05d6\u05de\u05e0\u05d4 \u05d5\u05d4\u05de\u05db\u05ea\u05d1 \u05d9\u05e6\u05d0\u05d5 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9\u05ea</small></div>';}).join('');};\n document.addEventListener('click',function(e){\n  var r=e.target&&e.target.closest&&e.target.closest('.bzNew');if(!r)return;\n  var at=r.getAttribute('data-new-at');if(at)mark(at);\n  r.classList.remove('bzNew');var tg=r.querySelector('.bzNewTag');if(tg)tg.remove();\n  if(r.getAttribute('data-wl')){location.href='shachar/index.html?v='+Date.now();}\n },true);\n var t=document.getElementById('gLeadNew');\n if(t)t.onclick=function(){\n  var f=fresh();\n  if(f.some(function(x){return x.k==='lead';})&&typeof bizSheet==='function'){bizSheet();return;}\n  f.forEach(function(x){mark(x.at);});location.href='shachar/index.html?v='+Date.now();\n };\n paint();\n})();\n</script>\n";
 
 // 1.11: the time of the newest site lead or Shachar waitlist signup, so 💼 העסק שלי blinks on each one.
+// 4.11, Itzik: "תהבהב את המסך של העסק שלי ואת כל הנתיב עד שאני אראה שהוא חתם". Shai's signature time joins the stamp.
+function shaiSignStamp() {
+  if (inst.name !== 'abaitzik') return '';
+  try { const s = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'sign', 'a9cf9d55064a85b58583.json'), 'utf8')); return s.signedAt ? '-s' + s.signedAt.replace(/\D/g, '').slice(0, 12) : ''; } catch (e) { return ''; }
+}
+
 function newestLead() {
   try { const a = loadDocs('chat').filter(m => (m.heldWhy === 'lead' || m.heldWhy === 'waitlist') && m.at).map(m => m.at).sort().pop(); return a ? '-' + a.replace(/\D/g, '').slice(0, 12) : ''; } catch (e) { return ''; }
 }
@@ -4286,6 +4292,8 @@ ${require('./lib/home-ui.js').html}
 -->
 
  <div id="askBox"></div>
+<!-- 4.11, Itzik: "תעלה את האריח של העסק שלי למעלה ברשימה. למה שמת אותו אחרון?" The business grid opens the home screen. -->
+${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261104-views' + newestLead() + shaiSignStamp() + '"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
   <!-- 3.11, Itzik: "אני צריך אריח שממש יעבב לי, כמו ליד חדש". First on the grid; shows while a --nag reminder is open, hard blink once it is due, until "✅ עשיתי". -->
@@ -4570,7 +4578,6 @@ ${require('./lib/home-ui.js').html}
     and no screens list (Itzik's copy). A customer with a screens list gets the
     tile from tenantTiles, only when gBiz is in that list.
   -->
-${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261104-views' + newestLead() + '"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
 <!--TENANT:BEGIN-->
   <!--
     A customer's home screen, built from his intake answers and not filtered
@@ -16670,7 +16677,9 @@ function bizSheet(t0){
    var s=(D.shaiForms||{})[k]||{},sent='';try{sent=JSON.parse(localStorage.getItem('itsSent')||'{}')[k]||'';}catch(x){}
    function hd(t){try{return new Date(t).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'});}catch(x){return '';}}
    var cls,st;
-   if(s.done){cls='yb2';st=(s.sign?'✅ נחתם · ':'✅ מולא · ')+hd(s.done);}
+   var PN={small:'SMALL',medium:'MEDIUM',large:'LARGE'},sseen='';try{sseen=localStorage.getItem('itsDoneSeen:'+k)||'';}catch(x){}
+   if(s.done&&s.sign){cls='yb2'+(sseen===s.done?'':' taskblink');st='✅ חתם · '+hd(s.done)+(s.plan?' · חבילת '+(PN[s.plan]||s.plan):'')+(sseen===s.done?'':' · לחיצה לאישור שראית');}
+   else if(s.done){cls='yb2';st='✅ מולא · '+hd(s.done);}
    else if(s.opened){cls='ybWait';st=s.sign?'🟠 מצב המתנה: פתח, עוד לא חתם':'🟠 מצב המתנה: פתח, מילא '+(s.n||0)+' מתוך '+(s.of||0);}
    else if(sent){cls='ybWait';st='🟠 מצב המתנה: נשלח '+hd(sent)+', עוד לא פתח';}
    else{cls='ybRed';st='🔴 עוד לא נשלח. לחיצה שולחת';}
@@ -16772,7 +16781,7 @@ function bizSheet(t0){
     +'<p class="bzEmpty">הציון למעלה מ 0 עד 100, 100 זה הכי טוב. כל ליד שלא נגעו בו שבוע מוריד 8 נקודות, הצעה שלא חזרו אליה 3 ימים מורידה 12, ותזכורת שהגיעה ולא טופלה מורידה 6.</p>';
   }
   // 2.11, Itzik: a tab with something new blinks until he opens it. The stamp changes whenever something is added there.
-  var BZ_UPD={its:'20261104-contract',shachar:(D.shSum&&D.shSum.upd)||'20261103-shachar-auto'};
+  var BZ_UPD={its:'20261104-contract'+((D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done)?'-s'+String(D.shaiForms.sign.done).replace(/\\D/g,'').slice(0,12):''),shachar:(D.shSum&&D.shSum.upd)||'20261103-shachar-auto'};
   function bzSeen(){try{return JSON.parse(localStorage.getItem('bzTabSeen')||'{}');}catch(x){return {};}}
   function bzTabNew(k){return !!BZ_UPD[k]&&bzSeen()[k]!==BZ_UPD[k]&&k!==tab;}
   function bzMarkSeen(k){if(!BZ_UPD[k])return;var o=bzSeen();o[k]=BZ_UPD[k];try{localStorage.setItem('bzTabSeen',JSON.stringify(o));}catch(x){}}
@@ -16827,6 +16836,8 @@ function bizSheet(t0){
      if(navigator.share){navigator.share({title:title,text:tt+'\\n'+u}).then(sent,function(){});}
      else{try{navigator.clipboard.writeText(tt+' '+u);toast('הקישור הועתק. מדביקים לשי בוואטסאפ או במייל.');sent();}catch(x){toast(u);}}
     }
+    // 4.11: once signed, a tap only says "seen" (stops the blink); it never sends the quote again.
+    if(a==='sign-shai'&&D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done){try{localStorage.setItem('itsDoneSeen:sign',D.shaiForms.sign.done);}catch(x){}var bb2=el.querySelector('#bzBody');if(bb2)bb2.innerHTML=body();return;}
     if(a==='sign-shai'){shareShai('https://form.it-solution.co.il/q/a9cf9d55064a85b58583','שי, מצורפים הצעת המחיר והסכם השירות. עוברים, בוחרים חבילה וחותמים ישר מהטלפון:','הצעת מחיר והסכם שירות, IT Solution','sign');return;}
     if(a==='form3-shai'){shareShai('https://form.it-solution.co.il/f/15939da3cf0776f57992','שי, תודה על הטופס! נשארו רק כמה פרטים קטנים כדי שנתחיל לחבר, כמה דקות:','עוד כמה פרטים, IT Solution','form3');return;}
     if(a==='setup-shai'){shareShai('https://form.it-solution.co.il/s/f3d4f77d1278a2a5efdc','שי, כאן מחברים את המוניטור לכל הכלים שלך: המייל, הקלטות הפגישות, הדרייב, היומן, החשבוניות, קובץ החייבים, לינקדין ופייסבוק. בכל כרטיס כתוב בדיוק מה ללחוץ, וכל לחיצה נשמרת. בסוף לוחצים סיימתי:','חיבור המוניטור, IT Solution','setup');return;}
