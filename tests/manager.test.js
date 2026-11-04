@@ -65,3 +65,15 @@ test('push lists only what is open', () => {
   assert.ok(p.title.startsWith('המנהל'));
   assert.ok(!/דוח הבוקר מוכן/.test(p.body));
 });
+
+test('an appointment of the monitor counts, once, even with no calendar', () => {
+  const appts = [{ id: 'x', what: 'רופא שיניים', when: '2026-11-04T18:45:00+02:00' }];
+  const m = M.build({ ...base, cal: null, appts });
+  const c = m.items.find(i => i.k === 'cal');
+  assert.strictEqual(c.st, 'todo');
+  assert.match(c.sub, /18:45 רופא שיניים/);
+  assert.ok(!('_ev' in c));
+  assert.deepStrictEqual(M.alarmsDue(m, WED, []).map(e => e.id), ['appt-x']);
+  const both = M.build({ ...base, appts: [{ id: 'y', what: 'פגישה', when: '2026-11-04T11:00:00+02:00' }] });
+  assert.strictEqual(both.items.find(i => i.k === 'cal').sub.split('·').length, 2);
+});
