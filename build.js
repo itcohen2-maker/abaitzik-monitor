@@ -16617,21 +16617,19 @@ function bizSheet(t0){
    var s=(D.shaiForms||{})[k]||{},sent='';try{sent=JSON.parse(localStorage.getItem('itsSent')||'{}')[k]||'';}catch(x){}
    function hd(t){try{return new Date(t).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'});}catch(x){return '';}}
    var cls,st;
-   if(s.done){cls='yb2';st='✅ מולא · '+hd(s.done);}
-   else if(s.opened){cls='ybWait';st='🟠 מצב המתנה: פתח, מילא '+(s.n||0)+' מתוך '+(s.of||0);}
+   if(s.done){cls='yb2';st=(s.sign?'✅ נחתם · ':'✅ מולא · ')+hd(s.done);}
+   else if(s.opened){cls='ybWait';st=s.sign?'🟠 מצב המתנה: פתח, עוד לא חתם':'🟠 מצב המתנה: פתח, מילא '+(s.n||0)+' מתוך '+(s.of||0);}
    else if(sent){cls='ybWait';st='🟠 מצב המתנה: נשלח '+hd(sent)+', עוד לא פתח';}
    else{cls='ybRed';st='🔴 עוד לא נשלח. לחיצה שולחת';}
    return '<button type="button" class="yb '+cls+'" data-bz="'+a+'" data-sk="'+k+'">'+label+'<small style="display:block;font-weight:500;margin-top:3px">'+st+'</small></button>';
   }
   function itsHtml(){
    return '<div class="bzHead">💻 IT Solution</div>'
-    // 4.11, Itzik: "אני צריך חוזה מול לקוח". One service agreement for every client, signed inside the quote page, before any build.
-    +'<div class="bzSec">📜 חוזה ללקוח</div>'
-    +'<a class="yb yb1" href="https://form.it-solution.co.il/terms" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">📜 הסכם השירות הכללי, גרסה 1.0</a>'
-    +'<button type="button" class="yb" data-bz="anim" data-f="it-solution-contract-1.0.pdf">📄 ההסכם כ PDF</button>'
-    +'<div class="bzRow"><b>✍️ הלקוח חותם על ההסכם בתוך דף ההצעה</b><small>חתימה אחת על ההצעה וההסכם, ותשלום ההקמה. רק אחרי זה דף החיבורים ותחילת הבנייה. ה PDF החתום כולל את ההסכם המלא.</small></div>'
     // 4.11, Itzik: an insurance agent asks how confidential the monitor is. A page to hand the customer.
     +'<div class="bzSec">🔒 מוניטור ואבטחה</div>'
+    // 4.11, Itzik: "אני צריך חוזה מול לקוח" and "שים את זה במוניטור ואבטחה". One service agreement for every client, signed inside the quote page, before any build.
+    +'<a class="yb yb1" href="https://form.it-solution.co.il/terms" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">📜 הסכם השירות ללקוח, גרסה 1.0</a>'
+    +'<button type="button" class="yb" data-bz="anim" data-f="it-solution-contract-1.0.pdf">📄 הסכם השירות כ PDF</button>'
     // 4.11: two pages to send a customer. Share asks for whom, so the link carries ?r=<name> and the counter knows who opened (and if it was forwarded).
     +'<button type="button" class="yb yb1" data-bz="anim" data-f="views-report.html">👀 מי ראה את הדפים</button>'
     +'<a class="yb" href="https://it-solution.co.il/monitor/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">💡 דף המוניטור לעסק, למה לבחור בנו</a>'
@@ -16647,18 +16645,19 @@ function bizSheet(t0){
     // 4.11, Itzik: "שתי טפסים אני צריך לשלוח לו ... באדום, וברגע שאני שולח אותם ... כתום, וכתוב מצב המתנה".
     // Red: not sent. Orange: sent (marked on this device when shared) or opened and not finished. Green: filled.
     // Shared or copied, never opened here: opening reports "שי פתח".
-    +'<div class="bzRow"><b>📨 שני טפסים לשלוח לשי</b><small>🔴 עוד לא נשלח · 🟠 מצב המתנה · ✅ מולא. הצבע מתעדכן לבד כשהוא פותח וממלא.</small></div>'
-    +shaiFormBtn('form3-shai','form3','📝 טופס השלמות, 10 שאלות קצרות')
+    // 4.11, Itzik: "קודם אשלח לו את הטופס לחתימה, ואז הוא יקבל את הטופס למילוי".
+    +'<div class="bzRow"><b>📨 הסדר: קודם חתימה, אחר כך הטפסים</b><small>🔴 עוד לא נשלח · 🟠 מצב המתנה · ✅ הושלם. הצבע מתעדכן לבד כשהוא פותח, חותם וממלא.</small></div>'
+    +shaiFormBtn('sign-shai','sign','✍️ שלב 1: הצעת המחיר והסכם השירות לחתימה')
+    +'<a class="yb" href="https://form.it-solution.co.il/q/a9cf9d55064a85b58583/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לראות את ההצעה וההסכם לפני ששולחים</a>'
+    +shaiFormBtn('form3-shai','form3','📝 שלב 2, אחרי החתימה: טופס השלמות, 10 שאלות קצרות')
     // 4.11, Itzik: "תשים לי תצוגה נפרדת". The live page in view mode: nothing saved, never marked as opened.
     +'<a class="yb" href="https://form.it-solution.co.il/f/15939da3cf0776f57992/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לראות את טופס ההשלמות לפני ששולחים</a>'
-    +shaiFormBtn('setup-shai','setup','🔌 דף החיבורים: מייל, פגישות, יומן, חשבוניות, לינקדין, פייסבוק')
+    +shaiFormBtn('setup-shai','setup','🔌 שלב 3: דף החיבורים: מייל, פגישות, יומן, חשבוניות, לינקדין, פייסבוק')
     +'<a class="yb" href="https://form.it-solution.co.il/s/f3d4f77d1278a2a5efdc/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לראות את דף החיבורים לפני ששולחים</a>'
     +'<div class="bzSec">👀 עוד לראות</div>'
     // 3.11, Itzik: "אני רוצה לראות את הקובץ, תכין לי אחד בשבילי". Copies that save nothing and report nothing.
-    +'<a class="yb" href="https://form.it-solution.co.il/q/a9cf9d55064a85b58583/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 ההצעה לשי, כמו שהוא רואה אותה</a>'
     +'<div class="bzSec">🖥️ מה שכבר קיים אצל שי</div>'
     +'<a class="yb yb2" href="https://shai.it-solution.co.il/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">🖥️ המוניטור של שי</a>'
-    +'<button type="button" class="yb yb2" data-bz="sign-shai">✍️ הצעת המחיר לשי, נשלחה (לשלוח שוב)</button>'
     +'<button type="button" class="yb yb2" data-bz="form2-shai">📋 טופס המידע לשי, כבר מולא ✓</button>'
     ;
   }
@@ -16745,10 +16744,6 @@ function bizSheet(t0){
     // 1.11, Itzik: "שים לי אותו גם במוניטור". The intake form for Shai (forms.js on form.it-solution.co.il).
     // 2.11, Itzik: the sign page for Shai's quote, at the top of העסק שלי. It is shared or copied, never opened here:
     // opening it reports "שי פתח" to the monitor.
-    if(a==='sign-shai'){var su='https://form.it-solution.co.il/q/a9cf9d55064a85b58583',st='שי, מצורפת הצעת המחיר. אפשר לעבור עליה ולחתום ישר מהטלפון:';
-     if(navigator.share){navigator.share({title:'הצעת מחיר, IT Solution',text:st,url:su}).catch(function(){});}
-     else{try{navigator.clipboard.writeText(st+' '+su);toast('הקישור לחתימה הועתק. מדביקים לשי בוואטסאפ או במייל.');}catch(x){toast(su);}}
-     return;}
     // 3.11: the connections form. Shared or copied, never opened here: opening it reports "שי פתח את טופס האפיון".
     function shareShai(u,tt,title,k){
      function sent(){if(!k)return;try{var o=JSON.parse(localStorage.getItem('itsSent')||'{}');o[k]=new Date().toISOString();localStorage.setItem('itsSent',JSON.stringify(o));}catch(x){}
@@ -16756,6 +16751,7 @@ function bizSheet(t0){
      if(navigator.share){navigator.share({title:title,text:tt,url:u}).then(sent,function(){});}
      else{try{navigator.clipboard.writeText(tt+' '+u);toast('הקישור הועתק. מדביקים לשי בוואטסאפ או במייל.');sent();}catch(x){toast(u);}}
     }
+    if(a==='sign-shai'){shareShai('https://form.it-solution.co.il/q/a9cf9d55064a85b58583','שי, מצורפים הצעת המחיר והסכם השירות. עוברים, בוחרים חבילה וחותמים ישר מהטלפון:','הצעת מחיר והסכם שירות, IT Solution','sign');return;}
     if(a==='form3-shai'){shareShai('https://form.it-solution.co.il/f/15939da3cf0776f57992','שי, תודה על הטופס! נשארו רק כמה פרטים קטנים כדי שנתחיל לחבר, כמה דקות:','עוד כמה פרטים, IT Solution','form3');return;}
     if(a==='setup-shai'){shareShai('https://form.it-solution.co.il/s/f3d4f77d1278a2a5efdc','שי, כאן מחברים את המוניטור לכל הכלים שלך: המייל, הקלטות הפגישות, היומן, החשבוניות, קובץ החייבים, לינקדין ופייסבוק. בכל כרטיס כתוב בדיוק מה ללחוץ, וכל לחיצה נשמרת. בסוף לוחצים סיימתי:','חיבור המוניטור, IT Solution','setup');return;}
     if(a==='form2-shai'){var f2='https://form.it-solution.co.il/f/c94dc7fa0f53147ed133',f2t='שי, כדי שנחבר את המוניטור בדיוק למה שיש לך, הכנו טופס קצר. רוב השאלות רק לסמן, כ 5 דקות:';
