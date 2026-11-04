@@ -573,6 +573,19 @@ function recordPushSub(m, got) {
   say('נשמר מנוי התראות לטלפון, סה"כ ' + n);
 }
 
+// 4.11: the key of the chat record written at this time, the same key the page
+// uses (its id, else time and the first 40 letters). Empty when nothing has it.
+function reKeyFor(at) {
+  let names = [];
+  try { names = fs.readdirSync(CHAT).filter((n) => n.endsWith('.json')).sort().reverse(); } catch (e) { return ''; }
+  for (const n of names) {
+    let r = null;
+    try { r = JSON.parse(fs.readFileSync(path.join(CHAT, n), 'utf8')); } catch (e) { continue; }
+    if (r && r.at === at) return r.id ? String(r.id) : (r.at || '') + '|' + String(r.text || '').slice(0, 40);
+  }
+  return '';
+}
+
 function recordIncoming(m) {
   const gid = group.groupOf(m.title);
   const held = gid ? groupFiles.get(gid) : null;
@@ -590,6 +603,12 @@ function recordIncoming(m) {
     // every refresh, so the tail comes off here too.
     caption = gid ? group.captionFrom(m.message) : group.stripCode(m.message);
   }
+  // 4.11, Itzik: a reply sent from a bubble ends with [re:<its time>]. The reply
+  // keeps that bubble's key, so it sits under the bubble and not under the
+  // first message of the thread. The tag itself never goes into the chat.
+  let reTo = '';
+  const reTag = caption.match(/\n?\[re:([^\]\s]+)\]\s*$/);
+  if (reTag) { reTo = reKeyFor(reTag[1]); caption = caption.slice(0, reTag.index).trim(); }
   if (!attach && !caption.trim()) return false;
   const codeOk = !m.attachment && ownerCodeOk(m.message);
 
@@ -607,6 +626,7 @@ function recordIncoming(m) {
     if (codeOk && rec.from === 'unverified') { rec.from = 'itzik'; rec.status = 'working'; say('הקוד אומת, ההודעה עוברת לעבודה'); }
     else if (rec.from === 'unverified' && !m.attachment && heldWhy(m.message) === 'wrong-code') rec.heldWhy = 'wrong-code';
     rec.files = held.files.slice();
+    if (reTo && !rec.re) rec.re = reTo;
     try { fs.writeFileSync(path.join(CHAT, held.name), JSON.stringify(rec, null, 1), 'utf8'); }
     catch (e) { say('!! לא עודכן בצ׳אט: ' + e.message); return false; }
     say('צורף לאותה הודעה: ' + rec.text.slice(0, 60));
@@ -632,6 +652,7 @@ function recordIncoming(m) {
   */
   if (!codeOk) rec.heldWhy = heldWhy(m.message);
   if (files.length) rec.files = files.slice();
+  if (reTo) rec.re = reTo;
   try {
     fs.mkdirSync(CHAT, { recursive: true });
     fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');

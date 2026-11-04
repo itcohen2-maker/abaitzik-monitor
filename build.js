@@ -7460,7 +7460,7 @@ document.addEventListener('click',function(e){
 // 31.10, Itzik (voice): "תתקן ותחבר את התשובות למה ששאלת". An answer shows, above
 // its words, the first words of the message it answers, so he sees what it is about.
 function replyQuote(m){
- if(m.from!=='claude'||!m.re)return '';
+ if(!m.re)return '';
  var q=null;
  (D.chat||[]).forEach(function(x){if(x.id===m.re)q=x;});
  var t=q?String(q.text||'').replace(/\s+/g,' ').trim():'';
@@ -8081,7 +8081,8 @@ function wireReplies(host,all){
    btn.disabled=true;
    said.textContent='שולח.';
    var full=quoteOf(m)+String.fromCharCode(10)+text;
-   sendOrHold('תשובה מהמוניטור',full,'תשובה',{at:new Date().toISOString(),text:full,re:rootKeyFor(m)}).then(function(how){
+   // 4.11, Itzik: the reply keeps the bubble it was written under (its own key), with the time tag the listener reads.
+   sendOrHold('תשובה מהמוניטור',full+String.fromCharCode(10)+'[re:'+m.at+']','תשובה',{at:new Date().toISOString(),text:full,re:rootKeyFor(m)}).then(function(how){
     if(how==='held'){said.textContent=HELD_SAY;setStandby(f.getAttribute('data-k')||rootKeyFor(m));return;}
     var p=pending();
     p.push({at:new Date().toISOString(),text:full,re:rootKeyFor(m)});
@@ -18618,18 +18619,20 @@ function reallySend(list,squeezed){
   var m=document.getElementById('msgText');
   if(m&&m.value.trim()){cap=m.value.trim();m.value='';}
  }
+ // 4.11, Itzik: a reply aimed at a bubble carries that bubble's time; the listener links it to that bubble.
+ var reTag=aim?String.fromCharCode(10)+'[re:'+aim.at+']':'';
  var hasVoice=list.some(function(f){return /^voice-/.test(f.name);});
  var voice=list.length===1&&hasVoice;
  var deflt=voice?('הודעה קולית מהמוניטור'+micDiagLine())
    :(list.length>1?list.length+' קבצים מהמוניטור':'קובץ מהמוניטור');
  if(!hasVoice){
   sendSay(bundleWhat(list,cap)+(list.length>1||cap?' יוצאים ביחד, בהודעה אחת,':' יוצא')+' בעוד 15 שניות. אפשר לבטל בפס למטה.');
-  undoSend('',null,function(){goFiles(list,cap,deflt,hasVoice);},{file:list.length,onDrop:function(){
+  undoSend('',null,function(){goFiles(list,cap,deflt,hasVoice,reTag);},{file:list.length,onDrop:function(){
    if(cap)document.getElementById('fCap').value=cap;
    sendSay(list.length>1?'בוטל. הקבצים לא יצאו ועדיין בחורים.':'בוטל. הקובץ לא יצא ועדיין בחור.');fBtn.disabled=false;}});
   return;
  }
- goFiles(list,cap,deflt,hasVoice);
+ goFiles(list,cap,deflt,hasVoice,reTag);
 }
 /*
   Rinat, 14.10 (through Itzik): "they do not understand" what left when a few
@@ -18647,7 +18650,7 @@ function bundleWhat(list,cap){
  if(parts.length<2)return parts[0]||'הקובץ';
  return parts.slice(0,-1).join(', ')+' וגם '+parts[parts.length-1];
 }
-function goFiles(list,cap,deflt,hasVoice){
+function goFiles(list,cap,deflt,hasVoice,reTag){
  markSent(hasVoice?'voice':'file');
  var many=list.length>1||!!cap;
  sendSay((FEM?'שולחת ':'שולח ')+bundleWhat(list,cap)+(many?', הכל ביחד בהודעה אחת.':'.'));
@@ -18655,7 +18658,7 @@ function goFiles(list,cap,deflt,hasVoice){
  // mailbox was over quota the whole page became a Rate Limit notice and the
  // recording was simply lost. Sending in place keeps the page, and lets the
  // backup channel take over without him noticing.
- sendAll(list,cap||deflt).then(function(how){
+ sendAll(list,(cap||deflt)+(reTag||'')).then(function(how){
   document.getElementById('fCap').value='';
   // The file left with the message. Leaving it selected would attach it again
   // to the next thing he writes.

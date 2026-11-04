@@ -2336,7 +2336,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-04T12:30:16.733Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-04T12:31:04.012Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4216,7 +4216,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='6a94fe359d';
+var CODE_ID='58efcb69cf';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -5157,7 +5157,7 @@ document.addEventListener('click',function(e){
  window.speechSynthesis.speak(u);
 },true);
 function replyQuote(m){
- if(m.from!=='claude'||!m.re)return '';
+ if(!m.re)return '';
  var q=null;
  (D.chat||[]).forEach(function(x){if(x.id===m.re)q=x;});
  var t=q?String(q.text||'').replace(/s+/g,' ').trim():'';
@@ -5682,7 +5682,7 @@ function wireReplies(host,all){
    btn.disabled=true;
    said.textContent='שולח.';
    var full=quoteOf(m)+String.fromCharCode(10)+text;
-   sendOrHold('תשובה מהמוניטור',full,'תשובה',{at:new Date().toISOString(),text:full,re:rootKeyFor(m)}).then(function(how){
+   sendOrHold('תשובה מהמוניטור',full+String.fromCharCode(10)+'[re:'+m.at+']','תשובה',{at:new Date().toISOString(),text:full,re:rootKeyFor(m)}).then(function(how){
     if(how==='held'){said.textContent=HELD_SAY;setStandby(f.getAttribute('data-k')||rootKeyFor(m));return;}
     var p=pending();
     p.push({at:new Date().toISOString(),text:full,re:rootKeyFor(m)});
@@ -13944,18 +13944,19 @@ function reallySend(list,squeezed){
   var m=document.getElementById('msgText');
   if(m&&m.value.trim()){cap=m.value.trim();m.value='';}
  }
+ var reTag=aim?String.fromCharCode(10)+'[re:'+aim.at+']':'';
  var hasVoice=list.some(function(f){return /^voice-/.test(f.name);});
  var voice=list.length===1&&hasVoice;
  var deflt=voice?('הודעה קולית מהמוניטור'+micDiagLine())
    :(list.length>1?list.length+' קבצים מהמוניטור':'קובץ מהמוניטור');
  if(!hasVoice){
   sendSay(bundleWhat(list,cap)+(list.length>1||cap?' יוצאים ביחד, בהודעה אחת,':' יוצא')+' בעוד 15 שניות. אפשר לבטל בפס למטה.');
-  undoSend('',null,function(){goFiles(list,cap,deflt,hasVoice);},{file:list.length,onDrop:function(){
+  undoSend('',null,function(){goFiles(list,cap,deflt,hasVoice,reTag);},{file:list.length,onDrop:function(){
    if(cap)document.getElementById('fCap').value=cap;
    sendSay(list.length>1?'בוטל. הקבצים לא יצאו ועדיין בחורים.':'בוטל. הקובץ לא יצא ועדיין בחור.');fBtn.disabled=false;}});
   return;
  }
- goFiles(list,cap,deflt,hasVoice);
+ goFiles(list,cap,deflt,hasVoice,reTag);
 }
 function bundleWhat(list,cap){
  var files=list.filter(function(f){return !/^voice-/.test(f.name);}).length;
@@ -13967,11 +13968,11 @@ function bundleWhat(list,cap){
  if(parts.length<2)return parts[0]||'הקובץ';
  return parts.slice(0,-1).join(', ')+' וגם '+parts[parts.length-1];
 }
-function goFiles(list,cap,deflt,hasVoice){
+function goFiles(list,cap,deflt,hasVoice,reTag){
  markSent(hasVoice?'voice':'file');
  var many=list.length>1||!!cap;
  sendSay((FEM?'שולחת ':'שולח ')+bundleWhat(list,cap)+(many?', הכל ביחד בהודעה אחת.':'.'));
- sendAll(list,cap||deflt).then(function(how){
+ sendAll(list,(cap||deflt)+(reTag||'')).then(function(how){
   document.getElementById('fCap').value='';
   clearPick();
   try{localStorage.removeItem(DRAFT);}catch(err){}
