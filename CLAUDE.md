@@ -184,3 +184,8 @@
   The server has no calendar access: `node pc-task.js add --re <id> "add to Google Calendar: <title>, <date time>, <place>"`.
   The round circle "יומן" (`icGcal`) opens calendar.google.com/calendar/u/0/r/day. WhatsApp status is never posted
   automatically (no official API for status; unofficial tools risk his number): it stays the 3 tap tile.
+- **Reacting to a line in the brief or the manager card (4.11.2026):** every open line has ✓ בוצע, ⏰ אחר כך, 🤖 משימה לך,
+  ✕ לא רלוונטי. They send: "✓ סימנתי בוצע מהדוח: <line>" or "✕ לא רלוונטי מהדוח: <line>" (stop following it up: close the
+  matching task, reminder or follow up, answer one line), "🤖 משימה בשבילך מהדוח: <line>" (do it as a normal task),
+  "שעון מעורר HH:MM: <line>" (later today, alarm.js as usual) and "משימה ליום <day> (<YYYY-MM-DD>): <line>. וגם ביומן גוגל."
+  (task file as usual plus a PC task to add it to his Google Calendar). The line leaves the card on his phone at once.
