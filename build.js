@@ -16646,7 +16646,7 @@ function bizSheet(t0){
     +shaiFormBtn('form3-shai','form3','📝 טופס השלמות, 10 שאלות קצרות')
     // 4.11, Itzik: "תשים לי תצוגה נפרדת". The live page in view mode: nothing saved, never marked as opened.
     +'<a class="yb" href="https://form.it-solution.co.il/f/15939da3cf0776f57992/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לראות את טופס ההשלמות לפני ששולחים</a>'
-    +shaiFormBtn('setup-shai','setup','🔌 דף החיבורים: מייל, פגישות, יומן')
+    +shaiFormBtn('setup-shai','setup','🔌 דף החיבורים: מייל, פגישות, יומן, חשבוניות, לינקדין')
     +'<a class="yb" href="https://form.it-solution.co.il/s/f3d4f77d1278a2a5efdc/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לראות את דף החיבורים לפני ששולחים</a>'
     +'<div class="bzSec">👀 עוד לראות</div>'
     // 3.11, Itzik: "אני רוצה לראות את הקובץ, תכין לי אחד בשבילי". Copies that save nothing and report nothing.
@@ -16752,7 +16752,7 @@ function bizSheet(t0){
      else{try{navigator.clipboard.writeText(tt+' '+u);toast('הקישור הועתק. מדביקים לשי בוואטסאפ או במייל.');sent();}catch(x){toast(u);}}
     }
     if(a==='form3-shai'){shareShai('https://form.it-solution.co.il/f/15939da3cf0776f57992','שי, תודה על הטופס! נשארו רק כמה פרטים קטנים כדי שנתחיל לחבר, כמה דקות:','עוד כמה פרטים, IT Solution','form3');return;}
-    if(a==='setup-shai'){shareShai('https://form.it-solution.co.il/s/f3d4f77d1278a2a5efdc','שי, כאן מחברים את המוניטור לכלים שלך: המייל, הקלטות הפגישות והיומן. בכל כרטיס כתוב מה ללחוץ, וכל לחיצה נשמרת. את הפייסבוק נחבר בשלב הבא:','חיבור המוניטור, IT Solution','setup');return;}
+    if(a==='setup-shai'){shareShai('https://form.it-solution.co.il/s/f3d4f77d1278a2a5efdc','שי, כאן מחברים את המוניטור לכלים שלך: המייל, הקלטות הפגישות, היומן, החשבוניות ולינקדין. בכל כרטיס כתוב מה ללחוץ, וכל לחיצה נשמרת. את הפייסבוק נחבר בשלב הבא:','חיבור המוניטור, IT Solution','setup');return;}
     if(a==='form2-shai'){var f2='https://form.it-solution.co.il/f/c94dc7fa0f53147ed133',f2t='שי, כדי שנחבר את המוניטור בדיוק למה שיש לך, הכנו טופס קצר. רוב השאלות רק לסמן, כ 5 דקות:';
      if(navigator.share){navigator.share({title:'טופס חיבורים, IT Solution',text:f2t,url:f2}).catch(function(){});}
      else{try{navigator.clipboard.writeText(f2t+' '+f2);toast('הקישור לטופס הועתק. מדביקים לשי בוואטסאפ או במייל.');}catch(x){toast(f2);}}
