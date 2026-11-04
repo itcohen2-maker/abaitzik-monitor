@@ -3018,6 +3018,9 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 #bzBody{flex:1;min-width:0;border:2px solid #16202c;border-radius:14px 0 14px 14px;padding:4px 10px 10px;min-height:340px}
 .bzBody .yb,#bzBody>.yb,#bzBody .tdy-row .yb{width:100%;box-sizing:border-box}
 .bzHead{font:800 16px Heebo,sans-serif;margin:8px 0 4px}
+.bzPane>.bzHead:first-child{display:none}
+.bzPane .yb{width:100%;box-sizing:border-box}
+#bzDw{margin-top:12px}
 #ftText .bzT{background:#26303c;color:#e8eef5}#ftText .bzT.on{background:#e8eef5;color:#16202c}#ftText #bzBody{border-color:#e8eef5}
 .bzSec{font:700 14px Heebo,sans-serif;margin:10px 0 2px;color:#14675a}
 .bzRow{border-bottom:1px solid rgba(128,128,128,.25);padding:8px 0;font:500 14px/1.45 Heebo,sans-serif;display:flex;flex-direction:column;gap:2px}
@@ -16748,6 +16751,7 @@ function bizSheet(t0){
   function bzSeen(){try{return JSON.parse(localStorage.getItem('bzTabSeen')||'{}');}catch(x){return {};}}
   function bzTabNew(k){return !!BZ_UPD[k]&&bzSeen()[k]!==BZ_UPD[k]&&k!==tab;}
   function bzMarkSeen(k){if(!BZ_UPD[k])return;var o=bzSeen();o[k]=BZ_UPD[k];try{localStorage.setItem('bzTabSeen',JSON.stringify(o));}catch(x){}}
+  function bodyFor(t2){var s0=tab;tab=t2;try{return body();}finally{tab=s0;}}
   var dueN=((S&&S.staleLeads)||[]).length+((S&&S.due)||[]).length;
   var tabs=[['its','💻','IT Solution'],['leads','👥','לידים ולקוחות'],['money','💰','כסף החודש'],['due','⏰','צריך לחזור',dueN],['shachar','🌅','שחר']/*ITZIK:BEGIN*/,['ner','🕯️','נרות']/*ITZIK:END*/,['anim','🧠','המשרד']];
   if(INSTANCE&&INSTANCE.clalit)tabs.push(['docs','🏥','מסמכים']);
@@ -16755,21 +16759,33 @@ function bizSheet(t0){
   var html='<button type="button" class="yb bzBackTop" data-bz="back" data-tdy="1">→ חזרה</button>'+'<div class="biz"><div class="bzMicRow"><button type="button" id="bizMic" class="bzMic" aria-label="דבר אליי">'
    +'<svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" stroke="none"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8.5 21h7"/></svg></button></div>'
    +'<div class="bzTop">'+scoreHtml()+'<p class="bzUrg"><b>'+esc((S&&S.urgent)||'אין עדיין נתונים.')+'</b></p></div>'
-   +'<div class="bzWrap"><nav class="bzRail">'+tabs.map(function(t){
-     return '<button type="button" class="bzT'+(t[0]===tab?' on':'')+(bzTabNew(t[0])?' bzTNew':'')+'" data-bz="tab" data-t="'+t[0]+'" data-tdy="1"><i>'+t[1]+'</i>'+t[2]+(t[3]?' <span class="bzN">'+t[3]+'</span>':'')+'</button>';
-    }).join('')+'</nav>'
-   +'<div id="bzBody">'+body()+'</div></div></div>';
+   // 4.11.2026, Itzik picked ד instead of the thick tab rail: coloured keys on top, a drawer per tab (lib/drawers-ui.js).
+   +'<div id="bzDw">'+tabs.map(function(t){
+     return '<h3 data-t="'+t[0]+'"'+(t[3]?' data-n="'+t[3]+'"':'')+(bzTabNew(t[0])?' data-new="1"':'')+'>'+t[1]+' '+esc(t[2])+'</h3><div class="bzPane" data-t="'+t[0]+'">'+bodyFor(t[0])+'</div>';
+    }).join('')+'</div></div>';
   shipOpen('bizSheet','💼 העסק שלי',html,function(el){
    var bm=el.querySelector('#bizMic');if(bm)bm.onclick=toggleRec;
    // 1.11, Itzik: inside העסק שלי there was no back, only home. חזרה goes one step back.
    // Every tab change is a step. The phone's back gesture uses the same step (see popstate below).
-   var bizHist=[];
+   var bizHist=[],bzQuiet=false;
+   function bzPane(t2){return el.querySelector('.bzPane[data-t="'+t2+'"]');}
+   function bzRe(){var p=bzPane(tab);if(p)p.innerHTML=body();}
    function bizShow(t2,back){
     if(!back&&t2!==tab)bizHist.push(tab);
     tab=t2;bzMarkSeen(tab);
-    el.querySelectorAll('[data-bz="tab"]').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-t')===tab);if(b.getAttribute('data-t')===tab)b.classList.remove('bzTNew');});
-    el.querySelector('#bzBody').innerHTML=body();
+    var p=bzPane(tab);if(!p)return;
+    p.innerHTML=body();
+    var d=p.closest('details');if(d&&!d.open){bzQuiet=true;d.open=true;setTimeout(function(){bzQuiet=false;},0);}
    }
+   // The drawer that opens is the tab this sheet was opened on (a lead alert opens leads), not only the last one used.
+   (function(){var ct=tabs.filter(function(x){return x[0]===tab;})[0];if(ct){try{localStorage.setItem('dwOpen:biz',ct[2]);}catch(x){}}})();
+   drawerize(el.querySelector('#bzDw'),{key:'biz',keys:4,counts:'data',
+    short:{'IT Solution':'IT Solution','לידים ולקוחות':'לידים','כסף החודש':'כסף','צריך לחזור':'לחזור','שחר':'שחר','המשרד':'המשרד','מסמכים':'מסמכים'}});
+   el.querySelectorAll('#bzDw .dw').forEach(function(d){
+    var p=d.querySelector('.bzPane');if(!p)return;var t2=p.getAttribute('data-t');
+    if(d.open&&t2!==tab){tab=t2;bzMarkSeen(tab);}
+    d.addEventListener('toggle',function(){if(!d.open||bzQuiet||t2===tab)return;bizHist.push(tab);tab=t2;bzMarkSeen(tab);p.innerHTML=body();});
+   });
    window.bizStep=function(){if(!bizHist.length)return false;bizShow(bizHist.pop(),true);return true;};
    el.addEventListener('click',function(e){
     var t=e.target.closest?e.target.closest('[data-bz]'):null;if(!t)return;
@@ -16781,7 +16797,7 @@ function bizSheet(t0){
     // 3.11: the connections form. Shared or copied, never opened here: opening it reports "שי פתח את טופס האפיון".
     function shareShai(u,tt,title,k){
      function sent(){if(!k)return;try{var o=JSON.parse(localStorage.getItem('itsSent')||'{}');o[k]=new Date().toISOString();localStorage.setItem('itsSent',JSON.stringify(o));}catch(x){}
-      var bb=el.querySelector('#bzBody');if(bb)bb.innerHTML=body();}
+      bzRe();}
      // 4.11: WhatsApp on the iPhone keeps the text and drops a separate url, so Shai got no link. The link goes inside the text.
      if(navigator.share){navigator.share({title:title,text:tt+'\\n'+u}).then(sent,function(){});}
      else{try{navigator.clipboard.writeText(tt+' '+u);toast('הקישור הועתק. מדביקים לשי בוואטסאפ או במייל.');sent();}catch(x){toast(u);}}
