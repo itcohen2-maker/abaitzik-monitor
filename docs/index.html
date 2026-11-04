@@ -2402,7 +2402,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-04T21:49:23.318Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-04T21:56:50.639Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2755,14 +2755,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4292,7 +4285,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='8eece80fe3';
+var CODE_ID='95110219e6';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10406,7 +10399,7 @@ function postSheet(it){
    if(t===w)return close();
    if(!t.getAttribute)return;
    if(t.getAttribute('data-x'))return close();
-   if(t.getAttribute('data-full')){close();return fileOpen(it.r);}
+   if(t.getAttribute('data-full')){return fileOpen(it.r);}
    var i=t.getAttribute('data-i');
    if(i===null)return;
    var lab=t.getAttribute('data-l');
@@ -11943,7 +11936,7 @@ function nerBizSheet(){
   var k=e.target.getAttribute&&e.target.getAttribute('data-k');
   if(k===null||k===undefined)return;
   if(k==='')return close();
-  var it=NER_BIZ_ITEMS[+k];if(it&&it.r){close();fileOpen(it.r);}
+  var it=NER_BIZ_ITEMS[+k];if(it&&it.r){fileOpen(it.r);}
  };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
@@ -12588,7 +12581,7 @@ function bizSheet(t0){
     if(a==='shachar'){location.href='shachar/index.html?v='+Date.now();return;}
     if(a==='shfb'){location.href='shachar/index.html?view=feedback&v='+Date.now();return;}
     if(a==='shus'){location.href='shachar/index.html?view=usage&v='+Date.now();return;}
-    if(a==='anim'){var bx2=el.querySelector('[data-a="x"]'),tb2=tab;if(bx2)bx2.click();window.fvAfterClose=function(){bizSheet(tb2);};fileOpen(t.getAttribute('data-f'));return;}
+    if(a==='anim'){fileOpen(t.getAttribute('data-f'));return;}
     if(a==='ner'){var bx=el.querySelector('[data-a="x"]');if(bx)bx.click();nerBizSheet();return;}  // 30.10, Itzik: the X did not get him out, two sheets were stacked; one at a time
     if(a==='back'){if(!window.bizStep())el.querySelector('[data-a="x"]').click();return;}
     if(a==='tab'){bizShow(t.getAttribute('data-t'));return;}
@@ -16592,7 +16585,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="BDlgL4lKYXBB2yk96UVlN_bNhLBppiq0K8ORV-TQ2jb7k8IMskeWYICec19xE7N5VEcCzVXZU9Pxb9e64KH8OCk";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}

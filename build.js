@@ -14390,7 +14390,7 @@ function postSheet(it){
    if(t===w)return close();
    if(!t.getAttribute)return;
    if(t.getAttribute('data-x'))return close();
-   if(t.getAttribute('data-full')){close();return fileOpen(it.r);}
+   if(t.getAttribute('data-full')){return fileOpen(it.r);}
    var i=t.getAttribute('data-i');
    if(i===null)return;
    var lab=t.getAttribute('data-l');
@@ -16162,7 +16162,7 @@ function nerBizSheet(){
   var k=e.target.getAttribute&&e.target.getAttribute('data-k');
   if(k===null||k===undefined)return;
   if(k==='')return close();
-  var it=NER_BIZ_ITEMS[+k];if(it&&it.r){close();fileOpen(it.r);}
+  var it=NER_BIZ_ITEMS[+k];if(it&&it.r){fileOpen(it.r);}
  };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
@@ -16912,7 +16912,9 @@ function bizSheet(t0){
     if(a==='shus'){location.href='shachar/index.html?view=usage&v='+Date.now();return;}
     // 1.11: every file button on this sheet (the quote, the form preview, Shachar, the office). Restored after it went missing in an edit.
     // 2.11, Itzik (iron rule): closing the file goes back to this tab of העסק שלי, never to the main screen.
-    if(a==='anim'){var bx2=el.querySelector('[data-a="x"]'),tb2=tab;if(bx2)bx2.click();window.fvAfterClose=function(){bizSheet(tb2);};fileOpen(t.getAttribute('data-f'));return;}
+    // 4.11, Itzik: "יוצא ב X ותמיד זה זורק אותי למסך הבית". The viewer (z 99990) opens over the sheet, so the sheet stays open
+    // underneath: X lands on the same drawer at the same scroll. Never close a sheet before fileOpen.
+    if(a==='anim'){fileOpen(t.getAttribute('data-f'));return;}
     /*ITZIK:BEGIN*/if(a==='ner'){var bx=el.querySelector('[data-a="x"]');if(bx)bx.click();nerBizSheet();return;}/*ITZIK:END*/  // 30.10, Itzik: the X did not get him out, two sheets were stacked; one at a time
     if(a==='back'){if(!window.bizStep())el.querySelector('[data-a="x"]').click();return;}
     if(a==='tab'){bizShow(t.getAttribute('data-t'));return;}
