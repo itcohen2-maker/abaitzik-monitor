@@ -1395,7 +1395,7 @@ function tenantTiles(inst) {
     const [cls, title, sub] = TENANT_TILES[id];
     // data-grp by visible label: only the two labels in the groups list get one.
     const grp = { gFiles: 'home', gBiz: 'work' }[id];
-    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' || /^gBh|^gShopList$/.test(id) ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261104-contract"' : '') + (id === 'gTasks' ? ' data-upd="tasks-del-1024"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' || /^gBh|^gShopList$/.test(id) ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261104-shachar-ld"' : '') + (id === 'gTasks' ? ' data-upd="tasks-del-1024"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
 }
 /*
@@ -16762,6 +16762,14 @@ function bizSheet(t0){
 /*ITZIK:END*/
   function shacharHtml(){
    return '<div class="bzHead">🌅 שחר</div>'+shWaitHtml()
+    // 4.11 evening: light/dark switch, loading screen, reminder mail. Waiting for his approval before deploy.
+    +'<div class="bzSec">🆕 לאישור לפני עלייה: בהיר, כהה ומסך טעינה</div>'
+    +'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-light.png">01 ☀️ מצב בהיר</button>'
+    +'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-dark.png">02 🌙 מצב כהה</button>'
+    +'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-menu-switch.png">03 ☰ התפריט עם הכפתור בהיר וכהה</button>'
+    +'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-loading.png">04 🌅 מסך הטעינה: שחר כבר עולה</button>'
+    +'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-loading-dark.png">05 🌙 מסך הטעינה במצב כהה</button>'
+    +'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-reminder-mail.png">06 ✉️ מייל התזכורת</button>'
     +'<div class="bzSec">📤 הזמנה לשחר</div>'
     +'<p class="bzEmpty" style="white-space:pre-line;text-align:right">'+esc(SH_INV_TEXT)+'\\n'+SH_INV_URL+'</p>'
     +'<button type="button" class="yb" data-bz="shinv" data-k="share">📤 שליחת ההזמנה</button>'
@@ -16802,7 +16810,7 @@ function bizSheet(t0){
     +'<p class="bzEmpty">הציון למעלה מ 0 עד 100, 100 זה הכי טוב. כל ליד שלא נגעו בו שבוע מוריד 8 נקודות, הצעה שלא חזרו אליה 3 ימים מורידה 12, ותזכורת שהגיעה ולא טופלה מורידה 6.</p>';
   }
   // 2.11, Itzik: a tab with something new blinks until he opens it. The stamp changes whenever something is added there.
-  var BZ_UPD={its:'20261104-contract'+((D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done)?'-s'+String(D.shaiForms.sign.done).replace(/\\D/g,'').slice(0,12):''),shachar:(D.shSum&&D.shSum.upd)||'20261103-shachar-auto'};
+  var BZ_UPD={its:'20261104-contract'+((D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done)?'-s'+String(D.shaiForms.sign.done).replace(/\\D/g,'').slice(0,12):''),shachar:((D.shSum&&D.shSum.upd)||'20261103-shachar-auto')+'-ld1104'};
   function bzSeen(){try{return JSON.parse(localStorage.getItem('bzTabSeen')||'{}');}catch(x){return {};}}
   function bzTabNew(k){return !!BZ_UPD[k]&&bzSeen()[k]!==BZ_UPD[k]&&k!==tab;}
   function bzMarkSeen(k){if(!BZ_UPD[k])return;var o=bzSeen();o[k]=BZ_UPD[k];try{localStorage.setItem('bzTabSeen',JSON.stringify(o));}catch(x){}}
