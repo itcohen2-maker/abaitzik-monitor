@@ -2734,7 +2734,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-04T11:26:30.963Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-04T11:33:49.435Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3109,14 +3109,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4646,7 +4639,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='3c943540a7';
+var CODE_ID='14c5d95644';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12848,18 +12841,18 @@ function bizSheet(t0){
     function shareShai(u,tt,title,k){
      function sent(){if(!k)return;try{var o=JSON.parse(localStorage.getItem('itsSent')||'{}');o[k]=new Date().toISOString();localStorage.setItem('itsSent',JSON.stringify(o));}catch(x){}
       var bb=el.querySelector('#bzBody');if(bb)bb.innerHTML=body();}
-     if(navigator.share){navigator.share({title:title,text:tt,url:u}).then(sent,function(){});}
+     if(navigator.share){navigator.share({title:title,text:tt+'\n'+u}).then(sent,function(){});}
      else{try{navigator.clipboard.writeText(tt+' '+u);toast('הקישור הועתק. מדביקים לשי בוואטסאפ או במייל.');sent();}catch(x){toast(u);}}
     }
     if(a==='sign-shai'){shareShai('https://form.it-solution.co.il/q/a9cf9d55064a85b58583','שי, מצורפים הצעת המחיר והסכם השירות. עוברים, בוחרים חבילה וחותמים ישר מהטלפון:','הצעת מחיר והסכם שירות, IT Solution','sign');return;}
     if(a==='form3-shai'){shareShai('https://form.it-solution.co.il/f/15939da3cf0776f57992','שי, תודה על הטופס! נשארו רק כמה פרטים קטנים כדי שנתחיל לחבר, כמה דקות:','עוד כמה פרטים, IT Solution','form3');return;}
     if(a==='setup-shai'){shareShai('https://form.it-solution.co.il/s/f3d4f77d1278a2a5efdc','שי, כאן מחברים את המוניטור לכל הכלים שלך: המייל, הקלטות הפגישות, היומן, החשבוניות, קובץ החייבים, לינקדין ופייסבוק. בכל כרטיס כתוב בדיוק מה ללחוץ, וכל לחיצה נשמרת. בסוף לוחצים סיימתי:','חיבור המוניטור, IT Solution','setup');return;}
     if(a==='form2-shai'){var f2='https://form.it-solution.co.il/f/c94dc7fa0f53147ed133',f2t='שי, כדי שנחבר את המוניטור בדיוק למה שיש לך, הכנו טופס קצר. רוב השאלות רק לסמן, כ 5 דקות:';
-     if(navigator.share){navigator.share({title:'טופס חיבורים, IT Solution',text:f2t,url:f2}).catch(function(){});}
+     if(navigator.share){navigator.share({title:'טופס חיבורים, IT Solution',text:f2t+'\n'+f2}).catch(function(){});}
      else{try{navigator.clipboard.writeText(f2t+' '+f2);toast('הקישור לטופס הועתק. מדביקים לשי בוואטסאפ או במייל.');}catch(x){toast(f2);}}
      return;}
     if(a==='form-shai'){var fu='https://form.it-solution.co.il/f/db3cf21b5fe4b773cc20',ft='שי, לקראת הפגישה ביום שלישי הכנו שאלון היכרות קצר, רק לסמן, 3 דקות. ככה נבנה לך הדגמה בדיוק לפי העסק שלך:';
-     if(navigator.share){navigator.share({title:'שאלון היכרות',text:ft,url:fu}).catch(function(){});}else{window.open(fu,'_blank');}
+     if(navigator.share){navigator.share({title:'שאלון היכרות',text:ft+'\n'+fu}).catch(function(){});}else{window.open(fu,'_blank');}
      return;}
     if(a==='secshare'){var pg0=t.getAttribute('data-u')==='monitor'?'monitor':'security',k0=t.getAttribute('data-k')==='wa'?'wa':'share';
      var ob=el.querySelector('.secBox');if(ob)ob.parentNode.removeChild(ob);
@@ -16904,7 +16897,7 @@ floatTile=function(id,up){if(document.body.classList.contains('world'))return;re
 
 boot('worlds',worldSync);
 boot('design',dzBoot);
-var PUSH_KEY="BDlgL4lKYXBB2yk96UVlN_bNhLBppiq0K8ORV-TQ2jb7k8IMskeWYICec19xE7N5VEcCzVXZU9Pxb9e64KH8OCk";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}

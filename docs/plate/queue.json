@@ -1,16 +1,8 @@
 [
  {
-  "id": "avocado",
-  "name": "אבוקדו",
-  "order": 1,
-  "file": "media/plate-04-avocado.mp4",
-  "poster": "media/plate-04-avocado.jpg",
-  "approved": false
- },
- {
   "id": "limon",
   "name": "לימון: הקליפה וויטמין C (גרסה 11)",
-  "order": 2,
+  "order": 3,
   "file": "media/plate-limon-v11.mp4",
   "poster": "media/plate-limon-v11.jpg",
   "approved": false,
@@ -78,7 +70,7 @@
  {
   "id": "gezer",
   "name": "גזר: הכתום ששומר על התאים (גרסה 7)",
-  "order": 3,
+  "order": 2,
   "file": "media/plate-gezer-v7.mp4",
   "poster": "media/plate-gezer-v7.jpg",
   "approved": false,
