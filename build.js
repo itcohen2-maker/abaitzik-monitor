@@ -1378,7 +1378,7 @@ function tenantTiles(inst) {
     const [cls, title, sub] = TENANT_TILES[id];
     // data-grp by visible label: only the two labels in the groups list get one.
     const grp = { gFiles: 'home', gBiz: 'work' }[id];
-    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' || /^gBh|^gShopList$/.test(id) ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261104-sec"' : '') + (id === 'gTasks' ? ' data-upd="tasks-del-1024"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' || /^gBh|^gShopList$/.test(id) ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261104-views"' : '') + (id === 'gTasks' ? ' data-upd="tasks-del-1024"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
 }
 /*
@@ -4553,7 +4553,7 @@ ${require('./lib/home-ui.js').html}
     and no screens list (Itzik's copy). A customer with a screens list gets the
     tile from tenantTiles, only when gBiz is in that list.
   -->
-${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261104-sec' + newestLead() + '"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
+${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261104-views' + newestLead() + '"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
 <!--TENANT:BEGIN-->
   <!--
     A customer's home screen, built from his intake answers and not filtered
@@ -16627,9 +16627,14 @@ function bizSheet(t0){
    return '<div class="bzHead">💻 IT Solution</div>'
     // 4.11, Itzik: an insurance agent asks how confidential the monitor is. A page to hand the customer.
     +'<div class="bzSec">🔒 מוניטור ואבטחה</div>'
-    +'<a class="yb yb1" href="https://it-solution.co.il/security/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">🔒 דף אבטחת המידע ללקוח</a>'
-    +'<button type="button" class="yb" data-bz="secshare" data-k="share">📤 לשלוח ללקוח</button>'
-    +'<button type="button" class="yb" data-bz="secshare" data-k="wa">💬 בוואטסאפ</button>'
+    // 4.11: two pages to send a customer. Share asks for whom, so the link carries ?r=<name> and the counter knows who opened (and if it was forwarded).
+    +'<button type="button" class="yb yb1" data-bz="anim" data-f="views-report.html">👀 מי ראה את הדפים</button>'
+    +'<a class="yb" href="https://it-solution.co.il/monitor/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">💡 דף המוניטור לעסק, למה לבחור בנו</a>'
+    +'<button type="button" class="yb" data-bz="secshare" data-u="monitor" data-k="share">📤 לשלוח ללקוח את דף המוניטור</button>'
+    +'<button type="button" class="yb" data-bz="secshare" data-u="monitor" data-k="wa">💬 דף המוניטור בוואטסאפ</button>'
+    +'<a class="yb" href="https://it-solution.co.il/security/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">🔒 דף אבטחת המידע ללקוח</a>'
+    +'<button type="button" class="yb" data-bz="secshare" data-u="security" data-k="share">📤 לשלוח ללקוח את דף האבטחה</button>'
+    +'<button type="button" class="yb" data-bz="secshare" data-u="security" data-k="wa">💬 דף האבטחה בוואטסאפ</button>'
     +'<div class="bzSec">הדגמה ללקוח</div>'
     +(typeof dmoStart==='function'?'<button type="button" class="yb yb1" data-bz="demo">🎬 מצב הדגמה ללקוח</button>':'')
     +'<button type="button" class="yb" data-bz="anim" data-f="demo-script-shai.pdf">🎬 תסריט ההדגמה לשי (PDF)</button>'
@@ -16755,9 +16760,11 @@ function bizSheet(t0){
     if(a==='form-shai'){var fu='https://form.it-solution.co.il/f/db3cf21b5fe4b773cc20',ft='שי, לקראת הפגישה ביום שלישי הכנו שאלון היכרות קצר, רק לסמן, 3 דקות. ככה נבנה לך הדגמה בדיוק לפי העסק שלך:';
      if(navigator.share){navigator.share({title:'שאלון היכרות',text:ft,url:fu}).catch(function(){});}else{window.open(fu,'_blank');}
      return;}
-    if(a==='secshare'){var su='https://it-solution.co.il/security/',st='כך המוניטור של IT Solution שומר על המידע שלכם:';
+    if(a==='secshare'){var pg=t.getAttribute('data-u')==='monitor'?'monitor':'security';
+     var who=window.prompt('למי שולחים? (שם, כדי לדעת מי פתח)','');if(who===null)return;who=String(who).trim().slice(0,40);
+     var su='https://it-solution.co.il/'+pg+'/'+(who?'?r='+encodeURIComponent(who):''),st=pg==='monitor'?'מסך אחד בטלפון שמנהל איתך את העסק, ככה זה עובד:':'כך המוניטור של IT Solution שומר על המידע שלכם:';
      if(t.getAttribute('data-k')==='wa'){window.open('https://wa.me/?text='+encodeURIComponent(st+'\\n'+su),'_blank');return;}
-     if(navigator.share){navigator.share({title:'אבטחת המידע במוניטור',text:st,url:su}).catch(function(){});return;}
+     if(navigator.share){navigator.share({title:pg==='monitor'?'המוניטור לעסק':'אבטחת המידע במוניטור',text:st,url:su}).catch(function(){});return;}
      try{navigator.clipboard.writeText(st+'\\n'+su).then(function(){toast('הקישור הועתק.');},function(){toast(su);});}catch(x){toast(su);}
      return;}
     if(a==='shinv'){var k=t.getAttribute('data-k'),full=SH_INV_TEXT+'\\n'+SH_INV_URL;
