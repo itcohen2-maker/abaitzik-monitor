@@ -2499,6 +2499,7 @@ ${require('./lib/activity-ui.js').css}
 ${require('./lib/home-ui.js').css}
 ${inst.name === 'abaitzik' ? require('./lib/demo-mode.js').css : ''}${inst.bizHome ? require('./lib/biz-home.js').css : ''}
 ${require('./lib/skins-ui.js').css}
+${require('./lib/drawers-ui.js').css}
 ${pushUi.css}
 .toast .toast-x{display:block;margin-top:8px;font:500 12.5px Heebo,sans-serif;opacity:.85}
 .undobar{position:fixed;z-index:81;inset-inline:12px;bottom:calc(76px + env(safe-area-inset-bottom));
@@ -20710,6 +20711,13 @@ boot('hash',function(){
  if(k==='j'){renderDrains();ensure('drains',renderDrains);}
  if(k==='k'){renderReplies();markRepliesSeen();}
  if(k==='R')renderReminders();
+});
+${require('./lib/drawers-ui.js').js}
+// 4.11.2026, Itzik picked ד: numbers on top, coloured drawers below. First screen: הנהלת חשבונות.
+boot('drawers',function(){
+ drawerize(document.getElementById('rivBox'),{key:'riv',
+  icons:{'בדיקת לקוח':'🔎','מי חייב כסף':'💸','צ׳קים עתידיים':'🧾','צ׳קים שנגבו':'✅','נרשם כאן בנפרד':'📒','נכנס לבנק':'🏦','לאן הלך הכסף':'📊','שים לב':'⚠️','דף לשיתוף':'🔗'},
+  hints:{'מי חייב כסף':'לקוח לקוח, עם החשבוניות','דף לשיתוף':'הדף ליואל, לשליחה בוואטסאפ'}});
 });
 ${require('./lib/since-ui.js').js}
 ${require('./lib/approvals-ui.js').js}
