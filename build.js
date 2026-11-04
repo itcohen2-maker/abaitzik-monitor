@@ -16685,7 +16685,7 @@ function bizSheet(t0){
     +'<div class="bzRow"><b>📨 הסדר: קודם חתימה, אחר כך דף החיבורים</b><small>🔴 עוד לא נשלח · 🟠 מצב המתנה · ✅ הושלם. הצבע מתעדכן לבד כשהוא פותח, חותם וממלא.</small></div>'
     +shaiFormBtn('sign-shai','sign','✍️ שלב 1: הצעת המחיר והסכם השירות לחתימה')
     +'<a class="yb" href="https://form.it-solution.co.il/q/a9cf9d55064a85b58583/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לראות את ההצעה וההסכם לפני ששולחים</a>'
-    +shaiFormBtn('setup-shai','setup','🔌 שלב 2, אחרי החתימה: דף החיבורים: מייל, פגישות, יומן, חשבוניות, לינקדין, פייסבוק')
+    +shaiFormBtn('setup-shai','setup','🔌 שלב 2, אחרי החתימה: דף החיבורים: מייל, פגישות, דרייב, יומן, חשבוניות, לינקדין, פייסבוק')
     +'<a class="yb" href="https://form.it-solution.co.il/s/f3d4f77d1278a2a5efdc/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לראות את דף החיבורים לפני ששולחים</a>'
     // 4.11, Itzik: "תשאיר לי תמיד רק מה שמעודכן". Done items (the completion form, the info form) are gone from here.
     +'<div class="bzSec">🖥️ מה שכבר קיים אצל שי</div>'
@@ -16785,7 +16785,7 @@ function bizSheet(t0){
     }
     if(a==='sign-shai'){shareShai('https://form.it-solution.co.il/q/a9cf9d55064a85b58583','שי, מצורפים הצעת המחיר והסכם השירות. עוברים, בוחרים חבילה וחותמים ישר מהטלפון:','הצעת מחיר והסכם שירות, IT Solution','sign');return;}
     if(a==='form3-shai'){shareShai('https://form.it-solution.co.il/f/15939da3cf0776f57992','שי, תודה על הטופס! נשארו רק כמה פרטים קטנים כדי שנתחיל לחבר, כמה דקות:','עוד כמה פרטים, IT Solution','form3');return;}
-    if(a==='setup-shai'){shareShai('https://form.it-solution.co.il/s/f3d4f77d1278a2a5efdc','שי, כאן מחברים את המוניטור לכל הכלים שלך: המייל, הקלטות הפגישות, היומן, החשבוניות, קובץ החייבים, לינקדין ופייסבוק. בכל כרטיס כתוב בדיוק מה ללחוץ, וכל לחיצה נשמרת. בסוף לוחצים סיימתי:','חיבור המוניטור, IT Solution','setup');return;}
+    if(a==='setup-shai'){shareShai('https://form.it-solution.co.il/s/f3d4f77d1278a2a5efdc','שי, כאן מחברים את המוניטור לכל הכלים שלך: המייל, הקלטות הפגישות, הדרייב, היומן, החשבוניות, קובץ החייבים, לינקדין ופייסבוק. בכל כרטיס כתוב בדיוק מה ללחוץ, וכל לחיצה נשמרת. בסוף לוחצים סיימתי:','חיבור המוניטור, IT Solution','setup');return;}
     if(a==='form2-shai'){var f2='https://form.it-solution.co.il/f/c94dc7fa0f53147ed133',f2t='שי, כדי שנחבר את המוניטור בדיוק למה שיש לך, הכנו טופס קצר. רוב השאלות רק לסמן, כ 5 דקות:';
      if(navigator.share){navigator.share({title:'טופס חיבורים, IT Solution',text:f2t+'\\n'+f2}).catch(function(){});}
      else{try{navigator.clipboard.writeText(f2t+' '+f2);toast('הקישור לטופס הועתק. מדביקים לשי בוואטסאפ או במייל.');}catch(x){toast(f2);}}
