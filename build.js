@@ -16770,18 +16770,22 @@ function bizSheet(t0){
     function shareShai(u,tt,title,k){
      function sent(){if(!k)return;try{var o=JSON.parse(localStorage.getItem('itsSent')||'{}');o[k]=new Date().toISOString();localStorage.setItem('itsSent',JSON.stringify(o));}catch(x){}
       var bb=el.querySelector('#bzBody');if(bb)bb.innerHTML=body();}
-     if(navigator.share){navigator.share({title:title,text:tt,url:u}).then(sent,function(){});}
+     // 4.11: WhatsApp on the iPhone keeps the text and drops a separate url, so Shai got no link. The link goes inside the text.
+     if(navigator.share){navigator.share({title:title,text:tt+'
+'+u}).then(sent,function(){});}
      else{try{navigator.clipboard.writeText(tt+' '+u);toast('הקישור הועתק. מדביקים לשי בוואטסאפ או במייל.');sent();}catch(x){toast(u);}}
     }
     if(a==='sign-shai'){shareShai('https://form.it-solution.co.il/q/a9cf9d55064a85b58583','שי, מצורפים הצעת המחיר והסכם השירות. עוברים, בוחרים חבילה וחותמים ישר מהטלפון:','הצעת מחיר והסכם שירות, IT Solution','sign');return;}
     if(a==='form3-shai'){shareShai('https://form.it-solution.co.il/f/15939da3cf0776f57992','שי, תודה על הטופס! נשארו רק כמה פרטים קטנים כדי שנתחיל לחבר, כמה דקות:','עוד כמה פרטים, IT Solution','form3');return;}
     if(a==='setup-shai'){shareShai('https://form.it-solution.co.il/s/f3d4f77d1278a2a5efdc','שי, כאן מחברים את המוניטור לכל הכלים שלך: המייל, הקלטות הפגישות, היומן, החשבוניות, קובץ החייבים, לינקדין ופייסבוק. בכל כרטיס כתוב בדיוק מה ללחוץ, וכל לחיצה נשמרת. בסוף לוחצים סיימתי:','חיבור המוניטור, IT Solution','setup');return;}
     if(a==='form2-shai'){var f2='https://form.it-solution.co.il/f/c94dc7fa0f53147ed133',f2t='שי, כדי שנחבר את המוניטור בדיוק למה שיש לך, הכנו טופס קצר. רוב השאלות רק לסמן, כ 5 דקות:';
-     if(navigator.share){navigator.share({title:'טופס חיבורים, IT Solution',text:f2t,url:f2}).catch(function(){});}
+     if(navigator.share){navigator.share({title:'טופס חיבורים, IT Solution',text:f2t+'
+'+f2}).catch(function(){});}
      else{try{navigator.clipboard.writeText(f2t+' '+f2);toast('הקישור לטופס הועתק. מדביקים לשי בוואטסאפ או במייל.');}catch(x){toast(f2);}}
      return;}
     if(a==='form-shai'){var fu='https://form.it-solution.co.il/f/db3cf21b5fe4b773cc20',ft='שי, לקראת הפגישה ביום שלישי הכנו שאלון היכרות קצר, רק לסמן, 3 דקות. ככה נבנה לך הדגמה בדיוק לפי העסק שלך:';
-     if(navigator.share){navigator.share({title:'שאלון היכרות',text:ft,url:fu}).catch(function(){});}else{window.open(fu,'_blank');}
+     if(navigator.share){navigator.share({title:'שאלון היכרות',text:ft+'
+'+fu}).catch(function(){});}else{window.open(fu,'_blank');}
      return;}
     // 4.11: window.prompt used up the tap, so share and the WhatsApp window were blocked on the phone (Itzik: 'תקוע').
     // The name is typed in a box in the sheet, and its own button (a fresh tap) does the sharing.

@@ -142,13 +142,13 @@ function page(tok, d, s, view) {
     + 'var pr=+b.dataset.price,su=+b.dataset.setup,t=$("tot");t.style.display="block";'
     + 't.innerHTML="החיוב הראשון: <b>"+fmt(pr)+"</b> לחודש"+(su?" ועוד <b>"+fmt(su)+"</b> הקמה חד פעמית":", <b>ההקמה בחינם</b>")+". המחירים לא כוללים מע״מ."}});'
     + 'var cv=$("cv"),cx=cv.getContext("2d"),dn=false;'
-    + 'function fit(){var r=cv.getBoundingClientRect(),k=window.devicePixelRatio||1;var img=inked?cv.toDataURL():null;cv.width=r.width*k;cv.height=r.height*k;cx.setTransform(k,0,0,k,0,0);cx.lineWidth=2.6;cx.lineCap="round";cx.lineJoin="round";cx.strokeStyle="#0f1b2a";if(img){var im=new Image();im.onload=function(){cx.drawImage(im,0,0,r.width,r.height)};im.src=img}}'
+    + 'var fw=-1;function fit(force){var r=cv.getBoundingClientRect(),k=window.devicePixelRatio||1;if(!force&&Math.round(r.width)===fw)return;fw=Math.round(r.width);var img=inked?cv.toDataURL():null;cv.width=r.width*k;cv.height=r.height*k;cx.setTransform(k,0,0,k,0,0);cx.lineWidth=2.6;cx.lineCap="round";cx.lineJoin="round";cx.strokeStyle="#0f1b2a";if(img){var im=new Image();im.onload=function(){cx.drawImage(im,0,0,r.width,r.height)};im.src=img}}'
     + 'fit();window.addEventListener("resize",fit);'
     + 'function pt(e){var r=cv.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top]}'
     + 'cv.addEventListener("pointerdown",function(e){dn=true;cv.setPointerCapture(e.pointerId);var p=pt(e);cx.beginPath();cx.moveTo(p[0],p[1]);cx.lineTo(p[0]+.1,p[1]+.1);cx.stroke();inked=true;$("ph").style.display="none";e.preventDefault()});'
     + 'cv.addEventListener("pointermove",function(e){if(!dn)return;var p=pt(e);cx.lineTo(p[0],p[1]);cx.stroke();e.preventDefault()});'
     + 'cv.addEventListener("pointerup",function(){dn=false});cv.addEventListener("pointercancel",function(){dn=false});'
-    + '$("clr").onclick=function(){cx.setTransform(1,0,0,1,0,0);cx.clearRect(0,0,cv.width,cv.height);fit();inked=false;$("ph").style.display="flex"};'
+    + '$("clr").onclick=function(){cx.setTransform(1,0,0,1,0,0);cx.clearRect(0,0,cv.width,cv.height);fit(true);inked=false;$("ph").style.display="flex"};'
     // 2.11: /q/<token>/view is Itzik's own look from the monitor: no open report, nothing is sent.
     + (view ? '$("go").disabled=true;$("go").textContent="תצוגה בלבד, כך הלקוח רואה את ההצעה";' : 'fetch("/api/sign",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:T,open:true})}).catch(function(){});')
     + '$("go").onclick=function(){var er=$("err"),nm=$("nm").value.trim(),bz=$("bz").value.trim();'
