@@ -975,6 +975,20 @@ body.editing .bn{display:none}
 .hk-st.warn i{background:var(--wait)}
 .hk-st.bad i{background:var(--red)}
 .cnt,.nb-c,.gb-c,.apv-n,.icN,.tile .v{font-variant-numeric:tabular-nums}
+.mg{margin:0 0 14px;padding:16px;border-radius:20px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);color:var(--ink)}
+.mg[hidden]{display:none}
+.mg-list{margin:10px 0 0;padding:0;list-style:none}
+.mg-list li{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line);cursor:default}
+.mg-list li:first-child{border-top:0;padding-top:4px}
+.mg-list li[data-go]{cursor:pointer}
+.mg-i{flex:0 0 auto;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:16px;background:var(--accent-soft)}
+.mg-b{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.mg-t{font:700 15px/1.45 Heebo,sans-serif;overflow-wrap:anywhere}
+.mg-s{font:400 13.5px/1.45 Heebo,sans-serif;color:var(--dim);overflow-wrap:anywhere}
+.mg-st{flex:0 0 auto;font:800 12.5px Heebo,sans-serif;padding:3px 9px;border-radius:999px;align-self:center}
+.mg-st.done{background:rgba(34,197,94,.15);color:var(--green)}
+.mg-st.todo{background:var(--accent-soft);color:var(--accent)}
+.mg-st.warn{background:rgba(245,158,11,.18);color:var(--wait)}
 
 
 body.dmo-real .tdy-note,body.dmo-real .tdy-sel,body.dmo-real .tdy-bar,body.dmo-real .tdy-ck{display:none!important}
@@ -1262,6 +1276,7 @@ body:not(.inner) #thumbSet{display:block}
 .c-st{background:linear-gradient(160deg,#4285F4,#0b57d0)}
 .c-pg{background:linear-gradient(160deg,#a78bfa,#6d28d9)}
 .c-nr{background:linear-gradient(160deg,#243a6b,#0B1330)}
+.c-gcal{background:linear-gradient(160deg,#4285F4,#1a56c4)}
 .c-th{background:linear-gradient(160deg,#8b1e3f,#3a0a1c);font-size:26px}
 .c-sl{background:linear-gradient(160deg,#f472b6,#be185d)}
 .c-its{background:linear-gradient(160deg,#06b6d4,#0a4a5a)}
@@ -2377,7 +2392,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-04T13:39:03.565Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-04T13:50:37.090Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2485,6 +2500,7 @@ try{
 <div class="hm-greet" id="hmGreet" aria-live="off" hidden></div>
 <div id="sinceBox"></div>
 <section id="approvalsBox" class="apv" aria-live="polite" hidden></section>
+<section class="mg" id="homeMgr" aria-label="המנהל" hidden></section>
 <section class="hb" id="homeBrief" aria-label="דוח הבוקר" hidden></section>
 <section class="hk-grid" id="homeKpis" aria-label="מספרים" hidden></section>
 <details class="hm-money" id="homeMoney" hidden><summary>💰 הכסף שלי<small>מוסתר, לחיצה לפתיחה</small></summary><div class="hk-grid" id="homeMoneyGrid"></div></details>
@@ -2643,6 +2659,8 @@ try{
  <div class="row" id="blkIcons" role="group" aria-label="קיצורים">
   <button type="button" class="ic" data-grp="day" id="icNache"><span class="c c-nk">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="4.5" r="1.6"/><path d="M11 7.5v6h5l2 5"/><path d="M11 10.5h4"/><path d="M8 11.2a5.5 5.5 0 1 0 7.6 6.3"/></svg></span>תעודת נכה</button>
+  <a class="ic icNew" data-grp="day" id="icGcal" href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener" data-new="1"><span class="c c-gcal">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M9.5 13.5h1.5v4M14 13.5h2l-1.5 4"/></svg></span>יומן</a>
   <a class="ic" data-grp="net" data-net="all" id="icNet" href="#"><span class="c c-nt">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M10 20V5M15 20v-6M20 20V8"/></svg></span>ניטור רשתות</a>
   <a class="ic" data-grp="proj" href="https://abaitzik.com/" target="_blank" rel="noopener"><span class="c c-st">
@@ -2726,7 +2744,14 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-
+<div class="alerts" id="pushBox" hidden>
+ <div>
+  <b>התראות לטלפון</b>
+  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
+ </div>
+ <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
+ <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
+</div>
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4256,7 +4281,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='4e5741c2de';
+var CODE_ID='92729f2cb3';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -15948,11 +15973,29 @@ function hmTap(e){
  t.disabled=true;
  sendText('בקשה מהמוניטור',act,'בקשה').then(function(){t.disabled=false;toast('נשלח.');}).catch(function(){t.disabled=false;toast('לא נשלח. תנסה שוב.');});
 }
+var MG_GO={plate:function(){location.href='plate/plate.html?v='+Date.now();},status:function(){location.href='status/index.html?v='+Date.now();},
+ cal:function(){window.open('https://calendar.google.com/calendar/u/0/r/day','_blank','noopener');},
+ answers:function(){if(typeof pane==='function'){pane('a');if(typeof renderAnswers==='function')renderAnswers();if(typeof landPane==='function')landPane('pA');}},
+ biz:function(){if(typeof bizSheet==='function')bizSheet();}};
+var MG_ST={done:'✓ בוצע',todo:'עליך',warn:'לשים לב'};
+function hmMgrHtml(m){
+ if(!m||!Array.isArray(m.items)||!m.items.length)return '';
+ var left=m.items.filter(function(i){return i.st!=='done';}).length,at=hmHM(m.at);
+ var h='<div class="hb-head"><b>🧑‍💼 המנהל</b><small>'+(at?'סבב '+esc(at)+' · ':'')+(left?left+' פתוחים':'הכל בוצע')+'</small></div><ul class="mg-list">';
+ m.items.forEach(function(i){
+  var st=MG_ST[i.st]?i.st:'todo';
+  h+='<li'+(i.go&&MG_GO[i.go]?' data-go="'+esc(i.go)+'"':'')+'><span class="mg-i" aria-hidden="true">'+esc(i.icon||'•')+'</span><div class="mg-b"><span class="mg-t" dir="auto">'+esc(i.t||'')+'</span>'+(i.sub?'<span class="mg-s" dir="auto">'+esc(i.sub)+'</span>':'')+'</div><span class="mg-st '+st+'">'+MG_ST[st]+'</span></li>';
+ });
+ return h+'</ul>';
+}
 function renderHome(){
  var D0=(typeof D!=='undefined'&&D)||{};
  var g=document.getElementById('hmGreet');
  if(g){g.textContent=hmGreeting(new Date());g.hidden=false;}
  HM_ACTS=[];
+ var mg=document.getElementById('homeMgr');
+ if(mg){var mh=hmMgrHtml(D0.manager);mg.hidden=!mh;mg.innerHTML=mh;
+  if(!mg.getAttribute('data-bound')){mg.setAttribute('data-bound','1');mg.addEventListener('click',function(e){var li=e.target&&e.target.closest?e.target.closest('[data-go]'):null;if(li&&MG_GO[li.getAttribute('data-go')])MG_GO[li.getAttribute('data-go')]();});}}
  var brief=document.getElementById('homeBrief'),kpis=document.getElementById('homeKpis');
  var bh=hmBriefHtml(D0.brief);
  if(brief){
@@ -16487,7 +16530,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="";
+var PUSH_KEY="BDlgL4lKYXBB2yk96UVlN_bNhLBppiq0K8ORV-TQ2jb7k8IMskeWYICec19xE7N5VEcCzVXZU9Pxb9e64KH8OCk";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
