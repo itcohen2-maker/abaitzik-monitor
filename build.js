@@ -8891,7 +8891,9 @@ function repaintAll(){
   ['reqs',renderReqs],['stamp',paintStamp],['secrets',paintSecrets],
   ['drains',renderDrains],['block',renderBlock],['tenants',paintTenantsTile],
   // 14.10: the project tiles live in the sealed payload, so they are drawn after unlock too.
-  ['projects',function(){if(typeof projTiles==='function')projTiles();}]];
+  ['projects',function(){if(typeof projTiles==='function')projTiles();}],
+  // 4.11: the home cards (manager, brief) read the sealed payload too.
+  ['home',function(){if(typeof renderHome==='function')renderHome();}]];
  var bad=[],ran={};
  jobs.forEach(function(j){
   ran[j[0]]=1;
