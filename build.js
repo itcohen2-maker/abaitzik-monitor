@@ -16639,11 +16639,12 @@ function bizSheet(t0){
     // Shared or copied, never opened here: opening reports "שי פתח".
     +'<div class="bzRow"><b>📨 שני טפסים לשלוח לשי</b><small>🔴 עוד לא נשלח · 🟠 מצב המתנה · ✅ מולא. הצבע מתעדכן לבד כשהוא פותח וממלא.</small></div>'
     +shaiFormBtn('form3-shai','form3','📝 טופס השלמות, 10 שאלות קצרות')
+    // 4.11, Itzik: "תשים לי תצוגה נפרדת". The live page in view mode: nothing saved, never marked as opened.
+    +'<a class="yb" href="https://form.it-solution.co.il/f/15939da3cf0776f57992/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לראות את טופס ההשלמות לפני ששולחים</a>'
     +shaiFormBtn('setup-shai','setup','🔌 דף החיבורים: מייל, פגישות, יומן')
-    +'<div class="bzSec">👀 לראות לפני ששולחים</div>'
+    +'<a class="yb" href="https://form.it-solution.co.il/s/f3d4f77d1278a2a5efdc/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לראות את דף החיבורים לפני ששולחים</a>'
+    +'<div class="bzSec">👀 עוד לראות</div>'
     // 3.11, Itzik: "אני רוצה לראות את הקובץ, תכין לי אחד בשבילי". Copies that save nothing and report nothing.
-    +'<button type="button" class="yb" data-bz="anim" data-f="shai-form3-view.html">👀 טופס ההשלמות, תצוגה בשבילך</button>'
-    +'<button type="button" class="yb" data-bz="anim" data-f="shai-setup-view.html">👀 דף החיבורים, תצוגה בשבילך</button>'
     +'<a class="yb" href="https://form.it-solution.co.il/q/a9cf9d55064a85b58583/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 ההצעה לשי, כמו שהוא רואה אותה</a>'
     +'<div class="bzSec">🖥️ מה שכבר קיים אצל שי</div>'
     +'<a class="yb yb2" href="https://shai.it-solution.co.il/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">🖥️ המוניטור של שי</a>'

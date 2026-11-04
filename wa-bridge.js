@@ -392,8 +392,8 @@ async function api(q, s, u) {
 const server = http.createServer(function (q, s) {
   const u = new URL(q.url, 'http://x');
   // 1.11: client intake forms on form.it-solution.co.il (forms.js).
-  const fm = u.pathname.match(/^\/f\/([a-f0-9]{16,40})\/?$/);
-  if (fm && q.method === 'GET') { require('./forms.js').servePage(fm[1], s); return; }
+  const fm = u.pathname.match(/^\/f\/([a-f0-9]{16,40})(\/view)?\/?$/);
+  if (fm && q.method === 'GET') { if (fm[2]) require('./form-view.js').serve('./forms.js', fm[1], s); else require('./forms.js').servePage(fm[1], s); return; }
   // 2.11: sign a quote on the phone (sign.js), /q/<token>[/pdf|/signed] and /api/sign.
   const qm = u.pathname.match(/^\/q\/([a-f0-9]{16,40})(?:\/(pdf|signed|view))?\/?$/);
   if (qm && q.method === 'GET') { require('./sign.js').servePage(qm[1], qm[2], s); return; }
@@ -408,8 +408,8 @@ const server = http.createServer(function (q, s) {
     return;
   }
   // 1.11: client setup page (setup.js), /s/<token> and /api/setup.
-  const sm = u.pathname.match(/^\/s\/([a-f0-9]{16,40})\/?$/);
-  if (sm && q.method === 'GET') { require('./setup.js').servePage(sm[1], s); return; }
+  const sm = u.pathname.match(/^\/s\/([a-f0-9]{16,40})(\/view)?\/?$/);
+  if (sm && q.method === 'GET') { if (sm[2]) require('./form-view.js').serve('./setup.js', sm[1], s); else require('./setup.js').servePage(sm[1], s); return; }
   if (u.pathname === '/api/setup') {
     if (q.method !== 'POST') { s.writeHead(405); return s.end(); }
     readBody(q, 20000).then(function (raw) {
