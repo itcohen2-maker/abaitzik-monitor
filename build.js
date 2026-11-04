@@ -16654,8 +16654,6 @@ function bizSheet(t0){
     +'<a class="yb" href="https://form.it-solution.co.il/f/15939da3cf0776f57992/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לראות את טופס ההשלמות לפני ששולחים</a>'
     +shaiFormBtn('setup-shai','setup','🔌 שלב 3: דף החיבורים: מייל, פגישות, יומן, חשבוניות, לינקדין, פייסבוק')
     +'<a class="yb" href="https://form.it-solution.co.il/s/f3d4f77d1278a2a5efdc/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לראות את דף החיבורים לפני ששולחים</a>'
-    +'<div class="bzSec">👀 עוד לראות</div>'
-    // 3.11, Itzik: "אני רוצה לראות את הקובץ, תכין לי אחד בשבילי". Copies that save nothing and report nothing.
     +'<div class="bzSec">🖥️ מה שכבר קיים אצל שי</div>'
     +'<a class="yb yb2" href="https://shai.it-solution.co.il/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">🖥️ המוניטור של שי</a>'
     +'<button type="button" class="yb yb2" data-bz="form2-shai">📋 טופס המידע לשי, כבר מולא ✓</button>'
