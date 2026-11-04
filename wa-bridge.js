@@ -397,6 +397,7 @@ const server = http.createServer(function (q, s) {
   // 2.11: sign a quote on the phone (sign.js), /q/<token>[/pdf|/signed] and /api/sign.
   const qm = u.pathname.match(/^\/q\/([a-f0-9]{16,40})(?:\/(pdf|signed|view))?\/?$/);
   if (qm && q.method === 'GET') { require('./sign.js').servePage(qm[1], qm[2], s); return; }
+  if (u.pathname.replace(/\/$/, '') === '/terms' && q.method === 'GET') { require('./sign.js').serveTerms(s); return; }
   if (u.pathname === '/api/sign') {
     if (q.method !== 'POST') { s.writeHead(405); return s.end(); }
     readBody(q, 600000).then(function (raw) {

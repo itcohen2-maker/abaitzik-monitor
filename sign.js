@@ -19,6 +19,13 @@ const crypto = require('crypto');
 const { execFile } = require('child_process');
 const DIR = path.join(__dirname, 'data', 'sign');
 const PRIV = path.join(__dirname, 'data', 'files-private');
+// 4.11.2026: one general service agreement for every client (legal/contract-<ver>.html), signed together
+// with the quote. The signed PDF carries the full agreement, its version and its hash.
+const CONTRACT_VER = '1.0';
+function contract() { try { return fs.readFileSync(path.join(__dirname, 'legal', 'contract-' + CONTRACT_VER + '.html'), 'utf8'); } catch (e) { return ''; } }
+function contractHash() { return crypto.createHash('sha256').update(contract()).digest('hex'); }
+const CTR_CSS = '.ctr{font:400 14px/1.65 Heebo;color:#24364b}.ctr h2{font:900 19px Heebo;color:#0f1b2a;margin:0 0 2px}.ctr .cv{font:500 12.5px Heebo;color:#6b7c90;margin:0 0 10px}'
+  + '.ctr h3{font:800 15.5px Heebo;color:#0f1b2a;margin:16px 0 6px}.ctr ol{margin:0;padding:0 20px 0 0}.ctr li{margin-bottom:5px}.ctr p{margin:0 0 8px}.ctr b{color:#0f1b2a}';
 
 function safeTok(t) { return /^[a-f0-9]{16,40}$/.test(String(t || '')) ? String(t) : null; }
 function def(tok) { try { return JSON.parse(fs.readFileSync(path.join(DIR, tok + '.def.json'), 'utf8')); } catch (e) { return null; } }
@@ -64,7 +71,7 @@ function doneHtml(tok, d, s) {
   return '<div class="done"><div class="big">✅</div><h2>ההצעה נחתמה, תודה!</h2>'
     + '<p>חבילת <b dir="ltr">' + esc(p.name || s.plan) + '</b> · נחתם ב ' + esc(ilTime(s.signedAt)) + '</p>'
     + '<p>נחזור אליך בקרוב לתיאום שיחת ההקמה.</p>'
-    + '<a class="pdf" href="/q/' + tok + '/signed" target="_blank">📄 ההצעה החתומה (PDF)</a></div>';
+    + '<a class="pdf" href="/q/' + tok + '/signed" target="_blank">📄 ההצעה וההסכם החתומים (PDF)</a></div>';
 }
 
 // 2.11, Itzik: the whole quote on one page, no PDF to open. First what he gets (big, on top),
@@ -82,7 +89,7 @@ const CSS2 = '.intro{background:#fff;border-radius:20px;padding:20px 18px;margin
   + '.terms{margin:0;padding:0 20px 0 0;font:400 14.5px/1.65 Heebo;color:#24364b}.terms li{margin-bottom:6px}.terms b{color:#0f1b2a}'
   + 'details.card summary{font:800 16px Heebo;color:#0f1b2a;cursor:pointer;list-style:none}details.card summary:after{content:" ▾";color:#0e7490}details.card[open] summary{margin-bottom:10px}'
   + '.redo{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:8px;background:#fff;border:2px solid #0e7490;color:#0e7490;border-radius:14px;padding:11px;font:800 15.5px Heebo;cursor:pointer}'
-  + '.vat{font:500 13px Heebo;color:#6b7c90;margin:-2px 0 8px}';
+  + '.vat{font:500 13px Heebo;color:#6b7c90;margin:-2px 0 8px}' + CTR_CSS + '.ctrlink{display:inline-block;margin-top:6px;color:#0e7490;font:700 14px Heebo}';
 
 function page(tok, d, s, view) {
   let h = head(d.title).replace('</style>', CSS2 + '</style>');
@@ -115,6 +122,10 @@ function page(tok, d, s, view) {
     h += '<details class="card"><summary>📋 תנאי ההצעה (' + d.terms.length + ')</summary><ol class="terms">'
       + d.terms.map((t) => '<li>' + t + '</li>').join('') + '</ol></details>';
   }
+  if (contract()) {
+    h += '<details class="card"><summary>📜 הסכם השירות (גרסה ' + CONTRACT_VER + ')</summary>' + contract()
+      + '<a class="ctrlink" href="/terms" target="_blank">פתיחת ההסכם בדף מלא</a></details>';
+  }
   h += '<div class="sec"><i>4</i>פרטים וחתימה</div>'
     + '<label>שם מלא</label><input type="text" id="nm" autocomplete="name">'
     + '<label>שם העסק</label><input type="text" id="bz" autocomplete="organization">'
@@ -122,7 +133,7 @@ function page(tok, d, s, view) {
     + '<label>חתימה <small>(עם האצבע, בתוך המסגרת)</small></label>'
     + '<div class="pad"><canvas id="cv"></canvas><div class="ph" id="ph">✍️ חותמים כאן</div></div>'
     + '<button type="button" class="redo" id="clr">🔄 למחוק את החתימה ולחתום מחדש</button>'
-    + '<label class="agree"><input type="checkbox" id="ag"><span>קראתי את ההצעה ואת התנאים שבה, ואני מאשר אותם.</span></label>'
+    + '<label class="agree"><input type="checkbox" id="ag"><span>' + (contract() ? 'קראתי את ההצעה ואת הסכם השירות (גרסה ' + CONTRACT_VER + '), ואני מאשר אותם בשם העסק.' : 'קראתי את ההצעה ואת התנאים שבה, ואני מאשר אותם.') + '</span></label>'
     + '<button type="button" class="go" id="go">✍️ חתימה ושליחה</button><div class="err" id="err"></div>'
     + '<script>(function(){var T=' + JSON.stringify(tok) + ',plan=null,inked=false;'
     + 'var $=function(i){return document.getElementById(i)};'
@@ -166,11 +177,18 @@ function servePage(tok, sub, s) {
   s.end(page(tok, d, sub === 'view' ? {} : state(tok), sub === 'view'));
 }
 
+function serveTerms(s) {
+  const c = contract();
+  if (!c) { s.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); return s.end('לא נמצא'); }
+  s.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+  s.end(head('הסכם שירות').replace('</style>', CTR_CSS + '</style>') + '<div class="card" style="background:#fff;border-radius:16px;padding:18px 16px">' + c + '</div></div></body></html>');
+}
+
 function signedBlock(d, st) {
   const p = (d.plans || []).find((x) => x.id === st.plan) || {};
   const cell = (k, v) => '<div style="border-bottom:1.5px solid #94a3b8;padding:0 0 1.5mm"><div style="font:500 11px Heebo;color:#6b7c90">' + k + '</div><div style="font:700 14px Heebo;min-height:5mm">' + esc(v) + '</div></div>';
   return '<h2 style="margin-bottom:1.5mm">אישור ההצעה <span style="color:#0e7490">✓ נחתם דיגיטלית</span></h2>'
-    + '<p class="lead" style="margin-bottom:2mm">בחתימה על ההצעה, העסק מאשר את המחירים ואת התנאים המפורטים בה. החבילה שנבחרה: <b dir="ltr">' + esc(p.name || st.plan) + '</b>, ' + nis(p.price || 0) + ' לחודש' + (p.setup ? ', הקמה ' + nis(p.setup) + ' חד פעמי' : ', הקמה בחינם') + '.</p>'
+    + '<p class="lead" style="margin-bottom:2mm">בחתימה על ההצעה, העסק מאשר את המחירים ואת התנאים המפורטים בה' + (st.contractVer ? ', ואת הסכם השירות גרסה ' + esc(st.contractVer) + ' המצורף למסמך זה' : '') + '. החבילה שנבחרה: <b dir="ltr">' + esc(p.name || st.plan) + '</b>, ' + nis(p.price || 0) + ' לחודש' + (p.setup ? ', הקמה ' + nis(p.setup) + ' חד פעמי' : ', הקמה בחינם') + '.</p>'
     + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1.3fr;gap:4mm;align-items:end">'
     + cell('שם העסק', st.biz || '') + cell('שם החותם', st.name) + cell('מספר עוסק או ת.ז.', st.idno || '') + cell('תאריך ושעה', ilTime(st.signedAt))
     + '<div style="border-bottom:1.5px solid #94a3b8;padding:0 0 1mm"><div style="font:500 11px Heebo;color:#6b7c90">חתימה</div><img src="' + st.sig + '" style="display:block;height:15mm;max-width:100%;object-fit:contain"></div></div>'
@@ -180,6 +198,13 @@ function signedBlock(d, st) {
 function renderSigned(tok, d, st, cb) {
   let html = fs.readFileSync(path.join(DIR, tok + '.html'), 'utf8');
   html = html.replace(/<!--SIGN-->[\s\S]*?<!--\/SIGN-->/, signedBlock(d, st));
+  if (st.contractVer && contract()) {
+    const att = '<style>' + CTR_CSS + '</style><div style="page-break-before:always;padding:12mm 14mm;font-family:Heebo">' + contract()
+      + '<p style="font:500 11.5px/1.6 Heebo;color:#24364b;border-top:1.5px solid #94a3b8;margin-top:8mm;padding-top:3mm">נחתם דיגיטלית בשם <b>' + esc(st.biz || st.name) + '</b> על ידי <b>' + esc(st.name) + '</b>, ' + esc(ilTime(st.signedAt))
+      + ' · כתובת IP ' + esc(st.ip) + ' · מזהה ההסכם ' + esc(String(st.contractHash).slice(0, 16)) + '</p></div>';
+    const i = html.lastIndexOf('</body>');
+    html = i >= 0 ? html.slice(0, i) + att + html.slice(i) : html + att;
+  }
   const tmp = path.join(DIR, tok + '.signed.html'); fs.writeFileSync(tmp, html);
   const out = path.join(DIR, tok + '.signed.pdf');
   execFile('google-chrome', ['--headless=new', '--no-sandbox', '--disable-gpu', '--no-pdf-header-footer', '--virtual-time-budget=6000', '--print-to-pdf=' + out, 'file://' + tmp], { timeout: 90000 }, (e) => {
@@ -202,6 +227,7 @@ function handlePost(b, notify, ip, ua) {
   if (!plan || String(b.name || '').trim().length < 2 || !/^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(sig) || sig.length > 400000) return { status: 400, body: { ok: false } };
   let docHash = ''; try { docHash = crypto.createHash('sha256').update(fs.readFileSync(path.join(DIR, tok + '.pdf'))).digest('hex'); } catch (e) {}
   Object.assign(s, { signedAt: now, plan: plan.id, name: String(b.name).trim().slice(0, 80), biz: String(b.biz || '').trim().slice(0, 80), idno: String(b.idno || '').trim().slice(0, 20), ip: String(ip || ''), ua: String(ua || '').slice(0, 300), sig, docHash });
+  if (contract()) { s.contractVer = CONTRACT_VER; s.contractHash = contractHash(); }
   saveState(tok, s);
   renderSigned(tok, d, s, (e) => {
     const NL = '\n';
@@ -213,4 +239,4 @@ function handlePost(b, notify, ip, ua) {
   return { status: 200, body: { ok: true } };
 }
 
-module.exports = { servePage, handlePost };
+module.exports = { servePage, handlePost, serveTerms };
