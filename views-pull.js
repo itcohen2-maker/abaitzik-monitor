@@ -115,7 +115,8 @@ function report(vs) {
   console.log(new Date().toISOString(), 'events', all.length, 'new', fresh.length, 'visits', vs.length);
   if (DRY) { console.log(vs.slice(0, 5)); return; }
   fs.mkdirSync(DIR, { recursive: true });
-  if (!fresh.length && fs.existsSync(OUT)) return;
+  // A push that failed (GitHub refuses the key now and then) is retried on the next run, not lost.
+  if (!fresh.length && fs.existsSync(OUT) && !st.pending) return;
   fs.writeFileSync(EVENTS, JSON.stringify(all));
   fs.writeFileSync(OUT, report(vs));
   // One push per new device on a page. The open event is what counts; bots and tests never.
@@ -129,6 +130,7 @@ function report(vs) {
     try { execFileSync('node', [path.join(HERE, 'notify.js'), '👀 ' + who + ' פתח את ' + PAGES[e.p], [dev(e), e.city, source(e)].filter(Boolean).join(' · ') + '\nהפרטים: 💼 העסק שלי ← 💻 IT Solution ← 👀 מי ראה את הדפים'], { stdio: 'ignore', timeout: 30000 }); } catch (x) { console.error('notify', x.message); }
   });
   st.since = all.length ? all[all.length - 1].t : st.since;
+  st.pending = true;
   fs.writeFileSync(STATE, JSON.stringify(st));
-  try { execFileSync('node', [path.join(HERE, 'push.js'), 'views: page report'], { stdio: 'ignore', timeout: 180000 }); } catch (x) { console.error('push', x.message); }
+  try { execFileSync('node', [path.join(HERE, 'push.js'), 'views: page report'], { stdio: 'ignore', timeout: 180000 }); st.pending = false; fs.writeFileSync(STATE, JSON.stringify(st)); } catch (x) { console.error('push', x.message); }
 })().catch(function (e) { console.error(new Date().toISOString(), 'views-pull', e.message); process.exit(1); });
