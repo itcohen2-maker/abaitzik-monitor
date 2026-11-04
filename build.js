@@ -3019,6 +3019,8 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 .bzBody .yb,#bzBody>.yb,#bzBody .tdy-row .yb{width:100%;box-sizing:border-box}
 .bzHead{font:800 16px Heebo,sans-serif;margin:8px 0 4px}
 .bzPane>.bzHead:first-child{display:none}
+.dwIn>.salecard{background:none;border:0;box-shadow:none;padding:0;margin:0}
+.fl-day{font:700 13px Heebo,sans-serif;color:var(--dim);margin:12px 2px 6px}
 .bzPane .yb{width:100%;box-sizing:border-box}
 #bzDw{margin-top:12px;--surface:#ffffff;--ink:#16202c;--dim:#5f6b7f}
 #ftText #bzDw{--surface:#1b2230;--ink:#e8eef5;--dim:#a3adbd}
@@ -12209,7 +12211,7 @@ function renderReminders(){
   try{return new Date(iso).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',year:'numeric'});}
   catch(e){return String(iso||'').slice(0,10);}
  };
- host.innerHTML=R.length?R.map(function(r){
+ var remOne=function(r){
   return '<div class="rem'+(r.sentAt?' remsent':'')+'"><b>'+esc(r.text)+'</b>'
    +'<div class="w">'+(r.sentAt?'נשלחה '+esc(day(r.sentAt)):'תקפוץ '+esc(remWhen(r.due)))+'</div>'
    +(r.nag&&Date.parse(r.due)<=Date.now()?'<button type="button" class="remdone" data-k="'+esc(remKey(r))+'">✅ עשיתי</button>':'')
@@ -12217,7 +12219,12 @@ function renderReminders(){
    +'<button type="button" class="remdel" data-k="'+esc(remKey(r))+'">🗑 למחוק</button>'
    // Itzik, 4.10: "בתיזכורת אין לי אפשרות להגיב". Each reminder answers in place.
    +'<details class="remreply"><summary>💬 להגיב על התזכורת</summary>'+replyBox('על התזכורת "'+r.text+'"')+'</details></div>';
- }).join(''):'<div class="empty">אין תזכורת פתוחה.</div>';
+ };
+ // 4.11.2026 (direction ד): the reminders in coloured drawers by when, instead of one long list.
+ var rNow=Date.now(),RG=[['⏰ עכשיו והיום',[]],['📅 השבוע',[]],['🗓️ בהמשך',[]],['✅ נשלחו',[]]];
+ R.forEach(function(r){var t=Date.parse(r.due);RG[r.sentAt?3:(isNaN(t)||t<rNow+864e5?0:t<rNow+7*864e5?1:2)][1].push(r);});
+ host.innerHTML=R.length?RG.filter(function(g){return g[1].length;}).map(function(g){return '<h3 data-n="'+g[1].length+'">'+g[0]+'</h3><div>'+g[1].map(remOne).join('')+'</div>';}).join(''):'<div class="empty">אין תזכורת פתוחה.</div>';
+ dwRe(host,{key:'rem',counts:'data',short:{'עכשיו והיום':'היום'}});
  wireBoxes(host);
  Array.prototype.forEach.call(host.querySelectorAll('.remknow'),function(b){
   b.onclick=function(){
@@ -12432,14 +12439,30 @@ function renderFiles(){
   return {f:g[0],tag:g.length>1};
  }).sort(function(a,b){return (a.f.at||'')<(b.f.at||'')?1:-1;});
  var h='',last=null;
- top.forEach(function(r){
-  var d=day(r.f);
-  if(d!==last){last=d;if(d)h+='<h3>'+esc(d)+'</h3>';}
-  h+=row(r.f,r.tag,false);
+ if(q){
+  top.forEach(function(r){
+   var d=day(r.f);
+   if(d!==last){last=d;if(d)h+='<h3>'+esc(d)+'</h3>';}
+   h+=row(r.f,r.tag,false);
+  });
+  if(old.length)h+='<details style="margin-top:6px"><summary style="padding:10px 4px;color:var(--dim)">גרסאות קודמות ('+old.length+')</summary>'
+   +old.map(function(f){return row(f,false,true);}).join('')+'</details>';
+  box.innerHTML=tabs+h;
+  return;
+ }
+ // 4.11.2026 (direction ד): four coloured drawers by age instead of a heading for every day.
+ // A search shows the plain list above, so a match is never hidden in a closed drawer.
+ var fNow=Date.now(),today=day({at:new Date().toISOString()}),FB=[['🆕 היום',[]],['📅 השבוע',[]],['🗓️ החודש',[]],['🗄️ ישן יותר',[]]];
+ top.forEach(function(r){var a=fNow-Date.parse(r.f.at);FB[isNaN(a)?3:day(r.f)===today?0:a<7*864e5?1:a<31*864e5?2:3][1].push(r);});
+ FB.forEach(function(b){
+  if(!b[1].length)return;
+  last=null;h+='<h3 data-n="'+b[1].length+'">'+b[0]+'</h3><div>';
+  b[1].forEach(function(r){var d=day(r.f);if(d!==last&&b[0]!=='🆕 היום'){last=d;if(d)h+='<div class="fl-day">'+esc(d)+'</div>';}h+=row(r.f,r.tag,false);});
+  h+='</div>';
  });
- if(old.length)h+='<details style="margin-top:6px"><summary style="padding:10px 4px;color:var(--dim)">גרסאות קודמות ('+old.length+')</summary>'
-  +old.map(function(f){return row(f,false,true);}).join('')+'</details>';
+ if(old.length)h+='<h3 data-n="'+old.length+'">🗂️ גרסאות קודמות</h3><div>'+old.map(function(f){return row(f,false,true);}).join('')+'</div>';
  box.innerHTML=tabs+h;
+ dwRe(box,{key:'files',counts:'data',short:{'גרסאות קודמות':'קודמות','ישן יותר':'ישן'}});
 }
 function fileWork(n){
  var b=String(n).split('/').pop().replace(/\\.[a-z0-9]{1,5}$/i,'').toLowerCase();
@@ -12463,13 +12486,15 @@ function renderSale(){
  var S=D.sale||[];
  if(!S.length){box.innerHTML='<div class="empty">עוד אין כאן תיק.</div>';return;}
  box.innerHTML=S.map(function(d){
-  var h='<div class="salecard'+(d.kind==='open'?' open':'')+'"><h3>'+esc(d.title)+'</h3>';
+  var h='<h3>'+esc(d.title)+'</h3><div class="salecard'+(d.kind==='open'?' open':'')+'">';
   if(d.lines&&d.lines.length)h+='<ul>'+d.lines.map(function(l){return '<li>'+esc(l)+'</li>';}).join('')+'</ul>';
   if(d.files&&d.files.length)h+='<div class="sfiles"'+(d.lines&&d.lines.length?' style="margin-top:10px"':'')+'>'+d.files.map(function(f){
    return '<a href="'+esc(f.url)+'" target="_blank" rel="noopener">'+esc(f.name)+'</a>';}).join('')+'</div>';
   if(d.folder)h+='<a class="sfold" href="'+esc(d.folder)+'" target="_blank" rel="noopener">'+(d.kind==='status'?'פתיחת כל התיק בדרייב':'פתיחת התיקייה')+'</a>';
   return h+'</div>';
  }).join('');
+ // 4.11.2026 (direction ד): every chapter of the case is a coloured drawer.
+ dwRe(box,{key:'sale',keys:4});
 }
 on('gSale',function(){pane('Sa');renderSale();ensure('sale',renderSale);});
 /*
@@ -12514,7 +12539,7 @@ function renderIsra(){
  var S=D.isra||[];
  if(!S.length){box.innerHTML='<div class="empty">עוד אין כאן כלום.</div>';return;}
  box.innerHTML=S.map(function(d){
-  var h='<div class="salecard'+(d.kind==='cards'?' isratop':'')+'"><h3>'+esc(d.title)+'</h3>';
+  var h='<h3>'+esc(d.title)+'</h3><div class="salecard'+(d.kind==='cards'?' isratop':'')+'">';
   if(d.cards&&d.cards.length)h+='<div class="isracards">'+d.cards.map(function(c){
    return '<div><b>'+esc(c.num)+'</b><span>'+esc(c.name)+'</span></div>';}).join('')+'</div>';
   if(d.lines&&d.lines.length)h+='<ul>'+d.lines.map(function(l){return '<li>'+esc(l)+'</li>';}).join('')+'</ul>';
@@ -12523,6 +12548,7 @@ function renderIsra(){
    return '<a href="'+esc(f.url)+'" target="_blank" rel="noopener">'+esc(f.name)+'</a>';}).join('')+'</div>';
   return h+'</div>';
  }).join('');
+ dwRe(box,{key:'isra',keys:4});
 }
 on('gIsra',function(){pane('Is');renderIsra();ensure('isra',renderIsra);});
 /*ITZIK:END*/
@@ -17095,7 +17121,7 @@ function renderIdeas(){
  // The weekly radar (radar.js) brings new open source tools, each with its link.
  var L=(D.better||[]).map(function(x){return {t:x.t,d:x.d,u:x.u,built:!!x.built,tag:(x.built?'✅ כבר בוצע · '+stamp(x.built):(x.by==='radar'?'🔭 כלים חדשים':'🔍 בודק השיפורים')+(x.at?' · '+stamp(x.at):''))+(x.size?' · '+x.size:'')};}).concat(IDEAS);
  IDEAS_SHOWN=L;
- document.getElementById('ideaList').innerHTML=L.map(function(x,n){
+ var IH=L.map(function(x,n){
   var on=asked.indexOf(x.t)>-1;
   // Itzik, 8.10: "I need to be able to comment on the ideas." Every idea,
   // built or not, gets its own comment box that goes to me like a request.
@@ -17107,7 +17133,13 @@ function renderIdeas(){
    +(String(x.u||'').indexOf('https://')===0?'<p><a href="'+esc(x.u)+'" target="_blank" rel="noopener">לפתוח את הכלי</a></p>':'')
    +'<button type="button" data-i="'+n+'"'+(on?' class="done"':'')+'>'
    +(on?'ביקשת. אני על זה':'רוצה את זה')+'</button>'+cm+'</div>';
- }).join('');
+ });
+ // 4.11.2026 (direction ד): 174 ideas in one column became five coloured drawers.
+ var IG=[['🔍 חדש מבודק השיפורים',[]],['🙋 ביקשת',[]],['🔭 כלים חדשים',[]],['✅ כבר בוצע',[]],['💡 רעיונות כלליים',[]]];
+ L.forEach(function(x,n){IG[x.built?3:asked.indexOf(x.t)>-1?1:/🔭/.test(x.tag||'')?2:x.tag?0:4][1].push(IH[n]);});
+ var il=document.getElementById('ideaList');
+ il.innerHTML=IG.filter(function(g){return g[1].length;}).map(function(g){return '<h3 data-n="'+g[1].length+'">'+g[0]+'</h3><div>'+g[1].join('')+'</div>';}).join('');
+ dwRe(il,{key:'ideas',counts:'data',short:{'חדש מבודק השיפורים':'חדשים','כלים חדשים':'כלים','כבר בוצע':'בוצע','רעיונות כלליים':'כלליים'}});
  Array.prototype.forEach.call(document.querySelectorAll('#ideaList button[data-c]'),function(b){
   b.onclick=function(){
    var box=document.getElementById('icb'+b.getAttribute('data-c'));
