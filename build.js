@@ -15471,6 +15471,13 @@ boot('listTiles',function(){
 });
 /* 13.10: a changed tile pulses slowly until opened. Bump data-upd whenever
    something new goes into a tile that already exists; new tiles use data-new. */
+/* 4.11, Itzik: "תעלה את האריח של העסק שלי למעלה ברשימה". The home blocks are moved around after load
+   (blkTiles ends up above askBox), so the business grid and its lead box are put back right above the tiles. */
+boot('bizTop',function(){
+ function up(){var b=document.getElementById('blkBiz'),t=document.getElementById('blkTiles'),l=document.getElementById('leadBox');
+  if(!b||!t||!t.parentNode)return;if(b.nextElementSibling!==t&&!(l&&b.nextElementSibling===l&&l.nextElementSibling===t)){t.parentNode.insertBefore(b,t);if(l)t.parentNode.insertBefore(l,t);}}
+ up();setTimeout(up,0);setTimeout(up,1500);
+});
 boot('updTiles',function(){
  document.querySelectorAll('.gt[data-upd],.ic[data-upd],.newbtn[data-upd],#setBtn[data-upd],#nA[data-upd]').forEach(function(t){
   var k='tileUpd:'+t.id,stamp=t.getAttribute('data-upd')||'',seen='';try{seen=localStorage.getItem(k)||'';}catch(e){}
