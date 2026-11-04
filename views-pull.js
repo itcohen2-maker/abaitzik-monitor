@@ -111,7 +111,11 @@ function report(vs) {
   const have = new Set(old.map(function (e) { return e.t + e.v + e.e; }));
   const fresh = got.events.filter(function (e) { return !have.has(e.t + e.v + e.e); });
   const all = old.concat(fresh).sort(function (a, b) { return a.t - b.t; }).slice(-50000);
-  const vs = visits(all);
+  // Codes sent from the monitor share box map back to the name typed there.
+  const nm = {}; all.forEach(function (e) { if (e.e === 'name' && e.r) nm[e.r] = e.ref; });
+  all.forEach(function (e) { if (e.e !== 'name' && e.r && nm[e.r]) e.r = nm[e.r]; });
+  fresh.forEach(function (e) { if (e.e !== 'name' && e.r && nm[e.r]) e.r = nm[e.r]; });
+  const vs = visits(all.filter(function (e) { return e.e !== 'name'; }));
   console.log(new Date().toISOString(), 'events', all.length, 'new', fresh.length, 'visits', vs.length);
   if (DRY) { console.log(vs.slice(0, 5)); return; }
   fs.mkdirSync(DIR, { recursive: true });

@@ -2733,7 +2733,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-04T10:01:12.160Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-04T10:02:26.828Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4637,7 +4637,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='1547ffe220';
+var CODE_ID='a481aa144f';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12850,7 +12850,9 @@ function bizSheet(t0){
     if(a==='secgo'){var pg=t.getAttribute('data-u')==='monitor'?'monitor':'security',inp=document.getElementById('secWho');// the tidy rows wrap the button with their own checkbox, so never look it up by parent
 
      var who=String(inp&&inp.value||'').trim().slice(0,40);
-     var su='https://it-solution.co.il/'+pg+'/'+(who?'?r='+encodeURIComponent(who):''),st=pg==='monitor'?'מסך אחד בטלפון שמנהל איתך את העסק, ככה זה עובד:':'כך המוניטור של IT Solution שומר על המידע שלכם:';
+     var rc=who?Math.random().toString(36).slice(2,8):'';
+     if(rc){try{navigator.sendBeacon('https://it-solution.co.il/api/track',JSON.stringify({e:'name',p:'map',v:pg,r:rc,ref:who}));}catch(x){}}
+     var su='https://it-solution.co.il/'+pg+'/'+(rc?'?r='+rc:''),st=pg==='monitor'?'מסך אחד בטלפון שמנהל איתך את העסק, ככה זה עובד:':'כך המוניטור של IT Solution שומר על המידע שלכם:';
      if(t.getAttribute('data-k')==='wa'){window.open('https://wa.me/?text='+encodeURIComponent(st+'\n'+su),'_blank');return;}
      if(navigator.share){navigator.share({title:pg==='monitor'?'המוניטור לעסק':'אבטחת המידע במוניטור',text:st,url:su}).catch(function(){});return;}
      try{navigator.clipboard.writeText(st+'\n'+su).then(function(){toast('הקישור הועתק.');},function(){toast(su);});}catch(x){toast(su);}

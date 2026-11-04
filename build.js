@@ -16771,7 +16771,11 @@ function bizSheet(t0){
     if(a==='secgo'){var pg=t.getAttribute('data-u')==='monitor'?'monitor':'security',inp=document.getElementById('secWho');// the tidy rows wrap the button with their own checkbox, so never look it up by parent
 
      var who=String(inp&&inp.value||'').trim().slice(0,40);
-     var su='https://it-solution.co.il/'+pg+'/'+(who?'?r='+encodeURIComponent(who):''),st=pg==='monitor'?'מסך אחד בטלפון שמנהל איתך את העסק, ככה זה עובד:':'כך המוניטור של IT Solution שומר על המידע שלכם:';
+     // A Hebrew name in the link showed as %D7%91... in WhatsApp. The link carries a short code; the name goes to the counter
+     // quietly (a 'name' event), and views-pull.js turns the code back into the name.
+     var rc=who?Math.random().toString(36).slice(2,8):'';
+     if(rc){try{navigator.sendBeacon('https://it-solution.co.il/api/track',JSON.stringify({e:'name',p:'map',v:pg,r:rc,ref:who}));}catch(x){}}
+     var su='https://it-solution.co.il/'+pg+'/'+(rc?'?r='+rc:''),st=pg==='monitor'?'מסך אחד בטלפון שמנהל איתך את העסק, ככה זה עובד:':'כך המוניטור של IT Solution שומר על המידע שלכם:';
      if(t.getAttribute('data-k')==='wa'){window.open('https://wa.me/?text='+encodeURIComponent(st+'\\n'+su),'_blank');return;}
      if(navigator.share){navigator.share({title:pg==='monitor'?'המוניטור לעסק':'אבטחת המידע במוניטור',text:st,url:su}).catch(function(){});return;}
      try{navigator.clipboard.writeText(st+'\\n'+su).then(function(){toast('הקישור הועתק.');},function(){toast(su);});}catch(x){toast(su);}
