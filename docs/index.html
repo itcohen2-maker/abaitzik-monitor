@@ -2377,7 +2377,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-04T13:25:11.101Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-04T13:26:58.401Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4256,7 +4256,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='cbce1a141f';
+var CODE_ID='ebe8f9b6b0';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -8877,7 +8877,7 @@ function renderSale(){
   if(d.folder)h+='<a class="sfold" href="'+esc(d.folder)+'" target="_blank" rel="noopener">'+(d.kind==='status'?'פתיחת כל התיק בדרייב':'פתיחת התיקייה')+'</a>';
   return h+'</div>';
  }).join('');
- dwRe(box,{key:'sale',keys:4});
+ dwRe(box,{key:'sale',keys:4,icons:{'מצב המכירה':'📊','תזכורת':'⏰','מה עוד פתוח':'📌','📄':'📄'},short:{'מצב המכירה':'המצב','תזכורת':'תזכורת','מה עוד פתוח':'פתוח','01 הלוואות':'הלוואות'}});
 }
 on('gSale',function(){pane('Sa');renderSale();ensure('sale',renderSale);});
 function recipesSheet(){
@@ -8922,7 +8922,7 @@ function renderIsra(){
    return '<a href="'+esc(f.url)+'" target="_blank" rel="noopener">'+esc(f.name)+'</a>';}).join('')+'</div>';
   return h+'</div>';
  }).join('');
- dwRe(box,{key:'isra',keys:4});
+ dwRe(box,{key:'isra',keys:4,icons:{'הכרטיסים':'💳','מה לבקש':'📝','החיובים החוזרים':'🔁','אם אומרים':'☎️','מה כבר ידוע':'💡','מה ישראכרט ענו':'📩'},short:{'הכרטיסים':'כרטיסים','מה לבקש':'לבקש','החיובים החוזרים':'חיובים','אם אומרים':'אם אומרים','מה כבר ידוע':'ידוע','מה ישראכרט ענו':'תשובות'}});
 }
 on('gIsra',function(){pane('Is');renderIsra();ensure('isra',renderIsra);});
 

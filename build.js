@@ -12499,7 +12499,7 @@ function renderSale(){
   return h+'</div>';
  }).join('');
  // 4.11.2026 (direction ד): every chapter of the case is a coloured drawer.
- dwRe(box,{key:'sale',keys:4});
+ dwRe(box,{key:'sale',keys:4,icons:{'מצב המכירה':'📊','תזכורת':'⏰','מה עוד פתוח':'📌','📄':'📄'},short:{'מצב המכירה':'המצב','תזכורת':'תזכורת','מה עוד פתוח':'פתוח','01 הלוואות':'הלוואות'}});
 }
 on('gSale',function(){pane('Sa');renderSale();ensure('sale',renderSale);});
 /*
@@ -12553,7 +12553,7 @@ function renderIsra(){
    return '<a href="'+esc(f.url)+'" target="_blank" rel="noopener">'+esc(f.name)+'</a>';}).join('')+'</div>';
   return h+'</div>';
  }).join('');
- dwRe(box,{key:'isra',keys:4});
+ dwRe(box,{key:'isra',keys:4,icons:{'הכרטיסים':'💳','מה לבקש':'📝','החיובים החוזרים':'🔁','אם אומרים':'☎️','מה כבר ידוע':'💡','מה ישראכרט ענו':'📩'},short:{'הכרטיסים':'כרטיסים','מה לבקש':'לבקש','החיובים החוזרים':'חיובים','אם אומרים':'אם אומרים','מה כבר ידוע':'ידוע','מה ישראכרט ענו':'תשובות'}});
 }
 on('gIsra',function(){pane('Is');renderIsra();ensure('isra',renderIsra);});
 /*ITZIK:END*/
