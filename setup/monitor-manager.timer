@@ -1,0 +1,10 @@
+# 4.11.2026. 07:25 (after the brief at 07:00 and the calendar from the PC at 07:15), 13:00, and 18:00 (evening reminder).
+[Unit]
+Description=the manager's round, three times a day (Israel time)
+[Timer]
+OnCalendar=*-*-* 07:25:00 Asia/Jerusalem
+OnCalendar=*-*-* 13:00:00 Asia/Jerusalem
+OnCalendar=*-*-* 18:00:00 Asia/Jerusalem
+Persistent=true
+[Install]
+WantedBy=timers.target

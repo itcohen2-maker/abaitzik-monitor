@@ -816,6 +816,8 @@ function build() {
       home screen renders D.brief and falls back to the plain report otherwise.
     */
     brief: require('./lib/brief.js').forPage(loadDocs('brief'), Date.now()),
+    // 4.11.2026: the manager's round of today (manager.js, lib/manager.js), the "🧑‍💼 המנהל" card.
+    manager: inst.name === 'abaitzik' ? require('./lib/manager.js').forPage(inst.dataPath, Date.now()) : null,
     pegasus,
     improve,
     special,
@@ -2685,6 +2687,7 @@ body:not(.inner) #thumbSet{display:block}
 .c-pg{background:linear-gradient(160deg,#a78bfa,#6d28d9)}
 /* נר. Night behind the flames, the way the site itself looks. */
 .c-nr{background:linear-gradient(160deg,#243a6b,#0B1330)}
+.c-gcal{background:linear-gradient(160deg,#4285F4,#1a56c4)}
 /* 14.10: the theatre's round icon on a customer's home screen (instance circles). */
 .c-th{background:linear-gradient(160deg,#8b1e3f,#3a0a1c);font-size:26px}
 .c-sl{background:linear-gradient(160deg,#f472b6,#be185d)}
@@ -4487,6 +4490,9 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
        the card itself, decrypted, with the share button for the licensing office. -->
   <button type="button" class="ic" data-grp="day" id="icNache"><span class="c c-nk">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="4.5" r="1.6"/><path d="M11 7.5v6h5l2 5"/><path d="M11 10.5h4"/><path d="M8 11.2a5.5 5.5 0 1 0 7.6 6.3"/></svg></span>תעודת נכה</button>
+  <!-- 4.11, Itzik: "עיגול אחד של היומן של גוגל, כניסה ישירה אליו". Opens his calendar (account u/0, itcohen2), today. -->
+  <a class="ic icNew" data-grp="day" id="icGcal" href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener" data-new="1"><span class="c c-gcal">
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M9.5 13.5h1.5v4M14 13.5h2l-1.5 4"/></svg></span>יומן</a>
   <a class="ic" data-grp="net" data-net="all" id="icNet" href="#"><span class="c c-nt">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M10 20V5M15 20v-6M20 20V8"/></svg></span>ניטור רשתות</a>
   <a class="ic" data-grp="proj" href="https://abaitzik.com/" target="_blank" rel="noopener"><span class="c c-st">
