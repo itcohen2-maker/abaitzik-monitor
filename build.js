@@ -20771,7 +20771,8 @@ boot('reset',applyResetSeen);
 boot('resetMarks',applyResetMarks);
 boot('gate',gateBoot);
 boot('pane',function(){
- if(location.hash==='#new'||location.hash==='#chat'){
+ // 4.11: ansOnly is set by an #ans= link (a short WhatsApp answer); the hash is gone by now.
+ if(location.hash==='#new'||location.hash==='#chat'||ansOnly){
   pane('a');renderAnswers();landPane('pA');
  }
  else pane('h');
