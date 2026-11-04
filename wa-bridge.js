@@ -465,7 +465,11 @@ function readBody(q, max) {
     q.on('error', reject);
   });
 }
-function formNotify(kind, text) { toMonitor(kind, text).then(function (id) { log('form -> ntfy-' + id); }, function (e) { log('form notify failed: ' + e.message); }); }
+// 4.11, איציק: "איך לא נתת לי שום התראה, לא בווילון". toMonitor רק כותב לצ׳אט כהודעה שלו, בלי push.
+// לכן כל אירוע מטופס (חתימה, הצעה, הקמה) יוצא גם כהתראה לטלפון דרך notify.js.
+function formNotify(kind, text) {
+  try { require("child_process").execFile(process.execPath, [path.join(__dirname, "notify.js"), "✍️ " + kind, String(text).split(String.fromCharCode(10)).slice(0, 3).join(String.fromCharCode(10))], { cwd: __dirname, timeout: 60000 }, function (e) { if (e) log("form push failed: " + e.message); }); } catch (e) { log("form push failed: " + e.message); }
+  toMonitor(kind, text).then(function (id) { log('form -> ntfy-' + id); }, function (e) { log('form notify failed: ' + e.message); }); }
 function codeOk(c) { const o = ownerCode(); return !!o && String(c || '') === o; }
 // The demo page talks to the bridge: ask a question, read its answer, turn demo on and off.
 async function api(q, s, u) {
