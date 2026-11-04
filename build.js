@@ -8429,11 +8429,13 @@ function renderNew(){
  var c=unreadCount();
  var tot=c+g;
  var btn=document.getElementById('newBtn');
- btn.classList.toggle('hot',tot>0);
+ // 4.11: red only for an answer he has not read. Things in work or open tasks
+ // are waiting on us, not news for him, so they stay grey with their count.
+ btn.classList.toggle('hot',c>0);
  // The block knows when the red one is live, so the button under it can step
  // further back exactly then and not be in the way of the thumb.
  var blk=document.getElementById('newBlock');
- if(blk)blk.classList.toggle('hasnew',tot>0);
+ if(blk)blk.classList.toggle('hasnew',c>0);
  document.getElementById('nbCount').textContent=tot?tot:'✓';
  // Said in words as well as in colour. He told me a colour blind person would
  // not notice the old marking at all, and he was right.

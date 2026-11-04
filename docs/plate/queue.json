@@ -74,7 +74,7 @@
   "order": 3,
   "file": "media/plate-limon-v11.mp4",
   "poster": "media/plate-limon-v11.jpg",
-  "approved": false,
+  "approved": true,
   "screens": [
    {
     "head": "לימון",
@@ -136,7 +136,8 @@
   ],
   "onSite": false,
   "posted": true,
-  "postedAt": "2026-11-04T11:36:38.491Z"
+  "postedAt": "2026-11-04T11:36:38.491Z",
+  "approvedAt": "2026-11-04T12:14:25.691Z"
  },
  {
   "id": "afuna",
