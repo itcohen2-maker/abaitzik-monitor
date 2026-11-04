@@ -3020,7 +3020,8 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 .bzHead{font:800 16px Heebo,sans-serif;margin:8px 0 4px}
 .bzPane>.bzHead:first-child{display:none}
 .bzPane .yb{width:100%;box-sizing:border-box}
-#bzDw{margin-top:12px}
+#bzDw{margin-top:12px;--surface:#ffffff;--ink:#16202c;--dim:#5f6b7f}
+#ftText #bzDw{--surface:#1b2230;--ink:#e8eef5;--dim:#a3adbd}
 #ftText .bzT{background:#26303c;color:#e8eef5}#ftText .bzT.on{background:#e8eef5;color:#16202c}#ftText #bzBody{border-color:#e8eef5}
 .bzSec{font:700 14px Heebo,sans-serif;margin:10px 0 2px;color:#14675a}
 .bzRow{border-bottom:1px solid rgba(128,128,128,.25);padding:8px 0;font:500 14px/1.45 Heebo,sans-serif;display:flex;flex-direction:column;gap:2px}
