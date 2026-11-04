@@ -2733,7 +2733,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-04T10:10:01.566Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-04T10:15:51.720Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4637,7 +4637,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='a481aa144f';
+var CODE_ID='c4e7ded1a8';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12739,7 +12739,7 @@ function bizSheet(t0){
     +'<div class="bzRow"><b>📨 שני טפסים לשלוח לשי</b><small>🔴 עוד לא נשלח · 🟠 מצב המתנה · ✅ מולא. הצבע מתעדכן לבד כשהוא פותח וממלא.</small></div>'
     +shaiFormBtn('form3-shai','form3','📝 טופס השלמות, 10 שאלות קצרות')
     +'<a class="yb" href="https://form.it-solution.co.il/f/15939da3cf0776f57992/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לראות את טופס ההשלמות לפני ששולחים</a>'
-    +shaiFormBtn('setup-shai','setup','🔌 דף החיבורים: מייל, פגישות, יומן, חשבוניות, לינקדין')
+    +shaiFormBtn('setup-shai','setup','🔌 דף החיבורים: מייל, פגישות, יומן, חשבוניות, לינקדין, פייסבוק')
     +'<a class="yb" href="https://form.it-solution.co.il/s/f3d4f77d1278a2a5efdc/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לראות את דף החיבורים לפני ששולחים</a>'
     +'<div class="bzSec">👀 עוד לראות</div>'
     +'<a class="yb" href="https://form.it-solution.co.il/q/a9cf9d55064a85b58583/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 ההצעה לשי, כמו שהוא רואה אותה</a>'
@@ -12833,7 +12833,7 @@ function bizSheet(t0){
      else{try{navigator.clipboard.writeText(tt+' '+u);toast('הקישור הועתק. מדביקים לשי בוואטסאפ או במייל.');sent();}catch(x){toast(u);}}
     }
     if(a==='form3-shai'){shareShai('https://form.it-solution.co.il/f/15939da3cf0776f57992','שי, תודה על הטופס! נשארו רק כמה פרטים קטנים כדי שנתחיל לחבר, כמה דקות:','עוד כמה פרטים, IT Solution','form3');return;}
-    if(a==='setup-shai'){shareShai('https://form.it-solution.co.il/s/f3d4f77d1278a2a5efdc','שי, כאן מחברים את המוניטור לכלים שלך: המייל, הקלטות הפגישות, היומן, החשבוניות ולינקדין. בכל כרטיס כתוב מה ללחוץ, וכל לחיצה נשמרת. את הפייסבוק נחבר בשלב הבא:','חיבור המוניטור, IT Solution','setup');return;}
+    if(a==='setup-shai'){shareShai('https://form.it-solution.co.il/s/f3d4f77d1278a2a5efdc','שי, כאן מחברים את המוניטור לכל הכלים שלך: המייל, הקלטות הפגישות, היומן, החשבוניות, קובץ החייבים, לינקדין ופייסבוק. בכל כרטיס כתוב בדיוק מה ללחוץ, וכל לחיצה נשמרת. בסוף לוחצים סיימתי:','חיבור המוניטור, IT Solution','setup');return;}
     if(a==='form2-shai'){var f2='https://form.it-solution.co.il/f/c94dc7fa0f53147ed133',f2t='שי, כדי שנחבר את המוניטור בדיוק למה שיש לך, הכנו טופס קצר. רוב השאלות רק לסמן, כ 5 דקות:';
      if(navigator.share){navigator.share({title:'טופס חיבורים, IT Solution',text:f2t,url:f2}).catch(function(){});}
      else{try{navigator.clipboard.writeText(f2t+' '+f2);toast('הקישור לטופס הועתק. מדביקים לשי בוואטסאפ או במייל.');}catch(x){toast(f2);}}
