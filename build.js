@@ -16638,7 +16638,7 @@ function bizSheet(t0){
     // Red: not sent. Orange: sent (marked on this device when shared) or opened and not finished. Green: filled.
     // Shared or copied, never opened here: opening reports "שי פתח".
     +'<div class="bzRow"><b>📨 שני טפסים לשלוח לשי</b><small>🔴 עוד לא נשלח · 🟠 מצב המתנה · ✅ מולא. הצבע מתעדכן לבד כשהוא פותח וממלא.</small></div>'
-    +shaiFormBtn('form3-shai','form3','📝 טופס השלמות, 11 שאלות קצרות')
+    +shaiFormBtn('form3-shai','form3','📝 טופס השלמות, 10 שאלות קצרות')
     +shaiFormBtn('setup-shai','setup','🔌 דף החיבורים: מייל, פגישות, יומן')
     +'<div class="bzSec">👀 לראות לפני ששולחים</div>'
     // 3.11, Itzik: "אני רוצה לראות את הקובץ, תכין לי אחד בשבילי". Copies that save nothing and report nothing.
