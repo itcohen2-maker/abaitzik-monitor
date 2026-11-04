@@ -867,8 +867,11 @@ function pollUploads() {
     if (!name || name !== path.basename(name) || !fs.existsSync(path.join(DROP, name))) { say('!! קובץ גדול נעלם: ' + name); return; }
     const at = new Date();
     const file = chatName(at);
-    const rec = { at: at.toISOString(), from: 'itzik', text: group.groupText(String(up.caption || '').trim(), [name]),
+    // 4.11: the same [re:<time>] tag as a phone send links a big file to the bubble it was aimed at.
+    const upTag = String(up.caption || '').trim().match(/\n?\[re:([^\]\s]+)\]\s*$/);
+    const rec = { at: at.toISOString(), from: 'itzik', text: group.groupText(String(up.caption || '').trim().replace(/\n?\[re:[^\]\s]+\]\s*$/, ''), [name]),
       status: 'working', ackAt: at.toISOString(), id: 'up-' + up.id, auto: true, files: [name] };
+    if (upTag) rec.re = reKeyFor(upTag[1]);
     try {
       fs.mkdirSync(CHAT, { recursive: true });
       fs.writeFileSync(path.join(CHAT, file), JSON.stringify(rec, null, 1), 'utf8');
