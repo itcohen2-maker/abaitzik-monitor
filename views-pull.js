@@ -57,7 +57,7 @@ function dev(e) { return [e.model || e.os, e.app ? 'בתוך ' + e.app : e.br].f
 function visits(evs) {
   const by = {};
   evs.forEach(function (e) {
-    if (e.bot || !e.p || /^zz-/.test(e.p)) return;
+    if (e.bot || !e.p || /^zz-/.test(e.p) || /^בדיקה/.test(e.r || "")) return; // tests never count
     const k = e.sid || (e.v + e.t);
     const s = by[k] || (by[k] = { sid: k, p: e.p, v: e.v, r: e.r, t: e.t, sec: 0, depth: 0, cta: [], n: e.n, open: null });
     if (e.e === 'open') { s.open = e; s.t = e.t; }
@@ -121,7 +121,7 @@ function report(vs) {
   // One push per new device on a page. The open event is what counts; bots and tests never.
   const today = new Date().toISOString().slice(0, 10);
   if (st.day !== today) { st.day = today; st.sent = 0; }
-  fresh.filter(function (e) { return e.e === 'open' && !e.bot && PAGES[e.p]; }).forEach(function (e) {
+  fresh.filter(function (e) { return e.e === "open" && !e.bot && PAGES[e.p] && !/^בדיקה/.test(e.r || ""); }).forEach(function (e) {
     const k = e.p + ':' + e.v;
     if (st.seen[k]) return; st.seen[k] = e.t;
     if (st.sent >= DAY_CAP) return; st.sent++;
