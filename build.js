@@ -16765,10 +16765,11 @@ function bizSheet(t0){
     if(a==='secshare'){var pg0=t.getAttribute('data-u')==='monitor'?'monitor':'security',k0=t.getAttribute('data-k')==='wa'?'wa':'share';
      var ob=el.querySelector('.secBox');if(ob)ob.parentNode.removeChild(ob);
      var bx=document.createElement('div');bx.className='secBox';bx.style.cssText='margin:4px 0 12px;display:flex;gap:6px;align-items:center';
-     bx.innerHTML='<input type="text" maxlength="40" placeholder="למי שולחים? שם הלקוח" style="flex:1;min-width:0;font-size:17px;padding:11px;border-radius:10px;border:1px solid #888;direction:rtl"><button type="button" class="yb yb1" data-bz="secgo" data-u="'+pg0+'" data-k="'+k0+'" style="width:auto;margin:0;white-space:nowrap">'+(k0==='wa'?'💬 לוואטסאפ':'📤 שליחה')+'</button>';
+     bx.innerHTML='<input id="secWho" type="text" maxlength="40" placeholder="למי שולחים? שם הלקוח" style="flex:1;min-width:0;font-size:17px;padding:11px;border-radius:10px;border:1px solid #888;direction:rtl"><button type="button" class="yb yb1" data-bz="secgo" data-u="'+pg0+'" data-k="'+k0+'" style="width:auto;margin:0;white-space:nowrap">'+(k0==='wa'?'💬 לוואטסאפ':'📤 שליחה')+'</button>';
      t.parentNode.insertBefore(bx,t.nextSibling);try{bx.querySelector('input').focus();}catch(x){}
      return;}
-    if(a==='secgo'){var pg=t.getAttribute('data-u')==='monitor'?'monitor':'security',inp=t.parentNode.querySelector('input');
+    if(a==='secgo'){var pg=t.getAttribute('data-u')==='monitor'?'monitor':'security',inp=document.getElementById('secWho');// the tidy rows wrap the button with their own checkbox, so never look it up by parent
+
      var who=String(inp&&inp.value||'').trim().slice(0,40);
      var su='https://it-solution.co.il/'+pg+'/'+(who?'?r='+encodeURIComponent(who):''),st=pg==='monitor'?'מסך אחד בטלפון שמנהל איתך את העסק, ככה זה עובד:':'כך המוניטור של IT Solution שומר על המידע שלכם:';
      if(t.getAttribute('data-k')==='wa'){window.open('https://wa.me/?text='+encodeURIComponent(st+'\\n'+su),'_blank');return;}
