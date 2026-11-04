@@ -4301,8 +4301,7 @@ ${require('./lib/home-ui.js').html}
   <!-- The reports tile came off on 17.9. The reports are in "תשובות" now,
        which is the one button he asked for. -->
   <button type="button" class="gt g8" data-grp="money" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>מי חייב כסף ומאיזה חודש</small></button>
-  <!-- 4.11.2026, Itzik: "רק במוניטור שלי אני מחבר אותו לבנק". Here only; lib/features.js shows it for the owner. -->
-  <button type="button" class="gt g16" data-grp="money" id="gBank" data-new="1" data-upd="20261104-bank" hidden><b>🏦 חיבור הבנק</b><small>שולחים קובץ, אני מסדר</small></button>
+  <!-- 4.11.2026, Itzik: no bank tile, not here and not for customers. He connects the bank through Claude in the terminal; the monitor is only where he gets updates. -->
   <button type="button" class="gt g8" data-grp="home" id="gVaad"><b>🏠 ועד הבית</b><small>מי שילם ומה פתוח</small></button>
   <button type="button" class="gt g15" data-grp="money" id="gSale" data-upd="lawyer-docs-1018"><b>⚖️ מכירת לולוס</b><small>התיק לעורך הדין, מה פתוח ומה נמסר</small></button>
   <!--
@@ -20443,7 +20442,7 @@ boot('guides',function(){
 });
 boot('features',applyFeatures);
 ${require('./lib/features.js').js}
-${inst.name === 'abaitzik' ? require('./lib/bank-ui.js').js : ''}
+
 ${require('./lib/profile-ui.js').js}
 boot('install',function(){
  if(INSTANCE&&INSTANCE.name==='abaitzik')return;

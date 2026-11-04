@@ -44,19 +44,14 @@ test('the page hides the tile when the feature is off and shows it when on', () 
   assert.strictEqual(runPage({ features: { bank: true } }), false);
 });
 
-test('4.11: the tile left the customer page and lives on the owner page only', () => {
+test('4.11: no bank tile on any page; the bank is connected through Claude in the terminal', () => {
   const src = fs.readFileSync(path.join(ROOT, 'build.js'), 'utf8');
   const start = src.indexOf('const TENANT_TILES = {');
   const end = src.indexOf('function cutFor(');
   const { tenantTiles } = new Function(src.slice(start, end) + '; return { tenantTiles };')();
-  const html = tenantTiles({ screens: ['gFiles'] });
-  assert.ok(!/id="gBank"/.test(html), 'no bank tile for a customer');
-  const m = /<button[^>]*data-grp="money" id="gBank"[^>]*>/.exec(src);
-  assert.ok(m, 'gBank tile in the owner grid');
-  assert.ok(/\bhidden\b/.test(m[0]) && /data-new="1"/.test(m[0]));
-  assert.ok(src.includes("${inst.name === 'abaitzik' ? require('./lib/bank-ui.js').js : ''}"));
-  assert.ok(/features: require\('\.\/lib\/features\.js'\)\.read\(inst\.dataPath, inst\.name\)/.test(src), 'payload carries features by owner');
-  assert.ok(src.includes("boot('features',applyFeatures)") && src.includes("['features',applyFeatures]"));
+  assert.ok(!/id="gBank"/.test(tenantTiles({ screens: ['gFiles'] })), 'no bank tile for a customer');
+  assert.ok(!/<button[^>]*id="gBank"/.test(src), 'no bank tile for the owner either');
+  assert.ok(!src.includes("require('./lib/bank-ui.js').js"), 'the bank screen is not on any page');
 });
 
 test('4.11: bank is on for the owner and off for any customer, whatever the file says', () => {

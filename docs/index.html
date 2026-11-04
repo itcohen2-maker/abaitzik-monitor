@@ -2734,7 +2734,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-04T11:52:24.018Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-04T11:52:36.245Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2873,7 +2873,6 @@ try{
   <button type="button" class="gt gStory" data-grp="proj" id="gPegasus" data-new="1" data-upd="20261031-peg-status"><b>🐎 פגסוס</b><small>רק ההודעה האחרונה והשאלה שמחכה לך, הישנות נעלמות</small></button>
   <button type="button" class="gt gLec" data-grp="proj" id="gLec" data-upd="lec-1793426949738"><b>🎤 הרצאה</b><small>עודכן 31.10 08:09: המלל עודכן לפי המסמך לעריכה</small></button>
   <button type="button" class="gt g8" data-grp="money" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>מי חייב כסף ומאיזה חודש</small></button>
-  <button type="button" class="gt g16" data-grp="money" id="gBank" data-new="1" data-upd="20261104-bank" hidden><b>🏦 חיבור הבנק</b><small>שולחים קובץ, אני מסדר</small></button>
   <button type="button" class="gt g8" data-grp="home" id="gVaad"><b>🏠 ועד הבית</b><small>מי שילם ומה פתוח</small></button>
   <button type="button" class="gt g15" data-grp="money" id="gSale" data-upd="lawyer-docs-1018"><b>⚖️ מכירת לולוס</b><small>התיק לעורך הדין, מה פתוח ומה נמסר</small></button>
   <button type="button" class="gt gRec" data-grp="home" id="gRecipes"><b><img class="gi" src="icons/lolos-giraffe.png" alt=""> מתכונים</b><small>חוברת לולוס וספר המתכונים של איציק</small></button>
@@ -3110,14 +3109,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4647,7 +4639,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='0aecda3136';
+var CODE_ID='452aee317c';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -15720,33 +15712,6 @@ function applyFeatures(){
 }
 
 
-boot('bank',function(){
- var t=document.getElementById('gBank');if(!t)return;
- var TXT=[["h","איך מחברים את הבנק?"],["p","המוניטור לא נכנס לחשבון הבנק ולא מבקש סיסמה, אף פעם. את הקובץ מורידים מהבנק בעצמך, ואני מסדר ממנו את ההוצאות וההכנסות."],["s","1. נכנסים לאתר הבנק מהמחשב. באפליקציה בדרך כלל אי אפשר להוריד קובץ."],["s","2. נכנסים למסך התנועות בעובר ושב."],["s","3. בוחרים תקופה, למשל שלושת החודשים האחרונים."],["s","4. לוחצים על הסמל של אקסל, או על ייצוא, או על הורדה."],["s","5. שולחים את הקובץ כאן, בכפתור הגדול שלמטה."],["p","בנק הפועלים: בסרגל העליון נכנסים ללשונית עו״ש, בוחרים תאריכים, ולוחצים על הסמל של אקסל בצד שמאל למעלה."],["p","לא מוצאים את הכפתור? מצלמים את מסך התנועות ושולחים לי. אסמן בדיוק איפה ללחוץ."],["p","כרטיס אשראי: אותו דבר, באתר של חברת האשראי (ישראכרט, כאל, מקס), במסך פירוט העסקאות."],["p","לא שולחים סיסמה או קוד שמגיע בהודעה. אין בזה צורך."]];
- t.onclick=function(){
-  var w=document.createElement('div');
-  w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','חיבור הבנק');
-  w.innerHTML='<div class="ycard" style="max-height:88vh;display:flex;flex-direction:column;overflow:hidden"><div style="overflow:auto;flex:1 1 auto;min-height:0">'
-   +TXT.map(function(l){
-    if(l[0]==='h')return '<b>'+esc(l[1])+'</b>';
-    return '<div style="font-size:16px;line-height:1.55;margin-top:'+(l[0]==='s'?'4':'10')+'px">'+esc(l[1])+'</div>';
-   }).join('')
-   +'</div><button type="button" class="yb" data-a="send" style="flex:0 0 auto;margin-top:12px;width:100%;padding:18px 10px;font-size:19px;font-weight:800;border:0;border-radius:14px;background:#14675a;color:#fff">📎 שליחת קובץ התנועות</button>'
-   +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
-  w.onclick=function(e){
-   var a=e.target.getAttribute&&e.target.getAttribute('data-a');
-   if(e.target===w||a==='x'){w.remove();return;}
-   if(a==='send'){
-    w.remove();
-    pane('m');
-    var cap=document.getElementById('fCap');if(cap)cap.value='קובץ בנק';
-    openPicker('full','',true);
-   }
-  };
-  document.body.appendChild(w);
- };
-});
-
 
 var pfCorrection=function correctionText(label, value) {
   return 'תיקון בפרופיל העסק: ' + label + ': ' + value;
@@ -16944,7 +16909,7 @@ floatTile=function(id,up){if(document.body.classList.contains('world'))return;re
 
 boot('worlds',worldSync);
 boot('design',dzBoot);
-var PUSH_KEY="BDlgL4lKYXBB2yk96UVlN_bNhLBppiq0K8ORV-TQ2jb7k8IMskeWYICec19xE7N5VEcCzVXZU9Pxb9e64KH8OCk";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
