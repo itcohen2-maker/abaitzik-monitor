@@ -1,7 +1,7 @@
 {
- "at": "2026-11-04T03:17:19.268Z",
- "up": 27418,
- "since": "",
+ "at": "2026-11-04T03:17:23.805Z",
+ "up": 27422,
+ "since": "2026-11-04T03:17:23.804Z",
  "last": "",
  "n": 0,
  "recent": [
@@ -47,9 +47,9 @@
   },
   "beat": {
    "label": "פעימה",
-   "used": 5,
+   "used": 6,
    "cap": 30,
-   "left": 25,
+   "left": 24,
    "paid": false,
    "blockedUntil": "",
    "daily": false
