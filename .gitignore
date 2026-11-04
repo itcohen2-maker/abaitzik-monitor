@@ -45,3 +45,4 @@ __pycache__/
 # 30.9 security: never public
 *.pyc
 promo/first-client-playbook.html
+data/ms-app.json
