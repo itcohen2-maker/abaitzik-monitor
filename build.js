@@ -943,6 +943,8 @@ function build() {
         payload.shWait = (shs.waitlist || []).map((w) => ({ email: w.email, created_at: w.created_at, invited: !!w.invited, sent: sentTo.has(w.email), ready: !!rdy[w.email], visited: vis.has(String(w.email).toLowerCase()) }));
         payload.shSum = shState();
       } catch (e) { payload.shWait = []; }
+      // 4.11, Itzik: Shai's two forms, red until sent, orange while waiting, green when filled (lib/shai-forms.js).
+      if (inst.name === 'abaitzik') { try { payload.shaiForms = require('./lib/shai-forms.js').state(__dirname); } catch (e) { console.error('shaiForms: ' + e.message); } }
       bizOn = true;
     } catch (e) { console.error('biz: ' + e.message); }
   }
@@ -3033,6 +3035,8 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
  background:#e8eef6;color:#16202c;cursor:pointer;min-height:48px}
 .yb1{background:linear-gradient(150deg,#90caf9,#1565c0);color:#fff}
 .yb2{background:linear-gradient(150deg,#7bd88f,#1e8e4a);color:#fff}
+.ybRed{background:linear-gradient(150deg,#ef9a9a,#c62828);color:#fff}
+.ybWait{background:linear-gradient(150deg,#ffcc80,#ef6c00);color:#fff}
 .yb3{background:linear-gradient(150deg,#e8a38a,#b0482c);color:#fff}
 .ybwa{display:block;width:100%;text-align:center;text-decoration:none;background:linear-gradient(150deg,#5ee28a,#128c4a);color:#fff}
 a.yb4{display:block;text-align:center;text-decoration:none;background:linear-gradient(150deg,#ffd76a,#d49a00);color:#3a2e00}
@@ -16609,6 +16613,16 @@ function bizSheet(t0){
   }
   // 2.11, Itzik: everything IT Solution in one tab, so it does not mix with Shachar and the rest.
   // Something new here? Bump BZ_UPD.its (and the gBiz data-upd) so the tab label and the tile blink.
+  function shaiFormBtn(a,k,label){
+   var s=(D.shaiForms||{})[k]||{},sent='';try{sent=JSON.parse(localStorage.getItem('itsSent')||'{}')[k]||'';}catch(x){}
+   function hd(t){try{return new Date(t).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'});}catch(x){return '';}}
+   var cls,st;
+   if(s.done){cls='yb2';st='✅ מולא · '+hd(s.done);}
+   else if(s.opened){cls='ybWait';st='🟠 מצב המתנה: פתח, מילא '+(s.n||0)+' מתוך '+(s.of||0);}
+   else if(sent){cls='ybWait';st='🟠 מצב המתנה: נשלח '+hd(sent)+', עוד לא פתח';}
+   else{cls='ybRed';st='🔴 עוד לא נשלח. לחיצה שולחת';}
+   return '<button type="button" class="yb '+cls+'" data-bz="'+a+'" data-sk="'+k+'">'+label+'<small style="display:block;font-weight:500;margin-top:3px">'+st+'</small></button>';
+  }
   function itsHtml(){
    return '<div class="bzHead">💻 IT Solution</div>'
     // 4.11, Itzik: an insurance agent asks how confidential the monitor is. A page to hand the customer.
@@ -16620,18 +16634,21 @@ function bizSheet(t0){
     +(typeof dmoStart==='function'?'<button type="button" class="yb yb1" data-bz="demo">🎬 מצב הדגמה ללקוח</button>':'')
     +'<button type="button" class="yb" data-bz="anim" data-f="demo-script-shai.pdf">🎬 תסריט ההדגמה לשי (PDF)</button>'
     +'<div class="bzSec">שי בודק, יועץ עסקי</div>'
-    // 3.11, Itzik: "לשלוח לו טופס מידע", the connections form (what he has, so we know what to connect).
-    // 3.11 evening, Itzik: "את טופס ההשלמה והחיבורים נמצא במוניטור? איפה?". He sends the completion form in the morning,
-    // the connections page after the signature. Shared or copied, never opened here: opening reports "שי פתח".
-    +'<button type="button" class="yb yb1" data-bz="form3-shai">📝 טופס השלמות לשי: לשלוח לו</button>'
+    // 4.11, Itzik: "שתי טפסים אני צריך לשלוח לו ... באדום, וברגע שאני שולח אותם ... כתום, וכתוב מצב המתנה".
+    // Red: not sent. Orange: sent (marked on this device when shared) or opened and not finished. Green: filled.
+    // Shared or copied, never opened here: opening reports "שי פתח".
+    +'<div class="bzRow"><b>📨 שני טפסים לשלוח לשי</b><small>🔴 עוד לא נשלח · 🟠 מצב המתנה · ✅ מולא. הצבע מתעדכן לבד כשהוא פותח וממלא.</small></div>'
+    +shaiFormBtn('form3-shai','form3','📝 טופס השלמות, 11 שאלות קצרות')
+    +shaiFormBtn('setup-shai','setup','🔌 דף החיבורים: מייל, פגישות, יומן')
+    +'<div class="bzSec">👀 לראות לפני ששולחים</div>'
     // 3.11, Itzik: "אני רוצה לראות את הקובץ, תכין לי אחד בשבילי". Copies that save nothing and report nothing.
     +'<button type="button" class="yb" data-bz="anim" data-f="shai-form3-view.html">👀 טופס ההשלמות, תצוגה בשבילך</button>'
     +'<button type="button" class="yb" data-bz="anim" data-f="shai-setup-view.html">👀 דף החיבורים, תצוגה בשבילך</button>'
-    +'<button type="button" class="yb yb2" data-bz="setup-shai">🔌 דף החיבורים לשי: לשלוח לו, אחרי חתימה</button>'
+    +'<a class="yb" href="https://form.it-solution.co.il/q/a9cf9d55064a85b58583/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 ההצעה לשי, כמו שהוא רואה אותה</a>'
+    +'<div class="bzSec">🖥️ מה שכבר קיים אצל שי</div>'
     +'<a class="yb yb2" href="https://shai.it-solution.co.il/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">🖥️ המוניטור של שי</a>'
+    +'<button type="button" class="yb yb2" data-bz="sign-shai">✍️ הצעת המחיר לשי, נשלחה (לשלוח שוב)</button>'
     +'<button type="button" class="yb yb2" data-bz="form2-shai">📋 טופס המידע לשי, כבר מולא ✓</button>'
-    +'<a class="yb yb2" href="https://form.it-solution.co.il/q/a9cf9d55064a85b58583/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 ההצעה לשי, כמו שהוא רואה אותה</a>'
-    +'<button type="button" class="yb yb2" data-bz="sign-shai">✍️ הצעת מחיר לשי: לשלוח לחתימה בטלפון</button>'
     ;
   }
   // 3.11, Itzik: "הזמנה לשחר", a message he can send in WhatsApp or by mail. The words of the post on the site.
@@ -16683,7 +16700,7 @@ function bizSheet(t0){
     +'<p class="bzEmpty">הציון למעלה מ 0 עד 100, 100 זה הכי טוב. כל ליד שלא נגעו בו שבוע מוריד 8 נקודות, הצעה שלא חזרו אליה 3 ימים מורידה 12, ותזכורת שהגיעה ולא טופלה מורידה 6.</p>';
   }
   // 2.11, Itzik: a tab with something new blinks until he opens it. The stamp changes whenever something is added there.
-  var BZ_UPD={its:'20261104-sec',shachar:(D.shSum&&D.shSum.upd)||'20261103-shachar-auto'};
+  var BZ_UPD={its:'20261104-shai-forms',shachar:(D.shSum&&D.shSum.upd)||'20261103-shachar-auto'};
   function bzSeen(){try{return JSON.parse(localStorage.getItem('bzTabSeen')||'{}');}catch(x){return {};}}
   function bzTabNew(k){return !!BZ_UPD[k]&&bzSeen()[k]!==BZ_UPD[k]&&k!==tab;}
   function bzMarkSeen(k){if(!BZ_UPD[k])return;var o=bzSeen();o[k]=BZ_UPD[k];try{localStorage.setItem('bzTabSeen',JSON.stringify(o));}catch(x){}}
@@ -16722,12 +16739,14 @@ function bizSheet(t0){
      else{try{navigator.clipboard.writeText(st+' '+su);toast('הקישור לחתימה הועתק. מדביקים לשי בוואטסאפ או במייל.');}catch(x){toast(su);}}
      return;}
     // 3.11: the connections form. Shared or copied, never opened here: opening it reports "שי פתח את טופס האפיון".
-    function shareShai(u,tt,title){
-     if(navigator.share){navigator.share({title:title,text:tt,url:u}).catch(function(){});}
-     else{try{navigator.clipboard.writeText(tt+' '+u);toast('הקישור הועתק. מדביקים לשי בוואטסאפ או במייל.');}catch(x){toast(u);}}
+    function shareShai(u,tt,title,k){
+     function sent(){if(!k)return;try{var o=JSON.parse(localStorage.getItem('itsSent')||'{}');o[k]=new Date().toISOString();localStorage.setItem('itsSent',JSON.stringify(o));}catch(x){}
+      var bb=el.querySelector('#bzBody');if(bb)bb.innerHTML=body();}
+     if(navigator.share){navigator.share({title:title,text:tt,url:u}).then(sent,function(){});}
+     else{try{navigator.clipboard.writeText(tt+' '+u);toast('הקישור הועתק. מדביקים לשי בוואטסאפ או במייל.');sent();}catch(x){toast(u);}}
     }
-    if(a==='form3-shai'){shareShai('https://form.it-solution.co.il/f/15939da3cf0776f57992','שי, תודה על הטופס! נשארו רק כמה פרטים קטנים כדי שנתחיל לחבר, כמה דקות:','עוד כמה פרטים, IT Solution');return;}
-    if(a==='setup-shai'){shareShai('https://form.it-solution.co.il/s/f3d4f77d1278a2a5efdc','שי, כאן מחברים את המוניטור לכלים שלך: המייל, פיירפליס, הפייסבוק והיומן. כל לחיצה נשמרת:','חיבור המוניטור, IT Solution');return;}
+    if(a==='form3-shai'){shareShai('https://form.it-solution.co.il/f/15939da3cf0776f57992','שי, תודה על הטופס! נשארו רק כמה פרטים קטנים כדי שנתחיל לחבר, כמה דקות:','עוד כמה פרטים, IT Solution','form3');return;}
+    if(a==='setup-shai'){shareShai('https://form.it-solution.co.il/s/f3d4f77d1278a2a5efdc','שי, כאן מחברים את המוניטור לכלים שלך: המייל, הקלטות הפגישות והיומן. בכל כרטיס כתוב מה ללחוץ, וכל לחיצה נשמרת. את הפייסבוק נחבר בשלב הבא:','חיבור המוניטור, IT Solution','setup');return;}
     if(a==='form2-shai'){var f2='https://form.it-solution.co.il/f/c94dc7fa0f53147ed133',f2t='שי, כדי שנחבר את המוניטור בדיוק למה שיש לך, הכנו טופס קצר. רוב השאלות רק לסמן, כ 5 דקות:';
      if(navigator.share){navigator.share({title:'טופס חיבורים, IT Solution',text:f2t,url:f2}).catch(function(){});}
      else{try{navigator.clipboard.writeText(f2t+' '+f2);toast('הקישור לטופס הועתק. מדביקים לשי בוואטסאפ או במייל.');}catch(x){toast(f2);}}
