@@ -16670,17 +16670,14 @@ function bizSheet(t0){
     // Red: not sent. Orange: sent (marked on this device when shared) or opened and not finished. Green: filled.
     // Shared or copied, never opened here: opening reports "שי פתח".
     // 4.11, Itzik: "קודם אשלח לו את הטופס לחתימה, ואז הוא יקבל את הטופס למילוי".
-    +'<div class="bzRow"><b>📨 הסדר: קודם חתימה, אחר כך הטפסים</b><small>🔴 עוד לא נשלח · 🟠 מצב המתנה · ✅ הושלם. הצבע מתעדכן לבד כשהוא פותח, חותם וממלא.</small></div>'
+    +'<div class="bzRow"><b>📨 הסדר: קודם חתימה, אחר כך דף החיבורים</b><small>🔴 עוד לא נשלח · 🟠 מצב המתנה · ✅ הושלם. הצבע מתעדכן לבד כשהוא פותח, חותם וממלא.</small></div>'
     +shaiFormBtn('sign-shai','sign','✍️ שלב 1: הצעת המחיר והסכם השירות לחתימה')
     +'<a class="yb" href="https://form.it-solution.co.il/q/a9cf9d55064a85b58583/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לראות את ההצעה וההסכם לפני ששולחים</a>'
-    +shaiFormBtn('form3-shai','form3','📝 שלב 2, אחרי החתימה: טופס השלמות, 10 שאלות קצרות')
-    // 4.11, Itzik: "תשים לי תצוגה נפרדת". The live page in view mode: nothing saved, never marked as opened.
-    +'<a class="yb" href="https://form.it-solution.co.il/f/15939da3cf0776f57992/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לראות את טופס ההשלמות לפני ששולחים</a>'
-    +shaiFormBtn('setup-shai','setup','🔌 שלב 3: דף החיבורים: מייל, פגישות, יומן, חשבוניות, לינקדין, פייסבוק')
+    +shaiFormBtn('setup-shai','setup','🔌 שלב 2, אחרי החתימה: דף החיבורים: מייל, פגישות, יומן, חשבוניות, לינקדין, פייסבוק')
     +'<a class="yb" href="https://form.it-solution.co.il/s/f3d4f77d1278a2a5efdc/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לראות את דף החיבורים לפני ששולחים</a>'
+    // 4.11, Itzik: "תשאיר לי תמיד רק מה שמעודכן". Done items (the completion form, the info form) are gone from here.
     +'<div class="bzSec">🖥️ מה שכבר קיים אצל שי</div>'
     +'<a class="yb yb2" href="https://shai.it-solution.co.il/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">🖥️ המוניטור של שי</a>'
-    +'<button type="button" class="yb yb2" data-bz="form2-shai">📋 טופס המידע לשי, כבר מולא ✓</button>'
     ;
   }
   // 3.11, Itzik: "הזמנה לשחר", a message he can send in WhatsApp or by mail. The words of the post on the site.
