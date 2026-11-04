@@ -1376,7 +1376,7 @@ function tenantTiles(inst) {
     const [cls, title, sub] = TENANT_TILES[id];
     // data-grp by visible label: only the two labels in the groups list get one.
     const grp = { gFiles: 'home', gBiz: 'work' }[id];
-    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' || /^gBh|^gShopList$/.test(id) ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261103-view"' : '') + (id === 'gTasks' ? ' data-upd="tasks-del-1024"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' || /^gBh|^gShopList$/.test(id) ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261104-sec"' : '') + (id === 'gTasks' ? ' data-upd="tasks-del-1024"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
 }
 /*
@@ -4549,7 +4549,7 @@ ${require('./lib/home-ui.js').html}
     and no screens list (Itzik's copy). A customer with a screens list gets the
     tile from tenantTiles, only when gBiz is in that list.
   -->
-${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261103-form2b' + newestLead() + '"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
+${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261104-sec' + newestLead() + '"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
 <!--TENANT:BEGIN-->
   <!--
     A customer's home screen, built from his intake answers and not filtered
@@ -16611,6 +16611,11 @@ function bizSheet(t0){
   // Something new here? Bump BZ_UPD.its (and the gBiz data-upd) so the tab label and the tile blink.
   function itsHtml(){
    return '<div class="bzHead">💻 IT Solution</div>'
+    // 4.11, Itzik: an insurance agent asks how confidential the monitor is. A page to hand the customer.
+    +'<div class="bzSec">🔒 מוניטור ואבטחה</div>'
+    +'<a class="yb yb1" href="https://it-solution.co.il/security/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">🔒 דף אבטחת המידע ללקוח</a>'
+    +'<button type="button" class="yb" data-bz="secshare" data-k="share">📤 לשלוח ללקוח</button>'
+    +'<button type="button" class="yb" data-bz="secshare" data-k="wa">💬 בוואטסאפ</button>'
     +'<div class="bzSec">הדגמה ללקוח</div>'
     +(typeof dmoStart==='function'?'<button type="button" class="yb yb1" data-bz="demo">🎬 מצב הדגמה ללקוח</button>':'')
     +'<button type="button" class="yb" data-bz="anim" data-f="demo-script-shai.pdf">🎬 תסריט ההדגמה לשי (PDF)</button>'
@@ -16678,7 +16683,7 @@ function bizSheet(t0){
     +'<p class="bzEmpty">הציון למעלה מ 0 עד 100, 100 זה הכי טוב. כל ליד שלא נגעו בו שבוע מוריד 8 נקודות, הצעה שלא חזרו אליה 3 ימים מורידה 12, ותזכורת שהגיעה ולא טופלה מורידה 6.</p>';
   }
   // 2.11, Itzik: a tab with something new blinks until he opens it. The stamp changes whenever something is added there.
-  var BZ_UPD={its:'20261103-view',shachar:(D.shSum&&D.shSum.upd)||'20261103-shachar-auto'};
+  var BZ_UPD={its:'20261104-sec',shachar:(D.shSum&&D.shSum.upd)||'20261103-shachar-auto'};
   function bzSeen(){try{return JSON.parse(localStorage.getItem('bzTabSeen')||'{}');}catch(x){return {};}}
   function bzTabNew(k){return !!BZ_UPD[k]&&bzSeen()[k]!==BZ_UPD[k]&&k!==tab;}
   function bzMarkSeen(k){if(!BZ_UPD[k])return;var o=bzSeen();o[k]=BZ_UPD[k];try{localStorage.setItem('bzTabSeen',JSON.stringify(o));}catch(x){}}
@@ -16729,6 +16734,11 @@ function bizSheet(t0){
      return;}
     if(a==='form-shai'){var fu='https://form.it-solution.co.il/f/db3cf21b5fe4b773cc20',ft='שי, לקראת הפגישה ביום שלישי הכנו שאלון היכרות קצר, רק לסמן, 3 דקות. ככה נבנה לך הדגמה בדיוק לפי העסק שלך:';
      if(navigator.share){navigator.share({title:'שאלון היכרות',text:ft,url:fu}).catch(function(){});}else{window.open(fu,'_blank');}
+     return;}
+    if(a==='secshare'){var su='https://it-solution.co.il/security/',st='כך המוניטור של IT Solution שומר על המידע שלכם:';
+     if(t.getAttribute('data-k')==='wa'){window.open('https://wa.me/?text='+encodeURIComponent(st+'\\n'+su),'_blank');return;}
+     if(navigator.share){navigator.share({title:'אבטחת המידע במוניטור',text:st,url:su}).catch(function(){});return;}
+     try{navigator.clipboard.writeText(st+'\\n'+su).then(function(){toast('הקישור הועתק.');},function(){toast(su);});}catch(x){toast(su);}
      return;}
     if(a==='shinv'){var k=t.getAttribute('data-k'),full=SH_INV_TEXT+'\\n'+SH_INV_URL;
      if(k==='wa'){window.open('https://wa.me/?text='+encodeURIComponent(full),'_blank');return;}
