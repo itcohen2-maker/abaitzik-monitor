@@ -119,7 +119,7 @@ function page(tok, d, s, view) {
   });
   h += '<div class="tot" id="tot"></div>';
   if ((d.terms || []).length) {
-    h += '<details class="card"><summary>📋 תנאי ההצעה (' + d.terms.length + ')</summary><ol class="terms">'
+    h += '<details class="card" open><summary>📋 תנאי ההצעה (' + d.terms.length + ')</summary><ol class="terms">'
       + d.terms.map((t) => '<li>' + t + '</li>').join('') + '</ol></details>';
   }
   if (contract()) {

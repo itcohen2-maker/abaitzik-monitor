@@ -2368,7 +2368,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-04T12:45:49.093Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-04T12:48:18.215Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4248,7 +4248,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='02c846e61e';
+var CODE_ID='84d5c2cd49';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -15545,8 +15545,9 @@ function dwIcon(t,icons){
 }
 function dwCount(h,inner){
  var n=h.getAttribute('data-n');if(n!=null&&n!=='')return n;
+ var dn=inner.querySelectorAll('details').length;if(dn>0)return String(dn);
  var best=0;
- Array.prototype.forEach.call(inner.children,function(c){if(c===h||c.hidden)return;var k=c.children.length;if(k>best)best=k;});
+ (function walk(el,depth){Array.prototype.forEach.call(el.children,function(c){if(c===h||c.hidden)return;var k=c.children.length;if(k>best)best=k;if(depth<3)walk(c,depth+1);});})(inner,0);
  return best>1?String(best):'';
 }
 function drawerize(box,o){
@@ -15571,7 +15572,8 @@ function drawerize(box,o){
   var inner=d.querySelector('.dwIn');
   var n=d.nextSibling;inner.appendChild(h);
   while(n&&!(n.tagName==='H3')){var nx=n.nextSibling;inner.appendChild(n);n=nx;}
-  D.push({d:d,h:h,inner:inner,ic:ic,title:title,hue:hue});
+  var sh='';var shorts=o.short||{};for(var sk in shorts){if(t.indexOf(sk)===0)sh=shorts[sk];}
+  D.push({d:d,h:h,inner:inner,ic:ic,title:title,hue:hue,short:sh||title.split(/[,:]/)[0]});
  });
  function sync(){
   var vis=[];
@@ -15590,7 +15592,7 @@ function drawerize(box,o){
   want.forEach(function(x){
    var k=document.createElement('button');k.type='button';k.className='dwKey pop';k.style.setProperty('--h',x.hue);
    k.innerHTML='<i></i><b></b><small></small>';
-   k.querySelector('i').textContent=x.ic;k.querySelector('b').textContent=x.c||'•';k.querySelector('small').textContent=x.title;
+   k.querySelector('i').textContent=x.ic;k.querySelector('b').textContent=x.c||'•';k.querySelector('small').textContent=x.short;
    k.setAttribute('aria-label',x.title+(x.c?' '+x.c:''));
    k.onclick=function(){x.d.open=true;setTimeout(function(){try{x.d.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){x.d.scrollIntoView();}},40);};
    x.k=k;keys.appendChild(k);
@@ -15615,6 +15617,7 @@ function drawerize(box,o){
 boot('drawers',function(){
  drawerize(document.getElementById('rivBox'),{key:'riv',
   icons:{'בדיקת לקוח':'🔎','מי חייב כסף':'💸','צ׳קים עתידיים':'🧾','צ׳קים שנגבו':'✅','נרשם כאן בנפרד':'📒','נכנס לבנק':'🏦','לאן הלך הכסף':'📊','שים לב':'⚠️','דף לשיתוף':'🔗'},
+  short:{'מי חייב כסף':'חייבים','צ׳קים עתידיים':'צ׳קים','צ׳קים שנגבו':'נגבו','נרשם כאן בנפרד':'בנפרד','נכנס לבנק':'בלי קבלה','לאן הלך הכסף':'לאן הלך','דף לשיתוף':'ליואל'},
   hints:{'מי חייב כסף':'לקוח לקוח, עם החשבוניות','דף לשיתוף':'הדף ליואל, לשליחה בוואטסאפ'}});
 });
 
