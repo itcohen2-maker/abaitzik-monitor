@@ -137,6 +137,7 @@ function leadTexts() {
 const LEAD_BOX_JS = String.raw`<style>
 #leadBox{grid-column:1/-1;background:#fff;color:#0f1b2a;border:3px solid #ea4335;border-radius:14px;padding:10px;margin:6px 0}
 #leadBox[hidden]{display:none}
+#leadBox:empty{display:none}
 #leadBox .lbCard{border-bottom:1px solid #e5e7eb;padding:8px 0}
 #leadBox .lbCard:last-child{border-bottom:0}
 #leadBox .lbAt{font-size:13px;color:#555}
