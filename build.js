@@ -5176,8 +5176,6 @@ ${require('./lib/activity-ui.js').html}
 <!--ITZIK:BEGIN-->
 <section id="pL2" hidden>
  <h2>הנהלת חשבונות</h2>
- <!-- 4.11.2026: the early repayment form of loan 13 (May, Bank Hapoalim) to sign on the phone, docsign.js. Comes off when both signed. -->
- <a href="https://wa.me/?text=%D7%99%D7%95%D7%90%D7%9C%2C%20%D7%A6%D7%A8%D7%99%D7%9A%20%D7%90%D7%AA%20%D7%94%D7%97%D7%AA%D7%99%D7%9E%D7%94%20%D7%A9%D7%9C%D7%9A%20%D7%A2%D7%9C%20%D7%98%D7%95%D7%A4%D7%A1%20%D7%94%D7%A4%D7%99%D7%A8%D7%A2%D7%95%D7%9F%20%D7%94%D7%9E%D7%95%D7%A7%D7%93%D7%9D%20%D7%A9%D7%9C%20%D7%94%D7%9C%D7%95%D7%95%D7%90%D7%94%2013%20%D7%91%D7%91%D7%A0%D7%A7%20%D7%94%D7%A4%D7%95%D7%A2%D7%9C%D7%99%D7%9D.%20%D7%A4%D7%95%D7%AA%D7%97%D7%99%D7%9D%2C%20%D7%A0%D7%95%D7%92%D7%A2%D7%99%D7%9D%20%D7%91%D7%AA%D7%90%D7%A8%D7%99%D7%9A%20%D7%95%D7%91%D7%A9%D7%A2%D7%94%2C%20%D7%97%D7%95%D7%AA%D7%9E%D7%99%D7%9D%20%D7%91%D7%90%D7%A6%D7%91%D7%A2%20%D7%95%D7%9C%D7%95%D7%97%D7%A6%D7%99%D7%9D%20%D7%97%D7%AA%D7%99%D7%9E%D7%94%20%D7%95%D7%A9%D7%9C%D7%99%D7%97%D7%94%3A%0Ahttps%3A//form.it-solution.co.il/d/d311480a824255ffc9f1" target="_blank" rel="noopener" style="display:block;background:#25d366;color:#0f1b2a;border-radius:16px;padding:14px 16px;margin:0 0 14px;text-decoration:none;font:900 18px Heebo,sans-serif">✅ חתמת. עכשיו: לשלוח ליואל בוואטסאפ<small style="display:block;font:500 14px Heebo,sans-serif;margin-top:3px">נגיעה פותחת וואטסאפ עם ההודעה והקישור שלו, בוחרים את יואל ושולחים</small></a>
  <div class="rivtalk" id="rivTalk"></div>
  <div class="hint" id="rivWait">טוען את הנתונים...</div>
  <div id="rivBox" hidden>
