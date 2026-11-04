@@ -180,7 +180,7 @@ test('the red button and the push both land on the one answers screen', () => {
   assert.ok(html.includes("document.getElementById('newBtn').onclick=function(){"));
   assert.ok(html.includes("  openAnswers(n?'fresh':'all',true);"));
   assert.ok(html.includes('function openAnswers(filter,wipe){'));
-  assert.ok(html.includes("if(location.hash==='#new'||location.hash==='#chat'){\n  pane('a');renderAnswers();landPane('pA');\n }"));
+  assert.ok(html.includes("if(location.hash==='#new'||location.hash==='#chat'||ansOnly){\n  pane('a');renderAnswers();landPane('pA');\n }"));
   assert.ok(!html.includes("onclick=function(){pane('m');markChatSeen();"), 'no tab may open the chat screen');
   assert.ok(html.includes('<em class="badge latest">האחרונה שהגיעה</em>'));
   assert.ok(html.includes('.badge.latest{'));

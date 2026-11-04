@@ -2499,7 +2499,6 @@ ${require('./lib/activity-ui.js').css}
 ${require('./lib/home-ui.js').css}
 ${inst.name === 'abaitzik' ? require('./lib/demo-mode.js').css : ''}${inst.bizHome ? require('./lib/biz-home.js').css : ''}
 ${require('./lib/skins-ui.js').css}
-${require('./lib/worlds-ui.js').css}
 ${pushUi.css}
 .toast .toast-x{display:block;margin-top:8px;font:500 12.5px Heebo,sans-serif;opacity:.85}
 .undobar{position:fixed;z-index:81;inset-inline:12px;bottom:calc(76px + env(safe-area-inset-bottom));
@@ -4606,7 +4605,6 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <button type="button" class="skb" data-skin="dark">לילה</button>
  </div>
 </div>
-${require('./lib/skins-ui.js').html}
 ${inst.name !== 'abaitzik' ? require('./lib/profile-ui.js').entry() : ''}
 <!--
   This closing tag was missing.
@@ -20717,8 +20715,6 @@ on('gActLog',function(){pane('Lg');renderActLog();return false;});
 ${require('./lib/home-ui.js').js}
 ${inst.name === 'abaitzik' ? require('./lib/demo-mode.js').js : ''}${inst.bizHome ? require('./lib/biz-home.js').js : ''}${inst.name !== 'abaitzik' ? require('./lib/shop-list.js').js : ''}
 ${require('./lib/skins-ui.js').js}
-${require('./lib/worlds-ui.js').js}
-boot('worlds',worldSync);
 boot('design',dzBoot);
 ${pushUi.js(pushKey())}
 boot('ask',renderAsk);
