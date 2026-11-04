@@ -167,6 +167,7 @@ function handlePost(b, notify, ip, ua, done) {
   st.doneAt = new Date().toISOString(); saveState(dir, st);
   render(f, (e) => {
     if (e) { delete st.doneAt; saveState(dir, st); notify('חתימה על מסמך', 'כולם חתמו על "' + def.title + '", אבל הפקת ה PDF נכשלה: ' + e.message); return done({ status: 200, body: { ok: true } }); }
+    execFile('node', [path.join(__dirname, 'push.js'), 'docsign: ' + (def.out || 'signed')], { cwd: __dirname, timeout: 180000 }, () => {});
     notify('חתימה על מסמך', 'כל החתימות התקבלו על "' + def.title + '". אחרון חתם ' + me.name + ' (' + date + ', ' + time + ').\nהמסמך החתום: files/' + def.out + '\nאפשר לשלוח אותו למאי בבנק.');
     done({ status: 200, body: { ok: true } });
   });
