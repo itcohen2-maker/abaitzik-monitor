@@ -108,6 +108,8 @@ function main() {
   // between 16:00 and 08:00 (Meta receipts of 1.11 and 2.11 were never printed). This pass
   // looks back three days and remembers each receipt uid for good, so none is missed or doubled.
   const billNote = billsPass();
+  // 4.11.2026: mail asking to leave Shachar's list is added to unsub in data/shachar/state.json (lib/shachar-unsub.js).
+  try { require('./lib/shachar-unsub.js').scan(ROOT); } catch (e) { console.error('shachar unsub failed:', String(e.message || e).slice(0, 300)); }
   const k = fresh.length;
   if (k === 0) {
     if (billNote) say(now, state, `בדיקת מייל ${state.n} (${hm(now)}):${billNote}`, 'בדיקת מייל', 'חשבוניות');
