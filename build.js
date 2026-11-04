@@ -4300,7 +4300,7 @@ ${require('./lib/home-ui.js').html}
   -->
   <!-- The reports tile came off on 17.9. The reports are in "תשובות" now,
        which is the one button he asked for. -->
-  <button type="button" class="gt g8" data-grp="money" id="gLolos" data-upd="20261104-piraon"><b>🧾 הנהלת חשבונות</b><small>מי חייב כסף ומאיזה חודש</small></button>
+  <button type="button" class="gt g8" data-grp="money" id="gLolos" data-upd="20261104-piraon-yoel"><b>🧾 הנהלת חשבונות</b><small>מי חייב כסף ומאיזה חודש</small></button>
   <!-- 4.11.2026, Itzik: no bank tile, not here and not for customers. He connects the bank through Claude in the terminal; the monitor is only where he gets updates. -->
   <button type="button" class="gt g8" data-grp="home" id="gVaad"><b>🏠 ועד הבית</b><small>מי שילם ומה פתוח</small></button>
   <button type="button" class="gt g15" data-grp="money" id="gSale" data-upd="lawyer-docs-1018"><b>⚖️ מכירת לולוס</b><small>התיק לעורך הדין, מה פתוח ומה נמסר</small></button>
@@ -5171,7 +5171,7 @@ ${require('./lib/activity-ui.js').html}
 <section id="pL2" hidden>
  <h2>הנהלת חשבונות</h2>
  <!-- 4.11.2026: the early repayment form of loan 13 (May, Bank Hapoalim) to sign on the phone, docsign.js. Comes off when both signed. -->
- <a href="https://form.it-solution.co.il/d/27ac78de038e809af8ed" target="_blank" rel="noopener" style="display:block;background:#06b6d4;color:#0f1b2a;border-radius:16px;padding:14px 16px;margin:0 0 14px;text-decoration:none;font:900 18px Heebo,sans-serif">✍️ לחתימה שלך: פירעון מוקדם, הלוואה 13<small style="display:block;font:500 14px Heebo,sans-serif;margin-top:3px">בנק הפועלים, 15,615.09 ₪. אחרי שתחתום יגיע הקישור ליואל</small></a>
+ <a href="https://wa.me/?text=%D7%99%D7%95%D7%90%D7%9C%2C%20%D7%A6%D7%A8%D7%99%D7%9A%20%D7%90%D7%AA%20%D7%94%D7%97%D7%AA%D7%99%D7%9E%D7%94%20%D7%A9%D7%9C%D7%9A%20%D7%A2%D7%9C%20%D7%98%D7%95%D7%A4%D7%A1%20%D7%94%D7%A4%D7%99%D7%A8%D7%A2%D7%95%D7%9F%20%D7%94%D7%9E%D7%95%D7%A7%D7%93%D7%9D%20%D7%A9%D7%9C%20%D7%94%D7%9C%D7%95%D7%95%D7%90%D7%94%2013%20%D7%91%D7%91%D7%A0%D7%A7%20%D7%94%D7%A4%D7%95%D7%A2%D7%9C%D7%99%D7%9D.%20%D7%A4%D7%95%D7%AA%D7%97%D7%99%D7%9D%2C%20%D7%A0%D7%95%D7%92%D7%A2%D7%99%D7%9D%20%D7%91%D7%AA%D7%90%D7%A8%D7%99%D7%9A%20%D7%95%D7%91%D7%A9%D7%A2%D7%94%2C%20%D7%97%D7%95%D7%AA%D7%9E%D7%99%D7%9D%20%D7%91%D7%90%D7%A6%D7%91%D7%A2%20%D7%95%D7%9C%D7%95%D7%97%D7%A6%D7%99%D7%9D%20%D7%97%D7%AA%D7%99%D7%9E%D7%94%20%D7%95%D7%A9%D7%9C%D7%99%D7%97%D7%94%3A%0Ahttps%3A//form.it-solution.co.il/d/d311480a824255ffc9f1" target="_blank" rel="noopener" style="display:block;background:#25d366;color:#0f1b2a;border-radius:16px;padding:14px 16px;margin:0 0 14px;text-decoration:none;font:900 18px Heebo,sans-serif">✅ חתמת. עכשיו: לשלוח ליואל בוואטסאפ<small style="display:block;font:500 14px Heebo,sans-serif;margin-top:3px">נגיעה פותחת וואטסאפ עם ההודעה והקישור שלו, בוחרים את יואל ושולחים</small></a>
  <div class="rivtalk" id="rivTalk"></div>
  <div class="hint" id="rivWait">טוען את הנתונים...</div>
  <div id="rivBox" hidden>
