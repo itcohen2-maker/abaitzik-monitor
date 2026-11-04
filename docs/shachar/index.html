@@ -110,11 +110,11 @@ https://abaitzik.com/shachar</p>
   </section>
 
   <section id="newtester">
-    <h2>הזמנה ידנית, לא חובה</h2>
-    <p class="sub">רק למי שלא נרשם באתר. מי שנרשם באתר מוזמן לבד.</p>
-    <p class="sub" id="how" hidden>לחיצה אחת מאשרת את המייל ושולחת לנסיין את המכתב.</p>
+    <h2>שליחת הזמנה לחבר, לא חובה</h2>
+    <p class="sub">רק למי שלא נרשם באתר בעצמו. מי שנרשם באתר מקבל הזמנה לבד.</p>
+    <p class="sub" id="how" hidden>לחיצה אחת מאשרת את המייל ושולחת לחבר את המכתב.</p>
     <div class="card">
-      <label for="email" style="margin-top:0">מייל של הנסיין</label>
+      <label for="email" style="margin-top:0">מייל של החבר</label>
       <input class="ltr" id="email" type="email" inputmode="email" autocomplete="off" autocapitalize="off" placeholder="name@example.com">
       <label for="note">הערה (לא חובה)</label>
       <input id="note" type="text" autocomplete="off">
@@ -123,7 +123,7 @@ https://abaitzik.com/shachar</p>
       <details style="margin-top:6px">
         <summary class="meta" style="min-height:44px;display:flex;align-items:center;cursor:pointer">לערוך את המכתב</summary>
         <label for="su">נושא</label>
-        <input id="su" type="text" value="הזמנה לנסות את שחר">
+        <input id="su" type="text" value="הזמנה לשחר">
         <label for="bd">המכתב</label>
         <textarea id="bd">הי,
 
@@ -149,9 +149,9 @@ https://abaitzik.com/shachar</p>
   </section>
 
   <section id="tester">
-    <h2>הודעה לנסיין בוואטסאפ</h2>
+    <h2>הודעה לחבר בוואטסאפ</h2>
     <div class="card">
-      <p id="tsText" style="margin:0;white-space:pre-line">היי, אתה מהנסיינים הראשונים של שחר 🌅
+      <p id="tsText" style="margin:0;white-space:pre-line">היי, רציתי לשתף אותך בשחר 🌅
 שחר זה משהו שאני בונה: מקום רגוע לדבר בו, ששולח לך כל בוקר הודעה קטנה שמרימה. זה פתוח עכשיו, כל אחד נכנס עם המייל שלו.
 
 ככה נכנסים:
@@ -161,7 +161,7 @@ https://abaitzik.com/shachar</p>
 4. פותחים את שחר מהאייקון ומאשרים התראות, ככה הודעת הבוקר תקפוץ לך על המסך
 
 וזה מה שאני באמת צריך ממך: תגיד לי בכנות מה עבד, מה הרגיש מוזר ומה היית משנה.</p>
-      <button type="button" class="btn main wide" id="tsShare">שליחה לנסיין</button>
+      <button type="button" class="btn main wide" id="tsShare">שליחה לחבר</button>
       <div class="acts">
         <a class="btn" id="tsWa" href="#">וואטסאפ</a>
         <a class="btn" id="tsMsgr" href="fb-messenger://share/?link=https%3A%2F%2Fshachar.abaitzik.com">מסנג׳ר</a>
@@ -197,7 +197,7 @@ https://abaitzik.com/shachar</p>
     <div id="usDays" class="usBars"></div>
     <h2>14 הימים האחרונים</h2>
     <div id="usDaily" class="usBars"></div>
-    <h2>כל נסיין</h2>
+    <h2>כל מי שנכנס</h2>
     <div id="usUsers"></div>
   </section>
   <style>
@@ -235,7 +235,7 @@ https://abaitzik.com/shachar</p>
     }
     window.renderUs=function(u){
       if(!on)return;
-      if(!u){document.getElementById('usSum').innerHTML='<p class="empty">עוד אין נתונים. הספירה התחילה ב 1.11 בערב, ברגע שנסיין ייכנס זה יופיע כאן.</p>';return;}
+      if(!u){document.getElementById('usSum').innerHTML='<p class="empty">עוד אין נתונים. הספירה התחילה ב 1.11 בערב, ברגע שמישהו ייכנס זה יופיע כאן.</p>';return;}
       document.getElementById('usSum').innerHTML='<div class="usK">'
         +'<div><b>'+u.users+'</b>נסיינים שנכנסו</div>'
         +'<div><b>'+u.active7+'</b>נכנסו השבוע</div>'
@@ -254,7 +254,7 @@ https://abaitzik.com/shachar</p>
         return '<div class="usU"><div class="e">'+esc(x.email)+'</div><div class="m">'
           +x.visits+' כניסות ב '+x.days+' ימים · '+mins(x.minutes)+' · '+x.messages+' הודעות<br>'
           +'נכנס לראשונה '+esc(when(x.firstAt))+' · לאחרונה '+esc(when(x.lastAt))+'</div></div>';
-      }).join(''):'<p class="empty">עוד אף נסיין לא נכנס.</p>';
+      }).join(''):'<p class="empty">עוד אף אחד לא נכנס.</p>';
     };
   })();
   </script>
@@ -288,7 +288,7 @@ https://abaitzik.com/shachar</p>
     function when(iso){var d=new Date(iso);return isNaN(d)?'':d.toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'});}
     window.renderFb=function(f){
       if(!on)return;
-      if(!f){document.getElementById('fbSum').innerHTML='<p class="empty">עוד אין משוב. ברגע שנסיין יכתוב, זה יופיע כאן.</p>';return;}
+      if(!f){document.getElementById('fbSum').innerHTML='<p class="empty">עוד אין משוב. ברגע שמישהו יכתוב, זה יופיע כאן.</p>';return;}
       var w=f.week||{},a=f.all||{};
       document.getElementById('fbSum').innerHTML='<div class="fbK">'
         +'<div><b>'+(w.helpedPct==null?'אין':w.helpedPct+'%')+'</b>תשובות שעזרו השבוע</div>'
@@ -301,7 +301,7 @@ https://abaitzik.com/shachar</p>
         var head=r.kind==='rating'?(r.rating===1?'👍 התשובה עזרה':'👎 התשובה לא עזרה'):r.kind==='question'?'❓ '+esc(r.question):'✍️ הערה';
         return '<div class="fbR'+(r.kind==='rating'&&r.rating===-1?' down':'')+'"><div class="m">'+esc(r.email)+' · '+esc(when(r.at))+'</div><div class="t">'+head+'</div>'
           +(r.text?'<div class="t">"'+esc(r.text)+'"</div>':'')
-          +(r.asked?'<div class="q">הנסיין כתב: '+esc(r.asked)+'</div>':'')
+          +(r.asked?'<div class="q">מי שנכנס כתב: '+esc(r.asked)+'</div>':'')
           +(r.answer?'<div class="q">שחר ענה: '+esc(r.answer)+'</div>':'')+'</div>';
       }).join(''):'<p class="empty">עוד אין משוב.</p>';
     };
@@ -419,7 +419,7 @@ https://abaitzik.com/shachar</p>
 
  function render(){
   $('wlAt').textContent=D.waitlistAt?'עודכן '+day(D.waitlistAt):'עוד לא נטען';
-  $('how').textContent=D.mailAuto?'לחיצה אחת מאשרת את המייל ושולחת לנסיין את המכתב מהכתובת של שחר.':'לחיצה אחת מאשרת את המייל ופותחת בג׳ימייל את המכתב, ורק נשאר ללחוץ שליחה.';
+  $('how').textContent=D.mailAuto?'לחיצה אחת מאשרת את המייל ושולחת לחבר את המכתב מהכתובת של שחר.':'לחיצה אחת מאשרת את המייל ופותחת בג׳ימייל את המכתב, ורק נשאר ללחוץ שליחה.';
   $('go').textContent=D.mailAuto?'להזמין ולשלוח מכתב':'להזמין ולפתוח מכתב';
   // 3.11, Itzik: "גליל ארוך שאין לי מה לעשות איתו". Only who still waits is a card; who was
   // already invited folds into one closed line, opened only when he wants it.
