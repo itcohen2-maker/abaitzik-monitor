@@ -20481,7 +20481,10 @@ boot('welcome',function(){
  // 30.10.2026 (idea "ברכה ריקה"): three steps, and the notifications button right
  // here, so nobody has to install the ntfy app to hear an answer.
  var text=(INSTANCE&&INSTANCE.welcome)||'ברוכים הבאים למוניטור של אבא איציק';
- var steps=['1. שמרו את המוניטור במסך הבית: באייפון שיתוף ואז "הוספה למסך הבית", באנדרואיד תפריט ואז "התקנת אפליקציה".',
+ // 4.11.2026, Itzik: Shai has an iPhone, no need to write about Android. Only his phone kind (intake phone).
+ var ph=INSTANCE&&INSTANCE.phone;
+ var save=ph==='ios'?'באייפון: שיתוף ואז "הוספה למסך הבית".':ph==='android'?'תפריט ואז "התקנת אפליקציה".':'באייפון שיתוף ואז "הוספה למסך הבית", באנדרואיד תפריט ואז "התקנת אפליקציה".';
+ var steps=['1. שמרו את המוניטור במסך הבית: '+save,
   '2. הפעילו התראות מכאן, בלחיצה אחת. כך כל תשובה קופצת לטלפון, בלי אפליקציה נוספת.',
   '3. שלחו הודעה ראשונה, למשל: "צלמי בד ובקשי שלושה צבעים שמתאימים לו".'];
  var pbtn=(typeof PUSH_KEY!=='undefined'&&PUSH_KEY)
