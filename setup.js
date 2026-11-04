@@ -15,7 +15,10 @@
       done?:   "label of the done button",
       input?:  { label, placeholder?, hint? }  3.11: the client pastes a key (Gmail app password,
                                                Fireflies API key). Saved only in <token>.secrets.json
-                                               (mode 600), never shown back, never sent in a report. } ] }
+                                               (mode 600), never shown back, never sent in a report.
+      ms?:     { button }                      4.11: Microsoft 365 calendar by device code (ms-cal.js).
+                                               The page shows a code, the client approves at Microsoft,
+                                               the refresh token is saved like a secret. } ] }
   data/setup/<token>.json      { steps: { id: { choice?, done?, got? } }, openedAt, updatedAt, finishedAt }
 */
 const fs = require('fs');
@@ -33,14 +36,14 @@ function saveSecret(tok, id, v) {
   o[id] = { value: v, at: new Date().toISOString() };
   fs.writeFileSync(f + '.tmp', JSON.stringify(o, null, 1), { mode: 0o600 }); fs.renameSync(f + '.tmp', f); fs.chmodSync(f, 0o600);
 }
-function complete(st, s) { const x = (s.steps || {})[st.id] || {}; return st.input ? !!x.got : (st.done ? !!x.done : (st.choose ? !!x.choice : false)); }
+function complete(st, s) { const x = (s.steps || {})[st.id] || {}; return (st.input || st.ms) ? !!x.got : (st.done ? !!x.done : (st.choose ? !!x.choice : false)); }
 
 function summary(d, s) {
   const NL = '\n';
   let t = 'דף הקמה: ' + d.client + NL;
   d.steps.forEach((st) => {
     const x = (s.steps || {})[st.id] || {};
-    t += (complete(st, s) ? '✓ ' : '○ ') + st.title + (x.choice ? ': ' + x.choice : '') + (x.got ? ' (המפתח התקבל)' : '') + NL;
+    t += (complete(st, s) ? '✓ ' : '○ ') + st.title + (x.choice ? ': ' + x.choice : '') + (x.got ? (st.ms ? ' (מחובר' + (x.who ? ': ' + x.who : '') + ')' : ' (המפתח התקבל)') : '') + NL;
   });
   return t;
 }
@@ -57,6 +60,12 @@ function card(st, i, s) {
     + (st.input.hint ? '<p class="ih">' + esc(st.input.hint) + '</p>' : '')
     + '<div class="ir"><input type="text" dir="ltr" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="' + esc(st.input.placeholder || '') + '"><button type="button" class="sv">שמירה</button></div>'
     + '<p class="ig">' + (x.got ? '✓ התקבל ונשמר במקום מאובטח. כדי להחליף, להדביק שוב.' : '') + '</p></div>';
+  if (st.ms) h += '<div class="ms" data-got="' + (x.got ? 1 : 0) + '">'
+    + '<button type="button" class="msb">' + esc(x.got ? 'לחבר מחדש' : (st.ms.button || 'חיבור היומן')) + '</button>'
+    + '<div class="msc" hidden><div class="cp"><span>הקוד שלך:</span><b dir="ltr" class="msk"></b><button type="button" class="cpb" data-v="">העתקה</button></div>'
+    + '<a class="lk msl" href="https://microsoft.com/devicelogin" target="_blank" rel="noopener">פתיחת מסך האישור של מיקרוסופט ↗</a>'
+    + '<p class="ih">שם מדביקים את הקוד, נכנסים עם המייל של ה 365 ולוחצים אישור. הדף הזה יסמן ✓ לבד.</p></div>'
+    + '<p class="ig">' + (x.got ? '✓ היומן מחובר' + (x.who ? ' (' + esc(x.who) + ')' : '') : '') + '</p></div>';
   if (st.done) h += '<button type="button" class="dn' + (x.done ? ' on' : '') + '">' + (x.done ? '✓ ' : '') + esc(st.done) + '</button>';
   return h + '</section>';
 }
@@ -88,6 +97,7 @@ function page(tok, d, s) {
     + '.in{background:#f1f5f9;border-radius:12px;padding:10px 12px;margin:0 0 10px}.in .cq{margin:0 0 6px}.ih{font:500 13px/1.5 Heebo;color:#4a5a6e;margin:0 0 8px}'
     + '.ir{display:flex;gap:8px}.ir input{flex:1;min-width:0;border:1.5px solid #cbd5e1;border-radius:10px;padding:10px;font:500 16px monospace;background:#fff}'
     + '.sv{border:0;border-radius:10px;background:#0f1b2a;color:#fff;font:700 15px Heebo;padding:0 16px;min-height:44px;cursor:pointer}.ig{font:600 13.5px Heebo;color:#0e7490;margin:8px 0 0}'
+    + '.msb{display:block;width:100%;border:0;border-radius:14px;background:#0f1b2a;color:#fff;font:800 16px Heebo;padding:13px;cursor:pointer;min-height:48px;margin:0 0 10px}.msk{font:900 24px monospace!important;letter-spacing:3px!important}'
     + '.fin{display:block;width:100%;border:0;border-radius:16px;background:#0f1b2a;color:#fff;font:800 18px Heebo;padding:16px;margin-top:8px;cursor:pointer}'
     + '.saved{font:500 13px Heebo;color:#6b7c90;text-align:center;margin-top:10px}'
     + '.thanks{display:none;text-align:center;padding:60px 20px}.thanks b{display:block;font:900 26px Heebo;margin-bottom:8px}.thanks p{font:400 16px/1.6 Heebo;color:#24364b}'
@@ -102,12 +112,19 @@ function page(tok, d, s) {
     + 'function post(o){o.t=T;return fetch("/api/setup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(o)}).then(function(r){if(!r.ok)throw 0;return r.json();});}'
     + 'function msg(t){document.getElementById("saved").textContent=t;}'
     + 'function paint(){var n=C.filter(function(c){return c.classList.contains("ok");}).length;document.getElementById("bar").style.width=Math.round(n/C.length*100)+"%";document.getElementById("cnt").textContent=n+" מתוך "+C.length+" מוכנים";}'
-    + 'function ok(c){var dn=c.querySelector(".dn"),inp=c.querySelector(".in");c.classList.toggle("ok",inp?inp.getAttribute("data-got")==="1":(dn?dn.classList.contains("on"):!!c.querySelector(".op.on")));paint();}'
+    + 'function ok(c){var dn=c.querySelector(".dn"),inp=c.querySelector(".in")||c.querySelector(".ms");c.classList.toggle("ok",inp?inp.getAttribute("data-got")==="1":(dn?dn.classList.contains("on"):!!c.querySelector(".op.on")));paint();}'
     + 'C.forEach(function(c){var id=c.getAttribute("data-id");c.addEventListener("click",function(e){'
     + 'var b=e.target.closest(".op");if(b){c.querySelectorAll(".op.on").forEach(function(x){if(x!==b)x.classList.remove("on");});b.classList.add("on");ok(c);post({id:id,choice:b.textContent}).then(function(){msg("נשמר ✓");},function(){msg("אין חיבור כרגע. נסו שוב בעוד רגע.");});return;}'
     + 'var p=e.target.closest(".cpb");if(p){var v=p.getAttribute("data-v");(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(function(){p.textContent="הועתק ✓";},function(){p.textContent=v;});return;}'
     + 'var sv=e.target.closest(".sv");if(sv){var box=c.querySelector(".in"),f=box.querySelector("input"),g=box.querySelector(".ig"),v=f.value.trim();if(!v){g.textContent="צריך להדביק קודם";return;}sv.disabled=true;g.textContent="שומר...";'
     + 'post({id:id,secret:v}).then(function(){f.value="";box.setAttribute("data-got","1");g.textContent="✓ התקבל ונשמר במקום מאובטח. כדי להחליף, להדביק שוב.";sv.disabled=false;ok(c);msg("נשמר ✓");},function(){sv.disabled=false;g.textContent="לא נשמר. נסו שוב בעוד רגע.";});return;}'
+    + 'var mb=e.target.closest(".msb");if(mb){var mx=c.querySelector(".ms"),mg=mx.querySelector(".ig"),mc=mx.querySelector(".msc");mb.disabled=true;mg.textContent="מבקש קוד ממיקרוסופט...";'
+    + 'post({id:id,ms:"start"}).then(function(r){mb.disabled=false;if(!r.code){mg.textContent=r.error==="notready"?"החיבור למיקרוסופט ייפתח בקרוב. נעדכן אותך.":"לא התקבל קוד. נסו שוב בעוד רגע.";return;}'
+    + 'mx.querySelector(".msk").textContent=r.code;mx.querySelector(".msc .cpb").setAttribute("data-v",r.code);mx.querySelector(".msc .cpb").textContent="העתקה";mx.querySelector(".msl").href=r.url;mc.hidden=false;mg.textContent="מחכה לאישור שלך במיקרוסופט (הקוד תקף "+r.minutes+" דקות)...";'
+    + 'var w=setInterval(function(){post({id:id,ms:"poll"}).then(function(q){if(q.status==="pending")return;clearInterval(w);'
+    + 'if(q.status==="ok"){mc.hidden=true;mx.setAttribute("data-got","1");mb.textContent="לחבר מחדש";mg.textContent="✓ היומן מחובר"+(q.who?" ("+q.who+")":"");ok(c);msg("נשמר ✓");}'
+    + 'else{mc.hidden=true;mg.textContent=q.status==="expired"?"הקוד פג. לוחצים שוב לקבלת קוד חדש.":(q.status==="declined"?"האישור בוטל. אפשר לנסות שוב.":"מיקרוסופט לא אישרה. ייתכן שמנהל ה 365 צריך לאשר. נעדכן אותך.");}},function(){});},5000);'
+    + '},function(){mb.disabled=false;mg.textContent="אין חיבור כרגע. נסו שוב בעוד רגע.";});return;}'
     + 'var d=e.target.closest(".dn");if(d){var on=!d.classList.contains("on");d.classList.toggle("on",on);d.textContent=(on?"✓ ":"")+d.textContent.replace(/^✓ /,"");ok(c);post({id:id,done:on}).then(function(){msg("נשמר ✓");},function(){msg("אין חיבור כרגע. נסו שוב בעוד רגע.");});}'
     + '});});'
     + 'document.getElementById("fin").onclick=function(){var b=this;b.disabled=true;b.textContent="שולח...";post({finish:true}).then(function(){document.body.classList.add("sent");window.scrollTo(0,0);},function(){b.disabled=false;b.textContent="לא נשלח, לנסות שוב";});};'
@@ -140,6 +157,7 @@ function handlePost(b, notify) {
   }
   const st = d.steps.find((x) => x.id === b.id);
   if (!st) return { status: 400, body: { error: 'step' } };
+  if (st.ms && (b.ms === 'start' || b.ms === 'poll')) return msStep(tok, d, st, b.ms, notify);
   const x = s.steps[st.id] = s.steps[st.id] || {};
   if (typeof b.choice === 'string' && st.choose && st.choose.options.indexOf(b.choice) > -1) x.choice = b.choice;
   if (typeof b.done === 'boolean' && st.done) x.done = b.done;
@@ -150,6 +168,24 @@ function handlePost(b, notify) {
   }
   s.updatedAt = now; s.reported = false; saveState(tok, s);
   return { status: 200, body: { ok: true } };
+}
+
+// 4.11: the calendar card. Returns a Promise; wa-bridge resolves it.
+function msStep(tok, d, st, what, notify) {
+  const ms = require('./ms-cal.js');
+  if (what === 'start') return ms.start(tok).then((r) => ({ status: 200, body: r }), () => ({ status: 200, body: { error: 'ms' } }));
+  return ms.poll(tok).then((r) => {
+    if (r.status === 'ok') {
+      saveSecret(tok, st.id, JSON.stringify(r.tokens));
+      const s = state(tok); s.steps = s.steps || {};
+      const x = s.steps[st.id] = s.steps[st.id] || {};
+      x.got = new Date().toISOString(); x.who = r.who || '';
+      s.updatedAt = x.got; s.reported = false; saveState(tok, s);
+      notify('דף הקמה', d.client + ': היומן של מיקרוסופט חובר' + (r.who ? ' (' + r.who + ')' : '') + '.');
+    }
+    if (r.status === 'error') notify('דף הקמה', d.client + ': חיבור היומן נכשל במיקרוסופט: ' + (r.detail || '') + '. ייתכן שצריך אישור של מנהל ה 365 שלו.');
+    return { status: 200, body: { status: r.status, who: r.who || '' } };
+  }, () => ({ status: 200, body: { status: 'pending' } }));
 }
 
 // Every notify wakes a worker round, so taps are not reported one by one: only
