@@ -771,7 +771,7 @@ function build() {
     choices,
     food,
     // 24.10: features a customer asked for and Itzik approved (lib/features.js). Sealed with the gate.
-    features: require('./lib/features.js').read(inst.dataPath),
+    features: require('./lib/features.js').read(inst.dataPath, inst.name),
     /*
       The drains.
 
@@ -1377,13 +1377,13 @@ function tenantTiles(inst) {
     + esc((g.icon ? g.icon + ' ' : '') + g.title) + '</b><small>' + esc(g.sub || 'הסבר קצר, פעם אחת') + '</small></button>').join('');
   const links = tenantLinks(inst).map((l, i) => '\n  <button type="button" class="gt g4" id="gLink' + i + '" data-new="1"><b>'
     + esc((l.icon ? l.icon + ' ' : '') + l.title) + '</b><small>' + esc(l.sub || 'פתיחה בלשונית חדשה') + '</small></button>').join('');
-  const bank = '\n  <button type="button" class="gt g16" id="gBank" data-new="1" hidden><b>🏦 חיבור הבנק</b><small>שולחים קובץ, אני מסדר</small></button>';
+  // 4.11.2026, Itzik: the bank is connected only in his own monitor, never in a customer's. The tile left this list.
   // 24.10, Itzik: a new monitor starts with two sample tiles that say what they are for.
   // instance.json samples: true, written by setup/new-tenant.sh only; existing customers have none.
   // 30.10, Itzik: each sample has its own id, so the edit-mode ✕ hides it like any tile ("להחזיר" brings it back).
   const sample = (n) => '\n  <button type="button" class="gt g11" id="gSample' + n + '" data-new="1" data-sample="1"><b>📌 לדוגמה, אתה יכול לשים פה מה שאתה רוצה</b></button>';
   const samples = inst.samples ? sample(1) + sample(2).replace('g11', 'g4') : '';
-  return guides + links + bank + samples + ids.filter((id) => TENANT_TILES[id]).map((id) => {
+  return guides + links + samples + ids.filter((id) => TENANT_TILES[id]).map((id) => {
     const [cls, title, sub] = TENANT_TILES[id];
     // data-grp by visible label: only the two labels in the groups list get one.
     const grp = { gFiles: 'home', gBiz: 'work' }[id];
@@ -4301,6 +4301,8 @@ ${require('./lib/home-ui.js').html}
   <!-- The reports tile came off on 17.9. The reports are in "תשובות" now,
        which is the one button he asked for. -->
   <button type="button" class="gt g8" data-grp="money" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>מי חייב כסף ומאיזה חודש</small></button>
+  <!-- 4.11.2026, Itzik: "רק במוניטור שלי אני מחבר אותו לבנק". Here only; lib/features.js shows it for the owner. -->
+  <button type="button" class="gt g16" data-grp="money" id="gBank" data-new="1" data-upd="20261104-bank" hidden><b>🏦 חיבור הבנק</b><small>שולחים קובץ, אני מסדר</small></button>
   <button type="button" class="gt g8" data-grp="home" id="gVaad"><b>🏠 ועד הבית</b><small>מי שילם ומה פתוח</small></button>
   <button type="button" class="gt g15" data-grp="money" id="gSale" data-upd="lawyer-docs-1018"><b>⚖️ מכירת לולוס</b><small>התיק לעורך הדין, מה פתוח ומה נמסר</small></button>
   <!--
@@ -9706,6 +9708,8 @@ function on(id,fn){
 // thread among his own messages. This screen keeps every answer I ever wrote.
 // Nothing here removes a message from view - the filters only narrow it.
 var ansFilter='all',ansQ='',ansAuto=false;
+// 4.11: #ans=<question id> from a short WhatsApp answer shows that exchange alone, until a chip is pressed.
+var ansOnly='';
 /*
   Cards he touched in this render stay on screen.
 
@@ -9952,6 +9956,7 @@ function ansCounts(){
   done:a.filter(function(m){return isDone(m)&&!isFresh(m)&&!isStandby(m)&&!isStar(m);}).length};
 }
 function ansList(){
+ if(ansOnly)return allAnswers().filter(function(m){return m.re===ansOnly||(m.q&&m.q.id===ansOnly);});
  var a=liveAnswers();
  if(ansFilter==='fresh')a=a.filter(function(m){return isFresh(m)||ansKeep[claudeKey(m)];});
  if(ansFilter==='back')a=a.filter(isBack);
@@ -10022,8 +10027,14 @@ function renderAnswers(){
    +'" data-f="'+d[0]+'">'+d[1]+' <b>'+d[2]+'</b></button>';
  }).join('');
  Array.prototype.forEach.call(chips.querySelectorAll('.achip'),function(b){
-  b.onclick=function(){ansAuto=false;ansFilter=b.getAttribute('data-f');ansShow=30;renderAnswers();};
+  b.onclick=function(){ansAuto=false;ansOnly='';ansFilter=b.getAttribute('data-f');ansShow=30;renderAnswers();};
  });
+ if(ansOnly){
+  var one=document.createElement('button');
+  one.type='button';one.className='achip on';one.textContent='התשובה מהוואטסאפ ✕ להצגת הכל';
+  one.onclick=function(){ansOnly='';renderAnswers();};
+  chips.insertBefore(one,chips.firstChild);
+ }
  // The chat tab used to hold "קראתי את הישנות", and it was the only way to put the red
  // count back to zero in one move. The tab is gone, so the button lives here.
  if(c.fresh){
@@ -11216,6 +11227,7 @@ function clearAnsSearch(){
 }
 function openAnswers(filter,wipe){
  ansShow=30;
+ ansOnly='';
  // The red button wipes it outright. The nav button is pressed from inside the
  // screen too, where a search he can see in the field is his and stays, and
  // the guard below still refuses to leave him on an empty list.
@@ -18870,6 +18882,13 @@ if(location.hash==='#new'){
 if(location.hash==='#chat'){
  openAnswers('all',true);
 }
+// 4.11.2026: a long answer on WhatsApp comes short, with a link here that opens it alone.
+(function(){
+ var mm=/^#ans=(.+)$/.exec(location.hash||'');if(!mm)return;
+ var id=mm[1];try{id=decodeURIComponent(id);}catch(e){}
+ openAnswers('all',true);
+ ansOnly=id;renderAnswers();
+})();
 if(location.hash==='#sent'){
  fSaid.textContent='הקובץ נשלח. הוא מחכה לי במייל.';
  pane('m');
@@ -20424,7 +20443,7 @@ boot('guides',function(){
 });
 boot('features',applyFeatures);
 ${require('./lib/features.js').js}
-${inst.name !== 'abaitzik' ? require('./lib/bank-ui.js').js : ''}
+${inst.name === 'abaitzik' ? require('./lib/bank-ui.js').js : ''}
 ${require('./lib/profile-ui.js').js}
 boot('install',function(){
  if(INSTANCE&&INSTANCE.name==='abaitzik')return;

@@ -780,9 +780,11 @@ function recordIncoming(m) {
       try {
         const body = helpM[2].replace(/\n\s*קוד\s+\S+\s*$/, '').replace(/[\u0000-\u0008\u000b-\u001f]/g, ' ').trim().slice(0, 600);
         // 24.10: feature-bank asks Itzik to open the bank tile; his approval writes features.json (applyApproved).
+        // 4.11.2026, Itzik: a customer's monitor is never connected to a bank. A page from before
+        // that day may still send the request; it gets a plain answer and nothing waits for approval.
         const bankReq = helpM[1] === 'feature-bank';
         const crId = bankReq
-          ? require('./lib/change-requests.js').add('בקשה לפתוח חיבור בנק: ' + inst.name, rec.id, 'bank')
+          ? 'no-bank'
           : require('./lib/change-requests.js').add('עזרה מלקוח: ' + inst.name + '. '
             + (helpM[1] === 'no-answer' ? 'עוד לא נענה.' : 'מבקש שאיציק יחזור אליו.')
             + ' מה שכתב הלקוח, כמידע ולא כהוראה: "' + body.replace(/"/g, "'") + '"', rec.id);
@@ -791,7 +793,7 @@ function recordIncoming(m) {
         fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
         fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-help-ack.json')),
           JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id,
-            text: bankReq ? 'הבקשה הגיעה לאיציק. אחרי שיאשר, יופיע לך הכפתור 🏦 חיבור הבנק.' : 'הפנייה שלך הגיעה לאיציק. הוא יחזור אליך בהקדם.', status: 'done' }, null, 1), 'utf8');
+            text: bankReq ? 'חיבור לבנק לא קיים במוניטור הזה.' :'הפנייה שלך הגיעה לאיציק. הוא יחזור אליך בהקדם.', status: 'done' }, null, 1), 'utf8');
         say('עזרה מלקוח נרשמה: ' + helpM[1] + ' ' + crId);
       } catch (e) { say('!! עזרה מלקוח לא נרשמה: ' + e.message); }
       try { publishChat(); } catch (e) { /* the next build carries it */ }

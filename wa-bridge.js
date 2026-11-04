@@ -86,7 +86,7 @@ function req(method, url, headers, body) {
 }
 
 // Publish into the monitor exactly as the page does: first line the kind, then the text, then the code.
-async function toMonitor(kind, text) {
+async function toMonitor(kind, text, re) {
   /*
     1.11, 19:22: ntfy.sh answered 429 (the server's daily allowance ran out) and
     both WhatsApp and the demo box stopped. The bridge runs on the same machine
@@ -103,19 +103,72 @@ async function toMonitor(kind, text) {
   const id = 'wa-' + at.getTime().toString(36) + crypto.randomBytes(3).toString('hex');
   const rec = { at: at.toISOString(), from: 'itzik', text: kind + String.fromCharCode(10) + text, status: 'working',
     ackAt: at.toISOString(), id: id, auto: true, via: 'wa-bridge' };
+  // 4.11: a quoted reply continues its thread on the page (monitor-chat-threads-re).
+  if (re) rec.re = re;
   fs.mkdirSync(CHAT, { recursive: true });
   fs.writeFileSync(path.join(CHAT, name + '.tmp'), JSON.stringify(rec, null, 1), 'utf8');
   fs.renameSync(path.join(CHAT, name + '.tmp'), path.join(CHAT, name));
   return id;
 }
 
-async function waSend(to, text) {
+// Returns Meta's id of the sent message (wamid). With mem, the id is remembered
+// (lib/wa-out.js), so a reply that quotes this message continues mem.re.
+async function waSend(to, text, mem) {
   const c = cfg();
   const body = JSON.stringify({ messaging_product: 'whatsapp', to: to, type: 'text', text: { preview_url: true, body: String(text).slice(0, 4000) } });
   const r = await req('POST', 'https://graph.facebook.com/' + (c.graph || 'v21.0') + '/' + c.phoneId + '/messages',
     { Authorization: 'Bearer ' + c.token, 'Content-Type': 'application/json' }, Buffer.from(body, 'utf8'));
   if (r.status !== 200) throw new Error('graph ' + r.status + ' ' + r.body.toString('utf8').slice(0, 300));
-  return true;
+  let id = ''; try { id = JSON.parse(r.body.toString('utf8')).messages[0].id; } catch (e) {}
+  if (mem && id) { try { waOut.remember(DATA, id, mem); } catch (e) { log('remember failed: ' + e.message); } }
+  return id || true;
+}
+
+/*
+  4.11.2026, the plan after the Instinct comparison. WhatsApp is the front door,
+  the monitor is where everything is seen. So:
+
+  A long answer comes as its opening and a link straight to it on the monitor
+  (#ans=<question id>, build.js), never as a wall of text. "הכל" sends the
+  whole of the last long answer here after all.
+
+  A reply that quotes one of my messages (m.context.id) continues that thread:
+  the new record carries re = the question it continues, and the quoted text
+  goes along so the session knows what "this" is. A message with no quote opens
+  a new task, as before.
+*/
+const waOut = require('./lib/wa-out.js');
+const DATA = path.join(ROOT, 'data');
+const LONG = 700;
+function pageUrl() {
+  try { return require('./lib/instance.js').publicUrl || ''; } catch (e) { return ''; }
+}
+function shortOf(text, re) {
+  const t = String(text || '').trim();
+  if (t.length <= LONG) return null;
+  const first = t.split(/\n\s*\n/)[0];
+  let s = first.length > 380 ? first.slice(0, 380) : first;
+  if (s.length < first.length) {
+    const cut = Math.max(s.lastIndexOf('. '), s.lastIndexOf('.\n'), s.lastIndexOf('? '));
+    s = cut > 120 ? s.slice(0, cut + 1) : s.replace(/\s+\S*$/, '') + '…';
+  }
+  const url = pageUrl();
+  return s + '\n\n' + (url ? 'התשובה המלאה במוניטור: ' + url + '#ans=' + encodeURIComponent(re) + '\n' : '')
+    + 'או כתוב "הכל" ואשלח אותה כאן.';
+}
+function isAllCommand(t) { return /^\s*(?:הכל|את הכל|הכול|שלח הכל|תשלח הכל|את כל התשובה|כל התשובה|המשך)[.!]*\s*$/.test(String(t || '')); }
+async function sendLongParts(to, text, mem) {
+  // WhatsApp takes 4096 characters; long answers go in parts, cut on a paragraph.
+  let rest = String(text || '');
+  while (rest.length) {
+    let part = rest;
+    if (rest.length > 3800) {
+      const cut = rest.lastIndexOf('\n\n', 3800);
+      part = rest.slice(0, cut > 1000 ? cut : 3800);
+    }
+    await waSend(to, part, mem);
+    rest = rest.slice(part.length).replace(/^\s+/, '');
+  }
 }
 
 async function voiceText(mediaId) {
@@ -265,6 +318,8 @@ async function onMessage(m, contactName) {
   const allow = (cfg().allow || []).map(String);
   if (allow.indexOf(String(m.from)) < 0) { log('not on the allow list: ' + String(m.from).slice(0, 5) + '...'); return; }
   markRead(m.id);
+  // 4.11: Meta's 24 hour window opens with his message; lib/wa-out.js reads this.
+  { const sl = loadState(); sl.lastIn = sl.lastIn || {}; sl.lastIn[m.from] = Date.now(); saveState(sl); }
   // 1.11, for Shai's demo: "summarize meetings and send tasks", by voice, on WhatsApp.
   // The voice note is downloaded from Meta, transcribed with the monitor's own transcribe.js,
   // and goes on as text, exactly like a typed message.
@@ -296,14 +351,42 @@ async function onMessage(m, contactName) {
     if (sv.last[m.from]) queueVoice(m.from, sv.last[m.from]);
     return;
   }
-  const id = await toMonitor('וואטסאפ', demoOn() ? DEMO_FRAME + t : t);
+  // 4.11: "הכל" sends the whole of a long answer that came here short (the quoted one, else the last).
+  const quoted = m.context && m.context.id ? waOut.recall(DATA, m.context.id) : null;
+  if (isAllCommand(t)) {
+    const sa = loadState(); sa.long = sa.long || {};
+    const full = (quoted && quoted.re && sa.long[quoted.re]) || (sa.lastLong && sa.lastLong[m.from] && sa.long[sa.lastLong[m.from]]);
+    if (full) { await sendLongParts(m.from, full, { re: (quoted && quoted.re) || sa.lastLong[m.from], text: full.slice(0, 1500) }); return; }
+  }
+  // 4.11: a quoted reply continues that thread; the quoted text goes along as context.
+  let body = t, re = '';
+  if (quoted) {
+    re = quoted.re || '';
+    body = 'בהמשך להודעה שלך בוואטסאפ: "' + String(quoted.text || '').replace(/\s+/g, ' ').slice(0, 400) + '"' + String.fromCharCode(10) + t;
+  } else {
+    // Not quoted, but the last thing here was the monitor speaking first (the daily
+    // message or an alert): a short answer like "תטפל בליד" is about that.
+    const lastOwn = latestOwn(m.from);
+    if (lastOwn && (lastOwn.kind === 'daily' || lastOwn.kind === 'alert') && Date.now() - lastOwn.at < 12 * 3600e3) {
+      body = t + String.fromCharCode(10, 10) + '(ההקשר: ההודעה האחרונה שהמוניטור שלח לו בוואטסאפ, ביוזמתו: "' + String(lastOwn.text || '').replace(/\s+/g, ' ').slice(0, 600) + '")';
+    }
+  }
+  const id = await toMonitor('וואטסאפ', demoOn() ? DEMO_FRAME + body : body, re);
   const s2 = loadState();
   s2.pending[id] = { to: m.from, at: Date.now(), name: contactName || '' };
+  if (re) s2.pending[id].re = re;
   // A question that itself asks to be read ("ותקריא לי", "בהקראה") gets this one answer as voice.
   if (/(?:תקריא|תקריאי|הקרא|תקרא|בהקראה|בקול|הודעה קולית)/.test(t)) s2.pending[id].voice = true;
   saveState(s2);
-  log('in ' + m.id + ' -> ntfy-' + id);
-  await waSend(m.from, '✓ קיבלתי, אני עובד על זה. התשובה תגיע לכאן.');
+  log('in ' + m.id + ' -> ntfy-' + id + (re ? ' (continues ' + re + ')' : ''));
+  await waSend(m.from, re ? '✓ קיבלתי, ממשיך מאותה שיחה. התשובה תגיע לכאן.' : '✓ קיבלתי, אני עובד על זה. התשובה תגיע לכאן.');
+}
+// The newest message the monitor itself sent to this number (lib/wa-out.js keeps them).
+function latestOwn(to) {
+  let j = {}; try { j = JSON.parse(fs.readFileSync(path.join(DATA, 'status', 'wa-out.json'), 'utf8')); } catch (e) { return null; }
+  let best = null;
+  Object.keys(j).forEach(function (k) { const r = j[k]; if (r && (!best || r.at > best.at)) best = r; });
+  return best;
 }
 
 // The answers: claude's chat records that answer a message that came from WhatsApp.
@@ -325,7 +408,17 @@ function sweep() {
     const to = st.pending[d.re].to;
     const s5 = loadState(); s5.last = s5.last || {}; s5.last[to] = d.text; saveState(s5);
     const asVoice = !!((s5.voice && s5.voice[to]) || st.pending[d.re].voice);
-    (asVoice ? queueVoice(to, d.text, true) : waSend(to, d.text)).then(function () {
+    // 4.11: the thread a quoted reply continues is the question's own thread (its re), else the question.
+    const root = st.pending[d.re].re || d.re;
+    const short = asVoice ? null : shortOf(d.text, d.re);
+    if (short) {
+      const sl = loadState(); sl.long = sl.long || {}; sl.lastLong = sl.lastLong || {};
+      sl.long[d.re] = d.text; sl.lastLong[to] = d.re;
+      const lk = Object.keys(sl.long); if (lk.length > 30) lk.slice(0, lk.length - 30).forEach(function (k) { delete sl.long[k]; });
+      saveState(sl);
+    }
+    const mem = { re: root, text: d.text.slice(0, 1500) };
+    (asVoice ? queueVoice(to, d.text, true) : waSend(to, short || d.text, mem)).then(function () {
       log('out ' + f + ' -> ' + d.re + (asVoice ? ' (voice)' : ''));
     })
       .catch(function (e) { log('send failed ' + f + ': ' + e.message); const s3 = loadState(); delete s3.sent[f]; saveState(s3); });
@@ -334,6 +427,34 @@ function sweep() {
   const s4 = loadState(); let ch = false;
   Object.keys(s4.pending).forEach(function (k) { if (Date.now() - s4.pending[k].at > 6 * 3600e3) { delete s4.pending[k]; ch = true; } });
   if (ch) saveState(s4);
+}
+
+/*
+  4.11.2026: one number per monitor.
+
+  Itzik's bridge is the only one Meta talks to (wa.abaitzik.com/webhook). Each
+  customer's monitor runs its own wa-bridge.js on its own port, as its own user,
+  with its own data/wa.json (its phoneId, its token, its owner on allow). Itzik's
+  data/wa.json lists them:  "routes": { "<phone_number_id>": { "port": 8811, "tenant": "shai" } }
+  The raw body goes on unchanged with Meta's signature, so the customer's bridge
+  checks it with the same app secret. Each bridge acts only on its own number:
+  what is not its own is either routed (Itzik's) or dropped, never mixed.
+  Set up with setup/wa-tenant.sh <tenant>.
+*/
+function route(pid) {
+  let c = {}; try { c = cfg(); } catch (e) { return 'unknown'; }
+  if (!pid || !c.phoneId || pid === String(c.phoneId)) return 'mine';
+  return c.routes && c.routes[pid] ? 'other' : 'unknown';
+}
+function forward(pid, raw, sig) {
+  const r = (cfg().routes || {})[pid];
+  const x = http.request({ method: 'POST', hostname: '127.0.0.1', port: r.port, path: '/webhook',
+    headers: { 'Content-Type': 'application/json', 'Content-Length': raw.length, 'X-Hub-Signature-256': sig || '' } }, function (res) {
+    res.resume(); log('routed to ' + (r.tenant || r.port) + ': ' + res.statusCode);
+  });
+  x.on('error', function (e) { log('!! route to ' + (r.tenant || r.port) + ' failed: ' + e.message); });
+  x.setTimeout(10000, function () { x.destroy(new Error('timeout')); });
+  x.end(raw);
 }
 
 function readBody(q, max) {
@@ -447,9 +568,16 @@ const server = http.createServer(function (q, s) {
     if (!sigOk(raw, q.headers['x-hub-signature-256'])) { log('bad signature'); s.writeHead(401); return s.end(); }
     s.writeHead(200); s.end('ok');
     let d; try { d = JSON.parse(raw.toString('utf8')); } catch (e) { return; }
+    const forwarded = {};
     (d.entry || []).forEach(function (e) {
       (e.changes || []).forEach(function (c) {
         const v = c.value || {};
+        // 4.11: every customer on their own number. Meta sends all numbers to this one webhook;
+        // a message to another number goes to that customer's own bridge, never into this monitor.
+        const pid = String((v.metadata && v.metadata.phone_number_id) || '');
+        const dest = route(pid);
+        if (dest === 'other') { if (!forwarded[pid]) { forwarded[pid] = 1; forward(pid, raw, q.headers['x-hub-signature-256']); } return; }
+        if (dest === 'unknown') { if ((v.messages || []).length) log('message for an unknown number ' + pid.slice(0, 6) + '..., dropped'); return; }
         const name = v.contacts && v.contacts[0] && v.contacts[0].profile && v.contacts[0].profile.name;
         (v.messages || []).forEach(function (m) { onMessage(m, name).catch(function (err) { log('message failed: ' + err.message); }); });
       });
@@ -463,4 +591,4 @@ if (require.main === module) {
   setInterval(function () { try { require('./forms.js').sweep(formNotify); } catch (e) { log('forms sweep: ' + e.message); } }, 60000);
   setInterval(function () { try { require('./setup.js').sweep(formNotify); } catch (e) { log('setup sweep: ' + e.message); } }, 60000);
 }
-module.exports = { textOf, sigOk, voiceCommand, speakable };
+module.exports = { textOf, sigOk, voiceCommand, speakable, shortOf, isAllCommand, route };
