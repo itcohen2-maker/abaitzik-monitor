@@ -1378,7 +1378,7 @@ function tenantTiles(inst) {
     const [cls, title, sub] = TENANT_TILES[id];
     // data-grp by visible label: only the two labels in the groups list get one.
     const grp = { gFiles: 'home', gBiz: 'work' }[id];
-    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' || /^gBh|^gShopList$/.test(id) ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261104-views"' : '') + (id === 'gTasks' ? ' data-upd="tasks-del-1024"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' || /^gBh|^gShopList$/.test(id) ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261104-contract"' : '') + (id === 'gTasks' ? ' data-upd="tasks-del-1024"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
 }
 /*
@@ -16625,6 +16625,11 @@ function bizSheet(t0){
   }
   function itsHtml(){
    return '<div class="bzHead">💻 IT Solution</div>'
+    // 4.11, Itzik: "אני צריך חוזה מול לקוח". One service agreement for every client, signed inside the quote page, before any build.
+    +'<div class="bzSec">📜 חוזה ללקוח</div>'
+    +'<a class="yb yb1" href="https://form.it-solution.co.il/terms" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">📜 הסכם השירות הכללי, גרסה 1.0</a>'
+    +'<button type="button" class="yb" data-bz="anim" data-f="it-solution-contract-1.0.pdf">📄 ההסכם כ PDF</button>'
+    +'<div class="bzRow"><b>✍️ הלקוח חותם על ההסכם בתוך דף ההצעה</b><small>חתימה אחת על ההצעה וההסכם, ותשלום ההקמה. רק אחרי זה דף החיבורים ותחילת הבנייה. ה PDF החתום כולל את ההסכם המלא.</small></div>'
     // 4.11, Itzik: an insurance agent asks how confidential the monitor is. A page to hand the customer.
     +'<div class="bzSec">🔒 מוניטור ואבטחה</div>'
     // 4.11: two pages to send a customer. Share asks for whom, so the link carries ?r=<name> and the counter knows who opened (and if it was forwarded).
@@ -16706,7 +16711,7 @@ function bizSheet(t0){
     +'<p class="bzEmpty">הציון למעלה מ 0 עד 100, 100 זה הכי טוב. כל ליד שלא נגעו בו שבוע מוריד 8 נקודות, הצעה שלא חזרו אליה 3 ימים מורידה 12, ותזכורת שהגיעה ולא טופלה מורידה 6.</p>';
   }
   // 2.11, Itzik: a tab with something new blinks until he opens it. The stamp changes whenever something is added there.
-  var BZ_UPD={its:'20261104-shai-forms',shachar:(D.shSum&&D.shSum.upd)||'20261103-shachar-auto'};
+  var BZ_UPD={its:'20261104-contract',shachar:(D.shSum&&D.shSum.upd)||'20261103-shachar-auto'};
   function bzSeen(){try{return JSON.parse(localStorage.getItem('bzTabSeen')||'{}');}catch(x){return {};}}
   function bzTabNew(k){return !!BZ_UPD[k]&&bzSeen()[k]!==BZ_UPD[k]&&k!==tab;}
   function bzMarkSeen(k){if(!BZ_UPD[k])return;var o=bzSeen();o[k]=BZ_UPD[k];try{localStorage.setItem('bzTabSeen',JSON.stringify(o));}catch(x){}}
