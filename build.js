@@ -8435,7 +8435,7 @@ function renderNew(){
  // The block knows when the red one is live, so the button under it can step
  // further back exactly then and not be in the way of the thumb.
  var blk=document.getElementById('newBlock');
- if(blk)blk.classList.toggle('hasnew',c>0);
+ if(blk)blk.classList.toggle('hasnew',tot>0);
  document.getElementById('nbCount').textContent=tot?tot:'✓';
  // Said in words as well as in colour. He told me a colour blind person would
  // not notice the old marking at all, and he was right.
