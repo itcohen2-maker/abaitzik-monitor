@@ -4299,7 +4299,7 @@ ${require('./lib/home-ui.js').html}
   -->
   <!-- The reports tile came off on 17.9. The reports are in "תשובות" now,
        which is the one button he asked for. -->
-  <button type="button" class="gt g8" data-grp="money" id="gLolos"><b>🧾 הנהלת חשבונות</b><small>מי חייב כסף ומאיזה חודש</small></button>
+  <button type="button" class="gt g8" data-grp="money" id="gLolos" data-upd="20261104-piraon"><b>🧾 הנהלת חשבונות</b><small>מי חייב כסף ומאיזה חודש</small></button>
   <!-- 4.11.2026, Itzik: no bank tile, not here and not for customers. He connects the bank through Claude in the terminal; the monitor is only where he gets updates. -->
   <button type="button" class="gt g8" data-grp="home" id="gVaad"><b>🏠 ועד הבית</b><small>מי שילם ומה פתוח</small></button>
   <button type="button" class="gt g15" data-grp="money" id="gSale" data-upd="lawyer-docs-1018"><b>⚖️ מכירת לולוס</b><small>התיק לעורך הדין, מה פתוח ומה נמסר</small></button>
@@ -5169,6 +5169,8 @@ ${require('./lib/activity-ui.js').html}
 <!--ITZIK:BEGIN-->
 <section id="pL2" hidden>
  <h2>הנהלת חשבונות</h2>
+ <!-- 4.11.2026: the early repayment form of loan 13 (May, Bank Hapoalim) to sign on the phone, docsign.js. Comes off when both signed. -->
+ <a href="https://form.it-solution.co.il/d/27ac78de038e809af8ed" target="_blank" rel="noopener" style="display:block;background:#06b6d4;color:#0f1b2a;border-radius:16px;padding:14px 16px;margin:0 0 14px;text-decoration:none;font:900 18px Heebo,sans-serif">✍️ לחתימה שלך: פירעון מוקדם, הלוואה 13<small style="display:block;font:500 14px Heebo,sans-serif;margin-top:3px">בנק הפועלים, 15,615.09 ₪. אחרי שתחתום יגיע הקישור ליואל</small></a>
  <div class="rivtalk" id="rivTalk"></div>
  <div class="hint" id="rivWait">טוען את הנתונים...</div>
  <div id="rivBox" hidden>

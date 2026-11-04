@@ -72,7 +72,6 @@ function page(f) {
       + '</div><script>var a=document.getElementById("again");if(a)a.onclick=function(){fetch("/api/docsign",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({tok:"' + me.tok + '",undo:true})}).then(function(){location.reload()})}</script></div></body></html>';
     return h;
   }
-  const n = nowIL();
   h += '<button class="jump" id="jump">⬇️ ישר לחתימה</button>'
     + '<div class="step"><i>1</i>קוראים את המסמך</div><p class="sub">המקום של החתימה שלך מסומן בתכלת, בעמוד ' + me.page + '.</p>';
   def.pages.forEach((p, i) => {
@@ -81,13 +80,13 @@ function page(f) {
     h += '</div>';
   });
   h += '<div class="step" id="sg"><i>2</i>תאריך, שעה וחתימה</div>'
-    + '<div class="row"><div><label for="dt">תאריך</label><input type="text" id="dt" value="' + n.date + '" inputmode="numeric"></div>'
-    + '<div><label for="tm">שעה</label><input type="text" id="tm" value="' + n.time + '" inputmode="numeric"></div></div>'
+    + '<div class="row"><div><label for="dt">תאריך</label><input type="text" id="dt" value="" placeholder="לגעת למילוי" inputmode="numeric"></div>'
+    + '<div><label for="tm">שעה</label><input type="text" id="tm" value="" placeholder="לגעת למילוי" inputmode="numeric"></div></div>'
     + '<label>חתימה</label><div class="pad"><canvas id="cv"></canvas><div class="ph" id="ph">✍️ חותמים כאן עם האצבע</div></div>'
     + '<button class="clr" id="clr">🔄 למחוק ולחתום מחדש</button>'
     + '<button class="go" id="go">✍️ חתימה ושליחה</button><div class="err" id="err"></div>'
     + '<script>(function(){var T="' + me.tok + '",inked=false;function $(i){return document.getElementById(i)}'
-    + '$("jump").onclick=function(){$("sg").scrollIntoView({behavior:"smooth"})};'
+    + 'function now(){var p={};new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Jerusalem",day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:false}).formatToParts(new Date()).forEach(function(x){p[x.type]=x.value});return{dt:p.day+"/"+p.month+"/"+p.year,tm:p.hour+":"+p.minute}}["dt","tm"].forEach(function(id){var el=$(id),fill=function(){if(!el.value.trim())el.value=now()[id]};el.addEventListener("pointerdown",fill);el.addEventListener("focus",fill)});$("jump").onclick=function(){$("sg").scrollIntoView({behavior:"smooth"})};'
     + 'var cv=$("cv"),cx=cv.getContext("2d"),dn=false;'
     + 'var fw=-1;function fit(force){var r=cv.getBoundingClientRect(),k=window.devicePixelRatio||1;if(!force&&Math.round(r.width)===fw)return;fw=Math.round(r.width);var img=inked?cv.toDataURL():null;cv.width=r.width*k;cv.height=r.height*k;cx.setTransform(k,0,0,k,0,0);cx.lineWidth=2.8;cx.lineCap="round";cx.lineJoin="round";cx.strokeStyle="#0f1b5a";if(img){var im=new Image();im.onload=function(){cx.drawImage(im,0,0,r.width,r.height)};im.src=img}}'
     + 'fit();window.addEventListener("resize",fit);'
@@ -97,7 +96,7 @@ function page(f) {
     + 'cv.addEventListener("pointerup",function(){dn=false});cv.addEventListener("pointercancel",function(){dn=false});'
     + '$("clr").onclick=function(){cx.setTransform(1,0,0,1,0,0);cx.clearRect(0,0,cv.width,cv.height);fit(true);inked=false;$("ph").style.display="flex"};'
     + '$("go").onclick=function(){var er=$("err"),dt=$("dt").value.trim(),tm=$("tm").value.trim();'
-    + 'if(dt.length<6){er.textContent="צריך למלא תאריך";return}if(tm.length<3){er.textContent="צריך למלא שעה";return}'
+    + 'if(dt.length<6){er.textContent="לגעת בתאריך כדי למלא אותו";return}if(tm.length<3){er.textContent="לגעת בשעה כדי למלא אותה";return}'
     + 'if(!inked){er.textContent="צריך לחתום עם האצבע בתוך המסגרת";return}'
     + 'er.textContent="";var g=$("go");g.disabled=true;g.textContent="שולח...";'
     + 'fetch("/api/docsign",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({tok:T,date:dt,time:tm,sig:cv.toDataURL("image/png")})})'
