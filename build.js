@@ -16764,14 +16764,6 @@ function bizSheet(t0){
 /*ITZIK:END*/
   function shacharHtml(){
    return '<div class="bzHead">🌅 שחר</div>'+shWaitHtml()
-    // 4.11 evening: light/dark switch, loading screen, reminder mail. Waiting for his approval before deploy.
-    +'<div class="bzSec">🆕 לאישור לפני עלייה: בהיר, כהה ומסך טעינה</div>'
-    +'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-light.png">01 ☀️ מצב בהיר</button>'
-    +'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-dark.png">02 🌙 מצב כהה</button>'
-    +'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-menu-switch.png">03 ☰ התפריט עם הכפתור בהיר וכהה</button>'
-    +'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-loading.png">04 🌅 מסך הטעינה: שחר כבר עולה</button>'
-    +'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-loading-dark.png">05 🌙 מסך הטעינה במצב כהה</button>'
-    +'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-reminder-mail.png">06 ✉️ מייל התזכורת</button>'
     +'<div class="bzSec">📤 הזמנה לשחר</div>'
     +'<p class="bzEmpty" style="white-space:pre-line;text-align:right">'+esc(SH_INV_TEXT)+'\\n'+SH_INV_URL+'</p>'
     +'<button type="button" class="yb" data-bz="shinv" data-k="share">📤 שליחת ההזמנה</button>'
