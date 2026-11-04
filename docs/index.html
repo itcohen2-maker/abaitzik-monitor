@@ -1286,6 +1286,7 @@ body:not(.inner) #thumbSet{display:block}
 .c-pg{background:linear-gradient(160deg,#a78bfa,#6d28d9)}
 .c-nr{background:linear-gradient(160deg,#243a6b,#0B1330)}
 .c-gcal{background:linear-gradient(160deg,#4285F4,#1a56c4)}
+.c-sh{background:linear-gradient(160deg,#243a6b,#0B1330);overflow:hidden}
 .c-th{background:linear-gradient(160deg,#8b1e3f,#3a0a1c);font-size:26px}
 .c-sl{background:linear-gradient(160deg,#f472b6,#be185d)}
 .c-its{background:linear-gradient(160deg,#06b6d4,#0a4a5a)}
@@ -2401,7 +2402,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-04T19:25:47.308Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-04T19:27:22.835Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2674,6 +2675,7 @@ try{
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M10 20V5M15 20v-6M20 20V8"/></svg></span>ניטור רשתות</a>
   <a class="ic" data-grp="proj" href="https://abaitzik.com/" target="_blank" rel="noopener" data-upd="20261104-abaname"><span class="c c-st">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c3 3 3 13 0 16M12 4c-3 3-3 13 0 16"/></svg></span>אבא איציק</a>
+  <button type="button" class="ic icNew" data-grp="proj" id="icShachar" data-new="1"><span class="c c-sh"><img src="icons/shachar.png" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover"></span>שחר</button>
   <button type="button" class="ic" data-grp="proj" id="icLand"><span class="c c-vd">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 13h5"/></svg></span>דפי נחיתה</button>
   <a class="ic" data-grp="proj" href="https://salinda-mobile.vercel.app/" target="_blank" rel="noopener"><span class="c c-sl">
@@ -4290,7 +4292,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='5633d1d00e';
+var CODE_ID='d3031fd1a9';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10248,6 +10250,7 @@ on('gNerMkt',nerSheet);
 on('gPlate',function(){try{sessionStorage.setItem('nerSend',JSON.stringify({t:NTFYIN(),c:sendCode()}));}catch(e){}location.href='plate/plate.html?v='+Date.now();});
 
 on('gShachar',function(){location.href='shachar/index.html?v='+Date.now();});
+on('icShachar',function(){location.href='shachar/index.html?v='+Date.now();});
 on('gNerStyles',function(){try{sessionStorage.setItem('nerSend',JSON.stringify({t:NTFYIN(),c:sendCode()}));}catch(e){}location.href='ner/candle.html?v='+Date.now();});
 on('gWaStatus',function(){try{sessionStorage.setItem('nerSend',JSON.stringify({t:NTFYIN(),c:sendCode()}));}catch(e){}location.href='status/index.html?v='+Date.now();});
 boot('waStatusTile',function(){

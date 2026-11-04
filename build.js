@@ -2688,6 +2688,7 @@ body:not(.inner) #thumbSet{display:block}
 /* נר. Night behind the flames, the way the site itself looks. */
 .c-nr{background:linear-gradient(160deg,#243a6b,#0B1330)}
 .c-gcal{background:linear-gradient(160deg,#4285F4,#1a56c4)}
+.c-sh{background:linear-gradient(160deg,#243a6b,#0B1330);overflow:hidden}
 /* 14.10: the theatre's round icon on a customer's home screen (instance circles). */
 .c-th{background:linear-gradient(160deg,#8b1e3f,#3a0a1c);font-size:26px}
 .c-sl{background:linear-gradient(160deg,#f472b6,#be185d)}
@@ -4498,6 +4499,8 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <!-- 4.11, Itzik: "באתר של אבא איציק תרשום אבא איציק, כל הזמן. אני מתבלבל בין האתר לאתר שלי". This is the abaitzik.com icon, so its label is the name, always. -->
   <a class="ic" data-grp="proj" href="https://abaitzik.com/" target="_blank" rel="noopener" data-upd="20261104-abaname"><span class="c c-st">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c3 3 3 13 0 16M12 4c-3 3-3 13 0 16"/></svg></span>אבא איציק</a>
+  <!-- 4.11, Itzik (voice): "שים לי אייקון של שחר". A round circle that opens the Shachar page, same as the tile in the grid. -->
+  <button type="button" class="ic icNew" data-grp="proj" id="icShachar" data-new="1"><span class="c c-sh"><img src="icons/shachar.png" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover"></span>שחר</button>
   <button type="button" class="ic" data-grp="proj" id="icLand"><span class="c c-vd">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 13h5"/></svg></span>דפי נחיתה</button>
   <a class="ic" data-grp="proj" href="https://salinda-mobile.vercel.app/" target="_blank" rel="noopener"><span class="c c-sl">
@@ -14208,6 +14211,7 @@ on('gNerMkt',nerSheet);
 on('gPlate',function(){try{sessionStorage.setItem('nerSend',JSON.stringify({t:NTFYIN(),c:sendCode()}));}catch(e){}location.href='plate/plate.html?v='+Date.now();});
 
 on('gShachar',function(){location.href='shachar/index.html?v='+Date.now();});
+on('icShachar',function(){location.href='shachar/index.html?v='+Date.now();});
 on('gNerStyles',function(){try{sessionStorage.setItem('nerSend',JSON.stringify({t:NTFYIN(),c:sendCode()}));}catch(e){}location.href='ner/candle.html?v='+Date.now();});
 on('gWaStatus',function(){try{sessionStorage.setItem('nerSend',JSON.stringify({t:NTFYIN(),c:sendCode()}));}catch(e){}location.href='status/index.html?v='+Date.now();});
 // 1.11: the status tile waves each morning (Sun to Fri, Israel date) while today has an item that is not posted and the tile was not opened today.
