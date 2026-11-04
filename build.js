@@ -12773,7 +12773,7 @@ function paintTenantsTile(){
    tile also jumps to the front of the grid until the customer is back.
  */
  b.classList.toggle('tdown',!!bad.length);
- if(c)c.classList.toggle('tdown',!!badIly.length);
+ // 4.11: the Ilay icon (c, badIly) is gone since 27.10; this line threw and stopped the rest of the repaint.
  /*
    7.10, Itzik, with a screenshot: "why do I have these bars on top? I asked
    that on top there is only the monitor." So no bar above the talk card any
