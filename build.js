@@ -16777,8 +16777,6 @@ function bizSheet(t0){
     +'<div class="bzRow"><b>📨 הסדר: קודם חתימה, אחר כך דף החיבורים</b><small>🔴 עוד לא נשלח · 🟠 מצב המתנה · ✅ הושלם. הצבע מתעדכן לבד כשהוא פותח, חותם וממלא.</small></div>'
     // 4.11, Itzik: "איפה אני יכול לקבל את מה שהוא חתם? אני רוצה לראות את זה במוניטור". Step 1 is done: the signed PDF in its place.
     +'<button type="button" class="yb yb1" data-bz="anim" data-f="quote-shai-bodek-signed.pdf" data-new="1">✅ שלב 1: שי חתם ב 4.11, ההצעה וההסכם החתומים (PDF)</button>'
-    +shaiFormBtn('setup-shai','setup','🔌 שלב 2, אחרי החתימה: דף החיבורים: מייל, פגישות, דרייב, יומן, חשבוניות, לינקדין, פייסבוק')
-    +'<a class="yb" href="https://form.it-solution.co.il/s/f3d4f77d1278a2a5efdc/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לראות את דף החיבורים לפני ששולחים</a>'
     // 4.11, Itzik: "תשאיר לי תמיד רק מה שמעודכן". Done items (the completion form, the info form) are gone from here.
     +'<div class="bzSec">🖥️ מה שכבר קיים אצל שי</div>'
     +'<a class="yb yb2" href="https://shai.it-solution.co.il/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">🖥️ המוניטור של שי</a>'
