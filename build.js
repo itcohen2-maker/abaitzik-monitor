@@ -4415,7 +4415,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
     is amirshwartz1's TikTok comment on the cake video (55 likes).
   -->
   <button type="button" class="gt gWin" data-grp="net" id="gWin" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
-  <button type="button" class="gt gReel" data-grp="net" id="gReels" data-upd="20261103-33"><b>🎬 הרילים שלי</b><small>חדש: כל סרטוני שחר מתוקנים, פתוח עכשיו</small></button>
+  <button type="button" class="gt gReel" data-grp="net" id="gReels" data-upd="20261105-it01"><b>🎬 הרילים שלי</b><small>חדש: המוניטור, וואטסאפ ולוח בקרה, לסטורי</small></button>
   <button type="button" class="gt gFut" data-grp="net" id="gFut" data-upd="20261103-futclean"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 21 איך נכנסים לאתר, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור, 08 שרירים והגיל, 09 קונטרה למינוס, 17 המבריק במדיח</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
@@ -14312,6 +14312,10 @@ var REEL_ITEMS=[
 {n:'שחר 33',t:'מודעה: ככה נראה הבוקר שלי · 4K הכי איכותי, לשמירה בגלריה',r:'reel-33-ad-morning.mp4'},
 {n:'שחר 33 כריכה',t:'הכריכה · 4K',r:'reel-33-cover.png'},
 {n:'שחר 33 פרסום',p:'sh33',t:'כיתוב, מוזיקה והאשטגים לכל רשת',r:'reel-sh33-post.txt'},
+// 5.11, Itzik: the monitor with WhatsApp and the control panel, for Instagram story and TikTok (IT Solution).
+{n:'IT 01',t:'חדש: המוניטור, וואטסאפ ולוח בקרה אחד, לסטורי באינסטגרם ובטיקטוק · הכי איכותי, לשמירה בגלריה',r:'it01-monitor-v2.mp4'},
+{n:'IT 01 כריכה',t:'הכריכה: מי לא שילם לך החודש?',r:'it01-cover.jpg'},
+{n:'IT 01 פרסום',p:'it01',t:'טקסט לסטורי באינסטגרם ולטיקטוק, עם קישור לכל רשת',r:'it01-post.txt'},
 {n:'33',t:'סוכר, מיתוס: שופך סוכר עם שייק ומדבקת מיתוס, ועד 13 סוגי סרטן · 4K הכי איכותי, לשמירה בגלריה',r:'reel-33-sugar.mp4'},
 {n:'33ב',t:'מתוקן: המדבקה עפה פנימה ונדבקת עם שייק, חצי שנייה עצירה אחרי השאלה, חולה באדום, אפסיק, הכיתוב רק כשאתה מדבר, משפטים מלאים · 4K הכי איכותי, לשמירה בגלריה',r:'reel-33b-sugar.mp4'},
 {n:'33ג',t:'מתוקן: מיתוס כחותמת דיו שנדבקת חזק עם רעד מסביב, וההוק נצבע באדום מילה אחרי מילה · 4K הכי איכותי, לשמירה בגלריה',r:'reel-33c-sugar.mp4'},
