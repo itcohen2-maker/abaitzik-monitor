@@ -90,6 +90,8 @@ test('12.10: a send held for a wrong code says so, and the history opens and clo
   const m = { from: 'unverified', status: 'held', at: '2026-10-12T13:50:00Z', text: 'הודעה קולית', heldWhy: 'wrong-code' };
   assert.match(heldProblem([m], now), /קוד שגוי/);
   assert.match(heldProblem([Object.assign({}, m, { heldWhy: undefined })], now), /בלי הקוד/);
+  // 5.11: a Shachar login held on purpose is not a fault
+  assert.equal(heldProblem([Object.assign({}, m, { heldWhy: 'login-wait' })], now), '');
   let h = history({}, ['2 הודעות מחכות'], now);
   h = history({ history: h }, ['3 הודעות מחכות'], now + 60000);
   assert.equal(h.length, 1);

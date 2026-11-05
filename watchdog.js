@@ -55,7 +55,8 @@ function refused(log) {
   return /((?<![\w-])401(?![\w-])|unauthori[sz]ed|invalid (api key|token)|oauth token (has )?expired|please run \/login)/i.test(log);
 }
 // 2.11: a Shachar waitlist signup or tester feedback is held on purpose and already rang (listen.js leadAlert), like a site lead.
-const HELD_ON_PURPOSE = new Set(['lead', 'waitlist', 'shachar-feedback']);
+// 5.11: a Shachar login that could not sign in is held and already rang (listen.js alertLoginWait); it was missing here, so it stayed an alarm for 24 hours.
+const HELD_ON_PURPOSE = new Set(['lead', 'waitlist', 'shachar-feedback', 'login-wait']);
 function heldProblem(all, now) {
   // 20.10: a site lead is held on purpose and already rang (listen.js alertLead).
   const held = all.filter((m) => m.from === 'unverified' && m.status === 'held' && !HELD_ON_PURPOSE.has(m.heldWhy)
