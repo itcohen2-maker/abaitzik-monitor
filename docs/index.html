@@ -2402,7 +2402,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-05T06:45:56.669Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-05T06:48:55.389Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4285,7 +4285,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='0827a3d2a0';
+var CODE_ID='014ced17fe';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10258,18 +10258,22 @@ on('gShachar',function(){location.href='shachar/index.html?v='+Date.now();});
 on('icShachar',function(){location.href='shachar/index.html?v='+Date.now();});
 on('gNerStyles',function(){try{sessionStorage.setItem('nerSend',JSON.stringify({t:NTFYIN(),c:sendCode()}));}catch(e){}location.href='ner/candle.html?v='+Date.now();});
 on('gWaStatus',function(){try{sessionStorage.setItem('nerSend',JSON.stringify({t:NTFYIN(),c:sendCode()}));}catch(e){}location.href='status/index.html?v='+Date.now();});
+function dailyTile(t,up){
+ function mv(){var box=t.parentNode;if(!box)return;if(up){if(box.firstElementChild!==t)box.insertBefore(t,box.firstElementChild);}else if(box.lastElementChild!==t)box.appendChild(t);}
+ mv();setTimeout(mv,700);
+}
 boot('waStatusTile',function(){
  var t=document.getElementById('gWaStatus');if(!t)return;
  var day='';try{day=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jerusalem'}).format(new Date());}catch(e){return;}
  if(new Date(day+'T12:00:00Z').getUTCDay()===6)return;
  var seenK='waStatusSeen:'+day,seen='';try{seen=localStorage.getItem(seenK)||'';}catch(e){}
- if(seen)return;
+ if(seen){dailyTile(t,false);return;}
  var posted={};try{posted=JSON.parse(localStorage.getItem('waStatusDone')||'{}')||{};}catch(e){}
  fetch('status/queue.json?v='+Date.now()).then(function(r){return r.ok?r.json():[];}).then(function(q){
   var it=(Array.isArray(q)?q:[]).find(function(x){return x.date===day;});
-  if(!it||posted[it.name])return;
-  t.classList.add('taskblink');
-  t.addEventListener('click',function(){try{localStorage.setItem(seenK,'1');}catch(e){}t.classList.remove('taskblink');});
+  if(!it||posted[it.name]){dailyTile(t,false);return;}
+  t.classList.add('taskblink');dailyTile(t,true);
+  t.addEventListener('click',function(){try{localStorage.setItem(seenK,'1');}catch(e){}t.classList.remove('taskblink');dailyTile(t,false);});
  }).catch(function(){});
 });
 function captionSheet(it){

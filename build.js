@@ -14230,19 +14230,27 @@ on('gShachar',function(){location.href='shachar/index.html?v='+Date.now();});
 on('icShachar',function(){location.href='shachar/index.html?v='+Date.now();});
 on('gNerStyles',function(){try{sessionStorage.setItem('nerSend',JSON.stringify({t:NTFYIN(),c:sendCode()}));}catch(e){}location.href='ner/candle.html?v='+Date.now();});
 on('gWaStatus',function(){try{sessionStorage.setItem('nerSend',JSON.stringify({t:NTFYIN(),c:sendCode()}));}catch(e){}location.href='status/index.html?v='+Date.now();});
+// A tile with a job for today: first in its grid while the job waits, last once done today.
+// Moved after the saved order is applied (applyOrder), so edit mode keeps its own order otherwise.
+function dailyTile(t,up){
+ function mv(){var box=t.parentNode;if(!box)return;if(up){if(box.firstElementChild!==t)box.insertBefore(t,box.firstElementChild);}else if(box.lastElementChild!==t)box.appendChild(t);}
+ mv();setTimeout(mv,700);
+}
 // 1.11: the status tile waves each morning (Sun to Fri, Israel date) while today has an item that is not posted and the tile was not opened today.
 boot('waStatusTile',function(){
  var t=document.getElementById('gWaStatus');if(!t)return;
  var day='';try{day=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jerusalem'}).format(new Date());}catch(e){return;}
  if(new Date(day+'T12:00:00Z').getUTCDay()===6)return;
  var seenK='waStatusSeen:'+day,seen='';try{seen=localStorage.getItem(seenK)||'';}catch(e){}
- if(seen)return;
+ // 5.11, Itzik: "בבוקר למעלה, אחרי שהשתמשתי, תוריד". A daily job tile is first in the grid until he
+ // opens it that day, then it goes to the end of the grid until tomorrow (dailyTile below).
+ if(seen){dailyTile(t,false);return;}
  var posted={};try{posted=JSON.parse(localStorage.getItem('waStatusDone')||'{}')||{};}catch(e){}
  fetch('status/queue.json?v='+Date.now()).then(function(r){return r.ok?r.json():[];}).then(function(q){
   var it=(Array.isArray(q)?q:[]).find(function(x){return x.date===day;});
-  if(!it||posted[it.name])return;
-  t.classList.add('taskblink');
-  t.addEventListener('click',function(){try{localStorage.setItem(seenK,'1');}catch(e){}t.classList.remove('taskblink');});
+  if(!it||posted[it.name]){dailyTile(t,false);return;}
+  t.classList.add('taskblink');dailyTile(t,true);
+  t.addEventListener('click',function(){try{localStorage.setItem(seenK,'1');}catch(e){}t.classList.remove('taskblink');dailyTile(t,false);});
  }).catch(function(){});
 });
 // 8.10 Itzik: copying the caption out of a Drive file is awkward on the phone.
