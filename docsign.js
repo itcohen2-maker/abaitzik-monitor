@@ -102,6 +102,7 @@ function page(f) {
     + 'fetch("/api/docsign",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({tok:T,date:dt,time:tm,sig:cv.toDataURL("image/png")})})'
     + '.then(function(r){return r.json()}).then(function(j){if(j.ok){location.reload()}else{throw 0}})'
     + '.catch(function(){g.disabled=false;g.textContent="✍️ חתימה ושליחה";er.textContent="השליחה לא עברה. בדוק את החיבור לאינטרנט ונסה שוב."})};'
+    + 'fetch("/api/docsign",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({tok:T,open:true})}).catch(function(){});'
     + '})();</script>';
   return h + '</div></body></html>';
 }
@@ -152,6 +153,13 @@ function handlePost(b, notify, ip, ua, done) {
   const f = find(b && b.tok);
   if (!f) return done({ status: 404, body: { ok: false } });
   const { dir, def, me, st } = f;
+  if (b.open) {
+    // 5.11 (iron rule, analytics): a signer opening the page is recorded, so "opened and did not sign" is visible.
+    const o = st.opens = st.opens || {}, now = new Date().toISOString(), x = o[me.id] = o[me.id] || { first: now, n: 0 };
+    x.n++; x.last = now; saveState(dir, st);
+    if (x.n === 1 && !st[me.id] && !st.doneAt) notify('חתימה על מסמך', me.name + ' פתח את "' + def.title + '" לחתימה.');
+    return done({ status: 200, body: { ok: true } });
+  }
   if (st.doneAt) return done({ status: 409, body: { ok: false } });
   if (b.undo) { delete st[me.id]; saveState(dir, st); return done({ status: 200, body: { ok: true } }); }
   const sig = String(b.sig || ''), date = String(b.date || '').trim().slice(0, 20), time = String(b.time || '').trim().slice(0, 10);

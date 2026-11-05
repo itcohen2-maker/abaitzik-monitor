@@ -218,6 +218,9 @@ function handlePost(b, notify, ip, ua) {
   if (!d) return { status: 404, body: { ok: false } };
   const s = state(tok); const now = new Date().toISOString();
   if (b.open) {
+    // 5.11 (iron rule, analytics): every open counts, not only the first.
+    s.opens = (s.opens || 0) + 1; s.lastOpenAt = now;
+    if (s.openedAt || s.signedAt) saveState(tok, s);
     if (!s.openedAt && !s.signedAt) { s.openedAt = now; saveState(tok, s); notify('חתימה על הצעה', d.client + ' פתח את דף החתימה על ההצעה (' + d.quoteNo + ').'); }
     return { status: 200, body: { ok: true } };
   }

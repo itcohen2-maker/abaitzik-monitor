@@ -102,6 +102,9 @@ function handlePost(b, notify) {
   const s = state(tok);
   const now = new Date().toISOString();
   if (b.open) {
+    // 5.11 (iron rule, analytics): every open counts, not only the first.
+    s.opens = (s.opens || 0) + 1; s.lastOpenAt = now;
+    if (s.openedAt) saveState(tok, s);
     if (!s.openedAt) { s.openedAt = now; saveState(tok, s); notify('טופס אפיון', d.client + ' פתח את טופס האפיון עכשיו.'); }
     return { status: 200, body: { ok: true } };
   }

@@ -162,6 +162,9 @@ function handlePost(b, notify) {
   const now = new Date().toISOString();
   const K = 'דף הקמה';
   if (b.open) {
+    // 5.11 (iron rule, analytics): every open counts, not only the first.
+    s.opens = (s.opens || 0) + 1; s.lastOpenAt = now;
+    if (s.openedAt) saveState(tok, s);
     if (!s.openedAt) { s.openedAt = now; saveState(tok, s); notify(K, d.client + ' פתח את דף ההקמה עכשיו.'); }
     return { status: 200, body: { ok: true } };
   }
