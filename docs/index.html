@@ -2402,7 +2402,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-05T14:15:00.265Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-05T14:27:57.620Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2755,14 +2755,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4292,7 +4285,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='b214327079';
+var CODE_ID='6794123d67';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12016,9 +12009,9 @@ function clalitSheet(){
 on('gClalit',clalitSheet);
 var TOM_ITEMS=[
  {h:"📣 קמפיין ממומן · כפתור צור קשר, נפתח צ׳אט"},
- {n:"1",t:"⏳ בבדיקה של מטא · מי לא שילם, בנק והנה״ח",r:"ad-monitor-gviya-bank-chat.mp4"},
- {n:"2",t:"⏳ בבדיקה של מטא · תור לרופא שיניים",r:"ad-monitor-tor-shinayim-chat.mp4"},
- {n:"3",t:"⏳ בבדיקה של מטא · שרפת קרדיטים, סרטון חדש",r:"ad-credits-v2-chat.mp4"},
+ {n:"1",t:"✅ באוויר מ 5.11 · מי לא שילם, בנק והנה״ח",r:"ad-monitor-gviya-bank-chat.mp4"},
+ {n:"2",t:"✅ באוויר מ 5.11 · תור לרופא שיניים",r:"ad-monitor-tor-shinayim-chat.mp4"},
+ {n:"3",t:"✅ באוויר מ 5.11 · שרפת קרדיטים, סרטון חדש",r:"ad-credits-v2-chat.mp4"},
  {n:"4",t:"✅ באוויר · שרפת קרדיטים, תמונה (המנצחת)",r:"ads-nov01-card9-story.mp4"},
  {n:"5",t:"✅ באוויר · קרוסלה, מה עוד נתקע לך",r:"ads-nov01-card14-story.mp4"},
  {n:"6",t:"✅ באוויר · האתר שלך מבריח לקוחות",r:"ads-nov01-card10-story.mp4"},
@@ -16603,7 +16596,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="BDlgL4lKYXBB2yk96UVlN_bNhLBppiq0K8ORV-TQ2jb7k8IMskeWYICec19xE7N5VEcCzVXZU9Pxb9e64KH8OCk";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
