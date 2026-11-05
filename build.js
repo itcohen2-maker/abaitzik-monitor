@@ -7008,6 +7008,7 @@ function goLinks(m){
  tileNames().forEach(function(x){
   if(ids.length>=3||ids.indexOf(x.id)>-1)return;
   if(bzb&&x.id==='gBiz')return;
+  if(m.skip&&m.skip.indexOf(x.id)>-1)return;
   if(t.indexOf(x.name)>-1){ids.push(x.id);names[x.id]=x.name;}
  });
  // Itzik, 1.10: "איפה זה ממוקם ולמה אין לי כפתור קח אותי לשם". A file named
@@ -12246,7 +12247,7 @@ function renderReminders(){
   return '<div class="rem'+(r.sentAt?' remsent':'')+'"><b>'+esc(r.text)+'</b>'
    +'<div class="w">'+(r.sentAt?'נשלחה '+esc(day(r.sentAt)):'תקפוץ '+esc(remWhen(r.due)))+'</div>'
    // 5.11, Itzik: a reminder that says where to go takes him there (same buttons as an answer).
-   +goLinks({text:r.text,go:r.go,from:'claude'})
+   +goLinks({text:r.text,go:r.go,from:'claude',skip:['gRemind','gRemTop']})
    +(r.nag&&Date.parse(r.due)<=Date.now()?'<button type="button" class="remdone" data-k="'+esc(remKey(r))+'">✅ עשיתי</button>':'')
    +(remHot(r)?'<button type="button" class="remknow" data-k="'+esc(remKey(r))+'">אני יודע</button>':'')
    +'<button type="button" class="remdel" data-k="'+esc(remKey(r))+'">🗑 למחוק</button>'
