@@ -4300,7 +4300,7 @@ ${require('./lib/home-ui.js').html}
 
  <div id="askBox"></div>
 <!-- 4.11, Itzik: "תעלה את האריח של העסק שלי למעלה ברשימה. למה שמת אותו אחרון?" The business grid opens the home screen. -->
-${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261105-nda2' + ndaStamp() + newestLead() + shaiSignStamp() + '"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
+${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261105-shlab' + ndaStamp() + newestLead() + shaiSignStamp() + '"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
   <!-- 3.11, Itzik: "אני צריך אריח שממש יעבב לי, כמו ליד חדש". First on the grid; shows while a --nag reminder is open, hard blink once it is due, until "✅ עשיתי". -->
@@ -16890,6 +16890,11 @@ function bizSheet(t0){
     +'<button type="button" class="yb" data-bz="shachar"><img src="icons/shachar.png" alt="" style="height:1.3em;vertical-align:-0.3em;border-radius:4px"> הדף של שחר: מי הצטרף, מכתבים והזמנה ידנית</button>'
     +'<button type="button" class="yb" data-bz="shfb">🌅 שחר: משוב מהנסיינים</button>'
     +'<button type="button" class="yb" data-bz="shus">📊 שחר: מי משתמש ומתי</button>'
+    // 5.11, Itzik: the side room of Shachar (owner only, behind his login) and exactly what to film for it.
+    +'<div class="bzSec">🏋️ החדר הצדדי, רק אתה רואה</div>'
+    +'<a class="yb" href="https://shachar.abaitzik.com/lab" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">🚪 כניסה לחדר הצדדי: כושר, צלחת ומתכונים</a>'
+    +'<button type="button" class="yb" data-bz="anim" data-f="shachar-filming.html">🎬 מה לצלם: 78 תרגילים, מסמנים וי</button>'
+    +'<p class="bzEmpty">הכניסה עם המייל שלך בשחר. מי שלא מנהל מקבל דף שלא קיים.</p>'
     +'<p class="bzEmpty">הסרטונים, הסטוריז והפוסט של שחר נמצאים באריח 🎬 הרילים שלי.</p>';
   }
   /*ITZIK:BEGIN*/

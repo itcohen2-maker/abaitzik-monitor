@@ -2402,7 +2402,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-05T21:10:01.872Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-05T21:24:01.159Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2534,7 +2534,7 @@ try{
 
 
  <div id="askBox"></div>
-<div class="grid" id="blkBiz"><button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="lead|2026-11-04T21:49:14.929Z"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button><button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261105-nda2-202611042149-s202611041308"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div><script>
+<div class="grid" id="blkBiz"><button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="lead|2026-11-04T21:49:14.929Z"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button><button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261105-shlab-202611042149-s202611041308"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div><script>
 (function(){
  var K='leadSeen';
  function seen(){try{return JSON.parse(localStorage.getItem(K)||'[]');}catch(e){return [];}}
@@ -4280,7 +4280,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='0329f5615f';
+var CODE_ID='9bdc22ca54';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12557,6 +12557,10 @@ function bizSheet(t0){
     +'<button type="button" class="yb" data-bz="shachar"><img src="icons/shachar.png" alt="" style="height:1.3em;vertical-align:-0.3em;border-radius:4px"> הדף של שחר: מי הצטרף, מכתבים והזמנה ידנית</button>'
     +'<button type="button" class="yb" data-bz="shfb">🌅 שחר: משוב מהנסיינים</button>'
     +'<button type="button" class="yb" data-bz="shus">📊 שחר: מי משתמש ומתי</button>'
+    +'<div class="bzSec">🏋️ החדר הצדדי, רק אתה רואה</div>'
+    +'<a class="yb" href="https://shachar.abaitzik.com/lab" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">🚪 כניסה לחדר הצדדי: כושר, צלחת ומתכונים</a>'
+    +'<button type="button" class="yb" data-bz="anim" data-f="shachar-filming.html">🎬 מה לצלם: 78 תרגילים, מסמנים וי</button>'
+    +'<p class="bzEmpty">הכניסה עם המייל שלך בשחר. מי שלא מנהל מקבל דף שלא קיים.</p>'
     +'<p class="bzEmpty">הסרטונים, הסטוריז והפוסט של שחר נמצאים באריח 🎬 הרילים שלי.</p>';
   }
   
