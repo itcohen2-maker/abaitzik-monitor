@@ -11,6 +11,7 @@
       id, icon, title, text,
       choose?: { q, options: [...] },          one choice
       copy?:   { label, value },               a value to copy (our business ID)
+      copies?: [ { label, value, msg? } ]      5.11: more values; msg: a Hebrew message he forwards to someone
       link?:   { label, url },                 a button that opens a page
       done?:   "label of the done button",
       input?:  { label, placeholder?, hint? }  3.11: the client pastes a key (Gmail app password,
@@ -54,7 +55,12 @@ function card(st, i, s) {
     + '<div class="hd"><span class="ic">' + esc(st.icon || '•') + '</span><h2>' + esc(st.title) + '</h2><i class="ck">✓</i></div>'
     + '<p class="tx">' + esc(st.text) + '</p>';
   if (st.choose) h += '<p class="cq">' + esc(st.choose.q) + '</p><div class="ops">' + st.choose.options.map((o) => '<button type="button" class="op' + (x.choice === o ? ' on' : '') + '">' + esc(o) + '</button>').join('') + '</div>';
-  if (st.copy) h += '<div class="cp"><span>' + esc(st.copy.label) + '</span><b dir="ltr">' + esc(st.copy.value) + '</b><button type="button" class="cpb" data-v="' + esc(st.copy.value) + '">העתקה</button></div>';
+  // 5.11: several values per card; msg: true is a Hebrew message to forward (right to left, keeps its lines).
+  [].concat(st.copy || [], st.copies || []).forEach((c) => {
+    h += c.msg
+      ? '<div class="cp cpm"><span>' + esc(c.label) + '</span><b dir="rtl">' + esc(c.value) + '</b><button type="button" class="cpb" data-v="' + esc(c.value) + '">העתקת ההודעה</button></div>'
+      : '<div class="cp"><span>' + esc(c.label) + '</span><b dir="ltr">' + esc(c.value) + '</b><button type="button" class="cpb" data-v="' + esc(c.value) + '">העתקה</button></div>';
+  });
   if (st.link) h += '<a class="lk" href="' + esc(st.link.url) + '" target="_blank" rel="noopener">' + esc(st.link.label) + ' ↗</a>';
   if (st.input) h += '<div class="in" data-got="' + (x.got ? 1 : 0) + '"><p class="cq">' + esc(st.input.label) + '</p>'
     + (st.input.hint ? '<p class="ih">' + esc(st.input.hint) + '</p>' : '')
@@ -91,6 +97,7 @@ function page(tok, d, s) {
     + '.ops{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}.op{border:1.5px solid #cbd5e1;background:#fff;color:#0f1b2a;border-radius:999px;padding:10px 15px;font:500 15px Heebo;cursor:pointer;min-height:44px}'
     + '.op.on{background:#0f1b2a;border-color:#0f1b2a;color:#fff;font-weight:700}'
     + '.cp{display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:#f1f5f9;border-radius:12px;padding:10px 12px;margin:0 0 10px}.cp span{font:500 13.5px Heebo;color:#4a5a6e}.cp b{font:800 17px Heebo;letter-spacing:.5px;flex:1}'
+    + '.cpm{display:block}.cpm span{display:block;margin-bottom:6px}.cpm b{display:block;white-space:pre-wrap;font:500 15px/1.6 Heebo!important;letter-spacing:0!important;background:#fff;border-radius:10px;padding:10px 12px;margin-bottom:8px}.cpm .cpb{width:100%}'
     + '.cpb{border:0;border-radius:10px;background:#0f1b2a;color:#fff;font:700 14px Heebo;padding:9px 14px;cursor:pointer;min-height:40px}'
     + '.lk{display:block;text-align:center;text-decoration:none;border:1.5px solid #0f1b2a;color:#0f1b2a;border-radius:14px;padding:12px;font:700 15.5px Heebo;margin:0 0 10px}'
     + '.dn{display:block;width:100%;border:0;border-radius:14px;background:#06b6d4;color:#0f1b2a;font:800 16px Heebo;padding:13px;cursor:pointer;min-height:48px}.dn.on{background:#e0f7fb;color:#0e7490}'
