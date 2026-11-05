@@ -16,7 +16,7 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 const oa = require('./lib/oauth.js');
 const DIR = process.env.SETUP_DIR || path.join(__dirname, 'data', 'setup');
-const NAME = { google: 'גוגל', meta: 'פייסבוק' };
+const NAME = { google: 'גוגל', meta: 'פייסבוק', microsoft: 'מיקרוסופט', fireflies: 'פיירפליס' };
 
 function readJson(f, d) { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { return d; } }
 function writeJson(f, o) { fs.writeFileSync(f + '.tmp', JSON.stringify(o, null, 1)); fs.renameSync(f + '.tmp', f); }
@@ -32,9 +32,14 @@ async function run(opts) {
     const def = readJson(path.join(DIR, tok + '.def.json'), null);
     for (const id of Object.keys(sec)) {
       let saved; try { saved = JSON.parse(sec[id].value); } catch (e) { continue; }
-      if (!saved || (saved.provider !== 'google' && saved.provider !== 'meta')) continue;
+      if (!saved || oa.PROVIDERS.indexOf(saved.provider) < 0) continue;
       let r; try { r = await oa.check(saved); } catch (e) { r = { ok: false, revoked: false, error: e.message }; }
       out.push({ tok, id, provider: saved.provider, ok: r.ok, revoked: !!r.revoked, error: r.error || '' });
+      // Microsoft and Fireflies rotate refresh tokens: keep the new one, or the next check fails.
+      if (r.ok && r.refresh && r.refresh !== saved.refresh_token && !opts.dry) {
+        saved.refresh_token = r.refresh; sec[id].value = JSON.stringify(saved);
+        const sf2 = path.join(DIR, f); fs.writeFileSync(sf2 + '.tmp', JSON.stringify(sec, null, 1), { mode: 0o600 }); fs.renameSync(sf2 + '.tmp', sf2);
+      }
       if (r.ok || !r.revoked || opts.dry) continue;
       const sf = path.join(DIR, tok + '.json');
       const s = readJson(sf, { steps: {} }); s.steps = s.steps || {};

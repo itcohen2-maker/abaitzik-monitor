@@ -14,17 +14,22 @@ const path = require('path');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'oauth-'));
 process.env.SETUP_DIR = path.join(tmp, 'setup');
 process.env.OAUTH_APP_FILE = path.join(tmp, 'oauth-app.json');
+process.env.MS_APP_FILE = path.join(tmp, 'ms-app.json');
+fs.writeFileSync(process.env.MS_APP_FILE, JSON.stringify({ clientId: '00000000-1111-2222-3333-444444444444', tenant: 'common' }));
 fs.mkdirSync(process.env.SETUP_DIR);
 fs.writeFileSync(process.env.OAUTH_APP_FILE, JSON.stringify({
   stateKey: 'k'.repeat(64),
   google: { clientId: 'cid.apps.googleusercontent.com', clientSecret: 'gsecret' },
   meta: { appId: '111', appSecret: 'msecret', configId: '222' },
+  fireflies: { clientId: 'ffclient' },
 }));
 const TOK = 'abcdef0123456789abcd';
 fs.writeFileSync(path.join(process.env.SETUP_DIR, TOK + '.def.json'), JSON.stringify({
   client: 'לקוח בדיקה', title: 't', hello: 'h',
   steps: [{ id: 'g', icon: '📧', title: 'גוגל', text: 'x', oauth: { provider: 'google', scopes: ['gmail', 'calendar'] } },
-    { id: 'fb', icon: '📘', title: 'פייסבוק', text: 'x', oauth: { provider: 'meta' } }],
+    { id: 'fb', icon: '📘', title: 'פייסבוק', text: 'x', oauth: { provider: 'meta' } },
+    { id: 'ms', icon: '📅', title: 'יומן', text: 'x', oauth: { provider: 'microsoft' } },
+    { id: 'ff', icon: '🎙️', title: 'פיירפליס', text: 'x', oauth: { provider: 'fireflies' } }],
 }));
 const oa = require('../lib/oauth.js');
 const setup = require('../setup.js');
@@ -185,4 +190,48 @@ test('gmail query is read only shaped and formatted like mail-search.py', () => 
   assert.equal(g.query({ text: 'חשבונית', from: 'a@b.c', days: 7 }), 'חשבונית from:a@b.c newer_than:7d');
   const line = g.format([{ id: 'x1', when: '05.11.2026 09:30', from: 'A <a@b.c>', subject: 'S', snippet: 'n' }]).split('\n')[0];
   assert.match(line, /^\[(\w+)\] (\d{2})\.(\d{2})\.(\d{4}) (\d{2}):(\d{2}) \| (.*)$/);
+});
+
+test('microsoft and fireflies start as public clients with PKCE and no secret', () => {
+  const m = new URL(oa.startUrl('microsoft', TOK, 'ms').url);
+  assert.equal(m.host, 'login.microsoftonline.com');
+  assert.equal(m.searchParams.get('client_id'), '00000000-1111-2222-3333-444444444444');
+  assert.ok(m.searchParams.get('scope').includes('offline_access'));
+  assert.equal(m.searchParams.get('code_challenge_method'), 'S256');
+  const f = new URL(oa.startUrl('fireflies', TOK, 'ff').url);
+  assert.equal(f.host, 'api.fireflies.ai');
+  assert.equal(f.searchParams.get('redirect_uri'), 'https://form.it-solution.co.il/oauth/fireflies/callback');
+  assert.equal(f.searchParams.get('resource'), 'https://api.fireflies.ai/mcp');
+});
+
+test('a microsoft callback saves the refresh token and the account, never a secret', async () => {
+  const st = stateOf(oa.startUrl('microsoft', TOK, 'ms').url);
+  const calls = mockFetch({ 'oauth2/v2.0/token': { access_token: 'MA', refresh_token: 'MR1' }, 'graph.microsoft.com/v1.0/me': { mail: 'c@biz.co.il' } });
+  await setup.oauthCallback('microsoft', new URLSearchParams({ state: st, code: 'C' }), res(), () => {});
+  const body = String(calls[0].opts.body);
+  assert.ok(body.includes('code_verifier=') && !body.includes('client_secret'));
+  const sec = JSON.parse(fs.readFileSync(path.join(process.env.SETUP_DIR, TOK + '.secrets.json'), 'utf8'));
+  assert.equal(JSON.parse(sec.ms.value).refresh_token, 'MR1');
+  const s = JSON.parse(fs.readFileSync(path.join(process.env.SETUP_DIR, TOK + '.json'), 'utf8'));
+  assert.equal(s.steps.ms.who, 'c@biz.co.il');
+});
+
+test('a rotated microsoft refresh token is kept by the daily check', async () => {
+  mockFetch({ 'oauth2/v2.0/token': { access_token: 'MA2', refresh_token: 'MR2' }, 'oauth2.googleapis.com/token': { access_token: 'x' } });
+  await require('../oauth-health.js').run({ notify: () => {} });
+  const sec = JSON.parse(fs.readFileSync(path.join(process.env.SETUP_DIR, TOK + '.secrets.json'), 'utf8'));
+  assert.equal(JSON.parse(sec.ms.value).refresh_token, 'MR2');
+});
+
+test('a fireflies callback saves its refresh token', async () => {
+  const st = stateOf(oa.startUrl('fireflies', TOK, 'ff').url);
+  mockFetch({ 'api.fireflies.ai/token': { access_token: 'FA', refresh_token: 'FR' } });
+  await setup.oauthCallback('fireflies', new URLSearchParams({ state: st, code: 'C' }), res(), () => {});
+  const sec = JSON.parse(fs.readFileSync(path.join(process.env.SETUP_DIR, TOK + '.secrets.json'), 'utf8'));
+  assert.equal(JSON.parse(sec.ff.value).provider, 'fireflies');
+});
+
+test('drive and youtube short names map to Google scopes', () => {
+  const sc = oa.scopesFor('google', ['gmail', 'drive', 'youtube']);
+  assert.ok(sc.includes('https://www.googleapis.com/auth/drive') && sc.includes('https://www.googleapis.com/auth/youtube.upload'));
 });

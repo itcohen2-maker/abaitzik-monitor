@@ -546,7 +546,7 @@ const server = http.createServer(function (q, s) {
     return;
   }
   // 5.11: "Connect with Google / Facebook" on the setup page (lib/oauth.js, setup.js).
-  const om = u.pathname.match(/^\/oauth\/(google|meta)\/(start|callback)\/?$/);
+  const om = u.pathname.match(/^\/oauth\/(google|meta|microsoft|fireflies)\/(start|callback)\/?$/);
   if (om && q.method === "GET") {
     if (om[2] === "start") require("./setup.js").oauthStart(om[1], u.searchParams, s);
     else require("./setup.js").oauthCallback(om[1], u.searchParams, s, formNotify).catch(function (e) { log("oauth: " + e.message); try { s.writeHead(500); s.end(); } catch (x) {} });
