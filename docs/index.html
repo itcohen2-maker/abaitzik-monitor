@@ -2402,7 +2402,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-05T18:48:18.758Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-05T19:05:31.850Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4285,7 +4285,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='d80fd75aba';
+var CODE_ID='a3fd1d8dc7';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11999,20 +11999,20 @@ function clalitSheet(){
 on('gClalit',clalitSheet);
 var TOM_ITEMS=[
  {h:"📣 קמפיין ממומן · כפתור צור קשר, נפתח צ׳אט"},
- {n:"1",t:"✅ באוויר מ 5.11 · מי לא שילם, בנק והנה״ח",r:"ad-monitor-gviya-bank-chat.mp4"},
- {n:"2",t:"✅ באוויר מ 5.11 · תור לרופא שיניים",r:"ad-monitor-tor-shinayim-chat.mp4"},
- {n:"3",t:"✅ באוויר מ 5.11 · שרפת קרדיטים, סרטון חדש",r:"ad-credits-v2-chat.mp4"},
- {n:"4",t:"✅ באוויר · שרפת קרדיטים, תמונה (המנצחת)",r:"ads-nov01-card9-story.mp4"},
- {n:"5",t:"✅ באוויר · קרוסלה, מה עוד נתקע לך",r:"ads-nov01-card14-story.mp4"},
- {n:"6",t:"✅ באוויר · האתר שלך מבריח לקוחות",r:"ads-nov01-card10-story.mp4"},
+ {n:"1",t:"📣 קמפיין · ✅ באוויר מ 5.11 · מי לא שילם, בנק והנה״ח",r:"ad-monitor-gviya-bank-chat.mp4"},
+ {n:"2",t:"📣 קמפיין · ✅ באוויר מ 5.11 · תור לרופא שיניים",r:"ad-monitor-tor-shinayim-chat.mp4"},
+ {n:"3",t:"📣 קמפיין · ✅ באוויר מ 5.11 · שרפת קרדיטים, סרטון חדש",r:"ad-credits-v2-chat.mp4"},
+ {n:"4",t:"📣 קמפיין · ✅ באוויר · שרפת קרדיטים, תמונה (המנצחת)",r:"ads-nov01-card9-story.mp4"},
+ {n:"5",t:"📣 קמפיין · ✅ באוויר · קרוסלה, מה עוד נתקע לך",r:"ads-nov01-card14-story.mp4"},
+ {n:"6",t:"📣 קמפיין · ✅ באוויר · האתר שלך מבריח לקוחות",r:"ads-nov01-card10-story.mp4"},
  {h:"📲 סטטוס וסטורי · עם כתובת האתר בסוף"},
- {n:"7",t:"⏳ עוד לא עלה · מי לא שילם, בנק והנה״ח · להיום 5.11",r:"monitor-gviya-bank-v7.mp4"},
- {n:"8",t:"⏳ עוד לא עלה · תור לרופא שיניים · לשלישי 10.11",r:"monitor-tor-shinayim.mp4"},
- {n:"9",t:"⏳ עוד לא עלה · שרפת קרדיטים, סרטון חדש, גרסה עם כתובת האתר",r:"ad-credits-v2.mp4"},
+ {n:"7",t:"📲 לרשתות · מי לא שילם, בנק והנה״ח · להיום 5.11",r:"monitor-gviya-bank-v7.mp4"},
+ {n:"8",t:"📲 לרשתות · תור לרופא שיניים · לשלישי 10.11",r:"monitor-tor-shinayim.mp4"},
+ {n:"9",t:"📲 לרשתות · שרפת קרדיטים, סרטון חדש, גרסה עם כתובת האתר",r:"ad-credits-v2.mp4"},
  {h:"🎬 רילים וטיקטוק · המוניטור"},
- {n:"10",t:"IT 01 · המוניטור, וואטסאפ ולוח בקרה אחד · לסטורי באינסטגרם ולטיקטוק",r:"it01-monitor-v2.mp4"},
- {n:"10 כריכה",t:"הכריכה: מי לא שילם לך החודש?",r:"it01-cover.jpg"},
- {n:"10 פרסום",t:"טקסט לסטורי ולטיקטוק, עם קישור לכל רשת",r:"it01-post.txt"}
+ {n:"10",t:"📲 לרשתות · IT 01 · המוניטור, וואטסאפ ולוח בקרה אחד · לסטורי באינסטגרם ולטיקטוק",r:"it01-monitor-v2.mp4"},
+ {n:"10 כריכה",t:"📲 לרשתות · הכריכה: מי לא שילם לך החודש?",r:"it01-cover.jpg"},
+ {n:"10 פרסום",t:"📲 לרשתות · טקסט לסטורי ולטיקטוק, עם קישור לכל רשת",r:"it01-post.txt"}
 ];
 function tomSheet(){
  var old=document.getElementById('tomSheet');if(old)old.remove();
@@ -12022,7 +12022,7 @@ function tomSheet(){
  w.setAttribute('aria-label','קמפיין פייסבוק');
  w.innerHTML='<div class="ycard">'
   +'<b>קמפיין פייסבוק</b>'
-  +'<small>✅ באוויר · ⏳ עוד לא. למעלה הממומן, באמצע סטטוס וסטורי, למטה רילים.</small>'
+  +'<small>📣 קמפיין = מודעה ממומנת · 📲 לרשתות = סטטוס, סטורי ורילים.</small>'
   +TOM_ITEMS.map(function(it,i,a){
     if(it.h)return '<small style="display:block;margin:14px 0 6px;font-weight:800;color:var(--ink)">'+esc(it.h)+'</small>';
     if(it.r&&!fileEntry(it.r))return '';
