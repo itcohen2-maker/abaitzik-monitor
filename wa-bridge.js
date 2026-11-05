@@ -545,6 +545,13 @@ const server = http.createServer(function (q, s) {
     }).catch(function () { try { s.writeHead(400); s.end('{}'); } catch (e) {} });
     return;
   }
+  // 5.11: "Connect with Google / Facebook" on the setup page (lib/oauth.js, setup.js).
+  const om = u.pathname.match(/^\/oauth\/(google|meta)\/(start|callback)\/?$/);
+  if (om && q.method === "GET") {
+    if (om[2] === "start") require("./setup.js").oauthStart(om[1], u.searchParams, s);
+    else require("./setup.js").oauthCallback(om[1], u.searchParams, s, formNotify).catch(function (e) { log("oauth: " + e.message); try { s.writeHead(500); s.end(); } catch (x) {} });
+    return;
+  }
   // 1.11: client setup page (setup.js), /s/<token> and /api/setup.
   const sm = u.pathname.match(/^\/s\/([a-f0-9]{16,40})(\/view)?\/?$/);
   if (sm && q.method === 'GET') { if (sm[2]) require('./form-view.js').serve('./setup.js', sm[1], s); else require('./setup.js').servePage(sm[1], s); return; }

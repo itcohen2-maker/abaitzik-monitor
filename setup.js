@@ -27,7 +27,21 @@
 */
 const fs = require('fs');
 const path = require('path');
-const DIR = path.join(__dirname, 'data', 'setup');
+const DIR = process.env.SETUP_DIR || path.join(__dirname, 'data', 'setup');
+/*
+  5.11: oauth?: { provider: "google" | "meta", scopes?: ["gmail","calendar",...], button? }
+  A card with a "Connect with ..." button (lib/oauth.js). The button goes to
+  /oauth/<provider>/start; the provider sends the client back to /oauth/<provider>/callback,
+  the token is saved like a secret under the step id, and the client lands back on this page.
+*/
+const OA_NAME = { google: 'גוגל', meta: 'פייסבוק' };
+const OA_ERR = {
+  denied: 'החיבור בוטל באמצע. אפשר ללחוץ שוב.',
+  state: 'הקישור פג או נפתח פעמיים. לוחצים שוב על הכפתור.',
+  norefresh: 'גוגל לא נתן הרשאה קבועה. לוחצים שוב ומאשרים את כל הסימונים.',
+  exchange: 'החיבור לא הושלם אצל הספק. נסו שוב בעוד רגע, ואם זה חוזר נעדכן אתכם.',
+  revoked: 'החיבור נותק (אולי הסיסמה הוחלפה או שהגישה בוטלה). לוחצים כדי לחבר מחדש.',
+};
 
 function safeTok(t) { return /^[a-f0-9]{16,40}$/.test(String(t || '')) ? String(t) : null; }
 function def(tok) { try { return JSON.parse(fs.readFileSync(path.join(DIR, tok + '.def.json'), 'utf8')); } catch (e) { return null; } }
@@ -40,7 +54,7 @@ function saveSecret(tok, id, v) {
   o[id] = { value: v, at: new Date().toISOString() };
   fs.writeFileSync(f + '.tmp', JSON.stringify(o, null, 1), { mode: 0o600 }); fs.renameSync(f + '.tmp', f); fs.chmodSync(f, 0o600);
 }
-function complete(st, s) { const x = (s.steps || {})[st.id] || {}; return (st.input || st.ms) ? !!x.got : (st.done ? !!x.done : (st.choose ? !!x.choice : false)); }
+function complete(st, s) { const x = (s.steps || {})[st.id] || {}; return (st.input || st.ms || st.oauth) ? !!x.got : (st.done ? !!x.done : (st.choose ? !!x.choice : false)); }
 
 function summary(d, s) {
   const NL = '\n';
@@ -70,6 +84,16 @@ function card(st, i, s) {
     + (st.input.hint ? '<p class="ih">' + esc(st.input.hint) + '</p>' : '')
     + '<div class="ir"><input type="text" dir="ltr" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="' + esc(st.input.placeholder || '') + '"><button type="button" class="sv">שמירה</button></div>'
     + '<p class="ig">' + (x.got ? '✓ התקבל ונשמר במקום מאובטח. כדי להחליף, להדביק שוב.' : '') + '</p></div>';
+  if (st.oauth) {
+    const pr = st.oauth.provider === 'meta' ? 'meta' : 'google';
+    const live = require('./lib/oauth.js').ready(pr);
+    const href = '/oauth/' + pr + '/start?t=' + encodeURIComponent(s._tok || '') + '&s=' + encodeURIComponent(st.id);
+    h += '<div class="oa" data-got="' + (x.got ? 1 : 0) + '">'
+      + (live
+        ? '<a class="oab oa-' + pr + '" rel="noreferrer" referrerpolicy="no-referrer" href="' + esc(href) + '">' + esc(x.got ? 'לחבר מחדש' : (st.oauth.button || 'התחברות עם ' + OA_NAME[pr])) + '</a>'
+        : '<p class="ih">החיבור ל' + OA_NAME[pr] + ' בלחיצה ייפתח בקרוב. נעדכן אותך.</p>')
+      + '<p class="ig">' + (x.got ? '✓ מחובר' + (x.who ? ' (' + esc(x.who) + ')' : '') : (x.oaErr ? esc(OA_ERR[x.oaErr] || OA_ERR.exchange) : '')) + '</p></div>';
+  }
   if (st.ms) h += '<div class="ms" data-got="' + (x.got ? 1 : 0) + '">'
     + '<button type="button" class="msb">' + esc(x.got ? 'לחבר מחדש' : (st.ms.button || 'חיבור היומן')) + '</button>'
     + '<div class="msc" hidden><div class="cp"><span>הקוד שלך:</span><b dir="ltr" class="msk"></b><button type="button" class="cpb" data-v="">העתקה</button></div>'
@@ -110,6 +134,7 @@ function page(tok, d, s) {
     + '.ir{display:flex;gap:8px}.ir input{flex:1;min-width:0;border:1.5px solid #cbd5e1;border-radius:10px;padding:10px;font:500 16px monospace;background:#fff}'
     + '.sv{border:0;border-radius:10px;background:#0f1b2a;color:#fff;font:700 15px Heebo;padding:0 16px;min-height:44px;cursor:pointer}.ig{font:600 13.5px Heebo;color:#0e7490;margin:8px 0 0}'
     + '.msb{display:block;width:100%;border:0;border-radius:14px;background:#0f1b2a;color:#fff;font:800 16px Heebo;padding:13px;cursor:pointer;min-height:48px;margin:0 0 10px}.msk{font:900 24px monospace!important;letter-spacing:3px!important}'
+    + '.oab{display:block;text-align:center;text-decoration:none;border-radius:14px;background:#0f1b2a;color:#fff;font:800 16px Heebo;padding:14px;min-height:48px;margin:0 0 10px}.oa-google{background:#fff;color:#1f1f1f;border:1.5px solid #747775}.oa-meta{background:#1877f2}'
     + '.fin{display:block;width:100%;border:0;border-radius:16px;background:#0f1b2a;color:#fff;font:800 18px Heebo;padding:16px;margin-top:8px;cursor:pointer}'
     + '.saved{font:500 13px Heebo;color:#6b7c90;text-align:center;margin-top:10px}'
     + '.thanks{display:none;text-align:center;padding:60px 20px}.thanks b{display:block;font:900 26px Heebo;margin-bottom:8px}.thanks p{font:400 16px/1.6 Heebo;color:#24364b}'
@@ -125,7 +150,7 @@ function page(tok, d, s) {
     + 'function post(o){o.t=T;return fetch("/api/setup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(o)}).then(function(r){if(!r.ok)throw 0;return r.json();});}'
     + 'function msg(t){document.getElementById("saved").textContent=t;}'
     + 'function paint(){var n=C.filter(function(c){return c.classList.contains("ok");}).length;document.getElementById("bar").style.width=Math.round(n/C.length*100)+"%";document.getElementById("cnt").textContent=n+" מתוך "+C.length+" מוכנים";}'
-    + 'function ok(c){var dn=c.querySelector(".dn"),inp=c.querySelector(".in")||c.querySelector(".ms");c.classList.toggle("ok",inp?inp.getAttribute("data-got")==="1":(dn?dn.classList.contains("on"):!!c.querySelector(".op.on")));paint();}'
+    + 'function ok(c){var dn=c.querySelector(".dn"),inp=c.querySelector(".in")||c.querySelector(".ms")||c.querySelector(".oa");c.classList.toggle("ok",inp?inp.getAttribute("data-got")==="1":(dn?dn.classList.contains("on"):!!c.querySelector(".op.on")));paint();}'
     + 'C.forEach(function(c){var id=c.getAttribute("data-id");c.addEventListener("click",function(e){'
     + 'var b=e.target.closest(".op");if(b){c.querySelectorAll(".op.on").forEach(function(x){if(x!==b)x.classList.remove("on");});b.classList.add("on");ok(c);post({id:id,choice:b.textContent}).then(function(){msg("נשמר ✓");},function(){msg("אין חיבור כרגע. נסו שוב בעוד רגע.");});return;}'
     + 'var p=e.target.closest(".cpb");if(p){var v=p.getAttribute("data-v");(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(function(){p.textContent="הועתק ✓";},function(){p.textContent=v;});return;}'
@@ -151,7 +176,8 @@ function servePage(tok, res) {
   tok = safeTok(tok); const d = tok && def(tok);
   if (!d) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('הדף לא נמצא'); }
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex, nofollow' });
-  res.end(page(tok, d, state(tok)));
+  const s = state(tok); s._tok = tok;
+  res.end(page(tok, d, s));
 }
 
 // POST /api/setup {t, open? | id + choice? | id + done? | finish?}. notify(kind, text) goes to the monitor.
@@ -223,4 +249,39 @@ function sweep(notify) {
   });
 }
 
-module.exports = { servePage, handlePost, sweep, summary };
+// 5.11: GET /oauth/<p>/start?t=&s=  -> 302 to the consent screen of Google or Meta.
+function oauthStart(p, q, res) {
+  const oa = require('./lib/oauth.js');
+  const tok = safeTok(q.get('t')); const d = tok && def(tok);
+  const st = d && d.steps.find((x) => x.id === q.get('s') && x.oauth && (x.oauth.provider === 'meta' ? 'meta' : 'google') === p);
+  if (!st) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('הדף לא נמצא'); }
+  const r = oa.startUrl(p, tok, st.id, st.oauth.scopes);
+  if (!r.url) { res.writeHead(302, { Location: '/s/' + tok + '#' + st.id }); return res.end(); }
+  res.writeHead(302, { Location: r.url, 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' }); res.end();
+}
+
+// 5.11: GET /oauth/<p>/callback. Saves the token as the step's secret, tells the monitor, sends the client back.
+async function oauthCallback(p, q, res, notify) {
+  const oa = require('./lib/oauth.js');
+  let r; try { r = await oa.callback(p, q); } catch (e) { r = { ok: false, error: 'exchange', detail: e.message }; }
+  const tok = safeTok(r.t); const d = tok && def(tok);
+  const st = d && d.steps.find((x) => x.id === r.s && x.oauth);
+  if (!st) { res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('הקישור פג. חוזרים לדף ההקמה ולוחצים שוב.'); }
+  const s = state(tok); s.steps = s.steps || {};
+  const x = s.steps[st.id] = s.steps[st.id] || {};
+  const now = new Date().toISOString(); const K = 'דף הקמה';
+  if (r.ok) {
+    saveSecret(tok, st.id, JSON.stringify(r.saved));
+    x.got = now; x.who = r.who || ''; delete x.oaErr; delete x.broken;
+    if (r.pages) x.pages = r.pages.map((pg) => pg.name + (pg.ig ? ' + @' + pg.ig : ''));
+    notify(K, d.client + ': ' + OA_NAME[p] + ' חובר' + (r.who ? ' (' + r.who + ')' : '') + '.'
+      + (r.pages ? (r.pages.length ? ' דפים: ' + x.pages.join(', ') + '.' : ' לא נמצא אף דף עסקי שהוא מנהל.') : ''));
+  } else {
+    x.oaErr = r.error;
+    if (r.error === 'exchange') notify(K, d.client + ': החיבור ל' + OA_NAME[p] + ' נכשל אצל הספק' + (r.detail ? ': ' + r.detail : '') + '.');
+  }
+  s.updatedAt = now; s.reported = false; saveState(tok, s);
+  res.writeHead(302, { Location: '/s/' + tok + '#' + st.id, 'Cache-Control': 'no-store' }); res.end();
+}
+
+module.exports = { servePage, handlePost, sweep, summary, oauthStart, oauthCallback, DIR };
