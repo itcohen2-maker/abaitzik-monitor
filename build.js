@@ -4455,7 +4455,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   -->
   <!-- 13.10. Itzik: "תעשה תקייה של טום ממליץ ואריח טום ממליץ". Scripts of
        Tom's posts, four ad images, the site copy, and the draft of his own site. -->
-  <button type="button" class="gt gTom" data-grp="work" id="gTom" data-new="1" data-upd="2026-11-02-rename"><b>🧭 קמפיין פייסבוק</b><small>מסודר וממוספר: הקמפיין שרץ והתמונות המונפשות</small></button>
+  <button type="button" class="gt gTom" data-grp="work" id="gTom" data-new="1" data-upd="2026-11-05-split"><b>🧭 קמפיין וסרטוני פרסום</b><small>ממומן, סטטוס וסטורי, רילים: מה באוויר ומה עוד לא</small></button>
   <!-- 13.10 night: the Clalit agreement moved inside the lecture tile (item 05). -->
   <button type="button" class="gt gGviya" data-grp="work" id="gGviya" data-new="1"><b>📞 גבייה, יואל</b><small>דף שיואל מסמן, כל סימון מעדכן אותך</small></button>
   <button type="button" class="gt gLaw" data-grp="home" id="gLaw" hidden><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
@@ -16258,25 +16258,18 @@ on('gClalit',clalitSheet);
   only once they are in the monitor; Drive links (u) open the folder.
 */
 var TOM_ITEMS=[
-// 2.11, Itzik: "תשאיר באריח רק את מה שאנחנו נעבוד איתו. כל השאר למחוק". 6 in the campaign, 3 in reserve.
-// 2.11 (order), Itzik: "הסרטונים הארוכים למעלה, והקצרים למטה". The long one (29 sec) goes first; the rest are 8 sec. Numbers n stay as they were.
- {n:"5",t:"רץ מ 2.11: סרטון שרפת קרדיטים, קרוסלה, אנחנו מסדרים · 9:16",r:"ads-nov01-story-c-stuck.mp4"},
- {n:"1",t:"רץ: לא צריך ללמוד קורס AI · 9:16",r:"ads-oct28-card3-story.mp4"},
- {n:"2",t:"רץ: לא צריך ללמוד קורס AI · 4:5 פיד",r:"ads-oct28-card3-feed.mp4"},
- {n:"3",t:"רץ: מי לא שילם לך החודש · 9:16",r:"ads-oct28-card2-story.mp4"},
- {n:"4",t:"רץ: מי לא שילם לך החודש · 4:5 פיד",r:"ads-oct28-card2-feed.mp4"},
- {n:"6",t:"רץ מ 2.11: שרפת קרדיטים ב Lovable ו Base44 · 9:16",r:"ads-nov01-card9-story.mp4"},
- {n:"7",t:"רץ מ 2.11: שרפת קרדיטים ב Lovable ו Base44 · 4:5 פיד",r:"ads-nov01-card9-feed.mp4"},
- {n:"8",t:"רץ מ 2.11: קרוסלה, מה עוד נתקע לך · 9:16",r:"ads-nov01-card14-story.mp4"},
- {n:"9",t:"רץ מ 2.11: קרוסלה, מה עוד נתקע לך · 4:5 פיד",r:"ads-nov01-card14-feed.mp4"},
- {n:"10",t:"רץ מ 2.11: האתר שלך מבריח לקוחות · 9:16",r:"ads-nov01-card10-story.mp4"},
- {n:"11",t:"רץ מ 2.11: האתר שלך מבריח לקוחות · 4:5 פיד",r:"ads-nov01-card10-feed.mp4"},
- {n:"12",t:"רזרבה: הרעיון שלך כבר שנה במגירה · 9:16",r:"ads-nov01-card11-story.mp4"},
- {n:"13",t:"רזרבה: הרעיון שלך כבר שנה במגירה · 4:5 פיד",r:"ads-nov01-card11-feed.mp4"},
- {n:"14",t:"רזרבה: עובד 12 שעות ומרוויח כמו שכיר · 9:16",r:"ads-nov01-card12-story.mp4"},
- {n:"15",t:"רזרבה: עובד 12 שעות ומרוויח כמו שכיר · 4:5 פיד",r:"ads-nov01-card12-feed.mp4"},
- {n:"16",t:"רזרבה: קרוסלה, מה מטריף אותך היום · 9:16",r:"ads-nov01-card13-story.mp4"},
- {n:"17",t:"רזרבה: קרוסלה, מה מטריף אותך היום · 4:5 פיד",r:"ads-nov01-card13-feed.mp4"}
+// 5.11, Itzik: "תשאיר רק מה שרלוונטי ותמספר, מה שעלה ומה שעדיין לא עלה, מה שריל ומה שקמפיין, מה שסטורי ומה שסטטוס, שזה ביחד". h = heading.
+ {h:"📣 קמפיין ממומן · כפתור צור קשר, נפתח צ׳אט"},
+ {n:"1",t:"⏳ בבדיקה של מטא · מי לא שילם, בנק והנה״ח",r:"ad-monitor-gviya-bank-chat.mp4"},
+ {n:"2",t:"⏳ בבדיקה של מטא · תור לרופא שיניים",r:"ad-monitor-tor-shinayim-chat.mp4"},
+ {n:"3",t:"⏳ בבדיקה של מטא · שרפת קרדיטים, סרטון חדש",r:"ad-credits-v2-chat.mp4"},
+ {n:"4",t:"✅ באוויר · שרפת קרדיטים, תמונה (המנצחת)",r:"ads-nov01-card9-story.mp4"},
+ {n:"5",t:"✅ באוויר · קרוסלה, מה עוד נתקע לך",r:"ads-nov01-card14-story.mp4"},
+ {n:"6",t:"✅ באוויר · האתר שלך מבריח לקוחות",r:"ads-nov01-card10-story.mp4"},
+ {h:"📲 סטטוס וסטורי · עם כתובת האתר בסוף"},
+ {n:"7",t:"⏳ עוד לא עלה · מי לא שילם, בנק והנה״ח · להיום 5.11",r:"monitor-gviya-bank-v7.mp4"},
+ {n:"8",t:"⏳ עוד לא עלה · תור לרופא שיניים · לשלישי 10.11",r:"monitor-tor-shinayim.mp4"},
+ {h:"🎬 רילים · אין כרגע ריל של המוניטור"}
 ];
 function tomSheet(){
  var old=document.getElementById('tomSheet');if(old)old.remove();
@@ -16286,8 +16279,9 @@ function tomSheet(){
  w.setAttribute('aria-label','קמפיין פייסבוק');
  w.innerHTML='<div class="ycard">'
   +'<b>קמפיין פייסבוק</b>'
-  +'<small>1 עד 11 רצים עכשיו בקמפיין הממומן. 12 עד 17 ברזרבה לסבב הבא.</small>'
+  +'<small>✅ באוויר · ⏳ עוד לא. למעלה הממומן, באמצע סטטוס וסטורי, למטה רילים.</small>'
   +TOM_ITEMS.map(function(it,i,a){
+    if(it.h)return '<small style="display:block;margin:14px 0 6px;font-weight:800;color:var(--ink)">'+esc(it.h)+'</small>';
     if(it.r&&!fileEntry(it.r))return '';
     return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
    }).join('')

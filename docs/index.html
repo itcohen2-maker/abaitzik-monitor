@@ -2402,7 +2402,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-05T13:55:07.628Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-05T14:09:54.826Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2654,7 +2654,7 @@ try{
   <button type="button" class="gt gWin" data-grp="net" id="gWin" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <button type="button" class="gt gReel" data-grp="net" id="gReels" data-upd="20261105-it01"><b>🎬 הרילים שלי</b><small>חדש: המוניטור, וואטסאפ ולוח בקרה, לסטורי</small></button>
   <button type="button" class="gt gFut" data-grp="net" id="gFut" data-upd="20261103-futclean"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 21 איך נכנסים לאתר, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור, 08 שרירים והגיל, 09 קונטרה למינוס, 17 המבריק במדיח</small></button>
-  <button type="button" class="gt gTom" data-grp="work" id="gTom" data-new="1" data-upd="2026-11-02-rename"><b>🧭 קמפיין פייסבוק</b><small>מסודר וממוספר: הקמפיין שרץ והתמונות המונפשות</small></button>
+  <button type="button" class="gt gTom" data-grp="work" id="gTom" data-new="1" data-upd="2026-11-05-split"><b>🧭 קמפיין וסרטוני פרסום</b><small>ממומן, סטטוס וסטורי, רילים: מה באוויר ומה עוד לא</small></button>
   <button type="button" class="gt gGviya" data-grp="work" id="gGviya" data-new="1"><b>📞 גבייה, יואל</b><small>דף שיואל מסמן, כל סימון מעדכן אותך</small></button>
   <button type="button" class="gt gLaw" data-grp="home" id="gLaw" hidden><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
   <button type="button" class="gt gShop" data-grp="home" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
@@ -4285,7 +4285,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='d1d47f9fa8';
+var CODE_ID='a8d83a5d55';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12008,23 +12008,17 @@ function clalitSheet(){
 }
 on('gClalit',clalitSheet);
 var TOM_ITEMS=[
- {n:"5",t:"רץ מ 2.11: סרטון שרפת קרדיטים, קרוסלה, אנחנו מסדרים · 9:16",r:"ads-nov01-story-c-stuck.mp4"},
- {n:"1",t:"רץ: לא צריך ללמוד קורס AI · 9:16",r:"ads-oct28-card3-story.mp4"},
- {n:"2",t:"רץ: לא צריך ללמוד קורס AI · 4:5 פיד",r:"ads-oct28-card3-feed.mp4"},
- {n:"3",t:"רץ: מי לא שילם לך החודש · 9:16",r:"ads-oct28-card2-story.mp4"},
- {n:"4",t:"רץ: מי לא שילם לך החודש · 4:5 פיד",r:"ads-oct28-card2-feed.mp4"},
- {n:"6",t:"רץ מ 2.11: שרפת קרדיטים ב Lovable ו Base44 · 9:16",r:"ads-nov01-card9-story.mp4"},
- {n:"7",t:"רץ מ 2.11: שרפת קרדיטים ב Lovable ו Base44 · 4:5 פיד",r:"ads-nov01-card9-feed.mp4"},
- {n:"8",t:"רץ מ 2.11: קרוסלה, מה עוד נתקע לך · 9:16",r:"ads-nov01-card14-story.mp4"},
- {n:"9",t:"רץ מ 2.11: קרוסלה, מה עוד נתקע לך · 4:5 פיד",r:"ads-nov01-card14-feed.mp4"},
- {n:"10",t:"רץ מ 2.11: האתר שלך מבריח לקוחות · 9:16",r:"ads-nov01-card10-story.mp4"},
- {n:"11",t:"רץ מ 2.11: האתר שלך מבריח לקוחות · 4:5 פיד",r:"ads-nov01-card10-feed.mp4"},
- {n:"12",t:"רזרבה: הרעיון שלך כבר שנה במגירה · 9:16",r:"ads-nov01-card11-story.mp4"},
- {n:"13",t:"רזרבה: הרעיון שלך כבר שנה במגירה · 4:5 פיד",r:"ads-nov01-card11-feed.mp4"},
- {n:"14",t:"רזרבה: עובד 12 שעות ומרוויח כמו שכיר · 9:16",r:"ads-nov01-card12-story.mp4"},
- {n:"15",t:"רזרבה: עובד 12 שעות ומרוויח כמו שכיר · 4:5 פיד",r:"ads-nov01-card12-feed.mp4"},
- {n:"16",t:"רזרבה: קרוסלה, מה מטריף אותך היום · 9:16",r:"ads-nov01-card13-story.mp4"},
- {n:"17",t:"רזרבה: קרוסלה, מה מטריף אותך היום · 4:5 פיד",r:"ads-nov01-card13-feed.mp4"}
+ {h:"📣 קמפיין ממומן · כפתור צור קשר, נפתח צ׳אט"},
+ {n:"1",t:"⏳ בבדיקה של מטא · מי לא שילם, בנק והנה״ח",r:"ad-monitor-gviya-bank-chat.mp4"},
+ {n:"2",t:"⏳ בבדיקה של מטא · תור לרופא שיניים",r:"ad-monitor-tor-shinayim-chat.mp4"},
+ {n:"3",t:"⏳ בבדיקה של מטא · שרפת קרדיטים, סרטון חדש",r:"ad-credits-v2-chat.mp4"},
+ {n:"4",t:"✅ באוויר · שרפת קרדיטים, תמונה (המנצחת)",r:"ads-nov01-card9-story.mp4"},
+ {n:"5",t:"✅ באוויר · קרוסלה, מה עוד נתקע לך",r:"ads-nov01-card14-story.mp4"},
+ {n:"6",t:"✅ באוויר · האתר שלך מבריח לקוחות",r:"ads-nov01-card10-story.mp4"},
+ {h:"📲 סטטוס וסטורי · עם כתובת האתר בסוף"},
+ {n:"7",t:"⏳ עוד לא עלה · מי לא שילם, בנק והנה״ח · להיום 5.11",r:"monitor-gviya-bank-v7.mp4"},
+ {n:"8",t:"⏳ עוד לא עלה · תור לרופא שיניים · לשלישי 10.11",r:"monitor-tor-shinayim.mp4"},
+ {h:"🎬 רילים · אין כרגע ריל של המוניטור"}
 ];
 function tomSheet(){
  var old=document.getElementById('tomSheet');if(old)old.remove();
@@ -12034,8 +12028,9 @@ function tomSheet(){
  w.setAttribute('aria-label','קמפיין פייסבוק');
  w.innerHTML='<div class="ycard">'
   +'<b>קמפיין פייסבוק</b>'
-  +'<small>1 עד 11 רצים עכשיו בקמפיין הממומן. 12 עד 17 ברזרבה לסבב הבא.</small>'
+  +'<small>✅ באוויר · ⏳ עוד לא. למעלה הממומן, באמצע סטטוס וסטורי, למטה רילים.</small>'
   +TOM_ITEMS.map(function(it,i,a){
+    if(it.h)return '<small style="display:block;margin:14px 0 6px;font-weight:800;color:var(--ink)">'+esc(it.h)+'</small>';
     if(it.r&&!fileEntry(it.r))return '';
     return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
    }).join('')
