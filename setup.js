@@ -20,6 +20,9 @@
       ms?:     { button }                      4.11: Microsoft 365 calendar by device code (ms-cal.js).
                                                The page shows a code, the client approves at Microsoft,
                                                the refresh token is saved like a secret. } ] }
+  offers?: [ { id, icon, title, text, price?, choose } ]   5.11: "אולי יעניין אותך" under the cards: an extra product
+                                               (first: digital signature on quotes). Not counted in progress; a choice
+                                               other than the last option tells Itzik's monitor at once (a sale lead).
   data/setup/<token>.json      { steps: { id: { choice?, done?, got? } }, openedAt, updatedAt, finishedAt }
 */
 const fs = require('fs');
@@ -46,6 +49,7 @@ function summary(d, s) {
     const x = (s.steps || {})[st.id] || {};
     t += (complete(st, s) ? '✓ ' : '○ ') + st.title + (x.choice ? ': ' + x.choice : '') + (x.got ? (st.ms ? ' (מחובר' + (x.who ? ': ' + x.who : '') + ')' : ' (המפתח התקבל)') : '') + NL;
   });
+  (d.offers || []).forEach((st) => { const x = (s.steps || {})[st.id] || {}; if (x.choice) t += '✨ ' + st.title + ': ' + x.choice + NL; });
   return t;
 }
 
@@ -97,6 +101,7 @@ function page(tok, d, s) {
     + '.ops{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}.op{border:1.5px solid #cbd5e1;background:#fff;color:#0f1b2a;border-radius:999px;padding:10px 15px;font:500 15px Heebo;cursor:pointer;min-height:44px}'
     + '.op.on{background:#0f1b2a;border-color:#0f1b2a;color:#fff;font-weight:700}'
     + '.cp{display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:#f1f5f9;border-radius:12px;padding:10px 12px;margin:0 0 10px}.cp span{font:500 13.5px Heebo;color:#4a5a6e}.cp b{font:800 17px Heebo;letter-spacing:.5px;flex:1}'
+    + '.xh{font:900 19px Heebo;margin:26px 0 10px;color:#0f1b2a}.c.xo{background:linear-gradient(160deg,#ecfeff,#fff);border-color:#a5f3fc}.c.xo.ok{border-color:#06b6d4}.pr{font-style:normal;font:800 13.5px Heebo;color:#0e7490;background:#cffafe;border-radius:999px;padding:4px 10px;white-space:nowrap}'
     + '.cpm{display:block}.cpm span{display:block;margin-bottom:6px}.cpm b{display:block;white-space:pre-wrap;font:500 15px/1.6 Heebo!important;letter-spacing:0!important;background:#fff;border-radius:10px;padding:10px 12px;margin-bottom:8px}.cpm .cpb{width:100%}'
     + '.cpb{border:0;border-radius:10px;background:#0f1b2a;color:#fff;font:700 14px Heebo;padding:9px 14px;cursor:pointer;min-height:40px}'
     + '.lk{display:block;text-align:center;text-decoration:none;border:1.5px solid #0f1b2a;color:#0f1b2a;border-radius:14px;padding:12px;font:700 15.5px Heebo;margin:0 0 10px}'
@@ -113,9 +118,10 @@ function page(tok, d, s) {
     + '<div class="top"><div class="brand"><span>IT</span><b>IT<i>solution</i></b></div><div class="bar"><i id="bar"></i></div><div class="cnt" id="cnt"></div></div>'
     + '<div class="wrap"><h1>' + esc(d.title) + '</h1><p class="hello">' + esc(d.hello) + '</p>'
     + d.steps.map((st, i) => card(st, i, s)).join('')
+    + ((d.offers || []).length ? '<h3 class="xh">✨ אולי יעניין אותך</h3>' + d.offers.map((st) => card(st, 0, s).replace('<section class="c', '<section class="c xo').replace('</h2>', '</h2>' + (st.price ? '<em class="pr">' + esc(st.price) + '</em>' : ''))).join('') : '')
     + '<button type="button" class="fin" id="fin">סיימתי, אפשר להתחיל</button><p class="saved" id="saved">כל לחיצה נשמרת מיד. אפשר לסגור ולחזור אחר כך.</p></div>'
     + '<div class="thanks"><b>תודה! ✓</b><p>קיבלנו. נחבר את מה שנשאר ונעדכן אותך כשהמוניטור מוכן.</p></div>'
-    + '<script>(function(){var T=' + JSON.stringify(tok) + ',C=[].slice.call(document.querySelectorAll(".c"));'
+    + '<script>(function(){var T=' + JSON.stringify(tok) + ',C=[].slice.call(document.querySelectorAll(".c:not(.xo)")),X=[].slice.call(document.querySelectorAll(".c.xo"));'
     + 'function post(o){o.t=T;return fetch("/api/setup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(o)}).then(function(r){if(!r.ok)throw 0;return r.json();});}'
     + 'function msg(t){document.getElementById("saved").textContent=t;}'
     + 'function paint(){var n=C.filter(function(c){return c.classList.contains("ok");}).length;document.getElementById("bar").style.width=Math.round(n/C.length*100)+"%";document.getElementById("cnt").textContent=n+" מתוך "+C.length+" מוכנים";}'
@@ -134,6 +140,7 @@ function page(tok, d, s) {
     + '},function(){mb.disabled=false;mg.textContent="אין חיבור כרגע. נסו שוב בעוד רגע.";});return;}'
     + 'var d=e.target.closest(".dn");if(d){var on=!d.classList.contains("on");d.classList.toggle("on",on);d.textContent=(on?"✓ ":"")+d.textContent.replace(/^✓ /,"");ok(c);post({id:id,done:on}).then(function(){msg("נשמר ✓");},function(){msg("אין חיבור כרגע. נסו שוב בעוד רגע.");});}'
     + '});});'
+    + 'X.forEach(function(c){var id=c.getAttribute("data-id");c.addEventListener("click",function(e){var b=e.target.closest(".op");if(!b)return;c.querySelectorAll(".op.on").forEach(function(x){if(x!==b)x.classList.remove("on");});b.classList.add("on");c.classList.add("ok");post({id:id,choice:b.textContent}).then(function(){msg("נשמר ✓");},function(){msg("אין חיבור כרגע. נסו שוב בעוד רגע.");});});});'
     + 'document.getElementById("fin").onclick=function(){var b=this;b.disabled=true;b.textContent="שולח...";post({finish:true}).then(function(){document.body.classList.add("sent");window.scrollTo(0,0);},function(){b.disabled=false;b.textContent="לא נשלח, לנסות שוב";});};'
     + 'paint();post({open:true}).catch(function(){});})();</script>'
     + '</body></html>';
@@ -162,11 +169,16 @@ function handlePost(b, notify) {
     if (!s.finishedAt) { s.finishedAt = now; saveState(tok, s); notify(K, summary(d, s) + '\nהלקוח לחץ "סיימתי". מה שמסומן ○ עוד פתוח.'); }
     return { status: 200, body: { ok: true } };
   }
-  const st = d.steps.find((x) => x.id === b.id);
+  const offer = (d.offers || []).find((x) => x.id === b.id);
+  const st = d.steps.find((x) => x.id === b.id) || offer;
   if (!st) return { status: 400, body: { error: 'step' } };
   if (st.ms && (b.ms === 'start' || b.ms === 'poll')) return msStep(tok, d, st, b.ms, notify);
   const x = s.steps[st.id] = s.steps[st.id] || {};
-  if (typeof b.choice === 'string' && st.choose && st.choose.options.indexOf(b.choice) > -1) x.choice = b.choice;
+  if (typeof b.choice === 'string' && st.choose && st.choose.options.indexOf(b.choice) > -1) {
+    const was = x.choice; x.choice = b.choice;
+    const last = st.choose.options[st.choose.options.length - 1];
+    if (offer && b.choice !== last && b.choice !== was) notify(K, '💰 ' + d.client + ' מתעניין: ' + st.title + (st.price ? ' (' + st.price + ')' : '') + '. בחר: ' + b.choice + '. לחזור אליו עם פרטים.');
+  }
   if (typeof b.done === 'boolean' && st.done) x.done = b.done;
   if (typeof b.secret === 'string' && st.input) {
     const v = b.secret.trim();
