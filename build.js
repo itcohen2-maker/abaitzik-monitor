@@ -1395,7 +1395,7 @@ function tenantTiles(inst) {
     const [cls, title, sub] = TENANT_TILES[id];
     // data-grp by visible label: only the two labels in the groups list get one.
     const grp = { gFiles: 'home', gBiz: 'work' }[id];
-    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' || /^gBh|^gShopList$/.test(id) ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261105-shai-oauth"' : '') + (id === 'gTasks' ? ' data-upd="tasks-del-1024"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' || /^gBh|^gShopList$/.test(id) ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261105-shai-send"' : '') + (id === 'gTasks' ? ' data-upd="tasks-del-1024"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
 }
 /*
@@ -16780,6 +16780,8 @@ function bizSheet(t0){
     // 4.11, Itzik: "תשאיר לי תמיד רק מה שמעודכן". Done items (the completion form, the info form) are gone from here.
     // 5.11, Itzik: "תשים לי את הטופס במוניטור, ב IT Solution, כדי שאני אוכל להיכנס ולבדוק אותו". The /view preview: never marks it opened; the connect buttons are real and come back here.
     +'<div class="bzSec">🔌 דף החיבורים החדש של שי, הכל בלחיצה</div>'
+    // 5.11, Itzik: "שים לי את הטופס לשי במוניטור כדי לשלוח לו אותו ... לסמן לי אותו באדום עד שאני נוגע בו".
+    +shaiFormBtn('setup-shai','setup2','📤 שלב 2: לשלוח לשי את דף החיבורים')
     +'<div class="bzRow"><b>כל כרטיס הוא כפתור התחברות: גוגל, מיקרוסופט, פיירפליס, לינקדין, יוטיוב, טיקטוק ופייסבוק</b><small>כאן לבדיקה שלך. מה שתחבר נשמר באמת, ואחרי הבדיקה מאפסים. שי לא יראה שנפתח.</small></div>'
     +'<a class="yb yb1" href="https://form.it-solution.co.il/s/f3d4f77d1278a2a5efdc/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לבדוק בעצמי את דף החיבורים של שי</a>'
     // 5.11, Itzik: "תכין לי טופס אחד ל review, אני רוצה לשלוח לתום לפני שאנחנו שולחים ללקוח". A separate copy (233c66...), reset after Tom answers.
@@ -16837,7 +16839,7 @@ function bizSheet(t0){
     +'<p class="bzEmpty">הציון למעלה מ 0 עד 100, 100 זה הכי טוב. כל ליד שלא נגעו בו שבוע מוריד 8 נקודות, הצעה שלא חזרו אליה 3 ימים מורידה 12, ותזכורת שהגיעה ולא טופלה מורידה 6.</p>';
   }
   // 2.11, Itzik: a tab with something new blinks until he opens it. The stamp changes whenever something is added there.
-  var BZ_UPD={its:'20261104-contract'+((D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done)?'-s'+String(D.shaiForms.sign.done).replace(/\\D/g,'').slice(0,12):''),shachar:((D.shSum&&D.shSum.upd)||'20261103-shachar-auto')+'-ld1104'};
+  var BZ_UPD={its:'20261105-setup2'+((D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done)?'-s'+String(D.shaiForms.sign.done).replace(/\\D/g,'').slice(0,12):''),shachar:((D.shSum&&D.shSum.upd)||'20261103-shachar-auto')+'-ld1104'};
   function bzSeen(){try{return JSON.parse(localStorage.getItem('bzTabSeen')||'{}');}catch(x){return {};}}
   function bzTabNew(k){return !!BZ_UPD[k]&&bzSeen()[k]!==BZ_UPD[k]&&k!==tab;}
   function bzMarkSeen(k){if(!BZ_UPD[k])return;var o=bzSeen();o[k]=BZ_UPD[k];try{localStorage.setItem('bzTabSeen',JSON.stringify(o));}catch(x){}}
@@ -16896,7 +16898,7 @@ function bizSheet(t0){
     if(a==='sign-shai'&&D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done){try{localStorage.setItem('itsDoneSeen:sign',D.shaiForms.sign.done);}catch(x){}var bb2=el.querySelector('#bzBody');if(bb2)bb2.innerHTML=body();return;}
     if(a==='sign-shai'){shareShai('https://form.it-solution.co.il/q/a9cf9d55064a85b58583','שי, מצורפים הצעת המחיר והסכם השירות. עוברים, בוחרים חבילה וחותמים ישר מהטלפון:','הצעת מחיר והסכם שירות, IT Solution','sign');return;}
     if(a==='form3-shai'){shareShai('https://form.it-solution.co.il/f/15939da3cf0776f57992','שי, תודה על הטופס! נשארו רק כמה פרטים קטנים כדי שנתחיל לחבר, כמה דקות:','עוד כמה פרטים, IT Solution','form3');return;}
-    if(a==='setup-shai'){shareShai('https://form.it-solution.co.il/s/f3d4f77d1278a2a5efdc','שי, כאן מחברים את המוניטור לכל הכלים שלך: המייל, הקלטות הפגישות, הדרייב, היומן, החשבוניות, קובץ החייבים, פייסבוק ואינסטגרם, לינקדין, טיקטוק ויוטיוב. בכל כרטיס כתוב בדיוק מה ללחוץ, וכל לחיצה נשמרת. בסוף לוחצים סיימתי:','חיבור המוניטור, IT Solution','setup');return;}
+    if(a==='setup-shai'){shareShai('https://form.it-solution.co.il/s/f3d4f77d1278a2a5efdc','שי, כאן מחברים את המוניטור לכלים שלך: המייל, הדרייב, היומן, הפגישות, לינקדין, יוטיוב ופייסבוק. בכל כרטיס יש כפתור התחברות והסבר מדויק מה רואים ועל מה לוחצים, וכל לחיצה נשמרת. אם משהו לא עובד, כותבים לנו בתיבה שמתחת לכרטיס:','חיבור המוניטור, IT Solution','setup2');return;}
     if(a==='form2-shai'){var f2='https://form.it-solution.co.il/f/c94dc7fa0f53147ed133',f2t='שי, כדי שנחבר את המוניטור בדיוק למה שיש לך, הכנו טופס קצר. רוב השאלות רק לסמן, כ 5 דקות:';
      if(navigator.share){navigator.share({title:'טופס חיבורים, IT Solution',text:f2t+'\\n'+f2}).catch(function(){});}
      else{try{navigator.clipboard.writeText(f2t+' '+f2);toast('הקישור לטופס הועתק. מדביקים לשי בוואטסאפ או במייל.');}catch(x){toast(f2);}}
