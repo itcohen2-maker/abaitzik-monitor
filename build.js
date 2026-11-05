@@ -7001,8 +7001,13 @@ function goLinks(m){
  var ids=[],names={};
  if(m.go){String(m.go).split(',').forEach(function(id){id=id.trim();if(id&&ids.indexOf(id)<0)ids.push(id);});}
  var t=String(m.text||'');
+ // 5.11, Itzik: "כל מקום שאתה אומר לי שאני צריך לעשות משהו, קח אותי לשם". A drawer inside
+ // העסק שלי ("העסק שלי ← 🌅 שחר") gets its own button that opens that drawer, not the sheet top.
+ var bzb='';
+ if(t.indexOf('העסק שלי')>-1){BZ_GO.forEach(function(z){if(!bzb&&t.indexOf(z[1])>-1)bzb='<button type="button" class="gotile" data-tile="gBiz" data-bt="'+z[0]+'">קח אותי לשם: העסק שלי ← '+esc(z[1])+'</button>';});}
  tileNames().forEach(function(x){
   if(ids.length>=3||ids.indexOf(x.id)>-1)return;
+  if(bzb&&x.id==='gBiz')return;
   if(t.indexOf(x.name)>-1){ids.push(x.id);names[x.id]=x.name;}
  });
  // Itzik, 1.10: "איפה זה ממוקם ולמה אין לי כפתור קח אותי לשם". A file named
@@ -7053,7 +7058,15 @@ function goLinks(m){
   if(!el||el.hidden)return '';
   var name=names[id]||goClean((el.querySelector('b')||el).textContent);
   return '<button type="button" class="gotile" data-tile="'+esc(id)+'">קח אותי לשם: '+esc(name)+'</button>';
- }).join('')+fold;
+ }).join('')+bzb+fold;
+}
+var BZ_GO=[['its','IT Solution'],['leads','לידים ולקוחות'],['money','כסף החודש'],['due','צריך לחזור'],['shachar','שחר'],['ner','נרות'],['anim','המשרד']];
+// Opens one drawer of העסק שלי and brings it into view (the drawers are details.dw around h3[data-t]).
+function bzOpenDrawer(k){
+ var n=0,iv=setInterval(function(){
+  var sh=document.getElementById('bizSheet'),h=sh&&sh.querySelector('h3[data-t="'+k+'"]'),d=h&&h.closest('details');
+  if(d||++n>25){clearInterval(iv);if(d){if(!d.open){var su=d.querySelector('summary');if(su)su.click();else d.open=true;}setTimeout(function(){d.scrollIntoView({block:'start',behavior:'smooth'});},250);}}
+ },120);
 }
 var goBack=null;
 function goBackBtn(){
@@ -7073,7 +7086,8 @@ function goThere(btn){
  var th=btn.closest('details.th');
  goBack={pane:panePrev||'h',y:window.pageYOffset||document.documentElement.scrollTop||0,
   th:th?th.getAttribute('data-k'):''};
- t.click();
+ var bt=btn.getAttribute('data-bt');
+ if(bt&&typeof bizSheet==='function'){bizSheet(bt);bzOpenDrawer(bt);}else t.click();
  goBackBtn().hidden=false;
 }
 function goReturn(){
@@ -12231,6 +12245,8 @@ function renderReminders(){
  var remOne=function(r){
   return '<div class="rem'+(r.sentAt?' remsent':'')+'"><b>'+esc(r.text)+'</b>'
    +'<div class="w">'+(r.sentAt?'נשלחה '+esc(day(r.sentAt)):'תקפוץ '+esc(remWhen(r.due)))+'</div>'
+   // 5.11, Itzik: a reminder that says where to go takes him there (same buttons as an answer).
+   +goLinks({text:r.text,go:r.go,from:'claude'})
    +(r.nag&&Date.parse(r.due)<=Date.now()?'<button type="button" class="remdone" data-k="'+esc(remKey(r))+'">✅ עשיתי</button>':'')
    +(remHot(r)?'<button type="button" class="remknow" data-k="'+esc(remKey(r))+'">אני יודע</button>':'')
    +'<button type="button" class="remdel" data-k="'+esc(remKey(r))+'">🗑 למחוק</button>'

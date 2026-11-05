@@ -2402,7 +2402,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-05T06:00:02.055Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-05T06:45:56.669Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2755,14 +2755,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4292,7 +4285,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='3e90b36646';
+var CODE_ID='0827a3d2a0';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -4893,8 +4886,11 @@ function goLinks(m){
  var ids=[],names={};
  if(m.go){String(m.go).split(',').forEach(function(id){id=id.trim();if(id&&ids.indexOf(id)<0)ids.push(id);});}
  var t=String(m.text||'');
+ var bzb='';
+ if(t.indexOf('העסק שלי')>-1){BZ_GO.forEach(function(z){if(!bzb&&t.indexOf(z[1])>-1)bzb='<button type="button" class="gotile" data-tile="gBiz" data-bt="'+z[0]+'">קח אותי לשם: העסק שלי ← '+esc(z[1])+'</button>';});}
  tileNames().forEach(function(x){
   if(ids.length>=3||ids.indexOf(x.id)>-1)return;
+  if(bzb&&x.id==='gBiz')return;
   if(t.indexOf(x.name)>-1){ids.push(x.id);names[x.id]=x.name;}
  });
  t=fileCap(fileSpaces(t));
@@ -4930,7 +4926,14 @@ function goLinks(m){
   if(!el||el.hidden)return '';
   var name=names[id]||goClean((el.querySelector('b')||el).textContent);
   return '<button type="button" class="gotile" data-tile="'+esc(id)+'">קח אותי לשם: '+esc(name)+'</button>';
- }).join('')+fold;
+ }).join('')+bzb+fold;
+}
+var BZ_GO=[['its','IT Solution'],['leads','לידים ולקוחות'],['money','כסף החודש'],['due','צריך לחזור'],['shachar','שחר'],['ner','נרות'],['anim','המשרד']];
+function bzOpenDrawer(k){
+ var n=0,iv=setInterval(function(){
+  var sh=document.getElementById('bizSheet'),h=sh&&sh.querySelector('h3[data-t="'+k+'"]'),d=h&&h.closest('details');
+  if(d||++n>25){clearInterval(iv);if(d){if(!d.open){var su=d.querySelector('summary');if(su)su.click();else d.open=true;}setTimeout(function(){d.scrollIntoView({block:'start',behavior:'smooth'});},250);}}
+ },120);
 }
 var goBack=null;
 function goBackBtn(){
@@ -4950,7 +4953,8 @@ function goThere(btn){
  var th=btn.closest('details.th');
  goBack={pane:panePrev||'h',y:window.pageYOffset||document.documentElement.scrollTop||0,
   th:th?th.getAttribute('data-k'):''};
- t.click();
+ var bt=btn.getAttribute('data-bt');
+ if(bt&&typeof bizSheet==='function'){bizSheet(bt);bzOpenDrawer(bt);}else t.click();
  goBackBtn().hidden=false;
 }
 function goReturn(){
@@ -8679,6 +8683,7 @@ function renderReminders(){
  var remOne=function(r){
   return '<div class="rem'+(r.sentAt?' remsent':'')+'"><b>'+esc(r.text)+'</b>'
    +'<div class="w">'+(r.sentAt?'נשלחה '+esc(day(r.sentAt)):'תקפוץ '+esc(remWhen(r.due)))+'</div>'
+   +goLinks({text:r.text,go:r.go,from:'claude'})
    +(r.nag&&Date.parse(r.due)<=Date.now()?'<button type="button" class="remdone" data-k="'+esc(remKey(r))+'">✅ עשיתי</button>':'')
    +(remHot(r)?'<button type="button" class="remknow" data-k="'+esc(remKey(r))+'">אני יודע</button>':'')
    +'<button type="button" class="remdel" data-k="'+esc(remKey(r))+'">🗑 למחוק</button>'
@@ -16585,7 +16590,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="BDlgL4lKYXBB2yk96UVlN_bNhLBppiq0K8ORV-TQ2jb7k8IMskeWYICec19xE7N5VEcCzVXZU9Pxb9e64KH8OCk";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
