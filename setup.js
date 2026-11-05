@@ -80,6 +80,20 @@ function card(st, i, s) {
       ? '<div class="cp cpm"><span>' + esc(c.label) + '</span><b dir="rtl">' + esc(c.value) + '</b><button type="button" class="cpb" data-v="' + esc(c.value) + '">העתקת ההודעה</button></div>'
       : '<div class="cp"><span>' + esc(c.label) + '</span><b dir="ltr">' + esc(c.value) + '</b><button type="button" class="cpb" data-v="' + esc(c.value) + '">העתקה</button></div>';
   });
+  // 5.11, Itzik: "צריך ממש הסבר מדויק לכל דבר, כי לקוח לא טכנולוגי לא יצליח לעבור את זה".
+  // guide: [ { t: "what you see and what to press", img?: "file in data/setup/img" } ], open by default,
+  // just before the button, so it is read before the page is left for the provider's screens.
+  if (Array.isArray(st.guide) && st.guide.length) {
+    h += '<details class="gd" open><summary>' + esc(st.guideTitle || '📋 מה יופיע על המסך ומה ללחוץ, שלב אחרי שלב') + '</summary><ol>'
+      + st.guide.map((g) => {
+        const step = typeof g === 'string' ? { t: g } : (g || {});
+        let im = '';
+        if (step.img && /^[a-z0-9-]+\.(jpg|png)$/.test(step.img)) {
+          try { im = '<img alt="" loading="lazy" src="data:image/' + (step.img.endsWith('.png') ? 'png' : 'jpeg') + ';base64,' + fs.readFileSync(path.join(DIR, 'img', step.img)).toString('base64') + '">'; } catch (e) {}
+        }
+        return '<li>' + esc(step.t) + im + '</li>';
+      }).join('') + '</ol></details>';
+  }
   if (st.link) h += '<a class="lk" href="' + esc(st.link.url) + '" target="_blank" rel="noopener">' + esc(st.link.label) + ' ↗</a>';
   if (st.input) h += '<div class="in" data-got="' + (x.got ? 1 : 0) + '"><p class="cq">' + esc(st.input.label) + '</p>'
     + (st.input.hint ? '<p class="ih">' + esc(st.input.hint) + '</p>' : '')
@@ -136,6 +150,7 @@ function page(tok, d, s) {
     + '.sv{border:0;border-radius:10px;background:#0f1b2a;color:#fff;font:700 15px Heebo;padding:0 16px;min-height:44px;cursor:pointer}.ig{font:600 13.5px Heebo;color:#0e7490;margin:8px 0 0}'
     + '.msb{display:block;width:100%;border:0;border-radius:14px;background:#0f1b2a;color:#fff;font:800 16px Heebo;padding:13px;cursor:pointer;min-height:48px;margin:0 0 10px}.msk{font:900 24px monospace!important;letter-spacing:3px!important}'
     + '.oab{display:block;text-align:center;text-decoration:none;border-radius:14px;background:#0f1b2a;color:#fff;font:800 16px Heebo;padding:14px;min-height:48px;margin:0 0 10px}.oa-google{background:#fff;color:#1f1f1f;border:1.5px solid #747775}.oa-meta{background:#1877f2}.oa-microsoft{background:#2f2f2f}.oa-fireflies{background:#6b21a8}.oa-linkedin{background:#0a66c2}.oa-tiktok{background:#000}'
+    + '.gd{background:#fffbeb;border:1.5px solid #fcd34d;border-radius:14px;padding:10px 12px;margin:0 0 12px}.gd summary{font:800 15px Heebo;cursor:pointer;color:#92400e}.gd ol{margin:8px 0 0;padding:0 22px 0 0}.gd li{font:400 15px/1.65 Heebo;color:#1f2937;margin:0 0 10px}.gd img{display:block;width:100%;max-width:340px;border:1px solid #e5e7eb;border-radius:10px;margin:8px 0 0}'
     + '.fin{display:block;width:100%;border:0;border-radius:16px;background:#0f1b2a;color:#fff;font:800 18px Heebo;padding:16px;margin-top:8px;cursor:pointer}'
     + '.saved{font:500 13px Heebo;color:#6b7c90;text-align:center;margin-top:10px}'
     + '.thanks{display:none;text-align:center;padding:60px 20px}.thanks b{display:block;font:900 26px Heebo;margin-bottom:8px}.thanks p{font:400 16px/1.6 Heebo;color:#24364b}'
