@@ -91,7 +91,11 @@ function card(st, i, s) {
         if (step.img && /^[a-z0-9-]+\.(jpg|png)$/.test(step.img)) {
           try { im = '<img alt="" loading="lazy" src="data:image/' + (step.img.endsWith('.png') ? 'png' : 'jpeg') + ';base64,' + fs.readFileSync(path.join(DIR, 'img', step.img)).toString('base64') + '">'; } catch (e) {}
         }
-        return '<li>' + esc(step.t) + im + '</li>';
+        // English button names in brackets, addresses and mails keep their own direction inside Hebrew.
+        const txt = esc(step.t)
+          .replace(/\(([A-Za-z][^()]*?(?:\([^()]*\)[^()]*?)?)\)/g, '(<bdi dir="ltr">$1</bdi>)')
+          .replace(/(^|[\s"])([\w.-]+@[\w.-]+\.[a-z]{2,}|[a-z0-9-]+\.(?:co\.il|com|ai))(?=[\s".,)]|$)/g, '$1<bdi dir="ltr">$2</bdi>');
+        return '<li>' + txt + im + '</li>';
       }).join('') + '</ol></details>';
   }
   if (st.link) h += '<a class="lk" href="' + esc(st.link.url) + '" target="_blank" rel="noopener">' + esc(st.link.label) + ' ↗</a>';
