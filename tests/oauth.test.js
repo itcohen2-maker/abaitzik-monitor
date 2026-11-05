@@ -250,3 +250,19 @@ test('linkedin and tiktok use our secret only on the server, never in the start 
   assert.equal(r.ok, true); assert.equal(r.saved.access_token, 'LA'); assert.equal(r.who, 'a@b.c');
   assert.ok(String(calls[0].opts.body).includes('client_secret=LSECRET'));
 });
+
+test('a note under a guide is saved and goes to Itzik at once', () => {
+  const d = JSON.parse(fs.readFileSync(path.join(process.env.SETUP_DIR, TOK + '.def.json'), 'utf8'));
+  d.steps[0].guide = ['שלב אחד'];
+  fs.writeFileSync(path.join(process.env.SETUP_DIR, TOK + '.def.json'), JSON.stringify(d));
+  const said = [];
+  setup.handlePost({ t: TOK, id: 'g', how: 'לא הצליח ✗' }, (k, t) => said.push(t));
+  setup.handlePost({ t: TOK, id: 'g', note: 'נתקעתי במסך האדום' }, (k, t) => said.push(t));
+  setup.handlePost({ t: TOK, id: 'g', how: 'something else' }, (k, t) => said.push(t));
+  const s = JSON.parse(fs.readFileSync(path.join(process.env.SETUP_DIR, TOK + '.json'), 'utf8'));
+  assert.equal(s.steps.g.how, 'לא הצליח ✗'); assert.equal(s.steps.g.note, 'נתקעתי במסך האדום');
+  assert.equal(said.length, 2); assert.ok(said[1].includes('נתקעתי במסך האדום'));
+  const r = { code: 0, headers: {}, body: '' }; r.writeHead = (c) => { r.code = c; }; r.end = (b) => { r.body = b; };
+  setup.servePage(TOK, r);
+  assert.ok(r.body.includes('class="nta"') && r.body.includes('נתקעתי במסך האדום'));
+});

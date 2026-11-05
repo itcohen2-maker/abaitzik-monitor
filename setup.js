@@ -120,6 +120,15 @@ function card(st, i, s) {
     + '<p class="ih">שם מדביקים את הקוד, נכנסים עם המייל של ה 365 ולוחצים אישור. הדף הזה יסמן ✓ לבד.</p></div>'
     + '<p class="ig">' + (x.got ? '✓ היומן מחובר' + (x.who ? ' (' + esc(x.who) + ')' : '') : '') + '</p></div>';
   if (st.done) h += '<button type="button" class="dn' + (x.done ? ' on' : '') + '">' + (x.done ? '✓ ' : '') + esc(st.done) + '</button>';
+  // 5.11, Itzik: "תשים בטופס, מתחת לכל ההסברים, הערה, אם הוא רוצה לכתוב משהו, הצליח, לא הצליח".
+  // Every card with a guide ends with "how did it go" + a free note. Sent to Itzik's monitor at once.
+  if (Array.isArray(st.guide) && st.guide.length) {
+    const HOW = ['הצליח ✓', 'לא הצליח ✗'];
+    h += '<div class="nt"><p class="cq">איך הלך? (לא חובה)</p><div class="ops">'
+      + HOW.map((o) => '<button type="button" class="nh' + (x.how === o ? ' on' : '') + '">' + esc(o) + '</button>').join('') + '</div>'
+      + '<textarea class="nta" rows="2" placeholder="רוצה לכתוב לנו משהו? מה ראית, איפה נתקעת, שאלה">' + esc(x.note || '') + '</textarea>'
+      + '<button type="button" class="ntb">שליחת ההערה</button><p class="ig ntg"></p></div>';
+  }
   return h + '</section>';
 }
 
@@ -154,7 +163,8 @@ function page(tok, d, s) {
     + '.sv{border:0;border-radius:10px;background:#0f1b2a;color:#fff;font:700 15px Heebo;padding:0 16px;min-height:44px;cursor:pointer}.ig{font:600 13.5px Heebo;color:#0e7490;margin:8px 0 0}'
     + '.msb{display:block;width:100%;border:0;border-radius:14px;background:#0f1b2a;color:#fff;font:800 16px Heebo;padding:13px;cursor:pointer;min-height:48px;margin:0 0 10px}.msk{font:900 24px monospace!important;letter-spacing:3px!important}'
     + '.oab{display:block;text-align:center;text-decoration:none;border-radius:14px;background:#0f1b2a;color:#fff;font:800 16px Heebo;padding:14px;min-height:48px;margin:0 0 10px}.oa-google{background:#fff;color:#1f1f1f;border:1.5px solid #747775}.oa-meta{background:#1877f2}.oa-microsoft{background:#2f2f2f}.oa-fireflies{background:#6b21a8}.oa-linkedin{background:#0a66c2}.oa-tiktok{background:#000}'
-    + '.gd{background:#fffbeb;border:1.5px solid #fcd34d;border-radius:14px;padding:10px 12px;margin:0 0 12px}.gd summary{font:800 15px Heebo;cursor:pointer;color:#92400e}.gd ol{margin:8px 0 0;padding:0 22px 0 0}.gd li{font:400 15px/1.65 Heebo;color:#1f2937;margin:0 0 10px}.gd bdi{white-space:nowrap}.gd img{display:block;width:100%;max-width:340px;border:1px solid #e5e7eb;border-radius:10px;margin:8px 0 0}'
+    + '.gd{background:#fffbeb;border:1.5px solid #fcd34d;border-radius:14px;padding:10px 12px;margin:0 0 12px}.gd summary{font:800 15px Heebo;cursor:pointer;color:#92400e}.gd ol{margin:8px 0 0;padding:0 22px 0 0}.gd li{font:400 15px/1.65 Heebo;color:#1f2937;margin:0 0 10px}.nt{border-top:1px dashed #cbd5e1;margin-top:12px;padding-top:10px}.nh{border:1.5px solid #cbd5e1;background:#fff;color:#0f1b2a;border-radius:999px;padding:8px 14px;font:500 14.5px Heebo;cursor:pointer;min-height:40px}.nh.on{background:#0f1b2a;border-color:#0f1b2a;color:#fff}.nta{display:block;width:100%;border:1.5px solid #cbd5e1;border-radius:10px;padding:10px;font:400 15px Heebo;margin:8px 0;resize:vertical}.ntb{border:0;border-radius:10px;background:#e2e8f0;color:#0f1b2a;font:700 14.5px Heebo;padding:9px 16px;cursor:pointer;min-height:40px}'
+    + '.gd bdi{white-space:nowrap}.gd img{display:block;width:100%;max-width:340px;border:1px solid #e5e7eb;border-radius:10px;margin:8px 0 0}'
     + '.fin{display:block;width:100%;border:0;border-radius:16px;background:#0f1b2a;color:#fff;font:800 18px Heebo;padding:16px;margin-top:8px;cursor:pointer}'
     + '.saved{font:500 13px Heebo;color:#6b7c90;text-align:center;margin-top:10px}'
     + '.thanks{display:none;text-align:center;padding:60px 20px}.thanks b{display:block;font:900 26px Heebo;margin-bottom:8px}.thanks p{font:400 16px/1.6 Heebo;color:#24364b}'
@@ -171,7 +181,7 @@ function page(tok, d, s) {
     + 'function msg(t){document.getElementById("saved").textContent=t;}'
     + 'function paint(){var n=C.filter(function(c){return c.classList.contains("ok");}).length;document.getElementById("bar").style.width=Math.round(n/C.length*100)+"%";document.getElementById("cnt").textContent=n+" מתוך "+C.length+" מוכנים";}'
     + 'function ok(c){var dn=c.querySelector(".dn"),inp=c.querySelector(".in")||c.querySelector(".ms")||c.querySelector(".oa");c.classList.toggle("ok",inp?inp.getAttribute("data-got")==="1":(dn?dn.classList.contains("on"):!!c.querySelector(".op.on")));paint();}'
-    + 'C.forEach(function(c){var id=c.getAttribute("data-id");c.addEventListener("click",function(e){'
+    + 'C.forEach(function(c){var id=c.getAttribute("data-id");c.addEventListener("click",function(e){var nh=e.target.closest(".nh");if(nh){c.querySelectorAll(".nh.on").forEach(function(x){if(x!==nh)x.classList.remove("on");});nh.classList.add("on");post({id:id,how:nh.textContent}).then(function(){msg("נשמר ✓");},function(){msg("אין חיבור כרגע. נסו שוב בעוד רגע.");});return;}var nb=e.target.closest(".ntb");if(nb){var ta=c.querySelector(".nta"),ng=c.querySelector(".ntg");nb.disabled=true;ng.textContent="שולח...";post({id:id,note:ta.value}).then(function(){nb.disabled=false;ng.textContent="✓ ההערה הגיעה אלינו. נחזור אליך אם צריך.";},function(){nb.disabled=false;ng.textContent="לא נשלח. נסו שוב בעוד רגע.";});return;}'
     + 'var b=e.target.closest(".op");if(b){c.querySelectorAll(".op.on").forEach(function(x){if(x!==b)x.classList.remove("on");});b.classList.add("on");ok(c);post({id:id,choice:b.textContent}).then(function(){msg("נשמר ✓");},function(){msg("אין חיבור כרגע. נסו שוב בעוד רגע.");});return;}'
     + 'var p=e.target.closest(".cpb");if(p){var v=p.getAttribute("data-v");(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(function(){p.textContent="הועתק ✓";},function(){p.textContent=v;});return;}'
     + 'var sv=e.target.closest(".sv");if(sv){var box=c.querySelector(".in"),f=box.querySelector("input"),g=box.querySelector(".ig"),v=f.value.trim();if(!v){g.textContent="צריך להדביק קודם";return;}sv.disabled=true;g.textContent="שומר...";'
@@ -229,6 +239,13 @@ function handlePost(b, notify) {
     if (offer && b.choice !== last && b.choice !== was) notify(K, '💰 ' + d.client + ' מתעניין: ' + st.title + (st.price ? ' (' + st.price + ')' : '') + '. בחר: ' + b.choice + '. לחזור אליו עם פרטים.');
   }
   if (typeof b.done === 'boolean' && st.done) x.done = b.done;
+  // 5.11: "how did it go" and a free note under each guide; Itzik sees it at once.
+  if ((typeof b.how === 'string' || typeof b.note === 'string') && Array.isArray(st.guide)) {
+    const how = typeof b.how === 'string' && /^(הצליח ✓|לא הצליח ✗)$/.test(b.how) ? b.how : null;
+    const note = typeof b.note === 'string' ? b.note.trim().slice(0, 1000) : null;
+    if (how && how !== x.how) { x.how = how; notify(K, '📝 ' + d.client + ', ' + st.title + ': ' + how + (x.note ? '. כתב: ' + x.note : '')); }
+    if (note !== null && note !== (x.note || '')) { x.note = note; if (note) notify(K, '📝 ' + d.client + ' כתב על ' + st.title + (x.how ? ' (' + x.how + ')' : '') + ': ' + note); }
+  }
   if (typeof b.secret === 'string' && st.input) {
     const v = b.secret.trim();
     if (!v || v.length > 400) return { status: 400, body: { error: 'secret' } };
