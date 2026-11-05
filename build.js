@@ -1395,7 +1395,7 @@ function tenantTiles(inst) {
     const [cls, title, sub] = TENANT_TILES[id];
     // data-grp by visible label: only the two labels in the groups list get one.
     const grp = { gFiles: 'home', gBiz: 'work' }[id];
-    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' || /^gBh|^gShopList$/.test(id) ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261104-shachar-ld"' : '') + (id === 'gTasks' ? ' data-upd="tasks-del-1024"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' || /^gBh|^gShopList$/.test(id) ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261105-shai-oauth"' : '') + (id === 'gTasks' ? ' data-upd="tasks-del-1024"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
 }
 /*
@@ -16778,6 +16778,10 @@ function bizSheet(t0){
     // 4.11, Itzik: "איפה אני יכול לקבל את מה שהוא חתם? אני רוצה לראות את זה במוניטור". Step 1 is done: the signed PDF in its place.
     +'<button type="button" class="yb yb1" data-bz="anim" data-f="quote-shai-bodek-signed.pdf" data-new="1">✅ שלב 1: שי חתם ב 4.11, ההצעה וההסכם החתומים (PDF)</button>'
     // 4.11, Itzik: "תשאיר לי תמיד רק מה שמעודכן". Done items (the completion form, the info form) are gone from here.
+    // 5.11, Itzik: "תשים לי את הטופס במוניטור, ב IT Solution, כדי שאני אוכל להיכנס ולבדוק אותו". The /view preview: never marks it opened; the connect buttons are real and come back here.
+    +'<div class="bzSec">🔌 דף החיבורים החדש של שי, הכל בלחיצה</div>'
+    +'<div class="bzRow"><b>כל כרטיס הוא כפתור התחברות: גוגל, מיקרוסופט, פיירפליס, לינקדין, יוטיוב, טיקטוק ופייסבוק</b><small>כאן לבדיקה שלך. מה שתחבר נשמר באמת, ואחרי הבדיקה מאפסים. שי לא יראה שנפתח.</small></div>'
+    +'<a class="yb yb1" href="https://form.it-solution.co.il/s/f3d4f77d1278a2a5efdc/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לבדוק בעצמי את דף החיבורים של שי</a>'
     +'<div class="bzSec">🖥️ מה שכבר קיים אצל שי</div>'
     +'<a class="yb yb2" href="https://shai.it-solution.co.il/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">🖥️ המוניטור של שי</a>'
     ;

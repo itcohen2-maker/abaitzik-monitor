@@ -256,8 +256,9 @@ function oauthStart(p, q, res) {
   const tok = safeTok(q.get('t')); const d = tok && def(tok);
   const st = d && d.steps.find((x) => x.id === q.get('s') && x.oauth && oaProv(x.oauth) === p);
   if (!st) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('הדף לא נמצא'); }
-  const r = oa.startUrl(p, tok, st.id, st.oauth.scopes);
-  if (!r.url) { res.writeHead(302, { Location: '/s/' + tok + '#' + st.id }); return res.end(); }
+  const view = q.get('v') === '1';
+  const r = oa.startUrl(p, tok, st.id, st.oauth.scopes, null, view);
+  if (!r.url) { res.writeHead(302, { Location: '/s/' + tok + (view ? '/view' : '') + '#' + st.id }); return res.end(); }
   res.writeHead(302, { Location: r.url, 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' }); res.end();
 }
 
@@ -282,7 +283,7 @@ async function oauthCallback(p, q, res, notify) {
     if (r.error === 'exchange') notify(K, d.client + ': החיבור ל' + OA_NAME[p] + ' נכשל אצל הספק' + (r.detail ? ': ' + r.detail : '') + '.');
   }
   s.updatedAt = now; s.reported = false; saveState(tok, s);
-  res.writeHead(302, { Location: '/s/' + tok + '#' + st.id, 'Cache-Control': 'no-store' }); res.end();
+  res.writeHead(302, { Location: '/s/' + tok + (r.v ? '/view' : '') + '#' + st.id, 'Cache-Control': 'no-store' }); res.end();
 }
 
 module.exports = { servePage, handlePost, sweep, summary, oauthStart, oauthCallback, DIR };

@@ -17,6 +17,12 @@ function serve(mod, tok, res) {
   if (code === 200) {
     out = out.replace(/<body([^>]*)>/, (m, a) => '<body' + a.replace(/class="sent"/, '') + '>' + BANNER);
     out = out.replace('<script>', STUB + '<script>');
+    // 5.11: "connect" buttons are real here, so Itzik can try them with his own accounts. They carry
+    // v=1, and the provider sends him back to this view, never to the client's page.
+    if (/\/oauth\/[a-z]+\/start\?/.test(out)) {
+      out = out.replace(/(\/oauth\/[a-z]+\/start\?t=[a-f0-9]+&amp;s=[^"&]+)/g, '$1&amp;v=1');
+      out = out.replace(BANNER, BANNER.replace('שום דבר לא נשמר, לא נשלח ולא נרשם שנפתח.', 'לא נרשם שנפתח. כפתורי ההתחברות אמיתיים: מה שמחברים כאן נשמר, ואחרי הבדיקה מאפסים.'));
+    }
   }
   res.writeHead(code, Object.assign({}, head, { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex, nofollow' }));
   res.end(out);
