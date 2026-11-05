@@ -83,7 +83,7 @@ function card(st, i, s) {
   // 5.11, Itzik: "צריך ממש הסבר מדויק לכל דבר, כי לקוח לא טכנולוגי לא יצליח לעבור את זה".
   // guide: [ { t: "what you see and what to press", img?: "file in data/setup/img" } ], open by default,
   // just before the button, so it is read before the page is left for the provider's screens.
-  if (Array.isArray(st.guide) && st.guide.length) {
+  if (Array.isArray(st.guide) && st.guide.length && !(st.oauth && st.oauth.soon)) {
     h += '<details class="gd" open><summary>' + esc(st.guideTitle || '📋 מה יופיע על המסך ומה ללחוץ, שלב אחרי שלב') + '</summary><ol>'
       + st.guide.map((g) => {
         const step = typeof g === 'string' ? { t: g } : (g || {});
@@ -105,12 +105,13 @@ function card(st, i, s) {
     + '<p class="ig">' + (x.got ? '✓ התקבל ונשמר במקום מאובטח. כדי להחליף, להדביק שוב.' : '') + '</p></div>';
   if (st.oauth) {
     const pr = oaProv(st.oauth);
-    const live = require('./lib/oauth.js').ready(pr);
+    // 5.11: oauth.soon = the provider has not approved our app yet; show a calm note instead of a button that would fail.
+    const live = require('./lib/oauth.js').ready(pr) && !st.oauth.soon;
     const href = '/oauth/' + pr + '/start?t=' + encodeURIComponent(s._tok || '') + '&s=' + encodeURIComponent(st.id);
     h += '<div class="oa" data-got="' + (x.got ? 1 : 0) + '">'
       + (live
         ? '<a class="oab oa-' + pr + '" rel="noreferrer" referrerpolicy="no-referrer" href="' + esc(href) + '">' + esc(x.got ? 'לחבר מחדש' : (st.oauth.button || 'התחברות עם ' + OA_NAME[pr])) + '</a>'
-        : '<p class="ih">החיבור ל' + OA_NAME[pr] + ' בלחיצה ייפתח בקרוב. נעדכן אותך.</p>')
+        : '<p class="ih">' + esc(typeof st.oauth.soon === 'string' ? st.oauth.soon : 'החיבור ל' + OA_NAME[pr] + ' בלחיצה ייפתח בקרוב. נעדכן אותך.') + '</p>')
       + '<p class="ig">' + (x.got ? '✓ מחובר' + (x.who ? ' (' + esc(x.who) + ')' : '') : (x.oaErr ? esc(OA_ERR[x.oaErr] || OA_ERR.exchange) : '')) + '</p></div>';
   }
   if (st.ms) h += '<div class="ms" data-got="' + (x.got ? 1 : 0) + '">'
@@ -122,7 +123,7 @@ function card(st, i, s) {
   if (st.done) h += '<button type="button" class="dn' + (x.done ? ' on' : '') + '">' + (x.done ? '✓ ' : '') + esc(st.done) + '</button>';
   // 5.11, Itzik: "תשים בטופס, מתחת לכל ההסברים, הערה, אם הוא רוצה לכתוב משהו, הצליח, לא הצליח".
   // Every card with a guide ends with "how did it go" + a free note. Sent to Itzik's monitor at once.
-  if (Array.isArray(st.guide) && st.guide.length) {
+  if (Array.isArray(st.guide) && st.guide.length && !(st.oauth && st.oauth.soon)) {
     const HOW = ['הצליח ✓', 'לא הצליח ✗'];
     h += '<div class="nt"><p class="cq">איך הלך? (לא חובה)</p><div class="ops">'
       + HOW.map((o) => '<button type="button" class="nh' + (x.how === o ? ' on' : '') + '">' + esc(o) + '</button>').join('') + '</div>'

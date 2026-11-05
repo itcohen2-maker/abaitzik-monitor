@@ -80,6 +80,7 @@ async function checkPage(tok) {
     if (st.ms) res.problems.push(st.title + ': עדיין חיבור בקוד במקום כפתור');
     if (st.copy && /iam\.gserviceaccount\.com/.test(st.copy.value || '')) res.problems.push(st.title + ': עדיין מבקש לשתף עם כתובת');
     if (!st.oauth) { res.cards.push({ id: st.id, title: st.title, provider: '', ok: true, why: 'בלי חיבור (שאלה או אישור)' }); continue; }
+    if (st.oauth.soon) { res.cards.push({ id: st.id, title: st.title, provider: st.oauth.provider, ok: false, pending: true, why: 'מסומן "בקרוב" עד אישור הספק' }); continue; }
     const href = '/oauth/' + st.oauth.provider + '/start?t=' + tok + '&amp;s=' + encodeURIComponent(st.id);
     const live = oa.ready(st.oauth.provider);
     if (live && page.indexOf(href) < 0) { res.cards.push({ id: st.id, title: st.title, provider: st.oauth.provider, ok: false, why: 'הכפתור לא מופיע בדף החי' }); continue; }
