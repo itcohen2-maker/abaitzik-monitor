@@ -2402,7 +2402,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-05T18:42:01.813Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-05T18:44:33.679Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2755,14 +2755,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4292,7 +4285,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='efbd65046b';
+var CODE_ID='6fbaf0974d';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12015,7 +12008,11 @@ var TOM_ITEMS=[
  {h:"📲 סטטוס וסטורי · עם כתובת האתר בסוף"},
  {n:"7",t:"⏳ עוד לא עלה · מי לא שילם, בנק והנה״ח · להיום 5.11",r:"monitor-gviya-bank-v7.mp4"},
  {n:"8",t:"⏳ עוד לא עלה · תור לרופא שיניים · לשלישי 10.11",r:"monitor-tor-shinayim.mp4"},
- {h:"🎬 רילים · אין כרגע ריל של המוניטור"}
+ {n:"9",t:"⏳ עוד לא עלה · שרפת קרדיטים, סרטון חדש, גרסה עם כתובת האתר",r:"ad-credits-v2.mp4"},
+ {h:"🎬 רילים וטיקטוק · המוניטור"},
+ {n:"10",t:"IT 01 · המוניטור, וואטסאפ ולוח בקרה אחד · לסטורי באינסטגרם ולטיקטוק",r:"it01-monitor-v2.mp4"},
+ {n:"10 כריכה",t:"הכריכה: מי לא שילם לך החודש?",r:"it01-cover.jpg"},
+ {n:"10 פרסום",t:"טקסט לסטורי ולטיקטוק, עם קישור לכל רשת",r:"it01-post.txt"}
 ];
 function tomSheet(){
  var old=document.getElementById('tomSheet');if(old)old.remove();
@@ -16593,7 +16590,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="BDlgL4lKYXBB2yk96UVlN_bNhLBppiq0K8ORV-TQ2jb7k8IMskeWYICec19xE7N5VEcCzVXZU9Pxb9e64KH8OCk";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
