@@ -953,6 +953,8 @@ function build() {
         payload.shSum = shState();
       } catch (e) { payload.shWait = []; }
       // 4.11, Itzik: Shai's two forms, red until sent, orange while waiting, green when filled (lib/shai-forms.js).
+      // 5.11, Itzik: the NDA a new client signs on the phone (ndasign.js): the IT Solution signature, the link, every signed copy.
+      if (inst.name === 'abaitzik') { try { payload.nda = require('./ndasign.js').state(); } catch (e) { console.error('nda: ' + e.message); } }
       if (inst.name === 'abaitzik') { try { payload.shaiForms = require('./lib/shai-forms.js').state(__dirname); } catch (e) { console.error('shaiForms: ' + e.message); } }
       bizOn = true;
     } catch (e) { console.error('biz: ' + e.message); }
@@ -1456,6 +1458,7 @@ function filesUpd(html){
   return /data-upd="/.test(tag)?tag.replace(/data-upd="([^"]*)"/,function(m,v){return 'data-upd="'+v.replace(/-f\d+$/,'')+'-'+stamp+'"';}):tag.replace(/>$/,' data-upd="'+stamp+'">');
  });
 }
+function ndaStamp(){try{const n=require('./ndasign.js').state();return n&&n.signed[0]?'-'+String(n.signed[0].at).replace(/\D/g,'').slice(0,12):'';}catch(e){return '';}}
 function lecWhen(f){try{return fs.statSync(path.join(__dirname,'data','files-private',f)).mtime;}catch(e){return null;}}
 function lecFmt(d,withTime){if(!d)return '';var o={timeZone:'Asia/Jerusalem',day:'numeric',month:'numeric'};if(withTime){o.hour='2-digit';o.minute='2-digit';o.hour12=false;}return d.toLocaleString('he-IL',o).replace(/\//g,'.').replace(',','');}
 const LEC_PRAC=lecWhen('lecture-practice-small-slides.pdf'),LEC_TEXT=lecWhen('lecture-full-text.pdf');
@@ -4297,7 +4300,7 @@ ${require('./lib/home-ui.js').html}
 
  <div id="askBox"></div>
 <!-- 4.11, Itzik: "תעלה את האריח של העסק שלי למעלה ברשימה. למה שמת אותו אחרון?" The business grid opens the home screen. -->
-${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261105-nda' + newestLead() + shaiSignStamp() + '"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
+${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261105-nda2' + ndaStamp() + newestLead() + shaiSignStamp() + '"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
   <!-- 3.11, Itzik: "אני צריך אריח שממש יעבב לי, כמו ליד חדש". First on the grid; shows while a --nag reminder is open, hard blink once it is due, until "✅ עשיתי". -->
@@ -16740,6 +16743,22 @@ function bizSheet(t0){
    });
    return h;
   }
+  // 5.11, Itzik: "תהפוך את הטופס לטופס עם חתימה דיגיטלית" and "חתימה של IT Solution תסין, רק יישאר לנו למלא כל פעם תאריך ותפקיד".
+  // Red until IT Solution signed once; then one link for every client; every signed copy, newest first.
+  function ndaHtml(){
+   var n=D.nda;if(!n)return '';
+   function hd(t){try{return new Date(t).toLocaleString('he-IL',{day:'numeric',month:'numeric',year:'2-digit',hour:'2-digit',minute:'2-digit'});}catch(x){return '';}}
+   var wa='https://wa.me/?text='+encodeURIComponent('שלום, מצורף הסכם הסודיות של IT Solution. ממלאים את פרטי החברה וחותמים מהטלפון, ומקבלים מיד עותק חתום:\\n'+n.share);
+   var h=n.owner
+    ?'<a class="yb yb2" href="'+n.own+'" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">✅ IT Solution חתם ('+hd(n.ownerAt)+') · לשנות פרטים או חתימה</a>'
+    :'<a class="yb ybRed taskblink" href="'+n.own+'" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">✍️ שלב 1: לחתום פעם אחת בשם IT Solution<small style="display:block;font-weight:500;margin-top:3px">🔴 בלי זה הלקוח לא יכול לחתום</small></a>';
+   if(n.owner)h+='<a class="yb yb1" href="'+wa+'" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">💬 לשלוח ללקוח חדש לחתימה (וואטסאפ)</a>'
+    +'<button type="button" class="yb" data-bz="ndacopy" data-u="'+n.share+'">📋 להעתיק את הקישור לחתימה</button>';
+   h+='<button type="button" class="yb" data-bz="anim" data-f="'+(n.blank||'it-solution-nda.pdf')+'">📄 הסכם הסודיות כ PDF (ריק, לפני חתימה)</button>';
+   (n.signed||[]).forEach(function(x,i){h+='<button type="button" class="yb'+(i?'':' yb2')+'" data-bz="anim" data-f="'+esc(x.file)+'">✍️ '+esc(x.co)+' חתם · '+hd(x.at)+' (PDF חתום)</button>';});
+   h+='<div class="bzRow"><small>'+((n.signed||[]).length?'חתמו '+n.signed.length+' · ':'עוד אף לקוח לא חתם · ')+'פתחו את הקישור '+(n.opens||0)+' פעמים. הלקוח ממלא שם חברה, ח.פ., כתובת, שם ותפקיד וחותם; התאריך נכנס לבד.</small></div>';
+   return h;
+  }
   function itsHtml(){
    return '<div class="bzHead">💻 IT Solution</div>'+planBoardHtml()
     // 4.11, Itzik: an insurance agent asks how confidential the monitor is. A page to hand the customer.
@@ -16756,8 +16775,8 @@ function bizSheet(t0){
     +'<button type="button" class="yb" data-bz="secshare" data-u="security" data-k="share">📤 לשלוח ללקוח את דף האבטחה</button>'
     +'<button type="button" class="yb" data-bz="secshare" data-u="security" data-k="wa">💬 דף האבטחה בוואטסאפ</button>'
     // 5.11, Itzik: "זה מסמך סודיות שמעבירים ללקוח חדש, שים אותו ב IT Solution". The Word file, to share as is.
-    +'<div class="bzSec">📄 מסמך סודיות ללקוח חדש</div>'
-    +'<button type="button" class="yb yb1" data-bz="anim" data-f="it-solution-nda.docx" data-new="1">📄 הסכם סודיות NDA (וורד, לשליחה ללקוח)</button>'
+    +'<div class="bzSec">📄 מסמך סודיות ללקוח חדש</div>'+ndaHtml()
+    +'<button type="button" class="yb" data-bz="anim" data-f="it-solution-nda.docx">📄 הסכם הסודיות כקובץ וורד</button>'
     +'<div class="bzSec">הדגמה ללקוח</div>'
     +(typeof dmoStart==='function'?'<button type="button" class="yb yb1" data-bz="demo">🎬 מצב הדגמה ללקוח</button>':'')
     +'<button type="button" class="yb" data-bz="anim" data-f="demo-script-shai.pdf">🎬 תסריט ההדגמה לשי (PDF)</button>'
@@ -16831,7 +16850,7 @@ function bizSheet(t0){
     +'<p class="bzEmpty">הציון למעלה מ 0 עד 100, 100 זה הכי טוב. כל ליד שלא נגעו בו שבוע מוריד 8 נקודות, הצעה שלא חזרו אליה 3 ימים מורידה 12, ותזכורת שהגיעה ולא טופלה מורידה 6.</p>';
   }
   // 2.11, Itzik: a tab with something new blinks until he opens it. The stamp changes whenever something is added there.
-  var BZ_UPD={its:'20261105-nda'+((D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done)?'-s'+String(D.shaiForms.sign.done).replace(/\\D/g,'').slice(0,12):''),shachar:((D.shSum&&D.shSum.upd)||'20261103-shachar-auto')+'-ld1104'};
+  var BZ_UPD={its:'20261105-nda2'+((D.nda&&D.nda.signed&&D.nda.signed[0])?'-'+String(D.nda.signed[0].at).replace(/\D/g,'').slice(0,12):'')+((D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done)?'-s'+String(D.shaiForms.sign.done).replace(/\\D/g,'').slice(0,12):''),shachar:((D.shSum&&D.shSum.upd)||'20261103-shachar-auto')+'-ld1104'};
   function bzSeen(){try{return JSON.parse(localStorage.getItem('bzTabSeen')||'{}');}catch(x){return {};}}
   function bzTabNew(k){return !!BZ_UPD[k]&&bzSeen()[k]!==BZ_UPD[k]&&k!==tab;}
   function bzMarkSeen(k){if(!BZ_UPD[k])return;var o=bzSeen();o[k]=BZ_UPD[k];try{localStorage.setItem('bzTabSeen',JSON.stringify(o));}catch(x){}}
@@ -16900,6 +16919,7 @@ function bizSheet(t0){
      return;}
     // 4.11: window.prompt used up the tap, so share and the WhatsApp window were blocked on the phone (Itzik: 'תקוע').
     // The name is typed in a box in the sheet, and its own button (a fresh tap) does the sharing.
+    if(a==='ndacopy'){var u0=t.getAttribute('data-u');try{navigator.clipboard.writeText(u0).then(function(){toast('הקישור הועתק');},function(){uiPrompt('הקישור לחתימה:',u0);});}catch(x){uiPrompt('הקישור לחתימה:',u0);}return;}
     if(a==='secshare'){var pg0=t.getAttribute('data-u')==='monitor'?'monitor':'security',k0=t.getAttribute('data-k')==='wa'?'wa':'share';
      var ob=el.querySelector('.secBox');if(ob)ob.parentNode.removeChild(ob);
      var bx=document.createElement('div');bx.className='secBox';bx.style.cssText='margin:4px 0 12px;display:flex;gap:6px;align-items:center';

@@ -257,7 +257,7 @@ function handlePost(b, notify, ip, ua, done) {
   const rec = { f: c, sig, date: n.date, time: n.time, signedAt: new Date().toISOString(), ip: String(ip || ''), ua: clean(ua, 300), out, owner: { name: o.name, role: o.role, at: o.at } };
   const docHash = crypto.createHash('sha256').update(printHtml({})).digest('hex').slice(0, 16);
   const vals = Object.assign({}, c, { day: n.d, month: MONTHS[+n.m - 1], year: n.y, date: n.date, sig, itsAddr: o.addr, itsName: o.name, itsRole: o.role, itsDate: n.date, itsSig: o.sig,
-    audit: 'נחתם דיגיטלית ב form.it-solution.co.il ב ' + esc(n.date) + ' בשעה ' + esc(n.time) + ' (שעון ישראל). כתובת IP של החותם: ' + esc(rec.ip || 'לא ידועה') + '. מזהה ההסכם: ' + tok + '. טביעת נוסח ההסכם: ' + docHash + '.' });
+    audit: 'נחתם דיגיטלית ב <bdi>form.it-solution.co.il</bdi> ב <bdi>' + esc(n.date) + '</bdi> בשעה <bdi>' + esc(n.time) + '</bdi> (שעון ישראל).<br>כתובת IP של החותם: <bdi dir="ltr">' + esc(rec.ip || 'לא ידועה') + '</bdi> · מזהה ההסכם: <bdi dir="ltr">' + tok + '</bdi> · טביעת נוסח ההסכם: <bdi dir="ltr">' + docHash + '</bdi>' });
   writeJson(path.join(d.dir, 'signed', tok + '.json'), rec);
   const pdfPath = path.join(d.dir, 'signed', tok + '.pdf');
   toPdf(printHtml(vals), pdfPath, (e) => {
