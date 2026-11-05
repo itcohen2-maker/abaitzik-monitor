@@ -34,7 +34,7 @@ const DIR = process.env.SETUP_DIR || path.join(__dirname, 'data', 'setup');
   /oauth/<provider>/start; the provider sends the client back to /oauth/<provider>/callback,
   the token is saved like a secret under the step id, and the client lands back on this page.
 */
-const OA_NAME = { google: 'גוגל', meta: 'פייסבוק', microsoft: 'מיקרוסופט', fireflies: 'פיירפליס' };
+const OA_NAME = { google: 'גוגל', meta: 'פייסבוק', microsoft: 'מיקרוסופט', fireflies: 'פיירפליס', linkedin: 'לינקדין', tiktok: 'טיקטוק' };
 const oaProv = (o) => (require('./lib/oauth.js').PROVIDERS.indexOf(o && o.provider) > -1 ? o.provider : 'google');
 const OA_ERR = {
   denied: 'החיבור בוטל באמצע. אפשר ללחוץ שוב.',
@@ -135,7 +135,7 @@ function page(tok, d, s) {
     + '.ir{display:flex;gap:8px}.ir input{flex:1;min-width:0;border:1.5px solid #cbd5e1;border-radius:10px;padding:10px;font:500 16px monospace;background:#fff}'
     + '.sv{border:0;border-radius:10px;background:#0f1b2a;color:#fff;font:700 15px Heebo;padding:0 16px;min-height:44px;cursor:pointer}.ig{font:600 13.5px Heebo;color:#0e7490;margin:8px 0 0}'
     + '.msb{display:block;width:100%;border:0;border-radius:14px;background:#0f1b2a;color:#fff;font:800 16px Heebo;padding:13px;cursor:pointer;min-height:48px;margin:0 0 10px}.msk{font:900 24px monospace!important;letter-spacing:3px!important}'
-    + '.oab{display:block;text-align:center;text-decoration:none;border-radius:14px;background:#0f1b2a;color:#fff;font:800 16px Heebo;padding:14px;min-height:48px;margin:0 0 10px}.oa-google{background:#fff;color:#1f1f1f;border:1.5px solid #747775}.oa-meta{background:#1877f2}.oa-microsoft{background:#2f2f2f}.oa-fireflies{background:#6b21a8}'
+    + '.oab{display:block;text-align:center;text-decoration:none;border-radius:14px;background:#0f1b2a;color:#fff;font:800 16px Heebo;padding:14px;min-height:48px;margin:0 0 10px}.oa-google{background:#fff;color:#1f1f1f;border:1.5px solid #747775}.oa-meta{background:#1877f2}.oa-microsoft{background:#2f2f2f}.oa-fireflies{background:#6b21a8}.oa-linkedin{background:#0a66c2}.oa-tiktok{background:#000}'
     + '.fin{display:block;width:100%;border:0;border-radius:16px;background:#0f1b2a;color:#fff;font:800 18px Heebo;padding:16px;margin-top:8px;cursor:pointer}'
     + '.saved{font:500 13px Heebo;color:#6b7c90;text-align:center;margin-top:10px}'
     + '.thanks{display:none;text-align:center;padding:60px 20px}.thanks b{display:block;font:900 26px Heebo;margin-bottom:8px}.thanks p{font:400 16px/1.6 Heebo;color:#24364b}'

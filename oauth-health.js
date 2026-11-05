@@ -16,7 +16,7 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 const oa = require('./lib/oauth.js');
 const DIR = process.env.SETUP_DIR || path.join(__dirname, 'data', 'setup');
-const NAME = { google: 'גוגל', meta: 'פייסבוק', microsoft: 'מיקרוסופט', fireflies: 'פיירפליס' };
+const NAME = { google: 'גוגל', meta: 'פייסבוק', microsoft: 'מיקרוסופט', fireflies: 'פיירפליס', linkedin: 'לינקדין', tiktok: 'טיקטוק' };
 
 function readJson(f, d) { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { return d; } }
 function writeJson(f, o) { fs.writeFileSync(f + '.tmp', JSON.stringify(o, null, 1)); fs.renameSync(f + '.tmp', f); }

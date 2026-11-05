@@ -235,3 +235,18 @@ test('drive and youtube short names map to Google scopes', () => {
   const sc = oa.scopesFor('google', ['gmail', 'drive', 'youtube']);
   assert.ok(sc.includes('https://www.googleapis.com/auth/drive') && sc.includes('https://www.googleapis.com/auth/youtube.upload'));
 });
+
+test('linkedin and tiktok use our secret only on the server, never in the start address', async () => {
+  const c = JSON.parse(fs.readFileSync(process.env.OAUTH_APP_FILE, 'utf8'));
+  c.linkedin = { clientId: 'lid', clientSecret: 'LSECRET' }; c.tiktok = { clientId: 'tkey', clientSecret: 'TSECRET' };
+  fs.writeFileSync(process.env.OAUTH_APP_FILE, JSON.stringify(c));
+  const l = oa.startUrl('linkedin', TOK, 'g').url, t = oa.startUrl('tiktok', TOK, 'g').url;
+  assert.ok(!l.includes('LSECRET') && !t.includes('TSECRET'));
+  assert.ok(new URL(l).searchParams.get('scope').includes('w_member_social'));
+  assert.equal(new URL(t).searchParams.get('client_key'), 'tkey');
+  const st = stateOf(l);
+  const calls = mockFetch({ 'linkedin.com/oauth/v2/accessToken': { access_token: 'LA', expires_in: 5184000, id_token: 'x.' + Buffer.from(JSON.stringify({ email: 'a@b.c' })).toString('base64url') + '.y' } });
+  const r = await oa.callback('linkedin', new URLSearchParams({ state: st, code: 'C' }));
+  assert.equal(r.ok, true); assert.equal(r.saved.access_token, 'LA'); assert.equal(r.who, 'a@b.c');
+  assert.ok(String(calls[0].opts.body).includes('client_secret=LSECRET'));
+});
