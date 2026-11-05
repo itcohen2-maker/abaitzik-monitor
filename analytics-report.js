@@ -23,7 +23,7 @@ const NL = '\n';
 const ilDay = (t) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem' }).format(new Date(t));
 const ilShort = (t) => new Date(t).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
 const NAMES = { ner: 'candletimes.com', 'ner-add': 'candletimes, הוספה למסך הבית', 'itzik-site': 'abaitzik.com', pegasus: 'פגסוס', salinda: 'סלינדה' };
-const PAGES = { monitor: 'it-solution.co.il/monitor', security: 'it-solution.co.il/security', home: 'it-solution.co.il (דף הבית)' };
+const PAGES = { monitor: 'it-solution.co.il/monitor', security: 'it-solution.co.il/security', home: 'it-solution.co.il (דף הבית)', chat: 'it-solution.co.il, הצ׳אט (מהמודעות)', 'monitor-guide': 'it-solution.co.il, מדריך המוניטור', privacy: 'it-solution.co.il, פרטיות', terms: 'it-solution.co.il, תנאים' };
 
 function getJson(url, headers) {
   return new Promise((ok, bad) => {

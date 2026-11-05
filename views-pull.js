@@ -21,7 +21,7 @@ const DIR = path.join(HERE, 'data', 'views');
 const STATE = path.join(DIR, 'state.json');
 const EVENTS = path.join(DIR, 'events.json');
 const OUT = path.join(HERE, 'data', 'files-private', 'views-report.html');
-const PAGES = { monitor: 'דף המוניטור לעסק', security: 'דף אבטחת המידע' };
+const PAGES = { monitor: 'דף המוניטור לעסק', security: 'דף אבטחת המידע', home: 'דף הבית של האתר', chat: 'הצ׳אט באתר (המודעות)', 'monitor-guide': 'מדריך המוניטור באתר', privacy: 'מדיניות הפרטיות', terms: 'תנאי השימוש' };
 const DAY_CAP = 15;
 
 function get(url) {
