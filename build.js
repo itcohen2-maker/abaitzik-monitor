@@ -4390,11 +4390,8 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
     made for pushing candletimes, numbered like Rinat's list: the bio
     comparison, the how-to page, the live candle stories.
   -->
-  <button type="button" class="gt gNer" data-grp="net" id="gPlate" data-new="1"><b>🍽️ מה בצלחת</b><small>הסטוריז לפי הסדר, אפשר לסדר ולמחוק</small></button>
   <!-- 1.11, Itzik (voice): "תעשה לי אייקון במוניטור של שחר שאני אוכל ישר להיכנס". A direct tile to the Shachar page; it also stays inside העסק שלי. -->
-  <button type="button" class="gt gNer" data-grp="net" id="gNerStyles" data-new="1" data-upd="ner-tile-20261031"><b>🕯️ candle.times</b><small>סטוריז ופוסטים שמחכים לאישור שלך</small></button>
   <!-- 1.11, Itzik: the WhatsApp status of the day, video plus text ready, he posts it himself in 3 taps (page docs/status/). Blinks each morning, Sunday to Friday, while today has an item he has not opened or marked posted. Nothing here touches WhatsApp. -->
-  <button type="button" class="gt gNer" data-grp="net" id="gWaStatus" data-new="1"><b>📲 סטטוס וואטסאפ</b><small>הסרטון של היום, 3 נגיעות לסטטוס</small></button>
   <!-- 1.11, Itzik: Shachar lives inside 💼 העסק שלי now, one place for everything (no separate home tile). -->
   <!--
     איציק, 1.10: "שים כפתור יעודי במוניטור, ככה אני לא מוצא". Every finished
@@ -4418,8 +4415,8 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
     is amirshwartz1's TikTok comment on the cake video (55 likes).
   -->
   <button type="button" class="gt gWin" data-grp="net" id="gWin" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
-  <button type="button" class="gt gReel" data-grp="net" id="gReels" data-upd="20261105-it01"><b>🎬 הרילים שלי</b><small>חדש: המוניטור, וואטסאפ ולוח בקרה, לסטורי</small></button>
-  <button type="button" class="gt gFut" data-grp="net" id="gFut" data-upd="20261103-futclean"><b>🎞️ רילים עתידיים</b><small>רעיונות וחומרים שמורים. 21 איך נכנסים לאתר, 04 מאכלים להפחית, 05 הטלפון ליד המיטה, 06 קידום להרצאה, 07 הריל של הקישור, 08 שרירים והגיל, 09 קונטרה למינוס, 17 המבריק במדיח</small></button>
+  <!-- 5.11, Itzik: "את כל הסרטונים נעביר לאריח אחד, ובתוכו טאבים". One tile with a tab per kind; the old tiles (reels, future reels, campaign, plate, status, candle.times) were removed; their sheets stay in the code. -->
+  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1"><b>🎬 הסרטונים</b><small>קמפיין, שחר, סטטוס, מה בצלחת, נרות ושלי</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
@@ -4458,7 +4455,6 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   -->
   <!-- 13.10. Itzik: "תעשה תקייה של טום ממליץ ואריח טום ממליץ". Scripts of
        Tom's posts, four ad images, the site copy, and the draft of his own site. -->
-  <button type="button" class="gt gTom" data-grp="work" id="gTom" data-new="1" data-upd="2026-11-05-split"><b>🧭 קמפיין וסרטוני פרסום</b><small>ממומן, סטטוס וסטורי, רילים: מה באוויר ומה עוד לא</small></button>
   <!-- 13.10 night: the Clalit agreement moved inside the lecture tile (item 05). -->
   <button type="button" class="gt gGviya" data-grp="work" id="gGviya" data-new="1"><b>📞 גבייה, יואל</b><small>דף שיואל מסמן, כל סימון מעדכן אותך</small></button>
   <button type="button" class="gt gLaw" data-grp="home" id="gLaw" hidden><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
@@ -14242,7 +14238,8 @@ function dailyTile(t,up){
 }
 // 1.11: the status tile waves each morning (Sun to Fri, Israel date) while today has an item that is not posted and the tile was not opened today.
 boot('waStatusTile',function(){
- var t=document.getElementById('gWaStatus');if(!t)return;
+ var t=document.getElementById('gVideos');if(!t)return;
+ var dailyTile=function(){};
  var day='';try{day=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jerusalem'}).format(new Date());}catch(e){return;}
  if(new Date(day+'T12:00:00Z').getUTCDay()===6)return;
  var seenK='waStatusSeen:'+day,seen='';try{seen=localStorage.getItem(seenK)||'';}catch(e){}
@@ -14483,6 +14480,7 @@ var FUT_ITEMS=[
 // back to this list must not ask about it again: only opening the screen asks,
 // the list itself never re-checks. Otherwise the ask loops with no way out.
 function futSheet(){
+ window.VID_BACK=0;
  var pend=srcPendingAll('fut:');
  if(pend.length)return srcAsk(pend[0],futList);
  futList();
@@ -14548,7 +14546,7 @@ function futText(it){
  // Set here, so sheetTopX (which would press the close button) leaves it alone.
  var tx=document.createElement('button');
  tx.type='button';tx.className='ytopx';tx.textContent='✕';tx.setAttribute('aria-label','חזרה לרשימה');
- tx.onclick=function(e){e.stopPropagation();w.setAttribute('data-replaced','1');close();futList();};
+ tx.onclick=function(e){e.stopPropagation();w.setAttribute('data-replaced','1');close();if(window.VID_BACK)vidSheet();else futList();};
  w.querySelector('.ycard').insertBefore(tx,w.querySelector('.ycard').firstChild);
  w.querySelector('.ycard').classList.add('hasx');
  function close(){w.remove();document.removeEventListener('keydown',esckey);}
@@ -14565,7 +14563,7 @@ function futText(it){
    return;
   }
   close();
-  if(a==='back')return futList();
+  if(a==='back')return window.VID_BACK?vidSheet():futList();
   if(a==='src')return window.open(it.u,'_blank','noopener');
   if(a==='file')return fileOpen(it.r);
   if(a==='note'){
@@ -16267,7 +16265,7 @@ var TOM_ITEMS=[
  {h:"🎬 רילים וטיקטוק · המוניטור"},
  {n:"10",t:"📲 לרשתות · IT 01 · המוניטור, וואטסאפ ולוח בקרה אחד · לסטורי באינסטגרם ולטיקטוק",r:"it01-monitor-v2.mp4"},
  {n:"10 כריכה",t:"📲 לרשתות · הכריכה: מי לא שילם לך החודש?",r:"it01-cover.jpg"},
- {n:"10 פרסום",t:"📲 לרשתות · טקסט לסטורי ולטיקטוק, עם קישור לכל רשת",r:"it01-post.txt"}
+ {n:"10 פרסום",p:"it01",t:"📲 לרשתות · טקסט לסטורי ולטיקטוק, עם קישור לכל רשת",r:"it01-post.txt"}
 ];
 function tomSheet(){
  var old=document.getElementById('tomSheet');if(old)old.remove();
@@ -16300,6 +16298,79 @@ function tomSheet(){
  document.body.appendChild(w);
 }
 on('gTom',tomSheet);
+
+/* 5.11, Itzik: "תעשה סדר בכל הסרטונים... הכל רק באריח אחד, ובתוכו טאבים". Built from the
+   existing lists (TOM_ITEMS, REEL_ITEMS, FUT_ITEMS), so anything added there shows here. */
+function vidGo(url){try{sessionStorage.setItem('nerSend',JSON.stringify({t:NTFYIN(),c:sendCode()}));}catch(e){}location.href=url+'?v='+Date.now();}
+function vidTabs(){
+ var isSh=function(it){return /^שחר/.test(String(it.n))||/^sh[0-9]/.test(String(it.n))||/^שחר/.test(String(it.t));};
+ var isIt=function(it){return /^IT /.test(String(it.n));};
+ var plateN={'17':1},candleN={'13':1,'14':1,'15':1,'19':1};
+ var R=REEL_ITEMS.map(function(it){return {k:'reel',it:it};});
+ var F=FUT_ITEMS.map(function(it){return {k:'fut',it:it};});
+ var idea=function(x){return x.k==='fut';};
+ return [
+  {id:'ads',l:'📣 קמפיין',h:'הממומן, וסרטוני המוניטור לסטורי',L:TOM_ITEMS.map(function(it){return it.h?{h:it.h}:{k:'tom',it:it};})},
+  {id:'sh',l:'🌅 שחר',h:'הרילים, הסטורי והפוסטים של שחר',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isSh(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isSh(x.it);}))},
+  {id:'st',l:'📲 סטטוס',h:'הסרטון של היום לסטטוס וואטסאפ, 3 נגיעות',L:[{k:'go',t:'📲 פתיחת הסטטוס של היום',u:'status/index.html'}]},
+  {id:'pl',l:'🍽️ מה בצלחת',h:'הסטוריז לפי הסדר, אפשר לסדר ולמחוק',L:[{k:'go',t:'🍽️ פתיחת הסטוריז של מה בצלחת',u:'plate/plate.html'},{h:'💡 רעיונות'}].concat(F.filter(function(x){return plateN[x.it.n];}))},
+  {id:'nr',l:'🕯️ נרות',h:'candle.times: סטוריז ופוסטים שמחכים לאישור שלך',L:[{k:'go',t:'🕯️ פתיחת candle.times',u:'ner/candle.html'},{h:'💡 רעיונות'}].concat(F.filter(function(x){return candleN[x.it.n];}))},
+  {id:'me',l:'🎬 שלי',h:'הרילים והסטוריז שלי, ורעיונות לבאים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return !isSh(x.it)&&!isIt(x.it);}),[{h:'💡 רעיונות לרילים הבאים'}],F.filter(function(x){return !isSh(x.it)&&!plateN[x.it.n]&&!candleN[x.it.n];}))}
+ ].map(function(t){
+  // a heading with nothing under it is dropped, and a file that is not in the monitor is not shown
+  var L=t.L.filter(function(x){return !(x.it&&x.it.r&&x.k!=='fut'&&!fileEntry(x.it.r));});
+  t.L=L.filter(function(x,i){return !x.h||(L[i+1]&&!L[i+1].h);});
+  return t;
+ });
+}
+function vidSheet(tab){
+ window.VID_BACK=0;
+ var T=vidTabs();
+ if(!tab){try{tab=localStorage.getItem('vidTab')||'';}catch(e){}}
+ var cur=T.filter(function(t){return t.id===tab;})[0]||T[0];
+ try{localStorage.setItem('vidTab',cur.id);}catch(e){}
+ var old=document.getElementById('vidSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='vidSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','הסרטונים');
+ var rows=cur.L.filter(function(x){return !x.h;});
+ w.innerHTML='<div class="ycard">'
+  +'<b>🎬 הסרטונים</b>'
+  +'<div role="tablist" style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px">'
+  +T.map(function(t){var on=t.id===cur.id;
+    return '<button type="button" role="tab" aria-selected="'+on+'" data-tab="'+t.id+'" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;font:inherit;font-weight:800;font-size:14px;border:1px solid '+(on?'transparent':'var(--line,#ccc)')+';background:'+(on?'var(--ink,#111)':'transparent')+';color:'+(on?'var(--bg,#fff)':'var(--ink,#111)')+'">'+t.l+'</button>';}).join('')
+  +'</div>'
+  +'<small>'+esc(cur.h)+'</small>'
+  +(rows.length?'':'<small>אין כרגע סרטונים כאן</small>')
+  +cur.L.map(function(x,i){
+    if(x.h)return '<small style="display:block;margin:14px 0 6px;font-weight:800;color:var(--ink)">'+esc(x.h)+'</small>';
+    var lab=x.k==='go'?x.t:(x.it.n+' · '+x.it.t);
+    return '<button type="button" '+ybAttr(rows,rows.indexOf(x))+' data-k="'+i+'">'+esc(lab)+'</button>';
+   }).join('')
+  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var tb=e.target.closest&&e.target.closest('[data-tab]');
+  if(tb){close();return vidSheet(tb.getAttribute('data-tab'));}
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k===null||k===undefined)return;
+  close();
+  var x=cur.L[+k];if(k===''||!x)return;
+  var it=x.it;
+  if(x.k==='go')return vidGo(x.u);
+  if(x.k==='fut'){window.VID_BACK=1;return futText(it);}
+  if(it.u)return window.open(it.u,'_blank','noopener');
+  if(/פרסום$/.test(it.n))return postSheet(it);
+  fileOpen(it.r);
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('gVideos',function(){vidSheet();});
 
 // 7.10: the open accounts as one file to send on, at the bottom of the debtors.
 document.getElementById('rivShare')&&document.getElementById('rivShare').addEventListener('click',function(e){

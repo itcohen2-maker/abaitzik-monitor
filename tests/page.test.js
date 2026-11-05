@@ -2340,7 +2340,8 @@ test('stop after an auto retry ends the new recorder, and the old one finishing 
 });
 test('the story tile sits after the reels tile, opens the same viewer, and its file exists', () => {
   const html = renderPage(fixture({}));
-  const a = html.indexOf('id="gReels"');
+  // 5.11 (Itzik): the reels tile went into the one videos tile.
+  const a = html.indexOf('id="gVideos"');
   // 22.10 (Itzik): the story tile was removed from the home screen. Its viewer code stays,
   // so the tile must simply not be drawn anymore.
   assert.ok(a > 0, 'reels tile drawn');
