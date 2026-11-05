@@ -16825,7 +16825,7 @@ function bizSheet(t0){
     :'<a class="yb ybRed taskblink" href="'+n.own+'" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">✍️ שלב 1: לחתום פעם אחת בשם IT Solution<small style="display:block;font-weight:500;margin-top:3px">🔴 בלי זה הלקוח לא יכול לחתום</small></a>';
    if(n.owner)h+='<a class="yb yb1" href="'+wa+'" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">💬 לשלוח ללקוח חדש לחתימה (וואטסאפ)</a>'
     +'<button type="button" class="yb" data-bz="ndacopy" data-u="'+n.share+'">📋 להעתיק את הקישור לחתימה</button>';
-   h+='<button type="button" class="yb" data-bz="anim" data-f="'+(n.blank||'it-solution-nda.pdf')+'">📄 הסכם הסודיות כ PDF (ריק, לפני חתימה)</button>';
+   h+='<button type="button" class="yb" data-bz="anim" data-f="'+(n.blank||'it-solution-nda.pdf')+'">📄 הסכם הסודיות המקורי (PDF, לפני חתימה)</button>';
    (n.signed||[]).forEach(function(x,i){h+='<button type="button" class="yb'+(i?'':' yb2')+'" data-bz="anim" data-f="'+esc(x.file)+'">✍️ '+esc(x.co)+' חתם · '+hd(x.at)+' (PDF חתום)</button>';});
    h+='<div class="bzRow"><small>'+((n.signed||[]).length?'חתמו '+n.signed.length+' · ':'עוד אף לקוח לא חתם · ')+'פתחו את הקישור '+(n.opens||0)+' פעמים. הלקוח ממלא שם חברה, ח.פ., כתובת, שם ותפקיד וחותם; התאריך נכנס לבד.</small></div>';
    return h;
@@ -16845,9 +16845,8 @@ function bizSheet(t0){
     +'<a class="yb" href="https://it-solution.co.il/security/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">🔒 דף אבטחת המידע ללקוח</a>'
     +'<button type="button" class="yb" data-bz="secshare" data-u="security" data-k="share">📤 לשלוח ללקוח את דף האבטחה</button>'
     +'<button type="button" class="yb" data-bz="secshare" data-u="security" data-k="wa">💬 דף האבטחה בוואטסאפ</button>'
-    // 5.11, Itzik: "זה מסמך סודיות שמעבירים ללקוח חדש, שים אותו ב IT Solution". The Word file, to share as is.
+    // 5.11, Itzik: "זה מסמך סודיות שמעבירים ללקוח חדש, שים אותו ב IT Solution", then "תשנה אותו ל PDF": the original is the PDF, no Word file.
     +'<div class="bzSec">📄 מסמך סודיות ללקוח חדש</div>'+ndaHtml()
-    +'<button type="button" class="yb" data-bz="anim" data-f="it-solution-nda.docx">📄 הסכם הסודיות כקובץ וורד</button>'
     +'<div class="bzSec">הדגמה ללקוח</div>'
     +(typeof dmoStart==='function'?'<button type="button" class="yb yb1" data-bz="demo">🎬 מצב הדגמה ללקוח</button>':'')
     +'<button type="button" class="yb" data-bz="anim" data-f="demo-script-shai.pdf">🎬 תסריט ההדגמה לשי (PDF)</button>'
