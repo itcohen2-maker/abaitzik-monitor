@@ -16339,12 +16339,12 @@ function vidSheet(tab){
   +'<b>🎬 הסרטונים</b>'
   +'<div role="tablist" style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px">'
   +T.map(function(t){var on=t.id===cur.id;
-    return '<button type="button" role="tab" aria-selected="'+on+'" data-tab="'+t.id+'" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;font:inherit;font-weight:800;font-size:14px;border:1px solid '+(on?'transparent':'var(--line,#ccc)')+';background:'+(on?'var(--ink,#111)':'transparent')+';color:'+(on?'var(--bg,#fff)':'var(--ink,#111)')+'">'+t.l+'</button>';}).join('')
+    return '<button type="button" role="tab" aria-selected="'+on+'" data-tab="'+t.id+'" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;font:inherit;font-weight:800;font-size:14px;border:2px solid '+(on?'#1d6fe0':'#c9d3e3')+';background:'+(on?'#1d6fe0':'#eef2f8')+';color:'+(on?'#fff':'#1a2233')+'">'+t.l+'</button>';}).join('')
   +'</div>'
-  +'<small>'+esc(cur.h)+'</small>'
+  +'<small style="color:#3a4458">'+esc(cur.h)+'</small>'
   +(rows.length?'':'<small>אין כרגע סרטונים כאן</small>')
   +cur.L.map(function(x,i){
-    if(x.h)return '<small style="display:block;margin:14px 0 6px;font-weight:800;color:var(--ink)">'+esc(x.h)+'</small>';
+    if(x.h)return '<small style="display:block;margin:14px 0 6px;font-weight:800;font-size:15px;color:#1a2233">'+esc(x.h)+'</small>';
     var lab=x.k==='go'?x.t:(x.it.n+' · '+x.it.t);
     return '<button type="button" '+ybAttr(rows,rows.indexOf(x))+' data-k="'+i+'">'+esc(lab)+'</button>';
    }).join('')
