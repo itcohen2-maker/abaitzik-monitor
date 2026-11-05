@@ -1,6 +1,6 @@
 {
- "at": "2026-11-05T22:17:15.265Z",
- "up": 32400,
+ "at": "2026-11-05T23:17:15.266Z",
+ "up": 36000,
  "since": "2026-11-05T13:17:15.579Z",
  "last": "2026-11-05T18:40:55.026Z",
  "n": 3,
@@ -33,8 +33,8 @@
    "cap": 150,
    "left": 97,
    "paid": false,
-   "blockedUntil": "2026-11-05T22:17:15.655Z",
-   "daily": true
+   "blockedUntil": "",
+   "daily": false
   },
   "mail": {
    "label": "מייל",
@@ -47,9 +47,9 @@
   },
   "beat": {
    "label": "פעימה",
-   "used": 22,
+   "used": 23,
    "cap": 30,
-   "left": 8,
+   "left": 7,
    "paid": false,
    "blockedUntil": "",
    "daily": false
