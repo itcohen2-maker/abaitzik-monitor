@@ -2402,7 +2402,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-06T06:25:53.778Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-06T06:26:40.434Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4280,7 +4280,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='e6947889ee';
+var CODE_ID='f8cbd28460';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12469,7 +12469,12 @@ function bizSheet(t0){
   var S=D.bizSum||null,recs=D.biz||[],tab=t0||'its';
   function scoreHtml(){
    if(!S||S.score==null)return '<div class="bzScore n">אין עדיין נתונים</div>';
-   return '<div class="bzScore '+(S.score>=75?'g':S.score>=50?'a':'r')+'">'+esc(String(S.score))+'</div>';
+   var nst=(S.staleLeads||[]).length,ndu=(S.due||[]).length,nof=(S.stuckOffers||[]).length,why=[];
+   if(nst)why.push(nst+' לידים שלא נגעו בהם (8 כל אחד)');
+   if(nof)why.push(nof+' הצעות מחיר תקועות (12 כל אחת)');
+   if(ndu)why.push(ndu===1?'אחד שצריך לחזור אליו (6)':ndu+' שצריך לחזור אליהם (6 כל אחד)');
+   return '<div class="bzScore '+(S.score>=75?'g':S.score>=50?'a':'r')+'">'+esc(String(S.score))+'</div>'
+    +'<small style="display:block;margin-top:4px;color:#5a6478;font-size:13px;line-height:1.4">ציון הסדר בעסק. 100 = אין שום דבר פתוח'+(why.length?'. ירד בגלל: '+esc(why.join(', ')):'')+'</small>';
   }
   function leadsHtml(){
    var list=recs.filter(function(r){return r.kind==='lead'||r.kind==='customer';}),wl=window.leadNewWaitHtml?leadNewWaitHtml():'';

@@ -16782,7 +16782,13 @@ function bizSheet(t0){
   var S=D.bizSum||null,recs=D.biz||[],tab=t0||'its';
   function scoreHtml(){
    if(!S||S.score==null)return '<div class="bzScore n">אין עדיין נתונים</div>';
-   return '<div class="bzScore '+(S.score>=75?'g':S.score>=50?'a':'r')+'">'+esc(String(S.score))+'</div>';
+   // 6.11, Itzik: "94 בעיגול ירוק, מה זה?". The number now says what it is and why it is not 100.
+   var nst=(S.staleLeads||[]).length,ndu=(S.due||[]).length,nof=(S.stuckOffers||[]).length,why=[];
+   if(nst)why.push(nst+' לידים שלא נגעו בהם (8 כל אחד)');
+   if(nof)why.push(nof+' הצעות מחיר תקועות (12 כל אחת)');
+   if(ndu)why.push(ndu===1?'אחד שצריך לחזור אליו (6)':ndu+' שצריך לחזור אליהם (6 כל אחד)');
+   return '<div class="bzScore '+(S.score>=75?'g':S.score>=50?'a':'r')+'">'+esc(String(S.score))+'</div>'
+    +'<small style="display:block;margin-top:4px;color:#5a6478;font-size:13px;line-height:1.4">ציון הסדר בעסק. 100 = אין שום דבר פתוח'+(why.length?'. ירד בגלל: '+esc(why.join(', ')):'')+'</small>';
   }
   function leadsHtml(){
    var list=recs.filter(function(r){return r.kind==='lead'||r.kind==='customer';}),wl=window.leadNewWaitHtml?leadNewWaitHtml():'';
