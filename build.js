@@ -6855,8 +6855,11 @@ function leadRow(c){
   */
   +(c.shot?'<details class="shot"><summary>צילום המסך של הפנייה</summary>'
     +(c.shotNote?'<small>'+esc(c.shotNote)+'</small>':'')
-    +'<a href="'+esc(c.shot)+'" target="_blank" rel="noopener">'
-    +'<img src="'+esc(c.shot)+'" alt="צילום מסך של הפנייה" loading="lazy"></a></details>':'')
+    // 6.11 (monitor-guard): the shots live sealed in files-private, so files/<name> was a 404. Open them through the viewer.
+    +(fileEntry(String(c.shot).replace(/^files[/]/,''))
+      ?'<button type="button" class="yb" onclick="fileOpen(this.dataset.f)" data-f="'+esc(String(c.shot).replace(/^files[/]/,''))+'">📷 פתיחת צילום המסך</button>'
+      :'<a href="'+esc(c.shot)+'" target="_blank" rel="noopener"><img src="'+esc(c.shot)+'" alt="צילום מסך של הפנייה" loading="lazy"></a>')
+    +'</details>':'')
   +logHtml(c.log)
   // 15.10: the mailto opened his mail app instead of giving him the details.
   // Contact details are not kept on the server, so the button asks in the chat

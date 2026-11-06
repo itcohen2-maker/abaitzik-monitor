@@ -2405,7 +2405,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-06T08:34:59.749Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-06T08:37:43.269Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4293,7 +4293,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='f929b6759b';
+var CODE_ID='1518a2ae22';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -4774,8 +4774,10 @@ function leadRow(c){
   +(c.note?'<div class="body">'+esc(c.note)+'</div>':'')
   +(c.shot?'<details class="shot"><summary>צילום המסך של הפנייה</summary>'
     +(c.shotNote?'<small>'+esc(c.shotNote)+'</small>':'')
-    +'<a href="'+esc(c.shot)+'" target="_blank" rel="noopener">'
-    +'<img src="'+esc(c.shot)+'" alt="צילום מסך של הפנייה" loading="lazy"></a></details>':'')
+    +(fileEntry(String(c.shot).replace(/^files[/]/,''))
+      ?'<button type="button" class="yb" onclick="fileOpen(this.dataset.f)" data-f="'+esc(String(c.shot).replace(/^files[/]/,''))+'">📷 פתיחת צילום המסך</button>'
+      :'<a href="'+esc(c.shot)+'" target="_blank" rel="noopener"><img src="'+esc(c.shot)+'" alt="צילום מסך של הפנייה" loading="lazy"></a>')
+    +'</details>':'')
   +logHtml(c.log)
   +'<button type="button" class="ask" data-askc="'+esc(c.name||'')+'">בקשת פרטי התקשרות</button>'
   +'<div class="stat" data-lead="'+esc(c.name||'')+'">'+['open','standby','done'].map(function(k){return '<button type="button" data-s="'+k+'" aria-pressed="'+(k===st)+'">'+STAT[k]+'</button>';}).join('')+'</div>'
