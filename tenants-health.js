@@ -197,6 +197,8 @@ function selfArena(t, x) {
 */
 function preApprove(t, x) {
   if (!t.preApproved) return false;
+  // 6.11: a help request ('עזרה מלקוח', the help button) is a person asking for Itzik, never a change to build.
+  if (/^עזרה מלקוח:/.test(String(x.text || ''))) return false;
   // 4.11: a package request is paid first and approved by Itzik himself, never in advance.
   if (require('./lib/plan.js').parseRequest(x.text)) return false;
   try {
@@ -308,7 +310,8 @@ function main() {
     fresh.splice(0, fresh.length, ...fresh.filter((x) => !pre.includes(x)));
     if (fresh.length && !DRY) {
       try {
-        execFileSync('node', ['notify.js', '📨 ' + (t.title || t.id) + ' מבקש שינוי', fresh.map((x) => x.text).join(' · ').slice(0, 300)],
+        const help = fresh.some((x) => /^עזרה מלקוח:/.test(String(x.text || '')));
+        execFileSync('node', ['notify.js', (help ? '🆘 ' : '📨 ') + (t.title || t.id) + (help ? ' מבקש עזרה' : ' מבקש שינוי'), fresh.map((x) => x.text).join(' · ').slice(0, 300)],
           { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
       } catch (e) { console.log('request alert failed: ' + String(e.message).slice(0, 120)); }
     }
