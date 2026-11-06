@@ -2615,7 +2615,7 @@ ${pushUi.css}
    meant two hands and a long reach. On the home screen it also floats at the
    thumb, bottom left (end side in RTL), above the mic dock; hidden when locked. */
 #thumbSet{display:none;position:fixed;inset-inline-end:12px;z-index:30;
- bottom:calc(70px + env(safe-area-inset-bottom));min-height:44px;padding:0 16px;border:0;border-radius:999px;cursor:pointer;
+ bottom:calc(124px + env(safe-area-inset-bottom));min-height:44px;padding:0 16px;border:0;border-radius:999px;cursor:pointer;
  background:linear-gradient(180deg,#9aa5b8,#6b7688);color:#fff;font:700 15px Heebo,sans-serif;
  box-shadow:0 2px 8px rgba(0,0,0,.3)}
 body:not(.inner) #thumbSet{display:block}
@@ -2663,6 +2663,19 @@ body:not(.inner) #thumbSet{display:block}
 .wbig span{display:flex;flex-direction:column;align-items:flex-start}
 .way:active{background:var(--accent-soft);border-color:var(--accent)}
 .way:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* 6.11.2026: compact talk card. The id wins over the rules above and below. */
+#talkCard{padding:10px 12px;gap:8px 12px;margin-bottom:10px}
+#talkCard .mic{width:62px;height:62px;flex:0 0 62px}
+#talkCard .vtxt b{font-size:17px}
+#talkCard .vtxt small{font-size:13px;line-height:1.35}
+#talkCard .ways{gap:8px;margin-top:0}
+#talkCard .way{flex-direction:row;justify-content:center;gap:8px;min-height:44px;padding:6px 10px;border-radius:12px}
+#talkCard .way b{font-size:15px}
+#talkCard .way small{display:none}
+#talkCard .way .wi{font-size:19px}
+#talkCard .quickwrite{margin-top:0;align-items:stretch}
+#talkCard .quickwrite textarea{min-height:46px;padding:10px 12px;font-size:15.5px}
+#talkCard .quickwrite button{min-height:46px;padding:0 16px}
 .mic{width:98px;height:98px;flex:0 0 98px;border-radius:50%;border:0;padding:0;cursor:pointer;position:relative;
  display:grid;place-items:center;background:conic-gradient(from 0deg,var(--blue),var(--red),var(--yellow),var(--green),var(--blue));
  box-shadow:0 12px 28px rgba(66,133,244,.35)}
