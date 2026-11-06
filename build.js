@@ -1858,6 +1858,8 @@ button.abtn[disabled]{opacity:.55}
 .gt.glow .flag{animation:hardblink .5s steps(1) infinite}
 .gt.leadNew{animation:hardblink .6s steps(1) infinite}
 .gt.leadNew[hidden]{display:none}
+/* 6.11.2026: Isracard lives inside the lawyer tile (gSale); its own tile stays off. */
+#gIsra{display:none!important}
 .gt.leadNew.lnSeen{animation:none}
 .bzRow.bzNew{background:#fff4d6;color:#0f1b2a;border-right:5px solid #f59e0b;border-radius:10px;padding:8px 10px;margin:4px 0;cursor:pointer}
 .bzNewTag{align-self:flex-start;background:#ea4335;color:#fff;font:700 12px Heebo,sans-serif;border-radius:8px;padding:2px 8px}
