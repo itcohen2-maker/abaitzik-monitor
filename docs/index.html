@@ -2402,7 +2402,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-06T06:10:03.978Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-06T06:15:22.092Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4280,7 +4280,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='210bab552e';
+var CODE_ID='6487890d9d';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12043,7 +12043,55 @@ function tomSheet(){
 }
 on('gTom',tomSheet);
 
-function vidGo(url){try{sessionStorage.setItem('nerSend',JSON.stringify({t:NTFYIN(),c:sendCode()}));}catch(e){}location.href=url+'?v='+Date.now();}
+function vidGo(url,hash){try{sessionStorage.setItem('nerSend',JSON.stringify({t:NTFYIN(),c:sendCode()}));}catch(e){}location.href=url+'?v='+Date.now()+(hash?'#'+encodeURIComponent(hash):'');}
+var VQ=null,VQT=0;
+function vqLoad(cb){
+ if(VQ&&Date.now()-VQT<60000)return cb();
+ var P=[['st','status/queue.json'],['nr','ner/queue.json'],['pl','plate/queue.json']],n=P.length,R={};
+ P.forEach(function(p){
+  fetch(p[1]+'?v='+Date.now()).then(function(r){return r.json();}).then(function(d){R[p[0]]=Array.isArray(d)?d:[];},function(){R[p[0]]=[];})
+   .then(function(){if(--n===0){VQ=R;VQT=Date.now();cb();}});
+ });
+}
+function vqDay(){try{return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jerusalem'}).format(new Date());}catch(e){return new Date().toISOString().slice(0,10);}}
+function vqDate(d){var p=String(d||'').split('-');return p.length===3?(+p[2])+'.'+(+p[1]):'';}
+function vqCut(s,n){s=String(s||'').split(String.fromCharCode(10))[0];return s.length>n?s.slice(0,n)+'…':s;}
+function vqRows(id){
+ var Q=(VQ&&VQ[id])||[],T=vqDay(),out=[];
+ if(id==='st'){
+  var up=Q.filter(function(x){return x.date>=T;}).sort(function(a,b){return a.date.localeCompare(b.date);});
+  var now=up.filter(function(x){return x.date===T;}),next=up.filter(function(x){return x.date>T;});
+  out.push({h:now.length?'📲 להעלות היום ('+now.length+')':'📲 אין סטטוס להיום'});
+  if(!now.length)out.push({k:'q',t:'אין סטטוס להיום, הבא בתור למטה',u:'status/index.html'});
+  now.forEach(function(x){out.push({k:'q',t:'⭐ היום · '+(x.topic||'')+' · '+vqCut(x.caption,38),u:'status/index.html',n:x.name});});
+  if(next.length)out.push({h:'📅 הבאים בתור'});
+  next.forEach(function(x){out.push({k:'q',t:vqDate(x.date)+' · '+(x.topic||'')+' · '+vqCut(x.caption,34),u:'status/index.html',n:x.name});});
+ }
+ if(id==='nr'){
+  var st=function(x){return (x.rejected||x.hold)?'rej':x.approved?'ok':'wait';};
+  var up2=Q.filter(function(x){return !x.posted&&!x.failed;}).sort(function(a,b){return (a.date+a.time).localeCompare(b.date+b.time);});
+  var lab=function(x){return (x.kind==='post'?'פוסט':'סטורי')+' '+(x.lang==='en'?'אנגלית':'עברית')+' · '+(x.city||'')+' · '+(x.date===T?'היום':vqDate(x.date))+' '+(x.time||'');};
+  var w=up2.filter(function(x){return st(x)==='wait';}),ok=up2.filter(function(x){return st(x)==='ok';}),rj=up2.filter(function(x){return st(x)==='rej';});
+  out.push({h:'⏳ מחכים לאישור שלך ('+w.length+')'});
+  if(!w.length)out.push({k:'q',t:'✔️ אין כרגע מה לאשר',u:'ner/candle.html'});
+  w.forEach(function(x){out.push({k:'q',t:'⏳ '+lab(x),u:'ner/candle.html',n:x.name});});
+  if(ok.length)out.push({h:'✅ מאושרים, יעלו לבד ('+ok.length+')'});
+  ok.forEach(function(x){out.push({k:'q',t:'✅ '+lab(x),u:'ner/candle.html',n:x.name});});
+  if(rj.length)out.push({h:'⛔ נפסלו'});
+  rj.forEach(function(x){out.push({k:'q',t:'⛔ '+lab(x),u:'ner/candle.html',n:x.name});});
+ }
+ if(id==='pl'){
+  var day=function(iso){return new Date(iso||0).toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'});};
+  var q=Q.filter(function(x){return !x.posted||day(x.postedAt)===T;}).sort(function(a,b){return (a.order||0)-(b.order||0);});
+  var w2=q.filter(function(x){return !x.approved&&!x.posted;}),ok2=q.filter(function(x){return x.approved||x.posted;});
+  out.push({h:'⏳ מחכים לאישור שלך ('+w2.length+')'});
+  if(!w2.length)out.push({k:'q',t:'✔️ אין כרגע מה לאשר',u:'plate/plate.html'});
+  w2.forEach(function(x){out.push({k:'q',t:'⏳ '+x.name,u:'plate/plate.html',n:x.id});});
+  if(ok2.length)out.push({h:'✅ אושרו'});
+  ok2.forEach(function(x){out.push({k:'q',t:(x.posted?'📤 עלה היום · ':'✅ ')+x.name,u:'plate/plate.html',n:x.id});});
+ }
+ return out;
+}
 function vidTabs(){
  var isSh=function(it){return /^שחר/.test(String(it.n))||/^sh[0-9]/.test(String(it.n))||/^שחר/.test(String(it.t));};
  var isIt=function(it){return /^IT /.test(String(it.n));};
@@ -12051,12 +12099,16 @@ function vidTabs(){
  var R=REEL_ITEMS.map(function(it){return {k:'reel',it:it};});
  var F=FUT_ITEMS.map(function(it){return {k:'fut',it:it};});
  var idea=function(x){return x.k==='fut';};
+ var TD=vqDay(),VQ0=VQ||{};
+ var stN=(VQ0.st||[]).filter(function(x){return x.date===TD;}).length;
+ var nrN=(VQ0.nr||[]).filter(function(x){return !x.posted&&!x.failed&&!x.approved&&!x.rejected&&!x.hold;}).length;
+ var plN=(VQ0.pl||[]).filter(function(x){return !x.posted&&!x.approved;}).length;
  return [
+  {id:'st',l:'📲 סטטוס'+(stN?' ('+stN+')':''),h:'סטטוס וואטסאפ: מה עולה היום ומה הבא בתור. לחיצה פותחת את הסרטון והטקסט, 3 נגיעות',L:vqRows('st').concat([{h:'📂 הדף המלא'},{k:'go',t:'📲 פתיחת כל הסטטוסים המוכנים',u:'status/index.html'}])},
   {id:'ads',l:'📣 קמפיין',h:'הממומן, וסרטוני המוניטור לסטורי',L:TOM_ITEMS.map(function(it){return it.h?{h:it.h}:{k:'tom',it:it};})},
   {id:'sh',l:'🌅 שחר',h:'הרילים, הסטורי והפוסטים של שחר',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isSh(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isSh(x.it);}))},
-  {id:'st',l:'📲 סטטוס',h:'כל הסטטוסים המוכנים לוואטסאפ, מהיום והלאה. 3 נגיעות לכל אחד',L:[{k:'go',t:'📲 פתיחת כל הסטטוסים המוכנים',u:'status/index.html'}]},
-  {id:'pl',l:'🍽️ מה בצלחת',h:'הסטוריז לפי הסדר, אפשר לסדר ולמחוק',L:[{k:'go',t:'🍽️ פתיחת הסטוריז של מה בצלחת',u:'plate/plate.html'},{h:'💡 רעיונות'}].concat(F.filter(function(x){return plateN[x.it.n];}))},
-  {id:'nr',l:'🕯️ נרות',h:'candle.times: סטוריז ופוסטים שמחכים לאישור שלך',L:[{k:'go',t:'🕯️ פתיחת candle.times',u:'ner/candle.html'},{h:'💡 רעיונות'}].concat(F.filter(function(x){return candleN[x.it.n];}))},
+  {id:'pl',l:'🍽️ מה בצלחת'+(plN?' ('+plN+')':''),h:'הסטוריז לפי הסדר, אפשר לסדר ולמחוק',L:vqRows('pl').concat([{h:'📂 הדף המלא'},{k:'go',t:'🍽️ פתיחת הסטוריז של מה בצלחת',u:'plate/plate.html'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return plateN[x.it.n];}))},
+  {id:'nr',l:'🕯️ נרות'+(nrN?' ('+nrN+')':''),h:'candle.times: סטוריז ופוסטים שמחכים לאישור שלך',L:vqRows('nr').concat([{h:'📂 הדף המלא'},{k:'go',t:'🕯️ פתיחת candle.times',u:'ner/candle.html'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return candleN[x.it.n];}))},
   {id:'me',l:'🎬 שלי',h:'הרילים והסטוריז שלי, ורעיונות לבאים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return !isSh(x.it)&&!isIt(x.it);}),[{h:'💡 רעיונות לרילים הבאים'}],F.filter(function(x){return !isSh(x.it)&&!plateN[x.it.n]&&!candleN[x.it.n];}))}
  ].map(function(t){
   var L=t.L.filter(function(x){return !(x.it&&x.it.r&&x.k!=='fut'&&!fileEntry(x.it.r));});
@@ -12065,6 +12117,7 @@ function vidTabs(){
  });
 }
 function vidSheet(tab){
+ if(!(VQ&&Date.now()-VQT<60000))return vqLoad(function(){vidSheet(tab);});
  window.VID_BACK=0;
  var T=vidTabs();
  if(!tab){try{tab=localStorage.getItem('vidTab')||'';}catch(e){}}
@@ -12086,7 +12139,7 @@ function vidSheet(tab){
   +(rows.length?'':'<small>אין כרגע סרטונים כאן</small>')
   +cur.L.map(function(x,i){
     if(x.h)return '<small style="display:block;margin:14px 0 6px;font-weight:800;font-size:15px;color:#1a2233">'+esc(x.h)+'</small>';
-    var lab=x.k==='go'?x.t:(x.it.n+' · '+x.it.t);
+    var lab=(x.k==='go'||x.k==='q')?x.t:(x.it.n+' · '+x.it.t);
     return '<button type="button" '+ybAttr(rows,rows.indexOf(x))+' data-k="'+i+'">'+esc(lab)+'</button>';
    }).join('')
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
@@ -12103,6 +12156,7 @@ function vidSheet(tab){
   var x=cur.L[+k];if(k===''||!x)return;
   var it=x.it;
   if(x.k==='go')return vidGo(x.u);
+  if(x.k==='q')return vidGo(x.u,x.n);
   if(x.k==='fut'){window.VID_BACK=1;return futText(it);}
   if(it.u)return window.open(it.u,'_blank','noopener');
   if(/פרסום$/.test(it.n))return postSheet(it);

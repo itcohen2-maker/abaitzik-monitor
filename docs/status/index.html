@@ -188,5 +188,6 @@
   .catch(function(){M.innerHTML='<section class="empty"><h2>לא הצלחתי לטעון את הרשימה</h2><p>בדוק חיבור ורענן את הדף.</p></section>';});
 })();
 </script>
+<script>/* 6.11: opened from a row in the videos tile, jump to that video */(function(){var h=decodeURIComponent(location.hash.slice(1));if(!h)return;var t=0,iv=setInterval(function(){var a=document.querySelector('[data-n="'+h+'"],[data-id="'+h+'"]');if(a||++t>60){clearInterval(iv);if(a){a.scrollIntoView({block:'center'});a.style.outline='3px solid #1d6fe0';a.style.outlineOffset='4px';}}},100);})();</script>
 </body>
 </html>
