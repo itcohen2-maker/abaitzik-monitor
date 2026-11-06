@@ -20378,7 +20378,10 @@ function pinHome(home){
  var grid=document.querySelector('.grid');
  var home=document.getElementById('pH');
  if(grid){nameChildren(grid,'tile');applyOrder(grid,'tileOrder');armTiles(grid);}
- setInterval(function(){var g=document.getElementById('blkTiles');if(g&&g!==window.TILES_GRID&&!tEdit){nameChildren(g,'tile');applyOrder(g,'tileOrder');armTiles(g);}},1000);
+ (function(){function re(){var g=document.getElementById('blkTiles');if(g&&g!==window.TILES_GRID&&!tEdit){nameChildren(g,'tile');applyOrder(g,'tileOrder');armTiles(g);}}
+  // re-arm the moment the grid is swapped (a long press right after the swap must work too), and once a second as a backstop
+  try{new MutationObserver(re).observe(document.body,{childList:true,subtree:true});}catch(e){}
+  setInterval(re,1000);})();
  // The round icons: named by what they say, not where they stand, so a new
  // icon added in the middle does not shuffle his order.
  var icons=document.getElementById('blkIcons');
