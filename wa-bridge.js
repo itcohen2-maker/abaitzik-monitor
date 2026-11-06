@@ -684,6 +684,8 @@ const server = http.createServer(function (q, s) {
         if (dest === 'unknown') { if ((v.messages || []).length) log('message for an unknown number ' + pid.slice(0, 6) + '..., dropped'); return; }
         const name = v.contacts && v.contacts[0] && v.contacts[0].profile && v.contacts[0].profile.name;
         (v.messages || []).forEach(function (m) { onMessage(m, name).catch(function (err) { log('message failed: ' + err.message); }); });
+        // 6.11: delivery reports, so "I did not get it" can be checked. Failures say why.
+        (v.statuses || []).forEach(function (x) { if (x.status !== 'read') log('status ' + x.status + ' ' + String(x.id || '').slice(-12) + (x.errors && x.errors[0] ? ' ' + x.errors[0].code + ' ' + (x.errors[0].title || '') + ' ' + ((x.errors[0].error_data && x.errors[0].error_data.details) || '') : '')); });
       });
     });
   });
