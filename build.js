@@ -2676,6 +2676,8 @@ body:not(.inner) #thumbSet{display:block}
 #talkCard .quickwrite{margin-top:0;align-items:stretch}
 #talkCard .quickwrite textarea{min-height:46px;padding:10px 12px;font-size:15.5px}
 #talkCard .quickwrite button{min-height:46px;padding:0 16px}
+#talkCard .quickwrite textarea{height:46px}
+#talkCard #quickSaid:empty{display:none}
 .mic{width:98px;height:98px;flex:0 0 98px;border-radius:50%;border:0;padding:0;cursor:pointer;position:relative;
  display:grid;place-items:center;background:conic-gradient(from 0deg,var(--blue),var(--red),var(--yellow),var(--green),var(--blue));
  box-shadow:0 12px 28px rgba(66,133,244,.35)}
