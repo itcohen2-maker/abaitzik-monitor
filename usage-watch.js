@@ -180,6 +180,8 @@ function reasons(sum, sub) {
     const left = Date.parse(sub.week.resets) - Date.now();
     const gone = Math.max(0.01, 1 - left / (7 * 864e5));
     if (sub.week.pct >= 80) out.push(['sub:80', 'המכסה השבועית ב ' + Math.round(sub.week.pct) + '%, מתאפסת ' + when(sub.week.resets) + '.']);
+    // 6.11, Itzik: early warning, half the weekly quota gone before half the week
+    else if (sub.week.pct >= 50 && gone < 0.5) out.push(['sub:half', 'חצי מהמכסה השבועית כבר נוצל (' + Math.round(sub.week.pct) + '%) ועוד לא עבר חצי שבוע. מתאפסת ' + when(sub.week.resets) + '.']);
     else if (sub.week.pct / gone > 110 && sub.week.pct >= 30) out.push(['sub:pace', 'בקצב הנוכחי המכסה השבועית תיגמר לפני האיפוס (' + Math.round(sub.week.pct) + '% אחרי ' + Math.round(gone * 100) + '% מהשבוע).']);
   }
   const all = sum.reduce((n, s) => n + s.today, 0);
