@@ -4431,7 +4431,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
     and Google from August on (before that he filed them himself). Pulled from
     his mail; private files only, numbered, a new one gets the next number.
   -->
-  <button type="button" class="gt gInv" data-grp="money" id="gInv" data-upd="2026-10-15-inv"><b>🧾 חשבוניות</b><small>ממוספר. מ 3.10 והלאה</small></button>
+  <!-- 6.11.2026, Itzik: "תסיר את אריח חשבוניות". The tile is gone; INV_ITEMS, invSheet and the files stay. -->
   <!--
     2.10. Itzik, in a voice note: a new tile with winning lines. The first one
     is amirshwartz1's TikTok comment on the cake video (55 likes).
