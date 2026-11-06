@@ -17101,7 +17101,7 @@ function bizSheet(t0){
      // 15.10: "📝 הערה" opens the same box, but what is sent is a note on the record
      var row=t.closest('.bzRow');if(!row||row.querySelector('.bzEd'))return;
      var isNote=a==='note';
-     row.insertAdjacentHTML('beforeend','<div class="bzEd"><input placeholder="'+(isNote?'כתוב הערה על הליד':'מה השתנה? לדוגמה: סגר, או קבע לשלישי')+'">'+(isNote?'':'<input class="bzMail" type="email" placeholder="מייל (לא חובה)">')+'<button type="button" class="yb yb2" data-bz="'+(isNote?'sendnote':'send')+'">שלח</button></div>');
+     row.insertAdjacentHTML('beforeend','<div class="bzEd"><input placeholder="'+(isNote?'כתוב הערה על הליד':'מה השתנה? לדוגמה: סגר, או קבע לשלישי')+'">'+(isNote?'':'<input class="bzMail" type="email" placeholder="מייל (לא חובה)">')+'<button type="button" class="yb yb2" data-tdy="1" data-bz="'+(isNote?'sendnote':'send')+'">שלח</button></div>');
      row.querySelector('.bzEd input').focus();return;
     }
     if(a==='stage'){
@@ -17111,7 +17111,8 @@ function bizSheet(t0){
      return;
     }
     if(a==='send'||a==='sendnote'){
-     var r2=t.closest('.bzRow'),box=t.parentNode,inp2=box.querySelector('input'),txt=inp2.value.trim();
+     // 6.11: the tidy checkbox wraps the send button, so parentNode found the checkbox and sent "on". Look in the box itself.
+     var r2=t.closest('.bzRow'),box=t.closest('.bzEd'),inp2=box.querySelector('input:not([type=checkbox]):not(.bzMail)'),txt=inp2.value.trim();
      var mail2=box.querySelector('.bzMail'),mv=mail2?mail2.value.trim():'';
      if(!txt&&!mv){inp2.focus();return;}
      var nm=r2.querySelector('b').textContent;
