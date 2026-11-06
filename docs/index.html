@@ -337,6 +337,21 @@ button.abtn[disabled]{opacity:.55}
 .bzNewTag{align-self:flex-start;background:#ea4335;color:#fff;font:700 12px Heebo,sans-serif;border-radius:8px;padding:2px 8px}
 @keyframes taskbeat{0%,49%{box-shadow:0 0 0 4px var(--yellow),var(--shadow)}50%,100%{box-shadow:0 0 0 0 transparent,var(--shadow)}}
 .gt.taskblink{animation:taskbeat .8s steps(1) infinite}
+.gt:not(.leadNew){background:linear-gradient(150deg,#1b8aa5,#0e5a73)!important}
+.gt.ubeat{animation:taskbeat .8s steps(1) infinite}
+.tsh{position:fixed;inset:0;z-index:9999;background:rgba(10,15,30,.45);display:flex;align-items:flex-end;justify-content:center}
+.tsh-in{width:100%;max-width:520px;background:#fff;color:#0f172a;border-radius:22px 22px 0 0;padding:18px 16px 22px;font-family:Heebo,sans-serif;box-shadow:0 -10px 30px rgba(0,0,0,.25);direction:rtl}
+.tsh-t{display:block;font-size:18px;margin-bottom:10px}
+.tsh-l{font-size:14px;color:#475569;margin:4px 0 8px}
+.tsh-sw{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;align-items:center}
+.tsw{width:42px;height:42px;border-radius:50%;border:3px solid transparent;box-shadow:0 0 0 1px rgba(0,0,0,.12);cursor:pointer}
+.tsw.on{border-color:#0f172a}
+.tsw0{width:auto;padding:0 14px;border-radius:21px;background:linear-gradient(150deg,#1b8aa5,#0e5a73);color:#fff;font:700 14px Heebo,sans-serif}
+.tsh-r{display:flex;justify-content:space-between;align-items:center;width:100%;min-height:52px;border:1px solid #e2e8f0;background:#fff;color:#0f172a;border-radius:14px;padding:0 14px;margin:6px 0;font:600 16px Heebo,sans-serif;cursor:pointer}
+.tsh-r span{font-weight:400;color:#475569;font-size:14px}
+.tsh-del{color:#c62828}.tsh-del.sure{background:#c62828;color:#fff;border-color:#c62828}
+.tsh-x{width:100%;min-height:46px;margin-top:8px;border:0;background:transparent;color:#475569;font:600 15px Heebo,sans-serif;cursor:pointer}
+@media(prefers-color-scheme:dark){.tsh-in{background:#13131c;color:#e5e7eb}.tsh-r{background:#1b1b26;color:#e5e7eb;border-color:#2a2a38}.tsh-l,.tsh-r span,.tsh-x{color:#9ca3af}.tsw.on{border-color:#fff}}
 @media(prefers-reduced-motion:reduce){.gt.taskblink{animation:none;box-shadow:0 0 0 4px var(--yellow)}}
 @keyframes updbeat{0%,100%{box-shadow:0 0 0 0 rgba(255,214,0,0),var(--shadow)}50%{box-shadow:0 0 0 5px rgba(255,214,0,.55),var(--shadow)}}
 .gt.updblink,.newbtn.updblink{animation:updbeat 2.6s ease-in-out infinite}
@@ -2252,11 +2267,11 @@ body.rdragging{user-select:none;-webkit-user-select:none}
  25%{transform:rotate(0) translateY(-3px)}
  50%{transform:rotate(11deg)}
  75%{transform:rotate(0) translateY(-3px)}}
-.gt.taskblink::before,.gt.glow::before,.gt.blink::before{content:"";position:absolute;
+.gt.taskblink::before,.gt.glow::before,.gt.blink::before,.gt.uhand::before{content:"";position:absolute;
  bottom:4px;inset-inline-end:6px;width:42px;height:45px;pointer-events:none;z-index:2;
  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 64'%3E%3Cellipse cx='34' cy='61' rx='13' ry='2.2' fill='%23000' opacity='.18'/%3E%3Cg stroke='%232b2024' stroke-width='2.2' stroke-linecap='round' fill='none'%3E%3Cpath d='M30 48l-2 10h-4'/%3E%3Cpath d='M38 48l2 10h4'/%3E%3C/g%3E%3Cpath d='M20 30c-3-3-7-6-9-3s3 7 7 11c3 4 6 10 13 11s13-3 14-11l2-17c0-3-4-3-5 0l-1 6-1-17c0-3-5-3-5 0l-1 15-2-17c0-3-5-3-5 0l1 17-4-13c-1-3-5-2-5 1l3 17z' fill='%23ec4a4f' stroke='%232b2024' stroke-width='2.2' stroke-linejoin='round'/%3E%3Cg stroke='%232b2024' stroke-width='2' stroke-linecap='round' fill='none'%3E%3Cpath d='M27 37q2-2 4 0'/%3E%3Cpath d='M35 36q2-2 4 0'/%3E%3Cpath d='M29 42q5 4 10 0'/%3E%3C/g%3E%3Cg stroke='%234cc3e6' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M6 46l-4 2'%3E%3Canimate attributeName='opacity' values='0%3B1%3B0' dur='1.2s' repeatCount='indefinite'/%3E%3C/path%3E%3Cpath d='M8 52l-3 5'%3E%3Canimate attributeName='opacity' values='1%3B0%3B1' dur='1.2s' repeatCount='indefinite'/%3E%3C/path%3E%3Cpath d='M13 54v5'%3E%3Canimate attributeName='opacity' values='0%3B1%3B0' dur='1.2s' begin='.3s' repeatCount='indefinite'/%3E%3C/path%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat;transform-origin:56% 92%;
  filter:drop-shadow(0 1px 2px rgba(0,0,0,.25));animation:handtap 1.2s ease-in-out infinite}
-@media(prefers-reduced-motion:reduce){.gt.taskblink::before,.gt.glow::before,.gt.blink::before{animation:none}}
+@media(prefers-reduced-motion:reduce){.gt.taskblink::before,.gt.glow::before,.gt.blink::before,.gt.uhand::before{animation:none}}
 .mob{display:flex;gap:6px;flex:0 0 auto}
 .mob button{background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:10px;
  padding:9px 12px;font:500 13.5px Heebo,sans-serif;cursor:pointer;white-space:nowrap}
@@ -2406,7 +2421,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-06T20:54:04.929Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-06T20:57:09.376Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4296,7 +4311,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='b039512d38';
+var CODE_ID='b81d3b920d';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -15272,6 +15287,7 @@ function armTiles(grid){
  tools.appendChild(arr);
  grid.insertBefore(tools,grid.firstChild);
  var pin=pinTiles(grid);
+ tPaint();setTimeout(tPaint,0);window.addEventListener('load',tPaint);
  pressDrag(grid,'.gt','tileOrder',function(){return tEdit;},pin);
  grid.addEventListener('click',function(e){
   if(!tEdit||e.target.closest('#tileArr'))return;
@@ -15293,6 +15309,50 @@ function armTiles(grid){
   }
  },true);
 }
+var TCOL=['#0e7490','#2563eb','#7c3aed','#db2777','#dc2626','#ea580c','#ca8a04','#16a34a','#475569'];
+function tPrefs(k){try{return JSON.parse(localStorage.getItem(k)||'null')||{};}catch(e){return {};}}
+function tPut(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+function tPaint(){
+ var c=tPrefs('tileColor'),b=tPrefs('tileBeat'),h=tPrefs('tileHand');
+ Array.prototype.forEach.call(document.querySelectorAll('.gt[id]'),function(t){
+  if(c[t.id])t.style.setProperty('background',c[t.id],'important');else t.style.removeProperty('background');
+  t.classList.toggle('ubeat',!!b[t.id]);t.classList.toggle('uhand',!!h[t.id]);
+ });
+}
+function tileSheet(t){
+ var old=document.getElementById('tSheet');if(old)old.remove();
+ var name=((t.querySelector('b')||t).textContent||'').trim();
+ var c=tPrefs('tileColor'),b=tPrefs('tileBeat'),h=tPrefs('tileHand');
+ var w=document.createElement('div');w.id='tSheet';w.className='tsh';
+ var sw=TCOL.map(function(x){return '<button type="button" class="tsw'+(c[t.id]===x?' on':'')+'" data-col="'+x+'" style="background:'+x+'" aria-label="צבע"></button>';}).join('');
+ w.innerHTML='<div class="tsh-in" role="dialog" aria-label="אפשרויות לאריח"><b class="tsh-t"></b>'
+  +'<div class="tsh-l">צבע</div><div class="tsh-sw">'+sw+'<button type="button" class="tsw tsw0'+(c[t.id]?'':' on')+'" data-col="">אחיד</button></div>'
+  +'<button type="button" class="tsh-r" data-a="beat">✨ הבהוב<span>'+(b[t.id]?'פועל':'כבוי')+'</span></button>'
+  +'<button type="button" class="tsh-r" data-a="hand">👋 יד מתנפנפת<span>'+(h[t.id]?'פועלת':'כבויה')+'</span></button>'
+  +'<button type="button" class="tsh-r tsh-del" data-a="del">🗑 מחיקת האריח</button>'
+  +'<button type="button" class="tsh-x" data-a="x">סגירה</button></div>';
+ w.querySelector('.tsh-t').textContent=name;
+ document.body.appendChild(w);
+ w.addEventListener('click',function(e){
+  e.stopPropagation();
+  if(e.target===w){w.remove();return;}
+  var s=e.target.closest('[data-col]');
+  if(s){var cc=tPrefs('tileColor'),v=s.getAttribute('data-col');if(v)cc[t.id]=v;else delete cc[t.id];tPut('tileColor',cc);tPaint();w.remove();toast(v?'הצבע של "'+name+'" נשמר.':'"'+name+'" חזר לצבע האחיד.');return;}
+  var a=e.target.closest('[data-a]');if(!a)return;a=a.getAttribute('data-a');
+  if(a==='x'){w.remove();return;}
+  if(a==='beat'||a==='hand'){
+   var k=a==='beat'?'tileBeat':'tileHand',m=tPrefs(k),on=!m[t.id];
+   if(on)m[t.id]=1;else delete m[t.id];tPut(k,m);tPaint();w.remove();
+   toast((a==='beat'?'ההבהוב של "'+name+'" ':'היד על "'+name+'" ')+(on?'פועל עד שתיכנס אליו.':'כבוי.'));return;
+  }
+  if(a==='del'){
+   var d=w.querySelector('.tsh-del');
+   if(!d.classList.contains('sure')){d.classList.add('sure');d.textContent='בטוח? לחיצה נוספת מוחקת את "'+name+'"';return;}
+   var hid=tileStore('tilesHidden',[]);if(hid.indexOf(t.id)<0)hid.push(t.id);tileSave('tilesHidden',hid);
+   t.hidden=true;w.remove();toast('"'+name+'" נמחק מהמסך. אפשר להחזיר אותו בהגדרות.');
+  }
+ });
+}
 function pinTiles(grid){
  var K='pinBlink';
  var get=function(){try{return JSON.parse(localStorage.getItem(K)||'[]')||[];}catch(e){return [];}};
@@ -15304,14 +15364,14 @@ function pinTiles(grid){
   if(Date.now()-(window.PIN_AT||0)<900)return;
   var a=get(),i=a.indexOf(t.id);
   if(i>=0){a.splice(i,1);put(a);t.classList.remove('taskblink');}
+  var bb=tPrefs('tileBeat'),hh=tPrefs('tileHand');
+  if(bb[t.id]||hh[t.id]){delete bb[t.id];delete hh[t.id];tPut('tileBeat',bb);tPut('tileHand',hh);tPaint();}
  },true);
  paint();setTimeout(paint,0);window.addEventListener('load',paint);
  return function(t){
   if(!t||!t.id)return;
   window.PIN_AT=Date.now();
-  var a=get(),i=a.indexOf(t.id),name=((t.querySelector('b')||t).textContent||'').trim();
-  if(i<0){a.push(t.id);put(a);t.classList.add('taskblink');toast('"'+name+'" מהבהב עכשיו, עד שתיכנס אליו.');}
-  else{a.splice(i,1);put(a);t.classList.remove('taskblink');toast('"'+name+'" כבר לא מהבהב.');}
+  tileSheet(t);
  };
 }
 var HOME_HEAD=['hmGreet','sinceBox','approvalsBox','homeBrief','homeKpis','homeMoney','newBlock','bareBtn','blkIcons','blkTiles'];
