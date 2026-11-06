@@ -122,6 +122,7 @@
    +'<div class="body"><span class="tag">'+esc(it.topic||'')+'</span><p class="cap">'+lnk(esc(it.caption))+'</p>';
   if(big){
    h+='<div class="stack"><button type="button" class="btn share" data-share>'+ic('share')+'שתף לסטטוס</button></div><p class="hint" data-hint hidden>הטקסט הועתק. בסטטוס: הדבק בכיתוב</p>';
+   h+='<div class="stack"><button type="button" class="btn soft" data-copy>'+ic('copy')+'העתקת הטקסט</button></div>';
    h+='<a class="dl" href="'+esc(it.file)+'" target="_blank" rel="noopener">פתיחת הסרטון לשמירה</a>';
    h+=done?'<div class="state"><span>'+ic('check')+'סומן שהועלה</span><button type="button" class="undo" data-undo>ביטול</button></div>'
           :'<div class="stack"><button type="button" class="btn done" data-done>'+ic('check')+'העליתי</button></div>';
