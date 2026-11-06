@@ -4361,7 +4361,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   -->
   <button type="button" class="gt gMyDay" data-grp="day" id="gMyDay" data-new="1" data-upd="20261024-tdel"><b>📅 מה יש לי היום</b><small>תורים, תזכורות ומשימות של היום</small></button>
   <button type="button" class="gt g18" data-grp="day" id="gAppts" data-upd="20261106-series"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
-  <button type="button" class="gt g16" data-grp="day" id="gRemind"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
+  <button type="button" class="gt g16" data-grp="day" id="gRemind" data-upd="20261106-remhelp"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
   <button type="button" class="gt g10 roundTile" id="gNotes" title="פתקים" aria-label="פתקים" data-upd="notes-print-20261102">📝</button>
   <!-- 12.10, Itzik: "תקים אפליקציה לבדוק מה כל הקלקולים האלה". Every monitor's faults on one screen. -->
   <button type="button" class="gt gHealth" id="gHealth" data-new="1"><b>🩺 תקלות</b><small>מה תקוע, מה נעצר, ולמה</small></button>
@@ -5444,6 +5444,7 @@ __RIVSHARE__
  <div class="thread" id="thread"></div>
  <form id="msgForm">
   <div class="rlab" id="msgLab">בקשה חדשה. נפתחת כשיחה נפרדת. להמשך של שיחה קיימת כותבים בתוך השיחה עצמה.</div>
+  ${inst.name !== 'abaitzik' ? '<div class="rlab qwarn" id="quotaWarn" hidden></div>' : ''}
   <textarea id="msgText" rows="2"
    placeholder="כתוב כאן. בקשה, תשובה, או כל דבר שבא לך שאדע"></textarea>
   <div class="sendrow">
@@ -6500,6 +6501,8 @@ function sendFiles(list, note) {
  }
  return list.reduce(function (chain, f, i) {
   return chain.then(function () {
+   // 6.11.2026 (reviewer idea he took): a small file shows the same bar as a big one, with its number.
+   upPanel(true, 'שולח ' + f.name + ' (' + (i + 1) + ' מתוך ' + n + ')', Math.floor(i / n * 100));
    return putOne(f, i).catch(function () {
     // A sliced file already retried each slice; sending it all again would
     // only spend the quota that probably refused it.
@@ -6508,6 +6511,7 @@ function sendFiles(list, note) {
    });
   });
  }, Promise.resolve()).then(function () {
+  upPanel(false);
   if (failed.length) note = (note ? note + String.fromCharCode(10) : '')
    + 'לא עלו: ' + failed.join(', ');
   // notSent: nothing arrived and no caption left, so the whole send can be
@@ -12270,7 +12274,7 @@ function renderReminders(){
  // 4.11.2026 (direction ד): the reminders in coloured drawers by when, instead of one long list.
  var rNow=Date.now(),RG=[['⏰ עכשיו והיום',[]],['📅 השבוע',[]],['🗓️ בהמשך',[]],['✅ נשלחו',[]]];
  R.forEach(function(r){var t=Date.parse(r.due);RG[r.sentAt?3:(isNaN(t)||t<rNow+864e5?0:t<rNow+7*864e5?1:2)][1].push(r);});
- host.innerHTML=R.length?RG.filter(function(g){return g[1].length;}).map(function(g){return '<h3 data-n="'+g[1].length+'">'+g[0]+'</h3><div>'+g[1].map(remOne).join('')+'</div>';}).join(''):'<div class="empty">אין תזכורת פתוחה.</div>';
+ host.innerHTML=R.length?RG.filter(function(g){return g[1].length;}).map(function(g){return '<h3 data-n="'+g[1].length+'">'+g[0]+'</h3><div>'+g[1].map(remOne).join('')+'</div>';}).join(''):'<div class="empty">אין תזכורת פתוחה.<br>לקבוע תזכורת, '+(FEM?'כתבי':'כתוב')+' למטה מה להזכיר ובאיזה יום.</div>';
  dwRe(host,{key:'rem',counts:'data',short:{'עכשיו והיום':'היום'}});
  wireBoxes(host);
  Array.prototype.forEach.call(host.querySelectorAll('.remknow'),function(b){
