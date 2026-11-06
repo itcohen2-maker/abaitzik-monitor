@@ -71,7 +71,7 @@
  {
   "id": "limon",
   "name": "לימון: הקליפה וויטמין C (גרסה 11)",
-  "order": 3,
+  "order": 4,
   "file": "media/plate-limon-v11.mp4",
   "poster": "media/plate-limon-v11.jpg",
   "approved": true,
@@ -135,13 +135,14 @@
    }
   ],
   "onSite": true,
-  "posted": false,
+  "posted": true,
+  "postedAt": "2026-11-04T11:36:38.491Z",
   "approvedAt": "2026-11-04T12:14:25.696Z"
  },
  {
   "id": "afuna",
   "name": "אפונה ירוקה: הקפואה מנצחת (גרסה 11)",
-  "order": 4,
+  "order": 3,
   "file": "media/plate-afuna-v11.mp4",
   "poster": "media/plate-afuna-v11.jpg",
   "approved": false,
