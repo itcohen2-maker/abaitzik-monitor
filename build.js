@@ -5810,6 +5810,8 @@ function fileHasName(name){return !!(fileOwnNames()[name]||fileListName(name)||f
 function fileNiceName(name){
  var own=fileOwnNames()[name];if(own)return own;
  var ln=fileListName(name)||fileMsgName(name);if(ln)return ln;
+ // 6.11: "shachar filming" showed in English. A file opened from a button takes the button's own words.
+ try{var fb=[].slice.call(document.querySelectorAll('[data-f]')).filter(function(b){return b.getAttribute('data-f')===name;})[0];var bt=fb&&String(fb.textContent||'').replace(/^[^֐-׿A-Za-z0-9]+/,'').split(/[,(]/)[0].trim();if(bt)return bt;}catch(e){}
  var short=String(name).split('/').pop();
  var lists=[];
  ['NER_ITEMS','REEL_ITEMS','STORY_ITEMS','FUT_ITEMS','OCC_ITEMS','LAW_ITEMS','DUDI_ITEMS','CLALIT_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS','LEC_ITEMS']

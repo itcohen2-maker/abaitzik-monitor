@@ -2405,7 +2405,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-06T15:40:01.109Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-06T15:40:26.488Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4009,6 +4009,7 @@ function fileHasName(name){return !!(fileOwnNames()[name]||fileListName(name)||f
 function fileNiceName(name){
  var own=fileOwnNames()[name];if(own)return own;
  var ln=fileListName(name)||fileMsgName(name);if(ln)return ln;
+ try{var fb=[].slice.call(document.querySelectorAll('[data-f]')).filter(function(b){return b.getAttribute('data-f')===name;})[0];var bt=fb&&String(fb.textContent||'').replace(/^[^֐-׿A-Za-z0-9]+/,'').split(/[,(]/)[0].trim();if(bt)return bt;}catch(e){}
  var short=String(name).split('/').pop();
  var lists=[];
  ['NER_ITEMS','REEL_ITEMS','STORY_ITEMS','FUT_ITEMS','OCC_ITEMS','LAW_ITEMS','DUDI_ITEMS','CLALIT_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS','LEC_ITEMS']
@@ -4293,7 +4294,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='39ab75518d';
+var CODE_ID='8843434ff6';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
