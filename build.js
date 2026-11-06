@@ -1397,7 +1397,7 @@ function tenantTiles(inst) {
     const [cls, title, sub] = TENANT_TILES[id];
     // data-grp by visible label: only the two labels in the groups list get one.
     const grp = { gFiles: 'home', gBiz: 'work' }[id];
-    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' || /^gBh|^gShopList$/.test(id) ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261105-shai-send"' : '') + (id === 'gTasks' ? ' data-upd="tasks-del-1024"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' || /^gBh|^gShopList$/.test(id) ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261105-shai-send"' : '') + (id === 'gTasks' ? ' data-upd="tasks-edit-1106"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
 }
 /*
@@ -2871,6 +2871,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .tk.done span{text-decoration:line-through;opacity:.55}
 .tk.tnc{cursor:default}.tk.tnc span{flex:1}
 .tkDel{margin-inline-start:auto;border:0;background:none;font-size:18px;padding:4px 6px;cursor:pointer}
+.tkAct{margin-inline-start:auto;display:flex;align-items:center}.tkAct .tkDel{margin-inline-start:0}
 .tncode{user-select:all;letter-spacing:1px}.tncopy{margin-top:4px;padding:4px 10px;border-radius:8px;border:0;background:#1e3a5f;color:#9ecbff;font-weight:700}
 .tnopen{flex:none;padding:8px 14px;border-radius:10px;background:#1e3a5f;color:#9ecbff;text-decoration:none;font-weight:700}
 @keyframes tkpop{0%{transform:scale(1)}45%{transform:scale(1.06)}100%{transform:scale(1)}}
@@ -5332,7 +5333,7 @@ __RIVSHARE__
  <div id="tkBox"></div>
  <!-- 17.10, idea he took: "במסך המשימות אין איך להוסיף משימה". The same box as מה יש לי היום, with a day picker. -->
  <div class="tdSec">להוסיף משימה</div>
- <form class="tdAdd" id="tkForm"><select id="tkDay" aria-label="לאיזה יום"></select><input id="tkText" placeholder="למשל: להתקשר לבנק" autocomplete="off"><button type="submit">שליחה</button></form>
+ <form class="tdAdd" id="tkForm"><select id="tkDay" aria-label="לאיזה יום"></select><input id="tkText" placeholder="למשל: להתקשר לבנק" autocomplete="off"><button type="submit">שליחה</button><button type="button" id="tkCancel" hidden>ביטול</button></form>
  <small id="tkSaid"></small>
 </section>
 
@@ -5459,6 +5460,14 @@ __RIVSHARE__
   <input type="hidden" name="הודעה" id="fNote" value="">
   <input type="hidden" name="קוד" id="fCode" value="">
   <input type="file" id="fPick" name="attachment" multiple>
+  <!-- Idea 02:31 (review): several pages of one document become one PDF before sending. -->
+  <button type="button" id="scanBtn" class="cpall">📄 סריקת מסמך</button>
+  <input type="file" id="scanIn" accept="image/*" capture="environment" hidden>
+  <div class="scanst" id="scanSt" hidden>
+   <span id="scanSay"></span>
+   <button type="button" id="scanDone" class="cpall">סיום: קובץ PDF אחד</button>
+   <button type="button" id="scanCancel" class="cpall">ביטול</button>
+  </div>
   <input type="text" id="fCap" placeholder="כיתוב, לא חובה">
   <div class="fmeta" id="fMeta">אפשר לבחור כל קובץ, גם כמה יחד, לכתוב שורה, ואז להקליט. הכל יוצא בהודעה אחת.</div>
   <div class="pthumbs" id="fThumbs" hidden></div>
@@ -12875,11 +12884,12 @@ function renderTasks(){
    h+='<h3>'+esc(lbl)+'</h3>';
   }
   h+='<label class="tk'+(done[t.id]?' done':'')+'"><input type="checkbox" data-tk="'+esc(t.id)+'"'
-   +(done[t.id]?' checked':'')+'><span>'+esc(t.text)+'</span>'+tkDelBtn(t)+'</label>';
+   +(done[t.id]?' checked':'')+'><span>'+esc(t.text)+'</span>'+tkActs(t)+'</label>';
  });
  // An empty screen says in one line what it is for, like the ideas screen does.
  host.innerHTML=h||'<div class="empty">אין משימות. כל משימה שתשלח למוניטור תופיע כאן לפי היום שלה.</div>';
- host.onclick=function(e){var d=e.target.closest&&e.target.closest('[data-tkdel]');if(d){e.preventDefault();tkDelete(d);}};
+ host.onclick=function(e){var d=e.target.closest&&e.target.closest('[data-tkdel]');if(d){e.preventDefault();tkDelete(d);return;}
+  var ed=e.target.closest&&e.target.closest('[data-tkedit]');if(ed){e.preventDefault();tkEditStart(ed);}};
  var b=document.getElementById('tkClear');
  if(b)b.onclick=function(){clearIds('tasksCleared',T.map(function(t){return t.id;}));notesPush();renderTasks();};
 }
@@ -12915,6 +12925,28 @@ function apEditFill(a){
  apEditId=a.id;apEditSet(true);
  document.getElementById('apSaid').textContent='משנים את התור. שנה מה שצריך ושלח, והתור הישן יתעדכן.';
  document.getElementById('apForm').scrollIntoView({behavior:'smooth',block:'center'});
+}
+// 6.11, idea he took: "אי אפשר לשנות משימה או להעביר אותה ליום אחר". The ✏️ opens the add form with the text and the day; sending writes the same task again.
+var tkEditId='';
+function tkEditSet(on){
+ var c=document.getElementById('tkCancel'),bt=document.querySelector('#tkForm button[type=submit]');
+ if(c)c.hidden=!on;
+ if(bt)bt.textContent=on?'שמירת השינוי':'שליחה';
+}
+function tkEditBtn(t){return '<button type="button" class="tkDel" data-tkedit="'+esc(t.id)+'" data-what="'+esc(t.text)+'" data-day="'+esc(t.day)+'" aria-label="לשנות את המשימה או להעביר אותה ליום אחר">✏️</button>';}
+function tkActs(t){return '<span class="tkAct">'+tkEditBtn(t)+tkDelBtn(t)+'</span>';}
+function tkEditStart(b){
+ var sel=document.getElementById('tkDay'),day=b.getAttribute('data-day')||'';
+ tkAddInit();
+ if(sel&&day&&!Array.prototype.some.call(sel.options,function(o){return o.value===day;})){
+  var lb=new Date(day+'T12:00:00').toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'});
+  var op=document.createElement('option');op.value=day;op.textContent=lb;sel.insertBefore(op,sel.firstChild);
+ }
+ if(sel&&day)sel.value=day;
+ document.getElementById('tkText').value=b.getAttribute('data-what')||'';
+ tkEditId=b.getAttribute('data-tkedit');tkEditSet(true);
+ document.getElementById('tkSaid').textContent='משנים את המשימה. שנה את הטקסט או את היום, ושלח.';
+ document.getElementById('tkForm').scrollIntoView({behavior:'smooth',block:'center'});
 }
 function tkDelBtn(t){return '<button type="button" class="tkDel" data-tkdel="'+esc(t.id)+'" data-what="'+esc(t.text)+'" aria-label="למחוק את המשימה">🗑</button>';}
 function tkDelete(b){
@@ -12967,6 +12999,13 @@ on2('tkForm','submit',function(e){
  var iso=sel.value,today=iso===tdDay(0);
  var lbl=new Date(iso+'T12:00:00').toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'});
  said.textContent='שולח.';
+ if(tkEditId){
+  var eid=tkEditId;
+  return sendText('עדכון משימה','עדכון משימה: '+eid+' | '+v+', ליום '+lbl+' ('+iso+')','משימה').then(function(){
+   t.value='';tkEditId='';tkEditSet(false);said.textContent='נשלח. המשימה תתעדכן כאן ברגע שהמוניטור יקבל את השינוי.';
+   markSent('text');renderSent();renderThread();
+  }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';});
+ }
  sendText(today?'משימה להיום':'משימה ליום אחר',(today?'משימה להיום, ':'משימה ליום ')+lbl+' ('+iso+'): '+v,'משימה').then(function(){
   t.value='';said.textContent='נשלח. זה יופיע כאן ברשימה, ביום שבחרת.';
   markSent('text');renderSent();renderThread();
@@ -15732,7 +15771,7 @@ function todaySheet(){
  h+='<div class="tdSec">🏥 תורים</div>'+(x.ap.length?x.ap.map(apRow).join(''):'<small>אין תור היום. תור חדש מוסיפים מהמסך הראשי: לוחצים על 🏥 תורים עתידיים, בטופס למטה.</small>');
  h+='<div class="tdSec">⏰ תזכורות</div>'+(x.rm.length?x.rm.map(function(r){return '<div class="tdRow">'+esc(r.text)+'</div>';}).join(''):'<small>אין תזכורת להיום.</small>');
  h+='<div class="tdSec">✅ משימות</div>'+(x.tk.length?x.tk.map(function(t){
-   return '<label class="tdRow tk'+(x.done[t.id]?' done':'')+'"><input type="checkbox" data-tk="'+esc(t.id)+'"'+(x.done[t.id]?' checked':'')+'> '+esc(t.text)+tkDelBtn(t)+'</label>';
+   return '<label class="tdRow tk'+(x.done[t.id]?' done':'')+'"><input type="checkbox" data-tk="'+esc(t.id)+'"'+(x.done[t.id]?' checked':'')+'> '+esc(t.text)+tkActs(t)+'</label>';
   }).join(''):'<small>אין משימה פתוחה להיום.</small>');
  if(x.ap1.length)h+='<div class="tdSec">מחר</div>'+x.ap1.map(apRow).join('');
  // 13.10, idea he took: "משימה להיום אפשר לכתוב רק לאותו יום". A day picker, today by default.
@@ -15748,6 +15787,8 @@ function todaySheet(){
  function esckey(e){if(e.key==='Escape')close();}
  w.onclick=function(e){
   var d=e.target.closest&&e.target.closest('[data-tkdel]');if(d){e.preventDefault();tkDelete(d);return;}
+  // 6.11: the ✏️ in this box opens the tasks screen with that task in the form.
+  var ed=e.target.closest&&e.target.closest('[data-tkedit]');if(ed){e.preventDefault();close();pane('T');renderTasks();tkEditStart(ed);return;}
   if(e.target===w||e.target.id==='tdClose')close();
  };
  w.addEventListener('change',function(e){var l=e.target.closest&&e.target.closest('label');if(l)l.classList.toggle('done',e.target.checked);});
@@ -18746,6 +18787,77 @@ fPick.addEventListener('change',function(){
  else reallySend(list);
 });
 function putFiles(list){pickArr=list.slice();describe();paintBoxPick();return true;}
+// Scan a document: each photo is one page, kept in scanPages until "סיום".
+// Then the pages become one PDF (one JPEG per page, A4) that joins the picked
+// files like any other file, so it is sent with the line in one message.
+var scanPages=[];
+function scanPaint(){
+ var st=document.getElementById('scanSt');if(!st)return;
+ st.hidden=!scanPages.length;
+ document.getElementById('scanSay').textContent=scanPages.length+(scanPages.length>1?' עמודים':' עמוד')+' בסריקה. לצלם עוד עמוד, או לסיים.';
+}
+function scanShrink(f,cb){
+ var rd=new FileReader();
+ rd.onload=function(){
+  var im=new Image();
+  im.onload=function(){
+   var k=Math.min(1,1400/Math.max(im.width,im.height)),c=document.createElement('canvas');
+   c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);
+   c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+   cb(c);
+  };
+  im.onerror=function(){toast('התמונה לא נפתחה. נסו שוב.');};
+  im.src=rd.result;
+ };
+ rd.readAsDataURL(f);
+}
+function scanBytes(s){var b=atob(s.slice(s.indexOf(',')+1)),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u;}
+// Minimal PDF writer: page k is object 3+3k, its content 4+3k, its JPEG 5+3k.
+function scanPdf(pages){
+ var parts=[],len=0,offs=[],total=2+3*pages.length;
+ function enc(s){var a=new Uint8Array(s.length);for(var i=0;i<s.length;i++)a[i]=s.charCodeAt(i)&255;return a;}
+ function put(x){var u=typeof x==='string'?enc(x):x;parts.push(u);len+=u.length;}
+ function obj(id,head,bytes,tail){offs[id]=len;put(id+' 0 obj\\n'+head);if(bytes)put(bytes);put((tail||'')+'\\nendobj\\n');}
+ put('%PDF-1.4\\n');
+ obj(1,'<< /Type /Catalog /Pages 2 0 R >>');
+ var kids=[];pages.forEach(function(p,k){kids.push((3+3*k)+' 0 R');});
+ obj(2,'<< /Type /Pages /Kids ['+kids.join(' ')+'] /Count '+pages.length+' >>');
+ pages.forEach(function(p,k){
+  var W=595,H=842,s=Math.min((W-36)/p.w,(H-36)/p.h),iw=p.w*s,ih=p.h*s,x=(W-iw)/2,y=(H-ih)/2;
+  var cs='q '+iw.toFixed(2)+' 0 0 '+ih.toFixed(2)+' '+x.toFixed(2)+' '+y.toFixed(2)+' cm /Im'+k+' Do Q';
+  obj(3+3*k,'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+W+' '+H+'] /Resources << /XObject << /Im'+k+' '+(5+3*k)+' 0 R >> >> /Contents '+(4+3*k)+' 0 R >>');
+  obj(4+3*k,'<< /Length '+cs.length+' >>\\nstream\\n'+cs+'\\nendstream');
+  obj(5+3*k,'<< /Type /XObject /Subtype /Image /Width '+p.w+' /Height '+p.h+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+p.jpg.length+' >>\\nstream\\n',p.jpg,'\\nendstream');
+ });
+ var xref=len;
+ put('xref\\n0 '+(total+1)+'\\n0000000000 65535 f \\n');
+ for(var i=1;i<=total;i++)put(('0000000000'+offs[i]).slice(-10)+' 00000 n \\n');
+ put('trailer\\n<< /Size '+(total+1)+' /Root 1 0 R >>\\nstartxref\\n'+xref+'\\n%%EOF\\n');
+ return new Blob(parts,{type:'application/pdf'});
+}
+document.getElementById('scanBtn').onclick=function(){
+ if(scanPages.length>=40){toast('עד 40 עמודים בקובץ אחד. לחצו סיום.');return;}
+ document.getElementById('scanIn').click();
+};
+document.getElementById('scanIn').onchange=function(){
+ var f=this.files&&this.files[0];this.value='';
+ if(!f)return;
+ scanShrink(f,function(c){
+  scanPages.push({jpg:scanBytes(c.toDataURL('image/jpeg',0.82)),w:c.width,h:c.height});
+  scanPaint();
+ });
+};
+document.getElementById('scanDone').onclick=function(){
+ if(!scanPages.length)return;
+ var d=new Date(),p2=function(n){return (n<10?'0':'')+n;},
+  nm='סריקה-'+d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())+'-'+p2(d.getHours())+p2(d.getMinutes())+'.pdf';
+ pickArr.push(new File([scanPdf(scanPages)],nm,{type:'application/pdf',lastModified:Date.now()}));
+ scanPages=[];scanPaint();
+ var f=document.getElementById('fileForm');if(f)f.hidden=false;
+ describe();paintBoxPick();
+ toast('הקובץ מוכן. לחצו שליחה.');
+};
+document.getElementById('scanCancel').onclick=function(){scanPages=[];scanPaint();};
 /*
   14.10, Rinat's request, approved by Itzik: "אני צריכה אופציה להדביק לעוזר
   צילום מסך (תמונה) ישר בתיבת ההודעה, לא רק טקסט". A picture pasted into the
