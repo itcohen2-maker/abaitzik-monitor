@@ -20329,6 +20329,8 @@ function pinTiles(grid){
  grid.addEventListener('click',function(e){
   var t=e.target.closest?e.target.closest('.gt'):null;
   if(!t||t.parentNode!==grid||!t.id)return;
+  // 6.11: the click that follows a long press is not an opening; it took the hand straight off again.
+  if(Date.now()-(window.PIN_AT||0)<900)return;
   // Opening it is the reminder done: the hand comes off and stays off until
   // another long press. "ברגע שנכנסתי אליו ההבהוב צריך להפסיק" (11.10, evening).
   var a=get(),i=a.indexOf(t.id);
@@ -20338,6 +20340,7 @@ function pinTiles(grid){
  paint();setTimeout(paint,0);window.addEventListener('load',paint);
  return function(t){
   if(!t||!t.id)return;
+  window.PIN_AT=Date.now();
   var a=get(),i=a.indexOf(t.id),name=((t.querySelector('b')||t).textContent||'').trim();
   if(i<0){a.push(t.id);put(a);t.classList.add('taskblink');toast('"'+name+'" מהבהב עכשיו, עד שתיכנס אליו.');}
   else{a.splice(i,1);put(a);t.classList.remove('taskblink');toast('"'+name+'" כבר לא מהבהב.');}
