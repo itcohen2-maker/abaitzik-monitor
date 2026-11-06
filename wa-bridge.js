@@ -323,6 +323,45 @@ function voiceCommand(t) {
   return null;
 }
 
+// 6.11: sales training, the monitor plays the customer (lib/sales-train.js).
+const ST = require('./lib/sales-train.js');
+function writeChat(text) {
+  const now = new Date();
+  const f = now.toISOString().replace(/[^0-9]/g, '').slice(0, 8) + '-' + now.toISOString().replace(/[^0-9]/g, '').slice(8, 14) + '-claude-train.json';
+  fs.writeFileSync(path.join(CHAT, f), JSON.stringify({ at: now.toISOString(), from: 'claude', status: 'done', text: text }, null, 1), 'utf8');
+  require('child_process').execFile('node', ['push.js', 'chat: sales training'], { cwd: ROOT, timeout: 240000 }, function () {});
+}
+async function trainTurn(to, t) {
+  const st = loadState(); st.train = st.train || {};
+  let tr = st.train[to];
+  const s0 = ST.startOf(t);
+  if (s0) {
+    let biz = ''; try { biz = JSON.parse(fs.readFileSync(path.join(ROOT, 'instance.json'), 'utf8')).business || ''; } catch (e) {}
+    st.train[to] = { scenario: s0.scenario, business: biz, turns: [], last: Date.now() }; saveState(st);
+    await waSend(to, '🎭 מתחילים אימון מכירות. אני הלקוח' + (s0.scenario ? ' (' + s0.scenario + ')' : '') + '. אתה פותח את השיחה, בכתב או בהקלטה.' + String.fromCharCode(10) + '"סיימנו" לציון, "עצור אימון" ליציאה.');
+    return true;
+  }
+  if (!ST.active(tr)) { if (tr) { delete st.train[to]; saveState(st); } return false; }
+  if (ST.isStop(t)) { delete st.train[to]; saveState(st); await waSend(to, 'האימון נעצר, בלי ציון.'); return true; }
+  if (ST.isEnd(t)) {
+    await waSend(to, '📝 מסכם ונותן ציון, כחצי דקה.');
+    let res = ''; try { res = await ST.score(tr); } catch (e) { log('train score: ' + e.message); }
+    const s2 = loadState(); if (s2.train) delete s2.train[to]; saveState(s2);
+    if (!res) { await waSend(to, 'לא הצלחתי לחשב ציון הפעם. אפשר להתחיל שוב: "אימון מכירות".'); return true; }
+    const f = ST.keep(DATA, tr, res);
+    writeChat('🎭 אימון מכירות' + (tr.scenario ? ': ' + tr.scenario : '') + String.fromCharCode(10, 10) + res + String.fromCharCode(10, 10) + 'השיחה המלאה: files/' + f);
+    await waSend(to, res);
+    return true;
+  }
+  tr.turns.push({ who: 'me', t: t }); tr.last = Date.now(); saveState(st);
+  let r = ''; try { r = await ST.customerTurn(tr); } catch (e) { log('train turn: ' + e.message); }
+  if (!r) { await waSend(to, '(תקלה רגעית, הלקוח לא ענה. אפשר לכתוב שוב.)'); return true; }
+  const s3 = loadState(); const t3 = s3.train && s3.train[to];
+  if (t3) { t3.turns.push({ who: 'client', t: r }); t3.last = Date.now(); saveState(s3); }
+  await waSend(to, r);
+  return true;
+}
+
 async function onMessage(m, contactName) {
   const st = loadState();
   if (st.seen[m.id]) return;
@@ -351,10 +390,12 @@ async function onMessage(m, contactName) {
     return;
   }
   if (m.type === 'audio' && m.audio && m.audio.id) {
-    await waSend(m.from, '🎙️ קיבלתי את ההקלטה, מתמלל.');
+    const training = ST.active((loadState().train || {})[m.from]);
+    if (!training) await waSend(m.from, '🎙️ קיבלתי את ההקלטה, מתמלל.');
     let heard = '';
     try { heard = await voiceText(m.audio.id); } catch (e) { log('voice failed: ' + e.message); }
     if (!heard) { await waSend(m.from, 'לא הצלחתי לתמלל את ההקלטה. אפשר לשלוח שוב, או לכתוב.'); return; }
+    if (training && await trainTurn(m.from, heard)) return;
     const vid = await toMonitor('וואטסאפ', (demoOn() ? DEMO_FRAME : '') + '🎙️ הודעה קולית מוואטסאפ: ' + heard);
     const sv = loadState(); sv.pending[vid] = { to: m.from, at: Date.now(), name: contactName || '' }; saveState(sv);
     log('voice ' + m.id + ' -> ntfy-' + vid + ' (' + heard.length + ' chars)');
@@ -368,6 +409,7 @@ async function onMessage(m, contactName) {
       : 'קיבלתי, אבל את סוג ההודעה הזה אני עוד לא קורא. אפשר לכתוב לי אותה במילים?');
     return;
   }
+  if (await trainTurn(m.from, t)) return;
   const vc = voiceCommand(t);
   if (vc) {
     const sv = loadState(); sv.voice = sv.voice || {}; sv.last = sv.last || {};
