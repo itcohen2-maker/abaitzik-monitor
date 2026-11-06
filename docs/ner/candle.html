@@ -83,6 +83,7 @@
   .tag{font-size:14px;font-weight:500;padding:3px 10px;border-radius:999px;background:var(--card2);color:var(--ink)}
   .tag.k{background:rgba(242,178,76,.16);color:var(--flame)}
   .when{font-size:15px;color:var(--dim);font-variant-numeric:tabular-nums;margin-inline-start:auto}
+  .cap a{color:#8fd0ff;text-decoration:underline;font-weight:700}
   .cap{margin:12px 0 0;padding:12px 14px;border-radius:12px;background:rgba(0,0,0,.22);color:var(--ink);font-size:16px;line-height:1.6;
     white-space:pre-wrap;overflow-wrap:anywhere;-webkit-user-select:text;user-select:text;direction:auto;max-height:11.5em;overflow:auto}
   .tools{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}
@@ -181,7 +182,7 @@
    +'<button type="button" class="play" data-play aria-label="נגן את הסרטון"><span>'+ic('play')+'</span></button></div>'
    +'<div class="body"><div class="tags"><span class="tag k">'+(story?'סטורי':'פוסט')+'</span><span class="tag">'+(abroad?'חו״ל':'ישראל')+'</span>'
    +(it.city?'<span class="tag">'+esc(it.city)+'</span>':'')+'<span class="when">'+esc(it.time||'')+'</span></div>';
-  if(it.caption)h+='<p class="cap">'+esc(it.caption)+'</p>';
+  if(it.caption)h+='<p class="cap">'+lnk(esc(it.caption))+'</p>';
   h+='<div class="tools">'+(it.caption?'<button type="button" class="btn soft" data-copy>'+ic('copy')+'העתקת הכיתוב</button>':'')
    +'<button type="button" class="btn soft" data-dl>'+ic('down')+'שמירה בטלפון</button></div>';
   if(s==='ok')h+='<div class="state ok"><span>'+ic('check')+'מאושר. יעלה ב '+esc(it.time||'')+'</span><button type="button" class="undo" data-set="wait">ביטול</button></div>';
@@ -191,6 +192,8 @@
   return h+'</div></article>';
  }
 
+ /* 6.11, Itzik: links in the text must be tappable */
+ function lnk(s){return s.replace(/https?:\/\/[^\s<]+/g,function(m){return '<a href="'+m+'" target="_blank" rel="noopener">'+m+'</a>';});}
  function render(){
   var up=Q.filter(function(x){return !x.posted&&!x.failed;});
   up.sort(function(a,b){return (a.date+a.time).localeCompare(b.date+b.time);});

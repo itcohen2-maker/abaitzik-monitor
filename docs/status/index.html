@@ -57,6 +57,7 @@
   .play svg{width:32px;height:32px;margin-inline-start:4px;fill:var(--ink)}
   .body{padding:14px 16px 16px}
   .tag{display:inline-block;font-size:14px;font-weight:500;padding:3px 10px;border-radius:999px;background:rgba(242,178,76,.16);color:var(--acc)}
+  .cap a{color:#8fd0ff;text-decoration:underline;font-weight:700}
   .cap{margin:12px 0 0;padding:12px 14px;border-radius:12px;background:rgba(0,0,0,.22);font-size:16px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere;
     -webkit-user-select:text;user-select:text;direction:rtl}
   .stack{display:grid;gap:10px;margin:16px 0 0}
@@ -118,7 +119,7 @@
   var h='<article class="item'+(done?' posted':'')+(big?'':' small')+'" data-n="'+esc(it.name)+'">'
    +'<div class="vid"><video src="'+esc(it.file)+'#t=0.6" playsinline preload="metadata"></video>'
    +'<button type="button" class="play" data-play aria-label="נגן את הסרטון"><span>'+ic('play')+'</span></button></div>'
-   +'<div class="body"><span class="tag">'+esc(it.topic||'')+'</span><p class="cap">'+esc(it.caption)+'</p>';
+   +'<div class="body"><span class="tag">'+esc(it.topic||'')+'</span><p class="cap">'+lnk(esc(it.caption))+'</p>';
   if(big){
    h+='<div class="stack"><button type="button" class="btn share" data-share>'+ic('share')+'שתף לסטטוס</button></div><p class="hint" data-hint hidden>הטקסט הועתק. בסטטוס: הדבק בכיתוב</p>';
    h+='<a class="dl" href="'+esc(it.file)+'" target="_blank" rel="noopener">פתיחת הסרטון לשמירה</a>';
@@ -131,6 +132,8 @@
   return h+'</div></article>';
  }
 
+ /* 6.11, Itzik: links in the text must be tappable */
+ function lnk(s){return s.replace(/https?:\/\/[^\s<]+/g,function(m){return '<a href="'+m+'" target="_blank" rel="noopener">'+m+'</a>';});}
  function render(){
   var up=Q.filter(function(x){return x.date>=TODAY;}).sort(function(a,b){return a.date.localeCompare(b.date);});
   var days={},order=[];
