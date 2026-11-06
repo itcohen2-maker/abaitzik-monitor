@@ -20017,7 +20017,7 @@ function tileBar(show){
  if(!show){if(b)b.remove();return;}
  if(!b){b=document.createElement('div');b.id='tileBar';document.body.appendChild(b);}
  var hid=tileStore('tilesHidden',[]);
- b.innerHTML='<small>גוררים כפתור למקום שרוצים. ה ✕ האדום מוריד כפתור מהמסך.</small>'
+ b.innerHTML='<small>גוררים אריח למקום שרוצים. בסוף לוחצים סיום.</small>'
   +'<div class="row2"><button type="button" class="done" id="tileDone">סיום</button>'
   +(hid.length?'<button type="button" class="back" id="tileBack">להחזיר '+hid.length+' שהורדו</button>':'')+'</div>';
  document.getElementById('tileDone').onclick=tilesExit;
@@ -20029,10 +20029,7 @@ function tilesEnter(grid){
  tEdit=true;
  grid.classList.add('tedit');
  Array.prototype.forEach.call(grid.querySelectorAll('.gt'),function(el){
-  if(el.querySelector(':scope > .tx'))return;
-  var x=document.createElement('span');
-  x.className='tx';x.textContent='✕';x.setAttribute('role','button');x.setAttribute('aria-label','להוריד מהמסך');
-  el.appendChild(x);
+  // 6.11, Itzik: "פשוטה ורק להזיז". No ✕ here any more; moving only.
  });
  try{navigator.vibrate&&navigator.vibrate(18);}catch(e){}
  tileBar(true);
@@ -20043,7 +20040,7 @@ function tilesExit(){
  tEdit=false;
  if(grid){grid.classList.remove('tedit');saveOrder(grid,'tileOrder');}
  tileBar(false);
- var a=document.getElementById('tileArr');if(a)a.textContent='✎ הזזה והורדה של אריחים';
+ var a=document.getElementById('tileArr');if(a)a.textContent='✎ הזזת אריחים';
 }
 /*
   The press and drag itself, shared by the square tiles and, from 30.9 in his
@@ -20116,7 +20113,8 @@ function pressDrag(grid,sel,key,inEdit,still){
   lx=x;ly=y;
   if(held){if(e.cancelable)e.preventDefault();if(Math.abs(x-sx)>12||Math.abs(y-sy)>12)moved=true;place(x,y);return;}
   if(!cand)return;
-  if(Math.abs(x-sx)>10||Math.abs(y-sy)>10){
+  var thr=inEdit()?4:10;
+  if(Math.abs(x-sx)>thr||Math.abs(y-sy)>thr){
    if(inEdit()){if(e.cancelable)e.preventDefault();lift(cand,sx,sy);moved=true;place(x,y);return;}
    clearTimeout(hold);hold=null;cand=null;
   }
@@ -20145,7 +20143,7 @@ function pressDrag(grid,sel,key,inEdit,still){
 function armTiles(grid){
  if(!grid)return;
  var arr=document.createElement('button');
- arr.type='button';arr.id='tileArr';arr.className='tarr';arr.textContent='✎ הזזה והורדה של אריחים';
+ arr.type='button';arr.id='tileArr';arr.className='tarr';arr.textContent='✎ הזזת אריחים';
  arr.onclick=function(){if(tEdit)tilesExit();else tilesEnter(grid);};
  // Inside the grid, across the full row: the home screen re-pins its blocks
  // after this runs, and a button standing beside the grid got left behind.
@@ -20154,7 +20152,13 @@ function armTiles(grid){
  tools.appendChild(arr);
  grid.insertBefore(tools,grid.firstChild);
  var pin=pinTiles(grid);
- pressDrag(grid,'.gt','tileOrder',function(){return tEdit;},pin);
+ pressDrag(grid,'.gt','tileOrder',function(){return tEdit;});
+ // 6.11, Itzik: "זה פותח את מסך ההגדרות". The tiles' own handlers sit on the tile, so the block has to be in the capture phase.
+ grid.addEventListener('click',function(e){
+  if(!tEdit||e.target.closest('#tileArr'))return;
+  var t=e.target.closest?e.target.closest('.gt'):null;
+  if(t&&t.parentNode===grid){e.preventDefault();e.stopPropagation();}
+ },true);
  grid.addEventListener('contextmenu',function(e){if(tEdit)e.preventDefault();});
  grid.addEventListener('click',function(e){
   if(!tEdit||e.target.closest('#tileArr'))return;
