@@ -20272,6 +20272,10 @@ function pressDrag(grid,sel,key,inEdit,still){
 }
 function armTiles(grid){
  if(!grid)return;
+ // 6.11, Itzik (iron rule): long press blinks, ✎ moves. The home grid gets swapped for a new element after
+ // boot, and everything armed on the old one went dead. Remember which grid is armed; rearmTiles() re-arms a new one.
+ window.TILES_GRID=grid;
+ var oldTools=document.getElementById('tileTools');if(oldTools)oldTools.remove();
  var arr=document.createElement('button');
  arr.type='button';arr.id='tileArr';arr.className='tarr';arr.textContent='✎ הזזת אריחים';
  arr.onclick=function(){if(tEdit)tilesExit();else tilesEnter(grid);};
@@ -20368,6 +20372,7 @@ function pinHome(home){
  var grid=document.querySelector('.grid');
  var home=document.getElementById('pH');
  if(grid){nameChildren(grid,'tile');applyOrder(grid,'tileOrder');armTiles(grid);}
+ setInterval(function(){var g=document.getElementById('blkTiles');if(g&&g!==window.TILES_GRID&&!tEdit){nameChildren(g,'tile');applyOrder(g,'tileOrder');armTiles(g);}},1000);
  // The round icons: named by what they say, not where they stand, so a new
  // icon added in the middle does not shuffle his order.
  var icons=document.getElementById('blkIcons');
