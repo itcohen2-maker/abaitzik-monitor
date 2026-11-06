@@ -20152,7 +20152,8 @@ function armTiles(grid){
  tools.appendChild(arr);
  grid.insertBefore(tools,grid.firstChild);
  var pin=pinTiles(grid);
- pressDrag(grid,'.gt','tileOrder',function(){return tEdit;});
+ // 6.11, Itzik (iron rule): a long press without moving makes the tile blink. Never remove this.
+ pressDrag(grid,'.gt','tileOrder',function(){return tEdit;},pin);
  // 6.11, Itzik: "זה פותח את מסך ההגדרות". The tiles' own handlers sit on the tile, so the block has to be in the capture phase.
  grid.addEventListener('click',function(e){
   if(!tEdit||e.target.closest('#tileArr'))return;
