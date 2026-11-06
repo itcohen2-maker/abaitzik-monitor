@@ -190,3 +190,6 @@
   matching task, reminder or follow up, answer one line), "🤖 משימה בשבילך מהדוח: <line>" (do it as a normal task),
   "שעון מעורר HH:MM: <line>" (later today, alarm.js as usual) and "משימה ליום <day> (<YYYY-MM-DD>): <line>. וגם ביומן גוגל."
   (task file as usual plus a PC task to add it to his Google Calendar). The line leaves the card on his phone at once.
+
+## ניתוח שיחה (6.11.2026)
+קובץ אודיו של שיחה (הקלטת שיחת מכירה, שירות או גבייה) שהועלה במסך המוניטור, או בקשה "תנתח את השיחה" עם קובץ: מריצים `node lib/call-analysis.js <הקובץ>`, והפלט הוא הבקשה המלאה עם התמליל והפורמט. עונים בדיוק בפורמט הזה. מוואטסאפ זה קורה לבד (wa-bridge.js).

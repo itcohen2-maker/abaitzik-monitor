@@ -171,6 +171,19 @@ async function sendLongParts(to, text, mem) {
   }
 }
 
+// 6.11: a call recording (lib/call-analysis.js). Download with its own extension.
+async function mediaFile(mediaId, ext) {
+  const c = cfg(), H = { Authorization: 'Bearer ' + c.token };
+  const meta = await req('GET', 'https://graph.facebook.com/' + (c.graph || 'v21.0') + '/' + mediaId, H);
+  if (meta.status !== 200) throw new Error('media meta ' + meta.status);
+  const bin = await req('GET', JSON.parse(meta.body.toString('utf8')).url, H);
+  if (bin.status !== 200 || !bin.body.length) throw new Error('media get ' + bin.status);
+  const dir = path.join(ROOT, 'data', 'inbox'); fs.mkdirSync(dir, { recursive: true });
+  const file = path.join(dir, 'wa-call-' + new Date().toISOString().replace(/[^0-9]/g, '').slice(0, 14) + ext);
+  fs.writeFileSync(file, bin.body);
+  return file;
+}
+
 async function voiceText(mediaId) {
   const c = cfg(), H = { Authorization: 'Bearer ' + c.token };
   const meta = await req('GET', 'https://graph.facebook.com/' + (c.graph || 'v21.0') + '/' + mediaId, H);
@@ -323,6 +336,20 @@ async function onMessage(m, contactName) {
   // 1.11, for Shai's demo: "summarize meetings and send tasks", by voice, on WhatsApp.
   // The voice note is downloaded from Meta, transcribed with the monitor's own transcribe.js,
   // and goes on as text, exactly like a typed message.
+  const CA = require('./lib/call-analysis.js');
+  if (CA.isCall(m)) {
+    const o = m[m.type] || {};
+    await waSend(m.from, '📞 קיבלתי את הקלטת השיחה. מתמלל ומנתח, בשיחה ארוכה זה לוקח כמה דקות.');
+    let r = { text: '', seconds: 0 };
+    try { r = await CA.transcribe(ROOT, await mediaFile(o.id, CA.extOf(m))); } catch (e) { log('call failed: ' + e.message); }
+    if (!r.text) { await waSend(m.from, 'לא הצלחתי לתמלל את השיחה. אפשר לשלוח את הקובץ שוב.'); return; }
+    const txt = CA.keep(DATA, o.filename || '', r.text);
+    const cid = await toMonitor('וואטסאפ', CA.request({ name: o.filename || '', seconds: r.seconds, txt: txt, transcript: r.text }) + (o.caption ? String.fromCharCode(10, 10) + 'מה שהוא כתב עם הקובץ: ' + o.caption : ''));
+    const sc = loadState(); sc.pending[cid] = { to: m.from, at: Date.now(), name: contactName || '' }; saveState(sc);
+    log('call ' + m.id + ' -> ntfy-' + cid + ' (' + r.seconds + 's, ' + r.text.length + ' chars)');
+    await waSend(m.from, '✓ תמללתי ' + (r.seconds ? 'כ ' + Math.max(1, Math.round(r.seconds / 60)) + ' דקות' : 'את השיחה') + '. הניתוח יגיע לכאן.');
+    return;
+  }
   if (m.type === 'audio' && m.audio && m.audio.id) {
     await waSend(m.from, '🎙️ קיבלתי את ההקלטה, מתמלל.');
     let heard = '';
