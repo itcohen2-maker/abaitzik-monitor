@@ -17028,7 +17028,7 @@ function bizSheet(t0){
     +'<div class="bzSec">🏋️ החדר הצדדי, רק אתה רואה</div>'
     +'<a class="yb" href="https://shachar.abaitzik.com/lab" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">🚪 כניסה לחדר הצדדי: כושר, צלחת ומתכונים</a>'
     +'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-exercise-plan.html" data-new="1">📋 רשימת התרגילים החדשה לאישור</button>'+'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-exercise-demo.html" data-new="1">🏋️ דוגמה: מסך תרגיל עם הדמות שלך</button>'
-    +'<button type="button" class="yb" data-bz="anim" data-f="shachar-filming.html">🎬 מה לצלם: 78 תרגילים, מסמנים וי</button>'
+    +'<button type="button" class="yb" data-bz="anim" data-f="shachar-filming.html" data-new="1">🎬 מה לצלם: 30 סרטונים לפי הרשימה החדשה</button>'
     +'<p class="bzEmpty">הכניסה עם המייל שלך בשחר. מי שלא מנהל מקבל דף שלא קיים.</p>'
     +'<p class="bzEmpty">הסרטונים, הסטוריז והפוסט של שחר נמצאים באריח 🎬 הרילים שלי.</p>';
   }
