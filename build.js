@@ -10904,6 +10904,9 @@ function histWanted(){
  return navStack.length>0||note||!!overlayOpen(null)||!!dlgClose();
 }
 function histSync(){
+ // 6.11, Itzik: "לוחץ על הלינקים, כלום לא עובד". A row that leaves the page closes its sheet first, and the
+ // history.back() below then cancelled the page change. When we are leaving, history is left alone.
+ if(window.navAway)return;
  var want=histWanted();
  if(want&&!histOn){
   histOn=true;
@@ -16301,7 +16304,8 @@ on('gTom',tomSheet);
 
 /* 5.11, Itzik: "תעשה סדר בכל הסרטונים... הכל רק באריח אחד, ובתוכו טאבים". Built from the
    existing lists (TOM_ITEMS, REEL_ITEMS, FUT_ITEMS), so anything added there shows here. */
-function vidGo(url,hash){try{sessionStorage.setItem('nerSend',JSON.stringify({t:NTFYIN(),c:sendCode()}));}catch(e){}location.href=url+'?v='+Date.now()+(hash?'#'+encodeURIComponent(hash):'');}
+window.addEventListener('pageshow',function(){window.navAway=0;});
+function vidGo(url,hash){window.navAway=1;try{sessionStorage.setItem('nerSend',JSON.stringify({t:NTFYIN(),c:sendCode()}));}catch(e){}location.href=url+'?v='+Date.now()+(hash?'#'+encodeURIComponent(hash):'');}
 /* 6.11, Itzik: the status, candle and plate tabs list every video itself (today first, waiting for approval first),
    not just a button to a page. Read from the same queue.json files those pages read. */
 var VQ=null,VQT=0;
