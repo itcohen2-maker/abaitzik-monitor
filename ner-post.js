@@ -58,10 +58,19 @@ const FEED_CAPTION = {
   he: 'זמני הדלקת נרות לכל עיר בעולם, לפי המיקום המדויק שלכם.\nבחינם, מתנה ממני על כל התמיכה.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #candletimes',
   en: 'Candle lighting times for every city in the world, by your exact location.\nFree for every Jew, a gift from me for all your support.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes'
 };
+// 6.11, Itzik: "אהבתי מאוד את הרעיון של שליחת כרטיס לשבת". Every reel description carries the Shabbat card link.
+function withCard(c, lang) {
+  if (!c || c.indexOf('candletimes.com/card') > -1) return c;
+  const line = lang === 'en' ? 'Send a personal Shabbat Shalom card with your city times: candletimes.com/card'
+    : 'כרטיס שבת שלום אישי עם זמני העיר שלך, לשלוח למשפחה: candletimes.com/card';
+  const m = c.match(/(Link in bio|הלינק בביו): candletimes\.com\n/);
+  if (m) return c.replace(m[0], m[0] + line + '\n');
+  return c + '\n\n' + line;
+}
 async function publish(it) {
   const p = { video_url: BASE + it.file };
   if (it.kind === 'story') p.media_type = 'STORIES';
-  else { p.media_type = 'REELS'; p.caption = it.caption || ''; p.share_to_feed = 'true'; }
+  else { p.media_type = 'REELS'; p.caption = withCard(it.caption || '', it.lang); p.share_to_feed = 'true'; }
   const c = await call('me/media', p, 'POST');
   for (let i = 0; i < 40; i++) {
     await new Promise(function (r) { setTimeout(r, 6000); });
