@@ -20568,9 +20568,9 @@ on('resetBtn',function(){
 // Deleting everything is never done by this button. It only asks, and the
 // request waits in "מחכה לך" until he approves it there.
 on('wipeBtn',function(){
- if(!confirm('בטוח? הכל יימחק ולא יחזור'))return;
- var w=prompt('כדי לאשר כתוב: למחוק','');
- if(w!=='למחוק'){toast('לא נשלח. כדי לאשר צריך לכתוב בדיוק: למחוק');return;}
+ if(!confirm('נשלחת בקשה למחיקה. מנהל IT Solution יאשר, ואחרי זה הכל יימחק ולא יחזור. לשלוח את הבקשה?'))return;
+ var w=prompt('כדי לשלוח את הבקשה כתוב: למחוק','');
+ if(w!=='למחוק'){toast('לא נשלח. כדי לשלוח את הבקשה צריך לכתוב בדיוק: למחוק');return;}
  sendText('מחיקת כל הנתונים','בקשה למחיקת כל הנתונים','הגדרה').then(function(){
   toast('נשלחה הבקשה. היא מחכה לאישור.');
  }).catch(function(){toast('לא יצא, אין רשת. לנסות שוב.');});
