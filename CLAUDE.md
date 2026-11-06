@@ -93,7 +93,7 @@
 
 - **A new appointment (13.10.2026):** the form on the "🏥 תורים עתידיים" screen sends "תור חדש: <what>, <DD.MM.YYYY> (<YYYY-MM-DD>)
   בשעה HH:MM | בלי שעה[, מקום: <where>]". Write it as `data/appts/appts/<YYYYMMDD>-<slug>.json` with `id` ("a" + the name),
-  `at`, `when` (ISO with +03:00; with no hour use 09:00 and `"noTime":true`), `what`, `where`. Then push and answer one line.
+  `at`, `when` (ISO with +03:00; with no hour use 09:00 and `"noTime":true`), `what`, `where`. Then push and answer one line. **Repeating visit (6.11.2026):** when the message has ", חוזר כל שבוע N פעמים" or ", חוזר כל חודש N פעמים", write N files, one per visit: the first on the given date, each next one 7 days (or one calendar month) later, same time and place, ids "a"+name+"-"+n, file names with each date. Then push and answer one line.
 - **Deleting an appointment (20.10.2026):** the 🗑️ button on the appointments screen sends "מחיקת תור: <id> (<what>, <date>)". Delete data/appts/appts/<file whose id matches>.json (an explicit request, so deleting is allowed), push, answer one line.
 - **Editing an appointment (24.10.2026):** the ✏️ button on the appointments screen fills the form; sending it sends "עדכון תור: <id> | <what>, <DD.MM.YYYY> (<YYYY-MM-DD>) בשעה HH:MM[, מקום: <where>]". Overwrite the same data/appts/appts/<file whose id matches>.json with the new details (keep its id), push, answer one line.
 - **Deleting a task (24.10.2026):** the 🗑 button next to a task (on the tasks screen and in מה יש לי היום) sends "מחיקת משימה: <id> (<text>)". Delete data/tasks/tasks/<file whose id matches>.json (an explicit request, so deleting is allowed), push, answer one line.

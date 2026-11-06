@@ -4359,7 +4359,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
     tasks of today, and a peek at tomorrow.
   -->
   <button type="button" class="gt gMyDay" data-grp="day" id="gMyDay" data-new="1" data-upd="20261024-tdel"><b>📅 מה יש לי היום</b><small>תורים, תזכורות ומשימות של היום</small></button>
-  <button type="button" class="gt g18" data-grp="day" id="gAppts" data-upd="20261030-ideas"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
+  <button type="button" class="gt g18" data-grp="day" id="gAppts" data-upd="20261106-series"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
   <button type="button" class="gt g16" data-grp="day" id="gRemind"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
   <button type="button" class="gt g10 roundTile" id="gNotes" title="פתקים" aria-label="פתקים" data-upd="notes-print-20261102">📝</button>
   <!-- 12.10, Itzik: "תקים אפליקציה לבדוק מה כל הקלקולים האלה". Every monitor's faults on one screen. -->
@@ -5347,6 +5347,8 @@ __RIVSHARE__
   <input type="time" id="apTime" aria-label="שעה">
   <input type="text" id="apWhat" autocomplete="off" placeholder="מה, למשל: רופא עור">
   <input type="text" id="apWhere" autocomplete="off" placeholder="איפה, למשל: מכבי רמות">
+  <select id="apRepeat" aria-label="חוזר"><option value="">לא חוזר</option><option value="שבוע">כל שבוע</option><option value="חודש">כל חודש</option></select>
+  <input type="number" id="apRepeatN" min="2" max="52" value="4" aria-label="כמה פעמים" title="כמה תורים בסדרה">
   <label class="apNr"><input type="checkbox" id="apNoRem"> בלי תזכורת</label>
   <button type="submit">הוספת תור</button>
   <button type="button" id="apCancel" hidden onclick="apEditId='';apEditSet(false);this.form.reset();document.getElementById('apSaid').textContent='';">ביטול העריכה</button>
@@ -12978,11 +12980,14 @@ on2('apForm','submit',function(e){
  var v=w.value.trim(),p=wh.value.trim();
  if(!v||!d.value){said.textContent='צריך תאריך ומה התור.';return;}
  var nr=document.getElementById('apNoRem');
- var rest=v+', '+d.value.split('-').reverse().join('.')+' ('+d.value+')'+(tm.value?' בשעה '+tm.value:' בלי שעה')+(p?', מקום: '+p:'')+(nr&&nr.checked?', בלי תזכורת':'');
+ // 6.11, idea he took: a visit that repeats (weekly or monthly, N times) is one line with ", חוזר כל שבוע N פעמים" and the server writes every visit.
+ var rp=document.getElementById('apRepeat'),rn=document.getElementById('apRepeatN');
+ var rep=!apEditId&&rp&&rp.value?', חוזר כל '+rp.value+' '+Math.max(2,Math.min(52,parseInt(rn.value,10)||4))+' פעמים':'';
+ var rest=v+', '+d.value.split('-').reverse().join('.')+' ('+d.value+')'+(tm.value?' בשעה '+tm.value:' בלי שעה')+(p?', מקום: '+p:'')+rep+(nr&&nr.checked?', בלי תזכורת':'');
  var editing=apEditId,msg=editing?'עדכון תור: '+editing+' | '+rest:'תור חדש: '+rest;
  said.textContent='שולח.';
  sendText(editing?'עדכון תור':'תור חדש',msg,'תור').then(function(){
-  w.value='';wh.value='';tm.value='';d.value='';if(nr)nr.checked=false;
+  w.value='';wh.value='';tm.value='';d.value='';if(nr)nr.checked=false;if(rp)rp.value='';
   if(editing){apEditId='';apEditSet(false);}
   said.textContent=editing?'נשלח. התור השתנה ברשימה, וגם במה יש לי היום ביום שלו.':'נשלח. התור יופיע כאן ברשימה, וגם במה יש לי היום ביום שלו.';
   markSent('text');renderSent();renderThread();
