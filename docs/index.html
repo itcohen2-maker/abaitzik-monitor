@@ -2403,7 +2403,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-06T06:54:30.025Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-06T06:54:57.397Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4297,7 +4297,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='0e7973ab29';
+var CODE_ID='dbd0c4c577';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -14167,6 +14167,73 @@ fPick.addEventListener('change',function(){
  else reallySend(list);
 });
 function putFiles(list){pickArr=list.slice();describe();paintBoxPick();return true;}
+var scanPages=[];
+function scanPaint(){
+ var st=document.getElementById('scanSt');if(!st)return;
+ st.hidden=!scanPages.length;
+ document.getElementById('scanSay').textContent=scanPages.length+(scanPages.length>1?' עמודים':' עמוד')+' בסריקה. לצלם עוד עמוד, או לסיים.';
+}
+function scanShrink(f,cb){
+ var rd=new FileReader();
+ rd.onload=function(){
+  var im=new Image();
+  im.onload=function(){
+   var k=Math.min(1,1400/Math.max(im.width,im.height)),c=document.createElement('canvas');
+   c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);
+   c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+   cb(c);
+  };
+  im.onerror=function(){toast('התמונה לא נפתחה. נסו שוב.');};
+  im.src=rd.result;
+ };
+ rd.readAsDataURL(f);
+}
+function scanBytes(s){var b=atob(s.slice(s.indexOf(',')+1)),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u;}
+function scanPdf(pages){
+ var parts=[],len=0,offs=[],total=2+3*pages.length;
+ function enc(s){var a=new Uint8Array(s.length);for(var i=0;i<s.length;i++)a[i]=s.charCodeAt(i)&255;return a;}
+ function put(x){var u=typeof x==='string'?enc(x):x;parts.push(u);len+=u.length;}
+ function obj(id,head,bytes,tail){offs[id]=len;put(id+' 0 obj\n'+head);if(bytes)put(bytes);put((tail||'')+'\nendobj\n');}
+ put('%PDF-1.4\n');
+ obj(1,'<< /Type /Catalog /Pages 2 0 R >>');
+ var kids=[];pages.forEach(function(p,k){kids.push((3+3*k)+' 0 R');});
+ obj(2,'<< /Type /Pages /Kids ['+kids.join(' ')+'] /Count '+pages.length+' >>');
+ pages.forEach(function(p,k){
+  var W=595,H=842,s=Math.min((W-36)/p.w,(H-36)/p.h),iw=p.w*s,ih=p.h*s,x=(W-iw)/2,y=(H-ih)/2;
+  var cs='q '+iw.toFixed(2)+' 0 0 '+ih.toFixed(2)+' '+x.toFixed(2)+' '+y.toFixed(2)+' cm /Im'+k+' Do Q';
+  obj(3+3*k,'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+W+' '+H+'] /Resources << /XObject << /Im'+k+' '+(5+3*k)+' 0 R >> >> /Contents '+(4+3*k)+' 0 R >>');
+  obj(4+3*k,'<< /Length '+cs.length+' >>\nstream\n'+cs+'\nendstream');
+  obj(5+3*k,'<< /Type /XObject /Subtype /Image /Width '+p.w+' /Height '+p.h+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+p.jpg.length+' >>\nstream\n',p.jpg,'\nendstream');
+ });
+ var xref=len;
+ put('xref\n0 '+(total+1)+'\n0000000000 65535 f \n');
+ for(var i=1;i<=total;i++)put(('0000000000'+offs[i]).slice(-10)+' 00000 n \n');
+ put('trailer\n<< /Size '+(total+1)+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF\n');
+ return new Blob(parts,{type:'application/pdf'});
+}
+document.getElementById('scanBtn').onclick=function(){
+ if(scanPages.length>=40){toast('עד 40 עמודים בקובץ אחד. לחצו סיום.');return;}
+ document.getElementById('scanIn').click();
+};
+document.getElementById('scanIn').onchange=function(){
+ var f=this.files&&this.files[0];this.value='';
+ if(!f)return;
+ scanShrink(f,function(c){
+  scanPages.push({jpg:scanBytes(c.toDataURL('image/jpeg',0.82)),w:c.width,h:c.height});
+  scanPaint();
+ });
+};
+document.getElementById('scanDone').onclick=function(){
+ if(!scanPages.length)return;
+ var d=new Date(),p2=function(n){return (n<10?'0':'')+n;},
+  nm='סריקה-'+d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())+'-'+p2(d.getHours())+p2(d.getMinutes())+'.pdf';
+ pickArr.push(new File([scanPdf(scanPages)],nm,{type:'application/pdf',lastModified:Date.now()}));
+ scanPages=[];scanPaint();
+ var f=document.getElementById('fileForm');if(f)f.hidden=false;
+ describe();paintBoxPick();
+ toast('הקובץ מוכן. לחצו שליחה.');
+};
+document.getElementById('scanCancel').onclick=function(){scanPages=[];scanPaint();};
 function pasteImgs(blobs,ta){
  var add=[],t=Date.now();
  blobs.forEach(function(b,i){
