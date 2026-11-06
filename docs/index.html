@@ -1458,6 +1458,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .tk.done span{text-decoration:line-through;opacity:.55}
 .tk.tnc{cursor:default}.tk.tnc span{flex:1}
 .tkDel{margin-inline-start:auto;border:0;background:none;font-size:18px;padding:4px 6px;cursor:pointer}
+.tkAct{margin-inline-start:auto;display:flex;align-items:center}.tkAct .tkDel{margin-inline-start:0}
 .tncode{user-select:all;letter-spacing:1px}.tncopy{margin-top:4px;padding:4px 10px;border-radius:8px;border:0;background:#1e3a5f;color:#9ecbff;font-weight:700}
 .tnopen{flex:none;padding:8px 14px;border-radius:10px;background:#1e3a5f;color:#9ecbff;text-decoration:none;font-weight:700}
 @keyframes tkpop{0%{transform:scale(1)}45%{transform:scale(1.06)}100%{transform:scale(1)}}
@@ -2402,7 +2403,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-06T06:54:11.532Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-06T06:54:30.025Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3339,7 +3340,7 @@ try{
  <div class="rephint">לחיצה על משימה מסמנת שבוצעה. הסימון נשמר בטלפון שלך.</div>
  <div id="tkBox"></div>
  <div class="tdSec">להוסיף משימה</div>
- <form class="tdAdd" id="tkForm"><select id="tkDay" aria-label="לאיזה יום"></select><input id="tkText" placeholder="למשל: להתקשר לבנק" autocomplete="off"><button type="submit">שליחה</button></form>
+ <form class="tdAdd" id="tkForm"><select id="tkDay" aria-label="לאיזה יום"></select><input id="tkText" placeholder="למשל: להתקשר לבנק" autocomplete="off"><button type="submit">שליחה</button><button type="button" id="tkCancel" hidden>ביטול</button></form>
  <small id="tkSaid"></small>
 </section>
 
@@ -3464,6 +3465,13 @@ try{
   <input type="hidden" name="הודעה" id="fNote" value="">
   <input type="hidden" name="קוד" id="fCode" value="">
   <input type="file" id="fPick" name="attachment" multiple>
+  <button type="button" id="scanBtn" class="cpall">📄 סריקת מסמך</button>
+  <input type="file" id="scanIn" accept="image/*" capture="environment" hidden>
+  <div class="scanst" id="scanSt" hidden>
+   <span id="scanSay"></span>
+   <button type="button" id="scanDone" class="cpall">סיום: קובץ PDF אחד</button>
+   <button type="button" id="scanCancel" class="cpall">ביטול</button>
+  </div>
   <input type="text" id="fCap" placeholder="כיתוב, לא חובה">
   <div class="fmeta" id="fMeta">אפשר לבחור כל קובץ, גם כמה יחד, לכתוב שורה, ואז להקליט. הכל יוצא בהודעה אחת.</div>
   <div class="pthumbs" id="fThumbs" hidden></div>
@@ -4289,7 +4297,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='39a6d8e102';
+var CODE_ID='0e7973ab29';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -9208,10 +9216,11 @@ function renderTasks(){
    h+='<h3>'+esc(lbl)+'</h3>';
   }
   h+='<label class="tk'+(done[t.id]?' done':'')+'"><input type="checkbox" data-tk="'+esc(t.id)+'"'
-   +(done[t.id]?' checked':'')+'><span>'+esc(t.text)+'</span>'+tkDelBtn(t)+'</label>';
+   +(done[t.id]?' checked':'')+'><span>'+esc(t.text)+'</span>'+tkActs(t)+'</label>';
  });
  host.innerHTML=h||'<div class="empty">אין משימות. כל משימה שתשלח למוניטור תופיע כאן לפי היום שלה.</div>';
- host.onclick=function(e){var d=e.target.closest&&e.target.closest('[data-tkdel]');if(d){e.preventDefault();tkDelete(d);}};
+ host.onclick=function(e){var d=e.target.closest&&e.target.closest('[data-tkdel]');if(d){e.preventDefault();tkDelete(d);return;}
+  var ed=e.target.closest&&e.target.closest('[data-tkedit]');if(ed){e.preventDefault();tkEditStart(ed);}};
  var b=document.getElementById('tkClear');
  if(b)b.onclick=function(){clearIds('tasksCleared',T.map(function(t){return t.id;}));notesPush();renderTasks();};
 }
@@ -9244,6 +9253,27 @@ function apEditFill(a){
  apEditId=a.id;apEditSet(true);
  document.getElementById('apSaid').textContent='משנים את התור. שנה מה שצריך ושלח, והתור הישן יתעדכן.';
  document.getElementById('apForm').scrollIntoView({behavior:'smooth',block:'center'});
+}
+var tkEditId='';
+function tkEditSet(on){
+ var c=document.getElementById('tkCancel'),bt=document.querySelector('#tkForm button[type=submit]');
+ if(c)c.hidden=!on;
+ if(bt)bt.textContent=on?'שמירת השינוי':'שליחה';
+}
+function tkEditBtn(t){return '<button type="button" class="tkDel" data-tkedit="'+esc(t.id)+'" data-what="'+esc(t.text)+'" data-day="'+esc(t.day)+'" aria-label="לשנות את המשימה או להעביר אותה ליום אחר">✏️</button>';}
+function tkActs(t){return '<span class="tkAct">'+tkEditBtn(t)+tkDelBtn(t)+'</span>';}
+function tkEditStart(b){
+ var sel=document.getElementById('tkDay'),day=b.getAttribute('data-day')||'';
+ tkAddInit();
+ if(sel&&day&&!Array.prototype.some.call(sel.options,function(o){return o.value===day;})){
+  var lb=new Date(day+'T12:00:00').toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'});
+  var op=document.createElement('option');op.value=day;op.textContent=lb;sel.insertBefore(op,sel.firstChild);
+ }
+ if(sel&&day)sel.value=day;
+ document.getElementById('tkText').value=b.getAttribute('data-what')||'';
+ tkEditId=b.getAttribute('data-tkedit');tkEditSet(true);
+ document.getElementById('tkSaid').textContent='משנים את המשימה. שנה את הטקסט או את היום, ושלח.';
+ document.getElementById('tkForm').scrollIntoView({behavior:'smooth',block:'center'});
 }
 function tkDelBtn(t){return '<button type="button" class="tkDel" data-tkdel="'+esc(t.id)+'" data-what="'+esc(t.text)+'" aria-label="למחוק את המשימה">🗑</button>';}
 function tkDelete(b){
@@ -9293,6 +9323,13 @@ on2('tkForm','submit',function(e){
  var iso=sel.value,today=iso===tdDay(0);
  var lbl=new Date(iso+'T12:00:00').toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'});
  said.textContent='שולח.';
+ if(tkEditId){
+  var eid=tkEditId;
+  return sendText('עדכון משימה','עדכון משימה: '+eid+' | '+v+', ליום '+lbl+' ('+iso+')','משימה').then(function(){
+   t.value='';tkEditId='';tkEditSet(false);said.textContent='נשלח. המשימה תתעדכן כאן ברגע שהמוניטור יקבל את השינוי.';
+   markSent('text');renderSent();renderThread();
+  }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';});
+ }
  sendText(today?'משימה להיום':'משימה ליום אחר',(today?'משימה להיום, ':'משימה ליום ')+lbl+' ('+iso+'): '+v,'משימה').then(function(){
   t.value='';said.textContent='נשלח. זה יופיע כאן ברשימה, ביום שבחרת.';
   markSent('text');renderSent();renderThread();
@@ -11547,7 +11584,7 @@ function todaySheet(){
  h+='<div class="tdSec">🏥 תורים</div>'+(x.ap.length?x.ap.map(apRow).join(''):'<small>אין תור היום. תור חדש מוסיפים מהמסך הראשי: לוחצים על 🏥 תורים עתידיים, בטופס למטה.</small>');
  h+='<div class="tdSec">⏰ תזכורות</div>'+(x.rm.length?x.rm.map(function(r){return '<div class="tdRow">'+esc(r.text)+'</div>';}).join(''):'<small>אין תזכורת להיום.</small>');
  h+='<div class="tdSec">✅ משימות</div>'+(x.tk.length?x.tk.map(function(t){
-   return '<label class="tdRow tk'+(x.done[t.id]?' done':'')+'"><input type="checkbox" data-tk="'+esc(t.id)+'"'+(x.done[t.id]?' checked':'')+'> '+esc(t.text)+tkDelBtn(t)+'</label>';
+   return '<label class="tdRow tk'+(x.done[t.id]?' done':'')+'"><input type="checkbox" data-tk="'+esc(t.id)+'"'+(x.done[t.id]?' checked':'')+'> '+esc(t.text)+tkActs(t)+'</label>';
   }).join(''):'<small>אין משימה פתוחה להיום.</small>');
  if(x.ap1.length)h+='<div class="tdSec">מחר</div>'+x.ap1.map(apRow).join('');
  var tdOpts='';for(var k=0;k<60;k++){var dd=new Date(Date.now()+k*864e5);
@@ -11562,6 +11599,7 @@ function todaySheet(){
  function esckey(e){if(e.key==='Escape')close();}
  w.onclick=function(e){
   var d=e.target.closest&&e.target.closest('[data-tkdel]');if(d){e.preventDefault();tkDelete(d);return;}
+  var ed=e.target.closest&&e.target.closest('[data-tkedit]');if(ed){e.preventDefault();close();pane('T');renderTasks();tkEditStart(ed);return;}
   if(e.target===w||e.target.id==='tdClose')close();
  };
  w.addEventListener('change',function(e){var l=e.target.closest&&e.target.closest('label');if(l)l.classList.toggle('done',e.target.checked);});
