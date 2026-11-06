@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>שמירה לטלפון</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+ :root{--bg:#0d1830;--card:#14223f;--ink:#f3f6fb;--dim:#a9b6cc;--gold:#f5b94c}
+ *{box-sizing:border-box}
+ body{margin:0;background:var(--bg);color:var(--ink);font-family:Heebo,sans-serif}
+ main{max-width:480px;margin:0 auto;padding:16px}
+ a.back{color:var(--dim);text-decoration:none;font-size:15px}
+ h1{font-size:22px;margin:12px 0 4px}
+ p{color:var(--dim);margin:0 0 12px;line-height:1.5}
+ video{width:100%;max-height:62vh;border-radius:14px;background:#000;display:block}
+ button{width:100%;margin-top:12px;padding:16px;border:0;border-radius:14px;font:800 18px Heebo,sans-serif;background:var(--gold);color:#1a1300}
+ button[disabled]{opacity:.6}
+ .steps{background:var(--card);border-radius:14px;padding:12px 14px;margin-top:12px;font-size:16px;line-height:1.7}
+ .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#fff;color:#111;padding:10px 16px;border-radius:12px;font-weight:700;display:none}
+</style>
+</head>
+<body>
+<main>
+ <a class="back" href="./" id="back">→ למוניטור</a>
+ <h1 id="ttl">שמירה לטלפון</h1>
+ <p id="sub">הסרטון נטען, עוד רגע הכפתור יהיה מוכן.</p>
+ <video id="v" playsinline controls preload="metadata"></video>
+ <button type="button" id="save" disabled>טוען את הסרטון...</button>
+ <div class="steps">באייפון: לוחצים על הכפתור, ובחלון שנפתח גוללים למטה ובוחרים <b>"שמור וידאו"</b>. הסרטון נכנס לגלריה, ומשם מעלים לטיקטוק או לאינסטגרם.</div>
+</main>
+<div class="toast" id="toast"></div>
+<script>
+/* 6.11, Itzik: "אין לי שום אפשרות לשמור את הסרטון ולהוריד אותו לטלפון". One page for any video: save.html?f=<path>&n=<title>.
+   The file is fetched as a Blob at load, so the tap shares it right away (iOS needs the share inside the tap). */
+(function(){
+ var q=new URLSearchParams(location.search),f=q.get('f')||'',n=q.get('n')||'סרטון';
+ var ok=/^[a-z0-9_\/.\-]+\.mp4(\?v=[a-z0-9]+)?$/i.test(f)&&f.indexOf('..')<0;
+ var v=document.getElementById('v'),b=document.getElementById('save'),sub=document.getElementById('sub');
+ document.getElementById('ttl').textContent=n;
+ function toast(t){var e=document.getElementById('toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(function(){e.style.display='none';},2600);}
+ if(!ok){sub.textContent='לא נמצא סרטון בקישור הזה.';b.textContent='אין סרטון';return;}
+ v.src=f;
+ var file=null,name=(f.split('?')[0].split('/').pop()||'video.mp4');
+ fetch(f).then(function(r){if(!r.ok)throw 0;return r.blob();}).then(function(bl){
+  file=new File([bl],name,{type:'video/mp4'});
+  b.disabled=false;b.textContent='💾 שמירה לטלפון';sub.textContent='הסרטון מוכן לשמירה.';
+ }).catch(function(){b.disabled=false;b.textContent='💾 פתיחת הסרטון';sub.textContent='לא הצלחתי לטעון מראש. הכפתור יפתח את הסרטון עצמו.';});
+ b.onclick=function(){
+  if(file&&navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file]}).catch(function(){});return;}
+  if(file){var a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=name;document.body.appendChild(a);a.click();a.remove();toast('הסרטון יורד');return;}
+  window.open(f,'_blank');
+ };
+})();
+</script>
+</body>
+</html>

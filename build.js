@@ -16355,7 +16355,7 @@ on('gTom',tomSheet);
 /* 5.11, Itzik: "תעשה סדר בכל הסרטונים... הכל רק באריח אחד, ובתוכו טאבים". Built from the
    existing lists (TOM_ITEMS, REEL_ITEMS, FUT_ITEMS), so anything added there shows here. */
 window.addEventListener('pageshow',function(){window.navAway=0;});
-function vidGo(url,hash){window.navAway=1;try{sessionStorage.setItem('nerSend',JSON.stringify({t:NTFYIN(),c:sendCode()}));}catch(e){}location.href=url+'?v='+Date.now()+(hash?'#'+encodeURIComponent(hash):'');}
+function vidGo(url,hash){window.navAway=1;try{sessionStorage.setItem('nerSend',JSON.stringify({t:NTFYIN(),c:sendCode()}));}catch(e){}location.href=url+(url.indexOf('?')>-1?'&':'?')+'v='+Date.now()+(hash?'#'+encodeURIComponent(hash):'');}
 /* 6.11, Itzik: the status, candle and plate tabs list every video itself (today first, waiting for approval first),
    not just a button to a page. Read from the same queue.json files those pages read. */
 var VQ=null,VQT=0;
@@ -16392,6 +16392,10 @@ function vqRows(id){
   w.forEach(function(x){out.push({k:'q',t:'⏳ '+lab(x),u:'ner/candle.html',n:x.name});});
   if(ok.length)out.push({h:'✅ מאושרים, יעלו לבד ('+ok.length+')'});
   ok.forEach(function(x){out.push({k:'q',t:'✅ '+lab(x),u:'ner/candle.html',n:x.name});});
+  // 6.11, Itzik: "אני רוצה להוריד את הסרטון הזה חזרה ולהעלות אותו בטיקטוק"
+  var upT=Q.filter(function(x){return x.posted&&x.postedAt&&new Date(x.postedAt).toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'})===T;});
+  if(upT.length)out.push({h:'📥 עלו היום, לשמירה לטלפון ולטיקטוק ('+upT.length+')'});
+  upT.forEach(function(x){out.push({k:'q',t:'💾 '+lab(x),u:'save.html?f='+encodeURIComponent('ner/'+String(x.file).split('?')[0])+'&n='+encodeURIComponent(lab(x))});});
   if(rj.length)out.push({h:'⛔ נפסלו'});
   rj.forEach(function(x){out.push({k:'q',t:'⛔ '+lab(x),u:'ner/candle.html',n:x.name});});
  }
