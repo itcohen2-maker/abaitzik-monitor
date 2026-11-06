@@ -17057,7 +17057,7 @@ function bizSheet(t0){
     // 5.11, Itzik: the side room of Shachar (owner only, behind his login) and exactly what to film for it.
     +'<div class="bzSec">🏋️ החדר הצדדי, רק אתה רואה</div>'
     +'<a class="yb" href="https://shachar.abaitzik.com/lab" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">🚪 כניסה לחדר הצדדי: כושר, צלחת ומתכונים</a>'
-    +'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-exercise-plan.html" data-new="1">📋 רשימת התרגילים החדשה לאישור</button>'+'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-exercise-demo.html" data-new="1">🏋️ דוגמה: מסך תרגיל עם הדמות שלך</button>'
+    +'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-training-design.html" data-new="1">🧭 תכנון חדר האימון לאישור</button>'+'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-exercise-plan.html" data-new="1">📋 רשימת התרגילים החדשה לאישור</button>'+'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-exercise-demo.html" data-new="1">🏋️ דוגמה: מסך תרגיל עם הדמות שלך</button>'
     +'<button type="button" class="yb" data-bz="anim" data-f="shachar-filming.html" data-new="1">🎬 מה לצלם: 27 צילומים עם תמונות לפי הרשימה החדשה</button>'
     +'<p class="bzEmpty">הכניסה עם המייל שלך בשחר. מי שלא מנהל מקבל דף שלא קיים.</p>'
     +'<p class="bzEmpty">הסרטונים, הסטוריז והפוסט של שחר נמצאים באריח 🎬 הרילים שלי.</p>';
