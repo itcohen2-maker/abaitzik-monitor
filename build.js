@@ -4328,14 +4328,14 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <button type="button" class="gt g8" data-grp="money" id="gLolos" data-upd="20261104-piraon-yoel"><b>🧾 הנהלת חשבונות</b><small>מי חייב כסף ומאיזה חודש</small></button>
   <!-- 4.11.2026, Itzik: no bank tile, not here and not for customers. He connects the bank through Claude in the terminal; the monitor is only where he gets updates. -->
   <button type="button" class="gt g8" data-grp="home" id="gVaad"><b>🏠 ועד הבית</b><small>מי שילם ומה פתוח</small></button>
-  <button type="button" class="gt g15" data-grp="money" id="gSale" data-upd="lawyer-docs-1018"><b>⚖️ מכירת לולוס</b><small>התיק לעורך הדין, מה פתוח ומה נמסר</small></button>
+  <button type="button" class="gt g15" data-grp="money" id="gSale" data-upd="lawyer-isra-1106"><b>⚖️ עו״ד ויואל</b><small>התיק לעורך הדין והכרטיסים של יואל</small></button>
   <!--
     איציק, 28.9: "תשים אצלי במוניטור עם אייקון לולוס". The recipe booklet, 19
     recipes from the Lolos drive (מתכונים תקינים למהדרין 2024). The PDF is a
     private file, opened sealed like every other one.
   -->
   <button type="button" class="gt gRec" data-grp="home" id="gRecipes"><b><img class="gi" src="icons/lolos-giraffe.png" alt=""> מתכונים</b><small>חוברת לולוס וספר המתכונים של איציק</small></button>
-  <button type="button" class="gt g16" data-grp="money" id="gIsra"><b>💳 ישראכרט יואל</b><small>הכרטיסים, מה לבקש, ומה ענו</small></button>
+  <button type="button" class="gt g16" data-grp="money" id="gIsra" hidden><b>💳 ישראכרט יואל</b><small>הכרטיסים, מה לבקש, ומה ענו</small></button>
   <!-- איציק, 11.10: "כפתור להחליף מודל תמחק אותו". הכפתור gModel ירד ממסך הבית; הקוד שלו בודק שהוא קיים. -->
   <button type="button" class="gt g10" data-grp="home" id="gFiles" data-new="1" data-upd="20261024-comment"><b>📁 הקבצים שלי</b><small>מה ששלחת ומה שנשלח לך, עם הורדה</small></button>
   <button type="button" class="gt g8" data-grp="work" id="gHomestyle" data-new="1" data-upd="20261023-hs-quote3"><b>🏠 הום סטייל</b><small>חדש: הצעת מחיר ובקשה לאיש המחשבים</small></button>
@@ -5029,6 +5029,7 @@ ${require('./lib/profile-ui.js').html(inst)}
  <h2>מכירת לולוס</h2>
  <div class="rephint">כל התיק שהוכן לעורך הדין, מסודר לפי החלקים שלו. כל שורה פותחת את הדוח עצמו בדרייב.</div>
  <div id="saleBox"><div class="empty">טוען.</div></div>
+ <div id="saleIsraSlot" style="margin-top:28px"></div>
 </section>
 <!--ITZIK:END-->
 
@@ -12237,18 +12238,22 @@ function remTopSeen(){try{return JSON.parse(localStorage.getItem('remTopSeen')||
 function remWhen(iso){try{var d=new Date(iso),t=d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Jerusalem'}),k=function(x){return x.toLocaleDateString('he-IL',{timeZone:'Asia/Jerusalem'});};
  if(k(d)===k(new Date()))return 'היום '+t;return d.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'})+' '+t;}catch(e){return '';}}
 function remTopPaint(){
- var t=document.getElementById('gRemTop');if(!t)return;
- var L=remTopList();t.hidden=!L.length;if(!L.length)return;
- var now=Date.now(),due=L.filter(function(r){return Date.parse(r.due)<=now;}),r=due[0]||L[0],s=remTopSeen();
- t.classList.toggle('lnSeen',!due.length||due.every(function(x){return s[remKey(x)];}));
- var r1=String(r.text||'').split(String.fromCharCode(10))[0];
- t.querySelector('b').textContent=due.length?'⏰ עכשיו: '+r1:'⏰ תזכורת';
- t.querySelector('small').textContent=due.length?(due.length>1?'ועוד '+(due.length-1)+' · ':'')+'לחיצה, ואז ✅ עשיתי':remWhen(r.due)+': '+r1;
+ // 6.11.2026, Itzik: one reminders tile only. The nag shows on ⏰ תזכורות itself.
+ var top=document.getElementById('gRemTop');if(top)top.hidden=true;
+ var t=document.getElementById('gRemind');if(!t)return;
+ var b=t.querySelector('b'),sm=t.querySelector('small');if(!b||!sm)return;
+ if(!t.dataset.b0){t.dataset.b0=b.textContent;t.dataset.s0=sm.textContent;}
+ var L=remTopList(),now=Date.now(),due=L.filter(function(r){return Date.parse(r.due)<=now;}),s=remTopSeen();
+ var line=function(r){return String(r.text||'').split(String.fromCharCode(10))[0];};
+ if(!due.length){t.classList.remove('leadNew','lnSeen');b.textContent=t.dataset.b0;sm.textContent=L.length?remWhen(L[0].due)+': '+line(L[0]):t.dataset.s0;return;}
+ t.classList.add('leadNew');t.classList.toggle('lnSeen',due.every(function(x){return s[remKey(x)];}));
+ b.textContent='⏰ עכשיו: '+line(due[0]);
+ sm.textContent=(due.length>1?'ועוד '+(due.length-1)+' · ':'')+'לחיצה, ואז ✅ עשיתי';
 }
 (function(){
- function go(){var t=document.getElementById('gRemTop');if(!t)return;
-  t.onclick=function(){var s=remTopSeen(),now=Date.now();remTopList().forEach(function(r){if(Date.parse(r.due)<=now)s[remKey(r)]=1;});
-   try{localStorage.setItem('remTopSeen',JSON.stringify(s));}catch(e){}remTopPaint();pane('R');renderReminders();};
+ function go(){var t=document.getElementById('gRemind');if(!t)return;
+  t.addEventListener('click',function(){var s=remTopSeen(),now=Date.now();remTopList().forEach(function(r){if(Date.parse(r.due)<=now)s[remKey(r)]=1;});
+   try{localStorage.setItem('remTopSeen',JSON.stringify(s));}catch(e){}setTimeout(function(){try{remTopPaint();}catch(e){}},0);});
   try{remTopPaint();}catch(e){}setInterval(function(){try{remTopPaint();}catch(e){}},30000);}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else setTimeout(go,0);
 })();
@@ -12556,7 +12561,14 @@ function renderSale(){
  // 4.11.2026 (direction ד): every chapter of the case is a coloured drawer.
  dwRe(box,{key:'sale',keys:4,icons:{'מצב המכירה':'📊','תזכורת':'⏰','מה עוד פתוח':'📌','📄':'📄'},short:{'מצב המכירה':'המצב','תזכורת':'תזכורת','מה עוד פתוח':'פתוח','01 הלוואות':'הלוואות'}});
 }
-on('gSale',function(){pane('Sa');renderSale();ensure('sale',renderSale);});
+function saleOpen(){
+ // The Isracard screen lives under the lawyer case now: its heading, hint and box move in once.
+ var slot=document.getElementById('saleIsraSlot'),src=document.getElementById('pIsra');
+ if(slot&&src&&!slot.childNodes.length){while(src.firstChild)slot.appendChild(src.firstChild);var h=slot.querySelector('h2');if(h)h.textContent='💳 ישראכרט יואל';}
+ pane('Sa');renderSale();ensure('sale',renderSale);
+ try{renderIsra();ensure('isra',renderIsra);}catch(e){}
+}
+on('gSale',saleOpen);
 /*
   איציק, 29.9: "יהיו שתי ספרים, אחד לולוס אחד איציק", "הכל באותו כפתור".
   One tile, a choice of two books, each its own sealed file.
@@ -12610,7 +12622,7 @@ function renderIsra(){
  }).join('');
  dwRe(box,{key:'isra',keys:4,icons:{'הכרטיסים':'💳','מה לבקש':'📝','החיובים החוזרים':'🔁','אם אומרים':'☎️','מה כבר ידוע':'💡','מה ישראכרט ענו':'📩'},short:{'הכרטיסים':'כרטיסים','מה לבקש':'לבקש','החיובים החוזרים':'חיובים','אם אומרים':'אם אומרים','מה כבר ידוע':'ידוע','מה ישראכרט ענו':'תשובות'}});
 }
-on('gIsra',function(){pane('Is');renderIsra();ensure('isra',renderIsra);});
+on('gIsra',saleOpen);
 /*ITZIK:END*/
 on('gRemote',function(){pane('Rc');});
 function remoteDone(){try{return localStorage.getItem('remoteDoneRD')==='1';}catch(e){return false;}}
