@@ -97,6 +97,7 @@
 - **Deleting an appointment (20.10.2026):** the 🗑️ button on the appointments screen sends "מחיקת תור: <id> (<what>, <date>)". Delete data/appts/appts/<file whose id matches>.json (an explicit request, so deleting is allowed), push, answer one line.
 - **Editing an appointment (24.10.2026):** the ✏️ button on the appointments screen fills the form; sending it sends "עדכון תור: <id> | <what>, <DD.MM.YYYY> (<YYYY-MM-DD>) בשעה HH:MM[, מקום: <where>]". Overwrite the same data/appts/appts/<file whose id matches>.json with the new details (keep its id), push, answer one line.
 - **Deleting a task (24.10.2026):** the 🗑 button next to a task (on the tasks screen and in מה יש לי היום) sends "מחיקת משימה: <id> (<text>)". Delete data/tasks/tasks/<file whose id matches>.json (an explicit request, so deleting is allowed), push, answer one line.
+- **Editing a task (6.11.2026):** the ✏️ button next to a task (tasks screen and מה יש לי היום) fills the add form, and sending it sends "עדכון משימה: <id> | <text>, ליום <DD.MM.YYYY> (<YYYY-MM-DD>)". Overwrite the same data/tasks/tasks/<file whose id matches>.json with the new text and day (keep its id, `n` and the rest), push, answer one line.
 
 - **"העסק שלי", the small business CRM (12.10.2026), only when `instance.json` has `"biz": true`:** a message (text or
   voice) about a lead, a customer, a payment received or an expense is written as one record file in `data/biz/biz/`,
