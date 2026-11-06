@@ -4414,7 +4414,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
     2.10. Itzik, in a voice note: a new tile with winning lines. The first one
     is amirshwartz1's TikTok comment on the cake video (55 likes).
   -->
-  <button type="button" class="gt gWin" data-grp="net" id="gWin" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
+  <button type="button" class="gt gWin" data-grp="net" id="gWin" data-upd="20261106-win03" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <!-- 5.11, Itzik: "את כל הסרטונים נעביר לאריח אחד, ובתוכו טאבים". One tile with a tab per kind; the old tiles (reels, future reels, campaign, plate, status, candle.times) were removed; their sheets stay in the code. -->
   <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1"><b>🎬 הסרטונים</b><small>קמפיין, שחר, סטטוס, מה בצלחת, נרות ושלי</small></button>
   <!--
@@ -16388,7 +16388,8 @@ document.getElementById('gLaw')&&document.getElementById('gLaw').addEventListene
 */
 var WIN_ITEMS=[
  {n:'01',t:'מרימים את הראש ולא את הידיים',f:'amirshwartz1, תגובה בטיקטוק על סרטון העוגה'},
- {n:'02',t:'בכל רגע נתון יש לנו שתי אופציות: לצעוד קדימה לצמיחה או לצעוד אחורה לנוחות.',f:'כרטיס שצילמתי, 7.10, #מיאתבוחרתלהיות?'}
+ {n:'02',t:'בכל רגע נתון יש לנו שתי אופציות: לצעוד קדימה לצמיחה או לצעוד אחורה לנוחות.',f:'כרטיס שצילמתי, 7.10, #מיאתבוחרתלהיות?'},
+ {n:'03',t:'רפואה שלמה ואיתנה. כל אור מגרש את החושך והתקווה מעניקה כח. לא רק לך, לזקוקים לה סביבך',f:'פוסט של Z.h-e1z, צילום מסך, 6.11'}
 ];
 function winSheet(){
  var old=document.getElementById('winSheet');if(old)old.remove();
