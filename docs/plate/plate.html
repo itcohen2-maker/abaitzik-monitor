@@ -20,23 +20,27 @@
   .lede{color:var(--dim);font-size:15px;margin:0 0 6px}
   a{color:var(--glow)}
   h2{margin:22px 0 10px;font-size:19px;font-weight:500;color:var(--glow)}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
-  @media(min-width:640px){.grid{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}}
+  .grid{display:flex;flex-direction:column;gap:28px;max-width:520px;margin:0 auto}
   .card{background:rgba(255,255,255,.05);border:2px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
   .card.first{border-color:var(--glow)}
   .card.done{opacity:.75}
-  .media{background:#000;aspect-ratio:9/16;width:100%}
+  .media{background:#000;aspect-ratio:9/16;width:100%;max-height:70vh;margin:0 auto}
   .media video{width:100%;height:100%;object-fit:cover;display:block}
-  .meta{padding:9px 10px;display:flex;flex-direction:column;gap:5px}
+  .meta{padding:14px;display:flex;flex-direction:column;gap:10px}
   .k{font-size:13px;color:var(--glow);font-weight:500}
-  .nm{font-size:17px;font-weight:500}
+  .nm{font-size:20px;font-weight:700;line-height:1.35}
   .st{display:inline-block;border-radius:6px;padding:0 7px;font-size:12px;border:1px solid var(--line)}
   .st.ok{color:var(--ok);border-color:var(--ok)}
   .st.wait{color:var(--warn);border-color:var(--warn)}
   .ok-box{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:500;cursor:pointer;padding:2px 0}
   .ok-box input{width:22px;height:22px;accent-color:var(--ok)}
-  .row{display:flex;gap:6px;flex-wrap:wrap}
-  .row button{font:inherit;font-size:14px;background:rgba(255,255,255,.12);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:6px 10px;cursor:pointer;min-height:36px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .row button{font:inherit;font-size:19px;font-weight:700;background:rgba(255,255,255,.12);color:var(--ink);border:2px solid var(--line);border-radius:14px;padding:14px 12px;cursor:pointer;min-height:60px;grid-column:1/-1}
+  .row button[data-up],.row button[data-down]{grid-column:auto;font-size:24px}
+  .row button[data-dl]{background:#f5b94c;color:#1a1300;border-color:#f5b94c}
+  .row button[data-posted]{background:rgba(60,207,142,.18);border-color:var(--ok)}
+  .row button[data-posted][data-sure="1"]{background:var(--ok);color:#06210f}
+  .row button.del{margin-top:14px}
   .row button.del{color:var(--bad);border-color:rgba(255,122,122,.5)}
   .row button:disabled{opacity:.4}
   .empty{border:1px dashed var(--line);border-radius:14px;padding:14px;color:var(--dim)}
@@ -70,10 +74,10 @@
    +'<div class="meta"><span class="k">'+(i+1)+(i===0&&!it.approved?' · הבא בתור':'')+'</span>'
    +'<span class="nm">'+esc(it.name)+(it.posted?' · ✅ עלה היום':' · עוד לא עלה')+'</span>'
    +'<div class="row">'
-   +'<button type="button" data-up="'+esc(it.id)+'"'+(i===0?' disabled':'')+' aria-label="למעלה">↑</button>'
-   +'<button type="button" data-down="'+esc(it.id)+'"'+(i===len-1?' disabled':'')+' aria-label="למטה">↓</button>'
+   +'<button type="button" data-up="'+esc(it.id)+'"'+(i===0?' disabled':'')+' aria-label="למעלה">↑ למעלה</button>'
+   +'<button type="button" data-down="'+esc(it.id)+'"'+(i===len-1?' disabled':'')+' aria-label="למטה">↓ למטה</button>'
    +'<button type="button" data-dl="'+esc(it.file)+'" data-nm="'+esc(it.id)+'">💾 שמירה לטלפון</button>'
-   +(it.posted?'':'<button type="button" data-posted="'+esc(it.id)+'">☐ סמן שהעליתי</button>')
+   +(it.posted?'':'<button type="button" data-posted="'+esc(it.id)+'">☐ העליתי את זה</button>')
    +'<button type="button" class="del" data-del="'+esc(it.id)+'">🗑️ מחק</button>'
    +'</div></div></div>';
  }
@@ -93,6 +97,7 @@
    b.disabled=true;act('move',id,{dir:dir},function(ok){if(ok)swap(id,dir);else{b.disabled=false;alert('לא נשלח, נסה שוב');}});});});
   document.querySelectorAll('[data-posted]').forEach(function(b){b.addEventListener('click',function(){
    var id=b.getAttribute('data-posted'),it=q.find(function(x){return x.id===id;});
+   if(b.getAttribute('data-sure')!=='1'){b.setAttribute('data-sure','1');b.textContent='✅ לחץ שוב לאישור: העליתי את '+(it.name.split(':')[0]);setTimeout(function(){if(b.isConnected&&!b.disabled){b.removeAttribute('data-sure');b.textContent='☐ העליתי את זה';}},6000);return;}
    b.disabled=true;act('posted',id,{},function(ok){if(ok){it.posted=true;it.postedAt=new Date().toISOString();draw(q);}else{b.disabled=false;alert('לא נשלח, נסה שוב');}});});});
   document.querySelectorAll('[data-del]').forEach(function(b){b.addEventListener('click',function(){
    var id=b.getAttribute('data-del'),it=q.find(function(x){return x.id===id;});

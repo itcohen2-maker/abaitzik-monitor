@@ -1334,6 +1334,8 @@ body:not(.inner) #thumbSet{display:block}
 #dropZone div{border:3px dashed #fff;border-radius:22px;padding:34px 40px;color:#fff;
  font:700 22px Heebo,sans-serif;text-align:center;background:rgba(0,0,0,.25)}
 .gt b{font:700 16px Heebo,sans-serif;display:block}
+#blkTiles>.gt{height:124px;min-height:124px;max-height:124px}
+#blkTiles>.gt b,#blkTiles>.gt small{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
 .gt small{font-size:13px;opacity:.96;font-weight:400;text-shadow:0 1px 3px rgba(0,0,0,.4)}
 .gt:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .g1{background:linear-gradient(150deg,#5aa9fb,var(--blue))}
@@ -2403,7 +2405,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-06T08:00:19.879Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-06T08:00:48.546Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4291,7 +4293,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='712a3187cf';
+var CODE_ID='4134a45400';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -8665,8 +8667,9 @@ function remTopPaint(){
  var L=remTopList();t.hidden=!L.length;if(!L.length)return;
  var now=Date.now(),due=L.filter(function(r){return Date.parse(r.due)<=now;}),r=due[0]||L[0],s=remTopSeen();
  t.classList.toggle('lnSeen',!due.length||due.every(function(x){return s[remKey(x)];}));
- t.querySelector('b').textContent=due.length?'⏰ עכשיו: '+r.text:'⏰ תזכורת';
- t.querySelector('small').textContent=due.length?(due.length>1?'ועוד '+(due.length-1)+' · ':'')+'לחיצה, ואז ✅ עשיתי':remWhen(r.due)+': '+r.text;
+ var r1=String(r.text||'').split(String.fromCharCode(10))[0];
+ t.querySelector('b').textContent=due.length?'⏰ עכשיו: '+r1:'⏰ תזכורת';
+ t.querySelector('small').textContent=due.length?(due.length>1?'ועוד '+(due.length-1)+' · ':'')+'לחיצה, ואז ✅ עשיתי':remWhen(r.due)+': '+r1;
 }
 (function(){
  function go(){var t=document.getElementById('gRemTop');if(!t)return;

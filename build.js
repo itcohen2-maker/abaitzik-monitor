@@ -2744,6 +2744,9 @@ body:not(.inner) #thumbSet{display:block}
 #dropZone div{border:3px dashed #fff;border-radius:22px;padding:34px 40px;color:#fff;
  font:700 22px Heebo,sans-serif;text-align:center;background:rgba(0,0,0,.25)}
 .gt b{font:700 16px Heebo,sans-serif;display:block}
+/* 6.11, Itzik: "לא משנה מה כתוב בהם, יהיה להם גודל אחיד". Every home tile is the same height; long text is cut to two lines. */
+#blkTiles>.gt{height:124px;min-height:124px;max-height:124px}
+#blkTiles>.gt b,#blkTiles>.gt small{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
 .gt small{font-size:13px;opacity:.96;font-weight:400;text-shadow:0 1px 3px rgba(0,0,0,.4)}
 .gt:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .g1{background:linear-gradient(150deg,#5aa9fb,var(--blue))}
@@ -12233,8 +12236,9 @@ function remTopPaint(){
  var L=remTopList();t.hidden=!L.length;if(!L.length)return;
  var now=Date.now(),due=L.filter(function(r){return Date.parse(r.due)<=now;}),r=due[0]||L[0],s=remTopSeen();
  t.classList.toggle('lnSeen',!due.length||due.every(function(x){return s[remKey(x)];}));
- t.querySelector('b').textContent=due.length?'⏰ עכשיו: '+r.text:'⏰ תזכורת';
- t.querySelector('small').textContent=due.length?(due.length>1?'ועוד '+(due.length-1)+' · ':'')+'לחיצה, ואז ✅ עשיתי':remWhen(r.due)+': '+r.text;
+ var r1=String(r.text||'').split(String.fromCharCode(10))[0];
+ t.querySelector('b').textContent=due.length?'⏰ עכשיו: '+r1:'⏰ תזכורת';
+ t.querySelector('small').textContent=due.length?(due.length>1?'ועוד '+(due.length-1)+' · ':'')+'לחיצה, ואז ✅ עשיתי':remWhen(r.due)+': '+r1;
 }
 (function(){
  function go(){var t=document.getElementById('gRemTop');if(!t)return;
