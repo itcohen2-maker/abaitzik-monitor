@@ -2782,7 +2782,7 @@ body:not(.inner) #thumbSet{display:block}
 .idea .itag{display:block;font-size:11px;color:var(--dim);margin-bottom:3px}
 .grid .gt,#blkIcons .ic{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 #blkIcons .ic.tlift{opacity:.3}
-.tarr{grid-column:1/-1;justify-self:start;display:block;margin:0;border:0;background:none;color:var(--dim);font:600 12.5px Heebo,sans-serif;cursor:pointer;padding:4px 2px}
+.tarr{grid-column:1/-1;justify-self:start;display:block;margin:0;border:2px solid #1d6fe0;border-radius:999px;background:rgba(29,111,224,.12);color:#8fc0ff;font:800 14px Heebo,sans-serif;cursor:pointer;padding:7px 14px}
 .tarrs{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px 18px}
 .tarrs .tarr{grid-column:auto}
 .tedit .gt{position:relative;animation:wobble .28s infinite alternate ease-in-out}
@@ -16315,6 +16315,7 @@ function vqLoad(cb){
 }
 function vqDay(){try{return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jerusalem'}).format(new Date());}catch(e){return new Date().toISOString().slice(0,10);}}
 function vqDate(d){var p=String(d||'').split('-');return p.length===3?(+p[2])+'.'+(+p[1]):'';}
+function vqDayName(d){var p=String(d||'').split('-');if(p.length!==3)return '';var n=new Date(Date.UTC(+p[0],+p[1]-1,+p[2])).getUTCDay();return ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'][n];}
 function vqCut(s,n){s=String(s||'').split(String.fromCharCode(10))[0];return s.length>n?s.slice(0,n)+'…':s;}
 function vqRows(id){
  var Q=(VQ&&VQ[id])||[],T=vqDay(),out=[];
@@ -16323,9 +16324,9 @@ function vqRows(id){
   var now=up.filter(function(x){return x.date===T;}),next=up.filter(function(x){return x.date>T;});
   out.push({h:now.length?'📲 להעלות היום ('+now.length+')':'📲 אין סטטוס להיום'});
   if(!now.length)out.push({k:'q',t:'אין סטטוס להיום, הבא בתור למטה',u:'status/index.html'});
-  now.forEach(function(x){out.push({k:'q',t:'⭐ היום · '+(x.topic||'')+' · '+vqCut(x.caption,38),u:'status/index.html',n:x.name});});
+  now.forEach(function(x){out.push({k:'q',t:'⭐ היום, '+vqDayName(x.date)+' '+vqDate(x.date)+' · '+(x.topic||'')+' · '+vqCut(x.caption,30),u:'status/index.html',n:x.name});});
   if(next.length)out.push({h:'📅 הבאים בתור'});
-  next.forEach(function(x){out.push({k:'q',t:vqDate(x.date)+' · '+(x.topic||'')+' · '+vqCut(x.caption,34),u:'status/index.html',n:x.name});});
+  next.forEach(function(x){out.push({k:'q',t:vqDayName(x.date)+' '+vqDate(x.date)+' · '+(x.topic||'')+' · '+vqCut(x.caption,30),u:'status/index.html',n:x.name});});
  }
  if(id==='nr'){
   var st=function(x){return (x.rejected||x.hold)?'rej':x.approved?'ok':'wait';};
@@ -16343,12 +16344,14 @@ function vqRows(id){
  if(id==='pl'){
   var day=function(iso){return new Date(iso||0).toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'});};
   var q=Q.filter(function(x){return !x.posted||day(x.postedAt)===T;}).sort(function(a,b){return (a.order||0)-(b.order||0);});
-  var w2=q.filter(function(x){return !x.approved&&!x.posted;}),ok2=q.filter(function(x){return x.approved||x.posted;});
+  var w2=q.filter(function(x){return !x.approved&&!x.posted;}),go2=q.filter(function(x){return x.approved&&!x.posted;}),ok2=q.filter(function(x){return x.posted;});
+  if(go2.length)out.push({h:'📤 מאושר, להעלות עכשיו ('+go2.length+')'});
+  go2.forEach(function(x){out.push({k:'q',t:'📤 '+x.name,u:'plate/plate.html',n:x.id});});
   out.push({h:'⏳ מחכים לאישור שלך ('+w2.length+')'});
   if(!w2.length)out.push({k:'q',t:'✔️ אין כרגע מה לאשר',u:'plate/plate.html'});
   w2.forEach(function(x){out.push({k:'q',t:'⏳ '+x.name,u:'plate/plate.html',n:x.id});});
-  if(ok2.length)out.push({h:'✅ אושרו'});
-  ok2.forEach(function(x){out.push({k:'q',t:(x.posted?'📤 עלה היום · ':'✅ ')+x.name,u:'plate/plate.html',n:x.id});});
+  if(ok2.length)out.push({h:'✅ עלה היום'});
+  ok2.forEach(function(x){out.push({k:'q',t:'✅ '+x.name,u:'plate/plate.html',n:x.id});});
  }
  return out;
 }
@@ -20036,7 +20039,7 @@ function tilesExit(){
  tEdit=false;
  if(grid){grid.classList.remove('tedit');saveOrder(grid,'tileOrder');}
  tileBar(false);
- var a=document.getElementById('tileArr');if(a)a.textContent='✎ הורדת אריחים';
+ var a=document.getElementById('tileArr');if(a)a.textContent='✎ הזזה והורדה של אריחים';
 }
 /*
   The press and drag itself, shared by the square tiles and, from 30.9 in his
@@ -20138,7 +20141,7 @@ function pressDrag(grid,sel,key,inEdit,still){
 function armTiles(grid){
  if(!grid)return;
  var arr=document.createElement('button');
- arr.type='button';arr.id='tileArr';arr.className='tarr';arr.textContent='✎ הורדת אריחים';
+ arr.type='button';arr.id='tileArr';arr.className='tarr';arr.textContent='✎ הזזה והורדה של אריחים';
  arr.onclick=function(){if(tEdit)tilesExit();else tilesEnter(grid);};
  // Inside the grid, across the full row: the home screen re-pins its blocks
  // after this runs, and a button standing beside the grid got left behind.
