@@ -768,7 +768,7 @@ function run(list) {
       );
     }
     // 22.10: an answer that says it did the work while nothing changed (lib/claim-check.js).
-    try { checkClaims(list, began); } catch (e) { say('!! בדיקת הטענות נכשלה: ' + e.message); }
+    try { checkClaims(list, began, res && res.session_id); } catch (e) { say('!! בדיקת הטענות נכשלה: ' + e.message); }
   });
   child.on('error', (e) => {
     unregister(sid);
@@ -785,17 +785,21 @@ function run(list) {
   before reopenAt so it does not count as the answer to the reopened message.
   A second empty claim on the same message is told to him, not looped.
 */
-function checkClaims(list, began) {
+function checkClaims(list, began, sessionId) {
   let all = [];
   try { all = fs.readdirSync(CHAT).map((f) => { const d = readJson(path.join(CHAT, f), null); return d ? Object.assign({ file: f }, d) : null; }).filter(Boolean); }
   catch (e) { return; }
-  const empty = require('./lib/claim-check.js').emptyClaims(all, list, began, HERE, inst.dataPath);
-  if (!empty.length) return;
+  const cc = require('./lib/claim-check.js');
+  const empty = cc.emptyClaims(all, list, began, HERE, inst.dataPath);
+  // 6.11: "שלחתי", "קבעתי", "הוצאתי" with no such action in the session's own log.
+  let acts = [];
+  try { acts = cc.emptyActions(all, list, began, require('os').homedir(), HERE, sessionId).filter((a) => !empty.some((e) => e.msg.id === a.msg.id)); } catch (e) {}
+  if (!empty.length && !acts.length) return;
   const p = {};
   new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Jerusalem', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
     .formatToParts(new Date()).forEach((x) => { p[x.type] = x.value; });
   const stamp = p.year + p.month + p.day + '-' + p.hour + p.minute;
-  empty.forEach(({ msg, answer }) => {
+  empty.concat(acts).forEach(({ msg, answer, kinds }) => {
     const f = path.join(CHAT, msg.file);
     const d = readJson(f, null);
     if (!d) return;
@@ -807,11 +811,13 @@ function checkClaims(list, began) {
     const at = new Date();
     fs.writeFileSync(path.join(CHAT, stamp + '-claude-claim-fix-' + Math.random().toString(36).slice(2, 6) + '.json'),
       JSON.stringify({ at: at.toISOString(), from: 'claude', re: msg.id, status: 'done',
-        text: 'תיקון: התשובה הקודמת אמרה שזה בוצע, אבל שום קובץ לא השתנה, כלומר זה לא בוצע. זה חזר לעבודה עכשיו.' }, null, 1), 'utf8');
+        text: kinds ? 'תיקון: התשובה הקודמת אמרה שבוצעה ' + kinds.join(' ו') + ', אבל הסשן לא הריץ שום פעולה כזו, כלומר זה לא יצא. זה חזר לעבודה עכשיו.'
+          : 'תיקון: התשובה הקודמת אמרה שזה בוצע, אבל שום קובץ לא השתנה, כלומר זה לא בוצע. זה חזר לעבודה עכשיו.' }, null, 1), 'utf8');
     d.status = 'working';
     d.claimRedo = d.reopenAt = new Date(at.getTime() + 1000).toISOString();
     d.reopenNote = 'התשובה הקודמת אמרה שבוצע ("' + String(answer.text || '').replace(/\s+/g, ' ').slice(0, 160) +
-      '"), ושום קובץ לא השתנה. לבצע באמת: לשנות את הקובץ עצמו, לבנות, לדחוף, ולבדוק באתר החי שהשינוי שם לפני שכותבים שבוצע.';
+      (kinds ? '"), והסשן לא הריץ שום פעולת ' + kinds.join(' או ') + '. לבצע באמת (לשלוח, לקבוע, להפיק) ולכתוב שבוצע רק אחרי שהפקודה הצליחה, או לכתוב בפירוש שזה לא יצא ולמה.'
+        : '"), ושום קובץ לא השתנה. לבצע באמת: לשנות את הקובץ עצמו, לבנות, לדחוף, ולבדוק באתר החי שהשינוי שם לפני שכותבים שבוצע.');
     fs.writeFileSync(f, JSON.stringify(d, null, 1), 'utf8');
     say('טענה ריקה, נפתח מחדש: ' + msg.file);
   });
