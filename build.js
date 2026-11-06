@@ -16312,7 +16312,7 @@ function vidTabs(){
  return [
   {id:'ads',l:'📣 קמפיין',h:'הממומן, וסרטוני המוניטור לסטורי',L:TOM_ITEMS.map(function(it){return it.h?{h:it.h}:{k:'tom',it:it};})},
   {id:'sh',l:'🌅 שחר',h:'הרילים, הסטורי והפוסטים של שחר',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isSh(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isSh(x.it);}))},
-  {id:'st',l:'📲 סטטוס',h:'הסרטון של היום לסטטוס וואטסאפ, 3 נגיעות',L:[{k:'go',t:'📲 פתיחת הסטטוס של היום',u:'status/index.html'}]},
+  {id:'st',l:'📲 סטטוס',h:'כל הסטטוסים המוכנים לוואטסאפ, מהיום והלאה. 3 נגיעות לכל אחד',L:[{k:'go',t:'📲 פתיחת כל הסטטוסים המוכנים',u:'status/index.html'}]},
   {id:'pl',l:'🍽️ מה בצלחת',h:'הסטוריז לפי הסדר, אפשר לסדר ולמחוק',L:[{k:'go',t:'🍽️ פתיחת הסטוריז של מה בצלחת',u:'plate/plate.html'},{h:'💡 רעיונות'}].concat(F.filter(function(x){return plateN[x.it.n];}))},
   {id:'nr',l:'🕯️ נרות',h:'candle.times: סטוריז ופוסטים שמחכים לאישור שלך',L:[{k:'go',t:'🕯️ פתיחת candle.times',u:'ner/candle.html'},{h:'💡 רעיונות'}].concat(F.filter(function(x){return candleN[x.it.n];}))},
   {id:'me',l:'🎬 שלי',h:'הרילים והסטוריז שלי, ורעיונות לבאים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return !isSh(x.it)&&!isIt(x.it);}),[{h:'💡 רעיונות לרילים הבאים'}],F.filter(function(x){return !isSh(x.it)&&!plateN[x.it.n]&&!candleN[x.it.n];}))}

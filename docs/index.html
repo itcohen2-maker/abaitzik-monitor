@@ -2402,7 +2402,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-06T04:59:47.535Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-06T05:00:32.404Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4287,7 +4287,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='83b02719d8';
+var CODE_ID='e54f48e490';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12061,7 +12061,7 @@ function vidTabs(){
  return [
   {id:'ads',l:'📣 קמפיין',h:'הממומן, וסרטוני המוניטור לסטורי',L:TOM_ITEMS.map(function(it){return it.h?{h:it.h}:{k:'tom',it:it};})},
   {id:'sh',l:'🌅 שחר',h:'הרילים, הסטורי והפוסטים של שחר',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isSh(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isSh(x.it);}))},
-  {id:'st',l:'📲 סטטוס',h:'הסרטון של היום לסטטוס וואטסאפ, 3 נגיעות',L:[{k:'go',t:'📲 פתיחת הסטטוס של היום',u:'status/index.html'}]},
+  {id:'st',l:'📲 סטטוס',h:'כל הסטטוסים המוכנים לוואטסאפ, מהיום והלאה. 3 נגיעות לכל אחד',L:[{k:'go',t:'📲 פתיחת כל הסטטוסים המוכנים',u:'status/index.html'}]},
   {id:'pl',l:'🍽️ מה בצלחת',h:'הסטוריז לפי הסדר, אפשר לסדר ולמחוק',L:[{k:'go',t:'🍽️ פתיחת הסטוריז של מה בצלחת',u:'plate/plate.html'},{h:'💡 רעיונות'}].concat(F.filter(function(x){return plateN[x.it.n];}))},
   {id:'nr',l:'🕯️ נרות',h:'candle.times: סטוריז ופוסטים שמחכים לאישור שלך',L:[{k:'go',t:'🕯️ פתיחת candle.times',u:'ner/candle.html'},{h:'💡 רעיונות'}].concat(F.filter(function(x){return candleN[x.it.n];}))},
   {id:'me',l:'🎬 שלי',h:'הרילים והסטוריז שלי, ורעיונות לבאים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return !isSh(x.it)&&!isIt(x.it);}),[{h:'💡 רעיונות לרילים הבאים'}],F.filter(function(x){return !isSh(x.it)&&!plateN[x.it.n]&&!candleN[x.it.n];}))}
