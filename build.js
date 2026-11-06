@@ -16370,17 +16370,18 @@ function vqLoad(cb){
 function vqDay(){try{return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jerusalem'}).format(new Date());}catch(e){return new Date().toISOString().slice(0,10);}}
 function vqDate(d){var p=String(d||'').split('-');return p.length===3?(+p[2])+'.'+(+p[1]):'';}
 function vqDayName(d){var p=String(d||'').split('-');if(p.length!==3)return '';var n=new Date(Date.UTC(+p[0],+p[1]-1,+p[2])).getUTCDay();return ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'][n];}
-function vqCut(s,n){s=String(s||'').split(String.fromCharCode(10))[0];return s.length>n?s.slice(0,n)+'…':s;}
 function vqRows(id){
  var Q=(VQ&&VQ[id])||[],T=vqDay(),out=[];
  if(id==='st'){
-  var up=Q.filter(function(x){return x.date>=T;}).sort(function(a,b){return a.date.localeCompare(b.date);});
+  // 6.11, Itzik: a status he already marked uploaded goes off the list at once, and each row shows only its title.
+  var doneSt={};try{doneSt=JSON.parse(localStorage.getItem('waStatusDone')||'{}')||{};}catch(e){}
+  var up=Q.filter(function(x){return x.date>=T&&!doneSt[x.name];}).sort(function(a,b){return a.date.localeCompare(b.date);});
   var now=up.filter(function(x){return x.date===T;}),next=up.filter(function(x){return x.date>T;});
   out.push({h:now.length?'📲 להעלות היום ('+now.length+')':'📲 אין סטטוס להיום'});
   if(!now.length)out.push({k:'q',t:'אין סטטוס להיום, הבא בתור למטה',u:'status/index.html'});
-  now.forEach(function(x){out.push({k:'q',t:'⭐ היום, '+vqDayName(x.date)+' '+vqDate(x.date)+' · '+(x.topic||'')+' · '+vqCut(x.caption,30),u:'status/index.html',n:x.name});});
+  now.forEach(function(x){out.push({k:'q',t:'⭐ היום, '+vqDayName(x.date)+' '+vqDate(x.date)+' · '+(x.topic||''),u:'status/index.html',n:x.name});});
   if(next.length)out.push({h:'📅 הבאים בתור'});
-  next.forEach(function(x){out.push({k:'q',t:vqDayName(x.date)+' '+vqDate(x.date)+' · '+(x.topic||'')+' · '+vqCut(x.caption,30),u:'status/index.html',n:x.name});});
+  next.forEach(function(x){out.push({k:'q',t:vqDayName(x.date)+' '+vqDate(x.date)+' · '+(x.topic||''),u:'status/index.html',n:x.name});});
  }
  if(id==='nr'){
   var st=function(x){return (x.rejected||x.hold)?'rej':x.approved?'ok':'wait';};
