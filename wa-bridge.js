@@ -518,7 +518,7 @@ const server = http.createServer(function (q, s) {
   const u = new URL(q.url, 'http://x');
   // 1.11: client intake forms on form.it-solution.co.il (forms.js).
   const fm = u.pathname.match(/^\/f\/([a-f0-9]{16,40})(\/view)?\/?$/);
-  if (fm && q.method === 'GET') { if (fm[2]) require('./form-view.js').serve('./forms.js', fm[1], s); else require('./forms.js').servePage(fm[1], s); return; }
+  if (fm && q.method === 'GET') { if (fm[2]) require('./owner-mark.js').setCookie(s); if (fm[2]) require('./form-view.js').serve('./forms.js', fm[1], s); else require('./forms.js').servePage(fm[1], s); return; }
   // 4.11: sign an existing document (docsign.js), /d/<signer token>[/signed|/pN.png] and /api/docsign.
   const dm = u.pathname.match(/^\/d\/([a-f0-9]{16,40})(?:\/(signed|p\d{1,2}\.png))?\/?$/);
   if (dm && q.method === 'GET') { require('./docsign.js').serve(dm[1], dm[2], s); return; }
@@ -566,12 +566,12 @@ const server = http.createServer(function (q, s) {
   }
   // 1.11: client setup page (setup.js), /s/<token> and /api/setup.
   const sm = u.pathname.match(/^\/s\/([a-f0-9]{16,40})(\/view)?\/?$/);
-  if (sm && q.method === 'GET') { if (sm[2]) require('./form-view.js').serve('./setup.js', sm[1], s); else require('./setup.js').servePage(sm[1], s); return; }
+  if (sm && q.method === 'GET') { if (sm[2]) require('./owner-mark.js').setCookie(s); if (sm[2]) require('./form-view.js').serve('./setup.js', sm[1], s); else require('./setup.js').servePage(sm[1], s); return; }
   if (u.pathname === '/api/setup') {
     if (q.method !== 'POST') { s.writeHead(405); return s.end(); }
     readBody(q, 20000).then(function (raw) {
       let b; try { b = JSON.parse(raw.toString('utf8')); } catch (e) { s.writeHead(400); return s.end('{}'); }
-      return Promise.resolve(require('./setup.js').handlePost(b, formNotify)).then(function (r) {
+      return Promise.resolve(require('./setup.js').handlePost(b, formNotify, require('./owner-mark.js').meta(q))).then(function (r) {
         s.writeHead(r.status, { 'Content-Type': 'application/json' }); s.end(JSON.stringify(r.body));
       });
     }).catch(function () { try { s.writeHead(400); s.end('{}'); } catch (e) {} });
@@ -581,7 +581,7 @@ const server = http.createServer(function (q, s) {
     if (q.method !== 'POST') { s.writeHead(405); return s.end(); }
     readBody(q, 20000).then(function (raw) {
       let b; try { b = JSON.parse(raw.toString('utf8')); } catch (e) { s.writeHead(400); return s.end('{}'); }
-      const r = require('./forms.js').handlePost(b, formNotify);
+      const r = require('./forms.js').handlePost(b, formNotify, require('./owner-mark.js').meta(q));
       s.writeHead(r.status, { 'Content-Type': 'application/json' }); s.end(JSON.stringify(r.body));
     }).catch(function () { try { s.writeHead(400); s.end('{}'); } catch (e) {} });
     return;

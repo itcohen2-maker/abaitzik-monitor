@@ -212,13 +212,14 @@ function servePage(tok, res) {
 }
 
 // POST /api/setup {t, open? | id + choice? | id + done? | finish?}. notify(kind, text) goes to the monitor.
-function handlePost(b, notify) {
+function handlePost(b, notify, meta) {
   const tok = safeTok(b && b.t); const d = tok && def(tok);
   if (!d) return { status: 404, body: { error: 'setup' } };
   const s = state(tok); s.steps = s.steps || {};
   const now = new Date().toISOString();
   const K = 'דף הקמה';
   if (b.open) {
+    if (require('./owner-mark.js').onOpen(s, meta, now, () => saveState(tok, s))) return { status: 200, body: { ok: true } };
     // 5.11 (iron rule, analytics): every open counts, not only the first.
     s.opens = (s.opens || 0) + 1; s.lastOpenAt = now;
     if (s.openedAt) saveState(tok, s);

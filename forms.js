@@ -96,12 +96,13 @@ function servePage(tok, res) {
 }
 
 // POST /api/form {t, answers?, submit?, open?}. notify(kind, text) goes to the monitor.
-function handlePost(b, notify) {
+function handlePost(b, notify, meta) {
   const tok = safeTok(b && b.t); const d = tok && def(tok);
   if (!d) return { status: 404, body: { error: 'form' } };
   const s = state(tok);
   const now = new Date().toISOString();
   if (b.open) {
+    if (require('./owner-mark.js').onOpen(s, meta, now, () => saveState(tok, s))) return { status: 200, body: { ok: true } };
     // 5.11 (iron rule, analytics): every open counts, not only the first.
     s.opens = (s.opens || 0) + 1; s.lastOpenAt = now;
     if (s.openedAt) saveState(tok, s);
