@@ -16404,7 +16404,7 @@ function vqRows(id){
   var q=Q.filter(function(x){return !x.posted||day(x.postedAt)===T;}).sort(function(a,b){return (a.order||0)-(b.order||0);});
   var w2=q.filter(function(x){return !x.approved&&!x.posted;}),go2=q.filter(function(x){return x.approved&&!x.posted;}),ok2=q.filter(function(x){return x.posted;});
   if(go2.length)out.push({h:'📤 מאושר, להעלות עכשיו ('+go2.length+')'});
-  go2.forEach(function(x){out.push({k:'q',t:'📤 '+x.name,u:'plate/plate.html',n:x.id});});
+  go2.forEach(function(x){out.push({k:'q',t:'💾 '+x.name+' · לשמירה לטלפון',u:'save.html?f='+encodeURIComponent('plate/'+String(x.file).split('?')[0])+'&n='+encodeURIComponent(x.name)});});
   out.push({h:'⏳ מחכים לאישור שלך ('+w2.length+')'});
   if(!w2.length)out.push({k:'q',t:'✔️ אין כרגע מה לאשר',u:'plate/plate.html'});
   w2.forEach(function(x){out.push({k:'q',t:'⏳ '+x.name,u:'plate/plate.html',n:x.id});});
