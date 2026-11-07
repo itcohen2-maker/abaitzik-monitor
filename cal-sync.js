@@ -60,7 +60,7 @@ async function pull(access, now) {
 // status.json tells the page whether the copy is alive, and where to tap to connect again.
 function status(src, ok, why) {
   const f = path.join(src.dir, 'data', 'cal', 'status.json');
-  const next = { ok, why: why || '', connect: ok ? '' : 'https://form.it-solution.co.il/s/' + src.setup + '#' + src.step };
+  const next = { ok, why: why || '', connect: ok ? '' : 'https://form.it-solution.co.il/oauth/google/start?t=' + src.setup + '&s=' + src.step };
   const old = readJson(f, null);
   if (old && old.ok === next.ok && old.why === next.why) return false;
   if (DRY) return false;
