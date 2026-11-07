@@ -1906,7 +1906,7 @@ button.abtn[disabled]{opacity:.55}
    Something new inside an existing tile = data-upd="<stamp>" on the tile,
    and the updTiles boot gives it this slow pulse until he opens it. */
 @keyframes updbeat{0%,100%{box-shadow:0 0 0 0 rgba(255,214,0,0),var(--shadow)}50%{box-shadow:0 0 0 5px rgba(255,214,0,.55),var(--shadow)}}
-.gt.updblink,.newbtn.updblink{animation:updbeat 2.6s ease-in-out infinite}
+.gt.updblink,.newbtn.updblink,#vidSheet .yb.updblink,#vidSheet [role=tab].updblink{animation:updbeat 2.6s ease-in-out infinite}
 @media(prefers-reduced-motion:reduce){.gt.updblink{animation:none;box-shadow:0 0 0 3px rgba(255,214,0,.55)}}
 .rcsteps{margin:6px 0 14px;padding-inline-start:22px;line-height:1.7}
 .rcsteps li{margin-bottom:8px}
@@ -4556,7 +4556,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   -->
   <button type="button" class="gt gWin" data-grp="net" id="gWin" data-upd="20261106-win03" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <!-- 5.11, Itzik: "את כל הסרטונים נעביר לאריח אחד, ובתוכו טאבים". One tile with a tab per kind; the old tiles (reels, future reels, campaign, plate, status, candle.times) were removed; their sheets stay in the code. -->
-  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1"><b>🎬 הסרטונים</b><small>רילים, רילים עתידיים, סטטוס, נרות, מה בצלחת, שחר וקמפיין</small></button>
+  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1" data-upd="20261107-it01"><b>🎬 הסרטונים</b><small>רילים, רילים עתידיים, סטטוס, נרות, מה בצלחת, שחר וקמפיין</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
@@ -14676,7 +14676,7 @@ on('gStory',storySheet);
   later, so they do not get lost in the chat. Same numbered sheet as the reels.
 */
 var FUT_ITEMS=[
-{n:'it01',t:'IT Solution, כל העסק במקום אחד: קמפיינים, הנהלת חשבונות, בנק, חתימה דיגיטלית, אימון למכירה ויומן. התסריט המלא בפנים',he:'ריל IT Solution: כל העסק במקום אחד\\nבערך 75 שניות, אתה מדבר למצלמה במקום אחד. בנוי על המבנה של הסרטון של נעם (כאב, פתרון, מה קורה בפועל, מה הצעד הבא), עם מילים ודוגמאות שלנו.\\n\\nפתיחה, 0 עד 8 שניות. על המסך: שבע אפליקציות. עסק אחד.\\nאתה בעל עסק, ובסוף היום יש לך שבע אפליקציות פתוחות. אחת להצעות מחיר, אחת לחשבוניות, אחת לבנק, אחת ליומן, ועוד שלוש שאתה כבר לא זוכר למה פתחת. ובסוף אתה מנהל את העסק מתוך בלגן.\\n\\nהמהפך, 8 עד 18 שניות. על המסך: מסך אחד.\\nאז בנינו מוניטור. מסך אחד בטלפון, וכל העסק שלך יושב בתוכו. לא תוכנה שצריך ללמוד, לא קורס. פותחים, ורואים.\\n\\nשיווק, 18 עד 32 שניות. על המסך: קמפיינים, תמונה וסרטון.\\nנתחיל מהלקוחות. אתה אומר לו מה אתה מוכר, והוא בונה לך קמפיין. לא רק תמונה. גם סרטון, ושילוב של שניהם. והוא מכין את זה כך שיעצור את מי שגולל בפיד. אתה רק מאשר בלחיצה אחת.\\n\\nכסף, 32 עד 48 שניות. על המסך: הנהלת חשבונות ובנק.\\nאחר כך הכסף. אתה מחבר את הנהלת החשבונות, ואתה מחבר את הבנק. ופתאום אתה רואה מי חייב לך, מה נכנס, מה יצא, ומה תקוע. בלי לחכות לסוף חודש ובלי להתקשר לרואה החשבון כדי לשאול איפה אנחנו עומדים.\\n\\nסגירה, 48 עד 62 שניות. על המסך: חתימה דיגיטלית.\\nהלקוח מוכן לסגור? שולחים לו הצעה, והוא חותם על הטלפון, ממש במקום. בלי להדפיס, בלי לסרוק, בלי לרדוף אחרי חתימה שלושה ימים.\\n\\nצמיחה, 62 עד 72 שניות. על המסך: אימון למכירה ויומן.\\nואם אתה מרגיש שהמכירות לא זזות, יש אימון למכירה. אתה מתרגל שיחה, ומקבל ציון ותיקון. וכל פגישה שנסגרה נכנסת ישר ליומן, בלי שתכתוב אותה פעמיים.\\n\\nסיום, 72 עד 80 שניות. על המסך: IT Solution, וכתבו לי מוניטור.\\nזה לא עוד כלי. זה העסק שלך, מסודר, במקום אחד. כתוב לי בתגובות או בהודעה את המילה מוניטור, ואני אראה לך אותו עובד על העסק שלך.\\n\\nכיתוב לפוסט: כל העסק במקום אחד: קמפיינים עם תמונה וסרטון, הנהלת חשבונות, בנק, חתימה דיגיטלית, אימון למכירה ויומן. כתבו לי מוניטור ואראה לכם.\\n\\nלצילום ולעריכה:\\nכתוביות באמצע המסך, מילה מודגשת בצהוב בכל משפט.\\nבכל נושא (קמפיין, בנק, חתימה, יומן) לצרף 2 עד 3 שניות הקלטת מסך אמיתית מהמוניטור.\\nבלי לוגו של אף אחד אחר. הלוגו של IT Solution רק בסוף.\\nלבדוק לפני צילום שאימון למכירה וחיבור הבנק כבר עובדים במוניטור, כדי לא להבטיח מה שעוד לא קיים.'},
+{n:'it01',nw:'20261107',t:'IT Solution, כל העסק במקום אחד: קמפיינים, הנהלת חשבונות, בנק, חתימה דיגיטלית, אימון למכירה ויומן. התסריט המלא בפנים',he:'ריל IT Solution: כל העסק במקום אחד\\nבערך 75 שניות, אתה מדבר למצלמה במקום אחד. בנוי על המבנה של הסרטון של נעם (כאב, פתרון, מה קורה בפועל, מה הצעד הבא), עם מילים ודוגמאות שלנו.\\n\\nפתיחה, 0 עד 8 שניות. על המסך: שבע אפליקציות. עסק אחד.\\nאתה בעל עסק, ובסוף היום יש לך שבע אפליקציות פתוחות. אחת להצעות מחיר, אחת לחשבוניות, אחת לבנק, אחת ליומן, ועוד שלוש שאתה כבר לא זוכר למה פתחת. ובסוף אתה מנהל את העסק מתוך בלגן.\\n\\nהמהפך, 8 עד 18 שניות. על המסך: מסך אחד.\\nאז בנינו מוניטור. מסך אחד בטלפון, וכל העסק שלך יושב בתוכו. לא תוכנה שצריך ללמוד, לא קורס. פותחים, ורואים.\\n\\nשיווק, 18 עד 32 שניות. על המסך: קמפיינים, תמונה וסרטון.\\nנתחיל מהלקוחות. אתה אומר לו מה אתה מוכר, והוא בונה לך קמפיין. לא רק תמונה. גם סרטון, ושילוב של שניהם. והוא מכין את זה כך שיעצור את מי שגולל בפיד. אתה רק מאשר בלחיצה אחת.\\n\\nכסף, 32 עד 48 שניות. על המסך: הנהלת חשבונות ובנק.\\nאחר כך הכסף. אתה מחבר את הנהלת החשבונות, ואתה מחבר את הבנק. ופתאום אתה רואה מי חייב לך, מה נכנס, מה יצא, ומה תקוע. בלי לחכות לסוף חודש ובלי להתקשר לרואה החשבון כדי לשאול איפה אנחנו עומדים.\\n\\nסגירה, 48 עד 62 שניות. על המסך: חתימה דיגיטלית.\\nהלקוח מוכן לסגור? שולחים לו הצעה, והוא חותם על הטלפון, ממש במקום. בלי להדפיס, בלי לסרוק, בלי לרדוף אחרי חתימה שלושה ימים.\\n\\nצמיחה, 62 עד 72 שניות. על המסך: אימון למכירה ויומן.\\nואם אתה מרגיש שהמכירות לא זזות, יש אימון למכירה. אתה מתרגל שיחה, ומקבל ציון ותיקון. וכל פגישה שנסגרה נכנסת ישר ליומן, בלי שתכתוב אותה פעמיים.\\n\\nסיום, 72 עד 80 שניות. על המסך: IT Solution, וכתבו לי מוניטור.\\nזה לא עוד כלי. זה העסק שלך, מסודר, במקום אחד. כתוב לי בתגובות או בהודעה את המילה מוניטור, ואני אראה לך אותו עובד על העסק שלך.\\n\\nכיתוב לפוסט: כל העסק במקום אחד: קמפיינים עם תמונה וסרטון, הנהלת חשבונות, בנק, חתימה דיגיטלית, אימון למכירה ויומן. כתבו לי מוניטור ואראה לכם.\\n\\nלצילום ולעריכה:\\nכתוביות באמצע המסך, מילה מודגשת בצהוב בכל משפט.\\nבכל נושא (קמפיין, בנק, חתימה, יומן) לצרף 2 עד 3 שניות הקלטת מסך אמיתית מהמוניטור.\\nבלי לוגו של אף אחד אחר. הלוגו של IT Solution רק בסוף.\\nלבדוק לפני צילום שאימון למכירה וחיבור הבנק כבר עובדים במוניטור, כדי לא להבטיח מה שעוד לא קיים.'},
 {n:'sh34',t:'שחר, מה עושים כשאין כוח לקום: ריל אורגני של 30 שניות, התסריט המלא בפנים',he:'ריל שחר: מה עושים כשאין כוח לקום\\nאורגני בלבד, בערך 30 שניות, אתה מדבר למצלמה (כ 20 שניות), ואז מסך של שחר.\\nמצלמים בטלפון, לאורך, ליד חלון באור יום. בלי עריכה מתוחכמת. פרסום מוצע: רביעי.\\n\\nעל המסך בהתחלה, בכתב גדול:\\n"מה עושים כשאין כוח לקום"\\n\\nמה אומרים:\\n\\nיש בוקר אחד אחרי הניתוח שאני לא שוכח.\\nהתעוררתי, ולא היה לי כוח לקום.\\nלא מהמיטה. מהראש.\\n\\nזה היה כמו טלפון על אחוז אחד.\\nהוא עדיין עובד, אבל כל תנועה עולה לו ביוקר.\\n\\nמה שהוציא אותי מזה לא היה יעד גדול.\\nהיה דבר קטן אחד.\\nלשבת. כוס מים. עד הדלת.\\n\\nאז בניתי את שחר.\\nכל בוקר הוא כותב לך:\\n"בוקר טוב, מה הדבר הקטן שתעשה היום?"\\n\\nשחר הוא בינה מלאכותית, לא מטפל.\\nאבל הוא שם, גם כשקשה.\\n\\nבקיצור, כשאין כוח לקום, לא מתחילים מהכל.\\nמתחילים מדבר אחד קטן.\\n\\nשחר פתוח, בחינם בתקופת ההשקה. נכנסים דרך האתר, abaitzik.com.\\n\\nאחרי הצילום: שולחים לי את הסרטון. אני מוסיף כתוביות, מסך של שחר עם ההודעה "בוקר טוב, מה הדבר הקטן שתעשה היום?" ואת הסיום עם הכתובת abaitzik.com.'},
 {n:'22',t:'שחר, הסיפור שלי: אתה מדבר למצלמה, עד 30 שניות. התסריט המלא בפנים',he:'מודעה לשחר: הסיפור שלי. עד 30 שניות, אורגני בלבד.\\nמצלמים לבד בטלפון, לאורך, ליד חלון באור יום. בלי עריכה מתוחכמת.\\n\\nעל המסך בהתחלה, בכתב גדול:\\n"שכבתי במיטה אחרי הניתוח, והבנתי מה הכי חסר"\\n\\nמה אומרים:\\n\\nשכבתי במיטה אחרי הניתוח, והבנתי שמה שהכי חסר זאת הסביבה שתרים אותך.\\n\\nאנשים עזרו לי. מילה טובה, הודעה קטנה. זה עשה לי את היום.\\n\\nאז בניתי את שחר. כל בוקר מילה טובה וצעד אחד קטן. ואם בא לך לדבר, הוא מקשיב.\\n\\nשחר הוא בינה מלאכותית, לא מטפל. וכשקשה באמת, הוא מפנה לעזרה אמיתית.\\n\\nשחר פתוח עכשיו, בחינם בתקופת ההשקה. נכנסים דרך האתר, abaitzik.com.\\n\\nאחרי הצילום: שולחים לי את הסרטון, ואני מוסיף כתוביות, מסך של שחר ואת הסיום עם הכתובת.'},
 {n:'21',t:'איך נכנסים לאתר: 10 שניות האתר בטלפון ואז 5 שניות כפתור, לשים עליו מדבקת קישור · 4K הכי איכותי, לשמירה בגלריה',r:'fut21-site-entry-4k.mp4'},
@@ -16555,7 +16555,7 @@ function vqRows(id){
 }
 function vidTabs(){
  var isSh=function(it){return /^שחר/.test(String(it.n))||/^sh[0-9]/.test(String(it.n))||/^שחר/.test(String(it.t));};
- var isIt=function(it){return /^IT /.test(String(it.n));};
+ var isIt=function(it){return /^IT /.test(String(it.n))||/^it[0-9]/.test(String(it.n));};
  var plateN={'17':1},candleN={'13':1,'14':1,'15':1,'19':1};
  var R=REEL_ITEMS.map(function(it){return {k:'reel',it:it};});
  var F=FUT_ITEMS.map(function(it){return {k:'fut',it:it};});
@@ -16570,9 +16570,11 @@ function vidTabs(){
   {id:'sh',l:'🌅 שחר',h:'הרילים, הסטורי והפוסטים של שחר',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isSh(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isSh(x.it);}))},
   {id:'pl',l:'🍽️ מה בצלחת'+(plN?' ('+plN+')':''),h:'הסטוריז לפי הסדר, אפשר לסדר ולמחוק',L:vqRows('pl').concat([{h:'📂 הדף המלא'},{k:'go',t:'🍽️ פתיחת הסטוריז של מה בצלחת',u:'plate/plate.html'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return plateN[x.it.n];}))},
   {id:'nr',l:'🕯️ נרות'+(nrN?' ('+nrN+')':''),h:'candle.times: סטוריז ופוסטים שמחכים לאישור שלך',L:vqRows('nr').concat([{h:'📂 הדף המלא'},{k:'go',t:'🕯️ פתיחת candle.times',u:'ner/candle.html'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return candleN[x.it.n];}))},
+  // 7.11, Itzik: a tab for IT Solution reels (ready ones first, then the ideas). upd = the soft blink until the tab is opened.
+  {id:'it',l:'💻 IT Solution',upd:'20261107-it01',h:'הרילים של IT Solution: המוניטור, הקמפיינים והעסקים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isIt(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isIt(x.it);}))},
   // 7.11, Itzik: the reels and the future reels too, each in its own tab of the one tile.
   {id:'me',l:'🎬 הרילים שלי',h:'הרילים והסטוריז שלי, מוכנים לרשתות',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return !isSh(x.it)&&!isIt(x.it);}))},
-  {id:'fut',l:'💡 רילים עתידיים',h:'רעיונות, רפרנסים ותסריטים לרילים הבאים',L:[{h:'💡 רעיונות לרילים הבאים'}].concat(F.filter(function(x){return !isSh(x.it)&&!plateN[x.it.n]&&!candleN[x.it.n];}))}
+  {id:'fut',l:'💡 רילים עתידיים',h:'רעיונות, רפרנסים ותסריטים לרילים הבאים',L:[{h:'💡 רעיונות לרילים הבאים'}].concat(F.filter(function(x){return !isSh(x.it)&&!isIt(x.it)&&!plateN[x.it.n]&&!candleN[x.it.n];}))}
  ].map(function(t){
   // a heading with nothing under it is dropped, and a file that is not in the monitor is not shown
   var L=t.L.filter(function(x){return !(x.it&&x.it.r&&x.k!=='fut'&&!fileEntry(x.it.r));});
@@ -16580,6 +16582,11 @@ function vidTabs(){
   return t;
  });
 }
+/* 7.11, Itzik: "שיש ריל או משהו חדש הלחצן והריל צריכים להבהב בצורה נעימה". A new tab or item pulses softly (updbeat)
+   until it is opened once; the stamp is kept in localStorage. */
+function vidSeen(k){try{return localStorage.getItem('vidSeen:'+k)||'';}catch(e){return '';}}
+function vidMark(k,v){try{localStorage.setItem('vidSeen:'+k,v);}catch(e){}}
+function vidTabNew(t){return !!(t.upd&&vidSeen('tab:'+t.id)!==t.upd);}
 function vidSheet(tab){
  if(!(VQ&&Date.now()-VQT<60000))return vqLoad(function(){vidSheet(tab);});
  window.VID_BACK=0;
@@ -16598,14 +16605,15 @@ function vidSheet(tab){
   +vqStockHtml()
   +'<div role="tablist" style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px">'
   +T.map(function(t){var on=t.id===cur.id;
-    return '<button type="button" role="tab" aria-selected="'+on+'" data-tab="'+t.id+'" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;font:inherit;font-weight:800;font-size:14px;border:2px solid '+(on?'#1d6fe0':'#c9d3e3')+';background:'+(on?'#1d6fe0':'#eef2f8')+';color:'+(on?'#fff':'#1a2233')+'">'+t.l+'</button>';}).join('')
+    return '<button type="button" role="tab"'+(vidTabNew(t)?' class="updblink"':'')+' aria-selected="'+on+'" data-tab="'+t.id+'" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;font:inherit;font-weight:800;font-size:14px;border:2px solid '+(on?'#1d6fe0':'#c9d3e3')+';background:'+(on?'#1d6fe0':'#eef2f8')+';color:'+(on?'#fff':'#1a2233')+'">'+t.l+'</button>';}).join('')
   +'</div>'
   +'<small style="color:#3a4458">'+esc(cur.h)+'</small>'
   +(rows.length?'':'<small>אין כרגע סרטונים כאן</small>')
   +cur.L.map(function(x,i){
     if(x.h)return '<small style="display:block;margin:14px 0 6px;font-weight:800;font-size:15px;color:#1a2233">'+esc(x.h)+'</small>';
     var lab=(x.k==='go'||x.k==='q')?x.t:(x.it.n+' · '+x.it.t);
-    return '<button type="button" '+ybAttr(rows,rows.indexOf(x))+' data-k="'+i+'">'+esc(lab)+'</button>';
+    var yb=ybAttr(rows,rows.indexOf(x));if(x.it&&x.it.nw&&vidSeen('it:'+x.it.n)!==x.it.nw)yb=yb.replace('class="yb','class="updblink yb');
+    return '<button type="button" '+yb+' data-k="'+i+'">'+esc(lab)+'</button>';
    }).join('')
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
   +'</div>';
@@ -16620,6 +16628,7 @@ function vidSheet(tab){
   close();
   var x=cur.L[+k];if(k===''||!x)return;
   var it=x.it;
+  if(it&&it.nw)vidMark('it:'+it.n,it.nw);
   if(x.k==='go')return vidGo(x.u);
   if(x.k==='q')return vidGo(x.u,x.n);
   if(x.k==='fut'){window.VID_BACK=1;return futText(it);}
@@ -16629,6 +16638,7 @@ function vidSheet(tab){
  };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
+ if(cur.upd)vidMark('tab:'+cur.id,cur.upd);
 }
 on('gVideos',function(){vidSheet();});
 
