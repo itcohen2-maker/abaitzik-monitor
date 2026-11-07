@@ -2784,9 +2784,15 @@ body:not(.inner) #thumbSet{display:block}
 #blkTiles.grid{gap:8px}
 #blkTiles>.gt{height:94px;min-height:94px;max-height:94px;padding:10px 12px}
 #blkTiles>.gt b{-webkit-line-clamp:1;font-size:15.5px}
-#blkIcons.row{gap:8px 6px;padding-bottom:8px}
-#blkIcons .ic .c{width:50px;height:50px}
-#blkIcons .ic svg{width:25px;height:25px}
+#blkIcons.row{grid-template-columns:repeat(5,1fr);gap:8px 4px;padding-bottom:8px}
+#blkIcons .ic{font-size:11px;gap:4px}
+#blkIcons .ic .c{width:46px;height:46px}
+#blkIcons .ic svg{width:23px;height:23px}
+#blkIcons .ic .c:after{top:5px;left:10px;right:10px;height:12px}
+/* The monitors live in the icons (אלון, שי, תקלות); their two tiles are gone. */
+#gHealth,#gTenants{display:none!important}
+.c-hl{background:linear-gradient(160deg,#66bb6a,#2e7d32);font-size:22px}
+.c-hl.bad{background:linear-gradient(160deg,#ef5350,#b71c1c)}
 /* 7.11.2026, Itzik: "את התקציר בראש הדף אני לא רוצה". */
 #homeBrief{display:none!important}
 .gt small{font-size:13px;opacity:.96;font-weight:400;text-shadow:0 1px 3px rgba(0,0,0,.4)}
@@ -4582,6 +4588,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
        health check, and inside, his card with the link and the entry code (sealed data, not in this script). -->
   <a class="ic icNew" data-grp="work" href="#" id="icShai" data-new="1"><span class="c c-shai" id="icShaiC">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M9 20h6M12 16v4"/><path d="M7 11l2.5-2.5 2 2L15 7"/></svg></span>שי</a>
+  <button type="button" class="ic" data-grp="work" id="icHealth"><span class="c c-hl" id="icHealthC">🩺</span>תקלות</button>
   <!-- תיאטרון. Itzik, 12.10 night: "תהפוך את תאטרון לאייקון במקום אריח". Same
        sheet and same id, so the news blink still finds it; the news line goes
        into its title since a round icon has no small text. -->
@@ -16810,6 +16817,7 @@ function paintHealthTile(){
  var bad=H.cards.filter(function(c){return !c.ok;});
  b.classList.toggle('hbad',!!bad.length);
  b.querySelector('b').textContent=(bad.length?'🔴':'🩺')+' תקלות';
+ var ic=document.getElementById('icHealthC');if(ic){ic.classList.toggle('bad',!!bad.length);ic.textContent=bad.length?'🔴':'🩺';}
  b.querySelector('small').textContent=bad.length?bad.map(function(c){return c.title+': '+(c.problems[0]||'');}).join(' · ').slice(0,90):'הכל תקין · נכון ל '+hbTime(H.at);
 }
 function healthSheet(){
@@ -16838,7 +16846,7 @@ function healthSheet(){
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
 }
-on('gHealth',healthSheet);
+on('gHealth',healthSheet);on('icHealth',healthSheet);
 /*
   12.10, "העסק שלי". The records come sealed on open (data/biz.json), the summary
   came with the head. Nothing here writes a file: a new lead, or an update to a
