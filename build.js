@@ -17424,6 +17424,7 @@ function bizSheet(t0){
     /*ITZIK:BEGIN*/+'<div class="bzSec">🏋️ החדר הצדדי, רק אתה רואה</div>'
     +'<a class="yb" href="https://shachar.abaitzik.com/lab" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">🚪 כניסה לחדר הצדדי: כושר, צלחת ומתכונים</a>'/*ITZIK:END*/
     +'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-training-design.html" data-new="1">🧭 תכנון חדר האימון לאישור</button>'+'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-exercise-plan.html" data-new="1">📋 רשימת התרגילים החדשה לאישור</button>'+'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-exercise-demo.html" data-new="1">🏋️ דוגמה: מסך תרגיל עם הדמות שלך</button>'
+    +'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-anim-review.html" data-new="1">🕺 לאישורך: תנועה לפני AI, מנה 1</button>'
     +'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-ai-review.html" data-new="1">🔍 לאישורך: סרטוני AI לשחר</button>'
     +'<button type="button" class="yb" data-bz="anim" data-f="shachar-filming.html" data-new="1">🎬 מה לצלם: 27 צילומים, ציור מדויק לכל שלב</button>'
     +'<p class="bzEmpty">הכניסה עם המייל שלך בשחר. מי שלא מנהל מקבל דף שלא קיים.</p>'
