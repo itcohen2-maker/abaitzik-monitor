@@ -932,6 +932,7 @@ body.editing .bn{display:none}
 .apv-more,.apv-whyt{min-height:44px;padding:0 6px;border:0;background:none;color:var(--on-accent);text-decoration:underline;font:700 14px Heebo,sans-serif;cursor:pointer}
 .apv-why{margin-top:4px;font:400 14px/1.6 Heebo,sans-serif;color:inherit;opacity:.9;text-align:start}
 .apv-why[hidden]{display:none}
+.apv-prev[data-a]{cursor:text}
 .apv-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .apv-btns button{flex:1 1 28%;min-height:46px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px Heebo,sans-serif;cursor:pointer}
 .apv-btns button[disabled]{opacity:.5}
@@ -2532,7 +2533,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-07T13:07:20.891Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-07T13:07:54.500Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2886,14 +2887,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4435,7 +4429,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='bdc4d5f4e9';
+var CODE_ID='bbfa89bbbb';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -16507,12 +16501,12 @@ function apvCard(c){
  }else if(apvPending[c.id]){
   h+='<button type="button" class="apv-undo" data-a="undo">אושר. ביטול</button>';
  }else{
-  if(full)h+='<div class="apv-prev" dir="auto">'+esc(long&&!more?full.slice(0,160)+'…':full)+'</div>';
+  if(full)h+='<div class="apv-prev" dir="auto" data-a="editt" role="button" title="לחיצה לעריכה">'+esc(long&&!more?full.slice(0,160)+'…':full)+'</div>';
   if(long)h+='<button type="button" class="apv-more" data-a="more" aria-expanded="'+(more?'true':'false')+'">'+(more?'הסתר':'הצג הכול')+'</button>';
   if(c.expires){var t=apvHM(c.expires);if(t)h+='<div class="apv-exp">בתוקף עד '+t+'</div>';}
   if(c.why)h+='<button type="button" class="apv-whyt" data-a="why" aria-expanded="'+(why?'true':'false')+'">למה?</button>'
    +'<div class="apv-why"'+(why?'':' hidden')+'>'+esc(c.why)+'</div>';
-  h+='<div class="apv-btns"><button type="button" class="apv-ok" data-a="ok">אשר</button><button type="button" data-a="edit">ערוך</button><button type="button" data-a="later">לא עכשיו</button></div>';
+  h+='<div class="apv-btns"><button type="button" class="apv-ok" data-a="ok">אשר</button><button type="button" data-a="edit">✏️ עריכה</button><button type="button" data-a="later">לא עכשיו</button></div>';
  }
  return h;
 }
@@ -16560,6 +16554,7 @@ function apvBind(card,c){
  });
  on('undo',function(){clearTimeout(apvTimers[c.id]);delete apvPending[c.id];renderApprovals();});
  on('edit',function(){apvEditing[c.id]=true;renderApprovals();});
+ on('editt',function(){apvEditing[c.id]=true;renderApprovals();});
  on('cancel',function(){delete apvEditing[c.id];renderApprovals();});
  on('send',function(){
   var ta=card.querySelector('.apv-ta'),txt=ta?ta.value.trim():'';
@@ -17314,7 +17309,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="BDlgL4lKYXBB2yk96UVlN_bNhLBppiq0K8ORV-TQ2jb7k8IMskeWYICec19xE7N5VEcCzVXZU9Pxb9e64KH8OCk";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
