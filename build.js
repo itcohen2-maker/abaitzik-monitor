@@ -16978,7 +16978,7 @@ function fcPaintMsgs(force){
  fcS.msgs.forEach(function(m){
   var me=m.from==='me';
   h+='<div class="fcb '+(me?'me':'bot')+'"><span class="fcbt">'+esc(m.text)+'</span>';
-  if(!me){var st=fcS.todo[m.id];h+='<button type="button" class="fcdo" data-id="'+esc(m.id)+'"'+(st?' disabled':'')+'>'+(st==='ok'?'✓ נשלח לביצוע':st==='wait'?'שולח...':'להעביר לביצוע')+'</button>';}
+  if(!me&&fcS.mode!=='sales'&&m.kind!=='sales'){var st=fcS.todo[m.id]||(m.todo?'ok':'');h+='<button type="button" class="fcdo" data-id="'+esc(m.id)+'"'+(st?' disabled':'')+'>'+(st==='ok'?'✓ נשלח לביצוע':st==='wait'?'שולח...':'להעביר לביצוע')+'</button>';}
   h+='</div>';
  });
  if(fcS.busy)h+='<div class="fcb bot"><span class="fcbt fcTyping">…כותב</span></div>';
@@ -16992,7 +16992,7 @@ function fcSend(text){
  fcS.msgs=fcS.msgs.concat([{id:'tmp'+Date.now(),from:'me',text:text}]);
  var ta=document.getElementById('fcText');if(ta)ta.value='';
  fcPaintMode();fcPaintMsgs(true);
- fcPost('',{text:text}).then(function(j){fcApply(j);},function(e){
+ fcPost('',{text:text}).then(function(j){fcApply(j);var l=fcS.msgs[fcS.msgs.length-1];if(j&&j.reply&&(!l||l.from!=='bot'))fcS.err=j.reply;},function(e){
   fcS.msgs=fcS.msgs.slice(0,-1);fcS.err=(e&&e.status)?'לא הצלחתי לענות עכשיו, נסה שוב':'אין חיבור כרגע';
   var t=document.getElementById('fcText');if(t&&!t.value)t.value=text;
  }).then(function(){fcS.busy=false;fcPaintMode();fcPaintMsgs(true);fcPaintRow();});

@@ -362,17 +362,43 @@ async function trainTurn(to, t) {
   return true;
 }
 
-// 7.11: chat mode per number (st.chat[number]): text and voice go to the fast chat (lib/fast-chat.js), shared with the page.
-async function chatTurn(to, t) {
+// 7.11: chat mode per number (st.chat[number] = {at}): text and voice go to the fast chat (lib/fast-chat.js), shared with the page.
+// It ends by itself after 30 minutes without a message. Only where the owner feature is on (Itzik's own monitor).
+const CHAT_IDLE_MS = 30 * 60e3;
+function chatLive(to) { const c = (loadState().chat || {})[to]; return !!(c && c.at && Date.now() - c.at < CHAT_IDLE_MS); }
+async function chatReply(to, text) {
+  const sv = loadState();
+  if (sv.voice && sv.voice[to]) { sv.last = sv.last || {}; sv.last[to] = text; saveState(sv); return queueVoice(to, text, true); }
+  return waSend(to, text);
+}
+async function chatTurn(to, t, m) {
   const FCm = require('./lib/fast-chat.js');
-  const st = loadState(); st.chat = st.chat || {};
-  if (FCm.chatOn(t)) { st.chat[to] = true; saveState(st); await waSend(to, "עברנו לשיחה. כל מה שתכתוב יענה מיד. 'מצב בקשות' כדי לחזור."); return true; }
-  if (FCm.chatOff(t)) { delete st.chat[to]; saveState(st); await waSend(to, 'חזרנו לבקשות. כל הודעה נכנסת לתור לביצוע.'); return true; }
-  if (!st.chat[to]) return false;
   let inst = {}; try { inst = require('./lib/instance.js'); } catch (e) {}
+  let on = false; try { on = require('./lib/features.js').read(DATA, inst.name).fastChat === true; } catch (e) {}
+  if (!on) return false;
+  const st = loadState(); st.chat = st.chat || {};
+  if (FCm.chatOn(t)) { st.chat[to] = { at: Date.now() }; saveState(st); await waSend(to, "עברנו לשיחה. כל מה שתכתוב יענה מיד. 'מצב בקשות' כדי לחזור."); return true; }
+  if (FCm.chatOff(t)) { delete st.chat[to]; saveState(st); await waSend(to, 'חזרנו לבקשות. כל הודעה נכנסת לתור לביצוע.'); return true; }
+  if (!chatLive(to)) { if (st.chat[to]) { delete st.chat[to]; saveState(st); } return false; }
+  if (demoOn()) return false;
+  if (m && m.context && m.context.id) return false; // a quoted reply continues that thread, in the normal flow
+  if ((isAllCommand(t) && !/^\s*המשך/.test(t)) || voiceCommand(t)) return false;
+  st.chat[to].at = Date.now(); saveState(st);
+  if (FCm.isTodoCmd(t)) {
+    const r = await FCm.todoLast(DATA, toMonitor);
+    await waSend(to, r.status === 200 ? (r.json.dup ? '✓ כבר נשלח לביצוע' : '✓ נשלח לביצוע') : 'אין עדיין מה להעביר לביצוע.');
+    return true;
+  }
   let biz = ''; try { biz = JSON.parse(fs.readFileSync(path.join(ROOT, 'instance.json'), 'utf8')).business || ''; } catch (e) {}
+  const th0 = FCm.load(DATA);
+  const ending = th0.mode === 'sales' && ST.isEnd(t);
+  if (ending) await waSend(to, '📝 מסכם ונותן ציון, כחצי דקה.');
   const r = await FCm.turn(DATA, t, { via: 'wa', owner: inst.name === 'abaitzik', business: biz || (inst.profile && inst.profile.business) || '' });
-  if (r.reply) await waSend(to, r.reply);
+  if (ending && r.mode === 'chat' && r.reply) {
+    const sc = th0.sales && th0.sales.scenario;
+    writeChat('🎭 אימון מכירות' + (sc ? ': ' + sc : '') + String.fromCharCode(10, 10) + r.reply + (r.kept ? String.fromCharCode(10, 10) + 'השיחה המלאה: files/' + r.kept : ''));
+  }
+  if (r.reply) await chatReply(to, r.reply);
   return true;
 }
 
@@ -405,12 +431,12 @@ async function onMessage(m, contactName) {
   }
   if (m.type === 'audio' && m.audio && m.audio.id) {
     const training = ST.active((loadState().train || {})[m.from]);
-    const inChat = !!((loadState().chat || {})[m.from]);
+    const inChat = chatLive(m.from);
     if (!training && !inChat) await waSend(m.from, '🎙️ קיבלתי את ההקלטה, מתמלל.');
     let heard = '';
     try { heard = await voiceText(m.audio.id); } catch (e) { log('voice failed: ' + e.message); }
     if (!heard) { await waSend(m.from, 'לא הצלחתי לתמלל את ההקלטה. אפשר לשלוח שוב, או לכתוב.'); return; }
-    if (await chatTurn(m.from, heard)) return;
+    if (await chatTurn(m.from, heard, m)) return;
     if (training && await trainTurn(m.from, heard)) return;
     const vid = await toMonitor('וואטסאפ', (demoOn() ? DEMO_FRAME : '') + '🎙️ הודעה קולית מוואטסאפ: ' + heard);
     const sv = loadState(); sv.pending[vid] = { to: m.from, at: Date.now(), name: contactName || '' }; saveState(sv);
@@ -425,7 +451,7 @@ async function onMessage(m, contactName) {
       : 'קיבלתי, אבל את סוג ההודעה הזה אני עוד לא קורא. אפשר לכתוב לי אותה במילים?');
     return;
   }
-  if (await chatTurn(m.from, t)) return;
+  if (await chatTurn(m.from, t, m)) return;
   if (await trainTurn(m.from, t)) return;
   const vc = voiceCommand(t);
   if (vc) {
@@ -586,7 +612,8 @@ async function api(q, s, u) {
     // 7.11: fast consulting chat (lib/fast-chat.js), after the code check above.
     let inst = {}; try { inst = require('./lib/instance.js'); } catch (e) {}
     const bizOf = function (i) { let raw = ''; try { raw = JSON.parse(fs.readFileSync(path.join(ROOT, 'instance.json'), 'utf8')).business || ''; } catch (e) {} return raw || (i.profile && i.profile.business) || ''; };
-    const r = await require('./lib/fast-chat.js').chatApi(u.pathname, b, { dataPath: DATA, toMonitor: toMonitor, owner: inst.name === 'abaitzik', business: bizOf(inst) });
+    let enabled = false; try { enabled = require('./lib/features.js').read(DATA, inst.name).fastChat === true; } catch (e) {}
+    const r = await require('./lib/fast-chat.js').chatApi(u.pathname, b, { dataPath: DATA, toMonitor: toMonitor, owner: inst.name === 'abaitzik', business: bizOf(inst), enabled: enabled });
     s.writeHead(r.status, h); return s.end(JSON.stringify(r.json));
   }
   if (u.pathname === '/api/feed') {
@@ -679,7 +706,15 @@ const server = http.createServer(function (q, s) {
     }).catch(function () { try { s.writeHead(400); s.end('{}'); } catch (e) {} });
     return;
   }
-  if (u.pathname.indexOf('/api/') === 0) { api(q, s, u).catch(function (e) { log('api: ' + e.message); try { s.writeHead(500); s.end('{}'); } catch (x) {} }); return; }
+  if (u.pathname.indexOf('/api/') === 0) { api(q, s, u).catch(function (e) {
+    log('api: ' + e.message);
+    try {
+      const o = q.headers.origin || '';
+      const eh = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', Vary: 'Origin' };
+      if (ORIGINS.indexOf(o) > -1) { eh['Access-Control-Allow-Origin'] = o; eh['Access-Control-Allow-Headers'] = 'Content-Type'; eh['Access-Control-Allow-Methods'] = 'POST, OPTIONS'; }
+      s.writeHead(500, eh); s.end('{}');
+    } catch (x) {}
+  }); return; }
   if (u.pathname !== '/webhook') { s.writeHead(404); return s.end(); }
   if (q.method === 'GET') {
     let c = {}; try { c = cfg(); } catch (e) {}

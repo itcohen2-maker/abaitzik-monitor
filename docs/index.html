@@ -2492,7 +2492,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-07T09:30:01.609Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-07T09:32:51.812Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4385,7 +4385,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='a8054b0ad1';
+var CODE_ID='aa07c2f148';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12639,7 +12639,7 @@ function fcPaintMsgs(force){
  fcS.msgs.forEach(function(m){
   var me=m.from==='me';
   h+='<div class="fcb '+(me?'me':'bot')+'"><span class="fcbt">'+esc(m.text)+'</span>';
-  if(!me){var st=fcS.todo[m.id];h+='<button type="button" class="fcdo" data-id="'+esc(m.id)+'"'+(st?' disabled':'')+'>'+(st==='ok'?'✓ נשלח לביצוע':st==='wait'?'שולח...':'להעביר לביצוע')+'</button>';}
+  if(!me&&fcS.mode!=='sales'&&m.kind!=='sales'){var st=fcS.todo[m.id]||(m.todo?'ok':'');h+='<button type="button" class="fcdo" data-id="'+esc(m.id)+'"'+(st?' disabled':'')+'>'+(st==='ok'?'✓ נשלח לביצוע':st==='wait'?'שולח...':'להעביר לביצוע')+'</button>';}
   h+='</div>';
  });
  if(fcS.busy)h+='<div class="fcb bot"><span class="fcbt fcTyping">…כותב</span></div>';
@@ -12653,7 +12653,7 @@ function fcSend(text){
  fcS.msgs=fcS.msgs.concat([{id:'tmp'+Date.now(),from:'me',text:text}]);
  var ta=document.getElementById('fcText');if(ta)ta.value='';
  fcPaintMode();fcPaintMsgs(true);
- fcPost('',{text:text}).then(function(j){fcApply(j);},function(e){
+ fcPost('',{text:text}).then(function(j){fcApply(j);var l=fcS.msgs[fcS.msgs.length-1];if(j&&j.reply&&(!l||l.from!=='bot'))fcS.err=j.reply;},function(e){
   fcS.msgs=fcS.msgs.slice(0,-1);fcS.err=(e&&e.status)?'לא הצלחתי לענות עכשיו, נסה שוב':'אין חיבור כרגע';
   var t=document.getElementById('fcText');if(t&&!t.value)t.value=text;
  }).then(function(){fcS.busy=false;fcPaintMode();fcPaintMsgs(true);fcPaintRow();});
