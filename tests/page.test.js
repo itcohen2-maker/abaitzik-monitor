@@ -1262,7 +1262,10 @@ test('a lead can carry the screenshot of the request, closed by default', () => 
   }));
   const body = html.slice(html.indexOf('function leadRow(c){'), html.indexOf('function reportRow('));
   assert.ok(body.includes("c.shot?'<details class=\"shot\"><summary>צילום המסך של הפנייה</summary>'"));
-  assert.ok(body.includes("+'<img src=\"'+esc(c.shot)+'\" alt=\"צילום מסך של הפנייה\" loading=\"lazy\"></a></details>'"));
+  // 6.11 (monitor-guard): the shots live sealed, so the viewer button comes first and the img link is the fallback.
+  assert.ok(body.includes("<img src=\"'+esc(c.shot)+'\" alt=\"צילום מסך של הפנייה\" loading=\"lazy\"></a>')"));
+  assert.ok(body.includes("+'</details>':'')"));
+  assert.ok(body.includes('fileOpen(this.dataset.f)'));
   assert.ok(html.includes('.shot img{display:block;width:100%;max-width:300px'));
 });
 

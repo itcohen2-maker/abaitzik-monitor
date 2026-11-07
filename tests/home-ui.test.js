@@ -144,7 +144,8 @@ test('motion: decorative loops stop after three runs, the new-tile and unread bl
   assert.ok(!html.includes('nbeat 1.1s infinite'));
   assert.ok(!html.includes('pjHot 1.6s ease-in-out infinite'));
   assert.ok(html.includes('.gt.taskblink{animation:taskbeat .8s steps(1) infinite}'), 'new tile blink changed');
-  assert.ok(html.includes('.gt.updblink,.newbtn.updblink{animation:updbeat 2.6s ease-in-out infinite}'), 'update blink changed');
+  // 7.11: the selector list grew (the videos tile tabs and rows), the soft infinite blink is the same.
+  assert.ok(/\.gt\.updblink,\.newbtn\.updblink[^{]*\{animation:updbeat 2\.6s ease-in-out infinite\}/.test(html), 'update blink changed');
   assert.ok(html.includes('.newbtn.hot .nb-c{animation:hardblink .5s steps(1) infinite}'), 'unread blink changed');
 });
 

@@ -52,7 +52,7 @@ test('the shared gBiz tile is written once, outside every ITZIK and TENANT block
 });
 
 test('the client sheet is wired outside every /*ITZIK*/ block', () => {
-  const idx = src.indexOf('function bizSheet(){');
+  const idx = src.indexOf('function bizSheet(');
   assert.ok(idx > 0);
   assert.ok(src.includes("on('gBiz',bizSheet);"));
   const before = src.slice(0, idx);

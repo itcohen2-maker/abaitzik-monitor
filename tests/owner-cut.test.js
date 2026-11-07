@@ -93,7 +93,8 @@ test("a customer's built page, script included, has no word of Itzik's", () => {
     screens: ['gCIdeas', 'gPlan', 'gRemind', 'gTasks', 'gNotes'], chromeProfile: 'none', memoryDir: null,
   }));
   execFileSync(process.execPath, ['build.js'], { cwd: dir, env: { ...process.env, ABAITZIK_INSTANCE_FILE: '' }, stdio: 'pipe' });
-  const out = fs.readFileSync(path.join(dir, 'docs', 'index.html'), 'utf8');
+  // 7.11: the fast chat answers from one shared server for every monitor (lib/features.js), so its host is not a leak.
+  const out = fs.readFileSync(path.join(dir, 'docs', 'index.html'), 'utf8').split('wa.abaitzik.com').join('');
   const words = ['פגסוס', 'pegasusgame', 'candletimes', 'סלינדה', 'salinda', 'ועד הבית', 'ריווחית',
     'כדור', 'ניתוח', 'abaitzik.com', 'instagram.com/abaitzik', 'gezer', 'גזר', 'drive.google', 'לולוס',
     'איציק, ', 'נרות'];

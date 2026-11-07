@@ -208,7 +208,6 @@ test('the page: back button, big link, the exact invite text, no dashes in visib
   assert.match(html, /href="\.\.\/index\.html"/);
   assert.match(html, /href="https:\/\/shachar\.abaitzik\.com"[^>]*>לפתוח את שחר</);
   assert.match(html, /מי הצטרף, לפי סדר ההרשמה/);
-  assert.match(html, /הזמנה ידנית, לא חובה/);
   // 3.11, Itzik: "אני לא מאשר יותר ידני". The page says entry is open and automatic, first.
   assert.match(html, /פתוח עכשיו, הכניסה אוטומטית/);
   assert.ok(html.indexOf('פתוח עכשיו, הכניסה אוטומטית') < html.indexOf('מי הצטרף, לפי סדר ההרשמה'));
@@ -220,9 +219,9 @@ test('the page: back button, big link, the exact invite text, no dashes in visib
   assert.match(html, /המכתב נשלח ✓/);
   assert.match(html, /הוזמן ✓/);
   // 1.11, Itzik: the waitlist comes first, oldest signup first, and only invitations on the page.
-  assert.ok(html.indexOf('מי הצטרף, לפי סדר ההרשמה') < html.indexOf('הזמנה ידנית, לא חובה'));
+  // 3.11: the manual invite heading was removed (entry is automatic), so only the waitlist heading is checked.
   assert.ok(!/id="(motion|voice|posts|logos)"/.test(html));
-  assert.ok(html.includes('value="הזמנה לנסות את שחר"'));
+  // 3.11: the manual invite button is gone with the manual form; the invite text itself stays in the textarea below.
   const body = [
     'הי,',
     '',

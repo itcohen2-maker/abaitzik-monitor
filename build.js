@@ -7236,7 +7236,7 @@ function goLinks(m){
   return '<button type="button" class="gotile" data-tile="'+esc(id)+'">קח אותי לשם: '+esc(name)+'</button>';
  }).join('')+bzb+fold;
 }
-var BZ_GO=[['its','IT Solution'],['leads','לידים ולקוחות'],['money','כסף החודש'],['due','צריך לחזור'],['shachar','שחר'],['ner','נרות'],['anim','המשרד']];
+var BZ_GO=[['its','IT Solution'],['leads','לידים ולקוחות'],['money','כסף החודש'],['due','צריך לחזור'],['shachar','שחר'],/*ITZIK:BEGIN*/['ner','נרות'],/*ITZIK:END*/['anim','המשרד']];
 // Opens one drawer of העסק שלי and brings it into view (the drawers are details.dw around h3[data-t]).
 function bzOpenDrawer(k){
  var n=0,iv=setInterval(function(){
@@ -17390,8 +17390,8 @@ function bizSheet(t0){
     +'<button type="button" class="yb" data-bz="shfb">🌅 שחר: משוב מהנסיינים</button>'
     +'<button type="button" class="yb" data-bz="shus">📊 שחר: מי משתמש ומתי</button>'
     // 5.11, Itzik: the side room of Shachar (owner only, behind his login) and exactly what to film for it.
-    +'<div class="bzSec">🏋️ החדר הצדדי, רק אתה רואה</div>'
-    +'<a class="yb" href="https://shachar.abaitzik.com/lab" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">🚪 כניסה לחדר הצדדי: כושר, צלחת ומתכונים</a>'
+    /*ITZIK:BEGIN*/+'<div class="bzSec">🏋️ החדר הצדדי, רק אתה רואה</div>'
+    +'<a class="yb" href="https://shachar.abaitzik.com/lab" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">🚪 כניסה לחדר הצדדי: כושר, צלחת ומתכונים</a>'/*ITZIK:END*/
     +'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-training-design.html" data-new="1">🧭 תכנון חדר האימון לאישור</button>'+'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-exercise-plan.html" data-new="1">📋 רשימת התרגילים החדשה לאישור</button>'+'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-exercise-demo.html" data-new="1">🏋️ דוגמה: מסך תרגיל עם הדמות שלך</button>'
     +'<button type="button" class="yb" data-bz="anim" data-f="shachar-filming.html" data-new="1">🎬 מה לצלם: 27 צילומים, ציור מדויק לכל שלב</button>'
     +'<p class="bzEmpty">הכניסה עם המייל שלך בשחר. מי שלא מנהל מקבל דף שלא קיים.</p>'
