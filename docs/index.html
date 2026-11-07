@@ -1005,6 +1005,7 @@ body.editing .bn{display:none}
 .mg-b{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .mg-t{font:700 15px/1.45 Heebo,sans-serif;overflow-wrap:anywhere}
 .mg-s{font:400 13.5px/1.45 Heebo,sans-serif;color:var(--dim);overflow-wrap:anywhere}
+.mg-go{align-self:flex-start;margin-top:4px;font:700 13px Heebo,sans-serif;color:var(--accent);background:var(--accent-soft);border:0;border-radius:999px;padding:5px 12px;cursor:pointer}
 .mg-st{flex:0 0 auto;font:800 12.5px Heebo,sans-serif;padding:3px 9px;border-radius:999px;align-self:center}
 .mg-st.done{background:rgba(34,197,94,.15);color:var(--green)}
 .mg-st.todo{background:var(--accent-soft);color:var(--accent)}
@@ -2461,7 +2462,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-07T07:59:52.786Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-07T08:01:36.851Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4357,7 +4358,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='813d1583f5';
+var CODE_ID='ddb6ac807a';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -16450,7 +16451,7 @@ function hmMgrHtml(m){
  m.items.forEach(function(i){
   var st=MG_ST[i.st]?i.st:'todo';
   if(st!=='done'&&rxDone(i.t))return;
-  h+='<li'+(i.go&&MG_GO[i.go]?' data-go="'+esc(i.go)+'"':'')+'><span class="mg-i" aria-hidden="true">'+esc(i.icon||'•')+'</span><div class="mg-b"><span class="mg-t" dir="auto">'+esc(i.t||'')+'</span>'+(i.sub?'<span class="mg-s" dir="auto">'+esc(i.sub)+'</span>':'')+(st!=='done'?rxHtml(i.t,i.sub):'')+'</div><span class="mg-st '+st+'">'+MG_ST[st]+'</span></li>';
+  h+='<li'+(i.go&&MG_GO[i.go]?' data-go="'+esc(i.go)+'"':'')+'><span class="mg-i" aria-hidden="true">'+esc(i.icon||'•')+'</span><div class="mg-b"><span class="mg-t" dir="auto">'+esc(i.t||'')+'</span>'+(i.sub?'<span class="mg-s" dir="auto">'+esc(i.sub)+'</span>':'')+(st!=='done'?rxHtml(i.t,i.sub):'')+(i.go&&MG_GO[i.go]?'<button type="button" class="mg-go" data-go="'+esc(i.go)+'">↗ קח אותי לשם</button>':'')+'</div><span class="mg-st '+st+'">'+MG_ST[st]+'</span></li>';
  });
  return h+'</ul>';
 }
