@@ -1274,6 +1274,36 @@ body:not(.inner) #thumbSet{display:block}
 #talkCard .quickwrite{margin-top:0;align-items:stretch}
 #talkCard .quickwrite textarea{min-height:46px;padding:10px 12px;font-size:15.5px}
 #talkCard .quickwrite button{min-height:46px;padding:0 16px}
+.fcrow{display:flex;align-items:center;gap:10px;width:100%;min-height:56px;margin:0 0 10px;padding:8px 12px;box-sizing:border-box;text-align:start;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--r);font-family:Heebo,sans-serif;cursor:pointer}
+.fcrow[hidden]{display:none}
+.fcrow .fci{font-size:24px;line-height:1;flex:0 0 auto}
+.fcrow .fct{display:flex;flex-direction:column;min-width:0;flex:1}
+.fcrow b{font:700 16px Heebo,sans-serif}
+.fcrow small{font:400 13px Heebo,sans-serif;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fcrow:active{background:var(--accent-soft)}
+#fcSheet .ycard{max-width:560px;height:100%;overflow:hidden;font-family:Heebo,sans-serif}
+#fcSheet .ycard>b{font-size:17px}
+#fcSheet .fcMode{font:700 14px Heebo,sans-serif;padding:6px 10px;border-radius:10px;background:var(--accent-soft,#eef3ff);color:#16202c}
+#fcSheet .fcMode[hidden]{display:none}
+#fcSheet .fcTop{display:flex;flex-wrap:wrap;gap:8px}
+#fcSheet .fcm{flex:1 1 auto;min-height:44px;padding:0 12px;border:1px solid #d5dbe3;border-radius:12px;background:#f4f6f9;color:#16202c;font:700 14px Heebo,sans-serif;cursor:pointer}
+#fcSheet .fcm[hidden]{display:none}
+#fcSheet .ycard>.fcMsgs{flex:1 1 0;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:8px;padding:2px 0}
+#fcSheet .fcb{max-width:88%;display:flex;flex-direction:column;gap:4px}
+#fcSheet .fcb.me{align-self:flex-start}
+#fcSheet .fcb.bot{align-self:flex-end}
+#fcSheet .fcbt{white-space:pre-wrap;word-break:break-word;font:400 16px/1.45 Heebo,sans-serif;padding:9px 12px;border-radius:14px}
+#fcSheet .fcb.me .fcbt{background:var(--accent);color:var(--on-accent)}
+#fcSheet .fcb.bot .fcbt{background:#eef1f5;color:#16202c}
+#fcSheet .fcTyping{opacity:.65}
+#fcSheet .fcdo{align-self:flex-end;min-height:44px;padding:0 12px;border:1px solid #d5dbe3;border-radius:12px;background:#fff;color:#16202c;font:700 14px Heebo,sans-serif;cursor:pointer}
+#fcSheet .fcdo:disabled{opacity:.7;cursor:default}
+#fcSheet .fcEmpty{margin:8px 0;font:400 15px/1.5 Heebo,sans-serif;opacity:.7}
+#fcSheet .fcErr{font:700 14px Heebo,sans-serif;color:#b3261e;padding:2px 4px}
+#fcSheet .fcForm{display:flex;gap:8px;align-items:flex-end}
+#fcSheet .fcForm textarea{flex:1;min-width:0;box-sizing:border-box;min-height:46px;max-height:9.5em;resize:none;padding:10px 12px;border:1px solid #d5dbe3;border-radius:12px;background:#f4f6f9;color:#16202c;font:400 16px Heebo,sans-serif}
+#fcSheet .fcForm button{flex:0 0 auto;min-height:46px;padding:0 16px;border:0;border-radius:12px;background:var(--accent);color:var(--on-accent);font:700 15px Heebo,sans-serif;cursor:pointer}
+#fcSheet .fcForm button:disabled{opacity:.5}
 #talkCard .quickwrite textarea{height:46px}
 #talkCard #quickSaid:empty{display:none}
 .mic{width:98px;height:98px;flex:0 0 98px;border-radius:50%;border:0;padding:0;cursor:pointer;position:relative;
@@ -2462,7 +2492,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-07T09:14:21.983Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-07T09:16:01.088Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2564,6 +2594,10 @@ try{
   </form>
   <div class="msgsaid" id="quickSaid"></div>
  </section>
+ <button type="button" class="fcrow" id="fcRow" hidden aria-label="שיחה עם המוניטור">
+  <span class="fci" aria-hidden="true">💬</span>
+  <span class="fct"><b>שיחה עם המוניטור</b><small>שואלים, מתייעצים, מתאמנים</small></span>
+ </button>
  <button type="button" class="reloadbig" id="reloadBtn" aria-label="רענון וחזרה לדף הבית" title="רענון וחזרה לדף הבית">↻<span class="rlw">רענן</span></button>
 
 <section id="pH">
@@ -2809,7 +2843,14 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-
+<div class="alerts" id="pushBox" hidden>
+ <div>
+  <b>התראות לטלפון</b>
+  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
+ </div>
+ <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
+ <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
+</div>
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4351,7 +4392,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='7b99764656';
+var CODE_ID='b846cca7f9';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11074,6 +11115,7 @@ function tidyRemove(w,c){
  },function(){toast('הוסר מהמסך, אבל הבקשה לא נשלחה. לנסות שוב בהמשך.');});
 }
 function sheetTidy(w){
+ if(w.id==='fcSheet')return; // the chat has its own buttons: no removal checkboxes, no note
  var c=w.querySelector('.ycard');if(!c)return;
  var key=tidyKey(w),gone=null;
  var bs=[].slice.call(c.querySelectorAll('.yb')).filter(function(b){
@@ -12575,6 +12617,88 @@ function calSheet(all){
 }
 (function(){var a=document.getElementById('icGcal');if(!a)return;
  a.addEventListener('click',function(e){if(!D.cal)return;e.preventDefault();e.stopPropagation();calSheet(false);},true);})();
+var FC_API='https://wa.abaitzik.com/api/chat';
+var fcS={mode:'chat',msgs:[],busy:false,err:'',todo:{},loaded:false};
+function fcPost(p,body){
+ body.code=sendCode();
+ return fetch(FC_API+p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){if(!r.ok)throw new Error('api '+r.status);return r.json();});
+}
+function fcApply(j){if(j&&j.msgs)fcS.msgs=j.msgs;if(j&&j.mode)fcS.mode=j.mode;}
+function fcPaintRow(){
+ var r=document.getElementById('fcRow');if(!r)return;
+ var s=r.querySelector('small'),m=fcS.msgs[fcS.msgs.length-1];
+ if(s)s.textContent=m?((m.from==='me'?'אתה: ':'')+String(m.text||'').split(String.fromCharCode(10)).join(' ').slice(0,80)):'שואלים, מתייעצים, מתאמנים';
+}
+function fcPaintMode(){
+ var lab=document.getElementById('fcMode'),end=document.getElementById('fcEnd'),snd=document.getElementById('fcSend');
+ if(lab){lab.hidden=fcS.mode==='chat';lab.textContent=fcS.mode==='sales'?'🎯 אימון מכירות פעיל':fcS.mode==='coach'?'🧭 אימון עסקי פעיל':'';}
+ if(end){end.hidden=fcS.mode==='chat';}
+ if(snd)snd.disabled=!!fcS.busy;
+}
+function fcPaintMsgs(force){
+ var box=document.getElementById('fcMsgs');if(!box)return;
+ var near=force||box.scrollHeight-box.scrollTop-box.clientHeight<90,keep=box.scrollTop;
+ var h='';
+ if(!fcS.msgs.length&&!fcS.busy)h+='<p class="fcEmpty">עוד לא כתבנו. שאל אותי כל דבר על העסק, או התחל אימון.</p>';
+ fcS.msgs.forEach(function(m){
+  var me=m.from==='me';
+  h+='<div class="fcb '+(me?'me':'bot')+'"><span class="fcbt">'+esc(m.text)+'</span>';
+  if(!me){var st=fcS.todo[m.id];h+='<button type="button" class="fcdo" data-id="'+esc(m.id)+'"'+(st?' disabled':'')+'>'+(st==='ok'?'✓ נשלח לביצוע':st==='wait'?'שולח...':'להעביר לביצוע')+'</button>';}
+  h+='</div>';
+ });
+ if(fcS.busy)h+='<div class="fcb bot"><span class="fcbt fcTyping">…כותב</span></div>';
+ if(fcS.err)h+='<div class="fcErr">'+esc(fcS.err)+'</div>';
+ box.innerHTML=h;
+ box.scrollTop=near?box.scrollHeight:keep;
+}
+function fcSend(text){
+ text=String(text||'').trim();if(!text||fcS.busy)return;
+ fcS.busy=true;fcS.err='';
+ fcS.msgs=fcS.msgs.concat([{id:'tmp'+Date.now(),from:'me',text:text}]);
+ var ta=document.getElementById('fcText');if(ta)ta.value='';
+ fcPaintMode();fcPaintMsgs(true);
+ fcPost('',{text:text}).then(function(j){fcApply(j);},function(){
+  fcS.msgs=fcS.msgs.slice(0,-1);fcS.err='אין חיבור כרגע';
+  var t=document.getElementById('fcText');if(t&&!t.value)t.value=text;
+ }).then(function(){fcS.busy=false;fcPaintMode();fcPaintMsgs(true);fcPaintRow();});
+}
+function fcTodo(id){
+ if(!id||fcS.todo[id])return;
+ fcS.todo[id]='wait';fcS.err='';fcPaintMsgs();
+ fcPost('/todo',{id:id}).then(function(){fcS.todo[id]='ok';},function(){delete fcS.todo[id];fcS.err='לא נשלח לביצוע, לנסות שוב';}).then(function(){fcPaintMsgs();});
+}
+function fcSheet(){
+ var old=document.getElementById('fcSheet');if(old)old.remove();
+ var h='<div class="ycard"><b>💬 שיחה עם המוניטור</b>'
+  +'<div class="fcMode" id="fcMode" hidden></div>'
+  +'<div class="fcTop"><button type="button" class="fcm" data-k="fcs">🎯 אימון מכירות</button><button type="button" class="fcm" data-k="fcc">🧭 אימון עסקי</button><button type="button" class="fcm" id="fcEnd" data-k="fce" hidden>✖ סיום אימון</button></div>'
+  +'<div class="fcMsgs" id="fcMsgs"></div>'
+  +'<form class="fcForm" id="fcForm"><textarea id="fcText" rows="2" maxlength="2000" autocomplete="off" placeholder="כתוב לי מה מעסיק אותך"></textarea><button type="submit" id="fcSend">שליחה</button></form>'
+  +'<button type="button" class="yb yx" data-k="">סגירה</button></div>';
+ var w=document.createElement('div');w.id='fcSheet';w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','שיחה עם המוניטור');
+ w.innerHTML=h;
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  var t=e.target,k=t.getAttribute&&t.getAttribute('data-k');
+  if(t===w||k==='')close();
+  else if(k==='fcs')fcSend('אימון מכירות');
+  else if(k==='fcc')fcSend('אימון עסקי');
+  else if(k==='fce')fcSend(fcS.mode==='sales'?'עצור אימון':'סיום אימון');
+  else if(t.classList&&t.classList.contains('fcdo'))fcTodo(t.getAttribute('data-id'));
+ };
+ w.querySelector('#fcForm').onsubmit=function(e){e.preventDefault();var ta=document.getElementById('fcText');fcSend(ta?ta.value:'');};
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+ fcPaintMode();fcPaintMsgs(true);
+ fcPost('/thread',{}).then(function(j){if(fcS.busy)return;fcApply(j);fcPaintMode();fcPaintMsgs(true);fcPaintRow();},function(){});
+}
+function fcBoot(){
+ var r=document.getElementById('fcRow');if(!r||r.hidden||fcS.loaded)return;
+ fcS.loaded=true;
+ r.onclick=fcSheet;
+ fcPost('/thread',{}).then(function(j){if(fcS.busy)return;fcApply(j);fcPaintRow();},function(){});
+}
 var BZ_ORDER=['חדש','בשיחה','הצעה','נסגר','אבד'];
 var BZ_KIND={lead:'ליד',customer:'לקוח',income:'הכנסה',expense:'הוצאה'};
 function bzMoney(n){return '₪'+Number(n||0).toLocaleString('he-IL');}
@@ -15817,6 +15941,8 @@ function applyFeatures(){
   try{if(typeof tileStore==='function')mine=tileStore('tilesHidden',[]);}catch(e){}
   if(t)t.hidden=(F[p[1]]!==true)||mine.indexOf(p[0])>=0;
  });
+ var fr=document.getElementById('fcRow');
+ if(fr){fr.hidden=F.fastChat!==true;if(!fr.hidden&&typeof fcBoot==='function')fcBoot();}
 }
 
 
@@ -16995,7 +17121,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="";
+var PUSH_KEY="BDlgL4lKYXBB2yk96UVlN_bNhLBppiq0K8ORV-TQ2jb7k8IMskeWYICec19xE7N5VEcCzVXZU9Pxb9e64KH8OCk";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
