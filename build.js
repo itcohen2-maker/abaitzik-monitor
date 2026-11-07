@@ -2719,10 +2719,11 @@ section#talkCard.talk{border:2px solid var(--accent);box-shadow:0 8px 24px color
 #talkCard .vtxt b{font-size:19px}
 #talkCard .way{border:2px solid color-mix(in srgb,var(--accent) 55%,var(--line));background:var(--accent-soft)}
 #talkCard .way b{font-size:16px}
-button#fcRow.fcrow{margin:0 0 10px;padding:6px 12px;gap:0;min-height:40px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:none}
-#fcRow .fcbub,#fcRow .fcin,#fcRow .fct em{display:none}
-#fcRow .fci{font-size:18px}
-#fcRow .fct b{font-size:14px;font-weight:600;color:var(--dim)}
+button#fcRow.fcrow{margin:0 0 12px;padding:14px;gap:10px;min-height:110px;background:var(--accent-soft);border:2px solid #06b6d4;border-radius:16px;box-shadow:0 6px 18px rgba(6,182,212,.25)}
+#fcRow .fci{font-size:34px}
+#fcRow .fct b{font-size:20px;font-weight:800;color:var(--ink)}
+#fcRow .fct em{font-size:15px;color:var(--ink);opacity:.85}
+#fcRow .fcin{padding:12px 16px;font-size:16px;border:2px solid #06b6d4}
 /* 7.11.2026, Itzik: "להקטין בכלל את כל הכפתורים, שייכנס קצת יותר". Second step of the day: everything on the home screen a notch smaller. */
 #blkTiles.grid{gap:6px}
 #blkTiles>.gt{height:78px;min-height:78px;max-height:78px;padding:8px 10px}
@@ -2737,7 +2738,7 @@ button#fcRow.fcrow{margin:0 0 10px;padding:6px 12px;gap:0;min-height:40px;backgr
 #talkCard .tkHead b,#talkCard .vtxt b{font-size:17px}
 #talkCard .way{min-height:40px;padding:4px 8px}
 #talkCard .way b{font-size:14.5px}
-#talkCard .quickwrite textarea{min-height:42px;height:42px}
+#talkCard .quickwrite textarea{min-height:70px;height:70px}
 #talkCard .quickwrite button{min-height:42px}
 section#talkCard.talk{padding:8px 10px;gap:6px 10px;margin-bottom:8px}
 .hm-greet{font-size:19px;margin:2px 2px 8px}
@@ -2767,7 +2768,7 @@ section#talkCard.talk{padding:8px 10px;gap:6px 10px;margin-bottom:8px}
 #fcSheet .fcForm textarea{flex:1;min-width:0;box-sizing:border-box;min-height:46px;max-height:9.5em;resize:none;padding:10px 12px;border:1px solid #d5dbe3;border-radius:12px;background:#f4f6f9;color:#16202c;font:400 16px Heebo,sans-serif}
 #fcSheet .fcForm button{flex:0 0 auto;min-height:46px;padding:0 16px;border:0;border-radius:12px;background:var(--accent);color:var(--on-accent);font:700 15px Heebo,sans-serif;cursor:pointer}
 #fcSheet .fcForm button:disabled{opacity:.5}
-#talkCard .quickwrite textarea{height:46px}
+#talkCard .quickwrite textarea{height:70px}
 #talkCard #quickSaid:empty{display:none}
 .mic{width:98px;height:98px;flex:0 0 98px;border-radius:50%;border:0;padding:0;cursor:pointer;position:relative;
  display:grid;place-items:center;background:conic-gradient(from 0deg,var(--blue),var(--red),var(--yellow),var(--green),var(--blue));
@@ -4356,7 +4357,7 @@ try{
 </header>
 ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').bar : ''}
  <section class="talk" id="talkCard" aria-label="פנייה אליי">
-  ${true ? '<div class="tkHead"><b>📋 בקשות לביצוע</b><small>מבקשים, והמוניטור עושה</small></div>' : ''}
+  ${true ? '<div class="tkHead"><b>📋 בקשות מהמוניטור</b></div>' : ''}
   <!-- 13.10, idea from the reviewer he took: on the first visit nobody knows
        what this card is for. One line says it, until "הבנתי" or the first send. -->
   <div class="firsthint" id="firstHint" hidden>
@@ -4389,14 +4390,14 @@ ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').bar : ''}
     This sends the same way the chat does and lands in the same thread.
   -->
   <form class="quickwrite" id="quickForm">
-   <textarea id="quickText" rows="2" autocomplete="off"
+   <textarea id="quickText" rows="3" autocomplete="off"
     placeholder="${inst.name === 'abaitzik' ? 'יצחק' : inst.owner}, ${inst.gender === 'f' ? 'כתבי לי מה את צריכה' : 'כתוב לי מה אתה צריך'}"></textarea>
    <button type="submit" id="quickBtn">שליחה</button>
   </form>
   <div class="msgsaid" id="quickSaid"></div>
  </section>
  ${true ? `<button type="button" class="fcrow" id="fcRow" hidden aria-label="שיחה עם המוניטור">
-  <span class="fch"><span class="fci" aria-hidden="true">💬</span><span class="fct"><b>שיחה עם המוניטור</b><em>מדברים ומתייעצים, תשובה תוך שניות. כאן לא מבצעים.</em></span></span>
+  <span class="fch"><span class="fci" aria-hidden="true">💬</span><span class="fct"><b>דבר עם AI</b><em>לוחצים כאן ומתחילים שיחה שלמה: שואלים, מתייעצים ומתאמנים, והתשובה מגיעה תוך שניות.</em></span></span>
   <span class="fcbub"><small>שואלים, מתייעצים, מתאמנים</small></span>
   <span class="fcin" aria-hidden="true">${inst.gender === 'f' ? 'כתבי' : 'כתוב'} שאלה למוניטור...<i>➤</i></span>
  </button>` : ''}
