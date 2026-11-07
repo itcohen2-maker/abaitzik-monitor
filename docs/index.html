@@ -1382,6 +1382,8 @@ body:not(.inner) #thumbSet{display:block}
 #calSheet .ycard{max-height:86vh;overflow:auto}
 .cald{margin:14px 0 4px;font:700 16px Heebo,sans-serif;color:var(--ink)}
 .cald.today{color:var(--accent)}
+#calSheet .cald{opacity:1!important;color:#111827!important;background:#eef2f7;border-radius:10px;padding:6px 10px;margin:12px 0 2px}
+#calSheet .cald.today{color:#0f766e!important}
 .cale{padding:8px 0;border-top:1px solid var(--line)}
 .cale b{display:block;font:600 16px Heebo,sans-serif;overflow-wrap:anywhere}
 .cale b i{font-style:normal;font-weight:700;color:var(--accent);margin-inline-end:8px}
@@ -2459,7 +2461,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-07T07:10:02.299Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-07T07:11:25.716Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4348,7 +4350,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='9ea11895c5';
+var CODE_ID='e4c776ab77';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');

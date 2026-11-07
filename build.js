@@ -2803,6 +2803,8 @@ body:not(.inner) #thumbSet{display:block}
 #calSheet .ycard{max-height:86vh;overflow:auto}
 .cald{margin:14px 0 4px;font:700 16px Heebo,sans-serif;color:var(--ink)}
 .cald.today{color:var(--accent)}
+#calSheet .cald{opacity:1!important;color:#111827!important;background:#eef2f7;border-radius:10px;padding:6px 10px;margin:12px 0 2px}
+#calSheet .cald.today{color:#0f766e!important}
 .cale{padding:8px 0;border-top:1px solid var(--line)}
 .cale b{display:block;font:600 16px Heebo,sans-serif;overflow-wrap:anywhere}
 .cale b i{font-style:normal;font-weight:700;color:var(--accent);margin-inline-end:8px}
