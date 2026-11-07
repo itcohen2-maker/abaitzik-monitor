@@ -2723,6 +2723,25 @@ button#fcRow.fcrow{margin:0 0 10px;padding:6px 12px;gap:0;min-height:40px;backgr
 #fcRow .fcbub,#fcRow .fcin,#fcRow .fct em{display:none}
 #fcRow .fci{font-size:18px}
 #fcRow .fct b{font-size:14px;font-weight:600;color:var(--dim)}
+/* 7.11.2026, Itzik: "להקטין בכלל את כל הכפתורים, שייכנס קצת יותר". Second step of the day: everything on the home screen a notch smaller. */
+#blkTiles.grid{gap:6px}
+#blkTiles>.gt{height:78px;min-height:78px;max-height:78px;padding:8px 10px}
+#blkTiles>.gt b{font-size:14.5px}
+#blkTiles>.gt small{font-size:12.5px;-webkit-line-clamp:1}
+#blkIcons.row{grid-template-columns:repeat(6,1fr);gap:6px 2px;padding-bottom:6px}
+#blkIcons .ic{font-size:10.5px;gap:3px}
+#blkIcons .ic .c{width:40px;height:40px}
+#blkIcons .ic svg{width:20px;height:20px}
+#blkIcons .ic .c:after{top:4px;left:9px;right:9px;height:10px}
+#talkCard .mic{width:56px;height:56px;flex:0 0 56px}
+#talkCard .tkHead b,#talkCard .vtxt b{font-size:17px}
+#talkCard .way{min-height:40px;padding:4px 8px}
+#talkCard .way b{font-size:14.5px}
+#talkCard .quickwrite textarea{min-height:42px;height:42px}
+#talkCard .quickwrite button{min-height:42px}
+section#talkCard.talk{padding:8px 10px;gap:6px 10px;margin-bottom:8px}
+.hm-greet{font-size:19px;margin:2px 2px 8px}
+.apv-bar{min-height:40px}
 #fcSheet .ycard{max-width:560px;height:100%;overflow:hidden;font-family:Heebo,sans-serif}
 #fcSheet .ycard>b{font-size:17px}
 #fcSheet .fcMode{font:700 14px Heebo,sans-serif;padding:6px 10px;border-radius:10px;background:var(--accent-soft,#eef3ff);color:#16202c}
