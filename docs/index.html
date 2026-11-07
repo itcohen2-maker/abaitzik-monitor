@@ -1375,6 +1375,15 @@ body:not(.inner) #thumbSet{display:block}
 #blkIcons .ic svg{width:23px;height:23px}
 #blkIcons .ic .c:after{top:5px;left:10px;right:10px;height:12px}
 #gHealth,#gTenants{display:none!important}
+#calSheet .ycard{max-height:86vh;overflow:auto}
+.cald{margin:14px 0 4px;font:700 16px Heebo,sans-serif;color:var(--ink)}
+.cald.today{color:var(--accent)}
+.cale{padding:8px 0;border-top:1px solid var(--line)}
+.cale b{display:block;font:600 16px Heebo,sans-serif;overflow-wrap:anywhere}
+.cale b i{font-style:normal;font-weight:700;color:var(--accent);margin-inline-end:8px}
+.cale small{display:block;font-size:13.5px;color:var(--dim);overflow-wrap:anywhere;margin-top:2px}
+.cale.past{opacity:.5}
+.cale a{color:var(--accent)}
 .c-hl{background:linear-gradient(160deg,#66bb6a,#2e7d32);font-size:22px}
 .c-hl.bad{background:linear-gradient(160deg,#ef5350,#b71c1c)}
 #homeBrief{display:none!important}
@@ -2446,7 +2455,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-07T06:51:13.913Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-07T06:57:44.819Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4335,7 +4344,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='d2c7ea6c96';
+var CODE_ID='7015fe92d5';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12522,6 +12531,43 @@ function healthSheet(){
  document.body.appendChild(w);
 }
 on('gHealth',healthSheet);on('icHealth',healthSheet);
+function calSheet(all){
+ var old=document.getElementById('calSheet');if(old)old.remove();
+ var C=D.cal||{events:[]},now=Date.now(),tz='Asia/Jerusalem';
+ var dk=function(d){return d.toLocaleDateString('en-CA',{timeZone:tz});};
+ var today=dk(new Date(now)),tmr=dk(new Date(now+86400000));
+ var h='<div class="ycard"><b>📅 היומן</b>';
+ if(!C.ok)h+='<p>החיבור ליומן של גוגל נותק, ולכן מה שכאן לא מתעדכן.</p>'+(C.connect?'<a class="yb" href="'+esc(C.connect)+'" target="_blank" rel="noopener">🔗 לחבר את היומן מחדש</a>':'');
+ var ev=C.events.slice().sort(function(a,b){return Date.parse(a.start)-Date.parse(b.start);});
+ var days=[],by={};
+ ev.forEach(function(e){var k=e.allDay?e.start:dk(new Date(e.start));if(k<today)return;if(!by[k]){by[k]=[];days.push(k);}by[k].push(e);});
+ var shown=all?days:days.slice(0,10);
+ if(!days.length)h+='<p>אין אירועים ביומן בחודשיים הקרובים.</p>';
+ shown.forEach(function(k){
+  var d=new Date(k+'T12:00:00');
+  var name=k===today?'היום':k===tmr?'מחר':d.toLocaleDateString('he-IL',{weekday:'long'});
+  h+='<div class="cald'+(k===today?' today':'')+'">'+name+', '+d.toLocaleDateString('he-IL',{day:'numeric',month:'numeric'})+'</div>';
+  by[k].forEach(function(e){
+   var t=e.allDay?'כל היום':new Date(e.start).toLocaleTimeString('he-IL',{timeZone:tz,hour:'2-digit',minute:'2-digit'});
+   var past=!e.allDay&&Date.parse(e.end||e.start)<now;
+   var sub=[];if(e.where)sub.push('📍 '+esc(e.where));if(e.who&&e.who.length)sub.push('👥 '+esc(e.who.join(', ')));
+   h+='<div class="cale'+(past?' past':'')+'"><b><i>'+t+'</i>'+esc(e.title)+'</b>'+(sub.length?'<small>'+sub.join(' · ')+'</small>':'')+(e.meet?'<small><a href="'+esc(e.meet)+'" target="_blank" rel="noopener">🎥 כניסה לפגישה</a></small>':'')+'</div>';
+  });
+ });
+ if(!all&&days.length>shown.length)h+='<button type="button" class="yb" data-k="all">עוד '+(days.length-shown.length)+' ימים</button>';
+ h+='<small>'+(C.at?'השינוי האחרון ביומן הגיע ב '+esc(hbDay(C.at))+'. ':'')+'נבדק כל 10 דקות.</small>';
+ h+='<a class="yb" href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener">פתיחה ביומן של גוגל</a>';
+ h+='<button type="button" class="yb yx" data-k="">סגירה</button></div>';
+ var w=document.createElement('div');w.id='calSheet';w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','היומן');
+ w.innerHTML=h;
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-k');if(e.target===w||k==='')close();else if(k==='all'){close();calSheet(true);}};
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+(function(){var a=document.getElementById('icGcal');if(!a)return;
+ a.addEventListener('click',function(e){if(!D.cal)return;e.preventDefault();e.stopPropagation();calSheet(false);},true);})();
 var BZ_ORDER=['חדש','בשיחה','הצעה','נסגר','אבד'];
 var BZ_KIND={lead:'ליד',customer:'לקוח',income:'הכנסה',expense:'הוצאה'};
 function bzMoney(n){return '₪'+Number(n||0).toLocaleString('he-IL');}

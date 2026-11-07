@@ -826,6 +826,15 @@ function build() {
     reminders,
     tasks,
     tenants,
+    // 7.11.2026, Itzik: "כל דבר שנמצא ביומן של הלקוח יהיה בתוך המוניטור". The copy cal-sync.js keeps.
+    cal: (() => {
+      const r = (f) => { try { return JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'cal', f), 'utf8')); } catch (e) { return null; } };
+      const e = r('events.json'), st = r('status.json');
+      if (!e && !st) return null;
+      const from = Date.now() - 86400000;
+      return { at: (e && e.at) || '', ok: !st || !!st.ok, connect: (st && !st.ok && st.connect) || '',
+        events: e ? e.events.filter((x) => Date.parse(x.end || x.start) >= from) : [] };
+    })(),
     // 12.10: the 🩺 board, every monitor's faults in one file (health-board.js). His copy only.
     health: inst.name === 'abaitzik' ? (() => { try { return JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'status', 'health-board.json'), 'utf8')); } catch (e) { return null; } })() : null,
     ideas,
@@ -2791,6 +2800,15 @@ body:not(.inner) #thumbSet{display:block}
 #blkIcons .ic .c:after{top:5px;left:10px;right:10px;height:12px}
 /* The monitors live in the icons (אלון, שי, תקלות); their two tiles are gone. */
 #gHealth,#gTenants{display:none!important}
+#calSheet .ycard{max-height:86vh;overflow:auto}
+.cald{margin:14px 0 4px;font:700 16px Heebo,sans-serif;color:var(--ink)}
+.cald.today{color:var(--accent)}
+.cale{padding:8px 0;border-top:1px solid var(--line)}
+.cale b{display:block;font:600 16px Heebo,sans-serif;overflow-wrap:anywhere}
+.cale b i{font-style:normal;font-weight:700;color:var(--accent);margin-inline-end:8px}
+.cale small{display:block;font-size:13.5px;color:var(--dim);overflow-wrap:anywhere;margin-top:2px}
+.cale.past{opacity:.5}
+.cale a{color:var(--accent)}
 .c-hl{background:linear-gradient(160deg,#66bb6a,#2e7d32);font-size:22px}
 .c-hl.bad{background:linear-gradient(160deg,#ef5350,#b71c1c)}
 /* 7.11.2026, Itzik: "את התקציר בראש הדף אני לא רוצה". */
@@ -16847,6 +16865,47 @@ function healthSheet(){
  document.body.appendChild(w);
 }
 on('gHealth',healthSheet);on('icHealth',healthSheet);
+/*
+  7.11.2026: the 📅 יומן icon opens the copy of the Google calendar inside the monitor
+  (cal-sync.js every 10 minutes). Without a copy it keeps opening Google as before.
+*/
+function calSheet(all){
+ var old=document.getElementById('calSheet');if(old)old.remove();
+ var C=D.cal||{events:[]},now=Date.now(),tz='Asia/Jerusalem';
+ var dk=function(d){return d.toLocaleDateString('en-CA',{timeZone:tz});};
+ var today=dk(new Date(now)),tmr=dk(new Date(now+86400000));
+ var h='<div class="ycard"><b>📅 היומן</b>';
+ if(!C.ok)h+='<p>החיבור ליומן של גוגל נותק, ולכן מה שכאן לא מתעדכן.</p>'+(C.connect?'<a class="yb" href="'+esc(C.connect)+'" target="_blank" rel="noopener">🔗 לחבר את היומן מחדש</a>':'');
+ var ev=C.events.slice().sort(function(a,b){return Date.parse(a.start)-Date.parse(b.start);});
+ var days=[],by={};
+ ev.forEach(function(e){var k=e.allDay?e.start:dk(new Date(e.start));if(k<today)return;if(!by[k]){by[k]=[];days.push(k);}by[k].push(e);});
+ var shown=all?days:days.slice(0,10);
+ if(!days.length)h+='<p>אין אירועים ביומן בחודשיים הקרובים.</p>';
+ shown.forEach(function(k){
+  var d=new Date(k+'T12:00:00');
+  var name=k===today?'היום':k===tmr?'מחר':d.toLocaleDateString('he-IL',{weekday:'long'});
+  h+='<div class="cald'+(k===today?' today':'')+'">'+name+', '+d.toLocaleDateString('he-IL',{day:'numeric',month:'numeric'})+'</div>';
+  by[k].forEach(function(e){
+   var t=e.allDay?'כל היום':new Date(e.start).toLocaleTimeString('he-IL',{timeZone:tz,hour:'2-digit',minute:'2-digit'});
+   var past=!e.allDay&&Date.parse(e.end||e.start)<now;
+   var sub=[];if(e.where)sub.push('📍 '+esc(e.where));if(e.who&&e.who.length)sub.push('👥 '+esc(e.who.join(', ')));
+   h+='<div class="cale'+(past?' past':'')+'"><b><i>'+t+'</i>'+esc(e.title)+'</b>'+(sub.length?'<small>'+sub.join(' · ')+'</small>':'')+(e.meet?'<small><a href="'+esc(e.meet)+'" target="_blank" rel="noopener">🎥 כניסה לפגישה</a></small>':'')+'</div>';
+  });
+ });
+ if(!all&&days.length>shown.length)h+='<button type="button" class="yb" data-k="all">עוד '+(days.length-shown.length)+' ימים</button>';
+ h+='<small>'+(C.at?'השינוי האחרון ביומן הגיע ב '+esc(hbDay(C.at))+'. ':'')+'נבדק כל 10 דקות.</small>';
+ h+='<a class="yb" href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener">פתיחה ביומן של גוגל</a>';
+ h+='<button type="button" class="yb yx" data-k="">סגירה</button></div>';
+ var w=document.createElement('div');w.id='calSheet';w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','היומן');
+ w.innerHTML=h;
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-k');if(e.target===w||k==='')close();else if(k==='all'){close();calSheet(true);}};
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+(function(){var a=document.getElementById('icGcal');if(!a)return;
+ a.addEventListener('click',function(e){if(!D.cal)return;e.preventDefault();e.stopPropagation();calSheet(false);},true);})();
 /*
   12.10, "העסק שלי". The records come sealed on open (data/biz.json), the summary
   came with the head. Nothing here writes a file: a new lead, or an update to a
