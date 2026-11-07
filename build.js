@@ -2770,6 +2770,10 @@ section#talkCard.talk{padding:8px 10px;gap:6px 10px;margin-bottom:8px}
 #fcSheet .fcForm button:disabled{opacity:.5}
 #talkCard .quickwrite textarea{height:70px}
 #talkCard #quickSaid:empty{display:none}
+/* 7.11.2026, Itzik: a soft gold (mustard) shadow under every mockup. */
+:root{--goldsh:0 4px 14px rgba(201,162,39,.38)}
+#blkTiles>.gt,button#fcRow.fcrow,#newBtn.newbtn,section#talkCard.talk,.apv-bar,button#reloadBtn.reloadbig{box-shadow:var(--goldsh)}
+#blkIcons .ic .c{box-shadow:0 3px 9px rgba(201,162,39,.38)}
 .mic{width:98px;height:98px;flex:0 0 98px;border-radius:50%;border:0;padding:0;cursor:pointer;position:relative;
  display:grid;place-items:center;background:conic-gradient(from 0deg,var(--blue),var(--red),var(--yellow),var(--green),var(--blue));
  box-shadow:0 12px 28px rgba(66,133,244,.35)}
