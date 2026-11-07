@@ -2711,6 +2711,18 @@ body:not(.inner) #thumbSet{display:block}
 .fcrow b{font:700 16px Heebo,sans-serif}
 .fcrow .fcbub small{font-size:14px}
 .fcrow:active{background:var(--accent-soft)}
+/* 7.11.2026, Itzik: the request card (talk, upload, camera) must stand out more than the chat row under it,
+   and the chat row shrinks to one thin line. The ids win over everything above. */
+section#talkCard.talk{border:2px solid var(--accent);box-shadow:0 8px 24px color-mix(in srgb,var(--accent) 32%,transparent)}
+#talkCard .tkHead b{font-size:19px;color:var(--accent)}
+#talkCard .mic{width:68px;height:68px;flex:0 0 68px;box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 28%,transparent)}
+#talkCard .vtxt b{font-size:19px}
+#talkCard .way{border:2px solid color-mix(in srgb,var(--accent) 55%,var(--line));background:var(--accent-soft)}
+#talkCard .way b{font-size:16px}
+button#fcRow.fcrow{margin:0 0 10px;padding:6px 12px;gap:0;min-height:40px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:none}
+#fcRow .fcbub,#fcRow .fcin,#fcRow .fct em{display:none}
+#fcRow .fci{font-size:18px}
+#fcRow .fct b{font-size:14px;font-weight:600;color:var(--dim)}
 #fcSheet .ycard{max-width:560px;height:100%;overflow:hidden;font-family:Heebo,sans-serif}
 #fcSheet .ycard>b{font-size:17px}
 #fcSheet .fcMode{font:700 14px Heebo,sans-serif;padding:6px 10px;border-radius:10px;background:var(--accent-soft,#eef3ff);color:#16202c}
