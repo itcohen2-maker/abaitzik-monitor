@@ -2728,6 +2728,8 @@ body:not(.inner) #thumbSet{display:block}
 #fcSheet .fcTyping{opacity:.65}
 #fcSheet .fcdo{align-self:flex-end;min-height:44px;padding:0 12px;border:1px solid #d5dbe3;border-radius:12px;background:#fff;color:#16202c;font:700 14px Heebo,sans-serif;cursor:pointer}
 #fcSheet .fcdo:disabled{opacity:.7;cursor:default}
+#fcSheet a.fcConn{align-self:flex-end;display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border-radius:12px;background:#0891b2;color:#fff;font:700 14px Heebo,sans-serif;text-decoration:none}
+#fcSheet .fcPaid{align-self:flex-end;font:700 13px Heebo,sans-serif;color:#b45309}
 #fcSheet .fcEmpty{margin:8px 0;font:400 15px/1.5 Heebo,sans-serif;opacity:.7}
 #fcSheet .fcErr{font:700 14px Heebo,sans-serif;color:#b3261e;padding:2px 4px}
 #fcSheet .fcForm{display:flex;gap:8px;align-items:flex-end}
@@ -17037,6 +17039,7 @@ function fcPaintMsgs(force){
  fcS.msgs.forEach(function(m){
   var me=m.from==='me';
   h+='<div class="fcb '+(me?'me':'bot')+'"><span class="fcbt">'+esc(m.text)+'</span>';
+  if(!me&&m.conn&&m.conn.link)h+=(m.conn.paid?'<small class="fcPaid">'+esc(m.conn.paid)+'</small>':'')+'<a class="fcConn" href="'+esc(m.conn.link)+'" target="_blank" rel="noopener">🔌 לחבר: '+esc(m.conn.title)+'</a>';
   if(!me&&fcS.mode!=='sales'&&m.kind!=='sales'){var st=fcS.todo[m.id]||(m.todo?'ok':'');h+='<button type="button" class="fcdo" data-id="'+esc(m.id)+'"'+(st?' disabled':'')+'>'+(st==='ok'?'✓ נשלח לביצוע':st==='wait'?'שולח...':'להעביר לביצוע')+'</button>';}
   h+='</div>';
  });

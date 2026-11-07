@@ -393,7 +393,7 @@ async function chatTurn(to, t, m) {
   const th0 = FCm.load(DATA);
   const ending = th0.mode === 'sales' && ST.isEnd(t);
   if (ending) await waSend(to, '📝 מסכם ונותן ציון, כחצי דקה.');
-  const r = await FCm.turn(DATA, t, { via: 'wa', owner: inst.name === 'abaitzik', business: biz || (inst.profile && inst.profile.business) || '' });
+  const r = await FCm.turn(DATA, t, { via: 'wa', context: () => chatContext(null), owner: inst.name === 'abaitzik', business: biz || (inst.profile && inst.profile.business) || '' });
   if (ending && r.mode === 'chat' && r.reply) {
     const sc = th0.sales && th0.sales.scenario;
     writeChat('🎭 אימון מכירות' + (sc ? ': ' + sc : '') + String.fromCharCode(10, 10) + r.reply + (r.kept ? String.fromCharCode(10, 10) + 'השיחה המלאה: files/' + r.kept : ''));
@@ -588,6 +588,14 @@ function codeOk(c) { const o = ownerCode(); return !!o && String(c || '') === o;
   page) and here in data/fastchat/tenants.json { name: { key, dir, business } }. Its thread lives here under
   data/fastchat/t/<name>; "להעביר לביצוע" lands in its own request queue (an ACL lets this user write there).
 */
+// 7.11: what the chat knows (lib/chat-context.js). A customer: his setup page from sources.json, his data if readable.
+function chatContext(tn) {
+  const F = require('./lib/features.js');
+  if (!tn) { let n = ''; try { n = require('./lib/instance.js').name; } catch (e) {} return require('./lib/chat-context.js').build({ dataPath: DATA, instName: n, features: F.read(DATA, n) }); }
+  let src = null; try { src = JSON.parse(fs.readFileSync(path.join(DATA, 'cal', 'sources.json'), 'utf8')).find((x) => x.name === tn.name) || null; } catch (e) {}
+  return require('./lib/chat-context.js').build({ dataPath: path.join(tn.dir, 'data'), instName: tn.name, features: F.read(path.join(tn.dir, 'data'), tn.name),
+    tok: src && src.setup, setupDir: path.join(DATA, 'setup') });
+}
 function tenantByKey(c) {
   c = String(c || ''); if (c.length < 24) return null;
   let all = {}; try { all = JSON.parse(fs.readFileSync(path.join(DATA, 'fastchat', 'tenants.json'), 'utf8')) || {}; } catch (e) { return null; }
@@ -623,7 +631,7 @@ async function api(q, s, u) {
     const tn = tenantByKey(b.code);
     if (!tn) { s.writeHead(403, h); return s.end('{"error":"code"}'); }
     const r = await require('./lib/fast-chat.js').chatApi(u.pathname, b, { dataPath: path.join(DATA, 'fastchat', 't', tn.name),
-      toMonitor: tenantToMonitor(tn), owner: false, business: tn.business || '', enabled: true });
+      toMonitor: tenantToMonitor(tn), owner: false, business: tn.business || '', enabled: true, context: () => chatContext(tn) });
     s.writeHead(r.status, h); return s.end(JSON.stringify(r.json));
   }
   if (!codeOk(b.code)) { s.writeHead(403, h); return s.end('{"error":"code"}'); }
@@ -648,7 +656,7 @@ async function api(q, s, u) {
     let inst = {}; try { inst = require('./lib/instance.js'); } catch (e) {}
     const bizOf = function (i) { let raw = ''; try { raw = JSON.parse(fs.readFileSync(path.join(ROOT, 'instance.json'), 'utf8')).business || ''; } catch (e) {} return raw || (i.profile && i.profile.business) || ''; };
     let enabled = false; try { enabled = require('./lib/features.js').read(DATA, inst.name).fastChat === true; } catch (e) {}
-    const r = await require('./lib/fast-chat.js').chatApi(u.pathname, b, { dataPath: DATA, toMonitor: toMonitor, owner: inst.name === 'abaitzik', business: bizOf(inst), enabled: enabled });
+    const r = await require('./lib/fast-chat.js').chatApi(u.pathname, b, { dataPath: DATA, toMonitor: toMonitor, owner: inst.name === 'abaitzik', business: bizOf(inst), enabled: enabled, context: () => chatContext(null) });
     s.writeHead(r.status, h); return s.end(JSON.stringify(r.json));
   }
   if (u.pathname === '/api/feed') {

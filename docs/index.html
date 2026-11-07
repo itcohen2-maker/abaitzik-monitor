@@ -1307,6 +1307,8 @@ body:not(.inner) #thumbSet{display:block}
 #fcSheet .fcTyping{opacity:.65}
 #fcSheet .fcdo{align-self:flex-end;min-height:44px;padding:0 12px;border:1px solid #d5dbe3;border-radius:12px;background:#fff;color:#16202c;font:700 14px Heebo,sans-serif;cursor:pointer}
 #fcSheet .fcdo:disabled{opacity:.7;cursor:default}
+#fcSheet a.fcConn{align-self:flex-end;display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border-radius:12px;background:#0891b2;color:#fff;font:700 14px Heebo,sans-serif;text-decoration:none}
+#fcSheet .fcPaid{align-self:flex-end;font:700 13px Heebo,sans-serif;color:#b45309}
 #fcSheet .fcEmpty{margin:8px 0;font:400 15px/1.5 Heebo,sans-serif;opacity:.7}
 #fcSheet .fcErr{font:700 14px Heebo,sans-serif;color:#b3261e;padding:2px 4px}
 #fcSheet .fcForm{display:flex;gap:8px;align-items:flex-end}
@@ -2513,7 +2515,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-07T11:27:46.058Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-07T11:54:13.425Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4409,7 +4411,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='ea8641f91d';
+var CODE_ID='5e0cc27e5d';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12684,6 +12686,7 @@ function fcPaintMsgs(force){
  fcS.msgs.forEach(function(m){
   var me=m.from==='me';
   h+='<div class="fcb '+(me?'me':'bot')+'"><span class="fcbt">'+esc(m.text)+'</span>';
+  if(!me&&m.conn&&m.conn.link)h+=(m.conn.paid?'<small class="fcPaid">'+esc(m.conn.paid)+'</small>':'')+'<a class="fcConn" href="'+esc(m.conn.link)+'" target="_blank" rel="noopener">🔌 לחבר: '+esc(m.conn.title)+'</a>';
   if(!me&&fcS.mode!=='sales'&&m.kind!=='sales'){var st=fcS.todo[m.id]||(m.todo?'ok':'');h+='<button type="button" class="fcdo" data-id="'+esc(m.id)+'"'+(st?' disabled':'')+'>'+(st==='ok'?'✓ נשלח לביצוע':st==='wait'?'שולח...':'להעביר לביצוע')+'</button>';}
   h+='</div>';
  });
