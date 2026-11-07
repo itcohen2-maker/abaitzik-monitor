@@ -2787,6 +2787,8 @@ body:not(.inner) #thumbSet{display:block}
 #blkIcons.row{gap:8px 6px;padding-bottom:8px}
 #blkIcons .ic .c{width:50px;height:50px}
 #blkIcons .ic svg{width:25px;height:25px}
+/* 7.11.2026, Itzik: "את התקציר בראש הדף אני לא רוצה". */
+#homeBrief{display:none!important}
 .gt small{font-size:13px;opacity:.96;font-weight:400;text-shadow:0 1px 3px rgba(0,0,0,.4)}
 .gt:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .g1{background:linear-gradient(150deg,#5aa9fb,var(--blue))}
