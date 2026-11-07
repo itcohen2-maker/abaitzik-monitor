@@ -835,6 +835,8 @@ function build() {
       return { at: (e && e.at) || '', ok: !st || !!st.ok, connect: (st && !st.ok && st.connect) || '',
         events: e ? e.events.filter((x) => Date.parse(x.end || x.start) >= from) : [] };
     })(),
+    // 7.11.2026: 🔌 חיבורים, what is connected and a connect link for each (lib/connections.js). His copy only.
+    conn: (() => { const F = require('./lib/features.js').read(inst.dataPath, inst.name); return F.conn ? require('./lib/connections.js').list(inst.dataPath, inst.name, F) : null; })(),
     // 12.10: the 🩺 board, every monitor's faults in one file (health-board.js). His copy only.
     health: inst.name === 'abaitzik' ? (() => { try { return JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'status', 'health-board.json'), 'utf8')); } catch (e) { return null; } })() : null,
     ideas,
@@ -2832,6 +2834,18 @@ body:not(.inner) #thumbSet{display:block}
 /* The monitors live in the icons (אלון, שי, תקלות); their two tiles are gone. */
 #gHealth,#gTenants{display:none!important}
 #calSheet .ycard{max-height:86vh;overflow:auto}
+.c-cn{background:linear-gradient(160deg,#22d3ee,#0891b2);font-size:22px}
+#connSheet .ycard{max-height:86vh;overflow:auto}
+#connSheet .cnr{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #e5e7eb}
+#connSheet .cni{font-size:24px;width:34px;text-align:center;flex:none}
+#connSheet .cnt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+#connSheet .cnt b{font-size:16px;color:#111827}
+#connSheet .cnOk{color:#15803d;font-weight:700;font-size:14px}
+#connSheet .cnOff{color:#b91c1c;font-weight:700;font-size:14px}
+#connSheet .cnSoon,#connSheet .cnPaid{color:#6b7280;font-size:14px}
+#connSheet .cnt small{color:#6b7280;font-size:12px;overflow-wrap:anywhere}
+#connSheet a.cnb{background:#0891b2;color:#fff;border-radius:10px;padding:9px 12px;font-weight:700;text-decoration:none;font-size:14px;white-space:nowrap;flex:none}
+#connSheet a.cnb.again{background:#e5e7eb;color:#374151}
 .cald{margin:14px 0 4px;font:700 16px Heebo,sans-serif;color:var(--ink)}
 .cald.today{color:var(--accent)}
 #calSheet .cald{opacity:1!important;color:#111827!important;background:#eef2f7;border-radius:10px;padding:6px 10px;margin:12px 0 2px}
@@ -4644,6 +4658,8 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <a class="ic icNew" data-grp="work" href="#" id="icShai" data-new="1"><span class="c c-shai" id="icShaiC">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M9 20h6M12 16v4"/><path d="M7 11l2.5-2.5 2 2L15 7"/></svg></span>שי</a>
   <button type="button" class="ic" data-grp="work" id="icHealth"><span class="c c-hl" id="icHealthC">🩺</span>תקלות</button>
+  <!-- 7.11.2026: 🔌 חיבורים, shown only when D.features.conn (applyFeatures). -->
+  <button type="button" class="ic" data-grp="work" id="icConn" style="display:none"><span class="c c-cn">🔌</span>חיבורים</button>
   <!-- תיאטרון. Itzik, 12.10 night: "תהפוך את תאטרון לאייקון במקום אריח". Same
        sheet and same id, so the news blink still finds it; the news line goes
        into its title since a round icon has no small text. -->
@@ -16942,6 +16958,31 @@ function calSheet(all){
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
 }
+/*
+  7.11.2026: 🔌 חיבורים. What is connected and what is not, with a one tap connect link for each
+  (the setup page's own OAuth links). Data from lib/connections.js at build time.
+*/
+function connSheet(){
+ var old=document.getElementById('connSheet');if(old)old.remove();
+ var C=D.conn||{rows:[]};
+ var n=C.rows.filter(function(r){return r.on;}).length;
+ var h='<div class="ycard"><b>🔌 חיבורים</b><p>'+n+' מתוך '+C.rows.length+' מחוברים. כל חיבור נותן למוניטור לעבוד בשבילך עם עוד מקום.</p>';
+ C.rows.forEach(function(r){
+  var st=r.on?'<span class="cnOk">✓ מחובר</span>':r.paid?'<span class="cnPaid">'+esc(r.paid)+'</span>':r.soon?'<span class="cnSoon">בקרוב</span>':'<span class="cnOff">לא מחובר</span>';
+  h+='<div class="cnr'+(r.on?' on':'')+'"><span class="cni">'+esc(r.icon)+'</span><div class="cnt"><b>'+esc(r.title)+'</b>'+st+(r.who?'<small>'+esc(r.who)+'</small>':'')+'</div>';
+  if(r.link&&!r.soon)h+='<a class="cnb'+(r.on?' again':'')+'" href="'+esc(r.link)+'" target="_blank" rel="noopener">'+(r.on?'חיבור מחדש':'להתחבר')+'</a>';
+  h+='</div>';
+ });
+ h+='<small>אחרי חיבור, המצב כאן מתעדכן תוך כמה דקות.</small><button type="button" class="yb yx" data-k="">סגירה</button></div>';
+ var w=document.createElement('div');w.id='connSheet';w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','חיבורים');
+ w.innerHTML=h;
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-k');if(e.target===w||k==='')close();};
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+}
+on('icConn',connSheet);
 (function(){var a=document.getElementById('icGcal');if(!a)return;
  a.addEventListener('click',function(e){if(!D.cal)return;e.preventDefault();e.stopPropagation();calSheet(false);},true);})();
 /*
