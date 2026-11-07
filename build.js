@@ -2850,7 +2850,6 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .gFut{background:linear-gradient(150deg,#3a8fd9,#16243f)}
 .gSelf{background:linear-gradient(150deg,#d98a3a,#3f2416)}
 .meTxt{white-space:pre-wrap;text-align:right;line-height:1.7;font-size:17px;margin:10px 0 14px}
-.gLaw{background:linear-gradient(150deg,#c0623a,#3a1d12)}
 .gStk{background:linear-gradient(150deg,#d6a43a,#4a1d5c)}
 .stkg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}
 .stkc{background:#26222b;border:0;border-radius:12px;padding:6px 4px;color:#f2ede4;font:600 13px system-ui;position:relative}
@@ -4501,7 +4500,6 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
        Tom's posts, four ad images, the site copy, and the draft of his own site. -->
   <!-- 13.10 night: the Clalit agreement moved inside the lecture tile (item 05). -->
   <button type="button" class="gt gGviya" data-grp="work" id="gGviya" data-new="1"><b>📞 גבייה, יואל</b><small>דף שיואל מסמן, כל סימון מעדכן אותך</small></button>
-  <button type="button" class="gt gLaw" data-grp="home" id="gLaw" hidden><b>📁 מסמכים לעורך הדין</b><small>ריק כרגע</small></button>
   <button type="button" class="gt gShop" data-grp="home" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
   <button type="button" class="gt gBoyGeorge" data-grp="home" id="gBoyGeorge" data-new="1" data-files="boy-george-ticket-1.jpeg,boy-george-ticket-2.jpeg"><b>🎤 בוי ג׳ורג׳</b><small>שני הכרטיסים להופעה ב-7.11, מנורה מבטחים</small></button>
   <!-- 12.10 alarm tile: moved 13.10 to the round icons, see gAlarm next to gStk. -->
@@ -5839,7 +5837,7 @@ function fileMsgName(name){
 }
 function fileListName(name){
  var lists=[];
- ['NER_ITEMS','REEL_ITEMS','STORY_ITEMS','FUT_ITEMS','OCC_ITEMS','LAW_ITEMS','DUDI_ITEMS','CLALIT_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS']
+ ['NER_ITEMS','REEL_ITEMS','STORY_ITEMS','FUT_ITEMS','OCC_ITEMS','DUDI_ITEMS','CLALIT_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS']
   .forEach(function(k){if(Array.isArray(window[k]))lists.push(window[k]);});
  for(var i=0;i<lists.length;i++){
   var L=lists[i]||[];
@@ -5855,7 +5853,7 @@ function fileNiceName(name){
  try{var fb=[].slice.call(document.querySelectorAll('[data-f]')).filter(function(b){return b.getAttribute('data-f')===name;})[0];var bt=fb&&String(fb.textContent||'').replace(/^[^֐-׿A-Za-z0-9]+/,'').split(/[,(]/)[0].trim();if(bt)return bt;}catch(e){}
  var short=String(name).split('/').pop();
  var lists=[];
- ['NER_ITEMS','REEL_ITEMS','STORY_ITEMS','FUT_ITEMS','OCC_ITEMS','LAW_ITEMS','DUDI_ITEMS','CLALIT_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS','LEC_ITEMS']
+ ['NER_ITEMS','REEL_ITEMS','STORY_ITEMS','FUT_ITEMS','OCC_ITEMS','DUDI_ITEMS','CLALIT_ITEMS','WIN_ITEMS','PEN_ITEMS','MED_ITEMS','INV_ITEMS','LEC_ITEMS']
   .forEach(function(k){if(Array.isArray(window[k]))lists.push(window[k]);});
  // 22.10: the lecture PDF opened under its English file name. Any other *_ITEMS list counts too.
  // 23.10, Itzik: a file goes out under its list name; an item may carry n, the exact name to send it under.
@@ -16222,36 +16220,6 @@ boot('occ',function(){var o=(D.occ||[])[0],seen='';var sm=document.querySelector
   4.10. Documents made for the lawyer in the Lolos sale, numbered. A new one
   gets the next number. Same sheet as the future reels.
 */
-/* 11.10: Itzik no longer needs the lawyer documents; the list was cleared. */
-var LAW_ITEMS=[];
-function lawSheet(){
- var old=document.getElementById('lawSheet');if(old)old.remove();
- var w=document.createElement('div');
- w.id='lawSheet';w.className='ysheet';
- w.setAttribute('role','dialog');
- w.setAttribute('aria-label','מסמכים לעורך הדין');
- w.innerHTML='<div class="ycard">'
-  +'<b>מסמכים לעורך הדין</b>'
-  +'<small>'+(LAW_ITEMS.length?'לחיצה פותחת':'אין מסמכים כרגע')+'</small>'
-  +LAW_ITEMS.map(function(it,i,a){
-    return '<button type="button" '+ybAttr(a,i)+' data-k="'+i+'">'+it.n+' · '+esc(it.t)+'</button>';
-   }).join('')
-  +'<button type="button" class="yb yx" data-k="">סגירה</button>'
-  +'</div>';
- function close(){w.remove();document.removeEventListener('keydown',esckey);}
- function esckey(e){if(e.key==='Escape')close();}
- w.onclick=function(e){
-  if(e.target===w)return close();
-  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
-  if(k===null||k===undefined)return;
-  close();
-  var it=LAW_ITEMS[+k];if(k===''||!it)return;
-  fileOpen(it.r);
- };
- document.addEventListener('keydown',esckey);
- document.body.appendChild(w);
-}
-on('gLaw',lawSheet);
 /* 13.10: the Clalit lecture agreement, corrected (one hour, lateness inside cancellation, filming for marketing, logo, two pages). */
 /*
   30.10, Itzik: "תכניס עידכונים בעסק שלי תחת ... עסק הנירות". A candletimes section
@@ -16556,11 +16524,6 @@ document.getElementById('rivShare')&&document.getElementById('rivShare').addEven
  var r=e.target.closest&&e.target.closest('[data-r]');if(!r)return;
  fileOpen(r.getAttribute('data-r'));
 });
-// 4.10: Itzik could not find these files. The tile blinks until he opens it
-// after a new document was added (the count is what he has seen).
-/* 11.10: the letter to Roi was sent; its items and the Sunday blink are gone. */
-boot('lawblink',function(){var b=document.getElementById('gLaw');if(!b||!LAW_ITEMS.length)return;var r='';try{r=localStorage.getItem('lawSeenR')||'';if(!r&&localStorage.getItem('lawSeen')){r=LAW_ITEMS[LAW_ITEMS.length-1].r;localStorage.setItem('lawSeenR',r);}}catch(x){}b.classList.toggle('taskblink',r!==LAW_ITEMS[LAW_ITEMS.length-1].r);});
-document.getElementById('gLaw')&&document.getElementById('gLaw').addEventListener('click',function(){if(LAW_ITEMS.length)try{localStorage.setItem('lawSeenR',LAW_ITEMS[LAW_ITEMS.length-1].r);}catch(x){}this.classList.remove('taskblink');});
 /*
   2.10. Winning lines. Tapping a line copies it. A new line goes at the end
   with the next number, with where it came from.
