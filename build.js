@@ -2719,11 +2719,25 @@ section#talkCard.talk{border:2px solid var(--accent);box-shadow:0 8px 24px color
 #talkCard .vtxt b{font-size:19px}
 #talkCard .way{border:2px solid color-mix(in srgb,var(--accent) 55%,var(--line));background:var(--accent-soft)}
 #talkCard .way b{font-size:16px}
-button#fcRow.fcrow{margin:0 0 10px;padding:8px 12px;gap:0;min-height:0;background:var(--accent-soft);border:2px solid #06b6d4;border-radius:16px;box-shadow:0 6px 18px rgba(6,182,212,.25)}
+#fcRow.fcrow{margin:0 0 10px;padding:8px 12px;gap:6px;min-height:0;cursor:default;background:var(--accent-soft);border:2px solid #06b6d4;border-radius:16px;box-shadow:0 6px 18px rgba(6,182,212,.25)}
 #fcRow .fcbub,#fcRow .fcin{display:none}
 #fcRow .fci{font-size:24px}
 #fcRow .fct b{font-size:16px;font-weight:800;color:var(--ink)}
 #fcRow .fct em{font-size:13px;color:var(--ink);opacity:.85}
+#fcRow .fch{gap:8px}
+#fcRow .fcQuick{display:flex;gap:6px;align-items:center}
+#fcRow .fcQuick input{flex:1;min-width:0;box-sizing:border-box;height:42px;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font:400 15.5px Heebo,sans-serif}
+#fcRow .fcQuick input:focus{outline:2px solid #06b6d4;outline-offset:1px}
+#fcRow .fcQuick button{flex:0 0 auto;width:42px;height:42px;border:0;border-radius:50%;background:#0891b2;color:#fff;font-size:17px;cursor:pointer}
+#fcRow .fcInline{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#fcRow .fcInline[hidden]{display:none}
+#fcRow .fcib{max-width:90%;white-space:pre-wrap;word-break:break-word;font:400 15px/1.45 Heebo,sans-serif;padding:8px 12px;border-radius:14px}
+#fcRow .fcib.me{align-self:flex-start;background:var(--accent);color:var(--on-accent)}
+#fcRow .fcib.bot{align-self:flex-end;background:var(--surface);border:1px solid var(--line);color:var(--ink)}
+#fcRow .fcmore{align-self:flex-start;background:none;border:0;color:#0891b2;font:700 13px Heebo,sans-serif;padding:4px 2px;cursor:pointer}
+#fcRow .fcErr{font:700 13px Heebo,sans-serif;color:#b3261e}
+.c-fcs{background:linear-gradient(160deg,#f59e0b,#b45309);font-size:22px}
+.c-fcc{background:linear-gradient(160deg,#22d3ee,#0e7490);font-size:22px}
 /* 7.11.2026, Itzik: "להקטין בכלל את כל הכפתורים, שייכנס קצת יותר". Second step of the day: everything on the home screen a notch smaller. */
 #blkTiles.grid{gap:6px}
 #blkTiles>.gt{height:78px;min-height:78px;max-height:78px;padding:8px 10px}
@@ -2772,7 +2786,7 @@ section#talkCard.talk{padding:8px 10px;gap:6px 10px;margin-bottom:8px}
 #talkCard #quickSaid:empty{display:none}
 /* 7.11.2026, Itzik: a soft gold (mustard) shadow under every mockup. */
 :root{--goldsh:0 4px 14px rgba(201,162,39,.38)}
-#blkTiles>.gt,button#fcRow.fcrow,#newBtn.newbtn,section#talkCard.talk,.apv-bar,button#reloadBtn.reloadbig{box-shadow:var(--goldsh)}
+#blkTiles>.gt,#fcRow.fcrow,#newBtn.newbtn,section#talkCard.talk,.apv-bar,button#reloadBtn.reloadbig{box-shadow:var(--goldsh)}
 #blkIcons .ic .c{box-shadow:0 3px 9px rgba(201,162,39,.38)}
 .mic{width:98px;height:98px;flex:0 0 98px;border-radius:50%;border:0;padding:0;cursor:pointer;position:relative;
  display:grid;place-items:center;background:conic-gradient(from 0deg,var(--blue),var(--red),var(--yellow),var(--green),var(--blue));
@@ -4400,11 +4414,11 @@ ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').bar : ''}
   </form>
   <div class="msgsaid" id="quickSaid"></div>
  </section>
- ${true ? `<button type="button" class="fcrow" id="fcRow" hidden aria-label="שיחה עם המוניטור">
-  <span class="fch"><span class="fci" aria-hidden="true">💬</span><span class="fct"><b>התייעץ ודבר עם AI</b><em>על העסק או על כל דבר אחר. שיחה שלמה, תשובה תוך שניות.</em></span></span>
-  <span class="fcbub"><small>שואלים, מתייעצים, מתאמנים</small></span>
-  <span class="fcin" aria-hidden="true">${inst.gender === 'f' ? 'כתבי' : 'כתוב'} שאלה למוניטור...<i>➤</i></span>
- </button>` : ''}
+ ${true ? `<div class="fcrow" id="fcRow" hidden role="group" aria-label="שיחה עם ה AI">
+  <div class="fch"><span class="fci" aria-hidden="true">💬</span><span class="fct"><b>אני AI, כתוב לי כל דבר</b></span></div>
+  <div class="fcInline" id="fcInline" hidden></div>
+  <form class="fcQuick" id="fcQuick"><input type="text" id="fcQText" maxlength="2000" autocomplete="off" placeholder="התייעץ איתי על העסק, או כל דבר אחר"><button type="submit" id="fcQBtn" aria-label="שליחה">➤</button></form>
+ </div>` : ''}
  <button type="button" class="reloadbig" id="reloadBtn" aria-label="רענון וחזרה לדף הבית" title="רענון וחזרה לדף הבית">↻<span class="rlw">רענן</span></button>
 
 <section id="pH">
@@ -4682,6 +4696,9 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <!-- 4.11, Itzik: "עיגול אחד של היומן של גוגל, כניסה ישירה אליו". Opens his calendar (account u/0, itcohen2), today. -->
   <a class="ic icNew" data-grp="day" id="icGcal" href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener" data-new="1" data-upd="20261107-month"><span class="c c-gcal">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M9.5 13.5h1.5v4M14 13.5h2l-1.5 4"/></svg></span>יומן</a>
+  <!-- 7.11.2026, Itzik: the trainings sit in round icons beside the calendar. Shown only when the chat is allowed (fcBoot). -->
+  <button type="button" class="ic icNew" data-grp="day" id="icFcSales" data-new="1" style="display:none"><span class="c c-fcs">🎯</span>אימון מכירות</button>
+  <button type="button" class="ic icNew" data-grp="day" id="icFcCoach" data-new="1" style="display:none"><span class="c c-fcc">🧭</span>אימון עסקי</button>
   <a class="ic" data-grp="net" data-net="all" id="icNet" href="#"><span class="c c-nt">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M10 20V5M15 20v-6M20 20V8"/></svg></span>ניטור רשתות</a>
   <!-- 4.11, Itzik: "באתר של אבא איציק תרשום אבא איציק, כל הזמן. אני מתבלבל בין האתר לאתר שלי". This is the abaitzik.com icon, so its label is the name, always. -->
@@ -17155,7 +17172,18 @@ function fcPaintMode(){
  var sc=document.getElementById('fcScore');if(sc)sc.hidden=fcS.mode!=='sales';
  if(snd)snd.disabled=!!fcS.busy;
 }
+function fcPaintInline(){
+ var box=document.getElementById('fcInline');if(!box)return;
+ if(!fcS.inl){box.hidden=true;return;}
+ var h='';
+ fcS.msgs.slice(-4).forEach(function(m){h+='<div class="fcib '+(m.from==='me'?'me':'bot')+'">'+esc(m.text)+'</div>';});
+ if(fcS.busy)h+='<div class="fcib bot fcTyping">…כותב</div>';
+ if(fcS.err)h+='<div class="fcErr">'+esc(fcS.err)+'</div>';
+ h+='<button type="button" class="fcmore" id="fcMore">פתיחת השיחה המלאה</button>';
+ box.innerHTML=h;box.hidden=false;box.scrollTop=box.scrollHeight;
+}
 function fcPaintMsgs(force){
+ fcPaintInline();
  var box=document.getElementById('fcMsgs');if(!box)return;
  var near=force||box.scrollHeight-box.scrollTop-box.clientHeight<90,keep=box.scrollTop;
  var h='';
@@ -17180,7 +17208,7 @@ function fcSend(text){
  fcPaintMode();fcPaintMsgs(true);
  fcPost('',{text:text}).then(function(j){fcApply(j);var l=fcS.msgs[fcS.msgs.length-1];if(j&&j.reply&&(!l||l.from!=='bot'))fcS.err=j.reply;},function(e){
   fcS.msgs=fcS.msgs.slice(0,-1);fcS.err=(e&&e.status)?'לא הצלחתי לענות עכשיו, נסה שוב':'אין חיבור כרגע';
-  var t=document.getElementById('fcText');if(t&&!t.value)t.value=text;
+  var t=document.getElementById('fcText')||document.getElementById('fcQText');if(t&&!t.value)t.value=text;
  }).then(function(){fcS.busy=false;fcPaintMode();fcPaintMsgs(true);fcPaintRow();});
 }
 function fcTodo(id){
@@ -17216,10 +17244,19 @@ function fcSheet(){
  // What was written in WhatsApp too.
  fcPost('/thread',{}).then(function(j){if(fcS.busy)return;fcApply(j);fcPaintMode();fcPaintMsgs(true);fcPaintRow();},function(){});
 }
-(function(){var r=document.getElementById('fcRow');if(r)r.onclick=fcSheet;})();
+(function(){
+ var f=document.getElementById('fcQuick');
+ if(f)f.onsubmit=function(e){e.preventDefault();var i=document.getElementById('fcQText'),v=i?i.value:'';if(!String(v).trim())return;fcS.inl=true;if(i)i.value='';fcSend(v);};
+ var r=document.getElementById('fcRow');
+ if(r)r.addEventListener('click',function(e){var t=e.target;if(t&&t.id==='fcMore')fcSheet();});
+ on('icFcSales',function(){fcSheet();fcSend('אימון מכירות');});
+ on('icFcCoach',function(){fcSheet();fcSend('אימון עסקי');});
+})();
 // Called by applyFeatures once the row is allowed: one read of the thread, for the last line.
 function fcBoot(){
- var r=document.getElementById('fcRow');if(!r||r.hidden||fcS.loaded)return;
+ var r=document.getElementById('fcRow');if(!r||r.hidden)return;
+ ['icFcSales','icFcCoach'].forEach(function(i){var e=document.getElementById(i);if(e)e.style.display='';});
+ if(fcS.loaded)return;
  fcS.loaded=true;
  fcPost('/thread',{}).then(function(j){if(fcS.busy)return;fcApply(j);fcPaintRow();},function(){});
 }
