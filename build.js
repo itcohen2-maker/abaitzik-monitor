@@ -2719,11 +2719,11 @@ section#talkCard.talk{border:2px solid var(--accent);box-shadow:0 8px 24px color
 #talkCard .vtxt b{font-size:19px}
 #talkCard .way{border:2px solid color-mix(in srgb,var(--accent) 55%,var(--line));background:var(--accent-soft)}
 #talkCard .way b{font-size:16px}
-button#fcRow.fcrow{margin:0 0 12px;padding:14px;gap:10px;min-height:110px;background:var(--accent-soft);border:2px solid #06b6d4;border-radius:16px;box-shadow:0 6px 18px rgba(6,182,212,.25)}
-#fcRow .fci{font-size:34px}
-#fcRow .fct b{font-size:20px;font-weight:800;color:var(--ink)}
-#fcRow .fct em{font-size:15px;color:var(--ink);opacity:.85}
-#fcRow .fcin{padding:12px 16px;font-size:16px;border:2px solid #06b6d4}
+button#fcRow.fcrow{margin:0 0 10px;padding:8px 12px;gap:0;min-height:0;background:var(--accent-soft);border:2px solid #06b6d4;border-radius:16px;box-shadow:0 6px 18px rgba(6,182,212,.25)}
+#fcRow .fcbub,#fcRow .fcin{display:none}
+#fcRow .fci{font-size:24px}
+#fcRow .fct b{font-size:16px;font-weight:800;color:var(--ink)}
+#fcRow .fct em{font-size:13px;color:var(--ink);opacity:.85}
 /* 7.11.2026, Itzik: "להקטין בכלל את כל הכפתורים, שייכנס קצת יותר". Second step of the day: everything on the home screen a notch smaller. */
 #blkTiles.grid{gap:6px}
 #blkTiles>.gt{height:78px;min-height:78px;max-height:78px;padding:8px 10px}
@@ -4397,7 +4397,7 @@ ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').bar : ''}
   <div class="msgsaid" id="quickSaid"></div>
  </section>
  ${true ? `<button type="button" class="fcrow" id="fcRow" hidden aria-label="שיחה עם המוניטור">
-  <span class="fch"><span class="fci" aria-hidden="true">💬</span><span class="fct"><b>דבר עם AI</b><em>לוחצים כאן ומתחילים שיחה שלמה: שואלים, מתייעצים ומתאמנים, והתשובה מגיעה תוך שניות.</em></span></span>
+  <span class="fch"><span class="fci" aria-hidden="true">💬</span><span class="fct"><b>התייעץ ודבר עם AI</b><em>על העסק או על כל דבר אחר. שיחה שלמה, תשובה תוך שניות.</em></span></span>
   <span class="fcbub"><small>שואלים, מתייעצים, מתאמנים</small></span>
   <span class="fcin" aria-hidden="true">${inst.gender === 'f' ? 'כתבי' : 'כתוב'} שאלה למוניטור...<i>➤</i></span>
  </button>` : ''}
