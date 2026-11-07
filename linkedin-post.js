@@ -40,6 +40,7 @@ const firstLine = (t) => String(t).split('\n').find((x) => x.trim()) || '';
 // the approve card in the "🔔 לאישורך" strip
 function card(it) {
   const f = path.join(CHOICES, 'linkedin-' + it.id + '.json');
+  if (fs.readdirSync(CHOICES).some((n) => n.indexOf('linkedin-' + it.id) === 0)) return false; // a rewritten card (-v2) counts
   if (fs.existsSync(f) || DRY) return false;
   fs.mkdirSync(CHOICES, { recursive: true });
   fs.writeFileSync(f, JSON.stringify({ type: 'approve', kind: 'send', id: 'linkedin-' + it.id, at: new Date(Date.parse('2030-01-01') - Date.parse(it.date)).toISOString(), // the strip lists newest first: the earliest post gets the latest stamp
