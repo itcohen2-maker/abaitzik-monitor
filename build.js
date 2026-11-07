@@ -9075,8 +9075,7 @@ function repaintAll(){
   // 4.11: the home cards (manager, brief) read the sealed payload too.
   ['home',function(){if(typeof renderHome==='function')renderHome();}],
   // 7.11: the 🔔 לאישורך strip reads D.choices, sealed too. Without this it stayed hidden after unlock.
-  ['approvals',function(){if(typeof renderApprovals==='function')renderApprovals();}],
-  ['ask',function(){if(typeof renderAsk==='function')renderAsk();}]];
+  ['approvals',function(){if(typeof renderApprovals==='function')renderApprovals();}]];
  var bad=[],ran={};
  jobs.forEach(function(j){
   ran[j[0]]=1;
