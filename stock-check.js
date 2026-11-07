@@ -23,11 +23,13 @@ const S = stock.compute({
   st: rd(path.join(HERE, 'docs', 'status', 'queue.json'), []),
   nr: rd('/home/monitor/ner-queue.json', []),
   pl: rd(path.join(HERE, 'docs', 'plate', 'queue.json'), []),
+  li: rd(path.join(HERE, 'docs', 'linkedin', 'stock.json'), null),
 }, today);
 
 const HOW = {
   st: 'להכין סטטוסים לוואטסאפ לפי הסבב (ראשון שחר, שני האתר, שלישי המוניטור, רביעי שחר, חמישי המוניטור, שישי נרות, בלי שבת), סרטון חדש לכל יום, לתור docs/status/queue.json.',
   nr: 'להכין את השבוע הבא של candle.times (2 פוסטים ו 2 סטוריז ביום, עברית ואנגלית, בלי שבת וחג, דמויות חדשות) ולהכניס ל /home/monitor/ner-queue.json עם approved: true (הנרות עולים לבד בלי אישור, איציק 7.11), ואז node ner-post.js --mirror.',
+  li: 'לכתוב עוד פוסטים ללינקדין בקול של איציק (דגש על ההרצאות, בלי מקפים, בלי אימוג׳י, בלי שמות לקוחות) ולהכניס ל data/linkedin/queue.json, ראשון שלישי וחמישי ב 09:00. כרטיסי האישור ב 🔔 לאישורך נוצרים לבד (linkedin-post.js).',
   pl: 'להכין עוד סטוריז של מה בצלחת לפי הסדר בדרייב (מה בצלחת עם דמות/00 סדר ההעלאה.txt) ולהכניס ל docs/plate/queue.json לאישור של איציק.',
 };
 

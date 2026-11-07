@@ -920,6 +920,9 @@ body.editing .bn{display:none}
 
 .apv{margin:0 0 14px;padding:16px;border-radius:20px;background:var(--accent);border:0;color:var(--on-accent);box-shadow:0 10px 24px color-mix(in srgb,var(--accent) 35%,transparent)}
 .apv[hidden]{display:none}
+.apv:not([hidden]){animation:apvBlink 1.8s ease-in-out infinite}
+@keyframes apvBlink{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--accent) 45%,transparent),0 10px 24px color-mix(in srgb,var(--accent) 35%,transparent);filter:brightness(1.12)}}
+@media (prefers-reduced-motion:reduce){.apv:not([hidden]){animation:none}}
 .apv-head{display:flex;align-items:center;gap:8px;font:800 16px Heebo,sans-serif;margin-bottom:2px}
 .apv-n{min-width:26px;height:26px;padding:0 8px;border-radius:13px;background:var(--surface);color:var(--accent);font:800 13px/26px Heebo,sans-serif;text-align:center}
 .apv-card{background:color-mix(in srgb,var(--on-accent) 12%,transparent);border:1px solid color-mix(in srgb,var(--on-accent) 25%,transparent);border-radius:14px;padding:12px;margin-top:8px;color:var(--on-accent)}
@@ -2515,7 +2518,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-07T12:38:35.830Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-07T12:40:35.739Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2869,14 +2872,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4418,7 +4414,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='d4473169b8';
+var CODE_ID='fdfea3ff18';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12231,25 +12227,26 @@ function compute(Q, today) {
   var st = (Q.st || []).map(function (x) { return x.date; });
   var nr = (Q.nr || []).filter(function (x) { return !x.posted && !x.failed && !x.rejected && !x.hold; }).map(function (x) { return x.date; });
   var pl = (Q.pl || []).filter(function (x) { return !x.posted; }).length;
+  var li = Q.li && typeof Q.li === 'object' && !Array.isArray(Q.li) ? Q.li : null;
   var a = reach(st, today, 'סטטוסים'), b = reach(nr, today, 'פריטים');
   return [
     { id: 'st', title: '📲 סטטוס', line: a.line, low: a.low },
     { id: 'nr', title: '🕯️ נרות', line: b.line, low: b.low },
     { id: 'pl', title: '🍽️ מה בצלחת', line: pl ? pl + ' סטוריז מוכנים בתור' : 'אין סטוריז מוכנים', low: pl < 4 },
-  ];
+  ].concat(li ? [{ id: 'li', title: '💼 לינקדין', line: li.total ? li.total + ' פוסטים בתור' + (li.last ? ' עד ' + nice(li.last) : '') + (li.waiting ? ', ' + li.waiting + ' מחכים לאישורך' : '') : 'אין פוסטים בתור', low: (li.total || 0) < 2 }] : []);
 }
 
 if (typeof module !== 'undefined') module.exports = { compute: compute };
 ;return module.exports;})();
 function vqStockHtml(){
- var S=[];try{S=STOCK.compute({st:(VQ&&VQ.st)||[],nr:(VQ&&VQ.nr)||[],pl:(VQ&&VQ.pl)||[]},vqDay());}catch(e){return '';}
+ var S=[];try{S=STOCK.compute({st:(VQ&&VQ.st)||[],nr:(VQ&&VQ.nr)||[],pl:(VQ&&VQ.pl)||[],li:(VQ&&VQ.li)||null},vqDay());}catch(e){return '';}
  return '<div class="vqStock" style="background:#f4f6f9;border-radius:12px;padding:8px 12px;margin:8px 0"><small style="display:block;font-weight:800;font-size:15px;color:#1a2233;margin:0 0 4px">📦 מלאי מוכן</small>'+S.map(function(c){return '<div style="font:600 14px Heebo,sans-serif;padding:3px 0;color:'+(c.low?'#b45309':'#15803d')+'">'+(c.low?'⚠️ ':'✓ ')+esc(c.title)+': '+esc(c.line)+'</div>';}).join('')+'<small style="display:block;color:#3a4458;margin-top:4px">כשמשהו חסר, המוניטור מזמין לבד עוד סרטונים כל בוקר.</small></div>';
 }
 function vqLoad(cb){
  if(VQ&&Date.now()-VQT<60000)return cb();
- var P=[['st','status/queue.json'],['nr','ner/queue.json'],['pl','plate/queue.json']],n=P.length,R={};
+ var P=[['st','status/queue.json'],['nr','ner/queue.json'],['pl','plate/queue.json'],['li','linkedin/stock.json']],n=P.length,R={};
  P.forEach(function(p){
-  fetch(p[1]+'?v='+Date.now()).then(function(r){return r.json();}).then(function(d){R[p[0]]=Array.isArray(d)?d:[];},function(){R[p[0]]=[];})
+  fetch(p[1]+'?v='+Date.now()).then(function(r){return r.json();}).then(function(d){R[p[0]]=p[0]==='li'?(d&&typeof d==='object'?d:null):(Array.isArray(d)?d:[]);},function(){R[p[0]]=[];})
    .then(function(){if(--n===0){VQ=R;VQT=Date.now();cb();}});
  });
 }
@@ -16483,7 +16480,7 @@ function renderApprovals(){
  var open=apvOpen();
  if(!open.length){host.hidden=true;host.innerHTML='';return;}
  host.hidden=false;
- host.innerHTML='<div class="apv-head"><b>מחכה לך</b><span class="apv-n">'+open.length+'</span></div>'
+ host.innerHTML='<div class="apv-head"><b>🔔 לאישורך</b><span class="apv-n">'+open.length+'</span></div>'
   +open.map(function(c){return '<div class="apv-card" data-id="'+esc(c.id)+'">'+apvCard(c)+'</div>';}).join('');
  var cards=host.querySelectorAll('.apv-card');
  for(var i=0;i<open.length;i++)apvBind(cards[i],open[i]);
@@ -17218,7 +17215,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="BDlgL4lKYXBB2yk96UVlN_bNhLBppiq0K8ORV-TQ2jb7k8IMskeWYICec19xE7N5VEcCzVXZU9Pxb9e64KH8OCk";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
