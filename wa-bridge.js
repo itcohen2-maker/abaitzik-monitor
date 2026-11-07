@@ -35,7 +35,7 @@ const STATE = path.join(ROOT, 'data', 'status', 'wa-bridge.json');
 const CHAT = path.join(ROOT, 'data', 'chat', 'chat');
 const PORT = Number(process.env.WA_PORT || 8796);
 const DEMO_FLAG = path.join(ROOT, 'data', 'demo', 'active.json');
-const ORIGINS = ['https://itcohen2-maker.github.io'];
+const ORIGINS = ['https://itcohen2-maker.github.io', 'https://shai.it-solution.co.il', 'https://alon.abaitzik.com', 'https://rinat.abaitzik.com'];
 /*
   1.11.2026: the client demo (lib/demo-mode.js). While it is on, every question,
   from the page or from WhatsApp, goes to the worker with this frame first, so
@@ -583,6 +583,33 @@ function formNotify(kind, text) {
   try { require("child_process").execFile(process.execPath, [path.join(__dirname, "notify.js"), "✍️ " + kind, String(text).split(String.fromCharCode(10)).slice(0, 3).join(String.fromCharCode(10))], { cwd: __dirname, timeout: 60000 }, function (e) { if (e) log("form push failed: " + e.message); }); } catch (e) { log("form push failed: " + e.message); }
   toMonitor(kind, text).then(function (id) { log('form -> ntfy-' + id); }, function (e) { log('form notify failed: ' + e.message); }); }
 function codeOk(c) { const o = ownerCode(); return !!o && String(c || '') === o; }
+/*
+  7.11: every customer's monitor has the fast chat. Its key sits in its own data/fc-key.txt (sealed in its
+  page) and here in data/fastchat/tenants.json { name: { key, dir, business } }. Its thread lives here under
+  data/fastchat/t/<name>; "להעביר לביצוע" lands in its own request queue (an ACL lets this user write there).
+*/
+function tenantByKey(c) {
+  c = String(c || ''); if (c.length < 24) return null;
+  let all = {}; try { all = JSON.parse(fs.readFileSync(path.join(DATA, 'fastchat', 'tenants.json'), 'utf8')) || {}; } catch (e) { return null; }
+  for (const n of Object.keys(all)) { const t = all[n]; if (t && t.key && t.key.length === c.length && crypto.timingSafeEqual(Buffer.from(t.key), Buffer.from(c))) return Object.assign({ name: n }, t); }
+  return null;
+}
+function tenantToMonitor(tn) {
+  return async function (kind, text) {
+    const dir = path.join(tn.dir, 'data', 'chat', 'chat');
+    const pad = (n) => String(n).padStart(2, '0');
+    const at = new Date();
+    const base = at.getFullYear() + pad(at.getMonth() + 1) + pad(at.getDate()) + '-' + pad(at.getHours()) + pad(at.getMinutes()) + pad(at.getSeconds()) + '-itzik-auto';
+    let name = base + '.json';
+    for (let i = 2; fs.existsSync(path.join(dir, name)); i++) name = base + '-' + i + '.json';
+    const id = 'fc-' + at.getTime().toString(36) + crypto.randomBytes(3).toString('hex');
+    const rec = { at: at.toISOString(), from: 'itzik', text: kind + String.fromCharCode(10) + text, status: 'working', ackAt: at.toISOString(), id: id, auto: true, via: 'fast-chat' };
+    fs.writeFileSync(path.join(dir, name + '.tmp'), JSON.stringify(rec, null, 1), { encoding: 'utf8', mode: 0o664 });
+    fs.renameSync(path.join(dir, name + '.tmp'), path.join(dir, name));
+    log('fast chat todo -> ' + tn.name + ' ' + id);
+    return id;
+  };
+}
 // The demo page talks to the bridge: ask a question, read its answer, turn demo on and off.
 async function api(q, s, u) {
   const origin = q.headers.origin || '';
@@ -591,6 +618,14 @@ async function api(q, s, u) {
   if (q.method === 'OPTIONS') { s.writeHead(204, h); return s.end(); }
   if (q.method !== 'POST') { s.writeHead(405, h); return s.end('{}'); }
   let b; try { b = JSON.parse((await readBody(q, 20000)).toString('utf8')); } catch (e) { s.writeHead(400, h); return s.end('{}'); }
+  // 7.11: a customer's monitor talks to its own chat with its own key (data/fastchat/tenants.json).
+  if (/^\/api\/chat(\/thread|\/todo)?$/.test(u.pathname) && !codeOk(b.code)) {
+    const tn = tenantByKey(b.code);
+    if (!tn) { s.writeHead(403, h); return s.end('{"error":"code"}'); }
+    const r = await require('./lib/fast-chat.js').chatApi(u.pathname, b, { dataPath: path.join(DATA, 'fastchat', 't', tn.name),
+      toMonitor: tenantToMonitor(tn), owner: false, business: tn.business || '', enabled: true });
+    s.writeHead(r.status, h); return s.end(JSON.stringify(r.json));
+  }
   if (!codeOk(b.code)) { s.writeHead(403, h); return s.end('{"error":"code"}'); }
   const send = function (o) { s.writeHead(200, h); s.end(JSON.stringify(o)); };
   if (u.pathname === '/api/demo') {

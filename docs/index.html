@@ -2513,7 +2513,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-07T11:17:47.608Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-07T11:23:29.984Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4409,7 +4409,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='a5aca8fdd3';
+var CODE_ID='346eab0935';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12660,14 +12660,14 @@ var fcS={mode:'chat',msgs:[],busy:false,err:'',todo:{},loaded:false};
 try{var fcT=JSON.parse(localStorage.getItem('fcTodo')||'[]');if(fcT&&fcT.forEach)fcT.forEach(function(i){fcS.todo[i]='ok';});}catch(e){}
 function fcSaveTodo(){try{var a=[];for(var i in fcS.todo){if(fcS.todo[i]==='ok')a.push(i);}localStorage.setItem('fcTodo',JSON.stringify(a.slice(-200)));}catch(e){}}
 function fcPost(p,body){
- body.code=sendCode();
+ body.code=(D&&D.fcKey)||sendCode();
  return fetch(FC_API+p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){if(!r.ok){var er=new Error('api '+r.status);er.status=r.status;throw er;}return r.json();});
 }
 function fcApply(j){if(j&&j.msgs)fcS.msgs=j.msgs;if(j&&j.mode)fcS.mode=j.mode;}
 function fcPaintRow(){
  var r=document.getElementById('fcRow');if(!r)return;
  var s=r.querySelector('small'),m=fcS.msgs[fcS.msgs.length-1];
- if(s)s.textContent=m?((m.from==='me'?'אתה: ':'')+String(m.text||'').split(String.fromCharCode(10)).join(' ').slice(0,80)):'שואלים, מתייעצים, מתאמנים';
+ if(s)s.textContent=m?((m.from==='me'?'אני: ':'')+String(m.text||'').split(String.fromCharCode(10)).join(' ').slice(0,80)):'שואלים, מתייעצים, מתאמנים';
 }
 function fcPaintMode(){
  var lab=document.getElementById('fcMode'),end=document.getElementById('fcEnd'),snd=document.getElementById('fcSend');

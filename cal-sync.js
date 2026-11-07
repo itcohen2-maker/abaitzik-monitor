@@ -71,13 +71,45 @@ function status(src, ok, why) {
   return true;
 }
 function publish(src) {
-  try { execFileSync(process.execPath, ['push.js', 'calendar changed'], { cwd: src.dir, stdio: 'ignore', timeout: 300000 }); }
+  // 7.11: as the monitor's own user (root left root owned files behind). A customer's page is built in place.
+  const uid = fs.statSync(src.dir).uid;
+  const run = src.tenant ? [process.execPath, 'build.js'] : [process.execPath, 'push.js', 'calendar changed'];
+  try { execFileSync('sudo', ['-u', '#' + uid, '-H'].concat(run), { cwd: src.dir, stdio: 'ignore', timeout: 300000 });
+    if (src.tenant) execFileSync('chmod', ['-R', 'o+rX', path.join(src.dir, 'docs')]); }
   catch (e) { say(src.name + ': push נכשל ' + e.message.slice(0, 80)); }
+}
+
+/*
+  7.11: the 🔌 screen of every monitor. A snapshot of its setup page (which steps, which are connected),
+  written into its own data/conn/setup.json, since a customer's build cannot read Itzik's data/setup.
+*/
+function connSnap(src) {
+  const def = readJson(path.join(SETUP, src.setup + '.def.json'), null);
+  if (!def) return false;
+  const st = readJson(path.join(SETUP, src.setup + '.json'), {}).steps || {};
+  const steps = [], state = {}, ready = {};
+  (def.steps || []).forEach((d) => {
+    if (!d.oauth || !d.oauth.provider) return;
+    steps.push({ id: d.id, icon: d.icon || '', title: d.title || d.id, oauth: { provider: d.oauth.provider } });
+    const s = st[d.id] || {};
+    state[d.id] = { got: s.got || '', revokedAt: s.revokedAt || '', who: s.who || '' };
+    ready[d.oauth.provider] = oa.ready(d.oauth.provider);
+  });
+  const next = JSON.stringify({ tok: src.setup, steps, state, ready });
+  const f = path.join(src.dir, 'data', 'conn', 'setup.json');
+  let old = ''; try { old = fs.readFileSync(f, 'utf8'); } catch (e) {}
+  if (old === next || DRY) return false;
+  const o = fs.statSync(src.dir);
+  fs.mkdirSync(path.dirname(f), { recursive: true });
+  fs.writeFileSync(f, next);
+  for (const x of [path.dirname(f), f]) { try { fs.chownSync(x, o.uid, o.gid); } catch (e) {} }
+  return true;
 }
 
 async function one(src, now) {
   const saved = savedFor(src);
-  if (!saved) { say(src.name + ': אין חיבור גוגל בדף ההקמה'); if (status(src, false, 'none')) publish(src); return; }
+  // 7.11: never connected is not "cut": no status file, so the 📅 icon keeps opening Google as before.
+  if (!saved) { say(src.name + ': אין חיבור גוגל בדף ההקמה'); return; }
   const c = await oa.check(saved);
   if (!c.ok) {
     say(src.name + ': החיבור לגוגל לא עובד (' + c.error + ')');
@@ -107,6 +139,7 @@ async function one(src, now) {
 (async () => {
   const now = Date.now();
   for (const src of readJson(SOURCES, [])) {
+    try { if (connSnap(src)) publish(src); } catch (e) { say(src.name + ': חיבורים ' + e.message.slice(0, 80)); }
     try { await one(src, now); } catch (e) { say(src.name + ': ' + e.message.slice(0, 120)); }
   }
 })();

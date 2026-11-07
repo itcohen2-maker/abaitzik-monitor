@@ -835,6 +835,8 @@ function build() {
       return { at: (e && e.at) || '', ok: !st || !!st.ok, connect: (st && !st.ok && st.connect) || '',
         events: e ? e.events.filter((x) => Date.parse(x.end || x.start) >= from) : [] };
     })(),
+    // 7.11.2026: a customer's key for the fast chat on wa-bridge (data/fc-key.txt, sealed like the rest of D).
+    fcKey: inst.name === 'abaitzik' ? '' : (() => { try { const k = fs.readFileSync(path.join(inst.dataPath, 'fc-key.txt'), 'utf8').trim(); return /^[a-f0-9]{24,64}$/.test(k) ? k : ''; } catch (e) { return ''; } })(),
     // 7.11.2026: 🔌 חיבורים, what is connected and a connect link for each (lib/connections.js). His copy only.
     conn: (() => { const F = require('./lib/features.js').read(inst.dataPath, inst.name); return F.conn ? require('./lib/connections.js').list(inst.dataPath, inst.name, F) : null; })(),
     // 12.10: the 🩺 board, every monitor's faults in one file (health-board.js). His copy only.
@@ -4302,7 +4304,7 @@ try{
 </header>
 ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').bar : ''}
  <section class="talk" id="talkCard" aria-label="פנייה אליי">
-  ${inst.name === 'abaitzik' ? '<div class="tkHead"><b>📋 בקשות לביצוע</b><small>מבקשים, והמוניטור עושה</small></div>' : ''}
+  ${true ? '<div class="tkHead"><b>📋 בקשות לביצוע</b><small>מבקשים, והמוניטור עושה</small></div>' : ''}
   <!-- 13.10, idea from the reviewer he took: on the first visit nobody knows
        what this card is for. One line says it, until "הבנתי" or the first send. -->
   <div class="firsthint" id="firstHint" hidden>
@@ -4341,10 +4343,10 @@ ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').bar : ''}
   </form>
   <div class="msgsaid" id="quickSaid"></div>
  </section>
- ${inst.name === 'abaitzik' ? `<button type="button" class="fcrow" id="fcRow" hidden aria-label="שיחה עם המוניטור">
+ ${true ? `<button type="button" class="fcrow" id="fcRow" hidden aria-label="שיחה עם המוניטור">
   <span class="fch"><span class="fci" aria-hidden="true">💬</span><span class="fct"><b>שיחה עם המוניטור</b><em>מדברים ומתייעצים, תשובה תוך שניות. כאן לא מבצעים.</em></span></span>
   <span class="fcbub"><small>שואלים, מתייעצים, מתאמנים</small></span>
-  <span class="fcin" aria-hidden="true">כתוב שאלה למוניטור...<i>➤</i></span>
+  <span class="fcin" aria-hidden="true">${inst.gender === 'f' ? 'כתבי' : 'כתוב'} שאלה למוניטור...<i>➤</i></span>
  </button>` : ''}
  <button type="button" class="reloadbig" id="reloadBtn" aria-label="רענון וחזרה לדף הבית" title="רענון וחזרה לדף הבית">↻<span class="rlw">רענן</span></button>
 
@@ -17006,14 +17008,14 @@ var fcS={mode:'chat',msgs:[],busy:false,err:'',todo:{},loaded:false};
 try{var fcT=JSON.parse(localStorage.getItem('fcTodo')||'[]');if(fcT&&fcT.forEach)fcT.forEach(function(i){fcS.todo[i]='ok';});}catch(e){}
 function fcSaveTodo(){try{var a=[];for(var i in fcS.todo){if(fcS.todo[i]==='ok')a.push(i);}localStorage.setItem('fcTodo',JSON.stringify(a.slice(-200)));}catch(e){}}
 function fcPost(p,body){
- body.code=sendCode();
+ body.code=(D&&D.fcKey)||sendCode();
  return fetch(FC_API+p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){if(!r.ok){var er=new Error('api '+r.status);er.status=r.status;throw er;}return r.json();});
 }
 function fcApply(j){if(j&&j.msgs)fcS.msgs=j.msgs;if(j&&j.mode)fcS.mode=j.mode;}
 function fcPaintRow(){
  var r=document.getElementById('fcRow');if(!r)return;
  var s=r.querySelector('small'),m=fcS.msgs[fcS.msgs.length-1];
- if(s)s.textContent=m?((m.from==='me'?'אתה: ':'')+String(m.text||'').split(String.fromCharCode(10)).join(' ').slice(0,80)):'שואלים, מתייעצים, מתאמנים';
+ if(s)s.textContent=m?((m.from==='me'?'אני: ':'')+String(m.text||'').split(String.fromCharCode(10)).join(' ').slice(0,80)):'שואלים, מתייעצים, מתאמנים';
 }
 function fcPaintMode(){
  var lab=document.getElementById('fcMode'),end=document.getElementById('fcEnd'),snd=document.getElementById('fcSend');
