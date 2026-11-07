@@ -1,9 +1,9 @@
 {
- "at": "2026-11-07T14:47:27.346Z",
- "up": 0,
+ "at": "2026-11-07T15:47:27.027Z",
+ "up": 3600,
  "since": "2026-11-07T14:47:27.327Z",
- "last": "",
- "n": 0,
+ "last": "2026-11-07T15:39:39.673Z",
+ "n": 2,
  "recent": [
   {
    "at": "2026-11-07T13:04:09.430Z",
@@ -29,11 +29,11 @@
  "budget": {
   "ntfy": {
    "label": "ntfy",
-   "used": 45,
+   "used": 46,
    "cap": 150,
-   "left": 105,
+   "left": 104,
    "paid": false,
-   "blockedUntil": "",
+   "blockedUntil": "2026-11-07T15:53:40.687Z",
    "daily": false
   },
   "mail": {
@@ -55,10 +55,10 @@
    "daily": false
   }
  },
- "queued": 52,
+ "queued": 55,
  "pc": {
   "on": true,
-  "seen": "2026-11-07T14:46:46.979Z"
+  "seen": "2026-11-07T15:46:47.715Z"
  },
  "hold": false,
  "quota": null,
