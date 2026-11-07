@@ -940,6 +940,9 @@ body.editing .bn{display:none}
 .apv-btns button[disabled]{opacity:.5}
 .apv-btns .apv-ok{background:var(--surface);border-color:transparent;color:var(--accent)}
 .apv-ta{display:block;width:100%;min-height:120px;box-sizing:border-box;margin-top:8px;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);font:400 15px/1.6 Heebo,sans-serif}
+.apv-talk{margin-top:8px}
+.apv-talk>button[data-a=talk]{width:100%;min-height:46px;border-radius:14px;border:1px dashed color-mix(in srgb,var(--on-accent) 55%,transparent);background:none;color:var(--on-accent);font:700 15px Heebo,sans-serif;cursor:pointer}
+.apv-wait{margin-top:8px;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--on-accent) 14%,transparent);font:600 14px/1.5 Heebo,sans-serif}
 .apv-undo{display:block;width:100%;min-height:46px;margin-top:10px;border:0;border-radius:14px;background:var(--wait);color:#fff;font:800 15px Heebo,sans-serif;cursor:pointer}
 
 
@@ -2535,7 +2538,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-07T14:43:46.955Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-07T14:46:45.920Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4431,7 +4434,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='2c174c9956';
+var CODE_ID='dc5f1e0fd7';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -16481,7 +16484,7 @@ function sinceBoot(){
 
 var APV_UNDO_MS=5000, APV_SNOOZE_MS=4*60*60*1000;
 var apvShow=false;
-var apvPending={}, apvEditing={}, apvTimers={}, apvMore={}, apvWhy={}, apvSr=null;
+var apvPending={}, apvEditing={}, apvTimers={}, apvMore={}, apvWhy={}, apvSr=null, apvTalk={}, apvAsked={};
 function apvRead(key){try{var v=JSON.parse(localStorage.getItem(key)||'{}');return v&&typeof v==='object'?v:{};}catch(e){return {};}}
 function apvWrite(key,v){try{localStorage.setItem(key,JSON.stringify(v));}catch(e){}}
 function apvOpen(){
@@ -16510,6 +16513,10 @@ function apvCard(c){
   if(c.why)h+='<button type="button" class="apv-whyt" data-a="why" aria-expanded="'+(why?'true':'false')+'">למה?</button>'
    +'<div class="apv-why"'+(why?'':' hidden')+'>'+esc(c.why)+'</div>';
   h+='<div class="apv-btns"><button type="button" class="apv-ok" data-a="ok">אשר</button><button type="button" data-a="edit">✏️ עריכה</button><button type="button" data-a="later">לא עכשיו</button></div>';
+  if(apvAsked[c.id])h+='<div class="apv-wait">שלחתי. הנוסח המעודכן יחזור לכרטיס הזה, ואז תאשר.</div>';
+  else if(apvTalk[c.id])h+='<div class="apv-talk"><textarea class="apv-ta" dir="auto" aria-label="מה לשנות" placeholder="תגיד מה לשנות, למשל: תקצר, או תעביר למחר ב 10"></textarea>'
+   +'<div class="apv-btns"><button type="button" class="apv-ok" data-a="talksend">שלח ל AI</button><button type="button" class="apv-mic" data-a="mic" aria-label="לדבר במקום לכתוב">🎤 לדבר</button><button type="button" data-a="talkx">ביטול</button></div></div>';
+  else h+='<div class="apv-talk"><button type="button" data-a="talk">💬 תגיד לי מה לשנות</button></div>';
  }
  return h;
 }
@@ -16558,6 +16565,16 @@ function apvBind(card,c){
  on('undo',function(){clearTimeout(apvTimers[c.id]);delete apvPending[c.id];renderApprovals();});
  on('edit',function(){apvEditing[c.id]=true;renderApprovals();});
  on('editt',function(){apvEditing[c.id]=true;renderApprovals();});
+ on('talk',function(){apvTalk[c.id]=true;renderApprovals();});
+ on('talkx',function(){delete apvTalk[c.id];renderApprovals();});
+ on('talksend',function(){
+  var ta=card.querySelector('.apv-ta'),txt=ta?ta.value.trim():'';
+  if(!txt){toast('קודם לכתוב או להגיד מה לשנות.');return;}
+  var b=card.querySelector('[data-a="talksend"]');if(b)b.disabled=true;
+  sendText('תשובה מהמוניטור','💬 שיחה על אישור ['+c.id+']: '+c.question+'\nהנוסח הנוכחי:\n'+(c.preview||'')+'\nמה לשנות: '+txt,'💬 שיחה על אישור').then(function(){
+   delete apvTalk[c.id];apvAsked[c.id]=true;toast('נשלח. הנוסח המעודכן יחזור לכרטיס.');renderApprovals();
+  }).catch(function(){if(b)b.disabled=false;toast('לא נשלח. תנסה שוב.');});
+ });
  on('cancel',function(){delete apvEditing[c.id];renderApprovals();});
  on('send',function(){
   var ta=card.querySelector('.apv-ta'),txt=ta?ta.value.trim():'';
