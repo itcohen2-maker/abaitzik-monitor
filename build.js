@@ -1152,7 +1152,7 @@ function build() {
   // 11.10: and the link tiles, a site of the customer's own behind a tile.
   const links = tenantLinks(inst).map((l) => ({ key: l.key, url: l.url }));
   const screens = Array.isArray(inst.screens) && inst.screens.length
-    ? inst.screens.filter((id) => id !== 'gAdminReq').concat(guides.map((g, i) => 'gGuide' + i), links.map((l, i) => 'gLink' + i), ['gAdminReq']) : inst.screens;
+    ? inst.screens.filter((id) => id !== 'gAdminReq').concat(guides.map((g, i) => 'gGuide' + i), links.map((l, i) => 'gLink' + i), ['gConn', 'gAdminReq']) : inst.screens;
   // 4.11: the monthly package tile is shown only where a package exists (lib/plan-ui.js).
   if (Array.isArray(screens) && screens.length && require('./lib/plan-ui.js').on(inst.name)) screens.push('gPack');
   /*
@@ -1329,6 +1329,7 @@ const TENANT_TILES = {
   gBhMeet: ['g12', '🎙️ סיכומי פגישות', 'סיכום, החלטות ומשימות מכל פגישה'],
   gBhClients: ['g16', '👥 הלקוחות שלי', 'מה פתוח מול כל לקוח, ומתי נפגשים'],
   gBhCal: ['g15', '📅 פגישות ויומן', 'מה יש לי היום, ומה בהמשך'],
+  gConn: ['g4', '🔌 חיבורים', 'מה מחובר, וחיבור בלחיצה'],
   gBhMail: ['g11', '📧 מייל', 'מה חשוב, ולמי לחזור'],
   gBhQuote: ['g13', '🧾 הצעות מחיר', 'הצעה עם הלוגו שלך, לפני מע״מ, ב PDF'],
   // 3.11.2026, Itzik: a customer's own shopping list (lib/shop-list.js), not Itzik's shared doc.
@@ -1338,6 +1339,8 @@ const TENANT_TILES = {
 // catalog gave a phone only customer "connect the computer", a client follow up
 // and a content plan, some of them empty screens.
 const TENANT_DEFAULT = ['gTasks', 'gNotes'];
+// 7.11.2026: 🔌 on every customer's home (connSheet, lib/connections.js).
+const TENANT_CONN_TILE = ['g4', '🔌 חיבורים', 'מה מחובר, וחיבור בלחיצה'];
 /*
   Itzik, 8.10, a recording: an explanation the customer has to see, behind a
   tile of its own on her home screen that blinks until she opens it once.
@@ -1393,6 +1396,8 @@ function tenantTiles(inst) {
   // Itzik, 5.10: a customer does not change the system, he asks. The way to ask
   // is on every customer's home screen, whatever his intake chose.
   // 12.10 evening: an admin (Rinat) asks too, for anything on the page.
+  // 7.11.2026, Itzik: every monitor gets 🔌 חיבורים. A customer's home has tiles, not the icon row.
+  ids.push('gConn');
   ids.push('gAdminReq');
   // esc() is defined far above; this part is also lifted alone by a test.
   const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -16995,7 +17000,7 @@ function connSheet(){
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
 }
-on('icConn',connSheet);
+on('icConn',connSheet);on('gConn',connSheet);
 (function(){var a=document.getElementById('icGcal');if(!a)return;
  a.addEventListener('click',function(e){if(!D.cal)return;e.preventDefault();e.stopPropagation();calSheet(false);},true);})();
 /*

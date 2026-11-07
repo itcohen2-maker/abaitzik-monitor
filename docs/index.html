@@ -2513,7 +2513,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-07T11:23:33.786Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-07T11:27:46.058Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4409,7 +4409,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='346eab0935';
+var CODE_ID='ea8641f91d';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12652,7 +12652,7 @@ function connSheet(){
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
 }
-on('icConn',connSheet);
+on('icConn',connSheet);on('gConn',connSheet);
 (function(){var a=document.getElementById('icGcal');if(!a)return;
  a.addEventListener('click',function(e){if(!D.cal)return;e.preventDefault();e.stopPropagation();calSheet(false);},true);})();
 var FC_API='https://wa.abaitzik.com/api/chat';
