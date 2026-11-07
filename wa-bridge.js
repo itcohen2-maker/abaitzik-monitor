@@ -565,6 +565,13 @@ async function api(q, s, u) {
     log('ask -> ntfy-' + id);
     return send({ id: id });
   }
+  if (u.pathname === '/api/chat' || u.pathname === '/api/chat/thread' || u.pathname === '/api/chat/todo') {
+    // 7.11: fast consulting chat (lib/fast-chat.js), after the code check above.
+    let inst = {}; try { inst = require('./lib/instance.js'); } catch (e) {}
+    const bizOf = function (i) { let raw = ''; try { raw = JSON.parse(fs.readFileSync(path.join(ROOT, 'instance.json'), 'utf8')).business || ''; } catch (e) {} return raw || (i.profile && i.profile.business) || ''; };
+    const r = await require('./lib/fast-chat.js').chatApi(u.pathname, b, { dataPath: DATA, toMonitor: toMonitor, owner: inst.name === 'abaitzik', business: bizOf(inst) });
+    s.writeHead(r.status, h); return s.end(JSON.stringify(r.json));
+  }
   if (u.pathname === '/api/feed') {
     let items = []; try { items = require('./demo-feed.js').load(); } catch (e) {}
     return send({ items: items });
