@@ -4556,7 +4556,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   -->
   <button type="button" class="gt gWin" data-grp="net" id="gWin" data-upd="20261106-win03" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <!-- 5.11, Itzik: "את כל הסרטונים נעביר לאריח אחד, ובתוכו טאבים". One tile with a tab per kind; the old tiles (reels, future reels, campaign, plate, status, candle.times) were removed; their sheets stay in the code. -->
-  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1"><b>🎬 הסרטונים</b><small>קמפיין, שחר, סטטוס, מה בצלחת, נרות ושלי</small></button>
+  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1"><b>🎬 הסרטונים</b><small>רילים, רילים עתידיים, סטטוס, נרות, מה בצלחת, שחר וקמפיין</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
@@ -16489,6 +16489,12 @@ function vidGo(url,hash){window.navAway=1;try{sessionStorage.setItem('nerSend',J
 /* 6.11, Itzik: the status, candle and plate tabs list every video itself (today first, waiting for approval first),
    not just a button to a page. Read from the same queue.json files those pages read. */
 var VQ=null,VQT=0;
+// 7.11.2026: 📦 how far each queue reaches, the same lib/stock.js that stock-check.js runs every morning.
+var STOCK=(function(){var module={exports:{}};${fs.readFileSync(path.join(__dirname, 'lib', 'stock.js'), 'utf8')};return module.exports;})();
+function vqStockHtml(){
+ var S=[];try{S=STOCK.compute({st:(VQ&&VQ.st)||[],nr:(VQ&&VQ.nr)||[],pl:(VQ&&VQ.pl)||[]},vqDay());}catch(e){return '';}
+ return '<div class="vqStock" style="background:#f4f6f9;border-radius:12px;padding:8px 12px;margin:8px 0"><small style="display:block;font-weight:800;font-size:15px;color:#1a2233;margin:0 0 4px">📦 מלאי מוכן</small>'+S.map(function(c){return '<div style="font:600 14px Heebo,sans-serif;padding:3px 0;color:'+(c.low?'#b45309':'#15803d')+'">'+(c.low?'⚠️ ':'✓ ')+esc(c.title)+': '+esc(c.line)+'</div>';}).join('')+'<small style="display:block;color:#3a4458;margin-top:4px">כשמשהו חסר, המוניטור מזמין לבד עוד סרטונים כל בוקר.</small></div>';
+}
 function vqLoad(cb){
  if(VQ&&Date.now()-VQT<60000)return cb();
  var P=[['st','status/queue.json'],['nr','ner/queue.json'],['pl','plate/queue.json']],n=P.length,R={};
@@ -16561,7 +16567,9 @@ function vidTabs(){
   {id:'sh',l:'🌅 שחר',h:'הרילים, הסטורי והפוסטים של שחר',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isSh(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isSh(x.it);}))},
   {id:'pl',l:'🍽️ מה בצלחת'+(plN?' ('+plN+')':''),h:'הסטוריז לפי הסדר, אפשר לסדר ולמחוק',L:vqRows('pl').concat([{h:'📂 הדף המלא'},{k:'go',t:'🍽️ פתיחת הסטוריז של מה בצלחת',u:'plate/plate.html'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return plateN[x.it.n];}))},
   {id:'nr',l:'🕯️ נרות'+(nrN?' ('+nrN+')':''),h:'candle.times: סטוריז ופוסטים שמחכים לאישור שלך',L:vqRows('nr').concat([{h:'📂 הדף המלא'},{k:'go',t:'🕯️ פתיחת candle.times',u:'ner/candle.html'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return candleN[x.it.n];}))},
-  {id:'me',l:'🎬 שלי',h:'הרילים והסטוריז שלי, ורעיונות לבאים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return !isSh(x.it)&&!isIt(x.it);}),[{h:'💡 רעיונות לרילים הבאים'}],F.filter(function(x){return !isSh(x.it)&&!plateN[x.it.n]&&!candleN[x.it.n];}))}
+  // 7.11, Itzik: the reels and the future reels too, each in its own tab of the one tile.
+  {id:'me',l:'🎬 הרילים שלי',h:'הרילים והסטוריז שלי, מוכנים לרשתות',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return !isSh(x.it)&&!isIt(x.it);}))},
+  {id:'fut',l:'💡 רילים עתידיים',h:'רעיונות, רפרנסים ותסריטים לרילים הבאים',L:[{h:'💡 רעיונות לרילים הבאים'}].concat(F.filter(function(x){return !isSh(x.it)&&!plateN[x.it.n]&&!candleN[x.it.n];}))}
  ].map(function(t){
   // a heading with nothing under it is dropped, and a file that is not in the monitor is not shown
   var L=t.L.filter(function(x){return !(x.it&&x.it.r&&x.k!=='fut'&&!fileEntry(x.it.r));});
@@ -16584,6 +16592,7 @@ function vidSheet(tab){
  var rows=cur.L.filter(function(x){return !x.h;});
  w.innerHTML='<div class="ycard">'
   +'<b>🎬 הסרטונים</b>'
+  +vqStockHtml()
   +'<div role="tablist" style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px">'
   +T.map(function(t){var on=t.id===cur.id;
     return '<button type="button" role="tab" aria-selected="'+on+'" data-tab="'+t.id+'" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;font:inherit;font-weight:800;font-size:14px;border:2px solid '+(on?'#1d6fe0':'#c9d3e3')+';background:'+(on?'#1d6fe0':'#eef2f8')+';color:'+(on?'#fff':'#1a2233')+'">'+t.l+'</button>';}).join('')

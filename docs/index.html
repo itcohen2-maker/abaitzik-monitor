@@ -2515,7 +2515,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-07T12:20:51.011Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-07T12:23:22.328Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2767,7 +2767,7 @@ try{
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות לשיפור המוניטור</b><small>מה עוד המסך הזה יכול לעשות</small></button>
   <button type="button" class="gt gMed" data-grp="day" id="gMed"><b>🩺 אחרי הניתוח השני</b><small>ממוספר. המסמכים מהביקורת אצל הפרופסור</small></button>
   <button type="button" class="gt gWin" data-grp="net" id="gWin" data-upd="20261106-win03" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
-  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1"><b>🎬 הסרטונים</b><small>קמפיין, שחר, סטטוס, מה בצלחת, נרות ושלי</small></button>
+  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1"><b>🎬 הסרטונים</b><small>רילים, רילים עתידיים, סטטוס, נרות, מה בצלחת, שחר וקמפיין</small></button>
   <button type="button" class="gt gGviya" data-grp="work" id="gGviya" data-new="1"><b>📞 גבייה, יואל</b><small>דף שיואל מסמן, כל סימון מעדכן אותך</small></button>
   <button type="button" class="gt gShop" data-grp="home" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
   <button type="button" class="gt gBoyGeorge" data-grp="home" id="gBoyGeorge" data-new="1" data-files="boy-george-ticket-1.jpeg,boy-george-ticket-2.jpeg" data-upd="f1793646431"><b>🎤 בוי ג׳ורג׳</b><small>שני הכרטיסים להופעה ב-7.11, מנורה מבטחים</small></button>
@@ -2869,14 +2869,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4418,7 +4411,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='3cf172a3e6';
+var CODE_ID='af3fbe9e37';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12203,6 +12196,47 @@ on('gTom',tomSheet);
 window.addEventListener('pageshow',function(){window.navAway=0;});
 function vidGo(url,hash){window.navAway=1;try{sessionStorage.setItem('nerSend',JSON.stringify({t:NTFYIN(),c:sendCode()}));}catch(e){}location.href=url+(url.indexOf('?')>-1?'&':'?')+'v='+Date.now()+(hash?'#'+encodeURIComponent(hash):'');}
 var VQ=null,VQT=0;
+var STOCK=(function(){var module={exports:{}};'use strict';
+var DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+function addDay(d, n) {
+  var p = String(d).split('-');
+  var t = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2] + n));
+  return t.toISOString().slice(0, 10);
+}
+function dow(d) { var p = String(d).split('-'); return new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])).getUTCDay(); }
+function nice(d) { var p = String(d).split('-'); return DAYS[dow(d)] + ' ' + (+p[2]) + '.' + (+p[1]); }
+function short(d) { var p = String(d).split('-'); return (+p[2]) + '.' + (+p[1]); }
+function needed(today) { var out = []; for (var i = 0; i < 7; i++) { var d = addDay(today, i); if (dow(d) !== 6) out.push(d); } return out; }
+
+function reach(dates, today, what) {
+  var have = {}; dates.forEach(function (d) { if (d >= today) have[d] = 1; });
+  var need = needed(today), until = '', missing = [];
+  for (var i = 0; i < need.length; i++) { if (have[need[i]]) { if (!missing.length) until = need[i]; } else missing.push(need[i]); }
+  var last = Object.keys(have).sort().pop() || '';
+  var line = last ? 'מוכן עד ' + nice(last) : 'אין ' + what + ' מוכנים';
+  if (missing.length) line += ', חסרים: ' + missing.map(short).join(', ');
+  return { line: line, low: missing.length > 0, until: until, last: last };
+}
+
+function compute(Q, today) {
+  Q = Q || {};
+  var st = (Q.st || []).map(function (x) { return x.date; });
+  var nr = (Q.nr || []).filter(function (x) { return !x.posted && !x.failed && !x.rejected && !x.hold; }).map(function (x) { return x.date; });
+  var pl = (Q.pl || []).filter(function (x) { return !x.posted; }).length;
+  var a = reach(st, today, 'סטטוסים'), b = reach(nr, today, 'פריטים');
+  return [
+    { id: 'st', title: '📲 סטטוס', line: a.line, low: a.low },
+    { id: 'nr', title: '🕯️ נרות', line: b.line, low: b.low },
+    { id: 'pl', title: '🍽️ מה בצלחת', line: pl ? pl + ' סטוריז מוכנים בתור' : 'אין סטוריז מוכנים', low: pl < 4 },
+  ];
+}
+
+if (typeof module !== 'undefined') module.exports = { compute: compute };
+;return module.exports;})();
+function vqStockHtml(){
+ var S=[];try{S=STOCK.compute({st:(VQ&&VQ.st)||[],nr:(VQ&&VQ.nr)||[],pl:(VQ&&VQ.pl)||[]},vqDay());}catch(e){return '';}
+ return '<div class="vqStock" style="background:#f4f6f9;border-radius:12px;padding:8px 12px;margin:8px 0"><small style="display:block;font-weight:800;font-size:15px;color:#1a2233;margin:0 0 4px">📦 מלאי מוכן</small>'+S.map(function(c){return '<div style="font:600 14px Heebo,sans-serif;padding:3px 0;color:'+(c.low?'#b45309':'#15803d')+'">'+(c.low?'⚠️ ':'✓ ')+esc(c.title)+': '+esc(c.line)+'</div>';}).join('')+'<small style="display:block;color:#3a4458;margin-top:4px">כשמשהו חסר, המוניטור מזמין לבד עוד סרטונים כל בוקר.</small></div>';
+}
 function vqLoad(cb){
  if(VQ&&Date.now()-VQT<60000)return cb();
  var P=[['st','status/queue.json'],['nr','ner/queue.json'],['pl','plate/queue.json']],n=P.length,R={};
@@ -12273,7 +12307,8 @@ function vidTabs(){
   {id:'sh',l:'🌅 שחר',h:'הרילים, הסטורי והפוסטים של שחר',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isSh(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isSh(x.it);}))},
   {id:'pl',l:'🍽️ מה בצלחת'+(plN?' ('+plN+')':''),h:'הסטוריז לפי הסדר, אפשר לסדר ולמחוק',L:vqRows('pl').concat([{h:'📂 הדף המלא'},{k:'go',t:'🍽️ פתיחת הסטוריז של מה בצלחת',u:'plate/plate.html'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return plateN[x.it.n];}))},
   {id:'nr',l:'🕯️ נרות'+(nrN?' ('+nrN+')':''),h:'candle.times: סטוריז ופוסטים שמחכים לאישור שלך',L:vqRows('nr').concat([{h:'📂 הדף המלא'},{k:'go',t:'🕯️ פתיחת candle.times',u:'ner/candle.html'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return candleN[x.it.n];}))},
-  {id:'me',l:'🎬 שלי',h:'הרילים והסטוריז שלי, ורעיונות לבאים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return !isSh(x.it)&&!isIt(x.it);}),[{h:'💡 רעיונות לרילים הבאים'}],F.filter(function(x){return !isSh(x.it)&&!plateN[x.it.n]&&!candleN[x.it.n];}))}
+  {id:'me',l:'🎬 הרילים שלי',h:'הרילים והסטוריז שלי, מוכנים לרשתות',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return !isSh(x.it)&&!isIt(x.it);}))},
+  {id:'fut',l:'💡 רילים עתידיים',h:'רעיונות, רפרנסים ותסריטים לרילים הבאים',L:[{h:'💡 רעיונות לרילים הבאים'}].concat(F.filter(function(x){return !isSh(x.it)&&!plateN[x.it.n]&&!candleN[x.it.n];}))}
  ].map(function(t){
   var L=t.L.filter(function(x){return !(x.it&&x.it.r&&x.k!=='fut'&&!fileEntry(x.it.r));});
   t.L=L.filter(function(x,i){return !x.h||(L[i+1]&&!L[i+1].h);});
@@ -12295,6 +12330,7 @@ function vidSheet(tab){
  var rows=cur.L.filter(function(x){return !x.h;});
  w.innerHTML='<div class="ycard">'
   +'<b>🎬 הסרטונים</b>'
+  +vqStockHtml()
   +'<div role="tablist" style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px">'
   +T.map(function(t){var on=t.id===cur.id;
     return '<button type="button" role="tab" aria-selected="'+on+'" data-tab="'+t.id+'" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;font:inherit;font-weight:800;font-size:14px;border:2px solid '+(on?'#1d6fe0':'#c9d3e3')+';background:'+(on?'#1d6fe0':'#eef2f8')+';color:'+(on?'#fff':'#1a2233')+'">'+t.l+'</button>';}).join('')
@@ -17174,7 +17210,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="BDlgL4lKYXBB2yk96UVlN_bNhLBppiq0K8ORV-TQ2jb7k8IMskeWYICec19xE7N5VEcCzVXZU9Pxb9e64KH8OCk";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
