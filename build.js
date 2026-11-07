@@ -16951,9 +16951,11 @@ function calSheet(all){
 */
 var FC_API='https://wa.abaitzik.com/api/chat';
 var fcS={mode:'chat',msgs:[],busy:false,err:'',todo:{},loaded:false};
+try{var fcT=JSON.parse(localStorage.getItem('fcTodo')||'[]');if(fcT&&fcT.forEach)fcT.forEach(function(i){fcS.todo[i]='ok';});}catch(e){}
+function fcSaveTodo(){try{var a=[];for(var i in fcS.todo){if(fcS.todo[i]==='ok')a.push(i);}localStorage.setItem('fcTodo',JSON.stringify(a.slice(-200)));}catch(e){}}
 function fcPost(p,body){
  body.code=sendCode();
- return fetch(FC_API+p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){if(!r.ok)throw new Error('api '+r.status);return r.json();});
+ return fetch(FC_API+p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){if(!r.ok){var er=new Error('api '+r.status);er.status=r.status;throw er;}return r.json();});
 }
 function fcApply(j){if(j&&j.msgs)fcS.msgs=j.msgs;if(j&&j.mode)fcS.mode=j.mode;}
 function fcPaintRow(){
@@ -16965,6 +16967,7 @@ function fcPaintMode(){
  var lab=document.getElementById('fcMode'),end=document.getElementById('fcEnd'),snd=document.getElementById('fcSend');
  if(lab){lab.hidden=fcS.mode==='chat';lab.textContent=fcS.mode==='sales'?'🎯 אימון מכירות פעיל':fcS.mode==='coach'?'🧭 אימון עסקי פעיל':'';}
  if(end){end.hidden=fcS.mode==='chat';}
+ var sc=document.getElementById('fcScore');if(sc)sc.hidden=fcS.mode!=='sales';
  if(snd)snd.disabled=!!fcS.busy;
 }
 function fcPaintMsgs(force){
@@ -16989,21 +16992,21 @@ function fcSend(text){
  fcS.msgs=fcS.msgs.concat([{id:'tmp'+Date.now(),from:'me',text:text}]);
  var ta=document.getElementById('fcText');if(ta)ta.value='';
  fcPaintMode();fcPaintMsgs(true);
- fcPost('',{text:text}).then(function(j){fcApply(j);},function(){
-  fcS.msgs=fcS.msgs.slice(0,-1);fcS.err='אין חיבור כרגע';
+ fcPost('',{text:text}).then(function(j){fcApply(j);},function(e){
+  fcS.msgs=fcS.msgs.slice(0,-1);fcS.err=(e&&e.status)?'לא הצלחתי לענות עכשיו, נסה שוב':'אין חיבור כרגע';
   var t=document.getElementById('fcText');if(t&&!t.value)t.value=text;
  }).then(function(){fcS.busy=false;fcPaintMode();fcPaintMsgs(true);fcPaintRow();});
 }
 function fcTodo(id){
  if(!id||fcS.todo[id])return;
  fcS.todo[id]='wait';fcS.err='';fcPaintMsgs();
- fcPost('/todo',{id:id}).then(function(){fcS.todo[id]='ok';},function(){delete fcS.todo[id];fcS.err='לא נשלח לביצוע, לנסות שוב';}).then(function(){fcPaintMsgs();});
+ fcPost('/todo',{id:id}).then(function(){fcS.todo[id]='ok';fcSaveTodo();},function(){delete fcS.todo[id];fcS.err='לא נשלח לביצוע, לנסות שוב';}).then(function(){fcPaintMsgs();});
 }
 function fcSheet(){
  var old=document.getElementById('fcSheet');if(old)old.remove();
  var h='<div class="ycard"><b>💬 שיחה עם המוניטור</b>'
   +'<div class="fcMode" id="fcMode" hidden></div>'
-  +'<div class="fcTop"><button type="button" class="fcm" data-k="fcs">🎯 אימון מכירות</button><button type="button" class="fcm" data-k="fcc">🧭 אימון עסקי</button><button type="button" class="fcm" id="fcEnd" data-k="fce" hidden>✖ סיום אימון</button></div>'
+  +'<div class="fcTop"><button type="button" class="fcm" data-k="fcs">🎯 אימון מכירות</button><button type="button" class="fcm" data-k="fcc">🧭 אימון עסקי</button><button type="button" class="fcm" id="fcEnd" data-k="fce" hidden>✖ סיום אימון</button><button type="button" class="fcm" id="fcScore" data-k="fcg" hidden>🏁 סיום וציון</button></div>'
   +'<div class="fcMsgs" id="fcMsgs"></div>'
   +'<form class="fcForm" id="fcForm"><textarea id="fcText" rows="2" maxlength="2000" autocomplete="off" placeholder="כתוב לי מה מעסיק אותך"></textarea><button type="submit" id="fcSend">שליחה</button></form>'
   +'<button type="button" class="yb yx" data-k="">סגירה</button></div>';
@@ -17016,6 +17019,7 @@ function fcSheet(){
   if(t===w||k==='')close();
   else if(k==='fcs')fcSend('אימון מכירות');
   else if(k==='fcc')fcSend('אימון עסקי');
+  else if(k==='fcg')fcSend('סיימנו');
   else if(k==='fce')fcSend(fcS.mode==='sales'?'עצור אימון':'סיום אימון');
   else if(t.classList&&t.classList.contains('fcdo'))fcTodo(t.getAttribute('data-id'));
  };
@@ -17026,11 +17030,11 @@ function fcSheet(){
  // What was written in WhatsApp too.
  fcPost('/thread',{}).then(function(j){if(fcS.busy)return;fcApply(j);fcPaintMode();fcPaintMsgs(true);fcPaintRow();},function(){});
 }
+(function(){var r=document.getElementById('fcRow');if(r)r.onclick=fcSheet;})();
 // Called by applyFeatures once the row is allowed: one read of the thread, for the last line.
 function fcBoot(){
  var r=document.getElementById('fcRow');if(!r||r.hidden||fcS.loaded)return;
  fcS.loaded=true;
- r.onclick=fcSheet;
  fcPost('/thread',{}).then(function(j){if(fcS.busy)return;fcApply(j);fcPaintRow();},function(){});
 }
 /*
