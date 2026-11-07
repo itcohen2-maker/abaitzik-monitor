@@ -920,10 +920,12 @@ body.editing .bn{display:none}
 
 .apv{margin:0 0 14px;padding:16px;border-radius:20px;background:var(--accent);border:0;color:var(--on-accent);box-shadow:0 10px 24px color-mix(in srgb,var(--accent) 35%,transparent)}
 .apv[hidden]{display:none}
-.apv:not([hidden]){animation:apvBlink 1.8s ease-in-out infinite}
-@keyframes apvBlink{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--accent) 45%,transparent),0 10px 24px color-mix(in srgb,var(--accent) 35%,transparent);filter:brightness(1.12)}}
-@media (prefers-reduced-motion:reduce){.apv:not([hidden]){animation:none}}
-.apv-head{display:flex;align-items:center;gap:8px;font:800 16px Heebo,sans-serif;margin-bottom:2px}
+.apv.shut{padding:0;background:none;box-shadow:none;margin:0 0 10px}
+.apv-bar{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:0 14px;border:0;border-radius:14px;background:var(--accent);color:var(--on-accent);font:800 15px Heebo,sans-serif;cursor:pointer;animation:apvBlink 2.6s ease-in-out infinite}
+.apv-ch{margin-inline-start:auto;font-size:13px}
+@keyframes apvBlink{50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--accent) 45%,transparent)}}
+@media (prefers-reduced-motion:reduce){.apv-bar{animation:none}}
+.apv-head{display:flex;align-items:center;gap:8px;font:800 16px Heebo,sans-serif;margin-bottom:2px;width:100%;border:0;background:none;color:inherit;cursor:pointer;padding:0}
 .apv-n{min-width:26px;height:26px;padding:0 8px;border-radius:13px;background:var(--surface);color:var(--accent);font:800 13px/26px Heebo,sans-serif;text-align:center}
 .apv-card{background:color-mix(in srgb,var(--on-accent) 12%,transparent);border:1px solid color-mix(in srgb,var(--on-accent) 25%,transparent);border-radius:14px;padding:12px;margin-top:8px;color:var(--on-accent)}
 .apv-q{font:700 15.5px/1.5 Heebo,sans-serif;text-align:start}
@@ -2533,7 +2535,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-07T14:40:02.513Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-07T14:43:46.955Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4429,7 +4431,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='bbfa89bbbb';
+var CODE_ID='2c174c9956';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -16478,6 +16480,7 @@ function sinceBoot(){
 
 
 var APV_UNDO_MS=5000, APV_SNOOZE_MS=4*60*60*1000;
+var apvShow=false;
 var apvPending={}, apvEditing={}, apvTimers={}, apvMore={}, apvWhy={}, apvSr=null;
 function apvRead(key){try{var v=JSON.parse(localStorage.getItem(key)||'{}');return v&&typeof v==='object'?v:{};}catch(e){return {};}}
 function apvWrite(key,v){try{localStorage.setItem(key,JSON.stringify(v));}catch(e){}}
@@ -16574,10 +16577,17 @@ function renderApprovals(){
  var open=apvOpen();
  if(!open.length){host.hidden=true;host.innerHTML='';return;}
  host.hidden=false;
- host.innerHTML='<div class="apv-head"><b>🔔 לאישורך</b><span class="apv-n">'+open.length+'</span></div>'
+ host.className='apv'+(apvShow?'':' shut');
+ if(!apvShow){
+  host.innerHTML='<button type="button" class="apv-bar" aria-expanded="false">🔔 <b>לאישורך</b><span class="apv-n">'+open.length+'</span><span class="apv-ch">◂</span></button>';
+  host.querySelector('.apv-bar').onclick=function(){apvShow=true;renderApprovals();};
+  return;
+ }
+ host.innerHTML='<button type="button" class="apv-head" aria-expanded="true">🔔 <b>לאישורך</b><span class="apv-n">'+open.length+'</span><span class="apv-ch">▾</span></button>'
   +open.map(function(c){return '<div class="apv-card" data-id="'+esc(c.id)+'">'+apvCard(c)+'</div>';}).join('');
  var cards=host.querySelectorAll('.apv-card');
  for(var i=0;i<open.length;i++)apvBind(cards[i],open[i]);
+ host.querySelector('.apv-head').onclick=function(){apvShow=false;renderApprovals();};
 }
 
 
