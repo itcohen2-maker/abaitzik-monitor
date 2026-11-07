@@ -2780,6 +2780,13 @@ body:not(.inner) #thumbSet{display:block}
 /* 6.11, Itzik: "לא משנה מה כתוב בהם, יהיה להם גודל אחיד". Every home tile is the same height; long text is cut to two lines. */
 #blkTiles>.gt{height:124px;min-height:124px;max-height:124px}
 #blkTiles>.gt b,#blkTiles>.gt small{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
+/* 7.11.2026, Itzik: "להקטין את כל הדברים, לא יותר מדי". Tiles 124 to 94, title on one line, text stays 13px and up. */
+#blkTiles.grid{gap:8px}
+#blkTiles>.gt{height:94px;min-height:94px;max-height:94px;padding:10px 12px}
+#blkTiles>.gt b{-webkit-line-clamp:1;font-size:15.5px}
+#blkIcons.row{gap:8px 6px;padding-bottom:8px}
+#blkIcons .ic .c{width:50px;height:50px}
+#blkIcons .ic svg{width:25px;height:25px}
 .gt small{font-size:13px;opacity:.96;font-weight:400;text-shadow:0 1px 3px rgba(0,0,0,.4)}
 .gt:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .g1{background:linear-gradient(150deg,#5aa9fb,var(--blue))}
