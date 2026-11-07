@@ -2532,7 +2532,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-07T12:51:26.893Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-07T12:59:58.878Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4428,7 +4428,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='0b4ae2e534';
+var CODE_ID='df425a8c66';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10511,6 +10511,12 @@ var REEL_ITEMS=[
 {n:'שחר 33',t:'מודעה: ככה נראה הבוקר שלי · 4K הכי איכותי, לשמירה בגלריה',r:'reel-33-ad-morning.mp4'},
 {n:'שחר 33 כריכה',t:'הכריכה · 4K',r:'reel-33-cover.png'},
 {n:'שחר 33 פרסום',p:'sh33',t:'כיתוב, מוזיקה והאשטגים לכל רשת',r:'reel-sh33-post.txt'},
+{n:'IT 02 עברית',t:'ריל: מניות ה AI קרסו, ומה זה אומר לעסק קטן · עברית, 720p, לשמירה בגלריה',r:'it02he.mp4'},
+{n:'IT 02 עברית כריכה',t:'הכריכה',r:'it02he-cover.jpg'},
+{n:'IT 02 עברית פרסום',p:'it02he',t:'כיתוב והאשטגים לכל רשת, עם המקור',r:'it02he-post.txt'},
+{n:'IT 02 אנגלית',t:'ריל באנגלית: AI stocks crashed, what it means for a small business · 720p, לשמירה בגלריה',r:'it02en.mp4'},
+{n:'IT 02 אנגלית כריכה',t:'הכריכה',r:'it02en-cover.jpg'},
+{n:'IT 02 אנגלית פרסום',p:'it02en',t:'כיתוב והאשטגים לכל רשת, עם המקור',r:'it02en-post.txt'},
 {n:'IT 01',t:'חדש: המוניטור, וואטסאפ ולוח בקרה אחד, לסטורי באינסטגרם ובטיקטוק · הכי איכותי, לשמירה בגלריה',r:'it01-monitor-v2.mp4'},
 {n:'IT 01 כריכה',t:'הכריכה: מי לא שילם לך החודש?',r:'it01-cover.jpg'},
 {n:'IT 01 פרסום',p:'it01',t:'טקסט לסטורי באינסטגרם ולטיקטוק, עם קישור לכל רשת',r:'it01-post.txt'},
@@ -12327,7 +12333,7 @@ function vidTabs(){
   {id:'sh',l:'🌅 שחר',h:'הרילים, הסטורי והפוסטים של שחר',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isSh(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isSh(x.it);}))},
   {id:'pl',l:'🍽️ מה בצלחת'+(plN?' ('+plN+')':''),h:'הסטוריז לפי הסדר, אפשר לסדר ולמחוק',L:vqRows('pl').concat([{h:'📂 הדף המלא'},{k:'go',t:'🍽️ פתיחת הסטוריז של מה בצלחת',u:'plate/plate.html'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return plateN[x.it.n];}))},
   {id:'nr',l:'🕯️ נרות'+(nrN?' ('+nrN+')':''),h:'candle.times: סטוריז ופוסטים שמחכים לאישור שלך',L:vqRows('nr').concat([{h:'📂 הדף המלא'},{k:'go',t:'🕯️ פתיחת candle.times',u:'ner/candle.html'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return candleN[x.it.n];}))},
-  {id:'it',l:'💻 IT Solution',upd:'20261107-it01',h:'הרילים של IT Solution: המוניטור, הקמפיינים והעסקים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isIt(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isIt(x.it);}))},
+  {id:'it',l:'💻 IT Solution',upd:'20261107-it02',h:'הרילים של IT Solution: המוניטור, הקמפיינים והעסקים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isIt(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isIt(x.it);}))},
   {id:'me',l:'🎬 הרילים שלי',h:'הרילים והסטוריז שלי, מוכנים לרשתות',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return !isSh(x.it)&&!isIt(x.it);}))},
   {id:'fut',l:'💡 רילים עתידיים',h:'רעיונות, רפרנסים ותסריטים לרילים הבאים',L:[{h:'💡 רעיונות לרילים הבאים'}].concat(F.filter(function(x){return !isSh(x.it)&&!isIt(x.it)&&!plateN[x.it.n]&&!candleN[x.it.n];}))}
  ].map(function(t){

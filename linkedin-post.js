@@ -42,7 +42,7 @@ function card(it) {
   const f = path.join(CHOICES, 'linkedin-' + it.id + '.json');
   if (fs.existsSync(f) || DRY) return false;
   fs.mkdirSync(CHOICES, { recursive: true });
-  fs.writeFileSync(f, JSON.stringify({ type: 'approve', kind: 'send', id: 'linkedin-' + it.id, at: new Date().toISOString(),
+  fs.writeFileSync(f, JSON.stringify({ type: 'approve', kind: 'send', id: 'linkedin-' + it.id, at: new Date(Date.parse('2030-01-01') - Date.parse(it.date)).toISOString(), // the strip lists newest first: the earliest post gets the latest stamp
     question: 'פוסט ללינקדין, יעלה ביום ' + dayName(it.date) + ' ב ' + it.time + ' (' + it.id + '): ' + firstLine(it.text).slice(0, 70),
     preview: it.text,
     why: 'פוסט בפרופיל שלך בלינקדין. אחרי "אשר" הוא עולה לבד בזמן שכתוב. "ערוך" מעלה את הנוסח שלך במקומו. "לא עכשיו" לא מעלה כלום.' }, null, 1));

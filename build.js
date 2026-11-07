@@ -14538,6 +14538,13 @@ var REEL_ITEMS=[
 {n:'שחר 33',t:'מודעה: ככה נראה הבוקר שלי · 4K הכי איכותי, לשמירה בגלריה',r:'reel-33-ad-morning.mp4'},
 {n:'שחר 33 כריכה',t:'הכריכה · 4K',r:'reel-33-cover.png'},
 {n:'שחר 33 פרסום',p:'sh33',t:'כיתוב, מוזיקה והאשטגים לכל רשת',r:'reel-sh33-post.txt'},
+// 7.11, Itzik: first AI channel reel, the Nasdaq drop of 5.5 percent. Same video twice, Hebrew and English (two Instagram accounts). 720p, not 4K.
+{n:'IT 02 עברית',t:'ריל: מניות ה AI קרסו, ומה זה אומר לעסק קטן · עברית, 720p, לשמירה בגלריה',r:'it02he.mp4'},
+{n:'IT 02 עברית כריכה',t:'הכריכה',r:'it02he-cover.jpg'},
+{n:'IT 02 עברית פרסום',p:'it02he',t:'כיתוב והאשטגים לכל רשת, עם המקור',r:'it02he-post.txt'},
+{n:'IT 02 אנגלית',t:'ריל באנגלית: AI stocks crashed, what it means for a small business · 720p, לשמירה בגלריה',r:'it02en.mp4'},
+{n:'IT 02 אנגלית כריכה',t:'הכריכה',r:'it02en-cover.jpg'},
+{n:'IT 02 אנגלית פרסום',p:'it02en',t:'כיתוב והאשטגים לכל רשת, עם המקור',r:'it02en-post.txt'},
 // 5.11, Itzik: the monitor with WhatsApp and the control panel, for Instagram story and TikTok (IT Solution).
 {n:'IT 01',t:'חדש: המוניטור, וואטסאפ ולוח בקרה אחד, לסטורי באינסטגרם ובטיקטוק · הכי איכותי, לשמירה בגלריה',r:'it01-monitor-v2.mp4'},
 {n:'IT 01 כריכה',t:'הכריכה: מי לא שילם לך החודש?',r:'it01-cover.jpg'},
@@ -16585,7 +16592,7 @@ function vidTabs(){
   {id:'pl',l:'🍽️ מה בצלחת'+(plN?' ('+plN+')':''),h:'הסטוריז לפי הסדר, אפשר לסדר ולמחוק',L:vqRows('pl').concat([{h:'📂 הדף המלא'},{k:'go',t:'🍽️ פתיחת הסטוריז של מה בצלחת',u:'plate/plate.html'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return plateN[x.it.n];}))},
   {id:'nr',l:'🕯️ נרות'+(nrN?' ('+nrN+')':''),h:'candle.times: סטוריז ופוסטים שמחכים לאישור שלך',L:vqRows('nr').concat([{h:'📂 הדף המלא'},{k:'go',t:'🕯️ פתיחת candle.times',u:'ner/candle.html'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return candleN[x.it.n];}))},
   // 7.11, Itzik: a tab for IT Solution reels (ready ones first, then the ideas). upd = the soft blink until the tab is opened.
-  {id:'it',l:'💻 IT Solution',upd:'20261107-it01',h:'הרילים של IT Solution: המוניטור, הקמפיינים והעסקים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isIt(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isIt(x.it);}))},
+  {id:'it',l:'💻 IT Solution',upd:'20261107-it02',h:'הרילים של IT Solution: המוניטור, הקמפיינים והעסקים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isIt(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isIt(x.it);}))},
   // 7.11, Itzik: the reels and the future reels too, each in its own tab of the one tile.
   {id:'me',l:'🎬 הרילים שלי',h:'הרילים והסטוריז שלי, מוכנים לרשתות',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return !isSh(x.it)&&!isIt(x.it);}))},
   {id:'fut',l:'💡 רילים עתידיים',h:'רעיונות, רפרנסים ותסריטים לרילים הבאים',L:[{h:'💡 רעיונות לרילים הבאים'}].concat(F.filter(function(x){return !isSh(x.it)&&!isIt(x.it)&&!plateN[x.it.n]&&!candleN[x.it.n];}))}
