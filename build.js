@@ -2688,12 +2688,21 @@ body:not(.inner) #thumbSet{display:block}
 #talkCard .quickwrite textarea{min-height:46px;padding:10px 12px;font-size:15.5px}
 #talkCard .quickwrite button{min-height:46px;padding:0 16px}
 /* 7.11.2026: 💬 שיחה עם המוניטור, שורה סגורה מתחת לכרטיס הבקשות ומסך שיחה (fcSheet). */
-.fcrow{display:flex;align-items:center;gap:10px;width:100%;min-height:56px;margin:0 0 10px;padding:8px 12px;box-sizing:border-box;text-align:start;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--r);font-family:Heebo,sans-serif;cursor:pointer}
+.tkHead{grid-column:1 / -1;display:flex;align-items:baseline;gap:8px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.tkHead b{font:800 17px Heebo,sans-serif}
+.tkHead small{font:400 13px Heebo,sans-serif;color:var(--dim)}
+.fcrow{display:flex;flex-direction:column;align-items:stretch;gap:8px;width:100%;margin:4px 0 12px;padding:12px;box-sizing:border-box;text-align:start;background:var(--accent-soft);color:var(--ink);border:2px solid #06b6d4;border-radius:var(--r);font-family:Heebo,sans-serif;cursor:pointer}
+.fcrow .fch{display:flex;align-items:center;gap:10px}
+.fcrow em{font:400 13px Heebo,sans-serif;font-style:normal;color:var(--dim)}
+.fcrow .fcbub{align-self:flex-start;max-width:88%;background:var(--surface);border:1px solid var(--line);border-radius:14px 14px 14px 4px;padding:8px 12px;box-shadow:var(--shadow)}
+.fcrow .fcbub small{display:block;font:400 14px Heebo,sans-serif;color:var(--ink);white-space:normal;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.fcrow .fcin{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:9px 14px;font:400 14.5px Heebo,sans-serif;color:var(--dim)}
+.fcrow .fcin i{font-style:normal;color:#0891b2;font-size:16px}
 .fcrow[hidden]{display:none}
 .fcrow .fci{font-size:24px;line-height:1;flex:0 0 auto}
 .fcrow .fct{display:flex;flex-direction:column;min-width:0;flex:1}
 .fcrow b{font:700 16px Heebo,sans-serif}
-.fcrow small{font:400 13px Heebo,sans-serif;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fcrow .fcbub small{font-size:14px}
 .fcrow:active{background:var(--accent-soft)}
 #fcSheet .ycard{max-width:560px;height:100%;overflow:hidden;font-family:Heebo,sans-serif}
 #fcSheet .ycard>b{font-size:17px}
@@ -4293,6 +4302,7 @@ try{
 </header>
 ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').bar : ''}
  <section class="talk" id="talkCard" aria-label="פנייה אליי">
+  ${inst.name === 'abaitzik' ? '<div class="tkHead"><b>📋 בקשות לביצוע</b><small>מבקשים, והמוניטור עושה</small></div>' : ''}
   <!-- 13.10, idea from the reviewer he took: on the first visit nobody knows
        what this card is for. One line says it, until "הבנתי" or the first send. -->
   <div class="firsthint" id="firstHint" hidden>
@@ -4332,8 +4342,9 @@ ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').bar : ''}
   <div class="msgsaid" id="quickSaid"></div>
  </section>
  ${inst.name === 'abaitzik' ? `<button type="button" class="fcrow" id="fcRow" hidden aria-label="שיחה עם המוניטור">
-  <span class="fci" aria-hidden="true">💬</span>
-  <span class="fct"><b>שיחה עם המוניטור</b><small>שואלים, מתייעצים, מתאמנים</small></span>
+  <span class="fch"><span class="fci" aria-hidden="true">💬</span><span class="fct"><b>שיחה עם המוניטור</b><em>מדברים ומתייעצים, תשובה תוך שניות. כאן לא מבצעים.</em></span></span>
+  <span class="fcbub"><small>שואלים, מתייעצים, מתאמנים</small></span>
+  <span class="fcin" aria-hidden="true">כתוב שאלה למוניטור...<i>➤</i></span>
  </button>` : ''}
  <button type="button" class="reloadbig" id="reloadBtn" aria-label="רענון וחזרה לדף הבית" title="רענון וחזרה לדף הבית">↻<span class="rlw">רענן</span></button>
 
