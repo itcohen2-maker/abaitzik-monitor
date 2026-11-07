@@ -14601,13 +14601,6 @@ var REEL_ITEMS=[
 {n:'שחר 33',t:'מודעה: ככה נראה הבוקר שלי · 4K הכי איכותי, לשמירה בגלריה',r:'reel-33-ad-morning.mp4'},
 {n:'שחר 33 כריכה',t:'הכריכה · 4K',r:'reel-33-cover.png'},
 {n:'שחר 33 פרסום',p:'sh33',t:'כיתוב, מוזיקה והאשטגים לכל רשת',r:'reel-sh33-post.txt'},
-// 7.11, Itzik: first AI channel reel, the Nasdaq drop of 5.5 percent. Same video twice, Hebrew and English (two Instagram accounts). 720p, not 4K.
-{n:'IT 02 עברית',t:'ריל: מניות ה AI קרסו, ומה זה אומר לעסק קטן · עברית, 720p, לשמירה בגלריה',r:'it02he.mp4'},
-{n:'IT 02 עברית כריכה',t:'הכריכה',r:'it02he-cover.jpg'},
-{n:'IT 02 עברית פרסום',p:'it02he',t:'כיתוב והאשטגים לכל רשת, עם המקור',r:'it02he-post.txt'},
-{n:'IT 02 אנגלית',t:'ריל באנגלית: AI stocks crashed, what it means for a small business · 720p, לשמירה בגלריה',r:'it02en.mp4'},
-{n:'IT 02 אנגלית כריכה',t:'הכריכה',r:'it02en-cover.jpg'},
-{n:'IT 02 אנגלית פרסום',p:'it02en',t:'כיתוב והאשטגים לכל רשת, עם המקור',r:'it02en-post.txt'},
 // 7.11, Itzik: AI channel reel 03, Atlas four fingers, all AI (his real photo as the presenter, silver shirt). Hebrew first; English follows.
 {n:'IT 03 עברית',t:'ריל: לרובוט הזה יש רק ארבע אצבעות, וזה לא באג · עברית, כולו AI, לשמירה בגלריה',r:'it03he.mp4'},
 {n:'IT 03 עברית כריכה',t:'הכריכה',r:'it03he-cover.jpg'},
