@@ -1391,6 +1391,19 @@ function tenantCircleLinks(inst) {
   };
   return '\n  <div class="row" id="blkCircles" role="group" aria-label="קיצורים לאתרים">' + list.map(one).join('') + '\n  </div>';
 }
+/*
+  7.11.2026, Itzik: "אייקון יומן, אימון מכירות ואימון עסקי, גם במוניטור של אלון". The same two training
+  icons as on his own page, and the calendar: his own events when there is a copy, otherwise the tasks screen
+  (by day). The trainings stay hidden until fcBoot says the chat is allowed.
+*/
+function tenantTools(inst) {
+  if (!inst || inst.name === 'abaitzik') return '';
+  return '\n  <div class="row" id="blkTools" role="group" aria-label="יומן ואימונים">'
+    + '\n   <button type="button" class="ic icNew" id="icTCal" data-new="1"><span class="c c-gcal"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></span>יומן</button>'
+    + '\n   <button type="button" class="ic icNew" id="icFcSales" data-new="1" style="display:none"><span class="c c-fcs">🎯</span>אימון מכירות</button>'
+    + '\n   <button type="button" class="ic icNew" id="icFcCoach" data-new="1" style="display:none"><span class="c c-fcc">🧭</span>אימון עסקי</button>'
+    + '\n  </div>';
+}
 function tenantTiles(inst) {
   const ids =(Array.isArray(inst.screens) && inst.screens.length ? inst.screens : TENANT_DEFAULT).filter((id) => id !== 'gAdminReq');
   // Itzik, 5.10: a customer does not change the system, he asks. The way to ask
@@ -4808,7 +4821,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <button type="button" class="shipline" id="shipLine" hidden></button>
   <!-- 14.10: one tile per project, drawn from D.projects after unlock (projTiles). -->
   <div class="grid" id="blkProj" hidden></div>
-  <div class="grid" id="blkTiles">${tenantTiles(inst)}${require('./lib/plan-ui.js').tile(inst.name)}</div>${tenantCircleLinks(inst)}${tenantCircles(inst)}
+  <div class="grid" id="blkTiles">${tenantTiles(inst)}${require('./lib/plan-ui.js').tile(inst.name)}</div>${tenantTools(inst)}${tenantCircleLinks(inst)}${tenantCircles(inst)}
 <!--TENANT:END-->
 
 
@@ -17200,8 +17213,8 @@ function fcPaintMsgs(force){
  box.innerHTML=h;
  box.scrollTop=near?box.scrollHeight:keep;
 }
-function fcSend(text){
- text=String(text||'').trim();if(!text||fcS.busy)return;
+function fcSend(text,force){
+ text=String(text||'').trim();if(!text||(fcS.busy&&!force))return;
  fcS.busy=true;fcS.err='';
  fcS.msgs=fcS.msgs.concat([{id:'tmp'+Date.now(),from:'me',text:text}]);
  var ta=document.getElementById('fcText');if(ta)ta.value='';
@@ -17233,8 +17246,8 @@ function fcSheet(){
   if(t===w||k==='')close();
   else if(k==='fcs')fcSend('אימון מכירות');
   else if(k==='fcc')fcSend('אימון עסקי');
-  else if(k==='fcg')fcSend('סיימנו');
-  else if(k==='fce')fcSend(fcS.mode==='sales'?'עצור אימון':'סיום אימון');
+  else if(k==='fcg')fcSend('סיימנו',true);
+  else if(k==='fce'){var wasSales=fcS.mode==='sales';fcS.mode='chat';fcPaintMode();fcSend(wasSales?'עצור אימון':'סיום אימון',true);}
   else if(t.classList&&t.classList.contains('fcdo'))fcTodo(t.getAttribute('data-id'));
  };
  w.querySelector('#fcForm').onsubmit=function(e){e.preventDefault();var ta=document.getElementById('fcText');fcSend(ta?ta.value:'');};
@@ -17251,6 +17264,7 @@ function fcSheet(){
  if(r)r.addEventListener('click',function(e){var t=e.target;if(t&&t.id==='fcMore')fcSheet();});
  on('icFcSales',function(){fcSheet();fcSend('אימון מכירות');});
  on('icFcCoach',function(){fcSheet();fcSend('אימון עסקי');});
+ on('icTCal',function(){if(D.cal&&D.cal.events&&D.cal.events.length){calSheet(false);return;}var t=document.getElementById('gTasks');if(t)t.click();else calSheet(false);});
 })();
 // Called by applyFeatures once the row is allowed: one read of the thread, for the last line.
 function fcBoot(){
