@@ -2584,7 +2584,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-07T18:00:02.388Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-07T18:03:17.401Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2940,14 +2940,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4489,7 +4482,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='8c6e316fc0';
+var CODE_ID='a1efb2ee48';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12885,8 +12878,8 @@ function fcPaintMsgs(force){
  box.innerHTML=h;
  box.scrollTop=near?box.scrollHeight:keep;
 }
-function fcSend(text){
- text=String(text||'').trim();if(!text||fcS.busy)return;
+function fcSend(text,force){
+ text=String(text||'').trim();if(!text||(fcS.busy&&!force))return;
  fcS.busy=true;fcS.err='';
  fcS.msgs=fcS.msgs.concat([{id:'tmp'+Date.now(),from:'me',text:text}]);
  var ta=document.getElementById('fcText');if(ta)ta.value='';
@@ -12918,8 +12911,8 @@ function fcSheet(){
   if(t===w||k==='')close();
   else if(k==='fcs')fcSend('אימון מכירות');
   else if(k==='fcc')fcSend('אימון עסקי');
-  else if(k==='fcg')fcSend('סיימנו');
-  else if(k==='fce')fcSend(fcS.mode==='sales'?'עצור אימון':'סיום אימון');
+  else if(k==='fcg')fcSend('סיימנו',true);
+  else if(k==='fce'){var wasSales=fcS.mode==='sales';fcS.mode='chat';fcPaintMode();fcSend(wasSales?'עצור אימון':'סיום אימון',true);}
   else if(t.classList&&t.classList.contains('fcdo'))fcTodo(t.getAttribute('data-id'));
  };
  w.querySelector('#fcForm').onsubmit=function(e){e.preventDefault();var ta=document.getElementById('fcText');fcSend(ta?ta.value:'');};
@@ -12935,6 +12928,7 @@ function fcSheet(){
  if(r)r.addEventListener('click',function(e){var t=e.target;if(t&&t.id==='fcMore')fcSheet();});
  on('icFcSales',function(){fcSheet();fcSend('אימון מכירות');});
  on('icFcCoach',function(){fcSheet();fcSend('אימון עסקי');});
+ on('icTCal',function(){if(D.cal&&D.cal.events&&D.cal.events.length){calSheet(false);return;}var t=document.getElementById('gTasks');if(t)t.click();else calSheet(false);});
 })();
 function fcBoot(){
  var r=document.getElementById('fcRow');if(!r||r.hidden)return;
@@ -17414,7 +17408,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="BDlgL4lKYXBB2yk96UVlN_bNhLBppiq0K8ORV-TQ2jb7k8IMskeWYICec19xE7N5VEcCzVXZU9Pxb9e64KH8OCk";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
