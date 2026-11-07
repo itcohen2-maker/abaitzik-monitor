@@ -4753,10 +4753,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   -->
   <a class="ic" data-grp="work" href="#" id="icAl" data-new="1"><span class="c c-al" id="icAlC">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-2 9a6 6 0 0 1-12 0z"/><circle cx="9" cy="9.5" r="1"/><circle cx="15" cy="9.5" r="1"/><path d="M9.5 13c1.5 1.3 3.5 1.3 5 0"/></svg></span>אלון</a>
-  <!-- 3.11, Itzik: "תעשה לי אייקון של מוניטור של שי עם הקוד שלו". Same as Alon's: green or red by the
-       health check, and inside, his card with the link and the entry code (sealed data, not in this script). -->
-  <a class="ic icNew" data-grp="work" href="#" id="icShai" data-new="1"><span class="c c-shai" id="icShaiC">
-   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M9 20h6M12 16v4"/><path d="M7 11l2.5-2.5 2 2L15 7"/></svg></span>שי</a>
+  <!-- 8.11.2026, Itzik: the Shai icon is gone. He is not paying and his access was cancelled. -->
   <button type="button" class="ic" data-grp="work" id="icHealth"><span class="c c-hl" id="icHealthC">🩺</span>תקלות</button>
   <!-- 7.11.2026: 🔌 חיבורים, shown only when D.features.conn (applyFeatures). -->
   <button type="button" class="ic" data-grp="work" id="icConn" style="display:none"><span class="c c-cn">🔌</span>חיבורים</button>
