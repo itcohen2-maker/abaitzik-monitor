@@ -993,6 +993,10 @@ body.editing .bn{display:none}
 .cnt,.nb-c,.gb-c,.apv-n,.icN,.tile .v{font-variant-numeric:tabular-nums}
 .mg{margin:0 0 14px;padding:16px;border-radius:20px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);color:var(--ink)}
 .mg[hidden]{display:none}
+.mg{padding:12px 16px}
+.mg:not(.open) .mg-list{display:none}
+.mg .hb-head{cursor:pointer}
+.mg .mg-tg{font:700 13.5px Heebo,sans-serif;color:var(--accent);white-space:nowrap}
 .mg-list{margin:10px 0 0;padding:0;list-style:none}
 .mg-list li{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line);cursor:default}
 .mg-list li:first-child{border-top:0;padding-top:4px}
@@ -2455,7 +2459,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-07T06:57:44.819Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-07T06:59:39.316Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2802,7 +2806,14 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-
+<div class="alerts" id="pushBox" hidden>
+ <div>
+  <b>התראות לטלפון</b>
+  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
+ </div>
+ <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
+ <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
+</div>
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4344,7 +4355,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='7015fe92d5';
+var CODE_ID='6d5e264c91';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -16433,7 +16444,7 @@ var MG_ST={done:'✓ בוצע',todo:'עליך',warn:'לשים לב'};
 function hmMgrHtml(m){
  if(!m||!Array.isArray(m.items)||!m.items.length)return '';
  var left=m.items.filter(function(i){return i.st!=='done';}).length,at=hmHM(m.at);
- var h='<div class="hb-head"><b>🧑‍💼 המנהל</b><small>'+(at?'סבב '+esc(at)+' · ':'')+(left?left+' פתוחים':'הכל בוצע')+'</small></div><ul class="mg-list">';
+ var h='<div class="hb-head" role="button" tabindex="0" aria-label="פתיחה וסגירה של המנהל"><b>🧑‍💼 המנהל</b><small>'+(at?'סבב '+esc(at)+' · ':'')+(left?left+' פתוחים':'הכל בוצע')+'</small><span class="mg-tg"></span></div><ul class="mg-list">';
  m.items.forEach(function(i){
   var st=MG_ST[i.st]?i.st:'todo';
   if(st!=='done'&&rxDone(i.t))return;
@@ -16449,6 +16460,10 @@ function renderHome(){
  HM_ACTS=[];
  var mg=document.getElementById('homeMgr');
  if(mg){var mh=hmMgrHtml(D0.manager);mg.hidden=!mh;mg.innerHTML=mh;
+  var mgTg=function(){var t=mg.querySelector('.mg-tg');if(t)t.textContent=mg.classList.contains('open')?'▴ סגירה':'▾ פתיחה';};mgTg();
+  if(!mg.getAttribute('data-tg')){mg.setAttribute('data-tg','1');
+   mg.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('.hb-head')){mg.classList.toggle('open');mgTg();}});
+   mg.addEventListener('keydown',function(e){if((e.key==='Enter'||e.key===' ')&&e.target.closest&&e.target.closest('.hb-head')){e.preventDefault();mg.classList.toggle('open');mgTg();}});}
   if(!mg.getAttribute('data-bound')){mg.setAttribute('data-bound','1');mg.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('.rx,.rx-snz'))return;var li=e.target&&e.target.closest?e.target.closest('[data-go]'):null;if(li&&MG_GO[li.getAttribute('data-go')])MG_GO[li.getAttribute('data-go')]();});}}
  var brief=document.getElementById('homeBrief'),kpis=document.getElementById('homeKpis');
  var bh=hmBriefHtml(D0.brief);
@@ -16984,7 +16999,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="";
+var PUSH_KEY="BDlgL4lKYXBB2yk96UVlN_bNhLBppiq0K8ORV-TQ2jb7k8IMskeWYICec19xE7N5VEcCzVXZU9Pxb9e64KH8OCk";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
