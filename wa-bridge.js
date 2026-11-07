@@ -362,6 +362,20 @@ async function trainTurn(to, t) {
   return true;
 }
 
+// 7.11: chat mode per number (st.chat[number]): text and voice go to the fast chat (lib/fast-chat.js), shared with the page.
+async function chatTurn(to, t) {
+  const FCm = require('./lib/fast-chat.js');
+  const st = loadState(); st.chat = st.chat || {};
+  if (FCm.chatOn(t)) { st.chat[to] = true; saveState(st); await waSend(to, "עברנו לשיחה. כל מה שתכתוב יענה מיד. 'מצב בקשות' כדי לחזור."); return true; }
+  if (FCm.chatOff(t)) { delete st.chat[to]; saveState(st); await waSend(to, 'חזרנו לבקשות. כל הודעה נכנסת לתור לביצוע.'); return true; }
+  if (!st.chat[to]) return false;
+  let inst = {}; try { inst = require('./lib/instance.js'); } catch (e) {}
+  let biz = ''; try { biz = JSON.parse(fs.readFileSync(path.join(ROOT, 'instance.json'), 'utf8')).business || ''; } catch (e) {}
+  const r = await FCm.turn(DATA, t, { via: 'wa', owner: inst.name === 'abaitzik', business: biz || (inst.profile && inst.profile.business) || '' });
+  if (r.reply) await waSend(to, r.reply);
+  return true;
+}
+
 async function onMessage(m, contactName) {
   const st = loadState();
   if (st.seen[m.id]) return;
@@ -391,10 +405,12 @@ async function onMessage(m, contactName) {
   }
   if (m.type === 'audio' && m.audio && m.audio.id) {
     const training = ST.active((loadState().train || {})[m.from]);
-    if (!training) await waSend(m.from, '🎙️ קיבלתי את ההקלטה, מתמלל.');
+    const inChat = !!((loadState().chat || {})[m.from]);
+    if (!training && !inChat) await waSend(m.from, '🎙️ קיבלתי את ההקלטה, מתמלל.');
     let heard = '';
     try { heard = await voiceText(m.audio.id); } catch (e) { log('voice failed: ' + e.message); }
     if (!heard) { await waSend(m.from, 'לא הצלחתי לתמלל את ההקלטה. אפשר לשלוח שוב, או לכתוב.'); return; }
+    if (await chatTurn(m.from, heard)) return;
     if (training && await trainTurn(m.from, heard)) return;
     const vid = await toMonitor('וואטסאפ', (demoOn() ? DEMO_FRAME : '') + '🎙️ הודעה קולית מוואטסאפ: ' + heard);
     const sv = loadState(); sv.pending[vid] = { to: m.from, at: Date.now(), name: contactName || '' }; saveState(sv);
@@ -409,6 +425,7 @@ async function onMessage(m, contactName) {
       : 'קיבלתי, אבל את סוג ההודעה הזה אני עוד לא קורא. אפשר לכתוב לי אותה במילים?');
     return;
   }
+  if (await chatTurn(m.from, t)) return;
   if (await trainTurn(m.from, t)) return;
   const vc = voiceCommand(t);
   if (vc) {

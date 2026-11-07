@@ -139,3 +139,9 @@ test('non-owner prompt has no literal X placeholder', async () => {
   const a = stub('ok'); await FC.turn(tmp(), 'x', { llm: a, owner: false });
   assert.ok(!a.calls[0].s.includes('X ₪'));
 });
+
+test('chatOn / chatOff triggers', () => {
+  for (const t of ['מצב שיחה', ' בוא נדבר ', 'מצב שיחה!']) assert.ok(FC.chatOn(t) && !FC.chatOff(t), t);
+  for (const t of ['מצב בקשות', 'סיום שיחה.']) assert.ok(FC.chatOff(t) && !FC.chatOn(t), t);
+  for (const t of ['בוא נדבר על המחיר', 'מצב שיחה עכשיו', '', null]) assert.ok(!FC.chatOn(t) && !FC.chatOff(t), String(t));
+});
