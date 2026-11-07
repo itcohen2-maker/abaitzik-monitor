@@ -81,3 +81,61 @@ test('add-on rule only for non owner', async () => {
   assert.ok(a.calls[0].s.includes('תוספת בתשלום'));
   assert.ok(!b.calls[0].s.includes('תוספת בתשלום'));
 });
+
+test('user message is on disk while the model is still working', async () => {
+  const d = tmp(); let seen = -1;
+  await FC.turn(d, 'שאלה', { llm: async () => { seen = FC.load(d).msgs.length; return 'ok'; } });
+  assert.equal(seen, 1);
+});
+
+test('sales: customerTurn throws keeps the seller line and the mode', async () => {
+  const d = tmp();
+  await FC.turn(d, 'אימון מכירות', { llm: stub('x'), salesTrain: salesStub });
+  const bad = Object.assign({}, salesStub, { customerTurn: async () => { throw new Error('x'); } });
+  const r = await FC.turn(d, 'היי, אני מציע שירות', { llm: stub('x'), salesTrain: bad });
+  assert.equal(r.reply, FC.FAIL); assert.equal(r.mode, 'sales');
+  const th = FC.load(d);
+  assert.equal(th.mode, 'sales');
+  assert.deepEqual(th.sales.turns, [{ who: 'me', t: 'היי, אני מציע שירות' }]);
+});
+
+test('sales: score failure keeps the training for a retry', async () => {
+  const d = tmp();
+  await FC.turn(d, 'אימון מכירות', { llm: stub('x'), salesTrain: salesStub });
+  await FC.turn(d, 'שלום', { llm: stub('x'), salesTrain: salesStub });
+  const bad = Object.assign({}, salesStub, { score: async () => { throw new Error('x'); } });
+  const r = await FC.turn(d, 'סיימנו', { llm: stub('x'), salesTrain: bad });
+  assert.equal(r.mode, 'sales'); assert.ok(FC.load(d).sales);
+  const ok = await FC.turn(d, 'סיימנו', { llm: stub('x'), salesTrain: salesStub });
+  assert.equal(ok.mode, 'chat'); assert.equal(ok.reply, '🎯 ציון: 70 מתוך 100');
+});
+
+test('coach: "אימון מכירות" switches to sales', async () => {
+  const d = tmp();
+  await FC.turn(d, 'אימון עסקי', { llm: stub('מה היעד?') });
+  const r = await FC.turn(d, 'אימון מכירות', { llm: stub('x'), salesTrain: salesStub });
+  assert.equal(r.mode, 'sales'); assert.equal(FC.load(d).mode, 'sales');
+});
+
+test('sales: "עצור אימון" exits without a score', async () => {
+  const d = tmp(); let scored = 0;
+  const st = Object.assign({}, salesStub, { score: async () => { scored++; return 'x'; } });
+  await FC.turn(d, 'אימון מכירות', { llm: stub('x'), salesTrain: st });
+  const r = await FC.turn(d, 'עצור אימון', { llm: stub('x'), salesTrain: st });
+  assert.equal(r.mode, 'chat'); assert.equal(scored, 0); assert.equal(FC.load(d).sales, undefined);
+});
+
+test('coach: goal-only reply shows a confirmation, goals capped at 20', async () => {
+  const d = tmp();
+  await FC.turn(d, 'אימון עסקי', { llm: stub('שלום') });
+  let r;
+  for (let i = 0; i < 22; i++) r = await FC.turn(d, 'יעד ' + i, { llm: stub('יעד: מטרה ' + i) });
+  assert.equal(r.reply, 'קבענו יעד: מטרה 21');
+  const goals = JSON.parse(fs.readFileSync(path.join(d, 'fastchat', 'coach.json'), 'utf8')).goals;
+  assert.equal(goals.length, 20); assert.equal(goals[19].text, 'מטרה 21');
+});
+
+test('non-owner prompt has no literal X placeholder', async () => {
+  const a = stub('ok'); await FC.turn(tmp(), 'x', { llm: a, owner: false });
+  assert.ok(!a.calls[0].s.includes('X ₪'));
+});

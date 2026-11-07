@@ -34,3 +34,8 @@ test('todo: unknown id is 404, valid id calls toMonitor once', async () => {
   assert.deepEqual(r.json, { ok: true, req: 'wa-1' });
   assert.deepEqual(calls, [['שיחה', 'תשובה']]);
 });
+
+test('unknown /api/chat/* path is 404', async () => {
+  const r = await FC.chatApi('/api/chat/nope', {}, { dataPath: tmp() });
+  assert.equal(r.status, 404);
+});
