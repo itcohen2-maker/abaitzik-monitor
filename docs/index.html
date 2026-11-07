@@ -1446,6 +1446,20 @@ body:not(.inner) #thumbSet{display:block}
 .cale b i{font-style:normal;font-weight:700;color:var(--accent);margin-inline-end:8px}
 .cale small{display:block;font-size:13.5px;color:var(--dim);overflow-wrap:anywhere;margin-top:2px}
 .cale.past{opacity:.5}
+#calSheet .calmode{display:flex;gap:6px;margin:8px 0}
+#calSheet .calmode button{flex:1;padding:9px 6px;border-radius:12px;border:2px solid #c9d3e3;background:#eef2f8;color:#1a2233;font:inherit;font-weight:800;font-size:14px}
+#calSheet .calmode button.on{background:#1d6fe0;border-color:#1d6fe0;color:#fff}
+#calSheet .calnav{display:flex;align-items:center;justify-content:space-between;margin:6px 0}
+#calSheet .calnav b{font-size:17px;color:#111827}
+#calSheet .calnav button{width:44px;height:40px;border-radius:12px;border:2px solid #c9d3e3;background:#eef2f8;font-size:22px;font-weight:800;color:#1a2233}
+#calSheet .calgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;direction:rtl}
+#calSheet .calh{text-align:center;font-weight:800;font-size:12px;color:#6b7280;padding:4px 0}
+#calSheet .calc{min-height:58px;padding:3px 2px;border-radius:10px;border:1px solid #e5e7eb;background:#fff;display:flex;flex-direction:column;align-items:stretch;gap:1px;text-align:center;font:inherit;color:#111827;overflow:hidden}
+#calSheet .calc .cn{font-weight:800;font-size:12px}
+#calSheet .calc .ct{font-size:9px;line-height:1.15;background:#dbeafe;color:#1e3a8a;border-radius:4px;padding:0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#calSheet .calc .cm{font-size:9px;color:#6b7280}
+#calSheet .calc.today .cn{background:#0f766e;color:#fff;border-radius:999px;width:20px;margin:0 auto}
+#calSheet .calc.sel{border:2px solid #1d6fe0;background:#eff6ff}
 .cale a{color:var(--accent)}
 .c-hl{background:linear-gradient(160deg,#66bb6a,#2e7d32);font-size:22px}
 .c-hl.bad{background:linear-gradient(160deg,#ef5350,#b71c1c)}
@@ -2518,7 +2532,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-07T12:50:07.683Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-07T12:51:26.893Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2784,7 +2798,7 @@ try{
  <div class="row" id="blkIcons" role="group" aria-label="קיצורים">
   <button type="button" class="ic" data-grp="day" id="icNache"><span class="c c-nk">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="4.5" r="1.6"/><path d="M11 7.5v6h5l2 5"/><path d="M11 10.5h4"/><path d="M8 11.2a5.5 5.5 0 1 0 7.6 6.3"/></svg></span>תעודת נכה</button>
-  <a class="ic icNew" data-grp="day" id="icGcal" href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener" data-new="1"><span class="c c-gcal">
+  <a class="ic icNew" data-grp="day" id="icGcal" href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener" data-new="1" data-upd="20261107-month"><span class="c c-gcal">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M9.5 13.5h1.5v4M14 13.5h2l-1.5 4"/></svg></span>יומן</a>
   <a class="ic" data-grp="net" data-net="all" id="icNet" href="#"><span class="c c-nt">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M10 20V5M15 20v-6M20 20V8"/></svg></span>ניטור רשתות</a>
@@ -4414,7 +4428,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='a5736781ec';
+var CODE_ID='0b4ae2e534';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12655,30 +12669,63 @@ function healthSheet(){
  document.body.appendChild(w);
 }
 on('gHealth',healthSheet);on('icHealth',healthSheet);
-function calSheet(all){
+function calYm(ym,n){var d=new Date(Date.UTC(+ym.slice(0,4),+ym.slice(5,7)-1+n,1));return d.toISOString().slice(0,7);}
+function calSheet(all,mode,ym,sel){
  var old=document.getElementById('calSheet');if(old)old.remove();
  var C=D.cal||{events:[]},now=Date.now(),tz='Asia/Jerusalem';
  var dk=function(d){return d.toLocaleDateString('en-CA',{timeZone:tz});};
  var today=dk(new Date(now)),tmr=dk(new Date(now+86400000));
+ if(!mode){try{mode=localStorage.getItem('calMode')||'';}catch(e){}}
+ if(mode!=='month')mode='list';
+ try{localStorage.setItem('calMode',mode);}catch(e){}
+ if(!ym)ym=(sel||today).slice(0,7);
+ var evHtml=function(e){
+  var t=e.allDay?'כל היום':new Date(e.start).toLocaleTimeString('he-IL',{timeZone:tz,hour:'2-digit',minute:'2-digit'});
+  var past=!e.allDay&&Date.parse(e.end||e.start)<now;
+  var sub=[];if(e.where)sub.push('📍 '+esc(e.where));if(e.who&&e.who.length)sub.push('👥 '+esc(e.who.join(', ')));
+  return '<div class="cale'+(past?' past':'')+'"><b><i>'+t+'</i>'+esc(e.title)+'</b>'+(sub.length?'<small>'+sub.join(' · ')+'</small>':'')+(e.meet?'<small><a href="'+esc(e.meet)+'" target="_blank" rel="noopener">🎥 כניסה לפגישה</a></small>':'')+'</div>';
+ };
+ var ev=C.events.slice().sort(function(a,b){return Date.parse(a.start)-Date.parse(b.start);});
  var h='<div class="ycard"><b>📅 היומן</b>';
  if(!C.ok)h+='<p>החיבור ליומן של גוגל נותק, ולכן מה שכאן לא מתעדכן.</p>'+(C.connect?'<a class="yb" href="'+esc(C.connect)+'" target="_blank" rel="noopener">🔗 לחבר את היומן מחדש</a>':'');
- var ev=C.events.slice().sort(function(a,b){return Date.parse(a.start)-Date.parse(b.start);});
+ h+='<div class="calmode"><button type="button" data-mode="list" class="'+(mode==='list'?'on':'')+'">📋 רשימה</button><button type="button" data-mode="month" class="'+(mode==='month'?'on':'')+'">🗓️ חודש</button></div>';
  var days=[],by={};
- ev.forEach(function(e){var k=e.allDay?e.start:dk(new Date(e.start));if(k<today)return;if(!by[k]){by[k]=[];days.push(k);}by[k].push(e);});
- var shown=all?days:days.slice(0,10);
- if(!days.length)h+='<p>אין אירועים ביומן בחודשיים הקרובים.</p>';
- shown.forEach(function(k){
-  var d=new Date(k+'T12:00:00');
-  var name=k===today?'היום':k===tmr?'מחר':d.toLocaleDateString('he-IL',{weekday:'long'});
-  h+='<div class="cald'+(k===today?' today':'')+'">'+name+', '+d.toLocaleDateString('he-IL',{day:'numeric',month:'numeric'})+'</div>';
-  by[k].forEach(function(e){
-   var t=e.allDay?'כל היום':new Date(e.start).toLocaleTimeString('he-IL',{timeZone:tz,hour:'2-digit',minute:'2-digit'});
-   var past=!e.allDay&&Date.parse(e.end||e.start)<now;
-   var sub=[];if(e.where)sub.push('📍 '+esc(e.where));if(e.who&&e.who.length)sub.push('👥 '+esc(e.who.join(', ')));
-   h+='<div class="cale'+(past?' past':'')+'"><b><i>'+t+'</i>'+esc(e.title)+'</b>'+(sub.length?'<small>'+sub.join(' · ')+'</small>':'')+(e.meet?'<small><a href="'+esc(e.meet)+'" target="_blank" rel="noopener">🎥 כניסה לפגישה</a></small>':'')+'</div>';
+ ev.forEach(function(e){var k=e.allDay?e.start:dk(new Date(e.start));if(!by[k]){by[k]=[];days.push(k);}by[k].push(e);});
+ var upcoming=days.filter(function(k){return k>=today;});
+ var shown=all?upcoming:upcoming.slice(0,10);
+ if(mode==='month'){
+  var y=+ym.slice(0,4),m=+ym.slice(5,7)-1;
+  var dim=new Date(Date.UTC(y,m+1,0)).getUTCDate(),off=new Date(Date.UTC(y,m,1)).getUTCDay();
+  var mname=new Date(Date.UTC(y,m,15,12)).toLocaleDateString('he-IL',{month:'long',year:'numeric',timeZone:'UTC'});
+  h+='<div class="calnav"><button type="button" data-m="'+calYm(ym,-1)+'" aria-label="חודש קודם">›</button><b>'+esc(mname)+'</b><button type="button" data-m="'+calYm(ym,1)+'" aria-label="חודש הבא">‹</button></div>';
+  h+='<div class="calgrid">';
+  ['א','ב','ג','ד','ה','ו','ש'].forEach(function(n){h+='<div class="calh">'+n+'</div>';});
+  for(var i=0;i<off;i++)h+='<div class="calx"></div>';
+  for(var d=1;d<=dim;d++){
+   var k=ym+'-'+('0'+d).slice(-2),L=by[k]||[];
+   h+='<button type="button" class="calc'+(k===today?' today':'')+(k===sel?' sel':'')+(L.length?' has':'')+'" data-d="'+k+'"><span class="cn">'+d+'</span>'
+    +L.slice(0,2).map(function(e){return '<span class="ct">'+esc(e.title)+'</span>';}).join('')
+    +(L.length>2?'<span class="cm">+'+(L.length-2)+'</span>':'')+'</button>';
+  }
+  h+='</div>';
+  if(sel){
+   var sd=new Date(sel+'T12:00:00'),sn=sel===today?'היום':sel===tmr?'מחר':sd.toLocaleDateString('he-IL',{weekday:'long'});
+   h+='<div class="cald'+(sel===today?' today':'')+'">'+sn+', '+sd.toLocaleDateString('he-IL',{day:'numeric',month:'numeric'})+'</div>';
+   if(!(by[sel]||[]).length)h+='<p>אין אירועים ביום הזה.</p>';
+   (by[sel]||[]).forEach(function(e){h+=evHtml(e);});
+  }else h+='<small>לחיצה על יום מראה את האירועים שלו.</small>';
+  if(!C.events.length)h+='<p>אין אירועים ביומן בחודשיים הקרובים.</p>';
+  else h+='<small>היומן כאן מכסה שבוע אחורה ועד כשישים יום קדימה.</small>';
+ }else{
+  if(!upcoming.length)h+='<p>אין אירועים ביומן בחודשיים הקרובים.</p>';
+  shown.forEach(function(k){
+   var d=new Date(k+'T12:00:00');
+   var name=k===today?'היום':k===tmr?'מחר':d.toLocaleDateString('he-IL',{weekday:'long'});
+   h+='<div class="cald'+(k===today?' today':'')+'">'+name+', '+d.toLocaleDateString('he-IL',{day:'numeric',month:'numeric'})+'</div>';
+   by[k].forEach(function(e){h+=evHtml(e);});
   });
- });
- if(!all&&days.length>shown.length)h+='<button type="button" class="yb" data-k="all">עוד '+(days.length-shown.length)+' ימים</button>';
+  if(!all&&upcoming.length>shown.length)h+='<button type="button" class="yb" data-k="all">עוד '+(upcoming.length-shown.length)+' ימים</button>';
+ }
  h+='<small>'+(C.at?'השינוי האחרון ביומן הגיע ב '+esc(hbDay(C.at))+'. ':'')+'נבדק כל 10 דקות.</small>';
  h+='<a class="yb" href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener">פתיחה ביומן של גוגל</a>';
  h+='<button type="button" class="yb yx" data-k="">סגירה</button></div>';
@@ -12686,7 +12733,16 @@ function calSheet(all){
  w.innerHTML=h;
  function close(){w.remove();document.removeEventListener('keydown',esckey);}
  function esckey(e){if(e.key==='Escape')close();}
- w.onclick=function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-k');if(e.target===w||k==='')close();else if(k==='all'){close();calSheet(true);}};
+ w.onclick=function(e){
+  var t=e.target.closest?e.target.closest('[data-mode],[data-m],[data-d],[data-k]'):null;
+  if(e.target===w)return close();
+  if(!t)return;
+  if(t.hasAttribute('data-mode')){close();return calSheet(false,t.getAttribute('data-mode'),mode==='month'?ym:'',mode==='month'?sel:'');}
+  if(t.hasAttribute('data-m')){close();return calSheet(false,'month',t.getAttribute('data-m'),'');}
+  if(t.hasAttribute('data-d')){var k=t.getAttribute('data-d');close();return calSheet(false,'month',ym,k===sel?'':k);}
+  var k2=t.getAttribute('data-k');
+  if(k2==='')close();else if(k2==='all'){close();calSheet(true,'list');}
+ };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
 }
