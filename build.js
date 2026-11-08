@@ -1754,6 +1754,20 @@ button.abtn[disabled]{opacity:.55}
 .livesheet #lsClose{margin-top:9px;width:100%;border:0;border-radius:10px;
  background:var(--sunk);color:var(--ink);padding:8px;
  font:700 13px Heebo,sans-serif;cursor:pointer}
+/* Itzik, 8.11: the answers screen fills the whole phone after he talks to the AI.
+   The small arrow in its header folds it to a two line strip above the bottom bar,
+   so the AI stays one tap away on every screen. */
+.ansdock{position:fixed;inset-inline:10px;max-width:640px;margin-inline:auto;bottom:calc(118px + env(safe-area-inset-bottom,0px));z-index:58;display:flex;align-items:center;gap:10px;
+ background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px 8px 8px 12px;box-shadow:var(--shadow);cursor:pointer}
+.ansdock[hidden]{display:none}
+.ansdock .ad-t{flex:1;min-width:0}
+.ansdock .ad-who{display:block;font:800 12.5px Heebo,sans-serif;color:var(--ink)}
+.ansdock .ad-txt{display:block;font:500 13px Heebo,sans-serif;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ansdock .ad-a{flex:0 0 auto;width:32px;height:32px;border:0;border-radius:50%;background:var(--sunk);color:var(--ink);font-size:17px;line-height:1;display:grid;place-items:center;cursor:pointer}
+.panebar #pbMin[hidden]{display:none}
+.panebar #pbMin::before,.ansdock .ad-a::before{content:"";width:9px;height:9px;border:solid currentColor;border-width:0 2px 2px 0;transform:rotate(45deg);margin-top:-5px}
+.ansdock .ad-a::before{transform:rotate(-135deg);margin-top:4px}
+.ansdock:focus-visible,.panebar #pbMin:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .fold.fold-done{border-color:var(--green)}
 .fold>summary b{font:700 15px Heebo,sans-serif}
 .fold>summary small{color:var(--dim);font-size:12.5px;font-weight:400}
@@ -5731,6 +5745,7 @@ __RIVSHARE__
  <div id="lsBody"></div>
  <button type="button" id="lsClose">סגירה</button>
 </div>
+<div class="ansdock" id="ansDock" role="button" tabindex="0" aria-label="פתיחת התשובות" hidden><div class="ad-t"><span class="ad-who"></span><span class="ad-txt"></span></div><span class="ad-a" aria-hidden="true"></span></div>
 <div class="toast" id="toast" role="status" hidden></div>
 ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').html : ''}
 
@@ -10912,6 +10927,25 @@ function renderGot(){
   One number now, unreadCount, the one the red button shows. A second counter
   of the same thing is not a second opinion, it is a button that looks broken.
 */
+function ansDockOn(){try{return localStorage.getItem('ansDock')==='1';}catch(e){return false;}}
+function ansDockSet(v){try{if(v)localStorage.setItem('ansDock','1');else localStorage.removeItem('ansDock');}catch(e){}}
+function paintAnsDock(w){
+ var d=document.getElementById('ansDock');if(!d)return;
+ var cur=w||panePrev;
+ if(!ansDockOn()||cur==='a'){d.hidden=true;return;}
+ var best=null,bt=0;
+ allAnswers().forEach(function(m){
+  if(!m||m.src==='itzik')return;
+  var x=Date.parse(m.at||'');
+  if(!isNaN(x)&&x>=bt){bt=x;best=m;}
+ });
+ var n=unreadCount();
+ var who=d.querySelector('.ad-who'),txt=d.querySelector('.ad-txt');
+ if(!who||!txt)return;
+ who.textContent=AI+(best?' · '+ago(best.at):'')+(n?' · '+n+' חדשות':'');
+ txt.textContent=best?String(best.text||''):'אפשר לכתוב לי כאן בכל רגע';
+ d.hidden=false;
+}
 function paintAnsCount(){
  var el=document.getElementById('aCnt');
  if(!el)return;
@@ -11094,10 +11128,16 @@ function paneBar(w){
   var hd=document.querySelector('.hd');
   if(hd&&hd.parentNode)hd.parentNode.insertBefore(bar,hd);else document.body.insertBefore(bar,document.body.firstChild);
   document.getElementById('pbBack').onclick=function(){navBack();};
+  var pm=document.createElement('button');
+  pm.type='button';pm.className='pb-r';pm.id='pbMin';pm.hidden=true;
+  pm.setAttribute('aria-label','הקטנה לשורה קטנה');
+  pm.onclick=function(e){e.preventDefault();ansDockSet(true);navBack();};
+  bar.insertBefore(pm,document.getElementById('pbReload'));
   document.getElementById('pbReload').onclick=function(){window.reloadStay=panePrev;var r=document.getElementById('reloadBtn');if(r)r.click();};
  }
  var inner=(w!=='h');
  document.body.classList.toggle('inner',inner);
+ var pmb=document.getElementById('pbMin');if(pmb)pmb.hidden=(w!=='a');
  if(inner){
   var sec=document.getElementById(PANES[w]),h=sec&&sec.querySelector('h2');
   document.getElementById('pbTitle').textContent=h?String(h.textContent||'').trim():'';
@@ -11193,6 +11233,7 @@ function pane(w){
   if(k===w){backBar(sec);replyBar(sec);paintTips(sec);}
  }
  navLabels();
+ try{paintAnsDock(w);}catch(e){}
  /*
    A screen draws itself when it opens. No caller can forget.
 
@@ -18833,6 +18874,13 @@ bareApply(bareGet());
 // that one button.
 var gChatEl=document.getElementById('gChat');
 if(gChatEl)gChatEl.onclick=function(){openAnswers('all',true);};
+(function(){
+ var dk=document.getElementById('ansDock');
+ var openFromDock=function(e){if(e)e.preventDefault();ansDockSet(false);openAnswers('all',true);};
+ if(dk){dk.onclick=openFromDock;dk.onkeydown=function(e){if(e.key==='Enter'||e.key===' ')openFromDock(e);};}
+ setInterval(function(){try{paintAnsDock();}catch(e){}},20000);
+ try{paintAnsDock();}catch(e){}
+})();
 /*
   Writing and the camera, from the card at the top instead of from a tile most
   of the way down the screen. Both land in the same place everything else does,
