@@ -215,6 +215,17 @@ button.abtn[disabled]{opacity:.55}
 .livesheet #lsClose{margin-top:9px;width:100%;border:0;border-radius:10px;
  background:var(--sunk);color:var(--ink);padding:8px;
  font:700 13px Heebo,sans-serif;cursor:pointer}
+.ansdock{position:fixed;inset-inline:10px;max-width:640px;margin-inline:auto;bottom:calc(118px + env(safe-area-inset-bottom,0px));z-index:58;display:flex;align-items:center;gap:10px;
+ background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px 8px 8px 12px;box-shadow:var(--shadow);cursor:pointer}
+.ansdock[hidden]{display:none}
+.ansdock .ad-t{flex:1;min-width:0}
+.ansdock .ad-who{display:block;font:800 12.5px Heebo,sans-serif;color:var(--ink)}
+.ansdock .ad-txt{display:block;font:500 13px Heebo,sans-serif;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ansdock .ad-a{flex:0 0 auto;width:32px;height:32px;border:0;border-radius:50%;background:var(--sunk);color:var(--ink);font-size:17px;line-height:1;display:grid;place-items:center;cursor:pointer}
+.panebar #pbMin[hidden]{display:none}
+.panebar #pbMin::before,.ansdock .ad-a::before{content:"";width:9px;height:9px;border:solid currentColor;border-width:0 2px 2px 0;transform:rotate(45deg);margin-top:-5px}
+.ansdock .ad-a::before{transform:rotate(-135deg);margin-top:4px}
+.ansdock:focus-visible,.panebar #pbMin:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .fold.fold-done{border-color:var(--green)}
 .fold>summary b{font:700 15px Heebo,sans-serif}
 .fold>summary small{color:var(--dim);font-size:12.5px;font-weight:400}
@@ -2584,7 +2595,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-08T13:53:16.529Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-08T13:59:52.890Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3685,6 +3696,7 @@ try{
  <div id="lsBody"></div>
  <button type="button" id="lsClose">סגירה</button>
 </div>
+<div class="ansdock" id="ansDock" role="button" tabindex="0" aria-label="פתיחת התשובות" hidden><div class="ad-t"><span class="ad-who"></span><span class="ad-txt"></span></div><span class="ad-a" aria-hidden="true"></span></div>
 <div class="toast" id="toast" role="status" hidden></div>
 
 
@@ -4480,7 +4492,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='c2d9fbe5bc';
+var CODE_ID='ee13279ce5';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -7775,6 +7787,25 @@ function renderGot(){
   };
  });
 }
+function ansDockOn(){try{return localStorage.getItem('ansDock')==='1';}catch(e){return false;}}
+function ansDockSet(v){try{if(v)localStorage.setItem('ansDock','1');else localStorage.removeItem('ansDock');}catch(e){}}
+function paintAnsDock(w){
+ var d=document.getElementById('ansDock');if(!d)return;
+ var cur=w||panePrev;
+ if(!ansDockOn()||cur==='a'){d.hidden=true;return;}
+ var best=null,bt=0;
+ allAnswers().forEach(function(m){
+  if(!m||m.src==='itzik')return;
+  var x=Date.parse(m.at||'');
+  if(!isNaN(x)&&x>=bt){bt=x;best=m;}
+ });
+ var n=unreadCount();
+ var who=d.querySelector('.ad-who'),txt=d.querySelector('.ad-txt');
+ if(!who||!txt)return;
+ who.textContent=AI+(best?' · '+ago(best.at):'')+(n?' · '+n+' חדשות':'');
+ txt.textContent=best?String(best.text||''):'אפשר לכתוב לי כאן בכל רגע';
+ d.hidden=false;
+}
 function paintAnsCount(){
  var el=document.getElementById('aCnt');
  if(!el)return;
@@ -7903,10 +7934,16 @@ function paneBar(w){
   var hd=document.querySelector('.hd');
   if(hd&&hd.parentNode)hd.parentNode.insertBefore(bar,hd);else document.body.insertBefore(bar,document.body.firstChild);
   document.getElementById('pbBack').onclick=function(){navBack();};
+  var pm=document.createElement('button');
+  pm.type='button';pm.className='pb-r';pm.id='pbMin';pm.hidden=true;
+  pm.setAttribute('aria-label','הקטנה לשורה קטנה');
+  pm.onclick=function(e){e.preventDefault();ansDockSet(true);navBack();};
+  bar.insertBefore(pm,document.getElementById('pbReload'));
   document.getElementById('pbReload').onclick=function(){window.reloadStay=panePrev;var r=document.getElementById('reloadBtn');if(r)r.click();};
  }
  var inner=(w!=='h');
  document.body.classList.toggle('inner',inner);
+ var pmb=document.getElementById('pbMin');if(pmb)pmb.hidden=(w!=='a');
  if(inner){
   var sec=document.getElementById(PANES[w]),h=sec&&sec.querySelector('h2');
   document.getElementById('pbTitle').textContent=h?String(h.textContent||'').trim():'';
@@ -7978,6 +8015,7 @@ function pane(w){
   if(k===w){backBar(sec);replyBar(sec);paintTips(sec);}
  }
  navLabels();
+ try{paintAnsDock(w);}catch(e){}
  var PAINT={a:function(){renderAnswers();paintAnsCount();},b:renderGot,m:renderThread,
   n:renderNet,r:render,p:renderPegasus,w:renderImprove,s:renderSpecial,
   e:renderReplies,f:renderFood,j:renderDrains,c:renderBlock,
@@ -13070,6 +13108,9 @@ function bizSheet(t0){
     +'<div class="bzSec">📜 הסכם בינינו</div>'
     +'<a class="yb yb1" href="https://form.it-solution.co.il/terms" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">📜 הסכם השירות ללקוח, גרסה 1.0</a>'
     +'<button type="button" class="yb" data-bz="anim" data-f="it-solution-contract-1.0.pdf">📄 הסכם השירות כ PDF</button>'
+    +'<div class="bzSec">💰 מחירון ללקוח</div>'
+    +'<a class="yb yb1" href="https://it-solution.co.il/offer/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">💰 דף המחירים: שלוש חבילות</a>'
+    +'<a class="yb" href="https://wa.me/?text='+encodeURIComponent('שלום, זה דף עם החבילות והמחירים של המוניטור העסקי של IT Solution:\nhttps://it-solution.co.il/offer/')+'" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">💬 לשלוח ללקוח בוואטסאפ</a>'
     +'<div class="bzSec">🔌 טופס התחברות</div>'
     +'<div class="bzRow"><b>כל כרטיס הוא כפתור התחברות</b><small>גוגל, פייסבוק ואינסטגרם, מיקרוסופט, פיירפליס, יוטיוב, לינקדין וטיקטוק. זו התבנית. ללקוח חדש כותבים לי את שמו ומקבלים קישור אישי, והצבע מתעדכן לבד כשהוא פותח ומחבר.</small></div>'
     +'<a class="yb yb1" href="https://form.it-solution.co.il/s/97353be7657c22ee625e/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לראות את טופס ההתחברות</a>'
@@ -13138,7 +13179,7 @@ function bizSheet(t0){
    return '<div class="bzHead">👥 לידים ולקוחות</div>'+newLeadHtml()+leadsHtml()
     +'<p class="bzEmpty">הציון למעלה מ 0 עד 100, 100 זה הכי טוב. כל ליד שלא נגעו בו שבוע מוריד 8 נקודות, הצעה שלא חזרו אליה 3 ימים מורידה 12, ותזכורת שהגיעה ולא טופלה מורידה 6.</p>';
   }
-  var BZ_UPD={its:'20261108-clean'+((D.nda&&D.nda.signed&&D.nda.signed[0])?'-'+String(D.nda.signed[0].at).replace(/D/g,'').slice(0,12):'')+((D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done)?'-s'+String(D.shaiForms.sign.done).replace(/\D/g,'').slice(0,12):''),shachar:((D.shSum&&D.shSum.upd)||'20261103-shachar-auto')+'-ld1104'};
+  var BZ_UPD={its:'20261108-offer'+((D.nda&&D.nda.signed&&D.nda.signed[0])?'-'+String(D.nda.signed[0].at).replace(/D/g,'').slice(0,12):'')+((D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done)?'-s'+String(D.shaiForms.sign.done).replace(/\D/g,'').slice(0,12):''),shachar:((D.shSum&&D.shSum.upd)||'20261103-shachar-auto')+'-ld1104'};
   function bzSeen(){try{return JSON.parse(localStorage.getItem('bzTabSeen')||'{}');}catch(x){return {};}}
   function bzTabNew(k){return !!BZ_UPD[k]&&bzSeen()[k]!==BZ_UPD[k]&&k!==tab;}
   function bzMarkSeen(k){if(!BZ_UPD[k])return;var o=bzSeen();o[k]=BZ_UPD[k];try{localStorage.setItem('bzTabSeen',JSON.stringify(o));}catch(x){}}
@@ -14278,6 +14319,13 @@ document.getElementById('bareBtn').onclick=function(){
 bareApply(bareGet());
 var gChatEl=document.getElementById('gChat');
 if(gChatEl)gChatEl.onclick=function(){openAnswers('all',true);};
+(function(){
+ var dk=document.getElementById('ansDock');
+ var openFromDock=function(e){if(e)e.preventDefault();ansDockSet(false);openAnswers('all',true);};
+ if(dk){dk.onclick=openFromDock;dk.onkeydown=function(e){if(e.key==='Enter'||e.key===' ')openFromDock(e);};}
+ setInterval(function(){try{paintAnsDock();}catch(e){}},20000);
+ try{paintAnsDock();}catch(e){}
+})();
 document.getElementById('wShoot').onclick=function(){
  pane('m');renderThread();
  shoot();
