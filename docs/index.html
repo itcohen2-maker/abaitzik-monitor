@@ -2595,7 +2595,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-08T20:34:01.599Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-08T20:41:35.262Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4492,7 +4492,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='07ba39b628';
+var CODE_ID='4eb3898205';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -13112,7 +13112,7 @@ function bizSheet(t0){
   function agrHtml(i){
    var A=D.agr||{},c=(A.clients||[])[i];if(!c)return '';
    function hd(t){try{return new Date(t).toLocaleString('he-IL',{day:'numeric',month:'numeric',year:'2-digit',hour:'2-digit',minute:'2-digit'});}catch(x){return '';}}
-   var st=c.signedAt?'✅ חתם ואישר את שני המסמכים · '+hd(c.signedAt):c.openedAt?'🟠 פתח את הדף ('+c.opens+' פעמים), עוד לא חתם':A.owner?'🔴 עוד לא פתח':'🔴 קודם לחתום בשם IT Solution';
+   var st=c.signedAt?'✅ חתם ואישר את שני המסמכים · '+hd(c.signedAt):c.openedAt?'🟠 פתח את הדף ('+c.opens+' פעמים), עוד לא חתם':c.sentAt?'🟠 נשלח אליו '+hd(c.sentAt)+', עוד לא פתח':A.owner?'🔴 עוד לא נשלח':'🔴 קודם לחתום בשם IT Solution';
    var wa='https://wa.me/?text='+encodeURIComponent('שלום, מצורף ההסכם בינינו וטופס הסודיות למרפאה ולמטופלים. קוראים, ממלאים את הפרטים וחותמים מהטלפון, ומקבלים מיד עותק חתום:\n'+c.link);
    var L=function(cls,href,txt){return '<a class="yb '+cls+'" href="'+href+'" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">'+txt+'</a>';};
    var h='<div class="bzHead">🩺 '+esc(c.client)+'</div>'
