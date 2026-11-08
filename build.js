@@ -968,7 +968,7 @@ function build() {
       // 4.11, Itzik: Shai's two forms, red until sent, orange while waiting, green when filled (lib/shai-forms.js).
       // 5.11, Itzik: the NDA a new client signs on the phone (ndasign.js): the IT Solution signature, the link, every signed copy.
       if (inst.name === 'abaitzik') { try { payload.nda = require('./ndasign.js').state(); } catch (e) { console.error('nda: ' + e.message); } }
-      if (inst.name === 'abaitzik') { try { payload.shaiForms = require('./lib/shai-forms.js').state(__dirname); } catch (e) { console.error('shaiForms: ' + e.message); } }
+      /* 8.11.2026: Shai's forms are gone from the tab. */
       bizOn = true;
     } catch (e) { console.error('biz: ' + e.message); }
   }
@@ -17414,13 +17414,21 @@ function bizSheet(t0){
    return h;
   }
   function itsHtml(){
+   // 8.11.2026, Itzik: "תעשה סדר בכל הטאב, תסיר את שי, תאפס ותשאיר לי: טופס סודיות, הסכם בינינו וטופס התחברות".
+   // Three clean templates, no customer name. Shai's files and answers are in data/_archive/shai-20261108.
    return '<div class="bzHead">💻 IT Solution</div>'+planBoardHtml()
-    // 4.11, Itzik: an insurance agent asks how confidential the monitor is. A page to hand the customer.
-    +'<div class="bzSec">🔒 מוניטור ואבטחה</div>'
-    // 4.11, Itzik: "אני צריך חוזה מול לקוח" and "שים את זה במוניטור ואבטחה". One service agreement for every client, signed inside the quote page, before any build.
+    // 5.11, Itzik: "זה מסמך סודיות שמעבירים ללקוח חדש": the original is the PDF, signed once by IT Solution, then one link for every client.
+    +'<div class="bzSec">🔒 טופס סודיות</div>'+ndaHtml()
+    // 4.11, Itzik: "אני צריך חוזה מול לקוח". One service agreement for every client, signed inside the quote page, before any build.
+    +'<div class="bzSec">📜 הסכם בינינו</div>'
     +'<a class="yb yb1" href="https://form.it-solution.co.il/terms" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">📜 הסכם השירות ללקוח, גרסה 1.0</a>'
     +'<button type="button" class="yb" data-bz="anim" data-f="it-solution-contract-1.0.pdf">📄 הסכם השירות כ PDF</button>'
-    // 4.11: two pages to send a customer. Share asks for whom, so the link carries ?r=<name> and the counter knows who opened (and if it was forwarded).
+    // 8.11: the clean connection form. Every card is a sign in button; a new client gets his own personal link on request.
+    +'<div class="bzSec">🔌 טופס התחברות</div>'
+    +'<div class="bzRow"><b>כל כרטיס הוא כפתור התחברות</b><small>גוגל, פייסבוק ואינסטגרם, מיקרוסופט, פיירפליס, יוטיוב, לינקדין וטיקטוק. זו התבנית. ללקוח חדש כותבים לי את שמו ומקבלים קישור אישי, והצבע מתעדכן לבד כשהוא פותח ומחבר.</small></div>'
+    +'<a class="yb yb1" href="https://form.it-solution.co.il/s/97353be7657c22ee625e/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לראות את טופס ההתחברות</a>'
+    // 4.11, Itzik: an insurance agent asks how confidential the monitor is. Pages to hand the customer.
+    +'<div class="bzSec">🛡️ מוניטור ואבטחה</div>'
     +'<button type="button" class="yb yb1" data-bz="anim" data-f="views-report.html">👀 מי ראה את הדפים</button>'
     +'<a class="yb" href="https://it-solution.co.il/monitor/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">💡 דף המוניטור לעסק, למה לבחור בנו</a>'
     +'<button type="button" class="yb" data-bz="secshare" data-u="monitor" data-k="share">📤 לשלוח ללקוח את דף המוניטור</button>'
@@ -17428,30 +17436,8 @@ function bizSheet(t0){
     +'<a class="yb" href="https://it-solution.co.il/security/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">🔒 דף אבטחת המידע ללקוח</a>'
     +'<button type="button" class="yb" data-bz="secshare" data-u="security" data-k="share">📤 לשלוח ללקוח את דף האבטחה</button>'
     +'<button type="button" class="yb" data-bz="secshare" data-u="security" data-k="wa">💬 דף האבטחה בוואטסאפ</button>'
-    // 5.11, Itzik: "זה מסמך סודיות שמעבירים ללקוח חדש, שים אותו ב IT Solution", then "תשנה אותו ל PDF": the original is the PDF, no Word file.
-    +'<div class="bzSec">📄 מסמך סודיות ללקוח חדש</div>'+ndaHtml()
     +'<div class="bzSec">הדגמה ללקוח</div>'
     +(typeof dmoStart==='function'?'<button type="button" class="yb yb1" data-bz="demo">🎬 מצב הדגמה ללקוח</button>':'')
-    +'<button type="button" class="yb" data-bz="anim" data-f="demo-script-shai.pdf">🎬 תסריט ההדגמה לשי (PDF)</button>'
-    +'<div class="bzSec">שי בודק, יועץ עסקי</div>'
-    // 4.11, Itzik: "שתי טפסים אני צריך לשלוח לו ... באדום, וברגע שאני שולח אותם ... כתום, וכתוב מצב המתנה".
-    // Red: not sent. Orange: sent (marked on this device when shared) or opened and not finished. Green: filled.
-    // Shared or copied, never opened here: opening reports "שי פתח".
-    // 4.11, Itzik: "קודם אשלח לו את הטופס לחתימה, ואז הוא יקבל את הטופס למילוי".
-    +'<div class="bzRow"><b>📨 הסדר: קודם חתימה, אחר כך דף החיבורים</b><small>🔴 עוד לא נשלח · 🟠 מצב המתנה · ✅ הושלם. הצבע מתעדכן לבד כשהוא פותח, חותם וממלא.</small></div>'
-    // 4.11, Itzik: "איפה אני יכול לקבל את מה שהוא חתם? אני רוצה לראות את זה במוניטור". Step 1 is done: the signed PDF in its place.
-    +'<button type="button" class="yb yb1" data-bz="anim" data-f="quote-shai-bodek-signed.pdf" data-new="1">✅ שלב 1: שי חתם ב 4.11, ההצעה וההסכם החתומים (PDF)</button>'
-    // 4.11, Itzik: "תשאיר לי תמיד רק מה שמעודכן". Done items (the completion form, the info form) are gone from here.
-    // 5.11, Itzik: "תשים לי את הטופס במוניטור, ב IT Solution, כדי שאני אוכל להיכנס ולבדוק אותו". The /view preview: never marks it opened; the connect buttons are real and come back here.
-    +'<div class="bzSec">🔌 דף החיבורים החדש של שי, הכל בלחיצה</div>'
-    // 5.11, Itzik: "שים לי את הטופס לשי במוניטור כדי לשלוח לו אותו ... לסמן לי אותו באדום עד שאני נוגע בו".
-    +shaiFormBtn('setup-shai','setup2','📤 שלב 2: לשלוח לשי את דף החיבורים')
-    +'<div class="bzRow"><b>כל כרטיס הוא כפתור התחברות: גוגל, מיקרוסופט, פיירפליס, לינקדין, יוטיוב, טיקטוק ופייסבוק</b><small>כאן לבדיקה שלך. מה שתחבר נשמר באמת, ואחרי הבדיקה מאפסים. שי לא יראה שנפתח.</small></div>'
-    +'<a class="yb yb1" href="https://form.it-solution.co.il/s/f3d4f77d1278a2a5efdc/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לבדוק בעצמי את דף החיבורים של שי</a>'
-    // 5.11, Itzik: "תכין לי טופס אחד ל review, אני רוצה לשלוח לתום לפני שאנחנו שולחים ללקוח". A separate copy (233c66...), reset after Tom answers.
-    +'<a class="yb" href="https://wa.me/?text=%D7%AA%D7%95%D7%9D%2C%20%D7%90%D7%A0%D7%99%20%D7%A8%D7%95%D7%A6%D7%94%20%D7%A9%D7%AA%D7%A2%D7%91%D7%95%D7%A8%20%D7%A2%D7%9C%20%D7%93%D7%A3%20%D7%94%D7%97%D7%99%D7%91%D7%95%D7%A8%D7%99%D7%9D%20%D7%94%D7%97%D7%93%D7%A9%20%D7%A9%D7%9C%20%D7%94%D7%9E%D7%95%D7%A0%D7%99%D7%98%D7%95%D7%A8%20%D7%9C%D7%A4%D7%A0%D7%99%20%D7%A9%D7%90%D7%A0%D7%99%20%D7%A9%D7%95%D7%9C%D7%97%20%D7%90%D7%95%D7%AA%D7%95%20%D7%9C%D7%9C%D7%A7%D7%95%D7%97.%20%D7%9B%D7%9C%20%D7%9B%D7%A8%D7%98%D7%99%D7%A1%20%D7%94%D7%95%D7%90%20%D7%9B%D7%A4%D7%AA%D7%95%D7%A8%20%D7%94%D7%AA%D7%97%D7%91%D7%A8%D7%95%D7%AA%2C%20%D7%95%D7%99%D7%A9%20%D7%91%D7%9B%D7%9C%20%D7%90%D7%97%D7%93%20%D7%94%D7%A1%D7%91%D7%A8%20%D7%9E%D7%94%20%D7%A8%D7%95%D7%90%D7%99%D7%9D%20%D7%95%D7%9E%D7%94%20%D7%9C%D7%9C%D7%97%D7%95%D7%A5.%20%D7%AA%D7%A0%D7%A1%D7%94%20%D7%90%D7%AA%20%D7%9E%D7%94%20%D7%A9%D7%90%D7%A4%D7%A9%D7%A8%2C%20%D7%95%D7%AA%D7%9B%D7%AA%D7%95%D7%91%20%D7%91%D7%AA%D7%99%D7%91%D7%94%20%D7%A9%D7%9E%D7%AA%D7%97%D7%AA%20%D7%9C%D7%9B%D7%9C%20%D7%9B%D7%A8%D7%98%D7%99%D7%A1%20%D7%9E%D7%94%20%D7%A2%D7%91%D7%93%20%D7%95%D7%9E%D7%94%20%D7%9C%D7%90%3A%20https%3A%2F%2Fform.it-solution.co.il%2Fs%2F233c666e0a4c8d6013c6" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">📤 לשלוח לתום את הטופס לבדיקה (וואטסאפ)</a>'
-    +'<div class="bzSec">🖥️ מה שכבר קיים אצל שי</div>'
-    +'<a class="yb yb2" href="https://shai.it-solution.co.il/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">🖥️ המוניטור של שי</a>'
     ;
   }
   // 3.11, Itzik: "הזמנה לשחר", a message he can send in WhatsApp or by mail. The words of the post on the site.
@@ -17512,7 +17498,7 @@ function bizSheet(t0){
     +'<p class="bzEmpty">הציון למעלה מ 0 עד 100, 100 זה הכי טוב. כל ליד שלא נגעו בו שבוע מוריד 8 נקודות, הצעה שלא חזרו אליה 3 ימים מורידה 12, ותזכורת שהגיעה ולא טופלה מורידה 6.</p>';
   }
   // 2.11, Itzik: a tab with something new blinks until he opens it. The stamp changes whenever something is added there.
-  var BZ_UPD={its:'20261105-nda2'+((D.nda&&D.nda.signed&&D.nda.signed[0])?'-'+String(D.nda.signed[0].at).replace(/\D/g,'').slice(0,12):'')+((D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done)?'-s'+String(D.shaiForms.sign.done).replace(/\\D/g,'').slice(0,12):''),shachar:((D.shSum&&D.shSum.upd)||'20261103-shachar-auto')+'-ld1104'};
+  var BZ_UPD={its:'20261108-clean'+((D.nda&&D.nda.signed&&D.nda.signed[0])?'-'+String(D.nda.signed[0].at).replace(/\D/g,'').slice(0,12):'')+((D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done)?'-s'+String(D.shaiForms.sign.done).replace(/\\D/g,'').slice(0,12):''),shachar:((D.shSum&&D.shSum.upd)||'20261103-shachar-auto')+'-ld1104'};
   function bzSeen(){try{return JSON.parse(localStorage.getItem('bzTabSeen')||'{}');}catch(x){return {};}}
   function bzTabNew(k){return !!BZ_UPD[k]&&bzSeen()[k]!==BZ_UPD[k]&&k!==tab;}
   function bzMarkSeen(k){if(!BZ_UPD[k])return;var o=bzSeen();o[k]=BZ_UPD[k];try{localStorage.setItem('bzTabSeen',JSON.stringify(o));}catch(x){}}
