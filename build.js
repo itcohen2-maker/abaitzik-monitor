@@ -3256,9 +3256,9 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 .bzRow .yb{align-self:flex-start;padding:6px 12px;min-height:36px;font-size:13px;margin-top:4px}
 .bzStages{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 .bzStages .yb{align-self:auto;margin-top:0}
-.bzEd{display:flex;gap:6px;margin-top:4px}
+.bzEd{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 .bzEd[hidden]{display:none}
-.bzEd input{flex:1;min-width:0;border-radius:10px;border:1px solid #ccd;padding:9px;font:15px Heebo,sans-serif}
+.bzEd input{flex:1 1 100%;min-width:0;border-radius:10px;border:1px solid #ccd;padding:9px;font:15px Heebo,sans-serif}
 .bzEd .yb{min-height:40px;padding:8px 12px}
 .bzEmpty{font:500 14px/1.5 Heebo,sans-serif;opacity:.85;margin:6px 0}
 .micSteps{margin:2px 0 6px;padding-inline-start:20px;font:500 15px/1.5 Heebo,sans-serif}
