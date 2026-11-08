@@ -79,11 +79,8 @@ function ask(text) {
   return new Promise((resolve, reject) => {
     const args = ['-p', '--model', 'haiku', '--output-format', 'text', '--disallowedTools',
       'Bash', 'Edit', 'Write', 'Read', 'Grep', 'Glob', 'WebFetch', 'WebSearch', 'NotebookEdit', 'Task', 'Agent'];
-    // The timer runs as root (it reads the customers' folders); the model runs as the monitor user, whose login it is.
-    const root = process.getuid && process.getuid() === 0;
-    const child = root
-      ? spawn('sudo', ['-u', 'monitor', '-H', 'claude'].concat(args), { cwd: '/home/monitor/abaitzik-monitor' })
-      : spawn('claude', args, { cwd: HERE, env: process.env });
+    // The login comes from /etc/monitor.env (EnvironmentFile of monitor-mail.service, the same as the worker's).
+    const child = spawn('claude', args, { cwd: HERE, env: process.env });
     let out = '', err = '';
     const t = setTimeout(() => { child.kill('SIGTERM'); reject(new Error('timeout')); }, 3 * 60 * 1000);
     child.stdout.on('data', (d) => { out += d; });
