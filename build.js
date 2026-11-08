@@ -17480,7 +17480,18 @@ function bizSheet(t0){
    if(!A.owner)h+=L('ybRed taskblink',A.own,'✍️ שלב 1: לחתום פעם אחת בשם IT Solution<small style="display:block;font-weight:500;margin-top:3px">בלי זה הלקוח רואה "עוד לא מוכן"</small>');
    h+=L('yb1',c.view,'👀 לראות את הדף כמו שהלקוח רואה');
    if(A.owner&&!c.signedAt)h+=L('',wa,'💬 לשלוח לו לחתימה בוואטסאפ')+'<button type="button" class="yb" data-bz="ndacopy" data-u="'+c.link+'">📋 להעתיק את הקישור לחתימה</button>';
-   return h+'</details>';
+   h+='</details>';
+   // 8.11, Itzik: "אחרי שהוא יחתום נשלח לו טופס עם הבקשות האלו ... שהוא יוכל להעלות לו את הקבצים". Sent only after signing.
+   if(c.setup){
+    var wa2='https://wa.me/?text='+encodeURIComponent('שלום, זה הטופס להקמת המוניטור של המרפאה: מחברים את גוגל, אאוטלוק ופייסבוק, ומעלים את דוח המעבדה, דף העבודה של הפרילנסרים ורשימת הספקים. כל לחיצה נשמרת, ואפשר להמשיך אחר כך:\\n'+c.setup);
+    h+='<details class="shwArch" style="background:#fff;border:2px solid #c9a227;box-shadow:var(--goldsh)"'+(c.signedAt?' open':'')+'><summary style="flex-wrap:wrap;gap:4px">📝 טופס ההקמה: חיבורים וקבצים<small style="display:block;width:100%;font-weight:500">'+(c.signedAt?'🔴 הוא חתם, אפשר לשלוח לו עכשיו':'⏳ נשלח רק אחרי שהוא חותם על ההסכם')+'</small></summary>'
+     +'<div class="bzRow"><b>מה יש בטופס</b><small>חיבור לגוגל, לאאוטלוק ולפייסבוק, מספר לקמפיינים, העלאת דוח מעבדה ודף העבודה היומי, הרופאים הפרילנסרים ואיך מחושב התשלום, רשימת ספקים, ומיילים לתיקייה המשותפת בדרייב. כל קובץ שהוא מעלה מגיע אליך בהודעה.</small></div>'
+     +L('yb1',c.setup+'/view','👀 לראות את הטופס כמו שהוא רואה')
+     +(c.signedAt?L('',wa2,'💬 לשלוח לו את הטופס בוואטסאפ')+'<button type="button" class="yb" data-bz="ndacopy" data-u="'+c.setup+'">📋 להעתיק את הקישור לטופס</button>':'')
+     +'</details>';
+   }
+   if(c.monitor)h+='<div class="bzRow"><b>🖥️ המוניטור שלו נפתח</b><small>'+esc(c.monitor)+' · עוד לא נמסר לו. קוד הכניסה שמור בשרת, ונמסר רק אחרי שתאשר את צילומי המסך.</small></div>';
+   return h;
   }
   function itsHtml(){
    // 8.11.2026, Itzik: "תעשה סדר בכל הטאב, תסיר את שי, תאפס ותשאיר לי: טופס סודיות, הסכם בינינו וטופס התחברות".

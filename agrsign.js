@@ -250,6 +250,8 @@ function state() {
     clients: clients().map((t) => {
       const d = cdef(t), s = cstate(t);
       return { tok: t, client: d.client, biz: d.biz || '', tab: d.tab || '', link: BASE + t, view: BASE + t + '/view',
+        // 8.11: the client's setup page (connections and files), sent only after he signed.
+        setup: d.setupTok ? 'https://form.it-solution.co.il/s/' + d.setupTok : '', monitor: d.monitorUrl || '',
         opens: s.opens || 0, openedAt: s.openedAt || '', signedAt: s.signedAt || '', file: s.signedAt ? d.out : '', signer: s.f ? s.f.name : '' };
     }),
   };
