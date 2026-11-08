@@ -17477,6 +17477,12 @@ function bizSheet(t0){
     +'<div class="bzSec">💰 מחירון ללקוח</div>'
     +'<a class="yb yb1" href="https://it-solution.co.il/offer/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">💰 דף המחירים: שלוש חבילות</a>'
     +'<a class="yb" href="https://wa.me/?text='+encodeURIComponent('שלום, זה דף עם החבילות והמחירים של המוניטור העסקי של IT Solution:\\nhttps://it-solution.co.il/offer/')+'" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">💬 לשלוח ללקוח בוואטסאפ</a>'
+    // 8.11, Itzik: entry 390 with 200 actions and no setup, the rest as in Shai's quote. The page tracks views (?r=<code>), see views-pull.js.
+    +'<div class="bzSec">💰 חבילות ומחירים</div>'
+    +'<a class="yb yb1" href="https://it-solution.co.il/offer/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none" data-new="1">💰 דף החבילות והמחירים</a>'
+    +'<button type="button" class="yb" data-bz="secshare" data-u="offer" data-k="share">📤 לשלוח ללקוח את דף המחירים</button>'
+    +'<button type="button" class="yb" data-bz="secshare" data-u="offer" data-k="wa">💬 דף המחירים בוואטסאפ</button>'
+    +'<button type="button" class="yb" data-bz="anim" data-f="pricing-options.html">🔎 המחירים שהוחלטו, עם מספרים פנימיים</button>'
     +'<div class="bzSec">🔌 טופס התחברות</div>'
     +'<div class="bzRow"><b>כל כרטיס הוא כפתור התחברות</b><small>גוגל, פייסבוק ואינסטגרם, מיקרוסופט, פיירפליס, יוטיוב, לינקדין וטיקטוק. זו התבנית. ללקוח חדש כותבים לי את שמו ומקבלים קישור אישי, והצבע מתעדכן לבד כשהוא פותח ומחבר.</small></div>'
     +'<a class="yb yb1" href="https://form.it-solution.co.il/s/97353be7657c22ee625e/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לראות את טופס ההתחברות</a>'
@@ -17551,7 +17557,7 @@ function bizSheet(t0){
     +'<p class="bzEmpty">הציון למעלה מ 0 עד 100, 100 זה הכי טוב. כל ליד שלא נגעו בו שבוע מוריד 8 נקודות, הצעה שלא חזרו אליה 3 ימים מורידה 12, ותזכורת שהגיעה ולא טופלה מורידה 6.</p>';
   }
   // 2.11, Itzik: a tab with something new blinks until he opens it. The stamp changes whenever something is added there.
-  var BZ_UPD={its:'20261108-offer'+((D.nda&&D.nda.signed&&D.nda.signed[0])?'-'+String(D.nda.signed[0].at).replace(/\D/g,'').slice(0,12):'')+((D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done)?'-s'+String(D.shaiForms.sign.done).replace(/\\D/g,'').slice(0,12):''),shachar:((D.shSum&&D.shSum.upd)||'20261103-shachar-auto')+'-ld1104'};
+  var BZ_UPD={its:'20261108-prices'+((D.nda&&D.nda.signed&&D.nda.signed[0])?'-'+String(D.nda.signed[0].at).replace(/\D/g,'').slice(0,12):'')+((D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done)?'-s'+String(D.shaiForms.sign.done).replace(/\\D/g,'').slice(0,12):''),shachar:((D.shSum&&D.shSum.upd)||'20261103-shachar-auto')+'-ld1104'};
   function bzSeen(){try{return JSON.parse(localStorage.getItem('bzTabSeen')||'{}');}catch(x){return {};}}
   function bzTabNew(k){return !!BZ_UPD[k]&&bzSeen()[k]!==BZ_UPD[k]&&k!==tab;}
   function bzMarkSeen(k){if(!BZ_UPD[k])return;var o=bzSeen();o[k]=BZ_UPD[k];try{localStorage.setItem('bzTabSeen',JSON.stringify(o));}catch(x){}}
@@ -17621,22 +17627,22 @@ function bizSheet(t0){
     // 4.11: window.prompt used up the tap, so share and the WhatsApp window were blocked on the phone (Itzik: 'תקוע').
     // The name is typed in a box in the sheet, and its own button (a fresh tap) does the sharing.
     if(a==='ndacopy'){var u0=t.getAttribute('data-u');try{navigator.clipboard.writeText(u0).then(function(){toast('הקישור הועתק');},function(){uiPrompt('הקישור לחתימה:',u0);});}catch(x){uiPrompt('הקישור לחתימה:',u0);}return;}
-    if(a==='secshare'){var pg0=t.getAttribute('data-u')==='monitor'?'monitor':'security',k0=t.getAttribute('data-k')==='wa'?'wa':'share';
+    if(a==='secshare'){var pg0=({monitor:1,offer:1})[t.getAttribute('data-u')]?t.getAttribute('data-u'):'security',k0=t.getAttribute('data-k')==='wa'?'wa':'share';
      var ob=el.querySelector('.secBox');if(ob)ob.parentNode.removeChild(ob);
      var bx=document.createElement('div');bx.className='secBox';bx.style.cssText='margin:4px 0 12px;display:flex;gap:6px;align-items:center';
      bx.innerHTML='<input id="secWho" type="text" maxlength="40" placeholder="למי שולחים? שם הלקוח" style="flex:1;min-width:0;font-size:17px;padding:11px;border-radius:10px;border:1px solid #888;direction:rtl"><button type="button" class="yb yb1" data-bz="secgo" data-u="'+pg0+'" data-k="'+k0+'" style="width:auto;margin:0;white-space:nowrap">'+(k0==='wa'?'💬 לוואטסאפ':'📤 שליחה')+'</button>';
      t.parentNode.insertBefore(bx,t.nextSibling);try{bx.querySelector('input').focus();}catch(x){}
      return;}
-    if(a==='secgo'){var pg=t.getAttribute('data-u')==='monitor'?'monitor':'security',inp=document.getElementById('secWho');// the tidy rows wrap the button with their own checkbox, so never look it up by parent
+    if(a==='secgo'){var pg=({monitor:1,offer:1})[t.getAttribute('data-u')]?t.getAttribute('data-u'):'security',inp=document.getElementById('secWho');// the tidy rows wrap the button with their own checkbox, so never look it up by parent
 
      var who=String(inp&&inp.value||'').trim().slice(0,40);
      // A Hebrew name in the link showed as %D7%91... in WhatsApp. The link carries a short code; the name goes to the counter
      // quietly (a 'name' event), and views-pull.js turns the code back into the name.
      var rc=who?Math.random().toString(36).slice(2,8):'';
      if(rc){try{navigator.sendBeacon('https://it-solution.co.il/api/track',JSON.stringify({e:'name',p:'map',v:pg,r:rc,ref:who}));}catch(x){}}
-     var su='https://it-solution.co.il/'+pg+'/'+(rc?'?r='+rc:''),st=pg==='monitor'?'מסך אחד בטלפון שמנהל איתך את העסק, ככה זה עובד:':'כך המוניטור של IT Solution שומר על המידע שלכם:';
+     var su='https://it-solution.co.il/'+pg+'/'+(rc?'?r='+rc:''),st=pg==='monitor'?'מסך אחד בטלפון שמנהל איתך את העסק, ככה זה עובד:':pg==='offer'?'החבילות והמחירים של המוניטור העסקי של IT Solution:':'כך המוניטור של IT Solution שומר על המידע שלכם:';
      if(t.getAttribute('data-k')==='wa'){window.open('https://wa.me/?text='+encodeURIComponent(st+'\\n'+su),'_blank');return;}
-     if(navigator.share){navigator.share({title:pg==='monitor'?'המוניטור לעסק':'אבטחת המידע במוניטור',text:st,url:su}).catch(function(){});return;}
+     if(navigator.share){navigator.share({title:pg==='monitor'?'המוניטור לעסק':pg==='offer'?'חבילות ומחירים':'אבטחת המידע במוניטור',text:st,url:su}).catch(function(){});return;}
      try{navigator.clipboard.writeText(st+'\\n'+su).then(function(){toast('הקישור הועתק.');},function(){toast(su);});}catch(x){toast(su);}
      return;}
     if(a==='shinv'){var k=t.getAttribute('data-k'),full=SH_INV_TEXT+'\\n'+SH_INV_URL;
