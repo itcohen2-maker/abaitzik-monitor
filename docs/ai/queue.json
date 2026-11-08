@@ -1,0 +1,32 @@
+[
+ {
+  "id": "robot-he",
+  "lang": "he",
+  "order": 1,
+  "name": "IT 03 עברית · לרובוט הזה יש רק ארבע אצבעות",
+  "file": "media/robot-he.mp4",
+  "poster": "media/robot-he.jpg",
+  "ig": "לרובוט של בוסטון דיינמיקס יש רק ארבע אצבעות, וזה לא באג.\nהם הורידו לאטלס את הזרת ונתנו לו 13 דרגות חופש ביד אחת. הידיים שלו כבר לא רק תופסות, הן עובדות: מחזיקות מקדחה ומהדקות ברגים.\nובקנזס, מפעל של ציוד חקלאי יתחיל ב 2027 לנסות רובוט אנושי במיון חלקים ובסידור ארגזים.\nאיזו עבודה בעסק שלכם הייתם נותנים לרובוט קודם?\n#בינהמלאכותית #רובוטיקה #ITSolution\nמקור: Boston Dynamics, 1.10.2026. AGCO ו Agility Robotics, 20.10.2026",
+  "tt": "לרובוט אטלס יש עכשיו רק ארבע אצבעות, ו 13 דרגות חופש ביד אחת. בקנזס מפעל חקלאי יתחיל ב 2027 לנסות רובוט אנושי. איזו עבודה בעסק שלכם הייתם נותנים לרובוט קודם?\n#בינהמלאכותית #רובוטיקה #ITSolution",
+  "yt": "לרובוט הזה יש רק ארבע אצבעות, וזה לא באג #בינהמלאכותית #רובוטיקה #ITSolution",
+  "ytd": "בוסטון דיינמיקס הורידה לאטלס את הזרת ונתנה לו 13 דרגות חופש ביד אחת. ובקנזס מפעל לציוד חקלאי יתחיל ב 2027 לנסות רובוט אנושי. מקור: Boston Dynamics, 1.10.2026. AGCO ו Agility Robotics, 20.10.2026.",
+  "song": "tech cinematic",
+  "song_tt": "futuristic beat",
+  "posted": false
+ },
+ {
+  "id": "robot-en",
+  "lang": "en",
+  "order": 2,
+  "name": "IT 03 אנגלית · This robot has only four fingers",
+  "file": "media/robot-en.mp4",
+  "poster": "media/robot-en.jpg",
+  "ig": "This robot has only four fingers, and that's not a bug.\nBoston Dynamics removed the pinky from Atlas and gave it 13 degrees of freedom in one hand. Its hands no longer just grab things, they work: holding a drill and tightening bolts.\nIn Kansas, a farm equipment factory will start testing a humanoid robot in 2027, sorting parts and stacking boxes.\nWhich job in your business would you hand to a robot first?\n#AI #robotics #ITSolution\nSource: Boston Dynamics, Oct 1, 2026. AGCO and Agility Robotics, Oct 20, 2026",
+  "tt": "Atlas now has only four fingers and 13 degrees of freedom in one hand. In 2027 a Kansas factory starts testing a humanoid robot. Which job in your business would you hand to a robot first?\n#AI #robotics #ITSolution",
+  "yt": "This robot has only four fingers, and that's not a bug #AI #robotics #ITSolution",
+  "ytd": "Boston Dynamics removed the pinky from Atlas and gave it 13 degrees of freedom in one hand. In 2027 a Kansas farm equipment factory starts testing a humanoid robot. Source: Boston Dynamics, Oct 1, 2026. AGCO and Agility Robotics, Oct 20, 2026.",
+  "song": "tech cinematic",
+  "song_tt": "futuristic beat",
+  "posted": false
+ }
+]

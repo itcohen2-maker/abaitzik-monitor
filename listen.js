@@ -1281,6 +1281,27 @@ async function recordPlateAction(m) {
   execFile(process.execPath, ['push.js', 'plate: ' + got.action + ' ' + it.id], { cwd: __dirname, timeout: 120000 }, function () {});
 }
 
+// 8.11.2026, Itzik: the AI channel reels page (docs/ai/ai.html). He uploads the reel himself and ticks it here;
+// the tick (or its undo) is kept in the queue and the page shows what went up and what did not.
+const AI_Q = '/home/monitor/ai-queue.json';
+async function recordAiAction(m) {
+  let got;
+  try { const res = await fetch(m.attachment.url); got = JSON.parse(res.ok ? await res.text() : ''); }
+  catch (e) { got = null; }
+  if (!got || !ownerCodeOk('קוד ' + String(got.code || ''))) { say('!! פעולת ערוץ AI בלי קוד, לא נשמרה'); return; }
+  let q;
+  try { q = JSON.parse(fs.readFileSync(AI_Q, 'utf8')); } catch (e) { say('!! תור ערוץ AI לא נקרא'); return; }
+  const it = q.find(function (x) { return x.id === String(got.id); });
+  if (!it) return;
+  if (got.action === 'posted') { if (it.posted) return; it.posted = true; it.postedAt = new Date().toISOString(); }
+  else if (got.action === 'unposted') { if (!it.posted) return; it.posted = false; it.postedAt = null; }
+  else return;
+  fs.writeFileSync(AI_Q, JSON.stringify(q, null, 1));
+  fs.writeFileSync(path.join(__dirname, 'docs', 'ai', 'queue.json'), JSON.stringify(q, null, 1));
+  say('ערוץ AI: ' + got.action + ' ' + it.name);
+  execFile(process.execPath, ['push.js', 'ai: ' + got.action + ' ' + it.id], { cwd: __dirname, timeout: 120000 }, function () {});
+}
+
 // The wrapper exists only so that a throw inside cannot leave the busy flag
 // set and freeze the restart check forever.
 async function handle(m) {
@@ -1353,6 +1374,11 @@ async function handleOne(m) {
   }
   if (m.attachment && m.title === 'plate-action') {
     await recordPlateAction(m);
+    remember(m);
+    return;
+  }
+  if (m.attachment && m.title === 'ai-action') {
+    await recordAiAction(m);
     remember(m);
     return;
   }

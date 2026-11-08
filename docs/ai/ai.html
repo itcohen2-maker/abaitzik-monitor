@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>ערוץ ה AI</title>
+<meta name="theme-color" content="#14213D">
+<style>
+  /* 8.11.2026, Itzik: "שים לי את הרילים להעלאה כמו מה בצלחת, ושם תחלק לי לאנגלית ועברית מה עלה ומה עדיין לא". */
+  :root{--ink:#F2F5FA;--dim:rgba(242,245,250,.66);--line:rgba(255,255,255,.14);--glow:#8FB8FF;--ok:#3ccf8e;--warn:#F5A623;--bad:#ff7a7a}
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:linear-gradient(180deg,#14213D 0%,#0E1830 60%,#0A1226 100%);background-attachment:fixed;color:var(--ink);
+    font-family:Heebo,"Segoe UI",system-ui,sans-serif;font-weight:300;line-height:1.55;padding:0 16px calc(env(safe-area-inset-bottom,0px) + 40px)}
+  header,main{max-width:980px;margin:0 auto}
+  header{padding:calc(env(safe-area-inset-top,0px) + 22px) 0 4px;text-align:center}
+  h1{font-size:26px;font-weight:500;margin:0 0 4px}
+  .lede{color:var(--dim);font-size:15px;margin:0 0 6px}
+  a{color:var(--glow)}
+  h2{margin:26px 0 4px;font-size:22px;font-weight:700;text-align:center}
+  h3{margin:18px 0 10px;font-size:17px;font-weight:500;color:var(--glow);text-align:center}
+  .grid{display:flex;flex-direction:column;gap:28px;max-width:520px;margin:0 auto}
+  .card{background:rgba(255,255,255,.05);border:2px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+  .card.todo{border-color:var(--warn)}
+  .card.done{opacity:.8}
+  .media{background:#000;aspect-ratio:9/16;width:100%;max-height:70vh;margin:0 auto}
+  .media video{width:100%;height:100%;object-fit:cover;display:block}
+  .meta{padding:14px;display:flex;flex-direction:column;gap:10px}
+  .nm{font-size:20px;font-weight:700;line-height:1.35}
+  .st{display:inline-block;border-radius:6px;padding:0 7px;font-size:13px;border:1px solid var(--line);align-self:flex-start}
+  .st.ok{color:var(--ok);border-color:var(--ok)}
+  .st.wait{color:var(--warn);border-color:var(--warn)}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .row button,.row a.b{font:inherit;font-size:18px;font-weight:700;background:rgba(255,255,255,.12);color:var(--ink);border:2px solid var(--line);border-radius:14px;padding:14px 12px;cursor:pointer;min-height:58px;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center}
+  .row .full{grid-column:1/-1}
+  .row [data-dl]{background:#f5b94c;color:#1a1300;border-color:#f5b94c}
+  .row [data-posted]{background:rgba(60,207,142,.18);border-color:var(--ok)}
+  .row [data-posted][data-sure="1"]{background:var(--ok);color:#06210f}
+  .row [data-un]{color:var(--dim)}
+  .row button:disabled{opacity:.4}
+  .cp{font-size:15px;min-height:48px}
+  .song{font-size:14px;color:var(--dim)}
+  .empty{border:1px dashed var(--line);border-radius:14px;padding:14px;color:var(--dim);max-width:520px;margin:0 auto}
+  .note{font-size:13px;color:var(--dim);text-align:center}
+  .backbtn{display:inline-block;padding:14px 22px;margin:8px 0 4px;font-size:20px;font-weight:700;line-height:1.2;min-height:48px;border-radius:14px;background:#20242c;color:#fff;text-decoration:none;border:1px solid var(--line)}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 24px);background:#06210f;color:#fff;border:2px solid var(--ok);border-radius:12px;padding:10px 18px;font-size:16px;font-weight:700;z-index:9;opacity:0;transition:opacity .2s;pointer-events:none}
+  .toast.on{opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <h1>🤖 ערוץ ה AI</h1>
+  <p class="lede">הרילים של ערוץ ה AI להעלאה, בעברית ובאנגלית. מה שעוד לא עלה למעלה, ומה שכבר עלה למטה.</p>
+  <p class="lede"><a class="backbtn" href="../">⬅️ חזרה למוניטור</a></p>
+</header>
+<main id="m"><p class="empty">טוען…</p></main>
+<div class="toast" id="toast"></div>
+<script>
+(function(){
+ function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+ var SEND=null;try{SEND=JSON.parse(sessionStorage.getItem('nerSend')||'null');}catch(e){}
+ // every action goes to the server through the same channel as the plate page, with his code
+ function act(action,id,done){
+  if(!SEND||!SEND.t){alert('פתח את הדף מהאריח במוניטור');done(false);return;}
+  var body={action:action,id:id,code:SEND.c,at:new Date().toISOString()};
+  fetch('https://ntfy.sh/'+SEND.t+'?filename=ai-action.json',{method:'PUT',headers:{Title:'ai-action'},body:JSON.stringify(body)})
+   .then(function(r){done(r.ok);},function(){done(false);});
+ }
+ var TOAST=null;
+ function toast(t){var e=document.getElementById('toast');e.textContent=t;e.className='toast on';clearTimeout(TOAST);TOAST=setTimeout(function(){e.className='toast';},1800);}
+ function copy(text,label){
+  function ok(){toast('✅ הועתק: '+label);}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(ok,fallback);}else fallback();
+  function fallback(){var a=document.createElement('textarea');a.value=text;a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.select();try{document.execCommand('copy');ok();}catch(e){toast('לא הצלחתי להעתיק');}a.remove();}
+ }
+ function day(iso){return new Date(iso||0).toLocaleDateString('he-IL',{timeZone:'Asia/Jerusalem',day:'numeric',month:'numeric'});}
+ function card(it){
+  var posted=!!it.posted;
+  var h='<div class="card '+(posted?'done':'todo')+'" data-id="'+esc(it.id)+'" data-n="'+esc(it.id)+'">'
+   +'<div class="media"><video src="'+esc(it.file)+'" poster="'+esc(it.poster)+'" controls playsinline preload="none"></video></div>'
+   +'<div class="meta">'
+   +'<span class="nm">'+esc(it.name)+'</span>'
+   +'<span class="st '+(posted?'ok':'wait')+'">'+(posted?'✅ עלה '+day(it.postedAt):'⏳ עוד לא עלה')+'</span>'
+   +'<div class="row">'
+   +'<button type="button" class="full" data-dl="'+esc(it.id)+'">💾 שמירה לטלפון</button>'
+   +'<a class="b" href="'+esc(it.poster)+'" target="_blank" rel="noopener">🖼️ הכריכה</a>'
+   +'<button type="button" class="cp" data-cp="ig" data-id2="'+esc(it.id)+'">📋 כיתוב אינסטגרם</button>'
+   +'<button type="button" class="cp" data-cp="tt" data-id2="'+esc(it.id)+'">📋 כיתוב טיקטוק</button>'
+   +'<button type="button" class="cp" data-cp="yt" data-id2="'+esc(it.id)+'">📋 יוטיוב, כותרת</button>'
+   +'<button type="button" class="cp full" data-cp="ytd" data-id2="'+esc(it.id)+'">📋 יוטיוב, תיאור</button>'
+   +(posted?'<button type="button" class="full" data-un="'+esc(it.id)+'">↩️ סימנתי בטעות, עוד לא עלה</button>'
+          :'<button type="button" class="full" data-posted="'+esc(it.id)+'">☐ העליתי את זה</button>')
+   +'</div>'
+   +'<div class="song">🎵 אינסטגרם: '+esc(it.song||'')+' · טיקטוק: '+esc(it.song_tt||'')+'</div>'
+   +'</div></div>';
+  return h;
+ }
+ function section(title,list){
+  var todo=list.filter(function(x){return !x.posted;}),done=list.filter(function(x){return x.posted;});
+  var h='<h2>'+title+'</h2>';
+  h+='<h3>⏳ עוד לא עלה ('+todo.length+')</h3>'+(todo.length?'<div class="grid">'+todo.map(card).join('')+'</div>':'<p class="empty">אין כרגע מה להעלות</p>');
+  h+='<h3>✅ עלה ('+done.length+')</h3>'+(done.length?'<div class="grid">'+done.map(card).join('')+'</div>':'<p class="empty">עוד לא עלה כלום</p>');
+  return h;
+ }
+ function draw(q){
+  q.sort(function(a,b){return (a.order||0)-(b.order||0);});
+  var he=q.filter(function(x){return x.lang!=='en';}),en=q.filter(function(x){return x.lang==='en';});
+  document.getElementById('m').innerHTML=section('🇮🇱 עברית',he)+section('🇺🇸 אנגלית',en)+'<p class="note">הסימון נשמר בשרת ומתעדכן כאן תוך דקה או שתיים.</p>';
+  document.addEventListener('play',function(e){document.querySelectorAll('video').forEach(function(v){if(v!==e.target)v.pause();});},true);
+  function find(id){return q.find(function(x){return x.id===id;});}
+  document.querySelectorAll('[data-cp]').forEach(function(b){b.addEventListener('click',function(){
+   var it=find(b.getAttribute('data-id2')),k=b.getAttribute('data-cp');if(it&&it[k])copy(it[k],b.textContent.replace('📋 ',''));});});
+  document.querySelectorAll('[data-dl]').forEach(function(b){b.addEventListener('click',function(){
+   var it=find(b.getAttribute('data-dl'));if(!it)return;
+   location.href='../save.html?f='+encodeURIComponent('ai/'+String(it.file).split('?')[0])+'&n='+encodeURIComponent(it.name);});});
+  document.querySelectorAll('[data-posted]').forEach(function(b){b.addEventListener('click',function(){
+   var id=b.getAttribute('data-posted'),it=find(id);
+   if(b.getAttribute('data-sure')!=='1'){b.setAttribute('data-sure','1');b.textContent='✅ לחץ שוב לאישור: העליתי';setTimeout(function(){if(b.isConnected&&!b.disabled){b.removeAttribute('data-sure');b.textContent='☐ העליתי את זה';}},4000);return;}
+   b.disabled=true;act('posted',id,function(ok){if(ok){it.posted=true;it.postedAt=new Date().toISOString();draw(q);}else{b.disabled=false;alert('לא נשלח, נסה שוב');}});});});
+  document.querySelectorAll('[data-un]').forEach(function(b){b.addEventListener('click',function(){
+   var id=b.getAttribute('data-un'),it=find(id);
+   b.disabled=true;act('unposted',id,function(ok){if(ok){it.posted=false;it.postedAt=null;draw(q);}else{b.disabled=false;alert('לא נשלח, נסה שוב');}});});});
+ }
+ fetch('queue.json?v='+Date.now()).then(function(r){return r.json();}).then(draw)
+  .catch(function(){document.getElementById('m').innerHTML='<p class="empty">לא הצלחתי לטעון את התור</p>';});
+})();
+</script>
+<script>/* opened from a row in the videos tile, jump to that video */(function(){var h=decodeURIComponent(location.hash.slice(1));if(!h)return;var t=0,iv=setInterval(function(){var e=document.querySelector('[data-n="'+h+'"]');if(e){clearInterval(iv);e.scrollIntoView({block:'start'});}else if(++t>40)clearInterval(iv);},150);})();</script>
+</body>
+</html>

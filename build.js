@@ -14642,13 +14642,6 @@ var REEL_ITEMS=[
 {n:'שחר 33',t:'מודעה: ככה נראה הבוקר שלי · 4K הכי איכותי, לשמירה בגלריה',r:'reel-33-ad-morning.mp4'},
 {n:'שחר 33 כריכה',t:'הכריכה · 4K',r:'reel-33-cover.png'},
 {n:'שחר 33 פרסום',p:'sh33',t:'כיתוב, מוזיקה והאשטגים לכל רשת',r:'reel-sh33-post.txt'},
-// 7.11, Itzik: AI channel reel 03, Atlas four fingers, all AI (his real photo as the presenter, silver shirt). Hebrew first; English follows.
-{n:'IT 03 עברית',t:'ריל: לרובוט הזה יש רק ארבע אצבעות, וזה לא באג · עברית, כולו AI, לשמירה בגלריה',r:'it03he.mp4'},
-{n:'IT 03 עברית כריכה',t:'הכריכה',r:'it03he-cover.jpg'},
-{n:'IT 03 עברית פרסום',p:'it03he',t:'כיתוב והאשטגים לכל רשת, עם המקור',r:'it03he-post.txt'},
-{n:'IT 03 אנגלית',t:'ריל באנגלית: This robot has only four fingers, and that is not a bug · כולו AI, לשמירה בגלריה',r:'it03en.mp4'},
-{n:'IT 03 אנגלית כריכה',t:'הכריכה',r:'it03en-cover.jpg'},
-{n:'IT 03 אנגלית פרסום',p:'it03en',t:'כיתוב והאשטגים לכל רשת, עם המקור',r:'it03en-post.txt'},
 // 5.11, Itzik: the monitor with WhatsApp and the control panel, for Instagram story and TikTok (IT Solution).
 {n:'IT 01',t:'חדש: המוניטור, וואטסאפ ולוח בקרה אחד, לסטורי באינסטגרם ובטיקטוק · הכי איכותי, לשמירה בגלריה',r:'it01-monitor-v2.mp4'},
 {n:'IT 01 כריכה',t:'הכריכה: מי לא שילם לך החודש?',r:'it01-cover.jpg'},
@@ -16625,7 +16618,7 @@ function vqStockHtml(){
 }
 function vqLoad(cb){
  if(VQ&&Date.now()-VQT<60000)return cb();
- var P=[['st','status/queue.json'],['nr','ner/queue.json'],['pl','plate/queue.json'],['li','linkedin/stock.json']],n=P.length,R={};
+ var P=[['st','status/queue.json'],['nr','ner/queue.json'],['pl','plate/queue.json'],['ai','ai/queue.json'],['li','linkedin/stock.json']],n=P.length,R={};
  P.forEach(function(p){
   fetch(p[1]+'?v='+Date.now()).then(function(r){return r.json();}).then(function(d){R[p[0]]=p[0]==='li'?(d&&typeof d==='object'?d:null):(Array.isArray(d)?d:[]);},function(){R[p[0]]=[];})
    .then(function(){if(--n===0){VQ=R;VQT=Date.now();cb();}});
@@ -16664,6 +16657,17 @@ function vqRows(id){
   if(rj.length)out.push({h:'⛔ נפסלו'});
   rj.forEach(function(x){out.push({k:'q',t:'⛔ '+lab(x),u:'ner/candle.html',n:x.name});});
  }
+ if(id==='ai'){
+  [['he','🇮🇱 עברית'],['en','🇺🇸 אנגלית']].forEach(function(g){
+   var inL=function(x){return g[0]==='en'?x.lang==='en':x.lang!=='en';};
+   var a=Q.filter(function(x){return inL(x)&&!x.posted;}),d=Q.filter(function(x){return inL(x)&&x.posted;});
+   out.push({h:g[1]+': עוד לא עלה ('+a.length+')'});
+   if(!a.length)out.push({k:'q',t:'✔️ אין כרגע מה להעלות',u:'ai/ai.html'});
+   a.forEach(function(x){out.push({k:'q',t:'⏳ '+x.name,u:'ai/ai.html',n:x.id});});
+   if(d.length)out.push({h:g[1]+': עלה ('+d.length+')'});
+   d.forEach(function(x){out.push({k:'q',t:'✅ '+x.name,u:'ai/ai.html',n:x.id});});
+  });
+ }
  if(id==='pl'){
   var day=function(iso){return new Date(iso||0).toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'});};
   var q=Q.filter(function(x){return !x.posted||day(x.postedAt)===T;}).sort(function(a,b){return (a.order||0)-(b.order||0);});
@@ -16689,11 +16693,14 @@ function vidTabs(){
  var stN=(VQ0.st||[]).filter(function(x){return x.date===TD;}).length;
  var nrN=(VQ0.nr||[]).filter(function(x){return !x.posted&&!x.failed&&!x.approved&&!x.rejected&&!x.hold;}).length;
  var plN=(VQ0.pl||[]).filter(function(x){return !x.posted&&!x.approved;}).length;
+ var aiN=(VQ0.ai||[]).filter(function(x){return !x.posted;}).length;
  return [
   {id:'st',l:'📲 סטטוס'+(stN?' ('+stN+')':''),h:'סטטוס וואטסאפ: מה עולה היום ומה הבא בתור. לחיצה פותחת את הסרטון והטקסט, 3 נגיעות',L:vqRows('st').concat([{h:'📂 הדף המלא'},{k:'go',t:'📲 פתיחת כל הסטטוסים המוכנים',u:'status/index.html'}])},
   {id:'ads',l:'📣 קמפיין',h:'הממומן, וסרטוני המוניטור לסטורי',L:TOM_ITEMS.map(function(it){return it.h?{h:it.h}:{k:'tom',it:it};})},
   {id:'sh',l:'🌅 שחר',h:'הרילים, הסטורי והפוסטים של שחר',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isSh(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isSh(x.it);}))},
   {id:'pl',l:'🍽️ מה בצלחת'+(plN?' ('+plN+')':''),h:'הסטוריז לפי הסדר, אפשר לסדר ולמחוק',L:vqRows('pl').concat([{h:'📂 הדף המלא'},{k:'go',t:'🍽️ פתיחת הסטוריז של מה בצלחת',u:'plate/plate.html'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return plateN[x.it.n];}))},
+  // 8.11, Itzik: the AI channel reels to upload, like the plate tab, split Hebrew and English, what went up and what did not.
+  {id:'ai',l:'🤖 ערוץ AI'+(aiN?' ('+aiN+')':''),upd:'20261108-ai',h:'הרילים של ערוץ ה AI להעלאה, בעברית ובאנגלית: מה עלה ומה עדיין לא',L:vqRows('ai').concat([{h:'📂 הדף המלא'},{k:'go',t:'🤖 פתיחת הרילים של ערוץ ה AI',u:'ai/ai.html'}])},
   {id:'nr',l:'🕯️ נרות'+(nrN?' ('+nrN+')':''),h:'candle.times: סטוריז ופוסטים שמחכים לאישור שלך',L:vqRows('nr').concat([{h:'📂 הדף המלא'},{k:'go',t:'🕯️ פתיחת candle.times',u:'ner/candle.html'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return candleN[x.it.n];}))},
   // 7.11, Itzik: a tab for IT Solution reels (ready ones first, then the ideas). upd = the soft blink until the tab is opened.
   {id:'it',l:'💻 IT Solution',upd:'20261107-it03en',h:'הרילים של IT Solution: המוניטור, הקמפיינים והעסקים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isIt(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isIt(x.it);}))},
