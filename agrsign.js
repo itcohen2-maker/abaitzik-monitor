@@ -69,6 +69,8 @@ const CSS = '*{box-sizing:border-box}body{margin:0;background:#f4f7fb;color:#0f1
   + '.go{display:block;width:100%;margin-top:16px;background:#06b6d4;color:#0f1b2a;border:0;border-radius:16px;padding:17px;font:900 19px Heebo;cursor:pointer}.go:disabled{background:#cbd5e1;color:#6b7c90}'
   + '.err{color:#b91c1c;font:700 14.5px Heebo;margin-top:10px;min-height:1em}'
   + '.done{background:#fff;border-radius:20px;padding:26px 18px;text-align:center;margin-top:10px}.done .big{font-size:52px}.done h2{font:900 23px Heebo;margin:6px 0}.done p{font:400 15.5px/1.6 Heebo;color:#24364b}'
+  + '.aft{background:#fffbeb;border:1.5px solid #fcd34d;border-radius:16px;padding:14px 16px;margin-top:18px;font:400 15px/1.6 Heebo;color:#24364b}.aft b{display:block;font:800 16.5px Heebo;color:#92400e;margin-bottom:4px}.aft p{margin:4px 0}.aft ol{margin:4px 0 8px;padding:0 20px 0 0}.aft li{margin-bottom:5px}'
+  + '.aft .wa{display:block;text-align:center;text-decoration:none;background:#25d366;color:#fff;border-radius:14px;padding:13px;font:800 16px Heebo;margin-top:8px}'
   + '.dl{display:block;margin-top:14px;background:#0f1b2a;color:#fff;border-radius:14px;padding:14px;font:800 16px Heebo;text-decoration:none;text-align:center}' + CTR_CSS;
 
 function head(title) {
@@ -103,11 +105,16 @@ function docsBlock(d) {
   return h;
 }
 
+function afterBlock(d) {
+  return (Array.isArray(d.after) && d.after.length ? '<div class="aft"><b>📌 לתשומת לבך</b><p>כדי שנוכל להתחיל לעבוד, נצטרך ממך:</p><ol>' + d.after.map((t) => '<li>' + esc(t) + '</li>').join('') + '</ol>'
+      + (d.afterWa ? '<p>אפשר לשלוח לנו את הדוגמאות בוואטסאפ:</p><a class="wa" href="https://wa.me/' + esc(d.afterWa) + '" target="_blank" rel="noopener">💬 שליחת הדוגמאות בוואטסאפ</a>' : '') + '</div>' : '');
+}
+
 function clientPage(tok, d, s, view) {
   let h = head(d.title);
   if (s.signedAt && !view) {
     return h + '<div class="done"><div class="big">✅</div><h2>נחתם, תודה!</h2><p>' + esc(d.title) + '</p><p>נחתם ב ' + esc(ilTime(s.signedAt)) + '</p>'
-      + '<a class="dl" href="/a/' + tok + '/signed" target="_blank">📄 העותק החתום (PDF)</a></div></div></body></html>';
+      + '<a class="dl" href="/a/' + tok + '/signed" target="_blank">📄 העותק החתום (PDF)</a></div>' + afterBlock(d) + '</div></body></html>';
   }
   if (!view && !(owner() && owner().sig)) {
     return h + '<div class="done"><div class="big">⏳</div><h2>המסמך עוד לא מוכן</h2><p>נשלח אליך קישור מעודכן בהקדם.</p></div></div></body></html>';
@@ -122,6 +129,8 @@ function clientPage(tok, d, s, view) {
     + '<label class="agree"><input type="checkbox" id="agA"><span>קראתי את <b>הסכם בינינו</b>: הסכם השירות (גרסה 1.0) ונספח אבטחת המידע, ואני מאשר אותם בשם המרפאה.</span></label>'
     + '<label class="agree"><input type="checkbox" id="agB"><span>קראתי את <b>טופס הסודיות למרפאה ולמטופלים</b>, ואני מאשר אותו בשם המרפאה.</span></label>'
     + '<button type="button" class="go" id="go">✍️ חתימה ואישור של שני המסמכים</button><div class="err" id="err"></div>'
+    // 8.11, Itzik: "תרשום מתחת לחתימה ואישור, לתשומת לבך, ושהוא יכול לשלוח לי בוואטסאפ את הדוגמאות". def: after [..], afterWa (number).
+    + afterBlock(d)
     + '<script>(function(){var T=' + JSON.stringify(tok) + ';' + PAD_JS
     + (view ? '$("go").disabled=true;$("go").textContent="תצוגה בלבד, כך הלקוח רואה את הדף";'
       : 'try{if(!sessionStorage.getItem("agrOpen"+T)){sessionStorage.setItem("agrOpen"+T,"1");post({tok:T,open:true}).catch(function(){})}}catch(x){post({tok:T,open:true}).catch(function(){})}')
