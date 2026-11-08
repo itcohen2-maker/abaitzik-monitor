@@ -17470,7 +17470,7 @@ function bizSheet(t0){
   function agrHtml(i){
    var A=D.agr||{},c=(A.clients||[])[i];if(!c)return '';
    function hd(t){try{return new Date(t).toLocaleString('he-IL',{day:'numeric',month:'numeric',year:'2-digit',hour:'2-digit',minute:'2-digit'});}catch(x){return '';}}
-   var st=c.signedAt?'✅ חתם ואישר את שני המסמכים · '+hd(c.signedAt):c.openedAt?'🟠 פתח את הדף ('+c.opens+' פעמים), עוד לא חתם':A.owner?'🔴 עוד לא פתח':'🔴 קודם לחתום בשם IT Solution';
+   var st=c.signedAt?'✅ חתם ואישר את שני המסמכים · '+hd(c.signedAt):c.openedAt?'🟠 פתח את הדף ('+c.opens+' פעמים), עוד לא חתם':c.sentAt?'🟠 נשלח אליו '+hd(c.sentAt)+', עוד לא פתח':A.owner?'🔴 עוד לא נשלח':'🔴 קודם לחתום בשם IT Solution';
    var wa='https://wa.me/?text='+encodeURIComponent('שלום, מצורף ההסכם בינינו וטופס הסודיות למרפאה ולמטופלים. קוראים, ממלאים את הפרטים וחותמים מהטלפון, ומקבלים מיד עותק חתום:\\n'+c.link);
    var L=function(cls,href,txt){return '<a class="yb '+cls+'" href="'+href+'" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">'+txt+'</a>';};
    var h='<div class="bzHead">🩺 '+esc(c.client)+'</div>'
