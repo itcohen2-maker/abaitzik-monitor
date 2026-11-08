@@ -17477,6 +17477,9 @@ function bizSheet(t0){
     +'<details class="shwArch" style="background:#fff;border:2px solid #c9a227;box-shadow:var(--goldsh)"><summary style="flex-wrap:wrap;gap:4px">📜 הסכם בינינו<small style="display:block;width:100%;font-weight:500">'+st+'</small></summary>'
     +'<div class="bzRow"><b>מה יש בדף החתימה</b><small>1. הסכם השירות, עם נספח אבטחת המידע.<br>2. טופס סודיות למרפאה ולמטופלים.<br>הוא ממלא פרטים, חותם פעם אחת ומאשר כל מסמך בנפרד. העותק החתום מגיע לכאן.</small></div>';
    if(c.signedAt)h+='<button type="button" class="yb yb2" data-bz="anim" data-f="'+esc(c.file)+'">📄 ההסכם וטופס הסודיות, חתומים (PDF)</button>';
+   // 8.11, Itzik: "הוא צריך לקבל את העותק החתום אליו בחזרה לוואטסאפ". You press send; nothing goes to him by itself.
+   if(c.signedAt&&c.signedUrl){var pn=String(c.phone||'').replace(/[^0-9]/g,'').replace(/^0/,'972');
+    h+=L('yb1'+(pn?'':' ybWait'),'https://wa.me/'+pn+'?text='+encodeURIComponent('שלום ד״ר '+String(c.client).replace(/^ד״ר /,'')+', מצורף העותק החתום של ההסכם בינינו וטופס הסודיות:\\n'+c.signedUrl),'💬 לשלוח לו את העותק החתום בוואטסאפ'+(pn?'':'<small style="display:block;font-weight:500">לא מסר טלפון, תבחר את איש הקשר</small>'));}
    if(!A.owner)h+=L('ybRed taskblink',A.own,'✍️ שלב 1: לחתום פעם אחת בשם IT Solution<small style="display:block;font-weight:500;margin-top:3px">בלי זה הלקוח רואה "עוד לא מוכן"</small>');
    h+=L('yb1',c.view,'👀 לראות את הדף כמו שהלקוח רואה');
    if(A.owner&&!c.signedAt)h+=L('',wa,'💬 לשלוח לו לחתימה בוואטסאפ')+'<button type="button" class="yb" data-bz="ndacopy" data-u="'+c.link+'">📋 להעתיק את הקישור לחתימה</button>';

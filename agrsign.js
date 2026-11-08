@@ -71,7 +71,7 @@ const CSS = '*{box-sizing:border-box}body{margin:0;background:#f4f7fb;color:#0f1
   + '.done{background:#fff;border-radius:20px;padding:26px 18px;text-align:center;margin-top:10px}.done .big{font-size:52px}.done h2{font:900 23px Heebo;margin:6px 0}.done p{font:400 15.5px/1.6 Heebo;color:#24364b}'
   + '.aft{background:#fffbeb;border:1.5px solid #fcd34d;border-radius:16px;padding:14px 16px;margin-top:18px;font:400 15px/1.6 Heebo;color:#24364b}.aft b{display:block;font:800 16.5px Heebo;color:#92400e;margin-bottom:4px}.aft p{margin:4px 0}.aft ol{margin:4px 0 8px;padding:0 20px 0 0}.aft li{margin-bottom:5px}'
   + '.aft .wa{display:block;text-align:center;text-decoration:none;background:#25d366;color:#fff;border-radius:14px;padding:13px;font:800 16px Heebo;margin-top:8px}'
-  + '.dl{display:block;margin-top:14px;background:#0f1b2a;color:#fff;border-radius:14px;padding:14px;font:800 16px Heebo;text-decoration:none;text-align:center}' + CTR_CSS;
+  + '.dl.wa{background:#25d366}.dl{display:block;margin-top:14px;background:#0f1b2a;color:#fff;border-radius:14px;padding:14px;font:800 16px Heebo;text-decoration:none;text-align:center}' + CTR_CSS;
 
 function head(title) {
   return '<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
@@ -114,7 +114,14 @@ function clientPage(tok, d, s, view) {
   let h = head(d.title);
   if (s.signedAt && !view) {
     return h + '<div class="done"><div class="big">✅</div><h2>נחתם, תודה!</h2><p>' + esc(d.title) + '</p><p>נחתם ב ' + esc(ilTime(s.signedAt)) + '</p>'
-      + '<a class="dl" href="/a/' + tok + '/signed" target="_blank">📄 העותק החתום (PDF)</a></div>' + afterBlock(d) + '</div></body></html>';
+      + '<a class="dl" href="/a/' + tok + '/signed" target="_blank">📄 העותק החתום (PDF)</a>'
+      // 8.11, Itzik: "אחרי השליחה הוא צריך לקבל את העותק החתום אליו בחזרה לוואטסאפ". The system never sends to a client by
+      // itself (WhatsApp goes only to Itzik): the client keeps the file in his own WhatsApp, and Itzik gets a ready button too.
+      + '<a class="dl wa" id="waMe" href="https://wa.me/?text=' + encodeURIComponent('העותק החתום של ' + d.title + ', IT Solution:\n' + BASE + tok + '/signed') + '" target="_blank" rel="noopener">💬 לשמור את העותק בוואטסאפ</a>'
+      + '<p style="font-size:13.5px;color:#6b7c90">שולחים לעצמך או לאנשי המרפאה. העותק יישלח אליך גם מאיתנו בוואטסאפ.</p></div>' + afterBlock(d)
+      + '<script>(function(){var a=document.getElementById("waMe");if(!navigator.canShare)return;a.onclick=function(e){e.preventDefault();fetch("/a/' + tok + '/signed").then(function(r){if(!r.ok)throw 0;return r.blob()}).then(function(bl){var f=new File([bl],"IT-Solution-signed.pdf",{type:"application/pdf"});'
+      + 'if(!navigator.canShare({files:[f]}))throw 0;return navigator.share({files:[f],title:"העותק החתום"})}).catch(function(x){if(x&&x.name==="AbortError")return;location.href=a.href})}})();</script>'
+      + '</div></body></html>';
   }
   if (!view && !(owner() && owner().sig)) {
     return h + '<div class="done"><div class="big">⏳</div><h2>המסמך עוד לא מוכן</h2><p>נשלח אליך קישור מעודכן בהקדם.</p></div></div></body></html>';
@@ -124,7 +131,7 @@ function clientPage(tok, d, s, view) {
     + '<div class="sec"><i>1</i>קוראים את המסמכים</div>' + docsBlock(d)
     + '<div class="sec"><i>2</i>פרטים וחתימה</div>'
     + field('nm', 'שם מלא', ' autocomplete="name"') + field('bz', 'שם המרפאה', ' autocomplete="organization" value="' + esc(d.bizDefault || '') + '"')
-    + field('idn', 'מספר עוסק, ח.פ. או ת.ז.', ' inputmode="numeric"') + field('ad', 'כתובת המרפאה', ' autocomplete="street-address"') + field('rl', 'תפקיד', ' value="' + esc(d.roleDefault || '') + '"')
+    + field('idn', 'מספר עוסק, ח.פ. או ת.ז.', ' inputmode="numeric"') + field('ph', 'טלפון נייד <small>(לשם יישלח העותק החתום בוואטסאפ)</small>', ' inputmode="tel" autocomplete="tel"') + field('ad', 'כתובת המרפאה', ' autocomplete="street-address"') + field('rl', 'תפקיד', ' value="' + esc(d.roleDefault || '') + '"')
     + pad()
     + '<label class="agree"><input type="checkbox" id="agA"><span>קראתי את <b>הסכם בינינו</b>: הסכם השירות (גרסה 1.0) ונספח אבטחת המידע, ואני מאשר אותם בשם המרפאה.</span></label>'
     + '<label class="agree"><input type="checkbox" id="agB"><span>קראתי את <b>טופס הסודיות למרפאה ולמטופלים</b>, ואני מאשר אותו בשם המרפאה.</span></label>'
@@ -137,11 +144,12 @@ function clientPage(tok, d, s, view) {
     + '$("go").onclick=function(){var er=$("err"),v=function(i){return $(i).value.trim()};'
     + 'if(v("nm").length<2){er.textContent="צריך למלא שם מלא";$("nm").focus();return}'
     + 'if(v("bz").length<2){er.textContent="צריך למלא את שם המרפאה";$("bz").focus();return}'
+    + 'if(v("ph").replace(/\D/g,"").length<9){er.textContent="צריך למלא טלפון נייד, לשם יישלח העותק החתום";$("ph").focus();return}'
     + 'if(!inked){er.textContent="צריך לחתום עם האצבע בתוך המסגרת";return}'
     + 'if(!$("agA").checked){er.textContent="צריך לאשר את הסכם בינינו";return}'
     + 'if(!$("agB").checked){er.textContent="צריך לאשר את טופס הסודיות";return}'
     + 'er.textContent="";var g=$("go");g.disabled=true;g.textContent="שולח...";'
-    + 'post({tok:T,name:v("nm"),biz:v("bz"),idno:v("idn"),addr:v("ad"),role:v("rl"),agA:true,agB:true,sig:cv.toDataURL("image/png")})'
+    + 'post({tok:T,name:v("nm"),biz:v("bz"),idno:v("idn"),phone:v("ph"),addr:v("ad"),role:v("rl"),agA:true,agB:true,sig:cv.toDataURL("image/png")})'
     + '.then(function(j){if(j.ok){location.reload()}else{throw 0}})'
     + '.catch(function(){g.disabled=false;g.textContent="✍️ חתימה ואישור של שני המסמכים";er.textContent="השליחה לא עברה. בדוק את החיבור לאינטרנט ונסה שוב."})};'
     + '})();</script>';
@@ -237,7 +245,7 @@ function handlePost(b, notify, ip, ua, done) {
   if (cut(b.name, 80).length < 2 || cut(b.biz, 80).length < 2 || b.agA !== true || b.agB !== true || !okSig(sig)) return done({ status: 400, body: { ok: false } });
   const all = (d.docs || ['contract', 'annex', 'clinic']).map(legal);
   Object.assign(s, {
-    signedAt: now, f: { name: cut(b.name, 80), biz: cut(b.biz, 80), idno: cut(b.idno, 20), addr: cut(b.addr, 120), role: cut(b.role, 60) },
+    signedAt: now, f: { name: cut(b.name, 80), biz: cut(b.biz, 80), idno: cut(b.idno, 20), phone: cut(b.phone, 20), addr: cut(b.addr, 120), role: cut(b.role, 60) },
     agA: true, agB: true, sig, ip: String(ip || ''), ua: String(ua || '').slice(0, 300),
     hashes: { contract: hash(legal('contract') + legal('annex')), clinic: hash(legal('clinic')), all: hash(all.join('')) },
   });
@@ -245,7 +253,8 @@ function handlePost(b, notify, ip, ua, done) {
   done({ status: 200, body: { ok: true } });
   renderSigned(tok, d, s, (e) => {
     notify('חתימה על הסכם', '🎉 ' + d.client + ' חתם על הסכם בינינו ועל טופס הסודיות!\n'
-      + s.f.name + ', ' + s.f.biz + (s.f.idno ? ', ' + s.f.idno : '') + '\n'
+      + s.f.name + ', ' + s.f.biz + (s.f.idno ? ', ' + s.f.idno : '') + (s.f.phone ? ', ' + s.f.phone : '') + '\n'
+      + 'את העותק החתום שולחים לו בלשונית שלו במוניטור: "💬 לשלוח לו את העותק החתום".\n'
       + (e ? 'ה PDF החתום לא הופק: ' + e.message : 'ה PDF החתום נמצא במוניטור: 💼 העסק שלי ← ' + d.client));
   });
 }
@@ -261,7 +270,8 @@ function state() {
       return { tok: t, client: d.client, biz: d.biz || '', tab: d.tab || '', link: BASE + t, view: BASE + t + '/view',
         // 8.11: the client's setup page (connections and files), sent only after he signed.
         setup: d.setupTok ? 'https://form.it-solution.co.il/s/' + d.setupTok : '', monitor: d.monitorUrl || '',
-        opens: s.opens || 0, openedAt: s.openedAt || '', signedAt: s.signedAt || '', file: s.signedAt ? d.out : '', signer: s.f ? s.f.name : '' };
+        opens: s.opens || 0, openedAt: s.openedAt || '', signedAt: s.signedAt || '', file: s.signedAt ? d.out : '', signer: s.f ? s.f.name : '',
+        phone: s.f && s.f.phone ? s.f.phone : '', signedUrl: s.signedAt ? BASE + t + '/signed' : '' };
     }),
   };
 }
