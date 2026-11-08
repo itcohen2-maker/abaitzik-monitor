@@ -92,7 +92,7 @@
    +(posted?'<button type="button" class="full" data-un="'+esc(it.id)+'">↩️ סימנתי בטעות, עוד לא עלה</button>'
           :'<button type="button" class="full" data-posted="'+esc(it.id)+'">☐ העליתי את זה</button>')
    +'</div>'
-   +'<div class="song">🎵 אינסטגרם: '+esc(it.song||'')+' · טיקטוק: '+esc(it.song_tt||'')+'</div>'
+   +((it.song||it.song_tt)?'<div class="song">🎵 אינסטגרם: '+esc(it.song||'')+' · טיקטוק: '+esc(it.song_tt||'')+'</div>':'')
    +'</div></div>';
   return h;
  }
