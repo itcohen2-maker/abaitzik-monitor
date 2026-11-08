@@ -33,6 +33,8 @@ function run(cmd, args) {
   catch (e) { log('!! ' + args[0] + ' failed: ' + String(e.stderr || e.message).slice(0, 200)); return null; }
 }
 
+if (!DRY && !EVENING) run('node', ['manager-work.js']); // 8.11: the manager's own checks first, so the card shows them
+
 const now = Date.now();
 const m = M.build(M.gather(dataPath, __dirname, now));
 if (DRY) { console.log(JSON.stringify(m, null, 1)); console.log(M.pushText(m)); process.exit(0); }

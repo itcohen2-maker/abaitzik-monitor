@@ -495,6 +495,7 @@ function build() {
   // One he deleted on the screen (the same key the page uses) is left out.
   const remGone = ((require('./lib/notes-sync.js').read(path.join(inst.dataPath, 'notes', 'notes')) || {}).remGone) || {};
   const reminders = loadDocs('reminders')
+    .filter(x => !x.doneAt) // 8.11: closed by the manager (manager-work.js), shown on his card instead
     .map(x => ({ at: x.at, due: x.due || '', text: x.text || '',
                  sentAt: x.sentAt || '', task: x.task || '', nag: !!x.nag }))
     .filter(x => !remGone[(x.at || '') + '|' + (x.due || '')])
@@ -4647,7 +4648,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   -->
   <button type="button" class="gt gWin" data-grp="net" id="gWin" data-upd="20261106-win03" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <!-- 5.11, Itzik: "את כל הסרטונים נעביר לאריח אחד, ובתוכו טאבים". One tile with a tab per kind; the old tiles (reels, future reels, campaign, plate, status, candle.times) were removed; their sheets stay in the code. -->
-  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1" data-upd="20261108-ai"><b>🎬 הסרטונים</b><small>רילים, רילים עתידיים, סטטוס, נרות, מה בצלחת, שחר וקמפיין</small></button>
+  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1" data-upd="20261107-it03en"><b>🎬 הסרטונים</b><small>רילים, רילים עתידיים, סטטוס, נרות, מה בצלחת, שחר וקמפיין</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
@@ -17472,10 +17473,10 @@ function bizSheet(t0){
     +'<a class="yb yb1" href="https://form.it-solution.co.il/terms" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">📜 הסכם השירות ללקוח, גרסה 1.0</a>'
     +'<button type="button" class="yb" data-bz="anim" data-f="it-solution-contract-1.0.pdf">📄 הסכם השירות כ PDF</button>'
     // 8.11: the clean connection form. Every card is a sign in button; a new client gets his own personal link on request.
-    // 8.11, Itzik: "אני עוד לא החלטתי מה יהיה המחיר". Private drafts only; the public page /offer/ was taken down.
-    +'<div class="bzSec">💰 מחיר: עוד לא הוחלט</div>'
-    +'<button type="button" class="yb yb1" data-bz="anim" data-f="pricing-options.html" data-new="1">💰 אופציות מחיר להחלטה, כולל עלות ורווח</button>'
-    +'<button type="button" class="yb" data-bz="anim" data-f="offer-draft.html">👀 טיוטת דף המחירים ללקוח (לא פורסם)</button>'
+    // 8.11: the one page price list for customers (it-solution.co.il/offer/, unlisted).
+    +'<div class="bzSec">💰 מחירון ללקוח</div>'
+    +'<a class="yb yb1" href="https://it-solution.co.il/offer/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">💰 דף המחירים: שלוש חבילות</a>'
+    +'<a class="yb" href="https://wa.me/?text='+encodeURIComponent('שלום, זה דף עם החבילות והמחירים של המוניטור העסקי של IT Solution:\\nhttps://it-solution.co.il/offer/')+'" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">💬 לשלוח ללקוח בוואטסאפ</a>'
     +'<div class="bzSec">🔌 טופס התחברות</div>'
     +'<div class="bzRow"><b>כל כרטיס הוא כפתור התחברות</b><small>גוגל, פייסבוק ואינסטגרם, מיקרוסופט, פיירפליס, יוטיוב, לינקדין וטיקטוק. זו התבנית. ללקוח חדש כותבים לי את שמו ומקבלים קישור אישי, והצבע מתעדכן לבד כשהוא פותח ומחבר.</small></div>'
     +'<a class="yb yb1" href="https://form.it-solution.co.il/s/97353be7657c22ee625e/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לראות את טופס ההתחברות</a>'
@@ -17550,7 +17551,7 @@ function bizSheet(t0){
     +'<p class="bzEmpty">הציון למעלה מ 0 עד 100, 100 זה הכי טוב. כל ליד שלא נגעו בו שבוע מוריד 8 נקודות, הצעה שלא חזרו אליה 3 ימים מורידה 12, ותזכורת שהגיעה ולא טופלה מורידה 6.</p>';
   }
   // 2.11, Itzik: a tab with something new blinks until he opens it. The stamp changes whenever something is added there.
-  var BZ_UPD={its:'20261108-options'+((D.nda&&D.nda.signed&&D.nda.signed[0])?'-'+String(D.nda.signed[0].at).replace(/\D/g,'').slice(0,12):'')+((D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done)?'-s'+String(D.shaiForms.sign.done).replace(/\\D/g,'').slice(0,12):''),shachar:((D.shSum&&D.shSum.upd)||'20261103-shachar-auto')+'-ld1104'};
+  var BZ_UPD={its:'20261108-offer'+((D.nda&&D.nda.signed&&D.nda.signed[0])?'-'+String(D.nda.signed[0].at).replace(/\D/g,'').slice(0,12):'')+((D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done)?'-s'+String(D.shaiForms.sign.done).replace(/\\D/g,'').slice(0,12):''),shachar:((D.shSum&&D.shSum.upd)||'20261103-shachar-auto')+'-ld1104'};
   function bzSeen(){try{return JSON.parse(localStorage.getItem('bzTabSeen')||'{}');}catch(x){return {};}}
   function bzTabNew(k){return !!BZ_UPD[k]&&bzSeen()[k]!==BZ_UPD[k]&&k!==tab;}
   function bzMarkSeen(k){if(!BZ_UPD[k])return;var o=bzSeen();o[k]=BZ_UPD[k];try{localStorage.setItem('bzTabSeen',JSON.stringify(o));}catch(x){}}
