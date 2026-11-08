@@ -140,7 +140,8 @@ function clientPage(tok, d, s, view) {
 }
 
 function ownerPage(tok) {
-  const o = owner() || {};
+  // 8.11, Itzik: the signer's name and role are filled in for him (def.json ownerName, ownerRole); he can change them.
+  const m = mainDef(), o = Object.assign({ name: m.ownerName || '', role: m.ownerRole || '' }, owner() || {});
   let h = head('חתימה בשם IT Solution');
   h += '<div class="intro"><h1>חתימה בשם IT Solution</h1><p class="big">פעם אחת. החתימה הזו נכנסת לכל הסכם שלקוח חותם עליו בדף הזה.' + (o.sig ? ' כבר חתמת ב ' + esc(ilTime(o.at)) + ', אפשר לחתום מחדש.' : '') + '</p></div>'
     + field('nm', 'שם החותם בשם IT Solution', ' value="' + esc(o.name || '') + '"') + field('rl', 'תפקיד', ' value="' + esc(o.role || '') + '"')

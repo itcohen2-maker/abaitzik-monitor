@@ -742,6 +742,16 @@ const server = http.createServer(function (q, s) {
   // 1.11: client setup page (setup.js), /s/<token> and /api/setup.
   const sm = u.pathname.match(/^\/s\/([a-f0-9]{16,40})(\/view)?\/?$/);
   if (sm && q.method === 'GET') { if (sm[2]) require('./owner-mark.js').setCookie(s); if (sm[2]) require('./form-view.js').serve('./setup.js', sm[1], s); else require('./setup.js').servePage(sm[1], s); return; }
+  // 8.11: files from an upload card of a setup page (setup.js handleFile), up to 20MB as base64.
+  if (u.pathname === '/api/setup-file') {
+    if (q.method !== 'POST') { s.writeHead(405); return s.end(); }
+    readBody(q, 28 * 1024 * 1024).then(function (raw) {
+      let b; try { b = JSON.parse(raw.toString('utf8')); } catch (e) { s.writeHead(400); return s.end('{}'); }
+      const r = require('./setup.js').handleFile(b, formNotify);
+      s.writeHead(r.status, { 'Content-Type': 'application/json' }); s.end(JSON.stringify(r.body));
+    }).catch(function () { try { s.writeHead(413); s.end('{}'); } catch (e) {} });
+    return;
+  }
   if (u.pathname === '/api/setup') {
     if (q.method !== 'POST') { s.writeHead(405); return s.end(); }
     readBody(q, 20000).then(function (raw) {

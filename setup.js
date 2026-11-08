@@ -55,14 +55,22 @@ function saveSecret(tok, id, v) {
   o[id] = { value: v, at: new Date().toISOString() };
   fs.writeFileSync(f + '.tmp', JSON.stringify(o, null, 1), { mode: 0o600 }); fs.renameSync(f + '.tmp', f); fs.chmodSync(f, 0o600);
 }
-function complete(st, s) { const x = (s.steps || {})[st.id] || {}; return (st.input || st.ms || st.oauth) ? !!x.got : (st.done ? !!x.done : (st.choose ? !!x.choice : false)); }
+/*
+  8.11.2026, Itzik, for the clinic: "תכין קובץ שהוא יוכל להעלות לו את הקבצים הדרושים". Two more card kinds:
+  text?:   { label, hint?, rows?, placeholder? }   free text (suppliers list, mails to share with). Saved in state, not secret.
+  upload?: { label, hint?, accept? }               files from the phone or computer, POST /api/setup-file, up to 20MB each.
+           Saved to data/setup/<token>-files/<step>/ (mode 600), never shown back; Itzik's monitor hears of each file.
+*/
+const UP_MAX = 20 * 1024 * 1024;
+function complete(st, s) { const x = (s.steps || {})[st.id] || {}; if (st.upload) return !!(x.files && x.files.length); if (st.text) return !!(x.text && x.text.trim()); return (st.input || st.ms || st.oauth) ? !!x.got : (st.done ? !!x.done : (st.choose ? !!x.choice : false)); }
 
 function summary(d, s) {
   const NL = '\n';
   let t = 'דף הקמה: ' + d.client + NL;
   d.steps.forEach((st) => {
     const x = (s.steps || {})[st.id] || {};
-    t += (complete(st, s) ? '✓ ' : '○ ') + st.title + (x.choice ? ': ' + x.choice : '') + (x.got ? (st.ms ? ' (מחובר' + (x.who ? ': ' + x.who : '') + ')' : ' (המפתח התקבל)') : '') + NL;
+    t += (complete(st, s) ? '✓ ' : '○ ') + st.title + (x.choice ? ': ' + x.choice : '')
+      + (st.text && x.text ? ': ' + x.text.replace(/\s+/g, ' ').slice(0, 300) : '') + (st.upload && x.files && x.files.length ? ' (' + x.files.length + ' קבצים)' : '') + (x.got && !st.text && !st.upload ? (st.ms || st.oauth ? ' (מחובר' + (x.who ? ': ' + x.who : '') + ')' : ' (המפתח התקבל)') : '') + NL;
   });
   (d.offers || []).forEach((st) => { const x = (s.steps || {})[st.id] || {}; if (x.choice) t += '✨ ' + st.title + ': ' + x.choice + NL; });
   return t;
@@ -120,6 +128,14 @@ function card(st, i, s) {
     + '<a class="lk msl" href="https://microsoft.com/devicelogin" target="_blank" rel="noopener">פתיחת מסך האישור של מיקרוסופט ↗</a>'
     + '<p class="ih">שם מדביקים את הקוד, נכנסים עם המייל של ה 365 ולוחצים אישור. הדף הזה יסמן ✓ לבד.</p></div>'
     + '<p class="ig">' + (x.got ? '✓ היומן מחובר' + (x.who ? ' (' + esc(x.who) + ')' : '') : '') + '</p></div>';
+  if (st.text) h += '<div class="tq" data-got="' + (x.text ? 1 : 0) + '"><p class="cq">' + esc(st.text.label) + '</p>'
+    + (st.text.hint ? '<p class="ih">' + esc(st.text.hint) + '</p>' : '')
+    + '<textarea class="tqa" rows="' + (st.text.rows || 3) + '" placeholder="' + esc(st.text.placeholder || '') + '">' + esc(x.text || '') + '</textarea>'
+    + '<button type="button" class="sv tqb">שמירה</button><p class="ig">' + (x.text ? '✓ נשמר. אפשר לערוך ולשמור שוב.' : '') + '</p></div>';
+  if (st.upload) h += '<div class="up" data-got="' + (x.files && x.files.length ? 1 : 0) + '"><p class="cq">' + esc(st.upload.label) + '</p>'
+    + (st.upload.hint ? '<p class="ih">' + esc(st.upload.hint) + '</p>' : '')
+    + '<label class="upb">📎 בחירת קבצים להעלאה<input type="file" multiple accept="' + esc(st.upload.accept || '.pdf,image/*,.xlsx,.xls,.csv,.doc,.docx') + '" hidden></label>'
+    + '<ul class="upl">' + (x.files || []).map((f) => '<li>✓ ' + esc(f.name) + '</li>').join('') + '</ul><p class="ig"></p></div>';
   if (st.done) h += '<button type="button" class="dn' + (x.done ? ' on' : '') + '">' + (x.done ? '✓ ' : '') + esc(st.done) + '</button>';
   // 5.11, Itzik: "תשים בטופס, מתחת לכל ההסברים, הערה, אם הוא רוצה לכתוב משהו, הצליח, לא הצליח".
   // Every card with a guide ends with "how did it go" + a free note. Sent to Itzik's monitor at once.
@@ -166,6 +182,8 @@ function page(tok, d, s) {
     + '.oab{display:block;text-align:center;text-decoration:none;border-radius:14px;background:#0f1b2a;color:#fff;font:800 16px Heebo;padding:14px;min-height:48px;margin:0 0 10px}.oa-google{background:#fff;color:#1f1f1f;border:1.5px solid #747775}.oa-meta{background:#1877f2}.oa-microsoft{background:#2f2f2f}.oa-fireflies{background:#6b21a8}.oa-linkedin{background:#0a66c2}.oa-tiktok{background:#000}'
     + '.gd{background:#fffbeb;border:1.5px solid #fcd34d;border-radius:14px;padding:10px 12px;margin:0 0 12px}.gd summary{font:800 15px Heebo;cursor:pointer;color:#92400e}.gd ol{margin:8px 0 0;padding:0 22px 0 0}.gd li{font:400 15px/1.65 Heebo;color:#1f2937;margin:0 0 10px}.nt{border-top:1px dashed #cbd5e1;margin-top:12px;padding-top:10px}.nh{border:1.5px solid #cbd5e1;background:#fff;color:#0f1b2a;border-radius:999px;padding:8px 14px;font:500 14.5px Heebo;cursor:pointer;min-height:40px}.nh.on{background:#0f1b2a;border-color:#0f1b2a;color:#fff}.nta{display:block;width:100%;border:1.5px solid #cbd5e1;border-radius:10px;padding:10px;font:400 15px Heebo;margin:8px 0;resize:vertical}.ntb{border:0;border-radius:10px;background:#e2e8f0;color:#0f1b2a;font:700 14.5px Heebo;padding:9px 16px;cursor:pointer;min-height:40px}'
     + '.gd bdi{white-space:nowrap}.gd img{display:block;width:100%;max-width:340px;border:1px solid #e5e7eb;border-radius:10px;margin:8px 0 0}'
+    + '.tq,.up{background:#f1f5f9;border-radius:12px;padding:10px 12px;margin:0 0 10px}.tq .cq,.up .cq{margin:0 0 6px}.tqa{display:block;width:100%;border:1.5px solid #cbd5e1;border-radius:10px;padding:10px;font:400 16px/1.5 Heebo;margin:0 0 8px;resize:vertical;background:#fff}'
+    + '.upb{display:block;text-align:center;border:2px dashed #0e7490;border-radius:14px;padding:14px;font:800 16px Heebo;color:#0e7490;background:#fff;cursor:pointer;min-height:48px}.upl{list-style:none;margin:8px 0 0;padding:0}.upl li{font:500 14px Heebo;color:#0f1b2a;padding:3px 0;word-break:break-all}'
     + '.fin{display:block;width:100%;border:0;border-radius:16px;background:#0f1b2a;color:#fff;font:800 18px Heebo;padding:16px;margin-top:8px;cursor:pointer}'
     + '.saved{font:500 13px Heebo;color:#6b7c90;text-align:center;margin-top:10px}'
     + '.thanks{display:none;text-align:center;padding:60px 20px}.thanks b{display:block;font:900 26px Heebo;margin-bottom:8px}.thanks p{font:400 16px/1.6 Heebo;color:#24364b}'
@@ -181,10 +199,12 @@ function page(tok, d, s) {
     + 'function post(o){o.t=T;return fetch("/api/setup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(o)}).then(function(r){if(!r.ok)throw 0;return r.json();});}'
     + 'function msg(t){document.getElementById("saved").textContent=t;}'
     + 'function paint(){var n=C.filter(function(c){return c.classList.contains("ok");}).length;document.getElementById("bar").style.width=Math.round(n/C.length*100)+"%";document.getElementById("cnt").textContent=n+" מתוך "+C.length+" מוכנים";}'
-    + 'function ok(c){var dn=c.querySelector(".dn"),inp=c.querySelector(".in")||c.querySelector(".ms")||c.querySelector(".oa");c.classList.toggle("ok",inp?inp.getAttribute("data-got")==="1":(dn?dn.classList.contains("on"):!!c.querySelector(".op.on")));paint();}'
+    + 'function ok(c){var dn=c.querySelector(".dn"),inp=c.querySelector(".in")||c.querySelector(".ms")||c.querySelector(".oa")||c.querySelector(".tq")||c.querySelector(".up");c.classList.toggle("ok",inp?inp.getAttribute("data-got")==="1":(dn?dn.classList.contains("on"):!!c.querySelector(".op.on")));paint();}'
     + 'C.forEach(function(c){var id=c.getAttribute("data-id");c.addEventListener("click",function(e){var nh=e.target.closest(".nh");if(nh){c.querySelectorAll(".nh.on").forEach(function(x){if(x!==nh)x.classList.remove("on");});nh.classList.add("on");post({id:id,how:nh.textContent}).then(function(){msg("נשמר ✓");},function(){msg("אין חיבור כרגע. נסו שוב בעוד רגע.");});return;}var nb=e.target.closest(".ntb");if(nb){var ta=c.querySelector(".nta"),ng=c.querySelector(".ntg");nb.disabled=true;ng.textContent="שולח...";post({id:id,note:ta.value}).then(function(){nb.disabled=false;ng.textContent="✓ ההערה הגיעה אלינו. נחזור אליך אם צריך.";},function(){nb.disabled=false;ng.textContent="לא נשלח. נסו שוב בעוד רגע.";});return;}'
     + 'var b=e.target.closest(".op");if(b){c.querySelectorAll(".op.on").forEach(function(x){if(x!==b)x.classList.remove("on");});b.classList.add("on");ok(c);post({id:id,choice:b.textContent}).then(function(){msg("נשמר ✓");},function(){msg("אין חיבור כרגע. נסו שוב בעוד רגע.");});return;}'
     + 'var p=e.target.closest(".cpb");if(p){var v=p.getAttribute("data-v");(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(function(){p.textContent="הועתק ✓";},function(){p.textContent=v;});return;}'
+    + 'var tb=e.target.closest(".tqb");if(tb){var tq=c.querySelector(".tq"),tg=tq.querySelector(".ig"),tv=tq.querySelector(".tqa").value.trim();tb.disabled=true;tg.textContent="שומר...";'
+    + 'post({id:id,text:tv}).then(function(){tb.disabled=false;tq.setAttribute("data-got",tv?"1":"0");tg.textContent=tv?"✓ נשמר. אפשר לערוך ולשמור שוב.":"";ok(c);msg("נשמר ✓");},function(){tb.disabled=false;tg.textContent="לא נשמר. נסו שוב בעוד רגע.";});return;}'
     + 'var sv=e.target.closest(".sv");if(sv){var box=c.querySelector(".in"),f=box.querySelector("input"),g=box.querySelector(".ig"),v=f.value.trim();if(!v){g.textContent="צריך להדביק קודם";return;}sv.disabled=true;g.textContent="שומר...";'
     + 'post({id:id,secret:v}).then(function(){f.value="";box.setAttribute("data-got","1");g.textContent="✓ התקבל ונשמר במקום מאובטח. כדי להחליף, להדביק שוב.";sv.disabled=false;ok(c);msg("נשמר ✓");},function(){sv.disabled=false;g.textContent="לא נשמר. נסו שוב בעוד רגע.";});return;}'
     + 'var mb=e.target.closest(".msb");if(mb){var mx=c.querySelector(".ms"),mg=mx.querySelector(".ig"),mc=mx.querySelector(".msc");mb.disabled=true;mg.textContent="מבקש קוד ממיקרוסופט...";'
@@ -196,6 +216,12 @@ function page(tok, d, s) {
     + '},function(){mb.disabled=false;mg.textContent="אין חיבור כרגע. נסו שוב בעוד רגע.";});return;}'
     + 'var d=e.target.closest(".dn");if(d){var on=!d.classList.contains("on");d.classList.toggle("on",on);d.textContent=(on?"✓ ":"")+d.textContent.replace(/^✓ /,"");ok(c);post({id:id,done:on}).then(function(){msg("נשמר ✓");},function(){msg("אין חיבור כרגע. נסו שוב בעוד רגע.");});}'
     + '});});'
+    // 8.11: upload cards. One file at a time, as base64 JSON, to /api/setup-file.
+    + 'C.forEach(function(c){var fi=c.querySelector(".up input[type=file]");if(!fi)return;var id=c.getAttribute("data-id"),up=c.querySelector(".up"),ug=up.querySelector(".ig"),ul=up.querySelector(".upl");'
+    + 'fi.addEventListener("change",function(){var fs=[].slice.call(fi.files||[]);fi.value="";var i=0;function next(){if(i>=fs.length){ug.textContent=fs.length?"✓ הקבצים הגיעו אלינו.":"";return;}var f=fs[i++];'
+    + 'if(f.size>' + UP_MAX + '){ug.textContent=f.name+" גדול מ 20 מגה. אפשר לשלוח אותו לנו בוואטסאפ.";return next();}ug.textContent="מעלה "+f.name+"...";var r=new FileReader();r.onload=function(){'
+    + 'fetch("/api/setup-file",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({t:T,id:id,name:f.name,type:f.type,data:String(r.result).split(",")[1]||""})}).then(function(x){if(!x.ok)throw 0;return x.json();})'
+    + '.then(function(){var li=document.createElement("li");li.textContent="✓ "+f.name;ul.appendChild(li);up.setAttribute("data-got","1");ok(c);msg("נשמר ✓");next();},function(){ug.textContent=f.name+" לא עלה. נסו שוב בעוד רגע.";});};r.readAsDataURL(f);}next();});});'
     + 'X.forEach(function(c){var id=c.getAttribute("data-id");c.addEventListener("click",function(e){var b=e.target.closest(".op");if(!b)return;c.querySelectorAll(".op.on").forEach(function(x){if(x!==b)x.classList.remove("on");});b.classList.add("on");c.classList.add("ok");post({id:id,choice:b.textContent}).then(function(){msg("נשמר ✓");},function(){msg("אין חיבור כרגע. נסו שוב בעוד רגע.");});});});'
     + 'document.getElementById("fin").onclick=function(){var b=this;b.disabled=true;b.textContent="שולח...";post({finish:true}).then(function(){document.body.classList.add("sent");window.scrollTo(0,0);},function(){b.disabled=false;b.textContent="לא נשלח, לנסות שוב";});};'
     + 'paint();post({open:true}).catch(function(){});})();</script>'
@@ -248,12 +274,35 @@ function handlePost(b, notify, meta) {
     if (how && how !== x.how) { x.how = how; notify(K, '📝 ' + d.client + ', ' + st.title + ': ' + how + (x.note ? '. כתב: ' + x.note : '')); }
     if (note !== null && note !== (x.note || '')) { x.note = note; if (note) notify(K, '📝 ' + d.client + ' כתב על ' + st.title + (x.how ? ' (' + x.how + ')' : '') + ': ' + note); }
   }
+  if (typeof b.text === 'string' && st.text) { x.text = b.text.trim().slice(0, 5000); if (x.text) x.got = now; else delete x.got; }
   if (typeof b.secret === 'string' && st.input) {
     const v = b.secret.trim();
     if (!v || v.length > 400) return { status: 400, body: { error: 'secret' } };
     saveSecret(tok, st.id, v); x.got = now;
   }
   s.updatedAt = now; s.reported = false; saveState(tok, s);
+  return { status: 200, body: { ok: true } };
+}
+
+// 8.11: POST /api/setup-file { t, id, name, type, data (base64) }. Only to a card with upload.
+function handleFile(b, notify) {
+  const tok = safeTok(b && b.t); const d = tok && def(tok);
+  const st = d && d.steps.find((x) => x.id === b.id && x.upload);
+  if (!st) return { status: 404, body: { error: 'step' } };
+  let buf; try { buf = Buffer.from(String(b.data || ''), 'base64'); } catch (e) { buf = null; }
+  if (!buf || !buf.length || buf.length > UP_MAX) return { status: 400, body: { error: 'size' } };
+  const name = String(b.name || 'file').replace(/[\/\\\0]/g, '_').replace(/^\.+/, '').slice(-120) || 'file';
+  if (!/\.(pdf|jpe?g|png|heic|heif|webp|gif|xlsx?|csv|docx?|txt)$/i.test(name)) return { status: 400, body: { error: 'type' } };
+  const dir = path.join(DIR, tok + '-files', st.id);
+  fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+  const now = new Date().toISOString();
+  const out = path.join(dir, now.replace(/\D/g, '').slice(0, 14) + '-' + name);
+  fs.writeFileSync(out, buf, { mode: 0o600 });
+  const s = state(tok); s.steps = s.steps || {};
+  const x = s.steps[st.id] = s.steps[st.id] || {};
+  x.files = (x.files || []).concat({ name, size: buf.length, at: now, file: path.basename(out) }).slice(-50); x.got = now;
+  s.updatedAt = now; saveState(tok, s);
+  notify('דף הקמה', '📎 ' + d.client + ' העלה קובץ ב"' + st.title + '": ' + name + ' (' + Math.max(1, Math.round(buf.length / 1024)) + 'KB). נשמר בשרת, לא בצ׳אט.');
   return { status: 200, body: { ok: true } };
 }
 
@@ -324,4 +373,4 @@ async function oauthCallback(p, q, res, notify) {
   res.writeHead(302, { Location: '/s/' + tok + (r.v ? '/view' : '') + '#' + st.id, 'Cache-Control': 'no-store' }); res.end();
 }
 
-module.exports = { servePage, handlePost, sweep, summary, oauthStart, oauthCallback, DIR };
+module.exports = { servePage, handlePost, handleFile, sweep, summary, oauthStart, oauthCallback, DIR };
