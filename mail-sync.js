@@ -133,9 +133,10 @@ function publish(src) {
 async function one(src) {
   const saved = savedFor(src);
   if (!saved) { say(src.name + ': אין חיבור גוגל'); return; }
-  if (!/gmail\.(readonly|modify)/.test(saved.scope || '') || !/gmail\.(compose|modify)/.test(saved.scope || '')) {
-    say(src.name + ': בחיבור לגוגל אין הרשאת מייל. צריך לחבר מחדש את כרטיס גוגל'); return;
-  }
+  if (!/gmail\.(readonly|modify)/.test(saved.scope || '')) { say(src.name + ': בחיבור לגוגל אין הרשאת קריאת מייל. צריך לחבר מחדש את כרטיס גוגל'); return; }
+  // Without gmail.compose the mail is still sorted and the reply shows in the monitor, only no Gmail draft.
+  const canDraft = /gmail\.(compose|modify)/.test(saved.scope || '');
+  if (!canDraft) say(src.name + ': אין הרשאת טיוטות (gmail.compose). ממיין בלי טיוטות בג׳ימייל');
   const c = await oa.check(saved);
   if (!c.ok) { say(src.name + ': החיבור לגוגל לא עובד (' + c.error + ')'); return; }
   const dir = path.join(src.dir, 'data', 'biz-home');
@@ -159,7 +160,7 @@ async function one(src) {
       const got = parse(await ask(RULES + '\n\n--- המייל ---\nמאת: ' + from + '\nנושא: ' + subject + '\n\n' + text + '\n--- סוף המייל ---'));
       const r = got || { tag: 'רגיל', summary: String(m.snippet || '').slice(0, 200), reply: '' };
       let drafted = false;
-      if (r.reply && !DRY) { try { await draft(c.access, m, r.reply); drafted = true; } catch (e) { say(src.name + ': טיוטה נכשלה ' + e.message); } }
+      if (r.reply && canDraft && !DRY) { try { await draft(c.access, m, r.reply); drafted = true; } catch (e) { say(src.name + ': טיוטה נכשלה ' + e.message); } }
       items.push({ id: x.id, at: new Date(Number(m.internalDate) || Date.now()).toISOString(), from: from.slice(0, 120),
         subject: subject.slice(0, 160), text: r.summary, tag: r.tag, reply: r.reply, draft: drafted });
       say(src.name + ': ' + r.tag + (r.reply ? (drafted ? ', טיוטה בג׳ימייל' : ', עם טיוטה') : '') + ' · ' + subject.slice(0, 50));
