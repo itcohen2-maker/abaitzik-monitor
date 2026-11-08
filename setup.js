@@ -57,12 +57,12 @@ function saveSecret(tok, id, v) {
 }
 /*
   8.11.2026, Itzik, for the clinic: "תכין קובץ שהוא יוכל להעלות לו את הקבצים הדרושים". Two more card kinds:
-  text?:   { label, hint?, rows?, placeholder? }   free text (suppliers list, mails to share with). Saved in state, not secret.
+  ask?:    { label, hint?, rows?, placeholder? }   free text (suppliers list, mails to share with). Saved in state, not secret.
   upload?: { label, hint?, accept? }               files from the phone or computer, POST /api/setup-file, up to 20MB each.
            Saved to data/setup/<token>-files/<step>/ (mode 600), never shown back; Itzik's monitor hears of each file.
 */
 const UP_MAX = 20 * 1024 * 1024;
-function complete(st, s) { const x = (s.steps || {})[st.id] || {}; if (st.upload) return !!(x.files && x.files.length); if (st.text) return !!(x.text && x.text.trim()); return (st.input || st.ms || st.oauth) ? !!x.got : (st.done ? !!x.done : (st.choose ? !!x.choice : false)); }
+function complete(st, s) { const x = (s.steps || {})[st.id] || {}; if (st.upload) return !!(x.files && x.files.length); if (st.ask) return !!(x.text && x.text.trim()); return (st.input || st.ms || st.oauth) ? !!x.got : (st.done ? !!x.done : (st.choose ? !!x.choice : false)); }
 
 function summary(d, s) {
   const NL = '\n';
@@ -70,7 +70,7 @@ function summary(d, s) {
   d.steps.forEach((st) => {
     const x = (s.steps || {})[st.id] || {};
     t += (complete(st, s) ? '✓ ' : '○ ') + st.title + (x.choice ? ': ' + x.choice : '')
-      + (st.text && x.text ? ': ' + x.text.replace(/\s+/g, ' ').slice(0, 300) : '') + (st.upload && x.files && x.files.length ? ' (' + x.files.length + ' קבצים)' : '') + (x.got && !st.text && !st.upload ? (st.ms || st.oauth ? ' (מחובר' + (x.who ? ': ' + x.who : '') + ')' : ' (המפתח התקבל)') : '') + NL;
+      + (st.ask && x.text ? ': ' + x.text.replace(/\s+/g, ' ').slice(0, 300) : '') + (st.upload && x.files && x.files.length ? ' (' + x.files.length + ' קבצים)' : '') + (x.got && !st.ask && !st.upload ? (st.ms || st.oauth ? ' (מחובר' + (x.who ? ': ' + x.who : '') + ')' : ' (המפתח התקבל)') : '') + NL;
   });
   (d.offers || []).forEach((st) => { const x = (s.steps || {})[st.id] || {}; if (x.choice) t += '✨ ' + st.title + ': ' + x.choice + NL; });
   return t;
@@ -128,9 +128,9 @@ function card(st, i, s) {
     + '<a class="lk msl" href="https://microsoft.com/devicelogin" target="_blank" rel="noopener">פתיחת מסך האישור של מיקרוסופט ↗</a>'
     + '<p class="ih">שם מדביקים את הקוד, נכנסים עם המייל של ה 365 ולוחצים אישור. הדף הזה יסמן ✓ לבד.</p></div>'
     + '<p class="ig">' + (x.got ? '✓ היומן מחובר' + (x.who ? ' (' + esc(x.who) + ')' : '') : '') + '</p></div>';
-  if (st.text) h += '<div class="tq" data-got="' + (x.text ? 1 : 0) + '"><p class="cq">' + esc(st.text.label) + '</p>'
-    + (st.text.hint ? '<p class="ih">' + esc(st.text.hint) + '</p>' : '')
-    + '<textarea class="tqa" rows="' + (st.text.rows || 3) + '" placeholder="' + esc(st.text.placeholder || '') + '">' + esc(x.text || '') + '</textarea>'
+  if (st.ask) h += '<div class="tq" data-got="' + (x.text ? 1 : 0) + '"><p class="cq">' + esc(st.ask.label) + '</p>'
+    + (st.ask.hint ? '<p class="ih">' + esc(st.ask.hint) + '</p>' : '')
+    + '<textarea class="tqa" rows="' + (st.ask.rows || 3) + '" placeholder="' + esc(st.ask.placeholder || '') + '">' + esc(x.text || '') + '</textarea>'
     + '<button type="button" class="sv tqb">שמירה</button><p class="ig">' + (x.text ? '✓ נשמר. אפשר לערוך ולשמור שוב.' : '') + '</p></div>';
   if (st.upload) h += '<div class="up" data-got="' + (x.files && x.files.length ? 1 : 0) + '"><p class="cq">' + esc(st.upload.label) + '</p>'
     + (st.upload.hint ? '<p class="ih">' + esc(st.upload.hint) + '</p>' : '')
@@ -274,7 +274,7 @@ function handlePost(b, notify, meta) {
     if (how && how !== x.how) { x.how = how; notify(K, '📝 ' + d.client + ', ' + st.title + ': ' + how + (x.note ? '. כתב: ' + x.note : '')); }
     if (note !== null && note !== (x.note || '')) { x.note = note; if (note) notify(K, '📝 ' + d.client + ' כתב על ' + st.title + (x.how ? ' (' + x.how + ')' : '') + ': ' + note); }
   }
-  if (typeof b.text === 'string' && st.text) { x.text = b.text.trim().slice(0, 5000); if (x.text) x.got = now; else delete x.got; }
+  if (typeof b.text === 'string' && st.ask) { x.text = b.text.trim().slice(0, 5000); if (x.text) x.got = now; else delete x.got; }
   if (typeof b.secret === 'string' && st.input) {
     const v = b.secret.trim();
     if (!v || v.length > 400) return { status: 400, body: { error: 'secret' } };
