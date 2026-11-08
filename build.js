@@ -17468,7 +17468,7 @@ function bizSheet(t0){
     // 8.11: the one page price list for customers (it-solution.co.il/offer/, unlisted).
     +'<div class="bzSec">💰 מחירון ללקוח</div>'
     +'<a class="yb yb1" href="https://it-solution.co.il/offer/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">💰 דף המחירים: שלוש חבילות</a>'
-    +'<a class="yb" href="https://wa.me/?text='+encodeURIComponent('שלום, זה דף עם החבילות והמחירים של המוניטור העסקי של IT Solution:\nhttps://it-solution.co.il/offer/')+'" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">💬 לשלוח ללקוח בוואטסאפ</a>'
+    +'<a class="yb" href="https://wa.me/?text='+encodeURIComponent('שלום, זה דף עם החבילות והמחירים של המוניטור העסקי של IT Solution:\\nhttps://it-solution.co.il/offer/')+'" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">💬 לשלוח ללקוח בוואטסאפ</a>'
     +'<div class="bzSec">🔌 טופס התחברות</div>'
     +'<div class="bzRow"><b>כל כרטיס הוא כפתור התחברות</b><small>גוגל, פייסבוק ואינסטגרם, מיקרוסופט, פיירפליס, יוטיוב, לינקדין וטיקטוק. זו התבנית. ללקוח חדש כותבים לי את שמו ומקבלים קישור אישי, והצבע מתעדכן לבד כשהוא פותח ומחבר.</small></div>'
     +'<a class="yb yb1" href="https://form.it-solution.co.il/s/97353be7657c22ee625e/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לראות את טופס ההתחברות</a>'
