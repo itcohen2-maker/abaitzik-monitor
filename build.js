@@ -969,6 +969,8 @@ function build() {
       // 4.11, Itzik: Shai's two forms, red until sent, orange while waiting, green when filled (lib/shai-forms.js).
       // 5.11, Itzik: the NDA a new client signs on the phone (ndasign.js): the IT Solution signature, the link, every signed copy.
       if (inst.name === 'abaitzik') { try { payload.nda = require('./ndasign.js').state(); } catch (e) { console.error('nda: ' + e.message); } }
+      // 8.11: clients who sign the agreement and the clinic NDA on one page (agrsign.js); each gets his own tab.
+      if (inst.name === 'abaitzik') { try { payload.agr = require('./agrsign.js').state(); } catch (e) { console.error('agr: ' + e.message); } }
       /* 8.11.2026: Shai's forms are gone from the tab. */
       bizOn = true;
     } catch (e) { console.error('biz: ' + e.message); }
@@ -1490,6 +1492,7 @@ function filesUpd(html){
   return /data-upd="/.test(tag)?tag.replace(/data-upd="([^"]*)"/,function(m,v){return 'data-upd="'+v.replace(/-f\d+$/,'')+'-'+stamp+'"';}):tag.replace(/>$/,' data-upd="'+stamp+'">');
  });
 }
+function agrStamp(){try{const a=require('./agrsign.js').state();return a?'-agr'+a.clients.map((c)=>String(c.signedAt||c.openedAt||c.tok.slice(0,4)).replace(/\D/g,'').slice(-6)).join(''):'';}catch(e){return '';}}
 function ndaStamp(){try{const n=require('./ndasign.js').state();return n&&n.signed[0]?'-'+String(n.signed[0].at).replace(/\D/g,'').slice(0,12):'';}catch(e){return '';}}
 function lecWhen(f){try{return fs.statSync(path.join(__dirname,'data','files-private',f)).mtime;}catch(e){return null;}}
 function lecFmt(d,withTime){if(!d)return '';var o={timeZone:'Asia/Jerusalem',day:'numeric',month:'numeric'};if(withTime){o.hour='2-digit';o.minute='2-digit';o.hour12=false;}return d.toLocaleString('he-IL',o).replace(/\//g,'.').replace(',','');}
@@ -4532,7 +4535,7 @@ ${require('./lib/home-ui.js').html}
 
  <div id="askBox"></div>
 <!-- 4.11, Itzik: "תעלה את האריח של העסק שלי למעלה ברשימה. למה שמת אותו אחרון?" The business grid opens the home screen. -->
-${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261105-shlab' + ndaStamp() + newestLead() + shaiSignStamp() + '"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
+${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261105-shlab' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
   <!-- 3.11, Itzik: "אני צריך אריח שממש יעבב לי, כמו ליד חדש". First on the grid; shows while a --nag reminder is open, hard blink once it is due, until "✅ עשיתי". -->
@@ -17462,6 +17465,23 @@ function bizSheet(t0){
    h+='<div class="bzRow"><small>'+((n.signed||[]).length?'חתמו '+n.signed.length+' · ':'עוד אף לקוח לא חתם · ')+'פתחו את הקישור '+(n.opens||0)+' פעמים. הלקוח ממלא שם חברה, ח.פ., כתובת, שם ותפקיד וחותם; התאריך נכנס לבד.</small></div>';
    return h;
   }
+  // 8.11.2026, Itzik: "יש לי לקוח חדש, תפתח לי טאב חדש ... תכניס את זה כמוקאפ נפתח להסכם בינינו". One tab per client
+  // (agrsign.js): the agreement with the security annex and the clinic NDA, one signature that approves both.
+  function agrHtml(i){
+   var A=D.agr||{},c=(A.clients||[])[i];if(!c)return '';
+   function hd(t){try{return new Date(t).toLocaleString('he-IL',{day:'numeric',month:'numeric',year:'2-digit',hour:'2-digit',minute:'2-digit'});}catch(x){return '';}}
+   var st=c.signedAt?'✅ חתם ואישר את שני המסמכים · '+hd(c.signedAt):c.openedAt?'🟠 פתח את הדף ('+c.opens+' פעמים), עוד לא חתם':A.owner?'🔴 עוד לא פתח':'🔴 קודם לחתום בשם IT Solution';
+   var wa='https://wa.me/?text='+encodeURIComponent('שלום, מצורף ההסכם בינינו וטופס הסודיות למרפאה ולמטופלים. קוראים, ממלאים את הפרטים וחותמים מהטלפון, ומקבלים מיד עותק חתום:\\n'+c.link);
+   var L=function(cls,href,txt){return '<a class="yb '+cls+'" href="'+href+'" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">'+txt+'</a>';};
+   var h='<div class="bzHead">🩺 '+esc(c.client)+'</div>'
+    +'<details class="shwArch" style="background:#fff;border:2px solid #c9a227;box-shadow:var(--goldsh)"><summary style="flex-wrap:wrap;gap:4px">📜 הסכם בינינו<small style="display:block;width:100%;font-weight:500">'+st+'</small></summary>'
+    +'<div class="bzRow"><b>מה יש בדף החתימה</b><small>1. הסכם השירות, עם נספח אבטחת המידע.<br>2. טופס סודיות למרפאה ולמטופלים.<br>הוא ממלא פרטים, חותם פעם אחת ומאשר כל מסמך בנפרד. העותק החתום מגיע לכאן.</small></div>';
+   if(c.signedAt)h+='<button type="button" class="yb yb2" data-bz="anim" data-f="'+esc(c.file)+'">📄 ההסכם וטופס הסודיות, חתומים (PDF)</button>';
+   if(!A.owner)h+=L('ybRed taskblink',A.own,'✍️ שלב 1: לחתום פעם אחת בשם IT Solution<small style="display:block;font-weight:500;margin-top:3px">בלי זה הלקוח רואה "עוד לא מוכן"</small>');
+   h+=L('yb1',c.view,'👀 לראות את הדף כמו שהלקוח רואה');
+   if(A.owner&&!c.signedAt)h+=L('',wa,'💬 לשלוח לו לחתימה בוואטסאפ')+'<button type="button" class="yb" data-bz="ndacopy" data-u="'+c.link+'">📋 להעתיק את הקישור לחתימה</button>';
+   return h+'</details>';
+  }
   function itsHtml(){
    // 8.11.2026, Itzik: "תעשה סדר בכל הטאב, תסיר את שי, תאפס ותשאיר לי: טופס סודיות, הסכם בינינו וטופס התחברות".
    // Three clean templates, no customer name. Shai's files and answers are in data/_archive/shai-20261108.
@@ -17548,6 +17568,7 @@ function bizSheet(t0){
    if(tab==='money')return '<div class="bzHead">💰 כסף החודש</div>'+moneyHtml();
    if(tab==='due')return '<div class="bzHead">⏰ צריך לחזור</div>'+dueHtml();
    if(tab==='its')return itsHtml();
+   if(String(tab).indexOf('agr')===0)return agrHtml(+String(tab).slice(3));
    if(tab==='shachar')return shacharHtml();
    /*ITZIK:BEGIN*/if(tab==='ner')return nerHtml();/*ITZIK:END*/
    if(tab==='anim')return animHtml();
@@ -17558,6 +17579,7 @@ function bizSheet(t0){
   }
   // 2.11, Itzik: a tab with something new blinks until he opens it. The stamp changes whenever something is added there.
   var BZ_UPD={its:'20261108-prices'+((D.nda&&D.nda.signed&&D.nda.signed[0])?'-'+String(D.nda.signed[0].at).replace(/\D/g,'').slice(0,12):'')+((D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done)?'-s'+String(D.shaiForms.sign.done).replace(/\\D/g,'').slice(0,12):''),shachar:((D.shSum&&D.shSum.upd)||'20261103-shachar-auto')+'-ld1104'};
+  ((D.agr&&D.agr.clients)||[]).forEach(function(c,i){BZ_UPD['agr'+i]='a8-'+String(c.signedAt||c.openedAt||'new').replace(/\\D/g,'').slice(0,12);});
   function bzSeen(){try{return JSON.parse(localStorage.getItem('bzTabSeen')||'{}');}catch(x){return {};}}
   function bzTabNew(k){return !!BZ_UPD[k]&&bzSeen()[k]!==BZ_UPD[k]&&k!==tab;}
   function bzMarkSeen(k){if(!BZ_UPD[k])return;var o=bzSeen();o[k]=BZ_UPD[k];try{localStorage.setItem('bzTabSeen',JSON.stringify(o));}catch(x){}}
@@ -17565,6 +17587,7 @@ function bizSheet(t0){
   var dueN=((S&&S.staleLeads)||[]).length+((S&&S.due)||[]).length;
   var tabs=[['its','💻','IT Solution'],['leads','👥','לידים ולקוחות'],['money','💰','כסף החודש'],['due','⏰','צריך לחזור',dueN],['shachar','🌅','שחר']/*ITZIK:BEGIN*/,['ner','🕯️','נרות']/*ITZIK:END*/,['anim','🧠','המשרד']];
   if(INSTANCE&&INSTANCE.clalit)tabs.push(['docs','🏥','מסמכים']);
+  ((D.agr&&D.agr.clients)||[]).forEach(function(c,i){tabs.splice(1+i,0,['agr'+i,'🩺',c.tab||c.client]);});
   // 1.11.2026: the client demo starts from here (lib/demo-mode.js).
   var html='<button type="button" class="yb bzBackTop" data-bz="back" data-tdy="1">→ חזרה</button>'+'<div class="biz"><div class="bzMicRow"><button type="button" id="bizMic" class="bzMic" aria-label="דבר אליי">'
    +'<svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" stroke="none"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8.5 21h7"/></svg></button></div>'
