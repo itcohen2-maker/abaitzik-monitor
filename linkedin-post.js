@@ -123,6 +123,7 @@ function mirror(q, now) {
       changed = true;
     }
   }
+  if (cards) notify('לינקדין: ' + (cards === 1 ? 'פוסט חדש מחכה לאישורך' : cards + ' פוסטים חדשים מחכים לאישורך'), 'הם ברצועה 🔔 לאישורך במוניטור. בלי אישור שלך שום פוסט לא עולה.'); // 9.11: a new card used to appear with no push
   if (changed) save(q);
   const m = mirror(q, now);
   if ((cards || m || changed) && !DRY) { try { execFileSync('node', [path.join(HERE, 'push.js'), 'linkedin: queue'], { stdio: 'ignore', timeout: 300000 }); } catch (e) { say('push נכשל'); } }

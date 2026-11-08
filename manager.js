@@ -52,10 +52,15 @@ for (const e of M.alarmsDue(m, now, st.alarms)) {
 }
 
 const p = M.pushText(m);
+const HOUR = Number(new Date().toLocaleString('en-GB', { timeZone: 'Asia/Jerusalem', hour: '2-digit', hour12: false }));
+const li = m.items.find(i => i.k === 'linkedin' && i.st === 'warn');
 if (!EVENING && st.pushed !== m.day && p) {
   if (run('node', ['notify.js', p.title, p.body]) !== null) st.pushed = m.day;
+} else if (!EVENING && HOUR >= 12 && li && st.liNoon !== m.day) {
+  // 9.11: the 13:00 round, one more reminder for a LinkedIn post still waiting for his approval (once a day)
+  if (run('node', ['notify.js', 'המנהל: ' + li.t, li.sub]) !== null) st.liNoon = m.day;
 } else if (EVENING && st.evening !== m.day) {
-  const open = m.items.filter(i => (i.k === 'plate' || i.k === 'status') && i.st === 'todo');
+  const open = m.items.filter(i => ((i.k === 'plate' || i.k === 'status') && i.st === 'todo') || (i.k === 'linkedin' && i.st === 'warn'));
   if (open.length && run('node', ['notify.js', 'תזכורת ערב', open.map(i => i.t + ': ' + i.sub).join('\n')]) !== null) st.evening = m.day;
 }
 fs.writeFileSync(stateFile, JSON.stringify(st));
