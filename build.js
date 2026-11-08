@@ -22029,7 +22029,7 @@ function videosPage() {
     '<p class="s">כל סרטון שנעשה כאן נשמר בדף הזה ונשאר בו. '
       + (files.length === 1 ? 'סרטון אחד' : files.length + ' סרטונים') + '.</p>',
     body,
-    '<a class="home" href="./">חזרה למוניטור</a>',
+    '<a class="home" href="./" onclick="var r=document.referrer;if(history.length>1&&r&&new URL(r).origin===location.origin){event.preventDefault();history.back();}">חזרה למוניטור</a>',
     '</html>',
   ].join('\n');
 }

@@ -60,7 +60,7 @@
 <div class="wrap">
   <header>
     <h1>שחר</h1>
-    <a class="back" id="back" href="../index.html">חזרה למוניטור</a>
+    <a class="back" id="back" href="../index.html" onclick="var r=document.referrer;if(history.length>1&&r&&new URL(r).origin===location.origin){event.preventDefault();history.back();}">חזרה למוניטור</a>
   </header>
 
   <a class="open" href="https://shachar.abaitzik.com" target="_blank" rel="noopener">לפתוח את שחר</a>

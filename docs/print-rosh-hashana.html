@@ -30,7 +30,7 @@
 </head>
 <body>
 <div class="bar">
- <a class="back" href="./">חזרה למוניטור</a>
+ <a class="back" href="./" onclick="var r=document.referrer;if(history.length>1&&r&&new URL(r).origin===location.origin){event.preventDefault();history.back();}">חזרה למוניטור</a>
  <b>סדר יהי רצון לראש השנה</b>
  <a href="files/rosh-hashana-simanim.jpg" target="_blank" rel="noopener">פתיחת הקובץ</a>
  <button type="button" onclick="window.print()">הדפסה</button>
