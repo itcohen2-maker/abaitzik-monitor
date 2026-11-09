@@ -41,6 +41,7 @@
   .row button:disabled{opacity:.4}
   .cp{font-size:15px;min-height:48px}
   .song{font-size:14px;color:var(--dim)}
+  .cap{white-space:pre-wrap;font-size:16px;line-height:1.55;padding:12px;border-radius:10px;background:rgba(127,127,127,.12);direction:auto}
   .empty{border:1px dashed var(--line);border-radius:14px;padding:14px;color:var(--dim);max-width:520px;margin:0 auto}
   .note{font-size:13px;color:var(--dim);text-align:center}
   .backbtn{display:inline-block;padding:14px 22px;margin:8px 0 4px;font-size:20px;font-weight:700;line-height:1.2;min-height:48px;border-radius:14px;background:#20242c;color:#fff;text-decoration:none;border:1px solid var(--line)}
@@ -82,6 +83,7 @@
    +'<div class="meta">'
    +'<span class="nm">'+esc(it.name)+'</span>'
    +'<span class="st '+(posted?'ok':'wait')+'">'+(posted?'✅ עלה '+day(it.postedAt):'⏳ עוד לא עלה')+'</span>'
+   +'<div class="cap">'+esc(it.ig||'')+'</div>'
    +'<div class="row">'
    +'<button type="button" class="full" data-dl="'+esc(it.id)+'">💾 שמירה לטלפון</button>'
    +'<a class="b" href="'+esc(it.poster)+'" target="_blank" rel="noopener">🖼️ הכריכה</a>'
