@@ -17564,7 +17564,6 @@ function bizSheet(t0){
     +'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-training-design.html" data-new="1">🧭 תכנון חדר האימון לאישור</button>'+'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-exercise-plan.html" data-new="1">📋 רשימת התרגילים החדשה לאישור</button>'+'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-exercise-demo.html" data-new="1">🏋️ דוגמה: מסך תרגיל עם הדמות שלך</button>'
     +'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-anim-review.html" data-new="1">🕺 לאישורך: תנועה לפני AI, מנה 1</button>'
     +'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-ai-review.html" data-new="1">🔍 לאישורך: סרטוני AI לשחר</button>'
-    +'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-real-review.html" data-new="1">🎥 לאישורך: תרגילים מצולמים, 29 קטעים</button>'
     +'<button type="button" class="yb yb1" data-bz="anim" data-f="shachar-film-list.html" data-new="1">📝 רשימת צילום למחר: 27 צילומים, 81 שלבים</button>'
     +'<button type="button" class="yb" data-bz="anim" data-f="shachar-filming.html" data-new="1">🎬 מה לצלם: 27 צילומים, ציור מדויק לכל שלב</button>'
     +'<p class="bzEmpty">הכניסה עם המייל שלך בשחר. מי שלא מנהל מקבל דף שלא קיים.</p>'
