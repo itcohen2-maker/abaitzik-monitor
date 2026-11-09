@@ -2595,7 +2595,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-09T11:49:35.557Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-09T11:53:21.077Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4492,7 +4492,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='a644144000';
+var CODE_ID='f8c08c6664';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12421,7 +12421,7 @@ function vidTabs(){
  var nrN=(VQ0.nr||[]).filter(function(x){return !x.posted&&!x.failed&&!x.approved&&!x.rejected&&!x.hold;}).length;
  var plN=(VQ0.pl||[]).filter(function(x){return !x.posted&&!x.approved;}).length;
  var aiN=(VQ0.ai||[]).filter(function(x){return !x.posted;}).length;
- var CAR=[{id:'personal',t:'הסיפור האישי',n:11,posted:false},{id:'lecture',t:'ההרצאה',n:8,posted:false}].filter(function(c){return !c.posted;});
+ var CAR=[{id:'personal',t:'הסיפור האישי',n:11,posted:false},{id:'lecture',t:'ההרצאה',n:7,posted:false}].filter(function(c){return !c.posted;});
  var carL=[];CAR.forEach(function(c){var pad=function(i){return (i<10?'0':'')+i;};carL.push({h:'🎠 קרוסלה לאבא איציק: '+c.t+' ('+c.n+' שקפים)'});carL.push({k:'reel',it:{n:'כיתוב',t:'הכיתוב לפוסט',r:'carousel-'+c.id+'-caption.txt',pulse:1}});for(var i=1;i<=c.n;i++)carL.push({k:'reel',it:{n:pad(i),t:'שקף '+i,r:'carousel-'+c.id+'-'+pad(i)+'.png',pulse:1}});});
  return [
   {id:'st',l:'📲 סטטוס'+(stN?' ('+stN+')':''),h:'סטטוס וואטסאפ: מה עולה היום ומה הבא בתור. לחיצה פותחת את הסרטון והטקסט, 3 נגיעות',L:vqRows('st').concat([{h:'📂 הדף המלא'},{k:'go',t:'📲 פתיחת כל הסטטוסים המוכנים',u:'status/index.html'}])},
