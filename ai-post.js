@@ -78,7 +78,7 @@ function post(it, ch, now) {
 
   if (process.argv.includes('--status')) {
     Object.keys(CHANNELS).forEach(function (l) {
-      const left = q.filter(function (x) { return x.lang === l && !x.posted && !x.failed; }).length;
+      const left = q.filter(function (x) { return x.lang === l && !x.posted && !x.failed && !x.hold; }).length;
       console.log(l, CHANNELS[l].name, 'last:', state[l] || '-', 'waiting:', left);
     });
     return;
@@ -95,7 +95,7 @@ function post(it, ch, now) {
     if (now.hm < POST_HOUR) return;
     Object.keys(CHANNELS).forEach(function (l) {
       if (state[l] === now.date) return;
-      const next = q.filter(function (x) { return x.lang === l && !x.posted && !x.failed; })
+      const next = q.filter(function (x) { return x.lang === l && !x.posted && !x.failed && !x.hold; })
         .sort(function (a, b) { return (a.order || 0) - (b.order || 0); })[0];
       if (next) jobs.push(next);
     });
