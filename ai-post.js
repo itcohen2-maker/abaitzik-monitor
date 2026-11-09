@@ -29,8 +29,8 @@ const API = 'https://graph.facebook.com/v23.0/';
 const CHANNELS = {
   he: { name: 'itsolution.ai', id: '17841456612749770', tokenFile: '/home/monitor/.ig-token-itsolution-ai',
         page: { id: '1341874565686928', name: 'ITsolution', tokenFile: '/home/monitor/.fb-page-token-itsolution' } },
-  en: { name: 'itsolution.global', id: '17841452824199374', tokenFile: '/home/monitor/.ig-token-itsolution-global' }
-  // en page: add page: { id, name, tokenFile } when the English Facebook page is in the It Solution portfolio and assigned to ai-poster
+  en: { name: 'itsolution.global', id: '17841452824199374', tokenFile: '/home/monitor/.ig-token-itsolution-global',
+        page: { id: '1355657644305501', name: 'It Solution Global', tokenFile: '/home/monitor/.fb-page-token-itsolution-global' } }
 };
 const POST_HOUR = '20:00';
 const DRY = process.argv.includes('--dry');
