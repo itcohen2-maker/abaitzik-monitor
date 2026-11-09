@@ -12740,7 +12740,7 @@ document.addEventListener('click',function(e){
  else{fiMode=b.getAttribute('data-fimode');fiFolder='';renderFiles();}
 },true);
 function renderFiles(){
- var box=document.getElementById('fiBox');if(!box)return;var All=(D.files||[]).filter(function(x){return String(x.n).indexOf('stk/')!==0&&(!fiFolder||String(x.n).indexOf(fiFolder)===0);});
+ var box=document.getElementById('fiBox');if(!box)return;var All=(D.files||[]).filter(function(x){return String(x.n).indexOf('stk/')!==0&&String(x.n).indexOf('carousel-')!==0&&(!fiFolder||String(x.n).indexOf(fiFolder)===0);});
  if(!All.length){box.innerHTML='<div class="empty">אין כאן קבצים.</div>';return;}
  var sent=filesSentToOwner();
  var q=((document.getElementById('fiQ')||{}).value||'').trim().toLowerCase();
