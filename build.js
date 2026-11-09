@@ -16704,6 +16704,9 @@ function vidTabs(){
  var nrN=(VQ0.nr||[]).filter(function(x){return !x.posted&&!x.failed&&!x.approved&&!x.rejected&&!x.hold;}).length;
  var plN=(VQ0.pl||[]).filter(function(x){return !x.posted&&!x.approved;}).length;
  var aiN=(VQ0.ai||[]).filter(function(x){return !x.posted;}).length;
+ // 9.11, Itzik: carousels for his page, all topics, in the reels tile. One that has not gone up blinks softly (updblink); when it goes up, posted:true takes it off.
+ var CAR=[{id:'personal',t:'הסיפור האישי',n:11,posted:false},{id:'lecture',t:'ההרצאה',n:8,posted:false}].filter(function(c){return !c.posted;});
+ var carL=[];CAR.forEach(function(c){var pad=function(i){return (i<10?'0':'')+i;};carL.push({h:'🎠 קרוסלה לאבא איציק: '+c.t+' ('+c.n+' שקפים)'});carL.push({k:'reel',it:{n:'כיתוב',t:'הכיתוב לפוסט',r:'carousel-'+c.id+'-caption.txt',pulse:1}});for(var i=1;i<=c.n;i++)carL.push({k:'reel',it:{n:pad(i),t:'שקף '+i,r:'carousel-'+c.id+'-'+pad(i)+'.png',pulse:1}});});
  return [
   {id:'st',l:'📲 סטטוס'+(stN?' ('+stN+')':''),h:'סטטוס וואטסאפ: מה עולה היום ומה הבא בתור. לחיצה פותחת את הסרטון והטקסט, 3 נגיעות',L:vqRows('st').concat([{h:'📂 הדף המלא'},{k:'go',t:'📲 פתיחת כל הסטטוסים המוכנים',u:'status/index.html'}])},
   {id:'ads',l:'📣 קמפיין',h:'הממומן, וסרטוני המוניטור לסטורי',L:TOM_ITEMS.map(function(it){return it.h?{h:it.h}:{k:'tom',it:it};})},
@@ -16716,6 +16719,7 @@ function vidTabs(){
   {id:'it',l:'💻 IT Solution',upd:'20261107-it03en',h:'הרילים של IT Solution: המוניטור, הקמפיינים והעסקים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isIt(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isIt(x.it);}))},
   // 7.11, Itzik: the reels and the future reels too, each in its own tab of the one tile.
   {id:'me',l:'🎬 הרילים שלי',h:'הרילים והסטוריז שלי, מוכנים לרשתות',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return !isSh(x.it)&&!isIt(x.it);}))},
+  {id:'car',l:'🎠 קרוסלות'+(CAR.length?' ('+CAR.length+')':''),pulse:CAR.length,h:'קרוסלות לאבא איציק, כל הנושאים. מה שעוד לא עלה מהבהב חלש',L:carL},
   {id:'fut',l:'💡 רילים עתידיים',h:'רעיונות, רפרנסים ותסריטים לרילים הבאים',L:[{h:'💡 רעיונות לרילים הבאים'}].concat(F.filter(function(x){return !isSh(x.it)&&!isIt(x.it)&&!plateN[x.it.n]&&!candleN[x.it.n];}))}
  ].map(function(t){
   // a heading with nothing under it is dropped, and a file that is not in the monitor is not shown
@@ -16728,7 +16732,7 @@ function vidTabs(){
    until it is opened once; the stamp is kept in localStorage. */
 function vidSeen(k){try{return localStorage.getItem('vidSeen:'+k)||'';}catch(e){return '';}}
 function vidMark(k,v){try{localStorage.setItem('vidSeen:'+k,v);}catch(e){}}
-function vidTabNew(t){return !!(t.upd&&vidSeen('tab:'+t.id)!==t.upd);}
+function vidTabNew(t){return !!(t.pulse||(t.upd&&vidSeen('tab:'+t.id)!==t.upd));}
 function vidSheet(tab){
  if(!(VQ&&Date.now()-VQT<60000))return vqLoad(function(){vidSheet(tab);});
  window.VID_BACK=0;
@@ -16754,7 +16758,7 @@ function vidSheet(tab){
   +cur.L.map(function(x,i){
     if(x.h)return '<small style="display:block;margin:14px 0 6px;font-weight:800;font-size:15px;color:#1a2233">'+esc(x.h)+'</small>';
     var lab=(x.k==='go'||x.k==='q')?x.t:(x.it.n+' · '+x.it.t);
-    var yb=ybAttr(rows,rows.indexOf(x));if(x.it&&x.it.nw&&vidSeen('it:'+x.it.n)!==x.it.nw)yb=yb.replace('class="yb','class="updblink yb');
+    var yb=ybAttr(rows,rows.indexOf(x));if(x.it&&x.it.nw&&vidSeen('it:'+x.it.n)!==x.it.nw)yb=yb.replace('class="yb','class="updblink yb');if(x.it&&x.it.pulse)yb=yb.replace('class="yb','class="updblink yb');
     return '<button type="button" '+yb+' data-k="'+i+'">'+esc(lab)+'</button>';
    }).join('')
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
