@@ -288,11 +288,12 @@ function gatePage(tok, d) {
     + 'input{width:100%;font:700 20px Heebo;text-align:center;letter-spacing:2px;padding:12px;border:2px solid #cbd5e1;border-radius:12px;direction:ltr}'
     + 'button{margin-top:12px;width:100%;border:0;border-radius:14px;background:#06b6d4;color:#0f1b2a;font:800 17px Heebo;padding:14px;cursor:pointer;min-height:48px}'
     + '#e{color:#b91c1c;min-height:22px;margin-top:10px;font-size:14px}</style></head><body><div class="b">'
-    + '<h1>' + esc(d.title) + '</h1><p>הטופס מוגן בסיסמה. הסיסמה נשלחה אליך בנפרד מהקישור.</p>'
-    + '<input id="p" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="סיסמה"><button id="g">כניסה</button><div id="e"></div></div>'
+    + '<h1>' + esc(d.title) + '</h1><p>הטופס מוגן בסיסמה, כדי שרק אתה תראה אותו. הסיסמה נשלחה אליך בהודעה נפרדת מהקישור. מקלידים אותה כאן ולוחצים על "כניסה".</p>'
+    + '<input id="p" type="text"' + (/^\d+$/.test(gatePass(tok)) ? ' inputmode="numeric" pattern="[0-9]*" placeholder="' + gatePass(tok).length + ' ספרות"' : ' placeholder="סיסמה"') + ' autocomplete="off" autocapitalize="none" spellcheck="false"><button id="g">כניסה</button><div id="e"></div>'
+    + '<p style="margin:16px 0 0;font-size:13px">לא קיבלת סיסמה? כתוב לאיציק והוא ישלח אותה שוב.</p></div>'
     + '<script>(function(){var T=' + JSON.stringify(tok) + ',p=document.getElementById("p"),e=document.getElementById("e"),g=document.getElementById("g");'
     + 'function go(){g.disabled=true;e.textContent="";fetch("/api/setup-gate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({t:T,p:p.value})})'
-    + '.then(function(r){if(r.ok){location.reload();return;}g.disabled=false;e.textContent=r.status===429?"נסיתם יותר מדי פעמים. אפשר שוב בעוד 10 דקות.":"הסיסמה לא נכונה.";})'
+    + '.then(function(r){if(r.ok){location.reload();return;}g.disabled=false;e.textContent=r.status===429?"נסיתם יותר מדי פעמים. אפשר שוב בעוד 10 דקות.":"הסיסמה לא נכונה. בודקים את מה שנשלח אליך ומנסים שוב.";})'
     + '.catch(function(){g.disabled=false;e.textContent="אין חיבור כרגע. נסו שוב בעוד רגע.";});}'
     + 'g.onclick=go;p.addEventListener("keydown",function(k){if(k.key==="Enter")go();});})();</script></body></html>';
 }
