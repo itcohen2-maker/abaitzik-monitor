@@ -2595,7 +2595,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-09T11:28:31.347Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-09T11:30:05.009Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2733,7 +2733,7 @@ try{
 
 
  <div id="askBox"></div>
-<div class="grid" id="blkBiz"><button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="lead|2026-11-04T21:49:14.929Z"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button><button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261105-shlab-agr732356-202611070852-li-queue-20261109"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div><script>
+<div class="grid" id="blkBiz"><button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="lead|2026-11-04T21:49:14.929Z"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button><button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261105-shlab-agr001420-202611070852-li-queue-20261109"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div><script>
 (function(){
  var K='leadSeen';
  function seen(){try{return JSON.parse(localStorage.getItem(K)||'[]');}catch(e){return [];}}
@@ -2949,14 +2949,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4499,7 +4492,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='b0a60e2791';
+var CODE_ID='015e53052b';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12428,6 +12421,8 @@ function vidTabs(){
  var nrN=(VQ0.nr||[]).filter(function(x){return !x.posted&&!x.failed&&!x.approved&&!x.rejected&&!x.hold;}).length;
  var plN=(VQ0.pl||[]).filter(function(x){return !x.posted&&!x.approved;}).length;
  var aiN=(VQ0.ai||[]).filter(function(x){return !x.posted;}).length;
+ var CAR=[{id:'personal',t:'הסיפור האישי',n:11,posted:false},{id:'lecture',t:'ההרצאה',n:8,posted:false}].filter(function(c){return !c.posted;});
+ var carL=[];CAR.forEach(function(c){var pad=function(i){return (i<10?'0':'')+i;};carL.push({h:'🎠 קרוסלה לאבא איציק: '+c.t+' ('+c.n+' שקפים)'});carL.push({k:'reel',it:{n:'כיתוב',t:'הכיתוב לפוסט',r:'carousel-'+c.id+'-caption.txt',pulse:1}});for(var i=1;i<=c.n;i++)carL.push({k:'reel',it:{n:pad(i),t:'שקף '+i,r:'carousel-'+c.id+'-'+pad(i)+'.png',pulse:1}});});
  return [
   {id:'st',l:'📲 סטטוס'+(stN?' ('+stN+')':''),h:'סטטוס וואטסאפ: מה עולה היום ומה הבא בתור. לחיצה פותחת את הסרטון והטקסט, 3 נגיעות',L:vqRows('st').concat([{h:'📂 הדף המלא'},{k:'go',t:'📲 פתיחת כל הסטטוסים המוכנים',u:'status/index.html'}])},
   {id:'ads',l:'📣 קמפיין',h:'הממומן, וסרטוני המוניטור לסטורי',L:TOM_ITEMS.map(function(it){return it.h?{h:it.h}:{k:'tom',it:it};})},
@@ -12437,6 +12432,7 @@ function vidTabs(){
   {id:'nr',l:'🕯️ נרות'+(nrN?' ('+nrN+')':''),h:'candle.times: סטוריז ופוסטים שמחכים לאישור שלך',L:vqRows('nr').concat([{h:'📂 הדף המלא'},{k:'go',t:'🕯️ פתיחת candle.times',u:'ner/candle.html'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return candleN[x.it.n];}))},
   {id:'it',l:'💻 IT Solution',upd:'20261107-it03en',h:'הרילים של IT Solution: המוניטור, הקמפיינים והעסקים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isIt(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isIt(x.it);}))},
   {id:'me',l:'🎬 הרילים שלי',h:'הרילים והסטוריז שלי, מוכנים לרשתות',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return !isSh(x.it)&&!isIt(x.it);}))},
+  {id:'car',l:'🎠 קרוסלות'+(CAR.length?' ('+CAR.length+')':''),pulse:CAR.length,h:'קרוסלות לאבא איציק, כל הנושאים. מה שעוד לא עלה מהבהב חלש',L:carL},
   {id:'fut',l:'💡 רילים עתידיים',h:'רעיונות, רפרנסים ותסריטים לרילים הבאים',L:[{h:'💡 רעיונות לרילים הבאים'}].concat(F.filter(function(x){return !isSh(x.it)&&!isIt(x.it)&&!plateN[x.it.n]&&!candleN[x.it.n];}))}
  ].map(function(t){
   var L=t.L.filter(function(x){return !(x.it&&x.it.r&&x.k!=='fut'&&!fileEntry(x.it.r));});
@@ -12446,7 +12442,7 @@ function vidTabs(){
 }
 function vidSeen(k){try{return localStorage.getItem('vidSeen:'+k)||'';}catch(e){return '';}}
 function vidMark(k,v){try{localStorage.setItem('vidSeen:'+k,v);}catch(e){}}
-function vidTabNew(t){return !!(t.upd&&vidSeen('tab:'+t.id)!==t.upd);}
+function vidTabNew(t){return !!(t.pulse||(t.upd&&vidSeen('tab:'+t.id)!==t.upd));}
 function vidSheet(tab){
  if(!(VQ&&Date.now()-VQT<60000))return vqLoad(function(){vidSheet(tab);});
  window.VID_BACK=0;
@@ -12472,7 +12468,7 @@ function vidSheet(tab){
   +cur.L.map(function(x,i){
     if(x.h)return '<small style="display:block;margin:14px 0 6px;font-weight:800;font-size:15px;color:#1a2233">'+esc(x.h)+'</small>';
     var lab=(x.k==='go'||x.k==='q')?x.t:(x.it.n+' · '+x.it.t);
-    var yb=ybAttr(rows,rows.indexOf(x));if(x.it&&x.it.nw&&vidSeen('it:'+x.it.n)!==x.it.nw)yb=yb.replace('class="yb','class="updblink yb');
+    var yb=ybAttr(rows,rows.indexOf(x));if(x.it&&x.it.nw&&vidSeen('it:'+x.it.n)!==x.it.nw)yb=yb.replace('class="yb','class="updblink yb');if(x.it&&x.it.pulse)yb=yb.replace('class="yb','class="updblink yb');
     return '<button type="button" '+yb+' data-k="'+i+'">'+esc(lab)+'</button>';
    }).join('')
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
@@ -17504,7 +17500,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="BAJSdIafAtGxgHzJr3tOJLTViE1Gkn6rNyAReKPb5ZiMM-6xXp2c1PD7V5VKOXkQRWLI9-Wdq7-Q4hyMCcYp2iQ";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
