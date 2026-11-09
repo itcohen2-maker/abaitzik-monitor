@@ -1964,6 +1964,8 @@ button.abtn[disabled]{opacity:.55}
 .ui-ok.danger{background:var(--red)}
 .ui-no{border:1px solid var(--line);border-radius:12px;padding:11px 18px;background:transparent;color:var(--ink);font:600 15px Heebo,sans-serif;cursor:pointer}
 .fv-body audio{width:100%}
+.fv-cmt{width:100%;max-width:520px;display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.fv-cmt textarea{width:100%;box-sizing:border-box;min-height:64px;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);color:#fff;font:500 16px Heebo,sans-serif;direction:rtl;resize:vertical}
 .fv-zoom{width:100%;overflow:hidden;display:flex;justify-content:center;align-items:center;border-radius:12px;touch-action:pan-y}
 .fv-zoom img{transform-origin:0 0;will-change:transform;width:auto;height:auto;max-width:100%;max-height:calc(100dvh - 140px);object-fit:contain}
 /* 9.11, Itzik: a carousel is slide after slide with a swipe, full screen, and closing it returns to the tab, not the home screen. */
@@ -6188,6 +6190,23 @@ function fileMissing(name){
   if(ta){ta.value='הקובץ "'+nice+'" לא נפתח לי, אפשר להעלות אותו שוב?';ta.focus();}
  };
 }
+/* 9.11, Itzik: under every video or picture to publish, a box to comment and give instructions. It goes to the chat as an ordinary note, with the file named in [file:...]. */
+function fvCommentBox(name){
+ var w=document.createElement('div');w.className='fv-cmt';
+ w.innerHTML='<textarea rows="2" placeholder="💬 הוראה או הערה על זה, ואני אעשה"></textarea><button type="button" class="ask">💬 שלח לי את ההערה</button>';
+ var ta=w.querySelector('textarea'),bt=w.querySelector('button');
+ bt.onclick=function(){
+  var t=ta.value.trim();if(!t){toast('כתוב קודם מה לעשות');return;}
+  var txt='💬 הערה על הקובץ "'+fileNiceName(name)+'" [file:'+name+']: '+t,at=new Date().toISOString();
+  bt.disabled=true;
+  sendOrHold('הערה על קובץ',txt,'הערה',{at:at,text:txt}).then(function(how){
+   bt.disabled=false;
+   if(how!=='held'){var pl=pending();pl.push({at:at,text:txt});savePending(pl);}
+   ta.value='';toast(how==='held'?HELD_SAY:'נשלח. התשובה תופיע בצ׳אט.');
+  });
+ };
+ return w;
+}
 function fileView(name){
  var e=fileEntry(name);if(!e||!GKEY)return false;
  var ov=document.createElement('div');ov.className='fview';
@@ -6246,6 +6265,7 @@ function fileView(name){
   if(gal)h+='<button type="button" class="ask fv-gal">שמירה לגלריה</button><div class="empty" style="font-size:13px">בחלון שנפתח: '+(t.indexOf('video/')===0?'שמור וידאו':'שמור תמונה')+'</div>';
   else h+='<a class="ask fv-save" href="'+url+'" download="'+esc(short)+'">'+((ios||/Android/i.test(navigator.userAgent||''))?'שמירה בטלפון':'הורדה למחשב')+'</a>';
   var body=ov.querySelector('.fv-body');body.innerHTML=h;
+  if(media||t==='application/pdf'){var cmx=fvCommentBox(name);if(cmx)ov.querySelector('.fv-body').appendChild(cmx);}
   var zb=body.querySelector('.fv-zoom');if(zb)fvZoom(zb);
   var sb=body.querySelector('.fv-share');
   if(sb)sb.onclick=function(){var f2=sf;try{if(sf.name!==short)f2=new File([b],short,{type:sf.type});}catch(x){}navigator.share({files:[f2]}).catch(shareFail);};

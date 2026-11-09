@@ -41,6 +41,8 @@
   .row button:disabled{opacity:.4}
   .cp{font-size:15px;min-height:48px}
   .song{font-size:14px;color:var(--dim)}
+  .cmt{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .cmt textarea{width:100%;box-sizing:border-box;min-height:64px;padding:10px 12px;border-radius:12px;border:1px solid var(--dim);background:transparent;color:inherit;font:500 16px Heebo,sans-serif;direction:rtl;resize:vertical}
   .cap{white-space:pre-wrap;font-size:16px;line-height:1.55;padding:12px;border-radius:10px;background:rgba(127,127,127,.12);direction:auto}
   .empty{border:1px dashed var(--line);border-radius:14px;padding:14px;color:var(--dim);max-width:520px;margin:0 auto}
   .note{font-size:13px;color:var(--dim);text-align:center}
@@ -94,6 +96,8 @@
    +(posted?'<button type="button" class="full" data-un="'+esc(it.id)+'">↩️ סימנתי בטעות, עוד לא עלה</button>'
           :'<button type="button" class="full" data-posted="'+esc(it.id)+'">☐ העליתי את זה</button>')
    +'</div>'
+   +'<div class="cmt"><textarea data-cmt="'+esc(it.id)+'" rows="2" placeholder="💬 הוראה או הערה על הסרטון הזה, ואני אעשה"></textarea>'
+   +'<button type="button" class="full" data-cmtgo="'+esc(it.id)+'">💬 שלח לי את ההערה</button></div>'
    +((it.song||it.song_tt)?'<div class="song">🎵 אינסטגרם: '+esc(it.song||'')+' · טיקטוק: '+esc(it.song_tt||'')+'</div>':'')
    +'</div></div>';
   return h;
@@ -123,6 +127,13 @@
   document.querySelectorAll('[data-un]').forEach(function(b){b.addEventListener('click',function(){
    var id=b.getAttribute('data-un'),it=find(id);
    b.disabled=true;act('unposted',id,function(ok){if(ok){it.posted=false;it.postedAt=null;draw(q);}else{b.disabled=false;alert('לא נשלח, נסה שוב');}});});});
+ document.querySelectorAll('[data-cmtgo]').forEach(function(b){b.addEventListener('click',function(){
+  var id=b.getAttribute('data-cmtgo'),it=find(id),ta=document.querySelector('[data-cmt="'+id+'"]'),t=ta?ta.value.trim():'';
+  if(!it||!t){toast('כתוב קודם מה לעשות עם הסרטון');return;}
+  if(!SEND||!SEND.t){alert('פתח את הדף מהאריח במוניטור');return;}
+  b.disabled=true;var NL=String.fromCharCode(10);
+  fetch('https://ntfy.sh/'+SEND.t,{method:'POST',headers:{Title:'monitor','X-Tags':'memo'},body:['הערה','💬 הערה על הסרטון "'+it.name+'" [video:'+id+']: '+t,'','קוד '+SEND.c].join(NL)})
+   .then(function(r){if(!r.ok)throw 0;ta.value='';b.disabled=false;toast('✅ נשלח. התשובה תופיע בצ׳אט במוניטור');},function(){b.disabled=false;alert('לא נשלח, נסה שוב');}).catch(function(){b.disabled=false;alert('לא נשלח, נסה שוב');});});});
  }
  fetch('queue.json?v='+Date.now()).then(function(r){return r.json();}).then(draw)
   .catch(function(){document.getElementById('m').innerHTML='<p class="empty">לא הצלחתי לטעון את התור</p>';});
