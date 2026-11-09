@@ -14676,6 +14676,10 @@ var REEL_ITEMS=[
 {n:'IT 01',t:'חדש: המוניטור, וואטסאפ ולוח בקרה אחד, לסטורי באינסטגרם ובטיקטוק · הכי איכותי, לשמירה בגלריה',r:'it01-monitor-v2.mp4'},
 {n:'IT 01 כריכה',t:'הכריכה: מי לא שילם לך החודש?',r:'it01-cover.jpg'},
 {n:'IT 01 פרסום',p:'it01',t:'טקסט לסטורי באינסטגרם ולטיקטוק, עם קישור לכל רשת',r:'it01-post.txt'},
+// 9.11, Itzik: sardine sandwich, three things he stopped buying; caption copied from his reference post.
+{n:'35',t:'ריל: שלושה דברים שהפסקתי לקנות · 4K הכי איכותי, לשמירה בגלריה',r:'reel-35-sardines.mp4'},
+{n:'35 כריכה',t:'הכריכה · 4K',r:'reel-35-cover.jpg'},
+{n:'35 פרסום',t:'כיתוב, מוזיקה והאשטגים לכל רשת',r:'reel-35-post.txt'},
 // 5.11, Itzik: post "the fire stopped here", his own text; music Sign of the Times.
 {n:'34 פרסום',t:'פוסט האש נעצרה כאן: הכיתוב שלך, Sign of the Times והאשטגים לכל רשת',r:'reel-34-post.txt'},
 {n:'28 סטורי האתר',t:'יש לי אתר חדש, כולם מוזמנים (מתוקן: שחר כבר פתוח, ועם לוגו) · 4K הכי איכותי, לשמירה בגלריה',r:'story-28-site-open.mp4'}
