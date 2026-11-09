@@ -2891,6 +2891,7 @@ section#talkCard.talk{padding:8px 10px;gap:6px 10px;margin-bottom:8px}
 .c-its{background:linear-gradient(160deg,#06b6d4,#0a4a5a)}
 .c-el{background:linear-gradient(160deg,#1f8f7d,#14675a)}
 .c-al{background:linear-gradient(160deg,#7e57c2,#4527a0)}
+.c-pb{background:linear-gradient(160deg,#26a69a,#00695c)}
 .c-shai{background:linear-gradient(160deg,#26c6da,#00838f)}
 .c-rn{background:linear-gradient(160deg,#d81b60,#8e1046)}
 /* 12.10: an empty place a customer can ask to fill. Dashed, no gloss. */
@@ -4789,6 +4790,8 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   -->
   <a class="ic" data-grp="work" href="#" id="icAl" data-new="1"><span class="c c-al" id="icAlC">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-2 9a6 6 0 0 1-12 0z"/><circle cx="9" cy="9.5" r="1"/><circle cx="15" cy="9.5" r="1"/><path d="M9.5 13c1.5 1.3 3.5 1.3 5 0"/></svg></span>אלון</a>
+  <!-- 9.11.2026, Itzik: "תעשה לו אייקון כמו האייקון של אלון. כשאני לוחץ אני רואה את כל המוניטורים, פלוס הקוד שלהם של הכניסה". Same as Alon's: the colour of his monitor's health check, and the click opens the monitors screen (link and entry code of each), scrolled to Dr. Shulman's. -->
+  <a class="ic" data-grp="work" href="#" id="icPb" data-new="1"><span class="c c-pb" id="icPbC">🦷</span>ד״ר שולמן</a>
   <!-- 8.11.2026, Itzik: the Shai icon is gone. He is not paying and his access was cancelled. -->
   <button type="button" class="ic" data-grp="work" id="icHealth"><span class="c c-hl" id="icHealthC">🩺</span>תקלות</button>
   <!-- 7.11.2026: 🔌 חיבורים, shown only when D.features.conn (applyFeatures). -->
@@ -13110,6 +13113,8 @@ function paintTenantsTile(){
  var ac=document.getElementById('icAlC');
  var badAl=T.filter(function(t){return t.id==='alon'&&t.state!=='ok'&&!t.paused;});
  if(ac&&T.some(function(t){return t.id==='alon';})){ac.style.background=badAl.length?'linear-gradient(160deg,#ef5350,#b71c1c)':'linear-gradient(160deg,#66bb6a,#1b5e20)';ac.classList.toggle('tdown',!!badAl.length);}
+ var pc=document.getElementById('icPbC'),badPb=T.filter(function(t){return t.id==='pablo'&&t.state!=='ok'&&!t.paused;});
+ if(pc&&T.some(function(t){return t.id==='pablo';})){pc.style.background=badPb.length?'linear-gradient(160deg,#ef5350,#b71c1c)':'linear-gradient(160deg,#66bb6a,#1b5e20)';pc.classList.toggle('tdown',!!badPb.length);}
  var sc=document.getElementById('icShaiC'),badSh=T.filter(function(t){return t.id==='shai'&&t.state!=='ok'&&!t.paused;});
  if(sc&&T.some(function(t){return t.id==='shai';})){sc.style.background=badSh.length?'linear-gradient(160deg,#ef5350,#b71c1c)':'linear-gradient(160deg,#66bb6a,#1b5e20)';sc.classList.toggle('tdown',!!badSh.length);}
  /*
@@ -13162,6 +13167,8 @@ on('gTenants',function(){
 (function(){
  var al=document.getElementById('icAl');
  if(al)al.onclick=function(e){e.preventDefault();pane('N3');renderTenants();};
+ var pb=document.getElementById('icPb');
+ if(pb)pb.onclick=function(e){e.preventDefault();pane('N3');renderTenants();setTimeout(function(){var c=[].slice.call(document.querySelectorAll('#tnBox .tnc')).filter(function(x){return /שולמן|פבלו/.test(x.textContent);})[0];if(c){c.scrollIntoView({block:'center'});c.style.boxShadow='0 0 0 3px #26a69a';}},120);};
  var sh=document.getElementById('icShai');
  if(sh)sh.onclick=function(e){e.preventDefault();pane('N3');renderTenants();setTimeout(function(){var c=[].slice.call(document.querySelectorAll('#tnBox .tnc')).filter(function(x){return /שי בודק/.test(x.textContent);})[0];if(c){c.scrollIntoView({block:'center'});c.style.boxShadow='0 0 0 3px #26c6da';}},120);};
 })();
