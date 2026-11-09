@@ -16748,7 +16748,8 @@ function vidTabs(){
  var plN=(VQ0.pl||[]).filter(function(x){return !x.posted&&!x.approved;}).length;
  var aiN=(VQ0.ai||[]).filter(function(x){return !x.posted;}).length;
  // 9.11, Itzik: carousels for his page, all topics, in the reels tile. One that has not gone up blinks softly (updblink); when it goes up, posted:true takes it off.
- var CAR=[{id:'life',t:'סיפור חיי',n:11,posted:false}].filter(function(c){return !c.posted;});
+ // 11.9, Itzik: the life carousel is removed from this menu (תמחק את הקרוסלה). New ones go in here again by name.
+ var CAR=[];
  var carL=[];CAR.forEach(function(c,ci){var pad=function(i){return (i<10?'0':'')+i;};carL.push({h:'🎠 קרוסלה '+(ci+1)+' · '+c.t+' ('+c.n+' שקפים)'});carL.push({k:'car',c:c.id,n:c.n,nm:'קרוסלה '+(ci+1)+' · '+c.t,t:'🎠 לפתיחת הקרוסלה, שקף אחרי שקף',pulse:1});carL.push({k:'reel',it:{n:'כיתוב',t:'הכיתוב לפוסט',r:'carousel-'+c.id+'-caption.txt',pulse:1}});});
  return [
   {id:'st',l:'📲 סטטוס'+(stN?' ('+stN+')':''),h:'סטטוס וואטסאפ: מה עולה היום ומה הבא בתור. לחיצה פותחת את הסרטון והטקסט, 3 נגיעות',L:vqRows('st').concat([{h:'📂 הדף המלא'},{k:'go',t:'📲 פתיחת כל הסטטוסים המוכנים',u:'status/index.html'}])},
