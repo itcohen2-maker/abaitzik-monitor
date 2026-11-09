@@ -34,8 +34,12 @@ const EXPECT = {
 // Text a provider shows when our app or callback is wrong.
 const PROVIDER_ERROR = /(redirect_uri_mismatch|invalid_client|AADSTS\d+|URL blocked|Can't load URL|isn't available right now|does not match the registered|unauthorized_client|invalid_request|app is not active|Error 400|Error 401)/i;
 
-async function hop(url) {
-  const r = await fetch(url, { redirect: 'manual', headers: { 'User-Agent': 'Mozilla/5.0 (setup-check)', 'Accept-Language': 'he,en' }, signal: AbortSignal.timeout(20000) });
+// 9.11: a form with a password (data/setup/<token>.pass) is fetched with its cookie, and only on our own host.
+const gateCk = (tok) => { try { return require('./setup.js').checkCookie(tok); } catch (e) { return ''; } };
+async function hop(url, ck) {
+  const headers = { 'User-Agent': 'Mozilla/5.0 (setup-check)', 'Accept-Language': 'he,en' };
+  if (ck && url.indexOf(BASE) === 0) headers.Cookie = ck;
+  const r = await fetch(url, { redirect: 'manual', headers, signal: AbortSignal.timeout(20000) });
   return { status: r.status, loc: r.headers.get('location'), body: r.status < 300 || r.status >= 400 ? (await r.text()).slice(0, 200000) : '' };
 }
 
@@ -44,7 +48,7 @@ async function checkCard(tok, st) {
   const out = { id: st.id, title: st.title, provider: p, ok: false, why: '' };
   if (!oa.ready(p)) { out.why = 'הספק עוד לא מוגדר בשרת (הכרטיס מציג "בקרוב")'; out.pending = true; return out; }
   const start = BASE + '/oauth/' + p + '/start?t=' + tok + '&s=' + encodeURIComponent(st.id);
-  const a = await hop(start);
+  const a = await hop(start, gateCk(tok));
   if (a.status !== 302 || !a.loc) { out.why = 'הכפתור לא מפנה (' + a.status + ')'; return out; }
   const u = new URL(a.loc);
   const E = EXPECT[p];
@@ -73,7 +77,7 @@ async function checkCard(tok, st) {
 
 async function checkPage(tok) {
   const def = JSON.parse(fs.readFileSync(path.join(DIR, tok + '.def.json'), 'utf8'));
-  const page = await (await fetch(BASE + '/s/' + tok, { signal: AbortSignal.timeout(20000) })).text();
+  const page = await (await fetch(BASE + '/s/' + tok, { headers: gateCk(tok) ? { Cookie: gateCk(tok) } : {}, signal: AbortSignal.timeout(20000) })).text();
   const res = { tok, client: def.client, cards: [], problems: [] };
   for (const st of def.steps) {
     if (st.input) res.problems.push(st.title + ': עדיין מבקש להדביק מפתח');

@@ -444,4 +444,6 @@ async function oauthCallback(p, q, res, notify) {
   res.writeHead(302, { Location: '/s/' + tok + (r.v ? '/view' : '') + '#' + st.id, 'Cache-Control': 'no-store' }); res.end();
 }
 
-module.exports = { servePage, handlePost, handleFile, sweep, summary, oauthStart, oauthCallback, gateOk, handleGate, DIR };
+// For setup-check.js: the cookie a password protected page accepts (sent to our own host only).
+function checkCookie(tok) { return safeTok(tok) && gatePass(tok) ? gateName(tok) + '=' + gateCookie(tok) : ''; }
+module.exports = { servePage, handlePost, handleFile, sweep, summary, oauthStart, oauthCallback, gateOk, handleGate, checkCookie, DIR };
