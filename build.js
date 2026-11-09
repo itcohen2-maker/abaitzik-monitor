@@ -1954,7 +1954,7 @@ button.abtn[disabled]{opacity:.55}
 .fv-bar b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
 .fv-x{width:44px;height:44px;border:0;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-size:20px;cursor:pointer}
 .fv-body{flex:1;overflow:auto;padding:12px 16px calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:12px}
-.fv-body img,.fv-body video{max-width:100%;max-height:70vh;border-radius:12px}
+.fv-body img,.fv-body video{max-width:100%;max-height:calc(100dvh - 140px);border-radius:12px}
 .ui-dlg-bg{position:fixed;inset:0;z-index:99995;background:rgba(10,12,18,.55);display:flex;align-items:center;justify-content:center;padding:20px}
 .ui-dlg{width:100%;max-width:360px;background:var(--surface);color:var(--ink);border-radius:18px;padding:20px 18px 16px;box-shadow:0 12px 40px rgba(0,0,0,.35);font:500 16px Heebo,sans-serif;line-height:1.5;direction:rtl;text-align:right}
 .ui-dlg b{display:block;font:600 17px Heebo,sans-serif;margin-bottom:4px}
@@ -1964,8 +1964,19 @@ button.abtn[disabled]{opacity:.55}
 .ui-ok.danger{background:var(--red)}
 .ui-no{border:1px solid var(--line);border-radius:12px;padding:11px 18px;background:transparent;color:var(--ink);font:600 15px Heebo,sans-serif;cursor:pointer}
 .fv-body audio{width:100%}
-.fv-zoom{width:100%;overflow:hidden;display:flex;justify-content:center;border-radius:12px;touch-action:pan-y}
-.fv-zoom img{transform-origin:0 0;will-change:transform;max-height:70vh}
+.fv-zoom{width:100%;overflow:hidden;display:flex;justify-content:center;align-items:center;border-radius:12px;touch-action:pan-y}
+.fv-zoom img{transform-origin:0 0;will-change:transform;width:auto;height:auto;max-width:100%;max-height:calc(100dvh - 140px);object-fit:contain}
+/* 9.11, Itzik: a carousel is slide after slide with a swipe, full screen, and closing it returns to the tab, not the home screen. */
+.carv{position:fixed;inset:0;z-index:99980;background:#000;display:flex;flex-direction:column;direction:ltr}
+.carv-top{position:absolute;top:0;left:0;right:0;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;color:#fff;background:linear-gradient(to bottom,rgba(0,0,0,.6),rgba(0,0,0,0))}
+.carv-x{width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.18);color:#fff;font-size:22px}
+.carv-n{font-size:17px}
+.carv-track{flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.carv-track::-webkit-scrollbar{display:none}
+.carv-s{flex:0 0 100%;scroll-snap-align:center;scroll-snap-stop:always;display:flex;align-items:center;justify-content:center;color:#fff}
+.carv-s img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}
+.carv-bot{display:flex;gap:8px;padding:10px 12px calc(12px + env(safe-area-inset-bottom));background:#000}
+.carv-bot button{flex:1;padding:12px 6px;border-radius:12px;border:0;background:#1f3a2f;color:#5fe3b0;font:inherit;font-weight:800;font-size:15px}
 .fv-zoom.on{touch-action:none}
 .fv-pdf{width:100%;max-width:640px;display:flex;flex-direction:column;gap:10px}
 .fv-pdf canvas{background:#fff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.4)}
@@ -16706,7 +16717,7 @@ function vidTabs(){
  var aiN=(VQ0.ai||[]).filter(function(x){return !x.posted;}).length;
  // 9.11, Itzik: carousels for his page, all topics, in the reels tile. One that has not gone up blinks softly (updblink); when it goes up, posted:true takes it off.
  var CAR=[{id:'personal',t:'הסיפור האישי',n:11,posted:false},{id:'lecture',t:'ההרצאה',n:7,posted:false}].filter(function(c){return !c.posted;});
- var carL=[];CAR.forEach(function(c){var pad=function(i){return (i<10?'0':'')+i;};carL.push({h:'🎠 קרוסלה לאבא איציק: '+c.t+' ('+c.n+' שקפים)'});carL.push({k:'reel',it:{n:'כיתוב',t:'הכיתוב לפוסט',r:'carousel-'+c.id+'-caption.txt',pulse:1}});for(var i=1;i<=c.n;i++)carL.push({k:'reel',it:{n:pad(i),t:'שקף '+i,r:'carousel-'+c.id+'-'+pad(i)+'.png',pulse:1}});});
+ var carL=[];CAR.forEach(function(c){var pad=function(i){return (i<10?'0':'')+i;};carL.push({h:'🎠 קרוסלה לאבא איציק: '+c.t+' ('+c.n+' שקפים)'});carL.push({k:'car',c:c.id,n:c.n,t:'🎠 לפתיחת הקרוסלה, שקף אחרי שקף ('+c.n+')',pulse:1});carL.push({k:'reel',it:{n:'כיתוב',t:'הכיתוב לפוסט',r:'carousel-'+c.id+'-caption.txt',pulse:1}});});
  return [
   {id:'st',l:'📲 סטטוס'+(stN?' ('+stN+')':''),h:'סטטוס וואטסאפ: מה עולה היום ומה הבא בתור. לחיצה פותחת את הסרטון והטקסט, 3 נגיעות',L:vqRows('st').concat([{h:'📂 הדף המלא'},{k:'go',t:'📲 פתיחת כל הסטטוסים המוכנים',u:'status/index.html'}])},
   {id:'ads',l:'📣 קמפיין',h:'הממומן, וסרטוני המוניטור לסטורי',L:TOM_ITEMS.map(function(it){return it.h?{h:it.h}:{k:'tom',it:it};})},
@@ -16757,8 +16768,8 @@ function vidSheet(tab){
   +(rows.length?'':'<small>אין כרגע סרטונים כאן</small>')
   +cur.L.map(function(x,i){
     if(x.h)return '<small style="display:block;margin:14px 0 6px;font-weight:800;font-size:15px;color:#1a2233">'+esc(x.h)+'</small>';
-    var lab=(x.k==='go'||x.k==='q')?x.t:(x.it.n+' · '+x.it.t);
-    var yb=ybAttr(rows,rows.indexOf(x));if(x.it&&x.it.nw&&vidSeen('it:'+x.it.n)!==x.it.nw)yb=yb.replace('class="yb','class="updblink yb');if(x.it&&x.it.pulse)yb=yb.replace('class="yb','class="updblink yb');
+    var lab=(x.k==='go'||x.k==='q'||x.k==='car')?x.t:(x.it.n+' · '+x.it.t);
+    var yb=ybAttr(rows,rows.indexOf(x));if(x.it&&x.it.nw&&vidSeen('it:'+x.it.n)!==x.it.nw)yb=yb.replace('class="yb','class="updblink yb');if((x.it&&x.it.pulse)||x.pulse)yb=yb.replace('class="yb','class="updblink yb');
     return '<button type="button" '+yb+' data-k="'+i+'">'+esc(lab)+'</button>';
    }).join('')
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
@@ -16775,6 +16786,7 @@ function vidSheet(tab){
   var x=cur.L[+k];if(k===''||!x)return;
   var it=x.it;
   if(it&&it.nw)vidMark('it:'+it.n,it.nw);
+  if(x.k==='car')return carView(x.c,x.n);
   if(x.k==='go')return vidGo(x.u);
   if(x.k==='q')return vidGo(x.u,x.n);
   if(x.k==='fut'){window.VID_BACK=1;return futText(it);}
@@ -16787,6 +16799,35 @@ function vidSheet(tab){
  if(cur.upd)vidMark('tab:'+cur.id,cur.upd);
 }
 on('gVideos',function(){vidSheet();});
+function carView(id,n){
+ var P=function(i){return (i<10?'0':'')+i;};
+ var ov=document.createElement('div');ov.className='carv';
+ var sl='';for(var i=1;i<=n;i++)sl+='<div class="carv-s"><div class="empty">טוען</div></div>';
+ ov.innerHTML='<div class="carv-top"><button type="button" class="carv-x" aria-label="סגירה">✕</button><b class="carv-n">1 / '+n+'</b></div><div class="carv-track">'+sl+'</div><div class="carv-bot"><button type="button" class="carv-save">שמירה לגלריה</button><button type="button" class="carv-all">כל השקפים</button><button type="button" class="carv-cap">הכיתוב</button></div>';
+ document.body.appendChild(ov);
+ var track=ov.querySelector('.carv-track'),cnt=ov.querySelector('.carv-n'),urls=[],files=[],cur=1;
+ (function load(i){
+  if(i>n||!ov.isConnected)return;
+  var cell=track.children[i-1],e=fileEntry('carousel-'+id+'-'+P(i)+'.png');
+  if(!e){cell.innerHTML='<div class="empty">השקף חסר</div>';return load(i+1);}
+  fileBlob(e).then(function(b){
+   urls[i]=URL.createObjectURL(b);
+   try{files[i]=new File([b],'carousel-'+id+'-'+P(i)+'.png',{type:'image/png'});}catch(x){}
+   cell.innerHTML='<img src="'+urls[i]+'" alt="">';load(i+1);
+  }).catch(function(){cell.innerHTML='<div class="empty">לא נפתח</div>';load(i+1);});
+ })(1);
+ track.addEventListener('scroll',function(){var w=track.clientWidth||1;cur=Math.min(n,Math.max(1,Math.round(track.scrollLeft/w)+1));cnt.textContent=cur+' / '+n;});
+ function send(list){
+  if(!list.length)return toast('השקפים עוד נטענים');
+  if(navigator.canShare&&navigator.canShare({files:list}))navigator.share({files:list}).catch(function(){});
+  else toast('השיתוף לא נתמך במכשיר הזה');
+ }
+ ov.querySelector('.carv-save').onclick=function(){send(files[cur]?[files[cur]]:[]);};
+ ov.querySelector('.carv-all').onclick=function(){send(files.filter(Boolean));};
+ ov.querySelector('.carv-cap').onclick=function(){fileOpen('carousel-'+id+'-caption.txt');};
+ ov.querySelector('.carv-x').onclick=function(){ov.remove();urls.forEach(function(u){if(u)URL.revokeObjectURL(u);});vidSheet('car');};
+}
+
 
 // 7.10: the open accounts as one file to send on, at the bottom of the debtors.
 document.getElementById('rivShare')&&document.getElementById('rivShare').addEventListener('click',function(e){
