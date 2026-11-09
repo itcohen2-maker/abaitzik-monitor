@@ -957,6 +957,13 @@ function build() {
       // Both or neither: records without the summary would reach the head unsealed.
       payload.biz = rows;
       payload.bizSum = sum;
+      // 9.11.2026, Itzik: "שים אל הפוסטים שעומדים לפרסם" in העסק שלי. The posts still waiting, oldest first; text cut to 120.
+      try {
+        payload.liPosts = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'linkedin', 'queue.json'), 'utf8'))
+          .filter((p) => p && !p.posted)
+          .map((p) => ({ id: p.id, date: p.date, time: p.time || '09:00', approved: !!p.approved, text: String(p.text || '').replace(/\s+/g, ' ').slice(0, 120) }))
+          .sort((a, b) => (String(a.date) + a.time).localeCompare(String(b.date) + b.time));
+      } catch (e) { payload.liPosts = []; }
       // 1.11, Itzik: "נכנס לטאב של שחר ואני לא רואה את רשימת ההמתנה". The list itself, inside the tab.
       try {
         const shs = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'shachar', 'state.json'), 'utf8'));
@@ -4535,7 +4542,7 @@ ${require('./lib/home-ui.js').html}
 
  <div id="askBox"></div>
 <!-- 4.11, Itzik: "תעלה את האריח של העסק שלי למעלה ברשימה. למה שמת אותו אחרון?" The business grid opens the home screen. -->
-${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261105-shlab' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
+${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261105-shlab' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
   <!-- 3.11, Itzik: "אני צריך אריח שממש יעבב לי, כמו ליד חדש". First on the grid; shows while a --nag reminder is open, hard blink once it is due, until "✅ עשיתי". -->
@@ -17577,6 +17584,15 @@ function bizSheet(t0){
   function docsHtml(){
    return '<div class="bzHead">🏥 מסמכים</div><button type="button" class="yb" data-bz="clalit">🏥 הסכם כללית</button>';
   }
+  // 9.11.2026, Itzik: the LinkedIn posts that are still waiting to go up, and a link to his profile.
+  function liHtml(){
+   var L=D.liPosts||[];
+   var h='<div class="bzHead">🔗 לינקדין</div><a class="yb yb1" href="https://www.linkedin.com/in/me/" target="_blank" rel="noopener">לפתוח את הפרופיל שלי בלינקדין</a>';
+   if(!L.length)return h+'<p class="bzEmpty">כרגע אין פוסטים שמחכים לפרסום. כל פוסט חדש יופיע כאן לבד.</p>';
+   return h+'<div class="bzSec">עומדים לפרסום ('+L.length+')</div>'+L.map(function(p){
+    return '<div class="bzRow"><b>'+esc(String(p.date||'').split('-').reverse().join('.'))+' · '+esc(p.time)+' · '+(p.approved?'✅ מאושר':'⏳ מחכה לאישור')+'</b><small>'+esc(p.text)+'</small></div>';
+   }).join('');
+  }
   function body(){
    if(tab==='money')return '<div class="bzHead">💰 כסף החודש</div>'+moneyHtml();
    if(tab==='due')return '<div class="bzHead">⏰ צריך לחזור</div>'+dueHtml();
@@ -17586,19 +17602,21 @@ function bizSheet(t0){
    /*ITZIK:BEGIN*/if(tab==='ner')return nerHtml();/*ITZIK:END*/
    if(tab==='anim')return animHtml();
    if(tab==='docs')return docsHtml();
+   if(tab==='li')return liHtml();
    // 1.11, Itzik: "תשים את ההצעה גם במוניטור". The official quote for Shai Bodek (3 packages), the demo on 3.11.
    return '<div class="bzHead">👥 לידים ולקוחות</div>'+newLeadHtml()+leadsHtml()
     +'<p class="bzEmpty">הציון למעלה מ 0 עד 100, 100 זה הכי טוב. כל ליד שלא נגעו בו שבוע מוריד 8 נקודות, הצעה שלא חזרו אליה 3 ימים מורידה 12, ותזכורת שהגיעה ולא טופלה מורידה 6.</p>';
   }
   // 2.11, Itzik: a tab with something new blinks until he opens it. The stamp changes whenever something is added there.
-  var BZ_UPD={its:'20261108-prices'+((D.nda&&D.nda.signed&&D.nda.signed[0])?'-'+String(D.nda.signed[0].at).replace(/\D/g,'').slice(0,12):'')+((D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done)?'-s'+String(D.shaiForms.sign.done).replace(/\\D/g,'').slice(0,12):''),shachar:((D.shSum&&D.shSum.upd)||'20261103-shachar-auto')+'-ld1104'};
+  var BZ_UPD={its:'20261108-prices'+((D.nda&&D.nda.signed&&D.nda.signed[0])?'-'+String(D.nda.signed[0].at).replace(/\D/g,'').slice(0,12):'')+((D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done)?'-s'+String(D.shaiForms.sign.done).replace(/\\D/g,'').slice(0,12):''),shachar:((D.shSum&&D.shSum.upd)||'20261103-shachar-auto')+'-ld1104',li:'li-queue-20261109'};
   ((D.agr&&D.agr.clients)||[]).forEach(function(c,i){BZ_UPD['agr'+i]='a8-'+String(c.signedAt||c.openedAt||'new').replace(/\\D/g,'').slice(0,12);});
   function bzSeen(){try{return JSON.parse(localStorage.getItem('bzTabSeen')||'{}');}catch(x){return {};}}
   function bzTabNew(k){return !!BZ_UPD[k]&&bzSeen()[k]!==BZ_UPD[k]&&k!==tab;}
   function bzMarkSeen(k){if(!BZ_UPD[k])return;var o=bzSeen();o[k]=BZ_UPD[k];try{localStorage.setItem('bzTabSeen',JSON.stringify(o));}catch(x){}}
   function bodyFor(t2){var s0=tab;tab=t2;try{return body();}finally{tab=s0;}}
   var dueN=((S&&S.staleLeads)||[]).length+((S&&S.due)||[]).length;
-  var tabs=[['its','💻','IT Solution'],['leads','👥','לידים ולקוחות'],['money','💰','כסף החודש'],['due','⏰','צריך לחזור',dueN],['shachar','🌅','שחר']/*ITZIK:BEGIN*/,['ner','🕯️','נרות']/*ITZIK:END*/,['anim','🧠','המשרד']];
+  var liN=(D.liPosts||[]).length;
+  var tabs=[['its','💻','IT Solution'],['leads','👥','לידים ולקוחות'],['money','💰','כסף החודש'],['due','⏰','צריך לחזור',dueN],['li','🔗','לינקדין',liN],['shachar','🌅','שחר']/*ITZIK:BEGIN*/,['ner','🕯️','נרות']/*ITZIK:END*/,['anim','🧠','המשרד']];
   if(INSTANCE&&INSTANCE.clalit)tabs.push(['docs','🏥','מסמכים']);
   ((D.agr&&D.agr.clients)||[]).forEach(function(c,i){tabs.splice(1+i,0,['agr'+i,'🩺',c.tab||c.client]);});
   // 1.11.2026: the client demo starts from here (lib/demo-mode.js).
