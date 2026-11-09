@@ -82,7 +82,7 @@
    +'<div class="media"><video src="'+esc(it.file)+'" poster="'+esc(it.poster)+'" controls playsinline preload="none"></video></div>'
    +'<div class="meta">'
    +'<span class="nm">'+esc(it.name)+'</span>'
-   +'<span class="st '+(posted?'ok':'wait')+'">'+(posted?'✅ עלה '+day(it.postedAt):'⏳ עוד לא עלה')+'</span>'
+   +'<span class="st '+(posted?'ok':'wait')+'">'+(posted?'✅ עלה '+day(it.postedAt):(it.hold?'👀 לצפייה, ממתין לאישור שלך, לא יעלה לבד':'⏳ עוד לא עלה'))+'</span>'
    +'<div class="cap">'+esc(it.ig||'')+'</div>'
    +'<div class="row">'
    +'<button type="button" class="full" data-dl="'+esc(it.id)+'">💾 שמירה לטלפון</button>'
