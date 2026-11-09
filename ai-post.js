@@ -51,27 +51,8 @@ async function yomTov(date) {
     return (j.items || []).some(function (x) { return x.yomtov; });
   } catch (e) { return false; }
 }
-function token(ch) { return fs.readFileSync(ch.tokenFile, 'utf8').replace(/[^A-Za-z0-9]/g, ''); }
-async function call(ch, ep, params, method) {
-  const q = new URLSearchParams(Object.assign({ access_token: token(ch) }, params));
-  const r = method === 'POST' ? await fetch(API + ep, { method: 'POST', body: q }) : await fetch(API + ep + '?' + q);
-  const j = await r.json();
-  if (j.error) throw new Error(j.error.message);
-  return j;
-}
-async function publishOne(ch, p) {
-  const c = await call(ch, ch.id + '/media', p, 'POST');
-  let ok = false;
-  for (let i = 0; i < 60; i++) {
-    await new Promise(function (r) { setTimeout(r, 6000); });
-    const s = await call(ch, c.id, { fields: 'status_code' });
-    if (s.status_code === 'FINISHED') { ok = true; break; }
-    if (s.status_code === 'ERROR' || s.status_code === 'EXPIRED') throw new Error('container ' + s.status_code);
-  }
-  if (!ok) throw new Error('container timeout');
-  const m = await call(ch, ch.id + '/media_publish', { creation_id: c.id }, 'POST');
-  return m.id;
-}
+// 9.11: the publishing core moved to lib/social.js, shared with a customer's runner.
+const social = require('./lib/social.js');
 function readJson(f, d) { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { return d; } }
 function save(q) {
   fs.writeFileSync(QUEUE, JSON.stringify(q, null, 1));
@@ -81,29 +62,10 @@ function push(msg) {
   execFile(process.execPath, ['push.js', msg], { cwd: __dirname, timeout: 180000 }, function () {});
 }
 
-// A Facebook page video (Reel on the page) from the same public file. Token: never expiring page token
-// made from the system user ai-poster (Business settings, It Solution).
-async function postPage(it, pg) {
-  const tok = fs.readFileSync(pg.tokenFile, 'utf8').replace(/[^A-Za-z0-9]/g, '');
-  const body = new URLSearchParams({ file_url: BASE + it.file, description: it.ig || '', access_token: tok });
-  const r = await fetch(API + pg.id + '/videos', { method: 'POST', body });
-  const j = await r.json();
-  if (j.error) throw new Error(j.error.message);
-  return j.id;
-}
-async function post(it, ch, now) {
-  const out = {};
-  const video = BASE + it.file;
-  const reel = { media_type: 'REELS', video_url: video, caption: it.ig || '', share_to_feed: 'true' };
-  if (it.poster) reel.cover_url = BASE + it.poster;
-  out.reel = await publishOne(ch, reel);
-  try { out.story = await publishOne(ch, { media_type: 'STORIES', video_url: video }); }
-  catch (e) { out.storyError = String(e.message || e).slice(0, 200); }
-  if (ch.page && !process.argv.includes('--no-page')) {
-    try { out.page = await postPage(it, ch.page); }
-    catch (e) { out.pageError = String(e.message || e).slice(0, 200); }
-  }
-  return out;
+// A reel, a story and the page video from the same public file. Our page tokens never expire
+// (system user ai-poster, Business settings, It Solution).
+function post(it, ch, now) {
+  return social.postAll(ch, BASE + it.file, { caption: it.ig || '', posterUrl: it.poster ? BASE + it.poster : '', noPage: process.argv.includes('--no-page') });
 }
 
 (async function () {
