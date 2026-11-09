@@ -16723,8 +16723,8 @@ function vidTabs(){
  var plN=(VQ0.pl||[]).filter(function(x){return !x.posted&&!x.approved;}).length;
  var aiN=(VQ0.ai||[]).filter(function(x){return !x.posted;}).length;
  // 9.11, Itzik: carousels for his page, all topics, in the reels tile. One that has not gone up blinks softly (updblink); when it goes up, posted:true takes it off.
- var CAR=[{id:'life',t:'סיפור החיים',n:11,posted:false},{id:'personal',t:'הסיפור האישי',n:12,posted:false},{id:'lecture',t:'ההרצאה',n:8,posted:false}].filter(function(c){return !c.posted;});
- var carL=[];CAR.forEach(function(c){var pad=function(i){return (i<10?'0':'')+i;};carL.push({h:'🎠 קרוסלה לאבא איציק: '+c.t+' ('+c.n+' שקפים)'});carL.push({k:'car',c:c.id,n:c.n,t:'🎠 לפתיחת הקרוסלה, שקף אחרי שקף ('+c.n+')',pulse:1});carL.push({k:'reel',it:{n:'כיתוב',t:'הכיתוב לפוסט',r:'carousel-'+c.id+'-caption.txt',pulse:1}});});
+ var CAR=[{id:'lifea',t:'סיפור חיי א',n:11,posted:false},{id:'life',t:'סיפור חיי ב',n:11,posted:false},{id:'personal',t:'הסיפור האישי',n:12,posted:false},{id:'lecture',t:'ההרצאה',n:8,posted:false}].filter(function(c){return !c.posted;});
+ var carL=[];CAR.forEach(function(c,ci){var pad=function(i){return (i<10?'0':'')+i;};carL.push({h:'🎠 קרוסלה '+(ci+1)+' · '+c.t+' ('+c.n+' שקפים)'});carL.push({k:'car',c:c.id,n:c.n,nm:'קרוסלה '+(ci+1)+' · '+c.t,t:'🎠 לפתיחת הקרוסלה, שקף אחרי שקף',pulse:1});carL.push({k:'reel',it:{n:'כיתוב',t:'הכיתוב לפוסט',r:'carousel-'+c.id+'-caption.txt',pulse:1}});});
  return [
   {id:'st',l:'📲 סטטוס'+(stN?' ('+stN+')':''),h:'סטטוס וואטסאפ: מה עולה היום ומה הבא בתור. לחיצה פותחת את הסרטון והטקסט, 3 נגיעות',L:vqRows('st').concat([{h:'📂 הדף המלא'},{k:'go',t:'📲 פתיחת כל הסטטוסים המוכנים',u:'status/index.html'}])},
   {id:'ads',l:'📣 קמפיין',h:'הממומן, וסרטוני המוניטור לסטורי',L:TOM_ITEMS.map(function(it){return it.h?{h:it.h}:{k:'tom',it:it};})},
@@ -16793,7 +16793,7 @@ function vidSheet(tab){
   var x=cur.L[+k];if(k===''||!x)return;
   var it=x.it;
   if(it&&it.nw)vidMark('it:'+it.n,it.nw);
-  if(x.k==='car')return carView(x.c,x.n);
+  if(x.k==='car')return carView(x.c,x.n,x.nm);
   if(x.k==='go')return vidGo(x.u);
   if(x.k==='q')return vidGo(x.u,x.n);
   if(x.k==='fut'){window.VID_BACK=1;return futText(it);}
@@ -16806,11 +16806,11 @@ function vidSheet(tab){
  if(cur.upd)vidMark('tab:'+cur.id,cur.upd);
 }
 on('gVideos',function(){vidSheet();});
-function carView(id,n){
+function carView(id,n,nm){
  var P=function(i){return (i<10?'0':'')+i;};
  var ov=document.createElement('div');ov.className='carv';
  var sl='';for(var i=1;i<=n;i++)sl+='<div class="carv-s"><div class="empty">טוען</div></div>';
- ov.innerHTML='<div class="carv-top"><button type="button" class="carv-x" aria-label="סגירה">✕</button><b class="carv-n">1 / '+n+'</b></div><div class="carv-track">'+sl+'</div><div class="carv-bot"><button type="button" class="carv-save">שמירה לגלריה</button><button type="button" class="carv-all">כל השקפים</button><button type="button" class="carv-cap">הכיתוב</button></div>';
+ ov.innerHTML='<div class="carv-top"><button type="button" class="carv-x" aria-label="סגירה">✕</button><b class="carv-n">'+(nm?nm+' · ':'')+'1 / '+n+'</b></div><div class="carv-track">'+sl+'</div><div class="carv-bot"><button type="button" class="carv-save">שמירה לגלריה</button><button type="button" class="carv-all">כל השקפים</button><button type="button" class="carv-cap">הכיתוב</button></div>';
  document.body.appendChild(ov);
  var track=ov.querySelector('.carv-track'),cnt=ov.querySelector('.carv-n'),urls=[],files=[],cur=1;
  (function load(i){
@@ -16823,7 +16823,7 @@ function carView(id,n){
    cell.innerHTML='<img src="'+urls[i]+'" alt="">';load(i+1);
   }).catch(function(){cell.innerHTML='<div class="empty">לא נפתח</div>';load(i+1);});
  })(1);
- track.addEventListener('scroll',function(){var w=track.clientWidth||1;cur=Math.min(n,Math.max(1,Math.round(track.scrollLeft/w)+1));cnt.textContent=cur+' / '+n;});
+ track.addEventListener('scroll',function(){var w=track.clientWidth||1;cur=Math.min(n,Math.max(1,Math.round(track.scrollLeft/w)+1));cnt.textContent=(nm?nm+' · ':'')+cur+' / '+n;});
  function send(list){
   if(!list.length)return toast('השקפים עוד נטענים');
   if(navigator.canShare&&navigator.canShare({files:list}))navigator.share({files:list}).catch(function(){});
