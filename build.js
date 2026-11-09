@@ -1970,13 +1970,13 @@ button.abtn[disabled]{opacity:.55}
 .carv{position:fixed;inset:0;z-index:99980;background:#000;display:flex;flex-direction:column;direction:ltr}
 .carv-top{position:absolute;top:0;left:0;right:0;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;color:#fff;background:linear-gradient(to bottom,rgba(0,0,0,.6),rgba(0,0,0,0))}
 .carv-x{width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.18);color:#fff;font-size:22px}
-.carv-n{font-size:17px}
+.carv-n{font-size:16px;color:#fff;background:rgba(0,0,0,.55);padding:6px 14px;border-radius:16px}
 .carv-track{flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .carv-track::-webkit-scrollbar{display:none}
 .carv-s{flex:0 0 100%;scroll-snap-align:center;scroll-snap-stop:always;display:flex;align-items:center;justify-content:center;color:#fff}
 .carv-s img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}
 .carv-bot{display:flex;gap:8px;padding:10px 12px calc(12px + env(safe-area-inset-bottom));background:#000}
-.carv-bot button{flex:1;padding:12px 6px;border-radius:12px;border:0;background:#1f3a2f;color:#5fe3b0;font:inherit;font-weight:800;font-size:15px}
+.carv-bot button{flex:1 1 0;min-width:0;white-space:nowrap;padding:12px 4px;border-radius:12px;border:0;background:#1f3a2f;color:#5fe3b0;font:inherit;font-weight:800;font-size:13px}
 .fv-zoom.on{touch-action:none}
 .fv-pdf{width:100%;max-width:640px;display:flex;flex-direction:column;gap:10px}
 .fv-pdf canvas{background:#fff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.4)}
