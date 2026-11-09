@@ -13,7 +13,8 @@
     "song": "",
     "song_tt": "",
     "posted": false,
-    "postedAt": null
+    "postedAt": null,
+    "hold": true
   },
   {
     "id": "robot-en",
@@ -29,7 +30,8 @@
     "song": "",
     "song_tt": "",
     "posted": false,
-    "postedAt": null
+    "postedAt": null,
+    "hold": true
   },
   {
     "id": "agents-he",
