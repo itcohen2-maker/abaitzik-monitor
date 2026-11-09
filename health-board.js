@@ -24,6 +24,8 @@ const inst = require('./lib/instance.js');
 const STATUS = path.join(inst.dataPath, 'status');
 const OUT = path.join(STATUS, 'health-board.json');
 const TENANTS = path.join(inst.dataPath, 'tenants', 'tenants');
+// Monitors that are cancelled and kept on disk only; they do not appear on the board.
+const HIDDEN = ['shai'];
 // The watchdog writes every two minutes; ten minutes without it is a fault of its own.
 const STALE_MS = 10 * 60 * 1000;
 
@@ -64,6 +66,8 @@ function run(now, dry) {
   files.sort().forEach((f) => {
     const t = readJson(path.join(TENANTS, f), null);
     if (!t || !t.dir) return;
+    // 9.11.2026, Itzik: "תוציא מפה את שי בודק". Shai's monitor was cancelled on 7.11, so it is not on the board.
+    if (HIDDEN.includes(t.id)) return;
     const paused = readJson(path.join(t.dir, 'instance.json'), {}).paused === true;
     cards.push(card(t.id, t.title || t.id, t.dir, t.listener, now, paused));
   });
