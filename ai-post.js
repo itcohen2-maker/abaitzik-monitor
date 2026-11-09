@@ -27,8 +27,10 @@ const STATE = '/home/monitor/ai-post-state.json';
 const BASE = 'https://itcohen2-maker.github.io/abaitzik-monitor/ai/';
 const API = 'https://graph.facebook.com/v23.0/';
 const CHANNELS = {
-  he: { name: 'itsolution.ai', id: '17841456612749770', tokenFile: '/home/monitor/.ig-token-itsolution-ai' },
+  he: { name: 'itsolution.ai', id: '17841456612749770', tokenFile: '/home/monitor/.ig-token-itsolution-ai',
+        page: { id: '1341874565686928', name: 'ITsolution', tokenFile: '/home/monitor/.fb-page-token-itsolution' } },
   en: { name: 'itsolution.global', id: '17841452824199374', tokenFile: '/home/monitor/.ig-token-itsolution-global' }
+  // en page: add page: { id, name, tokenFile } when the English Facebook page is in the It Solution portfolio and assigned to ai-poster
 };
 const POST_HOUR = '20:00';
 const DRY = process.argv.includes('--dry');
@@ -79,6 +81,16 @@ function push(msg) {
   execFile(process.execPath, ['push.js', msg], { cwd: __dirname, timeout: 180000 }, function () {});
 }
 
+// A Facebook page video (Reel on the page) from the same public file. Token: never expiring page token
+// made from the system user ai-poster (Business settings, It Solution).
+async function postPage(it, pg) {
+  const tok = fs.readFileSync(pg.tokenFile, 'utf8').replace(/[^A-Za-z0-9]/g, '');
+  const body = new URLSearchParams({ file_url: BASE + it.file, description: it.ig || '', access_token: tok });
+  const r = await fetch(API + pg.id + '/videos', { method: 'POST', body });
+  const j = await r.json();
+  if (j.error) throw new Error(j.error.message);
+  return j.id;
+}
 async function post(it, ch, now) {
   const out = {};
   const video = BASE + it.file;
@@ -87,6 +99,10 @@ async function post(it, ch, now) {
   out.reel = await publishOne(ch, reel);
   try { out.story = await publishOne(ch, { media_type: 'STORIES', video_url: video }); }
   catch (e) { out.storyError = String(e.message || e).slice(0, 200); }
+  if (ch.page && !process.argv.includes('--no-page')) {
+    try { out.page = await postPage(it, ch.page); }
+    catch (e) { out.pageError = String(e.message || e).slice(0, 200); }
+  }
   return out;
 }
 
@@ -130,11 +146,11 @@ async function post(it, ch, now) {
     if (DRY) { console.log('would post', it.id, 'to', ch.name, BASE + it.file); continue; }
     try {
       const r = await post(it, ch, now);
-      it.posted = true; it.postedAt = new Date().toISOString(); it.auto = { reel: r.reel, story: r.story || null, storyError: r.storyError || null, channel: ch.name };
+      it.posted = true; it.postedAt = new Date().toISOString(); it.auto = { reel: r.reel, story: r.story || null, storyError: r.storyError || null, page: r.page || null, pageError: r.pageError || null, channel: ch.name };
       state[it.lang] = now.date;
       fs.writeFileSync(STATE, JSON.stringify(state, null, 1));
       save(q);
-      notify('ערוץ AI עלה', ch.name + ': ' + it.name + (r.story ? ' (ריל וסטורי)' : ' (ריל בלבד, הסטורי נכשל: ' + r.storyError + ')'));
+      notify('ערוץ AI עלה', ch.name + ': ' + it.name + (r.story ? ' (ריל וסטורי)' : ' (ריל בלבד, הסטורי נכשל: ' + r.storyError + ')') + (ch.page ? (r.page ? ', וגם בדף ' + ch.page.name : ', הדף נכשל: ' + r.pageError) : ''));
     } catch (e) {
       it.failed = String(e.message || e).slice(0, 200); it.failedAt = new Date().toISOString();
       state[it.lang] = now.date;
