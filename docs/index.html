@@ -2595,7 +2595,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-09T06:10:04.004Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-09T06:13:42.002Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4492,7 +4492,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='b52c31b625';
+var CODE_ID='1ccc71a289';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -13083,7 +13083,8 @@ function bizSheet(t0){
    return '<button type="button" class="yb '+cls+'" data-bz="'+a+'" data-sk="'+k+'">'+label+'<small style="display:block;font-weight:500;margin-top:3px">'+st+'</small></button>';
   }
   function planBoardHtml(){
-   var B=D.planBoard||[];if(!B.length)return '';
+   var B=(D.planBoard||[]).filter(function(r){return /אלון|שולמן/.test(String(r.title||''));}); // 9.11, Itzik: only Alon and Dr Shulman here
+   if(!B.length)return '';
    var h='<div class="bzSec">📦 החבילות החודשיות</div>';
    B.forEach(function(r){
     var dot=r.level==='full'?'🔴':r.level==='warn'?'🟠':r.plan?'🟢':'⚪';
