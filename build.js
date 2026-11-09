@@ -16705,7 +16705,7 @@ function vidTabs(){
  var plN=(VQ0.pl||[]).filter(function(x){return !x.posted&&!x.approved;}).length;
  var aiN=(VQ0.ai||[]).filter(function(x){return !x.posted;}).length;
  // 9.11, Itzik: carousels for his page, all topics, in the reels tile. One that has not gone up blinks softly (updblink); when it goes up, posted:true takes it off.
- var CAR=[{id:'personal',t:'הסיפור האישי',n:11,posted:false},{id:'lecture',t:'ההרצאה',n:8,posted:false}].filter(function(c){return !c.posted;});
+ var CAR=[{id:'personal',t:'הסיפור האישי',n:11,posted:false},{id:'lecture',t:'ההרצאה',n:7,posted:false}].filter(function(c){return !c.posted;});
  var carL=[];CAR.forEach(function(c){var pad=function(i){return (i<10?'0':'')+i;};carL.push({h:'🎠 קרוסלה לאבא איציק: '+c.t+' ('+c.n+' שקפים)'});carL.push({k:'reel',it:{n:'כיתוב',t:'הכיתוב לפוסט',r:'carousel-'+c.id+'-caption.txt',pulse:1}});for(var i=1;i<=c.n;i++)carL.push({k:'reel',it:{n:pad(i),t:'שקף '+i,r:'carousel-'+c.id+'-'+pad(i)+'.png',pulse:1}});});
  return [
   {id:'st',l:'📲 סטטוס'+(stN?' ('+stN+')':''),h:'סטטוס וואטסאפ: מה עולה היום ומה הבא בתור. לחיצה פותחת את הסרטון והטקסט, 3 נגיעות',L:vqRows('st').concat([{h:'📂 הדף המלא'},{k:'go',t:'📲 פתיחת כל הסטטוסים המוכנים',u:'status/index.html'}])},
