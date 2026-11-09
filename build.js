@@ -17499,6 +17499,9 @@ function bizSheet(t0){
      +'<div class="bzRow"><b>מה יש בטופס</b><small>חיבור לגוגל, לאאוטלוק ולפייסבוק, מספר לקמפיינים, העלאת דוח מעבדה ודף העבודה היומי, הרופאים הפרילנסרים ואיך מחושב התשלום, רשימת ספקים, ומיילים לתיקייה המשותפת בדרייב. כל קובץ שהוא מעלה מגיע אליך בהודעה.</small></div>'
      +L('yb1',c.setup+'/view','👀 לראות את הטופס כמו שהוא רואה')
      +(c.signedAt?L('',wa2,'💬 לשלוח לו את הטופס בוואטסאפ')+'<button type="button" class="yb" data-bz="ndacopy" data-u="'+c.setup+'">📋 להעתיק את הקישור לטופס</button>':'')
+     // 9.11, Itzik: "תשים סיסמה על הטופס ... תשלח לי למוניטור את הסיסמה לידו לשליחה בנפרד". Sent in a different message from the link.
+     +(c.setupPass?'<div class="bzRow"><b>🔑 סיסמת הטופס: <span dir="ltr" style="font-size:18px;letter-spacing:1px">'+esc(c.setupPass)+'</span></b><small>לשלוח בהודעה נפרדת מהקישור. אם הוא מעביר את הטופס הלאה, מגיעה אליך התראה על מכשיר נוסף.'+(c.setupDevs>1?' 🔔 עד עכשיו נפתח מ '+c.setupDevs+' מכשירים.':'')+'</small></div>'
+       +(c.signedAt?L('','https://wa.me/?text='+encodeURIComponent('הסיסמה לטופס: '+c.setupPass),'💬 לשלוח לו את הסיסמה בוואטסאפ, בנפרד')+'<button type="button" class="yb" data-bz="ndacopy" data-u="'+esc(c.setupPass)+'">📋 להעתיק את הסיסמה</button>':''):'')
      +'</details>';
    }
    // 8.11: his own files (the quote), from the def. Each opens in the monitor's file viewer.

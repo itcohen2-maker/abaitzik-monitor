@@ -735,18 +735,31 @@ const server = http.createServer(function (q, s) {
   // 5.11: "Connect with Google / Facebook" on the setup page (lib/oauth.js, setup.js).
   const om = u.pathname.match(/^\/oauth\/(google|meta|microsoft|fireflies|linkedin|tiktok)\/(start|callback)\/?$/);
   if (om && q.method === "GET") {
+    if (om[2] === "start" && !require("./setup.js").gateOk(u.searchParams.get("t"), q)) { s.writeHead(403, { "Content-Type": "text/plain; charset=utf-8" }); return s.end("צריך להיכנס עם הסיסמה של הטופס"); }
     if (om[2] === "start") require("./setup.js").oauthStart(om[1], u.searchParams, s);
     else require("./setup.js").oauthCallback(om[1], u.searchParams, s, formNotify).catch(function (e) { log("oauth: " + e.message); try { s.writeHead(500); s.end(); } catch (x) {} });
     return;
   }
   // 1.11: client setup page (setup.js), /s/<token> and /api/setup.
   const sm = u.pathname.match(/^\/s\/([a-f0-9]{16,40})(\/view)?\/?$/);
-  if (sm && q.method === 'GET') { if (sm[2]) require('./owner-mark.js').setCookie(s); if (sm[2]) require('./form-view.js').serve('./setup.js', sm[1], s); else require('./setup.js').servePage(sm[1], s); return; }
+  if (sm && q.method === 'GET') { if (sm[2]) require('./owner-mark.js').setCookie(s); if (sm[2]) require('./form-view.js').serve('./setup.js', sm[1], s); else require('./setup.js').servePage(sm[1], s, q); return; }
+  // 9.11: the password box of a protected setup page (setup.js handleGate).
+  if (u.pathname === '/api/setup-gate') {
+    if (q.method !== 'POST') { s.writeHead(405); return s.end(); }
+    readBody(q, 2000).then(function (raw) {
+      let b; try { b = JSON.parse(raw.toString('utf8')); } catch (e) { s.writeHead(400); return s.end('{}'); }
+      const r = require('./setup.js').handleGate(b, q, formNotify);
+      const h = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }; if (r.cookie) h['Set-Cookie'] = r.cookie;
+      s.writeHead(r.status, h); s.end(JSON.stringify(r.body));
+    }).catch(function () { try { s.writeHead(400); s.end('{}'); } catch (e) {} });
+    return;
+  }
   // 8.11: files from an upload card of a setup page (setup.js handleFile), up to 20MB as base64.
   if (u.pathname === '/api/setup-file') {
     if (q.method !== 'POST') { s.writeHead(405); return s.end(); }
     readBody(q, 28 * 1024 * 1024).then(function (raw) {
       let b; try { b = JSON.parse(raw.toString('utf8')); } catch (e) { s.writeHead(400); return s.end('{}'); }
+      if (!require('./setup.js').gateOk(b && b.t, q)) { s.writeHead(403); return s.end('{}'); }
       const r = require('./setup.js').handleFile(b, formNotify);
       s.writeHead(r.status, { 'Content-Type': 'application/json' }); s.end(JSON.stringify(r.body));
     }).catch(function () { try { s.writeHead(413); s.end('{}'); } catch (e) {} });
@@ -756,6 +769,7 @@ const server = http.createServer(function (q, s) {
     if (q.method !== 'POST') { s.writeHead(405); return s.end(); }
     readBody(q, 20000).then(function (raw) {
       let b; try { b = JSON.parse(raw.toString('utf8')); } catch (e) { s.writeHead(400); return s.end('{}'); }
+      if (!require('./setup.js').gateOk(b && b.t, q)) { s.writeHead(403); return s.end('{}'); }
       return Promise.resolve(require('./setup.js').handlePost(b, formNotify, require('./owner-mark.js').meta(q))).then(function (r) {
         s.writeHead(r.status, { 'Content-Type': 'application/json' }); s.end(JSON.stringify(r.body));
       });

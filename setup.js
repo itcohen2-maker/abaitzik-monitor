@@ -27,6 +27,7 @@
 */
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const DIR = process.env.SETUP_DIR || path.join(__dirname, 'data', 'setup');
 /*
   5.11: oauth?: { provider: "google" | "meta", scopes?: ["gmail","calendar",...], button? }
@@ -228,10 +229,79 @@ function page(tok, d, s) {
     + '</body></html>';
 }
 
+/*
+  9.11.2026, Itzik, for Dr. Shulman's form: "תשים סיסמה על הטופס ... אם הוא מעביר אותו למישהו אני רוצה לדעת".
+  A form has a password when data/setup/<token>.pass exists (one line). Without the cookie the page is only the
+  password box; /api/setup, /api/setup-file and the connect buttons refuse too. The cookie is an HMAC keyed by the
+  password, so changing the password logs everyone out. Itzik's own mark cookie (owner-mark.js) passes.
+  Every open or password entry from a device not seen before tells Itzik's monitor ("passed on?").
+  Five wrong passwords lock the form for 10 minutes and tell him once.
+*/
+function gatePass(tok) { try { return fs.readFileSync(path.join(DIR, tok + '.pass'), 'utf8').trim(); } catch (e) { return ''; } }
+function gateCookie(tok) { return crypto.createHmac('sha256', gatePass(tok)).update('sg:' + tok).digest('hex').slice(0, 40); }
+function gateName(tok) { return 'sg_' + tok.slice(0, 8); }
+function gateOk(tok, req) {
+  tok = safeTok(tok); if (!tok || !gatePass(tok)) return true;
+  if (!req) return true;
+  if (require('./owner-mark.js').meta(req).owner) return true;
+  const m = String(req.headers.cookie || '').match(new RegExp('(?:^|;\\s*)' + gateName(tok) + '=([a-f0-9]+)'));
+  return !!(m && m[1] === gateCookie(tok));
+}
+// A device not seen before on this form: tell Itzik. The first device is the baseline.
+function trackDevice(tok, d, s, meta, notify, why) {
+  const key = (meta && meta.dev) || '?';
+  s.devs = s.devs || [];
+  if (s.devs.indexOf(key) > -1) return false;
+  s.devs.push(key);
+  if (s.devs.length > 1) notify('דף הקמה', '🔔 ' + d.client + ': הטופס ' + why + ' ממכשיר נוסף (' + key + '), מכשיר מספר ' + s.devs.length + '. ייתכן שהקישור הועבר למישהו אחר.');
+  return true;
+}
+const TRIES = {};
+function handleGate(b, req, notify) {
+  const tok = safeTok(b && b.t); const d = tok && def(tok);
+  const pw = tok && gatePass(tok);
+  if (!d || !pw) return { status: 404, body: { error: 'setup' } };
+  const meta = require('./owner-mark.js').meta(req);
+  const t = TRIES[tok] = TRIES[tok] || { n: 0, until: 0, told: false };
+  const now = Date.now();
+  if (t.until > now) return { status: 429, body: { error: 'locked' } };
+  const given = String((b && b.p) || '').trim().toLowerCase();
+  const ok = given.length === pw.length && crypto.timingSafeEqual(Buffer.from(given), Buffer.from(pw.toLowerCase()));
+  const s = state(tok);
+  if (!ok) {
+    t.n++;
+    if (t.n >= 5) { t.until = now + 10 * 60 * 1000; t.n = 0; notify('דף הקמה', '⚠️ ניסו 5 סיסמאות שגויות בטופס של ' + d.client + ' (' + meta.dev + '). הטופס ננעל ל 10 דקות.'); }
+    return { status: 403, body: { error: 'pass' } };
+  }
+  t.n = 0;
+  trackDevice(tok, d, s, meta, notify, 'נפתח עם הסיסמה');
+  s.passAt = new Date().toISOString(); s.passes = (s.passes || 0) + 1; saveState(tok, s);
+  return { status: 200, body: { ok: true }, cookie: gateName(tok) + '=' + gateCookie(tok) + '; Max-Age=2592000; Path=/; Secure; HttpOnly; SameSite=Lax' };
+}
+function gatePage(tok, d) {
+  return '<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+    + '<meta name="robots" content="noindex,nofollow"><title>' + esc(d.title) + ' | IT Solution</title>'
+    + '<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;800&display=swap" rel="stylesheet"><style>'
+    + '*{box-sizing:border-box}body{margin:0;background:#f4f7fb;color:#0f1b2a;font-family:Heebo,sans-serif;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:16px}'
+    + '.b{background:#fff;border-radius:18px;padding:26px 22px;max-width:380px;width:100%;box-shadow:0 8px 30px #0f1b2a18;text-align:center}'
+    + 'h1{font-size:20px;margin:0 0 8px}p{margin:0 0 16px;color:#44556a;font-size:15px;line-height:1.5}'
+    + 'input{width:100%;font:700 20px Heebo;text-align:center;letter-spacing:2px;padding:12px;border:2px solid #cbd5e1;border-radius:12px;direction:ltr}'
+    + 'button{margin-top:12px;width:100%;border:0;border-radius:14px;background:#06b6d4;color:#0f1b2a;font:800 17px Heebo;padding:14px;cursor:pointer;min-height:48px}'
+    + '#e{color:#b91c1c;min-height:22px;margin-top:10px;font-size:14px}</style></head><body><div class="b">'
+    + '<h1>' + esc(d.title) + '</h1><p>הטופס מוגן בסיסמה. הסיסמה נשלחה אליך בנפרד מהקישור.</p>'
+    + '<input id="p" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="סיסמה"><button id="g">כניסה</button><div id="e"></div></div>'
+    + '<script>(function(){var T=' + JSON.stringify(tok) + ',p=document.getElementById("p"),e=document.getElementById("e"),g=document.getElementById("g");'
+    + 'function go(){g.disabled=true;e.textContent="";fetch("/api/setup-gate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({t:T,p:p.value})})'
+    + '.then(function(r){if(r.ok){location.reload();return;}g.disabled=false;e.textContent=r.status===429?"נסיתם יותר מדי פעמים. אפשר שוב בעוד 10 דקות.":"הסיסמה לא נכונה.";})'
+    + '.catch(function(){g.disabled=false;e.textContent="אין חיבור כרגע. נסו שוב בעוד רגע.";});}'
+    + 'g.onclick=go;p.addEventListener("keydown",function(k){if(k.key==="Enter")go();});})();</script></body></html>';
+}
+
 // GET /s/<token>
-function servePage(tok, res) {
+function servePage(tok, res, req) {
   tok = safeTok(tok); const d = tok && def(tok);
   if (!d) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('הדף לא נמצא'); }
+  if (req && !gateOk(tok, req)) { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex, nofollow' }); return res.end(gatePage(tok, d)); }
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex, nofollow' });
   const s = state(tok); s._tok = tok;
   res.end(page(tok, d, s));
@@ -248,6 +318,7 @@ function handlePost(b, notify, meta) {
     if (require('./owner-mark.js').onOpen(s, meta, now, () => saveState(tok, s))) return { status: 200, body: { ok: true } };
     // 5.11 (iron rule, analytics): every open counts, not only the first.
     s.opens = (s.opens || 0) + 1; s.lastOpenAt = now;
+    trackDevice(tok, d, s, meta, notify, 'נפתח');
     if (s.openedAt) saveState(tok, s);
     if (!s.openedAt) { s.openedAt = now; saveState(tok, s); notify(K, d.client + ' פתח את דף ההקמה עכשיו.'); }
     return { status: 200, body: { ok: true } };
@@ -373,4 +444,4 @@ async function oauthCallback(p, q, res, notify) {
   res.writeHead(302, { Location: '/s/' + tok + (r.v ? '/view' : '') + '#' + st.id, 'Cache-Control': 'no-store' }); res.end();
 }
 
-module.exports = { servePage, handlePost, handleFile, sweep, summary, oauthStart, oauthCallback, DIR };
+module.exports = { servePage, handlePost, handleFile, sweep, summary, oauthStart, oauthCallback, gateOk, handleGate, DIR };

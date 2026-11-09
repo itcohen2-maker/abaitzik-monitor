@@ -252,6 +252,8 @@ function handlePost(b, notify, ip, ua, done) {
   });
 }
 
+function setupPass(tok) { try { return require('fs').readFileSync(require('path').join(require('./setup.js').DIR, tok + '.pass'), 'utf8').trim(); } catch (e) { return ''; } }
+function setupDevs(tok) { try { return (JSON.parse(require('fs').readFileSync(require('path').join(require('./setup.js').DIR, tok + '.json'), 'utf8')).devs || []).length; } catch (e) { return 0; } }
 // For the monitor (build.js payload.agr): one entry per client, and the owner link.
 function state() {
   const m = mainDef(); if (!m.ownerTok) return null;
@@ -264,6 +266,8 @@ function state() {
         // 8.11: the client's setup page (connections and files), sent only after he signed.
         files: Array.isArray(d.files) ? d.files : [], sentAt: d.sentAt || '',
         setup: d.setupTok ? 'https://form.it-solution.co.il/s/' + d.setupTok : '', monitor: d.monitorUrl || '',
+        // 9.11: the setup form's password (data/setup/<token>.pass), shown beside the link to be sent separately, and how many devices opened it.
+        setupPass: d.setupTok ? setupPass(d.setupTok) : '', setupDevs: d.setupTok ? setupDevs(d.setupTok) : 0,
         opens: s.opens || 0, openedAt: s.openedAt || '', signedAt: s.signedAt || '', file: s.signedAt ? d.out : '', signer: s.f ? s.f.name : '',
         phone: s.f && s.f.phone ? s.f.phone : '', signedUrl: s.signedAt ? BASE + t + '/signed' : '' };
     }),

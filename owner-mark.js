@@ -11,12 +11,14 @@ function meta(req) {
   const ua = String(req.headers['user-agent'] || '');
   const dev = /iPhone/.test(ua) ? 'iPhone' : /iPad/.test(ua) ? 'iPad' : /Android/.test(ua) ? 'Android' : /Windows/.test(ua) ? 'Windows' : /Mac OS/.test(ua) ? 'Mac' : 'אחר';
   const br = /CriOS|Chrome/.test(ua) ? 'Chrome' : /FxiOS|Firefox/.test(ua) ? 'Firefox' : /WhatsApp|FBAN|FBAV|Instagram/.test(ua) ? 'בתוך אפליקציה' : /Safari/.test(ua) ? 'Safari' : '';
-  return { owner: !!(m && m[1] === mark()), dev: (dev + ' ' + br).trim() };
+  // 9.11: a short hash of the address, to count distinct places a form was opened from (never the address itself).
+  const ip = String(req.headers['x-forwarded-for'] || (req.socket && req.socket.remoteAddress) || '').split(',')[0].trim();
+  return { owner: !!(m && m[1] === mark()), dev: (dev + ' ' + br).trim(), ip: crypto.createHash('sha1').update(ip).digest('hex').slice(0, 6) };
 }
 // Called at the top of the open branch. Returns true when the open was Itzik's (already saved, not counted).
 function onOpen(s, m, now, save) {
   if (m && m.owner) { s.ownerOpens = (s.ownerOpens || 0) + 1; s.ownerLastAt = now; save(); return true; }
-  s.log = (s.log || []).slice(-49); s.log.push({ at: now, dev: (m && m.dev) || '' });
+  s.log = (s.log || []).slice(-49); s.log.push({ at: now, dev: (m && m.dev) || '', ip: (m && m.ip) || '' });
   return false;
 }
 module.exports = { setCookie, meta, onOpen };
