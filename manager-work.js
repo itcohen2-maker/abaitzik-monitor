@@ -91,11 +91,31 @@ function parse(out) {
   return { status, line: noDash(o.line || ''), why: noDash(o.why || '') };
 }
 
+// 9.11.2026, Itzik: "עברת על המיילים? ותכניס את זה ככלל למנהל כל יום". Every round the manager goes over
+// the last day of mail (only through mail-read.js, a reader with no tools) and writes one line on the card:
+// what came in, and what is left for Itzik. At most once per round, never sends or answers anything.
+const MAIL_Q = 'עבור על כל המיילים מהיממה האחרונה, כולל לקוחות, קהילות, תמיכה של שירותים (ElevenLabs, Meta, ManyChat, טיקטוק, גוגל), קבלות וחיובים, והתראות אבטחה. ' +
+  'שורה ראשונה בלבד: "דחוף: כן" אם יש מייל שמחכה לתשובה או לפעולה שלו או חיוב לא רגיל או התראת אבטחה אמיתית, אחרת "דחוף: לא". ' +
+  'אחר כך עד שש שורות קצרות: מה הגיע ומה מחכה לו, כל שורה עם שולח ותאריך. בלי מקפים.';
+
+function mailSweep(now, results) {
+  const f = path.join(WORK_DIR, dayKey(now).replace(/-/g, '') + '.json');
+  let prev = []; try { prev = JSON.parse(fs.readFileSync(f, 'utf8')).items || []; } catch (e) {}
+  if (prev.some(x => x.kind === 'mailsweep' && now - Date.parse(x.when) < 4 * 3600 * 1000)) return; // once per round
+  let out = '';
+  try { out = execFileSync('node', ['mail-read.js', MAIL_Q, '--days', '1'], { cwd: __dirname, encoding: 'utf8', timeout: 6 * 60 * 1000, stdio: ['ignore', 'pipe', 'pipe'] }).trim(); }
+  catch (e) { results.push({ kind: 'mailsweep', text: 'סריקת מיילים', status: 'failed', line: 'הקריאה נכשלה: ' + noDash(String(e.message).slice(0, 80)) }); return; }
+  const urgent = /דחוף\s*:\s*כן/.test(out.split('\n')[0] || '');
+  const body = noDash(out.split('\n').slice(1).filter(l => l.trim()).join(' · '));
+  results.push({ kind: 'mailsweep', text: 'סריקת מיילים', status: urgent ? 'needsItzik' : 'mail', line: body.slice(0, 600) || 'אין מיילים חדשים' });
+}
+
 async function main() {
   const now = Date.now();
   const list = candidates(now);
   if (DRY) { console.log(list.map(r => r.due.slice(0, 10) + '  ' + r.text.slice(0, 90)).join('\n') || '(nothing to try)'); return; }
   const results = [];
+  if (!process.argv.includes('--no-mail')) mailSweep(now, results);
   for (const r of list) {
     const file = path.join(REM_DIR, r._file);
     const doc = JSON.parse(fs.readFileSync(file, 'utf8'));

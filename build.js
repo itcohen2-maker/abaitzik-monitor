@@ -17444,7 +17444,8 @@ function bizSheet(t0){
   }
   // 4.11, Itzik: the monthly packages, one row per customer (lib/plan-io.js board). Dollars are list price.
   function planBoardHtml(){
-   var B=D.planBoard||[];if(!B.length)return '';
+   var B=(D.planBoard||[]).filter(function(r){return /אלון|שולמן/.test(String(r.title||''));}); // 9.11, Itzik: only Alon and Dr Shulman here
+   if(!B.length)return '';
    var h='<div class="bzSec">📦 החבילות החודשיות</div>';
    B.forEach(function(r){
     var dot=r.level==='full'?'🔴':r.level==='warn'?'🟠':r.plan?'🟢':'⚪';
