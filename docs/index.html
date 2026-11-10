@@ -2531,12 +2531,16 @@ body #talkCard::before{content:"במה אפשר לעזור?";display:block;order
  -webkit-background-clip:text;background-clip:text;color:transparent}
 body #talkCard .tkHead,body #talkCard .firsthint{display:none!important}
 body #talkCard .vtxt{display:none!important}
-body #talkCard .quickwrite .mic{order:3;align-self:flex-end;margin:0 2px 0 0;width:52px;height:52px;flex:0 0 52px}
+body #talkCard .quickwrite .mic{order:3;align-self:flex-end;margin:0 2px 0 0!important;width:60px!important;height:60px!important;
+ min-height:60px!important;flex:0 0 60px!important;padding:0!important;border:0!important;border-radius:50%!important;display:grid!important;place-items:center;
+ background:conic-gradient(from 0deg,var(--blue),var(--red),var(--yellow),var(--green),var(--blue))!important;
+ box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 28%,transparent)!important}
+body #talkCard .quickwrite .mic svg{width:28px;height:28px}
 body #talkCard .quickwrite{order:1;gap:10px;align-items:flex-end;padding:10px 12px 10px 10px;margin:0;border-radius:30px;
  background:var(--surface)!important;border:1px solid var(--line)!important;box-shadow:0 8px 28px rgba(0,0,0,.14)!important}
 body #talkCard .quickwrite textarea{min-height:112px;padding:10px 10px;font-size:17px;background:transparent!important;
  border:0!important;outline:none!important;box-shadow:none!important;resize:none}
-body #talkCard .quickwrite button{min-height:46px;border-radius:23px;padding:0 22px;box-shadow:none}
+body #talkCard .quickwrite button:not(.mic){min-height:46px;border-radius:23px;padding:0 22px;box-shadow:none}
 body #talkCard .ways{order:3;justify-content:center;gap:8px;margin-top:14px}
 body #talkCard .way{min-height:40px;padding:0 16px;border-radius:999px;background:transparent!important;
  border:1px solid var(--line)!important;box-shadow:none!important;color:var(--dim)}
@@ -2697,7 +2701,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-10T18:14:36.851Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-10T18:18:09.516Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4611,7 +4615,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='a7a878988a';
+var CODE_ID='084338e4a5';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
