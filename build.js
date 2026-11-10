@@ -18256,8 +18256,11 @@ function notesSend(keep){
  try{last=localStorage.getItem('notesSyncSig')||'';}catch(e){}
  if(sig===last)return;
  body.at=new Date().toISOString();body.code=sendCode();
- fetch('https://ntfy.sh/'+NTFYIN()+'?filename=notes-sync.json',
-  {method:'PUT',headers:{Title:'notes-sync'},body:JSON.stringify(body),keepalive:!!keep})
+ // 10.11.2026: the notes are personal, so with sealing on they reach ntfy sealed like a message.
+ var notesPlain=JSON.stringify(body);
+ (SEALING()?gseal(notesPlain):Promise.resolve(notesPlain))
+  .then(function(nb){return fetch('https://ntfy.sh/'+NTFYIN()+'?filename=notes-sync.json',
+   {method:'PUT',headers:{Title:'notes-sync'},body:nb,keepalive:!!keep});})
   .then(function(r){if(r.ok)try{localStorage.setItem('notesSyncSig',sig);}catch(e){}},function(){});
 }
 document.addEventListener('visibilitychange',function(){if(document.hidden&&nsTimer)notesSend(true);});

@@ -1144,7 +1144,8 @@ async function recordNotesSync(m) {
   try { const res = await fetch(m.attachment.url); raw = res.ok ? await res.text() : ''; }
   catch (e) { raw = ''; }
   let got;
-  try { got = JSON.parse(raw); } catch (e) { got = null; }
+  // 10.11.2026: a sealed copy ("enc1:") is opened first; a plain one passes as before.
+  try { got = JSON.parse(gateSeal.openMessage(raw)); } catch (e) { got = null; }
   // The topic is public, so the copy is only taken with his code inside it.
   if (!got || !ownerCodeOk('קוד ' + String(got.code || ''))) { say('!! סנכרון פתקים בלי קוד, לא נשמר'); return; }
   delete got.code;
