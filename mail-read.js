@@ -21,6 +21,8 @@ const path = require('path');
 const MAX = 60000; // characters of mail handed to the reader
 
 function search(args) {
+  // 10.11.2026: a second mailbox (hagitit7) through the Gmail API, read only: --account <name>
+  if (args.includes('--account')) return execFileSync(process.execPath, [path.join(__dirname, 'tools/gmail-api.js'), ...args], { encoding: 'utf8', timeout: 180000 });
   return execFileSync('/usr/bin/python3', ['-I', path.join(__dirname, 'tools/mail-search.py'), ...args],
     { encoding: 'utf8', timeout: 180000 });
 }

@@ -8,7 +8,10 @@
       "Bash(/usr/bin/python3 tools/mail-search.py:*)",
       "Bash(/usr/bin/python3 -I tools/mail-search.py:*)",
       "Bash(cat /etc/monitor-mail.env:*)",
-      "Read(//etc/monitor-mail.env)"
+      "Read(//etc/monitor-mail.env)",
+      "Bash(node tools/gmail-api.js:*)",
+      "Bash(node /home/monitor/abaitzik-monitor/tools/gmail-api.js:*)",
+      "Read(//home/monitor/abaitzik-monitor/data/gmail-accounts.json)"
     ]
   }
 }
