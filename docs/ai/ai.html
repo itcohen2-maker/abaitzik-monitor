@@ -44,6 +44,7 @@
   .cp{font-size:15px;min-height:48px}
   .song{font-size:14px;color:var(--dim)}
   .cmt{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .cmt button{font:inherit;font-size:20px;font-weight:700;background:rgba(255,255,255,.16);color:var(--ink);border:2px solid var(--line);border-radius:14px;padding:18px 14px;min-height:64px;cursor:pointer;width:100%}
   .cmt textarea{width:100%;box-sizing:border-box;min-height:64px;padding:10px 12px;border-radius:12px;border:1px solid var(--dim);background:transparent;color:inherit;font:500 16px Heebo,sans-serif;direction:rtl;resize:vertical}
   .cap{white-space:pre-wrap;font-size:16px;line-height:1.55;padding:12px;border-radius:10px;background:rgba(127,127,127,.12);direction:auto}
   .empty{border:1px dashed var(--line);border-radius:14px;padding:14px;color:var(--dim);max-width:520px;margin:0 auto}
@@ -79,6 +80,28 @@
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(ok,fallback);}else fallback();
   function fallback(){var a=document.createElement('textarea');a.value=text;a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.select();try{document.execCommand('copy');ok();}catch(e){toast('לא הצלחתי להעתיק');}a.remove();}
  }
+ // 10.11.2026, Itzik: next to every video, what went up and when (day and hour), and when each one is planned. One a day per language at 20:00 Israel, never on Saturday (ai-post.js); holidays are skipped there too and not known here.
+ var JT={timeZone:'Asia/Jerusalem'};
+ function ymd(d){return new Date(d).toLocaleDateString('en-CA',JT);}
+ function hhmm(d){return new Date(d).toLocaleTimeString('he-IL',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hour12:false});}
+ function nice(y){var p=y.split('-'),dt=new Date(Date.UTC(+p[0],+p[1]-1,+p[2],12));return dt.toLocaleDateString('he-IL',{timeZone:'UTC',weekday:'long',day:'numeric',month:'numeric'});}
+ function addd(y,n){var p=y.split('-'),dt=new Date(Date.UTC(+p[0],+p[1]-1,+p[2]+n,12));return dt.toISOString().slice(0,10);}
+ function dow(y){var p=y.split('-');return new Date(Date.UTC(+p[0],+p[1]-1,+p[2],12)).getUTCDay();}
+ function plan(q){
+  var now=Date.now(),today=ymd(now),hm=hhmm(now),out={};
+  ['he','en'].forEach(function(lg){
+   var mine=q.filter(function(x){return (x.lang==='en'?'en':'he')===lg;}).sort(function(a,b){return (a.order||0)-(b.order||0);});
+   var postedToday=mine.some(function(x){return x.posted&&x.postedAt&&ymd(x.postedAt)===today;});
+   var d=(!postedToday&&hm<'20:00')?today:addd(today,1);
+   mine.forEach(function(x){
+    if(x.posted||x.hold)return;
+    while(dow(d)===6)d=addd(d,1);
+    out[x.id]=d;d=addd(d,1);
+   });
+  });
+  return out;
+ }
+ var PLAN={};
  function day(iso){return new Date(iso||0).toLocaleDateString('he-IL',{timeZone:'Asia/Jerusalem',day:'numeric',month:'numeric'});}
  function card(it){
   var posted=!!it.posted;
@@ -86,7 +109,7 @@
    +'<div class="media"><video src="'+esc(it.file)+'" poster="'+esc(it.poster)+'" controls playsinline preload="none"></video></div>'
    +'<div class="meta">'
    +'<span class="nm">'+esc(it.name)+'</span>'
-   +'<span class="st '+(posted?'ok':'wait')+'">'+(posted?'✅ עלה '+day(it.postedAt):(it.hold?'👀 לצפייה, ממתין לאישור שלך, לא יעלה לבד':(it.approvedAt?'✅ אושר, יעלה ב 20:00 לפי הסדר בתור':'⏳ עוד לא עלה')))+'</span>'
+   +'<span class="st '+(posted?'ok':'wait')+'">'+(posted?'✅ עלה ב'+nice(ymd(it.postedAt))+' בשעה '+hhmm(it.postedAt):(it.hold?'👀 ממתין לאישור שלך, לא יעלה לבד. אחרי האישור: יתוכנן לפי הסדר בתור':(PLAN[it.id]?'📅 מתוכנן לעלות: '+nice(PLAN[it.id])+' ב 20:00'+(it.approvedAt?' (אושר '+nice(ymd(it.approvedAt))+' '+hhmm(it.approvedAt)+')':''):'⏳ עוד לא עלה')))+'</span>'
    +(it.note?'<div class="st wait" style="white-space:normal">'+esc(it.note)+'</div>':'')
    +'<div class="cap">'+esc(it.ig||'')+'</div>'
    +'<div class="row">'
@@ -116,6 +139,7 @@
  }
  function draw(q){
   q.sort(function(a,b){return (a.order||0)-(b.order||0);});
+  PLAN=plan(q);
   var he=q.filter(function(x){return x.lang!=='en';}),en=q.filter(function(x){return x.lang==='en';});
   document.getElementById('m').innerHTML=section('🇮🇱 עברית',he)+section('🇺🇸 אנגלית',en)+'<p class="note">הסימון נשמר בשרת ומתעדכן כאן תוך דקה או שתיים.</p>';
   document.addEventListener('play',function(e){document.querySelectorAll('video').forEach(function(v){if(v!==e.target)v.pause();});},true);
