@@ -2625,7 +2625,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-10T08:56:47.807Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-10T08:58:46.208Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4541,7 +4541,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='588f116810';
+var CODE_ID='112ea1c948';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11124,7 +11124,7 @@ function campSheet(){
   +kinds.map(function(k){return '<button type="button" class="yb" data-k="'+k+'">'+k+'</button>';}).join('')+'</div>'
   +'<div id="cpSounds" hidden></div>'
   +'<textarea id="cpText" rows="4" style="width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif" placeholder="מה חשוב להגיד? מבצע, מי הקהל, כתובת, מחיר. אם משהו חסר, אשאל."></textarea>'
-  +'<small>מוזיקה: כברירת מחדל בלי מוזיקה בתוך הסרטון. את המוזיקה אפשר להוסיף בזמן הפרסום מאוסף הצלילים של Meta, בחינם בכל מוצרי Meta. אם יש כאן תיקיית צלילים ובחרת בה, אוסיף אותו בעדינות מתחת לסרטון.</small>'
+  +'<small>מוזיקה: כברירת מחדל בלי מוזיקה בתוך הסרטון. באינסטגרם בוחרים את המוזיקה בזמן ההעלאה מספריית הצלילים של אינסטגרם, בתיקייה RF (ללא זכויות יוצרים). בפייסבוק אפשר מאוסף הצלילים של Meta, בחינם בכל מוצרי Meta. אם יש כאן תיקיית צלילים ובחרת בה, אוסיף אותו בעדינות מתחת לסרטון.</small>'
   +'<a class="yb yb2" href="https://www.facebook.com/sound/collection/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">🎵 לפתוח את אוסף הצלילים של Meta</a>'
   +'<button type="button" class="yb yb1" data-a="send">שליחה</button>'
   +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
