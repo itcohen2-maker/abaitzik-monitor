@@ -839,7 +839,9 @@ function build() {
     // 10.11.2026, Itzik: "🎛️ לוח הפרסומים". LinkedIn posts and the statuses he marked done (both outside docs/). His copy only.
     board: inst.name === 'abaitzik' ? (() => { const r = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { return d; } };
       const li = r(path.join(inst.dataPath, 'linkedin', 'queue.json'), []);
-      return { li: (Array.isArray(li) ? li : []).map((x) => ({ date: x.date || '', time: x.time || '', ok: !!x.approved, up: !!x.posted, bad: !!x.failed, t: String(x.editedText || x.text || '').split('\n')[0].slice(0, 60) })),
+      return { li: (Array.isArray(li) ? li : []).map((x) => ({ id: x.id || '', date: x.date || '', time: x.time || '', ok: !!x.approved, up: !!x.posted, bad: !!x.failed, t: String(x.editedText || x.text || '').split('\n')[0].slice(0, 60) })),
+        // 10.11.2026: the editable week plan of the grid (lib/post-plan.js).
+        plan: require('./lib/post-plan.js').read(inst.dataPath), rows: require('./lib/post-plan.js').ROWS.map((x) => ({ id: x.id, ic: x.ic, n: x.n, sub: x.sub || '', kind: x.kind, tab: x.tab })),
         stDone: r('/home/monitor/wa-status-done.json', {}),
         // 10.11.2026, Itzik: "לוח בקרה שחולש על כל הקמפיין והאוטומציות לרשתות". The last line of each automation's log.
         auto: [['ai', '🤖', 'ערוץ AI לאינסטגרם', 'כל יום 20:00, לא בשבת', '/home/monitor/ai-post.log'],
@@ -14968,7 +14970,6 @@ var FUT_ITEMS=[
  {n:'13',t:'סרטון נרות 1: המתנה, קונטרסט ערים',he:'איציק 27.10: נבחר החושך המוחלט וההוק של הגפרור. פוצל לשני סרטונים. בערך 30 שניות.\\n\\n0 עד 3: חושך מלא, גפרור, הלהבה מאירה את הפנים. ״חיפשתי איך להגיד לכם תודה.״\\n3 עד 7: ״על כל התמיכה בשנתיים האלה, בניתי לכם משהו.״ מושיט את הטלפון למצלמה, המסך ממלא את הפריים.\\n7 עד 20: קונטרסט ערים במסך מפוצל, צילום אמיתי של העיר ומעליו השעה מהאתר החי. ירושלים מול חיפה, אותה מדינה ושעה אחרת. ואז ברוקלין מול פריז, כשבירושלים כבר מדליקים בברוקלין עוד בוקר. המפה עפה מעל הים בין הזוגות. על המסך: לפי המיקום שלך.\\n20 עד 26: ״והכל בפנים.״ ומיד מונטאז׳ מהיר, שנייה לכל מסך אמיתי: נגיעה אחת והאייקון נוחת במסך הבית, אשכנז וספרד בכל נוסח, חגים, הבדלה. על המסך מילה אחת לכל מסך: אייקון, אשכנז, ספרד, חגים.\\n26 עד 30: ״זה בחינם, וזה שלכם.״ כתובת גדולה candletimes.com, שלחו למי שמדליק.\\n\\nנראות: לילה כהה, אור ענבר של נר, גרעין עדין, גופן אחד, מסכים אמיתיים במסגרת טלפון. צילומי ערים מ Pexels, לא בינה מלאכותית. סאונד: גפרור, פסנתר שקט.\\nכיתוב: מתנה קטנה לכל מי שמדליק. זמני הדלקה לפי המיקום שלכם, בכל מקום בעולם. בחינם. #אבאאיציק #מחלתהסרטן #שבת',u:'https://candletimes.com'},
  {n:'14',t:'סרטון נרות 2: נר נשמה בכל שפה',he:'בערך 25 שניות. אותו עולם חושך כמו סרטון 1.\\n\\n0 עד 3: חושך, גפרור, מדליק נר נשמה בכוס. ״יש מישהו שאתם מתגעגעים אליו?״\\n3 עד 7: ״בניתי מקום לזכור אותו.״\\n7 עד 13: לשונית נר נשמה: מקלידים שם, מופיע התאריך העברי ויום האזכרה, הלהבה נדלקת. כמעט שקט.\\n13 עד 20: הברכה מתחלפת בין שפות עם תיק בכל החלפה: English, Français, Русский, 日本語, Español, אמהרית. על המסך: בכל שפה.\\n20 עד 25: ״זה בחינם. שלחו למי שצריך.״ candletimes.com\\n\\nכיתוב: לכל מי שמתגעגע. נר נשמה ויום האזכרה לפי התאריך העברי, בכל שפה. בחינם. #אבאאיציק #מחלתהסרטן #נרנשמה',u:'https://candletimes.com'},
  {n:'15',t:'רשימת צילום לשני סרטוני הנרות',he:'מה לארגן: קופסת גפרורים (לא מצית, בשביל הצליל), שני נרות שבת בפמוטים, נר נשמה בכוס, הטלפון שלך עם candletimes.com פתוח, חצובה לטלפון השני.\\nהחדר: חושך מוחלט, תריסים סגורים, כל האורות כבויים. שקט, בלי מזגן ובלי טלוויזיה.\\nמצלמה: אנכי, בגובה העיניים, מטר ממך, חזה ומעלה. לוחצים ארוך על הפנים לנעילת פוקוס, ומורידים חשיפה עד שהרקע שחור לגמרי.\\nהנר: נמוך מול הסנטר, כדי שהאור יעלה על הפנים.\\n\\nשורות, כל אחת שלוש פעמים, עם שתי שניות שקט לפני ואחרי:\\n1. (מדליק גפרור) חיפשתי איך להגיד לכם תודה.\\n2. על כל התמיכה בשנתיים האלה, בניתי לכם משהו. (מושיט את הטלפון למצלמה)\\n2א. והכל בפנים. (חיוך קטן, כמו מי שמגלה סוד)\\n3. זה בחינם, וזה שלכם.\\n4. (מדליק נר נשמה) יש מישהו שאתם מתגעגעים אליו?\\n5. בניתי מקום לזכור אותו.\\n6. זה בחינם. שלחו למי שצריך.\\n\\nצילומים בלי דיבור: גפרור נדלק מקרוב 3 פעמים. להבת נר שבת מקרוב 10 שניות. נר נשמה בוער 10 שניות. היד מושיטה את הטלפון 3 פעמים.\\nמסכים שאני מקליט מהאתר: אייקון למסך הבית, נוסח אשכנז וספרד, חגים, הבדלה, נר נשמה, החלפת שפות, וארבע הערים.\\nבטיחות: הגפרורים לצלחת עם מים, לא לכבות נר נשמה עם היד.\\nשליחה: את כל הקבצים במוניטור, כפתור הקובץ בצ׳אט.'},
- {n:'17',t:'מה נשאר לכם על הצלחות: המבריק במדיח',he:'איציק 27.10: ריל קצר על המבריק, צ׳יק צ׳ק. משפטים קצרים, הכל בתיאור. אצלו חומץ במקום מבריק.\\n\\nהתסריט, בערך 12 שניות:\\nמשהו במדיח לא נשטף עד הסוף.\\nהוא נשאר על הצלחות, ופוגע בשכבה שמגינה על המעי.\\nהמבריק.\\nאצלי? חומץ.\\nכל דבר שמוריד לי סיכון, אני לוקח.\\nגרסה זהירה למשפט השני, לצלם גם: ויכול לפגוע במעי.\\n\\nצילום: 9:16, מול המדיח, אור יום. בלי מבריק ובלי מותגים.\\n0 עד 4: פותח את תא המבריק, זום. על המסך: מה נשאר על הצלחות?\\n4 עד 7: אצבע על צלחת נקייה. על המסך: המבריק\\n7 עד 10: שופך חומץ לתא. על המסך: מבריק ❌ חומץ ✅\\n10 עד 12: פנים, המשפט האחרון. על המסך: פרטים בתיאור 👇\\n\\nכיתוב:\\nמשהו במדיח לא נשטף עד הסוף 👇\\nמחקר בשוויץ: שאריות מבריק פגעו בתאי מעי במעבדה.\\nבבני אדם עוד לא נבדק.\\nאצלי חומץ, בכמות של מבריק.\\nלא רוצים להחליף? עוד שטיפה בסוף.\\nמקור: JACI 2022. לא ייעוץ מקצועי.\\n#אבאאיציק #מחלתהסרטן #בריאות\\n\\nפרטי המחקר, נבדקו 27.10: Ogulur et al., Gut epithelial barrier damage caused by dishwasher detergents and rinse aids, J Allergy Clin Immunol 2022. אורגנואידים של מעי אנושי ותאי מעי על שבב, מיהול 1:10,000 עד 1:40,000 כמו על כלים יבשים. מינון גבוה הרג תאים, נמוך הגביר חדירות. פרופ׳ ג׳זמי אקדיש: בהרבה מכשירים אין שטיפה נוספת שמורידה את המבריק. הקשר למחלות כרוניות הוא השערה שלהם, לא תוצאה, לכן לא נכנס לכיתוב.\\n\\nנשמר לריל המשך אפשרי, שני דברים נוספים שהחלפתי במדיח:\\nטבליה לדפי נייר: העטיפה של הטבליה היא PVA, ויכוח פתוח אם היא מתפרקת, לא להגיד מיקרופלסטיק בוודאות. בלי לזהות מותג, טבליה קטנה או מטושטשת, הפוקוס על הדף (איציק: לא עושים שיימינג).\\nמלח מדיח למלח גס: רק בלי יוד ובלי חומר נגד התגבשות, אחרת סותם את מרכך המים. כסף ופשטות, פחות בריאות.\\n\\nסטורי מה בצלחת על המבריק (27.10, טיוטה לאישור, קצר):\\nהצלחת: הצלחת הלבנה שלו ריקה ונקייה, עם ברק וטיפות מים. בלי אוכל, הצלחת עצמה היא הסיפור. תמונה מג׳מיני, כמה אפשרויות לבחירה.\\nהפוסט למעלה: הצלחת נקייה. באמת? / משהו מהמדיח נשאר עליה.\\nמסך ראשון: המבריק. מה נשאר על הצלחת.\\n✓ מה טוב: כוסות שקופות, בלי כתמי מים.\\n✕ מה פחות: שכבה דקה נשארת על הכלים. במחקר בשוויץ פגעה בתאי מעי במעבדה.\\nבבני אדם עוד לא נבדק.\\nאיך מורידים: ✓ חומץ בתא המבריק. ✓ או עוד שטיפה בסוף.\\nסיום: כל דבר שמוריד לי סיכון, אני לוקח.\\nתגובות: יעל ב.: אין לי מושג מה יש לי בתא הזה 😅 / משה ק.: חומץ במדיח? מנסה הערב / דנה ש.: ומה עם מדיח בעבודה?\\nעולה יום אחרי הריל.',u:'https://www.news.uzh.ch/en/articles/media/2022/Geschirrspuelmittel.html'},
 ];
 // 17.10, Itzik: "אי אפשר לצאת". "אחר כך" leaves the note unmarked, so going
 // back to this list must not ask about it again: only opening the screen asks,
@@ -16982,7 +16983,7 @@ function vidTabs(){
   {id:'st',l:'📲 סטטוס'+(stN?' ('+stN+')':''),h:'סטטוס וואטסאפ: מה עולה היום ומה הבא בתור. לחיצה פותחת את הסרטון והטקסט, 3 נגיעות',L:vqRows('st').concat([{h:'📂 הדף המלא'},{k:'go',t:'📲 פתיחת כל הסטטוסים המוכנים',u:'status/index.html'}])},
   {id:'ads',l:'📣 קמפיין',h:'הממומן, וסרטוני המוניטור לסטורי',L:TOM_ITEMS.map(function(it){return it.h?{h:it.h}:{k:'tom',it:it};})},
   {id:'sh',l:'🌅 שחר',h:'הרילים, הסטורי והפוסטים של שחר',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isSh(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isSh(x.it);}))},
-  {id:'pl',l:'🍽️ מה בצלחת'+(plN?' ('+plN+')':''),h:'הסטוריז לפי הסדר, אפשר לסדר ולמחוק',L:vqRows('pl').concat([{h:'📂 הדף המלא'},{k:'go',t:'🍽️ פתיחת הסטוריז של מה בצלחת',u:'plate/plate.html'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return plateN[x.it.n];}))},
+  {id:'pl',l:'🍽️ מה בצלחת'+(plN?' ('+plN+')':''),h:'הסטוריז לפי הסדר, אפשר לסדר ולמחוק',L:vqRows('pl').concat([{h:'📂 הדף המלא'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return plateN[x.it.n];}))},
   // 8.11, Itzik: the AI channel reels to upload, like the plate tab, split Hebrew and English, what went up and what did not.
   {id:'ai',l:'🤖 ערוץ AI'+(aiN?' ('+aiN+')':''),upd:'20261109-auto',h:'הרילים של ערוץ ה AI להעלאה, בעברית ובאנגלית: מה עדיין לא עלה. מה שעלה יורד מכאן לבד',L:vqRows('ai').concat([{h:'📂 הדף המלא'},{k:'go',t:'🤖 פתיחת הרילים של ערוץ ה AI',u:'ai/ai.html'}])},
   {id:'nr',l:'🕯️ נרות'+(nrN?' ('+nrN+')':''),h:'candle.times: סטוריז ופוסטים שמחכים לאישור שלך',L:vqRows('nr').concat([{h:'📂 הדף המלא'},{k:'go',t:'🕯️ פתיחת candle.times',u:'ner/candle.html'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return candleN[x.it.n];}))},
@@ -17061,8 +17062,140 @@ function vidSheet(tab){
 on('gVideos',function(){vidSheet();});
 // 10.11.2026, Itzik: "מסך מוניטור שחולש על כל הסרטונים והקמפיין הממומן". Every kind with how many are ready,
 // a week table of what goes up and when (auto or by hand), a mark per row, and a tap opens the ready stock (vidSheet tab).
+// 10.11.2026, Itzik: "מסך אחד, שבצד אחד מראה את כל הרשתות, וצד שני את כל השבוע ... וכל רשת מסומן לידה ביום מתי
+// זה עולה, ואפשרויות לשינוי ולעריכת הלוח". Rows = networks, columns = the next 7 days. A tap on a cell edits it:
+// the week plan (lib/post-plan.js) or the time of a post. The change goes to listen.js (Title post-plan) and waits on
+// this phone (postPlanLocal) until the next build carries it. A tap on a network opens its ready stock.
 function boardSheet(){
  if(!(VQ&&Date.now()-VQT<60000))return vqLoad(boardSheet);
+ var old=document.getElementById('bdGrid');if(old)old.remove();
+ var B=D.board||{},ROWS=B.rows||[],P=JSON.parse(JSON.stringify(B.plan||{rows:{}}));
+ var L=null;try{L=JSON.parse(localStorage.getItem('postPlanLocal')||'null');}catch(e){}
+ if(!(L&&L.at&&(!P.at||L.at>P.at)))L={at:'',rows:{},items:{}};
+ Object.keys(L.rows||{}).forEach(function(k){P.rows[k]=L.rows[k];});
+ var IL=L.items||{};
+ var T0=vqDay(),Q=VQ||{},DN=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'],DS=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
+ function add(d,n){var p=d.split('-');return new Date(Date.UTC(+p[0],+p[1]-1,+p[2]+n)).toISOString().slice(0,10);}
+ function dw(d){var p=d.split('-');return new Date(Date.UTC(+p[0],+p[1]-1,+p[2])).getUTCDay();}
+ function dm(d){var p=d.split('-');return (+p[2])+'.'+(+p[1]);}
+ function upDay(x){return x.postedAt?new Date(x.postedAt).toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'}):'';}
+ var days=[];for(var i=0;i<7;i++)days.push(add(T0,i));
+ var adsOn=0;try{adsOn=TOM_ITEMS.filter(function(it){return !it.h&&/באוויר/.test(it.t||'');}).length;}catch(e){}
+ function isEn(lg,x){return lg==='en'?x.lang==='en':x.lang!=='en';}
+ function items(r,d){
+  if(r.id==='nr')return (Q.nr||[]).filter(function(x){return !x.failed&&!x.rejected&&(x.posted?upDay(x):x.date)===d;})
+   .map(function(x){return {id:x.name,time:IL['nr:'+x.name]||x.time||'',up:!!x.posted,ok:!!x.approved,t:(x.kind==='post'?'פוסט':'סטורי')+' '+(x.lang==='en'?'אנגלית':'עברית')+(x.city?' · '+x.city:'')};});
+  return (B.li||[]).filter(function(x){return !x.bad&&x.date===d;})
+   .map(function(x){return {id:x.id,time:IL['li:'+x.id]||x.time||'',up:x.up,ok:x.ok,t:x.t||'פוסט'};});
+ }
+ function cell(r,d){
+  var w=dw(d);
+  if(r.kind==='always')return adsOn?{t:'▶️ כל היום',c:'run'}:{t:'',c:''};
+  if(r.kind==='items'){
+   var I=items(r,d).sort(function(a,b){return a.time.localeCompare(b.time);});
+   if(!I.length)return {t:'',c:''};
+   var allUp=I.every(function(x){return x.up;}),wait=I.some(function(x){return !x.up&&!x.ok;});
+   return {t:(allUp?'✓ ':'')+I[0].time+(I.length>1?' ×'+I.length:''),c:allUp?'ok':wait?'wait':'auto'};
+  }
+  var t=(P.rows[r.id]&&P.rows[r.id].days[w])||'';
+  if(r.id==='ai-he'||r.id==='ai-en'){
+   var lg=r.id.slice(3);
+   if((Q.ai||[]).some(function(x){return isEn(lg,x)&&x.posted&&upDay(x)===d;}))return {t:'✓ '+(t||'עלה'),c:'ok'};
+   if(!t)return {t:'',c:''};
+   return {t:t,c:(Q.ai||[]).some(function(x){return isEn(lg,x)&&!x.posted&&!x.hold&&!x.failed;})?'auto':'held'};
+  }
+  if(r.id==='st'){
+   var it=(Q.st||[]).filter(function(x){return x.date===d;})[0];
+   if(it&&(B.stDone||{})[it.name])return {t:'✓ '+(t||'עלה'),c:'ok'};
+   if(!t)return {t:'',c:''};
+   return {t:t,c:it?'man':'miss'};
+  }
+  return t?{t:t,c:'man'}:{t:'',c:''};
+ }
+ var css='<style>#bdGrid table{width:100%;table-layout:fixed;border-collapse:collapse;font:11px/1.25 Heebo,sans-serif;margin:6px 0}'
+  +'#bdGrid th,#bdGrid td{border:1px solid #e3e7ef;padding:4px 1px;text-align:center;vertical-align:middle;overflow:hidden}'
+  +'#bdGrid th{background:#f4f6f9;font-weight:800}#bdGrid th small{display:block;font-weight:600;color:#5a6577}'
+  +'#bdGrid td.nm{text-align:right;padding:4px 5px;font-weight:700;font-size:12px;cursor:pointer;background:#fafbfd}#bdGrid td.nm small{display:block;font-weight:500;color:#5a6577;font-size:10px}'
+  +'#bdGrid td.cl{cursor:pointer;height:38px}#bdGrid td.cl:active{background:#eef4ff}#bdGrid .sat{background:#f3f3f3}#bdGrid .tdy{box-shadow:inset 0 0 0 2px #1a5fb4}'
+  +'#bdGrid .c-ok{color:#1b7f3b;font-weight:700}#bdGrid .c-auto{color:#1a5fb4;font-weight:700}#bdGrid .c-man{color:#8a5a00;font-weight:700}#bdGrid .c-wait{color:#b45309;font-weight:700}'
+  +'#bdGrid .c-miss{color:#c0262d;font-weight:700}#bdGrid .c-run{color:#6b3fa0;font-weight:700}#bdGrid .c-held{color:#b45309}'
+  +'#bdGrid .lg{font:11px/1.9 Heebo,sans-serif;color:#33405a}#bdGrid .lg b{font-weight:800}'
+  +'#bdEd{position:fixed;inset:0;background:rgba(10,20,40,.45);display:flex;align-items:flex-end;justify-content:center;z-index:99999}'
+  +'#bdEd .box{background:#fff;border-radius:18px 18px 0 0;padding:16px;width:100%;max-width:520px;box-sizing:border-box;font:15px/1.5 Heebo,sans-serif;max-height:85vh;overflow:auto}'
+  +'#bdEd label{display:flex;align-items:center;gap:8px;margin:10px 0;font-weight:600}#bdEd input[type=checkbox]{width:22px;height:22px}'
+  +'#bdEd input[type=time]{font:700 22px Heebo,sans-serif;padding:6px 10px;border:1px solid #ccd;border-radius:10px}#bdEd .row{border-top:1px solid #eef;padding:8px 0}</style>';
+ var h=css+'<div class="ycard"><b>🎛️ לוח הפרסומים</b><small>כל הרשתות מול כל השבוע. לחיצה על משבצת משנה אותה. לחיצה על שם רשת פותחת את המלאי המוכן שלה.</small>'
+  +'<table><colgroup><col style="width:27%">'+days.map(function(){return '<col>';}).join('')+'</colgroup><thead><tr><th>רשת</th>'
+  +days.map(function(d,i){return '<th class="'+(dw(d)===6?'sat':'')+'">'+(i===0?'היום':DS[dw(d)])+'<small>'+dm(d)+'</small></th>';}).join('')+'</tr></thead><tbody>'
+  +ROWS.map(function(r,ri){return '<tr><td class="nm" data-r="'+ri+'">'+r.ic+' '+esc(r.n)+(r.sub?'<small>'+esc(r.sub)+'</small>':'')+'</td>'
+   +days.map(function(d,di){var c=cell(r,d);return '<td class="cl c-'+(c.c||'x')+(dw(d)===6?' sat':'')+(di===0?' tdy':'')+'" data-r="'+ri+'" data-d="'+d+'">'+esc(c.t)+'</td>';}).join('')+'</tr>';}).join('')
+  +'</tbody></table>'
+  +'<div class="lg"><b class="c-auto">20:00</b> יעלה לבד · <b class="c-man">08:30</b> תזכורת, אתה מעלה · <b class="c-wait">09:00</b> מחכה לאישור · <b class="c-ok">✓</b> עלה · <b class="c-held">20:00</b> אין מה שיעלה (מושהה) · <b class="c-miss">08:30</b> אין סרטון ליום הזה · <b class="c-run">▶️</b> ממומן רץ</div>'
+  +(L.at?'<small style="color:#8a5a00">יש שינוי ששמרת בטלפון ועוד לא נבנה בדף. השרת כבר קיבל אותו.</small>':'')
+  +'<button type="button" class="yb yb2" data-a="more">📦 מלאי מוכן ואוטומציות</button>'
+  +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+ var w=document.createElement('div');w.id='bdGrid';w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','לוח הפרסומים');
+ w.innerHTML=h;
+ function keep(){L.at=new Date().toISOString();try{localStorage.setItem('postPlanLocal',JSON.stringify(L));}catch(e){}}
+ function send(body){
+  body.code=sendCode();body.at=new Date().toISOString();
+  return fetch('https://ntfy.sh/'+NTFYIN()+'?filename=post-plan.json',{method:'PUT',headers:{Title:'post-plan'},body:JSON.stringify(body)})
+   .then(function(r){toast(r.ok?'נשמר בלוח. השרת עובד לפיו מעכשיו.':'לא נשלח, נסה שוב');},function(){toast('אין חיבור, השינוי לא נשלח');});
+ }
+ function edit(r,d){
+  var e=document.createElement('div');e.id='bdEd';
+  var wd=dw(d),x='<div class="box"><b style="font-size:17px">'+r.ic+' '+esc(r.n)+' · יום '+DN[wd]+' '+dm(d)+'</b>';
+  if(r.kind==='always'){
+   x+='<p>הממומן רץ כל היום, '+adsOn+' מודעות באוויר. אין לו שעה בלוח.</p><button type="button" class="yb yb1" data-e="open">📣 לפתוח את הקמפיין</button>';
+  }else if(r.kind==='items'){
+   var I=items(r,d).filter(function(y){return !y.up;});
+   if(!I.length)x+='<p>אין ביום הזה פוסט שעוד לא עלה. פוסטים חדשים נכנסים מהמלאי.</p>';
+   I.forEach(function(y,k){x+='<div class="row">'+esc(y.t)+(y.ok?' · מאושר':' · מחכה לאישור שלך')+'<br><input type="time" data-k="'+k+'" value="'+esc(y.time)+'"></div>';});
+   x+=(I.length?'<button type="button" class="yb yb1" data-e="save">שמירה</button>':'')+'<button type="button" class="yb" data-e="open">📦 לפתוח את המלאי</button>';
+  }else{
+   var t=(P.rows[r.id]&&P.rows[r.id].days[wd])||'';
+   x+='<small style="display:block;color:#5a6577">הלוח שבועי: השינוי חל על כל יום '+DN[wd]+'. '+(r.kind==='auto'?'בשעה הזו הסרטון הבא בתור עולה לבד.':'בשעה הזו תקבל תזכורת לטלפון, ואתה מעלה.')+'</small>'
+    +'<label><input type="checkbox" id="edOn"'+(t?' checked':'')+'> עולה ביום '+DN[wd]+'</label>'
+    +'<input type="time" id="edT" value="'+esc(t||(r.kind==='auto'?'20:00':'09:00'))+'">'
+    +'<label><input type="checkbox" id="edAll"> אותו דבר בכל הימים, ראשון עד שישי</label>'
+    +'<button type="button" class="yb yb1" data-e="save">שמירה</button><button type="button" class="yb" data-e="open">📦 לפתוח את המלאי</button>';
+  }
+  x+='<button type="button" class="yb yx" data-e="x">ביטול</button></div>';
+  e.innerHTML=x;
+  e.onclick=function(ev){
+   var a=ev.target.getAttribute&&ev.target.getAttribute('data-e');
+   if(ev.target===e||a==='x')return e.remove();
+   if(a==='open'){e.remove();w.remove();return openTab(r);}
+   if(a!=='save')return;
+   if(r.kind==='items'){
+    var ch=[];[].forEach.call(e.querySelectorAll('input[type=time]'),function(inp){var y=I[+inp.getAttribute('data-k')];if(inp.value&&inp.value!==y.time){ch.push({kind:r.id,id:y.id,time:inp.value});L.items=L.items||{};L.items[r.id+':'+y.id]=inp.value;}});
+    if(!ch.length)return e.remove();
+    keep();send({items:ch});
+   }else{
+    var on=document.getElementById('edOn').checked,tv=document.getElementById('edT').value,all=document.getElementById('edAll').checked;
+    var dd=((P.rows[r.id]&&P.rows[r.id].days)||['','','','','','','']).slice();
+    if(all){for(var k=0;k<6;k++)dd[k]=on?tv:'';}else dd[wd]=on?tv:'';
+    L.rows=L.rows||{};L.rows[r.id]={days:dd};keep();
+    var body={rows:{}};body.rows[r.id]={days:dd};send(body);
+   }
+   e.remove();w.remove();boardSheet();
+  };
+  document.body.appendChild(e);
+ }
+ function openTab(r){if(r.tab)return vidSheet(r.tab);if(r.id==='li'){try{return bizSheet('li');}catch(x){}}toast('אין מלאי לרשת הזו');}
+ w.onclick=function(ev){
+  var a=ev.target.getAttribute&&ev.target.getAttribute('data-a');
+  if(ev.target===w||a==='x')return w.remove();
+  if(a==='more'){w.remove();return boardMore();}
+  var td=ev.target.closest&&ev.target.closest('td[data-r]');if(!td)return;
+  var r=ROWS[+td.getAttribute('data-r')];if(!r)return;
+  if(td.classList.contains('nm')){w.remove();return openTab(r);}
+  edit(r,td.getAttribute('data-d'));
+ };
+ document.body.appendChild(w);
+}
+function boardMore(){
+ if(!(VQ&&Date.now()-VQT<60000))return vqLoad(boardMore);
  var old=document.getElementById('bdSheet');if(old)old.remove();
  var T0=vqDay(),B=D.board||{li:[],stDone:{}},Q=VQ||{};
  var DN=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
@@ -17150,9 +17283,9 @@ function boardSheet(){
  var w=document.createElement('div');w.id='bdSheet';w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','לוח הפרסומים');
  w.innerHTML=h;
  w.onclick=function(e){
-  if(e.target===w||(e.target.getAttribute&&e.target.getAttribute('data-a')==='x'))return w.remove();
+  if(e.target===w||(e.target.getAttribute&&e.target.getAttribute('data-a')==='x')){w.remove();return boardSheet();}
   var m=e.target.getAttribute&&e.target.getAttribute('data-mark');
-  if(m){if(e.target.checked)delete hide[m];else hide[m]=1;try{localStorage.setItem('bdHide',JSON.stringify(hide));}catch(x){}w.remove();return boardSheet();}
+  if(m){if(e.target.checked)delete hide[m];else hide[m]=1;try{localStorage.setItem('bdHide',JSON.stringify(hide));}catch(x){}w.remove();return boardMore();}
   var c=e.target.closest&&e.target.closest('.bdC');
   if(c){var t=c.getAttribute('data-tab');if(t){w.remove();vidSheet(t);}else if(c.getAttribute('data-id')==='li'){w.remove();try{bizSheet('li');}catch(x){toast('לינקדין נמצא ב 💼 העסק שלי');}}}
  };

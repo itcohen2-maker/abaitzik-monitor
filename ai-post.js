@@ -91,9 +91,14 @@ function post(it, ch, now) {
     if (it.posted) return console.log('already posted', forced);
     jobs.push(it);
   } else {
-    if (now.wd === 'Sat' || await yomTov(now.date)) return;
-    if (now.hm < POST_HOUR) return;
+    // 10.11.2026: the days and hour of each channel come from 🎛️ לוח הפרסומים (lib/post-plan.js, rows ai-he and ai-en).
+    // The default is Sunday to Friday at 20:00 (POST_HOUR), as before. Never on yom tov.
+    if (await yomTov(now.date)) return;
+    const PLAN = require('./lib/post-plan.js'), P = PLAN.read(path.join(__dirname, 'data'));
+    const dow = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(now.wd);
     Object.keys(CHANNELS).forEach(function (l) {
+      const t = PLAN.time(P, 'ai-' + l, dow);
+      if (!t || now.hm < t) return;
       if (state[l] === now.date) return;
       const next = q.filter(function (x) { return x.lang === l && !x.posted && !x.failed && !x.hold; })
         .sort(function (a, b) { return (a.order || 0) - (b.order || 0); })[0];

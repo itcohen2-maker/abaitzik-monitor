@@ -1211,6 +1211,15 @@ async function recordWaStatusDone(m) {
   say('סטטוס וואטסאפ: ' + name + (got.done === false ? ' בוטל הסימון' : ' סומן כהועלה'));
 }
 
+// 10.11.2026: 🎛️ לוח הפרסומים, an edit of the week plan or of an item's time, from the page (lib/post-plan.js).
+async function recordPostPlan(m) {
+  let got;
+  try { const res = await fetch(m.attachment.url); got = JSON.parse(res.ok ? await res.text() : ''); }
+  catch (e) { got = null; }
+  if (!got || !ownerCodeOk('קוד ' + String(got.code || ''))) { say('!! שינוי בלוח הפרסומים בלי קוד, לא נשמר'); return; }
+  try { say('לוח הפרסומים: ' + require('./lib/post-plan.js').save(__dirname, got)); } catch (e) { say('!! לוח הפרסומים: ' + e.message); }
+}
+
 // The "next week" tick on the same page, 23.10. Itzik: on Thursday the tile
 // blinks, he ticks "תכין לי עוד סטוריז ופוסטים לכל השבוע הבא", the PC builds it
 // by clip/week_stories/ner_week/RECIPE.md and the week goes into the queue approved.
@@ -1420,6 +1429,11 @@ async function handleOne(m) {
   }
   if (m.attachment && m.title === 'ner-week') {
     await recordNerWeek(m);
+    remember(m);
+    return;
+  }
+  if (m.attachment && m.title === 'post-plan') {
+    await recordPostPlan(m);
     remember(m);
     return;
   }
