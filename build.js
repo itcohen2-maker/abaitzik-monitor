@@ -862,6 +862,8 @@ function build() {
         }) }; })() : null,
     // 10.11.2026: 📊 מצב הקמפיינים, the copy ads-sync.js keeps (numbers only, no token).
     ads: (() => { try { return JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'ads', 'status.json'), 'utf8')); } catch (e) { return null; } })(),
+    // 10.11.2026: Dr. Shulman's clinic tiles (lib/clinic.js), only where screens lists one of them. Patient data: sealed.
+    clinic: (Array.isArray(inst.screens) && inst.screens.some((id) => TENANT_TOP.indexOf(id) >= 0)) ? (() => { try { return require('./lib/clinic.js').payload(inst.dataPath); } catch (e) { return null; } })() : null,
     // 7.11.2026: a customer's key for the fast chat on wa-bridge (data/fc-key.txt, sealed like the rest of D).
     fcKey: inst.name === 'abaitzik' ? '' : (() => { try { const k = fs.readFileSync(path.join(inst.dataPath, 'fc-key.txt'), 'utf8').trim(); return /^[a-f0-9]{24,64}$/.test(k) ? k : ''; } catch (e) { return ''; } })(),
     demoFcKey: inst.name === 'abaitzik' ? (() => { try { const k = (JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'fastchat', 'tenants.json'), 'utf8')).demo || {}).key || ''; return /^[a-f0-9]{24,64}$/.test(k) ? k : ''; } catch (e) { return ''; } })() : '',
@@ -1395,7 +1397,13 @@ const TENANT_TILES = {
   gMyBoard: ['g16', '🎛️ לוח הפרסומים', 'מה רץ, מה מתוכנן ומה מוכן'],
   // 10.11.2026, Itzik: a manager for every monitor, where the customer records what comes back again and again (lib/routines.js).
   gMyMgr: ['g4', '🧑‍💼 מנהלת IT Solution', 'מה שחוזר על עצמו, אומרים פעם אחת'],
+  // 10.11.2026, Itzik, Dr. Shulman's clinic: "זה הכי חשוב לו, זה יהיה בראש האריחים" (lib/clinic.js, D.clinic).
+  gLab: ['g13', '🧪 דוח מעבדות', 'כל עבודה, כמה עלתה, ומה חויב פעמיים'],
+  gFrl: ['g16', '👩‍⚕️ פרילנסרים', 'לשונית לכל רופא, ומה מגיע לו החודש'],
+  gSup: ['g11', '📦 ספקים', 'חשבוניות החודש, הערה, ומה בוצע'],
 };
+// Tiles a customer listed in screens that go before everything else on his home, samples and guides included.
+const TENANT_TOP = ['gLab', 'gFrl', 'gSup'];
 // With no screens chosen at intake, only the tiles that fit any work. The whole
 // catalog gave a phone only customer "connect the computer", a client follow up
 // and a content plan, some of them empty screens.
@@ -1476,6 +1484,8 @@ function tenantTiles(inst) {
   // 12.10 evening: an admin (Rinat) asks too, for anything on the page.
   // 7.11.2026, Itzik: every monitor gets 🔌 חיבורים. A customer's home has tiles, not the icon row.
   TENANT_ALWAYS.forEach((id) => { if (ids.indexOf(id) < 0) ids.push(id); });
+  // 10.11.2026: the campaigns tile comes by itself once his Facebook is connected and numbers came in (ads-sync.js).
+  if (ids.indexOf('gAds') < 0) { try { if (JSON.parse(fs.readFileSync(path.join(inst.dataPath || 'data', 'ads', 'status.json'), 'utf8')).ok === true) ids.push('gAds'); } catch (e) { /* not connected */ } }
   ids.push('gConn');
   ids.push('gAdminReq');
   // 10.11.2026: a per tenant opt out (instance hideTiles, an array of tile ids). gConn and gAdminReq can never be hidden.
@@ -1492,14 +1502,16 @@ function tenantTiles(inst) {
   // 30.10, Itzik: each sample has its own id, so the edit-mode ✕ hides it like any tile ("להחזיר" brings it back).
   const sample = (n) => '\n  <button type="button" class="gt g11" id="gSample' + n + '" data-new="1" data-sample="1"><b>📌 לדוגמה, אתה יכול לשים פה מה שאתה רוצה</b></button>';
   const samples = inst.samples ? sample(1) + sample(2).replace('g11', 'g4') : '';
-  return guides + links + samples + ids.filter((id) => TENANT_TILES[id]).map((id) => {
+  const top = ids.filter((id) => TENANT_TOP.indexOf(id) >= 0), rest = ids.filter((id) => TENANT_TOP.indexOf(id) < 0);
+  const draw = (list) => list.filter((id) => TENANT_TILES[id]).map((id) => {
     let [cls, title, sub] = TENANT_TILES[id];
     // 10.11.2026, Itzik: the manager tile is named after its owner, "המנהלת של ד״ר שולמן".
     if (id === 'gMyMgr' && inst.owner) title = '🧑‍💼 המנהלת של ' + esc(inst.owner);
     // data-grp by visible label: only the two labels in the groups list get one.
     const grp = { gFiles: 'home', gBiz: 'work' }[id];
     return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' || /^gBh|^gShopList$|^gCamp$|^gMyMgr$|^gMyBoard$/.test(id) ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261105-shai-send"' : '') + (id === 'gTasks' ? ' data-upd="tasks-edit-1106"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
-  }).join('') + '\n ';
+  }).join('');
+  return draw(top) + guides + links + samples + draw(rest) + '\n ';
 }
 /*
   One page, two kinds of owner.
@@ -15586,6 +15598,92 @@ function adsSheet(){
  document.body.appendChild(w);
 }
 on('gAds',adsSheet);
+// 10.11.2026, Itzik, Dr. Shulman's clinic: the three tiles at the top of his home (data from lib/clinic.js, D.clinic).
+// Plain words for a customer who is not digital: every screen says what it shows and what the button does.
+function clSheet(id,label,body,wire){
+ var old=document.getElementById(id);if(old)old.remove();
+ var w=document.createElement('div');w.id=id;w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label',label);
+ w.innerHTML='<style>#'+id+' .clT{width:100%;border-collapse:collapse;font:13px/1.5 Heebo,sans-serif;margin:6px 0}#'+id+' .clT td,#'+id+' .clT th{border-bottom:1px solid #e5e7ef;padding:6px 4px;text-align:right;vertical-align:top}'
+  +'#'+id+' .clT th{font-weight:700;color:#5a6577;font-size:12px}#'+id+' .clN{text-align:left!important;white-space:nowrap;direction:ltr}'
+  +'#'+id+' .clBox{border:1px solid #e1e4ee;border-radius:14px;padding:10px 12px;margin:8px 0}#'+id+' .clBad{border-color:#f3b4ba;background:#fff4f5}#'+id+' .clOk{border-color:#b9e5c8;background:#f3fbf6}'
+  +'#'+id+' .clTabs{display:flex;gap:6px;overflow-x:auto;margin:8px 0;padding-bottom:2px}#'+id+' .clTabs button{flex:0 0 auto;border:1px solid #d6dae6;background:#fff;border-radius:999px;padding:7px 12px;font:700 13px Heebo,sans-serif;cursor:pointer}'
+  +'#'+id+' .clTabs button.on{background:#1a5fb4;color:#fff;border-color:#1a5fb4}#'+id+' .clSum{font:800 16px Heebo,sans-serif;margin:8px 0}</style>'
+  +'<div class="ycard"><b>'+label+'</b>'+body+'<button type="button" class="yb yx" data-cl="x">סגירה</button></div>';
+ w.onclick=function(e){var a=e.target.getAttribute&&e.target.getAttribute('data-cl');if(e.target===w||a==='x'){w.remove();return;}if(wire)wire(e,a,w);};
+ document.body.appendChild(w);return w;
+}
+function clMoney(n){n=Number(n)||0;return (Math.round(n*100)/100).toLocaleString('he-IL')+' ₪';}
+function clMonth(ym){ym=String(ym||'').replace('-','');return ym.length>=6?(+ym.slice(4,6))+'/'+ym.slice(0,4):ym;}
+function clDate(d){var p=String(d||'').split('-');return p.length===3?(+p[2])+'.'+(+p[1]):String(d||'');}
+// a file picked here goes to the monitor with a line that says what it is; the server reads it and the tile fills
+function clUpload(accept,note,done){
+ var i=document.createElement('input');i.type='file';i.accept=accept;i.multiple=true;i.style.display='none';
+ i.onchange=function(){var f=[].slice.call(i.files||[]);i.remove();if(!f.length)return;toast('שולח...');
+  sendAll(f,note).then(function(){toast('נשלח. אקרא את זה ואעדכן כאן, וגם אכתוב לך בתשובות.');if(done)done();},function(){toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});};
+ document.body.appendChild(i);i.click();
+}
+function labSheet(){
+ var C=D.clinic||{},L=C.lab||{months:[],dups:[]},h='';
+ h+='<small style="display:block">כל דוח שמגיע מהמעבדה נבדק כאן: כמה עבודות, כמה זה עלה, והאם משהו חויב פעמיים (אותו מטופל, אותה שן, אותה עבודה).</small>';
+ if(L.dups&&L.dups.length){
+  h+='<div class="clBox clBad"><b>⚠️ '+L.dups.length+' חיובים כפולים</b>'+L.dups.map(function(d){
+   return '<div style="margin-top:6px">'+esc(d.patient)+' · שן '+esc(d.tooth)+' · '+esc(d.work)+'<br><small>'+d.where.map(function(x){return esc(x.lab)+' תעודה '+esc(x.doc)+(x.date?' ('+esc(clDate(x.date))+')':'');}).join(' · ')+'</small></div>';}).join('')+'</div>';
+ }else if(L.months&&L.months.length)h+='<div class="clBox clOk">✅ לא נמצאו חיובים כפולים בדוחות שנקלטו.</div>';
+ if(!L.months||!L.months.length)h+='<div class="clBox">עוד לא נקלט דוח מעבדה. לוחצים על הכפתור למטה ובוחרים את קובץ ה PDF מהמעבדה.</div>';
+ (L.months||[]).forEach(function(m,k){
+  h+='<details class="clBox"'+(k===0?' open':'')+'><summary style="cursor:pointer;font:700 15px Heebo,sans-serif">'+esc(m.labName)+' · '+esc(clMonth(m.month))+' · '+clMoney(m.total)+'</summary>'
+   +'<small>'+m.docs+' תעודות, '+m.works+' עבודות</small><table class="clT"><tr><th>מטופל</th><th>עבודה</th><th>שן</th><th class="clN">סכום</th></tr>'
+   +m.lines.map(function(l){return '<tr'+(l.addon?' style="color:#5a6577"':'')+'><td>'+esc(l.patient||'')+'</td><td>'+esc(l.work)+'</td><td>'+esc((l.teeth||[]).join(', '))+'</td><td class="clN">'+clMoney(l.total)+'</td></tr>';}).join('')+'</table></details>';
+ });
+ h+='<button type="button" class="yb yb1" data-cl="up">📄 להעלות דוח מעבדה (PDF)</button>';
+ clSheet('labSheet','🧪 דוח מעבדות',h,function(e,a){if(a==='up')clUpload('application/pdf,image/*','דוח מעבדה: לבדוק ולהוסיף ל 🧪 דוח מעבדות');});
+}
+var FRL_TAB=0;
+function frlSheet(){
+ var C=D.clinic||{},F=C.frl||{doctors:[],rows:[],rate:0.4},ym=new Date().toISOString().slice(0,7);
+ var norm=function(s){return String(s||'').replace(/^\s*(ד["״׳']?ר|דוקטור)\s*/,'').trim();};
+ if(FRL_TAB>=F.doctors.length)FRL_TAB=0;
+ var doc=F.doctors[FRL_TAB]||'',rows=F.rows.filter(function(r){return norm(r.doctor)===norm(doc)&&String(r.date).slice(0,7)===ym;});
+ var paid=0,lab=0,pay=0;rows.forEach(function(r){paid+=r.paid;lab+=r.lab;pay+=r.pay;});
+ var h='<small style="display:block">החישוב: '+Math.round(F.rate*100)+'% ממה ששילם המטופל'+(F.labMinus?', פחות עלות המעבדה. עלות המעבדה נלקחת לבד מדוח המעבדה לפי שם המטופל.':'.')+'</small>';
+ h+='<div class="clTabs">'+F.doctors.map(function(d,i){return '<button type="button" data-cl="tab" data-i="'+i+'" class="'+(i===FRL_TAB?'on':'')+'">'+esc(d)+'</button>';}).join('')+'</div>';
+ if(!F.doctors.length)h+='<div class="clBox">עוד אין רשימת רופאים.</div>';
+ else{
+  h+='<div class="clSum">'+esc(doc)+' · '+esc(clMonth(ym))+': מגיע לו '+clMoney(pay)+'</div><small>'+rows.length+' טיפולים, המטופלים שילמו '+clMoney(paid)+(F.labMinus?', מעבדה '+clMoney(lab):'')+'</small>';
+  h+=rows.length?'<table class="clT"><tr><th>יום</th><th>מטופל</th><th>טיפול</th><th class="clN">שילם</th><th class="clN">מעבדה</th><th class="clN">מגיע</th></tr>'
+   +rows.map(function(r){return '<tr><td>'+esc(clDate(r.date))+'</td><td>'+esc(r.patient)+'</td><td>'+esc(r.treatment)+'</td><td class="clN">'+clMoney(r.paid)+'</td><td class="clN">'+(r.lab?clMoney(r.lab):'')+'</td><td class="clN"><b>'+clMoney(r.pay)+'</b></td></tr>';}).join('')+'</table>'
+   :'<div class="clBox">עוד אין טיפולים החודש. מצלמים את דף העבודה היומי שלו ושולחים בכפתור למטה, והטבלה מתמלאת.</div>';
+  h+='<button type="button" class="yb yb1" data-cl="up">📷 לצלם דף עבודה יומי של '+esc(doc)+'</button>';
+ }
+ clSheet('frlSheet','👩‍⚕️ פרילנסרים',h,function(e,a,w){
+  if(a==='tab'){FRL_TAB=+e.target.getAttribute('data-i');w.remove();return frlSheet();}
+  if(a==='up')clUpload('image/*,application/pdf','דף עבודה יומי של '+doc+': לקרוא ולהוסיף ל 👩‍⚕️ פרילנסרים');
+ });
+}
+function supSheet(){
+ var C=D.clinic||{},S=C.sup||{list:[],month:''},loc={};
+ try{loc=JSON.parse(localStorage.getItem('supLocal')||'{}')||{};}catch(e){loc={};}
+ var h='<small style="display:block">כל ספק והחשבוניות שלו מהחודש ('+esc(clMonth(S.month))+'), כפי שנמצאו בג׳ימייל שלך. אפשר לכתוב הערה ולסמן בוצע.</small>';
+ if(!S.list.length)h+='<div class="clBox">עוד אין רשימת ספקים.</div>';
+ S.list.forEach(function(s,i){
+  var L=loc[S.month+'|'+s.name]||{},done=L.done!=null?L.done:s.done,note=L.note!=null?L.note:s.note;
+  h+='<div class="clBox'+(done?' clOk':'')+'"><b>'+esc(s.name)+'</b> · '+(s.found.length?'✅ '+s.found.length+' מיילים החודש':'⚠️ עוד לא נמצאה חשבונית החודש')
+   +s.found.map(function(f){return '<br><small>'+esc(clDate(String(f.at).slice(0,10)))+' · '+esc(f.subject)+'</small>';}).join('')
+   +'<textarea data-n="'+i+'" rows="2" style="width:100%;box-sizing:border-box;margin-top:8px;border:1px solid #d6dae6;border-radius:10px;padding:8px;font:14px Heebo,sans-serif" placeholder="הערה לספק הזה">'+esc(note)+'</textarea>'
+   +'<label style="display:flex;align-items:center;gap:8px;margin-top:6px;font-weight:600"><input type="checkbox" data-cl="done" data-i="'+i+'"'+(done?' checked':'')+' style="width:22px;height:22px"> בוצע</label>'
+   +'<button type="button" class="yb" data-cl="save" data-i="'+i+'">שמירת ההערה</button></div>';
+ });
+ clSheet('supSheet','📦 ספקים',h,function(e,a){
+  if(a!=='done'&&a!=='save')return;
+  var s=S.list[+e.target.getAttribute('data-i')];if(!s)return;
+  var k=S.month+'|'+s.name,L=loc[k]||{};
+  if(a==='done')L.done=e.target.checked;
+  if(a==='save'){var ta=document.querySelector('#supSheet textarea[data-n="'+e.target.getAttribute('data-i')+'"]');L.note=ta?ta.value.trim():'';}
+  loc[k]=L;try{localStorage.setItem('supLocal',JSON.stringify(loc));}catch(x){}
+  sendText('ספקים','ספק '+s.name+', '+S.month+': '+(L.done?'בוצע':'לא בוצע')+(L.note?' | הערה: '+L.note:''),'עדכון').then(function(){toast('נשמר');},function(){toast('נשמר בטלפון, יישלח כשיהיה חיבור');});
+ });
+}
+on('gLab',labSheet);on('gFrl',frlSheet);on('gSup',supSheet);
 /*
   10.11.2026, Itzik: "שים לאיליי לוח פרסומים: לוח של כל ההעלאות שלו, ריק אם אין עדיין מלאי, או שתמלא לו את הקמפיין."
   A customer's own publishing board, in the black journal look of Itzik's board (a reel he liked). It shows only what is

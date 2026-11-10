@@ -250,3 +250,10 @@
 - **למה "pablo" לא נוסף לבד (10.11):** שום קוד לא הוסיף ל sources.json אחרי חיבור, ההערה בראש cal-sync.js רק תיארה כוונה. עכשיו הקליטה עושה את זה. ה `oaErr: denied` במצב הטופס היה לחיצה שנייה שבוטלה אחרי חיבור מוצלח, והחיבור עצמו תקין.
 - **מיקרוסופט:** ההרשאה השמורה היא `Calendars.ReadWrite` (קריאת יומן בלבד נעשית). מייל של מיקרוסופט לא נקרא: `lib/oauth.js` מבקש scope קבוע (`PUBLIC.microsoft.scope`) בלי `Mail.Read`, ולכן אין בקשה ללקוח לחבר מחדש. כדי לקרוא מייל צריך להוסיף `Mail.Read` ל scope, לאשר אותו באפליקציית Entra, ולבנות קורא (Graph /me/messages) כמו mail-sync.js.
 - **10.11.2026, same day, correction:** the alert is not a ring. A tile or round icon with an alert slowly changes colour, teal to amber and back (`alertfade`, 3.4s, an overlay on `::before` of a tile and `::after` of an icon), the same everywhere. The long-press sheet offers only colour and delete: no blink row and no hand row.
+
+## המרפאה של ד״ר שולמן: 🧪 דוח מעבדות, 👩‍⚕️ פרילנסרים, 📦 ספקים (10.11.2026)
+- שלושת האריחים ראשונים במסך הבית שלו (`TENANT_TOP` ב build.js, הנתונים ב `lib/clinic.js`, D.clinic מוצפן). פרטי מטופלים נשארים ב data/ בלבד.
+- **"דוח מעבדה: ..." עם קובץ:** `node lab-check.js <file> --data data`, ובנייה. התשובה בשורה אחת: כמה עבודות, סכום, וכמה כפילויות.
+- **"דף עבודה יומי של <רופא>: ..." עם תמונה:** קוראים את התמונה ורושמים `data/clinic/frl/<YYYYMMDD>-<slug>.json` = `{"doctor":"<השם כמו בהודעה>","date":"YYYY-MM-DD","rows":[{"patient","treatment","paid"}]}` (`paid` מספר בשקלים; `lab` רק אם כתוב בדף). מה שלא קריא: שואלים שאלה אחת, לא מנחשים סכום. בנייה, ותשובה בשורה: כמה טיפולים וכמה מגיע.
+- **"ספק <שם>, YYYY-MM: בוצע|לא בוצע | הערה: ...":** כותבים ל `data/clinic/sup/<YYYYMM>.json` את `{"<שם>":{"done":true|false,"note":"...","at":"<ISO>"}}` (ממזגים, לא מוחקים ספקים אחרים) ובונים. בלי תשובה בצ׳אט.
+- רשימת הרופאים, האחוז והספקים באים מטופס ההקמה ב profile.md. שינוי: `data/clinic/setup.json` (`doctors`, `rate`, `labMinus`, `suppliers`).
