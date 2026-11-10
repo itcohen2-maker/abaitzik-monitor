@@ -836,6 +836,11 @@ function build() {
       return { at: (e && e.at) || '', ok: !st || !!st.ok, connect: (st && !st.ok && st.connect) || '',
         events: e ? e.events.filter((x) => Date.parse(x.end || x.start) >= from) : [] };
     })(),
+    // 10.11.2026, Itzik: "🎛️ לוח הפרסומים". LinkedIn posts and the statuses he marked done (both outside docs/). His copy only.
+    board: inst.name === 'abaitzik' ? (() => { const r = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { return d; } };
+      const li = r(path.join(inst.dataPath, 'linkedin', 'queue.json'), []);
+      return { li: (Array.isArray(li) ? li : []).map((x) => ({ date: x.date || '', time: x.time || '', ok: !!x.approved, up: !!x.posted, bad: !!x.failed, t: String(x.editedText || x.text || '').split('\n')[0].slice(0, 60) })),
+        stDone: r('/home/monitor/wa-status-done.json', {}) }; })() : null,
     // 10.11.2026: 📊 מצב הקמפיינים, the copy ads-sync.js keeps (numbers only, no token).
     ads: (() => { try { return JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'ads', 'status.json'), 'utf8')); } catch (e) { return null; } })(),
     // 7.11.2026: a customer's key for the fast chat on wa-bridge (data/fc-key.txt, sealed like the rest of D).
@@ -4579,7 +4584,7 @@ ${require('./lib/home-ui.js').html}
 
  <div id="askBox"></div>
 <!-- 4.11, Itzik: "תעלה את האריח של העסק שלי למעלה ברשימה. למה שמת אותו אחרון?" The business grid opens the home screen. -->
-${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261105-shlab' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
+${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261105-shlab' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button>' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g13" data-grp="work" id="gBoard" data-new="1" data-upd="20261110-board"><b>🎛️ לוח הפרסומים</b><small>כל הסרטונים והממומן: מה מוכן, מה עולה ומתי</small></button>' : '') + '</div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
   <!-- 3.11, Itzik: "אני צריך אריח שממש יעבב לי, כמו ליד חדש". First on the grid; shows while a --nag reminder is open, hard blink once it is due, until "✅ עשיתי". -->
@@ -17040,6 +17045,98 @@ function vidSheet(tab){
  if(cur.upd)vidMark('tab:'+cur.id,cur.upd);
 }
 on('gVideos',function(){vidSheet();});
+// 10.11.2026, Itzik: "מסך מוניטור שחולש על כל הסרטונים והקמפיין הממומן". Every kind with how many are ready,
+// a week table of what goes up and when (auto or by hand), a mark per row, and a tap opens the ready stock (vidSheet tab).
+function boardSheet(){
+ if(!(VQ&&Date.now()-VQT<60000))return vqLoad(boardSheet);
+ var old=document.getElementById('bdSheet');if(old)old.remove();
+ var T0=vqDay(),B=D.board||{li:[],stDone:{}},Q=VQ||{};
+ var DN=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
+ function add(d,n){var p=d.split('-');return new Date(Date.UTC(+p[0],+p[1]-1,+p[2]+n)).toISOString().slice(0,10);}
+ function dw(d){var p=d.split('-');return new Date(Date.UTC(+p[0],+p[1]-1,+p[2])).getUTCDay();}
+ var days=[];for(var i=0;i<7;i++)days.push(add(T0,i));
+ function isSat(d){return dw(d)===6;}
+ function upDay(x){return x.postedAt?new Date(x.postedAt).toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'}):'';}
+ // what each kind has in the next 7 days: {d: [cell]} cell = {c: class, t: text}
+ function empty(){var o={};days.forEach(function(d){o[d]=[];});return o;}
+ var R=[];
+ // 📲 WhatsApp status: by hand, a reminder at 08:30
+ (function(){var o=empty(),st=Q.st||[],ready=st.filter(function(x){return x.date>=T0&&!B.stDone[x.name];});
+  days.forEach(function(d){var x=st.filter(function(y){return y.date===d;})[0];
+   if(x)o[d].push(B.stDone[x.name]?{c:'ok',t:'✅ עלה'}:{c:'man',t:'08:30 ידני'});
+   else if(!isSat(d))o[d].push({c:'miss',t:'חסר'});});
+  R.push({id:'st',tab:'st',ic:'📲',n:'סטטוס וואטסאפ',cnt:ready.length,how:'ידני, תזכורת ב 08:30',o:o});})();
+ // 🕯️ candle.times: automatic once approved, at its own time
+ (function(){var o=empty(),nr=(Q.nr||[]).filter(function(x){return !x.failed&&!x.rejected;});
+  nr.forEach(function(x){var d=x.posted?upDay(x):x.date;if(!o[d])return;
+   o[d].push(x.posted?{c:'ok',t:'✅ '+(x.time||'')}:x.approved?{c:'auto',t:'🤖 '+(x.time||'')}:{c:'wait',t:'⏳ '+(x.time||'')});});
+  R.push({id:'nr',tab:'nr',ic:'🕯️',n:'נרות',cnt:nr.filter(function(x){return !x.posted;}).length,how:'אוטומטי אחרי אישור שלך',o:o});})();
+ // 🤖 the AI channel: automatic, one a day at 20:00 per language, never on Saturday. Held ones do not go up.
+ [['he','🤖','ערוץ AI עברית'],['en','🤖','ערוץ AI אנגלית']].forEach(function(g){
+  var o=empty(),L=(Q.ai||[]).filter(function(x){return g[0]==='en'?x.lang==='en':x.lang!=='en';});
+  var next=L.filter(function(x){return !x.posted&&!x.hold&&!x.failed;}).sort(function(a,b){return (a.order||0)-(b.order||0);});
+  var held=L.filter(function(x){return !x.posted&&x.hold;}).length,k=0;
+  days.forEach(function(d){
+   var done=L.filter(function(x){return x.posted&&upDay(x)===d;});
+   if(done.length){o[d].push({c:'ok',t:'✅ 20:00'});return;}
+   if(isSat(d))return;
+   if(k<next.length){o[d].push({c:'auto',t:'🤖 20:00'});k++;}else o[d].push({c:'miss',t:held?'⏸️ מושהה':'חסר'});
+  });
+  R.push({id:'ai-'+g[0],tab:'ai',ic:g[1],n:g[2],cnt:next.length,how:'אוטומטי כל יום ב 20:00'+(held?', '+held+' מושהים':''),o:o});
+ });
+ // 💼 LinkedIn: automatic at its time, only after his approval
+ (function(){var o=empty(),li=(B.li||[]).filter(function(x){return !x.bad;});
+  li.forEach(function(x){if(!o[x.date])return;o[x.date].push(x.up?{c:'ok',t:'✅ '+x.time}:x.ok?{c:'auto',t:'🤖 '+x.time}:{c:'wait',t:'⏳ '+x.time});});
+  R.push({id:'li',tab:'',ic:'💼',n:'לינקדין',cnt:li.filter(function(x){return !x.up;}).length,how:'אוטומטי בשעה שנקבעה, אחרי אישור',o:o});})();
+ // the rest are ready stock without a clock: counted from the same tabs the 🎬 sheet shows
+ var TB={};try{vidTabs().forEach(function(t){TB[t.id]=t;});}catch(e){}
+ function rows(id){var t=TB[id];return t?t.L.filter(function(x){return !x.h&&x.k!=='go';}).length:0;}
+ var adsOn=0;try{adsOn=TOM_ITEMS.filter(function(it){return !it.h&&/באוויר/.test(it.t||'');}).length;}catch(e){}
+ (function(){var o=empty();days.forEach(function(d){if(adsOn)o[d].push({c:'run',t:'▶️ '+adsOn+' רצות'});});
+  R.push({id:'ads',tab:'ads',ic:'📣',n:'קמפיין ממומן',cnt:(function(){try{return TOM_ITEMS.filter(function(it){return !it.h;}).length;}catch(e){return 0;}})(),how:adsOn+' מודעות באוויר, רצות כל היום',o:o});})();
+ var plReady=(Q.pl||[]).filter(function(x){return !x.posted;}).length;
+ var STOCKS=[{id:'pl',tab:'pl',ic:'🍽️',n:'מה בצלחת',cnt:plReady,how:'סטוריז לפי הסדר, ידני'},
+  {id:'car',tab:'car',ic:'🎠',n:'קרוסלות',cnt:rows('car'),how:'ידני, אחרי אישור'},
+  {id:'it',tab:'it',ic:'💻',n:'IT Solution',cnt:rows('it'),how:'רילים מוכנים לרשתות'},
+  {id:'me',tab:'me',ic:'🎬',n:'הרילים שלי',cnt:rows('me'),how:'רילים וסטוריז מוכנים'},
+  {id:'sh',tab:'sh',ic:'🌅',n:'שחר',cnt:rows('sh'),how:'רילים, סטורי ופוסטים'},
+  {id:'fut',tab:'fut',ic:'💡',n:'רילים עתידיים',cnt:rows('fut'),how:'רעיונות ותסריטים'}];
+ var hide={};try{hide=JSON.parse(localStorage.getItem('bdHide')||'{}')||{};}catch(e){}
+ var css='<style>#bdSheet .bdG{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:8px 0}'
+  +'#bdSheet .bdC{position:relative;border:1px solid #dde3ee;border-radius:14px;padding:10px 10px 8px;background:#fff;text-align:right;font:14px/1.4 Heebo,sans-serif;cursor:pointer}'
+  +'#bdSheet .bdC b{display:block;font-size:15px}#bdSheet .bdC .bdN{font:800 26px Heebo,sans-serif;color:#1a5fb4}#bdSheet .bdC small{display:block;color:#5a6577}'
+  +'#bdSheet .bdC input{position:absolute;top:8px;left:8px;width:20px;height:20px}#bdSheet .bdC.hasM{padding-left:34px}'
+  +'#bdSheet .bdW{overflow-x:auto;margin:8px -4px;padding:0 4px}#bdSheet table{border-collapse:collapse;min-width:100%;font:13px Heebo,sans-serif}'
+  +'#bdSheet th,#bdSheet td{border:1px solid #e3e7ef;padding:5px 4px;text-align:center;vertical-align:top;white-space:nowrap}'
+  +'#bdSheet th{background:#f4f6f9;font-weight:700}#bdSheet td.bdR{text-align:right;font-weight:700;position:sticky;right:0;background:#fff}'
+  +'#bdSheet .c-ok{color:#1b7f3b}#bdSheet .c-auto{color:#1a5fb4}#bdSheet .c-man{color:#8a5a00}#bdSheet .c-wait{color:#b45309}#bdSheet .c-miss{color:#c0262d}#bdSheet .c-run{color:#6b3fa0}'
+  +'#bdSheet td.sat{background:#f7f7f7;color:#999}#bdSheet .bdL{font:12px/1.8 Heebo,sans-serif;color:#5a6577}</style>';
+ function card(r){return '<div class="bdC'+(r.o?' hasM':'')+'" data-tab="'+esc(r.tab)+'" data-id="'+esc(r.id)+'" role="button" tabindex="0">'
+  +(r.o?'<input type="checkbox" data-mark="'+esc(r.id)+'" aria-label="להציג בטבלה"'+(hide[r.id]?'':' checked')+'>':'')
+  +'<b>'+r.ic+' '+esc(r.n)+'</b><span class="bdN">'+r.cnt+'</span> <small style="display:inline">מוכנים</small><small>'+esc(r.how)+'</small></div>';}
+ var h=css+'<div class="ycard"><b>🎛️ לוח הפרסומים</b>'
+  +'<small>כל מה שמוכן ומה שעולה השבוע. לחיצה על כרטיס פותחת את המלאי המוכן. הסימון קובע מה מופיע בטבלה.</small>'
+  +'<div style="font:800 15px Heebo,sans-serif;margin:10px 0 0">⏱️ עולה לפי לוח זמנים</div><div class="bdG">'+R.map(card).join('')+'</div>'
+  +'<div style="font:800 15px Heebo,sans-serif;margin:10px 0 0">📅 השבוע</div><div class="bdW"><table><thead><tr><th></th>'
+  +days.map(function(d,i){var p=d.split('-');return '<th>'+(i===0?'היום':i===1?'מחר':DN[dw(d)])+'<br><small>'+(+p[2])+'.'+(+p[1])+'</small></th>';}).join('')+'</tr></thead><tbody>'
+  +R.filter(function(r){return !hide[r.id];}).map(function(r){return '<tr><td class="bdR">'+r.ic+' '+esc(r.n)+'</td>'
+   +days.map(function(d){var c=r.o[d]||[];return '<td'+(isSat(d)?' class="sat"':'')+'>'+(c.length?c.map(function(x){return '<div class="c-'+x.c+'">'+esc(x.t)+'</div>';}).join(''):(isSat(d)?'שבת':''))+'</td>';}).join('')+'</tr>';}).join('')
+  +'</tbody></table></div>'
+  +'<div class="bdL">✅ עלה · 🤖 יעלה לבד · ⏳ מחכה לאישור שלך · 08:30 ידני = תזכורת ואתה מעלה · ▶️ ממומן רץ · ⏸️ מושהה · חסר = אין מה שיעלה</div>'
+  +'<div style="font:800 15px Heebo,sans-serif;margin:10px 0 0">📦 מלאי מוכן בלי שעה קבועה</div><div class="bdG">'+STOCKS.map(card).join('')+'</div>'
+  +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+ var w=document.createElement('div');w.id='bdSheet';w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','לוח הפרסומים');
+ w.innerHTML=h;
+ w.onclick=function(e){
+  if(e.target===w||(e.target.getAttribute&&e.target.getAttribute('data-a')==='x'))return w.remove();
+  var m=e.target.getAttribute&&e.target.getAttribute('data-mark');
+  if(m){if(e.target.checked)delete hide[m];else hide[m]=1;try{localStorage.setItem('bdHide',JSON.stringify(hide));}catch(x){}w.remove();return boardSheet();}
+  var c=e.target.closest&&e.target.closest('.bdC');
+  if(c){var t=c.getAttribute('data-tab');if(t){w.remove();vidSheet(t);}else if(c.getAttribute('data-id')==='li'){w.remove();try{bizSheet('li');}catch(x){toast('לינקדין נמצא ב 💼 העסק שלי');}}}
+ };
+ document.body.appendChild(w);
+}
+on('gBoard',boardSheet);
 function carView(id,n,nm){
  var P=function(i){return (i<10?'0':'')+i;};
  var ov=document.createElement('div');ov.className='carv';
