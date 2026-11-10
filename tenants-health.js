@@ -308,6 +308,8 @@ function main() {
     fresh.splice(0, fresh.length, ...fresh.filter((x) => !own.includes(x)));
     const pre = DRY ? [] : fresh.filter((x) => preApprove(t, x));
     fresh.splice(0, fresh.length, ...fresh.filter((x) => !pre.includes(x)));
+    // 10.11.2026, Itzik: every customer request opens a blinking "📨 בקשה מהמנהלה" item (lib/handle.js, kind request) until he decides it.
+    if (!DRY) { try { if (require('./lib/handle.js').fromRequests(require('./lib/instance.js').dataPath, t.id, t.title || t.id, reqs, own.concat(pre))) changed = true; } catch (e) { console.log('handle: ' + e.message); } }
     if (fresh.length && !DRY) {
       try {
         const help = fresh.some((x) => /^עזרה מלקוח:/.test(String(x.text || '')));

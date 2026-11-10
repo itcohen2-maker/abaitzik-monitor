@@ -94,3 +94,49 @@ test('manager: handleItem is a warn line with the oldest and its age, and none w
   assert.ok(!/[-–—]/.test(it.t + it.sub));
   assert.ok(it.hours > 3);
 });
+
+// 10.11.2026: customer requests ("📨 בקשה מהמנהלה") and the automatic answer.
+test('requests: one item per pending request, idempotent, closed when Itzik decides', () => {
+  const d = tmp();
+  const reqs = [
+    { id: 'cr1', at: '2026-11-10T10:00:00.000Z', text: 'תוסיף לי כפתור - של קניות', status: 'pending' },
+    { id: 'cr2', at: '2026-11-10T11:00:00.000Z', text: 'שינוי צבע', status: 'pending' },
+  ];
+  assert.strictEqual(H.fromRequests(d, 'pablo', 'ד״ר שולמן', reqs), true);
+  assert.strictEqual(H.fromRequests(d, 'pablo', 'ד״ר שולמן', reqs), false);
+  const o = H.open(d);
+  assert.strictEqual(o.length, 2);
+  assert.ok(o.every((x) => x.kind === 'request' && x.link === 'tenants' && x.who === 'ד״ר שולמן'));
+  assert.ok(!/[-–—]/.test(o[1].title));
+  reqs[0].status = 'approved';
+  assert.strictEqual(H.fromRequests(d, 'pablo', 'ד״ר שולמן', reqs), true);
+  assert.deepStrictEqual(H.open(d).map((x) => x.title), ['שינוי צבע']);
+  // the same request does not come back once decided
+  H.fromRequests(d, 'pablo', 'ד״ר שולמן', [{ id: 'cr1', at: reqs[0].at, text: 'x', status: 'pending' }]);
+  assert.strictEqual(H.open(d).length, 1);
+});
+
+test('requests: one already approved by code (skip) makes no item; two tenants never collide', () => {
+  const d = tmp();
+  const r = { id: 'cr9', at: '2026-11-10T10:00:00.000Z', text: 'x', status: 'pending' };
+  assert.strictEqual(H.fromRequests(d, 'rinat', 'רינת', [r], [r]), false);
+  H.fromRequests(d, 'a', 'א', [r]);
+  H.fromRequests(d, 'b', 'ב', [r]);
+  assert.strictEqual(H.open(d).length, 2);
+});
+
+test('the customer gets the automatic answer from the listener, with no model, and Itzik gets the tile and the sweep', () => {
+  const root = path.join(__dirname, '..');
+  const listen = fs.readFileSync(path.join(root, 'listen.js'), 'utf8');
+  assert.ok(listen.includes('בקשתך התקבלה, תודה. נחזור אליך בהקדם.'));
+  const i = listen.indexOf('בקשתך התקבלה');
+  assert.ok(listen.slice(i - 400, i).includes('claude-admin-ack'), 'written as the listener ack');
+  assert.ok(listen.slice(i, i + 300).includes("status: 'done'"));
+  const th = fs.readFileSync(path.join(root, 'tenants-health.js'), 'utf8');
+  assert.ok(th.includes('fromRequests('), 'the tenants sweep files the request for Itzik');
+  const b = fs.readFileSync(path.join(root, 'build.js'), 'utf8');
+  assert.ok(b.includes('id="gReq" hidden data-new="1"') && b.includes('📨 בקשה מהמנהלה'));
+  assert.ok(b.includes("gAdminReq: ['g3', '📨 בקשה ממערכת המוניטור'"));
+  assert.ok(b.includes("'🧑‍💼 המנהלת של ' + esc(inst.owner)"));
+  assert.ok(b.includes('בקשה ממנהל: '), 'the wire prefix is unchanged');
+});

@@ -1353,7 +1353,7 @@ const TENANT_TILES = {
   gTasks: ['g17', '✅ משימות', 'מה לעשות, לפי יום'],
   gNotes: ['g10', '📝 פתקים', 'נכתב, נשמר, לא הולך לאיבוד'],
   gVoices: ['g4', '🎙️ הקלטות שלא תומללו', 'מה שלא הצלחתי לקרוא'],
-  gAdminReq: ['g3', '📨 בקשה ממנהל', 'לבקש שינוי במוניטור, והתשובה בצ׳אט'],
+  gAdminReq: ['g3', '📨 בקשה ממערכת המוניטור', 'לבקש שינוי במוניטור, והתשובה בצ׳אט'],
   // 6.10, Home Style: shipments. Drawn only for an instance that lists them.
   gShip: ['g16', '📦 משלוחים', 'כל ההזמנות הפתוחות, לפי דחיפות'],
   gAlerts: ['g3', '🔔 דורש טיפול', 'מה שלא יכול לחכות'],
@@ -1484,7 +1484,9 @@ function tenantTiles(inst) {
   const sample = (n) => '\n  <button type="button" class="gt g11" id="gSample' + n + '" data-new="1" data-sample="1"><b>📌 לדוגמה, אתה יכול לשים פה מה שאתה רוצה</b></button>';
   const samples = inst.samples ? sample(1) + sample(2).replace('g11', 'g4') : '';
   return guides + links + samples + ids.filter((id) => TENANT_TILES[id]).map((id) => {
-    const [cls, title, sub] = TENANT_TILES[id];
+    let [cls, title, sub] = TENANT_TILES[id];
+    // 10.11.2026, Itzik: the manager tile is named after its owner, "המנהלת של ד״ר שולמן".
+    if (id === 'gMyMgr' && inst.owner) title = '🧑‍💼 המנהלת של ' + esc(inst.owner);
     // data-grp by visible label: only the two labels in the groups list get one.
     const grp = { gFiles: 'home', gBiz: 'work' }[id];
     return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' || /^gBh|^gShopList$|^gCamp$|^gMyMgr$/.test(id) ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261105-shai-send"' : '') + (id === 'gTasks' ? ' data-upd="tasks-edit-1106"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
@@ -2840,7 +2842,7 @@ section#talkCard.talk{border:2px solid var(--accent);box-shadow:0 8px 24px color
 #fcRow .fcErr{font:700 13px Heebo,sans-serif;color:#b3261e}
 .c-fcs{background:linear-gradient(160deg,#f59e0b,#b45309);font-size:22px}
 .c-board{background:linear-gradient(160deg,#0e7490,#164e63);font-size:22px}
-#gHandle[hidden]{display:none}
+#gHandle[hidden],#gReq[hidden]{display:none}
 .c-fcc{background:linear-gradient(160deg,#22d3ee,#0e7490);font-size:22px}
 .c-fcp{background:linear-gradient(160deg,#4ade80,#15803d);font-size:22px}
 /* 7.11.2026, Itzik: "להקטין בכלל את כל הכפתורים, שייכנס קצת יותר". Second step of the day: everything on the home screen a notch smaller. */
@@ -4611,7 +4613,7 @@ ${require('./lib/home-ui.js').html}
 
  <div id="askBox"></div>
 <!-- 4.11, Itzik: "תעלה את האריח של העסק שלי למעלה ברשימה. למה שמת אותו אחרון?" The business grid opens the home screen. -->
-${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + ((inst.name === 'abaitzik' || inst.handle === true) ? '<button type="button" class="gt g16" id="gHandle" hidden data-new="1"><b>📋 לטיפול</b><small>טפסים שחזרו וצריכים אותך</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261105-shlab' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button>' + '</div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
+${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + ((inst.name === 'abaitzik' || inst.handle === true) ? '<button type="button" class="gt g16" id="gHandle" hidden data-new="1"><b>📋 לטיפול</b><small>טפסים שחזרו וצריכים אותך</small></button><button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261105-shlab' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button>' + '</div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
   <!-- 3.11, Itzik: "אני צריך אריח שממש יעבב לי, כמו ליד חדש". First on the grid; shows while a --nag reminder is open, hard blink once it is due, until "✅ עשיתי". -->
@@ -15276,9 +15278,9 @@ function adminReqSheet(){
  var w=document.createElement('div');
  w.id='arSheet';w.className='ysheet';
 // 10.11.2026: the request goes to the admin, never to the owner of the monitor (it said "to Ilay" on his own monitor). No name here: a customer page holds no word of Itzik (tests/owner-cut).
- w.setAttribute('role','dialog');w.setAttribute('aria-label','לבקש שינוי במוניטור');
- w.innerHTML='<div class="ycard"><b>לבקש שינוי במוניטור</b>'
-  +'<small>מה תרצה לשנות במוניטור? כפתור, מסך, עיצוב, איך הוא עונה. הבקשה הולכת למנהל המערכת, והוא מאשר. התשובה תגיע אליך בצ׳אט.</small>'
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','בקשה ממערכת המוניטור');
+ w.innerHTML='<div class="ycard"><b>📨 בקשה ממערכת המוניטור</b>'
+  +'<small>מה תרצה לשנות במוניטור? כפתור, מסך, עיצוב, איך הוא עונה. הבקשה הולכת למערכת המוניטור, והיא מאשרת. התשובה תגיע אליך בצ׳אט.</small>'
   +'<textarea id="arText" rows="5" style="width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif" placeholder="לדוגמה: תוסיף לי כפתור של רשימת קניות"></textarea>'
   // Itzik, 8.10: offer the customer the choice and show it, an icon on the
   // home screen or a button inside a screen, for the same subject.
@@ -15433,7 +15435,8 @@ function myMgrSheet(){
  var old=document.getElementById('mmSheet');if(old)old.remove();
  var w=document.createElement('div');
  w.id='mmSheet';w.className='ysheet';
- w.setAttribute('role','dialog');w.setAttribute('aria-label','מנהלת IT Solution');
+ var mmName=(INSTANCE&&INSTANCE.owner)?'המנהלת של '+INSTANCE.owner:'מנהלת IT Solution';
+ w.setAttribute('role','dialog');w.setAttribute('aria-label',mmName);
  var DN=['א','ב','ג','ד','ה','ו','ש'],kind='remind',freq='daily',days=[];
  function rows(){
   var L=D.routines||[];
@@ -15448,7 +15451,7 @@ function myMgrSheet(){
     +'<button type="button" class="yb yx" data-a="del" data-id="'+esc(r.id)+'">למחוק</button></div>';
   }).join('');
  }
- w.innerHTML='<div class="ycard"><b>🧑‍💼 מנהלת IT Solution</b>'
+ w.innerHTML='<div class="ycard"><b>🧑‍💼 '+esc(mmName)+'</b>'
   +'<small>דברים שחוזרים על עצמם: אומרים לי פעם אחת, ואני עושה בזמן שקבעת. תזכורת מגיעה אליך לטלפון. עבודה: אני מכינה ומחזירה תשובה במסך התשובות. שליחה לאנשים, תשלום ומחיקה תמיד מחכים לאישור שלך.</small>'
   +'<div id="mmList">'+rows()+'</div>'
   +'<small style="opacity:1;font-weight:600">שגרה חדשה: מה חוזר על עצמו?</small>'
@@ -15556,7 +15559,7 @@ function arWaitShow(){
  s.textContent='לבקש שינוי במוניטור, והתשובה בצ׳אט';
  if(!at)return;
  if(Date.now()-at>172800000){try{localStorage.removeItem('arSent');}catch(e){}return;}
- s.textContent='הבקשה אצל מנהל המערכת, מחכה לתשובה';
+ s.textContent='הבקשה אצל מערכת המוניטור, מחכה לתשובה';
 }
 boot('arWait',arWaitShow);
 // 12.10: an empty circle opens the same request, already started.
@@ -17522,28 +17525,29 @@ on('icBoard',function(){boardSheet(0);});
   a new lead). The sheet lists them newest first; "✓ טופל" sends "✓ טופל: <id>", which listen.js marks with no model.
   This phone drops the item at once (handleDone) and the next build drops it for good. The tile is never hidden while one is open.
 */
-function handleOpen(){
+function handleOpen(req){
  var done=[];try{done=JSON.parse(localStorage.getItem('handleDone')||'[]')||[];}catch(e){}
- return (D.handle||[]).filter(function(x){return done.indexOf(x.id)<0;});
+ return (D.handle||[]).filter(function(x){return done.indexOf(x.id)<0&&((x.kind==='request')===!!req);});
 }
-function paintHandle(){
- var t=document.getElementById('gHandle');if(!t)return;
- var L=handleOpen();
+function paintHandle(){paintHandleTile(false);paintHandleTile(true);}
+function paintHandleTile(req){
+ var t=document.getElementById(req?'gReq':'gHandle');if(!t)return;
+ var L=handleOpen(req);
  t.hidden=!L.length;
  if(!L.length){t.classList.remove('taskblink');return;}
  t.classList.add('taskblink');
  var b=t.querySelector('b'),sm=t.querySelector('small');
- if(b)b.textContent='📋 לטיפול · '+L.length;
+ if(b)b.textContent=(req?'📨 בקשה מהמנהלה':'📋 לטיפול')+' · '+L.length;
  if(sm)sm.textContent=L.slice(0,2).map(function(x){return x.who;}).join(', ')+(L.length>2?' ועוד '+(L.length-2):'')+' · לחיצה לפתיחה';
 }
-function handleSheet(){
+function handleSheet(req){
  var old=document.getElementById('hdSheet');if(old)old.remove();
  var w=document.createElement('div');w.id='hdSheet';w.className='ysheet';
  w.setAttribute('role','dialog');w.setAttribute('aria-label','לטיפול');
- var KI={setup:'🧩',sign:'✍️',agreement:'📑',nda:'🔏',doc:'📄',quote:'💰',lead:'🔔',form:'📝'};
+ var KI={request:'📨',setup:'🧩',sign:'✍️',agreement:'📑',nda:'🔏',doc:'📄',quote:'💰',lead:'🔔',form:'📝'};
  function rows(){
-  var L=handleOpen();
-  if(!L.length)return '<small>אין כלום לטיפול. כל מה שחזר טופל.</small>';
+  var L=handleOpen(req);
+  if(!L.length)return '<small>'+(req?'אין בקשות פתוחות מלקוחות.':'אין כלום לטיפול. כל מה שחזר טופל.')+'</small>';
   return L.map(function(x){
    var d=new Date(x.at);
    var go=x.link&&typeof MG_GO!=='undefined'&&MG_GO[x.link];
@@ -17554,7 +17558,7 @@ function handleSheet(){
     +'<button type="button" class="yb yb1" data-a="done" data-id="'+esc(x.id)+'">✓ טופל</button></div>';
   }).join('');
  }
- w.innerHTML='<div class="ycard"><b>📋 לטיפול</b><small>מה שחזר אליך ומחכה לך, החדש למעלה. כשסיימת עם פריט, לחץ ✓ טופל והוא יורד.</small><div id="hdList">'+rows()+'</div><button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+ w.innerHTML='<div class="ycard"><b>'+(req?'📨 בקשה מהמנהלה':'📋 לטיפול')+'</b><small>'+(req?'בקשות שלקוחות שלחו מהמוניטור שלהם, החדשה למעלה. הכפתור מוביל למסך שבו מחליטים. כשסיימת, לחץ ✓ טופל.':'מה שחזר אליך ומחכה לך, החדש למעלה. כשסיימת עם פריט, לחץ ✓ טופל והוא יורד.')+'</small><div id="hdList">'+rows()+'</div><button type="button" class="yb yx" data-a="x">סגירה</button></div>';
  function close(){w.remove();paintHandle();}
  w.onclick=function(e){
   var t=e.target;if(t===w)return close();
@@ -17573,7 +17577,8 @@ function handleSheet(){
  };
  document.body.appendChild(w);
 }
-on('gHandle',function(){handleSheet();setTimeout(paintHandle,60);});
+on('gHandle',function(){handleSheet(false);setTimeout(paintHandle,60);});
+on('gReq',function(){handleSheet(true);setTimeout(paintHandle,60);});
 
 function carView(id,n,nm){
  var P=function(i){return (i<10?'0':'')+i;};
