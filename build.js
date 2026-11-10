@@ -15603,7 +15603,7 @@ on('gAds',adsSheet);
 function clSheet(id,label,body,wire){
  var old=document.getElementById(id);if(old)old.remove();
  var w=document.createElement('div');w.id=id;w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label',label);
- w.innerHTML='<style>#'+id+' .clT{width:100%;border-collapse:collapse;font:13px/1.5 Heebo,sans-serif;margin:6px 0}#'+id+' .clT td,#'+id+' .clT th{border-bottom:1px solid #e5e7ef;padding:6px 4px;text-align:right;vertical-align:top}'
+ w.innerHTML='<style>#'+id+' .clT{width:100%;table-layout:fixed;border-collapse:collapse;font:13px/1.5 Heebo,sans-serif;margin:6px 0;word-break:break-word}#'+id+' .ycard{box-sizing:border-box}#'+id+' .clT td,#'+id+' .clT th{border-bottom:1px solid #e5e7ef;padding:6px 4px;text-align:right;vertical-align:top}'
   +'#'+id+' .clT th{font-weight:700;color:#5a6577;font-size:12px}#'+id+' .clN{text-align:left!important;white-space:nowrap;direction:ltr}'
   +'#'+id+' .clBox{border:1px solid #e1e4ee;border-radius:14px;padding:10px 12px;margin:8px 0}#'+id+' .clBad{border-color:#f3b4ba;background:#fff4f5}#'+id+' .clOk{border-color:#b9e5c8;background:#f3fbf6}'
   +'#'+id+' .clTabs{display:flex;gap:6px;overflow-x:auto;margin:8px 0;padding-bottom:2px}#'+id+' .clTabs button{flex:0 0 auto;border:1px solid #d6dae6;background:#fff;border-radius:999px;padding:7px 12px;font:700 13px Heebo,sans-serif;cursor:pointer}'
