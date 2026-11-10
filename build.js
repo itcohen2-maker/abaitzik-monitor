@@ -1386,6 +1386,8 @@ const TENANT_TILES = {
   gCamp: ['g13', '📣 קמפיינים', 'מעלים תמונות או סרטון, ואני מכין טיוטה'],
   // 10.11.2026, Itzik, for Ilay: his own campaigns from his ad account, read only (ads-sync.js, data/ads/status.json).
   gAds: ['g13', '📊 מצב הקמפיינים', 'מה רץ, כמה הוצא, כמה לידים'],
+  // 10.11.2026, Itzik: Ilay's own publishing board (only where instance.json screens lists it).
+  gMyBoard: ['g16', '🎛️ לוח הפרסומים', 'מה רץ, מה מתוכנן ומה מוכן'],
   // 10.11.2026, Itzik: a manager for every monitor, where the customer records what comes back again and again (lib/routines.js).
   gMyMgr: ['g4', '🧑‍💼 מנהלת IT Solution', 'מה שחוזר על עצמו, אומרים פעם אחת'],
 };
@@ -1491,7 +1493,7 @@ function tenantTiles(inst) {
     if (id === 'gMyMgr' && inst.owner) title = '🧑‍💼 המנהלת של ' + esc(inst.owner);
     // data-grp by visible label: only the two labels in the groups list get one.
     const grp = { gFiles: 'home', gBiz: 'work' }[id];
-    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' || /^gBh|^gShopList$|^gCamp$|^gMyMgr$/.test(id) ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261105-shai-send"' : '') + (id === 'gTasks' ? ' data-upd="tasks-edit-1106"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' || /^gBh|^gShopList$|^gCamp$|^gMyMgr$|^gMyBoard$/.test(id) ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261105-shai-send"' : '') + (id === 'gTasks' ? ' data-upd="tasks-edit-1106"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
 }
 /*
@@ -15574,6 +15576,62 @@ function adsSheet(){
  document.body.appendChild(w);
 }
 on('gAds',adsSheet);
+/*
+  10.11.2026, Itzik: "שים לאיליי לוח פרסומים: לוח של כל ההעלאות שלו, ריק אם אין עדיין מלאי, או שתמלא לו את הקמפיין."
+  A customer's own publishing board, in the black journal look of Itzik's board (a reel he liked). It shows only what is
+  this customer's: the campaigns that run in his ad account (D.ads, read only), what is planned to go up (nothing yet, so it
+  says so) and the campaign drafts he asked for with the campaign tile. No video, network or post of Itzik's is in it.
+*/
+function myBoardSheet(){
+ var old=document.getElementById('mbSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='mbSheet';w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','לוח הפרסומים');
+ var a=D.ads;
+ var css='<style>#mbSheet .ycard{background:#05060b!important;color:#f4f5ff!important;border:1px solid rgba(120,130,255,.22);border-radius:28px;box-shadow:0 26px 90px rgba(70,80,255,.2);padding:18px 14px 20px}'
+  +'#mbSheet .ycard>b{display:block;font:800 24px Heebo,sans-serif;color:#fff;text-shadow:0 0 24px rgba(91,108,255,.6);margin:0 0 6px}'
+  +'#mbSheet .ycard small,#mbSheet .ycard small[style]{color:#9aa0b8!important}'
+  +'#mbSheet h4{font:800 18px Heebo,sans-serif;color:#aab2ff;text-shadow:0 0 16px rgba(91,108,255,.5);margin:18px 2px 4px}'
+  +'#mbSheet .yb{background:#0f1220;color:#e8eaff;border:1px solid rgba(255,255,255,.12);border-radius:16px;min-height:48px}#mbSheet .yb.yb1{background:linear-gradient(135deg,#4f5bff,#8b5cf6);border-color:transparent;color:#fff}#mbSheet .yb.yx{background:transparent;color:#9aa0b8}'
+  +'#mbSheet .ai{display:flex;align-items:center;gap:12px;background:#0d0f18;border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:10px 14px;margin:8px 0}'
+  +'#mbSheet .ai.s-ok{border-color:rgba(34,197,94,.35)}#mbSheet .ai.s-wait{border-color:rgba(245,184,76,.35)}'
+  +'#mbSheet .tm{flex:0 0 auto;min-width:84px;text-align:center;font:800 30px/1 Heebo,sans-serif;color:#b9c0ff;text-shadow:0 0 20px rgba(91,108,255,.75);direction:ltr}#mbSheet .tm small{display:block;font:600 11px Heebo,sans-serif;color:#8f96bd!important;text-shadow:none}'
+  +'#mbSheet .mid{flex:1;min-width:0}#mbSheet .mid b{display:block;font:800 15px Heebo,sans-serif;color:#fff}#mbSheet .wh{display:block;font:500 13px/1.4 Heebo,sans-serif;color:#b9bedc}'
+  +'#mbSheet .side{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:6px}#mbSheet .clk{color:#6b72ff;opacity:.9}'
+  +'#mbSheet .chip{display:inline-block;border-radius:999px;padding:4px 11px;font:800 12px Heebo,sans-serif;white-space:nowrap}'
+  +'#mbSheet .chip.k-will{background:rgba(91,108,255,.2);color:#a9b2ff}#mbSheet .chip.k-hand{background:rgba(245,184,76,.18);color:#ffd27a}#mbSheet .chip.k-draft{background:rgba(139,92,246,.2);color:#c4a5ff}'
+  +'#mbSheet .emp{background:#0a0c14;border:1px dashed rgba(255,255,255,.14);border-radius:20px;padding:14px;margin:8px 0;color:#9aa0b8;font:14px/1.6 Heebo,sans-serif}</style>';
+ var CLK='<svg class="clk" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+ function money(n){n=Math.round((Number(n)||0)*100)/100;return n.toLocaleString('he-IL');}
+ function short(n){var p=String(n||'').split('|').map(function(x){return x.trim();}).filter(Boolean);return p.slice(0,3).join(' · ').slice(0,70);}
+ function when(s){try{var d=new Date(s);return d.toLocaleDateString('he-IL',{day:'numeric',month:'numeric'})+' '+d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});}catch(e){return '';}}
+ var h=css+'<div class="ycard"><b>🎛️ לוח הפרסומים</b><small>כל מה שרץ, מה מתוכנן להעלות ומה מוכן אצלך, במקום אחד.</small>';
+ h+='<h4>▶️ באוויר עכשיו</h4>';
+ var any=0;
+ if(a&&a.ok){
+  (a.accounts||[]).forEach(function(ac){
+   (ac.campaigns||[]).filter(function(c){return c.status==='ACTIVE'||c.status==='PAUSED'||c.status==='CAMPAIGN_PAUSED';}).slice(0,8).forEach(function(c){
+    any++;var on=c.status==='ACTIVE';
+    h+='<div class="ai s-'+(on?'ok':'wait')+'"><span class="tm">'+money(c.spendToday)+'<small>₪ היום</small></span>'
+     +'<div class="mid"><b>'+esc(short(c.name))+'</b><span class="wh">לידים ב 7 ימים: '+(c.leads7||0)+(c.leads7?' · עלות לליד '+money(c.cpl7)+' ₪':'')+' · לחיצות '+(c.clicks7||0)+'</span></div>'
+     +'<div class="side"><span class="chip k-'+(on?'will':'hand')+'">'+(on?'▶️ רץ':'⏸️ מושהה')+'</span>'+CLK+'</div></div>';
+   });
+  });
+  if(any)h+='<small>עודכן '+esc(when(a.at))+'. קריאה בלבד, שום דבר לא משתנה בחשבון.</small>';
+ }
+ if(!any)h+='<div class="emp">'+esc(a&&a.ok?'אין כרגע קמפיין באוויר.':'עוד אין חיבור לחשבון המודעות, ולכן אין כאן קמפיינים. אחרי החיבור הם יופיעו לבד.')+'</div>'
+  +(a&&!a.ok&&a.connect?'<a class="yb yb1" style="display:block;text-align:center;text-decoration:none" rel="noreferrer" referrerpolicy="no-referrer" href="'+esc(a.connect)+'">התחברות עם פייסבוק</a>':'');
+ h+='<h4>📅 מתוכנן להעלות</h4><div class="emp">עוד אין העלאות מתוכננות. כשיהיה פוסט, סטורי או סרטון מוכן, הוא יופיע כאן עם היום והשעה שבהם הוא עולה.</div>';
+ var dr=(D.reports||[]).filter(function(r){return /קמפיין/.test(String(r.title||''));}).slice(0,5);
+ h+='<h4>📝 טיוטות מוכנות</h4>';
+ if(dr.length)h+=dr.map(function(r){return '<div class="ai"><div class="mid"><b>'+esc(r.title)+'</b><span class="wh">'+esc(when(r.at))+'</span></div><div class="side"><span class="chip k-draft">📝 טיוטה</span></div></div>';}).join('')
+  +'<small>הטיוטות במסך התשובות. שום דבר לא עולה בלי אישור שלך.</small>';
+ else h+='<div class="emp">עוד אין טיוטות. בלחיצה על "📣 קמפיינים" מעלים תמונות או סרטון, ואני מכין טיוטה שתופיע כאן.</div>';
+ h+='<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+ w.innerHTML=h;
+ w.onclick=function(e){if(e.target===w||(e.target.getAttribute&&e.target.getAttribute('data-a')==='x'))w.remove();};
+ document.body.appendChild(w);
+}
+on('gMyBoard',myBoardSheet);
 // 24.10: the tile says the request is with the owner, for two days after it was sent.
 function arWaitMark(){try{localStorage.setItem('arSent',String(Date.now()));}catch(e){}arWaitShow();}
 function arWaitShow(){
