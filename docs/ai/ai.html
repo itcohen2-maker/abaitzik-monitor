@@ -134,7 +134,8 @@
   var todo=list.filter(function(x){return !x.posted;}),done=list.filter(function(x){return x.posted;});
   var h='<h2>'+title+'</h2>';
   h+='<h3>⏳ עוד לא עלה ('+todo.length+')</h3>'+(todo.length?'<div class="grid">'+todo.map(card).join('')+'</div>':'<p class="empty">אין כרגע מה להעלות</p>');
-  h+='<h3>✅ עלה ('+done.length+')</h3>'+(done.length?'<div class="grid">'+done.map(card).join('')+'</div>':'<p class="empty">עוד לא עלה כלום</p>');
+  // 10.11.2026, Itzik: "מה שעלה אפשר להסיר מהרשימה, זה סתם מבלבל". What went up is not listed here, only counted.
+  if(done.length)h+='<p class="note">✅ עלו עד היום: '+done.length+'. הם כבר לא ברשימה.</p>';
   return h;
  }
  function draw(q){
