@@ -242,7 +242,7 @@
    fetch(src).then(function(r){return r.blob();}).then(function(bl){t.disabled=false;var f=new File([bl],nm,{type:'video/mp4'});
     if(!navigator.canShare({files:[f]})){plain();return;}t._file=f;toast('לחץ שוב לשמירה בתמונות');},function(){t.disabled=false;plain();});return;}
   if(t.hasAttribute('data-chg')){var ta=art.querySelector('textarea'),txt=(ta.value||'').trim();if(!txt){var dt=t.closest('details');if(dt)dt.open=true;ta.focus();toast('כתוב קודם מה לשנות, ואז שליחה');return;}
-   if(!SEND||!SEND.t){toast('צריך לפתוח את הדף מהאריח במוניטור');return;}t.disabled=true;
+   if(!SEND||!SEND.t){toast('צריך לפתוח את הדף מהאריח במוניטור');t.textContent='פותחים מהאריח במוניטור';return;}t.disabled=true;
    var msg='candle.times, שינוי בפריט '+it.name+' ('+dayName(it.date)+' '+dayNum(it.date)+' '+(it.time||'')+(it.city?', '+it.city:'')+'): '+txt;
    fetch('https://ntfy.sh/'+SEND.t,{method:'POST',headers:{Title:'monitor','X-Tags':'memo'},body:['משימה',msg,'','קוד '+SEND.c].join(String.fromCharCode(10))})
     .then(function(r){if(r.ok){ta.disabled=true;t.textContent='נשלח';toast('הבקשה נשלחה');}else{t.disabled=false;toast('לא נשלח, נסה שוב');}},function(){t.disabled=false;toast('לא נשלח, נסה שוב');});return;}
