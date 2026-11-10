@@ -2609,7 +2609,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-10T07:29:02.676Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-10T07:45:27.377Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4525,7 +4525,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='f9ef2b9d04';
+var CODE_ID='33c84e0086';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11095,12 +11095,13 @@ function campSheet(){
   +'<small style="opacity:1;font-weight:600">מה לעשות איתם? אפשר לבחור כמה:</small>'
   +'<div class="arPick" id="cpKinds" role="group" aria-label="מה לעשות">'
   +kinds.map(function(k){return '<button type="button" class="yb" data-k="'+k+'">'+k+'</button>';}).join('')+'</div>'
+  +'<div id="cpSounds" hidden></div>'
   +'<textarea id="cpText" rows="4" style="width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif" placeholder="מה חשוב להגיד? מבצע, מי הקהל, כתובת, מחיר. אם משהו חסר, אשאל."></textarea>'
-  +'<small>מוזיקה: כברירת מחדל בלי מוזיקה בתוך הסרטון. אפשר להוסיף מהאוסף של Meta בזמן הפרסום.</small>'
+  +'<small>מוזיקה: כברירת מחדל בלי מוזיקה בתוך הסרטון. אם בחרת צליל מהתיקייה, אוסיף אותו בעדינות מתחת לסרטון.</small>'
   +'<button type="button" class="yb yb1" data-a="send">שליחה</button>'
   +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
  function close(){w.remove();}
- var picked=[];
+ var picked=[],chosenSound='',sndTitle={};
  function paintList(){
   var l=document.getElementById('cpList');
   if(l)l.textContent=picked.length?('נבחרו '+picked.length+': '+picked.map(function(f){return f.name;}).join(', ')):'';
@@ -11112,11 +11113,17 @@ function campSheet(){
   if(a==='pick'){var fi=document.getElementById('cpFiles');if(fi)fi.click();return;}
   var k=e.target.getAttribute&&e.target.getAttribute('data-k');
   if(k){e.target.classList.toggle('on');return;}
+  var sid=e.target.getAttribute&&e.target.getAttribute('data-s');
+  if(sid){
+   chosenSound=chosenSound===sid?'':sid;
+   [].forEach.call(w.querySelectorAll('#cpSounds [data-s]'),function(b){b.classList.toggle('on',b.getAttribute('data-s')===chosenSound);});
+   return;
+  }
   if(a!=='send')return;
   var chosen=[].map.call(w.querySelectorAll('#cpKinds .yb.on'),function(b){return b.getAttribute('data-k');});
   var t=(document.getElementById('cpText').value||'').trim();
   if(!picked.length&&!t){toast('בחר תמונות או סרטון, או כתוב מה תרצה');return;}
-  var note='קמפיין: '+(chosen.length?chosen.join(', '):'לא נבחר סוג')+(t?' | '+t:'');
+  var note='קמפיין: '+(chosen.length?chosen.join(', '):'לא נבחר סוג')+(t?' | '+t:'')+(chosenSound&&sndTitle[chosenSound]?' | צליל: '+sndTitle[chosenSound]:'');
   e.target.disabled=true;
   var go=picked.length?sendAll(picked,note):sendText('קמפיין',note,'משימה');
   go.then(function(){
@@ -11128,6 +11135,18 @@ function campSheet(){
   if(e.target&&e.target.id==='cpFiles'){picked=[].slice.call(e.target.files||[]);paintList();}
  });
  document.body.appendChild(w);
+ fetch('sounds/index.json',{cache:'no-store'}).then(function(r){return r.ok?r.json():[];}).then(function(list){
+  var box=document.getElementById('cpSounds');
+  if(!box||!Array.isArray(list)||!list.length)return;
+  list.forEach(function(s){if(s&&s.id)sndTitle[s.id]=s.title||s.id;});
+  box.hidden=false;
+  box.innerHTML='<small style="opacity:1;font-weight:600">🎵 צליל לסרטון (אפשר לא לבחור):</small>'
+   +list.filter(function(s){return s&&s.id&&s.file;}).map(function(s){
+    return '<div class="cpSnd" style="margin:6px 0"><b>'+esc(s.title||s.id)+'</b>'+(s.mood?' <small>'+esc(s.mood)+'</small>':'')
+     +'<audio controls preload="none" src="sounds/'+esc(s.file)+'" style="width:100%"></audio>'
+     +'<button type="button" class="yb" data-s="'+esc(s.id)+'">בחר את הצליל הזה</button></div>';
+   }).join('');
+ }).catch(function(){});
 }
 on('gCamp',campSheet);
 function arWaitMark(){try{localStorage.setItem('arSent',String(Date.now()));}catch(e){}arWaitShow();}
