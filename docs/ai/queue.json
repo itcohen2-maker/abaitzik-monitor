@@ -29,9 +29,17 @@
   "ytd": "This robot has only four fingers, and that's not a bug. Which job in your business would you hand to a robot first? Source: Boston Dynamics, 2026.",
   "song": "",
   "song_tt": "",
-  "posted": false,
-  "postedAt": null,
-  "approvedAt": "2026-11-10T12:04:04.323Z"
+  "posted": true,
+  "postedAt": "2026-11-10T18:03:54.980Z",
+  "approvedAt": "2026-11-10T12:04:04.323Z",
+  "auto": {
+   "reel": "18130553113873643",
+   "story": "18640437202008066",
+   "storyError": null,
+   "page": "1691434892717860",
+   "pageError": null,
+   "channel": "itsolution.global"
+  }
  },
  {
   "id": "agents-he",
@@ -90,9 +98,17 @@
   "ytd": "המנכ״ל של פרוטון תכנן לקרוא כמעט את כל העובדים לשיחה על שימוש בבינה מלאכותית, והעובדים חששו שיפטרו אותם אם ישתמשו בה מעט מדי. הוא ביטל את השיחות, אבל הלחץ נשאר. צריך לחייב עובדים להשתמש ב AI? מקור: 404 Media, 2026.",
   "song": "",
   "song_tt": "",
-  "posted": false,
-  "postedAt": null,
-  "approvedAt": "2026-11-10T12:00:17.768Z"
+  "posted": true,
+  "postedAt": "2026-11-10T18:02:31.539Z",
+  "approvedAt": "2026-11-10T12:00:17.768Z",
+  "auto": {
+   "reel": "17943494799388043",
+   "story": "18106986223998893",
+   "storyError": null,
+   "page": "2197405620810622",
+   "pageError": null,
+   "channel": "itsolution.ai"
+  }
  },
  {
   "id": "fridges-he",
