@@ -840,7 +840,20 @@ function build() {
     board: inst.name === 'abaitzik' ? (() => { const r = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { return d; } };
       const li = r(path.join(inst.dataPath, 'linkedin', 'queue.json'), []);
       return { li: (Array.isArray(li) ? li : []).map((x) => ({ date: x.date || '', time: x.time || '', ok: !!x.approved, up: !!x.posted, bad: !!x.failed, t: String(x.editedText || x.text || '').split('\n')[0].slice(0, 60) })),
-        stDone: r('/home/monitor/wa-status-done.json', {}) }; })() : null,
+        stDone: r('/home/monitor/wa-status-done.json', {}),
+        // 10.11.2026, Itzik: "לוח בקרה שחולש על כל הקמפיין והאוטומציות לרשתות". The last line of each automation's log.
+        auto: [['ai', '🤖', 'ערוץ AI לאינסטגרם', 'כל יום 20:00, לא בשבת', '/home/monitor/ai-post.log'],
+          ['nr', '🕯️', 'נרות candle.times', 'כל 10 דקות, בשעה של כל פריט מאושר', '/home/monitor/ner-post.log'],
+          ['li', '💼', 'לינקדין', 'בשעה שנקבעה, אחרי אישור, 08:00 עד 21:00', '/home/monitor/linkedin-post.log'],
+          ['st', '📲', 'תזכורת סטטוס וואטסאפ', 'א׳ עד ו׳ 08:30', '/home/monitor/wa-status-morning.log'],
+          ['camp', '📣', 'בדיקת הקמפיין הממומן', 'כל בוקר 07:40', '/home/monitor/camp-daily.log'],
+          ['stock', '📦', 'בדיקת מלאי', 'א׳ עד ו׳ 07:10', '/home/monitor/stock-check.log'],
+          ['social', '👥', 'פרסום ללקוחות', 'כל 10 דקות, מהשעה של כל לקוח', '/home/monitor/social-run.log'],
+          ['ads', '📊', 'קמפיינים של לקוחות (מטא)', 'כל 30 דקות', '/var/log/monitor-ads.log']].map((a) => {
+          let at = '', last = '';
+          try { at = fs.statSync(a[4]).mtime.toISOString(); const t = fs.readFileSync(a[4], 'utf8').trim().split('\n'); last = (t[t.length - 1] || '').replace(/^[0-9T:-]+\s+/, '').slice(0, 90); } catch (e) {}
+          return { id: a[0], ic: a[1], n: a[2], when: a[3], at, last, bad: /נכשל|error|fail|שגיאה/i.test(last) };
+        }) }; })() : null,
     // 10.11.2026: 📊 מצב הקמפיינים, the copy ads-sync.js keeps (numbers only, no token).
     ads: (() => { try { return JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'ads', 'status.json'), 'utf8')); } catch (e) { return null; } })(),
     // 7.11.2026: a customer's key for the fast chat on wa-bridge (data/fc-key.txt, sealed like the rest of D).
@@ -17123,8 +17136,16 @@ function boardSheet(){
    +days.map(function(d){var c=r.o[d]||[];return '<td'+(isSat(d)?' class="sat"':'')+'>'+(c.length?c.map(function(x){return '<div class="c-'+x.c+'">'+esc(x.t)+'</div>';}).join(''):(isSat(d)?'שבת':''))+'</td>';}).join('')+'</tr>';}).join('')
   +'</tbody></table></div>'
   +'<div class="bdL">✅ עלה · 🤖 יעלה לבד · ⏳ מחכה לאישור שלך · 08:30 ידני = תזכורת ואתה מעלה · ▶️ ממומן רץ · ⏸️ מושהה · חסר = אין מה שיעלה</div>'
+  +'<div style="font:800 15px Heebo,sans-serif;margin:10px 0 0">⚙️ האוטומציות</div>'+autoHtml()
   +'<div style="font:800 15px Heebo,sans-serif;margin:10px 0 0">📦 מלאי מוכן בלי שעה קבועה</div><div class="bdG">'+STOCKS.map(card).join('')+'</div>'
   +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+ function autoHtml(){
+  var A=(B.auto||[]);if(!A.length)return '<small>אין נתונים מהשרת.</small>';
+  function ago(s){if(!s)return 'עוד לא רץ';var m=Math.round((Date.now()-Date.parse(s))/60000);return m<60?'לפני '+m+' דק׳':m<1440?'לפני '+Math.round(m/60)+' שע׳':'לפני '+Math.round(m/1440)+' ימים';}
+  return A.map(function(a){return '<div style="border:1px solid '+(a.bad?'#f2b8bb':'#dde3ee')+';background:'+(a.bad?'#fff5f5':'#fff')+';border-radius:12px;padding:8px 10px;margin:6px 0;font:14px/1.5 Heebo,sans-serif">'
+   +'<b>'+(a.bad?'⚠️ ':'🟢 ')+a.ic+' '+esc(a.n)+'</b><br><small style="color:#5a6577">'+esc(a.when)+' · פעולה אחרונה '+ago(a.at)+'</small>'
+   +(a.last?'<br><small style="color:'+(a.bad?'#c0262d':'#33405a')+'">'+esc(a.last)+'</small>':'')+'</div>';}).join('');
+ }
  var w=document.createElement('div');w.id='bdSheet';w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','לוח הפרסומים');
  w.innerHTML=h;
  w.onclick=function(e){
@@ -17913,6 +17934,11 @@ function bizSheet(t0){
     +'<div class="bzSec">🔌 טופס התחברות</div>'
     +'<div class="bzRow"><b>כל כרטיס הוא כפתור התחברות</b><small>גוגל, פייסבוק ואינסטגרם, מיקרוסופט, פיירפליס, יוטיוב, לינקדין וטיקטוק. זו התבנית. ללקוח חדש כותבים לי את שמו ומקבלים קישור אישי, והצבע מתעדכן לבד כשהוא פותח ומחבר.</small></div>'
     +'<a class="yb yb1" href="https://form.it-solution.co.il/s/97353be7657c22ee625e/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לראות את טופס ההתחברות</a>'
+    // 10.11.2026, Itzik: "את הלינק לבדיקת האות תכניס למוניטור, ב IT Solution". Ilay's own Facebook connection, for the campaigns test.
+    +'<div class="bzSec">👤 איליי: בדיקת קריאת הקמפיינים</div>'
+    +'<div class="bzRow"><b>לחיצה אחת, הפייסבוק של איליי</b><small>הקישור לאיליי בלבד. אם תלחץ בעצמך על הכפתור בדף, יתחבר הפייסבוק שלך. אחרי שהוא מתחבר, הקמפיינים שלו מופיעים במוניטור שלו ב 📊 מצב הקמפיינים. לפני כן צריך להוסיף אותו כ Tester באפליקציה של מטא.</small></div>'
+    +'<a class="yb yb1" href="https://wa.me/972558853023?text='+encodeURIComponent('איליי, לחיצה אחת ומתחברים עם הפייסבוק שלך, כדי שהמוניטור יראה את הקמפיינים שלך. רק קריאה, לא משנה כלום:\\nhttps://form.it-solution.co.il/s/9ac71db672eafc146b63')+'" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none" data-new="1">💬 לשלוח לאיליי בוואטסאפ</a>'
+    +'<a class="yb" href="https://form.it-solution.co.il/s/9ac71db672eafc146b63/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לראות את הדף שלו</a>'
     // 4.11, Itzik: an insurance agent asks how confidential the monitor is. Pages to hand the customer.
     +'<div class="bzSec">🛡️ מוניטור ואבטחה</div>'
     +'<button type="button" class="yb yb1" data-bz="anim" data-f="views-report.html">👀 מי ראה את הדפים</button>'
