@@ -2697,7 +2697,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-10T17:48:53.023Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-10T17:50:36.296Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4618,7 +4618,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='01366288ab';
+var CODE_ID='b8b4db3cac';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -13156,7 +13156,11 @@ function boardMore(){
  (function(){var o=empty();days.forEach(function(d){if(adsOn)o[d].push({c:'run',t:'▶️ '+adsOn+' רצות'});});
   R.push({id:'ads',tab:'ads',ic:'📣',n:'קמפיין ממומן',cnt:(function(){try{return TOM_ITEMS.filter(function(it){return !it.h;}).length;}catch(e){return 0;}})(),how:adsOn+' מודעות באוויר, רצות כל היום',o:o});})();
  var plReady=(Q.pl||[]).filter(function(x){return !x.posted;}).length;
- var STOCKS=[{id:'pl',tab:'pl',ic:'🍽️',n:'מה בצלחת',cnt:plReady,how:'סטוריז לפי הסדר, ידני'},
+ var PLQ=Q.pl||[],plLast=PLQ.filter(function(x){return x.posted;}).map(upDay).sort().pop()||'',plP=plLast.split('-');
+ var PL={id:'pl',tab:'pl',ic:'🍽️',n:'מה בצלחת',cnt:plReady,how:'ידני, לפי הסדר'+(plLast?'. עלה לאחרונה ב '+(+plP[2])+'.'+(+plP[1]):''),o:empty()};
+ PLQ.forEach(function(x){var d=upDay(x);if(x.posted&&PL.o[d])PL.o[d].push({c:'ok',t:'✅ '+String(x.name||'').split(':')[0]});});
+ if(plReady)PL.o[T0].push({c:'man',t:'✋ '+plReady+' מוכנים'});
+ var STOCKS=[PL,
   {id:'car',tab:'car',ic:'🎠',n:'קרוסלות',cnt:rows('car'),how:'ידני, אחרי אישור'},
   {id:'it',tab:'it',ic:'💻',n:'IT Solution',cnt:rows('it'),how:'רילים מוכנים לרשתות'},
   {id:'me',tab:'me',ic:'🎬',n:'הרילים שלי',cnt:rows('me'),how:'רילים וסטוריז מוכנים'},
@@ -13180,7 +13184,7 @@ function boardMore(){
   +'<div style="font:800 15px Heebo,sans-serif;margin:10px 0 0">⏱️ עולה לפי לוח זמנים</div><div class="bdG">'+R.map(card).join('')+'</div>'
   +'<div style="font:800 15px Heebo,sans-serif;margin:10px 0 0">📅 השבוע</div><div class="bdW"><table><thead><tr><th></th>'
   +days.map(function(d,i){var p=d.split('-');return '<th>'+(i===0?'היום':i===1?'מחר':DN[dw(d)])+'<br><small>'+(+p[2])+'.'+(+p[1])+'</small></th>';}).join('')+'</tr></thead><tbody>'
-  +R.filter(function(r){return !hide[r.id];}).map(function(r){return '<tr><td class="bdR">'+r.ic+' '+esc(r.n)+'</td>'
+  +R.concat([PL]).filter(function(r){return !hide[r.id];}).map(function(r){return '<tr><td class="bdR">'+r.ic+' '+esc(r.n)+'</td>'
    +days.map(function(d){var c=r.o[d]||[];return '<td'+(isSat(d)?' class="sat"':'')+'>'+(c.length?c.map(function(x){return '<div class="c-'+x.c+'">'+esc(x.t)+'</div>';}).join(''):(isSat(d)?'שבת':''))+'</td>';}).join('')+'</tr>';}).join('')
   +'</tbody></table></div>'
   +'<div class="bdL">✅ עלה · 🤖 יעלה לבד · ⏳ מחכה לאישור שלך · 08:30 ידני = תזכורת ואתה מעלה · ▶️ ממומן רץ · ⏸️ מושהה · חסר = אין מה שיעלה</div>'
@@ -13704,7 +13708,14 @@ function fcPaintInline(){
  var box=document.getElementById('fcInline');if(!box)return;
  if(!fcS.inl){box.hidden=true;return;}
  var h='';
- fcS.msgs.slice(-4).forEach(function(m){h+='<div class="fcib '+(m.from==='me'?'me':'bot')+'">'+esc(m.text)+'</div>';});
+ var last4=fcS.msgs.slice(-4);
+ last4.forEach(function(m,i){
+  h+='<div class="fcib '+(m.from==='me'?'me':'bot')+'">'+esc(m.text)+'</div>';
+  if(m.from!=='me'&&i===last4.length-1&&m.id&&String(m.id).indexOf('tmp')!==0&&fcS.mode!=='sales'){
+   var st=fcS.todo[m.id]||(m.todo?'ok':'');
+   h+='<button type="button" class="fcmore fcInDo" data-id="'+esc(m.id)+'"'+(st?' disabled':'')+'>'+(st==='ok'?'✓ נשלח לביצוע':st==='wait'?'שולח...':'🛠️ להעביר לביצוע')+'</button>';
+  }
+ });
  if(fcS.busy)h+='<div class="fcib bot fcTyping">…כותב</div>';
  if(fcS.err)h+='<div class="fcErr">'+esc(fcS.err)+'</div>';
  h+='<button type="button" class="fcmore" id="fcMore">פתיחת השיחה המלאה</button>';
@@ -13775,7 +13786,7 @@ function fcSheet(){
  var f=document.getElementById('fcQuick');
  if(f)f.onsubmit=function(e){e.preventDefault();var i=document.getElementById('fcQText'),v=i?i.value:'';if(!String(v).trim())return;fcS.inl=true;if(i)i.value='';fcSend(v);};
  var r=document.getElementById('fcRow');
- if(r)r.addEventListener('click',function(e){var t=e.target;if(t&&t.id==='fcMore')fcSheet();});
+ if(r)r.addEventListener('click',function(e){var t=e.target;if(t&&t.id==='fcMore')fcSheet();else if(t&&t.classList&&t.classList.contains('fcInDo'))fcTodo(t.getAttribute('data-id'));});
  on('icFcSales',function(){fcSheet();fcSend('אימון מכירות');});
  on('icFcCoach',function(){fcSheet();fcSend('אימון עסקי');});
  on('icFcPersonal',function(){fcSheet();fcSend('אימון אישי');});

@@ -17491,7 +17491,13 @@ function boardMore(){
  (function(){var o=empty();days.forEach(function(d){if(adsOn)o[d].push({c:'run',t:'▶️ '+adsOn+' רצות'});});
   R.push({id:'ads',tab:'ads',ic:'📣',n:'קמפיין ממומן',cnt:(function(){try{return TOM_ITEMS.filter(function(it){return !it.h;}).length;}catch(e){return 0;}})(),how:adsOn+' מודעות באוויר, רצות כל היום',o:o});})();
  var plReady=(Q.pl||[]).filter(function(x){return !x.posted;}).length;
- var STOCKS=[{id:'pl',tab:'pl',ic:'🍽️',n:'מה בצלחת',cnt:plReady,how:'סטוריז לפי הסדר, ידני'},
+ // 10.11, Itzik: "למה אין עידכון של מה בצלחת". No clock, so it is not in the timed list: a row in the week table instead,
+ // what went up on each day and how many are waiting for today.
+ var PLQ=Q.pl||[],plLast=PLQ.filter(function(x){return x.posted;}).map(upDay).sort().pop()||'',plP=plLast.split('-');
+ var PL={id:'pl',tab:'pl',ic:'🍽️',n:'מה בצלחת',cnt:plReady,how:'ידני, לפי הסדר'+(plLast?'. עלה לאחרונה ב '+(+plP[2])+'.'+(+plP[1]):''),o:empty()};
+ PLQ.forEach(function(x){var d=upDay(x);if(x.posted&&PL.o[d])PL.o[d].push({c:'ok',t:'✅ '+String(x.name||'').split(':')[0]});});
+ if(plReady)PL.o[T0].push({c:'man',t:'✋ '+plReady+' מוכנים'});
+ var STOCKS=[PL,
   {id:'car',tab:'car',ic:'🎠',n:'קרוסלות',cnt:rows('car'),how:'ידני, אחרי אישור'},
   {id:'it',tab:'it',ic:'💻',n:'IT Solution',cnt:rows('it'),how:'רילים מוכנים לרשתות'},
   {id:'me',tab:'me',ic:'🎬',n:'הרילים שלי',cnt:rows('me'),how:'רילים וסטוריז מוכנים'},
@@ -17515,7 +17521,7 @@ function boardMore(){
   +'<div style="font:800 15px Heebo,sans-serif;margin:10px 0 0">⏱️ עולה לפי לוח זמנים</div><div class="bdG">'+R.map(card).join('')+'</div>'
   +'<div style="font:800 15px Heebo,sans-serif;margin:10px 0 0">📅 השבוע</div><div class="bdW"><table><thead><tr><th></th>'
   +days.map(function(d,i){var p=d.split('-');return '<th>'+(i===0?'היום':i===1?'מחר':DN[dw(d)])+'<br><small>'+(+p[2])+'.'+(+p[1])+'</small></th>';}).join('')+'</tr></thead><tbody>'
-  +R.filter(function(r){return !hide[r.id];}).map(function(r){return '<tr><td class="bdR">'+r.ic+' '+esc(r.n)+'</td>'
+  +R.concat([PL]).filter(function(r){return !hide[r.id];}).map(function(r){return '<tr><td class="bdR">'+r.ic+' '+esc(r.n)+'</td>'
    +days.map(function(d){var c=r.o[d]||[];return '<td'+(isSat(d)?' class="sat"':'')+'>'+(c.length?c.map(function(x){return '<div class="c-'+x.c+'">'+esc(x.t)+'</div>';}).join(''):(isSat(d)?'שבת':''))+'</td>';}).join('')+'</tr>';}).join('')
   +'</tbody></table></div>'
   +'<div class="bdL">✅ עלה · 🤖 יעלה לבד · ⏳ מחכה לאישור שלך · 08:30 ידני = תזכורת ואתה מעלה · ▶️ ממומן רץ · ⏸️ מושהה · חסר = אין מה שיעלה</div>'
