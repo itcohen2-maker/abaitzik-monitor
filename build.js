@@ -17332,22 +17332,50 @@ function boardSheet(wk){
    if(y.s==='wait'||y.s==='no'||y.s==='late'||(y.s==='miss'&&d>=add(T0,-6)))todo.push({ri:ri,d:d,y:y,r:r});
   });
  });});
- var css='<style>#bdGrid table{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:2px;font:11px/1.2 Heebo,sans-serif;margin:6px 0}'
-  +'#bdGrid th{font-weight:800;padding:3px 0;color:#1a2233}#bdGrid th small{display:block;font-weight:600;color:#5a6577}#bdGrid th.tdy{background:#1a5fb4;color:#fff;border-radius:8px}#bdGrid th.tdy small{color:#dfe9ff}'
-  +'#bdGrid td{text-align:center;vertical-align:middle;border-radius:8px;padding:3px 0;height:40px}'
-  +'#bdGrid td.nm{text-align:right;padding:3px 4px;font-weight:700;font-size:12px;cursor:pointer;background:#f4f6f9}#bdGrid td.nm small{display:block;font-weight:500;color:#5a6577;font-size:10px}'
-  +'#bdGrid td.cl{cursor:pointer;background:#fbfbfd;font-size:16px}#bdGrid td.cl small{display:block;font:700 10px Heebo,sans-serif;color:#33405a}'
-  +'#bdGrid td.s-ok{background:#e6f6ea}#bdGrid td.s-will{background:#e7f0ff}#bdGrid td.s-hand,#bdGrid td.s-open{background:#fff5e0}#bdGrid td.s-wait{background:#fff0d6}'
-  +'#bdGrid td.s-no,#bdGrid td.s-miss,#bdGrid td.s-late{background:#fde8e9}#bdGrid td.s-run{background:#f1eafb}#bdGrid td.sat{background:#f0f0f0}#bdGrid td.pst{opacity:.75}'
-  +'#bdGrid .sum{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}#bdGrid .sum span{background:#f4f6f9;border-radius:20px;padding:4px 10px;font:700 13px Heebo,sans-serif}'
-  +'#bdGrid .nav{display:flex;gap:6px;align-items:center;justify-content:space-between;margin:6px 0}#bdGrid .nav button{flex:0 0 auto;min-width:44px}#bdGrid .nav b{font:800 14px Heebo,sans-serif}'
-  +'#bdGrid .td{border:1px solid #f2c9cc;background:#fff8f8;border-radius:12px;padding:8px 10px;margin:6px 0;font:13px/1.5 Heebo,sans-serif;cursor:pointer}#bdGrid .td.w{border-color:#f3d7a8;background:#fffaf0}'
-  +'#bdGrid .lg{font:12px/1.9 Heebo,sans-serif;color:#33405a}'
-  +'#bdGrid .ag{margin:8px 0;font:13px/1.45 Heebo,sans-serif}#bdGrid .ag>b{display:block;font:800 14px Heebo,sans-serif;color:#1a5fb4;margin-bottom:3px}#bdGrid .ai{background:#f6f8fb;border-radius:10px;padding:6px 10px;margin:4px 0;cursor:pointer}#bdGrid .ai .tm{display:inline-block;min-width:44px;font-weight:800}#bdGrid .ai .wh{font-weight:600;color:#1a2233}#bdGrid .ai small{color:#5a6577}'
-  +'#bdEd{position:fixed;inset:0;background:rgba(10,20,40,.45);display:flex;align-items:flex-end;justify-content:center;z-index:99999}'
-  +'#bdEd .box{background:#fff;border-radius:18px 18px 0 0;padding:16px;width:100%;max-width:520px;box-sizing:border-box;font:15px/1.5 Heebo,sans-serif;max-height:85vh;overflow:auto}'
+ // 10.11.2026, Itzik, from a reel (itaiaron): "תעצב את לוח הבקרה לפי הסרטון, כמו יומן שחור יפה". Pure black, an indigo to violet glow,
+ // big glowing times, a status chip and a small clock on every row, dark rounded cards. Only the look: the data and the clicks are the same.
+ var css='<style>#bdGrid .ycard{background:#05060b!important;color:#f4f5ff!important;border:1px solid rgba(120,130,255,.22);border-radius:28px;'
+  +'box-shadow:0 0 0 1px rgba(255,255,255,.03),0 26px 90px rgba(70,80,255,.2);padding:18px 14px 20px;--ink:#f4f5ff;--dim:#9aa0b8;--surface:#0d0f18;--line:rgba(255,255,255,.1)}'
+  +'#bdGrid .ycard>b{display:block;font:800 24px Heebo,sans-serif;color:#fff;text-shadow:0 0 24px rgba(91,108,255,.6);margin:0 0 8px}'
+  +'#bdGrid .ycard small,#bdGrid .ycard small[style]{color:#9aa0b8!important}'
+  +'#bdGrid .ycard div[style*="1b7f3b"]{color:#5eea8a!important;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);border-radius:16px;padding:10px 12px}'
+  +'#bdGrid .yb{background:#0f1220;color:#e8eaff;border:1px solid rgba(255,255,255,.12);border-radius:16px;min-height:48px}'
+  +'#bdGrid .yb.yb2{background:linear-gradient(135deg,#4f5bff,#8b5cf6);border-color:transparent;color:#fff;box-shadow:0 0 22px rgba(91,108,255,.4)}'
+  +'#bdGrid .yb.yx{background:transparent;color:#9aa0b8}'
+  +'#bdGrid table{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:3px;font:11px/1.2 Heebo,sans-serif;margin:8px 0}'
+  +'#bdGrid th{font-weight:800;padding:4px 0;color:#dfe2ff}#bdGrid th small{display:block;font-weight:600}'
+  +'#bdGrid th.tdy{background:linear-gradient(135deg,#4f5bff,#8b5cf6);color:#fff;border-radius:10px;box-shadow:0 0 18px rgba(91,108,255,.6)}#bdGrid th.tdy small{color:#e6e9ff!important}'
+  +'#bdGrid td{text-align:center;vertical-align:middle;border-radius:10px;padding:3px 0;height:42px}'
+  +'#bdGrid td.nm{text-align:right;padding:3px 6px;font-weight:700;font-size:12px;cursor:pointer;background:#0d0f18;color:#f4f5ff}#bdGrid td.nm small{display:block;font-weight:500;font-size:10px}'
+  +'#bdGrid td.cl{cursor:pointer;background:#0a0c14;border:1px solid rgba(255,255,255,.05);font-size:16px}#bdGrid td.cl small{display:block;font:700 10px Heebo,sans-serif;color:#cfd3ff!important}'
+  +'#bdGrid td.s-ok{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4)}#bdGrid td.s-will{background:rgba(91,108,255,.17);border-color:rgba(91,108,255,.45)}'
+  +'#bdGrid td.s-hand,#bdGrid td.s-open,#bdGrid td.s-wait{background:rgba(245,184,76,.14);border-color:rgba(245,184,76,.4)}'
+  +'#bdGrid td.s-no,#bdGrid td.s-miss,#bdGrid td.s-late{background:rgba(255,93,108,.15);border-color:rgba(255,93,108,.45)}'
+  +'#bdGrid td.s-run{background:rgba(139,92,246,.2);border-color:rgba(139,92,246,.5)}#bdGrid td.sat{background:#07080e}#bdGrid td.pst{opacity:.65}'
+  +'#bdGrid .sum{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}#bdGrid .sum span{background:#0d0f18;border:1px solid rgba(255,255,255,.1);color:#e8eaff;border-radius:999px;padding:5px 12px;font:700 13px Heebo,sans-serif}'
+  +'#bdGrid .sum span[style]{background:rgba(255,93,108,.16)!important;border-color:rgba(255,93,108,.4);color:#ffb3ba}'
+  +'#bdGrid .nav{display:flex;gap:6px;align-items:center;justify-content:space-between;margin:8px 0}#bdGrid .nav button{flex:0 0 auto;min-width:56px}#bdGrid .nav b{font:800 15px Heebo,sans-serif;color:#cfd3ff}'
+  +'#bdGrid .lg{font:12px/1.9 Heebo,sans-serif;color:#8f96bd}'
+  +'#bdGrid .td{border:1px solid rgba(255,93,108,.4);background:rgba(255,93,108,.1);color:#ffd3d7;border-radius:18px;padding:10px 12px;margin:8px 0;font:13px/1.5 Heebo,sans-serif;cursor:pointer}'
+  +'#bdGrid .td.w{border-color:rgba(245,184,76,.45);background:rgba(245,184,76,.1);color:#ffe7b8}#bdGrid .td small{color:inherit!important;opacity:.8}'
+  +'#bdGrid #bdAgenda>div:first-child{font:800 20px Heebo,sans-serif!important;color:#fff;text-shadow:0 0 22px rgba(91,108,255,.55);margin:18px 0 4px!important}'
+  +'#bdGrid .ag{margin:12px 0}#bdGrid .ag>b{display:block;font:800 17px Heebo,sans-serif;color:#aab2ff;text-shadow:0 0 16px rgba(91,108,255,.5);margin:6px 2px 4px}'
+  +'#bdGrid .ai{display:flex;align-items:center;gap:12px;background:#0d0f18;border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:10px 14px;margin:8px 0;cursor:pointer}'
+  +'#bdGrid .ai.s-ok{border-color:rgba(34,197,94,.35)}#bdGrid .ai.s-no,#bdGrid .ai.s-miss,#bdGrid .ai.s-late{border-color:rgba(255,93,108,.4)}#bdGrid .ai.s-wait,#bdGrid .ai.s-hand{border-color:rgba(245,184,76,.35)}'
+  +'#bdGrid .ai .tm{flex:0 0 auto;min-width:84px;text-align:center;font:800 30px/1 Heebo,sans-serif;color:#b9c0ff;text-shadow:0 0 20px rgba(91,108,255,.75);letter-spacing:1px;direction:ltr}'
+  +'#bdGrid .ai .mid{flex:1;min-width:0}#bdGrid .ai .mid b{display:block;font:800 15px Heebo,sans-serif;color:#fff}'
+  +'#bdGrid .ai .wh{display:block;font:500 13px/1.4 Heebo,sans-serif;color:#b9bedc;overflow:hidden;text-overflow:ellipsis}#bdGrid .ai .mid small{color:#8f96bd!important}'
+  +'#bdGrid .ai .side{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:6px}'
+  +'#bdGrid .chip{display:inline-block;border-radius:999px;padding:4px 11px;font:800 12px Heebo,sans-serif;white-space:nowrap}'
+  +'#bdGrid .chip.k-ok{background:rgba(34,197,94,.18);color:#5eea8a}#bdGrid .chip.k-will{background:rgba(91,108,255,.2);color:#a9b2ff}'
+  +'#bdGrid .chip.k-hand{background:rgba(245,184,76,.18);color:#ffd27a}#bdGrid .chip.k-bad{background:rgba(255,93,108,.2);color:#ff9aa5}'
+  +'#bdGrid .clk{color:#6b72ff;opacity:.9}'
+  +'#bdEd{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;z-index:99999}'
+  +'#bdEd .box{background:#07080f;color:#f4f5ff;border:1px solid rgba(120,130,255,.25);border-radius:26px 26px 0 0;padding:18px 16px;width:100%;max-width:520px;box-sizing:border-box;font:15px/1.5 Heebo,sans-serif;max-height:85vh;overflow:auto;box-shadow:0 -20px 80px rgba(70,80,255,.25)}'
+  +'#bdEd .box small{color:#9aa0b8!important}#bdEd .yb{background:#0f1220;color:#e8eaff;border:1px solid rgba(255,255,255,.12);border-radius:16px}#bdEd .yb.yb1{background:linear-gradient(135deg,#4f5bff,#8b5cf6);border-color:transparent;color:#fff}'
   +'#bdEd label{display:flex;align-items:center;gap:8px;margin:10px 0;font-weight:600}#bdEd input[type=checkbox]{width:22px;height:22px}'
-  +'#bdEd input[type=time]{font:700 22px Heebo,sans-serif;padding:6px 10px;border:1px solid #ccd;border-radius:10px}#bdEd .row{border-top:1px solid #eef;padding:8px 0}#bdEd .it{background:#f6f8fb;border-radius:10px;padding:8px 10px;margin:6px 0}</style>';
+  +'#bdEd input[type=time]{font:800 26px Heebo,sans-serif;padding:8px 12px;border:1px solid rgba(255,255,255,.15);border-radius:14px;background:#0d0f18;color:#b9c0ff;text-shadow:0 0 16px rgba(91,108,255,.6)}'
+  +'#bdEd .row{border-top:1px solid rgba(255,255,255,.08);padding:8px 0}#bdEd .it{background:#0d0f18;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:10px 12px;margin:8px 0}</style>';
  var wkName=BD_WEEK===0?'השבוע':BD_WEEK===-1?'שבוע שעבר':BD_WEEK===1?'שבוע הבא':(BD_WEEK>0?'בעוד '+BD_WEEK+' שבועות':'לפני '+(-BD_WEEK)+' שבועות');
  var h=css+'<div class="ycard"><b>🎛️ לוח הפרסומים</b>'
   +'<div class="nav"><button type="button" class="yb" data-a="prev">‹ קודם</button><b>'+wkName+' · '+dm(days[0])+' עד '+dm(days[6])+'</b><button type="button" class="yb" data-a="next">הבא ›</button></div>'
@@ -17360,13 +17388,17 @@ function boardSheet(wk){
   +'</tbody></table>'
   +'<div class="lg">✅ עלה · ❌ לא עלה · 🔜 יעלה לבד · ✋ אתה מעלה, יש תזכורת · ⏳ מחכה לאישור שלך · ⚠️ לא יעלה · ▶️ ממומן רץ · משבצת ריקה: לא מתוכנן</div>';
  // 10.11, Itzik: "תשים את כל הזמנים ומה עולה, איזה סרטון". Day by day under the table: time, network, which video, state.
+ var CHIP={ok:['✓ עלה','ok'],will:['🔜 יעלה לבד','will'],hand:['✋ אתה מעלה','hand'],wait:['⏳ לאישור','hand'],no:['⚠️ לא יעלה','bad'],miss:['❌ לא עלה','bad'],late:['⚠️ עבר הזמן','bad'],run:['▶️ רץ','will'],open:['✋ ידני','hand']};
+ var CLK='<svg class="clk" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
  var AG=days.filter(function(d){return d>=T0||BD_WEEK<0;}).map(function(d){
   var L2=[];ROWS.forEach(function(r,ri){if(r.kind==='always')return;var c=C[ri+'|'+d];if(!c||!c.s)return;
    (c.items||[]).forEach(function(y){L2.push({t:y.time||c.t||'',r:r,y:y});});});
   L2.sort(function(a,b){return (a.t||'99').localeCompare(b.t||'99');});
   return '<div class="ag"><b>'+(d===T0?'היום':'יום '+DN[dw(d)])+' '+dm(d)+'</b>'+(L2.length?L2.map(function(x){
-   return '<div class="ai" data-r="'+ROWS.indexOf(x.r)+'" data-d="'+d+'"><span class="tm">'+esc(x.t||'')+'</span>'+IC[x.y.s]+' '+x.r.ic+' <b>'+esc(x.r.n)+'</b>'+(x.r.sub?' <small>'+esc(x.r.sub)+'</small>':'')
-    +'<br><span class="wh">'+esc(x.y.n||x.y.why)+'</span>'+(x.y.n?'<small> · '+esc(x.y.why)+'</small>':'')+'</div>';}).join(''):'<div class="ai"><small>לא מתוכנן כלום</small></div>')+'</div>';}).join('');
+   var ch=CHIP[x.y.s]||['','will'];
+   return '<div class="ai s-'+x.y.s+'" data-r="'+ROWS.indexOf(x.r)+'" data-d="'+d+'"><span class="tm">'+esc(x.t||'--:--')+'</span>'
+    +'<div class="mid"><b>'+x.r.ic+' '+esc(x.r.n)+(x.r.sub?' <small>'+esc(x.r.sub)+'</small>':'')+'</b><span class="wh">'+esc(x.y.n||x.y.why)+'</span>'+(x.y.n?'<small>'+esc(x.y.why)+'</small>':'')+'</div>'
+    +'<div class="side"><span class="chip k-'+ch[1]+'">'+ch[0]+'</span>'+CLK+'</div></div>';}).join(''):'<div class="ai"><small>לא מתוכנן כלום</small></div>')+'</div>';}).join('');
  h+='<div id="bdAgenda"><div style="font:800 15px Heebo,sans-serif;margin:12px 0 2px">📋 מה עולה ומתי, יום אחרי יום</div>'+(adsOn?'<small style="display:block;color:#5a6577">▶️ 📣 הממומן רץ כל היום, '+adsOn+' מודעות באוויר</small>':'')+AG+'</div>';
  var G=[],GI={};todo.forEach(function(x){var k=x.r.id+'|'+x.y.s+'|'+x.y.why;if(!GI[k]){GI[k]={r:x.r,y:x.y,ds:[],d:x.d};G.push(GI[k]);}GI[k].ds.push(x.d);});
  todo=G;
@@ -17504,15 +17536,18 @@ function boardMore(){
   {id:'sh',tab:'sh',ic:'🌅',n:'שחר',cnt:rows('sh'),how:'רילים, סטורי ופוסטים'},
   {id:'fut',tab:'fut',ic:'💡',n:'רילים עתידיים',cnt:rows('fut'),how:'רעיונות ותסריטים'}];
  var hide={};try{hide=JSON.parse(localStorage.getItem('bdHide')||'{}')||{};}catch(e){}
- var css='<style>#bdSheet .bdG{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:8px 0}'
-  +'#bdSheet .bdC{position:relative;border:1px solid #dde3ee;border-radius:14px;padding:10px 10px 8px;background:#fff;text-align:right;font:14px/1.4 Heebo,sans-serif;cursor:pointer}'
-  +'#bdSheet .bdC b{display:block;font-size:15px}#bdSheet .bdC .bdN{font:800 26px Heebo,sans-serif;color:#1a5fb4}#bdSheet .bdC small{display:block;color:#5a6577}'
+ var css='<style>#bdSheet .ycard{background:#05060b!important;color:#f4f5ff!important;border:1px solid rgba(120,130,255,.22);border-radius:28px;box-shadow:0 26px 90px rgba(70,80,255,.2);padding:18px 14px 20px}'
+  +'#bdSheet .ycard>b{display:block;font:800 24px Heebo,sans-serif;color:#fff;text-shadow:0 0 24px rgba(91,108,255,.6)}#bdSheet .ycard small,#bdSheet .ycard small[style]{color:#9aa0b8!important}'
+  +'#bdSheet .yb{background:#0f1220;color:#e8eaff;border:1px solid rgba(255,255,255,.12);border-radius:16px}#bdSheet .yb.yx{background:transparent;color:#9aa0b8}'
+  +'#bdSheet .bdG{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:8px 0}'
+  +'#bdSheet .bdC{position:relative;border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:12px 12px 10px;background:#0d0f18;color:#f4f5ff;text-align:right;font:14px/1.4 Heebo,sans-serif;cursor:pointer}'
+  +'#bdSheet .bdC b{display:block;font-size:15px;color:#fff}#bdSheet .bdC .bdN{font:800 30px Heebo,sans-serif;color:#b9c0ff;text-shadow:0 0 20px rgba(91,108,255,.7)}#bdSheet .bdC small{display:block;color:#8f96bd!important}'
   +'#bdSheet .bdC input{position:absolute;top:8px;left:8px;width:20px;height:20px}#bdSheet .bdC.hasM{padding-left:34px}'
-  +'#bdSheet .bdW{overflow-x:auto;margin:8px -4px;padding:0 4px}#bdSheet table{border-collapse:collapse;min-width:100%;font:13px Heebo,sans-serif}'
-  +'#bdSheet th,#bdSheet td{border:1px solid #e3e7ef;padding:5px 4px;text-align:center;vertical-align:top;white-space:nowrap}'
-  +'#bdSheet th{background:#f4f6f9;font-weight:700}#bdSheet td.bdR{text-align:right;font-weight:700;position:sticky;right:0;background:#fff}'
-  +'#bdSheet .c-ok{color:#1b7f3b}#bdSheet .c-auto{color:#1a5fb4}#bdSheet .c-man{color:#8a5a00}#bdSheet .c-wait{color:#b45309}#bdSheet .c-miss{color:#c0262d}#bdSheet .c-run{color:#6b3fa0}'
-  +'#bdSheet td.sat{background:#f7f7f7;color:#999}#bdSheet .bdL{font:12px/1.8 Heebo,sans-serif;color:#5a6577}</style>';
+  +'#bdSheet .bdW{overflow-x:auto;margin:8px -4px;padding:0 4px}#bdSheet table{border-collapse:separate;border-spacing:3px;min-width:100%;font:13px Heebo,sans-serif}'
+  +'#bdSheet th,#bdSheet td{background:#0a0c14;border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:5px 4px;text-align:center;vertical-align:top;white-space:nowrap;color:#e8eaff}'
+  +'#bdSheet th{background:#0d0f18;font-weight:700;color:#cfd3ff}#bdSheet td.bdR{text-align:right;font-weight:700;position:sticky;right:0;background:#0d0f18}'
+  +'#bdSheet .c-ok{color:#5eea8a}#bdSheet .c-auto{color:#a9b2ff}#bdSheet .c-man{color:#ffd27a}#bdSheet .c-wait{color:#ffb454}#bdSheet .c-miss{color:#ff9aa5}#bdSheet .c-run{color:#c4a5ff}'
+  +'#bdSheet td.sat{background:#07080e;color:#555}#bdSheet .bdL{font:12px/1.8 Heebo,sans-serif;color:#8f96bd}</style>';
  function card(r){return '<div class="bdC'+(r.o?' hasM':'')+'" data-tab="'+esc(r.tab)+'" data-id="'+esc(r.id)+'" role="button" tabindex="0">'
   +(r.o?'<input type="checkbox" data-mark="'+esc(r.id)+'" aria-label="להציג בטבלה"'+(hide[r.id]?'':' checked')+'>':'')
   +'<b>'+r.ic+' '+esc(r.n)+'</b><span class="bdN">'+r.cnt+'</span> <small style="display:inline">מוכנים</small><small>'+esc(r.how)+'</small></div>';}
