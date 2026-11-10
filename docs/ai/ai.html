@@ -38,6 +38,8 @@
   .row [data-posted]{background:rgba(60,207,142,.18);border-color:var(--ok)}
   .row [data-posted][data-sure="1"]{background:var(--ok);color:#06210f}
   .row [data-un]{color:var(--dim)}
+  .row [data-approve]{background:var(--ok);color:#06210f;border-color:var(--ok);font-size:20px;order:-1}
+  .row [data-unapprove]{color:var(--dim)}
   .row button:disabled{opacity:.4}
   .cp{font-size:15px;min-height:48px}
   .song{font-size:14px;color:var(--dim)}
@@ -84,7 +86,7 @@
    +'<div class="media"><video src="'+esc(it.file)+'" poster="'+esc(it.poster)+'" controls playsinline preload="none"></video></div>'
    +'<div class="meta">'
    +'<span class="nm">'+esc(it.name)+'</span>'
-   +'<span class="st '+(posted?'ok':'wait')+'">'+(posted?'✅ עלה '+day(it.postedAt):(it.hold?'👀 לצפייה, ממתין לאישור שלך, לא יעלה לבד':'⏳ עוד לא עלה'))+'</span>'
+   +'<span class="st '+(posted?'ok':'wait')+'">'+(posted?'✅ עלה '+day(it.postedAt):(it.hold?'👀 לצפייה, ממתין לאישור שלך, לא יעלה לבד':(it.approvedAt?'✅ אושר, יעלה ב 20:00 לפי הסדר בתור':'⏳ עוד לא עלה')))+'</span>'
    +(it.note?'<div class="st wait" style="white-space:normal">'+esc(it.note)+'</div>':'')
    +'<div class="cap">'+esc(it.ig||'')+'</div>'
    +'<div class="row">'
@@ -94,6 +96,8 @@
    +'<button type="button" class="cp" data-cp="tt" data-id2="'+esc(it.id)+'">📋 כיתוב טיקטוק</button>'
    +'<button type="button" class="cp" data-cp="yt" data-id2="'+esc(it.id)+'">📋 יוטיוב, כותרת</button>'
    +'<button type="button" class="cp full" data-cp="ytd" data-id2="'+esc(it.id)+'">📋 יוטיוב, תיאור</button>'
+   +(!posted&&it.hold?'<button type="button" class="full ok" data-approve="'+esc(it.id)+'">✅ לאשר, שיעלה בזמן שלו</button>'
+     :(!posted&&it.approvedAt?'<button type="button" class="full" data-unapprove="'+esc(it.id)+'">↩️ בטל אישור, להחזיר להמתנה</button>':''))
    +(posted?'<button type="button" class="full" data-un="'+esc(it.id)+'">↩️ סימנתי בטעות, עוד לא עלה</button>'
           :'<button type="button" class="full" data-posted="'+esc(it.id)+'">☐ העליתי את זה</button>')
    +'</div>'
@@ -125,6 +129,12 @@
    var id=b.getAttribute('data-posted'),it=find(id);
    if(b.getAttribute('data-sure')!=='1'){b.setAttribute('data-sure','1');b.textContent='✅ לחץ שוב לאישור: העליתי';setTimeout(function(){if(b.isConnected&&!b.disabled){b.removeAttribute('data-sure');b.textContent='☐ העליתי את זה';}},4000);return;}
    b.disabled=true;act('posted',id,function(ok){if(ok){it.posted=true;it.postedAt=new Date().toISOString();draw(q);}else{b.disabled=false;alert('לא נשלח, נסה שוב');}});});});
+  document.querySelectorAll('[data-approve]').forEach(function(b){b.addEventListener('click',function(){
+   var id=b.getAttribute('data-approve'),it=find(id);
+   b.disabled=true;act('approve',id,function(ok){if(ok){delete it.hold;delete it.note;it.approvedAt=new Date().toISOString();draw(q);toast('✅ אושר. יעלה ב 20:00 לפי הסדר בתור');}else{b.disabled=false;alert('לא נשלח, נסה שוב');}});});});
+  document.querySelectorAll('[data-unapprove]').forEach(function(b){b.addEventListener('click',function(){
+   var id=b.getAttribute('data-unapprove'),it=find(id);
+   b.disabled=true;act('unapprove',id,function(ok){if(ok){it.hold=true;delete it.approvedAt;draw(q);}else{b.disabled=false;alert('לא נשלח, נסה שוב');}});});});
   document.querySelectorAll('[data-un]').forEach(function(b){b.addEventListener('click',function(){
    var id=b.getAttribute('data-un'),it=find(id);
    b.disabled=true;act('unposted',id,function(ok){if(ok){it.posted=false;it.postedAt=null;draw(q);}else{b.disabled=false;alert('לא נשלח, נסה שוב');}});});});

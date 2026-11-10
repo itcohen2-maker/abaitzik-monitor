@@ -1344,6 +1344,10 @@ async function recordAiAction(m) {
   if (!it) return;
   if (got.action === 'posted') { if (it.posted) return; it.posted = true; it.postedAt = new Date().toISOString(); }
   else if (got.action === 'unposted') { if (!it.posted) return; it.posted = false; it.postedAt = null; }
+  // 10.11.2026, Itzik: "בסרטונים שמחכים לאישור שלי אין כפתור לאשר אותם". The button on the page is the explicit approval:
+  // it lifts the hold, so the video goes up at 20:00 in its turn (ai-post.js skips a held item). "בטל אישור" puts it back.
+  else if (got.action === 'approve') { if (it.posted || !it.hold) return; delete it.hold; delete it.note; it.approvedAt = new Date().toISOString(); }
+  else if (got.action === 'unapprove') { if (it.posted || it.hold) return; it.hold = true; delete it.approvedAt; }
   else return;
   fs.writeFileSync(AI_Q, JSON.stringify(q, null, 1));
   fs.writeFileSync(path.join(__dirname, 'docs', 'ai', 'queue.json'), JSON.stringify(q, null, 1));
