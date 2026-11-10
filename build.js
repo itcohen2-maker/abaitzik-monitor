@@ -15604,7 +15604,7 @@ function clSheet(id,label,body,wire){
  var old=document.getElementById(id);if(old)old.remove();
  var w=document.createElement('div');w.id=id;w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label',label);
  w.innerHTML='<style>#'+id+' .clT{width:100%;table-layout:fixed;border-collapse:collapse;font:13px/1.5 Heebo,sans-serif;margin:6px 0;word-break:break-word}#'+id+' .ycard{box-sizing:border-box}#'+id+' .clT td,#'+id+' .clT th{border-bottom:1px solid #e5e7ef;padding:6px 4px;text-align:right;vertical-align:top}'
-  +'#'+id+' .clT th{font-weight:700;color:#5a6577;font-size:12px}#'+id+' .clN{text-align:left!important;white-space:nowrap;direction:ltr}'
+  +'#'+id+' .clT th{font-weight:700;color:#5a6577;font-size:12px}#'+id+' .clN{text-align:left!important;direction:ltr}#'+id+' .clF{font-size:12px}#'+id+' .clF td,#'+id+' .clF th{padding:6px 2px}'
   +'#'+id+' .clBox{border:1px solid #e1e4ee;border-radius:14px;padding:10px 12px;margin:8px 0}#'+id+' .clBad{border-color:#f3b4ba;background:#fff4f5}#'+id+' .clOk{border-color:#b9e5c8;background:#f3fbf6}'
   +'#'+id+' .clTabs{display:flex;gap:6px;overflow-x:auto;margin:8px 0;padding-bottom:2px}#'+id+' .clTabs button{flex:0 0 auto;border:1px solid #d6dae6;background:#fff;border-radius:999px;padding:7px 12px;font:700 13px Heebo,sans-serif;cursor:pointer}'
   +'#'+id+' .clTabs button.on{background:#1a5fb4;color:#fff;border-color:#1a5fb4}#'+id+' .clSum{font:800 16px Heebo,sans-serif;margin:8px 0}</style>'
@@ -15650,8 +15650,10 @@ function frlSheet(){
  if(!F.doctors.length)h+='<div class="clBox">עוד אין רשימת רופאים.</div>';
  else{
   h+='<div class="clSum">'+esc(doc)+' · '+esc(clMonth(ym))+': מגיע לו '+clMoney(pay)+'</div><small>'+rows.length+' טיפולים, המטופלים שילמו '+clMoney(paid)+(F.labMinus?', מעבדה '+clMoney(lab):'')+'</small>';
-  h+=rows.length?'<table class="clT"><tr><th>יום</th><th>מטופל</th><th>טיפול</th><th class="clN">שילם</th><th class="clN">מעבדה</th><th class="clN">מגיע</th></tr>'
-   +rows.map(function(r){return '<tr><td>'+esc(clDate(r.date))+'</td><td>'+esc(r.patient)+'</td><td>'+esc(r.treatment)+'</td><td class="clN">'+clMoney(r.paid)+'</td><td class="clN">'+(r.lab?clMoney(r.lab):'')+'</td><td class="clN"><b>'+clMoney(r.pay)+'</b></td></tr>';}).join('')+'</table>'
+  var tr=rows.some(function(r){return r.treatment;}),neg=rows.some(function(r){return r.pay<0;});
+  h+=rows.length?'<table class="clT clF"><tr><th style="width:12%">יום</th><th>מטופל</th>'+(tr?'<th>טיפול</th>':'')+'<th class="clN">שילם</th><th class="clN">מעבדה</th><th class="clN">מגיע</th></tr>'
+   +rows.map(function(r){return '<tr><td>'+esc(clDate(r.date))+'</td><td>'+esc(r.patient)+'</td>'+(tr?'<td>'+esc(r.treatment)+'</td>':'')+'<td class="clN">'+clMoney(r.paid)+'</td><td class="clN">'+(r.lab?clMoney(r.lab):'')+'</td><td class="clN"><b'+(r.pay<0?' style="color:#b42318"':'')+'>'+clMoney(r.pay)+'</b>'+(r.pay<0?'<br><small style="color:#b42318">⚠️ לבדוק</small>':'')+'</td></tr>';}).join('')+'</table>'
+   +(neg?'<div class="clBox clBad">⚠️ יש שורה במינוס: עלות המעבדה של המטופל גבוהה מהחלק של הרופא. כדאי לבדוק אם המעבדה שייכת לתשלום הזה או לתשלום אחר שלו.</div>':'')
    :'<div class="clBox">עוד אין טיפולים החודש. מצלמים את דף העבודה היומי שלו ושולחים בכפתור למטה, והטבלה מתמלאת.</div>';
   h+='<button type="button" class="yb yb1" data-cl="up">📷 לצלם דף עבודה יומי של '+esc(doc)+'</button>';
  }
