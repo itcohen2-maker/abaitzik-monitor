@@ -17306,6 +17306,9 @@ function vqRows(id){
  }
  return out;
 }
+// 10.11.2026, Itzik (לוח בקרה): "קרוסלה עלתה היום". up = the day it went up; a posted one leaves the reels menu and the board shows it as posted.
+var CAR=[{id:'life',t:'סיפור חיי',n:11,up:'10.11'}];
+var CARON=CAR.filter(function(c){return !c.up;});
 function vidTabs(){
  var isSh=function(it){return /^שחר/.test(String(it.n))||/^sh[0-9]/.test(String(it.n))||/^שחר/.test(String(it.t));};
  var isIt=function(it){return /^IT /.test(String(it.n))||/^it[0-9]/.test(String(it.n));};
@@ -17320,8 +17323,7 @@ function vidTabs(){
  var aiN=(VQ0.ai||[]).filter(function(x){return !x.posted;}).length;
  // 9.11, Itzik: carousels for his page, all topics, in the reels tile. One that has not gone up blinks softly (updblink); when it goes up, posted:true takes it off.
  // 11.9, Itzik: the life carousel is removed from this menu (תמחק את הקרוסלה). New ones go in here again by name.
- var CAR=[{id:'life',t:'סיפור חיי',n:11}];
- var carL=[];CAR.forEach(function(c,ci){var pad=function(i){return (i<10?'0':'')+i;};carL.push({h:'🎠 קרוסלה '+(ci+1)+' · '+c.t+' ('+c.n+' שקפים)'});carL.push({k:'car',c:c.id,n:c.n,nm:'קרוסלה '+(ci+1)+' · '+c.t,t:'🎠 לפתיחת הקרוסלה, שקף אחרי שקף',pulse:1});carL.push({k:'reel',it:{n:'כיתוב',t:'הכיתוב לפוסט',r:'carousel-'+c.id+'-caption.txt',pulse:1}});});
+ var carL=[];CARON.forEach(function(c,ci){var pad=function(i){return (i<10?'0':'')+i;};carL.push({h:'🎠 קרוסלה '+(ci+1)+' · '+c.t+' ('+c.n+' שקפים)'});carL.push({k:'car',c:c.id,n:c.n,nm:'קרוסלה '+(ci+1)+' · '+c.t,t:'🎠 לפתיחת הקרוסלה, שקף אחרי שקף',pulse:1});carL.push({k:'reel',it:{n:'כיתוב',t:'הכיתוב לפוסט',r:'carousel-'+c.id+'-caption.txt',pulse:1}});});
  return [
   {id:'st',l:'📲 סטטוס'+(stN?' ('+stN+')':''),h:'סטטוס וואטסאפ: מה עולה היום ומה הבא בתור. לחיצה פותחת את הסרטון והטקסט, 3 נגיעות',L:vqRows('st').concat([{h:'📂 הדף המלא'},{k:'go',t:'📲 פתיחת כל הסטטוסים המוכנים',u:'status/index.html'}])},
   {id:'ads',l:'📣 קמפיין',h:'הממומן, וסרטוני המוניטור לסטורי',L:TOM_ITEMS.map(function(it){return it.h?{h:it.h}:{k:'tom',it:it};})},
@@ -17334,7 +17336,7 @@ function vidTabs(){
   {id:'it',l:'💻 IT Solution',upd:'20261107-it03en',h:'הרילים של IT Solution: המוניטור, הקמפיינים והעסקים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isIt(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isIt(x.it);}))},
   // 7.11, Itzik: the reels and the future reels too, each in its own tab of the one tile.
   {id:'me',l:'🎬 הרילים שלי',h:'הרילים והסטוריז שלי, מוכנים לרשתות',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return !isSh(x.it)&&!isIt(x.it);}))},
-  {id:'car',l:'🎠 קרוסלות'+(CAR.length?' ('+CAR.length+')':''),pulse:CAR.length,h:'קרוסלות לאבא איציק, כל הנושאים. מה שעוד לא עלה מהבהב חלש',L:carL},
+  {id:'car',l:'🎠 קרוסלות'+(CARON.length?' ('+CARON.length+')':''),pulse:CARON.length,h:'קרוסלות לאבא איציק, כל הנושאים. מה שעוד לא עלה מהבהב חלש',L:carL},
   {id:'fut',l:'💡 רילים עתידיים',h:'רעיונות, רפרנסים ותסריטים לרילים הבאים',L:[{h:'💡 רעיונות לרילים הבאים'}].concat(F.filter(function(x){return !isSh(x.it)&&!isIt(x.it)&&!plateN[x.it.n]&&!candleN[x.it.n];}))}
  ].map(function(t){
   // a heading with nothing under it is dropped, and a file that is not in the monitor is not shown
@@ -17743,7 +17745,7 @@ function boardMore(){
  PLQ.forEach(function(x){var d=upDay(x);if(x.posted&&PL.o[d])PL.o[d].push({c:'ok',t:'✅ '+String(x.name||'').split(':')[0]});});
  if(plReady)PL.o[T0].push({c:'man',t:'✋ '+plReady+' מוכנים'});
  var STOCKS=[PL,
-  {id:'car',tab:'car',ic:'🎠',n:'קרוסלות',cnt:rows('car'),how:'ידני, אחרי אישור'},
+  {id:'car',tab:'car',ic:'🎠',n:'קרוסלות',cnt:rows('car'),how:'ידני, אחרי אישור'+CAR.filter(function(c){return c.up;}).map(function(c){return '. '+c.t+' עלתה ב '+c.up;}).join('')},
   {id:'it',tab:'it',ic:'💻',n:'IT Solution',cnt:rows('it'),how:'רילים מוכנים לרשתות'},
   {id:'me',tab:'me',ic:'🎬',n:'הרילים שלי',cnt:rows('me'),how:'רילים וסטוריז מוכנים'},
   {id:'sh',tab:'sh',ic:'🌅',n:'שחר',cnt:rows('sh'),how:'רילים, סטורי ופוסטים'},
