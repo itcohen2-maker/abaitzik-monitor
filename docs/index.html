@@ -1347,6 +1347,7 @@ section#talkCard.talk{border:2px solid var(--accent);box-shadow:0 8px 24px color
 #fcRow .fcErr{font:700 13px Heebo,sans-serif;color:#b3261e}
 .c-fcs{background:linear-gradient(160deg,#f59e0b,#b45309);font-size:22px}
 .c-fcc{background:linear-gradient(160deg,#22d3ee,#0e7490);font-size:22px}
+.c-fcp{background:linear-gradient(160deg,#4ade80,#15803d);font-size:22px}
 #blkTiles.grid{gap:6px}
 #blkTiles>.gt{height:78px;min-height:78px;max-height:78px;padding:8px 10px}
 #blkTiles>.gt b{font-size:14.5px}
@@ -2608,7 +2609,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-10T07:22:40.299Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-10T07:26:18.208Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2878,6 +2879,7 @@ try{
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M9.5 13.5h1.5v4M14 13.5h2l-1.5 4"/></svg></span>יומן</a>
   <button type="button" class="ic icNew" data-grp="day" id="icFcSales" data-new="1" style="display:none"><span class="c c-fcs">🎯</span>אימון מכירות</button>
   <button type="button" class="ic icNew" data-grp="day" id="icFcCoach" data-new="1" style="display:none"><span class="c c-fcc">🧭</span>אימון עסקי</button>
+  <button type="button" class="ic icNew" data-grp="day" id="icFcPersonal" data-new="1" style="display:none"><span class="c c-fcp">🌿</span>אימון אישי</button>
   <a class="ic" data-grp="net" data-net="all" id="icNet" href="#"><span class="c c-nt">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M10 20V5M15 20v-6M20 20V8"/></svg></span>ניטור רשתות</a>
   <a class="ic" data-grp="proj" href="https://abaitzik.com/" target="_blank" rel="noopener" data-upd="20261104-abaname"><span class="c c-st">
@@ -2963,14 +2965,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4530,7 +4525,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='9bb67af0c9';
+var CODE_ID='f9ef2b9d04';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11086,6 +11081,55 @@ function adminReqSheet(){
  setTimeout(function(){var x=document.getElementById('arText');if(x)x.focus();},50);
 }
 on('gAdminReq',adminReqSheet);
+function campSheet(){
+ var old=document.getElementById('cpSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='cpSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','קמפיינים');
+ var kinds=['מודעה ממומנת','סטורי','ריל','פוסט','קרוסלה','סרטון מכל החומרים'];
+ w.innerHTML='<div class="ycard"><b>📣 קמפיינים</b>'
+  +'<small>מעלים תמונות או סרטון, בוחרים מה לעשות איתם, וכותבים מה חשוב. אני מכין טיוטה: מטרה, קהל, תקציב מוצע, כמה גרסאות כיתוב ותיאור לפוסט. שום דבר לא עולה בלי אישור שלך.</small>'
+  +'<button type="button" class="yb yb2" data-a="pick">📎 לבחור תמונות או סרטון</button>'
+  +'<input type="file" id="cpFiles" accept="image/*,video/*" multiple hidden>'
+  +'<div id="cpList" style="font:600 14px Heebo,sans-serif;margin:6px 0"></div>'
+  +'<small style="opacity:1;font-weight:600">מה לעשות איתם? אפשר לבחור כמה:</small>'
+  +'<div class="arPick" id="cpKinds" role="group" aria-label="מה לעשות">'
+  +kinds.map(function(k){return '<button type="button" class="yb" data-k="'+k+'">'+k+'</button>';}).join('')+'</div>'
+  +'<textarea id="cpText" rows="4" style="width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif" placeholder="מה חשוב להגיד? מבצע, מי הקהל, כתובת, מחיר. אם משהו חסר, אשאל."></textarea>'
+  +'<small>מוזיקה: כברירת מחדל בלי מוזיקה בתוך הסרטון. אפשר להוסיף מהאוסף של Meta בזמן הפרסום.</small>'
+  +'<button type="button" class="yb yb1" data-a="send">שליחה</button>'
+  +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+ function close(){w.remove();}
+ var picked=[];
+ function paintList(){
+  var l=document.getElementById('cpList');
+  if(l)l.textContent=picked.length?('נבחרו '+picked.length+': '+picked.map(function(f){return f.name;}).join(', ')):'';
+ }
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var a=e.target.getAttribute&&e.target.getAttribute('data-a');
+  if(a==='x')return close();
+  if(a==='pick'){var fi=document.getElementById('cpFiles');if(fi)fi.click();return;}
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k){e.target.classList.toggle('on');return;}
+  if(a!=='send')return;
+  var chosen=[].map.call(w.querySelectorAll('#cpKinds .yb.on'),function(b){return b.getAttribute('data-k');});
+  var t=(document.getElementById('cpText').value||'').trim();
+  if(!picked.length&&!t){toast('בחר תמונות או סרטון, או כתוב מה תרצה');return;}
+  var note='קמפיין: '+(chosen.length?chosen.join(', '):'לא נבחר סוג')+(t?' | '+t:'');
+  e.target.disabled=true;
+  var go=picked.length?sendAll(picked,note):sendText('קמפיין',note,'משימה');
+  go.then(function(){
+   markSent(picked.length?'file':'text',note);close();
+   toast('נשלח. אכין טיוטה ואחזיר אותה בתשובות, ושום דבר לא יעלה בלי אישור שלך.');
+  }).catch(function(){e.target.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
+ };
+ w.addEventListener('change',function(e){
+  if(e.target&&e.target.id==='cpFiles'){picked=[].slice.call(e.target.files||[]);paintList();}
+ });
+ document.body.appendChild(w);
+}
+on('gCamp',campSheet);
 function arWaitMark(){try{localStorage.setItem('arSent',String(Date.now()));}catch(e){}arWaitShow();}
 function arWaitShow(){
  var s=document.querySelector('#gAdminReq small');if(!s)return;
@@ -12996,7 +13040,7 @@ function fcPaintRow(){
 }
 function fcPaintMode(){
  var lab=document.getElementById('fcMode'),end=document.getElementById('fcEnd'),snd=document.getElementById('fcSend');
- if(lab){lab.hidden=fcS.mode==='chat';lab.textContent=fcS.mode==='sales'?'🎯 אימון מכירות פעיל':fcS.mode==='coach'?'🧭 אימון עסקי פעיל':'';}
+ if(lab){lab.hidden=fcS.mode==='chat';lab.textContent=fcS.mode==='sales'?'🎯 אימון מכירות פעיל':fcS.mode==='coach'?'🧭 אימון עסקי פעיל':fcS.mode==='personal'?'🌿 אימון אישי פעיל':'';}
  if(end){end.hidden=fcS.mode==='chat';}
  var sc=document.getElementById('fcScore');if(sc)sc.hidden=fcS.mode!=='sales';
  if(snd)snd.disabled=!!fcS.busy;
@@ -13079,11 +13123,12 @@ function fcSheet(){
  if(r)r.addEventListener('click',function(e){var t=e.target;if(t&&t.id==='fcMore')fcSheet();});
  on('icFcSales',function(){fcSheet();fcSend('אימון מכירות');});
  on('icFcCoach',function(){fcSheet();fcSend('אימון עסקי');});
+ on('icFcPersonal',function(){fcSheet();fcSend('אימון אישי');});
  on('icTCal',function(){if(D.cal&&D.cal.events&&D.cal.events.length){calSheet(false);return;}var t=document.getElementById('gTasks');if(t)t.click();else calSheet(false);});
 })();
 function fcBoot(){
  var r=document.getElementById('fcRow');if(!r||r.hidden)return;
- ['icFcSales','icFcCoach'].forEach(function(i){var e=document.getElementById(i);if(e)e.style.display='';});
+ ['icFcSales','icFcCoach','icFcPersonal'].forEach(function(i){var e=document.getElementById(i);if(e)e.style.display='';});
  if(fcS.loaded)return;
  fcS.loaded=true;
  fcPost('/thread',{}).then(function(j){if(fcS.busy)return;fcApply(j);fcPaintRow();},function(){});
@@ -17100,6 +17145,7 @@ var DMO_TILES=[
  ['mail','g10','✉️ מייל','ממוין לפי דחיפות, עם טיוטת תשובה'],
  ['quote','gInv','🧾 הצעת מחיר','הצעה מעוצבת ב PDF בדקה'],
  ['ads','gTom','📣 קמפיינים ללקוחות','כמה הוצאנו, כמה לידים, ומה לשפר'],
+ ['camp','g13','📣 קמפיין מתמונות וסרטון','מעלים חומר, ומקבלים טיוטה, קהל ותקציב'],
  ['day','gNer','☀️ מה יש לי היום','מה דחוף, ולמי לחזור']
 ];
 var dmoPend={},dmoTimer=null;
@@ -17336,6 +17382,16 @@ function dmoSheet(key){
     +'<div class="dmo-kpis"><div class="dmo-k"><b>'+dmoMoney(c.spend)+'</b><small>הוצאה</small></div><div class="dmo-k"><b>'+dmoNum(c.impressions)+'</b><small>חשיפות</small></div><div class="dmo-k"><b>'+dmoNum(c.clicks)+'</b><small>קליקים</small></div><div class="dmo-k"><b>'+dmoNum(c.leads)+'</b><small>לידים</small></div></div>'
     +(c.tip?'<div class="dmo-ai"><small>✨ המלצה</small><p>'+esc(c.tip)+'</p></div>':'')
     +'<div class="dmo-row"><button type="button" class="dmo-b alt" data-dmo-act="pause">להשהות</button><button type="button" class="dmo-b alt" data-dmo-act="budget">להגדיל תקציב</button></div></div>';}).join('');
+ } else if(key==='camp'){
+  label='📣 קמפיין מתמונות וסרטון';
+  h='<div class="dmo-card"><b>איך זה עובד</b><p>מעלים 3 תמונות וסרטון, בוחרים מה לעשות (מודעה, סטורי, ריל, פוסט, קרוסלה, או סרטון מכל החומרים) וכותבים מה חשוב. המוניטור מכין טיוטה, ושום דבר לא עולה בלי אישור שלך.</p></div>'
+   +'<div class="dmo-card"><span class="dmo-tag wait">דוגמה</span><b> טיוטת קמפיין: סטודיו לדוגמה</b>'
+   +'<p>מטרה: לידים. קהל מוצע: נשים 28 עד 55, ברדיוס 15 ק״מ. תקציב יומי מוצע: ₪40 (המודעה משולמת למטא ישירות מהכרטיס של העסק).</p>'
+   +'<div class="dmo-ai"><small>✨ גרסה 1</small><p>שלוש שעות בשבוע שהן רק שלך. שבוע ראשון בחצי מחיר.</p></div>'
+   +'<div class="dmo-ai"><small>✨ גרסה 2</small><p>מתחילים בשבוע הבא? נשארו חמישה מקומות.</p></div>'
+   +'<div class="dmo-ai"><small>✨ תיאור לפוסט</small><p>הסטודיו נפתח לקבוצה חדשה. כל המידע בהודעה ובתמונות.</p></div>'
+   +'<p class="dmo-meta">התאמה: תמונה 1 לפיד, תמונה 2 לסטורי (לחתוך לאורך), הסרטון לריל.</p>'
+   +'<div class="dmo-row"><button type="button" class="dmo-b" data-dmo-act="send">לאשר את הטיוטה</button><button type="button" class="dmo-b alt" data-dmo-act="budget">לבקש שינוי</button></div></div>';
  } else if(key==='crm'){
   label='👥 לקוחות ולידים';
   var cols=['ליד חדש','בשיחה','הצעת מחיר','נסגר'],L=d.crm||[];
@@ -17556,7 +17612,10 @@ function dmoIcons(){
  var row=document.getElementById('dmoIcons');if(!row)return;
  var ics=dmoGet('dmoIcons',[null,null,null,null,null,null,null]);
  if(!dmoGet('dmoYnet',false)){var fe=ics.indexOf(null);if(fe>-1)ics[fe]={n:'ynet',e:'📰',url:'https://www.ynet.co.il'};dmoSet('dmoIcons',ics);dmoSet('dmoYnet',true);}
- var h='<button type="button" class="ic" data-dic="notes"><span class="c c-dnote">📝</span>פתקים</button>';
+ var h='<button type="button" class="ic" data-dic="fcs"><span class="c c-fcs">🎯</span>אימון מכירות</button>'
+  +'<button type="button" class="ic" data-dic="fcc"><span class="c c-fcc">🧭</span>אימון עסקי</button>'
+  +'<button type="button" class="ic" data-dic="fcp"><span class="c c-fcp">🌿</span>אימון אישי</button>'
+  +'<button type="button" class="ic" data-dic="notes"><span class="c c-dnote">📝</span>פתקים</button>';
  ics.forEach(function(x,i){
   h+=x?'<button type="button" class="ic" data-dic="'+i+'"><span class="c c-dfill'+(x.url&&/ynet/.test(x.url)?' c-ynet':'')+'">'+(x.url&&/ynet/.test(x.url)?'ynet':esc(x.e))+'</span>'+esc(x.n)+'</button>'
       :'<button type="button" class="ic" data-dic="'+i+'"><span class="c c-add"><svg viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>להוסיף</button>';
@@ -17571,6 +17630,9 @@ function dmoIcons(){
   }
   b.addEventListener('click',function(e){
    e.preventDefault();e.stopImmediatePropagation();if(long){long=false;return;}
+   if(k==='fcs'){window.scrollTo({top:0,behavior:'smooth'});return dmoAsk('אימון מכירות');}
+   if(k==='fcc'){window.scrollTo({top:0,behavior:'smooth'});return dmoAsk('אימון עסקי');}
+   if(k==='fcp'){window.scrollTo({top:0,behavior:'smooth'});return dmoAsk('אימון אישי');}
    if(k==='notes')return dmoNotes();
    var x=dmoGet('dmoIcons',ics)[+k];
    if(x&&x.url){window.open(x.url,'_blank','noopener');return;}
@@ -17611,7 +17673,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="BAJSdIafAtGxgHzJr3tOJLTViE1Gkn6rNyAReKPb5ZiMM-6xXp2c1PD7V5VKOXkQRWLI9-Wdq7-Q4hyMCcYp2iQ";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
