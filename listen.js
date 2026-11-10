@@ -767,11 +767,17 @@ function recordIncoming(m) {
       let ans = '';
       try { ans = require('./lib/handle.js').done(inst.dataPath, hdM[1]) ? 'סימנתי שטופל.' : 'הפריט כבר סומן כטופל.'; say('לטיפול: ' + hdM[1] + ' | ' + ans); }
       catch (e) { ans = 'לא הצלחתי לסמן (' + e.message + ')'; say('!! לטיפול: ' + e.message); }
+      // 10.11.2026, Itzik: "I suddenly have answers like these, stop it". A done mark is silent: no line from him and no
+      // "סימנתי שטופל" in the answers. Only a failure stays, so he knows the item was not marked.
       rec.status = 'done';
+      const okMark = ans === 'סימנתי שטופל.' || ans === 'הפריט כבר סומן כטופל.';
       try {
-        fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
-        fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-handle-ack.json')),
-          JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id, text: ans, status: 'done' }, null, 1), 'utf8');
+        if (okMark) fs.unlinkSync(path.join(CHAT, name));
+        else {
+          fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+          fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-handle-ack.json')),
+            JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id, text: ans, status: 'done' }, null, 1), 'utf8');
+        }
       } catch (e) { /* the page drops the item on the next build anyway */ }
       try { publishChat(); } catch (e) { /* the next build carries it */ }
       return true;
