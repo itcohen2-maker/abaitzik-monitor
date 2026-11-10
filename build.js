@@ -15288,7 +15288,7 @@ function campSheet(){
   +kinds.map(function(k){return '<button type="button" class="yb" data-k="'+k+'">'+k+'</button>';}).join('')+'</div>'
   +'<div id="cpSounds" hidden></div>'
   +'<textarea id="cpText" rows="4" style="width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif" placeholder="מה חשוב להגיד? מבצע, מי הקהל, כתובת, מחיר. אם משהו חסר, אשאל."></textarea>'
-  +'<small>מוזיקה: כברירת מחדל בלי מוזיקה בתוך הסרטון. אם בחרת צליל מהתיקייה, אוסיף אותו בעדינות מתחת לסרטון.</small>'
+  +'<small>מוזיקה: כברירת מחדל בלי מוזיקה בתוך הסרטון. את המוזיקה אפשר להוסיף בזמן הפרסום מאוסף הצלילים של Meta, בחינם בכל מוצרי Meta. אם יש כאן תיקיית צלילים ובחרת בה, אוסיף אותו בעדינות מתחת לסרטון.</small>'
   +'<button type="button" class="yb yb1" data-a="send">שליחה</button>'
   +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
  function close(){w.remove();}
