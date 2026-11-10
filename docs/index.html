@@ -2625,7 +2625,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-10T09:08:05.918Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-10T09:11:43.169Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2981,7 +2981,14 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-
+<div class="alerts" id="pushBox" hidden>
+ <div>
+  <b>התראות לטלפון</b>
+  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
+ </div>
+ <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
+ <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
+</div>
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4541,7 +4548,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='1e3f5309dd';
+var CODE_ID='46064da156';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12705,8 +12712,10 @@ function vidSheet(tab){
  if(cur.upd)vidMark('tab:'+cur.id,cur.upd);
 }
 on('gVideos',function(){vidSheet();});
-function boardSheet(){
- if(!(VQ&&Date.now()-VQT<60000))return vqLoad(boardSheet);
+var BD_WEEK=0;
+function boardSheet(wk){
+ if(typeof wk==='number')BD_WEEK=wk;
+ if(!(VQ&&Date.now()-VQT<60000))return vqLoad(function(){boardSheet();});
  var old=document.getElementById('bdGrid');if(old)old.remove();
  var B=D.board||{},ROWS=B.rows||[],P=JSON.parse(JSON.stringify(B.plan||{rows:{}}));
  var L=null;try{L=JSON.parse(localStorage.getItem('postPlanLocal')||'null');}catch(e){}
@@ -12718,59 +12727,106 @@ function boardSheet(){
  function dw(d){var p=d.split('-');return new Date(Date.UTC(+p[0],+p[1]-1,+p[2])).getUTCDay();}
  function dm(d){var p=d.split('-');return (+p[2])+'.'+(+p[1]);}
  function upDay(x){return x.postedAt?new Date(x.postedAt).toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'}):'';}
- var days=[];for(var i=0;i<7;i++)days.push(add(T0,i));
+ var NOW='00:00';try{NOW=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date());}catch(e){}
+ var SUN=add(T0,-dw(T0)+7*BD_WEEK),days=[];for(var i=0;i<7;i++)days.push(add(SUN,i));
+ var LAST=days[6];
+ function gone(d,t){if(d<T0)return true;if(d>T0)return false;if(!t)return false;var p=t.split(':'),n=NOW.split(':');return (+n[0])*60+(+n[1])>(+p[0])*60+(+p[1])+20;}
+ var IC={ok:'✅',miss:'❌',will:'🔜',hand:'✋',wait:'⏳',no:'⚠️',run:'▶️',late:'⚠️',open:'✋'};
  var adsOn=0;try{adsOn=TOM_ITEMS.filter(function(it){return !it.h&&/באוויר/.test(it.t||'');}).length;}catch(e){}
- function isEn(lg,x){return lg==='en'?x.lang==='en':x.lang!=='en';}
- function items(r,d){
-  if(r.id==='nr')return (Q.nr||[]).filter(function(x){return !x.failed&&!x.rejected&&(x.posted?upDay(x):x.date)===d;})
-   .map(function(x){return {id:x.name,time:IL['nr:'+x.name]||x.time||'',up:!!x.posted,ok:!!x.approved,t:(x.kind==='post'?'פוסט':'סטורי')+' '+(x.lang==='en'?'אנגלית':'עברית')+(x.city?' · '+x.city:'')};});
-  return (B.li||[]).filter(function(x){return !x.bad&&x.date===d;})
-   .map(function(x){return {id:x.id,time:IL['li:'+x.id]||x.time||'',up:x.up,ok:x.ok,t:x.t||'פוסט'};});
- }
+ var TB={};try{vidTabs().forEach(function(t){TB[t.id]=t;});}catch(e){}
+ function stock(id){if(id==='pl')return (Q.pl||[]).filter(function(x){return !x.posted;}).length;var t=TB[id];return t?t.L.filter(function(x){return !x.h&&x.k!=='go';}).length:0;}
+ function planT(id,d){return (P.rows[id]&&P.rows[id].days[dw(d)])||'';}
+ var AIP={};
+ ['he','en'].forEach(function(lg){
+  var mine=function(x){return lg==='en'?x.lang==='en':x.lang!=='en';};
+  var A=(Q.ai||[]).filter(mine),ready=A.filter(function(x){return !x.posted&&!x.hold&&!x.failed;}).sort(function(a,b){return (a.order||0)-(b.order||0);});
+  var held=A.filter(function(x){return !x.posted&&x.hold;}).length,k=0,m={},end=LAST>T0?LAST:T0;
+  for(var d=(SUN<T0?SUN:T0);d<=end;d=add(d,1)){
+   var up=A.filter(function(x){return x.posted&&upDay(x)===d;})[0],t=planT('ai-'+lg,d);
+   if(up){m[d]={s:'ok',t:t,items:[{s:'ok',n:up.name,why:'עלה'}]};continue;}
+   if(!t)continue;
+   if(d<T0){m[d]={s:'miss',t:t,items:[{s:'miss',n:'',why:'לא עלה סרטון ביום הזה'}]};continue;}
+   if(k<ready.length){var x=ready[k++];m[d]=gone(d,t)?{s:'late',t:t,items:[{s:'late',n:x.name,why:'עבר הזמן ועוד לא עלה. אם הוא לא יעלה בדקות הקרובות, משהו נתקע'}]}:{s:'will',t:t,items:[{s:'will',n:x.name,why:'יעלה לבד ב '+t}]};}
+   else m[d]={s:'no',t:t,items:[{s:'no',n:'',why:held?'אין סרטון מוכן. '+held+' מושהים, אפשר לשחרר אותם':'אין סרטון מוכן בתור'}]};
+  }
+  AIP[lg]=m;
+ });
  function cell(r,d){
-  var w=dw(d);
-  if(r.kind==='always')return adsOn?{t:'▶️',c:'run'}:{t:'',c:''};
-  if(r.kind==='items'){
-   var I=items(r,d).sort(function(a,b){return a.time.localeCompare(b.time);});
-   if(!I.length)return {t:'',c:''};
-   var allUp=I.every(function(x){return x.up;}),wait=I.some(function(x){return !x.up&&!x.ok;});
-   return {t:(allUp?'✓ ':'')+I[0].time+(I.length>1?' ×'+I.length:''),c:allUp?'ok':wait?'wait':'auto'};
-  }
-  var t=(P.rows[r.id]&&P.rows[r.id].days[w])||'';
-  if(r.id==='ai-he'||r.id==='ai-en'){
-   var lg=r.id.slice(3);
-   if((Q.ai||[]).some(function(x){return isEn(lg,x)&&x.posted&&upDay(x)===d;}))return {t:'✓ '+(t||'עלה'),c:'ok'};
-   if(!t)return {t:'',c:''};
-   return {t:t,c:(Q.ai||[]).some(function(x){return isEn(lg,x)&&!x.posted&&!x.hold&&!x.failed;})?'auto':'held'};
-  }
+  var t,it,I;
+  if(r.kind==='always')return adsOn?{s:'run',t:'',items:[{s:'run',n:adsOn+' מודעות באוויר',why:'הממומן רץ כל היום'}]}:{s:'',t:''};
+  if(r.id==='ai-he'||r.id==='ai-en')return AIP[r.id.slice(3)][d]||{s:'',t:''};
   if(r.id==='st'){
-   var it=(Q.st||[]).filter(function(x){return x.date===d;})[0];
-   if(it&&(B.stDone||{})[it.name])return {t:'✓ '+(t||'עלה'),c:'ok'};
-   if(!t)return {t:'',c:''};
-   return {t:t,c:it?'man':'miss'};
+   t=planT('st',d);it=(Q.st||[]).filter(function(x){return x.date===d;})[0];
+   var n=it?String(it.caption||it.topic||it.name).split(String.fromCharCode(10))[0].slice(0,80):'';
+   if(it&&(B.stDone||{})[it.name])return {s:'ok',t:t,items:[{s:'ok',n:n,why:'סימנת שעלה'}]};
+   if(!t)return it?{s:'no',t:'',items:[{s:'no',n:n,why:'יש סטטוס ליום הזה, אבל אין לו שעה בלוח'}]}:{s:'',t:''};
+   if(!it)return d<T0?{s:'',t:''}:{s:'no',t:t,items:[{s:'no',n:'',why:'אין סרטון סטטוס ליום הזה'}]};
+   if(d<T0)return {s:'miss',t:t,items:[{s:'miss',n:n,why:'לא סומן שעלה'}]};
+   return {s:'hand',t:t,items:[{s:'hand',n:n,why:'תזכורת ב '+t+', אתה מעלה ומסמן'}]};
   }
-  return t?{t:t,c:'man'}:{t:'',c:''};
+  if(r.kind==='items'){
+   if(r.id==='nr')I=(Q.nr||[]).filter(function(x){return !x.rejected&&(x.posted?upDay(x):x.date)===d;}).map(function(x){return {id:x.name,time:IL['nr:'+x.name]||x.time||'',up:!!x.posted,ok:!!x.approved,bad:!!x.failed,n:(x.kind==='post'?'פוסט':'סטורי')+' '+(x.lang==='en'?'אנגלית':'עברית')+(x.city?' · '+x.city:'')};});
+   else I=(B.li||[]).filter(function(x){return x.date===d;}).map(function(x){return {id:x.id,time:IL['li:'+x.id]||x.time||'',up:x.up,ok:x.ok,bad:x.bad,n:x.t||'פוסט'};});
+   if(!I.length)return {s:'',t:''};
+   I.sort(function(a,b){return a.time.localeCompare(b.time);});
+   I.forEach(function(y){
+    if(y.up){y.s='ok';y.why='עלה';}
+    else if(y.bad){y.s='miss';y.why='נכשל בפרסום';}
+    else if(!y.ok){y.s=gone(d,y.time)?'miss':'wait';y.why=y.s==='miss'?'לא אושר, ולא עלה':'מחכה לאישור שלך. בלי אישור הוא לא יעלה';}
+    else if(gone(d,y.time)){y.s=d<T0?'miss':'late';y.why=d<T0?'לא עלה':'עבר הזמן ועוד לא עלה';}
+    else {y.s='will';y.why='יעלה לבד ב '+y.time;}
+   });
+   var rank={miss:5,late:4,no:4,wait:3,will:2,ok:1};
+   var worst=I.slice().sort(function(a,b){return (rank[b.s]||0)-(rank[a.s]||0);})[0];
+   return {s:worst.s,t:I[0].time,items:I,n:I.length};
+  }
+  t=planT(r.id,d);if(!t)return {s:'',t:''};
+  var have=stock(r.id);
+  if(d<T0)return {s:'open',t:t,items:[{s:'open',n:'',why:'היה מתוכנן ב '+t+'. מה שאתה מעלה בעצמך לא נבדק כאן'}]};
+  if(!have)return {s:'no',t:t,items:[{s:'no',n:'',why:'אין מלאי מוכן, אין מה להעלות'}]};
+  return {s:'hand',t:t,items:[{s:'hand',n:have+' מוכנים במלאי',why:'תזכורת ב '+t+', אתה מעלה'}]};
  }
- var css='<style>#bdGrid table{width:100%;table-layout:fixed;border-collapse:collapse;font:11px/1.25 Heebo,sans-serif;margin:6px 0}'
-  +'#bdGrid th,#bdGrid td{border:1px solid #e3e7ef;padding:4px 1px;text-align:center;vertical-align:middle;overflow:hidden}'
-  +'#bdGrid th{background:#f4f6f9;font-weight:800}#bdGrid th small{display:block;font-weight:600;color:#5a6577}'
-  +'#bdGrid td.nm{text-align:right;padding:4px 5px;font-weight:700;font-size:12px;cursor:pointer;background:#fafbfd}#bdGrid td.nm small{display:block;font-weight:500;color:#5a6577;font-size:10px}'
-  +'#bdGrid td.cl{cursor:pointer;height:38px}#bdGrid td.cl:active{background:#eef4ff}#bdGrid .sat{background:#f3f3f3}#bdGrid .tdy{box-shadow:inset 0 0 0 2px #1a5fb4}'
-  +'#bdGrid .c-ok{color:#1b7f3b;font-weight:700}#bdGrid .c-auto{color:#1a5fb4;font-weight:700}#bdGrid .c-man{color:#8a5a00;font-weight:700}#bdGrid .c-wait{color:#b45309;font-weight:700}'
-  +'#bdGrid .c-miss{color:#c0262d;font-weight:700}#bdGrid .c-run{color:#6b3fa0;font-weight:700}#bdGrid .c-held{color:#b45309}'
-  +'#bdGrid .lg{font:11px/1.9 Heebo,sans-serif;color:#33405a}#bdGrid .lg b{font-weight:800}'
+ var C={},cnt={ok:0,will:0,hand:0,wait:0,bad:0},todo=[];
+ ROWS.forEach(function(r,ri){days.forEach(function(d){
+  var c=cell(r,d);C[ri+'|'+d]=c;
+  (c.items||[]).forEach(function(y){
+   if(y.s==='ok')cnt.ok++;else if(y.s==='will')cnt.will++;else if(y.s==='hand')cnt.hand++;else if(y.s==='wait')cnt.wait++;
+   else if(y.s==='no'||y.s==='miss'||y.s==='late')cnt.bad++;
+   if(y.s==='wait'||y.s==='no'||y.s==='late'||(y.s==='miss'&&d>=add(T0,-6)))todo.push({ri:ri,d:d,y:y,r:r});
+  });
+ });});
+ var css='<style>#bdGrid table{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:2px;font:11px/1.2 Heebo,sans-serif;margin:6px 0}'
+  +'#bdGrid th{font-weight:800;padding:3px 0;color:#1a2233}#bdGrid th small{display:block;font-weight:600;color:#5a6577}#bdGrid th.tdy{background:#1a5fb4;color:#fff;border-radius:8px}#bdGrid th.tdy small{color:#dfe9ff}'
+  +'#bdGrid td{text-align:center;vertical-align:middle;border-radius:8px;padding:3px 0;height:40px}'
+  +'#bdGrid td.nm{text-align:right;padding:3px 4px;font-weight:700;font-size:12px;cursor:pointer;background:#f4f6f9}#bdGrid td.nm small{display:block;font-weight:500;color:#5a6577;font-size:10px}'
+  +'#bdGrid td.cl{cursor:pointer;background:#fbfbfd;font-size:16px}#bdGrid td.cl small{display:block;font:700 10px Heebo,sans-serif;color:#33405a}'
+  +'#bdGrid td.s-ok{background:#e6f6ea}#bdGrid td.s-will{background:#e7f0ff}#bdGrid td.s-hand,#bdGrid td.s-open{background:#fff5e0}#bdGrid td.s-wait{background:#fff0d6}'
+  +'#bdGrid td.s-no,#bdGrid td.s-miss,#bdGrid td.s-late{background:#fde8e9}#bdGrid td.s-run{background:#f1eafb}#bdGrid td.sat{background:#f0f0f0}#bdGrid td.pst{opacity:.75}'
+  +'#bdGrid .sum{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}#bdGrid .sum span{background:#f4f6f9;border-radius:20px;padding:4px 10px;font:700 13px Heebo,sans-serif}'
+  +'#bdGrid .nav{display:flex;gap:6px;align-items:center;justify-content:space-between;margin:6px 0}#bdGrid .nav button{flex:0 0 auto;min-width:44px}#bdGrid .nav b{font:800 14px Heebo,sans-serif}'
+  +'#bdGrid .td{border:1px solid #f2c9cc;background:#fff8f8;border-radius:12px;padding:8px 10px;margin:6px 0;font:13px/1.5 Heebo,sans-serif;cursor:pointer}#bdGrid .td.w{border-color:#f3d7a8;background:#fffaf0}'
+  +'#bdGrid .lg{font:12px/1.9 Heebo,sans-serif;color:#33405a}'
   +'#bdEd{position:fixed;inset:0;background:rgba(10,20,40,.45);display:flex;align-items:flex-end;justify-content:center;z-index:99999}'
   +'#bdEd .box{background:#fff;border-radius:18px 18px 0 0;padding:16px;width:100%;max-width:520px;box-sizing:border-box;font:15px/1.5 Heebo,sans-serif;max-height:85vh;overflow:auto}'
   +'#bdEd label{display:flex;align-items:center;gap:8px;margin:10px 0;font-weight:600}#bdEd input[type=checkbox]{width:22px;height:22px}'
-  +'#bdEd input[type=time]{font:700 22px Heebo,sans-serif;padding:6px 10px;border:1px solid #ccd;border-radius:10px}#bdEd .row{border-top:1px solid #eef;padding:8px 0}</style>';
- var h=css+'<div class="ycard"><b>🎛️ לוח הפרסומים</b><small>כל הרשתות מול כל השבוע. לחיצה על משבצת משנה אותה. לחיצה על שם רשת פותחת את המלאי המוכן שלה.</small>'
-  +'<table><colgroup><col style="width:27%">'+days.map(function(){return '<col>';}).join('')+'</colgroup><thead><tr><th>רשת</th>'
-  +days.map(function(d,i){return '<th class="'+(dw(d)===6?'sat':'')+'">'+(i===0?'היום':DS[dw(d)])+'<small>'+dm(d)+'</small></th>';}).join('')+'</tr></thead><tbody>'
+  +'#bdEd input[type=time]{font:700 22px Heebo,sans-serif;padding:6px 10px;border:1px solid #ccd;border-radius:10px}#bdEd .row{border-top:1px solid #eef;padding:8px 0}#bdEd .it{background:#f6f8fb;border-radius:10px;padding:8px 10px;margin:6px 0}</style>';
+ var wkName=BD_WEEK===0?'השבוע':BD_WEEK===-1?'שבוע שעבר':BD_WEEK===1?'שבוע הבא':(BD_WEEK>0?'בעוד '+BD_WEEK+' שבועות':'לפני '+(-BD_WEEK)+' שבועות');
+ var h=css+'<div class="ycard"><b>🎛️ לוח הפרסומים</b>'
+  +'<div class="nav"><button type="button" class="yb" data-a="prev">‹ קודם</button><b>'+wkName+' · '+dm(days[0])+' עד '+dm(days[6])+'</b><button type="button" class="yb" data-a="next">הבא ›</button></div>'
+  +'<div class="sum"><span>✅ עלו '+cnt.ok+'</span><span>🔜 יעלו לבד '+cnt.will+'</span><span>✋ אתה מעלה '+cnt.hand+'</span><span>⏳ לאישור '+cnt.wait+'</span><span style="background:#fde8e9">⚠️ לא יעלו '+cnt.bad+'</span></div>'
+  +'<table><colgroup><col style="width:25%">'+days.map(function(){return '<col>';}).join('')+'</colgroup><thead><tr><th></th>'
+  +days.map(function(d){return '<th class="'+(d===T0?'tdy':'')+'">'+(d===T0?'היום':DS[dw(d)])+'<small>'+dm(d)+'</small></th>';}).join('')+'</tr></thead><tbody>'
   +ROWS.map(function(r,ri){return '<tr><td class="nm" data-r="'+ri+'">'+r.ic+' '+esc(r.n)+(r.sub?'<small>'+esc(r.sub)+'</small>':'')+'</td>'
-   +days.map(function(d,di){var c=cell(r,d);return '<td class="cl c-'+(c.c||'x')+(dw(d)===6?' sat':'')+(di===0?' tdy':'')+'" data-r="'+ri+'" data-d="'+d+'">'+esc(c.t)+'</td>';}).join('')+'</tr>';}).join('')
+   +days.map(function(d){var c=C[ri+'|'+d];var sat=dw(d)===6&&!c.s;
+    return '<td class="cl'+(c.s?' s-'+c.s:'')+(sat?' sat':'')+(d<T0?' pst':'')+'" data-r="'+ri+'" data-d="'+d+'">'+(c.s?IC[c.s]+(c.n>1?'<small>'+c.n+' · '+esc(c.t)+'</small>':'<small>'+esc(c.t)+'</small>'):'')+'</td>';}).join('')+'</tr>';}).join('')
   +'</tbody></table>'
-  +'<div class="lg"><b class="c-auto">20:00</b> יעלה לבד · <b class="c-man">08:30</b> תזכורת, אתה מעלה · <b class="c-wait">09:00</b> מחכה לאישור · <b class="c-ok">✓</b> עלה · <b class="c-held">20:00</b> אין מה שיעלה (מושהה) · <b class="c-miss">08:30</b> אין סרטון ליום הזה · <b class="c-run">▶️</b> ממומן רץ</div>'
-  +(L.at?'<small style="color:#8a5a00">יש שינוי ששמרת בטלפון ועוד לא נבנה בדף. השרת כבר קיבל אותו.</small>':'')
+  +'<div class="lg">✅ עלה · ❌ לא עלה · 🔜 יעלה לבד · ✋ אתה מעלה, יש תזכורת · ⏳ מחכה לאישור שלך · ⚠️ לא יעלה · ▶️ ממומן רץ · משבצת ריקה: לא מתוכנן</div>';
+ if(todo.length){
+  h+='<div style="font:800 15px Heebo,sans-serif;margin:12px 0 2px">⚠️ מה לא יעלה, ולמה ('+todo.length+')</div>'
+   +todo.slice(0,12).map(function(x,k){return '<div class="td'+(x.y.s==='wait'?' w':'')+'" data-t="'+k+'">'+IC[x.y.s]+' <b>'+x.r.ic+' '+esc(x.r.n)+' · '+(x.d===T0?'היום':DN[dw(x.d)]+' '+dm(x.d))+'</b><br>'+esc(x.y.why)+(x.y.n?'<br><small>'+esc(x.y.n)+'</small>':'')+'<br><small style="color:#1a5fb4;font-weight:700">לחיצה כדי לטפל ›</small></div>';}).join('')
+   +(todo.length>12?'<small>ועוד '+(todo.length-12)+'</small>':'');
+ }else h+='<div style="margin:10px 0;font:700 14px Heebo,sans-serif;color:#1b7f3b">✅ כל מה שמתוכנן השבוע יעלה.</div>';
+ h+=(L.at?'<small style="display:block;color:#8a5a00;margin-top:6px">יש שינוי ששמרת בטלפון ועוד לא נבנה בדף. השרת כבר עובד לפיו.</small>':'')
   +'<button type="button" class="yb yb2" data-a="more">📦 מלאי מוכן ואוטומציות</button>'
   +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
  var w=document.createElement('div');w.id='bdGrid';w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','לוח הפרסומים');
@@ -12781,25 +12837,27 @@ function boardSheet(){
   return fetch('https://ntfy.sh/'+NTFYIN()+'?filename=post-plan.json',{method:'PUT',headers:{Title:'post-plan'},body:JSON.stringify(body)})
    .then(function(r){toast(r.ok?'נשמר בלוח. השרת עובד לפיו מעכשיו.':'לא נשלח, נסה שוב');},function(){toast('אין חיבור, השינוי לא נשלח');});
  }
+ function openTab(r){if(r.tab)return vidSheet(r.tab);if(r.id==='li'){try{return bizSheet('li');}catch(x){}}toast('אין מלאי לרשת הזו');}
  function edit(r,d){
-  var e=document.createElement('div');e.id='bdEd';
+  var c=C[ROWS.indexOf(r)+'|'+d]||{},e=document.createElement('div');e.id='bdEd';
   var wd=dw(d),x='<div class="box"><b style="font-size:17px">'+r.ic+' '+esc(r.n)+' · יום '+DN[wd]+' '+dm(d)+'</b>';
+  x+=(c.items&&c.items.length?c.items.map(function(y){return '<div class="it">'+IC[y.s]+' '+esc(y.why)+(y.n?'<br><small>'+esc(y.n)+'</small>':'')+'</div>';}).join(''):'<div class="it">לא מתוכנן כלום ביום הזה.</div>');
+  var I=null;
   if(r.kind==='always'){
-   x+='<p>הממומן רץ כל היום, '+adsOn+' מודעות באוויר. אין לו שעה בלוח.</p><button type="button" class="yb yb1" data-e="open">📣 לפתוח את הקמפיין</button>';
+   x+='<button type="button" class="yb yb1" data-e="open">📣 לפתוח את הקמפיין</button>';
   }else if(r.kind==='items'){
-   var I=items(r,d).filter(function(y){return !y.up;});
-   if(!I.length)x+='<p>אין ביום הזה פוסט שעוד לא עלה. פוסטים חדשים נכנסים מהמלאי.</p>';
-   I.forEach(function(y,k){x+='<div class="row">'+esc(y.t)+(y.ok?' · מאושר':' · מחכה לאישור שלך')+'<br><input type="time" data-k="'+k+'" value="'+esc(y.time)+'"></div>';});
-   x+=(I.length?'<button type="button" class="yb yb1" data-e="save">שמירה</button>':'')+'<button type="button" class="yb" data-e="open">📦 לפתוח את המלאי</button>';
+   I=(c.items||[]).filter(function(y){return !y.up&&!y.bad;});
+   I.forEach(function(y,k){x+='<div class="row">שעה ל'+esc(y.n)+'<br><input type="time" data-k="'+k+'" value="'+esc(y.time)+'"></div>';});
+   x+=(I.length?'<button type="button" class="yb yb1" data-e="save">שמירת השעה</button>':'')+'<button type="button" class="yb" data-e="open">'+(r.id==='nr'?'⏳ לאשר ולראות את הנרות':'📦 לפתוח')+'</button>';
   }else{
    var t=(P.rows[r.id]&&P.rows[r.id].days[wd])||'';
-   x+='<small style="display:block;color:#5a6577">הלוח שבועי: השינוי חל על כל יום '+DN[wd]+'. '+(r.kind==='auto'?'בשעה הזו הסרטון הבא בתור עולה לבד.':'בשעה הזו תקבל תזכורת לטלפון, ואתה מעלה.')+'</small>'
+   x+='<div style="font:800 15px Heebo,sans-serif;margin-top:10px">לשנות</div><small style="display:block;color:#5a6577">הלוח שבועי: השינוי חל על כל יום '+DN[wd]+'. '+(r.kind==='auto'?'בשעה הזו הסרטון הבא בתור עולה לבד.':'בשעה הזו תקבל תזכורת לטלפון, ואתה מעלה.')+'</small>'
     +'<label><input type="checkbox" id="edOn"'+(t?' checked':'')+'> עולה ביום '+DN[wd]+'</label>'
     +'<input type="time" id="edT" value="'+esc(t||(r.kind==='auto'?'20:00':'09:00'))+'">'
     +'<label><input type="checkbox" id="edAll"> אותו דבר בכל הימים, ראשון עד שישי</label>'
     +'<button type="button" class="yb yb1" data-e="save">שמירה</button><button type="button" class="yb" data-e="open">📦 לפתוח את המלאי</button>';
   }
-  x+='<button type="button" class="yb yx" data-e="x">ביטול</button></div>';
+  x+='<button type="button" class="yb yx" data-e="x">סגירה</button></div>';
   e.innerHTML=x;
   e.onclick=function(ev){
    var a=ev.target.getAttribute&&ev.target.getAttribute('data-e');
@@ -12821,11 +12879,13 @@ function boardSheet(){
   };
   document.body.appendChild(e);
  }
- function openTab(r){if(r.tab)return vidSheet(r.tab);if(r.id==='li'){try{return bizSheet('li');}catch(x){}}toast('אין מלאי לרשת הזו');}
  w.onclick=function(ev){
   var a=ev.target.getAttribute&&ev.target.getAttribute('data-a');
   if(ev.target===w||a==='x')return w.remove();
   if(a==='more'){w.remove();return boardMore();}
+  if(a==='prev'||a==='next'){w.remove();return boardSheet(BD_WEEK+(a==='next'?1:-1));}
+  var tdo=ev.target.closest&&ev.target.closest('.td[data-t]');
+  if(tdo){var x=todo[+tdo.getAttribute('data-t')];return edit(x.r,x.d);}
   var td=ev.target.closest&&ev.target.closest('td[data-r]');if(!td)return;
   var r=ROWS[+td.getAttribute('data-r')];if(!r)return;
   if(td.classList.contains('nm')){w.remove();return openTab(r);}
@@ -12924,7 +12984,7 @@ function boardMore(){
  };
  document.body.appendChild(w);
 }
-on('gBoard',boardSheet);
+on('gBoard',function(){boardSheet(0);});
 function carView(id,n,nm){
  var P=function(i){return (i<10?'0':'')+i;};
  var ov=document.createElement('div');ov.className='carv';
@@ -18078,7 +18138,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="";
+var PUSH_KEY="BAJSdIafAtGxgHzJr3tOJLTViE1Gkn6rNyAReKPb5ZiMM-6xXp2c1PD7V5VKOXkQRWLI9-Wdq7-Q4hyMCcYp2iQ";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
