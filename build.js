@@ -1963,6 +1963,8 @@ button.abtn[disabled]{opacity:.55}
 #gIsra{display:none!important}
 .gt.leadNew.lnSeen{animation:none}
 .bzRow.bzNew{background:#fff4d6;color:#0f1b2a;border-right:5px solid #f59e0b;border-radius:10px;padding:8px 10px;margin:4px 0;cursor:pointer}
+.ctcp{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.ctc{direction:ltr;word-break:break-all}
 .bzNewTag{align-self:flex-start;background:#ea4335;color:#fff;font:700 12px Heebo,sans-serif;border-radius:8px;padding:2px 8px}
 /* A task tile blinks until it is done: a yellow ring pulsing twice a second. */
 @keyframes taskbeat{0%,49%{box-shadow:0 0 0 4px var(--yellow),var(--shadow)}50%,100%{box-shadow:0 0 0 0 transparent,var(--shadow)}}
@@ -7904,6 +7906,34 @@ function replyQuote(m){
  if(t.length>60)t=t.slice(0,60).replace(/\s+\S*$/,'')+'…';
  return '<div class="rq">בקשר ל: '+esc(t)+'</div>';
 }
+/*
+  10.11.2026, Itzik: "תפרק את זה למייל שאני אוכל להעתיק, ותפרק את הטלפון". A lead message carries the email
+  and the phone inside a long line. Each one gets its own copy button under the message, and the lead rows in
+  "העסק שלי" get the same two buttons (bzRow). One tap copies only that value.
+*/
+function contactCopy(m){
+ var t=String(m&&m.text||'');if(!t||t.indexOf('@')<0&&t.length<9)return '';
+ var tk=t.split(String.fromCharCode(10)).join(' ').split(/[ ,;|]+/),mails=[],tels=[];
+ tk.forEach(function(x){
+  var v=x.replace(/^[^A-Za-z0-9+]+|[^A-Za-z0-9]+$/g,'');
+  if(!v)return;
+  var at=v.indexOf('@');
+  if(at>0&&v.indexOf('.',at)>at&&v.length<80){if(mails.indexOf(v)<0)mails.push(v);return;}
+  var d=v.split('-').join('');
+  if(d.length>=9&&d.length<=14&&/^[+]?[0-9]+$/.test(d)&&(d.charAt(0)==='0'||d.charAt(0)==='+')){if(tels.indexOf(d)<0)tels.push(d);}
+ });
+ if(!mails.length&&!tels.length)return '';
+ return '<div class="ctcp">'+mails.slice(0,3).map(function(v){return '<button type="button" class="yb ctc" data-cp="'+esc(v)+'">📋 מייל: '+esc(v)+'</button>';}).join('')
+  +tels.slice(0,3).map(function(v){return '<button type="button" class="yb ctc" data-cp="'+esc(v)+'">📋 טלפון: '+esc(v)+'</button>';}).join('')+'</div>';
+}
+document.addEventListener('click',function(e){
+ var b=e.target&&e.target.closest&&e.target.closest('.ctc');if(!b)return;
+ e.preventDefault();e.stopImmediatePropagation();
+ var v=b.getAttribute('data-cp')||'';
+ var ok=function(){var old=b.getAttribute('data-l')||b.textContent;b.setAttribute('data-l',old);b.textContent='הועתק ✓';setTimeout(function(){b.textContent=old;},1500);};
+ if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(v).then(ok,function(){fallbackCopy(v,ok);});
+ else fallbackCopy(v,ok);
+},true);
 function bubbleHtml(m,i,fresh,handled){
  var mine=m.from==='itzik';
  var no=mine&&!m.pend?numOf(m):0;
@@ -7924,7 +7954,7 @@ function bubbleHtml(m,i,fresh,handled){
   +(mine?'':'<button type="button" class="wash rdAloud" data-txt="'+esc(m.text||'')+'" aria-label="הקראה בקול">🔊</button>')
   +'<button type="button" class="hidemsg" data-k="'+esc(msgKey(m))+'" aria-label="להסתיר">×</button>'
   +(mine?'':'<button type="button" class="aimb bubaim" data-k="'+esc(claudeKey(m))+'">להשיב</button>')
-  +'</span>'+replyQuote(m)+linkify(m.text)+goLinks(m)+vb+ackLine(m,!!vtx)+'</div>';
+  +'</span>'+replyQuote(m)+linkify(m.text)+contactCopy(m)+goLinks(m)+vb+ackLine(m,!!vtx)+'</div>';
 }
 // Copy, paste and send on every reply form, whatever screen it is on.
 function pasteRow(){
@@ -18068,8 +18098,8 @@ function bzRow(r,extra){
  var k=BZ_KIND[r.kind]||'',nw=window.leadNewAt?leadNewAt(r):'';
  return '<div class="bzRow'+(nw?' bzNew" data-new-at="'+nw:'')+'">'+(nw?'<span class="bzNewTag">חדש</span>':'')+'<b>'+esc(r.name||'בלי שם')+'</b>'
   +'<small>'+esc((k?k:'')+(r.status?(k?' · ':'')+r.status:''))+(r.amount?' · '+esc(bzMoney(r.amount)):'')+'</small>'
-  +(r.phone?'<small>'+bzTel(r.phone)+'</small>':'')
-  +(r.email?'<small><a href="mailto:'+esc(r.email)+'">'+esc(r.email)+'</a></small>':'')
+  +(r.phone?'<small>'+bzTel(r.phone)+' <button type="button" class="yb ctc" data-cp="'+esc(String(r.phone).split('-').join('').split(' ').join(''))+'">📋 העתק טלפון</button></small>':'')
+  +(r.email?'<small><a href="mailto:'+esc(r.email)+'">'+esc(r.email)+'</a> <button type="button" class="yb ctc" data-cp="'+esc(r.email)+'">📋 העתק מייל</button></small>':'')
   +(r.note?'<small>'+esc(r.note)+'</small>':'')
   +(bzAgo(r)?'<small>'+esc(bzAgo(r))+'</small>':'')
   +(extra||'')
