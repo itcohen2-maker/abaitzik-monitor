@@ -1073,7 +1073,9 @@ body.dmo-real #talkCard .mic{order:2;align-self:center;margin-top:14px;width:58p
 .dmo-chip{border:1px solid var(--line,#e2e8f0);background:var(--surface,#fff);color:var(--ink,#0f1b2a);border-radius:999px;
  padding:9px 15px;font:600 14px Heebo,sans-serif;cursor:pointer}
 .dmo-tools{margin-top:18px}
-.dmo-tools>summary{list-style:none;cursor:pointer;text-align:center;font:700 15px Heebo,sans-serif;color:var(--accent);padding:10px}
+.dmo-tools>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;min-height:56px;border-radius:28px;background:var(--accent,#0e7490);color:#fff;border:0;font:800 18px Heebo,sans-serif;padding:0 22px;box-shadow:0 6px 18px rgba(14,116,144,.28)}
+.dmo-tools>summary::after{content:"▾";font-size:20px;transition:transform .2s}
+.dmo-tools[open]>summary::after{transform:rotate(180deg)}
 .dmo-tools>summary::-webkit-details-marker{display:none}
 body.dmo-real .hd{margin:4px 0 0!important}
 body.dmo-real .hd .s{opacity:.7}
@@ -2666,7 +2668,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-10T16:50:01.451Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-10T16:56:05.133Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4582,7 +4584,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='f0ec3e1d77';
+var CODE_ID='5bf4cdf683';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -17808,7 +17810,7 @@ function dmoApply(){
  h.innerHTML='<button type="button" id="dmoAnsBtn" class="newbtn"><span class="nb-l"><b>💬 תשובות</b><small id="dmoAnsSub"></small></span><span class="nb-c" id="dmoAnsNum">0</span></button>'
   +'<div class="dmo-ans" id="dmoAns" hidden></div><div class="dmo-ans" id="dmoFeed" hidden style="display:none"><div class="dmo-fl"></div></div>'
   +'<div class="dmo-hint dmo-chips">'+['תסכם לי את הפגישה עם מיכל','מה פתוח לי מול הלקוחות?','תקבע פגישה עם רון ביום חמישי'].map(function(q){return '<button type="button" class="dmo-chip" data-chip="'+q+'">'+q+'</button>';}).join('')+'</div>'
-  +'<details class="dmo-tools"><summary>📂 הכלים שלי</summary><div class="grid">'+DMO_TILES.map(function(x){return '<button type="button" class="gt '+x[1]+'" data-dmo="'+x[0]+'"><b>'+x[2]+'</b><small>'+x[3]+'</small></button>';}).join('')+'</div></details>'
+  +'<details class="dmo-tools"><summary>📂 כל הכלים שלי, לחץ לפתיחה</summary><div class="grid">'+DMO_TILES.map(function(x){return '<button type="button" class="gt '+x[1]+'" data-dmo="'+x[0]+'"><b>'+x[2]+'</b><small>'+x[3]+'</small></button>';}).join('')+'</div></details>'
   +'<div class="row dmo-ics" id="dmoIcons"></div>'
   +'';
  if(!document.getElementById('dmoGreet')){var g=document.createElement('div');g.id='dmoGreet';g.className='dmo-greet';g.innerHTML='שלום, במה אפשר לעזור?<small>כתוב לי כל דבר, או דבר אליי</small>';talk.parentNode.insertBefore(g,talk);}
