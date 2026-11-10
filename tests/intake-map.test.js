@@ -38,7 +38,7 @@ test('a complete response maps to the expected instance', () => {
   assert.equal(m.owner, 'דנה כהן');
   assert.equal(m.pageTitle, 'המוניטור של דנה כהן');
   assert.equal(m.welcome.startsWith('שלום דנה, '), true);
-  assert.deepEqual(m.screens, ['gToday', 'gTasks', 'gNotes', 'gRemind', 'gCIdeas', 'gPlan', 'gVoices',
+  assert.deepEqual(m.screens, ['gToday', 'gTasks', 'gNotes', 'gCamp', 'gRemind', 'gCIdeas', 'gPlan', 'gVoices',
     'gFiles', 'gRemote', 'gBiz', 'gPush', 'gBrief']);
   assert.equal(m.biz, true);
   assert.equal(m.computer, 'mac');
@@ -67,9 +67,9 @@ test('the phone or mail for a call back is never written to the proposal', () =>
   assert.ok(mapIntake(FIXTURE).intakeNotes.some((n) => n.startsWith('טלפון או מייל לחזרה: לא נכתב')));
 });
 
-test('an empty response is a plain monitor: the two default screens, formal tone, no biz', () => {
+test('an empty response is a plain monitor: the three default screens (tasks, notes, campaigns), formal tone, no biz', () => {
   const m = mapIntake({});
-  assert.deepEqual(m.screens, ['gTasks', 'gNotes']);
+  assert.deepEqual(m.screens, ['gTasks', 'gNotes', 'gCamp']);
   assert.equal(m.biz, false);
   assert.equal(m.profile.tone, 'formal');
   assert.deepEqual(m.profile.modules, []);

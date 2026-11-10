@@ -1344,11 +1344,15 @@ const TENANT_TILES = {
   gBhQuote: ['g13', '🧾 הצעות מחיר', 'הצעה עם הלוגו שלך, לפני מע״מ, ב PDF'],
   // 3.11.2026, Itzik: a customer's own shopping list (lib/shop-list.js), not Itzik's shared doc.
   gShopList: ['gShop', '🛒 קניות', 'הרשימה שלך, מסמנים מה נקנה'],
+  // 10.11.2026, Itzik: what the quote promises (a campaign draft, captions, a post description) is on every monitor by default.
+  gCamp: ['g13', '📣 קמפיינים', 'מעלים תמונות או סרטון, ואני מכין טיוטה'],
 };
 // With no screens chosen at intake, only the tiles that fit any work. The whole
 // catalog gave a phone only customer "connect the computer", a client follow up
 // and a content plan, some of them empty screens.
-const TENANT_DEFAULT = ['gTasks', 'gNotes'];
+const TENANT_DEFAULT = ['gTasks', 'gNotes', 'gCamp'];
+// 10.11.2026, Itzik: the notes app, the tasks and the campaigns screen are on every customer's monitor whatever the intake chose.
+const TENANT_ALWAYS = ['gTasks', 'gNotes', 'gCamp'];
 // 7.11.2026: 🔌 on every customer's home (connSheet, lib/connections.js).
 const TENANT_CONN_TILE = ['g4', '🔌 חיבורים', 'מה מחובר, וחיבור בלחיצה'];
 /*
@@ -1412,6 +1416,7 @@ function tenantTools(inst) {
     + '\n   <button type="button" class="ic icNew" id="icTCal" data-new="1"><span class="c c-gcal"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></span>יומן</button>'
     + '\n   <button type="button" class="ic icNew" id="icFcSales" data-new="1" style="display:none"><span class="c c-fcs">🎯</span>אימון מכירות</button>'
     + '\n   <button type="button" class="ic icNew" id="icFcCoach" data-new="1" style="display:none"><span class="c c-fcc">🧭</span>אימון עסקי</button>'
+    + '\n   <button type="button" class="ic icNew" id="icFcPersonal" data-new="1" style="display:none"><span class="c c-fcp">🌿</span>אימון אישי</button>'
     + '\n  </div>';
 }
 function tenantTiles(inst) {
@@ -1420,6 +1425,7 @@ function tenantTiles(inst) {
   // is on every customer's home screen, whatever his intake chose.
   // 12.10 evening: an admin (Rinat) asks too, for anything on the page.
   // 7.11.2026, Itzik: every monitor gets 🔌 חיבורים. A customer's home has tiles, not the icon row.
+  TENANT_ALWAYS.forEach((id) => { if (ids.indexOf(id) < 0) ids.push(id); });
   ids.push('gConn');
   ids.push('gAdminReq');
   // esc() is defined far above; this part is also lifted alone by a test.
@@ -1438,7 +1444,7 @@ function tenantTiles(inst) {
     const [cls, title, sub] = TENANT_TILES[id];
     // data-grp by visible label: only the two labels in the groups list get one.
     const grp = { gFiles: 'home', gBiz: 'work' }[id];
-    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' || /^gBh|^gShopList$/.test(id) ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261105-shai-send"' : '') + (id === 'gTasks' ? ' data-upd="tasks-edit-1106"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' || /^gBh|^gShopList$|^gCamp$/.test(id) ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261105-shai-send"' : '') + (id === 'gTasks' ? ' data-upd="tasks-edit-1106"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
 }
 /*
@@ -2789,6 +2795,7 @@ section#talkCard.talk{border:2px solid var(--accent);box-shadow:0 8px 24px color
 #fcRow .fcErr{font:700 13px Heebo,sans-serif;color:#b3261e}
 .c-fcs{background:linear-gradient(160deg,#f59e0b,#b45309);font-size:22px}
 .c-fcc{background:linear-gradient(160deg,#22d3ee,#0e7490);font-size:22px}
+.c-fcp{background:linear-gradient(160deg,#4ade80,#15803d);font-size:22px}
 /* 7.11.2026, Itzik: "להקטין בכלל את כל הכפתורים, שייכנס קצת יותר". Second step of the day: everything on the home screen a notch smaller. */
 #blkTiles.grid{gap:6px}
 #blkTiles>.gt{height:78px;min-height:78px;max-height:78px;padding:8px 10px}
@@ -4752,6 +4759,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <!-- 7.11.2026, Itzik: the trainings sit in round icons beside the calendar. Shown only when the chat is allowed (fcBoot). -->
   <button type="button" class="ic icNew" data-grp="day" id="icFcSales" data-new="1" style="display:none"><span class="c c-fcs">🎯</span>אימון מכירות</button>
   <button type="button" class="ic icNew" data-grp="day" id="icFcCoach" data-new="1" style="display:none"><span class="c c-fcc">🧭</span>אימון עסקי</button>
+  <button type="button" class="ic icNew" data-grp="day" id="icFcPersonal" data-new="1" style="display:none"><span class="c c-fcp">🌿</span>אימון אישי</button>
   <a class="ic" data-grp="net" data-net="all" id="icNet" href="#"><span class="c c-nt">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M10 20V5M15 20v-6M20 20V8"/></svg></span>ניטור רשתות</a>
   <!-- 4.11, Itzik: "באתר של אבא איציק תרשום אבא איציק, כל הזמן. אני מתבלבל בין האתר לאתר שלי". This is the abaitzik.com icon, so its label is the name, always. -->
@@ -15224,6 +15232,61 @@ function adminReqSheet(){
  setTimeout(function(){var x=document.getElementById('arText');if(x)x.focus();},50);
 }
 on('gAdminReq',adminReqSheet);
+/*
+  10.11.2026, Itzik: "כפתור בקמפיינים ממומנים להעלות סרטון או וידאו והוא ייצר לי". The quote promises a campaign draft,
+  caption versions, a post description and a fit for feed, story and reel. The customer picks photos or a video, says what
+  to make, and writes what matters. It goes out as "קמפיין: <סוגים> | <בקשה>" with the files, the same way a food photo goes
+  (sendAll). The session that gets it writes a draft only, nothing is published (lib/campaign.js, injected by worker.js).
+*/
+function campSheet(){
+ var old=document.getElementById('cpSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='cpSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','קמפיינים');
+ var kinds=['מודעה ממומנת','סטורי','ריל','פוסט','קרוסלה','סרטון מכל החומרים'];
+ w.innerHTML='<div class="ycard"><b>📣 קמפיינים</b>'
+  +'<small>מעלים תמונות או סרטון, בוחרים מה לעשות איתם, וכותבים מה חשוב. אני מכין טיוטה: מטרה, קהל, תקציב מוצע, כמה גרסאות כיתוב ותיאור לפוסט. שום דבר לא עולה בלי אישור שלך.</small>'
+  +'<button type="button" class="yb yb2" data-a="pick">📎 לבחור תמונות או סרטון</button>'
+  +'<input type="file" id="cpFiles" accept="image/*,video/*" multiple hidden>'
+  +'<div id="cpList" style="font:600 14px Heebo,sans-serif;margin:6px 0"></div>'
+  +'<small style="opacity:1;font-weight:600">מה לעשות איתם? אפשר לבחור כמה:</small>'
+  +'<div class="arPick" id="cpKinds" role="group" aria-label="מה לעשות">'
+  +kinds.map(function(k){return '<button type="button" class="yb" data-k="'+k+'">'+k+'</button>';}).join('')+'</div>'
+  +'<textarea id="cpText" rows="4" style="width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif" placeholder="מה חשוב להגיד? מבצע, מי הקהל, כתובת, מחיר. אם משהו חסר, אשאל."></textarea>'
+  +'<small>מוזיקה: כברירת מחדל בלי מוזיקה בתוך הסרטון. אפשר להוסיף מהאוסף של Meta בזמן הפרסום.</small>'
+  +'<button type="button" class="yb yb1" data-a="send">שליחה</button>'
+  +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+ function close(){w.remove();}
+ var picked=[];
+ function paintList(){
+  var l=document.getElementById('cpList');
+  if(l)l.textContent=picked.length?('נבחרו '+picked.length+': '+picked.map(function(f){return f.name;}).join(', ')):'';
+ }
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var a=e.target.getAttribute&&e.target.getAttribute('data-a');
+  if(a==='x')return close();
+  if(a==='pick'){var fi=document.getElementById('cpFiles');if(fi)fi.click();return;}
+  var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  if(k){e.target.classList.toggle('on');return;}
+  if(a!=='send')return;
+  var chosen=[].map.call(w.querySelectorAll('#cpKinds .yb.on'),function(b){return b.getAttribute('data-k');});
+  var t=(document.getElementById('cpText').value||'').trim();
+  if(!picked.length&&!t){toast('בחר תמונות או סרטון, או כתוב מה תרצה');return;}
+  var note='קמפיין: '+(chosen.length?chosen.join(', '):'לא נבחר סוג')+(t?' | '+t:'');
+  e.target.disabled=true;
+  var go=picked.length?sendAll(picked,note):sendText('קמפיין',note,'משימה');
+  go.then(function(){
+   markSent(picked.length?'file':'text',note);close();
+   toast('נשלח. אכין טיוטה ואחזיר אותה בתשובות, ושום דבר לא יעלה בלי אישור שלך.');
+  }).catch(function(){e.target.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
+ };
+ w.addEventListener('change',function(e){
+  if(e.target&&e.target.id==='cpFiles'){picked=[].slice.call(e.target.files||[]);paintList();}
+ });
+ document.body.appendChild(w);
+}
+on('gCamp',campSheet);
 // 24.10: the tile says the request is with the owner, for two days after it was sent.
 function arWaitMark(){try{localStorage.setItem('arSent',String(Date.now()));}catch(e){}arWaitShow();}
 function arWaitShow(){
@@ -17368,7 +17431,7 @@ function fcPaintRow(){
 }
 function fcPaintMode(){
  var lab=document.getElementById('fcMode'),end=document.getElementById('fcEnd'),snd=document.getElementById('fcSend');
- if(lab){lab.hidden=fcS.mode==='chat';lab.textContent=fcS.mode==='sales'?'🎯 אימון מכירות פעיל':fcS.mode==='coach'?'🧭 אימון עסקי פעיל':'';}
+ if(lab){lab.hidden=fcS.mode==='chat';lab.textContent=fcS.mode==='sales'?'🎯 אימון מכירות פעיל':fcS.mode==='coach'?'🧭 אימון עסקי פעיל':fcS.mode==='personal'?'🌿 אימון אישי פעיל':'';}
  if(end){end.hidden=fcS.mode==='chat';}
  var sc=document.getElementById('fcScore');if(sc)sc.hidden=fcS.mode!=='sales';
  if(snd)snd.disabled=!!fcS.busy;
@@ -17452,12 +17515,13 @@ function fcSheet(){
  if(r)r.addEventListener('click',function(e){var t=e.target;if(t&&t.id==='fcMore')fcSheet();});
  on('icFcSales',function(){fcSheet();fcSend('אימון מכירות');});
  on('icFcCoach',function(){fcSheet();fcSend('אימון עסקי');});
+ on('icFcPersonal',function(){fcSheet();fcSend('אימון אישי');});
  on('icTCal',function(){if(D.cal&&D.cal.events&&D.cal.events.length){calSheet(false);return;}var t=document.getElementById('gTasks');if(t)t.click();else calSheet(false);});
 })();
 // Called by applyFeatures once the row is allowed: one read of the thread, for the last line.
 function fcBoot(){
  var r=document.getElementById('fcRow');if(!r||r.hidden)return;
- ['icFcSales','icFcCoach'].forEach(function(i){var e=document.getElementById(i);if(e)e.style.display='';});
+ ['icFcSales','icFcCoach','icFcPersonal'].forEach(function(i){var e=document.getElementById(i);if(e)e.style.display='';});
  if(fcS.loaded)return;
  fcS.loaded=true;
  fcPost('/thread',{}).then(function(j){if(fcS.busy)return;fcApply(j);fcPaintRow();},function(){});
