@@ -17562,19 +17562,21 @@ function boardSheet(wk){
   +'#bdGrid .lg2>span.tdy{background:linear-gradient(135deg,#4f5bff,#8b5cf6);border-radius:10px;color:#fff;box-shadow:0 0 16px rgba(91,108,255,.6)}#bdGrid .lg2>span.tdy small{color:#e6e9ff}'
   +'#bdGrid .ln{font-size:20px!important;cursor:pointer}#bdGrid .ln small{max-width:68px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
   +'#bdGrid .lg2>span.lc{align-items:stretch;justify-content:stretch}'
-  +'#bdGrid .dot{width:100%;height:100%;min-height:0;border-radius:14px;padding:0;margin:0;cursor:pointer;box-sizing:border-box;'
-  +'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;color:#fff;background:#1c1f2a;border:2px solid rgba(255,255,255,.08);'
-  +'-webkit-tap-highlight-color:transparent;transition:transform .12s}'
-  +'#bdGrid .dot:active{transform:scale(.92)}'
+  // 10.11.2026, Itzik: "עריכים שנראים כמו העריכים שלי היום, מלבנים עם פינות מעוגלות, תלת מימדים, לחיצים, וכל שורה בצבע אחר".
+  // Every cell is a home tile (.gt): the row's own gradient, the moulded sheen, the same shadows and press. The state is the emoji;
+  // a cell that will not go up gets a red frame, an empty cell is the row colour faded, past days are dimmer.
+  +'#bdGrid .dot{width:100%;height:100%;min-height:0;border-radius:14px;padding:0;margin:0;cursor:pointer;box-sizing:border-box;position:relative;overflow:hidden;isolation:isolate;'
+  +'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;color:#fff;border:0;background:linear-gradient(150deg,var(--a),var(--b));'
+  +'box-shadow:0 6px 14px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.55),inset 0 -3px 8px rgba(0,0,0,.22),inset 0 0 0 1px rgba(255,255,255,.14);'
+  +'-webkit-tap-highlight-color:transparent;transition:transform .09s ease,box-shadow .09s ease,filter .09s ease}'
+  +'#bdGrid .dot:after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.34) 0%,rgba(255,255,255,.10) 42%,rgba(255,255,255,0) 55%,rgba(0,0,0,.10) 100%)}'
+  +'#bdGrid .dot:active{transform:translateY(2px) scale(.97);filter:saturate(1.15) brightness(.94);box-shadow:0 2px 6px rgba(0,0,0,.4),inset 0 2px 8px rgba(0,0,0,.32)}'
+  +'#bdGrid .dot.e{opacity:.3}'
+  +'#bdGrid .dot.s-no,#bdGrid .dot.s-miss,#bdGrid .dot.s-late{box-shadow:0 6px 14px rgba(0,0,0,.45),inset 0 0 0 3px #ff4d5e,inset 0 1px 0 rgba(255,255,255,.55)}'
+  +'#bdGrid .ln{border-radius:14px;background:linear-gradient(150deg,var(--a),var(--b));color:#fff;box-shadow:0 6px 14px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.5)}#bdGrid .ln small{color:#fff!important;font-weight:800!important;text-shadow:0 1px 2px rgba(0,0,0,.4)}'
   +'#bdGrid .dot em{font-style:normal;font-size:clamp(13px,4.2vh,24px);line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.55))}'
   +'#bdGrid .dot small{text-shadow:0 1px 3px rgba(0,0,0,.6)}#bdGrid .dot small{font:800 clamp(9px,2.7vh,13px) Heebo,sans-serif;color:#fff;direction:ltr}'
-  +'#bdGrid .dot.s-ok,#bdGrid .lk .k-ok{background:radial-gradient(circle at 35% 30%,#4ade80,#15803d);border-color:#4ade80;box-shadow:0 0 16px rgba(34,197,94,.55)}'
-  +'#bdGrid .dot.s-will,#bdGrid .lk .k-will{background:radial-gradient(circle at 35% 30%,#818cf8,#4338ca);border-color:#a5b4fc;box-shadow:0 0 16px rgba(91,108,255,.55)}'
-  +'#bdGrid .dot.s-run{background:radial-gradient(circle at 35% 30%,#c084fc,#7e22ce);border-color:#d8b4fe;box-shadow:0 0 16px rgba(139,92,246,.55)}'
-  +'#bdGrid .dot.s-hand,#bdGrid .dot.s-wait,#bdGrid .dot.s-open,#bdGrid .lk .k-hand{background:radial-gradient(circle at 35% 30%,#fcd34d,#d97706);border-color:#fde68a;box-shadow:0 0 16px rgba(245,158,11,.5)}'
-  +'#bdGrid .dot.s-no,#bdGrid .dot.s-miss,#bdGrid .dot.s-late,#bdGrid .lk .k-bad{background:radial-gradient(circle at 35% 30%,#f87171,#b91c1c);border-color:#fca5a5;box-shadow:0 0 16px rgba(239,68,68,.55)}'
-  +'#bdGrid .lk .k-no{background:#1c1f2a;border:1px solid rgba(255,255,255,.2)}'
-  +'#bdGrid .dot.pst{opacity:.55;box-shadow:none}#bdGrid .dot.now{outline:2px solid #fff;outline-offset:2px}'
+  +'#bdGrid .dot.pst{filter:saturate(.55) brightness(.75)}#bdGrid .dot.pst.e{opacity:.18}#bdGrid .dot.now{outline:2px solid #fff;outline-offset:2px}'
   +'}</style>';
  var wkName=BD_WEEK===0?'השבוע':BD_WEEK===-1?'שבוע שעבר':BD_WEEK===1?'שבוע הבא':(BD_WEEK>0?'בעוד '+BD_WEEK+' שבועות':'לפני '+(-BD_WEEK)+' שבועות');
  var h=css+'<div class="ycard"><b>🎛️ לוח בקרה</b>'
@@ -17591,14 +17593,18 @@ function boardSheet(wk){
  // the phone turned sideways shows only this: the whole week as round buttons filling the screen, one per network and day,
  // coloured by state (green went up, indigo goes up by itself, amber you post or approve, red will not, grey nothing planned).
  // A tap opens the same day editor as a cell of the table. Upright, the regular board is back. Only CSS decides which shows.
+ // one colour per row, taken from the home tiles (g7, g15, g12, gNer, g1, g9, g8, g6, gReel, g11)
+ var RC={st:['#7bd88f','#1e8e4a'],'ai-he':['#90caf9','#1565c0'],'ai-en':['#b39ddb','#673ab7'],nr:['#f0a64a','#0f1a3a'],li:['#5aa9fb','#0a4f9c'],
+  ads:['#f48fb1','#ad1457'],pl:['#ffb74d','#e65100'],car:['#4fb3c4','#00838f'],me:['#e2574c','#2a1240'],it:['#4fbf88','#00897b']};
  var LBL={ok:'עלה',miss:'לא עלה',will:'יעלה לבד',hand:'אתה מעלה',wait:'לאישור',no:'לא יעלה',run:'רץ',late:'עבר הזמן',open:'ידני'};
  h+='<div class="lsc" style="--R:'+ROWS.length+'"><div class="lh"><button type="button" class="lb" data-a="prev">‹</button><b>🎛️ '+wkName+' · '+dm(days[0])+' עד '+dm(days[6])+'</b>'
-  +'<span class="lk"><i class="k-ok"></i>עלה <i class="k-will"></i>יעלה לבד <i class="k-hand"></i>אתה / אישור <i class="k-bad"></i>לא יעלה <i class="k-no"></i>ריק</span>'
+  +'<span class="lk">✅ עלה · 🔜 יעלה לבד · ✋ אתה מעלה · ⏳ לאישור · ⚠️ לא יעלה · ▶️ ממומן · חיוור: לא מתוכנן</span>'
   +'<button type="button" class="lb" data-a="next">›</button><button type="button" class="lb" data-a="x">✕</button></div>'
   +'<div class="lg2"><span></span>'+days.map(function(d){return '<span class="'+(d===T0?'tdy':'')+'">'+(d===T0?'היום':DS[dw(d)])+'<small>'+dm(d)+'</small></span>';}).join('')
-  +ROWS.map(function(r,ri){return '<span class="ln" data-rn="'+ri+'">'+r.ic+'<small>'+esc(r.n)+'</small></span>'
+  +ROWS.map(function(r,ri){var rc=RC[r.id]||['#7d8ba1','#3f4a5c'],cv='--a:'+rc[0]+';--b:'+rc[1];
+   return '<span class="ln" style="'+cv+'" data-rn="'+ri+'">'+r.ic+'<small>'+esc(r.n)+'</small></span>'
    +days.map(function(d){var c=C[ri+'|'+d]||{},s=c.s||'';
-    return '<span class="lc"><button type="button" class="dot'+(s?' s-'+s:'')+(d===T0?' now':'')+(d<T0?' pst':'')+'" data-r="'+ri+'" data-d="'+d+'" aria-label="'+esc(r.n)+' '+dm(d)+' '+(LBL[s]||'לא מתוכנן')+'">'
+    return '<span class="lc"><button type="button" style="'+cv+'" class="dot'+(s?' s-'+s:' e')+(d===T0?' now':'')+(d<T0?' pst':'')+'" data-r="'+ri+'" data-d="'+d+'" aria-label="'+esc(r.n)+' '+dm(d)+' '+(LBL[s]||'לא מתוכנן')+'">'
      +(s?'<em>'+IC[s]+'</em>'+(c.t?'<small>'+esc(c.t)+'</small>':''):'')+'</button></span>';}).join('');}).join('')
   +'</div></div>';
  // 10.11, Itzik: "תשים את כל הזמנים ומה עולה, איזה סרטון". Day by day under the table: time, network, which video, state.
