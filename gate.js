@@ -162,6 +162,20 @@ function openMessage(text) {
 }
 
 /*
+  A file the page sealed for ntfy (10.11.2026): "ENC1" + 12 byte IV + ciphertext + 16 byte tag.
+  Returns the real bytes; the same buffer when it is not sealed (an old page, or sealing off);
+  null when it is sealed and does not verify, so the caller drops it instead of keeping noise.
+*/
+function openBytes(buf) {
+  if (!Buffer.isBuffer(buf) || buf.length < 4 + 12 + 16 || buf.subarray(0, 4).toString('latin1') !== 'ENC1') return buf;
+  try {
+    const d = crypto.createDecipheriv('aes-256-gcm', key(), buf.subarray(4, 16));
+    d.setAuthTag(buf.subarray(buf.length - 16));
+    return Buffer.concat([d.update(buf.subarray(16, buf.length - 16)), d.final()]);
+  } catch (e) { return null; }
+}
+
+/*
   Files, 27.9. Itzik's chat attachments sat in docs/files, readable by anyone
   with the address, a hospital appointment among them. They are sealed the same
   way as the data, as bytes: a 12 byte IV, then the ciphertext and its tag. The
@@ -176,7 +190,7 @@ function fileId(name) {
   return crypto.createHmac('sha256', key()).update('file:' + name).digest('hex').slice(0, 24);
 }
 
-module.exports = { enabled, seal, open, openMessage, sealBytes, fileId, normalize, pageParams,
+module.exports = { enabled, seal, open, openMessage, openBytes, sealBytes, fileId, normalize, pageParams,
   NEW_ROUNDS: ROUNDS, LEGACY_ROUNDS,
   get rounds() { return params().rounds; },
   saltB64: () => salt().toString('base64') };

@@ -6775,9 +6775,29 @@ function sendFiles(list, note) {
    what did not arrive, and only after that does the send report a failure.
  */
  var failed = [];
- function putBlob(b, name, i) {
-  return fetch('https://ntfy.sh/' + NTFYIN() + '?filename=' + encodeURIComponent(name),
-   { method: 'PUT', headers: { Title: 'file ' + gid + ' ' + (i + 1) + '/' + n }, body: b })
+ /*
+   10.11.2026, agreement audit: with sealing on, each file (or slice, 2MB at most) is sealed in
+   the browser before it goes to ntfy.sh: the four bytes ENC1, a 12 byte IV, then AES-GCM
+   ciphertext and tag, 32 bytes more than the file. listen.js opens it before the file is
+   written, so everything after the listener sees the real bytes. The file name still travels in
+   the clear, ntfy takes it as a header, so a sensitive file should have a plain name.
+ */
+ function sealBlob(b) {
+  if (!SEALING()) return Promise.resolve(b);
+  return b.arrayBuffer().then(function (buf) {
+   var iv = crypto.getRandomValues(new Uint8Array(12));
+   return crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, GKEY, buf).then(function (ct) {
+    return new Blob([new TextEncoder().encode('ENC1'), iv, new Uint8Array(ct)]);
+   });
+  });
+ }
+ function putBlob(b0, name, i) {
+  var b = b0;
+  return sealBlob(b0).then(function (sb) {
+   b = sb;
+   return fetch('https://ntfy.sh/' + NTFYIN() + '?filename=' + encodeURIComponent(name),
+    { method: 'PUT', headers: { Title: 'file ' + gid + ' ' + (i + 1) + '/' + n }, body: sb });
+  })
    .then(function (r) {
     if (!r.ok) throw new Error('ntfy');
     return r.json().catch(function () { return null; });

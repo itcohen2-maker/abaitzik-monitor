@@ -173,3 +173,33 @@ test('openMessage: sealed text opens, plain passes, damaged is null', () => {
     assert.equal(c.mod.openMessage('enc1:AAAA'), null);
   } finally { c.done(); }
 });
+
+// 10.11.2026: the page seals with WebCrypto (PBKDF2 then AES-GCM, build.js gderive / gseal / sealBlob),
+// the server opens with node:crypto. This builds the page's output the page's way, from the same
+// words, salt and rounds, and requires the server to open both a message and a file. A format drift
+// between the two halves would show here and not on a customer's phone.
+test('the page format (WebCrypto) opens on the server: message and file', async () => {
+  const words = 'שלום עולם אחד שניים שלוש';
+  const salt = crypto.randomBytes(24);
+  const c = copyWith({ 'gate-key.txt': words + '\n', 'gate-params.json': JSON.stringify({ salt: salt.toString('base64'), rounds: 100000 }) });
+  try {
+    const subtle = crypto.webcrypto.subtle;
+    const base = await subtle.importKey('raw', new TextEncoder().encode(c.mod.normalize(words)), 'PBKDF2', false, ['deriveKey']);
+    const k = await subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
+    // a message, as gseal does it
+    const text = 'שלום\nמטופל: דוגמה\n\nקוד 123';
+    const iv = crypto.webcrypto.getRandomValues(new Uint8Array(12));
+    const ct = new Uint8Array(await subtle.encrypt({ name: 'AES-GCM', iv }, k, new TextEncoder().encode(text)));
+    const all = new Uint8Array(12 + ct.length); all.set(iv); all.set(ct, 12);
+    assert.equal(c.mod.openMessage('enc1:' + Buffer.from(all).toString('base64')), text);
+    // a file, as sealBlob does it
+    const file = crypto.randomBytes(5000);
+    const iv2 = crypto.webcrypto.getRandomValues(new Uint8Array(12));
+    const ct2 = new Uint8Array(await subtle.encrypt({ name: 'AES-GCM', iv: iv2 }, k, file));
+    const blob = Buffer.concat([Buffer.from('ENC1'), Buffer.from(iv2), Buffer.from(ct2)]);
+    assert.ok(c.mod.openBytes(blob).equals(file));
+    assert.equal(c.mod.openBytes(Buffer.concat([blob.subarray(0, blob.length - 1), Buffer.from([blob[blob.length - 1] ^ 1])])), null);
+    const plain = crypto.randomBytes(100);
+    assert.ok(c.mod.openBytes(plain) === plain);
+  } finally { c.done(); }
+});

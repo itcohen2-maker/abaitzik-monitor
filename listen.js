@@ -410,10 +410,13 @@ async function saveAttachment(m) {
   const slice = PART_RE.test(m.attachment.name);
   const real = res.ok && (bin.length > 1024 || (slice && expected > 0 && bin.length === expected))
     && (!expected || bin.length >= expected * 0.9);
-  if (real) {
+  // 10.11.2026: a sealed file ("ENC1", see sealBlob in build.js) is opened here. The size checks above
+  // judged what ntfy holds; what is written is the real file. One that does not verify is a loss.
+  const data = real ? gateSeal.openBytes(bin) : null;
+  if (real && data) {
     fs.mkdirSync(DROP, { recursive: true });
-    fs.writeFileSync(out, bin);
-    say('קובץ נשמר: ' + m.attachment.name + ' (' + bin.length + ')');
+    fs.writeFileSync(out, data);
+    say('קובץ נשמר: ' + m.attachment.name + ' (' + data.length + ')');
     logPull('file', m.attachment.name);
     return true;
   }
