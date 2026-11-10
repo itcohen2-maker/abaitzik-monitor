@@ -4544,7 +4544,7 @@ ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').bar : ''}
  ${true ? `<div class="fcrow" id="fcRow" hidden role="group" aria-label="שיחה עם ה AI">
   <div class="fch"><span class="fci" aria-hidden="true">💬</span><span class="fct"><b>אני AI, כתוב לי כל דבר</b></span></div>
   <div class="fcInline" id="fcInline" hidden></div>
-  <form class="fcQuick" id="fcQuick"><input type="text" id="fcQText" maxlength="2000" autocomplete="off" placeholder="התייעץ איתי על העסק, או כל דבר אחר"><button type="submit" id="fcQBtn" aria-label="שליחה">➤</button></form>
+  <form class="fcQuick" id="fcQuick"><input type="text" id="fcQText" maxlength="2000" autocomplete="off" placeholder=""><button type="submit" id="fcQBtn" aria-label="שליחה">➤</button></form>
  </div>` : ''}
  <button type="button" class="reloadbig" id="reloadBtn" aria-label="רענון וחזרה לדף הבית" title="רענון וחזרה לדף הבית">↻<span class="rlw">רענן</span></button>
 
@@ -11197,6 +11197,8 @@ function backBar(sec){
   already, and a second one under it is noise.
 */
 function replyBar(sec){
+ // 10.11.2026, Itzik: no "do you have something to say about this screen" bar on any screen, in every monitor.
+ return;
  if(sec.id==='pH'||sec.id==='pM')return;
  // pL2 carries its own box, open at the top.
  if(sec.id==='pL2')return;
