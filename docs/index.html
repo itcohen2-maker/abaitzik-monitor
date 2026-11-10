@@ -2608,7 +2608,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-10T07:20:02.303Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-10T07:21:39.243Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4523,7 +4523,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='10f9f86483';
+var CODE_ID='d3c35eb596';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12491,7 +12491,7 @@ function vidTabs(){
  var nrN=(VQ0.nr||[]).filter(function(x){return !x.posted&&!x.failed&&!x.approved&&!x.rejected&&!x.hold;}).length;
  var plN=(VQ0.pl||[]).filter(function(x){return !x.posted&&!x.approved;}).length;
  var aiN=(VQ0.ai||[]).filter(function(x){return !x.posted;}).length;
- var CAR=[];
+ var CAR=[{id:'life',t:'סיפור חיי',n:11}];
  var carL=[];CAR.forEach(function(c,ci){var pad=function(i){return (i<10?'0':'')+i;};carL.push({h:'🎠 קרוסלה '+(ci+1)+' · '+c.t+' ('+c.n+' שקפים)'});carL.push({k:'car',c:c.id,n:c.n,nm:'קרוסלה '+(ci+1)+' · '+c.t,t:'🎠 לפתיחת הקרוסלה, שקף אחרי שקף',pulse:1});carL.push({k:'reel',it:{n:'כיתוב',t:'הכיתוב לפוסט',r:'carousel-'+c.id+'-caption.txt',pulse:1}});});
  return [
   {id:'st',l:'📲 סטטוס'+(stN?' ('+stN+')':''),h:'סטטוס וואטסאפ: מה עולה היום ומה הבא בתור. לחיצה פותחת את הסרטון והטקסט, 3 נגיעות',L:vqRows('st').concat([{h:'📂 הדף המלא'},{k:'go',t:'📲 פתיחת כל הסטטוסים המוכנים',u:'status/index.html'}])},
