@@ -204,7 +204,8 @@ test('no mail token: nothing is mailed; the Gmail draft is recorded when the pag
 });
 
 test('the page: back button, big link, the exact invite text, no dashes in visible copy', () => {
-  const html = fs.readFileSync(path.join(__dirname, '..', 'docs', 'shachar', 'index.html'), 'utf8');
+  // A page built on Windows ends its lines with CRLF; the text is the same, so compare on LF.
+  const html = fs.readFileSync(path.join(__dirname, '..', 'docs', 'shachar', 'index.html'), 'utf8').replace(/\r\n/g, '\n');
   assert.match(html, /href="\.\.\/index\.html"/);
   assert.match(html, /href="https:\/\/shachar\.abaitzik\.com"[^>]*>לפתוח את שחר</);
   assert.match(html, /מי הצטרף, לפי סדר ההרשמה/);

@@ -41,6 +41,7 @@ test('applyRemovals adds once, keeps other fields, mode 600, marks seen', () => 
   const s = JSON.parse(fs.readFileSync(f, 'utf8'));
   assert.deepEqual(s.unsub, ['old@x.io', 'a@b.co']);
   assert.equal(s.custom, 7);
-  assert.equal(fs.statSync(f).mode & 0o777, 0o600);
+  // Windows has no Unix permission bits (a file always reads back 0o666), so the mode is asserted only where it exists.
+  if (process.platform !== 'win32') assert.equal(fs.statSync(f).mode & 0o777, 0o600);
   assert.deepEqual(applyRemovals(d, msgs, ['1', '2']).added, []);
 });
