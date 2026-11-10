@@ -754,7 +754,7 @@ function recordIncoming(m) {
       } catch (e) { say('!! בקשה ממנהל לא נרשמה: ' + e.message); }
     }
     /*
-      10.11.2026, Itzik: "🧑‍💼 המנהל שלי" (build.js myMgrSheet). The sheet sends the routine as JSON, a pause, a resume or a
+      10.11.2026, Itzik: "🧑‍💼 מנהלת IT Solution" (build.js myMgrSheet). The sheet sends the routine as JSON, a pause, a resume or a
       delete by id. It is saved here, with no model, by lib/routines.js, and answered here, so a customer's
       routine never depends on a session remembering to write a file. The page is rebuilt so the list shows it.
     */

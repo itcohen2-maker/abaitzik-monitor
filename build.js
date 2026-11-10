@@ -818,7 +818,7 @@ function build() {
     */
     brief: require('./lib/brief.js').forPage(loadDocs('brief'), Date.now()),
     // 4.11.2026: the manager's round of today (manager.js, lib/manager.js), the "🧑‍💼 המנהל" card.
-    // 10.11.2026: the customer's own routines ("🧑‍💼 המנהל שלי"), sealed page payload only, never the public live.json.
+    // 10.11.2026: the customer's own routines ("🧑‍💼 מנהלת IT Solution"), sealed page payload only, never the public live.json.
     routines: inst.name === 'abaitzik' ? [] : require('./lib/routines.js').forPage(inst.dataPath, Date.now()),
     manager: inst.name === 'abaitzik' ? require('./lib/manager.js').forPage(inst.dataPath, Date.now()) : null,
     pegasus,
@@ -1384,7 +1384,7 @@ const TENANT_TILES = {
   // 10.11.2026, Itzik, for Ilay: his own campaigns from his ad account, read only (ads-sync.js, data/ads/status.json).
   gAds: ['g13', '📊 מצב הקמפיינים', 'מה רץ, כמה הוצא, כמה לידים'],
   // 10.11.2026, Itzik: a manager for every monitor, where the customer records what comes back again and again (lib/routines.js).
-  gMyMgr: ['g4', '🧑‍💼 המנהל שלי', 'מה שחוזר על עצמו, אומרים פעם אחת'],
+  gMyMgr: ['g4', '🧑‍💼 מנהלת IT Solution', 'מה שחוזר על עצמו, אומרים פעם אחת'],
 };
 // With no screens chosen at intake, only the tiles that fit any work. The whole
 // catalog gave a phone only customer "connect the computer", a client follow up
@@ -15371,7 +15371,7 @@ function myMgrSheet(){
  var old=document.getElementById('mmSheet');if(old)old.remove();
  var w=document.createElement('div');
  w.id='mmSheet';w.className='ysheet';
- w.setAttribute('role','dialog');w.setAttribute('aria-label','המנהל שלי');
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','מנהלת IT Solution');
  var DN=['א','ב','ג','ד','ה','ו','ש'],kind='remind',freq='daily',days=[];
  function rows(){
   var L=D.routines||[];
@@ -15386,8 +15386,8 @@ function myMgrSheet(){
     +'<button type="button" class="yb yx" data-a="del" data-id="'+esc(r.id)+'">למחוק</button></div>';
   }).join('');
  }
- w.innerHTML='<div class="ycard"><b>🧑‍💼 המנהל שלי</b>'
-  +'<small>דברים שחוזרים על עצמם: אומרים לי פעם אחת, ואני עושה בזמן שקבעת. תזכורת מגיעה אליך לטלפון. עבודה: אני מכין ומחזיר תשובה במסך התשובות. שליחה לאנשים, תשלום ומחיקה תמיד מחכים לאישור שלך.</small>'
+ w.innerHTML='<div class="ycard"><b>🧑‍💼 מנהלת IT Solution</b>'
+  +'<small>דברים שחוזרים על עצמם: אומרים לי פעם אחת, ואני עושה בזמן שקבעת. תזכורת מגיעה אליך לטלפון. עבודה: אני מכינה ומחזירה תשובה במסך התשובות. שליחה לאנשים, תשלום ומחיקה תמיד מחכים לאישור שלך.</small>'
   +'<div id="mmList">'+rows()+'</div>'
   +'<small style="opacity:1;font-weight:600">שגרה חדשה: מה חוזר על עצמו?</small>'
   +'<textarea id="mmText" rows="3" style="width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif" placeholder="למשל: לבדוק מי עוד לא שילם ולהכין לי רשימה"></textarea>'

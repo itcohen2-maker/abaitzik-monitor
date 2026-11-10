@@ -1,5 +1,5 @@
 'use strict';
-// 10.11.2026: "🧑‍💼 המנהל שלי", lib/routines.js. Times are Asia/Jerusalem whatever the server clock says.
+// 10.11.2026: "🧑‍💼 מנהלת IT Solution", lib/routines.js. Times are Asia/Jerusalem whatever the server clock says.
 const test = require('node:test');
 const assert = require('node:assert');
 const fs = require('fs');

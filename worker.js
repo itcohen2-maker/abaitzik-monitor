@@ -1172,7 +1172,7 @@ function routinesTick(only) {
 function main() {
   // 8.10: a paused customer gets no sessions at all.
   if (inst.paused) { say('מושהה. לא עונה.'); return; }
-  // 10.11.2026: "🧑‍💼 המנהל שלי". A reminder routine is a push, code only: it costs nothing, so no hold below stops it.
+  // 10.11.2026: "🧑‍💼 מנהלת IT Solution". A reminder routine is a push, code only: it costs nothing, so no hold below stops it.
   if (!DRY) routinesTick('remind');
   if (onHold()) return;
   if (quotaHold()) return;
