@@ -5859,7 +5859,7 @@ function gderive(code){
   .then(function(base){
    return crypto.subtle.deriveKey(
     {name:'PBKDF2',salt:gbytes(GATE.salt),iterations:GATE.rounds,hash:'SHA-256'},
-    base,{name:'AES-GCM',length:256},true,['decrypt']);
+    base,{name:'AES-GCM',length:256},true,['encrypt','decrypt']);
   });
 }
 function gopen(blob){
@@ -6569,14 +6569,38 @@ function MAILBOX(){ return secret('mail'); }
 // The topic sits in the page source, so it is public: every message carries
 // his code, and anything unsigned is ignored on my side.
 function NTFYIN(){ return secret('ntfyIn'); }
+/*
+  10.11.2026, the agreement audit: the body used to reach ntfy.sh as plain text, and ntfy keeps
+  it about three hours, with a secret topic name as the only lock. For a clinic that is patient
+  data on a third party. With the gate open the body is sealed with the same AES-GCM key that
+  opens the page (GKEY), as "enc1:" + base64(iv + ciphertext + tag); listen.js opens it before
+  anything else reads it. A page without a gate key, or an old cached page, still sends plain
+  text and the listener still takes it.
+*/
+// Sealing is switched on per monitor by "sealMsgs" in its keys, only after that monitor's listener
+// knows how to open "enc1:" (listen.js openSealed). A page that seals for a listener that cannot
+// open it would leave every message held as unverified.
+function SEALING(){ return !!(GKEY && secret('sealMsgs')); }
+function gseal(plain) {
+ var iv = crypto.getRandomValues(new Uint8Array(12));
+ return crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, GKEY, new TextEncoder().encode(plain)).then(function (buf) {
+  var c = new Uint8Array(buf), o = new Uint8Array(12 + c.length);
+  o.set(iv); o.set(c, 12);
+  return 'enc1:' + graw(o);
+ });
+}
 function ntfyText(kind, text, gid) {
  // Headers have to stay ASCII, so the Hebrew all rides in the body.
- return fetch('https://ntfy.sh/' + NTFYIN(), {
-  // 12.10: an account key (listen.js ownToken) is never kept on ntfy's side.
-  method: 'POST', headers: Object.assign({ Title: 'monitor' + (gid ? ' ' + gid + ' cap' : ''), 'X-Tags': 'memo' }, String(text).indexOf('sk-ant-oat') > -1 ? { Cache: 'no' } : {}),
-  // The page is emitted from a template literal, so a backslash escape here
-  // would be eaten at build time. The newline is built from its code point.
-  body: [kind, text, '', 'קוד ' + sendCode()].join(String.fromCharCode(10))
+ // The page is emitted from a template literal, so a backslash escape here
+ // would be eaten at build time. The newline is built from its code point.
+ var plain = [kind, text, '', 'קוד ' + sendCode()].join(String.fromCharCode(10));
+ var ready = SEALING() ? gseal(plain) : Promise.resolve(plain);
+ return ready.then(function (body) {
+  return fetch('https://ntfy.sh/' + NTFYIN(), {
+   // 12.10: an account key (listen.js ownToken) is never kept on ntfy's side.
+   method: 'POST', headers: Object.assign({ Title: 'monitor' + (gid ? ' ' + gid + ' cap' : ''), 'X-Tags': 'memo' }, String(text).indexOf('sk-ant-oat') > -1 ? { Cache: 'no' } : {}),
+   body: body
+  });
  }).then(function (r) { if (!r.ok) throw new Error('ntfy'); return 'ok'; });
 }
 // Returns 'ok' when the primary channel carried it and 'backup' when the
@@ -6586,6 +6610,9 @@ function sendText(subject, text, kind) {
  return ntfyText(kind, text).catch(function (e) {
   // An account key never goes by mail.
   if (String(text).indexOf('sk-ant-oat') > -1) throw e;
+  // With a gate key the text never goes to the mail relay in the clear: the message stays held
+  // on the device and is retried on ntfy (sendOrHold), instead of leaving as readable mail.
+  if (SEALING()) throw e;
   return fetch('https://formsubmit.co/ajax/' + MAILBOX(), {
    method: 'POST',
    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -21450,7 +21477,7 @@ function gateBoot(){
     nothing is wrong; a key that never got a file to try is unproven, and
     unproven is not a reason to make a man retype a code.
   */
-  crypto.subtle.importKey('raw',gbytes(saved),{name:'AES-GCM'},true,['decrypt'])
+  crypto.subtle.importKey('raw',gbytes(saved),{name:'AES-GCM'},true,['encrypt','decrypt'])
    .then(function(k){GKEY=k;return load();})
    .then(function(ok){
     if(ok===false){GKEY=null;try{localStorage.removeItem('gateKey');}catch(e){}clearTimeout(reveal);wrap.style.visibility='';}

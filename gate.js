@@ -145,6 +145,23 @@ function open(blob) {
 }
 
 /*
+  A message sealed by the page (10.11.2026): "enc1:" + base64(12 byte IV, ciphertext, 16 byte tag),
+  the same key that opens the page. Returns the text, or null when it is not ours or does not
+  verify (a wrong key, a damaged message), so the caller can drop it instead of reading garbage.
+*/
+function openMessage(text) {
+  const s = String(text || '');
+  if (s.slice(0, 5) !== 'enc1:') return s;
+  try {
+    const all = Buffer.from(s.slice(5).trim(), 'base64');
+    if (all.length < 29) return null;
+    const d = crypto.createDecipheriv('aes-256-gcm', key(), all.subarray(0, 12));
+    d.setAuthTag(all.subarray(all.length - 16));
+    return Buffer.concat([d.update(all.subarray(12, all.length - 16)), d.final()]).toString('utf8');
+  } catch (e) { return null; }
+}
+
+/*
   Files, 27.9. Itzik's chat attachments sat in docs/files, readable by anyone
   with the address, a hospital appointment among them. They are sealed the same
   way as the data, as bytes: a 12 byte IV, then the ciphertext and its tag. The
@@ -159,7 +176,7 @@ function fileId(name) {
   return crypto.createHmac('sha256', key()).update('file:' + name).digest('hex').slice(0, 24);
 }
 
-module.exports = { enabled, seal, open, sealBytes, fileId, normalize, pageParams,
+module.exports = { enabled, seal, open, openMessage, sealBytes, fileId, normalize, pageParams,
   NEW_ROUNDS: ROUNDS, LEGACY_ROUNDS,
   get rounds() { return params().rounds; },
   saltB64: () => salt().toString('base64') };

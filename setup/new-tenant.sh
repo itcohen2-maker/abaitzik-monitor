@@ -89,7 +89,7 @@ if INTAKE:
         if k in src: inst[k] = src[k]
 put(DIR + "/instance.json", json.dumps(inst, ensure_ascii=False, indent=1), 0o644)
 keys = {"_why": "נושאי ntfy הם סיסמה. לא נכנסים לגיט.", "ntfyIn": "%s-in-%s" % (ID, secrets.token_hex(16)),
-        "ntfyLive": "%s-live-%s" % (ID, secrets.token_hex(16)), "ntfyOut": "%s-out-%s" % (ID, secrets.token_hex(16)), "mail": ""}
+        "ntfyLive": "%s-live-%s" % (ID, secrets.token_hex(16)), "ntfyOut": "%s-out-%s" % (ID, secrets.token_hex(16)), "mail": "", "sealMsgs": True}
 put(DIR + "/data/keys.json", json.dumps(keys, ensure_ascii=False), 0o600)
 code = "".join(str(secrets.randbelow(10)) for _ in range(14))
 put(DIR + "/gate-key.txt", code + "\n", 0o600)

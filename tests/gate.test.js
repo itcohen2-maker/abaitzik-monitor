@@ -157,3 +157,19 @@ test('gate-params.json never reaches the repository', () => {
   assert.ok(ig.includes('gate-params.json'), 'a tracked gate-params.json would reach every customer copy');
   assert.ok(ig.includes('gate-key.txt'));
 });
+
+// 10.11.2026, agreement audit: a text message the page seals for ntfy.sh ("enc1:" + base64 of
+// IV, ciphertext, tag) must open on the server with the same key, a plain message must pass
+// untouched, and a damaged or foreign one must come back null so the listener drops it.
+test('openMessage: sealed text opens, plain passes, damaged is null', () => {
+  const c = copyWith({ 'gate-key.txt': 'שלום עולם אחד שניים שלוש\n', 'gate-params.json': JSON.stringify({ salt: crypto.randomBytes(24).toString('base64'), rounds: 100000 }) });
+  try {
+    const text = 'שלום\nטקסט של מטופל\n\nקוד 123456';
+    const sealed = 'enc1:' + c.mod.sealBytes(Buffer.from(text, 'utf8')).toString('base64');
+    assert.equal(c.mod.openMessage(sealed), text);
+    assert.equal(c.mod.openMessage('הודעה רגילה'), 'הודעה רגילה');
+    const broken = sealed.slice(0, -6) + 'AAAAAA';
+    assert.equal(c.mod.openMessage(broken), null);
+    assert.equal(c.mod.openMessage('enc1:AAAA'), null);
+  } finally { c.done(); }
+});

@@ -1355,11 +1355,28 @@ const shachar = {
   },
 };
 
+/*
+  10.11.2026, agreement audit: the page seals the body of a text message with the gate key before it
+  goes to ntfy.sh ("enc1:" + base64, see ntfyText in build.js), so ntfy never holds readable text.
+  Open it here, first, so nothing below knows the difference. Plain text still passes (an old cached
+  page). A sealed message that does not verify is dropped, never read as garbage.
+*/
+const gateSeal = require('./gate.js');
+function openSealed(m) {
+  if (!m || typeof m.message !== 'string' || m.message.slice(0, 5) !== 'enc1:') return m;
+  let plain = null;
+  try { plain = gateSeal.openMessage(m.message); } catch (e) { plain = null; }
+  if (plain === null) { say('!! הודעה מוצפנת שלא נפתחה, נמחקה בלי לקרוא'); return null; }
+  return Object.assign({}, m, { message: plain });
+}
+
 async function handleOne(m) {
   const seen = mark();
   if (m.time === seen.time && seen.ids.includes(m.id)) return;
   received++;
   lastMsgAt = Date.now();
+  m = openSealed(m);
+  if (!m) return;
   if (ownToken(m)) { remember(m); return; }
   // 24.10.2026: a phone's push subscription is stored, never chatted or sent to Claude.
   const pushSub = m.attachment ? null : wp.fromMessage(m.message);
@@ -1416,6 +1433,8 @@ async function handleOne(m) {
       say('הודעה ארוכה הגיעה כקובץ, נקראת כטקסט');
       m = Object.assign({}, m, { message: raw });
       delete m.attachment;
+      m = openSealed(m);
+      if (!m) return;
     }
   }
   if (m.attachment) {
