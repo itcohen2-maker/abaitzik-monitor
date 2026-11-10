@@ -4176,6 +4176,17 @@ body.rdragging{user-select:none;-webkit-user-select:none}
  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 64'%3E%3Cellipse cx='34' cy='61' rx='13' ry='2.2' fill='%23000' opacity='.18'/%3E%3Cg stroke='%232b2024' stroke-width='2.2' stroke-linecap='round' fill='none'%3E%3Cpath d='M30 48l-2 10h-4'/%3E%3Cpath d='M38 48l2 10h4'/%3E%3C/g%3E%3Cpath d='M20 30c-3-3-7-6-9-3s3 7 7 11c3 4 6 10 13 11s13-3 14-11l2-17c0-3-4-3-5 0l-1 6-1-17c0-3-5-3-5 0l-1 15-2-17c0-3-5-3-5 0l1 17-4-13c-1-3-5-2-5 1l3 17z' fill='%23ec4a4f' stroke='%232b2024' stroke-width='2.2' stroke-linejoin='round'/%3E%3Cg stroke='%232b2024' stroke-width='2' stroke-linecap='round' fill='none'%3E%3Cpath d='M27 37q2-2 4 0'/%3E%3Cpath d='M35 36q2-2 4 0'/%3E%3Cpath d='M29 42q5 4 10 0'/%3E%3C/g%3E%3Cg stroke='%234cc3e6' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M6 46l-4 2'%3E%3Canimate attributeName='opacity' values='0%3B1%3B0' dur='1.2s' repeatCount='indefinite'/%3E%3C/path%3E%3Cpath d='M8 52l-3 5'%3E%3Canimate attributeName='opacity' values='1%3B0%3B1' dur='1.2s' repeatCount='indefinite'/%3E%3C/path%3E%3Cpath d='M13 54v5'%3E%3Canimate attributeName='opacity' values='0%3B1%3B0' dur='1.2s' begin='.3s' repeatCount='indefinite'/%3E%3C/path%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat;transform-origin:56% 92%;
  filter:drop-shadow(0 1px 2px rgba(0,0,0,.25));animation:handtap 1.2s ease-in-out infinite}
 @media(prefers-reduced-motion:reduce){.gt.taskblink::before,.gt.glow::before,.gt.blink::before,.gt.uhand::before{animation:none}}
+/* 10.11.2026, Itzik: tiles do not blink and there is no waving hand. Only a tile or icon with a real alert
+   (an update inside it, a task or a reminder due, an unread lead) blinks, softly, and it is one blink in one
+   colour (amber ring) on every tile and every round icon. This block sits last so it wins over the older ones. */
+.gt.taskblink::before,.gt.glow::before,.gt.blink::before,.gt.uhand::before{content:none!important;display:none!important;animation:none!important}
+.gt .flag{animation:none!important}
+@keyframes alertsoft{0%,100%{box-shadow:0 0 0 0 rgba(255,193,7,0),var(--shadow)}50%{box-shadow:0 0 0 4px rgba(255,193,7,.6),var(--shadow)}}
+.gt.updblink,.gt.taskblink,.gt.glow,.gt.blink,.gt.ubeat,.gt.leadNew:not(.lnSeen),.ic.updblink,.ic.taskblink,
+.newbtn.updblink,#setBtn.updblink,#vidSheet .yb.updblink,#vidSheet [role=tab].updblink{animation:alertsoft 2.6s ease-in-out infinite!important;border-radius:inherit}
+.ic.updblink .c,.ic.taskblink .c{animation:alertsoft 2.6s ease-in-out infinite!important}
+.ic.updblink,.ic.taskblink{animation:none!important}
+@media(prefers-reduced-motion:reduce){.gt.updblink,.gt.taskblink,.gt.glow,.gt.blink,.gt.ubeat,.gt.leadNew:not(.lnSeen),.ic.updblink .c,.ic.taskblink .c{animation:none!important;box-shadow:0 0 0 3px rgba(255,193,7,.6)}}
 .mob{display:flex;gap:6px;flex:0 0 auto}
 .mob button{background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:10px;
  padding:9px 12px;font:500 13.5px Heebo,sans-serif;cursor:pointer;white-space:nowrap}
@@ -16295,8 +16306,8 @@ boot('newTiles',function(){
  document.querySelectorAll('.gt[data-new],.icNew[data-new]').forEach(function(t){
   var k='tileSeen:'+t.id,seen=false;try{seen=!!localStorage.getItem(k);}catch(e){}
   if(seen)return;
-  t.classList.add('taskblink');
-  t.addEventListener('click',function(){try{localStorage.setItem(k,'1');}catch(e){}t.classList.remove('taskblink');});
+  /* 10.11: a new tile no longer waves or blinks; it is just marked seen on first open. */
+  t.addEventListener('click',function(){try{localStorage.setItem(k,'1');}catch(e){}});
  });
 });
 // 30.10: the sample tiles say what they are for when tapped (they have no page to open yet).
@@ -21747,7 +21758,7 @@ function tPaint(){
  var c=tPrefs('tileColor'),b=tPrefs('tileBeat'),h=tPrefs('tileHand');
  Array.prototype.forEach.call(document.querySelectorAll('.gt[id]'),function(t){
   if(c[t.id])t.style.setProperty('background',c[t.id],'important');else t.style.removeProperty('background');
-  t.classList.toggle('ubeat',!!b[t.id]);t.classList.toggle('uhand',!!h[t.id]);
+  t.classList.toggle('ubeat',!!b[t.id]);t.classList.remove('uhand');
  });
 }
 function tileSheet(t){
@@ -21759,7 +21770,6 @@ function tileSheet(t){
  w.innerHTML='<div class="tsh-in" role="dialog" aria-label="אפשרויות לאריח"><b class="tsh-t"></b>'
   +'<div class="tsh-l">צבע</div><div class="tsh-sw">'+sw+'<button type="button" class="tsw tsw0'+(c[t.id]?'':' on')+'" data-col="">אחיד</button></div>'
   +'<button type="button" class="tsh-r" data-a="beat">✨ הבהוב<span>'+(b[t.id]?'פועל':'כבוי')+'</span></button>'
-  +'<button type="button" class="tsh-r" data-a="hand">👋 יד מתנפנפת<span>'+(h[t.id]?'פועלת':'כבויה')+'</span></button>'
   +'<button type="button" class="tsh-r tsh-del" data-a="del">🗑 מחיקת האריח</button>'
   +'<button type="button" class="tsh-x" data-a="x">סגירה</button></div>';
  w.querySelector('.tsh-t').textContent=name;

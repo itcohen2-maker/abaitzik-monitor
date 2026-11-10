@@ -77,9 +77,9 @@ inst = {"name": ID, "owner": OWNER, "publicUrl": "https://%s/" % HOST, "basePath
         "screens": [s for s in SCREENS.split(",") if s], "chromeProfile": "none", "memoryDir": None, "driveFolder": "",
         "computer": None, "phone": None, "welcome": WELCOME}
 if SHIP: inst["shipmentsDir"] = SHIP
-# 24.10, Itzik: every new monitor starts with sample tiles, the candle site as a round icon, and three empty round places.
+# 24.10, Itzik: every new monitor starts with sample tiles and three empty round places. 10.11, Itzik: no candle icon in customer monitors, only his own.
 inst["samples"] = True
-inst["circles"] = [{"key": "candle", "kind": "ner", "title": "אתר הנר", "url": "https://candletimes.com"}]
+inst["circles"] = []
 inst["emptyCircles"] = 3
 if HOMETILE: inst["homeTile"] = HOMETILE
 if INTAKE:

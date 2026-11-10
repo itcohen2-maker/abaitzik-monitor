@@ -1,0 +1,7 @@
+[Unit]
+Description=a form was finished or connected: run the intake (the trigger file is removed by the run)
+[Path]
+PathExists=/home/monitor/abaitzik-monitor/data/setup-intake/trigger
+Unit=monitor-intake.service
+[Install]
+WantedBy=multi-user.target

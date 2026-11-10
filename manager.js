@@ -36,7 +36,10 @@ function run(cmd, args) {
 if (!DRY && !EVENING) run('node', ['manager-work.js']); // 8.11: the manager's own checks first, so the card shows them
 
 const now = Date.now();
-const m = M.build(M.gather(dataPath, __dirname, now));
+const inp = M.gather(dataPath, __dirname, now);
+// 10.11: the setup forms that came back are pulled into the customers' monitors first (lib/setup-intake.js); --dry only reads the last result
+inp.intake = (() => { try { return DRY ? JSON.parse(fs.readFileSync(path.join(dataPath, 'setup-intake', 'summary.json'), 'utf8')) : require('./lib/setup-intake.js').managerRound({ data: dataPath }); } catch (e) { log('intake: ' + String(e.message).slice(0, 100)); return null; } })();
+const m = M.build(inp);
 if (DRY) { console.log(JSON.stringify(m, null, 1)); console.log(M.pushText(m)); process.exit(0); }
 
 fs.mkdirSync(path.join(dir, 'manager'), { recursive: true });

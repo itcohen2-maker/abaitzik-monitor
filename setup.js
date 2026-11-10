@@ -325,7 +325,7 @@ function handlePost(b, notify, meta) {
     return { status: 200, body: { ok: true } };
   }
   if (b.finish) {
-    if (!s.finishedAt) { s.finishedAt = now; saveState(tok, s); try { require('./lib/handle.js').complete({ key: 'setup:' + tok + ':' + now, kind: 'setup', who: d.client, title: 'מילא את טופס ההקמה ולחץ סיימתי', link: 'answers' }); } catch (e) { /* the push still goes out */ } notify(K, summary(d, s) + '\nהלקוח לחץ "סיימתי". מה שמסומן ○ עוד פתוח.'); }
+    if (!s.finishedAt) { s.finishedAt = now; saveState(tok, s); try { require('./lib/handle.js').complete({ key: 'setup:' + tok + ':' + now, kind: 'setup', who: d.client, title: 'מילא את טופס ההקמה ולחץ סיימתי', link: 'answers' }); } catch (e) { /* the push still goes out */ } notify(K, summary(d, s) + '\nהלקוח לחץ "סיימתי". מה שמסומן ○ עוד פתוח.'); try { require('./lib/setup-intake.js').request(undefined, tok); } catch (e) { /* the timer sweep catches it */ } }
     return { status: 200, body: { ok: true } };
   }
   const offer = (d.offers || []).find((x) => x.id === b.id);
@@ -434,6 +434,7 @@ async function oauthCallback(p, q, res, notify) {
   if (r.ok) {
     saveSecret(tok, st.id, JSON.stringify(r.saved));
     x.got = now; x.who = r.who || ''; delete x.oaErr; delete x.broken;
+    try { require('./lib/setup-intake.js').request(undefined, tok); } catch (e) { /* the timer sweep catches it */ } // 10.11: a new connection reaches cal-sync through the intake
     if (r.pages) x.pages = r.pages.map((pg) => pg.name + (pg.ig ? ' + @' + pg.ig : ''));
     notify(K, d.client + ': ' + OA_NAME[p] + ' חובר' + (r.who ? ' (' + r.who + ')' : '') + '.'
       + (r.pages ? (r.pages.length ? ' דפים: ' + x.pages.join(', ') + '.' : ' לא נמצא אף דף עסקי שהוא מנהל.') : ''));
