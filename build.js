@@ -15217,10 +15217,10 @@ function adminReqSheet(){
  var old=document.getElementById('arSheet');if(old)old.remove();
  var w=document.createElement('div');
  w.id='arSheet';w.className='ysheet';
-// 10.11.2026: the request goes to Itzik (adminName for a business customer, build.js adminOut), not to the owner of the monitor.
- w.setAttribute('role','dialog');w.setAttribute('aria-label','לבקש מאיציק שינוי במוניטור');
- w.innerHTML='<div class="ycard"><b>לבקש מאיציק שינוי במוניטור</b>'
-  +'<small>מה תרצה לשנות במוניטור? כפתור, מסך, עיצוב, איך הוא עונה. הבקשה הולכת לאיציק, והוא מאשר. התשובה תגיע אליך בצ׳אט.</small>'
+// 10.11.2026: the request goes to the admin, never to the owner of the monitor (it said "to Ilay" on his own monitor). No name here: a customer page holds no word of Itzik (tests/owner-cut).
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','לבקש שינוי במוניטור');
+ w.innerHTML='<div class="ycard"><b>לבקש שינוי במוניטור</b>'
+  +'<small>מה תרצה לשנות במוניטור? כפתור, מסך, עיצוב, איך הוא עונה. הבקשה הולכת למנהל המערכת, והוא מאשר. התשובה תגיע אליך בצ׳אט.</small>'
   +'<textarea id="arText" rows="5" style="width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif" placeholder="לדוגמה: תוסיף לי כפתור של רשימת קניות"></textarea>'
   // Itzik, 8.10: offer the customer the choice and show it, an icon on the
   // home screen or a button inside a screen, for the same subject.
@@ -15254,7 +15254,7 @@ function adminReqSheet(){
   if(w.arKind)t+=' (בתור '+w.arKind+')';
   e.target.disabled=true;
   sendText('בקשה ממנהל','בקשה ממנהל: '+t,'משימה').then(function(){
-   markSent('text',t);arWaitMark();close();toast('נשלח לאיציק. התשובה תגיע בצ׳אט, והאריח יזכיר שהבקשה מחכה.');
+   markSent('text',t);arWaitMark();close();toast('נשלח למנהל המערכת. התשובה תגיע בצ׳אט, והאריח יזכיר שהבקשה מחכה.');
   }).catch(function(){e.target.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
  };
  document.body.appendChild(w);
@@ -15382,10 +15382,10 @@ function arWaitMark(){try{localStorage.setItem('arSent',String(Date.now()));}cat
 function arWaitShow(){
  var s=document.querySelector('#gAdminReq small');if(!s)return;
  var at=0;try{at=+localStorage.getItem('arSent')||0;}catch(e){}
- s.textContent='לבקש מאיציק שינוי במוניטור, והתשובה בצ׳אט';
+ s.textContent='לבקש שינוי במוניטור, והתשובה בצ׳אט';
  if(!at)return;
  if(Date.now()-at>172800000){try{localStorage.removeItem('arSent');}catch(e){}return;}
- s.textContent='הבקשה אצל איציק, מחכה לתשובה';
+ s.textContent='הבקשה אצל מנהל המערכת, מחכה לתשובה';
 }
 boot('arWait',arWaitShow);
 // 12.10: an empty circle opens the same request, already started.
