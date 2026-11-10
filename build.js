@@ -1296,6 +1296,17 @@ function build() {
   }
   // איציק, 17.9: "כל הסרטונים שעשינו תשמור, כי את זה אנחנו מעלים לאתר."
   // כל mp4 ששמור תחת docs/files נכנס לכאן מעצמו בכל בנייה, ושום דבר לא נמחק.
+  // 10.11.2026, Itzik: a sounds folder the customer picks from while building a campaign. The folder sounds/ is code
+  // (it syncs to every monitor); each build copies the audio and its index to the page. Empty means the picker is hidden.
+  try {
+    const SND = path.join(__dirname, 'sounds'), SND_OUT = path.join(OUT_DIR, 'sounds');
+    if (fs.existsSync(SND)) {
+      fs.mkdirSync(SND_OUT, { recursive: true });
+      for (const f of fs.readdirSync(SND)) {
+        if (/\.(mp3|m4a|json)$/i.test(f)) fs.copyFileSync(path.join(SND, f), path.join(SND_OUT, f));
+      }
+    }
+  } catch (e) { console.error('sounds copy failed: ' + e.message); }
   fs.writeFileSync(path.join(OUT_DIR, 'videos.html'), videosPage(), 'utf8');
   console.log('built docs/index.html |', items.length, 'items,',
     payload.counts.pending, 'pending,', payload.counts.replied, 'replied,',
@@ -15252,12 +15263,13 @@ function campSheet(){
   +'<small style="opacity:1;font-weight:600">מה לעשות איתם? אפשר לבחור כמה:</small>'
   +'<div class="arPick" id="cpKinds" role="group" aria-label="מה לעשות">'
   +kinds.map(function(k){return '<button type="button" class="yb" data-k="'+k+'">'+k+'</button>';}).join('')+'</div>'
+  +'<div id="cpSounds" hidden></div>'
   +'<textarea id="cpText" rows="4" style="width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif" placeholder="מה חשוב להגיד? מבצע, מי הקהל, כתובת, מחיר. אם משהו חסר, אשאל."></textarea>'
-  +'<small>מוזיקה: כברירת מחדל בלי מוזיקה בתוך הסרטון. אפשר להוסיף מהאוסף של Meta בזמן הפרסום.</small>'
+  +'<small>מוזיקה: כברירת מחדל בלי מוזיקה בתוך הסרטון. אם בחרת צליל מהתיקייה, אוסיף אותו בעדינות מתחת לסרטון.</small>'
   +'<button type="button" class="yb yb1" data-a="send">שליחה</button>'
   +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
  function close(){w.remove();}
- var picked=[];
+ var picked=[],chosenSound='',sndTitle={};
  function paintList(){
   var l=document.getElementById('cpList');
   if(l)l.textContent=picked.length?('נבחרו '+picked.length+': '+picked.map(function(f){return f.name;}).join(', ')):'';
@@ -15269,11 +15281,17 @@ function campSheet(){
   if(a==='pick'){var fi=document.getElementById('cpFiles');if(fi)fi.click();return;}
   var k=e.target.getAttribute&&e.target.getAttribute('data-k');
   if(k){e.target.classList.toggle('on');return;}
+  var sid=e.target.getAttribute&&e.target.getAttribute('data-s');
+  if(sid){
+   chosenSound=chosenSound===sid?'':sid;
+   [].forEach.call(w.querySelectorAll('#cpSounds [data-s]'),function(b){b.classList.toggle('on',b.getAttribute('data-s')===chosenSound);});
+   return;
+  }
   if(a!=='send')return;
   var chosen=[].map.call(w.querySelectorAll('#cpKinds .yb.on'),function(b){return b.getAttribute('data-k');});
   var t=(document.getElementById('cpText').value||'').trim();
   if(!picked.length&&!t){toast('בחר תמונות או סרטון, או כתוב מה תרצה');return;}
-  var note='קמפיין: '+(chosen.length?chosen.join(', '):'לא נבחר סוג')+(t?' | '+t:'');
+  var note='קמפיין: '+(chosen.length?chosen.join(', '):'לא נבחר סוג')+(t?' | '+t:'')+(chosenSound&&sndTitle[chosenSound]?' | צליל: '+sndTitle[chosenSound]:'');
   e.target.disabled=true;
   var go=picked.length?sendAll(picked,note):sendText('קמפיין',note,'משימה');
   go.then(function(){
@@ -15285,6 +15303,19 @@ function campSheet(){
   if(e.target&&e.target.id==='cpFiles'){picked=[].slice.call(e.target.files||[]);paintList();}
  });
  document.body.appendChild(w);
+ // The sounds folder (sounds/index.json, copied by every build). No tracks yet: the picker stays hidden.
+ fetch('sounds/index.json',{cache:'no-store'}).then(function(r){return r.ok?r.json():[];}).then(function(list){
+  var box=document.getElementById('cpSounds');
+  if(!box||!Array.isArray(list)||!list.length)return;
+  list.forEach(function(s){if(s&&s.id)sndTitle[s.id]=s.title||s.id;});
+  box.hidden=false;
+  box.innerHTML='<small style="opacity:1;font-weight:600">🎵 צליל לסרטון (אפשר לא לבחור):</small>'
+   +list.filter(function(s){return s&&s.id&&s.file;}).map(function(s){
+    return '<div class="cpSnd" style="margin:6px 0"><b>'+esc(s.title||s.id)+'</b>'+(s.mood?' <small>'+esc(s.mood)+'</small>':'')
+     +'<audio controls preload="none" src="sounds/'+esc(s.file)+'" style="width:100%"></audio>'
+     +'<button type="button" class="yb" data-s="'+esc(s.id)+'">בחר את הצליל הזה</button></div>';
+   }).join('');
+ }).catch(function(){});
 }
 on('gCamp',campSheet);
 // 24.10: the tile says the request is with the owner, for two days after it was sent.
