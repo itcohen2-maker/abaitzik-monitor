@@ -2529,28 +2529,24 @@ body #talkCard{display:flex!important;flex-direction:column;align-items:stretch;
 body #talkCard::before{content:"במה אפשר לעזור?";display:block;order:0;text-align:center;margin:5vh 4px 22px;
  font:800 32px/1.2 Heebo,sans-serif;background:linear-gradient(100deg,var(--accent),#7c3aed 60%,#db2777);
  -webkit-background-clip:text;background-clip:text;color:transparent}
-body #talkCard .tkHead,body #talkCard .vtxt,body #talkCard .firsthint{display:none!important}
+body #talkCard .tkHead,body #talkCard .firsthint{display:none!important}
+body #talkCard .mic{align-self:center}
+body #talkCard .vtxt{align-self:center;text-align:center;margin:6px 0 14px}
 body #talkCard .quickwrite{order:1;gap:10px;align-items:flex-end;padding:10px 12px 10px 10px;margin:0;border-radius:30px;
  background:var(--surface)!important;border:1px solid var(--line)!important;box-shadow:0 8px 28px rgba(0,0,0,.14)!important}
 body #talkCard .quickwrite textarea{min-height:112px;padding:10px 10px;font-size:17px;background:transparent!important;
  border:0!important;outline:none!important;box-shadow:none!important;resize:none}
 body #talkCard .quickwrite button{min-height:46px;border-radius:23px;padding:0 22px;box-shadow:none}
-body #talkCard .mic{order:2;align-self:center;margin:16px 0 0;width:60px;height:60px;flex:0 0 60px;box-shadow:none!important}
 body #talkCard .ways{order:3;justify-content:center;gap:8px;margin-top:14px}
 body #talkCard .way{min-height:40px;padding:0 16px;border-radius:999px;background:transparent!important;
  border:1px solid var(--line)!important;box-shadow:none!important;color:var(--dim)}
 body #talkCard .way b{font-size:14px;font-weight:600;color:var(--dim)}
 body .fcrow{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;margin:6px 0 10px!important}
-body .fcrow .fch{justify-content:center}
-body .fcrow .fci{font-size:18px}
-body .fcrow b{font:600 14px Heebo,sans-serif;color:var(--dim)}
-body .fcrow .fcQuick{background:var(--surface)!important;border:1px solid var(--line)!important;box-shadow:none!important}
+body #fcRow .fch,body #fcRow .fcQuick{display:none!important}
 body .reloadbig{border:0!important;background:transparent!important;box-shadow:none!important;color:var(--dim)!important;
  margin:0 auto 8px!important;height:36px}
 body .morebtn{border-radius:999px!important;box-shadow:none!important}
-body #talkCard .quickwrite .mic{order:3!important;align-self:flex-end!important;margin:0!important;width:46px!important;height:46px!important;
- flex:0 0 46px!important;box-shadow:none!important}
-body #talkCard .quickwrite .mic svg{width:22px;height:22px}
+.qwRoute{font:500 13px Heebo,sans-serif;color:var(--dim);text-align:center;margin:8px 4px 0;order:4}
 
 .mob{display:flex;gap:6px;flex:0 0 auto}
 .mob button{background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:10px;
@@ -2701,7 +2697,7 @@ body #talkCard .quickwrite .mic svg{width:22px;height:22px}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-10T17:40:02.508Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-10T17:41:27.851Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4615,7 +4611,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='d9b5b0e780';
+var CODE_ID='6330f2aafa';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -17791,8 +17787,26 @@ function renderHome(){
 
 
 (function(){
- function micIn(){var m=document.getElementById('micBtn'),f=document.querySelector('#talkCard .quickwrite');if(m&&f&&m.parentNode!==f)f.appendChild(m);}
- if(document.readyState!=='loading')micIn();else document.addEventListener('DOMContentLoaded',micIn);
+ var TASK=/(^|\s)(ת?שלח|תשלחי|ת?קבע|תזמן|ת?פרסם|תעלה|העלה|ת?מחק|תעדכן|עדכן|תשנה|שנה|תבנה|בנה|תוסיף|הוסף|תדפיס|הדפס|תזכיר לי|תזכורת|תרשום|רשום|תבדוק|בדוק|תכין|הכן|תסדר|סדר|תתקן|תקן|תחבר|חבר|תוריד|הורד|תעביר|העבר|תפתח|פתח|תזמין|הזמן|תחייב|תגבה)(\s|$|[.,!])/;
+ var ASK=/^\s*(מה|איך|למה|מדוע|האם|כמה|מתי|איפה|מי|תסביר|הסבר|תייעץ|מה דעתך|יש לך רעיון|תן לי רעיון)/;
+ function isTask(t){t=String(t||'').trim();if(!t)return false;if(/[?？]\s*$/.test(t)||ASK.test(t))return false;return TASK.test(t);}
+ function chatOk(){var r=document.getElementById('fcRow');return !!(r&&!r.hidden&&typeof fcSend==='function');}
+ function say(msg){var c=document.getElementById('talkCard');if(!c)return;var l=document.getElementById('qwRoute');
+  if(!l){l=document.createElement('div');l.id='qwRoute';l.className='qwRoute';c.appendChild(l);}l.textContent=msg;clearTimeout(say.t);say.t=setTimeout(function(){l.textContent='';},6000);}
+ function arm(){
+  var f=document.getElementById('quickForm');if(!f||f.dataset.oneBox)return;f.dataset.oneBox='1';
+  f.addEventListener('submit',function(e){
+   if(document.body.classList.contains('dmo-real'))return;
+   var ta=f.querySelector('textarea'),t=ta?ta.value:'';
+   if(!String(t).trim())return;
+   if(!chatOk()||isTask(t)){say('זו משימה, נשלחה לביצוע.');return;}
+   e.preventDefault();e.stopImmediatePropagation();
+   try{fcS.inl=true;}catch(x){}
+   if(ta)ta.value='';
+   fcSend(t);say('זו שאלה, התשובה כאן למטה תוך כמה שניות.');
+  },true);
+ }
+ if(document.readyState!=='loading')arm();else document.addEventListener('DOMContentLoaded',arm);
 })();
 
 var DMO_API='https://wa.abaitzik.com/api/';
