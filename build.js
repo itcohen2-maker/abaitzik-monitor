@@ -1192,6 +1192,11 @@ function build() {
     ? inst.screens.filter((id) => id !== 'gAdminReq').concat(guides.map((g, i) => 'gGuide' + i), links.map((l, i) => 'gLink' + i), ['gConn', 'gAdminReq']) : inst.screens;
   // 4.11: the monthly package tile is shown only where a package exists (lib/plan-ui.js).
   if (Array.isArray(screens) && screens.length && require('./lib/plan-ui.js').on(inst.name)) screens.push('gPack');
+  // 10.11.2026, Itzik: the campaigns tile appears by itself only once the customer gave his Facebook and numbers came in
+  // (data/ads/status.json ok:true, written by ads-sync.js after setup-intake.js registered him). Until then nothing.
+  if (Array.isArray(screens) && screens.length && screens.indexOf('gAds') < 0) {
+    try { if (JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'ads', 'status.json'), 'utf8')).ok === true) screens.splice(screens.indexOf('gConn'), 0, 'gAds'); } catch (e) { /* not connected */ }
+  }
   /*
     8.10, from the reviewer: "שכחתי את הקוד" on the lock. The page files a request
     to Itzik carrying a random device mark it keeps; once he approves, the mark is
