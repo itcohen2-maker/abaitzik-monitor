@@ -2701,7 +2701,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-10T20:40:06.440Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-10T20:49:47.594Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3055,7 +3055,14 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-
+<div class="alerts" id="pushBox" hidden>
+ <div>
+  <b>התראות לטלפון</b>
+  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
+ </div>
+ <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
+ <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
+</div>
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4615,7 +4622,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='1c57b3ea27';
+var CODE_ID='229d9d92c5';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11426,8 +11433,8 @@ on('gAds',adsSheet);
 function clSheet(id,label,body,wire){
  var old=document.getElementById(id);if(old)old.remove();
  var w=document.createElement('div');w.id=id;w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label',label);
- w.innerHTML='<style>#'+id+' .clT{width:100%;border-collapse:collapse;font:13px/1.5 Heebo,sans-serif;margin:6px 0}#'+id+' .clT td,#'+id+' .clT th{border-bottom:1px solid #e5e7ef;padding:6px 4px;text-align:right;vertical-align:top}'
-  +'#'+id+' .clT th{font-weight:700;color:#5a6577;font-size:12px}#'+id+' .clN{text-align:left!important;white-space:nowrap;direction:ltr}'
+ w.innerHTML='<style>#'+id+' .clT{width:100%;table-layout:fixed;border-collapse:collapse;font:13px/1.5 Heebo,sans-serif;margin:6px 0;word-break:break-word}#'+id+' .ycard{box-sizing:border-box}#'+id+' .clT td,#'+id+' .clT th{border-bottom:1px solid #e5e7ef;padding:6px 4px;text-align:right;vertical-align:top}'
+  +'#'+id+' .clT th{font-weight:700;color:#5a6577;font-size:12px}#'+id+' .clN{text-align:left!important;direction:ltr}#'+id+' .clF{font-size:12px}#'+id+' .clF td,#'+id+' .clF th{padding:6px 2px}'
   +'#'+id+' .clBox{border:1px solid #e1e4ee;border-radius:14px;padding:10px 12px;margin:8px 0}#'+id+' .clBad{border-color:#f3b4ba;background:#fff4f5}#'+id+' .clOk{border-color:#b9e5c8;background:#f3fbf6}'
   +'#'+id+' .clTabs{display:flex;gap:6px;overflow-x:auto;margin:8px 0;padding-bottom:2px}#'+id+' .clTabs button{flex:0 0 auto;border:1px solid #d6dae6;background:#fff;border-radius:999px;padding:7px 12px;font:700 13px Heebo,sans-serif;cursor:pointer}'
   +'#'+id+' .clTabs button.on{background:#1a5fb4;color:#fff;border-color:#1a5fb4}#'+id+' .clSum{font:800 16px Heebo,sans-serif;margin:8px 0}</style>'
@@ -11472,8 +11479,10 @@ function frlSheet(){
  if(!F.doctors.length)h+='<div class="clBox">עוד אין רשימת רופאים.</div>';
  else{
   h+='<div class="clSum">'+esc(doc)+' · '+esc(clMonth(ym))+': מגיע לו '+clMoney(pay)+'</div><small>'+rows.length+' טיפולים, המטופלים שילמו '+clMoney(paid)+(F.labMinus?', מעבדה '+clMoney(lab):'')+'</small>';
-  h+=rows.length?'<table class="clT"><tr><th>יום</th><th>מטופל</th><th>טיפול</th><th class="clN">שילם</th><th class="clN">מעבדה</th><th class="clN">מגיע</th></tr>'
-   +rows.map(function(r){return '<tr><td>'+esc(clDate(r.date))+'</td><td>'+esc(r.patient)+'</td><td>'+esc(r.treatment)+'</td><td class="clN">'+clMoney(r.paid)+'</td><td class="clN">'+(r.lab?clMoney(r.lab):'')+'</td><td class="clN"><b>'+clMoney(r.pay)+'</b></td></tr>';}).join('')+'</table>'
+  var tr=rows.some(function(r){return r.treatment;}),neg=rows.some(function(r){return r.pay<0;});
+  h+=rows.length?'<table class="clT clF"><tr><th style="width:12%">יום</th><th>מטופל</th>'+(tr?'<th>טיפול</th>':'')+'<th class="clN">שילם</th><th class="clN">מעבדה</th><th class="clN">מגיע</th></tr>'
+   +rows.map(function(r){return '<tr><td>'+esc(clDate(r.date))+'</td><td>'+esc(r.patient)+'</td>'+(tr?'<td>'+esc(r.treatment)+'</td>':'')+'<td class="clN">'+clMoney(r.paid)+'</td><td class="clN">'+(r.lab?clMoney(r.lab):'')+'</td><td class="clN"><b'+(r.pay<0?' style="color:#b42318"':'')+'>'+clMoney(r.pay)+'</b>'+(r.pay<0?'<br><small style="color:#b42318">⚠️ לבדוק</small>':'')+'</td></tr>';}).join('')+'</table>'
+   +(neg?'<div class="clBox clBad">⚠️ יש שורה במינוס: עלות המעבדה של המטופל גבוהה מהחלק של הרופא. כדאי לבדוק אם המעבדה שייכת לתשלום הזה או לתשלום אחר שלו.</div>':'')
    :'<div class="clBox">עוד אין טיפולים החודש. מצלמים את דף העבודה היומי שלו ושולחים בכפתור למטה, והטבלה מתמלאת.</div>';
   h+='<button type="button" class="yb yb1" data-cl="up">📷 לצלם דף עבודה יומי של '+esc(doc)+'</button>';
  }
@@ -13199,19 +13208,18 @@ function boardSheet(wk){
   +'#bdGrid .lg2>span.tdy{background:linear-gradient(135deg,#4f5bff,#8b5cf6);border-radius:10px;color:#fff;box-shadow:0 0 16px rgba(91,108,255,.6)}#bdGrid .lg2>span.tdy small{color:#e6e9ff}'
   +'#bdGrid .ln{font-size:20px!important;cursor:pointer}#bdGrid .ln small{max-width:68px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
   +'#bdGrid .lg2>span.lc{align-items:stretch;justify-content:stretch}'
-  +'#bdGrid .dot{width:100%;height:100%;min-height:0;border-radius:14px;padding:0;margin:0;cursor:pointer;box-sizing:border-box;'
-  +'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;color:#fff;background:#1c1f2a;border:2px solid rgba(255,255,255,.08);'
-  +'-webkit-tap-highlight-color:transparent;transition:transform .12s}'
-  +'#bdGrid .dot:active{transform:scale(.92)}'
+  +'#bdGrid .dot{width:100%;height:100%;min-height:0;border-radius:14px;padding:0;margin:0;cursor:pointer;box-sizing:border-box;position:relative;overflow:hidden;isolation:isolate;'
+  +'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;color:#fff;border:0;background:linear-gradient(150deg,var(--a),var(--b));'
+  +'box-shadow:0 6px 14px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.55),inset 0 -3px 8px rgba(0,0,0,.22),inset 0 0 0 1px rgba(255,255,255,.14);'
+  +'-webkit-tap-highlight-color:transparent;transition:transform .09s ease,box-shadow .09s ease,filter .09s ease}'
+  +'#bdGrid .dot:after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.34) 0%,rgba(255,255,255,.10) 42%,rgba(255,255,255,0) 55%,rgba(0,0,0,.10) 100%)}'
+  +'#bdGrid .dot:active{transform:translateY(2px) scale(.97);filter:saturate(1.15) brightness(.94);box-shadow:0 2px 6px rgba(0,0,0,.4),inset 0 2px 8px rgba(0,0,0,.32)}'
+  +'#bdGrid .dot.e{opacity:.3}'
+  +'#bdGrid .dot.s-no,#bdGrid .dot.s-miss,#bdGrid .dot.s-late{box-shadow:0 6px 14px rgba(0,0,0,.45),inset 0 0 0 3px #ff4d5e,inset 0 1px 0 rgba(255,255,255,.55)}'
+  +'#bdGrid .ln{border-radius:14px;background:linear-gradient(150deg,var(--a),var(--b));color:#fff;box-shadow:0 6px 14px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.5)}#bdGrid .ln small{color:#fff!important;font-weight:800!important;text-shadow:0 1px 2px rgba(0,0,0,.4)}'
   +'#bdGrid .dot em{font-style:normal;font-size:clamp(13px,4.2vh,24px);line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.55))}'
   +'#bdGrid .dot small{text-shadow:0 1px 3px rgba(0,0,0,.6)}#bdGrid .dot small{font:800 clamp(9px,2.7vh,13px) Heebo,sans-serif;color:#fff;direction:ltr}'
-  +'#bdGrid .dot.s-ok,#bdGrid .lk .k-ok{background:radial-gradient(circle at 35% 30%,#4ade80,#15803d);border-color:#4ade80;box-shadow:0 0 16px rgba(34,197,94,.55)}'
-  +'#bdGrid .dot.s-will,#bdGrid .lk .k-will{background:radial-gradient(circle at 35% 30%,#818cf8,#4338ca);border-color:#a5b4fc;box-shadow:0 0 16px rgba(91,108,255,.55)}'
-  +'#bdGrid .dot.s-run{background:radial-gradient(circle at 35% 30%,#c084fc,#7e22ce);border-color:#d8b4fe;box-shadow:0 0 16px rgba(139,92,246,.55)}'
-  +'#bdGrid .dot.s-hand,#bdGrid .dot.s-wait,#bdGrid .dot.s-open,#bdGrid .lk .k-hand{background:radial-gradient(circle at 35% 30%,#fcd34d,#d97706);border-color:#fde68a;box-shadow:0 0 16px rgba(245,158,11,.5)}'
-  +'#bdGrid .dot.s-no,#bdGrid .dot.s-miss,#bdGrid .dot.s-late,#bdGrid .lk .k-bad{background:radial-gradient(circle at 35% 30%,#f87171,#b91c1c);border-color:#fca5a5;box-shadow:0 0 16px rgba(239,68,68,.55)}'
-  +'#bdGrid .lk .k-no{background:#1c1f2a;border:1px solid rgba(255,255,255,.2)}'
-  +'#bdGrid .dot.pst{opacity:.55;box-shadow:none}#bdGrid .dot.now{outline:2px solid #fff;outline-offset:2px}'
+  +'#bdGrid .dot.pst{filter:saturate(.55) brightness(.75)}#bdGrid .dot.pst.e{opacity:.18}#bdGrid .dot.now{outline:2px solid #fff;outline-offset:2px}'
   +'}</style>';
  var wkName=BD_WEEK===0?'השבוע':BD_WEEK===-1?'שבוע שעבר':BD_WEEK===1?'שבוע הבא':(BD_WEEK>0?'בעוד '+BD_WEEK+' שבועות':'לפני '+(-BD_WEEK)+' שבועות');
  var h=css+'<div class="ycard"><b>🎛️ לוח בקרה</b>'
@@ -13224,14 +13232,17 @@ function boardSheet(wk){
     return '<td class="cl'+(c.s?' s-'+c.s:'')+(sat?' sat':'')+(d<T0?' pst':'')+'" data-r="'+ri+'" data-d="'+d+'">'+(c.s?IC[c.s]+(c.n>1?'<small>'+c.n+' · '+esc(c.t)+'</small>':'<small>'+esc(c.t)+'</small>'):'')+'</td>';}).join('')+'</tr>';}).join('')
   +'</tbody></table>'
   +'<div class="lg">✅ עלה · ❌ לא עלה · 🔜 יעלה לבד · ✋ אתה מעלה, יש תזכורת · ⏳ מחכה לאישור שלך · ⚠️ לא יעלה · ▶️ ממומן רץ · משבצת ריקה: לא מתוכנן</div>';
+ var RC={st:['#7bd88f','#1e8e4a'],'ai-he':['#90caf9','#1565c0'],'ai-en':['#b39ddb','#673ab7'],nr:['#f0a64a','#0f1a3a'],li:['#5aa9fb','#0a4f9c'],
+  ads:['#f48fb1','#ad1457'],pl:['#ffb74d','#e65100'],car:['#4fb3c4','#00838f'],me:['#e2574c','#2a1240'],it:['#4fbf88','#00897b']};
  var LBL={ok:'עלה',miss:'לא עלה',will:'יעלה לבד',hand:'אתה מעלה',wait:'לאישור',no:'לא יעלה',run:'רץ',late:'עבר הזמן',open:'ידני'};
  h+='<div class="lsc" style="--R:'+ROWS.length+'"><div class="lh"><button type="button" class="lb" data-a="prev">‹</button><b>🎛️ '+wkName+' · '+dm(days[0])+' עד '+dm(days[6])+'</b>'
-  +'<span class="lk"><i class="k-ok"></i>עלה <i class="k-will"></i>יעלה לבד <i class="k-hand"></i>אתה / אישור <i class="k-bad"></i>לא יעלה <i class="k-no"></i>ריק</span>'
+  +'<span class="lk">✅ עלה · 🔜 יעלה לבד · ✋ אתה מעלה · ⏳ לאישור · ⚠️ לא יעלה · ▶️ ממומן · חיוור: לא מתוכנן</span>'
   +'<button type="button" class="lb" data-a="next">›</button><button type="button" class="lb" data-a="x">✕</button></div>'
   +'<div class="lg2"><span></span>'+days.map(function(d){return '<span class="'+(d===T0?'tdy':'')+'">'+(d===T0?'היום':DS[dw(d)])+'<small>'+dm(d)+'</small></span>';}).join('')
-  +ROWS.map(function(r,ri){return '<span class="ln" data-rn="'+ri+'">'+r.ic+'<small>'+esc(r.n)+'</small></span>'
+  +ROWS.map(function(r,ri){var rc=RC[r.id]||['#7d8ba1','#3f4a5c'],cv='--a:'+rc[0]+';--b:'+rc[1];
+   return '<span class="ln" style="'+cv+'" data-rn="'+ri+'">'+r.ic+'<small>'+esc(r.n)+'</small></span>'
    +days.map(function(d){var c=C[ri+'|'+d]||{},s=c.s||'';
-    return '<span class="lc"><button type="button" class="dot'+(s?' s-'+s:'')+(d===T0?' now':'')+(d<T0?' pst':'')+'" data-r="'+ri+'" data-d="'+d+'" aria-label="'+esc(r.n)+' '+dm(d)+' '+(LBL[s]||'לא מתוכנן')+'">'
+    return '<span class="lc"><button type="button" style="'+cv+'" class="dot'+(s?' s-'+s:' e')+(d===T0?' now':'')+(d<T0?' pst':'')+'" data-r="'+ri+'" data-d="'+d+'" aria-label="'+esc(r.n)+' '+dm(d)+' '+(LBL[s]||'לא מתוכנן')+'">'
      +(s?'<em>'+IC[s]+'</em>'+(c.t?'<small>'+esc(c.t)+'</small>':''):'')+'</button></span>';}).join('');}).join('')
   +'</div></div>';
  var CHIP={ok:['✓ עלה','ok'],will:['🔜 יעלה לבד','will'],hand:['✋ אתה מעלה','hand'],wait:['⏳ לאישור','hand'],no:['⚠️ לא יעלה','bad'],miss:['❌ לא עלה','bad'],late:['⚠️ עבר הזמן','bad'],run:['▶️ רץ','will'],open:['✋ ידני','hand']};
@@ -18685,7 +18696,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="";
+var PUSH_KEY="BAJSdIafAtGxgHzJr3tOJLTViE1Gkn6rNyAReKPb5ZiMM-6xXp2c1PD7V5VKOXkQRWLI9-Wdq7-Q4hyMCcYp2iQ";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
