@@ -2625,7 +2625,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-10T11:56:16.306Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-10T11:57:43.359Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2856,7 +2856,6 @@ try{
 
  <div class="grid" id="blkTiles">
   <button type="button" class="gt g16 leadNew" id="gRemTop" hidden><b>⏰ תזכורת</b><small></small></button>
-  <button type="button" class="gt g16" id="gPill" data-new="1"><b>⏰ הכדור</b><small>בוקר וערב, לחיצה מסמנת שלקחת</small></button>
   <button type="button" class="gt gNer" data-grp="net" id="gShachar" data-new="1" data-upd="sh-14-12-2-4"><b><img src="icons/shachar.png" alt="" style="height:1.1em;vertical-align:-0.2em;border-radius:4px"> שחר</b><small>פתוח עכשיו · הצטרפו 14 · נכנסו 2 · משובים 4</small></button>
   <button type="button" class="gt gStory" data-grp="proj" id="gPegasus" data-new="1" data-upd="20261031-peg-status"><b>🐎 פגסוס</b><small>רק ההודעה האחרונה והשאלה שמחכה לך, הישנות נעלמות</small></button>
   <button type="button" class="gt gLec" data-grp="proj" id="gLec" data-upd="lec-1793807086086"><b>🎤 הרצאה</b><small>עודכן 4.11 17:44: שקף 47, שחר עם הלוגו המדורג והסבר מתחת</small></button>
@@ -4548,7 +4547,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='c2fc6e6f2f';
+var CODE_ID='9b10673bd0';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -6192,8 +6191,6 @@ function newReports(){
 function paintNew(){
  var msgs=unreadTally();
  var reps=newReports().length;
- var t=lastPill();
- var pillNow=!t||(Date.now()-t)>=PILLGAP;
  function mark(id,on,label){
   var el=document.getElementById(id);
   if(!el)return;
@@ -6252,7 +6249,6 @@ function paintNew(){
  var dr=(D.drains||[]).slice().sort(function(a,b){return (a.at||'')<(b.at||'')?1:-1;});
  mark('gDrains',newerThan(dr,'drainsSeen'),'חדש');
 
- mark('gPill',pillNow,'עכשיו');
  var nA=document.getElementById('nA');
  if(nA)nA.classList.toggle('hasnew',msgs>0||reps>0);
 }
@@ -15033,7 +15029,7 @@ document.getElementById('wShoot').onclick=function(){
 on('gMail',function(){pane('e');});
 
 function openPill(){pane('p');renderPill();openPillSheet();}
-on('gPill',openPill);on('iPill',openPill);
+on('iPill',openPill);
 document.getElementById('pillBig').onclick=function(){openPillSheet();};
 on('pillNow',function(){recordPill(Date.now());});
 on('pillEarlier',function(){

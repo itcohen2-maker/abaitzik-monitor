@@ -1184,9 +1184,8 @@ test('the three health buttons left the home screen and live in the ideas screen
   // Itzik, 16.9: take the food button off, take the photo button off, move it
   // all to ideas, and the pill button too. Off the grid, not deleted.
   const grid = html.slice(html.indexOf('id="blkTiles"'), html.indexOf('id="gSearch"'));
-  // 3.11, Itzik: the pill tile is back on the grid, at the top (the one exception).
-  assert.ok(grid.includes('id="gPill" data-new="1"'));
-  assert.ok(grid.indexOf('id="gPill"') < grid.indexOf('id="gShachar"'));
+  // 11.11, Itzik: "סיימתי עם הכדורים", the pill tile is off the grid for good.
+  assert.ok(!grid.includes('id="gPill"'));
   assert.ok(!grid.includes('id="gCam"'));
   assert.ok(!grid.includes('id="gFood"'));
   // They open from the ideas screen instead, with the same three labels.
@@ -1199,7 +1198,7 @@ test('the three health buttons left the home screen and live in the ideas screen
   assert.ok(ideas.includes('עקוב אחרי התזונה'));
   // The old ids are still wired, so nothing breaks if a tile ever comes back,
   // and the binding is the null safe one now that the tile is gone.
-  assert.ok(html.includes("on('gPill',openPill);on('iPill',openPill);"));
+  assert.ok(html.includes("on('iPill',openPill);"));
   assert.ok(html.includes("on('gCam',openCam);on('iCam',openCam);"));
   assert.ok(html.includes("on('gFood',openFood);on('iFood',openFood);"));
 });
