@@ -17090,7 +17090,7 @@ function boardSheet(){
  }
  function cell(r,d){
   var w=dw(d);
-  if(r.kind==='always')return adsOn?{t:'▶️ כל היום',c:'run'}:{t:'',c:''};
+  if(r.kind==='always')return adsOn?{t:'▶️',c:'run'}:{t:'',c:''};
   if(r.kind==='items'){
    var I=items(r,d).sort(function(a,b){return a.time.localeCompare(b.time);});
    if(!I.length)return {t:'',c:''};
