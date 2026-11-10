@@ -2625,7 +2625,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-10T10:57:56.102Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-10T11:00:01.810Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4548,7 +4548,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='986249c59d';
+var CODE_ID='5e12955c6b';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12732,7 +12732,7 @@ function vidTabs(){
   {id:'ads',l:'📣 קמפיין',h:'הממומן, וסרטוני המוניטור לסטורי',L:TOM_ITEMS.map(function(it){return it.h?{h:it.h}:{k:'tom',it:it};})},
   {id:'sh',l:'🌅 שחר',h:'הרילים, הסטורי והפוסטים של שחר',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isSh(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isSh(x.it);}))},
   {id:'pl',l:'🍽️ מה בצלחת'+(plN?' ('+plN+')':''),h:'הסטוריז לפי הסדר, אפשר לסדר ולמחוק',L:vqRows('pl').concat([{h:'📂 הדף המלא'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return plateN[x.it.n];}))},
-  {id:'ai',l:'🤖 ערוץ AI'+(aiN?' ('+aiN+')':''),upd:'20261109-auto',h:'הרילים של ערוץ ה AI להעלאה, בעברית ובאנגלית: מה עדיין לא עלה. מה שעלה יורד מכאן לבד',L:vqRows('ai').concat([{h:'📂 הדף המלא'},{k:'go',t:'🤖 פתיחת הרילים של ערוץ ה AI',u:'ai/ai.html'}])},
+  {id:'ai',l:'🤖 ערוץ AI'+(aiN?' ('+aiN+')':''),upd:'20261110-approve',h:'הרילים של ערוץ ה AI להעלאה, בעברית ובאנגלית: מה עדיין לא עלה. מה שעלה יורד מכאן לבד',L:vqRows('ai').concat([{h:'📂 הדף המלא'},{k:'go',t:'🤖 פתיחת הרילים של ערוץ ה AI',u:'ai/ai.html'}])},
   {id:'nr',l:'🕯️ נרות'+(nrN?' ('+nrN+')':''),h:'candle.times: סטוריז ופוסטים שמחכים לאישור שלך',L:vqRows('nr').concat([{h:'📂 הדף המלא'},{k:'go',t:'🕯️ פתיחת candle.times',u:'ner/candle.html'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return candleN[x.it.n];}))},
   {id:'it',l:'💻 IT Solution',upd:'20261107-it03en',h:'הרילים של IT Solution: המוניטור, הקמפיינים והעסקים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isIt(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isIt(x.it);}))},
   {id:'me',l:'🎬 הרילים שלי',h:'הרילים והסטוריז שלי, מוכנים לרשתות',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return !isSh(x.it)&&!isIt(x.it);}))},
