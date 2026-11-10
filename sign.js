@@ -234,6 +234,7 @@ function handlePost(b, notify, ip, ua) {
   saveState(tok, s);
   renderSigned(tok, d, s, (e) => {
     const NL = '\n';
+    try { require('./lib/handle.js').complete({ key: 'quote:' + tok, kind: 'quote', who: d.client, title: 'חתם על ההצעה ' + d.quoteNo, link: 'biz' }); } catch (x) { /* the push still goes out */ }
     notify('חתימה על הצעה', '🎉 ' + d.client + ' חתם על ההצעה ' + d.quoteNo + '!' + NL
       + 'חבילה: ' + plan.name + ', ' + nis(plan.price) + ' לחודש' + (plan.setup ? ' ועוד ' + nis(plan.setup) + ' הקמה' : ', הקמה בחינם') + NL
       + 'שם: ' + s.name + (s.biz ? ', ' + s.biz : '') + (s.idno ? ', ' + s.idno : '') + NL

@@ -325,7 +325,7 @@ function handlePost(b, notify, meta) {
     return { status: 200, body: { ok: true } };
   }
   if (b.finish) {
-    if (!s.finishedAt) { s.finishedAt = now; saveState(tok, s); notify(K, summary(d, s) + '\nהלקוח לחץ "סיימתי". מה שמסומן ○ עוד פתוח.'); }
+    if (!s.finishedAt) { s.finishedAt = now; saveState(tok, s); try { require('./lib/handle.js').complete({ key: 'setup:' + tok + ':' + now, kind: 'setup', who: d.client, title: 'מילא את טופס ההקמה ולחץ סיימתי', link: 'answers' }); } catch (e) { /* the push still goes out */ } notify(K, summary(d, s) + '\nהלקוח לחץ "סיימתי". מה שמסומן ○ עוד פתוח.'); }
     return { status: 200, body: { ok: true } };
   }
   const offer = (d.offers || []).find((x) => x.id === b.id);

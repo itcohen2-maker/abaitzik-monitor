@@ -819,6 +819,8 @@ function build() {
     brief: require('./lib/brief.js').forPage(loadDocs('brief'), Date.now()),
     // 4.11.2026: the manager's round of today (manager.js, lib/manager.js), the "🧑‍💼 המנהל" card.
     // 10.11.2026: the customer's own routines ("🧑‍💼 מנהלת IT Solution"), sealed page payload only, never the public live.json.
+    // 10.11.2026: the "📋 לטיפול" queue (lib/handle.js), sealed payload only. Itzik's monitor; a customer opts in with instance handle:true.
+    handle: (inst.name === 'abaitzik' || inst.handle === true) ? require('./lib/handle.js').forPage(inst.dataPath) : [],
     routines: inst.name === 'abaitzik' ? [] : require('./lib/routines.js').forPage(inst.dataPath, Date.now()),
     manager: inst.name === 'abaitzik' ? require('./lib/manager.js').forPage(inst.dataPath, Date.now()) : null,
     pegasus,
@@ -2835,6 +2837,8 @@ section#talkCard.talk{border:2px solid var(--accent);box-shadow:0 8px 24px color
 #fcRow .fcmore{align-self:flex-start;background:none;border:0;color:#0891b2;font:700 13px Heebo,sans-serif;padding:4px 2px;cursor:pointer}
 #fcRow .fcErr{font:700 13px Heebo,sans-serif;color:#b3261e}
 .c-fcs{background:linear-gradient(160deg,#f59e0b,#b45309);font-size:22px}
+.c-board{background:linear-gradient(160deg,#0e7490,#164e63);font-size:22px}
+#gHandle[hidden]{display:none}
 .c-fcc{background:linear-gradient(160deg,#22d3ee,#0e7490);font-size:22px}
 .c-fcp{background:linear-gradient(160deg,#4ade80,#15803d);font-size:22px}
 /* 7.11.2026, Itzik: "להקטין בכלל את כל הכפתורים, שייכנס קצת יותר". Second step of the day: everything on the home screen a notch smaller. */
@@ -4605,7 +4609,7 @@ ${require('./lib/home-ui.js').html}
 
  <div id="askBox"></div>
 <!-- 4.11, Itzik: "תעלה את האריח של העסק שלי למעלה ברשימה. למה שמת אותו אחרון?" The business grid opens the home screen. -->
-${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261105-shlab' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button>' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g13" data-grp="work" id="gBoard" data-new="1" data-upd="20261110-board"><b>🎛️ לוח הפרסומים</b><small>כל הסרטונים והממומן: מה מוכן, מה עולה ומתי</small></button>' : '') + '</div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
+${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + ((inst.name === 'abaitzik' || inst.handle === true) ? '<button type="button" class="gt g16" id="gHandle" hidden data-new="1"><b>📋 לטיפול</b><small>טפסים שחזרו וצריכים אותך</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261105-shlab' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button>' + '</div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
   <!-- 3.11, Itzik: "אני צריך אריח שממש יעבב לי, כמו ליד חדש". First on the grid; shows while a --nag reminder is open, hard blink once it is due, until "✅ עשיתי". -->
@@ -4795,6 +4799,8 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <!-- 4.11, Itzik: "עיגול אחד של היומן של גוגל, כניסה ישירה אליו". Opens his calendar (account u/0, itcohen2), today. -->
   <a class="ic icNew" data-grp="day" id="icGcal" href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener" data-new="1" data-upd="20261107-month"><span class="c c-gcal">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M9.5 13.5h1.5v4M14 13.5h2l-1.5 4"/></svg></span>יומן</a>
+  <!-- 10.11.2026, Itzik: the control board (לוח הפרסומים) is a round icon, one entry point; the old square tile is gone. Opens boardSheet. -->
+  ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icBoard" data-new="1"><span class="c c-board">🎛️</span>לוח בקרה</button>' : ''}
   <!-- 7.11.2026, Itzik: the trainings sit in round icons beside the calendar. Shown only when the chat is allowed (fcBoot). -->
   <button type="button" class="ic icNew" data-grp="day" id="icFcSales" data-new="1" style="display:none"><span class="c c-fcs">🎯</span>אימון מכירות</button>
   <button type="button" class="ic icNew" data-grp="day" id="icFcCoach" data-new="1" style="display:none"><span class="c c-fcc">🧭</span>אימון עסקי</button>
@@ -9340,7 +9346,9 @@ function repaintAll(){
   // 4.11: the home cards (manager, brief) read the sealed payload too.
   ['home',function(){if(typeof renderHome==='function')renderHome();}],
   // 7.11: the 🔔 לאישורך strip reads D.choices, sealed too. Without this it stayed hidden after unlock.
-  ['approvals',function(){if(typeof renderApprovals==='function')renderApprovals();}]];
+  ['approvals',function(){if(typeof renderApprovals==='function')renderApprovals();}],
+  // 10.11: the 📋 לטיפול tile reads D.handle, sealed too.
+  ['handle',function(){if(typeof paintHandle==='function')paintHandle();}]];
  var bad=[],ran={};
  jobs.forEach(function(j){
   ran[j[0]]=1;
@@ -17504,7 +17512,67 @@ function boardMore(){
  };
  document.body.appendChild(w);
 }
-on('gBoard',function(){boardSheet(0);});
+on('icBoard',function(){boardSheet(0);});
+
+/*
+  10.11.2026, Itzik: "אם טופס של ליד או לקוח חזר וצריך טיפול, זה חייב להבהב במוניטור, לטיפול."
+  The tile 📋 לטיפול (gHandle) blinks while D.handle holds an open item (lib/handle.js: a returned setup form, a signature,
+  a new lead). The sheet lists them newest first; "✓ טופל" sends "✓ טופל: <id>", which listen.js marks with no model.
+  This phone drops the item at once (handleDone) and the next build drops it for good. The tile is never hidden while one is open.
+*/
+function handleOpen(){
+ var done=[];try{done=JSON.parse(localStorage.getItem('handleDone')||'[]')||[];}catch(e){}
+ return (D.handle||[]).filter(function(x){return done.indexOf(x.id)<0;});
+}
+function paintHandle(){
+ var t=document.getElementById('gHandle');if(!t)return;
+ var L=handleOpen();
+ t.hidden=!L.length;
+ if(!L.length){t.classList.remove('taskblink');return;}
+ t.classList.add('taskblink');
+ var b=t.querySelector('b'),sm=t.querySelector('small');
+ if(b)b.textContent='📋 לטיפול · '+L.length;
+ if(sm)sm.textContent=L.slice(0,2).map(function(x){return x.who;}).join(', ')+(L.length>2?' ועוד '+(L.length-2):'')+' · לחיצה לפתיחה';
+}
+function handleSheet(){
+ var old=document.getElementById('hdSheet');if(old)old.remove();
+ var w=document.createElement('div');w.id='hdSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','לטיפול');
+ var KI={setup:'🧩',sign:'✍️',agreement:'📑',nda:'🔏',doc:'📄',quote:'💰',lead:'🔔',form:'📝'};
+ function rows(){
+  var L=handleOpen();
+  if(!L.length)return '<small>אין כלום לטיפול. כל מה שחזר טופל.</small>';
+  return L.map(function(x){
+   var d=new Date(x.at);
+   var go=x.link&&typeof MG_GO!=='undefined'&&MG_GO[x.link];
+   return '<div class="ycard" style="margin:6px 0;padding:10px;text-align:right"><b>'+(KI[x.kind]||'📋')+' '+esc(x.who)+'</b>'
+    +'<small style="display:block;opacity:1">'+esc(x.title)+'</small>'
+    +'<small style="display:block">'+d.toLocaleString('he-IL',{weekday:'long',day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})+'</small>'
+    +(go?'<button type="button" class="yb" data-a="go" data-l="'+esc(x.link)+'">↗ לראות איפה זה</button>':'')
+    +'<button type="button" class="yb yb1" data-a="done" data-id="'+esc(x.id)+'">✓ טופל</button></div>';
+  }).join('');
+ }
+ w.innerHTML='<div class="ycard"><b>📋 לטיפול</b><small>מה שחזר אליך ומחכה לך, החדש למעלה. כשסיימת עם פריט, לחץ ✓ טופל והוא יורד.</small><div id="hdList">'+rows()+'</div><button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+ function close(){w.remove();paintHandle();}
+ w.onclick=function(e){
+  var t=e.target;if(t===w)return close();
+  var a=t.getAttribute&&t.getAttribute('data-a');
+  if(a==='x')return close();
+  if(a==='go'){var l=t.getAttribute('data-l');w.remove();if(MG_GO[l])MG_GO[l]();return;}
+  if(a==='done'){
+   var id=t.getAttribute('data-id'),note='✓ טופל: '+id;t.disabled=true;
+   var d=[];try{d=JSON.parse(localStorage.getItem('handleDone')||'[]')||[];}catch(x){}
+   sendText('טופל',note,'משימה').then(function(){
+    markSent('text',note);
+    if(d.indexOf(id)<0)d.push(id);try{localStorage.setItem('handleDone',JSON.stringify(d.slice(-300)));}catch(x){}
+    document.getElementById('hdList').innerHTML=rows();paintHandle();
+   }).catch(function(){t.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
+  }
+ };
+ document.body.appendChild(w);
+}
+on('gHandle',function(){handleSheet();setTimeout(paintHandle,60);});
+
 function carView(id,n,nm){
  var P=function(i){return (i<10?'0':'')+i;};
  var ov=document.createElement('div');ov.className='carv';

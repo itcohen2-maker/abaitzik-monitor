@@ -246,6 +246,7 @@ function handlePost(b, notify, ip, ua, done) {
   writeJson(path.join(CDIR, tok + '.json'), s);
   renderSigned(tok, d, s, (e) => {
     done({ status: 200, body: { ok: true } });
+    try { require('./lib/handle.js').complete({ key: 'agr:' + tok, kind: 'agreement', who: d.client, title: 'חתם על ההסכם ועל טופס הסודיות', link: 'biz' }); } catch (x) { /* the push still goes out */ }
     notify('חתימה על הסכם', '🎉 ' + d.client + ' חתם על הסכם בינינו ועל טופס הסודיות!\n'
       + s.f.name + ', ' + s.f.biz + (s.f.idno ? ', ' + s.f.idno : '') + (s.f.phone ? ', ' + s.f.phone : '') + '\n'
       + (e ? 'ה PDF החתום לא הופק: ' + e.message : 'ה PDF החתום נמצא במוניטור: 💼 העסק שלי ← ' + d.client));

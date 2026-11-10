@@ -261,6 +261,7 @@ function handlePost(b, notify, ip, ua, done) {
   writeJson(path.join(d.dir, 'signed', tok + '.json'), rec);
   const pdfPath = path.join(d.dir, 'signed', tok + '.pdf');
   toPdf(printHtml(vals), pdfPath, (e) => {
+    try { require('./lib/handle.js').complete({ key: 'nda:' + tok, kind: 'nda', who: c.co, title: 'חתם על הסכם הסודיות', link: 'biz' }); } catch (x) { /* the push still goes out */ }
     if (e) { notify('הסכם סודיות', c.co + ' חתם על הסכם הסודיות, אבל הפקת ה PDF נכשלה: ' + e.message); return done({ status: 200, body: { ok: true, tok } }); }
     try { fs.copyFileSync(pdfPath, path.join(PRIV, out)); } catch (x) {}
     execFile('node', [path.join(__dirname, 'push.js'), 'nda: ' + out], { cwd: __dirname, timeout: 180000 }, () => {});

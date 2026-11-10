@@ -669,7 +669,7 @@ function recordIncoming(m) {
     fs.mkdirSync(CHAT, { recursive: true });
     fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
     say((codeOk ? 'נרשם בצ׳אט עם אישור קבלה: ' : 'נרשם בלי קוד, ממתין לאימות: ') + text.slice(0, 60));
-    if (rec.heldWhy === 'lead') { alertLead(text); saveSiteLead(text, rec.at); }
+    if (rec.heldWhy === 'lead') { try { if (!require('./lib/biz.js').isTestLead(text)) { const nm = /(?:שם|name)\s*[:：]\s*([^\n]{1,60})/i.exec(text); require('./lib/handle.js').add(inst.dataPath, { key: 'lead:' + rec.at, kind: 'lead', who: nm ? nm[1] : 'ליד מהאתר', title: 'ליד חדש מהאתר, לחזור אליו', link: 'biz', at: rec.at }); } } catch (e) { say('!! לטיפול: ' + e.message); } alertLead(text); saveSiteLead(text, rec.at); }
     if (rec.heldWhy === 'waitlist') alertWaitlist(text);
     if (rec.heldWhy === 'login-wait') alertLoginWait(text);
     if (rec.heldWhy === 'shachar-feedback') alertShacharFeedback(text);
@@ -758,6 +758,24 @@ function recordIncoming(m) {
       delete by id. It is saved here, with no model, by lib/routines.js, and answered here, so a customer's
       routine never depends on a session remembering to write a file. The page is rebuilt so the list shows it.
     */
+    /*
+      10.11.2026, Itzik: "📋 לטיפול" (lib/handle.js). The button "✓ טופל" on the home sheet sends "✓ טופל: <id>".
+      Marked here with no model, so it works with no session running; the page is rebuilt so the tile drops the item.
+    */
+    const hdM = codeOk && /^\s*(?:משימה)?\s*✓\s*טופל\s*[:：]\s*(\S+)/.exec(text.replace(/\n\s*קוד[^\n]*$/, ''));
+    if (hdM) {
+      let ans = '';
+      try { ans = require('./lib/handle.js').done(inst.dataPath, hdM[1]) ? 'סימנתי שטופל.' : 'הפריט כבר סומן כטופל.'; say('לטיפול: ' + hdM[1] + ' | ' + ans); }
+      catch (e) { ans = 'לא הצלחתי לסמן (' + e.message + ')'; say('!! לטיפול: ' + e.message); }
+      rec.status = 'done';
+      try {
+        fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+        fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-handle-ack.json')),
+          JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id, text: ans, status: 'done' }, null, 1), 'utf8');
+      } catch (e) { /* the page drops the item on the next build anyway */ }
+      try { publishChat(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
     const rtM = codeOk && /^\s*(?:משימה)?\s*שגרה\s+(חדשה|עצירה|חידוש|מחיקה)\s*[:：]\s*([\s\S]*?)\s*$/.exec(text.replace(/\n\s*קוד[^\n]*$/, ''));
     if (rtM) {
       let ans = '';

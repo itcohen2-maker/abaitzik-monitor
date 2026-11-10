@@ -118,7 +118,7 @@ function handlePost(b, notify, meta) {
     });
     s.answers = clean; s.updatedAt = now;
   }
-  if (b.submit && !s.submittedAt) { s.submittedAt = now; s.reported = 'full'; saveState(tok, s); notify('טופס אפיון', summary(d, s, false)); }
+  if (b.submit && !s.submittedAt) { s.submittedAt = now; s.reported = 'full'; saveState(tok, s); try { require('./lib/handle.js').complete({ key: 'form:' + tok + ':' + now, kind: 'form', who: d.client, title: 'מילא את טופס האפיון ושלח', link: 'answers' }); } catch (e) { /* the push still goes out */ } notify('טופס אפיון', summary(d, s, false)); }
   else saveState(tok, s);
   return { status: 200, body: { ok: true } };
 }
