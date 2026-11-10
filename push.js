@@ -31,8 +31,30 @@ const LOG = path.join(HERE, 'data', 'status', 'push.log');
 const STALE_MS = 3 * 60 * 1000;
 const WAIT_MS = 4 * 60 * 1000;
 
-const msg = process.argv.slice(2).join(' ').trim();
+const FLUSH = process.argv[2] === '--flush';
+const msg = FLUSH ? 'flush' : process.argv.slice(2).join(' ').trim();
 if (!msg) { console.error('צריך הודעת קומיט'); process.exit(2); }
+/*
+  10.11.2026, Itzik's carousel did not show for 35 minutes. Every push starts a
+  GitHub Pages deploy that takes about five minutes, and a newer push cancels the
+  one still running. With pushes every minute or two (health board, sessions,
+  agents) no deploy finished between 15:16 and 15:50. So on Itzik's own page a
+  push to GitHub is spaced: if the last one was under GAP_MS ago, the commit stays
+  local and one detached "push.js --flush" pushes everything together when the
+  gap is over. The newest deploy always carries every commit before it.
+*/
+const GAP_MS = 6 * 60 * 1000;
+const REMOTE = path.join(HERE, 'data', 'status', 'push-remote.json');
+const FLOCK = path.join(HERE, 'data', 'status', 'push-flush.lock');
+function remoteState() { try { return JSON.parse(fs.readFileSync(REMOTE, 'utf8')) || {}; } catch (e) { return {}; } }
+function markPushed() { try { fs.writeFileSync(REMOTE, JSON.stringify({ lastPush: new Date().toISOString() }), 'utf8'); } catch (e) {} }
+function sinceLastPush() { const t = Date.parse(remoteState().lastPush || ''); return isNaN(t) ? Infinity : Date.now() - t; }
+function flusherAlive() { try { const f = JSON.parse(fs.readFileSync(FLOCK, 'utf8')); return !!(f.pid && alive(f.pid)); } catch (e) { return false; } }
+function startFlusher() {
+  if (flusherAlive()) return;
+  const c = require('child_process').spawn(process.execPath, [__filename, '--flush'], { cwd: HERE, detached: true, stdio: 'ignore' });
+  c.unref();
+}
 
 // 24.10.2026: a session that ran this as root left docs/ owned by root, and every
 // later build by the monitor user failed with EACCES until the files were handed
@@ -117,12 +139,17 @@ async function main() {
     */
     let ownPage = true;
     try { ownPage = JSON.parse(fs.readFileSync(path.join(HERE, 'instance.json'), 'utf8')).name === 'abaitzik'; } catch (e) {}
-    try { git('push'); }
+    if (ownPage && sinceLastPush() < GAP_MS) {
+      startFlusher();
+      say('נשמר, יידחף יחד עם הבאים (פרסום קודם עוד רץ): ' + msg.split(String.fromCharCode(10))[0].slice(0, 60));
+      return;
+    }
+    try { git('push'); markPushed(); }
     catch (e) {
       try {
         say('הדחיפה נדחתה, מושך ומנסה שוב.');
         git('pull', '--rebase', '--autostash');
-        git('push');
+        git('push'); markPushed();
       } catch (e2) {
         if (ownPage) throw e2;
         say('נבנה ופורסם בשרת. גיבוי לגיטהאב לא מחובר למופע הזה, זה בסדר, לא צריך לעשות כלום.');
@@ -134,4 +161,24 @@ async function main() {
     release();
   }
 }
-main().catch((e) => { release(); say('!! ' + e.message); process.exit(1); });
+async function flush() {
+  try { fs.writeFileSync(FLOCK, JSON.stringify({ pid: process.pid, at: new Date().toISOString() }), 'utf8'); } catch (e) {}
+  try {
+    const wait = GAP_MS - sinceLastPush();
+    if (wait > 0) await new Promise((r) => setTimeout(r, wait + 2000));
+    const until = Date.now() + WAIT_MS;
+    while (!take()) { if (Date.now() > until) { say('!! flush: התור לא התפנה.'); return; } await new Promise((r) => setTimeout(r, 2000)); }
+    try {
+      let ahead = '';
+      try { ahead = git('rev-list', '--count', '@{u}..HEAD').trim(); } catch (e) { ahead = '1'; }
+      if (ahead === '0') { say('flush: אין מה לדחוף.'); return; }
+      try { git('push'); }
+      catch (e) { say('flush: נדחה, מושך ומנסה שוב.'); git('pull', '--rebase', '--autostash'); git('push'); }
+      markPushed();
+      say('נדחף יחד: ' + ahead + ' קומיטים');
+    } finally { release(); }
+  } catch (e) { say('!! flush: ' + String(e.message || e).slice(-160)); }
+  finally { try { const f = JSON.parse(fs.readFileSync(FLOCK, 'utf8')); if (f.pid === process.pid) fs.unlinkSync(FLOCK); } catch (e) {} }
+}
+if (FLUSH) flush();
+else main().catch((e) => { release(); say('!! ' + e.message); process.exit(1); });
