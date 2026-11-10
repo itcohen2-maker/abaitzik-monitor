@@ -864,6 +864,7 @@ function build() {
     ads: (() => { try { return JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'ads', 'status.json'), 'utf8')); } catch (e) { return null; } })(),
     // 7.11.2026: a customer's key for the fast chat on wa-bridge (data/fc-key.txt, sealed like the rest of D).
     fcKey: inst.name === 'abaitzik' ? '' : (() => { try { const k = fs.readFileSync(path.join(inst.dataPath, 'fc-key.txt'), 'utf8').trim(); return /^[a-f0-9]{24,64}$/.test(k) ? k : ''; } catch (e) { return ''; } })(),
+    demoFcKey: inst.name === 'abaitzik' ? (() => { try { const k = (JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'fastchat', 'tenants.json'), 'utf8')).demo || {}).key || ''; return /^[a-f0-9]{24,64}$/.test(k) ? k : ''; } catch (e) { return ''; } })() : '',
     // 7.11.2026: 🔌 חיבורים, what is connected and a connect link for each (lib/connections.js). His copy only.
     conn: (() => { const F = require('./lib/features.js').read(inst.dataPath, inst.name); return F.conn ? require('./lib/connections.js').list(inst.dataPath, inst.name, F) : null; })(),
     // 12.10: the 🩺 board, every monitor's faults in one file (health-board.js). His copy only.
@@ -18084,7 +18085,7 @@ var fcS={mode:'chat',msgs:[],busy:false,err:'',todo:{},loaded:false};
 try{var fcT=JSON.parse(localStorage.getItem('fcTodo')||'[]');if(fcT&&fcT.forEach)fcT.forEach(function(i){fcS.todo[i]='ok';});}catch(e){}
 function fcSaveTodo(){try{var a=[];for(var i in fcS.todo){if(fcS.todo[i]==='ok')a.push(i);}localStorage.setItem('fcTodo',JSON.stringify(a.slice(-200)));}catch(e){}}
 function fcPost(p,body){
- body.code=(D&&D.fcKey)||sendCode();
+ body.code=(document.body.classList.contains('dmo-real')&&D&&D.demoFcKey)||(D&&D.fcKey)||sendCode();
  return fetch(FC_API+p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){if(!r.ok){var er=new Error('api '+r.status);er.status=r.status;throw er;}return r.json();});
 }
 function fcApply(j){if(j&&j.msgs)fcS.msgs=j.msgs;if(j&&j.mode)fcS.mode=j.mode;}
