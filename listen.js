@@ -754,6 +754,36 @@ function recordIncoming(m) {
       } catch (e) { say('!! בקשה ממנהל לא נרשמה: ' + e.message); }
     }
     /*
+      10.11.2026, Itzik: "🧑‍💼 המנהל שלי" (build.js myMgrSheet). The sheet sends the routine as JSON, a pause, a resume or a
+      delete by id. It is saved here, with no model, by lib/routines.js, and answered here, so a customer's
+      routine never depends on a session remembering to write a file. The page is rebuilt so the list shows it.
+    */
+    const rtM = codeOk && /^\s*(?:משימה)?\s*שגרה\s+(חדשה|עצירה|חידוש|מחיקה)\s*[:：]\s*([\s\S]*?)\s*$/.exec(text.replace(/\n\s*קוד[^\n]*$/, ''));
+    if (rtM) {
+      let ans = '';
+      try {
+        const R = require('./lib/routines.js');
+        if (rtM[1] === 'חדשה') {
+          let o = null; try { o = JSON.parse(rtM[2]); } catch (e) { /* answered below */ }
+          const r = R.add(inst.dataPath, o);
+          ans = r.ok ? 'השגרה נשמרה: ' + r.rec.text + ' (' + R.labelOf(r.rec.sched) + ').' : 'השגרה לא נשמרה: ' + r.why;
+        } else {
+          const id = String(rtM[2]).trim().split(/\s+/)[0];
+          const ok = rtM[1] === 'מחיקה' ? R.remove(inst.dataPath, id) : R.setState(inst.dataPath, id, rtM[1] === 'עצירה' ? 'paused' : 'active');
+          ans = ok ? (rtM[1] === 'מחיקה' ? 'השגרה נמחקה.' : rtM[1] === 'עצירה' ? 'השגרה נעצרה.' : 'השגרה חזרה לפעול.') : 'לא מצאתי את השגרה, או שכבר יש ' + R.MAX_ACTIVE + ' פעילות.';
+        }
+        say('שגרה: ' + rtM[1] + ' | ' + ans);
+      } catch (e) { ans = 'השגרה לא נשמרה (' + e.message + ')'; say('!! שגרה: ' + e.message); }
+      rec.status = 'done';
+      try {
+        fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+        fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-routine-ack.json')),
+          JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id, text: ans, status: 'done' }, null, 1), 'utf8');
+      } catch (e) { /* the page shows the list on the next build anyway */ }
+      try { publishChat(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
+    /*
       6.10, Home Style: "✔ טיפלתי" on a shipment card. The page sends the row id
       and the alert code; it is written to the shared table here, with no model,
       and the page is rebuilt so the count drops for everyone on this monitor.

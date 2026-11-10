@@ -317,6 +317,7 @@ function prompt(list) {
     ...require('./lib/lessons.js').promptLines(),
     // 10.11.2026: what a "קמפיין:" message from the 📣 tile asks for (draft only, nothing published).
     ...require('./lib/campaign.js').promptLines(),
+    ...require('./lib/routines.js').promptLines(),
     ...require('./lib/tier.js').promptLines(TIER),
     /*
       How an answer reads, 26.9. Itzik asked for the whole monitor to be gone
@@ -1145,9 +1146,34 @@ function planHold() {
   return true;
 }
 
+
+/*
+  10.11.2026, Itzik: routines (lib/routines.js). Called every minute from main(): reminders before the guards, work
+  routines after them. A "work" one is written as a chat message "שגרה: <text>", which waiting() then picks up like
+  any message, so it gets the same quota, plan and approval rules as one typed by hand and nothing more.
+*/
+function routinesTick(only) {
+  try {
+    const R = require('./lib/routines.js');
+    const did = R.tick(inst.dataPath, Date.now(), {
+      push: (title, body) => { require('./lib/notify-channels.js').notify(title, body, {}).catch(() => {}); },
+      chat: (text, id) => {
+        const at = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        const stamp = at.getFullYear() + pad(at.getMonth() + 1) + pad(at.getDate()) + '-' + pad(at.getHours()) + pad(at.getMinutes()) + pad(at.getSeconds());
+        fs.mkdirSync(CHAT, { recursive: true });
+        fs.writeFileSync(path.join(CHAT, stamp + '-itzik-auto.json'), JSON.stringify({ at: at.toISOString(), from: 'itzik', text, status: 'working', id, auto: true, routine: true }, null, 1), 'utf8');
+      },
+    }, { only });
+    did.forEach((d) => say('שגרה: ' + d));
+  } catch (e) { say('!! שגרות: ' + e.message); }
+}
+
 function main() {
   // 8.10: a paused customer gets no sessions at all.
   if (inst.paused) { say('מושהה. לא עונה.'); return; }
+  // 10.11.2026: "🧑‍💼 המנהל שלי". A reminder routine is a push, code only: it costs nothing, so no hold below stops it.
+  if (!DRY) routinesTick('remind');
   if (onHold()) return;
   if (quotaHold()) return;
   if (planHold()) return;
@@ -1155,6 +1181,8 @@ function main() {
   const live = livePids();
   if (!DRY) reconcile(live);
   const room = MAX_LIVE - Object.keys(live).length;
+  // A work routine becomes a chat message the normal way, so every guard above (hold, quota, plan) already applied to it.
+  if (!DRY) routinesTick('work');
   const list = waiting();
   if (!list.length) { if (DRY) say('אין הודעות שמחכות. רצים: ' + Object.keys(live).length); return; }
   say('מחכות ' + list.length + ', רצים ' + Object.keys(live).length + ', מקום ל' + Math.max(0, room));

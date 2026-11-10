@@ -818,6 +818,8 @@ function build() {
     */
     brief: require('./lib/brief.js').forPage(loadDocs('brief'), Date.now()),
     // 4.11.2026: the manager's round of today (manager.js, lib/manager.js), the "🧑‍💼 המנהל" card.
+    // 10.11.2026: the customer's own routines ("🧑‍💼 המנהל שלי"), sealed page payload only, never the public live.json.
+    routines: inst.name === 'abaitzik' ? [] : require('./lib/routines.js').forPage(inst.dataPath, Date.now()),
     manager: inst.name === 'abaitzik' ? require('./lib/manager.js').forPage(inst.dataPath, Date.now()) : null,
     pegasus,
     improve,
@@ -1381,13 +1383,15 @@ const TENANT_TILES = {
   gCamp: ['g13', '📣 קמפיינים', 'מעלים תמונות או סרטון, ואני מכין טיוטה'],
   // 10.11.2026, Itzik, for Ilay: his own campaigns from his ad account, read only (ads-sync.js, data/ads/status.json).
   gAds: ['g13', '📊 מצב הקמפיינים', 'מה רץ, כמה הוצא, כמה לידים'],
+  // 10.11.2026, Itzik: a manager for every monitor, where the customer records what comes back again and again (lib/routines.js).
+  gMyMgr: ['g4', '🧑‍💼 המנהל שלי', 'מה שחוזר על עצמו, אומרים פעם אחת'],
 };
 // With no screens chosen at intake, only the tiles that fit any work. The whole
 // catalog gave a phone only customer "connect the computer", a client follow up
 // and a content plan, some of them empty screens.
 const TENANT_DEFAULT = ['gTasks', 'gNotes', 'gCamp'];
 // 10.11.2026, Itzik: the notes app, the tasks and the campaigns screen are on every customer's monitor whatever the intake chose.
-const TENANT_ALWAYS = ['gTasks', 'gNotes', 'gCamp'];
+const TENANT_ALWAYS = ['gTasks', 'gNotes', 'gCamp', 'gMyMgr'];
 // 7.11.2026: 🔌 on every customer's home (connSheet, lib/connections.js).
 const TENANT_CONN_TILE = ['g4', '🔌 חיבורים', 'מה מחובר, וחיבור בלחיצה'];
 /*
@@ -1479,7 +1483,7 @@ function tenantTiles(inst) {
     const [cls, title, sub] = TENANT_TILES[id];
     // data-grp by visible label: only the two labels in the groups list get one.
     const grp = { gFiles: 'home', gBiz: 'work' }[id];
-    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' || /^gBh|^gShopList$|^gCamp$/.test(id) ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261105-shai-send"' : '') + (id === 'gTasks' ? ' data-upd="tasks-edit-1106"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' || /^gBh|^gShopList$|^gCamp$|^gMyMgr$/.test(id) ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261105-shai-send"' : '') + (id === 'gTasks' ? ' data-upd="tasks-edit-1106"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('') + '\n ';
 }
 /*
@@ -15356,6 +15360,91 @@ function campSheet(){
  }).catch(function(){});
 }
 on('gCamp',campSheet);
+/*
+  10.11.2026, Itzik: "מנהל לכל מוניטור, והלקוח נכנס לכפתור של המנהל ושם מקליט את כל הבקשות שחוזרות על עצמן."
+  The customer says (types, or speaks into the box) what comes back, when, and which kind:
+  a reminder to him, or "the manager prepares it and brings the answer". It is sent as JSON, saved by the listener
+  (lib/routines.js, no model) and run by the worker on its minute timer. Pause and delete go the same way.
+  Phase one: reminders, summaries and reports. Anything that sends, pays or deletes still waits for the owner's approval.
+*/
+function myMgrSheet(){
+ var old=document.getElementById('mmSheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='mmSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','המנהל שלי');
+ var DN=['א','ב','ג','ד','ה','ו','ש'],kind='remind',freq='daily',days=[];
+ function rows(){
+  var L=D.routines||[];
+  if(!L.length)return '<small>עוד אין שגרות. מה שחוזר על עצמך כל יום, שבוע או חודש, תכתוב או תגיד פה פעם אחת.</small>';
+  return L.map(function(r){
+   var nx=r.next?new Date(r.next):null;
+   var nxt=nx?(' · הפעם הבאה: '+nx.toLocaleString('he-IL',{weekday:'long',day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})):'';
+   return '<div class="ycard" style="margin:6px 0;padding:10px;text-align:right"><b>'+(r.kind==='remind'?'⏰ ':'🛠️ ')+esc(r.text)+'</b>'
+    +'<small style="display:block">'+esc(r.label)+(r.state==='paused'?' · עצורה':nxt)+'</small>'
+    +(r.lastResult?'<small style="display:block;opacity:.8">'+esc(r.lastResult)+'</small>':'')
+    +'<button type="button" class="yb" data-a="'+(r.state==='paused'?'resume':'pause')+'" data-id="'+esc(r.id)+'">'+(r.state==='paused'?'להפעיל שוב':'לעצור')+'</button>'
+    +'<button type="button" class="yb yx" data-a="del" data-id="'+esc(r.id)+'">למחוק</button></div>';
+  }).join('');
+ }
+ w.innerHTML='<div class="ycard"><b>🧑‍💼 המנהל שלי</b>'
+  +'<small>דברים שחוזרים על עצמם: אומרים לי פעם אחת, ואני עושה בזמן שקבעת. תזכורת מגיעה אליך לטלפון. עבודה: אני מכין ומחזיר תשובה במסך התשובות. שליחה לאנשים, תשלום ומחיקה תמיד מחכים לאישור שלך.</small>'
+  +'<div id="mmList">'+rows()+'</div>'
+  +'<small style="opacity:1;font-weight:600">שגרה חדשה: מה חוזר על עצמו?</small>'
+  +'<textarea id="mmText" rows="3" style="width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif" placeholder="למשל: לבדוק מי עוד לא שילם ולהכין לי רשימה"></textarea>'
+  +'<button type="button" class="yb yb2" data-a="mic" id="mmMic">🎤 להגיד במקום לכתוב</button>'
+  +'<small style="opacity:1;font-weight:600">מה לעשות?</small>'
+  +'<div class="arPick" role="group" aria-label="סוג"><button type="button" class="yb on" data-k="remind">⏰ להזכיר לי</button><button type="button" class="yb" data-k="work">🛠️ שתכין ותחזיר תשובה</button></div>'
+  +'<small style="opacity:1;font-weight:600">כל כמה זמן?</small>'
+  +'<div class="arPick" role="group" aria-label="תדירות"><button type="button" class="yb on" data-f="daily">כל יום</button><button type="button" class="yb" data-f="weekly">כל שבוע</button><button type="button" class="yb" data-f="monthly">כל חודש</button></div>'
+  +'<div id="mmDays" hidden><small>באילו ימים?</small><div class="arPick">'+DN.map(function(n,i){return '<button type="button" class="yb" data-d="'+i+'">'+n+'</button>';}).join('')+'</div></div>'
+  +'<div id="mmDom" hidden><small>באיזה יום בחודש?</small><input id="mmDomIn" type="number" min="1" max="31" value="1" style="width:5em;border-radius:10px;border:1px solid #ccd;padding:8px;font:15px Heebo,sans-serif"></div>'
+  +'<small>באיזו שעה?</small><input id="mmTime" type="time" value="08:00" style="border-radius:10px;border:1px solid #ccd;padding:8px;font:15px Heebo,sans-serif">'
+  +'<button type="button" class="yb yb1" data-a="save">לשמור את השגרה</button>'
+  +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+ function close(){w.remove();}
+ function pick(sel,attr,val){[].forEach.call(w.querySelectorAll(sel),function(b){b.classList.toggle('on',b.getAttribute(attr)===val);});}
+ function send(cmd,body,done){
+  var note='שגרה '+cmd+': '+body;
+  return sendText('שגרה',note,'משימה').then(function(){markSent('text',note);if(done)done();}).catch(function(){toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
+ }
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var t=e.target,a=t.getAttribute&&t.getAttribute('data-a');
+  if(a==='x')return close();
+  var k=t.getAttribute&&t.getAttribute('data-k');
+  if(k){kind=k;pick('[data-k]','data-k',k);return;}
+  var f=t.getAttribute&&t.getAttribute('data-f');
+  if(f){freq=f;pick('[data-f]','data-f',f);document.getElementById('mmDays').hidden=f!=='weekly';document.getElementById('mmDom').hidden=f!=='monthly';return;}
+  var d=t.getAttribute&&t.getAttribute('data-d');
+  if(d!==null&&d!==undefined&&d!==''){var n=+d,i=days.indexOf(n);if(i<0)days.push(n);else days.splice(i,1);t.classList.toggle('on',i<0);return;}
+  if(a==='pause'||a==='resume'||a==='del'){
+   var id=t.getAttribute('data-id');t.disabled=true;
+   send(a==='del'?'מחיקה':a==='pause'?'עצירה':'חידוש',id,function(){toast('נשלח. הרשימה תתעדכן בעוד רגע.');close();});
+   return;
+  }
+  if(a==='mic'){
+   var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+   if(!SR){toast('הקלטה בקול לא נתמכת בדפדפן הזה. אפשר לכתוב.');return;}
+   var rc=new SR();rc.lang='he-IL';rc.interimResults=false;
+   rc.onresult=function(ev){var s=ev.results[0][0].transcript||'',b=document.getElementById('mmText');b.value=(b.value?b.value+' ':'')+s;};
+   rc.onerror=function(){toast('לא שמעתי. אפשר לנסות שוב או לכתוב.');};
+   try{rc.start();toast('מקשיב, תגיד מה חוזר על עצמו');}catch(x){}
+   return;
+  }
+  if(a!=='save')return;
+  var text=(document.getElementById('mmText').value||'').trim(),hm=document.getElementById('mmTime').value||'';
+  if(text.length<3){toast('כתוב או תגיד מה חוזר על עצמו');return;}
+  if(!hm){toast('חסרה שעה');return;}
+  if(freq==='weekly'&&!days.length){toast('בחר יום אחד לפחות');return;}
+  var o={text:text,kind:kind,sched:{freq:freq,hm:hm}};
+  if(freq==='weekly')o.sched.days=days.slice().sort();
+  if(freq==='monthly')o.sched.dom=+document.getElementById('mmDomIn').value||1;
+  t.disabled=true;
+  send('חדשה',JSON.stringify(o),function(){toast('נשלח. אשמור ואאשר לך בתשובות.');close();});
+ };
+ document.body.appendChild(w);
+}
+on('gMyMgr',myMgrSheet);
 // 10.11.2026, Itzik, for Ilay: "📊 מצב הקמפיינים", what runs in his ad account, read only (ads-sync.js).
 function adsSheet(){
  var old=document.getElementById('adSheet');if(old)old.remove();
