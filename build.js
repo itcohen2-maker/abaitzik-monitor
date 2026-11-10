@@ -12643,6 +12643,17 @@ function remBlink(){
 // Itzik, 7.10: "צריך אפשרות בתזכורות למחוק". Gone at once on the phone, and
 // through the notes sync on the server, which then never sends it.
 function remLive(){var g=clearedIds('remGone');return (D.reminders||[]).filter(function(r){return !g[remKey(r)];});}
+// 10.11: the first web address written in a reminder ("linkedin.com/verify"), with https added when it is missing.
+function remLink(t){
+ var w=String(t||'').split(' '),i,x,d;
+ for(i=0;i<w.length;i++){
+  x=w[i].replace(/["'<>(),;]/g,'').replace(/[.:]+$/,'');
+  if(x.indexOf('://')>0)return x;
+  d=x.split('/')[0];
+  if(x.indexOf('/')>0&&d.indexOf('.')>0&&d.lastIndexOf('.')<d.length-2)return 'https://'+x;
+ }
+ return '';
+}
 function renderReminders(){
  remBlink();
  var host=document.getElementById('remBox');
@@ -12657,6 +12668,8 @@ function renderReminders(){
    +'<div class="w">'+(r.sentAt?'נשלחה '+esc(day(r.sentAt)):'תקפוץ '+esc(remWhen(r.due)))+'</div>'
    // 5.11, Itzik: a reminder that says where to go takes him there (same buttons as an answer).
    +goLinks({text:r.text,go:r.go,from:'claude',skip:['gRemind','gRemTop']})
+   // 10.11, Itzik: the reminder names a site ("linkedin.com/verify") and the card has no way to open it. The address in the text gets its own button.
+   +(remLink(r.text)?'<a class="abtn" href="'+esc(remLink(r.text))+'" target="_blank" rel="noopener">פתיחת הקישור</a>':'')
    +(r.nag&&Date.parse(r.due)<=Date.now()?'<button type="button" class="remdone" data-k="'+esc(remKey(r))+'">✅ עשיתי</button>':'')
    +(remHot(r)?'<button type="button" class="remknow" data-k="'+esc(remKey(r))+'">אני יודע</button>':'')
    +'<button type="button" class="remdel" data-k="'+esc(remKey(r))+'">🗑 למחוק</button>'

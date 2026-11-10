@@ -2609,7 +2609,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-10T08:17:48.358Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-10T08:18:31.811Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4532,7 +4532,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='fd25ca4b66';
+var CODE_ID='85f2aab317';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -8987,6 +8987,16 @@ function remBlink(){
  if(b)b.classList.toggle('taskblink',remLive().some(remHot));
 }
 function remLive(){var g=clearedIds('remGone');return (D.reminders||[]).filter(function(r){return !g[remKey(r)];});}
+function remLink(t){
+ var w=String(t||'').split(' '),i,x,d;
+ for(i=0;i<w.length;i++){
+  x=w[i].replace(/["'<>(),;]/g,'').replace(/[.:]+$/,'');
+  if(x.indexOf('://')>0)return x;
+  d=x.split('/')[0];
+  if(x.indexOf('/')>0&&d.indexOf('.')>0&&d.lastIndexOf('.')<d.length-2)return 'https://'+x;
+ }
+ return '';
+}
 function renderReminders(){
  remBlink();
  var host=document.getElementById('remBox');
@@ -9000,6 +9010,7 @@ function renderReminders(){
   return '<div class="rem'+(r.sentAt?' remsent':'')+'"><b>'+esc(r.text)+'</b>'
    +'<div class="w">'+(r.sentAt?'נשלחה '+esc(day(r.sentAt)):'תקפוץ '+esc(remWhen(r.due)))+'</div>'
    +goLinks({text:r.text,go:r.go,from:'claude',skip:['gRemind','gRemTop']})
+   +(remLink(r.text)?'<a class="abtn" href="'+esc(remLink(r.text))+'" target="_blank" rel="noopener">פתיחת הקישור</a>':'')
    +(r.nag&&Date.parse(r.due)<=Date.now()?'<button type="button" class="remdone" data-k="'+esc(remKey(r))+'">✅ עשיתי</button>':'')
    +(remHot(r)?'<button type="button" class="remknow" data-k="'+esc(remKey(r))+'">אני יודע</button>':'')
    +'<button type="button" class="remdel" data-k="'+esc(remKey(r))+'">🗑 למחוק</button>'
