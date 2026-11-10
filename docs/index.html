@@ -2701,7 +2701,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-10T18:43:54.227Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-10T18:45:36.532Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3055,14 +3055,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4622,7 +4615,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='8d1070a436';
+var CODE_ID='bcb14eb1b7';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -13676,7 +13669,8 @@ function calSheet(all,mode,ym,sel){
  };
  var ev=C.events.slice().sort(function(a,b){return Date.parse(a.start)-Date.parse(b.start);});
  var h='<div class="ycard"><b>📅 היומן</b>';
- if(!C.ok)h+='<p>החיבור ליומן של גוגל נותק, ולכן מה שכאן לא מתעדכן.</p>'+(C.connect?'<a class="yb" href="'+esc(C.connect)+'" target="_blank" rel="noopener">🔗 לחבר את היומן מחדש</a>':'');
+ if(!D.cal)h+='<p>היומן עוד לא מחובר. אחרי החיבור יופיעו כאן כל הפגישות שלך.</p><button type="button" class="yb" data-k="conn">🔌 לחבר את היומן</button>';
+ else if(!C.ok)h+='<p>החיבור ליומן של גוגל נותק, ולכן מה שכאן לא מתעדכן.</p>'+(C.connect?'<a class="yb" href="'+esc(C.connect)+'" target="_blank" rel="noopener">🔗 לחבר את היומן מחדש</a>':'');
  h+='<div class="calmode"><button type="button" data-mode="list" class="'+(mode==='list'?'on':'')+'">📋 רשימה</button><button type="button" data-mode="month" class="'+(mode==='month'?'on':'')+'">🗓️ חודש</button></div>';
  var days=[],by={};
  ev.forEach(function(e){var k=e.allDay?e.start:dk(new Date(e.start));if(!by[k]){by[k]=[];days.push(k);}by[k].push(e);});
@@ -13731,6 +13725,7 @@ function calSheet(all,mode,ym,sel){
   if(t.hasAttribute('data-d')){var k=t.getAttribute('data-d');close();return calSheet(false,'month',ym,k===sel?'':k);}
   var k2=t.getAttribute('data-k');
   if(k2==='')close();else if(k2==='all'){close();calSheet(true,'list');}
+  else if(k2==='conn'){close();if(typeof connSheet==='function')connSheet();}
  };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
@@ -13877,7 +13872,7 @@ function fcSheet(){
  on('icFcSales',function(){fcSheet();fcSend('אימון מכירות');});
  on('icFcCoach',function(){fcSheet();fcSend('אימון עסקי');});
  on('icFcPersonal',function(){fcSheet();fcSend('אימון אישי');});
- on('icTCal',function(){if(D.cal&&D.cal.events&&D.cal.events.length){calSheet(false);return;}var t=document.getElementById('gTasks');if(t)t.click();else calSheet(false);});
+ on('icTCal',function(){calSheet(false);});
 })();
 function fcBoot(){
  var r=document.getElementById('fcRow');if(!r||r.hidden)return;
@@ -18494,7 +18489,8 @@ function dmoIcons(){
  var h='<button type="button" class="ic" data-dic="fcs"><span class="c c-fcs">🎯</span>אימון מכירות</button>'
   +'<button type="button" class="ic" data-dic="fcc"><span class="c c-fcc">🧭</span>אימון עסקי</button>'
   +'<button type="button" class="ic" data-dic="fcp"><span class="c c-fcp">🌿</span>אימון אישי</button>'
-  +'<button type="button" class="ic" data-dic="notes"><span class="c c-dnote">📝</span>פתקים</button>';
+  +'<button type="button" class="ic" data-dic="notes"><span class="c c-dnote">📝</span>פתקים</button>'
+  +'<button type="button" class="ic" data-dic="cal"><span class="c c-gcal">📅</span>יומן</button>';
  ics.forEach(function(x,i){
   h+=x?'<button type="button" class="ic" data-dic="'+i+'"><span class="c c-dfill'+(x.url&&/ynet/.test(x.url)?' c-ynet':'')+'">'+(x.url&&/ynet/.test(x.url)?'ynet':esc(x.e))+'</span>'+esc(x.n)+'</button>'
       :'<button type="button" class="ic" data-dic="'+i+'"><span class="c c-add"><svg viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>להוסיף</button>';
@@ -18513,6 +18509,7 @@ function dmoIcons(){
    if(k==='fcc'){return dmoTrain('אימון עסקי');}
    if(k==='fcp'){return dmoTrain('אימון אישי');}
    if(k==='notes')return dmoNotes();
+   if(k==='cal')return dmoSheet('cal'); // 10.11: the demo calendar, made up meetings
    var x=dmoGet('dmoIcons',ics)[+k];
    if(x&&x.url){window.open(x.url,'_blank','noopener');return;}
    if(x){window.scrollTo({top:0,behavior:'smooth'});dmoAsk('תראה לי מה יש על '+x.n);return;}
@@ -18556,7 +18553,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="BAJSdIafAtGxgHzJr3tOJLTViE1Gkn6rNyAReKPb5ZiMM-6xXp2c1PD7V5VKOXkQRWLI9-Wdq7-Q4hyMCcYp2iQ";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
