@@ -4590,9 +4590,8 @@ ${require('./lib/home-ui.js').html}
       still reachable, it just does not sit on the way to everything else. -->
 
   <div class="sent" id="sentCard" hidden></div>
-<!--ITZIK:BEGIN-->
+<!-- 10.11.2026, Itzik: every monitor hides its tiles behind this button, like the demo (it was his copy only). -->
   <button type="button" id="bareBtn" class="morebtn">עוד כלים</button>
-<!--ITZIK:END-->
   <!--
     The music card is gone from here too. Itzik pointed out on 13.9 that the
     same thing is already announced in the messages, so the card was a second
@@ -19797,7 +19796,7 @@ function bareGet(){
  // so it never starts in it: 25.9, Ilay's first screen showed nothing but
  // the talk card, and his own tiles were there, hidden behind a switch he
  // did not have.
- if(INSTANCE&&INSTANCE.name!=='abaitzik')return false;
+ // 10.11.2026, Itzik: the customers too start with the tiles folded; the button (now on every page) opens them.
  try{return localStorage.getItem('bareHome')!=='0';}catch(e){return true;}
 }
 function bareApply(on){
