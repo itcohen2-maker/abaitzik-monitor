@@ -17277,6 +17277,7 @@ function boardSheet(wk){
   +'#bdGrid .nav{display:flex;gap:6px;align-items:center;justify-content:space-between;margin:6px 0}#bdGrid .nav button{flex:0 0 auto;min-width:44px}#bdGrid .nav b{font:800 14px Heebo,sans-serif}'
   +'#bdGrid .td{border:1px solid #f2c9cc;background:#fff8f8;border-radius:12px;padding:8px 10px;margin:6px 0;font:13px/1.5 Heebo,sans-serif;cursor:pointer}#bdGrid .td.w{border-color:#f3d7a8;background:#fffaf0}'
   +'#bdGrid .lg{font:12px/1.9 Heebo,sans-serif;color:#33405a}'
+  +'#bdGrid .ag{margin:8px 0;font:13px/1.45 Heebo,sans-serif}#bdGrid .ag>b{display:block;font:800 14px Heebo,sans-serif;color:#1a5fb4;margin-bottom:3px}#bdGrid .ai{background:#f6f8fb;border-radius:10px;padding:6px 10px;margin:4px 0;cursor:pointer}#bdGrid .ai .tm{display:inline-block;min-width:44px;font-weight:800}#bdGrid .ai .wh{font-weight:600;color:#1a2233}#bdGrid .ai small{color:#5a6577}'
   +'#bdEd{position:fixed;inset:0;background:rgba(10,20,40,.45);display:flex;align-items:flex-end;justify-content:center;z-index:99999}'
   +'#bdEd .box{background:#fff;border-radius:18px 18px 0 0;padding:16px;width:100%;max-width:520px;box-sizing:border-box;font:15px/1.5 Heebo,sans-serif;max-height:85vh;overflow:auto}'
   +'#bdEd label{display:flex;align-items:center;gap:8px;margin:10px 0;font-weight:600}#bdEd input[type=checkbox]{width:22px;height:22px}'
@@ -17292,6 +17293,15 @@ function boardSheet(wk){
     return '<td class="cl'+(c.s?' s-'+c.s:'')+(sat?' sat':'')+(d<T0?' pst':'')+'" data-r="'+ri+'" data-d="'+d+'">'+(c.s?IC[c.s]+(c.n>1?'<small>'+c.n+' · '+esc(c.t)+'</small>':'<small>'+esc(c.t)+'</small>'):'')+'</td>';}).join('')+'</tr>';}).join('')
   +'</tbody></table>'
   +'<div class="lg">✅ עלה · ❌ לא עלה · 🔜 יעלה לבד · ✋ אתה מעלה, יש תזכורת · ⏳ מחכה לאישור שלך · ⚠️ לא יעלה · ▶️ ממומן רץ · משבצת ריקה: לא מתוכנן</div>';
+ // 10.11, Itzik: "תשים את כל הזמנים ומה עולה, איזה סרטון". Day by day under the table: time, network, which video, state.
+ var AG=days.filter(function(d){return d>=T0||BD_WEEK<0;}).map(function(d){
+  var L2=[];ROWS.forEach(function(r,ri){if(r.kind==='always')return;var c=C[ri+'|'+d];if(!c||!c.s)return;
+   (c.items||[]).forEach(function(y){L2.push({t:y.time||c.t||'',r:r,y:y});});});
+  L2.sort(function(a,b){return (a.t||'99').localeCompare(b.t||'99');});
+  return '<div class="ag"><b>'+(d===T0?'היום':'יום '+DN[dw(d)])+' '+dm(d)+'</b>'+(L2.length?L2.map(function(x){
+   return '<div class="ai" data-r="'+ROWS.indexOf(x.r)+'" data-d="'+d+'"><span class="tm">'+esc(x.t||'')+'</span>'+IC[x.y.s]+' '+x.r.ic+' <b>'+esc(x.r.n)+'</b>'+(x.r.sub?' <small>'+esc(x.r.sub)+'</small>':'')
+    +'<br><span class="wh">'+esc(x.y.n||x.y.why)+'</span>'+(x.y.n?'<small> · '+esc(x.y.why)+'</small>':'')+'</div>';}).join(''):'<div class="ai"><small>לא מתוכנן כלום</small></div>')+'</div>';}).join('');
+ h+='<div id="bdAgenda"><div style="font:800 15px Heebo,sans-serif;margin:12px 0 2px">📋 מה עולה ומתי, יום אחרי יום</div>'+(adsOn?'<small style="display:block;color:#5a6577">▶️ 📣 הממומן רץ כל היום, '+adsOn+' מודעות באוויר</small>':'')+AG+'</div>';
  var G=[],GI={};todo.forEach(function(x){var k=x.r.id+'|'+x.y.s+'|'+x.y.why;if(!GI[k]){GI[k]={r:x.r,y:x.y,ds:[],d:x.d};G.push(GI[k]);}GI[k].ds.push(x.d);});
  todo=G;
  if(todo.length){
@@ -17359,6 +17369,7 @@ function boardSheet(wk){
   if(a==='prev'||a==='next'){w.remove();return boardSheet(BD_WEEK+(a==='next'?1:-1));}
   var tdo=ev.target.closest&&ev.target.closest('.td[data-t]');
   if(tdo){var x=todo[+tdo.getAttribute('data-t')];return edit(x.r,x.d);}
+  var ag=ev.target.closest&&ev.target.closest('.ai[data-r]');if(ag){var r0=ROWS[+ag.getAttribute('data-r')];if(r0)return edit(r0,ag.getAttribute('data-d'));}
   var td=ev.target.closest&&ev.target.closest('td[data-r]');if(!td)return;
   var r=ROWS[+td.getAttribute('data-r')];if(!r)return;
   if(td.classList.contains('nm')){w.remove();return openTab(r);}
