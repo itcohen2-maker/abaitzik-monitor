@@ -85,6 +85,7 @@
    +'<div class="meta">'
    +'<span class="nm">'+esc(it.name)+'</span>'
    +'<span class="st '+(posted?'ok':'wait')+'">'+(posted?'✅ עלה '+day(it.postedAt):(it.hold?'👀 לצפייה, ממתין לאישור שלך, לא יעלה לבד':'⏳ עוד לא עלה'))+'</span>'
+   +(it.note?'<div class="st wait" style="white-space:normal">'+esc(it.note)+'</div>':'')
    +'<div class="cap">'+esc(it.ig||'')+'</div>'
    +'<div class="row">'
    +'<button type="button" class="full" data-dl="'+esc(it.id)+'">💾 שמירה לטלפון</button>'
