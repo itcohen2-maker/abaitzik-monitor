@@ -2609,7 +2609,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-10T08:34:35.781Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-10T08:34:41.854Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4532,7 +4532,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='15e0f812a4';
+var CODE_ID='9237082df7';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11059,9 +11059,9 @@ function adminReqSheet(){
  var old=document.getElementById('arSheet');if(old)old.remove();
  var w=document.createElement('div');
  w.id='arSheet';w.className='ysheet';
- w.setAttribute('role','dialog');w.setAttribute('aria-label','לבקש מאיציק שינוי במוניטור');
- w.innerHTML='<div class="ycard"><b>לבקש מאיציק שינוי במוניטור</b>'
-  +'<small>מה תרצה לשנות במוניטור? כפתור, מסך, עיצוב, איך הוא עונה. הבקשה הולכת לאיציק, והוא מאשר. התשובה תגיע אליך בצ׳אט.</small>'
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','לבקש שינוי במוניטור');
+ w.innerHTML='<div class="ycard"><b>לבקש שינוי במוניטור</b>'
+  +'<small>מה תרצה לשנות במוניטור? כפתור, מסך, עיצוב, איך הוא עונה. הבקשה הולכת למנהל המערכת, והוא מאשר. התשובה תגיע אליך בצ׳אט.</small>'
   +'<textarea id="arText" rows="5" style="width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif" placeholder="לדוגמה: תוסיף לי כפתור של רשימת קניות"></textarea>'
   +'<small style="opacity:1;font-weight:600">איך זה ייראה? לדוגמה, כפתור שאוסף את כל ההדמיות של קולקציה:</small>'
   +'<div class="arEx">'
@@ -11092,7 +11092,7 @@ function adminReqSheet(){
   if(w.arKind)t+=' (בתור '+w.arKind+')';
   e.target.disabled=true;
   sendText('בקשה ממנהל','בקשה ממנהל: '+t,'משימה').then(function(){
-   markSent('text',t);arWaitMark();close();toast('נשלח לאיציק. התשובה תגיע בצ׳אט, והאריח יזכיר שהבקשה מחכה.');
+   markSent('text',t);arWaitMark();close();toast('נשלח למנהל המערכת. התשובה תגיע בצ׳אט, והאריח יזכיר שהבקשה מחכה.');
   }).catch(function(){e.target.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
  };
  document.body.appendChild(w);
@@ -11211,10 +11211,10 @@ function arWaitMark(){try{localStorage.setItem('arSent',String(Date.now()));}cat
 function arWaitShow(){
  var s=document.querySelector('#gAdminReq small');if(!s)return;
  var at=0;try{at=+localStorage.getItem('arSent')||0;}catch(e){}
- s.textContent='לבקש מאיציק שינוי במוניטור, והתשובה בצ׳אט';
+ s.textContent='לבקש שינוי במוניטור, והתשובה בצ׳אט';
  if(!at)return;
  if(Date.now()-at>172800000){try{localStorage.removeItem('arSent');}catch(e){}return;}
- s.textContent='הבקשה אצל איציק, מחכה לתשובה';
+ s.textContent='הבקשה אצל מנהל המערכת, מחכה לתשובה';
 }
 boot('arWait',arWaitShow);
 Array.prototype.forEach.call(document.querySelectorAll('.icEmpty'),function(b){
