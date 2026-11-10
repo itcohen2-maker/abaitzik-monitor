@@ -17435,7 +17435,7 @@ function boardSheet(wk){
   +'#bdEd input[type=time]{font:800 26px Heebo,sans-serif;padding:8px 12px;border:1px solid rgba(255,255,255,.15);border-radius:14px;background:#0d0f18;color:#b9c0ff;text-shadow:0 0 16px rgba(91,108,255,.6)}'
   +'#bdEd .row{border-top:1px solid rgba(255,255,255,.08);padding:8px 0}#bdEd .it{background:#0d0f18;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:10px 12px;margin:8px 0}</style>';
  var wkName=BD_WEEK===0?'השבוע':BD_WEEK===-1?'שבוע שעבר':BD_WEEK===1?'שבוע הבא':(BD_WEEK>0?'בעוד '+BD_WEEK+' שבועות':'לפני '+(-BD_WEEK)+' שבועות');
- var h=css+'<div class="ycard"><b>🎛️ לוח הפרסומים</b>'
+ var h=css+'<div class="ycard"><b>🎛️ לוח בקרה</b>'
   +'<div class="nav"><button type="button" class="yb" data-a="prev">‹ קודם</button><b>'+wkName+' · '+dm(days[0])+' עד '+dm(days[6])+'</b><button type="button" class="yb" data-a="next">הבא ›</button></div>'
   +'<div class="sum"><span>✅ עלו '+cnt.ok+'</span><span>🔜 יעלו לבד '+cnt.will+'</span><span>✋ אתה מעלה '+cnt.hand+'</span><span>⏳ לאישור '+cnt.wait+'</span><span style="background:#fde8e9">⚠️ לא יעלו '+cnt.bad+'</span></div>'
   +'<table><colgroup><col style="width:25%">'+days.map(function(){return '<col>';}).join('')+'</colgroup><thead><tr><th></th>'
@@ -17468,7 +17468,7 @@ function boardSheet(wk){
  h+=(L.at?'<small style="display:block;color:#8a5a00;margin-top:6px">יש שינוי ששמרת בטלפון ועוד לא נבנה בדף. השרת כבר עובד לפיו.</small>':'')
   +'<button type="button" class="yb yb2" data-a="more">📦 מלאי מוכן ואוטומציות</button>'
   +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
- var w=document.createElement('div');w.id='bdGrid';w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','לוח הפרסומים');
+ var w=document.createElement('div');w.id='bdGrid';w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','לוח בקרה');
  w.innerHTML=h;
  function keep(){L.at=new Date().toISOString();try{localStorage.setItem('postPlanLocal',JSON.stringify(L));}catch(e){}}
  function send(body){
@@ -17609,7 +17609,7 @@ function boardMore(){
  function card(r){return '<div class="bdC'+(r.o?' hasM':'')+'" data-tab="'+esc(r.tab)+'" data-id="'+esc(r.id)+'" role="button" tabindex="0">'
   +(r.o?'<input type="checkbox" data-mark="'+esc(r.id)+'" aria-label="להציג בטבלה"'+(hide[r.id]?'':' checked')+'>':'')
   +'<b>'+r.ic+' '+esc(r.n)+'</b><span class="bdN">'+r.cnt+'</span> <small style="display:inline">מוכנים</small><small>'+esc(r.how)+'</small></div>';}
- var h=css+'<div class="ycard"><b>🎛️ לוח הפרסומים</b>'
+ var h=css+'<div class="ycard"><b>🎛️ לוח בקרה</b>'
   +'<small>כל מה שמוכן ומה שעולה השבוע. לחיצה על כרטיס פותחת את המלאי המוכן. הסימון קובע מה מופיע בטבלה.</small>'
   +'<div style="font:800 15px Heebo,sans-serif;margin:10px 0 0">⏱️ עולה לפי לוח זמנים</div><div class="bdG">'+R.map(card).join('')+'</div>'
   +'<div style="font:800 15px Heebo,sans-serif;margin:10px 0 0">📅 השבוע</div><div class="bdW"><table><thead><tr><th></th>'
@@ -17628,7 +17628,7 @@ function boardMore(){
    +'<b>'+(a.bad?'⚠️ ':'🟢 ')+a.ic+' '+esc(a.n)+'</b><br><small style="color:#5a6577">'+esc(a.when)+' · פעולה אחרונה '+ago(a.at)+'</small>'
    +(a.last?'<br><small style="color:'+(a.bad?'#c0262d':'#33405a')+'">'+esc(a.last)+'</small>':'')+'</div>';}).join('');
  }
- var w=document.createElement('div');w.id='bdSheet';w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','לוח הפרסומים');
+ var w=document.createElement('div');w.id='bdSheet';w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','לוח בקרה');
  w.innerHTML=h;
  w.onclick=function(e){
   if(e.target===w||(e.target.getAttribute&&e.target.getAttribute('data-a')==='x')){w.remove();return boardSheet();}
