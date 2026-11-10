@@ -1,67 +1,81 @@
 [
- {
-  "date": "2026-11-02",
-  "name": "wa-site-workout-0211",
-  "topic": "האתר",
-  "file": "media/site-workout.mp4",
-  "caption": "אלה התרגילים שעזרו לי לעבור את התקופה הקשה. הם מתאימים לכל אדם, בכל מצב.\nhttps://abaitzik.com/?utm_source=wa_status"
- },
- {
-  "date": "2026-11-03",
-  "name": "wa-shachar-0311",
-  "topic": "שחר",
-  "file": "media/shachar-1.mp4?v=0311c",
-  "caption": "בניתי משהו חדש, ושמו שחר. הודעת בוקר שנותנת כוח לקום, ומישהו לדבר איתו בימים הקשים. פתוח עכשיו, נכנסים דרך האתר.\nhttps://abaitzik.com/?utm_source=wa_status"
- },
- {
-  "date": "2026-11-04",
-  "name": "wa-site-plate-0411",
-  "topic": "האתר",
-  "file": "media/site-plate.mp4",
-  "caption": "מה בצלחת: סיפורים קצרים על אוכל. אפשר לראות אותם באתר שלי, יחד עם האימונים וההרצאות.\nhttps://abaitzik.com/?utm_source=wa_status"
- },
- {
-  "date": "2026-11-05",
-  "name": "wa-monitor-0511",
-  "topic": "המוניטור",
-  "file": "media/monitor-0511-v7.mp4",
-  "caption": "מי לא שילם לך החודש? המוניטור יודע.\nלוח בקרה אחד לכל העסק: גבייה, לידים, יומן, הצעות מחיר, והצלבה של הבנק עם הנהלת החשבונות.\nואפשר פשוט לדבר איתו בוואטסאפ.\nפתרון מיידי, סדר מופתי.\nרוצה כזה לעסק שלך? https://it-solution.co.il/?utm_source=wa_status&utm_medium=status&utm_campaign=monitor0511"
- },
- {
-  "date": "2026-11-06",
-  "name": "wa-candle-0611",
-  "topic": "נרות",
-  "file": "media/candle-fri.mp4",
-  "caption": "ערב שבת. הכנתי כרטיס שבת שלום אישי, עם זמני הדלקת הנרות של העיר שלך. אפשר לשלוח אותו הלאה.\nhttps://candletimes.com/card/?utm_source=wa_status",
-  "posted": true,
-  "postedAt": "2026-11-06T21:19:33.007Z"
- },
- {
-  "date": "2026-11-10",
-  "name": "wa-monitor-1011",
-  "topic": "המוניטור",
-  "file": "media/monitor-1011-appt.mp4",
-  "caption": "קיבלת הודעה על תור לרופא שיניים? מעבירים אותה לוואטסאפ של המוניטור, וזהו.\nהוא מכניס את התור לתזכורות, ליומן גוגל ולרשימת התורים העתידיים.\nפתרון מיידי, סדר מופתי.\nרוצה כזה לעסק שלך? https://it-solution.co.il/?utm_source=wa_status&utm_medium=status&utm_campaign=monitor1011"
- },
- {
-  "date": "2026-11-12",
-  "name": "wa-monitor-1211",
-  "topic": "המוניטור",
-  "file": "media/monitor-1211.mp4",
-  "caption": "לקוח שעוד לא שילם? המוניטור מסדר את הגבייה, הלידים, היומן וההצעות במקום אחד.\nואפשר פשוט לדבר איתו בוואטסאפ.\nפתרון מיידי, סדר מופתי.\nרוצה כזה לעסק שלך? https://it-solution.co.il/?utm_source=wa_status&utm_medium=status&utm_campaign=monitor1211"
- },
- {
-  "date": "2026-11-13",
-  "name": "wa-candle-1311",
-  "topic": "נרות",
-  "file": "media/candle-1311.mp4",
-  "caption": "שבת שלום. זמני הדלקת הנרות לעיר שלך נמצאים באתר, ואפשר לשלוח הלאה כרטיס שבת שלום אישי.\nhttps://candletimes.com/card/?utm_source=wa_status"
- },
- {
-  "date": "2026-11-16",
-  "name": "wa-site-lecture-1611",
-  "topic": "האתר",
-  "file": "media/site-lectures-1611.mp4",
-  "caption": "ההרצאה שלי, כנגד כל הסיכויים, נמצאת באתר שלי, יחד עם האימונים ומה בצלחת. אפשר לראות, לשתף ולשלוח הלאה.\nhttps://abaitzik.com/?utm_source=wa_status"
- }
+  {
+    "date": "2026-11-02",
+    "name": "wa-site-workout-0211",
+    "topic": "האתר",
+    "file": "media/site-workout.mp4",
+    "caption": "אלה התרגילים שעזרו לי לעבור את התקופה הקשה. הם מתאימים לכל אדם, בכל מצב.\nhttps://abaitzik.com/?utm_source=wa_status"
+  },
+  {
+    "date": "2026-11-03",
+    "name": "wa-shachar-0311",
+    "topic": "שחר",
+    "file": "media/shachar-1.mp4?v=0311c",
+    "caption": "בניתי משהו חדש, ושמו שחר. הודעת בוקר שנותנת כוח לקום, ומישהו לדבר איתו בימים הקשים. פתוח עכשיו, נכנסים דרך האתר.\nhttps://abaitzik.com/?utm_source=wa_status"
+  },
+  {
+    "date": "2026-11-04",
+    "name": "wa-site-plate-0411",
+    "topic": "האתר",
+    "file": "media/site-plate.mp4",
+    "caption": "מה בצלחת: סיפורים קצרים על אוכל. אפשר לראות אותם באתר שלי, יחד עם האימונים וההרצאות.\nhttps://abaitzik.com/?utm_source=wa_status"
+  },
+  {
+    "date": "2026-11-05",
+    "name": "wa-monitor-0511",
+    "topic": "המוניטור",
+    "file": "media/monitor-0511-v7.mp4",
+    "caption": "מי לא שילם לך החודש? המוניטור יודע.\nלוח בקרה אחד לכל העסק: גבייה, לידים, יומן, הצעות מחיר, והצלבה של הבנק עם הנהלת החשבונות.\nואפשר פשוט לדבר איתו בוואטסאפ.\nפתרון מיידי, סדר מופתי.\nרוצה כזה לעסק שלך? https://it-solution.co.il/?utm_source=wa_status&utm_medium=status&utm_campaign=monitor0511"
+  },
+  {
+    "date": "2026-11-06",
+    "name": "wa-candle-0611",
+    "topic": "נרות",
+    "file": "media/candle-fri.mp4",
+    "caption": "ערב שבת. הכנתי כרטיס שבת שלום אישי, עם זמני הדלקת הנרות של העיר שלך. אפשר לשלוח אותו הלאה.\nhttps://candletimes.com/card/?utm_source=wa_status",
+    "posted": true,
+    "postedAt": "2026-11-06T21:19:33.007Z"
+  },
+  {
+    "date": "2026-11-10",
+    "name": "wa-monitor-1011",
+    "topic": "המוניטור",
+    "file": "media/monitor-1011-appt.mp4",
+    "caption": "קיבלת הודעה על תור לרופא שיניים? מעבירים אותה לוואטסאפ של המוניטור, וזהו.\nהוא מכניס את התור לתזכורות, ליומן גוגל ולרשימת התורים העתידיים.\nפתרון מיידי, סדר מופתי.\nרוצה כזה לעסק שלך? https://it-solution.co.il/?utm_source=wa_status&utm_medium=status&utm_campaign=monitor1011"
+  },
+  {
+    "date": "2026-11-11",
+    "name": "wa-site-1111",
+    "topic": "האתר",
+    "file": "media/site-1111.mp4",
+    "caption": "אימונים נגישים, תרגילים קצרים צעד אחר צעד, שמתאימים לכל אחד. כולם נמצאים באתר שלי, אפשר לראות ולשלוח הלאה.\nhttps://abaitzik.com/?utm_source=wa_status&utm_campaign=site1111"
+  },
+  {
+    "date": "2026-11-12",
+    "name": "wa-monitor-1211",
+    "topic": "המוניטור",
+    "file": "media/monitor-1211.mp4",
+    "caption": "לקוח שעוד לא שילם? המוניטור מסדר את הגבייה, הלידים, היומן וההצעות במקום אחד.\nואפשר פשוט לדבר איתו בוואטסאפ.\nפתרון מיידי, סדר מופתי.\nרוצה כזה לעסק שלך? https://it-solution.co.il/?utm_source=wa_status&utm_medium=status&utm_campaign=monitor1211"
+  },
+  {
+    "date": "2026-11-13",
+    "name": "wa-candle-1311",
+    "topic": "נרות",
+    "file": "media/candle-1311.mp4",
+    "caption": "שבת שלום. זמני הדלקת הנרות לעיר שלך נמצאים באתר, ואפשר לשלוח הלאה כרטיס שבת שלום אישי.\nhttps://candletimes.com/card/?utm_source=wa_status"
+  },
+  {
+    "date": "2026-11-15",
+    "name": "wa-site-1511",
+    "topic": "האתר",
+    "file": "media/site-1511.mp4",
+    "caption": "שבוע חדש, מתחילים בצעד קטן. האימונים, מה בצלחת וההרצאות שלי נמצאים כולם באתר, במקום אחד.\nhttps://abaitzik.com/?utm_source=wa_status&utm_campaign=site1511"
+  },
+  {
+    "date": "2026-11-16",
+    "name": "wa-site-lecture-1611",
+    "topic": "האתר",
+    "file": "media/site-lectures-1611.mp4",
+    "caption": "ההרצאה שלי, כנגד כל הסיכויים, נמצאת באתר שלי, יחד עם האימונים ומה בצלחת. אפשר לראות, לשתף ולשלוח הלאה.\nhttps://abaitzik.com/?utm_source=wa_status"
+  }
 ]

@@ -23,9 +23,11 @@ const S = stock.compute({
   st: rd(path.join(HERE, 'docs', 'status', 'queue.json'), []),
   nr: rd('/home/monitor/ner-queue.json', []),
   pl: rd(path.join(HERE, 'docs', 'plate', 'queue.json'), []),
+  ai: rd(path.join(HERE, 'docs', 'ai', 'queue.json'), []),
   li: rd(path.join(HERE, 'docs', 'linkedin', 'stock.json'), null),
 }, today);
 
+const HOW_AI = 'ערוץ ה AI עולה כסרטון אחד ביום לכל שפה עד שישי (שבת לא). פריט במצב hold לא עולה: להזכיר לאיציק בכרטיס אישור אחד קצר מה מחכה לאישורו. אם חסרים סרטונים, להכין תסריטים להקלטה לפי הסקיל ai-explainer-video ולהעלות לדרייב, ולבקש ממנו להקליט. לא להסיר hold בעצמו.';
 const HOW = {
   st: 'להכין סטטוסים לוואטסאפ לפי הסבב (ראשון שחר, שני האתר, שלישי המוניטור, רביעי שחר, חמישי המוניטור, שישי נרות, בלי שבת), סרטון חדש לכל יום, לתור docs/status/queue.json.',
   nr: 'להכין את השבוע הבא של candle.times (2 פוסטים ו 2 סטוריז ביום, עברית ואנגלית, בלי שבת וחג, דמויות חדשות) ולהכניס ל /home/monitor/ner-queue.json עם approved: true (הנרות עולים לבד בלי אישור, איציק 7.11), ואז node ner-post.js --mirror.',

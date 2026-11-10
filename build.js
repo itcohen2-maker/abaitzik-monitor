@@ -16895,7 +16895,7 @@ var VQ=null,VQT=0;
 // 7.11.2026: 📦 how far each queue reaches, the same lib/stock.js that stock-check.js runs every morning.
 var STOCK=(function(){var module={exports:{}};${fs.readFileSync(path.join(__dirname, 'lib', 'stock.js'), 'utf8')};return module.exports;})();
 function vqStockHtml(){
- var S=[];try{S=STOCK.compute({st:(VQ&&VQ.st)||[],nr:(VQ&&VQ.nr)||[],pl:(VQ&&VQ.pl)||[],li:(VQ&&VQ.li)||null},vqDay());}catch(e){return '';}
+ var S=[];try{S=STOCK.compute({st:(VQ&&VQ.st)||[],nr:(VQ&&VQ.nr)||[],pl:(VQ&&VQ.pl)||[],ai:(VQ&&VQ.ai)||[],li:(VQ&&VQ.li)||null},vqDay());}catch(e){return '';}
  return '<div class="vqStock" style="background:#f4f6f9;border-radius:12px;padding:8px 12px;margin:8px 0"><small style="display:block;font-weight:800;font-size:15px;color:#1a2233;margin:0 0 4px">📦 מלאי מוכן</small>'+S.map(function(c){return '<div style="font:600 14px Heebo,sans-serif;padding:3px 0;color:'+(c.low?'#b45309':'#15803d')+'">'+(c.low?'⚠️ ':'✓ ')+esc(c.title)+': '+esc(c.line)+'</div>';}).join('')+'<small style="display:block;color:#3a4458;margin-top:4px">כשמשהו חסר, המוניטור מזמין לבד עוד סרטונים כל בוקר.</small></div>';
 }
 function vqLoad(cb){
