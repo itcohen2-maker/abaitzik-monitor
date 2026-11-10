@@ -2625,7 +2625,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-10T09:24:42.087Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-10T09:25:44.612Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4548,7 +4548,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='f0555d9a75';
+var CODE_ID='18a4725f9b';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12531,6 +12531,8 @@ function nice(d) { var p = String(d).split('-'); return DAYS[dow(d)] + ' ' + (+p
 function short(d) { var p = String(d).split('-'); return (+p[2]) + '.' + (+p[1]); }
 function needed(today) { var out = []; for (var i = 0; i < 7; i++) { var d = addDay(today, i); if (dow(d) !== 6) out.push(d); } return out; }
 
+function daysToFriday(today) { var w = dow(today), n = w <= 5 ? 5 - w : 6, c = 0; for (var i = 0; i <= n; i++) { if (dow(addDay(today, i)) !== 6) c++; } return c; }
+
 function reach(dates, today, what) {
   var have = {}; dates.forEach(function (d) { if (d >= today) have[d] = 1; });
   var need = needed(today), until = '', missing = [];
@@ -12548,17 +12550,27 @@ function compute(Q, today) {
   var pl = (Q.pl || []).filter(function (x) { return !x.posted; }).length;
   var li = Q.li && typeof Q.li === 'object' && !Array.isArray(Q.li) ? Q.li : null;
   var a = reach(st, today, 'סטטוסים'), b = reach(nr, today, 'פריטים');
-  return [
+  var ai = Q.ai && Q.ai.length ? Q.ai : null, aiOut = [];
+  if (ai) {
+    var need = daysToFriday(today);
+    ['he', 'en'].forEach(function (lg) {
+      var mine = ai.filter(function (x) { return x.lang === lg && !x.posted && !x.failed; });
+      var ready = mine.filter(function (x) { return !x.hold; }).length, held = mine.length - ready;
+      var line = (lg === 'he' ? 'עברית' : 'אנגלית') + ': ' + ready + ' מוכנים' + (held ? ', ' + held + ' מחכים לאישורך' : '') + ', צריך ' + need + ' עד שישי';
+      aiOut.push({ id: 'ai-' + lg, title: '🤖 ערוץ AI', line: line, low: ready < need, held: held, need: need, ready: ready });
+    });
+  }
+  return aiOut.concat([
     { id: 'st', title: '📲 סטטוס', line: a.line, low: a.low },
     { id: 'nr', title: '🕯️ נרות', line: b.line, low: b.low },
     { id: 'pl', title: '🍽️ מה בצלחת', line: pl ? pl + ' סטוריז מוכנים בתור' : 'אין סטוריז מוכנים', low: pl < 4 },
-  ].concat(li ? [{ id: 'li', title: '💼 לינקדין', line: li.total ? li.total + ' פוסטים בתור' + (li.last ? ' עד ' + nice(li.last) : '') + (li.waiting ? ', ' + li.waiting + ' מחכים לאישורך' : '') : 'אין פוסטים בתור', low: (li.total || 0) < 2 }] : []);
+  ].concat(li ? [{ id: 'li', title: '💼 לינקדין', line: li.total ? li.total + ' פוסטים בתור' + (li.last ? ' עד ' + nice(li.last) : '') + (li.waiting ? ', ' + li.waiting + ' מחכים לאישורך' : '') : 'אין פוסטים בתור', low: (li.total || 0) < 2 }] : []));
 }
 
 if (typeof module !== 'undefined') module.exports = { compute: compute };
 ;return module.exports;})();
 function vqStockHtml(){
- var S=[];try{S=STOCK.compute({st:(VQ&&VQ.st)||[],nr:(VQ&&VQ.nr)||[],pl:(VQ&&VQ.pl)||[],li:(VQ&&VQ.li)||null},vqDay());}catch(e){return '';}
+ var S=[];try{S=STOCK.compute({st:(VQ&&VQ.st)||[],nr:(VQ&&VQ.nr)||[],pl:(VQ&&VQ.pl)||[],ai:(VQ&&VQ.ai)||[],li:(VQ&&VQ.li)||null},vqDay());}catch(e){return '';}
  return '<div class="vqStock" style="background:#f4f6f9;border-radius:12px;padding:8px 12px;margin:8px 0"><small style="display:block;font-weight:800;font-size:15px;color:#1a2233;margin:0 0 4px">📦 מלאי מוכן</small>'+S.map(function(c){return '<div style="font:600 14px Heebo,sans-serif;padding:3px 0;color:'+(c.low?'#b45309':'#15803d')+'">'+(c.low?'⚠️ ':'✓ ')+esc(c.title)+': '+esc(c.line)+'</div>';}).join('')+'<small style="display:block;color:#3a4458;margin-top:4px">כשמשהו חסר, המוניטור מזמין לבד עוד סרטונים כל בוקר.</small></div>';
 }
 function vqLoad(cb){
