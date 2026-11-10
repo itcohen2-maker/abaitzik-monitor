@@ -17181,9 +17181,11 @@ function boardSheet(wk){
     return '<td class="cl'+(c.s?' s-'+c.s:'')+(sat?' sat':'')+(d<T0?' pst':'')+'" data-r="'+ri+'" data-d="'+d+'">'+(c.s?IC[c.s]+(c.n>1?'<small>'+c.n+' · '+esc(c.t)+'</small>':'<small>'+esc(c.t)+'</small>'):'')+'</td>';}).join('')+'</tr>';}).join('')
   +'</tbody></table>'
   +'<div class="lg">✅ עלה · ❌ לא עלה · 🔜 יעלה לבד · ✋ אתה מעלה, יש תזכורת · ⏳ מחכה לאישור שלך · ⚠️ לא יעלה · ▶️ ממומן רץ · משבצת ריקה: לא מתוכנן</div>';
+ var G=[],GI={};todo.forEach(function(x){var k=x.r.id+'|'+x.y.s+'|'+x.y.why;if(!GI[k]){GI[k]={r:x.r,y:x.y,ds:[],d:x.d};G.push(GI[k]);}GI[k].ds.push(x.d);});
+ todo=G;
  if(todo.length){
-  h+='<div style="font:800 15px Heebo,sans-serif;margin:12px 0 2px">⚠️ מה לא יעלה, ולמה ('+todo.length+')</div>'
-   +todo.slice(0,12).map(function(x,k){return '<div class="td'+(x.y.s==='wait'?' w':'')+'" data-t="'+k+'">'+IC[x.y.s]+' <b>'+x.r.ic+' '+esc(x.r.n)+' · '+(x.d===T0?'היום':DN[dw(x.d)]+' '+dm(x.d))+'</b><br>'+esc(x.y.why)+(x.y.n?'<br><small>'+esc(x.y.n)+'</small>':'')+'<br><small style="color:#1a5fb4;font-weight:700">לחיצה כדי לטפל ›</small></div>';}).join('')
+  h+='<div style="font:800 15px Heebo,sans-serif;margin:12px 0 2px">⚠️ מה לא יעלה, ולמה</div>'
+   +todo.slice(0,12).map(function(x,k){return '<div class="td'+(x.y.s==='wait'?' w':'')+'" data-t="'+k+'">'+IC[x.y.s]+' <b>'+x.r.ic+' '+esc(x.r.n)+' · '+x.ds.map(function(d){return d===T0?'היום':DS[dw(d)]+' '+dm(d);}).join(', ')+'</b><br>'+esc(x.y.why)+(x.y.n&&x.ds.length===1?'<br><small>'+esc(x.y.n)+'</small>':'')+'<br><small style="color:#1a5fb4;font-weight:700">לחיצה כדי לטפל ›</small></div>';}).join('')
    +(todo.length>12?'<small>ועוד '+(todo.length-12)+'</small>':'');
  }else h+='<div style="margin:10px 0;font:700 14px Heebo,sans-serif;color:#1b7f3b">✅ כל מה שמתוכנן השבוע יעלה.</div>';
  h+=(L.at?'<small style="display:block;color:#8a5a00;margin-top:6px">יש שינוי ששמרת בטלפון ועוד לא נבנה בדף. השרת כבר עובד לפיו.</small>':'')
