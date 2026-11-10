@@ -176,6 +176,32 @@ function openBytes(buf) {
 }
 
 /*
+  A file whose NAME is sealed too (10.11.2026): "ENC2" + 12 byte IV + AES-GCM of
+  [2 byte name length][name, utf8][file bytes] + tag. The page then sends ntfy a random name, so the
+  real one never leaves the browser in the clear. Returns { data, name } (name is null for an old
+  "ENC1" or an unsealed file, whose name is the one ntfy carried), or null when it does not verify.
+  The name is made safe here: no folders, no characters a path cannot hold, a sane length.
+*/
+function safeName(n) {
+  const base = String(n || '').split(/[\\/]/).pop().replace(/[\x00-\x1f:*?"<>|]/g, '_').trim().slice(0, 180);
+  return base && base !== '.' && base !== '..' ? base : 'file';
+}
+function openFile(buf) {
+  if (Buffer.isBuffer(buf) && buf.length >= 4 + 12 + 16 + 2 && buf.subarray(0, 4).toString('latin1') === 'ENC2') {
+    try {
+      const d = crypto.createDecipheriv('aes-256-gcm', key(), buf.subarray(4, 16));
+      d.setAuthTag(buf.subarray(buf.length - 16));
+      const plain = Buffer.concat([d.update(buf.subarray(16, buf.length - 16)), d.final()]);
+      const len = plain.readUInt16BE(0);
+      if (2 + len > plain.length) return null;
+      return { name: safeName(plain.subarray(2, 2 + len).toString('utf8')), data: plain.subarray(2 + len) };
+    } catch (e) { return null; }
+  }
+  const data = openBytes(buf);
+  return data ? { name: null, data } : null;
+}
+
+/*
   Files, 27.9. Itzik's chat attachments sat in docs/files, readable by anyone
   with the address, a hospital appointment among them. They are sealed the same
   way as the data, as bytes: a 12 byte IV, then the ciphertext and its tag. The
@@ -190,7 +216,7 @@ function fileId(name) {
   return crypto.createHmac('sha256', key()).update('file:' + name).digest('hex').slice(0, 24);
 }
 
-module.exports = { enabled, seal, open, openMessage, openBytes, sealBytes, fileId, normalize, pageParams,
+module.exports = { enabled, seal, open, openMessage, openBytes, openFile, safeName, sealBytes, fileId, normalize, pageParams,
   NEW_ROUNDS: ROUNDS, LEGACY_ROUNDS,
   get rounds() { return params().rounds; },
   saltB64: () => salt().toString('base64') };

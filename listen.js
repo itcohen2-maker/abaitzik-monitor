@@ -398,26 +398,32 @@ function joinSlices(m) {
 }
 
 async function saveAttachment(m) {
-  if (!PART_RE.test(String(m.attachment.name || ''))) {
-    m.attachment = Object.assign({}, m.attachment, { name: freeName(String(m.attachment.name || 'file')) });
-  }
-  const out = path.join(DROP, m.attachment.name);
+  // What ntfy carried: the real name, or, for a sealed file, a random one (and the .partNofM tail).
+  const sent = String(m.attachment.name || 'file');
   const res = await fetch(m.attachment.url);
   const bin = Buffer.from(await res.arrayBuffer());
   const expected = Number(m.attachment.size) || 0;
   // The last slice of a sliced file can be a few bytes, so a slice is judged
   // only against the size ntfy says it has.
-  const slice = PART_RE.test(m.attachment.name);
+  const slice = PART_RE.test(sent);
   const real = res.ok && (bin.length > 1024 || (slice && expected > 0 && bin.length === expected))
     && (!expected || bin.length >= expected * 0.9);
-  // 10.11.2026: a sealed file ("ENC1", see sealBlob in build.js) is opened here. The size checks above
-  // judged what ntfy holds; what is written is the real file. One that does not verify is a loss.
-  const data = real ? gateSeal.openBytes(bin) : null;
-  if (real && data) {
+  // 10.11.2026: a sealed file ("ENC1" or "ENC2", see sealBlob in build.js) is opened here. The size checks
+  // above judged what ntfy holds; what is written is the real file, under the real name when it was sealed
+  // inside (ENC2, plus the slice tail from the sent name). One that does not verify is a loss.
+  const opened = real ? gateSeal.openFile(bin) : null;
+  if (real && opened) {
+    let name = sent;
+    if (opened.name) {
+      const hit = PART_RE.exec(sent);
+      name = hit ? opened.name + '.part' + hit[2] + 'of' + hit[3] : opened.name;
+    }
+    if (!PART_RE.test(name)) name = freeName(name);
+    m.attachment = Object.assign({}, m.attachment, { name: name });
     fs.mkdirSync(DROP, { recursive: true });
-    fs.writeFileSync(out, data);
-    say('קובץ נשמר: ' + m.attachment.name + ' (' + data.length + ')');
-    logPull('file', m.attachment.name);
+    fs.writeFileSync(path.join(DROP, name), opened.data);
+    say('קובץ נשמר: ' + name + ' (' + opened.data.length + ')');
+    logPull('file', name);
     return true;
   }
   // Three hours is all ntfy keeps an attachment. Listening removes the reason

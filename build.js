@@ -6782,20 +6782,28 @@ function sendFiles(list, note) {
    written, so everything after the listener sees the real bytes. The file name still travels in
    the clear, ntfy takes it as a header, so a sensitive file should have a plain name.
  */
- function sealBlob(b) {
+ // 10.11.2026, second step: the name is sealed too. ntfy gets a random name (and the .partNofM tail, which
+ // the listener needs to count slices), and the real name travels inside the sealed bytes as
+ // ENC2: IV, then AES-GCM of [2 byte length][name][file]. listen.js saveAttachment puts it back.
+ function sealBlob(b, realName) {
   if (!SEALING()) return Promise.resolve(b);
   return b.arrayBuffer().then(function (buf) {
+   var nm = new TextEncoder().encode(realName);
+   var plain = new Uint8Array(2 + nm.length + buf.byteLength);
+   plain[0] = nm.length >> 8; plain[1] = nm.length & 255; plain.set(nm, 2); plain.set(new Uint8Array(buf), 2 + nm.length);
    var iv = crypto.getRandomValues(new Uint8Array(12));
-   return crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, GKEY, buf).then(function (ct) {
-    return new Blob([new TextEncoder().encode('ENC1'), iv, new Uint8Array(ct)]);
+   return crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, GKEY, plain).then(function (ct) {
+    return new Blob([new TextEncoder().encode('ENC2'), iv, new Uint8Array(ct)]);
    });
   });
  }
  function putBlob(b0, name, i) {
-  var b = b0;
-  return sealBlob(b0).then(function (sb) {
+  var b = b0, sent = name;
+  var base = name.replace(/\\.part\\d+of\\d+$/, ''), tail = name.slice(base.length);
+  return sealBlob(b0, base).then(function (sb) {
    b = sb;
-   return fetch('https://ntfy.sh/' + NTFYIN() + '?filename=' + encodeURIComponent(name),
+   if (SEALING()) sent = 'f' + Math.floor(Math.random() * 4294967296).toString(16) + tail;
+   return fetch('https://ntfy.sh/' + NTFYIN() + '?filename=' + encodeURIComponent(sent),
     { method: 'PUT', headers: { Title: 'file ' + gid + ' ' + (i + 1) + '/' + n }, body: sb });
   })
    .then(function (r) {

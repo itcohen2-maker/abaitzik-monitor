@@ -203,3 +203,46 @@ test('the page format (WebCrypto) opens on the server: message and file', async 
     assert.ok(c.mod.openBytes(plain) === plain);
   } finally { c.done(); }
 });
+
+// 10.11.2026, second step: the file NAME is sealed inside (ENC2), built here the page's way (sealBlob in
+// build.js). The server must return the real name and bytes, make a hostile name safe, keep old ENC1
+// files and plain bytes working, and refuse a damaged one.
+test('ENC2: the sealed name and bytes open, a hostile name is made safe, old formats still pass', async () => {
+  const words = 'שלום עולם אחד שניים שלוש';
+  const salt = crypto.randomBytes(24);
+  const c = copyWith({ 'gate-key.txt': words + '\n', 'gate-params.json': JSON.stringify({ salt: salt.toString('base64'), rounds: 100000 }) });
+  try {
+    const subtle = crypto.webcrypto.subtle;
+    const base = await subtle.importKey('raw', new TextEncoder().encode(c.mod.normalize(words)), 'PBKDF2', false, ['deriveKey']);
+    const k = await subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
+    async function pageSeal(realName, file) {
+      const nm = new TextEncoder().encode(realName);
+      const plain = new Uint8Array(2 + nm.length + file.length);
+      plain[0] = nm.length >> 8; plain[1] = nm.length & 255; plain.set(nm, 2); plain.set(file, 2 + nm.length);
+      const iv = crypto.webcrypto.getRandomValues(new Uint8Array(12));
+      const ct = new Uint8Array(await subtle.encrypt({ name: 'AES-GCM', iv }, k, plain));
+      return Buffer.concat([Buffer.from('ENC2'), Buffer.from(iv), Buffer.from(ct)]);
+    }
+    const file = crypto.randomBytes(3000);
+    const r = c.mod.openFile(await pageSeal('דוח מעבדה 12.pdf', file));
+    assert.equal(r.name, 'דוח מעבדה 12.pdf');
+    assert.ok(r.data.equals(file));
+    // a name that tries to leave the folder
+    const evil = c.mod.openFile(await pageSeal('..\..\etc/passwd', file));
+    assert.equal(evil.name, 'passwd');
+    assert.equal(c.mod.safeName('a:b*c?.txt'), 'a_b_c_.txt');
+    assert.equal(c.mod.safeName('..'), 'file');
+    assert.equal(c.mod.safeName(''), 'file');
+    // damaged: refused
+    const sealed = await pageSeal('x.txt', file);
+    sealed[sealed.length - 1] ^= 1;
+    assert.equal(c.mod.openFile(sealed), null);
+    // old ENC1 and unsealed bytes keep their meaning
+    const enc1 = Buffer.concat([Buffer.from('ENC1'), c.mod.sealBytes(Buffer.from('hello world, this is a file body'))]);
+    const o1 = c.mod.openFile(enc1);
+    assert.equal(o1.name, null); assert.equal(o1.data.toString(), 'hello world, this is a file body');
+    const raw = crypto.randomBytes(200);
+    const o2 = c.mod.openFile(raw);
+    assert.equal(o2.name, null); assert.ok(o2.data.equals(raw));
+  } finally { c.done(); }
+});
