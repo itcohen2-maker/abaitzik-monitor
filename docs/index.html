@@ -2644,7 +2644,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-10T16:20:21.302Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-10T16:20:41.887Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4560,7 +4560,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='aa185c6e47';
+var CODE_ID='022f5a6afe';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11152,7 +11152,7 @@ function campSheet(){
  var w=document.createElement('div');
  w.id='cpSheet';w.className='ysheet';
  w.setAttribute('role','dialog');w.setAttribute('aria-label','קמפיינים');
- var kinds=['מודעה ממומנת','סטורי','ריל','פוסט','קרוסלה','סרטון מכל החומרים','רק להעלות סרטון מסוים לאינסטגרם'];
+ var kinds=['מודעה ממומנת','סטורי','ריל','פוסט','קרוסלה','סרטון מכל החומרים','להכין סרטון מסוים להעלאה לאינסטגרם'];
  w.innerHTML='<div class="ycard"><b>📣 קמפיינים</b>'
   +'<small>מעלים תמונות או סרטון, בוחרים מה לעשות איתם, וכותבים מה חשוב. אני מכין טיוטה: מטרה, קהל, תקציב מוצע, כמה גרסאות כיתוב ותיאור לפוסט. שום דבר לא עולה בלי אישור שלך.</small>'
   +'<button type="button" class="yb yb2" data-a="pick">📎 לבחור תמונות או סרטון</button>'

@@ -15351,7 +15351,7 @@ function campSheet(){
  var w=document.createElement('div');
  w.id='cpSheet';w.className='ysheet';
  w.setAttribute('role','dialog');w.setAttribute('aria-label','קמפיינים');
- var kinds=['מודעה ממומנת','סטורי','ריל','פוסט','קרוסלה','סרטון מכל החומרים','רק להעלות סרטון מסוים לאינסטגרם'];
+ var kinds=['מודעה ממומנת','סטורי','ריל','פוסט','קרוסלה','סרטון מכל החומרים','להכין סרטון מסוים להעלאה לאינסטגרם'];
  w.innerHTML='<div class="ycard"><b>📣 קמפיינים</b>'
   +'<small>מעלים תמונות או סרטון, בוחרים מה לעשות איתם, וכותבים מה חשוב. אני מכין טיוטה: מטרה, קהל, תקציב מוצע, כמה גרסאות כיתוב ותיאור לפוסט. שום דבר לא עולה בלי אישור שלך.</small>'
   +'<button type="button" class="yb yb2" data-a="pick">📎 לבחור תמונות או סרטון</button>'
