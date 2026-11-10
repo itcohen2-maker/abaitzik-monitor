@@ -836,6 +836,8 @@ function build() {
       return { at: (e && e.at) || '', ok: !st || !!st.ok, connect: (st && !st.ok && st.connect) || '',
         events: e ? e.events.filter((x) => Date.parse(x.end || x.start) >= from) : [] };
     })(),
+    // 10.11.2026: 📊 מצב הקמפיינים, the copy ads-sync.js keeps (numbers only, no token).
+    ads: (() => { try { return JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'ads', 'status.json'), 'utf8')); } catch (e) { return null; } })(),
     // 7.11.2026: a customer's key for the fast chat on wa-bridge (data/fc-key.txt, sealed like the rest of D).
     fcKey: inst.name === 'abaitzik' ? '' : (() => { try { const k = fs.readFileSync(path.join(inst.dataPath, 'fc-key.txt'), 'utf8').trim(); return /^[a-f0-9]{24,64}$/.test(k) ? k : ''; } catch (e) { return ''; } })(),
     // 7.11.2026: 🔌 חיבורים, what is connected and a connect link for each (lib/connections.js). His copy only.
@@ -1357,6 +1359,8 @@ const TENANT_TILES = {
   gShopList: ['gShop', '🛒 קניות', 'הרשימה שלך, מסמנים מה נקנה'],
   // 10.11.2026, Itzik: what the quote promises (a campaign draft, captions, a post description) is on every monitor by default.
   gCamp: ['g13', '📣 קמפיינים', 'מעלים תמונות או סרטון, ואני מכין טיוטה'],
+  // 10.11.2026, Itzik, for Ilay: his own campaigns from his ad account, read only (ads-sync.js, data/ads/status.json).
+  gAds: ['g13', '📊 מצב הקמפיינים', 'מה רץ, כמה הוצא, כמה לידים'],
 };
 // With no screens chosen at intake, only the tiles that fit any work. The whole
 // catalog gave a phone only customer "connect the computer", a client follow up
@@ -15331,6 +15335,47 @@ function campSheet(){
  }).catch(function(){});
 }
 on('gCamp',campSheet);
+// 10.11.2026, Itzik, for Ilay: "📊 מצב הקמפיינים", what runs in his ad account, read only (ads-sync.js).
+function adsSheet(){
+ var old=document.getElementById('adSheet');if(old)old.remove();
+ var a=D.ads,w=document.createElement('div');
+ w.id='adSheet';w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','מצב הקמפיינים');
+ var ST={ACTIVE:'✅ פעיל',PAUSED:'⏸️ מושהה',CAMPAIGN_PAUSED:'⏸️ מושהה',ADSET_PAUSED:'⏸️ מושהה',ARCHIVED:'ארכיון',DELETED:'נמחק',IN_PROCESS:'בבדיקה',WITH_ISSUES:'⚠️ יש בעיה',PENDING_REVIEW:'בבדיקה של מטא',DISAPPROVED:'⚠️ נדחה'};
+ function m(n,c){n=Number(n)||0;return (Math.round(n*100)/100).toLocaleString('he-IL')+(c==='ILS'?' ₪':(c?' '+c:''));}
+ function when(s){try{var d=new Date(s);return d.toLocaleDateString('he-IL',{day:'numeric',month:'numeric'})+' '+d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});}catch(e){return '';}}
+ var h='<div class="ycard"><b>📊 מצב הקמפיינים</b>';
+ if(!a||!a.ok){
+  var why=!a||a.why==='none'?'עוד אין חיבור לפייסבוק. לוחצים פעם אחת, מתחברים ומאשרים, והקמפיינים שלך יופיעו כאן.'
+   :a.why==='revoked'?'החיבור לפייסבוק נותק. לוחצים ומתחברים שוב.'
+   :'פייסבוק לא נתן הרשאה לקרוא את חשבון המודעות. לוחצים, מתחברים שוב ומסמנים את חשבון המודעות.';
+  h+='<small style="opacity:1">'+esc(why)+'</small>';
+  if(a&&a.connect)h+='<a class="yb yb1" style="display:block;text-align:center;text-decoration:none" rel="noreferrer" referrerpolicy="no-referrer" href="'+esc(a.connect)+'">התחברות עם פייסבוק</a>';
+ }else{
+  h+='<small>קריאה בלבד, שום דבר לא משתנה בחשבון. שבעת הימים האחרונים. עודכן '+esc(when(a.at))+'.</small>';
+  (a.accounts||[]).forEach(function(ac){
+   h+='<div style="margin:10px 0 4px;font:700 15px Heebo,sans-serif">'+esc(ac.name||ac.id)+'</div>';
+   if(!ac.campaigns||!ac.campaigns.length){h+='<small>אין קמפיינים בחשבון הזה.</small>';return;}
+   ac.campaigns.forEach(function(c){
+    h+='<details class="adC" style="border:1px solid #dde;border-radius:12px;padding:8px 10px;margin:6px 0">'
+     +'<summary style="cursor:pointer;font:600 14px Heebo,sans-serif">'+esc(c.name)+' · '+esc(ST[c.status]||c.status)+'</summary>'
+     +'<div style="font:14px/1.7 Heebo,sans-serif;margin-top:6px">'
+     +'הוצאה ב 7 ימים: <b>'+m(c.spend7,ac.currency)+'</b><br>'
+     +'היום: '+m(c.spendToday,ac.currency)+'<br>'
+     +'לידים: <b>'+(c.leads7||0)+'</b>'+(c.leads7?' · עלות לליד '+m(c.cpl7,ac.currency):'')+'<br>'
+     +(c.msgs7?'שיחות שנפתחו: '+c.msgs7+'<br>':'')
+     +'לחיצות: '+(c.clicks7||0)+' · חשיפות: '+(c.impr7||0).toLocaleString('he-IL')+'<br>'
+     +(c.budget?'תקציב יומי: '+m(c.budget,ac.currency):(c.budgetLife?'תקציב כולל: '+m(c.budgetLife,ac.currency):'תקציב ברמת סדרת המודעות'))
+     +'</div></details>';
+   });
+  });
+  if(!(a.accounts||[]).length)h+='<small>החיבור עובד, אבל לא נמצא חשבון מודעות. בהתחברות הבאה מסמנים את חשבון המודעות.</small>';
+ }
+ h+='<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+ w.innerHTML=h;
+ w.onclick=function(e){if(e.target===w||(e.target.getAttribute&&e.target.getAttribute('data-a')==='x'))w.remove();};
+ document.body.appendChild(w);
+}
+on('gAds',adsSheet);
 // 24.10: the tile says the request is with the owner, for two days after it was sent.
 function arWaitMark(){try{localStorage.setItem('arSent',String(Date.now()));}catch(e){}arWaitShow();}
 function arWaitShow(){
