@@ -2701,7 +2701,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-10T20:01:48.175Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-10T20:12:02.301Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2950,7 +2950,7 @@ try{
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות לשיפור המוניטור</b><small>מה עוד המסך הזה יכול לעשות</small></button>
   <button type="button" class="gt gMed" data-grp="day" id="gMed"><b>🩺 אחרי הניתוח השני</b><small>ממוספר. המסמכים מהביקורת אצל הפרופסור</small></button>
   <button type="button" class="gt gWin" data-grp="net" id="gWin" data-upd="20261106-win03" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
-  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1" data-upd="20261109-auto"><b>🎬 הסרטונים</b><small>רילים, רילים עתידיים, סטטוס, נרות, מה בצלחת, שחר וקמפיין</small></button>
+  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1" data-upd="20261110-ai5"><b>🎬 הסרטונים</b><small>רילים, רילים עתידיים, סטטוס, נרות, מה בצלחת, שחר וקמפיין</small></button>
   <button type="button" class="gt gGviya" data-grp="work" id="gGviya" data-new="1"><b>📞 גבייה, יואל</b><small>דף שיואל מסמן, כל סימון מעדכן אותך</small></button>
   <button type="button" class="gt gShop" data-grp="home" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
   <button type="button" class="gt gBoyGeorge" data-grp="home" id="gBoyGeorge" data-new="1" data-files="boy-george-ticket-1.jpeg,boy-george-ticket-2.jpeg" data-upd="f1793646431"><b>🎤 בוי ג׳ורג׳</b><small>שני הכרטיסים להופעה ב-7.11, מנורה מבטחים</small></button>
@@ -3055,7 +3055,14 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-
+<div class="alerts" id="pushBox" hidden>
+ <div>
+  <b>התראות לטלפון</b>
+  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
+ </div>
+ <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
+ <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
+</div>
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4615,7 +4622,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='6e5597fe5c';
+var CODE_ID='d1701a8d44';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10930,6 +10937,11 @@ function storySheet(){
 }
 on('gStory',storySheet);
 var FUT_ITEMS=[
+{n:'ai1',t:'ערוץ AI 1: גוגל מכבה את הבינה המלאכותית לתלמידים (כ 40 שניות, אקטואלי)',he:'ערוץ AI 1: גוגל מכבה את הבינה המלאכותית לתלמידים (כ 40 שניות, אקטואלי)\n\nבתי ספר שלא ירצו בינה מלאכותית, יאבדו גם את החיפוש של גוגל.\n\nככה גוגל הודיעה ב 3 בנובמבר: בחשבונות של תלמידים בארצות הברית, ג׳מיני והבינה המלאכותית בחיפוש יהיו כבויים, עד שמנהל בית הספר יפעיל אותם.\n\nאז למה זה נוגע גם בחיפוש?\n\nכי גוגל אומרת שהבינה המלאכותית כבר חלק מהחיפוש עצמו. בית ספר שמשאיר אותה כבויה, מוותר גם על החיפוש לתלמידים.\n\nלפי הדיווחים זה יתחיל בתחילת 2027, ועדיין לא ברור מה יהיה עם חשבונות הבית.\n\nבקיצור, בית הספר מחליט, והמחיר הוא החיפוש.\n\nמה הייתם בוחרים לילדים שלכם, חיפוש בלי בינה מלאכותית, או הכל פתוח?\n\nמקור (לא להקריא): הודעת גוגל מ 3.11.2026 כפי שדווחה ב The Next Web. מועד ההפעלה לפי דיווחים.'},
+{n:'ai2',t:'ערוץ AI 2: איך וייז יודע שיש פקק (כ 45 שניות, בסגנון טום)',he:'ערוץ AI 2: איך וייז יודע שיש פקק (כ 45 שניות, בסגנון טום)\n\nוייז לא רואה את הפקק. הוא שומע אותו, מהטלפונים של כולם.\n\nאז איך זה עובד? כל טלפון עם וייז שולח את המיקום שלו כל כמה שניות. מהמסלולים האלה השרת מחשב מהירות ממוצעת, לכל קטע כביש קטן.\n\nאחרי זה הוא משווה לקצב הרגיל של אותו קטע, שהוא כבר מכיר מההיסטוריה של נהגים. אם עכשיו נוסעים הרבה יותר לאט מהרגיל, יש פקק.\n\nחמישים קמש בכביש אחד זה פקק, ובכביש אחר זה מהר.\n\nולמה הוא שולח את כולם לאותו רחוב צדדי? כי כל הנהגים מקבלים אותה המלצה בבת אחת, והרחוב הצדדי נהיה פקק חדש.\n\nבקיצור, וייז לא יודע איפה הפקק. הוא יודע איפה כולם נוסעים לאט.\n\nאתם סומכים עליו תמיד, או לפעמים בוחרים בעצמכם?\n\nמקור (לא להקריא): הסבר של וייז לשותפים ופורום התמיכה שלו (אין תיעוד טכני רשמי). המשפט על הרחוב הצדדי הוא הסבר, לא מחקר.'},
+{n:'ai3',t:'ערוץ AI 3: קוד QR הוא לא קוד סודי (כ 45 שניות, בסגנון טום)',he:'ערוץ AI 3: קוד QR הוא לא קוד סודי (כ 45 שניות, בסגנון טום)\n\nקוד QR הוא לא קוד סודי. זו פשוט כתובת אתר, כתובה בריבועים.\n\nאז איך זה עובד? הריבועים השחורים והלבנים מקודדים טקסט, בדרך כלל קישור. המצלמה קוראת אותם ופותחת את הכתובת. היא לא בודקת מי הדפיס אותם.\n\nוזה הטריק של הנוכלים: מדפיסים מדבקה עם קוד משלהם, ומדביקים אותה על המקור, על מכונת חניה או על תפריט במסעדה. הקוד מוביל לאתר מזויף שמבקש פרטי כרטיס אשראי.\n\nבקליפורניה הדביקו כמאה וחמישים מדבקות כאלה, ובבריטניה מישהו איבד 768 לירות.\n\nמה כן עוזר? להסתכל על הכתובת שהטלפון מציג לפני שלוחצים. ואם המקום בכלל לא משתמש ב QR לתשלום, זו נורה אדומה. עדיף לשלם דרך האפליקציה הרשמית.\n\nבקיצור, אל תסמכו על הריבועים, תסמכו על הכתובת.\n\nאי פעם סרקתם קוד, ולא הייתם בטוחים שהוא באמת של המקום?\n\nמקור (לא להקריא): דיווחי חדשות ועיריות על מדבקות QR מזויפות על מכונות חניה (Redondo Beach, דיווח בריטי של 768 לירות) והמלצות Action Fraud.'},
+{n:'ai4',t:'ערוץ AI 4: איך תשלום בטלפון לא מוסר את הכרטיס שלך (כ 45 שניות, בסגנון טום)',he:'ערוץ AI 4: איך תשלום בטלפון לא מוסר את הכרטיס שלך (כ 45 שניות, בסגנון טום)\n\nכשמשלמים בטלפון, בית העסק לא מקבל את מספר הכרטיס שלכם. הוא מקבל מספר מחליף.\n\nאז איך זה עובד? כשמוסיפים כרטיס לארנק, רשת האשראי יוצרת מספר חלופי, שנקרא טוקן, ומקשרת אותו לטלפון שלכם. המספר האמיתי נשאר אצלה בכספת, והטוקן נשמר בשבב מוגן בתוך המכשיר.\n\nבכל תשלום הטלפון מייצר גם קוד חד פעמי, שעובד רק פעם אחת, ורק לכמה רגעים.\n\nולכן, גם אם גנב מצליח לקחת את הטוקן ממאגר של חנות, הוא לא שווה כלום. אין לו את הקוד שמתאים לרגע התשלום.\n\nזה כמו כרטיס כניסה עם חותמת של הרגע, ולא מפתח שאפשר להעתיק.\n\nבקיצור, בטלפון הכרטיס האמיתי שלכם כמעט לא יוצא מהבית.\n\nובאתרים אתם עדיין מקלידים את הכרטיס, או משלמים עם הטלפון?\n\nמקור (לא להקריא): הסברים על Device Account Number וטוקניזציה בתשלומי אפל. המקורות חלוקים בפרטים, לכן הנוסח כללי. לבדוק מול התיעוד של אפל או EMVCo לפני העלאה.'},
+{n:'ai5',t:'ערוץ AI 5: איך שאזאם מזהה שיר (כ 45 שניות, בסגנון טום)',he:'ערוץ AI 5: איך שאזאם מזהה שיר (כ 45 שניות, בסגנון טום)\n\nשאזאם מזהה שיר תוך כמה שניות, ובכלל לא מקשיב למוזיקה כמו שאנחנו.\n\nאז איך זה עובד? קודם הוא הופך את הצליל לגרף של תדרים לאורך זמן. מכל הגרף הוא שומר רק את הנקודות הכי חזקות, כי הן שורדות גם ברעש של בר או של רחוב.\n\nאחרי זה הוא לוקח זוגות של נקודות קרובות, ובונה מכל זוג קוד קצר: שני התדרים, והמרחק בזמן ביניהם. זו טביעת האצבע של השיר.\n\nבבסיס הנתונים יש טביעות כאלה לכל שיר. הקודים של ההקלטה שלכם מחפשים התאמה, והשיר שהקודים שלו מסתדרים באותו תזמון, מנצח.\n\nולכן זמזום לא עובד: אין שם אותם תדרים ואותו תזמון.\n\nבקיצור, שאזאם לא מזהה מנגינה. הוא מזהה טביעת אצבע.\n\nאיזה שיר שאזאם זיהה לכם, ולא האמנתם?\n\nמקור (לא להקריא): המאמר של Avery Wang מ 2003 על טביעת אצבע של שמע, כפי שמוסבר ב TechSpot וב ACRCloud.'},
 {n:'it01',t:'IT Solution, כל העסק במקום אחד: וואטסאפ, לוח בקשות, רשתות, קמפיינים, הנהלת חשבונות, בנק, פגישות ויומן, חתימה דיגיטלית. מלל לפרסום המוניטור, התסריט המלא בפנים',he:'ריל IT Solution: כל העסק במקום אחד\nבערך 107 שניות, אתה מדבר למצלמה במקום אחד. בנוי על המבנה של הסרטון של נעם, עם מילים ודוגמאות שלנו.\n\n\nפתיחה, 0 עד 8 שניות. על המסך: שבעה אפליקציות. עסק אחד.\nאתה בעל עסק, ובסוף היום יש לך שבע אפליקציות פתוחות. אחת להצעות מחיר, אחת לחשבוניות, אחת לבנק, אחת ליומן, ועוד שלוש שאתה כבר לא זוכר למה פתחת. ובסוף אתה מנהל את העסק מתוך בלגן.\n\nהמהפך, 8 עד 18 שניות. על המסך: מסך אחד.\nאז בנינו מוניטור. מסך אחד בטלפון, וכל העסק שלך יושב בתוכו. לא תוכנה שצריך ללמוד, לא קורס. פותחים, ורואים.\n\nוואטסאפ ולוח בקשות, 18 עד 30 שניות. על המסך: מנהלים הכול מוואטסאפ.\nואת הכול אפשר לנהל מוואטסאפ. כותבים הודעה, כמו לעובד: תכין הצעה, תבדוק מי חייב, תעלה קמפיין. וזה קורה. ובנוסף יש לוח בקשות אחד לכל מה שהעסק צריך. כל בקשה נכנסת לשם, וכל בקשה אפשר לראות איפה היא עומדת.\n\nחיבור לכל הרשתות, 30 עד 38 שניות. על המסך: מחובר לכל הרשתות.\nוהמוניטור מחובר לכל הרשתות שלך. אינסטגרם, פייסבוק, יוטיוב, המייל, הכול באותו מקום. לא עוד לקפוץ בין אפליקציות.\n\nשיווק, 38 עד 50 שניות. על המסך: קמפיינים: תמונה + סרטון.\nנתחיל מהלקוחות. אתה אומר לו מה אתה מוכר, והוא בונה לך קמפיין. לא רק תמונה. גם סרטון, ושילוב של שניהם. והוא מכין את זה כך שיעצור את מי שגולל בפיד. אתה רק מאשר בלחיצה אחת.\n\nכסף, 50 עד 64 שניות. על המסך: הנהלת חשבונות + בנק.\nאחר כך הכסף. אתה מחבר את הנהלת החשבונות, ואתה מחבר את הבנק. ופתאום אתה רואה מי חייב לך, מה נכנס, מה יצא, ומה תקוע. בלי לחכות לסוף חודש ובלי להתקשר לרואה החשבון כדי לשאול איפה אנחנו עומדים.\n\nפגישות ויומן, 64 עד 76 שניות. על המסך: פגישת זום? מוקלטת, מתומללת, מסוכמת.\nהקלטת מסך (תוך כדי הדיבור): סיכום פגישה שנכנס לאריח, ויומן Outlook באותו מסך\nועכשיו מה שלקוחות שלי ביקשו, ואנחנו בנינו. פגישת זום? היא מוקלטת, מתומללת, ומגיעה אליך מסוכמת: מה הוחלט, מה המשימות, ומתי פגישת ההמשך. היומן של Outlook והמייל באותו מסך. והצעת מחיר יוצאת עם הלוגו שלך, ומשתפים אותה בוואטסאפ בלחיצה.\n\nסגירה, 76 עד 88 שניות. על המסך: חתימה דיגיטלית.\nהלקוח מוכן לסגור? שולחים לו הצעה, והוא חותם על הטלפון, ממש במקום. בלי להדפיס, בלי לסרוק, בלי לרדוף אחרי חתימה שלושה ימים.\n\nצמיחה, 88 עד 98 שניות. על המסך: אימון למכירה + יומן.\nואם אתה מרגיש שהמכירות לא זזות, יש אימון למכירה. אתה מתרגל שיחה, ומקבל ציון ותיקון. וכל פגישה שנסגרה נכנסת ישר ליומן, בלי שתכתוב אותה פעמיים.\n\nסיום, 98 עד 107 שניות. על המסך: IT Solution. כתבו לי "מוניטור".\nזה לא עוד כלי. זה העסק שלך, מסודר, במקום אחד. כתוב לי בתגובות או בהודעה את המילה מוניטור, ואני אראה לך אותו עובד על העסק שלך.\n\n\nכיתוב לפוסט:\nכל העסק במקום אחד: וואטסאפ וחיבור לכל הרשתות, קמפיינים עם תמונה וסרטון, הנהלת חשבונות, בנק, חתימה דיגיטלית, אימון למכירה ויומן. כתבו לי "מוניטור" ואראה לכם.\n\nלצילום ולעריכה:\nכתוביות באמצע המסך, מילה מודגשת בצהוב בכל משפט, כמו בסרטון המקור.\nבכל נושא (קמפיין, בנק, חתימה, יומן) לצרף 2 עד 3 שניות הקלטת מסך אמיתית מהמוניטור, לא איור.\nבלי לוגו של אף אחד אחר. הלוגו של IT Solution רק בסוף.\nלבדוק לפני צילום שכל יכולת שמוזכרת פועלת כבר במוניטור, כדי שלא נבטיח מה שעוד לא קיים (בעיקר אימון למכירה וחיבור הבנק).\nלפני צילום לוודא: סיכומי פגישות (פיירפליס) מחוברים בפועל, יומן Outlook מחובר, ושיתוף הצעה בוואטסאפ עובד. אם משהו עוד לא, מורידים אותו מהקטע.'},
 {n:'sh34',t:'שחר, מה עושים כשאין כוח לקום: ריל אורגני של 30 שניות, התסריט המלא בפנים',he:'ריל שחר: מה עושים כשאין כוח לקום\nאורגני בלבד, בערך 30 שניות, אתה מדבר למצלמה (כ 20 שניות), ואז מסך של שחר.\nמצלמים בטלפון, לאורך, ליד חלון באור יום. בלי עריכה מתוחכמת. פרסום מוצע: רביעי.\n\nעל המסך בהתחלה, בכתב גדול:\n"מה עושים כשאין כוח לקום"\n\nמה אומרים:\n\nיש בוקר אחד אחרי הניתוח שאני לא שוכח.\nהתעוררתי, ולא היה לי כוח לקום.\nלא מהמיטה. מהראש.\n\nזה היה כמו טלפון על אחוז אחד.\nהוא עדיין עובד, אבל כל תנועה עולה לו ביוקר.\n\nמה שהוציא אותי מזה לא היה יעד גדול.\nהיה דבר קטן אחד.\nלשבת. כוס מים. עד הדלת.\n\nאז בניתי את שחר.\nכל בוקר הוא כותב לך:\n"בוקר טוב, מה הדבר הקטן שתעשה היום?"\n\nשחר הוא בינה מלאכותית, לא מטפל.\nאבל הוא שם, גם כשקשה.\n\nבקיצור, כשאין כוח לקום, לא מתחילים מהכל.\nמתחילים מדבר אחד קטן.\n\nשחר פתוח, בחינם בתקופת ההשקה. נכנסים דרך האתר, abaitzik.com.\n\nאחרי הצילום: שולחים לי את הסרטון. אני מוסיף כתוביות, מסך של שחר עם ההודעה "בוקר טוב, מה הדבר הקטן שתעשה היום?" ואת הסיום עם הכתובת abaitzik.com.'},
 {n:'22',t:'שחר, הסיפור שלי: אתה מדבר למצלמה, עד 30 שניות. התסריט המלא בפנים',he:'מודעה לשחר: הסיפור שלי. עד 30 שניות, אורגני בלבד.\nמצלמים לבד בטלפון, לאורך, ליד חלון באור יום. בלי עריכה מתוחכמת.\n\nעל המסך בהתחלה, בכתב גדול:\n"שכבתי במיטה אחרי הניתוח, והבנתי מה הכי חסר"\n\nמה אומרים:\n\nשכבתי במיטה אחרי הניתוח, והבנתי שמה שהכי חסר זאת הסביבה שתרים אותך.\n\nאנשים עזרו לי. מילה טובה, הודעה קטנה. זה עשה לי את היום.\n\nאז בניתי את שחר. כל בוקר מילה טובה וצעד אחד קטן. ואם בא לך לדבר, הוא מקשיב.\n\nשחר הוא בינה מלאכותית, לא מטפל. וכשקשה באמת, הוא מפנה לעזרה אמיתית.\n\nשחר פתוח עכשיו, בחינם בתקופת ההשקה. נכנסים דרך האתר, abaitzik.com.\n\nאחרי הצילום: שולחים לי את הסרטון, ואני מוסיף כתוביות, מסך של שחר ואת הסיום עם הכתובת.'},
@@ -11418,6 +11430,89 @@ function adsSheet(){
  document.body.appendChild(w);
 }
 on('gAds',adsSheet);
+function clSheet(id,label,body,wire){
+ var old=document.getElementById(id);if(old)old.remove();
+ var w=document.createElement('div');w.id=id;w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label',label);
+ w.innerHTML='<style>#'+id+' .clT{width:100%;border-collapse:collapse;font:13px/1.5 Heebo,sans-serif;margin:6px 0}#'+id+' .clT td,#'+id+' .clT th{border-bottom:1px solid #e5e7ef;padding:6px 4px;text-align:right;vertical-align:top}'
+  +'#'+id+' .clT th{font-weight:700;color:#5a6577;font-size:12px}#'+id+' .clN{text-align:left!important;white-space:nowrap;direction:ltr}'
+  +'#'+id+' .clBox{border:1px solid #e1e4ee;border-radius:14px;padding:10px 12px;margin:8px 0}#'+id+' .clBad{border-color:#f3b4ba;background:#fff4f5}#'+id+' .clOk{border-color:#b9e5c8;background:#f3fbf6}'
+  +'#'+id+' .clTabs{display:flex;gap:6px;overflow-x:auto;margin:8px 0;padding-bottom:2px}#'+id+' .clTabs button{flex:0 0 auto;border:1px solid #d6dae6;background:#fff;border-radius:999px;padding:7px 12px;font:700 13px Heebo,sans-serif;cursor:pointer}'
+  +'#'+id+' .clTabs button.on{background:#1a5fb4;color:#fff;border-color:#1a5fb4}#'+id+' .clSum{font:800 16px Heebo,sans-serif;margin:8px 0}</style>'
+  +'<div class="ycard"><b>'+label+'</b>'+body+'<button type="button" class="yb yx" data-cl="x">סגירה</button></div>';
+ w.onclick=function(e){var a=e.target.getAttribute&&e.target.getAttribute('data-cl');if(e.target===w||a==='x'){w.remove();return;}if(wire)wire(e,a,w);};
+ document.body.appendChild(w);return w;
+}
+function clMoney(n){n=Number(n)||0;return (Math.round(n*100)/100).toLocaleString('he-IL')+' ₪';}
+function clMonth(ym){ym=String(ym||'').replace('-','');return ym.length>=6?(+ym.slice(4,6))+'/'+ym.slice(0,4):ym;}
+function clDate(d){var p=String(d||'').split('-');return p.length===3?(+p[2])+'.'+(+p[1]):String(d||'');}
+function clUpload(accept,note,done){
+ var i=document.createElement('input');i.type='file';i.accept=accept;i.multiple=true;i.style.display='none';
+ i.onchange=function(){var f=[].slice.call(i.files||[]);i.remove();if(!f.length)return;toast('שולח...');
+  sendAll(f,note).then(function(){toast('נשלח. אקרא את זה ואעדכן כאן, וגם אכתוב לך בתשובות.');if(done)done();},function(){toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});};
+ document.body.appendChild(i);i.click();
+}
+function labSheet(){
+ var C=D.clinic||{},L=C.lab||{months:[],dups:[]},h='';
+ h+='<small style="display:block">כל דוח שמגיע מהמעבדה נבדק כאן: כמה עבודות, כמה זה עלה, והאם משהו חויב פעמיים (אותו מטופל, אותה שן, אותה עבודה).</small>';
+ if(L.dups&&L.dups.length){
+  h+='<div class="clBox clBad"><b>⚠️ '+L.dups.length+' חיובים כפולים</b>'+L.dups.map(function(d){
+   return '<div style="margin-top:6px">'+esc(d.patient)+' · שן '+esc(d.tooth)+' · '+esc(d.work)+'<br><small>'+d.where.map(function(x){return esc(x.lab)+' תעודה '+esc(x.doc)+(x.date?' ('+esc(clDate(x.date))+')':'');}).join(' · ')+'</small></div>';}).join('')+'</div>';
+ }else if(L.months&&L.months.length)h+='<div class="clBox clOk">✅ לא נמצאו חיובים כפולים בדוחות שנקלטו.</div>';
+ if(!L.months||!L.months.length)h+='<div class="clBox">עוד לא נקלט דוח מעבדה. לוחצים על הכפתור למטה ובוחרים את קובץ ה PDF מהמעבדה.</div>';
+ (L.months||[]).forEach(function(m,k){
+  h+='<details class="clBox"'+(k===0?' open':'')+'><summary style="cursor:pointer;font:700 15px Heebo,sans-serif">'+esc(m.labName)+' · '+esc(clMonth(m.month))+' · '+clMoney(m.total)+'</summary>'
+   +'<small>'+m.docs+' תעודות, '+m.works+' עבודות</small><table class="clT"><tr><th>מטופל</th><th>עבודה</th><th>שן</th><th class="clN">סכום</th></tr>'
+   +m.lines.map(function(l){return '<tr'+(l.addon?' style="color:#5a6577"':'')+'><td>'+esc(l.patient||'')+'</td><td>'+esc(l.work)+'</td><td>'+esc((l.teeth||[]).join(', '))+'</td><td class="clN">'+clMoney(l.total)+'</td></tr>';}).join('')+'</table></details>';
+ });
+ h+='<button type="button" class="yb yb1" data-cl="up">📄 להעלות דוח מעבדה (PDF)</button>';
+ clSheet('labSheet','🧪 דוח מעבדות',h,function(e,a){if(a==='up')clUpload('application/pdf,image/*','דוח מעבדה: לבדוק ולהוסיף ל 🧪 דוח מעבדות');});
+}
+var FRL_TAB=0;
+function frlSheet(){
+ var C=D.clinic||{},F=C.frl||{doctors:[],rows:[],rate:0.4},ym=new Date().toISOString().slice(0,7);
+ var norm=function(s){return String(s||'').replace(/^s*(ד["״׳']?ר|דוקטור)s*/,'').trim();};
+ if(FRL_TAB>=F.doctors.length)FRL_TAB=0;
+ var doc=F.doctors[FRL_TAB]||'',rows=F.rows.filter(function(r){return norm(r.doctor)===norm(doc)&&String(r.date).slice(0,7)===ym;});
+ var paid=0,lab=0,pay=0;rows.forEach(function(r){paid+=r.paid;lab+=r.lab;pay+=r.pay;});
+ var h='<small style="display:block">החישוב: '+Math.round(F.rate*100)+'% ממה ששילם המטופל'+(F.labMinus?', פחות עלות המעבדה. עלות המעבדה נלקחת לבד מדוח המעבדה לפי שם המטופל.':'.')+'</small>';
+ h+='<div class="clTabs">'+F.doctors.map(function(d,i){return '<button type="button" data-cl="tab" data-i="'+i+'" class="'+(i===FRL_TAB?'on':'')+'">'+esc(d)+'</button>';}).join('')+'</div>';
+ if(!F.doctors.length)h+='<div class="clBox">עוד אין רשימת רופאים.</div>';
+ else{
+  h+='<div class="clSum">'+esc(doc)+' · '+esc(clMonth(ym))+': מגיע לו '+clMoney(pay)+'</div><small>'+rows.length+' טיפולים, המטופלים שילמו '+clMoney(paid)+(F.labMinus?', מעבדה '+clMoney(lab):'')+'</small>';
+  h+=rows.length?'<table class="clT"><tr><th>יום</th><th>מטופל</th><th>טיפול</th><th class="clN">שילם</th><th class="clN">מעבדה</th><th class="clN">מגיע</th></tr>'
+   +rows.map(function(r){return '<tr><td>'+esc(clDate(r.date))+'</td><td>'+esc(r.patient)+'</td><td>'+esc(r.treatment)+'</td><td class="clN">'+clMoney(r.paid)+'</td><td class="clN">'+(r.lab?clMoney(r.lab):'')+'</td><td class="clN"><b>'+clMoney(r.pay)+'</b></td></tr>';}).join('')+'</table>'
+   :'<div class="clBox">עוד אין טיפולים החודש. מצלמים את דף העבודה היומי שלו ושולחים בכפתור למטה, והטבלה מתמלאת.</div>';
+  h+='<button type="button" class="yb yb1" data-cl="up">📷 לצלם דף עבודה יומי של '+esc(doc)+'</button>';
+ }
+ clSheet('frlSheet','👩‍⚕️ פרילנסרים',h,function(e,a,w){
+  if(a==='tab'){FRL_TAB=+e.target.getAttribute('data-i');w.remove();return frlSheet();}
+  if(a==='up')clUpload('image/*,application/pdf','דף עבודה יומי של '+doc+': לקרוא ולהוסיף ל 👩‍⚕️ פרילנסרים');
+ });
+}
+function supSheet(){
+ var C=D.clinic||{},S=C.sup||{list:[],month:''},loc={};
+ try{loc=JSON.parse(localStorage.getItem('supLocal')||'{}')||{};}catch(e){loc={};}
+ var h='<small style="display:block">כל ספק והחשבוניות שלו מהחודש ('+esc(clMonth(S.month))+'), כפי שנמצאו בג׳ימייל שלך. אפשר לכתוב הערה ולסמן בוצע.</small>';
+ if(!S.list.length)h+='<div class="clBox">עוד אין רשימת ספקים.</div>';
+ S.list.forEach(function(s,i){
+  var L=loc[S.month+'|'+s.name]||{},done=L.done!=null?L.done:s.done,note=L.note!=null?L.note:s.note;
+  h+='<div class="clBox'+(done?' clOk':'')+'"><b>'+esc(s.name)+'</b> · '+(s.found.length?'✅ '+s.found.length+' מיילים החודש':'⚠️ עוד לא נמצאה חשבונית החודש')
+   +s.found.map(function(f){return '<br><small>'+esc(clDate(String(f.at).slice(0,10)))+' · '+esc(f.subject)+'</small>';}).join('')
+   +'<textarea data-n="'+i+'" rows="2" style="width:100%;box-sizing:border-box;margin-top:8px;border:1px solid #d6dae6;border-radius:10px;padding:8px;font:14px Heebo,sans-serif" placeholder="הערה לספק הזה">'+esc(note)+'</textarea>'
+   +'<label style="display:flex;align-items:center;gap:8px;margin-top:6px;font-weight:600"><input type="checkbox" data-cl="done" data-i="'+i+'"'+(done?' checked':'')+' style="width:22px;height:22px"> בוצע</label>'
+   +'<button type="button" class="yb" data-cl="save" data-i="'+i+'">שמירת ההערה</button></div>';
+ });
+ clSheet('supSheet','📦 ספקים',h,function(e,a){
+  if(a!=='done'&&a!=='save')return;
+  var s=S.list[+e.target.getAttribute('data-i')];if(!s)return;
+  var k=S.month+'|'+s.name,L=loc[k]||{};
+  if(a==='done')L.done=e.target.checked;
+  if(a==='save'){var ta=document.querySelector('#supSheet textarea[data-n="'+e.target.getAttribute('data-i')+'"]');L.note=ta?ta.value.trim():'';}
+  loc[k]=L;try{localStorage.setItem('supLocal',JSON.stringify(loc));}catch(x){}
+  sendText('ספקים','ספק '+s.name+', '+S.month+': '+(L.done?'בוצע':'לא בוצע')+(L.note?' | הערה: '+L.note:''),'עדכון').then(function(){toast('נשמר');},function(){toast('נשמר בטלפון, יישלח כשיהיה חיבור');});
+ });
+}
+on('gLab',labSheet);on('gFrl',frlSheet);on('gSup',supSheet);
 function myBoardSheet(){
  var old=document.getElementById('mbSheet');if(old)old.remove();
  var w=document.createElement('div');
@@ -18596,7 +18691,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="";
+var PUSH_KEY="BAJSdIafAtGxgHzJr3tOJLTViE1Gkn6rNyAReKPb5ZiMM-6xXp2c1PD7V5VKOXkQRWLI9-Wdq7-Q4hyMCcYp2iQ";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
