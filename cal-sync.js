@@ -106,19 +106,92 @@ function connSnap(src) {
   return true;
 }
 
+/*
+  10.11.2026: the Outlook calendar of a client who connected Microsoft on his setup page (src.msStep, written by
+  lib/setup-intake.js). Read only: Graph /me/calendarView through the saved refresh token, the same window as Google.
+  Scope needed: Calendars.Read or Calendars.ReadWrite (the setup card asks for ReadWrite). Mail is not read.
+*/
+function msSaved(src) {
+  if (!src.msStep) return null;
+  const sec = readJson(path.join(SETUP, src.setup + '.secrets.json'), {});
+  try { const v = JSON.parse(sec[src.msStep].value); return v && v.provider === 'microsoft' ? v : null; } catch (e) { return null; }
+}
+// Graph answers in Israel time (Prefer header); a local time becomes an exact instant.
+function israelIso(local) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/.exec(local || '');
+  if (!m) return '';
+  const asUtc = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
+  for (const off of [2, 3]) {
+    const t = asUtc - off * 3600000;
+    const p = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Jerusalem', hourCycle: 'h23', hour: '2-digit' }).format(new Date(t));
+    if (Number(p) === +m[4]) return new Date(t).toISOString();
+  }
+  return new Date(asUtc - 2 * 3600000).toISOString();
+}
+async function pullMs(access, now) {
+  const out = [];
+  let url = 'https://graph.microsoft.com/v1.0/me/calendarView?' + new URLSearchParams({ startDateTime: new Date(now - 7 * DAY).toISOString(),
+    endDateTime: new Date(now + 60 * DAY).toISOString(), '$top': '100', '$orderby': 'start/dateTime',
+    '$select': 'id,subject,start,end,isAllDay,isCancelled,location,bodyPreview,attendees,onlineMeeting,webLink' });
+  for (let i = 0; i < 10 && url; i++) {
+    const r = await fetch(url, { headers: { Authorization: 'Bearer ' + access, Prefer: 'outlook.timezone="Israel Standard Time"' }, signal: AbortSignal.timeout(30000) });
+    const j = await r.json();
+    if (!r.ok) throw new Error('outlook ' + r.status + ' ' + String((j.error && (j.error.code || j.error.message)) || '').slice(0, 80));
+    (j.value || []).forEach((e) => {
+      if (e.isCancelled) return;
+      const allDay = !!e.isAllDay;
+      out.push({ id: 'ms-' + e.id, src: 'outlook', title: String(e.subject || '(בלי כותרת)').slice(0, 160),
+        start: allDay ? String(e.start.dateTime).slice(0, 10) : israelIso(e.start.dateTime), end: allDay ? String(e.end.dateTime).slice(0, 10) : israelIso(e.end.dateTime),
+        allDay, where: String((e.location && e.location.displayName) || '').slice(0, 160), note: String(e.bodyPreview || '').replace(/\s+/g, ' ').trim().slice(0, 300),
+        meet: (e.onlineMeeting && e.onlineMeeting.joinUrl) || '', who: (e.attendees || []).map((a) => a.emailAddress && (a.emailAddress.name || a.emailAddress.address)).filter(Boolean).slice(0, 6) });
+    });
+    url = j['@odata.nextLink'] || '';
+  }
+  return out;
+}
+// Microsoft may rotate the refresh token: keep the new one in the secrets file (same owner, mode 600).
+function keepRefresh(src, saved, refresh) {
+  if (DRY || !refresh || refresh === saved.refresh_token) return;
+  const f = path.join(SETUP, src.setup + '.secrets.json');
+  const sec = readJson(f, {}); const st = fs.statSync(f);
+  saved.refresh_token = refresh; sec[src.msStep] = { value: JSON.stringify(saved), at: new Date().toISOString() };
+  fs.writeFileSync(f + '.tmp', JSON.stringify(sec, null, 1), { mode: 0o600 }); fs.renameSync(f + '.tmp', f);
+  try { fs.chownSync(f, st.uid, st.gid); fs.chmodSync(f, 0o600); } catch (e) {}
+}
+
 async function one(src, now) {
   const saved = savedFor(src);
+  const ms = msSaved(src);
   // 7.11: never connected is not "cut": no status file, so the 📅 icon keeps opening Google as before.
-  if (!saved) { say(src.name + ': אין חיבור גוגל בדף ההקמה'); return; }
-  const c = await oa.check(saved);
-  if (!c.ok) {
-    say(src.name + ': החיבור לגוגל לא עובד (' + c.error + ')');
-    // Only a cut connection asks for a new tap; a passing failure keeps the last copy quietly.
-    if (c.revoked && status(src, false, 'revoked')) publish(src);
-    return;
+  if (!saved && !ms) { say(src.name + ': אין חיבור גוגל בדף ההקמה'); return; }
+  let events = [], flip = false, googleOk = false;
+  if (saved) {
+    const c = await oa.check(saved);
+    if (!c.ok) {
+      say(src.name + ': החיבור לגוגל לא עובד (' + c.error + ')');
+      // Only a cut connection asks for a new tap; a passing failure keeps the last copy quietly.
+      if (c.revoked && status(src, false, 'revoked')) publish(src);
+      if (!ms) return;
+    } else {
+      flip = status(src, true); googleOk = true;
+      events = (await pull(c.access, now)).map((e) => Object.assign({ src: 'google' }, e));
+    }
   }
-  const flip = status(src, true);
-  const events = await pull(c.access, now);
+  let msOk = false;
+  if (ms) {
+    try {
+      const c = await oa.check(ms);
+      if (!c.ok) say(src.name + ': החיבור למיקרוסופט לא עובד (' + c.error + ')');
+      else { keepRefresh(src, ms, c.refresh); events = events.concat(await pullMs(c.access, now)); msOk = true; }
+    } catch (e) { say(src.name + ': יומן אאוטלוק ' + e.message.slice(0, 100)); }
+  }
+  // a failed side keeps the last copy quietly: nothing is written when no source answered
+  if (!googleOk && !msOk) return;
+  if (saved && !googleOk || ms && !msOk) {
+    const old0 = readJson(path.join(src.dir, 'data', 'cal', 'events.json'), {});
+    const tag = saved && !googleOk ? 'google' : 'outlook';
+    events = events.concat((old0.events || []).filter((e) => (e.src || 'google') === tag));
+  }
   const file = path.join(src.dir, 'data', 'cal', 'events.json');
   const old = readJson(file, {});
   const hash = crypto.createHash('sha1').update(JSON.stringify(events)).digest('hex');
@@ -130,7 +203,7 @@ async function one(src, now) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(path.join(path.dirname(file), 'checked.json'), JSON.stringify({ at: new Date(now).toISOString() }));
   if (!changed) { if (flip) publish(src); return; }
-  fs.writeFileSync(file + '.tmp', JSON.stringify({ at: new Date(now).toISOString(), who: saved.who || '', hash, events }));
+  fs.writeFileSync(file + '.tmp', JSON.stringify({ at: new Date(now).toISOString(), who: (saved || ms).who || '', hash, events }));
   fs.renameSync(file + '.tmp', file);
   for (const f of [path.dirname(file), file, path.join(path.dirname(file), 'checked.json')]) { try { fs.chownSync(f, st.uid, st.gid); } catch (e) {} }
   publish(src);
