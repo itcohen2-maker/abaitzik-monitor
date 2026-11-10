@@ -1469,6 +1469,8 @@ function tenantTiles(inst) {
   TENANT_ALWAYS.forEach((id) => { if (ids.indexOf(id) < 0) ids.push(id); });
   ids.push('gConn');
   ids.push('gAdminReq');
+  // 10.11.2026: a per tenant opt out (instance hideTiles, an array of tile ids). gConn and gAdminReq can never be hidden.
+  if (Array.isArray(inst.hideTiles)) { const hide = inst.hideTiles.filter((id) => id !== 'gConn' && id !== 'gAdminReq'); for (let i = ids.length - 1; i >= 0; i--) if (hide.indexOf(ids[i]) >= 0) ids.splice(i, 1); }
   // esc() is defined far above; this part is also lifted alone by a test.
   const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const guides = tenantGuides(inst).map((g, i) => '\n  <button type="button" class="gt g11" id="gGuide' + i + '"><b>'

@@ -63,5 +63,11 @@ if (!EVENING && st.pushed !== m.day && p) {
   const open = m.items.filter(i => ((i.k === 'plate' || i.k === 'status') && i.st === 'todo') || (i.k === 'linkedin' && i.st === 'warn'));
   if (open.length && run('node', ['notify.js', 'תזכורת ערב', open.map(i => i.t + ': ' + i.sub).join('\n')]) !== null) st.evening = m.day;
 }
+// 10.11: an item waiting in 📋 לטיפול for more than 3 hours is pushed again at the 13:00 and 18:00 rounds (once per round).
+// The push follows quiet hours like any push; the tile on the home screen blinks at every hour.
+const hd = m.items.find(i => i.k === 'handle');
+if (hd && hd.hours > 3 && !(HOUR < 12) && st.handleAt !== m.day + '-' + (EVENING ? 'e' : 'n')) {
+  if (run('node', ['notify.js', 'המנהל: ' + hd.t, hd.sub]) !== null) st.handleAt = m.day + '-' + (EVENING ? 'e' : 'n');
+}
 fs.writeFileSync(stateFile, JSON.stringify(st));
 run('node', ['push.js', 'manager round']);

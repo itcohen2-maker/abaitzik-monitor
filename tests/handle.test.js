@@ -84,3 +84,13 @@ test('an empty or missing folder is an empty list, not an error', () => {
   assert.deepStrictEqual(H.open(d), []);
   assert.deepStrictEqual(H.forPage(path.join(d, 'none')), []);
 });
+
+test('manager: handleItem is a warn line with the oldest and its age, and none when nothing is open', () => {
+  const M = require('../lib/manager.js');
+  assert.strictEqual(M.handleItem({ n: 0, oldest: null, hours: 0 }), null);
+  const it = M.handleItem({ n: 2, oldest: { who: 'ד״ר שולמן', title: 'מילא את טופס ההקמה', link: 'answers' }, hours: 5.5 });
+  assert.strictEqual(it.st, 'warn');
+  assert.ok(it.t.indexOf('2') >= 0 && it.sub.indexOf('5 שעות') >= 0);
+  assert.ok(!/[-–—]/.test(it.t + it.sub));
+  assert.ok(it.hours > 3);
+});
