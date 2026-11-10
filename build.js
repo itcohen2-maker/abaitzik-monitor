@@ -866,7 +866,7 @@ function build() {
     fcKey: inst.name === 'abaitzik' ? '' : (() => { try { const k = fs.readFileSync(path.join(inst.dataPath, 'fc-key.txt'), 'utf8').trim(); return /^[a-f0-9]{24,64}$/.test(k) ? k : ''; } catch (e) { return ''; } })(),
     demoFcKey: inst.name === 'abaitzik' ? (() => { try { const k = (JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'fastchat', 'tenants.json'), 'utf8')).demo || {}).key || ''; return /^[a-f0-9]{24,64}$/.test(k) ? k : ''; } catch (e) { return ''; } })() : '',
     // 7.11.2026: 🔌 חיבורים, what is connected and a connect link for each (lib/connections.js). His copy only.
-    conn: (() => { const F = require('./lib/features.js').read(inst.dataPath, inst.name); return F.conn ? require('./lib/connections.js').list(inst.dataPath, inst.name, F) : null; })(),
+    conn: (() => { const F = require('./lib/features.js').read(inst.dataPath, inst.name); return F.conn ? require('./lib/connections.js').list(inst.dataPath, inst.name, F, null, inst.plan) : null; })(),
     // 12.10: the 🩺 board, every monitor's faults in one file (health-board.js). His copy only.
     health: inst.name === 'abaitzik' ? (() => { try { return JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'status', 'health-board.json'), 'utf8')); } catch (e) { return null; } })() : null,
     ideas,
@@ -1455,6 +1455,7 @@ function tenantCircleLinks(inst) {
 function tenantTools(inst) {
   if (!inst || inst.name === 'abaitzik') return '';
   return '\n  <div class="row" id="blkTools" role="group" aria-label="יומן ואימונים">'
+    + '\n   <button type="button" class="ic" id="icConn"><span class="c c-cn">🔌</span>חיבורים</button>'
     + '\n   <button type="button" class="ic icNew" id="icTCal" data-new="1"><span class="c c-gcal"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></span>יומן</button>'
     + '\n   <button type="button" class="ic icNew" id="icFcSales" data-new="1" style="display:none"><span class="c c-fcs">🎯</span>אימון מכירות</button>'
     + '\n   <button type="button" class="ic icNew" id="icFcCoach" data-new="1" style="display:none"><span class="c c-fcc">🧭</span>אימון עסקי</button>'
@@ -3019,6 +3020,7 @@ section#talkCard.talk{padding:8px 10px;gap:6px 10px;margin-bottom:8px}
 #connSheet .cnOk{color:#15803d;font-weight:700;font-size:14px}
 #connSheet .cnOff{color:#b91c1c;font-weight:700;font-size:14px}
 #connSheet .cnSoon,#connSheet .cnPaid{color:#6b7280;font-size:14px}
+#connSheet .cnr.lock{opacity:.5;filter:grayscale(1);pointer-events:none}
 #connSheet .cnt small{color:#6b7280;font-size:12px;overflow-wrap:anywhere}
 #connSheet a.cnb{background:#0891b2;color:#fff;border-radius:10px;padding:9px 12px;font-weight:700;text-decoration:none;font-size:14px;white-space:nowrap;flex:none}
 #connSheet a.cnb.again{background:#e5e7eb;color:#374151}
@@ -18046,7 +18048,7 @@ function connSheet(){
  var h='<div class="ycard"><b>🔌 חיבורים</b><p>'+n+' מתוך '+C.rows.length+' מחוברים. כל חיבור נותן למוניטור לעבוד בשבילך עם עוד מקום.</p>';
  C.rows.forEach(function(r){
   var st=r.on?'<span class="cnOk">✓ מחובר</span>':r.paid?'<span class="cnPaid">'+esc(r.paid)+'</span>':r.soon?'<span class="cnSoon">בקרוב</span>':'<span class="cnOff">לא מחובר</span>';
-  h+='<div class="cnr'+(r.on?' on':'')+'"><span class="cni">'+esc(r.icon)+'</span><div class="cnt"><b>'+esc(r.title)+'</b>'+st+(r.who?'<small>'+esc(r.who)+'</small>':'')+'</div>';
+  h+='<div class="cnr'+(r.on?' on':'')+(r.locked?' lock':'')+'"'+(r.locked?' aria-disabled="true"':'')+'><span class="cni">'+esc(r.icon)+'</span><div class="cnt"><b>'+esc(r.title)+'</b>'+st+(r.who?'<small>'+esc(r.who)+'</small>':'')+'</div>';
   if(r.link&&!r.soon)h+='<a class="cnb'+(r.on?' again':'')+'" href="'+esc(r.link)+'" target="_blank" rel="noopener">'+(r.on?'חיבור מחדש':'להתחבר')+'</a>';
   h+='</div>';
  });

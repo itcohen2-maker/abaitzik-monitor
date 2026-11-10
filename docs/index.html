@@ -1556,6 +1556,7 @@ section#talkCard.talk{padding:8px 10px;gap:6px 10px;margin-bottom:8px}
 #connSheet .cnOk{color:#15803d;font-weight:700;font-size:14px}
 #connSheet .cnOff{color:#b91c1c;font-weight:700;font-size:14px}
 #connSheet .cnSoon,#connSheet .cnPaid{color:#6b7280;font-size:14px}
+#connSheet .cnr.lock{opacity:.5;filter:grayscale(1);pointer-events:none}
 #connSheet .cnt small{color:#6b7280;font-size:12px;overflow-wrap:anywhere}
 #connSheet a.cnb{background:#0891b2;color:#fff;border-radius:10px;padding:9px 12px;font-weight:700;text-decoration:none;font-size:14px;white-space:nowrap;flex:none}
 #connSheet a.cnb.again{background:#e5e7eb;color:#374151}
@@ -2697,7 +2698,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-10T17:18:21.334Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-10T17:20:23.677Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4620,7 +4621,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='e8dd94b454';
+var CODE_ID='970aae761d';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -13653,7 +13654,7 @@ function connSheet(){
  var h='<div class="ycard"><b>🔌 חיבורים</b><p>'+n+' מתוך '+C.rows.length+' מחוברים. כל חיבור נותן למוניטור לעבוד בשבילך עם עוד מקום.</p>';
  C.rows.forEach(function(r){
   var st=r.on?'<span class="cnOk">✓ מחובר</span>':r.paid?'<span class="cnPaid">'+esc(r.paid)+'</span>':r.soon?'<span class="cnSoon">בקרוב</span>':'<span class="cnOff">לא מחובר</span>';
-  h+='<div class="cnr'+(r.on?' on':'')+'"><span class="cni">'+esc(r.icon)+'</span><div class="cnt"><b>'+esc(r.title)+'</b>'+st+(r.who?'<small>'+esc(r.who)+'</small>':'')+'</div>';
+  h+='<div class="cnr'+(r.on?' on':'')+(r.locked?' lock':'')+'"'+(r.locked?' aria-disabled="true"':'')+'><span class="cni">'+esc(r.icon)+'</span><div class="cnt"><b>'+esc(r.title)+'</b>'+st+(r.who?'<small>'+esc(r.who)+'</small>':'')+'</div>';
   if(r.link&&!r.soon)h+='<a class="cnb'+(r.on?' again':'')+'" href="'+esc(r.link)+'" target="_blank" rel="noopener">'+(r.on?'חיבור מחדש':'להתחבר')+'</a>';
   h+='</div>';
  });
