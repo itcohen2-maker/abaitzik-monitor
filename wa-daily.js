@@ -10,7 +10,9 @@
   Not on Saturday. Cost: free inside the 24 hour window, a template message
   (a few agorot) outside it.
 
-  Timer: monitor-wa-daily.timer, 08:00 Israel time (setup/monitor-wa-daily.*).
+  Timer: monitor-wa-daily.timer, 08:30 Israel time (setup/monitor-wa-daily.*). Moved from 08:00 on 10.11.2026 so it also
+  carries the fallback of the manager's morning push (lib/morning-wa.js): if the push was sent and the monitor was not
+  opened since, the manager's open lines go in this same message, once a day.
 
   Usage: node wa-daily.js           send if there is something new
          node wa-daily.js --dry     print the message, send and save nothing
@@ -21,6 +23,7 @@ const path = require('path');
 const inst = require('./lib/instance.js');
 const loops = require('./lib/open-loops.js');
 const out = require('./lib/wa-out.js');
+const mw = require('./lib/morning-wa.js');
 
 const args = process.argv.slice(2);
 const DRY = args.includes('--dry');
@@ -36,8 +39,17 @@ function today() { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jer
   const st = readJson(STATE, { day: '', keys: [] });
   if (st.day === day && !FORCE && !DRY) { console.log('כבר נשלח היום'); return; }
   const items = loops.list(inst.dataPath, Date.now());
-  const text = loops.message(items, st.keys, inst.publicUrl);
-  if (DRY) { console.log(text || '(אין חדש, לא נשלח כלום)'); console.log('פתוחים: ' + items.length); return; }
+  const loopsText = loops.message(items, st.keys, inst.publicUrl);
+  // 10.11: the fallback of the manager's morning push (lib/morning-wa.js). One WhatsApp: the manager's open lines and, when there is
+  // something new, the open loops under them. Otherwise nothing changes.
+  const fb = mw.check(inst.dataPath, Date.now());
+  const fbSend = fb.d.send;
+  const text = fbSend ? mw.text(fb.card, inst.publicUrl, loopsText) : loopsText;
+  if (DRY) {
+    console.log('גיבוי הבוקר: ' + (fbSend ? 'שולח' : 'לא שולח') + ' (' + fb.d.reason + ')');
+    console.log(JSON.stringify(fb.input));
+    console.log(text || '(אין חדש, לא נשלח כלום)'); console.log('פתוחים: ' + items.length); return;
+  }
   const keys = items.map((i) => i.key);
   if (!text) {
     // Nothing new. Keep the open list current, so a loop that closes and opens again counts as new.
@@ -49,7 +61,8 @@ function today() { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jer
   const r = await out.sendOwner(inst.dataPath, text, { kind: 'daily' });
   fs.mkdirSync(path.dirname(STATE), { recursive: true });
   fs.writeFileSync(STATE, JSON.stringify({ day: day, keys: keys, sentAt: new Date().toISOString(), via: r.via }, null, 1));
-  console.log('נשלח בוואטסאפ (' + r.via + '), ' + items.length + ' פתוחים');
+  if (fbSend) mw.markSent(inst.dataPath, day, r.via);
+  console.log('נשלח בוואטסאפ (' + r.via + '), ' + items.length + ' פתוחים' + (fbSend ? ', כולל גיבוי הבוקר' : ''));
 })().catch((e) => {
   // Never quiet: the reason goes to the log and to the phone.
   console.error('!! wa-daily: ' + e.message);

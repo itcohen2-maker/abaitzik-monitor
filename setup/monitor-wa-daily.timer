@@ -1,7 +1,7 @@
 [Unit]
-Description=daily WhatsApp of open items, 08:00 Israel time (not Saturday, wa-daily.js checks)
+Description=daily WhatsApp of open items, 08:30 Israel time (not Saturday, wa-daily.js checks)
 [Timer]
-OnCalendar=*-*-* 08:00:00 Asia/Jerusalem
+OnCalendar=*-*-* 08:30:00 Asia/Jerusalem
 Persistent=false
 [Install]
 WantedBy=timers.target

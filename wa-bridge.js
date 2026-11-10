@@ -636,6 +636,11 @@ async function api(q, s, u) {
   }
   if (!codeOk(b.code)) { s.writeHead(403, h); return s.end('{"error":"code"}'); }
   const send = function (o) { s.writeHead(200, h); s.end(JSON.stringify(o)); };
+  // 10.11: Itzik's own monitor page says it was opened (lib/owner-open.js). Only the owner code gets here.
+  if (u.pathname === '/api/owner-open') {
+    try { require('./lib/owner-open.js').record(DATA, String(b.src || 'load')); } catch (e) { log('owner-open: ' + e.message); }
+    return send({ ok: true });
+  }
   if (u.pathname === '/api/demo') {
     fs.mkdirSync(path.dirname(DEMO_FLAG), { recursive: true });
     fs.writeFileSync(DEMO_FLAG, JSON.stringify({ on: !!b.on, at: new Date().toISOString() }));

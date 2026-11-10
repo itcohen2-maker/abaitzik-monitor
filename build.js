@@ -18045,6 +18045,20 @@ on('icConn',connSheet);on('gConn',connSheet);
   seconds). It does not act: "להעביר לביצוע" sends a message to the normal request queue. Shown only
   when D.features.fastChat (Itzik's own monitor), see applyFeatures in lib/features.js.
 */
+// 10.11: Itzik's own monitor tells the server it was opened (the 08:30 WhatsApp fallback, lib/morning-wa.js).
+// Customers never send it: they have D.fcKey. The code travels in the body, never in the URL.
+var OO_API='https://wa.abaitzik.com/api/owner-open',ooAt=0;
+function ooBeacon(src){
+ try{
+  if(!D||D.fcKey||document.hidden)return;
+  var c=sendCode();if(!c)return;
+  var n=Date.now();if(n-ooAt<60000&&src!=='push')return;ooAt=n;
+  fetch(OO_API,{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({code:c,src:src})}).catch(function(){});
+ }catch(e){}
+}
+ooBeacon('load');
+document.addEventListener('visibilitychange',function(){if(!document.hidden)ooBeacon('visible');});
+try{if(navigator.serviceWorker)navigator.serviceWorker.addEventListener('message',function(e){if(e.data&&e.data.type==='push-click')ooBeacon('push');});}catch(e){}
 var FC_API='https://wa.abaitzik.com/api/chat';
 var fcS={mode:'chat',msgs:[],busy:false,err:'',todo:{},loaded:false};
 try{var fcT=JSON.parse(localStorage.getItem('fcTodo')||'[]');if(fcT&&fcT.forEach)fcT.forEach(function(i){fcS.todo[i]='ok';});}catch(e){}

@@ -55,7 +55,7 @@ const p = M.pushText(m);
 const HOUR = Number(new Date().toLocaleString('en-GB', { timeZone: 'Asia/Jerusalem', hour: '2-digit', hour12: false }));
 const li = m.items.find(i => i.k === 'linkedin' && i.st === 'warn');
 if (!EVENING && st.pushed !== m.day && p) {
-  if (run('node', ['notify.js', p.title, p.body]) !== null) st.pushed = m.day;
+  if (run('node', ['notify.js', p.title, p.body]) !== null) { st.pushed = m.day; st.pushedAt = new Date().toISOString(); } // 10.11: pushedAt feeds the 08:30 WhatsApp fallback (lib/morning-wa.js)
 } else if (!EVENING && HOUR >= 12 && li && st.liNoon !== m.day) {
   // 9.11: the 13:00 round, one more reminder for a LinkedIn post still waiting for his approval (once a day)
   if (run('node', ['notify.js', 'המנהל: ' + li.t, li.sub]) !== null) st.liNoon = m.day;
