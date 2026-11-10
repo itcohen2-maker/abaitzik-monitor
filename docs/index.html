@@ -1077,6 +1077,7 @@ body.dmo-real #talkCard .mic{order:2;align-self:center;margin-top:14px;width:58p
 .dmo-tools>summary::after{content:"▾";font-size:20px;transition:transform .2s}
 .dmo-tools[open]>summary::after{transform:rotate(180deg)}
 .dmo-tools>summary::-webkit-details-marker{display:none}
+body.dmo-real #talkCard::before{content:none!important;display:none!important}
 body.dmo-real .hd{margin:4px 0 0!important}
 body.dmo-real .hd .s{opacity:.7}
 body.dmo-real #talkCard{background:transparent!important;border:0!important;box-shadow:none!important}
@@ -2519,6 +2520,34 @@ body.rdragging{user-select:none;-webkit-user-select:none}
 @media(prefers-reduced-motion:reduce){
  .gt.updblink::before,.gt.taskblink::before,.gt.glow::before,.gt.blink::before,.gt.ubeat::before,.gt.leadNew:not(.lnSeen)::before,
  .ic.updblink .c::after,.ic.taskblink .c::after{animation:none!important;opacity:.55}}
+
+body .hd{margin:4px 0 6px!important}
+body .hd .s{opacity:.7}
+body #talkCard{display:flex!important;flex-direction:column;align-items:stretch;gap:0;background:transparent!important;
+ border:0!important;box-shadow:none!important;padding:0!important;margin:0 0 14px!important}
+body #talkCard::before{content:"במה אפשר לעזור?";display:block;order:0;text-align:center;margin:5vh 4px 22px;
+ font:800 32px/1.2 Heebo,sans-serif;background:linear-gradient(100deg,var(--accent),#7c3aed 60%,#db2777);
+ -webkit-background-clip:text;background-clip:text;color:transparent}
+body #talkCard .tkHead,body #talkCard .vtxt,body #talkCard .firsthint{display:none!important}
+body #talkCard .quickwrite{order:1;gap:10px;align-items:flex-end;padding:10px 12px 10px 10px;margin:0;border-radius:30px;
+ background:var(--surface)!important;border:1px solid var(--line)!important;box-shadow:0 8px 28px rgba(0,0,0,.14)!important}
+body #talkCard .quickwrite textarea{min-height:112px;padding:10px 10px;font-size:17px;background:transparent!important;
+ border:0!important;outline:none!important;box-shadow:none!important;resize:none}
+body #talkCard .quickwrite button{min-height:46px;border-radius:23px;padding:0 22px;box-shadow:none}
+body #talkCard .mic{order:2;align-self:center;margin:16px 0 0;width:60px;height:60px;flex:0 0 60px;box-shadow:none!important}
+body #talkCard .ways{order:3;justify-content:center;gap:8px;margin-top:14px}
+body #talkCard .way{min-height:40px;padding:0 16px;border-radius:999px;background:transparent!important;
+ border:1px solid var(--line)!important;box-shadow:none!important;color:var(--dim)}
+body #talkCard .way b{font-size:14px;font-weight:600;color:var(--dim)}
+body .fcrow{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;margin:6px 0 10px!important}
+body .fcrow .fch{justify-content:center}
+body .fcrow .fci{font-size:18px}
+body .fcrow b{font:600 14px Heebo,sans-serif;color:var(--dim)}
+body .fcrow .fcQuick{background:var(--surface)!important;border:1px solid var(--line)!important;box-shadow:none!important}
+body .reloadbig{border:0!important;background:transparent!important;box-shadow:none!important;color:var(--dim)!important;
+ margin:0 auto 8px!important;height:36px}
+body .morebtn{border-radius:999px!important;box-shadow:none!important}
+
 .mob{display:flex;gap:6px;flex:0 0 auto}
 .mob button{background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:10px;
  padding:9px 12px;font:500 13.5px Heebo,sans-serif;cursor:pointer;white-space:nowrap}
@@ -2668,7 +2697,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-10T17:07:14.529Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-10T17:13:06.036Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4584,7 +4613,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='9f90592a64';
+var CODE_ID='41e553ac15';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');

@@ -4195,6 +4195,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
 @media(prefers-reduced-motion:reduce){
  .gt.updblink::before,.gt.taskblink::before,.gt.glow::before,.gt.blink::before,.gt.ubeat::before,.gt.leadNew:not(.lnSeen)::before,
  .ic.updblink .c::after,.ic.taskblink .c::after{animation:none!important;opacity:.55}}
+${require('./lib/gemini-home.js').css}
 .mob{display:flex;gap:6px;flex:0 0 auto}
 .mob button{background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:10px;
  padding:9px 12px;font:500 13.5px Heebo,sans-serif;cursor:pointer;white-space:nowrap}
