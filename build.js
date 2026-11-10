@@ -15505,13 +15505,13 @@ function sheetNewFirst(c){
  if(c.getAttribute('data-newfirst'))return;
  var sm=c.querySelector(':scope > small');if(sm&&/החדש למעלה/.test(sm.textContent))return;
  var rows=[].slice.call(c.querySelectorAll(':scope > .tdy-row')).filter(function(r){
-  var b=r.querySelector('.yb');return b&&/^\d+$/.test(b.getAttribute('data-k')||'');
+  var b=r.querySelector('.yb');return b&&/^\\d+$/.test(b.getAttribute('data-k')||'');
  });
  if(rows.length<2)return;
  c.setAttribute('data-newfirst','1');
  var groups=[],last=null;
  rows.forEach(function(r){
-  var t=tidyText(r.querySelector('.yb')).split(/[\s·]+/)[0],m=t.match(/^\d+/),k=m?m[0]:t;
+  var t=tidyText(r.querySelector('.yb')).split(/[\\s·]+/)[0],m=t.match(/^\\d+/),k=m?m[0]:t;
   if(last&&last.k===k)last.r.push(r);else{last={k:k,r:[r]};groups.push(last);}
  });
  var anchor=document.createComment('nf');c.insertBefore(anchor,rows[0]);

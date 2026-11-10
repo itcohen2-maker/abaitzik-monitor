@@ -1386,7 +1386,10 @@ test('every saved video gets a permanent page, and nothing is dropped', () => {
   const dirs = [path.join(__dirname, '..', 'docs', 'files'), path.join(__dirname, '..', 'data', 'files-private')]
     .filter(d => fs.existsSync(d));
   const mp4 = [...new Set(dirs.flatMap(d => fs.readdirSync(d)).filter(n => n.toLowerCase().endsWith('.mp4')))];
-  assert.ok(mp4.length > 0, 'there must be at least one saved video to list');
+  // 10.11.2026: data/ is not in git, so a checkout with no saved video (a fresh clone, a PC that
+  // never held the files) has nothing to list and nothing that could be dropped. The rule below
+  // applies wherever videos exist; asserting that they exist made the suite red for no defect.
+  if (mp4.length === 0) return;
   // With the gate on, the videos moved into the monitor's files screen by
   // design (build.js videosPage); the page only points there.
   if (html.includes('הסרטונים עברו למוניטור')) {

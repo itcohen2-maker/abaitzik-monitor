@@ -27,8 +27,8 @@ const PRIV = path.join(__dirname, 'data', 'files-private');
 const BASE = 'https://form.it-solution.co.il/a/';
 
 const DOCS = {
-  contract: { file: 'contract-1.0.html', label: 'הסכם השירות, גרסה 1.0' },
-  annex: { file: 'security-annex-1.0.html', label: 'נספח א: אבטחת המידע' },
+  contract: { file: 'contract-1.1.html', label: 'הסכם השירות, גרסה 1.1' },
+  annex: { file: 'security-annex-1.1.html', label: 'נספח א: אבטחת המידע' },
   clinic: { file: 'clinic-nda-1.0.html', label: 'הסכם סודיות: המרפאה והמטופלים' },
 };
 function legal(k) { try { return fs.readFileSync(path.join(__dirname, 'legal', DOCS[k].file), 'utf8'); } catch (e) { return ''; } }
@@ -128,7 +128,7 @@ function clientPage(tok, d, s, view) {
     + field('nm', 'שם מלא', ' autocomplete="name"') + field('bz', 'שם המרפאה', ' autocomplete="organization" value="' + esc(d.bizDefault || '') + '"')
     + field('idn', 'מספר עוסק, ח.פ. או ת.ז.', ' inputmode="numeric"') + field('ad', 'כתובת המרפאה', ' autocomplete="street-address"') + field('rl', 'תפקיד', ' value="' + esc(d.roleDefault || '') + '"')
     + pad()
-    + '<label class="agree"><input type="checkbox" id="agA"><span>קראתי את <b>הסכם בינינו</b>: הסכם השירות (גרסה 1.0) ונספח אבטחת המידע, ואני מאשר אותם בשם המרפאה.</span></label>'
+    + '<label class="agree"><input type="checkbox" id="agA"><span>קראתי את <b>הסכם בינינו</b>: הסכם השירות (גרסה 1.1) ונספח אבטחת המידע, ואני מאשר אותם בשם המרפאה.</span></label>'
     + '<label class="agree"><input type="checkbox" id="agB"><span>קראתי את <b>טופס הסודיות למרפאה ולמטופלים</b>, ואני מאשר אותו בשם המרפאה.</span></label>'
     + '<button type="button" class="go" id="go">✍️ חתימה ואישור של שני המסמכים</button><div class="err" id="err"></div>'
     // 8.11, Itzik: "תרשום מתחת לחתימה ואישור, לתשומת לבך, ושהוא יכול לשלוח לי בוואטסאפ את הדוגמאות". def: after [..], afterWa (number).
@@ -198,7 +198,7 @@ function renderSigned(tok, d, st, cb) {
   const ks = d.docs || ['contract', 'annex', 'clinic'];
   let body = '<div style="padding:12mm 14mm"><div style="font:900 22px Heebo">IT Solution</div><div style="font:800 18px Heebo;margin:3mm 0">' + esc(d.title) + '</div>'
     + '<p style="font:500 13.5px/1.7 Heebo">' + esc(st.f.biz) + ', על ידי ' + esc(st.f.name) + (st.f.role ? ', ' + esc(st.f.role) : '') + ', חתם ואישר בנפרד את שני המסמכים:</p><ol style="font:500 13.5px/1.8 Heebo">'
-    + '<li>הסכם בינינו: הסכם השירות גרסה 1.0, ונספח א אבטחת המידע ✓</li><li>הסכם סודיות: המרפאה והמטופלים, גרסה 1.0 ✓</li></ol>' + sigBlock('שני המסמכים', o, st) + ver('all') + '</div>';
+    + '<li>הסכם בינינו: הסכם השירות גרסה 1.1, ונספח א אבטחת המידע ✓</li><li>הסכם סודיות: המרפאה והמטופלים, גרסה 1.0 ✓</li></ol>' + sigBlock('שני המסמכים', o, st) + ver('all') + '</div>';
   ks.filter((k) => k !== 'clinic').forEach((k) => { body += part(k); });
   body += '<div style="padding:0 14mm">' + sigBlock('הסכם בינינו', o, st) + ver('contract') + '</div>';
   if (ks.includes('clinic')) body += part('clinic') + '<div style="padding:0 14mm">' + sigBlock('הסכם הסודיות', o, st) + ver('clinic') + '</div>';
