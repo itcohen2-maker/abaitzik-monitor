@@ -22638,7 +22638,7 @@ ${require('./lib/activity-ui.js').js}
 on('gActLog',function(){pane('Lg');renderActLog();return false;});
 /*ITZIK:END*/
 ${require('./lib/home-ui.js').js}
-${inst.name === 'abaitzik' ? require('./lib/demo-mode.js').js : ''}${inst.bizHome ? require('./lib/biz-home.js').js : ''}${inst.name !== 'abaitzik' ? require('./lib/shop-list.js').js : ''}
+${require('./lib/gemini-home.js').js}${inst.name === 'abaitzik' ? require('./lib/demo-mode.js').js : ''}${inst.bizHome ? require('./lib/biz-home.js').js : ''}${inst.name !== 'abaitzik' ? require('./lib/shop-list.js').js : ''}
 ${require('./lib/skins-ui.js').js}
 boot('design',dzBoot);
 ${pushUi.js(pushKey())}
