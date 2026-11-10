@@ -18076,7 +18076,8 @@ function calSheet(all,mode,ym,sel){
  };
  var ev=C.events.slice().sort(function(a,b){return Date.parse(a.start)-Date.parse(b.start);});
  var h='<div class="ycard"><b>📅 היומן</b>';
- if(!C.ok)h+='<p>החיבור ליומן של גוגל נותק, ולכן מה שכאן לא מתעדכן.</p>'+(C.connect?'<a class="yb" href="'+esc(C.connect)+'" target="_blank" rel="noopener">🔗 לחבר את היומן מחדש</a>':'');
+ if(!D.cal)h+='<p>היומן עוד לא מחובר. אחרי החיבור יופיעו כאן כל הפגישות שלך.</p><button type="button" class="yb" data-k="conn">🔌 לחבר את היומן</button>';
+ else if(!C.ok)h+='<p>החיבור ליומן של גוגל נותק, ולכן מה שכאן לא מתעדכן.</p>'+(C.connect?'<a class="yb" href="'+esc(C.connect)+'" target="_blank" rel="noopener">🔗 לחבר את היומן מחדש</a>':'');
  h+='<div class="calmode"><button type="button" data-mode="list" class="'+(mode==='list'?'on':'')+'">📋 רשימה</button><button type="button" data-mode="month" class="'+(mode==='month'?'on':'')+'">🗓️ חודש</button></div>';
  var days=[],by={};
  ev.forEach(function(e){var k=e.allDay?e.start:dk(new Date(e.start));if(!by[k]){by[k]=[];days.push(k);}by[k].push(e);});
@@ -18131,6 +18132,7 @@ function calSheet(all,mode,ym,sel){
   if(t.hasAttribute('data-d')){var k=t.getAttribute('data-d');close();return calSheet(false,'month',ym,k===sel?'':k);}
   var k2=t.getAttribute('data-k');
   if(k2==='')close();else if(k2==='all'){close();calSheet(true,'list');}
+  else if(k2==='conn'){close();if(typeof connSheet==='function')connSheet();}
  };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
@@ -18290,7 +18292,8 @@ function fcSheet(){
  on('icFcSales',function(){fcSheet();fcSend('אימון מכירות');});
  on('icFcCoach',function(){fcSheet();fcSend('אימון עסקי');});
  on('icFcPersonal',function(){fcSheet();fcSend('אימון אישי');});
- on('icTCal',function(){if(D.cal&&D.cal.events&&D.cal.events.length){calSheet(false);return;}var t=document.getElementById('gTasks');if(t)t.click();else calSheet(false);});
+ // 10.11.2026, Itzik: the calendar icon opens the calendar in every monitor, also when it is not connected yet (it says so and offers to connect).
+ on('icTCal',function(){calSheet(false);});
 })();
 // Called by applyFeatures once the row is allowed: one read of the thread, for the last line.
 function fcBoot(){
