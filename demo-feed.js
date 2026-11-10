@@ -17,12 +17,13 @@
              lead: "phone"; meeting: "when", "where"; report: "kpis": {"הוצאה": "₪612", ...};
              "title": "...", "from": "...", "subject": "...", "text": "...",
              "client": "...", "items": [["פריט", 1, 1000], ...] }
+  campaign: "versions": ["כיתוב", ...], "audience", "budget", "goal", "sound", "fit", "media": [{"k":"video|image|audio","u":"files/<name>","t":"שם"}], text = the post description
   quote and invoice need client and items; the page adds VAT 18% and the totals.
 */
 const fs = require('fs');
 const path = require('path');
 const F = path.join(__dirname, 'data', 'demo', 'feed.json');
-const TYPES = ['mail', 'quote', 'invoice', 'doc', 'note', 'lead', 'meeting', 'report', 'task'];
+const TYPES = ['mail', 'quote', 'invoice', 'doc', 'note', 'lead', 'meeting', 'report', 'task', 'campaign'];
 
 function load() { try { const a = JSON.parse(fs.readFileSync(F, 'utf8')); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
 function save(a) { fs.mkdirSync(path.dirname(F), { recursive: true }); fs.writeFileSync(F + '.tmp', JSON.stringify(a.slice(-40), null, 1)); fs.renameSync(F + '.tmp', F); }
@@ -35,9 +36,15 @@ function clean(o) {
     phone: s(o.phone, 40), when: s(o.when, 80), where: s(o.where, 160) };
   if (o.kpis && typeof o.kpis === 'object') { it.kpis = {}; Object.keys(o.kpis).slice(0, 8).forEach((k) => { it.kpis[s(k, 30)] = s(o.kpis[k], 30); }); }
   if (Array.isArray(o.items)) it.items = o.items.slice(0, 20).map((r) => [s(r[0], 160), Number(r[1]) || 0, Number(r[2]) || 0]).filter((r) => r[0]);
+  if (type === 'campaign') {
+    it.goal = s(o.goal, 80); it.audience = s(o.audience, 200); it.budget = s(o.budget, 120); it.sound = s(o.sound, 160); it.fit = s(o.fit, 400);
+    it.versions = (Array.isArray(o.versions) ? o.versions : []).slice(0, 4).map((v) => s(v, 300)).filter(Boolean);
+    it.media = (Array.isArray(o.media) ? o.media : []).slice(0, 12).map((m) => ({ k: ['video', 'image', 'audio'].indexOf(m && m.k) > -1 ? m.k : 'video', u: s(m && m.u, 200), t: s(m && m.t, 120) }))
+      .filter((m) => /^files\/[^\/\\]+$/.test(m.u) && m.u.indexOf('..') < 0);
+  }
   if ((type === 'quote' || type === 'invoice') && !(it.items && it.items.length)) throw new Error('להצעת מחיר או חשבונית צריך items');
   if ((type === 'quote' || type === 'invoice') && !String(it.client || '').trim()) throw new Error('להצעת מחיר או חשבונית צריך client: שם הלקוח המלא כפי שיופיע ב PDF');
-  if (!it.title) it.title = type === 'mail' ? (it.subject || 'מייל') : type === 'quote' ? 'הצעת מחיר' : type === 'invoice' ? 'חשבונית' : type === 'lead' ? 'ליד חדש' : type === 'meeting' ? 'פגישה' : type === 'report' ? 'דוח' : type === 'task' ? 'משימה' : 'עדכון';
+  if (!it.title) it.title = type === 'mail' ? (it.subject || 'מייל') : type === 'quote' ? 'הצעת מחיר' : type === 'invoice' ? 'חשבונית' : type === 'lead' ? 'ליד חדש' : type === 'meeting' ? 'פגישה' : type === 'report' ? 'דוח' : type === 'task' ? 'משימה' : type === 'campaign' ? 'טיוטת קמפיין' : 'עדכון';
   return it;
 }
 
