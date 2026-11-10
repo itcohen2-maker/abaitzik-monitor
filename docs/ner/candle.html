@@ -223,13 +223,15 @@
   var t=e.target.closest('button');if(!t)return;
   var art=t.closest('.item'),it=art?Q.find(function(x){return x.name===art.getAttribute('data-n');}):null;
   if(t.hasAttribute('data-play')){var v=art.querySelector('video');v.controls=true;t.remove();v.play().catch(function(){});return;}
-  if(t.hasAttribute('data-set')){t.disabled=true;setState([it.name],t.getAttribute('data-set'));return;}
+  if(t.hasAttribute('data-set')){t.disabled=true;toast('שומר...');setState([it.name],t.getAttribute('data-set'));return;}
   if(t.hasAttribute('data-all')){t.disabled=true;setState(Q.filter(function(x){return !x.posted&&state(x)==='wait';}).map(function(x){return x.name;}),'ok');return;}
   if(t.hasAttribute('data-dayok')){var d=t.closest('.day').getAttribute('data-day');t.disabled=true;
    setState(Q.filter(function(x){return x.date===d&&!x.posted&&state(x)==='wait';}).map(function(x){return x.name;}),'ok');return;}
-  if(t.hasAttribute('data-copy')){var c=it.caption||'';
-   (navigator.clipboard?navigator.clipboard.writeText(c):Promise.reject()).then(function(){toast('הכיתוב הועתק');},function(){
-    var r=document.createRange();r.selectNodeContents(art.querySelector('.cap'));var s=getSelection();s.removeAllRanges();s.addRange(r);toast('הכיתוב מסומן, אפשר להעתיק');});return;}
+  if(t.hasAttribute('data-copy')){var c=it.caption||'',done=false;
+   // 10.11.2026: the copy can hang with no answer (a browser that never replies); after 1.5 seconds the caption is selected instead, so the press always answers.
+   var sel=function(){if(done)return;done=true;var r=document.createRange();r.selectNodeContents(art.querySelector('.cap'));var s=getSelection();s.removeAllRanges();s.addRange(r);toast('הכיתוב מסומן, אפשר להעתיק');};
+   setTimeout(sel,1500);
+   (navigator.clipboard?navigator.clipboard.writeText(c):Promise.reject()).then(function(){if(done)return;done=true;toast('הכיתוב הועתק');},sel);return;}
   if(t.hasAttribute('data-dl')){
    // iPhone: the share sheet has "Save Video", which puts it in Photos.
    var src=it.file,nm=it.name+'.mp4';
@@ -239,7 +241,7 @@
    t.disabled=true;toast('מכין את הסרטון');
    fetch(src).then(function(r){return r.blob();}).then(function(bl){t.disabled=false;var f=new File([bl],nm,{type:'video/mp4'});
     if(!navigator.canShare({files:[f]})){plain();return;}t._file=f;toast('לחץ שוב לשמירה בתמונות');},function(){t.disabled=false;plain();});return;}
-  if(t.hasAttribute('data-chg')){var ta=art.querySelector('textarea'),txt=(ta.value||'').trim();if(!txt){ta.focus();return;}
+  if(t.hasAttribute('data-chg')){var ta=art.querySelector('textarea'),txt=(ta.value||'').trim();if(!txt){ta.focus();toast('כתוב קודם מה לשנות, ואז שליחה');return;}
    if(!SEND||!SEND.t){toast('צריך לפתוח את הדף מהאריח במוניטור');return;}t.disabled=true;
    var msg='candle.times, שינוי בפריט '+it.name+' ('+dayName(it.date)+' '+dayNum(it.date)+' '+(it.time||'')+(it.city?', '+it.city:'')+'): '+txt;
    fetch('https://ntfy.sh/'+SEND.t,{method:'POST',headers:{Title:'monitor','X-Tags':'memo'},body:['משימה',msg,'','קוד '+SEND.c].join(String.fromCharCode(10))})
