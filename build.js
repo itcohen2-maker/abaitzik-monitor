@@ -15301,26 +15301,47 @@ function campSheet(){
   +'<button type="button" class="yb yb2" data-a="pick">📎 לבחור תמונות או סרטון</button>'
   +'<input type="file" id="cpFiles" accept="image/*,video/*" multiple hidden>'
   +'<div id="cpList" style="font:600 14px Heebo,sans-serif;margin:6px 0"></div>'
+  +'<label id="cpJoinBox" hidden style="display:block;font:700 14px Heebo,sans-serif;margin:6px 0"><input type="checkbox" id="cpJoin" checked> לחבר את הכול לסרטון אחד, לפי הסדר שלמעלה</label>'
   +'<small style="opacity:1;font-weight:600">מה לעשות איתם? אפשר לבחור כמה:</small>'
   +'<div class="arPick" id="cpKinds" role="group" aria-label="מה לעשות">'
   +kinds.map(function(k){return '<button type="button" class="yb" data-k="'+k+'">'+k+'</button>';}).join('')+'</div>'
   +'<div id="cpSounds" hidden></div>'
+  +'<button type="button" class="yb" data-a="pickau">🎵 להעלות צליל משלי</button>'
+  +'<input type="file" id="cpAudio" accept="audio/*" hidden>'
+  +'<div id="cpAuL" style="font:600 14px Heebo,sans-serif;margin:6px 0"></div>'
   +'<textarea id="cpText" rows="4" style="width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif" placeholder="מה חשוב להגיד? מבצע, מי הקהל, כתובת, מחיר. אם משהו חסר, אשאל."></textarea>'
   +'<small>מוזיקה: כברירת מחדל בלי מוזיקה בתוך הסרטון. באינסטגרם בוחרים את המוזיקה בזמן ההעלאה מספריית הצלילים של אינסטגרם, בתיקייה RF (ללא זכויות יוצרים). בפייסבוק אפשר מאוסף הצלילים של Meta, בחינם בכל מוצרי Meta. אם יש כאן תיקיית צלילים ובחרת בה, אוסיף אותו בעדינות מתחת לסרטון.</small>'
   +'<a class="yb yb2" href="https://www.facebook.com/sound/collection/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">🎵 לפתוח את אוסף הצלילים של Meta</a>'
   +'<button type="button" class="yb yb1" data-a="send">שליחה</button>'
   +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
  function close(){w.remove();}
- var picked=[],chosenSound='',sndTitle={};
+ var picked=[],chosenSound='',sndTitle={},ownAu=null;
  function paintList(){
   var l=document.getElementById('cpList');
-  if(l)l.textContent=picked.length?('נבחרו '+picked.length+': '+picked.map(function(f){return f.name;}).join(', ')):'';
+  if(l)l.innerHTML=picked.map(function(f,i){
+   return '<div style="display:flex;gap:6px;align-items:center;margin:4px 0"><b>'+(i+1)+'</b><span style="flex:1;word-break:break-all">'+(f.type&&f.type.indexOf('video')===0?'🎬 ':'🖼️ ')+esc(f.name)+'</span>'
+    +'<button type="button" class="yb" data-m="u'+i+'">▲</button><button type="button" class="yb" data-m="d'+i+'">▼</button><button type="button" class="yb" data-m="x'+i+'">✕</button></div>';
+  }).join('');
+  var jb=document.getElementById('cpJoinBox');if(jb)jb.hidden=picked.length<2;
+ }
+ function paintAudio(){
+  var l=document.getElementById('cpAuL');if(!l)return;
+  l.innerHTML=ownAu?'<div>🎵 '+esc(ownAu.name)+' <button type="button" class="yb" data-a="aux">✕</button></div><label style="display:block;margin-top:4px"><input type="checkbox" id="cpRight"> הצליל שלי ויש לי זכויות עליו</label>':'';
  }
  w.onclick=function(e){
   if(e.target===w)return close();
   var a=e.target.getAttribute&&e.target.getAttribute('data-a');
   if(a==='x')return close();
   if(a==='pick'){var fi=document.getElementById('cpFiles');if(fi)fi.click();return;}
+  if(a==='pickau'){var fa=document.getElementById('cpAudio');if(fa)fa.click();return;}
+  if(a==='aux'){ownAu=null;paintAudio();return;}
+  var mv=e.target.getAttribute&&e.target.getAttribute('data-m');
+  if(mv){
+   var mn=Number(mv.slice(1)),mc=mv.charAt(0);
+   if(mc==='x')picked.splice(mn,1);
+   else{var mj=mc==='u'?mn-1:mn+1;if(mj>=0&&mj<picked.length){var mt=picked[mn];picked[mn]=picked[mj];picked[mj]=mt;}}
+   paintList();return;
+  }
   var k=e.target.getAttribute&&e.target.getAttribute('data-k');
   if(k){e.target.classList.toggle('on');return;}
   var sid=e.target.getAttribute&&e.target.getAttribute('data-s');
@@ -15333,16 +15354,22 @@ function campSheet(){
   var chosen=[].map.call(w.querySelectorAll('#cpKinds .yb.on'),function(b){return b.getAttribute('data-k');});
   var t=(document.getElementById('cpText').value||'').trim();
   if(!picked.length&&!t){toast('בחר תמונות או סרטון, או כתוב מה תרצה');return;}
-  var note='קמפיין: '+(chosen.length?chosen.join(', '):'לא נבחר סוג')+(t?' | '+t:'')+(chosenSound&&sndTitle[chosenSound]?' | צליל: '+sndTitle[chosenSound]:'');
+  if(ownAu&&!(document.getElementById('cpRight')||{}).checked){toast('לסמן שיש לך זכויות על הצליל שהעלית, או להסיר אותו');return;}
+  var joinAll=picked.length>1&&!!(document.getElementById('cpJoin')||{}).checked;
+  var sndNote=ownAu?'צליל משלי: '+ownAu.name+' (הלקוח מאשר שיש לו זכויות עליו)':(chosenSound&&sndTitle[chosenSound]?'צליל: '+sndTitle[chosenSound]:'');
+  var note='קמפיין: '+(chosen.length?chosen.join(', '):'לא נבחר סוג')+(t?' | '+t:'')+(sndNote?' | '+sndNote:'')
+   +(picked.length>1?' | סדר הקבצים: '+picked.map(function(f,i){return (i+1)+'. '+f.name;}).join(', '):'')+(joinAll?' | לחבר הכול לסרטון אחד':'');
+  var allF=picked.concat(ownAu?[ownAu]:[]);
   e.target.disabled=true;
-  var go=picked.length?sendAll(picked,note):sendText('קמפיין',note,'משימה');
+  var go=allF.length?sendAll(allF,note):sendText('קמפיין',note,'משימה');
   go.then(function(){
-   markSent(picked.length?'file':'text',note);close();
+   markSent(allF.length?'file':'text',note);close();
    toast('נשלח. אכין טיוטה ואחזיר אותה בתשובות, ושום דבר לא יעלה בלי אישור שלך.');
   }).catch(function(){e.target.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
  };
  w.addEventListener('change',function(e){
-  if(e.target&&e.target.id==='cpFiles'){picked=[].slice.call(e.target.files||[]);paintList();}
+  if(e.target&&e.target.id==='cpFiles'){picked=picked.concat([].slice.call(e.target.files||[]));e.target.value='';paintList();}
+  if(e.target&&e.target.id==='cpAudio'){var af=(e.target.files||[])[0];if(af){ownAu=af;paintAudio();}e.target.value='';}
  });
  document.body.appendChild(w);
  // The sounds folder (sounds/index.json, copied by every build). No tracks yet: the picker stays hidden.
