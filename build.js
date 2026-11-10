@@ -18107,7 +18107,15 @@ function fcPaintInline(){
  var box=document.getElementById('fcInline');if(!box)return;
  if(!fcS.inl){box.hidden=true;return;}
  var h='';
- fcS.msgs.slice(-4).forEach(function(m){h+='<div class="fcib '+(m.from==='me'?'me':'bot')+'">'+esc(m.text)+'</div>';});
+ var last4=fcS.msgs.slice(-4);
+ last4.forEach(function(m,i){
+  h+='<div class="fcib '+(m.from==='me'?'me':'bot')+'">'+esc(m.text)+'</div>';
+  // 10.11.2026: one box for questions and requests. When the code took a request for a question, the answer can be handed to execution right here, without opening the full chat.
+  if(m.from!=='me'&&i===last4.length-1&&m.id&&String(m.id).indexOf('tmp')!==0&&fcS.mode!=='sales'){
+   var st=fcS.todo[m.id]||(m.todo?'ok':'');
+   h+='<button type="button" class="fcmore fcInDo" data-id="'+esc(m.id)+'"'+(st?' disabled':'')+'>'+(st==='ok'?'✓ נשלח לביצוע':st==='wait'?'שולח...':'🛠️ להעביר לביצוע')+'</button>';
+  }
+ });
  if(fcS.busy)h+='<div class="fcib bot fcTyping">…כותב</div>';
  if(fcS.err)h+='<div class="fcErr">'+esc(fcS.err)+'</div>';
  h+='<button type="button" class="fcmore" id="fcMore">פתיחת השיחה המלאה</button>';
@@ -18179,7 +18187,7 @@ function fcSheet(){
  var f=document.getElementById('fcQuick');
  if(f)f.onsubmit=function(e){e.preventDefault();var i=document.getElementById('fcQText'),v=i?i.value:'';if(!String(v).trim())return;fcS.inl=true;if(i)i.value='';fcSend(v);};
  var r=document.getElementById('fcRow');
- if(r)r.addEventListener('click',function(e){var t=e.target;if(t&&t.id==='fcMore')fcSheet();});
+ if(r)r.addEventListener('click',function(e){var t=e.target;if(t&&t.id==='fcMore')fcSheet();else if(t&&t.classList&&t.classList.contains('fcInDo'))fcTodo(t.getAttribute('data-id'));});
  on('icFcSales',function(){fcSheet();fcSend('אימון מכירות');});
  on('icFcCoach',function(){fcSheet();fcSend('אימון עסקי');});
  on('icFcPersonal',function(){fcSheet();fcSend('אימון אישי');});
