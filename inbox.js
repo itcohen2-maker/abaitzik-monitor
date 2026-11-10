@@ -13,6 +13,7 @@ const path = require('path');
 
 // Which monitor this is. Defaults are Itzik's topic and folders.
 const inst = require('./lib/instance.js');
+const gate = require('./gate.js');
 // Both inbound topics while a rotation window is open, see lib/instance.js.
 const TOPICS = inst.inTopics();
 const SEEN = path.join(inst.dataPath, 'ntfy-seen.json');
@@ -51,21 +52,30 @@ function mark() {
       // looks like a file on disk. That happened once and fourteen recordings
       // were written as 51 byte stubs, so the download is now checked and a
       // loss is reported loudly instead of being handed to the transcriber.
-      const out = path.join(DROP, m.attachment.name);
       const res = await fetch(m.attachment.url);
       const bin = Buffer.from(await res.arrayBuffer());
       const expected = Number(m.attachment.size) || 0;
       const looksReal = res.ok && bin.length > 1024 && (!expected || bin.length >= expected * 0.9);
-      if (looksReal) {
-        fs.writeFileSync(out, bin);
-        console.log('קובץ: ' + out + '  (' + bin.length + ' bytes)');
+      // 10.11.2026: a file the page sealed (ENC1 / ENC2, see sealBlob in build.js) is opened with the gate key,
+      // under its real name for ENC2; a plain one is written as it always was.
+      const opened = looksReal ? gate.openFile(bin) : null;
+      if (looksReal && opened) {
+        const out = path.join(DROP, opened.name || m.attachment.name);
+        fs.writeFileSync(out, opened.data);
+        console.log('קובץ: ' + out + '  (' + opened.data.length + ' bytes)');
+      } else if (looksReal) {
+        console.log('!! קובץ מוצפן שלא נפתח: ' + m.attachment.name);
       } else {
         console.log('!! ההקלטה אבדה: ' + m.attachment.name +
           '  (' + res.status + ', ' + bin.length + ' bytes, ציפינו ל-' + expected + ')');
         console.log('!! ntfy מוחק צרופות אחרי כשלוש שעות. צריך לבקש מאיציק לשלוח שוב.');
       }
     }
-    if (m.message) console.log(m.message);
+    // 10.11.2026: a sealed text message ("enc1:") is opened with the gate key; one that does not verify is said so.
+    if (m.message) {
+      const plain = gate.openMessage(m.message);
+      console.log(plain === null ? '!! הודעה מוצפנת שלא נפתחה' : plain);
+    }
   }
   const top = msgs[msgs.length - 1].time;
   const ids = msgs.filter(m => m.time === top).map(m => m.id)
