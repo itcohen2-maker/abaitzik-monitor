@@ -18039,18 +18039,29 @@ function handleSheet(req){
  var old=document.getElementById('hdSheet');if(old)old.remove();
  var w=document.createElement('div');w.id='hdSheet';w.className='ysheet';
  w.setAttribute('role','dialog');w.setAttribute('aria-label','לטיפול');
- var KI={request:'📨',setup:'🧩',sign:'✍️',agreement:'📑',nda:'🔏',doc:'📄',quote:'💰',lead:'🔔',form:'📝'};
+ var KI={request:'📨',setup:'🧩','setup-missing':'❓',sign:'✍️',agreement:'📑',nda:'🔏',doc:'📄',quote:'💰',lead:'🔔',form:'📝'};
+ /* 11.11.2026, Itzik: "לא ממש מעודכן ולא מסודר בצורה יפה". Grouped by what it is, each row says how long it waits,
+    and what waits more than two days is marked. */
+ var GR=req?[['בקשות מלקוחות',['request']]]:[['🔔 לידים',['lead']],['✍️ חתימות',['sign','agreement','nda','doc','quote']],['🧩 טפסים שחזרו',['setup','setup-missing','form']],['📋 עוד',null]];
+ function age(at){var h=(Date.now()-Date.parse(at))/3600000;if(!(h>=0))return '';if(h<1)return 'עכשיו';if(h<24){var r=Math.round(h);return r<2?'לפני שעה':'לפני '+r+' שעות';}var d=Math.floor(h/24);return d===1?'מאתמול':'מחכה '+d+' ימים';}
+ function row(x){
+  var go=x.link&&typeof MG_GO!=='undefined'&&MG_GO[x.link],old=(Date.now()-Date.parse(x.at))>48*3600000;
+  var d=new Date(x.at).toLocaleString('he-IL',{weekday:'short',day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'});
+  return '<div style="margin:6px 0;padding:10px 12px;border-radius:12px;background:rgba(127,127,127,.10);text-align:right'+(old?';box-shadow:inset -4px 0 0 #e0a100':'')+'">'
+   +'<div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline"><b>'+(KI[x.kind]||'📋')+' '+esc(x.who)+'</b><small style="white-space:nowrap'+(old?';color:#e0a100;opacity:1':'')+'">'+age(x.at)+'</small></div>'
+   +'<div style="margin:4px 0 2px;line-height:1.45">'+esc(x.title)+'</div>'
+   +'<small style="display:block;opacity:.7">'+d+'</small>'
+   +'<div style="display:flex;gap:8px;margin-top:8px">'+(go?'<button type="button" class="yb" style="flex:1;margin:0" data-a="go" data-l="'+esc(x.link)+'">↗ לראות איפה זה</button>':'')
+   +'<button type="button" class="yb yb1" style="flex:1;margin:0" data-a="done" data-id="'+esc(x.id)+'">✓ טופל</button></div></div>';
+ }
  function rows(){
   var L=handleOpen(req);
   if(!L.length)return '<small>'+(req?'אין בקשות פתוחות מלקוחות.':'אין כלום לטיפול. כל מה שחזר טופל.')+'</small>';
-  return L.map(function(x){
-   var d=new Date(x.at);
-   var go=x.link&&typeof MG_GO!=='undefined'&&MG_GO[x.link];
-   return '<div class="ycard" style="margin:6px 0;padding:10px;text-align:right"><b>'+(KI[x.kind]||'📋')+' '+esc(x.who)+'</b>'
-    +'<small style="display:block;opacity:1">'+esc(x.title)+'</small>'
-    +'<small style="display:block">'+d.toLocaleString('he-IL',{weekday:'long',day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})+'</small>'
-    +(go?'<button type="button" class="yb" data-a="go" data-l="'+esc(x.link)+'">↗ לראות איפה זה</button>':'')
-    +'<button type="button" class="yb yb1" data-a="done" data-id="'+esc(x.id)+'">✓ טופל</button></div>';
+  var used={};
+  return GR.map(function(g){
+   var M=L.filter(function(x){if(used[x.id])return false;var ok=!g[1]||g[1].indexOf(x.kind)>=0;if(ok)used[x.id]=1;return ok;});
+   if(!M.length)return '';
+   return (GR.length>1?'<div style="margin:14px 2px 2px;font-weight:700;opacity:.85">'+g[0]+' · '+M.length+'</div>':'')+M.map(row).join('');
   }).join('');
  }
  w.innerHTML='<div class="ycard"><b>'+(req?'📨 בקשה מהמנהלה':'📋 לטיפול')+'</b><small>'+(req?'בקשות שלקוחות שלחו מהמוניטור שלהם, החדשה למעלה. הכפתור מוביל למסך שבו מחליטים. כשסיימת, לחץ ✓ טופל.':'מה שחזר אליך ומחכה לך, החדש למעלה. כשסיימת עם פריט, לחץ ✓ טופל והוא יורד.')+'</small><div id="hdList">'+rows()+'</div><button type="button" class="yb yx" data-a="x">סגירה</button></div>';

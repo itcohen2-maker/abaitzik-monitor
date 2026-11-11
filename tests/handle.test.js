@@ -140,3 +140,24 @@ test('the customer gets the automatic answer from the listener, with no model, a
   assert.ok(b.includes("'🧑‍💼 המנהלת של ' + esc(inst.owner)"));
   assert.ok(b.includes('בקשה ממנהל: '), 'the wire prefix is unchanged');
 });
+
+// 11.11.2026: a request gone from the customer's list closes on Itzik's side; a form finished again replaces its item.
+test('fromRequests whole: a request removed by the customer closes its open item', () => {
+  const d = tmp();
+  const r1 = { id: 'cr1', at: '2026-11-10T17:59:00Z', text: 'לחבר מייל', status: 'pending' };
+  H.fromRequests(d, 'pablo', 'ד״ר שולמן', [r1]);
+  assert.strictEqual(H.open(d).length, 1);
+  assert.strictEqual(H.fromRequests(d, 'pablo', 'ד״ר שולמן', [], [], false), false, 'without the whole list nothing closes');
+  assert.strictEqual(H.open(d).length, 1);
+  assert.strictEqual(H.fromRequests(d, 'pablo', 'ד״ר שולמן', [], [], true), true);
+  assert.strictEqual(H.open(d).length, 0);
+});
+
+test('closePrefix: the earlier finish of the same form closes', () => {
+  const d = tmp();
+  H.add(d, form('setup:tokA:1'));
+  H.add(d, form('setup:tokB:1'));
+  assert.strictEqual(H.closePrefix(d, 'setup:tokA:'), 1);
+  H.add(d, form('setup:tokA:2'));
+  assert.deepStrictEqual(H.open(d).map((r) => r.key).sort(), ['setup:tokA:2', 'setup:tokB:1']);
+});
