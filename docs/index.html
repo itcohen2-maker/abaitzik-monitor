@@ -2701,7 +2701,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-11T06:06:22.720Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-11T06:10:03.191Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4615,7 +4615,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='10e17cf7d4';
+var CODE_ID='1b0c8384e0';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -13185,7 +13185,7 @@ function boardSheet(wk){
   +'#bdEd input[type=time]{font:800 26px Heebo,sans-serif;padding:8px 12px;border:1px solid rgba(255,255,255,.15);border-radius:14px;background:#0d0f18;color:#b9c0ff;text-shadow:0 0 16px rgba(91,108,255,.6)}'
   +'#bdEd .row{border-top:1px solid rgba(255,255,255,.08);padding:8px 0}#bdEd .it{background:#0d0f18;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:10px 12px;margin:8px 0}'
   +'#bdGrid .ycard>table,#bdGrid .ycard>.nav,#bdGrid .ycard>.sum,#bdGrid .ycard>.lg{display:none!important}'
-  +'#bdGrid .lsc{display:flex;flex-direction:column;gap:6px;margin:6px 0 4px}'
+  +'#bdGrid .lsc{display:flex;flex-direction:column;gap:6px;margin:6px 0 4px}#bdGrid{padding-left:4px!important;padding-right:4px!important}#bdGrid .ycard{padding-left:6px!important;padding-right:6px!important}'
   +'#bdGrid .lrot{display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,rgba(79,91,255,.22),rgba(139,92,246,.22));border:1px solid rgba(139,92,246,.45);border-radius:14px;padding:8px 10px;font:700 13px Heebo,sans-serif;color:#e6e9ff}'
   +'#bdGrid .lrot i{font-style:normal;font-size:20px;display:inline-block;animation:bdRot 2.6s ease-in-out infinite}'
   +'@keyframes bdRot{0%,40%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}'
@@ -13219,9 +13219,9 @@ function boardSheet(wk){
   +'#bdGrid .lsc{height:100%;gap:4px;margin:0}#bdGrid .lrot{display:none}'
   +'#bdGrid .lh{flex-wrap:nowrap;flex:0 0 36px}#bdGrid .lh b{flex:0 0 auto}'
   +'#bdGrid .lk{order:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:start}'
-  +'#bdGrid .lg2{flex:1;min-height:0;grid-template-columns:64px repeat(7,minmax(0,1fr));grid-template-rows:28px repeat(var(--R),minmax(0,1fr));gap:4px}'
-  +'#bdGrid .ln{font-size:clamp(12px,3.4vh,17px)!important}#bdGrid .ln small{font-size:clamp(8px,2.3vh,10px)!important}'
-  +'#bdGrid .dot em{font-size:clamp(11px,3.3vh,18px)}#bdGrid .dot small{font-size:clamp(8px,2.3vh,11px)}'
+  +'#bdGrid .lg2{flex:1;min-height:0;grid-template-columns:86px repeat(7,minmax(0,1fr));grid-template-rows:28px repeat(var(--R),minmax(0,1fr));gap:4px}'
+  +'#bdGrid .ln{flex-direction:row!important;gap:3px;font-size:clamp(12px,3.4vh,16px)!important}#bdGrid .ln small{flex:1;text-align:start;font-size:clamp(8px,2.3vh,10px)!important}'
+  +'#bdGrid .dot{flex-direction:row;gap:4px}#bdGrid .dot em{font-size:clamp(11px,3.6vh,18px)}#bdGrid .dot small{font-size:clamp(8px,2.8vh,12px)}'
   +'#bdGrid .dot{border-radius:12px}'
   +'}</style>';
  var wkName=BD_WEEK===0?'השבוע':BD_WEEK===-1?'שבוע שעבר':BD_WEEK===1?'שבוע הבא':(BD_WEEK>0?'בעוד '+BD_WEEK+' שבועות':'לפני '+(-BD_WEEK)+' שבועות');
