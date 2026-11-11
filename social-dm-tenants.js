@@ -97,8 +97,20 @@ async function one(t) {
   say(t.name + ': ' + made + ' שורות נוספו ל 📋');
 }
 
+// Self signups (signup-personalize.js) add { name, setup, tenant: true } to data/cal/sources.json with the 📸 card
+// from the template. They join here by themselves, and are read only after they press "להפעיל" on that card.
+function all() {
+  const list = readJson(LIST, []);
+  const known = new Set(list.map((t) => t && t.name));
+  readJson(path.join(HERE, 'data', 'cal', 'sources.json'), []).forEach((c) => {
+    if (!c || !c.tenant || !c.setup || known.has(c.name)) return;
+    list.push({ name: c.name, dir: c.dir || '/home/' + c.name + '/' + c.name + '-monitor', setup: c.setup, step: 'meta', dmStep: 'dm' });
+  });
+  return list;
+}
+
 (async () => {
-  for (const t of readJson(LIST, [])) {
+  for (const t of all()) {
     try { await one(t); } catch (e) { say((t && t.name) + ': ' + e.message.slice(0, 120)); }
   }
 })();
