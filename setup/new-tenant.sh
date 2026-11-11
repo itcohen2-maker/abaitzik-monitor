@@ -108,9 +108,16 @@ sudo -H -u "$U" node build.js 2>&1 | tail -2
 chmod -R o+rX docs
 grep -q "gate" docs/index.html || { echo "הדף לא נעול, עוצר"; exit 1; }
 
-# the Claude token: the answering worker only
-grep "^CLAUDE_CODE_OAUTH_TOKEN=" /etc/monitor.env > /etc/$U.env
+# the Claude key: the answering worker only. 11.11.2026, Itzik: "שום מנוי של מוניטור לא נוגע במנוי שלי".
+# A new monitor starts on the customers' API key (CUSTOMER_API_KEY), never on Itzik's subscription token.
+# A key of its own can replace it later (setup/tenant-api-key.sh).
+CK=$(grep "^CUSTOMER_API_KEY=" /etc/monitor.env | cut -d= -f2-)
+[ -n "$CK" ] || { echo "אין CUSTOMER_API_KEY ב /etc/monitor.env, עוצר"; exit 1; }
+echo "ANTHROPIC_API_KEY=$CK" > /etc/$U.env
 chown root:"$U" /etc/$U.env; chmod 640 /etc/$U.env
+mkdir -p /srv/monitor-changes /root/tenant-tokens
+date -u +%FT%TZ > "/srv/monitor-changes/$ID.own"; chmod 644 "/srv/monitor-changes/$ID.own"
+date -u +%FT%TZ > "/root/tenant-tokens/$ID.own"
 
 HARD="NoNewPrivileges=yes
 PrivateTmp=yes
@@ -223,7 +230,7 @@ $HOST {
 		Referrer-Policy "no-referrer"
 		Strict-Transport-Security "max-age=31536000"
 		Permissions-Policy "camera=(self), microphone=(self), geolocation=()"
-		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://ntfy.sh; frame-ancestors 'none'; base-uri 'none'; form-action 'self'; object-src 'none'"
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://ntfy.sh https://wa.abaitzik.com; frame-ancestors 'none'; base-uri 'none'; form-action 'self'; object-src 'none'"
 		-Server
 	}
 	@hidden path_regexp hid ^/(\.|api/|gate-|instance\.json|CLAUDE)

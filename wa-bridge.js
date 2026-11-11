@@ -36,6 +36,8 @@ const CHAT = path.join(ROOT, 'data', 'chat', 'chat');
 const PORT = Number(process.env.WA_PORT || 8796);
 const DEMO_FLAG = path.join(ROOT, 'data', 'demo', 'active.json');
 const ORIGINS = ['https://itcohen2-maker.github.io', 'https://shai.it-solution.co.il', 'https://alon.abaitzik.com', 'https://rinat.abaitzik.com', 'https://pablo.it-solution.co.il', 'https://ilay.abaitzik.com', 'https://it-solution.co.il', 'https://www.it-solution.co.il'];
+// 11.11.2026: every self signup trial monitor lives at https://<id>.m.it-solution.co.il, so those are allowed by pattern.
+function originOk(o) { return ORIGINS.indexOf(o) > -1 || /^https:\/\/t[a-f0-9]{6}\.m\.it-solution\.co\.il$/.test(String(o || '')); }
 /*
   1.11.2026: the client demo (lib/demo-mode.js). While it is on, every question,
   from the page or from WhatsApp, goes to the worker with this frame first, so
@@ -622,7 +624,7 @@ function tenantToMonitor(tn) {
 async function api(q, s, u) {
   const origin = q.headers.origin || '';
   const h = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', Vary: 'Origin' };
-  if (ORIGINS.indexOf(origin) > -1) { h['Access-Control-Allow-Origin'] = origin; h['Access-Control-Allow-Headers'] = 'Content-Type'; h['Access-Control-Allow-Methods'] = 'POST, OPTIONS'; }
+  if (originOk(origin)) { h['Access-Control-Allow-Origin'] = origin; h['Access-Control-Allow-Headers'] = 'Content-Type'; h['Access-Control-Allow-Methods'] = 'POST, OPTIONS'; }
   if (q.method === 'OPTIONS') { s.writeHead(204, h); return s.end(); }
   if (q.method !== 'POST') { s.writeHead(405, h); return s.end('{}'); }
   let b; try { b = JSON.parse((await readBody(q, 20000)).toString('utf8')); } catch (e) { s.writeHead(400, h); return s.end('{}'); }
@@ -829,7 +831,7 @@ const server = http.createServer(function (q, s) {
     try {
       const o = q.headers.origin || '';
       const eh = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', Vary: 'Origin' };
-      if (ORIGINS.indexOf(o) > -1) { eh['Access-Control-Allow-Origin'] = o; eh['Access-Control-Allow-Headers'] = 'Content-Type'; eh['Access-Control-Allow-Methods'] = 'POST, OPTIONS'; }
+      if (originOk(o)) { eh['Access-Control-Allow-Origin'] = o; eh['Access-Control-Allow-Headers'] = 'Content-Type'; eh['Access-Control-Allow-Methods'] = 'POST, OPTIONS'; }
       s.writeHead(500, eh); s.end('{}');
     } catch (x) {}
   }); return; }
