@@ -2734,7 +2734,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-11T13:46:10.948Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-11T13:50:02.506Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4648,7 +4648,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='574a65350b';
+var CODE_ID='d72832466b';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12981,20 +12981,18 @@ function vqRows(id){
   rj.forEach(function(x){out.push({k:'q',t:'⛔ '+lab(x),u:'ner/candle.html',n:x.name});});
  }
  if(id==='ai'){
-  [['he','🇮🇱 עברית'],['en','🇺🇸 אנגלית']].forEach(function(g){
-   var inL=function(x){return g[0]==='en'?x.lang==='en':x.lang!=='en';};
-   var a=Q.filter(function(x){return inL(x)&&!x.posted&&!x.failed;}).sort(function(p,q2){return (p.order||0)-(q2.order||0);});
-   var wt=a.filter(function(x){return x.hold;}),ap=a.filter(function(x){return !x.hold;});
-   out.push({h:g[1]+': 🔔 מחכים לאישור שלך ('+wt.length+')'});
-   if(!wt.length)out.push({k:'q',t:'✔️ אין כרגע מה לאשר',u:'ai/ai.html'});
-   wt.forEach(function(x){out.push({k:'q',t:'🆕 '+x.name+' · לחץ כדי לצפות ולאשר',u:'ai/ai.html',n:x.id});});
-   var nowIL=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Jerusalem'})),d0=new Date(nowIL);if(nowIL.getHours()>=20)d0.setDate(d0.getDate()+1);
-   var DNs=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'],slot=function(i){var d=new Date(d0),k=-1;for(;;){if(d.getDay()!==6){k++;if(k===i)break;}d.setDate(d.getDate()+1);}
-    var same=d.toDateString()===nowIL.toDateString();return (same?'היום':'יום '+DNs[d.getDay()]+' '+d.getDate()+'.'+(d.getMonth()+1))+' ב 20:00';};
-   out.push({h:g[1]+': ✅ מאושרים, יעלו לבד ('+ap.length+')'});
-   if(!ap.length)out.push({k:'q',t:'⚠️ אין סרטון מאושר שמחכה לעלות',u:'ai/ai.html'});
-   ap.forEach(function(x,i){out.push({k:'q',t:'📅 '+slot(i)+' · '+x.name,u:'ai/ai.html',n:x.id});});
-  });
+  var nowIL=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Jerusalem'})),d0=new Date(nowIL);if(nowIL.getHours()>=20)d0.setDate(d0.getDate()+1);
+  var DNs=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+  var slot=function(i){var d=new Date(d0),k=-1;for(;;){if(d.getDay()!==6){k++;if(k===i)break;}d.setDate(d.getDate()+1);}return d;};
+  var nice=function(d){return (d.toDateString()===nowIL.toDateString()?'היום':'יום '+DNs[d.getDay()]+' '+d.getDate()+'.'+(d.getMonth()+1))+' ב 20:00';};
+  var fl=function(x){return x.lang==='en'?'🇺🇸':'🇮🇱';};
+  var live=Q.filter(function(x){return !x.posted&&!x.failed;}).sort(function(p,q2){return (p.order||0)-(q2.order||0);});
+  var wt=live.filter(function(x){return x.hold;});
+  wt.forEach(function(x){out.push({k:'q',t:'🔔 מחכה לאישור שלך '+fl(x)+' '+x.name+' · לחץ לצפייה ואישור',u:'ai/ai.html',n:x.id,pulse:true});});
+  if(!wt.length)out.push({k:'q',t:'✔️ אין כרגע סרטון שמחכה לאישור שלך',u:'ai/ai.html'});
+  var ap=[];['he','en'].forEach(function(lg){live.filter(function(x){return !x.hold&&(lg==='en'?x.lang==='en':x.lang!=='en');}).forEach(function(x,i){ap.push({x:x,d:slot(i)});});});
+  ap.sort(function(p,q2){return p.d-q2.d||((p.x.lang==='en')-(q2.x.lang==='en'));});
+  ap.forEach(function(o){out.push({k:'q',t:'✅ '+nice(o.d)+' '+fl(o.x)+' '+o.x.name,u:'ai/ai.html',n:o.x.id});});
  }
  if(id==='pl'){
   var day=function(iso){return new Date(iso||0).toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'});};
