@@ -182,9 +182,17 @@
   "ytd": "On the night of November 2, according to reports, supermarket fridges in five European countries were hacked and heated up to 50 degrees. 15 stores out of more than 700, and it is still unclear who is behind it. Any device connected to the internet can be a breach. What do you have connected, and not secured? Source: AP and The National, November 2, 2026.",
   "song": "",
   "song_tt": "",
-  "posted": false,
-  "postedAt": null,
-  "approvedAt": "2026-11-11T08:37:06.014Z"
+  "posted": true,
+  "postedAt": "2026-11-11T18:05:22.290Z",
+  "approvedAt": "2026-11-11T08:37:06.014Z",
+  "auto": {
+   "reel": "18105789440015392",
+   "story": "17978746002153366",
+   "storyError": null,
+   "page": "1026254043845337",
+   "pageError": null,
+   "channel": "itsolution.global"
+  }
  },
  {
   "id": "goncourt-en",
