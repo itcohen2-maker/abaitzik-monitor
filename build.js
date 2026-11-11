@@ -15803,7 +15803,7 @@ function myBoardSheet(wk){
  var wkName=BD_WEEK===0?'השבוע':BD_WEEK===-1?'שבוע שעבר':BD_WEEK===1?'שבוע הבא':(BD_WEEK>0?'בעוד '+BD_WEEK+' שבועות':'לפני '+(-BD_WEEK)+' שבועות');
  var h=bdCss()+'<div class="ycard"><b>🎛️ לוח בקרה</b><small>'+(CL?'הפרילנסרים, המעבדות והספקים של המרפאה, שבוע אחד במבט.':'כל מה שרץ, מה מתוכנן להעלות ומה מוכן אצלך, במקום אחד.')+'</small>'
   +bdTiles(ROWS,C,days,T0,wkName,{IC:IC,DS:DS,dm:dm,dw:dw,legend:CL?'✅ נקלט · ⚠️ כפילות במעבדה · ⏳ מייל מספק לטיפול · ▶️ קמפיין רץ · חיוור: אין':'▶️ רץ · ⏸️ מושהה · 🔜 יעלה · ✋ אתה מעלה · ✅ עלה · חיוור: לא מתוכנן'})
-  +(CL?bdClinicMonth(CL,money):bdChatHtml()+bdUpdatesHtml());
+  +(CL?bdClinicMonth(CL,money):(D.bb&&D.bb.mail?'':bdChatHtml()+bdUpdatesHtml()));
  if(CL){
   h+=bdMailHtml()+bdDoneHtml()+bdChatHtml(1);
   if(a&&a.ok)h+='<h4>▶️ הקמפיין</h4>';
@@ -15833,6 +15833,8 @@ function myBoardSheet(wk){
   +'<small>הטיוטות במסך התשובות. שום דבר לא עולה בלי אישור שלך.</small>';
  else h+='<div class="emp">עוד אין טיוטות. בלחיצה על "📣 קמפיינים" מעלים תמונות או סרטון, ואני מכין טיוטה שתופיע כאן.</div>';
  }
+ // 11.11.2026: a customer who is not a clinic gets the same bottom too, after his campaigns
+ if(!CL&&D.bb&&D.bb.mail)h+=bdMailHtml()+bdDoneHtml()+bdChatHtml(1);
  h+=bdReportHtml()+'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
  var w=document.createElement('div');
  w.id='bdGrid';w.className='ysheet'+(BD_LAND?' land':'')+(BD_DESK?' desk':'');w.setAttribute('role','dialog');w.setAttribute('aria-label','לוח בקרה');
@@ -17775,6 +17777,7 @@ function bdReportHtml(){
 // 11.11.2026, Itzik: "מהמייל, אם הגיע משהו מיוחד או אם משהו צריך להיות לאישור מיידי או לתשומת ליבי". D.bb.mail from lib/board-feed.js mailItzik.
 function bdMailHtml(){
  var M=D.bb&&D.bb.mail;if(!M)return '';
+ if(M.none)return '<div class="bbx"><b>📬 מהמייל</b><div class="emp">המיילים החשובים יופיעו כאן אחרי שמחברים את המייל במסך 🔌 חיבורים.</div></div>';
  function row(x){return '<div class="bbu"><span>✉️</span><div><b class="bbf">'+esc(x.from)+(x.n>1?' ×'+x.n:'')+'</b> '+esc(x.t)+'<small>'+esc(bdAgo(x.at))+'</small></div></div>';}
  function grp(k,ic,ttl,cl){var L=M[k]||[];if(!L.length)return '';return '<div class="bbg '+cl+'"><b>'+ic+' '+ttl+' <i>'+L.length+'</i></b>'+L.map(row).join('')+'</div>';}
  var h='<div class="bbx"><b>📬 מהמייל</b>';

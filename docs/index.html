@@ -2735,7 +2735,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-11T19:53:56.705Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-11T19:57:19.753Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4649,7 +4649,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='c4f6148f49';
+var CODE_ID='e92b97ad4f';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11612,7 +11612,7 @@ function myBoardSheet(wk){
  var wkName=BD_WEEK===0?'השבוע':BD_WEEK===-1?'שבוע שעבר':BD_WEEK===1?'שבוע הבא':(BD_WEEK>0?'בעוד '+BD_WEEK+' שבועות':'לפני '+(-BD_WEEK)+' שבועות');
  var h=bdCss()+'<div class="ycard"><b>🎛️ לוח בקרה</b><small>'+(CL?'הפרילנסרים, המעבדות והספקים של המרפאה, שבוע אחד במבט.':'כל מה שרץ, מה מתוכנן להעלות ומה מוכן אצלך, במקום אחד.')+'</small>'
   +bdTiles(ROWS,C,days,T0,wkName,{IC:IC,DS:DS,dm:dm,dw:dw,legend:CL?'✅ נקלט · ⚠️ כפילות במעבדה · ⏳ מייל מספק לטיפול · ▶️ קמפיין רץ · חיוור: אין':'▶️ רץ · ⏸️ מושהה · 🔜 יעלה · ✋ אתה מעלה · ✅ עלה · חיוור: לא מתוכנן'})
-  +(CL?bdClinicMonth(CL,money):bdChatHtml()+bdUpdatesHtml());
+  +(CL?bdClinicMonth(CL,money):(D.bb&&D.bb.mail?'':bdChatHtml()+bdUpdatesHtml()));
  if(CL){
   h+=bdMailHtml()+bdDoneHtml()+bdChatHtml(1);
   if(a&&a.ok)h+='<h4>▶️ הקמפיין</h4>';
@@ -11642,6 +11642,7 @@ function myBoardSheet(wk){
   +'<small>הטיוטות במסך התשובות. שום דבר לא עולה בלי אישור שלך.</small>';
  else h+='<div class="emp">עוד אין טיוטות. בלחיצה על "📣 קמפיינים" מעלים תמונות או סרטון, ואני מכין טיוטה שתופיע כאן.</div>';
  }
+ if(!CL&&D.bb&&D.bb.mail)h+=bdMailHtml()+bdDoneHtml()+bdChatHtml(1);
  h+=bdReportHtml()+'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
  var w=document.createElement('div');
  w.id='bdGrid';w.className='ysheet'+(BD_LAND?' land':'')+(BD_DESK?' desk':'');w.setAttribute('role','dialog');w.setAttribute('aria-label','לוח בקרה');
@@ -13387,6 +13388,7 @@ function bdReportHtml(){
 }
 function bdMailHtml(){
  var M=D.bb&&D.bb.mail;if(!M)return '';
+ if(M.none)return '<div class="bbx"><b>📬 מהמייל</b><div class="emp">המיילים החשובים יופיעו כאן אחרי שמחברים את המייל במסך 🔌 חיבורים.</div></div>';
  function row(x){return '<div class="bbu"><span>✉️</span><div><b class="bbf">'+esc(x.from)+(x.n>1?' ×'+x.n:'')+'</b> '+esc(x.t)+'<small>'+esc(bdAgo(x.at))+'</small></div></div>';}
  function grp(k,ic,ttl,cl){var L=M[k]||[];if(!L.length)return '';return '<div class="bbg '+cl+'"><b>'+ic+' '+ttl+' <i>'+L.length+'</i></b>'+L.map(row).join('')+'</div>';}
  var h='<div class="bbx"><b>📬 מהמייל</b>';
