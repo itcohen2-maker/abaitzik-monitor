@@ -150,7 +150,16 @@ function card(st, i, s) {
   return h + '</section>';
 }
 
-function page(tok, d, s) {
+// 11.11.2026: a setup page whose def has lang "en" (the Google verification demo page) renders left to right in English.
+// Customer pages never set lang, so they are untouched.
+const EN = [['lang="he" dir="rtl"','lang="en" dir="ltr"'],['" מתוך "','" of "'],['" מוכנים"','" ready"'],['לחבר מחדש','Reconnect'],['מחובר','Connected'],
+  ['כל לחיצה נשמרת מיד. אפשר לסגור ולחזור אחר כך','Every step is saved right away. You can close this page and come back later'],
+  ['סיימתי, אפשר להתחיל','Done'],['רוצה לכתוב לנו משהו','Want to write us something'],['מה ראית, איפה נתקעת, שאלה','What you saw, where you got stuck, a question'],
+  ['שליחת ההערה','Send note'],['לא חובה','Optional'],['האישור בוטל. אפשר לנסות שוב','The approval was cancelled. You can try again'],
+  ['קיבלנו. נחבר את מה שנשאר ונעדכן אותך כשהמוניטור מוכן','Thank you. Your Google services are connected to your Monitor'],['תודה!','Thank you!']];
+function pageEn(h) { for (const [a, b] of EN) h = h.split(a).join(b); return h.replace('<style>', '<style>body{direction:ltr;text-align:left}'); }
+function page(tok, d, s) { const h = pageHe(tok, d, s); return d && d.lang === 'en' ? pageEn(h) : h; }
+function pageHe(tok, d, s) {
   return '<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
     + '<meta name="robots" content="noindex,nofollow"><title>' + esc(d.title) + ' | IT Solution</title>'
     + '<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800;900&display=swap" rel="stylesheet">'
