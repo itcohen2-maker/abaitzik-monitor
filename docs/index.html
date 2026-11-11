@@ -2734,7 +2734,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-11T10:14:11.234Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-11T10:14:20.738Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4648,7 +4648,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='0213d25a8e';
+var CODE_ID='7bdf79f81f';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -18790,7 +18790,7 @@ function dmoIcons(){
   +'<button type="button" class="ic" data-dic="fcp"><span class="c c-fcp">🌿</span>אימון אישי</button>'
   +'<button type="button" class="ic" data-dic="notes"><span class="c c-dnote">📝</span>פתקים</button>'
   +'<button type="button" class="ic" data-dic="cal"><span class="c c-gcal">📅</span>יומן</button>'
-  +'<button type="button" class="ic" data-dic="conn"><span class="c c-dconn">🔌</span>חיבורים</button>';
+  +'<button type="button" class="ic" data-dic="conn"><span class="c c-dconn">🔌</span>חיבורים והחבילה שלי</button>';
  ics.forEach(function(x,i){
   h+=x?'<button type="button" class="ic" data-dic="'+i+'"><span class="c c-dfill'+(x.url&&/ynet/.test(x.url)?' c-ynet':'')+'">'+(x.url&&/ynet/.test(x.url)?'ynet':esc(x.e))+'</span>'+esc(x.n)+'</button>'
       :'<button type="button" class="ic" data-dic="'+i+'"><span class="c c-add"><svg viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>להוסיף</button>';
