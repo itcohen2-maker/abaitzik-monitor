@@ -2735,7 +2735,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-11T19:57:33.484Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-11T20:00:01.126Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4649,7 +4649,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='e92b97ad4f';
+var CODE_ID='23e7bf35dc';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11558,7 +11558,7 @@ function myBoardSheet(wk){
  function dm(d){var p=d.split('-');return (+p[2])+'.'+(+p[1]);}
  function money(n){n=Math.round((Number(n)||0)*100)/100;return n.toLocaleString('he-IL');}
  function when(s){try{var d=new Date(s);return d.toLocaleDateString('he-IL',{day:'numeric',month:'numeric'})+' '+d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});}catch(e){return '';}}
- var T0=vqDay(),DN=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'],DS=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
+ var T0=(function(){try{return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jerusalem'}).format(new Date());}catch(e){return new Date().toISOString().slice(0,10);}})(),DN=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'],DS=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
  var SUN=add(T0,-dw(T0)+7*BD_WEEK),days=[];for(var i=0;i<7;i++)days.push(add(SUN,i));
  var IC={ok:'✅',miss:'❌',will:'🔜',hand:'✋',wait:'⏳',no:'⚠️',run:'▶️',late:'⚠️',open:'✋',pause:'⏸️'};
  var PAL=[['#f48fb1','#ad1457'],['#90caf9','#1565c0'],['#b39ddb','#673ab7'],['#ffb74d','#e65100'],['#4fb3c4','#00838f'],['#7bd88f','#1e8e4a'],['#e2574c','#2a1240'],['#5aa9fb','#0a4f9c']];
@@ -13216,6 +13216,7 @@ function vidSheet(tab){
  if(cur.upd)vidMark('tab:'+cur.id,cur.upd);
 }
 on('gVideos',function(){vidSheet();});
+
 var BD_WEEK=0;
 var BD_DESK=false;try{BD_DESK=matchMedia('(pointer:fine) and (min-width:900px)').matches;}catch(e){}
 var BD_LAND=null;try{var bdl=localStorage.getItem('bdLand');if(bdl==='1'||bdl==='0')BD_LAND=bdl==='1';}catch(e){}
@@ -13451,6 +13452,7 @@ function bdAct(a,w){
  var msg=(gen?'🎛️ מלוח הבקרה: ':'🎛️ בקשה ללוח הבקרה: ')+v;
  sendText('לוח הבקרה',msg,'משימה').then(function(){markSent('text',msg);t.value='';toast(gen?'נשלח. אטפל ואענה בצ׳אט.':'נשלח. אעדכן את הלוח ואענה בצ׳אט.');},function(){toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
 }
+
 function boardSheet(wk){
  if(typeof wk==='number')BD_WEEK=wk;
  if(!(VQ&&Date.now()-VQT<60000))return vqLoad(function(){boardSheet();});

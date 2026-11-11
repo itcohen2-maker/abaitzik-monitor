@@ -15764,7 +15764,7 @@ function myBoardSheet(wk){
  function dm(d){var p=d.split('-');return (+p[2])+'.'+(+p[1]);}
  function money(n){n=Math.round((Number(n)||0)*100)/100;return n.toLocaleString('he-IL');}
  function when(s){try{var d=new Date(s);return d.toLocaleDateString('he-IL',{day:'numeric',month:'numeric'})+' '+d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});}catch(e){return '';}}
- var T0=vqDay(),DN=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'],DS=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
+ var T0=(function(){try{return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jerusalem'}).format(new Date());}catch(e){return new Date().toISOString().slice(0,10);}})(),DN=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'],DS=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
  var SUN=add(T0,-dw(T0)+7*BD_WEEK),days=[];for(var i=0;i<7;i++)days.push(add(SUN,i));
  var IC={ok:'✅',miss:'❌',will:'🔜',hand:'✋',wait:'⏳',no:'⚠️',run:'▶️',late:'⚠️',open:'✋',pause:'⏸️'};
  var PAL=[['#f48fb1','#ad1457'],['#90caf9','#1565c0'],['#b39ddb','#673ab7'],['#ffb74d','#e65100'],['#4fb3c4','#00838f'],['#7bd88f','#1e8e4a'],['#e2574c','#2a1240'],['#5aa9fb','#0a4f9c']];
@@ -17600,6 +17600,9 @@ function vidSheet(tab){
  if(cur.upd)vidMark('tab:'+cur.id,cur.upd);
 }
 on('gVideos',function(){vidSheet();});
+/*ITZIK:END*/
+// 11.11.2026: the board helpers (bd*, BD_*) are shared with the customers' own board (myBoardSheet). Inside the
+// ITZIK block a customer's page got empty stand ins, so Ilay's and Dr. Shulman's boards drew nothing.
 // 10.11.2026, Itzik: "מסך מוניטור שחולש על כל הסרטונים והקמפיין הממומן". Every kind with how many are ready,
 // a week table of what goes up and when (auto or by hand), a mark per row, and a tap opens the ready stock (vidSheet tab).
 // 10.11.2026, Itzik: "מסך אחד, שבצד אחד מראה את כל הרשתות, וצד שני את כל השבוע ... ואפשרויות לשינוי ולעריכת הלוח",
@@ -17862,6 +17865,7 @@ function bdAct(a,w){
  var msg=(gen?'🎛️ מלוח הבקרה: ':'🎛️ בקשה ללוח הבקרה: ')+v;
  sendText('לוח הבקרה',msg,'משימה').then(function(){markSent('text',msg);t.value='';toast(gen?'נשלח. אטפל ואענה בצ׳אט.':'נשלח. אעדכן את הלוח ואענה בצ׳אט.');},function(){toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
 }
+/*ITZIK:BEGIN*/
 function boardSheet(wk){
  if(typeof wk==='number')BD_WEEK=wk;
  if(!(VQ&&Date.now()-VQT<60000))return vqLoad(function(){boardSheet();});
