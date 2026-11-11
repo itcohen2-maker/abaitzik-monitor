@@ -88,7 +88,7 @@ function req(method, url, headers, body) {
 }
 
 // Publish into the monitor exactly as the page does: first line the kind, then the text, then the code.
-async function toMonitor(kind, text, re) {
+async function toMonitor(kind, text, re, files) {
   /*
     1.11, 19:22: ntfy.sh answered 429 (the server's daily allowance ran out) and
     both WhatsApp and the demo box stopped. The bridge runs on the same machine
@@ -107,6 +107,8 @@ async function toMonitor(kind, text, re) {
     ackAt: at.toISOString(), id: id, auto: true, via: 'wa-bridge' };
   // 4.11: a quoted reply continues its thread on the page (monitor-chat-threads-re).
   if (re) rec.re = re;
+  // 11.11: a file from WhatsApp is in data/inbox, like a page upload (lib/wa-media.js).
+  if (files && files.length) rec.files = files;
   fs.mkdirSync(CHAT, { recursive: true });
   fs.writeFileSync(path.join(CHAT, name + '.tmp'), JSON.stringify(rec, null, 1), 'utf8');
   fs.renameSync(path.join(CHAT, name + '.tmp'), path.join(CHAT, name));
@@ -141,6 +143,8 @@ async function waSend(to, text, mem) {
 */
 const waOut = require('./lib/wa-out.js');
 const WT = require('./lib/wa-tenants.js');
+const WM = require('./lib/wa-media.js');
+const groupLib = require('./lib/group.js');
 const DATA = path.join(ROOT, 'data');
 const LONG = 700;
 function pageUrl() {
@@ -437,6 +441,7 @@ async function onMessage(m, contactName) {
     await waSend(m.from, '✓ תמללתי ' + (r.seconds ? 'כ ' + Math.max(1, Math.round(r.seconds / 60)) + ' דקות' : 'את השיחה') + '. הניתוח יגיע לכאן.');
     return;
   }
+  { const mp = WM.partOf(m); if (mp) return mediaIn(m, mp, null, contactName); }
   if (m.type === 'audio' && m.audio && m.audio.id) {
     const training = ST.active((loadState().train || {})[m.from]);
     const inChat = chatLive(m.from);
@@ -512,6 +517,7 @@ async function tenantSend(to, text) {
 async function tenantMessage(m, tn, contactName) {
   markRead(m.id);
   { const sl = loadState(); sl.lastIn = sl.lastIn || {}; sl.lastIn[m.from] = Date.now(); saveState(sl); }
+  { const mp = WM.partOf(m); if (mp) return mediaIn(m, mp, tn, contactName); }
   let t = textOf(m);
   if (!t && m.type === 'audio' && m.audio && m.audio.id) {
     let heard = ''; try { heard = await voiceText(m.audio.id); } catch (e) { log('tenant voice failed: ' + e.message); }
@@ -528,6 +534,49 @@ async function tenantMessage(m, tn, contactName) {
   log('tenant in ' + tn.tenant + ' ' + m.id + ' -> ' + id + (fw ? ' (forwarded)' : ''));
   await tenantSend(m.from, fw ? '✓ קיבלתי את ההודעה שהעברת. היא כבר ב 📋 לטיפול במוניטור, וטיוטת תשובה תגיע לכאן.' : '✓ קיבלתי, אני עובד על זה. התשובה תגיע לכאן.');
 }
+/*
+  11.11.2026, Itzik: a file sent in the WhatsApp chat reaches the monitor itself, not a line about it.
+  Downloaded from Meta (lib/wa-media.js, up to 25 MB), saved in that monitor's data/inbox (his own or the customer's),
+  and queued with files:[name] exactly like a page upload. A customer's PDF is also noted for the lab check.
+*/
+async function mediaIn(m, part, tn, contactName) {
+  const send = tn ? tenantSend : waSend;
+  const shown = WM.shown(m, part);
+  let got;
+  try { got = await WM.download(req, cfg(), part.id); } catch (e) {
+    log('media failed ' + (tn ? tn.tenant : 'own') + ': ' + e.message.slice(0, 120));
+    await send(m.from, e.big ? 'הקובץ גדול מ 25MB ולכן לא נקלט. אפשר להעלות אותו במוניטור, בכפתור 📎 העלאת קובץ.' : 'לא הצלחתי להוריד את הקובץ. אפשר לשלוח אותו שוב?');
+    return;
+  }
+  let name;
+  try { name = WM.save(tn ? path.join(tn.dir, 'data') : DATA, WM.nameFor(m, part, got.mime), got.buf, { labNote: !!tn }); } catch (e) {
+    log('!! media save ' + (tn ? tn.tenant : 'own') + ': ' + e.message);
+    await send(m.from, 'משהו נתקע אצלי בשמירת הקובץ. אפשר להעלות אותו במוניטור, בכפתור 📎 העלאת קובץ.');
+    return;
+  }
+  const cap = String(part.caption || '').trim();
+  const text = groupLib.groupText(cap, [name]);
+  let id;
+  if (tn) {
+    const fw = WT.forwarded(m);
+    try { id = WT.write(tn, 'וואטסאפ', WT.request(fw, text), [name]); } catch (e) {
+      log('!! tenant queue ' + tn.tenant + ': ' + e.message);
+      await send(m.from, 'הקובץ נשמר, אבל משהו נתקע בתור. אפשר לכתוב במוניטור מה לעשות איתו, ואני מטפל.');
+      return;
+    }
+    if (fw) WT.handleItem(tn, m.id, (cap ? cap + ' ' : '') + '(' + shown + ')', contactName);
+  } else {
+    id = await toMonitor('וואטסאפ', (demoOn() ? DEMO_FRAME : '') + text, '', [name]);
+  }
+  const s = loadState();
+  s.pending[id] = tn ? { to: m.from, at: Date.now(), name: contactName || '', tenant: tn.tenant, dir: tn.dir } : { to: m.from, at: Date.now(), name: contactName || '' };
+  saveState(s);
+  log('file ' + (tn ? tn.tenant : 'own') + ' ' + m.id + ' -> ' + id + ' (' + got.buf.length + ' bytes)');
+  let lab = false;
+  if (tn && /\.pdf$/i.test(name)) { try { lab = JSON.parse(fs.readFileSync(path.join(tn.dir, 'instance.json'), 'utf8')).labCheck === true; } catch (e) {} }
+  await send(m.from, '✓ קיבלתי את הקובץ ' + shown + '. ' + (lab ? 'אם זה דוח מעבדה, הוא נבדק לכפילויות ברבע השעה הקרובה והתוצאה תופיע בתשובות. ' : '') + 'התשובה תגיע לכאן.');
+}
+
 // The newest message the monitor itself sent to this number (lib/wa-out.js keeps them).
 function latestOwn(to) {
   let j = {}; try { j = JSON.parse(fs.readFileSync(path.join(DATA, 'status', 'wa-out.json'), 'utf8')); } catch (e) { return null; }

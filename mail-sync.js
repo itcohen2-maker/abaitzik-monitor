@@ -186,6 +186,8 @@ async function one(src) {
 const LAB_ONLY = process.argv.includes('--lab-only');
 async function lab(src) {
   if (readJson(path.join(src.dir, 'instance.json'), {}).labCheck !== true) return;
+  // 11.11: lab PDFs he sent on WhatsApp first; they do not need Gmail (lib/lab-mail.js dropSweep).
+  try { const d = require('./lib/lab-mail.js').dropSweep(src, { dry: DRY, say }); if (d.changed && !DRY) publish(src); } catch (e) { say(src.name + ': מעבדה מוואטסאפ: ' + e.message.slice(0, 120)); }
   const saved = savedFor(src);
   if (!saved || !/gmail\.(readonly|modify)/.test(saved.scope || '')) return;
   const c = await oa.check(saved);
