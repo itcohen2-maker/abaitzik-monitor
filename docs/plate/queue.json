@@ -612,7 +612,7 @@
   "order": 12,
   "file": "media/plate-ochmaniot-v1.mp4",
   "poster": "media/plate-ochmaniot-v1.jpg",
-  "approved": false,
+  "approved": true,
   "screens": [
    {
     "head": "אוכמניות",
