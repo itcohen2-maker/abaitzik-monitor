@@ -35,7 +35,7 @@ const STATE = path.join(ROOT, 'data', 'status', 'wa-bridge.json');
 const CHAT = path.join(ROOT, 'data', 'chat', 'chat');
 const PORT = Number(process.env.WA_PORT || 8796);
 const DEMO_FLAG = path.join(ROOT, 'data', 'demo', 'active.json');
-const ORIGINS = ['https://itcohen2-maker.github.io', 'https://shai.it-solution.co.il', 'https://alon.abaitzik.com', 'https://rinat.abaitzik.com'];
+const ORIGINS = ['https://itcohen2-maker.github.io', 'https://shai.it-solution.co.il', 'https://alon.abaitzik.com', 'https://rinat.abaitzik.com', 'https://pablo.it-solution.co.il', 'https://ilay.abaitzik.com'];
 /*
   1.11.2026: the client demo (lib/demo-mode.js). While it is on, every question,
   from the page or from WhatsApp, goes to the worker with this frame first, so
@@ -626,6 +626,14 @@ async function api(q, s, u) {
   if (q.method === 'OPTIONS') { s.writeHead(204, h); return s.end(); }
   if (q.method !== 'POST') { s.writeHead(405, h); return s.end('{}'); }
   let b; try { b = JSON.parse((await readBody(q, 20000)).toString('utf8')); } catch (e) { s.writeHead(400, h); return s.end('{}'); }
+  // 11.11: a customer's page says when it is open and for how long (lib/visits.js), with its own visit key.
+  if (u.pathname === '/api/visit') {
+    const V = require('./lib/visits.js');
+    const vn = V.nameByKey(DATA, b.key);
+    if (!vn) { s.writeHead(403, h); return s.end('{"error":"key"}'); }
+    try { V.record(DATA, vn, b); if (b.ev === 'start' || b.ev === 'end') V.buildSoon(); } catch (e) { log('visit: ' + e.message); }
+    s.writeHead(200, h); return s.end('{"ok":true}');
+  }
   // 7.11: a customer's monitor talks to its own chat with its own key (data/fastchat/tenants.json).
   if (/^\/api\/chat(\/thread|\/todo)?$/.test(u.pathname) && !codeOk(b.code)) {
     const tn = tenantByKey(b.code);

@@ -864,6 +864,13 @@ function build() {
     ads: (() => { try { return JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'ads', 'status.json'), 'utf8')); } catch (e) { return null; } })(),
     // 10.11.2026: Dr. Shulman's clinic tiles (lib/clinic.js), only where screens lists one of them. Patient data: sealed.
     clinic: (Array.isArray(inst.screens) && inst.screens.some((id) => TENANT_TOP.indexOf(id) >= 0)) ? (() => { try { return require('./lib/clinic.js').payload(inst.dataPath); } catch (e) { return null; } })() : null,
+    // 11.11.2026: a customer's visit key (lib/visits.js), sealed. With it the page says when it is open and for how long.
+    visitKey: inst.name === 'abaitzik' ? '' : (() => { try { const k = fs.readFileSync(path.join(inst.dataPath, 'status', 'visit-key.txt'), 'utf8').trim(); return /^[a-f0-9]{32}$/.test(k) ? k : ''; } catch (e) { return ''; } })(),
+    // 11.11.2026: Itzik's 👀 tile, the customers' visits with the display name from data/tenants. Sealed, his copy only.
+    visits: inst.name !== 'abaitzik' ? null : (() => { try {
+      const v = require('./lib/visits.js').forPage(inst.dataPath), out = {};
+      Object.keys(v).forEach((n) => { let t = n; try { t = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'tenants', 'tenants', n + '.json'), 'utf8')).title || n; } catch (e) {} out[n] = { title: t, list: v[n] }; });
+      return out; } catch (e) { return null; } })(),
     // 7.11.2026: a customer's key for the fast chat on wa-bridge (data/fc-key.txt, sealed like the rest of D).
     fcKey: inst.name === 'abaitzik' ? '' : (() => { try { const k = fs.readFileSync(path.join(inst.dataPath, 'fc-key.txt'), 'utf8').trim(); return /^[a-f0-9]{24,64}$/.test(k) ? k : ''; } catch (e) { return ''; } })(),
     demoFcKey: inst.name === 'abaitzik' ? (() => { try { const k = (JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'fastchat', 'tenants.json'), 'utf8')).demo || {}).key || ''; return /^[a-f0-9]{24,64}$/.test(k) ? k : ''; } catch (e) { return ''; } })() : '',
@@ -4672,7 +4679,7 @@ ${require('./lib/home-ui.js').html}
 
  <div id="askBox"></div>
 <!-- 4.11, Itzik: "תעלה את האריח של העסק שלי למעלה ברשימה. למה שמת אותו אחרון?" The business grid opens the home screen. -->
-${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + ((inst.name === 'abaitzik' || inst.handle === true) ? '<button type="button" class="gt g16" id="gHandle" hidden data-new="1"><b>📋 לטיפול</b><small>טפסים שחזרו וצריכים אותך</small></button><button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261111-leads' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button>' + '</div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
+${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + ((inst.name === 'abaitzik' || inst.handle === true) ? '<button type="button" class="gt g16" id="gHandle" hidden data-new="1"><b>📋 לטיפול</b><small>טפסים שחזרו וצריכים אותך</small></button><button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16" id="gVisits" hidden data-new="1"><b>👀 כניסות לקוחות</b><small>מתי נכנסו ולכמה זמן</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261111-leads' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button>' + '</div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
   <!-- 3.11, Itzik: "אני צריך אריח שממש יעבב לי, כמו ליד חדש". First on the grid; shows while a --nag reminder is open, hard blink once it is due, until "✅ עשיתי". -->
@@ -9411,7 +9418,9 @@ function repaintAll(){
   // 7.11: the 🔔 לאישורך strip reads D.choices, sealed too. Without this it stayed hidden after unlock.
   ['approvals',function(){if(typeof renderApprovals==='function')renderApprovals();}],
   // 10.11: the 📋 לטיפול tile reads D.handle, sealed too.
-  ['handle',function(){if(typeof paintHandle==='function')paintHandle();}]];
+  ['handle',function(){if(typeof paintHandle==='function')paintHandle();}],
+  // 11.11: 👀 כניסות לקוחות reads D.visits, and a customer's page starts its visit beacon from D.visitKey.
+  ['visits',function(){if(typeof paintVisits==='function')paintVisits();if(typeof visitStart==='function')visitStart();}]];
  var bad=[],ran={};
  jobs.forEach(function(j){
   ran[j[0]]=1;
@@ -17894,6 +17903,57 @@ function handleSheet(req){
  };
  document.body.appendChild(w);
 }
+/*
+  11.11.2026, Itzik on Dr. Shulman: "תסמן באיזה שעות הוא נכנס, כמה זמן, ותעדכן אותי באריח מהבהב".
+  A customer's page (D.visitKey) sends start when it is on screen, beat every minute while it stays, end when hidden
+  (lib/visits.js on wa-bridge). Itzik's tile 👀 כניסות לקוחות lists them and blinks until he opens it after a new one.
+*/
+var VIS_API='https://wa.abaitzik.com/api/visit',visSid='',visOn=false,visTimer=0;
+function visDev(){var t=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Mac/.test(navigator.platform||''));return t?'phone':'computer';}
+function visSend(ev){try{if(!D||!D.visitKey||!visSid)return;fetch(VIS_API,{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({key:D.visitKey,sid:visSid,ev:ev,dev:visDev()})}).catch(function(){});}catch(e){}}
+function visBegin(){visSend('start');clearInterval(visTimer);visTimer=setInterval(function(){if(!document.hidden)visSend('beat');},60000);}
+function visStop(){clearInterval(visTimer);visSend('end');}
+function visitStart(){
+ if(visOn||!D||!D.visitKey)return;visOn=true;
+ visSid=Math.random().toString(36).slice(2,12)+Date.now().toString(36).slice(-4);
+ if(!document.hidden)visBegin();
+ document.addEventListener('visibilitychange',function(){if(document.hidden)visStop();else visBegin();});
+ window.addEventListener('pagehide',visStop);
+}
+function visAll(){
+ var V=D&&D.visits,L=[];if(!V)return L;
+ Object.keys(V).forEach(function(n){(V[n].list||[]).forEach(function(x){L.push({n:n,t:V[n].title||n,at:x.at,sec:x.sec,dev:x.dev});});});
+ return L.sort(function(a,b){return a.at<b.at?1:-1;});
+}
+function visSeen(){try{return localStorage.getItem('visSeen')||'';}catch(e){return '';}}
+function visWhen(a){return new Date(a).toLocaleString('he-IL',{weekday:'short',day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'});}
+function visDur(s){if(!(s>=60))return 'פחות מדקה';var m=Math.round(s/60);if(m<60)return m+' דקות';return Math.floor(m/60)+' שעות ו '+(m%60)+' דקות';}
+function paintVisits(){
+ var t=document.getElementById('gVisits');if(!t)return;
+ var L=visAll();t.hidden=!L.length;if(!L.length){t.classList.remove('taskblink');return;}
+ var s=visSeen(),nw=L.filter(function(x){return x.at>s;}).length,x=L[0];
+ t.classList.toggle('taskblink',nw>0);
+ var b=t.querySelector('b'),sm=t.querySelector('small');
+ if(b)b.textContent='👀 כניסות לקוחות'+(nw?' · '+nw+' חדשות':'');
+ if(sm)sm.textContent='אחרונה: '+x.t+', '+visWhen(x.at)+', '+visDur(x.sec);
+}
+function visitsSheet(){
+ var old=document.getElementById('visSheet');if(old)old.remove();
+ var L=visAll(),s=visSeen(),by={};
+ L.forEach(function(x){(by[x.n]=by[x.n]||{t:x.t,l:[]}).l.push(x);});
+ var h='';
+ Object.keys(by).forEach(function(n){
+  var g=by[n],tot=g.l.reduce(function(a,x){return a+(x.sec||0);},0);
+  h+='<div class="ycard" style="margin:8px 0;padding:10px;text-align:right"><b>'+esc(g.t)+'</b><small style="display:block">'+g.l.length+' כניסות, בסך הכול '+visDur(tot)+'</small>'
+   +g.l.map(function(x){return '<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid rgba(255,255,255,.08)'+(x.at>s?';font-weight:700':'')+'"><span>'+(x.dev==='computer'?'💻':'📱')+' '+visWhen(x.at)+(x.at>s?' · חדש':'')+'</span><span>'+visDur(x.sec)+'</span></div>';}).join('')+'</div>';
+ });
+ var w=document.createElement('div');w.id='visSheet';w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','כניסות לקוחות');
+ w.innerHTML='<div class="ycard"><b>👀 כניסות לקוחות</b><small>מתי כל לקוח פתח את המוניטור שלו, מאיזה מכשיר ולכמה זמן. החדש למעלה. 📱 טלפון, 💻 מחשב.</small>'+(h||'<small>עוד אין כניסות.</small>')+'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+ w.onclick=function(e){var a=e.target&&e.target.closest&&e.target.closest('[data-a="x"]');if(a||e.target===w){w.remove();paintVisits();}};
+ document.body.appendChild(w);
+ try{if(L.length)localStorage.setItem('visSeen',L[0].at);}catch(e){}
+}
+on('gVisits',function(){visitsSheet();setTimeout(paintVisits,60);});
 on('gHandle',function(){handleSheet(false);setTimeout(paintHandle,60);});
 on('gReq',function(){handleSheet(true);setTimeout(paintHandle,60);});
 
