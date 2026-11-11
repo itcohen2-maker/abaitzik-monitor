@@ -17675,6 +17675,8 @@ function bdCss(){
   +'#bdGrid.land.desk .dot{flex-direction:row;gap:6px;border-radius:10px}'
   +'#bdGrid.land.desk .dot em{font-size:16px}#bdGrid.land.desk .dot small{font-size:14px;letter-spacing:0;color:#fff!important;text-shadow:0 1px 3px rgba(0,0,0,.75)}'
   +'#bdGrid.land.desk .dot.e{opacity:.12}#bdGrid.land.desk .dot.pst.e{opacity:.07}'
+  // 11.11.2026: on a computer the mail, the manager list, the report and the ask line stay under the tiles (the phone turned sideways still shows only tiles)
+  +'#bdGrid.land.desk .ycard>.bbx{display:block!important;max-width:900px;margin:14px auto 0}'
   +'</style>';
  css+='<style>#bdGrid .bbx{background:#0d0f18;border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:12px 14px;margin:12px 0;color:#f4f5ff;font:14px/1.5 Heebo,sans-serif}'
   +'#bdGrid .bbx>b,#bdGrid .bbx>summary{display:block;font:800 16px Heebo,sans-serif;color:#aab2ff;text-shadow:0 0 16px rgba(91,108,255,.5);margin:0 0 4px;cursor:pointer}'
