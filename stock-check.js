@@ -42,6 +42,9 @@ let wrote = 0;
 for (const c of S) {
   console.log(today + ' ' + c.id + ': ' + c.line + (c.low ? ' [חסר]' : ''));
   if (!c.low || DRY) continue;
+  // 11.11.2026: statuses and candles are filled by stock-fill.js on the PC (Sonnet, every morning 06:30).
+  // A request here only reached a Haiku session that closed it without doing anything.
+  if (c.id === 'st' || c.id === 'nr') continue;
   const last = asked[c.id] ? Date.parse(asked[c.id]) : 0;
   // 11.11.2026, Itzik: statuses ran out and nobody filled them, because a channel was asked again only after 3 days.
   // Now it is asked again every morning while it is still short of a full week.
