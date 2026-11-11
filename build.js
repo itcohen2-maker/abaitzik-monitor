@@ -17401,7 +17401,8 @@ function vidSheet(tab){
  w.setAttribute('role','dialog');
  w.setAttribute('aria-label','הסרטונים');
  var rows=cur.L.filter(function(x){return !x.h;});
- w.innerHTML='<div class="ycard">'
+ // 11.11.2026: queue tabs are already in the order he needs (waiting first, then by day); sheetNewFirst must not flip them.
+ w.innerHTML='<div class="ycard"'+(/^(ai|nr|pl)$/.test(cur.id)?' data-newfirst="1"':'')+'>'
   +'<b>🎬 הסרטונים</b>'
   +vqStockHtml()
   +'<div role="tablist" style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px">'
