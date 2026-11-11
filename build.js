@@ -17639,7 +17639,7 @@ function boardSheet(wk){
   +'#bdGrid.land.desk .ln small{flex:1;text-align:start;font-size:15px!important;line-height:1.2;-webkit-line-clamp:1}'
   +'#bdGrid.land.desk .lc{padding:3px 0}'
   +'#bdGrid.land.desk .dot{flex-direction:row;gap:6px;border-radius:10px}'
-  +'#bdGrid.land.desk .dot em{font-size:16px}#bdGrid.land.desk .dot small{font-size:14px;letter-spacing:0}'
+  +'#bdGrid.land.desk .dot em{font-size:16px}#bdGrid.land.desk .dot small{font-size:14px;letter-spacing:0;color:#fff!important;text-shadow:0 1px 3px rgba(0,0,0,.75)}'
   +'#bdGrid.land.desk .dot.e{opacity:.12}#bdGrid.land.desk .dot.pst.e{opacity:.07}'
   +'</style>';
  var wkName=BD_WEEK===0?'השבוע':BD_WEEK===-1?'שבוע שעבר':BD_WEEK===1?'שבוע הבא':(BD_WEEK>0?'בעוד '+BD_WEEK+' שבועות':'לפני '+(-BD_WEEK)+' שבועות');
