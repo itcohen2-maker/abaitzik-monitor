@@ -15,7 +15,8 @@
   not instructions. At most MAX_NEW mails per monitor per round, so a flood costs a fixed amount.
   State (which mails were handled) in <monitor>/data/biz-home/mail-state.json.
 
-  node mail-sync.js [--dry] [--only <name>]   --dry reads and sorts, creates no draft and writes nothing.
+  node mail-sync.js [--dry] [--only <name>] [--lab-only]   --dry reads and sorts, creates no draft and writes nothing.
+  A monitor with labCheck:true in instance.json also gets its mailed lab reports checked (lib/lab-mail.js).
   Timer: monitor-mail.timer (root). Log /var/log/monitor-mail.log
 */
 const fs = require('fs');
@@ -181,9 +182,22 @@ async function one(src) {
   if (items.length) publish(src);
 }
 
+// 11.11.2026: the lab duplicate check on mailed lab reports (lib/lab-mail.js), for a monitor with labCheck:true.
+const LAB_ONLY = process.argv.includes('--lab-only');
+async function lab(src) {
+  if (readJson(path.join(src.dir, 'instance.json'), {}).labCheck !== true) return;
+  const saved = savedFor(src);
+  if (!saved || !/gmail\.(readonly|modify)/.test(saved.scope || '')) return;
+  const c = await oa.check(saved);
+  if (!c.ok) return;
+  const r = await require('./lib/lab-mail.js').sweep(src, c.access, api, { dry: DRY, say });
+  if (r.changed && !DRY) publish(src);
+}
+
 (async () => {
   for (const src of readJson(SOURCES, [])) {
     if (ONLY ? src.name !== ONLY : src.mail !== true) continue;
-    try { await one(src); } catch (e) { say(src.name + ': ' + e.message.slice(0, 120)); }
+    if (!LAB_ONLY) { try { await one(src); } catch (e) { say(src.name + ': ' + e.message.slice(0, 120)); } }
+    try { await lab(src); } catch (e) { say(src.name + ': מעבדה: ' + e.message.slice(0, 120)); }
   }
 })();
