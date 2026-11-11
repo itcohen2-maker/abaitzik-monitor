@@ -2734,7 +2734,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-11T14:47:34.844Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-11T14:48:52.273Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4648,7 +4648,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='5d4f76b271';
+var CODE_ID='191a6abce9';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -13014,13 +13014,13 @@ function upToday(){
  });
  var P=(VQ.pl||[]).slice().sort(function(a,b){return (a.order||0)-(b.order||0);});
  var pT=P.filter(function(x){return x.posted&&day(x.postedAt)===T;});
- var nm=function(x){return String(x.name||x.id).replace(/s*(גרסה [0-9]+)s*$/,'');};
+ var nm=function(x){return String(x.name||x.id).split(' (גרסה ')[0].trim();};
  if(pT.length)pT.forEach(function(x){L.push({n:'מה בצלחת',done:true,t:'🍽️ מה בצלחת · '+nm(x),u:'plate/plate.html',h:x.id});});
  else{var nx=P.filter(function(x){return !x.posted;})[0];
   if(nx)L.push({n:'מה בצלחת',done:false,t:'🍽️ מה בצלחת · '+nm(nx)+(nx.approved?' · מאושר, לשמור לטלפון ולהעלות':' · לאשר ואז להעלות'),
    u:nx.approved?'save.html?f='+encodeURIComponent('plate/'+String(nx.file).split('?')[0])+'&n='+encodeURIComponent(nx.name):'plate/plate.html',h:nx.approved?'':nx.id});
   else{var lp=P.filter(function(x){return x.posted;}).pop(),sc=lp&&lp.screens&&lp.screens[lp.screens.length-1],
-   nn=sc&&/^ומחר:s*/.test(sc.head||'')?String(sc.head).replace(/^ומחר:s*/,''):'';
+   nn=sc&&String(sc.head||'').indexOf('ומחר:')===0?String(sc.head).slice(5).trim():'';
    L.push({n:'מה בצלחת',done:false,t:'🍽️ מה בצלחת · '+(nn?'הבא: '+nn+' · ':'')+'בהכנה, עוד לא מוכן להעלאה',u:'plate/plate.html',h:''});}}
  CARON.forEach(function(c){L.push({n:'קרוסלה',done:false,car:c,t:'🎠 קרוסלה · '+c.t+' ('+c.n+' שקפים)'});});
  return L;
