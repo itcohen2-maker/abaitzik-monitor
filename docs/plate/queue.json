@@ -482,7 +482,7 @@
   "order": 10,
   "file": "media/plate-kinamon-v1.mp4",
   "poster": "media/plate-kinamon-v1.jpg",
-  "approved": false,
+  "approved": true,
   "screens": [
    {
     "head": "קינמון",
