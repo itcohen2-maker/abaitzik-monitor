@@ -258,4 +258,5 @@ systemctl is-active monitor-listen-$ID.service monitor-worker-$ID.timer monitor-
 # Itzik, 11.10: every customer gets big file uploads from day one, without asking.
 bash "$(dirname "$0")/enable-upload.sh" "$ID" || echo "העלאת קבצים גדולים לא הופעלה, להריץ setup/enable-upload.sh $ID"
 if [ -n "${TIER:-}" ]; then echo "הקליטה מציעה פרופיל $TIER: cat setup/profiles/$TIER.env >> /etc/$ID.env (אחרי setup/apply-own-token.sh)"; fi
+echo "NEXT (11.11): own API key monitor-$ID in the Console -> /root/tenant-tokens/$ID.apikey -> bash setup/tenant-api-key.sh $ID; package -> /srv/monitor-changes/$ID.plan.json"
 echo "סיום: $ID"
