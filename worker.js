@@ -1137,6 +1137,19 @@ function planHold() {
   const told = readJson(flag, {}) || {};
   const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
   const save = () => { try { fs.writeFileSync(flag, JSON.stringify(told)); } catch (e) {} };
+  // 11.11.2026: the self signup trial is the one package that stops: at 40 actions or after 7 days.
+  if (st.trial) {
+    if (st.level === 'warn' && !DRY && !told.trialWarn) { told.trialWarn = 1; save(); tell('שבוע הניסיון', P.SAY.trialWarn); planChat('trial-warn', P.SAY.trialWarn); }
+    if (st.level !== 'ended') return false;
+    say('שבוע הניסיון הסתיים (' + st.used + ' מתוך ' + st.total + '). לא מפעיל סשן.');
+    if (!DRY && !told.trialEnd) {
+      told.trialEnd = 1; save();
+      tell('שבוע הניסיון הסתיים', P.SAY.trialEnd);
+      planChat('trial-end', P.SAY.trialEnd);
+      try { require('./lib/change-requests.js').add('שבוע הניסיון של ' + inst.name + ' הסתיים (' + st.used + ' מתוך ' + st.total + ' פעולות). אם לא שילם תוך יומיים, לחזור אליו.', ''); } catch (e) {}
+    }
+    return true;
+  }
   if (st.level === 'warn') {
     if (!DRY && told.warn !== st.month) {
       told.warn = st.month; save();

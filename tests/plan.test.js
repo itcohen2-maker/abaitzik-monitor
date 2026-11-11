@@ -109,3 +109,34 @@ test('the messages to the customer have no dashes and no dollars', () => {
   Object.values(plan.SAY).forEach((m) => assert.ok(!/[-–—$]/.test(m)));
   assert.match(plan.SAY.warn, /80%/);
 });
+
+// 11.11.2026: the entry package and the self signup trial.
+test('entry: 390 ILS, 200 actions, first in the upgrade order', () => {
+  assert.equal(plan.PACKAGES.entry.price, 390);
+  assert.equal(plan.PACKAGES.entry.actions, 200);
+  assert.equal(plan.ORDER[0], 'entry');
+  assert.deepEqual(plan.upgradesFrom('entry').map((x) => x.plan), ['small', 'medium', 'large']);
+});
+
+test('trial: 40 actions counted from its start, not the calendar month', () => {
+  const tr = { plan: 'trial', start: '2026-11-10T08:00:00Z', month: '2026-11', extra: 0 };
+  const t = [line('2026-11-09T08:00:00Z', 50, 0), line('2026-11-11T08:00:00Z', 10, 0)].join('\n');
+  const st = plan.status(tr, t, Date.parse('2026-11-12T08:00:00Z'));
+  assert.equal(st.used, 10);
+  assert.equal(st.total, 40);
+  assert.equal(st.level, 'ok');
+  assert.equal(st.trial, true);
+});
+
+test('trial ends at 40 actions or after 7 days, whichever first', () => {
+  const tr = { plan: 'trial', start: '2026-11-10T08:00:00Z', month: '2026-11', extra: 0 };
+  assert.equal(plan.status(tr, line('2026-11-11T08:00:00Z', 40, 0), Date.parse('2026-11-12T08:00:00Z')).level, 'ended');
+  assert.equal(plan.status(tr, line('2026-11-11T08:00:00Z', 32, 0), Date.parse('2026-11-12T08:00:00Z')).level, 'warn');
+  const late = plan.status(tr, '', Date.parse('2026-11-17T08:00:01Z'));
+  assert.equal(late.level, 'ended');
+  assert.equal(late.endsAt, '2026-11-17T08:00:00.000Z');
+});
+
+test('a trial without a start date gets no enforcement', () => {
+  assert.equal(plan.status({ plan: 'trial', month: '2026-11' }, '', NOW), null);
+});
