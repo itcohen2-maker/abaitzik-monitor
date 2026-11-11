@@ -17317,10 +17317,19 @@ function vqRows(id){
   [['he','🇮🇱 עברית'],['en','🇺🇸 אנגלית']].forEach(function(g){
    var inL=function(x){return g[0]==='en'?x.lang==='en':x.lang!=='en';};
    // 9.11, Itzik: what was already posted leaves this menu by itself (it stays in ai/queue.json, only hidden here).
-   var a=Q.filter(function(x){return inL(x)&&!x.posted;});
-   out.push({h:g[1]+': עוד לא עלה ('+a.length+')'});
-   if(!a.length)out.push({k:'q',t:'✔️ אין כרגע מה להעלות',u:'ai/ai.html'});
-   a.forEach(function(x){out.push({k:'q',t:'⏳ '+x.name,u:'ai/ai.html',n:x.id});});
+   var a=Q.filter(function(x){return inL(x)&&!x.posted&&!x.failed;}).sort(function(p,q2){return (p.order||0)-(q2.order||0);});
+   // 11.11.2026, Itzik: "אני לא רואה משהו שסימנת לי שהוא חדש ואני צריך לאשר". What waits for his approval comes first,
+   // marked, then the approved ones in the order they go up, each with its day (one a day per language at 20:00, no Saturday).
+   var wt=a.filter(function(x){return x.hold;}),ap=a.filter(function(x){return !x.hold;});
+   out.push({h:g[1]+': 🔔 מחכים לאישור שלך ('+wt.length+')'});
+   if(!wt.length)out.push({k:'q',t:'✔️ אין כרגע מה לאשר',u:'ai/ai.html'});
+   wt.forEach(function(x){out.push({k:'q',t:'🆕 '+x.name+' · לחץ כדי לצפות ולאשר',u:'ai/ai.html',n:x.id});});
+   var nowIL=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Jerusalem'})),d0=new Date(nowIL);if(nowIL.getHours()>=20)d0.setDate(d0.getDate()+1);
+   var DNs=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'],slot=function(i){var d=new Date(d0),k=-1;for(;;){if(d.getDay()!==6){k++;if(k===i)break;}d.setDate(d.getDate()+1);}
+    var same=d.toDateString()===nowIL.toDateString();return (same?'היום':'יום '+DNs[d.getDay()]+' '+d.getDate()+'.'+(d.getMonth()+1))+' ב 20:00';};
+   out.push({h:g[1]+': ✅ מאושרים, יעלו לבד ('+ap.length+')'});
+   if(!ap.length)out.push({k:'q',t:'⚠️ אין סרטון מאושר שמחכה לעלות',u:'ai/ai.html'});
+   ap.forEach(function(x,i){out.push({k:'q',t:'📅 '+slot(i)+' · '+x.name,u:'ai/ai.html',n:x.id});});
   });
  }
  if(id==='pl'){
