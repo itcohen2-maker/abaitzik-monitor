@@ -140,6 +140,7 @@ async function waSend(to, text, mem) {
   a new task, as before.
 */
 const waOut = require('./lib/wa-out.js');
+const WT = require('./lib/wa-tenants.js');
 const DATA = path.join(ROOT, 'data');
 const LONG = 700;
 function pageUrl() {
@@ -410,7 +411,12 @@ async function onMessage(m, contactName) {
   st.seen[m.id] = Date.now();
   saveState(st);
   const allow = (cfg().allow || []).map(String);
-  if (allow.indexOf(String(m.from)) < 0) { log('not on the allow list: ' + String(m.from).slice(0, 5) + '...'); return; }
+  if (allow.indexOf(String(m.from)) < 0) {
+    // 11.11: a customer's number goes to his own monitor (lib/wa-tenants.js). Itzik's numbers (allow) are checked first.
+    const tn = WT.lookup(DATA, m.from);
+    if (tn) return tenantMessage(m, tn, contactName);
+    log('not on the allow list: ' + String(m.from).slice(0, 5) + '...'); return;
+  }
   markRead(m.id);
   // 4.11: Meta's 24 hour window opens with his message; lib/wa-out.js reads this.
   { const sl = loadState(); sl.lastIn = sl.lastIn || {}; sl.lastIn[m.from] = Date.now(); saveState(sl); }
@@ -495,6 +501,33 @@ async function onMessage(m, contactName) {
   log('in ' + m.id + ' -> ntfy-' + id + (re ? ' (continues ' + re + ')' : ''));
   await waSend(m.from, re ? '✓ קיבלתי, ממשיך מאותה שיחה. התשובה תגיע לכאן.' : '✓ קיבלתי, אני עובד על זה. התשובה תגיע לכאן.');
 }
+/*
+  11.11.2026: a customer writes to the IT Solution number. Text, a voice note (transcribed here) or a file caption goes
+  into his own monitor's queue; a forwarded message also lands at once in his 📋 לטיפול. The answer goes back from
+  sweep(). On Meta's test number a reply reaches him only after Itzik approved his number in the App Dashboard.
+*/
+async function tenantSend(to, text) {
+  try { await waSend(to, text); return true; } catch (e) { log('tenant send failed ' + String(to).slice(0, 5) + '...: ' + e.message.slice(0, 160)); return false; }
+}
+async function tenantMessage(m, tn, contactName) {
+  markRead(m.id);
+  { const sl = loadState(); sl.lastIn = sl.lastIn || {}; sl.lastIn[m.from] = Date.now(); saveState(sl); }
+  let t = textOf(m);
+  if (!t && m.type === 'audio' && m.audio && m.audio.id) {
+    let heard = ''; try { heard = await voiceText(m.audio.id); } catch (e) { log('tenant voice failed: ' + e.message); }
+    if (heard) t = '🎙️ הודעה קולית מוואטסאפ: ' + heard;
+  }
+  if (!t) { await tenantSend(m.from, 'קיבלתי, אבל את סוג ההודעה הזה אני עוד לא קורא. אפשר לכתוב לי אותה במילים?'); return; }
+  const fw = WT.forwarded(m);
+  let id;
+  try { id = WT.write(tn, 'וואטסאפ', WT.request(fw, t)); } catch (e) { log('!! tenant queue ' + tn.tenant + ': ' + e.message); await tenantSend(m.from, 'משהו נתקע אצלי. אפשר לכתוב את זה במסך הבית של המוניטור, ואני מטפל.'); return; }
+  if (fw) WT.handleItem(tn, m.id, t, contactName);
+  const s = loadState();
+  s.pending[id] = { to: m.from, at: Date.now(), name: contactName || '', tenant: tn.tenant, dir: tn.dir };
+  saveState(s);
+  log('tenant in ' + tn.tenant + ' ' + m.id + ' -> ' + id + (fw ? ' (forwarded)' : ''));
+  await tenantSend(m.from, fw ? '✓ קיבלתי את ההודעה שהעברת. היא כבר ב 📋 לטיפול במוניטור, וטיוטת תשובה תגיע לכאן.' : '✓ קיבלתי, אני עובד על זה. התשובה תגיע לכאן.');
+}
 // The newest message the monitor itself sent to this number (lib/wa-out.js keeps them).
 function latestOwn(to) {
   let j = {}; try { j = JSON.parse(fs.readFileSync(path.join(DATA, 'status', 'wa-out.json'), 'utf8')); } catch (e) { return null; }
@@ -508,17 +541,39 @@ function sweep() {
   const st = loadState();
   const ids = Object.keys(st.pending);
   if (!ids.length) return;
+  // 11.11: Itzik's queue, and the queue of every customer who wrote from his own number (pending.dir).
+  const queues = {};
+  ids.forEach(function (k) { const p = st.pending[k]; const q = p.dir ? WT.chatDir(p) : CHAT; (queues[q] = queues[q] || []).push(k); });
+  Object.keys(queues).forEach(function (q) { sweepQueue(st, q, queues[q]); });
+  // a question waits for answers for 6 hours, then is let go
+  const s4 = loadState(); let ch = false;
+  Object.keys(s4.pending).forEach(function (k) { if (Date.now() - s4.pending[k].at > 6 * 3600e3) { delete s4.pending[k]; ch = true; } });
+  if (ch) saveState(s4);
+}
+function sweepQueue(st, Q, ids) {
+  const mine = Q === CHAT;
   let files = [];
-  try { files = fs.readdirSync(CHAT).filter(function (f) { return f.endsWith('.json') && f.indexOf('claude') > -1; }); } catch (e) { return; }
+  try { files = fs.readdirSync(Q).filter(function (f) { return f.endsWith('.json') && f.indexOf('claude') > -1; }); } catch (e) { return; }
   const since = Math.min.apply(null, ids.map(function (k) { return st.pending[k].at; })) - 60000;
   files.forEach(function (f) {
-    if (st.sent[f]) return;
-    const full = path.join(CHAT, f);
+    const sk = mine ? f : st.pending[ids[0]].tenant + '/' + f;
+    if (st.sent[sk]) return;
+    const full = path.join(Q, f);
     let d;
     try { if (fs.statSync(full).mtimeMs < since) return; d = JSON.parse(fs.readFileSync(full, 'utf8')); } catch (e) { return; }
     if (!d || d.from !== 'claude' || !d.re || !st.pending[d.re] || !d.text) return;
-    st.sent[f] = Date.now();
+    if (!mine && ids.indexOf(d.re) < 0) return;
+    st.sent[sk] = Date.now();
     saveState(st);
+    if (!mine) {
+      // A customer: the whole answer here (his monitor link is not Itzik's), in parts when long.
+      const to = st.pending[d.re].to, txt = String(d.text);
+      const parts = []; for (let i = 0; i < txt.length && parts.length < 4; i += 3800) parts.push(txt.slice(i, i + 3800));
+      (async function () { for (const p of parts) { if (!(await tenantSend(to, p))) return false; } return true; })().then(function (ok) {
+        log('tenant out ' + st.pending[d.re].tenant + ' ' + f + (ok ? '' : ' (not delivered)'));
+      });
+      return;
+    }
     const to = st.pending[d.re].to;
     const s5 = loadState(); s5.last = s5.last || {}; s5.last[to] = d.text; saveState(s5);
     const asVoice = !!((s5.voice && s5.voice[to]) || st.pending[d.re].voice);
@@ -537,10 +592,6 @@ function sweep() {
     })
       .catch(function (e) { log('send failed ' + f + ': ' + e.message); const s3 = loadState(); delete s3.sent[f]; saveState(s3); });
   });
-  // a question waits for answers for 6 hours, then is let go
-  const s4 = loadState(); let ch = false;
-  Object.keys(s4.pending).forEach(function (k) { if (Date.now() - s4.pending[k].at > 6 * 3600e3) { delete s4.pending[k]; ch = true; } });
-  if (ch) saveState(s4);
 }
 
 /*
@@ -936,4 +987,4 @@ if (require.main === module) {
   setInterval(function () { try { require('./forms.js').sweep(formNotify); } catch (e) { log('forms sweep: ' + e.message); } }, 60000);
   setInterval(function () { try { require('./setup.js').sweep(formNotify); } catch (e) { log('setup sweep: ' + e.message); } }, 60000);
 }
-module.exports = { textOf, sigOk, voiceCommand, speakable, shortOf, isAllCommand, route };
+module.exports = { textOf, sigOk, voiceCommand, speakable, shortOf, isAllCommand, route, onMessage, sweep, _set: function (o) { if (o.waSend) waSend = o.waSend; if (o.markRead) markRead = o.markRead; } };

@@ -72,6 +72,24 @@ function personalize(q, qf) {
   log(q.id + ' welcome written' + (DRY ? ' (dry): ' + w.title : ''));
 }
 
+// 11.11: he chose WhatsApp and gave his mobile: map it to his monitor (lib/wa-tenants.js), open his queue to the bridge,
+// and ask Itzik to approve the number on Meta's test number (by hand, Meta sends that phone a code). Once per number.
+function whatsapp(q, qf) {
+  const p = q.profile;
+  if (!p || p.talk !== 'wa' || !p.waPhone || q.waMapped === p.waPhone) return;
+  const dir = home(q.id);
+  if (!fs.existsSync(path.join(dir, 'data'))) return;
+  const WT = require('./lib/wa-tenants.js');
+  if (DRY) { log(q.id + ' whatsapp (dry) ' + p.waPhone.slice(0, 5) + '...'); return; }
+  const n = WT.add(DATA, p.waPhone, { tenant: q.id, dir, name: q.name || q.id });
+  if (!n) return;
+  try { execFileSync('chown', ['monitor:monitor', path.join(DATA, 'wa-tenants.json')]); } catch (e) {}
+  try { WT.grant(WT.lookup(DATA, n)); } catch (e) { log(q.id + ' whatsapp grant: ' + e.message); }
+  try { execFileSync('sudo', ['-u', 'monitor', 'node', '-e', 'require("./lib/handle.js").complete({key:"wa-approve-"+process.argv[1],kind:"request",who:process.argv[2],title:"להוסיף את "+process.argv[2]+" ("+process.argv[3]+") למספרים המאושרים בוואטסאפ. אחרי זה: node lib/wa-tenants.js approved "+process.argv[3],link:"biz"})', q.id, q.name || q.id, '0' + n.slice(3)], { cwd: REPO, stdio: 'ignore' }); } catch (e) {}
+  q.waMapped = p.waPhone; wr(qf, q, 'monitor');
+  log(q.id + ' whatsapp mapped');
+}
+
 let names = [];
 try { names = fs.readdirSync(Q).filter((n) => /^t[a-f0-9]{6}\.json$/.test(n)); } catch (e) { process.exit(0); }
 for (const n of names) {
@@ -80,4 +98,5 @@ for (const n of names) {
   if (!['ready', 'mailfail'].includes(q.state)) continue;
   try { connections(q, qf); } catch (e) { log(q.id + ' connections: ' + e.message); }
   try { personalize(q, qf); } catch (e) { log(q.id + ' personalize: ' + e.message); }
+  try { whatsapp(q, qf); } catch (e) { log(q.id + ' whatsapp: ' + e.message); }
 }
