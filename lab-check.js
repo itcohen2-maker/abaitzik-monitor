@@ -13,9 +13,9 @@
   Patient data: <data> is gitignored everywhere and stays on the server.
   Nothing is sent to anyone from here.
 
-  Hook for the incoming mail (not enabled): mail-sync.js, after it saves an
-  attachment of a mail from a lab address, would call run([pdfPath], dataDir)
-  for a tenant with "labCheck": true in instance.json; the report is the only output.
+  The incoming mail (11.11.2026): mail-sync.js calls lib/lab-mail.js for a monitor with labCheck:true in
+  instance.json; it saves a mailed lab PDF and runs run([pdfPath], dataDir) as the monitor user. The report
+  is the only output, plus a 📋 לטיפול item when duplicates are found.
 */
 const fs = require('fs');
 const path = require('path');
