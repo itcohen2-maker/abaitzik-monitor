@@ -677,7 +677,7 @@
   "order": 13,
   "file": "media/plate-shibolet-v2.mp4",
   "poster": "media/plate-shibolet-v2.jpg",
-  "approved": false,
+  "approved": true,
   "screens": [
    {
     "head": "שיבולת שועל",
@@ -733,6 +733,6 @@
     ]
    }
   ],
-  "onSite": false
+  "onSite": true
  }
 ]
