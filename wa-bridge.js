@@ -686,9 +686,10 @@ async function api(q, s, u) {
       const v = S.verify(DATA, b);
       if (!v.ok) return send(400, { error: v.error });
       if (v.fresh) {
-        try { require('./lib/handle.js').complete({ key: 'signup-' + v.id, kind: 'lead', who: v.name, title: 'נרשם לשבוע ניסיון ואימת מייל (' + v.phone + '). המוניטור שלו נפתח עכשיו.', link: 'biz' }); } catch (e) { log('signup handle: ' + e.message); }
+        try { require('./lib/handle.js').complete({ key: 'signup-' + v.id, kind: 'lead', who: v.name, title: 'נרשם לשבוע ניסיון ואימת מייל (' + (v.phone || v.email) + '). המוניטור שלו נפתח עכשיו.', link: 'biz' }); } catch (e) { log('signup handle: ' + e.message); }
       }
-      return send(200, { ok: true });
+      // 11.11: the page shows an entry button to the monitor being built (the login code goes only by mail)
+      return send(200, { ok: true, host: v.id ? v.id + '.m.it-solution.co.il' : '' });
     } catch (e) { log('signup: ' + e.message); return send(500, { error: 'server' }); }
   }
   // 11.11.2026: the entry package payment. The customer's page sends its visit key in the body (never the URL); we open a
