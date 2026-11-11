@@ -18996,6 +18996,10 @@ function bizSheet(t0){
     if(r.phone){rep+='<a class="yb yb2" href="'+ldWa(r.phone)+'" target="_blank" rel="noopener">💬 וואטסאפ</a><a class="yb" href="tel:'+esc(String(r.phone).replace(/[^0-9+]/g,''))+'">📞 להתקשר</a>';}
     if(r.email)rep+='<a class="yb" href="mailto:'+esc(r.email)+'">✉️ מייל</a>';
     if(meta)rep+='<a class="yb yb2" href="'+esc(r.link||LD_INBOX)+'" target="_blank" rel="noopener">💬 לענות במטא</a>';
+    // 11.11: copy the phone, or all the details at once (name, phone, mail, where from, when, what he wrote, notes)
+    var NL=String.fromCharCode(10),all=[r.name||'בלי שם',r.phone?'טלפון: '+r.phone:'',r.email?'מייל: '+r.email:'','מאיפה: '+src.replace(/^[^ ]+ /,''),dd?'תאריך: '+dd:'','סטטוס: '+(r.status||''),r.last?'כתב: '+r.last:'',r.note?ldNote(r.note):''].filter(Boolean).join(NL);
+    if(r.phone)rep+='<button type="button" class="yb" data-bz="ldcopy" data-w="הטלפון" data-u="'+esc(r.phone)+'">📋 להעתיק טלפון</button>';
+    rep+='<button type="button" class="yb" data-bz="ldcopy" data-w="כל הפרטים" data-u="'+esc(all)+'">📋 להעתיק את כל הפרטים</button>';
     h+='<details class="ldRow'+(r.status==='חדש'?' ldNew':'')+'" data-id="'+esc(r.id)+'"><summary><span>'+esc(dd)+'</span><b>'+esc(r.name||'בלי שם')+'</b><span>'+esc(src)+'</span><span class="ldSt">'+esc(r.status||'')+'</span></summary>'
      +'<div class="ldBody">'
      +(r.last?'<p class="ldLast">"'+esc(r.last)+'"</p>':'')
@@ -19191,6 +19195,8 @@ function bizSheet(t0){
      return;}
     // 4.11: window.prompt used up the tap, so share and the WhatsApp window were blocked on the phone (Itzik: 'תקוע').
     // The name is typed in a box in the sheet, and its own button (a fresh tap) does the sharing.
+    // 11.11, Itzik: "תן לי אפשרות להתקשר אליו, העתקה, הדבקה, גם של הפרטים שלו". Copies a lead's phone or all his details.
+    if(a==='ldcopy'){var u1=t.getAttribute('data-u'),w1=t.getAttribute('data-w')||'';try{navigator.clipboard.writeText(u1).then(function(){toast(w1+' הועתק, אפשר להדביק');},function(){uiPrompt(w1+':',u1);});}catch(x){uiPrompt(w1+':',u1);}return;}
     if(a==='ndacopy'){var u0=t.getAttribute('data-u');try{navigator.clipboard.writeText(u0).then(function(){toast('הקישור הועתק');},function(){uiPrompt('הקישור לחתימה:',u0);});}catch(x){uiPrompt('הקישור לחתימה:',u0);}return;}
     if(a==='secshare'){var pg0=({monitor:1,offer:1})[t.getAttribute('data-u')]?t.getAttribute('data-u'):'security',k0=t.getAttribute('data-k')==='wa'?'wa':'share';
      var ob=el.querySelector('.secBox');if(ob)ob.parentNode.removeChild(ob);
