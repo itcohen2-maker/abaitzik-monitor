@@ -17759,7 +17759,7 @@ function bdCss(){
   +'#bdGrid .bbr{display:flex;gap:8px;align-items:flex-end;margin:8px 0}'
   +'#bdGrid .bbr textarea{flex:1;min-width:0;box-sizing:border-box;background:#05060b;color:#f4f5ff;border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:10px 12px;font:15px/1.4 Heebo,sans-serif;resize:vertical}'
   +'#bdGrid .bbr .lb{width:46px;height:46px;font-size:20px}'
-  +'#bdGrid .bbu{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid rgba(255,255,255,.07)}#bdGrid .bbu>span{flex:0 0 22px;text-align:center}#bdGrid .bbu>div{flex:1;min-width:0}#bdGrid .bbk{flex:0 0 auto;width:18px;height:18px;margin-top:4px}'
+  +'#bdGrid .bbu{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid rgba(255,255,255,.07)}#bdGrid .bbu>span{flex:0 0 22px;text-align:center}#bdGrid .bbu>div{flex:1;min-width:0}#bdGrid .bbSeen{display:inline-block;margin-top:6px;margin-inline-start:8px;padding:4px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06);color:inherit;font:700 13px Heebo,sans-serif}#bdGrid .bbk{flex:0 0 auto;width:18px;height:18px;margin-top:4px}'
   +'#bdGrid .bbg{margin:8px 0 2px;padding:8px 10px;border-radius:14px;background:#0a0c14;border:1px solid rgba(255,255,255,.08)}#bdGrid .bbg>b{display:block;font:800 14px Heebo,sans-serif;margin-bottom:2px}#bdGrid .bbg>b i,#bdGrid .bbn{font-style:normal;font-size:12px;background:rgba(255,255,255,.12);border-radius:9px;padding:0 7px;margin-inline-start:4px}'
   +'#bdGrid .g-now{border-color:rgba(255,90,90,.55);background:rgba(255,60,60,.08)}#bdGrid .g-now>b{color:#ff9b9b}#bdGrid .g-look>b{color:#ffd27a}#bdGrid .g-sp>b{color:#9fe0ff}#bdGrid .g-mg>b{color:#aab2ff}'
   +'#bdGrid .bbf{color:#fff;font-weight:700}#bdGrid .bbu ul{margin:4px 0 0;padding-inline-start:18px;color:#c9cde6;font-size:13px}#bdGrid .d-bad>span{color:#ff8a8a}#bdGrid .d-warn>span{color:#ffd27a}#bdGrid .d-ok>span{color:#7fe0a0}'
@@ -17820,11 +17820,25 @@ function bdReportHtml(){
  return '<details class="bbx"><summary>📰 הדוח של הבוקר</summary><small>'+esc(bdAgo(rep.at))+'</small><pre>'+esc(body||'אין בדוח הזה קטעים שביקשת.')+'</pre></details>';
 }
 // 11.11.2026, Itzik: "מהמייל, אם הגיע משהו מיוחד או אם משהו צריך להיות לאישור מיידי או לתשומת ליבי". D.bb.mail from lib/board-feed.js mailItzik.
+document.addEventListener('click',function(e){
+ var t=e.target;if(!t||!t.classList||!t.classList.contains('bbSeen'))return;
+ e.preventDefault();e.stopPropagation();
+ var id=t.getAttribute('data-mid'),note='✓ ראיתי במייל: '+id;t.disabled=true;
+ sendText('ראיתי',note,'משימה').then(function(){
+  markSent('text',note);
+  var d=[];try{d=JSON.parse(localStorage.getItem('mailSeen')||'[]')||[];}catch(x){}
+  if(d.indexOf(id)<0)d.push(id);try{localStorage.setItem('mailSeen',JSON.stringify(d.slice(-300)));}catch(x){}
+  var r=t.closest('.bbu'),g=r&&r.closest('.bbg');if(r)r.remove();
+  if(g){var n=g.querySelectorAll('.bbu').length,i=g.querySelector('b i');if(!n)g.remove();else if(i)i.textContent=n;}
+ }).catch(function(){t.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
+},true);
 function bdMailHtml(){
  var M=D.bb&&D.bb.mail;if(!M)return '';
  if(M.none)return '<div class="bbx"><b>📬 מהמייל</b><div class="emp">המיילים החשובים יופיעו כאן אחרי שמחברים את המייל במסך 🔌 חיבורים.</div></div>';
- function row(x){return '<div class="bbu"><span>✉️</span><div><b class="bbf">'+esc(x.from)+(x.n>1?' ×'+x.n:'')+'</b> '+esc(x.t)+'<small>'+esc(bdAgo(x.at))+'</small></div></div>';}
- function grp(k,ic,ttl,cl){var L=M[k]||[];if(!L.length)return '';return '<div class="bbg '+cl+'"><b>'+ic+' '+ttl+' <i>'+L.length+'</i></b>'+L.map(row).join('')+'</div>';}
+ // 12.11.2026, Itzik: "זה משהו שראינו כבר". Each mail line has "✓ ראיתי": it leaves the board at once and for good.
+ var mSeen=[];try{mSeen=JSON.parse(localStorage.getItem('mailSeen')||'[]')||[];}catch(e){}
+ function row(x){return '<div class="bbu"><span>✉️</span><div><b class="bbf">'+esc(x.from)+(x.n>1?' ×'+x.n:'')+'</b> '+esc(x.t)+'<small>'+esc(bdAgo(x.at))+'</small>'+(x.id?'<button type="button" class="bbSeen" data-mid="'+esc(x.id)+'">✓ ראיתי</button>':'')+'</div></div>';}
+ function grp(k,ic,ttl,cl){var L=(M[k]||[]).filter(function(x){return !x.id||mSeen.indexOf(x.id)<0;});if(!L.length)return '';return '<div class="bbg '+cl+'"><b>'+ic+' '+ttl+' <i>'+L.length+'</i></b>'+L.map(row).join('')+'</div>';}
  var h='<div class="bbx"><b>📬 מהמייל</b>';
  var body=grp('now','🚨','לאישור מיידי','g-now')+grp('look','👀','לתשומת לבך','g-look')+grp('special','⭐','מיוחד, אדם כתב לך','g-sp');
  if(M.sweep&&M.sweep.lines.length)body+='<div class="bbg '+(M.sweep.urgent?'g-now':'g-mg')+'"><b>🧑‍💼 המנהל קרא את המיילים'+(M.sweep.urgent?', יש משהו בשבילך':'')+'</b>'

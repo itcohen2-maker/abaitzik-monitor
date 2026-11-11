@@ -785,6 +785,21 @@ function recordIncoming(m) {
       try { publishChat(); } catch (e) { /* the next build carries it */ }
       return true;
     }
+    // 12.11.2026, Itzik: "זה משהו שראינו כבר". "✓ ראיתי במייל: <uids>" from the control board's mail block. Saved
+    // here with no model in data/status/mail-board-seen.json (lib/board-feed.js mailItzik drops those), silently.
+    const msM = codeOk && /^\s*(?:משימה)?\s*✓\s*ראיתי במייל\s*[:：]\s*([\d,\s]+)/.exec(text.replace(/\n\s*קוד[^\n]*$/, ''));
+    if (msM) {
+      try {
+        const f = path.join(inst.dataPath, 'status', 'mail-board-seen.json');
+        let L = []; try { L = JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { /* first one */ }
+        msM[1].split(/[,\s]+/).filter(Boolean).forEach((u) => { if (!L.includes(u)) L.push(u); });
+        fs.writeFileSync(f + '.tmp', JSON.stringify(L.slice(-2000))); fs.renameSync(f + '.tmp', f);
+        say('מייל נראה: ' + msM[1]);
+        fs.unlinkSync(path.join(CHAT, name));
+      } catch (e) { say('!! מייל נראה: ' + e.message); }
+      try { require('./lib/handle.js').publishSoon(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
     const hdM = codeOk && /^\s*(?:משימה)?\s*✓\s*טופל\s*[:：]\s*(\S+)/.exec(text.replace(/\n\s*קוד[^\n]*$/, ''));
     if (hdM) {
       let ans = '';
