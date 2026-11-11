@@ -39,6 +39,13 @@ for f in "$Q"/t*.json; do
     continue
   fi
   rm -f "$PROF"
+  # 11.11.2026, Itzik: the page promises "CRM מובנה", so every trial gets "💼 העסק שלי" (leads, customers, money).
+  IJ="/home/$ID/$ID-monitor/instance.json"
+  if [ -f "$IJ" ]; then
+    WASI=0; lsattr -d "$IJ" 2>/dev/null | cut -d' ' -f1 | grep -q i && { WASI=1; chattr -i "$IJ"; }
+    node -e 'const fs=require("fs"),f=process.argv[1],j=JSON.parse(fs.readFileSync(f,"utf8"));if(!j.biz)j.biz={name:process.argv[2],sub:"העסק שלי"};fs.writeFileSync(f,JSON.stringify(j,null,1))' "$IJ" "$NAME" || log "$ID biz on failed"
+    [ "$WASI" = 1 ] && chattr +i "$IJ"
+  fi
   # The trial package, counted from now.
   printf '{"plan":"trial","start":"%s","month":"%s","extra":0,"applied":[],"history":[{"at":"%s","kind":"start","plan":"trial","note":"self signup"}]}\n' \
     "$(date -u +%FT%TZ)" "$(TZ=Asia/Jerusalem date +%Y-%m)" "$(date -u +%FT%TZ)" > "/srv/monitor-changes/$ID.plan.json"
