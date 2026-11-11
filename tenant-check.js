@@ -8,7 +8,7 @@
   customer's voice note failed ("No module named faster_whisper"), always, and nobody was told. The manager's "כל הלקוחות
   תקינים" only knew that the services were up.
 
-  This runs as root every 10 minutes (cron) and at the end of setup/new-tenant.sh (--new <id>). Plain code, no model.
+  This runs as root every 2 minutes (cron, flock) and at the end of setup/new-tenant.sh (--new <id>). Plain code, no model.
   For every customer in data/tenants/tenants:
     1. voice   A voice note of the last 48 hours that was not transcribed is transcribed again as that customer's user.
                When it works the message is opened again with the transcript (reopenAt), so his monitor answers it.
@@ -85,7 +85,10 @@ function voiceRecovery(t, res) {
     if (!r.ok) { res.problems.push('הודעה קולית מ ' + rec.at.slice(11, 16) + ' עדיין לא מתומללת: ' + r.err); return; }
     const words = r.text.replace(/[^֐-׿a-zA-Z0-9 ]/g, ' ').trim().split(/\s+/).filter(Boolean);
     rec.retx = new Date().toISOString();
+    // 11.11: he had already said it again in a newer message (Dr. Shulman, 21:41): no second handling, no double meeting
+    const newer = fl.filter((g) => g > f).some((g) => (readJson(path.join(chat, g), {}).from === 'itzik'));
     if (words.length < 3) { rec.note = 'תמלול: ' + r.text + ' (קצר מאוד, כנראה שקט)'; }
+    else if (newer) { rec.note = 'תמלול: ' + r.text + ' (אחרי זה שלח הודעה חדשה, לא הוחזרה לטיפול)'; }
     else {
       rec.note = 'תמלול: ' + r.text;
       delete rec.status;
@@ -96,7 +99,7 @@ function voiceRecovery(t, res) {
       fs.writeFileSync(full, JSON.stringify(rec, null, 1));
       spawnSync('chown', [t.user + ':' + t.user, full]);
     }
-    res.fixed.push('הודעה קולית מ ' + new Date(rec.at).toLocaleTimeString('he-IL', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' }) + ' תומללה מחדש' + (words.length < 3 ? ' (שקט)' : ' והוחזרה לטיפול') + ': ' + r.text.slice(0, 80));
+    res.fixed.push('הודעה קולית מ ' + new Date(rec.at).toLocaleTimeString('he-IL', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' }) + ' תומללה מחדש' + (words.length < 3 ? ' (שקט)' : newer ? ' (שלח אחריה הודעה חדשה)' : ' והוחזרה לטיפול') + ': ' + r.text.slice(0, 80));
   });
 }
 
