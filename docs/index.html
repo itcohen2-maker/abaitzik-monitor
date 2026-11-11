@@ -2717,7 +2717,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-11T08:30:01.966Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-11T08:30:23.549Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4631,7 +4631,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='395a0b6cb2';
+var CODE_ID='42341339e9';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -14204,7 +14204,7 @@ function bizSheet(t0){
   var LD_SRC={site:'🌐 אתר','fb-comment':'📘 תגובה במודעה','ig-comment':'📸 תגובה במודעה',messenger:'💬 מסנג׳ר','ig-dm':'📸 הודעה באינסטגרם',leadform:'📝 טופס מטא',manual:'✍️ ידני'};
   var LD_INBOX='https://business.facebook.com/latest/inbox/all?asset_id=1341874565686928&business_id=2131000707784066';
   function ldWa(p){var d=String(p||'').replace(/[^0-9]/g,'');if(!d)return '';if(d.charAt(0)==='0')d='972'+d.slice(1);return 'https://wa.me/'+d;}
-  function ldNote(n){var W={mockups:'יש לו סקיצות',idea:'רק רעיון',started:'כבר התחיל',stuck:'נתקע באמצע',tier1:'עד 5,000 ₪',tier2:'5,000 עד 15,000 ₪',tier3:'15,000 עד 50,000 ₪',tier4:'מעל 50,000 ₪'};return String(n||'').split(String.fromCharCode(10)).map(function(l){return l.trim();}).filter(function(l){return l&&l!=='[Chat Lead]'&&l!=='Answers:'&&!/^Description: *N.A$/i.test(l);}).map(function(l){var m=/^(stage|budget): *([a-z0-9]+)/i.exec(l);return m?(m[1].toLowerCase()==='stage'?'שלב: ':'תקציב: ')+(W[m[2]]||m[2]):l;}).join(String.fromCharCode(10));}
+  function ldNote(n){var W={idea:'רעיון',spec:'אפיון',mockups:'מסכים',product:'מוצר עובד',tier1:'0 עד 5,000 ₪',tier2:'5,000 עד 10,000 ₪',tier3:'10,000 עד 30,000 ₪',tier4:'30,000 עד 50,000 ₪',tier5:'50,000 ₪ ומעלה'};return String(n||'').split(String.fromCharCode(10)).map(function(l){return l.trim();}).filter(function(l){return l&&l!=='[Chat Lead]'&&l!=='Answers:'&&!/^Description: *N.A$/i.test(l);}).map(function(l){var m=/^(stage|budget): *([a-z0-9]+)/i.exec(l);return m?(m[1].toLowerCase()==='stage'?'שלב: ':'תקציב: ')+(W[m[2]]||m[2]):l;}).join(String.fromCharCode(10));}
   function itsLeadsHtml(){
    var L=recs.filter(function(r){return r.kind==='lead'||r.kind==='customer';}).slice().sort(function(a,b){return String(b.at||'').localeCompare(String(a.at||''));});
    var sc=D.leadScan,open=L.filter(function(r){return r.status==='חדש';}).length;
