@@ -28,6 +28,8 @@ const S = stock.compute({
 }, today);
 
 const HOW_AI = 'ערוץ ה AI עולה כסרטון אחד ביום לכל שפה עד שישי (שבת לא). פריט במצב hold לא עולה: להזכיר לאיציק בכרטיס אישור אחד קצר מה מחכה לאישורו. אם חסרים סרטונים, להכין תסריטים להקלטה לפי הסקיל ai-explainer-video ולהעלות לדרייב, ולבקש ממנו להקליט. לא להסיר hold בעצמו.';
+// 11.11.2026: English needs no recording, it is the cloned voice; it follows the Hebrew topics.
+const HOW_AI_EN = 'אנגלית לא צריכה הקלטה: לוקחים נושא שכבר יש לו סרטון בעברית ועוד אין לו אנגלית, ומכינים גרסה אנגלית לפי הסקיל ai-explainer-video (קול משובט, כל משפט חי ולא מונוטוני, שאלה מתלהבת בסוף כמו ב cent-en, תמונת הפרופיל של איציק במסך הסיום), עם hold: true לאישור שלו. אם אין נושא בעברית בלי אנגלית, להכין תסריטים כמו בעברית.';
 const HOW = {
   st: 'להכין סטטוסים לוואטסאפ לפי הסבב (ראשון שחר, שני האתר, שלישי המוניטור, רביעי שחר, חמישי המוניטור, שישי נרות, בלי שבת), סרטון חדש לכל יום, לתור docs/status/queue.json.',
   nr: 'להכין את השבוע הבא של candle.times (2 פוסטים ו 2 סטוריז ביום, עברית ואנגלית, בלי שבת וחג, דמויות חדשות) ולהכניס ל /home/monitor/ner-queue.json עם approved: true (הנרות עולים לבד בלי אישור, איציק 7.11), ואז node ner-post.js --mirror.',
@@ -51,7 +53,7 @@ for (const c of S) {
   for (let i = 2; fs.existsSync(path.join(CHAT, name)); i++) name = base + '-' + i + '.json';
   const rec = { at: at.toISOString(), from: 'itzik', status: 'working', ackAt: at.toISOString(), auto: true, via: 'stock-check',
     id: 'stk-' + at.getTime().toString(36) + crypto.randomBytes(3).toString('hex'),
-    text: '📦 מלאי סרטונים\n' + c.title + ': ' + c.line + '.\n' + (HOW[c.id] || HOW_AI) + '\nאחרי ההכנה, השורה באריח 🎬 הסרטונים מתעדכנת לבד.' };
+    text: '📦 מלאי סרטונים\n' + c.title + ': ' + c.line + '.\n' + (HOW[c.id] || (c.id === 'ai-en' ? HOW_AI_EN : HOW_AI)) + '\nאחרי ההכנה, השורה באריח 🎬 הסרטונים מתעדכנת לבד.' };
   fs.mkdirSync(CHAT, { recursive: true });
   fs.writeFileSync(path.join(CHAT, name + '.tmp'), JSON.stringify(rec, null, 1), 'utf8');
   fs.renameSync(path.join(CHAT, name + '.tmp'), path.join(CHAT, name));
