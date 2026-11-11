@@ -17625,6 +17625,23 @@ function boardSheet(wk){
   +'#bdGrid .dot{flex-direction:row;gap:4px}#bdGrid .dot em{font-size:clamp(11px,3.6vh,18px)}#bdGrid .dot small{font-size:clamp(8px,2.8vh,12px)}'
   +'#bdGrid .dot{border-radius:12px}';
  css+='<style>@media (orientation:landscape) and (max-height:560px){'+LR+'}'+LR.replace(/#bdGrid/g,'#bdGrid.land')+'</style>';
+ // 11.11.2026, Itzik (recording on the computer): "עמוס מדי, העריכים גדולים והכותרות בצד ימין נורא קטנות, אין פרופורציות. תקטין שלא יתפרס על השוליים".
+ // On a computer: a centered card with margins, a wide readable name column, low tiles, bigger times; empty days almost vanish.
+ // Like the weekly content calendars (Buffer, Planable): channel rows, day columns, status colour, the label is the strongest text.
+ css+='<style>#bdGrid.land.desk{background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:3vh 3vw}'
+  +'#bdGrid.land.desk .ycard{position:relative;inset:auto;width:100%;max-width:1180px;height:auto;max-height:94vh;overflow:auto;border:1px solid rgba(120,130,255,.22);border-radius:24px;padding:18px 22px 20px;box-shadow:0 26px 90px rgba(70,80,255,.2)}'
+  +'#bdGrid.land.desk .lsc{height:auto;gap:12px}'
+  +'#bdGrid.land.desk .lh{flex:0 0 auto;gap:10px}#bdGrid.land.desk .lh b{font-size:20px}#bdGrid.land.desk .lk{font-size:13px;color:#aab0cc}'
+  +'#bdGrid.land.desk .lb{min-width:40px;height:40px}'
+  +'#bdGrid.land.desk .lg2{flex:none;grid-template-columns:180px repeat(7,minmax(0,1fr));grid-template-rows:44px repeat(var(--R),46px);gap:6px 8px}'
+  +'#bdGrid.land.desk .lg2>span{font-size:15px}#bdGrid.land.desk .lg2>span small{font-size:12px}'
+  +'#bdGrid.land.desk .ln{flex-direction:row!important;justify-content:flex-start;gap:8px;padding:0 12px;font-size:18px!important;border-radius:12px}'
+  +'#bdGrid.land.desk .ln small{flex:1;text-align:start;font-size:15px!important;line-height:1.2;-webkit-line-clamp:1}'
+  +'#bdGrid.land.desk .lc{padding:3px 0}'
+  +'#bdGrid.land.desk .dot{flex-direction:row;gap:6px;border-radius:10px}'
+  +'#bdGrid.land.desk .dot em{font-size:16px}#bdGrid.land.desk .dot small{font-size:14px;letter-spacing:0}'
+  +'#bdGrid.land.desk .dot.e{opacity:.12}#bdGrid.land.desk .dot.pst.e{opacity:.07}'
+  +'</style>';
  var wkName=BD_WEEK===0?'השבוע':BD_WEEK===-1?'שבוע שעבר':BD_WEEK===1?'שבוע הבא':(BD_WEEK>0?'בעוד '+BD_WEEK+' שבועות':'לפני '+(-BD_WEEK)+' שבועות');
  var h=css+'<div class="ycard"><b>🎛️ לוח בקרה</b>'
   +'<div class="nav"><button type="button" class="yb" data-a="prev">‹ קודם</button><b>'+wkName+' · '+dm(days[0])+' עד '+dm(days[6])+'</b><button type="button" class="yb" data-a="next">הבא ›</button></div>'
@@ -17678,7 +17695,7 @@ function boardSheet(wk){
  h+=(L.at?'<small style="display:block;color:#8a5a00;margin-top:6px">יש שינוי ששמרת בטלפון ועוד לא נבנה בדף. השרת כבר עובד לפיו.</small>':'')
   +'<button type="button" class="yb yb2" data-a="more">📦 מלאי מוכן ואוטומציות</button>'
   +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
- var w=document.createElement('div');w.id='bdGrid';w.className='ysheet'+(BD_LAND?' land':'');w.setAttribute('role','dialog');w.setAttribute('aria-label','לוח בקרה');
+ var w=document.createElement('div');w.id='bdGrid';w.className='ysheet'+(BD_LAND?' land':'')+(BD_DESK?' desk':'');w.setAttribute('role','dialog');w.setAttribute('aria-label','לוח בקרה');
  w.innerHTML=h;
  function keep(){L.at=new Date().toISOString();try{localStorage.setItem('postPlanLocal',JSON.stringify(L));}catch(e){}}
  function send(body){
