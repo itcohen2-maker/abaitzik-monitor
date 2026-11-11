@@ -257,3 +257,7 @@
 - **"דף עבודה יומי של <רופא>: ..." עם תמונה:** קוראים את התמונה ורושמים `data/clinic/frl/<YYYYMMDD>-<slug>.json` = `{"doctor":"<השם כמו בהודעה>","date":"YYYY-MM-DD","rows":[{"patient","treatment","paid"}]}` (`paid` מספר בשקלים; `lab` רק אם כתוב בדף). מה שלא קריא: שואלים שאלה אחת, לא מנחשים סכום. בנייה, ותשובה בשורה: כמה טיפולים וכמה מגיע.
 - **"ספק <שם>, YYYY-MM: בוצע|לא בוצע | הערה: ...":** כותבים ל `data/clinic/sup/<YYYYMM>.json` את `{"<שם>":{"done":true|false,"note":"...","at":"<ISO>"}}` (ממזגים, לא מוחקים ספקים אחרים) ובונים. בלי תשובה בצ׳אט.
 - רשימת הרופאים, האחוז והספקים באים מטופס ההקמה ב profile.md. שינוי: `data/clinic/setup.json` (`doctors`, `rate`, `labMinus`, `suppliers`).
+
+## 👀 כניסות לקוחות (11.11.2026)
+- איציק על ד״ר שולמן: "תסמן באיזה שעות הוא נכנס, כמה זמן, ותעדכן אותי באריח מהבהב". דף של לקוח עם `D.visitKey` שולח ל wa-bridge.js `POST /api/visit` (start, beat כל דקה, end), ו lib/visits.js שומר ב `data/visits/<לקוח>.json` אצל איציק. האריח `gVisits` אצל איציק בלבד, מוסתר עד הכניסה הראשונה, ומהבהב עד שפותחים אותו אחרי כניסה חדשה.
+- הפעלה ללקוח: `sudo -u monitor node -e "console.log(require('./lib/visits.js').newKey('data','<id>'))"`, את המפתח כותבים ל `<תיקיית הלקוח>/data/status/visit-key.txt` (בעלות משתמש הלקוח, 600) ובונים אצלו. כתובת הדף של הלקוח צריכה להיות ב ORIGINS שב wa-bridge.js. פעיל כרגע: pablo.
