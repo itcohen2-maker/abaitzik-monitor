@@ -1,7 +1,7 @@
 {
- "at": "2026-11-11T19:22:02.383Z",
+ "at": "2026-11-11T19:46:12.598Z",
  "up": 0,
- "since": "2026-11-11T19:22:02.363Z",
+ "since": "2026-11-11T19:46:12.574Z",
  "last": "",
  "n": 0,
  "recent": [
@@ -38,9 +38,9 @@
   },
   "mail": {
    "label": "מייל",
-   "used": 11,
+   "used": 15,
    "cap": 40,
-   "left": 29,
+   "left": 25,
    "paid": false,
    "blockedUntil": "",
    "daily": false
@@ -58,7 +58,7 @@
  "queued": 0,
  "pc": {
   "on": true,
-  "seen": "2026-11-11T19:21:45.275Z"
+  "seen": "2026-11-11T19:45:45.587Z"
  },
  "hold": false,
  "quota": null,
