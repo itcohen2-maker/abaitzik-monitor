@@ -261,3 +261,8 @@
 ## 👀 כניסות לקוחות (11.11.2026)
 - איציק על ד״ר שולמן: "תסמן באיזה שעות הוא נכנס, כמה זמן, ותעדכן אותי באריח מהבהב". דף של לקוח עם `D.visitKey` שולח ל wa-bridge.js `POST /api/visit` (start, beat כל דקה, end), ו lib/visits.js שומר ב `data/visits/<לקוח>.json` אצל איציק. האריח `gVisits` אצל איציק בלבד, מוסתר עד הכניסה הראשונה, ומהבהב עד שפותחים אותו אחרי כניסה חדשה.
 - הפעלה ללקוח: `sudo -u monitor node -e "console.log(require('./lib/visits.js').newKey('data','<id>'))"`, את המפתח כותבים ל `<תיקיית הלקוח>/data/status/visit-key.txt` (בעלות משתמש הלקוח, 600) ובונים אצלו. כתובת הדף של הלקוח צריכה להיות ב ORIGINS שב wa-bridge.js. פעיל אצל pablo, alon ו ilay, ו setup/new-tenant.sh מפעיל לכל לקוח חדש.
+
+## "מה בצלחת" באתר ובהיילייט, חובת המנהל (11.11.2026, איציק)
+- כל סטורי של מה בצלחת שסומן שעלה (posted בתור /home/monitor/plate-queue.json) חייב להיות גם ב abaitzik.com/plate/ (onSite) וגם אחרון בהיילייט "מה בצלחת? 🍽️" באינסטגרם של abaitzik.
+- המנהל בודק בכל סבב (lib/manager.js plateSiteMissing): שעה אחרי ההעלאה, אם אין onSite, הוא שולח בעצמו משימה למחשב (pc-task, פעם אחת לפריט, state.plateSite) שמריצה clip/plate_tile/publish_plate.py ובודקת את ההיילייט, ומראה שורה בכרטיס עד שזה מסודר.
+- publish_plate.py מקבל עכשיו גם פריט שסומן posted בלי approved (זו הסיבה שאפונה ויוגורט לא הגיעו לאתר), ו --src לעותק מקומי כשהסרטון כבר נמחק מהשרת.

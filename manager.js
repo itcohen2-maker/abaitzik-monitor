@@ -48,6 +48,12 @@ log('round ' + m.day + ': ' + m.items.map(i => i.k + '=' + i.st).join(' '));
 
 const st = readJson(stateFile, {});
 st.alarms = (st.alarms || []).filter(x => x.startsWith(m.day));
+// 11.11: a plate story posted and not on the site or in the highlight: the manager sends the PC job himself, once per item.
+st.plateSite = st.plateSite || {};
+for (const it of M.plateSiteMissing(inp.plate, now)) {
+  if (st.plateSite[it.id]) continue;
+  if (run('node', ['pc-task.js', 'add', '--quiet', '--re', 'plate-site-' + it.id, M.plateSiteJob(it)]) !== null) { st.plateSite[it.id] = new Date(now).toISOString(); log('plate site job ' + it.id); }
+}
 for (const e of M.alarmsDue(m, now, st.alarms)) {
   const at = new Date(e.ms - 30 * 60000).toLocaleTimeString('en-GB', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit', hour12: false });
   const out = run('node', ['alarm.js', at, 'בעוד חצי שעה: ' + e.title + (e.where ? ', ' + e.where : '')]);
