@@ -15896,7 +15896,7 @@ function myBoardSheet(wk){
     else if(!BD_LAND&&document.fullscreenElement)document.exitFullscreen();}catch(e){}
    return;
   }
-  if(at==='bbsend'||at==='bbmic'||at==='bbtalk'||at==='bbdel')return bdAct(at,w);
+  if(at==='bbsend'||at==='bbmic'||at==='bbtalk'||at==='bbdel'||at==='bbatt'||at==='bbpaste')return bdAct(at,w);
   if(ev.target===w||at==='x'){try{if(document.fullscreenElement)document.exitFullscreen();}catch(e){}return w.remove();}
   if(at==='hrs')return hoursSheet();
   if(at==='prev'||at==='next'){w.remove();return myBoardSheet(BD_WEEK+(at==='next'?1:-1));}
@@ -17759,7 +17759,7 @@ function bdCss(){
   +'#bdGrid .bbr{display:flex;gap:8px;align-items:flex-end;margin:8px 0}'
   +'#bdGrid .bbr textarea{flex:1;min-width:0;box-sizing:border-box;background:#05060b;color:#f4f5ff;border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:10px 12px;font:15px/1.4 Heebo,sans-serif;resize:vertical}'
   +'#bdGrid .bbr .lb{width:46px;height:46px;font-size:20px}'
-  +'#bdGrid .bbu{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid rgba(255,255,255,.07)}#bdGrid .bbu>span{flex:0 0 22px;text-align:center}#bdGrid .bbu>div{flex:1;min-width:0}#bdGrid .bbSeen{display:inline-block;margin-top:6px;margin-inline-start:8px;padding:4px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06);color:inherit;font:700 13px Heebo,sans-serif}#bdGrid .bbk{flex:0 0 auto;width:18px;height:18px;margin-top:4px}'
+  +'#bdGrid .bbu{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid rgba(255,255,255,.07)}#bdGrid .bbu>span{flex:0 0 22px;text-align:center}#bdGrid .bbu>div{flex:1;min-width:0}#bdGrid .bbAttR{display:flex;gap:8px;margin:8px 0 2px}#bdGrid .bbAttB{flex:1;min-height:40px;border-radius:12px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.06);color:inherit;font:700 14px Heebo,sans-serif}#bdGrid .bbAttL{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0;font-size:13px}#bdGrid .bbAttL span{background:rgba(255,255,255,.08);border-radius:10px;padding:4px 8px}#bdGrid .bbAttL button{background:none;border:0;color:inherit;font-size:13px;margin-inline-start:4px}#bdGrid .bbSeen{display:inline-block;margin-top:6px;margin-inline-start:8px;padding:4px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06);color:inherit;font:700 13px Heebo,sans-serif}#bdGrid .bbk{flex:0 0 auto;width:18px;height:18px;margin-top:4px}'
   +'#bdGrid .bbg{margin:8px 0 2px;padding:8px 10px;border-radius:14px;background:#0a0c14;border:1px solid rgba(255,255,255,.08)}#bdGrid .bbg>b{display:block;font:800 14px Heebo,sans-serif;margin-bottom:2px}#bdGrid .bbg>b i,#bdGrid .bbn{font-style:normal;font-size:12px;background:rgba(255,255,255,.12);border-radius:9px;padding:0 7px;margin-inline-start:4px}'
   +'#bdGrid .g-now{border-color:rgba(255,90,90,.55);background:rgba(255,60,60,.08)}#bdGrid .g-now>b{color:#ff9b9b}#bdGrid .g-look>b{color:#ffd27a}#bdGrid .g-sp>b{color:#9fe0ff}#bdGrid .g-mg>b{color:#aab2ff}'
   +'#bdGrid .bbf{color:#fff;font-weight:700}#bdGrid .bbu ul{margin:4px 0 0;padding-inline-start:18px;color:#c9cde6;font-size:13px}#bdGrid .d-bad>span{color:#ff8a8a}#bdGrid .d-warn>span{color:#ffd27a}#bdGrid .d-ok>span{color:#7fe0a0}'
@@ -17793,6 +17793,9 @@ function bdChatHtml(gen){
  if(gen)return '<div class="bbx bbask" data-gen="1"><b>💬 לבקש משהו</b><small>כתוב או תגיד מה לעשות: משימה, תשובה למייל, שינוי בלוח. אני מטפל ועונה בצ׳אט.</small>'
   +'<div class="bbr"><textarea id="bbT" rows="2" placeholder="למשל: תענה לרועי שאני מאשר, תבדוק אם הגיעה החשבונית, תוסיף שורה ללוח"></textarea>'
   +'<button type="button" class="lb" data-a="bbmic" aria-label="הקלטה בקול">🎤</button></div>'
+  // 12.11.2026, Itzik: "תן לי גם אפשרות להדביק ולצרף צילום". Paste text or a screenshot, or attach images from the phone.
+  +'<div class="bbAttR"><button type="button" class="bbAttB" data-a="bbpaste">📋 הדבקה</button><button type="button" class="bbAttB" data-a="bbatt">📎 צילום מסך</button>'
+  +'<input type="file" id="bbF" accept="image/*,application/pdf" multiple hidden></div><div id="bbAtt" class="bbAttL" hidden></div>'
   +'<button type="button" class="yb yb2" data-a="bbsend">שליחה</button></div>';
  return '<div class="bbx"><b>💬 מה לשנות או להוסיף בלוח הבקרה</b><small>כתוב או תגיד מה לשנות בלוח, אילו עדכונים להראות ומה יהיה בדוח. אני מעדכן ועונה בצ׳אט.</small>'
   +'<div class="bbr"><textarea id="bbT" rows="2" placeholder="למשל: להסתיר שורה, להוסיף עדכון על חשבוניות, או דוח בוקר מתחת"></textarea>'
@@ -17878,8 +17881,51 @@ function bdDoneHtml(){
  return h+'<div class="bbr"><button type="button" class="yb yb2" data-a="bbtalk">💬 תגובה למסומנים</button><button type="button" class="yb yb2" data-a="bbdel">🗑 הסר מסומנים מהרשימה</button></div></div>';
 }
 // the chat bar of the board: 🎤 dictates, שליחה sends a normal monitor message that starts "🎛️ בקשה ללוח הבקרה:" (CLAUDE.md says how a session answers it)
+// 12.11.2026: files waiting to go with the "לבקש משהו" line (pasted screenshots or picked from the phone).
+var BB_FILES=[];
+function bbShowAtt(){
+ var L=document.getElementById('bbAtt');if(!L)return;
+ L.hidden=!BB_FILES.length;
+ L.innerHTML=BB_FILES.map(function(f,i){return '<span>'+(/^image/.test(f.type)?'🖼️':'📄')+' '+esc(f.name)+' <button type="button" data-bbx="'+i+'" aria-label="הסרה">✕</button></span>';}).join('');
+}
+function bbAddFiles(list){
+ [].slice.call(list||[]).forEach(function(f,i){
+  if(!f)return;
+  var nm=f.name&&f.name!=='image.png'?f.name:'צילום-'+new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')+'-'+(BB_FILES.length+i+1)+'.'+(String(f.type).split('/')[1]||'png');
+  try{if(nm!==f.name)f=new File([f],nm,{type:f.type});}catch(x){}
+  BB_FILES.push(f);
+ });
+ bbShowAtt();
+ if(BB_FILES.length)toast(BB_FILES.length===1?'צירפתי קובץ אחד':'צירפתי '+BB_FILES.length+' קבצים');
+}
+document.addEventListener('change',function(e){var t=e.target;if(t&&t.id==='bbF'){bbAddFiles(t.files);t.value='';}},true);
+document.addEventListener('paste',function(e){
+ var t=e.target;if(!t||t.id!=='bbT')return;
+ var it=e.clipboardData&&e.clipboardData.files;
+ if(it&&it.length){e.preventDefault();bbAddFiles(it);}
+},true);
+document.addEventListener('click',function(e){
+ var t=e.target,i=t&&t.getAttribute&&t.getAttribute('data-bbx');if(i==null)return;
+ e.preventDefault();e.stopPropagation();BB_FILES.splice(+i,1);bbShowAtt();
+},true);
 function bdAct(a,w){
  var t=w.querySelector('#bbT');if(!t)return;
+ if(a==='bbatt'){var fi=w.querySelector('#bbF');if(fi)fi.click();return;}
+ if(a==='bbpaste'){
+  var C=navigator.clipboard;
+  var txt=function(){if(!C||!C.readText){t.focus();toast('לחיצה ארוכה בתיבה ואז הדבק');return;}
+   C.readText().then(function(s){if(s){t.value=(t.value?t.value+' ':'')+s;t.focus();}else toast('אין טקסט להדבקה');},function(){t.focus();toast('לחיצה ארוכה בתיבה ואז הדבק');});};
+  if(C&&C.read){
+   C.read().then(function(items){
+    var got=[],ps=[];
+    items.forEach(function(it){var ty=(it.types||[]).filter(function(x){return /^image[/]/.test(x);})[0];
+     if(ty)ps.push(it.getType(ty).then(function(b){got.push(new File([b],'image.png',{type:ty}));}));});
+    if(!ps.length)return txt();
+    return Promise.all(ps).then(function(){bbAddFiles(got);});
+   },txt);
+  }else txt();
+  return;
+ }
  if(a==='bbtalk'||a==='bbdel'){
   var ks=[].slice.call(w.querySelectorAll('.bbk:checked'));
   if(!ks.length){toast('סמן קודם שורה או שתיים מהרשימה');return;}
@@ -17899,8 +17945,15 @@ function bdAct(a,w){
   return;
  }
  var v=(t.value||'').trim();
- if(v.length<3){toast('כתוב או תגיד מה לשנות בלוח');return;}
  var gen=!!w.querySelector('.bbask');
+ if(gen&&BB_FILES.length){
+  var fm='🎛️ מלוח הבקרה: '+(v||'מצורף צילום, תסתכל ותטפל');
+  var fl=BB_FILES.slice();toast('שולח...');
+  sendSmall(fl,fm).then(function(){markSent('text',fm);t.value='';BB_FILES=[];bbShowAtt();toast('נשלח עם '+(fl.length===1?'הקובץ':fl.length+' קבצים')+'. אטפל ואענה בצ׳אט.');},
+   function(){toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
+  return;
+ }
+ if(v.length<3){toast('כתוב או תגיד מה לשנות בלוח');return;}
  var msg=(gen?'🎛️ מלוח הבקרה: ':'🎛️ בקשה ללוח הבקרה: ')+v;
  sendText('לוח הבקרה',msg,'משימה').then(function(){markSent('text',msg);t.value='';toast(gen?'נשלח. אטפל ואענה בצ׳אט.':'נשלח. אעדכן את הלוח ואענה בצ׳אט.');},function(){toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
 }
@@ -18102,7 +18155,7 @@ function boardSheet(wk){
     else if(!BD_LAND&&document.fullscreenElement)document.exitFullscreen();}catch(e){}
    return;
   }
-  if(a==='bbsend'||a==='bbmic'||a==='bbtalk'||a==='bbdel')return bdAct(a,w);
+  if(a==='bbsend'||a==='bbmic'||a==='bbtalk'||a==='bbdel'||a==='bbatt'||a==='bbpaste')return bdAct(a,w);
   if(ev.target===w||a==='x'){try{if(document.fullscreenElement)document.exitFullscreen();}catch(e){}return w.remove();}
   if(a==='more'){w.remove();return boardMore();}
   if(a==='prev'||a==='next'){w.remove();return boardSheet(BD_WEEK+(a==='next'?1:-1));}
