@@ -2734,7 +2734,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-11T10:10:18.021Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-11T10:11:36.917Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3088,14 +3088,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4655,7 +4648,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='7483d4cc9f';
+var CODE_ID='0213d25a8e';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -13269,6 +13262,20 @@ function boardSheet(wk){
   +'#bdGrid .dot{flex-direction:row;gap:4px}#bdGrid .dot em{font-size:clamp(11px,3.6vh,18px)}#bdGrid .dot small{font-size:clamp(8px,2.8vh,12px)}'
   +'#bdGrid .dot{border-radius:12px}';
  css+='<style>@media (orientation:landscape) and (max-height:560px){'+LR+'}'+LR.replace(/#bdGrid/g,'#bdGrid.land')+'</style>';
+ css+='<style>#bdGrid.land.desk{background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:3vh 3vw}'
+  +'#bdGrid.land.desk .ycard{position:relative;inset:auto;width:100%;max-width:1180px;height:auto;max-height:94vh;overflow:auto;border:1px solid rgba(120,130,255,.22);border-radius:24px;padding:18px 22px 20px;box-shadow:0 26px 90px rgba(70,80,255,.2)}'
+  +'#bdGrid.land.desk .lsc{height:auto;gap:12px}'
+  +'#bdGrid.land.desk .lh{flex:0 0 auto;gap:10px}#bdGrid.land.desk .lh b{font-size:20px}#bdGrid.land.desk .lk{font-size:13px;color:#aab0cc}'
+  +'#bdGrid.land.desk .lb{min-width:40px;height:40px}'
+  +'#bdGrid.land.desk .lg2{flex:none;grid-template-columns:180px repeat(7,minmax(0,1fr));grid-template-rows:44px repeat(var(--R),46px);gap:6px 8px}'
+  +'#bdGrid.land.desk .lg2>span{font-size:15px}#bdGrid.land.desk .lg2>span small{font-size:12px}'
+  +'#bdGrid.land.desk .ln{flex-direction:row!important;justify-content:flex-start;gap:8px;padding:0 12px;font-size:18px!important;border-radius:12px}'
+  +'#bdGrid.land.desk .ln small{flex:1;text-align:start;font-size:15px!important;line-height:1.2;-webkit-line-clamp:1}'
+  +'#bdGrid.land.desk .lc{padding:3px 0}'
+  +'#bdGrid.land.desk .dot{flex-direction:row;gap:6px;border-radius:10px}'
+  +'#bdGrid.land.desk .dot em{font-size:16px}#bdGrid.land.desk .dot small{font-size:14px;letter-spacing:0}'
+  +'#bdGrid.land.desk .dot.e{opacity:.12}#bdGrid.land.desk .dot.pst.e{opacity:.07}'
+  +'</style>';
  var wkName=BD_WEEK===0?'השבוע':BD_WEEK===-1?'שבוע שעבר':BD_WEEK===1?'שבוע הבא':(BD_WEEK>0?'בעוד '+BD_WEEK+' שבועות':'לפני '+(-BD_WEEK)+' שבועות');
  var h=css+'<div class="ycard"><b>🎛️ לוח בקרה</b>'
   +'<div class="nav"><button type="button" class="yb" data-a="prev">‹ קודם</button><b>'+wkName+' · '+dm(days[0])+' עד '+dm(days[6])+'</b><button type="button" class="yb" data-a="next">הבא ›</button></div>'
@@ -13316,7 +13323,7 @@ function boardSheet(wk){
  h+=(L.at?'<small style="display:block;color:#8a5a00;margin-top:6px">יש שינוי ששמרת בטלפון ועוד לא נבנה בדף. השרת כבר עובד לפיו.</small>':'')
   +'<button type="button" class="yb yb2" data-a="more">📦 מלאי מוכן ואוטומציות</button>'
   +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
- var w=document.createElement('div');w.id='bdGrid';w.className='ysheet'+(BD_LAND?' land':'');w.setAttribute('role','dialog');w.setAttribute('aria-label','לוח בקרה');
+ var w=document.createElement('div');w.id='bdGrid';w.className='ysheet'+(BD_LAND?' land':'')+(BD_DESK?' desk':'');w.setAttribute('role','dialog');w.setAttribute('aria-label','לוח בקרה');
  w.innerHTML=h;
  function keep(){L.at=new Date().toISOString();try{localStorage.setItem('postPlanLocal',JSON.stringify(L));}catch(e){}}
  function send(body){
@@ -18867,7 +18874,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="BAJSdIafAtGxgHzJr3tOJLTViE1Gkn6rNyAReKPb5ZiMM-6xXp2c1PD7V5VKOXkQRWLI9-Wdq7-Q4hyMCcYp2iQ";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
