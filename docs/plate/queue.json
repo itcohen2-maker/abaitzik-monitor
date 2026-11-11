@@ -547,7 +547,7 @@
   "order": 11,
   "file": "media/plate-adashim-v1.mp4",
   "poster": "media/plate-adashim-v1.jpg",
-  "approved": false,
+  "approved": true,
   "screens": [
    {
     "head": "עדשים",
