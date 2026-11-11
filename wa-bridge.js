@@ -638,7 +638,9 @@ async function api(q, s, u) {
   if (/^\/api\/chat(\/thread|\/todo)?$/.test(u.pathname) && !codeOk(b.code)) {
     const tn = tenantByKey(b.code);
     if (!tn) { s.writeHead(403, h); return s.end('{"error":"code"}'); }
-    const r = await require('./lib/fast-chat.js').chatApi(u.pathname, b, { dataPath: path.join(DATA, 'fastchat', 't', tn.name),
+    // 11.11.2026: a customer's chat and trainings run on the customers' API key, never on Itzik's subscription.
+    let cst; try { cst = require('./lib/sales-train.js').forCustomer(); } catch (e) { log('customer chat: ' + e.message); s.writeHead(503, h); return s.end('{"error":"key"}'); }
+    const r = await require('./lib/fast-chat.js').chatApi(u.pathname, b, { llm: cst.llm, salesTrain: cst, dataPath: path.join(DATA, 'fastchat', 't', tn.name),
       toMonitor: tenantToMonitor(tn), owner: false, business: tn.business || '', enabled: true, context: () => chatContext(tn) });
     s.writeHead(r.status, h); return s.end(JSON.stringify(r.json));
   }

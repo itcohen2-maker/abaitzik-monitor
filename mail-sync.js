@@ -75,12 +75,15 @@ const RULES = [
   'בפרסומת ובהודעה אוטומטית reply ריק.'
 ].join('\n');
 
-function ask(text) {
+function ask(text, src) {
   return new Promise((resolve, reject) => {
     const args = ['-p', '--model', 'haiku', '--output-format', 'text', '--disallowedTools',
       'Bash', 'Edit', 'Write', 'Read', 'Grep', 'Glob', 'WebFetch', 'WebSearch', 'NotebookEdit', 'Task', 'Agent'];
     // The login comes from /etc/monitor.env (EnvironmentFile of monitor-mail.service, the same as the worker's).
-    const child = spawn('claude', args, { cwd: HERE, env: process.env });
+    // 11.11.2026: a customer's mail is sorted on the customers' API key (lib/customer-env.js), never on Itzik's subscription.
+    let env = process.env;
+    if (!src || src.tenant || (src.name && src.name !== 'abaitzik')) { try { env = require('./lib/customer-env.js').customerEnv(); } catch (e) { return reject(e); } }
+    const child = spawn('claude', args, { cwd: HERE, env });
     let out = '', err = '';
     const t = setTimeout(() => { child.kill('SIGTERM'); reject(new Error('timeout')); }, 3 * 60 * 1000);
     child.stdout.on('data', (d) => { out += d; });
@@ -158,7 +161,7 @@ async function one(src) {
       if (me && from.toLowerCase().includes(me)) continue;
       const subject = head(m, 'subject');
       const text = bodyText(m.payload);
-      const got = parse(await ask(RULES + '\n\n--- המייל ---\nמאת: ' + from + '\nנושא: ' + subject + '\n\n' + text + '\n--- סוף המייל ---'));
+      const got = parse(await ask(RULES + '\n\n--- המייל ---\nמאת: ' + from + '\nנושא: ' + subject + '\n\n' + text + '\n--- סוף המייל ---', src));
       const r = got || { tag: 'רגיל', summary: String(m.snippet || '').slice(0, 200), reply: '' };
       let drafted = false;
       if (r.reply && canDraft && !DRY) { try { await draft(c.access, m, r.reply); drafted = true; } catch (e) { say(src.name + ': טיוטה נכשלה ' + e.message); } }
