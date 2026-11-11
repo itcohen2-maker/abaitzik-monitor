@@ -82,7 +82,11 @@ function card(st, i, s) {
   let h = '<section class="c' + (complete(st, s) ? ' ok' : '') + '" data-id="' + esc(st.id) + '">'
     + '<div class="hd"><span class="ic">' + esc(st.icon || '•') + '</span><h2>' + esc(st.title) + '</h2><i class="ck">✓</i></div>'
     + '<p class="tx">' + esc(st.text) + '</p>';
-  if (st.choose) h += '<p class="cq">' + esc(st.choose.q) + '</p><div class="ops">' + st.choose.options.map((o) => '<button type="button" class="op' + (x.choice === o ? ' on' : '') + '">' + esc(o) + '</button>').join('') + '</div>';
+  // 11.11: needs: "<step id>" = this card waits for another card to be connected first (📸 private messages need
+  // the Facebook connection above); until then a calm note replaces the choice.
+  const waits = st.needs && !(((s.steps || {})[st.needs] || {}).got);
+  if (waits) h += '<p class="ih">' + esc(st.needsText || 'קודם מחברים את הכרטיס שלמעלה, ואז חוזרים לכאן.') + '</p>';
+  if (st.choose && !waits) h += '<p class="cq">' + esc(st.choose.q) + '</p><div class="ops">' + st.choose.options.map((o) => '<button type="button" class="op' + (x.choice === o ? ' on' : '') + '">' + esc(o) + '</button>').join('') + '</div>';
   // 5.11: several values per card; msg: true is a Hebrew message to forward (right to left, keeps its lines).
   [].concat(st.copy || [], st.copies || []).forEach((c) => {
     h += c.msg
