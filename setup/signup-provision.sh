@@ -58,3 +58,6 @@ for f in "$Q"/t*.json; do
     sudo -u monitor node "$REPO/notify.js" "מייל לא יצא" "המוניטור של $NAME נפתח, אבל המייל עם הקישור לא יצא. הקוד ב /root/tenant-codes/$ID.txt" >/dev/null 2>&1
   fi
 done
+
+# 11.11.2026: the connections page and the questionnaire welcome of every ready trial (signup-personalize.js).
+node "$REPO/signup-personalize.js" >> "$LOG" 2>&1 || log "personalize failed"

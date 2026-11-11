@@ -33,7 +33,10 @@ sed -i "/-$ID\.\(service\|timer\)|/d" /usr/local/bin/monitor-keepalive.sh
 sudo -u monitor node -e '
 const fs=require("fs"),id=process.argv[1];
 for (const f of ["data/fastchat/tenants.json","data/visits/keys.json"]) { try { const j=JSON.parse(fs.readFileSync(f,"utf8")); if (j[id]) { delete j[id]; fs.writeFileSync(f,JSON.stringify(j,null,1)); } } catch (e) {} }
-for (const f of ["data/tenants/tenants/"+id+".json","data/visits/"+id+".json"]) { try { fs.unlinkSync(f); } catch (e) {} }' "$ID" 2>/dev/null
+for (const f of ["data/tenants/tenants/"+id+".json","data/visits/"+id+".json"]) { try { fs.unlinkSync(f); } catch (e) {} }
+// 11.11: its connections page (signup-personalize.js) and its line in sources.json
+try { const sf="data/cal/sources.json", s=JSON.parse(fs.readFileSync(sf,"utf8")), me=s.find((x)=>x&&x.name===id);
+  if (me) { fs.writeFileSync(sf,JSON.stringify(s.filter((x)=>x!==me),null,1)); if (/^[a-f0-9]{20}$/.test(me.setup||"")) for (const e of [".def.json",".json",".secrets.json"]) { try { fs.unlinkSync("data/setup/"+me.setup+e); } catch (e2) {} } } } catch (e) {}' "$ID" 2>/dev/null
 ( cd "$REPO" ) && cd "$REPO"
 rm -f "/etc/$ID.env" /srv/monitor-changes/$ID.* "/root/tenant-codes/$ID.txt" /root/tenant-tokens/$ID.* /var/log/monitor-*-$ID.log
 chattr -i "/home/$ID/$ID-monitor/instance.json" "/home/$ID/$ID-monitor/data/profile.md" 2>/dev/null

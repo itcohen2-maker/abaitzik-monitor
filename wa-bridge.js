@@ -671,11 +671,14 @@ async function api(q, s, u) {
   let b; try { b = JSON.parse((await readBody(q, 20000)).toString('utf8')); } catch (e) { s.writeHead(400, h); return s.end('{}'); }
   // 11.11.2026: the self signup (lib/signup.js). Public, no code: the email code is the check. A verified signup waits in
   // data/signup/queue/ for its trial monitor (setup/signup-provision.sh), and lands in Itzik's 📋 לטיפול.
-  if (u.pathname === '/api/signup' || u.pathname === '/api/signup/verify') {
+  if (u.pathname === '/api/signup' || u.pathname === '/api/signup/verify' || u.pathname === '/api/signup/profile' || u.pathname === '/api/signup/status') {
     const S = require('./lib/signup.js'), M = require('./lib/mailer.js');
     const ip = String(q.headers['x-forwarded-for'] || q.socket.remoteAddress || '-').split(',')[0].trim();
     const send = function (code, o) { s.writeHead(code, h); s.end(JSON.stringify(o)); };
     try {
+      // 11.11: the questionnaire while the monitor is built, and the build status (both need the page token from verify)
+      if (u.pathname === '/api/signup/profile') { const r = S.saveProfile(DATA, b); return send(r.ok ? 200 : 400, r); }
+      if (u.pathname === '/api/signup/status') { const r = S.status(DATA, b); return send(r.ok ? 200 : 400, r); }
       if (u.pathname === '/api/signup') {
         const r = S.start(DATA, Object.assign({}, b, { ip }));
         if (!r.ok) return send(r.error === 'limit' ? 429 : 400, { error: r.error });
@@ -689,7 +692,7 @@ async function api(q, s, u) {
         try { require('./lib/handle.js').complete({ key: 'signup-' + v.id, kind: 'lead', who: v.name, title: 'נרשם לשבוע ניסיון ואימת מייל (' + (v.phone || v.email) + '). המוניטור שלו נפתח עכשיו.', link: 'biz' }); } catch (e) { log('signup handle: ' + e.message); }
       }
       // 11.11: the page shows an entry button to the monitor being built (the login code goes only by mail)
-      return send(200, { ok: true, host: v.id ? v.id + '.m.it-solution.co.il' : '' });
+      return send(200, { ok: true, id: v.id, pt: v.pt, host: v.id ? v.id + '.m.it-solution.co.il' : '' });
     } catch (e) { log('signup: ' + e.message); return send(500, { error: 'server' }); }
   }
   // 11.11.2026: the entry package payment. The customer's page sends its visit key in the body (never the URL); we open a
