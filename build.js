@@ -15825,7 +15825,7 @@ function myBoardSheet(wk){
     else if(!BD_LAND&&document.fullscreenElement)document.exitFullscreen();}catch(e){}
    return;
   }
-  if(at==='bbsend'||at==='bbmic')return bdAct(at,w);
+  if(at==='bbsend'||at==='bbmic'||at==='bbtalk'||at==='bbdel')return bdAct(at,w);
   if(ev.target===w||at==='x'){try{if(document.fullscreenElement)document.exitFullscreen();}catch(e){}return w.remove();}
   if(at==='prev'||at==='next'){w.remove();return myBoardSheet(BD_WEEK+(at==='next'?1:-1));}
   var dt=ev.target.closest&&ev.target.closest('.dot[data-r]');if(dt){var r0=ROWS[+dt.getAttribute('data-r')];if(r0)detail(r0,dt.getAttribute('data-d'));return;}
@@ -17684,7 +17684,7 @@ function bdCss(){
   +'#bdGrid .bbr{display:flex;gap:8px;align-items:flex-end;margin:8px 0}'
   +'#bdGrid .bbr textarea{flex:1;min-width:0;box-sizing:border-box;background:#05060b;color:#f4f5ff;border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:10px 12px;font:15px/1.4 Heebo,sans-serif;resize:vertical}'
   +'#bdGrid .bbr .lb{width:46px;height:46px;font-size:20px}'
-  +'#bdGrid .bbu{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid rgba(255,255,255,.07)}#bdGrid .bbu>span{flex:0 0 22px;text-align:center}#bdGrid .bbu>div{flex:1;min-width:0}'
+  +'#bdGrid .bbu{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid rgba(255,255,255,.07)}#bdGrid .bbu>span{flex:0 0 22px;text-align:center}#bdGrid .bbu>div{flex:1;min-width:0}#bdGrid .bbk{flex:0 0 auto;width:18px;height:18px;margin-top:4px}'
   +'#bdGrid .bbg{margin:8px 0 2px;padding:8px 10px;border-radius:14px;background:#0a0c14;border:1px solid rgba(255,255,255,.08)}#bdGrid .bbg>b{display:block;font:800 14px Heebo,sans-serif;margin-bottom:2px}#bdGrid .bbg>b i,#bdGrid .bbn{font-style:normal;font-size:12px;background:rgba(255,255,255,.12);border-radius:9px;padding:0 7px;margin-inline-start:4px}'
   +'#bdGrid .g-now{border-color:rgba(255,90,90,.55);background:rgba(255,60,60,.08)}#bdGrid .g-now>b{color:#ff9b9b}#bdGrid .g-look>b{color:#ffd27a}#bdGrid .g-sp>b{color:#9fe0ff}#bdGrid .g-mg>b{color:#aab2ff}'
   +'#bdGrid .bbf{color:#fff;font-weight:700}#bdGrid .bbu ul{margin:4px 0 0;padding-inline-start:18px;color:#c9cde6;font-size:13px}#bdGrid .d-bad>span{color:#ff8a8a}#bdGrid .d-warn>span{color:#ffd27a}#bdGrid .d-ok>span{color:#7fe0a0}'
@@ -17760,18 +17760,28 @@ function bdMailHtml(){
 // 11.11.2026, Itzik: "רשימה של כל הדברים שהמנהל עשה, וזה מתעדכן כל הזמן". D.bb.done from lib/board-feed.js doneItzik, newest first.
 function bdDoneHtml(){
  var L=D.bb&&D.bb.done;if(!L)return '';
- function row(x){return '<div class="bbu d-'+esc(x.st)+'"><span>'+esc(x.ic)+'</span><div>'+esc(x.t)
+ function row(x){return '<div class="bbu d-'+esc(x.st)+'"><input type="checkbox" class="bbk" data-k="'+esc(x.k)+'" data-t="'+esc(x.t)+'" aria-label="סמן"><span>'+esc(x.ic)+'</span><div>'+esc(x.t)
   +((x.sub||[]).length?'<ul>'+x.sub.map(function(s){return '<li>'+esc(s)+'</li>';}).join('')+'</ul>':'')
   +'<small>'+esc(bdAgo(x.at))+'</small></div></div>';}
  var h='<div class="bbx"><b>🧑‍💼 מה המנהל עשה היום <i class="bbn">'+L.length+'</i></b>';
  if(!L.length)return h+'<div class="emp">עוד לא עשה כלום היום. הסבבים ב 07:25, 13:00 ו 18:00.</div></div>';
  h+=L.slice(0,10).map(row).join('');
  if(L.length>10)h+='<details><summary class="bbm">עוד '+(L.length-10)+'</summary>'+L.slice(10).map(row).join('')+'</details>';
- return h+'</div>';
+ // סימון: בוחרים שורות, ואז תגובה אליהן בפס הצ׳אט, או הסרה מהרשימה (הסשן כותב doneHide ב board-prefs.json)
+ return h+'<div class="bbr"><button type="button" class="yb yb2" data-a="bbtalk">💬 תגובה למסומנים</button><button type="button" class="yb yb2" data-a="bbdel">🗑 הסר מסומנים מהרשימה</button></div></div>';
 }
 // the chat bar of the board: 🎤 dictates, שליחה sends a normal monitor message that starts "🎛️ בקשה ללוח הבקרה:" (CLAUDE.md says how a session answers it)
 function bdAct(a,w){
  var t=w.querySelector('#bbT');if(!t)return;
+ if(a==='bbtalk'||a==='bbdel'){
+  var ks=[].slice.call(w.querySelectorAll('.bbk:checked'));
+  if(!ks.length){toast('סמן קודם שורה או שתיים מהרשימה');return;}
+  var names=ks.map(function(c){return c.getAttribute('data-t');});
+  if(a==='bbtalk'){t.value=(t.value?t.value+' ':'')+'על: '+names.join(' | ')+' — ';t.focus();return;}
+  var dm='🎛️ מלוח הבקרה: הסר מהרשימה "מה המנהל עשה היום" את השורות האלה (doneHide): '+ks.map(function(c){return c.getAttribute('data-k');}).join(' ;; ')+'. בלוח: '+names.join(' | ');
+  sendText('לוח הבקרה',dm,'משימה').then(function(){markSent('text',dm);toast('נשלח. אסיר אותן מהרשימה ואענה בצ׳אט.');},function(){toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
+  return;
+ }
  if(a==='bbmic'){
   var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){toast('הקלטה בקול לא נתמכת בדפדפן הזה. אפשר לכתוב.');return;}
@@ -17984,7 +17994,7 @@ function boardSheet(wk){
     else if(!BD_LAND&&document.fullscreenElement)document.exitFullscreen();}catch(e){}
    return;
   }
-  if(a==='bbsend'||a==='bbmic')return bdAct(a,w);
+  if(a==='bbsend'||a==='bbmic'||a==='bbtalk'||a==='bbdel')return bdAct(a,w);
   if(ev.target===w||a==='x'){try{if(document.fullscreenElement)document.exitFullscreen();}catch(e){}return w.remove();}
   if(a==='more'){w.remove();return boardMore();}
   if(a==='prev'||a==='next'){w.remove();return boardSheet(BD_WEEK+(a==='next'?1:-1));}
