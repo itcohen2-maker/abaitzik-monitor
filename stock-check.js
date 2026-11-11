@@ -49,7 +49,7 @@ for (const c of S) {
   for (let i = 2; fs.existsSync(path.join(CHAT, name)); i++) name = base + '-' + i + '.json';
   const rec = { at: at.toISOString(), from: 'itzik', status: 'working', ackAt: at.toISOString(), auto: true, via: 'stock-check',
     id: 'stk-' + at.getTime().toString(36) + crypto.randomBytes(3).toString('hex'),
-    text: '📦 מלאי סרטונים\n' + c.title + ': ' + c.line + '.\n' + HOW[c.id] + '\nאחרי ההכנה, השורה באריח 🎬 הסרטונים מתעדכנת לבד.' };
+    text: '📦 מלאי סרטונים\n' + c.title + ': ' + c.line + '.\n' + (HOW[c.id] || HOW_AI) + '\nאחרי ההכנה, השורה באריח 🎬 הסרטונים מתעדכנת לבד.' };
   fs.mkdirSync(CHAT, { recursive: true });
   fs.writeFileSync(path.join(CHAT, name + '.tmp'), JSON.stringify(rec, null, 1), 'utf8');
   fs.renameSync(path.join(CHAT, name + '.tmp'), path.join(CHAT, name));
