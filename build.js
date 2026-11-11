@@ -17445,6 +17445,11 @@ on('gVideos',function(){vidSheet();});
 // exactly what that day holds, and edits it: the week plan (lib/post-plan.js) or the time of a post. The change goes to
 // listen.js (Title post-plan) and waits on this phone (postPlanLocal) until the next build carries it.
 var BD_WEEK=0;
+// 11.11.2026, Itzik: "בדפדפן במחשב אין לי אפשרות להפוך את המסך, תיצור כפתור לסובב את המסך, וברגע שאני אפתח הוא יתפרס על כל המסך".
+// BD_LAND puts the sideways phone view (the tiles over the whole screen) on demand. On a computer it is the default.
+var BD_DESK=false;try{BD_DESK=matchMedia('(pointer:fine) and (min-width:900px)').matches;}catch(e){}
+var BD_LAND=null;try{var bdl=localStorage.getItem('bdLand');if(bdl==='1'||bdl==='0')BD_LAND=bdl==='1';}catch(e){}
+if(BD_LAND===null)BD_LAND=BD_DESK;
 function boardSheet(wk){
  if(typeof wk==='number')BD_WEEK=wk;
  if(!(VQ&&Date.now()-VQT<60000))return vqLoad(function(){boardSheet();});
@@ -17605,9 +17610,10 @@ function boardSheet(wk){
   +'#bdGrid .dot em{font-style:normal;font-size:14px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.55))}'
   +'#bdGrid .dot small{display:block;max-width:100%;overflow:hidden;white-space:nowrap;font:800 8px/1.1 Heebo,sans-serif;color:#fff;direction:ltr;letter-spacing:-.2px;text-shadow:0 1px 3px rgba(0,0,0,.6)}'
   +'#bdGrid .dot.pst{filter:saturate(.55) brightness(.75)}#bdGrid .dot.pst.e{opacity:.18}#bdGrid .dot.now{outline:2px solid #fff;outline-offset:1px}'
-  // the sideways phone: the same tiles fill the whole screen, nothing else shows
-  +'@media (orientation:landscape) and (max-height:560px){'
-  +'#bdGrid{background:#000;padding:0}'
+  +'#bdGrid .lrot{cursor:pointer;width:100%;box-sizing:border-box}#bdGrid .lb.rot{font-size:18px}'
+  +'</style>';
+ // the sideways phone: the same tiles fill the whole screen, nothing else shows. The same rules under #bdGrid.land are the rotate button.
+ var LR='#bdGrid{background:#000;padding:0}'
   +'#bdGrid .ycard{position:fixed;inset:0;max-width:none;max-height:none;height:100%;width:100%;box-sizing:border-box;border:0;border-radius:0;padding:6px max(10px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));overflow:hidden;box-shadow:none}'
   +'#bdGrid .ycard>*:not(.lsc){display:none!important}'
   +'#bdGrid .lsc{height:100%;gap:4px;margin:0}#bdGrid .lrot{display:none}'
@@ -17616,8 +17622,8 @@ function boardSheet(wk){
   +'#bdGrid .lg2{flex:1;min-height:0;grid-template-columns:86px repeat(7,minmax(0,1fr));grid-template-rows:28px repeat(var(--R),minmax(0,1fr));gap:4px}'
   +'#bdGrid .ln{flex-direction:row!important;gap:3px;font-size:clamp(12px,3.4vh,16px)!important}#bdGrid .ln small{flex:1;text-align:start;font-size:clamp(8px,2.3vh,10px)!important}'
   +'#bdGrid .dot{flex-direction:row;gap:4px}#bdGrid .dot em{font-size:clamp(11px,3.6vh,18px)}#bdGrid .dot small{font-size:clamp(8px,2.8vh,12px)}'
-  +'#bdGrid .dot{border-radius:12px}'
-  +'}</style>';
+  +'#bdGrid .dot{border-radius:12px}';
+ css+='<style>@media (orientation:landscape) and (max-height:560px){'+LR+'}'+LR.replace(/#bdGrid/g,'#bdGrid.land')+'</style>';
  var wkName=BD_WEEK===0?'השבוע':BD_WEEK===-1?'שבוע שעבר':BD_WEEK===1?'שבוע הבא':(BD_WEEK>0?'בעוד '+BD_WEEK+' שבועות':'לפני '+(-BD_WEEK)+' שבועות');
  var h=css+'<div class="ycard"><b>🎛️ לוח בקרה</b>'
   +'<div class="nav"><button type="button" class="yb" data-a="prev">‹ קודם</button><b>'+wkName+' · '+dm(days[0])+' עד '+dm(days[6])+'</b><button type="button" class="yb" data-a="next">הבא ›</button></div>'
@@ -17639,8 +17645,8 @@ function boardSheet(wk){
  var LBL={ok:'עלה',miss:'לא עלה',will:'יעלה לבד',hand:'אתה מעלה',wait:'לאישור',no:'לא יעלה',run:'רץ',late:'עבר הזמן',open:'ידני'};
  h+='<div class="lsc" style="--R:'+ROWS.length+'"><div class="lh"><button type="button" class="lb" data-a="prev">‹</button><b>🎛️ '+wkName+' · '+dm(days[0])+' עד '+dm(days[6])+'</b>'
   +'<span class="lk">✅ עלה · 🔜 יעלה לבד · ✋ אתה מעלה · ⏳ לאישור · ⚠️ לא יעלה · ▶️ ממומן · חיוור: לא מתוכנן</span>'
-  +'<button type="button" class="lb" data-a="next">›</button><button type="button" class="lb" data-a="x">✕</button></div>'
-  +'<div class="lrot"><i>📱</i>סובב את הטלפון לרוחב, ככה רואים את הלוח הכי טוב</div>'
+  +'<button type="button" class="lb" data-a="next">›</button><button type="button" class="lb rot" data-a="rot" title="לסובב את המסך" aria-label="לסובב את המסך">🔄</button><button type="button" class="lb" data-a="x">✕</button></div>'
+  +'<button type="button" class="lrot" data-a="rot"><i>📱</i>'+(BD_DESK?'🔄 לסובב לרוחב, על כל המסך':'סובב את הטלפון לרוחב, או לחץ כאן')+'</button>'
   +'<div class="lg2"><span></span>'+days.map(function(d){return '<span class="'+(d===T0?'tdy':'')+'">'+(d===T0?'היום':DS[dw(d)])+'<small>'+dm(d)+'</small></span>';}).join('')
   +ROWS.map(function(r,ri){var rc=RC[r.id]||['#7d8ba1','#3f4a5c'],cv='--a:'+rc[0]+';--b:'+rc[1];
    return '<span class="ln" style="'+cv+'" data-rn="'+ri+'">'+r.ic+'<small>'+esc(r.n)+'</small></span>'
@@ -17671,7 +17677,7 @@ function boardSheet(wk){
  h+=(L.at?'<small style="display:block;color:#8a5a00;margin-top:6px">יש שינוי ששמרת בטלפון ועוד לא נבנה בדף. השרת כבר עובד לפיו.</small>':'')
   +'<button type="button" class="yb yb2" data-a="more">📦 מלאי מוכן ואוטומציות</button>'
   +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
- var w=document.createElement('div');w.id='bdGrid';w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','לוח בקרה');
+ var w=document.createElement('div');w.id='bdGrid';w.className='ysheet'+(BD_LAND?' land':'');w.setAttribute('role','dialog');w.setAttribute('aria-label','לוח בקרה');
  w.innerHTML=h;
  function keep(){L.at=new Date().toISOString();try{localStorage.setItem('postPlanLocal',JSON.stringify(L));}catch(e){}}
  function send(body){
@@ -17723,7 +17729,14 @@ function boardSheet(wk){
  }
  w.onclick=function(ev){
   var a=ev.target.getAttribute&&ev.target.getAttribute('data-a');
-  if(ev.target===w||a==='x')return w.remove();
+  var rb=ev.target.closest&&ev.target.closest('[data-a="rot"]');
+  if(rb){
+   BD_LAND=!BD_LAND;w.classList.toggle('land',BD_LAND);try{localStorage.setItem('bdLand',BD_LAND?'1':'0');}catch(e){}
+   try{if(BD_LAND&&BD_DESK&&!document.fullscreenElement&&document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(function(){});
+    else if(!BD_LAND&&document.fullscreenElement)document.exitFullscreen();}catch(e){}
+   return;
+  }
+  if(ev.target===w||a==='x'){try{if(document.fullscreenElement)document.exitFullscreen();}catch(e){}return w.remove();}
   if(a==='more'){w.remove();return boardMore();}
   if(a==='prev'||a==='next'){w.remove();return boardSheet(BD_WEEK+(a==='next'?1:-1));}
   var tdo=ev.target.closest&&ev.target.closest('.td[data-t]');
@@ -17843,7 +17856,11 @@ function boardMore(){
  };
  document.body.appendChild(w);
 }
-on('icBoard',function(){boardSheet(0);});
+on('icBoard',function(){
+ // on a computer the board opens over the whole screen (the click is the gesture the browser needs)
+ try{if(BD_LAND&&BD_DESK&&!document.fullscreenElement&&document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(function(){});}catch(e){}
+ boardSheet(0);
+});
 
 /*
   10.11.2026, Itzik: "אם טופס של ליד או לקוח חזר וצריך טיפול, זה חייב להבהב במוניטור, לטיפול."
