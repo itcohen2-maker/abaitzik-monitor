@@ -14850,14 +14850,18 @@ boot('waStatusTile',function(){
  var seenK='waStatusSeen:'+day,seen='';try{seen=localStorage.getItem(seenK)||'';}catch(e){}
  // 5.11, Itzik: "בבוקר למעלה, אחרי שהשתמשתי, תוריד". A daily job tile is first in the grid until he
  // opens it that day, then it goes to the end of the grid until tomorrow (dailyTile below).
- if(seen){dailyTile(t,false);return;}
- var posted={};try{posted=JSON.parse(localStorage.getItem('waStatusDone')||'{}')||{};}catch(e){}
- fetch('status/queue.json?v='+Date.now()).then(function(r){return r.ok?r.json():[];}).then(function(q){
-  var it=(Array.isArray(q)?q:[]).find(function(x){return x.date===day;});
-  if(!it||posted[it.name]){dailyTile(t,false);return;}
-  t.classList.add('taskblink');dailyTile(t,true);
-  t.addEventListener('click',function(){try{localStorage.setItem(seenK,'1');}catch(e){}t.classList.remove('taskblink');dailyTile(t,false);});
- }).catch(function(){});
+ // 11.11.2026, Itzik: what he uploads by hand today (upToday: status, plate, carousel) is written in the tile and the
+ // tile keeps its soft alert (taskblink, now the slow colour change; updTiles does not clear it on open) until all of it went up, not only until it is opened.
+ var sm=t.querySelector('small'),sm0=sm?sm.textContent:'';
+ vqLoad(function(){
+  var L=upToday(),op=L.filter(function(x){return !x.done;});
+  if(sm)sm.textContent=op.length?'⭐ להעלות היום: '+op.map(function(x){return x.n;}).join(', '):(L.length?'✅ הכל עלה היום':sm0);
+  if(!op.length){t.classList.remove('taskblink');dailyTile(t,false);return;}
+  t.classList.add('taskblink');
+  if(seen){dailyTile(t,false);return;}
+  dailyTile(t,true);
+  t.addEventListener('click',function(){try{localStorage.setItem(seenK,'1');}catch(e){}dailyTile(t,false);});
+ });
 });
 // 8.10 Itzik: copying the caption out of a Drive file is awkward on the phone.
 // The caption lives here, shown in full, with one button that copies all of it.
@@ -16556,7 +16560,7 @@ boot('updTiles',function(){
  document.querySelectorAll('.gt[data-upd],.ic[data-upd],.newbtn[data-upd],#setBtn[data-upd],#nA[data-upd]').forEach(function(t){
   var k='tileUpd:'+t.id,stamp=t.getAttribute('data-upd')||'',seen='';try{seen=localStorage.getItem(k)||'';}catch(e){}
   if(seen===stamp||t.classList.contains('taskblink'))return;
-  t.classList.add('updblink');
+  t.classList.add('taskblink');
   t.addEventListener('click',function(){try{localStorage.setItem(k,stamp);}catch(e){}t.classList.remove('updblink');});
  });
 });
@@ -17331,6 +17335,37 @@ function vqLoad(cb){
 }
 function vqDay(){try{return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jerusalem'}).format(new Date());}catch(e){return new Date().toISOString().slice(0,10);}}
 function vqDate(d){var p=String(d||'').split('-');return p.length===3?(+p[2])+'.'+(+p[1]):'';}
+/* 11.11.2026, Itzik: "תסכם במוניטור אם יש דברים שצריכים לעלות כל יום, סטטוס, מה בצלחת, שאני צריך לעלות אותם,
+   שהם יעבעבו בתוך האריח". What he uploads by hand today: today's status, the next plate story, a carousel not up yet.
+   Open ones blink (first tab of 🎬 and the tile itself); what went up today shows ✅. No uploads on Saturday. */
+function upToday(){
+ var T=vqDay(),L=[];if(!VQ)return L;
+ if(new Date(T+'T12:00:00Z').getUTCDay()===6)return L;
+ var day=function(iso){return iso?new Date(iso).toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'}):'';};
+ var doneSt={};try{doneSt=JSON.parse(localStorage.getItem('waStatusDone')||'{}')||{};}catch(e){}
+ (VQ.st||[]).filter(function(x){return x.date===T;}).forEach(function(x){
+  L.push({n:'סטטוס',done:!!doneSt[x.name],t:'📲 סטטוס וואטסאפ · '+(x.topic||''),u:'status/index.html',h:x.name});
+ });
+ var P=(VQ.pl||[]).slice().sort(function(a,b){return (a.order||0)-(b.order||0);});
+ var pT=P.filter(function(x){return x.posted&&day(x.postedAt)===T;});
+ var nm=function(x){return String(x.name||x.id).replace(/\s*\(גרסה [0-9]+\)\s*$/,'');};
+ if(pT.length)pT.forEach(function(x){L.push({n:'מה בצלחת',done:true,t:'🍽️ מה בצלחת · '+nm(x),u:'plate/plate.html',h:x.id});});
+ else{var nx=P.filter(function(x){return !x.posted;})[0];
+  if(nx)L.push({n:'מה בצלחת',done:false,t:'🍽️ מה בצלחת · '+nm(nx)+(nx.approved?' · מאושר, לשמור לטלפון ולהעלות':' · לאשר ואז להעלות'),
+   u:nx.approved?'save.html?f='+encodeURIComponent('plate/'+String(nx.file).split('?')[0])+'&n='+encodeURIComponent(nx.name):'plate/plate.html',h:nx.approved?'':nx.id});}
+ CARON.forEach(function(c){L.push({n:'קרוסלה',done:false,car:c,t:'🎠 קרוסלה · '+c.t+' ('+c.n+' שקפים)'});});
+ return L;
+}
+function upTodayRows(){
+ var L=upToday(),op=L.filter(function(x){return !x.done;}),dn=L.filter(function(x){return x.done;}),out=[];
+ var row=function(x,p){return x.car?{k:'car',c:x.car.id,n:x.car.n,nm:'קרוסלה · '+x.car.t,t:x.t,pulse:p}:{k:'q',t:(p?'':'✅ ')+x.t,u:x.u,n:x.h||'',pulse:p};};
+ out.push({h:op.length?'⭐ להעלות היום ('+op.length+')':'✔️ הכל עלה היום'});
+ if(!op.length)out.push({k:'q',t:'✔️ אין מה להעלות כרגע',u:'status/index.html'});
+ op.forEach(function(x){out.push(row(x,1));});
+ if(dn.length)out.push({h:'✅ עלה היום'});
+ dn.forEach(function(x){out.push(row(x,0));});
+ return out;
+}
 function vqDayName(d){var p=String(d||'').split('-');if(p.length!==3)return '';var n=new Date(Date.UTC(+p[0],+p[1]-1,+p[2])).getUTCDay();return ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'][n];}
 function vqRows(id){
  var Q=(VQ&&VQ[id])||[],T=vqDay(),out=[];
@@ -17411,7 +17446,9 @@ function vidTabs(){
  // 9.11, Itzik: carousels for his page, all topics, in the reels tile. One that has not gone up blinks softly (updblink); when it goes up, posted:true takes it off.
  // 11.9, Itzik: the life carousel is removed from this menu (תמחק את הקרוסלה). New ones go in here again by name.
  var carL=[];CARON.forEach(function(c,ci){var pad=function(i){return (i<10?'0':'')+i;};carL.push({h:'🎠 קרוסלה '+(ci+1)+' · '+c.t+' ('+c.n+' שקפים)'});carL.push({k:'car',c:c.id,n:c.n,nm:'קרוסלה '+(ci+1)+' · '+c.t,t:'🎠 לפתיחת הקרוסלה, שקף אחרי שקף',pulse:1});carL.push({k:'reel',it:{n:'כיתוב',t:'הכיתוב לפוסט',r:'carousel-'+c.id+'-caption.txt',pulse:1}});});
+ var upN=upToday().filter(function(x){return !x.done;}).length;
  return [
+  {id:'today',l:'⭐ להעלות היום'+(upN?' ('+upN+')':''),pulse:upN,h:'מה שאתה מעלה בעצמך היום. מה שמהבהב עוד לא עלה, וכשהוא עולה הוא עובר ל ✅',L:upTodayRows()},
   {id:'st',l:'📲 סטטוס'+(stN?' ('+stN+')':''),h:'סטטוס וואטסאפ: מה עולה היום ומה הבא בתור. לחיצה פותחת את הסרטון והטקסט, 3 נגיעות',L:vqRows('st').concat([{h:'📂 הדף המלא'},{k:'go',t:'📲 פתיחת כל הסטטוסים המוכנים',u:'status/index.html'}])},
   {id:'ads',l:'📣 קמפיין',h:'הממומן, וסרטוני המוניטור לסטורי',L:TOM_ITEMS.map(function(it){return it.h?{h:it.h}:{k:'tom',it:it};})},
   {id:'sh',l:'🌅 שחר',h:'הרילים, הסטורי והפוסטים של שחר',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isSh(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isSh(x.it);}))},
@@ -17441,6 +17478,7 @@ function vidSheet(tab){
  if(!(VQ&&Date.now()-VQT<60000))return vqLoad(function(){vidSheet(tab);});
  window.VID_BACK=0;
  var T=vidTabs();
+ if(!tab&&upToday().some(function(x){return !x.done;}))tab='today';
  if(!tab){try{tab=localStorage.getItem('vidTab')||'';}catch(e){}}
  var cur=T.filter(function(t){return t.id===tab;})[0]||T[0];
  try{localStorage.setItem('vidTab',cur.id);}catch(e){}
