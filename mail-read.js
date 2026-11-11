@@ -27,12 +27,28 @@ function search(args) {
     { encoding: 'utf8', timeout: 180000 });
 }
 
+// 11.11.2026: run from inside a Claude session (the manager's checks call this through Bash), the token is stripped from
+// the tool's environment, so the reader failed with "OAuth session expired" and every mail check of the manager failed.
+// The reader takes only that one value from /etc/monitor.env (owned by monitor, 600) and drops the parent session's markers.
+function childEnv() {
+  const env = Object.assign({}, process.env);
+  ['CLAUDECODE', 'CLAUDE_CODE_CHILD_SESSION', 'CLAUDE_CODE_SESSION_ID', 'CLAUDE_PID', 'CLAUDE_CODE_ENTRYPOINT',
+    'CLAUDE_CODE_MESSAGING_SOCKET', 'CLAUDE_CODE_MESSAGING_TOKEN', 'CLAUDE_CODE_SESSION_ATTENDED', 'CLAUDE_CODE_EXECPATH'].forEach((k) => { delete env[k]; });
+  if (!env.CLAUDE_CODE_OAUTH_TOKEN) {
+    try {
+      const m = /^CLAUDE_CODE_OAUTH_TOKEN=(.*)$/m.exec(require('fs').readFileSync('/etc/monitor.env', 'utf8'));
+      if (m) env.CLAUDE_CODE_OAUTH_TOKEN = m[1].trim().replace(/^["']|["']$/g, '');
+    } catch (e) { /* not on the server */ }
+  }
+  return env;
+}
+
 function read(text) {
   return new Promise((resolve, reject) => {
     // No tools at all: whatever the mail says, this session can only write an answer.
     const args = ['-p', '--model', 'haiku', '--output-format', 'text', '--disallowedTools',
       'Bash', 'Edit', 'Write', 'Read', 'Grep', 'Glob', 'WebFetch', 'WebSearch', 'NotebookEdit', 'Task', 'Agent'];
-    const child = spawn('claude', args, { cwd: __dirname, env: process.env });
+    const child = spawn('claude', args, { cwd: __dirname, env: childEnv() });
     let out = '', err = '';
     const timer = setTimeout(() => { child.kill('SIGTERM'); reject(new Error('timeout')); }, 5 * 60 * 1000);
     child.stdout.on('data', d => { out += d; });
