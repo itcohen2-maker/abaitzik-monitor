@@ -17792,7 +17792,7 @@ function bdClinicMonth(CL,money){
  var h='<div class="bbx"><b>💰 החודש</b>';
  (CL.frl.doctors||[]).forEach(function(dn){var R=CL.frl.rows.filter(function(x){return cn(x.doctor)===cn(dn)&&String(x.date).slice(0,7)===ym;});
   var pay=R.reduce(function(s2,x){return s2+(x.pay||0);},0),days={};R.forEach(function(x){days[x.date]=1;});
-  h+='<div class="bbu"><span>👩‍⚕️</span><div><b class="bbf">'+esc(cn(dn))+'</b> '+(R.length?Object.keys(days).length+' ימים, '+R.length+' טיפולים, מגיע לו '+money(pay)+' ₪':'עוד אין דפי עבודה החודש')+'</div></div>';});
+  h+='<div class="bbu"><span>👩‍⚕️</span><div><b class="bbf">'+esc(cn(dn))+'</b> '+(R.length?(Object.keys(days).length===1?'יום אחד':Object.keys(days).length+' ימים')+', '+R.length+' טיפולים, מגיע לו '+money(pay)+' ₪':'עוד אין דפי עבודה החודש')+'</div></div>';});
  var lm=(CL.lab.months||[]).filter(function(m){return m.month===ym.replace('-','');});
  h+='<div class="bbu"><span>🧪</span><div><b class="bbf">מעבדות</b> '+(lm.length?lm.map(function(m){return esc(m.labName)+': '+m.works+' עבודות, '+money(m.total)+' ₪';}).join(' · '):'עוד אין דוח מעבדה החודש')+'</div></div>';
  var dn2=(CL.lab.dups||[]).length;

@@ -2735,7 +2735,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-11T19:52:46.741Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-11T19:53:51.422Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4649,7 +4649,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='6fec98aa07';
+var CODE_ID='c4f6148f49';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -13402,7 +13402,7 @@ function bdClinicMonth(CL,money){
  var h='<div class="bbx"><b>💰 החודש</b>';
  (CL.frl.doctors||[]).forEach(function(dn){var R=CL.frl.rows.filter(function(x){return cn(x.doctor)===cn(dn)&&String(x.date).slice(0,7)===ym;});
   var pay=R.reduce(function(s2,x){return s2+(x.pay||0);},0),days={};R.forEach(function(x){days[x.date]=1;});
-  h+='<div class="bbu"><span>👩‍⚕️</span><div><b class="bbf">'+esc(cn(dn))+'</b> '+(R.length?Object.keys(days).length+' ימים, '+R.length+' טיפולים, מגיע לו '+money(pay)+' ₪':'עוד אין דפי עבודה החודש')+'</div></div>';});
+  h+='<div class="bbu"><span>👩‍⚕️</span><div><b class="bbf">'+esc(cn(dn))+'</b> '+(R.length?(Object.keys(days).length===1?'יום אחד':Object.keys(days).length+' ימים')+', '+R.length+' טיפולים, מגיע לו '+money(pay)+' ₪':'עוד אין דפי עבודה החודש')+'</div></div>';});
  var lm=(CL.lab.months||[]).filter(function(m){return m.month===ym.replace('-','');});
  h+='<div class="bbu"><span>🧪</span><div><b class="bbf">מעבדות</b> '+(lm.length?lm.map(function(m){return esc(m.labName)+': '+m.works+' עבודות, '+money(m.total)+' ₪';}).join(' · '):'עוד אין דוח מעבדה החודש')+'</div></div>';
  var dn2=(CL.lab.dups||[]).length;
