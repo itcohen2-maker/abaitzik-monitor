@@ -258,5 +258,8 @@ systemctl is-active monitor-listen-$ID.service monitor-worker-$ID.timer monitor-
 # Itzik, 11.10: every customer gets big file uploads from day one, without asking.
 bash "$(dirname "$0")/enable-upload.sh" "$ID" || echo "העלאת קבצים גדולים לא הופעלה, להריץ setup/enable-upload.sh $ID"
 if [ -n "${TIER:-}" ]; then echo "הקליטה מציעה פרופיל $TIER: cat setup/profiles/$TIER.env >> /etc/$ID.env (אחרי setup/apply-own-token.sh)"; fi
+# 11.11.2026: every customer's visits show on Itzik's 👀 tile (lib/visits.js). Its page host must be in ORIGINS in wa-bridge.js.
+vk=$(cd /home/monitor/abaitzik-monitor && sudo -u monitor node -e "console.log(require('./lib/visits.js').newKey('data','$ID'))") && printf '%s' "$vk" > "$DIR/data/status/visit-key.txt" && chown "$U:$U" "$DIR/data/status/visit-key.txt" && chmod 600 "$DIR/data/status/visit-key.txt"
+grep -q "https://$HOST'" /home/monitor/abaitzik-monitor/wa-bridge.js || echo "NEXT (11.11): add https://$HOST to ORIGINS in wa-bridge.js, then restart monitor-wa"
 echo "NEXT (11.11): own API key monitor-$ID in the Console -> /root/tenant-tokens/$ID.apikey -> bash setup/tenant-api-key.sh $ID; package -> /srv/monitor-changes/$ID.plan.json"
 echo "סיום: $ID"

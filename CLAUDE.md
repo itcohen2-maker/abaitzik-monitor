@@ -260,4 +260,4 @@
 
 ## 👀 כניסות לקוחות (11.11.2026)
 - איציק על ד״ר שולמן: "תסמן באיזה שעות הוא נכנס, כמה זמן, ותעדכן אותי באריח מהבהב". דף של לקוח עם `D.visitKey` שולח ל wa-bridge.js `POST /api/visit` (start, beat כל דקה, end), ו lib/visits.js שומר ב `data/visits/<לקוח>.json` אצל איציק. האריח `gVisits` אצל איציק בלבד, מוסתר עד הכניסה הראשונה, ומהבהב עד שפותחים אותו אחרי כניסה חדשה.
-- הפעלה ללקוח: `sudo -u monitor node -e "console.log(require('./lib/visits.js').newKey('data','<id>'))"`, את המפתח כותבים ל `<תיקיית הלקוח>/data/status/visit-key.txt` (בעלות משתמש הלקוח, 600) ובונים אצלו. כתובת הדף של הלקוח צריכה להיות ב ORIGINS שב wa-bridge.js. פעיל כרגע: pablo.
+- הפעלה ללקוח: `sudo -u monitor node -e "console.log(require('./lib/visits.js').newKey('data','<id>'))"`, את המפתח כותבים ל `<תיקיית הלקוח>/data/status/visit-key.txt` (בעלות משתמש הלקוח, 600) ובונים אצלו. כתובת הדף של הלקוח צריכה להיות ב ORIGINS שב wa-bridge.js. פעיל אצל pablo, alon ו ilay, ו setup/new-tenant.sh מפעיל לכל לקוח חדש.
