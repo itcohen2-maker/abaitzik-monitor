@@ -4879,6 +4879,8 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M9.5 13.5h1.5v4M14 13.5h2l-1.5 4"/></svg></span>יומן</a>
   <!-- 10.11.2026, Itzik: the control board (לוח הפרסומים) is a round icon, one entry point; the old square tile is gone. Opens boardSheet. -->
   ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icBoard" data-new="1"><span class="c c-board">🎛️</span>לוח בקרה</button>' : ''}
+  <!-- 11.11.2026, Itzik: "שימו לי במוניטור אייקון של הטופס הזה, שאני אוכל לשלוח אותו לאנשים בוואטסאפ או במייל". The signup page (it-solution.co.il/start). -->
+  ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icSignup" data-new="1"><span class="c c-its">🚀</span>דף הרשמה</button>' : ''}
   <!-- 7.11.2026, Itzik: the trainings sit in round icons beside the calendar. Shown only when the chat is allowed (fcBoot). -->
   <button type="button" class="ic icNew" data-grp="day" id="icFcSales" data-new="1" style="display:none"><span class="c c-fcs">🎯</span>אימון מכירות</button>
   <button type="button" class="ic icNew" data-grp="day" id="icFcCoach" data-new="1" style="display:none"><span class="c c-fcc">🧭</span>אימון עסקי</button>
@@ -6471,6 +6473,21 @@ function waFiles(m){
  })).then(function(fs){st.files=fs;return fs;},function(er){delete waPrep[k];throw er;});
  st.p.catch(function(){});
  waPrep[k]=st;return st;
+}
+// 11.11.2026: send the monitor's signup page (name, mail, a free week) to someone, by WhatsApp or mail, or open it.
+var SIGNUP_URL='https://it-solution.co.il/start/?k=ottpdpckxey9zt5k';
+function signupShare(){
+ var NL=String.fromCharCode(10),txt='שלום, זה הקישור לפתוח מוניטור עסקי משלך. שבוע ניסיון בלי חיוב ובלי כרטיס אשראי, נרשמים עם שם ומייל:'+NL+SIGNUP_URL;
+ var w=document.createElement('div');w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','דף הרשמה');
+ w.innerHTML='<div class="ycard"><b>🚀 דף ההרשמה למוניטור</b><small>שבוע ניסיון, שם ומייל, והמוניטור נפתח לבד</small>'
+  +'<a class="yb yb1" style="display:block;text-align:center;text-decoration:none" href="https://wa.me/?text='+encodeURIComponent(txt)+'" target="_blank" rel="noopener">💬 לשלוח בוואטסאפ</a>'
+  +'<a class="yb" style="display:block;text-align:center;text-decoration:none" href="mailto:?subject='+encodeURIComponent('המוניטור העסקי: שבוע ניסיון')+'&body='+encodeURIComponent(txt)+'">✉️ לשלוח במייל</a>'
+  +'<button type="button" class="yb" data-k="copy">📋 להעתיק את הקישור</button>'
+  +'<a class="yb" style="display:block;text-align:center;text-decoration:none" href="'+SIGNUP_URL+'" target="_blank" rel="noopener">👀 לפתוח את הדף</a>'
+  +'<button type="button" class="yb yx" data-k="x">סגירה</button></div>';
+ w.onclick=function(e){var k=e.target.closest&&e.target.closest('[data-k]');if(e.target===w||(k&&k.getAttribute('data-k')==='x'))return w.remove();
+  if(k&&k.getAttribute('data-k')==='copy'){try{navigator.clipboard.writeText(SIGNUP_URL).then(function(){toast('הקישור הועתק');},function(){uiPrompt('הקישור:',SIGNUP_URL);});}catch(x){uiPrompt('הקישור:',SIGNUP_URL);}}};
+ document.body.appendChild(w);
 }
 function waPick(names){
  var w=document.createElement('div');w.className='ysheet';w.setAttribute('role','dialog');
@@ -18163,6 +18180,7 @@ function boardMore(){
  };
  document.body.appendChild(w);
 }
+on('icSignup',function(){signupShare();});
 on('icBoard',function(){
  // on a computer the board opens over the whole screen (the click is the gesture the browser needs)
  try{if(BD_LAND&&BD_DESK&&!document.fullscreenElement&&document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(function(){});}catch(e){}
