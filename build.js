@@ -860,6 +860,8 @@ function build() {
           try { at = fs.statSync(a[4]).mtime.toISOString(); const t = fs.readFileSync(a[4], 'utf8').trim().split('\n'); last = (t[t.length - 1] || '').replace(/^[0-9T:-]+\s+/, '').slice(0, 90); } catch (e) {}
           return { id: a[0], ic: a[1], n: a[2], when: a[3], at, last, bad: /נכשל|error|fail|שגיאה/i.test(last) };
         }) }; })() : null,
+    // 11.11.2026: the control board extras (chat bar, updates, morning report), sealed payload only, null for every other monitor.
+    bb: (() => { try { return require('./lib/board-feed.js').forPage(inst, Date.now()); } catch (e) { return null; } })(),
     // 10.11.2026: 📊 מצב הקמפיינים, the copy ads-sync.js keeps (numbers only, no token).
     ads: (() => { try { return JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'ads', 'status.json'), 'utf8')); } catch (e) { return null; } })(),
     // 10.11.2026: Dr. Shulman's clinic tiles (lib/clinic.js), only where screens lists one of them. Patient data: sealed.
@@ -1403,7 +1405,7 @@ const TENANT_TILES = {
   // 10.11.2026, Itzik, for Ilay: his own campaigns from his ad account, read only (ads-sync.js, data/ads/status.json).
   gAds: ['g13', '📊 מצב הקמפיינים', 'מה רץ, כמה הוצא, כמה לידים'],
   // 10.11.2026, Itzik: Ilay's own publishing board (only where instance.json screens lists it).
-  gMyBoard: ['g16', '🎛️ לוח הפרסומים', 'מה רץ, מה מתוכנן ומה מוכן'],
+  gMyBoard: ['g16', '🎛️ לוח בקרה', 'מה רץ, מה מתוכנן, עדכונים ושינוי בצ׳אט'],
   // 10.11.2026, Itzik: a manager for every monitor, where the customer records what comes back again and again (lib/routines.js).
   gMyMgr: ['g4', '🧑‍💼 מנהלת IT Solution', 'מה שחוזר על עצמו, אומרים פעם אחת'],
   // 10.11.2026, Itzik, Dr. Shulman's clinic: "זה הכי חשוב לו, זה יהיה בראש האריחים" (lib/clinic.js, D.clinic).
@@ -15717,33 +15719,54 @@ function supSheet(){
 on('gLab',labSheet);on('gFrl',frlSheet);on('gSup',supSheet);
 /*
   10.11.2026, Itzik: "שים לאיליי לוח פרסומים: לוח של כל ההעלאות שלו, ריק אם אין עדיין מלאי, או שתמלא לו את הקמפיין."
-  A customer's own publishing board, in the black journal look of Itzik's board (a reel he liked). It shows only what is
-  this customer's: the campaigns that run in his ad account (D.ads, read only), what is planned to go up (nothing yet, so it
-  says so) and the campaign drafts he asked for with the campaign tile. No video, network or post of Itzik's is in it.
+  11.11.2026, Itzik: "קח את לוח הבקרה ושים אותו במוניטור של איליי". The customer's own control board, the same tile week as Itzik's
+  (bdCss and bdTiles are shared), with HIS rows: one per campaign that runs or ran this week in his ad account (D.ads, read only), and the rows
+  of what is planned (posts, stories, reels, plus rows he asks for) from data/board-prefs.json. Under the tiles: the chat bar, the updates,
+  what is in the air now, what is planned, the drafts, and the morning report when he wants it. No video, network or post of Itzik's is in it.
 */
-function myBoardSheet(){
- var old=document.getElementById('mbSheet');if(old)old.remove();
- var w=document.createElement('div');
- w.id='mbSheet';w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','לוח הפרסומים');
- var a=D.ads;
- var css='<style>#mbSheet .ycard{background:#05060b!important;color:#f4f5ff!important;border:1px solid rgba(120,130,255,.22);border-radius:28px;box-shadow:0 26px 90px rgba(70,80,255,.2);padding:18px 14px 20px}'
-  +'#mbSheet .ycard>b{display:block;font:800 24px Heebo,sans-serif;color:#fff;text-shadow:0 0 24px rgba(91,108,255,.6);margin:0 0 6px}'
-  +'#mbSheet .ycard small,#mbSheet .ycard small[style]{color:#9aa0b8!important}'
-  +'#mbSheet h4{font:800 18px Heebo,sans-serif;color:#aab2ff;text-shadow:0 0 16px rgba(91,108,255,.5);margin:18px 2px 4px}'
-  +'#mbSheet .yb{background:#0f1220;color:#e8eaff;border:1px solid rgba(255,255,255,.12);border-radius:16px;min-height:48px}#mbSheet .yb.yb1{background:linear-gradient(135deg,#4f5bff,#8b5cf6);border-color:transparent;color:#fff}#mbSheet .yb.yx{background:transparent;color:#9aa0b8}'
-  +'#mbSheet .ai{display:flex;align-items:center;gap:12px;background:#0d0f18;border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:10px 14px;margin:8px 0}'
-  +'#mbSheet .ai.s-ok{border-color:rgba(34,197,94,.35)}#mbSheet .ai.s-wait{border-color:rgba(245,184,76,.35)}'
-  +'#mbSheet .tm{flex:0 0 auto;min-width:84px;text-align:center;font:800 30px/1 Heebo,sans-serif;color:#b9c0ff;text-shadow:0 0 20px rgba(91,108,255,.75);direction:ltr}#mbSheet .tm small{display:block;font:600 11px Heebo,sans-serif;color:#8f96bd!important;text-shadow:none}'
-  +'#mbSheet .mid{flex:1;min-width:0}#mbSheet .mid b{display:block;font:800 15px Heebo,sans-serif;color:#fff}#mbSheet .wh{display:block;font:500 13px/1.4 Heebo,sans-serif;color:#b9bedc}'
-  +'#mbSheet .side{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:6px}#mbSheet .clk{color:#6b72ff;opacity:.9}'
-  +'#mbSheet .chip{display:inline-block;border-radius:999px;padding:4px 11px;font:800 12px Heebo,sans-serif;white-space:nowrap}'
-  +'#mbSheet .chip.k-will{background:rgba(91,108,255,.2);color:#a9b2ff}#mbSheet .chip.k-hand{background:rgba(245,184,76,.18);color:#ffd27a}#mbSheet .chip.k-draft{background:rgba(139,92,246,.2);color:#c4a5ff}'
-  +'#mbSheet .emp{background:#0a0c14;border:1px dashed rgba(255,255,255,.14);border-radius:20px;padding:14px;margin:8px 0;color:#9aa0b8;font:14px/1.6 Heebo,sans-serif}</style>';
- var CLK='<svg class="clk" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+function myBoardSheet(wk){
+ if(typeof wk==='number')BD_WEEK=wk;
+ var old=document.getElementById('bdGrid');if(old)old.remove();
+ var a=D.ads,BB=D.bb||{prefs:{hideRows:[],rows:[],plan:[],report:{show:false,includes:[]}},updates:[]},PR=BB.prefs;
+ function add(d,n){var p=d.split('-');return new Date(Date.UTC(+p[0],+p[1]-1,+p[2]+n)).toISOString().slice(0,10);}
+ function dw(d){var p=d.split('-');return new Date(Date.UTC(+p[0],+p[1]-1,+p[2])).getUTCDay();}
+ function dm(d){var p=d.split('-');return (+p[2])+'.'+(+p[1]);}
  function money(n){n=Math.round((Number(n)||0)*100)/100;return n.toLocaleString('he-IL');}
- function short(n){var p=String(n||'').split('|').map(function(x){return x.trim();}).filter(Boolean);return p.slice(0,3).join(' · ').slice(0,70);}
  function when(s){try{var d=new Date(s);return d.toLocaleDateString('he-IL',{day:'numeric',month:'numeric'})+' '+d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});}catch(e){return '';}}
- var h=css+'<div class="ycard"><b>🎛️ לוח הפרסומים</b><small>כל מה שרץ, מה מתוכנן להעלות ומה מוכן אצלך, במקום אחד.</small>';
+ var T0=vqDay(),DN=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'],DS=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
+ var SUN=add(T0,-dw(T0)+7*BD_WEEK),days=[];for(var i=0;i<7;i++)days.push(add(SUN,i));
+ var IC={ok:'✅',miss:'❌',will:'🔜',hand:'✋',wait:'⏳',no:'⚠️',run:'▶️',late:'⚠️',open:'✋',pause:'⏸️'};
+ var PAL=[['#f48fb1','#ad1457'],['#90caf9','#1565c0'],['#b39ddb','#673ab7'],['#ffb74d','#e65100'],['#4fb3c4','#00838f'],['#7bd88f','#1e8e4a'],['#e2574c','#2a1240'],['#5aa9fb','#0a4f9c']];
+ function cname(n){var p=String(n||'').split('|').map(function(x){return x.trim();}).filter(Boolean);var t=(p.length>2?p.slice(1,3):p).join(' · ');return t.length>30?t.slice(0,29)+'…':t;}
+ function short(n){var p=String(n||'').split('|').map(function(x){return x.trim();}).filter(Boolean);return p.slice(0,3).join(' · ').slice(0,70);}
+ var camps=[];
+ if(a&&a.ok)(a.accounts||[]).forEach(function(ac){(ac.campaigns||[]).forEach(function(c){
+  var paused=c.status==='PAUSED'||c.status==='CAMPAIGN_PAUSED';
+  if(c.status==='ACTIVE'||(paused&&(c.spend7||0)>0))camps.push(c);
+ });});
+ var ROWS=[];
+ camps.slice(0,8).forEach(function(c,k){ROWS.push({id:'c'+c.id,ic:'📣',n:cname(c.name),kind:'camp',cc:PAL[k%PAL.length],c:c});});
+ [{id:'mp',ic:'📝',n:'פוסטים',cc:['#ffb74d','#e65100']},{id:'ms',ic:'📱',n:'סטוריז',cc:['#7bd88f','#1e8e4a']},{id:'mr',ic:'🎬',n:'רילים',cc:['#e2574c','#2a1240']}].concat((PR.rows||[]).map(function(x,k){return {id:x.id,ic:x.ic,n:x.n,cc:PAL[(k+3)%PAL.length]};}))
+  .forEach(function(r){ROWS.push(r);});
+ ROWS=ROWS.filter(function(r){return (PR.hideRows||[]).indexOf(r.id)<0;});
+ var C={};
+ ROWS.forEach(function(r,ri){days.forEach(function(d){
+  var c={s:'',t:''};
+  if(r.kind==='camp'){
+   var on=r.c.status==='ACTIVE';
+   if(d===T0)c={s:on?'run':'pause',t:on&&r.c.spendToday?money(r.c.spendToday)+'₪':'',items:[{s:on?'run':'pause',n:short(r.c.name),why:(on?'רץ היום. הוצאה היום '+money(r.c.spendToday)+' ₪':'מושהה כרגע')+'. לידים ב 7 ימים: '+(r.c.leads7||0)+(r.c.leads7?', עלות לליד '+money(r.c.cpl7)+' ₪':'')+', לחיצות '+(r.c.clicks7||0)}]};
+   else if(d>T0&&on)c={s:'run',t:'',items:[{s:'run',n:short(r.c.name),why:'באוויר, רץ כל היום'}]};
+  }else{
+   var it=(PR.plan||[]).filter(function(x){return x.row===r.id&&x.date===d;});
+   if(it.length){var LB={will:'יעלה',hand:'אתה מעלה',ok:'עלה',wait:'מחכה לאישור'};
+    c={s:it[0].state,t:it[0].time,n:it.length,items:it.map(function(x){return {s:x.state,n:x.title||'ללא שם',why:LB[x.state]+(x.time?' ב '+x.time:'')};})};}
+  }
+  C[ri+'|'+d]=c;
+ });});
+ var wkName=BD_WEEK===0?'השבוע':BD_WEEK===-1?'שבוע שעבר':BD_WEEK===1?'שבוע הבא':(BD_WEEK>0?'בעוד '+BD_WEEK+' שבועות':'לפני '+(-BD_WEEK)+' שבועות');
+ var h=bdCss()+'<div class="ycard"><b>🎛️ לוח בקרה</b><small>כל מה שרץ, מה מתוכנן להעלות ומה מוכן אצלך, במקום אחד.</small>'
+  +bdTiles(ROWS,C,days,T0,wkName,{IC:IC,DS:DS,dm:dm,dw:dw,legend:'▶️ רץ · ⏸️ מושהה · 🔜 יעלה · ✋ אתה מעלה · ✅ עלה · חיוור: לא מתוכנן'})
+  +bdChatHtml()+bdUpdatesHtml();
  h+='<h4>▶️ באוויר עכשיו</h4>';
  var any=0;
  if(a&&a.ok){
@@ -15752,22 +15775,48 @@ function myBoardSheet(){
     any++;var on=c.status==='ACTIVE';
     h+='<div class="ai s-'+(on?'ok':'wait')+'"><span class="tm">'+money(c.spendToday)+'<small>₪ היום</small></span>'
      +'<div class="mid"><b>'+esc(short(c.name))+'</b><span class="wh">לידים ב 7 ימים: '+(c.leads7||0)+(c.leads7?' · עלות לליד '+money(c.cpl7)+' ₪':'')+' · לחיצות '+(c.clicks7||0)+'</span></div>'
-     +'<div class="side"><span class="chip k-'+(on?'will':'hand')+'">'+(on?'▶️ רץ':'⏸️ מושהה')+'</span>'+CLK+'</div></div>';
+     +'<div class="side"><span class="chip k-'+(on?'will':'hand')+'">'+(on?'▶️ רץ':'⏸️ מושהה')+'</span></div></div>';
    });
   });
   if(any)h+='<small>עודכן '+esc(when(a.at))+'. קריאה בלבד, שום דבר לא משתנה בחשבון.</small>';
  }
  if(!any)h+='<div class="emp">'+esc(a&&a.ok?'אין כרגע קמפיין באוויר.':'עוד אין חיבור לחשבון המודעות, ולכן אין כאן קמפיינים. אחרי החיבור הם יופיעו לבד.')+'</div>'
   +(a&&!a.ok&&a.connect?'<a class="yb yb1" style="display:block;text-align:center;text-decoration:none" rel="noreferrer" referrerpolicy="no-referrer" href="'+esc(a.connect)+'">התחברות עם פייסבוק</a>':'');
- h+='<h4>📅 מתוכנן להעלות</h4><div class="emp">עוד אין העלאות מתוכננות. כשיהיה פוסט, סטורי או סרטון מוכן, הוא יופיע כאן עם היום והשעה שבהם הוא עולה.</div>';
+ var pl=(PR.plan||[]).filter(function(x){return x.date>=T0;}).sort(function(x,y){return (x.date+(x.time||'')).localeCompare(y.date+(y.time||''));}).slice(0,8);
+ h+='<h4>📅 מתוכנן להעלות</h4>';
+ if(pl.length)h+=pl.map(function(x){var rn=ROWS.filter(function(r){return r.id===x.row;})[0];return '<div class="ai"><span class="tm">'+esc(x.time||'--:--')+'<small>'+dm(x.date)+'</small></span><div class="mid"><b>'+(rn?rn.ic+' '+esc(rn.n):'')+'</b><span class="wh">'+esc(x.title||'ללא שם')+'</span></div></div>';}).join('');
+ else h+='<div class="emp">עוד אין העלאות מתוכננות. כשיהיה פוסט, סטורי או סרטון מוכן, הוא יופיע כאן עם היום והשעה שבהם הוא עולה. אפשר גם לכתוב לי בפס למעלה מה לתכנן.</div>';
  var dr=(D.reports||[]).filter(function(r){return /קמפיין/.test(String(r.title||''));}).slice(0,5);
  h+='<h4>📝 טיוטות מוכנות</h4>';
  if(dr.length)h+=dr.map(function(r){return '<div class="ai"><div class="mid"><b>'+esc(r.title)+'</b><span class="wh">'+esc(when(r.at))+'</span></div><div class="side"><span class="chip k-draft">📝 טיוטה</span></div></div>';}).join('')
   +'<small>הטיוטות במסך התשובות. שום דבר לא עולה בלי אישור שלך.</small>';
  else h+='<div class="emp">עוד אין טיוטות. בלחיצה על "📣 קמפיינים" מעלים תמונות או סרטון, ואני מכין טיוטה שתופיע כאן.</div>';
- h+='<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+ h+=bdReportHtml()+'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+ var w=document.createElement('div');
+ w.id='bdGrid';w.className='ysheet'+(BD_LAND?' land':'')+(BD_DESK?' desk':'');w.setAttribute('role','dialog');w.setAttribute('aria-label','לוח בקרה');
  w.innerHTML=h;
- w.onclick=function(e){if(e.target===w||(e.target.getAttribute&&e.target.getAttribute('data-a')==='x'))w.remove();};
+ function detail(r,d){
+  var c=C[ROWS.indexOf(r)+'|'+d]||{},e=document.createElement('div');e.id='bdEd';
+  e.innerHTML='<div class="box"><b style="font-size:17px">'+r.ic+' '+esc(r.n)+' · יום '+DN[dw(d)]+' '+dm(d)+'</b>'
+   +(c.items&&c.items.length?c.items.map(function(y){return '<div class="it">'+IC[y.s]+' '+esc(y.why)+(y.n?'<br><small>'+esc(y.n)+'</small>':'')+'</div>';}).join(''):'<div class="it">לא מתוכנן כלום ביום הזה. אפשר לכתוב לי בפס שמתחת ללוח מה לתכנן.</div>')
+   +'<button type="button" class="yb yx" data-e="x">סגירה</button></div>';
+  e.onclick=function(ev){if(ev.target===e||(ev.target.getAttribute&&ev.target.getAttribute('data-e')==='x'))e.remove();};
+  document.body.appendChild(e);
+ }
+ w.onclick=function(ev){
+  var at=ev.target.getAttribute&&ev.target.getAttribute('data-a');
+  if(ev.target.closest&&ev.target.closest('[data-a="rot"]')){
+   BD_LAND=!BD_LAND;w.classList.toggle('land',BD_LAND);try{localStorage.setItem('bdLand',BD_LAND?'1':'0');}catch(e){}
+   try{if(BD_LAND&&BD_DESK&&!document.fullscreenElement&&document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(function(){});
+    else if(!BD_LAND&&document.fullscreenElement)document.exitFullscreen();}catch(e){}
+   return;
+  }
+  if(at==='bbsend'||at==='bbmic')return bdAct(at,w);
+  if(ev.target===w||at==='x'){try{if(document.fullscreenElement)document.exitFullscreen();}catch(e){}return w.remove();}
+  if(at==='prev'||at==='next'){w.remove();return myBoardSheet(BD_WEEK+(at==='next'?1:-1));}
+  var dt=ev.target.closest&&ev.target.closest('.dot[data-r]');if(dt){var r0=ROWS[+dt.getAttribute('data-r')];if(r0)detail(r0,dt.getAttribute('data-d'));return;}
+  var ln=ev.target.closest&&ev.target.closest('.ln[data-rn]');if(ln){var r1=ROWS[+ln.getAttribute('data-rn')];if(r1)detail(r1,T0);}
+ };
  document.body.appendChild(w);
 }
 on('gMyBoard',myBoardSheet);
@@ -17459,100 +17508,10 @@ var BD_WEEK=0;
 var BD_DESK=false;try{BD_DESK=matchMedia('(pointer:fine) and (min-width:900px)').matches;}catch(e){}
 var BD_LAND=null;try{var bdl=localStorage.getItem('bdLand');if(bdl==='1'||bdl==='0')BD_LAND=bdl==='1';}catch(e){}
 if(BD_LAND===null)BD_LAND=BD_DESK;
-function boardSheet(wk){
- if(typeof wk==='number')BD_WEEK=wk;
- if(!(VQ&&Date.now()-VQT<60000))return vqLoad(function(){boardSheet();});
- var old=document.getElementById('bdGrid');if(old)old.remove();
- var B=D.board||{},ROWS=B.rows||[],P=JSON.parse(JSON.stringify(B.plan||{rows:{}}));
- var L=null;try{L=JSON.parse(localStorage.getItem('postPlanLocal')||'null');}catch(e){}
- if(!(L&&L.at&&(!P.at||L.at>P.at)))L={at:'',rows:{},items:{}};
- Object.keys(L.rows||{}).forEach(function(k){P.rows[k]=L.rows[k];});
- var IL=L.items||{};
- var T0=vqDay(),Q=VQ||{},DN=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'],DS=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
- function add(d,n){var p=d.split('-');return new Date(Date.UTC(+p[0],+p[1]-1,+p[2]+n)).toISOString().slice(0,10);}
- function dw(d){var p=d.split('-');return new Date(Date.UTC(+p[0],+p[1]-1,+p[2])).getUTCDay();}
- function dm(d){var p=d.split('-');return (+p[2])+'.'+(+p[1]);}
- function upDay(x){return x.postedAt?new Date(x.postedAt).toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'}):'';}
- var NOW='00:00';try{NOW=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date());}catch(e){}
- var SUN=add(T0,-dw(T0)+7*BD_WEEK),days=[];for(var i=0;i<7;i++)days.push(add(SUN,i));
- var LAST=days[6];
- // a time that has passed: an earlier day, or today after that hour (with 20 minutes for the run every 10 minutes)
- function gone(d,t){if(d<T0)return true;if(d>T0)return false;if(!t)return false;var p=t.split(':'),n=NOW.split(':');return (+n[0])*60+(+n[1])>(+p[0])*60+(+p[1])+20;}
- var IC={ok:'✅',miss:'❌',will:'🔜',hand:'✋',wait:'⏳',no:'⚠️',run:'▶️',late:'⚠️',open:'✋'};
- var adsOn=0;try{adsOn=TOM_ITEMS.filter(function(it){return !it.h&&/באוויר/.test(it.t||'');}).length;}catch(e){}
- var TB={};try{vidTabs().forEach(function(t){TB[t.id]=t;});}catch(e){}
- function stock(id){if(id==='pl')return (Q.pl||[]).filter(function(x){return !x.posted;}).length;var t=TB[id];return t?t.L.filter(function(x){return !x.h&&x.k!=='go';}).length:0;}
- function planT(id,d){return (P.rows[id]&&P.rows[id].days[dw(d)])||'';}
- // the AI channel: from today on, each planned day takes the next ready video in order; held ones never go up
- var AIP={};
- ['he','en'].forEach(function(lg){
-  var mine=function(x){return lg==='en'?x.lang==='en':x.lang!=='en';};
-  var A=(Q.ai||[]).filter(mine),ready=A.filter(function(x){return !x.posted&&!x.hold&&!x.failed;}).sort(function(a,b){return (a.order||0)-(b.order||0);});
-  var held=A.filter(function(x){return !x.posted&&x.hold;}).length,k=0,m={},end=LAST>T0?LAST:T0;
-  for(var d=(SUN<T0?SUN:T0);d<=end;d=add(d,1)){
-   var up=A.filter(function(x){return x.posted&&upDay(x)===d;})[0],t=planT('ai-'+lg,d);
-   if(up){m[d]={s:'ok',t:t,items:[{s:'ok',n:up.name,why:'עלה'}]};continue;}
-   if(!t)continue;
-   if(d<T0){m[d]={s:'miss',t:t,items:[{s:'miss',n:'',why:'לא עלה סרטון ביום הזה'}]};continue;}
-   if(k<ready.length){var x=ready[k++];m[d]=gone(d,t)?{s:'late',t:t,items:[{s:'late',n:x.name,why:'עבר הזמן ועוד לא עלה. אם הוא לא יעלה בדקות הקרובות, משהו נתקע'}]}:{s:'will',t:t,items:[{s:'will',n:x.name,why:'יעלה לבד ב '+t}]};}
-   else m[d]={s:'no',t:t,items:[{s:'no',n:'',why:held?'אין סרטון מוכן. '+held+' מושהים, אפשר לשחרר אותם':'אין סרטון מוכן בתור'}]};
-  }
-  AIP[lg]=m;
- });
- function cell(r,d){
-  var t,it,I;
-  if(r.kind==='always')return adsOn?{s:'run',t:'',items:[{s:'run',n:adsOn+' מודעות באוויר',why:'הממומן רץ כל היום'}]}:{s:'',t:''};
-  if(r.id==='ai-he'||r.id==='ai-en')return AIP[r.id.slice(3)][d]||{s:'',t:''};
-  if(r.id==='st'){
-   t=planT('st',d);it=(Q.st||[]).filter(function(x){return x.date===d;})[0];
-   var n=it?String(it.caption||it.topic||it.name).split(String.fromCharCode(10))[0].slice(0,80):'';
-   if(it&&(B.stDone||{})[it.name])return {s:'ok',t:t,items:[{s:'ok',n:n,why:'סימנת שעלה'}]};
-   if(!t)return it?{s:'no',t:'',items:[{s:'no',n:n,why:'יש סטטוס ליום הזה, אבל אין לו שעה בלוח'}]}:{s:'',t:''};
-   if(!it)return d<T0?{s:'',t:''}:{s:'no',t:t,items:[{s:'no',n:'',why:'אין סרטון סטטוס ליום הזה'}]};
-   if(d<T0)return {s:'miss',t:t,items:[{s:'miss',n:n,why:'לא סומן שעלה'}]};
-   return {s:'hand',t:t,items:[{s:'hand',n:n,why:'תזכורת ב '+t+', אתה מעלה ומסמן'}]};
-  }
-  if(r.kind==='items'){
-   if(r.id==='nr')I=(Q.nr||[]).filter(function(x){return !x.rejected&&(x.posted?upDay(x):x.date)===d;}).map(function(x){return {id:x.name,time:IL['nr:'+x.name]||x.time||'',up:!!x.posted,ok:!!x.approved,bad:!!x.failed,n:(x.kind==='post'?'פוסט':'סטורי')+' '+(x.lang==='en'?'אנגלית':'עברית')+(x.city?' · '+x.city:'')};});
-   else I=(B.li||[]).filter(function(x){return x.date===d;}).map(function(x){return {id:x.id,time:IL['li:'+x.id]||x.time||'',up:x.up,ok:x.ok,bad:x.bad,n:x.t||'פוסט'};});
-   if(!I.length)return {s:'',t:''};
-   I.sort(function(a,b){return a.time.localeCompare(b.time);});
-   I.forEach(function(y){
-    if(y.up){y.s='ok';y.why='עלה';}
-    else if(y.bad){y.s='miss';y.why='נכשל בפרסום';}
-    else if(!y.ok){y.s=gone(d,y.time)?'miss':'wait';y.why=y.s==='miss'?'לא אושר, ולא עלה':'מחכה לאישור שלך. בלי אישור הוא לא יעלה';}
-    else if(gone(d,y.time)){y.s=d<T0?'miss':'late';y.why=d<T0?'לא עלה':'עבר הזמן ועוד לא עלה';}
-    else {y.s='will';y.why='יעלה לבד ב '+y.time;}
-   });
-   var rank={miss:5,late:4,no:4,wait:3,will:2,ok:1};
-   var worst=I.slice().sort(function(a,b){return (rank[b.s]||0)-(rank[a.s]||0);})[0];
-   return {s:worst.s,t:I[0].time,items:I,n:I.length};
-  }
-  // 11.11.2026, Itzik: "לא מעודכן, קרוסלה עלתה אתמול ... מה בצלחת לא מעודכן". What went up by hand is shown on its day,
-  // with or without a planned time: plate stories from their postedAt, carousels from CAR up ("D.M").
-  t=planT(r.id,d);
-  if(r.id==='pl'){var pu=(Q.pl||[]).filter(function(x){return x.posted&&upDay(x)===d;});
-   if(pu.length)return {s:'ok',t:t,n:pu.length,items:pu.map(function(x){return {s:'ok',n:String(x.name||'').split(' (')[0],why:'עלה'};})};}
-  if(r.id==='car'){var cu=[];try{cu=CAR.filter(function(c){return c.up===dm(d);});}catch(e){}
-   if(cu.length)return {s:'ok',t:t,items:cu.map(function(c){return {s:'ok',n:'🎠 '+c.t,why:'עלתה'+(c.where?' ל '+c.where:'')};})};}
-  // by hand: a reminder at the planned time, if there is something ready
-  if(!t)return {s:'',t:''};
-  var have=stock(r.id);
-  if(d<T0)return {s:'open',t:t,items:[{s:'open',n:'',why:'היה מתוכנן ב '+t+'. מה שאתה מעלה בעצמך לא נבדק כאן'}]};
-  if(!have)return {s:'no',t:t,items:[{s:'no',n:'',why:'אין מלאי מוכן, אין מה להעלות'}]};
-  return {s:'hand',t:t,items:[{s:'hand',n:have+' מוכנים במלאי',why:'תזכורת ב '+t+', אתה מעלה'}]};
- }
- var C={},cnt={ok:0,will:0,hand:0,wait:0,bad:0},todo=[];
- ROWS.forEach(function(r,ri){days.forEach(function(d){
-  var c=cell(r,d);C[ri+'|'+d]=c;
-  (c.items||[]).forEach(function(y){
-   if(y.s==='ok')cnt.ok++;else if(y.s==='will')cnt.will++;else if(y.s==='hand')cnt.hand++;else if(y.s==='wait')cnt.wait++;
-   else if(y.s==='no'||y.s==='miss'||y.s==='late')cnt.bad++;
-   if(y.s==='wait'||y.s==='no'||y.s==='late'||(y.s==='miss'&&d>=add(T0,-6)))todo.push({ri:ri,d:d,y:y,r:r});
-  });
- });});
- // 10.11.2026, Itzik, from a reel (itaiaron): "תעצב את לוח הבקרה לפי הסרטון, כמו יומן שחור יפה". Pure black, an indigo to violet glow,
- // big glowing times, a status chip and a small clock on every row, dark rounded cards. Only the look: the data and the clicks are the same.
+var BD_RC={st:['#7bd88f','#1e8e4a'],'ai-he':['#90caf9','#1565c0'],'ai-en':['#b39ddb','#673ab7'],nr:['#f0a64a','#0f1a3a'],li:['#5aa9fb','#0a4f9c'],
+  ads:['#f48fb1','#ad1457'],pl:['#ffb74d','#e65100'],car:['#4fb3c4','#00838f'],me:['#e2574c','#2a1240'],it:['#4fbf88','#00897b']};
+var BD_LBL={pause:'מושהה',ok:'עלה',miss:'לא עלה',will:'יעלה לבד',hand:'אתה מעלה',wait:'לאישור',no:'לא יעלה',run:'רץ',late:'עבר הזמן',open:'ידני'};
+function bdCss(){
  var css='<style>#bdGrid .ycard{background:#05060b!important;color:#f4f5ff!important;border:1px solid rgba(120,130,255,.22);border-radius:28px;'
   +'box-shadow:0 0 0 1px rgba(255,255,255,.03),0 26px 90px rgba(70,80,255,.2);padding:18px 14px 20px;--ink:#f4f5ff;--dim:#9aa0b8;--surface:#0d0f18;--line:rgba(255,255,255,.1)}'
   +'#bdGrid .ycard>b{display:block;font:800 24px Heebo,sans-serif;color:#fff;text-shadow:0 0 24px rgba(91,108,255,.6);margin:0 0 8px}'
@@ -17657,6 +17616,176 @@ function boardSheet(wk){
   +'#bdGrid.land.desk .dot em{font-size:16px}#bdGrid.land.desk .dot small{font-size:14px;letter-spacing:0;color:#fff!important;text-shadow:0 1px 3px rgba(0,0,0,.75)}'
   +'#bdGrid.land.desk .dot.e{opacity:.12}#bdGrid.land.desk .dot.pst.e{opacity:.07}'
   +'</style>';
+ css+='<style>#bdGrid .bbx{background:#0d0f18;border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:12px 14px;margin:12px 0;color:#f4f5ff;font:14px/1.5 Heebo,sans-serif}'
+  +'#bdGrid .bbx>b,#bdGrid .bbx>summary{display:block;font:800 16px Heebo,sans-serif;color:#aab2ff;text-shadow:0 0 16px rgba(91,108,255,.5);margin:0 0 4px;cursor:pointer}'
+  +'#bdGrid .bbx small{display:block;color:#9aa0b8!important;font:500 12px/1.5 Heebo,sans-serif}'
+  +'#bdGrid .bbr{display:flex;gap:8px;align-items:flex-end;margin:8px 0}'
+  +'#bdGrid .bbr textarea{flex:1;min-width:0;box-sizing:border-box;background:#05060b;color:#f4f5ff;border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:10px 12px;font:15px/1.4 Heebo,sans-serif;resize:vertical}'
+  +'#bdGrid .bbr .lb{width:46px;height:46px;font-size:20px}'
+  +'#bdGrid .bbu{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid rgba(255,255,255,.07)}#bdGrid .bbu>span{flex:0 0 22px;text-align:center}#bdGrid .bbu>div{flex:1;min-width:0}'
+  +'#bdGrid .bbx pre{white-space:pre-wrap;font:13px/1.6 Heebo,sans-serif;color:#dfe2ff;margin:8px 0 0}'
+  +'#bdGrid h4{font:800 18px Heebo,sans-serif;color:#aab2ff;text-shadow:0 0 16px rgba(91,108,255,.5);margin:18px 2px 4px}'
+  +'#bdGrid .emp{background:#0a0c14;border:1px dashed rgba(255,255,255,.14);border-radius:20px;padding:14px;margin:8px 0;color:#9aa0b8;font:14px/1.6 Heebo,sans-serif}'
+  +'#bdGrid .ai .tm small{display:block;font:600 11px Heebo,sans-serif;color:#8f96bd;text-shadow:none}'
+  +'#bdGrid .chip.k-draft{background:rgba(139,92,246,.2);color:#c4a5ff}#bdGrid .dot.s-pause{filter:saturate(.5) brightness(.85)}'
+  +'</style>';
+ return css;
+}
+// The tile week, shared by Itzik's board (boardSheet) and a customer's own (myBoardSheet): rows, days, a rounded 3D tile per cell.
+function bdTiles(ROWS,C,days,T0,wkName,H){
+ return '<div class="lsc" style="--R:'+ROWS.length+'"><div class="lh"><button type="button" class="lb" data-a="prev">‹</button><b>🎛️ '+wkName+' · '+H.dm(days[0])+' עד '+H.dm(days[6])+'</b>'
+  +'<span class="lk">'+(H.legend||'✅ עלה · 🔜 יעלה לבד · ✋ אתה מעלה · ⏳ לאישור · ⚠️ לא יעלה · ▶️ ממומן · חיוור: לא מתוכנן')+'</span>'
+  +'<button type="button" class="lb" data-a="next">›</button><button type="button" class="lb rot" data-a="rot" title="לסובב את המסך" aria-label="לסובב את המסך">🔄</button><button type="button" class="lb" data-a="x">✕</button></div>'
+  +'<button type="button" class="lrot" data-a="rot"><i>📱</i>'+(BD_DESK?'🔄 לסובב לרוחב, על כל המסך':'סובב את הטלפון לרוחב, או לחץ כאן')+'</button>'
+  +'<div class="lg2"><span></span>'+days.map(function(d){return '<span class="'+(d===T0?'tdy':'')+'">'+(d===T0?'היום':H.DS[H.dw(d)])+'<small>'+H.dm(d)+'</small></span>';}).join('')
+  +ROWS.map(function(r,ri){var rc=r.cc||BD_RC[r.id]||['#7d8ba1','#3f4a5c'],cv='--a:'+rc[0]+';--b:'+rc[1];
+   return '<span class="ln" style="'+cv+'" data-rn="'+ri+'">'+r.ic+'<small>'+esc(r.n)+'</small></span>'
+   +days.map(function(d){var c=C[ri+'|'+d]||{},s=c.s||'';
+    return '<span class="lc"><button type="button" style="'+cv+'" class="dot'+(s?' s-'+s:' e')+(d===T0?' now':'')+(d<T0?' pst':'')+'" data-r="'+ri+'" data-d="'+d+'" aria-label="'+esc(r.n)+' '+H.dm(d)+' '+(BD_LBL[s]||'לא מתוכנן')+'">'
+     +(s?'<em>'+H.IC[s]+'</em>'+(c.t?'<small>'+esc(c.t)+'</small>':''):'')+'</button></span>';}).join('');}).join('')
+  +'</div></div>';
+}
+// 11.11.2026, Itzik: "שורת צ'אט מתחת ללוח הבקרה, עדכונים מגוגל, עדכוני המנהל, ודוח הבוקר". Only where D.bb exists (Itzik and Ilay), see lib/board-feed.js.
+function bdAgo(s){var m=Math.round((Date.now()-Date.parse(s))/60000);if(isNaN(m))return '';return m<2?'עכשיו':m<60?'לפני '+m+' דקות':m<1440?'לפני '+Math.round(m/60)+' שעות':'לפני '+Math.round(m/1440)+' ימים';}
+function bdChatHtml(){
+ if(!D.bb)return '';
+ return '<div class="bbx"><b>💬 מה לשנות או להוסיף בלוח הבקרה</b><small>כתוב או תגיד מה לשנות בלוח, אילו עדכונים להראות ומה יהיה בדוח. אני מעדכן ועונה בצ׳אט.</small>'
+  +'<div class="bbr"><textarea id="bbT" rows="2" placeholder="למשל: להסתיר שורה, להוסיף עדכון על חשבוניות, או דוח בוקר מתחת"></textarea>'
+  +'<button type="button" class="lb" data-a="bbmic" aria-label="הקלטה בקול">🎤</button></div>'
+  +'<button type="button" class="yb yb2" data-a="bbsend">שליחה</button></div>';
+}
+function bdUpdatesHtml(){
+ var B=D.bb;if(!B)return '';
+ var U=B.updates||[],h='<div class="bbx"><b>🔔 עדכונים</b>';
+ if(U.length)h+=U.map(function(u){return '<div class="bbu"><span>'+esc(u.ic)+'</span><div>'+esc(u.t)+(u.at&&!u.noAgo?'<small>'+esc(bdAgo(u.at))+'</small>':'')+'</div></div>';}).join('');
+ else h+='<div class="emp">אין עדכונים חשובים כרגע.</div>';
+ if(B.mailNote)h+='<small>'+esc(B.mailNote)+'</small>';
+ return h+'</div>';
+}
+function bdReportHtml(){
+ var B=D.bb;if(!B)return '';
+ var R=B.prefs.report;
+ if(!R.show)return B.mode==='mine'?'<div class="bbx"><b>📰 הדוח של הבוקר</b><small>רוצה דוח בוקר כאן? כתוב בפס למעלה מה תרצה שיהיה בו.</small></div>':'';
+ var rep=(D.reports||[]).filter(function(r){return /דוח בוקר|דוח הבוקר/.test(String(r.title||''));}).sort(function(a,b){return Date.parse(b.at)-Date.parse(a.at);})[0];
+ if(!rep)return '<div class="bbx"><b>📰 הדוח של הבוקר</b><small>עוד אין דוח בוקר. כשיהיה, הוא יופיע כאן.</small></div>';
+ var body=String(rep.body||''),NL=String.fromCharCode(10);
+ if(R.includes&&R.includes.length){
+  body=body.split(NL+NL).filter(function(bl){var f=String(bl).split(NL)[0];return R.includes.some(function(w){return f.indexOf(w)>=0;});}).join(NL+NL);
+ }
+ return '<details class="bbx"><summary>📰 הדוח של הבוקר</summary><small>'+esc(bdAgo(rep.at))+'</small><pre>'+esc(body||'אין בדוח הזה קטעים שביקשת.')+'</pre></details>';
+}
+// the chat bar of the board: 🎤 dictates, שליחה sends a normal monitor message that starts "🎛️ בקשה ללוח הבקרה:" (CLAUDE.md says how a session answers it)
+function bdAct(a,w){
+ var t=w.querySelector('#bbT');if(!t)return;
+ if(a==='bbmic'){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){toast('הקלטה בקול לא נתמכת בדפדפן הזה. אפשר לכתוב.');return;}
+  var rc=new SR();rc.lang='he-IL';rc.interimResults=false;
+  rc.onresult=function(ev){var s=ev.results[0][0].transcript||'';t.value=(t.value?t.value+' ':'')+s;};
+  rc.onerror=function(){toast('לא שמעתי. אפשר לנסות שוב או לכתוב.');};
+  try{rc.start();toast('מקשיב, תגיד מה לשנות בלוח');}catch(x){}
+  return;
+ }
+ var v=(t.value||'').trim();
+ if(v.length<3){toast('כתוב או תגיד מה לשנות בלוח');return;}
+ var msg='🎛️ בקשה ללוח הבקרה: '+v;
+ sendText('לוח הבקרה',msg,'משימה').then(function(){markSent('text',msg);t.value='';toast('נשלח. אעדכן את הלוח ואענה בצ׳אט.');},function(){toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
+}
+function boardSheet(wk){
+ if(typeof wk==='number')BD_WEEK=wk;
+ if(!(VQ&&Date.now()-VQT<60000))return vqLoad(function(){boardSheet();});
+ var old=document.getElementById('bdGrid');if(old)old.remove();
+ var B=D.board||{},ROWS=(B.rows||[]).filter(function(r){return !(D.bb&&(D.bb.prefs.hideRows||[]).indexOf(r.id)>=0);}),P=JSON.parse(JSON.stringify(B.plan||{rows:{}}));
+ var L=null;try{L=JSON.parse(localStorage.getItem('postPlanLocal')||'null');}catch(e){}
+ if(!(L&&L.at&&(!P.at||L.at>P.at)))L={at:'',rows:{},items:{}};
+ Object.keys(L.rows||{}).forEach(function(k){P.rows[k]=L.rows[k];});
+ var IL=L.items||{};
+ var T0=vqDay(),Q=VQ||{},DN=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'],DS=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
+ function add(d,n){var p=d.split('-');return new Date(Date.UTC(+p[0],+p[1]-1,+p[2]+n)).toISOString().slice(0,10);}
+ function dw(d){var p=d.split('-');return new Date(Date.UTC(+p[0],+p[1]-1,+p[2])).getUTCDay();}
+ function dm(d){var p=d.split('-');return (+p[2])+'.'+(+p[1]);}
+ function upDay(x){return x.postedAt?new Date(x.postedAt).toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'}):'';}
+ var NOW='00:00';try{NOW=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date());}catch(e){}
+ var SUN=add(T0,-dw(T0)+7*BD_WEEK),days=[];for(var i=0;i<7;i++)days.push(add(SUN,i));
+ var LAST=days[6];
+ // a time that has passed: an earlier day, or today after that hour (with 20 minutes for the run every 10 minutes)
+ function gone(d,t){if(d<T0)return true;if(d>T0)return false;if(!t)return false;var p=t.split(':'),n=NOW.split(':');return (+n[0])*60+(+n[1])>(+p[0])*60+(+p[1])+20;}
+ var IC={ok:'✅',miss:'❌',will:'🔜',hand:'✋',wait:'⏳',no:'⚠️',run:'▶️',late:'⚠️',open:'✋'};
+ var adsOn=0;try{adsOn=TOM_ITEMS.filter(function(it){return !it.h&&/באוויר/.test(it.t||'');}).length;}catch(e){}
+ var TB={};try{vidTabs().forEach(function(t){TB[t.id]=t;});}catch(e){}
+ function stock(id){if(id==='pl')return (Q.pl||[]).filter(function(x){return !x.posted;}).length;var t=TB[id];return t?t.L.filter(function(x){return !x.h&&x.k!=='go';}).length:0;}
+ function planT(id,d){return (P.rows[id]&&P.rows[id].days[dw(d)])||'';}
+ // the AI channel: from today on, each planned day takes the next ready video in order; held ones never go up
+ var AIP={};
+ ['he','en'].forEach(function(lg){
+  var mine=function(x){return lg==='en'?x.lang==='en':x.lang!=='en';};
+  var A=(Q.ai||[]).filter(mine),ready=A.filter(function(x){return !x.posted&&!x.hold&&!x.failed;}).sort(function(a,b){return (a.order||0)-(b.order||0);});
+  var held=A.filter(function(x){return !x.posted&&x.hold;}).length,k=0,m={},end=LAST>T0?LAST:T0;
+  for(var d=(SUN<T0?SUN:T0);d<=end;d=add(d,1)){
+   var up=A.filter(function(x){return x.posted&&upDay(x)===d;})[0],t=planT('ai-'+lg,d);
+   if(up){m[d]={s:'ok',t:t,items:[{s:'ok',n:up.name,why:'עלה'}]};continue;}
+   if(!t)continue;
+   if(d<T0){m[d]={s:'miss',t:t,items:[{s:'miss',n:'',why:'לא עלה סרטון ביום הזה'}]};continue;}
+   if(k<ready.length){var x=ready[k++];m[d]=gone(d,t)?{s:'late',t:t,items:[{s:'late',n:x.name,why:'עבר הזמן ועוד לא עלה. אם הוא לא יעלה בדקות הקרובות, משהו נתקע'}]}:{s:'will',t:t,items:[{s:'will',n:x.name,why:'יעלה לבד ב '+t}]};}
+   else m[d]={s:'no',t:t,items:[{s:'no',n:'',why:held?'אין סרטון מוכן. '+held+' מושהים, אפשר לשחרר אותם':'אין סרטון מוכן בתור'}]};
+  }
+  AIP[lg]=m;
+ });
+ function cell(r,d){
+  var t,it,I;
+  if(r.kind==='always')return adsOn?{s:'run',t:'',items:[{s:'run',n:adsOn+' מודעות באוויר',why:'הממומן רץ כל היום'}]}:{s:'',t:''};
+  if(r.id==='ai-he'||r.id==='ai-en')return AIP[r.id.slice(3)][d]||{s:'',t:''};
+  if(r.id==='st'){
+   t=planT('st',d);it=(Q.st||[]).filter(function(x){return x.date===d;})[0];
+   var n=it?String(it.caption||it.topic||it.name).split(String.fromCharCode(10))[0].slice(0,80):'';
+   if(it&&(B.stDone||{})[it.name])return {s:'ok',t:t,items:[{s:'ok',n:n,why:'סימנת שעלה'}]};
+   if(!t)return it?{s:'no',t:'',items:[{s:'no',n:n,why:'יש סטטוס ליום הזה, אבל אין לו שעה בלוח'}]}:{s:'',t:''};
+   if(!it)return d<T0?{s:'',t:''}:{s:'no',t:t,items:[{s:'no',n:'',why:'אין סרטון סטטוס ליום הזה'}]};
+   if(d<T0)return {s:'miss',t:t,items:[{s:'miss',n:n,why:'לא סומן שעלה'}]};
+   return {s:'hand',t:t,items:[{s:'hand',n:n,why:'תזכורת ב '+t+', אתה מעלה ומסמן'}]};
+  }
+  if(r.kind==='items'){
+   if(r.id==='nr')I=(Q.nr||[]).filter(function(x){return !x.rejected&&(x.posted?upDay(x):x.date)===d;}).map(function(x){return {id:x.name,time:IL['nr:'+x.name]||x.time||'',up:!!x.posted,ok:!!x.approved,bad:!!x.failed,n:(x.kind==='post'?'פוסט':'סטורי')+' '+(x.lang==='en'?'אנגלית':'עברית')+(x.city?' · '+x.city:'')};});
+   else I=(B.li||[]).filter(function(x){return x.date===d;}).map(function(x){return {id:x.id,time:IL['li:'+x.id]||x.time||'',up:x.up,ok:x.ok,bad:x.bad,n:x.t||'פוסט'};});
+   if(!I.length)return {s:'',t:''};
+   I.sort(function(a,b){return a.time.localeCompare(b.time);});
+   I.forEach(function(y){
+    if(y.up){y.s='ok';y.why='עלה';}
+    else if(y.bad){y.s='miss';y.why='נכשל בפרסום';}
+    else if(!y.ok){y.s=gone(d,y.time)?'miss':'wait';y.why=y.s==='miss'?'לא אושר, ולא עלה':'מחכה לאישור שלך. בלי אישור הוא לא יעלה';}
+    else if(gone(d,y.time)){y.s=d<T0?'miss':'late';y.why=d<T0?'לא עלה':'עבר הזמן ועוד לא עלה';}
+    else {y.s='will';y.why='יעלה לבד ב '+y.time;}
+   });
+   var rank={miss:5,late:4,no:4,wait:3,will:2,ok:1};
+   var worst=I.slice().sort(function(a,b){return (rank[b.s]||0)-(rank[a.s]||0);})[0];
+   return {s:worst.s,t:I[0].time,items:I,n:I.length};
+  }
+  // 11.11.2026, Itzik: "לא מעודכן, קרוסלה עלתה אתמול ... מה בצלחת לא מעודכן". What went up by hand is shown on its day,
+  // with or without a planned time: plate stories from their postedAt, carousels from CAR up ("D.M").
+  t=planT(r.id,d);
+  if(r.id==='pl'){var pu=(Q.pl||[]).filter(function(x){return x.posted&&upDay(x)===d;});
+   if(pu.length)return {s:'ok',t:t,n:pu.length,items:pu.map(function(x){return {s:'ok',n:String(x.name||'').split(' (')[0],why:'עלה'};})};}
+  if(r.id==='car'){var cu=[];try{cu=CAR.filter(function(c){return c.up===dm(d);});}catch(e){}
+   if(cu.length)return {s:'ok',t:t,items:cu.map(function(c){return {s:'ok',n:'🎠 '+c.t,why:'עלתה'+(c.where?' ל '+c.where:'')};})};}
+  // by hand: a reminder at the planned time, if there is something ready
+  if(!t)return {s:'',t:''};
+  var have=stock(r.id);
+  if(d<T0)return {s:'open',t:t,items:[{s:'open',n:'',why:'היה מתוכנן ב '+t+'. מה שאתה מעלה בעצמך לא נבדק כאן'}]};
+  if(!have)return {s:'no',t:t,items:[{s:'no',n:'',why:'אין מלאי מוכן, אין מה להעלות'}]};
+  return {s:'hand',t:t,items:[{s:'hand',n:have+' מוכנים במלאי',why:'תזכורת ב '+t+', אתה מעלה'}]};
+ }
+ var C={},cnt={ok:0,will:0,hand:0,wait:0,bad:0},todo=[];
+ ROWS.forEach(function(r,ri){days.forEach(function(d){
+  var c=cell(r,d);C[ri+'|'+d]=c;
+  (c.items||[]).forEach(function(y){
+   if(y.s==='ok')cnt.ok++;else if(y.s==='will')cnt.will++;else if(y.s==='hand')cnt.hand++;else if(y.s==='wait')cnt.wait++;
+   else if(y.s==='no'||y.s==='miss'||y.s==='late')cnt.bad++;
+   if(y.s==='wait'||y.s==='no'||y.s==='late'||(y.s==='miss'&&d>=add(T0,-6)))todo.push({ri:ri,d:d,y:y,r:r});
+  });
+ });});
+ // 10.11.2026, Itzik, from a reel (itaiaron): "תעצב את לוח הבקרה לפי הסרטון, כמו יומן שחור יפה". Pure black, an indigo to violet glow,
+ // big glowing times, a status chip and a small clock on every row, dark rounded cards. Only the look: the data and the clicks are the same.
+ var css=bdCss();
  var wkName=BD_WEEK===0?'השבוע':BD_WEEK===-1?'שבוע שעבר':BD_WEEK===1?'שבוע הבא':(BD_WEEK>0?'בעוד '+BD_WEEK+' שבועות':'לפני '+(-BD_WEEK)+' שבועות');
  var h=css+'<div class="ycard"><b>🎛️ לוח בקרה</b>'
   +'<div class="nav"><button type="button" class="yb" data-a="prev">‹ קודם</button><b>'+wkName+' · '+dm(days[0])+' עד '+dm(days[6])+'</b><button type="button" class="yb" data-a="next">הבא ›</button></div>'
@@ -17673,20 +17802,8 @@ function boardSheet(wk){
  // coloured by state (green went up, indigo goes up by itself, amber you post or approve, red will not, grey nothing planned).
  // A tap opens the same day editor as a cell of the table. Since 11.11 upright shows the same tiles (smaller), with a hint to turn the phone.
  // one colour per row, taken from the home tiles (g7, g15, g12, gNer, g1, g9, g8, g6, gReel, g11)
- var RC={st:['#7bd88f','#1e8e4a'],'ai-he':['#90caf9','#1565c0'],'ai-en':['#b39ddb','#673ab7'],nr:['#f0a64a','#0f1a3a'],li:['#5aa9fb','#0a4f9c'],
-  ads:['#f48fb1','#ad1457'],pl:['#ffb74d','#e65100'],car:['#4fb3c4','#00838f'],me:['#e2574c','#2a1240'],it:['#4fbf88','#00897b']};
- var LBL={ok:'עלה',miss:'לא עלה',will:'יעלה לבד',hand:'אתה מעלה',wait:'לאישור',no:'לא יעלה',run:'רץ',late:'עבר הזמן',open:'ידני'};
- h+='<div class="lsc" style="--R:'+ROWS.length+'"><div class="lh"><button type="button" class="lb" data-a="prev">‹</button><b>🎛️ '+wkName+' · '+dm(days[0])+' עד '+dm(days[6])+'</b>'
-  +'<span class="lk">✅ עלה · 🔜 יעלה לבד · ✋ אתה מעלה · ⏳ לאישור · ⚠️ לא יעלה · ▶️ ממומן · חיוור: לא מתוכנן</span>'
-  +'<button type="button" class="lb" data-a="next">›</button><button type="button" class="lb rot" data-a="rot" title="לסובב את המסך" aria-label="לסובב את המסך">🔄</button><button type="button" class="lb" data-a="x">✕</button></div>'
-  +'<button type="button" class="lrot" data-a="rot"><i>📱</i>'+(BD_DESK?'🔄 לסובב לרוחב, על כל המסך':'סובב את הטלפון לרוחב, או לחץ כאן')+'</button>'
-  +'<div class="lg2"><span></span>'+days.map(function(d){return '<span class="'+(d===T0?'tdy':'')+'">'+(d===T0?'היום':DS[dw(d)])+'<small>'+dm(d)+'</small></span>';}).join('')
-  +ROWS.map(function(r,ri){var rc=RC[r.id]||['#7d8ba1','#3f4a5c'],cv='--a:'+rc[0]+';--b:'+rc[1];
-   return '<span class="ln" style="'+cv+'" data-rn="'+ri+'">'+r.ic+'<small>'+esc(r.n)+'</small></span>'
-   +days.map(function(d){var c=C[ri+'|'+d]||{},s=c.s||'';
-    return '<span class="lc"><button type="button" style="'+cv+'" class="dot'+(s?' s-'+s:' e')+(d===T0?' now':'')+(d<T0?' pst':'')+'" data-r="'+ri+'" data-d="'+d+'" aria-label="'+esc(r.n)+' '+dm(d)+' '+(LBL[s]||'לא מתוכנן')+'">'
-     +(s?'<em>'+IC[s]+'</em>'+(c.t?'<small>'+esc(c.t)+'</small>':''):'')+'</button></span>';}).join('');}).join('')
-  +'</div></div>';
+ h+=bdTiles(ROWS,C,days,T0,wkName,{IC:IC,DS:DS,dm:dm,dw:dw});
+ h+=bdChatHtml()+bdUpdatesHtml();
  // 10.11, Itzik: "תשים את כל הזמנים ומה עולה, איזה סרטון". Day by day under the table: time, network, which video, state.
  var CHIP={ok:['✓ עלה','ok'],will:['🔜 יעלה לבד','will'],hand:['✋ אתה מעלה','hand'],wait:['⏳ לאישור','hand'],no:['⚠️ לא יעלה','bad'],miss:['❌ לא עלה','bad'],late:['⚠️ עבר הזמן','bad'],run:['▶️ רץ','will'],open:['✋ ידני','hand']};
  var CLK='<svg class="clk" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
@@ -17707,6 +17824,7 @@ function boardSheet(wk){
    +todo.slice(0,12).map(function(x,k){return '<div class="td'+(x.y.s==='wait'?' w':'')+'" data-t="'+k+'">'+IC[x.y.s]+' <b>'+x.r.ic+' '+esc(x.r.n)+' · '+x.ds.map(function(d){return d===T0?'היום':DS[dw(d)]+' '+dm(d);}).join(', ')+'</b><br>'+esc(x.y.why)+(x.y.n&&x.ds.length===1?'<br><small>'+esc(x.y.n)+'</small>':'')+'<br><small style="color:#1a5fb4;font-weight:700">לחיצה כדי לטפל ›</small></div>';}).join('')
    +(todo.length>12?'<small>ועוד '+(todo.length-12)+'</small>':'');
  }else h+='<div style="margin:10px 0;font:700 14px Heebo,sans-serif;color:#1b7f3b">✅ כל מה שמתוכנן השבוע יעלה.</div>';
+ h+=bdReportHtml();
  h+=(L.at?'<small style="display:block;color:#8a5a00;margin-top:6px">יש שינוי ששמרת בטלפון ועוד לא נבנה בדף. השרת כבר עובד לפיו.</small>':'')
   +'<button type="button" class="yb yb2" data-a="more">📦 מלאי מוכן ואוטומציות</button>'
   +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
@@ -17769,6 +17887,7 @@ function boardSheet(wk){
     else if(!BD_LAND&&document.fullscreenElement)document.exitFullscreen();}catch(e){}
    return;
   }
+  if(a==='bbsend'||a==='bbmic')return bdAct(a,w);
   if(ev.target===w||a==='x'){try{if(document.fullscreenElement)document.exitFullscreen();}catch(e){}return w.remove();}
   if(a==='more'){w.remove();return boardMore();}
   if(a==='prev'||a==='next'){w.remove();return boardSheet(BD_WEEK+(a==='next'?1:-1));}
