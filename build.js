@@ -1498,7 +1498,8 @@ function tenantTiles(inst) {
   ids.push('gConn');
   ids.push('gAdminReq');
   // 10.11.2026: a per tenant opt out (instance hideTiles, an array of tile ids). gConn and gAdminReq can never be hidden.
-  if (Array.isArray(inst.hideTiles)) { const hide = inst.hideTiles.filter((id) => id !== 'gConn' && id !== 'gAdminReq'); for (let i = ids.length - 1; i >= 0; i--) if (hide.indexOf(ids[i]) >= 0) ids.splice(i, 1); }
+  // 11.11.2026, Itzik: the notes app is installed by default in every monitor, so gNotes can never be hidden either.
+  if (Array.isArray(inst.hideTiles)) { const hide = inst.hideTiles.filter((id) => id !== 'gConn' && id !== 'gAdminReq' && id !== 'gNotes'); for (let i = ids.length - 1; i >= 0; i--) if (hide.indexOf(ids[i]) >= 0) ids.splice(i, 1); }
   // esc() is defined far above; this part is also lifted alone by a test.
   const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const guides = tenantGuides(inst).map((g, i) => '\n  <button type="button" class="gt g11" id="gGuide' + i + '"><b>'
