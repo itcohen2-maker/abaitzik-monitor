@@ -17355,7 +17355,7 @@ function upToday(){
  });
  var P=(VQ.pl||[]).slice().sort(function(a,b){return (a.order||0)-(b.order||0);});
  var pT=P.filter(function(x){return x.posted&&day(x.postedAt)===T;});
- var nm=function(x){return String(x.name||x.id).replace(/\s*\(גרסה [0-9]+\)\s*$/,'');};
+ var nm=function(x){return String(x.name||x.id).split(' (גרסה ')[0].trim();};
  if(pT.length)pT.forEach(function(x){L.push({n:'מה בצלחת',done:true,t:'🍽️ מה בצלחת · '+nm(x),u:'plate/plate.html',h:x.id});});
  else{var nx=P.filter(function(x){return !x.posted;})[0];
   if(nx)L.push({n:'מה בצלחת',done:false,t:'🍽️ מה בצלחת · '+nm(nx)+(nx.approved?' · מאושר, לשמור לטלפון ולהעלות':' · לאשר ואז להעלות'),
@@ -17363,7 +17363,7 @@ function upToday(){
   // 11.11.2026, Itzik: "מה שלא עלה זה מה בצלחת". No ready story is still a plate day: say which one is next
   // (the "ומחר: X" screen of the last one that went up) and that it is being made.
   else{var lp=P.filter(function(x){return x.posted;}).pop(),sc=lp&&lp.screens&&lp.screens[lp.screens.length-1],
-   nn=sc&&/^ומחר:\s*/.test(sc.head||'')?String(sc.head).replace(/^ומחר:\s*/,''):'';
+   nn=sc&&String(sc.head||'').indexOf('ומחר:')===0?String(sc.head).slice(5).trim():'';
    L.push({n:'מה בצלחת',done:false,t:'🍽️ מה בצלחת · '+(nn?'הבא: '+nn+' · ':'')+'בהכנה, עוד לא מוכן להעלאה',u:'plate/plate.html',h:''});}}
  CARON.forEach(function(c){L.push({n:'קרוסלה',done:false,car:c,t:'🎠 קרוסלה · '+c.t+' ('+c.n+' שקפים)'});});
  return L;
