@@ -845,7 +845,7 @@ function build() {
       const li = r(path.join(inst.dataPath, 'linkedin', 'queue.json'), []);
       return { li: (Array.isArray(li) ? li : []).map((x) => ({ id: x.id || '', date: x.date || '', time: x.time || '', ok: !!x.approved, up: !!x.posted, bad: !!x.failed, t: String(x.editedText || x.text || '').split('\n')[0].slice(0, 60) })),
         // 10.11.2026: the editable week plan of the grid (lib/post-plan.js).
-        plan: require('./lib/post-plan.js').read(inst.dataPath), rows: require('./lib/post-plan.js').ROWS.map((x) => ({ id: x.id, ic: x.ic, n: x.n, sub: x.sub || '', kind: x.kind, tab: x.tab })),
+        plan: require('./lib/post-plan.js').read(inst.dataPath), rows: require('./lib/post-plan.js').ROWS.filter((x) => x.id !== 'it' /* 11.11, Itzik: "רילים של IT Solution ... זה סתם כפילות", the AI rows are it */).map((x) => ({ id: x.id, ic: x.ic, n: x.n, sub: x.sub || '', kind: x.kind, tab: x.tab })),
         stDone: r('/home/monitor/wa-status-done.json', {}),
         // 10.11.2026, Itzik: "לוח בקרה שחולש על כל הקמפיין והאוטומציות לרשתות". The last line of each automation's log.
         auto: [['ai', '🤖', 'ערוץ AI לאינסטגרם', 'כל יום 20:00, לא בשבת', '/home/monitor/ai-post.log'],
@@ -17338,7 +17338,7 @@ function vqRows(id){
  return out;
 }
 // 10.11.2026, Itzik (לוח בקרה): "קרוסלה עלתה היום". up = the day it went up; a posted one leaves the reels menu and the board shows it as posted.
-var CAR=[{id:'life',t:'סיפור חיי',n:11,up:'10.11'}];
+var CAR=[{id:'life',t:'סיפור חיי',n:11,up:'10.11',where:'אינסטגרם, טיקטוק ופייסבוק'}];
 var CARON=CAR.filter(function(c){return !c.up;});
 function vidTabs(){
  var isSh=function(it){return /^שחר/.test(String(it.n))||/^sh[0-9]/.test(String(it.n))||/^שחר/.test(String(it.t));};
@@ -17520,8 +17520,15 @@ function boardSheet(wk){
    var worst=I.slice().sort(function(a,b){return (rank[b.s]||0)-(rank[a.s]||0);})[0];
    return {s:worst.s,t:I[0].time,items:I,n:I.length};
   }
+  // 11.11.2026, Itzik: "לא מעודכן, קרוסלה עלתה אתמול ... מה בצלחת לא מעודכן". What went up by hand is shown on its day,
+  // with or without a planned time: plate stories from their postedAt, carousels from CAR up ("D.M").
+  t=planT(r.id,d);
+  if(r.id==='pl'){var pu=(Q.pl||[]).filter(function(x){return x.posted&&upDay(x)===d;});
+   if(pu.length)return {s:'ok',t:t,n:pu.length,items:pu.map(function(x){return {s:'ok',n:String(x.name||'').split(' (')[0],why:'עלה'};})};}
+  if(r.id==='car'){var cu=[];try{cu=CAR.filter(function(c){return c.up===dm(d);});}catch(e){}
+   if(cu.length)return {s:'ok',t:t,items:cu.map(function(c){return {s:'ok',n:'🎠 '+c.t,why:'עלתה'+(c.where?' ל '+c.where:'')};})};}
   // by hand: a reminder at the planned time, if there is something ready
-  t=planT(r.id,d);if(!t)return {s:'',t:''};
+  if(!t)return {s:'',t:''};
   var have=stock(r.id);
   if(d<T0)return {s:'open',t:t,items:[{s:'open',n:'',why:'היה מתוכנן ב '+t+'. מה שאתה מעלה בעצמך לא נבדק כאן'}]};
   if(!have)return {s:'no',t:t,items:[{s:'no',n:'',why:'אין מלאי מוכן, אין מה להעלות'}]};
