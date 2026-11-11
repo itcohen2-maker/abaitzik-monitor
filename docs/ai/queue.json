@@ -227,7 +227,6 @@
   "song_tt": "",
   "posted": false,
   "postedAt": null,
-  "hold": true,
-  "note": "גרסה באנגלית, ממתינה לאישור שלך"
+  "approvedAt": "2026-11-11T14:41:34.545Z"
  }
 ]
