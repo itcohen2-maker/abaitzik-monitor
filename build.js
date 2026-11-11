@@ -17683,6 +17683,10 @@ function bdCss(){
   +'#bdGrid .bbr textarea{flex:1;min-width:0;box-sizing:border-box;background:#05060b;color:#f4f5ff;border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:10px 12px;font:15px/1.4 Heebo,sans-serif;resize:vertical}'
   +'#bdGrid .bbr .lb{width:46px;height:46px;font-size:20px}'
   +'#bdGrid .bbu{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid rgba(255,255,255,.07)}#bdGrid .bbu>span{flex:0 0 22px;text-align:center}#bdGrid .bbu>div{flex:1;min-width:0}'
+  +'#bdGrid .bbg{margin:8px 0 2px;padding:8px 10px;border-radius:14px;background:#0a0c14;border:1px solid rgba(255,255,255,.08)}#bdGrid .bbg>b{display:block;font:800 14px Heebo,sans-serif;margin-bottom:2px}#bdGrid .bbg>b i,#bdGrid .bbn{font-style:normal;font-size:12px;background:rgba(255,255,255,.12);border-radius:9px;padding:0 7px;margin-inline-start:4px}'
+  +'#bdGrid .g-now{border-color:rgba(255,90,90,.55);background:rgba(255,60,60,.08)}#bdGrid .g-now>b{color:#ff9b9b}#bdGrid .g-look>b{color:#ffd27a}#bdGrid .g-sp>b{color:#9fe0ff}#bdGrid .g-mg>b{color:#aab2ff}'
+  +'#bdGrid .bbf{color:#fff;font-weight:700}#bdGrid .bbu ul{margin:4px 0 0;padding-inline-start:18px;color:#c9cde6;font-size:13px}#bdGrid .d-bad>span{color:#ff8a8a}#bdGrid .d-warn>span{color:#ffd27a}#bdGrid .d-ok>span{color:#7fe0a0}'
+  +'#bdGrid .bbm{cursor:pointer;color:#aab2ff;font:700 13px Heebo,sans-serif;padding:6px 0}#bdGrid .bbask{border-color:rgba(120,130,255,.4)}'
   +'#bdGrid .bbx pre{white-space:pre-wrap;font:13px/1.6 Heebo,sans-serif;color:#dfe2ff;margin:8px 0 0}'
   +'#bdGrid h4{font:800 18px Heebo,sans-serif;color:#aab2ff;text-shadow:0 0 16px rgba(91,108,255,.5);margin:18px 2px 4px}'
   +'#bdGrid .emp{background:#0a0c14;border:1px dashed rgba(255,255,255,.14);border-radius:20px;padding:14px;margin:8px 0;color:#9aa0b8;font:14px/1.6 Heebo,sans-serif}'
@@ -17707,8 +17711,12 @@ function bdTiles(ROWS,C,days,T0,wkName,H){
 }
 // 11.11.2026, Itzik: "שורת צ'אט מתחת ללוח הבקרה, עדכונים מגוגל, עדכוני המנהל, ודוח הבוקר". Only where D.bb exists (Itzik and Ilay), see lib/board-feed.js.
 function bdAgo(s){var m=Math.round((Date.now()-Date.parse(s))/60000);if(isNaN(m))return '';return m<2?'עכשיו':m<60?'לפני '+m+' דקות':m<1440?'לפני '+Math.round(m/60)+' שעות':'לפני '+Math.round(m/1440)+' ימים';}
-function bdChatHtml(){
+function bdChatHtml(gen){
  if(!D.bb)return '';
+ if(gen)return '<div class="bbx bbask" data-gen="1"><b>💬 לבקש משהו</b><small>כתוב או תגיד מה לעשות: משימה, תשובה למייל, שינוי בלוח. אני מטפל ועונה בצ׳אט.</small>'
+  +'<div class="bbr"><textarea id="bbT" rows="2" placeholder="למשל: תענה לרועי שאני מאשר, תבדוק אם הגיעה החשבונית, תוסיף שורה ללוח"></textarea>'
+  +'<button type="button" class="lb" data-a="bbmic" aria-label="הקלטה בקול">🎤</button></div>'
+  +'<button type="button" class="yb yb2" data-a="bbsend">שליחה</button></div>';
  return '<div class="bbx"><b>💬 מה לשנות או להוסיף בלוח הבקרה</b><small>כתוב או תגיד מה לשנות בלוח, אילו עדכונים להראות ומה יהיה בדוח. אני מעדכן ועונה בצ׳אט.</small>'
   +'<div class="bbr"><textarea id="bbT" rows="2" placeholder="למשל: להסתיר שורה, להוסיף עדכון על חשבוניות, או דוח בוקר מתחת"></textarea>'
   +'<button type="button" class="lb" data-a="bbmic" aria-label="הקלטה בקול">🎤</button></div>'
@@ -17734,6 +17742,31 @@ function bdReportHtml(){
  }
  return '<details class="bbx"><summary>📰 הדוח של הבוקר</summary><small>'+esc(bdAgo(rep.at))+'</small><pre>'+esc(body||'אין בדוח הזה קטעים שביקשת.')+'</pre></details>';
 }
+// 11.11.2026, Itzik: "מהמייל, אם הגיע משהו מיוחד או אם משהו צריך להיות לאישור מיידי או לתשומת ליבי". D.bb.mail from lib/board-feed.js mailItzik.
+function bdMailHtml(){
+ var M=D.bb&&D.bb.mail;if(!M)return '';
+ function row(x){return '<div class="bbu"><span>✉️</span><div><b class="bbf">'+esc(x.from)+(x.n>1?' ×'+x.n:'')+'</b> '+esc(x.t)+'<small>'+esc(bdAgo(x.at))+'</small></div></div>';}
+ function grp(k,ic,ttl,cl){var L=M[k]||[];if(!L.length)return '';return '<div class="bbg '+cl+'"><b>'+ic+' '+ttl+' <i>'+L.length+'</i></b>'+L.map(row).join('')+'</div>';}
+ var h='<div class="bbx"><b>📬 מהמייל</b>';
+ var body=grp('now','🚨','לאישור מיידי','g-now')+grp('look','👀','לתשומת לבך','g-look')+grp('special','⭐','מיוחד, אדם כתב לך','g-sp');
+ if(M.sweep&&M.sweep.lines.length)body+='<div class="bbg '+(M.sweep.urgent?'g-now':'g-mg')+'"><b>🧑‍💼 המנהל קרא את המיילים'+(M.sweep.urgent?', יש משהו בשבילך':'')+'</b>'
+  +M.sweep.lines.map(function(l){return '<div class="bbu"><span>·</span><div>'+esc(l)+'</div></div>';}).join('')+'<small>'+esc(bdAgo(M.sweep.at))+'</small></div>';
+ h+=body||'<div class="emp">אין במייל משהו שמחכה לך.</div>';
+ if(M.at)h+='<small>נבדק '+esc(bdAgo(M.at))+'. רק שולח ונושא, בלי פרסומות וקודים. מתעדכן כל רבע שעה.</small>';
+ return h+'</div>';
+}
+// 11.11.2026, Itzik: "רשימה של כל הדברים שהמנהל עשה, וזה מתעדכן כל הזמן". D.bb.done from lib/board-feed.js doneItzik, newest first.
+function bdDoneHtml(){
+ var L=D.bb&&D.bb.done;if(!L)return '';
+ function row(x){return '<div class="bbu d-'+esc(x.st)+'"><span>'+esc(x.ic)+'</span><div>'+esc(x.t)
+  +((x.sub||[]).length?'<ul>'+x.sub.map(function(s){return '<li>'+esc(s)+'</li>';}).join('')+'</ul>':'')
+  +'<small>'+esc(bdAgo(x.at))+'</small></div></div>';}
+ var h='<div class="bbx"><b>🧑‍💼 מה המנהל עשה היום <i class="bbn">'+L.length+'</i></b>';
+ if(!L.length)return h+'<div class="emp">עוד לא עשה כלום היום. הסבבים ב 07:25, 13:00 ו 18:00.</div></div>';
+ h+=L.slice(0,10).map(row).join('');
+ if(L.length>10)h+='<details><summary class="bbm">עוד '+(L.length-10)+'</summary>'+L.slice(10).map(row).join('')+'</details>';
+ return h+'</div>';
+}
 // the chat bar of the board: 🎤 dictates, שליחה sends a normal monitor message that starts "🎛️ בקשה ללוח הבקרה:" (CLAUDE.md says how a session answers it)
 function bdAct(a,w){
  var t=w.querySelector('#bbT');if(!t)return;
@@ -17748,8 +17781,9 @@ function bdAct(a,w){
  }
  var v=(t.value||'').trim();
  if(v.length<3){toast('כתוב או תגיד מה לשנות בלוח');return;}
- var msg='🎛️ בקשה ללוח הבקרה: '+v;
- sendText('לוח הבקרה',msg,'משימה').then(function(){markSent('text',msg);t.value='';toast('נשלח. אעדכן את הלוח ואענה בצ׳אט.');},function(){toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
+ var gen=!!w.querySelector('.bbask');
+ var msg=(gen?'🎛️ מלוח הבקרה: ':'🎛️ בקשה ללוח הבקרה: ')+v;
+ sendText('לוח הבקרה',msg,'משימה').then(function(){markSent('text',msg);t.value='';toast(gen?'נשלח. אטפל ואענה בצ׳אט.':'נשלח. אעדכן את הלוח ואענה בצ׳אט.');},function(){toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
 }
 function boardSheet(wk){
  if(typeof wk==='number')BD_WEEK=wk;
@@ -17863,7 +17897,7 @@ function boardSheet(wk){
  // A tap opens the same day editor as a cell of the table. Since 11.11 upright shows the same tiles (smaller), with a hint to turn the phone.
  // one colour per row, taken from the home tiles (g7, g15, g12, gNer, g1, g9, g8, g6, gReel, g11)
  h+=bdTiles(ROWS,C,days,T0,wkName,{IC:IC,DS:DS,dm:dm,dw:dw});
- h+=bdChatHtml()+bdUpdatesHtml();
+ h+=(D.bb&&D.bb.mail?'':bdChatHtml()+bdUpdatesHtml());
  // 10.11, Itzik: "תשים את כל הזמנים ומה עולה, איזה סרטון". Day by day under the table: time, network, which video, state.
  var CHIP={ok:['✓ עלה','ok'],will:['🔜 יעלה לבד','will'],hand:['✋ אתה מעלה','hand'],wait:['⏳ לאישור','hand'],no:['⚠️ לא יעלה','bad'],miss:['❌ לא עלה','bad'],late:['⚠️ עבר הזמן','bad'],run:['▶️ רץ','will'],open:['✋ ידני','hand']};
  var CLK='<svg class="clk" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
@@ -17884,7 +17918,8 @@ function boardSheet(wk){
    +todo.slice(0,12).map(function(x,k){return '<div class="td'+(x.y.s==='wait'?' w':'')+'" data-t="'+k+'">'+IC[x.y.s]+' <b>'+x.r.ic+' '+esc(x.r.n)+' · '+x.ds.map(function(d){return d===T0?'היום':DS[dw(d)]+' '+dm(d);}).join(', ')+'</b><br>'+esc(x.y.why)+(x.y.n&&x.ds.length===1?'<br><small>'+esc(x.y.n)+'</small>':'')+'<br><small style="color:#1a5fb4;font-weight:700">לחיצה כדי לטפל ›</small></div>';}).join('')
    +(todo.length>12?'<small>ועוד '+(todo.length-12)+'</small>':'');
  }else h+='<div style="margin:10px 0;font:700 14px Heebo,sans-serif;color:#1b7f3b">✅ כל מה שמתוכנן השבוע יעלה.</div>';
- h+=bdReportHtml();
+ // 11.11.2026, Itzik: at the bottom of the board, what came in the mail, everything the manager did, then a line to ask for anything.
+ h+=(D.bb&&D.bb.mail?bdMailHtml()+bdDoneHtml()+bdReportHtml()+bdChatHtml(1):bdReportHtml());
  h+=(L.at?'<small style="display:block;color:#8a5a00;margin-top:6px">יש שינוי ששמרת בטלפון ועוד לא נבנה בדף. השרת כבר עובד לפיו.</small>':'')
   +'<button type="button" class="yb yb2" data-a="more">📦 מלאי מוכן ואוטומציות</button>'
   +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';

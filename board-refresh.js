@@ -13,8 +13,17 @@ const LOGS = ['/home/monitor/ai-post.log', '/home/monitor/ner-post.log', '/home/
   '/home/monitor/social-run.log', '/var/log/monitor-ads.log'];
 const DRY = process.argv.includes('--dry');
 
+// 11.11.2026, Itzik: the 📬 mail block and "מה המנהל עשה היום" under the board "מתעדכן כל הזמן". Their files join the
+// signature, so the page is rebuilt within 10 minutes of a new mail that matters or anything the manager did.
+function boardFiles() {
+  const d = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' }).replace(/-/g, '');
+  const D = path.join(__dirname, 'data');
+  return [path.join(D, 'status', 'mail-board.json'), path.join(D, 'manager', 'work', d + '.json'),
+    path.join(D, 'manager', 'manager', d + '.json'), path.join(D, 'manager', 'state.json')];
+}
+
 function signature() {
-  return LOGS.map((f) => {
+  return LOGS.concat(boardFiles()).map((f) => {
     try { return f + '@' + fs.statSync(f).mtime.toISOString(); } catch (e) { return f + '@none'; }
   }).join('|');
 }
