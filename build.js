@@ -18681,14 +18681,16 @@ function bizSheet(t0){
   */
   var LD_SRC={site:'🌐 אתר','fb-comment':'📘 תגובה במודעה','ig-comment':'📸 תגובה במודעה',messenger:'💬 מסנג׳ר','ig-dm':'📸 הודעה באינסטגרם',leadform:'📝 טופס מטא',manual:'✍️ ידני'};
   var LD_INBOX='https://business.facebook.com/latest/inbox/all?asset_id=1341874565686928&business_id=2131000707784066';
-  function ldWa(p){var d=String(p||'').replace(/\D/g,'');if(!d)return '';if(d.charAt(0)==='0')d='972'+d.slice(1);return 'https://wa.me/'+d;}
+  function ldWa(p){var d=String(p||'').replace(/[^0-9]/g,'');if(!d)return '';if(d.charAt(0)==='0')d='972'+d.slice(1);return 'https://wa.me/'+d;}
+  // The site chat sends its raw answers ([Chat Lead], Answers:, stage: mockups); shown in words.
+  function ldNote(n){var W={mockups:'יש לו סקיצות',idea:'רק רעיון',started:'כבר התחיל',stuck:'נתקע באמצע',tier1:'עד 5,000 ₪',tier2:'5,000 עד 15,000 ₪',tier3:'15,000 עד 50,000 ₪',tier4:'מעל 50,000 ₪'};return String(n||'').split(String.fromCharCode(10)).map(function(l){return l.trim();}).filter(function(l){return l&&l!=='[Chat Lead]'&&l!=='Answers:'&&!/^Description: *N.A$/i.test(l);}).map(function(l){var m=/^(stage|budget): *([a-z0-9]+)/i.exec(l);return m?(m[1].toLowerCase()==='stage'?'שלב: ':'תקציב: ')+(W[m[2]]||m[2]):l;}).join(String.fromCharCode(10));}
   function itsLeadsHtml(){
    var L=recs.filter(function(r){return r.kind==='lead'||r.kind==='customer';}).slice().sort(function(a,b){return String(b.at||'').localeCompare(String(a.at||''));});
    var sc=D.leadScan,open=L.filter(function(r){return r.status==='חדש';}).length;
    var h='<div class="bzSec">📋 כל הלידים ('+L.length+(open?', '+open+' חדשים':'')+')</div>';
    if(sc){
     var t=sc.at?new Date(sc.at).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'}):'';
-    h+='<small style="display:block;margin:-2px 0 8px;color:#5a6478;font-size:13px;line-height:1.4">'+(sc.ok?'🟢 הסורק בודק את מטא כל 10 דקות. נבדק לאחרונה '+esc(t):'🟠 הסורק בודק כל 10 דקות את האתר, אבל עדיין לא רואה תגובות והודעות מהמודעות. חסרה הרשאה במטא: '+esc((sc.need||[]).join(', ')))+'</small>';
+    h+='<small style="display:block;margin:-2px 0 8px;color:#5a6478;font-size:13px;line-height:1.4">'+(sc.ok?'🟢 הסורק בודק כל 10 דקות את האתר, התגובות במודעות, מסנג׳ר ואינסטגרם. נבדק לאחרונה '+esc(t):'🟠 לידים מהאתר נכנסים לבד. תגובות והודעות מהמודעות עוד לא נכנסות לבד: חסר אישור אחד במטא. עד אז אני מוסיף אותן ידנית.')+'</small>';
    }
    if(!L.length)return h+'<p class="bzEmpty">עוד אין לידים.</p>';
    h+='<div class="ldTbl"><div class="ldHd"><span>תאריך</span><span>שם</span><span>מאיפה</span><span>סטטוס</span></div>';
@@ -18703,7 +18705,7 @@ function bizSheet(t0){
      +'<div class="ldBody">'
      +(r.last?'<p class="ldLast">"'+esc(r.last)+'"</p>':'')
      +(r.phone?'<small>'+bzTel(r.phone)+'</small>':'')+(r.email?'<small><bdi>'+esc(r.email)+'</bdi></small>':'')
-     +(r.note?'<small style="white-space:pre-line">'+esc(r.note)+'</small>':'')
+     +(r.note?'<small style="white-space:pre-line">'+esc(ldNote(r.note))+'</small>':'')
      +'<div class="ldAct">'+(rep||'<small>אין טלפון או מייל. מחכים שיחזור.</small>')+'</div>'
      +'<div class="ldAct">'+BZ_ORDER.filter(function(st){return st!==r.status;}).map(function(st){return '<button type="button" class="yb" data-bz="ldst" data-s="'+st+'">'+st+'</button>';}).join('')+'</div>'
      +'<div class="ldAct"><button type="button" class="yb" data-bz="ldnote">📝 לרשום</button><button type="button" class="yb" data-bz="lddel">🗑️ למחוק</button></div>'
