@@ -1173,6 +1173,23 @@ body.dmo-real #dmoBack{display:flex;position:sticky;top:0;z-index:99999;justify-
 .dmo-sec{font:800 14px Heebo,sans-serif;color:#0e7490;margin:14px 2px 4px}
 .dmo-ics{margin-top:16px}
 .c-dnote{background:#fef3c7;font-size:24px;display:flex;align-items:center;justify-content:center}
+.c-dconn{background:#e0f2fe;font-size:24px;display:flex;align-items:center;justify-content:center}
+.dmo-pk{background:linear-gradient(150deg,#0e7490,#155e75);color:#fff;border:0}
+.dmo-pk b,.dmo-pk p{color:#fff}
+.dmo-pk .dmo-big{font:800 26px Heebo,sans-serif;margin:2px 0 8px}
+.dmo-meter{margin:10px 0 2px}
+.dmo-meter .l{display:flex;justify-content:space-between;font:600 14px Heebo,sans-serif}
+.dmo-meter .t{height:9px;border-radius:9px;background:rgba(255,255,255,.25);overflow:hidden;margin-top:4px}
+.dmo-meter .t i{display:block;height:100%;border-radius:9px;background:#fff}
+.dmo-opt{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:14px;margin:7px 0;background:#fff;border:1px solid #e2e8f0;text-align:right}
+.dmo-opt .e{font-size:22px;width:30px;text-align:center}
+.dmo-opt .n{flex:1;font:700 15px Heebo,sans-serif;color:#0f1b2a}
+.dmo-opt .n small{display:block;font:500 12.5px Heebo,sans-serif;color:#6b7c90}
+.dmo-opt .s{font:700 12px Heebo,sans-serif;padding:3px 10px;border-radius:999px;background:#dcfce7;color:#166534;white-space:nowrap}
+.dmo-opt.off{background:#f1f5f9;border-style:dashed}
+.dmo-opt.off .e{filter:grayscale(1);opacity:.55}
+.dmo-opt.off .n{color:#94a3b8}
+.dmo-opt.off .s{background:#0f1b2a;color:#fff;border:0;cursor:pointer;font-family:Heebo,sans-serif}
 .c-dfill{background:var(--surface,#fff);border:1px solid var(--line,#e2e8f0);font-size:24px;display:flex;align-items:center;justify-content:center}
 .dmo-all{align-self:center;margin-top:2px}
 .c-ynet{background:#e21b22!important;color:#fff;font:900 15px Arial,sans-serif!important;letter-spacing:-.5px;border:0!important}
@@ -2717,7 +2734,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-11T10:04:08.463Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-11T10:08:56.194Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4631,7 +4648,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='1661f72e3b';
+var CODE_ID='169d6adb16';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -18758,7 +18775,8 @@ function dmoIcons(){
   +'<button type="button" class="ic" data-dic="fcc"><span class="c c-fcc">🧭</span>אימון עסקי</button>'
   +'<button type="button" class="ic" data-dic="fcp"><span class="c c-fcp">🌿</span>אימון אישי</button>'
   +'<button type="button" class="ic" data-dic="notes"><span class="c c-dnote">📝</span>פתקים</button>'
-  +'<button type="button" class="ic" data-dic="cal"><span class="c c-gcal">📅</span>יומן</button>';
+  +'<button type="button" class="ic" data-dic="cal"><span class="c c-gcal">📅</span>יומן</button>'
+  +'<button type="button" class="ic" data-dic="conn"><span class="c c-dconn">🔌</span>חיבורים</button>';
  ics.forEach(function(x,i){
   h+=x?'<button type="button" class="ic" data-dic="'+i+'"><span class="c c-dfill'+(x.url&&/ynet/.test(x.url)?' c-ynet':'')+'">'+(x.url&&/ynet/.test(x.url)?'ynet':esc(x.e))+'</span>'+esc(x.n)+'</button>'
       :'<button type="button" class="ic" data-dic="'+i+'"><span class="c c-add"><svg viewBox="0 0 24 24" fill="none" stroke="var(--dim)" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>להוסיף</button>';
@@ -18778,6 +18796,7 @@ function dmoIcons(){
    if(k==='fcp'){return dmoTrain('אימון אישי');}
    if(k==='notes')return dmoNotes();
    if(k==='cal')return dmoSheet('cal'); // 10.11: the demo calendar, made up meetings
+   if(k==='conn')return dmoConn(); // 11.11: the package and the connections
    var x=dmoGet('dmoIcons',ics)[+k];
    if(x&&x.url){window.open(x.url,'_blank','noopener');return;}
    if(x){window.scrollTo({top:0,behavior:'smooth'});dmoAsk('תראה לי מה יש על '+x.n);return;}
@@ -18793,6 +18812,26 @@ function dmoIcons(){
 function dmoTrain(name){
  try{if(typeof fcSheet==='function'&&typeof fcSend==='function'){fcSheet();fcSend(name);return;}}catch(e){}
  window.scrollTo({top:0,behavior:'smooth'});dmoAsk(name);
+}
+var DMO_PK={name:'Small',price:700,meters:[['פעולות החודש',112,300],['הצעות מחיר',7,20],['חתימות דיגיטליות מהטלפון',2,5]],renew:'11.12'};
+var DMO_ON=[['✉️','מייל וגוגל','ממוין לפי דחיפות, עם טיוטות תשובה'],['📅','יומן','פגישות, זימונים ותזכורות'],['💬','וואטסאפ','מדברים עם המוניטור ומקבלים עדכונים'],['🧾','הצעות מחיר','עד 20 בחודש'],['✍️','חתימה דיגיטלית מהטלפון','עד 5 בחודש'],['🎯','אימון מכירות, עסקי ואישי','פתוח תמיד, בלי הגבלה'],['📝','פתקים','פתוח תמיד']];
+var DMO_OFF=[['🏦','חיבור לבנק','תנועות, הוצאות קבועות וחריגות','149 ₪ לחודש'],['📒','הנהלת חשבונות','חשבוניות וקבלות, דוח לרואה החשבון','99 ₪ לחודש'],['📣','קמפיינים בפייסבוק ואינסטגרם','כמה הוצאנו, כמה לידים ומה לשפר','בחבילת Medium'],['🎬','סרטונים וקרוסלות','מעלים חומר ומקבלים פוסט מוכן','בחבילת Medium'],['💼','לינקדין','פוסטים שעולים בזמן שלהם','בחבילת Large'],['👥','משתמש נוסף','עוד אדם מהצוות במוניטור','בחבילת Large']];
+function dmoConn(){
+ var m=DMO_PK.meters.map(function(x){var p=Math.min(100,Math.round(x[1]/x[2]*100));return '<div class="dmo-meter"><div class="l"><span>'+esc(x[0])+'</span><span>'+x[1]+' מתוך '+x[2]+'</span></div><div class="t"><i style="width:'+p+'%"></i></div></div>';}).join('');
+ var h='<div class="dmo-card dmo-pk"><div class="dmo-meta" style="color:#cffafe">החבילה שלך</div><div class="dmo-big">'+esc(DMO_PK.name)+' · '+DMO_PK.price+' ₪ לחודש</div>'+m
+  +'<p style="margin-top:10px;font-size:13px;color:#cffafe">הספירה מתחילה מחדש ב '+esc(DMO_PK.renew)+'</p>'
+  +'<div class="dmo-row"><button type="button" class="dmo-b" style="background:#fff;color:#0e7490" data-cn-up="1">⬆️ לשדרג חבילה</button></div></div>'
+  +'<div class="dmo-sec">✅ מחובר אצלך</div>'
+  +DMO_ON.map(function(x){return '<div class="dmo-opt"><span class="e">'+x[0]+'</span><span class="n">'+esc(x[1])+'<small>'+esc(x[2])+'</small></span><span class="s">פעיל</span></div>';}).join('')
+  +'<div class="dmo-sec" style="color:#64748b">🔒 לא בחבילה שלך</div>'
+  +DMO_OFF.map(function(x,i){return '<div class="dmo-opt off"><span class="e">'+x[0]+'</span><span class="n">'+esc(x[1])+'<small>'+esc(x[2])+' · '+esc(x[3])+'</small></span><button type="button" class="s" data-cn-ask="'+i+'">לפנות למנהל</button></div>';}).join('');
+ shipOpen('dmoSheet','🔌 חיבורים והחבילה שלי',h,function(el){
+  el.addEventListener('click',function(e){
+   var a=e.target.closest&&e.target.closest('[data-cn-ask],[data-cn-up]');if(!a)return;
+   var what=a.hasAttribute('data-cn-up')?'שדרוג חבילה':DMO_OFF[+a.getAttribute('data-cn-ask')][1];
+   if(typeof toast==='function')toast('נשלחה בקשה למנהל: '+what+'. בהדגמה לא נשלח כלום באמת.');
+  });
+ });
 }
 function dmoNotes(){
  var notes=dmoGet('dmoNotes',[{t:'להתקשר לרון אחרי הפגישה בבנק',at:'היום'},{t:'רעיון לסדנה: תמחור לבעלי סטודיו',at:'אתמול'}]);
