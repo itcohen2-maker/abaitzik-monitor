@@ -41,7 +41,9 @@ for (const c of S) {
   console.log(today + ' ' + c.id + ': ' + c.line + (c.low ? ' [חסר]' : ''));
   if (!c.low || DRY) continue;
   const last = asked[c.id] ? Date.parse(asked[c.id]) : 0;
-  if (Date.now() - last < 3 * 86400000) continue;
+  // 11.11.2026, Itzik: statuses ran out and nobody filled them, because a channel was asked again only after 3 days.
+  // Now it is asked again every morning while it is still short of a full week.
+  if (Date.now() - last < 20 * 3600000) continue;
   const at = new Date();
   const pad = (n) => String(n).padStart(2, '0');
   const base = at.getFullYear() + pad(at.getMonth() + 1) + pad(at.getDate()) + '-' + pad(at.getHours()) + pad(at.getMinutes()) + pad(at.getSeconds()) + '-itzik-auto';
