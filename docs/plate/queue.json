@@ -341,7 +341,7 @@
     ]
    }
   ],
-  "onSite": false,
+  "onSite": true,
   "posted": true,
   "postedAt": "2026-11-10T10:00:00.000Z",
   "postedBy": "itzik said 11.11"
