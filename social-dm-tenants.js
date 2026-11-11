@@ -24,7 +24,7 @@ const dm = require('./lib/social-dm.js');
 
 const HERE = __dirname;
 const SETUP = path.join(HERE, 'data', 'setup');
-const LIST = path.join(HERE, 'data', 'social-dm', 'tenants.json');
+const LIST = process.env.SOCIAL_DM_LIST || path.join(HERE, 'data', 'social-dm', 'tenants.json');
 const DRY = process.argv.includes('--dry');
 const ON = 'להפעיל';
 
