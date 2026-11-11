@@ -45,7 +45,9 @@ function candidates(now) {
   }).filter(r => r && r.text && !r.doneAt && !r.every && r.due
     && Date.parse(r.due) <= now + 7 * DAY
     && Date.parse(r.due) >= now - 3 * DAY
-    && (!r.tried || dayKey(Date.parse(r.tried)) !== dayKey(now))
+    && (!r.tried || dayKey(Date.parse(r.tried)) !== dayKey(now)
+      // 11.11.2026: a failed try (a passing error of the session) is tried again next round, up to 3 times a day
+      || (r.failDay === dayKey(now) && (r.failN || 0) < 3 && r.lastStatus === 'failed'))
     && CHECKY.test(r.text) && (/תג האימות/.test(r.text) || !ONLY_HIM.test(r.text)))
     .sort((a, b) => Date.parse(a.due) - Date.parse(b.due)).slice(0, MAX_PER_ROUND);
 }
@@ -78,7 +80,7 @@ function runClaude(text) {
     const timer = setTimeout(() => { child.kill('SIGTERM'); reject(new Error('timeout')); }, 8 * 60 * 1000);
     child.stdout.on('data', d => { out += d; });
     child.stderr.on('data', d => { err += d; });
-    child.on('close', code => { clearTimeout(timer); code === 0 ? resolve(out) : reject(new Error('claude exited ' + code + ': ' + err.slice(0, 160))); });
+    child.on('close', code => { clearTimeout(timer); code === 0 ? resolve(out) : reject(new Error('claude exited ' + code + ': ' + (err.trim() || out.trim()).slice(-200))); });
     child.stdin.end(text);
   });
 }
@@ -103,8 +105,10 @@ function mailSweep(now, results) {
   let prev = []; try { prev = JSON.parse(fs.readFileSync(f, 'utf8')).items || []; } catch (e) {}
   if (prev.some(x => x.kind === 'mailsweep' && now - Date.parse(x.when) < 4 * 3600 * 1000)) return; // once per round
   let out = '';
-  try { out = execFileSync('node', ['mail-read.js', MAIL_Q, '--days', '1'], { cwd: __dirname, encoding: 'utf8', timeout: 6 * 60 * 1000, stdio: ['ignore', 'pipe', 'pipe'] }).trim(); }
-  catch (e) { results.push({ kind: 'mailsweep', text: 'סריקת מיילים', status: 'failed', line: 'הקריאה נכשלה: ' + noDash(String(e.message).slice(0, 80)) }); return; }
+  const read = () => execFileSync('node', ['mail-read.js', MAIL_Q, '--days', '1'], { cwd: __dirname, encoding: 'utf8', timeout: 6 * 60 * 1000, stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+  // 11.11.2026: one quiet retry before a failure is written, and the real reason (stderr) is kept, not the command line
+  try { try { out = read(); } catch (e1) { execFileSync('sleep', ['30']); out = read(); } }
+  catch (e) { results.push({ kind: 'mailsweep', text: 'סריקת מיילים', status: 'failed', line: 'הקריאה נכשלה: ' + noDash(String(e.stderr || e.stdout || e.message).trim().slice(-160)) }); return; }
   const urgent = /דחוף\s*:\s*כן/.test(out.split('\n')[0] || '');
   const body = noDash(out.split('\n').slice(1).filter(l => l.trim()).join(' · '));
   results.push({ kind: 'mailsweep', text: 'סריקת מיילים', status: urgent ? 'needsItzik' : 'mail', line: body.slice(0, 600) || 'אין מיילים חדשים' });
@@ -121,7 +125,14 @@ async function main() {
     const doc = JSON.parse(fs.readFileSync(file, 'utf8'));
     doc.tried = new Date().toISOString(); // one attempt a day at most, whatever came out
     let res;
-    try { res = parse(await runClaude(prompt(r))); } catch (e) { res = { status: 'failed', line: '', why: String(e.message).slice(0, 100) }; }
+    try { res = parse(await runClaude(prompt(r))); } catch (e) { res = { status: 'failed', line: '', why: String(e.message).slice(0, 200) }; }
+    // 11.11.2026: one quiet retry half a minute later before a failure is written (five failed at 07:15, none was retried)
+    if (res.status === 'failed') {
+      await new Promise((ok) => setTimeout(ok, 30000));
+      try { res = parse(await runClaude(prompt(r))); } catch (e) { res = { status: 'failed', line: '', why: String(e.message).slice(0, 200) }; }
+    }
+    doc.lastStatus = res.status;
+    if (res.status === 'failed') { const d = dayKey(Date.now()); doc.failN = doc.failDay === d ? (doc.failN || 0) + 1 : 1; doc.failDay = d; doc.failWhy = res.why; }
     if (res.status === 'done' && res.line) { doc.doneAt = new Date().toISOString(); doc.doneBy = 'manager'; doc.result = res.line; }
     else if (res.status === 'needsItzik') doc.managerNote = res.why || res.line;
     fs.writeFileSync(file, JSON.stringify(doc, null, 1));

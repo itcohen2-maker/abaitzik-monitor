@@ -39,7 +39,7 @@ function read(text) {
     child.stderr.on('data', d => { err += d; });
     child.on('close', code => {
       clearTimeout(timer);
-      if (code !== 0) return reject(new Error('claude exited ' + code + ': ' + err.slice(0, 200)));
+      if (code !== 0) return reject(new Error('claude exited ' + code + ': ' + (err.trim() || out.trim()).slice(-300)));
       resolve(out.trim());
     });
     child.stdin.end(text);
