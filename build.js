@@ -15760,13 +15760,36 @@ function myBoardSheet(wk){
  });});
  var ROWS=[];
  camps.slice(0,8).forEach(function(c,k){ROWS.push({id:'c'+c.id,ic:'📣',n:cname(c.name),kind:'camp',cc:PAL[k%PAL.length],c:c});});
- [{id:'mp',ic:'📝',n:'פוסטים',cc:['#ffb74d','#e65100']},{id:'ms',ic:'📱',n:'סטוריז',cc:['#7bd88f','#1e8e4a']},{id:'mr',ic:'🎬',n:'רילים',cc:['#e2574c','#2a1240']}].concat((PR.rows||[]).map(function(x,k){return {id:x.id,ic:x.ic,n:x.n,cc:PAL[(k+3)%PAL.length]};}))
+ // 11.11.2026, Itzik approved for Dr. Shulman: a clinic's week is its freelancers (a daily sheet came in), its labs (a report,
+ // a duplicate charge) and its suppliers (a mail this month). Counts and sums only, never a patient's name (D.clinic, lib/clinic.js).
+ var CL=D.clinic&&D.clinic.frl?D.clinic:null;
+ if(CL){
+  var cn=function(x){return String(x||'').replace(/^\\s*(ד["״׳']?ר|דוקטור)\\s*/,'').trim();};
+  (CL.frl.doctors||[]).forEach(function(dn,k){ROWS.push({id:'f'+k,ic:'👩‍⚕️',n:cn(dn),kind:'frl',doc:dn,cc:PAL[k%PAL.length]});});
+  var LL=(CL.labs&&CL.labs.length?CL.labs:[]).slice();
+  (CL.lab.months||[]).forEach(function(m){if(LL.indexOf(m.labName)<0)LL.push(m.labName);});
+  LL.forEach(function(ln,k){ROWS.push({id:'l'+k,ic:'🧪',n:ln,kind:'lab',lab:ln,cc:PAL[(k+4)%PAL.length]});});
+  if((CL.sup.list||[]).length)ROWS.push({id:'sup',ic:'📦',n:'ספקים',kind:'sup',cc:['#ffb74d','#e65100']});
+ }
+ (CL?[]:[{id:'mp',ic:'📝',n:'פוסטים',cc:['#ffb74d','#e65100']},{id:'ms',ic:'📱',n:'סטוריז',cc:['#7bd88f','#1e8e4a']},{id:'mr',ic:'🎬',n:'רילים',cc:['#e2574c','#2a1240']}]).concat((PR.rows||[]).map(function(x,k){return {id:x.id,ic:x.ic,n:x.n,cc:PAL[(k+3)%PAL.length]};}))
   .forEach(function(r){ROWS.push(r);});
  ROWS=ROWS.filter(function(r){return (PR.hideRows||[]).indexOf(r.id)<0;});
  var C={};
  ROWS.forEach(function(r,ri){days.forEach(function(d){
   var c={s:'',t:''};
-  if(r.kind==='camp'){
+  if(r.kind==='frl'){
+   var fr=CL.frl.rows.filter(function(x){return cn(x.doctor)===cn(r.doc)&&x.date===d;});
+   if(fr.length){var pay=fr.reduce(function(s2,x){return s2+(x.pay||0);},0);c={s:'ok',t:fr.length+' טיפולים',items:[{s:'ok',n:'',why:'דף עבודה נקלט: '+fr.length+' טיפולים, מגיע לו '+money(pay)+' ₪'}]};}
+  }else if(r.kind==='lab'){
+   var lm=(CL.lab.months||[]).filter(function(m){return m.labName===r.lab;}),ll=[];
+   lm.forEach(function(m){m.lines.forEach(function(x){if(x.date===d)ll.push(x);});});
+   if(ll.length){var dup=(CL.lab.dups||[]).some(function(u){return u.where.some(function(w){return w.lab===r.lab&&w.date===d;});});
+    var tot=ll.reduce(function(s2,x){return s2+(x.total||0);},0);
+    c={s:dup?'no':'ok',t:ll.filter(function(x){return !x.addon;}).length+' עבודות',items:[{s:dup?'no':'ok',n:'',why:'דוח מעבדה: '+ll.filter(function(x){return !x.addon;}).length+' עבודות, '+money(tot)+' ₪'+(dup?'. יש כפילות לבדוק במסך 🧪':'')}]};}
+  }else if(r.kind==='sup'){
+   var sm=[];(CL.sup.list||[]).forEach(function(x){(x.found||[]).forEach(function(m){if(String(m.at||'').slice(0,10)===d)sm.push({s:x.done?'ok':'wait',n:x.name,why:(x.done?'בוצע. ':'מייל מהספק, לטיפול. ')+m.subject});});});
+   if(sm.length)c={s:sm.every(function(x){return x.s==='ok';})?'ok':'wait',t:sm.length+'',items:sm};
+  }else if(r.kind==='camp'){
    var on=r.c.status==='ACTIVE';
    if(d===T0)c={s:on?'run':'pause',t:on&&r.c.spendToday?money(r.c.spendToday)+'₪':'',items:[{s:on?'run':'pause',n:short(r.c.name),why:(on?'רץ היום. הוצאה היום '+money(r.c.spendToday)+' ₪':'מושהה כרגע')+'. לידים ב 7 ימים: '+(r.c.leads7||0)+(r.c.leads7?', עלות לליד '+money(r.c.cpl7)+' ₪':'')+', לחיצות '+(r.c.clicks7||0)}]};
    else if(d>T0&&on)c={s:'run',t:'',items:[{s:'run',n:short(r.c.name),why:'באוויר, רץ כל היום'}]};
@@ -15778,10 +15801,14 @@ function myBoardSheet(wk){
   C[ri+'|'+d]=c;
  });});
  var wkName=BD_WEEK===0?'השבוע':BD_WEEK===-1?'שבוע שעבר':BD_WEEK===1?'שבוע הבא':(BD_WEEK>0?'בעוד '+BD_WEEK+' שבועות':'לפני '+(-BD_WEEK)+' שבועות');
- var h=bdCss()+'<div class="ycard"><b>🎛️ לוח בקרה</b><small>כל מה שרץ, מה מתוכנן להעלות ומה מוכן אצלך, במקום אחד.</small>'
-  +bdTiles(ROWS,C,days,T0,wkName,{IC:IC,DS:DS,dm:dm,dw:dw,legend:'▶️ רץ · ⏸️ מושהה · 🔜 יעלה · ✋ אתה מעלה · ✅ עלה · חיוור: לא מתוכנן'})
-  +bdChatHtml()+bdUpdatesHtml();
- h+='<h4>▶️ באוויר עכשיו</h4>';
+ var h=bdCss()+'<div class="ycard"><b>🎛️ לוח בקרה</b><small>'+(CL?'הפרילנסרים, המעבדות והספקים של המרפאה, שבוע אחד במבט.':'כל מה שרץ, מה מתוכנן להעלות ומה מוכן אצלך, במקום אחד.')+'</small>'
+  +bdTiles(ROWS,C,days,T0,wkName,{IC:IC,DS:DS,dm:dm,dw:dw,legend:CL?'✅ נקלט · ⚠️ כפילות במעבדה · ⏳ מייל מספק לטיפול · ▶️ קמפיין רץ · חיוור: אין':'▶️ רץ · ⏸️ מושהה · 🔜 יעלה · ✋ אתה מעלה · ✅ עלה · חיוור: לא מתוכנן'})
+  +(CL?bdClinicMonth(CL,money):bdChatHtml()+bdUpdatesHtml());
+ if(CL){
+  h+=bdMailHtml()+bdDoneHtml()+bdChatHtml(1);
+  if(a&&a.ok)h+='<h4>▶️ הקמפיין</h4>';
+ }
+ if(!CL)h+='<h4>▶️ באוויר עכשיו</h4>';
  var any=0;
  if(a&&a.ok){
   (a.accounts||[]).forEach(function(ac){
@@ -15794,10 +15821,10 @@ function myBoardSheet(wk){
   });
   if(any)h+='<small>עודכן '+esc(when(a.at))+'. קריאה בלבד, שום דבר לא משתנה בחשבון.</small>';
  }
- if(!any)h+='<div class="emp">'+esc(a&&a.ok?'אין כרגע קמפיין באוויר.':'עוד אין חיבור לחשבון המודעות, ולכן אין כאן קמפיינים. אחרי החיבור הם יופיעו לבד.')+'</div>'
+ if(!any&&!CL)h+='<div class="emp">'+esc(a&&a.ok?'אין כרגע קמפיין באוויר.':'עוד אין חיבור לחשבון המודעות, ולכן אין כאן קמפיינים. אחרי החיבור הם יופיעו לבד.')+'</div>'
   +(a&&!a.ok&&a.connect?'<a class="yb yb1" style="display:block;text-align:center;text-decoration:none" rel="noreferrer" referrerpolicy="no-referrer" href="'+esc(a.connect)+'">התחברות עם פייסבוק</a>':'');
  var pl=(PR.plan||[]).filter(function(x){return x.date>=T0;}).sort(function(x,y){return (x.date+(x.time||'')).localeCompare(y.date+(y.time||''));}).slice(0,8);
- h+='<h4>📅 מתוכנן להעלות</h4>';
+ if(!CL){h+='<h4>📅 מתוכנן להעלות</h4>';
  if(pl.length)h+=pl.map(function(x){var rn=ROWS.filter(function(r){return r.id===x.row;})[0];return '<div class="ai"><span class="tm">'+esc(x.time||'--:--')+'<small>'+dm(x.date)+'</small></span><div class="mid"><b>'+(rn?rn.ic+' '+esc(rn.n):'')+'</b><span class="wh">'+esc(x.title||'ללא שם')+'</span></div></div>';}).join('');
  else h+='<div class="emp">עוד אין העלאות מתוכננות. כשיהיה פוסט, סטורי או סרטון מוכן, הוא יופיע כאן עם היום והשעה שבהם הוא עולה. אפשר גם לכתוב לי בפס למעלה מה לתכנן.</div>';
  var dr=(D.reports||[]).filter(function(r){return /קמפיין/.test(String(r.title||''));}).slice(0,5);
@@ -15805,6 +15832,7 @@ function myBoardSheet(wk){
  if(dr.length)h+=dr.map(function(r){return '<div class="ai"><div class="mid"><b>'+esc(r.title)+'</b><span class="wh">'+esc(when(r.at))+'</span></div><div class="side"><span class="chip k-draft">📝 טיוטה</span></div></div>';}).join('')
   +'<small>הטיוטות במסך התשובות. שום דבר לא עולה בלי אישור שלך.</small>';
  else h+='<div class="emp">עוד אין טיוטות. בלחיצה על "📣 קמפיינים" מעלים תמונות או סרטון, ואני מכין טיוטה שתופיע כאן.</div>';
+ }
  h+=bdReportHtml()+'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
  var w=document.createElement('div');
  w.id='bdGrid';w.className='ysheet'+(BD_LAND?' land':'')+(BD_DESK?' desk':'');w.setAttribute('role','dialog');w.setAttribute('aria-label','לוח בקרה');
@@ -17757,14 +17785,31 @@ function bdMailHtml(){
  if(M.at)h+='<small>נבדק '+esc(bdAgo(M.at))+'. רק שולח ונושא, בלי פרסומות וקודים. מתעדכן כל רבע שעה.</small>';
  return h+'</div>';
 }
+// 11.11.2026, Dr. Shulman's board: this month in one box. What each freelancer is owed (40 percent less the lab, lib/clinic.js),
+// the labs, duplicates and the suppliers done. Sums and counts only.
+function bdClinicMonth(CL,money){
+ var ym=new Date().toISOString().slice(0,7),cn=function(x){return String(x||'').replace(/^\\s*(ד["״׳']?ר|דוקטור)\\s*/,'').trim();};
+ var h='<div class="bbx"><b>💰 החודש</b>';
+ (CL.frl.doctors||[]).forEach(function(dn){var R=CL.frl.rows.filter(function(x){return cn(x.doctor)===cn(dn)&&String(x.date).slice(0,7)===ym;});
+  var pay=R.reduce(function(s2,x){return s2+(x.pay||0);},0),days={};R.forEach(function(x){days[x.date]=1;});
+  h+='<div class="bbu"><span>👩‍⚕️</span><div><b class="bbf">'+esc(cn(dn))+'</b> '+(R.length?Object.keys(days).length+' ימים, '+R.length+' טיפולים, מגיע לו '+money(pay)+' ₪':'עוד אין דפי עבודה החודש')+'</div></div>';});
+ var lm=(CL.lab.months||[]).filter(function(m){return m.month===ym.replace('-','');});
+ h+='<div class="bbu"><span>🧪</span><div><b class="bbf">מעבדות</b> '+(lm.length?lm.map(function(m){return esc(m.labName)+': '+m.works+' עבודות, '+money(m.total)+' ₪';}).join(' · '):'עוד אין דוח מעבדה החודש')+'</div></div>';
+ var dn2=(CL.lab.dups||[]).length;
+ if(dn2)h+='<div class="bbu d-bad"><span>⚠️</span><div>'+dn2+' כפילויות בחיובי המעבדה. הפרטים במסך 🧪 דוח מעבדות.</div></div>';
+ var SL=CL.sup.list||[],sd=SL.filter(function(x){return x.done;}).length;
+ h+='<div class="bbu"><span>📦</span><div><b class="bbf">ספקים</b> '+sd+' מתוך '+SL.length+' סומנו בוצע החודש'+(SL.length>sd?': חסרים '+esc(SL.filter(function(x){return !x.done;}).map(function(x){return x.name;}).join(', ')):'')+'</div></div>';
+ return h+'</div>';
+}
 // 11.11.2026, Itzik: "רשימה של כל הדברים שהמנהל עשה, וזה מתעדכן כל הזמן". D.bb.done from lib/board-feed.js doneItzik, newest first.
 function bdDoneHtml(){
  var L=D.bb&&D.bb.done;if(!L)return '';
  function row(x){return '<div class="bbu d-'+esc(x.st)+'"><input type="checkbox" class="bbk" data-k="'+esc(x.k)+'" data-t="'+esc(x.t)+'" aria-label="סמן"><span>'+esc(x.ic)+'</span><div>'+esc(x.t)
   +((x.sub||[]).length?'<ul>'+x.sub.map(function(s){return '<li>'+esc(s)+'</li>';}).join('')+'</ul>':'')
   +'<small>'+esc(bdAgo(x.at))+'</small></div></div>';}
- var h='<div class="bbx"><b>🧑‍💼 מה המנהל עשה היום <i class="bbn">'+L.length+'</i></b>';
- if(!L.length)return h+'<div class="emp">עוד לא עשה כלום היום. הסבבים ב 07:25, 13:00 ו 18:00.</div></div>';
+ var mine=D.bb.mode!=='itzik';
+ var h='<div class="bbx"><b>🧑‍💼 '+(mine?'מה מנהלת IT Solution עשתה':'מה המנהל עשה היום')+' <i class="bbn">'+L.length+'</i></b>';
+ if(!L.length)return h+'<div class="emp">'+(mine?'עוד אין כאן פעולות. בכפתור מנהלת IT Solution אפשר להגדיר מה לבדוק ולעשות כל יום.':'עוד לא עשה כלום היום. הסבבים ב 07:25, 13:00 ו 18:00.')+'</div></div>';
  h+=L.slice(0,10).map(row).join('');
  if(L.length>10)h+='<details><summary class="bbm">עוד '+(L.length-10)+'</summary>'+L.slice(10).map(row).join('')+'</details>';
  // סימון: בוחרים שורות, ואז תגובה אליהן בפס הצ׳אט, או הסרה מהרשימה (הסשן כותב doneHide ב board-prefs.json)
