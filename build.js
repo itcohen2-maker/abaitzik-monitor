@@ -17549,7 +17549,7 @@ function boardSheet(wk){
   // 11.11.2026, Itzik: "תעשה את התצוגה גם כשזה לאורך, אבל תמליץ לסובב. אל תשאיר את התצוגה הישנה לאורך", and smaller text so nothing spills out of a tile.
   // The tile week (.lsc) is the board in both orientations; the old table is gone. Sideways it fills the screen (media block below).
   +'#bdGrid .ycard>table,#bdGrid .ycard>.nav,#bdGrid .ycard>.sum,#bdGrid .ycard>.lg{display:none!important}'
-  +'#bdGrid .lsc{display:flex;flex-direction:column;gap:6px;margin:6px 0 4px}'
+  +'#bdGrid .lsc{display:flex;flex-direction:column;gap:6px;margin:6px 0 4px}#bdGrid{padding-left:4px!important;padding-right:4px!important}#bdGrid .ycard{padding-left:6px!important;padding-right:6px!important}'
   +'#bdGrid .lrot{display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,rgba(79,91,255,.22),rgba(139,92,246,.22));border:1px solid rgba(139,92,246,.45);border-radius:14px;padding:8px 10px;font:700 13px Heebo,sans-serif;color:#e6e9ff}'
   +'#bdGrid .lrot i{font-style:normal;font-size:20px;display:inline-block;animation:bdRot 2.6s ease-in-out infinite}'
   +'@keyframes bdRot{0%,40%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}'
@@ -17585,9 +17585,9 @@ function boardSheet(wk){
   +'#bdGrid .lsc{height:100%;gap:4px;margin:0}#bdGrid .lrot{display:none}'
   +'#bdGrid .lh{flex-wrap:nowrap;flex:0 0 36px}#bdGrid .lh b{flex:0 0 auto}'
   +'#bdGrid .lk{order:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:start}'
-  +'#bdGrid .lg2{flex:1;min-height:0;grid-template-columns:64px repeat(7,minmax(0,1fr));grid-template-rows:28px repeat(var(--R),minmax(0,1fr));gap:4px}'
-  +'#bdGrid .ln{font-size:clamp(12px,3.4vh,17px)!important}#bdGrid .ln small{font-size:clamp(8px,2.3vh,10px)!important}'
-  +'#bdGrid .dot em{font-size:clamp(11px,3.3vh,18px)}#bdGrid .dot small{font-size:clamp(8px,2.3vh,11px)}'
+  +'#bdGrid .lg2{flex:1;min-height:0;grid-template-columns:86px repeat(7,minmax(0,1fr));grid-template-rows:28px repeat(var(--R),minmax(0,1fr));gap:4px}'
+  +'#bdGrid .ln{flex-direction:row!important;gap:3px;font-size:clamp(12px,3.4vh,16px)!important}#bdGrid .ln small{flex:1;text-align:start;font-size:clamp(8px,2.3vh,10px)!important}'
+  +'#bdGrid .dot{flex-direction:row;gap:4px}#bdGrid .dot em{font-size:clamp(11px,3.6vh,18px)}#bdGrid .dot small{font-size:clamp(8px,2.8vh,12px)}'
   +'#bdGrid .dot{border-radius:12px}'
   +'}</style>';
  var wkName=BD_WEEK===0?'השבוע':BD_WEEK===-1?'שבוע שעבר':BD_WEEK===1?'שבוע הבא':(BD_WEEK>0?'בעוד '+BD_WEEK+' שבועות':'לפני '+(-BD_WEEK)+' שבועות');
