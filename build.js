@@ -14853,6 +14853,8 @@ boot('waStatusTile',function(){
  // 11.11.2026, Itzik: what he uploads by hand today (upToday: status, plate, carousel) is written in the tile and the
  // tile keeps its soft alert (taskblink, now the slow colour change; updTiles does not clear it on open) until all of it went up, not only until it is opened.
  var sm=t.querySelector('small'),sm0=sm?sm.textContent:'';
+ // window.upTile: run again after a mark from inside the sheet, so the tile text and colour follow at once.
+ window.upTile=function(){
  vqLoad(function(){
   var L=upToday(),op=L.filter(function(x){return !x.done;});
   if(sm)sm.textContent=op.length?'⭐ להעלות היום: '+op.map(function(x){return x.n;}).join(', '):(L.length?'✅ הכל עלה היום':sm0);
@@ -14860,8 +14862,11 @@ boot('waStatusTile',function(){
   t.classList.add('taskblink');
   if(seen){dailyTile(t,false);return;}
   dailyTile(t,true);
-  t.addEventListener('click',function(){try{localStorage.setItem(seenK,'1');}catch(e){}dailyTile(t,false);});
+  if(t.dataset.upc)return;t.dataset.upc='1';
+  t.addEventListener('click',function(){try{localStorage.setItem(seenK,'1');}catch(e){}seen='1';dailyTile(t,false);});
  });
+ };
+ window.upTile();
 });
 // 8.10 Itzik: copying the caption out of a Drive file is awkward on the phone.
 // The caption lives here, shown in full, with one button that copies all of it.
@@ -17342,9 +17347,11 @@ function upToday(){
  var T=vqDay(),L=[];if(!VQ)return L;
  if(new Date(T+'T12:00:00Z').getUTCDay()===6)return L;
  var day=function(iso){return iso?new Date(iso).toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'}):'';};
+ // 11.11.2026, Itzik: "סטטוס של וואטסאפ כבר עלה". Done = marked on this phone or on the server (any device).
  var doneSt={};try{doneSt=JSON.parse(localStorage.getItem('waStatusDone')||'{}')||{};}catch(e){}
+ var srvSt=(typeof D!=='undefined'&&D&&D.board&&D.board.stDone)||{};
  (VQ.st||[]).filter(function(x){return x.date===T;}).forEach(function(x){
-  L.push({n:'סטטוס',done:!!doneSt[x.name],t:'📲 סטטוס וואטסאפ · '+(x.topic||''),u:'status/index.html',h:x.name});
+  L.push({n:'סטטוס',done:!!(doneSt[x.name]||srvSt[x.name]),st:x.name,t:'📲 סטטוס וואטסאפ · '+(x.topic||''),u:'status/index.html',h:x.name});
  });
  var P=(VQ.pl||[]).slice().sort(function(a,b){return (a.order||0)-(b.order||0);});
  var pT=P.filter(function(x){return x.posted&&day(x.postedAt)===T;});
@@ -17352,7 +17359,12 @@ function upToday(){
  if(pT.length)pT.forEach(function(x){L.push({n:'מה בצלחת',done:true,t:'🍽️ מה בצלחת · '+nm(x),u:'plate/plate.html',h:x.id});});
  else{var nx=P.filter(function(x){return !x.posted;})[0];
   if(nx)L.push({n:'מה בצלחת',done:false,t:'🍽️ מה בצלחת · '+nm(nx)+(nx.approved?' · מאושר, לשמור לטלפון ולהעלות':' · לאשר ואז להעלות'),
-   u:nx.approved?'save.html?f='+encodeURIComponent('plate/'+String(nx.file).split('?')[0])+'&n='+encodeURIComponent(nx.name):'plate/plate.html',h:nx.approved?'':nx.id});}
+   u:nx.approved?'save.html?f='+encodeURIComponent('plate/'+String(nx.file).split('?')[0])+'&n='+encodeURIComponent(nx.name):'plate/plate.html',h:nx.approved?'':nx.id});
+  // 11.11.2026, Itzik: "מה שלא עלה זה מה בצלחת". No ready story is still a plate day: say which one is next
+  // (the "ומחר: X" screen of the last one that went up) and that it is being made.
+  else{var lp=P.filter(function(x){return x.posted;}).pop(),sc=lp&&lp.screens&&lp.screens[lp.screens.length-1],
+   nn=sc&&/^ומחר:\s*/.test(sc.head||'')?String(sc.head).replace(/^ומחר:\s*/,''):'';
+   L.push({n:'מה בצלחת',done:false,t:'🍽️ מה בצלחת · '+(nn?'הבא: '+nn+' · ':'')+'בהכנה, עוד לא מוכן להעלאה',u:'plate/plate.html',h:''});}}
  CARON.forEach(function(c){L.push({n:'קרוסלה',done:false,car:c,t:'🎠 קרוסלה · '+c.t+' ('+c.n+' שקפים)'});});
  return L;
 }
@@ -17361,7 +17373,8 @@ function upTodayRows(){
  var row=function(x,p){return x.car?{k:'car',c:x.car.id,n:x.car.n,nm:'קרוסלה · '+x.car.t,t:x.t,pulse:p}:{k:'q',t:(p?'':'✅ ')+x.t,u:x.u,n:x.h||'',pulse:p};};
  out.push({h:op.length?'⭐ להעלות היום ('+op.length+')':'✔️ הכל עלה היום'});
  if(!op.length)out.push({k:'q',t:'✔️ אין מה להעלות כרגע',u:'status/index.html'});
- op.forEach(function(x){out.push(row(x,1));});
+ // 11.11.2026: a status he already put up but did not mark is marked from here in one tap.
+ op.forEach(function(x){out.push(row(x,1));if(x.st)out.push({k:'stdone',t:'✓ הסטטוס כבר עלה, לסמן',nm:x.st});});
  if(dn.length)out.push({h:'✅ עלה היום'});
  dn.forEach(function(x){out.push(row(x,0));});
  return out;
@@ -17500,7 +17513,7 @@ function vidSheet(tab){
   +(rows.length?'':'<small>אין כרגע סרטונים כאן</small>')
   +cur.L.map(function(x,i){
     if(x.h)return '<small style="display:block;margin:14px 0 6px;font-weight:800;font-size:15px;color:#1a2233">'+esc(x.h)+'</small>';
-    var lab=(x.k==='go'||x.k==='q'||x.k==='car')?x.t:(x.it.n+' · '+x.it.t);
+    var lab=(x.k==='go'||x.k==='q'||x.k==='car'||x.k==='stdone')?x.t:(x.it.n+' · '+x.it.t);
     var yb=ybAttr(rows,rows.indexOf(x));if(x.it&&x.it.nw&&vidSeen('it:'+x.it.n)!==x.it.nw)yb=yb.replace('class="yb','class="updblink yb');if((x.it&&x.it.pulse)||x.pulse)yb=yb.replace('class="yb','class="updblink yb');
     return '<button type="button" '+yb+' data-k="'+i+'">'+esc(lab)+'</button>';
    }).join('')
@@ -17519,6 +17532,10 @@ function vidSheet(tab){
   var it=x.it;
   if(it&&it.nw)vidMark('it:'+it.n,it.nw);
   if(x.k==='car')return carView(x.c,x.n,x.nm);
+  // 11.11.2026: the same mark the status page sends (localStorage on this phone, wa-status-done on the server).
+  if(x.k==='stdone'){var dn={};try{dn=JSON.parse(localStorage.getItem('waStatusDone')||'{}')||{};}catch(e2){}dn[x.nm]=1;try{localStorage.setItem('waStatusDone',JSON.stringify(dn));}catch(e2){}
+   try{fetch('https://ntfy.sh/'+NTFYIN()+'?filename=wa-status-done.json',{method:'PUT',headers:{Title:'wa-status-done'},body:JSON.stringify({name:x.nm,done:true,code:sendCode(),at:new Date().toISOString()})}).catch(function(){toast('הסימון נשמר בטלפון, לשרת לא הגיע');});}catch(e2){}
+   toast('סומן שהסטטוס עלה');if(window.upTile)window.upTile();return vidSheet('today');}
   if(x.k==='go')return vidGo(x.u);
   if(x.k==='q')return vidGo(x.u,x.n);
   if(x.k==='fut'){window.VID_BACK=1;return futText(it);}
