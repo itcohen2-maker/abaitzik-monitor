@@ -352,7 +352,7 @@
   "order": 8,
   "file": "media/plate-kurkum-v2.mp4",
   "poster": "media/plate-kurkum-v2.jpg",
-  "approved": false,
+  "approved": true,
   "screens": [
    {
     "head": "כורכום",
