@@ -54,6 +54,15 @@ for (const it of M.plateSiteMissing(inp.plate, now)) {
   if (st.plateSite[it.id]) continue;
   if (run('node', ['pc-task.js', 'add', '--quiet', '--re', 'plate-site-' + it.id, M.plateSiteJob(it)]) !== null) { st.plateSite[it.id] = new Date(now).toISOString(); log('plate site job ' + it.id); }
 }
+// 11.11: open external approvals are checked by the PC itself (browser + mail): pending or needs info once a day, not submitted once a week.
+st.apprTask = st.apprTask || {};
+for (const a of (inp.approvals || [])) {
+  const A = require('./approvals.js');
+  if (!A.OPEN(a.status)) continue;
+  const gap = (a.status === 'notSubmitted' ? 7 * 24 : 20) * 3600e3;
+  if (st.apprTask[a.id] && now - Date.parse(st.apprTask[a.id]) < gap) continue;
+  if (run('node', ['pc-task.js', 'add', '--quiet', '--re', 'approval-' + a.id, A.taskText(a)]) !== null) { st.apprTask[a.id] = new Date(now).toISOString(); log('approval check ' + a.id); }
+}
 for (const e of M.alarmsDue(m, now, st.alarms)) {
   const at = new Date(e.ms - 30 * 60000).toLocaleTimeString('en-GB', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit', hour12: false });
   const out = run('node', ['alarm.js', at, 'בעוד חצי שעה: ' + e.title + (e.where ? ', ' + e.where : '')]);
