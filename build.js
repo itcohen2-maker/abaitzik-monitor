@@ -22791,7 +22791,7 @@ function gateUI(){
  w.innerHTML='<div class="gatecard">'
   +'<b class="gt-t">'+esc((INSTANCE&&INSTANCE.name==='abaitzik')?'אבא איציק':(INSTANCE&&INSTANCE.owner||''))+'</b>'
   +(W?'<div class="gt-s">הדף נעול. תקליד את הסיסמה פעם אחת והמכשיר הזה יזכור אותה.'
-    +'<br>זו הסיסמה שקיבלת כשהדף הוקם. מקלידים אותה בדיוק כמו שקיבלת.</div>'
+    +'<br>זו הסיסמה שקיבלת כשהדף הוקם, במייל "המוניטור שלך מוכן". מקלידים אותה בדיוק כמו שקיבלת.</div>'
   :'<div class="gt-s">הדף נעול. תקליד את הקוד פעם אחת והמכשיר הזה יזכור אותו.'
   +'<br>'+((INSTANCE&&INSTANCE.name!=='abaitzik')?'זה הקוד שבחרת בהתקנה.':'הקוד נשלח אליך בהתראה לטלפון, בנושא הקוד לפתיחת הדף.')+'</div>')
   +(W?'<form id="gateForm" class="gw"><input id="gateIn" type="password" autocomplete="off" autocapitalize="off"'
