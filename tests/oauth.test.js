@@ -231,9 +231,10 @@ test('a fireflies callback saves its refresh token', async () => {
   assert.equal(JSON.parse(sec.ff.value).provider, 'fireflies');
 });
 
+// 11.11.2026: drive is drive.file (only files the Monitor creates or the client picks), see lib/oauth.js
 test('drive and youtube short names map to Google scopes', () => {
   const sc = oa.scopesFor('google', ['gmail', 'drive', 'youtube']);
-  assert.ok(sc.includes('https://www.googleapis.com/auth/drive') && sc.includes('https://www.googleapis.com/auth/youtube.upload'));
+  assert.ok(sc.includes('https://www.googleapis.com/auth/drive.file') && sc.includes('https://www.googleapis.com/auth/youtube.upload'));
 });
 
 test('linkedin and tiktok use our secret only on the server, never in the start address', async () => {

@@ -12,9 +12,17 @@
   "ytd": "לרובוט הזה יש רק ארבע אצבעות, וזה לא באג. איזו עבודה בעסק שלכם הייתם נותנים לרובוט קודם? מקור: Boston Dynamics, 2026.",
   "song": "",
   "song_tt": "",
-  "posted": false,
-  "postedAt": null,
-  "approvedAt": "2026-11-11T07:12:19.567Z"
+  "posted": true,
+  "postedAt": "2026-11-11T18:03:05.595Z",
+  "approvedAt": "2026-11-11T07:12:19.567Z",
+  "auto": {
+   "reel": "18128444608671745",
+   "story": "18077535344572687",
+   "storyError": null,
+   "page": "877492162088066",
+   "pageError": null,
+   "channel": "itsolution.ai"
+  }
  },
  {
   "id": "robot-en",
