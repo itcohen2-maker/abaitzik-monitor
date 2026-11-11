@@ -15641,7 +15641,7 @@ function labSheet(){
 var FRL_TAB=0;
 function frlSheet(){
  var C=D.clinic||{},F=C.frl||{doctors:[],rows:[],rate:0.4},ym=new Date().toISOString().slice(0,7);
- var norm=function(s){return String(s||'').replace(/^\s*(ד["״׳']?ר|דוקטור)\s*/,'').trim();};
+ var norm=function(s){return String(s||'').replace(/^\\s*(ד["״׳']?ר|דוקטור)\\s*/,'').trim();};
  if(FRL_TAB>=F.doctors.length)FRL_TAB=0;
  var doc=F.doctors[FRL_TAB]||'',rows=F.rows.filter(function(r){return norm(r.doctor)===norm(doc)&&String(r.date).slice(0,7)===ym;});
  var paid=0,lab=0,pay=0;rows.forEach(function(r){paid+=r.paid;lab+=r.lab;pay+=r.pay;});
@@ -17546,39 +17546,49 @@ function boardSheet(wk){
   +'#bdEd label{display:flex;align-items:center;gap:8px;margin:10px 0;font-weight:600}#bdEd input[type=checkbox]{width:22px;height:22px}'
   +'#bdEd input[type=time]{font:800 26px Heebo,sans-serif;padding:8px 12px;border:1px solid rgba(255,255,255,.15);border-radius:14px;background:#0d0f18;color:#b9c0ff;text-shadow:0 0 16px rgba(91,108,255,.6)}'
   +'#bdEd .row{border-top:1px solid rgba(255,255,255,.08);padding:8px 0}#bdEd .it{background:#0d0f18;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:10px 12px;margin:8px 0}'
-  // the sideways phone: round buttons on the whole screen (see the .lsc block below)
-  +'#bdGrid .lsc{display:none}'
-  +'@media (orientation:landscape) and (max-height:560px){'
-  +'#bdGrid{background:#000;padding:0}'
-  +'#bdGrid .ycard{position:fixed;inset:0;max-width:none;max-height:none;height:100%;width:100%;box-sizing:border-box;border:0;border-radius:0;padding:6px max(10px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));overflow:hidden;box-shadow:none}'
-  +'#bdGrid .ycard>*:not(.lsc){display:none!important}'
-  +'#bdGrid .lsc{display:flex;flex-direction:column;height:100%;gap:4px}'
-  +'#bdGrid .lh{display:flex;align-items:center;gap:8px;flex:0 0 38px}'
-  +'#bdGrid .lh b{font:800 15px Heebo,sans-serif;color:#fff;text-shadow:0 0 18px rgba(91,108,255,.6);white-space:nowrap}'
-  +'#bdGrid .lk{flex:1;min-width:0;font:600 11px Heebo,sans-serif;color:#9aa0b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
-  +'#bdGrid .lk i{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 8px 0 3px;vertical-align:-1px}'
-  +'#bdGrid .lb{flex:0 0 auto;min-width:40px;height:34px;border-radius:999px;background:#0f1220;color:#e8eaff;border:1px solid rgba(255,255,255,.14);font:800 16px Heebo,sans-serif;cursor:pointer}'
-  +'#bdGrid .lg2{flex:1;min-height:0;display:grid;grid-template-columns:70px repeat(7,1fr);grid-template-rows:30px repeat(var(--R),minmax(0,1fr));gap:4px}'
-  +'#bdGrid .lg2>span{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;min-height:0;font:800 12px Heebo,sans-serif;color:#dfe2ff}'
-  +'#bdGrid .lg2>span small{font:600 10px Heebo,sans-serif;color:#9aa0b8}'
+  // 11.11.2026, Itzik: "תעשה את התצוגה גם כשזה לאורך, אבל תמליץ לסובב. אל תשאיר את התצוגה הישנה לאורך", and smaller text so nothing spills out of a tile.
+  // The tile week (.lsc) is the board in both orientations; the old table is gone. Sideways it fills the screen (media block below).
+  +'#bdGrid .ycard>table,#bdGrid .ycard>.nav,#bdGrid .ycard>.sum,#bdGrid .ycard>.lg{display:none!important}'
+  +'#bdGrid .lsc{display:flex;flex-direction:column;gap:6px;margin:6px 0 4px}'
+  +'#bdGrid .lrot{display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,rgba(79,91,255,.22),rgba(139,92,246,.22));border:1px solid rgba(139,92,246,.45);border-radius:14px;padding:8px 10px;font:700 13px Heebo,sans-serif;color:#e6e9ff}'
+  +'#bdGrid .lrot i{font-style:normal;font-size:20px;display:inline-block;animation:bdRot 2.6s ease-in-out infinite}'
+  +'@keyframes bdRot{0%,40%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}'
+  +'#bdGrid .lh{display:flex;flex-wrap:wrap;align-items:center;gap:6px}'
+  +'#bdGrid .lh b{flex:1;text-align:center;font:800 14px Heebo,sans-serif;color:#fff;text-shadow:0 0 18px rgba(91,108,255,.6);white-space:nowrap}'
+  +'#bdGrid .lk{order:9;flex:1 1 100%;font:600 11px/1.5 Heebo,sans-serif;color:#9aa0b8;text-align:center}'
+  +'#bdGrid .lb{flex:0 0 auto;min-width:38px;height:34px;border-radius:999px;background:#0f1220;color:#e8eaff;border:1px solid rgba(255,255,255,.14);font:800 16px Heebo,sans-serif;cursor:pointer}'
+  +'#bdGrid .lg2{display:grid;grid-template-columns:52px repeat(7,minmax(0,1fr));grid-template-rows:34px repeat(var(--R),42px);gap:3px}'
+  +'#bdGrid .lg2>span{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;min-height:0;overflow:hidden;font:800 11px Heebo,sans-serif;color:#dfe2ff}'
+  +'#bdGrid .lg2>span small{font:600 9px Heebo,sans-serif;color:#9aa0b8}'
   +'#bdGrid .lg2>span.tdy{background:linear-gradient(135deg,#4f5bff,#8b5cf6);border-radius:10px;color:#fff;box-shadow:0 0 16px rgba(91,108,255,.6)}#bdGrid .lg2>span.tdy small{color:#e6e9ff}'
-  +'#bdGrid .ln{font-size:20px!important;cursor:pointer}#bdGrid .ln small{max-width:68px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
+  +'#bdGrid .ln{font-size:16px!important;cursor:pointer;padding:2px 1px;box-sizing:border-box}'
+  +'#bdGrid .ln small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;max-width:100%;overflow:hidden;text-align:center;font-size:8px!important;line-height:1.05;word-break:break-word}'
   +'#bdGrid .lg2>span.lc{align-items:stretch;justify-content:stretch}'
   // 10.11.2026, Itzik: "עריכים שנראים כמו העריכים שלי היום, מלבנים עם פינות מעוגלות, תלת מימדים, לחיצים, וכל שורה בצבע אחר".
-  // Every cell is a home tile (.gt): the row's own gradient, the moulded sheen, the same shadows and press. The state is the emoji;
-  // a cell that will not go up gets a red frame, an empty cell is the row colour faded, past days are dimmer.
-  +'#bdGrid .dot{width:100%;height:100%;min-height:0;border-radius:14px;padding:0;margin:0;cursor:pointer;box-sizing:border-box;position:relative;overflow:hidden;isolation:isolate;'
-  +'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;color:#fff;border:0;background:linear-gradient(150deg,var(--a),var(--b));'
-  +'box-shadow:0 6px 14px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.55),inset 0 -3px 8px rgba(0,0,0,.22),inset 0 0 0 1px rgba(255,255,255,.14);'
+  +'#bdGrid .dot{width:100%;height:100%;min-height:0;min-width:0;border-radius:10px;padding:1px;margin:0;cursor:pointer;box-sizing:border-box;position:relative;overflow:hidden;isolation:isolate;'
+  +'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;color:#fff;border:0;background:linear-gradient(150deg,var(--a),var(--b));'
+  +'box-shadow:0 4px 10px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.55),inset 0 -3px 8px rgba(0,0,0,.22),inset 0 0 0 1px rgba(255,255,255,.14);'
   +'-webkit-tap-highlight-color:transparent;transition:transform .09s ease,box-shadow .09s ease,filter .09s ease}'
   +'#bdGrid .dot:after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.34) 0%,rgba(255,255,255,.10) 42%,rgba(255,255,255,0) 55%,rgba(0,0,0,.10) 100%)}'
   +'#bdGrid .dot:active{transform:translateY(2px) scale(.97);filter:saturate(1.15) brightness(.94);box-shadow:0 2px 6px rgba(0,0,0,.4),inset 0 2px 8px rgba(0,0,0,.32)}'
   +'#bdGrid .dot.e{opacity:.3}'
-  +'#bdGrid .dot.s-no,#bdGrid .dot.s-miss,#bdGrid .dot.s-late{box-shadow:0 6px 14px rgba(0,0,0,.45),inset 0 0 0 3px #ff4d5e,inset 0 1px 0 rgba(255,255,255,.55)}'
-  +'#bdGrid .ln{border-radius:14px;background:linear-gradient(150deg,var(--a),var(--b));color:#fff;box-shadow:0 6px 14px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.5)}#bdGrid .ln small{color:#fff!important;font-weight:800!important;text-shadow:0 1px 2px rgba(0,0,0,.4)}'
-  +'#bdGrid .dot em{font-style:normal;font-size:clamp(13px,4.2vh,24px);line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.55))}'
-  +'#bdGrid .dot small{text-shadow:0 1px 3px rgba(0,0,0,.6)}#bdGrid .dot small{font:800 clamp(9px,2.7vh,13px) Heebo,sans-serif;color:#fff;direction:ltr}'
-  +'#bdGrid .dot.pst{filter:saturate(.55) brightness(.75)}#bdGrid .dot.pst.e{opacity:.18}#bdGrid .dot.now{outline:2px solid #fff;outline-offset:2px}'
+  +'#bdGrid .dot.s-no,#bdGrid .dot.s-miss,#bdGrid .dot.s-late{box-shadow:0 4px 10px rgba(0,0,0,.45),inset 0 0 0 2px #ff4d5e,inset 0 1px 0 rgba(255,255,255,.55)}'
+  +'#bdGrid .ln{border-radius:10px;background:linear-gradient(150deg,var(--a),var(--b));color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.5)}#bdGrid .ln small{color:#fff!important;font-weight:800!important;text-shadow:0 1px 2px rgba(0,0,0,.4)}'
+  +'#bdGrid .dot em{font-style:normal;font-size:14px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.55))}'
+  +'#bdGrid .dot small{display:block;max-width:100%;overflow:hidden;white-space:nowrap;font:800 8px/1.1 Heebo,sans-serif;color:#fff;direction:ltr;letter-spacing:-.2px;text-shadow:0 1px 3px rgba(0,0,0,.6)}'
+  +'#bdGrid .dot.pst{filter:saturate(.55) brightness(.75)}#bdGrid .dot.pst.e{opacity:.18}#bdGrid .dot.now{outline:2px solid #fff;outline-offset:1px}'
+  // the sideways phone: the same tiles fill the whole screen, nothing else shows
+  +'@media (orientation:landscape) and (max-height:560px){'
+  +'#bdGrid{background:#000;padding:0}'
+  +'#bdGrid .ycard{position:fixed;inset:0;max-width:none;max-height:none;height:100%;width:100%;box-sizing:border-box;border:0;border-radius:0;padding:6px max(10px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));overflow:hidden;box-shadow:none}'
+  +'#bdGrid .ycard>*:not(.lsc){display:none!important}'
+  +'#bdGrid .lsc{height:100%;gap:4px;margin:0}#bdGrid .lrot{display:none}'
+  +'#bdGrid .lh{flex-wrap:nowrap;flex:0 0 36px}#bdGrid .lh b{flex:0 0 auto}'
+  +'#bdGrid .lk{order:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:start}'
+  +'#bdGrid .lg2{flex:1;min-height:0;grid-template-columns:64px repeat(7,minmax(0,1fr));grid-template-rows:28px repeat(var(--R),minmax(0,1fr));gap:4px}'
+  +'#bdGrid .ln{font-size:clamp(12px,3.4vh,17px)!important}#bdGrid .ln small{font-size:clamp(8px,2.3vh,10px)!important}'
+  +'#bdGrid .dot em{font-size:clamp(11px,3.3vh,18px)}#bdGrid .dot small{font-size:clamp(8px,2.3vh,11px)}'
+  +'#bdGrid .dot{border-radius:12px}'
   +'}</style>';
  var wkName=BD_WEEK===0?'השבוע':BD_WEEK===-1?'שבוע שעבר':BD_WEEK===1?'שבוע הבא':(BD_WEEK>0?'בעוד '+BD_WEEK+' שבועות':'לפני '+(-BD_WEEK)+' שבועות');
  var h=css+'<div class="ycard"><b>🎛️ לוח בקרה</b>'
@@ -17594,7 +17604,7 @@ function boardSheet(wk){
  // 10.11.2026, Itzik: "כשאני נכנס ללוח הבקרה ומסובב את הטלפון, אני רואה עריכים על כל המסך, לחיצים ועגולים, ולפי צבעים":
  // the phone turned sideways shows only this: the whole week as round buttons filling the screen, one per network and day,
  // coloured by state (green went up, indigo goes up by itself, amber you post or approve, red will not, grey nothing planned).
- // A tap opens the same day editor as a cell of the table. Upright, the regular board is back. Only CSS decides which shows.
+ // A tap opens the same day editor as a cell of the table. Since 11.11 upright shows the same tiles (smaller), with a hint to turn the phone.
  // one colour per row, taken from the home tiles (g7, g15, g12, gNer, g1, g9, g8, g6, gReel, g11)
  var RC={st:['#7bd88f','#1e8e4a'],'ai-he':['#90caf9','#1565c0'],'ai-en':['#b39ddb','#673ab7'],nr:['#f0a64a','#0f1a3a'],li:['#5aa9fb','#0a4f9c'],
   ads:['#f48fb1','#ad1457'],pl:['#ffb74d','#e65100'],car:['#4fb3c4','#00838f'],me:['#e2574c','#2a1240'],it:['#4fbf88','#00897b']};
@@ -17602,6 +17612,7 @@ function boardSheet(wk){
  h+='<div class="lsc" style="--R:'+ROWS.length+'"><div class="lh"><button type="button" class="lb" data-a="prev">‹</button><b>🎛️ '+wkName+' · '+dm(days[0])+' עד '+dm(days[6])+'</b>'
   +'<span class="lk">✅ עלה · 🔜 יעלה לבד · ✋ אתה מעלה · ⏳ לאישור · ⚠️ לא יעלה · ▶️ ממומן · חיוור: לא מתוכנן</span>'
   +'<button type="button" class="lb" data-a="next">›</button><button type="button" class="lb" data-a="x">✕</button></div>'
+  +'<div class="lrot"><i>📱</i>סובב את הטלפון לרוחב, ככה רואים את הלוח הכי טוב</div>'
   +'<div class="lg2"><span></span>'+days.map(function(d){return '<span class="'+(d===T0?'tdy':'')+'">'+(d===T0?'היום':DS[dw(d)])+'<small>'+dm(d)+'</small></span>';}).join('')
   +ROWS.map(function(r,ri){var rc=RC[r.id]||['#7d8ba1','#3f4a5c'],cv='--a:'+rc[0]+';--b:'+rc[1];
    return '<span class="ln" style="'+cv+'" data-rn="'+ri+'">'+r.ic+'<small>'+esc(r.n)+'</small></span>'
