@@ -41,6 +41,13 @@
   .row button[data-posted]{background:rgba(60,207,142,.18);border-color:var(--ok)}
   .row button[data-posted][data-sure="1"]{background:var(--ok);color:#06210f}
   .row button.del{margin-top:14px}
+  /* 11.11.2026, Itzik: "ביקשתי שיהיה אפשר לאשר וגם לתת תגובה". */
+  .row button[data-ok]{background:var(--ok);color:#06210f;border-color:var(--ok);font-size:22px}
+  .okd{display:block;font-weight:700;color:var(--ok);padding:6px 2px}
+  .cmt{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+  .cmt textarea{width:100%;box-sizing:border-box;min-height:64px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:transparent;color:inherit;font:500 17px Heebo,sans-serif;direction:rtl;resize:vertical}
+  .cmt button{font:inherit;font-size:20px;font-weight:700;background:rgba(255,255,255,.14);color:inherit;border:2px solid var(--line);border-radius:14px;padding:16px 14px;min-height:60px;cursor:pointer;width:100%}
+  .cmt small{color:var(--dim)}
   .row button.del{color:var(--bad);border-color:rgba(255,122,122,.5)}
   .row button:disabled{opacity:.4}
   .empty{border:1px dashed var(--line);border-radius:14px;padding:14px;color:var(--dim)}
@@ -52,7 +59,7 @@
 <body>
 <header>
   <h1>🍽️ מה בצלחת</h1>
-  <p class="lede">הסטוריז לפי סדר ההעלאה. אפשר לסדר ולמחוק. את הסטורי באתר מעלה איציק בעצמו.</p>
+  <p class="lede">הסטוריז לפי סדר ההעלאה. לכל סרטון: מאשר, הערה אם צריך לשנות, ואחרי שהעלית לאינסטגרם מסמנים שעלה.</p>
   <p class="lede"><a class="backbtn" href="../" onclick="var r=document.referrer;if(history.length>1&&r&&new URL(r).origin===location.origin){event.preventDefault();history.back();}">⬅️ חזרה למוניטור</a></p>
   <p class="lede"><a href="https://abaitzik.com/plate/" rel="noopener">העמוד באתר</a></p>
 </header>
@@ -76,10 +83,15 @@
    +'<div class="row">'
    +'<button type="button" data-up="'+esc(it.id)+'"'+(i===0?' disabled':'')+' aria-label="למעלה">↑ למעלה</button>'
    +'<button type="button" data-down="'+esc(it.id)+'"'+(i===len-1?' disabled':'')+' aria-label="למטה">↓ למטה</button>'
+   // 11.11.2026, Itzik: approve first, then the upload mark; a comment box under every video.
+   +(it.posted?'':it.approved?'<span class="okd">✅ אישרת את הסרטון</span>':'<button type="button" data-ok="'+esc(it.id)+'">✓ מאשר את הסרטון</button>')
    +'<button type="button" data-dl="'+esc(it.file)+'" data-nm="'+esc(it.id)+'">💾 שמירה לטלפון</button>'
-   +(it.posted?'':'<button type="button" data-posted="'+esc(it.id)+'">☐ העליתי את זה</button>')
+   +(it.posted||!it.approved?'':'<button type="button" data-posted="'+esc(it.id)+'">☐ העליתי לאינסטגרם</button>')
    +'<button type="button" class="del" data-del="'+esc(it.id)+'">🗑️ מחק</button>'
-   +'</div></div></div>';
+   +'</div>'
+   +'<div class="cmt"><textarea data-cmt="'+esc(it.id)+'" rows="2" placeholder="💬 מה לשנות בסרטון הזה, ואני אתקן"></textarea>'
+   +'<button type="button" data-cmtgo="'+esc(it.id)+'">💬 שלח לי את ההערה</button><small data-cmtok="'+esc(it.id)+'"></small></div>'
+   +'</div></div>';
  }
  // 26.10, Itzik: only what went up today and what is still coming.
  function today(iso){return new Date(iso||0).toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'});}
@@ -97,8 +109,19 @@
    b.disabled=true;act('move',id,{dir:dir},function(ok){if(ok)swap(id,dir);else{b.disabled=false;alert('לא נשלח, נסה שוב');}});});});
   document.querySelectorAll('[data-posted]').forEach(function(b){b.addEventListener('click',function(){
    var id=b.getAttribute('data-posted'),it=q.find(function(x){return x.id===id;});
-   if(b.getAttribute('data-sure')!=='1'){b.setAttribute('data-sure','1');b.textContent='✅ לחץ שוב לאישור: העליתי את '+(it.name.split(':')[0]);setTimeout(function(){if(b.isConnected&&!b.disabled){b.removeAttribute('data-sure');b.textContent='☐ העליתי את זה';}},6000);return;}
+   if(b.getAttribute('data-sure')!=='1'){b.setAttribute('data-sure','1');b.textContent='✅ לחץ שוב לאישור: העליתי את '+(it.name.split(':')[0]);setTimeout(function(){if(b.isConnected&&!b.disabled){b.removeAttribute('data-sure');b.textContent='☐ העליתי לאינסטגרם';}},6000);return;}
    b.disabled=true;act('posted',id,{},function(ok){if(ok){it.posted=true;it.postedAt=new Date().toISOString();draw(q);}else{b.disabled=false;alert('לא נשלח, נסה שוב');}});});});
+  document.querySelectorAll('[data-ok]').forEach(function(b){b.addEventListener('click',function(){
+   var id=b.getAttribute('data-ok'),it=q.find(function(x){return x.id===id;});
+   b.disabled=true;act('approve',id,{},function(ok){if(ok){it.approved=true;draw(q);}else{b.disabled=false;alert('לא נשלח, נסה שוב');}});});});
+  document.querySelectorAll('[data-cmtgo]').forEach(function(b){b.addEventListener('click',function(){
+   var id=b.getAttribute('data-cmtgo'),it=q.find(function(x){return x.id===id;}),ta=document.querySelector('[data-cmt="'+id+'"]'),t=ta?ta.value.trim():'',m=document.querySelector('[data-cmtok="'+id+'"]');
+   if(!t){m.textContent='כתוב קודם מה לשנות';return;}
+   if(!SEND||!SEND.t){alert('פתח את הדף מהאריח במוניטור');return;}
+   b.disabled=true;var NL=String.fromCharCode(10);
+   fetch('https://ntfy.sh/'+SEND.t,{method:'POST',headers:{Title:'monitor','X-Tags':'memo'},body:['הערה','💬 הערה על הסרטון "'+it.name+'" [plate:'+id+']: '+t,'','קוד '+SEND.c].join(NL)})
+    .then(function(r){if(!r.ok)throw 0;ta.value='';b.disabled=false;m.textContent='✅ נשלח. התשובה תופיע בצ׳אט במוניטור';})
+    .catch(function(){b.disabled=false;m.textContent='לא נשלח, נסה שוב';});});});
   document.querySelectorAll('[data-del]').forEach(function(b){b.addEventListener('click',function(){
    var id=b.getAttribute('data-del'),it=q.find(function(x){return x.id===id;});
    if(b.getAttribute('data-sure')!=='1'){b.setAttribute('data-sure','1');b.textContent='בטוח? לחץ שוב';return;}
