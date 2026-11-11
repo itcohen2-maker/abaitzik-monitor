@@ -417,7 +417,7 @@
   "order": 9,
   "file": "media/plate-ginger-v2.mp4",
   "poster": "media/plate-ginger-v2.jpg",
-  "approved": false,
+  "approved": true,
   "screens": [
    {
     "head": "ג׳ינג׳ר",
