@@ -2734,7 +2734,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-11T10:30:02.845Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-11T10:31:09.259Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4648,7 +4648,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='0a3fe450bd';
+var CODE_ID='0f7566fdff';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -13003,7 +13003,7 @@ function vqRows(id){
  }
  return out;
 }
-var CAR=[{id:'life',t:'סיפור חיי',n:11,up:'10.11'}];
+var CAR=[{id:'life',t:'סיפור חיי',n:11,up:'10.11',where:'אינסטגרם, טיקטוק ופייסבוק'}];
 var CARON=CAR.filter(function(c){return !c.up;});
 function vidTabs(){
  var isSh=function(it){return /^שחר/.test(String(it.n))||/^sh[0-9]/.test(String(it.n))||/^שחר/.test(String(it.t));};
@@ -13164,7 +13164,12 @@ function boardSheet(wk){
    var worst=I.slice().sort(function(a,b){return (rank[b.s]||0)-(rank[a.s]||0);})[0];
    return {s:worst.s,t:I[0].time,items:I,n:I.length};
   }
-  t=planT(r.id,d);if(!t)return {s:'',t:''};
+  t=planT(r.id,d);
+  if(r.id==='pl'){var pu=(Q.pl||[]).filter(function(x){return x.posted&&upDay(x)===d;});
+   if(pu.length)return {s:'ok',t:t,n:pu.length,items:pu.map(function(x){return {s:'ok',n:String(x.name||'').split(' (')[0],why:'עלה'};})};}
+  if(r.id==='car'){var cu=[];try{cu=CAR.filter(function(c){return c.up===dm(d);});}catch(e){}
+   if(cu.length)return {s:'ok',t:t,items:cu.map(function(c){return {s:'ok',n:'🎠 '+c.t,why:'עלתה'+(c.where?' ל '+c.where:'')};})};}
+  if(!t)return {s:'',t:''};
   var have=stock(r.id);
   if(d<T0)return {s:'open',t:t,items:[{s:'open',n:'',why:'היה מתוכנן ב '+t+'. מה שאתה מעלה בעצמך לא נבדק כאן'}]};
   if(!have)return {s:'no',t:t,items:[{s:'no',n:'',why:'אין מלאי מוכן, אין מה להעלות'}]};
