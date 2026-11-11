@@ -2734,7 +2734,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-11T10:08:56.194Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-11T10:09:41.737Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4648,7 +4648,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='169d6adb16';
+var CODE_ID='89e4e48816';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -18815,7 +18815,7 @@ function dmoTrain(name){
 }
 var DMO_PK={name:'Small',price:700,meters:[['פעולות החודש',112,300],['הצעות מחיר',7,20],['חתימות דיגיטליות מהטלפון',2,5]],renew:'11.12'};
 var DMO_ON=[['✉️','מייל וגוגל','ממוין לפי דחיפות, עם טיוטות תשובה'],['📅','יומן','פגישות, זימונים ותזכורות'],['💬','וואטסאפ','מדברים עם המוניטור ומקבלים עדכונים'],['🧾','הצעות מחיר','עד 20 בחודש'],['✍️','חתימה דיגיטלית מהטלפון','עד 5 בחודש'],['🎯','אימון מכירות, עסקי ואישי','פתוח תמיד, בלי הגבלה'],['📝','פתקים','פתוח תמיד']];
-var DMO_OFF=[['🏦','חיבור לבנק','תנועות, הוצאות קבועות וחריגות','149 ₪ לחודש'],['📒','הנהלת חשבונות','חשבוניות וקבלות, דוח לרואה החשבון','99 ₪ לחודש'],['📣','קמפיינים בפייסבוק ואינסטגרם','כמה הוצאנו, כמה לידים ומה לשפר','בחבילת Medium'],['🎬','סרטונים וקרוסלות','מעלים חומר ומקבלים פוסט מוכן','בחבילת Medium'],['💼','לינקדין','פוסטים שעולים בזמן שלהם','בחבילת Large'],['👥','משתמש נוסף','עוד אדם מהצוות במוניטור','בחבילת Large']];
+var DMO_OFF=[['🏦','חיבור לבנק','תנועות, הוצאות קבועות וחריגות','149 ₪ לחודש'],['📒','הנהלת חשבונות','חשבוניות וקבלות, דוח לרואה החשבון','99 ₪ לחודש'],['📣','קמפיינים בפייסבוק ואינסטגרם','כמה הוצאנו, כמה לידים ומה לשפר','בחבילת Medium'],['🎬','סרטונים וקרוסלות','מעלים חומר ומקבלים פוסט מוכן','בחבילת Medium'],['💼','לינקדין','פוסטים שעולים בזמן שלהם','בחבילת Large']];
 function dmoConn(){
  var m=DMO_PK.meters.map(function(x){var p=Math.min(100,Math.round(x[1]/x[2]*100));return '<div class="dmo-meter"><div class="l"><span>'+esc(x[0])+'</span><span>'+x[1]+' מתוך '+x[2]+'</span></div><div class="t"><i style="width:'+p+'%"></i></div></div>';}).join('');
  var h='<div class="dmo-card dmo-pk"><div class="dmo-meta" style="color:#cffafe">החבילה שלך</div><div class="dmo-big">'+esc(DMO_PK.name)+' · '+DMO_PK.price+' ₪ לחודש</div>'+m
