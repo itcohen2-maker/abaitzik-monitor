@@ -35,7 +35,7 @@ const STATE = path.join(ROOT, 'data', 'status', 'wa-bridge.json');
 const CHAT = path.join(ROOT, 'data', 'chat', 'chat');
 const PORT = Number(process.env.WA_PORT || 8796);
 const DEMO_FLAG = path.join(ROOT, 'data', 'demo', 'active.json');
-const ORIGINS = ['https://itcohen2-maker.github.io', 'https://shai.it-solution.co.il', 'https://alon.abaitzik.com', 'https://rinat.abaitzik.com', 'https://pablo.it-solution.co.il', 'https://ilay.abaitzik.com'];
+const ORIGINS = ['https://itcohen2-maker.github.io', 'https://shai.it-solution.co.il', 'https://alon.abaitzik.com', 'https://rinat.abaitzik.com', 'https://pablo.it-solution.co.il', 'https://ilay.abaitzik.com', 'https://it-solution.co.il', 'https://www.it-solution.co.il'];
 /*
   1.11.2026: the client demo (lib/demo-mode.js). While it is on, every question,
   from the page or from WhatsApp, goes to the worker with this frame first, so
@@ -626,6 +626,28 @@ async function api(q, s, u) {
   if (q.method === 'OPTIONS') { s.writeHead(204, h); return s.end(); }
   if (q.method !== 'POST') { s.writeHead(405, h); return s.end('{}'); }
   let b; try { b = JSON.parse((await readBody(q, 20000)).toString('utf8')); } catch (e) { s.writeHead(400, h); return s.end('{}'); }
+  // 11.11.2026: the self signup (lib/signup.js). Public, no code: the email code is the check. A verified signup waits in
+  // data/signup/queue/ for its trial monitor (setup/signup-provision.sh), and lands in Itzik's 📋 לטיפול.
+  if (u.pathname === '/api/signup' || u.pathname === '/api/signup/verify') {
+    const S = require('./lib/signup.js'), M = require('./lib/mailer.js');
+    const ip = String(q.headers['x-forwarded-for'] || q.socket.remoteAddress || '-').split(',')[0].trim();
+    const send = function (code, o) { s.writeHead(code, h); s.end(JSON.stringify(o)); };
+    try {
+      if (u.pathname === '/api/signup') {
+        const r = S.start(DATA, Object.assign({}, b, { ip }));
+        if (!r.ok) return send(r.error === 'limit' ? 429 : 400, { error: r.error });
+        const m = await M.send(DATA, Object.assign({ to: r.email }, M.codeMail(r.name, r.code)));
+        log('signup code ' + (m.ok ? 'sent' : 'not sent (' + m.error + ')'));
+        return send(m.ok ? 200 : 503, m.ok ? { ok: true } : { error: 'mail' });
+      }
+      const v = S.verify(DATA, b);
+      if (!v.ok) return send(400, { error: v.error });
+      if (v.fresh) {
+        try { require('./lib/handle.js').complete({ key: 'signup-' + v.id, kind: 'lead', who: v.name, title: 'נרשם לשבוע ניסיון ואימת מייל (' + v.phone + '). המוניטור שלו נפתח עכשיו.', link: 'biz' }); } catch (e) { log('signup handle: ' + e.message); }
+      }
+      return send(200, { ok: true });
+    } catch (e) { log('signup: ' + e.message); return send(500, { error: 'server' }); }
+  }
   // 11.11: a customer's page says when it is open and for how long (lib/visits.js), with its own visit key.
   if (u.pathname === '/api/visit') {
     const V = require('./lib/visits.js');
