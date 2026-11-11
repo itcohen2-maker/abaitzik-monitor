@@ -675,9 +675,9 @@
   "id": "shibolet",
   "name": "שיבולת שועל: הבוקר שמחזיק",
   "order": 13,
-  "file": "media/plate-shibolet-v1.mp4",
-  "poster": "media/plate-shibolet-v1.jpg",
-  "approved": true,
+  "file": "media/plate-shibolet-v2.mp4",
+  "poster": "media/plate-shibolet-v2.jpg",
+  "approved": false,
   "screens": [
    {
     "head": "שיבולת שועל",
@@ -733,6 +733,6 @@
     ]
    }
   ],
-  "onSite": true
+  "onSite": false
  }
 ]
