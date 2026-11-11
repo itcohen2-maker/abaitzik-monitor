@@ -2735,7 +2735,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-11T23:08:30.084Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-11T23:08:51.746Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4671,7 +4671,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='8858fefcf5';
+var CODE_ID='45f1ef6c9e';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11571,6 +11571,28 @@ function supSheet(){
  });
 }
 on('gLab',labSheet);on('gFrl',frlSheet);on('gSup',supSheet);
+function hoursBtn(){
+ return '<div class="bbx"><b>🕒 שעות פרסום</b><small>באילו שעות מעלים בכל יום. אתה קובע בעצמך.</small><button type="button" class="yb yb2" data-a="hrs">לקבוע שעות</button></div>';
+}
+function hoursSheet(){
+ var DN=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'],H={};
+ try{H=JSON.parse(localStorage.getItem('bdHours')||'{}')||{};}catch(e){}
+ var old=document.getElementById('bdEd');if(old)old.remove();
+ var h='<div class="box"><b style="font-size:17px">🕒 שעות פרסום</b><small>לכל יום כתוב את השעות שבהן מעלים, למשל 09:00, 18:00. השעות נשמרות במכשיר הזה.</small>';
+ DN.forEach(function(n,d){h+='<label style="display:block;margin:8px 0">'+n+'<input type="text" data-h="'+d+'" value="'+esc(H[d]||'')+'" placeholder="למשל 09:00, 18:00" style="display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:8px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#0f1220;color:#e8eaff;font:15px Heebo,sans-serif"></label>';});
+ h+='<button type="button" class="yb yb1" data-h="save">שמירה</button> <button type="button" class="yb" data-h="x">סגירה</button></div>';
+ var e=document.createElement('div');e.id='bdEd';e.innerHTML=h;
+ e.onclick=function(ev){
+  var t=ev.target,k=t.getAttribute&&t.getAttribute('data-h');
+  if(t===e||k==='x')return e.remove();
+  if(k==='save'){
+   var o={};e.querySelectorAll('input[data-h]').forEach(function(i){var v=i.value.trim();if(v)o[i.getAttribute('data-h')]=v;});
+   try{localStorage.setItem('bdHours',JSON.stringify(o));}catch(x){}
+   toast('השעות נשמרו');e.remove();
+  }
+ };
+ document.body.appendChild(e);
+}
 function myBoardSheet(wk){
  if(typeof wk==='number')BD_WEEK=wk;
  var old=document.getElementById('bdGrid');if(old)old.remove();
@@ -11634,6 +11656,7 @@ function myBoardSheet(wk){
  var wkName=BD_WEEK===0?'השבוע':BD_WEEK===-1?'שבוע שעבר':BD_WEEK===1?'שבוע הבא':(BD_WEEK>0?'בעוד '+BD_WEEK+' שבועות':'לפני '+(-BD_WEEK)+' שבועות');
  var h=bdCss()+'<div class="ycard"><b>🎛️ לוח בקרה</b><small>'+(CL?'הפרילנסרים, המעבדות והספקים של המרפאה, שבוע אחד במבט.':'כל מה שרץ, מה מתוכנן להעלות ומה מוכן אצלך, במקום אחד.')+'</small>'
   +bdTiles(ROWS,C,days,T0,wkName,{IC:IC,DS:DS,dm:dm,dw:dw,legend:CL?'✅ נקלט · ⚠️ כפילות במעבדה · ⏳ מייל מספק לטיפול · ▶️ קמפיין רץ · חיוור: אין':'▶️ רץ · ⏸️ מושהה · 🔜 יעלה · ✋ אתה מעלה · ✅ עלה · חיוור: לא מתוכנן'})
+  +(CL?'':hoursBtn())
   +(CL?bdClinicMonth(CL,money):(D.bb&&D.bb.mail?'':bdChatHtml()+bdUpdatesHtml()));
  if(CL){
   h+=bdMailHtml()+bdDoneHtml()+bdChatHtml(1);
@@ -11687,6 +11710,7 @@ function myBoardSheet(wk){
   }
   if(at==='bbsend'||at==='bbmic'||at==='bbtalk'||at==='bbdel')return bdAct(at,w);
   if(ev.target===w||at==='x'){try{if(document.fullscreenElement)document.exitFullscreen();}catch(e){}return w.remove();}
+  if(at==='hrs')return hoursSheet();
   if(at==='prev'||at==='next'){w.remove();return myBoardSheet(BD_WEEK+(at==='next'?1:-1));}
   var dt=ev.target.closest&&ev.target.closest('.dot[data-r]');if(dt){var r0=ROWS[+dt.getAttribute('data-r')];if(r0)detail(r0,dt.getAttribute('data-d'));return;}
   var ln=ev.target.closest&&ev.target.closest('.ln[data-rn]');if(ln){var r1=ROWS[+ln.getAttribute('data-rn')];if(r1)detail(r1,T0);}
