@@ -67,7 +67,10 @@ test('the customer tiles come from his screens list, in his order', () => {
 
 test('with no screens chosen, a customer gets the few tiles that fit any work', () => {
   const html = mod.tenantTiles({ screens: null });
-  assert.ok(html.includes('id="gTasks"') && html.includes('id="gNotes"') && html.includes('id="gAdminReq"'));
+  assert.ok(html.includes('id="gTasks"') && html.includes('id="gAdminReq"'));
+  // 11.11.2026, Itzik: the notes app is a round icon (icTNotes in tenantTools), not a tile.
+  assert.ok(!html.includes('id="gNotes"'));
+  assert.ok(mod.tenantTools ? mod.tenantTools({ name: 'x' }).includes('id="icTNotes"') : true);
   for (const id of ['gRemote', 'gRemind', 'gPlan']) assert.ok(!html.includes('id="' + id + '"'), id);
 });
 

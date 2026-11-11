@@ -1482,6 +1482,8 @@ function tenantTools(inst) {
   if (!inst || inst.name === 'abaitzik') return '';
   return '\n  <div class="row" id="blkTools" role="group" aria-label="יומן ואימונים">'
     + '\n   <button type="button" class="ic" id="icConn"><span class="c c-cn">🔌</span>חיבורים</button>'
+    // 11.11.2026, Itzik: "תוריד את האריח פתקים, תעביר אותו לאייקון קטן". The notes app stays in every monitor, as a round icon.
+    + '\n   <button type="button" class="ic icNew" id="icTNotes" data-new="1"><span class="c c-tn">📝</span>פתקים</button>'
     + '\n   <button type="button" class="ic icNew" id="icTCal" data-new="1"><span class="c c-gcal"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></span>יומן</button>'
     + '\n   <button type="button" class="ic icNew" id="icFcSales" data-new="1" style="display:none"><span class="c c-fcs">🎯</span>אימון מכירות</button>'
     + '\n   <button type="button" class="ic icNew" id="icFcCoach" data-new="1" style="display:none"><span class="c c-fcc">🧭</span>אימון עסקי</button>'
@@ -1502,6 +1504,8 @@ function tenantTiles(inst) {
   // 10.11.2026: a per tenant opt out (instance hideTiles, an array of tile ids). gConn and gAdminReq can never be hidden.
   // 11.11.2026, Itzik: the notes app is installed by default in every monitor, so gNotes can never be hidden either.
   if (Array.isArray(inst.hideTiles)) { const hide = inst.hideTiles.filter((id) => id !== 'gConn' && id !== 'gAdminReq' && id !== 'gNotes'); for (let i = ids.length - 1; i >= 0; i--) if (hide.indexOf(ids[i]) >= 0) ids.splice(i, 1); }
+  // 11.11.2026: the notes app is the round icon icTNotes in tenantTools, not a tile.
+  { const n = ids.indexOf('gNotes'); if (n >= 0) ids.splice(n, 1); }
   // esc() is defined far above; this part is also lifted alone by a test.
   const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const guides = tenantGuides(inst).map((g, i) => '\n  <button type="button" class="gt g11" id="gGuide' + i + '"><b>'
@@ -2873,6 +2877,7 @@ section#talkCard.talk{border:2px solid var(--accent);box-shadow:0 8px 24px color
 #fcRow .fcmore{align-self:flex-start;background:none;border:0;color:#0891b2;font:700 13px Heebo,sans-serif;padding:4px 2px;cursor:pointer}
 #fcRow .fcErr{font:700 13px Heebo,sans-serif;color:#b3261e}
 .c-fcs{background:linear-gradient(160deg,#f59e0b,#b45309);font-size:22px}
+.c-tn{background:linear-gradient(160deg,#facc15,#ca8a04);font-size:22px}
 .c-board{background:linear-gradient(160deg,#0e7490,#164e63);font-size:22px}
 #gHandle[hidden],#gReq[hidden]{display:none}
 .c-fcc{background:linear-gradient(160deg,#22d3ee,#0e7490);font-size:22px}
@@ -18485,6 +18490,7 @@ on('gGviya',function(){window.open('https://lolos.abaitzik.com/gviya/1abf2a1f563
 /*ITZIK:END*/
 on('gOp',function(){pane('s');});
 on('gNotes',function(){pane('t');renderNotes();});
+on('icTNotes',function(){pane('t');renderNotes();});
 // 11.10, a recording: "תפתור את התזכורות, אחרי שהוא מהבהב נכנסתי, הוא צריך להפסיק להבהב".
 // Opening the tile is the "I know" for every reminder that was waving it.
 on('gRemind',function(){
