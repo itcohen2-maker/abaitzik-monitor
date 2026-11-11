@@ -2734,7 +2734,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-11T17:15:41.706Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-11T17:19:44.453Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4655,7 +4655,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='489f09c2c2';
+var CODE_ID='befb23c243';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -17494,7 +17494,7 @@ function gateUI(){
  w.innerHTML='<div class="gatecard">'
   +'<b class="gt-t">'+esc((INSTANCE&&INSTANCE.name==='abaitzik')?'אבא איציק':(INSTANCE&&INSTANCE.owner||''))+'</b>'
   +(W?'<div class="gt-s">הדף נעול. תקליד את הסיסמה פעם אחת והמכשיר הזה יזכור אותה.'
-    +'<br>זו הסיסמה שקיבלת כשהדף הוקם. מקלידים אותה בדיוק כמו שקיבלת.</div>'
+    +'<br>זו הסיסמה שקיבלת כשהדף הוקם, במייל "המוניטור שלך מוכן". מקלידים אותה בדיוק כמו שקיבלת.</div>'
   :'<div class="gt-s">הדף נעול. תקליד את הקוד פעם אחת והמכשיר הזה יזכור אותו.'
   +'<br>'+((INSTANCE&&INSTANCE.name!=='abaitzik')?'זה הקוד שבחרת בהתקנה.':'הקוד נשלח אליך בהתראה לטלפון, בנושא הקוד לפתיחת הדף.')+'</div>')
   +(W?'<form id="gateForm" class="gw"><input id="gateIn" type="password" autocomplete="off" autocapitalize="off"'
