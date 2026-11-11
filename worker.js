@@ -967,11 +967,15 @@ function quotaHold() {
     }
     return true;
   }
+  // 11.11.2026, Itzik: "he pays 700 a month, he can't keep hearing it ran out". A customer with a
+  // monthly package has no day ceiling; only the package counts (planHold). The five hour and weekly
+  // guard of Itzik's subscription stays while the customer still runs on it (no .own key).
+  const hasPlan = !!planStatus();
   const r = require('./lib/quota-hold.js').check({
     quota: selfPaid ? null : readJson('/srv/monitor-changes/quota.json', null),
     limitPct: Number(process.env.MONITOR_QUOTA_PCT) || 80,
     spentToday: spentToday(),
-    dayUsd: TIER ? TIER.dayUsd : DAY_USD,
+    dayUsd: hasPlan && !TIER ? Infinity : (TIER ? TIER.dayUsd : DAY_USD),
     pass: readJson(QPASS, null),
     now: Date.now(),
   });
@@ -1142,12 +1146,16 @@ function planHold() {
     }
     return false;
   }
-  say('החבילה החודשית הסתיימה (' + st.used + ' מתוך ' + st.total + '). לא מפעיל סשן.');
-  if (!DRY && waiting().length) {
-    if (told.fullDay !== today) { told.fullDay = today; save(); tell('החבילה החודשית הסתיימה', P.SAY.full); }
-    if (told.full !== st.month) { told.full = st.month; save(); planChat('full', P.SAY.full); }
+  // 11.11.2026, Itzik: at 100% the customer is not stopped. He is told once a month that it is time
+  // to upgrade, and Itzik gets one request on his screen to decide with him. Work goes on.
+  if (!DRY && told.full !== st.month) {
+    told.full = st.month; save();
+    tell('החבילה החודשית', P.SAY.full);
+    planChat('full', P.SAY.full);
+    try { require('./lib/change-requests.js').add('החבילה החודשית של ' + inst.name + ' נוצלה במלואה (' + st.used + ' מתוך ' + st.total + ' פעולות). המוניטור ממשיך לעבוד. לדבר איתו על שדרוג?', ''); } catch (e) {}
+    say('חבילה: ' + st.used + ' מתוך ' + st.total + ', עבר את החבילה. ממשיך לעבוד, נשלחה הודעה.');
   }
-  return true;
+  return false;
 }
 
 

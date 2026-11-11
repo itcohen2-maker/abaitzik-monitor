@@ -71,6 +71,8 @@ function holdOn() { return fs.existsSync(QHOLD); }
 function quotaView() {
   // live.json is public on Pages, so only the percent goes out, never dollars.
   try {
+    // 11.11.2026: a customer with a monthly package sees no day bar; the package tile is the only count.
+    if (require('./lib/plan-io.js').stateOf(inst.name)) return null;
     const v = require('./lib/quota-day.js').view({ name: inst.name, statusDir: STATUS,
       ownAccount: fs.existsSync('/srv/monitor-changes/' + inst.name + '.own'), tier: require('./lib/tier.js').current(), env: process.env });
     return v ? { pct: v.pct } : null;
