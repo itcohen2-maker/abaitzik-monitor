@@ -50,7 +50,10 @@ const hfEnv = !process.env.HF_HOME && sharedModel ? { HF_HOME: shared, HF_HUB_OF
 
 try {
   // Without PYTHONIOENCODING the Windows console codec cannot print Hebrew.
-  const out = execFileSync('python', ['-c', py, wav, lang], {
+  // 11.11.2026: faster_whisper was installed only for the monitor user, so every customer (pablo, alon) failed with
+  // "No module named faster_whisper" and their voice messages were never heard. /opt/whisper-venv is shared, readable by all.
+  const PYBIN = fs.existsSync('/opt/whisper-venv/bin/python') ? '/opt/whisper-venv/bin/python' : 'python';
+  const out = execFileSync(PYBIN, ['-c', py, wav, lang], {
     encoding: 'utf8', maxBuffer: 1 << 24,
     env: Object.assign({}, process.env, { PYTHONIOENCODING: 'utf-8' }, hfEnv),
   });
