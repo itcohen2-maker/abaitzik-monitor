@@ -274,4 +274,8 @@ if(!t['$ID'])t['$ID']={key:c.randomBytes(16).toString('hex'),dir:'$DIR',business
 vk=$(cd /home/monitor/abaitzik-monitor && sudo -u monitor node -e "console.log(require('./lib/visits.js').newKey('data','$ID'))") && printf '%s' "$vk" > "$DIR/data/status/visit-key.txt" && chown "$U:$U" "$DIR/data/status/visit-key.txt" && chmod 600 "$DIR/data/status/visit-key.txt"
 grep -q "https://$HOST'" /home/monitor/abaitzik-monitor/wa-bridge.js || echo "NEXT (11.11): add https://$HOST to ORIGINS in wa-bridge.js, then restart monitor-wa"
 echo "NEXT (11.11): own API key monitor-$ID in the Console -> /root/tenant-tokens/$ID.apikey -> bash setup/tenant-api-key.sh $ID; package -> /srv/monitor-changes/$ID.plan.json"
+# 11.11.2026, Itzik: "לקוח חדש שעכשיו יסלוק ויחכה 3 דקות, יהיה לו מוניטור שיעבוד 100%". Before "סיום" the new monitor is
+# tested as its own user: a sample voice note is transcribed, the visit key matches, the page answers. A failure is repaired
+# and tested again; what still fails is printed here and lands in 📋 לטיפול.
+node "$(dirname "$0")/../tenant-check.js" --new "$ID" || echo "NEXT (11.11): the new monitor $ID did not pass tenant-check.js, see above"
 echo "סיום: $ID"
