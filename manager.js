@@ -33,7 +33,7 @@ function run(cmd, args) {
   catch (e) { log('!! ' + args[0] + ' failed: ' + String(e.stderr || e.message).slice(0, 200)); return null; }
 }
 
-if (!DRY && !EVENING) run('node', ['manager-work.js']); // 8.11: the manager's own checks first, so the card shows them
+if (!DRY) run('node', ['manager-work.js']); // 11.11: all three rounds (Itzik: "המנהל יבדוק 3 פעמים ביום ויטפל") // 8.11: the manager's own checks first, so the card shows them
 
 const now = Date.now();
 const inp = M.gather(dataPath, __dirname, now);
@@ -62,6 +62,23 @@ for (const a of (inp.approvals || [])) {
   const gap = (a.status === 'notSubmitted' ? 7 * 24 : 20) * 3600e3;
   if (st.apprTask[a.id] && now - Date.parse(st.apprTask[a.id]) < gap) continue;
   if (run('node', ['pc-task.js', 'add', '--quiet', '--re', 'approval-' + a.id, A.taskText(a)]) !== null) { st.apprTask[a.id] = new Date(now).toISOString(); log('approval check ' + a.id); }
+}
+// 11.11.2026, Itzik: "אני רוצה שהמנהל יבדוק 3 פעמים ביום ויטפל בבעיה או בבקשה".
+// Every round, each problem on the card (st warn) that is not his alone becomes one work order in the PC queue
+// (pc-task.js, full Claude with memory). Once per problem per day, at most 3 per round. The answer lands in his chat.
+const FIX_SKIP = new Set(['handle', 'cal', 'brief', 'leads', 'plate', 'status', 'linkedin', 'work']); // his own, or already a task elsewhere
+const FIX_HIM = /(לשלם|תשלום|כסף|בנק|חתימ|דרכון|סלפי|לאשר|אישורך|באישורך|להתקשר|זיכוי)/;
+st.fixed = st.fixed || {};
+for (const k of Object.keys(st.fixed)) if (!k.startsWith(m.day)) delete st.fixed[k];
+let fixN = 0;
+for (const it of m.items) {
+  if (fixN >= 3 || it.st !== 'warn' || FIX_SKIP.has(it.k)) continue;
+  const key = m.day + '|' + it.k + '|' + it.t;
+  if (st.fixed[key] || FIX_HIM.test(it.t + ' ' + (it.sub || ''))) continue;
+  const job = 'המנהל מצא בעיה בסבב ומבקש לטפל בה עכשיו: ' + it.t + (it.sub ? '. פרטים: ' + it.sub : '') + '. '
+    + 'לבדוק את הסיבה, לתקן מה שאפשר לתקן לבד, ולוודא שהתיקון עובד. כללים: בלי לשלם, בלי לשלוח לאנשים, בלי לפרסם ובלי למחוק מידע של לקוח; '
+    + 'מה שדורש את איציק (כסף, חתימה, אישור, לחיצה בטלפון) לא לעשות אלא לכתוב לו במשפט אחד מה נשאר לו. בסוף שורה אחת בעברית: מה מצאת ומה עשית.';
+  if (run('node', ['pc-task.js', 'add', '--re', 'manager-fix-' + it.k + '-' + m.day, job]) !== null) { st.fixed[key] = new Date(now).toISOString(); fixN++; log('fix job ' + it.k); }
 }
 for (const e of M.alarmsDue(m, now, st.alarms)) {
   const at = new Date(e.ms - 30 * 60000).toLocaleTimeString('en-GB', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit', hour12: false });
