@@ -764,6 +764,27 @@ function recordIncoming(m) {
       10.11.2026, Itzik: "📋 לטיפול" (lib/handle.js). The button "✓ טופל" on the home sheet sends "✓ טופל: <id>".
       Marked here with no model, so it works with no session running; the page is rebuilt so the tile drops the item.
     */
+    /*
+      11.11.2026, Itzik: the leads table in IT Solution. Its buttons send "ליד [<id>]: סטטוס|הערה|מחיקה ...".
+      Applied here with no model (lib/leads.js); delete moves the record to data/biz/_deleted. Silent when it worked.
+    */
+    const ldA = codeOk && inst.biz && require('./lib/leads.js').parse(text.replace(/\n\s*קוד[^\n]*$/, ''));
+    if (ldA) {
+      let res;
+      try { res = require('./lib/leads.js').apply(inst.dataPath, text.replace(/\n\s*קוד[^\n]*$/, '')); say('ליד: ' + ldA.id + ' ' + ldA.act + ' | ' + res.reply); }
+      catch (e) { res = { ok: false, reply: 'לא הצלחתי לעדכן את הליד (' + e.message + ')' }; say('!! ליד: ' + e.message); }
+      rec.status = 'done';
+      try {
+        if (res.ok) fs.unlinkSync(path.join(CHAT, name));
+        else {
+          fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+          fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-lead-ack.json')),
+            JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id, text: res.reply, status: 'done' }, null, 1), 'utf8');
+        }
+      } catch (e) { /* the next build carries it */ }
+      try { publishChat(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
     const hdM = codeOk && /^\s*(?:משימה)?\s*✓\s*טופל\s*[:：]\s*(\S+)/.exec(text.replace(/\n\s*קוד[^\n]*$/, ''));
     if (hdM) {
       let ans = '';

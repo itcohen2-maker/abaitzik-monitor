@@ -976,7 +976,9 @@ function build() {
     try {
       const biz = require('./lib/biz.js');
       const recs = biz.load(inst.dataPath) || [];
-      const BIZ_FIELDS = ['id', 'kind', 'name', 'phone', 'email', 'status', 'amount', 'note', 'next', 'nextAt', 'at', 'updatedAt'];
+      const BIZ_FIELDS = ['id', 'kind', 'name', 'phone', 'email', 'status', 'amount', 'note', 'next', 'nextAt', 'at', 'updatedAt', 'source', 'last', 'link'];
+      // 11.11.2026: the leads scanner (lead-scan.js) says when it last looked and what Meta refused.
+      try { payload.leadScan = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'status', 'lead-scan.json'), 'utf8')); } catch (e) { payload.leadScan = null; }
       const rows = recs.map((r) => {
         const o = {};
         BIZ_FIELDS.forEach((f) => { if (r && r[f] != null) o[f] = r[f]; });
@@ -3367,6 +3369,23 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 #ftText .bzT{background:#26303c;color:#e8eef5}#ftText .bzT.on{background:#e8eef5;color:#16202c}#ftText #bzBody{border-color:#e8eef5}
 .bzSec{font:700 14px Heebo,sans-serif;margin:10px 0 2px;color:#14675a}
 .bzRow{border-bottom:1px solid rgba(128,128,128,.25);padding:8px 0;font:500 14px/1.45 Heebo,sans-serif;display:flex;flex-direction:column;gap:2px}
+/* 11.11.2026: the leads table in IT Solution (itsLeadsHtml). */
+.ldTbl{border:1px solid rgba(128,128,128,.3);border-radius:12px;overflow:hidden;margin-bottom:14px;font:500 14px/1.4 Heebo,sans-serif}
+.ldHd,.ldRow>summary{display:grid;grid-template-columns:3.2em 1fr 7.5em 4em;gap:6px;padding:9px 10px;align-items:center}
+.ldHd{font-weight:700;font-size:12px;opacity:.7;background:rgba(128,128,128,.08)}
+.ldRow{border-top:1px solid rgba(128,128,128,.22)}
+.ldRow>summary{cursor:pointer;list-style:none}
+.ldRow>summary::-webkit-details-marker{display:none}
+.ldRow>summary b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ldRow>summary span:nth-child(3){font-size:12px}
+.ldSt{font-size:12px;font-weight:700;text-align:center;border-radius:8px;padding:2px 4px;background:rgba(128,128,128,.12)}
+.ldNew>summary{background:rgba(255,153,0,.13)}
+.ldNew .ldSt{background:#f59e0b;color:#fff}
+.ldBody{padding:4px 10px 12px;display:flex;flex-direction:column;gap:6px}
+.ldBody small{display:block}
+.ldLast{margin:0;font-style:italic;opacity:.85}
+.ldAct{display:flex;flex-wrap:wrap;gap:6px}
+.ldAct .yb{text-decoration:none;flex:0 1 auto;width:auto;margin:0}
 .bzRow b{font:700 14px Heebo,sans-serif}
 .bzRow small{opacity:.85}
 .bzRow .yb{align-self:flex-start;padding:6px 12px;min-height:36px;font-size:13px;margin-top:4px}
@@ -4653,7 +4672,7 @@ ${require('./lib/home-ui.js').html}
 
  <div id="askBox"></div>
 <!-- 4.11, Itzik: "תעלה את האריח של העסק שלי למעלה ברשימה. למה שמת אותו אחרון?" The business grid opens the home screen. -->
-${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + ((inst.name === 'abaitzik' || inst.handle === true) ? '<button type="button" class="gt g16" id="gHandle" hidden data-new="1"><b>📋 לטיפול</b><small>טפסים שחזרו וצריכים אותך</small></button><button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261105-shlab' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button>' + '</div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
+${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + ((inst.name === 'abaitzik' || inst.handle === true) ? '<button type="button" class="gt g16" id="gHandle" hidden data-new="1"><b>📋 לטיפול</b><small>טפסים שחזרו וצריכים אותך</small></button><button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261111-leads' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button>' + '</div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
   <!-- 3.11, Itzik: "אני צריך אריח שממש יעבב לי, כמו ליד חדש". First on the grid; shows while a --nag reminder is open, hard blink once it is due, until "✅ עשיתי". -->
@@ -18655,10 +18674,47 @@ function bizSheet(t0){
    if(c.monitor)h+='<div class="bzRow"><b>🖥️ המוניטור שלו נפתח</b><small>'+esc(c.monitor)+' · עוד לא נמסר לו. קוד הכניסה שמור בשרת, ונמסר רק אחרי שתאשר את צילומי המסך.</small></div>';
    return h;
   }
+  /*
+    11.11.2026, Itzik: "טבלה של כל הלידים שהגיעו לנו עד כה. וליד כל ליד אפשרות לתת תגובה או למחוק או לעדכן או לרשום".
+    One line per lead (date, name, where from, status); a tap opens it: the last words, reply, status, note, delete.
+    Status, note and delete go as "ליד [<id>]: ..." and the listener applies them with no model (lib/leads.js).
+  */
+  var LD_SRC={site:'🌐 אתר','fb-comment':'📘 תגובה במודעה','ig-comment':'📸 תגובה במודעה',messenger:'💬 מסנג׳ר','ig-dm':'📸 הודעה באינסטגרם',leadform:'📝 טופס מטא',manual:'✍️ ידני'};
+  var LD_INBOX='https://business.facebook.com/latest/inbox/all?asset_id=1341874565686928&business_id=2131000707784066';
+  function ldWa(p){var d=String(p||'').replace(/\D/g,'');if(!d)return '';if(d.charAt(0)==='0')d='972'+d.slice(1);return 'https://wa.me/'+d;}
+  function itsLeadsHtml(){
+   var L=recs.filter(function(r){return r.kind==='lead'||r.kind==='customer';}).slice().sort(function(a,b){return String(b.at||'').localeCompare(String(a.at||''));});
+   var sc=D.leadScan,open=L.filter(function(r){return r.status==='חדש';}).length;
+   var h='<div class="bzSec">📋 כל הלידים ('+L.length+(open?', '+open+' חדשים':'')+')</div>';
+   if(sc){
+    var t=sc.at?new Date(sc.at).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+    h+='<small style="display:block;margin:-2px 0 8px;color:#5a6478;font-size:13px;line-height:1.4">'+(sc.ok?'🟢 הסורק בודק את מטא כל 10 דקות. נבדק לאחרונה '+esc(t):'🟠 הסורק בודק כל 10 דקות את האתר, אבל עדיין לא רואה תגובות והודעות מהמודעות. חסרה הרשאה במטא: '+esc((sc.need||[]).join(', ')))+'</small>';
+   }
+   if(!L.length)return h+'<p class="bzEmpty">עוד אין לידים.</p>';
+   h+='<div class="ldTbl"><div class="ldHd"><span>תאריך</span><span>שם</span><span>מאיפה</span><span>סטטוס</span></div>';
+   L.forEach(function(r){
+    var d=new Date(r.at||''),dd=isNaN(d)?'':d.getDate()+'.'+(d.getMonth()+1);
+    var src=LD_SRC[r.source]||(r.kind==='customer'?'🤝 לקוח':'✍️ ידני'),meta=/comment|messenger|dm|leadform/.test(r.source||'');
+    var rep='';
+    if(r.phone){rep+='<a class="yb yb2" href="'+ldWa(r.phone)+'" target="_blank" rel="noopener">💬 וואטסאפ</a><a class="yb" href="tel:'+esc(String(r.phone).replace(/[^0-9+]/g,''))+'">📞 להתקשר</a>';}
+    if(r.email)rep+='<a class="yb" href="mailto:'+esc(r.email)+'">✉️ מייל</a>';
+    if(meta)rep+='<a class="yb yb2" href="'+esc(r.link||LD_INBOX)+'" target="_blank" rel="noopener">💬 לענות במטא</a>';
+    h+='<details class="ldRow'+(r.status==='חדש'?' ldNew':'')+'" data-id="'+esc(r.id)+'"><summary><span>'+esc(dd)+'</span><b>'+esc(r.name||'בלי שם')+'</b><span>'+esc(src)+'</span><span class="ldSt">'+esc(r.status||'')+'</span></summary>'
+     +'<div class="ldBody">'
+     +(r.last?'<p class="ldLast">"'+esc(r.last)+'"</p>':'')
+     +(r.phone?'<small>'+bzTel(r.phone)+'</small>':'')+(r.email?'<small><bdi>'+esc(r.email)+'</bdi></small>':'')
+     +(r.note?'<small style="white-space:pre-line">'+esc(r.note)+'</small>':'')
+     +'<div class="ldAct">'+(rep||'<small>אין טלפון או מייל. מחכים שיחזור.</small>')+'</div>'
+     +'<div class="ldAct">'+BZ_ORDER.filter(function(st){return st!==r.status;}).map(function(st){return '<button type="button" class="yb" data-bz="ldst" data-s="'+st+'">'+st+'</button>';}).join('')+'</div>'
+     +'<div class="ldAct"><button type="button" class="yb" data-bz="ldnote">📝 לרשום</button><button type="button" class="yb" data-bz="lddel">🗑️ למחוק</button></div>'
+     +'</div></details>';
+   });
+   return h+'</div>';
+  }
   function itsHtml(){
    // 8.11.2026, Itzik: "תעשה סדר בכל הטאב, תסיר את שי, תאפס ותשאיר לי: טופס סודיות, הסכם בינינו וטופס התחברות".
    // Three clean templates, no customer name. Shai's files and answers are in data/_archive/shai-20261108.
-   return '<div class="bzHead">💻 IT Solution</div>'+planBoardHtml()
+   return '<div class="bzHead">💻 IT Solution</div>'+itsLeadsHtml()+planBoardHtml()
     // 5.11, Itzik: "זה מסמך סודיות שמעבירים ללקוח חדש": the original is the PDF, signed once by IT Solution, then one link for every client.
     +'<div class="bzSec">🔒 טופס סודיות</div>'+ndaHtml()
     // 4.11, Itzik: "אני צריך חוזה מול לקוח". One service agreement for every client, signed inside the quote page, before any build.
@@ -18766,7 +18822,7 @@ function bizSheet(t0){
     +'<p class="bzEmpty">הציון למעלה מ 0 עד 100, 100 זה הכי טוב. כל ליד שלא נגעו בו שבוע מוריד 8 נקודות, הצעה שלא חזרו אליה 3 ימים מורידה 12, ותזכורת שהגיעה ולא טופלה מורידה 6.</p>';
   }
   // 2.11, Itzik: a tab with something new blinks until he opens it. The stamp changes whenever something is added there.
-  var BZ_UPD={its:'20261108-prices'+((D.nda&&D.nda.signed&&D.nda.signed[0])?'-'+String(D.nda.signed[0].at).replace(/\D/g,'').slice(0,12):'')+((D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done)?'-s'+String(D.shaiForms.sign.done).replace(/\\D/g,'').slice(0,12):''),shachar:((D.shSum&&D.shSum.upd)||'20261103-shachar-auto')+'-ld1104',li:'li-queue-20261109'};
+  var BZ_UPD={its:'20261111-leads'+((D.nda&&D.nda.signed&&D.nda.signed[0])?'-'+String(D.nda.signed[0].at).replace(/\D/g,'').slice(0,12):'')+((D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done)?'-s'+String(D.shaiForms.sign.done).replace(/\\D/g,'').slice(0,12):''),shachar:((D.shSum&&D.shSum.upd)||'20261103-shachar-auto')+'-ld1104',li:'li-queue-20261109'};
   ((D.agr&&D.agr.clients)||[]).forEach(function(c,i){BZ_UPD['agr'+i]='a8-'+String(c.signedAt||c.openedAt||'new').replace(/\\D/g,'').slice(0,12);});
   function bzSeen(){try{return JSON.parse(localStorage.getItem('bzTabSeen')||'{}');}catch(x){return {};}}
   function bzTabNew(k){return !!BZ_UPD[k]&&bzSeen()[k]!==BZ_UPD[k]&&k!==tab;}
@@ -18876,6 +18932,18 @@ function bizSheet(t0){
     /*ITZIK:BEGIN*/if(a==='ner'){var bx=el.querySelector('[data-a="x"]');if(bx)bx.click();nerBizSheet();return;}/*ITZIK:END*/  // 30.10, Itzik: the X did not get him out, two sheets were stacked; one at a time
     if(a==='back'){if(!window.bizStep())el.querySelector('[data-a="x"]').click();return;}
     if(a==='tab'){bizShow(t.getAttribute('data-t'));return;}
+    // 11.11.2026: the leads table (itsLeadsHtml). Applied by the listener with no model.
+    if(a==='ldst'||a==='ldnote'||a==='lddel'||a==='ldsend'){
+     var lr=t.closest('.ldRow'),lid=lr&&lr.getAttribute('data-id');if(!lid)return;
+     var lgo=function(body,ok){sendText('ליד',body,'ליד').then(function(){toast(ok);}).catch(function(){toast('לא נשלח, נסה שוב מאוחר יותר.');});};
+     if(a==='ldst'){var ls=t.getAttribute('data-s');lr.querySelector('.ldSt').textContent=ls;lr.classList.toggle('ldNew',ls==='חדש');lgo('ליד ['+lid+']: סטטוס '+ls,'עודכן: '+ls);return;}
+     if(a==='lddel'){
+      if(t.getAttribute('data-sure')!=='1'){t.setAttribute('data-sure','1');t.textContent='🗑️ בטוח? לחיצה נוספת מוחקת';return;}
+      lr.style.opacity='.35';lgo('ליד ['+lid+']: מחיקה','נמחק מהטבלה. אפשר לשחזר מהארכיון.');return;}
+     if(a==='ldnote'){if(lr.querySelector('.bzEd'))return;t.parentNode.insertAdjacentHTML('afterend','<div class="bzEd"><input placeholder="מה לרשום על הליד"><button type="button" class="yb yb2" data-bz="ldsend">שלח</button></div>');lr.querySelector('.bzEd input').focus();return;}
+     var lbx=t.closest('.bzEd'),lin=lbx.querySelector('input'),lv=lin.value.trim();if(!lv){lin.focus();return;}
+     lgo('ליד ['+lid+']: הערה '+lv,'נרשם.');lbx.remove();return;
+    }
     if(a==='newtoggle'){var nb=el.querySelector('[data-bz="newbox"]');nb.hidden=!nb.hidden;if(!nb.hidden)el.querySelector('#bzNewIn').focus();return;}
     if(a==='newsend'){
      var inp=el.querySelector('#bzNewIn'),v=inp.value.trim(),mail=el.querySelector('#bzNewMail').value.trim();
