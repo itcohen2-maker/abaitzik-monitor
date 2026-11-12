@@ -15522,7 +15522,8 @@ function campSheet(){
  w.setAttribute('role','dialog');w.setAttribute('aria-label','קמפיינים');
  var kinds=['מודעה ממומנת','סטורי','ריל','פוסט','קרוסלה','סרטון מכל החומרים','להכין סרטון מסוים להעלאה לאינסטגרם'];
  var CP_ASK=['מה לעשות עם התמונות?','מה לכתוב עליהן?','מי הלקוחות שלך?','מבצע, מחיר או טלפון?'];
- function cpRealText(t){var s=t;CP_ASK.forEach(function(q){s=s.split(q).join('');});return s.split(String.fromCharCode(10)).join(' ').trim();}
+ var cpAiQs=[],cpAiAsked=[],cpAiBusy=false,cpAiDone={};
+ function cpRealText(t){var s=t;CP_ASK.concat(cpAiAsked).forEach(function(q){s=s.split(q).join('');});return s.split(String.fromCharCode(10)).join(' ').trim();}
  w.innerHTML='<div class="ycard"><b>📣 קמפיינים</b>'
   +'<small>מעלים תמונות או סרטון, בוחרים מה לעשות איתם, וכותבים מה חשוב. אני מכין טיוטה: מטרה, קהל, תקציב מוצע, כמה גרסאות כיתוב ותיאור לפוסט. שום דבר לא עולה בלי אישור שלך.</small>'
   +'<button type="button" class="yb yb2" data-a="pick">📎 לבחור תמונות או סרטון</button>'
@@ -15541,6 +15542,8 @@ function campSheet(){
   +'<small style="opacity:1;font-weight:700">כדי שזה יעבוד, ענה לי על אלה (לחיצה פותחת שורה):</small>'
   +'<div class="arPick" id="cpAsk" role="group" aria-label="שאלות מנחות">'
   +CP_ASK.map(function(q,i){return '<button type="button" class="yb" data-q="'+i+'">'+q+'</button>';}).join('')+'</div>'
+  +'<button type="button" class="yb yb2" data-a="ai">🤖 תעזור לי לתאר: תשאל אותי מה חשוב</button>'
+  +'<div id="cpAI" aria-live="polite"></div>'
   +'<small>מוזיקה: כברירת מחדל בלי מוזיקה בתוך הסרטון. באינסטגרם בוחרים את המוזיקה בזמן ההעלאה מספריית הצלילים של אינסטגרם, בתיקייה RF (ללא זכויות יוצרים). בפייסבוק אפשר מאוסף הצלילים של Meta, בחינם בכל מוצרי Meta. אם יש כאן תיקיית צלילים ובחרת בה, אוסיף אותו בעדינות מתחת לסרטון.</small>'
   // 12.11: a link out to Meta's sound collection had no way back on a phone, and a pick there never reached the draft. The name is typed here instead.
   +'<label style="display:block;font:600 14px Heebo,sans-serif;margin:8px 0 4px" for="cpMeta">🎵 צליל מאוסף Meta לזמן הפרסום (לא חובה)</label>'
@@ -15557,6 +15560,36 @@ function campSheet(){
   }).join('');
   var jb=document.getElementById('cpJoinBox');if(jb)jb.hidden=picked.length<2;
  }
+ function cpAiPaint(j){
+  var box=document.getElementById('cpAI');if(!box)return;
+  cpAiQs=(j&&j.questions)||[];cpAiDone={};
+  cpAiQs.forEach(function(q){if(cpAiAsked.indexOf(q.q)<0)cpAiAsked.push(q.q);});
+  var h='';
+  if(j&&j.note)h+='<small style="opacity:1;font-weight:700">🤖 '+esc(j.note)+'</small>';
+  cpAiQs.forEach(function(q,i){
+   h+='<div id="cpAq'+i+'" style="margin:8px 0;padding:10px;border:1px solid #ccd;border-radius:12px"><b style="font:700 15px Heebo,sans-serif">'+esc(q.q)+'</b>'
+    +'<div class="arPick">'+(q.opts||[]).map(function(o,k){return '<button type="button" class="yb" data-ao="'+i+'_'+k+'">'+esc(o)+'</button>';}).join('')+'</div>'
+    +'<div style="display:flex;gap:6px;margin-top:6px"><input type="text" id="cpAin'+i+'" maxlength="300" placeholder="או במילים שלך" style="flex:1;min-width:0;border-radius:10px;border:1px solid #ccd;padding:8px;font:15px Heebo,sans-serif">'
+    +'<button type="button" class="yb" data-aok="'+i+'">הוספה</button></div></div>';
+  });
+  if(j&&j.ready)h+='<small style="opacity:1;font-weight:700">✓ יש מספיק כדי להכין טיוטה טובה. אפשר לשלוח, או לענות על עוד שאלה.</small>';
+  if(cpAiQs.length||!(j&&j.ready))h+='<button type="button" class="yb" data-a="ai">🤖 עוד שאלות</button>';
+  box.innerHTML=h;
+ }
+ function cpAiRun(){
+  if(cpAiBusy)return;var box=document.getElementById('cpAI');if(!box)return;
+  cpAiBusy=true;box.innerHTML='<small style="opacity:1;font-weight:600">🤖 רגע, בודק מה חסר כדי שהקמפיין ייצא הכי טוב...</small>';
+  var kd=[].map.call(w.querySelectorAll('#cpKinds .yb.on'),function(b){return b.getAttribute('data-k');});
+  fcPost('/camp',{kinds:kd,text:(document.getElementById('cpText')||{}).value||'',files:picked.map(function(f){return f.name;})}).then(function(j){cpAiBusy=false;cpAiPaint(j);},function(er){
+   cpAiBusy=false;box.innerHTML='<small style="opacity:1">'+(er&&er.status===429?'הגעת למכסת השאלות של היום. אפשר להמשיך לכתוב בעצמך.':'לא הצלחתי לשאול עכשיו. אפשר לענות על השאלות שמעל התיבה, או לנסות שוב.')+'</small><button type="button" class="yb" data-a="ai">🤖 לנסות שוב</button>';
+  });
+ }
+ function cpAiAdd(i,ans){
+  var q=cpAiQs[i],ta=document.getElementById('cpText');ans=String(ans||'').trim();if(!q||!ta||!ans)return;
+  ta.value=(ta.value.trim()?ta.value.trim()+String.fromCharCode(10):'')+q.q+' '+ans;ta.style.borderColor='#ccd';
+  cpAiDone[i]=1;var c=document.getElementById('cpAq'+i);if(c){c.style.opacity='.55';c.querySelector('b').textContent='✓ '+q.q;}
+  var all=cpAiQs.every(function(_,k){return cpAiDone[k];});if(all)cpAiRun();
+ }
  function paintAudio(){
   var l=document.getElementById('cpAuL');if(!l)return;
   l.innerHTML=ownAu?'<div>🎵 '+esc(ownAu.name)+' <button type="button" class="yb" data-a="aux">✕</button></div><label style="display:block;margin-top:4px"><input type="checkbox" id="cpRight"> הצליל שלי ויש לי זכויות עליו</label>':'';
@@ -15566,6 +15599,11 @@ function campSheet(){
   var a=e.target.getAttribute&&e.target.getAttribute('data-a');
   if(a==='x')return close();
   if(a==='pick'){var fi=document.getElementById('cpFiles');if(fi)fi.click();return;}
+  if(a==='ai')return cpAiRun();
+  var ao=e.target.getAttribute&&e.target.getAttribute('data-ao');
+  if(ao){var ap=ao.split('_'),aq=cpAiQs[Number(ap[0])];if(aq)cpAiAdd(Number(ap[0]),aq.opts[Number(ap[1])]);return;}
+  var aok=e.target.getAttribute&&e.target.getAttribute('data-aok');
+  if(aok!==null&&aok!==undefined){var ai=document.getElementById('cpAin'+aok);if(ai&&ai.value.trim())cpAiAdd(Number(aok),ai.value);else toast('לכתוב תשובה בתיבה, או ללחוץ על אחת התשובות.');return;}
   if(a==='pickau'){var fa=document.getElementById('cpAudio');if(fa)fa.click();return;}
   if(a==='aux'){ownAu=null;paintAudio();return;}
   var mv=e.target.getAttribute&&e.target.getAttribute('data-m');
@@ -15598,7 +15636,7 @@ function campSheet(){
   if(cpRealText(t).length<20){
    var tb=document.getElementById('cpText');
    if(tb){tb.style.borderColor='#e0563b';tb.focus();tb.scrollIntoView({block:'center'});}
-   toast('עוד רגע: כתוב בכמה מילים מה לעשות עם התמונות, מה לכתוב עליהן ומי הלקוחות. השאלות מתחת לתיבה יעזרו.');return;
+   toast('עוד רגע: בלי תיאור הקמפיין לא ייצא טוב. ענה על השאלות שלמטה.');cpAiRun();return;
   }
   if(ownAu&&!(document.getElementById('cpRight')||{}).checked){toast('לסמן שיש לך זכויות על הצליל שהעלית, או להסיר אותו');return;}
   var joinAll=picked.length>1&&!!(document.getElementById('cpJoin')||{}).checked;
@@ -15616,7 +15654,7 @@ function campSheet(){
   }).catch(function(){e.target.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
  };
  w.addEventListener('change',function(e){
-  if(e.target&&e.target.id==='cpFiles'){picked=picked.concat([].slice.call(e.target.files||[]));e.target.value='';paintList();}
+  if(e.target&&e.target.id==='cpFiles'){picked=picked.concat([].slice.call(e.target.files||[]));e.target.value='';paintList();if(picked.length&&!cpAiAsked.length&&!cpRealText((document.getElementById('cpText')||{}).value||''))cpAiRun();}
   if(e.target&&e.target.id==='cpAudio'){var af=(e.target.files||[])[0];if(af){ownAu=af;paintAudio();}e.target.value='';}
  });
  document.body.appendChild(w);

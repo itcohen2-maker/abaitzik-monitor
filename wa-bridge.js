@@ -845,6 +845,15 @@ async function api(q, s, u) {
   }
   // 7.11: a customer's monitor talks to its own chat with its own key (data/fastchat/tenants.json).
   if (codeLocked(q)) { s.writeHead(429, h); return s.end('{"error":"wait"}'); }
+  // 12.11: the campaign sheet's interviewer (lib/camp-ask.js), for the owner and every customer, always on the customers' API key.
+  if (u.pathname === '/api/chat/camp') {
+    const own = codeOk(b.code), tn = own ? null : tenantByKey(b.code);
+    if (!own && !tn) { codeFail(q, b.code); s.writeHead(403, h); return s.end('{"error":"code"}'); }
+    let cst; try { cst = require('./lib/sales-train.js').forCustomer(); } catch (e) { log('camp ask: ' + e.message); s.writeHead(503, h); return s.end('{"error":"key"}'); }
+    let ownBiz = ''; if (own) { try { ownBiz = JSON.parse(fs.readFileSync(path.join(ROOT, 'instance.json'), 'utf8')).business || ''; } catch (e) {} }
+    const r = await require('./lib/camp-ask.js').ask(cst.llm, b, { name: own ? 'owner' : tn.name, business: own ? ownBiz : (tn.business || '') });
+    s.writeHead(r.status, h); return s.end(JSON.stringify(r.json));
+  }
   if (/^\/api\/chat(\/thread|\/todo)?$/.test(u.pathname) && !codeOk(b.code)) {
     const tn = tenantByKey(b.code);
     if (!tn) { codeFail(q, b.code); s.writeHead(403, h); return s.end('{"error":"code"}'); }
