@@ -329,8 +329,16 @@ function main() {
     */
     if (!DRY) {
       const down = t.state !== 'ok';
-      const again = down && (!t.alertedAt || Date.now() - Date.parse(t.alertedAt) > 2 * 60 * 60 * 1000);
-      if ((before && before !== t.state) || again) {
+      /*
+        12.11.2026, Itzik: "יש לי במייל כל כך הרבה הודעות מ IT Solution שזה מציק לי". Most were a restart or a new
+        monitor still building: "בנתק" and a minute later "חזר לתקין". Now a customer is reported down only after
+        10 minutes down, again every two hours, and "חזר לתקין" goes only when "בנתק" went.
+      */
+      const downFor = down && t.downSince ? Date.now() - Date.parse(t.downSince) : 0;
+      const first = down && !t.alertedAt && downFor >= 10 * 60 * 1000;
+      const again = down && t.alertedAt && Date.now() - Date.parse(t.alertedAt) > 2 * 60 * 60 * 1000;
+      const back = !down && !!t.alertedAt;
+      if (first || again || back) {
         const title = down ? '🔴 ' + (t.title || t.id) + ' בנתק' : '🟢 ' + (t.title || t.id) + ' חזר לתקין';
         const msg = down ? (r.problems.join(' · ') || 'לא עונה') : 'הכל תקין שוב';
         try {
