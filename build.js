@@ -4833,7 +4833,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   -->
   <button type="button" class="gt gWin" data-grp="net" id="gWin" data-upd="20261106-win03" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <!-- 5.11, Itzik: "את כל הסרטונים נעביר לאריח אחד, ובתוכו טאבים". One tile with a tab per kind; the old tiles (reels, future reels, campaign, plate, status, candle.times) were removed; their sheets stay in the code. -->
-  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1" data-upd="20261110-ai5"><b>🎬 הסרטונים</b><small>רילים, רילים עתידיים, סטטוס, נרות, מה בצלחת, שחר וקמפיין</small></button>
+  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1" data-upd="20261112-ps-story"><b>🎬 הסרטונים</b><small>רילים, רילים עתידיים, סטטוס, נרות, מה בצלחת, שחר וקמפיין</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
@@ -14966,6 +14966,9 @@ function captionSheet(it){
 // 24.10: 26 is part 2 of the brand post, coffee spilled on the same white shirt.
 // 3.11: shown in this order, Shachar first, then the newest number on top (החדש למעלה, so sheetNewFirst leaves it).
 var REEL_ITEMS=[
+// 12.11, Itzik: "זה יהיה גם סרטון לסטורי, תשים לי אותו ברילים סטורי חדש". The monitor video, problem and solution five times,
+// with it-solution.co.il at the end (source ~/clip/monitor_ps_story). Shows in the 💻 IT Solution tab.
+{n:'IT סטורי מוניטור',t:'🆕 סטורי: המוניטור, בעיה ופתרון חמש פעמים · בסוף כתובת האתר',r:'monitor-ps-story.mp4'},
 // 3.11, Itzik: "אין יותר רשימת המתנה, הרשמה וישר נכנסים". All of Shachar in one group, shown first;
 // 'p' is the reel-posts.json key for a פרסום item whose name does not start with its number.
 {n:'שחר סטורי',t:'שחר פתוח עכשיו, נרשמים ונכנסים מיד · 4K הכי איכותי, לשמירה בגלריה',r:'shachar-story-open.mp4'},
@@ -17506,15 +17509,15 @@ on('gClalit',clalitSheet);
 var TOM_ITEMS=[
 // 12.11, Itzik: "תמחק משם את כל הסרטונים שאנחנו לא משתמשים ותשאיר רק מה שיש עכשיו בקמפיין ועוד הסרטון החדש של היום".
 // Removed files are in /home/monitor/trash-tom-nov12 (it01 stays, other lists use it).
- {n:"1",t:"📣 קמפיין · ✅ באוויר · שרפת קרדיטים, תמונה מונפשת (מביאה כמעט את כל הלידים)",r:"ads-nov01-card9-story.mp4"},
- {n:"2",t:"📣 קמפיין · ✅ באוויר · תור לרופא שיניים",r:"ad-monitor-tor-shinayim-chat.mp4"},
- {n:"3",t:"📣 קמפיין · ✅ באוויר מ 11.11 · מי לא שילם, אנימציה",r:"ad-monitor-anim-1111.mp4"},
- {n:"4",t:"📣 קמפיין · 🆕 נכנס היום 12.11 · עסקי ואישי בלחיצה",r:"ad-monitor-personal-v2.mp4"},
- {n:"5",t:"📣 קמפיין · ✅ עלה 12.11, בבדיקה של מטא · נתקעת באמצע ב Lovable או Base44",r:"ads-nov12-card15.mp4"},
- {n:"6",t:"📣 קמפיין · ✅ עלה 12.11, בבדיקה של מטא · אתרים: האתר יפה, ואף אחד לא פונה (מסך חדש עם פניות)",r:"ads-nov12-card16.mp4"},
- {n:"7",t:"📣 קמפיין · ✅ עלה 12.11, בבדיקה של מטא · ייעוץ: עובד 12 שעות ביום והכל עדיין עליך",r:"ads-nov12-card17.mp4"},
- // 12.11, Itzik: the monitor video, problem and solution one after the other, less crowded, no WhatsApp (that one after Meta's approval).
- {n:"8",t:"🆕 טיוטה לבדיקה 12.11 · סרטון המוניטור: בעיה, פתרון, חמש פעמים, בלי וואטסאפ",r:"monitor-ps-v1.mp4"}
+ // 12.11 afternoon, Itzik: "שלא יהיו יותר מדי דברים בקמפיין, ליד כל אחד בקיצור מה הוא". Only what runs or waits for Meta,
+ // one short line each. The monitor video (problem and solution) moved to the 💻 IT Solution tab as a story.
+ {n:"1",t:"✅ באוויר · שרפת קרדיטים: תמונה מונפשת, מביאה את רוב הלידים",r:"ads-nov01-card9-story.mp4"},
+ {n:"2",t:"✅ באוויר · תור לרופא שיניים: המוניטור קובע ומזכיר",r:"ad-monitor-tor-shinayim-chat.mp4"},
+ {n:"3",t:"✅ באוויר · מי לא שילם לך: אנימציה של המוניטור",r:"ad-monitor-anim-1111.mp4"},
+ {n:"4",t:"✅ באוויר · עסקי ואישי: מתג בין העסק לבית",r:"ad-monitor-personal-v2.mp4"},
+ {n:"5",t:"⏳ בבדיקה של מטא · נתקעת ב Lovable או Base44: מסיימים לך את האתר",r:"ads-nov12-card15.mp4"},
+ {n:"6",t:"⏳ בבדיקה של מטא · אתר יפה ואף אחד לא פונה: מסך פניות",r:"ads-nov12-card16.mp4"},
+ {n:"7",t:"⏳ בבדיקה של מטא · עובד 12 שעות והכל עליך: ייעוץ",r:"ads-nov12-card17.mp4"}
 ];
 function tomSheet(){
  var old=document.getElementById('tomSheet');if(old)old.remove();
@@ -17701,7 +17704,7 @@ function vidTabs(){
   {id:'ai',l:'🤖 ערוץ AI'+(aiN?' ('+aiN+')':''),upd:'20261110-approve',h:'הרילים של ערוץ ה AI להעלאה, בעברית ובאנגלית: מה עדיין לא עלה. מה שעלה יורד מכאן לבד',L:vqRows('ai').concat([{h:'📂 הדף המלא'},{k:'go',t:'🤖 פתיחת הרילים של ערוץ ה AI',u:'ai/ai.html'}])},
   {id:'nr',l:'🕯️ נרות'+(nrN?' ('+nrN+')':''),h:'candle.times: סטוריז ופוסטים שמחכים לאישור שלך',L:vqRows('nr').concat([{h:'📂 הדף המלא'},{k:'go',t:'🕯️ פתיחת candle.times',u:'ner/candle.html'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return candleN[x.it.n];}))},
   // 7.11, Itzik: a tab for IT Solution reels (ready ones first, then the ideas). upd = the soft blink until the tab is opened.
-  {id:'it',l:'💻 IT Solution',upd:'20261107-it03en',h:'הרילים של IT Solution: המוניטור, הקמפיינים והעסקים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isIt(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isIt(x.it);}))},
+  {id:'it',l:'💻 IT Solution',upd:'20261112-ps-story',h:'הרילים של IT Solution: המוניטור, הקמפיינים והעסקים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isIt(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isIt(x.it);}))},
   // 7.11, Itzik: the reels and the future reels too, each in its own tab of the one tile.
   {id:'me',l:'🎬 הרילים שלי',h:'הרילים והסטוריז שלי, מוכנים לרשתות',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return !isSh(x.it)&&!isIt(x.it);}))},
   {id:'car',l:'🎠 קרוסלות'+(CARON.length?' ('+CARON.length+')':''),pulse:CARON.length,h:'קרוסלות לאבא איציק, כל הנושאים. מה שעוד לא עלה מהבהב חלש',L:carL},
