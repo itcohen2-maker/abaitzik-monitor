@@ -571,7 +571,9 @@ function saveSiteLead(text, at) {
   if (!r) return;
   const dir = path.join(inst.dataPath, 'biz', 'biz');
   try { fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(path.join(dir, id + '.json'), JSON.stringify(r, null, 1), 'utf8'); say('ליד נכנס לעסק שלי: ' + r.name); }
-  catch (e) { say('!! ליד לא נכנס לעסק שלי: ' + e.message); }
+  catch (e) { say('!! ליד לא נכנס לעסק שלי: ' + e.message); return; }
+  // 12.11.2026: a site lead that came through a referrer's link (?ref=shai) goes on his table too (affiliates.js).
+  if (inst.name === 'abaitzik') { try { const who = require('./affiliates.js').linkSiteLead(text, r); if (who) say('ליד מהאתר נכנס גם לטבלה של ' + who); } catch (e) { say('!! טבלת שותף: ' + e.message); } }
 }
 
 /*

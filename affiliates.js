@@ -234,4 +234,28 @@ function handleLead(b, ip, notify) {
   return { ok: true };
 }
 
-module.exports = { serve, handleLead, handleSign, rows, aff };
+/*
+  12.11.2026, Itzik: "כן" to giving Shai a link to the site, it-solution.co.il/?ref=shai. The site keeps the ref 30 days and
+  the chat lead arrives as "ליד מהאתר" with "מקור: shai". listen.js saveSiteLead calls this after the lead is saved: when the
+  source is a referrer's ref, the lead goes on his table too, once.
+*/
+function byRef(ref) {
+  let f = [];
+  try { f = fs.readdirSync(DIR).filter((x) => /^[a-f0-9]{16,40}\.json$/.test(x)); } catch (e) { return null; }
+  for (const x of f) { const a = readJson(path.join(DIR, x), null); if (a && a.ref === ref) return { tok: x.slice(0, -5), a }; }
+  return null;
+}
+function linkSiteLead(text, rec) {
+  const m = /^מקור:\s*([A-Za-z0-9_-]{2,40})/m.exec(String(text || ''));
+  if (!m || !rec || !rec.id) return null;
+  const hit = byRef(m[1].toLowerCase());
+  if (!hit) return null;
+  const a = hit.a;
+  a.leads = a.leads || [];
+  if (a.leads.some((x) => x.id === rec.id)) return null;
+  a.leads.push({ at: rec.at || new Date().toISOString(), id: rec.id, name: rec.name || 'ליד מהאתר', biz: 'מהאתר' });
+  writeJson(path.join(DIR, hit.tok + '.json'), a);
+  return a.name;
+}
+
+module.exports = { serve, handleLead, handleSign, rows, aff, linkSiteLead };
