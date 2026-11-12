@@ -18357,10 +18357,6 @@ function handleSheet(req){
  document.body.appendChild(w);
 }
 /*ITZIK:END*/
-/*
-  Page activity beacon (lib/visits.js on wa-bridge): start when on screen, beat every minute, end when hidden.
-  Outside the ITZIK block on purpose: a customer page needs it, and only the time and phone/computer are sent.
-*/
 var VIS_API='https://wa.abaitzik.com/api/visit',visSid='',visOn=false,visTimer=0;
 function visDev(){var t=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Mac/.test(navigator.platform||''));return t?'phone':'computer';}
 function visSend(ev){try{if(!D||!D.visitKey||!visSid)return;fetch(VIS_API,{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({key:D.visitKey,sid:visSid,ev:ev,dev:visDev()})}).catch(function(){});}catch(e){}}
