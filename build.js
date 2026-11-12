@@ -1572,7 +1572,7 @@ function tenantTiles(inst) {
   const samples = inst.samples ? sample(1) + sample(2).replace('g11', 'g4') : '';
   const top = ids.filter((id) => TENANT_TOP.indexOf(id) >= 0), rest = ids.filter((id) => TENANT_TOP.indexOf(id) < 0);
   const draw = (list) => list.filter((id) => TENANT_TILES[id]).map((id) => {
-    if (id === 'gLeads') return String.fromCharCode(10) + '  ' + leadsTile();
+    if (id === 'gLeads') return String.fromCharCode(10) + '  ' + (typeof leadsTile === 'function' ? leadsTile() : '<button type="button" class="gt g16" id="gLeads"><b>🔔 לידים</b><small>כל הלידים במקום אחד</small></button>');
     let [cls, title, sub] = TENANT_TILES[id];
     // 10.11.2026, Itzik: the manager tile is named after its owner, "המנהלת של ד״ר שולמן".
     if (id === 'gMyMgr' && inst.owner) title = '🧑‍💼 המנהלת של ' + esc(inst.owner);
