@@ -21,8 +21,11 @@ LOG=/var/log/monitor-wa-kapso.log
 exec 9>/run/wa-kapso-provision.lock
 flock -n 9 || exit 0
 log() { echo "$(date -Is) $*" >> "$LOG"; }
-[ -d "$P" ] || exit 0
 cd "$R" || exit 1
+# 12.11.2026, Itzik: the quick connect (lib/wa-quick-provision.js): data/wa-tenants-pending/<tenant>.json left by wa-bridge.js
+# when a customer sent his code or wrote "ניתוק". Maps the number, writes his status, rebuilds his page, pushes, confirms.
+node "$R/lib/wa-quick-provision.js" >> "$LOG" 2>&1 || log "quick connect provisioning failed"
+[ -d "$P" ] || exit 0
 
 # jget <file> <a.b.c>
 jget() { node -e 'try{const o=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));const v=process.argv[2].split(".").reduce((a,k)=>a&&a[k],o);process.stdout.write(v==null?"":String(v))}catch(e){}' "$1" "$2"; }

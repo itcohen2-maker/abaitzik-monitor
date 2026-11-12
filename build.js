@@ -8455,9 +8455,13 @@ function renderThread(){
    var t=b.classList.contains('rcopyall')?(b.getAttribute('data-copy')||''):(flat[Number(b.getAttribute('data-i'))].text||'');
    var was=b.textContent;
    var done=function(){b.textContent='הועתק';setTimeout(function(){b.textContent=was;},1400);};
+   // 12.11: a clipboard write that never settles (a hidden tab, a stuck permission) left the button silent. After 1.5 s the copy falls back to the text box, once.
+   var settled=false;
+   var finish=function(){if(settled)return;settled=true;done();};
    if(navigator.clipboard&&navigator.clipboard.writeText){
-    navigator.clipboard.writeText(t).then(done,function(){fallbackCopy(t,done);});
-   }else fallbackCopy(t,done);
+    setTimeout(function(){if(!settled)fallbackCopy(t,finish);},1500);
+    navigator.clipboard.writeText(t).then(finish,function(){fallbackCopy(t,finish);});
+   }else fallbackCopy(t,finish);
   };
  });
 }
@@ -19157,7 +19161,10 @@ function connSheet(){
  C.rows.forEach(function(r){
   var st=r.on?'<span class="cnOk">✓ מחובר</span>':r.paid?'<span class="cnPaid">'+esc(r.paid)+'</span>':r.soon?'<span class="cnSoon">מחברים בתיאום עם IT Solution</span>':'<span class="cnOff">לא מחובר</span>';
   h+='<div class="cnr'+(r.on?' on':'')+(r.locked?' lock':'')+'"'+(r.locked?' aria-disabled="true"':'')+'><span class="cni">'+esc(r.icon)+'</span><div class="cnt"><b>'+esc(r.title)+'</b>'+st+(r.who?'<small>'+esc(r.who)+'</small>':'')+'</div>';
-  if(r.link&&!r.soon)h+='<a class="cnb'+(r.on?' again':'')+'" href="'+esc(r.link)+'" target="_blank" rel="noopener">'+(r.on?'חיבור מחדש':'להתחבר')+'</a>';
+  if(r.link&&!r.soon)h+='<a class="cnb'+(r.on?' again':'')+'" href="'+esc(r.link)+'" target="_blank" rel="noopener">'+(r.on?'חיבור מחדש':(r.linkLabel||'להתחבר'))+'</a>';
+  // 12.11: the quick WhatsApp connect is the primary action; the own number (waOwn flag) is a small second link, a note says how to disconnect.
+  if(r.link2&&!r.on)h+='<a href="'+esc(r.link2)+'" target="_blank" rel="noopener" style="flex-basis:100%;font-size:12.5px;color:#0e7490;margin-top:4px">'+esc(r.link2Label||'')+'</a>';
+  if(r.note)h+='<small style="flex-basis:100%">'+esc(r.note)+'</small>';
   // 12.11: YouTube takes a channel link here, no Google login and no leaving the monitor.
   if(r.yt&&!r.locked)h+='<div style="flex-basis:100%;display:flex;gap:6px;margin-top:6px"><input type="url" id="ytUrl" dir="ltr" maxlength="300" placeholder="קישור לערוץ, לסרטון, או @שם" style="flex:1;min-width:0;border-radius:10px;border:1px solid #ccd;padding:8px;font:15px Heebo,sans-serif"><button type="button" class="yb" data-yt="1">'+(r.on?'החלפה':'שמירה')+'</button></div>'+(r.ytErr?'<small style="flex-basis:100%">'+esc(r.ytErr)+'</small>':'')+'<small style="flex-basis:100%">קוראים רק תגובות ציבוריות, בלי כניסה לחשבון. המוניטור לא מגיב ולא מוחק.</small>';
   h+='</div>';

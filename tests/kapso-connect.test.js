@@ -197,10 +197,11 @@ test('connections: a customer without the wa feature sees no WhatsApp row', () =
   assert.strictEqual(conn('basic', 't1a2b3c', {}, {}), undefined);
 });
 
-test('connections: with the feature and his code the row links to the connect page, not connected yet', () => {
-  const row = conn('basic', 't1a2b3c', { wa: true }, { 'fc-key.txt': KEY });
+test('connections: with the feature, his code and waOwn the own number link is the second action (12.11: the quick connect is the first)', () => {
+  const row = conn('basic', 't1a2b3c', { wa: true, waOwn: true }, { 'fc-key.txt': KEY });
   assert.strictEqual(row.on, false);
-  assert.strictEqual(row.link, 'https://wa.abaitzik.com/api/wa/connect?t=t1a2b3c&c=' + KEY);
+  assert.ok(row.link.startsWith('https://wa.me/'));
+  assert.strictEqual(row.link2, 'https://wa.abaitzik.com/api/wa/connect?t=t1a2b3c&c=' + KEY);
   assert.ok(!row.paid && !row.locked);
 });
 
@@ -211,7 +212,7 @@ test('connections: without a code it stays the old coordinated text, no link', (
 });
 
 test('connections: phoneId and kapsoKey in his wa.json show it connected with the number, link kept for reconnect', () => {
-  const row = conn('small', 't1a2b3c', { wa: true }, { 'fc-key.txt': KEY, 'wa.json': { phoneId: '1', kapsoKey: 'k', kapsoDisplay: '972521234567' } });
+  const row = conn('small', 't1a2b3c', { wa: true, waOwn: true }, { 'fc-key.txt': KEY, 'wa.json': { phoneId: '1', kapsoKey: 'k', kapsoDisplay: '972521234567' } });
   assert.strictEqual(row.on, true);
   assert.strictEqual(row.who, '972521234567');
   assert.ok(row.link);

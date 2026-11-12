@@ -38,7 +38,8 @@ const path = require('path');
 const ROOT = __dirname;
 // 12.11.2026: WA_BRIDGE_DATA lets the tests point the bridge at a temporary data folder.
 const CFG = path.join(process.env.WA_BRIDGE_DATA || path.join(ROOT, 'data'), 'wa.json');
-const STATE = path.join(ROOT, 'data', 'status', 'wa-bridge.json');
+// 12.11.2026: the state follows WA_BRIDGE_DATA too, so a test never touches the real one.
+const STATE = path.join(process.env.WA_BRIDGE_DATA || path.join(ROOT, 'data'), 'status', 'wa-bridge.json');
 const CHAT = path.join(ROOT, 'data', 'chat', 'chat');
 const PORT = Number(process.env.WA_PORT || 8796);
 const DEMO_FLAG = path.join(ROOT, 'data', 'demo', 'active.json');
@@ -151,6 +152,7 @@ async function waSend(to, text, mem) {
 const waOut = require('./lib/wa-out.js');
 const WT = require('./lib/wa-tenants.js');
 const WM = require('./lib/wa-media.js');
+const QK = require('./lib/wa-quick.js');
 const groupLib = require('./lib/group.js');
 const DATA = process.env.WA_BRIDGE_DATA || path.join(ROOT, 'data');
 const LONG = 700;
@@ -426,6 +428,10 @@ async function onMessage(m, contactName) {
   if (allow.indexOf(String(m.from)) < 0) {
     // 11.11: a customer's number goes to his own monitor (lib/wa-tenants.js). Itzik's numbers (allow) are checked first.
     const tn = WT.lookup(DATA, m.from);
+    // 12.11: the quick connect phrase (lib/wa-quick.js) and "ניתוק" are answered before anything else.
+    { const qt = textOf(m);
+      if (tn && qt && QK.isDisconnect(qt)) return quickDisconnect(m, tn);
+      if (qt && QK.looksLikeConnect(qt) && (!tn || QK.parse(qt))) return quickConnect(m, qt, contactName, tn); }
     if (tn) return tenantMessage(m, tn, contactName);
     log('not on the allow list: ' + String(m.from).slice(0, 5) + '...'); return;
   }
@@ -522,6 +528,54 @@ async function onMessage(m, contactName) {
 async function tenantSend(to, text) {
   try { await waSend(to, text); return true; } catch (e) { log('tenant send failed ' + String(to).slice(0, 5) + '...: ' + e.message.slice(0, 160)); return false; }
 }
+/*
+  12.11.2026, Itzik: "כן, תבנה את החיבור המהיר". A customer presses the quick connect link in 🔌 and sends
+  "היי, אני רוצה לחבר את הוואטסאפ שלי למוניטור. קוד: <code>" to the shared number. The code resolves his tenant
+  (lib/wa-quick.js); the bridge only leaves data/wa-tenants-pending/<tenant>.json, root maps it within a minute
+  (setup/wa-kapso-provision.sh, lib/wa-quick-provision.js). He just wrote, so a free text reply is allowed.
+  A number mapped to another monitor is never remapped. At most 3 replies a day to one number (QK.allowReply).
+  "ניתוק" from a mapped number leaves a remove request.
+*/
+async function quickReply(m, text) {
+  if (!QK.allowReply(DATA, m.from)) { log('quick connect: reply limit for ' + String(m.from).slice(0, 5) + '...'); return; }
+  await tenantSend(m.from, text);
+}
+async function quickConnect(m, text, contactName, tn) {
+  markRead(m.id);
+  const from = String(m.from);
+  const tenant = QK.resolve(DATA, QK.parse(text));
+  if (!tenant) { log('quick connect: wrong code from ' + from.slice(0, 5) + '...'); return quickReply(m, 'הקוד לא תקין. כדאי לפתוח שוב את 🔌 חיבורים במוניטור וללחוץ על חיבור מהיר.'); }
+  if (tn) {
+    if (tn.tenant === tenant) return quickReply(m, 'המספר הזה כבר מחובר למוניטור שלך ✓. אפשר לכתוב לי כאן כל בקשה.');
+    log('quick connect: ' + from.slice(0, 5) + '... is mapped to ' + tn.tenant + ', refused for ' + tenant);
+    return quickReply(m, 'המספר הזה כבר מחובר למוניטור אחר, לכן לא חיברתי אותו. כדאי לפנות אל IT Solution.');
+  }
+  const other = QK.pendingPhoneOwner(DATA, from);
+  if (!WT.norm(from) || (other && other !== tenant)) return quickReply(m, 'לא הצלחתי לחבר את המספר הזה בעצמי. כדאי לפנות אל IT Solution ונסדר את זה.');
+  try { QK.writePending(DATA, { op: 'add', tenant, phone: from, name: contactName || '' }); }
+  catch (e) { log('!! quick connect pending ' + tenant + ': ' + e.message); return quickReply(m, 'משהו נתקע אצלי. אפשר לנסות שוב בעוד דקה.'); }
+  log('quick connect: ' + tenant + ' <- ' + from.slice(0, 5) + '...');
+  return quickReply(m, '✓ מחבר אותך למוניטור שלך. תוך דקה אפשר לכתוב לי כאן כל בקשה.');
+}
+async function quickDisconnect(m, tn) {
+  markRead(m.id);
+  try { QK.writePending(DATA, { op: 'remove', tenant: tn.tenant, phone: String(m.from) }); }
+  catch (e) { log('!! quick disconnect ' + tn.tenant + ': ' + e.message); return; }
+  log('quick disconnect: ' + tn.tenant);
+  return quickReply(m, '✓ קיבלתי, מנתק את המספר הזה מהמוניטור. אפשר לחבר שוב בכל רגע מ 🔌 חיבורים.');
+}
+// Root leaves lines here (the confirmation after the number is mapped); sent as free text, once, inside the 24 hour window.
+function outboxSweep() {
+  const dir = path.join(DATA, 'wa-outbox');
+  let fl = []; try { fl = fs.readdirSync(dir).filter(function (f) { return /\.json$/.test(f); }).slice(0, 10); } catch (e) { return; }
+  fl.forEach(function (f) {
+    const full = path.join(dir, f);
+    let o = null; try { o = JSON.parse(fs.readFileSync(full, 'utf8')); } catch (e) { return; }
+    try { fs.unlinkSync(full); } catch (e) { return; }
+    if (!o || !/^\d{8,15}$/.test(String(o.to || '')) || !o.text) return;
+    tenantSend(String(o.to), String(o.text).slice(0, 1500));
+  });
+}
 async function tenantMessage(m, tn, contactName) {
   markRead(m.id);
   { const sl = loadState(); sl.lastIn = sl.lastIn || {}; sl.lastIn[m.from] = Date.now(); saveState(sl); }
@@ -595,6 +649,7 @@ function latestOwn(to) {
 
 // The answers: claude's chat records that answer a message that came from WhatsApp.
 function sweep() {
+  outboxSweep();
   const st = loadState();
   const ids = Object.keys(st.pending);
   if (!ids.length) return;
@@ -1221,4 +1276,4 @@ if (require.main === module) {
   setInterval(function () { try { require('./forms.js').sweep(formNotify); } catch (e) { log('forms sweep: ' + e.message); } }, 60000);
   setInterval(function () { try { require('./setup.js').sweep(formNotify); } catch (e) { log('setup sweep: ' + e.message); } }, 60000);
 }
-module.exports = { connectCodeOk, waConnect, kapsoProject, kapsoEvent, textOf, sigOk, voiceCommand, speakable, shortOf, isAllCommand, route, onMessage, sweep, _set: function (o) { if (o.push) pushItzik = o.push; if (o.waSend) waSend = o.waSend; if (o.markRead) markRead = o.markRead; } };
+module.exports = { connectCodeOk, waConnect, kapsoProject, kapsoEvent, textOf, sigOk, voiceCommand, speakable, shortOf, isAllCommand, route, onMessage, sweep, outboxSweep, _set: function (o) { if (o.push) pushItzik = o.push; if (o.waSend) waSend = o.waSend; if (o.markRead) markRead = o.markRead; } };
