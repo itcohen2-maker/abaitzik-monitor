@@ -2735,7 +2735,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-12T08:00:04.859Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-12T08:07:29.939Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4671,7 +4671,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='1d77029701';
+var CODE_ID='519260f4bb';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -13928,6 +13928,7 @@ function handleSheet(req){
  };
  document.body.appendChild(w);
 }
+
 var VIS_API='https://wa.abaitzik.com/api/visit',visSid='',visOn=false,visTimer=0;
 function visDev(){var t=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Mac/.test(navigator.platform||''));return t?'phone':'computer';}
 function visSend(ev){try{if(!D||!D.visitKey||!visSid)return;fetch(VIS_API,{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({key:D.visitKey,sid:visSid,ev:ev,dev:visDev()})}).catch(function(){});}catch(e){}}
@@ -13940,6 +13941,7 @@ function visitStart(){
  document.addEventListener('visibilitychange',function(){if(document.hidden)visStop();else visBegin();});
  window.addEventListener('pagehide',visStop);
 }
+
 function visAll(){
  var V=D&&D.visits,L=[];if(!V)return L;
  Object.keys(V).forEach(function(n){(V[n].list||[]).forEach(function(x){L.push({n:n,t:V[n].title||n,at:x.at,sec:x.sec,dev:x.dev});});});
