@@ -1,0 +1,11 @@
+[Unit]
+Description=Public YouTube comments for every monitor that gave a channel (yt-comments.js)
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/home/monitor/abaitzik-monitor
+EnvironmentFile=/etc/monitor.env
+ExecStart=/usr/bin/node yt-comments.js
+StandardOutput=append:/var/log/monitor-yt.log
+StandardError=append:/var/log/monitor-yt.log
+TimeoutStartSec=1500

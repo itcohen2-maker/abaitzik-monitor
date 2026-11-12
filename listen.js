@@ -811,6 +811,23 @@ function recordIncoming(m) {
       try { require('./lib/handle.js').publishSoon(); } catch (e) { /* the next build carries it */ }
       return true;
     }
+    // 12.11.2026: "▶️ ערוץ יוטיוב: <link>" from 🔌 חיבורים (lib/yt-comments.js). Saved here with no model; yt-comments.js reads the comments.
+    const ytIn = codeOk && require('./lib/yt-comments.js').parseMsg(text.replace(/\n\s*קוד[^\n]*$/, ''));
+    if (ytIn) {
+      let res; try { res = require('./lib/yt-comments.js').setChannel(inst.dataPath, ytIn); } catch (e) { res = { ok: false, reply: 'לא הצלחתי לשמור את הערוץ (' + e.message + ')' }; }
+      say('יוטיוב: ' + (res.ok ? (res.removed ? 'הוסר' : 'נשמר') : res.reply));
+      try {
+        if (res.ok) fs.unlinkSync(path.join(CHAT, name));
+        else {
+          rec.status = 'done';
+          fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+          fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-yt-ack.json')),
+            JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id, text: res.reply, status: 'done' }, null, 1), 'utf8');
+        }
+      } catch (e) { /* the next build carries it */ }
+      try { require('./lib/handle.js').publishSoon(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
     const hdM = codeOk && /^\s*(?:משימה)?\s*✓\s*טופל\s*[:：]\s*(\S+)/.exec(text.replace(/\n\s*קוד[^\n]*$/, ''));
     if (hdM) {
       let ans = '';

@@ -2779,7 +2779,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-12T17:10:03.350Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-12T17:16:42.603Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4709,7 +4709,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='8fd4694c00';
+var CODE_ID='115943dd64';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -14618,6 +14618,7 @@ function connSheet(){
   var st=r.on?'<span class="cnOk">✓ מחובר</span>':r.paid?'<span class="cnPaid">'+esc(r.paid)+'</span>':r.soon?'<span class="cnSoon">מחברים בתיאום עם IT Solution</span>':'<span class="cnOff">לא מחובר</span>';
   h+='<div class="cnr'+(r.on?' on':'')+(r.locked?' lock':'')+'"'+(r.locked?' aria-disabled="true"':'')+'><span class="cni">'+esc(r.icon)+'</span><div class="cnt"><b>'+esc(r.title)+'</b>'+st+(r.who?'<small>'+esc(r.who)+'</small>':'')+'</div>';
   if(r.link&&!r.soon)h+='<a class="cnb'+(r.on?' again':'')+'" href="'+esc(r.link)+'" target="_blank" rel="noopener">'+(r.on?'חיבור מחדש':'להתחבר')+'</a>';
+  if(r.yt&&!r.locked)h+='<div style="flex-basis:100%;display:flex;gap:6px;margin-top:6px"><input type="url" id="ytUrl" dir="ltr" maxlength="300" placeholder="קישור לערוץ, לסרטון, או @שם" style="flex:1;min-width:0;border-radius:10px;border:1px solid #ccd;padding:8px;font:15px Heebo,sans-serif"><button type="button" class="yb" data-yt="1">'+(r.on?'החלפה':'שמירה')+'</button></div>'+(r.ytErr?'<small style="flex-basis:100%">'+esc(r.ytErr)+'</small>':'')+'<small style="flex-basis:100%">קוראים רק תגובות ציבוריות, בלי כניסה לחשבון. המוניטור לא מגיב ולא מוחק.</small>';
   h+='</div>';
  });
  h+='<small>אחרי חיבור, המצב כאן מתעדכן תוך כמה דקות.</small><button type="button" class="yb yx" data-k="">סגירה</button></div>';
@@ -14625,13 +14626,46 @@ function connSheet(){
  w.innerHTML=h;
  function close(){w.remove();document.removeEventListener('keydown',esckey);}
  function esckey(e){if(e.key==='Escape')close();}
- w.onclick=function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-k');if(e.target===w||k==='')close();};
+ w.onclick=function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-k');if(e.target===w||k==='')return close();
+  if(e.target.getAttribute&&e.target.getAttribute('data-yt')){
+   var u=((document.getElementById('ytUrl')||{}).value||'').trim();if(!u){toast('להדביק קישור לערוץ יוטיוב.');return;}
+   var note='▶️ ערוץ יוטיוב: '+u,bt=e.target;bt.disabled=true;
+   sendText('ערוץ יוטיוב',note,'משימה').then(function(){markSent('text',note);toast('נשמר. התגובות יופיעו באריח ▶️ תוך רבע שעה.');close();}).catch(function(){bt.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
+  }
+ };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
 }
 on('icConn',connSheet);on('gConn',connSheet);
 function connNone(){var C=D&&D.conn;return !!(C&&C.rows&&C.rows.length&&!C.rows.some(function(r){return r.on&&!r.fixed;}));}
 try{if(connNone())['gConn','icConn'].forEach(function(id){var t=document.getElementById(id);if(t)t.classList.add('taskblink');});}catch(e){}
+function ytSheet(){
+ var old=document.getElementById('ytSheet');if(old)old.remove();
+ var Y=D.yt||{ch:{},items:[]},it=Y.items||[],ch=Y.ch||{};
+ var h='<div class="ycard"><b>▶️ תגובות ביוטיוב</b>';
+ if(ch.err)h+='<p>'+esc(ch.err)+' אפשר להחליף את הקישור ב 🔌 חיבורים.</p>';
+ else if(!ch.ok)h+='<p>הערוץ נשמר. התגובות יגיעו לכאן תוך רבע שעה.</p>';
+ else h+='<p>'+esc(ch.title)+': '+it.length+' תגובות מ 30 הימים האחרונים. שאלות ופניות למעלה. כאן רק קוראים, את התשובה כותבים ביוטיוב.</p>';
+ var top=it.filter(function(x){return x.lead||x.q;}),rest=it.filter(function(x){return !(x.lead||x.q);});
+ top.concat(rest).forEach(function(x){
+  var tag=x.lead?'🔔 פנייה · ':x.q?'❓ שאלה · ':'';
+  h+='<div class="cnr"><div class="cnt"><b>'+tag+esc(x.author||'')+'</b><span style="white-space:pre-wrap">'+esc(x.text||'')+'</span><small>'+esc((x.vtitle?x.vtitle+' · ':'')+String(x.at||'').slice(0,10).split('-').reverse().join('.'))+(x.replies?' · '+x.replies+' תשובות':'')+'</small></div>'
+   +(x.url?'<a class="cnb" href="'+esc(x.url)+'" target="_blank" rel="noopener">ביוטיוב</a>':'')+'</div>';
+ });
+ if(ch.ok&&!it.length)h+='<p>אין תגובות חדשות ב 30 הימים האחרונים.</p>';
+ h+='<button type="button" class="yb yx" data-k="">סגירה</button></div>';
+ var w=document.createElement('div');w.id='ytSheet';w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','תגובות ביוטיוב');
+ w.innerHTML=h;
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-k');if(e.target===w||k==='')close();};
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+ try{localStorage.setItem('ytSeen',(it[0]&&it[0].id)||'');}catch(e){}
+ var t=document.getElementById('gYtCom');if(t)t.classList.remove('taskblink');
+}
+on('gYtCom',ytSheet);
+try{(function(){var f=D&&D.yt&&D.yt.items&&D.yt.items[0];if(!f)return;var s='';try{s=localStorage.getItem('ytSeen')||'';}catch(e){}if(s!==f.id){var t=document.getElementById('gYtCom');if(t)t.classList.add('taskblink');}})();}catch(e){}
 function firstSteps(){
  var w=document.getElementById('firstSteps');if(!w)return;
  var R=(D.conn&&D.conn.rows)||[];

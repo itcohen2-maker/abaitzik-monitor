@@ -893,6 +893,8 @@ function build() {
     demoFcKey: inst.name === 'abaitzik' ? (() => { try { const k = (JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'fastchat', 'tenants.json'), 'utf8')).demo || {}).key || ''; return /^[a-f0-9]{24,64}$/.test(k) ? k : ''; } catch (e) { return ''; } })() : '',
     // 7.11.2026: 🔌 חיבורים, what is connected and a connect link for each (lib/connections.js). His copy only.
     conn: (() => { const F = require('./lib/features.js').read(inst.dataPath, inst.name); return F.conn ? require('./lib/connections.js').list(inst.dataPath, inst.name, F, null, inst.plan) : null; })(),
+    // 12.11.2026: ▶️ the public YouTube comments of the channel given in 🔌 (lib/yt-comments.js). Sealed like the rest of D.
+    yt: (() => { try { return require('./lib/yt-comments.js').forPage(inst.dataPath); } catch (e) { return null; } })(),
     // 12.10: the 🩺 board, every monitor's faults in one file (health-board.js). His copy only.
     health: inst.name === 'abaitzik' ? (() => { try { return JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'status', 'health-board.json'), 'utf8')); } catch (e) { return null; } })() : null,
     ideas,
@@ -1412,6 +1414,7 @@ const TENANT_TILES = {
   gBhClients: ['g16', '👥 הלקוחות שלי', 'מה פתוח מול כל לקוח, ומתי נפגשים'],
   gBhCal: ['g15', '📅 פגישות ויומן', 'מה יש לי היום, ומה בהמשך'],
   gConn: ['g4', '🔌 חיבורים', 'מה מחובר, וחיבור בלחיצה'],
+  gYtCom: ['g11', '▶️ תגובות ביוטיוב', 'מה כתבו לך בערוץ, שאלות ופניות למעלה'],
   gBhMail: ['g11', '📧 מייל', 'מה חשוב, ולמי לחזור'],
   gBhQuote: ['g13', '🧾 הצעות מחיר', 'הצעה עם הלוגו שלך, לפני מע״מ, ב PDF'],
   // 3.11.2026, Itzik: a customer's own shopping list (lib/shop-list.js), not Itzik's shared doc.
@@ -1517,6 +1520,8 @@ function tenantTiles(inst) {
   TENANT_ALWAYS.forEach((id) => { if (ids.indexOf(id) < 0) ids.push(id); });
   // 10.11.2026: the campaigns tile comes by itself once his Facebook is connected and numbers came in (ads-sync.js).
   if (ids.indexOf('gAds') < 0) { try { if (JSON.parse(fs.readFileSync(path.join(inst.dataPath || 'data', 'ads', 'status.json'), 'utf8')).ok === true) ids.push('gAds'); } catch (e) { /* not connected */ } }
+  // 12.11.2026: ▶️ comes once a YouTube channel was given in 🔌 (data/yt/channel.json).
+  try { if (ids.indexOf('gYtCom') < 0 && fs.existsSync(path.join(inst.dataPath || 'data', 'yt', 'channel.json'))) ids.push('gYtCom'); } catch (e) { /* none */ }
   ids.push('gConn');
   ids.push('gAdminReq');
   // 10.11.2026: a per tenant opt out (instance hideTiles, an array of tile ids). gConn and gAdminReq can never be hidden.
@@ -19153,6 +19158,8 @@ function connSheet(){
   var st=r.on?'<span class="cnOk">✓ מחובר</span>':r.paid?'<span class="cnPaid">'+esc(r.paid)+'</span>':r.soon?'<span class="cnSoon">מחברים בתיאום עם IT Solution</span>':'<span class="cnOff">לא מחובר</span>';
   h+='<div class="cnr'+(r.on?' on':'')+(r.locked?' lock':'')+'"'+(r.locked?' aria-disabled="true"':'')+'><span class="cni">'+esc(r.icon)+'</span><div class="cnt"><b>'+esc(r.title)+'</b>'+st+(r.who?'<small>'+esc(r.who)+'</small>':'')+'</div>';
   if(r.link&&!r.soon)h+='<a class="cnb'+(r.on?' again':'')+'" href="'+esc(r.link)+'" target="_blank" rel="noopener">'+(r.on?'חיבור מחדש':'להתחבר')+'</a>';
+  // 12.11: YouTube takes a channel link here, no Google login and no leaving the monitor.
+  if(r.yt&&!r.locked)h+='<div style="flex-basis:100%;display:flex;gap:6px;margin-top:6px"><input type="url" id="ytUrl" dir="ltr" maxlength="300" placeholder="קישור לערוץ, לסרטון, או @שם" style="flex:1;min-width:0;border-radius:10px;border:1px solid #ccd;padding:8px;font:15px Heebo,sans-serif"><button type="button" class="yb" data-yt="1">'+(r.on?'החלפה':'שמירה')+'</button></div>'+(r.ytErr?'<small style="flex-basis:100%">'+esc(r.ytErr)+'</small>':'')+'<small style="flex-basis:100%">קוראים רק תגובות ציבוריות, בלי כניסה לחשבון. המוניטור לא מגיב ולא מוחק.</small>';
   h+='</div>';
  });
  h+='<small>אחרי חיבור, המצב כאן מתעדכן תוך כמה דקות.</small><button type="button" class="yb yx" data-k="">סגירה</button></div>';
@@ -19160,7 +19167,13 @@ function connSheet(){
  w.innerHTML=h;
  function close(){w.remove();document.removeEventListener('keydown',esckey);}
  function esckey(e){if(e.key==='Escape')close();}
- w.onclick=function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-k');if(e.target===w||k==='')close();};
+ w.onclick=function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-k');if(e.target===w||k==='')return close();
+  if(e.target.getAttribute&&e.target.getAttribute('data-yt')){
+   var u=((document.getElementById('ytUrl')||{}).value||'').trim();if(!u){toast('להדביק קישור לערוץ יוטיוב.');return;}
+   var note='▶️ ערוץ יוטיוב: '+u,bt=e.target;bt.disabled=true;
+   sendText('ערוץ יוטיוב',note,'משימה').then(function(){markSent('text',note);toast('נשמר. התגובות יופיעו באריח ▶️ תוך רבע שעה.');close();}).catch(function(){bt.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
+  }
+ };
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
 }
@@ -19168,6 +19181,34 @@ on('icConn',connSheet);on('gConn',connSheet);
 // 12.11: until a real service is connected (the always on signature row does not count), the 🔌 tile and icon carry the soft alert.
 function connNone(){var C=D&&D.conn;return !!(C&&C.rows&&C.rows.length&&!C.rows.some(function(r){return r.on&&!r.fixed;}));}
 try{if(connNone())['gConn','icConn'].forEach(function(id){var t=document.getElementById(id);if(t)t.classList.add('taskblink');});}catch(e){}
+// 12.11: ▶️ תגובות ביוטיוב, the public comments of the channel given in 🔌 (D.yt). Read only: answering happens on YouTube.
+function ytSheet(){
+ var old=document.getElementById('ytSheet');if(old)old.remove();
+ var Y=D.yt||{ch:{},items:[]},it=Y.items||[],ch=Y.ch||{};
+ var h='<div class="ycard"><b>▶️ תגובות ביוטיוב</b>';
+ if(ch.err)h+='<p>'+esc(ch.err)+' אפשר להחליף את הקישור ב 🔌 חיבורים.</p>';
+ else if(!ch.ok)h+='<p>הערוץ נשמר. התגובות יגיעו לכאן תוך רבע שעה.</p>';
+ else h+='<p>'+esc(ch.title)+': '+it.length+' תגובות מ 30 הימים האחרונים. שאלות ופניות למעלה. כאן רק קוראים, את התשובה כותבים ביוטיוב.</p>';
+ var top=it.filter(function(x){return x.lead||x.q;}),rest=it.filter(function(x){return !(x.lead||x.q);});
+ top.concat(rest).forEach(function(x){
+  var tag=x.lead?'🔔 פנייה · ':x.q?'❓ שאלה · ':'';
+  h+='<div class="cnr"><div class="cnt"><b>'+tag+esc(x.author||'')+'</b><span style="white-space:pre-wrap">'+esc(x.text||'')+'</span><small>'+esc((x.vtitle?x.vtitle+' · ':'')+String(x.at||'').slice(0,10).split('-').reverse().join('.'))+(x.replies?' · '+x.replies+' תשובות':'')+'</small></div>'
+   +(x.url?'<a class="cnb" href="'+esc(x.url)+'" target="_blank" rel="noopener">ביוטיוב</a>':'')+'</div>';
+ });
+ if(ch.ok&&!it.length)h+='<p>אין תגובות חדשות ב 30 הימים האחרונים.</p>';
+ h+='<button type="button" class="yb yx" data-k="">סגירה</button></div>';
+ var w=document.createElement('div');w.id='ytSheet';w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','תגובות ביוטיוב');
+ w.innerHTML=h;
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-k');if(e.target===w||k==='')close();};
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+ try{localStorage.setItem('ytSeen',(it[0]&&it[0].id)||'');}catch(e){}
+ var t=document.getElementById('gYtCom');if(t)t.classList.remove('taskblink');
+}
+on('gYtCom',ytSheet);
+try{(function(){var f=D&&D.yt&&D.yt.items&&D.yt.items[0];if(!f)return;var s='';try{s=localStorage.getItem('ytSeen')||'';}catch(e){}if(s!==f.id){var t=document.getElementById('gYtCom');if(t)t.classList.add('taskblink');}})();}catch(e){}
 /*
   12.11.2026, Itzik, entering as a new trial customer: "איפה כל העניין של להציע לי
   לחבר את הגוגל, או לחבר את כל הדברים האחרים, כדי שאני אתחיל ליהנות מהמוניטור?"
