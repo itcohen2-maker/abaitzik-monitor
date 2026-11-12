@@ -4924,7 +4924,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   -->
   <button type="button" class="gt gWin" data-grp="net" id="gWin" data-upd="20261106-win03" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <!-- 5.11, Itzik: "את כל הסרטונים נעביר לאריח אחד, ובתוכו טאבים". One tile with a tab per kind; the old tiles (reels, future reels, campaign, plate, status, candle.times) were removed; their sheets stay in the code. -->
-  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1" data-upd="20261113-list6"><b>🎬 הסרטונים</b><small>רילים, רילים עתידיים, סטטוס, נרות, מה בצלחת, שחר וקמפיין</small></button>
+  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1" data-upd="20261113-live"><b>🎬 הסרטונים</b><small>רילים, רילים עתידיים, סטטוס, נרות, מה בצלחת, שחר וקמפיין</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
@@ -17705,13 +17705,13 @@ on('gClalit',clalitSheet);
 var TOM_ITEMS=[
 // 13.11, Itzik approved the recommended list: 6 ads (2 videos, 4 animated images), Meta waits for his yes.
 // 7 stops (almost the same as 3). 8 to 10 wait aside, ready to replace a weak ad. Then the stories. Copies of the old cards: Downloads/ITsolution-ads.
- {n:"1",t:"🎬 סרטון · מי לא שילם לך (הראשי) · לשבוע התנסות בחינם",r:"wa-hub-gviya-ad.mp4"},
- {n:"2",t:"🎬 סרטון · עסקי ואישי · לשבוע התנסות בחינם",r:"wa-hub-personal-ad.mp4"},
+ {n:"1",t:"✅ באוויר 13.11 · 🎬 סרטון · מי לא שילם לך (הראשי) · לשבוע התנסות בחינם",r:"wa-hub-gviya-ad.mp4"},
+ {n:"2",t:"✅ באוויר 13.11 · 🎬 סרטון · עסקי ואישי · לשבוע התנסות בחינם",r:"wa-hub-personal-ad.mp4"},
  {n:"3",t:"✅ באוויר · 🖼️ שרפת קרדיטים · לצ׳אט",r:"ads-nov01-card9-story.mp4"},
- {n:"4",t:"🆕 🖼️ מי לא שילם לך? · תג שבוע התנסות בחינם · להרשמה",r:"ads-nov13-card18.mp4"},
- {n:"5",t:"🆕 🖼️ האתר יפה ואף אחד לא פונה? · לפני ואחרי · לצ׳אט",r:"ads-nov13-card19.mp4"},
- {n:"6",t:"🆕 🖼️ עובד 12 שעות · אבחון AI חינם · ל it-solution.co.il/ai",r:"ads-nov13-card20.mp4"},
- {n:"7",t:"⛔ לעצור · נתקעת ב Lovable או Base44 (כמעט זהה ל 3)",r:"ads-nov12-card15.mp4"},
+ {n:"4",t:"✅ באוויר 13.11 · 🖼️ מי לא שילם לך? · תג שבוע התנסות בחינם · להרשמה",r:"ads-nov13-card18.mp4"},
+ {n:"5",t:"✅ באוויר 13.11 · 🖼️ האתר יפה ואף אחד לא פונה? · לפני ואחרי · לצ׳אט",r:"ads-nov13-card19.mp4"},
+ {n:"6",t:"✅ באוויר 13.11 · 🖼️ עובד 12 שעות · אבחון AI חינם · ל it-solution.co.il/ai",r:"ads-nov13-card20.mp4"},
+ {n:"7",t:"⛔ נעצר 13.11 · נתקעת ב Lovable או Base44 (כמעט זהה ל 3)",r:"ads-nov12-card15.mp4"},
  {n:"8",t:"⏸️ בצד · סרטון תור לרופא שיניים",r:"wa-hub-tor-ad.mp4"},
  {n:"9",t:"⏸️ בצד · סרטון חשבוניות מהמעבדה",r:"wa-hub-lab-ad.mp4"},
  {n:"10",t:"⏸️ בצד · סרטון הטמעת AI",r:"wa-hub-ai-ad.mp4"},
@@ -17906,7 +17906,7 @@ function vidTabs(){
   {id:'ai',l:'🤖 ערוץ AI'+(aiN?' ('+aiN+')':''),upd:'20261110-approve',h:'הרילים של ערוץ ה AI להעלאה, בעברית ובאנגלית: מה עדיין לא עלה. מה שעלה יורד מכאן לבד',L:vqRows('ai').concat([{h:'📂 הדף המלא'},{k:'go',t:'🤖 פתיחת הרילים של ערוץ ה AI',u:'ai/ai.html'}])},
   {id:'nr',l:'🕯️ נרות'+(nrN?' ('+nrN+')':''),h:'candle.times: סטוריז ופוסטים שמחכים לאישור שלך',L:vqRows('nr').concat([{h:'📂 הדף המלא'},{k:'go',t:'🕯️ פתיחת candle.times',u:'ner/candle.html'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return candleN[x.it.n];}))},
   // 7.11, Itzik: a tab for IT Solution reels (ready ones first, then the ideas). upd = the soft blink until the tab is opened.
-  {id:'it',l:'💻 IT Solution',upd:'20261113-list6',h:'הרילים של IT Solution: המוניטור, הקמפיינים והעסקים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isIt(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isIt(x.it);}))},
+  {id:'it',l:'💻 IT Solution',upd:'20261113-live',h:'הרילים של IT Solution: המוניטור, הקמפיינים והעסקים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isIt(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isIt(x.it);}))},
   // 7.11, Itzik: the reels and the future reels too, each in its own tab of the one tile.
   {id:'me',l:'🎬 הרילים שלי',h:'הרילים והסטוריז שלי, מוכנים לרשתות',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return !isSh(x.it)&&!isIt(x.it);}))},
   {id:'car',l:'🎠 קרוסלות'+(CARON.length?' ('+CARON.length+')':''),pulse:CARON.length,h:'קרוסלות לאבא איציק, כל הנושאים. מה שעוד לא עלה מהבהב חלש',L:carL},
