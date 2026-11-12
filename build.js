@@ -15521,6 +15521,8 @@ function campSheet(){
  w.id='cpSheet';w.className='ysheet';
  w.setAttribute('role','dialog');w.setAttribute('aria-label','קמפיינים');
  var kinds=['מודעה ממומנת','סטורי','ריל','פוסט','קרוסלה','סרטון מכל החומרים','להכין סרטון מסוים להעלאה לאינסטגרם'];
+ var CP_ASK=['מה לעשות עם התמונות?','מה לכתוב עליהן?','מי הלקוחות שלך?','מבצע, מחיר או טלפון?'];
+ function cpRealText(t){var s=t;CP_ASK.forEach(function(q){s=s.split(q).join('');});return s.split(String.fromCharCode(10)).join(' ').trim();}
  w.innerHTML='<div class="ycard"><b>📣 קמפיינים</b>'
   +'<small>מעלים תמונות או סרטון, בוחרים מה לעשות איתם, וכותבים מה חשוב. אני מכין טיוטה: מטרה, קהל, תקציב מוצע, כמה גרסאות כיתוב ותיאור לפוסט. שום דבר לא עולה בלי אישור שלך.</small>'
   +'<button type="button" class="yb yb2" data-a="pick">📎 לבחור תמונות או סרטון</button>'
@@ -15534,9 +15536,15 @@ function campSheet(){
   +'<button type="button" class="yb" data-a="pickau">🎵 להעלות צליל משלי</button>'
   +'<input type="file" id="cpAudio" accept="audio/*" hidden>'
   +'<div id="cpAuL" style="font:600 14px Heebo,sans-serif;margin:6px 0"></div>'
-  +'<textarea id="cpText" rows="4" style="width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif" placeholder="מה חשוב להגיד? מבצע, מי הקהל, כתובת, מחיר. אם משהו חסר, אשאל."></textarea>'
+  +'<textarea id="cpText" rows="4" style="width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif" placeholder="ספר לי במילים שלך: מה לעשות עם התמונות, מה לכתוב עליהן, ומי הלקוחות שלך. בלי זה הטיוטה לא תצא טובה."></textarea>'
+  // 12.11: photos went out with no description. The four prompts open a line each in the box, and send waits for a real description.
+  +'<small style="opacity:1;font-weight:700">כדי שזה יעבוד, ענה לי על אלה (לחיצה פותחת שורה):</small>'
+  +'<div class="arPick" id="cpAsk" role="group" aria-label="שאלות מנחות">'
+  +CP_ASK.map(function(q,i){return '<button type="button" class="yb" data-q="'+i+'">'+q+'</button>';}).join('')+'</div>'
   +'<small>מוזיקה: כברירת מחדל בלי מוזיקה בתוך הסרטון. באינסטגרם בוחרים את המוזיקה בזמן ההעלאה מספריית הצלילים של אינסטגרם, בתיקייה RF (ללא זכויות יוצרים). בפייסבוק אפשר מאוסף הצלילים של Meta, בחינם בכל מוצרי Meta. אם יש כאן תיקיית צלילים ובחרת בה, אוסיף אותו בעדינות מתחת לסרטון.</small>'
-  +'<a class="yb yb2" href="https://www.facebook.com/sound/collection/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">🎵 לפתוח את אוסף הצלילים של Meta</a>'
+  // 12.11: a link out to Meta's sound collection had no way back on a phone, and a pick there never reached the draft. The name is typed here instead.
+  +'<label style="display:block;font:600 14px Heebo,sans-serif;margin:8px 0 4px" for="cpMeta">🎵 צליל מאוסף Meta לזמן הפרסום (לא חובה)</label>'
+  +'<input id="cpMeta" type="text" maxlength="120" style="width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif" placeholder="שם השיר או סגנון, למשל: שקט ואופטימי">'
   +'<button type="button" class="yb yb1" data-a="send">שליחה</button>'
   +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
  function close(){w.remove();}
@@ -15569,6 +15577,14 @@ function campSheet(){
   }
   var k=e.target.getAttribute&&e.target.getAttribute('data-k');
   if(k){e.target.classList.toggle('on');return;}
+  var qi=e.target.getAttribute&&e.target.getAttribute('data-q');
+  if(qi!==null&&qi!==undefined&&CP_ASK[qi]){
+   var ta=document.getElementById('cpText');if(!ta)return;
+   var line=CP_ASK[qi]+' ';
+   if(ta.value.indexOf(CP_ASK[qi])<0)ta.value=(ta.value.trim()?ta.value.trim()+String.fromCharCode(10):'')+line;
+   ta.style.borderColor='#ccd';ta.focus();try{ta.setSelectionRange(ta.value.length,ta.value.length);}catch(_){}
+   e.target.classList.add('on');return;
+  }
   var sid=e.target.getAttribute&&e.target.getAttribute('data-s');
   if(sid){
    chosenSound=chosenSound===sid?'':sid;
@@ -15579,9 +15595,16 @@ function campSheet(){
   var chosen=[].map.call(w.querySelectorAll('#cpKinds .yb.on'),function(b){return b.getAttribute('data-k');});
   var t=(document.getElementById('cpText').value||'').trim();
   if(!picked.length&&!t){toast('בחר תמונות או סרטון, או כתוב מה תרצה');return;}
+  if(cpRealText(t).length<20){
+   var tb=document.getElementById('cpText');
+   if(tb){tb.style.borderColor='#e0563b';tb.focus();tb.scrollIntoView({block:'center'});}
+   toast('עוד רגע: כתוב בכמה מילים מה לעשות עם התמונות, מה לכתוב עליהן ומי הלקוחות. השאלות מתחת לתיבה יעזרו.');return;
+  }
   if(ownAu&&!(document.getElementById('cpRight')||{}).checked){toast('לסמן שיש לך זכויות על הצליל שהעלית, או להסיר אותו');return;}
   var joinAll=picked.length>1&&!!(document.getElementById('cpJoin')||{}).checked;
   var sndNote=ownAu?'צליל משלי: '+ownAu.name+' (הלקוח מאשר שיש לו זכויות עליו)':(chosenSound&&sndTitle[chosenSound]?'צליל: '+sndTitle[chosenSound]:'');
+  var metaSnd=((document.getElementById('cpMeta')||{}).value||'').trim();
+  if(metaSnd)sndNote+=(sndNote?' | ':'')+'צליל מאוסף Meta בזמן הפרסום: '+metaSnd;
   var note='קמפיין: '+(chosen.length?chosen.join(', '):'לא נבחר סוג')+(t?' | '+t:'')+(sndNote?' | '+sndNote:'')
    +(picked.length>1?' | סדר הקבצים: '+picked.map(function(f,i){return (i+1)+'. '+f.name;}).join(', '):'')+(joinAll?' | לחבר הכול לסרטון אחד':'');
   var allF=picked.concat(ownAu?[ownAu]:[]);
