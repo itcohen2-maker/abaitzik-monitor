@@ -138,6 +138,22 @@ function pageCheck(t, res) {
   if (String(r.stdout).trim() !== '200') res.problems.push('הדף שלו לא עונה (' + (String(r.stdout).trim() || 'אין חיבור') + ')');
 }
 
+// 12.11.2026, Itzik: "שלא יקרה מצב שמישהו מהמוניטורים יראה משהו מהמוניטור האישי שלי. תקים שומר יעודי".
+// The canaries (data/leak-canaries.json, never in git) are strings from his personal monitor. A customer's public
+// address and its live.json must never contain one. Nothing is fixed by a script here: a hit is one urgent item
+// and one push, and the text itself is never repeated in them.
+function leakCheck(t, res) {
+  if (!t.host) return;
+  const canaries = readJson(path.join(DATA, 'leak-canaries.json'), []).filter((c) => typeof c === 'string' && c.length >= 4);
+  if (!canaries.length) return;
+  ['/', '/live.json'].forEach((p) => {
+    const r = spawnSync('curl', ['-s', '--max-time', '20', 'https://' + t.host + p], { encoding: 'utf8', maxBuffer: 20 * 1024 * 1024 });
+    const body = String(r.stdout || '');
+    const hit = canaries.findIndex((c) => body.includes(c));
+    if (hit >= 0) res.problems.push('בדף שלו (' + p + ') נמצא טקסט שמסומן כפרטי של המוניטור שלך, סימון ' + (hit + 1) + '. הוא לא נמחק לבד, צריך לבדוק');
+  });
+}
+
 function escalate(t, res, state) {
   const day = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
   res.problems.forEach((p) => {
@@ -165,6 +181,7 @@ function main() {
     try { visitsCheck(t, res); } catch (e) { res.problems.push('בדיקת כניסות נכשלה: ' + e.message); }
     try { answerCheck(t, res); } catch (e) {}
     try { pageCheck(t, res); } catch (e) {}
+    try { leakCheck(t, res); } catch (e) { res.problems.push('בדיקת הדף מול הפרטי נכשלה: ' + e.message); }
     res.ok = !res.problems.length;
     // what it fixed today stays on the card for the day
     const day = state.at.slice(0, 10);
