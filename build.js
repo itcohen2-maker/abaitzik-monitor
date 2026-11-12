@@ -19148,6 +19148,7 @@ function connSheet(){
  var C=D.conn||{rows:[]};
  var n=C.rows.filter(function(r){return r.on;}).length;
  var h='<div class="ycard"><b>🔌 חיבורים</b><p>'+n+' מתוך '+C.rows.length+' מחוברים. כל חיבור נותן למוניטור לעבוד בשבילך עם עוד מקום.</p>';
+ if(connNone())h+='<p style="font-weight:700">עוד לא חיברת כלום, ובלי חיבור המוניטור לא יכול לעבוד בשבילך. כדאי להתחיל מגוגל: מייל, יומן ודרייב, זה לוקח דקה.</p>';
  C.rows.forEach(function(r){
   var st=r.on?'<span class="cnOk">✓ מחובר</span>':r.paid?'<span class="cnPaid">'+esc(r.paid)+'</span>':r.soon?'<span class="cnSoon">מחברים בתיאום עם IT Solution</span>':'<span class="cnOff">לא מחובר</span>';
   h+='<div class="cnr'+(r.on?' on':'')+(r.locked?' lock':'')+'"'+(r.locked?' aria-disabled="true"':'')+'><span class="cni">'+esc(r.icon)+'</span><div class="cnt"><b>'+esc(r.title)+'</b>'+st+(r.who?'<small>'+esc(r.who)+'</small>':'')+'</div>';
@@ -19164,6 +19165,9 @@ function connSheet(){
  document.body.appendChild(w);
 }
 on('icConn',connSheet);on('gConn',connSheet);
+// 12.11: until a real service is connected (the always on signature row does not count), the 🔌 tile and icon carry the soft alert.
+function connNone(){var C=D&&D.conn;return !!(C&&C.rows&&C.rows.length&&!C.rows.some(function(r){return r.on&&!r.fixed;}));}
+try{if(connNone())['gConn','icConn'].forEach(function(id){var t=document.getElementById(id);if(t)t.classList.add('taskblink');});}catch(e){}
 /*
   12.11.2026, Itzik, entering as a new trial customer: "איפה כל העניין של להציע לי
   לחבר את הגוגל, או לחבר את כל הדברים האחרים, כדי שאני אתחיל ליהנות מהמוניטור?"
