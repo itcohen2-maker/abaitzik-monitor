@@ -68,3 +68,6 @@ done
 
 # 11.11.2026: the connections page and the questionnaire welcome of every ready trial (signup-personalize.js).
 node "$REPO/signup-personalize.js" >> "$LOG" 2>&1 || log "personalize failed"
+
+# 12.11.2026, Itzik: the trial week mails (not opened, not back for two days, the last day). trial-nudge.js, once each.
+( set -a; . /etc/monitor.env; set +a; cd "$REPO" && node trial-nudge.js ) >> "$LOG" 2>&1 || log "nudge failed"
