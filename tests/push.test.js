@@ -36,6 +36,8 @@ const SUB_LINE = 'מנוי התראות: ' + JSON.stringify(SUB);
 async function withData(fn, opts) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'abaitzik-push-data-'));
   fs.mkdirSync(path.join(dir, 'status'), { recursive: true });
+  // Quiet hours off: these tests pin channel order, and at night (22:00 to 07:00 Israel) every send was held as 'quiet'.
+  fs.writeFileSync(path.join(dir, 'status', 'quiet.json'), JSON.stringify({ on: false }));
   fs.writeFileSync(path.join(dir, 'keys.json'), JSON.stringify({
     ntfyIn: 'test-in-topic', ntfyLive: 'test-live-topic', ntfyOut: 'test-out-topic', mail: 'itcohen2@gmail.com',
   }));

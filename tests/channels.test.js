@@ -37,6 +37,8 @@ const FAKE = { ntfyIn: 'test-in-topic', ntfyLive: 'test-live-topic', ntfyOut: 't
 async function withKeys(extra, fn) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'abaitzik-chan-'));
   fs.mkdirSync(path.join(dir, 'status'), { recursive: true });
+  // Quiet hours off: these tests pin channel order, and at night (22:00 to 07:00 Israel) every send was held as 'quiet'.
+  fs.writeFileSync(path.join(dir, 'status', 'quiet.json'), JSON.stringify({ on: false }));
   fs.writeFileSync(path.join(dir, 'keys.json'), JSON.stringify(Object.assign({}, FAKE, extra || {})));
   const saved = fs.existsSync(FILE) ? fs.readFileSync(FILE) : null;
   try {
