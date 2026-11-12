@@ -1,7 +1,7 @@
 {
- "at": "2026-11-12T11:07:55.108Z",
+ "at": "2026-11-12T11:11:37.559Z",
  "up": 0,
- "since": "2026-11-12T11:07:55.088Z",
+ "since": "2026-11-12T11:11:37.537Z",
  "last": "",
  "n": 0,
  "recent": [
@@ -47,9 +47,9 @@
   },
   "beat": {
    "label": "פעימה",
-   "used": 21,
+   "used": 22,
    "cap": 30,
-   "left": 9,
+   "left": 8,
    "paid": false,
    "blockedUntil": "",
    "daily": false
@@ -58,7 +58,7 @@
  "queued": 0,
  "pc": {
   "on": true,
-  "seen": "2026-11-12T11:07:46.930Z"
+  "seen": "2026-11-12T11:10:47.237Z"
  },
  "hold": false,
  "quota": null,
