@@ -871,6 +871,19 @@ function build() {
     // 11.11.2026: a customer's visit key (lib/visits.js), sealed. With it the page says when it is open and for how long.
     visitKey: inst.name === 'abaitzik' ? '' : (() => { try { const k = fs.readFileSync(path.join(inst.dataPath, 'status', 'visit-key.txt'), 'utf8').trim(); return /^[a-f0-9]{32}$/.test(k) ? k : ''; } catch (e) { return ''; } })(),
     // 11.11.2026: Itzik's 👀 tile, the customers' visits with the display name from data/tenants. Sealed, his copy only.
+    // 12.11.2026, Itzik: "אם מישהו נרשם דרך הטופס אפילייט של שי, אתה צריך לעדכן אותי באריחים".
+    // Every affiliate: leads from his form or the site (affiliates.js rows) and trial signups through ?ref (data/signup/refs).
+    affs: inst.name !== 'abaitzik' ? null : (() => { try {
+      const A = require('./affiliates.js'), dir = path.join(inst.dataPath, 'affiliates'), out = [];
+      fs.readdirSync(dir).filter((f) => /^[a-f0-9]{16,40}\.json$/.test(f)).forEach((f) => {
+        const a = A.aff(f.slice(0, -5)); if (!a || !a.ref) return;
+        let r = {}; try { r = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'signup', 'refs', a.ref + '.json'), 'utf8')); } catch (e) {}
+        const ev = A.rows(a).map((x) => ({ at: x.at, k: 'lead', who: x.name + (x.biz ? ', ' + x.biz : ''), st: x.status }))
+          .concat((r.people || []).map((p) => ({ at: p.at, k: 'signup', who: p.name || p.email || '', st: 'שבוע ניסיון' })))
+          .sort((x, y) => (x.at < y.at ? 1 : -1));
+        out.push({ name: a.name || a.ref, ref: a.ref, visits: r.visits || 0, ev });
+      });
+      return out; } catch (e) { return null; } })(),
     visits: inst.name !== 'abaitzik' ? null : (() => { try {
       const v = require('./lib/visits.js').forPage(inst.dataPath), out = {};
       Object.keys(v).forEach((n) => { let t = n; try { t = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'tenants', 'tenants', n + '.json'), 'utf8')).title || n; } catch (e) {} out[n] = { title: t, list: v[n] }; });
@@ -4739,7 +4752,7 @@ ${require('./lib/home-ui.js').html}
 
  <div id="askBox"></div>
 <!-- 4.11, Itzik: "תעלה את האריח של העסק שלי למעלה ברשימה. למה שמת אותו אחרון?" The business grid opens the home screen. -->
-${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + ((inst.name === 'abaitzik' || inst.handle === true) ? '<button type="button" class="gt g16" id="gHandle" hidden data-new="1"><b>📋 לטיפול</b><small>טפסים שחזרו וצריכים אותך</small></button><button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16" id="gVisits" hidden data-new="1"><b>👀 כניסות לקוחות</b><small>מתי נכנסו ולכמה זמן</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261111-leads' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button>' + '</div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
+${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + ((inst.name === 'abaitzik' || inst.handle === true) ? '<button type="button" class="gt g16" id="gHandle" hidden data-new="1"><b>📋 לטיפול</b><small>טפסים שחזרו וצריכים אותך</small></button><button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16" id="gVisits" hidden data-new="1"><b>👀 כניסות לקוחות</b><small>מתי נכנסו ולכמה זמן</small></button><button type="button" class="gt g16" id="gAffs" hidden data-new="1"><b>🤝 שותפים</b><small>מי הגיע דרך שי</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261111-leads' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button>' + '</div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
   <!-- 3.11, Itzik: "אני צריך אריח שממש יעבב לי, כמו ליד חדש". First on the grid; shows while a --nag reminder is open, hard blink once it is due, until "✅ עשיתי". -->
@@ -9514,7 +9527,7 @@ function repaintAll(){
   // 10.11: the 📋 לטיפול tile reads D.handle, sealed too.
   ['handle',function(){if(typeof paintHandle==='function')paintHandle();}],
   // 11.11: 👀 כניסות לקוחות reads D.visits, and a customer's page starts its visit beacon from D.visitKey.
-  ['visits',function(){if(typeof paintVisits==='function')paintVisits();if(typeof visitStart==='function')visitStart();}]];
+  ['visits',function(){if(typeof paintVisits==='function')paintVisits();if(typeof paintAffs==='function')paintAffs();if(typeof visitStart==='function')visitStart();}]];
  var bad=[],ran={};
  jobs.forEach(function(j){
   ran[j[0]]=1;
@@ -18677,6 +18690,31 @@ function visitsSheet(){
  try{if(L.length)localStorage.setItem('visSeen',L[0].at);}catch(e){}
 }
 on('gVisits',function(){visitsSheet();setTimeout(paintVisits,60);});
+function affSeen(){try{return localStorage.getItem('affSeen')||'';}catch(e){return '';}}
+function affAll(){var L=[];(D&&D.affs||[]).forEach(function(a){(a.ev||[]).forEach(function(x){L.push(x);});});return L.sort(function(a,b){return a.at<b.at?1:-1;});}
+function paintAffs(){
+ var t=document.getElementById('gAffs');if(!t)return;var A=D&&D.affs||[];t.hidden=!A.length;if(!A.length)return;
+ var L=affAll(),s=affSeen(),nw=L.filter(function(x){return x.at>s;}).length;
+ t.classList.toggle('taskblink',nw>0);
+ var b=t.querySelector('b'),sm=t.querySelector('small'),ld=L.filter(function(x){return x.k==='lead';}).length,su=L.length-ld,vi=A.reduce(function(n,a){return n+(a.visits||0);},0);
+ if(b)b.textContent='🤝 שותפים'+(nw?' · '+nw+' חדשים':'');
+ if(sm)sm.textContent=nw?('אחרון: '+L[0].who+', '+visWhen(L[0].at)):(ld+' לידים, '+su+' נרשמו, '+vi+' כניסות לקישור');
+}
+function affsSheet(){
+ var old=document.getElementById('affSheet');if(old)old.remove();
+ var s=affSeen(),h='';
+ (D&&D.affs||[]).forEach(function(a){
+  var ev=a.ev||[];
+  h+='<div class="ycard" style="margin:8px 0;padding:10px;text-align:right"><b>'+esc(a.name)+'</b><small style="display:block">'+ev.filter(function(x){return x.k==='lead';}).length+' לידים מהטופס או מהאתר, '+ev.filter(function(x){return x.k==='signup';}).length+' נרשמו לניסיון, '+(a.visits||0)+' כניסות לקישור</small>'
+   +(ev.length?ev.map(function(x){return '<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid rgba(255,255,255,.08)'+(x.at>s?';font-weight:700':'')+'"><span>'+(x.k==='lead'?'📝 ':'🚀 ')+esc(x.who)+(x.at>s?' · חדש':'')+'</span><span>'+esc(x.st||'')+' · '+visWhen(x.at)+'</span></div>';}).join(''):'<small style="display:block">עוד אף אחד לא הגיע דרכו.</small>')+'</div>';
+ });
+ var w=document.createElement('div');w.id='affSheet';w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','שותפים');
+ w.innerHTML='<div class="ycard"><b>🤝 שותפים</b><small>מי מילא את הטופס של השותף, מי השאיר פרטים באתר דרך הקישור שלו ומי נרשם לניסיון. החדש למעלה. 📝 ליד, 🚀 הרשמה.</small>'+h+'<button type="button" class="yb" data-a="x">סגירה</button></div>';
+ w.onclick=function(e){var a=e.target&&e.target.closest&&e.target.closest('[data-a="x"]');if(a||e.target===w){w.remove();paintAffs();}};
+ document.body.appendChild(w);
+ try{var L=affAll();if(L.length)localStorage.setItem('affSeen',L[0].at);}catch(e){}
+}
+on('gAffs',function(){affsSheet();setTimeout(paintAffs,60);});
 on('gHandle',function(){handleSheet(false);setTimeout(paintHandle,60);});
 on('gReq',function(){handleSheet(true);setTimeout(paintHandle,60);});
 
