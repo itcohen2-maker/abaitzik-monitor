@@ -2055,7 +2055,7 @@ button.abtn[disabled]{opacity:.55}
 .gt.leadNew{animation:hardblink .6s steps(1) infinite}
 /* 13.11.2026, Itzik: "תחזיר את הגודל היחיד של האריחים, מה קרה שהם פתאום התארכו". A long live line (names, counts) wrapped to
    four lines and stretched its row. Every tile's small line stops at two lines, so every tile keeps one size. */
-.grid .gt small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.grid .gt small{display:-webkit-box!important;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.grid .gt b{display:-webkit-box!important;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}#blkBiz .gt{padding:10px!important;min-height:94px}
 .gt.leadNew[hidden]{display:none}
 /* 6.11.2026: Isracard lives inside the lawyer tile (gSale); its own tile stays off. */
 #gIsra{display:none!important}
