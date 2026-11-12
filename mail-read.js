@@ -16,6 +16,7 @@
     node mail-read.js "מה כתוב במייל?" --id 46388
 */
 const { execFileSync, spawn } = require('child_process');
+const fs = require('fs');
 const path = require('path');
 
 const MAX = 60000; // characters of mail handed to the reader
@@ -43,6 +44,21 @@ function childEnv() {
   return env;
 }
 
+/*
+  12.11.2026, Itzik: "התראה כשהחיבור של השרת לבינה המלאכותית פג". 10.11 the mail check failed with
+  "OAuth session expired" and nothing said so: the failure stayed inside the session and the logs.
+  A refusal here is written to data/status/ai-login.json (one file, the last refusal), a success
+  removes it, and watchdog.js reads it and rings once. Nothing is retried here.
+*/
+const LOGIN_FILE = path.join(__dirname, 'data', 'status', 'ai-login.json');
+const LOGIN_REFUSED = /session expired|oauth token (has )?expired|unauthori[sz]ed|invalid (api key|x-api-key)|please run \/login|authentication_error/i;
+function markLogin(ok, why) {
+  try {
+    if (ok) return fs.rmSync(LOGIN_FILE, { force: true });
+    fs.writeFileSync(LOGIN_FILE, JSON.stringify({ at: new Date().toISOString(), why: String(why).slice(0, 200) }, null, 1));
+  } catch (e) { /* data folder missing: nothing to tell */ }
+}
+
 function read(text) {
   return new Promise((resolve, reject) => {
     // No tools at all: whatever the mail says, this session can only write an answer.
@@ -55,7 +71,12 @@ function read(text) {
     child.stderr.on('data', d => { err += d; });
     child.on('close', code => {
       clearTimeout(timer);
-      if (code !== 0) return reject(new Error('claude exited ' + code + ': ' + (err.trim() || out.trim()).slice(-300)));
+      const msg = (err.trim() || out.trim());
+      if (code !== 0) {
+        if (LOGIN_REFUSED.test(msg)) markLogin(false, msg.slice(-200));
+        return reject(new Error('claude exited ' + code + ': ' + msg.slice(-300)));
+      }
+      markLogin(true);
       resolve(out.trim());
     });
     child.stdin.end(text);

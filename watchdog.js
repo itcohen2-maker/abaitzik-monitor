@@ -193,6 +193,12 @@ function check(now) {
     const wl = fs.readFileSync(process.env.WORKER_LOG || '/var/log/monitor-worker.log', 'utf8').split('\n').slice(-60).join('\n');
     if (refused(wl)) problems.push('סשנים בשרת נדחים, כנראה הכניסה של קלוד פגה');
   } catch (e) {}
+  // 12.11, Itzik: "התראה כשהחיבור של השרת לבינה המלאכותית פג". mail-read.js writes this file when the
+  // Claude login is refused and removes it on the next good answer; the 10.11 mail check failed silently.
+  try {
+    const lg = JSON.parse(fs.readFileSync(path.join(STATUS, 'ai-login.json'), 'utf8'));
+    if (lg && lg.at && now - Date.parse(lg.at) < 24 * 3600 * 1000) problems.push('החיבור של השרת לבינה המלאכותית פג, הקריאה למייל נדחתה. צריך לחדש את הכניסה');
+  } catch (e) {}
   // 16.10: Alon's key ran out of credit and the tile said only "messages waiting".
   try {
     const ah = JSON.parse(fs.readFileSync(path.join(STATUS, 'account-hold.json'), 'utf8'));
