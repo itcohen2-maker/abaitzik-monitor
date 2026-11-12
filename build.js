@@ -2395,6 +2395,10 @@ section{margin-bottom:30px}
 .ppick input{flex:1 1 140px;min-width:0;padding:7px 10px;border:2px solid var(--line);border-radius:10px;font:15px Heebo,sans-serif}
 .thbody{display:flex;flex-direction:column;gap:9px;padding:0 14px 14px;border-top:1px solid var(--line)}
 .thbody .bub{max-width:92%}
+/* 12.11.2026, Itzik: a long answer does not take the whole screen; it scrolls inside its bubble. A line between days. */
+.thbody .bub.long{max-height:40vh;overflow-y:auto}
+.dsep{display:flex;align-items:center;gap:8px;color:var(--dim);font-size:12px;margin:4px 0}
+.dsep:before,.dsep:after{content:"";flex:1;border-top:1px solid var(--line)}
 .th-fresh{border-color:var(--red);background:var(--unread);animation:bubglow 1.5s ease-in-out infinite}
 .th-fresh .num{background:var(--red);color:#fff}
 .th-standby{border-color:#d9a441;background:#fff8ea}
@@ -3135,6 +3139,9 @@ section#talkCard.talk{padding:8px 10px;gap:6px 10px;margin-bottom:8px}
 .g9{background:linear-gradient(150deg,#f48fb1,#ad1457)}
 .g10{background:linear-gradient(150deg,#ffd54f,#e65100);color:#3b2a00}
 .roundTile{width:72px;height:72px;min-height:72px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;font-size:30px;}
+/* 12.11.2026, Itzik: the notes circle on the home screen gets its caption inside the circle. */
+.roundCap{flex-direction:column;gap:0;font-size:24px;line-height:1}
+.roundCap small{font-size:11px;line-height:1.1;opacity:1;text-shadow:none}
 .g11{background:linear-gradient(150deg,#4fbf88,#00897b)}
 .gHealth{background:linear-gradient(150deg,#66bb6a,#1b5e20)}
 .gHealth.hbad{background:linear-gradient(150deg,#ef5350,#b71c1c)}
@@ -4780,7 +4787,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <button type="button" class="gt gMyDay" data-grp="day" id="gMyDay" data-new="1" data-upd="20261024-tdel"><b>📅 מה יש לי היום</b><small>תורים, תזכורות ומשימות של היום</small></button>
   <button type="button" class="gt g18" data-grp="day" id="gAppts" data-upd="20261106-series"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
   <button type="button" class="gt g16" data-grp="day" id="gRemind" data-upd="20261106-remhelp"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
-  <button type="button" class="gt g10 roundTile" id="gNotes" title="פתקים" aria-label="פתקים" data-upd="notes-print-20261102">📝</button>
+  <button type="button" class="gt g10 roundTile roundCap" id="gNotes" title="פתקים" aria-label="פתקים" data-upd="notes-caption-20261112"><span>📝</span><small>פתקים</small></button>
   <!-- 12.10, Itzik: "תקים אפליקציה לבדוק מה כל הקלקולים האלה". Every monitor's faults on one screen. -->
   <button type="button" class="gt gHealth" id="gHealth" data-new="1"><b>🩺 תקלות</b><small>מה תקוע, מה נעצר, ולמה</small></button>
   <!-- Other monitors on this server, one colour each. Hidden when there are none. -->
@@ -4877,7 +4884,6 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <!-- 13.10 night: the Clalit agreement moved inside the lecture tile (item 05). -->
   <button type="button" class="gt gGviya" data-grp="work" id="gGviya" data-new="1"><b>📞 גבייה, יואל</b><small>דף שיואל מסמן, כל סימון מעדכן אותך</small></button>
   <button type="button" class="gt gShop" data-grp="home" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
-  <button type="button" class="gt gBoyGeorge" data-grp="home" id="gBoyGeorge" data-new="1" data-files="boy-george-ticket-1.jpeg,boy-george-ticket-2.jpeg"><b>🎤 בוי ג׳ורג׳</b><small>שני הכרטיסים להופעה ב-7.11, מנורה מבטחים</small></button>
   <!-- 12.10 alarm tile: moved 13.10 to the round icons, see gAlarm next to gStk. -->
   <!--
     איציק, 28.9, בהקלטה: "תסיר את כפתור תוכניות תוכן". הכפתור ירד ממסך הבית.
@@ -8073,6 +8079,14 @@ document.addEventListener('click',function(e){
  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(v).then(ok,function(){fallbackCopy(v,ok);});
  else fallbackCopy(v,ok);
 },true);
+// 12.11.2026, Itzik: "אין קו שמפריד בין ימים בשיחה". The day name above the first message of each day.
+function dayLabel(iso){
+ var d=new Date(iso);if(isNaN(d.getTime()))return'';
+ var now=new Date(),yes=new Date(now.getTime()-864e5);
+ if(d.toDateString()===now.toDateString())return'היום';
+ if(d.toDateString()===yes.toDateString())return'אתמול';
+ return d.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'});
+}
 function bubbleHtml(m,i,fresh,handled){
  var mine=m.from==='itzik';
  var no=mine&&!m.pend?numOf(m):0;
@@ -8081,7 +8095,7 @@ function bubbleHtml(m,i,fresh,handled){
  // מה שמועתק מהודעה קולית הוא המילים, לא שם הקובץ.
  var line=(mine?OWNER:AI)+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'')
   +(vtx?String.fromCharCode(10)+'תמלול: '+vtx:'');
- return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')+(live?' beat':'')
+ return '<div class="bub '+(mine?'you':'me')+(m.pend?' pend':'')+(live?' beat':'')+((m.text||'').length>700?' long':'')
   +(fresh?' fresh':(handled?' touched':' read'))+'" data-i="'+i+'"'
   +' data-copy="'+esc(line)+'">'
   +'<span class="w">'+(live?'<i class="lv"></i>':'')+(no?'<b class="bno">#'+no+'</b> ':'')+(mine?'אתה':AI)+' · '+esc(stamp(m.at))
@@ -8288,11 +8302,15 @@ function renderThread(){
    // Reviewer, 11.10, approved by Itzik: "נקרא" read like WhatsApp's mark
    // that the other side read it. Only new answers are marked now.
    :'';
+  var lastDay='';
   var body=t.msgs.map(function(m){
    var i=flat.push(m)-1;
    var fresh=m.from!=='itzik'&&unreadKeys.indexOf(claudeKey(m))>-1;
    var handled=!fresh&&touched.indexOf(claudeKey(m))>-1;
-   return bubbleHtml(m,i,fresh,handled);
+   var dk=new Date(m.at).toDateString();
+   var sep=dk!==lastDay?'<div class="dsep">'+esc(dayLabel(m.at))+'</div>':'';
+   lastDay=dk;
+   return sep+bubbleHtml(m,i,fresh,handled);
   }).join('');
   var ri2=flat.indexOf(t.root);
   var whole=t.msgs.map(function(m){return (m.from==='itzik'?OWNER:AI)+' · '+stamp(m.at)+String.fromCharCode(10)+(m.text||'');}).join(String.fromCharCode(10,10));
@@ -18856,22 +18874,6 @@ function planSheet(){
 }
 on('gContentPlan',planSheet);
 on('gShopList',function(){window.open('https://docs.google.com/document/d/1A2tvet0ucYNDoDclswaVDybuL8bir3OAerRzXtDUEPU/edit','_blank','noopener');});
-on('gBoyGeorge',function(){
- var old=document.getElementById('bgSheet');if(old)old.remove();
- var w=document.createElement('div');w.id='bgSheet';w.className='ysheet';w.setAttribute('role','dialog');
- w.innerHTML='<div class="ycard"><b>🎤 Boy George</b><small>We Will Dance Again, היכל מנורה מבטחים, תל אביב-יפו</small>'
-  +'<small>יום שבת 07.11.2026, פתיחת שערים 19:30, הופעה 21:00. יציע 11, שורה 7, כיסאות 86 ו-87</small>'
-  +'<button type="button" class="yb yb1" data-f="1">🎟 כרטיס 1</button>'
-  +'<button type="button" class="yb" data-f="2">🎟 כרטיס 2</button>'
-  +'<button type="button" class="yb yx" data-f="">סגירה</button></div>';
- w.onclick=function(e){
-  if(e.target===w)return w.remove();
-  var k=e.target.closest&&e.target.closest('[data-f]');if(!k)return;
-  w.remove();var f=k.getAttribute('data-f');
-  if(f)fileOpen(f==='1'?'boy-george-ticket-1.jpeg':'boy-george-ticket-2.jpeg');
- };
- document.body.appendChild(w);
-});
 on('gGviya',function(){window.open('https://lolos.abaitzik.com/gviya/1abf2a1f563a0fb3a7/','_blank','noopener');});
 // 15.10 Itzik: the stories archive tile came off the screen for good; its button and handler are gone.
 // (15.10 later: that line was a one line /* */ comment followed by code, and the build's comment
