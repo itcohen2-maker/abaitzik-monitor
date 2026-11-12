@@ -2762,7 +2762,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-12T16:07:42.446Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-12T16:08:01.442Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3454,6 +3454,7 @@ try{
  <h2>הקבצים שלי</h2>
  <div class="rephint">כל קובץ ששלחת וכל קובץ שנשלח לך. הם סגורים ונפתחים רק כאן, אחרי הקוד שלך. הכפתור ⬇ מוריד את הקובץ.</div>
  <input type="search" id="fiQ" class="note-search" autocomplete="off" placeholder="🔍 חיפוש לפי שם קובץ">
+ <input type="date" id="fiDay" class="note-search" title="להציג רק קבצים מיום מסוים" aria-label="תאריך">
  <div id="fiBox" class="flist"></div>
 </section>
 
@@ -4699,7 +4700,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='00c495aff4';
+var CODE_ID='80fdacb457';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -9358,7 +9359,9 @@ function renderFiles(){
  if(!All.length){box.innerHTML='<div class="empty">אין כאן קבצים.</div>';return;}
  var sent=filesSentToOwner();
  var q=((document.getElementById('fiQ')||{}).value||'').trim().toLowerCase();
- var F=All.filter(function(f){return fiMode==='all'||(fiMode==='in'?!!sent[f.n]:!sent[f.n]);}).filter(function(f){return !q||String(f.n).split('/').pop().toLowerCase().indexOf(q)>=0;});
+ var dy=((document.getElementById('fiDay')||{}).value||'');
+ var dayOf=function(f){var x=new Date(f.at);return isNaN(x)?'':x.toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'});};
+ var F=All.filter(function(f){return fiMode==='all'||(fiMode==='in'?!!sent[f.n]:!sent[f.n]);}).filter(function(f){return !q||String(f.n).split('/').pop().toLowerCase().indexOf(q)>=0;}).filter(function(f){return !dy||dayOf(f)===dy;});
  var tabs='<div class="fl-tabs">'+[['all','הכל'],['in',FEM?'מה שנשלח אלייך':'מה שנשלח אליך'],['out',FEM?'מה ששלחת את':'מה ששלחת']].map(function(t){
   return '<button type="button" data-fimode="'+t[0]+'"'+(fiMode===t[0]?' class="on"':'')+'>'+t[1]+'</button>';}).join('')+'</div>';
  if(fiFolder)tabs='<div style="padding:6px 4px;color:var(--dim)">בתיקייה: '+esc(fiFolder)+' · לחזרה לכל הקבצים לחצי על "הכל"</div>'+tabs;

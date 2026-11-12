@@ -5491,6 +5491,8 @@ ${require('./lib/activity-ui.js').html}
  <h2>הקבצים שלי</h2>
  <div class="rephint">כל קובץ ששלחת וכל קובץ שנשלח לך. הם סגורים ונפתחים רק כאן, אחרי הקוד שלך. הכפתור ⬇ מוריד את הקובץ.</div>
  <input type="search" id="fiQ" class="note-search" autocomplete="off" placeholder="🔍 חיפוש לפי שם קובץ">
+ <!-- 12.11.2026, Itzik's idea "רוצה את זה": a day picker next to the name search; only the files of that day show. -->
+ <input type="date" id="fiDay" class="note-search" title="להציג רק קבצים מיום מסוים" aria-label="תאריך">
  <div id="fiBox" class="flist"></div>
 </section>
 
@@ -13046,11 +13048,14 @@ function renderFiles(){
  if(!All.length){box.innerHTML='<div class="empty">אין כאן קבצים.</div>';return;}
  var sent=filesSentToOwner();
  var q=((document.getElementById('fiQ')||{}).value||'').trim().toLowerCase();
- var F=All.filter(function(f){return fiMode==='all'||(fiMode==='in'?!!sent[f.n]:!sent[f.n]);}).filter(function(f){return !q||String(f.n).split('/').pop().toLowerCase().indexOf(q)>=0;});
+ // 12.11, Itzik's idea: a day picked (YYYY-MM-DD, Israel time) keeps only the files of that day, and counts as a search.
+ var dy=((document.getElementById('fiDay')||{}).value||'');
+ var dayOf=function(f){var x=new Date(f.at);return isNaN(x)?'':x.toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'});};
+ var F=All.filter(function(f){return fiMode==='all'||(fiMode==='in'?!!sent[f.n]:!sent[f.n]);}).filter(function(f){return !q||String(f.n).split('/').pop().toLowerCase().indexOf(q)>=0;}).filter(function(f){return !dy||dayOf(f)===dy;});
  var tabs='<div class="fl-tabs">'+[['all','הכל'],['in',FEM?'מה שנשלח אלייך':'מה שנשלח אליך'],['out',FEM?'מה ששלחת את':'מה ששלחת']].map(function(t){
   return '<button type="button" data-fimode="'+t[0]+'"'+(fiMode===t[0]?' class="on"':'')+'>'+t[1]+'</button>';}).join('')+'</div>';
  if(fiFolder)tabs='<div style="padding:6px 4px;color:var(--dim)">בתיקייה: '+esc(fiFolder)+' · לחזרה לכל הקבצים לחצי על "הכל"</div>'+tabs;
- if(!F.length){box.innerHTML=tabs+(q?'<div class="rephint">לא נמצא קובץ בשם הזה</div>':'<div class="empty">'+(fiMode==='in'?'עוד לא נשלחו לכאן קבצים.':'אין כאן קבצים.')+'</div>');return;}
+ if(!F.length){box.innerHTML=tabs+((q||dy)?'<div class="rephint">'+(dy&&!q?'לא נשלח ביום הזה קובץ':'לא נמצא קובץ בשם הזה')+'</div>':'<div class="empty">'+(fiMode==='in'?'עוד לא נשלחו לכאן קבצים.':'אין כאן קבצים.')+'</div>');return;}
  /*
    Reviewer 7.10, approved 8.10: five versions of the same deck one after the
    other, and a cancelled one among them, and no way to tell which is the one
