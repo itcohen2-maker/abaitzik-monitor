@@ -73,7 +73,10 @@ const RULES = [
   'דחוף: לקוח או ספק שמחכה לתשובה היום, תשלום, תקלה. חשוב: פנייה עסקית שצריך לענות עליה. רגיל: עדכון בלי צורך לענות. פרסומת: ניוזלטר, שיווק, הודעה אוטומטית.',
   'reply: רק כשבאמת צריך לענות. קצר ומנומס, בשפה של המייל, בשם בעל העסק, בלי חתימה עם שם. בלי מקפים.',
   'לעולם אל תבטיח בטיוטה מחיר, תאריך, הנחה או התחייבות שלא מופיעים במייל. כשחסר מידע, כתוב שתחזור עם פרטים.',
-  'בפרסומת ובהודעה אוטומטית reply ריק.'
+  'בפרסומת ובהודעה אוטומטית reply ריק.',
+  // 12.11.2026, Itzik: "תבנה שהאריחים יתמלאו לבד מהמייל". The same call also fills the 🏡 personal tiles (lib/personal.js), at no extra cost.
+  'שדה נוסף באותו JSON, "personal":',
+  require('./lib/personal.js').mailAsk(),
 ].join('\n');
 
 function ask(text, src) {
@@ -100,7 +103,8 @@ function parse(out) {
   try {
     const j = JSON.parse(m[0]);
     return { tag: TAGS.includes(j.tag) ? j.tag : 'רגיל', summary: String(j.summary || '').slice(0, 200),
-      reply: j.tag === 'פרסומת' ? '' : String(j.reply || '').trim().slice(0, 2000) };
+      reply: j.tag === 'פרסומת' ? '' : String(j.reply || '').trim().slice(0, 2000),
+      personal: require('./lib/personal.js').parsePersonal(j.personal) };
   } catch (e) { return null; }
 }
 
@@ -154,6 +158,7 @@ async function one(src) {
   if (!fresh.length) { say(src.name + ': אין מייל חדש'); return; }
   const me = String(saved.who || '').toLowerCase();
   const items = [];
+  let personalNew = false;
   for (const x of fresh) {
     seen.add(x.id);
     try {
@@ -168,6 +173,10 @@ async function one(src) {
       if (r.reply && canDraft && !DRY) { try { await draft(c.access, m, r.reply); drafted = true; } catch (e) { say(src.name + ': טיוטה נכשלה ' + e.message); } }
       items.push({ id: x.id, at: new Date(Number(m.internalDate) || Date.now()).toISOString(), from: from.slice(0, 120),
         subject: subject.slice(0, 160), text: r.summary, tag: r.tag, reply: r.reply, draft: drafted });
+      if (r.personal) {
+        say(src.name + ': 🏡 ' + r.personal.k + ' · ' + r.personal.line);
+        if (!DRY) { try { if (require('./lib/personal.js').addItem(path.join(src.dir, 'data'), Object.assign({ ref: 'g' + x.id, src: 'mail' }, r.personal))) personalNew = true; } catch (e) { say(src.name + ': 🏡 ' + e.message.slice(0, 80)); } }
+      }
       say(src.name + ': ' + r.tag + (r.reply ? (drafted ? ', טיוטה בג׳ימייל' : ', עם טיוטה') : '') + ' · ' + subject.slice(0, 50));
     } catch (e) { say(src.name + ': מייל ' + x.id + ' ' + e.message.slice(0, 100)); }
   }
@@ -179,6 +188,7 @@ async function one(src) {
   fs.writeFileSync(mf + '.tmp', JSON.stringify(next)); fs.renameSync(mf + '.tmp', mf);
   fs.writeFileSync(stateF, JSON.stringify({ at: new Date().toISOString(), seen: Array.from(seen).slice(-500) }));
   own(src.dir, [dir, mf, stateF]);
+  if (personalNew) { const pd = path.join(src.dir, 'data', 'personal'); own(src.dir, [pd, path.join(pd, 'items.json')]); }
   if (items.length) publish(src);
 }
 

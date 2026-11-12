@@ -2891,6 +2891,8 @@ section#talkCard.talk{border:2px solid var(--accent);box-shadow:0 8px 24px color
 #psSheet .psT{display:flex;gap:8px;align-items:center;text-align:right;border-radius:16px;padding:10px;border:0;font:800 14px/1.25 Heebo,sans-serif;color:#3b2f25;background:var(--c,#efe2c6)}
 #psSheet .psT i{font-style:normal;font-size:20px;flex:none}
 #psSheet .psT small{display:block;font-weight:600;font-size:12px;color:#5b4a3a}
+#psSheet .psT.psWide{grid-column:1/-1}
+#psSheet .psT .psIt{margin-top:4px;padding-top:4px;border-top:1px solid rgba(59,47,37,.12);font-size:13px;color:#3b2f25}
 #psSheet .psPick .psT{opacity:.55;cursor:pointer}
 #psSheet .psPick .psT.on{opacity:1;box-shadow:inset 0 0 0 2.5px #5e8c61}
 #psSheet .psBtn{display:block;width:100%;margin:6px 0;border:0;border-radius:99px;padding:12px;font:800 15px Heebo,sans-serif;background:#5e8c61;color:#fff}
@@ -15572,7 +15574,11 @@ function personalSheet(){
  var w=document.createElement('div');w.id='psSheet';w.className='ysheet';
  w.setAttribute('role','dialog');w.setAttribute('aria-label','מצב אישי');
  var picking=!P.chosen,sel=(P.picked||[]).slice();
- function tileHtml(t){return '<div class="psT" style="--c:'+esc(t.c||'#efe2c6')+'"><i>'+esc(t.i)+'</i><div>'+esc(t.t)+(t.note?'<small>'+esc(t.note)+'</small>':'')+'</div></div>';}
+ // 12.11.2026: what the mail brought sits in the tile (lib/personal.js items), the nearest date first.
+ var DW=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
+ function whenTxt(w){if(!w)return '';var d=new Date(w.slice(0,10)+'T12:00:00');if(isNaN(d))return '';return 'יום '+DW[d.getDay()]+' '+d.getDate()+'.'+(d.getMonth()+1)+(w.length>10?' · '+w.slice(11,16):'');}
+ function tileHtml(t){var its=t.items||[];return '<div class="psT'+(its.length?' psWide':'')+'" style="--c:'+esc(t.c||'#efe2c6')+'"><i>'+esc(t.i)+'</i><div>'+esc(t.t)+(t.note?'<small>'+esc(t.note)+'</small>':'')
+  +its.map(function(x){return '<small class="psIt">'+(x.src==='mail'?'📧 ':'')+esc(x.line)+(x.when?' · <b>'+esc(whenTxt(x.when))+'</b>':'')+'</small>';}).join('')+'</div></div>';}
  function pickHtml(){
   return '<b class="psHead">🏡 המצב האישי שלך</b>'
    +'<small>'+(P.chosen?'מה להראות כאן?':'ברוך הבא למצב האישי: הצד של הבית, מחוץ לעבודה. בחר מה חשוב לך שיופיע כאן.')+' <b>תמיד אפשר לשנות.</b></small>'
@@ -15589,7 +15595,7 @@ function personalSheet(){
  function mainHtml(){
   var T=P.tiles||[];
   return '<b class="psHead">🏡 המצב האישי שלך</b>'
-   +(T.length?'<div class="psGrid">'+T.map(tileHtml).join('')+'</div>':'<small>עוד לא בחרת מה יופיע כאן.</small>')
+   +(T.length?'<small>תורים, כרטיסים, חשבונות והודעות שמגיעים במייל נכנסים לבד לאריח המתאים, ויורדים כשהיום עבר.</small><div class="psGrid">'+T.map(tileHtml).join('')+'</div>':'<small>עוד לא בחרת מה יופיע כאן.</small>')
    +'<button type="button" class="psBtn lt" data-a="pick">✏️ לשנות מה מופיע</button>'
    +'<small style="font-weight:700;display:block;margin-top:8px">מה לשים כאן ואיך לסדר?</small>'
    +'<small>כותבים או אומרים, והמנהל של המוניטור מסדר. למשל: התורים לרופא ראשונים, תוסיף אריח לחוג של הילדה.</small>'
