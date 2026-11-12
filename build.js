@@ -19296,7 +19296,7 @@ function bizSheet(t0){
     One line per lead (date, name, where from, status); a tap opens it: the last words, reply, status, note, delete.
     Status, note and delete go as "ליד [<id>]: ..." and the listener applies them with no model (lib/leads.js).
   */
-  var LD_SRC={site:'🌐 אתר','fb-comment':'📘 תגובה במודעה','ig-comment':'📸 תגובה במודעה',messenger:'💬 מסנג׳ר','ig-dm':'📸 הודעה באינסטגרם',leadform:'📝 טופס מטא',manual:'✍️ ידני'};
+  var LD_SRC={site:'🌐 אתר','fb-comment':'📘 תגובה במודעה','ig-comment':'📸 תגובה במודעה',messenger:'💬 מסנג׳ר','ig-dm':'📸 הודעה באינסטגרם',leadform:'📝 טופס מטא',manual:'✍️ ידני',aff:'🤝 שותף'};
   var LD_INBOX='https://business.facebook.com/latest/inbox/all?asset_id=1341874565686928&business_id=2131000707784066';
   function ldWa(p){var d=String(p||'').replace(/[^0-9]/g,'');if(!d)return '';if(d.charAt(0)==='0')d='972'+d.slice(1);return 'https://wa.me/'+d;}
   // The site chat sends its raw answers ([Chat Lead], Answers:, stage: mockups); shown in words.

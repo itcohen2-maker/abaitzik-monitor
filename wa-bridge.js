@@ -904,6 +904,20 @@ async function api(q, s, u) {
 
 const server = http.createServer(function (q, s) {
   const u = new URL(q.url, 'http://x');
+  // 12.11: a referrer's (affiliate) form and table, /r/<token>[/t] and /api/ref-lead (affiliates.js).
+  const rm = u.pathname.match(/^\/r\/([a-f0-9]{16,40})(?:\/(t))?\/?$/);
+  if (rm && q.method === 'GET') { require('./affiliates.js').serve(rm[1], rm[2], s); return; }
+  if (u.pathname === '/api/ref-lead') {
+    if (q.method !== 'POST') { s.writeHead(405); return s.end(); }
+    readBody(q, 8000).then(function (raw) {
+      let b; try { b = JSON.parse(raw.toString('utf8')); } catch (e) { s.writeHead(400, { 'Content-Type': 'application/json' }); return s.end('{}'); }
+      const ip = String(q.headers['x-forwarded-for'] || q.socket.remoteAddress || '-').split(',').pop().trim();
+      const r = require('./affiliates.js').handleLead(b, ip, function (k, t) { formNotify(k, t); });
+      if (r.ok) { try { require('child_process').execFile(process.execPath, [path.join(__dirname, 'push.js'), 'leads: affiliate'], { cwd: __dirname, timeout: 120000 }, function () {}); } catch (e) {} }
+      s.writeHead(r.ok ? 200 : (r.error === 'limit' ? 429 : 400), { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); s.end(JSON.stringify(r));
+    }, function () { s.writeHead(400); s.end(); });
+    return;
+  }
   // 1.11: client intake forms on form.it-solution.co.il (forms.js).
   const fm = u.pathname.match(/^\/f\/([a-f0-9]{16,40})(\/view)?\/?$/);
   if (fm && q.method === 'GET') { if (fm[2]) require('./owner-mark.js').setCookie(s); if (fm[2]) require('./form-view.js').serve('./forms.js', fm[1], s); else require('./forms.js').servePage(fm[1], s); return; }
