@@ -43,6 +43,8 @@ const m = M.build(inp);
 // 12.11.2026, Itzik: "המנהל צריך תמיד לבדוק את החיבורים שהם לא נשברים מהטופס למייל". Every round: the signup road (signup-check.js).
 // A warn is fixed by the PC like any problem on the card (the FIX loop below).
 try { const sc = JSON.parse(execFileSync('node', ['signup-check.js'], { cwd: __dirname, encoding: 'utf8', timeout: 120000 }).trim().split('\n').pop()); if (sc && sc.k) m.items.push({ k: sc.k, st: sc.st, t: sc.t, sub: sc.sub }); } catch (e) { m.items.push({ k: 'signup', st: 'warn', t: '📝 בדיקת ההרשמה לא רצה', sub: String(e.message).slice(0, 120) }); }
+// 12.11.2026, Itzik: "שומר שכל הבקשות המיוחדות של המשתמשים החדשים בוצעו". The wish from each trial's questionnaire (lib/trial-wishes.js).
+try { const TW = require('./lib/trial-wishes.js'); const wi = TW.item(TW.list(dataPath, now)); if (wi) m.items.push(wi); } catch (e) { log('wishes: ' + e.message); }
 if (DRY) { console.log(JSON.stringify(m, null, 1)); console.log(M.pushText(m)); process.exit(0); }
 
 fs.mkdirSync(path.join(dir, 'manager'), { recursive: true });
