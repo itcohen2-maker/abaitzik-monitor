@@ -17466,7 +17466,9 @@ var TOM_ITEMS=[
  {n:"4",t:"📣 קמפיין · 🆕 נכנס היום 12.11 · עסקי ואישי בלחיצה",r:"ad-monitor-personal-v2.mp4"},
  {n:"5",t:"📣 קמפיין · ✅ עלה 12.11, בבדיקה של מטא · נתקעת באמצע ב Lovable או Base44",r:"ads-nov12-card15.mp4"},
  {n:"6",t:"📣 קמפיין · ✅ עלה 12.11, בבדיקה של מטא · אתרים: האתר יפה, ואף אחד לא פונה (מסך חדש עם פניות)",r:"ads-nov12-card16.mp4"},
- {n:"7",t:"📣 קמפיין · ✅ עלה 12.11, בבדיקה של מטא · ייעוץ: עובד 12 שעות ביום והכל עדיין עליך",r:"ads-nov12-card17.mp4"}
+ {n:"7",t:"📣 קמפיין · ✅ עלה 12.11, בבדיקה של מטא · ייעוץ: עובד 12 שעות ביום והכל עדיין עליך",r:"ads-nov12-card17.mp4"},
+ // 12.11, Itzik: the monitor video, problem and solution one after the other, less crowded, no WhatsApp (that one after Meta's approval).
+ {n:"8",t:"🆕 טיוטה לבדיקה 12.11 · סרטון המוניטור: בעיה, פתרון, חמש פעמים, בלי וואטסאפ",r:"monitor-ps-v1.mp4"}
 ];
 function tomSheet(){
  var old=document.getElementById('tomSheet');if(old)old.remove();
