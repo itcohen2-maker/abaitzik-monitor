@@ -3095,6 +3095,16 @@ section#talkCard.talk{padding:8px 10px;gap:6px 10px;margin-bottom:8px}
 #connSheet .cnSoon,#connSheet .cnPaid{color:#6b7280;font-size:14px}
 #connSheet .cnr.lock{opacity:.5;filter:grayscale(1);pointer-events:none}
 #connSheet .cnt small{color:#6b7280;font-size:12px;overflow-wrap:anywhere}
+#firstSteps{margin:4px 0 14px;padding:16px;border-radius:18px;background:linear-gradient(160deg,#0f2a4a,#0e3b4f);color:#fff;border:1px solid rgba(34,211,238,.35)}
+#firstSteps b.fsH{display:block;font-size:18px;margin-bottom:4px}
+#firstSteps p{margin:0 0 10px;font-size:14px;opacity:.9}
+#firstSteps .fsR{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid rgba(255,255,255,.12)}
+#firstSteps .fsR span.fsI{font-size:24px;flex:none}
+#firstSteps .fsR div{flex:1;min-width:0}
+#firstSteps .fsR small{display:block;font-size:12.5px;opacity:.8}
+#firstSteps a.fsB,#firstSteps button.fsB{background:#22d3ee;color:#062033;border:0;border-radius:12px;padding:10px 14px;font:700 15px Heebo,sans-serif;text-decoration:none;white-space:nowrap;flex:none}
+#firstSteps .fsOk{color:#86efac;font-weight:700;flex:none}
+#firstSteps .fsTip{display:block;margin-top:8px;font-size:12.5px;opacity:.75}
 #connSheet a.cnb{background:#0891b2;color:#fff;border-radius:10px;padding:9px 12px;font-weight:700;text-decoration:none;font-size:14px;white-space:nowrap;flex:none}
 #connSheet a.cnb.again{background:#e5e7eb;color:#374151}
 .cald{margin:14px 0 4px;font:700 16px Heebo,sans-serif;color:var(--ink)}
@@ -5036,6 +5046,8 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <button type="button" class="shipline" id="shipLine" hidden></button>
   <!-- 14.10: one tile per project, drawn from D.projects after unlock (projTiles). -->
   <div class="grid" id="blkProj" hidden></div>
+  <!-- 12.11.2026, Itzik (as a new trial customer): "איפה כל העניין של להציע לי לחבר את הגוגל". First steps card, drawn by firstSteps() until Google is connected. -->
+  <div id="firstSteps" hidden></div>
   <div class="grid" id="blkTiles">${tenantTiles(inst)}${require('./lib/plan-ui.js').tile(inst.name)}</div>${tenantTools(inst)}${tenantCircleLinks(inst)}${tenantCircles(inst)}
 <!--TENANT:END-->
 
@@ -12568,6 +12580,7 @@ function applyHidden(){
  });
  // 24.10: a tile for a feature that is off stays hidden whatever this loop says.
  try{applyFeatures();}catch(e){}
+ try{firstSteps();}catch(e){}
  var back=document.getElementById('tidyBack');
  if(back)back.hidden=!hid.length;
 }
@@ -19113,6 +19126,32 @@ function connSheet(){
  document.body.appendChild(w);
 }
 on('icConn',connSheet);on('gConn',connSheet);
+/*
+  12.11.2026, Itzik, entering as a new trial customer: "איפה כל העניין של להציע לי
+  לחבר את הגוגל, או לחבר את כל הדברים האחרים, כדי שאני אתחיל ליהנות מהמוניטור?"
+  A customer's business home opens with a first steps card while Google is not
+  connected: Google in one tap, Facebook next, and every other connection in 🔌.
+  It leaves by itself once Google is on. Only in a customer's page (#firstSteps).
+*/
+function firstSteps(){
+ var w=document.getElementById('firstSteps');if(!w)return;
+ var R=(D.conn&&D.conn.rows)||[];
+ var g=R.filter(function(r){return r.key==='google'&&!r.locked;});
+ var gOn=g.some(function(r){return r.on;});
+ var gl=g.filter(function(r){return r.link&&!r.soon;})[0];
+ if(gOn||!R.length){w.hidden=true;w.innerHTML='';return;}
+ var m=R.filter(function(r){return r.key==='meta'&&!r.locked;})[0];
+ var h='<b class="fsH">🚀 בוא נתחיל</b><p>המוניטור עובד בשבילך מהרגע שהוא מחובר. שני חיבורים, דקה כל אחד.</p>';
+ h+='<div class="fsR"><span class="fsI">📧</span><div><b>גוגל: מייל, יומן ודרייב</b><small>המוניטור קורא את המיילים, מוציא מהם משימות, תורים ותשלומים, וממלא לבד גם את המצב האישי.</small></div>'
+  +(gl?'<a class="fsB" href="'+esc(gl.link)+'" target="_blank" rel="noopener">להתחבר</a>':'<button type="button" class="fsB" data-fs="all">לחבר</button>')+'</div>';
+ if(m)h+='<div class="fsR"><span class="fsI">📘</span><div><b>פייסבוק ואינסטגרם</b><small>הודעות, תגובות ומודעות במקום אחד.</small></div>'
+  +(m.on?'<span class="fsOk">✓ מחובר</span>':m.link&&!m.soon?'<a class="fsB" href="'+esc(m.link)+'" target="_blank" rel="noopener">להתחבר</a>':'<small>בתיאום איתנו</small>')+'</div>';
+ h+='<div class="fsR"><span class="fsI">🔌</span><div><b>כל שאר החיבורים</b><small>מיקרוסופט, לינקדין, תמלול פגישות ועוד.</small></div><button type="button" class="fsB" data-fs="all">לראות</button></div>';
+ h+='<small class="fsTip">אם גוגל מציג "האפליקציה לא אומתה": ללחוץ "מתקדם" ואז על הקישור שמתחתיו. זה החיבור שלנו, והוא בטוח.</small>';
+ w.innerHTML=h;w.hidden=false;
+ w.onclick=function(e){var t=e.target.closest&&e.target.closest('[data-fs]');if(t)connSheet();};
+}
+
 (function(){var a=document.getElementById('icGcal');if(!a)return;
  a.addEventListener('click',function(e){if(!D.cal)return;e.preventDefault();e.stopPropagation();calSheet(false);},true);})();
 /*
