@@ -80,10 +80,13 @@ test('bridge: a wrong code gets one polite line, no file, and at most 3 replies 
   assert.ok(QK.allowReply(DATA, '972522222222', Date.now() + 36 * 3600e3), 'the next day it counts again');
 });
 
-test('bridge: an unknown sender who does not write the phrase gets no answer (as before)', async () => {
+test('bridge: an unknown sender who does not write the phrase is a lead with the one auto reply (12.11, lib/wa-stranger.js)', async () => {
   sent.length = 0;
+  bridge._set({ stranger: { handle: () => ({}), publish: () => {}, notify: () => {} } });
   await bridge.onMessage(msg('972523333333', 'שלום מי זה'), 'x');
-  assert.strictEqual(sent.length, 0);
+  bridge._set({ stranger: null });
+  assert.strictEqual(sent.length, 1);
+  assert.strictEqual(sent[0][1], require('../lib/wa-stranger.js').REPLY);
 });
 
 test('bridge: a number already mapped to another monitor is refused, never remapped', async () => {
