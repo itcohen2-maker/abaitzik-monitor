@@ -822,6 +822,8 @@ function build() {
     // 10.11.2026: the "📋 לטיפול" queue (lib/handle.js), sealed payload only. Itzik's monitor; a customer opts in with instance handle:true.
     handle: (inst.name === 'abaitzik' || inst.handle === true) ? require('./lib/handle.js').forPage(inst.dataPath) : [],
     routines: inst.name === 'abaitzik' ? [] : require('./lib/routines.js').forPage(inst.dataPath, Date.now()),
+    // 12.11.2026, Itzik: "🏡 מצב אישי" in every monitor (lib/personal.js), sealed payload only.
+    personal: require('./lib/personal.js').forPage(inst.dataPath),
     manager: inst.name === 'abaitzik' ? require('./lib/manager.js').forPage(inst.dataPath, Date.now()) : null,
     pegasus,
     improve,
@@ -1483,6 +1485,8 @@ function tenantTools(inst) {
   return '\n  <div class="row" id="blkTools" role="group" aria-label="יומן ואימונים">'
     + '\n   <button type="button" class="ic" id="icConn"><span class="c c-cn">🔌</span>חיבורים</button>'
     // 11.11.2026, Itzik: "תוריד את האריח פתקים, תעביר אותו לאייקון קטן". The notes app stays in every monitor, as a round icon.
+    // 12.11.2026, Itzik: "אייקון של מצב אישי כמו בסרטון", in every monitor (personalSheet).
+    + '\n   <button type="button" class="ic icNew" id="icPersonal" data-new="1"><span class="c c-ps">🏡</span>מצב אישי</button>'
     + '\n   <button type="button" class="ic icNew" id="icTNotes" data-new="1"><span class="c c-tn">📝</span>פתקים</button>'
     + '\n   <button type="button" class="ic icNew" id="icTCal" data-new="1"><span class="c c-gcal"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></span>יומן</button>'
     + '\n   <button type="button" class="ic icNew" id="icFcSales" data-new="1" style="display:none"><span class="c c-fcs">🎯</span>אימון מכירות</button>'
@@ -2878,6 +2882,21 @@ section#talkCard.talk{border:2px solid var(--accent);box-shadow:0 8px 24px color
 #fcRow .fcErr{font:700 13px Heebo,sans-serif;color:#b3261e}
 .c-fcs{background:linear-gradient(160deg,#f59e0b,#b45309);font-size:22px}
 .c-tn{background:linear-gradient(160deg,#facc15,#ca8a04);font-size:22px}
+/* 12.11.2026, Itzik: the personal mode, in the calm colours of the ad (cream, sage, peach, sand), not the business blue. */
+.c-ps{background:linear-gradient(160deg,#a8c99a,#5e8c61);font-size:22px}
+#psSheet .ycard{background:linear-gradient(180deg,#fffaf2,#f6eee2);color:#3b2f25;max-height:88vh;overflow:auto;border:2px solid #e9b48a;font-family:Heebo,sans-serif}
+#psSheet .ycard small{color:#6b5a49}
+#psSheet .psHead{font:900 20px Heebo,sans-serif;color:#3b2f25;display:block;margin-bottom:4px}
+#psSheet .psGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+#psSheet .psT{display:flex;gap:8px;align-items:center;text-align:right;border-radius:16px;padding:10px;border:0;font:800 14px/1.25 Heebo,sans-serif;color:#3b2f25;background:var(--c,#efe2c6)}
+#psSheet .psT i{font-style:normal;font-size:20px;flex:none}
+#psSheet .psT small{display:block;font-weight:600;font-size:12px;color:#5b4a3a}
+#psSheet .psPick .psT{opacity:.55;cursor:pointer}
+#psSheet .psPick .psT.on{opacity:1;box-shadow:inset 0 0 0 2.5px #5e8c61}
+#psSheet .psBtn{display:block;width:100%;margin:6px 0;border:0;border-radius:99px;padding:12px;font:800 15px Heebo,sans-serif;background:#5e8c61;color:#fff}
+#psSheet .psBtn.lt{background:#efe2c6;color:#3b2f25}
+#psSheet textarea{width:100%;box-sizing:border-box;border-radius:14px;border:1px solid #e3d3b5;background:#fffdf8;padding:10px;font:15px Heebo,sans-serif;color:#3b2f25}
+#psSheet .psReq{background:#fffdf8;border-radius:12px;padding:8px 10px;margin:6px 0;font:600 13px Heebo,sans-serif;text-align:right}
 .c-board{background:linear-gradient(160deg,#0e7490,#164e63);font-size:22px}
 #gHandle[hidden],#gReq[hidden]{display:none}
 .c-fcc{background:linear-gradient(160deg,#22d3ee,#0e7490);font-size:22px}
@@ -4877,6 +4896,8 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <!-- 4.11, Itzik: "עיגול אחד של היומן של גוגל, כניסה ישירה אליו". Opens his calendar (account u/0, itcohen2), today. -->
   <a class="ic icNew" data-grp="day" id="icGcal" href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener" data-new="1" data-upd="20261107-month"><span class="c c-gcal">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M9.5 13.5h1.5v4M14 13.5h2l-1.5 4"/></svg></span>יומן</a>
+  <!-- 12.11.2026, Itzik: "אייקון של מצב אישי כמו בסרטון". The calm side of the monitor, in the ad's colours (personalSheet, lib/personal.js). -->
+  <button type="button" class="ic icNew" data-grp="day" id="icPersonal" data-new="1"><span class="c c-ps">🏡</span>מצב אישי</button>
   <!-- 10.11.2026, Itzik: the control board (לוח הפרסומים) is a round icon, one entry point; the old square tile is gone. Opens boardSheet. -->
   ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icBoard" data-new="1"><span class="c c-board">🎛️</span>לוח בקרה</button>' : ''}
   <!-- 11.11.2026, Itzik: "שימו לי במוניטור אייקון של הטופס הזה, שאני אוכל לשלוח אותו לאנשים בוואטסאפ או במייל". The signup page (it-solution.co.il/start). -->
@@ -15540,6 +15561,92 @@ on('gCamp',campSheet);
   (lib/routines.js, no model) and run by the worker on its minute timer. Pause and delete go the same way.
   Phase one: reminders, summaries and reports. Anything that sends, pays or deletes still waits for the owner's approval.
 */
+/*
+  12.11.2026, Itzik: "🏡 מצב אישי" (lib/personal.js). The first open offers the choices and says it can always change.
+  After that: his tiles in the ad's calm colours, and one box where he says what to put and how to sort it. The box
+  goes to the monitor's manager ("מצב אישי בקשה:"), who sorts the screen and answers in the answers screen.
+*/
+function personalSheet(){
+ var old=document.getElementById('psSheet');if(old)old.remove();
+ var P=D.personal||{chosen:false,picked:[],tiles:[],catalog:[],requests:[]};
+ var w=document.createElement('div');w.id='psSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','מצב אישי');
+ var picking=!P.chosen,sel=(P.picked||[]).slice();
+ function tileHtml(t){return '<div class="psT" style="--c:'+esc(t.c||'#efe2c6')+'"><i>'+esc(t.i)+'</i><div>'+esc(t.t)+(t.note?'<small>'+esc(t.note)+'</small>':'')+'</div></div>';}
+ function pickHtml(){
+  return '<b class="psHead">🏡 המצב האישי שלך</b>'
+   +'<small>'+(P.chosen?'מה להראות כאן?':'ברוך הבא למצב האישי: הצד של הבית, מחוץ לעבודה. בחר מה חשוב לך שיופיע כאן.')+' <b>תמיד אפשר לשנות.</b></small>'
+   +'<div class="psGrid psPick">'+(P.catalog||[]).map(function(c){return '<button type="button" class="psT'+(sel.indexOf(c.k)>=0?' on':'')+'" data-k="'+esc(c.k)+'"><i>'+esc(c.i)+'</i><div>'+esc(c.t)+'</div></button>';}).join('')+'</div>'
+   +'<small>משהו אחר שלא ברשימה? אחרי השמירה כותבים אותו בתיבה, והמנהל מוסיף.</small>'
+   +'<button type="button" class="psBtn" data-a="save">לשמור את הבחירה</button>'
+   +(P.chosen?'<button type="button" class="psBtn lt" data-a="back">חזרה</button>':'');
+ }
+ function reqHtml(){
+  var L=P.requests||[];if(!L.length)return '';
+  return '<small style="font-weight:700;display:block;margin-top:8px">מה ביקשת</small>'+L.map(function(r){
+   return '<div class="psReq">'+(r.state==='done'?'✓ ':'⏳ ')+esc(r.text)+'<small style="display:block">'+(r.state==='done'?esc(r.answer||'סודר'):'אצל המנהל, מסדר')+'</small></div>';}).join('');
+ }
+ function mainHtml(){
+  var T=P.tiles||[];
+  return '<b class="psHead">🏡 המצב האישי שלך</b>'
+   +(T.length?'<div class="psGrid">'+T.map(tileHtml).join('')+'</div>':'<small>עוד לא בחרת מה יופיע כאן.</small>')
+   +'<button type="button" class="psBtn lt" data-a="pick">✏️ לשנות מה מופיע</button>'
+   +'<small style="font-weight:700;display:block;margin-top:8px">מה לשים כאן ואיך לסדר?</small>'
+   +'<small>כותבים או אומרים, והמנהל של המוניטור מסדר. למשל: התורים לרופא ראשונים, תוסיף אריח לחוג של הילדה.</small>'
+   +'<textarea id="psText" rows="3" placeholder="מה לשים, מה להוריד, מה ראשון"></textarea>'
+   +'<button type="button" class="psBtn lt" data-a="mic">🎤 להגיד במקום לכתוב</button>'
+   +'<button type="button" class="psBtn" data-a="send">לשלוח למנהל</button>'
+   +reqHtml();
+ }
+ function draw(){w.innerHTML='<div class="ycard">'+(picking?pickHtml():mainHtml())+'<button type="button" class="psBtn lt" data-a="x">סגירה</button></div>';}
+ function close(){w.remove();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var b=e.target.closest?e.target.closest('button'):e.target;if(!b)return;
+  var a=b.getAttribute('data-a'),k=b.getAttribute('data-k');
+  if(k){var i=sel.indexOf(k);if(i<0)sel.push(k);else sel.splice(i,1);b.classList.toggle('on',i<0);return;}
+  if(a==='x')return close();
+  if(a==='pick'){picking=true;sel=(P.picked||[]).slice();draw();return;}
+  if(a==='back'){picking=false;draw();return;}
+  if(a==='save'){
+   if(!sel.length){toast('בחר לפחות דבר אחד. תמיד אפשר לשנות.');return;}
+   b.disabled=true;
+   var note='מצב אישי בחירה: '+sel.join(',');
+   sendText('מצב אישי',note,'משימה').then(function(){
+    markSent('text',note);
+    var byK={};(P.catalog||[]).forEach(function(c){byK[c.k]=c;});(P.tiles||[]).forEach(function(t){byK[t.k]=t;});
+    var pal=['#d6e6cf','#f8d9c2','#efe2c6','#e3d9f2','#f3d3d3'];
+    P.chosen=true;P.picked=sel.slice();
+    P.tiles=sel.filter(function(x){return byK[x];}).map(function(x,n){var c=byK[x];return {k:x,i:c.i,t:c.t,c:c.c||pal[n%5],note:c.note||''};});
+    D.personal=P;picking=false;draw();
+    toast('נשמר. תמיד אפשר לשנות מכאן.');
+   }).catch(function(){b.disabled=false;toast('לא נשמר. תבדוק חיבור ותנסה שוב.');});
+   return;
+  }
+  if(a==='send'){
+   var tx=document.getElementById('psText'),t=(tx.value||'').trim();
+   if(!t){toast('מה לשים או לסדר? אפשר לכתוב או להגיד.');return;}
+   b.disabled=true;
+   var m='מצב אישי בקשה: '+t;
+   sendText('מצב אישי',m,'משימה').then(function(){
+    markSent('text',m);
+    P.requests=[{id:'',at:new Date().toISOString(),text:t,state:'open',answer:''}].concat(P.requests||[]);
+    D.personal=P;draw();
+    toast('עבר למנהל. התשובה תגיע במסך התשובות.');
+   }).catch(function(){b.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
+   return;
+  }
+  if(a==='mic'){
+   var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+   if(!SR){toast('הקלטה בקול לא נתמכת בדפדפן הזה. אפשר לכתוב.');return;}
+   var rc=new SR();rc.lang='he-IL';rc.interimResults=false;
+   rc.onresult=function(ev){var s=ev.results[0][0].transcript||'',x=document.getElementById('psText');if(x)x.value=(x.value?x.value+' ':'')+s;};
+   rc.onerror=function(){toast('לא שמעתי. אפשר לנסות שוב או לכתוב.');};
+   try{rc.start();toast('מקשיב...');}catch(err){toast('לא הצלחתי להקליט. אפשר לכתוב.');}
+  }
+ };
+ draw();document.body.appendChild(w);
+}
 function myMgrSheet(){
  var old=document.getElementById('mmSheet');if(old)old.remove();
  var w=document.createElement('div');
@@ -18693,6 +18800,7 @@ on('gGviya',function(){window.open('https://lolos.abaitzik.com/gviya/1abf2a1f563
 on('gOp',function(){pane('s');});
 on('gNotes',function(){pane('t');renderNotes();});
 on('icTNotes',function(){pane('t');renderNotes();});
+on('icPersonal',personalSheet);
 // 11.10, a recording: "תפתור את התזכורות, אחרי שהוא מהבהב נכנסתי, הוא צריך להפסיק להבהב".
 // Opening the tile is the "I know" for every reminder that was waving it.
 on('gRemind',function(){

@@ -318,6 +318,8 @@ function prompt(list) {
     // 10.11.2026: what a "קמפיין:" message from the 📣 tile asks for (draft only, nothing published).
     ...require('./lib/campaign.js').promptLines(),
     ...require('./lib/routines.js').promptLines(),
+    // 12.11.2026: "מצב אישי:" from the 🏡 icon, the manager sorts the personal screen (lib/personal.js).
+    ...require('./lib/personal.js').promptLines(),
     ...require('./lib/tier.js').promptLines(TIER),
     /*
       How an answer reads, 26.9. Itzik asked for the whole monitor to be gone
@@ -717,7 +719,7 @@ function run(list) {
     args.splice(args.indexOf('--dangerously-skip-permissions'), 1);
     args.push('--allowedTools', 'Read', 'Grep', 'Glob', 'Write', 'Edit',
       'Bash(node pc-task.js:*)', 'Bash(node push.js:*)', 'Bash(node change-request.js:*)',
-      'Bash(node transcribe.js:*)', 'Bash(node build.js:*)', 'Bash(npm test:*)', 'Bash(ls:*)', 'Bash(cat:*)', 'Bash(date:*)');
+      'Bash(node transcribe.js:*)', 'Bash(node lib/personal.js:*)', 'Bash(node build.js:*)', 'Bash(npm test:*)', 'Bash(ls:*)', 'Bash(cat:*)', 'Bash(date:*)');
     say('מחשב הלקוח מחובר: הסשן כאן רק מעביר מלל ומשימות');
   }
   // 14.10: a shell only on Windows (claude.cmd). On Linux the shell split the

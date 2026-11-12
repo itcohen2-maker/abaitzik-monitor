@@ -820,6 +820,33 @@ function recordIncoming(m) {
       try { publishChat(); } catch (e) { /* the next build carries it */ }
       return true;
     }
+    /*
+      12.11.2026, Itzik: "🏡 מצב אישי" (build.js personalSheet, lib/personal.js). The choice of tiles is saved here with no
+      model and silently. A free request is saved and stays a normal message, rewritten as "מצב אישי: <text> [id]", so the
+      monitor's manager (the worker session) applies it and answers.
+    */
+    const psM = codeOk && /^\s*(?:משימה)?\s*מצב אישי\s+(בחירה|בקשה)\s*[:：]\s*([\s\S]*?)\s*$/.exec(text.replace(/\n\s*קוד[^\n]*$/, ''));
+    if (psM) {
+      const P = require('./lib/personal.js');
+      try {
+        if (psM[1] === 'בחירה') {
+          const got = P.setPicked(inst.dataPath, psM[2]);
+          say('מצב אישי: בחירה ' + got.join(','));
+          fs.unlinkSync(path.join(CHAT, name));
+          try { require('./lib/handle.js').publishSoon(); } catch (e) { /* the next build carries it */ }
+          return true;
+        }
+        const r = P.addRequest(inst.dataPath, psM[2]);
+        if (r) {
+          rec.text = 'מצב אישי: ' + r.text + ' [' + r.id + ']';
+          rec.personal = r.id;
+          fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+          say('מצב אישי: בקשה ' + r.id + ' עברה למנהל');
+          try { publishChat(); } catch (e) { /* the next build carries it */ }
+          return true;
+        }
+      } catch (e) { say('!! מצב אישי: ' + e.message); }
+    }
     const rtM = codeOk && /^\s*(?:משימה)?\s*שגרה\s+(חדשה|עצירה|חידוש|מחיקה)\s*[:：]\s*([\s\S]*?)\s*$/.exec(text.replace(/\n\s*קוד[^\n]*$/, ''));
     if (rtM) {
       let ans = '';
