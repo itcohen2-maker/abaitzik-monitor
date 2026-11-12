@@ -825,10 +825,17 @@ function recordIncoming(m) {
       model and silently. A free request is saved and stays a normal message, rewritten as "מצב אישי: <text> [id]", so the
       monitor's manager (the worker session) applies it and answers.
     */
-    const psM = codeOk && /^\s*(?:משימה)?\s*מצב אישי\s+(בחירה|בקשה)\s*[:：]\s*([\s\S]*?)\s*$/.exec(text.replace(/\n\s*קוד[^\n]*$/, ''));
+    const psM = codeOk && /^\s*(?:משימה)?\s*מצב אישי\s+(בחירה|בקשה|איפוס)\s*[:：]\s*([\s\S]*?)\s*$/.exec(text.replace(/\n\s*קוד[^\n]*$/, ''));
     if (psM) {
       const P = require('./lib/personal.js');
       try {
+        if (psM[1] === 'איפוס') {
+          P.reset(inst.dataPath);
+          say('מצב אישי: איפוס');
+          fs.unlinkSync(path.join(CHAT, name));
+          try { require('./lib/handle.js').publishSoon(); } catch (e) { /* the next build carries it */ }
+          return true;
+        }
         if (psM[1] === 'בחירה') {
           const got = P.setPicked(inst.dataPath, psM[2]);
           say('מצב אישי: בחירה ' + got.join(','));

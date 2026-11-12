@@ -15593,7 +15593,8 @@ function personalSheet(){
    +'<textarea id="psMore" rows="3" placeholder="מה עוד לשים כאן"></textarea>'
    +'<button type="button" class="psBtn lt" data-a="mic" data-t="psMore">🎤 להגיד במקום לכתוב</button>'
    +'<button type="button" class="psBtn" data-a="save">לשמור ולשלוח</button>'
-   +(P.chosen?'<button type="button" class="psBtn lt" data-a="back">חזרה</button>':'');
+   +(P.chosen?'<button type="button" class="psBtn lt" data-a="back">חזרה</button>'
+     +'<button type="button" class="psBtn lt" data-a="reset">🔄 להתחיל מאפס</button>':'');
  }
  function reqHtml(){
   var L=P.requests||[];if(!L.length)return '';
@@ -15623,6 +15624,19 @@ function personalSheet(){
   if(a==='x')return close();
   if(a==='pick'){picking=true;sel=(P.picked||[]).slice();draw();return;}
   if(a==='back'){picking=false;draw();return;}
+  // 12.11.2026: start over. The first tap asks, the second sends (no browser dialog).
+  if(a==='reset'){
+   if(!b.getAttribute('data-sure')){b.setAttribute('data-sure','1');b.textContent='לחיצה נוספת מוחקת את הבחירה, האריחים והבקשות';return;}
+   b.disabled=true;
+   var rn='מצב אישי איפוס: כן';
+   sendText('מצב אישי',rn,'משימה').then(function(){
+    markSent('text',rn);
+    P={chosen:false,picked:[],tiles:[],requests:[],catalog:(P.catalog||[]).filter(function(c){return !/^x/.test(c.k);})};
+    D.personal=P;sel=[];sent=false;picking=true;draw();
+    toast('אופס. אפשר לבחור מחדש.');
+   }).catch(function(){b.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
+   return;
+  }
   if(a==='save'){
    var more=((document.getElementById('psMore')||{}).value||'').trim();
    if(!sel.length&&!more){toast('בחר משהו, או כתוב מה תרצה כאן. תמיד אפשר לשנות.');return;}
