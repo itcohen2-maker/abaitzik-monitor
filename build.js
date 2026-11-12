@@ -1020,7 +1020,8 @@ function build() {
     carries only the summary (names included, so it sits behind the gate too).
   */
   let bizOn = false;
-  if (inst.biz) {
+  // 13.11.2026: every monitor has the 🔔 leads tile, so every monitor gets its leads records
+  if (inst.biz || inst.name !== 'abaitzik') {
     try {
       const biz = require('./lib/biz.js');
       const recs = biz.load(inst.dataPath) || [];
@@ -1405,6 +1406,7 @@ function build() {
   written from the customer's intake.
 */
 const TENANT_TILES = {
+  gLeads: ['g16', '🔔 לידים', 'כל הלידים במקום אחד'], // 13.11.2026, drawn by leadsTile()
   gCIdeas: ['g11', '💡 רעיונות לתוכן', 'מה שעלה לך, לפני שנשכח'],
   gPlan: ['g3', '🗓️ לוח תוכן', 'מה עולה מתי, ומה כבר עלה'],
   gRemote: ['g4', '🖥️ לחבר את המחשב', 'רק כשצריך, ועושים את זה יחד בטלפון'],
@@ -1457,7 +1459,7 @@ const TENANT_TILES = {
   gSend: ['g16', '📤 הודעות לשליחה', 'מוכנות לך אחת אחת'],
 };
 // Tiles a customer listed in screens that go before everything else on his home, samples and guides included.
-const TENANT_TOP = ['gLab', 'gFrl', 'gSup', 'gSend'];
+const TENANT_TOP = ['gLeads', 'gLab', 'gFrl', 'gSup', 'gSend'];
 // With no screens chosen at intake, only the tiles that fit any work. The whole
 // catalog gave a phone only customer "connect the computer", a client follow up
 // and a content plan, some of them empty screens.
@@ -1547,6 +1549,8 @@ function tenantTiles(inst) {
   if (ids.indexOf('gAds') < 0) { try { if (JSON.parse(fs.readFileSync(path.join(inst.dataPath || 'data', 'ads', 'status.json'), 'utf8')).ok === true) ids.push('gAds'); } catch (e) { /* not connected */ } }
   // 12.11.2026: ▶️ comes once a YouTube channel was given in 🔌 (data/yt/channel.json).
   try { if (ids.indexOf('gYtCom') < 0 && fs.existsSync(path.join(inst.dataPath || 'data', 'yt', 'channel.json'))) ids.push('gYtCom'); } catch (e) { /* none */ }
+  // 13.11.2026, Itzik: "תעשה אריח אחד של לידים ... על כל המוניטורים". Here when the business grid (which has it) is not drawn.
+  if (ids.indexOf('gLeads') < 0 && !(inst.biz && !(Array.isArray(inst.screens) && inst.screens.length))) ids.unshift('gLeads');
   ids.push('gConn');
   ids.push('gAdminReq');
   // 10.11.2026: a per tenant opt out (instance hideTiles, an array of tile ids). gConn and gAdminReq can never be hidden.
@@ -1568,6 +1572,7 @@ function tenantTiles(inst) {
   const samples = inst.samples ? sample(1) + sample(2).replace('g11', 'g4') : '';
   const top = ids.filter((id) => TENANT_TOP.indexOf(id) >= 0), rest = ids.filter((id) => TENANT_TOP.indexOf(id) < 0);
   const draw = (list) => list.filter((id) => TENANT_TILES[id]).map((id) => {
+    if (id === 'gLeads') return String.fromCharCode(10) + '  ' + leadsTile();
     let [cls, title, sub] = TENANT_TILES[id];
     // 10.11.2026, Itzik: the manager tile is named after its owner, "המנהלת של ד״ר שולמן".
     if (id === 'gMyMgr' && inst.owner) title = '🧑‍💼 המנהלת של ' + esc(inst.owner);
@@ -19529,7 +19534,8 @@ function bzRow(r,extra){
 }
 function bizSheet(t0){
  ensure('biz',function(){
-  var S=D.bizSum||null,recs=(D.biz||[]).filter(function(r){return typeof ldGone!=='function'||ldGone().indexOf(r.id)<0;}),tab=t0||'its';
+  var S=D.bizSum||null,recs=(D.biz||[]).filter(function(r){return typeof ldGone!=='function'||ldGone().indexOf(r.id)<0;}),tab=t0||'leads';
+  var bzOwner=false;/*ITZIK:BEGIN*/bzOwner=true;if(!t0)tab='its';/*ITZIK:END*/
   function scoreHtml(){
    if(!S||S.score==null)return '<div class="bzScore n">אין עדיין נתונים</div>';
    // 6.11, Itzik: "94 בעיגול ירוק, מה זה?". The number now says what it is and why it is not 100.
@@ -19840,6 +19846,8 @@ function bizSheet(t0){
   var dueN=((S&&S.staleLeads)||[]).length+((S&&S.due)||[]).length;
   var liN=(D.liPosts||[]).length;
   var tabs=[['its','💻','IT Solution'],['leads','🔔','לידים ולקוחות'],['money','💰','כסף החודש'],['due','⏰','צריך לחזור',dueN],['li','🔗','לינקדין',liN],['shachar','🌅','שחר']/*ITZIK:BEGIN*/,['ner','🕯️','נרות']/*ITZIK:END*/,['anim','🧠','המשרד']];
+  // 13.11.2026: a customer's copy showed Itzik's own tabs (IT Solution, Shachar, the office). Only his own business here.
+  if(!bzOwner)tabs=tabs.filter(function(t){return ['leads','money','due'].indexOf(t[0])>=0;});
   if(INSTANCE&&INSTANCE.clalit)tabs.push(['docs','🏥','מסמכים']);
   ((D.agr&&D.agr.clients)||[]).forEach(function(c,i){tabs.splice(1+i,0,['agr'+i,'🩺',c.tab||c.client]);});
   // 1.11.2026: the client demo starts from here (lib/demo-mode.js).

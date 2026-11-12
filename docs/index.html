@@ -2810,7 +2810,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-12T22:36:29.075Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-12T22:37:29.820Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4749,7 +4749,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='b913b4a6dd';
+var CODE_ID='ab81176890';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -14942,7 +14942,8 @@ function bzRow(r,extra){
 }
 function bizSheet(t0){
  ensure('biz',function(){
-  var S=D.bizSum||null,recs=(D.biz||[]).filter(function(r){return typeof ldGone!=='function'||ldGone().indexOf(r.id)<0;}),tab=t0||'its';
+  var S=D.bizSum||null,recs=(D.biz||[]).filter(function(r){return typeof ldGone!=='function'||ldGone().indexOf(r.id)<0;}),tab=t0||'leads';
+  var bzOwner=false;bzOwner=true;if(!t0)tab='its';
   function scoreHtml(){
    if(!S||S.score==null)return '<div class="bzScore n">אין עדיין נתונים</div>';
    var nst=(S.staleLeads||[]).length,ndu=(S.due||[]).length,nof=(S.stuckOffers||[]).length,why=[];
@@ -15217,6 +15218,7 @@ function bizSheet(t0){
   var dueN=((S&&S.staleLeads)||[]).length+((S&&S.due)||[]).length;
   var liN=(D.liPosts||[]).length;
   var tabs=[['its','💻','IT Solution'],['leads','🔔','לידים ולקוחות'],['money','💰','כסף החודש'],['due','⏰','צריך לחזור',dueN],['li','🔗','לינקדין',liN],['shachar','🌅','שחר'],['ner','🕯️','נרות'],['anim','🧠','המשרד']];
+  if(!bzOwner)tabs=tabs.filter(function(t){return ['leads','money','due'].indexOf(t[0])>=0;});
   if(INSTANCE&&INSTANCE.clalit)tabs.push(['docs','🏥','מסמכים']);
   ((D.agr&&D.agr.clients)||[]).forEach(function(c,i){tabs.splice(1+i,0,['agr'+i,'🩺',c.tab||c.client]);});
   var html='<button type="button" class="yb bzBackTop" data-bz="back" data-tdy="1">→ חזרה</button>'+'<div class="biz"><div class="bzMicRow"><button type="button" id="bizMic" class="bzMic" aria-label="דבר אליי">'
