@@ -938,6 +938,14 @@ async function api(q, s, u) {
     try { V.record(DATA, vn, b); if (b.ev === 'start' || b.ev === 'end') V.buildSoon(); } catch (e) { log('visit: ' + e.message); }
     s.writeHead(200, h); return s.end('{"ok":true}');
   }
+  // 12.11.2026, Itzik: the free AI diagnosis must be fully automatic. The page it-solution.co.il/ai posts seven answers here;
+  // lib/diag.js validates and queues them (honeypot, one per email per 24 hours, a limit per address) and answers at once.
+  // diag.js (timer, every minute) writes and mails the diagnosis. Public like /api/signup, Itzik's own instance only.
+  if (u.pathname === '/api/diag') {
+    if (!isOwnerInstance()) { s.writeHead(404, h); return s.end('{}'); }
+    let r; try { r = require('./lib/diag.js').intake(DATA, b, realIp(q)); } catch (e) { log('diag: ' + e.message); r = { status: 500, json: { error: 'server' } }; }
+    s.writeHead(r.status, h); return s.end(JSON.stringify(r.json));
+  }
   // 7.11: a customer's monitor talks to its own chat with its own key (data/fastchat/tenants.json).
   if (codeLocked(q)) { s.writeHead(429, h); return s.end('{"error":"wait"}'); }
   // 12.11: the campaign sheet's interviewer (lib/camp-ask.js), for the owner and every customer, always on the customers' API key.
@@ -1019,7 +1027,8 @@ async function api(q, s, u) {
      The answer is 200 at once, the slow work comes after; X-Idempotency-Key makes a repeat harmless.
 */
 const KAPSO_DIR = path.join(DATA, 'kapso');
-function isOwnerInstance() { try { return require('./lib/instance.js').name === 'abaitzik'; } catch (e) { return false; } }
+let ownerForTest = null; // 12.11.2026: a test says which instance this is
+function isOwnerInstance() { if (ownerForTest !== null) return ownerForTest; try { return require('./lib/instance.js').name === 'abaitzik'; } catch (e) { return false; } }
 function connectPage(s, status, msg) {
   s.writeHead(status, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' });
   s.end('<!doctype html><html lang="he" dir="rtl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>חיבור וואטסאפ</title>'
@@ -1297,4 +1306,4 @@ if (require.main === module) {
   setInterval(function () { try { require('./forms.js').sweep(formNotify); } catch (e) { log('forms sweep: ' + e.message); } }, 60000);
   setInterval(function () { try { require('./setup.js').sweep(formNotify); } catch (e) { log('setup sweep: ' + e.message); } }, 60000);
 }
-module.exports = { connectCodeOk, waConnect, kapsoProject, kapsoEvent, textOf, sigOk, voiceCommand, speakable, shortOf, isAllCommand, route, onMessage, sweep, outboxSweep, _set: function (o) { if (o.push) pushItzik = o.push; if (o.waSend) waSend = o.waSend; if (o.markRead) markRead = o.markRead; if (o.stranger !== undefined) strangerDeps = o.stranger; } };
+module.exports = { api, connectCodeOk, waConnect, kapsoProject, kapsoEvent, textOf, sigOk, voiceCommand, speakable, shortOf, isAllCommand, route, onMessage, sweep, outboxSweep, _set: function (o) { if (o.push) pushItzik = o.push; if (o.waSend) waSend = o.waSend; if (o.markRead) markRead = o.markRead; if (o.stranger !== undefined) strangerDeps = o.stranger; if (o.owner !== undefined) ownerForTest = o.owner; } };

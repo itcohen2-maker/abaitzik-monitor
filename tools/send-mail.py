@@ -22,6 +22,8 @@ def main():
     msg['From'] = os.environ.get('MAIL_FROM') or 'IT Solution <info@it-solution.co.il>'
     msg['To'] = m['to']
     msg['Subject'] = m['subject']
+    if m.get('reply_to'):  # 12.11.2026: the diagnosis mail answers go to info@
+        msg['Reply-To'] = m['reply_to']
     msg['Message-ID'] = make_msgid(domain='it-solution.co.il')
     msg.set_content(m['text'])
     if m.get('html'):

@@ -1,0 +1,18 @@
+# 12.11.2026, Itzik: the free AI diagnosis is fully automatic. The runner of data/diag/queue (diag.js), every minute.
+# Install as root:
+#   touch /var/log/monitor-diag.log && chown monitor:monitor /var/log/monitor-diag.log
+#   cp setup/monitor-diag.service setup/monitor-diag.timer /etc/systemd/system/ && systemctl daemon-reload && systemctl enable --now monitor-diag.timer
+[Unit]
+Description=the free AI diagnosis, one pass over the queue (diag.js)
+After=network-online.target
+[Service]
+Type=oneshot
+User=monitor
+Group=monitor
+Environment=HOME=/home/monitor
+EnvironmentFile=/etc/monitor.env
+WorkingDirectory=/home/monitor/abaitzik-monitor
+ExecStart=/usr/bin/flock -n /var/lock/monitor-diag.lock /usr/bin/node diag.js
+TimeoutStartSec=15min
+StandardOutput=append:/var/log/monitor-diag.log
+StandardError=append:/var/log/monitor-diag.log

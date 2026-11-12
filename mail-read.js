@@ -107,4 +107,6 @@ async function main() {
   console.log(await read(prompt));
 }
 
-main().catch(e => { console.error(String(e.message || e).slice(0, 500)); process.exitCode = 1; });
+// 12.11.2026: diag.js (the free AI diagnosis) reuses childEnv and markLogin, so the file only runs main when started directly.
+if (require.main === module) main().catch(e => { console.error(String(e.message || e).slice(0, 500)); process.exitCode = 1; });
+module.exports = { childEnv, markLogin, LOGIN_REFUSED };
