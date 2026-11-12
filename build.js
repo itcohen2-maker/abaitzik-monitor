@@ -18185,6 +18185,22 @@ function bdClinicMonth(CL,money){
  return h+'</div>';
 }
 // 11.11.2026, Itzik: "רשימה של כל הדברים שהמנהל עשה, וזה מתעדכן כל הזמן". D.bb.done from lib/board-feed.js doneItzik, newest first.
+// 12.11.2026, Itzik: "לוח חיבורים למוניטור, באותו סגנון: כמה משתמשים נכנסו, כל משתמש שורה אחת, באיזה יום, באיזה שעה,
+// כמה זמן יש לו וכמה פעולות עשה", and whether he connected WhatsApp. Rows from lib/board-feed.js usersItzik (D.bb.users).
+function bdUsersHtml(){
+ var L=D.bb&&D.bb.users;if(!L)return '';
+ var h='<div class="bbx"><b>👥 לוח חיבורים למוניטור <i class="bbn">'+L.length+'</i></b>';
+ if(!L.length)return h+'<div class="emp">עוד אף אחד לא נרשם לשבוע ניסיון.</div></div>';
+ var inN=L.filter(function(u){return u.visits>0;}).length,waN=L.filter(function(u){return u.wa;}).length;
+ h+='<small style="display:block;margin:2px 0 6px">'+L.length+' נרשמו · '+inN+' נכנסו · '+waN+' חיברו וואטסאפ</small>';
+ h+=L.map(function(u){
+  var st=u.visits?'ok':'warn';
+  return '<div class="bbu d-'+st+'"><span>'+(u.wa?'💬':'👤')+'</span><div><b>'+esc(u.name)+'</b> · נרשם '+esc(u.signed)+' · '+esc(u.left)
+   +'<small>'+u.used+' פעולות מתוך '+u.total+' · '+(u.visits?'נכנס '+u.visits+' פעמים, לאחרונה '+esc(u.last)+(u.mins?', '+u.mins+' דקות בפנים':''):'עוד לא נכנס')
+   +' · וואטסאפ '+(u.wa?'✓':'✗')+' · גוגל '+(u.google?'✓':'✗')+'</small></div></div>';
+ }).join('');
+ return h+'</div>';
+}
 function bdDoneHtml(){
  var L=D.bb&&D.bb.done;if(!L)return '';
  function row(x){return '<div class="bbu d-'+esc(x.st)+'"><input type="checkbox" class="bbk" data-k="'+esc(x.k)+'" data-t="'+esc(x.t)+'" aria-label="סמן"><span>'+esc(x.ic)+'</span><div>'+esc(x.t)
@@ -18413,7 +18429,7 @@ function boardSheet(wk){
    +(todo.length>12?'<small>ועוד '+(todo.length-12)+'</small>':'');
  }else h+='<div style="margin:10px 0;font:700 14px Heebo,sans-serif;color:#1b7f3b">✅ כל מה שמתוכנן השבוע יעלה.</div>';
  // 11.11.2026, Itzik: at the bottom of the board, what came in the mail, everything the manager did, then a line to ask for anything.
- h+=(D.bb&&D.bb.mail?bdMailHtml()+bdDoneHtml()+bdReportHtml()+bdChatHtml(1):bdReportHtml());
+ h+=(D.bb&&D.bb.mail?bdMailHtml()+bdDoneHtml()+bdUsersHtml()+bdReportHtml()+bdChatHtml(1):bdReportHtml());
  h+=(L.at?'<small style="display:block;color:#8a5a00;margin-top:6px">יש שינוי ששמרת בטלפון ועוד לא נבנה בדף. השרת כבר עובד לפיו.</small>':'')
   +'<button type="button" class="yb yb2" data-a="more">📦 מלאי מוכן ואוטומציות</button>'
   +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
