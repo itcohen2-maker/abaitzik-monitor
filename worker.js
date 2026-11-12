@@ -591,6 +591,8 @@ function houseRules() {
   included. usage-watch.js on the server reads every monitor's file, reports
   and warns on overuse. Never throws: a bad line must not cost him an answer.
 */
+// 12.11.2026: messages about tiles are not counted as actions (lib/plan.js billable).
+const { billable } = require('./lib/plan.js');
 function logUsage(raw, list, planner) {
   try {
     const t = String(raw).trim();
@@ -600,7 +602,7 @@ function logUsage(raw, list, planner) {
       models[m] = { in: u.inputTokens || 0, out: u.outputTokens || 0, cr: u.cacheReadInputTokens || 0, cw: u.cacheCreationInputTokens || 0, usd: +(u.costUSD || 0).toFixed(4) };
     }
     const line = { at: new Date().toISOString(), who: inst.name, usd: +(d.total_cost_usd || 0).toFixed(4), turns: d.num_turns || 0,
-      ms: d.duration_ms || 0, msgs: planner ? 0 : list.length, planner: planner ? 1 : undefined, sub: (d.subagent_stats && d.subagent_stats.spawned) || 0, models };
+      ms: d.duration_ms || 0, msgs: planner ? 0 : list.filter(billable).length, free: planner ? undefined : (list.length - list.filter(billable).length) || undefined, planner: planner ? 1 : undefined, sub: (d.subagent_stats && d.subagent_stats.spawned) || 0, models };
     fs.appendFileSync(path.join(STATUS, 'usage.jsonl'), JSON.stringify(line) + '\n');
     return d;
   } catch (e) { return null; }
