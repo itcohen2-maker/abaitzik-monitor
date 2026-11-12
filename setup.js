@@ -135,6 +135,8 @@ function card(st, i, s) {
       + (live
         ? '<a class="oab oa-' + pr + '" rel="noreferrer" referrerpolicy="no-referrer" href="' + esc(href) + '">' + esc(x.got ? 'לחבר מחדש' : (st.oauth.button || 'התחברות עם ' + OA_NAME[pr])) + '</a>'
         : '<p class="ih">' + esc(typeof st.oauth.soon === 'string' ? st.oauth.soon : 'החיבור ל' + OA_NAME[pr] + ' בלחיצה ייפתח בקרוב. נעדכן אותך.') + '</p>')
+      // 12.11.2026, Itzik: our Google app is not verified yet, so Google shows a warning first. Say what to tap.
+      + (live && !x.got && pr === 'google' ? '<p class="ih">אם גוגל מציג "Google לא אימתה את האפליקציה": ללחוץ "מתקדם", ואז "מעבר אל IT Solution". זה החיבור שלנו, והוא בטוח.</p>' : '')
       + '<p class="ig">' + (x.got ? '✓ מחובר' + (x.who ? ' (' + esc(x.who) + ')' : '') : (x.oaErr ? esc(OA_ERR[x.oaErr] || OA_ERR.exchange) : '')) + '</p></div>';
   }
   if (st.ms) h += '<div class="ms" data-got="' + (x.got ? 1 : 0) + '">'

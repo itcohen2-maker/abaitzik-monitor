@@ -19185,7 +19185,7 @@ function firstSteps(){
  if(m)h+='<div class="fsR"><span class="fsI">📘</span><div><b>פייסבוק ואינסטגרם</b><small>הודעות, תגובות ומודעות במקום אחד.</small></div>'
   +(m.on?'<span class="fsOk">✓ מחובר</span>':m.link&&!m.soon?'<a class="fsB" href="'+esc(m.link)+'" target="_blank" rel="noopener">להתחבר</a>':'<small>בתיאום איתנו</small>')+'</div>';
  h+='<div class="fsR"><span class="fsI">🔌</span><div><b>כל שאר החיבורים</b><small>מיקרוסופט, לינקדין, תמלול פגישות ועוד.</small></div><button type="button" class="fsB" data-fs="all">לראות</button></div>';
- h+='<small class="fsTip">אם גוגל מציג "האפליקציה לא אומתה": ללחוץ "מתקדם" ואז על הקישור שמתחתיו. זה החיבור שלנו, והוא בטוח.</small>';
+ h+='<small class="fsTip">אם גוגל מציג "Google לא אימתה את האפליקציה": ללחוץ "מתקדם", ואז "מעבר אל IT Solution". זה החיבור שלנו, והוא בטוח.</small>';
  w.innerHTML=h;w.hidden=false;
  w.onclick=function(e){var t=e.target.closest&&e.target.closest('[data-fs]');if(t)connSheet();};
 }
