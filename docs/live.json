@@ -1,6 +1,6 @@
 {
- "at": "2026-11-12T21:40:53.217Z",
- "up": 0,
+ "at": "2026-11-12T22:01:52.880Z",
+ "up": 1260,
  "since": "2026-11-12T21:40:53.190Z",
  "last": "",
  "n": 0,
@@ -51,14 +51,14 @@
    "cap": 30,
    "left": 1,
    "paid": false,
-   "blockedUntil": "2026-11-12T21:53:13.200Z",
-   "daily": true
+   "blockedUntil": "",
+   "daily": false
   }
  },
  "queued": 2,
  "pc": {
-  "on": true,
-  "seen": "2026-11-12T21:40:44.827Z"
+  "on": false,
+  "seen": "2026-11-12T21:58:46.029Z"
  },
  "hold": false,
  "quota": null,
