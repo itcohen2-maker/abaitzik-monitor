@@ -245,6 +245,12 @@ function byRef(ref) {
   for (const x of f) { const a = readJson(path.join(DIR, x), null); if (a && a.ref === ref) return { tok: x.slice(0, -5), a }; }
   return null;
 }
+// 12.11.2026, Itzik: "כשהגיע לי ליד מהאתר דרך שי, אתה תרשום ליד דרך שי בודק. ואז נדע שזה למוניטור."
+function siteLabel(text) {
+  const m = /^מקור:\s*([A-Za-z0-9_-]{2,40})/m.exec(String(text || ''));
+  const hit = m && byRef(m[1].toLowerCase());
+  return hit ? 'ליד דרך ' + (hit.a.full || hit.a.name) + ', למוניטור' : '';
+}
 function linkSiteLead(text, rec) {
   const m = /^מקור:\s*([A-Za-z0-9_-]{2,40})/m.exec(String(text || ''));
   if (!m || !rec || !rec.id) return null;
@@ -258,4 +264,4 @@ function linkSiteLead(text, rec) {
   return a.name;
 }
 
-module.exports = { serve, handleLead, handleSign, rows, aff, linkSiteLead };
+module.exports = { serve, handleLead, handleSign, rows, aff, linkSiteLead, siteLabel };

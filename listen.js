@@ -534,9 +534,16 @@ function leadAlert(title, body, tags) {
   setTimeout(() => execFile(process.execPath, ['push.js', 'ליד חדש: העסק שלי מהבהב'], { cwd: __dirname, timeout: 240000 }, function () {}), 4000);
 }
 
+function siteLeadLabel(text) {
+  if (inst.name !== 'abaitzik') return '';
+  try { return require('./affiliates.js').siteLabel(text); } catch (e) { return ''; }
+}
 function alertLead(text) {
-  const body = String(text || '').replace(/^\s*ליד מהאתר[^\n]*\n/, '');
-  leadAlert('💼 ליד חדש מהאתר', body + '\nבמוניטור: במסך הראשי האריח 🔔 יש ליד שהגיע, או 💼 העסק שלי ← לידים', 'rotating_light,moneybag');
+  // 12.11.2026: a lead through a referrer's link says so in the title and in the source line ("ליד דרך שי בודק, למוניטור").
+  const lab = siteLeadLabel(text);
+  let body = String(text || '').replace(/^\s*ליד מהאתר[^\n]*\n/, '');
+  if (lab) body = body.replace(/^מקור:.*$/m, 'מקור: ' + lab);
+  leadAlert(lab ? '💼 ' + lab : '💼 ליד חדש מהאתר', body + '\nבמוניטור: במסך הראשי האריח 🔔 יש ליד שהגיע, או 💼 העסק שלי ← לידים', 'rotating_light,moneybag');
 }
 
 function alertShacharFeedback(text) {
@@ -569,6 +576,8 @@ function saveSiteLead(text, at) {
   const id = 'biz-' + at.replace(/\D/g, '').slice(0, 14) + '-site';
   const r = require('./lib/biz.js').leadFromSite(text, at, id);
   if (!r) return;
+  const lab = siteLeadLabel(text);
+  if (lab) { r.source = 'aff'; r.note = lab + '\n' + r.note; r.next = 'לחזור אליו, על המוניטור'; }
   const dir = path.join(inst.dataPath, 'biz', 'biz');
   try { fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(path.join(dir, id + '.json'), JSON.stringify(r, null, 1), 'utf8'); say('ליד נכנס לעסק שלי: ' + r.name); }
   catch (e) { say('!! ליד לא נכנס לעסק שלי: ' + e.message); return; }
@@ -673,7 +682,7 @@ function recordIncoming(m) {
     fs.mkdirSync(CHAT, { recursive: true });
     fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
     say((codeOk ? 'נרשם בצ׳אט עם אישור קבלה: ' : 'נרשם בלי קוד, ממתין לאימות: ') + text.slice(0, 60));
-    if (rec.heldWhy === 'lead') { try { if (!require('./lib/biz.js').isTestLead(text)) { const nm = /(?:שם|name)\s*[:：]\s*([^\n]{1,60})/i.exec(text); require('./lib/handle.js').add(inst.dataPath, { key: 'lead:' + rec.at, kind: 'lead', who: nm ? nm[1] : 'ליד מהאתר', title: 'ליד חדש מהאתר, לחזור אליו', link: 'biz', at: rec.at }); } } catch (e) { say('!! לטיפול: ' + e.message); } alertLead(text); saveSiteLead(text, rec.at); }
+    if (rec.heldWhy === 'lead') { try { if (!require('./lib/biz.js').isTestLead(text)) { const nm = /(?:שם|name)\s*[:：]\s*([^\n]{1,60})/i.exec(text); require('./lib/handle.js').add(inst.dataPath, { key: 'lead:' + rec.at, kind: 'lead', who: nm ? nm[1] : 'ליד מהאתר', title: (siteLeadLabel(text) || 'ליד חדש מהאתר') + ', לחזור אליו', link: 'biz', at: rec.at }); } } catch (e) { say('!! לטיפול: ' + e.message); } alertLead(text); saveSiteLead(text, rec.at); }
     if (rec.heldWhy === 'waitlist') alertWaitlist(text);
     if (rec.heldWhy === 'login-wait') alertLoginWait(text);
     if (rec.heldWhy === 'shachar-feedback') alertShacharFeedback(text);
