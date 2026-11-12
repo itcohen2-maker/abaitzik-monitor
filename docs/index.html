@@ -2762,7 +2762,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-12T11:35:32.285Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-12T11:36:45.466Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3011,7 +3011,7 @@ try{
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות לשיפור המוניטור</b><small>מה עוד המסך הזה יכול לעשות</small></button>
   <button type="button" class="gt gMed" data-grp="day" id="gMed"><b>🩺 אחרי הניתוח השני</b><small>ממוספר. המסמכים מהביקורת אצל הפרופסור</small></button>
   <button type="button" class="gt gWin" data-grp="net" id="gWin" data-upd="20261106-win03" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
-  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1" data-upd="20261110-ai5"><b>🎬 הסרטונים</b><small>רילים, רילים עתידיים, סטטוס, נרות, מה בצלחת, שחר וקמפיין</small></button>
+  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1" data-upd="20261112-ps-story"><b>🎬 הסרטונים</b><small>רילים, רילים עתידיים, סטטוס, נרות, מה בצלחת, שחר וקמפיין</small></button>
   <button type="button" class="gt gGviya" data-grp="work" id="gGviya" data-new="1"><b>📞 גבייה, יואל</b><small>דף שיואל מסמן, כל סימון מעדכן אותך</small></button>
   <button type="button" class="gt gShop" data-grp="home" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
   <button type="button" class="gt gBoyGeorge" data-grp="home" id="gBoyGeorge" data-new="1" data-files="boy-george-ticket-1.jpeg,boy-george-ticket-2.jpeg" data-upd="f1793646431"><b>🎤 בוי ג׳ורג׳</b><small>שני הכרטיסים להופעה ב-7.11, מנורה מבטחים</small></button>
@@ -3118,14 +3118,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -3600,7 +3593,7 @@ try{
   <h3 class="rivh">דף לשיתוף</h3>
   <div class="hint">כל החשבונות הפתוחים, לקוח לקוח עם החשבוניות. לחיצה פותחת, ומשם שליחה בוואטסאפ.</div>
   <div id="rivShare">
-   <button type="button" class="yb yb1" data-r="lolos-open-accounts-2026-11-04-10aa.pdf">📤 חשבונות פתוחים עד 4.11 (PDF)</button>
+   <button type="button" class="yb yb1" data-r="lolos-open-accounts-2026-11-04-5ede.pdf">📤 חשבונות פתוחים עד 4.11 (PDF)</button>
   </div>
  </div>
 </section>
@@ -4699,7 +4692,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='e49e741aef';
+var CODE_ID='829c53ae0c';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10870,6 +10863,7 @@ function captionSheet(it){
  document.body.appendChild(w);
 }
 var REEL_ITEMS=[
+{n:'IT סטורי מוניטור',t:'🆕 סטורי: המוניטור, בעיה ופתרון חמש פעמים · בסוף כתובת האתר',r:'monitor-ps-story.mp4'},
 {n:'שחר סטורי',t:'שחר פתוח עכשיו, נרשמים ונכנסים מיד · 4K הכי איכותי, לשמירה בגלריה',r:'shachar-story-open.mp4'},
 {n:'שחר פוסט',t:'תמונה לשיתוף: פתוח עכשיו, נרשמים ונכנסים מיד',r:'shachar-post-open.png'},
 {n:'שחר 29',t:'ריל: איזה כיף, יש עם מי לדבר · 4K הכי איכותי, לשמירה בגלריה',r:'shachar-reel-29-open.mp4'},
@@ -13106,14 +13100,13 @@ function clalitSheet(){
 }
 on('gClalit',clalitSheet);
 var TOM_ITEMS=[
- {n:"1",t:"📣 קמפיין · ✅ באוויר · שרפת קרדיטים, תמונה מונפשת (מביאה כמעט את כל הלידים)",r:"ads-nov01-card9-story.mp4"},
- {n:"2",t:"📣 קמפיין · ✅ באוויר · תור לרופא שיניים",r:"ad-monitor-tor-shinayim-chat.mp4"},
- {n:"3",t:"📣 קמפיין · ✅ באוויר מ 11.11 · מי לא שילם, אנימציה",r:"ad-monitor-anim-1111.mp4"},
- {n:"4",t:"📣 קמפיין · 🆕 נכנס היום 12.11 · עסקי ואישי בלחיצה",r:"ad-monitor-personal-v2.mp4"},
- {n:"5",t:"📣 קמפיין · ✅ עלה 12.11, בבדיקה של מטא · נתקעת באמצע ב Lovable או Base44",r:"ads-nov12-card15.mp4"},
- {n:"6",t:"📣 קמפיין · ✅ עלה 12.11, בבדיקה של מטא · אתרים: האתר יפה, ואף אחד לא פונה (מסך חדש עם פניות)",r:"ads-nov12-card16.mp4"},
- {n:"7",t:"📣 קמפיין · ✅ עלה 12.11, בבדיקה של מטא · ייעוץ: עובד 12 שעות ביום והכל עדיין עליך",r:"ads-nov12-card17.mp4"},
- {n:"8",t:"🆕 טיוטה לבדיקה 12.11 · סרטון המוניטור: בעיה, פתרון, חמש פעמים, בלי וואטסאפ",r:"monitor-ps-v1.mp4"}
+ {n:"1",t:"✅ באוויר · שרפת קרדיטים: תמונה מונפשת, מביאה את רוב הלידים",r:"ads-nov01-card9-story.mp4"},
+ {n:"2",t:"✅ באוויר · תור לרופא שיניים: המוניטור קובע ומזכיר",r:"ad-monitor-tor-shinayim-chat.mp4"},
+ {n:"3",t:"✅ באוויר · מי לא שילם לך: אנימציה של המוניטור",r:"ad-monitor-anim-1111.mp4"},
+ {n:"4",t:"✅ באוויר · עסקי ואישי: מתג בין העסק לבית",r:"ad-monitor-personal-v2.mp4"},
+ {n:"5",t:"⏳ בבדיקה של מטא · נתקעת ב Lovable או Base44: מסיימים לך את האתר",r:"ads-nov12-card15.mp4"},
+ {n:"6",t:"⏳ בבדיקה של מטא · אתר יפה ואף אחד לא פונה: מסך פניות",r:"ads-nov12-card16.mp4"},
+ {n:"7",t:"⏳ בבדיקה של מטא · עובד 12 שעות והכל עליך: ייעוץ",r:"ads-nov12-card17.mp4"}
 ];
 function tomSheet(){
  var old=document.getElementById('tomSheet');if(old)old.remove();
@@ -13327,7 +13320,7 @@ function vidTabs(){
   {id:'pl',l:'🍽️ מה בצלחת'+(plN?' ('+plN+')':''),h:'הסטוריז לפי הסדר, אפשר לסדר ולמחוק',L:vqRows('pl').concat([{h:'📂 הדף המלא'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return plateN[x.it.n];}))},
   {id:'ai',l:'🤖 ערוץ AI'+(aiN?' ('+aiN+')':''),upd:'20261110-approve',h:'הרילים של ערוץ ה AI להעלאה, בעברית ובאנגלית: מה עדיין לא עלה. מה שעלה יורד מכאן לבד',L:vqRows('ai').concat([{h:'📂 הדף המלא'},{k:'go',t:'🤖 פתיחת הרילים של ערוץ ה AI',u:'ai/ai.html'}])},
   {id:'nr',l:'🕯️ נרות'+(nrN?' ('+nrN+')':''),h:'candle.times: סטוריז ופוסטים שמחכים לאישור שלך',L:vqRows('nr').concat([{h:'📂 הדף המלא'},{k:'go',t:'🕯️ פתיחת candle.times',u:'ner/candle.html'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return candleN[x.it.n];}))},
-  {id:'it',l:'💻 IT Solution',upd:'20261107-it03en',h:'הרילים של IT Solution: המוניטור, הקמפיינים והעסקים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isIt(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isIt(x.it);}))},
+  {id:'it',l:'💻 IT Solution',upd:'20261112-ps-story',h:'הרילים של IT Solution: המוניטור, הקמפיינים והעסקים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isIt(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isIt(x.it);}))},
   {id:'me',l:'🎬 הרילים שלי',h:'הרילים והסטוריז שלי, מוכנים לרשתות',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return !isSh(x.it)&&!isIt(x.it);}))},
   {id:'car',l:'🎠 קרוסלות'+(CARON.length?' ('+CARON.length+')':''),pulse:CARON.length,h:'קרוסלות לאבא איציק, כל הנושאים. מה שעוד לא עלה מהבהב חלש',L:carL},
   {id:'fut',l:'💡 רילים עתידיים',h:'רעיונות, רפרנסים ותסריטים לרילים הבאים',L:[{h:'💡 רעיונות לרילים הבאים'}].concat(F.filter(function(x){return !isSh(x.it)&&!isIt(x.it)&&!plateN[x.it.n]&&!candleN[x.it.n];}))}
@@ -19406,7 +19399,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="BAJSdIafAtGxgHzJr3tOJLTViE1Gkn6rNyAReKPb5ZiMM-6xXp2c1PD7V5VKOXkQRWLI9-Wdq7-Q4hyMCcYp2iQ";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
