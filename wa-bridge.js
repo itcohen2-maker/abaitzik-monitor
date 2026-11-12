@@ -910,6 +910,8 @@ async function api(q, s, u) {
       if (!v.ok) return send(400, { error: v.error });
       if (v.fresh) {
         try { require('./lib/handle.js').complete({ key: 'signup-' + v.id, kind: 'lead', who: v.name, title: 'נרשם לשבוע ניסיון ואימת מייל (' + (v.phone || v.email) + ')' + (v.ref ? ', הגיע דרך הקישור של ' + v.ref : '') + '. המוניטור שלו נפתח עכשיו.', link: 'biz' }); } catch (e) { log('signup handle: ' + e.message); }
+        // 13.11.2026, Itzik: "אני צריך שזה הכל יתנקז למקום אחד". Every trial signup is also a row in the leads table.
+        try { require('./lib/leads.js').addFound(DATA, { src: 'signup', key: 'signup:' + v.id, name: v.name, phone: v.phone, email: v.email, text: 'נרשם לשבוע ניסיון ואימת מייל' + (v.ref ? ', דרך הקישור של ' + v.ref : '') }); } catch (e) { log('signup lead: ' + e.message); }
       }
       // 11.11: the page shows an entry button to the monitor being built (the login code goes only by mail)
       return send(200, { ok: true, id: v.id, pt: v.pt, host: v.id ? v.id + '.m.it-solution.co.il' : '' });

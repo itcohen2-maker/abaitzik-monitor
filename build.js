@@ -4898,7 +4898,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   -->
   <button type="button" class="gt gWin" data-grp="net" id="gWin" data-upd="20261106-win03" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <!-- 5.11, Itzik: "את כל הסרטונים נעביר לאריח אחד, ובתוכו טאבים". One tile with a tab per kind; the old tiles (reels, future reels, campaign, plate, status, candle.times) were removed; their sheets stay in the code. -->
-  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1" data-upd="20261113-revert2"><b>🎬 הסרטונים</b><small>רילים, רילים עתידיים, סטטוס, נרות, מה בצלחת, שחר וקמפיין</small></button>
+  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1" data-upd="20261113-list6"><b>🎬 הסרטונים</b><small>רילים, רילים עתידיים, סטטוס, נרות, מה בצלחת, שחר וקמפיין</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
@@ -17677,22 +17677,23 @@ on('gClalit',clalitSheet);
   only once they are in the monitor; Drive links (u) open the folder.
 */
 var TOM_ITEMS=[
-// 13.11, Itzik: the animated images come back as they were (not monitor videos); notes on the new videos come next.
-// 1 to 3 the monitor videos (Meta waits for his yes), 4 to 7 the images that run, 8 and 9 new videos waiting for his notes, then stories.
- {n:"1",t:"🆕 🖥️ מוניטור · מי לא שילם לך (הראשי) · לשבוע התנסות בחינם",r:"wa-hub-gviya-ad.mp4"},
- {n:"2",t:"🆕 🖥️ מוניטור · עסקי ואישי: כרטיס להופעה עובר למצב האישי",r:"wa-hub-personal-ad.mp4"},
- {n:"3",t:"🆕 🖥️ מוניטור · תור לרופא שיניים",r:"wa-hub-tor-ad.mp4"},
- {n:"4",t:"✅ באוויר · שרפת קרדיטים: תמונה מונפשת, מביאה את רוב הלידים",r:"ads-nov01-card9-story.mp4"},
- {n:"5",t:"⏳ בבדיקה של מטא · נתקעת ב Lovable או Base44: תמונה מונפשת",r:"ads-nov12-card15.mp4"},
- {n:"6",t:"⏳ בבדיקה של מטא · אתר יפה ואף אחד לא פונה: תמונה מונפשת, לשנות קצת את הרעיון",r:"ads-nov12-card16.mp4"},
- {n:"7",t:"⏳ בבדיקה של מטא · עובד 12 שעות והכל עליך: תמונה מונפשת",r:"ads-nov12-card17.mp4"},
- {n:"8",t:"🆕 לבדיקה שלך · מוניטור · חשבוניות מהמעבדה בוואטסאפ",r:"wa-hub-lab-ad.mp4"},
- {n:"9",t:"🆕 לבדיקה שלך · הטמעת AI · אבחון חינם תוך 24 שעות",r:"wa-hub-ai-ad.mp4"},
- {n:"10",t:"📲 סטורי · מי לא שילם לך · it-solution.co.il/start",r:"wa-hub-gviya-story.mp4"},
- {n:"11",t:"📲 סטורי · עסקי ואישי · it-solution.co.il/start",r:"wa-hub-personal-story.mp4"},
- {n:"12",t:"📲 סטורי · תור לרופא שיניים · it-solution.co.il/start",r:"wa-hub-tor-story.mp4"},
- {n:"13",t:"📲 סטורי · חשבוניות מהמעבדה · it-solution.co.il/start",r:"wa-hub-lab-story.mp4"},
- {n:"14",t:"📲 סטורי · הטמעת AI · it-solution.co.il/ai",r:"wa-hub-ai-story.mp4"}
+// 13.11, Itzik approved the recommended list: 6 ads (2 videos, 4 animated images), Meta waits for his yes.
+// 7 stops (almost the same as 3). 8 to 10 wait aside, ready to replace a weak ad. Then the stories. Copies of the old cards: Downloads/ITsolution-ads.
+ {n:"1",t:"🎬 סרטון · מי לא שילם לך (הראשי) · לשבוע התנסות בחינם",r:"wa-hub-gviya-ad.mp4"},
+ {n:"2",t:"🎬 סרטון · עסקי ואישי · לשבוע התנסות בחינם",r:"wa-hub-personal-ad.mp4"},
+ {n:"3",t:"✅ באוויר · 🖼️ שרפת קרדיטים · לצ׳אט",r:"ads-nov01-card9-story.mp4"},
+ {n:"4",t:"🆕 🖼️ מי לא שילם לך? · תג שבוע התנסות בחינם · להרשמה",r:"ads-nov13-card18.mp4"},
+ {n:"5",t:"🆕 🖼️ האתר יפה ואף אחד לא פונה? · לפני ואחרי · לצ׳אט",r:"ads-nov13-card19.mp4"},
+ {n:"6",t:"🆕 🖼️ עובד 12 שעות · אבחון AI חינם · ל it-solution.co.il/ai",r:"ads-nov13-card20.mp4"},
+ {n:"7",t:"⛔ לעצור · נתקעת ב Lovable או Base44 (כמעט זהה ל 3)",r:"ads-nov12-card15.mp4"},
+ {n:"8",t:"⏸️ בצד · סרטון תור לרופא שיניים",r:"wa-hub-tor-ad.mp4"},
+ {n:"9",t:"⏸️ בצד · סרטון חשבוניות מהמעבדה",r:"wa-hub-lab-ad.mp4"},
+ {n:"10",t:"⏸️ בצד · סרטון הטמעת AI",r:"wa-hub-ai-ad.mp4"},
+ {n:"11",t:"📲 סטורי · מי לא שילם לך · it-solution.co.il/start",r:"wa-hub-gviya-story.mp4"},
+ {n:"12",t:"📲 סטורי · עסקי ואישי · it-solution.co.il/start",r:"wa-hub-personal-story.mp4"},
+ {n:"13",t:"📲 סטורי · תור לרופא שיניים · it-solution.co.il/start",r:"wa-hub-tor-story.mp4"},
+ {n:"14",t:"📲 סטורי · חשבוניות מהמעבדה · it-solution.co.il/start",r:"wa-hub-lab-story.mp4"},
+ {n:"15",t:"📲 סטורי · הטמעת AI · it-solution.co.il/ai",r:"wa-hub-ai-story.mp4"}
 ];
 function tomSheet(){
  var old=document.getElementById('tomSheet');if(old)old.remove();
@@ -17879,7 +17880,7 @@ function vidTabs(){
   {id:'ai',l:'🤖 ערוץ AI'+(aiN?' ('+aiN+')':''),upd:'20261110-approve',h:'הרילים של ערוץ ה AI להעלאה, בעברית ובאנגלית: מה עדיין לא עלה. מה שעלה יורד מכאן לבד',L:vqRows('ai').concat([{h:'📂 הדף המלא'},{k:'go',t:'🤖 פתיחת הרילים של ערוץ ה AI',u:'ai/ai.html'}])},
   {id:'nr',l:'🕯️ נרות'+(nrN?' ('+nrN+')':''),h:'candle.times: סטוריז ופוסטים שמחכים לאישור שלך',L:vqRows('nr').concat([{h:'📂 הדף המלא'},{k:'go',t:'🕯️ פתיחת candle.times',u:'ner/candle.html'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return candleN[x.it.n];}))},
   // 7.11, Itzik: a tab for IT Solution reels (ready ones first, then the ideas). upd = the soft blink until the tab is opened.
-  {id:'it',l:'💻 IT Solution',upd:'20261113-revert2',h:'הרילים של IT Solution: המוניטור, הקמפיינים והעסקים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isIt(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isIt(x.it);}))},
+  {id:'it',l:'💻 IT Solution',upd:'20261113-list6',h:'הרילים של IT Solution: המוניטור, הקמפיינים והעסקים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isIt(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isIt(x.it);}))},
   // 7.11, Itzik: the reels and the future reels too, each in its own tab of the one tile.
   {id:'me',l:'🎬 הרילים שלי',h:'הרילים והסטוריז שלי, מוכנים לרשתות',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return !isSh(x.it)&&!isIt(x.it);}))},
   {id:'car',l:'🎠 קרוסלות'+(CARON.length?' ('+CARON.length+')':''),pulse:CARON.length,h:'קרוסלות לאבא איציק, כל הנושאים. מה שעוד לא עלה מהבהב חלש',L:carL},
@@ -19663,7 +19664,7 @@ function bizSheet(t0){
     One line per lead (date, name, where from, status); a tap opens it: the last words, reply, status, note, delete.
     Status, note and delete go as "ליד [<id>]: ..." and the listener applies them with no model (lib/leads.js).
   */
-  var LD_SRC={site:'🌐 אתר','fb-comment':'📘 תגובה במודעה','ig-comment':'📸 תגובה במודעה',messenger:'💬 מסנג׳ר','ig-dm':'📸 הודעה באינסטגרם',leadform:'📝 טופס מטא',manual:'✍️ ידני',aff:'🤝 שותף',whatsapp:'💬 וואטסאפ'};
+  var LD_SRC={site:'🌐 אתר','fb-comment':'📘 תגובה במודעה','ig-comment':'📸 תגובה במודעה',messenger:'💬 מסנג׳ר','ig-dm':'📸 הודעה באינסטגרם',leadform:'📝 טופס מטא',manual:'✍️ ידני',aff:'🤝 שותף',whatsapp:'💬 וואטסאפ',signup:'🆕 שבוע ניסיון'};
   var LD_INBOX='https://business.facebook.com/latest/inbox/all?asset_id=1341874565686928&business_id=2131000707784066';
   function ldWa(p){var d=String(p||'').replace(/[^0-9]/g,'');if(!d)return '';if(d.charAt(0)==='0')d='972'+d.slice(1);return 'https://wa.me/'+d;}
   // The site chat sends its raw answers ([Chat Lead], Answers:, stage: mockups); shown in words.
