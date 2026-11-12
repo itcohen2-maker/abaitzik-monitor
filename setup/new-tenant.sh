@@ -43,7 +43,8 @@ id "$U" >/dev/null 2>&1 || useradd -m -s /usr/sbin/nologin "$U"
 # A shared table is read through its group (homestyle). 6.10: Roni's was added by hand and the
 # next customer would have had no access at all.
 [ -n "$SHIP" ] && usermod -aG "$(stat -c %G "$(dirname "$SHIP")")" "$U"
-chmod 711 /home/$U
+# 12.11 security: other customers cannot pass through; only Caddy (docs) and the owner instance can.
+chmod 711 /home/$U; setfacl -m u:caddy:x,u:monitor:x /home/$U; chmod o-rwx /home/$U
 # Shallow: a full clone carried 3.4G of Itzik's history into every customer and filled the disk (7.10).
 [ -d "$DIR" ] || sudo -H -u "$U" git clone -q --depth 1 "$PUB" "$DIR"
 cd "$DIR"
@@ -55,7 +56,7 @@ sudo -H -u "$U" git remote get-url origin >/dev/null 2>&1 || sudo -H -u "$U" git
 sudo -H -u "$U" git remote set-url --push code no-push-allowed
 sudo -H -u "$U" git config branch.main.remote origin
 sudo -H -u "$U" git config branch.main.merge refs/heads/main
-chmod 711 "$DIR"
+chmod 711 "$DIR"; setfacl -m u:caddy:x,u:monitor:x "$DIR"; chmod o-rwx "$DIR"
 sudo -H -u "$U" rm -rf docs
 sudo -H -u "$U" mkdir -p data/chat data/reports data/tasks data/reminders data/inbox data/status data/files-private
 chmod 751 data; chmod 755 data/status

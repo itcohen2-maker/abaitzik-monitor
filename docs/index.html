@@ -2735,7 +2735,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-12T08:13:44.100Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-12T08:20:01.798Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4664,7 +4664,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='a6b82bde47';
+var CODE_ID='612d892a4e';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -6899,7 +6899,7 @@ function checkFresh(){
   if(seen===v.builtAt){pendingCode='';return;}
   try{sessionStorage.setItem('reloadedFor',v.builtAt);}catch(e){}
   carryState();
-  var go=function(){location.replace(location.pathname+'?b='+encodeURIComponent(v.builtAt));};
+  var go=function(){location.replace(location.pathname+'?b='+encodeURIComponent(v.builtAt)+(/^#file=/.test(location.hash||'')?location.hash:''));};
   try{
    if(window.caches&&caches.keys){
     caches.keys().then(function(keys){
@@ -8261,7 +8261,7 @@ function pane(w){
  if(hb)hb.hidden=(w==='h');
  if(w==='h'&&goBack){goBack=null;var gbk=document.getElementById('goBack');if(gbk)gbk.hidden=true;}
  try{
-  if(location.hash&&history&&history.replaceState)history.replaceState(null,'',location.pathname);
+  if(location.hash&&!/^#file=/.test(location.hash)&&history&&history.replaceState)history.replaceState(null,'',location.pathname);
  }catch(e){}
  window.scrollTo(0,0);
 }
@@ -16690,9 +16690,10 @@ if(location.hash==='#chat'){
  var mm=/^#file=(.+)$/.exec(location.hash||'');if(!mm)return;
  var fn=mm[1];try{fn=decodeURIComponent(fn);}catch(e){}
  fn=fn.replace(/^files[/]/,'');
- try{if(history&&history.replaceState)history.replaceState(null,'',location.pathname);}catch(e){}
  var n=0,iv=setInterval(function(){
-  if(typeof GKEY!=='undefined'&&GKEY&&D&&D.files){clearInterval(iv);fileOpen(fn);}
+  if(typeof GKEY!=='undefined'&&GKEY&&D&&D.files){clearInterval(iv);
+   try{if(history&&history.replaceState)history.replaceState(null,'',location.pathname+location.search);}catch(e){}
+   fileOpen(fn);}
   else if(++n>600)clearInterval(iv);
  },1000);
 })();

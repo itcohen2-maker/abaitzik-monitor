@@ -395,4 +395,4 @@ const server = http.createServer((req, res) => {
   }
   return send(res, 404, 'text/plain; charset=utf-8', 'לא נמצא');
 });
-server.listen(PORT, '127.0.0.1', () => console.log('gviya on ' + PORT + ' token ' + TOKEN));
+server.listen(PORT, '127.0.0.1', () => console.log("gviya on " + PORT));
