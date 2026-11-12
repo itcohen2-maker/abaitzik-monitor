@@ -77,3 +77,19 @@ test('an appointment of the monitor counts, once, even with no calendar', () => 
   const both = M.build({ ...base, appts: [{ id: 'y', what: 'פגישה', when: '2026-11-04T11:00:00+02:00' }] });
   assert.strictEqual(both.items.find(i => i.k === 'cal').sub.split('·').length, 2);
 });
+
+// 12.11.2026: security is the first line of the round.
+test('securityItem: first line, warns on a failing check, quiet when all pass', () => {
+  const ok = { at: new Date(WED - 3600e3).toISOString(), checks: [{ k: 'isolation', ok: true, t: 'בידוד' }, { k: 'logs', ok: true, t: 'יומנים' }] };
+  assert.strictEqual(M.securityItem(undefined, WED), null);
+  assert.strictEqual(M.securityItem(ok, WED).st, 'done');
+  const bad = { at: ok.at, checks: [{ k: 'isolation', ok: false, t: 'בידוד בין הלקוחות', sub: 'alon > pablo' }, { k: 'logs', ok: true, t: 'יומנים' }] };
+  const w = M.securityItem(bad, WED);
+  assert.strictEqual(w.st, 'warn');
+  assert.match(w.t, /בעיה אחת/);
+  assert.match(w.sub, /alon/);
+  assert.strictEqual(M.securityItem({ at: new Date(WED - 20 * 3600e3).toISOString(), checks: ok.checks }, WED).st, 'warn');
+  assert.strictEqual(M.securityItem(null, WED).st, 'warn');
+  const m = M.build(Object.assign({}, base, { security: bad }));
+  assert.strictEqual(m.items[0].k, 'security');
+});
