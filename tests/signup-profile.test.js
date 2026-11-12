@@ -42,3 +42,18 @@ test('the page token saves the answers and reads the status, a wrong token does 
     assert.ok(!JSON.stringify(q).includes(v.pt));
   } finally { fs.rmSync(d, { recursive: true, force: true }); }
 });
+
+test('12.11: the longer questionnaire keeps team, sources, tools, start, personal tiles and style, and the welcome speaks them', () => {
+  const a = P.sanitize({ biz: 'shop', team: 'solo', from: ['wa', 'nope'], tools: ['excel'], start: '07', personal: ['shop', 'kidsSport', 'zz'], style: 'short', pains: ['tasks', 'suppliers'] });
+  assert.deepStrictEqual(a.from, ['wa']);
+  assert.deepStrictEqual(a.personal, ['shop', 'kidsSport']);
+  assert.strictEqual(a.start, '07');
+  const w = P.welcome('דנה', a);
+  assert.match(w.body, /07:00/);
+  assert.match(w.body, /מצב אישי/);
+  assert.match(w.body, /רשימת קניות/);
+  assert.match(w.body, /חשבוניות ספקים/);
+  assert.ok(!/[–—]| - /.test(w.body));
+  assert.match(P.profileSection(a), /קצר ולעניין/);
+  assert.ok(P.sanitize({ personal: ['doctor'] }), 'a personal choice alone is an answer');
+});

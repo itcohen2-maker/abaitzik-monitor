@@ -65,6 +65,20 @@ function personalize(q, qf) {
       execFileSync('chown', [q.id + ':' + q.id, pf]);
     } catch (e) { log(q.id + ' profile.md: ' + e.message); }
     finally { if (locked) try { execFileSync('chattr', ['+i', pf]); } catch (e) {} }
+    // 12.11.2026, the longer questionnaire: the 🏡 personal tiles he picked, and a morning reminder at the hour his day starts.
+    // Written as root into his folder, then handed to his user. Once per answers, like the rest of this function.
+    try {
+      const dataDir = path.join(dir, 'data');
+      if (p.personal && p.personal.length) {
+        require('./lib/personal.js').setPicked(dataDir, p.personal.join(','));
+        execFileSync('chown', ['-R', q.id + ':' + q.id, path.join(dataDir, 'personal')]);
+      }
+      if (p.start && !q.morningRoutine) {
+        const R = require('./lib/routines.js');
+        const r = R.add(dataDir, { text: 'בוקר טוב. פותחים את המוניטור ורואים מה יש לך היום', kind: 'remind', sched: { freq: 'daily', hm: P.START[p.start] } });
+        if (r.ok) { q.morningRoutine = r.rec.id; execFileSync('chown', ['-R', q.id + ':' + q.id, path.join(dataDir, 'routines')]); }
+      }
+    } catch (e) { log(q.id + ' personal/morning: ' + e.message.slice(0, 80)); }
     try { execFileSync('sudo', ['-u', q.id, '-H', 'node', 'build.js'], { cwd: dir, stdio: 'ignore', timeout: 180000 }); } catch (e) { log(q.id + ' build: ' + e.message.slice(0, 80)); }
     try { execFileSync('sudo', ['-u', 'monitor', 'node', '-e', 'require("./lib/handle.js").complete({key:"signup-profile-"+process.argv[1],kind:"lead",who:process.argv[2],title:process.argv[3],link:"biz"})', q.id, q.name, P.summaryLine(q.name, p)], { cwd: REPO, stdio: 'ignore' }); } catch (e) {}
   }
