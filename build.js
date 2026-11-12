@@ -3123,6 +3123,15 @@ section#talkCard.talk{padding:8px 10px;gap:6px 10px;margin-bottom:8px}
 #firstSteps a.fsB,#firstSteps button.fsB{background:#22d3ee;color:#062033;border:0;border-radius:12px;padding:10px 14px;font:700 15px Heebo,sans-serif;text-decoration:none;white-space:nowrap;flex:none}
 #firstSteps .fsOk{color:#86efac;font-weight:700;flex:none}
 #firstSteps .fsTip{display:block;margin-top:8px;font-size:12.5px;opacity:.75}
+/* 12.11.2026, Itzik: a customer not yet on WhatsApp gets this card at the very top. Its alert is the shared slow
+   colour change (alertfade, 10.11.2026: no glow, no pulse), an overlay on ::before like a tile, static under reduced motion. */
+#waCard{position:relative;overflow:hidden;margin:4px 0 14px;padding:16px;border-radius:18px;background:linear-gradient(160deg,#0f2a4a,#0e3b4f);color:#fff;border:2px solid #25d366}
+#waCard::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(150deg,#f2a93b,#d9801a);opacity:0;animation:alertfade 3.4s ease-in-out infinite}
+#waCard>*{position:relative;z-index:1}
+#waCard b.wcH{display:block;font-size:19px;margin-bottom:4px}
+#waCard p{margin:0 0 12px;font-size:14.5px;opacity:.95}
+#waCard a.wcB{display:block;text-align:center;background:#25d366;color:#04271a;border-radius:14px;padding:14px;font:800 17px Heebo,sans-serif;text-decoration:none}
+@media(prefers-reduced-motion:reduce){#waCard::before{animation:none;opacity:.55}}
 #connSheet a.cnb{background:#0891b2;color:#fff;border-radius:10px;padding:9px 12px;font-weight:700;text-decoration:none;font-size:14px;white-space:nowrap;flex:none}
 #connSheet a.cnb.again{background:#e5e7eb;color:#374151}
 .cald{margin:14px 0 4px;font:700 16px Heebo,sans-serif;color:var(--ink)}
@@ -5064,6 +5073,8 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <button type="button" class="shipline" id="shipLine" hidden></button>
   <!-- 14.10: one tile per project, drawn from D.projects after unlock (projTiles). -->
   <div class="grid" id="blkProj" hidden></div>
+  <!-- 12.11.2026, Itzik: "בכל המוניטורים תשים חיבורים, ומי שעדיין לא יתחבר לוואטסאפ תהבהב לו את המסך." Blinking WhatsApp card, drawn by waCard() until connected. -->
+  <div id="waCard" hidden></div>
   <!-- 12.11.2026, Itzik (as a new trial customer): "איפה כל העניין של להציע לי לחבר את הגוגל". First steps card, drawn by firstSteps() until Google is connected. -->
   <div id="firstSteps" hidden></div>
   <div class="grid" id="blkTiles">${tenantTiles(inst)}${require('./lib/plan-ui.js').tile(inst.name)}</div>${tenantTools(inst)}${tenantCircleLinks(inst)}${tenantCircles(inst)}
@@ -12603,6 +12614,7 @@ function applyHidden(){
  // 24.10: a tile for a feature that is off stays hidden whatever this loop says.
  try{applyFeatures();}catch(e){}
  try{firstSteps();}catch(e){}
+ try{waCard();}catch(e){}
  var back=document.getElementById('tidyBack');
  if(back)back.hidden=!hid.length;
 }
@@ -19195,8 +19207,18 @@ function connSheet(){
 }
 on('icConn',connSheet);on('gConn',connSheet);
 // 12.11: until a real service is connected (the always on signature row does not count), the 🔌 tile and icon carry the soft alert.
+// 12.11, Itzik: "מי שעדיין לא יתחבר לוואטסאפ תהבהב לו את המסך". The WhatsApp row of 🔌 (lib/connections.js waRow) when it is offered and not connected, else null.
+function waPending(){var R=(D&&D.conn&&D.conn.rows)||[];var r=R.filter(function(x){return x.id==='wa';})[0];return r&&!r.on&&!r.locked?r:null;}
+function waCard(){
+ var w=document.getElementById('waCard');if(!w)return;
+ var r=waPending();
+ if(!r||!r.link){w.hidden=true;w.innerHTML='';return;}
+ w.innerHTML='<b class="wcH">💬 חבר את הוואטסאפ שלך למוניטור</b><p>לחיצה אחת, בלי פייסבוק. אחר כך מדברים איתי ישר מהוואטסאפ</p><a class="wcB" href="'+esc(r.link)+'" target="_blank" rel="noopener">לחבר עכשיו בוואטסאפ</a>';
+ w.hidden=false;
+}
+//waCard end
 function connNone(){var C=D&&D.conn;return !!(C&&C.rows&&C.rows.length&&!C.rows.some(function(r){return r.on&&!r.fixed;}));}
-try{if(connNone())['gConn','icConn'].forEach(function(id){var t=document.getElementById(id);if(t)t.classList.add('taskblink');});}catch(e){}
+try{if(connNone()||waPending())['gConn','icConn'].forEach(function(id){var t=document.getElementById(id);if(t)t.classList.add('taskblink');});}catch(e){}
 // 12.11: ▶️ תגובות ביוטיוב, the public comments of the channel given in 🔌 (D.yt). Read only: answering happens on YouTube.
 function ytSheet(){
  var old=document.getElementById('ytSheet');if(old)old.remove();

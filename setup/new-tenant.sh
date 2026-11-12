@@ -94,6 +94,8 @@ keys = {"_why": "נושאי ntfy הם סיסמה. לא נכנסים לגיט.", 
 put(DIR + "/data/keys.json", json.dumps(keys, ensure_ascii=False), 0o600)
 # 10.11.2026, annex 4.1: phone alerts carry no names or content (lib/notify-channels.js genericAlerts).
 put(DIR + "/data/status/generic-alerts", "1\n", 0o644)
+# 12.11.2026, Itzik: "בכל המוניטורים תשים חיבורים", WhatsApp quick connect is on for every new customer (lib/features.js).
+put(DIR + "/data/status/features.json", json.dumps({"wa": True}), 0o644)
 code = "".join(str(secrets.randbelow(10)) for _ in range(14))
 put(DIR + "/gate-key.txt", code + "\n", 0o600)
 put(DIR + "/gate-params.json", json.dumps({"salt": base64.b64encode(secrets.token_bytes(24)).decode(), "rounds": 600000}), 0o600)
