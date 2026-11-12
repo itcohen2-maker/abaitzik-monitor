@@ -40,13 +40,13 @@ const HEAD = '<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-
 
 function formPage(tok, a) {
   // 12.11, Itzik: the link goes out with a picture of the monitor (WhatsApp preview) and the page shows it too.
-  const og = 'https://it-solution.co.il/start/monitor-og.jpg', url = 'https://form.it-solution.co.il/r/' + tok;
+  const og = 'https://it-solution.co.il/start/monitor-og2.jpg', url = 'https://form.it-solution.co.il/r/' + tok;
   return HEAD + '<title>המוניטור לעסק | IT Solution</title>'
     + '<meta property="og:type" content="website"><meta property="og:url" content="' + url + '"><meta property="og:title" content="המוניטור לעסק | IT Solution">'
     + '<meta property="og:description" content="' + esc(a.name) + ' ממליץ. השאר שם וטלפון ונחזור אליך לשיחה קצרה."><meta property="og:image" content="' + og + '">'
     + '<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image">'
     + '</head><body><div class="wrap"><div class="brand">IT Solution · המוניטור לעסק</div>'
-    + '<img src="https://it-solution.co.il/start/monitor-ad.jpg" alt="המוניטור לעסק בטלפון" width="540" height="960" style="display:block;width:100%;max-width:260px;height:auto;margin:14px auto 6px;border-radius:18px">'
+    + '<img src="https://it-solution.co.il/start/monitor-og2.jpg" alt="המוניטור לעסק: פתרון מיידי, סדר מופתי" width="1200" height="630" style="display:block;width:100%;height:auto;margin:14px auto 6px;border-radius:16px">'
     + '<h1>נשמח לחזור אליך</h1><p class="lead">' + esc(a.name) + ' המליץ עלינו. השאר שם וטלפון, ונחזור אליך לשיחה קצרה על המוניטור לעסק שלך.</p>'
     + '<div class="card" id="box"><form id="f" novalidate>'
     + '<label for="n">שם מלא</label><input id="n" autocomplete="name" required maxlength="60">'
