@@ -820,6 +820,8 @@ function build() {
     // 4.11.2026: the manager's round of today (manager.js, lib/manager.js), the "🧑‍💼 המנהל" card.
     // 10.11.2026: the customer's own routines ("🧑‍💼 מנהלת IT Solution"), sealed page payload only, never the public live.json.
     // 10.11.2026: the "📋 לטיפול" queue (lib/handle.js), sealed payload only. Itzik's monitor; a customer opts in with instance handle:true.
+    // 12.11.2026, Itzik: "📤 הודעות לשליחה" in every monitor (lib/sendlist.js): messages prepared one by one, he sends them himself. Sealed payload only.
+    sendlist: require('./lib/sendlist.js').forPage(inst.dataPath, Date.now()),
     handle: (inst.name === 'abaitzik' || inst.handle === true) ? require('./lib/handle.js').forPage(inst.dataPath) : [],
     routines: inst.name === 'abaitzik' ? [] : require('./lib/routines.js').forPage(inst.dataPath, Date.now()),
     // 12.11.2026, Itzik: "🏡 מצב אישי" in every monitor (lib/personal.js), sealed payload only.
@@ -1431,15 +1433,17 @@ const TENANT_TILES = {
   gLab: ['g13', '🧪 דוח מעבדות', 'כל עבודה, כמה עלתה, ומה חויב פעמיים'],
   gFrl: ['g16', '👩‍⚕️ פרילנסרים', 'לשונית לכל רופא, ומה מגיע לו החודש'],
   gSup: ['g11', '📦 ספקים', 'חשבוניות החודש, הערה, ומה בוצע'],
+  // 12.11.2026, Itzik: messages the monitor prepares for his clients, one by one; he sends them from his own WhatsApp (lib/sendlist.js). Hidden until a list has an unsent row.
+  gSend: ['g16', '📤 הודעות לשליחה', 'מוכנות לך אחת אחת'],
 };
 // Tiles a customer listed in screens that go before everything else on his home, samples and guides included.
-const TENANT_TOP = ['gLab', 'gFrl', 'gSup'];
+const TENANT_TOP = ['gLab', 'gFrl', 'gSup', 'gSend'];
 // With no screens chosen at intake, only the tiles that fit any work. The whole
 // catalog gave a phone only customer "connect the computer", a client follow up
 // and a content plan, some of them empty screens.
 const TENANT_DEFAULT = ['gTasks', 'gNotes', 'gCamp'];
 // 10.11.2026, Itzik: the notes app, the tasks and the campaigns screen are on every customer's monitor whatever the intake chose.
-const TENANT_ALWAYS = ['gTasks', 'gNotes', 'gCamp', 'gMyMgr'];
+const TENANT_ALWAYS = ['gTasks', 'gNotes', 'gCamp', 'gMyMgr', 'gSend'];
 // 7.11.2026: 🔌 on every customer's home (connSheet, lib/connections.js).
 const TENANT_CONN_TILE = ['g4', '🔌 חיבורים', 'מה מחובר, וחיבור בלחיצה'];
 /*
@@ -1548,7 +1552,7 @@ function tenantTiles(inst) {
     if (id === 'gMyMgr' && inst.owner) title = '🧑‍💼 המנהלת של ' + esc(inst.owner);
     // data-grp by visible label: only the two labels in the groups list get one.
     const grp = { gFiles: 'home', gBiz: 'work' }[id];
-    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' || /^gBh|^gShopList$|^gCamp$|^gMyMgr$|^gMyBoard$/.test(id) ? ' data-new="1"' : '') + (id === 'gBiz' ? ' data-upd="20261105-shai-send"' : '') + (id === 'gTasks' ? ' data-upd="tasks-edit-1106"' : '') + (id === 'gMyBoard' ? ' data-upd="20261111-hours"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' || /^gBh|^gShopList$|^gCamp$|^gMyMgr$|^gMyBoard$|^gSend$/.test(id) ? ' data-new="1"' : '') + (id === 'gSend' ? ' hidden' : '') + (id === 'gBiz' ? ' data-upd="20261105-shai-send"' : '') + (id === 'gTasks' ? ' data-upd="tasks-edit-1106"' : '') + (id === 'gMyBoard' ? ' data-upd="20261111-hours"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('');
   return draw(top) + guides + links + samples + draw(rest) + '\n ';
 }
@@ -2708,6 +2712,7 @@ ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').css : ''}
 ${inst.name !== 'abaitzik' ? require('./lib/plan-ui.js').css : ''}
 ${require('./lib/profile-ui.js').css}
 ${require('./lib/approvals-ui.js').css}
+${require('./lib/sendlist-ui.js').css}
 ${require('./lib/since-ui.js').css}
 ${require('./lib/activity-ui.js').css}
 ${require('./lib/home-ui.js').css}
@@ -4766,7 +4771,7 @@ ${require('./lib/home-ui.js').html}
 
  <div id="askBox"></div>
 <!-- 4.11, Itzik: "תעלה את האריח של העסק שלי למעלה ברשימה. למה שמת אותו אחרון?" The business grid opens the home screen. -->
-${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + ((inst.name === 'abaitzik' || inst.handle === true) ? '<button type="button" class="gt g16" id="gHandle" hidden data-new="1"><b>📋 לטיפול</b><small>טפסים שחזרו וצריכים אותך</small></button><button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16" id="gVisits" hidden data-new="1"><b>👀 כניסות לקוחות</b><small>מתי נכנסו ולכמה זמן</small></button><button type="button" class="gt g16" id="gAffs" hidden data-new="1"><b>🤝 שותפים</b><small>מי הגיע דרך שי</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261111-leads' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button>' + '</div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
+${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? require('./lib/sendlist-ui.js').tile : '') + ((inst.name === 'abaitzik' || inst.handle === true) ? '<button type="button" class="gt g16" id="gHandle" hidden data-new="1"><b>📋 לטיפול</b><small>טפסים שחזרו וצריכים אותך</small></button><button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16" id="gVisits" hidden data-new="1"><b>👀 כניסות לקוחות</b><small>מתי נכנסו ולכמה זמן</small></button><button type="button" class="gt g16" id="gAffs" hidden data-new="1"><b>🤝 שותפים</b><small>מי הגיע דרך שי</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261111-leads' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button>' + '</div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
   <!-- 3.11, Itzik: "אני צריך אריח שממש יעבב לי, כמו ליד חדש". First on the grid; shows while a --nag reminder is open, hard blink once it is due, until "✅ עשיתי". -->
@@ -9546,6 +9551,8 @@ function repaintAll(){
   ['approvals',function(){if(typeof renderApprovals==='function')renderApprovals();}],
   // 10.11: the 📋 לטיפול tile reads D.handle, sealed too.
   ['handle',function(){if(typeof paintHandle==='function')paintHandle();}],
+  // 12.11: the 📤 הודעות לשליחה tile reads D.sendlist, sealed too.
+  ['sendlist',function(){if(typeof sdPaint==='function')sdPaint();}],
   // 11.11: 👀 כניסות לקוחות reads D.visits, and a customer's page starts its visit beacon from D.visitKey.
   ['visits',function(){if(typeof paintVisits==='function')paintVisits();if(typeof paintAffs==='function')paintAffs();if(typeof visitStart==='function')visitStart();}]];
  var bad=[],ran={};
@@ -23913,6 +23920,7 @@ boot('drawers',function(){
 });
 ${require('./lib/since-ui.js').js}
 ${require('./lib/approvals-ui.js').js}
+${require('./lib/sendlist-ui.js').js}
 /*ITZIK:BEGIN*/
 ${require('./lib/activity-ui.js').js}
 on('gActLog',function(){pane('Lg');renderActLog();return false;});

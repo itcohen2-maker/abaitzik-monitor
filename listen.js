@@ -849,6 +849,19 @@ function recordIncoming(m) {
       return true;
     }
     /*
+      12.11.2026, Itzik: "📤 הודעות לשליחה" (lib/sendlist.js). The page sends "📤 נשלח: <listId> <idx>" when he taps a row.
+      Written here with no model and silently into the list file as items[idx].sentAt, so the mark survives other devices.
+      The page is rebuilt (20 seconds, batched) so every device shows it.
+    */
+    const sdM = codeOk && require('./lib/sendlist.js').parseMark(text.replace(/\n\s*קוד[^\n]*$/, ''));
+    if (sdM) {
+      try { const ok = require('./lib/sendlist.js').markSent(inst.dataPath, sdM.listId, sdM.idx); say('הודעות לשליחה: ' + sdM.listId + ' ' + sdM.idx + (ok ? ' סומן' : ' כבר סומן או לא קיים')); }
+      catch (e) { say('!! הודעות לשליחה: ' + e.message); }
+      try { fs.unlinkSync(path.join(CHAT, name)); } catch (e) { /* already gone */ }
+      try { require('./lib/handle.js').publishSoon(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
+    /*
       12.11.2026, Itzik: "🏡 מצב אישי" (build.js personalSheet, lib/personal.js). The choice of tiles is saved here with no
       model and silently. A free request is saved and stays a normal message, rewritten as "מצב אישי: <text> [id]", so the
       monitor's manager (the worker session) applies it and answers.
