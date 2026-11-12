@@ -215,9 +215,17 @@
   "ytd": "The winner of the Goncourt Prize, the most prestigious literary award in France, admitted to using AI three times in the book. Earlier, another book was removed from the prize list over suspicion it was written with AI. So what is allowed, and where is the line? Source: Euronews, November 4, 2026.",
   "song": "",
   "song_tt": "",
-  "posted": false,
-  "postedAt": null,
-  "approvedAt": "2026-11-11T08:40:55.865Z"
+  "posted": true,
+  "postedAt": "2026-11-12T18:04:54.710Z",
+  "approvedAt": "2026-11-11T08:40:55.865Z",
+  "auto": {
+   "reel": "18011925011780759",
+   "story": "18456424984122891",
+   "storyError": null,
+   "page": "3761116150733405",
+   "pageError": null,
+   "channel": "itsolution.global"
+  }
  },
  {
   "id": "cent-en",
