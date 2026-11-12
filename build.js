@@ -2898,6 +2898,8 @@ section#talkCard.talk{border:2px solid var(--accent);box-shadow:0 8px 24px color
 #psSheet .psBtn{display:block;width:100%;margin:6px 0;border:0;border-radius:99px;padding:12px;font:800 15px Heebo,sans-serif;background:#5e8c61;color:#fff}
 #psSheet .psBtn.lt{background:#efe2c6;color:#3b2f25}
 #psSheet textarea{width:100%;box-sizing:border-box;border-radius:14px;border:1px solid #e3d3b5;background:#fffdf8;padding:10px;font:15px Heebo,sans-serif;color:#3b2f25}
+#psSheet .psSent{background:#d6e6cf;color:#2f4a2a;border-radius:14px;padding:12px;margin:8px 0;font:800 15px/1.4 Heebo,sans-serif;text-align:right}
+#psSheet textarea{width:100%;box-sizing:border-box}
 #psSheet .psReq{background:#fffdf8;border-radius:12px;padding:8px 10px;margin:6px 0;font:600 13px Heebo,sans-serif;text-align:right}
 .c-board{background:linear-gradient(160deg,#0e7490,#164e63);font-size:22px}
 #gHandle[hidden],#gReq[hidden]{display:none}
@@ -15573,35 +15575,42 @@ function personalSheet(){
  var P=D.personal||{chosen:false,picked:[],tiles:[],catalog:[],requests:[]};
  var w=document.createElement('div');w.id='psSheet';w.className='ysheet';
  w.setAttribute('role','dialog');w.setAttribute('aria-label','מצב אישי');
- var picking=!P.chosen,sel=(P.picked||[]).slice();
+ var picking=!P.chosen,sel=(P.picked||[]).slice(),sent=false;
+ // 12.11.2026, Itzik: "ברגע שהוא שלח את זה, אתה רושם, המערכת עובדת על זה ותבנה לך את זה בהקדם."
+ var SENT='✓ נרשם. המערכת עובדת על זה ותבנה לך את זה בהקדם.';
  // 12.11.2026: what the mail brought sits in the tile (lib/personal.js items), the nearest date first.
  var DW=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
  function whenTxt(w){if(!w)return '';var d=new Date(w.slice(0,10)+'T12:00:00');if(isNaN(d))return '';return 'יום '+DW[d.getDay()]+' '+d.getDate()+'.'+(d.getMonth()+1)+(w.length>10?' · '+w.slice(11,16):'');}
- function tileHtml(t){var its=t.items||[];return '<div class="psT'+(its.length?' psWide':'')+'" style="--c:'+esc(t.c||'#efe2c6')+'"><i>'+esc(t.i)+'</i><div>'+esc(t.t)+(t.note?'<small>'+esc(t.note)+'</small>':'')
-  +its.map(function(x){return '<small class="psIt">'+(x.src==='mail'?'📧 ':'')+esc(x.line)+(x.when?' · <b>'+esc(whenTxt(x.when))+'</b>':'')+'</small>';}).join('')+'</div></div>';}
+ function tileHtml(t){var its=t.items||[];return '<div class="psT'+(its.length||(t.reqs||[]).length?' psWide':'')+'" style="--c:'+esc(t.c||'#efe2c6')+'"><i>'+esc(t.i)+'</i><div>'+esc(t.t)+(t.note?'<small>'+esc(t.note)+'</small>':'')
+  +its.map(function(x){return '<small class="psIt">'+(x.src==='mail'?'📧 ':'')+esc(x.line)+(x.when?' · <b>'+esc(whenTxt(x.when))+'</b>':'')+'</small>';}).join('')
+  +(t.reqs||[]).map(function(r){return '<small class="psIt">'+(r.state==='done'?'✓ ':'⏳ ')+esc(r.text)+'</small>';}).join('')+'</div></div>';}
  function pickHtml(){
   return '<b class="psHead">🏡 המצב האישי שלך</b>'
    +'<small>'+(P.chosen?'מה להראות כאן?':'ברוך הבא למצב האישי: הצד של הבית, מחוץ לעבודה. בחר מה חשוב לך שיופיע כאן.')+' <b>תמיד אפשר לשנות.</b></small>'
    +'<div class="psGrid psPick">'+(P.catalog||[]).map(function(c){return '<button type="button" class="psT'+(sel.indexOf(c.k)>=0?' on':'')+'" data-k="'+esc(c.k)+'"><i>'+esc(c.i)+'</i><div>'+esc(c.t)+'</div></button>';}).join('')+'</div>'
-   +'<small>משהו אחר שלא ברשימה? אחרי השמירה כותבים אותו בתיבה, והמנהל מוסיף.</small>'
-   +'<button type="button" class="psBtn" data-a="save">לשמור את הבחירה</button>'
+   +'<small style="font-weight:700;display:block;margin-top:8px">ועוד משהו שתרצה כאן?</small>'
+   +'<small>כותבים או אומרים, כמה דברים שרוצים. למשל: חוג ציור של הילדה בימי שלישי, טיפול לרכב, ביטוח דירה. המערכת תבנה לכל דבר אריח.</small>'
+   +'<textarea id="psMore" rows="3" placeholder="מה עוד לשים כאן"></textarea>'
+   +'<button type="button" class="psBtn lt" data-a="mic" data-t="psMore">🎤 להגיד במקום לכתוב</button>'
+   +'<button type="button" class="psBtn" data-a="save">לשמור ולשלוח</button>'
    +(P.chosen?'<button type="button" class="psBtn lt" data-a="back">חזרה</button>':'');
  }
  function reqHtml(){
   var L=P.requests||[];if(!L.length)return '';
   return '<small style="font-weight:700;display:block;margin-top:8px">מה ביקשת</small>'+L.map(function(r){
-   return '<div class="psReq">'+(r.state==='done'?'✓ ':'⏳ ')+esc(r.text)+'<small style="display:block">'+(r.state==='done'?esc(r.answer||'סודר'):'אצל המנהל, מסדר')+'</small></div>';}).join('');
+   return '<div class="psReq">'+(r.state==='done'?'✓ ':'⏳ ')+esc(r.text)+'<small style="display:block">'+(r.state==='done'?esc(r.answer||'סודר'):'נרשם. המערכת בונה את זה בהקדם')+'</small></div>';}).join('');
  }
  function mainHtml(){
   var T=P.tiles||[];
   return '<b class="psHead">🏡 המצב האישי שלך</b>'
+   +(sent?'<div class="psSent" role="status">'+SENT+'</div>':'')
    +(T.length?'<small>תורים, כרטיסים, חשבונות והודעות שמגיעים במייל נכנסים לבד לאריח המתאים, ויורדים כשהיום עבר.</small><div class="psGrid">'+T.map(tileHtml).join('')+'</div>':'<small>עוד לא בחרת מה יופיע כאן.</small>')
    +'<button type="button" class="psBtn lt" data-a="pick">✏️ לשנות מה מופיע</button>'
    +'<small style="font-weight:700;display:block;margin-top:8px">מה לשים כאן ואיך לסדר?</small>'
    +'<small>כותבים או אומרים, והמנהל של המוניטור מסדר. למשל: התורים לרופא ראשונים, תוסיף אריח לחוג של הילדה.</small>'
    +'<textarea id="psText" rows="3" placeholder="מה לשים, מה להוריד, מה ראשון"></textarea>'
-   +'<button type="button" class="psBtn lt" data-a="mic">🎤 להגיד במקום לכתוב</button>'
-   +'<button type="button" class="psBtn" data-a="send">לשלוח למנהל</button>'
+   +'<button type="button" class="psBtn lt" data-a="mic" data-t="psText">🎤 להגיד במקום לכתוב</button>'
+   +'<button type="button" class="psBtn" data-a="send">לשלוח</button>'
    +reqHtml();
  }
  function draw(){w.innerHTML='<div class="ycard">'+(picking?pickHtml():mainHtml())+'<button type="button" class="psBtn lt" data-a="x">סגירה</button></div>';}
@@ -15615,17 +15624,24 @@ function personalSheet(){
   if(a==='pick'){picking=true;sel=(P.picked||[]).slice();draw();return;}
   if(a==='back'){picking=false;draw();return;}
   if(a==='save'){
-   if(!sel.length){toast('בחר לפחות דבר אחד. תמיד אפשר לשנות.');return;}
+   var more=((document.getElementById('psMore')||{}).value||'').trim();
+   if(!sel.length&&!more){toast('בחר משהו, או כתוב מה תרצה כאן. תמיד אפשר לשנות.');return;}
    b.disabled=true;
-   var note='מצב אישי בחירה: '+sel.join(',');
+   var note='מצב אישי בחירה: '+sel.join(','),mq='מצב אישי בקשה: '+more;
    sendText('מצב אישי',note,'משימה').then(function(){
     markSent('text',note);
+    if(!more)return;
+    return sendText('מצב אישי',mq,'משימה').then(function(){
+     markSent('text',mq);
+     P.requests=[{id:'',at:new Date().toISOString(),text:more,state:'open',answer:''}].concat(P.requests||[]);
+    });
+   }).then(function(){
     var byK={};(P.catalog||[]).forEach(function(c){byK[c.k]=c;});(P.tiles||[]).forEach(function(t){byK[t.k]=t;});
     var pal=['#d6e6cf','#f8d9c2','#efe2c6','#e3d9f2','#f3d3d3'];
     P.chosen=true;P.picked=sel.slice();
     P.tiles=sel.filter(function(x){return byK[x];}).map(function(x,n){var c=byK[x];return {k:x,i:c.i,t:c.t,c:c.c||pal[n%5],note:c.note||''};});
-    D.personal=P;picking=false;draw();
-    toast('נשמר. תמיד אפשר לשנות מכאן.');
+    D.personal=P;picking=false;sent=!!more;draw();
+    toast(more?SENT:'נשמר. תמיד אפשר לשנות מכאן.');
    }).catch(function(){b.disabled=false;toast('לא נשמר. תבדוק חיבור ותנסה שוב.');});
    return;
   }
@@ -15637,8 +15653,8 @@ function personalSheet(){
    sendText('מצב אישי',m,'משימה').then(function(){
     markSent('text',m);
     P.requests=[{id:'',at:new Date().toISOString(),text:t,state:'open',answer:''}].concat(P.requests||[]);
-    D.personal=P;draw();
-    toast('עבר למנהל. התשובה תגיע במסך התשובות.');
+    D.personal=P;sent=true;draw();
+    toast(SENT);
    }).catch(function(){b.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
    return;
   }
@@ -15646,7 +15662,8 @@ function personalSheet(){
    var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
    if(!SR){toast('הקלטה בקול לא נתמכת בדפדפן הזה. אפשר לכתוב.');return;}
    var rc=new SR();rc.lang='he-IL';rc.interimResults=false;
-   rc.onresult=function(ev){var s=ev.results[0][0].transcript||'',x=document.getElementById('psText');if(x)x.value=(x.value?x.value+' ':'')+s;};
+   var tid=b.getAttribute('data-t')||'psText';
+   rc.onresult=function(ev){var s=ev.results[0][0].transcript||'',x=document.getElementById(tid);if(x)x.value=(x.value?x.value+' ':'')+s;};
    rc.onerror=function(){toast('לא שמעתי. אפשר לנסות שוב או לכתוב.');};
    try{rc.start();toast('מקשיב...');}catch(err){toast('לא הצלחתי להקליט. אפשר לכתוב.');}
   }
@@ -16194,6 +16211,8 @@ function tidyNote(w,c){
  // 4.11.2026, Itzik: a client cannot change the interface, and a box under every menu invites a stream of requests. Only on his own monitor.
  if(typeof INSTANCE!=='undefined'&&INSTANCE&&INSTANCE.name!=='abaitzik')return;
  if(c.querySelector(':scope > .tdy-note'))return;
+ // 12.11.2026: the personal screen has its own box; two boxes on one screen confused him.
+ if(w&&w.id==='psSheet')return;
  var key=tidyKey(w),title=tidyTitle(w);
  var n=document.createElement('div');n.className='tdy-note';
  // 1.11, Itzik: "זה תקוע, תשים לי שם גם מיקרופון קטן". It was sent, but the words stayed in the box, so it looked stuck.

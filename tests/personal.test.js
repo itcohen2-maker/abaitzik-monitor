@@ -67,3 +67,20 @@ test('the model answer is checked: none, an unknown key or an empty line is noth
   assert.strictEqual(P.parsePersonal({ k: 'bills', line: '' }), null);
   assert.deepStrictEqual(P.parsePersonal({ k: 'bills', line: 'ארנונה', when: '2026-11-15T00:00' }), { k: 'bills', line: 'ארנונה', when: '2026-11-15 00:00' });
 });
+
+test('12.11: requests belong to tiles: a new tile by ref, an existing one by done.k, a dated line by addItems', () => {
+  const d = tmp();
+  P.setPicked(d, 'doctor');
+  const a = P.addRequest(d, 'חוג ציור של הילדה בימי שלישי 16:00');
+  const b = P.addRequest(d, 'תור לרופא עיניים');
+  P.apply(d, { add: [{ t: 'חוג ציור', i: '🎨', ref: a.id }], addItems: [{ k: 'חוג ציור', line: 'חוג ציור', when: '2099-11-17 16:00' }], done: { id: a.id, answer: 'נבנה אריח' } });
+  P.apply(d, { done: { id: b.id, answer: 'בתורים', k: 'doctor' } });
+  const f = P.forPage(d);
+  const art = f.tiles.find((t) => t.t === 'חוג ציור');
+  assert.ok(art);
+  assert.strictEqual(art.reqs.length, 1);
+  assert.strictEqual(art.items[0].when, '2099-11-17 16:00');
+  assert.strictEqual(f.tiles.find((t) => t.k === 'doctor').reqs[0].text, 'תור לרופא עיניים');
+  P.apply(d, { add: [{ t: 'חוג ציור', i: '🎨' }] });
+  assert.strictEqual(P.forPage(d).tiles.filter((t) => t.t === 'חוג ציור').length, 1);
+});
