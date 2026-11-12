@@ -320,6 +320,7 @@ function prompt(list) {
     ...require('./lib/routines.js').promptLines(),
     // 12.11.2026: "מצב אישי:" from the 🏡 icon, the manager sorts the personal screen (lib/personal.js).
     ...require('./lib/personal.js').promptLines(),
+    ...require('./lib/mail-prefs.js').promptLines(),
     ...require('./lib/tier.js').promptLines(TIER),
     /*
       How an answer reads, 26.9. Itzik asked for the whole monitor to be gone

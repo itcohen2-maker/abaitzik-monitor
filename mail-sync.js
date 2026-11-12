@@ -30,6 +30,8 @@ const SOURCES = path.join(HERE, 'data', 'cal', 'sources.json');
 const DRY = process.argv.includes('--dry');
 const ONLY = (function () { const i = process.argv.indexOf('--only'); return i > 0 ? process.argv[i + 1] : ''; })();
 const MAX_NEW = 8;
+const FIRST_DAYS = 7, FIRST_MAX = 30; // 12.11.2026: the first round after Gmail is connected
+const MP = require('./lib/mail-prefs.js');
 const KEEP = 50;
 const GM = 'https://gmail.googleapis.com/gmail/v1/users/me';
 
@@ -152,10 +154,15 @@ async function one(src) {
   const stateF = path.join(dir, 'mail-state.json');
   const state = readJson(stateF, { seen: [] });
   const seen = new Set(state.seen);
-  const q = 'in:inbox newer_than:2d -category:promotions -category:social -category:forums';
-  const list = await api(c.access, GM + '/messages?' + new URLSearchParams({ q, maxResults: '25' }));
-  const fresh = (list.messages || []).filter((x) => !seen.has(x.id)).reverse().slice(0, MAX_NEW);
-  if (!fresh.length) { say(src.name + ': אין מייל חדש'); return; }
+  // 12.11.2026, Itzik: no state file yet = the first round after Gmail was connected. It reads the last FIRST_DAYS
+  // days (up to FIRST_MAX, newest first), makes no drafts, and leaves "מה מצאתי במייל שלך השבוע" with questions.
+  const first = !state.at;
+  const prefs = MP.read(path.join(src.dir, 'data'));
+  const q = 'in:inbox newer_than:' + (first ? FIRST_DAYS : 2) + 'd -category:promotions -category:social -category:forums';
+  const list = await api(c.access, GM + '/messages?' + new URLSearchParams({ q, maxResults: first ? '50' : '25' }));
+  const fresh = (list.messages || []).filter((x) => !seen.has(x.id)).slice(0, first ? FIRST_MAX : MAX_NEW).reverse();
+  if (!fresh.length && !first) { say(src.name + ': אין מייל חדש'); return; }
+  if (first) say(src.name + ': סריקה ראשונה, ' + fresh.length + ' מיילים מ ' + FIRST_DAYS + ' ימים');
   const me = String(saved.who || '').toLowerCase();
   const items = [];
   let personalNew = false;
@@ -167,10 +174,12 @@ async function one(src) {
       if (me && from.toLowerCase().includes(me)) continue;
       const subject = head(m, 'subject');
       const text = bodyText(m.payload);
-      const got = parse(await ask(RULES + '\n\n--- המייל ---\nמאת: ' + from + '\nנושא: ' + subject + '\n\n' + text + '\n--- סוף המייל ---', src));
+      const got = parse(await ask(RULES + (MP.askLine(prefs) ? '\n' + MP.askLine(prefs) : '') + '\n\n--- המייל ---\nמאת: ' + from + '\nנושא: ' + subject + '\n\n' + text + '\n--- סוף המייל ---', src));
       const r = got || { tag: 'רגיל', summary: String(m.snippet || '').slice(0, 200), reply: '' };
+      r.tag = MP.tagFor(from, r.tag, prefs); // the customer's own rules (lib/mail-prefs.js)
+      if (r.tag === 'פרסומת') r.reply = '';
       let drafted = false;
-      if (r.reply && canDraft && !DRY) { try { await draft(c.access, m, r.reply); drafted = true; } catch (e) { say(src.name + ': טיוטה נכשלה ' + e.message); } }
+      if (r.reply && canDraft && !DRY && !first) { try { await draft(c.access, m, r.reply); drafted = true; } catch (e) { say(src.name + ': טיוטה נכשלה ' + e.message); } }
       items.push({ id: x.id, at: new Date(Number(m.internalDate) || Date.now()).toISOString(), from: from.slice(0, 120),
         subject: subject.slice(0, 160), text: r.summary, tag: r.tag, reply: r.reply, draft: drafted });
       if (r.personal) {
@@ -189,7 +198,19 @@ async function one(src) {
   fs.writeFileSync(stateF, JSON.stringify({ at: new Date().toISOString(), seen: Array.from(seen).slice(-500) }));
   own(src.dir, [dir, mf, stateF]);
   if (personalNew) { const pd = path.join(src.dir, 'data', 'personal'); own(src.dir, [pd, path.join(pd, 'items.json')]); }
-  if (items.length) publish(src);
+  if (first) {
+    // items is newest first here (reversed above)
+    const rep = MP.firstReport(items, FIRST_DAYS);
+    const rd = path.join(src.dir, 'data', 'reports', 'reports');
+    const rf = path.join(rd, new Date().toISOString().replace(/\D/g, '').slice(0, 12) + '-mail-first.json');
+    try {
+      fs.mkdirSync(rd, { recursive: true });
+      fs.writeFileSync(rf, JSON.stringify({ at: new Date().toISOString(), title: rep.title, body: rep.body }));
+      own(src.dir, [rf]);
+      say(src.name + ': הודעת הסריקה הראשונה נכתבה');
+    } catch (e) { say(src.name + ': הודעת הסריקה הראשונה נכשלה ' + e.message.slice(0, 80)); }
+  }
+  if (items.length || first) publish(src);
 }
 
 // 11.11.2026: the lab duplicate check on mailed lab reports (lib/lab-mail.js), for a monitor with labCheck:true.
