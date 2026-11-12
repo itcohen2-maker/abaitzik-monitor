@@ -84,7 +84,7 @@
    +'<button type="button" data-up="'+esc(it.id)+'"'+(i===0?' disabled':'')+' aria-label="למעלה">↑ למעלה</button>'
    +'<button type="button" data-down="'+esc(it.id)+'"'+(i===len-1?' disabled':'')+' aria-label="למטה">↓ למטה</button>'
    // 11.11.2026, Itzik: approve first, then the upload mark; a comment box under every video.
-   +(it.posted?'':it.approved?'<span class="okd">✅ אישרת את הסרטון</span>':'<button type="button" data-ok="'+esc(it.id)+'">✓ מאשר את הסרטון</button>')
+   +(it.posted?'':it.approved?'<span class="okd">✅ אישרת את הסרטון</span><button type="button" data-unok="'+esc(it.id)+'">↩ בטל אישור, לא לפרסם</button>':'<button type="button" data-ok="'+esc(it.id)+'">✓ מאשר את הסרטון</button>')
    +'<button type="button" data-dl="'+esc(it.file)+'" data-nm="'+esc(it.id)+'">💾 שמירה לטלפון</button>'
    +(it.posted||!it.approved?'':'<button type="button" data-posted="'+esc(it.id)+'">☐ העליתי לאינסטגרם</button>')
    +'<button type="button" class="del" data-del="'+esc(it.id)+'">🗑️ מחק</button>'
@@ -114,6 +114,9 @@
   document.querySelectorAll('[data-ok]').forEach(function(b){b.addEventListener('click',function(){
    var id=b.getAttribute('data-ok'),it=q.find(function(x){return x.id===id;});
    b.disabled=true;act('approve',id,{},function(ok){if(ok){it.approved=true;draw(q);}else{b.disabled=false;alert('לא נשלח, נסה שוב');}});});});
+  document.querySelectorAll('[data-unok]').forEach(function(b){b.addEventListener('click',function(){
+   var id=b.getAttribute('data-unok'),it=q.find(function(x){return x.id===id;});
+   b.disabled=true;act('unapprove',id,{},function(ok){if(ok){it.approved=false;draw(q);}else{b.disabled=false;alert('לא נשלח, נסה שוב');}});});});
   document.querySelectorAll('[data-cmtgo]').forEach(function(b){b.addEventListener('click',function(){
    var id=b.getAttribute('data-cmtgo'),it=q.find(function(x){return x.id===id;}),ta=document.querySelector('[data-cmt="'+id+'"]'),t=ta?ta.value.trim():'',m=document.querySelector('[data-cmtok="'+id+'"]');
    if(!t){m.textContent='כתוב קודם מה לשנות';return;}
