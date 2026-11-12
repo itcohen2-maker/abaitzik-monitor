@@ -4880,7 +4880,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   -->
   <button type="button" class="gt gWin" data-grp="net" id="gWin" data-upd="20261106-win03" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <!-- 5.11, Itzik: "את כל הסרטונים נעביר לאריח אחד, ובתוכו טאבים". One tile with a tab per kind; the old tiles (reels, future reels, campaign, plate, status, candle.times) were removed; their sheets stay in the code. -->
-  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1" data-upd="20261112-wa2"><b>🎬 הסרטונים</b><small>רילים, רילים עתידיים, סטטוס, נרות, מה בצלחת, שחר וקמפיין</small></button>
+  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1" data-upd="20261112-hub"><b>🎬 הסרטונים</b><small>רילים, רילים עתידיים, סטטוס, נרות, מה בצלחת, שחר וקמפיין</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
@@ -15058,16 +15058,6 @@ function captionSheet(it){
 var REEL_ITEMS=[
 // 12.11, Itzik: "זה יהיה גם סרטון לסטורי, תשים לי אותו ברילים סטורי חדש". The monitor video, problem and solution five times,
 // with it-solution.co.il at the end (source ~/clip/monitor_ps_story). Shows in the 💻 IT Solution tab.
-// 12.11 night, Itzik: everything now includes WhatsApp; 'אני רוצה לראות את כל הסרטונים לפני שאתה מעלה'. For his review here, not in the campaign tile
-// (that one holds only what runs). Source ~/clip/wa_second (gen.py) on the PC. Replaces the problem and solution story without WhatsApp.
-{n:'IT וואטסאפ 1',t:'🆕 לבדיקה שלך · העסק · 📣 לממומן, בסוף כפתור הצ׳אט',r:'wa-monitor-biz-ad.mp4'},
-{n:'IT וואטסאפ 2',t:'🆕 לבדיקה שלך · העסק · 🌐 לאתר abaitzik.com, בסוף לוחצים על הסרטון',r:'wa-monitor-biz-site.mp4'},
-{n:'IT וואטסאפ 3',t:'🆕 לבדיקה שלך · העסק · 🔑 לדף ההתחברות למוניטור, בסוף נרשמים כאן',r:'wa-monitor-biz-start.mp4'},
-{n:'IT וואטסאפ 4',t:'🆕 לבדיקה שלך · העסק · 📲 לסטטוס וסטורי, בסוף כתובת האתר',r:'wa-monitor-biz-status.mp4'},
-{n:'IT וואטסאפ 5',t:'🆕 לבדיקה שלך · העסק והבית · 📣 לממומן, בסוף כפתור הצ׳אט',r:'wa-monitor-home-ad.mp4'},
-{n:'IT וואטסאפ 6',t:'🆕 לבדיקה שלך · העסק והבית · 🌐 לאתר abaitzik.com, בסוף לוחצים על הסרטון',r:'wa-monitor-home-site.mp4'},
-{n:'IT וואטסאפ 7',t:'🆕 לבדיקה שלך · העסק והבית · 🔑 לדף ההתחברות למוניטור, בסוף נרשמים כאן',r:'wa-monitor-home-start.mp4'},
-{n:'IT וואטסאפ 8',t:'🆕 לבדיקה שלך · העסק והבית · 📲 לסטטוס וסטורי, בסוף כתובת האתר',r:'wa-monitor-home-status.mp4'},
 // 3.11, Itzik: "אין יותר רשימת המתנה, הרשמה וישר נכנסים". All of Shachar in one group, shown first;
 // 'p' is the reel-posts.json key for a פרסום item whose name does not start with its number.
 {n:'שחר סטורי',t:'שחר פתוח עכשיו, נרשמים ונכנסים מיד · 4K הכי איכותי, לשמירה בגלריה',r:'shachar-story-open.mp4'},
@@ -17667,14 +17657,12 @@ on('gClalit',clalitSheet);
   only once they are in the monitor; Drive links (u) open the folder.
 */
 var TOM_ITEMS=[
-// 12.11, Itzik: "תמחק משם את כל הסרטונים שאנחנו לא משתמשים ותשאיר רק מה שיש עכשיו בקמפיין ועוד הסרטון החדש של היום".
-// Removed files are in /home/monitor/trash-tom-nov12 (it01 stays, other lists use it).
- // 12.11 afternoon, Itzik: "שלא יהיו יותר מדי דברים בקמפיין, ליד כל אחד בקיצור מה הוא". Only what runs or waits for Meta,
- // one short line each. The monitor video (problem and solution) moved to the 💻 IT Solution tab as a story.
- {n:"1",t:"✅ באוויר · שרפת קרדיטים: תמונה מונפשת, מביאה את רוב הלידים",r:"ads-nov01-card9-story.mp4"},
- {n:"2",t:"✅ באוויר · תור לרופא שיניים: המוניטור קובע ומזכיר",r:"ad-monitor-tor-shinayim-chat.mp4"},
- {n:"3",t:"✅ באוויר · מי לא שילם לך: אנימציה של המוניטור",r:"ad-monitor-anim-1111.mp4"},
- {n:"4",t:"✅ באוויר · עסקי ואישי: מתג בין העסק לבית",r:"ad-monitor-personal-v2.mp4"},
+// 12.11 night, Itzik: "הכיוון הוא שהמוניטור מסדר את הכל, ואפשר גם בוואטסאפ" ... "תסדר לי את זה בצורה מסודרת במוניטור, 1 עד 7, מה שאנחנו מפרסמים".
+// Only what runs. 1 to 3 are the new monitor videos with WhatsApp inside (source ~/clip/wa_hub on the PC); in Meta the old ones still run until he approves.
+ {n:"1",t:"🆕 לאישורך · הסרטון הראשי, מי לא שילם לך: המוניטור מסדר, ואפשר גם מהוואטסאפ · מחליף את האנימציה שבאוויר",r:"wa-hub-gviya-ad.mp4"},
+ {n:"2",t:"🆕 לאישורך · עסקי ואישי, עכשיו עם וואטסאפ · מחליף את מה שבאוויר",r:"wa-hub-personal-ad.mp4"},
+ {n:"3",t:"🆕 לאישורך · תור לרופא שיניים: רואים שזה נכנס למוניטור · מחליף את מה שבאוויר",r:"wa-hub-tor-ad.mp4"},
+ {n:"4",t:"✅ באוויר · שרפת קרדיטים: תמונה מונפשת, מביאה את רוב הלידים",r:"ads-nov01-card9-story.mp4"},
  {n:"5",t:"⏳ בבדיקה של מטא · נתקעת ב Lovable או Base44: מסיימים לך את האתר",r:"ads-nov12-card15.mp4"},
  {n:"6",t:"⏳ בבדיקה של מטא · אתר יפה ואף אחד לא פונה: מסך פניות",r:"ads-nov12-card16.mp4"},
  {n:"7",t:"⏳ בבדיקה של מטא · עובד 12 שעות והכל עליך: ייעוץ",r:"ads-nov12-card17.mp4"}
@@ -17864,7 +17852,7 @@ function vidTabs(){
   {id:'ai',l:'🤖 ערוץ AI'+(aiN?' ('+aiN+')':''),upd:'20261110-approve',h:'הרילים של ערוץ ה AI להעלאה, בעברית ובאנגלית: מה עדיין לא עלה. מה שעלה יורד מכאן לבד',L:vqRows('ai').concat([{h:'📂 הדף המלא'},{k:'go',t:'🤖 פתיחת הרילים של ערוץ ה AI',u:'ai/ai.html'}])},
   {id:'nr',l:'🕯️ נרות'+(nrN?' ('+nrN+')':''),h:'candle.times: סטוריז ופוסטים שמחכים לאישור שלך',L:vqRows('nr').concat([{h:'📂 הדף המלא'},{k:'go',t:'🕯️ פתיחת candle.times',u:'ner/candle.html'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return candleN[x.it.n];}))},
   // 7.11, Itzik: a tab for IT Solution reels (ready ones first, then the ideas). upd = the soft blink until the tab is opened.
-  {id:'it',l:'💻 IT Solution',upd:'20261112-wa2',h:'הרילים של IT Solution: המוניטור, הקמפיינים והעסקים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isIt(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isIt(x.it);}))},
+  {id:'it',l:'💻 IT Solution',upd:'20261112-hub',h:'הרילים של IT Solution: המוניטור, הקמפיינים והעסקים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isIt(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isIt(x.it);}))},
   // 7.11, Itzik: the reels and the future reels too, each in its own tab of the one tile.
   {id:'me',l:'🎬 הרילים שלי',h:'הרילים והסטוריז שלי, מוכנים לרשתות',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return !isSh(x.it)&&!isIt(x.it);}))},
   {id:'car',l:'🎠 קרוסלות'+(CARON.length?' ('+CARON.length+')':''),pulse:CARON.length,h:'קרוסלות לאבא איציק, כל הנושאים. מה שעוד לא עלה מהבהב חלש',L:carL},
