@@ -9680,7 +9680,7 @@ function checkFresh(){
   if(seen===v.builtAt){pendingCode='';return;}
   try{sessionStorage.setItem('reloadedFor',v.builtAt);}catch(e){}
   carryState();
-  var go=function(){location.replace(location.pathname+'?b='+encodeURIComponent(v.builtAt));};
+  var go=function(){location.replace(location.pathname+'?b='+encodeURIComponent(v.builtAt)+(/^#file=/.test(location.hash||'')?location.hash:''));};
   try{
    if(window.caches&&caches.keys){
     caches.keys().then(function(keys){
@@ -11563,7 +11563,7 @@ function pane(w){
  // The hash is only an incoming address. Writing it on every move made the
  // app reopen on an inner screen and feel like it jumped on its own.
  try{
-  if(location.hash&&history&&history.replaceState)history.replaceState(null,'',location.pathname);
+  if(location.hash&&!/^#file=/.test(location.hash)&&history&&history.replaceState)history.replaceState(null,'',location.pathname);
  }catch(e){}
  window.scrollTo(0,0);
 }
@@ -21618,10 +21618,12 @@ if(location.hash==='#chat'){
  var mm=/^#file=(.+)$/.exec(location.hash||'');if(!mm)return;
  var fn=mm[1];try{fn=decodeURIComponent(fn);}catch(e){}
  fn=fn.replace(/^files[/]/,'');
- try{if(history&&history.replaceState)history.replaceState(null,'',location.pathname);}catch(e){}
- // the personal code may still be typed in, so wait for the page to open, up to 10 minutes
+ // the personal code may still be typed in, so wait for the page to open, up to 10 minutes. The hash stays
+ // until then, so a reload for a newer build (which keeps a #file= hash) still lands on the file.
  var n=0,iv=setInterval(function(){
-  if(typeof GKEY!=='undefined'&&GKEY&&D&&D.files){clearInterval(iv);fileOpen(fn);}
+  if(typeof GKEY!=='undefined'&&GKEY&&D&&D.files){clearInterval(iv);
+   try{if(history&&history.replaceState)history.replaceState(null,'',location.pathname+location.search);}catch(e){}
+   fileOpen(fn);}
   else if(++n>600)clearInterval(iv);
  },1000);
 })();
