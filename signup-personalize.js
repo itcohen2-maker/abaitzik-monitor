@@ -40,7 +40,8 @@ function connections(q, qf) {
   wr(path.join(DATA, 'setup', tok + '.def.json'), def, 'monitor');
   const sf = path.join(DATA, 'cal', 'sources.json');
   const src = rd(sf, []);
-  if (Array.isArray(src) && !src.some((x) => x && x.name === q.id)) { src.push({ name: q.id, setup: tok, tenant: true }); wr(sf, src, 'monitor'); }
+  // 12.11.2026: the line had no dir, so cal-sync never wrote the trial's data/conn/setup.json and his 🔌 stayed empty.
+  if (Array.isArray(src) && !src.some((x) => x && x.name === q.id)) { src.push({ name: q.id, dir: home(q.id), setup: tok, tenant: true }); wr(sf, src, 'monitor'); }
   q.setup = tok; wr(qf, q, 'monitor');
   log(q.id + ' connections page ready');
 }
@@ -105,6 +106,14 @@ function whatsapp(q, qf) {
 }
 
 let names = [];
+// 12.11.2026: trials opened before the fix have a sources.json line without dir. Filled once here.
+{
+  const sf = path.join(DATA, 'cal', 'sources.json');
+  const src = rd(sf, []);
+  let fixed = false;
+  if (Array.isArray(src)) src.forEach((x) => { if (x && x.tenant && !x.dir && /^t[a-f0-9]{6}$/.test(String(x.name))) { x.dir = home(x.name); fixed = true; } });
+  if (fixed) { wr(sf, src, 'monitor'); log('sources.json: dir added to trial lines'); }
+}
 try { names = fs.readdirSync(Q).filter((n) => /^t[a-f0-9]{6}\.json$/.test(n)); } catch (e) { process.exit(0); }
 for (const n of names) {
   const qf = path.join(Q, n), q = rd(qf, null);
