@@ -46,7 +46,17 @@ const OA_ERR = {
 };
 
 function safeTok(t) { return /^[a-f0-9]{16,40}$/.test(String(t || '')) ? String(t) : null; }
-function def(tok) { try { return JSON.parse(fs.readFileSync(path.join(DIR, tok + '.def.json'), 'utf8')); } catch (e) { return null; } }
+/*
+  12.11.2026, Itzik: "אני רואה שיש שם חיבור גם לטיק טוק". Our TikTok app still waits for TikTok's review (sandbox keys
+  work only for Itzik's own account), so a customer's setup page drops the TikTok card, as 🔌 already does
+  (lib/connections.js). It comes back per page with "tiktok": true in that page's def, or in Itzik's own page.
+*/
+const OWN_SETUP = 'f837b9adea42a6f2ceda';
+function def(tok) {
+  let d; try { d = JSON.parse(fs.readFileSync(path.join(DIR, tok + '.def.json'), 'utf8')); } catch (e) { return null; }
+  if (d && Array.isArray(d.steps) && tok !== OWN_SETUP && d.tiktok !== true) d.steps = d.steps.filter((st) => !(st && st.oauth && st.oauth.provider === 'tiktok'));
+  return d;
+}
 function state(tok) { try { return JSON.parse(fs.readFileSync(path.join(DIR, tok + '.json'), 'utf8')); } catch (e) { return { steps: {} }; } }
 function saveState(tok, s) { fs.mkdirSync(DIR, { recursive: true }); fs.writeFileSync(path.join(DIR, tok + '.json.tmp'), JSON.stringify(s, null, 1)); fs.renameSync(path.join(DIR, tok + '.json.tmp'), path.join(DIR, tok + '.json')); }
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
