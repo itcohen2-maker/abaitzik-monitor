@@ -200,7 +200,9 @@ async function one(src) {
   if (personalNew) { const pd = path.join(src.dir, 'data', 'personal'); own(src.dir, [pd, path.join(pd, 'items.json')]); }
   if (first) {
     // items is newest first here (reversed above)
-    const rep = MP.firstReport(items, FIRST_DAYS);
+    // the whole week, also what earlier rounds already sorted (a monitor that sorted mail before this round existed)
+    const since = Date.now() - FIRST_DAYS * 864e5;
+    const rep = MP.firstReport(next.filter((x) => Date.parse(x.at) >= since), FIRST_DAYS);
     const rd = path.join(src.dir, 'data', 'reports', 'reports');
     const rf = path.join(rd, new Date().toISOString().replace(/\D/g, '').slice(0, 12) + '-mail-first.json');
     try {

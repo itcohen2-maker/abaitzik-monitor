@@ -35,6 +35,9 @@ test('the first report lists the urgent mail, asks questions and has no dashes',
   assert.match(r.body, /3 מיילים/);
   assert.match(r.body, /מחכה להצעת מחיר היום/);
   assert.match(r.body, /news@shop\.com/);
+  assert.doesNotMatch(MP.firstReport([items[1]], 7).body, /הגיעו 1 /);
+  const long = MP.firstReport([{ from: 'a@b.com', text: 'מילה '.repeat(40), tag: 'דחוף' }], 7).body;
+  assert.match(long, /מילה…/);
   assert.match(r.body, /מי הלקוחות/);
   assert.doesNotMatch(r.title + r.body, /[‐-―]| - /);
   const empty = MP.firstReport([], 7);
