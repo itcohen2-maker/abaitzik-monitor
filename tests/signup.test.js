@@ -76,3 +76,9 @@ test('a signup without a phone is fine, a wrong phone is not', () => {
     assert.equal(S.start(d, { name: 'רון', phone: '123', email: 'ron2@example.com', terms: true, ip: '1.1.1.2' }, Date.now()).error, 'phone');
   } finally { fs.rmSync(d, { recursive: true, force: true }); }
 });
+
+test('a typo in the mail ending is refused before a code goes nowhere (12.11)', () => {
+  const d = fs.mkdtempSync(path.join(os.tmpdir(), 'su-typo-'));
+  ['hagitit7@gmail.con', 'a@gmial.com', 'a@gmail.co', 'a@x.cmo'].forEach((e) => assert.equal(S.start(d, who({ email: e }), T0).error, 'email', e));
+  ['a@gmail.com', 'a@walla.co.il', 'a@x.co', 'a@company.co.il', 'a@x.com'].forEach((e) => assert.notEqual(S.start(d, who({ email: e, ip: e }), T0).error, 'email', e));
+});
