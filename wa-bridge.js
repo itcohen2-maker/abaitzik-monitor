@@ -17,7 +17,12 @@
   window that Meta opens when he writes, a free text reply is allowed.
 
   Config, never in git: data/wa.json (600)
-    { verifyToken, appSecret, token, phoneId, allow: ["9725..."], graph: "v21.0" }
+    { verifyToken, appSecret, token, phoneId, allow: ["9725..."], graph: "v21.0",
+      kapsoKey, kapsoSecret, kapsoGraph }   (the last three are optional, see below)
+  12.11.2026, Itzik decided to connect customers' WhatsApp through Kapso (a BSP) to start selling; the same
+  number moves to our own Meta app later. With kapsoKey the calls go through Kapso's Meta compatible proxy
+  (lib/wa-api.js); the webhook is Meta's payload, signed with X-Webhook-Signature (kapsoSecret). Without
+  kapsoKey everything is Meta direct, exactly as before.
   State: data/status/wa-bridge.json (which ntfy id came from which number,
   and which answers were already sent).
 
@@ -26,6 +31,7 @@
 const http = require('http');
 const https = require('https');
 const crypto = require('crypto');
+const WA = require('./lib/wa-api.js');
 const fs = require('fs');
 const path = require('path');
 
@@ -120,8 +126,8 @@ async function toMonitor(kind, text, re, files) {
 async function waSend(to, text, mem) {
   const c = cfg();
   const body = JSON.stringify({ messaging_product: 'whatsapp', to: to, type: 'text', text: { preview_url: true, body: String(text).slice(0, 4000) } });
-  const r = await req('POST', 'https://graph.facebook.com/' + (c.graph || 'v21.0') + '/' + c.phoneId + '/messages',
-    { Authorization: 'Bearer ' + c.token, 'Content-Type': 'application/json' }, Buffer.from(body, 'utf8'));
+  const r = await req('POST', WA.base(c) + '/' + c.phoneId + '/messages',
+    Object.assign({ 'Content-Type': 'application/json' }, WA.auth(c)), Buffer.from(body, 'utf8'));
   if (r.status !== 200) throw new Error('graph ' + r.status + ' ' + r.body.toString('utf8').slice(0, 300));
   let id = ''; try { id = JSON.parse(r.body.toString('utf8')).messages[0].id; } catch (e) {}
   if (mem && id) { try { waOut.remember(DATA, id, mem); } catch (e) { log('remember failed: ' + e.message); } }
@@ -180,10 +186,11 @@ async function sendLongParts(to, text, mem) {
 
 // 6.11: a call recording (lib/call-analysis.js). Download with its own extension.
 async function mediaFile(mediaId, ext) {
-  const c = cfg(), H = { Authorization: 'Bearer ' + c.token };
-  const meta = await req('GET', 'https://graph.facebook.com/' + (c.graph || 'v21.0') + '/' + mediaId, H);
+  const c = cfg(), H = WA.auth(c);
+  const meta = await req('GET', WA.mediaMetaUrl(c, mediaId), H);
   if (meta.status !== 200) throw new Error('media meta ' + meta.status);
-  const bin = await req('GET', JSON.parse(meta.body.toString('utf8')).url, H);
+  const dl = WA.mediaDownload(c, JSON.parse(meta.body.toString('utf8')));
+  const bin = await req('GET', dl.url, dl.headers);
   if (bin.status !== 200 || !bin.body.length) throw new Error('media get ' + bin.status);
   const dir = path.join(ROOT, 'data', 'inbox'); fs.mkdirSync(dir, { recursive: true });
   const file = path.join(dir, 'wa-call-' + new Date().toISOString().replace(/[^0-9]/g, '').slice(0, 14) + ext);
@@ -192,11 +199,11 @@ async function mediaFile(mediaId, ext) {
 }
 
 async function voiceText(mediaId) {
-  const c = cfg(), H = { Authorization: 'Bearer ' + c.token };
-  const meta = await req('GET', 'https://graph.facebook.com/' + (c.graph || 'v21.0') + '/' + mediaId, H);
+  const c = cfg(), H = WA.auth(c);
+  const meta = await req('GET', WA.mediaMetaUrl(c, mediaId), H);
   if (meta.status !== 200) throw new Error('media meta ' + meta.status);
-  const url = JSON.parse(meta.body.toString('utf8')).url;
-  const bin = await req('GET', url, H);
+  const dl = WA.mediaDownload(c, JSON.parse(meta.body.toString('utf8')));
+  const bin = await req('GET', dl.url, dl.headers);
   if (bin.status !== 200 || !bin.body.length) throw new Error('media get ' + bin.status);
   const dir = path.join(ROOT, 'data', 'inbox'); fs.mkdirSync(dir, { recursive: true });
   const file = path.join(dir, 'wa-voice-' + new Date().toISOString().replace(/[^0-9]/g, '').slice(0, 14) + '.ogg');
@@ -217,17 +224,17 @@ async function voiceText(mediaId) {
 async function markRead(id) {
   try {
     const c = cfg();
-    await req('POST', 'https://graph.facebook.com/' + (c.graph || 'v21.0') + '/' + c.phoneId + '/messages',
-      { Authorization: 'Bearer ' + c.token, 'Content-Type': 'application/json' },
+    await req('POST', WA.base(c) + '/' + c.phoneId + '/messages',
+      Object.assign({ 'Content-Type': 'application/json' }, WA.auth(c)),
       Buffer.from(JSON.stringify({ messaging_product: 'whatsapp', status: 'read', message_id: id }), 'utf8'));
   } catch (e) { /* a read mark is a courtesy */ }
 }
 
+// header: the X-Hub-Signature-256 value (old callers), or the whole headers object (either signature passes).
 function sigOk(raw, header) {
   try {
-    const want = 'sha256=' + crypto.createHmac('sha256', cfg().appSecret).update(raw).digest('hex');
-    const a = Buffer.from(String(header || '')), b = Buffer.from(want);
-    return a.length === b.length && crypto.timingSafeEqual(a, b);
+    const h = header && typeof header === 'object' ? header : { 'x-hub-signature-256': header };
+    return WA.sigOk(cfg(), raw, h);
   } catch (e) { return false; }
 }
 
@@ -289,8 +296,8 @@ async function waUpload(file, mime) {
     part('messaging_product', 'whatsapp'), part('type', mime),
     Buffer.from('--' + b + NL + 'Content-Disposition: form-data; name="file"; filename="' + path.basename(file) + '"' + NL + 'Content-Type: ' + mime + NL + NL, 'utf8'),
     fs.readFileSync(file), Buffer.from(NL + '--' + b + '--' + NL, 'utf8')]);
-  const r = await req('POST', 'https://graph.facebook.com/' + (c.graph || 'v21.0') + '/' + c.phoneId + '/media',
-    { Authorization: 'Bearer ' + c.token, 'Content-Type': 'multipart/form-data; boundary=' + b, 'Content-Length': body.length }, body);
+  const r = await req('POST', WA.base(c) + '/' + c.phoneId + '/media',
+    Object.assign({ 'Content-Type': 'multipart/form-data; boundary=' + b, 'Content-Length': body.length }, WA.auth(c)), body);
   if (r.status !== 200) throw new Error('media up ' + r.status + ' ' + r.body.toString('utf8').slice(0, 200));
   return JSON.parse(r.body.toString('utf8')).id;
 }
@@ -301,8 +308,8 @@ async function waVoice(to, text) {
   const id = await waUpload(file, 'audio/ogg');
   const c = cfg();
   const send = function (audio) {
-    return req('POST', 'https://graph.facebook.com/' + (c.graph || 'v21.0') + '/' + c.phoneId + '/messages',
-      { Authorization: 'Bearer ' + c.token, 'Content-Type': 'application/json' },
+    return req('POST', WA.base(c) + '/' + c.phoneId + '/messages',
+      Object.assign({ 'Content-Type': 'application/json' }, WA.auth(c)),
       Buffer.from(JSON.stringify({ messaging_product: 'whatsapp', to: to, type: 'audio', audio: audio }), 'utf8'));
   };
   let r = await send({ id: id, voice: true });
@@ -660,10 +667,16 @@ function route(pid) {
   if (!pid || !c.phoneId || pid === String(c.phoneId)) return 'mine';
   return c.routes && c.routes[pid] ? 'other' : 'unknown';
 }
-function forward(pid, raw, sig) {
+// hs: the incoming headers; Meta's and Kapso's signatures both go on, so a tenant bridge can verify either.
+function forward(pid, raw, hs) {
   const r = (cfg().routes || {})[pid];
+  if (typeof hs === 'string') hs = { 'x-hub-signature-256': hs };
+  hs = hs || {};
+  const fh = { 'Content-Type': 'application/json', 'Content-Length': raw.length, 'X-Hub-Signature-256': hs['x-hub-signature-256'] || '' };
+  if (hs['x-webhook-signature']) fh['X-Webhook-Signature'] = hs['x-webhook-signature'];
+  if (hs['x-idempotency-key']) fh['X-Idempotency-Key'] = hs['x-idempotency-key'];
   const x = http.request({ method: 'POST', hostname: '127.0.0.1', port: r.port, path: '/webhook',
-    headers: { 'Content-Type': 'application/json', 'Content-Length': raw.length, 'X-Hub-Signature-256': sig || '' } }, function (res) {
+    headers: fh }, function (res) {
     res.resume(); log('routed to ' + (r.tenant || r.port) + ': ' + res.statusCode);
   });
   x.on('error', function (e) { log('!! route to ' + (r.tenant || r.port) + ' failed: ' + e.message); });
@@ -1066,7 +1079,7 @@ const server = http.createServer(function (q, s) {
   q.on('data', function (c) { size += c.length; if (size < 2e6) ch.push(c); });
   q.on('end', function () {
     const raw = Buffer.concat(ch);
-    if (!sigOk(raw, q.headers['x-hub-signature-256'])) { log('bad signature'); s.writeHead(401); return s.end(); }
+    if (!sigOk(raw, q.headers)) { log('bad signature'); s.writeHead(401); return s.end(); }
     s.writeHead(200); s.end('ok');
     let d; try { d = JSON.parse(raw.toString('utf8')); } catch (e) { return; }
     const forwarded = {};
@@ -1077,7 +1090,7 @@ const server = http.createServer(function (q, s) {
         // a message to another number goes to that customer's own bridge, never into this monitor.
         const pid = String((v.metadata && v.metadata.phone_number_id) || '');
         const dest = route(pid);
-        if (dest === 'other') { if (!forwarded[pid]) { forwarded[pid] = 1; forward(pid, raw, q.headers['x-hub-signature-256']); } return; }
+        if (dest === 'other') { if (!forwarded[pid]) { forwarded[pid] = 1; forward(pid, raw, q.headers); } return; }
         if (dest === 'unknown') { if ((v.messages || []).length) log('message for an unknown number ' + pid.slice(0, 6) + '..., dropped'); return; }
         const name = v.contacts && v.contacts[0] && v.contacts[0].profile && v.contacts[0].profile.name;
         (v.messages || []).forEach(function (m) { onMessage(m, name).catch(function (err) { log('message failed: ' + err.message); }); });
