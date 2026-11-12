@@ -83,6 +83,33 @@ function rows(a) {
   });
 }
 
+/*
+  12.11.2026, Itzik: "תן שם בדיוק את ההסבר, תעשה מוקאפ של הסברים: לקוח חותם ב 15 בחודש, מחושב מה 15 עד ה 15,
+  ומה שיהיה באותו חודש לפי זה מחשבים את שי, אלא אם הוא ביטל בחודש השני, אז גם העמלה של שי תתקזז".
+  A worked example on the referrer's table, with his own numbers (grant, pct, months, bonus) from his file.
+*/
+function howItWorks(a) {
+  const price = 990, pct = a.pct || 10, fee = Math.round(price * pct / 100), months = a.months || 12, grant = a.grant || 0;
+  const row = (m, when, paid, you, cls) => '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td><b>' + m + '</b><br><small style="color:var(--mut)">' + when + '</small></td><td>' + paid + '</td><td><b>' + you + '</b></td></tr>';
+  return '<h2 style="font-size:20px;margin:26px 0 6px">איך מחושב מה שמגיע לך</h2>'
+    + '<div class="card"><b>1. החודש מתחיל ביום שהלקוח חתם.</b><br>לקוח שחתם ב 15 בחודש: החודש שלו הוא מה 15 עד ה 15 בחודש הבא. לא לפי חודש בלוח השנה.</div>'
+    + '<div class="card"><b>2. מחשבים לפי מה שהלקוח שילם באותו חודש.</b><br>על כל חודש ששולם מגיע לך ' + pct + '% ממנו, למשך ' + months + ' חודשים. על החודש הראשון מגיע לך גם מענק סגירה של ' + nis(grant) + ', אחרי שהלקוח שילם אותו.'
+    + (a.bonusFrom ? '<br>מהלקוח ה ' + a.bonusFrom + ' שלך והלאה: ' + a.bonusPct + '% במקום ' + pct + '%.' : '') + '</div>'
+    + '<div class="card" style="border-color:#fecaca;background:#fff7f7"><b>3. ביטול בחודש השני: העמלה מתקזזת.</b><br>אם הלקוח מבטל בחודש השני, מה שקיבלת עליו מתקזז מהתשלום הבא שלך.</div>'
+    + '<h3 style="font-size:17px;margin:20px 0 4px">דוגמה: לקוח שחתם ב 15.1, מנוי של ' + nis(price) + ' בחודש</h3>'
+    + '<div class="card"><table><thead><tr><th>חודש</th><th>הלקוח שילם</th><th>מגיע לך</th></tr></thead><tbody>'
+    + row('חודש 1', '15.1 עד 15.2', nis(price), nis(grant + fee) + '<br><small style="color:var(--mut)">מענק ' + nis(grant) + ' ועוד ' + nis(fee) + '</small>')
+    + row('חודש 2', '15.2 עד 15.3', nis(price), nis(fee))
+    + row('חודש 3', '15.3 עד 15.4', nis(price), nis(fee))
+    + '<tr><td colspan="3" style="text-align:center;color:var(--mut)">וכך כל חודש, עד חודש ' + months + '</td></tr>'
+    + '</tbody></table><p style="margin:10px 0 0">סך הכל על לקוח אחד בשנה: <b style="color:var(--acc)">' + nis(grant + fee * months) + '</b></p></div>'
+    + '<h3 style="font-size:17px;margin:20px 0 4px">דוגמה: אותו לקוח ביטל בחודש השני</h3>'
+    + '<div class="card"><table><thead><tr><th>חודש</th><th>מה קרה</th><th>מגיע לך</th></tr></thead><tbody>'
+    + row('חודש 1', '15.1 עד 15.2', 'שילם ' + nis(price), nis(grant + fee))
+    + row('חודש 2', '15.2 עד 15.3', 'ביטל', '<span style="color:#b91c1c">מתקזז ' + nis(grant + fee) + '</span>')
+    + '</tbody></table><p style="margin:10px 0 0">סך הכל על הלקוח הזה: <b>0 ₪</b>. הסכום יורד מהתשלום הבא שלך.</p></div>';
+}
+
 function tablePage(tok, a) {
   const r = rows(a);
   const sr = readJson(path.join(DATA, 'signup', 'refs', a.ref + '.json'), { visits: 0, signups: 0, people: [] });
@@ -102,6 +129,7 @@ function tablePage(tok, a) {
   });
   t += '</tbody></table></div>';
   if (sr.visits || sr.signups) t += '<div class="card">בקישור ההרשמה שלך: ' + sr.visits + ' כניסות, ' + sr.signups + ' נרשמו לשבוע ניסיון.</div>';
+  t += howItWorks(a);
   return t + '<p class="small">מענק סגירה ' + nis(a.grant) + ' אחרי שהלקוח שילם את החודש הראשון, ו ' + a.pct + '% מהמנוי החודשי למשך ' + a.months + ' חודשים'
     + (a.bonusFrom ? ' (מהלקוח ה ' + a.bonusFrom + ' והלאה ' + a.bonusPct + '%)' : '') + '.</p></div></body></html>';
 }
