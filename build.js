@@ -199,6 +199,24 @@ function shaiSignStamp() {
   try { const s = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'sign', 'a9cf9d55064a85b58583.json'), 'utf8')); return s.signedAt ? '-s' + s.signedAt.replace(/\D/g, '').slice(0, 12) : ''; } catch (e) { return ''; }
 }
 
+/*
+  13.11.2026, Itzik: "תעשה אריח אחד של לידים, וגם בתוך העסק שלי הטאב של הלידים יוביל לאותו אריח ... על כל המוניטורים".
+  One tile in every monitor with biz. It reads the leads table (data/biz/biz, lib/leads.js) where every source lands:
+  the site chat, trial signups, Meta comments and messages, manual adds. It blinks while a lead is still "חדש" and
+  this phone has not opened the tile since that lead came in. A tap opens העסק שלי on the leads tab, the same table.
+*/
+function leadsTile() {
+  let all = [];
+  try { all = require('./lib/leads.js').readAll(inst.dataPath).filter((r) => r.kind === 'lead' && !r.test); } catch (e) { all = []; }
+  const fresh = all.filter((r) => r.status === 'חדש');
+  const newest = fresh.map((r) => String(r.at || '')).sort().pop() || '';
+  const small = (fresh.length ? (fresh.length === 1 ? 'ליד חדש אחד' : fresh.length + ' לידים חדשים') + ' · ' : '') + all.length + ' בסך הכל';
+  return '<button type="button" class="gt g16" id="gLeads" data-lnew="' + newest.replace(/[^0-9TZ:.-]/g, '') + '"><b>🔔 לידים</b><small>' + small + '</small></button>'
+    + '<script>(function(){var t=document.getElementById("gLeads");if(!t)return;var k=t.getAttribute("data-lnew"),s="";try{s=localStorage.getItem("leadsTileSeen")||"";}catch(e){}'
+    + 'if(k&&s!==k)t.classList.add("leadNew");'
+    + 't.addEventListener("click",function(){try{if(k)localStorage.setItem("leadsTileSeen",k);}catch(e){}t.classList.remove("leadNew");if(typeof bizSheet==="function"){bizSheet("leads");if(typeof bzOpenDrawer==="function")bzOpenDrawer("leads");}});})();</script>';
+}
+
 function newestLead() {
   try { const a = loadDocs('chat').filter(m => m.heldWhy === 'lead' && m.at).map(m => m.at).sort().pop(); return a ? '-' + a.replace(/\D/g, '').slice(0, 12) : ''; } catch (e) { return ''; }
 }
@@ -4784,7 +4802,7 @@ ${require('./lib/home-ui.js').html}
 
  <div id="askBox"></div>
 <!-- 4.11, Itzik: "תעלה את האריח של העסק שלי למעלה ברשימה. למה שמת אותו אחרון?" The business grid opens the home screen. -->
-${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? require('./lib/sendlist-ui.js').tile : '') + ((inst.name === 'abaitzik' || inst.handle === true) ? '<button type="button" class="gt g16" id="gHandle" hidden data-new="1"><b>📋 לטיפול</b><small>טפסים שחזרו וצריכים אותך</small></button><button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16" id="gVisits" hidden data-new="1"><b>👀 כניסות לקוחות</b><small>מתי נכנסו ולכמה זמן</small></button><button type="button" class="gt g16" id="gAffs" hidden data-new="1"><b>🤝 שותפים</b><small>מי הגיע דרך שי</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="' + leadStamps() + '"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button>' : '') + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261111-leads' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button>' + '</div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
+${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? require('./lib/sendlist-ui.js').tile : '') + ((inst.name === 'abaitzik' || inst.handle === true) ? '<button type="button" class="gt g16" id="gHandle" hidden data-new="1"><b>📋 לטיפול</b><small>טפסים שחזרו וצריכים אותך</small></button><button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16" id="gVisits" hidden data-new="1"><b>👀 כניסות לקוחות</b><small>מתי נכנסו ולכמה זמן</small></button><button type="button" class="gt g16" id="gAffs" hidden data-new="1"><b>🤝 שותפים</b><small>מי הגיע דרך שי</small></button>' : '') + leadsTile() + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261111-leads' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button>' + '</div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
   <!-- 3.11, Itzik: "אני צריך אריח שממש יעבב לי, כמו ליד חדש". First on the grid; shows while a --nag reminder is open, hard blink once it is due, until "✅ עשיתי". -->
@@ -19665,7 +19683,7 @@ function bizSheet(t0){
     Status, note and delete go as "ליד [<id>]: ..." and the listener applies them with no model (lib/leads.js).
   */
   var LD_SRC={site:'🌐 אתר','fb-comment':'📘 תגובה במודעה','ig-comment':'📸 תגובה במודעה',messenger:'💬 מסנג׳ר','ig-dm':'📸 הודעה באינסטגרם',leadform:'📝 טופס מטא',manual:'✍️ ידני',aff:'🤝 שותף',whatsapp:'💬 וואטסאפ',signup:'🆕 שבוע ניסיון'};
-  var LD_INBOX='https://business.facebook.com/latest/inbox/all?asset_id=1341874565686928&business_id=2131000707784066';
+  var LD_INBOX='';/*ITZIK:BEGIN*/LD_INBOX='https://business.facebook.com/latest/inbox/all?asset_id=1341874565686928&business_id=2131000707784066';/*ITZIK:END*/
   function ldWa(p){var d=String(p||'').replace(/[^0-9]/g,'');if(!d)return '';if(d.charAt(0)==='0')d='972'+d.slice(1);return 'https://wa.me/'+d;}
   // The site chat sends its raw answers ([Chat Lead], Answers:, stage: mockups); shown in words.
   function ldNote(n){var W={idea:'רעיון',spec:'אפיון',mockups:'מסכים',product:'מוצר עובד',tier1:'0 עד 5,000 ₪',tier2:'5,000 עד 10,000 ₪',tier3:'10,000 עד 30,000 ₪',tier4:'30,000 עד 50,000 ₪',tier5:'50,000 ₪ ומעלה'};return String(n||'').split(String.fromCharCode(10)).map(function(l){return l.trim();}).filter(function(l){return l&&l!=='[Chat Lead]'&&l!=='Answers:'&&!/^Description: *N.A$/i.test(l);}).map(function(l){var m=/^(stage|budget): *([a-z0-9]+)/i.exec(l);return m?(m[1].toLowerCase()==='stage'?'שלב: ':'תקציב: ')+(W[m[2]]||m[2]):l;}).join(String.fromCharCode(10));}
@@ -19686,7 +19704,7 @@ function bizSheet(t0){
     var rep='';
     if(r.phone){rep+='<a class="yb yb2" href="'+ldWa(r.phone)+'" target="_blank" rel="noopener">💬 וואטסאפ</a><a class="yb" href="tel:'+esc(String(r.phone).replace(/[^0-9+]/g,''))+'">📞 להתקשר</a>';}
     if(r.email)rep+='<a class="yb" href="mailto:'+esc(r.email)+'">✉️ מייל</a>';
-    if(meta)rep+='<a class="yb yb2" href="'+esc(r.link||LD_INBOX)+'" target="_blank" rel="noopener">💬 לענות במטא</a>';
+    if(meta&&(r.link||LD_INBOX))rep+='<a class="yb yb2" href="'+esc(r.link||LD_INBOX)+'" target="_blank" rel="noopener">💬 לענות במטא</a>';
     // 11.11: copy the phone, or all the details at once (name, phone, mail, where from, when, what he wrote, notes)
     var NL=String.fromCharCode(10),all=[r.name||'בלי שם',r.phone?'טלפון: '+r.phone:'',r.email?'מייל: '+r.email:'','מאיפה: '+src.replace(/^[^ ]+ /,''),dd?'תאריך: '+dd:'','סטטוס: '+(r.status||''),r.last?'כתב: '+r.last:'',r.note?ldNote(r.note):''].filter(Boolean).join(NL);
     if(r.phone)rep+='<button type="button" class="yb" data-bz="ldcopy" data-w="הטלפון" data-u="'+esc(r.phone)+'">📋 להעתיק טלפון</button>';
@@ -19706,7 +19724,7 @@ function bizSheet(t0){
   function itsHtml(){
    // 8.11.2026, Itzik: "תעשה סדר בכל הטאב, תסיר את שי, תאפס ותשאיר לי: טופס סודיות, הסכם בינינו וטופס התחברות".
    // Three clean templates, no customer name. Shai's files and answers are in data/_archive/shai-20261108.
-   return '<div class="bzHead">💻 IT Solution</div>'+itsLeadsHtml()+planBoardHtml()
+   return '<div class="bzHead">💻 IT Solution</div>'+planBoardHtml()
     // 5.11, Itzik: "זה מסמך סודיות שמעבירים ללקוח חדש": the original is the PDF, signed once by IT Solution, then one link for every client.
     +'<div class="bzSec">🔒 טופס סודיות</div>'+ndaHtml()
     // 4.11, Itzik: "אני צריך חוזה מול לקוח". One service agreement for every client, signed inside the quote page, before any build.
@@ -19810,8 +19828,7 @@ function bizSheet(t0){
    if(tab==='docs')return docsHtml();
    if(tab==='li')return liHtml();
    // 1.11, Itzik: "תשים את ההצעה גם במוניטור". The official quote for Shai Bodek (3 packages), the demo on 3.11.
-   return '<div class="bzHead">👥 לידים ולקוחות</div>'+newLeadHtml()+leadsHtml()
-    +'<p class="bzEmpty">הציון למעלה מ 0 עד 100, 100 זה הכי טוב. כל ליד שלא נגעו בו שבוע מוריד 8 נקודות, הצעה שלא חזרו אליה 3 ימים מורידה 12, ותזכורת שהגיעה ולא טופלה מורידה 6.</p>';
+   return '<div class="bzHead">🔔 לידים: כל מה שנכנס, במקום אחד</div>'+itsLeadsHtml()+newLeadHtml();
   }
   // 2.11, Itzik: a tab with something new blinks until he opens it. The stamp changes whenever something is added there.
   var BZ_UPD={its:'20261111-leads'+((D.nda&&D.nda.signed&&D.nda.signed[0])?'-'+String(D.nda.signed[0].at).replace(/\D/g,'').slice(0,12):'')+((D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done)?'-s'+String(D.shaiForms.sign.done).replace(/\\D/g,'').slice(0,12):''),shachar:((D.shSum&&D.shSum.upd)||'20261103-shachar-auto')+'-ld1104',li:'li-queue-20261109'};
