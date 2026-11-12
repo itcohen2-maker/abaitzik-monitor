@@ -36,7 +36,8 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = __dirname;
-const CFG = path.join(ROOT, 'data', 'wa.json');
+// 12.11.2026: WA_BRIDGE_DATA lets the tests point the bridge at a temporary data folder.
+const CFG = path.join(process.env.WA_BRIDGE_DATA || path.join(ROOT, 'data'), 'wa.json');
 const STATE = path.join(ROOT, 'data', 'status', 'wa-bridge.json');
 const CHAT = path.join(ROOT, 'data', 'chat', 'chat');
 const PORT = Number(process.env.WA_PORT || 8796);
@@ -151,7 +152,7 @@ const waOut = require('./lib/wa-out.js');
 const WT = require('./lib/wa-tenants.js');
 const WM = require('./lib/wa-media.js');
 const groupLib = require('./lib/group.js');
-const DATA = path.join(ROOT, 'data');
+const DATA = process.env.WA_BRIDGE_DATA || path.join(ROOT, 'data');
 const LONG = 700;
 function pageUrl() {
   try { return require('./lib/instance.js').publicUrl || ''; } catch (e) { return ''; }
@@ -929,8 +930,121 @@ async function api(q, s, u) {
   s.writeHead(404, h); s.end('{}');
 }
 
+/*
+  12.11.2026, Itzik: a customer connects his own WhatsApp number from 🔌, through Kapso (lib/kapso.js).
+  Itzik's instance only, it is the public one (wa.abaitzik.com).
+  1. GET /api/wa/connect?t=<tenant id>&c=<his code>: the code is checked against data/tenants/tenants/<t>.json `code`
+     when it has one, and against the fast chat key of that tenant (data/fastchat/tenants.json, the same key his page
+     already holds as D.fcKey and lib/connections.js puts in the link), constant time, then a 302 to a fresh Kapso setup link.
+     A wrong code counts per address (10 in 15 minutes lock it for 30 minutes), and so does too many requests.
+  2. POST /kapso/project (also /api/kapso/project): Kapso's project webhook. Signed with kapsoProjectSecret
+     (data/kapso.json). On whatsapp.phone_number.created it leaves data/kapso/pending/<tenant>.json for
+     setup/wa-kapso-provision.sh, registers the per number webhook to /webhook, and pushes Itzik one line.
+     The answer is 200 at once, the slow work comes after; X-Idempotency-Key makes a repeat harmless.
+*/
+const KAPSO_DIR = path.join(DATA, 'kapso');
+function isOwnerInstance() { try { return require('./lib/instance.js').name === 'abaitzik'; } catch (e) { return false; } }
+function connectPage(s, status, msg) {
+  s.writeHead(status, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' });
+  s.end('<!doctype html><html lang="he" dir="rtl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>חיבור וואטסאפ</title>'
+    + '<body style="font-family:Heebo,Arial,sans-serif;max-width:420px;margin:12vh auto;padding:0 16px;text-align:center"><h2>' + msg + '</h2>'
+    + '<p><a href="https://it-solution.co.il">חזרה לאתר IT Solution</a></p></body></html>');
+}
+function sha(x) { return crypto.createHash('sha256').update(String(x)).digest(); }
+function connectCodeOk(t, c) {
+  t = String(t || ''); c = String(c || '');
+  if (!/^[a-z0-9][a-z0-9-]{0,40}$/.test(t) || c.length < 8) return false;
+  const exp = [];
+  try { const r = JSON.parse(fs.readFileSync(path.join(DATA, 'tenants', 'tenants', t + '.json'), 'utf8')); if (r && typeof r.code === 'string' && r.code.length >= 8) exp.push(r.code); } catch (e) { return false; }
+  try { const f = JSON.parse(fs.readFileSync(path.join(DATA, 'fastchat', 'tenants.json'), 'utf8')); if (f && f[t] && typeof f[t].key === 'string' && f[t].key.length >= 16) exp.push(f[t].key); } catch (e) { /* none */ }
+  let ok = false;
+  exp.forEach(function (e) { if (crypto.timingSafeEqual(sha(e), sha(c))) ok = true; });
+  return ok;
+}
+const connHits = new Map();
+function connBump(q, fail) {
+  const ip = realIp(q), now = Date.now();
+  let r = connHits.get(ip);
+  if (!r || now - r.first > 15 * 60e3) r = { first: now, n: 0, f: 0, until: 0 };
+  r.n++; if (fail) r.f++;
+  if (!r.until && (r.f >= 10 || r.n >= 40)) { r.until = now + 30 * 60e3; log('connect lock ' + ip); }
+  connHits.set(ip, r);
+  if (connHits.size > 5000) connHits.clear();
+  return r;
+}
+async function waConnect(q, s, u) {
+  if (!isOwnerInstance()) return connectPage(s, 404, 'הדף לא נמצא');
+  if (q.method !== 'GET') { s.writeHead(405); return s.end(); }
+  const pre = connHits.get(realIp(q));
+  if (pre && pre.until > Date.now()) return connectPage(s, 429, 'יותר מדי ניסיונות. אפשר לנסות שוב בעוד חצי שעה.');
+  const t = u.searchParams.get('t'), c = u.searchParams.get('c');
+  if (!connectCodeOk(t, c)) { connBump(q, true); return connectPage(s, 403, 'הקישור לא תקין. כדאי לפתוח שוב את החיבורים מתוך המוניטור.'); }
+  const r = connBump(q, false);
+  if (r.until > Date.now()) return connectPage(s, 429, 'יותר מדי ניסיונות. אפשר לנסות שוב בעוד חצי שעה.');
+  let url;
+  try { url = await require('./lib/kapso.js').setupLink(DATA, String(t)); }
+  catch (e) { log('connect failed for ' + t + ': ' + String(e.message).replace(/[0-9a-f]{24,}/gi, '...')); return connectPage(s, 502, 'לא הצלחנו לפתוח את החיבור כרגע. נסו שוב בעוד דקה, ואם זה חוזר, כתבו לנו במוניטור.'); }
+  s.writeHead(302, { Location: url, 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' });
+  s.end();
+}
+function kapsoSeen(key) {
+  const f = path.join(KAPSO_DIR, 'seen.json');
+  let o = {}; try { o = JSON.parse(fs.readFileSync(f, 'utf8')) || {}; } catch (e) {}
+  if (key && o[key]) return true;
+  if (key) {
+    o[key] = Date.now();
+    const e = Object.entries(o); if (e.length > 500) o = Object.fromEntries(e.slice(-500));
+    fs.mkdirSync(KAPSO_DIR, { recursive: true });
+    fs.writeFileSync(f + '.tmp', JSON.stringify(o), { mode: 0o600 }); fs.renameSync(f + '.tmp', f);
+  }
+  return false;
+}
+let pushItzik = function (title, text) {
+  try { require('child_process').execFile(process.execPath, [path.join(__dirname, 'notify.js'), title, text], { cwd: __dirname, timeout: 60000 }, function (e) { if (e) log('kapso push failed: ' + e.message); }); } catch (e) { log('kapso push failed: ' + e.message); }
+};
+async function kapsoEvent(raw, headers) {
+  const K = require('./lib/kapso.js');
+  let d; try { d = JSON.parse(raw.toString('utf8')); } catch (e) { return 'bad json'; }
+  const hv = function (n) { const k = Object.keys(headers || {}).find(function (x) { return x.toLowerCase() === n; }); return k ? String(headers[k]) : ''; };
+  const ev = hv('x-webhook-event') || d.event || '';
+  if (kapsoSeen(hv('x-idempotency-key'))) return 'duplicate';
+  if (ev !== 'whatsapp.phone_number.created') return 'ignored ' + ev;
+  const phoneId = String(d.phone_number_id || '');
+  const tenant = K.tenantOf(DATA, d.customer);
+  if (!/^\d{5,25}$/.test(phoneId) || !tenant) { log('kapso: number event without a known customer'); return 'unknown'; }
+  const pf = path.join(KAPSO_DIR, 'pending', tenant + '.json');
+  let same = null;
+  try { same = JSON.parse(fs.readFileSync(pf, 'utf8')); } catch (e) {}
+  if (!same) { try { same = JSON.parse(fs.readFileSync(path.join(KAPSO_DIR, 'done', tenant + '.json'), 'utf8')); } catch (e) {} }
+  if (same && String(same.phoneId) === phoneId) return 'already';
+  const display = await K.phoneDisplay(DATA, phoneId);
+  const rec = { tenantId: tenant, phoneId: phoneId, display: display, at: new Date().toISOString(), hook: '' };
+  fs.mkdirSync(path.dirname(pf), { recursive: true });
+  fs.writeFileSync(pf + '.tmp', JSON.stringify(rec, null, 1), { mode: 0o600 }); fs.renameSync(pf + '.tmp', pf);
+  try {
+    await K.registerNumberWebhook(DATA, phoneId, cfg().kapsoSecret);
+    rec.hook = 'ok';
+  } catch (e) { rec.hook = 'failed'; log('kapso hook failed for ' + tenant + ': ' + e.message); }
+  if (fs.existsSync(pf)) { fs.writeFileSync(pf + '.tmp', JSON.stringify(rec, null, 1), { mode: 0o600 }); fs.renameSync(pf + '.tmp', pf); }
+  const t = K.tenantRec(DATA, tenant) || {};
+  pushItzik('💬 חיבור וואטסאפ', '💬 ' + (t.title || tenant) + ' חיבר וואטסאפ ' + (display || ''));
+  return 'pending';
+}
+function kapsoProject(q, s) {
+  if (!isOwnerInstance()) { s.writeHead(404); s.end(); return Promise.resolve(); }
+  if (q.method !== 'POST') { s.writeHead(405); s.end(); return Promise.resolve(); }
+  return readBody(q, 300000).then(function (raw) {
+    const secret = require('./lib/kapso.js').cfg(DATA).kapsoProjectSecret;
+    if (!require('./lib/kapso.js').verifyProjectWebhook(raw, q.headers, secret)) { log('kapso project: bad signature'); s.writeHead(401); s.end(); return; }
+    s.writeHead(200); s.end('ok');
+    return kapsoEvent(raw, q.headers).then(function (r) { log('kapso project: ' + r); }, function (e) { log('kapso project failed: ' + e.message); });
+  }, function () { s.writeHead(400); s.end(); });
+}
+
 const server = http.createServer(function (q, s) {
   const u = new URL(q.url, 'http://x');
+  if (u.pathname === '/api/wa/connect') { waConnect(q, s, u).catch(function (e) { log('connect: ' + e.message); try { connectPage(s, 500, 'משהו השתבש, נסו שוב.'); } catch (x) {} }); return; }
+  if (u.pathname === '/kapso/project' || u.pathname === '/api/kapso/project') { kapsoProject(q, s); return; }
   // 12.11: a referrer's (affiliate) form and table, /r/<token>[/t] and /api/ref-lead (affiliates.js).
   const rm = u.pathname.match(/^\/r\/([a-f0-9]{16,40})(?:\/(t))?\/?$/);
   if (rm && q.method === 'GET') { require('./affiliates.js').serve(rm[1], rm[2], s); return; }
@@ -1107,4 +1221,4 @@ if (require.main === module) {
   setInterval(function () { try { require('./forms.js').sweep(formNotify); } catch (e) { log('forms sweep: ' + e.message); } }, 60000);
   setInterval(function () { try { require('./setup.js').sweep(formNotify); } catch (e) { log('setup sweep: ' + e.message); } }, 60000);
 }
-module.exports = { textOf, sigOk, voiceCommand, speakable, shortOf, isAllCommand, route, onMessage, sweep, _set: function (o) { if (o.waSend) waSend = o.waSend; if (o.markRead) markRead = o.markRead; } };
+module.exports = { connectCodeOk, waConnect, kapsoProject, kapsoEvent, textOf, sigOk, voiceCommand, speakable, shortOf, isAllCommand, route, onMessage, sweep, _set: function (o) { if (o.push) pushItzik = o.push; if (o.waSend) waSend = o.waSend; if (o.markRead) markRead = o.markRead; } };

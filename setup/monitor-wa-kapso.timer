@@ -1,0 +1,8 @@
+[Unit]
+Description=every minute: look for a customer WhatsApp number waiting to be wired (data/kapso/pending)
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+AccuracySec=10s
+[Install]
+WantedBy=timers.target

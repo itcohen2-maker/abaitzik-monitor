@@ -1,6 +1,7 @@
 #!/bin/bash
 # 4.11.2026: a customer's own WhatsApp number on their own monitor.
 #
+# (12.11.2026: for a Kapso number setup/wa-kapso-provision.sh runs this by itself, no token step.)
 # Run as root once the customer's number is registered in Meta (through the
 # verified business portfolio) and a token that can send for it exists:
 #   setup/wa-tenant.sh <tenant> <phone_number_id> <owner_phone_972...> <port>
@@ -48,4 +49,10 @@ UNIT
 systemctl daemon-reload
 systemctl enable --now "monitor-wa-$T.service"
 systemctl restart monitor-wa.service
-echo "ok: $T on $PORT, route $PID. The token is still empty until wa-set.py token runs."
+# 12.11.2026: a Kapso number has no Meta token on purpose (kapsoKey in the same file, put there by
+# setup/wa-kapso-provision.sh); wa-bridge and lib/wa-out.js accept an empty token when kapsoKey exists.
+if node -e "process.exit(JSON.parse(require('fs').readFileSync('$D/data/wa.json','utf8')).kapsoKey?0:1)" 2>/dev/null; then
+  echo "ok: $T on $PORT, route $PID (Kapso, no Meta token needed)."
+else
+  echo "ok: $T on $PORT, route $PID. The token is still empty until wa-set.py token runs."
+fi
