@@ -40,6 +40,9 @@ const inp = M.gather(dataPath, __dirname, now);
 // 10.11: the setup forms that came back are pulled into the customers' monitors first (lib/setup-intake.js); --dry only reads the last result
 inp.intake = (() => { try { return DRY ? JSON.parse(fs.readFileSync(path.join(dataPath, 'setup-intake', 'summary.json'), 'utf8')) : require('./lib/setup-intake.js').managerRound({ data: dataPath }); } catch (e) { log('intake: ' + String(e.message).slice(0, 100)); return null; } })();
 const m = M.build(inp);
+// 12.11.2026, Itzik: "המנהל צריך תמיד לבדוק את החיבורים שהם לא נשברים מהטופס למייל". Every round: the signup road (signup-check.js).
+// A warn is fixed by the PC like any problem on the card (the FIX loop below).
+try { const sc = JSON.parse(execFileSync('node', ['signup-check.js'], { cwd: __dirname, encoding: 'utf8', timeout: 120000 }).trim().split('\n').pop()); if (sc && sc.k) m.items.push({ k: sc.k, st: sc.st, t: sc.t, sub: sc.sub }); } catch (e) { m.items.push({ k: 'signup', st: 'warn', t: '📝 בדיקת ההרשמה לא רצה', sub: String(e.message).slice(0, 120) }); }
 if (DRY) { console.log(JSON.stringify(m, null, 1)); console.log(M.pushText(m)); process.exit(0); }
 
 fs.mkdirSync(path.join(dir, 'manager'), { recursive: true });
@@ -62,6 +65,30 @@ for (const a of (inp.approvals || [])) {
   const gap = (a.status === 'notSubmitted' ? 7 * 24 : 20) * 3600e3;
   if (st.apprTask[a.id] && now - Date.parse(st.apprTask[a.id]) < gap) continue;
   if (run('node', ['pc-task.js', 'add', '--quiet', '--re', 'approval-' + a.id, A.taskText(a)]) !== null) { st.apprTask[a.id] = new Date(now).toISOString(); log('approval check ' + a.id); }
+}
+// 12.11.2026, Itzik: "רואה חשבון רוצה את כל החשבוניות בהדפסות ... לאסוף מכל המיילים, משלושת החשבונות, לשים בתיקייה בדרייב,
+// ובסוף החודש אני אדפיס". mail-check.js now only saves each invoice to the month folder. On the 1st of the month the manager
+// sends one PC job for the month that ended: sweep the three mailboxes, fill the gaps, one merged PDF to print, and a 📋 item.
+{
+  const il = new Date(now).toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' }); // YYYY-MM-DD
+  if (il.slice(8, 10) === '01') {
+    const d = new Date(Date.parse(il + 'T12:00:00Z') - 2 * 864e5);
+    const ym = d.toISOString().slice(0, 7);
+    const HE = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
+    const mon = String(d.getUTCMonth() + 1).padStart(2, '0') + ' ' + HE[d.getUTCMonth()] + ' ' + d.getUTCFullYear();
+    if (st.invoiceMonth !== ym) {
+      const job = 'סוף חודש, חשבוניות לרואה החשבון (איציק 12.11.2026): כל החשבוניות והקבלות של ' + mon + ' מודפסות יחד פעם בחודש. '
+        + '1) לעבור בג׳ימייל בכרום על שלושת החשבונות: itcohen2, itcohen2p1 ו 100lolosf@gmail.com (עם f; את מספר u בודקים לפי הכתובת), ולחפש את כל החשבוניות והקבלות של ' + mon + ' (חשבונית, קבלה, invoice, receipt, PayPal, Google Play, מטא, סלקום, Anthropic, דומיינים). '
+        + '2) כל אחת שעוד לא נמצאת ב G:/My Drive/חשבוניות והוצאות 2026/' + mon + ' לשמור שם כ PDF בשם "YYYY-MM-DD ספק סכום.pdf" (בלי מייל PDF: להפיק PDF מהמייל) ולהוסיף שורה ל "00 רשימה לרואה החשבון.txt" שבאותה תיקייה. לא דפי פירוט אשראי ולא מסמכים רפואיים. '
+        + '3) לאחד את כל ה PDF של החודש, לפי תאריך, לקובץ אחד "להדפסה ' + mon + '.pdf" באותה תיקייה (Google Play ו PayPal בדף אחד כל אחת), ובעמוד הראשון את הרשימה עם הסכום הכולל. '
+        + '4) לא להדפיס: איציק מדפיס כשהוא מחליט. אם הוא כותב "תדפיס את החשבוניות", מדפיסים את הקובץ המאוחד בשיטה שבזיכרון, ורושמים ב "00 מה הודפס.txt". '
+        + '5) לענות שורה אחת: כמה חשבוניות, הסכום הכולל, ושהקובץ "להדפסה ' + mon + '.pdf" מוכן בדרייב.';
+      if (run('node', ['pc-task.js', 'add', '--re', 'invoices-' + ym, job]) !== null) {
+        st.invoiceMonth = ym; log('invoices month job ' + ym);
+        try { require('./lib/handle.js').complete({ key: 'invoices-' + ym, kind: 'lead', who: 'רואה החשבון', title: 'החשבוניות של ' + mon + ' נאספות לקובץ אחד להדפסה בדרייב. כשמוכן: "תדפיס את החשבוניות"', link: 'answers' }); } catch (e) { log('invoices handle: ' + e.message); }
+      }
+    }
+  }
 }
 // 11.11.2026, Itzik: "אני רוצה שהמנהל יבדוק 3 פעמים ביום ויטפל בבעיה או בבקשה".
 // Every round, each problem on the card (st warn) that is not his alone becomes one work order in the PC queue
