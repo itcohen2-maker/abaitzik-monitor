@@ -5234,7 +5234,7 @@ ${pushUi.html(pushKey())}
    <span aria-hidden="true">🏥</span><div>תורים עתידיים<small>הזימונים, וקובץ אחד להדפסה של כולם</small></div></a>
   <!-- Itzik, 23.9: the folder he will hand to the lawyer as a link, so he
        wanted it one tap away. The draft notice to Barzani lives in 06. -->
-  <a href="https://drive.google.com/drive/u/0/folders/1Waun6RZNoBJV7hGof3M7Xzn6Qt-VNuOj" target="_blank" rel="noopener">
+  <a href="https://drive.google.com/drive/u/0/folders/1g-Uqzb0y6CWira4LMt_pn1UfTY_kjQRU" target="_blank" rel="noopener">
    <span aria-hidden="true">⚖️</span><div>מכירת לולוס, לעורך דין<small>התיק המלא. המכתב לברזני ב 06 שכירות וחוזים</small></div></a>
   <!-- Itzik, 25.9: "תמיד תשים בתיקייה, אני לא מוצא ככה". The folders were
        there; what was missing is a way to reach them from the phone. Every
