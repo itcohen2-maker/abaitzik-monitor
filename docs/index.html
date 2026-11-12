@@ -973,6 +973,23 @@ body.editing .bn{display:none}
 .apv-undo{display:block;width:100%;min-height:46px;margin-top:10px;border:0;border-radius:14px;background:var(--wait);color:#fff;font:800 15px Heebo,sans-serif;cursor:pointer}
 
 
+.sdNote{margin:8px 0 12px;padding:10px 12px;border-radius:12px;background:rgba(224,161,0,.16);font:600 14px/1.55 Heebo,sans-serif;text-align:right}
+.sdList{margin:14px 0 4px;font:800 15.5px/1.4 Heebo,sans-serif;text-align:right}
+.sdList small{display:block;font-weight:500;opacity:.75}
+.sdRow{margin:6px 0;padding:10px 12px;border-radius:12px;background:rgba(127,127,127,.10);text-align:right}
+.sdRow.sdDone{opacity:.72}
+.sdHead{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.sdRow details{margin:6px 0 2px;line-height:1.5}
+.sdRow summary{cursor:pointer;list-style:none;opacity:.85;font-size:14px;overflow-wrap:anywhere}
+.sdRow details[open] summary{display:none}
+.sdFull{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14.5px;line-height:1.6}
+.sdBtns{display:flex;gap:8px;margin-top:8px;align-items:stretch}
+.sdGo{flex:2;display:flex;align-items:center;justify-content:center;min-height:52px;border-radius:14px;background:#1f9d55;color:#fff!important;text-decoration:none;font:800 17px Heebo,sans-serif;text-align:center}
+.sdRow.sdDone .sdGo{background:rgba(127,127,127,.25);color:inherit!important;font-weight:600;font-size:14px}
+.sdCp{flex:1;min-height:52px;margin:0}
+.sdBad{margin-top:6px;font:600 13.5px Heebo,sans-serif;color:#c0392b}
+
+
 .since{margin:0 0 12px;padding:9px 12px;border-radius:14px;background:var(--sunk);border:1px solid var(--line);color:var(--ink);font:600 14px/1.5 Heebo,sans-serif;text-align:start}
 .since[hidden]{display:none}
 
@@ -2786,7 +2803,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-12T20:05:07.414Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-12T20:06:05.703Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2922,7 +2939,7 @@ try{
 
 
  <div id="askBox"></div>
-<div class="grid" id="blkBiz"><button type="button" class="gt g16" id="gHandle" hidden data-new="1"><b>📋 לטיפול</b><small>טפסים שחזרו וצריכים אותך</small></button><button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button><button type="button" class="gt g16" id="gVisits" hidden data-new="1"><b>👀 כניסות לקוחות</b><small>מתי נכנסו ולכמה זמן</small></button><button type="button" class="gt g16" id="gAffs" hidden data-new="1"><b>🤝 שותפים</b><small>מי הגיע דרך שי</small></button><button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="lead|2026-11-04T21:49:14.929Z,lead|2026-11-10T06:37:53.360Z"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button><button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261111-leads-agr001420-202611100637-li-queue-20261109"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div><script>
+<div class="grid" id="blkBiz"><button type="button" class="gt g16" id="gSend" hidden data-new="1"><b>📤 הודעות לשליחה</b><small>מוכנות לך אחת אחת</small></button><button type="button" class="gt g16" id="gHandle" hidden data-new="1"><b>📋 לטיפול</b><small>טפסים שחזרו וצריכים אותך</small></button><button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button><button type="button" class="gt g16" id="gVisits" hidden data-new="1"><b>👀 כניסות לקוחות</b><small>מתי נכנסו ולכמה זמן</small></button><button type="button" class="gt g16" id="gAffs" hidden data-new="1"><b>🤝 שותפים</b><small>מי הגיע דרך שי</small></button><button type="button" class="gt g16 leadNew" id="gLeadNew" hidden data-leads="lead|2026-11-04T21:49:14.929Z,lead|2026-11-10T06:37:53.360Z"><b>🔔 יש ליד שהגיע</b><small>לחיצה לפתיחה</small></button><button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261111-leads-agr001420-202611100637-li-queue-20261109"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div><script>
 (function(){
  var K='leadSeen';
  function seen(){try{return JSON.parse(localStorage.getItem(K)||'[]');}catch(e){return [];}}
@@ -4723,7 +4740,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='c613bd93d8';
+var CODE_ID='c3808b433f';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -6823,6 +6840,7 @@ function repaintAll(){
   ['home',function(){if(typeof renderHome==='function')renderHome();}],
   ['approvals',function(){if(typeof renderApprovals==='function')renderApprovals();}],
   ['handle',function(){if(typeof paintHandle==='function')paintHandle();}],
+  ['sendlist',function(){if(typeof sdPaint==='function')sdPaint();}],
   ['visits',function(){if(typeof paintVisits==='function')paintVisits();if(typeof paintAffs==='function')paintAffs();if(typeof visitStart==='function')visitStart();}]];
  var bad=[],ran={};
  jobs.forEach(function(j){
@@ -18695,6 +18713,92 @@ function renderApprovals(){
  for(var i=0;i<open.length;i++)apvBind(cards[i],open[i]);
  host.querySelector('.apv-head').onclick=function(){apvShow=false;renderApprovals();};
 }
+
+
+var SD_KEY='sendSent',sdBusy=false;
+function sdMarks(){try{return JSON.parse(localStorage.getItem(SD_KEY)||'{}')||{};}catch(e){return {};}}
+function sdSave(m){try{localStorage.setItem(SD_KEY,JSON.stringify(m));}catch(e){}}
+function sdIsSent(l,it,m){return !!it.sentAt||m[l.id+':'+it.i]!==undefined;}
+function sdCount(lists,m){
+ var n=0,total=0;
+ (lists||[]).forEach(function(l){(l.items||[]).forEach(function(it){total++;if(!it.bad&&!sdIsSent(l,it,m))n++;});});
+ return {n:n,total:total};
+}
+function sdRowHtml(l,it,m){
+ var done=sdIsSent(l,it,m),pre=String(it.text||'').split(String.fromCharCode(10)).join(' ').slice(0,70);
+ return '<div class="sdRow'+(done?' sdDone':'')+'">'
+  +'<div class="sdHead"><b>'+(done?'✓ ':'')+esc(it.name)+'</b><small>'+esc(it.phoneMask||'אין מספר')+'</small></div>'
+  +'<details><summary>'+esc(pre)+(String(it.text||'').length>70?'... לפתיחת ההודעה':'')+'</summary><div class="sdFull">'+esc(it.text||'')+'</div></details>'
+  +(it.bad?'<div class="sdBad">אין מספר וואטסאפ תקין, אפשר להעתיק את ההודעה ולשלוח ידנית.</div>':'')
+  +'<div class="sdBtns">'
+  +(it.bad?'':'<a class="sdGo" data-a="go" data-l="'+esc(l.id)+'" data-i="'+it.i+'" href="'+esc(it.link)+'" target="_blank" rel="noopener">'+(done?'נשלח, לשלוח שוב':'לשלוח בוואטסאפ')+'</a>')
+  +'<button type="button" class="yb sdCp" data-a="cp" data-l="'+esc(l.id)+'" data-i="'+it.i+'">העתקה</button>'
+  +'</div></div>';
+}
+function sdHtml(lists,m){
+ var L=(lists||[]).filter(function(l){return (l.items||[]).length;});
+ if(!L.length)return '<small>אין הודעות לשליחה.</small>';
+ return L.map(function(l){
+  var sent=l.items.filter(function(it){return sdIsSent(l,it,m);}).length;
+  return '<div class="sdList">'+esc(l.title)+'<small>'+sent+' מתוך '+l.items.length+' נשלחו'+(l.note?' · '+esc(l.note):'')+'</small></div>'
+   +l.items.map(function(it){return sdRowHtml(l,it,m);}).join('');
+ }).join('');
+}
+function sdPaint(){
+ var t=document.getElementById('gSend');if(!t)return;
+ var c=sdCount(D.sendlist,sdMarks());
+ t.hidden=!c.n;
+ if(!c.n){t.classList.remove('taskblink');return;}
+ t.classList.add('taskblink');
+ var b=t.querySelector('b'),sm=t.querySelector('small');
+ if(b)b.textContent='📤 הודעות לשליחה · '+c.n;
+ if(sm)sm.textContent='מוכנות לך אחת אחת, לחיצה פותחת את הוואטסאפ';
+ sdFlush();
+}
+function sdFlush(){
+ if(sdBusy)return;
+ var m=sdMarks(),k=Object.keys(m).filter(function(x){return m[x]===0;})[0];
+ if(!k)return;
+ sdBusy=true;
+ var p=k.lastIndexOf(':'),line='📤 נשלח: '+k.slice(0,p)+' '+k.slice(p+1);
+ sendText('נשלח',line,'משימה').then(function(){var mm=sdMarks();mm[k]=1;sdSave(mm);sdBusy=false;sdFlush();}).catch(function(){sdBusy=false;});
+}
+function sdMark(id,i){
+ var m=sdMarks(),k=id+':'+i;
+ if(m[k]===undefined){m[k]=0;sdSave(m);}
+ sdPaint();sdFlush();
+}
+function sdFind(id,i){
+ var l=(D.sendlist||[]).filter(function(x){return x.id===id;})[0];
+ return l?l.items[Number(i)]:null;
+}
+function sdCopy(txt){
+ function fb(){var a=document.createElement('textarea');a.value=txt;a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.select();try{document.execCommand('copy');}catch(e){}a.remove();toast('ההודעה הועתקה');}
+ try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){toast('ההודעה הועתקה');}).catch(fb);return;}}catch(e){}
+ fb();
+}
+function sdSheet(){
+ var old=document.getElementById('sdSheet');if(old)old.remove();
+ var w=document.createElement('div');w.id='sdSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','הודעות לשליחה');
+ function body(){return sdHtml(D.sendlist,sdMarks());}
+ w.innerHTML='<div class="ycard"><b>📤 הודעות לשליחה</b>'
+  +'<div class="sdNote">ההודעות יוצאות מהוואטסאפ שלך, בשם שלך. לחיצה פותחת את הצ׳אט עם ההודעה מוכנה, ואתה לוחץ שלח.</div>'
+  +'<div id="sdBody">'+body()+'</div><button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+ function close(){w.remove();sdPaint();}
+ function redraw(){var b=document.getElementById('sdBody');if(b)b.innerHTML=body();sdPaint();}
+ w.onclick=function(e){
+  var t=e.target;if(t===w)return close();
+  while(t&&t!==w&&!(t.getAttribute&&t.getAttribute('data-a')))t=t.parentNode;
+  var a=t&&t.getAttribute&&t.getAttribute('data-a');
+  if(a==='x')return close();
+  if(a==='go'){sdMark(t.getAttribute('data-l'),t.getAttribute('data-i'));setTimeout(redraw,80);return;}
+  if(a==='cp'){var it=sdFind(t.getAttribute('data-l'),t.getAttribute('data-i'));if(it)sdCopy(it.text);}
+ };
+ document.body.appendChild(w);
+ sdFlush();
+}
+on('gSend',function(){sdSheet();setTimeout(sdPaint,60);});
 
 
 
