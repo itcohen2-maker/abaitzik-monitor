@@ -18034,6 +18034,9 @@ function boardSheet(wk){
    if(pu.length)return {s:'ok',t:t,n:pu.length,items:pu.map(function(x){return {s:'ok',n:String(x.name||'').split(' (')[0],why:'עלה'};})};}
   if(r.id==='car'){var cu=[];try{cu=CAR.filter(function(c){return c.up===dm(d);});}catch(e){}
    if(cu.length)return {s:'ok',t:t,items:cu.map(function(c){return {s:'ok',n:'🎠 '+c.t,why:'עלתה'+(c.where?' ל '+c.where:'')};})};}
+  // 12.11.2026, Itzik: "חסר הסימון של מה בצלחת שאני מעלה". Plate stories have no set time by default, so the hand mark never showed:
+  // today, with stories ready in the queue, the row shows ✋ "לפי הסדר, אתה מעלה".
+  if(!t&&r.id==='pl'&&d===T0){var pk=stock('pl');if(pk)return {s:'hand',t:'',items:[{s:'hand',n:pk+' מוכנים במלאי',why:'לפי הסדר, אתה מעלה'}]};}
   // by hand: a reminder at the planned time, if there is something ready
   if(!t)return {s:'',t:''};
   var have=stock(r.id);
