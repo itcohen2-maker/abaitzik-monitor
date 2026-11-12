@@ -21616,6 +21616,19 @@ if(location.hash==='#chat'){
  openAnswers('all',true);
  ansOnly=id;renderAnswers();
 })();
+// 12.11.2026, Itzik: "הלינק הוא לא מעביר לסרטון". A link ending in #file=<name> opens that private file
+// (video, image, PDF) in the viewer, with its comment box; fileOpen waits until the page has decrypted.
+(function(){
+ var mm=/^#file=(.+)$/.exec(location.hash||'');if(!mm)return;
+ var fn=mm[1];try{fn=decodeURIComponent(fn);}catch(e){}
+ fn=fn.replace(/^files[/]/,'');
+ try{if(history&&history.replaceState)history.replaceState(null,'',location.pathname);}catch(e){}
+ // the personal code may still be typed in, so wait for the page to open, up to 10 minutes
+ var n=0,iv=setInterval(function(){
+  if(typeof GKEY!=='undefined'&&GKEY&&D&&D.files){clearInterval(iv);fileOpen(fn);}
+  else if(++n>600)clearInterval(iv);
+ },1000);
+})();
 if(location.hash==='#sent'){
  fSaid.textContent='הקובץ נשלח. הוא מחכה לי במייל.';
  pane('m');
