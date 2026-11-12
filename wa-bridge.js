@@ -433,6 +433,8 @@ async function onMessage(m, contactName) {
       if (tn && qt && QK.isDisconnect(qt)) return quickDisconnect(m, tn);
       if (qt && QK.looksLikeConnect(qt) && (!tn || QK.parse(qt))) return quickConnect(m, qt, contactName, tn); }
     if (tn) return tenantMessage(m, tn, contactName);
+    // 12.11: on Itzik's own instance a stranger becomes a lead (lib/wa-stranger.js); on any other instance he is still dropped.
+    if (isOwnerInstance()) return strangerMessage(m, contactName);
     log('not on the allow list: ' + String(m.from).slice(0, 5) + '...'); return;
   }
   markRead(m.id);
@@ -536,6 +538,25 @@ async function tenantSend(to, text) {
   A number mapped to another monitor is never remapped. At most 3 replies a day to one number (QK.allowReply).
   "ניתוק" from a mapped number leaves a remove request.
 */
+/*
+  12.11.2026, Itzik: "כל מי שכותב למספר ואינו לקוח ייכנס כליד אצלך ויקבל תשובה אוטומטית." See lib/wa-stranger.js.
+  The text is stored as data (a biz record, a 📋 לטיפול item, a push) and never reaches a Claude session.
+*/
+let strangerDeps = null;
+async function strangerMessage(m, contactName) {
+  markRead(m.id);
+  const H = require('./lib/handle.js');
+  const d = strangerDeps || {
+    handle: function (o) { return H.add(DATA, o); },
+    publish: function () { H.publishSoon(); },
+    notify: function (title, text) { require('child_process').execFile(process.execPath, [path.join(__dirname, 'notify.js'), '--urgent', title, text], { cwd: __dirname, timeout: 60000 }, function (e) { if (e) log('stranger push failed: ' + e.message); }); },
+    voice: voiceText,
+  };
+  try {
+    const r = await require('./lib/wa-stranger.js').intake(DATA, m, Object.assign({ name: contactName, textOf: textOf, send: tenantSend, log: log, voice: voiceText }, d));
+    log('stranger ' + String(m.from).slice(0, 5) + '...: ' + (r.skipped ? 'skipped ' + r.skipped : (r.created ? 'new lead' : 'appended') + (r.replied ? ', replied' : '') + (r.pushed ? ', pushed' : '')));
+  } catch (e) { log('!! stranger lead failed: ' + e.message); }
+}
 async function quickReply(m, text) {
   if (!QK.allowReply(DATA, m.from)) { log('quick connect: reply limit for ' + String(m.from).slice(0, 5) + '...'); return; }
   await tenantSend(m.from, text);
@@ -1276,4 +1297,4 @@ if (require.main === module) {
   setInterval(function () { try { require('./forms.js').sweep(formNotify); } catch (e) { log('forms sweep: ' + e.message); } }, 60000);
   setInterval(function () { try { require('./setup.js').sweep(formNotify); } catch (e) { log('setup sweep: ' + e.message); } }, 60000);
 }
-module.exports = { connectCodeOk, waConnect, kapsoProject, kapsoEvent, textOf, sigOk, voiceCommand, speakable, shortOf, isAllCommand, route, onMessage, sweep, outboxSweep, _set: function (o) { if (o.push) pushItzik = o.push; if (o.waSend) waSend = o.waSend; if (o.markRead) markRead = o.markRead; } };
+module.exports = { connectCodeOk, waConnect, kapsoProject, kapsoEvent, textOf, sigOk, voiceCommand, speakable, shortOf, isAllCommand, route, onMessage, sweep, outboxSweep, _set: function (o) { if (o.push) pushItzik = o.push; if (o.waSend) waSend = o.waSend; if (o.markRead) markRead = o.markRead; if (o.stranger !== undefined) strangerDeps = o.stranger; } };

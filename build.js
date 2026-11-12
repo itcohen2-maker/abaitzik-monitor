@@ -1504,7 +1504,8 @@ function tenantCircleLinks(inst) {
 function tenantTools(inst) {
   if (!inst || inst.name === 'abaitzik') return '';
   return '\n  <div class="row" id="blkTools" role="group" aria-label="יומן ואימונים">'
-    + '\n   <button type="button" class="ic" id="icConn"><span class="c c-cn">🔌</span>חיבורים</button>'
+    // 12.11.2026, Itzik: "יש גם אריח חיבורים וגם אייקון חיבורים. למה צריך את שניהם?" One door: the 🔌 tile (gConn,
+    // bigger, never hidden, blinks until connected). The round icon is gone from customers' pages.
     // 11.11.2026, Itzik: "תוריד את האריח פתקים, תעביר אותו לאייקון קטן". The notes app stays in every monitor, as a round icon.
     // 12.11.2026, Itzik: "אייקון של מצב אישי כמו בסרטון", in every monitor (personalSheet).
     + '\n   <button type="button" class="ic icNew" id="icPersonal" data-new="1"><span class="c c-ps">🏡</span>מצב אישי</button>'
@@ -19600,7 +19601,7 @@ function bizSheet(t0){
     One line per lead (date, name, where from, status); a tap opens it: the last words, reply, status, note, delete.
     Status, note and delete go as "ליד [<id>]: ..." and the listener applies them with no model (lib/leads.js).
   */
-  var LD_SRC={site:'🌐 אתר','fb-comment':'📘 תגובה במודעה','ig-comment':'📸 תגובה במודעה',messenger:'💬 מסנג׳ר','ig-dm':'📸 הודעה באינסטגרם',leadform:'📝 טופס מטא',manual:'✍️ ידני',aff:'🤝 שותף'};
+  var LD_SRC={site:'🌐 אתר','fb-comment':'📘 תגובה במודעה','ig-comment':'📸 תגובה במודעה',messenger:'💬 מסנג׳ר','ig-dm':'📸 הודעה באינסטגרם',leadform:'📝 טופס מטא',manual:'✍️ ידני',aff:'🤝 שותף',whatsapp:'💬 וואטסאפ'};
   var LD_INBOX='https://business.facebook.com/latest/inbox/all?asset_id=1341874565686928&business_id=2131000707784066';
   function ldWa(p){var d=String(p||'').replace(/[^0-9]/g,'');if(!d)return '';if(d.charAt(0)==='0')d='972'+d.slice(1);return 'https://wa.me/'+d;}
   // The site chat sends its raw answers ([Chat Lead], Answers:, stage: mockups); shown in words.
