@@ -32,7 +32,8 @@ test('the card and its blink are in the built page', () => {
   assert.ok(html.includes('#waCard::before{') && /#waCard::before\{[^}]*animation:alertfade 3\.4s/.test(html), 'must use the shared alertfade');
   assert.ok(!html.includes('waglow'), 'no glow, no pulse (10.11)');
   assert.ok(html.includes('#waCard::before{animation:none;opacity:.55}'), 'reduced motion fallback missing');
-  assert.ok(html.includes("if(connNone()||waPending())['gConn','icConn']"), 'the 🔌 tile must blink too');
+  assert.ok(html.includes("on=connNone()||!!waPending();}catch(e){}\n ['gConn','icConn'].forEach(function(id){var t=document.getElementById(id);if(t){t.classList.toggle('connAlert',on)"), 'the 🔌 tile and icon must blink too (12.11: connAlert)');
+  assert.ok(html.includes('.ic.connAlert .c{animation:connFlash'), 'a clear flash, not the soft fade');
 });
 
 test('shown when wa is on and not connected, with the quick connect link', () => {

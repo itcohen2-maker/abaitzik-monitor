@@ -3137,6 +3137,11 @@ section#talkCard.talk{padding:8px 10px;gap:6px 10px;margin-bottom:8px}
 #waCard p{margin:0 0 12px;font-size:14.5px;opacity:.95}
 #waCard a.wcB{display:block;text-align:center;background:#25d366;color:#04271a;border-radius:14px;padding:14px;font:800 17px Heebo,sans-serif;text-decoration:none}
 @media(prefers-reduced-motion:reduce){#waCard::before{animation:none;opacity:.55}}
+/* 12.11.2026, Itzik: "האייקון צריך להבהב, נקודה". 🔌 until connected: a clear amber flash on the round icon and the tile. */
+@keyframes connFlash{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,0);filter:none}50%{box-shadow:0 0 0 4px #f59e0b,0 0 22px 6px rgba(245,158,11,.85);filter:brightness(1.25)}}
+.ic.connAlert .c{animation:connFlash 1.1s ease-in-out infinite!important;background:#f59e0b!important}
+.gt.connAlert{animation:connFlash 1.1s ease-in-out infinite!important;border-color:#f59e0b!important}
+@media(prefers-reduced-motion:reduce){.ic.connAlert .c,.gt.connAlert{animation:none!important;box-shadow:0 0 0 4px #f59e0b!important}}
 #connSheet a.cnb{background:#0891b2;color:#fff;border-radius:10px;padding:9px 12px;font-weight:700;text-decoration:none;font-size:14px;white-space:nowrap;flex:none}
 #connSheet a.cnb.again{background:#e5e7eb;color:#374151}
 .cald{margin:14px 0 4px;font:700 16px Heebo,sans-serif;color:var(--ink)}
@@ -19213,7 +19218,12 @@ function waCard(){
 }
 //waCard end
 function connNone(){var C=D&&D.conn;return !!(C&&C.rows&&C.rows.length&&!C.rows.some(function(r){return r.on&&!r.fixed;}));}
-try{if(connNone()||waPending())['gConn','icConn'].forEach(function(id){var t=document.getElementById(id);if(t)t.classList.add('taskblink');});}catch(e){}
+// 12.11.2026, Itzik: "חיבורים, שזה הדבר הכי חשוב במוניטור, לא מהבהב ללקוח חדש. האייקון צריך להבהב, נקודה." The soft
+// colour fade (taskblink) was too quiet to notice, so 🔌 gets its own clear blink (connAlert, CSS next to #waCard) until a
+// real service and WhatsApp are connected, and it is applied again every few seconds so no repaint can drop it.
+function connAlert(){var on=false;try{on=connNone()||!!waPending();}catch(e){}
+ ['gConn','icConn'].forEach(function(id){var t=document.getElementById(id);if(t){t.classList.toggle('connAlert',on);if(on)t.classList.remove('taskblink');}});}
+try{connAlert();setInterval(connAlert,4000);}catch(e){}
 // 12.11: ▶️ תגובות ביוטיוב, the public comments of the channel given in 🔌 (D.yt). Read only: answering happens on YouTube.
 function ytSheet(){
  var old=document.getElementById('ytSheet');if(old)old.remove();
