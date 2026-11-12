@@ -1160,6 +1160,7 @@ function build() {
     const pio = require('./lib/plan-io.js');
     if (inst.name === 'abaitzik') payload.planBoard = pio.board(inst.dataPath, Date.now());
     else payload.plan = require('./lib/plan.js').view(pio.statusOf(inst.name, path.join(inst.dataPath, 'status'), Date.now()));
+    if (inst.name !== 'abaitzik') payload.payOffer = require('./lib/pay-offer.js').view(inst.name);
   } catch (e) { console.error('plan: ' + e.message); }
   const DATA_DIR2 = path.join(OUT_DIR, 'data');
   fs.mkdirSync(DATA_DIR2, { recursive: true });

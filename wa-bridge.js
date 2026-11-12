@@ -746,19 +746,22 @@ async function payDone(u, s) {
   const who = payWho(ext);
   if (!fs.existsSync(rec)) {
     const p = await P.getPayment(pid);
-    if (!P.paymentOk(p)) throw new Error('payment ' + pid + ' not valid');
+    const PO = require('./lib/pay-offer.js'), of = PO.live(ext);
+    if (!P.paymentOk(p, of ? PO.total(of) : 0)) throw new Error('payment ' + pid + ' not valid');
     const out = { at: new Date().toISOString(), tenant: ext, paymentId: Number(pid), customerId: p.CustomerID, amount: p.Amount, recurring: null };
     fs.writeFileSync(rec, JSON.stringify(out, null, 1));
     // The package: entry from now on (the plan file is read by the customer's worker and page).
     const pf = '/srv/monitor-changes/' + ext + '.plan.json';
     let st = {}; try { st = JSON.parse(fs.readFileSync(pf, 'utf8')); } catch (e) {}
     const month = require('./lib/plan.js').monthOf();
-    st = Object.assign({}, st, { plan: 'entry', month, extra: 0, applied: st.applied || [], history: (st.history || []).concat([{ at: out.at, kind: 'paid', plan: 'entry', paymentId: Number(pid) }]) });
+    const newPlan = (of && of.plan) || 'entry';
+    st = Object.assign({}, st, { plan: newPlan, month, extra: 0, applied: st.applied || [], history: (st.history || []).concat([{ at: out.at, kind: 'paid', plan: newPlan, paymentId: Number(pid) }]) });
     delete st.start;
     fs.writeFileSync(pf + '.tmp', JSON.stringify(st, null, 1)); fs.renameSync(pf + '.tmp', pf);
-    try { out.recurring = await P.startRecurring(p.CustomerID); } catch (e) { out.recurringError = e.message; log('pay recurring: ' + e.message); }
+    if (of) { try { PO.markPaid(ext, Number(pid)); } catch (e) { log('pay offer: ' + e.message); } }
+    try { out.recurring = await P.startRecurring(p.CustomerID, undefined, undefined, of ? of.monthly : null); } catch (e) { out.recurringError = e.message; log('pay recurring: ' + e.message); }
     fs.writeFileSync(rec, JSON.stringify(out, null, 1));
-    try { require('./lib/handle.js').complete({ key: 'paid-' + pid, kind: 'lead', who: who.name, title: 'שילם על חבילת הכניסה (' + p.Amount + ' ₪).' + (out.recurringError ? ' החיוב החודשי לא נפתח, לפתוח בסאמיט.' : ' החיוב החודשי נפתח מהחודש הבא.'), link: 'biz' }); } catch (e) { log('pay handle: ' + e.message); }
+    try { require('./lib/handle.js').complete({ key: 'paid-' + pid, kind: 'lead', who: who.name, title: (of ? 'שילם: ' + of.items.map(function (x) { return x.name; }).join(' + ') + ' (' : 'שילם על חבילת הכניסה (') + p.Amount + ' ₪).' + (out.recurringError ? ' החיוב החודשי לא נפתח, לפתוח בסאמיט.' : ' החיוב החודשי נפתח מהחודש הבא.'), link: 'biz' }); } catch (e) { log('pay handle: ' + e.message); }
     log('paid ' + ext + ' ' + pid);
   }
   s.writeHead(302, { Location: who.home ? who.home + '?paid=1' : 'https://it-solution.co.il/trial/?paid=1' });
@@ -831,7 +834,9 @@ async function api(q, s, u) {
     if (!P.ready()) { s.writeHead(503, h); return s.end('{"error":"pay"}'); }
     try {
       const who = payWho(vn);
-      const url = await P.beginEntry({ tenant: vn, name: who.name, email: who.email, phone: who.phone, redirect: 'https://wa.abaitzik.com/api/pay/done', cancel: who.home });
+      // 12.11.2026: a customer with an offer that Itzik turned on pays its own lines (lib/pay-offer.js).
+      const of = require('./lib/pay-offer.js').live(vn);
+      const url = await P.beginEntry({ tenant: vn, name: (of && of.name) || who.name, email: (of && of.email) || who.email, phone: who.phone, items: of ? of.items : null, redirect: 'https://wa.abaitzik.com/api/pay/done', cancel: who.home });
       s.writeHead(200, h); return s.end(JSON.stringify({ url }));
     } catch (e) { log('pay start: ' + e.message); s.writeHead(502, h); return s.end('{"error":"pay"}'); }
   }
