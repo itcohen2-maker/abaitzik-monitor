@@ -18356,10 +18356,10 @@ function handleSheet(req){
  };
  document.body.appendChild(w);
 }
+/*ITZIK:END*/
 /*
-  11.11.2026, Itzik on Dr. Shulman: "תסמן באיזה שעות הוא נכנס, כמה זמן, ותעדכן אותי באריח מהבהב".
-  A customer's page (D.visitKey) sends start when it is on screen, beat every minute while it stays, end when hidden
-  (lib/visits.js on wa-bridge). Itzik's tile 👀 כניסות לקוחות lists them and blinks until he opens it after a new one.
+  Page activity beacon (lib/visits.js on wa-bridge): start when on screen, beat every minute, end when hidden.
+  Outside the ITZIK block on purpose: a customer page needs it, and only the time and phone/computer are sent.
 */
 var VIS_API='https://wa.abaitzik.com/api/visit',visSid='',visOn=false,visTimer=0;
 function visDev(){var t=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Mac/.test(navigator.platform||''));return t?'phone':'computer';}
@@ -18373,6 +18373,7 @@ function visitStart(){
  document.addEventListener('visibilitychange',function(){if(document.hidden)visStop();else visBegin();});
  window.addEventListener('pagehide',visStop);
 }
+/*ITZIK:BEGIN*/
 function visAll(){
  var V=D&&D.visits,L=[];if(!V)return L;
  Object.keys(V).forEach(function(n){(V[n].list||[]).forEach(function(x){L.push({n:n,t:V[n].title||n,at:x.at,sec:x.sec,dev:x.dev});});});
