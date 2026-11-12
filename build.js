@@ -3262,6 +3262,8 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 .remreply summary{cursor:pointer;font-weight:700;padding:6px 0}
 .rem .remknow{margin-top:8px;padding:8px 16px;border:0;border-radius:10px;background:var(--yellow);color:#000;font:700 15px Heebo,sans-serif}
 .rem .remdel{margin-top:8px;margin-inline-start:6px;padding:8px 14px;border:1px solid var(--line,#555);border-radius:10px;background:transparent;color:inherit;font:600 14px Heebo,sans-serif}
+.remundo{display:flex;align-items:center;gap:10px;margin:0 0 10px;padding:8px 12px;border-radius:10px;background:var(--line,#2a2f38);font:600 14px Heebo,sans-serif}
+.remundo .remundoBtn{padding:6px 14px;border:0;border-radius:8px;background:var(--yellow);color:#000;font:700 14px Heebo,sans-serif}
 /* The three choices behind the יהודה tile. Its own sheet, so it borrows
    nothing from the panes and cannot disturb them. */
 .fttx{white-space:pre-wrap;text-align:right;line-height:1.6;font-size:16px;margin:10px 0;max-height:45vh;overflow:auto;user-select:text;-webkit-user-select:text}.fttx-en{margin:0 0 10px;font-size:13px;opacity:.75}.fttx-en div{white-space:pre-wrap;user-select:text;-webkit-user-select:text;margin-top:6px}.ysheet{position:fixed;inset:0;z-index:9999;background:rgba(10,14,22,.55);
@@ -4750,7 +4752,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <button type="button" class="gt gRec" data-grp="home" id="gRecipes"><b><img class="gi" src="icons/lolos-giraffe.png" alt=""> מתכונים</b><small>חוברת לולוס וספר המתכונים של איציק</small></button>
   <button type="button" class="gt g16" data-grp="money" id="gIsra" hidden><b>💳 ישראכרט יואל</b><small>הכרטיסים, מה לבקש, ומה ענו</small></button>
   <!-- איציק, 11.10: "כפתור להחליף מודל תמחק אותו". הכפתור gModel ירד ממסך הבית; הקוד שלו בודק שהוא קיים. -->
-  <button type="button" class="gt g10" data-grp="home" id="gFiles" data-new="1" data-upd="20261024-comment"><b>📁 הקבצים שלי</b><small>מה ששלחת ומה שנשלח לך, עם הורדה</small></button>
+  <button type="button" class="gt g10" data-grp="home" id="gFiles" data-new="1" data-upd="20261112-fiday"><b>📁 הקבצים שלי</b><small>מה ששלחת ומה שנשלח לך, עם הורדה</small></button>
   <button type="button" class="gt g8" data-grp="work" id="gHomestyle" data-new="1" data-upd="20261023-hs-quote3"><b>🏠 הום סטייל</b><small>חדש: הצעת מחיר ובקשה לאיש המחשבים</small></button>
   <button type="button" class="gt g10" data-grp="home" id="gCams" data-new="1" data-upd="20261022-privacy" data-files="cameras-tenants.png,cameras-tenants.pdf,cameras-erocam.txt"><b>📹 מצלמות</b><small>דף לדיירים: הברקוד, הסיסמה ושמונה שלבים</small></button>
   <!--
@@ -12876,8 +12878,12 @@ function renderReminders(){
  var rNow=Date.now(),RG=[['⏰ עכשיו והיום',[]],['📅 השבוע',[]],['🗓️ בהמשך',[]],['✅ נשלחו',[]]];
  R.forEach(function(r){var t=Date.parse(r.due);RG[r.sentAt?3:(isNaN(t)||t<rNow+864e5?0:t<rNow+7*864e5?1:2)][1].push(r);});
  host.innerHTML=R.length?RG.filter(function(g){return g[1].length;}).map(function(g){return '<h3 data-n="'+g[1].length+'">'+g[0]+'</h3><div>'+g[1].map(remOne).join('')+'</div>';}).join(''):'<div class="empty">אין תזכורת פתוחה.<br>לקבוע תזכורת, '+(FEM?'כתבי':'כתוב')+' למטה מה להזכיר ובאיזה יום.</div>';
+ // 12.11, Itzik's idea "רוצה את זה": a reminder set by mistake goes in one tap, and "בטל" brings it back for a few seconds.
+ if(remUndo)host.insertAdjacentHTML('afterbegin','<div class="remundo">נמחקה תזכורת. <button type="button" class="remundoBtn">בטל</button></div>');
  dwRe(host,{key:'rem',counts:'data',short:{'עכשיו והיום':'היום'}});
  wireBoxes(host);
+ var ub=host.querySelector('.remundoBtn');
+ if(ub)ub.onclick=remUndoUndo;
  Array.prototype.forEach.call(host.querySelectorAll('.remknow'),function(b){
   b.onclick=function(){
    var k=remKnown();k[b.getAttribute('data-k')]=1;
@@ -12889,13 +12895,26 @@ function renderReminders(){
   b.onclick=function(){clearIds('remGone',[b.getAttribute('data-k')]);notesSend(false);renderReminders();};
  });
  Array.prototype.forEach.call(host.querySelectorAll('.remdel'),function(b){
-  b.onclick=async function(){
-   if(!await uiConfirm('למחוק את התזכורת?','מחיקה',true))return;
+  b.onclick=function(){
    clearIds('remGone',[b.getAttribute('data-k')]);
    notesSend(false);
+   remUndoSet(b.getAttribute('data-k'));
    renderReminders();
   };
  });
+}
+// 12.11: the last deleted reminder, kept for 6 seconds so "בטל" can bring it back.
+var remUndo=null;
+function remUndoSet(k){
+ clearTimeout(remUndo&&remUndo.t);
+ remUndo={k:k,t:setTimeout(function(){remUndo=null;renderReminders();},6000)};
+}
+function remUndoUndo(){
+ if(!remUndo)return;
+ var d=clearedIds('remGone');delete d[remUndo.k];
+ try{localStorage.setItem('remGone',JSON.stringify(d));}catch(e){}
+ clearTimeout(remUndo.t);remUndo=null;
+ notesSend(false);renderReminders();
 }
 function renderAppts(){
  var host=document.getElementById('apBox');
@@ -13094,7 +13113,7 @@ function renderFiles(){
   return {f:g[0],tag:g.length>1};
  }).sort(function(a,b){return (a.f.at||'')<(b.f.at||'')?1:-1;});
  var h='',last=null;
- if(q){
+ if(q||dy){
   top.forEach(function(r){
    var d=day(r.f);
    if(d!==last){last=d;if(d)h+='<h3>'+esc(d)+'</h3>';}
@@ -13134,7 +13153,7 @@ on('gFiles',function(){pane('Fi');renderFiles();});
 // 22.10: the page he forwards to the tenants, barcode and steps in one image (the text and a PDF beside it).
 on('gCams',function(){fileOpen('cameras-tenants.png');});
 /* 21.10, Itzik's idea "חיפוש בתוך הקבצים שלי": the list narrows as he types a part of the name. */
-document.addEventListener('input',function(e){if(e.target&&e.target.id==='fiQ')renderFiles();});
+document.addEventListener('input',function(e){if(e.target&&(e.target.id==='fiQ'||e.target.id==='fiDay'))renderFiles();});
 /*ITZIK:BEGIN*/
 function renderSale(){
  var box=document.getElementById('saleBox');if(!box)return;
