@@ -32,6 +32,14 @@ NOW = ('(from:ilcargo.com OR from:yaele@extraretail.co.il OR from:rinatb@extrare
 
 LABEL = 'הום סטייל'
 
+# 12.11 Itzik: "אם המיילים לא מוכרים וממשיכים ... פעם הבאה שיופיעו, תעשה אותם כספאם ותחסום".
+# it-solution.co.il was someone else's domain before 27.10.2026, and Forward Email passes every
+# address to his Gmail, so mail for the old owner's people (tamiz@, iditl@) lands with him.
+# Mail to an address of the domain that is not one of his goes to spam (Gmail learns the sender).
+OURS = ('info', 'contact', 'conect')
+STRANGERS = ('to:it-solution.co.il ' + ' '.join('-to:%s@it-solution.co.il' % a for a in OURS)
+             + ' -from:it-solution.co.il -from:itcohen2@gmail.com -in:spam -in:trash')
+
 
 def mutf7(name):
     # IMAP folder names are modified UTF-7 (RFC 3501), quoted.
@@ -81,7 +89,12 @@ def main():
         ids = b','.join(ship).decode()
         m.uid('STORE', ids, '+X-GM-LABELS', '(' + box + ')')
         m.uid('STORE', ids, '-X-GM-LABELS', '(\\Inbox)')
-    print(f'moved to trash: {len(uids)}, shipments labelled: {len(ship)}, out of trash: {len(back)}')
+    m.literal = STRANGERS.encode('utf8')
+    _, data = m.uid('SEARCH', 'CHARSET', 'UTF-8', 'X-GM-RAW')
+    odd = data[0].split()
+    if odd:
+        m.uid('MOVE', b','.join(odd).decode(), '"[Gmail]/Spam"')
+    print(f'moved to trash: {len(uids)}, shipments labelled: {len(ship)}, out of trash: {len(back)}, strangers to spam: {len(odd)}')
     m.logout()
 
 
