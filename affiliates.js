@@ -189,7 +189,7 @@ function tablePage(tok, a) {
       + (x.won ? nis(x.grant) + (x.monthly ? '<br><small>+ ' + nis(x.monthly) + ' לחודש (' + x.pct + '%)</small>' : '') : '·') + '</td></tr>';
   });
   t += '</tbody></table></div>';
-  if (sr.visits || sr.signups) t += '<div class="card">בקישור ההרשמה שלך: ' + sr.visits + ' כניסות, ' + sr.signups + ' נרשמו לשבוע ניסיון.</div>';
+  // 12.11.2026, Itzik: a referrer has no trial signup link ("אין לו לינק"), so no signup line on his table.
   t += howItWorks(a);
   if (!a.signed) t += signBlock(tok, a);
   return t + '<p class="small">מענק סגירה ' + nis(a.grant) + ' אחרי שהלקוח שילם את החודש הראשון, ו ' + a.pct + '% מהמנוי החודשי למשך ' + a.months + ' חודשים'
