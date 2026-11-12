@@ -572,7 +572,7 @@ function alertWaitlist(text) {
 
 // 21.10: the same lead also lands in העסק שלי, so he sees it in the monitor
 // and can mark it handled. See leadFromSite in lib/biz.js.
-function saveSiteLead(text, at) {
+function saveSiteLead(text, at, own) {
   const id = 'biz-' + at.replace(/\D/g, '').slice(0, 14) + '-site';
   const r = require('./lib/biz.js').leadFromSite(text, at, id);
   if (!r) return;
@@ -582,7 +582,7 @@ function saveSiteLead(text, at) {
   try { fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(path.join(dir, id + '.json'), JSON.stringify(r, null, 1), 'utf8'); say('ליד נכנס לעסק שלי: ' + r.name); }
   catch (e) { say('!! ליד לא נכנס לעסק שלי: ' + e.message); return; }
   // 12.11.2026: a site lead that came through a referrer's link (?ref=shai) goes on his table too (affiliates.js).
-  if (inst.name === 'abaitzik') { try { const who = require('./affiliates.js').linkSiteLead(text, r); if (who) say('ליד מהאתר נכנס גם לטבלה של ' + who); } catch (e) { say('!! טבלת שותף: ' + e.message); } }
+  if (inst.name === 'abaitzik' && !own) { try { const who = require('./affiliates.js').linkSiteLead(text, r); if (who) say('ליד מהאתר נכנס גם לטבלה של ' + who); } catch (e) { say('!! טבלת שותף: ' + e.message); } }
 }
 
 /*
@@ -682,7 +682,15 @@ function recordIncoming(m) {
     fs.mkdirSync(CHAT, { recursive: true });
     fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
     say((codeOk ? 'נרשם בצ׳אט עם אישור קבלה: ' : 'נרשם בלי קוד, ממתין לאימות: ') + text.slice(0, 60));
-    if (rec.heldWhy === 'lead') { try { if (!require('./lib/biz.js').isTestLead(text)) { const nm = /(?:שם|name)\s*[:：]\s*([^\n]{1,60})/i.exec(text); require('./lib/handle.js').add(inst.dataPath, { key: 'lead:' + rec.at, kind: 'lead', who: nm ? nm[1] : 'ליד מהאתר', title: (siteLeadLabel(text) || 'ליד חדש מהאתר') + ', לחזור אליו', link: 'biz', at: rec.at }); } } catch (e) { say('!! לטיפול: ' + e.message); } alertLead(text); saveSiteLead(text, rec.at); }
+    if (rec.heldWhy === 'lead') {
+      // 12.11.2026, Itzik: a lead from his own phone or mail is a test: it is created and shown greyed, but it makes no
+      // 📋 לטיפול item, no alert and no urgent push (lib/own-leads.js).
+      const own = require('./lib/own-leads.js').isOwnText(inst.dataPath, text);
+      try { if (!own && !require('./lib/biz.js').isTestLead(text)) { const nm = /(?:שם|name)\s*[:：]\s*([^\n]{1,60})/i.exec(text); require('./lib/handle.js').add(inst.dataPath, { key: 'lead:' + rec.at, kind: 'lead', who: nm ? nm[1] : 'ליד מהאתר', title: (siteLeadLabel(text) || 'ליד חדש מהאתר') + ', לחזור אליו', link: 'biz', at: rec.at, bizId: 'biz-' + rec.at.replace(/\D/g, '').slice(0, 14) + '-site' }); } } catch (e) { say('!! לטיפול: ' + e.message); }
+      if (!own) alertLead(text);
+      saveSiteLead(text, rec.at, own);
+      if (own) { say('ליד מהאתר מהכתובת או הטלפון שלך: סומן בדיקה, בלי התראה'); try { require('./lib/handle.js').publishSoon(); } catch (e) { /* the next build carries it */ } }
+    }
     if (rec.heldWhy === 'waitlist') alertWaitlist(text);
     if (rec.heldWhy === 'login-wait') alertLoginWait(text);
     if (rec.heldWhy === 'shachar-feedback') alertShacharFeedback(text);
@@ -846,6 +854,29 @@ function recordIncoming(m) {
         }
       } catch (e) { /* the page drops the item on the next build anyway */ }
       try { publishChat(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
+    /*
+      12.11.2026, Itzik: "תיתן לי אפשרות חוץ מטופל גם למחוק אותו, הליד שנכנס זה אני הייתי." The page sends
+      "🗑 מחיקת ליד: <bizId>" after its own confirm. Applied here with no model and silently, like "✓ טופל": the lead's biz
+      record, its 📋 לטיפול items and its chat message MOVE to data/_deleted/<YYYYMMDD>/ (lib/lead-delete.js), never erased.
+    */
+    const ldD = codeOk && inst.biz && require('./lib/lead-delete.js').parse(text);
+    if (ldD) {
+      let res;
+      try { res = require('./lib/lead-delete.js').apply(inst.dataPath, ldD.id); say('מחיקת ליד: ' + ldD.id + ' | ' + (res.ok ? res.moved.map((x) => x.kind).join(',') : res.reply)); }
+      catch (e) { res = { ok: false, reply: 'לא הצלחתי למחוק את הליד (' + e.message + ')', err: true }; say('!! מחיקת ליד: ' + e.message); }
+      rec.status = 'done';
+      // silent when it worked, and also when the lead is already gone (the phone hid it already); only a failure answers
+      try {
+        if (!res.err) fs.unlinkSync(path.join(CHAT, name));
+        else {
+          fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+          fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-lead-del-ack.json')),
+            JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id, text: res.reply, status: 'done' }, null, 1), 'utf8');
+        }
+      } catch (e) { /* the next build carries it */ }
+      try { require('./lib/handle.js').publishSoon(); } catch (e) { /* the next build carries it */ }
       return true;
     }
     /*

@@ -114,9 +114,9 @@ async function scan(tk) {
   fs.writeFileSync(STATUS, JSON.stringify(st, null, 1), 'utf8');
 
   if (!first) {
-    added.forEach((n) => {
+    added.filter((n) => !n.test).forEach((n) => { // 12.11.2026: his own phone or mail is a test, no item and no alert
       const where = leads.SOURCES[n.source] || n.source;
-      try { require('./lib/handle.js').add(inst.dataPath, { key: 'lead:' + n.id, kind: 'lead', who: n.name, title: 'ליד חדש (' + where + '), לחזור אליו', link: 'biz', at: n.at }); }
+      try { require('./lib/handle.js').add(inst.dataPath, { key: 'lead:' + n.id, kind: 'lead', who: n.name, title: 'ליד חדש (' + where + '), לחזור אליו', link: 'biz', at: n.at, bizId: n.id }); }
       catch (e) { console.log('!! handle: ' + e.message); }
       try { console.log(execFileSync(process.execPath, ['notify.js', '--urgent', '🔔 ליד חדש: ' + n.name, where + (n.last ? ': "' + n.last.slice(0, 120) + '"' : '') + '. בעסק שלי, IT Solution, כל הלידים.'], { cwd: __dirname, encoding: 'utf8', timeout: 60000 }).trim()); }
       catch (e) { console.log('!! notify: ' + e.message); }
