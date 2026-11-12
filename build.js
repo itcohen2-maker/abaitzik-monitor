@@ -19839,7 +19839,7 @@ function bizSheet(t0){
   function bodyFor(t2){var s0=tab;tab=t2;try{return body();}finally{tab=s0;}}
   var dueN=((S&&S.staleLeads)||[]).length+((S&&S.due)||[]).length;
   var liN=(D.liPosts||[]).length;
-  var tabs=[['its','💻','IT Solution'],['leads','👥','לידים ולקוחות'],['money','💰','כסף החודש'],['due','⏰','צריך לחזור',dueN],['li','🔗','לינקדין',liN],['shachar','🌅','שחר']/*ITZIK:BEGIN*/,['ner','🕯️','נרות']/*ITZIK:END*/,['anim','🧠','המשרד']];
+  var tabs=[['its','💻','IT Solution'],['leads','🔔','לידים ולקוחות'],['money','💰','כסף החודש'],['due','⏰','צריך לחזור',dueN],['li','🔗','לינקדין',liN],['shachar','🌅','שחר']/*ITZIK:BEGIN*/,['ner','🕯️','נרות']/*ITZIK:END*/,['anim','🧠','המשרד']];
   if(INSTANCE&&INSTANCE.clalit)tabs.push(['docs','🏥','מסמכים']);
   ((D.agr&&D.agr.clients)||[]).forEach(function(c,i){tabs.splice(1+i,0,['agr'+i,'🩺',c.tab||c.client]);});
   // 1.11.2026: the client demo starts from here (lib/demo-mode.js).
