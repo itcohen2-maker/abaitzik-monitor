@@ -684,7 +684,32 @@ function readBody(q, max) {
 function formNotify(kind, text) {
   try { require("child_process").execFile(process.execPath, [path.join(__dirname, "notify.js"), "✍️ " + kind, String(text).split(String.fromCharCode(10)).slice(0, 3).join(String.fromCharCode(10))], { cwd: __dirname, timeout: 60000 }, function (e) { if (e) log("form push failed: " + e.message); }); } catch (e) { log("form push failed: " + e.message); }
   toMonitor(kind, text).then(function (id) { log('form -> ntfy-' + id); }, function (e) { log('form notify failed: ' + e.message); }); }
-function codeOk(c) { const o = ownerCode(); return !!o && String(c || '') === o; }
+/*
+  12.11.2026 security: the owner code opens /api/* from anywhere, so a wrong code is counted per address.
+  30 wrong codes in 15 minutes lock that address for 30 minutes. An empty code (a page still loading) and the
+  previous code (data/owner-code.prev.txt, a page opened before a rotation) are refused without counting,
+  so Itzik's own phone never locks itself out. Compared in constant time.
+*/
+function codeOk(c) {
+  const o = ownerCode(), x = String(c || '');
+  return !!o && x.length === o.length && crypto.timingSafeEqual(Buffer.from(x), Buffer.from(o));
+}
+const codeFails = new Map();
+// Caddy sets X-Forwarded-For itself; the last entry is the address it saw.
+function realIp(q) { return String(q.headers['x-forwarded-for'] || q.socket.remoteAddress || '-').split(',').pop().trim(); }
+function codeLocked(q) { const r = codeFails.get(realIp(q)); return !!(r && r.until > Date.now()); }
+function codeFail(q, c) {
+  const x = String(c || '');
+  if (!x) return;
+  try { if (x === fs.readFileSync(path.join(ROOT, 'data', 'owner-code.prev.txt'), 'utf8').trim()) return; } catch (e) {}
+  const ip = realIp(q), now = Date.now();
+  let r = codeFails.get(ip);
+  if (!r || now - r.first > 15 * 60e3) r = { n: 0, first: now, until: 0 };
+  r.n++;
+  if (r.n >= 30 && !r.until) { r.until = now + 30 * 60e3; log('code lock ' + ip); }
+  codeFails.set(ip, r);
+  if (codeFails.size > 5000) codeFails.clear();
+}
 /*
   7.11: every customer's monitor has the fast chat. Its key sits in its own data/fc-key.txt (sealed in its
   page) and here in data/fastchat/tenants.json { name: { key, dir, business } }. Its thread lives here under
@@ -773,7 +798,7 @@ async function api(q, s, u) {
   // data/signup/queue/ for its trial monitor (setup/signup-provision.sh), and lands in Itzik's 📋 לטיפול.
   if (u.pathname === '/api/signup' || u.pathname === '/api/signup/verify' || u.pathname === '/api/signup/profile' || u.pathname === '/api/signup/status') {
     const S = require('./lib/signup.js'), M = require('./lib/mailer.js');
-    const ip = String(q.headers['x-forwarded-for'] || q.socket.remoteAddress || '-').split(',')[0].trim();
+    const ip = String(q.headers['x-forwarded-for'] || q.socket.remoteAddress || '-').split(',').pop().trim();
     const send = function (code, o) { s.writeHead(code, h); s.end(JSON.stringify(o)); };
     try {
       // 11.11: the questionnaire while the monitor is built, and the build status (both need the page token from verify)
@@ -817,16 +842,17 @@ async function api(q, s, u) {
     s.writeHead(200, h); return s.end('{"ok":true}');
   }
   // 7.11: a customer's monitor talks to its own chat with its own key (data/fastchat/tenants.json).
+  if (codeLocked(q)) { s.writeHead(429, h); return s.end('{"error":"wait"}'); }
   if (/^\/api\/chat(\/thread|\/todo)?$/.test(u.pathname) && !codeOk(b.code)) {
     const tn = tenantByKey(b.code);
-    if (!tn) { s.writeHead(403, h); return s.end('{"error":"code"}'); }
+    if (!tn) { codeFail(q, b.code); s.writeHead(403, h); return s.end('{"error":"code"}'); }
     // 11.11.2026: a customer's chat and trainings run on the customers' API key, never on Itzik's subscription.
     let cst; try { cst = require('./lib/sales-train.js').forCustomer(); } catch (e) { log('customer chat: ' + e.message); s.writeHead(503, h); return s.end('{"error":"key"}'); }
     const r = await require('./lib/fast-chat.js').chatApi(u.pathname, b, { llm: cst.llm, salesTrain: cst, dataPath: path.join(DATA, 'fastchat', 't', tn.name),
       toMonitor: tenantToMonitor(tn), owner: false, business: tn.business || '', enabled: true, context: () => chatContext(tn) });
     s.writeHead(r.status, h); return s.end(JSON.stringify(r.json));
   }
-  if (!codeOk(b.code)) { s.writeHead(403, h); return s.end('{"error":"code"}'); }
+  if (!codeOk(b.code)) { codeFail(q, b.code); s.writeHead(403, h); return s.end('{"error":"code"}'); }
   const send = function (o) { s.writeHead(200, h); s.end(JSON.stringify(o)); };
   // 10.11: Itzik's own monitor page says it was opened (lib/owner-open.js). Only the owner code gets here.
   if (u.pathname === '/api/owner-open') {
@@ -886,7 +912,7 @@ const server = http.createServer(function (q, s) {
     if (q.method !== 'POST') { s.writeHead(405); return s.end(); }
     readBody(q, 700000).then(function (raw) {
       let b; try { b = JSON.parse(raw.toString('utf8')); } catch (e) { s.writeHead(400); return s.end('{}'); }
-      const ip = String(q.headers['x-forwarded-for'] || q.socket.remoteAddress || '').split(',')[0].trim();
+      const ip = String(q.headers['x-forwarded-for'] || q.socket.remoteAddress || '').split(',').pop().trim();
       require('./docsign.js').handlePost(b, formNotify, ip, q.headers['user-agent'], function (r) { s.writeHead(r.status, { 'Content-Type': 'application/json' }); s.end(JSON.stringify(r.body)); });
     }).catch(function () { try { s.writeHead(400); s.end('{}'); } catch (e) {} });
     return;
@@ -898,7 +924,7 @@ const server = http.createServer(function (q, s) {
     if (q.method !== 'POST') { s.writeHead(405); return s.end(); }
     readBody(q, 700000).then(function (raw) {
       let b; try { b = JSON.parse(raw.toString('utf8')); } catch (e) { s.writeHead(400); return s.end('{}'); }
-      const ip = String(q.headers['x-forwarded-for'] || q.socket.remoteAddress || '').split(',')[0].trim();
+      const ip = String(q.headers['x-forwarded-for'] || q.socket.remoteAddress || '').split(',').pop().trim();
       require('./agrsign.js').handlePost(b, formNotify, ip, q.headers['user-agent'], function (r) { s.writeHead(r.status, { 'Content-Type': 'application/json' }); s.end(JSON.stringify(r.body)); });
     }).catch(function () { try { s.writeHead(400); s.end('{}'); } catch (e) {} });
     return;
@@ -910,7 +936,7 @@ const server = http.createServer(function (q, s) {
     if (q.method !== 'POST') { s.writeHead(405); return s.end(); }
     readBody(q, 700000).then(function (raw) {
       let b; try { b = JSON.parse(raw.toString('utf8')); } catch (e) { s.writeHead(400); return s.end('{}'); }
-      const ip = String(q.headers['x-forwarded-for'] || q.socket.remoteAddress || '').split(',')[0].trim();
+      const ip = String(q.headers['x-forwarded-for'] || q.socket.remoteAddress || '').split(',').pop().trim();
       require('./ndasign.js').handlePost(b, formNotify, ip, q.headers['user-agent'], function (r) { s.writeHead(r.status, { 'Content-Type': 'application/json' }); s.end(JSON.stringify(r.body)); });
     }).catch(function () { try { s.writeHead(400); s.end('{}'); } catch (e) {} });
     return;
@@ -923,7 +949,7 @@ const server = http.createServer(function (q, s) {
     if (q.method !== 'POST') { s.writeHead(405); return s.end(); }
     readBody(q, 600000).then(function (raw) {
       let b; try { b = JSON.parse(raw.toString('utf8')); } catch (e) { s.writeHead(400); return s.end('{}'); }
-      const ip = String(q.headers['x-forwarded-for'] || q.socket.remoteAddress || '').split(',')[0].trim();
+      const ip = String(q.headers['x-forwarded-for'] || q.socket.remoteAddress || '').split(',').pop().trim();
       const r = require('./sign.js').handlePost(b, formNotify, ip, q.headers['user-agent']);
       s.writeHead(r.status, { 'Content-Type': 'application/json' }); s.end(JSON.stringify(r.body));
     }).catch(function () { try { s.writeHead(400); s.end('{}'); } catch (e) {} });
