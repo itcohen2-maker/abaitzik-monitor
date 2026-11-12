@@ -909,11 +909,13 @@ const server = http.createServer(function (q, s) {
   if (rm && q.method === 'GET') { require('./affiliates.js').serve(rm[1], rm[2], s); return; }
   if (u.pathname === '/api/ref-lead') {
     if (q.method !== 'POST') { s.writeHead(405); return s.end(); }
-    readBody(q, 8000).then(function (raw) {
+    // 12.11: the referrer's signature on his terms comes the same way ({ sign:1 }), so the body may hold a PNG.
+    readBody(q, 450000).then(function (raw) {
       let b; try { b = JSON.parse(raw.toString('utf8')); } catch (e) { s.writeHead(400, { 'Content-Type': 'application/json' }); return s.end('{}'); }
       const ip = String(q.headers['x-forwarded-for'] || q.socket.remoteAddress || '-').split(',').pop().trim();
-      const r = require('./affiliates.js').handleLead(b, ip, function (k, t) { formNotify(k, t); });
-      if (r.ok) { try { require('child_process').execFile(process.execPath, [path.join(__dirname, 'push.js'), 'leads: affiliate'], { cwd: __dirname, timeout: 120000 }, function () {}); } catch (e) {} }
+      const A = require('./affiliates.js');
+      const r = b && b.sign ? A.handleSign(b, ip, q.headers['user-agent'], function (k, t) { formNotify(k, t); }) : A.handleLead(b, ip, function (k, t) { formNotify(k, t); });
+      if (r.ok && !(b && b.sign)) { try { require('child_process').execFile(process.execPath, [path.join(__dirname, 'push.js'), 'leads: affiliate'], { cwd: __dirname, timeout: 120000 }, function () {}); } catch (e) {} }
       s.writeHead(r.ok ? 200 : (r.error === 'limit' ? 429 : 400), { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); s.end(JSON.stringify(r));
     }, function () { s.writeHead(400); s.end(); });
     return;

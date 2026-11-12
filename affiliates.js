@@ -110,6 +110,67 @@ function howItWorks(a) {
     + '</tbody></table><p style="margin:10px 0 0">סך הכל על הלקוח הזה: <b>0 ₪</b>. הסכום יורד מהתשלום הבא שלך.</p></div>';
 }
 
+/*
+  12.11.2026, Itzik: "תוסיף שם את החתימה ממני, ותן לו גם לחתום על זה ... ואחרי שהוא יחתום, תעדכן לו את הטופס רגיל, בלי חתימה."
+  Until the referrer signs, his table ends with Itzik's signature (the one saved for the agreements, data/agrsign/owner.json)
+  and a pad for his own. POST /api/ref-lead { t, sign:1, name, agree, sig }. After that the page is the plain table again.
+  The signed copy: data/files-private/aff-<ref>-signed-<date>.html, and the signature in data/affiliates/<tok>.sig.png.
+*/
+function ownerSig() { const o = readJson(path.join(DATA, 'agrsign', 'owner.json'), null); return o && o.sig ? o : null; }
+function signBlock(tok, a) {
+  const o = ownerSig();
+  return '<h2 style="font-size:20px;margin:26px 0 6px">אישור התנאים</h2>'
+    + '<div class="card"><p style="margin:0 0 10px">התנאים שבדף הזה מוסכמים על שנינו.</p>'
+    + '<div style="border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:14px"><small style="color:var(--mut)">IT Solution</small>'
+    + (o ? '<img src="' + o.sig + '" alt="החתימה של יצחק כהן" style="display:block;max-width:220px;height:auto;margin:4px 0">' : '')
+    + '<b>' + esc(o ? o.name : 'יצחק כהן') + '</b>, IT Solution</div>'
+    + '<small style="color:var(--mut)">' + esc(a.name) + '</small>'
+    + '<label for="sn">שם מלא</label><input id="sn" value="' + esc(a.name) + '" autocomplete="name">'
+    + '<label style="display:flex;gap:8px;align-items:flex-start;font-weight:400"><input type="checkbox" id="sa" style="width:auto;margin-top:5px"> קראתי את ההסבר ואני מאשר את התנאים</label>'
+    + '<label>החתימה שלך (עם האצבע)</label>'
+    + '<canvas id="cv" style="width:100%;height:160px;border:1px dashed #9aa8b8;border-radius:12px;background:#fff;touch-action:none;display:block"></canvas>'
+    + '<button type="button" id="cl" style="background:#eef2f7;color:var(--ink);font-size:15px;padding:10px;margin-top:8px">לנקות ולחתום שוב</button>'
+    + '<button type="button" id="go">✍️ לחתום ולאשר</button><div class="msg bad" id="er"></div></div>'
+    + '<script>(function(){var T="' + tok + '",cv=document.getElementById("cv"),x=cv.getContext("2d"),dn=false,ink=false;'
+    + 'function fit(){var r=cv.getBoundingClientRect(),d=window.devicePixelRatio||1;cv.width=r.width*d;cv.height=r.height*d;x.scale(d,d);x.lineWidth=2.4;x.lineCap="round";x.strokeStyle="#14202e";ink=false}fit();'
+    + 'function pt(e){var r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}'
+    + 'cv.addEventListener("pointerdown",function(e){dn=true;var p=pt(e);x.beginPath();x.moveTo(p.x,p.y);cv.setPointerCapture(e.pointerId)});'
+    + 'cv.addEventListener("pointermove",function(e){if(!dn)return;var p=pt(e);x.lineTo(p.x,p.y);x.stroke();ink=true});'
+    + 'cv.addEventListener("pointerup",function(){dn=false});'
+    + 'document.getElementById("cl").onclick=function(){x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,cv.width,cv.height);fit()};'
+    + 'var g=document.getElementById("go"),er=document.getElementById("er");'
+    + 'g.onclick=function(){var n=document.getElementById("sn").value.trim();er.textContent="";'
+    + 'if(n.length<2){er.textContent="צריך שם מלא.";return}if(!document.getElementById("sa").checked){er.textContent="צריך לסמן שקראת ואתה מאשר.";return}if(!ink){er.textContent="צריך לחתום בתיבה.";return}'
+    + 'g.disabled=true;g.textContent="שומר...";fetch("/api/ref-lead",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({t:T,sign:1,name:n,agree:true,sig:cv.toDataURL("image/png")})})'
+    + '.then(function(r){return r.json()}).then(function(j){if(!j.ok)throw 0;location.reload()}).catch(function(){g.disabled=false;g.textContent="✍️ לחתום ולאשר";er.textContent="השמירה לא עברה, נסה שוב."})}})()</script>';
+}
+function handleSign(b, ip, ua, notify) {
+  const tok = safeTok(b && b.t), a = tok && aff(tok);
+  if (!a) return { ok: false, error: 'link' };
+  if (a.signed) return { ok: true, already: true };
+  const name = clean(b.name, 60), sig = String(b.sig || '');
+  if (name.length < 2) return { ok: false, error: 'name' };
+  if (b.agree !== true) return { ok: false, error: 'agree' };
+  if (!/^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(sig) || sig.length > 400000) return { ok: false, error: 'sig' };
+  if (limited(ip)) return { ok: false, error: 'limit' };
+  const at = new Date().toISOString();
+  fs.writeFileSync(path.join(DIR, tok + '.sig.png'), Buffer.from(sig.split(',')[1], 'base64'));
+  const day = at.slice(0, 10), o = ownerSig();
+  const copy = HEAD + '<title>תנאי שותפות, ' + esc(a.name) + ', חתום</title></head><body><div class="wrap"><div class="brand">IT Solution · שותפים</div>'
+    + '<h1>תנאי שותפות: ' + esc(a.name) + '</h1>' + howItWorks(a)
+    + '<div class="card"><b>IT Solution</b>' + (o ? '<img src="' + o.sig + '" style="display:block;max-width:220px">' + esc(o.name) : '') + '</div>'
+    + '<div class="card"><b>' + esc(name) + '</b><img src="' + sig + '" style="display:block;max-width:260px;background:#fff">'
+    + '<small>נחתם ' + new Date(at).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' }) + ' · כתובת ' + esc(ip) + '</small></div></div></body></html>';
+  const priv = path.join(DATA, 'files-private');
+  fs.mkdirSync(priv, { recursive: true });
+  const file = 'aff-' + a.ref + '-signed-' + day + '.html';
+  fs.writeFileSync(path.join(priv, file), copy);
+  a.signed = { name, at, ip, ua: clean(ua, 200), file };
+  writeJson(path.join(DIR, tok + '.json'), a);
+  try { notify('aff-sign', '✍️ ' + a.name + ' חתם על תנאי השותפות. העותק החתום: files/' + file); } catch (e) {}
+  return { ok: true };
+}
+
 function tablePage(tok, a) {
   const r = rows(a);
   const sr = readJson(path.join(DATA, 'signup', 'refs', a.ref + '.json'), { visits: 0, signups: 0, people: [] });
@@ -130,6 +191,7 @@ function tablePage(tok, a) {
   t += '</tbody></table></div>';
   if (sr.visits || sr.signups) t += '<div class="card">בקישור ההרשמה שלך: ' + sr.visits + ' כניסות, ' + sr.signups + ' נרשמו לשבוע ניסיון.</div>';
   t += howItWorks(a);
+  if (!a.signed) t += signBlock(tok, a);
   return t + '<p class="small">מענק סגירה ' + nis(a.grant) + ' אחרי שהלקוח שילם את החודש הראשון, ו ' + a.pct + '% מהמנוי החודשי למשך ' + a.months + ' חודשים'
     + (a.bonusFrom ? ' (מהלקוח ה ' + a.bonusFrom + ' והלאה ' + a.bonusPct + '%)' : '') + '.</p></div></body></html>';
 }
@@ -172,4 +234,4 @@ function handleLead(b, ip, notify) {
   return { ok: true };
 }
 
-module.exports = { serve, handleLead, rows, aff };
+module.exports = { serve, handleLead, handleSign, rows, aff };
