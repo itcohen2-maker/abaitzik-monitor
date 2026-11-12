@@ -102,7 +102,8 @@ function tablePage(tok, a) {
 function serve(tok, view, res) {
   const a = aff(tok);
   const h = { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex, nofollow', 'Referrer-Policy': 'no-referrer' };
-  if (!a) { res.writeHead(404, h); return res.end('<!doctype html><meta charset="utf-8"><p>הדף לא נמצא.</p>'); }
+  // 12.11.2026, Itzik on Shai: "תסיר את הדף שמראה כמה לקוחות הוא הביא". "noTable": true in the referrer's file closes /t.
+  if (!a || (view === 't' && a.noTable)) { res.writeHead(404, h); return res.end('<!doctype html><meta charset="utf-8"><p>הדף לא נמצא.</p>'); }
   res.writeHead(200, h); res.end(view === 't' ? tablePage(tok, a) : formPage(tok, a));
 }
 
