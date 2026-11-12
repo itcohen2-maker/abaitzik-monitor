@@ -2900,6 +2900,15 @@ section#talkCard.talk{border:2px solid var(--accent);box-shadow:0 8px 24px color
 #psSheet textarea{width:100%;box-sizing:border-box;border-radius:14px;border:1px solid #e3d3b5;background:#fffdf8;padding:10px;font:15px Heebo,sans-serif;color:#3b2f25}
 #psSheet .psSent{background:#d6e6cf;color:#2f4a2a;border-radius:14px;padding:12px;margin:8px 0;font:800 15px/1.4 Heebo,sans-serif;text-align:right}
 #psSheet textarea{width:100%;box-sizing:border-box}
+#psSheet.psFull{background:#f6eee2;padding:0;align-items:stretch;justify-content:stretch;animation:psIn .7s cubic-bezier(.2,.7,.2,1) both}
+@keyframes psIn{from{clip-path:circle(0 at 12% 6%)}to{clip-path:circle(150% at 12% 6%)}}
+#psSheet.psFull .ycard{max-width:none;width:100%;max-height:none;height:100%;margin:0;border:0;border-radius:0;box-sizing:border-box;overflow:auto;padding:0 16px 28px;background:linear-gradient(180deg,#fffaf2,#f3e8d8)}
+#psSheet .psTop{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:max(14px,env(safe-area-inset-top)) 0 10px;background:#fffaf2;border-bottom:1px solid #eadcc4;margin-bottom:10px}
+#psSheet .psTop b{font:900 22px Heebo,sans-serif;color:#3b2f25}
+#psSheet .psBack{flex:none;border:0;border-radius:99px;padding:10px 16px;font:800 14px Heebo,sans-serif;background:#1f3a5f;color:#fff;cursor:pointer}
+#psSheet.psFull .psGrid{gap:10px}
+#psSheet.psFull .psT{padding:14px;font-size:15px;min-height:64px}
+@media(min-width:720px){#psSheet.psFull .ycard{padding:0 max(16px,calc(50% - 360px)) 28px}#psSheet.psFull .psGrid{grid-template-columns:1fr 1fr 1fr}}
 #psSheet .psReq{background:#fffdf8;border-radius:12px;padding:8px 10px;margin:6px 0;font:600 13px Heebo,sans-serif;text-align:right}
 .c-board{background:linear-gradient(160deg,#0e7490,#164e63);font-size:22px}
 #gHandle[hidden],#gReq[hidden]{display:none}
@@ -15603,7 +15612,7 @@ function personalSheet(){
  }
  function mainHtml(){
   var T=P.tiles||[];
-  return '<b class="psHead">🏡 המצב האישי שלך</b>'
+  return '<div class="psTop"><b>🏡 הבית שלי</b><button type="button" class="psBack" data-a="x">💼 חזרה לעסקי</button></div>'
    +(sent?'<div class="psSent" role="status">'+SENT+'</div>':'')
    +(T.length?'<small>תורים, כרטיסים, חשבונות והודעות שמגיעים במייל נכנסים לבד לאריח המתאים, ויורדים כשהיום עבר.</small><div class="psGrid">'+T.map(tileHtml).join('')+'</div>':'<small>עוד לא בחרת מה יופיע כאן.</small>')
    +'<button type="button" class="psBtn lt" data-a="pick">✏️ לשנות מה מופיע</button>'
@@ -15614,7 +15623,11 @@ function personalSheet(){
    +'<button type="button" class="psBtn" data-a="send">לשלוח</button>'
    +reqHtml();
  }
- function draw(){w.innerHTML='<div class="ycard">'+(picking?pickHtml():mainHtml())+'<button type="button" class="psBtn lt" data-a="x">סגירה</button></div>';}
+ function draw(){
+  w.classList.toggle('psFull',!picking);
+  w.innerHTML='<div class="ycard">'+(picking?pickHtml():mainHtml())+(picking?'<button type="button" class="psBtn lt" data-a="x">סגירה</button>':'')+'</div>';
+  var cd=w.querySelector('.ycard');if(cd)cd.scrollTop=0;
+ }
  function close(){w.remove();}
  w.onclick=function(e){
   if(e.target===w)return close();
