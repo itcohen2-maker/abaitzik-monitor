@@ -2810,7 +2810,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-12T22:33:56.080Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-12T22:34:20.953Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3061,7 +3061,7 @@ try{
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות לשיפור המוניטור</b><small>מה עוד המסך הזה יכול לעשות</small></button>
   <button type="button" class="gt gMed" data-grp="day" id="gMed"><b>🩺 אחרי הניתוח השני</b><small>ממוספר. המסמכים מהביקורת אצל הפרופסור</small></button>
   <button type="button" class="gt gWin" data-grp="net" id="gWin" data-upd="20261106-win03" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
-  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1" data-upd="20261113-revert2"><b>🎬 הסרטונים</b><small>רילים, רילים עתידיים, סטטוס, נרות, מה בצלחת, שחר וקמפיין</small></button>
+  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1" data-upd="20261113-list6"><b>🎬 הסרטונים</b><small>רילים, רילים עתידיים, סטטוס, נרות, מה בצלחת, שחר וקמפיין</small></button>
   <button type="button" class="gt gGviya" data-grp="work" id="gGviya" data-new="1"><b>📞 גבייה, יואל</b><small>דף שיואל מסמן, כל סימון מעדכן אותך</small></button>
   <button type="button" class="gt gShop" data-grp="home" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
  </div>
@@ -4749,7 +4749,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='02f74365c6';
+var CODE_ID='d4966879c8';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -13249,20 +13249,21 @@ function clalitSheet(){
 }
 on('gClalit',clalitSheet);
 var TOM_ITEMS=[
- {n:"1",t:"🆕 🖥️ מוניטור · מי לא שילם לך (הראשי) · לשבוע התנסות בחינם",r:"wa-hub-gviya-ad.mp4"},
- {n:"2",t:"🆕 🖥️ מוניטור · עסקי ואישי: כרטיס להופעה עובר למצב האישי",r:"wa-hub-personal-ad.mp4"},
- {n:"3",t:"🆕 🖥️ מוניטור · תור לרופא שיניים",r:"wa-hub-tor-ad.mp4"},
- {n:"4",t:"✅ באוויר · שרפת קרדיטים: תמונה מונפשת, מביאה את רוב הלידים",r:"ads-nov01-card9-story.mp4"},
- {n:"5",t:"⏳ בבדיקה של מטא · נתקעת ב Lovable או Base44: תמונה מונפשת",r:"ads-nov12-card15.mp4"},
- {n:"6",t:"⏳ בבדיקה של מטא · אתר יפה ואף אחד לא פונה: תמונה מונפשת, לשנות קצת את הרעיון",r:"ads-nov12-card16.mp4"},
- {n:"7",t:"⏳ בבדיקה של מטא · עובד 12 שעות והכל עליך: תמונה מונפשת",r:"ads-nov12-card17.mp4"},
- {n:"8",t:"🆕 לבדיקה שלך · מוניטור · חשבוניות מהמעבדה בוואטסאפ",r:"wa-hub-lab-ad.mp4"},
- {n:"9",t:"🆕 לבדיקה שלך · הטמעת AI · אבחון חינם תוך 24 שעות",r:"wa-hub-ai-ad.mp4"},
- {n:"10",t:"📲 סטורי · מי לא שילם לך · it-solution.co.il/start",r:"wa-hub-gviya-story.mp4"},
- {n:"11",t:"📲 סטורי · עסקי ואישי · it-solution.co.il/start",r:"wa-hub-personal-story.mp4"},
- {n:"12",t:"📲 סטורי · תור לרופא שיניים · it-solution.co.il/start",r:"wa-hub-tor-story.mp4"},
- {n:"13",t:"📲 סטורי · חשבוניות מהמעבדה · it-solution.co.il/start",r:"wa-hub-lab-story.mp4"},
- {n:"14",t:"📲 סטורי · הטמעת AI · it-solution.co.il/ai",r:"wa-hub-ai-story.mp4"}
+ {n:"1",t:"🎬 סרטון · מי לא שילם לך (הראשי) · לשבוע התנסות בחינם",r:"wa-hub-gviya-ad.mp4"},
+ {n:"2",t:"🎬 סרטון · עסקי ואישי · לשבוע התנסות בחינם",r:"wa-hub-personal-ad.mp4"},
+ {n:"3",t:"✅ באוויר · 🖼️ שרפת קרדיטים · לצ׳אט",r:"ads-nov01-card9-story.mp4"},
+ {n:"4",t:"🆕 🖼️ מי לא שילם לך? · תג שבוע התנסות בחינם · להרשמה",r:"ads-nov13-card18.mp4"},
+ {n:"5",t:"🆕 🖼️ האתר יפה ואף אחד לא פונה? · לפני ואחרי · לצ׳אט",r:"ads-nov13-card19.mp4"},
+ {n:"6",t:"🆕 🖼️ עובד 12 שעות · אבחון AI חינם · ל it-solution.co.il/ai",r:"ads-nov13-card20.mp4"},
+ {n:"7",t:"⛔ לעצור · נתקעת ב Lovable או Base44 (כמעט זהה ל 3)",r:"ads-nov12-card15.mp4"},
+ {n:"8",t:"⏸️ בצד · סרטון תור לרופא שיניים",r:"wa-hub-tor-ad.mp4"},
+ {n:"9",t:"⏸️ בצד · סרטון חשבוניות מהמעבדה",r:"wa-hub-lab-ad.mp4"},
+ {n:"10",t:"⏸️ בצד · סרטון הטמעת AI",r:"wa-hub-ai-ad.mp4"},
+ {n:"11",t:"📲 סטורי · מי לא שילם לך · it-solution.co.il/start",r:"wa-hub-gviya-story.mp4"},
+ {n:"12",t:"📲 סטורי · עסקי ואישי · it-solution.co.il/start",r:"wa-hub-personal-story.mp4"},
+ {n:"13",t:"📲 סטורי · תור לרופא שיניים · it-solution.co.il/start",r:"wa-hub-tor-story.mp4"},
+ {n:"14",t:"📲 סטורי · חשבוניות מהמעבדה · it-solution.co.il/start",r:"wa-hub-lab-story.mp4"},
+ {n:"15",t:"📲 סטורי · הטמעת AI · it-solution.co.il/ai",r:"wa-hub-ai-story.mp4"}
 ];
 function tomSheet(){
  var old=document.getElementById('tomSheet');if(old)old.remove();
@@ -13476,7 +13477,7 @@ function vidTabs(){
   {id:'pl',l:'🍽️ מה בצלחת'+(plN?' ('+plN+')':''),h:'הסטוריז לפי הסדר, אפשר לסדר ולמחוק',L:vqRows('pl').concat([{h:'📂 הדף המלא'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return plateN[x.it.n];}))},
   {id:'ai',l:'🤖 ערוץ AI'+(aiN?' ('+aiN+')':''),upd:'20261110-approve',h:'הרילים של ערוץ ה AI להעלאה, בעברית ובאנגלית: מה עדיין לא עלה. מה שעלה יורד מכאן לבד',L:vqRows('ai').concat([{h:'📂 הדף המלא'},{k:'go',t:'🤖 פתיחת הרילים של ערוץ ה AI',u:'ai/ai.html'}])},
   {id:'nr',l:'🕯️ נרות'+(nrN?' ('+nrN+')':''),h:'candle.times: סטוריז ופוסטים שמחכים לאישור שלך',L:vqRows('nr').concat([{h:'📂 הדף המלא'},{k:'go',t:'🕯️ פתיחת candle.times',u:'ner/candle.html'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return candleN[x.it.n];}))},
-  {id:'it',l:'💻 IT Solution',upd:'20261113-revert2',h:'הרילים של IT Solution: המוניטור, הקמפיינים והעסקים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isIt(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isIt(x.it);}))},
+  {id:'it',l:'💻 IT Solution',upd:'20261113-list6',h:'הרילים של IT Solution: המוניטור, הקמפיינים והעסקים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isIt(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isIt(x.it);}))},
   {id:'me',l:'🎬 הרילים שלי',h:'הרילים והסטוריז שלי, מוכנים לרשתות',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return !isSh(x.it)&&!isIt(x.it);}))},
   {id:'car',l:'🎠 קרוסלות'+(CARON.length?' ('+CARON.length+')':''),pulse:CARON.length,h:'קרוסלות לאבא איציק, כל הנושאים. מה שעוד לא עלה מהבהב חלש',L:carL},
   {id:'fut',l:'💡 רילים עתידיים',h:'רעיונות, רפרנסים ותסריטים לרילים הבאים',L:[{h:'💡 רעיונות לרילים הבאים'}].concat(F.filter(function(x){return !isSh(x.it)&&!isIt(x.it)&&!plateN[x.it.n]&&!candleN[x.it.n];}))}
