@@ -4891,7 +4891,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   -->
   <button type="button" class="gt gWin" data-grp="net" id="gWin" data-upd="20261106-win03" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <!-- 5.11, Itzik: "את כל הסרטונים נעביר לאריח אחד, ובתוכו טאבים". One tile with a tab per kind; the old tiles (reels, future reels, campaign, plate, status, candle.times) were removed; their sheets stay in the code. -->
-  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1" data-upd="20261112-hub6"><b>🎬 הסרטונים</b><small>רילים, רילים עתידיים, סטטוס, נרות, מה בצלחת, שחר וקמפיין</small></button>
+  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1" data-upd="20261112-hub7"><b>🎬 הסרטונים</b><small>רילים, רילים עתידיים, סטטוס, נרות, מה בצלחת, שחר וקמפיין</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
@@ -17673,7 +17673,7 @@ var TOM_ITEMS=[
 // 12.11 night, Itzik: "הכיוון הוא שהמוניטור מסדר את הכל, ואפשר גם בוואטסאפ" ... "תסדר לי את זה בצורה מסודרת במוניטור, 1 עד 7, מה שאנחנו מפרסמים".
 // Only what runs. 1 to 3 are the new monitor videos with WhatsApp inside (source ~/clip/wa_hub on the PC); in Meta the old ones still run until he approves.
  {n:"1",t:"🆕 לאישורך · הסרטון הראשי, מי לא שילם לך: המוניטור מסדר, ואפשר גם מהוואטסאפ · מחליף את האנימציה שבאוויר",r:"wa-hub-gviya-ad.mp4"},
- {n:"2",t:"🆕 לאישורך · עסקי ואישי, עכשיו עם וואטסאפ · מחליף את מה שבאוויר",r:"wa-hub-personal-ad.mp4"},
+ {n:"2",t:"🆕 לאישורך · עסקי ואישי: עבודה, כרטיס להופעה בוואטסאפ, מעבר למצב אישי והכרטיס נפתח · מחליף את מה שבאוויר",r:"wa-hub-personal-ad.mp4"},
  {n:"3",t:"🆕 לאישורך · תור לרופא שיניים: רואים שזה נכנס למוניטור · מחליף את מה שבאוויר",r:"wa-hub-tor-ad.mp4"},
  {n:"4",t:"✅ באוויר · שרפת קרדיטים: תמונה מונפשת, מביאה את רוב הלידים",r:"ads-nov01-card9-story.mp4"},
  {n:"5",t:"⏳ בבדיקה של מטא · נתקעת ב Lovable או Base44: מסיימים לך את האתר",r:"ads-nov12-card15.mp4"},
@@ -17865,7 +17865,7 @@ function vidTabs(){
   {id:'ai',l:'🤖 ערוץ AI'+(aiN?' ('+aiN+')':''),upd:'20261110-approve',h:'הרילים של ערוץ ה AI להעלאה, בעברית ובאנגלית: מה עדיין לא עלה. מה שעלה יורד מכאן לבד',L:vqRows('ai').concat([{h:'📂 הדף המלא'},{k:'go',t:'🤖 פתיחת הרילים של ערוץ ה AI',u:'ai/ai.html'}])},
   {id:'nr',l:'🕯️ נרות'+(nrN?' ('+nrN+')':''),h:'candle.times: סטוריז ופוסטים שמחכים לאישור שלך',L:vqRows('nr').concat([{h:'📂 הדף המלא'},{k:'go',t:'🕯️ פתיחת candle.times',u:'ner/candle.html'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return candleN[x.it.n];}))},
   // 7.11, Itzik: a tab for IT Solution reels (ready ones first, then the ideas). upd = the soft blink until the tab is opened.
-  {id:'it',l:'💻 IT Solution',upd:'20261112-hub6',h:'הרילים של IT Solution: המוניטור, הקמפיינים והעסקים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isIt(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isIt(x.it);}))},
+  {id:'it',l:'💻 IT Solution',upd:'20261112-hub7',h:'הרילים של IT Solution: המוניטור, הקמפיינים והעסקים',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isIt(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isIt(x.it);}))},
   // 7.11, Itzik: the reels and the future reels too, each in its own tab of the one tile.
   {id:'me',l:'🎬 הרילים שלי',h:'הרילים והסטוריז שלי, מוכנים לרשתות',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return !isSh(x.it)&&!isIt(x.it);}))},
   {id:'car',l:'🎠 קרוסלות'+(CARON.length?' ('+CARON.length+')':''),pulse:CARON.length,h:'קרוסלות לאבא איציק, כל הנושאים. מה שעוד לא עלה מהבהב חלש',L:carL},
