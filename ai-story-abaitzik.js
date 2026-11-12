@@ -26,6 +26,19 @@ const QUEUE = '/home/monitor/ai-queue.json';
 const STATE = '/home/monitor/abaitzik-story-state.json';
 const BASE = 'https://itcohen2-maker.github.io/abaitzik-monitor/ai/';
 const CH = { name: 'abaitzik', id: '17841439995081131', tokenFile: '/home/monitor/.ig-token-abaitzik' };
+// 12.11.2026, Itzik: he wants the channel's own post shared to his story (the card with the channel), which only the
+// Instagram app can do. So by default this sends him a WhatsApp with today's post link, Hebrew and English in turn,
+// and he shares it in the app (open, share, add to story). --post keeps the old way (the video itself as a story).
+const POST = process.argv.includes('--post');
+const SRC = { he: { name: 'itsolution.ai', tokenFile: '/home/monitor/.ig-token-itsolution-ai' },
+  en: { name: 'itsolution.global', tokenFile: '/home/monitor/.ig-token-itsolution-global' } };
+async function permalink(it) {
+  const reel = it.auto && it.auto.reel;
+  const ch = SRC[it.lang];
+  if (!reel || !ch) return null;
+  const r = await social.call(ch, reel, { fields: 'permalink' }, 'GET');
+  return r.permalink || null;
+}
 const STORY_HOUR = '21:00';
 const DRY = process.argv.includes('--dry');
 const NOW = process.argv.includes('--now');
@@ -60,10 +73,27 @@ async function main() {
   const it = pick(todays(readJson(QUEUE, []), date), st.lastLang);
   if (!it) { if (DRY) console.log('nothing went up on the channels on', date); return; }
   const url = BASE + it.file;
-  if (DRY) return console.log('would post a story in abaitzik:', it.id, '(' + it.lang + ')', url);
+  if (DRY) return console.log(POST ? 'would post a story in abaitzik:' : 'would send the share link of:', it.id, '(' + it.lang + ')', POST ? url : await permalink(it));
   if (!fs.existsSync(CH.tokenFile)) {
     fs.writeFileSync(STATE, JSON.stringify(Object.assign(st, { date, failed: 'no token file' }), null, 1));
     return notify('סטורי ב abaitzik נכשל', 'אין קובץ טוקן');
+  }
+  if (!POST) {
+    try {
+      const link = await permalink(it);
+      if (!link) throw new Error('no post link for ' + it.id);
+      const lang = it.lang === 'he' ? 'עברית' : 'אנגלית';
+      const text = 'סטורי של היום ב abaitzik (' + lang + '): ' + (it.name || it.id) + '\n'
+        + 'פותחים את הפוסט, לוחצים על החץ של השיתוף, ובוחרים "הוספה לסטורי":\n' + link;
+      let sent = false;
+      try { await require('./lib/wa-out.js').sendOwner(path.join(__dirname, 'data'), text, { kind: 'ai-story' }); sent = true; }
+      catch (e) { notify('סטורי של היום ב abaitzik', text); }
+      fs.writeFileSync(STATE, JSON.stringify({ date, lastLang: it.lang, item: it.id, story: 'remind', link, via: sent ? 'wa' : 'push', at: new Date().toISOString() }, null, 1));
+    } catch (e) {
+      fs.writeFileSync(STATE, JSON.stringify(Object.assign(st, { date, failed: String(e.message || e).slice(0, 200), failedAt: new Date().toISOString() }), null, 1));
+      notify('קישור לסטורי ב abaitzik נכשל', (it.name || it.id) + ' | ' + String(e.message || e).slice(0, 160));
+    }
+    return;
   }
   try {
     const id = await social.publishOne(CH, { media_type: 'STORIES', video_url: url });
