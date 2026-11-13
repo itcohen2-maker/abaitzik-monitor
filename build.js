@@ -19992,14 +19992,14 @@ function bizSheet(t0){
    }
    function ldTable(title,list,empty){
     var n=list.filter(function(r){return !r.test;}),o=n.filter(function(r){return r.status==='חדש';}).length;
-    h+='<div class="bzSec" style="margin-top:14px">'+title+' ('+n.length+(o?', '+o+' חדשים':'')+')</div>';
+    h+='<div class="bzSec" style="margin-top:14px">'+title+' ('+n.length+(o?', '+(o===1?'חדש אחד':o+' חדשים'):'')+')</div>';
     if(!list.length){h+='<p class="bzEmpty">'+empty+'</p>';return;}
     h+='<div class="ldTbl"><div class="ldHd"><span>תאריך</span><span>שם</span><span>מאיפה</span><span>סטטוס</span></div>';
     list.forEach(oneRow);
     h+='</div>';
    }
    ldTable('🆕 נרשמו לשבוע ניסיון',L.filter(function(r){return r.source==='signup';}),'עוד אין הרשמות לשבוע ניסיון.');
-   ldTable('📥 פניות מהצ׳אט באתר, מהמודעות ומכל מקום אחר',L.filter(function(r){return r.source!=='signup';}),'עוד אין פניות.');
+   ldTable('📥 פניות: צ׳אט באתר, מודעות ועוד',L.filter(function(r){return r.source!=='signup';}),'עוד אין פניות.');
    return h;
   }
   function itsHtml(){
