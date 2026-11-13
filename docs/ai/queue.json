@@ -320,18 +320,18 @@
   "lang": "en",
   "order": 16,
   "name": "Why does the Wi-Fi crawl in the bedroom?",
-  "file": "media/wifi-en.mp4",
+  "file": "media/wifi-en.mp4?v=2",
   "poster": "media/wifi-en.jpg",
-  "ig": "Why does the Wi-Fi work great in the living room, but crawl in the bedroom?\nIt's because of the difference between the two frequencies your router sends out: 2.4 gigahertz and 5 gigahertz. 5 gigahertz is very fast, but it hates walls, and every wall weakens it. 2.4 gigahertz goes through walls much better, but it's slower.\nAnd one more thing: if your router is stuck inside a metal comms cabinet or behind the TV, the signal just dies. Switch the devices in the far room to 2.4, and take the router out of the cabinet. And at your place, is the Wi-Fi the worst in some room?\n#אבאאיציק #WiFi #router #techtips #internet\nSource: Wi-Fi Alliance",
-  "tt": "Why does the Wi-Fi work great in the living room, but crawl in the bedroom?\nIt's because of the difference between the two frequencies your router sends out: 2.4 gigahertz and 5 gigahertz. 5 gigahertz is very fast, but it hates walls, and every wall weakens it. 2.4 gigahertz goes through walls much better, but it's slower.\nAnd one more thing: if your router is stuck inside a metal comms cabinet or behind the TV, the signal just dies. Switch the devices in the far room to 2.4, and take the router out of the cabinet. And at your place, is the Wi-Fi the worst in some room?\n#אבאאיציק #WiFi #router #techtips #internet",
+  "ig": "Why does the Wi-Fi work great in the living room, but crawl in the bedroom?\nIt's because of the difference between the two frequencies your router sends out: 2.4 gigahertz and 5 gigahertz. 5 gigahertz is very fast, but it hates walls, and every wall weakens it. 2.4 gigahertz goes through walls much better, but it's slower.\nAnd one more thing: if your router is stuck inside a metal comms cabinet or behind the TV, the signal just dies. Switch the devices in the far room to 2.4, and take the router out of the cabinet. Is there one room in your home where the Wi-Fi just dies?\n#אבאאיציק #WiFi #router #techtips #internet\nSource: Wi-Fi Alliance",
+  "tt": "Why does the Wi-Fi work great in the living room, but crawl in the bedroom?\nIt's because of the difference between the two frequencies your router sends out: 2.4 gigahertz and 5 gigahertz. 5 gigahertz is very fast, but it hates walls, and every wall weakens it. 2.4 gigahertz goes through walls much better, but it's slower.\nAnd one more thing: if your router is stuck inside a metal comms cabinet or behind the TV, the signal just dies. Switch the devices in the far room to 2.4, and take the router out of the cabinet. Is there one room in your home where the Wi-Fi just dies?\n#אבאאיציק #WiFi #router #techtips #internet",
   "yt": "Why does the Wi-Fi crawl in the bedroom? #אבאאיציק #WiFi",
-  "ytd": "It's because of the difference between the two frequencies your router sends out: 2.4 gigahertz and 5 gigahertz. 5 gigahertz is very fast, but it hates walls, and every wall weakens it. 2.4 gigahertz goes through walls much better, but it's slower. And one more thing: if your router is stuck inside a metal comms cabinet or behind the TV, the signal just dies. Switch the devices in the far room to 2.4, and take the router out of the cabinet. And at your place, is the Wi-Fi the worst in some room? Source: Wi-Fi Alliance",
+  "ytd": "It's because of the difference between the two frequencies your router sends out: 2.4 gigahertz and 5 gigahertz. 5 gigahertz is very fast, but it hates walls, and every wall weakens it. 2.4 gigahertz goes through walls much better, but it's slower. And one more thing: if your router is stuck inside a metal comms cabinet or behind the TV, the signal just dies. Switch the devices in the far room to 2.4, and take the router out of the cabinet. Is there one room in your home where the Wi-Fi just dies? Source: Wi-Fi Alliance",
   "song": "",
   "song_tt": "",
   "posted": false,
   "postedAt": null,
   "hold": true,
-  "note": "13.11: חדש, מחכה לאישור שלך"
+  "note": "13.11: שאלת הסיום תוקנה, מחכה לאישור שלך"
  },
  {
   "id": "googleedu-he",
@@ -601,7 +601,7 @@
   "posted": false,
   "postedAt": null,
   "hold": true,
-  "note": "ממתין לאישור של איציק"
+  "note": "13.11: חדש, מחכה לאישור שלך"
  },
  {
   "id": "tokenpay-en",
@@ -619,6 +619,6 @@
   "posted": false,
   "postedAt": null,
   "hold": true,
-  "note": "ממתין לאישור של איציק"
+  "note": "13.11: חדש, מחכה לאישור שלך"
  }
 ]
