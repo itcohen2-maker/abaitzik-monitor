@@ -2812,7 +2812,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-13T13:42:44.505Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-13T13:45:14.547Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4751,7 +4751,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='ea7fa28c4c';
+var CODE_ID='00229d0ac2';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11402,6 +11402,7 @@ function campSheet(){
  function cpRealText(t){var s=t;CP_ASK.concat(cpAiAsked).forEach(function(q){s=s.split(q).join('');});return s.split(String.fromCharCode(10)).join(' ').trim();}
  w.innerHTML='<div class="ycard"><b>📣 קמפיינים</b>'
   +'<small>מעלים תמונות או סרטון, בוחרים מה לעשות איתם, וכותבים מה חשוב. אני מכין טיוטה: מטרה, קהל, תקציב מוצע, כמה גרסאות כיתוב ותיאור לפוסט. שום דבר לא עולה בלי אישור שלך.</small>'
+  +'<button type="button" class="yb yb1" data-a="quiz">📋 להכין לי קרוסלה או סרטון מהחומר שלי: שאלון מפורט</button>'
   +'<button type="button" class="yb yb2" data-a="pick">📎 לבחור תמונות או סרטון</button>'
   +'<input type="file" id="cpFiles" accept="image/*,video/*" multiple hidden>'
   +'<div id="cpList" style="font:600 14px Heebo,sans-serif;margin:6px 0"></div>'
@@ -11472,6 +11473,7 @@ function campSheet(){
   if(e.target===w)return close();
   var a=e.target.getAttribute&&e.target.getAttribute('data-a');
   if(a==='x')return close();
+  if(a==='quiz'){close();return campQuiz();}
   if(a==='pick'){var fi=document.getElementById('cpFiles');if(fi)fi.click();return;}
   if(a==='ai')return cpAiRun();
   var ao=e.target.getAttribute&&e.target.getAttribute('data-ao');
@@ -11546,6 +11548,138 @@ function campSheet(){
  }).catch(function(){});
 }
 on('gCamp',campSheet);
+var CQ=[
+ {k:'kind',t:'מה להכין לך?',o:['קרוסלה (כמה תמונות שמחליקים)','סרטון','גם קרוסלה וגם סרטון'],req:1},
+ {k:'biz',t:'ספר לי על העסק',h:'איך קוראים לעסק, מה אתם עושים, ואיפה. שתיים שלוש שורות מספיקות.',f:'למשל: סטודיו לפילאטיס ברמת גן, שיעורים קטנים עד 6 משתתפות',req:1},
+ {k:'what',t:'מה מקדמים בקמפיין הזה?',h:'מוצר, שירות, אירוע או מבצע. אחד, הכי חשוב.',f:'למשל: מנוי חודשי לשיעורי בוקר',req:1},
+ {k:'goal',t:'מה תרצה שיקרה אחרי שרואים את זה?',o:['שיכתבו לי בוואטסאפ','שיתקשרו','שימלאו טופס','שיקנו באתר','שיגיעו לעסק','שיכירו אותי ויעקבו'],m:1,req:1},
+ {k:'offer',t:'יש מבצע, מחיר או הטבה?',o:['אין, רק להכיר','הנחה','מתנה או בונוס','מחיר מיוחד','לזמן מוגבל'],m:1,f:'כתוב את המבצע במדויק, כמו שצריך להופיע'},
+ {k:'pain',t:'מה הבעיה שהלקוח שלך רוצה לפתור?',h:'מה הוא מרגיש לפני שהוא מגיע אליך. מזה בונים את המשפט הראשון.',f:'למשל: כואב לו הגב מהישיבה מול המחשב',req:1},
+ {k:'why',t:'למה לבחור דווקא בך?',o:['שירות אישי','ניסיון של שנים','מחיר טוב','איכות','מהירות','זמינות'],m:1,f:'או במילים שלך'},
+ {k:'age',t:'מי הלקוחות שלך? גיל',o:['18 עד 25','25 עד 35','35 עד 45','45 עד 55','55 עד 65','65 ומעלה','כל הגילאים'],m:1,req:1},
+ {k:'who',t:'ועוד על הלקוח',o:['בעיקר נשים','בעיקר גברים','גם וגם','הורים','בעלי עסקים','סטודנטים'],m:1,f:'תאר את הלקוח הכי טוב שלך במשפט'},
+ {k:'area',t:'איפה הלקוחות נמצאים?',o:['כל הארץ','צפון','חיפה והקריות','השרון','מרכז','ירושלים','דרום','רק העיר שלי'],m:1,f:'עיר או שכונה, אם צריך'},
+ {k:'where',t:'איפה זה יעלה?',o:['פיד באינסטגרם','סטורי','ריל','פייסבוק','טיקטוק','סטטוס בוואטסאפ','מודעה ממומנת','עוד לא יודע'],m:1,req:1},
+ {k:'len',t:'כמה ארוך הסרטון?',o:['עד 15 שניות','עד 30 שניות','עד 60 שניות','תחליטו אתם'],when:'video'},
+ {k:'slides',t:'כמה תמונות בקרוסלה?',o:['3 עד 5','6 עד 8','עד 10','תחליטו אתם'],when:'car'},
+ {k:'style',t:'איזה סגנון?',o:['מקצועי ונקי','חם ומשפחתי','מצחיק וקליל','מרגש','צעיר וצבעוני','יוקרתי'],m:1,f:'צבעים של העסק, או משהו שחשוב לך במראה'},
+ {k:'text',t:'טקסט על המסך?',o:['כן, כותרות קצרות','מעט מאוד','בלי טקסט בכלל'],req:1},
+ {k:'lang',t:'באיזו שפה?',o:['עברית','אנגלית','רוסית','ערבית','עברית ואנגלית'],m:1},
+ {k:'must',t:'מה חייב להופיע?',o:['הלוגו','טלפון','כתובת','אתר','וואטסאפ','שעות פתיחה'],m:1,f:'כתוב את הפרטים עצמם: המספר, הכתובת, האתר'},
+ {k:'never',t:'יש משהו שאסור?',h:'מילה, תמונה, מתחרה, צבע. אם אין, לדלג.',f:'למשל: לא להראות פנים של לקוחות'},
+ {k:'like',t:'ראית פרסומת שאהבת?',h:'קישור או תיאור קצר. לא חובה, אבל זה עוזר מאוד.',f:'הדבק קישור או תאר'},
+ {k:'music',t:'מוזיקה',o:['בלי, אבחר בזמן ההעלאה','שקט ורגוע','קצבי ושמח','מרגש'],h:'באינסטגרם ובפייסבוק הכי טוב לבחור שיר בזמן ההעלאה, מהספרייה שלהם.'},
+ {k:'files',t:'החומרים שלך',h:'תמונות וסרטונים שצילמת. הסדר כאן הוא הסדר שבו הם יופיעו.',files:1,f:'מה רואים בכל קובץ, ומה הכי חשוב שיופיע',req:1},
+ {k:'tile',t:'איפה תקבל את זה',info:1,o:['כן, אריח במסך הבית','לא, מספיק במסך התשובות'],req:1},
+ {k:'end',t:'הכל מוכן לשליחה',sum:1}
+];
+function campQuiz(){
+ var old=document.getElementById('cqSheet');if(old)old.remove();
+ var w=document.createElement('div');w.id='cqSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','שאלון לקרוסלה או סרטון');
+ var A={},F={},files=[],step=0;
+ function steps(){var kd=(A.kind||[])[0]||'';return CQ.filter(function(q){
+  if(q.when==='video')return kd.indexOf('סרטון')>=0;
+  if(q.when==='car')return kd.indexOf('קרוסלה')>=0;
+  return true;});}
+ function line(q){var a=(A[q.k]||[]).join(', '),f=(F[q.k]||'').trim();return a&&f?a+'. '+f:a||f;}
+ function paint(){
+  var L=steps(),q=L[step],n=L.length-1;
+  var h='<div class="ycard"><small style="opacity:1;font-weight:700">📋 שאלה '+Math.min(step+1,n)+' מתוך '+n+'</small>'
+   +'<div style="height:6px;border-radius:9px;background:#e6e9ef;margin:6px 0 10px"><i style="display:block;height:6px;border-radius:9px;background:#22c55e;width:'+Math.round(step*100/n)+'%"></i></div>'
+   +'<b style="font-size:20px">'+esc(q.t)+'</b>';
+  if(q.h)h+='<small style="opacity:1">'+esc(q.h)+'</small>';
+  if(q.info)h+='<div style="margin:8px 0;padding:12px;border-radius:14px;background:#fff7e6;border:1px solid #f5c26b;font:600 15px/1.5 Heebo,sans-serif">'
+   +'⏳ ההכנה לוקחת זמן. בדרך כלל כמה שעות, ולפעמים עד יום עבודה.<br>📩 כשזה מוכן תקבל הודעה, והתוצאה תחכה לך במסך התשובות, עם כפתור לפתוח ולשמור לטלפון.<br>'
+   +'🎁 אפשר גם אריח במסך הבית שמחזיק את הסרטון עד שתעלה אותו. אחרי ההעלאה לוחצים בו "העליתי", והאריח והקבצים נמחקים.</div>'
+   +'<small style="opacity:1;font-weight:700">רוצה אריח במסך הבית?</small>';
+  if(q.o)h+='<div class="arPick" role="group">'+q.o.map(function(o,i){return '<button type="button" class="yb'+((A[q.k]||[]).indexOf(o)>=0?' on':'')+'" data-o="'+i+'">'+esc(o)+'</button>';}).join('')+'</div>'
+   +(q.m?'<small>אפשר לבחור כמה</small>':'');
+  if(q.files)h+='<button type="button" class="yb yb2" data-a="pick">📎 לבחור תמונות או סרטונים</button><input type="file" id="cqFiles" accept="image/*,video/*" multiple hidden>'
+   +'<div style="font:600 14px Heebo,sans-serif;margin:6px 0">'+files.map(function(f,i){
+    return '<div style="display:flex;gap:6px;align-items:center;margin:4px 0"><b>'+(i+1)+'</b><span style="flex:1;word-break:break-all">'+(f.type&&f.type.indexOf('video')===0?'🎬 ':'🖼️ ')+esc(f.name)+'</span>'
+     +'<button type="button" class="yb" data-m="u'+i+'">▲</button><button type="button" class="yb" data-m="d'+i+'">▼</button><button type="button" class="yb" data-m="x'+i+'">✕</button></div>';}).join('')+'</div>';
+  if(q.f)h+='<textarea id="cqF" rows="3" style="width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif;margin-top:6px" placeholder="'+esc(q.f)+'">'+esc(F[q.k]||'')+'</textarea>';
+  if(q.sum){
+   h+='<div style="max-height:46vh;overflow:auto;margin:8px 0;font:600 14px/1.5 Heebo,sans-serif">'+L.filter(function(x){return !x.sum&&!x.info&&!x.files&&line(x);}).map(function(x){
+    return '<div style="margin:4px 0"><span style="opacity:.7">'+esc(x.t)+'</span><br>'+esc(line(x))+'</div>';}).join('')
+    +'<div style="margin:4px 0"><span style="opacity:.7">קבצים</span><br>'+files.length+'</div></div>'
+    +'<small style="opacity:1;font-weight:700">⏳ זכור: ההכנה לוקחת כמה שעות, לפעמים עד יום עבודה. שום דבר לא עולה לרשתות בלי אישור שלך.</small>'
+    +'<button type="button" class="yb yb1" data-a="send">שליחה</button>';
+  }else h+='<button type="button" class="yb yb1" data-a="next">'+(step+1===n?'לסיכום':'הבא')+'</button>';
+  if(step>0)h+='<button type="button" class="yb" data-a="back">חזרה</button>';
+  h+='<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+  w.innerHTML=h;
+  var ta=document.getElementById('cqF');if(ta)ta.oninput=function(){F[q.k]=ta.value;};
+ }
+ function ok(q){
+  if(q.files)return files.length?true:(toast('צריך לבחור לפחות תמונה או סרטון אחד'),false);
+  if(q.req&&!line(q)){toast(q.o?'לבחור תשובה, או לכתוב במילים שלך':'כתוב כמה מילים, זה חשוב לתוצאה');return false;}
+  return true;
+ }
+ w.onclick=function(e){
+  if(e.target===w)return;
+  var L=steps(),q=L[step],t=e.target,a=t.getAttribute&&t.getAttribute('data-a');
+  if(a==='x'){if(step<2||confirm('לסגור? התשובות לא יישמרו'))w.remove();return;}
+  if(a==='back'){step=Math.max(0,step-1);return paint();}
+  if(a==='next'){if(!ok(q))return;step++;return paint();}
+  if(a==='pick'){var fi=document.getElementById('cqFiles');if(fi)fi.click();return;}
+  var o=t.getAttribute&&t.getAttribute('data-o');
+  if(o!==null&&o!==undefined&&q.o){
+   var v=q.o[Number(o)],cur=A[q.k]||[];
+   if(q.m){var i=cur.indexOf(v);if(i>=0)cur.splice(i,1);else cur.push(v);A[q.k]=cur;paint();}
+   else{A[q.k]=[v];step++;paint();}
+   return;
+  }
+  var mv=t.getAttribute&&t.getAttribute('data-m');
+  if(mv){var mn=Number(mv.slice(1)),mc=mv.charAt(0);
+   if(mc==='x')files.splice(mn,1);else{var mj=mc==='u'?mn-1:mn+1;if(mj>=0&&mj<files.length){var tmp=files[mn];files[mn]=files[mj];files[mj]=tmp;}}
+   return paint();}
+  if(a!=='send')return;
+  var kd=(A.kind||[''])[0],tile=(A.tile||[''])[0].indexOf('כן')===0;
+  var parts=L.filter(function(x){return !x.sum&&!x.info&&!x.files&&x.k!=='kind'&&line(x);}).map(function(x){return x.t+' '+line(x);});
+  if((F.files||'').trim())parts.push('על הקבצים: '+F.files.trim());
+  var note='קמפיין: '+kd+' מהחומר שלי (שאלון) | '+parts.join(' | ')
+   +(files.length>1?' | סדר הקבצים: '+files.map(function(f,i){return (i+1)+'. '+f.name;}).join(', '):'')
+   +' | אריח מוכן: '+(tile?'כן':'לא');
+  t.disabled=true;t.textContent='שולח...';
+  sendAll(files,note).then(function(){
+   markSent('file',note);w.remove();
+   toast('נשלח. ההכנה לוקחת כמה שעות. כשזה מוכן תקבל הודעה, והתוצאה תחכה במסך התשובות'+(tile?' ובאריח 🎁 במסך הבית.':'.'));
+  }).catch(function(){t.disabled=false;t.textContent='שליחה';toast('לא נשלח. תבדוק חיבור ותנסה שוב. התשובות נשמרו כאן.');});
+ };
+ w.addEventListener('change',function(e){
+  if(e.target&&e.target.id==='cqFiles'){files=files.concat([].slice.call(e.target.files||[]));e.target.value='';paint();}
+ });
+ document.body.appendChild(w);paint();
+}
+function readySheet(){
+ var old=document.getElementById('rdSheet');if(old)old.remove();
+ var w=document.createElement('div');w.id='rdSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','מוכן להעלאה');
+ var R=(D.ready||[]),arm={};
+ function paint(){
+  w.innerHTML='<div class="ycard"><b>🎁 מוכן להעלאה</b><small style="opacity:1">פותחים, שומרים לטלפון ומעלים לרשת. אחרי שהעלית, לוחצים "העליתי" והקבצים נמחקים מכאן.</small>'
+   +(R.length?R.map(function(r,i){
+    return '<div style="margin:10px 0;padding:12px;border:1px solid #ccd;border-radius:14px"><b style="font:800 16px Heebo,sans-serif">'+esc(r.title||'מוכן')+'</b><br><small>'+esc(agoAfter(r.at)?'הוכן '+agoAfter(r.at):'')+'</small>'
+     +(r.files||[]).map(function(f,k){return '<button type="button" class="yb yb2" data-f="'+esc(f)+'">'+(/[.](mp4|mov|webm)$/i.test(f)?'▶️ לפתוח את הסרטון':'🖼️ לפתוח תמונה '+(k+1))+'</button>';}).join('')
+     +'<button type="button" class="yb" data-d="'+i+'">'+(arm[i]?'בטוח? לחיצה נוספת מוחקת':'✓ העליתי, אפשר למחוק')+'</button></div>';
+   }).join(''):'<small>אין כרגע כלום שמחכה.</small>')
+   +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+ }
+ w.onclick=function(e){
+  var t=e.target;if(t===w||(t.getAttribute&&t.getAttribute('data-a')==='x'))return w.remove();
+  var f=t.getAttribute&&t.getAttribute('data-f');if(f)return fileOpen(f);
+  var d=t.getAttribute&&t.getAttribute('data-d');if(d===null||d===undefined)return;
+  var i=Number(d);if(!arm[i]){arm[i]=1;return paint();}
+  var r=R[i];if(!r)return;
+  try{fetch('https://ntfy.sh/'+NTFYIN()+'?filename=ready-done.json',{method:'PUT',headers:{Title:'ready-done'},body:JSON.stringify({id:r.id,code:sendCode(),at:new Date().toISOString()})})
+   .then(function(){R.splice(i,1);arm={};paint();toast('נמחק. האריח ייעלם בעדכון הבא של הדף.');if(!R.length){var g=document.getElementById('gReady');if(g)g.hidden=true;}})
+   .catch(function(){toast('לא נמחק. תבדוק חיבור ותנסה שוב.');});}catch(e2){toast('לא נמחק. תנסה שוב.');}
+ };
+ document.body.appendChild(w);paint();
+}
+on('gReady',readySheet);
 function personalSheet(){
  var old=document.getElementById('psSheet');if(old)old.remove();
  var P=D.personal||{chosen:false,picked:[],tiles:[],catalog:[],requests:[]};
