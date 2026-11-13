@@ -1,0 +1,14 @@
+[Unit]
+Description=pain scanner: public complaints into ad headlines (web search only)
+After=network-online.target
+[Service]
+Type=oneshot
+User=monitor
+Group=monitor
+Environment=HOME=/home/monitor
+EnvironmentFile=/etc/monitor.env
+WorkingDirectory=/home/monitor/abaitzik-monitor
+ExecStart=/usr/bin/node pain-scan.js
+TimeoutStartSec=40min
+StandardOutput=append:/var/log/monitor-pains.log
+StandardError=append:/var/log/monitor-pains.log
