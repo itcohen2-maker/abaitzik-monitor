@@ -864,6 +864,8 @@ function build() {
       return { at: (e && e.at) || '', ok: !st || !!st.ok, connect: (st && !st.ok && st.connect) || '',
         events: e ? e.events.filter((x) => Date.parse(x.end || x.start) >= from) : [] };
     })(),
+    // 13.11.2026: the 🎁 tile, a carousel or video waiting to be uploaded (readyList).
+    ready: readyList(inst.dataPath || 'data'),
     // 10.11.2026, Itzik: "🎛️ לוח הפרסומים". LinkedIn posts and the statuses he marked done (both outside docs/). His copy only.
     board: inst.name === 'abaitzik' ? (() => { const r = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { return d; } };
       const li = r(path.join(inst.dataPath, 'linkedin', 'queue.json'), []);
@@ -1445,6 +1447,8 @@ const TENANT_TILES = {
   gShopList: ['gShop', '🛒 קניות', 'הרשימה שלך, מסמנים מה נקנה'],
   // 10.11.2026, Itzik: what the quote promises (a campaign draft, captions, a post description) is on every monitor by default.
   gCamp: ['g13', '📣 קמפיינים', 'מעלים תמונות או סרטון, ואני מכין טיוטה'],
+  // 13.11.2026, Itzik: what the monitor made from his material waits here until he uploads it (data/ready, readySheet).
+  gReady: ['g13', '🎁 מוכן להעלאה', 'הסרטון או הקרוסלה שהכנתי לך'],
   // 10.11.2026, Itzik, for Ilay: his own campaigns from his ad account, read only (ads-sync.js, data/ads/status.json).
   gAds: ['g13', '📊 מצב הקמפיינים', 'מה רץ, כמה הוצא, כמה לידים'],
   // 10.11.2026, Itzik: Ilay's own publishing board (only where instance.json screens lists it).
@@ -1538,6 +1542,17 @@ function tenantTools(inst) {
     + '\n   <button type="button" class="ic icNew" id="icFcPersonal" data-new="1" style="display:none"><span class="c c-fcp">🌿</span>אימון אישי</button>'
     + '\n  </div>';
 }
+// 13.11.2026: what waits in the 🎁 tile, newest first. Only names that still exist in files-private.
+function readyList(dataPath) {
+  const dir = path.join(dataPath, 'ready'), out = [];
+  let names = [];
+  try { names = fs.readdirSync(dir).filter((f) => /^[a-z0-9-]{4,60}[.]json$/.test(f)); } catch (e) { return out; }
+  names.forEach((f) => { try { const r = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
+    const files = (Array.isArray(r.files) ? r.files : []).map(String).filter((n) => /^[^/]+$/.test(n) && fs.existsSync(path.join(dataPath, 'files-private', n)));
+    if (files.length) out.push({ id: f.replace(/[.]json$/, ''), at: String(r.at || ''), title: String(r.title || '').slice(0, 120), files: files });
+  } catch (e) { /* a broken entry is skipped */ } });
+  return out.sort((a, b) => (a.at < b.at ? 1 : -1));
+}
 function tenantTiles(inst) {
   const ids =(Array.isArray(inst.screens) && inst.screens.length ? inst.screens : TENANT_DEFAULT).filter((id) => id !== 'gAdminReq');
   // Itzik, 5.10: a customer does not change the system, he asks. The way to ask
@@ -1547,6 +1562,8 @@ function tenantTiles(inst) {
   TENANT_ALWAYS.forEach((id) => { if (ids.indexOf(id) < 0) ids.push(id); });
   // 10.11.2026: the campaigns tile comes by itself once his Facebook is connected and numbers came in (ads-sync.js).
   if (ids.indexOf('gAds') < 0) { try { if (JSON.parse(fs.readFileSync(path.join(inst.dataPath || 'data', 'ads', 'status.json'), 'utf8')).ok === true) ids.push('gAds'); } catch (e) { /* not connected */ } }
+  // 13.11.2026: 🎁 first on the home screen while something waits in data/ready (removed after "העליתי").
+  try { if (ids.indexOf('gReady') < 0 && readyList(inst.dataPath || 'data').length) ids.unshift('gReady'); } catch (e) { /* none, or lifted alone by a test */ }
   // 12.11.2026: ▶️ comes once a YouTube channel was given in 🔌 (data/yt/channel.json).
   try { if (ids.indexOf('gYtCom') < 0 && fs.existsSync(path.join(inst.dataPath || 'data', 'yt', 'channel.json'))) ids.push('gYtCom'); } catch (e) { /* none */ }
   // 13.11.2026, Itzik: "תעשה אריח אחד של לידים ... על כל המוניטורים". Here when the business grid (which has it) is not drawn.
@@ -1578,7 +1595,7 @@ function tenantTiles(inst) {
     if (id === 'gMyMgr' && inst.owner) title = '🧑‍💼 המנהלת של ' + esc(inst.owner);
     // data-grp by visible label: only the two labels in the groups list get one.
     const grp = { gFiles: 'home', gBiz: 'work' }[id];
-    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' || /^gBh|^gShopList$|^gCamp$|^gMyMgr$|^gMyBoard$|^gSend$/.test(id) ? ' data-new="1"' : '') + (id === 'gSend' ? ' hidden' : '') + (id === 'gBiz' ? ' data-upd="20261105-shai-send"' : '') + (id === 'gTasks' ? ' data-upd="tasks-edit-1106"' : '') + (id === 'gMyBoard' ? ' data-upd="20261111-hours"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
+    return '\n  <button type="button" class="gt ' + cls + '"' + (grp ? ' data-grp="' + grp + '"' : '') + ' id="' + id + '"' + (id === 'gIntake' || id === 'gFiles' || id === 'gBiz' || /^gBh|^gShopList$|^gCamp$|^gReady$|^gMyMgr$|^gMyBoard$|^gSend$/.test(id) ? ' data-new="1"' : '') + (id === 'gSend' ? ' hidden' : '') + (id === 'gBiz' ? ' data-upd="20261105-shai-send"' : '') + (id === 'gTasks' ? ' data-upd="tasks-edit-1106"' : '') + (id === 'gMyBoard' ? ' data-upd="20261111-hours"' : '') + (id === 'gIntake' ? ' data-upd="20261024-intake"' : '') + (id === 'gAdminReq' ? ' data-upd="20261024-arq"' : '') + (id === 'gUpgrade' ? ' data-upd="20261024-upg"' : '') + '><b>' + title + '</b><small>' + sub + '</small></button>';
   }).join('');
   return draw(top) + guides + links + samples + draw(rest) + '\n ';
 }
@@ -15627,6 +15644,8 @@ function campSheet(){
  function cpRealText(t){var s=t;CP_ASK.concat(cpAiAsked).forEach(function(q){s=s.split(q).join('');});return s.split(String.fromCharCode(10)).join(' ').trim();}
  w.innerHTML='<div class="ycard"><b>📣 קמפיינים</b>'
   +'<small>מעלים תמונות או סרטון, בוחרים מה לעשות איתם, וכותבים מה חשוב. אני מכין טיוטה: מטרה, קהל, תקציב מוצע, כמה גרסאות כיתוב ותיאור לפוסט. שום דבר לא עולה בלי אישור שלך.</small>'
+  // 13.11.2026, Itzik: a carousel or a video made from his own material goes through the detailed questionnaire (campQuiz).
+  +'<button type="button" class="yb yb1" data-a="quiz">📋 להכין לי קרוסלה או סרטון מהחומר שלי: שאלון מפורט</button>'
   +'<button type="button" class="yb yb2" data-a="pick">📎 לבחור תמונות או סרטון</button>'
   +'<input type="file" id="cpFiles" accept="image/*,video/*" multiple hidden>'
   +'<div id="cpList" style="font:600 14px Heebo,sans-serif;margin:6px 0"></div>'
@@ -15699,6 +15718,7 @@ function campSheet(){
   if(e.target===w)return close();
   var a=e.target.getAttribute&&e.target.getAttribute('data-a');
   if(a==='x')return close();
+  if(a==='quiz'){close();return campQuiz();}
   if(a==='pick'){var fi=document.getElementById('cpFiles');if(fi)fi.click();return;}
   if(a==='ai')return cpAiRun();
   var ao=e.target.getAttribute&&e.target.getAttribute('data-ao');
@@ -15774,6 +15794,150 @@ function campSheet(){
  }).catch(function(){});
 }
 on('gCamp',campSheet);
+/*
+  13.11.2026, Itzik: "שאלון ללקוח שרוצה להעלות קמפיין ורוצה שהמוניטור יכין לו קרוסלה או סרטון מחומר שהוא הביא.
+  השאלון חייב להיות מפורט כמה שיותר ... להזכיר לו שיקח זמן ... להגיד לו איפה הסרטון נמצא, או לשאול אם הוא רוצה אריח,
+  ואחר כך למחוק אחרי שהוא יעלה". On every monitor. One question a screen, a tap or a few words, files at the end,
+  then the delivery: how long it takes, where it lands, and whether a 🎁 tile should hold it until he uploads.
+  It goes out like the campaign sheet ("קמפיין: ... | ..." with the files, sendAll). lib/campaign.js says what the session does.
+*/
+var CQ=[
+ {k:'kind',t:'מה להכין לך?',o:['קרוסלה (כמה תמונות שמחליקים)','סרטון','גם קרוסלה וגם סרטון'],req:1},
+ {k:'biz',t:'ספר לי על העסק',h:'איך קוראים לעסק, מה אתם עושים, ואיפה. שתיים שלוש שורות מספיקות.',f:'למשל: סטודיו לפילאטיס ברמת גן, שיעורים קטנים עד 6 משתתפות',req:1},
+ {k:'what',t:'מה מקדמים בקמפיין הזה?',h:'מוצר, שירות, אירוע או מבצע. אחד, הכי חשוב.',f:'למשל: מנוי חודשי לשיעורי בוקר',req:1},
+ {k:'goal',t:'מה תרצה שיקרה אחרי שרואים את זה?',o:['שיכתבו לי בוואטסאפ','שיתקשרו','שימלאו טופס','שיקנו באתר','שיגיעו לעסק','שיכירו אותי ויעקבו'],m:1,req:1},
+ {k:'offer',t:'יש מבצע, מחיר או הטבה?',o:['אין, רק להכיר','הנחה','מתנה או בונוס','מחיר מיוחד','לזמן מוגבל'],m:1,f:'כתוב את המבצע במדויק, כמו שצריך להופיע'},
+ {k:'pain',t:'מה הבעיה שהלקוח שלך רוצה לפתור?',h:'מה הוא מרגיש לפני שהוא מגיע אליך. מזה בונים את המשפט הראשון.',f:'למשל: כואב לו הגב מהישיבה מול המחשב',req:1},
+ {k:'why',t:'למה לבחור דווקא בך?',o:['שירות אישי','ניסיון של שנים','מחיר טוב','איכות','מהירות','זמינות'],m:1,f:'או במילים שלך'},
+ {k:'age',t:'מי הלקוחות שלך? גיל',o:['18 עד 25','25 עד 35','35 עד 45','45 עד 55','55 עד 65','65 ומעלה','כל הגילאים'],m:1,req:1},
+ {k:'who',t:'ועוד על הלקוח',o:['בעיקר נשים','בעיקר גברים','גם וגם','הורים','בעלי עסקים','סטודנטים'],m:1,f:'תאר את הלקוח הכי טוב שלך במשפט'},
+ {k:'area',t:'איפה הלקוחות נמצאים?',o:['כל הארץ','צפון','חיפה והקריות','השרון','מרכז','ירושלים','דרום','רק העיר שלי'],m:1,f:'עיר או שכונה, אם צריך'},
+ {k:'where',t:'איפה זה יעלה?',o:['פיד באינסטגרם','סטורי','ריל','פייסבוק','טיקטוק','סטטוס בוואטסאפ','מודעה ממומנת','עוד לא יודע'],m:1,req:1},
+ {k:'len',t:'כמה ארוך הסרטון?',o:['עד 15 שניות','עד 30 שניות','עד 60 שניות','תחליטו אתם'],when:'video'},
+ {k:'slides',t:'כמה תמונות בקרוסלה?',o:['3 עד 5','6 עד 8','עד 10','תחליטו אתם'],when:'car'},
+ {k:'style',t:'איזה סגנון?',o:['מקצועי ונקי','חם ומשפחתי','מצחיק וקליל','מרגש','צעיר וצבעוני','יוקרתי'],m:1,f:'צבעים של העסק, או משהו שחשוב לך במראה'},
+ {k:'text',t:'טקסט על המסך?',o:['כן, כותרות קצרות','מעט מאוד','בלי טקסט בכלל'],req:1},
+ {k:'lang',t:'באיזו שפה?',o:['עברית','אנגלית','רוסית','ערבית','עברית ואנגלית'],m:1},
+ {k:'must',t:'מה חייב להופיע?',o:['הלוגו','טלפון','כתובת','אתר','וואטסאפ','שעות פתיחה'],m:1,f:'כתוב את הפרטים עצמם: המספר, הכתובת, האתר'},
+ {k:'never',t:'יש משהו שאסור?',h:'מילה, תמונה, מתחרה, צבע. אם אין, לדלג.',f:'למשל: לא להראות פנים של לקוחות'},
+ {k:'like',t:'ראית פרסומת שאהבת?',h:'קישור או תיאור קצר. לא חובה, אבל זה עוזר מאוד.',f:'הדבק קישור או תאר'},
+ {k:'music',t:'מוזיקה',o:['בלי, אבחר בזמן ההעלאה','שקט ורגוע','קצבי ושמח','מרגש'],h:'באינסטגרם ובפייסבוק הכי טוב לבחור שיר בזמן ההעלאה, מהספרייה שלהם.'},
+ {k:'files',t:'החומרים שלך',h:'תמונות וסרטונים שצילמת. הסדר כאן הוא הסדר שבו הם יופיעו.',files:1,f:'מה רואים בכל קובץ, ומה הכי חשוב שיופיע',req:1},
+ {k:'tile',t:'איפה תקבל את זה',info:1,o:['כן, אריח במסך הבית','לא, מספיק במסך התשובות'],req:1},
+ {k:'end',t:'הכל מוכן לשליחה',sum:1}
+];
+function campQuiz(){
+ var old=document.getElementById('cqSheet');if(old)old.remove();
+ var w=document.createElement('div');w.id='cqSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','שאלון לקרוסלה או סרטון');
+ var A={},F={},files=[],step=0;
+ function steps(){var kd=(A.kind||[])[0]||'';return CQ.filter(function(q){
+  if(q.when==='video')return kd.indexOf('סרטון')>=0;
+  if(q.when==='car')return kd.indexOf('קרוסלה')>=0;
+  return true;});}
+ function line(q){var a=(A[q.k]||[]).join(', '),f=(F[q.k]||'').trim();return a&&f?a+'. '+f:a||f;}
+ function paint(){
+  var L=steps(),q=L[step],n=L.length-1;
+  var h='<div class="ycard"><small style="opacity:1;font-weight:700">📋 שאלה '+Math.min(step+1,n)+' מתוך '+n+'</small>'
+   +'<div style="height:6px;border-radius:9px;background:#e6e9ef;margin:6px 0 10px"><i style="display:block;height:6px;border-radius:9px;background:#22c55e;width:'+Math.round(step*100/n)+'%"></i></div>'
+   +'<b style="font-size:20px">'+esc(q.t)+'</b>';
+  if(q.h)h+='<small style="opacity:1">'+esc(q.h)+'</small>';
+  if(q.info)h+='<div style="margin:8px 0;padding:12px;border-radius:14px;background:#fff7e6;border:1px solid #f5c26b;font:600 15px/1.5 Heebo,sans-serif">'
+   +'⏳ ההכנה לוקחת זמן. בדרך כלל כמה שעות, ולפעמים עד יום עבודה.<br>📩 כשזה מוכן תקבל הודעה, והתוצאה תחכה לך במסך התשובות, עם כפתור לפתוח ולשמור לטלפון.<br>'
+   +'🎁 אפשר גם אריח במסך הבית שמחזיק את הסרטון עד שתעלה אותו. אחרי ההעלאה לוחצים בו "העליתי", והאריח והקבצים נמחקים.</div>'
+   +'<small style="opacity:1;font-weight:700">רוצה אריח במסך הבית?</small>';
+  if(q.o)h+='<div class="arPick" role="group">'+q.o.map(function(o,i){return '<button type="button" class="yb'+((A[q.k]||[]).indexOf(o)>=0?' on':'')+'" data-o="'+i+'">'+esc(o)+'</button>';}).join('')+'</div>'
+   +(q.m?'<small>אפשר לבחור כמה</small>':'');
+  if(q.files)h+='<button type="button" class="yb yb2" data-a="pick">📎 לבחור תמונות או סרטונים</button><input type="file" id="cqFiles" accept="image/*,video/*" multiple hidden>'
+   +'<div style="font:600 14px Heebo,sans-serif;margin:6px 0">'+files.map(function(f,i){
+    return '<div style="display:flex;gap:6px;align-items:center;margin:4px 0"><b>'+(i+1)+'</b><span style="flex:1;word-break:break-all">'+(f.type&&f.type.indexOf('video')===0?'🎬 ':'🖼️ ')+esc(f.name)+'</span>'
+     +'<button type="button" class="yb" data-m="u'+i+'">▲</button><button type="button" class="yb" data-m="d'+i+'">▼</button><button type="button" class="yb" data-m="x'+i+'">✕</button></div>';}).join('')+'</div>';
+  if(q.f)h+='<textarea id="cqF" rows="3" style="width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #ccd;padding:10px;font:15px Heebo,sans-serif;margin-top:6px" placeholder="'+esc(q.f)+'">'+esc(F[q.k]||'')+'</textarea>';
+  if(q.sum){
+   h+='<div style="max-height:46vh;overflow:auto;margin:8px 0;font:600 14px/1.5 Heebo,sans-serif">'+L.filter(function(x){return !x.sum&&!x.info&&!x.files&&line(x);}).map(function(x){
+    return '<div style="margin:4px 0"><span style="opacity:.7">'+esc(x.t)+'</span><br>'+esc(line(x))+'</div>';}).join('')
+    +'<div style="margin:4px 0"><span style="opacity:.7">קבצים</span><br>'+files.length+'</div></div>'
+    +'<small style="opacity:1;font-weight:700">⏳ זכור: ההכנה לוקחת כמה שעות, לפעמים עד יום עבודה. שום דבר לא עולה לרשתות בלי אישור שלך.</small>'
+    +'<button type="button" class="yb yb1" data-a="send">שליחה</button>';
+  }else h+='<button type="button" class="yb yb1" data-a="next">'+(step+1===n?'לסיכום':'הבא')+'</button>';
+  if(step>0)h+='<button type="button" class="yb" data-a="back">חזרה</button>';
+  h+='<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+  w.innerHTML=h;
+  var ta=document.getElementById('cqF');if(ta)ta.oninput=function(){F[q.k]=ta.value;};
+ }
+ function ok(q){
+  if(q.files)return files.length?true:(toast('צריך לבחור לפחות תמונה או סרטון אחד'),false);
+  if(q.req&&!line(q)){toast(q.o?'לבחור תשובה, או לכתוב במילים שלך':'כתוב כמה מילים, זה חשוב לתוצאה');return false;}
+  return true;
+ }
+ w.onclick=function(e){
+  if(e.target===w)return;
+  var L=steps(),q=L[step],t=e.target,a=t.getAttribute&&t.getAttribute('data-a');
+  if(a==='x'){if(step<2||confirm('לסגור? התשובות לא יישמרו'))w.remove();return;}
+  if(a==='back'){step=Math.max(0,step-1);return paint();}
+  if(a==='next'){if(!ok(q))return;step++;return paint();}
+  if(a==='pick'){var fi=document.getElementById('cqFiles');if(fi)fi.click();return;}
+  var o=t.getAttribute&&t.getAttribute('data-o');
+  if(o!==null&&o!==undefined&&q.o){
+   var v=q.o[Number(o)],cur=A[q.k]||[];
+   if(q.m){var i=cur.indexOf(v);if(i>=0)cur.splice(i,1);else cur.push(v);A[q.k]=cur;paint();}
+   else{A[q.k]=[v];step++;paint();}
+   return;
+  }
+  var mv=t.getAttribute&&t.getAttribute('data-m');
+  if(mv){var mn=Number(mv.slice(1)),mc=mv.charAt(0);
+   if(mc==='x')files.splice(mn,1);else{var mj=mc==='u'?mn-1:mn+1;if(mj>=0&&mj<files.length){var tmp=files[mn];files[mn]=files[mj];files[mj]=tmp;}}
+   return paint();}
+  if(a!=='send')return;
+  var kd=(A.kind||[''])[0],tile=(A.tile||[''])[0].indexOf('כן')===0;
+  var parts=L.filter(function(x){return !x.sum&&!x.info&&!x.files&&x.k!=='kind'&&line(x);}).map(function(x){return x.t+' '+line(x);});
+  if((F.files||'').trim())parts.push('על הקבצים: '+F.files.trim());
+  var note='קמפיין: '+kd+' מהחומר שלי (שאלון) | '+parts.join(' | ')
+   +(files.length>1?' | סדר הקבצים: '+files.map(function(f,i){return (i+1)+'. '+f.name;}).join(', '):'')
+   +' | אריח מוכן: '+(tile?'כן':'לא');
+  t.disabled=true;t.textContent='שולח...';
+  sendAll(files,note).then(function(){
+   markSent('file',note);w.remove();
+   toast('נשלח. ההכנה לוקחת כמה שעות. כשזה מוכן תקבל הודעה, והתוצאה תחכה במסך התשובות'+(tile?' ובאריח 🎁 במסך הבית.':'.'));
+  }).catch(function(){t.disabled=false;t.textContent='שליחה';toast('לא נשלח. תבדוק חיבור ותנסה שוב. התשובות נשמרו כאן.');});
+ };
+ w.addEventListener('change',function(e){
+  if(e.target&&e.target.id==='cqFiles'){files=files.concat([].slice.call(e.target.files||[]));e.target.value='';paint();}
+ });
+ document.body.appendChild(w);paint();
+}
+/*
+  13.11.2026: 🎁 מוכן להעלאה. A carousel or video the monitor made, held on the home screen until he uploads it.
+  data/ready/<id>.json {id, at, title, files:[names in files-private]}, written by the session (lib/campaign.js).
+  "העליתי" sends ready-done with the owner code; the listener deletes the entry and its files and rebuilds.
+*/
+function readySheet(){
+ var old=document.getElementById('rdSheet');if(old)old.remove();
+ var w=document.createElement('div');w.id='rdSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','מוכן להעלאה');
+ var R=(D.ready||[]),arm={};
+ function paint(){
+  w.innerHTML='<div class="ycard"><b>🎁 מוכן להעלאה</b><small style="opacity:1">פותחים, שומרים לטלפון ומעלים לרשת. אחרי שהעלית, לוחצים "העליתי" והקבצים נמחקים מכאן.</small>'
+   +(R.length?R.map(function(r,i){
+    return '<div style="margin:10px 0;padding:12px;border:1px solid #ccd;border-radius:14px"><b style="font:800 16px Heebo,sans-serif">'+esc(r.title||'מוכן')+'</b><br><small>'+esc(agoAfter(r.at)?'הוכן '+agoAfter(r.at):'')+'</small>'
+     +(r.files||[]).map(function(f,k){return '<button type="button" class="yb yb2" data-f="'+esc(f)+'">'+(/[.](mp4|mov|webm)$/i.test(f)?'▶️ לפתוח את הסרטון':'🖼️ לפתוח תמונה '+(k+1))+'</button>';}).join('')
+     +'<button type="button" class="yb" data-d="'+i+'">'+(arm[i]?'בטוח? לחיצה נוספת מוחקת':'✓ העליתי, אפשר למחוק')+'</button></div>';
+   }).join(''):'<small>אין כרגע כלום שמחכה.</small>')
+   +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+ }
+ w.onclick=function(e){
+  var t=e.target;if(t===w||(t.getAttribute&&t.getAttribute('data-a')==='x'))return w.remove();
+  var f=t.getAttribute&&t.getAttribute('data-f');if(f)return fileOpen(f);
+  var d=t.getAttribute&&t.getAttribute('data-d');if(d===null||d===undefined)return;
+  var i=Number(d);if(!arm[i]){arm[i]=1;return paint();}
+  var r=R[i];if(!r)return;
+  try{fetch('https://ntfy.sh/'+NTFYIN()+'?filename=ready-done.json',{method:'PUT',headers:{Title:'ready-done'},body:JSON.stringify({id:r.id,code:sendCode(),at:new Date().toISOString()})})
+   .then(function(){R.splice(i,1);arm={};paint();toast('נמחק. האריח ייעלם בעדכון הבא של הדף.');if(!R.length){var g=document.getElementById('gReady');if(g)g.hidden=true;}})
+   .catch(function(){toast('לא נמחק. תבדוק חיבור ותנסה שוב.');});}catch(e2){toast('לא נמחק. תנסה שוב.');}
+ };
+ document.body.appendChild(w);paint();
+}
+on('gReady',readySheet);
 /*
   10.11.2026, Itzik: "מנהל לכל מוניטור, והלקוח נכנס לכפתור של המנהל ושם מקליט את כל הבקשות שחוזרות על עצמן."
   The customer says (types, or speaks into the box) what comes back, when, and which kind:

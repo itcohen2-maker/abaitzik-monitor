@@ -1405,6 +1405,25 @@ async function recordNerApprove(m) {
   execFile(process.execPath, ['ner-post.js', '--mirror'], { cwd: __dirname, timeout: 120000 }, function () {});
 }
 
+// 13.11.2026, Itzik: the 🎁 tile. "העליתי" deletes the waiting carousel or video (data/ready/<id>.json and its files) and rebuilds.
+async function recordReadyDone(m) {
+  let got;
+  try { const res = await fetch(m.attachment.url); got = JSON.parse(res.ok ? await res.text() : ''); }
+  catch (e) { got = null; }
+  if (!got || !ownerCodeOk('קוד ' + String(got.code || ''))) { say('!! מחיקת מוכן להעלאה בלי קוד, לא בוצעה'); return; }
+  const id = String(got.id || '');
+  if (!/^[a-z0-9-]{4,60}$/.test(id)) return;
+  const p = path.join(__dirname, 'data', 'ready', id + '.json');
+  let r;
+  try { r = JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { say('מוכן להעלאה: ' + id + ' כבר לא קיים'); return; }
+  (Array.isArray(r.files) ? r.files : []).map(String).filter((n) => /^[^/]+$/.test(n) && n !== '.' && n !== '..').forEach(function (n) {
+    try { fs.unlinkSync(path.join(__dirname, 'data', 'files-private', n)); } catch (e) { /* already gone */ }
+  });
+  try { fs.unlinkSync(p); } catch (e) { /* gone */ }
+  say('מוכן להעלאה: ' + id + ' הועלה ונמחק');
+  publishChat();
+}
+
 // The "posted" tick on the WhatsApp status page (docs/status/index.html), 1.11. Records the item name
 // in wa-status-done.json so wa-status-morning.js stays quiet for it. Nothing here touches WhatsApp.
 const WA_STATUS_DONE = '/home/monitor/wa-status-done.json';
@@ -1649,6 +1668,11 @@ async function handleOne(m) {
   }
   if (m.attachment && m.title === 'post-plan') {
     await recordPostPlan(m);
+    remember(m);
+    return;
+  }
+  if (m.attachment && m.title === 'ready-done') {
+    await recordReadyDone(m);
     remember(m);
     return;
   }
