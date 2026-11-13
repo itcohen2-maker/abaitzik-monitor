@@ -2693,7 +2693,13 @@ body.gDock #pH,body.gDock #pA{padding-bottom:96px}
 body.gDock #quickSaid:not(:empty),body.gDock #qwRoute:not(:empty){position:fixed;left:16px;right:16px;bottom:148px;z-index:69;text-align:center;
  background:var(--surface);border-radius:12px;padding:6px 10px;box-shadow:0 4px 14px rgba(0,0,0,.12)}
 body.gDock #ansDock{bottom:150px!important}
-body.gDock #pcPill,body.gDock #livePill{transform:translateY(-62px)}
+body.gDock #pcPill,body.gDock #livePill{transform:translateY(-78px)!important}
+body #quickForm .gPlus{background:var(--sunk)!important;color:var(--ink)!important;border:0!important;box-shadow:none!important;min-height:40px!important;padding:0!important;border-radius:50%!important;font:400 26px/1 Heebo,sans-serif!important}
+body.gDockA .gGreet{display:none}
+body #setBtn{display:none!important}
+body #thumbSet.gSetBottom{position:static!important;display:block!important;margin:18px auto 8px!important;inset:auto!important;transform:none!important;
+ border-radius:999px!important;padding:10px 22px!important;box-shadow:none!important;border:1px solid var(--line)!important;background:var(--surface)!important;color:var(--ink)!important}
+body:not(.gDockH) #thumbSet.gSetBottom{display:none!important}
 
 .mob{display:flex;gap:6px;flex:0 0 auto}
 .mob button{background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:10px;
@@ -2844,7 +2850,7 @@ body.gDock #pcPill,body.gDock #livePill{transform:translateY(-62px)}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-13T17:40:33.615Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-13T17:45:17.422Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3201,7 +3207,14 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-
+<div class="alerts" id="pushBox" hidden>
+ <div>
+  <b>התראות לטלפון</b>
+  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
+ </div>
+ <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
+ <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
+</div>
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4776,7 +4789,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='1b80287bf8';
+var CODE_ID='6e9940adf4';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -19325,6 +19338,7 @@ function renderHome(){
   var h=document.getElementById('pH'),a=document.getElementById('pA');
   var on=!!((h&&!h.hidden)||(a&&!a.hidden));
   document.body.classList.toggle('gDock',on);
+  document.body.classList.toggle('gDockH',!!(h&&!h.hidden));document.body.classList.toggle('gDockA',!!(a&&!a.hidden));
   if(!on){var mm=document.getElementById('gMenu');if(mm)mm.hidden=true;}
  }
  function gBuild(){
@@ -19351,7 +19365,8 @@ function renderHome(){
   ['pH','pA'].forEach(function(id){var el=document.getElementById(id);if(el&&window.MutationObserver)new MutationObserver(gDock).observe(el,{attributes:true,attributeFilter:['hidden']});});
   gDock();
  }
- function boot(){arm();micIn();gBuild();}
+ function gSet(){var t=document.getElementById('thumbSet'),h=document.getElementById('pH');if(!t||!h)return;t.classList.add('gSetBottom');if(h.nextSibling!==t)h.parentNode.insertBefore(t,h.nextSibling);}
+ function boot(){arm();micIn();gBuild();gSet();}
  if(document.readyState!=='loading')boot();else document.addEventListener('DOMContentLoaded',boot);
 })();
 
@@ -20019,7 +20034,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="";
+var PUSH_KEY="BAJSdIafAtGxgHzJr3tOJLTViE1Gkn6rNyAReKPb5ZiMM-6xXp2c1PD7V5VKOXkQRWLI9-Wdq7-Q4hyMCcYp2iQ";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
