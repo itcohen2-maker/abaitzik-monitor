@@ -226,5 +226,53 @@
   "caption": "Candle lighting time and Havdalah time when Shabbat ends, exact for your city.\nFree for every Jew, with love.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Parisian\" by Kevin MacLeod (incompetech.com), CC BY 3.0",
   "approved": true,
   "approvedBy": "itzik-11.11-auto"
+ },
+ {
+  "name": "story-he-thu-1911",
+  "date": "2026-11-19",
+  "time": "20:00",
+  "kind": "story",
+  "lang": "he",
+  "city": "עפולה",
+  "file": "media/story-he-thu-1911.mp4",
+  "caption": "",
+  "approved": true,
+  "approvedBy": "itzik-11.11-auto"
+ },
+ {
+  "name": "story-en-thu-1911",
+  "date": "2026-11-19",
+  "time": "20:00",
+  "kind": "story",
+  "lang": "en",
+  "city": "Sydney",
+  "file": "media/story-en-thu-1911.mp4",
+  "caption": "",
+  "approved": true,
+  "approvedBy": "itzik-11.11-auto"
+ },
+ {
+  "name": "post-he-thu-1911",
+  "date": "2026-11-19",
+  "time": "20:00",
+  "kind": "post",
+  "lang": "he",
+  "city": "לוד",
+  "file": "media/post-he-thu-1911.mp4",
+  "caption": "מחר ערב שבת. בדקו כבר עכשיו את זמן הדלקת הנרות לפי המיקום שלכם.\nבחינם, מתנה ממני.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #candletimes\n\nתמונות: ויקישיתוף, נחלת הכלל. מוזיקה: \"Clean Soul\" של Kevin MacLeod (incompetech.com), CC BY 3.0",
+  "approved": true,
+  "approvedBy": "itzik-11.11-auto"
+ },
+ {
+  "name": "post-en-thu-1911",
+  "date": "2026-11-19",
+  "time": "20:00",
+  "kind": "post",
+  "lang": "en",
+  "city": "Dublin",
+  "file": "media/post-en-thu-1911.mp4",
+  "caption": "Tomorrow is Erev Shabbat. Check your candle lighting time now, by your exact location.\nFree, a gift from me.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Clean Soul\" by Kevin MacLeod (incompetech.com), CC BY 3.0",
+  "approved": true,
+  "approvedBy": "itzik-11.11-auto"
  }
 ]
