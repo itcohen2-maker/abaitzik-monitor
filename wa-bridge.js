@@ -514,6 +514,20 @@ async function onMessage(m, contactName) {
       body = t + String.fromCharCode(10, 10) + '(ההקשר: ההודעה האחרונה שהמוניטור שלח לו בוואטסאפ, ביוזמתו: "' + String(lastOwn.text || '').replace(/\s+/g, ' ').slice(0, 600) + '")';
     }
   }
+  // 13.11.2026: "מה המצב" is answered here, in code. A session took it and sometimes ended with no answer (הוחזר לתור).
+  if (require('./lib/wa-status-ask.js').isStatusAsk(t)) {
+    const SA = require('./lib/wa-status-ask.js');
+    const reply = SA.statusReply({ lastOwnAt: (latestOwn(m.from) || {}).at || 0, waiting: Object.keys(loadState().pending || {}).length });
+    await waSend(m.from, reply);
+    try {
+      const stamp = new Date().toISOString().replace(/[-:]/g, '').slice(0, 13).replace('T', '-');
+      fs.writeFileSync(path.join(CHAT, stamp + '-claude-wa-status-' + Date.now().toString(36) + '.json'),
+        JSON.stringify({ at: new Date().toISOString(), from: 'claude', text: reply }, null, 1), 'utf8');
+    } catch (e) { log('!! status chat note: ' + e.message); }
+    log('status question answered in code: ' + m.id);
+    return;
+  }
+
   const id = await toMonitor('וואטסאפ', demoOn() ? DEMO_FRAME + body : body, re);
   const s2 = loadState();
   s2.pending[id] = { to: m.from, at: Date.now(), name: contactName || '' };
