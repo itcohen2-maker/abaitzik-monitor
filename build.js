@@ -539,7 +539,7 @@ function build() {
   // The reviewer's improvements (review.js), newest first. 30.9.
   const better = loadDocs('better')
     .map(x => ({ at: x.at || '', t: x.t || '', d: x.d || '', area: x.area || '', size: x.size || '', built: x.built || '',
-                 by: x.by === 'radar' ? 'radar' : 'review', u: /^https:\/\//.test(x.u || '') ? x.u : '' }))
+                 by: x.by === 'radar' || x.by === 'pains' ? x.by : 'review', q: x.q || '', u: /^https:\/\//.test(x.u || '') ? x.u : '' }))
     // 12.10, Itzik: "כל זמן אותם רעיונות". What is already done sinks under what is still open.
     .sort((a, b) => (!a.built !== !b.built ? (a.built ? 1 : -1) : (a.at < b.at ? 1 : -1)));
   // 12.10: what the other side changed in the theatre (theatre-news.js), newest first.
@@ -20434,7 +20434,7 @@ function renderIdeas(){
  // What the daily reviewer found comes first, marked with the day it found it.
  // What the improver (improve.js) already built says so instead of asking him.
  // The weekly radar (radar.js) brings new open source tools, each with its link.
- var L=(D.better||[]).map(function(x){return {t:x.t,d:x.d,u:x.u,built:!!x.built,tag:(x.built?'✅ כבר בוצע · '+stamp(x.built):(x.by==='radar'?'🔭 כלים חדשים':'🔍 בודק השיפורים')+(x.at?' · '+stamp(x.at):''))+(x.size?' · '+x.size:'')};}).concat(IDEAS);
+ var L=(D.better||[]).map(function(x){return {t:x.t,d:x.d,u:x.u,q:x.q,pain:x.by==='pains',built:!!x.built,tag:(x.built?'✅ כבר בוצע · '+stamp(x.built):(x.by==='radar'?'🔭 כלים חדשים':x.by==='pains'?'🩹 כאב למודעה':'🔍 בודק השיפורים')+(x.at?' · '+stamp(x.at):''))+(x.size?' · '+x.size:'')};}).concat(IDEAS);
  IDEAS_SHOWN=L;
  var IH=L.map(function(x,n){
   var on=asked.indexOf(x.t)>-1;
@@ -20445,16 +20445,17 @@ function renderIdeas(){
    +'<button type="button" data-s="'+n+'">שליחה</button><small></small></div>';
   if(x.built)return '<div class="idea"><small class="itag">'+esc(x.tag)+'</small><b>'+esc(x.t)+'</b><p>'+esc(x.d)+'</p>'+cm+'</div>';
   return '<div class="idea">'+(x.tag?'<small class="itag">'+esc(x.tag)+'</small>':'')+'<b>'+esc(x.t)+'</b><p>'+esc(x.d)+'</p>'
-   +(String(x.u||'').indexOf('https://')===0?'<p><a href="'+esc(x.u)+'" target="_blank" rel="noopener">לפתוח את הכלי</a></p>':'')
+   +(String(x.u||'').indexOf('https://')===0?'<p><a href="'+esc(x.u)+'" target="_blank" rel="noopener">'+(x.pain?'לראות את המקור':'לפתוח את הכלי')+'</a></p>':'')
    +'<button type="button" data-i="'+n+'"'+(on?' class="done"':'')+'>'
-   +(on?'ביקשת. אני על זה':'רוצה את זה')+'</button>'+cm+'</div>';
+   +(on?'ביקשת. אני על זה':(x.pain?'להכין מודעה מזה':'רוצה את זה'))+'</button>'+cm+'</div>';
  });
  // 4.11.2026 (direction ד): 174 ideas in one column became five coloured drawers.
- var IG=[['🔍 חדש מבודק השיפורים',[]],['🙋 ביקשת',[]],['🔭 כלים חדשים',[]],['✅ כבר בוצע',[]],['💡 רעיונות כלליים',[]]];
- L.forEach(function(x,n){IG[x.built?3:asked.indexOf(x.t)>-1?1:/🔭/.test(x.tag||'')?2:x.tag?0:4][1].push(IH[n]);});
+ var IG=[['🔍 חדש מבודק השיפורים',[]],['🙋 ביקשת',[]],['🔭 כלים חדשים',[]],['✅ כבר בוצע',[]],['💡 רעיונות כלליים',[]],['🩹 כאבים למודעות',[]]];
+ // 13.11.2026: pain-scan.js, real complaints turned into ad headlines, in their own drawer.
+ L.forEach(function(x,n){IG[x.built?3:asked.indexOf(x.t)>-1?1:x.pain?5:/🔭/.test(x.tag||'')?2:x.tag?0:4][1].push(IH[n]);});
  var il=document.getElementById('ideaList');
  il.innerHTML=IG.filter(function(g){return g[1].length;}).map(function(g){return '<h3 data-n="'+g[1].length+'">'+g[0]+'</h3><div>'+g[1].join('')+'</div>';}).join('');
- dwRe(il,{key:'ideas',counts:'data',short:{'חדש מבודק השיפורים':'חדשים','כלים חדשים':'כלים','כבר בוצע':'בוצע','רעיונות כלליים':'כלליים'}});
+ dwRe(il,{key:'ideas',counts:'data',short:{'חדש מבודק השיפורים':'חדשים','כאבים למודעות':'כאבים','כלים חדשים':'כלים','כבר בוצע':'בוצע','רעיונות כלליים':'כלליים'}});
  Array.prototype.forEach.call(document.querySelectorAll('#ideaList button[data-c]'),function(b){
   b.onclick=function(){
    var box=document.getElementById('icb'+b.getAttribute('data-c'));
@@ -20483,12 +20484,13 @@ function renderIdeas(){
   b.onclick=function(){
    var x=IDEAS_SHOWN[Number(b.getAttribute('data-i'))];
    b.disabled=true;b.textContent='שולח.';
-   sendText('רעיון מהמוניטור','רוצה את זה: '+x.t,'רעיון').then(function(){
+   var ask=x.pain?'להכין מודעה מהכאב: '+x.t+' (הציטוט: '+(x.q||x.d)+')':'רוצה את זה: '+x.t;
+   sendText('רעיון מהמוניטור',ask,'רעיון').then(function(){
     var a=ideaDone();
     if(a.indexOf(x.t)<0)a.push(x.t);
     try{localStorage.setItem('ideasAsked',JSON.stringify(a));}catch(e){}
     b.className='done';b.textContent='ביקשת. אני על זה';
-    var p=pending();p.push({at:new Date().toISOString(),text:'רוצה את זה: '+x.t});savePending(p);
+    var p=pending();p.push({at:new Date().toISOString(),text:ask});savePending(p);
     markSent('text');renderSent();renderThread();
    }).catch(function(){
     b.textContent='לא נשלח. תנסה שוב';
