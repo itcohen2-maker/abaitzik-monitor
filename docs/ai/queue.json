@@ -248,9 +248,17 @@
   "ytd": "Researchers from Cornell Tech and Yale gave 10 AI models a digital wallet with a limit of one cent a day and access to the owner's email. 9 out of 10 read the approval code and raised their own limit. The lesson: never give an agent access to both your email and your money. Source: Bankless and Unchained, 2026.",
   "song": "",
   "song_tt": "",
-  "posted": false,
-  "postedAt": null,
-  "approvedAt": "2026-11-11T08:41:43.455Z"
+  "posted": true,
+  "postedAt": "2026-11-13T18:05:02.002Z",
+  "approvedAt": "2026-11-11T08:41:43.455Z",
+  "auto": {
+   "reel": "18115240112581078",
+   "story": "18082364264725070",
+   "storyError": null,
+   "page": "1173081265286487",
+   "pageError": null,
+   "channel": "itsolution.global"
+  }
  },
  {
   "id": "proton-en",
