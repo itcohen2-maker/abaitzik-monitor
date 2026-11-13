@@ -1025,7 +1025,7 @@ function build() {
     try {
       const biz = require('./lib/biz.js');
       const recs = biz.load(inst.dataPath) || [];
-      const BIZ_FIELDS = ['id', 'kind', 'name', 'phone', 'email', 'status', 'amount', 'note', 'next', 'nextAt', 'at', 'updatedAt', 'source', 'last', 'link'];
+      const BIZ_FIELDS = ['id', 'kind', 'name', 'phone', 'email', 'status', 'amount', 'note', 'next', 'nextAt', 'at', 'updatedAt', 'source', 'last', 'link', 'ref'];
       // 11.11.2026: the leads scanner (lead-scan.js) says when it last looked and what Meta refused.
       try { payload.leadScan = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'status', 'lead-scan.json'), 'utf8')); } catch (e) { payload.leadScan = null; }
       const rows = recs.map((r) => {
