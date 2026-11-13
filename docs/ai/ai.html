@@ -66,9 +66,12 @@
 (function(){
  function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
  var SEND=null;try{SEND=JSON.parse(sessionStorage.getItem('nerSend')||'null');}catch(e){}
+ // 13.11.2026, Itzik: "אין אפשרות לאשר את הסרטונים, הכפתור תקוע". Opened from a plain link (WhatsApp) there is no channel,
+ // so the page goes through the monitor once (#ai), which opens it again with the channel. m=1 marks that return, so no loop.
+ if((!SEND||!SEND.t)&&!/[?&]m=1/.test(location.search)){location.replace('../#ai'+(location.hash&&location.hash.length>1?'='+location.hash.slice(1):''));return;}
  // every action goes to the server through the same channel as the plate page, with his code
  function act(action,id,done){
-  if(!SEND||!SEND.t){alert('פתח את הדף מהאריח במוניטור');done(false);return;}
+  if(!SEND||!SEND.t){done(false);location.href='../#ai='+encodeURIComponent(id);return;}
   var body={action:action,id:id,code:SEND.c,at:new Date().toISOString()};
   fetch('https://ntfy.sh/'+SEND.t+'?filename=ai-action.json',{method:'PUT',headers:{Title:'ai-action'},body:JSON.stringify(body)})
    .then(function(r){done(r.ok);},function(){done(false);});

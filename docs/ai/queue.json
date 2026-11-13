@@ -584,5 +584,41 @@
   "postedAt": null,
   "hold": true,
   "note": "13.11: חדש, מחכה לאישור שלך"
+ },
+ {
+  "id": "tokenpay-he",
+  "lang": "he",
+  "order": 31,
+  "name": "מה בית העסק באמת מקבל כשאתם משלמים בטלפון",
+  "file": "media/tokenpay-he.mp4",
+  "poster": "media/tokenpay-he.jpg",
+  "ig": "מה בית העסק באמת מקבל כשאתם משלמים בטלפון?\nכשמשלמים בטלפון, בית העסק לא מקבל את מספר הכרטיס שלכם. הוא מקבל מספר מחליף שנקרא טוקן. כשמוסיפים כרטיס לארנק, רשת האשראי יוצרת את הטוקן ומקשרת אותו לטלפון, והמספר האמיתי נשאר אצלה בכספת. בכל תשלום הטלפון מייצר גם קוד חד פעמי שעובד רק לכמה רגעים. אז גם אם גנב לוקח את הטוקן ממאגר של חנות, הוא לא שווה כלום, כי אין לו את הקוד של רגע התשלום.\nובאתרים, אתם עדיין מקלידים את הכרטיס או משלמים עם הטלפון?\n#אבאאיציק #תשלוםבטלפון #אבטחה #בינהמלאכותית #טכנולוגיה\nמקור: Apple Support, Apple Pay security and privacy overview",
+  "tt": "מה בית העסק באמת מקבל כשאתם משלמים בטלפון? לא את מספר הכרטיס שלכם, אלא טוקן וקוד חד פעמי שעובד רק לרגע. ובאתרים, אתם עדיין מקלידים את הכרטיס או משלמים עם הטלפון?\n#אבאאיציק #תשלוםבטלפון #אבטחה",
+  "yt": "מה בית העסק באמת מקבל כשאתם משלמים בטלפון #אבאאיציק #אבטחה",
+  "ytd": "בית העסק לא מקבל את מספר הכרטיס שלכם אלא טוקן, וקוד חד פעמי שעובד רק לכמה רגעים. גם גנב שלוקח את הטוקן לא יכול להשתמש בו. מקור: Apple Support, Apple Pay security and privacy overview.",
+  "song": "",
+  "song_tt": "",
+  "posted": false,
+  "postedAt": null,
+  "hold": true,
+  "note": "ממתין לאישור של איציק"
+ },
+ {
+  "id": "tokenpay-en",
+  "lang": "en",
+  "order": 32,
+  "name": "What the store really gets when you pay with your phone",
+  "file": "media/tokenpay-en.mp4",
+  "poster": "media/tokenpay-en.jpg",
+  "ig": "What the store really gets when you pay with your phone.\nWhen you pay with your phone, the store never gets your card number. It gets a stand-in number called a token. When you add a card to your wallet, the card network creates the token and links it to your phone, while the real number stays in its vault. With every payment the phone also generates a one-time code that works only for a few moments. So even if a thief takes the token from a store's database, it's worth nothing, because he doesn't have the code for that moment.\nOn websites, do you still type in your card, or pay with your phone?\n#אבאאיציק #ApplePay #CyberSecurity #Payments #Tech\nSource: Apple Support, Apple Pay security and privacy overview",
+  "tt": "What the store really gets when you pay with your phone: not your card number, but a token and a one-time code that works only for a moment. On websites, do you still type in your card, or pay with your phone?\n#אבאאיציק #ApplePay #CyberSecurity",
+  "yt": "What the store really gets when you pay with your phone #אבאאיציק #CyberSecurity",
+  "ytd": "The store never gets your card number, only a token and a one-time code that works for a few moments. A thief who steals the token can't use it. Source: Apple Support, Apple Pay security and privacy overview.",
+  "song": "",
+  "song_tt": "",
+  "posted": false,
+  "postedAt": null,
+  "hold": true,
+  "note": "ממתין לאישור של איציק"
  }
 ]

@@ -9828,7 +9828,7 @@ function checkFresh(){
   if(seen===v.builtAt){pendingCode='';return;}
   try{sessionStorage.setItem('reloadedFor',v.builtAt);}catch(e){}
   carryState();
-  var go=function(){location.replace(location.pathname+'?b='+encodeURIComponent(v.builtAt)+(/^#file=/.test(location.hash||'')?location.hash:''));};
+  var go=function(){location.replace(location.pathname+'?b='+encodeURIComponent(v.builtAt)+(/^#(file=|ai$|ai=)/.test(location.hash||'')?location.hash:''));};
   try{
    if(window.caches&&caches.keys){
     caches.keys().then(function(keys){
@@ -11711,7 +11711,7 @@ function pane(w){
  // The hash is only an incoming address. Writing it on every move made the
  // app reopen on an inner screen and feel like it jumped on its own.
  try{
-  if(location.hash&&!/^#file=/.test(location.hash)&&history&&history.replaceState)history.replaceState(null,'',location.pathname);
+  if(location.hash&&!/^#(file=|ai$|ai=)/.test(location.hash)&&history&&history.replaceState)history.replaceState(null,'',location.pathname);
  }catch(e){}
  window.scrollTo(0,0);
 }
@@ -22130,6 +22130,19 @@ if(location.hash==='#chat'){
    fileOpen(fn);}
   else if(++n>600)clearInterval(iv);
  },1000);
+})();
+// 13.11.2026, Itzik: "אין אפשרות לאשר את הסרטונים, הכפתור תקוע". He opened the AI channel page from a WhatsApp link,
+// so it had no channel to the server and the approve button did nothing. A link ending in #ai (or #ai=<video id>)
+// opens that page from here, with the channel, once the monitor has decrypted. ai.html sends itself here when opened bare.
+(function(){
+ var mm=/^#ai(=(.+))?$/.exec(location.hash||'');if(!mm)return;
+ var id=mm[2]||'';try{id=decodeURIComponent(id);}catch(e){}
+ var n=0,iv=setInterval(function(){
+  if(typeof GKEY!=='undefined'&&GKEY&&NTFYIN()){clearInterval(iv);
+   try{if(history&&history.replaceState)history.replaceState(null,'',location.pathname+location.search);}catch(e){}
+   vidGo('ai/ai.html?m=1',id);}
+  else if(++n>1200)clearInterval(iv);
+ },500);
 })();
 if(location.hash==='#sent'){
  fSaid.textContent='הקובץ נשלח. הוא מחכה לי במייל.';
