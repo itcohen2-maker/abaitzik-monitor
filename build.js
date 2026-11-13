@@ -12163,7 +12163,11 @@ document.addEventListener('keydown',function(e){
  if(document.getElementById('pH').hidden)pane('h');
 });
 document.getElementById('nQ').onclick=function(){pane('q');ensure(['replied'],render);};
-document.getElementById('nL').onclick=function(){pane('l');};
+// 13.11.2026, Itzik: "יש לי באג בלידים ... תסתכל על השעון". The bottom-bar לידים button (the clock-like icon)
+// opened the old list from the chat (last entry 17.10) and never showed the leads table. It now opens the same
+// table as the 🔔 tile (bizSheet leads), and its dot lights while the tile blinks for a new lead.
+document.getElementById('nL').onclick=function(){var g=document.getElementById('gLeads');if(g&&typeof bizSheet==='function'){g.click();var d=document.getElementById('lDot');if(d)d.hidden=true;return;}pane('l');};
+(function(){var g=document.getElementById('gLeads'),d=document.getElementById('lDot');if(g&&d&&g.classList.contains('leadNew'))d.hidden=false;})();
 document.getElementById('nR').onclick=function(){pane('r');};
 document.getElementById('nA').onclick=function(){openAnswers(ansFilter);};
 
