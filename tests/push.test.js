@@ -310,11 +310,11 @@ test('when the phones fail, ntfy takes it; when ntfy fails too, the mailbox does
 
     f = fakeFetch({ 'ntfy.sh': 500, 'formsubmit.co': 500 });
     try {
-      const r = await ch.notify('t', 'b');
+      const r = await ch.notify('t', 'b', { mail: true });
       assert.equal(r.ok, false);
       assert.equal(r.queued, true);
       assert.equal(r.tried.length, 3);
-      assert.equal(ch.queueLength(), 1, 'nothing is dropped');
+      assert.equal(ch.queueLength(), 2, 'nothing is dropped (the one without mail waits too)');
     } finally { f.restore(); }
   }, { keys: true, subs: [SUB] });
 });
