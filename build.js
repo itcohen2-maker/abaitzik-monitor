@@ -19940,7 +19940,7 @@ function bizSheet(t0){
    // 13.11.2026, Itzik: "שים לב שלא יהיו טעויות בתאריך והשעה". Every date and time here is Israel time, whatever the
    // device clock says, and the order is by the real moment (records mix +02:00 and Z, a string sort mixed them).
    var ldT=function(x){var n=Date.parse(x||'');return isNaN(n)?0:n;};
-   var ldIL=function(x){var n=ldT(x);if(!n)return {dd:'',hm:''};var o={timeZone:'Asia/Jerusalem'},p={};new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(new Date(n)).forEach(function(q){p[q.type]=q.value;});return {dd:p.day+'.'+p.month,hm:p.hour+':'+p.minute};};
+   var ldIL=function(x){var n=ldT(x);if(!n)return {dd:'',hm:''};var o={timeZone:'Asia/Jerusalem'},p={};new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(new Date(n)).forEach(function(q){p[q.type]=q.value;});return {dd:(+p.day)+'.'+(+p.month),hm:p.hour+':'+p.minute};};
    var L=recs.filter(function(r){return r.kind==='lead'||r.kind==='customer';}).slice().sort(function(a,b){return ldT(b.at)-ldT(a.at);});
    // 12.11.2026: a test lead (his own phone or mail) is listed greyed and is not in the counts
    var LC=L.filter(function(r){return !r.test;}),sc=D.leadScan,open=LC.filter(function(r){return r.status==='חדש';}).length;
