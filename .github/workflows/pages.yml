@@ -32,8 +32,8 @@ jobs:
       - id: deploy
         uses: actions/deploy-pages@v4
         continue-on-error: true
-      - if: steps.deploy.outcome == failure
+      - if: steps.deploy.outcome == 'failure'
         run: sleep 30
       - id: deploy2
-        if: steps.deploy.outcome == failure
+        if: steps.deploy.outcome == 'failure'
         uses: actions/deploy-pages@v4
