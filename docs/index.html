@@ -2857,7 +2857,7 @@ body.gH #bareBtn{display:block;width:auto!important;min-width:0!important;margin
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-13T20:24:11.266Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-13T20:30:01.374Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3151,7 +3151,8 @@ try{
   <a class="ic icNew" data-grp="proj" id="icSiteChat" href="https://it-solution.co.il/#chat" target="_blank" rel="noopener" data-new="1" data-upd="dom1028" title="לידים מהצ׳אט באתר: 4 בסך הכל, 2 היום"><span class="c c-its"><em class="icN hot">4</em>
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01"/></svg></span>צ׳אט באתר</a>
   <a class="ic" data-grp="work" href="#" id="icAl" data-new="1"><span class="c c-al" id="icAlC">
-   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-2 9a6 6 0 0 1-12 0z"/><circle cx="9" cy="9.5" r="1"/><circle cx="15" cy="9.5" r="1"/><path d="M9.5 13c1.5 1.3 3.5 1.3 5 0"/></svg></span>אלון</a>
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-2 9a6 6 0 0 1-12 0z"/><circle cx="9" cy="9.5" r="1"/><circle cx="15" cy="9.5" r="1"/><path d="M9.5 13c1.5 1.3 3.5 1.3 5 0"/></svg></span>מוניטורים</a>
+  <style>/* 13.11.2026, Itzik: off his home screen */#icFcSales,#icFcCoach,#icFcPersonal,#icPb,#gAlarm,#icShachar,#gRemind,#gWin{display:none!important}</style>
   <a class="ic" data-grp="work" href="#" id="icPb" data-new="1"><span class="c c-pb" id="icPbC">🦷</span>ד״ר שולמן</a>
   <button type="button" class="ic" data-grp="work" id="icHealth"><span class="c c-hl" id="icHealthC">🩺</span>תקלות</button>
   <button type="button" class="ic" data-grp="work" id="icConn" style="display:none"><span class="c c-cn">🔌</span>חיבורים</button>
@@ -3214,14 +3215,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4796,7 +4790,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='3e19e96617';
+var CODE_ID='d9930333e8';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -7288,10 +7282,14 @@ function saveOrder(box,key){
 function applyOrder(box,key){
  var order=readOrder(key);
  if(!box||!order)return;
+ var known={};
  order.forEach(function(id){
+  known[id]=1;
   var el=document.getElementById(id);
   if(el&&el.parentNode===box)box.appendChild(el);
  });
+ Array.prototype.slice.call(box.children).forEach(function(c){if(c.id!=='tileTools'&&!known[c.id])box.appendChild(c);});
+ var tt=document.getElementById('tileTools');if(tt&&tt.parentNode===box)box.insertBefore(tt,box.firstChild);
 }
 var editing=null;
 function armDrag(box,key){
@@ -20040,7 +20038,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="BAJSdIafAtGxgHzJr3tOJLTViE1Gkn6rNyAReKPb5ZiMM-6xXp2c1PD7V5VKOXkQRWLI9-Wdq7-Q4hyMCcYp2iQ";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}

@@ -646,12 +646,28 @@ function build() {
   // sees: the app asks what he wants and changes in front of him.
   // 24.10: type "approve" docs are the approval inbox (lib/approvals.js). An expired
   // or blocked one normalizes to null and drops out here.
+  // 13.11.2026, Itzik: "לאישורך brings things that are not related; if nothing is urgent it should not show".
+  // An approval drops out once he answered it, a LinkedIn card once its post is approved or up, and what is left
+  // shows only when it is urgent: new in the last two days, or expiring / going up within three days.
+  const apvAnswered = loadDocs('chat').filter((m) => m.from === 'itzik' && typeof m.text === 'string' && /^\s*אישור/.test(m.text)).map((m) => m.text);
+  let apvLi = []; try { apvLi = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'linkedin', 'queue.json'), 'utf8')); } catch (e) { apvLi = []; }
+  const apvKeep = (c) => {
+    if (!c || c.type !== 'approve') return true;
+    const q = String(c.question || '').slice(0, 50);
+    if (q && apvAnswered.some((t) => t.indexOf(q) > -1)) return false;
+    const now = Date.now(), DAY = 864e5;
+    const li = /^linkedin-(li-\d+)/.exec(String(c.id || ''));
+    if (li) { const p = (Array.isArray(apvLi) ? apvLi : []).find((x) => x.id === li[1]); if (!p || p.approved || p.posted || p.failed) return false; return Date.parse(p.date) - now < 3 * DAY; }
+    if (c.expires && Date.parse(c.expires) - now < 3 * DAY) return true;
+    return now - Date.parse(c.at || 0) < 2 * DAY;
+  };
   const choices = loadDocs('choices')
     .filter(c => !c.answer)
     .map(c => (c.type === 'approve'
       ? require('./lib/approvals.js').normalize(c)
       : { id: c.id, at: c.at, question: c.question, options: c.options || [] }))
     .filter(Boolean)
+    .filter(apvKeep)
     .sort((a, b) => ((a.at || '') < (b.at || '') ? 1 : -1));
   const food = loadDocs('food')
     // zinc is in milligrams and may be missing on rows written before 17.9.
@@ -5069,8 +5085,9 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
     with his link and entry code to send him.
   -->
   <a class="ic" data-grp="work" href="#" id="icAl" data-new="1"><span class="c c-al" id="icAlC">
-   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-2 9a6 6 0 0 1-12 0z"/><circle cx="9" cy="9.5" r="1"/><circle cx="15" cy="9.5" r="1"/><path d="M9.5 13c1.5 1.3 3.5 1.3 5 0"/></svg></span>אלון</a>
+   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-2 9a6 6 0 0 1-12 0z"/><circle cx="9" cy="9.5" r="1"/><circle cx="15" cy="9.5" r="1"/><path d="M9.5 13c1.5 1.3 3.5 1.3 5 0"/></svg></span>מוניטורים</a>
   <!-- 9.11.2026, Itzik: "תעשה לו אייקון כמו האייקון של אלון. כשאני לוחץ אני רואה את כל המוניטורים, פלוס הקוד שלהם של הכניסה". Same as Alon's: the colour of his monitor's health check, and the click opens the monitors screen (link and entry code of each), scrolled to Dr. Shulman's. -->
+  ${inst.name === 'abaitzik' ? '<style>/* 13.11.2026, Itzik: off his home screen */#icFcSales,#icFcCoach,#icFcPersonal,#icPb,#gAlarm,#icShachar,#gRemind,#gWin{display:none!important}</style>' : ''}
   <a class="ic" data-grp="work" href="#" id="icPb" data-new="1"><span class="c c-pb" id="icPbC">🦷</span>ד״ר שולמן</a>
   <!-- 8.11.2026, Itzik: the Shai icon is gone. He is not paying and his access was cancelled. -->
   <button type="button" class="ic" data-grp="work" id="icHealth"><span class="c c-hl" id="icHealthC">🩺</span>תקלות</button>
@@ -10167,13 +10184,18 @@ function saveOrder(box,key){
 function applyOrder(box,key){
  var order=readOrder(key);
  if(!box||!order)return;
+ var known={};
  order.forEach(function(id){
+  known[id]=1;
   var el=document.getElementById(id);
   // Only move a child of this box: an id from an older layout must not drag
   // some unrelated element in here.
   if(el&&el.parentNode===box)box.appendChild(el);
  });
- // Anything added since he last arranged simply stays at the end.
+ // 13.11.2026, Itzik: "I do not know why tiles are always added on top". The loop above moved the known ones to the
+ // end, so everything new stayed in front of them (and pushed ✎ הזזת אריחים into the middle). New ones go last now.
+ Array.prototype.slice.call(box.children).forEach(function(c){if(c.id!=='tileTools'&&!known[c.id])box.appendChild(c);});
+ var tt=document.getElementById('tileTools');if(tt&&tt.parentNode===box)box.insertBefore(tt,box.firstChild);
 }
 // The iPhone method, which is what he asked for and what the first attempt got
 // wrong: a long press does not drag anything. It puts the screen into edit
