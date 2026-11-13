@@ -19960,8 +19960,9 @@ function bizSheet(t0){
     h+='<small style="display:block;margin:-2px 0 8px;color:#5a6478;font-size:13px;line-height:1.4">'+(sc.ok?'🟢 הסורק בודק כל 10 דקות את האתר, התגובות במודעות, מסנג׳ר ואינסטגרם. נבדק לאחרונה '+esc(t):'🟠 לידים מהאתר נכנסים לבד. תגובות והודעות מהמודעות עוד לא נכנסות לבד: חסר אישור אחד במטא. עד אז אני מוסיף אותן ידנית.')+'</small>';
    }
    if(!L.length)return h+'<p class="bzEmpty">עוד אין לידים.</p>';
-   h+='<div class="ldTbl"><div class="ldHd"><span>תאריך</span><span>שם</span><span>מאיפה</span><span>סטטוס</span></div>';
-   L.forEach(function(r){
+   // 13.11.2026, Itzik: "הטבלה של הלידים ... מערבבת. תחצה אותה לשתיים": trial-week signups in one table, every other
+   // lead (the site chat, Meta, WhatsApp, manual, customers) in a second one. Each table is newest first with its own count.
+   function oneRow(r){
     var d=new Date(r.at||''),dd=isNaN(d)?'':d.getDate()+'.'+(d.getMonth()+1),hm=isNaN(d)?'':d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
     // 13.11.2026, Itzik: every detail to get back to him: phone, mail, where from and when. A mail written only inside the note is read from there.
     var em=r.email||((String(r.note||'').match(/מייל: *([^ ,;]+@[^ ,;]+)/)||[])[1]||'');
@@ -19988,8 +19989,18 @@ function bizSheet(t0){
      +'<div class="ldAct">'+BZ_ORDER.filter(function(st){return st!==r.status;}).map(function(st){return '<button type="button" class="yb" data-bz="ldst" data-s="'+st+'">'+st+'</button>';}).join('')+'</div>'
      +'<div class="ldAct"><button type="button" class="yb" data-bz="ldnote">📝 לרשום</button><button type="button" class="yb ldDel" data-bz="lddel">🗑 מחיקה</button></div>'
      +'</div></details>';
-   });
-   return h+'</div>';
+   }
+   function ldTable(title,list,empty){
+    var n=list.filter(function(r){return !r.test;}),o=n.filter(function(r){return r.status==='חדש';}).length;
+    h+='<div class="bzSec" style="margin-top:14px">'+title+' ('+n.length+(o?', '+o+' חדשים':'')+')</div>';
+    if(!list.length){h+='<p class="bzEmpty">'+empty+'</p>';return;}
+    h+='<div class="ldTbl"><div class="ldHd"><span>תאריך</span><span>שם</span><span>מאיפה</span><span>סטטוס</span></div>';
+    list.forEach(oneRow);
+    h+='</div>';
+   }
+   ldTable('🆕 נרשמו לשבוע ניסיון',L.filter(function(r){return r.source==='signup';}),'עוד אין הרשמות לשבוע ניסיון.');
+   ldTable('📥 פניות מהצ׳אט באתר, מהמודעות ומכל מקום אחר',L.filter(function(r){return r.source!=='signup';}),'עוד אין פניות.');
+   return h;
   }
   function itsHtml(){
    // 8.11.2026, Itzik: "תעשה סדר בכל הטאב, תסיר את שי, תאפס ותשאיר לי: טופס סודיות, הסכם בינינו וטופס התחברות".
