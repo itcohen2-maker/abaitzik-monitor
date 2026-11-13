@@ -98,8 +98,20 @@ test('the WhatsApp prompt names the word, not a button', async () => {
   const llm = async (m, sys) => { seen.push(sys); return 'ok'; };
   await FC.turn(tmp(), 'א', { llm, via: 'wa' });
   await FC.turn(tmp(), 'א', { llm, via: 'page' });
-  assert.ok(seen[0].includes("'לביצוע'") && !seen[0].includes('ללחוץ'));
-  assert.ok(seen[1].includes('ללחוץ'));
+  // 13.11.2026: a request to act is marked "משימה:" on both, and the server forwards it (next test).
+  assert.ok(seen[0].includes('משימה:') && seen[1].includes('משימה:'));
+});
+
+test('a task written under שיחה goes to the request queue, not into a conversation (13.11.2026)', async () => {
+  const sent = [];
+  const llm = async () => 'משימה: לשלוח לדנה את הצעת המחיר';
+  const r = await FC.turn(tmp(), 'תשלח לדנה את הצעת המחיר', { llm, via: 'page', toMonitor: async (k, t) => { sent.push(t); return 'id1'; } });
+  assert.deepStrictEqual(sent, ['תשלח לדנה את הצעת המחיר']);
+  assert.ok(/העברתי אותה לביצוע/.test(r.reply));
+  assert.ok(r.thread[r.thread.length - 1].todo);
+  // without a queue it says how to send it, and still does not converse
+  const r2 = await FC.turn(tmp(), 'תשלח לדנה', { llm, via: 'wa' });
+  assert.ok(/לביצוע/.test(r2.reply));
 });
 
 test('todoLast sends the last pair once; isTodoCmd matches the bare word', async () => {
