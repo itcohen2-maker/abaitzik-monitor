@@ -95,13 +95,15 @@ function card(lines) {
   const lines = [];
   let sent = 0;
   for (const m of todo) {
-    const key = noDash(m.subject).slice(0, 80);
+    // the same fault once a day: subject plus the start of the body ("תקלה אצל לקוח" names a different customer each time)
+    const key = noDash(m.subject + ' ' + m.body.replace(/\s+/g, ' ').slice(0, 60)).slice(0, 120);
     if (st.subj[key] || sent >= MAX_RUN || st.n >= MAX_DAY) { st.seen[m.id] = new Date().toISOString(); continue; }
     if (DRY) { console.log('DRY ' + m.id + ' ' + m.subject); continue; }
+    try { m.body = execFileSync('/usr/bin/python3', ['-I', path.join(__dirname, 'tools/mail-search.py'), '--id', m.id], { cwd: __dirname, encoding: 'utf8', timeout: 60000, stdio: ['ignore', 'pipe', 'ignore'] }).split('\n').slice(4).join('\n').trim() || m.body; } catch (e) { /* the snippet is enough */ }
     try {
       execFileSync('node', ['pc-task.js', 'add', '--re', 'fault-mail-' + m.id, job(m)], { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
       sent++; st.n++; st.subj[key] = m.id;
-      lines.push({ when: new Date().toISOString(), kind: 'faultmail', text: 'מייל תקלה', status: 'mail', line: 'נשלח לתיקון: ' + key });
+      lines.push({ when: new Date().toISOString(), kind: 'faultmail', text: 'מייל תקלה', status: 'mail', line: 'נשלח לתיקון: ' + noDash(m.subject) });
       console.log(new Date().toISOString().slice(0, 16) + ' fix order ' + m.id + ' ' + key);
     } catch (e) { console.log(new Date().toISOString().slice(0, 16) + ' pc-task failed ' + m.id); continue; }
     st.seen[m.id] = new Date().toISOString();
