@@ -17917,32 +17917,18 @@ on('gClalit',clalitSheet);
   only once they are in the monitor; Drive links (u) open the folder.
 */
 var TOM_ITEMS=[
-// 13.11, Itzik approved the recommended list: 6 ads (2 videos, 4 animated images), Meta waits for his yes.
-// 7 stops (almost the same as 3). 8 to 10 wait aside, ready to replace a weak ad. Then the stories. Copies of the old cards: Downloads/ITsolution-ads.
- {n:"🆕 ה 🖼️",t:"תמונה מלאה 9:16 · תיקנת באג אחד ונשברו שלושה? · לצ׳אט",r:"ads-nov13-image25.png"},
- {n:"🆕 ה 🖼️",t:"תמונה מלאה לפיד 4:5 · תיקנת באג אחד ונשברו שלושה? · לצ׳אט",r:"ads-nov13-image25-feed.png"},
- {n:"🆕 ד 🖼️",t:"תמונה מלאה 9:16 · אצלך זה עובד ואצל הלקוח נופל? · לצ׳אט",r:"ads-nov13-image24.png"},
- {n:"🆕 ד 🖼️",t:"תמונה מלאה לפיד 4:5 · אצלך זה עובד ואצל הלקוח נופל? · לצ׳אט",r:"ads-nov13-image24-feed.png"},
- {n:"🆕 ב 🖼️",t:"תמונה מלאה 9:16 · הלקוחות הגיעו והאפליקציה קרסה? · לצ׳אט",r:"ads-nov13-image22.png"},
- {n:"🆕 ב 🖼️",t:"תמונה מלאה לפיד 4:5 · הלקוחות הגיעו והאפליקציה קרסה? · לצ׳אט",r:"ads-nov13-image22-feed.png"},
- {n:"🆕 ה",t:"✔️ נבחרה · סיום: את זה אנחנו עושים · 🖼️ תיקנת באג אחד ונשברו שלושה? · לצ׳אט",r:"ads-nov13-card25.mp4"},
- {n:"🆕 ד",t:"✔️ נבחרה · סיום: את זה אנחנו עושים · 🖼️ אצלך זה עובד ואצל הלקוח נופל? · לצ׳אט",r:"ads-nov13-card24.mp4"},
- {n:"🆕 ב",t:"✔️ נבחרה · סיום: את זה אנחנו עושים · 🖼️ הלקוחות הגיעו והאפליקציה קרסה? · מקריסה למוכנה · לצ׳אט · במקום 5",r:"ads-nov13-card22.mp4"},
- {n:"1",t:"✅ באוויר 13.11 · 🎬 סרטון · מי לא שילם לך (הראשי) · לשבוע התנסות בחינם",r:"wa-hub-gviya-ad.mp4"},
+// 13.11 night, Itzik: only what is in the campaign. Images other than burning credits out, Tom's 3 pain images in. Story versions at the end.
+ {n:"1",t:"✅ באוויר 13.11 · 🎬 סרטון · מי לא שילם לך · לשבוע התנסות בחינם",r:"wa-hub-gviya-ad.mp4"},
  {n:"2",t:"✅ באוויר 13.11 · 🎬 סרטון · עסקי ואישי · לשבוע התנסות בחינם",r:"wa-hub-personal-ad.mp4"},
- {n:"3",t:"✅ באוויר · 🖼️ שרפת קרדיטים · לצ׳אט",r:"ads-nov01-card9-story.mp4"},
- {n:"4",t:"✅ באוויר 13.11 · 🖼️ מי לא שילם לך? · תג שבוע התנסות בחינם · להרשמה",r:"ads-nov13-card18.mp4"},
- {n:"5",t:"✅ באוויר 13.11 · 🖼️ האתר יפה ואף אחד לא פונה? · לפני ואחרי · לצ׳אט",r:"ads-nov13-card19.mp4"},
- {n:"6",t:"✅ באוויר 13.11 · 🖼️ עובד 12 שעות · אבחון AI חינם · ל it-solution.co.il/ai",r:"ads-nov13-card20.mp4"},
- {n:"7",t:"⛔ נעצר 13.11 · נתקעת ב Lovable או Base44 (כמעט זהה ל 3)",r:"ads-nov12-card15.mp4"},
- {n:"8",t:"⏸️ בצד · סרטון תור לרופא שיניים",r:"wa-hub-tor-ad.mp4"},
- {n:"9",t:"⏸️ בצד · סרטון חשבוניות מהמעבדה",r:"wa-hub-lab-ad.mp4"},
- {n:"10",t:"⏸️ בצד · סרטון הטמעת AI",r:"wa-hub-ai-ad.mp4"},
- {n:"11",t:"📲 סטורי · מי לא שילם לך · it-solution.co.il/start",r:"wa-hub-gviya-story.mp4"},
- {n:"12",t:"📲 סטורי · עסקי ואישי · it-solution.co.il/start",r:"wa-hub-personal-story.mp4"},
- {n:"13",t:"📲 סטורי · תור לרופא שיניים · it-solution.co.il/start",r:"wa-hub-tor-story.mp4"},
- {n:"14",t:"📲 סטורי · חשבוניות מהמעבדה · it-solution.co.il/start",r:"wa-hub-lab-story.mp4"},
- {n:"15",t:"📲 סטורי · הטמעת AI · it-solution.co.il/ai",r:"wa-hub-ai-story.mp4"}
+ {n:"3",t:"✅ באוויר · 🖼️ שרפת קרדיטים · Base44 · המודעה שעובדת · לצ׳אט",r:"ads-nov01-card9-story.mp4"},
+ {n:"4",t:"⏳ מחכה להעלאה · 🖼️ יש לך אתר שעובד. ואין אפליקציה? · לצ׳אט",r:"ads-pain1-feed.png"},
+ {n:"5",t:"⏳ מחכה להעלאה · 🖼️ המידע של הלקוחות. באמת מוגן? · לצ׳אט",r:"ads-pain2-feed.png"},
+ {n:"6",t:"⏳ מחכה להעלאה · 🖼️ מפחד ממה שאתה לא יודע? · לצ׳אט",r:"ads-pain3-feed.png"},
+ {n:"7",t:"📲 סטורי · יש לך אתר שעובד. ואין אפליקציה?",r:"ads-pain1-story.png"},
+ {n:"8",t:"📲 סטורי · המידע של הלקוחות. באמת מוגן?",r:"ads-pain2-story.png"},
+ {n:"9",t:"📲 סטורי · מפחד ממה שאתה לא יודע?",r:"ads-pain3-story.png"},
+ {n:"10",t:"📲 סטורי · מי לא שילם לך · it-solution.co.il/start",r:"wa-hub-gviya-story.mp4"},
+ {n:"11",t:"📲 סטורי · עסקי ואישי · it-solution.co.il/start",r:"wa-hub-personal-story.mp4"}
 ];
 function tomSheet(){
  var old=document.getElementById('tomSheet');if(old)old.remove();
@@ -18122,7 +18108,7 @@ function vidTabs(){
  return [
   {id:'today',l:'⭐ להעלות היום'+(upN?' ('+upN+')':''),pulse:upN,h:'מה שאתה מעלה בעצמך היום. מה שמהבהב עוד לא עלה, וכשהוא עולה הוא עובר ל ✅',L:upTodayRows()},
   {id:'st',l:'📲 סטטוס'+(stN?' ('+stN+')':''),h:'סטטוס וואטסאפ: מה עולה היום ומה הבא בתור. לחיצה פותחת את הסרטון והטקסט, 3 נגיעות',L:vqRows('st').concat([{h:'📂 הדף המלא'},{k:'go',t:'📲 פתיחת כל הסטטוסים המוכנים',u:'status/index.html'}])},
-  {id:'ads',l:'📣 קמפיין',upd:'20261113-purple',h:'הממומן, וסרטוני המוניטור לסטורי',L:TOM_ITEMS.map(function(it){return it.h?{h:it.h}:{k:'tom',it:it};})},
+  {id:'ads',l:'📣 קמפיין',upd:'20261113-pain',h:'הממומן, וסרטוני המוניטור לסטורי',L:TOM_ITEMS.map(function(it){return it.h?{h:it.h}:{k:'tom',it:it};})},
   {id:'sh',l:'🌅 שחר',h:'הרילים, הסטורי והפוסטים של שחר',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isSh(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isSh(x.it);}))},
   {id:'pl',l:'🍽️ מה בצלחת'+(plN?' ('+plN+')':''),h:'הסטוריז לפי הסדר, אפשר לסדר ולמחוק',L:vqRows('pl').concat([{h:'📂 הדף המלא'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return plateN[x.it.n];}))},
   // 8.11, Itzik: the AI channel reels to upload, like the plate tab, split Hebrew and English, what went up and what did not.
