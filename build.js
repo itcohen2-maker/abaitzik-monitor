@@ -4077,7 +4077,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
 .ansc .aq .atxt{font-weight:300}
 .ansc .w{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--dim);
  font:500 12.5px Heebo,sans-serif;margin-bottom:7px}
-.ansc .atxt{white-space:pre-wrap;word-break:break-word}
+.ansc .atxt{white-space:pre-wrap;word-break:break-word}.ansc .atxt.aclip{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.ansc .amore{display:block;margin:6px 0 2px;font-weight:700}
 .arow{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
 .ab{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:9px 13px;
  font:500 13px Heebo,sans-serif;color:var(--ink);cursor:pointer}
@@ -10686,9 +10686,14 @@ function isArchived(m){
  return !(m.src==='itzik'||isStandby(m)||isStar(m));
 }
 function liveAnswers(){return allAnswers().filter(function(m){return !isArchived(m);});}
+// 13.11.2026, Itzik: "לא צריך לעדכן כל דבר, רק על מה ששאלו". Reports, Codex and the manager's own rounds
+// (an answer to nothing he wrote) move to the chip עדכונים. They stay one tap away, they just do not crowd his answers.
+function isUpd(m){if(!m)return false;if(m.src==='report'||m.src==='codex')return true;if(m.src==='claude'&&!m.q){var r=String(m.re||'');return !!r&&!/^(wa|ntfy)-/.test(r);}return false;}
+// 13.11.2026, Itzik: an answer shows three lines, the rest opens in a window.
+function ansLong(m){var t=String((m&&m.text)||'');return t.split(String.fromCharCode(10)).length>3||t.length>160;}
 function ansCounts(){
- var a=liveAnswers();
- return {all:a.length,
+ var a0=liveAnswers(),a=a0.filter(function(m){return !isUpd(m);});
+ return {all:a.length,upd:a0.filter(isUpd).length,
   fresh:a.filter(isFresh).length,
   star:a.filter(isStar).length,
   standby:a.filter(isStandby).length,
@@ -10698,6 +10703,7 @@ function ansCounts(){
 function ansList(){
  if(ansOnly)return allAnswers().filter(function(m){return m.re===ansOnly||(m.q&&m.q.id===ansOnly);});
  var a=liveAnswers();
+ a=a.filter(function(m){return ansFilter==='upd'?isUpd(m):!isUpd(m);});
  if(ansFilter==='fresh')a=a.filter(function(m){return isFresh(m)||ansKeep[claudeKey(m)];});
  if(ansFilter==='back')a=a.filter(isBack);
  if(ansFilter==='star')a=a.filter(isStar);
@@ -10761,7 +10767,7 @@ function renderAnswers(){
  if(!chips||!host)return;
  paintAnsTip();
  var c=ansCounts();
- var defs=[['all','הכל',c.all],['fresh','לא נקראו',c.fresh],['back','לחזור לזה',c.back]];
+ var defs=[['all','הכל',c.all],['fresh','לא נקראו',c.fresh],['back','לחזור לזה',c.back],['upd','עדכונים',c.upd]];
  chips.innerHTML=defs.map(function(d){
   return '<button type="button" class="achip'+(ansFilter===d[0]?' on':'')
    +'" data-f="'+d[0]+'">'+d[1]+' <b>'+d[2]+'</b></button>';
@@ -10906,7 +10912,7 @@ function renderAnswers(){
   return '<div class="ansc'+(his?' mine':' '+ansColor(m))+(m.q?' pair':'')+'" data-i="'+i+'">'
    +ask
    +'<span class="w">'+ansWho(m)+' · '+esc(stamp(m.at))+mark+'</span>'
-   +(m.src==='report'?ansReport(m):'<div class="atxt">'+linkify(m.text)+'</div>')
+   +(m.src==='report'?ansReport(m):ansLong(m)?'<div class="atxt aclip">'+linkify(m.text)+'</div><button type="button" class="ab amore" data-i="'+i+'">לקריאת כל התשובה</button>':'<div class="atxt">'+linkify(m.text)+'</div>')
    +screenLinks(m.text)
    +goLinks(m)
    +'<div class="arow">'
@@ -10929,6 +10935,11 @@ function renderAnswers(){
    // an answer to a question nobody can see.
    var head=m.q?('אתה · '+stamp(m.q.at)+NL+(m.q.note||m.q.text||'')+NL+NL):'';
    ansCopy(b,head+ansWho(m)+' · '+stamp(m.at)+NL+(m.text||''));};
+ });
+ Array.prototype.forEach.call(host.querySelectorAll('.amore'),function(b){
+  b.onclick=function(e){e.stopPropagation();var m=at(b);if(!m)return;
+   clSheet('ansFull',esc(ansWho(m)+' · '+stamp(m.at)),'<div style="white-space:pre-wrap;word-break:break-word;margin-top:8px;max-height:70vh;overflow-y:auto">'+linkify(m.text)+'</div>'+screenLinks(m.text));
+   if(isFresh(m)){markOneSeen(m);renderAnswers();paintDot();renderNew();}};
  });
  Array.prototype.forEach.call(host.querySelectorAll('.aback'),function(b){
   b.onclick=function(e){e.stopPropagation();toggleBack(at(b));renderAnswers();paintDot();renderNew();};
