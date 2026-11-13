@@ -300,9 +300,12 @@ test('when the phones fail, ntfy takes it; when ntfy fails too, the mailbox does
 
     f = fakeFetch({ 'ntfy.sh': 500 });
     try {
-      const r = await ch.notify('t', 'b');
+      // 13.11.2026: on Itzik's monitor mail is no longer a fallback (the manager inbox is), only on request.
+      const r = await ch.notify('t', 'b', { mail: true });
       assert.equal(r.channel, 'mail');
       assert.equal(r.tried.length, 2);
+      const r2 = await ch.notify('t', 'b');
+      assert.notEqual(r2.channel, 'mail');
     } finally { f.restore(); }
 
     f = fakeFetch({ 'ntfy.sh': 500, 'formsubmit.co': 500 });

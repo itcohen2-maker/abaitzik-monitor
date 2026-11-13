@@ -55,8 +55,7 @@ function mails() {
 function inbox() {
   const cut = Date.now() - 864e5;
   let txt = ''; try { txt = fs.readFileSync(path.join(inst.dataPath, 'manager', 'inbox.jsonl'), 'utf8'); } catch (e) { return []; }
-  return txt.split('
-').filter(Boolean).map((l) => { try { return JSON.parse(l); } catch (e) { return null; } })
+  return txt.split('\n').filter(Boolean).map((l) => { try { return JSON.parse(l); } catch (e) { return null; } })
     .filter((m) => m && m.id && Date.parse(m.at) > cut)
     .map((m) => ({ id: m.id, local: true, at: new Date(m.at).toLocaleString('sv-SE', { timeZone: 'Asia/Jerusalem' }).slice(0, 16), from: m.from, subject: m.subject, body: m.body }));
 }
