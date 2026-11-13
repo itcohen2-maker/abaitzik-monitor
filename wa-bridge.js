@@ -40,7 +40,9 @@ const ROOT = __dirname;
 const CFG = path.join(process.env.WA_BRIDGE_DATA || path.join(ROOT, 'data'), 'wa.json');
 // 12.11.2026: the state follows WA_BRIDGE_DATA too, so a test never touches the real one.
 const STATE = path.join(process.env.WA_BRIDGE_DATA || path.join(ROOT, 'data'), 'status', 'wa-bridge.json');
-const CHAT = path.join(ROOT, 'data', 'chat', 'chat');
+// 13.11.2026, Itzik: "במסך התשובות אני מקבל המון תשובות לא רלוונטיות". A test runs the bridge with WA_BRIDGE_DATA set to a
+// temp folder, but CHAT was always the real one, so every npm test left a "הוואטסאפ פעיל" answer on his screen.
+const CHAT = path.join(process.env.WA_BRIDGE_DATA || path.join(ROOT, 'data'), 'chat', 'chat');
 const PORT = Number(process.env.WA_PORT || 8796);
 const DEMO_FLAG = path.join(ROOT, 'data', 'demo', 'active.json');
 const ORIGINS = ['https://itcohen2-maker.github.io', 'https://shai.it-solution.co.il', 'https://alon.abaitzik.com', 'https://rinat.abaitzik.com', 'https://pablo.it-solution.co.il', 'https://ilay.abaitzik.com', 'https://it-solution.co.il', 'https://www.it-solution.co.il'];
