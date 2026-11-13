@@ -1531,7 +1531,9 @@ test('a report in the answers list is a title until it is opened', () => {
   // reports in was right, but a thousand word round summary next to a one line
   // reply makes a list nobody can skim, and that is a heap, not one button.
   assert.ok(html.includes('function ansReport(m){'));
-  assert.ok(html.includes("+(m.src==='report'?ansReport(m):'<div class=\"atxt\">'+linkify(m.text)+'</div>')"));
+  // 13.11.2026: a long answer shows three lines, the rest in a window (ansLong, .amore).
+  assert.ok(html.includes("+(m.src==='report'?ansReport(m):ansLong(m)?'<div class=\"atxt aclip\">'"));
+  assert.ok(html.includes("function isUpd(m){"));
   assert.ok(html.includes("'<details class=\"arep\"><summary>'+esc(title)+'</summary>'"));
   // The body still ships, so the search box finds a word inside a folded report.
   assert.ok(html.includes("var body=cut<0?'':t.slice(cut+1).trim();"));
