@@ -17921,9 +17921,9 @@ var TOM_ITEMS=[
  {n:"1",t:"✅ באוויר 13.11 · 🎬 סרטון · מי לא שילם לך · לשבוע התנסות בחינם",r:"wa-hub-gviya-ad.mp4"},
  {n:"2",t:"✅ באוויר 13.11 · 🎬 סרטון · עסקי ואישי · לשבוע התנסות בחינם",r:"wa-hub-personal-ad.mp4"},
  {n:"3",t:"✅ באוויר · 🖼️ שרפת קרדיטים · Base44 · המודעה שעובדת · לצ׳אט",r:"ads-nov01-card9-story.mp4"},
- {n:"4",t:"⏳ מחכה להעלאה · 🖼️ יש לך אתר שעובד. ואין אפליקציה? · לצ׳אט",r:"ads-pain1-feed.png"},
- {n:"5",t:"⏳ מחכה להעלאה · 🖼️ המידע של הלקוחות. באמת מוגן? · לצ׳אט",r:"ads-pain2-feed.png"},
- {n:"6",t:"⏳ מחכה להעלאה · 🖼️ מפחד ממה שאתה לא יודע? · לצ׳אט",r:"ads-pain3-feed.png"},
+ {n:"4",t:"✅ עלתה 13.11 · בבדיקה של מטא · 🖼️ יש לך אתר שעובד. ואין אפליקציה? · לצ׳אט",r:"ads-pain1-feed.png"},
+ {n:"5",t:"✅ עלתה 13.11 · בבדיקה של מטא · 🖼️ המידע של הלקוחות. באמת מוגן? · לצ׳אט",r:"ads-pain2-feed.png"},
+ {n:"6",t:"✅ עלתה 13.11 · בבדיקה של מטא · 🖼️ מפחד ממה שאתה לא יודע? · לצ׳אט",r:"ads-pain3-feed.png"},
  {n:"7",t:"📲 סטורי · יש לך אתר שעובד. ואין אפליקציה?",r:"ads-pain1-story.png"},
  {n:"8",t:"📲 סטורי · המידע של הלקוחות. באמת מוגן?",r:"ads-pain2-story.png"},
  {n:"9",t:"📲 סטורי · מפחד ממה שאתה לא יודע?",r:"ads-pain3-story.png"},
@@ -19937,19 +19937,23 @@ function bizSheet(t0){
   // The site chat sends its raw answers ([Chat Lead], Answers:, stage: mockups); shown in words.
   function ldNote(n){var W={idea:'רעיון',spec:'אפיון',mockups:'מסכים',product:'מוצר עובד',tier1:'0 עד 5,000 ₪',tier2:'5,000 עד 10,000 ₪',tier3:'10,000 עד 30,000 ₪',tier4:'30,000 עד 50,000 ₪',tier5:'50,000 ₪ ומעלה'};return String(n||'').split(String.fromCharCode(10)).map(function(l){return l.trim();}).filter(function(l){return l&&l!=='[Chat Lead]'&&l!=='Answers:'&&!/^Description: *N.A$/i.test(l);}).map(function(l){var m=/^(stage|budget): *([a-z0-9]+)/i.exec(l);return m?(m[1].toLowerCase()==='stage'?'שלב: ':'תקציב: ')+(W[m[2]]||m[2]):l;}).join(String.fromCharCode(10));}
   function itsLeadsHtml(){
-   var L=recs.filter(function(r){return r.kind==='lead'||r.kind==='customer';}).slice().sort(function(a,b){return String(b.at||'').localeCompare(String(a.at||''));});
+   // 13.11.2026, Itzik: "שים לב שלא יהיו טעויות בתאריך והשעה". Every date and time here is Israel time, whatever the
+   // device clock says, and the order is by the real moment (records mix +02:00 and Z, a string sort mixed them).
+   var ldT=function(x){var n=Date.parse(x||'');return isNaN(n)?0:n;};
+   var ldIL=function(x){var n=ldT(x);if(!n)return {dd:'',hm:''};var o={timeZone:'Asia/Jerusalem'},p={};new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(new Date(n)).forEach(function(q){p[q.type]=q.value;});return {dd:p.day+'.'+p.month,hm:p.hour+':'+p.minute};};
+   var L=recs.filter(function(r){return r.kind==='lead'||r.kind==='customer';}).slice().sort(function(a,b){return ldT(b.at)-ldT(a.at);});
    // 12.11.2026: a test lead (his own phone or mail) is listed greyed and is not in the counts
    var LC=L.filter(function(r){return !r.test;}),sc=D.leadScan,open=LC.filter(function(r){return r.status==='חדש';}).length;
    var h='<div class="bzSec">📋 כל הלידים ('+LC.length+(open?', '+open+' חדשים':'')+')</div>';
    if(sc){
-    var t=sc.at?new Date(sc.at).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+    var t=sc.at?(function(z){return z.dd+' '+z.hm;})(ldIL(sc.at)):'';
     h+='<small style="display:block;margin:-2px 0 8px;color:#5a6478;font-size:13px;line-height:1.4">'+(sc.ok?'🟢 הסורק בודק כל 10 דקות את האתר, התגובות במודעות, מסנג׳ר ואינסטגרם. נבדק לאחרונה '+esc(t):'🟠 לידים מהאתר נכנסים לבד. תגובות והודעות מהמודעות עוד לא נכנסות לבד: חסר אישור אחד במטא. עד אז אני מוסיף אותן ידנית.')+'</small>';
    }
    if(!L.length)return h+'<p class="bzEmpty">עוד אין לידים.</p>';
    // 13.11.2026, Itzik: "הטבלה של הלידים ... מערבבת. תחצה אותה לשתיים": trial-week signups in one table, every other
    // lead (the site chat, Meta, WhatsApp, manual, customers) in a second one. Each table is newest first with its own count.
    function oneRow(r){
-    var d=new Date(r.at||''),dd=isNaN(d)?'':d.getDate()+'.'+(d.getMonth()+1),hm=isNaN(d)?'':d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+    var il=ldIL(r.at),dd=il.dd,hm=il.hm;
     // 13.11.2026, Itzik: every detail to get back to him: phone, mail, where from and when. A mail written only inside the note is read from there.
     var em=r.email||((String(r.note||'').match(/מייל: *([^ ,;]+@[^ ,;]+)/)||[])[1]||'');
     var src=LD_SRC[r.source]||(r.kind==='customer'?'🤝 לקוח':'✍️ ידני'),meta=/comment|messenger|dm|leadform/.test(r.source||'');
@@ -20228,7 +20232,7 @@ function bizSheet(t0){
      if(a==='ldnote'){if(lr.querySelector('.bzEd'))return;t.parentNode.insertAdjacentHTML('afterend','<div class="bzEd"><input placeholder="מה לרשום על הליד"><button type="button" class="yb yb2" data-tdy="1" data-bz="ldsend">שלח</button></div>');lr.querySelector('.bzEd input').focus();return;}
      var lbx=t.closest('.bzEd'),lin=lbx.querySelector('input:not([type=checkbox])'),lv=lin.value.trim();if(!lv){lin.focus();return;}
      lgo('ליד ['+lid+']: הערה '+lv,'נרשם.');
-     if(lbx.classList.contains('ldNoteBox')){var nd=new Date();lbx.insertAdjacentHTML('beforebegin','<small class="ldMine" style="white-space:pre-line">'+nd.getDate()+'.'+(nd.getMonth()+1)+': '+lv.replace(/[&<>"]/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch];})+'</small>');lin.value='';}else lbx.remove();
+     if(lbx.classList.contains('ldNoteBox')){var nd=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',day:'numeric',month:'numeric'}).format(new Date()).replace('/','.');lbx.insertAdjacentHTML('beforebegin','<small class="ldMine" style="white-space:pre-line">'+nd+': '+lv.replace(/[&<>"]/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch];})+'</small>');lin.value='';}else lbx.remove();
      return;
     }
     if(a==='leaddel'){var dr=t.closest('.bzRow'),did=t.getAttribute('data-id');if(!did||typeof leadDelAsk!=='function')return;leadDelAsk(t.getAttribute('data-n'),did,function(){if(dr)dr.style.display='none';});return;}
