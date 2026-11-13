@@ -9976,6 +9976,8 @@ function motionBind(){
    var v=b.getAttribute('data-motion')==='soft'?'soft':'off';
    try{localStorage.setItem('motion',v);}catch(e){}
    motionApply(v);
+   // 13.11.2026: calm is the default, so a tap on רגוע changed nothing on screen and the button checker read "no reaction". Now it says so.
+   if(typeof toast==='function')toast(v==='soft'?'נשמר: רמז עדין':'נשמר: רגוע, שום דבר לא מהבהב');
   });
  });
  motionApply(motionGet());
