@@ -21419,7 +21419,7 @@ function bareApply(on){
  var home=document.getElementById('pH');
  if(home)home.classList.toggle('bare',!!on);
  var btn=document.getElementById('bareBtn');
- if(btn)btn.textContent=on?'עוד כלים':'רק המיקרופון';
+ if(btn)btn.textContent=on?'עוד כלים':'פחות כלים';
 }
 document.getElementById('bareBtn').onclick=function(){
  var next=!bareGet();

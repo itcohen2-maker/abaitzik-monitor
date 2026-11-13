@@ -680,7 +680,7 @@ test('the home screen is the microphone and nothing else', () => {
   assert.ok(!header.includes('id="arrangeBtn"'), 'and not beside the title');
   assert.ok(!header.includes('id="bareBtn"'), 'nor the tools link');
   assert.ok(html.includes("home.classList.toggle('bare',!!on);"));
-  assert.ok(html.includes("btn.textContent=on?'עוד כלים':'רק המיקרופון';"));
+  assert.ok(html.includes("btn.textContent=on?'עוד כלים':'פחות כלים';"));
   // Bare by default, and the choice survives a reload like every other one.
   assert.ok(html.includes("return localStorage.getItem('bareHome')!=='0';"));
   assert.ok(html.includes("localStorage.setItem('bareHome',next?'1':'0');"));
