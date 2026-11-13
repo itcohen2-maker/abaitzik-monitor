@@ -2811,7 +2811,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-13T03:30:01.819Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-13T03:32:08.978Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4743,7 +4743,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='e3b66710f5';
+var CODE_ID='4e6f2155bc';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -14984,7 +14984,7 @@ function bizSheet(t0){
   }
   function newLeadHtml(){
    return '<button type="button" class="yb yb1" data-bz="newtoggle">➕ ליד חדש</button>'
-    +'<div class="bzEd" data-bz="newbox" hidden><input id="bzNewIn" placeholder="שם, טלפון ומה הוא רוצה"><input id="bzNewMail" type="email" placeholder="מייל (לא חובה)"><button type="button" class="yb yb2" data-bz="newsend">שלח</button></div>';
+    +'<div class="bzEd" data-bz="newbox" hidden><input id="bzNewIn" placeholder="שם, טלפון ומה הוא רוצה"><input id="bzNewMail" type="email" placeholder="מייל (לא חובה)"><button type="button" class="yb yb2" data-tdy="1" data-bz="newsend">שלח</button></div>'; // data-tdy: no removal checkbox inside the send box
   }
   function shwTapped(e){try{return (JSON.parse(localStorage.getItem('shwTapped')||'{}'))[e];}catch(x){return false;}}
   function shWaitHtml(){
@@ -15302,8 +15302,8 @@ function bizSheet(t0){
      if(a==='ldst'){var ls=t.getAttribute('data-s');lr.querySelector('.ldSt').textContent=ls;lr.classList.toggle('ldNew',ls==='חדש');lgo('ליד ['+lid+']: סטטוס '+ls,'עודכן: '+ls);return;}
      if(a==='lddel'){
       leadDelAsk(lr.getAttribute('data-n'),lid,function(){lr.style.display='none';});return;}
-     if(a==='ldnote'){if(lr.querySelector('.bzEd'))return;t.parentNode.insertAdjacentHTML('afterend','<div class="bzEd"><input placeholder="מה לרשום על הליד"><button type="button" class="yb yb2" data-bz="ldsend">שלח</button></div>');lr.querySelector('.bzEd input').focus();return;}
-     var lbx=t.closest('.bzEd'),lin=lbx.querySelector('input'),lv=lin.value.trim();if(!lv){lin.focus();return;}
+     if(a==='ldnote'){if(lr.querySelector('.bzEd'))return;t.parentNode.insertAdjacentHTML('afterend','<div class="bzEd"><input placeholder="מה לרשום על הליד"><button type="button" class="yb yb2" data-tdy="1" data-bz="ldsend">שלח</button></div>');lr.querySelector('.bzEd input').focus();return;}
+     var lbx=t.closest('.bzEd'),lin=lbx.querySelector('input:not([type=checkbox])'),lv=lin.value.trim();if(!lv){lin.focus();return;}
      lgo('ליד ['+lid+']: הערה '+lv,'נרשם.');lbx.remove();return;
     }
     if(a==='leaddel'){var dr=t.closest('.bzRow'),did=t.getAttribute('data-id');if(!did||typeof leadDelAsk!=='function')return;leadDelAsk(t.getAttribute('data-n'),did,function(){if(dr)dr.style.display='none';});return;}

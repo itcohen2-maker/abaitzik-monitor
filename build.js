@@ -19587,7 +19587,7 @@ function bizSheet(t0){
   // 1.11, Itzik: every part of the sheet gets its own tab on the right, so nothing is a long list.
   function newLeadHtml(){
    return '<button type="button" class="yb yb1" data-bz="newtoggle">➕ ליד חדש</button>'
-    +'<div class="bzEd" data-bz="newbox" hidden><input id="bzNewIn" placeholder="שם, טלפון ומה הוא רוצה"><input id="bzNewMail" type="email" placeholder="מייל (לא חובה)"><button type="button" class="yb yb2" data-bz="newsend">שלח</button></div>';
+    +'<div class="bzEd" data-bz="newbox" hidden><input id="bzNewIn" placeholder="שם, טלפון ומה הוא רוצה"><input id="bzNewMail" type="email" placeholder="מייל (לא חובה)"><button type="button" class="yb yb2" data-tdy="1" data-bz="newsend">שלח</button></div>'; // data-tdy: no removal checkbox inside the send box
   }
   function shwTapped(e){try{return (JSON.parse(localStorage.getItem('shwTapped')||'{}'))[e];}catch(x){return false;}}
   function shWaitHtml(){
@@ -19961,8 +19961,9 @@ function bizSheet(t0){
      if(a==='ldst'){var ls=t.getAttribute('data-s');lr.querySelector('.ldSt').textContent=ls;lr.classList.toggle('ldNew',ls==='חדש');lgo('ליד ['+lid+']: סטטוס '+ls,'עודכן: '+ls);return;}
      if(a==='lddel'){
       leadDelAsk(lr.getAttribute('data-n'),lid,function(){lr.style.display='none';});return;}
-     if(a==='ldnote'){if(lr.querySelector('.bzEd'))return;t.parentNode.insertAdjacentHTML('afterend','<div class="bzEd"><input placeholder="מה לרשום על הליד"><button type="button" class="yb yb2" data-bz="ldsend">שלח</button></div>');lr.querySelector('.bzEd input').focus();return;}
-     var lbx=t.closest('.bzEd'),lin=lbx.querySelector('input'),lv=lin.value.trim();if(!lv){lin.focus();return;}
+     // 13.11: data-tdy keeps the removal checkbox out of the send box, so "on" can never be read as the note (as in עדכון עסק, 6.11)
+     if(a==='ldnote'){if(lr.querySelector('.bzEd'))return;t.parentNode.insertAdjacentHTML('afterend','<div class="bzEd"><input placeholder="מה לרשום על הליד"><button type="button" class="yb yb2" data-tdy="1" data-bz="ldsend">שלח</button></div>');lr.querySelector('.bzEd input').focus();return;}
+     var lbx=t.closest('.bzEd'),lin=lbx.querySelector('input:not([type=checkbox])'),lv=lin.value.trim();if(!lv){lin.focus();return;}
      lgo('ליד ['+lid+']: הערה '+lv,'נרשם.');lbx.remove();return;
     }
     if(a==='leaddel'){var dr=t.closest('.bzRow'),did=t.getAttribute('data-id');if(!did||typeof leadDelAsk!=='function')return;leadDelAsk(t.getAttribute('data-n'),did,function(){if(dr)dr.style.display='none';});return;}
