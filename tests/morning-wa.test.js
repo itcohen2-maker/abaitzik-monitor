@@ -39,13 +39,15 @@ test('text: open lines only, short, no dashes in the copy, one link', () => {
   const card = { items: [
     { k: 'brief', st: 'done', t: 'דוח הבוקר מוכן', sub: 'x' },
     { k: 'cal', st: 'todo', t: 'ביומן היום: 2 דברים', sub: "08:00 העברה · 12:45 רופא שיניים" },
-    { k: 'mail', st: 'warn', t: 'מיילים: דבר אחד דחוף', sub: 'א-ב\nשורה שנייה' },
+    { k: 'work2', st: 'warn', t: 'נשאר לך: דבר אחד', sub: 'א-ב\nשורה שנייה' },
+    { k: 'handle', st: 'warn', t: 'פריט אחד מחכה לטיפול שלך', sub: '' },
   ] };
   const s = W.text(card, 'https://example.test/m/');
   assert.match(s, /לא ראיתי שפתחת את המוניטור/);
   assert.ok(!s.includes('דוח הבוקר מוכן'));
-  assert.match(s, /• ביומן היום: 2 דברים: 08:00 העברה/);
-  assert.match(s, /• מיילים: דבר אחד דחוף: א ב$/m);
+  assert.ok(!s.includes('ביומן היום'), 'calendar is not a request');
+  assert.match(s, /• נשאר לך: דבר אחד: א ב$/m);
+  assert.match(s, /• פריט אחד מחכה לטיפול שלך/);
   assert.strictEqual(s.split('https://example.test/m/').length, 2);
   assert.ok(!/[-‐‑‒–—]/.test(s.replace('https://example.test/m/', '')));
   const merged = W.text(card, 'https://example.test/m/', 'מה פתוח היום:\n• אישור\nהכל במוניטור: https://example.test/m/');
@@ -71,7 +73,7 @@ test('check reads the disk: pushed today, no open, then an open', () => {
   const now = Date.parse('2026-11-11T08:30:00+02:00');
   fs.mkdirSync(path.join(d, 'manager', 'manager'), { recursive: true });
   fs.writeFileSync(path.join(d, 'manager', 'state.json'), JSON.stringify({ pushed: DAY, pushedAt: new Date(PUSH).toISOString() }));
-  fs.writeFileSync(path.join(d, 'manager', 'manager', '20261111.json'), JSON.stringify({ day: DAY, items: [{ k: 'cal', st: 'todo', t: 'ביומן היום: דבר אחד', sub: '' }] }));
+  fs.writeFileSync(path.join(d, 'manager', 'manager', '20261111.json'), JSON.stringify({ day: DAY, items: [{ k: 'work2', st: 'todo', t: 'נשאר לך: דבר אחד', sub: '' }] }));
   assert.strictEqual(W.check(d, now).d.send, true);
   OO.record(d, 'push', PUSH + 120000);
   assert.strictEqual(W.check(d, now).d.reason, 'opened');

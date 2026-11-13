@@ -18,13 +18,14 @@ const bridge = require('../wa-bridge.js');
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'waplan-'));
 
 test('the daily message says only what is new, and nothing when nothing is new', () => {
-  const items = [{ key: 'a', t: 'ליד פתוח: רון' }, { key: 'b', t: 'ההצעה לשי נפתחה ועוד לא נחתמה' }];
+  const items = [{ key: 'a', kind: 'approve', t: 'מחכה לאישור שלך: רון' }, { key: 'b', kind: 'wait', t: 'בקשה שלך עוד בלי תשובה: שי' }];
   const first = loops.message(items, [], 'https://x/');
-  assert.ok(first.includes('• ליד פתוח: רון') && first.includes('• ההצעה לשי'));
+  assert.ok(first.includes('• מחכה לאישור שלך: רון') && first.includes('• בקשה שלך עוד בלי תשובה: שי'));
   assert.ok(first.includes('הכל במוניטור: https://x/'));
-  const second = loops.message(items.concat([{ key: 'c', t: 'מחכה לאישור שלך: משהו' }]), ['a', 'b'], '');
+  const second = loops.message(items.concat([{ key: 'c', kind: 'approve', t: 'מחכה לאישור שלך: משהו' }]), ['a', 'b'], '');
   assert.ok(second.includes('• מחכה לאישור שלך: משהו'));
   assert.ok(!second.includes('רון'), 'old items are only counted');
+  assert.ok(!loops.message([{ key: 'l', kind: 'lead', t: 'ליד פתוח: רון' }], [], ''), 'leads are not sent');
   assert.ok(second.includes('ועוד 2 ששלחתי קודם ועדיין פתוחים.'));
   assert.strictEqual(loops.message(items, ['a', 'b'], ''), null);
   assert.ok(!/[-‐-―־]/.test(first + second), 'no dashes in what he reads');
