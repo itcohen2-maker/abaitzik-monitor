@@ -599,7 +599,7 @@ function adminRules() {
 
 function houseRules() {
   const lines = [];
-  if (inst.name === 'abaitzik') lines.push('כללי הבית: הפעל את הסקיל abaitzik-onboarding לפני שאתה נוגע במשהו.');
+  if (inst.name === 'abaitzik') lines.push('כללי הבית: בשרת אין את הסקיל abaitzik-onboarding, אל תחפש אותו ואל תעצור בגללו. שמור על הכללים האדומים: לא פונים למי שלא פנה, וואטסאפ רק להודעה לעצמך, בלי מקפים בטקסט שמתפרסם, בלי שם פרטי בתשובה, ושואלים לפני מחיקה, תשלום או שינוי זהות. בכל מקרה נותנים תשובה בצ׳אט.');
   try {
     const prof = fs.readFileSync(path.join(inst.dataPath, 'profile.md'), 'utf8').trim();
     if (prof) lines.push('כללי הבית של המופע הזה, מתוך data/profile.md:', '', prof);
