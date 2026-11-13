@@ -17890,6 +17890,8 @@ on('gClalit',clalitSheet);
 var TOM_ITEMS=[
 // 13.11, Itzik approved the recommended list: 6 ads (2 videos, 4 animated images), Meta waits for his yes.
 // 7 stops (almost the same as 3). 8 to 10 wait aside, ready to replace a weak ad. Then the stories. Copies of the old cards: Downloads/ITsolution-ads.
+ {n:"🆕 ג",t:"לאישורך · 🖼️ הראית לכולם דמו ואף אחד לא שילם? · מדמו למוצר · לצ׳אט",r:"ads-nov13-card23.mp4"},
+ {n:"🆕 ד",t:"לאישורך · 🖼️ אצלך זה עובד ואצל הלקוח נופל? · לצ׳אט",r:"ads-nov13-card24.mp4"},
  {n:"🆕 א",t:"לאישורך · 🖼️ יש לך אפליקציה ואין לך לקוח אחד? · Lovable ו Base44 · לצ׳אט · במקום 4",r:"ads-nov13-card21.mp4"},
  {n:"🆕 ב",t:"לאישורך · 🖼️ הלקוחות הגיעו והאפליקציה קרסה? · מקריסה למוכנה · לצ׳אט · במקום 5",r:"ads-nov13-card22.mp4"},
  {n:"1",t:"✅ באוויר 13.11 · 🎬 סרטון · מי לא שילם לך (הראשי) · לשבוע התנסות בחינם",r:"wa-hub-gviya-ad.mp4"},
