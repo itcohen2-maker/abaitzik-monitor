@@ -3521,6 +3521,7 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 .ldNew .ldSt{background:#f59e0b;color:#fff}
 .ldBody{padding:4px 10px 12px;display:flex;flex-direction:column;gap:6px}
 .ldBody small{display:block}
+.ldRow summary b .ldC{display:block;font:400 13px Heebo,sans-serif;color:#5a6478;margin-top:2px;direction:ltr;text-align:right}
 .ldLast{margin:0;font-style:italic;opacity:.85}
 .ldAct{display:flex;flex-wrap:wrap;gap:6px}
 .ldAct .yb{text-decoration:none;flex:0 1 auto;width:auto;margin:0}
@@ -19708,20 +19709,24 @@ function bizSheet(t0){
    if(!L.length)return h+'<p class="bzEmpty">עוד אין לידים.</p>';
    h+='<div class="ldTbl"><div class="ldHd"><span>תאריך</span><span>שם</span><span>מאיפה</span><span>סטטוס</span></div>';
    L.forEach(function(r){
-    var d=new Date(r.at||''),dd=isNaN(d)?'':d.getDate()+'.'+(d.getMonth()+1);
+    var d=new Date(r.at||''),dd=isNaN(d)?'':d.getDate()+'.'+(d.getMonth()+1),hm=isNaN(d)?'':d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+    // 13.11.2026, Itzik: every detail to get back to him: phone, mail, where from and when. A mail written only inside the note is read from there.
+    var em=r.email||((String(r.note||'').match(/מייל: *([^ ,;]+@[^ ,;]+)/)||[])[1]||'');
     var src=LD_SRC[r.source]||(r.kind==='customer'?'🤝 לקוח':'✍️ ידני'),meta=/comment|messenger|dm|leadform/.test(r.source||'');
     var rep='';
     if(r.phone){rep+='<a class="yb yb2" href="'+ldWa(r.phone)+'" target="_blank" rel="noopener">💬 וואטסאפ</a><a class="yb" href="tel:'+esc(String(r.phone).replace(/[^0-9+]/g,''))+'">📞 להתקשר</a>';}
-    if(r.email)rep+='<a class="yb" href="mailto:'+esc(r.email)+'">✉️ מייל</a>';
+    if(em)rep+='<a class="yb" href="mailto:'+esc(em)+'">✉️ מייל</a>';
     if(meta&&(r.link||LD_INBOX))rep+='<a class="yb yb2" href="'+esc(r.link||LD_INBOX)+'" target="_blank" rel="noopener">💬 לענות במטא</a>';
     // 11.11: copy the phone, or all the details at once (name, phone, mail, where from, when, what he wrote, notes)
-    var NL=String.fromCharCode(10),all=[r.name||'בלי שם',r.phone?'טלפון: '+r.phone:'',r.email?'מייל: '+r.email:'','מאיפה: '+src.replace(/^[^ ]+ /,''),dd?'תאריך: '+dd:'','סטטוס: '+(r.status||''),r.last?'כתב: '+r.last:'',r.note?ldNote(r.note):''].filter(Boolean).join(NL);
+    var NL=String.fromCharCode(10),all=[r.name||'בלי שם',r.phone?'טלפון: '+r.phone:'',em?'מייל: '+em:'','מאיפה: '+src.replace(/^[^ ]+ /,'')+(r.ref?' ('+r.ref+')':''),dd?'תאריך: '+dd+' '+hm:'','סטטוס: '+(r.status||''),r.last?'כתב: '+r.last:'',r.note?ldNote(r.note):''].filter(Boolean).join(NL);
     if(r.phone)rep+='<button type="button" class="yb" data-bz="ldcopy" data-w="הטלפון" data-u="'+esc(r.phone)+'">📋 להעתיק טלפון</button>';
     rep+='<button type="button" class="yb" data-bz="ldcopy" data-w="כל הפרטים" data-u="'+esc(all)+'">📋 להעתיק את כל הפרטים</button>';
-    h+='<details class="ldRow'+(r.test?' ldTest':(r.status==='חדש'?' ldNew':''))+'" data-id="'+esc(r.id)+'" data-n="'+esc(r.name||'')+'"><summary><span>'+esc(dd)+'</span><b>'+esc(r.name||'בלי שם')+(r.test?'<span class="ldTestTag">בדיקה שלך</span>':'')+'</b><span>'+esc(src)+'</span><span class="ldSt">'+esc(r.status||'')+'</span></summary>'
+    h+='<details class="ldRow'+(r.test?' ldTest':(r.status==='חדש'?' ldNew':''))+'" data-id="'+esc(r.id)+'" data-n="'+esc(r.name||'')+'"><summary><span>'+esc(dd)+'</span><b>'+esc(r.name||'בלי שם')+(r.test?'<span class="ldTestTag">בדיקה שלך</span>':'')+((r.phone||em)?'<small class="ldC"><bdi>'+esc([r.phone,em].filter(Boolean).join(' · '))+'</bdi></small>':'<small class="ldC">אין טלפון</small>')+'</b><span>'+esc(src)+'</span><span class="ldSt">'+esc(r.status||'')+'</span></summary>'
      +'<div class="ldBody">'
      +(r.last?'<p class="ldLast">"'+esc(r.last)+'"</p>':'')
-     +(r.phone?'<small>'+bzTel(r.phone)+'</small>':'')+(r.email?'<small><bdi>'+esc(r.email)+'</bdi></small>':'')
+     +'<small>📍 מאיפה: '+esc(src.replace(/^[^ ]+ /,''))+(r.ref?' · '+esc(r.ref):'')+'</small>'
+     +(dd?'<small>🕒 נכנס: '+esc(dd+' '+hm)+'</small>':'')
+     +(r.phone?'<small>📞 '+bzTel(r.phone)+'</small>':'<small>📞 לא השאיר טלפון</small>')+(em?'<small>✉️ <bdi>'+esc(em)+'</bdi></small>':'<small>✉️ לא השאיר מייל</small>')
      +(r.note?'<small style="white-space:pre-line">'+esc(ldNote(r.note))+'</small>':'')
      +'<div class="ldAct">'+(rep||'<small>אין טלפון או מייל. מחכים שיחזור.</small>')+'</div>'
      +'<div class="ldAct">'+BZ_ORDER.filter(function(st){return st!==r.status;}).map(function(st){return '<button type="button" class="yb" data-bz="ldst" data-s="'+st+'">'+st+'</button>';}).join('')+'</div>'
