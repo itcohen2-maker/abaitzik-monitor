@@ -19721,6 +19721,9 @@ function bizSheet(t0){
     var NL=String.fromCharCode(10),all=[r.name||'בלי שם',r.phone?'טלפון: '+r.phone:'',em?'מייל: '+em:'','מאיפה: '+src.replace(/^[^ ]+ /,'')+(r.ref?' ('+r.ref+')':''),dd?'תאריך: '+dd+' '+hm:'','סטטוס: '+(r.status||''),r.last?'כתב: '+r.last:'',r.note?ldNote(r.note):''].filter(Boolean).join(NL);
     if(r.phone)rep+='<button type="button" class="yb" data-bz="ldcopy" data-w="הטלפון" data-u="'+esc(r.phone)+'">📋 להעתיק טלפון</button>';
     rep+='<button type="button" class="yb" data-bz="ldcopy" data-w="כל הפרטים" data-u="'+esc(all)+'">📋 להעתיק את כל הפרטים</button>';
+    // 13.11.2026, Itzik: "להעביר את הליד לטום ... אני אחליט למי אני שולח". WhatsApp opens with every detail
+    // already written and no recipient, so he picks who gets it (טום or anyone).
+    rep+='<a class="yb yb1" href="https://wa.me/?text='+encodeURIComponent('ליד להעברה'+NL+all)+'" target="_blank" rel="noopener">📤 להעביר בוואטסאפ</a>';
     h+='<details class="ldRow'+(r.test?' ldTest':(r.status==='חדש'?' ldNew':''))+'" data-id="'+esc(r.id)+'" data-n="'+esc(r.name||'')+'"><summary><span>'+esc(dd)+'</span><b>'+esc(r.name||'בלי שם')+(r.test?'<span class="ldTestTag">בדיקה שלך</span>':'')+((r.phone||em)?'<small class="ldC"><bdi>'+esc([r.phone,em].filter(Boolean).join(' · '))+'</bdi></small>':'<small class="ldC">אין טלפון</small>')+'</b><span>'+esc(src)+'</span><span class="ldSt">'+esc(r.status||'')+'</span></summary>'
      +'<div class="ldBody">'
      +(r.last?'<p class="ldLast">"'+esc(r.last)+'"</p>':'')
