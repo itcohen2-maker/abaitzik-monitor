@@ -5087,7 +5087,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <a class="ic" data-grp="work" href="#" id="icAl" data-new="1"><span class="c c-al" id="icAlC">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-2 9a6 6 0 0 1-12 0z"/><circle cx="9" cy="9.5" r="1"/><circle cx="15" cy="9.5" r="1"/><path d="M9.5 13c1.5 1.3 3.5 1.3 5 0"/></svg></span>מוניטורים</a>
   <!-- 9.11.2026, Itzik: "תעשה לו אייקון כמו האייקון של אלון. כשאני לוחץ אני רואה את כל המוניטורים, פלוס הקוד שלהם של הכניסה". Same as Alon's: the colour of his monitor's health check, and the click opens the monitors screen (link and entry code of each), scrolled to Dr. Shulman's. -->
-  ${inst.name === 'abaitzik' ? '<style>/* 13.11.2026, Itzik: off his home screen */#icFcSales,#icFcCoach,#icFcPersonal,#icPb,#gAlarm,#icShachar,#gRemind,#gWin{display:none!important}</style>' : ''}
+  ${inst.name === 'abaitzik' ? '<style>/* 13.11.2026, Itzik: off his home screen */#icFcSales,#icFcCoach,#icFcPersonal,#icPb,#gAlarm,#icShachar,#gShachar,#gRemind,#gWin{display:none!important}</style>' : ''}
   <a class="ic" data-grp="work" href="#" id="icPb" data-new="1"><span class="c c-pb" id="icPbC">🦷</span>ד״ר שולמן</a>
   <!-- 8.11.2026, Itzik: the Shai icon is gone. He is not paying and his access was cancelled. -->
   <button type="button" class="ic" data-grp="work" id="icHealth"><span class="c c-hl" id="icHealthC">🩺</span>תקלות</button>
@@ -23269,6 +23269,8 @@ function tilesEnter(grid){
  try{navigator.vibrate&&navigator.vibrate(18);}catch(e){}
  tileBar(true);
  var a=document.getElementById('tileArr');if(a)a.textContent='✓ סיום';
+ // the top button only opens the move mode; סיום is the bar at the bottom (tileBar)
+ var at=document.getElementById('tileArrTop');if(at)at.style.display='none';
 }
 function tilesExit(){
  var grid=document.getElementById('blkTiles');
@@ -23276,6 +23278,7 @@ function tilesExit(){
  if(grid){grid.classList.remove('tedit');saveOrder(grid,'tileOrder');}
  tileBar(false);
  var a=document.getElementById('tileArr');if(a)a.textContent='✎ הזזת אריחים';
+ var at=document.getElementById('tileArrTop');if(at)at.style.display='';
 }
 /*
   The press and drag itself, shared by the square tiles and, from 30.9 in his
@@ -23390,6 +23393,17 @@ function armTiles(grid){
  tools.id='tileTools';tools.className='tarrs';
  tools.appendChild(arr);
  grid.insertBefore(tools,grid.firstChild);
+ // 13.11.2026, Itzik: "הזזת אריחים at the top of the tiles". The business tiles (blkBiz) stand above this grid, so the
+ // button he sees sits above them; it presses the real one and shows its word (✎ or סיום).
+ var bz=document.getElementById('blkBiz');
+ if(bz&&bz.parentNode){
+  var px=document.getElementById('tileArrTop');
+  if(!px){px=document.createElement('div');px.id='tileArrTop';px.className='tarrs';var pb=document.createElement('button');pb.type='button';pb.className='tarr';px.appendChild(pb);}
+  if(bz.firstChild!==px)bz.insertBefore(px,bz.firstChild);
+  // the grid is rebuilt after boot and the button with it: always press the current one
+  var pbt=px.firstChild;pbt.textContent=arr.textContent;pbt.onclick=function(){if(tEdit)tilesExit();else{var g=document.getElementById('blkTiles');if(g)tilesEnter(g);}};
+  tools.style.display='none';
+ }
  var pin=pinTiles(grid);
  tPaint();setTimeout(tPaint,0);window.addEventListener('load',tPaint);
  // 6.11, Itzik (iron rule): a long press without moving makes the tile blink. Never remove this.
