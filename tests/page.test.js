@@ -948,7 +948,7 @@ test('answers screen holds every source in one cluster', () => {
   assert.ok(html.includes(" return his.concat(mine).concat(cdx).concat(rps).sort("));
   assert.ok(html.includes("function ansWho(m){var k=m&&m.src;return k==='codex'?'קודקס':k==='report'?'דוח':k==='itzik'?'אתה':AI;}"));
   assert.ok(html.includes("var AI=(INSTANCE&&INSTANCE.name&&INSTANCE.name!=='abaitzik')?'העוזר שלך':'קלוד';"));
-  assert.ok(html.includes("'<span class=\"w\">'+(his?'':'<span class=\"achev\" aria-hidden=\"true\">▼</span>')+ansWho(m)+' · '+esc(stamp(m.at))+mark+'</span>'"));
+  assert.ok(html.includes("'<span class=\"w\">'+(his?'':'<span class=\"achev\" aria-hidden=\"true\">▼</span>')+ansWho(m)+' · '+ansStamp(m.at)+mark+'</span>'"));
   // His own message is never unread to him, and offers no reply button.
   assert.ok(html.includes("function isFresh(m){if(m&&m.src==='itzik')return false;"));
   assert.ok(html.includes('.ansc.mine{'));
