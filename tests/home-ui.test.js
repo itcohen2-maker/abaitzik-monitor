@@ -58,7 +58,7 @@ test('the top of the home screen is greeting, approvals, brief, bento, then the 
   assert.ok(at('id="homeBrief"') < at('id="homeKpis"'));
   assert.ok(at('id="homeKpis"') < at('id="newBlock"'));
   // pinHome moves these to the top at load, so they must be in its list.
-  assert.ok(html.includes("var HOME_HEAD=['hmGreet','sinceBox','approvalsBox','homeBrief','homeKpis','homeMoney','newBlock'"));
+  assert.ok(html.includes("var HOME_HEAD=['hmGreet','sinceBox','approvalsBox','homeBrief','homeKpis','homeMoney','bareBtn','newBlock'")); // 13.11.2026: answers under עוד כלים
 });
 
 test('nothing renders without D.brief or D.money', () => {
