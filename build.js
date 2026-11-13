@@ -19971,9 +19971,12 @@ function bizSheet(t0){
      +(dd?'<small>🕒 נכנס: '+esc(dd+' '+hm)+'</small>':'')
      +(r.phone?'<small>📞 '+bzTel(r.phone)+'</small>':'<small>📞 לא השאיר טלפון</small>')+(em?'<small>✉️ <bdi>'+esc(em)+'</bdi></small>':'<small>✉️ לא השאיר מייל</small>')
      +(r.note?'<small style="white-space:pre-line">'+esc(ldNote(r.note))+'</small>':'')
+     // 13.11.2026, Itzik: "בלידים אין לי איך להכניס הערה". The 📝 button sat at the very bottom, after every other
+     // button. Now the note box is open in every lead, right under the details, and a sent note shows at once.
+     +'<div class="bzEd ldNoteBox"><input placeholder="📝 הערה על הליד" enterkeyhint="send"><button type="button" class="yb yb2" data-tdy="1" data-bz="ldsend">לרשום</button></div>'
      +'<div class="ldAct">'+(rep||'<small>אין טלפון או מייל. מחכים שיחזור.</small>')+'</div>'
      +'<div class="ldAct">'+BZ_ORDER.filter(function(st){return st!==r.status;}).map(function(st){return '<button type="button" class="yb" data-bz="ldst" data-s="'+st+'">'+st+'</button>';}).join('')+'</div>'
-     +'<div class="ldAct"><button type="button" class="yb" data-bz="ldnote">📝 לרשום</button><button type="button" class="yb ldDel" data-bz="lddel">🗑 מחיקה</button></div>'
+     +'<div class="ldAct"><button type="button" class="yb ldDel" data-bz="lddel">🗑 מחיקה</button></div>'
      +'</div></details>';
    }
    function ldTable(title,list,empty){
@@ -20224,7 +20227,9 @@ function bizSheet(t0){
      // 13.11: data-tdy keeps the removal checkbox out of the send box, so "on" can never be read as the note (as in עדכון עסק, 6.11)
      if(a==='ldnote'){if(lr.querySelector('.bzEd'))return;t.parentNode.insertAdjacentHTML('afterend','<div class="bzEd"><input placeholder="מה לרשום על הליד"><button type="button" class="yb yb2" data-tdy="1" data-bz="ldsend">שלח</button></div>');lr.querySelector('.bzEd input').focus();return;}
      var lbx=t.closest('.bzEd'),lin=lbx.querySelector('input:not([type=checkbox])'),lv=lin.value.trim();if(!lv){lin.focus();return;}
-     lgo('ליד ['+lid+']: הערה '+lv,'נרשם.');lbx.remove();return;
+     lgo('ליד ['+lid+']: הערה '+lv,'נרשם.');
+     if(lbx.classList.contains('ldNoteBox')){var nd=new Date();lbx.insertAdjacentHTML('beforebegin','<small class="ldMine" style="white-space:pre-line">'+nd.getDate()+'.'+(nd.getMonth()+1)+': '+lv.replace(/[&<>"]/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch];})+'</small>');lin.value='';}else lbx.remove();
+     return;
     }
     if(a==='leaddel'){var dr=t.closest('.bzRow'),did=t.getAttribute('data-id');if(!did||typeof leadDelAsk!=='function')return;leadDelAsk(t.getAttribute('data-n'),did,function(){if(dr)dr.style.display='none';});return;}
     if(a==='newtoggle'){var nb=el.querySelector('[data-bz="newbox"]');nb.hidden=!nb.hidden;if(!nb.hidden)el.querySelector('#bzNewIn').focus();return;}
