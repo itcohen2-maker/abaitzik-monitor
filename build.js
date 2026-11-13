@@ -2745,6 +2745,8 @@ body.editing .bn{display:none}
 @media(prefers-reduced-motion:reduce){body.editing .editbox>*{animation:none;
  outline:1px dashed var(--accent);outline-offset:3px}}
 .stamp{text-align:center;color:var(--dim);font-size:11px;padding:10px 0 4px}
+/* 13.11.2026, Itzik: the version line comes off the screen; it stays in ⚙ הגדרות (builtSet). */
+.wrap>.stamp{display:none}
 .toast{position:fixed;z-index:80;inset-inline:16px;bottom:calc(76px + env(safe-area-inset-bottom));
  margin-inline:auto;max-width:360px;text-align:center;
  background:var(--surface);border:1px solid var(--line);border-radius:16px;
@@ -6092,7 +6094,7 @@ ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').html : ''}
  <button type="button" id="nA" aria-pressed="false" data-upd="20261030-eta"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h16v11h-9l-5 3.5v-3.5H4Z"/><path d="M8 10.5h8M8 14h5"/></svg>תשובות<i class="cnt zero" id="aCnt">0</i></button>
  <button type="button" id="nQ" aria-pressed="false"${inst.name === 'abaitzik' ? '' : ' hidden'}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"/><path d="M7 19v-6"/><path d="M12 19V7"/><path d="M17 19v-9"/></svg>רשתות</button>
  <button type="button" id="nL" aria-pressed="false"${inst.name === 'abaitzik' ? '' : ' hidden'}><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>לידים<i class="dot" id="lDot" hidden></i></button>
- <button type="button" id="nR" aria-pressed="false"${inst.name === 'abaitzik' ? '' : ' hidden'}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6Z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h4"/></svg>דוחות</button>
+ <button type="button" id="nR" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6Z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h4"/></svg>דוחות</button>
 </nav>
 
 <div class="stamp"><span id="builtFoot"></span></div>
