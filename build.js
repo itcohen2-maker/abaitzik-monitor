@@ -23411,8 +23411,8 @@ function armTiles(grid){
   if(!px){px=document.createElement('div');px.id='tileArrTop';px.className='tarrs';var pb=document.createElement('button');pb.type='button';pb.className='tarr';px.appendChild(pb);}
   if(bz.firstChild!==px)bz.insertBefore(px,bz.firstChild);
   // the grid is rebuilt after boot and the button with it: always press the current one
-  var pbt=px.firstChild;pbt.textContent=arr.textContent;pbt.onclick=function(){if(tEdit)tilesExit();else{var g=document.getElementById('blkTiles');if(g)tilesEnter(g);}};
-  tools.style.display='none';
+  var pbt=px.firstChild;pbt.id='tileArr';pbt.textContent=arr.textContent;pbt.onclick=function(){if(tEdit)tilesExit();else{var g=document.getElementById('blkTiles');if(g)tilesEnter(g);}};
+  arr.id='tileArrGrid';tools.style.display='none';
  }
  var pin=pinTiles(grid);
  tPaint();setTimeout(tPaint,0);window.addEventListener('load',tPaint);
