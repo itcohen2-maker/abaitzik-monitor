@@ -1043,7 +1043,7 @@ function build() {
       try {
         payload.liPosts = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'linkedin', 'queue.json'), 'utf8'))
           .filter((p) => p && !p.posted)
-          .map((p) => ({ id: p.id, date: p.date, time: p.time || '09:00', approved: !!p.approved, text: String(p.text || '').replace(/\s+/g, ' ').slice(0, 120) }))
+          .map((p) => ({ id: p.id, date: p.date, time: p.time || '09:00', approved: !!p.approved, text: String(p.editedText || p.text || '').slice(0, 3000) }))
           .sort((a, b) => (String(a.date) + a.time).localeCompare(String(b.date) + b.time));
       } catch (e) { payload.liPosts = []; }
       // 1.11, Itzik: "נכנס לטאב של שחר ואני לא רואה את רשימת ההמתנה". The list itself, inside the tab.
@@ -20033,7 +20033,7 @@ function bizSheet(t0){
    var h='<div class="bzHead">🔗 לינקדין</div><a class="yb yb1" href="https://www.linkedin.com/in/me/" target="_blank" rel="noopener">לפתוח את הפרופיל שלי בלינקדין</a>';
    if(!L.length)return h+'<p class="bzEmpty">כרגע אין פוסטים שמחכים לפרסום. כל פוסט חדש יופיע כאן לבד.</p>';
    return h+'<div class="bzSec">עומדים לפרסום ('+L.length+')</div>'+L.map(function(p){
-    return '<div class="bzRow"><b>'+esc(String(p.date||'').split('-').reverse().join('.'))+' · '+esc(p.time)+' · '+(p.approved?'✅ מאושר':'⏳ מחכה לאישור')+'</b><small>'+esc(p.text)+'</small></div>';
+    return '<div class="bzRow"><b>'+esc(String(p.date||'').split('-').reverse().join('.'))+' · '+esc(p.time)+' · '+(p.approved?'✅ מאושר':'⏳ מחכה לאישור')+'</b><small style="white-space:pre-line">'+esc(p.text)+'</small>'+(p.approved?'':'<button type="button" class="yb yb2" data-bz="liok" data-id="'+esc(p.id)+'">✅ לאשר את הפוסט</button>')+'</div>';
    }).join('');
   }
   function body(){
@@ -20099,6 +20099,8 @@ function bizSheet(t0){
     var t=e.target.closest?e.target.closest('[data-bz]'):null;if(!t)return;
     var a=t.getAttribute('data-bz');
     if(a==='demo'){dmoStart();return;}
+    // 13.11.2026, Itzik: "אין לי איך לאשר את הפוסטים". Approve right here, same answer the 🔔 strip sends (linkedin-post.js finds the id). Two taps.
+    if(a==='liok'){var lid2=t.getAttribute('data-id');if(!lid2)return;if(!t.getAttribute('data-sure')){t.setAttribute('data-sure','1');t.textContent='לחיצה נוספת: לאשר, והוא יעלה בזמן שכתוב';return;}t.disabled=true;sendText('תשובה מהמוניטור','אישור: פוסט ללינקדין ('+lid2+')','אישור').then(function(){t.textContent='✅ אושר. הוא יעלה לבד בזמן שכתוב';toast('אושר.');}).catch(function(){t.disabled=false;t.removeAttribute('data-sure');t.textContent='✅ לאשר את הפוסט';toast('לא נשלח. תנסה שוב.');});return;}
     // 1.11, Itzik: "שים לי אותו גם במוניטור". The intake form for Shai (forms.js on form.it-solution.co.il).
     // 2.11, Itzik: the sign page for Shai's quote, at the top of העסק שלי. It is shared or copied, never opened here:
     // opening it reports "שי פתח" to the monitor.
