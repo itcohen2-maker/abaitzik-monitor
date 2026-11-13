@@ -4077,7 +4077,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
 .ansc .aq .atxt{font-weight:300}
 .ansc .w{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--dim);
  font:500 12.5px Heebo,sans-serif;margin-bottom:7px}
-.ansc .atxt{white-space:pre-wrap;word-break:break-word}.ansc .atxt.aclip{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.ansc .amore{display:block;margin:6px 0 2px;font-weight:700}
+.ansc .atxt{white-space:pre-wrap;word-break:break-word}.ansc.acol>.atxt{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.ansc.acol .arow,.ansc.acol .rbox,.ansc.acol .asaid{display:none}.ansc .achev{float:left;font-size:12px;opacity:.65;transition:transform .2s;padding:0 4px}.ansc:not(.acol) .achev{transform:rotate(180deg)}.ansc .arow .ab{padding:5px 10px;font-size:13px;border-radius:9px}.ansc .rbox button{font-size:13.5px!important;padding:7px 10px!important;min-height:0!important;border-radius:10px!important}.ansc .rbox textarea{min-height:52px!important;font-size:15px!important}
 .arow{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
 .ab{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:9px 13px;
  font:500 13px Heebo,sans-serif;color:var(--ink);cursor:pointer}
@@ -10692,6 +10692,7 @@ function liveAnswers(){return allAnswers().filter(function(m){return !isArchived
 // (an answer to nothing he wrote) move to the chip עדכונים. They stay one tap away, they just do not crowd his answers.
 function isUpd(m){if(!m)return false;if(m.src==='report'||m.src==='codex')return true;if(m.src==='claude'&&!m.q){var r=String(m.re||'');return !!r&&!/^(wa|ntfy)-/.test(r);}return false;}
 // 13.11.2026, Itzik: an answer shows three lines, the rest opens in a window.
+var ansOpen={};
 function ansLong(m){var t=String((m&&m.text)||'');return t.split(String.fromCharCode(10)).length>3||t.length>160;}
 function ansCounts(){
  var a0=liveAnswers(),a=a0.filter(function(m){return !isUpd(m);});
@@ -10911,10 +10912,10 @@ function renderAnswers(){
    var qw=m.q.status==='done'?'מוכן':m.q.status==='working'?'בעבודה':'התקבל';
    ask='<div class="aq"><span class="w">אתה · '+esc(stamp(m.q.at))+' · '+qw+'</span>'+qb+qau+'</div>';
   }
-  return '<div class="ansc'+(his?' mine':' '+ansColor(m))+(m.q?' pair':'')+'" data-i="'+i+'">'
+  return '<div class="ansc'+(his?' mine':' '+ansColor(m)+(ansOpen[claudeKey(m)]?'':' acol'))+(m.q?' pair':'')+'" data-i="'+i+'">'
    +ask
-   +'<span class="w">'+ansWho(m)+' · '+esc(stamp(m.at))+mark+'</span>'
-   +(m.src==='report'?ansReport(m):ansLong(m)?'<div class="atxt aclip">'+linkify(m.text)+'</div><button type="button" class="ab amore" data-i="'+i+'">לקריאת כל התשובה</button>':'<div class="atxt">'+linkify(m.text)+'</div>')
+   +'<span class="w">'+(his?'':'<span class="achev" aria-hidden="true">▼</span>')+ansWho(m)+' · '+esc(stamp(m.at))+mark+'</span>'
+   +(m.src==='report'?ansReport(m):'<div class="atxt">'+linkify(m.text)+'</div>')
    +screenLinks(m.text)
    +goLinks(m)
    +'<div class="arow">'
@@ -10938,11 +10939,6 @@ function renderAnswers(){
    var head=m.q?('אתה · '+stamp(m.q.at)+NL+(m.q.note||m.q.text||'')+NL+NL):'';
    ansCopy(b,head+ansWho(m)+' · '+stamp(m.at)+NL+(m.text||''));};
  });
- Array.prototype.forEach.call(host.querySelectorAll('.amore'),function(b){
-  b.onclick=function(e){e.stopPropagation();var m=at(b);if(!m)return;
-   clSheet('ansFull',esc(ansWho(m)+' · '+stamp(m.at)),'<div style="white-space:pre-wrap;word-break:break-word;margin-top:8px;max-height:70vh;overflow-y:auto">'+linkify(m.text)+'</div>'+screenLinks(m.text));
-   if(isFresh(m)){markOneSeen(m);renderAnswers();paintDot();renderNew();}};
- });
  Array.prototype.forEach.call(host.querySelectorAll('.aback'),function(b){
   b.onclick=function(e){e.stopPropagation();toggleBack(at(b));renderAnswers();paintDot();renderNew();};
  });
@@ -10962,6 +10958,8 @@ function renderAnswers(){
    if(sel&&String(sel).length>2)return;
    var m=list[Number(card.getAttribute('data-i'))];
    if(!m)return;
+   // 13.11.2026: the tap opens the answer in place (two lines and ▼ until then), and a second tap folds it.
+   var ok2=claudeKey(m);ansOpen[ok2]=!ansOpen[ok2];card.classList.toggle('acol',!ansOpen[ok2]);
    /*
      18.9, and he has said it more than once: "your answers do not turn colour
      when I touch them." The guard here used to be !isFresh(m), so a card that

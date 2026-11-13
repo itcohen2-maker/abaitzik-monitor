@@ -948,7 +948,7 @@ test('answers screen holds every source in one cluster', () => {
   assert.ok(html.includes(" return his.concat(mine).concat(cdx).concat(rps).sort("));
   assert.ok(html.includes("function ansWho(m){var k=m&&m.src;return k==='codex'?'קודקס':k==='report'?'דוח':k==='itzik'?'אתה':AI;}"));
   assert.ok(html.includes("var AI=(INSTANCE&&INSTANCE.name&&INSTANCE.name!=='abaitzik')?'העוזר שלך':'קלוד';"));
-  assert.ok(html.includes("'<span class=\"w\">'+ansWho(m)+' · '+esc(stamp(m.at))+mark+'</span>'"));
+  assert.ok(html.includes("'<span class=\"w\">'+(his?'':'<span class=\"achev\" aria-hidden=\"true\">▼</span>')+ansWho(m)+' · '+esc(stamp(m.at))+mark+'</span>'"));
   // His own message is never unread to him, and offers no reply button.
   assert.ok(html.includes("function isFresh(m){if(m&&m.src==='itzik')return false;"));
   assert.ok(html.includes('.ansc.mine{'));
@@ -1532,7 +1532,9 @@ test('a report in the answers list is a title until it is opened', () => {
   // reply makes a list nobody can skim, and that is a heap, not one button.
   assert.ok(html.includes('function ansReport(m){'));
   // 13.11.2026: a long answer shows three lines, the rest in a window (ansLong, .amore).
-  assert.ok(html.includes("+(m.src==='report'?ansReport(m):ansLong(m)?'<div class=\"atxt aclip\">'"));
+  assert.ok(html.includes("+(m.src==='report'?ansReport(m):'<div class=\"atxt\">'+linkify(m.text)+'</div>')"));
+  // 13.11.2026: two lines and ▼, a tap opens it in place (ansOpen, .acol).
+  assert.ok(html.includes("(ansOpen[claudeKey(m)]?'':' acol')"));
   assert.ok(html.includes("function isUpd(m){"));
   assert.ok(html.includes("'<details class=\"arep\"><summary>'+esc(title)+'</summary>'"));
   // The body still ships, so the search box finds a word inside a folded report.
