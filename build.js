@@ -15128,6 +15128,8 @@ var REEL_ITEMS=[
 // 13.11, Itzik: stories from the monitor ads shoot, one now and one half an hour later. "תשים לי את זה ... כמו נגיד הרילים שלי".
 {n:'סטורי סט 1',t:'להעלות עכשיו: שקט, מצלמים 🤫 · התמונה המלאה',r:'story-1-now.jpg'},
 {n:'סטורי סט 2',t:'בעוד חצי שעה: חצי שעה אחרי, לשמור שכולם יהיו בשקט 🤫 · סרטון',r:'story-2-in-30min.mp4'},
+{n:'מדבקת המוניטור',t:'המוניטור בטלפון עם: זה המוניטור, כל העסק בטלפון אחד · רקע שקוף',r:'sticker-monitor.png'},
+{n:'מדבקת המוניטור בלי כיתוב',t:'רק הטלפון עם המוניטור · רקע שקוף',r:'sticker-monitor-phone-only.png'},
 {n:'סטורי סט מדבקה',t:'המשפט על רקע שקוף, לשים על כל סרטון',r:'story-set-sticker.png'},
 // 9.11, Itzik: sardine sandwich, three things he stopped buying; caption copied from his reference post.
 {n:'35',t:'ריל: שלושה דברים שהפסקתי לקנות · 4K הכי איכותי, לשמירה בגלריה',r:'reel-35-sardines.mp4'},
@@ -17918,7 +17920,8 @@ function vidTabs(){
   {id:'fut',l:'💡 רילים עתידיים',h:'רעיונות, רפרנסים ותסריטים לרילים הבאים',L:[{h:'💡 רעיונות לרילים הבאים'}].concat(F.filter(function(x){return !isSh(x.it)&&!isIt(x.it)&&!plateN[x.it.n]&&!candleN[x.it.n];}))}
  ].map(function(t){
   // a heading with nothing under it is dropped, and a file that is not in the monitor is not shown
-  var L=t.L.filter(function(x){return !(x.it&&x.it.r&&x.k!=='fut'&&!fileEntry(x.it.r));});
+  var gone=rlGone();
+  var L=t.L.filter(function(x){return !(x.it&&x.it.r&&x.k!=='fut'&&(!fileEntry(x.it.r)||gone.indexOf(x.it.r)>=0));});
   t.L=L.filter(function(x,i){return !x.h||(L[i+1]&&!L[i+1].h);});
   return t;
  });
@@ -17956,7 +17959,11 @@ function vidSheet(tab){
     if(x.h)return '<small style="display:block;margin:14px 0 6px;font-weight:800;font-size:15px;color:#1a2233">'+esc(x.h)+'</small>';
     var lab=(x.k==='go'||x.k==='q'||x.k==='car'||x.k==='stdone')?x.t:(x.it.n+' · '+x.it.t);
     var yb=ybAttr(rows,rows.indexOf(x));if(x.it&&x.it.nw&&vidSeen('it:'+x.it.n)!==x.it.nw)yb=yb.replace('class="yb','class="updblink yb');if((x.it&&x.it.pulse)||x.pulse)yb=yb.replace('class="yb','class="updblink yb');
-    return '<button type="button" '+yb+' data-k="'+i+'">'+esc(lab)+'</button>';
+    var b='<button type="button" '+yb+' data-k="'+i+'">'+esc(lab)+'</button>';
+    // 13.11.2026, Itzik: "כפתור, להשמיד" after he uploads. A 🗑 beside every finished item (not the ideas).
+    if(x.k==='reel'&&x.it&&x.it.r&&!x.it.u)b='<div style="display:flex;gap:6px;align-items:stretch">'+b.replace('<button type="button" ','<button type="button" style="flex:1;margin:0" ')
+      +'<button type="button" class="yb ldDel" style="flex:none;width:54px;margin:0;padding:0" data-del="'+i+'" aria-label="מחיקה">🗑</button></div>';
+    return b;
    }).join('')
   +'<button type="button" class="yb yx" data-k="">סגירה</button>'
   +'</div>';
@@ -17966,6 +17973,8 @@ function vidSheet(tab){
   if(e.target===w)return close();
   var tb=e.target.closest&&e.target.closest('[data-tab]');
   if(tb){close();return vidSheet(tb.getAttribute('data-tab'));}
+  var dl=e.target.closest&&e.target.closest('[data-del]');
+  if(dl){var xd=cur.L[+dl.getAttribute('data-del')];if(!xd||!xd.it)return;close();return reelDelAsk(xd.it,function(){vidSheet(cur.id);});}
   var k=e.target.getAttribute&&e.target.getAttribute('data-k');
   if(k===null||k===undefined)return;
   close();
@@ -17989,6 +17998,30 @@ function vidSheet(tab){
  if(cur.upd)vidMark('tab:'+cur.id,cur.upd);
 }
 on('gVideos',function(){vidSheet();});
+// 13.11.2026, Itzik: "מסיים להעלות ... כפתור, להשמיד את הלשונית, וזה הכל. ככה לא יהיה בלגן". Ask once, send
+// "🗑 הסרת ריל: <file>" (the listener moves the file aside, lib/reel-remove.js), and hide it on this phone at once.
+function rlGone(){try{return JSON.parse(localStorage.getItem('reelGone')||'[]')||[];}catch(e){return [];}}
+function reelDelAsk(it,after){
+ var old=document.getElementById('rlDelAsk');if(old)old.remove();
+ var w=document.createElement('div');w.id='rlDelAsk';w.className='ysheet';
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','מחיקה מהאריח');
+ w.innerHTML='<div class="ycard"><b>🗑 למחוק מהאריח?</b><small>'+esc(it.n+' · '+it.t)+'</small>'
+  +'<button type="button" class="yb ldDel" data-a="y">מחיקה</button><button type="button" class="yb yx" data-a="n">ביטול</button></div>';
+ w.onclick=function(e){
+  var t=e.target;if(t===w)return w.remove();
+  var a=t.getAttribute&&t.getAttribute('data-a');
+  if(a==='n'){w.remove();if(after)after();return;}
+  if(a==='y'){
+   var note='🗑 הסרת ריל: '+it.r;t.disabled=true;
+   sendText('הסרת ריל',note,'משימה').then(function(){
+    markSent('text',note);
+    var g=rlGone();if(g.indexOf(it.r)<0)g.push(it.r);try{localStorage.setItem('reelGone',JSON.stringify(g.slice(-300)));}catch(x){}
+    w.remove();toast('נמחק מהאריח');if(after)after();
+   }).catch(function(){t.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
+  }
+ };
+ document.body.appendChild(w);
+}
 /*ITZIK:END*/
 // 11.11.2026: the board helpers (bd*, BD_*) are shared with the customers' own board (myBoardSheet). Inside the
 // ITZIK block a customer's page got empty stand ins, so Ilay's and Dr. Shulman's boards drew nothing.

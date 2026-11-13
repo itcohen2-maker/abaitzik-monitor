@@ -880,6 +880,19 @@ function recordIncoming(m) {
       return true;
     }
     /*
+      13.11.2026, Itzik: "מסיים להעלות את הסטורי ... כפתור, להשמיד את הלשונית". The 🗑 next to an item in 🎬 the videos
+      tile sends "🗑 הסרת ריל: <file>". Applied with no model and silently: the file MOVES to data/_deleted/<day>/reels
+      (lib/reel-remove.js), and the tile drops an item whose file is not in the monitor.
+    */
+    const rlD = codeOk && require('./lib/reel-remove.js').parse(text);
+    if (rlD) {
+      try { const r = require('./lib/reel-remove.js').apply(inst.dataPath, rlD.file); say('הסרת ריל: ' + rlD.file + ' | ' + (r.ok ? (r.gone ? 'כבר הוסר' : 'הועבר') : r.reply)); }
+      catch (e) { say('!! הסרת ריל: ' + e.message); }
+      try { fs.unlinkSync(path.join(CHAT, name)); } catch (e) { /* already gone */ }
+      try { require('./lib/handle.js').publishSoon(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
+    /*
       12.11.2026, Itzik: "📤 הודעות לשליחה" (lib/sendlist.js). The page sends "📤 נשלח: <listId> <idx>" when he taps a row.
       Written here with no model and silently into the list file as items[idx].sentAt, so the mark survives other devices.
       The page is rebuilt (20 seconds, batched) so every device shows it.
