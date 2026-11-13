@@ -51,6 +51,15 @@ function mails() {
   });
   return rows.map((r) => ({ id: r.id, at: r.at, from: r.from, subject: r.lines[0] || '', body: unb64(r.lines.slice(1).join(' ')) }));
 }
+// 13.11.2026: alerts no longer go to his mailbox (lib/notify-channels.js toManager), they land here. The last day.
+function inbox() {
+  const cut = Date.now() - 864e5;
+  let txt = ''; try { txt = fs.readFileSync(path.join(inst.dataPath, 'manager', 'inbox.jsonl'), 'utf8'); } catch (e) { return []; }
+  return txt.split('
+').filter(Boolean).map((l) => { try { return JSON.parse(l); } catch (e) { return null; } })
+    .filter((m) => m && m.id && Date.parse(m.at) > cut)
+    .map((m) => ({ id: m.id, local: true, at: new Date(m.at).toLocaleString('sv-SE', { timeZone: 'Asia/Jerusalem' }).slice(0, 16), from: m.from, subject: m.subject, body: m.body }));
+}
 
 function isFault(m) {
   const s = m.subject, all = s + ' ' + m.body;
@@ -124,7 +133,8 @@ if (process.argv.includes('--fix')) { fs.mkdirSync(FIX_DIR, { recursive: true })
   const cut = Date.now() - 7 * 864e5;
   Object.keys(st.seen).forEach((k) => { if (Date.parse(st.seen[k]) < cut) delete st.seen[k]; });
   let rows;
-  try { rows = mails(); } catch (e) { console.log(new Date().toISOString().slice(0, 16) + ' mail read failed: ' + String(e.stderr || e.message).slice(-160)); return; }
+  try { rows = mails(); } catch (e) { console.log(new Date().toISOString().slice(0, 16) + ' mail read failed: ' + String(e.stderr || e.message).slice(-160)); rows = []; }
+  rows = rows.concat(inbox());
   const todo = rows.filter((m) => !st.seen[m.id] && isFault(m));
   const lines = [];
   let sent = 0;
@@ -133,7 +143,7 @@ if (process.argv.includes('--fix')) { fs.mkdirSync(FIX_DIR, { recursive: true })
     const key = noDash(m.subject + ' ' + m.body.replace(/\s+/g, ' ').slice(0, 60)).slice(0, 120);
     if (st.subj[key] || sent >= MAX_RUN || st.n >= MAX_DAY) { st.seen[m.id] = new Date().toISOString(); continue; }
     if (DRY) { console.log('DRY ' + m.id + ' ' + m.subject); continue; }
-    try { m.body = execFileSync('/usr/bin/python3', ['-I', path.join(__dirname, 'tools/mail-search.py'), '--id', m.id], { cwd: __dirname, encoding: 'utf8', timeout: 60000, stdio: ['ignore', 'pipe', 'ignore'] }).split('\n').slice(4).join('\n').trim() || m.body; } catch (e) { /* the snippet is enough */ }
+    if (!m.local) try { m.body = execFileSync('/usr/bin/python3', ['-I', path.join(__dirname, 'tools/mail-search.py'), '--id', m.id], { cwd: __dirname, encoding: 'utf8', timeout: 60000, stdio: ['ignore', 'pipe', 'ignore'] }).split('\n').slice(4).join('\n').trim() || m.body; } catch (e) { /* the snippet is enough */ }
     const onPc = pcOn();
     try {
       if (onPc) execFileSync('node', ['pc-task.js', 'add', '--re', 'fault-mail-' + m.id, job(m)], { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
