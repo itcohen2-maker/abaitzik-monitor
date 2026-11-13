@@ -2812,7 +2812,7 @@ body .morebtn{border-radius:999px!important;box-shadow:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-13T15:36:40.431Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-13T15:40:03.473Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3169,14 +3169,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4751,7 +4744,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='00229d0ac2';
+var CODE_ID='1ac6c544a0';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -15368,7 +15361,7 @@ function bizSheet(t0){
    var h='<div class="bzHead">🔗 לינקדין</div><a class="yb yb1" href="https://www.linkedin.com/in/me/" target="_blank" rel="noopener">לפתוח את הפרופיל שלי בלינקדין</a>';
    if(!L.length)return h+'<p class="bzEmpty">כרגע אין פוסטים שמחכים לפרסום. כל פוסט חדש יופיע כאן לבד.</p>';
    return h+'<div class="bzSec">עומדים לפרסום ('+L.length+')</div>'+L.map(function(p){
-    return '<div class="bzRow"><b>'+esc(String(p.date||'').split('-').reverse().join('.'))+' · '+esc(p.time)+' · '+(p.approved?'✅ מאושר':'⏳ מחכה לאישור')+'</b><small>'+esc(p.text)+'</small></div>';
+    return '<div class="bzRow"><b>'+esc(String(p.date||'').split('-').reverse().join('.'))+' · '+esc(p.time)+' · '+(p.approved?'✅ מאושר':'⏳ מחכה לאישור')+'</b><small style="white-space:pre-line">'+esc(p.text)+'</small>'+(p.approved?'':'<button type="button" class="yb yb2" data-bz="liok" data-id="'+esc(p.id)+'">✅ לאשר את הפוסט</button>')+'</div>';
    }).join('');
   }
   function body(){
@@ -15426,6 +15419,7 @@ function bizSheet(t0){
     var t=e.target.closest?e.target.closest('[data-bz]'):null;if(!t)return;
     var a=t.getAttribute('data-bz');
     if(a==='demo'){dmoStart();return;}
+    if(a==='liok'){var lid2=t.getAttribute('data-id');if(!lid2)return;if(!t.getAttribute('data-sure')){t.setAttribute('data-sure','1');t.textContent='לחיצה נוספת: לאשר, והוא יעלה בזמן שכתוב';return;}t.disabled=true;sendText('תשובה מהמוניטור','אישור: פוסט ללינקדין ('+lid2+')','אישור').then(function(){t.textContent='✅ אושר. הוא יעלה לבד בזמן שכתוב';toast('אושר.');}).catch(function(){t.disabled=false;t.removeAttribute('data-sure');t.textContent='✅ לאשר את הפוסט';toast('לא נשלח. תנסה שוב.');});return;}
     function shareShai(u,tt,title,k){
      function sent(){if(!k)return;try{var o=JSON.parse(localStorage.getItem('itsSent')||'{}');o[k]=new Date().toISOString();localStorage.setItem('itsSent',JSON.stringify(o));}catch(x){}
       bzRe();}
@@ -19944,7 +19938,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="BAJSdIafAtGxgHzJr3tOJLTViE1Gkn6rNyAReKPb5ZiMM-6xXp2c1PD7V5VKOXkQRWLI9-Wdq7-Q4hyMCcYp2iQ";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
