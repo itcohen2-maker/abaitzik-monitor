@@ -121,7 +121,15 @@ function work(t) {
     let out = '', err = '';
     child.stdout.on('data', (b) => { out += b; });
     child.stderr.on('data', (b) => { err += b; });
-    const timer = setTimeout(() => { say('!! עברו 30 דקות, עוצר ' + t.id); try { child.kill(); } catch (e) {} }, MAX_SESSION_MS);
+    const timer = setTimeout(() => {
+      say('!! עברו 30 דקות, עוצר ' + t.id);
+      // 13.11: the child is a cmd wrapper (shell:true). child.kill() stopped only the wrapper, claude.exe
+      // stayed alive holding the pipes, 'close' never came, and the task stayed claimed for good.
+      // Kill the whole tree and answer now, so the server gets a fail and can retry or report.
+      spawn('taskkill', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true });
+      setLive(child.pid, null);
+      resolve({ ok: false, why: 'עברו 30 דקות בלי תשובה, הסשן נעצר' });
+    }, MAX_SESSION_MS);
     child.stdin.end(prompt(t), 'utf8');
     child.on('error', (e) => { clearTimeout(timer); setLive(child.pid, null); resolve({ ok: false, why: 'הסשן לא עלה: ' + e.message }); });
     child.on('close', (code) => {
