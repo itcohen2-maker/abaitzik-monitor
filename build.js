@@ -15125,6 +15125,10 @@ var REEL_ITEMS=[
 {n:'IT 01',t:'חדש: המוניטור, וואטסאפ ולוח בקרה אחד, לסטורי באינסטגרם ובטיקטוק · הכי איכותי, לשמירה בגלריה',r:'it01-monitor-v2.mp4'},
 {n:'IT 01 כריכה',t:'הכריכה: מי לא שילם לך החודש?',r:'it01-cover.jpg'},
 {n:'IT 01 פרסום',p:'it01',t:'טקסט לסטורי באינסטגרם ולטיקטוק, עם קישור לכל רשת',r:'it01-post.txt'},
+// 13.11, Itzik: stories from the monitor ads shoot, one now and one half an hour later. "תשים לי את זה ... כמו נגיד הרילים שלי".
+{n:'סטורי סט 1',t:'להעלות עכשיו: שקט, מצלמים 🤫 · התמונה המלאה',r:'story-1-now.jpg'},
+{n:'סטורי סט 2',t:'בעוד חצי שעה: חצי שעה אחרי, לשמור שכולם יהיו בשקט 🤫 · סרטון',r:'story-2-in-30min.mp4'},
+{n:'סטורי סט מדבקה',t:'המשפט על רקע שקוף, לשים על כל סרטון',r:'story-set-sticker.png'},
 // 9.11, Itzik: sardine sandwich, three things he stopped buying; caption copied from his reference post.
 {n:'35',t:'ריל: שלושה דברים שהפסקתי לקנות · 4K הכי איכותי, לשמירה בגלריה',r:'reel-35-sardines.mp4'},
 {n:'35 כריכה',t:'הכריכה · 4K',r:'reel-35-cover.jpg'},
