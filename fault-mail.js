@@ -5,10 +5,11 @@
   (notify.js, info@it-solution.co.il), and a customer may write about one too. Until now nobody
   acted on those mails; the manager only summed them up.
 
-  Every 15 minutes (cron, 07 to 22 Israel time) this reads the last day of his inbox, read only
+  Every 10 minutes, day and night (13.11, Itzik: "תיקונים אוטומטים צריכים להתבצע כל הזמן, יש לנו לקוחות שמשלמים"), this reads the last day of his inbox, read only
   (tools/mail-search.py, EXAMINE), picks the mails about a monitor fault, and sends each new one
-  to the PC queue as a fix order (pc-task.js, full Claude with memory). The answer lands in his
-  chat. No model here, no send to anyone, nothing in the mailbox changes.
+  to the PC queue as a fix order (pc-task.js, full Claude with memory). When the PC is off (night,
+  lid closed) the server fixes it itself: node fault-mail.js --fix runs one Claude session at a time
+  on the server (data/manager/fault-fix/<id>.txt), as user monitor. The answer lands in his chat. The scan itself uses no model, sends to no one, nothing in the mailbox changes.
 
   Limits: one order per mail (by id), the same subject once a day, 3 per run, 10 per day.
   The manager's own mails ("המנהל: ...") never count, so a fix that fails cannot feed itself.
@@ -58,19 +59,21 @@ function isFault(m) {
   return /מוניטור/.test(all) && FAULT.test(all); // a person writing about a fault in a monitor
 }
 
-function job(m) {
+function job(m, server) {
   return [
     'המנהל: הגיע מייל על תקלה במוניטור. לטפל בה עד הסוף, לבד.',
     'המייל: ' + m.at + ' · מאת ' + m.from + ' · נושא: ' + m.subject,
     'התוכן: ' + noDash(m.body).slice(0, 900),
     '',
     'מה לעשות:',
-    '1. לבדוק אם התקלה אמיתית, בדף החי או בשרת (ssh -i C:\Users\User\.ssh\monitor_server root@178.105.63.97, קריאה ובדיקה).',
+    server ? '1. אתה רץ על השרת עצמו, בתיקייה /home/monitor/abaitzik-monitor. לבדוק אם התקלה אמיתית: יומנים ב /home/monitor ו /var/log, הדף החי, והקוד.'
+      : '1. לבדוק אם התקלה אמיתית, בדף החי או בשרת (ssh -i C:\Users\User\.ssh\monitor_server root@178.105.63.97, קריאה ובדיקה).',
     '2. אמיתית: לתקן בקוד של abaitzik-monitor (main, /home/monitor/abaitzik-monitor), לא בתוך תיקייה של לקוח. npm test חייב לעבור. התיקון מגיע לכל הלקוחות לבד תוך 5 דקות.',
     '3. לא אמיתית (הבודק טעה): לתקן את הבודק או את הכפתור כך שהלחיצה מראה תגובה, כדי שהמייל לא יחזור.',
     '4. לוודא שזה עובד אחרי התיקון, לא רק בקוד.',
     'אסור: לשלם, לשלוח הודעה לאדם, לפרסם, למחוק מידע של לקוח, לשנות סיסמה או הגדרת אבטחה.',
-    'התשובה: שתי שורות בעברית, מה היה ומה תוקן, או למה לא תוקן.'
+    server ? 'אחרי תיקון: git commit ואז node push.js. התשובה: שתי שורות בעברית, מה היה ומה תוקן, או למה לא תוקן. אם לא תוקן, השורה הראשונה מתחילה ב "לא תוקן".'
+      : 'התשובה: שתי שורות בעברית, מה היה ומה תוקן, או למה לא תוקן.'
   ].join('\n');
 }
 
@@ -80,6 +83,37 @@ function card(lines) {
   fs.mkdirSync(WORK_DIR, { recursive: true });
   fs.writeFileSync(f, JSON.stringify({ at: new Date().toISOString(), items: prev.concat(lines) }, null, 1));
 }
+
+const FIX_DIR = path.join(inst.dataPath, 'manager', 'fault-fix');
+const FIX_LOCK = path.join(FIX_DIR, '.lock');
+function pcOn() { try { return /^on/.test(execFileSync('node', ['pc-task.js', 'online'], { cwd: __dirname, encoding: 'utf8', timeout: 30000 }).trim()); } catch (e) { return false; } }
+function lockFree() { try { const t = Date.parse(fs.readFileSync(FIX_LOCK, 'utf8')); return !(Date.now() - t < 40 * 60 * 1000); } catch (e) { return true; } }
+// the server stands in for the PC: one session at a time, oldest order first
+function serverFix() {
+  if (!lockFree()) return;
+  fs.writeFileSync(FIX_LOCK, new Date().toISOString());
+  const { spawnSync } = require('child_process');
+  try {
+    for (;;) {
+      const next = fs.readdirSync(FIX_DIR).filter((f) => /^\d+\.txt$/.test(f)).sort()[0];
+      if (!next) break;
+      const id = next.replace('.txt', ''), jf = path.join(FIX_DIR, next);
+      fs.writeFileSync(FIX_LOCK, new Date().toISOString());
+      const r = spawnSync('claude', ['-p', '--model', 'sonnet', '--output-format', 'text', '--allowedTools', 'Read,Edit,Write,Grep,Glob,Bash,WebFetch'],
+        { cwd: __dirname, input: fs.readFileSync(jf, 'utf8'), encoding: 'utf8', timeout: 30 * 60 * 1000, env: process.env, maxBuffer: 8 * 1024 * 1024 });
+      let text = String(r.stdout || '').trim();
+      if (r.status !== 0 || !text) text = 'לא תוקן: הסשן בשרת לא הסתיים (' + String(r.error ? r.error.message : 'קוד ' + r.status).slice(0, 80) + '). הבדיקה הבאה תנסה שוב דרך המחשב.';
+      const chat = path.join(inst.dataPath, 'chat', 'chat');
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+      fs.writeFileSync(path.join(chat, stamp + '-claude-faultfix.json'), JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: 'fault-mail-' + id, text: text.slice(0, 1500), status: 'done' }, null, 1));
+      fs.renameSync(jf, jf.replace(/\.txt$/, '.done'));
+      console.log(new Date().toISOString().slice(0, 16) + ' server fix ' + id + ': ' + noDash(text).slice(0, 120));
+      if (/^\s*לא תוקן/.test(text)) { try { execFileSync('node', ['notify.js', 'המנהל: תקלה לא תוקנה', noDash(text).slice(0, 300)], { cwd: __dirname, stdio: 'ignore', timeout: 60000 }); } catch (e) {} }
+      try { execFileSync('node', ['push.js', 'fault fix ' + id], { cwd: __dirname, stdio: 'ignore', timeout: 5 * 60 * 1000 }); } catch (e) {}
+    }
+  } finally { try { fs.unlinkSync(FIX_LOCK); } catch (e) {} }
+}
+if (process.argv.includes('--fix')) { fs.mkdirSync(FIX_DIR, { recursive: true }); serverFix(); return; }
 
 (function main() {
   const st = rd(STATE, {});
@@ -100,10 +134,12 @@ function card(lines) {
     if (st.subj[key] || sent >= MAX_RUN || st.n >= MAX_DAY) { st.seen[m.id] = new Date().toISOString(); continue; }
     if (DRY) { console.log('DRY ' + m.id + ' ' + m.subject); continue; }
     try { m.body = execFileSync('/usr/bin/python3', ['-I', path.join(__dirname, 'tools/mail-search.py'), '--id', m.id], { cwd: __dirname, encoding: 'utf8', timeout: 60000, stdio: ['ignore', 'pipe', 'ignore'] }).split('\n').slice(4).join('\n').trim() || m.body; } catch (e) { /* the snippet is enough */ }
+    const onPc = pcOn();
     try {
-      execFileSync('node', ['pc-task.js', 'add', '--re', 'fault-mail-' + m.id, job(m)], { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
+      if (onPc) execFileSync('node', ['pc-task.js', 'add', '--re', 'fault-mail-' + m.id, job(m)], { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
+      else { fs.mkdirSync(FIX_DIR, { recursive: true }); fs.writeFileSync(path.join(FIX_DIR, m.id + '.txt'), job(m, true)); }
       sent++; st.n++; st.subj[key] = m.id;
-      lines.push({ when: new Date().toISOString(), kind: 'faultmail', text: 'מייל תקלה', status: 'mail', line: 'נשלח לתיקון: ' + noDash(m.subject) });
+      lines.push({ when: new Date().toISOString(), kind: 'faultmail', text: 'מייל תקלה', status: 'mail', line: (onPc ? 'נשלח למחשב לתיקון: ' : 'השרת מתקן (המחשב כבוי): ') + noDash(m.subject) });
       console.log(new Date().toISOString().slice(0, 16) + ' fix order ' + m.id + ' ' + key);
     } catch (e) { console.log(new Date().toISOString().slice(0, 16) + ' pc-task failed ' + m.id); continue; }
     st.seen[m.id] = new Date().toISOString();
@@ -113,4 +149,6 @@ function card(lines) {
   fs.mkdirSync(path.dirname(STATE), { recursive: true });
   fs.writeFileSync(STATE, JSON.stringify(st, null, 1));
   if (lines.length) card(lines);
+  // anything waiting for the server is started in the background, so the cron run ends now
+  try { if (fs.readdirSync(FIX_DIR).some((f) => /^\d+\.txt$/.test(f)) && lockFree()) require('child_process').spawn('node', [__filename, '--fix'], { cwd: __dirname, detached: true, stdio: ['ignore', fs.openSync('/home/monitor/fault-mail.log', 'a'), fs.openSync('/home/monitor/fault-mail.log', 'a')], env: process.env }).unref(); } catch (e) {}
 })();
