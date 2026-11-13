@@ -2857,7 +2857,7 @@ body.gH #bareBtn{display:block;width:auto!important;min-width:0!important;margin
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-13T21:20:19.572Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-13T21:29:13.307Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4790,7 +4790,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='4feef512e8';
+var CODE_ID='c5f6a6ffe6';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -19329,7 +19329,7 @@ function renderHome(){
 
 
 (function(){
- var TASK=/(^|\s)(ת?שלח|תשלחי|ת?קבע|תזמן|ת?פרסם|תעלה|העלה|ת?מחק|תעדכן|עדכן|תשנה|שנה|תבנה|בנה|תוסיף|הוסף|תדפיס|הדפס|תזכיר לי|תזכורת|תרשום|רשום|תבדוק|בדוק|תכין|הכן|תסדר|סדר|תתקן|תקן|תחבר|חבר|תוריד|הורד|תעביר|העבר|תפתח|פתח|תזמין|הזמן|תחייב|תגבה)(\s|$|[.,!])/;
+ var TASK=/(^|\s)(ת?שלח|תשלחי|ת?קבע|תזמן|ת?פרסם|תעלה|העלה|ת?מחק|תעדכן|עדכן|תשנה|שנה|תבנה|בנה|תוסיף|הוסף|תדפיס|הדפס|תזכיר לי|תזכורת|תרשום|רשום|תבדוק|בדוק|תכין|הכן|תסדר|סדר|תתקן|תקן|תחבר|חבר|תוריד|הורד|תעביר|העבר|תפתח|פתח|תזמין|הזמן|תחייב|תגבה|תעשה|עשה|תטפל|טפל|תחזיר|החזר|תמצא|תוציא|תשים|שים|תסיר|הסר)(\s|$|[.,!])/;
  var ASK=/^\s*(מה|איך|למה|מדוע|האם|כמה|מתי|איפה|מי|תסביר|הסבר|תייעץ|מה דעתך|יש לך רעיון|תן לי רעיון)/;
  function isTask(t){t=String(t||'').trim();if(!t)return false;if(/[?？]\s*$/.test(t)||ASK.test(t))return false;return TASK.test(t);}
  function chatOk(){var r=document.getElementById('fcRow');return !!(r&&!r.hidden&&typeof fcSend==='function');}
@@ -19342,8 +19342,8 @@ function renderHome(){
    var ta=f.querySelector('textarea'),t=ta?ta.value:'';
    if(!String(t).trim())return;
    var busy=false;try{busy=!!fcS.busy;}catch(x){}
-   var obvious=isTask(t),chosen=document.body.classList.contains('gH')?(obvious?'משימה':gMode()):(obvious?'משימה':'שיחה');
-   if(!chatOk()||chosen==='משימה'||busy){say(busy?'השיחה עוד עונה על השאלה הקודמת, אז זה נשלח לביצוע.':(obvious&&gMode()==='שיחה'?'זו נראית משימה, אז היא נשלחה לביצוע.':'משימה, נשלחה לביצוע.'));return;}
+   var chosen=isTask(t)?'משימה':'שיחה';
+   if(!chatOk()||chosen==='משימה'||busy){say(busy?'השיחה עוד עונה על השאלה הקודמת, אז זה נשלח לביצוע.':'זו משימה, נשלחה לביצוע. התשובה תגיע במסך התשובות.');return;}
    e.preventDefault();e.stopImmediatePropagation();
    try{fcS.inl=true;}catch(x){}
    if(ta)ta.value='';
@@ -19375,7 +19375,8 @@ function renderHome(){
    say.textContent=m==='משימה'?'משימה: נשלח לביצוע, התשובה במסך התשובות':'שיחה: תשובה כאן תוך כמה שניות';};
   ['שיחה','משימה'].forEach(function(m){var b=document.createElement('button');b.type='button';b.textContent=m;
    b.addEventListener('click',function(){try{localStorage.setItem('gMode',m);}catch(x){}paint();});chips.appendChild(b);});
-  f.parentNode.insertBefore(chips,f.nextSibling);chips.parentNode.insertBefore(say,chips.nextSibling);paint();
+  void paint;try{localStorage.removeItem('gMode');}catch(x){}
+  f.parentNode.insertBefore(say,f.nextSibling);say.textContent='שאלה או שיחה נענות כאן. בקשה לעשות משהו נשלחת לביצוע.';
   if(ta){ta.setAttribute('rows','1');
    var fit=function(){f.classList.toggle('gHas',!!ta.value.trim());ta.style.height='auto';ta.style.height=Math.min(Math.max(ta.scrollHeight,26),130)+'px';};
    ta.addEventListener('input',fit);f.addEventListener('submit',function(){setTimeout(fit,80);});setInterval(fit,1500);}
