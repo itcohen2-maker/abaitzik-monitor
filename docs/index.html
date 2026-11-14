@@ -3067,7 +3067,7 @@ html body #quickForm.quickwrite.mvWait{border:2px solid transparent!important;an
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-14T12:18:52.752Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-14T12:19:23.367Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -5014,7 +5014,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='0b28ca6e6b';
+var CODE_ID='c968639d69';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -20108,6 +20108,7 @@ var DMO_API='https://wa.abaitzik.com/api/';
 var DMO_TILES=[
  ['meet','gMyDay','🎙️ סיכומי פגישות','מדברים אחרי הפגישה, המוניטור מסכם ושולח משימות'],
  ['clients','g8','👥 הלקוחות שלי','מה פתוח מול כל לקוח, ומתי נפגשים'],
+ ['crm','gTom','🔔 לידים','כל ליד עם השעה שהגיע, ולמי לחזור מחר'], // 14.11.2026: like the leads in his own monitor
  ['cal','g18','📅 פגישות ויומן','קביעת פגישות, זימונים ותזכורות'],
  ['wa','g16','💬 וואטסאפ','מדברים עם המוניטור, והוא עונה ומבצע'],
  ['mail','g10','✉️ מייל','ממוין לפי דחיפות, עם טיוטת תשובה'],
