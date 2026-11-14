@@ -26,6 +26,14 @@ const path = require('path');
 // Which monitor this is. Without instance.json this is Itzik's, word for word.
 const inst = require('./lib/instance.js');
 /*
+  14.11.2026, the offer page sells meeting summaries, clients, calendar, mail sorting and quotes with signing in every
+  package. So the business set (lib/biz-home.js) is on for every customer with a package: a plan file (lib/plan-io.js)
+  or a plan in instance.json, not only where instance.json says bizHome.
+*/
+if (inst.name !== 'abaitzik' && !inst.bizHome) {
+  try { if (require('./lib/plan-io.js').stateOf(inst.name) || inst.plan) inst.bizHome = true; } catch (e) { /* as before */ }
+}
+/*
   27.9: the chat lives on the server since 25.9, and this PC's data/ is a stale
   copy. Every build made here and pushed put that copy on his page, so the chat
   went back to 25.9 and the requests he had just reset came back. An instance
