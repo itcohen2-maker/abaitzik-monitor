@@ -36,6 +36,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const inst = require('./lib/instance.js');
+const bankSeal = require('./lib/bank-seal.js'); // 14.11: bank files are sealed at rest; other folders pass through
 const features = require('./lib/features.js');
 const morning = require('./lib/morning.js');
 const cashflow = require('./lib/cashflow.js');
@@ -62,7 +63,7 @@ function docsIn(sub) {
   const dir = path.join(inst.dataPath, sub, sub);
   if (!fs.existsSync(dir)) return [];
   return fs.readdirSync(dir).filter((f) => f.endsWith('.json'))
-    .map((f) => readJson(path.join(dir, f), null)).filter(Boolean);
+    .map((f) => bankSeal.open(readJson(path.join(dir, f), null))).filter(Boolean);
 }
 
 // Bank: the newest file gives the cash, all files give the history (no duplicates).
