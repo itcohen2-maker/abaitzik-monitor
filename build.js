@@ -17995,17 +17995,18 @@ on('gClalit',clalitSheet);
 */
 var TOM_ITEMS=[
 // 13.11 night, Itzik: only what is in the campaign. Images other than burning credits out, Tom's 3 pain images in. Story versions at the end.
- {n:"1",t:"✅ באוויר 13.11 · 🎬 סרטון · מי לא שילם לך · לשבוע התנסות בחינם",r:"wa-hub-gviya-ad.mp4"},
- {n:"2",t:"✅ באוויר 13.11 · 🎬 סרטון · עסקי ואישי · לשבוע התנסות בחינם",r:"wa-hub-personal-ad.mp4"},
- {n:"3",t:"✅ באוויר · 🖼️ שרפת קרדיטים · Base44 · המודעה שעובדת · לצ׳אט",r:"ads-nov01-card9-story.mp4"},
- {n:"4",t:"✅ עלתה 13.11 · בבדיקה של מטא · 🖼️ יש לך אתר שעובד. ואין אפליקציה? · לצ׳אט",r:"ads-pain1-feed.png"},
- {n:"5",t:"✅ עלתה 13.11 · בבדיקה של מטא · 🖼️ המידע של הלקוחות. באמת מוגן? · לצ׳אט",r:"ads-pain2-feed.png"},
- {n:"6",t:"✅ עלתה 13.11 · בבדיקה של מטא · 🖼️ מפחד ממה שאתה לא יודע? · לצ׳אט",r:"ads-pain3-feed.png"},
- {n:"7",t:"📲 סטורי · יש לך אתר שעובד. ואין אפליקציה?",r:"ads-pain1-story.png"},
- {n:"8",t:"📲 סטורי · המידע של הלקוחות. באמת מוגן?",r:"ads-pain2-story.png"},
- {n:"9",t:"📲 סטורי · מפחד ממה שאתה לא יודע?",r:"ads-pain3-story.png"},
+// The monitor shows this list newest first (reversed), so stories are first here to land at the end on screen.
+ {n:"11",t:"📲 סטורי · עסקי ואישי · it-solution.co.il/start",r:"wa-hub-personal-story.mp4"},
  {n:"10",t:"📲 סטורי · מי לא שילם לך · it-solution.co.il/start",r:"wa-hub-gviya-story.mp4"},
- {n:"11",t:"📲 סטורי · עסקי ואישי · it-solution.co.il/start",r:"wa-hub-personal-story.mp4"}
+ {n:"9",t:"📲 סטורי · מפחד ממה שאתה לא יודע?",r:"ads-pain3-story.png"},
+ {n:"8",t:"📲 סטורי · המידע של הלקוחות. באמת מוגן?",r:"ads-pain2-story.png"},
+ {n:"7",t:"📲 סטורי · יש לך אתר שעובד. ואין אפליקציה?",r:"ads-pain1-story.png"},
+ {n:"6",t:"✅ באוויר 13.11 · אושרה · 🖼️ מפחד ממה שאתה לא יודע? · לצ׳אט",r:"ads-pain3-feed.png"},
+ {n:"5",t:"✅ באוויר 13.11 · אושרה · 🖼️ המידע של הלקוחות. באמת מוגן? · לצ׳אט",r:"ads-pain2-feed.png"},
+ {n:"4",t:"✅ באוויר 13.11 · אושרה · 🖼️ יש לך אתר שעובד. ואין אפליקציה? · לצ׳אט",r:"ads-pain1-feed.png"},
+ {n:"3",t:"✅ באוויר · 🖼️ שרפת קרדיטים · Base44 · המודעה שעובדת · לצ׳אט",r:"ads-nov01-card9-story.mp4"},
+ {n:"2",t:"✅ באוויר 13.11 · 🎬 סרטון · עסקי ואישי · לשבוע התנסות בחינם",r:"wa-hub-personal-ad.mp4"},
+ {n:"1",t:"✅ באוויר 13.11 · 🎬 סרטון · מי לא שילם לך · לשבוע התנסות בחינם",r:"wa-hub-gviya-ad.mp4"}
 ];
 function tomSheet(){
  var old=document.getElementById('tomSheet');if(old)old.remove();
