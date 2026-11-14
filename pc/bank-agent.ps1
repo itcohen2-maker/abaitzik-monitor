@@ -16,6 +16,36 @@ $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Web.Extensions
 $Here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Cfg = Get-Content -Raw -Encoding UTF8 (Join-Path $Here 'config.json') | ConvertFrom-Json
+# 14.11.2026, Itzik: "is it all encrypted at the best level?" The key is kept sealed with Windows
+# DPAPI (this user on this computer only, a copied config.json opens nowhere else). A plain key, the
+# one that came inside the install file, is traded for a fresh one (POST rekey) on first contact and
+# never written again. The new key is used only after it was saved and read back, so a failed save
+# keeps the old key, which the server still accepts until the new one is used.
+function Open-PcKey($enc) {
+  try { $ss = ConvertTo-SecureString ([string]$enc); $b = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($ss); try { return [Runtime.InteropServices.Marshal]::PtrToStringBSTR($b) } finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($b) } } catch { return $null }
+}
+function Get-PcKey($cfgPath) {
+  $c = Get-Content -Raw -Encoding UTF8 $cfgPath | ConvertFrom-Json
+  if ($c.keyDpapi) { $k = Open-PcKey $c.keyDpapi; if ($k) { return $k } }
+  if (-not $c.key) { return $null }
+  $old = [string]$c.key
+  try {
+    $r = Invoke-WebRequest -UseBasicParsing -Method POST -Uri ($c.url.TrimEnd('/') + '/rekey') -Headers @{ 'X-Pc-Key' = $old } -Body '' -TimeoutSec 30
+    $txt = if ($r.Content -is [byte[]]) { [Text.Encoding]::UTF8.GetString($r.Content) } else { [string]$r.Content }
+    $new = [string](($txt | ConvertFrom-Json).key)
+    if ($new -notmatch '^[0-9a-f]{32}$') { return $old }
+    $o = [ordered]@{}
+    $c.PSObject.Properties | Where-Object { $_.Name -ne 'key' -and $_.Name -ne 'keyDpapi' } | ForEach-Object { $o[$_.Name] = $_.Value }
+    $o['keyDpapi'] = ConvertFrom-SecureString (ConvertTo-SecureString $new -AsPlainText -Force)
+    $tmp = $cfgPath + '.new'
+    [IO.File]::WriteAllText($tmp, ($o | ConvertTo-Json), (New-Object Text.UTF8Encoding $false))
+    $back = Get-Content -Raw -Encoding UTF8 $tmp | ConvertFrom-Json
+    if ((Open-PcKey $back.keyDpapi) -ne $new) { Remove-Item $tmp -Force -ErrorAction SilentlyContinue; return $old }
+    Move-Item $tmp $cfgPath -Force
+    return $new
+  } catch { return $old }
+}
+$PcKey = Get-PcKey (Join-Path $Here 'config.json')
 $Log = Join-Path $Here 'bank.log'
 $Lock = Join-Path $Here 'bank.lock'
 $Profile = Join-Path $Here 'chrome-profile'
@@ -43,9 +73,9 @@ function Call($method, $p, $body) {
   $u = $Cfg.url.TrimEnd('/') + '/' + $p
   try {
     if ($body -ne $null) {
-      $r = Invoke-WebRequest -UseBasicParsing -Method $method -Uri $u -Headers @{ 'X-Pc-Key' = $Cfg.key } -Body ([Text.Encoding]::UTF8.GetBytes([string]$body)) -ContentType 'text/plain; charset=utf-8' -TimeoutSec 60
+      $r = Invoke-WebRequest -UseBasicParsing -Method $method -Uri $u -Headers @{ 'X-Pc-Key' = $PcKey } -Body ([Text.Encoding]::UTF8.GetBytes([string]$body)) -ContentType 'text/plain; charset=utf-8' -TimeoutSec 60
     } else {
-      $r = Invoke-WebRequest -UseBasicParsing -Method $method -Uri $u -Headers @{ 'X-Pc-Key' = $Cfg.key } -TimeoutSec 60
+      $r = Invoke-WebRequest -UseBasicParsing -Method $method -Uri $u -Headers @{ 'X-Pc-Key' = $PcKey } -TimeoutSec 60
     }
     $txt = if ($r.Content -is [byte[]]) { [Text.Encoding]::UTF8.GetString($r.Content) } else { [string]$r.Content }
     return @{ code = [int]$r.StatusCode; text = $txt }
@@ -226,7 +256,7 @@ function Run-Bank($t) {
     $file = Join-Path $Here ('bank-' + (Get-Date -Format 'yyyyMMdd-HHmm') + '.json')
     [IO.File]::WriteAllText($file, $data, (New-Object Text.UTF8Encoding $false))
     $u = $Cfg.url.TrimEnd('/') + '/file/' + $t.id + '?name=' + [uri]::EscapeDataString((Split-Path -Leaf $file))
-    Invoke-WebRequest -UseBasicParsing -Method POST -Uri $u -Headers @{ 'X-Pc-Key' = $Cfg.key } -InFile $file -ContentType 'application/octet-stream' -TimeoutSec 300 | Out-Null
+    Invoke-WebRequest -UseBasicParsing -Method POST -Uri $u -Headers @{ 'X-Pc-Key' = $PcKey } -InFile $file -ContentType 'application/octet-stream' -TimeoutSec 300 | Out-Null
     Remove-Item $file -Force -ErrorAction SilentlyContinue
     $out = 'none'
     try { $out = Eval $ws $Logout; Start-Sleep -Seconds 4 } catch {}

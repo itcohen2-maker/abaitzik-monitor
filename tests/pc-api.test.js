@@ -171,3 +171,17 @@ test('pc api: the bank computer cannot list or read the monitor files', async ()
     assert.equal((await call('GET', '/up/v1/rinat/pc/get?name=x', undefined, 'a'.repeat(32))).status, 403);
   } finally { server.close(); }
 });
+
+test('pc api: the backup key (lolosbk) only pings and rekeys', async () => {
+  const calls = [];
+  const dataPath = tmp();
+  fs.writeFileSync(path.join(dataPath, 'keys.json'), JSON.stringify({ pcKey: 'a'.repeat(32), pcName: 'bank', pcKeys: { lolosbk: 'f'.repeat(32) } }));
+  const api = pcApi({ name: 'rinat', dir: '/x', dataPath, log: () => {}, run: async (cmd) => { calls.push(cmd); return { code: 0, out: '', err: '' }; } });
+  const { server, call } = await serve(api);
+  try {
+    assert.equal((await call('GET', '/up/v1/rinat/pc/ping', undefined, 'f'.repeat(32))).status, 200);
+    for (const u of ['next', 'list', 'get?name=x', 'self']) assert.equal((await call('GET', '/up/v1/rinat/pc/' + u, undefined, 'f'.repeat(32))).status, 403, u);
+    assert.equal((await call('POST', '/up/v1/rinat/pc/rekey', '', 'f'.repeat(32))).status, 200);
+    assert.deepEqual(calls, []);
+  } finally { server.close(); }
+});

@@ -17,6 +17,36 @@ $ErrorActionPreference = 'Stop'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 $Here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Cfg = Get-Content -Raw -Encoding UTF8 (Join-Path $Here 'config.json') | ConvertFrom-Json
+# 14.11.2026, Itzik: "is it all encrypted at the best level?" The key is kept sealed with Windows
+# DPAPI (this user on this computer only, a copied config.json opens nowhere else). A plain key, the
+# one that came inside the install file, is traded for a fresh one (POST rekey) on first contact and
+# never written again. The new key is used only after it was saved and read back, so a failed save
+# keeps the old key, which the server still accepts until the new one is used.
+function Open-PcKey($enc) {
+  try { $ss = ConvertTo-SecureString ([string]$enc); $b = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($ss); try { return [Runtime.InteropServices.Marshal]::PtrToStringBSTR($b) } finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($b) } } catch { return $null }
+}
+function Get-PcKey($cfgPath) {
+  $c = Get-Content -Raw -Encoding UTF8 $cfgPath | ConvertFrom-Json
+  if ($c.keyDpapi) { $k = Open-PcKey $c.keyDpapi; if ($k) { return $k } }
+  if (-not $c.key) { return $null }
+  $old = [string]$c.key
+  try {
+    $r = Invoke-WebRequest -UseBasicParsing -Method POST -Uri ($c.url.TrimEnd('/') + '/rekey') -Headers @{ 'X-Pc-Key' = $old } -Body '' -TimeoutSec 30
+    $txt = if ($r.Content -is [byte[]]) { [Text.Encoding]::UTF8.GetString($r.Content) } else { [string]$r.Content }
+    $new = [string](($txt | ConvertFrom-Json).key)
+    if ($new -notmatch '^[0-9a-f]{32}$') { return $old }
+    $o = [ordered]@{}
+    $c.PSObject.Properties | Where-Object { $_.Name -ne 'key' -and $_.Name -ne 'keyDpapi' } | ForEach-Object { $o[$_.Name] = $_.Value }
+    $o['keyDpapi'] = ConvertFrom-SecureString (ConvertTo-SecureString $new -AsPlainText -Force)
+    $tmp = $cfgPath + '.new'
+    [IO.File]::WriteAllText($tmp, ($o | ConvertTo-Json), (New-Object Text.UTF8Encoding $false))
+    $back = Get-Content -Raw -Encoding UTF8 $tmp | ConvertFrom-Json
+    if ((Open-PcKey $back.keyDpapi) -ne $new) { Remove-Item $tmp -Force -ErrorAction SilentlyContinue; return $old }
+    Move-Item $tmp $cfgPath -Force
+    return $new
+  } catch { return $old }
+}
+$PcKey = Get-PcKey (Join-Path $Here 'config.json')
 $Log = Join-Path $Here 'pc-pull.log'
 $Lock = Join-Path $Here 'running.lock'
 $Work = Join-Path $env:USERPROFILE 'MonitorWork'
@@ -39,7 +69,7 @@ function Find-Claude() {
   throw 'claude.exe not found'
 }
 function Call($method, $p, $body) {
-  $h = @{ 'X-Pc-Key' = $Cfg.key }
+  $h = @{ 'X-Pc-Key' = $PcKey }
   $u = $Cfg.url.TrimEnd('/') + '/' + $p
   try {
     if ($body -ne $null) {
@@ -172,7 +202,7 @@ function One() {
     Set-Content -Path $mark -Value (Get-Date).ToString('s') -Encoding ASCII
     try {
       $tmp = Join-Path $Here 'pc-pull.new'
-      Invoke-WebRequest -UseBasicParsing -Uri ($Cfg.url.TrimEnd('/') + '/self') -Headers @{ 'X-Pc-Key' = $Cfg.key } -OutFile $tmp -TimeoutSec 60
+      Invoke-WebRequest -UseBasicParsing -Uri ($Cfg.url.TrimEnd('/') + '/self') -Headers @{ 'X-Pc-Key' = $PcKey } -OutFile $tmp -TimeoutSec 60
       $me = $MyInvocation.PSCommandPath; if (-not $me) { $me = Join-Path $Here 'pc-pull.ps1' }
       if ((Get-FileHash $tmp).Hash -ne (Get-FileHash (Join-Path $Here 'pc-pull.ps1')).Hash) {
         $errs = $null; [void][System.Management.Automation.Language.Parser]::ParseFile($tmp, [ref]$null, [ref]$errs)
@@ -209,7 +239,7 @@ function One() {
         New-Item -ItemType Directory -Force $inDir | Out-Null
         $dst = Join-Path $inDir (Split-Path $n -Leaf)
         try {
-          Invoke-WebRequest -UseBasicParsing -Uri ($Cfg.url.TrimEnd('/') + '/get?name=' + [uri]::EscapeDataString($n)) -Headers @{ 'X-Pc-Key' = $Cfg.key } -OutFile $dst -TimeoutSec 900
+          Invoke-WebRequest -UseBasicParsing -Uri ($Cfg.url.TrimEnd('/') + '/get?name=' + [uri]::EscapeDataString($n)) -Headers @{ 'X-Pc-Key' = $PcKey } -OutFile $dst -TimeoutSec 900
           Say ('ירד מהמוניטור: ' + $n)
         } catch { Say ('!! לא ירד: ' + $n + ' ' + $_.Exception.Message) }
       }
@@ -227,7 +257,7 @@ function One() {
       foreach ($f in (Get-ChildItem -Path $outDir -File -Recurse | Where-Object { $_.Length -le 300MB })) {
         $u = $Cfg.url.TrimEnd('/') + '/file/' + $t.id + '?name=' + [uri]::EscapeDataString($f.Name)
         try {
-          $r2 = Invoke-WebRequest -UseBasicParsing -Method POST -Uri $u -Headers @{ 'X-Pc-Key' = $Cfg.key } -InFile $f.FullName -ContentType 'application/octet-stream' -TimeoutSec 900
+          $r2 = Invoke-WebRequest -UseBasicParsing -Method POST -Uri $u -Headers @{ 'X-Pc-Key' = $PcKey } -InFile $f.FullName -ContentType 'application/octet-stream' -TimeoutSec 900
           $l = if ($r2.Content -is [string]) { $r2.Content } else { [Text.Encoding]::UTF8.GetString($r2.Content) }
           $links += $l.Trim(); Say ('עלה: ' + $f.Name)
         } catch { Say ('!! לא עלה: ' + $f.Name + ' ' + $_.Exception.Message) }

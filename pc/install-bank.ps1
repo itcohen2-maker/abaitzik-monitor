@@ -21,8 +21,14 @@ function Tell($he, $ok) {
 # Itzik's first try: two files named install-bank, and nothing happened.
 function Payload($n) { if ($Embedded) { return [Convert]::FromBase64String($Embedded[$n]) } else { return [IO.File]::ReadAllBytes((Join-Path $Src $n)) } }
 $cfg = [Text.Encoding]::UTF8.GetString((Payload 'config.json')).TrimStart([char]0xFEFF) | ConvertFrom-Json
+# 14.11: once the agent traded the install key for its own (DPAPI, config.json in $Dst), the reports use that one.
+function Report-Key {
+  try { $j = Get-Content -Raw -Encoding UTF8 (Join-Path $Dst 'config.json') | ConvertFrom-Json
+    if ($j.keyDpapi) { $ss = ConvertTo-SecureString ([string]$j.keyDpapi); $b = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($ss); try { return [Runtime.InteropServices.Marshal]::PtrToStringBSTR($b) } finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($b) } } } catch {}
+  return $cfg.key
+}
 function Report($step) {
-  try { Invoke-WebRequest -UseBasicParsing -Uri ($cfg.url.TrimEnd('/') + '/ping?step=' + [uri]::EscapeDataString('bank: ' + $step)) -Headers @{ 'X-Pc-Key' = $cfg.key } -TimeoutSec 20 | Out-Null } catch {}
+  try { Invoke-WebRequest -UseBasicParsing -Uri ($cfg.url.TrimEnd('/') + '/ping?step=' + [uri]::EscapeDataString('bank: ' + $step)) -Headers @{ 'X-Pc-Key' = (Report-Key) } -TimeoutSec 20 | Out-Null } catch {}
 }
 
 Step 'Checking the connection to the monitor'

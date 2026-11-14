@@ -14,8 +14,14 @@ function Bad($s) { Write-Host ('   ' + $s) -ForegroundColor Red }
 
 Step 'מחפש את Claude Code במחשב הזה'
 $cfg = Get-Content -Raw -Encoding UTF8 (Join-Path $Src 'config.json') | ConvertFrom-Json
+# 14.11: once the agent traded the install key for its own (DPAPI, config.json in $Dst), the reports use that one.
+function Report-Key {
+  try { $j = Get-Content -Raw -Encoding UTF8 (Join-Path $Dst 'config.json') | ConvertFrom-Json
+    if ($j.keyDpapi) { $ss = ConvertTo-SecureString ([string]$j.keyDpapi); $b = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($ss); try { return [Runtime.InteropServices.Marshal]::PtrToStringBSTR($b) } finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($b) } } } catch {}
+  return $cfg.key
+}
 function Report($step) {
-  try { Invoke-WebRequest -UseBasicParsing -Uri ($cfg.url.TrimEnd('/') + '/ping?step=' + [uri]::EscapeDataString($step)) -Headers @{ 'X-Pc-Key' = $cfg.key } -TimeoutSec 20 | Out-Null } catch {}
+  try { Invoke-WebRequest -UseBasicParsing -Uri ($cfg.url.TrimEnd('/') + '/ping?step=' + [uri]::EscapeDataString($step)) -Headers @{ 'X-Pc-Key' = (Report-Key) } -TimeoutSec 20 | Out-Null } catch {}
 }
 trap { Report ('crash: ' + $_.Exception.Message + ' line ' + $_.InvocationInfo.ScriptLineNumber); Bad ('Error: ' + $_.Exception.Message); exit 1 }
 Report ('start ' + $env:COMPUTERNAME + ' user ' + $env:USERNAME + ' ps ' + $PSVersionTable.PSVersion)
