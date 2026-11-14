@@ -43,7 +43,7 @@ function asUser(user, cmd, argv, timeout) {
 function transcribeAs(t, audio) {
   const r = asUser(t.user, 'node', [path.join(t.dir, 'transcribe.js'), audio], 600000);
   const text = String(r.stdout || '').trim().split('\n').filter(Boolean).filter((l) => !/^\(\d/.test(l)).pop() || '';
-  return { ok: r.status === 0 && !!text, text, err: (String(r.stderr || '').split('\n').filter((l) => /Error/.test(l)).pop() || String(r.stderr || '').trim().split('\n')[0] || '').trim().slice(0, 160) };
+  return { ok: r.status === 0 && !!text, text, err: (String(r.stderr || '').split('\n').filter((l) => /Error/.test(l) && !/^\s+at /.test(l)).pop() || String(r.stderr || '').trim().split('\n')[0] || '').trim().slice(0, 160) };
 }
 
 function repairWhisper() {
