@@ -44,3 +44,16 @@ test('alarms: two "no"s stop the offer', () => {
   A.declined(D); assert.equal(A.offerOk(D), false);
   assert.ok(A.promptLines(D).join(' ').includes('לא מציעים יותר'));
 });
+
+test('alarms: the buttons, done, in an hour, tomorrow at 09:00', () => {
+  const D = tmp(), now = Date.UTC(2026, 10, 14, 12);
+  const a = A.add(D, '2026-11-14 18:00', 'להתקשר לרונית', now).alarm;
+  assert.ok(A.act(D, a.id, 'done', now).say.includes('טופל'));
+  const h = A.act(D, a.id, '1h', now);
+  assert.equal(h.ok, true);
+  assert.equal(A.list(D).find((x) => x.id === h.id).due, new Date(now + 3600e3).toISOString());
+  const m = A.act(D, a.id, 'tom', now);
+  assert.equal(A.list(D).find((x) => x.id === m.id).due, '2026-11-15T07:00:00.000Z');
+  assert.equal(A.act(D, 'a0nothere00', 'done', now).ok, false);
+  assert.equal(A.act(D, '../x', 'done', now).ok, false);
+});

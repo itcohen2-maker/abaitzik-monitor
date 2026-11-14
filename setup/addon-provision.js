@@ -83,7 +83,27 @@ function accounting(job, dir) {
   return sw;
 }
 
+// 14.11.2026: the buttons under a customer's reminder (wa-bridge.js alarmTap leaves data/alarm-cmd/*.json).
+function alarmCmds() {
+  const d = path.join(REPO, 'data', 'alarm-cmd');
+  let fl = []; try { fl = fs.readdirSync(d).filter((f) => f.endsWith('.json')); } catch (e) { return; }
+  const A = require(path.join(REPO, 'lib', 'alarms.js'));
+  for (const f of fl) {
+    const j = rj(path.join(d, f), null);
+    try { fs.unlinkSync(path.join(d, f)); } catch (e) {}
+    if (!j || !/^[a-z0-9-]{1,32}$/.test(j.tenant || '') || j.tenant === 'abaitzik') continue;
+    const dir = tenantDir(j.tenant), data = path.join(dir, 'data');
+    try {
+      const r = A.act(data, j.id, j.action);
+      const st = fs.statSync(dir);
+      execFileSync('chown', ['-R', st.uid + ':' + st.gid, path.join(data, 'alarms')]);
+      log(j.tenant + ' alarm ' + j.action + ' ' + (r.ok ? 'ok' : r.say));
+    } catch (e) { log(j.tenant + ' alarm cmd failed ' + e.message); }
+  }
+}
+
 function main() {
+  alarmCmds();
   let files = [];
   try { files = fs.readdirSync(Q).filter((f) => /^[a-z0-9-]+-(bank|accounting)\.json$/.test(f)); } catch (e) { return; }
   for (const f of files) {

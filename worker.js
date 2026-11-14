@@ -1243,13 +1243,13 @@ function alarmsTick() {
   try {
     const did = require('./lib/alarms.js').tick(inst.dataPath, Date.now(), {
       push: (title, body) => { require('./lib/notify-channels.js').notify(title, body, { kind: 'reminders' }).catch(() => {}); },
-      wa: (text) => {
-        if (inst.name === 'abaitzik') return require('./lib/wa-out.js').sendOwner(inst.dataPath, text, { kind: 'alarm' });
+      wa: (text, alarmId) => {
+        // 14.11.2026: Itzik's own monitor too: the bridge sends it with the buttons (waPushSweep, his own chat folder).
         const at = new Date(), pad = (n) => String(n).padStart(2, '0');
         const stamp = at.getFullYear() + pad(at.getMonth() + 1) + pad(at.getDate()) + '-' + pad(at.getHours()) + pad(at.getMinutes()) + pad(at.getSeconds());
         fs.mkdirSync(CHAT, { recursive: true });
         let name = stamp + '-claude-push.json'; for (let i = 2; fs.existsSync(path.join(CHAT, name)); i++) name = stamp + '-claude-push-' + i + '.json';
-        fs.writeFileSync(path.join(CHAT, name), JSON.stringify({ at: at.toISOString(), from: 'claude', text, status: 'done', waPush: true, alarm: true, id: 'al-' + at.getTime().toString(36) }, null, 1), 'utf8');
+        fs.writeFileSync(path.join(CHAT, name), JSON.stringify({ at: at.toISOString(), from: 'claude', text, status: 'done', waPush: true, alarm: true, alarmId: alarmId || '', id: 'al-' + at.getTime().toString(36) }, null, 1), 'utf8');
         return Promise.resolve();
       },
     });

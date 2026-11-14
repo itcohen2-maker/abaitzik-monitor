@@ -442,6 +442,7 @@ async function onMessage(m, contactName) {
     log('not on the allow list: ' + String(m.from).slice(0, 5) + '...'); return;
   }
   markRead(m.id);
+  { const said = alarmTap(m, 'abaitzik'); if (said) { await waSend(m.from, said); return; } }
   // 4.11: Meta's 24 hour window opens with his message; lib/wa-out.js reads this.
   { const sl = loadState(); sl.lastIn = sl.lastIn || {}; sl.lastIn[m.from] = Date.now(); saveState(sl); }
   // 1.11, for Shai's demo: "summarize meetings and send tasks", by voice, on WhatsApp.
@@ -622,8 +623,46 @@ async function waTemplate(to, text) {
   if (r.status !== 200) throw new Error('graph ' + r.status + ' ' + r.body.toString('utf8').slice(0, 200));
   return true;
 }
+// 14.11.2026: a reminder with its three buttons. Inside 24 hours: interactive reply buttons (free). Outside: the
+// approved template monitor_reminder with payloads, and while it waits for Meta, monitor_update without buttons.
+async function alarmSend(to, tenant, alarmId, text, open) {
+  const c = cfg(), body = String(text).replace(/^⏰ תזכורת(?: \(באיחור\))?: /, '').slice(0, 900);
+  const pl = (k) => 'al|' + tenant + '|' + alarmId + '|' + k;
+  const post = async (o) => {
+    const r = await req('POST', WA.base(c) + '/' + c.phoneId + '/messages', Object.assign({ 'Content-Type': 'application/json' }, WA.auth(c)), Buffer.from(JSON.stringify(o), 'utf8'));
+    if (r.status !== 200) throw new Error('graph ' + r.status + ' ' + r.body.toString('utf8').slice(0, 200));
+    return true;
+  };
+  if (open) return post({ messaging_product: 'whatsapp', to, type: 'interactive', interactive: { type: 'button', body: { text: String(text).slice(0, 1000) },
+    action: { buttons: [{ type: 'reply', reply: { id: pl('done'), title: '✅ טופל' } }, { type: 'reply', reply: { id: pl('1h'), title: '⏰ עוד שעה' } }, { type: 'reply', reply: { id: pl('tom'), title: 'מחר בבוקר' } }] } } });
+  try {
+    return await post({ messaging_product: 'whatsapp', to, type: 'template', template: { name: 'monitor_reminder', language: { code: 'he' }, components: [
+      { type: 'body', parameters: [{ type: 'text', text: waOut.oneLine(body) }] },
+      { type: 'button', sub_type: 'quick_reply', index: '0', parameters: [{ type: 'payload', payload: pl('done') }] },
+      { type: 'button', sub_type: 'quick_reply', index: '1', parameters: [{ type: 'payload', payload: pl('1h') }] },
+      { type: 'button', sub_type: 'quick_reply', index: '2', parameters: [{ type: 'payload', payload: pl('tom') }] }] } });
+  } catch (e) { log('monitor_reminder not usable yet (' + e.message.slice(0, 80) + '), plain template'); return waTemplate(to, text); }
+}
+// A tap on one of them: "al|<monitor>|<alarm id>|done|1h|tom". Itzik's own is applied here; a customer's goes to
+// data/alarm-cmd for setup/addon-provision.js (root, every minute), since his folder is his. The reply is at once.
+function alarmTap(m, tenant) {
+  const p = m.type === 'button' ? String((m.button && m.button.payload) || '') : m.type === 'interactive' ? String(((m.interactive || {}).button_reply || {}).id || '') : '';
+  const x = /^al\|([a-z0-9-]{1,40})\|(a[a-z0-9]{6,20})\|(done|1h|tom)$/.exec(p);
+  if (!x) return null;
+  if (x[1] !== tenant) { log('alarm tap for another monitor ' + x[1]); return 'התזכורת הזו לא שייכת למספר הזה.'; }
+  const A = require('./lib/alarms.js');
+  if (tenant === 'abaitzik') return A.act(DATA, x[2], x[3]).say;
+  const d = path.join(DATA, 'alarm-cmd'); fs.mkdirSync(d, { recursive: true });
+  fs.writeFileSync(path.join(d, tenant + '-' + Date.now() + '.json'), JSON.stringify({ tenant, id: x[2], action: x[3], at: new Date().toISOString() }));
+  if (x[3] === 'done') return '✅ סומן כטופל.';
+  const t = x[3] === '1h' ? Date.now() + 3600e3 : A.parseLocal(new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem' }).format(new Date(Date.now() + 86400e3)) + ' 09:00');
+  return '⏰ אזכיר שוב ' + A.when(t) + '.';
+}
+
 function waPushSweep() {
-  let map = {}; try { map = JSON.parse(fs.readFileSync(path.join(DATA, 'wa-tenants.json'), 'utf8')) || {}; } catch (e) { return; }
+  let map = {}; try { map = JSON.parse(fs.readFileSync(path.join(DATA, 'wa-tenants.json'), 'utf8')) || {}; } catch (e) { map = {}; }
+  // 14.11.2026: Itzik's own monitor too (his reminders), to the first number on allow.
+  if (isOwnerInstance()) { const own = String(((cfg().allow || [])[0]) || ''); if (/^\d{8,15}$/.test(own)) map = Object.assign({}, map, { [own]: { tenant: 'abaitzik', dir: ROOT } }); }
   const st = loadState(); st.pushed = st.pushed || {}; let ch = false;
   Object.keys(map).forEach(function (phone) {
     const t = map[phone]; if (!t || !t.tenant || !t.dir || !/^\d{8,15}$/.test(phone)) return;
@@ -635,7 +674,7 @@ function waPushSweep() {
       if (!d || !d.waPush || d.from !== 'claude' || !d.text) return;
       st.pushed[k] = Date.now(); ch = true;
       const open = st.lastIn && st.lastIn[phone] && Date.now() - st.lastIn[phone] < 23.5 * 3600e3;
-      (open ? tenantSend(phone, String(d.text)) : waTemplate(phone, d.text)).then(function (ok) { log('wa push ' + t.tenant + ' ' + f + (open ? ' text' : ' template') + (ok === false ? ' (not delivered)' : '')); })
+      (d.alarm && d.alarmId ? alarmSend(phone, t.tenant, d.alarmId, d.text, open) : open ? tenantSend(phone, String(d.text)) : waTemplate(phone, d.text)).then(function (ok) { log('wa push ' + t.tenant + ' ' + f + (open ? ' text' : ' template') + (ok === false ? ' (not delivered)' : '')); })
         .catch(function (e) { log('wa push failed ' + t.tenant + ' ' + f + ': ' + e.message.slice(0, 160)); });
     });
   });
@@ -655,6 +694,7 @@ function outboxSweep() {
 async function tenantMessage(m, tn, contactName) {
   markRead(m.id);
   { const sl = loadState(); sl.lastIn = sl.lastIn || {}; sl.lastIn[m.from] = Date.now(); saveState(sl); }
+  { const said = alarmTap(m, tn.tenant); if (said) { await tenantSend(m.from, said); return; } }
   { const mp = WM.partOf(m); if (mp) return mediaIn(m, mp, tn, contactName); }
   let t = textOf(m);
   if (!t && m.type === 'audio' && m.audio && m.audio.id) {
