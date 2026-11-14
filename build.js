@@ -7226,7 +7226,8 @@ var UPCHUNK=8*1024*1024;
 // customer assumed it stays for good. The server keeps it 7 days (upload-server
 // finishedTtl); Itzik's own inbox is cleared after 3 (build FILE_DAYS). The
 // "received" panel says so, and stays up long enough to read it.
-var UPKEEP='הקובץ נשמר אצלנו '+((INSTANCE&&INSTANCE.name)==='abaitzik'?3:7)+' ימים, כדאי לשמור עותק במכשיר.';
+// 14.11.2026: a customer's files are kept by kind (lib/file-keep.js), so the line says that and not "7 ימים".
+var UPKEEP=(INSTANCE&&INSTANCE.name)==='abaitzik'?'הקובץ נשמר אצלנו 3 ימים, כדאי לשמור עותק במכשיר.':'הקלטות ותמונות נשמרות 7 ימים, מסמכים שנה. 📌 במסך הקבצים שומר קובץ בלי הגבלה.';
 // Which files leave by the big path. Past 15MB each, and if what is left for
 // ntfy still passes its 18MB, the largest of those join them.
 function splitSend(list){
@@ -13259,13 +13260,28 @@ document.addEventListener('click',function(e){
  }).catch(function(){b.disabled=false;toast('לא נשלח. אפשר לנסות שוב.');});
 },true);
 document.addEventListener('click',function(e){
- var b=e.target&&e.target.closest&&e.target.closest('[data-fdl],[data-fimode],[data-fcmt]');if(!b)return;
+ var b=e.target&&e.target.closest&&e.target.closest('[data-fdl],[data-fimode],[data-fcmt],[data-fpin]');if(!b)return;
  e.preventDefault();e.stopPropagation();
  if(b.hasAttribute('data-fdl'))fileDownload(b.getAttribute('data-fdl'));
  // 24.10, Itzik's idea: "אי אפשר להעיר על תוצר מסוים". The note button names the file itself.
+ else if(b.hasAttribute('data-fpin'))filePin(b.getAttribute('data-fpin'));
  else if(b.hasAttribute('data-fcmt'))askInChat('הערה על '+b.getAttribute('data-fcmt').split('/').pop()+': ');
  else{fiMode=b.getAttribute('data-fimode');fiFolder='';renderFiles();}
 },true);
+// 14.11.2026, Itzik approved: a customer's files are kept by kind (lib/file-keep.js). The row says until when,
+// and 📌 keeps one file with no limit. The tap goes sealed like any message (the file name is his), with the code.
+function fileKeepTag(f){if((INSTANCE&&INSTANCE.name)==='abaitzik')return '';if(f.p)return ' · 📌 שמור';if(!f.x)return ' · שמור';
+ var d=new Date(f.x);if(isNaN(d))return '';var o={day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'};if(d.getFullYear()!==new Date().getFullYear())o.year='2-digit';return ' · נשמר עד '+d.toLocaleDateString('he-IL',o);}
+function filePinBtn(f){if((INSTANCE&&INSTANCE.name)==='abaitzik'||(!f.x&&!f.p))return '';
+ return '<button type="button" class="fl-dl" data-fpin="'+esc(f.n)+'" aria-label="'+(f.p?'לבטל את השמירה':'לשמור בלי הגבלה')+'">📌<small>'+(f.p?'שמור':'לשמור')+'</small></button>';}
+function filePin(n){
+ var f=fileEntry(n),on=!(f&&f.p);
+ var body=JSON.stringify({code:sendCode(),n:n,pin:on,at:new Date().toISOString()});
+ var back=function(){if(f){if(on)delete f.p;else f.p=1;}renderFiles();toast('לא נשלח. אפשר לנסות שוב.');};
+ (SEALING()?gseal(body):Promise.resolve(body)).then(function(b){return fetch('https://ntfy.sh/'+NTFYIN(),{method:'POST',headers:{Title:'file-pin'},body:b});})
+  .then(function(r){if(!r.ok)back();else toast(on?'📌 הקובץ נשמר בלי הגבלה':'הקובץ חזר לכלל השמירה הרגיל');},back);
+ if(f){if(on)f.p=1;else delete f.p;}renderFiles();
+}
 function renderFiles(){
  var box=document.getElementById('fiBox');if(!box)return;var All=(D.files||[]).filter(function(x){return String(x.n).indexOf('stk/')!==0&&String(x.n).indexOf('carousel-')!==0&&(!fiFolder||String(x.n).indexOf(fiFolder)===0);});
  if(!All.length){box.innerHTML='<div class="empty">אין כאן קבצים.</div>';return;}
@@ -13301,9 +13317,9 @@ function renderFiles(){
  function day(f){try{var x=new Date(f.at);if(isNaN(x))return '';return x.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',year:'numeric',timeZone:'Asia/Jerusalem'});}catch(e){return '';}}
  function row(f,tag,full){var w=when(f,full);return '<div class="fl-r"><a href="files/'+esc(f.n)+'"><span class="fl-i"><span class="fl-e">'+ico(f)+'</span>'+fileThumb(f.n)+'</span>'
   +'<span class="fl-n">'+(tag?'<b style="font-size:12px;background:#16a34a;color:#fff;border-radius:8px;padding:1px 7px;margin-inline-end:6px">עדכני</b>':'')+esc(f.n.split('/').pop())
-  +'<small>'+(w?esc(w)+' · ':'')+kb(f)+'</small></span></a>'
+  +'<small>'+(w?esc(w)+' · ':'')+kb(f)+fileKeepTag(f)+'</small></span></a>'
   +'<button type="button" class="fl-dl" data-fdl="'+esc(f.n)+'" aria-label="הורדה">⬇<small>הורדה</small></button>'
-  +'<button type="button" class="fl-dl" data-fcmt="'+esc(f.n)+'" aria-label="הערה על זה">💬<small>הערה</small></button></div>';}
+  +'<button type="button" class="fl-dl" data-fcmt="'+esc(f.n)+'" aria-label="הערה על זה">💬<small>הערה</small></button>'+filePinBtn(f)+'</div>';}
  var groups={},order=[],old=[];
  F.forEach(function(f){
   if(/בוטל|cancel+ed/i.test(f.n)){old.push(f);return;}
@@ -24506,8 +24522,8 @@ function walkFiles(dir, base = '') {
 const FILE_DAYS = 3;
 const KEEP_FILE = /^(appt-|lead-|music\/|stk\/)/;
 function pruneOldFiles(src) {
-  // His request, his monitor. A customer's files are theirs to keep.
-  if (inst.name !== 'abaitzik') return;
+  // 14.11.2026: a customer's files are kept by kind (lib/file-keep.js), no longer all forever.
+  if (inst.name !== 'abaitzik') { try { require('./lib/file-keep.js').prune(inst.dataPath); } catch (e) { console.error('file-keep: ' + e.message); } return; }
   const cutoff = Date.now() - FILE_DAYS * 864e5;
   let named = '';
   try { named = fs.readFileSync(__filename, 'utf8'); } catch (e) { return; }
@@ -24586,6 +24602,9 @@ function sealFiles() {
   })(pub);
   pruneOldFiles(src);
   const list = [], keep = new Set();
+  // 14.11.2026: a customer's file row says until when it is kept, and whether he marked it 📌
+  const fileKeep = require('./lib/file-keep.js');
+  const keepCtx = inst.name !== 'abaitzik' ? fileKeep.context(inst.dataPath) : null;
   for (const rel of walkFiles(src)) {
     const id = gate.fileId(rel), target = path.join(outDir, id + '.bin');
     const full = path.join(src, rel);
@@ -24599,6 +24618,12 @@ function sealFiles() {
     const ext = (rel.split('.').pop() || '').toLowerCase();
     list.push({ n: rel, id, s: fs.statSync(full).size, t: MIME[ext] || 'application/octet-stream',
                 at: new Date(fs.statSync(full).mtimeMs).toISOString() });
+    if (keepCtx) {
+      const e = list[list.length - 1];
+      if (keepCtx.pins.has(rel)) e.p = 1;
+      const x = fileKeep.expiry(rel, fs.statSync(full).mtimeMs, keepCtx);
+      if (x) e.x = x;
+    }
   }
   for (const f of fs.readdirSync(outDir)) if (!keep.has(f)) fs.unlinkSync(path.join(outDir, f));
   return list.sort((a, b) => (a.at < b.at ? 1 : -1));

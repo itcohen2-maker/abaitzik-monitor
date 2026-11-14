@@ -1638,6 +1638,28 @@ function openSealed(m) {
   return Object.assign({}, m, { message: plain });
 }
 
+/*
+  14.11.2026, Itzik approved: the 📌 button in the files screen keeps one file with no limit (lib/file-keep.js
+  reads data/files-pins.json). The body is {code, n, pin}, sealed like a message.
+*/
+function recordFilePin(m) {
+  let got;
+  try { got = JSON.parse(String(m.message || '')); } catch (e) { got = null; }
+  if (!got || !ownerCodeOk('קוד ' + String(got.code || ''))) { say('!! שמירת קובץ בלי קוד, לא בוצעה'); return; }
+  const n = String(got.n || '');
+  if (!n || n.length > 300 || n.split('/').some((p) => !p || p === '.' || p === '..')) return;
+  const f = path.join(inst.dataPath, 'files-pins.json');
+  let list = [];
+  try { list = JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) {}
+  if (!Array.isArray(list)) list = [];
+  list = list.filter((x) => x !== n);
+  if (got.pin) list.push(n);
+  try { fs.writeFileSync(f + '.tmp', JSON.stringify(list.slice(-2000))); fs.renameSync(f + '.tmp', f); }
+  catch (e) { say('!! שמירת קובץ: ' + e.message); return; }
+  say(got.pin ? 'קובץ סומן לשמירה בלי הגבלה' : 'קובץ חזר לכלל השמירה');
+  publishChat();
+}
+
 async function handleOne(m) {
   const seen = mark();
   if (m.time === seen.time && seen.ids.includes(m.id)) return;
@@ -1645,6 +1667,8 @@ async function handleOne(m) {
   lastMsgAt = Date.now();
   m = openSealed(m);
   if (!m) return;
+  // 14.11.2026: 📌 on a file. Before anything logs the message, since its body carries the code.
+  if (!m.attachment && m.title === 'file-pin') { recordFilePin(m); remember(m); return; }
   if (ownToken(m)) { remember(m); return; }
   // 24.10.2026: a phone's push subscription is stored, never chatted or sent to Claude.
   const pushSub = m.attachment ? null : wp.fromMessage(m.message);
