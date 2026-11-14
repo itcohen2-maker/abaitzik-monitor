@@ -3007,6 +3007,7 @@ section#talkCard.talk{border:2px solid var(--accent);box-shadow:0 8px 24px color
 @media(min-width:720px){#psSheet.psFull .ycard{padding:0 max(16px,calc(50% - 360px)) 28px}#psSheet.psFull .psGrid{grid-template-columns:1fr 1fr 1fr}}
 #psSheet .psReq{background:#fffdf8;border-radius:12px;padding:8px 10px;margin:6px 0;font:600 13px Heebo,sans-serif;text-align:right}
 .c-board{background:linear-gradient(160deg,#0e7490,#164e63);font-size:22px}
+.c-lboard{background:linear-gradient(160deg,#f59e0b,#b45309);font-size:22px}
 #gHandle[hidden],#gReq[hidden]{display:none}
 .c-fcc{background:linear-gradient(160deg,#22d3ee,#0e7490);font-size:22px}
 .c-fcp{background:linear-gradient(160deg,#4ade80,#15803d);font-size:22px}
@@ -5069,7 +5070,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <!-- 12.11.2026, Itzik: "אייקון של מצב אישי כמו בסרטון". The calm side of the monitor, in the ad's colours (personalSheet, lib/personal.js). -->
   <button type="button" class="ic icNew" data-grp="day" id="icPersonal" data-new="1"><span class="c c-ps">🏡</span>מצב אישי</button>
   <!-- 10.11.2026, Itzik: the control board (לוח הפרסומים) is a round icon, one entry point; the old square tile is gone. Opens boardSheet. -->
-  ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icBoard" data-new="1"><span class="c c-board">🎛️</span>לוח בקרה</button>' : ''}
+  ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icBoard" data-new="1"><span class="c c-board">🎛️</span>לוח בקרה</button><button type="button" class="ic icNew" data-grp="work" id="icLeadBoard" data-new="1"><span class="c c-lboard">🔔</span>לוח לידים</button>' : ''}
   <!-- 11.11.2026, Itzik: "שימו לי במוניטור אייקון של הטופס הזה, שאני אוכל לשלוח אותו לאנשים בוואטסאפ או במייל". The signup page (it-solution.co.il/start). -->
   ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icSignup" data-new="1"><span class="c c-its">🚀</span>דף הרשמה</button>' : ''}
   <!-- 7.11.2026, Itzik: the trainings sit in round icons beside the calendar. Shown only when the chat is allowed (fcBoot). -->
@@ -18978,6 +18979,94 @@ function boardMore(){
  document.body.appendChild(w);
 }
 on('icSignup',function(){signupShare();});
+// 14.11.2026, Itzik: "אני רוצה כמו הלוח בקרה אבל של הלידים". The same week tiles as 🎛️ לוח בקרה (bdCss, bdTiles):
+// a row per place a lead comes from, a column per day, each tile the leads that came in that day and the hour of the
+// first one, coloured by where they stand (⚠️ waiting for you, ⏳ in talk, ✅ closed, ❌ lost). Under it: is the scanner
+// working, who is waiting for you now (call, WhatsApp), and the week day by day. Reads only D.biz and D.leadScan (sealed).
+var LB_WEEK=0;
+var LB_ROWS=[
+ {id:'site',ic:'🌐',n:'צ׳אט באתר',cc:['#5aa9fb','#0a4f9c']},
+ {id:'messenger',ic:'💬',n:'מסנג׳ר',cc:['#90caf9','#1565c0']},
+ {id:'fb-comment',ic:'📘',n:'תגובה בפייסבוק',cc:['#7986cb','#283593']},
+ {id:'ig-comment',ic:'📸',n:'תגובה באינסטגרם',cc:['#f48fb1','#ad1457']},
+ {id:'ig-dm',ic:'📩',n:'הודעה באינסטגרם',cc:['#ce93d8','#6a1b9a']},
+ {id:'leadform',ic:'📝',n:'טופס מטא',cc:['#ffcc80','#e65100']},
+ {id:'whatsapp',ic:'🟢',n:'וואטסאפ',cc:['#7bd88f','#1e8e4a']},
+ {id:'signup',ic:'🚀',n:'שבוע ניסיון',cc:['#80deea','#00838f']},
+ {id:'aff',ic:'🤝',n:'הפניה משותף',cc:['#bcaaa4','#4e342e']},
+ {id:'manual',ic:'✍️',n:'נרשם ידנית',cc:['#b0bec5','#37474f']}
+];
+function lbDay(iso){var t=Date.parse(iso);if(isNaN(t))return '';return new Date(t).toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'});}
+function lbHm(iso){var t=Date.parse(iso);if(isNaN(t))return '';return new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(t));}
+function lbState(r){var s=r.status||'חדש';return s==='נסגר'?'ok':s==='אבד'?'miss':s==='חדש'?'no':'wait';}
+function lbWa(p){var d=String(p||'').replace(/[^0-9]/g,'');if(d.indexOf('0')===0)d='972'+d.slice(1);return 'https://wa.me/'+d;}
+function leadBoard(wk){
+ if(typeof wk==='number')LB_WEEK=wk;
+ var old=document.getElementById('bdGrid');if(old)old.remove();
+ var L=(D.biz||[]).filter(function(r){return r&&r.kind==='lead'&&!r.test;});
+ var DN=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'],DS=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
+ function add(d,n){var p=d.split('-');return new Date(Date.UTC(+p[0],+p[1]-1,+p[2]+n)).toISOString().slice(0,10);}
+ function dw(d){var p=d.split('-');return new Date(Date.UTC(+p[0],+p[1]-1,+p[2])).getUTCDay();}
+ function dm(d){var p=d.split('-');return (+p[2])+'.'+(+p[1]);}
+ var T0=lbDay(new Date().toISOString()),SUN=add(T0,-dw(T0)+7*LB_WEEK),days=[];for(var i=0;i<7;i++)days.push(add(SUN,i));
+ var IC={no:'⚠️',wait:'⏳',ok:'✅',miss:'❌'},RANK={no:3,wait:2,ok:1,miss:0};
+ var known={};LB_ROWS.forEach(function(r){known[r.id]=1;});
+ var C={},byDay={};
+ L.forEach(function(r){
+  var d=lbDay(r.at);if(!d||d<days[0]||d>days[6])return;
+  var ri=-1;LB_ROWS.forEach(function(x,k){if(x.id===(known[r.source]?r.source:'manual'))ri=k;});
+  var key=ri+'|'+d,c=C[key]||(C[key]={s:'',n:0,t:'',items:[]}),s=lbState(r),hm=lbHm(r.at);
+  c.n++;c.items.push(r);if(!c.s||RANK[s]>RANK[c.s])c.s=s;if(!c.t||hm<c.t)c.t=hm;
+  (byDay[d]=byDay[d]||[]).push(r);
+ });
+ Object.keys(C).forEach(function(k){if(C[k].n>1)C[k].t=C[k].n+' · '+C[k].t;});
+ var wkName=LB_WEEK===0?'לידים השבוע':LB_WEEK<0?'לידים לפני '+(-LB_WEEK)+' שבועות':'לידים';
+ var h=bdCss()+'<div class="ycard">'
+  +bdTiles(LB_ROWS,C,days,T0,wkName,{IC:IC,DS:DS,dm:dm,dw:dw,legend:'⚠️ מחכה לך · ⏳ בשיחה · ✅ נסגר · ❌ אבד · השעה: מתי הגיע הראשון'});
+ // is the scanner alive: the last run of lead-scan.js (every 10 minutes)
+ var S=D.leadScan||null,ago=S&&S.at?Math.round((Date.now()-Date.parse(S.at))/60000):null;
+ var ok=S&&S.ok&&ago!=null&&ago<40;
+ h+='<div style="margin:10px 0;padding:10px 12px;border-radius:16px;font:700 14px Heebo,sans-serif;'+(ok?'color:#5eea8a;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3)':'color:#ff8a8a;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35)')+'">'
+  +(ok?'🟢 הסורק עובד: בדק '+(ago<2?'עכשיו':'לפני '+ago+' דקות')+'. אתר, מסנג׳ר, תגובות בפייסבוק ובאינסטגרם, טפסים. כל 10 דקות.'
+   :'🔴 הסורק לא תקין'+(S&&S.need&&S.need.length?': חסרות הרשאות '+esc(S.need.join(', ')):ago!=null?': לא רץ '+ago+' דקות':'')+'. המנהל מטפל.')+'</div>';
+ // who is waiting for him now: new, or due today or earlier
+ var wait=L.filter(function(r){var s=r.status||'חדש';if(s==='נסגר'||s==='אבד')return false;return s==='חדש'||(r.nextAt&&String(r.nextAt).slice(0,10)<=T0);})
+  .sort(function(a,b){return String(a.nextAt||a.at).localeCompare(String(b.nextAt||b.at));});
+ var tmr=add(T0,1),soon=L.filter(function(r){var s=r.status||'חדש';return s!=='נסגר'&&s!=='אבד'&&s!=='חדש'&&r.nextAt&&String(r.nextAt).slice(0,10)===tmr;});
+ function card(r){
+  var src=(LB_ROWS.filter(function(x){return x.id===r.source;})[0]||{ic:'✍️',n:r.source||'ליד'});
+  return '<div class="ai s-'+lbState(r)+'"><span class="tm">'+esc(lbHm(r.at))+'<small style="display:block">'+esc(dm(lbDay(r.at)||T0))+'</small></span>'
+   +'<div class="mid"><b>'+src.ic+' '+esc(r.name||'בלי שם')+'</b>'+(r.last?'<span class="wh">"'+esc(String(r.last).slice(0,90))+'"</span>':'')
+   +'<small>'+esc(src.n)+(r.next?' · '+esc(r.next):'')+'</small>'
+   +(r.phone?'<div style="margin-top:4px"><a class="yb" style="display:inline-block;min-height:0;padding:4px 10px;margin:2px" href="tel:'+esc(String(r.phone).replace(/[^0-9+]/g,''))+'">📞 להתקשר</a><a class="yb" style="display:inline-block;min-height:0;padding:4px 10px;margin:2px" href="'+lbWa(r.phone)+'" target="_blank" rel="noopener">💬 וואטסאפ</a></div>':'')
+   +'</div><div class="side"><span class="chip k-'+(lbState(r)==='no'?'bad':lbState(r)==='ok'?'ok':'hand')+'">'+IC[lbState(r)]+' '+esc(r.status||'חדש')+'</span></div></div>';
+ }
+ h+='<div id="bdAgenda"><div style="font:800 15px Heebo,sans-serif;margin:12px 0 2px">🙋 מחכים לך עכשיו ('+wait.length+')</div>'
+  +(wait.length?wait.map(card).join(''):'<div class="ai"><small>אין ליד שמחכה לך. כל הכבוד.</small></div>')
+  +(soon.length?'<div style="font:800 15px Heebo,sans-serif;margin:12px 0 2px">📅 מחר</div>'+soon.map(card).join(''):'')
+  +'<div style="font:800 15px Heebo,sans-serif;margin:14px 0 2px">📋 מה נכנס השבוע, יום אחרי יום</div>'
+  +days.filter(function(d){return d<=T0||LB_WEEK<0;}).reverse().map(function(d){var A=(byDay[d]||[]).sort(function(a,b){return String(a.at).localeCompare(String(b.at));});
+   return '<div class="ag"><b>'+(d===T0?'היום':'יום '+DN[dw(d)])+' '+dm(d)+'</b>'+(A.length?A.map(card).join(''):'<div class="ai"><small>לא נכנס ליד</small></div>')+'</div>';}).join('')
+  +'</div>'
+  +'<button type="button" class="yb yb2" data-a="biz">🔔 כל הלידים בטבלה</button>'
+  +'<button type="button" class="yb yx" data-a="x">סגירה</button></div>';
+ var w=document.createElement('div');w.id='bdGrid';w.className='ysheet ldb'+(BD_LAND?' land':'')+(BD_DESK?' desk':'');w.setAttribute('role','dialog');w.setAttribute('aria-label','לוח לידים');
+ w.innerHTML=h;
+ w.onclick=function(ev){
+  var a=ev.target.getAttribute&&ev.target.getAttribute('data-a');
+  if(ev.target.closest&&ev.target.closest('[data-a="rot"]')){BD_LAND=!BD_LAND;w.classList.toggle('land',BD_LAND);try{localStorage.setItem('bdLand',BD_LAND?'1':'0');}catch(e){}return;}
+  if(ev.target===w||a==='x'){try{if(document.fullscreenElement)document.exitFullscreen();}catch(e){}return w.remove();}
+  if(a==='prev'||a==='next'){w.remove();return leadBoard(LB_WEEK+(a==='next'?1:-1));}
+  if(a==='biz'){w.remove();try{return bizSheet('leads');}catch(e){return;}}
+  var dot=ev.target.closest&&ev.target.closest('.dot[data-r]');
+  if(dot){var c=C[dot.getAttribute('data-r')+'|'+dot.getAttribute('data-d')];
+   if(!c||!c.items.length)return toast('לא נכנס ליד ביום הזה');
+   return toast(c.items.map(function(r){return lbHm(r.at)+' '+(r.name||'')+' · '+(r.status||'חדש');}).join(' | '));}
+ };
+ document.body.appendChild(w);
+}
+on('icLeadBoard',function(){leadBoard(0);});
+
 on('icBoard',function(){
  // on a computer the board opens over the whole screen (the click is the gesture the browser needs)
  try{if(BD_LAND&&BD_DESK&&!document.fullscreenElement&&document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(function(){});}catch(e){}
