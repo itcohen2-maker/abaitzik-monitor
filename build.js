@@ -3287,6 +3287,14 @@ body.tjig #blkTiles>.gt,body.tjig #blkBiz>.gt{position:relative;animation:tjig .
 body.tjig #blkTiles>.gt:nth-child(2n),body.tjig #blkBiz>.gt:nth-child(2n){animation-duration:.34s!important;animation-delay:-.11s!important}
 body.tjig #blkTiles>.gt:nth-child(3n),body.tjig #blkBiz>.gt:nth-child(3n){animation-duration:.27s!important;animation-delay:-.19s!important}
 body.tjig #blkBiz .gt{opacity:.55}
+body.tjig #blkIcons>.ic{position:relative;animation:tjig .3s infinite linear!important;transform-origin:50% 40%}
+body.tjig #blkIcons>.ic:nth-child(2n){animation-duration:.34s!important;animation-delay:-.11s!important}
+body.tjig #blkIcons>.ic:nth-child(3n){animation-duration:.27s!important;animation-delay:-.19s!important}
+#blkIcons>.ic.icHid{display:none!important}
+.ic .tx{display:none;position:absolute;top:-6px;inset-inline-end:calc(50% - 34px);width:24px;height:24px;border-radius:50%;
+ background:#3a3a3c;color:#fff;border:2px solid #fff;font:800 18px/19px Heebo,sans-serif;padding:0;z-index:3;cursor:pointer;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.ic .tx::after{content:"";position:absolute;inset:-10px}
+body.tjig #blkIcons .ic .tx{display:block}
 .grid .gt.tlift{opacity:.3}
 #tGhost{position:fixed;z-index:80;pointer-events:none;margin:0;transform:scale(1.08);box-shadow:0 18px 34px rgba(0,0,0,.4);opacity:.95;animation:none}
 body.tdrag{-webkit-user-select:none;user-select:none}
@@ -3304,7 +3312,7 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 #tileBar .add{flex:0 0 auto;min-width:56px;font-size:22px;line-height:1;background:#eee;color:#333}
 .tadd{display:block;width:100%;text-align:start;min-height:50px;border:1px solid #e2e8f0;background:#fff;color:#0f172a;border-radius:14px;padding:0 14px;margin:6px 0;font:600 16px Heebo,sans-serif;cursor:pointer}
 @media(prefers-color-scheme:dark){.tadd{background:#1b1b26;color:#e5e7eb;border-color:#2a2a38}}
-@media(prefers-reduced-motion:reduce){body.tjig #blkTiles>.gt,body.tjig #blkBiz>.gt{animation:none!important}}
+@media(prefers-reduced-motion:reduce){body.tjig #blkTiles>.gt,body.tjig #blkBiz>.gt,body.tjig #blkIcons>.ic{animation:none!important}}
 .gt .gi{height:1.35em;width:auto;vertical-align:-0.3em;margin-inline-end:2px}
 .gNer{background:linear-gradient(150deg,#f0a64a,#0f1a3a)}
 .gReel{background:linear-gradient(150deg,#e2574c,#2a1240)}
@@ -23333,26 +23341,41 @@ function tileBar(show){
 function tileAddSheet(){
  var old=document.getElementById('tSheet');if(old)old.remove();
  var hid=tileStore('tilesHidden',[]).filter(function(id){return document.getElementById(id);});
- if(!hid.length){toast('כל האריחים כבר על המסך.');return;}
+ var ihid=tileStore('iconsHidden',[]).filter(function(id){return document.getElementById(id);});
+ hid=hid.concat(ihid);
+ if(!hid.length){toast('כל האריחים והאייקונים כבר על המסך.');return;}
  var w=document.createElement('div');w.id='tSheet';w.className='tsh';
  w.innerHTML='<div class="tsh-in" role="dialog" aria-label="הוספת אריח"><b class="tsh-t">להחזיר למסך</b>'
   +hid.map(function(id){return '<button type="button" class="tadd" data-id="'+id+'"></button>';}).join('')
   +(hid.length>1?'<button type="button" class="tadd" data-id="*">+ להחזיר את כולם ('+hid.length+')</button>':'')
   +'<button type="button" class="tsh-x" data-a="x">סגירה</button></div>';
- Array.prototype.forEach.call(w.querySelectorAll('.tadd[data-id]'),function(x){var id=x.getAttribute('data-id');if(id!=='*')x.textContent='+ '+tileLabel(id);});
+ Array.prototype.forEach.call(w.querySelectorAll('.tadd[data-id]'),function(x){var id=x.getAttribute('data-id');if(id!=='*')x.textContent='+ '+(ihid.indexOf(id)>=0?iconLabel(id):tileLabel(id));});
  document.body.appendChild(w);
  w.addEventListener('click',function(e){
   e.stopPropagation();
   if(e.target===w||e.target.closest('[data-a="x"]')){w.remove();return;}
   var x=e.target.closest('.tadd');if(!x)return;
-  var id=x.getAttribute('data-id'),h=tileStore('tilesHidden',[]);
+  var id=x.getAttribute('data-id'),h=tileStore('tilesHidden',[]),ih=tileStore('iconsHidden',[]);
+  var isIc=ihid.indexOf(id)>=0;
   h=id==='*'?[]:h.filter(function(v){return v!==id;});
-  tileSave('tilesHidden',h);applyHidden();tileMinus();w.remove();
-  toast(id==='*'?'כל האריחים חזרו.':'"'+tileLabel(id)+'" חזר למסך.');
+  ih=id==='*'?[]:ih.filter(function(v){return v!==id;});
+  tileSave('tilesHidden',h);tileSave('iconsHidden',ih);applyHidden();applyIconsHidden();tileMinus();w.remove();
+  toast(id==='*'?'הכל חזר למסך.':'"'+(isIc?iconLabel(id):tileLabel(id))+'" חזר למסך.');
  });
 }
 // The − on every tile of the grid while it jiggles.
+function iconLabel(id){var el=document.getElementById(id);if(!el)return id;var c=el.cloneNode(true);Array.prototype.forEach.call(c.querySelectorAll('.tx'),function(x){x.remove();});return (c.textContent||'').trim()||el.getAttribute('aria-label')||id;}
+function applyIconsHidden(){
+ var hid=tileStore('iconsHidden',[]);
+ Array.prototype.forEach.call(document.querySelectorAll('#blkIcons>.ic'),function(el){el.classList.toggle('icHid',hid.indexOf(el.id)>=0);});
+}
 function tileMinus(){
+ // 14.11.2026, Itzik: "גם את האייקונים". The round icons jiggle with the tiles and take the same −.
+ Array.prototype.forEach.call(document.querySelectorAll('#blkIcons>.ic'),function(t){
+  if(t.id==='icAdd'||t.querySelector('.tx'))return; // "חדש" is how things come in, not something to take off
+  var x=document.createElement('span');x.className='tx';x.setAttribute('role','button');x.setAttribute('aria-label','להוריד מהמסך');x.textContent='−';
+  t.appendChild(x);
+ });
  var g=document.getElementById('blkTiles');if(!g)return;
  Array.prototype.forEach.call(g.querySelectorAll('.gt'),function(t){
   if(t.parentNode!==g||t.querySelector('.tx'))return;
@@ -23377,6 +23400,8 @@ function tilesExit(){
  tEdit=false;
  if(grid){grid.classList.remove('tedit');Array.prototype.forEach.call(grid.querySelectorAll('.tx'),function(x){x.remove();});saveOrder(grid,'tileOrder');}
  document.body.classList.remove('tjig');
+ var icx=document.getElementById('blkIcons');
+ if(icx){Array.prototype.forEach.call(icx.querySelectorAll('.tx'),function(x){x.remove();});saveOrder(icx,'iconOrder');}
  var ts=document.getElementById('tSheet');if(ts)ts.remove();
  tileBar(false);
  var a=document.getElementById('tileArr');if(a)a.textContent='✎ הזזת אריחים';
@@ -23485,7 +23510,7 @@ function pressDrag(grid,sel,key,inEdit,still,lifted){
 if(!window.TJIG_OUT){window.TJIG_OUT=1;document.addEventListener('click',function(e){
  if(!tEdit)return;
  var t=e.target;if(!t||!t.closest)return;
- if(t.closest('#blkTiles .gt,#tileBar,.tsh,#tileArr,#tileArrTop,#tileArrGrid'))return;
+ if(t.closest('#blkTiles .gt,#blkIcons .ic,#tileBar,.tsh,#tileArr,#tileArrTop,#tileArrGrid'))return;
  e.preventDefault();e.stopPropagation();
  // the click that ends the long press that started it is not a tap outside
  if(Date.now()-(window.TJIG_AT||0)<800)return;
@@ -23669,7 +23694,16 @@ function pinHome(home){
   Array.prototype.forEach.call(icons.children,function(el){
    if(!el.id)el.id='ic-'+(el.getAttribute('data-net')||el.textContent.trim());
   });
-  applyOrder(icons,'iconOrder');pressDrag(icons,'.ic','iconOrder');
+  applyOrder(icons,'iconOrder');applyIconsHidden();
+  pressDrag(icons,'.ic','iconOrder',function(){return tEdit;},null,function(){var g=document.getElementById('blkTiles');if(!tEdit&&g)tilesEnter(g);});
+  icons.addEventListener('click',function(e){
+   if(!tEdit)return;
+   e.preventDefault();e.stopPropagation();
+   var t=e.target.closest?e.target.closest('.ic'):null;
+   if(!t||t.parentNode!==icons||!e.target.closest('.tx'))return;
+   var hid=tileStore('iconsHidden',[]);if(hid.indexOf(t.id)<0)hid.push(t.id);tileSave('iconsHidden',hid);
+   applyIconsHidden();toast('"'+iconLabel(t.id)+'" הורד מהמסך. + מחזיר אותו.');
+  },true);
  }
  if(home){nameChildren(home,'blk');applyOrder(home,'blockOrder');pinHome(home);armDrag(home,'blockOrder');}
 })();
