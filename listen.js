@@ -713,6 +713,21 @@ function recordIncoming(m) {
         return true;
       } catch (e) { say('!! שעות שקטות לא נשמרו: ' + e.message); }
     }
+    // 14.11: the alert kind switches from Settings, the same way, with no model (lib/alert-kinds.js).
+    const kv = codeOk && require('./lib/alert-kinds.js').parse(text);
+    if (kv) {
+      try {
+        const kc = require('./lib/alert-kinds.js').set(kv);
+        rec.status = 'done';
+        fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+        fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-kinds.json')),
+          JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id,
+            text: require('./lib/alert-kinds.js').said(kc), status: 'done' }, null, 1), 'utf8');
+        say('סוגי התראות: ' + JSON.stringify(kv));
+        try { publishChat(); } catch (e) { /* the next build carries it */ }
+        return true;
+      } catch (e) { say('!! סוגי התראות לא נשמרו: ' + e.message); }
+    }
     /*
       16.10: a tap on a decision card of the Pegasus screen ("פגסוס: <ask> ← <pick>")
       is applied here with no model: the card gets his answer, the work goes to

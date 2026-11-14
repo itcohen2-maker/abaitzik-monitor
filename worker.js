@@ -1208,7 +1208,7 @@ function routinesTick(only) {
   try {
     const R = require('./lib/routines.js');
     const did = R.tick(inst.dataPath, Date.now(), {
-      push: (title, body) => { require('./lib/notify-channels.js').notify(title, body, {}).catch(() => {}); },
+      push: (title, body) => { require('./lib/notify-channels.js').notify(title, body, { kind: 'reminders' }).catch(() => {}); },
       chat: (text, id) => {
         const at = new Date();
         const pad = (n) => String(n).padStart(2, '0');

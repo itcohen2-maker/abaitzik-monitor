@@ -1777,6 +1777,7 @@ button.abtn{border:0;cursor:pointer}
 .skinrow{display:flex;gap:6px;flex:0 0 auto}
 .skb{background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:10px;
  padding:9px 12px;font:500 13.5px Heebo,sans-serif;cursor:pointer;white-space:nowrap}
+#kindBox label{display:inline-flex;align-items:center;gap:4px;margin-inline-end:10px}
 #quietBox input[type=time]{background:var(--sunk);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:6px;font:inherit}
 .skb[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
 .skb:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -5231,6 +5232,20 @@ ${pushUi.html(pushKey())}
   <input type="time" id="quietTo" value="07:00" aria-label="נגמרות ב">
   <button type="button" class="skb" id="quietOn">שמירה</button>
   <button type="button" class="skb" id="quietOff">כבוי</button>
+ </div>
+</div>
+<!-- 14.11.2026: one switch per kind of notification, so only what matters rings (lib/alert-kinds.js). -->
+<div class="alerts" id="kindBox">
+ <div>
+  <b>מה מצלצל בטלפון</b>
+  <small id="kindSaid">מה שכבוי לא מצלצל, ועדיין מופיע במוניטור.</small>
+ </div>
+ <div class="skinrow" role="group" aria-label="סוגי התראות">
+  <label><input type="checkbox" data-kind="answers" checked> תשובות</label>
+  <label><input type="checkbox" data-kind="reminders" checked> תזכורות</label>
+  <label><input type="checkbox" data-kind="files" checked> קבצים חדשים</label>
+  <label><input type="checkbox" data-kind="tasks" checked> משימות</label>
+  <button type="button" class="skb" id="kindSave">שמירה</button>
  </div>
 </div>
 <div class="alerts" id="pingBox">
@@ -10103,6 +10118,23 @@ pingBind();
  document.getElementById('quietOn').addEventListener('click',function(){go(true);});
  document.getElementById('quietOff').addEventListener('click',function(){go(false);});
  paint();
+})();
+/* 14.11 alert kinds: one line to the listener, which applies it with no model. */
+(function(){
+ var b=document.getElementById('kindSave');if(!b)return;
+ var boxes=[].slice.call(document.querySelectorAll('#kindBox input[data-kind]'));
+ var said=document.getElementById('kindSaid');
+ var names={answers:'תשובות',reminders:'תזכורות',files:'קבצים',tasks:'משימות'};
+ var st={};try{st=JSON.parse(localStorage.getItem('kindSet')||'{}');}catch(e){}
+ boxes.forEach(function(x){if(st[x.dataset.kind]===false)x.checked=false;});
+ b.addEventListener('click',function(){
+  var line='סוגי התראות: '+boxes.map(function(x){return names[x.dataset.kind]+' '+(x.checked?'פועל':'כבוי');}).join(', ');
+  sendText('סוגי התראות',line,'הגדרה').then(function(){
+   st={};boxes.forEach(function(x){st[x.dataset.kind]=x.checked;});
+   try{localStorage.setItem('kindSet',JSON.stringify(st));}catch(e){}
+   said.textContent='נשמר. מה שכבוי לא מצלצל, ועדיין מופיע במוניטור.';toast('נשמר.');
+  }).catch(function(){toast('לא יצא, אין רשת. לנסות שוב.');});
+ });
 })();
 setInterval(pingPaint,60000);
 

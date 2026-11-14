@@ -6,6 +6,7 @@
          node notify.js --budget          what is left today, and what is queued
          node notify.js --drain           retry whatever could not go out
          node notify.js --urgent "t" "m"  rings even inside quiet hours (lib/quiet.js)
+         node notify.js --kind=files "t" "m"  answers|reminders|files|tasks, each can be switched off (lib/alert-kinds.js)
 
   This used to post straight to ntfy and ignore the answer. On 13.9 that meant
   the daily quota ran out in complete silence and he found out by asking why
@@ -48,8 +49,15 @@ function line(b) {
   const title = rest[0] || 'עדכון מהמוניטור';
   const body = rest.slice(1).join(' ') || title;
 
-  const r = await ch.notify(title, body, { urgent: args.includes('--urgent') });
-  if (r.held) {
+  // A session tells about its answer through here, so a line of no other kind counts as an answer
+  // for the switches in Settings (lib/alert-kinds.js). --urgent stays unmuted, --kind=<k> says it outright.
+  const urgent = args.includes('--urgent');
+  const k = (args.find(a => a.startsWith('--kind=')) || '').slice(7);
+  const kind = k || require('./lib/alert-kinds.js').guess(title) || (urgent ? null : 'answers');
+  const r = await ch.notify(title, body, { urgent: urgent, kind: kind });
+  if (r.muted) {
+    console.log('סוג ההתראה הזה כבוי בהגדרות: לא צלצל. התשובה כבר בשיחה.');
+  } else if (r.held) {
     console.log('שעות שקטות: ההתראה נשמרה ותצא בבוקר בהתראה אחת. התשובה כבר בשיחה.');
   } else if (r.ok) {
     console.log('נשלח דרך ' + r.channel);
