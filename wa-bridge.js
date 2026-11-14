@@ -608,6 +608,39 @@ async function quickDisconnect(m, tn) {
   return quickReply(m, '✓ קיבלתי, מנתק את המספר הזה מהמוניטור. אפשר לחבר שוב בכל רגע מ 🔌 חיבורים.');
 }
 // Root leaves lines here (the confirmation after the number is mapped); sent as free text, once, inside the 24 hour window.
+/*
+  14.11.2026 (lib/meet-push.js): a message a customer's own monitor sends him first, a chat record with waPush
+  (file name with -push), goes to every phone mapped to that monitor in data/wa-tenants.json. Inside 24 hours of
+  his last message as text, otherwise through the approved template (cfg.template, monitor_update) as one line.
+  Once per phone and record; records older than a day are skipped.
+*/
+async function waTemplate(to, text) {
+  const c = cfg();
+  const body = JSON.stringify({ messaging_product: 'whatsapp', to: to, type: 'template', template: { name: c.template || 'monitor_update',
+    language: { code: c.templateLang || 'he' }, components: [{ type: 'body', parameters: [{ type: 'text', text: waOut.oneLine(text) }] }] } });
+  const r = await req('POST', WA.base(c) + '/' + c.phoneId + '/messages', Object.assign({ 'Content-Type': 'application/json' }, WA.auth(c)), Buffer.from(body, 'utf8'));
+  if (r.status !== 200) throw new Error('graph ' + r.status + ' ' + r.body.toString('utf8').slice(0, 200));
+  return true;
+}
+function waPushSweep() {
+  let map = {}; try { map = JSON.parse(fs.readFileSync(path.join(DATA, 'wa-tenants.json'), 'utf8')) || {}; } catch (e) { return; }
+  const st = loadState(); st.pushed = st.pushed || {}; let ch = false;
+  Object.keys(map).forEach(function (phone) {
+    const t = map[phone]; if (!t || !t.tenant || !t.dir || !/^\d{8,15}$/.test(phone)) return;
+    let files = []; try { files = fs.readdirSync(WT.chatDir(t)).filter(function (f) { return f.indexOf('-push') > -1 && f.endsWith('.json'); }); } catch (e) { return; }
+    files.forEach(function (f) {
+      const k = phone + '/' + t.tenant + '/' + f; if (st.pushed[k]) return;
+      const full = path.join(WT.chatDir(t), f); let d = null;
+      try { if (Date.now() - fs.statSync(full).mtimeMs > 24 * 3600e3) { st.pushed[k] = 1; ch = true; return; } d = JSON.parse(fs.readFileSync(full, 'utf8')); } catch (e) { return; }
+      if (!d || !d.waPush || d.from !== 'claude' || !d.text) return;
+      st.pushed[k] = Date.now(); ch = true;
+      const open = st.lastIn && st.lastIn[phone] && Date.now() - st.lastIn[phone] < 23.5 * 3600e3;
+      (open ? tenantSend(phone, String(d.text)) : waTemplate(phone, d.text)).then(function (ok) { log('wa push ' + t.tenant + ' ' + f + (open ? ' text' : ' template') + (ok === false ? ' (not delivered)' : '')); })
+        .catch(function (e) { log('wa push failed ' + t.tenant + ' ' + f + ': ' + e.message.slice(0, 160)); });
+    });
+  });
+  if (ch) { const ks = Object.keys(st.pushed); if (ks.length > 600) ks.slice(0, ks.length - 600).forEach(function (k) { delete st.pushed[k]; }); saveState(st); }
+}
 function outboxSweep() {
   const dir = path.join(DATA, 'wa-outbox');
   let fl = []; try { fl = fs.readdirSync(dir).filter(function (f) { return /\.json$/.test(f); }).slice(0, 10); } catch (e) { return; }
@@ -703,6 +736,7 @@ function latestOwn(to) {
 // The answers: claude's chat records that answer a message that came from WhatsApp.
 function sweep() {
   outboxSweep();
+  try { waPushSweep(); } catch (e) { log('wa push: ' + e.message); }
   const st = loadState();
   const ids = Object.keys(st.pending);
   if (!ids.length) return;

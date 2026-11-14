@@ -78,13 +78,14 @@ async function main() {
 
   const own = owner();
   let meetings = bh.readList(inst.dataPath, 'meet'), clients = bh.readList(inst.dataPath, 'client');
-  const titles = [];
+  const titles = [], fresh2 = [];
   for (const t of ready.sort((a, b) => Number(a.date) - Number(b.date))) {
     const { meeting, newClient } = bh.meetingFromTranscript(t, { clients, ownerEmails: own.emails, ownerNames: own.names });
     if (newClient && !clients.some((c) => c.id === newClient.id)) clients = clients.concat([newClient]);
     meetings = bh.upsert(meetings, meeting);
     st.seen[t.id] = meeting.at || new Date().toISOString();
     titles.push((meeting.client || meeting.title));
+    fresh2.push(meeting);
     log('meeting ' + t.id + ' -> ' + (meeting.client || 'לא שויך'));
   }
   // The newest finished transcript moves the window; anything still processing stays inside it.
@@ -95,6 +96,8 @@ async function main() {
   bh.writeList(inst.dataPath, 'meet', meetings);
   bh.writeList(inst.dataPath, 'client', clients);
   saveState(st);
+  // 14.11.2026 (lib/meet-push.js): the summary to his WhatsApp, his tasks into his Google Calendar.
+  for (const m of fresh2) { try { const r = require('./lib/meet-push.js').write(inst.dataPath, m); log('push ' + r.chat + ', ' + r.adds.length + ' tasks to the calendar'); } catch (e) { log('!! meet push: ' + e.message); } }
   const msg = titles.length === 1 ? 'סיכום חדש: ' + titles[0] : titles.length + ' סיכומי פגישות חדשים';
   try { execFileSync(process.execPath, ['push.js', 'פיירפליס: ' + msg], { cwd: __dirname, stdio: 'inherit', timeout: 180000 }); } catch (e) { log('!! push: ' + e.message); }
   try { execFileSync(process.execPath, ['notify.js', '🎙️ סיכומי פגישות', msg + '. במסך הבית, באריח סיכומי פגישות.'], { cwd: __dirname, stdio: 'inherit', timeout: 60000 }); } catch (e) { log('!! notify: ' + e.message); }

@@ -159,6 +159,37 @@ function keepRefresh(src, saved, refresh) {
   try { fs.chownSync(f, st.uid, st.gid); fs.chmodSync(f, 0o600); } catch (e) {}
 }
 
+/*
+  14.11.2026 (lib/meet-push.js): items a monitor asks to add, data/cal/add/*.json { title, date, note }, become
+  all-day events in his primary Google Calendar (scope calendar.events), then move to data/cal/add/done.
+  At most 20 a round. A failed one stays and is tried on the next round, three times at most.
+*/
+async function pushAdds(src, access) {
+  const dir = path.join(src.dir, 'data', 'cal', 'add');
+  let fl = []; try { fl = fs.readdirSync(dir).filter((f) => f.endsWith('.json')).slice(0, 20); } catch (e) { return 0; }
+  if (!fl.length || DRY) return 0;
+  const doneDir = path.join(dir, 'done'); fs.mkdirSync(doneDir, { recursive: true });
+  const o = fs.statSync(src.dir); try { fs.chownSync(doneDir, o.uid, o.gid); } catch (e) {}
+  let n = 0;
+  for (const f of fl) {
+    const full = path.join(dir, f), a = readJson(full, null);
+    if (!a || !/^\d{4}-\d{2}-\d{2}$/.test(String(a.date || '')) || !a.title) { try { fs.renameSync(full, path.join(doneDir, f + '.bad')); } catch (e) {} continue; }
+    const end = new Date(Date.parse(a.date + 'T12:00:00Z') + DAY).toISOString().slice(0, 10);
+    const r = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', { method: 'POST',
+      headers: { Authorization: 'Bearer ' + access, 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(30000),
+      body: JSON.stringify({ summary: String(a.title).slice(0, 200), description: String(a.note || '').slice(0, 1000), start: { date: a.date }, end: { date: end } }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      a.tries = (a.tries || 0) + 1; a.lastError = String((j.error && j.error.message) || r.status).slice(0, 120);
+      if (a.tries >= 3) { fs.writeFileSync(path.join(doneDir, f + '.failed'), JSON.stringify(a)); fs.unlinkSync(full); } else fs.writeFileSync(full, JSON.stringify(a));
+      say(src.name + ': פריט ליומן לא נוסף (' + a.lastError + ')'); continue;
+    }
+    a.eventId = j.id; a.addedAt = new Date().toISOString();
+    fs.writeFileSync(path.join(doneDir, f), JSON.stringify(a)); fs.unlinkSync(full); n++;
+  }
+  if (n) say(src.name + ': ' + n + ' פריטים נוספו ליומן');
+  return n;
+}
 async function one(src, now) {
   const saved = savedFor(src);
   const ms = msSaved(src);
@@ -174,6 +205,7 @@ async function one(src, now) {
       if (!ms) return;
     } else {
       flip = status(src, true); googleOk = true;
+      try { await pushAdds(src, c.access); } catch (e) { say(src.name + ': הוספה ליומן נכשלה ' + e.message.slice(0, 80)); }
       events = (await pull(c.access, now)).map((e) => Object.assign({ src: 'google' }, e));
     }
   }
