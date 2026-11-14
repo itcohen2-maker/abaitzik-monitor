@@ -2759,21 +2759,21 @@ body.gH #fcInline{display:none!important}
 :root[data-theme="dark"] body.gH{background-image:radial-gradient(ellipse 80% 45% at 50% 38%,rgba(43,75,216,.30),transparent 70%);background-attachment:fixed}
 
 
-.rpill{display:flex!important;flex-wrap:nowrap!important;align-items:center;gap:4px;padding:4px 5px 4px 6px!important;margin-top:6px;
+.rpill{display:flex!important;flex:1 1 100%;width:100%;box-sizing:border-box;flex-wrap:nowrap!important;align-items:center;gap:4px;padding:4px 5px 4px 6px!important;margin-top:6px;
  border-radius:999px!important;background:rgba(127,127,127,.10)!important;border:1px solid rgba(127,127,127,.28)!important;box-shadow:0 2px 10px rgba(0,0,0,.08)}
 .rpill:focus-within{border-color:var(--accent,#1a73e8)!important;box-shadow:0 0 0 3px rgba(26,115,232,.18)}
-.rpill>input,.rpill>textarea{flex:1 1 auto!important;width:auto!important;min-width:0!important;border:0!important;background:transparent!important;
+.rpill.rpill>input,.rpill.rpill.rpill>textarea{flex:1 1 auto!important;width:auto!important;min-width:0!important;border:0!important;background:transparent!important;
  outline:none!important;box-shadow:none!important;padding:9px 10px!important;margin:0!important;font:16px Heebo,sans-serif!important;color:inherit!important;border-radius:0!important}
-.rpill>textarea{resize:none;min-height:40px;max-height:140px;line-height:1.4}
-.rpill .rpMic,.rpill .rpGo{flex:0 0 40px!important;width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important;
+.rpill>textarea{resize:none;min-height:40px!important;height:40px;max-height:140px;line-height:1.4;align-self:center}
+.rpill.rpill button.rpMic,.rpill.rpill button.rpGo{flex:0 0 40px!important;width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important;
  border-radius:50%!important;border:0!important;padding:0!important;margin:0!important;display:grid!important;place-items:center;cursor:pointer;box-shadow:none!important}
-.rpill .rpMic{background:transparent!important;color:inherit!important;font-size:19px!important;line-height:1}
-.rpill .rpMic.on{background:#fee2e2!important;animation:rpBeat 1s ease-in-out infinite}
-.rpill .rpGo{background:var(--accent,#1a73e8)!important;color:#fff!important;font-size:0!important}
-.rpill .rpGo::after{content:"↑";font:800 19px/1 Heebo,sans-serif}
-.rpill .rpGo:disabled{opacity:.45}
+.rpill.rpill button.rpMic{background:transparent!important;color:inherit!important;font-size:19px!important;line-height:1}
+.rpill.rpill button.rpMic.on{background:#fee2e2!important;animation:rpBeat 1s ease-in-out infinite}
+.rpill.rpill button.rpGo{background:var(--accent,#1a73e8)!important;color:transparent!important;font-size:0!important;line-height:0!important}
+.rpill.rpill button.rpGo::after{content:"↑";font:800 19px/1 Heebo,sans-serif;color:#fff}
+.rpill.rpill button.rpGo:disabled{opacity:.45}
 @keyframes rpBeat{50%{box-shadow:0 0 0 6px rgba(220,38,38,.18)}}
-@media(prefers-reduced-motion:reduce){.rpill .rpMic.on{animation:none}}
+@media(prefers-reduced-motion:reduce){.rpill.rpill button.rpMic.on{animation:none}}
 
 .mob{display:flex;gap:6px;flex:0 0 auto}
 .mob button{background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:10px;
@@ -2924,7 +2924,7 @@ body.gH #fcInline{display:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-14T08:23:26.024Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-14T08:28:04.669Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4871,7 +4871,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='0916d1ae96';
+var CODE_ID='c0a7681abc';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -19594,18 +19594,27 @@ function renderHome(){
 })();
 
 (function(){
- var RP_SEL=['.bzEd','.ldNoteBox','.rpWant'];
- function texts(b){return Array.prototype.filter.call(b.children,function(e){return (e.tagName==='TEXTAREA'||(e.tagName==='INPUT'&&!/^(checkbox|radio|hidden|file|email|tel|date|time|number)$/i.test(e.type||'')));});}
+ var RP_SEL=['.bzEd','.fv-cmt','.pjFbox','.pjNewReq','.icbox','.rform'];
+ function isText(e){return e.tagName==='TEXTAREA'||(e.tagName==='INPUT'&&!/^(checkbox|radio|hidden|file|email|tel|date|time|number|submit|button)$/i.test(e.type||''));}
+ function texts(b){return Array.prototype.filter.call(b.querySelectorAll('input,textarea'),isText);}
  function dress(b){
-  if(b.classList.contains('rpill')||b.getAttribute('data-rp')==='no')return;
-  var t=texts(b),bt=Array.prototype.filter.call(b.children,function(e){return e.tagName==='BUTTON';});
-  if(t.length!==1||bt.length!==1||b.querySelectorAll('input,textarea,select').length!==1)return;
-  var go=bt[0];
-  b.classList.add('rpill');
+  if(b.getAttribute('data-rp'))return;
+  var t=texts(b);
+  if(t.length!==1||b.querySelectorAll('select').length){b.setAttribute('data-rp','no');return;}
+  var go=null;
+  if(b.tagName==='FORM'){var sb=b.querySelectorAll('button[type=submit]');if(sb.length===1)go=sb[0];}
+  else{var bt=Array.prototype.filter.call(b.querySelectorAll('button'),function(x){return !x.classList.contains('rpMic');});if(bt.length===1)go=bt[0];}
+  if(!go){b.setAttribute('data-rp','no');return;}
+  b.setAttribute('data-rp','1');
+  var w=document.createElement('div');w.className='rpill';
+  t[0].parentNode.insertBefore(w,t[0]);
+  w.appendChild(t[0]);
+  var m=document.createElement('button');m.type='button';m.className='rpMic';m.setAttribute('aria-label','להקליט במקום לכתוב');m.textContent='🎤';
+  w.appendChild(m);
   go.classList.add('rpGo');
   if(!go.getAttribute('aria-label'))go.setAttribute('aria-label',(go.textContent||'שליחה').trim());
-  var m=document.createElement('button');m.type='button';m.className='rpMic';m.setAttribute('aria-label','להקליט במקום לכתוב');m.textContent='🎤';
-  b.insertBefore(m,go);
+  w.appendChild(go);
+  if(t[0].tagName==='TEXTAREA'){t[0].rows=1;t[0].addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,140)+'px';});}
  }
  function up(){
   try{Array.prototype.forEach.call(document.querySelectorAll(RP_SEL.join(',')),dress);}catch(e){}
@@ -19626,7 +19635,7 @@ function renderHome(){
  document.addEventListener('click',function(e){
   var m=e.target&&e.target.closest?e.target.closest('.rpill .rpMic'):null;if(!m)return;
   e.preventDefault();e.stopPropagation();
-  var b=m.parentNode,inp=texts(b)[0];if(!inp)return;
+  var b=m.parentNode,inp=b.querySelector('input,textarea');if(!inp)return;
   if(recBtn===m){stop();return;}
   stop();
   var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
