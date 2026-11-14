@@ -19002,6 +19002,9 @@ function lbState(r){var s=r.status||'חדש';return s==='נסגר'?'ok':s==='א�
 function lbWa(p){var d=String(p||'').replace(/[^0-9]/g,'');if(d.indexOf('0')===0)d='972'+d.slice(1);return 'https://wa.me/'+d;}
 function leadBoard(wk){
  if(typeof wk==='number')LB_WEEK=wk;
+ // the leads travel sealed and load on demand, like in 💼 העסק שלי
+ if(typeof ensure==='function'&&!(D.biz&&D.biz.length)&&!leadBoard._t){leadBoard._t=1;return ensure('biz',function(){leadBoard._t=0;leadBoard();});}
+ leadBoard._t=0;
  var old=document.getElementById('bdGrid');if(old)old.remove();
  var L=(D.biz||[]).filter(function(r){return r&&r.kind==='lead'&&!r.test;});
  var DN=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'],DS=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
