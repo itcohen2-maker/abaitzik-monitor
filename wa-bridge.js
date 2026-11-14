@@ -896,50 +896,19 @@ async function payDone(u, s) {
   setup/addon-provision.sh. Itzik only reads a line in 📋; nothing waits for him.
 */
 async function addonDone(u, s) {
-  const P = require('./lib/sumit.js'), A = require('./lib/addons.js'), PIO = require('./lib/plan-io.js');
+  // 14.11.2026: the logic lives in lib/addon-pay.js, tested end to end against a fake SUMIT (tests/addon-pay.test.js).
   const oid = u.pathname.split('/').pop();
-  if (!/^[a-f0-9]{18}$/.test(oid)) throw new Error('bad order id');
-  const of = path.join(DATA, 'pay', 'orders', oid + '.json');
-  const order = JSON.parse(fs.readFileSync(of, 'utf8'));
-  const who = payWho(order.tenant);
-  const back = (qs) => { s.writeHead(302, { Location: (who.home || 'https://it-solution.co.il/') + qs }); s.end(); };
-  if (order.status === 'done') return back('?paid=1&addon=' + order.kind);
-  const pid = String(u.searchParams.get('OG-PaymentID') || '').replace(/\D/g, '');
-  const ext = String(u.searchParams.get('OG-ExternalIdentifier') || '');
-  if (!pid || (ext && ext !== order.tenant)) throw new Error('addon return params');
-  const rec = path.join(DATA, 'pay', pid + '.json');
-  let prev = null; try { prev = JSON.parse(fs.readFileSync(rec, 'utf8')); } catch (e) {}
-  if (prev && prev.order !== oid) throw new Error('payment ' + pid + ' belongs to another order');
-  const p = await P.getPayment(pid);
-  if (!P.paymentOk(p, A.total(order))) throw new Error('addon payment ' + pid + ' not valid');
-  const out = { at: new Date().toISOString(), tenant: order.tenant, order: oid, kind: order.kind, paymentId: Number(pid), customerId: p.CustomerID, amount: p.Amount };
-  fs.writeFileSync(rec, JSON.stringify(out, null, 1));
-  const before = PIO.stateOf(order.tenant);
-  const after = A.apply(before, order, pid);
-  if (after && after !== before) PIO.write(order.tenant, after);
-  if (order.monthly) {
-    try {
-      if (order.replace) {
-        const items = await P.listRecurring(p.CustomerID);
-        const pk = A.packageItems(items);
-        // A standing order we can not tell apart is never doubled: Itzik is told instead.
-        if (!pk.length && items.length) throw new Error('לא נמצאה הוראת הקבע של החבילה מבין ' + items.length + ', לבדוק בסאמיט');
-        for (const it of pk) await P.cancelRecurring(p.CustomerID, it.ID);
-        out.cancelled = pk.map((x) => x.ID);
-      }
-      out.recurring = await P.startRecurring(p.CustomerID, undefined, undefined, order.monthly);
-    } catch (e) { out.recurringError = e.message; log('addon recurring: ' + e.message); }
+  let who = { home: null, name: '' };
+  try { who = payWho(JSON.parse(fs.readFileSync(path.join(DATA, 'pay', 'orders', oid + '.json'), 'utf8')).tenant); } catch (e) {}
+  const r = await require('./lib/addon-pay.js').done({ DATA, P: require('./lib/sumit.js'), PIO: require('./lib/plan-io.js') }, oid,
+    u.searchParams.get('OG-PaymentID'), String(u.searchParams.get('OG-ExternalIdentifier') || ''));
+  if (r.out) {
+    const o = r.order, out = r.out;
+    if (out.recurringError) log('addon recurring: ' + out.recurringError);
+    try { require('./lib/handle.js').complete({ key: 'paid-' + out.paymentId, kind: 'lead', who: who.name, title: 'שילם ' + out.amount + ' ₪: ' + o.title + '. נפתח לבד.' + (out.recurringError ? ' החיוב החודשי לא עודכן: ' + out.recurringError : (o.monthly ? ' החיוב החודשי מתעדכן מהחודש הבא.' : '')), link: 'biz' }); } catch (e) { log('addon handle: ' + e.message); }
+    log('addon paid ' + o.tenant + ' ' + o.kind + ' ' + out.paymentId);
   }
-  if (order.kind === 'bank' || order.kind === 'accounting') {
-    const pd = path.join(DATA, 'pay', 'provision'); fs.mkdirSync(pd, { recursive: true });
-    fs.writeFileSync(path.join(pd, order.tenant + '-' + order.kind + '.json'), JSON.stringify({ tenant: order.tenant, kind: order.kind, answers: order.answers || {}, order: oid, at: out.at, state: 'queued' }, null, 1));
-  }
-  order.status = 'done'; order.paymentId = Number(pid); order.doneAt = out.at;
-  fs.writeFileSync(of, JSON.stringify(order, null, 1));
-  fs.writeFileSync(rec, JSON.stringify(out, null, 1));
-  try { require('./lib/handle.js').complete({ key: 'paid-' + pid, kind: 'lead', who: who.name, title: 'שילם ' + p.Amount + ' ₪: ' + order.title + '. נפתח לבד.' + (out.recurringError ? ' החיוב החודשי לא עודכן: ' + out.recurringError : (order.monthly ? ' החיוב החודשי מתעדכן מהחודש הבא.' : '')), link: 'biz' }); } catch (e) { log('addon handle: ' + e.message); }
-  log('addon paid ' + order.tenant + ' ' + order.kind + ' ' + pid);
-  back('?paid=1&addon=' + order.kind);
+  s.writeHead(302, { Location: (who.home || 'https://it-solution.co.il/') + r.qs }); s.end();
 }
 // 14.11.2026 (lib/csign.js): his client opened or signed; a message in the customer's own monitor, and a 📋 line if that fails.
 function csignTell(tenant, text) {
