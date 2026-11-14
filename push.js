@@ -92,6 +92,15 @@ function take() {
 function release() { try { const c = readLock(); if (c && c.pid === process.pid) fs.unlinkSync(LOCK); } catch (e) {} }
 
 const git = (...a) => execFileSync('git', a, { cwd: HERE, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] });
+/*
+  14.11: a pull --rebase that hit a conflict (both sides rebuilt docs/) was left half done, and the
+  watchdog then called git stuck. On failure the rebase is aborted: the repo is back where it was,
+  and the next build publishes again.
+*/
+const pullRebase = () => {
+  try { git('pull', '--rebase', '--autostash'); }
+  catch (e) { try { git('rebase', '--abort'); } catch (e2) { /* no rebase running */ } throw e; }
+};
 
 async function main() {
   const until = Date.now() + WAIT_MS;
@@ -148,7 +157,7 @@ async function main() {
     catch (e) {
       try {
         say('הדחיפה נדחתה, מושך ומנסה שוב.');
-        git('pull', '--rebase', '--autostash');
+        pullRebase();
         git('push'); markPushed();
       } catch (e2) {
         if (ownPage) throw e2;
@@ -173,7 +182,7 @@ async function flush() {
       try { ahead = git('rev-list', '--count', '@{u}..HEAD').trim(); } catch (e) { ahead = '1'; }
       if (ahead === '0') { say('flush: אין מה לדחוף.'); return; }
       try { git('push'); }
-      catch (e) { say('flush: נדחה, מושך ומנסה שוב.'); git('pull', '--rebase', '--autostash'); git('push'); }
+      catch (e) { say('flush: נדחה, מושך ומנסה שוב.'); pullRebase(); git('push'); }
       markPushed();
       say('נדחף יחד: ' + ahead + ' קומיטים');
     } finally { release(); }
