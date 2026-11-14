@@ -80,7 +80,7 @@ function Prompt($t) {
     ('  - כל תוצר שהלקוח צריך לקבל (תמונה, PDF, קובץ AI או PSD, מצגת) שומרים גם בתיקייה הזאת: ' + (Join-Path $Work ('out-' + $t.id))),
     '    כל קובץ שם עולה למוניטור לבד אחרי שתסיים, ומופיע ללקוח עם תמונה וכפתור הורדה. שם קובץ בעברית פשוטה שאומר מה זה.',
     '    תמונה לתצוגה: גם JPG או PNG, לא רק AI או PSD, כדי שהלקוח יראה את התוצאה בלי לפתוח תוכנה.',
-    '  - אל תפתח דפדפן ואל תשלח כלום לאף אחד. לא מיילים, לא הודעות.',
+    $(if ($t.chrome) { '  - במשימה הזאת עובדים בכרום של המחשב, רק באתר שהמשימה מציינת. לא מקלידים סיסמה, קוד או פרט אישי, אף פעם. לא שולחים כלום לאף אחד.' } else { '  - אל תפתח דפדפן ואל תשלח כלום לאף אחד. לא מיילים, לא הודעות.' }),
     '  - התשובה פשוטה מאוד: משפט אחד מה עשית, ושאלה אחת אם צריך החלטה. בלי נתיבים ובלי שמות טכניים.',
     '  - בלי מקפים ובלי אימוג׳י בתשובה.',
     '',
@@ -97,10 +97,13 @@ function RunClaude($t) {
   $pf = Join-Path $Here ('prompt-' + $t.id + '.txt')
   [IO.File]::WriteAllText($pf, (Prompt $t), (New-Object Text.UTF8Encoding $false))
   $model = if ($Cfg.model) { $Cfg.model } else { 'haiku' }
+  # 14.11: a task may name its model (the bank download needs more than haiku) and ask for Chrome.
+  if ($t.model -and ([string]$t.model -match '^(haiku|sonnet|opus)$')) { $model = [string]$t.model }
+  $chromeArg = if ($t.chrome) { ' --chrome' } else { '' }
   $modes = @('--dangerously-skip-permissions', '--permission-mode acceptEdits')
   foreach ($mode in $modes) {
     $psi = New-Object Diagnostics.ProcessStartInfo
-    $cl = '-p --output-format json --model ' + $model + ' ' + $mode
+    $cl = '-p --output-format json --model ' + $model + $chromeArg + ' ' + $mode
     if ($exe -like '*.exe') { $psi.FileName = $exe; $psi.Arguments = $cl }
     else { $psi.FileName = 'cmd.exe'; $psi.Arguments = '/d /s /c ""' + $exe + '" ' + $cl + '"' }
     $psi.WorkingDirectory = $Work

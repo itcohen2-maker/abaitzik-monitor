@@ -46,8 +46,24 @@ const MAX_TRIES = 2;
   heartbeat: seen in the last 3 minutes means on, and the reply can say so.
 */
 const SEEN = path.join(inst.dataPath, "status", "pc-seen.json");
-function pcOnline() {
-  const s = readJson(SEEN, null);
+/*
+  14.11.2026, a second computer on the same monitor (Itzik's bank computer): a task can
+  name the computer it is for (add --pc <name>), and that computer asks with next --pc
+  <name>. A computer without a name takes only tasks without one, so Itzik's own PC
+  never claims a bank task. Each named computer keeps its own heartbeat file.
+*/
+const PC_RE = /^[a-z0-9_-]{1,24}$/;
+function seenFile(name) { return name ? path.join(inst.dataPath, 'status', 'pc-seen-' + name + '.json') : SEEN; }
+function argOf(list, flag) { const i = list.indexOf(flag); return i > -1 ? String(list[i + 1] || '') : ''; }
+// 14.11: a task added with --wa has no chat message; its answer goes to Itzik on WhatsApp.
+function waOwner(text) {
+  try {
+    const out = require('./lib/wa-out.js');
+    return out.sendOwner(inst.dataPath, text).then((r) => console.log('wa ' + r.via), (e) => console.error('wa failed: ' + e.message));
+  } catch (e) { console.error('wa failed: ' + e.message); return Promise.resolve(); }
+}
+function pcOnline(name) {
+  const s = readJson(seenFile(name), null);
   const at = s && Date.parse(s.at);
   return { on: Boolean(at && Date.now() - at < 3 * 60 * 1000), at: s ? s.at : null };
 }
@@ -164,6 +180,7 @@ function failExhausted() {
   const dead = locked(() => all().filter((x) => x.status === 'claimed' && now - Date.parse(x.claimedAt) > STALE_MS && (x.tries || 0) >= MAX_TRIES)
     .map((x) => { x.status = 'failed'; x.lastError = 'המחשב לקח את המשימה ' + x.tries + ' פעמים ולא החזיר תשובה'; write(x); return x; }));
   dead.filter((t) => !t.test).forEach((t) => {
+    if (t.wa) { waOwner('המחשב לקח משימה ולא החזיר תשובה: ' + t.task.slice(0, 80)); return; }
     reply(t, 'המחשב ניסה פעמיים ולא החזיר תשובה על זה. מה שנתקע: הסשן במחשב נגמר בלי להודיע. אפשר לבקש שוב.', 'failed');
     push('משימת מחשב נכשלה: ' + t.task.slice(0, 60));
   });
@@ -176,8 +193,15 @@ if (cmd === 'add') {
   const re = ri > -1 ? rest[ri + 1] : '';
   const ti = rest.indexOf('--then');
   const then = ti > -1 ? String(rest[ti + 1] || '').trim() : '';
-  const task = rest.filter((x, i) => x !== '--test' && x !== '--quiet' && i !== ri && i !== ri + 1 && i !== ti && i !== ti + 1).join(' ').trim();
-  if ((!re && !test) || !task) { console.error('usage: node pc-task.js add --re <id> [--then "<what the server does next>"] "<task>"'); process.exit(2); }
+  const wa = rest.includes('--wa');
+  const chrome = rest.includes('--chrome');
+  const pci = rest.indexOf('--pc'), mi = rest.indexOf('--model');
+  const pcName = argOf(rest, '--pc'), model = argOf(rest, '--model');
+  if (pci > -1 && !PC_RE.test(pcName)) { console.error('bad --pc name'); process.exit(2); }
+  if (mi > -1 && !/^(haiku|sonnet|opus)$/.test(model)) { console.error('bad --model'); process.exit(2); }
+  const skip = new Set([ri, ri + 1, ti, ti + 1].concat(pci > -1 ? [pci, pci + 1] : [], mi > -1 ? [mi, mi + 1] : []).filter((i) => i > -1));
+  const task = rest.filter((x, i) => x !== '--test' && x !== '--quiet' && x !== '--wa' && x !== '--chrome' && !skip.has(i)).join(' ').trim();
+  if ((!re && !test && !wa) || !task) { console.error('usage: node pc-task.js add --re <id> | --wa [--pc <name>] [--chrome] [--model sonnet] [--then "<what the server does next>"] "<task>"'); process.exit(2); }
   // 15.10, Rinat's deck: the session queued the task and wrote the synthesis file after it.
   // Her computer claimed the task 23 seconds later, listed the monitor's files, the file
   // was not there yet, and the session there gave up: "the content file is not on the
@@ -191,22 +215,25 @@ if (cmd === 'add') {
   }
   const id = 'pc-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
   write(Object.assign({ id, re, at: new Date().toISOString(), task, status: 'pending', tries: 0 },
-    test ? { test: true } : {}, quiet ? { quiet: true } : {}, then ? { then } : {}));
-  const o = pcOnline();
+    test ? { test: true } : {}, quiet ? { quiet: true } : {}, then ? { then } : {},
+    wa ? { wa: true } : {}, pcName ? { pc: pcName } : {}, chrome ? { chrome: true } : {}, model ? { model } : {}));
+  const o = pcOnline(pcName);
   console.log(id);
   console.log(o.on ? 'pc: on' : 'pc: off, last seen ' + (o.at || 'never'));
 } else if (cmd === 'online') {
-  const o = pcOnline();
+  const o = pcOnline(argOf(rest, '--pc'));
   console.log(o.on ? 'on' : 'off ' + (o.at || 'never'));
 } else if (cmd === 'next') {
   // The PC asks every minute it is awake, so this is also its heartbeat.
   // pegasus-server.js reads it to stand in for the PC only while it is off.
-  try { fs.writeFileSync(path.join(inst.dataPath, 'status', 'pc-seen.json'), JSON.stringify({ at: new Date().toISOString() })); } catch (e) {}
+  const me = argOf(rest, '--pc');
+  if (me && !PC_RE.test(me)) { console.error('bad --pc name'); process.exit(2); }
+  try { fs.writeFileSync(seenFile(me), JSON.stringify({ at: new Date().toISOString() })); } catch (e) {}
   failExhausted();
   const t = locked(() => {
     const now = Date.now();
-    const free = all().find((x) => x.status === 'pending' ||
-      (x.status === 'claimed' && now - Date.parse(x.claimedAt) > STALE_MS && (x.tries || 0) < MAX_TRIES));
+    const free = all().find((x) => (x.pc || '') === me && (x.status === 'pending' ||
+      (x.status === 'claimed' && now - Date.parse(x.claimedAt) > STALE_MS && (x.tries || 0) < MAX_TRIES)));
     if (!free) return null;
     free.status = 'claimed';
     free.claimedAt = new Date().toISOString();
@@ -233,6 +260,11 @@ if (cmd === 'add') {
     return x;
   });
   if (t.test) { console.log('test task, answer kept in the record'); process.exit(0); }
+  if (t.wa) {
+    locked(() => { const x = get(t.id); x.answer = text; write(x); });
+    waOwner(text).then(() => process.exit(0));
+    return;
+  }
   if (t.quiet) {
     locked(() => { const x = get(t.id); x.answer = text; write(x); });
     push('המחשב סיים משימה קבועה: ' + t.task.slice(0, 60));
@@ -255,10 +287,16 @@ if (cmd === 'add') {
   const t = locked(() => {
     const x = get(rest[0]);
     x.lastError = why.slice(0, 500);
-    x.status = (x.tries || 0) >= MAX_TRIES ? 'failed' : 'pending';
+    // 14.11: a WhatsApp task (the bank) is not tried again: the bank session it needed is gone.
+    x.status = (x.tries || 0) >= MAX_TRIES || x.wa ? 'failed' : 'pending';
     write(x);
     return x;
   });
+  if (t.wa && !t.test) {
+    console.log(t.status);
+    waOwner('המחשב לא הצליח: ' + why.slice(0, 300)).then(() => process.exit(0));
+    return;
+  }
   if (t.status === 'failed' && !t.test) {
     reply(t, 'המחשב ניסה פעמיים ולא הצליח לבצע את זה. מה שנתקע: ' + why.slice(0, 300), 'failed');
     push('משימת מחשב נכשלה: ' + t.task.slice(0, 60));

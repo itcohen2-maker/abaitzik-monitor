@@ -484,6 +484,10 @@ async function onMessage(m, contactName) {
       : 'קיבלתי, אבל את סוג ההודעה הזה אני עוד לא קורא. אפשר לכתוב לי אותה במילים?');
     return;
   }
+  // 14.11: "בנק" / "התחברתי" / "ביטול בנק" run the bank download on the bank computer (lib/bank-flow.js).
+  try {
+    if (isOwnerInstance() && await require('./lib/bank-flow.js').waTurn({ root: ROOT, dataPath: DATA, text: t, send: (s) => waSend(m.from, s) })) return;
+  } catch (e) { log('bank flow failed: ' + e.message); await waSend(m.from, 'חיבור הבנק נתקע: ' + String(e.message).slice(0, 160)); return; }
   if (await chatTurn(m.from, t, m)) return;
   if (await trainTurn(m.from, t)) return;
   const vc = voiceCommand(t);
