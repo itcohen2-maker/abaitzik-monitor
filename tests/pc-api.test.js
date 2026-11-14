@@ -120,3 +120,19 @@ test('pc api: a long done body (a thousand file lines) reaches pc-task, only a h
     assert.equal(calls.length, 1);
   } finally { server.close(); }
 });
+
+test('pc api: pcKeys adds a second named computer, each key asks only for its own tasks', async () => {
+  const calls = [];
+  const dataPath = tmp();
+  fs.writeFileSync(path.join(dataPath, 'keys.json'), JSON.stringify({ pcKey: 'a'.repeat(32), pcName: 'bank', pcKeys: { lolos: 'c'.repeat(32), 'Bad Name': 'd'.repeat(32), short: 'e' } }));
+  const api = pcApi({ name: 'rinat', dir: '/x', dataPath, log: () => {},
+    run: async (cmd, id) => { calls.push([cmd, id]); return { code: 0, out: '', err: '' }; } });
+  const { server, call } = await serve(api);
+  try {
+    assert.equal((await call('GET', '/up/v1/rinat/pc/next', undefined, 'a'.repeat(32))).status, 204);
+    assert.equal((await call('GET', '/up/v1/rinat/pc/next', undefined, 'c'.repeat(32))).status, 204);
+    assert.equal((await call('GET', '/up/v1/rinat/pc/next', undefined, 'd'.repeat(32))).status, 401);
+    assert.equal((await call('GET', '/up/v1/rinat/pc/next', undefined, 'e')).status, 401);
+    assert.deepEqual(calls, [['next', ['--pc', 'bank']], ['next', ['--pc', 'lolos']]]);
+  } finally { server.close(); }
+});
