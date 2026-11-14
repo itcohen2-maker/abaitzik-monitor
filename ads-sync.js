@@ -116,8 +116,24 @@ async function one(src) {
   if (write(src, { ok: true, who: saved.who || '', accounts, at: new Date().toISOString() })) publish(src);
 }
 
+/*
+  14.11.2026: every customer monitor joins by itself, like social-dm-tenants.js: a tenant line in data/cal/sources.json
+  (setup page token) brings its meta step, from the moment he connected Facebook on that page.
+*/
+function all() {
+  const list = readJson(SOURCES, []);
+  const known = new Set(list.map((t) => t && t.name));
+  readJson(path.join(HERE, 'data', 'cal', 'sources.json'), []).forEach((c) => {
+    if (!c || !c.tenant || !c.setup || known.has(c.name)) return;
+    const t = { name: c.name, dir: c.dir || '/home/' + c.name + '/' + c.name + '-monitor', setup: c.setup, step: 'meta', tenant: true };
+    // Only once he really connected Facebook: before Meta's App Review a "connect" button on his page would fail for him.
+    if (savedFor(t)) list.push(t);
+  });
+  return list;
+}
+
 (async () => {
-  for (const src of readJson(SOURCES, [])) {
+  for (const src of all()) {
     try { await one(src); } catch (e) { say(src.name + ': ' + e.message.slice(0, 120)); }
   }
 })();
