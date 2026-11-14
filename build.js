@@ -20062,11 +20062,12 @@ function bizSheet(t0){
     // 13.11.2026, Itzik: "להעביר את הליד לטום ... אני אחליט למי אני שולח". WhatsApp opens with every detail
     // already written and no recipient, so he picks who gets it (טום or anyone).
     var fwd='<a class="yb yb1 ldFwd" href="https://wa.me/?text='+encodeURIComponent('ליד להעברה'+NL+all)+'" target="_blank" rel="noopener">📤 להעביר בוואטסאפ למישהו אחר (טום, סוכן)</a>';
-    h+='<details class="ldRow'+(r.test?' ldTest':(r.status==='חדש'?' ldNew':''))+'" data-id="'+esc(r.id)+'" data-n="'+esc(r.name||'')+'"><summary><span>'+esc(dd)+'</span><b>'+esc(r.name||'בלי שם')+(r.test?'<span class="ldTestTag">בדיקה שלך</span>':'')+((r.phone||em)?'<small class="ldC"><bdi>'+esc([r.phone,em].filter(Boolean).join(' · '))+'</bdi></small>':'<small class="ldC">אין טלפון</small>')+'</b><span>'+esc(src)+'</span><span class="ldSt">'+esc(r.status||'')+'</span></summary>'
+    h+='<details class="ldRow'+(r.test?' ldTest':(r.status==='חדש'?' ldNew':''))+'" data-id="'+esc(r.id)+'" data-n="'+esc(r.name||'')+'"><summary><span>'+esc(dd)+(hm?' · '+esc(hm):'')+'</span><b>'+esc(r.name||'בלי שם')+(r.test?'<span class="ldTestTag">בדיקה שלך</span>':'')+((r.phone||em)?'<small class="ldC"><bdi>'+esc([r.phone,em].filter(Boolean).join(' · '))+'</bdi></small>':'<small class="ldC">אין טלפון</small>')+'</b><span>'+esc(src)+'</span><span class="ldSt">'+esc(r.status||'')+'</span></summary>'
      +'<div class="ldBody">'
      // 14.11.2026, Itzik: "למעלה יהיה כתוב השם שלו, המייל שלו, למה, אם הוא כתב משהו, טלפון, ורק למטה מאיפה הוא הגיע.
      // אחרי זה ... הערה ... שליחה לוואטסאפ אחר". Who he is and what he wants on top, the note, the forward, and where from last.
      +'<div class="ldTop"><b class="ldName">'+esc(r.name||'בלי שם')+'</b>'
+     +(dd?'<small>🕐 הגיע ב '+esc(dd)+(hm?' בשעה '+esc(hm):'')+'</small>':'') // 14.11.2026, Itzik: "בלידים תרשום גם באיזה שעה הגיעו"
      +(em?'<small>✉️ <bdi>'+esc(em)+'</bdi></small>':'<small class="ldNo">✉️ לא השאיר מייל</small>')
      +(r.last?'<p class="ldLast">💬 "'+esc(r.last)+'"</p>':'')
      +(r.note?'<small class="ldWhy" style="white-space:pre-line">'+esc(ldNote(r.note))+'</small>':'')
