@@ -4439,6 +4439,7 @@ ${require('./lib/gemini-home.js').css}
 ${require('./lib/reply-pill.js').css}
 ${require('./lib/agents-ui.js').css}
 ${require('./lib/mic-colors.js').css}
+${require('./lib/motion.js').css}
 .mob{display:flex;gap:6px;flex:0 0 auto}
 .mob button{background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:10px;
  padding:9px 12px;font:500 13.5px Heebo,sans-serif;cursor:pointer;white-space:nowrap}
@@ -24507,7 +24508,7 @@ ${require('./lib/activity-ui.js').js}
 on('gActLog',function(){pane('Lg');renderActLog();return false;});
 /*ITZIK:END*/
 ${require('./lib/home-ui.js').js}
-${require('./lib/gemini-home.js').js}${require('./lib/reply-pill.js').js}${require('./lib/agents-ui.js').js(inst.name === 'abaitzik')}${require('./lib/mic-colors.js').js}${inst.name === 'abaitzik' ? require('./lib/demo-mode.js').js : ''}${inst.bizHome ? require('./lib/biz-home.js').js : ''}${inst.name !== 'abaitzik' ? require('./lib/shop-list.js').js : ''}
+${require('./lib/gemini-home.js').js}${require('./lib/reply-pill.js').js}${require('./lib/agents-ui.js').js(inst.name === 'abaitzik')}${require('./lib/mic-colors.js').js}${require('./lib/motion.js').js}${inst.name === 'abaitzik' ? require('./lib/demo-mode.js').js : ''}${inst.bizHome ? require('./lib/biz-home.js').js : ''}${inst.name !== 'abaitzik' ? require('./lib/shop-list.js').js : ''}
 ${require('./lib/skins-ui.js').js}
 boot('design',dzBoot);
 ${pushUi.js(pushKey())}
