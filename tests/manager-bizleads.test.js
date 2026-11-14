@@ -13,7 +13,8 @@ test('bizLeadsItem: a lead still new after two hours is named on the card', () =
   ], NOW);
   assert.strictEqual(it.st, 'warn');
   assert.match(it.t, /ליד אחד/);
-  assert.match(it.sub, /אופירה \(מאתמול\)/);
+  // 14.11.2026 (3c4d6766): the hour each lead came in is on the card too
+  assert.match(it.sub, /אופירה \(הגיע 13\.11 בשעה 00:13, אתמול\)/);
   assert.doesNotMatch(it.sub, /טרי|בדיקה|סגור/);
 });
 test('bizLeadsItem: the day to get back has come', () => {
