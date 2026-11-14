@@ -226,6 +226,9 @@ test('connections: Itzik\'s own row is unchanged and has no link', () => {
   assert.ok(!row.link);
 });
 
-test('connections: no plan keys were changed', () => {
-  assert.deepStrictEqual(CONN.PLAN_KEYS.basic, ['google', 'wa', 'sign']);
+// 14.11.2026: the split follows the offer page (Google, Facebook and LinkedIn in every package; bank and accounting are paid add-ons).
+test('connections: the plan keys follow the offer page', () => {
+  assert.deepStrictEqual(CONN.PLAN_KEYS.basic, ['google', 'wa', 'sign', 'meta', 'linkedin']);
+  assert.ok(CONN.PLAN_KEYS.small.indexOf('fireflies') >= 0);
+  Object.keys(CONN.PLAN_KEYS).forEach((k) => { assert.ok(CONN.PLAN_KEYS[k].indexOf('bank') < 0 && CONN.PLAN_KEYS[k].indexOf('acc') < 0); });
 });
