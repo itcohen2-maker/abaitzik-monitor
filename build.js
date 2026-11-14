@@ -18016,19 +18016,20 @@ on('gClalit',clalitSheet);
   only once they are in the monitor; Drive links (u) open the folder.
 */
 var TOM_ITEMS=[
-// 13.11 night, Itzik: only what is in the campaign. Images other than burning credits out, Tom's 3 pain images in. Story versions at the end.
-// The monitor shows this list newest first (reversed), so stories are first here to land at the end on screen.
- {n:"11",t:"📲 סטורי · עסקי ואישי · it-solution.co.il/start",r:"wa-hub-personal-story.mp4"},
- {n:"10",t:"📲 סטורי · מי לא שילם לך · it-solution.co.il/start",r:"wa-hub-gviya-story.mp4"},
- {n:"9",t:"📲 סטורי · מפחד ממה שאתה לא יודע?",r:"ads-pain3-story.png"},
- {n:"8",t:"📲 סטורי · המידע של הלקוחות. באמת מוגן?",r:"ads-pain2-story.png"},
- {n:"7",t:"📲 סטורי · יש לך אתר שעובד. ואין אפליקציה?",r:"ads-pain1-story.png"},
- {n:"6",t:"✅ באוויר 13.11 · אושרה · 🖼️ מפחד ממה שאתה לא יודע? · לצ׳אט",r:"ads-pain3-feed.png"},
- {n:"5",t:"✅ באוויר 13.11 · אושרה · 🖼️ המידע של הלקוחות. באמת מוגן? · לצ׳אט",r:"ads-pain2-feed.png"},
- {n:"4",t:"✅ באוויר 13.11 · אושרה · 🖼️ יש לך אתר שעובד. ואין אפליקציה? · לצ׳אט",r:"ads-pain1-feed.png"},
- {n:"3",t:"✅ באוויר · 🖼️ שרפת קרדיטים · Base44 · המודעה שעובדת · לצ׳אט",r:"ads-nov01-card9-story.mp4"},
- {n:"2",t:"✅ באוויר 13.11 · 🎬 סרטון · עסקי ואישי · לשבוע התנסות בחינם",r:"wa-hub-personal-ad.mp4"},
- {n:"1",t:"✅ באוויר 13.11 · 🎬 סרטון · מי לא שילם לך · לשבוע התנסות בחינם",r:"wa-hub-gviya-ad.mp4"}
+// 14.11.2026, Itzik: "תסדר לי באריח את כל הסרטונים של הקמפיין העדכניים". Exactly what is ACTIVE in Meta at 15:55 UTC:
+// Ilay's four monitor videos (14.11, to the free week), the three pain images (13.11, to the chat) and burning credits.
+// The 13.11 videos "מי לא שילם לך" and "עסקי ואישי" are no longer running and left the list. Newest first on screen (reversed).
+ {n:"11",t:"📲 לרשתות · סטורי · מפחד ממה שאתה לא יודע?",r:"ads-pain3-story.png"},
+ {n:"10",t:"📲 לרשתות · סטורי · המידע של הלקוחות. באמת מוגן?",r:"ads-pain2-story.png"},
+ {n:"9",t:"📲 לרשתות · סטורי · יש לך אתר שעובד. ואין אפליקציה?",r:"ads-pain1-story.png"},
+ {n:"8",t:"📣 קמפיין · ✅ באוויר מ 13.11 · 🖼️ מפחד ממה שאתה לא יודע? · לצ׳אט",r:"ads-pain3-feed.png"},
+ {n:"7",t:"📣 קמפיין · ✅ באוויר מ 13.11 · 🖼️ המידע של הלקוחות. באמת מוגן? · לצ׳אט",r:"ads-pain2-feed.png"},
+ {n:"6",t:"📣 קמפיין · ✅ באוויר מ 13.11 · 🖼️ יש לך אתר שעובד. ואין אפליקציה? · לצ׳אט",r:"ads-pain1-feed.png"},
+ {n:"5",t:"📣 קמפיין · ✅ באוויר מ 2.11 · 🖼️ שרפת קרדיטים · Base44 · לצ׳אט",r:"ads-nov01-card9-story.mp4"},
+ {n:"4",t:"📣 קמפיין · ✅ באוויר מ 14.11 · 🎬 איליי, המוניטור · אנימציות קלות · לשבוע התנסות",r:"ilay-1411-animatziot.mp4"},
+ {n:"3",t:"📣 קמפיין · ✅ באוויר מ 14.11 · 🎬 איליי, המוניטור · מסכים · לשבוע התנסות",r:"ilay-1411-masachim.mp4"},
+ {n:"2",t:"📣 קמפיין · ✅ באוויר מ 14.11 · 🎬 איליי, המוניטור · מפוצץ · לשבוע התנסות",r:"ilay-1411-mefotzatz.mp4"},
+ {n:"1",t:"📣 קמפיין · ✅ באוויר מ 14.11 · 🎬 איליי, המוניטור · נקי · לשבוע התנסות",r:"ilay-1411-naki.mp4"}
 ];
 function tomSheet(){
  var old=document.getElementById('tomSheet');if(old)old.remove();
