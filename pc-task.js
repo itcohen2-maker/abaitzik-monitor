@@ -262,6 +262,10 @@ if (cmd === 'add') {
   if (t.test) { console.log('test task, answer kept in the record'); process.exit(0); }
   if (t.wa) {
     locked(() => { const x = get(t.id); x.answer = text; write(x); });
+    // 14.11: the bank agent's file becomes data/bank/bank/*.json for money.js (lib/bank-flow.js).
+    if (t.pc === 'bank' && /BANK:RUN/.test(t.task)) {
+      try { console.log('bank import: ' + require('./lib/bank-flow.js').importDone(inst.dataPath, t.id)); } catch (e) { console.error('bank import failed: ' + e.message); }
+    }
     waOwner(text).then(() => process.exit(0));
     return;
   }
