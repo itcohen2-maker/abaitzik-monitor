@@ -57,9 +57,9 @@ function needOf(err) {
 }
 
 async function scan(tk) {
-  const found = []; const need = new Set(); let netErr = '';
+  const found = []; const need = new Set(); let netErr = ''; let igOff = false; // 14.11: the page has no professional Instagram linked
   const q = (p) => get(G + p + (p.includes('?') ? '&' : '?') + 'access_token=' + tk);
-  const seenErr = (j) => { if (j.error) { if (j.error.net) netErr = j.error.message; else need.add(needOf(j.error)); return true; } return false; };
+  const seenErr = (j) => { if (j.error) { if (j.error.net) netErr = j.error.message; else if (/אינסטגרם|Instagram account/i.test(String(j.error.message || ''))) igOff = true; else need.add(needOf(j.error)); return true; } return false; };
 
   // Comments: the page's posts and its ad posts (dark posts never show in the feed).
   const cf = 'comments.limit(50){id,from,message,created_time,permalink_url}';
@@ -94,8 +94,16 @@ async function scan(tk) {
   return { found, need: [...need].sort(), netErr };
 }
 
+// 14.11.2026: the leads token is a system user token (ai-poster, never expires, 15 scopes incl. pages_read_user_content,
+// pages_messaging, leads_retrieval). Page edges (feed, ads_posts, conversations) need the PAGE token, so it is asked for every run.
+async function pageToken(tk) {
+  if (!tk || tk.f !== '.fb-leads-token-itsolution') return tk;
+  const j = await get(G + PAGE + '?fields=access_token&access_token=' + tk.t);
+  return j && j.access_token ? { t: j.access_token, f: tk.f } : tk;
+}
+
 (async () => {
-  const tk = token();
+  const tk = await pageToken(token());
   let prev = null; try { prev = JSON.parse(fs.readFileSync(STATUS, 'utf8')); } catch (e) { /* first run */ }
   const at = new Date().toISOString();
   if (!tk) { console.log(at + ' !! no token'); return; }
