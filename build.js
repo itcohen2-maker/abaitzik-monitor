@@ -20213,7 +20213,8 @@ function bizSheet(t0){
   function bodyFor(t2){var s0=tab;tab=t2;try{return body();}finally{tab=s0;}}
   var dueN=((S&&S.staleLeads)||[]).length+((S&&S.due)||[]).length;
   var liN=(D.liPosts||[]).length;
-  var tabs=[['its','💻','IT Solution'],['leads','🔔','לידים ולקוחות'],['money','💰','כסף החודש'],['due','⏰','צריך לחזור',dueN],['li','🔗','לינקדין',liN],['shachar','🌅','שחר']/*ITZIK:BEGIN*/,['ner','🕯️','נרות']/*ITZIK:END*/,['anim','🧠','המשרד']];
+  var tabs=[['its','💻','IT Solution'],['leads','🔔','לידים ולקוחות'],['money','💰','כסף החודש'],['due','⏰','צריך לחזור',dueN],['li','🔗','לינקדין',liN]/* 14.11.2026, Itzik: "תסיר את שחר מהעסק שלי" (the 🌅 tab is out; its code stays) *//*ITZIK:BEGIN*/,['ner','🕯️','נרות']/*ITZIK:END*/,['anim','🧠','המשרד']];
+  if(tab==='shachar')tab='its'; // 14.11: the Shachar tab is out; a saved way back to it opens IT Solution
   // 13.11.2026: a customer's copy showed Itzik's own tabs (IT Solution, Shachar, the office). Only his own business here.
   if(!bzOwner)tabs=tabs.filter(function(t){return ['leads','money','due'].indexOf(t[0])>=0;});
   if(INSTANCE&&INSTANCE.clalit)tabs.push(['docs','🏥','מסמכים']);
