@@ -3282,12 +3282,17 @@ section#talkCard.talk{padding:8px 10px;gap:6px 10px;margin-bottom:8px}
 .tarr{grid-column:1/-1;justify-self:start;display:block;margin:0;border:2px solid #1d6fe0;border-radius:999px;background:rgba(29,111,224,.12);color:#8fc0ff;font:800 14px Heebo,sans-serif;cursor:pointer;padding:7px 14px}
 .tarrs{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px 18px}
 .tarrs .tarr{grid-column:auto}
-.tedit .gt{position:relative;animation:wobble .28s infinite alternate ease-in-out}
+@keyframes tjig{0%{transform:rotate(-1.3deg)}50%{transform:rotate(1.3deg)}100%{transform:rotate(-1.3deg)}}
+body.tjig #blkTiles>.gt,body.tjig #blkBiz>.gt{position:relative;animation:tjig .3s infinite linear!important;transform-origin:50% 50%}
+body.tjig #blkTiles>.gt:nth-child(2n),body.tjig #blkBiz>.gt:nth-child(2n){animation-duration:.34s!important;animation-delay:-.11s!important}
+body.tjig #blkTiles>.gt:nth-child(3n),body.tjig #blkBiz>.gt:nth-child(3n){animation-duration:.27s!important;animation-delay:-.19s!important}
+body.tjig #blkBiz .gt{opacity:.55}
 .grid .gt.tlift{opacity:.3}
 #tGhost{position:fixed;z-index:80;pointer-events:none;margin:0;transform:scale(1.08);box-shadow:0 18px 34px rgba(0,0,0,.4);opacity:.95;animation:none}
 body.tdrag{-webkit-user-select:none;user-select:none}
-.gt .tx{display:none;position:absolute;top:6px;inset-inline-end:6px;width:44px;height:44px;border-radius:50%;
- background:#d93025;color:#fff;border:2px solid #fff;font:700 16px/22px Heebo,sans-serif;padding:0;z-index:2;cursor:pointer;text-align:center}
+.gt .tx{display:none;position:absolute;top:4px;inset-inline-end:4px;width:30px;height:30px;border-radius:50%;
+ background:#3a3a3c;color:#fff;border:2px solid #fff;font:800 22px/24px Heebo,sans-serif;padding:0;z-index:3;cursor:pointer;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.gt .tx::after{content:"";position:absolute;inset:-9px}
 .tedit .gt .tx{display:block}
 #tileBar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--surface);color:inherit;border-top:1px solid var(--line);box-shadow:0 -2px 12px rgba(0,0,0,.18);
  padding:10px 14px calc(10px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px}
@@ -3296,7 +3301,10 @@ body.tdrag{-webkit-user-select:none;user-select:none}
 #tileBar button{flex:1;border:0;border-radius:12px;padding:11px;font:700 14px Heebo,sans-serif;cursor:pointer}
 #tileBar .done{background:var(--blue,#1a73e8);color:#fff}
 #tileBar .back{background:#eee;color:#333}
-@media(prefers-reduced-motion:reduce){.tedit .gt{animation:none}}
+#tileBar .add{flex:0 0 auto;min-width:56px;font-size:22px;line-height:1;background:#eee;color:#333}
+.tadd{display:block;width:100%;text-align:start;min-height:50px;border:1px solid #e2e8f0;background:#fff;color:#0f172a;border-radius:14px;padding:0 14px;margin:6px 0;font:600 16px Heebo,sans-serif;cursor:pointer}
+@media(prefers-color-scheme:dark){.tadd{background:#1b1b26;color:#e5e7eb;border-color:#2a2a38}}
+@media(prefers-reduced-motion:reduce){body.tjig #blkTiles>.gt,body.tjig #blkBiz>.gt{animation:none!important}}
 .gt .gi{height:1.35em;width:auto;vertical-align:-0.3em;margin-inline-end:2px}
 .gNer{background:linear-gradient(150deg,#f0a64a,#0f1a3a)}
 .gReel{background:linear-gradient(150deg,#e2574c,#2a1240)}
@@ -10262,6 +10270,10 @@ function armDrag(box,key){
   if(t&&t.closest&&t.closest('input,textarea,select'))return;
   // A long press on a tile lifts the tile, not the whole block.
   if(t&&t.closest&&t.closest('#blkTiles .gt,#blkIcons .ic'))return;
+  // 14.11.2026: the business tiles too. A long press there opened the whole-screen arranging, "מסך אחר".
+  if(t&&t.closest&&t.closest('.grid .gt')){var g0=document.getElementById('blkTiles');if(g0&&!tEdit){var sy0=e.clientY,h0=setTimeout(function(){tilesEnter(g0);},450);
+   var stop0=function(ev){if(ev.type!=='pointermove'||Math.abs(ev.clientY-sy0)>10){clearTimeout(h0);box.removeEventListener('pointermove',stop0);box.removeEventListener('pointerup',stop0);box.removeEventListener('pointercancel',stop0);}};
+   box.addEventListener('pointermove',stop0);box.addEventListener('pointerup',stop0);box.addEventListener('pointercancel',stop0);}return;}
   if(editing)return;
   startY=e.clientY;
   hold=setTimeout(enterEdit,500);
@@ -23311,20 +23323,49 @@ function tileBar(show){
  if(!show){if(b)b.remove();return;}
  if(!b){b=document.createElement('div');b.id='tileBar';document.body.appendChild(b);}
  var hid=tileStore('tilesHidden',[]);
- b.innerHTML='<small>גוררים אריח למקום שרוצים. בסוף לוחצים סיום.</small>'
-  +'<div class="row2"><button type="button" class="done" id="tileDone">סיום</button>'
-  +(hid.length?'<button type="button" class="back" id="tileBack">להחזיר '+hid.length+' שהורדו</button>':'')+'</div>';
+ // 14.11.2026, Itzik: like the iPhone. Everything jiggles, − takes a tile off, + brings one back, a drag moves.
+ b.innerHTML='<small>גוררים אריח כדי להזיז. − מוריד מהמסך, + מחזיר. נגיעה באריח: צבע.</small>'
+  +'<div class="row2"><button type="button" class="add" id="tileAdd" aria-label="הוספת אריח">+</button>'
+  +'<button type="button" class="done" id="tileDone">סיום</button></div>';
  document.getElementById('tileDone').onclick=tilesExit;
- var bk=document.getElementById('tileBack');
- if(bk)bk.onclick=function(){tileSave('tilesHidden',[]);applyHidden();tileBar(true);toast('כל הכפתורים חזרו.');};
+ document.getElementById('tileAdd').onclick=tileAddSheet;
+}
+function tileAddSheet(){
+ var old=document.getElementById('tSheet');if(old)old.remove();
+ var hid=tileStore('tilesHidden',[]).filter(function(id){return document.getElementById(id);});
+ if(!hid.length){toast('כל האריחים כבר על המסך.');return;}
+ var w=document.createElement('div');w.id='tSheet';w.className='tsh';
+ w.innerHTML='<div class="tsh-in" role="dialog" aria-label="הוספת אריח"><b class="tsh-t">להחזיר למסך</b>'
+  +hid.map(function(id){return '<button type="button" class="tadd" data-id="'+id+'"></button>';}).join('')
+  +(hid.length>1?'<button type="button" class="tadd" data-id="*">+ להחזיר את כולם ('+hid.length+')</button>':'')
+  +'<button type="button" class="tsh-x" data-a="x">סגירה</button></div>';
+ Array.prototype.forEach.call(w.querySelectorAll('.tadd[data-id]'),function(x){var id=x.getAttribute('data-id');if(id!=='*')x.textContent='+ '+tileLabel(id);});
+ document.body.appendChild(w);
+ w.addEventListener('click',function(e){
+  e.stopPropagation();
+  if(e.target===w||e.target.closest('[data-a="x"]')){w.remove();return;}
+  var x=e.target.closest('.tadd');if(!x)return;
+  var id=x.getAttribute('data-id'),h=tileStore('tilesHidden',[]);
+  h=id==='*'?[]:h.filter(function(v){return v!==id;});
+  tileSave('tilesHidden',h);applyHidden();tileMinus();w.remove();
+  toast(id==='*'?'כל האריחים חזרו.':'"'+tileLabel(id)+'" חזר למסך.');
+ });
+}
+// The − on every tile of the grid while it jiggles.
+function tileMinus(){
+ var g=document.getElementById('blkTiles');if(!g)return;
+ Array.prototype.forEach.call(g.querySelectorAll('.gt'),function(t){
+  if(t.parentNode!==g||t.querySelector('.tx'))return;
+  var x=document.createElement('span');x.className='tx';x.setAttribute('role','button');x.setAttribute('aria-label','להוריד מהמסך');x.textContent='−';
+  t.appendChild(x);
+ });
 }
 function tilesEnter(grid){
  if(tEdit)return;
  tEdit=true;
  grid.classList.add('tedit');
- Array.prototype.forEach.call(grid.querySelectorAll('.gt'),function(el){
-  // 6.11, Itzik: "פשוטה ורק להזיז". No ✕ here any more; moving only.
- });
+ document.body.classList.add('tjig');window.TJIG_AT=Date.now();
+ tileMinus();
  try{navigator.vibrate&&navigator.vibrate(18);}catch(e){}
  tileBar(true);
  var a=document.getElementById('tileArr');if(a)a.textContent='✓ סיום';
@@ -23334,7 +23375,9 @@ function tilesEnter(grid){
 function tilesExit(){
  var grid=document.getElementById('blkTiles');
  tEdit=false;
- if(grid){grid.classList.remove('tedit');saveOrder(grid,'tileOrder');}
+ if(grid){grid.classList.remove('tedit');Array.prototype.forEach.call(grid.querySelectorAll('.tx'),function(x){x.remove();});saveOrder(grid,'tileOrder');}
+ document.body.classList.remove('tjig');
+ var ts=document.getElementById('tSheet');if(ts)ts.remove();
  tileBar(false);
  var a=document.getElementById('tileArr');if(a)a.textContent='✎ הזזת אריחים';
  var at=document.getElementById('tileArrTop');if(at)at.style.display='';
@@ -23346,7 +23389,8 @@ function tilesExit(){
   box is in a mode where a move lifts at once without the wait.
 */
 // still, when given, gets the tile when a long press lets go without moving.
-function pressDrag(grid,sel,key,inEdit,still){
+// lifted, when given, runs the moment a long press picks a tile up (the tiles: that is where the jiggle starts).
+function pressDrag(grid,sel,key,inEdit,still,lifted){
  inEdit=inEdit||function(){return false;};
  var hold=null,sx=0,sy=0,cand=null,held=null,ghost=null,gdx=0,gdy=0,lx=0,ly=0,swallow=false,roll=null,moved=false;
  function tileAt(x,y){
@@ -23381,6 +23425,7 @@ function pressDrag(grid,sel,key,inEdit,still){
   document.body.appendChild(ghost);
   t.classList.add('tlift');
   document.body.classList.add('tdrag');
+  if(lifted)try{lifted(t);}catch(e){}
   try{navigator.vibrate&&navigator.vibrate(18);}catch(e){}
   roll=requestAnimationFrame(edge);
  }
@@ -23437,6 +23482,15 @@ function pressDrag(grid,sel,key,inEdit,still){
   if(swallow){swallow=false;e.preventDefault();e.stopImmediatePropagation();return;}
  },true);
 }
+if(!window.TJIG_OUT){window.TJIG_OUT=1;document.addEventListener('click',function(e){
+ if(!tEdit)return;
+ var t=e.target;if(!t||!t.closest)return;
+ if(t.closest('#blkTiles .gt,#tileBar,.tsh,#tileArr,#tileArrTop,#tileArrGrid'))return;
+ e.preventDefault();e.stopPropagation();
+ // the click that ends the long press that started it is not a tap outside
+ if(Date.now()-(window.TJIG_AT||0)<800)return;
+ tilesExit();
+},true);}
 function armTiles(grid){
  if(!grid)return;
  // 6.11, Itzik (iron rule): long press blinks, ✎ moves. The home grid gets swapped for a new element after
@@ -23465,8 +23519,10 @@ function armTiles(grid){
  }
  var pin=pinTiles(grid);
  tPaint();setTimeout(tPaint,0);window.addEventListener('load',tPaint);
- // 6.11, Itzik (iron rule): a long press without moving makes the tile blink. Never remove this.
- pressDrag(grid,'.gt','tileOrder',function(){return tEdit;},pin);
+ // 14.11.2026, Itzik: "כל פעם שמנסים להזיז, זה פותח מסך אחר ... כמו באייפון". The long press no longer opens
+ // the sheet: it starts the jiggle and the tile is already in hand, so the same finger can drag it on.
+ // The colours (the 6.11 sheet) are one tap away: a tap on a jiggling tile opens them.
+ pressDrag(grid,'.gt','tileOrder',function(){return tEdit;},pin,function(){if(!tEdit)tilesEnter(grid);});
  // 6.11, Itzik: "זה פותח את מסך ההגדרות". The tiles' own handlers sit on the tile, so the block has to be in the capture phase.
  grid.addEventListener('click',function(e){
   if(!tEdit||e.target.closest('#tileArr'))return;
@@ -23483,9 +23539,11 @@ function armTiles(grid){
    var hid=tileStore('tilesHidden',[]);
    if(hid.indexOf(t.id)<0)hid.push(t.id);
    tileSave('tilesHidden',hid);
-   applyHidden();tileBar(true);
-   toast('הורד מהמסך. "להחזיר" מחזיר אותו.');
+   applyHidden();
+   toast('"'+tileLabel(t.id)+'" הורד מהמסך. + מחזיר אותו.');
+   return;
   }
+  if(t.id)tileSheet(t);
  },true);
 }
 /*
