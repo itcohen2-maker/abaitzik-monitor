@@ -285,11 +285,13 @@ function liveBehind(now) {
   let pending = prev.pending && !(liveAt >= Date.parse(prev.pending)) ? prev.pending : null;
   if (!(liveAt >= Date.parse(local.builtAt)) && !pending) pending = local.builtAt;
   if (liveAt >= Date.parse(local.builtAt)) pending = null;
-  const ok = !isNaN(liveAt) && (!pending || now - Date.parse(pending) < 10 * 60000);
+  // 15.11: a lag of about ten minutes after a successful build is normal on Pages; twenty is a fault.
+  const ok = !isNaN(liveAt) && (!pending || now - Date.parse(pending) < 20 * 60000);
   try { fs.writeFileSync(f, JSON.stringify({ at: new Date(now).toISOString(), ok, pending, live: live && live.builtAt, local: local.builtAt })); } catch (e) {}
   if (ok) return '';
   if (!live) return 'האתר החי לא עונה';
-  return 'האתר החי לא התעדכן ' + Math.round((now - Date.parse(pending)) / 60000) + ' דקות, הבנייה בגיטהאב נכשלת';
+  // 15.11: say only what is known. The build itself was green in that case.
+  return 'האתר החי מאחר ' + Math.round((now - Date.parse(pending)) / 60000) + ' דקות מהבנייה האחרונה. אם זה נמשך, לבדוק את הבנייה בגיטהאב';
 }
 
 /*
