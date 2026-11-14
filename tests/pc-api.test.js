@@ -136,3 +136,38 @@ test('pc api: pcKeys adds a second named computer, each key asks only for its ow
     assert.deepEqual(calls, [['next', ['--pc', 'bank']], ['next', ['--pc', 'lolos']]]);
   } finally { server.close(); }
 });
+
+test('pc api: rekey trades a key for a fresh one, the old one works until the new one is used', async () => {
+  const dataPath = tmp();
+  fs.writeFileSync(path.join(dataPath, 'keys.json'), JSON.stringify({ pcKey: 'a'.repeat(32), pcName: 'bank', pcKeys: { lolos: 'c'.repeat(32) } }));
+  const api = pcApi({ name: 'rinat', dir: '/x', dataPath, log: () => {}, run: async () => ({ code: 0, out: '', err: '' }) });
+  const { server, call } = await serve(api);
+  const keys = () => JSON.parse(fs.readFileSync(path.join(dataPath, 'keys.json'), 'utf8'));
+  try {
+    assert.equal((await call('GET', '/up/v1/rinat/pc/rekey', undefined, 'c'.repeat(32))).status, 405);
+    const r = await call('POST', '/up/v1/rinat/pc/rekey', '', 'c'.repeat(32));
+    assert.equal(r.status, 200);
+    const fresh = JSON.parse(r.text).key;
+    assert.match(fresh, /^[0-9a-f]{32}$/);
+    assert.equal(keys().pcKeys.lolos, fresh);
+    assert.equal(keys().pcKey, 'a'.repeat(32), 'the bank key is untouched');
+    await new Promise((ok) => setTimeout(ok, 5));
+    assert.equal((await call('GET', '/up/v1/rinat/pc/ping', undefined, 'c'.repeat(32))).status, 200, 'old key still works, the answer may have been lost');
+    assert.equal((await call('GET', '/up/v1/rinat/pc/ping', undefined, fresh)).status, 200);
+    assert.ok(!keys().pcRetiring.lolos, 'retired after the new key was used');
+    assert.equal((await call('GET', '/up/v1/rinat/pc/ping', undefined, 'c'.repeat(32))).status, 401);
+    const b = await call('POST', '/up/v1/rinat/pc/rekey', '', 'a'.repeat(32));
+    assert.equal(keys().pcKey, JSON.parse(b.text).key, 'the main key rotates in pcKey');
+  } finally { server.close(); }
+});
+
+test('pc api: the bank computer cannot list or read the monitor files', async () => {
+  const dataPath = tmp();
+  fs.writeFileSync(path.join(dataPath, 'keys.json'), JSON.stringify({ pcKey: 'a'.repeat(32), pcName: 'bank' }));
+  const api = pcApi({ name: 'rinat', dir: '/x', dataPath, log: () => {}, run: async () => ({ code: 0, out: '', err: '' }) });
+  const { server, call } = await serve(api);
+  try {
+    assert.equal((await call('GET', '/up/v1/rinat/pc/list', undefined, 'a'.repeat(32))).status, 403);
+    assert.equal((await call('GET', '/up/v1/rinat/pc/get?name=x', undefined, 'a'.repeat(32))).status, 403);
+  } finally { server.close(); }
+});
