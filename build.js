@@ -19675,9 +19675,22 @@ function firstSteps(){
  var g=R.filter(function(r){return r.key==='google'&&!r.locked;});
  var gOn=g.some(function(r){return r.on;});
  var gl=g.filter(function(r){return r.link&&!r.soon;})[0];
- if(gOn||!R.length){w.hidden=true;w.innerHTML='';return;}
+ // 14.11.2026, Itzik: "הוא עדיין לא חיבר את הוואטסאפ. אני רוצה שזה הדבר הראשון שהמוניטור שלו יגיד לו לעשות,
+ // ולהדריך אותו ללחוץ על חיבורים ולהמשיך לפי ההוראות". WhatsApp leads the card until its row is connected.
+ var wa=R.filter(function(r){return r.id==='wa'&&!r.locked;})[0];
+ var waNeed=!!(wa&&!wa.on&&wa.link);
+ if((gOn&&!waNeed)||!R.length){w.hidden=true;w.innerHTML='';return;}
  var m=R.filter(function(r){return r.key==='meta'&&!r.locked;})[0];
- var h='<b class="fsH">🚀 בוא נתחיל</b><p>המוניטור עובד בשבילך מהרגע שהוא מחובר. שני חיבורים, דקה כל אחד.</p>';
+ var h='';
+ w.onclick=function(e){var t=e.target.closest&&e.target.closest('[data-fs]');if(t)connSheet();};
+ if(waNeed){
+  h+='<b class="fsH">👋 הדבר הראשון: לחבר את הוואטסאפ</b><p>ככה כותבים למוניטור בוואטסאפ, כמו לאדם, והתשובות חוזרות לשם. לוקח דקה.</p>'
+   +'<div class="fsR"><span class="fsI">1️⃣</span><div><b>לוחצים על 🔌 חיבורים</b><small>אפשר גם מהכפתור כאן.</small></div><button type="button" class="fsB" data-fs="all">🔌 חיבורים</button></div>'
+   +'<div class="fsR"><span class="fsI">2️⃣</span><div><b>בשורה 💬 וואטסאפ לוחצים "חיבור מהיר"</b><small>היא הראשונה ברשימה.</small></div></div>'
+   +'<div class="fsR"><span class="fsI">3️⃣</span><div><b>נפתח וואטסאפ עם הודעה מוכנה. לוחצים שלח</b><small>תוך דקה מגיעה תשובה "✓ התחברת", וזהו.</small></div></div>';
+  if(gOn){w.innerHTML=h;w.hidden=false;return;}
+  h+='<p style="margin-top:12px">ואחר כך:</p>';
+ }else h+='<b class="fsH">🚀 בוא נתחיל</b><p>המוניטור עובד בשבילך מהרגע שהוא מחובר. שני חיבורים, דקה כל אחד.</p>';
  h+='<div class="fsR"><span class="fsI">📧</span><div><b>גוגל: מייל, יומן ודרייב</b><small>המוניטור קורא את המיילים, מוציא מהם משימות, תורים ותשלומים, וממלא לבד גם את המצב האישי.</small></div>'
   +(gl?'<a class="fsB" href="'+esc(gl.link)+'" target="_blank" rel="noopener">להתחבר</a>':'<button type="button" class="fsB" data-fs="all">לחבר</button>')+'</div>';
  if(m)h+='<div class="fsR"><span class="fsI">📘</span><div><b>פייסבוק ואינסטגרם</b><small>הודעות, תגובות ומודעות במקום אחד.</small></div>'
