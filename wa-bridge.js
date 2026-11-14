@@ -941,6 +941,24 @@ async function addonDone(u, s) {
   log('addon paid ' + order.tenant + ' ' + order.kind + ' ' + pid);
   back('?paid=1&addon=' + order.kind);
 }
+// 14.11.2026 (lib/csign.js): his client opened or signed; a message in the customer's own monitor, and a 📋 line if that fails.
+function csignTell(tenant, text) {
+  try {
+    if (!/^[a-z0-9-]{1,32}$/.test(String(tenant || ''))) throw new Error('bad tenant');
+    let dir = ''; try { dir = JSON.parse(fs.readFileSync(path.join(DATA, 'tenants', 'tenants', tenant + '.json'), 'utf8')).dir || ''; } catch (e) {}
+    if (!dir) dir = '/home/' + tenant + '/' + tenant + '-monitor';
+    const cd = path.join(dir, 'data', 'chat', 'chat');
+    const pad = (n) => String(n).padStart(2, '0'); const at = new Date();
+    const base = at.getFullYear() + pad(at.getMonth() + 1) + pad(at.getDate()) + '-' + pad(at.getHours()) + pad(at.getMinutes()) + pad(at.getSeconds()) + '-claude-csign';
+    let name = base + '.json'; for (let i = 2; fs.existsSync(path.join(cd, name)); i++) name = base + '-' + i + '.json';
+    fs.writeFileSync(path.join(cd, name + '.tmp'), JSON.stringify({ at: at.toISOString(), from: 'claude', text, status: 'done', id: 'cs-' + at.getTime().toString(36) }, null, 1), { encoding: 'utf8', mode: 0o664 });
+    fs.renameSync(path.join(cd, name + '.tmp'), path.join(cd, name));
+    log('csign tell ' + tenant);
+  } catch (e) {
+    log('csign tell ' + tenant + ' failed: ' + e.message);
+    try { require('./lib/handle.js').complete({ key: 'csign-' + tenant + '-' + Date.now(), kind: 'lead', who: tenant, title: 'הודעת חתימה לא נכנסה למוניטור של הלקוח: ' + String(text).slice(0, 120), link: 'biz' }); } catch (x) {}
+  }
+}
 function tenantByKey(c) {
   c = String(c || ''); if (c.length < 24) return null;
   let all = {}; try { all = JSON.parse(fs.readFileSync(path.join(DATA, 'fastchat', 'tenants.json'), 'utf8')) || {}; } catch (e) { return null; }
@@ -1296,6 +1314,38 @@ const server = http.createServer(function (q, s) {
       const ip = String(q.headers['x-forwarded-for'] || q.socket.remoteAddress || '').split(',').pop().trim();
       require('./ndasign.js').handlePost(b, formNotify, ip, q.headers['user-agent'], function (r) { s.writeHead(r.status, { 'Content-Type': 'application/json' }); s.end(JSON.stringify(r.body)); });
     }).catch(function () { try { s.writeHead(400); s.end('{}'); } catch (e) {} });
+    return;
+  }
+  // 14.11.2026: a customer's own quote, signed by his client (lib/csign.js), /c/<token>[/signed|/view] and /api/csign.
+  const cm = u.pathname.match(/^\/c\/([a-f0-9]{24})(?:\/(signed|view))?\/?$/);
+  if (cm && q.method === 'GET') { require('./lib/csign.js').servePage(DATA, cm[1], cm[2], s); return; }
+  if (u.pathname === '/api/csign') {
+    if (q.method !== 'POST') { s.writeHead(405); return s.end(); }
+    readBody(q, 600000).then(function (raw) {
+      let b; try { b = JSON.parse(raw.toString('utf8')); } catch (e) { s.writeHead(400); return s.end('{}'); }
+      const ip = String(q.headers['x-forwarded-for'] || q.socket.remoteAddress || '').split(',').pop().trim();
+      const r = require('./lib/csign.js').handlePost(DATA, b, ip, q.headers['user-agent'], csignTell);
+      s.writeHead(r.status, { 'Content-Type': 'application/json' }); s.end(JSON.stringify(r.body));
+    }).catch(function () { try { s.writeHead(400); s.end('{}'); } catch (e) {} });
+    return;
+  }
+  // 14.11.2026: the customer's page asks for a signing link (his visit key, the quote as fields, his logo). Big body, own CORS.
+  if (u.pathname === '/api/csign/create') {
+    const origin = q.headers.origin || '';
+    const h = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', Vary: 'Origin' };
+    if (originOk(origin)) { h['Access-Control-Allow-Origin'] = origin; h['Access-Control-Allow-Headers'] = 'Content-Type'; h['Access-Control-Allow-Methods'] = 'POST, OPTIONS'; }
+    if (q.method === 'OPTIONS') { s.writeHead(204, h); return s.end(); }
+    if (q.method !== 'POST') { s.writeHead(405, h); return s.end('{}'); }
+    readBody(q, 600000).then(function (raw) {
+      let b; try { b = JSON.parse(raw.toString('utf8')); } catch (e) { s.writeHead(400, h); return s.end('{}'); }
+      const vn = require('./lib/visits.js').nameByKey(DATA, b.key);
+      if (!vn) { s.writeHead(403, h); return s.end('{"error":"key"}'); }
+      const C = require('./lib/csign.js');
+      const r = C.create(DATA, vn, b, require('./lib/plan-io.js').stateOf(vn));
+      if (!r.ok) { s.writeHead(r.why === 'limit' ? 409 : 400, h); return s.end(JSON.stringify({ error: r.why, limit: r.limit || 0 })); }
+      log('csign link ' + vn + ' ' + r.tok);
+      s.writeHead(200, h); s.end(JSON.stringify({ link: r.link, left: r.left }));
+    }).catch(function () { try { s.writeHead(400, h); s.end('{}'); } catch (e) {} });
     return;
   }
   // 2.11: sign a quote on the phone (sign.js), /q/<token>[/pdf|/signed] and /api/sign.

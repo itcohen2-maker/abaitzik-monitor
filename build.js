@@ -1221,6 +1221,8 @@ function build() {
     if (inst.name !== 'abaitzik') payload.payOffer = require('./lib/pay-offer.js').view(inst.name);
     // 14.11.2026: the add-ons and upgrades the customer can buy and pay on SUMIT (lib/addons.js).
     if (inst.name !== 'abaitzik') payload.addonMenu = require('./lib/addons.js').menu(pio.stateOf(inst.name), require('./lib/bank-flow.js').BANKS);
+    // 14.11.2026: where a customer's page asks for a signing link (lib/csign.js); kept out of the page code itself.
+    if (inst.name !== 'abaitzik') payload.payApi = 'https://wa.abaitzik.com';
   } catch (e) { console.error('plan: ' + e.message); }
   const DATA_DIR2 = path.join(OUT_DIR, 'data');
   fs.mkdirSync(DATA_DIR2, { recursive: true });
