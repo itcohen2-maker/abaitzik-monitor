@@ -681,6 +681,8 @@ function recordIncoming(m) {
   try {
     fs.mkdirSync(CHAT, { recursive: true });
     fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+    // 15.11: the same voice note sent again with the code closes its held copy (lib/held-supersede.js).
+    if (codeOk) { try { require('./lib/held-supersede.js').supersede(CHAT, name, rec); } catch (e) { say('!! הודעה ישנה לא נסגרה: ' + e.message); } }
     say((codeOk ? 'נרשם בצ׳אט עם אישור קבלה: ' : 'נרשם בלי קוד, ממתין לאימות: ') + text.slice(0, 60));
     if (rec.heldWhy === 'lead') {
       // 12.11.2026, Itzik: a lead from his own phone or mail is a test: it is created and shown greyed, but it makes no
