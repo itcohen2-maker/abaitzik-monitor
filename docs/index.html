@@ -2822,6 +2822,14 @@ body.gH #fcInline{display:none!important}
 #agScr .agS1 b{font-weight:700}
 #agScr .ag:not(.open) .agBody{display:none}
 #agScr .agBody{animation:mgDrop .25s ease-out}
+#agScr .agRen{margin-top:8px;padding:10px;border-radius:14px;background:var(--sunk,#14161a)}
+#agScr .agRen label{display:block;font:700 12.5px Heebo,sans-serif;color:var(--dim,#9aa0a6);margin:6px 0 4px}
+#agScr .agRen input{width:100%;box-sizing:border-box;font:16px Heebo,sans-serif;color:inherit;background:var(--surface,#1a1c21);border:1px solid var(--line,#2e3036);border-radius:12px;padding:9px 11px}
+#agScr .agRen .row{display:flex;gap:8px;margin-top:10px}
+#agScr .agRen .row button{flex:1;font:800 14.5px Heebo,sans-serif;border:0;border-radius:999px;padding:10px;cursor:pointer}
+#agScr .agRen .ok{color:#fff;background:linear-gradient(90deg,#4285F4,#6d5cf0)}
+#agScr .agRen .no{color:inherit;background:transparent;border:1px solid var(--line,#2e3036)!important}
+#agScr h2 .agEd{font-size:16px}
 #agScr .agA{flex:0 0 42px;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font:800 18px Heebo,sans-serif;color:#fff;background:var(--c);position:relative}
 #agScr .ag.work .agA::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:2px solid transparent;background:conic-gradient(from var(--mgAng),#4285F4,#EA4335,#FBBC05,#34A853,#4285F4) border-box;
  -webkit-mask:linear-gradient(#000 0 0) padding-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:mgSpin 1.8s linear infinite}
@@ -3024,7 +3032,7 @@ body.gH #fcInline{display:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-14T11:17:44.547Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-14T11:19:21.272Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3383,7 +3391,14 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-
+<div class="alerts" id="pushBox" hidden>
+ <div>
+  <b>התראות לטלפון</b>
+  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
+ </div>
+ <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
+ <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
+</div>
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4971,7 +4986,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='db5c5058c4';
+var CODE_ID='ea43d745ea';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -19779,7 +19794,7 @@ function renderHome(){
 })();
 
 (function(){
- var NAME="המנהל שלי",COL=['#4285F4','#EA4335','#FBBC05','#34A853'],NL=String.fromCharCode(10);
+ var NAME0="המנהל שלי",COL=['#4285F4','#EA4335','#FBBC05','#34A853'],NL=String.fromCharCode(10);
  var TPL=[['📬 מיילים','נועה','אחראית על המיילים','לבדוק את המייל ולסכם לי מה חשוב','work'],['⏰ תזכורות','דני','עוזר אישי ותזכורות','להזכיר לי את מה שיש היום ביומן','remind'],
   ['🔔 לידים','מאיה','אחראית על הלידים','לבדוק אם נכנס ליד חדש ולהכין לו תשובה','work'],['💰 כסף','יוסי','כסף וגבייה','לבדוק מי עוד לא שילם ולנסח תזכורת מנומסת','work'],
   ['📱 רשתות','שירה','רשתות חברתיות','לבדוק תגובות והודעות חדשות ברשתות','work'],['🤝 לקוחות','אבי','לקוחות קיימים','להזכיר לי לחזור ללקוח שלא דיברנו איתו חודש','remind']];
@@ -19796,11 +19811,13 @@ function renderHome(){
  function sysAgents(){
   if(!MI().length)return [];
   return SYS.map(function(S,n){var ov=((window.D&&D.agents)||[]).filter(function(x){return x.id===S[0];})[0];
-   return {id:S[0],name:ov?ov.name:S[1],role:S[2],c:n%4,sys:S,items:MI().filter(function(i){return sysOf(i.k)===S;})};}).filter(function(a){return a.items.length;});
+   return {id:S[0],name:ov?ov.name:S[1],role:ov&&ov.role?ov.role:S[2],c:n%4,sys:S,items:MI().filter(function(i){return sysOf(i.k)===S;})};}).filter(function(a){return a.items.length;});
  }
  function ALL(){return sysAgents().concat(A());}
  function E(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
- function A(){return ((window.D&&D.agents)||[]).filter(function(x){return String(x.id).indexOf('asys')!==0;});}
+ function A(){return ((window.D&&D.agents)||[]).filter(function(x){return String(x.id).indexOf('asys')!==0&&x.id!=='amanager0';});}
+ function MGR(){return ((window.D&&D.agents)||[]).filter(function(x){return x.id==='amanager0';})[0];}
+ function NM(){var m=MGR();return m&&m.name?m.name:NAME0;}
  function R(){return (window.D&&D.routines)||[];}
  function tday(iso){if(!iso)return false;var d=new Date(iso),n=new Date();return d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth()&&d.getDate()===n.getDate();}
  function hhmm(iso){var d=new Date(iso);return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
@@ -19825,11 +19842,11 @@ function renderHome(){
    t.innerHTML='<div class="mgAv"><span>🧑‍💼</span></div><div><b></b><small></small></div><span class="mgGo">‹</span>';
    t.addEventListener('click',function(e){e.preventDefault();open();});}
   if(anchor.previousSibling!==t)anchor.parentNode.insertBefore(t,anchor);
-  t.querySelector('b').textContent=NAME;t.querySelector('small').textContent=sub();
+  t.querySelector('b').textContent=NM();t.querySelector('small').textContent=sub();
   t.classList.toggle('busy',!!busy().length);
   var old=document.getElementById('gMyMgr');if(old)old.style.display='none';
  }
- var agOpen={},scr=null,tab='all',formFor=null,fq='day',kind='remind',pickT=-1;
+ var renFor=null,agOpen={},scr=null,tab='all',formFor=null,fq='day',kind='remind',pickT=-1;
  function chk(){return '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M7 12.5l3.2 3.2L17 9"/></svg>';}
  function optHtml(withAgent){
   return '<div class="agOpt">'+(withAgent?'<label>תבנית (או כותבים לבד)</label><div class="tpl">'+TPL.map(function(T,k){return '<button type="button" data-tpl="'+k+'"'+(pickT===k?' class="on"':'')+'>'+T[0]+'<small>'+E(T[3])+'</small></button>';}).join('')+'</div>'
@@ -19843,12 +19860,14 @@ function renderHome(){
    +'<button type="button" class="agSave" data-a="save">'+(withAgent?'ליצור את הסוכן':'להוסיף את הפקודה')+'</button>'
    +'<small style="display:block;color:var(--dim,#9aa0a6);margin-top:8px;font-size:12px">שליחה לאנשים, תשלום ומחיקה תמיד מחכים לאישור שלך.</small></div>';
  }
+ function renHtml(n,r,mgr){return '<div class="agRen"><label>'+(mgr?'השם של המנהל':'השם')+'</label><input id="rnN" maxlength="24" value="'+E(n)+'">'
+  +(mgr?'':'<label>התפקיד</label><input id="rnR" maxlength="80" value="'+E(r)+'">')+'<div class="row"><button type="button" class="ok" data-a="renOk">שמירה</button><button type="button" class="no" data-a="renNo">ביטול</button></div></div>';}
  function agHtml(a,i){
   var L=routinesOf(a),on=L.some(function(r){return r.state==='active';}),wk=L.some(function(r){return r.runNow;});
   var last=L.reduce(function(m,r){return r.lastRunAt&&(!m||r.lastRunAt>m.lastRunAt)?r:m;},null);
   var c=a?COL[(a.c||0)%4]:'#9aa0a6',id=a?a.id:'',S=a&&a.sys;
   var ST={done:'✓',ok:'✓',warn:'⚠️',todo:'○'};
-  var isOpen=!!agOpen[id||'_']||formFor===id+'|cmd';
+  var isOpen=!!agOpen[id||'_']||formFor===id+'|cmd'||renFor===id;
   var nW=S?a.items.filter(function(i){return i.st!=='done'&&i.st!=='ok';}).length:0,nD=S?a.items.length-nW:0;
   var s1=S?(nW?'<b style="color:#FBBC05">⚠️ '+nW+' מחכים לך</b>':'<b style="color:#34A853">✓ הכל טופל</b>')+(nD?' · ✓ '+nD+' נעשו':'')+(L.length?' · '+L.length+' פקודות שלך':'')
     :(L.length?L.length+(L.length===1?' פקודה':' פקודות')+(L[0]?' · '+E(L[0].label):''):'עוד אין פקודות');
@@ -19859,13 +19878,14 @@ function renderHome(){
    +(L.length?'<button type="button" class="agSw" data-a="sw" aria-label="'+(on?'לעצור':'להפעיל')+'"></button>':'')+'<span class="agChev" aria-hidden="true">▼</span></div><div class="agS1">'+s1+'</div><div class="agBody">'
    +fixed+(L.length?'<ul class="agL">'+L.map(function(r){return '<li class="'+(r.state==='active'?'':'off')+'"><span>'+(r.kind==='work'?'🛠️':'⏰')+'</span><span class="t">'+E(r.text)+'<br><span class="fq">'+E(r.label)+(r.state==='active'?'':' · עצור')+'</span></span><button type="button" class="x" data-a="del" data-r="'+E(r.id)+'" aria-label="למחוק את הפקודה">🗑</button></li>';}).join('')+'</ul>':(S?'':'<div class="agEmpty">עוד אין לו פקודות. כותבים למטה מה לעשות.</div>'))
    +'<div class="agLast">'+(S&&!wk?'עודכן בסבב של '+hhmm(MAT()):wk?'<span class="dots"><i></i><i></i><i></i><i></i></span>עובד עכשיו':last?'אחרון: '+(tday(last.lastRunAt)?'היום ':'')+hhmm(last.lastRunAt)+' · '+E(last.lastResult||last.text):'עוד לא רץ')+'</div>'
-   +'<div class="agAct">'+(L.length?'<button type="button" data-a="run">▶ להריץ עכשיו</button>':'')+'<button type="button" data-a="add">+ פקודה</button>'+(a&&!S?'<button type="button" data-a="rm">למחוק את הסוכן</button>':'')+'</div>'
+   +(a&&renFor===id?renHtml(a.name,a.role,false):'')
+   +'<div class="agAct">'+(a?'<button type="button" data-a="ren">✏️ שם ותפקיד</button>':'')+(L.length?'<button type="button" data-a="run">▶ להריץ עכשיו</button>':'')+'<button type="button" data-a="add">+ פקודה</button>'+(a&&!S?'<button type="button" data-a="rm">למחוק את הסוכן</button>':'')+'</div>'
    +(formFor===id+'|cmd'?optHtml(false):'')+'</div></div>';
  }
  function events(){
   var ev=[];
   sysAgents().forEach(function(a){a.items.forEach(function(i){ev.push({k:(i.st==='done'||i.st==='ok')?'done':'wait',at:MAT(),c:COL[a.c%4],who:a.name,t:String(i.t||'').replace('undefined ',''),res:i.sub||''});});});
-  R().forEach(function(r){var a=ALL().filter(function(x){return x.id===r.agent;})[0],c=a?COL[(a.c||0)%4]:'#9aa0a6',who=a?a.name:NAME;
+  R().forEach(function(r){var a=ALL().filter(function(x){return x.id===r.agent;})[0],c=a?COL[(a.c||0)%4]:'#9aa0a6',who=a?a.name:NM();
    if(r.runNow)ev.push({k:'now',at:new Date().toISOString(),c:c,who:who,t:r.text});
    (r.runs||[]).forEach(function(x){if(tday(x.at))ev.push({k:'done',at:x.at,c:c,who:who,t:r.text,res:x.result});});
    if(r.state==='active'&&r.next&&tday(r.next))ev.push({k:'next',at:r.next,c:c,who:who,t:r.text});});
@@ -19881,7 +19901,7 @@ function renderHome(){
  function draw(){
   if(!scr)return;var y=scr.scrollTop;
   var ag=ALL(),gen=routinesOf(null),rs=R(),act=rs.filter(function(r){return r.state==='active';}).length,ev=events();
-  scr.innerHTML='<div class="agW"><div class="agBar"><button type="button" class="agBack" data-a="x">‹ חזרה</button><h2>🧑‍💼 '+NAME+'</h2></div>'
+  scr.innerHTML='<div class="agW"><div class="agBar"><button type="button" class="agBack" data-a="x">‹ חזרה</button><h2>🧑‍💼 '+E(NM())+' <button type="button" class="agEd" data-a="renM" aria-label="לשנות את השם של המנהל">✏️</button></h2>'+(renFor==='amanager0'?renHtml(NM(),'',true):'')+'</div>'
    +'<p class="agLead">תן למנהל פקודות שחוזרות על עצמן. כל סוכן אחראי על תחום אחד, ואתה קובע לו מה לעשות וכמה פעמים. תזכורת מגיעה לטלפון, ועבודה חוזרת עם תשובה במסך התשובות.</p>'
    +'<div class="agSum"><div><b>'+ag.length+'</b><small>סוכנים</small></div><div><b>'+(MI().length?ev.filter(function(e){return e.k==='wait';}).length:act)+'</b><small>'+(MI().length?'מחכים לך':'פקודות פעילות')+'</small></div><div><b>'+ev.filter(function(e){return e.k==='done';}).length+'</b><small>נעשו היום</small></div></div>'
    +'<div class="agSec">הסוכנים שלך <button type="button" class="agNew" data-a="new">+ סוכן חדש</button></div>'
@@ -19891,7 +19911,7 @@ function renderHome(){
   scr.scrollTop=y;
  }
  function open(){
-  if(!scr){scr=document.createElement('div');scr.id='agScr';scr.setAttribute('role','dialog');scr.setAttribute('aria-label',NAME);scr.addEventListener('click',onClick);document.body.appendChild(scr);}
+  if(!scr){scr=document.createElement('div');scr.id='agScr';scr.setAttribute('role','dialog');scr.setAttribute('aria-label',NM());scr.addEventListener('click',onClick);document.body.appendChild(scr);}
   formFor=null;draw();scr.scrollTop=0;
   try{history.pushState({ag:1},'');}catch(e){}
  }
@@ -19949,12 +19969,18 @@ function renderHome(){
     .catch(function(){b.disabled=false;say('לא נשלח. תבדוק חיבור ותנסה שוב.');});
    return;
   }
-  if(a==='ren'&&ag){
-   var sp=card.querySelector('.nm'),inp=document.createElement('input');inp.value=ag.name;inp.maxLength=24;sp.replaceWith(inp);b.style.display='none';inp.focus();inp.select();
-   var done=false,fin=function(){if(done)return;done=true;var v=inp.value.trim();
-    if(!v||v===ag.name){draw();return;}
-    send('סוכן',JSON.stringify({id:ag.id,name:v,role:ag.role,c:ag.c})).then(function(){var L=(D.agents=D.agents||[]),o=L.filter(function(x){return x.id===ag.id;})[0];if(o)o.name=v;else L.push({id:ag.id,name:v,role:ag.role,c:ag.c});ag.name=v;draw();tile();say('השם נשמר: '+v);}).catch(function(){draw();say('לא נשמר. תנסה שוב.');});};
-   inp.addEventListener('blur',fin);inp.addEventListener('keydown',function(k){if(k.key==='Enter'){k.preventDefault();inp.blur();}});return;}
+  if(a==='ren'&&ag){renFor=ag.id;agOpen[ag.id]=true;draw();var f=document.getElementById('rnN');if(f){f.focus();f.select();}return;}
+  if(a==='renM'){renFor=renFor==='amanager0'?null:'amanager0';draw();var fm=document.getElementById('rnN');if(fm){fm.focus();fm.select();}return;}
+  if(a==='renNo'){renFor=null;draw();return;}
+  if(a==='renOk'){
+   var mg=renFor==='amanager0',who=mg?{id:'amanager0',name:NM(),role:'',c:0}:ALL().filter(function(x){return x.id===renFor;})[0];if(!who){renFor=null;draw();return;}
+   var nv=((document.getElementById('rnN')||{}).value||'').trim(),rv=mg?'':((document.getElementById('rnR')||{}).value||'').trim();
+   if(!nv){say('חסר שם');return;}
+   b.disabled=true;
+   send('סוכן',JSON.stringify({id:who.id,name:nv,role:mg?'':rv,c:who.c||0})).then(function(){
+    var L2=(D.agents=D.agents||[]),o=L2.filter(function(x){return x.id===who.id;})[0];if(o){o.name=nv;if(!mg)o.role=rv;}else L2.push({id:who.id,name:nv,role:mg?'':rv,c:who.c||0});
+    renFor=null;draw();tile();say('נשמר: '+nv);}).catch(function(){b.disabled=false;say('לא נשמר. תבדוק חיבור ותנסה שוב.');});
+   return;}
   if(a==='sw'){
    var L=routinesOf(ag||null).filter(function(r){return r.id;}),on=L.some(function(r){return r.state==='active';});
    b.disabled=true;
@@ -20646,7 +20672,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="";
+var PUSH_KEY="BAJSdIafAtGxgHzJr3tOJLTViE1Gkn6rNyAReKPb5ZiMM-6xXp2c1PD7V5VKOXkQRWLI9-Wdq7-Q4hyMCcYp2iQ";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
