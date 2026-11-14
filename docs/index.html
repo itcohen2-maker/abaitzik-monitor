@@ -2773,6 +2773,16 @@ body.gH #fcInline{display:none!important}
 .rpill.rpill button.rpGo::after{content:"↑";font:800 19px/1 Heebo,sans-serif;color:#fff}
 .rpill.rpill button.rpGo:disabled{opacity:.45}
 @keyframes rpBeat{50%{box-shadow:0 0 0 6px rgba(220,38,38,.18)}}
+.rpill.rpill button.rpPlus{flex:0 0 40px!important;width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important;border-radius:50%!important;
+ border:0!important;padding:0!important;margin:0!important;background:transparent!important;color:inherit!important;font:300 28px/1 Heebo,sans-serif!important;display:grid!important;place-items:center;cursor:pointer;box-shadow:none!important;transition:transform .2s}
+.rpill.rpill button.rpPlus[aria-expanded="true"]{transform:rotate(45deg)}
+.rpMenu{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.rpMenu[hidden]{display:none!important}
+.rpMenu.rpMenu button{flex:0 0 auto!important;width:auto!important;min-height:0!important;min-width:0!important;margin:0!important;padding:6px 12px!important;border-radius:999px!important;
+ font:600 13.5px Heebo,sans-serif!important;background:rgba(127,127,127,.10)!important;color:inherit!important;border:1px solid rgba(127,127,127,.28)!important;box-shadow:none!important}
+.ansc.fresh{border:2px solid transparent!important;border-inline-start-width:2px!important;
+ background:linear-gradient(color-mix(in srgb,var(--red,#ea4335) 6%,var(--surface,#1a1c21)),color-mix(in srgb,var(--red,#ea4335) 6%,var(--surface,#1a1c21))) padding-box,
+ conic-gradient(from 200deg,#4285F4,#EA4335,#FBBC05,#34A853,#4285F4) border-box!important;box-shadow:0 4px 18px rgba(66,133,244,.16)!important}
 @media(prefers-reduced-motion:reduce){.rpill.rpill button.rpMic.on{animation:none}}
 
 .mob{display:flex;gap:6px;flex:0 0 auto}
@@ -2924,7 +2934,7 @@ body.gH #fcInline{display:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-14T08:50:04.009Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-14T08:52:47.796Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4871,7 +4881,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='c0a7681abc';
+var CODE_ID='362945794b';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -19614,6 +19624,22 @@ function renderHome(){
   go.classList.add('rpGo');
   if(!go.getAttribute('aria-label'))go.setAttribute('aria-label',(go.textContent||'שליחה').trim());
   w.appendChild(go);
+  if(b.classList.contains('open')){
+   var host=b.closest('.rbox')||b;
+   var ex=Array.prototype.filter.call(host.querySelectorAll('.rpaste,.bmic,.bcam,.bfile'),function(x){return !x.closest('.rpill');});
+   if(ex.length){
+    var pl=document.createElement('button');pl.type='button';pl.className='rpPlus';pl.textContent='+';
+    pl.setAttribute('aria-label','עוד: הדבקה, מצלמה, קובץ, הודעה קולית');pl.setAttribute('aria-expanded','false');
+    w.insertBefore(pl,w.firstChild);
+    var mn=document.createElement('div');mn.className='rpMenu';mn.hidden=true;
+    w.parentNode.insertBefore(mn,w.nextSibling);
+    var NM={rpaste:'📋 הדבקה',bcam:'📷 מצלמה',bfile:'📎 קובץ',bmic:'🎙️ הודעה קולית'};
+    ex.forEach(function(x){for(var k in NM){if(x.classList.contains(k)){x.textContent=NM[k];break;}}mn.appendChild(x);});
+    Array.prototype.forEach.call(host.querySelectorAll('.rrow'),function(r){if(!r.querySelector('button'))r.style.display='none';});
+    pl.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();mn.hidden=!mn.hidden;pl.setAttribute('aria-expanded',mn.hidden?'false':'true');});
+    mn.addEventListener('click',function(){setTimeout(function(){mn.hidden=true;pl.setAttribute('aria-expanded','false');},60);});
+   }
+  }
   if(t[0].tagName==='TEXTAREA'){t[0].rows=1;t[0].addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,140)+'px';});}
  }
  function up(){
