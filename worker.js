@@ -365,6 +365,8 @@ function prompt(list) {
       files/<name> in an answer into the picture, a big download button, and the
       approve / pick / fix buttons, so the answer itself stays a sentence.
     */
+    // 14.11.2026 (lib/alarms.js): "תזכיר לי" at an exact time on WhatsApp, and offering it when a message has a date.
+    ...require('./lib/alarms.js').promptLines(inst.dataPath),
     // 14.11.2026 (partner-sync.js): publishing to his own Instagram and Facebook Page, only on his explicit request.
     ...(inst.name !== 'abaitzik' && fs.existsSync(path.join(inst.dataPath, 'conn', 'partner.json')) ? [
       'פרסום ברשתות של הלקוח: הפייסבוק והאינסטגרם שלו מחוברים (data/conn/partner.json). כשהוא מבקש במפורש לפרסם סרטון',
@@ -1233,11 +1235,34 @@ function routinesTick(only) {
   } catch (e) { say('!! שגרות: ' + e.message); }
 }
 
+/*
+  14.11.2026 (lib/alarms.js): one-off reminders, code only, before every guard (they cost nothing). A customer gets a
+  waPush chat record (wa-bridge.js waPushSweep sends it to his WhatsApp) and a push; Itzik gets sendOwner and a push.
+*/
+function alarmsTick() {
+  try {
+    const did = require('./lib/alarms.js').tick(inst.dataPath, Date.now(), {
+      push: (title, body) => { require('./lib/notify-channels.js').notify(title, body, { kind: 'reminders' }).catch(() => {}); },
+      wa: (text) => {
+        if (inst.name === 'abaitzik') return require('./lib/wa-out.js').sendOwner(inst.dataPath, text, { kind: 'alarm' });
+        const at = new Date(), pad = (n) => String(n).padStart(2, '0');
+        const stamp = at.getFullYear() + pad(at.getMonth() + 1) + pad(at.getDate()) + '-' + pad(at.getHours()) + pad(at.getMinutes()) + pad(at.getSeconds());
+        fs.mkdirSync(CHAT, { recursive: true });
+        let name = stamp + '-claude-push.json'; for (let i = 2; fs.existsSync(path.join(CHAT, name)); i++) name = stamp + '-claude-push-' + i + '.json';
+        fs.writeFileSync(path.join(CHAT, name), JSON.stringify({ at: at.toISOString(), from: 'claude', text, status: 'done', waPush: true, alarm: true, id: 'al-' + at.getTime().toString(36) }, null, 1), 'utf8');
+        return Promise.resolve();
+      },
+    });
+    did.forEach((d) => say('תזכורת: ' + d));
+  } catch (e) { say('!! תזכורות: ' + e.message); }
+}
+
 function main() {
   // 8.10: a paused customer gets no sessions at all.
   if (inst.paused) { say('מושהה. לא עונה.'); return; }
   // 10.11.2026: "🧑‍💼 מנהלת IT Solution". A reminder routine is a push, code only: it costs nothing, so no hold below stops it.
   if (!DRY) routinesTick('remind');
+  if (!DRY) alarmsTick();
   if (onHold()) return;
   if (quotaHold()) return;
   if (planHold()) return;
