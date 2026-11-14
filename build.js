@@ -4900,7 +4900,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
     recipes from the Lolos drive (מתכונים תקינים למהדרין 2024). The PDF is a
     private file, opened sealed like every other one.
   -->
-  <button type="button" class="gt gRec" data-grp="home" id="gRecipes" data-upd="kubbe-20261114"><b><img class="gi" src="icons/lolos-giraffe.png" alt=""> מתכונים</b><small>חוברת לולוס וספר המתכונים של איציק</small></button>
+  <button type="button" class="gt gRec" data-grp="home" id="gRecipes" data-upd="kubbe-20261114b"><b><img class="gi" src="icons/lolos-giraffe.png" alt=""> מתכונים</b><small>חוברת לולוס וספר המתכונים של איציק</small></button>
   <button type="button" class="gt g16" data-grp="money" id="gIsra" hidden><b>💳 ישראכרט יואל</b><small>הכרטיסים, מה לבקש, ומה ענו</small></button>
   <!-- איציק, 11.10: "כפתור להחליף מודל תמחק אותו". הכפתור gModel ירד ממסך הבית; הקוד שלו בודק שהוא קיים. -->
   <button type="button" class="gt g10" data-grp="home" id="gFiles" data-new="1" data-upd="20261112-fiday"><b>📁 הקבצים שלי</b><small>מה ששלחת ומה שנשלח לך, עם הורדה</small></button>
