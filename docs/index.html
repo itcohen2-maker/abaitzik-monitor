@@ -2887,11 +2887,11 @@ body.gH #fcInline{display:none!important}
 
 .micHd{position:relative;padding-bottom:12px!important}
 .micHd::after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;border-radius:2px;background:linear-gradient(90deg,#4285F4 0 25%,#EA4335 0 50%,#FBBC05 0 75%,#34A853 0);opacity:.85;pointer-events:none}
-#quickForm{border:1.5px solid transparent!important;background:linear-gradient(var(--surface,#fff),var(--surface,#fff)) padding-box,conic-gradient(from 0deg,#4285F4,#EA4335,#FBBC05,#34A853,#4285F4) border-box!important}
-#quickBtn{background:conic-gradient(from 0deg,#4285F4,#EA4335,#FBBC05,#34A853,#4285F4)!important;color:#fff!important}
-#bareBtn{border:2px solid transparent!important;color:var(--ink,#1f2430)!important;box-shadow:none!important;
+html body #quickForm.quickwrite{border:1.5px solid transparent!important;background:linear-gradient(var(--surface,#fff),var(--surface,#fff)) padding-box,conic-gradient(from 0deg,#4285F4,#EA4335,#FBBC05,#34A853,#4285F4) border-box!important}
+html body #quickForm #quickBtn{background:conic-gradient(from 0deg,#4285F4,#EA4335,#FBBC05,#34A853,#4285F4)!important;color:#fff!important}
+html body #bareBtn{border:2px solid transparent!important;color:var(--ink,#1f2430)!important;box-shadow:none!important;
  background:linear-gradient(var(--ground,#f6f8fc),var(--ground,#f6f8fc)) padding-box,conic-gradient(from 0deg,#4285F4,#EA4335,#FBBC05,#34A853,#4285F4) border-box!important}
-#thumbSet.gSetBottom{border:1.5px solid transparent!important;background:linear-gradient(var(--surface,#fff),var(--surface,#fff)) padding-box,conic-gradient(from 0deg,#4285F4,#EA4335,#FBBC05,#34A853,#4285F4) border-box!important}
+html body #thumbSet.gSetBottom{border:1.5px solid transparent!important;background:linear-gradient(var(--surface,#fff),var(--surface,#fff)) padding-box,conic-gradient(from 0deg,#4285F4,#EA4335,#FBBC05,#34A853,#4285F4) border-box!important}
 nav.bn{border-top-color:transparent!important}
 nav.bn::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#4285F4 0 25%,#EA4335 0 50%,#FBBC05 0 75%,#34A853 0);opacity:.8;pointer-events:none}
 
@@ -3044,7 +3044,7 @@ nav.bn::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;back
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-14T11:46:32.210Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-14T11:46:57.341Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4991,7 +4991,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='162860c4ee';
+var CODE_ID='802f829bda';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
