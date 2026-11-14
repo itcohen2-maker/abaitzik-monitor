@@ -31,7 +31,8 @@ const inst = require('./lib/instance.js');
   or a plan in instance.json, not only where instance.json says bizHome.
 */
 if (inst.name !== 'abaitzik' && !inst.bizHome) {
-  try { if (require('./lib/plan-io.js').stateOf(inst.name) || inst.plan) inst.bizHome = true; } catch (e) { /* as before */ }
+  // Every customer monitor is a business one; without a plan file (alon, ilay) everything is open, as in lib/connections.js.
+  inst.bizHome = true;
 }
 /*
   27.9: the chat lives on the server since 25.9, and this PC's data/ is a stale
