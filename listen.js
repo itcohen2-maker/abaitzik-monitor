@@ -954,12 +954,21 @@ function recordIncoming(m) {
         }
       } catch (e) { say('!! מצב אישי: ' + e.message); }
     }
-    const rtM = codeOk && /^\s*(?:משימה)?\s*שגרה\s+(חדשה|עצירה|חידוש|מחיקה)\s*[:：]\s*([\s\S]*?)\s*$/.exec(text.replace(/\n\s*קוד[^\n]*$/, ''));
+    const rtM = codeOk && /^\s*(?:משימה)?\s*שגרה\s+(חדשה|עצירה|חידוש|מחיקה|עכשיו|סוכן מחיקה|סוכן)\s*[:：]\s*([\s\S]*?)\s*$/.exec(text.replace(/\n\s*קוד[^\n]*$/, ''));
     if (rtM) {
       let ans = '';
       try {
         const R = require('./lib/routines.js');
-        if (rtM[1] === 'חדשה') {
+        // 14.11.2026: agents (a name, a role) and "run now"
+        if (rtM[1] === 'סוכן') {
+          let o = null; try { o = JSON.parse(rtM[2]); } catch (e) { /* answered below */ }
+          const r = R.agentSave(inst.dataPath, o);
+          ans = r.ok ? 'הסוכן נשמר: ' + r.agent.name + (r.agent.role ? ', ' + r.agent.role : '') + '.' : 'הסוכן לא נשמר: ' + r.why;
+        } else if (rtM[1] === 'סוכן מחיקה') {
+          ans = R.agentRemove(inst.dataPath, String(rtM[2]).trim().split(/\s+/)[0]) ? 'הסוכן והפקודות שלו נמחקו.' : 'לא מצאתי את הסוכן.';
+        } else if (rtM[1] === 'עכשיו') {
+          ans = R.runNow(inst.dataPath, String(rtM[2]).trim().split(/\s+/)[0]) ? 'זה ירוץ בדקה הקרובה.' : 'לא מצאתי את הפקודה.';
+        } else if (rtM[1] === 'חדשה') {
           let o = null; try { o = JSON.parse(rtM[2]); } catch (e) { /* answered below */ }
           const r = R.add(inst.dataPath, o);
           ans = r.ok ? 'השגרה נשמרה: ' + r.rec.text + ' (' + R.labelOf(r.rec.sched) + ').' : 'השגרה לא נשמרה: ' + r.why;

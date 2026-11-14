@@ -859,7 +859,9 @@ function build() {
     // 12.11.2026, Itzik: "📤 הודעות לשליחה" in every monitor (lib/sendlist.js): messages prepared one by one, he sends them himself. Sealed payload only.
     sendlist: require('./lib/sendlist.js').forPage(inst.dataPath, Date.now()),
     handle: (inst.name === 'abaitzik' || inst.handle === true) ? require('./lib/handle.js').forPage(inst.dataPath) : [],
-    routines: inst.name === 'abaitzik' ? [] : require('./lib/routines.js').forPage(inst.dataPath, Date.now()),
+    // 14.11.2026: his monitor too ("המנהל שלי"), and the agents the routines belong to
+    routines: require('./lib/routines.js').forPage(inst.dataPath, Date.now()),
+    agents: require('./lib/routines.js').agentsForPage(inst.dataPath),
     // 12.11.2026, Itzik: "🏡 מצב אישי" in every monitor (lib/personal.js), sealed payload only.
     personal: require('./lib/personal.js').forPage(inst.dataPath),
     manager: inst.name === 'abaitzik' ? require('./lib/manager.js').forPage(inst.dataPath, Date.now()) : null,
@@ -4435,6 +4437,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
  .ic.updblink .c::after,.ic.taskblink .c::after{animation:none!important;opacity:.55}}
 ${require('./lib/gemini-home.js').css}
 ${require('./lib/reply-pill.js').css}
+${require('./lib/agents-ui.js').css}
 .mob{display:flex;gap:6px;flex:0 0 auto}
 .mob button{background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:10px;
  padding:9px 12px;font:500 13.5px Heebo,sans-serif;cursor:pointer;white-space:nowrap}
@@ -24484,7 +24487,7 @@ ${require('./lib/activity-ui.js').js}
 on('gActLog',function(){pane('Lg');renderActLog();return false;});
 /*ITZIK:END*/
 ${require('./lib/home-ui.js').js}
-${require('./lib/gemini-home.js').js}${require('./lib/reply-pill.js').js}${inst.name === 'abaitzik' ? require('./lib/demo-mode.js').js : ''}${inst.bizHome ? require('./lib/biz-home.js').js : ''}${inst.name !== 'abaitzik' ? require('./lib/shop-list.js').js : ''}
+${require('./lib/gemini-home.js').js}${require('./lib/reply-pill.js').js}${require('./lib/agents-ui.js').js(inst.name === 'abaitzik')}${inst.name === 'abaitzik' ? require('./lib/demo-mode.js').js : ''}${inst.bizHome ? require('./lib/biz-home.js').js : ''}${inst.name !== 'abaitzik' ? require('./lib/shop-list.js').js : ''}
 ${require('./lib/skins-ui.js').js}
 boot('design',dzBoot);
 ${pushUi.js(pushKey())}

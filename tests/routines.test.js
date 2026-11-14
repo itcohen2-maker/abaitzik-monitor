@@ -122,3 +122,58 @@ test('Jerusalem time is right on both sides of the clock change', () => {
   assert.strictEqual(new Date(J(2026, 10, 24, 12, 0)).toISOString(), '2026-10-24T09:00:00.000Z');
   assert.strictEqual(new Date(J(2026, 11, 10, 12, 0)).toISOString(), '2026-11-10T10:00:00.000Z');
 });
+
+// 14.11.2026: agents (a name, a role), an hourly routine, run now, and what "עבודת המנהל" shows.
+test('agents: saved, renamed, limited, and removed with their routines', () => {
+  const dir = tmp();
+  assert.strictEqual(R.agentSave(dir, { id: 'bad', name: 'נועה' }).ok, false);
+  assert.strictEqual(R.agentSave(dir, { id: 'aabc123', name: '  ' }).ok, false);
+  const a = R.agentSave(dir, { id: 'aabc123', name: 'נועה', role: 'אחראית על המיילים', c: 2 });
+  assert.ok(a.ok);
+  assert.strictEqual(R.agentSave(dir, { id: 'aabc123', name: 'נועה ב' }).agent.name, 'נועה ב');
+  assert.strictEqual(R.agents(dir).length, 1);
+  assert.strictEqual(R.agents(dir)[0].role, 'אחראית על המיילים');
+  const r = R.add(dir, Object.assign(daily('08:00'), { agent: 'aabc123' }), J(2026, 11, 10, 9, 0));
+  assert.ok(r.ok);
+  assert.strictEqual(R.list(dir)[0].agent, 'aabc123');
+  assert.strictEqual(R.validate(Object.assign(daily('08:00'), { agent: '../x' })).ok, false);
+  assert.ok(R.agentRemove(dir, 'aabc123'));
+  assert.strictEqual(R.agents(dir).length, 0);
+  assert.strictEqual(R.list(dir).length, 0);
+  for (let i = 0; i < R.MAX_AGENTS; i++) assert.ok(R.agentSave(dir, { id: 'a' + 'x'.repeat(4) + i, name: 'ס' + i }).ok);
+  assert.strictEqual(R.agentSave(dir, { id: 'azzzz99', name: 'עוד' }).ok, false);
+});
+
+test('hourly: every hour at the minute, 08:00 to 20:00, not at night', () => {
+  const dir = tmp();
+  R.add(dir, { text: 'לבדוק לידים', kind: 'remind', sched: { freq: 'hourly', hm: '08:15' } }, J(2026, 11, 10, 7, 0));
+  const r = R.list(dir)[0];
+  assert.strictEqual(R.nextScheduled(r, J(2026, 11, 10, 9, 20)), J(2026, 11, 10, 10, 15));
+  assert.strictEqual(R.nextScheduled(r, J(2026, 11, 10, 20, 20)), J(2026, 11, 11, 8, 15));
+  assert.strictEqual(R.lastScheduled(r, J(2026, 11, 10, 9, 20)), J(2026, 11, 10, 9, 15));
+  let n = 0;
+  const hooks = { push: () => { n++; }, chat: () => {} };
+  R.tick(dir, J(2026, 11, 10, 9, 16), hooks);
+  R.tick(dir, J(2026, 11, 10, 9, 40), hooks);
+  R.tick(dir, J(2026, 11, 10, 10, 16), hooks);
+  assert.strictEqual(n, 2);
+  assert.ok(/כל שעה/.test(R.labelOf(r.sched)));
+});
+
+test('run now: due on the next tick once, then back to its own time, and the runs are kept for the page', () => {
+  const dir = tmp();
+  const made = J(2026, 11, 10, 9, 0);
+  const r = R.add(dir, daily('20:00', 'work'), made);
+  const msgs = [];
+  const hooks = { push: () => {}, chat: (text, id) => msgs.push({ text, id }) };
+  assert.strictEqual(R.tick(dir, made + 60000, hooks).length, 0);
+  assert.ok(R.runNow(dir, r.id));
+  assert.strictEqual(R.forPage(dir, made)[0].runNow, true);
+  R.tick(dir, made + 120000, hooks);
+  R.tick(dir, made + 180000, hooks);
+  assert.strictEqual(msgs.length, 1);
+  const p = R.forPage(dir, made + 200000)[0];
+  assert.strictEqual(p.runNow, false);
+  assert.strictEqual(p.runs.length, 1);
+  assert.ok(!R.runNow(dir, 'rnope1'));
+});
