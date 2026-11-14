@@ -70,6 +70,8 @@ function leadsTask(ymd) {
     '{"at":"<ISO>","name":"<השם כמו שמופיע>","network":"<network>","reach":"<המשתמש, ומספר או מייל אם השאיר>","note":"<מה ביקש ואיפה. לא נענה, מחכה להחלטה שלך.>","status":"open"}',
     'קודם בודקים ב ls שם שהוא לא כבר שם. רק פניות אמיתיות, לא כל מחמאה.',
     'אם נכנס ליד חדש, התראה אחת בלבד: ' + SSH + ' "cd /home/monitor/abaitzik-monitor && sudo -u monitor node notify.js \'ליד חדש\' \'<מי ומה, שורה אחת>. במוניטור, כפתור לידים למטה\'"',
+    // 14.11.2026, Itzik: the morning scan must tell him every lead, also the ones the server already caught (IT Solution page, ads, site).
+    'חובה: לפני שכותבים את קובץ הלידים מריצים ' + SSH + ' "cd /home/monitor/abaitzik-monitor && sudo -u monitor node lib/leads-open.js" וכל ליד שמופיע שם נכנס לדוח הלידים, שורה לכל ליד, עם השעה שהגיע ומה הלאה. הכותרת סופרת גם אותם. אין שם כלום ואין ברשתות: כותבים שאין.',
     'ושוב: לא לייק, לא תגובה, לא תשובה, לא אישור בקשה.',
   ].join('\n');
 }

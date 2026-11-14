@@ -74,6 +74,7 @@ function prompt(m, chat, reports) {
     '',
     'מבנה הדוח, בסדר הזה, רק סעיפים שיש בהם משהו:',
     '1. דחוף: מה דורש ממנו פעולה היום (תשלום, תור, מסמך, תשובה לאדם אמיתי). לכל פריט: מי, מה, ומה לעשות.',
+    '   ליד פתוח הוא תמיד דחוף: רשימת הלידים המלאה מתווספת מתחת לדוח מהקוד, אז בכותרת רק כמה לידים מחכים.',
     '2. מיילים: מי שלח מה, שורה לכל מייל חשוב. פרסומות, ניוזלטרים וספאם בשורה אחת מסכמת עם מספר, בלי לפרט.',
     '3. במוניטור: מה הוא ביקש אתמול, מה בוצע, ומה עדיין פתוח או מחכה לו.',
     '4. מה השתנה: מספרים מהדוחות (עוקבים, צפיות) רק אם יש שינוי שכדאי לדעת.',
@@ -156,6 +157,14 @@ function bizBlock() {
   } catch (e) { return ''; }
 }
 
+// 14.11.2026, Itzik: "גם בדוחות ... אם יש ליד לספר לי". Every open IT Solution lead, from code, never from the model.
+function leadsBlock() {
+  try {
+    const l = require('./lib/leads-open.js').lines(inst.dataPath);
+    return l.length ? '\n\nלידים פתוחים (' + l.length + '):\n' + l.map((x, i) => (i + 1) + '. ' + x).join('\n') : '';
+  } catch (e) { return ''; }
+}
+
 function execNode(args, timeout) {
   execFileSync('node', args, { cwd: __dirname, stdio: 'ignore', timeout });
 }
@@ -166,7 +175,8 @@ async function main() {
   const chat = docs('chat');
   const reports = docs('reports').filter(x => !/^דוח בוקר/.test(x.title || ''));
   // Nothing new in the last day: no model session at all (saving rule 2).
-  const fresh = m.items.length > 0 || chat.length > 0 || reports.length > 0;
+  let leadsN = 0; try { leadsN = require('./lib/leads-open.js').lines(inst.dataPath).length; } catch (e) {}
+  const fresh = m.items.length > 0 || chat.length > 0 || reports.length > 0 || leadsN > 0;
   const r = fresh ? parse(await runClaude(prompt(m, chat, reports))) : null;
 
   // 24.10.2026: the metrics doc. Plain code, no model.
@@ -185,7 +195,7 @@ async function main() {
     const doc = {
       at: new Date().toISOString(),
       title: 'דוח בוקר ' + day + ': ' + r.title,
-      body: r.body + usageBlock() + bizBlock() + (m.error ? '\n\nהתיבה לא נקראה הבוקר (' + m.error + '), הדוח בלי המיילים.' : ''),
+      body: r.body + leadsBlock() + usageBlock() + bizBlock() + (m.error ? '\n\nהתיבה לא נקראה הבוקר (' + m.error + '), הדוח בלי המיילים.' : ''),
     };
     const dir = path.join(inst.dataPath, 'reports', 'reports');
     fs.mkdirSync(dir, { recursive: true });
