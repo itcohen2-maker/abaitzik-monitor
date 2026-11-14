@@ -6022,17 +6022,17 @@ __RIVSHARE__
 </section>
 <!--ITZIK:END-->
 
-<!--ITZIK:BEGIN-->
+<!-- 14.11.2026: since 13.11 the customers bar has דוחות, but this screen was owner only, so a customer got an empty screen
+     (found by the new bar check). Every monitor has it now: the reports list for all, the round schedule and "דוח עכשיו" for Itzik. -->
 <section id="pR" hidden>
- <h2>דוחות הסבבים</h2>
- <div class="nextrep">
+ <h2>${inst.name === 'abaitzik' ? 'דוחות הסבבים' : 'דוחות'}</h2>
+ <div class="nextrep"${inst.name === 'abaitzik' ? '' : ' hidden'}>
   <div><b id="repNext">הדוח הבא</b><small id="repWhen"></small></div>
   <button type="button" id="repNow">דוח עכשיו</button>
  </div>
  <div class="msgsaid" id="repSaid"></div>
  <div id="reports"></div>
 </section>
-<!--ITZIK:END-->
 
 <!--ITZIK:BEGIN-->
 <section id="pE" hidden>
