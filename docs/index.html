@@ -2706,6 +2706,33 @@ body.gH .gChips{display:flex;gap:8px;justify-content:center;margin-top:12px;orde
 .gSay{display:none}
 body.gH .gSay{display:block;color:var(--dim);font-size:13px;text-align:center;margin-top:8px;order:6}
 body.gH #bareBtn{display:block;width:auto!important;min-width:0!important;margin:14px auto 6px!important;padding:12px 34px!important}
+html.gChatOpen,html.gChatOpen body{overflow:hidden!important}
+#fcSheet.gFull{padding:0!important;background:var(--ground)!important;align-items:stretch!important;justify-content:center}
+#fcSheet.gFull .ycard{max-width:760px!important;width:100%;height:100%;max-height:none;border-radius:0!important;box-shadow:none!important;
+ background:var(--ground)!important;color:var(--ink)!important;padding:calc(env(safe-area-inset-top,0px) + 6px) 14px calc(env(safe-area-inset-bottom,0px) + 10px)!important;gap:8px}
+#fcSheet.gFull .gTop{display:flex;align-items:center;gap:8px;min-height:48px;border-bottom:1px solid var(--line);margin:0 -14px;padding:0 8px}
+#fcSheet.gFull .gTop b{flex:1;font:600 17px Heebo,sans-serif;color:var(--ink)}
+#fcSheet.gFull .gBack{flex:0 0 auto;min-height:44px;padding:0 12px;border:0;border-radius:22px;background:transparent;color:var(--ink);font:600 16px Heebo,sans-serif;cursor:pointer}
+#fcSheet.gFull .gBack:active{background:var(--line)}
+#fcSheet.gFull .ycard>.yx,#fcSheet.gFull .ytopx,#fcSheet.gFull .fcm[data-k="fcs"],#fcSheet.gFull .fcm[data-k="fcc"]{display:none!important}
+#fcSheet.gFull .fcTop:not(:has(.fcm:not([hidden]):not([data-k="fcs"]):not([data-k="fcc"]))){display:none}
+#fcSheet.gFull .fcMsgs{gap:14px;padding:12px 2px}
+#fcSheet.gFull .fcb{max-width:92%}
+#fcSheet.gFull .fcbt{font-size:16.5px;line-height:1.6}
+#fcSheet.gFull .fcb.me .fcbt{background:var(--accent-soft);color:var(--ink);border-radius:20px}
+#fcSheet.gFull .fcb.bot .fcbt{background:transparent;color:var(--ink);padding:2px 4px}
+#fcSheet.gFull .fcdo{min-height:34px;padding:0 10px;border:0;background:transparent;color:var(--dim);font:500 13px Heebo,sans-serif}
+#fcSheet.gFull .fcEmpty{color:var(--dim);text-align:center;margin-top:20vh}
+#fcSheet.gFull .fcForm{align-items:center;gap:6px;padding:6px 8px;border-radius:30px;background:var(--surface,var(--chip));border:1px solid var(--line);box-shadow:0 2px 12px rgba(0,0,0,.14)}
+#fcSheet.gFull .fcForm textarea{border:0!important;background:transparent!important;color:var(--ink);min-height:40px;padding:8px 8px;outline:none}
+#fcSheet.gFull .fcForm button{width:42px;min-width:42px;height:42px;min-height:42px;padding:0;border-radius:50%;font-size:0}
+#fcSheet.gFull .fcForm button::after{content:"↑";font:800 20px/1 Heebo,sans-serif}
+#fcSheet.gFull .fcMode{background:var(--accent-soft);color:var(--ink)}
+.gBackChat{display:none}
+body.gH .gBackChat{display:block;margin:10px auto 0;order:7;min-height:40px;padding:0 18px;border-radius:999px;border:1px solid var(--line);
+ background:transparent;color:var(--ink);font:500 15px Heebo,sans-serif;cursor:pointer}
+body.gH .gBackChat[hidden]{display:none}
+body.gH #fcInline{display:none!important}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body.gH{background-image:radial-gradient(ellipse 80% 45% at 50% 38%,rgba(43,75,216,.30),transparent 70%);background-attachment:fixed}}
 :root[data-theme="dark"] body.gH{background-image:radial-gradient(ellipse 80% 45% at 50% 38%,rgba(43,75,216,.30),transparent 70%);background-attachment:fixed}
 
@@ -2858,7 +2885,7 @@ body.gH #bareBtn{display:block;width:auto!important;min-width:0!important;margin
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-14T05:28:19.389Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-14T05:29:04.059Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3216,14 +3243,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4811,7 +4831,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='a483b0065a';
+var CODE_ID='881290dcf0';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -19382,9 +19402,8 @@ function renderHome(){
    var chosen=isTask(t)?'משימה':'שיחה';
    if(!chatOk()||chosen==='משימה'||busy){say(busy?'השיחה עוד עונה על השאלה הקודמת, אז זה נשלח לביצוע.':'זו משימה, נשלחה לביצוע. התשובה תגיע במסך התשובות.');return;}
    e.preventDefault();e.stopImmediatePropagation();
-   try{fcS.inl=true;}catch(x){}
    if(ta)ta.value='';
-   fcSend(t);say('זו שאלה, התשובה כאן למטה תוך כמה שניות.');
+   gOpenChat();fcSend(t);
   },true);
  }
  function micIn(){var m=document.getElementById('micBtn'),f=document.getElementById('quickForm');if(m&&f&&m.parentNode!==f)f.appendChild(m);}
@@ -19420,7 +19439,32 @@ function renderHome(){
   var rb=document.getElementById('reloadBtn'),h=document.getElementById('pH');if(rb&&h)h.parentNode.insertBefore(rb,h.nextSibling);
   document.body.classList.add('gH');
  }
- function boot(){arm();micIn();gSet();try{gHome();}catch(x){}}
+ function gFull(){
+  var w=document.getElementById('fcSheet');if(!w||w.classList.contains('gFull'))return;
+  w.classList.add('gFull');document.documentElement.classList.add('gChatOpen');
+  var card=w.querySelector('.ycard'),title=card&&card.querySelector(':scope>b');
+  if(card&&title){var top=document.createElement('div');top.className='gTop';
+   var back=document.createElement('button');back.type='button';back.className='gBack';back.textContent='→ חזרה';back.setAttribute('aria-label','חזרה למסך הבית');
+   back.addEventListener('click',function(){var x=card.querySelector('.yx');if(x)x.click();else w.remove();});
+   card.insertBefore(top,title);top.appendChild(back);top.appendChild(title);}
+  var mo=new MutationObserver(function(){if(!document.body.contains(w)){mo.disconnect();document.documentElement.classList.remove('gChatOpen');gBackBtn();}});
+  mo.observe(document.body,{childList:true});
+  var ta=document.getElementById('fcText');if(ta){ta.setAttribute('rows','1');ta.setAttribute('placeholder','כתוב כאן');}
+ }
+ function gOpenChat(){try{fcS.inl=false;}catch(x){}if(typeof fcSheet==='function')fcSheet();gFull();}
+ function gWrap(){
+  if(typeof fcSheet!=='function'||fcSheet.gW)return;
+  var orig=fcSheet;var nw=function(){var r=orig.apply(this,arguments);try{gFull();}catch(x){}return r;};nw.gW=1;
+  try{window.fcSheet=nw;}catch(x){}
+  try{fcSheet=nw;}catch(x){}
+ }
+ function gBackBtn(){
+  var c=document.getElementById('talkCard');if(!c)return;var b=document.getElementById('gBackChat');
+  if(!b){b=document.createElement('button');b.type='button';b.id='gBackChat';b.className='gBackChat';b.textContent='💬 להמשיך את השיחה';
+   b.addEventListener('click',gOpenChat);c.appendChild(b);}
+  var n=0;try{n=fcS.msgs.length;}catch(x){}b.hidden=!n;
+ }
+ function boot(){arm();micIn();gSet();try{gHome();}catch(x){}try{gWrap();}catch(x){}setInterval(function(){try{if(chatOk())gBackBtn();}catch(x){}},3000);}
  if(document.readyState!=='loading')boot();else document.addEventListener('DOMContentLoaded',boot);
 })();
 
@@ -20088,7 +20132,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="BAJSdIafAtGxgHzJr3tOJLTViE1Gkn6rNyAReKPb5ZiMM-6xXp2c1PD7V5VKOXkQRWLI9-Wdq7-Q4hyMCcYp2iQ";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
