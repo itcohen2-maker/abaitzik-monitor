@@ -128,7 +128,10 @@ async function pageToken(tk) {
   const first = !prev;
   const added = [];
   if (DRY) { r.found.forEach((f) => console.log('would see: ' + f.src + ' ' + f.name + ': ' + String(f.text || '').slice(0, 60))); }
-  else r.found.forEach((f) => { const n = leads.addFound(inst.dataPath, f); if (n) added.push(n); });
+  // 14.11.2026, Itzik: "אני לא פותח את האפליקציה הזאת אז אני צריך שהמנהל יאתר את ההודעות האלו". A new message from a
+  // lead we already have (an answer, a phone number) is caught too, not only the first one.
+  const replied = [];
+  if (!DRY) r.found.forEach((f) => { const n = leads.addFound(inst.dataPath, f, (lead, line) => replied.push({ lead, line })); if (n) added.push(n); });
   const st = { at, ok: r.need.length === 0, need: r.need, token: tk.f.replace(/^\./, ''), seen: r.found.length, added: added.length };
   console.log(at + ' seen ' + r.found.length + ', new ' + added.length + (r.need.length ? ', missing: ' + r.need.join(',') : ''));
   if (DRY) return;
@@ -144,7 +147,14 @@ async function pageToken(tk) {
       catch (e) { console.log('!! notify: ' + e.message); }
     });
   }
-  const changed = added.length || !prev || prev.ok !== st.ok || String(prev.need) !== String(st.need);
+  if (!first) replied.filter((x) => !x.lead.test).forEach(({ lead, line }) => {
+    const where = leads.SOURCES[lead.source] || lead.source;
+    try { require('./lib/handle.js').add(inst.dataPath, { key: 'lead-msg:' + lead.id + ':' + Date.now(), kind: 'lead', who: lead.name, title: 'הודעה חדשה (' + where + '): "' + line.slice(0, 160) + '"', link: 'biz', at: new Date().toISOString(), bizId: lead.id }); }
+    catch (e) { console.log('!! handle: ' + e.message); }
+    try { console.log(execFileSync(process.execPath, ['notify.js', '--urgent', '💬 הודעה חדשה מ' + lead.name, where + ': "' + line.slice(0, 160) + '". בעסק שלי, IT Solution, לידים.'], { cwd: __dirname, encoding: 'utf8', timeout: 60000 }).trim()); }
+    catch (e) { console.log('!! notify: ' + e.message); }
+  });
+  const changed = added.length || replied.length || !prev || prev.ok !== st.ok || String(prev.need) !== String(st.need);
   if (changed) {
     try { execFileSync(process.execPath, ['push.js', 'leads: scan ' + added.length + ' new'], { cwd: __dirname, stdio: 'inherit', timeout: 300000 }); }
     catch (e) { console.log('!! push: ' + e.message); }
