@@ -1977,13 +1977,13 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 .bzSec{font:700 14px Heebo,sans-serif;margin:10px 0 2px;color:#14675a}
 .bzRow{border-bottom:1px solid rgba(128,128,128,.25);padding:8px 0;font:500 14px/1.45 Heebo,sans-serif;display:flex;flex-direction:column;gap:2px}
 .ldTbl{border:1px solid rgba(128,128,128,.3);border-radius:12px;overflow:hidden;margin-bottom:14px;font:500 14px/1.4 Heebo,sans-serif}
-.ldHd,.ldRow>summary{display:grid;grid-template-columns:3.2em 1fr 7.5em 4em;gap:6px;padding:9px 10px;align-items:center}
+.ldHd,.ldRow>summary{display:grid;grid-template-columns:auto minmax(5em,1fr) minmax(3.6em,7.5em) auto;gap:6px;padding:9px 10px;align-items:center}
 .ldHd{font-weight:700;font-size:12px;opacity:.7;background:rgba(128,128,128,.08)}
 .ldRow{border-top:1px solid rgba(128,128,128,.22)}
 .ldRow>summary{cursor:pointer;list-style:none}
 .ldRow>summary::-webkit-details-marker{display:none}
-.ldRow>summary b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ldRow>summary span:nth-child(3){font-size:12px}
+.ldRow>summary b{min-width:0;white-space:normal;overflow-wrap:anywhere}
+.ldRow>summary span:nth-child(3){font-size:12px;min-width:0;overflow-wrap:anywhere}
 .ldSt{font-size:12px;font-weight:700;text-align:center;border-radius:8px;padding:2px 4px;background:rgba(128,128,128,.12)}
 .ldNew>summary{background:rgba(255,153,0,.13)}
 .ldRow.ldTest,.bzRow.bzTest{opacity:.55;filter:grayscale(1)}
@@ -2901,7 +2901,7 @@ body.gH #fcInline{display:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-14T08:10:01.861Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-14T08:14:45.081Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4848,7 +4848,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='e1f289dc45';
+var CODE_ID='b10da514a0';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');

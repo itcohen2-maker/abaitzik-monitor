@@ -3557,13 +3557,14 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 .bzRow{border-bottom:1px solid rgba(128,128,128,.25);padding:8px 0;font:500 14px/1.45 Heebo,sans-serif;display:flex;flex-direction:column;gap:2px}
 /* 11.11.2026: the leads table in IT Solution (itsLeadsHtml). */
 .ldTbl{border:1px solid rgba(128,128,128,.3);border-radius:12px;overflow:hidden;margin-bottom:14px;font:500 14px/1.4 Heebo,sans-serif}
-.ldHd,.ldRow>summary{display:grid;grid-template-columns:3.2em 1fr 7.5em 4em;gap:6px;padding:9px 10px;align-items:center}
+/* 14.11.2026: on his iPhone with larger text the fixed columns ate the whole row and the name column fell to 0 ("היה ליד של אופירה, איפה הוא?"). The name keeps at least 5em now. */
+.ldHd,.ldRow>summary{display:grid;grid-template-columns:auto minmax(5em,1fr) minmax(3.6em,7.5em) auto;gap:6px;padding:9px 10px;align-items:center}
 .ldHd{font-weight:700;font-size:12px;opacity:.7;background:rgba(128,128,128,.08)}
 .ldRow{border-top:1px solid rgba(128,128,128,.22)}
 .ldRow>summary{cursor:pointer;list-style:none}
 .ldRow>summary::-webkit-details-marker{display:none}
-.ldRow>summary b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ldRow>summary span:nth-child(3){font-size:12px}
+.ldRow>summary b{min-width:0;white-space:normal;overflow-wrap:anywhere}
+.ldRow>summary span:nth-child(3){font-size:12px;min-width:0;overflow-wrap:anywhere}
 .ldSt{font-size:12px;font-weight:700;text-align:center;border-radius:8px;padding:2px 4px;background:rgba(128,128,128,.12)}
 .ldNew>summary{background:rgba(255,153,0,.13)}
 /* 12.11.2026, Itzik: a lead from his own phone or mail is a test: greyed, tagged, never counted */
