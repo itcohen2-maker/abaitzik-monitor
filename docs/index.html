@@ -2883,6 +2883,12 @@ body.gH #fcInline{display:none!important}
 #agScr .tpl button small{display:block;color:var(--dim,#9aa0a6);font-weight:400;font-size:11.5px;margin-top:2px}
 #agScr .tpl button.on{border-color:#4285F4}
 #agScr .agOpt input[type=text]{width:100%;box-sizing:border-box;font:16px Heebo,sans-serif;color:inherit;background:var(--surface,#1a1c21);border:1px solid var(--line,#2e3036);border-radius:12px;padding:9px 11px}
+#agScr .idG{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#agScr .idC{text-align:right;background:var(--surface,#1a1c21);border:1px solid var(--line,#2e3036);border-radius:18px;padding:11px;color:var(--ink,#e8eaed);font-family:Heebo,sans-serif;cursor:pointer;display:flex;flex-direction:column;gap:4px}
+#agScr .idC b{font:800 15px Heebo,sans-serif}
+#agScr .idC small{color:var(--dim,#9aa0a6);font-size:12px;line-height:1.45}
+#agScr .idC .go{margin-top:auto;font:800 13px Heebo,sans-serif;color:#4285F4}
+#agScr .idC.on{border-color:#34A853}#agScr .idC.on .go{color:#34A853}
 @media(prefers-reduced-motion:reduce){#mgrTop,#mgrTop .mgAv,#agScr *{animation:none!important}}
 
 
@@ -3076,7 +3082,7 @@ html body #quickForm.quickwrite.mvWait{border:2px solid transparent!important;an
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-14T12:50:06.260Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-14T12:51:49.065Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -5023,7 +5029,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='b420c9b6d5';
+var CODE_ID='99bfa2d5d0';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -14664,6 +14670,8 @@ function lbState(r){var s=r.status||'חדש';return s==='נסגר'?'ok':s==='א�
 function lbWa(p){var d=String(p||'').replace(/[^0-9]/g,'');if(d.indexOf('0')===0)d='972'+d.slice(1);return 'https://wa.me/'+d;}
 function leadBoard(wk){
  if(typeof wk==='number')LB_WEEK=wk;
+ if(typeof ensure==='function'&&!(D.biz&&D.biz.length)&&!leadBoard._t){leadBoard._t=1;return ensure('biz',function(){leadBoard._t=0;leadBoard();});}
+ leadBoard._t=0;
  var old=document.getElementById('bdGrid');if(old)old.remove();
  var L=(D.biz||[]).filter(function(r){return r&&r.kind==='lead'&&!r.test;});
  var DN=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'],DS=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
@@ -19929,6 +19937,20 @@ function renderHome(){
   ['asyscont','שירה','תוכן ורשתות',['plate','platesite','status','aistory','story','linkedin','platestock','statusstock','candles'],[['כל יום','🍽️','מה בצלחת, סטטוס, נרות, לינקדין וסטורי'],['כל בוקר 06:30','🎬','מלאי לשבוע מראש']]],
   ['asyssec','רון','אבטחה ואישורים',['security','vercel','approvals'],[['פעמיים ביום','🔒','בדיקת אבטחה'],['כל יום','🛡️','אישורים של מטא וגוגל, וורסל']]],
   ['asyswork','ליאת','מה נשאר לך',[],[['בכל סבב','🙋','מה פתוח ומחכה לך היום']]]];
+ var NOSEND='לא לשלוח לאף אחד: להכין טיוטה לכל אחד ולהציג לי לאישור, עם כפתור שליחה לכל אחד.';
+ var IDEAS=[
+  {k:'pay',i:'💰',t:'תזכורת תשלום',d:'כל יום ראשון ב 09:00: מי עוד לא שילם, ולכל אחד תזכורת מנומסת מוכנה. נשלחת רק אחרי האישור שלך.',ag:['יוסי','כסף וגבייה'],
+   r:[{text:'לבדוק מי עוד לא שילם, ולנסח לכל אחד תזכורת תשלום קצרה ומנומסת. '+NOSEND,kind:'work',sched:{freq:'weekly',hm:'09:00',days:[0]}}]},
+  {k:'rev',i:'⭐',t:'בקשת ביקורת',d:'כל יום ב 10:00: מי סיים עבודה אתמול, ולכל אחד בקשה קצרה לביקורת בגוגל. נשלחת רק אחרי האישור שלך.',ag:['גיל','ביקורות ולקוחות מרוצים'],
+   r:[{text:'לבדוק אילו לקוחות סיימו עבודה איתי אתמול, ולנסח לכל אחד בקשה קצרה וחמה לכתוב ביקורת בגוגל, עם הקישור לעמוד העסק אם יש. '+NOSEND,kind:'work',sched:{freq:'daily',hm:'10:00'}}]},
+  {k:'week',i:'📊',t:'סיכום שבועי',d:'כל יום שישי ב 12:00: כמה לידים טופלו, כמה כסף נכנס, מה נסגר, ובערך כמה זמן נחסך.',ag:['עומר','סיכומים'],
+   r:[{text:'לסכם את השבוע במספרים: כמה לידים נכנסו וכמה טופלו, כמה כסף נכנס ומי עוד חייב, אילו משימות נסגרו, ובערך כמה שעות עבודה המוניטור חסך. קצר וברור.',kind:'work',sched:{freq:'weekly',hm:'12:00',days:[5]}}]},
+  {k:'quiet',i:'🌙',t:'שקט בערב',d:'מ 20:00 עד 07:00 התראות לא מצלצלות, ובבוקר מגיע סיכום אחד. תזכורות שקבעת והשעון המעורר מצלצלים תמיד.'}];
+ function quietSet(){try{return JSON.parse(localStorage.getItem('quietSet')||'{}');}catch(e){return {};}}
+ function ideaOn(x){if(x.k==='quiet'){var q=quietSet();return q.on!==false&&q.at&&q.from==='20:00';}
+  return R().some(function(r){return r.text===x.r[0].text;});}
+ function ideasHtml(){return '<div class="agSec">⚡ רעיונות מוכנים <small style="font:600 12.5px Heebo,sans-serif;color:var(--dim,#9aa0a6)">נגיעה אחת</small></div><div class="idG">'
+  +IDEAS.map(function(x){var on=ideaOn(x);return '<button type="button" class="idC'+(on?' on':'')+'" data-a="idea" data-k="'+x.k+'"><b>'+x.i+' '+E(x.t)+'</b><small>'+E(x.d)+'</small><span class="go">'+(on?'✓ פעיל':'להפעיל')+'</span></button>';}).join('')+'</div>';}
  function MI(){return (window.D&&D.manager&&D.manager.items)||[];}
  function MAT(){return (window.D&&D.manager&&D.manager.at)||'';}
  function sysOf(k){for(var i=0;i<SYS.length;i++)if(SYS[i][3].indexOf(k)>=0)return SYS[i];return SYS[SYS.length-1];}
@@ -20031,7 +20053,7 @@ function renderHome(){
    +'<div class="agSec">הסוכנים שלך <button type="button" class="agNew" data-a="new">+ סוכן חדש</button></div>'
    +(formFor==='|new'?'<div class="ag" style="--c:#4285F4"><b>סוכן חדש</b>'+optHtml(true)+'</div>':'')
    +(ag.length||gen.length?ag.map(agHtml).join('')+(gen.length?agHtml(null):''):'<div class="agEmpty">עוד אין סוכנים. "+ סוכן חדש" ומתחילים מתבנית, למשל מיילים או תזכורות.</div>')
-   +workHtml()+'</div><button type="button" class="agX" data-a="x">✕ סגירה</button>';
+   +ideasHtml()+workHtml()+'</div><button type="button" class="agX" data-a="x">✕ סגירה</button>';
   scr.scrollTop=y;
  }
  function open(){
@@ -20073,6 +20095,20 @@ function renderHome(){
    document.getElementById('agNm').value=T[1];document.getElementById('agRl').value=T[2];document.getElementById('agTx').value=T[3];kind=T[4];
    Array.prototype.forEach.call(scr.querySelectorAll('[data-tpl]'),function(x){x.classList.toggle('on',x===b);});
    Array.prototype.forEach.call(scr.querySelectorAll('[data-g="kind"] button'),function(x){x.classList.toggle('on',x.getAttribute('data-v')===kind);});return;}
+  if(a==='idea'){
+   var x=IDEAS.filter(function(z){return z.k===b.getAttribute('data-k');})[0];if(!x)return;
+   if(ideaOn(x)){say(x.k==='quiet'?'השקט בערב כבר פעיל. משנים בהגדרות, שעות שקטות.':'כבר פעיל. אפשר לשנות או למחוק אצל הסוכן שלו.');return;}
+   b.disabled=true;
+   if(x.k==='quiet'){var line='שעות שקטות 20:00 עד 07:00';
+    sendText('שעות שקטות',line,'הגדרה').then(function(){try{markSent('text',line);}catch(e){}
+     try{localStorage.setItem('quietSet',JSON.stringify({on:true,from:'20:00',to:'07:00',at:new Date().toISOString()}));}catch(e){}
+     var f1=document.getElementById('quietFrom'),t1=document.getElementById('quietTo');if(f1)f1.value='20:00';if(t1)t1.value='07:00';
+     draw();say('השקט בערב פעיל: מ 20:00 עד 07:00.');}).catch(function(){b.disabled=false;say('לא נשלח. תבדוק חיבור ותנסה שוב.');});return;}
+   var na={id:newId('a'),name:x.ag[0],role:x.ag[1],c:A().length%4},list=x.r.map(function(o){return JSON.parse(JSON.stringify(o));});
+   chain([['סוכן',JSON.stringify(na)]].concat(list.map(function(o){o.agent=na.id;return ['חדשה',JSON.stringify(o)];}))).then(function(){
+    D.agents=((window.D&&D.agents)||[]).concat([na]);addLocal(list,na.id);draw();tile();say(x.t+' פעיל. '+na.name+' אחראי על זה.');
+   }).catch(function(){b.disabled=false;say('לא נשלח. תבדוק חיבור ותנסה שוב.');});
+   return;}
   if(a==='x'){close();try{if(history.state&&history.state.ag)history.back();}catch(x){}return;}
   if(a==='new'){formFor=formFor==='|new'?null:'|new';fq='day';kind='remind';pickT=-1;draw();var f=document.getElementById('agNm');if(f)f.focus();return;}
   if(a==='add'){formFor=formFor===aid+'|cmd'?null:aid+'|cmd';fq='day';kind='remind';draw();var t=document.getElementById('agTx');if(t)t.focus();return;}
