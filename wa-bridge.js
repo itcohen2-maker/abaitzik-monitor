@@ -1262,6 +1262,29 @@ function kapsoProject(q, s) {
 
 const server = http.createServer(function (q, s) {
   const u = new URL(q.url, 'http://x');
+  // 14.11.2026 (lib/partner.js): Facebook through partner access until Meta's App Review. GET the page, POST the Page link.
+  if ((u.pathname === '/api/partner' && q.method === 'GET') || (u.pathname === '/api/partner/claim' && q.method === 'POST')) {
+    (async function () {
+      const PT = require('./lib/partner.js');
+      let t = u.searchParams.get('t') || '', c = u.searchParams.get('c') || '', input = '';
+      if (q.method === 'POST') { const f = new URLSearchParams((await readBody(q, 4000)).toString('utf8')); t = f.get('t') || ''; c = f.get('c') || ''; input = String(f.get('page') || '').trim().slice(0, 300); }
+      if (!connectCodeOk(t, c)) { connBump(q, true); return connectPage(s, 403, 'הקישור לא תקין. פותחים אותו מחדש מתוך 🔌 במוניטור.'); }
+      if (connBump(q, false).until > Date.now()) return connectPage(s, 429, 'יותר מדי ניסיונות. נסו שוב בעוד חצי שעה.');
+      const dir = path.join(DATA, 'partner');
+      const cf = path.join(dir, 'claims', t + '.json');
+      let claim = null; try { claim = JSON.parse(fs.readFileSync(cf, 'utf8')); } catch (e) {}
+      let link = null; try { link = JSON.parse(fs.readFileSync(path.join(dir, 'links', t + '.json'), 'utf8')); } catch (e) {}
+      if (q.method === 'POST') {
+        if (!PT.pageRef(input)) { s.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' }); return s.end(PT.page(t, c, { input }, link).replace('<form', '<p class="err">זה לא נראה כמו קישור לדף פייסבוק. פותחים את הדף בפייסבוק ומעתיקים את הכתובת מלמעלה.</p><form')); }
+        claim = { input, at: new Date().toISOString() };
+        fs.mkdirSync(path.dirname(cf), { recursive: true }); fs.writeFileSync(cf, JSON.stringify(claim, null, 1));
+        log('partner claim ' + t);
+      }
+      s.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' });
+      s.end(PT.page(t, c, claim, link));
+    })().catch(function (e) { log('partner: ' + e.message); try { connectPage(s, 500, 'משהו השתבש, נסו שוב.'); } catch (x) {} });
+    return;
+  }
   if (u.pathname === '/api/wa/connect') { waConnect(q, s, u).catch(function (e) { log('connect: ' + e.message); try { connectPage(s, 500, 'משהו השתבש, נסו שוב.'); } catch (x) {} }); return; }
   if (u.pathname === '/kapso/project' || u.pathname === '/api/kapso/project') { kapsoProject(q, s); return; }
   // 12.11: a referrer's (affiliate) form and table, /r/<token>[/t] and /api/ref-lead (affiliates.js).

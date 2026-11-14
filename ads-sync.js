@@ -43,8 +43,10 @@ function count(actions, kinds) {
   return n;
 }
 
-async function pull(token) {
-  const acc = await get('/me/adaccounts?fields=id,name,currency,account_status&limit=25', token);
+async function pull(token, only) {
+  // 14.11.2026: a partner source (partner-sync.js) names its own accounts; our token sees every customer's.
+  const acc = only ? { data: await Promise.all(only.map((id) => get('/' + id + '?fields=id,name,currency,account_status', token))) }
+    : await get('/me/adaccounts?fields=id,name,currency,account_status&limit=25', token);
   const out = [];
   for (const a of acc.data || []) {
     const camps = await get('/' + a.id + '/campaigns?fields=id,name,status,effective_status,objective,daily_budget,lifetime_budget&limit=50', token);
@@ -94,14 +96,15 @@ function publish(src) {
 
 async function one(src) {
   const connect = 'https://form.it-solution.co.il/oauth/meta/start?t=' + src.setup + '&s=' + src.step;
-  const saved = savedFor(src);
+  let saved = savedFor(src);
+  if (!saved && src.partner && src.tokenFile) { try { saved = { token: fs.readFileSync(src.tokenFile, 'utf8').trim(), who: 'IT Solution (שותף)' }; } catch (e) { saved = null; } }
   if (!saved) {
     say(src.name + ': אין חיבור פייסבוק בדף ההקמה');
     if (write(src, { ok: false, why: 'none', connect, at: new Date().toISOString() })) publish(src);
     return;
   }
   let accounts;
-  try { accounts = await pull(saved.token); }
+  try { accounts = await pull(saved.token, src.partner ? src.accounts : null); }
   catch (e) {
     const revoked = e.code === 190 || e.code === 102;
     say(src.name + ': ' + (revoked ? 'החיבור נותק' : 'שגיאה') + ' ' + e.message);
