@@ -38,9 +38,11 @@ function writeRec(file, obj) {
 function git(cwd, args) { return execFileSync('git', args, { cwd, encoding: 'utf8' }).trim(); }
 
 /*
-  14.11.2026: once a day, drop what older fetches left behind (old tips of
-  code/main kept only by the reflog), so a customer's .git stays small.
-  Nothing that a branch of the customer points at is touched.
+  14.11.2026: once a day the customer's own history is folded into one commit on
+  top of the newest main, and what is left over is dropped. Every sync commits
+  the customer's whole built page (docs/index.html, about 1.5MB), 288 times a
+  day, so this history alone grew to 6G in a day. Nothing reads it (push.js
+  in a customer has no upstream). The files on disk do not change.
 */
 function tidy(cwd) {
   const stamp = path.join(cwd, '.git', 'tidy-day');
@@ -50,7 +52,11 @@ function tidy(cwd) {
   if (last === day) return;
   try { fs.writeFileSync(stamp, day); } catch (e) { return; }
   try {
+    git(cwd, ['reset', '-q', '--soft', 'refs/remotes/code/main']);
+    try { git(cwd, ['commit', '-q', '-m', 'tidy ' + day]); } catch (e) { /* nothing to commit */ }
     git(cwd, ['reflog', 'expire', '--expire=now', '--all']);
+    // a repack writes the new pack before it deletes the old ones: on a nearly full disk it filled it (ilay, 14.11)
+    try { const st = fs.statfsSync(cwd); if (st.bavail * st.bsize < 3e9) { console.log('tidy ' + cwd + ': disk low, gc skipped'); return; } } catch (e) {}
     execFileSync('git', ['gc', '-q', '--prune=now'], { cwd, stdio: 'ignore', timeout: 900000 });
   } catch (e) { console.log('tidy ' + cwd + ': ' + String(e.message).slice(0, 120)); }
 }
