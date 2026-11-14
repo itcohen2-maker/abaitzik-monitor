@@ -19908,8 +19908,8 @@ function bizSheet(t0){
    return h+list.map(function(r){return bzRow(r);}).join('');
   }
   function dueHtml(){
-   var st=(S&&S.staleLeads)||[],du=(S&&S.due)||[];
-   if(!st.length&&!du.length)return '<p class="bzEmpty">אין כרגע מה לחזור אליו. כשיהיה, זה יופיע כאן.</p>';
+   var st=(S&&S.staleLeads)||[],du=(S&&S.due)||[],tm=(S&&S.tomorrow)||[];
+   if(!st.length&&!du.length&&!tm.length)return '<p class="bzEmpty">אין כרגע מה לחזור אליו. כשיהיה, זה יופיע כאן.</p>';
    var h='';
    if(st.length){h+='<div class="bzSec">ליד שלא נגעו בו</div>';
     st.forEach(function(s){var r=bzById(s.id)||{name:s.name,status:s.status,kind:'lead'};
@@ -19917,6 +19917,10 @@ function bizSheet(t0){
    if(du.length){h+='<div class="bzSec">זמן לחזור</div>';
     du.forEach(function(d){var r=bzById(d.id)||{name:d.name,kind:'lead'};
      h+=bzRow(r,'<small>'+esc(d.next||'')+(d.nextAt?' · '+esc(d.nextAt):'')+'</small>');});}
+   // 14.11.2026, Itzik: "לחזור מחר" — what is due tomorrow, already here today
+   if(tm.length){h+='<div class="bzSec">📅 לחזור מחר</div>';
+    tm.forEach(function(d){var r=bzById(d.id)||{name:d.name,kind:'lead'};
+     h+=bzRow(r,'<small>'+esc(d.next||'לחזור מחר')+'</small>');});}
    return h;
   }
   // 1.11, Itzik: every part of the sheet gets its own tab on the right, so nothing is a long list.
@@ -20212,7 +20216,7 @@ function bizSheet(t0){
   function bzTabNew(k){return !!BZ_UPD[k]&&bzSeen()[k]!==BZ_UPD[k]&&k!==tab;}
   function bzMarkSeen(k){if(!BZ_UPD[k])return;var o=bzSeen();o[k]=BZ_UPD[k];try{localStorage.setItem('bzTabSeen',JSON.stringify(o));}catch(x){}}
   function bodyFor(t2){var s0=tab;tab=t2;try{return body();}finally{tab=s0;}}
-  var dueN=((S&&S.staleLeads)||[]).length+((S&&S.due)||[]).length;
+  var dueN=((S&&S.staleLeads)||[]).length+((S&&S.due)||[]).length+((S&&S.tomorrow)||[]).length;
   var liN=(D.liPosts||[]).length;
   var tabs=[['its','💻','IT Solution'],['leads','🔔','לידים ולקוחות'],['money','💰','כסף החודש'],['due','⏰','צריך לחזור',dueN],['li','🔗','לינקדין',liN]/* 14.11.2026, Itzik: "תסיר את שחר מהעסק שלי" (the 🌅 tab is out; its code stays) *//*ITZIK:BEGIN*/,['ner','🕯️','נרות']/*ITZIK:END*/,['anim','🧠','המשרד']];
   if(tab==='shachar')tab='its'; // 14.11: the Shachar tab is out; a saved way back to it opens IT Solution
