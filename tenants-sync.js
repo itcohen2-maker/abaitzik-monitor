@@ -71,7 +71,14 @@ function sync(t) {
     each with Itzik's whole built page), and every customer's .git grew back to 6G
     a day after it was cut to depth 1 (13.11), until the disk was full again.
   */
-  git(cwd, ['fetch', '-q', '--depth=1', 'code', '+main:refs/remotes/code/main']);
+  /*
+    14.11.2026, Itzik: "הלקוחות יקבלו רק מה שהבודק עשה". A customer runs the branch stable, not main.
+    The button checker (monitor-guard/run.sh) moves stable to the version of main it checked, and only when
+    his monitor had 0 faults. The local name stays code/main, so the rest of this file is unchanged.
+    Urgent fix without waiting for the checker: git push origin main:stable (as user monitor).
+  */
+  try { git(cwd, ['fetch', '-q', '--depth=1', 'code', '+stable:refs/remotes/code/main']); }
+  catch (e) { git(cwd, ['fetch', '-q', '--depth=1', 'code', '+main:refs/remotes/code/main']); }
   tidy(cwd);
   const head = git(cwd, ['rev-parse', 'code/main']);
   /*
