@@ -3576,6 +3576,12 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 .ldBody small{display:block}
 .ldRow summary b .ldC{display:block;font:400 13px Heebo,sans-serif;color:#5a6478;margin-top:2px;direction:ltr;text-align:right}
 .ldLast{margin:0;font-style:italic;opacity:.85}
+.ldTop{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border-radius:12px;background:rgba(127,127,127,.08)}
+.ldTop .ldName{font:800 18px Heebo,sans-serif}
+.ldTop .ldLast{font-style:normal;opacity:1;font:500 15px/1.45 Heebo,sans-serif}
+.ldNo{opacity:.6}
+.yb.ldFwd{display:block;text-align:center;text-decoration:none;margin:2px 0}
+.ldSrc{border-top:1px dashed rgba(127,127,127,.35);padding-top:6px;opacity:.85;display:flex;flex-direction:column;gap:2px}
 .ldAct{display:flex;flex-wrap:wrap;gap:6px}
 .ldAct .yb{text-decoration:none;flex:0 1 auto;width:auto;margin:0}
 .bzRow b{font:700 14px Heebo,sans-serif}
@@ -4428,6 +4434,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
  .gt.updblink::before,.gt.taskblink::before,.gt.glow::before,.gt.blink::before,.gt.ubeat::before,.gt.leadNew:not(.lnSeen)::before,
  .ic.updblink .c::after,.ic.taskblink .c::after{animation:none!important;opacity:.55}}
 ${require('./lib/gemini-home.js').css}
+${require('./lib/reply-pill.js').css}
 .mob{display:flex;gap:6px;flex:0 0 auto}
 .mob button{background:var(--sunk);color:var(--dim);border:1px solid var(--line);border-radius:10px;
  padding:9px 12px;font:500 13.5px Heebo,sans-serif;cursor:pointer;white-space:nowrap}
@@ -20037,18 +20044,23 @@ function bizSheet(t0){
     rep+='<button type="button" class="yb" data-bz="ldcopy" data-w="כל הפרטים" data-u="'+esc(all)+'">📋 להעתיק את כל הפרטים</button>';
     // 13.11.2026, Itzik: "להעביר את הליד לטום ... אני אחליט למי אני שולח". WhatsApp opens with every detail
     // already written and no recipient, so he picks who gets it (טום or anyone).
-    rep+='<a class="yb yb1" href="https://wa.me/?text='+encodeURIComponent('ליד להעברה'+NL+all)+'" target="_blank" rel="noopener">📤 להעביר בוואטסאפ</a>';
+    var fwd='<a class="yb yb1 ldFwd" href="https://wa.me/?text='+encodeURIComponent('ליד להעברה'+NL+all)+'" target="_blank" rel="noopener">📤 להעביר בוואטסאפ למישהו אחר (טום, סוכן)</a>';
     h+='<details class="ldRow'+(r.test?' ldTest':(r.status==='חדש'?' ldNew':''))+'" data-id="'+esc(r.id)+'" data-n="'+esc(r.name||'')+'"><summary><span>'+esc(dd)+'</span><b>'+esc(r.name||'בלי שם')+(r.test?'<span class="ldTestTag">בדיקה שלך</span>':'')+((r.phone||em)?'<small class="ldC"><bdi>'+esc([r.phone,em].filter(Boolean).join(' · '))+'</bdi></small>':'<small class="ldC">אין טלפון</small>')+'</b><span>'+esc(src)+'</span><span class="ldSt">'+esc(r.status||'')+'</span></summary>'
      +'<div class="ldBody">'
-     +(r.last?'<p class="ldLast">"'+esc(r.last)+'"</p>':'')
-     +'<small>📍 מאיפה: '+esc(src.replace(/^[^ ]+ /,''))+(r.ref?' · '+esc(r.ref):'')+'</small>'
-     +(dd?'<small>🕒 נכנס: '+esc(dd+' '+hm)+'</small>':'')
-     +(r.phone?'<small>📞 '+bzTel(r.phone)+'</small>':'<small>📞 לא השאיר טלפון</small>')+(em?'<small>✉️ <bdi>'+esc(em)+'</bdi></small>':'<small>✉️ לא השאיר מייל</small>')
-     +(r.note?'<small style="white-space:pre-line">'+esc(ldNote(r.note))+'</small>':'')
+     // 14.11.2026, Itzik: "למעלה יהיה כתוב השם שלו, המייל שלו, למה, אם הוא כתב משהו, טלפון, ורק למטה מאיפה הוא הגיע.
+     // אחרי זה ... הערה ... שליחה לוואטסאפ אחר". Who he is and what he wants on top, the note, the forward, and where from last.
+     +'<div class="ldTop"><b class="ldName">'+esc(r.name||'בלי שם')+'</b>'
+     +(em?'<small>✉️ <bdi>'+esc(em)+'</bdi></small>':'<small class="ldNo">✉️ לא השאיר מייל</small>')
+     +(r.last?'<p class="ldLast">💬 "'+esc(r.last)+'"</p>':'')
+     +(r.note?'<small class="ldWhy" style="white-space:pre-line">'+esc(ldNote(r.note))+'</small>':'')
+     +(r.phone?'<small>📞 '+bzTel(r.phone)+'</small>':'<small class="ldNo">📞 לא השאיר טלפון</small>')
+     +'</div>'
      // 13.11.2026, Itzik: "בלידים אין לי איך להכניס הערה". The 📝 button sat at the very bottom, after every other
      // button. Now the note box is open in every lead, right under the details, and a sent note shows at once.
      +'<div class="bzEd ldNoteBox"><input placeholder="📝 הערה על הליד" enterkeyhint="send"><button type="button" class="yb yb2" data-tdy="1" data-bz="ldsend">לרשום</button></div>'
+     +fwd
      +'<div class="ldAct">'+(rep||'<small>אין טלפון או מייל. מחכים שיחזור.</small>')+'</div>'
+     +'<div class="ldSrc"><small>📍 מאיפה: '+esc(src.replace(/^[^ ]+ /,''))+(r.ref?' · '+esc(r.ref):'')+'</small>'+(dd?'<small>🕒 נכנס: '+esc(dd+' '+hm)+'</small>':'')+'</div>'
      +'<div class="ldAct">'+BZ_ORDER.filter(function(st){return st!==r.status;}).map(function(st){return '<button type="button" class="yb" data-bz="ldst" data-s="'+st+'">'+st+'</button>';}).join('')+'</div>'
      +'<div class="ldAct"><button type="button" class="yb ldDel" data-bz="lddel">🗑 מחיקה</button></div>'
      +'</div></details>';
@@ -24471,7 +24483,7 @@ ${require('./lib/activity-ui.js').js}
 on('gActLog',function(){pane('Lg');renderActLog();return false;});
 /*ITZIK:END*/
 ${require('./lib/home-ui.js').js}
-${require('./lib/gemini-home.js').js}${inst.name === 'abaitzik' ? require('./lib/demo-mode.js').js : ''}${inst.bizHome ? require('./lib/biz-home.js').js : ''}${inst.name !== 'abaitzik' ? require('./lib/shop-list.js').js : ''}
+${require('./lib/gemini-home.js').js}${require('./lib/reply-pill.js').js}${inst.name === 'abaitzik' ? require('./lib/demo-mode.js').js : ''}${inst.bizHome ? require('./lib/biz-home.js').js : ''}${inst.name !== 'abaitzik' ? require('./lib/shop-list.js').js : ''}
 ${require('./lib/skins-ui.js').js}
 boot('design',dzBoot);
 ${pushUi.js(pushKey())}
