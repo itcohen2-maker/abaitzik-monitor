@@ -2697,6 +2697,9 @@ body #thumbSet.gSetBottom::before{content:"⚙";font-size:21px;line-height:1}
 body.inner #thumbSet.gSetBottom{display:none!important}
 
 body.gH #talkCard{position:relative}
+body.gH #pH.bare{padding-top:0!important}
+body.gH #hmGreet{display:none!important}
+body.gH #talkCard{margin-bottom:4px!important}
 body.gH #talkCard::before{content:none!important}
 .gTitle{display:none}
 body.gH .gTitle{display:block;text-align:center;font:500 28px/1.3 Heebo,sans-serif;color:var(--ink);opacity:.92;margin:7vh 8px 22px}
@@ -2728,7 +2731,7 @@ body.gH .gChips{display:flex;gap:8px;justify-content:center;margin-top:12px;orde
 .gChips button[aria-pressed="true"]{background:var(--sunk);color:var(--ink);border-color:var(--line)}
 .gSay{display:none}
 body.gH .gSay{display:block;color:var(--dim);font-size:13px;text-align:center;margin-top:8px;order:6}
-body.gH #bareBtn{display:block;width:auto!important;min-width:0!important;margin:14px auto 6px!important;padding:12px 34px!important}
+body.gH #bareBtn{display:block;width:auto!important;min-width:0!important;margin:2px auto 6px!important;padding:12px 34px!important}
 html.gChatOpen,html.gChatOpen body{overflow:hidden!important}
 #fcSheet.gFull{padding:0!important;background:var(--ground)!important;align-items:stretch!important;justify-content:center}
 #fcSheet.gFull .ycard{max-width:760px!important;width:100%;height:100%;max-height:none;border-radius:0!important;box-shadow:none!important;
@@ -3100,7 +3103,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-14T16:30:16.538Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-14T16:40:03.010Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -5047,7 +5050,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='bf8786883e';
+var CODE_ID='4a4b7cff3b';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -19871,7 +19874,14 @@ function renderHome(){
   var n=0;try{n=fcS.msgs.length;}catch(x){}b.hidden=!n;
   var fm=document.getElementById("fcMore");if(fm)fm.style.display="none";
  }
- function boot(){arm();micIn();gSet();try{gHome();}catch(x){}try{gWrap();}catch(x){}setInterval(function(){try{if(chatOk())gBackBtn();}catch(x){}},3000);}
+ function gLow(){var c=document.getElementById('talkCard'),h=document.getElementById('pH'),r=document.getElementById('reloadBtn'),nb=document.querySelector('nav.bn');
+  if(!c||!h||!nb)return;// only on the home screen itself: on any other screen (רשתות, לידים) the box stays where it was and the margin goes
+  if(!h.classList.contains('bare')||!c.offsetParent||!h.offsetParent||!h.offsetHeight){if(c.style.marginTop)c.style.removeProperty('margin-top');return;}
+  if(window.scrollY>4)return;var last=r&&r.offsetParent?r:h;var cur=parseFloat(c.style.marginTop)||0;
+  var free=nb.getBoundingClientRect().top-last.getBoundingClientRect().bottom-10;var mt=Math.min(window.innerHeight,Math.max(0,Math.round(cur+free)));
+  if(Math.abs(mt-cur)>2)c.style.setProperty('margin-top',mt+'px','important');}
+ window.gLow=gLow;
+ function boot(){arm();micIn();gSet();try{gHome();}catch(x){}try{gWrap();}catch(x){}try{gLow();setInterval(gLow,700);window.addEventListener('resize',gLow);}catch(x){}setInterval(function(){try{if(chatOk())gBackBtn();}catch(x){}},3000);}
  if(document.readyState!=='loading')boot();else document.addEventListener('DOMContentLoaded',boot);
 })();
 
