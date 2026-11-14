@@ -10,6 +10,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { execFileSync } = require('child_process');
 const PT = require('./lib/partner.js');
 
 const HERE = __dirname;
@@ -68,6 +69,47 @@ function register(t, link) {
   } catch (e) { say(t + ': !! partner.json ' + e.message.slice(0, 80)); }
 }
 
+/*
+  14.11.2026: his channels for social-run.js (data/social/<t>/channels.json): his Instagram (our system user token,
+  the IG account of his Page) and his Page (its own Page token, kept in /home/monitor/.partner/<t>-page.token, 600).
+*/
+async function channels(t, link) {
+  if (DRY || !link.igId) return;
+  const dir = path.join(DATA, 'social', t);
+  const tokDir = '/home/monitor/.partner', pf = path.join(tokDir, t + '-page.token');
+  try {
+    const pj = await call(link.pageId, { fields: 'access_token' });
+    fs.mkdirSync(tokDir, { recursive: true, mode: 0o700 });
+    fs.writeFileSync(pf, pj.access_token, { mode: 0o600 });
+    const mon = fs.statSync('/home/monitor'); for (const x of [tokDir, pf]) { try { fs.chownSync(x, mon.uid, mon.gid); } catch (e) {} }
+  } catch (e) { say(t + ': !! טוקן דף ' + e.message.slice(0, 80)); }
+  fs.mkdirSync(path.join(dir, 'media'), { recursive: true });
+  const cf = path.join(dir, 'channels.json'), cfg = rj(cf, null) || { title: link.pageName, hour: '20:00', channels: {} };
+  cfg.channels.main = { name: '@' + link.ig, id: link.igId, tokenFile: TOKEN_FILE, page: fs.existsSync(pf) ? { id: link.pageId, name: link.pageName, tokenFile: pf } : undefined };
+  wj(cf, cfg);
+  if (!fs.existsSync(path.join(dir, 'queue.json'))) wj(path.join(dir, 'queue.json'), []);
+  try { execFileSync('chown', ['-R', 'monitor:monitor', dir]); } catch (e) {}
+}
+// What his monitor put in <his dir>/data/social-out (a video and its .json) goes into the queue of social-run.js.
+function outbox(t) {
+  const src = path.join(tenantDir(t), 'data', 'social-out'), dir = path.join(DATA, 'social', t);
+  if (!fs.existsSync(path.join(dir, 'channels.json'))) return;
+  let fl = []; try { fl = fs.readdirSync(src).filter((f) => /^[A-Za-z0-9_-]{1,60}\.json$/.test(f)); } catch (e) { return; }
+  const qf = path.join(dir, 'queue.json'), q = rj(qf, []);
+  let order = q.reduce((m, x) => Math.max(m, Number(x.order) || 0), 0), added = 0;
+  for (const f of fl) {
+    const j = rj(path.join(src, f), null);
+    const file = j && String(j.file || '');
+    if (!j || !/^[A-Za-z0-9_-]{1,60}\.mp4$/.test(file) || !fs.existsSync(path.join(src, file))) continue;
+    const id = 'p' + Date.now().toString(36) + crypto.randomBytes(2).toString('hex');
+    if (DRY) { say('would queue ' + t + ' ' + file); continue; }
+    fs.copyFileSync(path.join(src, file), path.join(dir, 'media', id + '.mp4'));
+    q.push({ id, name: file.replace(/\.mp4$/, ''), file: id + '.mp4', caption: String(j.caption || '').slice(0, 2200), channel: 'main', order: ++order, from: 'customer', at: new Date().toISOString() });
+    fs.unlinkSync(path.join(src, f)); fs.unlinkSync(path.join(src, file)); added++;
+  }
+  if (added) { wj(qf, q); try { execFileSync('chown', ['-R', 'monitor:monitor', dir]); } catch (e) {} tell(t, '📲 ' + added + ' סרטונים נכנסו לתור הפרסום. הם עולים לאינסטגרם ולדף שלך בשעה הקבועה (20:00, לא בשבת).'); say(t + ': ' + added + ' לתור הפרסום'); }
+}
+
 async function main() {
   const claims = (() => { try { return fs.readdirSync(path.join(DIR, 'claims')).filter((f) => /^[a-z0-9-]+\.json$/.test(f)); } catch (e) { return []; } })();
   if (!claims.length) return;
@@ -75,6 +117,7 @@ async function main() {
   const accounts = await all('client_ad_accounts', 'id,name,business{id}');
   for (const f of claims) {
     const t = f.replace(/\.json$/, '');
+    try { outbox(t); } catch (e) { say(t + ': !! outbox ' + e.message.slice(0, 80)); }
     const claim = rj(path.join(DIR, 'claims', f), null);
     if (!claim) continue;
     const lf = path.join(DIR, 'links', t + '.json'), old = rj(lf, null);
@@ -99,6 +142,7 @@ async function main() {
       adAccounts: ads, at: new Date().toISOString(), errs };
     wj(lf, link);
     register(t, link);
+    await channels(t, link);
     say(t + ': חובר ' + p.name + ', ' + ads.length + ' חשבונות מודעות' + (errs.length ? ' | !! ' + errs.join(' | ') : ''));
     if (!old || !old.pageId) {
       tell(t, '✅ פייסבוק מחובר: ' + (p.name || 'הדף שלך') + (link.ig ? ' ואינסטגרם @' + link.ig : '') + (ads.length ? ', וחשבון המודעות' : '') + '.\n'

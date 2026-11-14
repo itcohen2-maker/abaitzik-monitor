@@ -365,6 +365,15 @@ function prompt(list) {
       files/<name> in an answer into the picture, a big download button, and the
       approve / pick / fix buttons, so the answer itself stays a sentence.
     */
+    // 14.11.2026 (partner-sync.js): publishing to his own Instagram and Facebook Page, only on his explicit request.
+    ...(inst.name !== 'abaitzik' && fs.existsSync(path.join(inst.dataPath, 'conn', 'partner.json')) ? [
+      'פרסום ברשתות של הלקוח: הפייסבוק והאינסטגרם שלו מחוברים (data/conn/partner.json). כשהוא מבקש במפורש לפרסם סרטון',
+      '  (ריל לאינסטגרם, סטורי וסרטון בדף), ורק אז: מעתיקים את קובץ ה mp4 (לאורך, 9:16, עד 90 שניות) ל data/social-out/<שם באנגלית>.mp4,',
+      '  וכותבים לידו data/social-out/<אותו שם>.json עם { "file": "<אותו שם>.mp4", "caption": "<הכיתוב המלא שהלקוח אישר>" }.',
+      '  השרת מכניס אותו לתור תוך 10 דקות, והוא עולה בשעה הקבועה (20:00, לא בשבת וחג). עונים לו במשפט אחד שזה בתור ומתי עולה.',
+      '  בלי בקשה מפורשת שלו לא מפרסמים כלום. כיתוב שלא אישר: מציגים לו ושואלים, ורק אחרי "כן" כותבים את הקובץ.',
+      '',
+    ] : []),
     ...(inst.name !== 'abaitzik' ? [
       'כל תוצר שהלקוח ביקש (תמונה, PDF, קובץ עבודה) נשמר ב data/files-private/<שם בעברית פשוטה> ונכתב בתשובה כשורה files/<שם>.',
       'הדף מציג כל קובץ כזה עם תמונה, כפתור הורדה גדול שיורד ישר להורדות במחשב, וכפתורי "מאשרת", "בוחרת בזה" ו"לתקן".',
