@@ -37,11 +37,36 @@ function writeRec(file, obj) {
 }
 function git(cwd, args) { return execFileSync('git', args, { cwd, encoding: 'utf8' }).trim(); }
 
+/*
+  14.11.2026: once a day, drop what older fetches left behind (old tips of
+  code/main kept only by the reflog), so a customer's .git stays small.
+  Nothing that a branch of the customer points at is touched.
+*/
+function tidy(cwd) {
+  const stamp = path.join(cwd, '.git', 'tidy-day');
+  const day = new Date().toISOString().slice(0, 10);
+  let last = '';
+  try { last = fs.readFileSync(stamp, 'utf8').trim(); } catch (e) {}
+  if (last === day) return;
+  try { fs.writeFileSync(stamp, day); } catch (e) { return; }
+  try {
+    git(cwd, ['reflog', 'expire', '--expire=now', '--all']);
+    execFileSync('git', ['gc', '-q', '--prune=now'], { cwd, stdio: 'ignore', timeout: 900000 });
+  } catch (e) { console.log('tidy ' + cwd + ': ' + String(e.message).slice(0, 120)); }
+}
+
 function sync(t) {
   const cwd = t.dir;
   try { git(cwd, ['remote', 'get-url', 'code']); }
   catch (e) { git(cwd, ['remote', 'add', 'code', git(__dirname, ['remote', 'get-url', 'origin'])]); }
-  git(cwd, ['fetch', '-q', 'code']);
+  /*
+    14.11.2026: only the newest version of main, never its history. A plain fetch
+    pulled every commit of the main monitor since the last trim (about 2,900 a day,
+    each with Itzik's whole built page), and every customer's .git grew back to 6G
+    a day after it was cut to depth 1 (13.11), until the disk was full again.
+  */
+  git(cwd, ['fetch', '-q', '--depth=1', 'code', '+main:refs/remotes/code/main']);
+  tidy(cwd);
   const head = git(cwd, ['rev-parse', 'code/main']);
   /*
     5.10: a customer does not change his monitor (lib/change-requests.js). Code
