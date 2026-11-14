@@ -3,13 +3,17 @@
 $ErrorActionPreference = 'Continue'
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-$Src = Split-Path -Parent $MyInvocation.MyCommand.Path
+$Src = if ($MyInvocation.MyCommand.Path) { Split-Path -Parent $MyInvocation.MyCommand.Path } else { '' }
 $Dst = Join-Path $env:LOCALAPPDATA 'MonitorBank'
 $Task = 'MonitorBank'
 function Step($s) { Write-Host ''; Write-Host ('== ' + $s) -ForegroundColor Cyan }
 function Ok($s) { Write-Host ('   ' + $s) -ForegroundColor Green }
 function Bad($s) { Write-Host ('   ' + $s) -ForegroundColor Red }
-$cfg = Get-Content -Raw -Encoding UTF8 (Join-Path $Src 'config.json') | ConvertFrom-Json
+# 14.11: the customer's file is one Bank-Setup.cmd with everything inside ($Embedded, base64,
+# written by setup/build-bank-installer.py), so it works even when double clicked inside the zip.
+# Itzik's first try: two files named install-bank, and nothing happened.
+function Payload($n) { if ($Embedded) { return [Convert]::FromBase64String($Embedded[$n]) } else { return [IO.File]::ReadAllBytes((Join-Path $Src $n)) } }
+$cfg = [Text.Encoding]::UTF8.GetString((Payload 'config.json')).TrimStart([char]0xFEFF) | ConvertFrom-Json
 function Report($step) {
   try { Invoke-WebRequest -UseBasicParsing -Uri ($cfg.url.TrimEnd('/') + '/ping?step=' + [uri]::EscapeDataString('bank: ' + $step)) -Headers @{ 'X-Pc-Key' = $cfg.key } -TimeoutSec 20 | Out-Null } catch {}
 }
@@ -27,7 +31,7 @@ if ($chrome) { Ok $chrome; Report ('browser ' + $chrome) } else { Bad 'לא נמ
 
 Step 'מעתיק את הקבצים'
 New-Item -ItemType Directory -Force $Dst | Out-Null
-foreach ($f in 'bank-agent.ps1', 'run-hidden.vbs', 'config.json') { Copy-Item (Join-Path $Src $f) (Join-Path $Dst $f) -Force }
+foreach ($f in 'bank-agent.ps1', 'run-hidden.vbs', 'config.json') { [IO.File]::WriteAllBytes((Join-Path $Dst $f), (Payload $f)) }
 Ok $Dst
 
 Step 'רושם בדיקה כל דקה ברקע'
