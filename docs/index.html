@@ -2899,6 +2899,8 @@ html body #bareBtn{border:2px solid transparent!important;color:var(--ink,#1f243
  background:linear-gradient(var(--ground,#f6f8fc),var(--ground,#f6f8fc)) padding-box,conic-gradient(from 0deg,#4285F4,#EA4335,#FBBC05,#34A853,#4285F4) border-box!important}
 html body #thumbSet.gSetBottom{border:0!important;background:transparent!important;box-shadow:none!important}
 html body #thumbSet.gSetBottom{position:relative!important;padding:0!important}
+html body #thumbSet.gSetBottom{display:none!important}
+#hdAva{cursor:pointer}
 html body #thumbSet.gSetBottom::before{position:absolute!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;margin:0!important;line-height:1!important;display:block!important}
 nav.bn{border-top-color:transparent!important}
 nav.bn::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#4285F4 0 25%,#EA4335 0 50%,#FBBC05 0 75%,#34A853 0);opacity:.8;pointer-events:none}
@@ -3089,7 +3091,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-14T14:50:08.019Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-14T14:52:48.302Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3156,7 +3158,7 @@ try{
   <div class="s" id="built"></div>
   <div class="s dim" id="checked" hidden></div>
  </div>
- <div class="ava" aria-hidden="true"><div>א</div></div>
+ <div class="ava" id="hdAva" role="button" tabindex="0" aria-label="הגדרות" title="הגדרות"><div><svg viewBox="0 0 40 40" width="32" height="32" role="img"><rect width="40" height="40" rx="10" fill="#06b6d4"/><text x="20" y="27.5" text-anchor="middle" font-family="Heebo,Arial,sans-serif" font-weight="900" font-size="19" fill="#fff">IT</text></svg></div></div>
 </header>
 
  <section class="talk" id="talkCard" aria-label="פנייה אליי">
@@ -5036,7 +5038,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='d724f644c6';
+var CODE_ID='539e3ac573';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -20188,6 +20190,9 @@ function renderHome(){
  function hd(){var t=document.querySelector('.hdtext');if(t&&t.parentNode&&!t.parentNode.classList.contains('micHd'))t.parentNode.classList.add('micHd');}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',hd);else hd();
  window.addEventListener('load',hd);
+ function goSet(e){if(e)e.preventDefault();try{pane('z');}catch(x){var t=document.getElementById('thumbSet');if(t)t.click();}}
+ document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('#hdAva'))goSet(e);});
+ document.addEventListener('keydown',function(e){if((e.key==='Enter'||e.key===' ')&&e.target&&e.target.id==='hdAva')goSet(e);});
 })();
 
 (function(){

@@ -4749,7 +4749,7 @@ try{
   <div class="s dim" id="checked" hidden></div>
  </div>
  <!-- 9.11.2026, Itzik: "ליד המוניטור של דוקטור שולמן, העיגול, כתוב ד'. תשנה את זה ל IT Solution. למוניטורים". A customer's monitor carries the IT Solution mark in the circle instead of the first letter of his name; Itzik's own keeps his letter. -->
- <div class="ava" aria-hidden="true"><div>${inst.name === 'abaitzik' ? String(inst.owner || 'א').charAt(0) : '<svg viewBox="0 0 40 40" width="32" height="32" role="img"><rect width="40" height="40" rx="10" fill="#06b6d4"/><text x="20" y="27.5" text-anchor="middle" font-family="Heebo,Arial,sans-serif" font-weight="900" font-size="19" fill="#fff">IT</text></svg>'}</div></div>
+ <div class="ava" id="hdAva" role="button" tabindex="0" aria-label="הגדרות" title="הגדרות"><div>${inst.logo ? '<img src="' + String(inst.logo).replace(/"/g, '') + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">' : inst.name === 'abaitzik' ? '<svg viewBox="0 0 40 40" width="32" height="32" role="img"><rect width="40" height="40" rx="10" fill="#06b6d4"/><text x="20" y="27.5" text-anchor="middle" font-family="Heebo,Arial,sans-serif" font-weight="900" font-size="19" fill="#fff">IT</text></svg>' : (String(inst.firstName || String(inst.owner || '').replace(/^ *(ד[״"']?ר|דר|פרופ[׳']?)[.]? +/, '') || 'א').trim().charAt(0))}</div></div>
 </header>
 ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').bar : ''}
  <section class="talk" id="talkCard" aria-label="פנייה אליי">
