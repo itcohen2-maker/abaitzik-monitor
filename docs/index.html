@@ -2885,7 +2885,7 @@ body.gH #fcInline{display:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-14T06:36:07.206Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-14T06:37:50.753Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -2991,6 +2991,7 @@ try{
  <div class="fcrow" id="fcRow" hidden role="group" aria-label="שיחה עם ה AI">
   <div class="fch"><span class="fci" aria-hidden="true">💬</span><span class="fct"><b>אני AI, כתוב לי כל דבר</b></span></div>
   <div class="fcInline" id="fcInline" hidden></div>
+  <button type="button" class="fcmore" id="fcMore">פתיחת השיחה המלאה</button>
   <form class="fcQuick" id="fcQuick"><input type="text" id="fcQText" maxlength="2000" autocomplete="off" placeholder=""><button type="submit" id="fcQBtn" aria-label="שליחה">➤</button></form>
  </div>
  <button type="button" class="reloadbig" id="reloadBtn" aria-label="רענון וחזרה לדף הבית" title="רענון וחזרה לדף הבית">↻<span class="rlw">רענן</span></button>
@@ -4831,7 +4832,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='0eeef3c82b';
+var CODE_ID='953b9b7b04';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -15125,7 +15126,7 @@ function fcPaintInline(){
  });
  if(fcS.busy)h+='<div class="fcib bot fcTyping">…כותב</div>';
  if(fcS.err)h+='<div class="fcErr">'+esc(fcS.err)+'</div>';
- h+='<button type="button" class="fcmore" id="fcMore">פתיחת השיחה המלאה</button>';
+ 
  box.innerHTML=h;box.hidden=false;box.scrollTop=box.scrollHeight;
 }
 function fcPaintMsgs(force){

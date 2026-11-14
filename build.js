@@ -4761,6 +4761,7 @@ ${inst.name !== 'abaitzik' ? require('./lib/help-ui.js').bar : ''}
  ${true ? `<div class="fcrow" id="fcRow" hidden role="group" aria-label="שיחה עם ה AI">
   <div class="fch"><span class="fci" aria-hidden="true">💬</span><span class="fct"><b>אני AI, כתוב לי כל דבר</b></span></div>
   <div class="fcInline" id="fcInline" hidden></div>
+  <button type="button" class="fcmore" id="fcMore">פתיחת השיחה המלאה</button>
   <form class="fcQuick" id="fcQuick"><input type="text" id="fcQText" maxlength="2000" autocomplete="off" placeholder=""><button type="submit" id="fcQBtn" aria-label="שליחה">➤</button></form>
  </div>` : ''}
  <button type="button" class="reloadbig" id="reloadBtn" aria-label="רענון וחזרה לדף הבית" title="רענון וחזרה לדף הבית">↻<span class="rlw">רענן</span></button>
@@ -19712,7 +19713,7 @@ function fcPaintInline(){
  });
  if(fcS.busy)h+='<div class="fcib bot fcTyping">…כותב</div>';
  if(fcS.err)h+='<div class="fcErr">'+esc(fcS.err)+'</div>';
- h+='<button type="button" class="fcmore" id="fcMore">פתיחת השיחה המלאה</button>';
+ 
  box.innerHTML=h;box.hidden=false;box.scrollTop=box.scrollHeight;
 }
 function fcPaintMsgs(force){
