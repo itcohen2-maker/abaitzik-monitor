@@ -5,6 +5,7 @@ After=network-online.target
 Type=oneshot
 User=monitor
 Group=monitor
+UMask=0027
 Environment=HOME=/home/monitor
 EnvironmentFile=/etc/monitor.env
 WorkingDirectory=/home/monitor/abaitzik-monitor
