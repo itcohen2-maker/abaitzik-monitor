@@ -889,6 +889,58 @@ async function payDone(u, s) {
   s.writeHead(302, { Location: who.home ? who.home + '?paid=1' : 'https://it-solution.co.il/trial/?paid=1' });
   s.end();
 }
+/*
+  14.11.2026: back from SUMIT after an add-on or upgrade (lib/addons.js). Checked with SUMIT itself, once per
+  payment id: the plan file changes at once, the monthly part becomes a standing order from next month (an upgrade
+  first cancels the package's old one), and what needs root or the customer's computer is queued for
+  setup/addon-provision.sh. Itzik only reads a line in 📋; nothing waits for him.
+*/
+async function addonDone(u, s) {
+  const P = require('./lib/sumit.js'), A = require('./lib/addons.js'), PIO = require('./lib/plan-io.js');
+  const oid = u.pathname.split('/').pop();
+  if (!/^[a-f0-9]{18}$/.test(oid)) throw new Error('bad order id');
+  const of = path.join(DATA, 'pay', 'orders', oid + '.json');
+  const order = JSON.parse(fs.readFileSync(of, 'utf8'));
+  const who = payWho(order.tenant);
+  const back = (qs) => { s.writeHead(302, { Location: (who.home || 'https://it-solution.co.il/') + qs }); s.end(); };
+  if (order.status === 'done') return back('?paid=1&addon=' + order.kind);
+  const pid = String(u.searchParams.get('OG-PaymentID') || '').replace(/\D/g, '');
+  const ext = String(u.searchParams.get('OG-ExternalIdentifier') || '');
+  if (!pid || (ext && ext !== order.tenant)) throw new Error('addon return params');
+  const rec = path.join(DATA, 'pay', pid + '.json');
+  let prev = null; try { prev = JSON.parse(fs.readFileSync(rec, 'utf8')); } catch (e) {}
+  if (prev && prev.order !== oid) throw new Error('payment ' + pid + ' belongs to another order');
+  const p = await P.getPayment(pid);
+  if (!P.paymentOk(p, A.total(order))) throw new Error('addon payment ' + pid + ' not valid');
+  const out = { at: new Date().toISOString(), tenant: order.tenant, order: oid, kind: order.kind, paymentId: Number(pid), customerId: p.CustomerID, amount: p.Amount };
+  fs.writeFileSync(rec, JSON.stringify(out, null, 1));
+  const before = PIO.stateOf(order.tenant);
+  const after = A.apply(before, order, pid);
+  if (after && after !== before) PIO.write(order.tenant, after);
+  if (order.monthly) {
+    try {
+      if (order.replace) {
+        const items = await P.listRecurring(p.CustomerID);
+        const pk = A.packageItems(items);
+        // A standing order we can not tell apart is never doubled: Itzik is told instead.
+        if (!pk.length && items.length) throw new Error('לא נמצאה הוראת הקבע של החבילה מבין ' + items.length + ', לבדוק בסאמיט');
+        for (const it of pk) await P.cancelRecurring(p.CustomerID, it.ID);
+        out.cancelled = pk.map((x) => x.ID);
+      }
+      out.recurring = await P.startRecurring(p.CustomerID, undefined, undefined, order.monthly);
+    } catch (e) { out.recurringError = e.message; log('addon recurring: ' + e.message); }
+  }
+  if (order.kind === 'bank' || order.kind === 'accounting') {
+    const pd = path.join(DATA, 'pay', 'provision'); fs.mkdirSync(pd, { recursive: true });
+    fs.writeFileSync(path.join(pd, order.tenant + '-' + order.kind + '.json'), JSON.stringify({ tenant: order.tenant, kind: order.kind, answers: order.answers || {}, order: oid, at: out.at, state: 'queued' }, null, 1));
+  }
+  order.status = 'done'; order.paymentId = Number(pid); order.doneAt = out.at;
+  fs.writeFileSync(of, JSON.stringify(order, null, 1));
+  fs.writeFileSync(rec, JSON.stringify(out, null, 1));
+  try { require('./lib/handle.js').complete({ key: 'paid-' + pid, kind: 'lead', who: who.name, title: 'שילם ' + p.Amount + ' ₪: ' + order.title + '. נפתח לבד.' + (out.recurringError ? ' החיוב החודשי לא עודכן: ' + out.recurringError : (order.monthly ? ' החיוב החודשי מתעדכן מהחודש הבא.' : '')), link: 'biz' }); } catch (e) { log('addon handle: ' + e.message); }
+  log('addon paid ' + order.tenant + ' ' + order.kind + ' ' + pid);
+  back('?paid=1&addon=' + order.kind);
+}
 function tenantByKey(c) {
   c = String(c || ''); if (c.length < 24) return null;
   let all = {}; try { all = JSON.parse(fs.readFileSync(path.join(DATA, 'fastchat', 'tenants.json'), 'utf8')) || {}; } catch (e) { return null; }
@@ -963,6 +1015,33 @@ async function api(q, s, u) {
       const url = await P.beginEntry({ tenant: vn, name: (of && of.name) || who.name, email: (of && of.email) || who.email, phone: who.phone, items: of ? of.items : null, redirect: 'https://wa.abaitzik.com/api/pay/done', cancel: who.home });
       s.writeHead(200, h); return s.end(JSON.stringify({ url }));
     } catch (e) { log('pay start: ' + e.message); s.writeHead(502, h); return s.end('{"error":"pay"}'); }
+  }
+  /*
+    14.11.2026, Itzik: every add-on and upgrade is paid on SUMIT and opens by itself (lib/addons.js).
+    The page sends its visit key, what it wants and the answers (which software, which bank and kind).
+    The order is kept here, SUMIT's page opens, and /api/pay/addon-done/<order> checks and applies it.
+  */
+  if (u.pathname === '/api/pay/addon') {
+    const vn = require('./lib/visits.js').nameByKey(DATA, b.key);
+    if (!vn) { s.writeHead(403, h); return s.end('{"error":"key"}'); }
+    const P = require('./lib/sumit.js'), A = require('./lib/addons.js');
+    if (!P.ready()) { s.writeHead(503, h); return s.end('{"error":"pay"}'); }
+    const ans = b.answers && typeof b.answers === 'object' ? { software: String(b.answers.software || ''), bank: String(b.answers.bank || ''), kind: String(b.answers.kind || '') } : {};
+    const q = A.quote(require('./lib/plan-io.js').stateOf(vn), String(b.what || ''), ans, require('./lib/bank-flow.js').BANKS);
+    if (!q.ok) {
+      // A bank the program does not read yet: the customer hears it honestly and Itzik sees the demand.
+      if (q.why === 'unsupported') { try { require('./lib/handle.js').complete({ key: 'addon-unsup-' + vn + '-' + ans.bank + '-' + ans.kind, kind: 'lead', who: payWho(vn).name, title: 'ביקש חיבור לבנק שהתוכנה עוד לא קוראת: ' + q.bankName + ', ' + q.kindName + '. לא חויב.', link: 'biz' }); } catch (e) { log('addon unsup: ' + e.message); } }
+      s.writeHead(409, h); return s.end(JSON.stringify({ error: q.why, bankName: q.bankName || '', kindName: q.kindName || '' }));
+    }
+    try {
+      const who = payWho(vn);
+      const oid = crypto.randomBytes(9).toString('hex');
+      const od = path.join(DATA, 'pay', 'orders'); fs.mkdirSync(od, { recursive: true });
+      fs.writeFileSync(path.join(od, oid + '.json'), JSON.stringify(Object.assign({ id: oid, tenant: vn, at: new Date().toISOString(), status: 'open' }, q), null, 1), { mode: 0o600 });
+      const url = await P.beginEntry({ tenant: vn, name: who.name, email: who.email, phone: who.phone, items: q.items, redirect: 'https://wa.abaitzik.com/api/pay/addon-done/' + oid, cancel: who.home });
+      log('addon order ' + vn + ' ' + q.kind + ' ' + oid);
+      s.writeHead(200, h); return s.end(JSON.stringify({ url }));
+    } catch (e) { log('addon start: ' + e.message); s.writeHead(502, h); return s.end('{"error":"pay"}'); }
   }
   // 11.11: a customer's page says when it is open and for how long (lib/visits.js), with its own visit key.
   if (u.pathname === '/api/visit') {
@@ -1289,6 +1368,8 @@ const server = http.createServer(function (q, s) {
     return;
   }
   // 11.11.2026: SUMIT sends the customer back here after paying (lib/sumit.js). GET, so it is handled before api().
+  // 14.11.2026: back from SUMIT after an add-on or upgrade (addonDone).
+  if (/^\/api\/pay\/addon-done\/[a-f0-9]{18}$/.test(u.pathname) && q.method === 'GET') { addonDone(u, s).catch(function (e) { log('addon done: ' + e.message); try { s.writeHead(302, { Location: 'https://it-solution.co.il/offer/?pay=error' }); s.end(); } catch (x) {} }); return; }
   if (u.pathname === '/api/pay/done' && q.method === 'GET') { payDone(u, s).catch(function (e) { log('pay done: ' + e.message); try { s.writeHead(302, { Location: 'https://it-solution.co.il/trial/?pay=error' }); s.end(); } catch (x) {} }); return; }
   if (u.pathname.indexOf('/api/') === 0) { api(q, s, u).catch(function (e) {
     log('api: ' + e.message);
