@@ -56,6 +56,14 @@ test('a task waiting for a PC that is off is not a fault, and the clock starts w
   assert.match(pcProblems([c], true, now - 30 * 60000, now)[0], /תקוע/);
 });
 
+test("a task named for another computer waits for that computer, not for this one", () => {
+  const now = Date.parse("2026-10-05T05:00:00Z");
+  const t = { status: "pending", at: "2026-10-05T04:00:00Z", task: "x", pc: "lolos" };
+  assert.deepEqual(pcProblems([t], true, 0, now, () => ({ on: false, since: 0 })), []);
+  assert.deepEqual(pcProblems([t], true, now - 11 * 60000, now, () => ({ on: false, since: 0 })), []);
+  assert.match(pcProblems([t], false, 0, now, () => ({ on: true, since: now - 11 * 60000 }))[0], /מחכה יותר מעשר דקות/);
+});
+
 test('the doctor is not woken for the PC', () => {
   const now = Date.parse('2026-10-05T05:00:00Z');
   const since = {}; const old = new Date(now - 20 * 60000).toISOString();

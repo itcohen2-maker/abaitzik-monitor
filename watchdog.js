@@ -131,13 +131,25 @@ function pcState(now) {
   const prev = (readJson(OUT, {}) || {}).pcOnSince;
   return { on, since: on ? (Date.parse(prev) || now) : 0 };
 }
-function pcProblems(tasks, on, since, now) {
-  if (!on) return [];
+// A task named for another computer (Lolos, the bank PC) waits for that computer, not for this one.
+const NAMED_NOW = {};
+function namedState(name, now) {
+  const s = readJson(path.join(STATUS, "pc-seen-" + name + ".json"), {}) || {};
+  const seen = Date.parse(s.at);
+  const on = !isNaN(seen) && now - seen < PC_ON_MS;
+  const prev = ((readJson(OUT, {}) || {}).pcNamedSince || {})[name];
+  const since = on ? (Date.parse(prev) || now) : 0;
+  NAMED_NOW[name] = on ? new Date(since).toISOString() : null;
+  return { on, since };
+}
+function pcProblems(tasks, on, since, now, namedFn) {
   const out = [];
   tasks.forEach((t) => {
     if (!t || t.test) return;
-    if (t.status === "pending" && now - Math.max(Date.parse(t.at), since || 0) > 10 * 60 * 1000) out.push("משימה למחשב מחכה יותר מעשר דקות: " + String(t.task).slice(0, 40));
-    if (t.status === "claimed" && now - Math.max(Date.parse(t.claimedAt), since || 0) > 25 * 60 * 1000) out.push("המחשב תקוע על משימה יותר מ-25 דקות: " + String(t.task).slice(0, 40));
+    const up = t.pc ? (namedFn ? namedFn(t.pc) : { on: false, since: 0 }) : { on, since };
+    if (!up.on) return;
+    if (t.status === "pending" && now - Math.max(Date.parse(t.at), up.since || 0) > 10 * 60 * 1000) out.push("משימה למחשב מחכה יותר מעשר דקות: " + String(t.task).slice(0, 40));
+    if (t.status === "claimed" && now - Math.max(Date.parse(t.claimedAt), up.since || 0) > 25 * 60 * 1000) out.push("המחשב תקוע על משימה יותר מ-25 דקות: " + String(t.task).slice(0, 40));
   });
   return out;
 }
@@ -184,7 +196,7 @@ function check(now) {
   let tasks = [];
   try { tasks = fs.readdirSync(PCDIR).map((f) => readJson(path.join(PCDIR, f), null)).filter(Boolean); } catch (e) {}
   const pc = pcState(now);
-  pcProblems(tasks, pc.on, pc.since, now).forEach((p) => problems.push(p));
+  pcProblems(tasks, pc.on, pc.since, now, (n) => namedState(n, now)).forEach((p) => problems.push(p));
   // The Claude login on the server (CLAUDE_CODE_OAUTH_TOKEN, set 25.9.2026)
   // lasts about a year. Warn a month ahead, and at once if the worker log shows
   // the sessions being refused.
@@ -465,7 +477,7 @@ function main() {
   Object.keys(told).forEach((k) => { if (now - Date.parse(told[k]) > 24 * 3600 * 1000) delete told[k]; });
   let board = null;
   try { board = snapshot(now); } catch (e) { console.log('!! תמונת מצב: ' + e.message); }
-  try { fs.mkdirSync(STATUS, { recursive: true }); fs.writeFileSync(OUT, JSON.stringify({ at: new Date(now).toISOString(), problems, told, since, speed: sp, pcOnSince: pc.on ? new Date(pc.since).toISOString() : null, board, history: history(prev, problems, now) }, null, 1)); } catch (e) {}
+  try { fs.mkdirSync(STATUS, { recursive: true }); fs.writeFileSync(OUT, JSON.stringify({ at: new Date(now).toISOString(), problems, told, since, speed: sp, pcOnSince: pc.on ? new Date(pc.since).toISOString() : null, pcNamedSince: NAMED_NOW, board, history: history(prev, problems, now) }, null, 1)); } catch (e) {}
   // 12.10: Itzik's instance gathers every monitor into the 🩺 board.
   if (inst.name === 'abaitzik') {
     try { require('./health-board.js').run(now); } catch (e) { console.log('!! לוח התקלות: ' + e.message); }
