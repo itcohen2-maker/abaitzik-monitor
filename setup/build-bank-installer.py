@@ -18,7 +18,7 @@ head = '\r\n'.join([
   'chcp 65001 >nul',
   'title Bank Setup',
   "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"$s=[IO.File]::ReadAllText('%~f0',[Text.Encoding]::UTF8); $i=$s.IndexOf('#PS'+'START'); iex $s.Substring($i)\"",
-  'if errorlevel 1 pause',
+  "if errorlevel 1 pause",
   'exit /b',
   '#PSSTART',
   '',

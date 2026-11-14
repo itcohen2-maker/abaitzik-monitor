@@ -486,7 +486,7 @@ async function onMessage(m, contactName) {
   }
   // 14.11: "בנק" / "התחברתי" / "ביטול בנק" run the bank download on the bank computer (lib/bank-flow.js).
   try {
-    if (isOwnerInstance() && await require('./lib/bank-flow.js').waTurn({ root: ROOT, dataPath: DATA, text: t, send: (s) => waSend(m.from, s) })) return;
+    if (isOwnerInstance() && await require('./lib/bank-flow.js').waTurn({ root: ROOT, dataPath: DATA, text: t, send: (s) => waSend(m.from, s), owner: true })) return;
   } catch (e) { log('bank flow failed: ' + e.message); await waSend(m.from, 'חיבור הבנק נתקע: ' + String(e.message).slice(0, 160)); return; }
   if (await chatTurn(m.from, t, m)) return;
   if (await trainTurn(m.from, t)) return;
@@ -629,6 +629,16 @@ async function tenantMessage(m, tn, contactName) {
     if (heard) t = '🎙️ הודעה קולית מוואטסאפ: ' + heard;
   }
   if (!t) { await tenantSend(m.from, 'קיבלתי, אבל את סוג ההודעה הזה אני עוד לא קורא. אפשר לכתוב לי אותה במילים?'); return; }
+  // 14.11: "בנק" from a customer runs the bank program on his computer (lib/bank-flow.js, setup/enable-bank.sh).
+  // His monitor without data/bank/config.json gets it as an ordinary message.
+  try {
+    const r = await require('./lib/bank-flow.js').waTurn({ dataPath: path.join(tn.dir, 'data'), chatDir: WT.chatDir(tn), text: t, send: (s) => tenantSend(m.from, s) });
+    if (r) {
+      if (r.chatId) { const sb = loadState(); sb.pending[r.chatId] = { to: m.from, at: Date.now(), name: contactName || '', tenant: tn.tenant, dir: tn.dir }; saveState(sb); }
+      log('tenant bank ' + tn.tenant + ' ' + m.id + (r.chatId ? ' -> ' + r.chatId : ''));
+      return;
+    }
+  } catch (e) { log('!! tenant bank ' + tn.tenant + ': ' + e.message); await tenantSend(m.from, 'חיבור הבנק נתקע אצלי. אפשר לנסות שוב בעוד כמה דקות.'); return; }
   const fw = WT.forwarded(m);
   let id;
   try { id = WT.write(tn, 'וואטסאפ', WT.request(fw, t)); } catch (e) { log('!! tenant queue ' + tn.tenant + ': ' + e.message); await tenantSend(m.from, 'משהו נתקע אצלי. אפשר לכתוב את זה במסך הבית של המוניטור, ואני מטפל.'); return; }

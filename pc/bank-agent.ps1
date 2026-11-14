@@ -23,9 +23,18 @@ $Port = 9339
 $WaitLoginMin = 15
 $Days = 90
 # config.json may name another login page (a test bank); the real one is Hapoalim's.
-$BankLogin = if ($Cfg.bankLogin) { [string]$Cfg.bankLogin } else { 'https://login.bankhapoalim.co.il/ng-portals/auth/he/' }
-$BankOrigin = ([Uri]$BankLogin).GetLeftPart([UriPartial]::Authority)
-$BankHost = ([Uri]$BankLogin).Host
+# 14.11: the task names the bank, BANK:RUN <id>. Each bank: its login page, how its logged in home looks,
+# and the page script that reads it. Only Hapoalim (private accounts) so far; the others come as customers need them.
+$Banks = @{
+  'hapoalim' = @{ name = 'בנק הפועלים'; login = 'https://login.bankhapoalim.co.il/ng-portals/auth/he/'; inTest = "(/\/(ng-portals(-bt)?\/rb\/|portalserver\/HomePage)/i.test(location.href) && !!window.bnhpApp && !!window.bnhpApp.restContext)" }
+}
+function Use-Bank($id) {
+  if (-not $Banks.ContainsKey($id)) { throw ('הבנק ' + $id + ' עוד לא נתמך בתוכנה הזאת') }
+  $script:Bank = $Banks[$id]
+  $script:BankLogin = if ($Cfg.bankLogin) { [string]$Cfg.bankLogin } else { $Bank.login }
+  $script:BankOrigin = ([Uri]$BankLogin).GetLeftPart([UriPartial]::Authority)
+  $script:BankHost = ([Uri]$BankLogin).Host
+}
 $Json = New-Object System.Web.Script.Serialization.JavaScriptSerializer
 $Json.MaxJsonLength = [int]::MaxValue
 
@@ -185,11 +194,18 @@ function Run-Bank($t) {
     try { Cdp $ws 'Page.bringToFront' @{} | Out-Null } catch {}
     Say 'מחכה שהלקוח יתחבר'
     $in = $false
+    $lastLoad = Get-Date; $reloads = 0
     while (((Get-Date) - $start).TotalMinutes -lt $WaitLoginMin) {
       Start-Sleep -Seconds 3
       try {
-        $ok = Eval $ws "(/\/(ng-portals(-bt)?\/rb\/|portalserver\/HomePage)/i.test(location.href) && !!window.bnhpApp && !!window.bnhpApp.restContext)"
+        $ok = Eval $ws $Bank.inTest
         if ($ok) { $in = $true; break }
+        # 14.11, Itzik's first real run: the window stayed white until he pressed F5. A page with
+        # nothing to type in after 20 seconds is reloaded, up to three times.
+        if (((Get-Date) - $lastLoad).TotalSeconds -gt 20 -and $reloads -lt 3) {
+          $empty = Eval $ws "(!document.body || (document.body.innerText || '').trim().length < 20) && document.querySelectorAll('input').length === 0"
+          if ($empty) { $reloads++; Say ('הדף לבן, מרענן (' + $reloads + ')'); Cdp $ws 'Page.reload' @{ ignoreCache = $true } | Out-Null; $lastLoad = Get-Date }
+        }
       } catch {
         # the page navigated and the socket closed: reconnect to the bank tab
         try { $ws.Dispose() } catch {}
@@ -239,8 +255,10 @@ function Once {
   $t = $r.text | ConvertFrom-Json
   Set-Content -Path $Lock -Value $t.id -Encoding UTF8
   try {
-    if ([string]$t.task -notmatch 'BANK:RUN') { Call 'POST' ('fail/' + $t.id) 'המחשב הזה מבצע רק משיכת תנועות בנק' | Out-Null; return }
-    Say ('בקשת בנק ' + $t.id)
+    if ([string]$t.task -notmatch 'BANK:RUN(?:\s+([a-z0-9-]+))?') { Call 'POST' ('fail/' + $t.id) 'המחשב הזה מבצע רק משיכת תנועות בנק' | Out-Null; return }
+    $bid = if ($Matches[1]) { $Matches[1] } else { 'hapoalim' }
+    Say ('בקשת בנק ' + $t.id + ' ' + $bid)
+    try { Use-Bank $bid } catch { Call 'POST' ('fail/' + $t.id) ([string]$_.Exception.Message) | Out-Null; return }
     Run-Bank $t
   } finally { Remove-Item $Lock -Force -ErrorAction SilentlyContinue }
 }

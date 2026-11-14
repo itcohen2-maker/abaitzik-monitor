@@ -9,6 +9,13 @@ $Task = 'MonitorBank'
 function Step($s) { Write-Host ''; Write-Host ('== ' + $s) -ForegroundColor Cyan }
 function Ok($s) { Write-Host ('   ' + $s) -ForegroundColor Green }
 function Bad($s) { Write-Host ('   ' + $s) -ForegroundColor Red }
+# 14.11, Itzik's screen: the console printed the Hebrew reversed. The console speaks English, and
+# what the customer must read comes in a Windows message box, which shows Hebrew right to left.
+Add-Type -AssemblyName PresentationFramework
+function Tell($he, $ok) {
+  $icon = if ($ok) { [System.Windows.MessageBoxImage]::Information } else { [System.Windows.MessageBoxImage]::Warning }
+  [void][System.Windows.MessageBox]::Show($he, 'חיבור הבנק', [System.Windows.MessageBoxButton]::OK, $icon, [System.Windows.MessageBoxResult]::OK, [System.Windows.MessageBoxOptions]::RtlReading)
+}
 # 14.11: the customer's file is one Bank-Setup.cmd with everything inside ($Embedded, base64,
 # written by setup/build-bank-installer.py), so it works even when double clicked inside the zip.
 # Itzik's first try: two files named install-bank, and nothing happened.
@@ -18,23 +25,23 @@ function Report($step) {
   try { Invoke-WebRequest -UseBasicParsing -Uri ($cfg.url.TrimEnd('/') + '/ping?step=' + [uri]::EscapeDataString('bank: ' + $step)) -Headers @{ 'X-Pc-Key' = $cfg.key } -TimeoutSec 20 | Out-Null } catch {}
 }
 
-Step 'בודק את החיבור למוניטור'
+Step 'Checking the connection to the monitor'
 try {
   $r = Invoke-WebRequest -UseBasicParsing -Uri ($cfg.url.TrimEnd('/') + '/ping') -Headers @{ 'X-Pc-Key' = $cfg.key } -TimeoutSec 30
-  Ok ('המוניטור עונה (' + $r.StatusCode + ')')
-} catch { Bad ('המוניטור לא ענה: ' + $_.Exception.Message); Bad 'צריך אינטרנט. מנסים שוב אחר כך.'; Read-Host 'Enter לסגירה'; exit 1 }
+  Ok ('Monitor answers (' + $r.StatusCode + ')')
+} catch { Bad ('No answer: ' + $_.Exception.Message); Tell ('אין חיבור למוניטור.' + [Environment]::NewLine + 'צריך לבדוק שיש אינטרנט, ולהריץ שוב.') $false; exit 1 }
 Report ('start ' + $env:COMPUTERNAME)
 
-Step 'בודק שיש כרום'
+Step 'Looking for Chrome'
 $chrome = @("$env:ProgramFiles\Google\Chrome\Application\chrome.exe", "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe", "$env:LOCALAPPDATA\Google\Chrome\Application\chrome.exe", "${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe", "$env:ProgramFiles\Microsoft\Edge\Application\msedge.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
-if ($chrome) { Ok $chrome; Report ('browser ' + $chrome) } else { Bad 'לא נמצא כרום. צריך להתקין את Google Chrome ואז להריץ שוב.'; Report 'no browser'; Read-Host 'Enter לסגירה'; exit 1 }
+if ($chrome) { Ok $chrome; Report ('browser ' + $chrome) } else { Bad 'Chrome not found'; Report 'no browser'; Tell ('לא נמצא דפדפן כרום במחשב.' + [Environment]::NewLine + 'צריך להתקין את Google Chrome, ואז להריץ שוב.') $false; exit 1 }
 
-Step 'מעתיק את הקבצים'
+Step 'Copying the files'
 New-Item -ItemType Directory -Force $Dst | Out-Null
 foreach ($f in 'bank-agent.ps1', 'run-hidden.vbs', 'config.json') { [IO.File]::WriteAllBytes((Join-Path $Dst $f), (Payload $f)) }
 Ok $Dst
 
-Step 'רושם בדיקה כל דקה ברקע'
+Step 'Starting the check every minute'
 $agent = Join-Path $Dst 'bank-agent.ps1'
 $stamp = Join-Path $Dst 'last-run.txt'
 Remove-Item $stamp -Force -ErrorAction SilentlyContinue
@@ -63,10 +70,7 @@ if (-not $works) {
   if ((Test-Path $stamp) -and (Get-Item $stamp).LastWriteTime -gt $since) { $works = 'loop' }
 }
 if ($works) {
-  Ok ('פועל ברקע (' + $works + ')'); Report ('installed via ' + $works)
-  Write-Host ''
-  Ok 'מותקן. מעכשיו כותבים למוניטור בוואטסאפ: בנק'
-  Ok 'ייפתח כאן חלון של הבנק. מתחברים בו, והשאר קורה לבד.'
-} else { Bad 'לא הצלחתי להפעיל את הבדיקה ברקע במחשב הזה.'; Report 'nothing runs' }
-Write-Host ''
-Read-Host 'Enter לסגירה'
+  Ok ('Running (' + $works + ')'); Report ('installed via ' + $works)
+  Ok 'Installed.'
+  Tell ('✓ חיבור הבנק מותקן.' + [Environment]::NewLine + [Environment]::NewLine + 'מעכשיו כותבים למוניטור בוואטסאפ: בנק' + [Environment]::NewLine + 'ייפתח כאן חלון של הבנק. מתחברים בו בעצמך, והשאר קורה לבד.') $true
+} else { Bad 'Nothing runs'; Report 'nothing runs'; Tell ('ההתקנה לא הצליחה להפעיל את הבדיקה ברקע במחשב הזה.' + [Environment]::NewLine + 'צריך לשלוח צילום של המסך הזה.') $false; exit 1 }
