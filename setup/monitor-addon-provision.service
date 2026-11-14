@@ -1,0 +1,5 @@
+[Unit]
+Description=paid add-ons that need root (bank installer, accounting start), lib/addons.js
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/node /home/monitor/abaitzik-monitor/setup/addon-provision.js
