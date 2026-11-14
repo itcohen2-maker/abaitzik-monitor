@@ -85,13 +85,16 @@ async function scan(tk) {
   }
   // Conversations: Messenger and Instagram.
   for (const [plat, src] of [['messenger', 'messenger'], ['instagram', 'ig-dm']]) {
-    const j = await q(PAGE + '/conversations?platform=' + plat + '&fields=participants,updated_time,messages.limit(1){message,from,created_time}&limit=50');
+    const j = await q(PAGE + '/conversations?platform=' + plat + '&fields=participants,updated_time,messages.limit(8){message,from,created_time}&limit=50');
     if (seenErr(j)) continue;
     (j.data || []).forEach((cv) => {
       const who = ((cv.participants && cv.participants.data) || []).find((p) => p.id !== PAGE && p.username !== 'itsolution.ai');
       if (!who) return;
-      const m = (cv.messages && cv.messages.data && cv.messages.data[0]) || {};
-      found.push({ src, key: 'm:' + who.id, name: who.name || who.username, text: m.from && m.from.id === who.id ? m.message : '', at: cv.updated_time, link: INBOX.replace('/all?', '/' + plat + '?') });
+      // 14.11.2026: Hidi sent her phone and Meta added its own line right after it ("נוסף תיוג אוטומטי"), so the newest
+      // message was the page's and her answer was missed. Now: the newest message written by the person.
+      const m = ((cv.messages && cv.messages.data) || []).find((x) => x.from && x.from.id === who.id) || {};
+      const ph = (String(m.message || '').match(/(?:\+?972[- ]?|0)5\d[- ]?\d{3}[- ]?\d{4}/) || [])[0] || '';
+      found.push({ src, key: 'm:' + who.id, name: who.name || who.username, text: m.message || '', phone: ph.replace(/[^0-9+]/g, ''), at: cv.updated_time, link: INBOX.replace('/all?', '/' + plat + '?') });
     });
   }
   // Instant Form leads.
