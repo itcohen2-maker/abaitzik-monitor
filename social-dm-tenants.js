@@ -95,6 +95,37 @@ async function one(t) {
   try { if (fs.existsSync(path.join(t.dir, 'notify.js'))) asUser(t.dir, ['notify.js', head, last.text.slice(0, 120) + '. מחכה לך ב 📋 לטיפול.']); } catch (e) { say(t.name + ': !! notify ' + e.message.slice(0, 80)); }
   try { asUser(t.dir, ['build.js']); execFileSync('chmod', ['-R', 'o+rX', path.join(t.dir, 'docs')]); } catch (e) { say(t.name + ': !! build ' + e.message.slice(0, 80)); }
   say(t.name + ': ' + made + ' שורות נוספו ל 📋');
+  // 14.11.2026, the offer page: "שיחות מפייסבוק ומאינסטגרם, עם תשובה מוצעת". Up to five a round.
+  for (const f of lines.slice(-5)) {
+    try { await suggest(t, f); } catch (e) { say(t.name + ': !! suggest ' + e.message.slice(0, 100)); }
+  }
+}
+
+/*
+  14.11.2026: a suggested reply to a new private message, written into the customer's own chat as a message
+  from his monitor ("📩 ... תשובה מוצעת"), so he copies it or asks for a change. Never sent to anyone by itself.
+  On the customers' API key (lib/sales-train.js forCustomer), never on Itzik's subscription; the cheap model.
+*/
+async function suggest(t, f) {
+  if (DRY) return;
+  let biz = ''; try { biz = String(JSON.parse(fs.readFileSync(path.join(t.dir, 'instance.json'), 'utf8')).business || ''); } catch (e) {}
+  const llm = require('./lib/sales-train.js').forCustomer().llm;
+  const sys = 'אתה עוזר לבעל עסק לענות להודעה פרטית שקיבל בפייסבוק או באינסטגרם. כתוב תשובה אחת קצרה (עד 3 משפטים), בעברית'
+    + ' פשוטה וחמה, בגוף ראשון בשם העסק, בלי אימוג׳י ובלי מקפים. אל תמציא מחירים, שעות או פרטים שלא נאמרו. אם חסר מידע,'
+    + ' תשאל שאלה אחת או תציע לדבר בטלפון. החזר רק את נוסח התשובה.';
+  const input = (biz ? 'העסק: ' + biz + '\n' : '') + 'הפונה: ' + f.who + '\nההודעה: ' + String(f.text || '').slice(0, 1500);
+  const reply = String(await llm('haiku', sys, input, 90000) || '').trim().slice(0, 700);
+  if (!reply) return;
+  const cd = path.join(t.dir, 'data', 'chat', 'chat');
+  const own = fs.statSync(cd);
+  const pad = (n) => String(n).padStart(2, '0'); const at = new Date();
+  const base = at.getFullYear() + pad(at.getMonth() + 1) + pad(at.getDate()) + '-' + pad(at.getHours()) + pad(at.getMinutes()) + pad(at.getSeconds()) + '-claude-dm';
+  let name = base + '.json'; for (let i = 2; fs.existsSync(path.join(cd, name)); i++) name = base + '-' + i + '.json';
+  const text = '📩 ' + dm.NAME[f.plat] + ', ' + f.who + ': "' + String(f.text || '').slice(0, 300) + '"\n\nתשובה מוצעת:\n' + reply
+    + '\n\nלהעתיק ולשלוח מ' + dm.NAME[f.plat] + ', או לכתוב לי מה לשנות.';
+  fs.writeFileSync(path.join(cd, name), JSON.stringify({ at: at.toISOString(), from: 'claude', text, status: 'done', id: 'dm-' + at.getTime().toString(36), dm: f.id }, null, 1), { mode: 0o664 });
+  try { fs.chownSync(path.join(cd, name), own.uid, own.gid); } catch (e) {}
+  say(t.name + ': תשובה מוצעת ל ' + f.who);
 }
 
 // Self signups (signup-personalize.js) add { name, setup, tenant: true } to data/cal/sources.json with the 📸 card
