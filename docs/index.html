@@ -3067,7 +3067,7 @@ html body #quickForm.quickwrite.mvWait{border:2px solid transparent!important;an
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-14T12:18:03.757Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-14T12:18:52.752Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3426,14 +3426,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -5021,7 +5014,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='0673d83332';
+var CODE_ID='0b28ca6e6b';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -20329,7 +20322,7 @@ function dmoMerge(d){
    var c3=cli(it.client);if(c3)c3.open=ti;
   } else if(ty==='lead'){
    var c4=cli(it.client||ti);if(c4){c4.status='ליד חדש';if(tx)c4.biz=c4.biz||tx;}
-   o.crm=[{name:it.client||ti,what:tx||ti,src:'וואטסאפ',stage:'ליד חדש'}].concat(o.crm||[]);
+   o.crm=[{name:it.client||ti,what:tx||ti,src:'וואטסאפ',stage:'ליד חדש',at:day(it),next:'לחזור מחר'}].concat(o.crm||[]); // 14.11: the hour it came in, and due tomorrow, like his own monitor
   } else if(ty==='quote'||ty==='invoice'){
    o.made=[it].concat(o.made||[]);
    var c5=cli(it.client);if(c5)c5.open=(ty==='invoice'?'חשבונית':'הצעת מחיר')+' נשלחה, מחכה לתשובה';
@@ -20368,7 +20361,7 @@ function dmoSheet(key){
   label='👥 לקוחות ולידים';
   var cols=['ליד חדש','בשיחה','הצעת מחיר','נסגר'],L=d.crm||[];
   h='<div class="dmo-pipe">'+cols.map(function(c){var it=L.filter(function(r){return r.stage===c;});
-    return '<div class="dmo-col"><b>'+esc(c)+' ('+it.length+')</b>'+it.map(function(r){return '<div class="dmo-lead"><b>'+esc(r.name||'')+'</b><br>'+esc(r.what||'')+'<br><span class="dmo-meta">'+esc(r.src||'')+(r.amount?' · '+dmoMoney(r.amount):'')+'</span>'+(r.next?'<br><span class="dmo-meta">⏰ '+esc(r.next)+'</span>':'')+'</div>';}).join('')+'</div>';}).join('')+'</div>';
+    return '<div class="dmo-col"><b>'+esc(c)+' ('+it.length+')</b>'+it.map(function(r){return '<div class="dmo-lead"><b>'+esc(r.name||'')+'</b><br>'+esc(r.what||'')+'<br><span class="dmo-meta">'+esc(r.src||'')+(r.amount?' · '+dmoMoney(r.amount):'')+'</span>'+(r.at?'<br><span class="dmo-meta">🕐 הגיע '+esc(r.at)+'</span>':'')+(r.next?'<br><span class="dmo-meta">⏰ '+esc(r.next)+'</span>':'')+'</div>';}).join('')+'</div>';}).join('')+'</div>';
  } else if(key==='quote'){
   label='🧾 הצעת מחיר';
   var q=((d.quote||[])[0])||{};
@@ -20775,7 +20768,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="BAJSdIafAtGxgHzJr3tOJLTViE1Gkn6rNyAReKPb5ZiMM-6xXp2c1PD7V5VKOXkQRWLI9-Wdq7-Q4hyMCcYp2iQ";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
