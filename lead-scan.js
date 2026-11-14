@@ -71,6 +71,18 @@ async function scan(tk) {
       found.push({ src, key: 'c:' + c.from.id, name: c.from.name, text: c.message, at: c.created_time, link: INBOX.replace('/all?', '/facebook?') });
     }));
   }
+  // 14.11.2026, Itzik: "תבדוק את עיניין האינסטגרם". Comments on the Instagram side of the ads (page-backed account,
+  // no username is returned, so the key is the comment id). One comment found this way had waited since 2.11.
+  if (RAW) {
+    const ads = await get(G + 'act_191762840889782/ads?effective_status=' + encodeURIComponent('["ACTIVE"]') + '&fields=creative{effective_instagram_media_id}&limit=100&access_token=' + RAW);
+    const media = new Set(((ads && ads.data) || []).map((a) => a.creative && a.creative.effective_instagram_media_id).filter(Boolean));
+    for (const m of media) {
+      const j = await get(G + m + '/comments?fields=id,text,timestamp,username,from&limit=50&access_token=' + RAW);
+      if (j.error) { if (j.error.net) netErr = j.error.message; continue; }
+      (j.data || []).forEach((c) => found.push({ src: 'ig-comment', key: 'igc:' + c.id, name: (c.from && c.from.username) || c.username || 'מגיב באינסטגרם',
+        text: c.text, at: c.timestamp, link: INBOX.replace('/all?', '/instagram?') }));
+    }
+  }
   // Conversations: Messenger and Instagram.
   for (const [plat, src] of [['messenger', 'messenger'], ['instagram', 'ig-dm']]) {
     const j = await q(PAGE + '/conversations?platform=' + plat + '&fields=participants,updated_time,messages.limit(1){message,from,created_time}&limit=50');
@@ -96,9 +108,11 @@ async function scan(tk) {
 
 // 14.11.2026: the leads token is a system user token (ai-poster, never expires, 15 scopes incl. pages_read_user_content,
 // pages_messaging, leads_retrieval). Page edges (feed, ads_posts, conversations) need the PAGE token, so it is asked for every run.
+let RAW = '';
 async function pageToken(tk) {
   if (!tk || tk.f !== '.fb-leads-token-itsolution') return tk;
   const j = await get(G + PAGE + '?fields=access_token&access_token=' + tk.t);
+  RAW = tk.t; // 14.11: the ads (and their Instagram comments) are read with the system user token itself
   return j && j.access_token ? { t: j.access_token, f: tk.f } : tk;
 }
 
