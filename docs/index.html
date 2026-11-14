@@ -3032,7 +3032,7 @@ body.gH #fcInline{display:none!important}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-14T11:20:04.847Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-14T11:21:21.735Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3391,7 +3391,14 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-
+<div class="alerts" id="pushBox" hidden>
+ <div>
+  <b>התראות לטלפון</b>
+  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
+ </div>
+ <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
+ <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
+</div>
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -4979,7 +4986,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='24a5b7bd87';
+var CODE_ID='8b30585c10';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -19886,7 +19893,7 @@ function renderHome(){
  }
  function workHtml(){
   var ev=events(),sh=ev.filter(function(e){return tab==='all'||e.k===tab||(tab==='done'&&e.k==='now');});
-  return '<div class="agWork"><h3>🗂️ עבודת '+(NAME==='המנהל שלי'?'המנהל':'המנהלת')+' <small>היום · '+ev.filter(function(e){return e.k!=='next';}).length+' נעשו</small></h3>'
+  return '<div class="agWork"><h3>🗂️ עבודת '+(NAME0==='המנהל שלי'?'המנהל':'המנהלת')+' <small>היום · '+ev.filter(function(e){return e.k!=='next';}).length+' נעשו</small></h3>'
    +'<div class="agTabs">'+[['all','הכל'],['wait','מחכה לך'],['done','נעשה'],['next','בהמשך היום']].map(function(x){return '<button type="button" data-tab="'+x[0]+'"'+(tab===x[0]?' class="on"':'')+'>'+x[1]+'</button>';}).join('')+'</div>'
    +(sh.length?sh.map(function(e){return '<div class="ev '+e.k+'" style="--c:'+e.c+'"><div class="ic">'+(e.k==='now'?'<span></span>':e.k==='next'?'🕒':e.k==='wait'?'⚠️':chk())+'</div><div class="tx"><small>'+(e.k==='now'?'עכשיו':hhmm(e.at))+(e.k==='wait'?' · מחכה לך':'')+'</small><span class="who">'+E(e.who)+'</span> '+E(e.t)+(e.res?'<small>'+E(e.res)+'</small>':'')+'</div></div>';}).join('')
      :'<div class="agEmpty">'+(tab==='next'?'אין עוד משהו היום.':tab==='wait'?'שום דבר לא מחכה לך.':'עוד לא נעשה כלום היום.')+'</div>')+'</div>';
@@ -20665,7 +20672,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="";
+var PUSH_KEY="BAJSdIafAtGxgHzJr3tOJLTViE1Gkn6rNyAReKPb5ZiMM-6xXp2c1PD7V5VKOXkQRWLI9-Wdq7-Q4hyMCcYp2iQ";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}

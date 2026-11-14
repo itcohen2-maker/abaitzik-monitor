@@ -109,6 +109,35 @@ for (const it of m.items) {
     + 'מה שדורש את איציק (כסף, חתימה, אישור, לחיצה בטלפון) לא לעשות אלא לכתוב לו במשפט אחד מה נשאר לו. בסוף שורה אחת בעברית: מה מצאת ומה עשית.';
   if (run('node', ['pc-task.js', 'add', '--re', 'manager-fix-' + it.k + '-' + m.day, job]) !== null) { st.fixed[key] = new Date(now).toISOString(); fixN++; log('fix job ' + it.k); }
 }
+// 14.11.2026, Itzik: "כל שבוע ביום שבת המנהל ידאג שיש מלאי סרטונים וסטטוסים לכל השבוע הבא. תמיד".
+// Saturday, every round: lib/stock.js counts the next week (Sunday to Friday) of every channel. Each channel that is
+// short becomes one PC job (pc-task.js, full Claude with memory), once per channel per Saturday, and checks itself after.
+const isSat = new Date(new Date(now).toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' })).getDay() === 6;
+if (isSat) {
+  st.satStock = st.satStock && st.satStock.day === m.day ? st.satStock : { day: m.day, sent: {} };
+  let S = [];
+  try {
+    const stock = require('./lib/stock.js');
+    S = stock.compute({
+      st: readJson(path.join(__dirname, 'docs', 'status', 'queue.json'), []),
+      nr: readJson('/home/monitor/ner-queue.json', []),
+      pl: readJson(path.join(__dirname, 'docs', 'plate', 'queue.json'), []),
+      ai: readJson(path.join(__dirname, 'docs', 'ai', 'queue.json'), []),
+      li: readJson(path.join(__dirname, 'docs', 'linkedin', 'stock.json'), null),
+    }, m.day);
+  } catch (e) { log('!! saturday stock: ' + e.message); }
+  const low = S.filter(c => c.low);
+  log('saturday stock: ' + (low.length ? low.map(c => c.id).join(',') + ' short' : 'full week'));
+  for (const c of low) {
+    if (st.satStock.sent[c.id]) continue;
+    if (c.need && (c.ready || 0) + (c.held || 0) >= c.need) { log("saturday stock " + c.id + ": enough made, waiting for his approval"); continue; } // the AI channel: approval is his, not more videos
+    const job = 'המנהל, בדיקת שבת (איציק 14.11: כל שבת לדאוג שיש מלאי סרטונים וסטטוסים לכל השבוע הבא, תמיד). '
+      + c.title + ': ' + c.line + '. להשלים עכשיו את כל השבוע הבא, ראשון עד שישי, לפי הסקילים והכללים של הערוץ הזה. '
+      + 'מה שצריך את האישור של איציק נכנס לתור כמחכה לאישורו, לא עולה לרשת. '
+      + 'תמיד לבדוק הכל: אחרי ההכנה לספור שוב את התור ולוודא שכל יום בשבוע הבא מכוסה ושהקבצים באמת קיימים. בסוף שורה אחת בעברית: מה הוכן ומה עוד חסר.';
+    if (run('node', ['pc-task.js', 'add', '--re', 'sat-stock-' + c.id + '-' + m.day, job]) !== null) { st.satStock.sent[c.id] = new Date(now).toISOString(); log('saturday stock job ' + c.id); }
+  }
+}
 for (const e of M.alarmsDue(m, now, st.alarms)) {
   const at = new Date(e.ms - 30 * 60000).toLocaleTimeString('en-GB', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit', hour12: false });
   const out = run('node', ['alarm.js', at, 'בעוד חצי שעה: ' + e.title + (e.where ? ', ' + e.where : '')]);
