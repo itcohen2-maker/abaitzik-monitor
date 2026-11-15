@@ -3112,7 +3112,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-15T09:07:16.311Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-15T09:08:03.002Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -5064,7 +5064,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='3fa3922e4b';
+var CODE_ID='47010d994b';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -14176,6 +14176,7 @@ function bdCss(){
   +'#bdGrid .dot em{font-style:normal;font-size:14px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.55))}'
   +'#bdGrid .dot small{display:block;max-width:100%;overflow:hidden;white-space:nowrap;font:800 8px/1.1 Heebo,sans-serif;color:#fff;direction:ltr;letter-spacing:-.2px;text-shadow:0 1px 3px rgba(0,0,0,.6)}'
   +'#bdGrid .dot.pst{filter:saturate(.55) brightness(.75)}#bdGrid .dot.pst.e{opacity:.18}#bdGrid .dot.now{outline:2px solid #fff;outline-offset:1px}'
+  +'#bdGrid .dot.fut{opacity:.5;filter:saturate(.7) brightness(.85)}'
   +'#bdGrid .lrot{cursor:pointer;width:100%;box-sizing:border-box}#bdGrid .lb.rot{font-size:18px}'
   +'</style>';
  var LR='#bdGrid{background:#000;padding:0}'
@@ -14232,7 +14233,7 @@ function bdTiles(ROWS,C,days,T0,wkName,H){
   +ROWS.map(function(r,ri){var rc=r.cc||BD_RC[r.id]||['#7d8ba1','#3f4a5c'],cv='--a:'+rc[0]+';--b:'+rc[1];
    return '<span class="ln" style="'+cv+'" data-rn="'+ri+'">'+r.ic+'<small>'+esc(r.n)+'</small></span>'
    +days.map(function(d){var c=C[ri+'|'+d]||{},s=c.s||'';
-    return '<span class="lc"><button type="button" style="'+cv+'" class="dot'+(s?' s-'+s:' e')+(d===T0?' now':'')+(d<T0?' pst':'')+'" data-r="'+ri+'" data-d="'+d+'" aria-label="'+esc(r.n)+' '+H.dm(d)+' '+(BD_LBL[s]||'לא מתוכנן')+'">'
+    return '<span class="lc"><button type="button" style="'+cv+'" class="dot'+(s?' s-'+s:' e')+(d===T0?' now':'')+(d<T0?' pst':'')+(s&&d>T0?' fut':'')+'" data-r="'+ri+'" data-d="'+d+'" aria-label="'+esc(r.n)+' '+H.dm(d)+' '+(BD_LBL[s]||'לא מתוכנן')+'">'
      +(s?'<em>'+H.IC[s]+'</em>'+(c.t?'<small>'+esc(c.t)+'</small>':''):'')+'</button></span>';}).join('');}).join('')
   +'</div></div>';
 }

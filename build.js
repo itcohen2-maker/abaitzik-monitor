@@ -18450,6 +18450,8 @@ function bdCss(){
   +'#bdGrid .dot em{font-style:normal;font-size:14px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.55))}'
   +'#bdGrid .dot small{display:block;max-width:100%;overflow:hidden;white-space:nowrap;font:800 8px/1.1 Heebo,sans-serif;color:#fff;direction:ltr;letter-spacing:-.2px;text-shadow:0 1px 3px rgba(0,0,0,.6)}'
   +'#bdGrid .dot.pst{filter:saturate(.55) brightness(.75)}#bdGrid .dot.pst.e{opacity:.18}#bdGrid .dot.now{outline:2px solid #fff;outline-offset:1px}'
+  // 15.11.2026, Itzik: "the board shows the coming week always lit. Same colour, but faded, because the day has not come yet."
+  +'#bdGrid .dot.fut{opacity:.5;filter:saturate(.7) brightness(.85)}'
   +'#bdGrid .lrot{cursor:pointer;width:100%;box-sizing:border-box}#bdGrid .lb.rot{font-size:18px}'
   +'</style>';
  // the sideways phone: the same tiles fill the whole screen, nothing else shows. The same rules under #bdGrid.land are the rotate button.
@@ -18512,7 +18514,7 @@ function bdTiles(ROWS,C,days,T0,wkName,H){
   +ROWS.map(function(r,ri){var rc=r.cc||BD_RC[r.id]||['#7d8ba1','#3f4a5c'],cv='--a:'+rc[0]+';--b:'+rc[1];
    return '<span class="ln" style="'+cv+'" data-rn="'+ri+'">'+r.ic+'<small>'+esc(r.n)+'</small></span>'
    +days.map(function(d){var c=C[ri+'|'+d]||{},s=c.s||'';
-    return '<span class="lc"><button type="button" style="'+cv+'" class="dot'+(s?' s-'+s:' e')+(d===T0?' now':'')+(d<T0?' pst':'')+'" data-r="'+ri+'" data-d="'+d+'" aria-label="'+esc(r.n)+' '+H.dm(d)+' '+(BD_LBL[s]||'לא מתוכנן')+'">'
+    return '<span class="lc"><button type="button" style="'+cv+'" class="dot'+(s?' s-'+s:' e')+(d===T0?' now':'')+(d<T0?' pst':'')+(s&&d>T0?' fut':'')+'" data-r="'+ri+'" data-d="'+d+'" aria-label="'+esc(r.n)+' '+H.dm(d)+' '+(BD_LBL[s]||'לא מתוכנן')+'">'
      +(s?'<em>'+H.IC[s]+'</em>'+(c.t?'<small>'+esc(c.t)+'</small>':''):'')+'</button></span>';}).join('');}).join('')
   +'</div></div>';
 }
