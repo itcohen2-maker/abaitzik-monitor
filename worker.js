@@ -806,6 +806,8 @@ function run(list) {
       messages that were answered. "איך יכול להיות תקין?". The answer on disk
       decides, whatever the exit code.
     */
+    // 15.11: an answer written into the message's own reply field is copied to the chat, so it counts and he sees it.
+    try { require('./lib/answer-adopt.js').adoptReplies(CHAT, list); } catch (e) { say('!! העתקת תשובה נכשלה: ' + e.message); }
     const missed = missedOf(list, code);
     if (missed.length) {
       unmarkHandled(missed);
