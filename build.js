@@ -9364,7 +9364,7 @@ var LANDING=[
   The reports are what he reads at the end of every round, and they were the
   one screen of the four he uses with no way in from the bar.
 */
-var NAVS={h:'nH',q:'nQ',l:'nL',a:'nA',r:'nR'};
+var NAVS={h:'nH',q:'nQ',l:'nL',a:'nA',r:'nR',n:'nQ'};
 
 // Per network monitoring. Tapping a network circle opens its own screen:
 // what is waiting there, and only the report lines about that network.
@@ -12243,7 +12243,8 @@ document.addEventListener('keydown',function(e){
  if(tag==='INPUT'||tag==='TEXTAREA'||(t&&t.isContentEditable))return;
  if(document.getElementById('pH').hidden)pane('h');
 });
-document.getElementById('nQ').onclick=function(){pane('q');ensure(['replied'],render);};
+// 15.11.2026, Itzik said yes: the networks button opens the network numbers (pN), not the reply queue that is always empty.
+document.getElementById('nQ').onclick=function(){openNet('all');};
 // 13.11.2026, Itzik: "יש לי באג בלידים ... תסתכל על השעון". The bottom-bar לידים button (the clock-like icon)
 // opened the old list from the chat (last entry 17.10) and never showed the leads table. It now opens the same
 // table as the 🔔 tile (bizSheet leads), and its dot lights while the tile blinks for a new lead.
