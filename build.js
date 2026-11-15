@@ -4241,6 +4241,7 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   back, and the choice is remembered.
 */
 #pH.bare > *:not(#talkCard):not(#bareBtn):not(#approvalsBox){display:none!important}
+body.offHome #talkCard,body.offHome #gBackChat,body.offHome .gMenu{display:none!important}
 /*
   9.10, the improvements reviewer: a wide green bar saying "refresh me" told a
   new customer the page does not update by itself and needs pressing each
@@ -11797,6 +11798,9 @@ function pane(w){
   if(navStack.length>30)navStack.shift();
  }
  panePrev=w;
+ // 15.11.2026, Itzik (screenshot of פתקים with the write box and להמשיך את השיחה still on top): "אני נכנס למשל פתקים או אריח
+ // יפתח חלון מלא בלי שאריות מהמסך הקודם". The write box belongs to the home screen only; any other screen opens clean.
+ try{document.body.classList.toggle('offHome',w!=='h');if(moved&&w!=='h'&&!navgoing)window.scrollTo(0,0);}catch(e){}
  histSync();
  for(var k in PANES){
   var sec=document.getElementById(PANES[k]);
