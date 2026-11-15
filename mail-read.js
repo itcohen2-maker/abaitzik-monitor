@@ -83,13 +83,41 @@ function read(text) {
   });
 }
 
+/*
+  15.11.2026, the improvements reviewer: the reader failed twice in a row with no explanation and the
+  question stayed unanswered. Each step (search, reader) is tried once more after a short pause, and if
+  it fails again the output is one plain line for Itzik: what was checked, why it stopped, the next step.
+*/
+async function twice(fn, wait) {
+  try { return await fn(); } catch (e) {
+    await new Promise(r => setTimeout(r, wait == null ? 5000 : wait));
+    return fn();
+  }
+}
+
+function failNote(step, args, e) {
+  const what = args.length ? args.join(' ') : 'כל התיבה';
+  const why = String((e && e.message) || e || '');
+  let next = 'אנסה שוב בעוד כמה דקות. אם זה חוזר, צריך לבדוק את החיבור לתיבת הדואר בשרת.';
+  if (LOGIN_REFUSED.test(why)) next = 'החיבור של השרת לבינה המלאכותית פג. צריך להתחבר מחדש, ואז לשאול שוב.';
+  else if (/timeout|ETIMEDOUT/i.test(why)) next = 'הבדיקה לקחה יותר מדי זמן. כדאי לשאול שוב עם פחות ימים או שולח מסוים.';
+  return 'בדיקת הדואר לא הצליחה, גם בניסיון השני. מה נבדק: ' + what + '. איפה נעצר: ' +
+    (step === 'search' ? 'בחיפוש בתיבה' : 'בקריאת המיילים') + '. הצעד הבא: ' + next;
+}
+
 async function main() {
   const [question, ...args] = process.argv.slice(2);
   if (!question) {
     console.error('usage: node mail-read.js "<question>" [mail-search args]');
     process.exit(2);
   }
-  const mail = search(args).slice(0, MAX);
+  let mail;
+  try { mail = (await twice(() => search(args))).slice(0, MAX); } catch (e) {
+    console.error(String(e.message || e).slice(0, 500));
+    console.log(failNote('search', args, e));
+    process.exitCode = 1;
+    return;
+  }
   if (!mail.trim()) return console.log('לא נמצאו מיילים בחיפוש הזה.');
   const prompt = [
     'אתה קורא מיילים בשביל איציק. ענה בעברית, קצר ולעניין, על השאלה שלמטה, רק לפי המיילים.',
@@ -104,9 +132,13 @@ async function main() {
     mail,
     '=== סוף המיילים ===',
   ].join('\n');
-  console.log(await read(prompt));
+  try { console.log(await twice(() => read(prompt))); } catch (e) {
+    console.error(String(e.message || e).slice(0, 500));
+    console.log(failNote('read', args, e));
+    process.exitCode = 1;
+  }
 }
 
 // 12.11.2026: diag.js (the free AI diagnosis) reuses childEnv and markLogin, so the file only runs main when started directly.
 if (require.main === module) main().catch(e => { console.error(String(e.message || e).slice(0, 500)); process.exitCode = 1; });
-module.exports = { childEnv, markLogin, LOGIN_REFUSED };
+module.exports = { childEnv, markLogin, LOGIN_REFUSED, twice, failNote };
