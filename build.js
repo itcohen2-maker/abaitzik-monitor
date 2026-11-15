@@ -16187,8 +16187,8 @@ function personalSheet(){
   w.classList.toggle('psFull',!picking);
   w.innerHTML='<div class="ycard">'+(picking?pickHtml():mainHtml())+(picking?'<button type="button" class="psBtn lt" data-a="x">סגירה</button>':'')+'</div>';
   var cd=w.querySelector('.ycard');if(cd)cd.scrollTop=0;
-  // 15.11.2026, Itzik: "גם על מצב אישי?" The 🏡 tiles move too: long press and drag, phone and mouse, the order kept on the device.
-  if(!picking&&typeof pressDrag==='function')Array.prototype.forEach.call(w.querySelectorAll('.psGrid[id]'),function(g){var key='psOrder-'+g.id;nameChildren(g,'ps');applyOrder(g,key);pressDrag(g,'.psT',key);});
+  // 15.11.2026, Itzik: "גם על מצב אישי?" The 🏡 tiles move too: long press and drag, phone and mouse, the order kept on the device. draw() runs before w is in the page, so the order is applied inside g, not through getElementById.
+  if(!picking&&typeof pressDrag==='function')Array.prototype.forEach.call(w.querySelectorAll('.psGrid[id]'),function(g){var key='psOrder-'+g.id;nameChildren(g,'ps');(readOrder(key)||[]).forEach(function(id){var el=g.querySelector('[id="'+id+'"]');if(el)g.appendChild(el);});pressDrag(g,'.psT',key);});
  }
  function close(){w.remove();}
  w.onclick=function(e){
