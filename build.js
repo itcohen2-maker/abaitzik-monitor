@@ -663,7 +663,9 @@ function build() {
   const apvKeep = (c) => {
     if (!c || c.type !== 'approve') return true;
     const q = String(c.question || '').slice(0, 50);
-    if (q && apvAnswered.some((t) => t.indexOf(q) > -1)) return false;
+    // 15.11.2026: a LinkedIn card is judged by its post in the queue (approved or not), not by the first 50
+    // characters: a rewritten post on the same day (li-1711b) starts like the old answered one (li-1711).
+    if (q && !/^linkedin-li-/.test(String(c.id || '')) && apvAnswered.some((t) => t.indexOf(q) > -1)) return false;
     const now = Date.now(), DAY = 864e5;
     // 15.11.2026: a rewritten post has a letter after its number (li-1711b), and every LinkedIn post that waits for
     // him shows (Itzik: "אני צריך לאשר אותם בתוך המוניטור. איפה שמת לי אותם?"), not only the next three days.
