@@ -161,6 +161,12 @@ const LONG = 700;
 function pageUrl() {
   try { return require('./lib/instance.js').publicUrl || ''; } catch (e) { return ''; }
 }
+// 15.11: "files/<name>" in an answer becomes a full link, so it opens from WhatsApp.
+function absFiles(text) {
+  const base = pageUrl();
+  if (!base) return String(text || '');
+  return String(text || '').replace(/(^|[\s(])files\/([^\s)\]]+)/g, function (m, pre, name) { return pre + base + 'files/' + name; });
+}
 function shortOf(text, re) {
   const t = String(text || '').trim();
   if (t.length <= LONG) return null;
@@ -814,19 +820,21 @@ function sweepQueue(st, Q, ids) {
       return;
     }
     const to = st.pending[d.re].to;
-    const s5 = loadState(); s5.last = s5.last || {}; s5.last[to] = d.text; saveState(s5);
+    // 15.11 (Itzik): a file path in WhatsApp is not a link. files/<name> becomes the full address on the monitor.
+    const body = absFiles(d.text);
+    const s5 = loadState(); s5.last = s5.last || {}; s5.last[to] = body; saveState(s5);
     const asVoice = !!((s5.voice && s5.voice[to]) || st.pending[d.re].voice);
     // 4.11: the thread a quoted reply continues is the question's own thread (its re), else the question.
     const root = st.pending[d.re].re || d.re;
-    const short = asVoice ? null : shortOf(d.text, d.re);
+    const short = asVoice ? null : shortOf(body, d.re);
     if (short) {
       const sl = loadState(); sl.long = sl.long || {}; sl.lastLong = sl.lastLong || {};
-      sl.long[d.re] = d.text; sl.lastLong[to] = d.re;
+      sl.long[d.re] = body; sl.lastLong[to] = d.re;
       const lk = Object.keys(sl.long); if (lk.length > 30) lk.slice(0, lk.length - 30).forEach(function (k) { delete sl.long[k]; });
       saveState(sl);
     }
-    const mem = { re: root, text: d.text.slice(0, 1500) };
-    (asVoice ? queueVoice(to, d.text, true) : waSend(to, short || d.text, mem)).then(function () {
+    const mem = { re: root, text: body.slice(0, 1500) };
+    (asVoice ? queueVoice(to, body, true) : waSend(to, short || body, mem)).then(function () {
       log('out ' + f + ' -> ' + d.re + (asVoice ? ' (voice)' : ''));
     })
       .catch(function (e) { log('send failed ' + f + ': ' + e.message); const s3 = loadState(); delete s3.sent[f]; saveState(s3); });
