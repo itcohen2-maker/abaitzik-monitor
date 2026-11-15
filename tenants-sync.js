@@ -54,6 +54,19 @@ function tidy(cwd) {
   try {
     git(cwd, ['reset', '-q', '--soft', 'refs/remotes/code/main']);
     try { git(cwd, ['commit', '-q', '-m', 'tidy ' + day]); } catch (e) { /* nothing to commit */ }
+    /*
+      15.11.2026: the fold above kept main's whole history reachable. code/main was fetched with
+      --depth=1, but its parents were already on disk, so git never marked it shallow, and the
+      folded commit sat on top of all of it: alon, ilay and pablo were back to 6G, and the disk
+      filled at night (ilay's transcription failed, "No space left"). Now the folded commit has no
+      parent, and code/main is written into .git/shallow, so gc can drop everything older.
+    */
+    const cm = git(cwd, ['rev-parse', 'refs/remotes/code/main']);
+    const root = git(cwd, ['commit-tree', git(cwd, ['rev-parse', 'HEAD^{tree}']), '-m', 'tidy ' + day]);
+    git(cwd, ['reset', '-q', '--soft', root]);
+    const sh = path.join(cwd, '.git', 'shallow');
+    let L = []; try { L = fs.readFileSync(sh, 'utf8').split(String.fromCharCode(10)).filter(Boolean); } catch (e) {}
+    if (L.indexOf(cm) < 0) { L.push(cm); fs.writeFileSync(sh, L.join(String.fromCharCode(10)) + String.fromCharCode(10)); }
     git(cwd, ['reflog', 'expire', '--expire=now', '--all']);
     // a repack writes the new pack before it deletes the old ones: on a nearly full disk it filled it (ilay, 14.11)
     try { const st = fs.statfsSync(cwd); if (st.bavail * st.bsize < 3e9) { console.log('tidy ' + cwd + ': disk low, gc skipped'); return; } } catch (e) {}
