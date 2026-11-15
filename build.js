@@ -665,8 +665,10 @@ function build() {
     const q = String(c.question || '').slice(0, 50);
     if (q && apvAnswered.some((t) => t.indexOf(q) > -1)) return false;
     const now = Date.now(), DAY = 864e5;
-    const li = /^linkedin-(li-\d+)/.exec(String(c.id || ''));
-    if (li) { const p = (Array.isArray(apvLi) ? apvLi : []).find((x) => x.id === li[1]); if (!p || p.approved || p.posted || p.failed) return false; return Date.parse(p.date) - now < 3 * DAY; }
+    // 15.11.2026: a rewritten post has a letter after its number (li-1711b), and every LinkedIn post that waits for
+    // him shows (Itzik: "אני צריך לאשר אותם בתוך המוניטור. איפה שמת לי אותם?"), not only the next three days.
+    const li = /^linkedin-(li-[0-9a-z]+)/.exec(String(c.id || ''));
+    if (li) { const p = (Array.isArray(apvLi) ? apvLi : []).find((x) => x.id === li[1]); if (!p || p.approved || p.posted || p.failed) return false; return Date.parse(p.date) - now < 16 * DAY; }
     if (c.expires && Date.parse(c.expires) - now < 3 * DAY) return true;
     return now - Date.parse(c.at || 0) < 2 * DAY;
   };
