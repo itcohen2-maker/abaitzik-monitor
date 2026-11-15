@@ -31,3 +31,17 @@ test('found lead is added once, status, note and delete apply', () => {
     assert.strictEqual(fs.readdirSync(path.join(d, 'biz', '_deleted')).length, 1);
   } finally { fs.rmSync(d, { recursive: true, force: true }); }
 });
+
+test("a note asking to remove the lead removes it, not interested closes it", () => {
+  const d = tmp();
+  try {
+    const a = L.addFound(d, { src: "site", key: "s:1", name: "משה", text: "x" });
+    const b = L.addFound(d, { src: "site", key: "s:2", name: "הידי", text: "y" });
+    assert.ok(L.apply(d, "ליד [" + a.id + "]: הערה תסיר אותו מפה").ok);
+    assert.ok(L.apply(d, "ליד [" + b.id + "]: הערה לא מעוניין").ok);
+    assert.ok(L.apply(d, "ליד [" + b.id + "]: הערה טום יוריד לו מחיר").ok);
+    const left = L.readAll(d);
+    assert.strictEqual(left.length, 1);
+    assert.strictEqual(left[0].status, "אבד");
+  } finally { fs.rmSync(d, { recursive: true, force: true }); }
+});
