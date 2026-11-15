@@ -281,9 +281,17 @@
   "ytd": "The CEO of Proton planned nearly company wide interviews about how employees use AI, and employees could be fired if leadership felt they were not using it enough. He canceled them, but still wants employees to use AI more. Should companies require employees to use AI? Source: 404 Media, 2026.",
   "song": "",
   "song_tt": "",
-  "posted": false,
-  "postedAt": null,
-  "approvedAt": "2026-11-11T14:41:34.545Z"
+  "posted": true,
+  "postedAt": "2026-11-15T18:05:16.931Z",
+  "approvedAt": "2026-11-11T14:41:34.545Z",
+  "auto": {
+   "reel": "18129051926314021",
+   "story": "18084437096353593",
+   "storyError": null,
+   "page": "1467958248601457",
+   "pageError": null,
+   "channel": "itsolution.global"
+  }
  },
  {
   "id": "adlisten-he",
