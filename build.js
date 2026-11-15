@@ -23780,6 +23780,8 @@ function pressDrag(grid,sel,key,inEdit,still,lifted){
  grid.addEventListener('mousedown',function(e){if(e.button===0)start(e,e.clientX,e.clientY);});
  document.addEventListener('mousemove',function(e){if(cand||held)move(e,e.clientX,e.clientY);});
  document.addEventListener('mouseup',drop);
+ // 15.11, Itzik: on the computer the icons are links, and after a few pixels Chrome starts its own link drag, which swallows every mousemove and the mouseup. Cancel it inside the grid.
+ grid.addEventListener('dragstart',function(e){e.preventDefault();});
  grid.addEventListener('contextmenu',function(e){if(swallow||held)e.preventDefault();});
  // Registered before any other click handler on the box, so stopping it here
  // stops them too.
