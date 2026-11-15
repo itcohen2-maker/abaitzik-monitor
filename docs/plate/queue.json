@@ -409,7 +409,9 @@
     ]
    }
   ],
-  "onSite": true
+  "onSite": true,
+  "posted": true,
+  "postedAt": "2026-11-14T10:00:00.000Z"
  },
  {
   "id": "kinamon",
