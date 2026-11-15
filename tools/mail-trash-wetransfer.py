@@ -22,7 +22,8 @@ creds = import_module('mail-search').creds
 # 15.11 Itzik: "תמחק את כל האימיילים האלה שמאשרים, אני לא אוהב את זה, מיותרים". Google's security alert
 # that an account (his, Lolos, hagitit7) gave our own app it-solution.co.il access: to the trash, read or not.
 # Only alerts that name it-solution.co.il; any other Google alert (a new sign in, another app) stays.
-OWN_APP = '(from:no-reply@accounts.google.com "it-solution.co.il")'
+# 15.11 Itzik, same day: the alerts about his old accounts that list him as recovery mail go the same way.
+OWN_APP = '(from:no-reply@accounts.google.com ("it-solution.co.il" OR king.gamer02 OR best.d.4.us OR tomcohenlol))'
 QUERY = '(from:wetransfer.com OR (from:itcohen2@gmail.com to:itcohen2@gmail.com subject:פגסוס))'
 
 
