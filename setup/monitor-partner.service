@@ -1,6 +1,7 @@
 [Unit]
 Description=Facebook through partner access: match shared Pages to customers (partner-sync.js)
 [Service]
+UMask=0027
 Type=oneshot
 WorkingDirectory=/home/monitor/abaitzik-monitor
 EnvironmentFile=/etc/monitor.env
