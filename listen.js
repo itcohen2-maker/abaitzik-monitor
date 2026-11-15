@@ -1555,10 +1555,8 @@ async function recordPlateAction(m) {
   } else if (got.action === 'approve') {
     if (it.approved) return;
     it.approved = true;
-    const job = 'מה בצלחת: איציק אישר באריח את "' + it.name + '" (id ' + it.id + '). להעלות לאתר: '
-      + 'cd C:/Users/User/clip/plate_tile && python publish_plate.py ' + it.id
-      + ' . אם הסקריפט אומר שאין מלל, לחלץ פריימים מהסרטון, להעתיק את המלל של כל מסך כמו שהוא, לשמור כ texts.json ולהריץ עם --text texts.json. בלי מקפים.';
-    require('child_process').spawnSync(process.execPath, ['pc-task.js', 'add', '--quiet', '--re', 'plate-' + it.id, job], { cwd: __dirname, encoding: 'utf8', timeout: 60000 });
+    // 15.11.2026, Itzik: "אני רוצה שיהיה באתר שיופיע רק מה שעלה לאינסטגרם". Approval no longer puts the
+    // story on /plate/; only the "posted" tick (and the manager's plateSiteMissing) does.
   } else if (got.action === 'unapprove') {
     // 23.10, Itzik: a tick by mistake can be undone. Not yet on the site: publish_plate.py stops on its own.
     // Already on the site: the PC takes it off.

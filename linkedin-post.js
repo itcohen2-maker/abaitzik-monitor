@@ -110,6 +110,9 @@ function mirror(q, now) {
   let changed = false, cards = 0;
   for (const it of q) {
     if (it.posted || it.failed) continue;
+    // 15.11.2026, Itzik: "בפוסטים של הלינקדין, אל תרשום יותר ותדבר על שחר, אני כרגע לא מפתח את זה".
+    // A post that names Shachar never goes out, even if approved; it leaves the queue with a reason.
+    if (/שחר/.test((it.editedText || '') + ' ' + (it.text || ''))) { it.failed = 'שחר בהשהיה (איציק 15.11), לא עולה'; changed = true; say(it.id + ': נעצר, מזכיר את שחר'); notify('לינקדין: פוסט נעצר', 'הוא מזכיר את שחר: ' + firstLine(it.editedText || it.text).slice(0, 60)); continue; }
     if (card(it)) cards++;
     if (!it.approved) {
       const a = answer(it);

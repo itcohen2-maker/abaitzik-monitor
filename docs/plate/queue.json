@@ -476,7 +476,7 @@
     ]
    }
   ],
-  "onSite": true
+  "onSite": false
  },
  {
   "id": "adashim",
@@ -541,7 +541,7 @@
     ]
    }
   ],
-  "onSite": true
+  "onSite": false
  },
  {
   "id": "ochmaniot",
@@ -606,7 +606,7 @@
     ]
    }
   ],
-  "onSite": true
+  "onSite": false
  },
  {
   "id": "shibolet",
@@ -670,6 +670,6 @@
     ]
    }
   ],
-  "onSite": true
+  "onSite": false
  }
 ]
