@@ -1001,7 +1001,7 @@ test('the answers tab sits beside home and its badge counts what waits', () => {
   // read the bar back to me to say so: answers, networks, leads. The reports
   // are the end of every round, so they get the fifth tab.
   assert.ok(html.includes('id="nR"'), 'the reports tab must be on the bar');
-  assert.ok(html.includes("var NAVS={h:'nH',q:'nQ',l:'nL',a:'nA',r:'nR'};"));
+  assert.ok(html.includes("var NAVS={h:'nH',q:'nQ',l:'nL',a:'nA',r:'nR',n:'nQ'};"));
   assert.ok(html.includes("document.getElementById('nR').onclick=function(){pane('r');};"));
   // Reports still sort into the answers list by time. The tab is a second way
   // in, not a move: taking them out of answers would undo 17.9.
