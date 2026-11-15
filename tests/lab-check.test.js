@@ -93,3 +93,29 @@ test('an unknown lab is marked as read with the general template', () => {
   assert.equal(doc.fallback, true);
   assert.match(rep.body, /לא נקראה אף שורה/);
 });
+
+// 15.11.2026: New Dent invoice printed by MBoss. Names are invented; the columns follow the real print.
+function mboss(rowsText, sub) {
+  return 'ניו-ג.א.ש-דנט פיתוח בע"מ\nמספר 4001\nתאריך31/10/26 :\n' + rowsText + '\n' +
+    '  ' + sub + ' סה"כ נטו:\n';
+}
+test('New Dent (MBoss): rows, teeth, a wrapped patient name, a helper line, and a duplicate', () => {
+  const crown = '     5,400.00       0.0     450.00    כתר זרקוניה מונוליטי -      12   תמ 101007 20889    28/07/26כהן דנה                        0    84887';
+  const teeth = ' '.repeat(48) + 'שיניים17-25 :';
+  const row2 = '        890.00      0.0     890.00        תח"ל ויטליום ע\\ת         1   תמ 103003 20889       08/09/26לוי';
+  const wrap2 = ' '.repeat(row2.indexOf('לוי') - 7) + 'יוסי';
+  const crown2 = '      600.00      0.0     100.00         כתר זמני בחריטה         6   תמ 102004 20889    24/08/26כהן דנה                     0    85446';
+  const teeth2 = ' '.repeat(48) + 'שיניים14-15 :';
+  const doc = lc.parseDoc(mboss([crown, teeth, row2, wrap2, crown2, teeth2].join('\n'), '5,400.00'));
+  assert.equal(doc.lab, 'newdent');
+  assert.equal(doc.fallback, false);
+  assert.equal(doc.no, '4001');
+  assert.equal(doc.date, '2026-10-31');
+  assert.equal(doc.lines[0].patient, 'כהן דנה');
+  assert.deepEqual(doc.lines[0].teeth, [17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25]);
+  assert.equal(doc.lines[1].patient, 'לוי יוסי');
+  assert.equal(doc.lines[1].bad, true, 'no teeth on the line: it is reported, not checked');
+  assert.deepEqual(doc.lines[2].teeth, [14, 15]);
+  const dups = lc.findDuplicates(doc, []);
+  assert.equal(dups.length, 0, 'a tooth in two different works is not a duplicate; 14 and 15 differ from the crown above');
+});
