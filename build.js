@@ -16733,7 +16733,10 @@ function sheetTopX(w){
 // a request goes to the server session, which takes it out of the code for good.
 // The note is kept on this device while he types; "שליחה לביצוע" sends it as a
 // task, so what he wrote reaches the server session and is done.
-var TIDY_GONE='sheetGone',TIDY_NOTE='sheetNote:',TIDY_SKIP=/^(סגירה|סגור|חזרה|ביטול|✕)/;
+var TIDY_GONE='sheetGone',TIDY_NOTE='sheetNote:',TIDY_SKIP=/^(סגירה|סגור|חזרה|ביטול|✕|הבא|הקודם|אחורה|המשך|דלג|שליחה|שלח|סיום|אישור|אשר)/;
+// 15.11.2026: in Alon's monitor the "הבא" button of the campaign questionnaire was marked for removal by mistake,
+// hidden on his phone and sent as a request. Moving and sending buttons are never removable, and a questionnaire
+// (cqSheet, one question a screen) has no removal checkboxes at all. A button hidden before this shows again.
 function tidyGet(k,d){try{var v=localStorage.getItem(k);return v===null?d:v;}catch(e){return d;}}
 function tidySet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 function tidyGoneList(){try{var a=JSON.parse(tidyGet(TIDY_GONE,'[]'));return Array.isArray(a)?a:[];}catch(e){return [];}}
@@ -16871,7 +16874,7 @@ function tidyRemove(w,c){
  },function(){toast('הוסר מהמסך, אבל הבקשה לא נשלחה. לנסות שוב בהמשך.');});
 }
 function sheetTidy(w){
- if(w.id==='fcSheet')return; // the chat has its own buttons: no removal checkboxes, no note
+ if(w.id==='fcSheet'||w.id==='cqSheet')return; // the chat and the campaign questionnaire have their own buttons: no removal checkboxes, no note
  var c=w.querySelector('.ycard');if(!c)return;
  var key=tidyKey(w),gone=null;
  var bs=[].slice.call(c.querySelectorAll('.yb')).filter(function(b){

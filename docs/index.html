@@ -3112,7 +3112,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-15T10:20:05.454Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-15T10:26:35.782Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -5057,7 +5057,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='a2cf269626';
+var CODE_ID='fd654d4f3e';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12614,7 +12614,7 @@ function sheetTopX(w){
  t.onclick=function(e){e.stopPropagation();x.click();};
  c.insertBefore(t,c.firstChild);c.classList.add('hasx');
 }
-var TIDY_GONE='sheetGone',TIDY_NOTE='sheetNote:',TIDY_SKIP=/^(סגירה|סגור|חזרה|ביטול|✕)/;
+var TIDY_GONE='sheetGone',TIDY_NOTE='sheetNote:',TIDY_SKIP=/^(סגירה|סגור|חזרה|ביטול|✕|הבא|הקודם|אחורה|המשך|דלג|שליחה|שלח|סיום|אישור|אשר)/;
 function tidyGet(k,d){try{var v=localStorage.getItem(k);return v===null?d:v;}catch(e){return d;}}
 function tidySet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 function tidyGoneList(){try{var a=JSON.parse(tidyGet(TIDY_GONE,'[]'));return Array.isArray(a)?a:[];}catch(e){return [];}}
@@ -12748,7 +12748,7 @@ function tidyRemove(w,c){
  },function(){toast('הוסר מהמסך, אבל הבקשה לא נשלחה. לנסות שוב בהמשך.');});
 }
 function sheetTidy(w){
- if(w.id==='fcSheet')return; // the chat has its own buttons: no removal checkboxes, no note
+ if(w.id==='fcSheet'||w.id==='cqSheet')return; // the chat and the campaign questionnaire have their own buttons: no removal checkboxes, no note
  var c=w.querySelector('.ycard');if(!c)return;
  var key=tidyKey(w),gone=null;
  var bs=[].slice.call(c.querySelectorAll('.yb')).filter(function(b){
