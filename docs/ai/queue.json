@@ -292,8 +292,7 @@
   "song_tt": "",
   "posted": false,
   "postedAt": null,
-  "hold": true,
-  "note": "13.11: חדש, מחכה לאישור שלך"
+  "approvedAt": "2026-11-15T06:00:45.408Z"
  },
  {
   "id": "adlisten-en",
@@ -310,8 +309,7 @@
   "song_tt": "",
   "posted": false,
   "postedAt": null,
-  "hold": true,
-  "note": "13.11: חדש, מחכה לאישור שלך"
+  "approvedAt": "2026-11-15T06:00:45.408Z"
  },
  {
   "id": "wifi-he",
@@ -328,8 +326,7 @@
   "song_tt": "",
   "posted": false,
   "postedAt": null,
-  "hold": true,
-  "note": "13.11: חדש, מחכה לאישור שלך"
+  "approvedAt": "2026-11-15T06:00:45.408Z"
  },
  {
   "id": "wifi-en",
@@ -346,8 +343,7 @@
   "song_tt": "",
   "posted": false,
   "postedAt": null,
-  "hold": true,
-  "note": "13.11: שאלת הסיום תוקנה, מחכה לאישור שלך"
+  "approvedAt": "2026-11-15T06:00:45.408Z"
  },
  {
   "id": "googleedu-he",
@@ -364,8 +360,7 @@
   "song_tt": "",
   "posted": false,
   "postedAt": null,
-  "hold": true,
-  "note": "13.11: חדש, מחכה לאישור שלך"
+  "approvedAt": "2026-11-15T06:00:45.408Z"
  },
  {
   "id": "googleedu-en",
@@ -382,8 +377,7 @@
   "song_tt": "",
   "posted": false,
   "postedAt": null,
-  "hold": true,
-  "note": "13.11: חדש, מחכה לאישור שלך"
+  "approvedAt": "2026-11-15T06:00:45.408Z"
  },
  {
   "id": "waze-he",
@@ -400,8 +394,7 @@
   "song_tt": "",
   "posted": false,
   "postedAt": null,
-  "hold": true,
-  "note": "13.11: חדש, מחכה לאישור שלך"
+  "approvedAt": "2026-11-15T06:00:45.408Z"
  },
  {
   "id": "waze-en",
@@ -418,8 +411,7 @@
   "song_tt": "",
   "posted": false,
   "postedAt": null,
-  "hold": true,
-  "note": "13.11: חדש, מחכה לאישור שלך"
+  "approvedAt": "2026-11-15T06:00:45.408Z"
  },
  {
   "id": "wascam-he",
@@ -436,8 +428,7 @@
   "song_tt": "",
   "posted": false,
   "postedAt": null,
-  "hold": true,
-  "note": "13.11: חדש, מחכה לאישור שלך"
+  "approvedAt": "2026-11-15T06:00:45.408Z"
  },
  {
   "id": "wascam-en",
@@ -454,8 +445,7 @@
   "song_tt": "",
   "posted": false,
   "postedAt": null,
-  "hold": true,
-  "note": "13.11: חדש, מחכה לאישור שלך"
+  "approvedAt": "2026-11-15T06:00:45.408Z"
  },
  {
   "id": "qrscam-he",
@@ -472,8 +462,7 @@
   "song_tt": "",
   "posted": false,
   "postedAt": null,
-  "hold": true,
-  "note": "13.11: חדש, מחכה לאישור שלך"
+  "approvedAt": "2026-11-15T06:00:45.408Z"
  },
  {
   "id": "qrscam-en",
@@ -490,8 +479,7 @@
   "song_tt": "",
   "posted": false,
   "postedAt": null,
-  "hold": true,
-  "note": "13.11: שאלת הסיום תוקנה, מחכה לאישור שלך"
+  "approvedAt": "2026-11-15T06:00:45.408Z"
  },
  {
   "id": "battery-he",
@@ -508,8 +496,7 @@
   "song_tt": "",
   "posted": false,
   "postedAt": null,
-  "hold": true,
-  "note": "13.11: חדש, מחכה לאישור שלך"
+  "approvedAt": "2026-11-15T06:00:45.408Z"
  },
  {
   "id": "battery-en",
@@ -526,8 +513,7 @@
   "song_tt": "",
   "posted": false,
   "postedAt": null,
-  "hold": true,
-  "note": "13.11: חדש, מחכה לאישור שלך"
+  "approvedAt": "2026-11-15T06:00:45.408Z"
  },
  {
   "id": "shazam-he",
@@ -544,8 +530,7 @@
   "song_tt": "",
   "posted": false,
   "postedAt": null,
-  "hold": true,
-  "note": "13.11: חדש, מחכה לאישור שלך"
+  "approvedAt": "2026-11-15T06:00:45.408Z"
  },
  {
   "id": "shazam-en",
@@ -562,8 +547,7 @@
   "song_tt": "",
   "posted": false,
   "postedAt": null,
-  "hold": true,
-  "note": "13.11: חדש, מחכה לאישור שלך"
+  "approvedAt": "2026-11-15T06:00:45.408Z"
  },
  {
   "id": "deepfake-he",
@@ -580,8 +564,7 @@
   "song_tt": "",
   "posted": false,
   "postedAt": null,
-  "hold": true,
-  "note": "13.11: חדש, מחכה לאישור שלך"
+  "approvedAt": "2026-11-15T06:00:45.408Z"
  },
  {
   "id": "deepfake-en",
@@ -598,8 +581,7 @@
   "song_tt": "",
   "posted": false,
   "postedAt": null,
-  "hold": true,
-  "note": "13.11: חדש, מחכה לאישור שלך"
+  "approvedAt": "2026-11-15T06:00:45.408Z"
  },
  {
   "id": "tokenpay-he",
@@ -616,8 +598,7 @@
   "song_tt": "",
   "posted": false,
   "postedAt": null,
-  "hold": true,
-  "note": "13.11: חדש, מחכה לאישור שלך"
+  "approvedAt": "2026-11-15T06:00:45.408Z"
  },
  {
   "id": "tokenpay-en",
@@ -634,7 +615,6 @@
   "song_tt": "",
   "posted": false,
   "postedAt": null,
-  "hold": true,
-  "note": "13.11: חדש, מחכה לאישור שלך"
+  "approvedAt": "2026-11-15T06:00:45.408Z"
  }
 ]
