@@ -878,6 +878,27 @@ function recordIncoming(m) {
       "🗑 מחיקת ליד: <bizId>" after its own confirm. Applied here with no model and silently, like "✓ טופל": the lead's biz
       record, its 📋 לטיפול items and its chat message MOVE to data/_deleted/<YYYYMMDD>/ (lib/lead-delete.js), never erased.
     */
+    /*
+      15.11.2026, Itzik's idea "רוצה את זה": "תזכורת שוב: <1h|tom> <at>|<due>" from the reminder's ⏰ buttons. No model.
+      Silent when it worked, a line only on failure.
+    */
+    const rsN = codeOk && require('./lib/remind-snooze.js').parse(text);
+    if (rsN) {
+      let res;
+      try { res = require('./lib/remind-snooze.js').apply(inst.dataPath, rsN); say('תזכורת שוב: ' + res.reply); }
+      catch (e) { res = { ok: false, reply: 'לא הצלחתי לדחות את התזכורת (' + e.message + ')', err: true }; say('!! תזכורת שוב: ' + e.message); }
+      rec.status = 'done';
+      try {
+        if (res.ok) fs.unlinkSync(path.join(CHAT, name));
+        else {
+          fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+          fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-snooze-ack.json')),
+            JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id, text: res.reply, status: 'done' }, null, 1), 'utf8');
+        }
+      } catch (e) { /* the next build carries it */ }
+      try { require('./lib/handle.js').publishSoon(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
     const ldD = codeOk && inst.biz && require('./lib/lead-delete.js').parse(text);
     if (ldD) {
       let res;
