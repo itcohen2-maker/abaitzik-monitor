@@ -403,6 +403,9 @@ button.abtn[disabled]{opacity:.55}
 .carv-bot{display:flex;gap:8px;padding:10px 12px calc(12px + env(safe-area-inset-bottom));background:#000}
 .carv-bot button{flex:1 1 0;min-width:0;white-space:nowrap;padding:12px 4px;border-radius:12px;border:0;background:#1f3a2f;color:#5fe3b0;font:inherit;font-weight:800;font-size:13px}
 .fv-zoom.on{touch-action:none}
+.fvFull{position:fixed;inset:0;z-index:99991;background:#000;display:flex;align-items:center;justify-content:center;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.fvFull img{max-width:100vw;max-height:100dvh;width:auto;height:auto;object-fit:contain}
+.fvFull small{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;color:#fff;opacity:.75;font:600 13px Heebo,sans-serif;pointer-events:none}
 .fv-pdf{width:100%;max-width:640px;display:flex;flex-direction:column;gap:10px}
 .fv-pdf canvas{background:#fff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.4)}
 .fv-txt{white-space:pre-wrap;color:#eee;background:rgba(255,255,255,.06);padding:12px;border-radius:12px;width:100%;direction:rtl}
@@ -3115,7 +3118,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-15T16:10:03.308Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-15T16:15:54.537Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4899,6 +4902,11 @@ function fileView(name){
   var body=ov.querySelector('.fv-body');body.innerHTML=h;
   if(media||t==='application/pdf'){var cmx=fvCommentBox(name);if(cmx)ov.querySelector('.fv-body').appendChild(cmx);}
   var zb=body.querySelector('.fv-zoom');if(zb)fvZoom(zb);
+  if(zb){
+   var full=function(){var f=document.createElement('div');f.className='fvFull';f.innerHTML='<img src="'+url+'" alt=""><small>לחיצה חוזרת לכפתורים</small>';f.onclick=function(){f.remove();};document.body.appendChild(f);};
+   var fb=document.createElement('button');fb.type='button';fb.className='ask';fb.textContent='🔍 תמונה מלאה';fb.onclick=full;
+   zb.parentNode.insertBefore(fb,zb.nextSibling);full();
+  }
   var sb=body.querySelector('.fv-share');
   if(sb)sb.onclick=function(){var f2=sf;try{if(sf.name!==short)f2=new File([b],short,{type:sf.type});}catch(x){}navigator.share({files:[f2]}).catch(shareFail);};
   var pb=body.querySelector('.fv-print');
@@ -5058,7 +5066,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='c53a127f07';
+var CODE_ID='c766a85b45';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12059,9 +12067,10 @@ function personalSheet(){
  var SENT='✓ נרשם. המערכת עובדת על זה ותבנה לך את זה בהקדם.';
  var DW=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
  function whenTxt(w){if(!w)return '';var d=new Date(w.slice(0,10)+'T12:00:00');if(isNaN(d))return '';return 'יום '+DW[d.getDay()]+' '+d.getDate()+'.'+(d.getMonth()+1)+(w.length>10?' · '+w.slice(11,16):'');}
- function tileHtml(t){var its=t.items||[];return '<div class="psT'+(its.length||(t.reqs||[]).length?' psWide':'')+'" style="--c:'+esc(t.c||'#efe2c6')+'"><i>'+esc(t.i)+'</i><div>'+esc(t.t)+(t.note?'<small>'+esc(t.note)+'</small>':'')
+ var PS_GO=(INSTANCE&&INSTANCE.name)==='abaitzik'?{doctor:'https://drive.google.com/drive/u/0/folders/1PO2J-fpjcIgO2JsNXqsrIMMOz3kl9Num',shop:'https://docs.google.com/document/d/1A2tvet0ucYNDoDclswaVDybuL8bir3OAerRzXtDUEPU/edit',pills:'kn'}:{};
+ function tileHtml(t){var its=t.items||[],go=PS_GO[t.k]||'',tg=go?'button':'div';return '<'+tg+(go?' type="button" data-go="'+esc(go)+'"':'')+' class="psT'+(its.length||(t.reqs||[]).length?' psWide':'')+'" style="--c:'+esc(t.c||'#efe2c6')+'"><i>'+esc(t.i)+'</i><div>'+esc(t.t)+(t.note?'<small>'+esc(t.note)+'</small>':'')
   +its.map(function(x){return '<small class="psIt">'+(x.src==='mail'?'📧 ':'')+esc(x.line)+(x.when?' · <b>'+esc(whenTxt(x.when))+'</b>':'')+'</small>';}).join('')
-  +(t.reqs||[]).map(function(r){return '<small class="psIt">'+(r.state==='done'?'✓ ':'⏳ ')+esc(r.text)+'</small>';}).join('')+'</div></div>';}
+  +(t.reqs||[]).map(function(r){return '<small class="psIt">'+(r.state==='done'?'✓ ':'⏳ ')+esc(r.text)+'</small>';}).join('')+(go?'<small>'+(go==='kn'?'לפתוח את המרשמים':'לפתוח')+' ›</small>':'')+'</div></'+tg+'>';}
  function pickHtml(){
   return '<b class="psHead">🏡 המצב האישי שלך</b>'
    +'<small>'+(P.chosen?'מה להראות כאן?':'ברוך הבא למצב האישי: הצד של הבית, מחוץ לעבודה. בחר מה חשוב לך שיופיע כאן.')+' <b>תמיד אפשר לשנות.</b></small>'
@@ -12109,6 +12118,8 @@ function personalSheet(){
   if(k){var i=sel.indexOf(k);if(i<0)sel.push(k);else sel.splice(i,1);b.classList.toggle('on',i<0);return;}
   if(a==='x')return close();
   if(a==='kn'){kanabisSheet();return;}
+  var go=b.getAttribute('data-go');
+  if(go){if(go==='kn')kanabisSheet();else window.open(go,'_blank','noopener');return;}
   if(a==='nache'){fileOpen('tav-nache-teuda.jpg');return;}
   if(a==='pick'){picking=true;sel=(P.picked||[]).slice();draw();return;}
   if(a==='back'){picking=false;draw();return;}
@@ -17166,33 +17177,53 @@ document.getElementById('visitsAgain').onclick=loadVisits;
 document.getElementById('icLand').onclick=function(){pane('g');};
 var nkIc=document.getElementById('icNache');if(nkIc)nkIc.onclick=function(){fileOpen('tav-nache-teuda.jpg');};
 var KANABIS=[
+ {f:'kanabis-2026-03.pdf',m:'מרץ 2026',from:'2026-03-07',to:'2026-03-31',n:'9969991'},
+ {f:'kanabis-2026-04.pdf',m:'אפריל 2026',from:'2026-04-06',to:'2026-04-30',n:'9969992'},
+ {f:'kanabis-2026-05.pdf',m:'מאי 2026',from:'2026-05-06',to:'2026-05-30',n:'9969993'},
+ {f:'kanabis-2026-06.pdf',m:'יוני 2026',from:'2026-06-05',to:'2026-06-29',n:'9969994'},
+ {f:'kanabis-2026-07.pdf',m:'יולי 2026',from:'2026-07-05',to:'2026-07-29',n:'9969995'},
+ {f:'kanabis-2026-08.pdf',m:'אוגוסט 2026',from:'2026-08-04',to:'2026-08-28',n:'9969996'},
+ {f:'kanabis-2026-09.pdf',m:'ספטמבר 2026',from:'2026-09-03',to:'2026-09-27',n:'9969997'},
+ {f:'kanabis-2026-10.pdf',m:'אוקטובר 2026',from:'2026-10-03',to:'2026-10-27',n:'9969998'},
  {f:'kanabis-2026-11.pdf',m:'נובמבר 2026',from:'2026-11-02',to:'2026-11-26',n:'9969999'},
  {f:'kanabis-2026-12.pdf',m:'דצמבר 2026',from:'2026-12-02',to:'2026-12-26',n:'9970000'},
  {f:'kanabis-2027-01.pdf',m:'ינואר 2027',from:'2027-01-01',to:'2027-01-25',n:'9970001'},
  {f:'kanabis-2027-02.pdf',m:'פברואר 2027',from:'2027-01-31',to:'2027-02-24',n:'9970002'}
 ];
-function kanabisSheet(){
+var KANABIS_LIC={f:'kanabis-rishayon-2026.pdf',n:'1410110',to:'2027-03-01'};
+function kanabisSheet(showAll){
  var old=document.getElementById('knSheet');if(old)old.remove();
  var today=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'});
- var L=KANABIS.filter(function(k){return k.to>=today;});
+ var next=KANABIS.filter(function(k){return k.to>=today;}),past=KANABIS.filter(function(k){return k.to<today;}).reverse();
+ var last=KANABIS[KANABIS.length-1];
  function dm(x){var p=x.split('-');return (+p[2])+'.'+(+p[1])+'.'+p[0];}
+ function days(x){return Math.round((Date.parse(x+'T12:00:00')-Date.parse(today+'T12:00:00'))/864e5);}
+ var left=days(last.to),licLeft=days(KANABIS_LIC.to);
+ var warn=left<0?'⛔ אין מרשם בתוקף. המרשם האחרון נגמר ב '+dm(last.to)+'. צריך לבקש מהרופא מרשמים חדשים.'
+  :left<=45?'⚠️ המרשמים נגמרים בעוד '+left+' ימים, ב '+dm(last.to)+'. כדאי לבקש עכשיו מהרופא מרשמים חדשים.':'';
+ function row(k,now,old){
+  return '<div class="ycard" style="margin:8px 0;padding:10px;text-align:right'+(now?';border:2px solid #4d7c0f':'')+(old?';opacity:.7':'')+'">'
+   +'<b>'+(now?'✅ ':old?'✔️ ':'')+esc(k.m)+(now?' · בתוקף עכשיו':old?' · עבר':'')+'</b>'
+   +'<small style="display:block">בתוקף מ '+dm(k.from)+' עד '+dm(k.to)+' · אישור מס׳ '+k.n+'</small>'
+   +'<button type="button" class="yb yb1" data-f="'+k.f+'">'+(old?'📄 לפתוח':'🖨️ לפתוח ולהדפיס')+'</button></div>';
+ }
  var w=document.createElement('div');w.id='knSheet';w.className='ysheet';
  w.setAttribute('role','dialog');w.setAttribute('aria-label','מרשם קנביס');
  w.innerHTML='<div class="ycard"><b>🌿 מרשם קנביס</b>'
-  +'<small>אישור מסירה לכל חודש, 50 גרם תפרחות. מרשם שהתוקף שלו עבר יורד מכאן לבד. בבית המרקחת מציגים תעודת זהות.</small>'
-  +(L.length?L.map(function(k){
-    var now=k.from<=today;
-    return '<div class="ycard" style="margin:8px 0;padding:10px;text-align:right'+(now?';border:2px solid #4d7c0f':'')+'">'
-     +'<b>'+(now?'✅ ':'')+esc(k.m)+(now?' · בתוקף עכשיו':'')+'</b>'
-     +'<small style="display:block">בתוקף מ '+dm(k.from)+' עד '+dm(k.to)+' · אישור מס׳ '+k.n+'</small>'
-     +'<button type="button" class="yb yb1" data-f="'+k.f+'">🖨️ לפתוח ולהדפיס</button></div>';
-   }).join(''):'<small style="display:block;margin:8px 0">אין כרגע מרשם בתוקף. צריך לבקש מהרופא מרשמים חדשים.</small>')
-  +(L.length===1?'<small style="display:block;margin:6px 0;font-weight:700">זה המרשם האחרון ברשימה. כדאי לבקש מהרופא מרשמים חדשים.</small>':'')
+  +'<div style="background:#eef6e6;color:#26381a;border-radius:12px;padding:10px;margin:8px 0;text-align:right;font:700 14px/1.5 Heebo,sans-serif">'
+  +'יש מרשמים עד '+dm(last.to)+(left>=0?' (עוד '+left+' ימים)':'')+'.<br>הרישיון מס׳ '+KANABIS_LIC.n+' בתוקף עד '+dm(KANABIS_LIC.to)+(licLeft>=0?' (עוד '+licLeft+' ימים)':', פג')+'.</div>'
+  +(warn?'<div style="background:#fde8e8;color:#7a1f1f;border-radius:12px;padding:10px;margin:8px 0;text-align:right;font:800 14px/1.5 Heebo,sans-serif">'+warn+'</div>':'')
+  +'<small>אישור מסירה לכל חודש, 50 גרם תפרחות. בבית המרקחת מציגים תעודת זהות.</small>'
+  +(next.length?next.map(function(k){return row(k,k.from<=today,false);}).join(''):'<small style="display:block;margin:8px 0">אין כרגע מרשם בתוקף.</small>')
+  +(past.length?'<button type="button" class="yb" data-all="1">'+(showAll?'להסתיר את המרשמים שעברו':'📂 להציג גם את המרשמים שעברו ('+past.length+')')+'</button>':'')
+  +(showAll?past.map(function(k){return row(k,false,true);}).join(''):'')
+  +'<button type="button" class="yb" data-f="'+KANABIS_LIC.f+'">📜 הרישיון עצמו (מס׳ '+KANABIS_LIC.n+')</button>'
   +'<button type="button" class="yb yx" data-x="1">סגירה</button></div>';
  w.onclick=function(e){
-  var b=e.target.closest?e.target.closest('button'):null;
-  if(e.target===w||(b&&b.getAttribute('data-x')))return w.remove();
-  var f=b&&b.getAttribute('data-f');if(f){w.remove();fileOpen(f);}
+  var bt=e.target.closest?e.target.closest('button'):null;
+  if(e.target===w||(bt&&bt.getAttribute('data-x')))return w.remove();
+  if(bt&&bt.getAttribute('data-all')){kanabisSheet(!showAll);return;}
+  var f=bt&&bt.getAttribute('data-f');if(f){w.remove();fileOpen(f);}
  };
  document.body.appendChild(w);
 }
