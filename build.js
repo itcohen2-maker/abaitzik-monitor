@@ -719,7 +719,9 @@ function build() {
     calibration certificate from the vehicles section without a word, so a
     link passes when it is Drive or one of those sealed files, nothing else.
   */
+  // 15.11.2026: a page locked to one phone (lib/ledger-lock.js) may sit in a drawer too.
   const docLinkOk = u => String(u || '').startsWith('https://drive.google.com/') ||
+    /^https:\/\/form\.it-solution\.co\.il\/l\/[a-f0-9]{20}(\/view)?$/.test(String(u || '')) ||
     /^files\/[^/?#\\]+$/.test(String(u || '')) && !String(u).includes('..');
   // 12.10: the debtors file in the sale screen is always the current one, the
   // same PDF the bookkeeping screen makes again whenever the debts change.
