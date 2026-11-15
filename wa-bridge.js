@@ -1412,6 +1412,17 @@ const server = http.createServer(function (q, s) {
     }).catch(function () { try { s.writeHead(400); s.end('{}'); } catch (e) {} });
     return;
   }
+  // 15.11.2026: a page locked to one phone, with a tracker (lib/ledger-lock.js), /l/<token>[/view] and /api/ledger.
+  const lm = u.pathname.match(/^\/l\/([a-f0-9]{20})(?:\/(view))?\/?$/);
+  if (lm && q.method === 'GET') { require('./lib/ledger-lock.js').serve(lm[1], lm[2], q, s, formNotify); return; }
+  if (u.pathname === '/api/ledger') {
+    if (q.method !== 'POST') { s.writeHead(405); return s.end(); }
+    readBody(q, 10000).then(function (raw) {
+      let b; try { b = JSON.parse(raw.toString('utf8')); } catch (e) { s.writeHead(400); return s.end('{}'); }
+      require('./lib/ledger-lock.js').handlePost(b, q, function (r) { s.writeHead(r.status, { 'Content-Type': 'application/json' }); s.end(JSON.stringify(r.body)); });
+    }).catch(function () { try { s.writeHead(400); s.end('{}'); } catch (e) {} });
+    return;
+  }
   // 5.11: the IT Solution NDA, signed on the phone (ndasign.js), /n/<token>[/pdf|/signed] and /api/nda.
   const nm = u.pathname.match(/^\/n\/([a-f0-9]{16,40})(?:\/(pdf|signed))?\/?$/);
   if (nm && q.method === 'GET') { require('./ndasign.js').serve(nm[1], nm[2], s); return; }
