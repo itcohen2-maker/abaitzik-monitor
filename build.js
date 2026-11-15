@@ -16141,7 +16141,7 @@ function personalSheet(){
  var DW=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
  function whenTxt(w){if(!w)return '';var d=new Date(w.slice(0,10)+'T12:00:00');if(isNaN(d))return '';return 'יום '+DW[d.getDay()]+' '+d.getDate()+'.'+(d.getMonth()+1)+(w.length>10?' · '+w.slice(11,16):'');}
  // 15.11.2026, Itzik: "תורים לרופא זה תורים עתידיים, רשימת קניות יש לי כבר, אתה אמור לחבר". His page only.
- var PS_GO=(INSTANCE&&INSTANCE.name)==='abaitzik'?{doctor:'https://drive.google.com/drive/u/0/folders/1PO2J-fpjcIgO2JsNXqsrIMMOz3kl9Num',shop:'https://docs.google.com/document/d/1A2tvet0ucYNDoDclswaVDybuL8bir3OAerRzXtDUEPU/edit',pills:'kn'}:{};
+ var PS_GO=(INSTANCE&&INSTANCE.name)==='abaitzik'?{doctor:'appts',shop:'https://docs.google.com/document/d/1A2tvet0ucYNDoDclswaVDybuL8bir3OAerRzXtDUEPU/edit',pills:'kn'}:{};
  function tileHtml(t){var its=t.items||[],go=PS_GO[t.k]||'',tg=go?'button':'div';return '<'+tg+(go?' type="button" data-go="'+esc(go)+'"':'')+' class="psT'+(its.length||(t.reqs||[]).length?' psWide':'')+'" style="--c:'+esc(t.c||'#efe2c6')+'"><i>'+esc(t.i)+'</i><div>'+esc(t.t)+(t.note?'<small>'+esc(t.note)+'</small>':'')
   +its.map(function(x){return '<small class="psIt">'+(x.src==='mail'?'📧 ':'')+esc(x.line)+(x.when?' · <b>'+esc(whenTxt(x.when))+'</b>':'')+'</small>';}).join('')
   +(t.reqs||[]).map(function(r){return '<small class="psIt">'+(r.state==='done'?'✓ ':'⏳ ')+esc(r.text)+'</small>';}).join('')+(go?'<small>'+(go==='kn'?'לפתוח את המרשמים':'לפתוח')+' ›</small>':'')+'</div></'+tg+'>';}
@@ -16196,7 +16196,8 @@ function personalSheet(){
   if(a==='x')return close();
   if(a==='kn'){kanabisSheet();return;}
   var go=b.getAttribute('data-go');
-  if(go){if(go==='kn')kanabisSheet();else window.open(go,'_blank','noopener');return;}
+  // 15.11.2026, Itzik: "אני לא רוצה להגיע לדרייב, אני רוצה להגיע כמו לתורים עתידיים": the 🏥 screen itself.
+  if(go){if(go==='kn')kanabisSheet();else if(go==='appts'){close();pane('Q');renderAppts();}else window.open(go,'_blank','noopener');return;}
   if(a==='nache'){fileOpen('tav-nache-teuda.jpg');return;}
   if(a==='pick'){picking=true;sel=(P.picked||[]).slice();draw();return;}
   if(a==='back'){picking=false;draw();return;}
@@ -21938,11 +21939,10 @@ function kanabisSheet(showAll){
  var left=days(last.to),licLeft=days(KANABIS_LIC.to);
  var warn=left<0?'⛔ אין מרשם בתוקף. המרשם האחרון נגמר ב '+dm(last.to)+'. צריך לבקש מהרופא מרשמים חדשים.'
   :left<=45?'⚠️ המרשמים נגמרים בעוד '+left+' ימים, ב '+dm(last.to)+'. כדאי לבקש עכשיו מהרופא מרשמים חדשים.':'';
+ // 15.11.2026, Itzik: "תצמצם את הרשימה ותרשום ליד כל מוקאפ כחול תאריך, ורק כשלוחצים עליו נפתח". One button a month.
  function row(k,now,old){
-  return '<div class="ycard" style="margin:8px 0;padding:10px;text-align:right'+(now?';border:2px solid #4d7c0f':'')+(old?';opacity:.7':'')+'">'
-   +'<b>'+(now?'✅ ':old?'✔️ ':'')+esc(k.m)+(now?' · בתוקף עכשיו':old?' · עבר':'')+'</b>'
-   +'<small style="display:block">בתוקף מ '+dm(k.from)+' עד '+dm(k.to)+' · אישור מס׳ '+k.n+'</small>'
-   +'<button type="button" class="yb yb1" data-f="'+k.f+'">'+(old?'📄 לפתוח':'🖨️ לפתוח ולהדפיס')+'</button></div>';
+  return '<button type="button" class="yb'+(old?'':' yb1')+'" data-f="'+k.f+'" style="text-align:right'+(now?';box-shadow:0 0 0 3px #4d7c0f':'')+'">'
+   +(now?'✅ ':old?'✔️ ':'🗓️ ')+esc(k.m)+' · '+dm(k.from)+' עד '+dm(k.to)+(now?' · עכשיו':'')+'</button>';
  }
  var w=document.createElement('div');w.id='knSheet';w.className='ysheet';
  w.setAttribute('role','dialog');w.setAttribute('aria-label','מרשם קנביס');
@@ -21950,7 +21950,7 @@ function kanabisSheet(showAll){
   +'<div style="background:#eef6e6;color:#26381a;border-radius:12px;padding:10px;margin:8px 0;text-align:right;font:700 14px/1.5 Heebo,sans-serif">'
   +'יש מרשמים עד '+dm(last.to)+(left>=0?' (עוד '+left+' ימים)':'')+'.<br>הרישיון מס׳ '+KANABIS_LIC.n+' בתוקף עד '+dm(KANABIS_LIC.to)+(licLeft>=0?' (עוד '+licLeft+' ימים)':', פג')+'.</div>'
   +(warn?'<div style="background:#fde8e8;color:#7a1f1f;border-radius:12px;padding:10px;margin:8px 0;text-align:right;font:800 14px/1.5 Heebo,sans-serif">'+warn+'</div>':'')
-  +'<small>אישור מסירה לכל חודש, 50 גרם תפרחות. בבית המרקחת מציגים תעודת זהות.</small>'
+  +'<small>לחיצה על חודש פותחת את המרשם להדפסה. בבית המרקחת מציגים תעודת זהות.</small>'
   +(next.length?next.map(function(k){return row(k,k.from<=today,false);}).join(''):'<small style="display:block;margin:8px 0">אין כרגע מרשם בתוקף.</small>')
   +(past.length?'<button type="button" class="yb" data-all="1">'+(showAll?'להסתיר את המרשמים שעברו':'📂 להציג גם את המרשמים שעברו ('+past.length+')')+'</button>':'')
   +(showAll?past.map(function(k){return row(k,false,true);}).join(''):'')
