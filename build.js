@@ -15221,7 +15221,7 @@ boot('waStatusTile',function(){
  window.upTile=function(){
  vqLoad(function(){
   var L=upToday(),op=L.filter(function(x){return !x.done;});
-  if(sm)sm.textContent=op.length?'⭐ להעלות היום: '+op.map(function(x){return x.n;}).join(', '):(L.length?'✅ הכל עלה היום':sm0);
+  if(sm)sm.textContent=op.length?'⭐ להעלות היום: '+op.map(function(x){return x.n;}).filter(function(n,i,a){return a.indexOf(n)===i;}).join(', '):(L.length?'✅ הכל עלה היום':sm0);
   if(!op.length){t.classList.remove('taskblink');dailyTile(t,false);return;}
   t.classList.add('taskblink');
   if(seen){dailyTile(t,false);return;}
@@ -18128,15 +18128,23 @@ function upToday(){
    nn=sc&&String(sc.head||'').indexOf('ומחר:')===0?String(sc.head).slice(5).trim():'';
    L.push({n:'מה בצלחת',done:false,t:'🍽️ מה בצלחת · '+(nn?'הבא: '+nn+' · ':'')+'בהכנה, עוד לא מוכן להעלאה',u:'plate/plate.html',h:''});}}
  CARON.forEach(function(c){L.push({n:'קרוסלה',done:false,car:c,t:'🎠 קרוסלה · '+c.t+' ('+c.n+' שקפים)'});});
+ // 15.11.2026, Itzik: "תעשה לי סדר עכשיו, מה אני צריך לעלות עכשיו. שים את הכל באריח של הסרטונים". The campaign
+ // stories he puts up by hand (📲 לרשתות in the 📣 קמפיין tab) join the list until he marks them (upDone, this phone).
+ var upD={};try{upD=JSON.parse(localStorage.getItem('upDone')||'{}')||{};}catch(e){}
+ (typeof TOM_ITEMS!=='undefined'?TOM_ITEMS:[]).filter(function(it){return !it.h&&it.r&&/^📲 לרשתות/.test(it.t||'')&&!upD[it.r];}).forEach(function(it){
+  L.push({n:'קמפיין',done:false,tom:it,t:'📣 '+String(it.t).replace(/^📲 לרשתות · /,'קמפיין · ')});});
  return L;
 }
 function upTodayRows(){
  var L=upToday(),op=L.filter(function(x){return !x.done;}),dn=L.filter(function(x){return x.done;}),out=[];
- var row=function(x,p){return x.car?{k:'car',c:x.car.id,n:x.car.n,nm:'קרוסלה · '+x.car.t,t:x.t,pulse:p}:{k:'q',t:(p?'':'✅ ')+x.t,u:x.u,n:x.h||'',pulse:p};};
+ var row=function(x,p){if(x.tom)return {k:'tom',it:x.tom,lab:x.t,pulse:p};return x.car?{k:'car',c:x.car.id,n:x.car.n,nm:'קרוסלה · '+x.car.t,t:x.t,pulse:p}:{k:'q',t:(p?'':'✅ ')+x.t,u:x.u,n:x.h||'',pulse:p};};
  out.push({h:op.length?'⭐ להעלות היום ('+op.length+')':'✔️ הכל עלה היום'});
  if(!op.length)out.push({k:'q',t:'✔️ אין מה להעלות כרגע',u:'status/index.html'});
  // 11.11.2026: a status he already put up but did not mark is marked from here in one tap.
- op.forEach(function(x){out.push(row(x,1));if(x.st)out.push({k:'stdone',t:'✓ הסטטוס כבר עלה, לסמן',nm:x.st});});
+ // 15.11.2026: in the order to upload, numbered.
+ op.forEach(function(x,i){var r=row(x,1);if(r.lab)r.lab=(i+1)+'. '+r.lab;else r.t=(i+1)+'. '+r.t;out.push(r);
+  if(x.st)out.push({k:'stdone',t:'✓ הסטטוס כבר עלה, לסמן',nm:x.st});
+  if(x.tom)out.push({k:'updone',t:'✓ כבר עלה, לסמן',nm:x.tom.r});});
  if(dn.length)out.push({h:'✅ עלה היום'});
  dn.forEach(function(x){out.push(row(x,0));});
  return out;
@@ -18265,7 +18273,7 @@ function vidSheet(tab){
  w.setAttribute('aria-label','הסרטונים');
  var rows=cur.L.filter(function(x){return !x.h;});
  // 11.11.2026: queue tabs are already in the order he needs (waiting first, then by day); sheetNewFirst must not flip them.
- w.innerHTML='<div class="ycard"'+(/^(ai|nr|pl)$/.test(cur.id)?' data-newfirst="1"':'')+'>'
+ w.innerHTML='<div class="ycard"'+(/^(ai|nr|pl|today)$/.test(cur.id)?' data-newfirst="1"':'')+'>'
   +'<b>🎬 הסרטונים</b>'
   +vqStockHtml()
   +'<div role="tablist" style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px">'
@@ -18276,7 +18284,7 @@ function vidSheet(tab){
   +(rows.length?'':'<small>אין כרגע סרטונים כאן</small>')
   +cur.L.map(function(x,i){
     if(x.h)return '<small style="display:block;margin:14px 0 6px;font-weight:800;font-size:15px;color:#1a2233">'+esc(x.h)+'</small>';
-    var lab=(x.k==='go'||x.k==='q'||x.k==='car'||x.k==='stdone')?x.t:(x.it.n+' · '+x.it.t);
+    var lab=x.lab||((x.k==='go'||x.k==='q'||x.k==='car'||x.k==='stdone'||x.k==='updone')?x.t:(x.it.n+' · '+x.it.t));
     var yb=ybAttr(rows,rows.indexOf(x));if(x.it&&x.it.nw&&vidSeen('it:'+x.it.n)!==x.it.nw)yb=yb.replace('class="yb','class="updblink yb');if((x.it&&x.it.pulse)||x.pulse)yb=yb.replace('class="yb','class="updblink yb');
     var b='<button type="button" '+yb+' data-k="'+i+'">'+esc(lab)+'</button>';
     // 13.11.2026, Itzik: "כפתור, להשמיד" after he uploads. A 🗑 beside every finished item (not the ideas).
@@ -18305,6 +18313,8 @@ function vidSheet(tab){
   if(x.k==='stdone'){var dn={};try{dn=JSON.parse(localStorage.getItem('waStatusDone')||'{}')||{};}catch(e2){}dn[x.nm]=1;try{localStorage.setItem('waStatusDone',JSON.stringify(dn));}catch(e2){}
    try{fetch('https://ntfy.sh/'+NTFYIN()+'?filename=wa-status-done.json',{method:'PUT',headers:{Title:'wa-status-done'},body:JSON.stringify({name:x.nm,done:true,code:sendCode(),at:new Date().toISOString()})}).catch(function(){toast('הסימון נשמר בטלפון, לשרת לא הגיע');});}catch(e2){}
    toast('סומן שהסטטוס עלה');if(window.upTile)window.upTile();return vidSheet('today');}
+  if(x.k==='updone'){var ud={};try{ud=JSON.parse(localStorage.getItem('upDone')||'{}')||{};}catch(e3){}ud[x.nm]=1;try{localStorage.setItem('upDone',JSON.stringify(ud));}catch(e3){}
+   toast('סומן שעלה');if(window.upTile)window.upTile();return vidSheet('today');}
   if(x.k==='go')return vidGo(x.u);
   if(x.k==='q')return vidGo(x.u,x.n);
   if(x.k==='fut'){window.VID_BACK=1;return futText(it);}
