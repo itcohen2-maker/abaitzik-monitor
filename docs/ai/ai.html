@@ -138,6 +138,9 @@
   var h='<h2>'+title+'</h2>';
   h+='<h3>⏳ עוד לא עלה ('+todo.length+')</h3>'+(todo.length?'<div class="grid">'+todo.map(card).join('')+'</div>':'<p class="empty">אין כרגע מה להעלות</p>');
   // 10.11.2026, Itzik: "מה שעלה אפשר להסיר מהרשימה, זה סתם מבלבל". What went up is not listed here, only counted.
+  // 15.11.2026, Itzik: a posted video marked keep stays listed, for his own upload.
+  var keep=done.filter(function(x){return x.keep;});
+  if(keep.length)h+='<h3>📤 להעלאה שלך ('+keep.length+')</h3><div class="grid">'+keep.map(card).join('')+'</div>';
   if(done.length)h+='<p class="note">✅ עלו עד היום: '+done.length+'. הם כבר לא ברשימה.</p>';
   return h;
  }

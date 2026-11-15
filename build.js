@@ -18235,6 +18235,8 @@ function vqRows(id){
   var wt=live.filter(function(x){return x.hold;});
   wt.forEach(function(x){out.push({k:'q',t:'🔔 מחכה לאישור שלך '+fl(x)+' '+x.name+' · לחץ לצפייה ואישור',u:'ai/ai.html',n:x.id,pulse:true});});
   if(!wt.length)out.push({k:'q',t:'✔️ אין כרגע סרטון שמחכה לאישור שלך',u:'ai/ai.html'});
+  // 15.11.2026, Itzik: "אני רוצה להעלות את הסרטון של חוקרים מייל בעברית". A video that already went up but is marked keep stays here for his own upload.
+  Q.filter(function(x){return x.posted&&x.keep;}).forEach(function(x){out.push({k:'q',t:'📤 להעלאה שלך '+fl(x)+' '+x.name+' · כבר עלה לאינסטגרם, כאן לשמירה ולכיתובים',u:'ai/ai.html',n:x.id,pulse:true});});
   var ap=[];['he','en'].forEach(function(lg){live.filter(function(x){return !x.hold&&(lg==='en'?x.lang==='en':x.lang!=='en');}).forEach(function(x,i){ap.push({x:x,d:slot(i)});});});
   ap.sort(function(p,q2){return p.d-q2.d||((p.x.lang==='en')-(q2.x.lang==='en'));});
   ap.forEach(function(o){out.push({k:'q',t:'✅ '+nice(o.d)+' '+fl(o.x)+' '+o.x.name,u:'ai/ai.html',n:o.x.id});});
