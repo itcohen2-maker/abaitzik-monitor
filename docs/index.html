@@ -3112,7 +3112,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-15T03:00:02.992Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-15T03:06:29.021Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -5057,7 +5057,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='42cc3353f4';
+var CODE_ID='ef31d77b28';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -15514,6 +15514,8 @@ function fcSheet(){
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
  fcPaintMode();fcPaintMsgs(true);
+ if(fcS.loaded&&fcS.at&&Date.now()-fcS.at<60000){fcPaintRow();return;}
+ fcS.at=Date.now();
  fcPost('/thread',{}).then(function(j){if(fcS.busy)return;fcApply(j);fcPaintMode();fcPaintMsgs(true);fcPaintRow();},function(){});
 }
 (function(){
@@ -15531,7 +15533,8 @@ function fcBoot(){
  ['icFcSales','icFcCoach','icFcPersonal'].forEach(function(i){var e=document.getElementById(i);if(e)e.style.display='';});
  if(fcS.loaded)return;
  fcS.loaded=true;
- fcPost('/thread',{}).then(function(j){if(fcS.busy)return;fcApply(j);fcPaintRow();},function(){});
+ fcS.at=Date.now();
+ fcPost('/thread',{}).then(function(j){if(fcS.busy)return;fcApply(j);fcPaintRow();if(document.getElementById('fcSheet')){fcPaintMode();fcPaintMsgs(true);}},function(){});
 }
 var BZ_ORDER=['חדש','בשיחה','הצעה','נסגר','אבד'];
 var BZ_KIND={lead:'ליד',customer:'לקוח',income:'הכנסה',expense:'הוצאה'};

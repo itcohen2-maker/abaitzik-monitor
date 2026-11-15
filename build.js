@@ -19931,7 +19931,9 @@ function fcSheet(){
  document.addEventListener('keydown',esckey);
  document.body.appendChild(w);
  fcPaintMode();fcPaintMsgs(true);
- // What was written in WhatsApp too.
+ // What was written in WhatsApp too. 15.11.2026: a read from the last minute (the page's own boot read) is reused, so opening the chat is one request.
+ if(fcS.loaded&&fcS.at&&Date.now()-fcS.at<60000){fcPaintRow();return;}
+ fcS.at=Date.now();
  fcPost('/thread',{}).then(function(j){if(fcS.busy)return;fcApply(j);fcPaintMode();fcPaintMsgs(true);fcPaintRow();},function(){});
 }
 (function(){
@@ -19951,7 +19953,8 @@ function fcBoot(){
  ['icFcSales','icFcCoach','icFcPersonal'].forEach(function(i){var e=document.getElementById(i);if(e)e.style.display='';});
  if(fcS.loaded)return;
  fcS.loaded=true;
- fcPost('/thread',{}).then(function(j){if(fcS.busy)return;fcApply(j);fcPaintRow();},function(){});
+ fcS.at=Date.now();
+ fcPost('/thread',{}).then(function(j){if(fcS.busy)return;fcApply(j);fcPaintRow();if(document.getElementById('fcSheet')){fcPaintMode();fcPaintMsgs(true);}},function(){});
 }
 /*
   12.10, "העסק שלי". The records come sealed on open (data/biz.json), the summary
