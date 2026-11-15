@@ -19,6 +19,10 @@ creds = import_module('mail-search').creds
 
 # 14.10 Itzik: the Pegasus live-update mails (sent by the PC to himself) go the same
 # way: the moment he has opened one, it goes to the trash.
+# 15.11 Itzik: "תמחק את כל האימיילים האלה שמאשרים, אני לא אוהב את זה, מיותרים". Google's security alert
+# that an account (his, Lolos, hagitit7) gave our own app it-solution.co.il access: to the trash, read or not.
+# Only alerts that name it-solution.co.il; any other Google alert (a new sign in, another app) stays.
+OWN_APP = '(from:no-reply@accounts.google.com "it-solution.co.il")'
 QUERY = '(from:wetransfer.com OR (from:itcohen2@gmail.com to:itcohen2@gmail.com subject:פגסוס))'
 
 
@@ -64,7 +68,7 @@ def main():
     m = imaplib.IMAP4_SSL('imap.gmail.com')
     m.login(user, pw)
     m.select('"[Gmail]/All Mail"')
-    m.literal = (QUERY + ('' if take_all else ' is:read') + ' -in:trash').encode('utf8')
+    m.literal = ('(' + QUERY + ('' if take_all else ' is:read') + ' OR ' + OWN_APP + ') -in:trash').encode('utf8')
     _, data = m.uid('SEARCH', 'CHARSET', 'UTF-8', 'X-GM-RAW')
     uids = data[0].split()
     if uids:
