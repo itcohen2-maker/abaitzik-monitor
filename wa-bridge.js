@@ -1387,7 +1387,7 @@ const server = http.createServer(function (q, s) {
   }
   // 1.11: client intake forms on form.it-solution.co.il (forms.js).
   const fm = u.pathname.match(/^\/f\/([a-f0-9]{16,40})(\/view)?\/?$/);
-  if (fm && q.method === 'GET') { if (fm[2]) require('./owner-mark.js').setCookie(s); if (fm[2]) require('./form-view.js').serve('./forms.js', fm[1], s); else require('./forms.js').servePage(fm[1], s); return; }
+  if (fm && q.method === 'GET') { if (fm[2]) require('./owner-mark.js').setCookie(s, q); if (fm[2]) require('./form-view.js').serve('./forms.js', fm[1], s); else require('./forms.js').servePage(fm[1], s); return; }
   // 4.11: sign an existing document (docsign.js), /d/<signer token>[/signed|/pN.png] and /api/docsign.
   const dm = u.pathname.match(/^\/d\/([a-f0-9]{16,40})(?:\/(signed|p\d{1,2}\.png))?\/?$/);
   if (dm && q.method === 'GET') { require('./docsign.js').serve(dm[1], dm[2], s); return; }
@@ -1410,6 +1410,14 @@ const server = http.createServer(function (q, s) {
       const ip = String(q.headers['x-forwarded-for'] || q.socket.remoteAddress || '').split(',').pop().trim();
       require('./agrsign.js').handlePost(b, formNotify, ip, q.headers['user-agent'], function (r) { s.writeHead(r.status, { 'Content-Type': 'application/json' }); s.end(JSON.stringify(r.body)); });
     }).catch(function () { try { s.writeHead(400); s.end('{}'); } catch (e) {} });
+    return;
+  }
+  // 15.11.2026: a one-time link that marks a device of Itzik's as his (owner-mark.js issue).
+  const mk = u.pathname.match(/^\/l\/m\/([a-f0-9]{32})\/?$/);
+  if (mk && q.method === 'GET') {
+    const okm = require('./owner-mark.js').redeem(mk[1], s);
+    s.writeHead(okm ? 200 : 410, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+    s.end('<!doctype html><html lang="he" dir="rtl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><body style="font-family:Arial;text-align:center;padding:60px 16px;font-size:20px">' + (okm ? '✅ המכשיר הזה מסומן עכשיו כשלך.' : 'הקישור כבר שומש או שפג תוקפו.') + '</body></html>');
     return;
   }
   // 15.11.2026: a page locked to one phone, with a tracker (lib/ledger-lock.js), /l/<token>[/view] and /api/ledger.
@@ -1493,7 +1501,7 @@ const server = http.createServer(function (q, s) {
   if (u.pathname.indexOf('/m/') === 0 && (q.method === 'GET' || q.method === 'HEAD')) { require('./lib/social-media.js').serve(u.pathname, q, s); return; }
   // 1.11: client setup page (setup.js), /s/<token> and /api/setup.
   const sm = u.pathname.match(/^\/s\/([a-f0-9]{16,40})(\/view)?\/?$/);
-  if (sm && q.method === 'GET') { if (sm[2]) require('./owner-mark.js').setCookie(s); if (sm[2]) require('./form-view.js').serve('./setup.js', sm[1], s); else require('./setup.js').servePage(sm[1], s, q); return; }
+  if (sm && q.method === 'GET') { if (sm[2]) require('./owner-mark.js').setCookie(s, q); if (sm[2]) require('./form-view.js').serve('./setup.js', sm[1], s); else require('./setup.js').servePage(sm[1], s, q); return; }
   // 9.11: the password box of a protected setup page (setup.js handleGate).
   if (u.pathname === '/api/setup-gate') {
     if (q.method !== 'POST') { s.writeHead(405); return s.end(); }

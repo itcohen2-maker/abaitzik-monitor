@@ -5,7 +5,24 @@ function mark() {
   try { const m = fs.readFileSync(F, 'utf8').trim(); if (m) return m; } catch (e) {}
   const m = crypto.randomBytes(18).toString('hex'); fs.writeFileSync(F, m, { mode: 0o600 }); return m;
 }
-function setCookie(res) { res.setHeader('Set-Cookie', 'itz=' + mark() + '; Max-Age=63072000; Path=/; Secure; HttpOnly; SameSite=Lax'); }
+// 15.11.2026: Itzik forwarded his own message, with a /view link, to a client. A /view page used to mark ANY
+// device that opened it as his, and the mark also opens the setup pages. Now a /view page only refreshes the
+// mark of a device that already has it (setCookie(res, req)), and a new device of his gets the mark only from
+// a one-time link: node owner-mark.js issue  ->  https://form.it-solution.co.il/l/m/<32 hex>, 30 minutes, once.
+function grant(res) { res.setHeader('Set-Cookie', 'itz=' + mark() + '; Max-Age=63072000; Path=/; Secure; HttpOnly; SameSite=Lax'); }
+function setCookie(res, req) { if (req && meta(req).owner) grant(res); }
+const OTP = path.join(__dirname, 'data', 'owner-mark-otp.json');
+function otps() { try { return JSON.parse(fs.readFileSync(OTP, 'utf8')); } catch (e) { return {}; } }
+function issue() {
+  const o = otps(), now = Date.now(); Object.keys(o).forEach(k => { if (o[k] < now) delete o[k]; });
+  const t = crypto.randomBytes(16).toString('hex'); o[t] = now + 30 * 60e3;
+  fs.writeFileSync(OTP, JSON.stringify(o), { mode: 0o600 }); return 'https://form.it-solution.co.il/l/m/' + t;
+}
+function redeem(t, res) {
+  const o = otps(); const ok = /^[a-f0-9]{32}$/.test(String(t)) && o[t] && o[t] > Date.now();
+  if (o[t]) { delete o[t]; fs.writeFileSync(OTP, JSON.stringify(o), { mode: 0o600 }); }
+  if (ok) grant(res); return !!ok;
+}
 function meta(req) {
   const c = String(req.headers.cookie || ''); const m = c.match(/(?:^|;\s*)itz=([a-f0-9]+)/);
   const ua = String(req.headers['user-agent'] || '');
@@ -21,4 +38,5 @@ function onOpen(s, m, now, save) {
   s.log = (s.log || []).slice(-49); s.log.push({ at: now, dev: (m && m.dev) || '', ip: (m && m.ip) || '' });
   return false;
 }
-module.exports = { setCookie, meta, onOpen };
+module.exports = { setCookie, grant, issue, redeem, meta, onOpen };
+if (require.main === module && process.argv[2] === 'issue') console.log(issue());
