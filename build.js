@@ -3010,6 +3010,7 @@ section#talkCard.talk{border:2px solid var(--accent);box-shadow:0 8px 24px color
 #psSheet .psT i{font-style:normal;font-size:20px;flex:none}
 #psSheet .psT small{display:block;font-weight:600;font-size:12px;color:#5b4a3a}
 #psSheet .psT.psWide{grid-column:1/-1}
+#tGhost.psT{z-index:10001;display:flex;gap:8px;align-items:center;text-align:right;border-radius:16px;padding:14px;border:0;font:800 15px/1.25 Heebo,sans-serif;color:#3b2f25;background:var(--c,#efe2c6)}#tGhost.psT i{font-style:normal;font-size:20px;flex:none}#tGhost.psT small{display:block;font-weight:600;font-size:12px;color:#5b4a3a}#psSheet .psT.tlift{opacity:.3}
 #psSheet .psT .psIt{margin-top:4px;padding-top:4px;border-top:1px solid rgba(59,47,37,.12);font-size:13px;color:#3b2f25}
 #psSheet .psPick .psT{opacity:.55;cursor:pointer}
 #psSheet .psPick .psT.on{opacity:1;box-shadow:inset 0 0 0 2.5px #5e8c61}
@@ -16142,7 +16143,7 @@ function personalSheet(){
  function whenTxt(w){if(!w)return '';var d=new Date(w.slice(0,10)+'T12:00:00');if(isNaN(d))return '';return 'יום '+DW[d.getDay()]+' '+d.getDate()+'.'+(d.getMonth()+1)+(w.length>10?' · '+w.slice(11,16):'');}
  // 15.11.2026, Itzik: "תורים לרופא זה תורים עתידיים, רשימת קניות יש לי כבר, אתה אמור לחבר". His page only.
  var PS_GO=(INSTANCE&&INSTANCE.name)==='abaitzik'?{doctor:'appts',shop:'https://docs.google.com/document/d/1A2tvet0ucYNDoDclswaVDybuL8bir3OAerRzXtDUEPU/edit',pills:'kn'}:{};
- function tileHtml(t){var its=t.items||[],go=PS_GO[t.k]||'',tg=go?'button':'div';return '<'+tg+(go?' type="button" data-go="'+esc(go)+'"':'')+' class="psT'+(its.length||(t.reqs||[]).length?' psWide':'')+'" style="--c:'+esc(t.c||'#efe2c6')+'"><i>'+esc(t.i)+'</i><div>'+esc(t.t)+(t.note?'<small>'+esc(t.note)+'</small>':'')
+ function tileHtml(t){var its=t.items||[],go=PS_GO[t.k]||'',tg=go?'button':'div';return '<'+tg+(go?' type="button" data-go="'+esc(go)+'"':'')+' id="ps-'+esc(t.k||t.t)+'" class="psT'+(its.length||(t.reqs||[]).length?' psWide':'')+'" style="--c:'+esc(t.c||'#efe2c6')+'"><i>'+esc(t.i)+'</i><div>'+esc(t.t)+(t.note?'<small>'+esc(t.note)+'</small>':'')
   +its.map(function(x){return '<small class="psIt">'+(x.src==='mail'?'📧 ':'')+esc(x.line)+(x.when?' · <b>'+esc(whenTxt(x.when))+'</b>':'')+'</small>';}).join('')
   +(t.reqs||[]).map(function(r){return '<small class="psIt">'+(r.state==='done'?'✓ ':'⏳ ')+esc(r.text)+'</small>';}).join('')+(go?'<small>'+(go==='kn'?'לפתוח את המרשמים':'לפתוח')+' ›</small>':'')+'</div></'+tg+'>';}
  function pickHtml(){
@@ -16167,10 +16168,10 @@ function personalSheet(){
   // 15.11.2026, Itzik: "את האייקון אני רוצה שתשים אותו בפרופיל האישי ... גם את תעודת הנכה תעביר לשם". His page only.
   var mine=(INSTANCE&&INSTANCE.name)==='abaitzik';
   return '<div class="psTop"><b>🏡 הבית שלי</b><button type="button" class="psBack" data-a="x">💼 חזרה לעסקי</button></div>'
-   +(mine?'<div class="psGrid"><button type="button" class="psT" data-a="kn" style="--c:#d6e6cf"><i>🌿</i><div>מרשם קנביס<small>המרשם של החודש, להדפסה</small></div></button>'
-     +'<button type="button" class="psT" data-a="nache" style="--c:#dbe7f3"><i>♿</i><div>תעודת נכה<small>לפתוח, לשלוח, להדפיס</small></div></button></div>':'')
+   +(mine?'<div class="psGrid" id="psGridMine"><button type="button" class="psT" id="ps-kn" data-a="kn" style="--c:#d6e6cf"><i>🌿</i><div>מרשם קנביס<small>המרשם של החודש, להדפסה</small></div></button>'
+     +'<button type="button" class="psT" id="ps-nache" data-a="nache" style="--c:#dbe7f3"><i>♿</i><div>תעודת נכה<small>לפתוח, לשלוח, להדפיס</small></div></button></div>':'')
    +(sent?'<div class="psSent" role="status">'+SENT+'</div>':'')
-   +(T.length?'<small>תורים, כרטיסים, חשבונות והודעות שמגיעים במייל נכנסים לבד לאריח המתאים, ויורדים כשהיום עבר.</small><div class="psGrid">'+T.map(tileHtml).join('')+'</div>':'<small>עוד לא בחרת מה יופיע כאן.</small>')
+   +(T.length?'<small>תורים, כרטיסים, חשבונות והודעות שמגיעים במייל נכנסים לבד לאריח המתאים, ויורדים כשהיום עבר.</small><div class="psGrid" id="psGridT">'+T.map(tileHtml).join('')+'</div>':'<small>עוד לא בחרת מה יופיע כאן.</small>')
    +'<button type="button" class="psBtn lt" data-a="pick">✏️ לשנות מה מופיע</button>'
    +'<small style="font-weight:700;display:block;margin-top:8px">מה לשים כאן ואיך לסדר?</small>'
    +'<small>כותבים או אומרים, והמנהל של המוניטור מסדר. למשל: התורים לרופא ראשונים, תוסיף אריח לחוג של הילדה.</small>'
@@ -16186,6 +16187,8 @@ function personalSheet(){
   w.classList.toggle('psFull',!picking);
   w.innerHTML='<div class="ycard">'+(picking?pickHtml():mainHtml())+(picking?'<button type="button" class="psBtn lt" data-a="x">סגירה</button>':'')+'</div>';
   var cd=w.querySelector('.ycard');if(cd)cd.scrollTop=0;
+  // 15.11.2026, Itzik: "גם על מצב אישי?" The 🏡 tiles move too: long press and drag, phone and mouse, the order kept on the device.
+  if(!picking&&typeof pressDrag==='function')Array.prototype.forEach.call(w.querySelectorAll('.psGrid[id]'),function(g){var key='psOrder-'+g.id;nameChildren(g,'ps');applyOrder(g,key);pressDrag(g,'.psT',key);});
  }
  function close(){w.remove();}
  w.onclick=function(e){
