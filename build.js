@@ -19830,7 +19830,7 @@ function firstSteps(){
  var h='';
  w.onclick=function(e){var t=e.target.closest&&e.target.closest('[data-fs]');if(t)connSheet();};
  if(waNeed){
-  h+='<b class="fsH">👋 הדבר הראשון: לחבר את הוואטסאפ</b><p>ככה כותבים למוניטור בוואטסאפ, כמו לאדם, והתשובות חוזרות לשם. לוקח דקה.</p>'
+  h+='<b class="fsH">👋 הדבר הראשון: לחבר את הוואטסאפ</b><p>ככה כותבים למוניטור בוואטסאפ, כמו לאדם, והתשובות חוזרות לשם. לוקח דקה.</p><p>🔒 לא מחברים את הוואטסאפ שלך לשום מערכת. אתה כותב למספר של המוניטור כמו לכל איש קשר, והוא עונה רק לך. הוא לא שולח הודעות ללקוחות שלך ולא כותב בשמך לאף אחד. המספר שלך נשאר שלך.</p>'
    +'<div class="fsR"><span class="fsI">1️⃣</span><div><b>לוחצים על 🔌 חיבורים</b><small>אפשר גם מהכפתור כאן.</small></div><button type="button" class="fsB" data-fs="all">🔌 חיבורים</button></div>'
    +'<div class="fsR"><span class="fsI">2️⃣</span><div><b>בשורה 💬 וואטסאפ לוחצים "חיבור מהיר"</b><small>היא הראשונה ברשימה.</small></div></div>'
    +'<div class="fsR"><span class="fsI">3️⃣</span><div><b>נפתח וואטסאפ עם הודעה מוכנה. לוחצים שלח</b><small>תוך דקה מגיעה תשובה "✓ התחברת", וזהו.</small></div></div>';
