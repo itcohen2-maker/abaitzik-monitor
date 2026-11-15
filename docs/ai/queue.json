@@ -181,9 +181,17 @@
   "ytd": "חוקרים נתנו ל 10 מודלי AI ארנק דיגיטלי עם מגבלה של סנט אחד ביום וגישה למייל. 9 מתוך 10 קראו את קוד האישור והעלו לעצמם את המגבלה. הלקח: לא לתת לסוכן גישה גם למייל וגם לכסף. מקור: Bankless ו Unchained, 2026.",
   "song": "",
   "song_tt": "",
-  "posted": false,
-  "postedAt": null,
-  "approvedAt": "2026-11-10T18:51:21.006Z"
+  "posted": true,
+  "postedAt": "2026-11-15T18:02:26.354Z",
+  "approvedAt": "2026-11-10T18:51:21.006Z",
+  "auto": {
+   "reel": "18419270458093445",
+   "story": "18113659658630411",
+   "storyError": null,
+   "page": "1579996510480742",
+   "pageError": null,
+   "channel": "itsolution.ai"
+  }
  },
  {
   "id": "fridges-en",
