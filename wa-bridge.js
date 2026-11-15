@@ -167,6 +167,38 @@ function absFiles(text) {
   if (!base) return String(text || '');
   return String(text || '').replace(/(^|[\s(])files\/([^\s)\]]+)/g, function (m, pre, name) { return pre + base + 'files/' + name; });
 }
+/*
+  15.11.2026, Itzik: "כל דבר שמישהו מבקש צירוף של משהו, ואם מצאת, אתה צריך לחבר את זה ולצרף את זה."
+  A link is not enough: every files/<name> an answer names goes out after the text as the file itself
+  (a PDF as a document, a picture as an image), for Itzik and for every customer. The file is looked up in the
+  answering monitor's own data (files-private, then files). Up to 5 files, each up to 95MB (the document cap is 100).
+*/
+const DOC_MIME = { pdf: 'application/pdf', jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', mp4: 'video/mp4',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', csv: 'text/csv', txt: 'text/plain', zip: 'application/zip', m4a: 'audio/mp4', mp3: 'audio/mpeg' };
+function filesNamed(text, dataDir) {
+  const out = [], re = /(^|[\s(])files\/([^\s)\]]+)/g; let m;
+  while ((m = re.exec(String(text || ''))) && out.length < 5) {
+    const name = m[2].replace(/[.,;:!?]+$/, '');
+    if (!name || name.indexOf('..') > -1) continue;
+    const hit = ['files-private', 'files'].map(function (d) { return path.join(dataDir, d, name); }).find(function (f) { try { return fs.statSync(f).isFile(); } catch (e) { return false; } });
+    if (hit && out.indexOf(hit) < 0 && fs.statSync(hit).size <= 95 * 1024 * 1024) out.push(hit);
+  }
+  return out;
+}
+async function waSendFiles(to, text, dataDir) {
+  for (const f of filesNamed(text, dataDir)) {
+    try {
+      const ext = path.extname(f).slice(1).toLowerCase(), mime = DOC_MIME[ext] || 'application/octet-stream';
+      const kind = /^image\/(jpeg|png)$/.test(mime) ? 'image' : (mime === 'video/mp4' ? 'video' : 'document');
+      const id = await waUpload(f, mime), c = cfg();
+      const media = kind === 'document' ? { id: id, filename: path.basename(f) } : { id: id };
+      const o = { messaging_product: 'whatsapp', to: to, type: kind }; o[kind] = media;
+      const r = await req('POST', WA.base(c) + '/' + c.phoneId + '/messages', Object.assign({ 'Content-Type': 'application/json' }, WA.auth(c)), Buffer.from(JSON.stringify(o), 'utf8'));
+      log('file ' + path.basename(f) + ' -> ' + String(to).slice(0, 5) + '... ' + r.status + (r.status === 200 ? '' : ' ' + r.body.toString('utf8').slice(0, 160)));
+    } catch (e) { log('file failed ' + path.basename(f) + ': ' + e.message.slice(0, 160)); }
+  }
+}
 function shortOf(text, re) {
   const t = String(text || '').trim();
   if (t.length <= LONG) return null;
@@ -814,7 +846,7 @@ function sweepQueue(st, Q, ids) {
       // A customer: the whole answer here (his monitor link is not Itzik's), in parts when long.
       const to = st.pending[d.re].to, txt = String(d.text);
       const parts = []; for (let i = 0; i < txt.length && parts.length < 4; i += 3800) parts.push(txt.slice(i, i + 3800));
-      (async function () { for (const p of parts) { if (!(await tenantSend(to, p))) return false; } return true; })().then(function (ok) {
+      (async function () { for (const p of parts) { if (!(await tenantSend(to, p))) return false; } await waSendFiles(to, txt, path.resolve(Q, '..', '..')); return true; })().then(function (ok) {
         log('tenant out ' + st.pending[d.re].tenant + ' ' + f + (ok ? '' : ' (not delivered)'));
       });
       return;
@@ -835,6 +867,8 @@ function sweepQueue(st, Q, ids) {
     }
     const mem = { re: root, text: body.slice(0, 1500) };
     (asVoice ? queueVoice(to, body, true) : waSend(to, short || body, mem)).then(function () {
+      return waSendFiles(to, d.text, path.resolve(Q, '..', '..'));
+    }).then(function () {
       log('out ' + f + ' -> ' + d.re + (asVoice ? ' (voice)' : ''));
     })
       .catch(function (e) { log('send failed ' + f + ': ' + e.message); const s3 = loadState(); delete s3.sent[f]; saveState(s3); });
