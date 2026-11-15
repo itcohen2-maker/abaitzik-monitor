@@ -93,3 +93,14 @@ test('securityItem: first line, warns on a failing check, quiet when all pass', 
   const m = M.build(Object.assign({}, base, { security: bad }));
   assert.strictEqual(m.items[0].k, 'security');
 });
+
+// 15.11.2026, Itzik: חלק מעבודת המנהל זה לדאוג שתמיד יהיו פוסטים למפרע.
+test('linkedin stock: short of two weeks ahead is a line, two weeks is quiet', () => {
+  const m = require('../lib/manager.js');
+  const now = new Date('2026-11-15T08:00:00Z');
+  assert.strictEqual(m.linkedinStockItem([], now), null);
+  const short = m.linkedinStockItem([{ id: 'a', date: '2026-11-19' }, { id: 'b', date: '2026-11-08', posted: 'x' }], now);
+  assert.ok(short && /עד 19\.11/.test(short.t) && /29\.11/.test(short.sub));
+  assert.strictEqual(m.linkedinStockItem([{ id: 'a', date: '2026-11-30' }], now), null);
+  assert.ok(m.linkedinStockItem([{ id: 'a', date: '2026-11-30', failed: 'x' }], now));
+});

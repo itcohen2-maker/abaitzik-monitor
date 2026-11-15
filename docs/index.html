@@ -3112,7 +3112,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-15T07:50:02.862Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-15T07:54:09.973Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -5057,7 +5057,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='271b836802';
+var CODE_ID='f639318feb';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -13813,6 +13813,7 @@ function addDay(d, n) {
   return t.toISOString().slice(0, 10);
 }
 function dow(d) { var p = String(d).split('-'); return new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])).getUTCDay(); }
+function liLow(li, today) { return !li || !li.total || !li.last || li.last < addDay(today, 14); }
 function nice(d) { var p = String(d).split('-'); return DAYS[dow(d)] + ' ' + (+p[2]) + '.' + (+p[1]); }
 function short(d) { var p = String(d).split('-'); return (+p[2]) + '.' + (+p[1]); }
 function needed(today) { var out = []; for (var i = 0; i < 7; i++) { var d = addDay(today, i); if (dow(d) !== 6) out.push(d); } return out; }
@@ -13850,7 +13851,7 @@ function compute(Q, today) {
     { id: 'st', title: '📲 סטטוס', line: a.line, low: a.low },
     { id: 'nr', title: '🕯️ נרות', line: b.line, low: b.low },
     { id: 'pl', title: '🍽️ מה בצלחת', line: pl ? pl + ' סטוריז מוכנים בתור' : 'אין סטוריז מוכנים', low: pl < 4 },
-  ].concat(li ? [{ id: 'li', title: '💼 לינקדין', line: li.total ? li.total + ' פוסטים בתור' + (li.last ? ' עד ' + nice(li.last) : '') + (li.waiting ? ', ' + li.waiting + ' מחכים לאישורך' : '') : 'אין פוסטים בתור', low: (li.total || 0) < 2 }] : []));
+  ].concat(li ? [{ id: 'li', title: '💼 לינקדין', line: li.total ? li.total + ' פוסטים בתור' + (li.last ? ' עד ' + nice(li.last) : '') + (li.waiting ? ', ' + li.waiting + ' מחכים לאישורך' : '') + (liLow(li, today) ? ', צריך עד ' + nice(addDay(today, 14)) : '') : 'אין פוסטים בתור', low: liLow(li, today) }] : []));
 }
 
 if (typeof module !== 'undefined') module.exports = { compute: compute };
