@@ -4895,7 +4895,7 @@ ${require('./lib/home-ui.js').html}
 
  <div id="askBox"></div>
 <!-- 4.11, Itzik: "תעלה את האריח של העסק שלי למעלה ברשימה. למה שמת אותו אחרון?" The business grid opens the home screen. -->
-${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? require('./lib/sendlist-ui.js').tile : '') + ((inst.name === 'abaitzik' || inst.handle === true) ? '<button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16" id="gVisits" hidden data-new="1"><b>👀 כניסות לקוחות</b><small>מתי נכנסו ולכמה זמן</small></button><button type="button" class="gt g16" id="gAffs" hidden data-new="1"><b>🤝 שותפים</b><small>מי הגיע דרך שי</small></button>' : '') + leadsTile() + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261111-leads' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button>' + '</div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
+${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? require('./lib/sendlist-ui.js').tile : '') + ((inst.name === 'abaitzik' || inst.handle === true) ? '<button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16" id="gVisits" hidden data-new="1"><b>👀 כניסות לקוחות</b><small>מתי נכנסו ולכמה זמן</small></button><button type="button" class="gt g16" id="gAffs" hidden data-new="1"><b>🤝 שותפים</b><small>מי הגיע דרך שי</small></button>' : '') + leadsTile() + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261111-leads' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109-cb1115"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button>' + '</div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
   <!-- 3.11, Itzik: "אני צריך אריח שממש יעבב לי, כמו ליד חדש". First on the grid; shows while a --nag reminder is open, hard blink once it is due, until "✅ עשיתי". -->
@@ -20053,9 +20053,14 @@ function bizSheet(t0){
    return h+list.map(function(r){return bzRow(r);}).join('');
   }
   function dueHtml(){
-   var st=(S&&S.staleLeads)||[],du=(S&&S.due)||[],tm=(S&&S.tomorrow)||[];
-   if(!st.length&&!du.length&&!tm.length)return '<p class="bzEmpty">אין כרגע מה לחזור אליו. כשיהיה, זה יופיע כאן.</p>';
+   var st=(S&&S.staleLeads)||[],du=(S&&S.due)||[],tm=(S&&S.tomorrow)||[],cb=(S&&S.callbacks)||[];
+   if(!st.length&&!du.length&&!tm.length&&!cb.length)return '<p class="bzEmpty">אין כרגע מה לחזור אליו. כשיהיה, זה יופיע כאן.</p>';
    var h='';
+   // 15.11.2026, Itzik: "כל החזרות בטלפון מהכי ישן ואז יורד להכי חדש, הכי ישן ער מספר אחד". Numbered, oldest first, from lib/biz.js callbacks.
+   if(cb.length){h+='<div class="bzSec">📞 לחזור בטלפון, מהישן לחדש</div>';
+    cb.forEach(function(c){var r=bzById(c.id)||{name:c.name,phone:c.phone,kind:'lead'};
+     var d=new Date(c.at),ds=isNaN(d)?'':d.toLocaleDateString('he-IL',{day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'});
+     h+=bzRow(r,'<small>'+esc(String(c.n))+'. הגיע '+esc(ds)+'</small>');});}
    if(st.length){h+='<div class="bzSec">ליד שלא נגעו בו</div>';
     st.forEach(function(s){var r=bzById(s.id)||{name:s.name,status:s.status,kind:'lead'};
      h+=bzRow(r,'<small>לא נגעו בו '+esc(String(s.days))+' ימים</small>');});}
