@@ -3026,6 +3026,7 @@ section#talkCard.talk{border:2px solid var(--accent);box-shadow:0 8px 24px color
 @media(min-width:720px){#psSheet.psFull .ycard{padding:0 max(16px,calc(50% - 360px)) 28px}#psSheet.psFull .psGrid{grid-template-columns:1fr 1fr 1fr}}
 #psSheet .psReq{background:#fffdf8;border-radius:12px;padding:8px 10px;margin:6px 0;font:600 13px Heebo,sans-serif;text-align:right}
 .c-board{background:linear-gradient(160deg,#0e7490,#164e63);font-size:22px}
+.c-kn{background:linear-gradient(160deg,#4d7c0f,#365314);font-size:22px}
 .c-lboard{background:linear-gradient(160deg,#f59e0b,#b45309);font-size:22px}
 #gHandle[hidden],#gReq[hidden]{display:none}
 .c-fcc{background:linear-gradient(160deg,#22d3ee,#0e7490);font-size:22px}
@@ -5090,7 +5091,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <!-- 12.11.2026, Itzik: "אייקון של מצב אישי כמו בסרטון". The calm side of the monitor, in the ad's colours (personalSheet, lib/personal.js). -->
   <button type="button" class="ic icNew" data-grp="day" id="icPersonal" data-new="1"><span class="c c-ps">🏡</span>מצב אישי</button>
   <!-- 10.11.2026, Itzik: the control board (לוח הפרסומים) is a round icon, one entry point; the old square tile is gone. Opens boardSheet. -->
-  ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icBoard" data-new="1"><span class="c c-board">🎛️</span>לוח בקרה</button><button type="button" class="ic icNew" data-grp="work" id="icLeadBoard" data-new="1"><span class="c c-lboard">🔔</span>לוח לידים</button>' : ''}
+  ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icBoard" data-new="1"><span class="c c-board">🎛️</span>לוח בקרה</button><button type="button" class="ic icNew" data-grp="work" id="icLeadBoard" data-new="1"><span class="c c-lboard">🔔</span>לוח לידים</button><button type="button" class="ic icNew" data-grp="day" id="icKanabis" data-new="1"><span class="c c-kn">🌿</span>מרשם קנביס</button>' : ''}
   <!-- 11.11.2026, Itzik: "שימו לי במוניטור אייקון של הטופס הזה, שאני אוכל לשלוח אותו לאנשים בוואטסאפ או במייל". The signup page (it-solution.co.il/start). -->
   ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icSignup" data-new="1"><span class="c c-its">🚀</span>דף הרשמה</button>' : ''}
   <!-- 7.11.2026, Itzik: the trainings sit in round icons beside the calendar. Shown only when the chat is allowed (fcBoot). -->
@@ -21882,6 +21883,44 @@ document.getElementById('icVisits').onclick=function(){pane('X');loadVisits();};
 document.getElementById('visitsAgain').onclick=loadVisits;
 document.getElementById('icLand').onclick=function(){pane('g');};
 document.getElementById('icNache').onclick=function(){fileOpen('tav-nache-teuda.jpg');};
+/*
+  15.11.2026, Itzik: "שים לי במוניטור שלי באייקון רק את המרשמים הרלוונטיים, מהתאריך היום והלאה, שכך אוכל להדפיס
+  כל פעם מרשם מתי שמגיע הזמן שלו, ואני מדפיס אותו, רק אני." Owner only: the icon is in the abaitzik-only icons, and
+  every month is one sealed PDF in data/files-private (split from his mail "רשיון קנביס 2026", 4.3.2026).
+  A month whose last day has passed drops off by itself. License 1410110 is valid until 1.3.2027.
+*/
+var KANABIS=[
+ {f:'kanabis-2026-11.pdf',m:'נובמבר 2026',from:'2026-11-02',to:'2026-11-26',n:'9969999'},
+ {f:'kanabis-2026-12.pdf',m:'דצמבר 2026',from:'2026-12-02',to:'2026-12-26',n:'9970000'},
+ {f:'kanabis-2027-01.pdf',m:'ינואר 2027',from:'2027-01-01',to:'2027-01-25',n:'9970001'},
+ {f:'kanabis-2027-02.pdf',m:'פברואר 2027',from:'2027-01-31',to:'2027-02-24',n:'9970002'}
+];
+function kanabisSheet(){
+ var old=document.getElementById('knSheet');if(old)old.remove();
+ var today=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'});
+ var L=KANABIS.filter(function(k){return k.to>=today;});
+ function dm(x){var p=x.split('-');return (+p[2])+'.'+(+p[1])+'.'+p[0];}
+ var w=document.createElement('div');w.id='knSheet';w.className='ysheet';
+ w.setAttribute('role','dialog');w.setAttribute('aria-label','מרשם קנביס');
+ w.innerHTML='<div class="ycard"><b>🌿 מרשם קנביס</b>'
+  +'<small>אישור מסירה לכל חודש, 50 גרם תפרחות. מרשם שהתוקף שלו עבר יורד מכאן לבד. בבית המרקחת מציגים תעודת זהות.</small>'
+  +(L.length?L.map(function(k){
+    var now=k.from<=today;
+    return '<div class="ycard" style="margin:8px 0;padding:10px;text-align:right'+(now?';border:2px solid #4d7c0f':'')+'">'
+     +'<b>'+(now?'✅ ':'')+esc(k.m)+(now?' · בתוקף עכשיו':'')+'</b>'
+     +'<small style="display:block">בתוקף מ '+dm(k.from)+' עד '+dm(k.to)+' · אישור מס׳ '+k.n+'</small>'
+     +'<button type="button" class="yb yb1" data-f="'+k.f+'">🖨️ לפתוח ולהדפיס</button></div>';
+   }).join(''):'<small style="display:block;margin:8px 0">אין כרגע מרשם בתוקף. צריך לבקש מהרופא מרשמים חדשים.</small>')
+  +(L.length===1?'<small style="display:block;margin:6px 0;font-weight:700">זה המרשם האחרון ברשימה. כדאי לבקש מהרופא מרשמים חדשים.</small>':'')
+  +'<button type="button" class="yb yx" data-x="1">סגירה</button></div>';
+ w.onclick=function(e){
+  var b=e.target.closest?e.target.closest('button'):null;
+  if(e.target===w||(b&&b.getAttribute('data-x')))return w.remove();
+  var f=b&&b.getAttribute('data-f');if(f){w.remove();fileOpen(f);}
+ };
+ document.body.appendChild(w);
+}
+var knIc=document.getElementById('icKanabis');if(knIc)knIc.onclick=kanabisSheet;
 document.getElementById('landList').innerHTML=LANDING.map(function(l){
  return '<div class="item"><div class="top"><span class="who">'+esc(l.name)+'</span>'
   +'<span class="chip">'+esc(l.note)+'</span></div>'
