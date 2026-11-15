@@ -3119,7 +3119,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-15T18:50:48.365Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-15T18:55:18.129Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3371,7 +3371,7 @@ try{
   <button type="button" class="gt g11" id="gIdeas"><b>💡 רעיונות לשיפור המוניטור</b><small>מה עוד המסך הזה יכול לעשות</small></button>
   <button type="button" class="gt gMed" data-grp="day" id="gMed"><b>🩺 אחרי הניתוח השני</b><small>ממוספר. המסמכים מהביקורת אצל הפרופסור</small></button>
   <button type="button" class="gt gWin" data-grp="net" id="gWin" data-upd="20261106-win03" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
-  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1" data-upd="20261113-purple"><b>🎬 הסרטונים</b><small>רילים, רילים עתידיים, סטטוס, נרות, מה בצלחת, שחר וקמפיין</small></button>
+  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1" data-upd="20261115-tiktok-yale"><b>🎬 הסרטונים</b><small>רילים, רילים עתידיים, סטטוס, נרות, מה בצלחת, שחר וקמפיין</small></button>
   <button type="button" class="gt gGviya" data-grp="work" id="gGviya" data-new="1"><b>📞 גבייה, יואל</b><small>דף שיואל מסמן, כל סימון מעדכן אותך</small></button>
   <button type="button" class="gt gShop" data-grp="home" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
  </div>
@@ -5067,7 +5067,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='e5e62bb1f9';
+var CODE_ID='3bd81f19fd';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -13911,6 +13911,7 @@ function upToday(){
   else{var lp=P.filter(function(x){return x.posted;}).pop(),sc=lp&&lp.screens&&lp.screens[lp.screens.length-1],
    nn=sc&&String(sc.head||'').indexOf('ומחר:')===0?String(sc.head).slice(5).trim():'';
    L.push({n:'מה בצלחת',done:false,t:'🍽️ מה בצלחת · '+(nn?'הבא: '+nn+' · ':'')+'בהכנה, עוד לא מוכן להעלאה',u:'plate/plate.html',h:''});}}
+ (VQ.ai||[]).filter(function(x){return x.posted&&x.keep&&Date.now()-Date.parse(x.postedAt||0)<3*864e5;}).forEach(function(x){L.push({n:'טיקטוק',done:false,t:'🎵 טיקטוק · '+(x.lang==='en'?'🇺🇸 ':'🇮🇱 ')+x.name+' · לשמור לטלפון ולהעלות',u:'save.html?f='+encodeURIComponent('ai/'+String(x.file).split('?')[0])+'&n='+encodeURIComponent(x.name),h:''});});
  CARON.forEach(function(c){L.push({n:'קרוסלה',done:false,car:c,t:'🎠 קרוסלה · '+c.t+' ('+c.n+' שקפים)'});});
  var upD={};try{upD=JSON.parse(localStorage.getItem('upDone')||'{}')||{};}catch(e){}
  (typeof TOM_ITEMS!=='undefined'?TOM_ITEMS:[]).filter(function(it){return !it.h&&it.r&&/^📲 לרשתות/.test(it.t||'')&&!upD[it.r];}).forEach(function(it){

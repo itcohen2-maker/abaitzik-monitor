@@ -5018,7 +5018,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   -->
   <button type="button" class="gt gWin" data-grp="net" id="gWin" data-upd="20261106-win03" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <!-- 5.11, Itzik: "את כל הסרטונים נעביר לאריח אחד, ובתוכו טאבים". One tile with a tab per kind; the old tiles (reels, future reels, campaign, plate, status, candle.times) were removed; their sheets stay in the code. -->
-  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1" data-upd="20261113-purple"><b>🎬 הסרטונים</b><small>רילים, רילים עתידיים, סטטוס, נרות, מה בצלחת, שחר וקמפיין</small></button>
+  <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1" data-upd="20261115-tiktok-yale"><b>🎬 הסרטונים</b><small>רילים, רילים עתידיים, סטטוס, נרות, מה בצלחת, שחר וקמפיין</small></button>
   <!--
     27.9. The content plan, shared with Ilay who runs the socials. Public on
     purpose (PUBLIC_FILES) so the link opens for him outside the monitor.
@@ -18169,6 +18169,8 @@ function upToday(){
   else{var lp=P.filter(function(x){return x.posted;}).pop(),sc=lp&&lp.screens&&lp.screens[lp.screens.length-1],
    nn=sc&&String(sc.head||'').indexOf('ומחר:')===0?String(sc.head).slice(5).trim():'';
    L.push({n:'מה בצלחת',done:false,t:'🍽️ מה בצלחת · '+(nn?'הבא: '+nn+' · ':'')+'בהכנה, עוד לא מוכן להעלאה',u:'plate/plate.html',h:''});}}
+ // 15.11.2026, Itzik: "הוא עלה אבל רציתי להעלות טיק טוק, אין לי את הסרטון. תהבהב לי אותו". An AI reel marked keep blinks here for 3 days, one tap saves it to the phone.
+ (VQ.ai||[]).filter(function(x){return x.posted&&x.keep&&Date.now()-Date.parse(x.postedAt||0)<3*864e5;}).forEach(function(x){L.push({n:'טיקטוק',done:false,t:'🎵 טיקטוק · '+(x.lang==='en'?'🇺🇸 ':'🇮🇱 ')+x.name+' · לשמור לטלפון ולהעלות',u:'save.html?f='+encodeURIComponent('ai/'+String(x.file).split('?')[0])+'&n='+encodeURIComponent(x.name),h:''});});
  CARON.forEach(function(c){L.push({n:'קרוסלה',done:false,car:c,t:'🎠 קרוסלה · '+c.t+' ('+c.n+' שקפים)'});});
  // 15.11.2026, Itzik: "תעשה לי סדר עכשיו, מה אני צריך לעלות עכשיו. שים את הכל באריח של הסרטונים". The campaign
  // stories he puts up by hand (📲 לרשתות in the 📣 קמפיין tab) join the list until he marks them (upDone, this phone).

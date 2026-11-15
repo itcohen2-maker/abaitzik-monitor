@@ -100,8 +100,13 @@ function post(it, ch, now) {
       const t = PLAN.time(P, 'ai-' + l, dow);
       if (!t || now.hm < t) return;
       if (state[l] === now.date) return;
-      const next = q.filter(function (x) { return x.lang === l && !x.posted && !x.failed && !x.hold; })
-        .sort(function (a, b) { return (a.order || 0) - (b.order || 0); })[0];
+      const cand = q.filter(function (x) { return x.lang === l && !x.posted && !x.failed && !x.hold; })
+        .sort(function (a, b) { return (a.order || 0) - (b.order || 0); });
+      // 15.11.2026, Itzik: "אתה מפרסם משהו אחד ב AI בעברית ומשהו אחר באנגלית? למה?" Same topic in both channels:
+      // a video whose twin in the other language already went up goes first, so the two never drift apart.
+      const base = function (x) { return String(x.id).replace(/-(he|en)$/, ''); };
+      const twinUp = function (x) { return q.some(function (y) { return y.lang !== l && base(y) === base(x) && y.posted; }); };
+      const next = cand.filter(twinUp)[0] || cand[0];
       if (next) jobs.push(next);
     });
   }
