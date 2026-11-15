@@ -104,3 +104,12 @@ test('linkedin stock: short of two weeks ahead is a line, two weeks is quiet', (
   assert.strictEqual(m.linkedinStockItem([{ id: 'a', date: '2026-11-30' }], now), null);
   assert.ok(m.linkedinStockItem([{ id: 'a', date: '2026-11-30', failed: 'x' }], now));
 });
+
+// 15.11.2026, Itzik: "תבדוק שיש מספיק מקום לכולם".
+test('disk: plenty is quiet done, low is a line, very low is a warning', () => {
+  const m = require('../lib/manager.js');
+  assert.strictEqual(m.diskItem(undefined), null);
+  assert.strictEqual(m.diskItem(19e9).st, 'done');
+  assert.strictEqual(m.diskItem(6e9).st, 'todo');
+  assert.strictEqual(m.diskItem(2e9).st, 'warn');
+});
