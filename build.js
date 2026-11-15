@@ -3015,7 +3015,8 @@ section#talkCard.talk{border:2px solid var(--accent);box-shadow:0 8px 24px color
 #psSheet textarea{width:100%;box-sizing:border-box;border-radius:14px;border:1px solid #e3d3b5;background:#fffdf8;padding:10px;font:15px Heebo,sans-serif;color:#3b2f25}
 #psSheet .psSent{background:#d6e6cf;color:#2f4a2a;border-radius:14px;padding:12px;margin:8px 0;font:800 15px/1.4 Heebo,sans-serif;text-align:right}
 #psSheet textarea{width:100%;box-sizing:border-box}
-#psSheet.psFull{background:#f6eee2;padding:0;align-items:stretch;justify-content:stretch;animation:psIn .7s cubic-bezier(.2,.7,.2,1) both}
+#psSheet.psFull{background:#f6eee2;padding:0;align-items:stretch;justify-content:stretch;animation:psIn .7s cubic-bezier(.2,.7,.2,1) backwards}
+#psSheet.psDone{animation:none!important;clip-path:none!important}
 @keyframes psIn{from{clip-path:circle(0 at 12% 6%)}to{clip-path:circle(150% at 12% 6%)}}
 #psSheet.psFull .ycard{max-width:none;width:100%;max-height:none;height:100%;margin:0;border:0;border-radius:0;box-sizing:border-box;overflow:auto;padding:0 16px 28px;background:linear-gradient(180deg,#fffaf2,#f3e8d8)}
 #psSheet .psTop{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:max(14px,env(safe-area-inset-top)) 0 10px;background:#fffaf2;border-bottom:1px solid #eadcc4;margin-bottom:10px}
@@ -16167,6 +16168,9 @@ function personalSheet(){
    +reqHtml();
  }
  function draw(){
+  // psClipFix (15.11.2026, Itzik: "בפרופיל האישי ... שום כפתור לא עובד", on the iPhone): once the colour wave ends the
+  // clip is dropped for good, so Safari hit-tests the whole screen and every tap lands.
+  if(!picking&&!w.classList.contains('psFull')){w.classList.remove('psDone');w.addEventListener('animationend',function(){w.classList.add('psDone');},{once:true});setTimeout(function(){w.classList.add('psDone');},900);}
   w.classList.toggle('psFull',!picking);
   w.innerHTML='<div class="ycard">'+(picking?pickHtml():mainHtml())+(picking?'<button type="button" class="psBtn lt" data-a="x">סגירה</button>':'')+'</div>';
   var cd=w.querySelector('.ycard');if(cd)cd.scrollTop=0;
