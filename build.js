@@ -5083,15 +5083,14 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   -->
   <!-- איציק, 6.10, בהקלטה: "תכין לי אייקון עגול עם התעודת נכה בפנים". Opens
        the card itself, decrypted, with the share button for the licensing office. -->
-  <button type="button" class="ic" data-grp="day" id="icNache"><span class="c c-nk">
-   <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="4.5" r="1.6"/><path d="M11 7.5v6h5l2 5"/><path d="M11 10.5h4"/><path d="M8 11.2a5.5 5.5 0 1 0 7.6 6.3"/></svg></span>תעודת נכה</button>
+  <!-- 15.11.2026, Itzik: "גם את תעודת הנכה תעביר לשם". The card moved into the personal mode (🏡, personalSheet). -->
   <!-- 4.11, Itzik: "עיגול אחד של היומן של גוגל, כניסה ישירה אליו". Opens his calendar (account u/0, itcohen2), today. -->
   <a class="ic icNew" data-grp="day" id="icGcal" href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener" data-new="1" data-upd="20261107-month"><span class="c c-gcal">
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M9.5 13.5h1.5v4M14 13.5h2l-1.5 4"/></svg></span>יומן</a>
   <!-- 12.11.2026, Itzik: "אייקון של מצב אישי כמו בסרטון". The calm side of the monitor, in the ad's colours (personalSheet, lib/personal.js). -->
   <button type="button" class="ic icNew" data-grp="day" id="icPersonal" data-new="1"><span class="c c-ps">🏡</span>מצב אישי</button>
   <!-- 10.11.2026, Itzik: the control board (לוח הפרסומים) is a round icon, one entry point; the old square tile is gone. Opens boardSheet. -->
-  ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icBoard" data-new="1"><span class="c c-board">🎛️</span>לוח בקרה</button><button type="button" class="ic icNew" data-grp="work" id="icLeadBoard" data-new="1"><span class="c c-lboard">🔔</span>לוח לידים</button><button type="button" class="ic icNew" data-grp="day" id="icKanabis" data-new="1"><span class="c c-kn">🌿</span>מרשם קנביס</button>' : ''}
+  ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icBoard" data-new="1"><span class="c c-board">🎛️</span>לוח בקרה</button><button type="button" class="ic icNew" data-grp="work" id="icLeadBoard" data-new="1"><span class="c c-lboard">🔔</span>לוח לידים</button>' : ''}
   <!-- 11.11.2026, Itzik: "שימו לי במוניטור אייקון של הטופס הזה, שאני אוכל לשלוח אותו לאנשים בוואטסאפ או במייל". The signup page (it-solution.co.il/start). -->
   ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icSignup" data-new="1"><span class="c c-its">🚀</span>דף הרשמה</button>' : ''}
   <!-- 7.11.2026, Itzik: the trainings sit in round icons beside the calendar. Shown only when the chat is allowed (fcBoot). -->
@@ -16152,7 +16151,11 @@ function personalSheet(){
  }
  function mainHtml(){
   var T=P.tiles||[];
+  // 15.11.2026, Itzik: "את האייקון אני רוצה שתשים אותו בפרופיל האישי ... גם את תעודת הנכה תעביר לשם". His page only.
+  var mine=(INSTANCE&&INSTANCE.name)==='abaitzik';
   return '<div class="psTop"><b>🏡 הבית שלי</b><button type="button" class="psBack" data-a="x">💼 חזרה לעסקי</button></div>'
+   +(mine?'<div class="psGrid"><button type="button" class="psT" data-a="kn" style="--c:#d6e6cf"><i>🌿</i><div>מרשם קנביס<small>המרשם של החודש, להדפסה</small></div></button>'
+     +'<button type="button" class="psT" data-a="nache" style="--c:#dbe7f3"><i>♿</i><div>תעודת נכה<small>לפתוח, לשלוח, להדפיס</small></div></button></div>':'')
    +(sent?'<div class="psSent" role="status">'+SENT+'</div>':'')
    +(T.length?'<small>תורים, כרטיסים, חשבונות והודעות שמגיעים במייל נכנסים לבד לאריח המתאים, ויורדים כשהיום עבר.</small><div class="psGrid">'+T.map(tileHtml).join('')+'</div>':'<small>עוד לא בחרת מה יופיע כאן.</small>')
    +'<button type="button" class="psBtn lt" data-a="pick">✏️ לשנות מה מופיע</button>'
@@ -16175,6 +16178,8 @@ function personalSheet(){
   var a=b.getAttribute('data-a'),k=b.getAttribute('data-k');
   if(k){var i=sel.indexOf(k);if(i<0)sel.push(k);else sel.splice(i,1);b.classList.toggle('on',i<0);return;}
   if(a==='x')return close();
+  if(a==='kn'){kanabisSheet();return;}
+  if(a==='nache'){fileOpen('tav-nache-teuda.jpg');return;}
   if(a==='pick'){picking=true;sel=(P.picked||[]).slice();draw();return;}
   if(a==='back'){picking=false;draw();return;}
   // 12.11.2026: start over. The first tap asks, the second sends (no browser dialog).
@@ -21882,7 +21887,7 @@ function visitDays(d,order,LABEL){
 document.getElementById('icVisits').onclick=function(){pane('X');loadVisits();};
 document.getElementById('visitsAgain').onclick=loadVisits;
 document.getElementById('icLand').onclick=function(){pane('g');};
-document.getElementById('icNache').onclick=function(){fileOpen('tav-nache-teuda.jpg');};
+var nkIc=document.getElementById('icNache');if(nkIc)nkIc.onclick=function(){fileOpen('tav-nache-teuda.jpg');};
 /*
   15.11.2026, Itzik: "שים לי במוניטור שלי באייקון רק את המרשמים הרלוונטיים, מהתאריך היום והלאה, שכך אוכל להדפיס
   כל פעם מרשם מתי שמגיע הזמן שלו, ואני מדפיס אותו, רק אני." Owner only: the icon is in the abaitzik-only icons, and
