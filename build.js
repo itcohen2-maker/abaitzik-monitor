@@ -4949,7 +4949,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   -->
   <button type="button" class="gt gMyDay" data-grp="day" id="gMyDay" data-new="1" data-upd="20261024-tdel"><b>📅 מה יש לי היום</b><small>תורים, תזכורות ומשימות של היום</small></button>
   <button type="button" class="gt g18" data-grp="day" id="gAppts" data-upd="20261106-series"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
-  <button type="button" class="gt g16" data-grp="day" id="gRemind" data-upd="20261106-remhelp"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
+  <button type="button" class="gt g16" data-grp="day" id="gRemind" data-upd="20261115-remsnooze"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
   <button type="button" class="gt g10 roundTile roundCap" id="gNotes" title="פתקים" aria-label="פתקים" data-upd="notes-caption-20261112"><span>📝</span><small>פתקים</small></button>
   <!-- 12.10, Itzik: "תקים אפליקציה לבדוק מה כל הקלקולים האלה". Every monitor's faults on one screen. -->
   <button type="button" class="gt gHealth" id="gHealth" data-new="1"><b>🩺 תקלות</b><small>מה תקוע, מה נעצר, ולמה</small></button>
@@ -13125,6 +13125,8 @@ function renderReminders(){
    +(r.nag&&Date.parse(r.due)<=Date.now()?'<button type="button" class="remdone" data-k="'+esc(remKey(r))+'">✅ עשיתי</button>':'')
    +(remHot(r)?'<button type="button" class="remknow" data-k="'+esc(remKey(r))+'">אני יודע</button>':'')
    +'<button type="button" class="remdel" data-k="'+esc(remKey(r))+'">🗑 למחוק</button>'
+   // 15.11.2026, Itzik's idea "רוצה את זה": a reminder that already came is put off in one tap, an hour or to tomorrow.
+   +((r.sentAt||Date.parse(r.due)<=Date.now())?'<button type="button" class="abtn remsnz" data-k="'+esc(remKey(r))+'" data-h="1h">⏰ שוב בעוד שעה</button><button type="button" class="abtn remsnz" data-k="'+esc(remKey(r))+'" data-h="tom">⏰ שוב מחר</button>':'')
    // Itzik, 4.10: "בתיזכורת אין לי אפשרות להגיב". Each reminder answers in place.
    +'<details class="remreply"><summary>💬 להגיב על התזכורת</summary>'+replyBox('על התזכורת "'+r.text+'"')+'</details></div>';
  };
@@ -13147,6 +13149,19 @@ function renderReminders(){
  });
  Array.prototype.forEach.call(host.querySelectorAll('.remdone'),function(b){
   b.onclick=function(){clearIds('remGone',[b.getAttribute('data-k')]);notesSend(false);renderReminders();};
+ });
+ // 15.11.2026: the card leaves at once, and the listener makes the new reminder; if the send fails it comes back.
+ Array.prototype.forEach.call(host.querySelectorAll('.remsnz'),function(b){
+  b.onclick=function(){
+   var k=b.getAttribute('data-k');
+   clearIds('remGone',[k]);
+   renderReminders();
+   sendText('תזכורת שוב','תזכורת שוב: '+b.getAttribute('data-h')+' '+k,'משימה').catch(function(){
+    var d=clearedIds('remGone');delete d[k];
+    try{localStorage.setItem('remGone',JSON.stringify(d));}catch(e){}
+    renderReminders();toast('לא נשלח. תבדוק חיבור ותנסה שוב.');
+   });
+  };
  });
  Array.prototype.forEach.call(host.querySelectorAll('.remdel'),function(b){
   b.onclick=function(){
