@@ -3203,7 +3203,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-16T13:40:03.323Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-16T13:41:16.826Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3456,7 +3456,7 @@ try{
   <button type="button" class="gt gMed" data-grp="day" data-upd="20261116-med" id="gMed"><b>🩺 אחרי הניתוח השני</b><small>ממוספר. המסמכים מהביקורת אצל הפרופסור</small></button>
   <button type="button" class="gt gWin" data-grp="net" id="gWin" data-upd="20261106-win03" hidden><b>🏆 משפטים מנצחים</b><small>מרימים את הראש ולא את הידיים</small></button>
   <button type="button" class="gt gReel" data-grp="net" id="gVideos" data-new="1" data-upd="20261115-tiktok-yale"><b>🎬 הסרטונים</b><small>רילים, רילים עתידיים, סטטוס, נרות, מה בצלחת, שחר וקמפיין</small></button>
-  <button type="button" class="gt gGviya" data-grp="work" id="gGviya" data-new="1"><b>📞 גבייה, יואל</b><small>דף שיואל מסמן, כל סימון מעדכן אותך</small></button>
+  <button type="button" class="gt gGviya" data-grp="work" id="gGviya" data-new="1"><b>📞 גבייה, יואל ונחמן</b><small>יואל או נחמן, לבחירה</small></button>
   <button type="button" class="gt gShop" data-grp="home" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
  </div>
 
@@ -5151,7 +5151,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='bc183044a0';
+var CODE_ID='ae852b8bff';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -15305,7 +15305,34 @@ function planSheet(){
 }
 on('gContentPlan',planSheet);
 on('gShopList',function(){window.open('https://docs.google.com/document/d/1A2tvet0ucYNDoDclswaVDybuL8bir3OAerRzXtDUEPU/edit','_blank','noopener');});
-on('gGviya',function(){window.open('https://lolos.abaitzik.com/gviya/1abf2a1f563a0fb3a7/','_blank','noopener');});
+function gviyaSheet(){
+ var old=document.getElementById('ySheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='ySheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','גבייה');
+ w.innerHTML='<div class="ycard">'
+  +'<b>📞 גבייה</b>'
+  +'<small>למי לפתוח?</small>'
+  +'<button type="button" class="yb yb1" data-y="yoel">יואל, דף הגבייה</button>'
+  +'<button type="button" class="yb yb2" data-y="nachman">🤝 נחמן, ההתחשבנות</button>'
+  +'<button type="button" class="yb yx" data-y="close">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-y');
+  if(!k)return;
+  if(k==='yoel')window.open('https://lolos.abaitzik.com/gviya/1abf2a1f563a0fb3a7/','_blank','noopener');
+  else if(k==='nachman')window.open('https://form.it-solution.co.il/l/f11b90f2fbc3806344c6/view','_blank','noopener');
+  close();
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+ var first=w.querySelector('.yb');if(first)first.focus();
+}
+on('gGviya',gviyaSheet);
 
 on('gOp',function(){pane('s');});
 on('gNotes',function(){pane('t');renderNotes();});
