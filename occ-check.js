@@ -25,7 +25,7 @@ function israel(d) {
     .reduce((o, x) => (o[x.type] = x.value, o), {});
   return p;
 }
-function stamp(d) { const p = israel(d); return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}:${p.second}+03:00`; }
+function stamp(d) { const p = israel(d); return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}:${p.second}${require('./lib/il-offset.js').ilOffset(d)}`; }
 function chat(slug, text) {
   const p = israel(new Date());
   const file = path.join(ROOT, 'data/chat/chat', `${p.year}${p.month}${p.day}-${p.hour}${p.minute}-claude-${slug}.json`);

@@ -34,6 +34,8 @@ if (require.main === module && inst.serverHost && require('os').hostname() !== i
   process.exit(0);
 }
 const CHAT = path.join(inst.dataPath, 'chat', 'chat');
+// 16.11.2026: Israel's offset today (lib/il-offset.js). The prompt said +03:00 all year.
+const IL_OFF = require('./lib/il-offset.js').ilOffset();
 const STATUS = path.join(inst.dataPath, 'status');
 const LOCK = path.join(STATUS, 'worker.lock');
 const LOG = path.join(STATUS, 'worker.log');
@@ -489,19 +491,32 @@ function prompt(list) {
     'חריג שני: כשמבקשים לשלוח או להכין הודעות לכמה אנשים (הלקוחות שלו, לידים, רשימה שהדביק, קבוצה מ "העסק שלי" ב data/biz/biz עם טלפונים):',
     '  לא שולחים כלום לאף אחד, גם לא דרך הוואטסאפ של המוניטור. ההודעות יוצאות רק מהוואטסאפ של מי שמבקש, בשמו.',
     '  כותבים קובץ אחד, data/sendlist/sendlist/<YYYYMMDD>-<HHMM>-<slug באותיות אנגליות קטנות>.json, ובו',
-    '  {"id":"<אותו שם בלי .json>","at":"<ISO עם +03:00>","title":"<כותרת קצרה>","note":"<אופציונלי>","items":[{"name":"<שם>","phone":"<טלפון>","text":"<הנוסח האישי לאיש הזה>"}]}.',
+    '  {"id":"<אותו שם בלי .json>","at":"<ISO עם ' + IL_OFF + '>","title":"<כותרת קצרה>","note":"<אופציונלי>","items":[{"name":"<שם>","phone":"<טלפון>","text":"<הנוסח האישי לאיש הזה>"}]}.',
     '  נוסח אישי לכל אחד: פונים בשמו, בלי קישור למוניטור ובלי הסבר, מוכן לשליחה כמו שהוא. עד 200 אנשים, עד 1500 תווים להודעה.',
     '  בודקים: node lib/sendlist.js check - <הקובץ>. אחר כך node push.js "הודעות לשליחה".',
     '  חסרים טלפונים: שואלים פעם אחת, בשורה אחת, ולא מכינים עד שהגיעו.',
     '  עונים בשורה אחת: "הכנתי <n> הודעות, הן מחכות ב 📤 הודעות לשליחה, לחיצה על כל אחת פותחת את הוואטסאפ שלך עם ההודעה מוכנה."',
     '  אדם אחד בלבד: נשארים בכלל של שני קבצי התשובה למעלה, בלי רשימה.',
+    /*
+      16.11.2026, Itzik: "אנחנו מבטיחים הצעת מחיר במוניטור ללקוחות, ועכשיו שביקשתי שיכין לי הוא מתעלם ממני."
+      The draft goes into 🧾 (quote-draft.js, lib/biz-home.js addQuote); the tile comes back even if hidden, and blinks softly.
+    */
+    'חריג שלישי: כשמבקשים הצעת מחיר ("תכין לי הצעת מחיר", "הצעה ל..."):',
+    '  צריך שלושה דברים: למי (שם, ואם נאמרו גם חברה, טלפון או מייל), מה העבודה, ומחיר לכל פריט או שעות ומחיר לשעה.',
+    '  חסר משהו: שואלים פעם אחת, בשורה אחת, רק על מה שחסר. מה שכבר נאמר בשיחה או נמצא ב data/biz-home/clients.json לא שואלים שוב.',
+    '  לא ממציאים מחיר. מחיר שלא נאמר הוא שאלה. תנאי תשלום, תוקף ופתיח מותר להשלים לבד בנוסח רגיל.',
+    '  יש הכל: כותבים data/biz-home/draft-<slug באותיות אנגליות קטנות>.json ובו',
+    '  {"client":"<שם>","co":"","coId":"","phone":"","mail":"","subject":"<הנדון>","intro":"<פתיח קצר>","items":[["<שם הפריט>",<כמות>,<מחיר ליחידה לפני מע״מ>,"<תיאור>","<יח׳, שעות, ימים, חודשים או פרויקט>"]],"disc":0,"terms":"שוטף + 30","when":"","valid":30,"notes":""}',
+    '  ומריצים node quote-draft.js <הקובץ>. אחר כך node build.js ו node push.js "הצעת מחיר".',
+    '  ההצעה לא נשלחת לאף אחד. האריח 🧾 הצעות מחיר חוזר לבד גם אם הוסתר או לא היה, ומהבהב בעדינות עד שפותחים אותו.',
+    '  עונים בשורה אחת: "ההצעה ל<לקוח> מוכנה ב 🧾 הצעות מחיר, <net> ₪ לפני מע״מ. שם מתקנים, מורידים PDF, משתפים בוואטסאפ ושולחים לחתימה." ומוסיפים את הקישור לדף המוניטור עם #bh-quote בסוף, שפותח את ההצעות ישר.',
     '',
     'שלב א, לא יותר משתי דקות מתחילת הסשן:',
     '  אם התשובה ידועה, או שהעבודה תיגמר תוך שלוש דקות: לא כותבים כלום עכשיו.',
     '  עושים את העבודה וכותבים פעם אחת, בשלב ג, את התוצאה.',
     '  רק אם העבודה ארוכה יותר:',
     '  1. קובץ חדש ב-data/chat/chat בשם <YYYYMMDD>-<HHMM>-claude-<slug>.json ובו',
-    '     {"at":"<ISO עם +03:00>","from":"claude","re":"<id ההודעה שלו>","text":"<התשובה>"}.',
+    '     {"at":"<ISO עם ' + IL_OFF + ', השעה של עכשיו>","from":"claude","re":"<id ההודעה שלו>","text":"<התשובה>"}.',
     '     כתוב מה הבנת ומה אתה הולך לעשות, במשפט או שניים. קצר ויבש, בלי מקפים, בלי אימוגי, בלי לפנות בשם.',
     '  2. `node push.js "מה עשית"`. עכשיו, לא בסוף.',
     'שתים עשרה דקות של שקט הן מבחינתו הודעה שנפלה, ולכן עבודה ארוכה מקבלת את זה מיד.',
@@ -766,7 +781,7 @@ function run(list) {
     // outside this list; with it, the list would not limit anything.
     args.splice(args.indexOf('--dangerously-skip-permissions'), 1);
     args.push('--allowedTools', 'Read', 'Grep', 'Glob', 'Write', 'Edit',
-      'Bash(node pc-task.js:*)', 'Bash(node push.js:*)', 'Bash(node change-request.js:*)',
+      'Bash(node pc-task.js:*)', 'Bash(node quote-draft.js:*)', 'Bash(node push.js:*)', 'Bash(node change-request.js:*)',
       'Bash(node transcribe.js:*)', 'Bash(node lib/personal.js:*)', 'Bash(node build.js:*)', 'Bash(npm test:*)', 'Bash(ls:*)', 'Bash(cat:*)', 'Bash(date:*)');
     say('מחשב הלקוח מחובר: הסשן כאן רק מעביר מלל ומשימות');
   }
@@ -792,6 +807,7 @@ function run(list) {
   child.stderr.on('data', (b2) => { out += b2; });
   child.on('close', (code) => {
     unregister(sid);
+    fixStamps(began);
     const res = logUsage(json, list);
     if (code === 0 && res && !res.is_error && fs.existsSync(AHOLD)) { try { fs.unlinkSync(AHOLD); say('החשבון עונה שוב, החסימה הוסרה.'); } catch (e) {} }
     say('הסשן הסתיים, קוד ' + code + '. ' + String(res ? res.result || '' : out).trim().slice(-300).replace(/\s+/g, ' '));
@@ -1377,4 +1393,26 @@ if (si > -1) {
   main();
   if (!DRY && inst.name !== 'abaitzik') announceDecisions();
   if (!DRY) require('./lib/pegasus-tick.js').tick(Date.now());
+}
+
+/*
+  16.11.2026: an answer is never stamped before the moment it was written. A session that wrote
+  +03:00 in winter put its answer an hour before the question, under it and out of sight. Every
+  claude answer file this session touched gets the file's own time when its stamp is off by more
+  than two minutes.
+*/
+function fixStamps(since) {
+  let names = [];
+  try { names = fs.readdirSync(CHAT).filter((f) => /-claude-.*\.json$/.test(f)); } catch (e) { return; }
+  names.forEach((f) => {
+    const full = path.join(CHAT, f);
+    let st; try { st = fs.statSync(full); } catch (e) { return; }
+    if (st.mtimeMs < since - 1000) return;
+    let d; try { d = JSON.parse(fs.readFileSync(full, 'utf8')); } catch (e) { return; }
+    if (!d || d.from !== 'claude') return;
+    const t = Date.parse(d.at || '');
+    if (t && t >= since - 120000 && t <= st.mtimeMs + 120000) return;
+    d.at = new Date(st.mtimeMs).toISOString();
+    try { fs.writeFileSync(full + '.tmp', JSON.stringify(d, null, 1), 'utf8'); fs.renameSync(full + '.tmp', full); } catch (e) { /* left as it was */ }
+  });
 }

@@ -1475,6 +1475,29 @@ const server = http.createServer(function (q, s) {
     }).catch(function () { try { s.writeHead(400, h); s.end('{}'); } catch (e) {} });
     return;
   }
+  /*
+    16.11.2026: a quote made in 🧾 is kept in the customer's own data/biz-home/quotes.json (lib/biz-home.js addQuote),
+    not only on the phone that made it. Same visit key check as /api/csign/create.
+  */
+  if (u.pathname === '/api/quote/save') {
+    const origin = q.headers.origin || '';
+    const h = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', Vary: 'Origin' };
+    if (originOk(origin)) { h['Access-Control-Allow-Origin'] = origin; h['Access-Control-Allow-Headers'] = 'Content-Type'; h['Access-Control-Allow-Methods'] = 'POST, OPTIONS'; }
+    if (q.method === 'OPTIONS') { s.writeHead(204, h); return s.end(); }
+    if (q.method !== 'POST') { s.writeHead(405, h); return s.end('{}'); }
+    readBody(q, 200000).then(function (raw) {
+      let b; try { b = JSON.parse(raw.toString('utf8')); } catch (e) { s.writeHead(400, h); return s.end('{}'); }
+      const vn = require('./lib/visits.js').nameByKey(DATA, b.key);
+      if (!vn || !/^[a-z0-9-]{1,32}$/.test(String(vn))) { s.writeHead(403, h); return s.end('{"error":"key"}'); }
+      let dir = ''; try { dir = JSON.parse(fs.readFileSync(path.join(DATA, 'tenants', 'tenants', vn + '.json'), 'utf8')).dir || ''; } catch (e) {}
+      if (!dir) dir = '/home/' + vn + '/' + vn + '-monitor';
+      let r = null; try { r = require('./lib/biz-home.js').addQuote(path.join(dir, 'data'), b.q, 'owner'); } catch (e) { log('!! quote save ' + vn + ': ' + e.message); }
+      if (!r) { s.writeHead(400, h); return s.end('{"error":"quote"}'); }
+      log('quote saved ' + vn + ' ' + r.id);
+      s.writeHead(200, h); s.end(JSON.stringify({ ok: true, id: r.id }));
+    }).catch(function () { try { s.writeHead(400, h); s.end('{}'); } catch (e) {} });
+    return;
+  }
   // 2.11: sign a quote on the phone (sign.js), /q/<token>[/pdf|/signed] and /api/sign.
   const qm = u.pathname.match(/^\/q\/([a-f0-9]{16,40})(?:\/(pdf|signed|view))?\/?$/);
   if (qm && q.method === 'GET') { require('./sign.js').servePage(qm[1], qm[2], s); return; }

@@ -30,7 +30,8 @@ const inst = require('./lib/instance.js');
   package. So the business set (lib/biz-home.js) is on for every customer with a package: a plan file (lib/plan-io.js)
   or a plan in instance.json, not only where instance.json says bizHome.
 */
-if (inst.name !== 'abaitzik' && !inst.bizHome) {
+// 16.11.2026, Itzik asked his own monitor for a quote and it had no 🧾 to put it in. His page has the set too (only 🧾 is drawn there).
+if (!inst.bizHome) {
   // Every customer monitor is a business one; without a plan file (alon, ilay) everything is open, as in lib/connections.js.
   inst.bizHome = true;
 }
@@ -1285,6 +1286,8 @@ function build() {
     ? inst.screens.filter((id) => id !== 'gAdminReq').concat(guides.map((g, i) => 'gGuide' + i), links.map((l, i) => 'gLink' + i), ['gConn', 'gAdminReq']) : inst.screens;
   // 4.11: the monthly package tile is shown only where a package exists (lib/plan-ui.js).
   if (Array.isArray(screens) && screens.length && require('./lib/plan-ui.js').on(inst.name)) screens.push('gPack');
+  // 16.11.2026, Itzik: a quote the monitor prepared brings 🧾 back, also where the intake never chose it.
+  try { if (Array.isArray(screens) && screens.length && screens.indexOf('gBhQuote') < 0 && require('./lib/biz-home.js').monitorQuote(inst.dataPath)) screens.push('gBhQuote'); } catch (e) { /* none */ }
   // 10.11.2026, Itzik: the campaigns tile appears by itself only once the customer gave his Facebook and numbers came in
   // (data/ads/status.json ok:true, written by ads-sync.js after setup-intake.js registered him). Until then nothing.
   if (Array.isArray(screens) && screens.length && screens.indexOf('gAds') < 0) {
@@ -1610,6 +1613,8 @@ function tenantTiles(inst) {
   // 10.11.2026: a per tenant opt out (instance hideTiles, an array of tile ids). gConn and gAdminReq can never be hidden.
   // 11.11.2026, Itzik: the notes app is installed by default in every monitor, so gNotes can never be hidden either.
   if (Array.isArray(inst.hideTiles)) { const hide = inst.hideTiles.filter((id) => id !== 'gConn' && id !== 'gAdminReq' && id !== 'gNotes'); for (let i = ids.length - 1; i >= 0; i--) if (hide.indexOf(ids[i]) >= 0) ids.splice(i, 1); }
+  // 16.11.2026, Itzik: "גם אם הוא מחק". A quote the monitor prepared brings 🧾 back, first, even if hideTiles took it off.
+  try { if (ids.indexOf('gBhQuote') < 0 && require('./lib/biz-home.js').monitorQuote(inst.dataPath || 'data')) ids.unshift('gBhQuote'); } catch (e) { /* none */ }
   // 11.11.2026: the notes app is the round icon icTNotes in tenantTools, not a tile.
   { const n = ids.indexOf('gNotes'); if (n >= 0) ids.splice(n, 1); }
   // esc() is defined far above; this part is also lifted alone by a test.
@@ -4904,7 +4909,7 @@ ${require('./lib/home-ui.js').html}
 
  <div id="askBox"></div>
 <!-- 4.11, Itzik: "תעלה את האריח של העסק שלי למעלה ברשימה. למה שמת אותו אחרון?" The business grid opens the home screen. -->
-${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? require('./lib/sendlist-ui.js').tile : '') + ((inst.name === 'abaitzik' || inst.handle === true) ? '<button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16" id="gVisits" hidden data-new="1"><b>👀 כניסות לקוחות</b><small>מתי נכנסו ולכמה זמן</small></button><button type="button" class="gt g16" id="gAffs" hidden data-new="1"><b>🤝 שותפים</b><small>מי הגיע דרך שי</small></button>' : '') + leadsTile() + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261116-vids-link' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109-cb1115"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button>' + '</div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
+${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? require('./lib/sendlist-ui.js').tile : '') + ((inst.name === 'abaitzik' || inst.handle === true) ? '<button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16" id="gVisits" hidden data-new="1"><b>👀 כניסות לקוחות</b><small>מתי נכנסו ולכמה זמן</small></button><button type="button" class="gt g16" id="gAffs" hidden data-new="1"><b>🤝 שותפים</b><small>מי הגיע דרך שי</small></button>' : '') + leadsTile() + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261116-vids-link' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109-cb1115"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button>' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g13" data-grp="work" id="gBhQuote" data-new="1"><b>🧾 הצעות מחיר</b><small>הצעה עם הלוגו שלך, לפני מע״מ, ב PDF</small></button>' : '') + '</div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
   <!-- 3.11, Itzik: "אני צריך אריח שממש יעבב לי, כמו ליד חדש". First on the grid; shows while a --nag reminder is open, hard blink once it is due, until "✅ עשיתי". -->
