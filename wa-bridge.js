@@ -866,7 +866,9 @@ function sweepQueue(st, Q, ids) {
       saveState(sl);
     }
     const mem = { re: root, text: body.slice(0, 1500) };
-    (asVoice ? queueVoice(to, body, true) : waSend(to, short || body, mem)).then(function () {
+    // 16.11: a page task's answer goes through sendOwner, which falls back to the template outside the 24 hours.
+    const pageAns = !!st.pending[d.re].page && !asVoice;
+    (asVoice ? queueVoice(to, body, true) : pageAns ? waOut.sendOwner(DATA, short || body, { re: root, kind: 'answer' }) : waSend(to, short || body, mem)).then(function () {
       return waSendFiles(to, d.text, path.resolve(Q, '..', '..'));
     }).then(function () {
       log('out ' + f + ' -> ' + d.re + (asVoice ? ' (voice)' : ''));
@@ -1209,7 +1211,18 @@ async function api(q, s, u) {
     let inst = {}; try { inst = require('./lib/instance.js'); } catch (e) {}
     const bizOf = function (i) { let raw = ''; try { raw = JSON.parse(fs.readFileSync(path.join(ROOT, 'instance.json'), 'utf8')).business || ''; } catch (e) {} return raw || (i.profile && i.profile.business) || ''; };
     let enabled = false; try { enabled = require('./lib/features.js').read(DATA, inst.name).fastChat === true; } catch (e) {}
-    const r = await require('./lib/fast-chat.js').chatApi(u.pathname, b, { dataPath: DATA, toMonitor: toMonitor, owner: inst.name === 'abaitzik', business: bizOf(inst), enabled: enabled, context: () => chatContext(null) });
+    // 16.11.2026, Itzik: "אני לא מקבל עדכונים בוואטסאפ פתאום". A task sent from the page's chat box went into the
+    // queue with no WhatsApp address, so its answer stayed on the page only. On his own monitor it now waits like a
+    // WhatsApp question, and sweep() sends the answer to his number (text inside the 24 hours, else the template).
+    const pageToMonitor = async function (kind, text, re, files) {
+      const id = await toMonitor(kind, text, re, files);
+      try {
+        const own = isOwnerInstance() ? String(((cfg().allow || [])[0]) || '') : '';
+        if (/^d{8,15}$/.test(own)) { const sp = loadState(); sp.pending[id] = { to: own, at: Date.now(), name: '', page: true }; saveState(sp); log('page task ' + id + ' -> answer to WhatsApp'); }
+      } catch (e) { log('!! page task pending: ' + e.message); }
+      return id;
+    };
+    const r = await require('./lib/fast-chat.js').chatApi(u.pathname, b, { dataPath: DATA, toMonitor: pageToMonitor, owner: inst.name === 'abaitzik', business: bizOf(inst), enabled: enabled, context: () => chatContext(null) });
     s.writeHead(r.status, h); return s.end(JSON.stringify(r.json));
   }
   if (u.pathname === '/api/feed') {
