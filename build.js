@@ -15325,6 +15325,7 @@ var REEL_ITEMS=[
 {n:'IT 01 כריכה',t:'הכריכה: מי לא שילם לך החודש?',r:'it01-cover.jpg'},
 {n:'IT 01 פרסום',p:'it01',t:'טקסט לסטורי באינסטגרם ולטיקטוק, עם קישור לכל רשת',r:'it01-post.txt'},
 // 9.11, Itzik: sardine sandwich, three things he stopped buying; caption copied from his reference post.
+{n:'36ב',t:'ריל: 3 דברים שהפסקתי לעשות במטבח, הגרסה המתוקנת · 4K הכי איכותי, לשמירה בגלריה',r:'reel-36b-yogurt.mp4'},
 {n:'36',t:'ריל: 3 דברים שהפסקתי לעשות במטבח · 4K הכי איכותי, לשמירה בגלריה',r:'reel-36-yogurt.mp4'},
 {n:'36 כריכה',t:'הכריכה · 4K',r:'reel-36-cover.jpg'},
 {n:'36 פרסום',t:'כיתוב, מוזיקה והאשטגים לכל רשת',r:'reel-36-post.txt'},
