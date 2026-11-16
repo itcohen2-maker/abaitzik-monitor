@@ -306,9 +306,17 @@
   "ytd": "Your phone doesn't need to listen to know what to advertise: shared location with friends, searches on the same WiFi and a behavior profile do the job. Ever talked about something, and then got a weird ad? Source: Kaspersky, Is Your Phone Listening to You.",
   "song": "",
   "song_tt": "",
-  "posted": false,
-  "postedAt": null,
-  "approvedAt": "2026-11-15T06:00:45.408Z"
+  "posted": true,
+  "postedAt": "2026-11-16T18:04:50.148Z",
+  "approvedAt": "2026-11-15T06:00:45.408Z",
+  "auto": {
+   "reel": "18009068438990977",
+   "story": "17995506285117706",
+   "storyError": null,
+   "page": "1680042180424061",
+   "pageError": null,
+   "channel": "itsolution.global"
+  }
  },
  {
   "id": "wifi-he",
