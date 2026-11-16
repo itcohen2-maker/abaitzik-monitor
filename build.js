@@ -4904,7 +4904,7 @@ ${require('./lib/home-ui.js').html}
 
  <div id="askBox"></div>
 <!-- 4.11, Itzik: "תעלה את האריח של העסק שלי למעלה ברשימה. למה שמת אותו אחרון?" The business grid opens the home screen. -->
-${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? require('./lib/sendlist-ui.js').tile : '') + ((inst.name === 'abaitzik' || inst.handle === true) ? '<button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16" id="gVisits" hidden data-new="1"><b>👀 כניסות לקוחות</b><small>מתי נכנסו ולכמה זמן</small></button><button type="button" class="gt g16" id="gAffs" hidden data-new="1"><b>🤝 שותפים</b><small>מי הגיע דרך שי</small></button>' : '') + leadsTile() + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261111-leads' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109-cb1115"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button>' + '</div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
+${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? require('./lib/sendlist-ui.js').tile : '') + ((inst.name === 'abaitzik' || inst.handle === true) ? '<button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16" id="gVisits" hidden data-new="1"><b>👀 כניסות לקוחות</b><small>מתי נכנסו ולכמה זמן</small></button><button type="button" class="gt g16" id="gAffs" hidden data-new="1"><b>🤝 שותפים</b><small>מי הגיע דרך שי</small></button>' : '') + leadsTile() + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261116-vids-link' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109-cb1115"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button>' + '</div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
   <!-- 3.11, Itzik: "אני צריך אריח שממש יעבב לי, כמו ליד חדש". First on the grid; shows while a --nag reminder is open, hard blink once it is due, until "✅ עשיתי". -->
@@ -20416,7 +20416,8 @@ function bizSheet(t0){
   if(INSTANCE&&INSTANCE.clalit)tabs.push(['docs','🏥','מסמכים']);
   ((D.agr&&D.agr.clients)||[]).forEach(function(c,i){tabs.splice(1+i,0,['agr'+i,'🩺',c.tab||c.client]);});
   // 1.11.2026: the client demo starts from here (lib/demo-mode.js).
-  var html='<button type="button" class="yb bzBackTop" data-bz="back" data-tdy="1">→ חזרה</button>'+'<div class="biz"><div class="bzMicRow"><button type="button" id="bizMic" class="bzMic" aria-label="דבר אליי">'
+  // 16.11.2026, Itzik: "שים לינק בעסק שלי לסירטונים". Opens 🎬 הסרטונים (vidSheet) from here.
+  var html='<button type="button" class="yb bzBackTop" data-bz="back" data-tdy="1">→ חזרה</button>'+'<button type="button" class="yb bzBackTop" data-bz="vid">🎬 הסרטונים</button>'+'<div class="biz"><div class="bzMicRow"><button type="button" id="bizMic" class="bzMic" aria-label="דבר אליי">'
    +'<svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" stroke="none"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8.5 21h7"/></svg></button></div>'
    +'<div class="bzTop">'+scoreHtml()+'<p class="bzUrg"><b>'+esc((S&&S.urgent)||'אין עדיין נתונים.')+'</b></p></div>'
    // 4.11.2026, Itzik picked ד instead of the thick tab rail: coloured keys on top, a drawer per tab (lib/drawers-ui.js).
@@ -20451,6 +20452,7 @@ function bizSheet(t0){
     var t=e.target.closest?e.target.closest('[data-bz]'):null;if(!t)return;
     var a=t.getAttribute('data-bz');
     if(a==='demo'){dmoStart();return;}
+    if(a==='vid'){vidSheet();return;}
     // 13.11.2026, Itzik: "אין לי איך לאשר את הפוסטים". Approve right here, same answer the 🔔 strip sends (linkedin-post.js finds the id). Two taps.
     if(a==='liok'){var lid2=t.getAttribute('data-id');if(!lid2)return;if(!t.getAttribute('data-sure')){t.setAttribute('data-sure','1');t.textContent='לחיצה נוספת: לאשר, והוא יעלה בזמן שכתוב';return;}t.disabled=true;sendText('תשובה מהמוניטור','אישור: פוסט ללינקדין ('+lid2+')','אישור').then(function(){t.textContent='✅ אושר. הוא יעלה לבד בזמן שכתוב';toast('אושר.');}).catch(function(){t.disabled=false;t.removeAttribute('data-sure');t.textContent='✅ לאשר את הפוסט';toast('לא נשלח. תנסה שוב.');});return;}
     // 1.11, Itzik: "שים לי אותו גם במוניטור". The intake form for Shai (forms.js on form.it-solution.co.il).

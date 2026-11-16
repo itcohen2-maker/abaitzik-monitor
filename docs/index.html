@@ -3119,7 +3119,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-16T06:57:29.488Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-16T06:58:04.047Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3256,7 +3256,7 @@ try{
 
 
  <div id="askBox"></div>
-<div class="grid" id="blkBiz"><button type="button" class="gt g16" id="gSend" hidden data-new="1"><b>📤 הודעות לשליחה</b><small>מוכנות לך אחת אחת</small></button><button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button><button type="button" class="gt g16" id="gVisits" hidden data-new="1"><b>👀 כניסות לקוחות</b><small>מתי נכנסו ולכמה זמן</small></button><button type="button" class="gt g16" id="gAffs" hidden data-new="1"><b>🤝 שותפים</b><small>מי הגיע דרך שי</small></button><button type="button" class="gt g16" id="gLeads" data-lnew="2026-11-15T19:34:36.819Z"><b>🔔 לידים</b><small>2 לידים חדשים · 4 בסך הכל</small></button><script>(function(){var t=document.getElementById("gLeads");if(!t)return;var k=t.getAttribute("data-lnew"),s="";try{s=localStorage.getItem("leadsTileSeen")||"";}catch(e){}if(k&&s!==k)t.classList.add("leadNew");t.addEventListener("click",function(){try{if(k)localStorage.setItem("leadsTileSeen",k);}catch(e){}t.classList.remove("leadNew");if(typeof bizSheet==="function"){bizSheet("leads");if(typeof bzOpenDrawer==="function")bzOpenDrawer("leads");}});})();</script><button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261111-leads-agr001420-202611132022-li-queue-20261109-cb1115"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div><script>
+<div class="grid" id="blkBiz"><button type="button" class="gt g16" id="gSend" hidden data-new="1"><b>📤 הודעות לשליחה</b><small>מוכנות לך אחת אחת</small></button><button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button><button type="button" class="gt g16" id="gVisits" hidden data-new="1"><b>👀 כניסות לקוחות</b><small>מתי נכנסו ולכמה זמן</small></button><button type="button" class="gt g16" id="gAffs" hidden data-new="1"><b>🤝 שותפים</b><small>מי הגיע דרך שי</small></button><button type="button" class="gt g16" id="gLeads" data-lnew="2026-11-15T19:34:36.819Z"><b>🔔 לידים</b><small>2 לידים חדשים · 4 בסך הכל</small></button><script>(function(){var t=document.getElementById("gLeads");if(!t)return;var k=t.getAttribute("data-lnew"),s="";try{s=localStorage.getItem("leadsTileSeen")||"";}catch(e){}if(k&&s!==k)t.classList.add("leadNew");t.addEventListener("click",function(){try{if(k)localStorage.setItem("leadsTileSeen",k);}catch(e){}t.classList.remove("leadNew");if(typeof bizSheet==="function"){bizSheet("leads");if(typeof bzOpenDrawer==="function")bzOpenDrawer("leads");}});})();</script><button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261116-vids-link-agr001420-202611132022-li-queue-20261109-cb1115"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button></div><script>
 (function(){
  var K='leadSeen';
  function seen(){try{return JSON.parse(localStorage.getItem(K)||'[]');}catch(e){return [];}}
@@ -5074,7 +5074,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='cf22c5b491';
+var CODE_ID='e8ee7e1e39';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -15916,7 +15916,7 @@ function bizSheet(t0){
   if(!bzOwner)tabs=tabs.filter(function(t){return ['leads','money','due'].indexOf(t[0])>=0;});
   if(INSTANCE&&INSTANCE.clalit)tabs.push(['docs','🏥','מסמכים']);
   ((D.agr&&D.agr.clients)||[]).forEach(function(c,i){tabs.splice(1+i,0,['agr'+i,'🩺',c.tab||c.client]);});
-  var html='<button type="button" class="yb bzBackTop" data-bz="back" data-tdy="1">→ חזרה</button>'+'<div class="biz"><div class="bzMicRow"><button type="button" id="bizMic" class="bzMic" aria-label="דבר אליי">'
+  var html='<button type="button" class="yb bzBackTop" data-bz="back" data-tdy="1">→ חזרה</button>'+'<button type="button" class="yb bzBackTop" data-bz="vid">🎬 הסרטונים</button>'+'<div class="biz"><div class="bzMicRow"><button type="button" id="bizMic" class="bzMic" aria-label="דבר אליי">'
    +'<svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" stroke="none"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8.5 21h7"/></svg></button></div>'
    +'<div class="bzTop">'+scoreHtml()+'<p class="bzUrg"><b>'+esc((S&&S.urgent)||'אין עדיין נתונים.')+'</b></p></div>'
    +'<div id="bzDw">'+tabs.map(function(t){
@@ -15947,6 +15947,7 @@ function bizSheet(t0){
     var t=e.target.closest?e.target.closest('[data-bz]'):null;if(!t)return;
     var a=t.getAttribute('data-bz');
     if(a==='demo'){dmoStart();return;}
+    if(a==='vid'){vidSheet();return;}
     if(a==='liok'){var lid2=t.getAttribute('data-id');if(!lid2)return;if(!t.getAttribute('data-sure')){t.setAttribute('data-sure','1');t.textContent='לחיצה נוספת: לאשר, והוא יעלה בזמן שכתוב';return;}t.disabled=true;sendText('תשובה מהמוניטור','אישור: פוסט ללינקדין ('+lid2+')','אישור').then(function(){t.textContent='✅ אושר. הוא יעלה לבד בזמן שכתוב';toast('אושר.');}).catch(function(){t.disabled=false;t.removeAttribute('data-sure');t.textContent='✅ לאשר את הפוסט';toast('לא נשלח. תנסה שוב.');});return;}
     function shareShai(u,tt,title,k){
      function sent(){if(!k)return;try{var o=JSON.parse(localStorage.getItem('itsSent')||'{}');o[k]=new Date().toISOString();localStorage.setItem('itsSent',JSON.stringify(o));}catch(x){}
