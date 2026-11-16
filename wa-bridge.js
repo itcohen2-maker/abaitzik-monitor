@@ -846,6 +846,9 @@ function sweepQueue(st, Q, ids) {
       // A customer: the whole answer here (his monitor link is not Itzik's), in parts when long.
       const to = st.pending[d.re].to, txt = String(d.text);
       const parts = []; for (let i = 0; i < txt.length && parts.length < 4; i += 3800) parts.push(txt.slice(i, i + 3800));
+      // 16.11: a page task's answer outside the customer's 24 hours goes as the one line template.
+      const pg = st.pending[d.re].page, open = st.lastIn && st.lastIn[to] && Date.now() - st.lastIn[to] < 23.5 * 3600e3;
+      if (pg && !open) { waTemplate(to, txt).then(function (ok) { log('tenant out ' + st.pending[d.re].tenant + ' ' + f + ' template' + (ok === false ? ' (not delivered)' : '')); }, function (e) { log('tenant out failed ' + f + ': ' + e.message.slice(0, 160)); }); return; }
       (async function () { for (const p of parts) { if (!(await tenantSend(to, p))) return false; } await waSendFiles(to, txt, path.resolve(Q, '..', '..')); return true; })().then(function (ok) {
         log('tenant out ' + st.pending[d.re].tenant + ' ' + f + (ok ? '' : ' (not delivered)'));
       });
@@ -1065,6 +1068,12 @@ function tenantToMonitor(tn) {
     fs.writeFileSync(path.join(dir, name + '.tmp'), JSON.stringify(rec, null, 1), { encoding: 'utf8', mode: 0o664 });
     fs.renameSync(path.join(dir, name + '.tmp'), path.join(dir, name));
     log('fast chat todo -> ' + tn.name + ' ' + id);
+    // 16.11.2026: a customer whose WhatsApp is connected gets the answer to a page task there too (as Itzik does).
+    try {
+      let map = {}; try { map = JSON.parse(fs.readFileSync(path.join(DATA, 'wa-tenants.json'), 'utf8')) || {}; } catch (e) {}
+      const phone = Object.keys(map).find(function (p) { return map[p] && map[p].tenant === tn.name && map[p].dir; });
+      if (phone) { const sp = loadState(); sp.pending[id] = { to: phone, at: Date.now(), name: '', tenant: tn.name, dir: map[phone].dir, page: true }; saveState(sp); log('page task ' + tn.name + ' ' + id + ' -> answer to WhatsApp'); }
+    } catch (e) { log('!! page task pending ' + tn.name + ': ' + e.message); }
     return id;
   };
 }
