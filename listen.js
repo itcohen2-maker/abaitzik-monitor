@@ -683,7 +683,7 @@ function recordIncoming(m) {
     fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
     // 15.11: the same voice note sent again with the code closes its held copy (lib/held-supersede.js).
     if (codeOk) { try { require('./lib/held-supersede.js').supersede(CHAT, name, rec); } catch (e) { say('!! הודעה ישנה לא נסגרה: ' + e.message); } }
-    say((codeOk ? 'נרשם בצ׳אט עם אישור קבלה: ' : 'נרשם בלי קוד, ממתין לאימות: ') + text.slice(0, 60));
+    say((codeOk ? 'נרשם בצ׳אט עם אישור קבלה: ' : 'נרשם בלי קוד, ממתין לאימות: ') + require('./lib/fireflies-key.js').mask(text).slice(0, 60));
     if (rec.heldWhy === 'lead') {
       // 12.11.2026, Itzik: a lead from his own phone or mail is a test: it is created and shown greyed, but it makes no
       // 📋 לטיפול item, no alert and no urgent push (lib/own-leads.js).
@@ -833,6 +833,21 @@ function recordIncoming(m) {
         say('מייל נראה: ' + msM[1]);
         fs.unlinkSync(path.join(CHAT, name));
       } catch (e) { say('!! מייל נראה: ' + e.message); }
+      try { require('./lib/handle.js').publishSoon(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
+    // 16.11.2026: "🎙️ מפתח פיירפליס: <key>" from 🔌 חיבורים (lib/fireflies-key.js). Saved here with no model into data/keys.json;
+    // the message file is deleted whatever happens, so the key never stays in the chat.
+    const ffIn = require('./lib/fireflies-key.js').parseMsg(text.replace(/\n\s*קוד[^\n]*$/, ''));
+    if (ffIn) {
+      let res = { ok: false, reply: 'המפתח לא נשמר: ההודעה הגיעה בלי הקוד האישי. אפשר לשלוח שוב מ 🔌 חיבורים.' };
+      if (codeOk) { try { res = require('./lib/fireflies-key.js').setKey(inst.dataPath, ffIn); } catch (e) { res = { ok: false, reply: 'לא הצלחתי לשמור את המפתח. אפשר לנסות שוב מ 🔌 חיבורים.' }; } }
+      say('פיירפליס: ' + (res.ok ? (res.removed ? 'הוסר' : 'נשמר') : 'לא נשמר'));
+      try { fs.unlinkSync(path.join(CHAT, name)); } catch (e) { /* already gone */ }
+      try {
+        fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-ff-ack.json')),
+          JSON.stringify({ at: new Date().toISOString(), from: 'claude', text: res.reply, status: 'done' }, null, 1), 'utf8');
+      } catch (e) { /* the next build carries it */ }
       try { require('./lib/handle.js').publishSoon(); } catch (e) { /* the next build carries it */ }
       return true;
     }

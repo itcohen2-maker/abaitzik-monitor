@@ -19785,6 +19785,8 @@ function connSheet(){
   if(r.link2&&!r.on)h+='<a href="'+esc(r.link2)+'" target="_blank" rel="noopener" style="flex-basis:100%;font-size:12.5px;color:#0e7490;margin-top:4px">'+esc(r.link2Label||'')+'</a>';
   if(r.note)h+='<small style="flex-basis:100%">'+esc(r.note)+'</small>';
   // 12.11: YouTube takes a channel link here, no Google login and no leaving the monitor.
+  // 16.11: Fireflies takes the API key here. It goes only sealed, and never into the sent list on the phone.
+  if(r.ff&&!r.locked)h+='<div style="flex-basis:100%;display:flex;gap:6px;margin-top:6px"><input type="password" id="ffKey" dir="ltr" maxlength="200" autocomplete="off" placeholder="'+(r.on?'מפתח חדש, להחלפה':'מפתח API מ Fireflies')+'" style="flex:1;min-width:0;border-radius:10px;border:1px solid #ccd;padding:8px;font:15px Heebo,sans-serif"><button type="button" class="yb" data-ff="1">'+(r.on?'החלפה':'שמירה')+'</button></div><small style="flex-basis:100%">ב Fireflies: Settings, ואז Developer settings, ואז API Key. מעתיקים ומדביקים כאן. המפתח נשמר מוצפן ולא מופיע בצ׳אט.</small>';
   if(r.yt&&!r.locked)h+='<div style="flex-basis:100%;display:flex;gap:6px;margin-top:6px"><input type="url" id="ytUrl" dir="ltr" maxlength="300" placeholder="קישור לערוץ, לסרטון, או @שם" style="flex:1;min-width:0;border-radius:10px;border:1px solid #ccd;padding:8px;font:15px Heebo,sans-serif"><button type="button" class="yb" data-yt="1">'+(r.on?'החלפה':'שמירה')+'</button></div>'+(r.ytErr?'<small style="flex-basis:100%">'+esc(r.ytErr)+'</small>':'')+'<small style="flex-basis:100%">קוראים רק תגובות ציבוריות, בלי כניסה לחשבון. המוניטור לא מגיב ולא מוחק.</small>';
   h+='</div>';
  });
@@ -19794,6 +19796,13 @@ function connSheet(){
  function close(){w.remove();document.removeEventListener('keydown',esckey);}
  function esckey(e){if(e.key==='Escape')close();}
  w.onclick=function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-k');if(e.target===w||k==='')return close();
+  if(e.target.getAttribute&&e.target.getAttribute('data-ff')){
+   var fk=((document.getElementById('ffKey')||{}).value||'').trim();if(!fk){toast('להדביק את המפתח מ Fireflies.');return;}
+   if(!SEALING()){toast('כאן המפתח נכנס דרך IT Solution. כתוב לנו בבקשה ממנהל.');return;}
+   var fb=e.target;fb.disabled=true;
+   sendText('מפתח פיירפליס','🎙️ מפתח פיירפליס: '+fk,'משימה').then(function(){toast('נשלח. הפגישות יופיעו ב 🎙️ סיכומי פגישות תוך חצי שעה.');close();}).catch(function(){fb.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
+   return;
+  }
   if(e.target.getAttribute&&e.target.getAttribute('data-yt')){
    var u=((document.getElementById('ytUrl')||{}).value||'').trim();if(!u){toast('להדביק קישור לערוץ יוטיוב.');return;}
    var note='▶️ ערוץ יוטיוב: '+u,bt=e.target;bt.disabled=true;

@@ -267,6 +267,8 @@ systemctl is-active monitor-listen-$ID.service monitor-worker-$ID.timer monitor-
 
 # Itzik, 11.10: every customer gets big file uploads from day one, without asking.
 bash "$(dirname "$0")/enable-upload.sh" "$ID" || echo "העלאת קבצים גדולים לא הופעלה, להריץ setup/enable-upload.sh $ID"
+# 16.11.2026: meeting summaries from the first day; fireflies-pull.js leaves quietly until the key is pasted in 🔌.
+bash "$(dirname "$0")/enable-fireflies.sh" "$ID" || echo "פיירפליס לא הופעל, להריץ setup/enable-fireflies.sh $ID"
 if [ -n "${TIER:-}" ]; then echo "הקליטה מציעה פרופיל $TIER: cat setup/profiles/$TIER.env >> /etc/$ID.env (אחרי setup/apply-own-token.sh)"; fi
 # 11.11.2026, Itzik: the three trainings (sales, business, personal) and the notes app are installed by default in every
 # monitor. Notes are in TENANT_ALWAYS; the trainings need the customer's fast chat key (data/fastchat/tenants.json + its fc-key.txt).

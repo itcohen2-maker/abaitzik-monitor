@@ -88,3 +88,20 @@ test('a new Rivhit document from the chat goes to the Lolos PC at once; a custom
   assert.ok(/מיד `node pc-task\.js add --pc lolos --re <id>/.test(w));
   assert.ok(/מסמכים חשבונאיים, ומפיקים אותם רק בתוכנת הנהלת החשבונות של הלקוח/.test(w));
 });
+
+test('Fireflies key: saved into keys.json by the listener, masked in logs, the message never kept', () => {
+  const FK = require('../lib/fireflies-key.js');
+  const d = tmp();
+  fs.writeFileSync(path.join(d, 'keys.json'), JSON.stringify({ sealMsgs: 'x' }));
+  const key = 'abcd1234efgh5678ijkl9012';
+  assert.strictEqual(FK.parseMsg('משימה\n🎙️ מפתח פיירפליס: ' + key), key);
+  assert.ok(!FK.mask('🎙️ מפתח פיירפליס: ' + key).includes(key));
+  assert.strictEqual(FK.setKey(d, 'short').ok, false);
+  assert.strictEqual(FK.setKey(d, key).ok, true);
+  const k = JSON.parse(fs.readFileSync(path.join(d, 'keys.json'), 'utf8'));
+  assert.strictEqual(k.firefliesKey, key); assert.strictEqual(k.sealMsgs, 'x', 'other keys stay');
+  assert.ok(FK.hasKey(d));
+  assert.ok(FK.setKey(d, 'הסרה').removed); assert.ok(!FK.hasKey(d));
+  const L = fs.readFileSync(path.join(ROOT, 'listen.js'), 'utf8');
+  assert.ok(/fireflies-key\.js'\)\.mask\(text\)/.test(L) && /unlinkSync\(path\.join\(CHAT, name\)\); \} catch \(e\) \{ \/\* already gone/.test(L));
+});
