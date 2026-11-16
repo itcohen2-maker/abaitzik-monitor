@@ -5010,7 +5010,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
     papers after the 14.9 surgery, numbered like the reels. Private files only,
     never PUBLIC_FILES: this is pathology and a doctor's summary.
   -->
-  <button type="button" class="gt gMed" data-grp="day" id="gMed"><b>🩺 אחרי הניתוח השני</b><small>ממוספר. המסמכים מהביקורת אצל הפרופסור</small></button>
+  <button type="button" class="gt gMed" data-grp="day" data-upd="20261116-med" id="gMed"><b>🩺 אחרי הניתוח השני</b><small>ממוספר. המסמכים מהביקורת אצל הפרופסור</small></button>
   <!--
     1.10. Itzik, in a voice note: "תעשה לי כפתור של חשבוניות", ChatGPT, Claude
     and Google from August on (before that he filed them himself). Pulled from
@@ -19486,7 +19486,8 @@ on('gPen',penSheet);
   not here.
 */
 var MED_ITEMS=[
- {n:'01',t:'ביקורת אצל פרופ׳ גיא להט, 1.10, עם הפתולוגיה',r:'med-01-lahat-review.pdf'}
+ {n:'01',t:'ביקורת אצל פרופ׳ גיא להט, 1.10, עם הפתולוגיה',r:'med-01-lahat-review.pdf'},
+ {n:'02',t:'סיכום ביקור מעקב באיכילוב, 16.11, אונקולוגיה',r:'med-02-ichilov-20261116.pdf'}
 ];
 function medSheet(){
  var old=document.getElementById('mdSheet');if(old)old.remove();
