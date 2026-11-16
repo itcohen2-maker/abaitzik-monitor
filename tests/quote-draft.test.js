@@ -128,3 +128,9 @@ test('16.11: a comment that asks is a lead, a blessing is not; the manager line 
   assert.strictEqual(M.leadHuntItem(ok, now).st, 'warn');
   assert.strictEqual(require('../lib/leads.js').SOURCES['igc-own'], 'תגובה באינסטגרם של אבא איציק');
 });
+
+test('16.11: TikTok is open to customers once the app was approved', () => {
+  const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'lib', 'connections.js'), 'utf8');
+  assert.ok(/F\.tiktok === false/.test(src));
+  assert.ok(/d\.tiktok === false/.test(require('fs').readFileSync(require('path').join(__dirname, '..', 'setup.js'), 'utf8')));
+});

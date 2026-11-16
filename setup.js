@@ -54,7 +54,8 @@ function safeTok(t) { return /^[a-f0-9]{16,40}$/.test(String(t || '')) ? String(
 const OWN_SETUP = 'f837b9adea42a6f2ceda';
 function def(tok) {
   let d; try { d = JSON.parse(fs.readFileSync(path.join(DIR, tok + '.def.json'), 'utf8')); } catch (e) { return null; }
-  if (d && Array.isArray(d.steps) && tok !== OWN_SETUP && d.tiktok !== true) d.steps = d.steps.filter((st) => !(st && st.oauth && st.oauth.provider === 'tiktok'));
+  // 16.11.2026: TikTok approved the app (production keys), Itzik: "תפתח ללקוחות". Only a page with "tiktok": false still drops the card.
+  if (d && Array.isArray(d.steps) && tok !== OWN_SETUP && d.tiktok === false) d.steps = d.steps.filter((st) => !(st && st.oauth && st.oauth.provider === 'tiktok'));
   return d;
 }
 function state(tok) { try { return JSON.parse(fs.readFileSync(path.join(DIR, tok + '.json'), 'utf8')); } catch (e) { return { steps: {} }; } }
