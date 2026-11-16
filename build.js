@@ -4966,7 +4966,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
     tasks of today, and a peek at tomorrow.
   -->
   <button type="button" class="gt gMyDay" data-grp="day" id="gMyDay" data-new="1" data-upd="20261024-tdel"><b>📅 מה יש לי היום</b><small>תורים, תזכורות ומשימות של היום</small></button>
-  <button type="button" class="gt g18" data-grp="day" id="gAppts" data-upd="20261106-series"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
+  <button type="button" class="gt g18" data-grp="day" id="gAppts" data-upd="20261116-tests-img"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
   <button type="button" class="gt g16" data-grp="day" id="gRemind" data-upd="20261115-remsnooze"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
   <button type="button" class="gt g10 roundTile roundCap" id="gNotes" title="פתקים" aria-label="פתקים" data-upd="notes-caption-20261112"><span>📝</span><small>פתקים</small></button>
   <!-- 12.10, Itzik: "תקים אפליקציה לבדוק מה כל הקלקולים האלה". Every monitor's faults on one screen. -->
