@@ -81,3 +81,10 @@ test('business details come from data/biz-home/biz.json when instance.json has o
   assert.strictEqual(BH.bizInfo(root, d).name, 'IT Solution');
   assert.deepStrictEqual(BH.bizInfo(root), {});
 });
+
+test('a new Rivhit document from the chat goes to the Lolos PC at once; a customer gets an honest line', () => {
+  const w = fs.readFileSync(path.join(ROOT, 'worker.js'), 'utf8');
+  assert.ok(/מסמך חדש בריווחית \(תעודת משלוח/.test(w));
+  assert.ok(/מיד `node pc-task\.js add --pc lolos --re <id>/.test(w));
+  assert.ok(/מסמכים חשבונאיים, ומפיקים אותם רק בתוכנת הנהלת החשבונות של הלקוח/.test(w));
+});
