@@ -1540,9 +1540,14 @@ function tenantLinks(inst) {
 function tenantCircles(inst) {
   const n = Math.max(0, Math.min(8, Number(inst.emptyCircles) || 0));
   if (!n) return '';
-  const one = '\n   <button type="button" class="ic icEmpty"><span class="c c-empty" aria-hidden="true">+</span>ריק</button>';
-  return '\n  <div class="row" id="blkEmpty" role="group" aria-label="מקומות ריקים">' + one.repeat(n) + '\n  </div>'
-    + '\n  <p class="emptyNote">העיגולים ריקים. אפשר להוסיף בהם משהו, אם בא לך: לוחצים על אחד וכותבים מה.</p>';
+  // 16.11.2026: instance emptyNames: ["יצירת הדמיות"] names the first empty places (the rest stay "ריק").
+  // A tap still opens the request to the admin, prefilled, so the name is the wish, not a built feature.
+  const names = (Array.isArray(inst.emptyNames) ? inst.emptyNames : []).map((t) => String(t || '').replace(/[<>&"']/g, '').trim().slice(0, 30));
+  const one = (i) => '\n   <button type="button" class="ic icEmpty"><span class="c c-empty" aria-hidden="true">+</span>' + (names[i] || 'ריק') + '</button>';
+  let row = '';
+  for (let i = 0; i < n; i++) row += one(i);
+  const note = names.some(Boolean) ? '' : '\n  <p class="emptyNote">העיגולים ריקים. אפשר להוסיף בהם משהו, אם בא לך: לוחצים על אחד וכותבים מה.</p>';
+  return '\n  <div class="row" id="blkEmpty" role="group" aria-label="מקומות ריקים">' + row + '\n  </div>' + note;
 }
 /*
   14.10, Itzik by voice: the candle icon, the small round one, on Alon's and Rinat's
