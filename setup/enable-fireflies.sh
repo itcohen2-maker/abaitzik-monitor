@@ -14,6 +14,7 @@ cat > /etc/systemd/system/monitor-fireflies-$ID.service <<EOF
 Description=$ID meetings from Fireflies
 After=network-online.target
 [Service]
+UMask=0027
 User=$U
 Group=$U
 Environment=HOME=/home/$U
@@ -43,7 +44,7 @@ OnUnitActiveSec=30min
 [Install]
 WantedBy=timers.target
 EOF
-touch /var/log/monitor-fireflies-$ID.log
+touch /var/log/monitor-fireflies-$ID.log; chown "$U":"$U" /var/log/monitor-fireflies-$ID.log; chmod 640 /var/log/monitor-fireflies-$ID.log
 systemctl daemon-reload
 systemctl enable --now monitor-fireflies-$ID.timer
 echo "monitor-fireflies-$ID.timer: $(systemctl is-active monitor-fireflies-$ID.timer)"
