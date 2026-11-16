@@ -3119,7 +3119,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-16T03:31:49.164Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-16T03:32:24.331Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -5074,7 +5074,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='e1dbce008b';
+var CODE_ID='9c7f096a13';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -5632,7 +5632,7 @@ function render(){
   :'<div class="empty">'+(tab==='pending'?'התור ריק. כל מי שפנה קיבל תשובה.':'עוד לא נשלחו תשובות.')+'</div>';
  var C=D.contacts||[];
  document.getElementById('leads').innerHTML=C.length?C.map(leadRow).join('')
-  :'<div class="empty">אף אחד ברשימה עדיין.</div>';
+  :'<div class="empty">אף אחד ברשימה עדיין. כאן יופיע מי שפנה אלייך ברשתות או בהודעה ורוצה המשך. סריקת הבוקר מוסיפה אותם לבד, ואפשר גם לכתוב לי בצ׳אט מי פנה.</div>';
  var R=D.reports||[];
  var head=R.length>1?'<div class="rephint">הדוח האחרון פתוח. לחיצה על כותרת פותחת דוח קודם.</div>':'';
  document.getElementById('reports').innerHTML=R.length?head+R.map(reportRow).join('')
@@ -12069,7 +12069,9 @@ function personalSheet(){
  var SENT='✓ נרשם. המערכת עובדת על זה ותבנה לך את זה בהקדם.';
  var DW=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
  function whenTxt(w){if(!w)return '';var d=new Date(w.slice(0,10)+'T12:00:00');if(isNaN(d))return '';return 'יום '+DW[d.getDay()]+' '+d.getDate()+'.'+(d.getMonth()+1)+(w.length>10?' · '+w.slice(11,16):'');}
- var PS_GO=(INSTANCE&&INSTANCE.name)==='abaitzik'?{doctor:'appts',shop:'https://docs.google.com/document/d/1A2tvet0ucYNDoDclswaVDybuL8bir3OAerRzXtDUEPU/edit',pills:'kn'}:{};
+
+var PS_GO={doctor:'appts',shop:'https://docs.google.com/document/d/1A2tvet0ucYNDoDclswaVDybuL8bir3OAerRzXtDUEPU/edit',pills:'kn'};
+
  function tileHtml(t){var its=t.items||[],go=PS_GO[t.k]||'',tg=go?'button':'div';return '<'+tg+(go?' type="button" data-go="'+esc(go)+'"':'')+' id="ps-'+esc(t.k||t.t)+'" class="psT'+(its.length||(t.reqs||[]).length?' psWide':'')+'" style="--c:'+esc(t.c||'#efe2c6')+'"><i>'+esc(t.i)+'</i><div>'+esc(t.t)+(t.note?'<small>'+esc(t.note)+'</small>':'')
   +its.map(function(x){return '<small class="psIt">'+(x.src==='mail'?'📧 ':'')+esc(x.line)+(x.when?' · <b>'+esc(whenTxt(x.when))+'</b>':'')+'</small>';}).join('')
   +(t.reqs||[]).map(function(r){return '<small class="psIt">'+(r.state==='done'?'✓ ':'⏳ ')+esc(r.text)+'</small>';}).join('')+(go?'<small>'+(go==='kn'?'לפתוח את המרשמים':'לפתוח')+' ›</small>':'')+'</div></'+tg+'>';}

@@ -7639,7 +7639,8 @@ function render(){
   :'<div class="empty">'+(tab==='pending'?'התור ריק. כל מי שפנה קיבל תשובה.':'עוד לא נשלחו תשובות.')+'</div>';
  var C=D.contacts||[];
  document.getElementById('leads').innerHTML=C.length?C.map(leadRow).join('')
-  :'<div class="empty">אף אחד ברשימה עדיין.</div>';
+  // An empty list said nothing about who lands here or how, so it says both.
+  :'<div class="empty">אף אחד ברשימה עדיין. כאן יופיע מי שפנה אלייך ברשתות או בהודעה ורוצה המשך. סריקת הבוקר מוסיפה אותם לבד, ואפשר גם לכתוב לי בצ׳אט מי פנה.</div>';
  var R=D.reports||[];
  var head=R.length>1?'<div class="rephint">הדוח האחרון פתוח. לחיצה על כותרת פותחת דוח קודם.</div>':'';
  document.getElementById('reports').innerHTML=R.length?head+R.map(reportRow).join('')
@@ -16136,7 +16137,10 @@ function personalSheet(){
  var DW=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
  function whenTxt(w){if(!w)return '';var d=new Date(w.slice(0,10)+'T12:00:00');if(isNaN(d))return '';return 'יום '+DW[d.getDay()]+' '+d.getDate()+'.'+(d.getMonth()+1)+(w.length>10?' · '+w.slice(11,16):'');}
  // 15.11.2026, Itzik: "תורים לרופא זה תורים עתידיים, רשימת קניות יש לי כבר, אתה אמור לחבר". His page only.
- var PS_GO=(INSTANCE&&INSTANCE.name)==='abaitzik'?{doctor:'appts',shop:'https://docs.google.com/document/d/1A2tvet0ucYNDoDclswaVDybuL8bir3OAerRzXtDUEPU/edit',pills:'kn'}:{};
+ // Inside an ITZIK block so the shopping list address never ships in a customer's source; they get PS_GO={}.
+/*ITZIK:BEGIN*/
+var PS_GO={doctor:'appts',shop:'https://docs.google.com/document/d/1A2tvet0ucYNDoDclswaVDybuL8bir3OAerRzXtDUEPU/edit',pills:'kn'};
+/*ITZIK:END*/
  function tileHtml(t){var its=t.items||[],go=PS_GO[t.k]||'',tg=go?'button':'div';return '<'+tg+(go?' type="button" data-go="'+esc(go)+'"':'')+' id="ps-'+esc(t.k||t.t)+'" class="psT'+(its.length||(t.reqs||[]).length?' psWide':'')+'" style="--c:'+esc(t.c||'#efe2c6')+'"><i>'+esc(t.i)+'</i><div>'+esc(t.t)+(t.note?'<small>'+esc(t.note)+'</small>':'')
   +its.map(function(x){return '<small class="psIt">'+(x.src==='mail'?'📧 ':'')+esc(x.line)+(x.when?' · <b>'+esc(whenTxt(x.when))+'</b>':'')+'</small>';}).join('')
   +(t.reqs||[]).map(function(r){return '<small class="psIt">'+(r.state==='done'?'✓ ':'⏳ ')+esc(r.text)+'</small>';}).join('')+(go?'<small>'+(go==='kn'?'לפתוח את המרשמים':'לפתוח')+' ›</small>':'')+'</div></'+tg+'>';}
