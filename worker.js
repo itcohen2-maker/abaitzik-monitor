@@ -184,6 +184,8 @@ function waiting() {
   }).filter(Boolean);
   const answeredIds = new Set(all.filter((m) => m.from === 'claude' && m.re).map((m) => m.re));
   require('./lib/pc-handed.js')().forEach((re) => answeredIds.add(re));
+  // 16.11: a repeat of an answered message (same text, same minutes) is the same request.
+  require('./lib/twin-answer.js').twinIds(all, answeredIds).forEach((id) => answeredIds.add(id));
   const done = readJson(SEEN, {});
   const now = Date.now();
   return all.filter((m) => m.from === 'itzik')
@@ -245,10 +247,14 @@ function answeredIds() {
   let files = [];
   const out = require('./lib/pc-handed.js')();
   try { files = fs.readdirSync(CHAT); } catch (e) { return out; }
+  const records = [];
   files.forEach((f2) => {
     const d = readJson(path.join(CHAT, f2), null);
     if (d && d.from === 'claude' && d.re) out.add(d.re);
+    if (d && d.from === 'itzik' && d.id) records.push(d);
   });
+  // 16.11: a repeat of an answered message (same text, same minutes) is answered by its twin.
+  require('./lib/twin-answer.js').twinIds(records, out).forEach((id) => out.add(id));
   return out;
 }
 function unanswered(list) {
