@@ -5063,7 +5063,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   <!-- 13.10. Itzik: "תעשה תקייה של טום ממליץ ואריח טום ממליץ". Scripts of
        Tom's posts, four ad images, the site copy, and the draft of his own site. -->
   <!-- 13.10 night: the Clalit agreement moved inside the lecture tile (item 05). -->
-  <button type="button" class="gt gGviya" data-grp="work" id="gGviya" data-new="1"><b>📞 גבייה, יואל</b><small>דף שיואל מסמן, כל סימון מעדכן אותך</small></button>
+  <button type="button" class="gt gGviya" data-grp="work" id="gGviya" data-new="1"><b>📞 גבייה, יואל ונחמן</b><small>יואל או נחמן, לבחירה</small></button>
   <button type="button" class="gt gShop" data-grp="home" id="gShopList"><b>🛒 קניות</b><small>רשימת הקניות המשותפת בדרייב</small></button>
   <!-- 12.10 alarm tile: moved 13.10 to the round icons, see gAlarm next to gStk. -->
   <!--
@@ -19626,7 +19626,37 @@ function planSheet(){
 }
 on('gContentPlan',planSheet);
 on('gShopList',function(){window.open('https://docs.google.com/document/d/1A2tvet0ucYNDoDclswaVDybuL8bir3OAerRzXtDUEPU/edit','_blank','noopener');});
-on('gGviya',function(){window.open('https://lolos.abaitzik.com/gviya/1abf2a1f563a0fb3a7/','_blank','noopener');});
+// 16.11.2026, Itzik: the settling page with Nachman moved here from the lawyer tile ("שם יהיה לי אפשרות, או את נחמן או את יואל").
+// The tile opens a choice: Yoel's collection page, or Itzik's own view of the Nachman page (with the tracker; never Nachman's link,
+// which locks on the first phone that opens it).
+function gviyaSheet(){
+ var old=document.getElementById('ySheet');if(old)old.remove();
+ var w=document.createElement('div');
+ w.id='ySheet';w.className='ysheet';
+ w.setAttribute('role','dialog');
+ w.setAttribute('aria-label','גבייה');
+ w.innerHTML='<div class="ycard">'
+  +'<b>📞 גבייה</b>'
+  +'<small>למי לפתוח?</small>'
+  +'<button type="button" class="yb yb1" data-y="yoel">יואל, דף הגבייה</button>'
+  +'<button type="button" class="yb yb2" data-y="nachman">🤝 נחמן, ההתחשבנות</button>'
+  +'<button type="button" class="yb yx" data-y="close">סגירה</button>'
+  +'</div>';
+ function close(){w.remove();document.removeEventListener('keydown',esckey);}
+ function esckey(e){if(e.key==='Escape')close();}
+ w.onclick=function(e){
+  if(e.target===w)return close();
+  var k=e.target.getAttribute&&e.target.getAttribute('data-y');
+  if(!k)return;
+  if(k==='yoel')window.open('https://lolos.abaitzik.com/gviya/1abf2a1f563a0fb3a7/','_blank','noopener');
+  else if(k==='nachman')window.open('https://form.it-solution.co.il/l/f11b90f2fbc3806344c6/view','_blank','noopener');
+  close();
+ };
+ document.addEventListener('keydown',esckey);
+ document.body.appendChild(w);
+ var first=w.querySelector('.yb');if(first)first.focus();
+}
+on('gGviya',gviyaSheet);
 // 15.10 Itzik: the stories archive tile came off the screen for good; its button and handler are gone.
 // (15.10 later: that line was a one line /* */ comment followed by code, and the build's comment
 // stripper took it as the start of a block that ran to the next standalone */, which swallowed the
