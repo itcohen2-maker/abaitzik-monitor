@@ -53,6 +53,7 @@ test('the page puts 🧾 back on this phone and blinks it softly; no 120 upsell 
   assert.ok(/bqMonSeen/.test(js) && /updblink/.test(js) && /tilesHidden/.test(js));
   assert.ok(!/120 ₪/.test(js), 'the 120 a month offer is gone since 14.11');
   assert.ok(/\/api\/quote\/save/.test(js));
+  assert.ok(/\/api\/quote\/list/.test(js), 'the page reads its saved quotes back');
 });
 
 test('Israel offset: +02:00 in winter, +03:00 in summer; no prompt says +03:00 for every day', () => {

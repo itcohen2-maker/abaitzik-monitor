@@ -1476,10 +1476,12 @@ const server = http.createServer(function (q, s) {
     return;
   }
   /*
-    16.11.2026: a quote made in 🧾 is kept in the customer's own data/biz-home/quotes.json (lib/biz-home.js addQuote),
-    not only on the phone that made it. Same visit key check as /api/csign/create.
+    16.11.2026: a quote made in 🧾 is kept on our side, data/tenant-quotes/<customer>/biz-home/quotes.json (lib/biz-home.js
+    addQuote), not only on the phone that made it. This service runs as monitor and can not write into a customer's home,
+    so it stays here, like the signatures, and /api/quote/list hands it back to his page. Same visit key check as
+    /api/csign/create.
   */
-  if (u.pathname === '/api/quote/save') {
+  if (u.pathname === '/api/quote/save' || u.pathname === '/api/quote/list') {
     const origin = q.headers.origin || '';
     const h = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', Vary: 'Origin' };
     if (originOk(origin)) { h['Access-Control-Allow-Origin'] = origin; h['Access-Control-Allow-Headers'] = 'Content-Type'; h['Access-Control-Allow-Methods'] = 'POST, OPTIONS'; }
@@ -1489,9 +1491,12 @@ const server = http.createServer(function (q, s) {
       let b; try { b = JSON.parse(raw.toString('utf8')); } catch (e) { s.writeHead(400, h); return s.end('{}'); }
       const vn = require('./lib/visits.js').nameByKey(DATA, b.key);
       if (!vn || !/^[a-z0-9-]{1,32}$/.test(String(vn))) { s.writeHead(403, h); return s.end('{"error":"key"}'); }
-      let dir = ''; try { dir = JSON.parse(fs.readFileSync(path.join(DATA, 'tenants', 'tenants', vn + '.json'), 'utf8')).dir || ''; } catch (e) {}
-      if (!dir) dir = '/home/' + vn + '/' + vn + '-monitor';
-      let r = null; try { r = require('./lib/biz-home.js').addQuote(path.join(dir, 'data'), b.q, 'owner'); } catch (e) { log('!! quote save ' + vn + ': ' + e.message); }
+      const qdir = path.join(DATA, 'tenant-quotes', String(vn));
+      if (u.pathname === '/api/quote/list') {
+        let l = []; try { l = require('./lib/biz-home.js').readList(qdir, 'quote').slice(-40); } catch (e) { /* none yet */ }
+        s.writeHead(200, h); return s.end(JSON.stringify({ quotes: l }));
+      }
+      let r = null; try { r = require('./lib/biz-home.js').addQuote(qdir, b.q, 'owner'); } catch (e) { log('!! quote save ' + vn + ': ' + e.message); }
       if (!r) { s.writeHead(400, h); return s.end('{"error":"quote"}'); }
       log('quote saved ' + vn + ' ' + r.id);
       s.writeHead(200, h); s.end(JSON.stringify({ ok: true, id: r.id }));
