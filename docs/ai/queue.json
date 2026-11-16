@@ -281,9 +281,17 @@
   "ytd": "הטלפון לא צריך להאזין לכם כדי לדעת מה לפרסם: מיקום משותף עם חברים, חיפושים באותה רשת וויפיי ופרופיל התנהגות עושים את העבודה. קרה לכם שדיברתם על משהו, וקיבלתם פרסומת מוזרה? מקור: Kaspersky, Is Your Phone Listening to You.",
   "song": "",
   "song_tt": "",
-  "posted": false,
-  "postedAt": null,
-  "approvedAt": "2026-11-15T06:00:45.408Z"
+  "posted": true,
+  "postedAt": "2026-11-16T18:02:19.865Z",
+  "approvedAt": "2026-11-15T06:00:45.408Z",
+  "auto": {
+   "reel": "18103807934181256",
+   "story": "18025708604715685",
+   "storyError": null,
+   "page": "2188843375039775",
+   "pageError": null,
+   "channel": "itsolution.ai"
+  }
  },
  {
   "id": "adlisten-en",
