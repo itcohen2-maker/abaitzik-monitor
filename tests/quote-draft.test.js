@@ -32,7 +32,7 @@ test('quote-draft.js writes the draft and removes the draft file', () => {
   const dir = path.join(d, 'data', 'biz-home'); fs.mkdirSync(dir, { recursive: true });
   const f = path.join(dir, 'draft-test.json');
   fs.writeFileSync(f, JSON.stringify({ client: 'בדיקה', items: [['הקמה', 1, 490]], disc: 10 }));
-  const out = JSON.parse(execFileSync('node', [path.join(ROOT, 'quote-draft.js'), f], { cwd: ROOT, env: Object.assign({}, process.env, { MONITOR_INSTANCE: path.join(d, 'instance.json') }), encoding: 'utf8' }).trim());
+  const out = JSON.parse(execFileSync('node', [path.join(ROOT, 'quote-draft.js'), f], { cwd: ROOT, env: Object.assign({}, process.env, { ABAITZIK_INSTANCE_FILE: path.join(d, 'instance.json') }), encoding: 'utf8' }).trim());
   assert.strictEqual(out.ok, true);
   assert.strictEqual(out.net, 441);
 });
