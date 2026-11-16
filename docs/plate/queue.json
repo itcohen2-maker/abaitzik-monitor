@@ -476,7 +476,9 @@
     ]
    }
   ],
-  "onSite": false
+  "onSite": false,
+  "posted": true,
+  "postedAt": "2026-11-15T10:00:00.000Z"
  },
  {
   "id": "adashim",
