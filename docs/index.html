@@ -3203,7 +3203,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-16T14:41:16.474Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-16T14:43:27.777Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -5151,7 +5151,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='03cebc8cfd';
+var CODE_ID='41a3fbd98b';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -11506,6 +11506,7 @@ function postSheet(it){
   function btn(label,x){texts.push(x);return '<button type="button" class="pcp" data-i="'+(texts.length-1)+'" data-l="'+esc(label)+'">'+label+'</button>';}
   function song(x,label){return '<div class="psong">🎵 '+label+': '+esc(x)+'</div>'+btn('העתקת שם השיר',x).replace('class="pcp"','class="pcp psm"');}
   var h='<b>'+esc(it.n)+'</b>';
+  if(d.screen)h+='<h4>🖥️ כותרת על המסך</h4>'+box(d.screen)+btn('📋 העתקת הכותרת',d.screen);
   h+='<h4>אינסטגרם</h4>'+box(d.ig||'')+btn('📋 העתקה לאינסטגרם',d.ig||'')+song(d.song||'','שיר');
   h+='<h4>טיקטוק</h4>'+box(d.tt||'')+btn('📋 העתקה לטיקטוק',d.tt||'');
   if(d.pin)h+='<div class="psong">📌 תגובה לנעוץ</div>'+box(d.pin)+btn('📋 העתקת התגובה',d.pin);

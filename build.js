@@ -15407,6 +15407,8 @@ function postSheet(it){
   function btn(label,x){texts.push(x);return '<button type="button" class="pcp" data-i="'+(texts.length-1)+'" data-l="'+esc(label)+'">'+label+'</button>';}
   function song(x,label){return '<div class="psong">🎵 '+label+': '+esc(x)+'</div>'+btn('העתקת שם השיר',x).replace('class="pcp"','class="pcp psm"');}
   var h='<b>'+esc(it.n)+'</b>';
+  // 16.11, Itzik: the title he types on the screen in Instagram, kept apart so he can copy it alone
+  if(d.screen)h+='<h4>🖥️ כותרת על המסך</h4>'+box(d.screen)+btn('📋 העתקת הכותרת',d.screen);
   h+='<h4>אינסטגרם</h4>'+box(d.ig||'')+btn('📋 העתקה לאינסטגרם',d.ig||'')+song(d.song||'','שיר');
   h+='<h4>טיקטוק</h4>'+box(d.tt||'')+btn('📋 העתקה לטיקטוק',d.tt||'');
   if(d.pin)h+='<div class="psong">📌 תגובה לנעוץ</div>'+box(d.pin)+btn('📋 העתקת התגובה',d.pin);
