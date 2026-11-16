@@ -27,7 +27,7 @@ const STATE = path.join(inst.dataPath, 'manager', 'fault-mail.json');
 const WORK_DIR = path.join(inst.dataPath, 'manager', 'work');
 const LINE = /^\[(\d+)\] (\d{2})\.(\d{2})\.(\d{4}) (\d{2}):(\d{2}) \| (.*)$/;
 const FAULT = /(בודק המוניטורים|השומר מצא תקלה|נשארה בלי תשובה|לא עלה|לא עובד|לא עובדת|לא נפתח|לא נשלח|נכשל|נכשלה|תקלה|שגיאה|נפל|תקוע|נתקע|בלי תגובה|אבטחה)/;
-const NOT = /(הכל תקין|תקין שוב|^המנהל|צריכת טוקנים)/;
+const NOT = /(הכל תקין|תקין שוב|^✅ |^המנהל|צריכת טוקנים)/;
 const SYSTEM = /info@it-solution\.co\.il/i;
 const MAX_RUN = 3, MAX_DAY = 10;
 
