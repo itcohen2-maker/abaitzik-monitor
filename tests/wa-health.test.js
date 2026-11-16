@@ -75,6 +75,29 @@ test('log: a failed send that went out later is fine; Meta failures and a stoppe
   assert.match(p.join(' '), /131042/);
 });
 
+test('repair: a missed answer goes back on the waiting list (at most 3 times), a stopped bridge is restarted', () => {
+  const s = setup();
+  s.w(s.chat, 'q1.json', { from: 'itzik', at: iso(120), id: 'wa-1', text: 'שיחה\nהצעת מחיר' });
+  s.w(s.chat, 'a1.json', { from: 'claude', at: iso(100), re: 'wa-1', text: 'הנה' });
+  s.w(s.tchat, 'new.json', { from: 'itzik', at: iso(60), id: 'fc-2', text: 'שיחה\nאחרי החיבור' });
+  s.w(s.tchat, 'newa.json', { from: 'claude', at: iso(50), re: 'fc-2', text: 'תשובה' });
+  const sp = path.join(s.data, 'status', 'wa-bridge.json');
+  fs.writeFileSync(sp, JSON.stringify({ pending: {}, sent: {} }));
+  const h = H.check({ dataPath: s.data, now: NOW, logText: '', isActive: () => false });
+  let restarted = 0; const tries = {};
+  const done = H.repair(h, { dataPath: s.data, tries, restart: () => { restarted++; } });
+  assert.strictEqual(restarted, 1);
+  assert.match(done.join(' '), /הגשר הופעל מחדש/); assert.match(done.join(' '), /2 תשובות הוחזרו/);
+  const st = JSON.parse(fs.readFileSync(sp, 'utf8'));
+  assert.deepStrictEqual(st.pending['wa-1'], { to: '972500000001', at: Date.parse(iso(100)) - 30e3, name: '', page: true });
+  assert.strictEqual(st.pending['fc-2'].tenant, 'pablo'); assert.strictEqual(st.pending['fc-2'].to, '972500000002');
+  H.repair(h, { dataPath: s.data, tries, restart: () => {} }); H.repair(h, { dataPath: s.data, tries, restart: () => {} });
+  fs.writeFileSync(sp, JSON.stringify({ pending: {}, sent: {} }));
+  const last = H.repair(h, { dataPath: s.data, tries, restart: () => {} });
+  assert.ok(!/הוחזר/.test(last.join(' ')));
+  assert.deepStrictEqual(JSON.parse(fs.readFileSync(sp, 'utf8')).pending, {});
+});
+
 test('manager 💬 line: done when clean, warn with the first problem, none on a customer monitor', () => {
   assert.strictEqual(M.waItem(undefined), null);
   const ok = M.waItem({ active: true, logRead: true, monitors: [{ name: 'abaitzik', missed: 0 }, { name: 'pablo', missed: 0 }], fails: [] });
