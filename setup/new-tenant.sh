@@ -250,12 +250,13 @@ EOF
 caddy validate --config /etc/caddy/Caddyfile >/dev/null 2>&1 && systemctl reload caddy
 
 # lock the customer's own settings, register with Itzik's monitor, keep alive
+# 16.11.2026, Itzik: the code goes into the record too, so his monitors screen shows it.
 chattr +i instance.json data/profile.md
 sudo -u monitor node -e '
 const fs=require("fs"),f=process.argv[1]+"/"+process.argv[2]+".json";
 fs.mkdirSync(process.argv[1],{recursive:true});
-fs.writeFileSync(f,JSON.stringify({id:process.argv[2],title:process.argv[3],dir:process.argv[4],listener:"monitor-listen-"+process.argv[2],timer:"monitor-worker-"+process.argv[2]+".timer",state:"unknown",problems:[],selfSync:true,user:process.argv[5],host:process.argv[6],requests:[]},null,1));
-' "$TEN" "$ID" "$TITLE" "$DIR" "$U" "$HOST"
+fs.writeFileSync(f,JSON.stringify({id:process.argv[2],title:process.argv[3],dir:process.argv[4],listener:"monitor-listen-"+process.argv[2],timer:"monitor-worker-"+process.argv[2]+".timer",state:"unknown",problems:[],selfSync:true,user:process.argv[5],host:process.argv[6],requests:[],code:process.argv[7]||""},null,1));
+' "$TEN" "$ID" "$TITLE" "$DIR" "$U" "$HOST" "$(cut -d' ' -f1 /root/tenant-codes/$ID.txt 2>/dev/null)"
 grep -q "monitor-listen-$ID.service" /usr/local/bin/monitor-keepalive.sh || \
   sed -i -E 's#^(monitor-watchdog-ily\.timer\|[^"]*)"#\1\nmonitor-listen-'"$ID"'.service|'"$DIR"'\nmonitor-worker-'"$ID"'.timer|'"$DIR"'\nmonitor-watchdog-'"$ID"'.timer|'"$DIR"'\nmonitor-sync-'"$ID"'.timer|'"$DIR"'"#' /usr/local/bin/monitor-keepalive.sh
 
