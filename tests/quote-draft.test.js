@@ -64,3 +64,20 @@ test('Israel offset: +02:00 in winter, +03:00 in summer; no prompt says +03:00 f
     assert.ok(!/ISO עם \+03:00/.test(fs.readFileSync(path.join(ROOT, f), 'utf8')), f);
   }
 });
+
+test('a quote is a document: the worker sends a PDF, never a WhatsApp text to the client', () => {
+  const w = fs.readFileSync(path.join(ROOT, 'worker.js'), 'utf8');
+  assert.ok(!/לנסח הודעה, הצעה או תשובה/.test(w), 'the message rule no longer says הצעה');
+  assert.ok(/quote-draft\.js <הקובץ> --pdf/.test(w));
+  const html = require('../lib/csign.js').pdfHtml({ q: require('../lib/csign.js').clean({ no: '1001', client: 'רינת', items: [['ייעוץ', 1, 1500]] }), biz: { name: 'IT Solution', vat: '028445518' }, logo: '' });
+  assert.ok(/size:A4/.test(html) && /IT Solution/.test(html) && /028445518/.test(html));
+});
+
+test('business details come from data/biz-home/biz.json when instance.json has only biz: true', () => {
+  const d = tmp(), root = tmp();
+  fs.writeFileSync(path.join(root, 'instance.json'), JSON.stringify({ biz: true }));
+  fs.mkdirSync(path.join(d, 'biz-home'), { recursive: true });
+  fs.writeFileSync(path.join(d, 'biz-home', 'biz.json'), JSON.stringify({ name: 'IT Solution', vat: '028445518' }));
+  assert.strictEqual(BH.bizInfo(root, d).name, 'IT Solution');
+  assert.deepStrictEqual(BH.bizInfo(root), {});
+});
