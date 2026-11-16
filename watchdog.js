@@ -84,6 +84,7 @@ function snapshot(now) {
   try { files = fs.readdirSync(CHAT); } catch (e) { return null; }
   const all = files.map((f) => readJson(path.join(CHAT, f), null)).filter(Boolean);
   const answered = new Set(all.filter((m) => m.from === 'claude' && m.re).map((m) => m.re));
+  require("./lib/twin-answer.js").twinIds(all, answered).forEach((id) => answered.add(id));
   const words = (m) => (own ? { t: String(m.text || '').replace(/\s+/g, ' ').slice(0, 60) } : {});
   const waiting = all.filter((m) => m.from === 'itzik' && m.status !== 'done' && !(m.id && answered.has(m.id))
     && now - Date.parse(m.at) < 3 * 24 * 3600 * 1000)
@@ -160,6 +161,8 @@ function check(now) {
   const all = files.map((f) => { const d = readJson(path.join(CHAT, f), null); return d ? Object.assign({ file: f }, d) : null; }).filter(Boolean);
   const answered = new Set(all.filter((m) => m.from === 'claude' && m.re).map((m) => m.re));
   require('./lib/pc-handed.js')().forEach((re) => answered.add(re));
+  // 16.11: a repeat of an answered message (same text, same minutes) is answered by its twin, as the worker counts it.
+  require("./lib/twin-answer.js").twinIds(all, answered).forEach((id) => answered.add(id));
   // When each message was first answered. 5.10 13:19: three answers landed a
   // moment before their messages were marked done, and that gap alone woke him.
   // Only an answer that has sat ten minutes without the done mark is a fault.
