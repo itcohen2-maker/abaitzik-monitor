@@ -30,6 +30,17 @@ const DRY = process.argv.includes('--dry');
 // Two at once is plenty for one PC and one Chrome.
 const MAX_LIVE = 2;
 const MAX_SESSION_MS = 30 * 60 * 1000;
+/*
+  16.11.2026: Alon's theatre requests sat in his own queue (/home/alon/alon-monitor/data/pc/pc)
+  since 16.10, because no computer ever asked it: the theatre's code is on this PC, and only
+  Itzik's queue was pulled. A customer without a computer of his own, whose work lives here,
+  is listed below. After Itzik's queue this PC asks theirs too, as their own user, and the
+  answer, the usage and a failure go back to the same queue, so the reply lands in his thread.
+*/
+const HELPED = ['alon'];
+const QUEUES = [{ name: '', dir: REMOTE, user: 'monitor' }]
+  .concat(HELPED.map((n) => ({ name: n, dir: '/home/' + n + '/' + n + '-monitor', user: n })));
+function queueOf(name) { return QUEUES.find((q) => q.name === (name || '')) || QUEUES[0]; }
 
 function say(line) {
   const l = new Date().toISOString() + ' ' + line;
@@ -57,9 +68,10 @@ function setLive(pid, v) {
 }
 
 // One command on the server, as the monitor user, with optional stdin.
-function remote(args, input) {
+function remote(args, input, q) {
+  q = q || QUEUES[0];
   return new Promise((resolve) => {
-    const cmd = 'cd ' + REMOTE + ' && sudo -u monitor node pc-task.js ' + args;
+    const cmd = 'cd ' + q.dir + ' && sudo -u ' + q.user + ' node pc-task.js ' + args;
     const c = spawn('ssh', ['-i', KEY, '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=15', HOST, cmd], { windowsHide: true });
     let out = '', err = '';
     c.stdout.on('data', (b) => { out += b; });
@@ -78,6 +90,7 @@ function prompt(t) {
     '',
     'כללי הבית: הפעל את הסקיל abaitzik-onboarding לפני שאתה נוגע במשהו. הכללים האדומים בתוקף.',
     '',
+    t._q ? 'המשימה הזו מהמוניטור של ' + t._q + ', לקוח של ' + inst.owner + ', והתשובה חוזרת אליו.' : '',
     'ההודעה המקורית שלו:',
     String(t.message || '(לא נמצאה)'),
     '',
@@ -191,34 +204,40 @@ async function main() {
   const live = liveNow();
   const room = MAX_LIVE - Object.keys(live).length;
   if (room <= 0) return;
-  for (let i = 0; i < room; i++) {
-    const r = await remote('next');
-    if (r.code !== 0) { say('!! השרת לא ענה: ' + (r.err || r.code).toString().trim().slice(0, 200)); return; }
-    const line = r.out.trim();
-    if (!line) return;
-    let t;
-    try { t = JSON.parse(line); } catch (e) { say('!! תשובה לא מובנת מהשרת: ' + line.slice(0, 200)); return; }
-    if (DRY) { say('יש משימה (dry, לא מבצע ולא מחזיר): ' + t.id); return; }
-    // Each task in its own detached process, so a long one never holds the
-    // scheduled task and the next minute can pick up another.
-    const c = spawn(process.execPath, [__filename, '--task', Buffer.from(line).toString('base64')],
-      { cwd: HERE, detached: true, stdio: 'ignore', windowsHide: true });
-    c.unref();
+  let left = room;
+  for (const q of QUEUES) {
+    while (left > 0) {
+      const r = await remote('next', '', q);
+      if (r.code !== 0) { say('!! השרת לא ענה' + (q.name ? ' (' + q.name + ')' : '') + ': ' + (r.err || r.code).toString().trim().slice(0, 200)); break; }
+      const line = r.out.trim();
+      if (!line) break;
+      let t;
+      try { t = JSON.parse(line); } catch (e) { say('!! תשובה לא מובנת מהשרת: ' + line.slice(0, 200)); break; }
+      if (q.name) t._q = q.name;
+      if (DRY) { say('יש משימה (dry, לא מבצע ולא מחזיר): ' + t.id + (q.name ? ' של ' + q.name : '')); return; }
+      // Each task in its own detached process, so a long one never holds the
+      // scheduled task and the next minute can pick up another.
+      const c = spawn(process.execPath, [__filename, '--task', Buffer.from(JSON.stringify(t)).toString('base64')],
+        { cwd: HERE, detached: true, stdio: 'ignore', windowsHide: true });
+      c.unref();
+      left--;
+    }
   }
 }
 
 async function one(b64) {
   const t = JSON.parse(Buffer.from(b64, 'base64').toString('utf8'));
+  const q = queueOf(t._q);
   const res = await work(t);
   if (res.usage) {
-    const u = await remote('usage ' + t.id, JSON.stringify(res.usage));
+    const u = await remote('usage ' + t.id, JSON.stringify(res.usage), q);
     if (u.code !== 0) say('!! הצריכה לא נרשמה: ' + t.id + ' ' + u.err.trim().slice(-120));
   }
   if (res.ok) {
-    const r = await remote('done ' + t.id, res.text);
+    const r = await remote('done ' + t.id, res.text, q);
     say((r.code === 0 ? 'הוחזר לשרת: ' : '!! ההחזרה נכשלה: ') + t.id + ' ' + r.err.trim().slice(-200));
   } else {
-    const r = await remote('fail ' + t.id, res.why);
+    const r = await remote('fail ' + t.id, res.why, q);
     say('!! ' + t.id + ' נכשל (' + r.out.trim() + '): ' + res.why.slice(0, 200));
   }
 }
