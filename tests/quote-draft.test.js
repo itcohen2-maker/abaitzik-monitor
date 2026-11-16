@@ -111,3 +111,20 @@ test('16.11: the manager round builds with now as a number (a LinkedIn queue cra
   const r = M.build({ now: Date.now(), linkedin: [{ date: '2026-11-17' }] });
   assert.ok(r && Array.isArray(r.items));
 });
+
+test('16.11: a comment that asks is a lead, a blessing is not; the manager line says what the hunt found', () => {
+  const I = require('../lib/lead-intent.js');
+  for (const s of ['פרטים', 'כמה זה עולה?', 'מוניטור', 'אשמח לפרטים בפרטי', 'איך מצטרפים?', 'אפשר להזמין אותך להרצאה?', 'שלחתי לך הודעה'])
+    assert.ok(I.isLead(s), s);
+  for (const s of ['רפואה שלמה 🙏', 'השראה❤️', 'אתה מלך', 'בהצלחה🙌', 'גם הלחם לא שיא הבריאות'])
+    assert.ok(!I.isLead(s), s);
+  const M = require('../lib/manager.js');
+  const now = Date.now(), at = new Date(now - 5 * 60000).toISOString();
+  const ok = [{ f: 'lead-scan.json', name: 'IT Solution', maxMin: 40, s: { at, ok: true } }, { f: 'social-dm.json', name: 'הודעות', maxMin: 40, s: { at } },
+    { f: 'comment-leads.json', name: 'תגובות', maxMin: 60, s: { at, ok: true, today: { scanned: 318, added: 1 } } }];
+  const a = M.leadHuntItem(ok, now);
+  assert.strictEqual(a.st, 'done'); assert.ok(/318/.test(a.sub) && /1 לידים/.test(a.sub));
+  ok[2].s.at = new Date(now - 3 * 3600000).toISOString();
+  assert.strictEqual(M.leadHuntItem(ok, now).st, 'warn');
+  assert.strictEqual(require('../lib/leads.js').SOURCES['igc-own'], 'תגובה באינסטגרם של אבא איציק');
+});

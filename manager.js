@@ -40,6 +40,16 @@ const inp = M.gather(dataPath, __dirname, now);
 // 10.11: the setup forms that came back are pulled into the customers' monitors first (lib/setup-intake.js); --dry only reads the last result
 inp.intake = (() => { try { return DRY ? JSON.parse(fs.readFileSync(path.join(dataPath, 'setup-intake', 'summary.json'), 'utf8')) : require('./lib/setup-intake.js').managerRound({ data: dataPath }); } catch (e) { log('intake: ' + String(e.message).slice(0, 100)); return null; } })();
 const m = M.build(inp);
+// 16.11.2026, Itzik: "שתמיד יחפש ליד". A lead scanner that stopped is run once here, then the card says what was found today.
+try {
+  const SCAN = { 'lead-scan.json': 'lead-scan.js', 'social-dm.json': 'social-dm.js', 'comment-leads.json': 'comment-leads.js' };
+  let hunt = M.leadHuntState(dataPath);
+  if (!DRY && M.leadHuntItem(hunt, Date.now()).st === 'warn') {
+    hunt.forEach((h) => { if (!h.s || Date.now() - Date.parse(h.s.at || 0) > h.maxMin * 60000) { log('lead hunt: running ' + SCAN[h.f] + ' again'); run('node', [SCAN[h.f]]); } });
+    hunt = M.leadHuntState(dataPath);
+  }
+  const li = M.leadHuntItem(hunt, Date.now()); if (li) m.items.push(li);
+} catch (e) { log('!! lead hunt: ' + e.message); }
 // 12.11.2026, Itzik: "המנהל צריך תמיד לבדוק את החיבורים שהם לא נשברים מהטופס למייל". Every round: the signup road (signup-check.js).
 // A warn is fixed by the PC like any problem on the card (the FIX loop below).
 try { const sc = JSON.parse(execFileSync('node', ['signup-check.js'], { cwd: __dirname, encoding: 'utf8', timeout: 120000 }).trim().split('\n').pop()); if (sc && sc.k) m.items.push({ k: sc.k, st: sc.st, t: sc.t, sub: sc.sub }); } catch (e) { m.items.push({ k: 'signup', st: 'warn', t: '📝 בדיקת ההרשמה לא רצה', sub: String(e.message).slice(0, 120) }); }
@@ -95,7 +105,7 @@ for (const a of (inp.approvals || [])) {
 // 11.11.2026, Itzik: "אני רוצה שהמנהל יבדוק 3 פעמים ביום ויטפל בבעיה או בבקשה".
 // Every round, each problem on the card (st warn) that is not his alone becomes one work order in the PC queue
 // (pc-task.js, full Claude with memory). Once per problem per day, at most 3 per round. The answer lands in his chat.
-const FIX_SKIP = new Set(['handle', 'cal', 'brief', 'leads', 'plate', 'status', 'linkedin', 'work']); // his own, or already a task elsewhere
+const FIX_SKIP = new Set(['handle', 'cal', 'brief', 'leads', 'leadhunt', 'plate', 'status', 'linkedin', 'work']); // his own, or already a task elsewhere
 const FIX_HIM = /(לשלם|תשלום|כסף|בנק|חתימ|דרכון|סלפי|לאשר|אישורך|באישורך|להתקשר|זיכוי)/;
 st.fixed = st.fixed || {};
 for (const k of Object.keys(st.fixed)) if (!k.startsWith(m.day)) delete st.fixed[k];
