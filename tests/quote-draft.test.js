@@ -105,3 +105,9 @@ test('Fireflies key: saved into keys.json by the listener, masked in logs, the m
   const L = fs.readFileSync(path.join(ROOT, 'listen.js'), 'utf8');
   assert.ok(/fireflies-key\.js'\)\.mask\(text\)/.test(L) && /unlinkSync\(path\.join\(CHAT, name\)\); \} catch \(e\) \{ \/\* already gone/.test(L));
 });
+
+test('16.11: the manager round builds with now as a number (a LinkedIn queue crashed it for a day)', () => {
+  const M = require('../lib/manager.js');
+  const r = M.build({ now: Date.now(), linkedin: [{ date: '2026-11-17' }] });
+  assert.ok(r && Array.isArray(r.items));
+});
