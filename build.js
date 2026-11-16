@@ -18090,7 +18090,17 @@ var TOM_ITEMS=[
  {n:"4",t:"📣 קמפיין · ✅ באוויר מ 14.11 · 🎬 איליי, המוניטור · אנימציות קלות · לשבוע התנסות",r:"ilay-1411-animatziot.mp4"},
  {n:"3",t:"📣 קמפיין · ✅ באוויר מ 14.11 · 🎬 איליי, המוניטור · מסכים · לשבוע התנסות",r:"ilay-1411-masachim.mp4"},
  {n:"2",t:"📣 קמפיין · ✅ באוויר מ 14.11 · 🎬 איליי, המוניטור · מפוצץ · לשבוע התנסות",r:"ilay-1411-mefotzatz.mp4"},
- {n:"1",t:"📣 קמפיין · ✅ באוויר מ 14.11 · 🎬 איליי, המוניטור · נקי · לשבוע התנסות",r:"ilay-1411-naki.mp4"}
+ {n:"1",t:"📣 קמפיין · ✅ באוויר מ 14.11 · 🎬 איליי, המוניטור · נקי · לשבוע התנסות",r:"ilay-1411-naki.mp4"},
+// 16.11.2026, Itzik: "אני צריך סרטונים לסטטוס ולסטורי. השינוי הוא בסוף בקישור ובהפנייה". Ilay's four campaign videos with
+// a new end card to it-solution.co.il/start (signup): the status one says the link is below, the story one says press the link.
+ {n:"100",t:"📲 לסטטוס · 🎬 איליי, המוניטור · אנימציות קלות · להרשמה",r:"ilay-1411-animatziot-status.mp4"},
+ {n:"101",t:"📲 לסטורי · 🎬 איליי, המוניטור · אנימציות קלות · להרשמה",r:"ilay-1411-animatziot-story.mp4"},
+ {n:"102",t:"📲 לסטטוס · 🎬 איליי, המוניטור · מסכים · להרשמה",r:"ilay-1411-masachim-status.mp4"},
+ {n:"103",t:"📲 לסטורי · 🎬 איליי, המוניטור · מסכים · להרשמה",r:"ilay-1411-masachim-story.mp4"},
+ {n:"104",t:"📲 לסטטוס · 🎬 איליי, המוניטור · מפוצץ · להרשמה",r:"ilay-1411-mefotzatz-status.mp4"},
+ {n:"105",t:"📲 לסטורי · 🎬 איליי, המוניטור · מפוצץ · להרשמה",r:"ilay-1411-mefotzatz-story.mp4"},
+ {n:"106",t:"📲 לסטטוס · 🎬 איליי, המוניטור · נקי · להרשמה",r:"ilay-1411-naki-status.mp4"},
+ {n:"107",t:"📲 לסטורי · 🎬 איליי, המוניטור · נקי · להרשמה",r:"ilay-1411-naki-story.mp4"}
 ];
 function tomSheet(){
  var old=document.getElementById('tomSheet');if(old)old.remove();
