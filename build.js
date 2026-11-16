@@ -16926,7 +16926,7 @@ function tidyRemove(w,c){
  },function(){toast('הוסר מהמסך, אבל הבקשה לא נשלחה. לנסות שוב בהמשך.');});
 }
 function sheetTidy(w){
- if(w.id==='fcSheet'||w.id==='cqSheet')return; // the chat and the campaign questionnaire have their own buttons: no removal checkboxes, no note
+ if(w.id==='fcSheet'||w.id==='cqSheet'||w.id==='pkSheet')return; // 16.11 Itzik: not on the payment sheet either. The chat and the campaign questionnaire have their own buttons: no removal checkboxes, no note
  var c=w.querySelector('.ycard');if(!c)return;
  var key=tidyKey(w),gone=null;
  var bs=[].slice.call(c.querySelectorAll('.yb')).filter(function(b){
