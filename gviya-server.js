@@ -278,6 +278,17 @@ setInterval(function(){fetch(BASE+'state').then(function(r){return r.json();}).t
   if(!s||!s.marks)return;marks=s.marks;
   document.querySelectorAll('.c').forEach(function(card){var name=card.dataset.name;applyStatus(card,(marks[name]||{}).status);var cin=card.querySelector('.cin');if(document.activeElement!==cin)renderThread(card,name);});
   tally();}).catch(function(){});},15000);
+
+// 16.11 עוקב: אילו כרטיסים היו על המסך ולכמה זמן, ומתי הדף ירד לרקע.
+(function(){var seen={},t0={};var io=null;
+function obs(){if(!io)return;document.querySelectorAll('.c').forEach(function(c){io.unobserve(c);io.observe(c);});}
+if('IntersectionObserver' in window){io=new IntersectionObserver(function(es){var now=Date.now();es.forEach(function(e){var n=e.target.dataset.name;if(!n)return;var on=e.isIntersecting&&(e.intersectionRatio>=0.6||e.intersectionRect.height>=window.innerHeight*0.5);if(on){if(!t0[n])t0[n]=now;}else if(t0[n]){seen[n]=(seen[n]||0)+(now-t0[n])/1000;delete t0[n];}});},{threshold:[0,0.3,0.6,1]});obs();}
+function flush(h){var now=Date.now();Object.keys(t0).forEach(function(n){seen[n]=(seen[n]||0)+(now-t0[n])/1000;t0[n]=now;});var out={};Object.keys(seen).forEach(function(n){var v=Math.round(seen[n]);if(v>0)out[n]=v;});seen={};
+try{fetch(BASE+'ev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({seen:out,hidden:!!h}),keepalive:true});}catch(e){}}
+document.addEventListener('visibilitychange',function(){if(document.hidden){flush(true);t0={};}else{flush(false);obs();}});
+window.addEventListener('pagehide',function(){flush(true);});
+setInterval(function(){if(!document.hidden)flush(false);},20000);
+})();
 </script></body></html>`;
 
 function send(res, code, type, body) { res.writeHead(code, { 'Content-Type': type, 'Cache-Control': 'no-store' }); res.end(body); }
@@ -335,6 +346,60 @@ function applyMark(o) {
 }
 function internalKey() { try { return fs.readFileSync(path.join(GDIR, 'internal.key'), 'utf8').trim(); } catch (e) { return ''; } }
 
+// 16.11.2026, איציק: "בטופס גבייה מול יואל, תשים שם עוקב, אני רוצה לדעת מתי הוא נכנס לטופס, מה, למה וכמה.
+// אין לו אייפון, הכניסה מהאייפון זה ממני." כל ביקור נרשם ב data/gviya/visits.jsonl. ביקור של מי שאינו איציק
+// שולח push בכניסה, ובסוף (3 דקות בלי סימן חיים) push עם משך, אילו לקוחות ראה וכמה זמן, ומה שינה.
+// מי זה מי: data/gviya/who.json { devId: שם }. אייפון בלי שם = איציק.
+const VISITS = path.join(GDIR, 'visits.jsonl');
+const WHOF = path.join(GDIR, 'who.json');
+const QUIET_WHO = { 'איציק': 1, 'בדיקה': 1 };
+function whoOf(devId, ua) {
+  let w = {}; try { w = JSON.parse(fs.readFileSync(WHOF, 'utf8')); } catch (e) {}
+  if (w[devId]) return w[devId];
+  return /iPhone|iPad/.test(String(ua || '')) ? 'איציק' : 'מכשיר לא מוכר';
+}
+function logVisit(o) { try { fs.appendFileSync(VISITS, JSON.stringify(Object.assign({ at: new Date().toISOString() }, o)) + '\n'); } catch (e) {} }
+function hm(ms) { return new Date(ms).toLocaleTimeString('he-IL', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' }); }
+function visitPush(title, body) { execFile(process.execPath, [path.join(ROOT, 'notify.js'), title, body], { cwd: ROOT }, () => {}); }
+function reqIp(req) { return String(req.headers['x-forwarded-for'] || (req.socket && req.socket.remoteAddress) || '').split(',')[0].trim(); }
+const sessions = {};
+function touchVisit(devId, req, kind) {
+  const now = Date.now();
+  let v = sessions[devId];
+  if (!v) {
+    const ua = String(req.headers['user-agent'] || '');
+    v = sessions[devId] = { dev: devId, who: whoOf(devId, ua), start: now, last: now, active: 0, hidden: false, ip: reqIp(req), ua: ua.slice(0, 140), seen: {}, did: [], loads: 0 };
+    logVisit({ ev: 'start', dev: devId, who: v.who, ip: v.ip, ua: v.ua });
+    if (!QUIET_WHO[v.who]) visitPush(v.who + ' נכנס לטופס הגבייה', 'נכנס ב ' + hm(now) + '. כשיצא יגיע סיכום: כמה זמן, מה ראה ומה שינה.');
+  }
+  if (kind === 'load') v.loads++;
+  if (!v.hidden) v.active += Math.min(now - v.last, 30000);
+  v.last = now;
+  return v;
+}
+function markDesc(o) {
+  const b = [];
+  if ('status' in o) b.push(o.status ? (STATUS_HE[o.status] || o.status) : 'ביטל סימון');
+  if (o.paidWhen) b.push('שולם ' + o.paidWhen);
+  if (o.dueWhen) b.push('לפירעון ' + o.dueWhen);
+  if ('note' in o && String(o.note || '').trim()) b.push('הערה "' + String(o.note).trim().slice(0, 80) + '"');
+  if (o.addComment && o.addComment.t) b.push('כתב "' + String(o.addComment.t).trim().slice(0, 80) + '"');
+  return o.name + ': ' + (b.join(', ') || 'עדכון');
+}
+function closeVisit(v) {
+  delete sessions[v.dev];
+  const amt = {}; try { (share.readDebts(DATA) || { debts: [] }).debts.forEach(d => { amt[d.name] = d.amount; }); } catch (e) {}
+  const names = Object.keys(v.seen).filter(n => v.seen[n] >= 3).sort((a, b) => v.seen[b] - v.seen[a]);
+  logVisit({ ev: 'end', dev: v.dev, who: v.who, from: new Date(v.start).toISOString(), to: new Date(v.last).toISOString(), activeSec: Math.round(v.active / 1000), loads: v.loads, seen: v.seen, did: v.did });
+  if (QUIET_WHO[v.who]) return;
+  let body = hm(v.start) + ' עד ' + hm(v.last) + ', ' + (v.active < 60000 ? 'פחות מדקה' : Math.round(v.active / 60000) + ' דקות') + ' בדף.\n';
+  body += v.did.length ? 'שינה: ' + v.did.slice(0, 6).join(' · ') + (v.did.length > 6 ? ' ועוד ' + (v.did.length - 6) : '') : 'לא סימן ולא כתב כלום.';
+  if (names.length) body += '\nהתעכב על: ' + names.slice(0, 6).map(n => n + (amt[n] ? ' ' + ils(amt[n]) : '') + ' (' + Math.round(v.seen[n]) + ' שניות)').join(', ') + (names.length > 6 ? ' ועוד ' + (names.length - 6) : '');
+  visitPush(v.who + ' יצא מטופס הגבייה', body);
+}
+setInterval(() => { const now = Date.now(); for (const k of Object.keys(sessions)) if (now - sessions[k].last > 180000) closeVisit(sessions[k]); }, 30000);
+const lockedSeen = {};
+
 const server = http.createServer((req, res) => {
   const u = new URL(req.url, 'http://x');
   const p = u.pathname;
@@ -367,7 +432,7 @@ const server = http.createServer((req, res) => {
   if (req.method === 'GET' && rest === '') {
     if (!devOK) {
       // מכשיר לא מאושר: נכנס רק בחלון רישום. אחרת נעול, גם עם סיסמה.
-      if (!enrollOpen()) return serveHtml(res, 200, lockedPage(), setCk);
+      if (!enrollOpen()) { const lw = whoOf(devId, req.headers['user-agent']); logVisit({ ev: 'locked', dev: devId, who: lw, ip: reqIp(req), ua: String(req.headers['user-agent'] || '').slice(0, 140) }); if (!QUIET_WHO[lw] && !(lockedSeen[devId] > Date.now() - 3600e3)) { lockedSeen[devId] = Date.now(); visitPush('ניסו לפתוח את טופס הגבייה', 'מכשיר שלא מאושר פתח את הקישור ב ' + hm(Date.now()) + ' וקיבל דף נעול.\n' + String(req.headers['user-agent'] || '').slice(0, 120)); } return serveHtml(res, 200, lockedPage(), setCk); }
       if (pw === PASS) {
         devs[devId] = { at: new Date().toISOString(), ua: String(req.headers['user-agent'] || '').slice(0, 140) };
         saveDevices(devs);
@@ -376,12 +441,25 @@ const server = http.createServer((req, res) => {
       }
       return serveHtml(res, 200, gatePage(pw != null), setCk);
     }
-    if (authed) return serveHtml(res, 200, page(), setCk);
+    if (authed) { touchVisit(devId, req, 'load'); return serveHtml(res, 200, page(), setCk); }
+    logVisit({ ev: pw == null ? 'gate' : (pw === PASS ? 'login' : 'badpw'), dev: devId, who: whoOf(devId, req.headers['user-agent']) });
     if (pw === PASS) { setCk.push(mkGva()); res.writeHead(302, { 'Set-Cookie': setCk, 'Location': '/gviya/' + TOKEN + '/' }); return res.end(); }
     return serveHtml(res, 200, gatePage(pw != null), setCk);
   }
   // נתונים: רק מכשיר מאושר + סיסמה
   if (!(devOK && authed)) return json(res, 403, { err: 'auth' });
+  if (req.method === 'GET' && rest === 'state') touchVisit(devId, req, 'beat');
+  if (req.method === 'POST' && rest === 'ev') {
+    let b = ''; req.on('data', c => { b += c; if (b.length > 2e4) req.destroy(); });
+    req.on('end', () => {
+      let o; try { o = JSON.parse(b); } catch (e) { return json(res, 400, { err: 'bad' }); }
+      const v = touchVisit(devId, req, 'ev');
+      if (o && o.seen && typeof o.seen === 'object') for (const n of Object.keys(o.seen).slice(0, 200)) { const sec = Number(o.seen[n]); if (n.length <= 80 && sec > 0 && sec <= 600) v.seen[n] = (v.seen[n] || 0) + sec; }
+      v.hidden = !!(o && o.hidden);
+      return json(res, 200, { ok: true });
+    });
+    return;
+  }
   if (req.method === 'GET' && rest === 'state') return json(res, 200, { marks: readMarks(), at: new Date().toISOString() });
   if (req.method === 'POST' && rest === 'mark') {
     let b = ''; req.on('data', c => { b += c; if (b.length > 1e5) req.destroy(); });
@@ -389,6 +467,7 @@ const server = http.createServer((req, res) => {
       let o; try { o = JSON.parse(b); } catch (e) { return json(res, 400, { err: 'bad' }); }
       if (!o || typeof o.name !== 'string') return json(res, 400, { err: 'name' });
       applyMark(o);
+      try { touchVisit(devId, req, 'mark').did.push(markDesc(o)); } catch (e) {}
       return json(res, 200, { ok: true });
     });
     return;
