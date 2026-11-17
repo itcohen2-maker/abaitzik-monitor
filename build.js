@@ -1723,7 +1723,7 @@ const PAGE = `<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-${require('./lib/public-demo.js').head(inst) /* 17.11.2026: the public demo only, empty elsewhere */}<script>
+${require('./lib/public-demo.js').head(inst) /* 17.11.2026: the public demo only, empty elsewhere */}${require('./lib/home-fold.js').head(inst) /* 17.11.2026: his inactive tiles folded once, his monitor only */}<script>
 /* Reviewer, 11.10, approved by Itzik: every size here is fixed, so a larger
    text setting on the iPhone changed nothing on this page. Safari reports that
    setting through the -apple-system-body font (17px at the default), and the
