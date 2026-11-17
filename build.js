@@ -18092,7 +18092,10 @@ on('gClalit',clalitSheet);
 */
 var TOM_ITEMS=[
  {n:"201",t:"📣 קמפיין · 🆕 לאישורך · תור 15 שניות",r:"tor-1711-15s.mp4"},
- {n:"200",t:"📣 קמפיין · 🆕 לאישורך · איליי קצר, בלי הכותרת האדומה",r:"ilay-1711-katzar-sium.mp4"},
+ {n:"204",t:"📣 קמפיין · 🆕 לאישורך · איליי 4: רוב בעלי העסקים משלמים על 7 מערכות · קמפיינים ותוכן",r:"ilay-1711-4-mefotzatz.mp4"},
+ {n:"203",t:"📣 קמפיין · 🆕 לאישורך · איליי 3: תסגור את כל החלוניות · מסך אחד ווואטסאפ",r:"ilay-1711-4-masachim.mp4"},
+ {n:"202",t:"📣 קמפיין · 🆕 לאישורך · איליי 2: כמה כסף בעלי עסקים מפסידים · הכסף",r:"ilay-1711-4-animatziot.mp4"},
+ {n:"200",t:"📣 קמפיין · 🆕 לאישורך · איליי 1: שבע מערכות בשביל חשבונית · מה הוא בונה לך",r:"ilay-1711-4-naki.mp4"},
 // 14.11.2026, Itzik: "תסדר לי באריח את כל הסרטונים של הקמפיין העדכניים". Exactly what is ACTIVE in Meta at 15:55 UTC:
 // Ilay's four monitor videos (14.11, to the free week), the three pain images (13.11, to the chat) and burning credits.
 // The 13.11 videos "מי לא שילם לך" and "עסקי ואישי" are no longer running and left the list. Newest first on screen (reversed).
@@ -18165,7 +18168,7 @@ function vqStockHtml(){
 }
 function vqLoad(cb){
  if(VQ&&Date.now()-VQT<60000)return cb();
- var P=[['st','status/queue.json'],['nr','ner/queue.json'],['pl','plate/queue.json'],['ai','ai/queue.json'],['li','linkedin/stock.json']],n=P.length,R={};
+ var P=[['st','status/queue.json'],['sr','story/queue.json'],['nr','ner/queue.json'],['pl','plate/queue.json'],['ai','ai/queue.json'],['li','linkedin/stock.json']],n=P.length,R={};
  P.forEach(function(p){
   fetch(p[1]+'?v='+Date.now()).then(function(r){return r.json();}).then(function(d){R[p[0]]=p[0]==='li'?(d&&typeof d==='object'?d:null):(Array.isArray(d)?d:[]);},function(){R[p[0]]=[];})
    .then(function(){if(--n===0){VQ=R;VQT=Date.now();cb();}});
@@ -18186,6 +18189,8 @@ function upToday(){
  (VQ.st||[]).filter(function(x){return x.date===T;}).forEach(function(x){
   L.push({n:'סטטוס',done:!!(doneSt[x.name]||srvSt[x.name]),st:x.name,t:'📲 סטטוס וואטסאפ · '+(x.topic||''),u:'status/index.html',h:x.name});
  });
+ var doneSr={};try{doneSr=JSON.parse(localStorage.getItem('storyDone')||'{}')||{};}catch(e){}
+ (VQ.sr||[]).filter(function(x){return x.date===T;}).forEach(function(x){L.push({n:'סטורי',done:!!doneSr[x.name],t:'📱 סטורי · '+(x.topic||''),u:'story/index.html',h:x.name});});
  var P=(VQ.pl||[]).slice().sort(function(a,b){return (a.order||0)-(b.order||0);});
  var pT=P.filter(function(x){return x.posted&&day(x.postedAt)===T;});
  var nm=function(x){return String(x.name||x.id).split(' (גרסה ')[0].trim();};
@@ -18225,16 +18230,18 @@ function upTodayRows(){
 function vqDayName(d){var p=String(d||'').split('-');if(p.length!==3)return '';var n=new Date(Date.UTC(+p[0],+p[1]-1,+p[2])).getUTCDay();return ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'][n];}
 function vqRows(id){
  var Q=(VQ&&VQ[id])||[],T=vqDay(),out=[];
- if(id==='st'){
+ if(id==='st'||id==='sr'){
   // 6.11, Itzik: a status he already marked uploaded goes off the list at once, and each row shows only its title.
-  var doneSt={};try{doneSt=JSON.parse(localStorage.getItem('waStatusDone')||'{}')||{};}catch(e){}
+  // 17.11.2026: the same rows for 📱 סטורי (story/, its own storyDone memory).
+  var SU=id==='sr'?'story/index.html':'status/index.html',SW=id==='sr'?'סטורי':'סטטוס';
+  var doneSt={};try{doneSt=JSON.parse(localStorage.getItem(id==='sr'?'storyDone':'waStatusDone')||'{}')||{};}catch(e){}
   var up=Q.filter(function(x){return x.date>=T&&!doneSt[x.name];}).sort(function(a,b){return a.date.localeCompare(b.date);});
   var now=up.filter(function(x){return x.date===T;}),next=up.filter(function(x){return x.date>T;});
-  out.push({h:now.length?'📲 להעלות היום ('+now.length+')':'📲 אין סטטוס להיום'});
-  if(!now.length)out.push({k:'q',t:'אין סטטוס להיום, הבא בתור למטה',u:'status/index.html'});
-  now.forEach(function(x){out.push({k:'q',t:'⭐ היום, '+vqDayName(x.date)+' '+vqDate(x.date)+' · '+(x.topic||''),u:'status/index.html',n:x.name});});
+  out.push({h:now.length?'📲 להעלות היום ('+now.length+')':'📲 אין '+SW+' להיום'});
+  if(!now.length)out.push({k:'q',t:'אין '+SW+' להיום, הבא בתור למטה',u:SU});
+  now.forEach(function(x){out.push({k:'q',t:'⭐ היום, '+vqDayName(x.date)+' '+vqDate(x.date)+' · '+(x.topic||''),u:SU,n:x.name});});
   if(next.length)out.push({h:'📅 הבאים בתור'});
-  next.forEach(function(x){out.push({k:'q',t:vqDayName(x.date)+' '+vqDate(x.date)+' · '+(x.topic||''),u:'status/index.html',n:x.name});});
+  next.forEach(function(x){out.push({k:'q',t:vqDayName(x.date)+' '+vqDate(x.date)+' · '+(x.topic||''),u:SU,n:x.name});});
  }
  if(id==='nr'){
   var st=function(x){return (x.rejected||x.hold)?'rej':x.approved?'ok':'wait';};
@@ -18298,6 +18305,7 @@ function vidTabs(){
  var idea=function(x){return x.k==='fut';};
  var TD=vqDay(),VQ0=VQ||{};
  var stN=(VQ0.st||[]).filter(function(x){return x.date===TD;}).length;
+ var srN=(VQ0.sr||[]).filter(function(x){return x.date===TD;}).length;
  var nrN=(VQ0.nr||[]).filter(function(x){return !x.posted&&!x.failed&&!x.approved&&!x.rejected&&!x.hold;}).length;
  var plN=(VQ0.pl||[]).filter(function(x){return !x.posted&&!x.approved;}).length;
  var aiN=(VQ0.ai||[]).filter(function(x){return !x.posted;}).length;
@@ -18308,6 +18316,7 @@ function vidTabs(){
  return [
   {id:'today',l:'⭐ להעלות היום'+(upN?' ('+upN+')':''),pulse:upN,h:'מה שאתה מעלה בעצמך היום. מה שמהבהב עוד לא עלה, וכשהוא עולה הוא עובר ל ✅',L:upTodayRows()},
   {id:'st',l:'📲 סטטוס'+(stN?' ('+stN+')':''),h:'סטטוס וואטסאפ: מה עולה היום ומה הבא בתור. לחיצה פותחת את הסרטון והטקסט, 3 נגיעות',L:vqRows('st').concat([{h:'📂 הדף המלא'},{k:'go',t:'📲 פתיחת כל הסטטוסים המוכנים',u:'status/index.html'}])},
+  {id:'sr',l:'📱 סטורי'+(srN?' ('+srN+')':''),upd:'20261117-story',h:'סטורי לאינסטגרם ולפייסבוק: סרטון קצר, ובסוף מסגרת להדבקת מדבקת הקישור להרשמה',L:vqRows('sr').concat([{h:'📂 הדף המלא'},{k:'go',t:'📱 פתיחת כל הסטורי המוכן',u:'story/index.html'}])},
   {id:'ads',l:'📣 קמפיין',upd:'20261117-approve',h:'הממומן, וסרטוני המוניטור לסטורי',L:TOM_ITEMS.map(function(it){return it.h?{h:it.h}:{k:'tom',it:it};})},
   {id:'sh',l:'🌅 שחר',h:'הרילים, הסטורי והפוסטים של שחר',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isSh(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isSh(x.it);}))},
   {id:'pl',l:'🍽️ מה בצלחת'+(plN?' ('+plN+')':''),h:'הסטוריז לפי הסדר, אפשר לסדר ולמחוק',L:vqRows('pl').concat([{h:'📂 הדף המלא'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return plateN[x.it.n];}))},
