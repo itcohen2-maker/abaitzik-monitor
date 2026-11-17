@@ -70,6 +70,17 @@ for f in "$Q"/t*.json; do
   fi
 done
 
+# 17.11.2026: a trial opened before the personal link existed has no "enter" on its queue entry, so signing up again
+# with the same mail sent him to the code screen. Give every ready entry its link once (the code is root only).
+for f in "$Q"/t*.json; do
+  [ -f "$f" ] || continue
+  [ "$(field "$f" state)" = ready ] || continue
+  [ -n "$(field "$f" enter)" ] && continue
+  ID=$(field "$f" id); [[ "$ID" =~ ^t[a-f0-9]{6}$ ]] || continue
+  [ -f "/root/tenant-codes/$ID.txt" ] || continue
+  setf "$f" enter "$(cut -d' ' -f1 "/root/tenant-codes/$ID.txt")"; log "$ID enter link added"
+done
+
 # 11.11.2026: the connections page and the questionnaire welcome of every ready trial (signup-personalize.js).
 node "$REPO/signup-personalize.js" >> "$LOG" 2>&1 || log "personalize failed"
 
