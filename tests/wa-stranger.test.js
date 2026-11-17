@@ -157,3 +157,13 @@ test("17.11: a refused reply (send returns false) is not counted as sent, so the
   assert.ok(r.replied);
   assert.strictEqual(n, 2);
 });
+
+test("17.11.2026: a number in wa-spam.json makes no lead, no push and no reply", async () => {
+  reset();
+  const before = leads().length;
+  w("status/wa-spam.json", ["919797767602"]);
+  await bridge.onMessage(msg("919797767602", "If you interested then say yes or no"), "Spam");
+  assert.strictEqual(leads().length, before);
+  assert.strictEqual(pushes.length, 0);
+  assert.strictEqual(sent.length, 0);
+});
