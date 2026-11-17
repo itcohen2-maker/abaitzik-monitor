@@ -33,7 +33,8 @@ for f in "$Q"/t*.json; do
   setf "$f" state building
   log "$ID building for $(echo "$EMAIL" | sed 's/^\(..\).*@/\1***@/')"
   PROF=$(mktemp); printf '# %s\n\nמוניטור ניסיון שנפתח בהרשמה עצמאית באתר IT Solution.\nטלפון: %s\nמייל: %s\n' "$NAME" "$PHONE" "$EMAIL" > "$PROF"
-  if ! bash "$REPO/setup/new-tenant.sh" "$ID" "$ID" "$HOST" "$NAME" "המוניטור של $NAME" "שלום $NAME, ברוך הבא למוניטור. שבוע הניסיון שלך התחיל." "" "$PROF" >> "$LOG" 2>&1; then
+  # 17.11.2026: new-tenant.sh prints the entry code for a manual setup; a signup keeps it out of the log (only the mail has it).
+  if ! { bash "$REPO/setup/new-tenant.sh" "$ID" "$ID" "$HOST" "$NAME" "המוניטור של $NAME" "שלום $NAME, ברוך הבא למוניטור. שבוע הניסיון שלך התחיל." "" "$PROF" 2>&1 | grep --line-buffered -v "קוד הכניסה ל" >> "$LOG"; [ "${PIPESTATUS[0]}" = 0 ]; }; then
     rm -f "$PROF"; setf "$f" state failed; log "$ID new-tenant failed"
     sudo -u monitor node "$REPO/notify.js" "פתיחת מוניטור נכשלה" "ההרשמה של $NAME לא נפתחה. יומן: /var/log/monitor-signup.log" >/dev/null 2>&1
     continue
