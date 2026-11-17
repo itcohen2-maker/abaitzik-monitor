@@ -55,7 +55,11 @@ for f in "$Q"/t*.json; do
   if ( set -a; . /etc/monitor.env; set +a; cd "$REPO" && node -e '
     const M=require("./lib/mailer.js"),[to,name,url,pass]=process.argv.slice(1);
     M.send("data",Object.assign({to},M.readyMail(name,url,pass))).then(r=>{if(!r.ok){console.error(r.error);process.exit(1)}});' \
-    "$EMAIL" "$NAME" "https://$HOST/" "$CODE" ); then
+    "$EMAIL" "$NAME" "https://$HOST/#k=$(node -e 'process.stdout.write(encodeURIComponent(process.argv[1]))' "$CODE")" "$CODE" ); then
+    # 17.11.2026, the short signup: the page that verified him gets the same personal link (lib/signup.js status,
+    # only with that page's token), so he goes straight in without a second code. Kept on the queue entry, which
+    # already holds his mail and is readable only by monitor.
+    setf "$f" enter "$CODE"
     setf "$f" state ready; setf "$f" host "$HOST"
     echo "$today $ID ready " >> "$LOG.days"; done_today=$((done_today+1))
     log "$ID ready, mail sent"

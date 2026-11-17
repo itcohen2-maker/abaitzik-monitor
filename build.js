@@ -6225,6 +6225,9 @@ var D = __DATA__, NET = __NET__, CAT = __CAT__, tab = 'pending';
   an old phone and happens once.
 */
 var GATE = __GATE__, GKEY = null;
+// 17.11.2026, Itzik approved the short signup: the "ready" mail and the signup page open the monitor with a personal
+// link, https://<host>/#k=<passphrase>. Read here, before anything rewrites the hash, and used once by gateBoot.
+var GATE_LINK = (function(){ try { var m = /^#k=(.+)$/.exec(location.hash || ''); return m ? decodeURIComponent(m[1]) : ''; } catch (e) { return ''; } })();
 function gbytes(b64){var x=atob(b64),a=new Uint8Array(x.length);for(var i=0;i<x.length;i++)a[i]=x.charCodeAt(i);return a;}
 function graw(a){var s='';for(var i=0;i<a.length;i++)s+=String.fromCharCode(a[i]);return btoa(s);}
 /*
@@ -24459,6 +24462,13 @@ function gateBoot(){
   });
  };
  setTimeout(function(){try{box.focus();}catch(e){}},120);
+ // 17.11.2026: a personal link (#k=) types the passphrase for him, once. The hash leaves the address bar right away,
+ // so the passphrase is not left in the history or in a shared screenshot.
+ if(GATE_LINK){
+  try{if(history&&history.replaceState)history.replaceState(null,'',location.pathname);}catch(e){}
+  box.value=GATE_LINK;GATE_LINK='';
+  form.onsubmit({preventDefault:function(){}});
+ }
 }
 boot('report',renderNextReport);
 boot('pegasus',renderPegasus);
