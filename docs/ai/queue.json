@@ -356,9 +356,17 @@
   "ytd": "It's because of the difference between the two frequencies your router sends out: 2.4 gigahertz and 5 gigahertz. 5 gigahertz is very fast, but it hates walls, and every wall weakens it. 2.4 gigahertz goes through walls much better, but it's slower. And one more thing: if your router is stuck inside a metal comms cabinet or behind the TV, the signal just dies. Switch the devices in the far room to 2.4, and take the router out of the cabinet. Is there one room in your home where the Wi-Fi just dies? Source: Wi-Fi Alliance",
   "song": "",
   "song_tt": "",
-  "posted": false,
-  "postedAt": null,
-  "approvedAt": "2026-11-15T06:00:45.408Z"
+  "posted": true,
+  "postedAt": "2026-11-17T18:04:01.032Z",
+  "approvedAt": "2026-11-15T06:00:45.408Z",
+  "auto": {
+   "reel": "18073812014782972",
+   "story": "18121673155978822",
+   "storyError": null,
+   "page": "2395015341349459",
+   "pageError": null,
+   "channel": "itsolution.global"
+  }
  },
  {
   "id": "googleedu-he",
