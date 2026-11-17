@@ -144,3 +144,16 @@ test('17.11: only a short lowercase slug in brackets counts as a ref', () => {
   assert.strictEqual(ST.refOf('היי [M-TOR]'), '');
   assert.strictEqual(ST.refOf('היי'), '');
 });
+
+test("17.11: a refused reply (send returns false) is not counted as sent, so the next message tries again", async () => {
+  const D = fs.mkdtempSync(path.join(os.tmpdir(), "wast3-"));
+  let n = 0;
+  const deps = (now, ok) => ({ now, name: "ג", textOf: (m) => m.text.body, handle: (o) => H.add(D, o), notify: () => {}, send: async () => { n++; return ok; } });
+  const T0 = Date.parse("2026-11-17T08:00:00Z");
+  const M = (t) => ({ id: "y" + t, from: "972525555555", type: "text", text: { body: "א" + t } });
+  let r = await ST.intake(D, M(1), deps(T0, false));
+  assert.ok(r.created && !r.replied);
+  r = await ST.intake(D, M(2), deps(T0 + 600e3, true));
+  assert.ok(r.replied);
+  assert.strictEqual(n, 2);
+});
