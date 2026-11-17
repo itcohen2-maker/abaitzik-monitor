@@ -99,6 +99,7 @@ function parse(out) {
 // what came in, and what is left for Itzik. At most once per round, never sends or answers anything.
 const MAIL_Q = 'עבור על כל המיילים מהיממה האחרונה, כולל לקוחות, קהילות, תמיכה של שירותים (ElevenLabs, Meta, ManyChat, טיקטוק, גוגל), קבלות וחיובים, והתראות אבטחה. ' +
   'שורה ראשונה בלבד: "דחוף: כן" אם יש מייל שמחכה לתשובה או לפעולה שלו או חיוב לא רגיל או התראת אבטחה אמיתית, אחרת "דחוף: לא". ' +
+  '"מחכה לתשובה" רק כשבגוף המייל יש שאלה או בקשה אליו. תשובה יבשה, אישור, תודה, העברה לידיעה או הודעה אוטומטית לא מחכים לו, גם כשהנושא נראה חשוב. ' +
   'אחר כך עד שש שורות קצרות: מה הגיע ומה מחכה לו, כל שורה עם שולח ותאריך. בלי מקפים.';
 
 function mailSweep(now, results) {
@@ -106,7 +107,7 @@ function mailSweep(now, results) {
   let prev = []; try { prev = JSON.parse(fs.readFileSync(f, 'utf8')).items || []; } catch (e) {}
   if (prev.some(x => x.kind === 'mailsweep' && now - Date.parse(x.when) < 4 * 3600 * 1000)) return; // once per round
   let out = '';
-  const read = () => execFileSync('node', ['mail-read.js', MAIL_Q, '--days', '1'], { cwd: __dirname, encoding: 'utf8', timeout: 6 * 60 * 1000, stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+  const read = () => execFileSync('node', ['mail-read.js', MAIL_Q, '--days', '1', '--limit', '30', '--bodies', '1500'], { cwd: __dirname, encoding: 'utf8', timeout: 6 * 60 * 1000, stdio: ['ignore', 'pipe', 'pipe'] }).trim();
   // 11.11.2026: one quiet retry before a failure is written, and the real reason (stderr) is kept, not the command line
   try { try { out = read(); } catch (e1) { execFileSync('sleep', ['30']); out = read(); } }
   catch (e) { results.push({ kind: 'mailsweep', text: 'סריקת מיילים', status: 'failed', line: 'הקריאה נכשלה: ' + noDash(String(e.stderr || e.stdout || e.message).trim().slice(-160)) }); return; }

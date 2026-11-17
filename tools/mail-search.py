@@ -90,6 +90,9 @@ def main():
     ap.add_argument('--days', type=int, default=180)
     ap.add_argument('--limit', type=int, default=10)
     ap.add_argument('--id', help='print one message in full')
+    # 17.11.2026, Itzik: the sweep said a dry reply from Wolfson "waits for your answer". The list gave the reader only the
+    # subject and 200 raw bytes of MIME (base64 for Hebrew), so it guessed. --bodies N prints each mail's decoded text, N chars.
+    ap.add_argument('--bodies', type=int, default=0)
     a = ap.parse_args()
 
     user, pw = creds()
@@ -129,7 +132,11 @@ def main():
         when = email.utils.parsedate_to_datetime(head['Date']).strftime('%d.%m.%Y %H:%M') if head['Date'] else ''
         print(f'[{uid.decode()}] {when} | {dec(head["From"])}')
         print('   ', dec(head['Subject']))
-        print('   ', ' '.join(snippet.split())[:200])
+        if a.bodies:
+            _, full = m.uid('FETCH', uid, '(BODY.PEEK[])')
+            raw = next((t[1] for t in full if isinstance(t, tuple)), b'')
+            snippet = body(email.message_from_bytes(raw)) if raw else snippet
+        print('   ', ' '.join(snippet.split())[:a.bodies or 200])
     m.logout()
 
 
