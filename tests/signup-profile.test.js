@@ -28,7 +28,7 @@ test('the welcome speaks his answers, no dashes', () => {
 test('the page token saves the answers and reads the status, a wrong token does not', () => {
   const d = fs.mkdtempSync(path.join(os.tmpdir(), 'sp-'));
   try {
-    const st = S.start(d, { name: 'דנה', email: 'dana@example.com', terms: true, ip: '1.1.1.1' }, Date.now());
+    const st = S.start(d, { name: 'דנה', phone: '0521234567', email: 'dana@example.com', terms: true, ip: '1.1.1.1' }, Date.now());
     const f = path.join(d, 'signup', 'pending'); const pend = JSON.parse(fs.readFileSync(path.join(f, fs.readdirSync(f)[0]), 'utf8'));
     assert.ok(st.ok && pend);
     const v = S.verify(d, { email: 'dana@example.com', code: st.code });

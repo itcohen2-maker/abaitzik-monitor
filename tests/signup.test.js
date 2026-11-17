@@ -66,13 +66,13 @@ test('the code is never stored in the clear', () => {
   assert.equal(txt.includes(r.code), false);
 });
 
-// 11.11.2026, Itzik: the signup is name and mail; a phone is optional.
-test('a signup without a phone is fine, a wrong phone is not', () => {
+// 17.11.2026, Itzik: the phone is required again; a missing or wrong phone is refused.
+test('a signup without a phone, or with a wrong one, is refused', () => {
   const fs = require('fs'), os = require('os'), path = require('path');
   const d = fs.mkdtempSync(path.join(os.tmpdir(), 'su-'));
   try {
     const r = S.start(d, { name: 'רון', email: 'ron@example.com', terms: true, ip: '1.1.1.1' }, Date.now());
-    assert.ok(r.ok);
+    assert.equal(r.error, 'phone');
     assert.equal(S.start(d, { name: 'רון', phone: '123', email: 'ron2@example.com', terms: true, ip: '1.1.1.2' }, Date.now()).error, 'phone');
   } finally { fs.rmSync(d, { recursive: true, force: true }); }
 });
