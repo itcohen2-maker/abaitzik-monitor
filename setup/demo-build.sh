@@ -1,7 +1,8 @@
 #!/bin/bash
 # 17.11.2026: the public demo monitor (demo.m.it-solution.co.il, it-solution.co.il/demo).
 # Static only: no listener, no worker, no Claude token, no git. Run as root (monitor-demo.timer, nightly).
-#  1. the code: Itzik's committed HEAD, without docs/ promo/ tests/ (git archive, no history on disk);
+#  1. the code: branch stable, what the button checker passed, the same version the customers run (17.11; was HEAD),
+#     without docs/ promo/ tests/ (git archive, no history on disk);
 #  2. the data: lib/demo-data.js writes the invented barbershop with today's dates;
 #  3. the page: MONITOR_NO_GATE build as the demo user, with instance.json publicDemo: true.
 # instance.json and data/ under /home/demo/app are kept between runs. Log: /var/log/monitor-demo.log
@@ -10,7 +11,8 @@ SRC=/home/monitor/abaitzik-monitor
 APP=/home/demo/app
 NEW=$(mktemp -d /home/demo/.app-new-XXXX)
 cd "$SRC"
-git archive HEAD | tar -x -C "$NEW" --exclude=docs --exclude=promo --exclude=tests --exclude=instance.json --exclude=data
+runuser -u monitor -- git fetch -q origin stable
+git archive origin/stable | tar -x -C "$NEW" --exclude=docs --exclude=promo --exclude=tests --exclude=instance.json --exclude=data
 # the code is replaced, instance.json and data stay
 find "$APP" -mindepth 1 -maxdepth 1 ! -name instance.json ! -name data ! -name docs -exec rm -rf {} +
 cp -a "$NEW"/. "$APP"/
@@ -49,4 +51,6 @@ if [ "$CODE" != 200 ] || ! grep -q PUBLIC_DEMO /tmp/demo-check.html; then
   cd "$SRC" && sudo -u monitor -H node notify.js "מוניטור ההדגמה לא עולה" "demo.m.it-solution.co.il החזיר $CODE אחרי הבנייה. יומן: /var/log/monitor-demo.log" || true
   exit 1
 fi
+# 17.11: the day's numbers to Itzik's 📄 דוחות (lib/demo-stats.js), as user monitor, from his own copy
+cd "$SRC" && runuser -u monitor -- node lib/demo-stats.js >/dev/null 2>&1 || echo "!! demo-stats failed"
 echo "$(date -Is) built"
