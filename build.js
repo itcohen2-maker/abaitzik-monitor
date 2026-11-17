@@ -3213,7 +3213,7 @@ section#talkCard.talk{padding:8px 10px;gap:6px 10px;margin-bottom:8px}
 #calSheet .ycard{max-height:86vh;overflow:auto}
 .c-cn{background:linear-gradient(160deg,#22d3ee,#0891b2);font-size:22px}
 #connSheet .ycard{max-height:86vh;overflow:auto}
-#connSheet .cnr{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #e5e7eb}
+#connSheet .cnr{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #e5e7eb}
 #connSheet .cni{font-size:24px;width:34px;text-align:center;flex:none}
 #connSheet .cnt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 #connSheet .cnt b{font-size:16px;color:#111827}
