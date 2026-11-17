@@ -18321,7 +18321,7 @@ function vidTabs(){
   {id:'today',l:'⭐ להעלות היום'+(upN?' ('+upN+')':''),pulse:upN,h:'מה שאתה מעלה בעצמך היום. מה שמהבהב עוד לא עלה, וכשהוא עולה הוא עובר ל ✅',L:upTodayRows()},
   {id:'st',l:'📲 סטטוס'+(stN?' ('+stN+')':''),h:'סטטוס וואטסאפ: מה עולה היום ומה הבא בתור. לחיצה פותחת את הסרטון והטקסט, 3 נגיעות',L:vqRows('st').concat([{h:'📂 הדף המלא'},{k:'go',t:'📲 פתיחת כל הסטטוסים המוכנים',u:'status/index.html'}])},
   {id:'sr',l:'📱 סטורי'+(srN?' ('+srN+')':''),upd:'20261117-story',h:'סטורי לאינסטגרם ולפייסבוק: סרטון קצר, ובסוף מסגרת להדבקת מדבקת הקישור להרשמה',L:vqRows('sr').concat([{h:'📂 הדף המלא'},{k:'go',t:'📱 פתיחת כל הסטורי המוכן',u:'story/index.html'}])},
-  {id:'ads',l:'📣 קמפיין',upd:'20261117-ilay4',h:'הממומן, וסרטוני המוניטור לסטורי',L:TOM_ITEMS.map(function(it){return it.h?{h:it.h}:{k:'tom',it:it};})},
+  {id:'ads',l:'📣 קמפיין',upd:'20261117-ilay4b',h:'הממומן, וסרטוני המוניטור לסטורי',L:TOM_ITEMS.map(function(it){return it.h?{h:it.h}:{k:'tom',it:it};})},
   {id:'sh',l:'🌅 שחר',h:'הרילים, הסטורי והפוסטים של שחר',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isSh(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isSh(x.it);}))},
   {id:'pl',l:'🍽️ מה בצלחת'+(plN?' ('+plN+')':''),h:'הסטוריז לפי הסדר, אפשר לסדר ולמחוק',L:vqRows('pl').concat([{h:'📂 הדף המלא'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return plateN[x.it.n];}))},
   // 8.11, Itzik: the AI channel reels to upload, like the plate tab, split Hebrew and English, what went up and what did not.

@@ -1086,6 +1086,13 @@ async function api(q, s, u) {
   if (q.method === 'OPTIONS') { s.writeHead(204, h); return s.end(); }
   if (q.method !== 'POST') { s.writeHead(405, h); return s.end('{}'); }
   let b; try { b = JSON.parse((await readBody(q, 20000)).toString('utf8')); } catch (e) { s.writeHead(400, h); return s.end('{}'); }
+  // 17.11.2026: the "🚀 בוא נתחיל" questions inside a customer's monitor (lib/signup.js moreProfile), by his visit key.
+  if (u.pathname === '/api/start/more') {
+    const vn = require('./lib/visits.js').nameByKey(DATA, b.key);
+    if (!vn) { s.writeHead(403, h); return s.end('{"error":"key"}'); }
+    const r = require('./lib/signup.js').moreProfile(DATA, vn, b);
+    s.writeHead(r.ok ? 200 : 400, h); return s.end(JSON.stringify(r));
+  }
   // 17.11.2026: the public demo monitor (lib/demo-chat.js). Public, no code, the owner instance only. Never his queue or thread.
   if (/^\/api\/demo\/(chat|hit|wa)$/.test(u.pathname)) {
     if (!isOwnerInstance()) { s.writeHead(404, h); return s.end('{}'); }
