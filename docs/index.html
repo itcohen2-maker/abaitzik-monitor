@@ -3211,7 +3211,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-17T13:50:52.143Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-17T13:52:20.006Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3568,14 +3568,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -5167,7 +5160,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='b81a2ed3e5';
+var CODE_ID='0fcc72d318';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -13881,10 +13874,10 @@ function clalitSheet(){
 on('gClalit',clalitSheet);
 var TOM_ITEMS=[
  {n:"201",t:"📣 קמפיין · 🆕 לאישורך · תור 15 שניות",r:"tor-1711-15s.mp4"},
- {n:"204",t:"📣 קמפיין · 🆕 לאישורך · איליי 4: רוב בעלי העסקים משלמים על 7 מערכות · קמפיינים ותוכן",r:"ilay-1711-4-mefotzatz.mp4"},
- {n:"203",t:"📣 קמפיין · 🆕 לאישורך · איליי 3: תסגור את כל החלוניות · מסך אחד ווואטסאפ",r:"ilay-1711-4-masachim.mp4"},
- {n:"202",t:"📣 קמפיין · 🆕 לאישורך · איליי 2: כמה כסף בעלי עסקים מפסידים · הכסף",r:"ilay-1711-4-animatziot.mp4"},
- {n:"200",t:"📣 קמפיין · 🆕 לאישורך · איליי 1: שבע מערכות בשביל חשבונית · מה הוא בונה לך",r:"ilay-1711-4-naki.mp4"},
+ {n:"204",t:"📣 קמפיין · ✅ איליי 4: רוב בעלי העסקים משלמים על 7 מערכות · קמפיינים ותוכן",r:"ilay-1711-4-mefotzatz.mp4"},
+ {n:"203",t:"📣 קמפיין · ✅ איליי 3: תסגור את כל החלוניות · מסך אחד ווואטסאפ",r:"ilay-1711-4-masachim.mp4"},
+ {n:"202",t:"📣 קמפיין · ✅ איליי 2: כמה כסף בעלי עסקים מפסידים · הכסף",r:"ilay-1711-4-animatziot.mp4"},
+ {n:"200",t:"📣 קמפיין · ✅ איליי 1: שבע מערכות בשביל חשבונית · מה הוא בונה לך",r:"ilay-1711-4-naki.mp4"},
  {n:"11",t:"📲 לרשתות · סטורי · מפחד ממה שאתה לא יודע?",r:"ads-pain3-story.png"},
  {n:"10",t:"📲 לרשתות · סטורי · המידע של הלקוחות. באמת מוגן?",r:"ads-pain2-story.png"},
  {n:"9",t:"📲 לרשתות · סטורי · יש לך אתר שעובד. ואין אפליקציה?",r:"ads-pain1-story.png"},
@@ -21459,7 +21452,7 @@ function bhQuoteShow(q,w){
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="BAJSdIafAtGxgHzJr3tOJLTViE1Gkn6rNyAReKPb5ZiMM-6xXp2c1PD7V5VKOXkQRWLI9-Wdq7-Q4hyMCcYp2iQ";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
