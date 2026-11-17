@@ -28,7 +28,7 @@ for l in lines:
     out.append(l)
 open(p, 'w').write('\n'.join(out))
 PY
-caddy validate --config /etc/caddy/Caddyfile >/dev/null 2>&1 && systemctl reload caddy || { cp -a "/root/Caddyfile.bak-rm-$ID" /etc/caddy/Caddyfile; echo "caddy did not validate, restored"; }
+caddy validate --config /etc/caddy/Caddyfile >/dev/null 2>&1 && caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null 2>&1 || { cp -a "/root/Caddyfile.bak-rm-$ID" /etc/caddy/Caddyfile; echo "caddy did not validate, restored"; }
 sed -i "/-$ID\.\(service\|timer\)|/d" /usr/local/bin/monitor-keepalive.sh
 sudo -u monitor node -e '
 const fs=require("fs"),id=process.argv[1];

@@ -247,7 +247,7 @@ $HOST {
 	}
 }
 EOF
-caddy validate --config /etc/caddy/Caddyfile >/dev/null 2>&1 && systemctl reload caddy
+caddy validate --config /etc/caddy/Caddyfile >/dev/null 2>&1 && caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null 2>&1
 
 # lock the customer's own settings, register with Itzik's monitor, keep alive
 # 16.11.2026, Itzik: the code goes into the record too, so his monitors screen shows it.

@@ -10,7 +10,7 @@ echo $(( $(date +%s) + 1800 )) > /run/monitor-maintenance-until
 # 1. The page ilay.abaitzik.com is served from the new place.
 cp /etc/caddy/Caddyfile /etc/caddy/Caddyfile.bak-20260928
 sed -i "s#/home/monitor/ily-monitor#/home/ily/ily-monitor#g" /etc/caddy/Caddyfile
-systemctl reload caddy
+caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null 2>&1
 
 # 2. The keepalive watches the new place, and the self sync timer.
 sed -i "s#/home/monitor/ily-monitor#/home/ily/ily-monitor#g" /usr/local/bin/monitor-keepalive.sh
