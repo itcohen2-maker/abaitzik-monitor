@@ -1,14 +1,10 @@
 {
- "at": "2026-11-17T05:09:02.812Z",
- "up": 32400,
+ "at": "2026-11-17T05:18:18.660Z",
+ "up": 32956,
  "since": "2026-11-16T20:09:03.112Z",
- "last": "",
- "n": 0,
+ "last": "2026-11-17T05:18:18.600Z",
+ "n": 1,
  "recent": [
-  {
-   "at": "2026-11-16T16:26:56.322Z",
-   "kind": "text"
-  },
   {
    "at": "2026-11-16T18:29:21.190Z",
    "kind": "text"
@@ -24,14 +20,18 @@
   {
    "at": "2026-11-16T19:27:28.311Z",
    "kind": "text"
+  },
+  {
+   "at": "2026-11-17T05:18:18.615Z",
+   "kind": "text"
   }
  ],
  "budget": {
   "ntfy": {
    "label": "ntfy",
-   "used": 6,
+   "used": 8,
    "cap": 150,
-   "left": 144,
+   "left": 142,
    "paid": false,
    "blockedUntil": "",
    "daily": false
@@ -47,9 +47,9 @@
   },
   "beat": {
    "label": "פעימה",
-   "used": 5,
+   "used": 6,
    "cap": 30,
-   "left": 25,
+   "left": 24,
    "paid": false,
    "blockedUntil": "",
    "daily": false
@@ -58,7 +58,7 @@
  "queued": 50,
  "pc": {
   "on": true,
-  "seen": "2026-11-17T05:08:47.318Z"
+  "seen": "2026-11-17T05:17:47.387Z"
  },
  "hold": false,
  "quota": null,
