@@ -19947,7 +19947,8 @@ function firstSteps(){
  var wa=R.filter(function(r){return r.id==='wa'&&!r.locked;})[0];
  var waNeed=!!(wa&&!wa.on&&wa.link);
  if((gOn&&!waNeed)||!R.length){w.hidden=true;w.innerHTML='';return;}
- var m=R.filter(function(r){return r.key==='meta'&&!r.locked;})[0];
+ // 17.11.2026: a customer has no Facebook login row until Meta's App Review, only the partner access row (fbp).
+ var m=R.filter(function(r){return (r.key==='meta'||r.id==='fbp')&&!r.locked;})[0];
  var h='';
  w.onclick=function(e){var t=e.target.closest&&e.target.closest('[data-fs]');if(t)connSheet();};
  if(waNeed){
