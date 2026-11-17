@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<script>(function(){try{if(localStorage.getItem("fold20261117"))return;function add(k,a){var h=[];try{h=JSON.parse(localStorage.getItem(k)||"[]")||[];}catch(e){}a.forEach(function(x){if(h.indexOf(x)<0)h.push(x);});localStorage.setItem(k,JSON.stringify(h));}add("tilesHidden",["gHomestyle"]);add("iconsHidden",["icDemo"]);localStorage.setItem("fold20261117","1");}catch(e){}})();</script>
+<script>(function(){try{function add(k,a){var h=[];try{h=JSON.parse(localStorage.getItem(k)||"[]")||[];}catch(e){}a.forEach(function(x){if(h.indexOf(x)<0)h.push(x);});localStorage.setItem(k,JSON.stringify(h));}[{"key":"fold20261117","tiles":["gHomestyle"],"icons":["icDemo"]},{"key":"fold20261117b","tiles":["gSale","gMed"],"icons":[]}].forEach(function(f){if(localStorage.getItem(f.key))return;add("tilesHidden",f.tiles);add("iconsHidden",f.icons);localStorage.setItem(f.key,"1");});}catch(e){}})();</script>
 <script>
 (function(){try{
  if(!window.CSS||!CSS.supports||!CSS.supports('font','-apple-system-body'))return;
@@ -3212,7 +3212,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-17T15:00:07.866Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-17T15:10:02.454Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -5161,7 +5161,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='33794e7679';
+var CODE_ID='040efa5817';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
