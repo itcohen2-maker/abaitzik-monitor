@@ -736,7 +736,12 @@ function planFirst(text, list) {
     try {
       return require('child_process').execFileSync('claude', a,
         { cwd: HERE, input: ask, encoding: 'utf8', timeout: 4 * 60 * 1000, maxBuffer: 16 << 20 });
-    } catch (e) { say('!! התכנון נכשל, הביצוע ממשיך בלי תוכנית: ' + String(e.message).slice(0, 120)); return String(e.stdout || ''); }
+    } catch (e) {
+      // 17.11.2026: the reason was cut at 120 characters, inside the command line. The exit, signal, stderr and the JSON tail say why.
+      const tail = (x) => String(x || '').replace(/\s+/g, ' ').slice(-400);
+      say('!! התכנון נכשל, הביצוע ממשיך בלי תוכנית: exit ' + e.status + (e.signal ? ' signal ' + e.signal : '') + ' | err: ' + tail(e.stderr) + ' | out: ' + tail(e.stdout) + ' | prompt ' + Buffer.byteLength(ask) + ' bytes');
+      return String(e.stdout || '');
+    }
   };
   let out = runPlanner(args);
   if (/Invalid effort level/.test(out) && !args.includes('--effort')) {

@@ -1613,6 +1613,10 @@ function tenantTiles(inst) {
   try { if (ids.indexOf('gYtCom') < 0 && fs.existsSync(path.join(inst.dataPath || 'data', 'yt', 'channel.json'))) ids.push('gYtCom'); } catch (e) { /* none */ }
   // 13.11.2026, Itzik: "תעשה אריח אחד של לידים ... על כל המוניטורים". Here when the business grid (which has it) is not drawn.
   if (ids.indexOf('gLeads') < 0 && !(inst.biz && !(Array.isArray(inst.screens) && inst.screens.length))) ids.unshift('gLeads');
+  // 17.11.2026, the audit Itzik approved: a customer does not see what does not work for him yet.
+  // 📣 is not in the entry package or the trial; 🎙️ meeting summaries only once Fireflies has a key.
+  try { const st = require('./lib/plan-io.js').stateOf(inst.name); if (st && (st.plan === 'entry' || st.plan === 'trial')) { const k = ids.indexOf('gCamp'); if (k >= 0) ids.splice(k, 1); } } catch (e) { /* no plan file: as before */ }
+  try { if (!require('./lib/fireflies-key.js').hasKey(inst.dataPath || 'data')) { const k = ids.indexOf('gBhMeet'); if (k >= 0) ids.splice(k, 1); } } catch (e) { /* as before */ }
   ids.push('gConn');
   ids.push('gAdminReq');
   // 10.11.2026: a per tenant opt out (instance hideTiles, an array of tile ids). gConn and gAdminReq can never be hidden.
