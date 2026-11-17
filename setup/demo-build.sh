@@ -16,6 +16,8 @@ find "$APP" -mindepth 1 -maxdepth 1 ! -name instance.json ! -name data ! -name d
 cp -a "$NEW"/. "$APP"/
 rm -rf "$NEW"
 chown -R demo:demo "$APP"
+# mktemp made the copy 700 and cp -a carried it over: Caddy could not read the page (17.11)
+chmod 711 "$APP"; setfacl -m u:caddy:x "$APP" 2>/dev/null || true
 cd "$APP"
 sudo -u demo -H node lib/demo-data.js data
 sudo -u demo -H env MONITOR_NO_GATE=1 node build.js 2>&1 | tail -1
