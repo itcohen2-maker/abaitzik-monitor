@@ -3203,7 +3203,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-17T10:50:05.751Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-17T10:50:20.927Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -5049,11 +5049,11 @@ function waFiles(m){
 }
 var SIGNUP_URL='https://it-solution.co.il/start/?k=ottpdpckxey9zt5k';
 function signupShare(){
- var NL=String.fromCharCode(10),txt='שלום, זה הקישור לפתוח מוניטור עסקי משלך. שבוע ניסיון בלי חיוב ובלי כרטיס אשראי, נרשמים עם שם ומייל:'+NL+SIGNUP_URL;
+ var NL=String.fromCharCode(10),txt=['שלום,','אם אתה מנהל עסק לבד ונופל עליך הכל, יש דרך פשוטה יותר.','','המוניטור העסקי מרכז את כל העסק במקום אחד. את הכל מבקשים ממנו בהודעת וואטסאפ, כמו שכותבים לעובד:','• מייל: קורא, מסכם ומכין טיוטת תשובה','• הצעות מחיר: מוכנות לשליחה, והלקוח חותם מהטלפון','• חשבוניות: מחובר לתוכנת החשבוניות שלך','• יומן ותזכורות: פגישות, ותזכורת בדיוק בשעה שביקשת','• לידים: כל פנייה נרשמת ואף אחת לא נשכחת','','שבוע ניסיון בחינם עם 40 פעולות, בלי כרטיס אשראי. נרשמים עם שם ומייל:',SIGNUP_URL].join(NL); // 17.11.2026, Itzik: why it is worth it, not only how to sign up
  var w=document.createElement('div');w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','דף הרשמה');
  w.innerHTML='<div class="ycard"><b>🚀 דף ההרשמה למוניטור</b><small>שבוע ניסיון, שם ומייל, והמוניטור נפתח לבד</small>'
   +'<a class="yb yb1" style="display:block;text-align:center;text-decoration:none" href="https://wa.me/?text='+encodeURIComponent(txt)+'" target="_blank" rel="noopener">💬 לשלוח בוואטסאפ</a>'
-  +'<a class="yb" style="display:block;text-align:center;text-decoration:none" href="mailto:?subject='+encodeURIComponent('המוניטור העסקי: שבוע ניסיון')+'&body='+encodeURIComponent(txt)+'">✉️ לשלוח במייל</a>'
+  +'<a class="yb" style="display:block;text-align:center;text-decoration:none" href="mailto:?subject='+encodeURIComponent('מנהל עסק לבד? הכל ממקום אחד, דרך הוואטסאפ')+'&body='+encodeURIComponent(txt)+'">✉️ לשלוח במייל</a>'
   +'<button type="button" class="yb" data-k="copy">📋 להעתיק את הקישור</button>'
   +'<a class="yb" style="display:block;text-align:center;text-decoration:none" href="'+SIGNUP_URL+'" target="_blank" rel="noopener">👀 לפתוח את הדף</a>'
   +'<button type="button" class="yb yx" data-k="x">סגירה</button></div>';
@@ -5151,7 +5151,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='27694eac29';
+var CODE_ID='37609b9f69';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');

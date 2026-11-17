@@ -6733,11 +6733,11 @@ function waFiles(m){
 // 11.11.2026: send the monitor's signup page (name, mail, a free week) to someone, by WhatsApp or mail, or open it.
 var SIGNUP_URL='https://it-solution.co.il/start/?k=ottpdpckxey9zt5k';
 function signupShare(){
- var NL=String.fromCharCode(10),txt='שלום, זה הקישור לפתוח מוניטור עסקי משלך. שבוע ניסיון בלי חיוב ובלי כרטיס אשראי, נרשמים עם שם ומייל:'+NL+SIGNUP_URL;
+ var NL=String.fromCharCode(10),txt=['שלום,','אם אתה מנהל עסק לבד ונופל עליך הכל, יש דרך פשוטה יותר.','','המוניטור העסקי מרכז את כל העסק במקום אחד. את הכל מבקשים ממנו בהודעת וואטסאפ, כמו שכותבים לעובד:','• מייל: קורא, מסכם ומכין טיוטת תשובה','• הצעות מחיר: מוכנות לשליחה, והלקוח חותם מהטלפון','• חשבוניות: מחובר לתוכנת החשבוניות שלך','• יומן ותזכורות: פגישות, ותזכורת בדיוק בשעה שביקשת','• לידים: כל פנייה נרשמת ואף אחת לא נשכחת','','שבוע ניסיון בחינם עם 40 פעולות, בלי כרטיס אשראי. נרשמים עם שם ומייל:',SIGNUP_URL].join(NL); // 17.11.2026, Itzik: why it is worth it, not only how to sign up
  var w=document.createElement('div');w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','דף הרשמה');
  w.innerHTML='<div class="ycard"><b>🚀 דף ההרשמה למוניטור</b><small>שבוע ניסיון, שם ומייל, והמוניטור נפתח לבד</small>'
   +'<a class="yb yb1" style="display:block;text-align:center;text-decoration:none" href="https://wa.me/?text='+encodeURIComponent(txt)+'" target="_blank" rel="noopener">💬 לשלוח בוואטסאפ</a>'
-  +'<a class="yb" style="display:block;text-align:center;text-decoration:none" href="mailto:?subject='+encodeURIComponent('המוניטור העסקי: שבוע ניסיון')+'&body='+encodeURIComponent(txt)+'">✉️ לשלוח במייל</a>'
+  +'<a class="yb" style="display:block;text-align:center;text-decoration:none" href="mailto:?subject='+encodeURIComponent('מנהל עסק לבד? הכל ממקום אחד, דרך הוואטסאפ')+'&body='+encodeURIComponent(txt)+'">✉️ לשלוח במייל</a>'
   +'<button type="button" class="yb" data-k="copy">📋 להעתיק את הקישור</button>'
   +'<a class="yb" style="display:block;text-align:center;text-decoration:none" href="'+SIGNUP_URL+'" target="_blank" rel="noopener">👀 לפתוח את הדף</a>'
   +'<button type="button" class="yb yx" data-k="x">סגירה</button></div>';
