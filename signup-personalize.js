@@ -90,6 +90,9 @@ function personalize(q, qf) {
 // 11.11: he chose WhatsApp and gave his mobile: map it to his monitor (lib/wa-tenants.js), open his queue to the bridge,
 // and ask Itzik to approve the number on Meta's test number (by hand, Meta sends that phone a code). Once per number.
 function whatsapp(q, qf) {
+  // 17.11.2026, Itzik approved: a typed number is never mapped, it proves nothing. WhatsApp connects only through the
+  // one tap link on the signup page and in 🔌 (lib/wa-quick.js), from the phone that really sent the code.
+  if (q) return;
   const p = q.profile;
   // 17.11.2026, Itzik: "קודם כל לחבר את הוואטסאפ". The mobile is required at signup now, so every trial is mapped,
   // not only one who picked WhatsApp in the questions. A number typed in the questions still wins. Never the line itself.
