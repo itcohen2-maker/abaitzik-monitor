@@ -103,7 +103,7 @@ async function scan(tk) {
     (lf.data || []).forEach((form) => ((form.leads && form.leads.data) || []).forEach((l) => {
       const f = {}; (l.field_data || []).forEach((x) => { f[x.name] = (x.values || [])[0] || ''; });
       found.push({ src: 'leadform', key: 'l:' + l.id, name: f.full_name || f.first_name || 'טופס מטא', phone: f.phone_number || '', email: f.email || '',
-        text: 'טופס "' + (form.name || '') + '"' + (l.ad_name ? ', מודעה: ' + l.ad_name : ''), at: l.created_time, link: 'https://business.facebook.com/latest/leads_center?business_id=' + BUSINESS });
+        text: 'טופס "' + (form.name || '') + '"' + (l.ad_name ? ', מודעה: ' + l.ad_name : '') + Object.keys(f).filter((k) => !['full_name', 'first_name', 'last_name', 'phone_number', 'email'].includes(k)).map((k) => ', ' + f[k]).join(''), at: l.created_time, link: 'https://business.facebook.com/latest/leads_center?business_id=' + BUSINESS });
     }));
   }
   return { found, need: [...need].sort(), netErr };
