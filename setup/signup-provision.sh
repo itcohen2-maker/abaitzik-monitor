@@ -84,6 +84,15 @@ done
 
 # 11.11.2026: the connections page and the questionnaire welcome of every ready trial (signup-personalize.js).
 node "$REPO/signup-personalize.js" >> "$LOG" 2>&1 || log "personalize failed"
+# 17.11.2026, Itzik on a fresh trial: "אני רוצה לעשות חיבורים והרשימה ריקה". cal-sync (every 10 minutes) copies the
+# connection buttons into the new monitor, so 🔌 stayed empty for up to 10 minutes after the ready mail. It runs right
+# here now, and a monitor whose list just arrived is rebuilt at once.
+node "$REPO/cal-sync.js" >> "$LOG" 2>&1 || log "cal-sync failed"
+for f in /home/t[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]/t*-monitor/data/conn/setup.json; do
+  [ -n "$(find "$f" -mmin -3 2>/dev/null)" ] || continue
+  T=$(basename "$(dirname "$(dirname "$(dirname "$f")")")" | sed s/-monitor$//)
+  systemctl start --no-block "monitor-sync-$T.service" 2>/dev/null || true
+done
 
 # 12.11.2026, Itzik: the trial week mails (not opened, not back for two days, the last day). trial-nudge.js, once each.
 ( set -a; . /etc/monitor.env; set +a; cd "$REPO" && node trial-nudge.js ) >> "$LOG" 2>&1 || log "nudge failed"
