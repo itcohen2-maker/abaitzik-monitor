@@ -18092,7 +18092,7 @@ on('gClalit',clalitSheet);
 */
 var TOM_ITEMS=[
  {n:"201",t:"📣 קמפיין · 🆕 לאישורך · תור 15 שניות",r:"tor-1711-15s.mp4"},
- {n:"200",t:"📣 קמפיין · 🆕 לאישורך · איליי קצר עם סיום",r:"ilay-1711-katzar-sium.mp4"},
+ {n:"200",t:"📣 קמפיין · 🆕 לאישורך · איליי קצר, בלי הכותרת האדומה",r:"ilay-1711-katzar-sium.mp4"},
 // 14.11.2026, Itzik: "תסדר לי באריח את כל הסרטונים של הקמפיין העדכניים". Exactly what is ACTIVE in Meta at 15:55 UTC:
 // Ilay's four monitor videos (14.11, to the free week), the three pain images (13.11, to the chat) and burning credits.
 // The 13.11 videos "מי לא שילם לך" and "עסקי ואישי" are no longer running and left the list. Newest first on screen (reversed).
@@ -20129,7 +20129,7 @@ function bzRow(r,extra){
 }
 function bizSheet(t0){
  ensure('biz',function(){
-  var S=D.bizSum||null,recs=(D.biz||[]).filter(function(r){return typeof ldGone!=='function'||ldGone().indexOf(r.id)<0;}),tab=t0||'leads';
+  var S=D.bizSum||null,recs=(D.biz||[]).filter(function(r){return typeof ldGone!=='function'||(ldGone()||[]).indexOf(r.id)<0;/* 17.11.2026: a customer copy has the empty stand in ldGone(){}, and the leads tile threw */}),tab=t0||'leads';
   var bzOwner=false;/*ITZIK:BEGIN*/bzOwner=true;if(!t0)tab='its';/*ITZIK:END*/
   function scoreHtml(){
    if(!S||S.score==null)return '<div class="bzScore n">אין עדיין נתונים</div>';
