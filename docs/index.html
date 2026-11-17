@@ -3203,7 +3203,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-17T12:10:06.013Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-17T12:20:01.994Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -4671,6 +4671,7 @@ try{
 <script>
 var D = {}, NET = {"facebook":"פייסבוק","instagram":"אינסטגרם","tiktok":"טיקטוק","youtube":"יוטיוב"}, CAT = {"blessing":"ברכה","encouragement":"עידוד","personal":"אישי","pain":"שיתוף כאב","medical_advice":"המלצה רפואית","offer_help":"הצעת עזרה","donation":"שאלת תרומות"}, tab = 'pending';
 var GATE = {"salt":"FADG3yVAiuMl/ULRAys1Cg==","rounds":210000}, GKEY = null;
+var GATE_LINK = (function(){ try { var m = /^#k=(.+)$/.exec(location.hash || ''); return m ? decodeURIComponent(m[1]) : ''; } catch (e) { return ''; } })();
 function gbytes(b64){var x=atob(b64),a=new Uint8Array(x.length);for(var i=0;i<x.length;i++)a[i]=x.charCodeAt(i);return a;}
 function graw(a){var s='';for(var i=0;i<a.length;i++)s+=String.fromCharCode(a[i]);return btoa(s);}
 function gnorm(s){return String(s==null?'':s).normalize('NFC').replace(/[\u0591-\u05C7]/g,'').replace(/[\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g,'').replace(/\s+/g,' ').trim().replace(/[ךםןףץ]/g,function(c){return 'כמנפצ'.charAt('ךםןףץ'.indexOf(c));});}
@@ -5151,7 +5152,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='f0f7897493';
+var CODE_ID='059e729e6d';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -19168,6 +19169,11 @@ function gateBoot(){
   });
  };
  setTimeout(function(){try{box.focus();}catch(e){}},120);
+ if(GATE_LINK){
+  try{if(history&&history.replaceState)history.replaceState(null,'',location.pathname);}catch(e){}
+  box.value=GATE_LINK;GATE_LINK='';
+  form.onsubmit({preventDefault:function(){}});
+ }
 }
 boot('report',renderNextReport);
 boot('pegasus',renderPegasus);
