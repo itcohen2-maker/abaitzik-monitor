@@ -710,7 +710,7 @@ function planFirst(text, list) {
   if (process.platform === 'win32' || process.env.MONITOR_ONE_STAGE || (TIER && TIER.oneStage)) return null;
   // 4.11: the cost guard of the monthly package: no Opus planner, one cheap session.
   if (planCheap()) return null;
-  const ask = text + '\n\n' + [
+  let ask = text + '\n\n' + [
     '=== שלב תכנון בלבד ===',
     'אתה המתכנן. מותר לך רק לקרוא קבצים (Read, Grep, Glob). אל תכתוב, אל תריץ ואל תענה.',
     'מי שיבצע אחריך הוא מודל זול ומהיר, שיקבל את ההודעות למעלה ואת התוכנית שלך.',
@@ -724,10 +724,13 @@ function planFirst(text, list) {
   // 17.10: the plan model per monitor, and Opus kept for 3D and design (lib/plan-model.js).
   const planModel = require('./lib/plan-model.js').pick(text);
   const args = ['-p', '--model', planModel, '--output-format', 'json',
-    '--allowedTools', 'Read', 'Grep', 'Glob', '--max-turns', '6'];
+    '--allowedTools', 'Read', 'Grep', 'Glob', '--max-turns', inst.name === 'abaitzik' ? '10' : '6'];
   // 14.10: the planner took $7.08 of Rinat's $8 day (30 runs, up to 15 turns of reading).
   // It plans, the computer does the reading; six turns and $0.30 are enough for a plan.
-  if (!ownAccount()) args.push('--max-budget-usd', '0.3');
+  // 17.11.2026: 437 planner failures on his own monitor, "error_max_budget_usd" after one turn: the context every run loads
+  // now costs more than $0.30 before any reading. The cap was for customers (Rinat, 14.10); the executor below already
+  // leaves his own monitor out (line "inst.name !== 'abaitzik'"), and so does the planner now.
+  if (inst.name !== 'abaitzik' && !ownAccount()) args.push('--max-budget-usd', '0.3');
   // 14.10: Rinat's company account answers Opus only at effort low ("400 Invalid effort
   // level" on the default). MONITOR_PLAN_EFFORT in /etc/<id>.env sets it; without it, a
   // planner that fails on effort is run once more at low.
@@ -747,6 +750,18 @@ function planFirst(text, list) {
   if (/Invalid effort level/.test(out) && !args.includes('--effort')) {
     say('המתכנן נדחה על רמת מאמץ, מנסה שוב ב low');
     out = runPlanner(args.concat('--effort', 'low'));
+  }
+  // 17.11.2026: a planner that read until its turns ran out ("error_max_turns") left no plan at all. One more short
+  // run without tools writes the plan from what the prompt already holds.
+  if (/"subtype":"error_max_turns"/.test(out)) {
+    say('המתכנן גמר את התורות בלי תוכנית, כותב אותה עכשיו בלי כלים');
+    const fb = ['-p', '--model', planModel, '--output-format', 'json', '--max-turns', '2', '--disallowedTools', 'Read', 'Grep', 'Glob', 'Bash', 'Edit', 'Write', 'WebFetch', 'WebSearch', 'Task', 'Agent'];
+    if (inst.name !== 'abaitzik' && !ownAccount()) fb.push('--max-budget-usd', '0.3');
+    if (args.includes('--effort')) fb.push('--effort', args[args.indexOf('--effort') + 1]);
+    const ask0 = ask;
+    ask = ask0 + '\n\nאין לך כלים בהרצה הזו ואין עוד קריאות. כתוב עכשיו את התוכנית המלאה ממה שכתוב כאן.';
+    out = runPlanner(fb);
+    ask = ask0;
   }
   // 4.11: the planner's line counts no actions (lib/plan.js counts msgs, once per message).
   const d = logUsage(out, list, true);
