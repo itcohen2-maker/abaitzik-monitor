@@ -34,10 +34,10 @@ NAMES_EN='shai|bodek|pablo|shulman|ilay|ily|alon|rinat|aminov|yehuda|shachar|yan
 # (שאלון). A message that opens with "שי, " loses the name, and code ids that hold "shai" are renamed.
 NAMES_PRE='שחר|שולמן|פבלו|איליי|יניב|נחמן|גיתית|לולוס|פגסוס|סלינדה'
 find "$APP/docs" -type f \( -name '*.html' -o -name '*.json' -o -name '*.js' \) -exec perl -CSD -Mutf8 -pi -e \
-  "s/(?<!\\p{Hebrew})([בלמוהכ])(?:$NAMES_PRE)(?!\\p{Hebrew})/\${1}לקוח/g; s/(?<!\\p{Hebrew})(?:$NAMES_HE)(?!\\p{Hebrew})/לקוח/g; s/(['\"])שי, /\$1/g; s/shai/cx/gi; s/\\b(?:$NAMES_EN)\\b/cx/gi" {} +
+  "s/(?<!\\p{Hebrew})([בלמוהכ])(?:$NAMES_PRE)(?!\\p{Hebrew})/\${1}לקוח/g; s/(?<!\\p{Hebrew})(?:$NAMES_HE)(?!\\p{Hebrew})/לקוח/g; s/(['\"])שי, /\$1/g; s/shai/cx/gi; s/אבא איציק/IT Solution/g; s/(?<!\p{Hebrew})([ולבהמש]{1,2})איציק(?!\p{Hebrew})/\${1} IT Solution/g; s/(?<!\p{Hebrew})(?:איציק|יצחק)(?!\p{Hebrew})/IT Solution/g; s/\\b(?:$NAMES_EN)\\b/cx/gi" {} +
 # Never publish anything of Itzik's. On a hit the page is replaced by a short notice, and the run fails.
 HIT=$(find "$APP/docs" -type f \( -name '*.html' -o -name '*.json' -o -name '*.js' \) -exec perl -CSD -Mutf8 -ne \
-  "print \"\$ARGV: \$&\\n\" if /(?<!\\p{Hebrew})[בלמוהכ]?(?:$NAMES_PRE)(?!\\p{Hebrew})|(?<!\\p{Hebrew})(?:$NAMES_HE|יצחק כהן)(?!\\p{Hebrew})|shai|\\b(?:$NAMES_EN)\\b|\\@gmail\\.com|\\/(?:f|p|r)\\/[a-f0-9]{16,}/i" {} + | head -5)
+  "print \"\$ARGV: \$&\\n\" if /(?<!\\p{Hebrew})[בלמוהכ]?(?:$NAMES_PRE)(?!\\p{Hebrew})|(?<!\\p{Hebrew})(?:$NAMES_HE|יצחק|איציק)(?!\\p{Hebrew})|shai|\\b(?:$NAMES_EN)\\b|\\@gmail\\.com|\\/(?:f|p|r)\\/[a-f0-9]{16,}/i" {} + | head -5)
 if [ -n "$HIT" ]; then
   echo "$HIT"
   printf '<!doctype html><meta charset="utf-8"><title>הדגמה</title><p style="font-family:sans-serif;text-align:center;margin-top:20vh">ההדגמה מתעדכנת, נסו שוב בעוד כמה דקות.</p>' > "$APP/docs/index.html"
