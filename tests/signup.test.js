@@ -100,3 +100,9 @@ test('status hands the personal link only to the page token, only when ready', (
   assert.equal(s.enter, 'https://' + v.id + '.m.it-solution.co.il/#k=12345678901234');
   assert.equal(S.status(d, { id: v.id, pt: 'a'.repeat(32) }).ok, false);
 });
+
+// 17.11.2026: no phone, no signup.
+test('the phone is required', () => {
+  const d = tmp();
+  assert.equal(S.start(d, who({ phone: '' }), T0).error, 'phone');
+});
