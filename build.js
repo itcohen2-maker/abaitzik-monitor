@@ -1719,7 +1719,7 @@ const PAGE = `<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<script>
+${require('./lib/public-demo.js').head(inst) /* 17.11.2026: the public demo only, empty elsewhere */}<script>
 /* Reviewer, 11.10, approved by Itzik: every size here is fixed, so a larger
    text setting on the iPhone changed nothing on this page. Safari reports that
    setting through the -apple-system-body font (17px at the default), and the
@@ -24939,7 +24939,7 @@ if(bootFailed.length){
 // appears and he has a way out instead of a screen that ignores him.
 try{window.__monAlive();}catch(e){}
 </script>
-</body>
+${require('./lib/public-demo.js').tail(inst)}</body>
 </html>`;
 
 /*
