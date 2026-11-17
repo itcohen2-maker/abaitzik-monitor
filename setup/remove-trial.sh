@@ -33,6 +33,8 @@ sed -i "/-$ID\.\(service\|timer\)|/d" /usr/local/bin/monitor-keepalive.sh
 sudo -u monitor node -e '
 const fs=require("fs"),id=process.argv[1];
 for (const f of ["data/fastchat/tenants.json","data/visits/keys.json"]) { try { const j=JSON.parse(fs.readFileSync(f,"utf8")); if (j[id]) { delete j[id]; fs.writeFileSync(f,JSON.stringify(j,null,1)); } } catch (e) {} }
+// 17.11: its WhatsApp mapping (data/wa-tenants.json is keyed by phone), so the number goes back to whoever owned it
+try { const wf="data/wa-tenants.json", w=JSON.parse(fs.readFileSync(wf,"utf8")); let ch=0; for (const k of Object.keys(w)) if (w[k]&&w[k].tenant===id) { delete w[k]; ch=1; } if (ch) fs.writeFileSync(wf,JSON.stringify(w,null,1)); } catch (e) {}
 for (const f of ["data/tenants/tenants/"+id+".json","data/visits/"+id+".json"]) { try { fs.unlinkSync(f); } catch (e) {} }
 // 11.11: its connections page (signup-personalize.js) and its line in sources.json
 try { const sf="data/cal/sources.json", s=JSON.parse(fs.readFileSync(sf,"utf8")), me=s.find((x)=>x&&x.name===id);
