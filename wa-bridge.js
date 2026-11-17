@@ -47,7 +47,8 @@ const PORT = Number(process.env.WA_PORT || 8796);
 const DEMO_FLAG = path.join(ROOT, 'data', 'demo', 'active.json');
 const ORIGINS = ['https://itcohen2-maker.github.io', 'https://shai.it-solution.co.il', 'https://alon.abaitzik.com', 'https://rinat.abaitzik.com', 'https://pablo.it-solution.co.il', 'https://ilay.abaitzik.com', 'https://it-solution.co.il', 'https://www.it-solution.co.il'];
 // 11.11.2026: every self signup trial monitor lives at https://<id>.m.it-solution.co.il, so those are allowed by pattern.
-function originOk(o) { return ORIGINS.indexOf(o) > -1 || /^https:\/\/t[a-f0-9]{6}\.m\.it-solution\.co\.il$/.test(String(o || '')); }
+// 17.11.2026: the public demo monitor too (lib/public-demo.js); it holds no code, so it reaches only the public /api/demo/*.
+function originOk(o) { return ORIGINS.indexOf(o) > -1 || o === 'https://demo.m.it-solution.co.il' || /^https:\/\/t[a-f0-9]{6}\.m\.it-solution\.co\.il$/.test(String(o || '')); }
 /*
   1.11.2026: the client demo (lib/demo-mode.js). While it is on, every question,
   from the page or from WhatsApp, goes to the worker with this frame first, so
@@ -1085,6 +1086,12 @@ async function api(q, s, u) {
   if (q.method === 'OPTIONS') { s.writeHead(204, h); return s.end(); }
   if (q.method !== 'POST') { s.writeHead(405, h); return s.end('{}'); }
   let b; try { b = JSON.parse((await readBody(q, 20000)).toString('utf8')); } catch (e) { s.writeHead(400, h); return s.end('{}'); }
+  // 17.11.2026: the public demo monitor (lib/demo-chat.js). Public, no code, the owner instance only. Never his queue or thread.
+  if (/^\/api\/demo\/(chat|hit|wa)$/.test(u.pathname)) {
+    if (!isOwnerInstance()) { s.writeHead(404, h); return s.end('{}'); }
+    const r = await require('./lib/demo-chat.js').api(u.pathname, b, { dataPath: DATA, ip: realIp(q) });
+    s.writeHead(r.status, h); return s.end(JSON.stringify(r.json));
+  }
   // 11.11.2026: the self signup (lib/signup.js). Public, no code: the email code is the check. A verified signup waits in
   // data/signup/queue/ for its trial monitor (setup/signup-provision.sh), and lands in Itzik's 📋 לטיפול.
   if (u.pathname === '/api/signup' || u.pathname === '/api/signup/verify' || u.pathname === '/api/signup/profile' || u.pathname === '/api/signup/status' || u.pathname === '/api/signup/ref') {
