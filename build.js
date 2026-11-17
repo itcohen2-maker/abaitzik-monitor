@@ -24852,7 +24852,7 @@ ${require('./lib/activity-ui.js').js}
 on('gActLog',function(){pane('Lg');renderActLog();return false;});
 /*ITZIK:END*/
 ${require('./lib/home-ui.js').js}
-${require('./lib/gemini-home.js').js}${require('./lib/reply-pill.js').js}${require('./lib/agents-ui.js').js(inst.name === 'abaitzik')}${require('./lib/mic-colors.js').js}${require('./lib/motion.js').js}${inst.name === 'abaitzik' ? require('./lib/demo-mode.js').js : ''}${inst.bizHome ? require('./lib/biz-home.js').js : ''}${inst.name !== 'abaitzik' ? require('./lib/shop-list.js').js : ''}
+${require('./lib/gemini-home.js').js}${require('./lib/reply-pill.js').js}${require('./lib/agents-ui.js').js(inst.name === 'abaitzik')}${require('./lib/start-more-ui.js').js(inst.name === 'abaitzik')}${require('./lib/mic-colors.js').js}${require('./lib/motion.js').js}${inst.name === 'abaitzik' ? require('./lib/demo-mode.js').js : ''}${inst.bizHome ? require('./lib/biz-home.js').js : ''}${inst.name !== 'abaitzik' ? require('./lib/shop-list.js').js : ''}
 ${require('./lib/skins-ui.js').js}
 boot('design',dzBoot);
 ${pushUi.js(pushKey())}
