@@ -115,3 +115,14 @@ test("17.11.2026: two dots in a row, or a dot at the edge, is not a valid addres
   assert.strictEqual(S.emailOk("hagitit7@gmail.com"), true);
   assert.strictEqual(S.emailOk("dana.levi@walla.co.il"), true);
 });
+
+test("17.11.2026: a removed trial does not block a new signup with the same mail", () => {
+  const S = require("../lib/signup.js");
+  const fs = require("fs"), os = require("os"), path = require("path");
+  const D = fs.mkdtempSync(path.join(os.tmpdir(), "sgrm-"));
+  fs.mkdirSync(path.join(D, "signup", "queue"), { recursive: true });
+  fs.writeFileSync(path.join(D, "signup", "queue", "t0a0b0c.json"), JSON.stringify({ id: "t0a0b0c", email: "x@y.co", state: "removed" }));
+  assert.strictEqual(S.findQueued(D, "x@y.co"), null);
+  fs.writeFileSync(path.join(D, "signup", "queue", "t0a0b0c.json"), JSON.stringify({ id: "t0a0b0c", email: "x@y.co", state: "ready" }));
+  assert.strictEqual(S.findQueued(D, "x@y.co").id, "t0a0b0c");
+});
