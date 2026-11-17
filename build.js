@@ -5409,7 +5409,8 @@ ${pushUi.html(pushKey())}
   <small>אפשר לבקש שנמחק את כל מה ששמרת כאן: הודעות, פתקים, קבצים, משימות ותורים. המחיקה סופית ואין דרך לשחזר אחריה. הבקשה מגיעה למנהל, והמחיקה נעשית תוך יום.</small>
   <small>מה נשאר אצלנו: רק חשבוניות שהחוק מחייב לשמור. לעזרה כתוב לנו בצ׳אט.</small>
  </div>
- <button type="button" class="abtn" id="wipeBtn" style="background:#c62828;color:#fff">למחוק הכל</button>
+ <!-- The button only sends a request (see wipeBtn below), so its label says so. -->
+ <button type="button" class="abtn" id="wipeBtn" style="background:#c62828;color:#fff">לבקש מחיקה של הכל</button>
 </div>
 </details>
  <!--
@@ -24157,7 +24158,7 @@ on('resetBtn',function(){
 // request waits in "מחכה לך" until he approves it there.
 on('wipeBtn',function(){
  if(!confirm('נשלחת בקשה למחיקה. מנהל IT Solution יאשר, ואחרי זה הכל יימחק ולא יחזור. לשלוח את הבקשה?'))return;
- var w=prompt('כדי לשלוח את הבקשה כתוב: למחוק','');
+ var w=prompt('עוד לא נמחק כלום. כדי לשלוח את הבקשה כתוב כאן את המילה: למחוק','');
  if(w!=='למחוק'){toast('לא נשלח. כדי לשלוח את הבקשה צריך לכתוב בדיוק: למחוק');return;}
  sendText('מחיקת כל הנתונים','בקשה למחיקת כל הנתונים','הגדרה').then(function(){
   toast('נשלחה הבקשה. היא מחכה לאישור.');
