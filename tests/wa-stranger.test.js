@@ -127,3 +127,20 @@ test('untouched: Itzik (allow), a connect phrase and a disconnect word from a st
   assert.ok(!sent.some((s) => s[1] === ST.REPLY));
   assert.strictEqual(pushes.length, 0);
 });
+
+test('17.11: a stranger from the site WhatsApp button keeps the ad ref and gets the ad reply', async () => {
+  reset();
+  await bridge.onMessage(msg('972527777777', 'שלום, ראיתי את המודעה על המוניטור ורוצה לשמוע עוד [m-tor]'), 'רון');
+  const r = leads().find((l) => l.phone === '0527777777');
+  assert.strictEqual(r.ref, 'm-tor');
+  assert.strictEqual(sent.length, 1);
+  assert.strictEqual(sent[0][1], ST.REPLY_AD);
+  assert.ok(!/[-‐‑‒–—]/.test(ST.REPLY_AD));
+});
+
+test('17.11: only a short lowercase slug in brackets counts as a ref', () => {
+  assert.strictEqual(ST.refOf('היי [m-tor]'), 'm-tor');
+  assert.strictEqual(ST.refOf('היי [<script>]'), '');
+  assert.strictEqual(ST.refOf('היי [M-TOR]'), '');
+  assert.strictEqual(ST.refOf('היי'), '');
+});

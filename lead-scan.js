@@ -98,12 +98,12 @@ async function scan(tk) {
     });
   }
   // Instant Form leads.
-  const lf = await q(PAGE + '/leadgen_forms?fields=id,name,leads.limit(50){id,created_time,field_data}&limit=25');
+  const lf = await q(PAGE + '/leadgen_forms?fields=id,name,leads.limit(50){id,created_time,field_data,ad_name}&limit=25');
   if (!seenErr(lf)) {
     (lf.data || []).forEach((form) => ((form.leads && form.leads.data) || []).forEach((l) => {
       const f = {}; (l.field_data || []).forEach((x) => { f[x.name] = (x.values || [])[0] || ''; });
       found.push({ src: 'leadform', key: 'l:' + l.id, name: f.full_name || f.first_name || 'טופס מטא', phone: f.phone_number || '', email: f.email || '',
-        text: 'טופס "' + (form.name || '') + '"', at: l.created_time, link: 'https://business.facebook.com/latest/leads_center?business_id=' + BUSINESS });
+        text: 'טופס "' + (form.name || '') + '"' + (l.ad_name ? ', מודעה: ' + l.ad_name : ''), at: l.created_time, link: 'https://business.facebook.com/latest/leads_center?business_id=' + BUSINESS });
     }));
   }
   return { found, need: [...need].sort(), netErr };
