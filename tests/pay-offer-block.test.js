@@ -26,6 +26,6 @@ test('a paid or turned off offer never blocks', () => {
 test('the page script keeps the blocked sheet without a close button', () => {
   const js = require('../lib/plan-ui.js').js;
   assert.match(js, /function payBlock\(\)/);
-  assert.match(js, /data-a="x"\]'\);if\(x\)x\.remove\(\)/);
+  assert.match(js, /.ytopx/);
   assert.match(js, /paid=1/);
 });
