@@ -9730,7 +9730,7 @@ function repaintAll(){
   // 12.11: the 📤 הודעות לשליחה tile reads D.sendlist, sealed too.
   ['sendlist',function(){if(typeof sdPaint==='function')sdPaint();}],
   // 11.11: 👀 כניסות לקוחות reads D.visits, and a customer's page starts its visit beacon from D.visitKey.
-  ['visits',function(){if(typeof paintVisits==='function')paintVisits();if(typeof paintAffs==='function')paintAffs();if(typeof visitStart==='function')visitStart();}]];
+  ['visits',function(){if(typeof paintVisits==='function')paintVisits();if(typeof paintAffs==='function')paintAffs();if(typeof visitStart==='function')visitStart();if(typeof paintDemoSt==='function')paintDemoSt();}]];
  var bad=[],ran={};
  jobs.forEach(function(j){
   ran[j[0]]=1;
@@ -19361,8 +19361,9 @@ function visitsSheet(){
 on('gVisits',function(){visitsSheet();setTimeout(paintVisits,60);});
 /* 17.11.2026, Itzik: "אריח מדידה" for the public demo (it-solution.co.il/demo). Today's numbers on the tile, the day,
    yesterday, the week, by ad ref and the last questions in the sheet (lib/demo-stats.js, D.demoStats). */
-(function(){var t=document.getElementById('gDemoSt');if(!t)return;var S=window.D&&D.demoStats;if(!S){t.hidden=true;return;}
- var sm=t.querySelector('small');if(sm)sm.textContent='היום: '+S.today.visits+' כניסות · '+S.today.questions+' שאלות · '+S.today.wa+' וואטסאפ';})();
+function paintDemoSt(){var t=document.getElementById('gDemoSt');if(!t)return;var S=window.D&&D.demoStats;t.hidden=!S;if(!S)return;
+ var sm=t.querySelector('small');if(sm)sm.textContent='היום: '+S.today.visits+' כניסות · '+S.today.questions+' שאלות · '+S.today.wa+' וואטסאפ';}
+paintDemoSt();
 on('gDemoSt',function(){var S=(window.D&&D.demoStats)||{};
  shipOpen('demoStSheet','📊 מוניטור ההדגמה','<p style="white-space:pre-wrap;text-align:right;line-height:1.6;margin:8px 0">'+esc(S.body||'עוד אין נתונים.')+'</p>'
   +'<a class="yb" style="display:block;text-align:center;text-decoration:none" href="https://it-solution.co.il/demo" target="_blank" rel="noopener">👀 לפתוח את ההדגמה</a>');});
