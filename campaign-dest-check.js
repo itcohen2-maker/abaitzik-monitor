@@ -71,7 +71,7 @@ async function main() {
   const token = fs.readFileSync(TOKEN_FILE, 'utf8').replace(/^﻿/, '').trim();
   const acct = (await graph(SEED_CAMPAIGN + '?fields=account_id', token)).account_id;
   const camps = (await graph('act_' + acct + '/campaigns?fields=id,name,effective_status&limit=100', token)).data
-    .filter((c) => c.effective_status === 'ACTIVE');
+    .filter((c) => LIVE.includes(c.effective_status)); // IN_PROCESS: a budget change being applied, the ads still run
   const ads = [];
   for (const c of camps) {
     const list = (await graph(c.id + '/ads?fields=id,name,effective_status,creative{object_story_spec,asset_feed_spec}&limit=100', token)).data;
