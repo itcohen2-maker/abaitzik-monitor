@@ -9730,7 +9730,7 @@ function repaintAll(){
   // 12.11: the 📤 הודעות לשליחה tile reads D.sendlist, sealed too.
   ['sendlist',function(){if(typeof sdPaint==='function')sdPaint();}],
   // 11.11: 👀 כניסות לקוחות reads D.visits, and a customer's page starts its visit beacon from D.visitKey.
-  ['visits',function(){if(typeof paintVisits==='function')paintVisits();if(typeof paintAffs==='function')paintAffs();if(typeof visitStart==='function')visitStart();if(typeof paintDemoSt==='function')paintDemoSt();}]];
+  ['visits',function(){if(typeof paintVisits==='function')paintVisits();if(typeof paintAffs==='function')paintAffs();if(typeof visitStart==='function')visitStart();if(typeof moreStart==='function')moreStart();if(typeof paintDemoSt==='function')paintDemoSt();}]];
  var bad=[],ran={};
  jobs.forEach(function(j){
   ran[j[0]]=1;

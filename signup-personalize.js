@@ -97,7 +97,7 @@ function whatsapp(q, qf) {
   if (!ph || q.waMapped === ph || /^(\+?972|0)528074881$/.test(String(ph).replace(/\D/g, '').replace(/^972/, '0'))) return;
   // 17.11.2026: Itzik's own phone (the owner numbers in data/wa.json allow) is never handed to a trial, his WhatsApp stays his monitor.
   try { const own = (JSON.parse(fs.readFileSync(path.join(DATA, 'wa.json'), 'utf8')).allow || []).map((x) => String(x).replace(/\D/g, '').slice(-9));
-    if (own.includes(String(ph).replace(/\D/g, '').slice(-9))) { log(q.id + ' whatsapp skipped, owner number'); return; } } catch (e) {}
+    if (own.includes(String(ph).replace(/\D/g, '').slice(-9))) { q.waMapped = ph; wr(qf, q, 'monitor'); log(q.id + ' whatsapp skipped, owner number'); return; } } catch (e) {}
   const dir = home(q.id);
   if (!fs.existsSync(path.join(dir, 'data'))) return;
   const WT = require('./lib/wa-tenants.js');
