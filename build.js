@@ -942,6 +942,8 @@ function build() {
         out.push({ name: a.name || a.ref, ref: a.ref, visits: r.visits || 0, ev });
       });
       return out; } catch (e) { return null; } })(),
+    // 17.11.2026, Itzik: the public demo's numbers on his home (📊 מוניטור ההדגמה, lib/demo-stats.js). His copy only.
+    demoStats: inst.name !== 'abaitzik' ? null : (() => { try { return require('./lib/demo-stats.js').forPage(inst.dataPath, Date.now()); } catch (e) { return null; } })(),
     visits: inst.name !== 'abaitzik' ? null : (() => { try {
       const v = require('./lib/visits.js').forPage(inst.dataPath), out = {};
       Object.keys(v).forEach((n) => { let t = n; try { t = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'tenants', 'tenants', n + '.json'), 'utf8')).title || n; } catch (e) {} out[n] = { title: t, list: v[n] }; });
@@ -4918,7 +4920,7 @@ ${require('./lib/home-ui.js').html}
 
  <div id="askBox"></div>
 <!-- 4.11, Itzik: "תעלה את האריח של העסק שלי למעלה ברשימה. למה שמת אותו אחרון?" The business grid opens the home screen. -->
-${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? require('./lib/sendlist-ui.js').tile : '') + ((inst.name === 'abaitzik' || inst.handle === true) ? '<button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16" id="gVisits" hidden data-new="1"><b>👀 כניסות לקוחות</b><small>מתי נכנסו ולכמה זמן</small></button><button type="button" class="gt g16" id="gAffs" hidden data-new="1"><b>🤝 שותפים</b><small>מי הגיע דרך שי</small></button>' : '') + leadsTile() + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261116-vids-link' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109-cb1115"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button>' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g13" data-grp="work" id="gBhQuote" data-new="1"><b>🧾 הצעות מחיר</b><small>הצעה עם הלוגו שלך, לפני מע״מ, ב PDF</small></button>' : '') + '</div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
+${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? require('./lib/sendlist-ui.js').tile : '') + ((inst.name === 'abaitzik' || inst.handle === true) ? '<button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16" id="gVisits" hidden data-new="1"><b>👀 כניסות לקוחות</b><small>מתי נכנסו ולכמה זמן</small></button><button type="button" class="gt g16" id="gDemoSt" data-new="1"><b>📊 מוניטור ההדגמה</b><small>כניסות, שאלות ווואטסאפ</small></button><button type="button" class="gt g16" id="gAffs" hidden data-new="1"><b>🤝 שותפים</b><small>מי הגיע דרך שי</small></button>' : '') + leadsTile() + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261116-vids-link' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109-cb1115"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button>' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g13" data-grp="work" id="gBhQuote" data-new="1"><b>🧾 הצעות מחיר</b><small>הצעה עם הלוגו שלך, לפני מע״מ, ב PDF</small></button>' : '') + '</div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
   <!-- 3.11, Itzik: "אני צריך אריח שממש יעבב לי, כמו ליד חדש". First on the grid; shows while a --nag reminder is open, hard blink once it is due, until "✅ עשיתי". -->
@@ -19357,6 +19359,13 @@ function visitsSheet(){
  try{if(L.length)localStorage.setItem('visSeen',L[0].at);}catch(e){}
 }
 on('gVisits',function(){visitsSheet();setTimeout(paintVisits,60);});
+/* 17.11.2026, Itzik: "אריח מדידה" for the public demo (it-solution.co.il/demo). Today's numbers on the tile, the day,
+   yesterday, the week, by ad ref and the last questions in the sheet (lib/demo-stats.js, D.demoStats). */
+(function(){var t=document.getElementById('gDemoSt');if(!t)return;var S=window.D&&D.demoStats;if(!S){t.hidden=true;return;}
+ var sm=t.querySelector('small');if(sm)sm.textContent='היום: '+S.today.visits+' כניסות · '+S.today.questions+' שאלות · '+S.today.wa+' וואטסאפ';})();
+on('gDemoSt',function(){var S=(window.D&&D.demoStats)||{};
+ shipOpen('demoStSheet','📊 מוניטור ההדגמה','<p style="white-space:pre-wrap;text-align:right;line-height:1.6;margin:8px 0">'+esc(S.body||'עוד אין נתונים.')+'</p>'
+  +'<a class="yb" style="display:block;text-align:center;text-decoration:none" href="https://it-solution.co.il/demo" target="_blank" rel="noopener">👀 לפתוח את ההדגמה</a>');});
 function affSeen(){try{return localStorage.getItem('affSeen')||'';}catch(e){return '';}}
 function affAll(){var L=[];(D&&D.affs||[]).forEach(function(a){(a.ev||[]).forEach(function(x){L.push(x);});});return L.sort(function(a,b){return a.at<b.at?1:-1;});}
 function paintAffs(){
