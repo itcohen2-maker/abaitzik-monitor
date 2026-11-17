@@ -106,3 +106,12 @@ test('the phone is required', () => {
   const d = tmp();
   assert.equal(S.start(d, who({ phone: '' }), T0).error, 'phone');
 });
+
+test("17.11.2026: two dots in a row, or a dot at the edge, is not a valid address", () => {
+  const S = require("../lib/signup.js");
+  assert.strictEqual(S.emailOk("hagitit7@gmail..com"), false);
+  assert.strictEqual(S.emailOk("a..b@gmail.com"), false);
+  assert.strictEqual(S.emailOk("x@.gmail.com"), false);
+  assert.strictEqual(S.emailOk("hagitit7@gmail.com"), true);
+  assert.strictEqual(S.emailOk("dana.levi@walla.co.il"), true);
+});
