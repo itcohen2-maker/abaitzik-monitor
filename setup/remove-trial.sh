@@ -9,7 +9,8 @@ ID="${1:-}"
 REPO=/home/monitor/abaitzik-monitor
 HOST="$ID.m.it-solution.co.il"
 [ -f "/srv/monitor-changes/$ID.plan.json" ] && grep -q '"plan":"entry"\|"plan": "entry"\|"plan":"small"\|"plan":"medium"\|"plan":"large"' "/srv/monitor-changes/$ID.plan.json" && { echo "$ID is on a paid package, not removing"; exit 3; }
-for u in listen worker watchdog sync upload; do
+# 17.11: every unit of this trial, not only a fixed list (fireflies was left behind). The id is in the name, so nobody else matches.
+for u in listen worker watchdog sync upload fireflies $(ls /etc/systemd/system | sed -n "s/^monitor-\(.*\)-$ID\.\(service\|timer\)$/\1/p" | sort -u); do
   for k in service timer; do systemctl disable --now "monitor-$u-$ID.$k" >/dev/null 2>&1; rm -f "/etc/systemd/system/monitor-$u-$ID.$k"; done
 done
 rm -rf "/etc/systemd/system/monitor-worker-$ID.service.d"
