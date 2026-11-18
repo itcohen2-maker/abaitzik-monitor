@@ -3675,6 +3675,16 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
  .lbLast:empty{display:block}
  .lbNext,.lbRem,.lbSite{text-align:center}
 }
+/* 18.11.2026, Task 4: editing in the row. ⏳ while sending, a grey ✓ for 3 seconds, red when it did not go. */
+.lbBoard .lbSt,.lbNext,.lbRem,.lbSite{cursor:pointer}
+.lbTools,.lbEd{display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px 0}
+.lbTools .yb,.lbEd .yb{width:auto;margin:0;min-height:40px;padding:8px 12px;font-size:14px}
+.lbEd .lbIn{flex:1 1 100%;min-width:0;border-radius:10px;border:1px solid rgba(128,128,128,.5);padding:9px;font:16px Heebo,sans-serif;background:transparent;color:inherit}
+.lbBoard .lbHide{display:none}
+.lbBoard [data-mk="wait"]::after{content:" ⏳"}
+.lbBoard [data-mk="ok"]::after{content:" ✓";color:#8a93a3;font-weight:700}
+.lbBoard .lbRow [data-mk="bad"]{background:#e2445c;color:#fff;opacity:1}
+.lbBoard .lbRow [data-mk="bad"]::after{content:" לא נשמר, לנסות שוב";font-weight:700}
 /*ITZIK:END*/
 .bzRow b{font:700 14px Heebo,sans-serif}
 .bzRow small{opacity:.85}
@@ -20413,7 +20423,7 @@ function bizSheet(t0){
     note box, forward, contact, where from, the stages and delete. hist (the board): the notes as a history, newest
     first, instead of one block.
   */
-  function ldBodyHtml(r,hist){
+  function ldBodyHtml(r,hist,cur){
    var i=ldInfo(r),dd=i.dd,hm=i.hm,em=i.em,src=i.src,meta=/comment|messenger|dm|leadform/.test(r.source||'');
    var rep='';
    if(r.phone){rep+='<a class="yb yb2" href="'+ldWa(r.phone)+'" target="_blank" rel="noopener">💬 וואטסאפ</a><a class="yb" href="tel:'+esc(String(r.phone).replace(/[^0-9+]/g,''))+'">📞 להתקשר</a>';}
@@ -20442,7 +20452,7 @@ function bizSheet(t0){
     +fwd
     +'<div class="ldAct">'+(rep||'<small>אין טלפון או מייל. מחכים שיחזור.</small>')+'</div>'
     +'<div class="ldSrc"><small>📍 מאיפה: '+esc(src.replace(/^[^ ]+ /,''))+(r.ref?' · '+esc(r.ref):'')+'</small>'+(dd?'<small>🕒 נכנס: '+esc(dd+' '+hm)+'</small>':'')+'</div>'
-    +'<div class="ldAct">'+BZ_ORDER.filter(function(st){return st!==r.status;}).map(function(st){return '<button type="button" class="yb" data-bz="ldst" data-s="'+st+'">'+st+'</button>';}).join('')+'</div>'
+    +'<div class="ldAct">'+BZ_ORDER.filter(function(st){return st!==(cur||r.status);}).map(function(st){return '<button type="button" class="yb" data-bz="ldst" data-s="'+st+'">'+st+'</button>';}).join('')+'</div>'
     +'<div class="ldAct"><button type="button" class="yb ldDel" data-bz="lddel">🗑 מחיקה</button></div>'
     +'</div>';
   }
@@ -20489,45 +20499,254 @@ function bizSheet(t0){
     only nextAt (older leads) means 09:00 that day.
     The DOM the editing (Task 4) hangs on: .lbRow[data-id][data-n][data-s][data-src][data-q], .lbSt[data-s], .lbNext,
     .lbSite, .lbRem[data-at], .lbGrp[data-g], .lbToday, .lbFlt [data-f], .lbQ. A row is also .ldRow and its stage is also
-    .ldSt, so the table's handlers (ldst, ldsend, lddel, ldcopy) keep working on it.
+    .ldSt; ldcopy keeps the table's handler, ldst, ldsend and lddel in a row go through lbTap below.
   */
+  var LB_IL=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
+  var lbKey=function(ms){var p={};LB_IL.formatToParts(new Date(ms)).forEach(function(q){p[q.type]=q.value;});return p.year+'-'+p.month+'-'+p.day+' '+(p.hour==='24'?'00':p.hour)+':'+p.minute;};
+  // A reminder as an Israel "YYYY-MM-DD HH:MM". One set on this page is already that and passes as is (never through
+  // Date.parse: Safari gives NaN for it, other browsers read it as device time). A date only nextAt is 09:00 that day.
+  var lbRemKey=function(x){x=String(x||'').trim();if(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(x))return x+' 09:00';if(/^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}$/.test(x))return x;var n=ldT(x);return n?lbKey(n):'';};
+  var lbStage=function(r){return BZ_ORDER.indexOf(r.status)>-1?r.status:'חדש';};
+  var lbShut=function(s){return s==='נסגר'||s==='אבד';};
+  var lbRemTxt=function(k){return '⏰'+(k?' '+(+k.slice(8,10))+'.'+(+k.slice(5,7))+' '+k.slice(11):'');};
+  // A site is a link only when it is a clean http(s) address; anything else (an old "eran.co.il", a bad value) is plain text.
+  var lbSiteIn=function(x){x=String(x||'');if(/^https?:[/][/][^ "'<>]+$/i.test(x))return '<a href="'+esc(x)+'" target="_blank" rel="noopener">🌐 '+esc(x.replace(/^https?:[/][/](www[.])?/i,'').split('/')[0])+'</a>';return x?'🌐 <bdi>'+esc(x)+'</bdi>':'🌐';};
+  var LB_HD='<div class="lbHd"><span>שם</span><span>שלב</span><span>הצעד הבא</span><span>⏰ תזכורת</span><span>🌐 אתר</span><span>מקור</span><span>הערה אחרונה</span></div>';
+  // In an open row, right under the summary (an input inside summary would fold the row on a space): what can be edited.
+  var LB_TOOLS='<div class="lbTools"><button type="button" class="yb" data-tdy="1" data-bz="lbed" data-k="next">✏️ הצעד הבא</button><button type="button" class="yb" data-tdy="1" data-bz="lbed" data-k="rem">⏰ תזכורת</button><button type="button" class="yb" data-tdy="1" data-bz="lbed" data-k="site">🌐 אתר</button></div>';
   function ldBoardHtml(){
-   var IL=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
-   var ilKey=function(ms){var p={};IL.formatToParts(new Date(ms)).forEach(function(q){p[q.type]=q.value;});return p.year+'-'+p.month+'-'+p.day+' '+(p.hour==='24'?'00':p.hour)+':'+p.minute;};
-   var remKey=function(x){x=String(x||'');if(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(x))return x+' 09:00';var n=ldT(x);return n?ilKey(n):'';};
-   var nowK=ilKey(Date.now()),todayK=nowK.slice(0,10);
-   var stage=function(r){return BZ_ORDER.indexOf(r.status)>-1?r.status:'חדש';};
-   var shut=function(s){return s==='נסגר'||s==='אבד';};
+   var nowK=lbKey(Date.now()),todayK=nowK.slice(0,10);
    var A=recs.filter(function(r){return r.kind==='lead'||r.kind==='customer';}).slice().sort(function(a,b){return ldT(b.at)-ldT(a.at);});
-   var LC=A.filter(function(r){return !r.test;}),nNew=LC.filter(function(r){return stage(r)==='חדש';}).length;
+   var LC=A.filter(function(r){return !r.test;}),nNew=LC.filter(function(r){return lbStage(r)==='חדש';}).length;
    var h='<div class="lbBoard"><div class="bzSec">📋 כל הלידים ('+LC.length+(nNew?', '+(nNew===1?'חדש אחד':nNew+' חדשים'):'')+')</div>'+ldScanHtml();
    if(!A.length)return h+'<p class="bzEmpty">עוד אין לידים.</p></div>';
    function row(r){
-    var st=stage(r),i=ldInfo(r),k=remKey(r.nextAt),due=!!k&&k<=nowK&&!shut(st);
-    var site=String(r.site||'').trim(),okSite=/^https?:[/][/][^ "'<>]+$/i.test(site);
+    var st=lbStage(r),i=ldInfo(r),k=lbRemKey(r.nextAt),due=!!k&&k<=nowK&&!lbShut(st);
+    var site=String(r.site||'').trim();
     var hist=r.note?ldNote(r.note).split(String.fromCharCode(10)).filter(Boolean).reverse():[];
     var tel=String(r.phone||'').replace(/[^0-9]/g,'');
     return '<details class="lbRow ldRow'+(r.test?' ldTest':(st==='חדש'?' ldNew':''))+'" data-id="'+esc(r.id)+'" data-n="'+esc(r.name||'')+'" data-at="'+esc(r.at||'')+'" data-s="'+esc(st)+'" data-src="'+(r.source==='signup'?'signup':'other')+'" data-q="'+esc((String(r.name||'')+' '+String(r.email||'')).toLowerCase()+' '+tel)+'"><summary>'
      +'<span class="lbName"><b>'+esc(r.name||'בלי שם')+(r.test?'<span class="ldTestTag">בדיקה שלך</span>':'')+'</b><small><bdi>'+esc(r.phone||i.em||'אין טלפון')+'</bdi></small></span>'
-     +'<span class="lbSt ldSt" data-s="'+esc(st)+'">'+esc(st)+'</span>'
-     +'<span class="lbNext'+(r.next?'':' lbNone')+'" data-v="'+esc(r.next||'')+'">'+esc(r.next||'צעד הבא')+'</span>'
-     +'<span class="lbRem'+(due?' lbDue':'')+(k?'':' lbNone')+'" data-at="'+esc(r.nextAt||'')+'">⏰'+(k?' '+(+k.slice(8,10))+'.'+(+k.slice(5,7))+' '+k.slice(11):'')+'</span>'
-     +'<span class="lbSite'+(okSite?'':' lbNone')+'" data-v="'+(okSite?esc(site):'')+'">'+(okSite?'<a href="'+esc(site)+'" target="_blank" rel="noopener">🌐 '+esc(site.replace(/^https?:[/][/](www[.])?/i,'').split('/')[0])+'</a>':'🌐')+'</span>'
+     +'<span data-bz="lbed" data-k="st" class="lbSt ldSt" data-s="'+esc(st)+'">'+esc(st)+'</span>'
+     +'<span data-bz="lbed" data-k="next" class="lbNext'+(r.next?'':' lbNone')+'" data-v="'+esc(r.next||'')+'">'+esc(r.next||'צעד הבא')+'</span>'
+     +'<span data-bz="lbed" data-k="rem" class="lbRem'+(due?' lbDue':'')+(k?'':' lbNone')+'" data-at="'+esc(r.nextAt||'')+'">'+lbRemTxt(k)+'</span>'
+     +'<span data-bz="lbed" data-k="site" class="lbSite'+(site?'':' lbNone')+'" data-v="'+esc(site)+'">'+lbSiteIn(site)+'</span>'
      +'<span class="lbSrc">'+esc(i.src)+'</span>'
-     +'<span class="lbLast">'+esc(hist[0]||(r.last?'"'+r.last+'"':''))+'</span>'
-     +'</summary>'+ldBodyHtml(r,hist)+'</details>';
+     +'<span data-bz="lbed" data-k="note" class="lbLast">'+esc(hist[0]||(r.last?'"'+r.last+'"':''))+'</span>'
+     +'</summary>'+LB_TOOLS+ldBodyHtml(r,hist,st)+'</details>';
    }
-   h+='<div class="lbBar"><div class="lbFlt"><button type="button" class="on" data-f="all">הכל</button><button type="button" data-f="signup">נרשמו לשבוע ניסיון</button><button type="button" data-f="other">פניות</button></div>'
+   h+='<div class="lbBar"><div class="lbFlt"><button type="button" class="on" data-bz="lbflt" data-f="all">הכל</button><button type="button" data-bz="lbflt" data-f="signup">נרשמו לשבוע ניסיון</button><button type="button" data-bz="lbflt" data-f="other">פניות</button></div>'
     +'<input class="lbQ" type="search" placeholder="🔎 חיפוש לפי שם או טלפון" enterkeyhint="search"></div>';
-   var T=A.filter(function(r){var k=remKey(r.nextAt);return k&&k.slice(0,10)<=todayK&&!shut(stage(r));}).sort(function(a,b){return remKey(a.nextAt)<remKey(b.nextAt)?-1:1;});
-   h+='<div class="lbToday'+(T.length?'':' lbNone')+'"><div class="lbTh">⏰ היום'+(T.length?' ('+T.length+')':'')+'</div>'+(T.length?T.map(row).join(''):'<small>אין תזכורות להיום.</small>')+'</div>';
-   var HD='<div class="lbHd"><span>שם</span><span>שלב</span><span>הצעד הבא</span><span>⏰ תזכורת</span><span>🌐 אתר</span><span>מקור</span><span>הערה אחרונה</span></div>';
+   var T=A.filter(function(r){var k=lbRemKey(r.nextAt);return k&&k.slice(0,10)<=todayK&&!lbShut(lbStage(r));}).sort(function(a,b){return lbRemKey(a.nextAt)<lbRemKey(b.nextAt)?-1:1;});
+   var nT=T.filter(function(r){return !r.test;}).length;
+   h+='<div class="lbToday'+(T.length?'':' lbNone')+'"><div class="lbTh">⏰ היום'+(nT?' ('+nT+')':'')+'</div>'+(T.length?T.map(row).join(''):'<small class="lbTNo">אין תזכורות להיום.</small>')+'</div>';
    BZ_ORDER.forEach(function(g){
-    var rs=A.filter(function(r){return stage(r)===g;}),n=rs.filter(function(r){return !r.test;}).length;
-    h+='<details class="lbGrp'+(shut(g)?' lbShut"':'"')+' data-g="'+g+'"'+(shut(g)?'':' open')+'><summary class="lbGh"><b>'+g+'</b><small>('+n+')</small></summary>'
-     +(rs.length?HD+rs.map(row).join(''):'<small class="lbEmpty">אין כאן לידים.</small>')+'</details>';
+    var rs=A.filter(function(r){return lbStage(r)===g;}),n=rs.filter(function(r){return !r.test;}).length;
+    h+='<details class="lbGrp'+(lbShut(g)?' lbShut"':'"')+' data-g="'+g+'"'+(lbShut(g)?'':' open')+'><summary class="lbGh"><b>'+g+'</b><small>('+n+')</small></summary>'
+     +(rs.length?LB_HD+rs.map(row).join(''):'<small class="lbEmpty">אין כאן לידים.</small>')+'</details>';
    });
    return h+'</div>';
+  }
+  /*
+    18.11.2026, the board's editing (Task 4). A tap on a field of a row (stage, next step, ⏰, 🌐) opens its editor under
+    the summary; the row's tools do the same in an open row. Every change shows at once with ⏳ on every row of that lead
+    (a due lead is in ⏰ היום and in its group, same data-id), then goes as "ליד [<id>]: ..." (lib/leads.js). Sent: a grey
+    ✓ for 3 seconds. Refused, or no answer in 30 seconds: the field is red, "לא נשמר, לנסות שוב", and a tap on it sends
+    the same line again. Only the newest send of a field paints it, so an older answer never overrides a newer change
+    (a late success of the newest one still turns its red to ✓). What the server refuses (an empty step, a bad site,
+    a passed time) is stopped here, since ✓ only means the line went out. Filter and search are this page only.
+  */
+  // The reminder chips: "YYYY-MM-DD HH:MM" in Israel time from nowMs, whatever the device clock. eve: 19:00 today, or
+  // tomorrow once 19:00 passed; tom: tomorrow 09:00; week: in 7 days 09:00. Days are added on the calendar, never as 24 hours.
+  function lbWhen(kind,nowMs){
+   var k=lbKey(nowMs),y=+k.slice(0,4),m=+k.slice(5,7),d=+k.slice(8,10);
+   var day=function(n){return new Date(Date.UTC(y,m-1,d+n)).toISOString().slice(0,10);};
+   if(kind==='eve')return day(k.slice(11)<'19:00'?0:1)+' 19:00';
+   if(kind==='tom')return day(1)+' 09:00';
+   if(kind==='week')return day(7)+' 09:00';
+   return '';
+  }
+  // The same rule as normSite in lib/leads.js: a bare domain gets https://, any other scheme or markup is refused.
+  function lbSiteNorm(x){
+   x=String(x||'').trim();if(!x||/[<>"']/.test(x)||x.indexOf(String.fromCharCode(92))>-1||x.indexOf(String.fromCharCode(96))>-1)return '';
+   for(var i=0;i<x.length;i++){if(x.charCodeAt(i)<33)return '';}
+   if(!/^https?:[/][/]/i.test(x)){if(/^[a-z][a-z0-9+.-]*:/i.test(x))return '';x='https://'+x;}
+   if(!/^https?:[/][/][a-z0-9-]+([.][a-z0-9-]+)*(:[0-9]+)?([/?#]|$)/i.test(x)||x.length>300)return '';
+   return x;
+  }
+  var lbSeq={},lbMsg={},LB_F={st:'lbSt',next:'lbNext',site:'lbSite',rem:'lbRem',note:'lbLast'};
+  var lbAll=function(p,sel){return Array.prototype.slice.call(p.querySelectorAll(sel));};
+  var lbKids=function(p){return lbAll(p,'.lbRow');};
+  function lbRows(el,id){return lbKids(el).filter(function(r){return r.getAttribute('data-id')===id;});}
+  // The page's copy of the lead changes too, so a redraw of the tab keeps what was just set.
+  function lbRec(id,o){recs.forEach(function(r){if(r.id===id){for(var k in o)r[k]=o[k];}});}
+  function lbMark(el,id,f,m){lbRows(el,id).forEach(function(r){var x=r.querySelector('.'+LB_F[f]);if(!x)return;if(m)x.setAttribute('data-mk',m);else x.removeAttribute('data-mk');});}
+  function lbSend(el,id,f,body){
+   var k=id+'|'+f,n=lbSeq[k]=(lbSeq[k]||0)+1,cur=function(){return lbSeq[k]===n;};
+   lbMsg[k]=body;lbMark(el,id,f,'wait');
+   var tm=setTimeout(function(){if(cur())lbMark(el,id,f,'bad');},30000),p;
+   try{p=Promise.resolve(sendText('ליד',body,'ליד'));}catch(x){p=Promise.reject(x);}
+   p.then(function(){clearTimeout(tm);if(!cur())return;lbMark(el,id,f,'ok');setTimeout(function(){if(cur())lbMark(el,id,f,'');},3000);},
+    function(){clearTimeout(tm);if(cur())lbMark(el,id,f,'bad');});
+  }
+  function lbStBtns(cur){return BZ_ORDER.filter(function(st){return st!==cur;}).map(function(st){return '<button type="button" class="yb" data-tdy="1" data-bz="ldst" data-s="'+st+'">'+st+'</button>';}).join('');}
+  // A group left with no row shows "אין כאן לידים." again.
+  function lbTidy(g){if(!g||!g.classList.contains('lbGrp')||lbKids(g).length)return;var hd=g.querySelector('.lbHd');if(hd)hd.parentNode.removeChild(hd);if(!g.querySelector('.lbEmpty'))g.insertAdjacentHTML('beforeend','<small class="lbEmpty">אין כאן לידים.</small>');}
+  function lbIntoGrp(el,r,s){
+   var g=el.querySelector('.lbGrp[data-g="'+s+'"]'),old=r.parentNode;if(!g||g===old)return;
+   var em=g.querySelector('.lbEmpty');if(em)em.parentNode.removeChild(em);
+   if(!g.querySelector('.lbHd'))g.querySelector('.lbGh').insertAdjacentHTML('afterend',LB_HD);
+   var t0=ldT(r.getAttribute('data-at')),rs=lbKids(g),nx=null;
+   for(var i=0;i<rs.length;i++){if(ldT(rs[i].getAttribute('data-at'))<t0){nx=rs[i];break;}}
+   g.insertBefore(r,nx);lbTidy(old);
+  }
+  // Every counter from what is on the page: the groups, the main line and ⏰ היום (a test lead is shown, never counted).
+  function lbCount(el){
+   var B=el.querySelector('.lbBoard');if(!B)return;
+   var real=function(p){return lbKids(p).filter(function(r){return !r.classList.contains('ldTest');}).length;},tot=0,nw=0;
+   lbAll(B,'.lbGrp').forEach(function(g){var n=real(g),c=g.querySelector('.lbGh small');tot+=n;if(g.getAttribute('data-g')==='חדש')nw=n;if(c)c.textContent='('+n+')';});
+   var m=B.querySelector('.bzSec');if(m)m.textContent='📋 כל הלידים ('+tot+(nw?', '+(nw===1?'חדש אחד':nw+' חדשים'):'')+')';
+   var T=B.querySelector('.lbToday');if(!T)return;
+   var all=lbKids(T).length,n=real(T),no=T.querySelector('.lbTNo'),th=T.querySelector('.lbTh');
+   if(th)th.textContent='⏰ היום'+(n?' ('+n+')':'');
+   T.classList.toggle('lbNone',!all);
+   if(all&&no)no.parentNode.removeChild(no);
+   if(!all&&!no)T.insertAdjacentHTML('beforeend','<small class="lbTNo">אין תזכורות להיום.</small>');
+  }
+  function lbStageSet(el,id,s){
+   if(BZ_ORDER.indexOf(s)<0)return;
+   lbRec(id,{status:s});
+   lbRows(el,id).forEach(function(r){
+    r.setAttribute('data-s',s);if(!r.classList.contains('ldTest'))r.classList.toggle('ldNew',s==='חדש');
+    var b=r.querySelector('.lbSt');if(b){b.setAttribute('data-s',s);b.textContent=s;}
+    var sb=r.querySelector('[data-bz="ldst"]'),box=sb&&sb.closest('.ldAct');if(box)box.innerHTML=lbStBtns(s);
+    var ed=r.querySelector('.lbEd');if(ed&&ed.getAttribute('data-k')==='st')ed.parentNode.removeChild(ed);
+    if(r.parentNode&&r.parentNode.classList.contains('lbGrp'))lbIntoGrp(el,r,s);
+   });
+   // נסגר and אבד: the server cancels the reminder, so it goes from the rows and from ⏰ היום.
+   if(lbShut(s))lbRemSet(el,id,'');
+   lbCount(el);lbFilter(el);
+  }
+  function lbRemSet(el,id,k){
+   lbRec(id,{nextAt:k});
+   var rows=lbRows(el,id),nowK=lbKey(Date.now()),shut=!!rows[0]&&lbShut(rows[0].getAttribute('data-s'));
+   var due=!!k&&k<=nowK&&!shut,day=!!k&&k.slice(0,10)<=nowK.slice(0,10)&&!shut;
+   var T=el.querySelector('.lbToday'),inT=null,src=null;
+   rows.forEach(function(r){
+    var x=r.querySelector('.lbRem');if(x){x.setAttribute('data-at',k);x.textContent=lbRemTxt(k);x.classList.toggle('lbDue',due);x.classList.toggle('lbNone',!k);}
+    if(T&&r.parentNode===T)inT=r;else src=r;
+   });
+   if(day&&src&&T&&!inT){
+    var c=src.cloneNode(true);c.removeAttribute('open');var ce=c.querySelector('.lbEd');if(ce)ce.parentNode.removeChild(ce);
+    var ts=lbKids(T),nx=null;
+    for(var i=0;i<ts.length;i++){var q=ts[i].querySelector('.lbRem');if(q&&lbRemKey(q.getAttribute('data-at'))>k){nx=ts[i];break;}}
+    T.insertBefore(c,nx);
+   }else if(inT&&!day)inT.parentNode.removeChild(inT);
+   lbCount(el);lbFilter(el);
+  }
+  function lbNextSet(el,id,v){lbRec(id,{next:v});lbRows(el,id).forEach(function(r){var x=r.querySelector('.lbNext');if(!x)return;x.setAttribute('data-v',v);x.textContent=v||'צעד הבא';x.classList.toggle('lbNone',!v);});}
+  function lbSiteSet(el,id,v){lbRec(id,{site:v});lbRows(el,id).forEach(function(r){var x=r.querySelector('.lbSite');if(!x)return;x.setAttribute('data-v',v);x.innerHTML=lbSiteIn(v);x.classList.toggle('lbNone',!v);});}
+  // A note goes on top of the history (newest first) and on the row, in every row of the lead. Like lib/leads.js:
+  // "לא מעוניין" or "לא רלוונטי" makes it אבד, any other note on a חדש lead makes it בשיחה.
+  function lbNote(el,id,v){
+   var line=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',day:'numeric',month:'numeric'}).format(new Date(Date.now())).replace('/','.')+': '+v;
+   lbRows(el,id).forEach(function(r){
+    var hs=r.querySelector('.lbHist');
+    if(!hs){var top=r.querySelector('.ldTop');if(!top)return;top.insertAdjacentHTML('beforeend','<div class="lbHist"></div>');hs=r.querySelector('.lbHist');}
+    hs.insertAdjacentHTML('afterbegin','<small class="ldMine">'+esc(line)+'</small>');
+    var la=r.querySelector('.lbLast');if(la)la.textContent=line;
+   });
+   var rec=null;recs.forEach(function(r){if(r.id===id)rec=r;});
+   var was=rec?rec.status:'';
+   if(rec)rec.note=(rec.note?rec.note+String.fromCharCode(10):'')+line;
+   if(/לא מעוניי?[ןנ]|לא רלוונטי/.test(v)){if(was!=='אבד')lbStageSet(el,id,'אבד');}
+   else if(was==='חדש')lbStageSet(el,id,'בשיחה');
+  }
+  function lbGone(el,id){
+   lbRows(el,id).forEach(function(r){var p=r.parentNode;p.removeChild(r);lbTidy(p);});
+   for(var i=recs.length-1;i>=0;i--){if(recs[i].id===id)recs.splice(i,1);}
+   lbCount(el);lbFilter(el);
+  }
+  // Filter (all, trial week signups, every other lead) and search by name or by the phone's digits. A group with nothing
+  // to show hides while a filter or a search is on; the counters stay the full counts.
+  function lbFilter(el){
+   var B=el.querySelector('.lbBoard');if(!B)return;
+   var on=B.querySelector('.lbFlt .on'),f=on?on.getAttribute('data-f'):'all',qi=B.querySelector('.lbQ');
+   var q=String(qi&&qi.value||'').trim().toLowerCase(),qd=q.replace(/[^0-9]/g,''),act=f!=='all'||!!q;
+   lbKids(B).forEach(function(r){
+    var dq=r.getAttribute('data-q')||'';
+    var ok=(f==='all'||r.getAttribute('data-src')===f)&&(!q||dq.indexOf(q)>-1||(qd.length>1&&dq.replace(/[^0-9]/g,'').indexOf(qd)>-1));
+    r.classList.toggle('lbHide',!ok);
+   });
+   lbAll(B,'.lbGrp').concat(lbAll(B,'.lbToday')).forEach(function(g){g.classList.toggle('lbHide',act&&!lbKids(g).some(function(r){return !r.classList.contains('lbHide');}));});
+  }
+  function lbEdHtml(row,k){
+   var B='<button type="button" data-tdy="1" class="yb';
+   if(k==='st'){var c=row.getAttribute('data-s');return BZ_ORDER.map(function(st){return B+(st===c?' yb2':'')+'" data-bz="lbst" data-s="'+st+'">'+st+'</button>';}).join('');}
+   if(k==='next')return '<input class="lbIn" maxlength="200" enterkeyhint="done" placeholder="מה הצעד הבא? למשל להתקשר ביום שלישי" value="'+esc(row.querySelector('.lbNext').getAttribute('data-v')||'')+'">'+B+' yb2" data-bz="lbnext">שמירה</button>';
+   if(k==='site'){var sv=row.querySelector('.lbSite').getAttribute('data-v')||'';return '<input class="lbIn" type="url" inputmode="url" enterkeyhint="done" placeholder="כתובת האתר, למשל eran.co.il" value="'+esc(sv)+'">'+B+' yb2" data-bz="lbsite">שמירה</button>'+(sv?B+'" data-bz="lbsite" data-x="1">בלי אתר</button>':'');}
+   if(k==='pick')return '<input class="lbIn" type="datetime-local" value="'+lbWhen('tom',Date.now()).replace(' ','T')+'">'+B+' yb2" data-bz="lbrem" data-r="set">שמירה</button>';
+   var now=Date.now(),eve=lbWhen('eve',now).slice(0,10)===lbKey(now).slice(0,10)?'הערב 19:00':'מחר 19:00';
+   return B+'" data-bz="lbrem" data-r="eve">'+eve+'</button>'+B+'" data-bz="lbrem" data-r="tom">מחר 9:00</button>'+B+'" data-bz="lbrem" data-r="week">בעוד שבוע</button>'+B+'" data-bz="lbrem" data-r="pick">📅 תאריך ושעה</button>'
+    +(row.querySelector('.lbRem').getAttribute('data-at')?B+'" data-bz="lbrem" data-r="off">בלי תזכורת</button>':'');
+  }
+  function lbEdOpen(row,k){
+   var old=row.querySelector('.lbEd'),same=old&&old.getAttribute('data-k')===k;
+   if(old)old.parentNode.removeChild(old);
+   if(same)return;
+   var tl=row.querySelector('.lbTools');if(!tl)return;
+   tl.insertAdjacentHTML('afterend','<div class="lbEd bzEd" data-k="'+k+'">'+lbEdHtml(row,k)+'</div>');
+   row.setAttribute('open','');
+   var i=row.querySelector('.lbEd input');if(i){try{i.focus();}catch(x){}}
+  }
+  // The sheet's click goes here first (his copy only). true: done here, the table's handlers never see it.
+  function lbTap(e,el){
+   var tg=e.target;if(!tg||!tg.closest)return false;
+   var t=tg.closest('[data-bz]'),a=t?t.getAttribute('data-bz'):'';
+   if(a==='lbflt'){lbAll(el,'.lbFlt [data-f]').forEach(function(b){b.classList.toggle('on',b===t);});lbFilter(el);return true;}
+   var row=tg.closest('.lbRow'),id=row&&row.getAttribute('data-id');if(!id)return false;
+   var bad=tg.closest('[data-mk="bad"]');
+   if(bad){e.preventDefault();for(var f in LB_F){if(bad.classList.contains(LB_F[f])&&lbMsg[id+'|'+f]){lbSend(el,id,f,lbMsg[id+'|'+f]);break;}}return true;}
+   if(a==='lbed'){
+    // the last note folds and unfolds the row as before, and the 🌐 link opens the site
+    if(t.getAttribute('data-k')==='note'||tg.closest('a'))return true;
+    e.preventDefault();lbEdOpen(row,t.getAttribute('data-k'));return true;
+   }
+   if(a==='lbst'||a==='ldst'){var s=t.getAttribute('data-s');if(BZ_ORDER.indexOf(s)<0||s===row.getAttribute('data-s'))return true;lbStageSet(el,id,s);lbSend(el,id,'st','ליד ['+id+']: סטטוס '+s);return true;}
+   var ed=t?t.closest('.lbEd'):null,inp=ed?ed.querySelector('input'):null,v=inp?String(inp.value||'').trim():'';
+   var done=function(){if(ed&&ed.parentNode)ed.parentNode.removeChild(ed);};
+   if(a==='lbnext'){
+    if(!v){if(inp)inp.focus();return true;}
+    v=v.slice(0,200);lbNextSet(el,id,v);done();lbSend(el,id,'next','ליד ['+id+']: צעד '+v);return true;
+   }
+   if(a==='lbsite'){
+    var x=t.getAttribute('data-x')==='1',u=x?'':lbSiteNorm(v);
+    if(!x&&!u){toast('כתובת האתר לא תקינה. למשל: eran.co.il');if(inp)inp.focus();return true;}
+    lbSiteSet(el,id,u);done();lbSend(el,id,'site','ליד ['+id+']: אתר '+(u||'ביטול'));return true;
+   }
+   if(a==='lbrem'){
+    var w=t.getAttribute('data-r');
+    if(w==='pick'){lbEdOpen(row,'pick');return true;}
+    var key=w==='off'?'':w==='set'?v.replace('T',' ').slice(0,16):lbWhen(w,Date.now());
+    if(w!=='off'){
+     if(!/^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}$/.test(key)){toast('צריך לבחור תאריך ושעה.');return true;}
+     if(key<=lbKey(Date.now())){toast('הזמן הזה כבר עבר. בוחרים זמן מאוחר יותר.');return true;}
+    }
+    done();lbRemSet(el,id,key);lbSend(el,id,'rem','ליד ['+id+']: תזכורת '+(key||'ביטול'));return true;
+   }
+   if(a==='ldsend'){
+    var nb=t.closest('.bzEd'),ni=nb?lbAll(nb,'input').filter(function(q){return (q.type||q.getAttribute('type'))!=='checkbox';})[0]:null,nv=ni?String(ni.value||'').trim():'';
+    if(!nv){if(ni)ni.focus();return true;}
+    ni.value='';lbNote(el,id,nv);lbSend(el,id,'note','ליד ['+id+']: הערה '+nv);return true;
+   }
+   if(a==='lddel'){leadDelAsk(row.getAttribute('data-n'),id,function(){lbGone(el,id);});return true;}
+   return false;
+  }
+  // Typing in the search filters at once; Enter in an editor saves it.
+  function lbOnKey(e,el){
+   var tg=e.target;if(!tg||!tg.classList)return;
+   if(e.type==='input'&&tg.classList.contains('lbQ')){lbFilter(el);return;}
+   if(e.type==='keydown'&&e.key==='Enter'&&tg.classList.contains('lbIn')){var b=tg.closest('.lbEd'),sv=b&&b.querySelector('[data-bz]');if(sv){e.preventDefault();sv.click();}}
   }
   /*ITZIK:END*/
   function itsHtml(){
@@ -20664,7 +20883,7 @@ function bizSheet(t0){
      return '<h3 data-t="'+t[0]+'"'+(t[3]?' data-n="'+t[3]+'"':'')+(bzTabNew(t[0])?' data-new="1"':'')+'>'+t[1]+' '+esc(t[2])+'</h3><div class="bzPane" data-t="'+t[0]+'">'+bodyFor(t[0])+'</div>';
     }).join('')+'</div></div>';
   shipOpen('bizSheet','💼 העסק שלי',html,function(el){
-   var bm=el.querySelector('#bizMic');if(bm)bm.onclick=toggleRec;
+   var bm=el.querySelector('#bizMic');if(bm)bm.onclick=toggleRec;/*ITZIK:BEGIN*/if(LD_BOARD){el.addEventListener('input',function(e){lbOnKey(e,el);});el.addEventListener('keydown',function(e){lbOnKey(e,el);});}/*ITZIK:END*/
    // 1.11, Itzik: inside העסק שלי there was no back, only home. חזרה goes one step back.
    // Every tab change is a step. The phone's back gesture uses the same step (see popstate below).
    var bizHist=[],bzQuiet=false;
@@ -20687,7 +20906,7 @@ function bizSheet(t0){
     d.addEventListener('toggle',function(){if(!d.open||bzQuiet||t2===tab)return;bizHist.push(tab);tab=t2;bzMarkSeen(tab);p.innerHTML=body();});
    });
    window.bizStep=function(){if(!bizHist.length)return false;bizShow(bizHist.pop(),true);return true;};
-   el.addEventListener('click',function(e){
+   el.addEventListener('click',function(e){/*ITZIK:BEGIN*/if(LD_BOARD&&lbTap(e,el))return;/*ITZIK:END*/
     var t=e.target.closest?e.target.closest('[data-bz]'):null;if(!t)return;
     var a=t.getAttribute('data-bz');
     if(a==='demo'){dmoStart();return;}
