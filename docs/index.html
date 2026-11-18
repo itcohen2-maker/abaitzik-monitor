@@ -3214,7 +3214,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-18T11:04:28.551Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-18T11:10:02.862Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -5163,7 +5163,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='f75d5f20a7';
+var CODE_ID='6eb55bf2f9';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -15519,7 +15519,6 @@ function connSheet(){
   var st=r.on?'<span class="cnOk">✓ מחובר</span>':r.paid?'<span class="cnPaid">'+esc(r.paid)+'</span>':r.soon?'<span class="cnSoon">מחברים בתיאום עם IT Solution</span>':'<span class="cnOff">לא מחובר</span>';
   h+='<div class="cnr'+(r.on?' on':'')+(r.locked?' lock':'')+'"'+(r.locked?' aria-disabled="true"':'')+'><span class="cni">'+esc(r.icon)+'</span><div class="cnt"><b>'+esc(r.title)+'</b>'+st+(r.who?'<small>'+esc(r.who)+'</small>':'')+'</div>';
   if(r.link&&!r.soon)h+='<a class="cnb'+(r.on?' again':'')+'" href="'+esc(r.link)+'" target="_blank" rel="noopener">'+(r.on?'חיבור מחדש':(r.linkLabel||'להתחבר'))+'</a>';
-  if(r.key==='google'&&!r.on&&!r.locked&&r.link&&!r.soon)h+='<div style="flex-basis:100%">'+GWARN+'</div>';
   if(r.link2&&!r.on)h+='<a href="'+esc(r.link2)+'" target="_blank" rel="noopener" style="flex-basis:100%;font-size:12.5px;color:#0e7490;margin-top:4px">'+esc(r.link2Label||'')+'</a>';
   if(r.note)h+='<small style="flex-basis:100%">'+esc(r.note)+'</small>';
   if(r.ff&&!r.locked)h+='<div style="flex-basis:100%;display:flex;gap:6px;margin-top:6px"><input type="password" id="ffKey" dir="ltr" maxlength="200" autocomplete="off" placeholder="'+(r.on?'מפתח חדש, להחלפה':'מפתח API מ Fireflies')+'" style="flex:1;min-width:0;border-radius:10px;border:1px solid #ccd;padding:8px;font:15px Heebo,sans-serif"><button type="button" class="yb" data-ff="1">'+(r.on?'החלפה':'שמירה')+'</button></div><small style="flex-basis:100%">ב Fireflies: Settings, ואז Developer settings, ואז API Key. מעתיקים ומדביקים כאן. המפתח נשמר מוצפן ולא מופיע בצ׳אט.</small>';
