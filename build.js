@@ -547,9 +547,10 @@ function build() {
     .map(x => ({ id: x.id, at: x.at || '', text: x.text || '', network: x.network || '', used: !!x.used }))
     .sort((a, b) => (a.at < b.at ? 1 : -1));
   // The reviewer's improvements (review.js), newest first. 30.9.
+  // 18.11.2026 (review): a customer's "מה חסר לך כאן?" (lib/leads-missing.js) keeps its "tenant:<id>" (betterBy).
   const better = loadDocs('better')
     .map(x => ({ at: x.at || '', t: x.t || '', d: x.d || '', area: x.area || '', size: x.size || '', built: x.built || '',
-                 by: x.by === 'radar' || x.by === 'pains' ? x.by : 'review', q: x.q || '', u: /^https:\/\//.test(x.u || '') ? x.u : '' }))
+                 by: betterBy(x.by), q: x.q || '', u: /^https:\/\//.test(x.u || '') ? x.u : '' }))
     // 12.10, Itzik: "כל זמן אותם רעיונות". What is already done sinks under what is still open.
     .sort((a, b) => (!a.built !== !b.built ? (a.built ? 1 : -1) : (a.at < b.at ? 1 : -1)));
   // 12.10: what the other side changed in the theatre (theatre-news.js), newest first.
@@ -3596,26 +3597,16 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 #ftText .bzT{background:#26303c;color:#e8eef5}#ftText .bzT.on{background:#e8eef5;color:#16202c}#ftText #bzBody{border-color:#e8eef5}
 .bzSec{font:700 14px Heebo,sans-serif;margin:10px 0 2px;color:#14675a}
 .bzRow{border-bottom:1px solid rgba(128,128,128,.25);padding:8px 0;font:500 14px/1.45 Heebo,sans-serif;display:flex;flex-direction:column;gap:2px}
-/* 11.11.2026: the leads table in IT Solution (itsLeadsHtml). */
-.ldTbl{border:1px solid rgba(128,128,128,.3);border-radius:12px;overflow:hidden;margin-bottom:14px;font:500 14px/1.4 Heebo,sans-serif}
-/* 14.11.2026: on his iPhone with larger text the fixed columns ate the whole row and the name column fell to 0 ("היה ליד של אופירה, איפה הוא?"). The name keeps at least 5em now. */
-.ldHd,.ldRow>summary{display:grid;grid-template-columns:auto minmax(5em,1fr) minmax(3.6em,7.5em) auto;gap:6px;padding:9px 10px;align-items:center}
-.ldHd{font-weight:700;font-size:12px;opacity:.7;background:rgba(128,128,128,.08)}
-.ldRow{border-top:1px solid rgba(128,128,128,.22)}
+/* 11.11.2026: a lead row (18.11: the board's .lbRow is also .ldRow; the old table is gone). */
 .ldRow>summary{cursor:pointer;list-style:none}
 .ldRow>summary::-webkit-details-marker{display:none}
 .ldRow>summary b{min-width:0;white-space:normal;overflow-wrap:anywhere}
-.ldRow>summary span:nth-child(3){font-size:12px;min-width:0;overflow-wrap:anywhere}
-.ldSt{font-size:12px;font-weight:700;text-align:center;border-radius:8px;padding:2px 4px;background:rgba(128,128,128,.12)}
-.ldNew>summary{background:rgba(255,153,0,.13)}
 /* 12.11.2026, Itzik: a lead from his own phone or mail is a test: greyed, tagged, never counted */
 .ldRow.ldTest,.bzRow.bzTest{opacity:.55;filter:grayscale(1)}
 .ldTestTag{display:inline-block;background:#e5e7eb;color:#374151;border-radius:8px;padding:1px 8px;font:700 12px Heebo,sans-serif;margin-inline-start:6px}
 .yb.ldDel{background:#fee2e2;color:#991b1b}
-.ldNew .ldSt{background:#f59e0b;color:#fff}
 .ldBody{padding:4px 10px 12px;display:flex;flex-direction:column;gap:6px}
 .ldBody small{display:block}
-.ldRow summary b .ldC{display:block;font:400 13px Heebo,sans-serif;color:#5a6478;margin-top:2px;direction:ltr;text-align:right}
 .ldLast{margin:0;font-style:italic;opacity:.85}
 .ldTop{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border-radius:12px;background:rgba(127,127,127,.08)}
 .ldTop .ldName{font:800 18px Heebo,sans-serif}
@@ -3625,8 +3616,7 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 .ldSrc{border-top:1px dashed rgba(127,127,127,.35);padding-top:6px;opacity:.85;display:flex;flex-direction:column;gap:2px}
 .ldAct{display:flex;flex-wrap:wrap;gap:6px}
 .ldAct .yb{text-decoration:none;flex:0 1 auto;width:auto;margin:0}
-/*ITZIK:BEGIN*/
-/* 18.11.2026, Itzik: "כמו הלוק של Monday". The leads board (ldBoardHtml), his copy only for now. A row is also .ldRow, so every rule here outranks the table's. */
+/* 18.11.2026, Itzik: "כמו הלוק של Monday". The leads board (ldBoardHtml). His copy first; since the evening of 18.11 every monitor's ("אותו לוח מגיע לכל הלקוחות"). A row is also .ldRow. */
 /* 18.11.2026: the board sits in bizSheet (about 550px even on a wide screen), so the row layout goes by the width of the board itself (a container query), not of the screen. */
 .lbBoard{font:500 14px/1.4 Heebo,sans-serif;container-type:inline-size;min-width:0;max-width:100%}
 .lbBar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 10px}
@@ -3690,7 +3680,14 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 .lbBoard .lbLast[data-mk="wait"]::before{content:"⏳ "}
 .lbBoard .lbLast[data-mk="ok"]::before{content:"✓ ";color:#8a93a3;font-weight:700}
 .lbBoard .lbLast[data-mk="bad"]::before{content:"לא נשמר, לנסות שוב: ";font-weight:700}
-/*ITZIK:END*/
+/* 18.11.2026: an empty board is a card that says where leads come from, with a button to add one; "מה חסר לך כאן?" closes a customer's board. */
+.lbHi{display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:14px;background:rgba(0,115,234,.07);border:1px solid rgba(0,115,234,.25);margin:4px 0 12px}
+.lbHi b{font:800 17px Heebo,sans-serif}
+.lbHi small{font:500 15px/1.5 Heebo,sans-serif}
+.lbHi .yb{width:100%}
+.lbAsk{margin-top:16px;padding:12px;border-radius:14px;border:1px dashed rgba(128,128,128,.5);display:flex;flex-direction:column;gap:4px}
+.lbAsk b{font:800 15px Heebo,sans-serif}
+.lbAsk small{font:500 13px/1.45 Heebo,sans-serif;opacity:.8}
 .bzRow b{font:700 14px Heebo,sans-serif}
 .bzRow small{opacity:.85}
 .bzRow .yb{align-self:flex-start;padding:6px 12px;min-height:36px;font-size:13px;margin-top:4px}
@@ -19368,6 +19365,11 @@ function handleSheet(req){
  };
  document.body.appendChild(w);
 }
+/*ITZIK:END*/
+/*
+  18.11.2026: out of his block, since the leads board is every customer's: in a customer's copy these were empty stand
+  ins, so 🗑 on his board asked nothing and deleted nothing. paintHandle is still a stand in there, which is fine.
+*/
 /*
   12.11.2026, Itzik: "תיתן לי אפשרות חוץ מטופל גם למחוק אותו, הליד שנכנס זה אני הייתי." One in page confirm (never
   window.confirm) for the three places a lead shows: 📋 לטיפול, the new lead card and the leads table. Confirmed, it sends
@@ -19396,7 +19398,6 @@ function leadDelAsk(name,bizId,after){
  };
  document.body.appendChild(w);
 }
-/*ITZIK:END*/
 var VIS_API='https://wa.abaitzik.com/api/visit',visSid='',visOn=false,visTimer=0;
 function visDev(){var t=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Mac/.test(navigator.platform||''));return t?'phone':'computer';}
 function visSend(ev){try{if(!D||!D.visitKey||!visSid)return;fetch(VIS_API,{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({key:D.visitKey,sid:visSid,ev:ev,dev:visDev()})}).catch(function(){});}catch(e){}}
@@ -20412,7 +20413,7 @@ function bizSheet(t0){
   function ldNote(n){var W={idea:'רעיון',spec:'אפיון',mockups:'מסכים',product:'מוצר עובד',tier1:'0 עד 5,000 ₪',tier2:'5,000 עד 10,000 ₪',tier3:'10,000 עד 30,000 ₪',tier4:'30,000 עד 50,000 ₪',tier5:'50,000 ₪ ומעלה'};return String(n||'').split(String.fromCharCode(10)).map(function(l){return l.trim();}).filter(function(l){return l&&l!=='[Chat Lead]'&&l!=='Answers:'&&!/^Description: *N.A$/i.test(l);}).map(function(l){var m=/^(stage|budget): *([a-z0-9]+)/i.exec(l);return m?(m[1].toLowerCase()==='stage'?'שלב: ':'תקציב: ')+(W[m[2]]||m[2]):l;}).join(String.fromCharCode(10));}
   // 13.11.2026, Itzik: "שים לב שלא יהיו טעויות בתאריך והשעה". Every date and time here is Israel time, whatever the
   // device clock says, and the order is by the real moment (records mix +02:00 and Z, a string sort mixed them).
-  // 18.11.2026: lifted out of itsLeadsHtml, so the table and the Monday board read dates the same way.
+  // 18.11.2026: lifted out of the old table (itsLeadsHtml, removed the same day), shared by the board.
   var ldT=function(x){var n=Date.parse(x||'');return isNaN(n)?0:n;};
   var ldIL=function(x){var n=ldT(x);if(!n)return {dd:'',hm:''};var o={timeZone:'Asia/Jerusalem'},p={};new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(new Date(n)).forEach(function(q){p[q.type]=q.value;});return {dd:(+p.day)+'.'+(+p.month),hm:p.hour+':'+p.minute};};
   // What one lead is: when it came (Israel time), its mail (also one written only inside the note) and where from.
@@ -20422,13 +20423,19 @@ function bizSheet(t0){
    var em=r.email||((String(r.note||'').match(/מייל: *([^ ,;]+@[^ ,;]+)/)||[])[1]||'');
    return {dd:il.dd,hm:il.hm,em:em,src:LD_SRC[r.source]||(r.kind==='customer'?'🤝 לקוח':'✍️ ידני')};
   }
-  function ldScanHtml(){
+  // 18.11.2026: the scanner line is about his site and his Meta, so a customer's board has none (an empty stand in).
+  var ldScanHtml=function(){return '';};
+  /*ITZIK:BEGIN*/
+  ldScanHtml=function(){
    var sc=D.leadScan;if(!sc)return '';
    var t=sc.at?(function(z){return z.dd+' '+z.hm;})(ldIL(sc.at)):'';
    return '<small style="display:block;margin:-2px 0 8px;color:#5a6478;font-size:13px;line-height:1.4">'+(sc.ok?'🟢 הסורק בודק כל 10 דקות את האתר, התגובות במודעות, מסנג׳ר ואינסטגרם. נבדק לאחרונה '+esc(t):'🟠 לידים מהאתר נכנסים לבד. תגובות והודעות מהמודעות עוד לא נכנסות לבד: חסר אישור אחד במטא. עד אז אני מוסיף אותן ידנית.')+'</small>';
-  }
+  };
+  /*ITZIK:END*/
+  // The forward button names who he usually forwards to; a customer's says only "someone else".
+  var LD_FWD='📤 להעביר בוואטסאפ למישהו אחר';/*ITZIK:BEGIN*/LD_FWD='📤 להעביר בוואטסאפ למישהו אחר (טום, סוכן)';/*ITZIK:END*/
   /*
-    The inside of an open lead, one copy for the table (itsLeadsHtml) and the Monday board: who he is, the
+    The inside of an open lead on the Monday board (the old table, itsLeadsHtml, is gone since 18.11): who he is, the
     note box, forward, contact, where from, the stages and delete. hist (the board): the notes as a history, newest
     first, instead of one block.
   */
@@ -20444,7 +20451,7 @@ function bizSheet(t0){
    rep+='<button type="button" class="yb" data-bz="ldcopy" data-w="כל הפרטים" data-u="'+esc(all)+'">📋 להעתיק את כל הפרטים</button>';
    // 13.11.2026, Itzik: "להעביר את הליד לטום ... אני אחליט למי אני שולח". WhatsApp opens with every detail
    // already written and no recipient, so he picks who gets it (טום or anyone).
-   var fwd='<a class="yb yb1 ldFwd" href="https://wa.me/?text='+encodeURIComponent('ליד להעברה'+NL+all)+'" target="_blank" rel="noopener">📤 להעביר בוואטסאפ למישהו אחר (טום, סוכן)</a>';
+   var fwd='<a class="yb yb1 ldFwd" href="https://wa.me/?text='+encodeURIComponent('ליד להעברה'+NL+all)+'" target="_blank" rel="noopener">'+LD_FWD+'</a>';
    return '<div class="ldBody">'
     // 14.11.2026, Itzik: "למעלה יהיה כתוב השם שלו, המייל שלו, למה, אם הוא כתב משהו, טלפון, ורק למטה מאיפה הוא הגיע.
     // אחרי זה ... הערה ... שליחה לוואטסאפ אחר". Who he is and what he wants on top, the note, the forward, and where from last.
@@ -20465,41 +20472,12 @@ function bizSheet(t0){
     +'<div class="ldAct"><button type="button" class="yb ldDel" data-bz="lddel">🗑 מחיקה</button></div>'
     +'</div>';
   }
-  function itsLeadsHtml(){
-   var L=recs.filter(function(r){return r.kind==='lead'||r.kind==='customer';}).slice().sort(function(a,b){return ldT(b.at)-ldT(a.at);});
-   // 12.11.2026: a test lead (his own phone or mail) is listed greyed and is not in the counts
-   var LC=L.filter(function(r){return !r.test;}),open=LC.filter(function(r){return r.status==='חדש';}).length;
-   var h='<div class="bzSec">📋 כל הלידים ('+LC.length+(open?', '+open+' חדשים':'')+')</div>';
-   h+=ldScanHtml();
-   if(!L.length)return h+'<p class="bzEmpty">עוד אין לידים.</p>';
-   // 13.11.2026, Itzik: "הטבלה של הלידים ... מערבבת. תחצה אותה לשתיים": trial-week signups in one table, every other
-   // lead (the site chat, Meta, WhatsApp, manual, customers) in a second one. Each table is newest first with its own count.
-   function oneRow(r){
-    var i=ldInfo(r),dd=i.dd,hm=i.hm,em=i.em,src=i.src;
-    h+='<details class="ldRow'+(r.test?' ldTest':(r.status==='חדש'?' ldNew':''))+'" data-id="'+esc(r.id)+'" data-n="'+esc(r.name||'')+'" data-at="'+esc(r.at||'')+'"><summary><span>'+esc(dd)+(hm?' · '+esc(hm):'')+'</span><b>'+esc(r.name||'בלי שם')+(r.test?'<span class="ldTestTag">בדיקה שלך</span>':'')+((r.phone||em)?'<small class="ldC"><bdi>'+esc([r.phone,em].filter(Boolean).join(' · '))+'</bdi></small>':'<small class="ldC">אין טלפון</small>')+'</b><span>'+esc(src)+'</span><span class="ldSt">'+esc(r.status||'')+'</span></summary>'
-     +ldBodyHtml(r)+'</details>';
-   }
-   function ldTable(title,list,empty){
-    var n=list.filter(function(r){return !r.test;}),o=n.filter(function(r){return r.status==='חדש';}).length;
-    h+='<div class="bzSec" style="margin-top:14px">'+title+' ('+n.length+(o?', '+(o===1?'חדש אחד':o+' חדשים'):'')+')</div>';
-    if(!list.length){h+='<p class="bzEmpty">'+empty+'</p>';return;}
-    h+='<div class="ldTbl"><div class="ldHd"><span>תאריך</span><span>שם</span><span>מאיפה</span><span>סטטוס</span></div>';
-    list.forEach(oneRow);
-    h+='</div>';
-   }
-   ldTable('🆕 נרשמו לשבוע ניסיון',L.filter(function(r){return r.source==='signup';}),'עוד אין הרשמות לשבוע ניסיון.');
-   ldTable('📥 פניות: צ׳אט באתר, מודעות ועוד',L.filter(function(r){return r.source!=='signup';}),'עוד אין פניות.');
-   return h;
-  }
   /*
     18.11.2026, Itzik: "תבנה את מערכת ה CRM שלנו כמו הלוק של Monday. מה שיש עכשיו לא נח לי." The leads board
-    (docs/superpowers/specs/2026-11-18-leads-board-design.md). His copy only for now ("רק כרגע אצלי במוניטור שלי"):
-    the switch and the whole board sit in his blocks, so a customer's copy keeps the table above and has no trace of it.
+    (docs/superpowers/specs/2026-11-18-leads-board-design.md). His copy first; the same evening every customer's too
+    ("אותו לוח מגיע לכל הלקוחות, ושואלים אותם מה חסר להם"). The old table (itsLeadsHtml) is gone for everyone.
+    Only his own bits stay in his blocks: the Meta inbox link, the scanner line, the empty card's sources, Tom.
   */
-  var LD_BOARD=false;/*ITZIK:BEGIN*/LD_BOARD=true;/*ITZIK:END*/
-  var ldMain=itsLeadsHtml;
-  /*ITZIK:BEGIN*/
-  if(LD_BOARD)ldMain=ldBoardHtml;
   /*
     Review 18.11: a redraw of the tab (bzRe, a drawer, the sheet opened again) paints the board from recs, which already
     holds the new value. So the send state lives on the page, not in this sheet: mk is the mark of every lead field
@@ -20515,7 +20493,7 @@ function bizSheet(t0){
     only nextAt (older leads) means 09:00 that day.
     The DOM the editing (Task 4) hangs on: .lbRow[data-id][data-n][data-s][data-src][data-q], .lbSt[data-s], .lbNext,
     .lbSite, .lbRem[data-at], .lbGrp[data-g], .lbToday, .lbFlt [data-f], .lbQ. A row is also .ldRow and its stage is also
-    .ldSt; ldcopy keeps the table's handler, ldst, ldsend and lddel in a row go through lbTap below.
+    .ldSt; ldcopy keeps the sheet's handler, ldst, ldsend and lddel in a row go through lbTap below.
   */
   var LB_IL=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
   var lbKey=function(ms){var p={};LB_IL.formatToParts(new Date(ms)).forEach(function(q){p[q.type]=q.value;});return p.year+'-'+p.month+'-'+p.day+' '+(p.hour==='24'?'00':p.hour)+':'+p.minute;};
@@ -20530,12 +20508,26 @@ function bizSheet(t0){
   var LB_HD='<div class="lbHd"><span>שם</span><span>שלב</span><span>הצעד הבא</span><span>⏰ תזכורת</span><span>🌐 אתר</span><span>מקור</span><span>הערה אחרונה</span></div>';
   // In an open row, right under the summary (an input inside summary would fold the row on a space): what can be edited.
   var LB_TOOLS='<div class="lbTools"><button type="button" class="yb" data-tdy="1" data-bz="lbed" data-k="next">✏️ הצעד הבא</button><button type="button" class="yb" data-tdy="1" data-bz="lbed" data-k="rem">⏰ תזכורת</button><button type="button" class="yb" data-tdy="1" data-bz="lbed" data-k="site">🌐 אתר</button></div>';
+  /*
+    18.11.2026: a board with no real lead (test leads do not count) opens with a card, not an empty screen: where
+    leads come from in this monitor and "➕ להוסיף ליד" (the sheet's own newtoggle box, newLeadHtml). A customer's
+    monitor gets leads only from what he writes or says to it (a stranger on WhatsApp reaches Itzik's monitor only,
+    wa-bridge.js), so his card says that; Itzik's says his site chat and WhatsApp.
+    LB_ASK, a customer's only: "מה חסר לך כאן?" at the bottom. It goes as "לוח לידים: חסר <text>"; his listener
+    (lib/leads-missing.js) keeps it and Itzik's tenants-health.js hands it to Itzik as an idea and on WhatsApp.
+  */
+  var LB_HI_SRC='כל ליד שתכתוב או תגיד למוניטור נרשם כאן: שם, טלפון ומה הוא רוצה. כאן מסמנים באיזה שלב הוא, מה הצעד הבא, ומקבלים תזכורת בזמן שבחרת.';
+  /*ITZIK:BEGIN*/LB_HI_SRC='לידים נכנסים לכאן לבד מהצ׳אט באתר ומהוואטסאפ. אפשר גם להוסיף ליד בעצמך.';/*ITZIK:END*/
+  var LB_HI='<div class="lbHi"><b>👋 עוד אין כאן לידים</b><small>'+LB_HI_SRC+'</small><button type="button" class="yb yb1" data-bz="newtoggle">➕ להוסיף ליד</button></div>';
+  var LB_ASK='<div class="lbAsk"><b>💡 מה חסר לך כאן?</b><small>משפט אחד על מה שהיית רוצה לראות בלוח. זה מגיע ישר לאיציק.</small><div class="bzEd"><input class="lbAskIn" maxlength="300" enterkeyhint="send" placeholder="למשל: עמודה של סכום העסקה"><button type="button" class="yb yb2" data-tdy="1" data-bz="lbask">לשלוח</button></div></div>';
+  /*ITZIK:BEGIN*/LB_ASK='';/*ITZIK:END*/
   function ldBoardHtml(){
    var nowK=lbKey(Date.now()),todayK=nowK.slice(0,10);
    var A=recs.filter(function(r){return r.kind==='lead'||r.kind==='customer';}).slice().sort(function(a,b){return ldT(b.at)-ldT(a.at);});
    var LC=A.filter(function(r){return !r.test;}),nNew=LC.filter(function(r){return lbStage(r)==='חדש';}).length;
    var h='<div class="lbBoard"><div class="bzSec">📋 כל הלידים ('+LC.length+(nNew?', '+(nNew===1?'חדש אחד':nNew+' חדשים'):'')+')</div>'+ldScanHtml();
-   if(!A.length)return h+'<p class="bzEmpty">עוד אין לידים.</p></div>';
+   if(!LC.length)h+=LB_HI;
+   if(!A.length)return h+LB_ASK+'</div>';
    function row(r){
     var st=lbStage(r),i=ldInfo(r),k=lbRemKey(r.nextAt),due=!!k&&k<=nowK&&!lbShut(st);
     var mk=function(f){var m=LBS.mk[r.id+'|'+f];return m?' data-mk="'+m+'"':'';};
@@ -20552,7 +20544,8 @@ function bizSheet(t0){
      +'<span data-bz="lbed" data-k="note"'+mk('note')+' class="lbLast">'+esc(hist[0]||(r.last?'"'+r.last+'"':''))+'</span>'
      +'</summary>'+LB_TOOLS+ldBodyHtml(r,hist,st)+'</details>';
    }
-   h+='<div class="lbBar"><div class="lbFlt"><button type="button" class="on" data-bz="lbflt" data-f="all">הכל</button><button type="button" data-bz="lbflt" data-f="signup">נרשמו לשבוע ניסיון</button><button type="button" data-bz="lbflt" data-f="other">פניות</button></div>'
+   // the filter is for trial week signups (IT Solution's); a board with none has only the search
+   h+='<div class="lbBar">'+(A.some(function(r){return r.source==='signup';})?'<div class="lbFlt"><button type="button" class="on" data-bz="lbflt" data-f="all">הכל</button><button type="button" data-bz="lbflt" data-f="signup">נרשמו לשבוע ניסיון</button><button type="button" data-bz="lbflt" data-f="other">פניות</button></div>':'')
     +'<input class="lbQ" type="search" placeholder="🔎 חיפוש לפי שם או טלפון" enterkeyhint="search"></div>';
    var T=A.filter(function(r){var k=lbRemKey(r.nextAt);return k&&k.slice(0,10)<=todayK&&!lbShut(lbStage(r));}).sort(function(a,b){return lbRemKey(a.nextAt)<lbRemKey(b.nextAt)?-1:1;});
    var nT=T.filter(function(r){return !r.test;}).length;
@@ -20562,7 +20555,7 @@ function bizSheet(t0){
     h+='<details class="lbGrp'+(lbShut(g)?' lbShut"':'"')+' data-g="'+g+'"'+(lbShut(g)?'':' open')+'><summary class="lbGh"><b>'+g+'</b><small>('+n+')</small></summary>'
      +(rs.length?LB_HD+rs.map(row).join(''):'<small class="lbEmpty">אין כאן לידים.</small>')+'</details>';
    });
-   return h+'</div>';
+   return h+LB_ASK+'</div>';
   }
   /*
     18.11.2026, the board's editing (Task 4). A tap on a field of a row (stage, next step, ⏰, 🌐) opens its editor under
@@ -20737,11 +20730,19 @@ function bizSheet(t0){
    row.setAttribute('open','');
    var i=row.querySelector('.lbEd input');if(i){try{i.focus();}catch(x){}}
   }
-  // The sheet's click goes here first (his copy only). true: done here, the table's handlers never see it.
+  // The sheet's click goes here first. true: done here, the sheet's other handlers never see it.
   function lbTap(e,el){
    var tg=e.target;if(!tg||!tg.closest)return false;
    var t=tg.closest('[data-bz]'),a=t?t.getAttribute('data-bz'):'';
    if(a==='lbflt'){lbAll(el,'.lbFlt [data-f]').forEach(function(b){b.classList.toggle('on',b===t);});lbFilter(el);return true;}
+   if(a==='lbask'){
+    var ab=t.closest('.lbAsk'),ai=ab?ab.querySelector('.lbAskIn'):null,av=ai?String(ai.value||'').replace(/[ ]+/g,' ').trim().slice(0,300):'';
+    if(!av){if(ai)ai.focus();return true;}
+    if(t.disabled)return true;t.disabled=true;
+    var ap;try{ap=Promise.resolve(sendText('ליד','לוח לידים: חסר '+av,'ליד'));}catch(x){ap=Promise.reject(x);}
+    ap.then(function(){t.disabled=false;ai.value='';toast('תודה, העברתי לאיציק.');},function(){t.disabled=false;toast('לא נשלח, נסה שוב מאוחר יותר.');});
+    return true;
+   }
    var row=tg.closest('.lbRow'),id=row&&row.getAttribute('data-id');if(!id)return false;
    var bad=tg.closest('[data-mk="bad"]');
    if(bad){e.preventDefault();if(bad.classList.contains('lbLast')){var nq=(lbNq[id]||[]).filter(function(x){return x.st==='bad'&&!x.fly;});if(!nq.length)toast('ההערה עוד בדרך. מחכים לתשובה, ואם לא תגיע היא תסומן שוב.');nq.forEach(function(x){lbNoteGo(el,id,x);});return true;}for(var f in LB_F){if(bad.classList.contains(LB_F[f])&&lbMsg[id+'|'+f]){lbSend(el,id,f,lbMsg[id+'|'+f]);break;}}return true;}
@@ -20784,9 +20785,9 @@ function bizSheet(t0){
   function lbOnKey(e,el){
    var tg=e.target;if(!tg||!tg.classList)return;
    if(e.type==='input'&&tg.classList.contains('lbQ')){lbFilter(el);return;}
+   if(e.type==='keydown'&&e.key==='Enter'&&tg.classList.contains('lbAskIn')){var ak=tg.closest('.lbAsk'),ag=ak&&ak.querySelector('[data-bz="lbask"]');if(ag){e.preventDefault();ag.click();}return;}
    if(e.type==='keydown'&&e.key==='Enter'&&tg.classList.contains('lbIn')){var b=tg.closest('.lbEd'),sv=b&&b.querySelector('[data-bz]');if(sv){e.preventDefault();sv.click();}}
   }
-  /*ITZIK:END*/
   function itsHtml(){
    // 8.11.2026, Itzik: "תעשה סדר בכל הטאב, תסיר את שי, תאפס ותשאיר לי: טופס סודיות, הסכם בינינו וטופס התחברות".
    // Three clean templates, no customer name. Shai's files and answers are in data/_archive/shai-20261108.
@@ -20894,7 +20895,7 @@ function bizSheet(t0){
    if(tab==='docs')return docsHtml();
    if(tab==='li')return liHtml();
    // 1.11, Itzik: "תשים את ההצעה גם במוניטור". The official quote for Shai Bodek (3 packages), the demo on 3.11.
-   return '<div class="bzHead">🔔 לידים: כל מה שנכנס, במקום אחד</div>'+ldMain()+newLeadHtml();
+   return '<div class="bzHead">🔔 לידים: כל מה שנכנס, במקום אחד</div>'+ldBoardHtml()+newLeadHtml();
   }
   // 2.11, Itzik: a tab with something new blinks until he opens it. The stamp changes whenever something is added there.
   var BZ_UPD={its:'20261111-leads'+((D.nda&&D.nda.signed&&D.nda.signed[0])?'-'+String(D.nda.signed[0].at).replace(/\D/g,'').slice(0,12):'')+((D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done)?'-s'+String(D.shaiForms.sign.done).replace(/\\D/g,'').slice(0,12):''),shachar:((D.shSum&&D.shSum.upd)||'20261103-shachar-auto')+'-ld1104',li:'li-queue-20261109'};
@@ -20921,7 +20922,7 @@ function bizSheet(t0){
      return '<h3 data-t="'+t[0]+'"'+(t[3]?' data-n="'+t[3]+'"':'')+(bzTabNew(t[0])?' data-new="1"':'')+'>'+t[1]+' '+esc(t[2])+'</h3><div class="bzPane" data-t="'+t[0]+'">'+bodyFor(t[0])+'</div>';
     }).join('')+'</div></div>';
   shipOpen('bizSheet','💼 העסק שלי',html,function(el){
-   var bm=el.querySelector('#bizMic');if(bm)bm.onclick=toggleRec;/*ITZIK:BEGIN*/if(LD_BOARD){LBS.el=el;el.addEventListener('input',function(e){lbOnKey(e,el);});el.addEventListener('keydown',function(e){lbOnKey(e,el);});}/*ITZIK:END*/
+   var bm=el.querySelector('#bizMic');if(bm)bm.onclick=toggleRec;LBS.el=el;el.addEventListener('input',function(e){lbOnKey(e,el);});el.addEventListener('keydown',function(e){lbOnKey(e,el);});
    // 1.11, Itzik: inside העסק שלי there was no back, only home. חזרה goes one step back.
    // Every tab change is a step. The phone's back gesture uses the same step (see popstate below).
    var bizHist=[],bzQuiet=false;
@@ -20944,7 +20945,7 @@ function bizSheet(t0){
     d.addEventListener('toggle',function(){if(!d.open||bzQuiet||t2===tab)return;bizHist.push(tab);tab=t2;bzMarkSeen(tab);p.innerHTML=body();});
    });
    window.bizStep=function(){if(!bizHist.length)return false;bizShow(bizHist.pop(),true);return true;};
-   el.addEventListener('click',function(e){/*ITZIK:BEGIN*/if(LD_BOARD&&lbTap(e,el))return;/*ITZIK:END*/
+   el.addEventListener('click',function(e){if(lbTap(e,el))return;
     var t=e.target.closest?e.target.closest('[data-bz]'):null;if(!t)return;
     var a=t.getAttribute('data-bz');
     if(a==='demo'){dmoStart();return;}
@@ -21016,20 +21017,6 @@ function bizSheet(t0){
     /*ITZIK:BEGIN*/if(a==='ner'){var bx=el.querySelector('[data-a="x"]');if(bx)bx.click();nerBizSheet();return;}/*ITZIK:END*/  // 30.10, Itzik: the X did not get him out, two sheets were stacked; one at a time
     if(a==='back'){if(!window.bizStep())el.querySelector('[data-a="x"]').click();return;}
     if(a==='tab'){bizShow(t.getAttribute('data-t'));return;}
-    // 11.11.2026: the leads table (itsLeadsHtml). Applied by the listener with no model.
-    if(a==='ldst'||a==='ldnote'||a==='lddel'||a==='ldsend'){
-     var lr=t.closest('.ldRow'),lid=lr&&lr.getAttribute('data-id');if(!lid)return;
-     var lgo=function(body,ok){sendText('ליד',body,'ליד').then(function(){toast(ok);}).catch(function(){toast('לא נשלח, נסה שוב מאוחר יותר.');});};
-     if(a==='ldst'){var ls=t.getAttribute('data-s');lr.querySelector('.ldSt').textContent=ls;lr.classList.toggle('ldNew',ls==='חדש');lgo('ליד ['+lid+']: סטטוס '+ls,'עודכן: '+ls);return;}
-     if(a==='lddel'){
-      leadDelAsk(lr.getAttribute('data-n'),lid,function(){lr.style.display='none';});return;}
-     // 13.11: data-tdy keeps the removal checkbox out of the send box, so "on" can never be read as the note (as in עדכון עסק, 6.11)
-     if(a==='ldnote'){if(lr.querySelector('.bzEd'))return;t.parentNode.insertAdjacentHTML('afterend','<div class="bzEd"><input placeholder="מה לרשום על הליד"><button type="button" class="yb yb2" data-tdy="1" data-bz="ldsend">שלח</button></div>');lr.querySelector('.bzEd input').focus();return;}
-     var lbx=t.closest('.bzEd'),lin=lbx.querySelector('input:not([type=checkbox])'),lv=lin.value.trim();if(!lv){lin.focus();return;}
-     lgo('ליד ['+lid+']: הערה '+lv,'נרשם.');
-     if(lbx.classList.contains('ldNoteBox')){var nd=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',day:'numeric',month:'numeric'}).format(new Date()).replace('/','.');lbx.insertAdjacentHTML('beforebegin','<small class="ldMine" style="white-space:pre-line">'+nd+': '+lv.replace(/[&<>"]/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch];})+'</small>');lin.value='';}else lbx.remove();
-     return;
-    }
     if(a==='leaddel'){var dr=t.closest('.bzRow'),did=t.getAttribute('data-id');if(!did||typeof leadDelAsk!=='function')return;leadDelAsk(t.getAttribute('data-n'),did,function(){if(dr)dr.style.display='none';});return;}
     if(a==='newtoggle'){var nb=el.querySelector('[data-bz="newbox"]');nb.hidden=!nb.hidden;if(!nb.hidden)el.querySelector('#bzNewIn').focus();return;}
     if(a==='newsend'){
@@ -21275,7 +21262,7 @@ function renderIdeas(){
  // What the daily reviewer found comes first, marked with the day it found it.
  // What the improver (improve.js) already built says so instead of asking him.
  // The weekly radar (radar.js) brings new open source tools, each with its link.
- var L=(D.better||[]).map(function(x){return {t:x.t,d:x.d,u:x.u,q:x.q,pain:x.by==='pains',built:!!x.built,tag:(x.built?'✅ כבר בוצע · '+stamp(x.built):(x.by==='radar'?'🔭 כלים חדשים':x.by==='pains'?'🩹 כאב למודעה':'🔍 בודק השיפורים')+(x.at?' · '+stamp(x.at):''))+(x.size?' · '+x.size:'')};}).concat(IDEAS);
+ var L=(D.better||[]).map(function(x){return {t:x.t,d:x.d,u:x.u,q:x.q,pain:x.by==='pains',built:!!x.built,tag:(x.built?'✅ כבר בוצע · '+stamp(x.built):(x.by==='radar'?'🔭 כלים חדשים':x.by==='pains'?'🩹 כאב למודעה':String(x.by||'').indexOf('tenant:')===0?'💬 לקוח כתב':'🔍 בודק השיפורים')+(x.at?' · '+stamp(x.at):''))+(x.size?' · '+x.size:'')};}).concat(IDEAS);
  IDEAS_SHOWN=L;
  var IH=L.map(function(x,n){
   var on=asked.indexOf(x.t)>-1;
@@ -25617,7 +25604,12 @@ function bizRow(r) {
   BIZ_FIELDS.forEach((f) => { if (r && r[f] != null) o[f] = r[f]; });
   return o;
 }
-module.exports = { renderPage, build, loadDocs, bizRow };
+/*
+  Who an idea is from, as the 💡 screen tells them apart: radar, pains, a customer ("tenant:<id>", an id only), or the
+  reviewer for anything else.
+*/
+function betterBy(by) { return by === 'radar' || by === 'pains' ? by : /^tenant:[A-Za-z0-9_-]{1,40}$/.test(String(by || '')) ? by : 'review'; }
+module.exports = { renderPage, build, loadDocs, bizRow, betterBy };
 if (require.main === module) build();
 
 

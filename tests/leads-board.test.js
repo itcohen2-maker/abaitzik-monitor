@@ -37,7 +37,7 @@ function leadsPart(html) {
 function load(html, recs, E) {
   E = E || env();
   const fn = new Function('recs', 'D', 'esc', 'bzTel', 'BZ_ORDER', 'window', 'sendText', 'toast', 'leadDelAsk', 'setTimeout', 'clearTimeout', 'Date', leadsPart(html)
-    + '\n;return {board:typeof ldBoardHtml==="function"?ldBoardHtml:null,table:itsLeadsHtml,flag:typeof LD_BOARD==="undefined"?undefined:LD_BOARD,main:typeof ldMain==="function"?ldMain:null,'
+    + '\n;return {board:typeof ldBoardHtml==="function"?ldBoardHtml:null,table:typeof itsLeadsHtml==="function"?itsLeadsHtml:null,flag:typeof LD_BOARD==="undefined"?undefined:LD_BOARD,main:typeof ldMain==="function"?ldMain:null,'
     + 'lbWhen:typeof lbWhen==="function"?lbWhen:null,lbTap:typeof lbTap==="function"?lbTap:null,lbFilter:typeof lbFilter==="function"?lbFilter:null};');
   return fn(recs, { biz: recs }, esc, bzTel, ORDER, {}, E.sendText, E.toast, E.leadDelAsk, E.setTimeout, E.clearTimeout, E.Date);
 }
@@ -73,7 +73,6 @@ const L = [
 
 test('board: five groups by stage, an unknown status sits in חדש, נסגר and אבד are shut', () => {
   const B = itzik(L);
-  assert.equal(B.flag, true, 'LD_BOARD is on in his copy');
   assert.equal(typeof B.board, 'function');
   const h = B.board();
   assert.equal(h.split('<details class="lbGrp').length - 1, 5);
@@ -128,30 +127,96 @@ test('board: a test lead is not counted, the history is newest first', () => {
   assert.ok(r.slice(0, r.indexOf('</summary>')).includes('18.11: שלחתי הצעה'), 'the last note is on the row');
 });
 
-test('board: zero leads opens with "עוד אין לידים", 300 leads open with no error', () => {
+test('board: zero leads opens with the card and ➕ להוסיף ליד, 300 leads open with no error', () => {
   const B = itzik([]);
-  assert.ok(B.board().includes('עוד אין לידים'));
+  const e = B.board();
+  assert.ok(e.includes('class="lbHi"') && e.includes('עוד אין כאן לידים'), 'the empty card');
+  assert.ok(/data-bz="newtoggle">➕ להוסיף ליד</.test(e), 'its button opens the existing new lead box');
+  assert.ok(e.includes('מהצ׳אט באתר ומהוואטסאפ'), 'his card names his sources');
+  assert.ok(!e.includes('lbAsk'), 'no "מה חסר לך כאן?" in his copy');
   const many = [];
   for (let i = 0; i < 300; i++) many.push({ id: 'biz-' + i, kind: 'lead', name: 'ליד ' + i, status: ORDER[i % 6] || 'zz', at: '2026-11-1' + (i % 9) + 'T08:00:00.000Z', nextAt: i % 3 ? '' : '2020-01-01' });
   const h = itzik(many).board();
   assert.equal(h.split('<details class="lbRow ldRow').length - 1, 300 + 100 - many.filter((r, i) => i % 3 === 0 && (r.status === 'נסגר' || r.status === 'אבד')).length);
 });
 
-test("board: the switch is his only; a customer copy has no ldBoardHtml and keeps the old table", () => {
+/*
+  18.11.2026 evening: the board is every monitor's. The old table is gone from both copies; what stays his: the Meta
+  inbox link, the scanner line, the empty card's sources, Tom in the forward button. "מה חסר לך כאן?" is a customer's only.
+*/
+const ily = (recs, E) => load(cut({ name: 'ily' }, page(recs)), recs, E);
+test('board: a customer copy has the board, and the old table is gone from both copies', () => {
   const html = page(L);
-  const own = cut({ name: 'abaitzik' }, html);
-  assert.ok(own.includes('function ldBoardHtml('));
-  const cust = cut({ name: 'ily' }, html);
-  assert.ok(!cust.includes('ldBoardHtml'), 'no ldBoardHtml in a customer copy');
-  assert.ok(!cust.includes('LD_BOARD=true'));
-  assert.ok(!cust.includes('.lbGrp'), 'the board CSS is cut too');
-  const B = load(cust, L);
-  assert.equal(B.flag, false);
-  assert.equal(B.board, null);
-  assert.equal(B.main, B.table, 'the sheet calls the old table');
-  assert.ok(B.table().includes('class="ldTbl"'));
-  const O = load(own, L);
-  assert.equal(O.main, O.board, 'his sheet calls the board');
+  const own = cut({ name: 'abaitzik' }, html), cust = cut({ name: 'ily' }, html);
+  for (const [who, h] of [['his', own], ['customer', cust]]) {
+    assert.ok(h.includes('function ldBoardHtml('), 'ldBoardHtml: ' + who);
+    assert.ok(!h.includes('itsLeadsHtml()') && !h.includes('function itsLeadsHtml'), 'no old table: ' + who);
+    assert.ok(!h.includes('class="ldTbl"') && !h.includes('.ldTbl{'), 'no table markup or CSS: ' + who);
+    assert.ok(!/LD_BOARD|ldMain/.test(h), 'no switch left: ' + who);
+    assert.ok(h.includes('.lbGrp'), 'the board CSS: ' + who);
+    assert.ok(h.includes("+ldBoardHtml()+newLeadHtml()"), 'the sheet calls the board: ' + who);
+  }
+  const B = ily(L);
+  assert.equal(B.table, null);
+  const h = B.board();
+  assert.equal(h.split('<details class="lbGrp').length - 1, 5, 'five groups in a customer copy');
+  assert.equal(h.split('<details class="lbRow ldRow').length - 1, 5 + 2);
+});
+
+test('board: what is his stays out of a customer copy', () => {
+  const html = page(L);
+  const own = cut({ name: 'abaitzik' }, html), cust = cut({ name: 'ily' }, html);
+  assert.ok(own.includes('business.facebook.com/latest/inbox'), 'his Meta inbox');
+  assert.ok(!cust.includes('business.facebook.com/latest/inbox'), 'no Meta inbox of his in a customer copy');
+  assert.ok(!cust.includes('הסורק בודק כל 10 דקות'), 'no scanner line');
+  assert.ok(!cust.includes('(טום, סוכן)') && own.includes('(טום, סוכן)'), 'Tom only in his forward button');
+  assert.ok(!cust.includes('מהצ׳אט באתר ומהוואטסאפ'), 'his sources are not a customer\'s');
+  const c = ily(L).board();
+  assert.ok(c.includes('📤 להעביר בוואטסאפ למישהו אחר<'), 'a customer forwards to "someone else"');
+  const D2 = { biz: L, leadScan: { ok: true, at: '2026-11-18T10:00:00.000Z' } };
+  const fn = (h) => new Function('recs', 'D', 'esc', 'bzTel', 'BZ_ORDER', 'window', 'sendText', 'toast', 'leadDelAsk', 'setTimeout', 'clearTimeout', 'Date', leadsPart(h) + '\n;return ldBoardHtml;');
+  const E = env();
+  const ob = fn(own)(L, D2, esc, bzTel, ORDER, {}, E.sendText, E.toast, E.leadDelAsk, E.setTimeout, E.clearTimeout, Date)();
+  const cb = fn(cust)(L, D2, esc, bzTel, ORDER, {}, E.sendText, E.toast, E.leadDelAsk, E.setTimeout, E.clearTimeout, Date)();
+  assert.ok(ob.includes('הסורק בודק'), 'his board shows the scanner line');
+  assert.ok(!cb.includes('הסורק'), 'a customer board never does, even with a leadScan');
+});
+
+test('board: a customer with no real lead gets the card, the add button and "מה חסר לך כאן?"', () => {
+  const e = ily([]).board();
+  assert.ok(e.includes('class="lbHi"') && e.includes('עוד אין כאן לידים'));
+  assert.ok(e.includes('כל ליד שתכתוב או תגיד למוניטור נרשם כאן'), 'his own way in, not sources he does not have');
+  assert.ok(/data-bz="newtoggle">➕ להוסיף ליד</.test(e));
+  assert.ok(e.includes('class="lbAsk"') && e.includes('💡 מה חסר לך כאן?') && e.includes('data-bz="lbask"'));
+  assert.ok(e.indexOf('lbHi') < e.indexOf('lbAsk'), 'the question closes the board');
+  // test leads only: still the card, and the test rows under it
+  const t = ily([L[4]]).board();
+  assert.ok(t.includes('class="lbHi"') && t.includes('data-id="biz-5"'));
+  // real leads: no card, the question at the very bottom
+  const f = ily(L).board();
+  assert.ok(!f.includes('class="lbHi"'));
+  assert.ok(f.lastIndexOf('class="lbAsk"') > f.lastIndexOf('class="lbGrp'), 'after the groups');
+  assert.ok(!f.includes('class="lbFlt"') || L.some((r) => r.source === 'signup'));
+  assert.ok(!ily([L[1]]).board().includes('class="lbFlt"'), 'no trial week filter on a board with no signups');
+});
+
+test('board: "מה חסר לך כאן?" sends one line the server knows, and thanks', async () => {
+  const M = mount(fx(), null, 'ily');
+  const box = M.root.querySelector('.lbAsk');
+  const btn = box.querySelector('[data-bz="lbask"]');
+  let ev = M.tap(btn);
+  assert.ok(ev.handled);
+  assert.deepEqual(M.E.sent, [], 'empty: nothing goes');
+  box.querySelector('.lbAskIn').value = '  עמודה   של סכום  ';
+  ev = M.tap(btn);
+  assert.ok(ev.handled);
+  assert.deepEqual(M.E.sent, ['לוח לידים: חסר עמודה של סכום']);
+  await flush();
+  assert.ok(M.E.toasts.includes('תודה, העברתי לאיציק.'));
+  assert.equal(box.querySelector('.lbAskIn').value, '');
+  box.querySelector('.lbAskIn').value = 'א'.repeat(400);
+  M.tap(btn);
+  assert.equal(M.E.sent[1], 'לוח לידים: חסר ' + 'א'.repeat(300), 'cut to 300');
 });
 
 test('board: the row layout goes by the board width (container query), not the screen (18.11)', () => {
@@ -163,13 +228,13 @@ test('board: the row layout goes by the board width (container query), not the s
   assert.ok(!/@media[^{]*\{[^@]*grid-template-columns/.test(css), 'no screen media query switches the grid');
 });
 
-test('the old table and the board share one lead body (ldBodyHtml), not two copies', () => {
-  const part = leadsPart(cut({ name: 'abaitzik' }, page(L)));
-  assert.ok(/function ldBodyHtml\(/.test(part));
-  assert.equal(part.split('data-bz="ldsend"').length - 1, 1, 'the note box is written once');
-  assert.equal(part.split('📤 להעביר בוואטסאפ').length - 1, 1, 'the forward button is written once');
-  const t = itzik(L).table();
-  assert.ok(t.includes('data-bz="ldsend"') && t.includes('class="ldTbl"'));
+test('one lead body (ldBodyHtml): the note box and the forward button are written once', () => {
+  for (const who of ['abaitzik', 'ily']) {
+    const part = leadsPart(cut({ name: who }, page(L)));
+    assert.ok(/function ldBodyHtml\(/.test(part));
+    assert.equal(part.split('data-bz="ldsend"').length - 1, 1, 'the note box is written once: ' + who);
+    assert.equal(part.split('📤 להעביר בוואטסאפ').length - 1, who === 'ily' ? 1 : 2, 'the forward label: ' + who);
+  }
 });
 
 /*
@@ -267,10 +332,10 @@ function ser(n) {
 const fx = () => JSON.parse(JSON.stringify(L));
 const at = (iso) => { const T = Date.parse(iso); return class extends Date { static now() { return T; } }; };
 const flush = () => new Promise((r) => setImmediate(r));
-function mount(recs, over) {
+function mount(recs, over, who) {
   const E = env(over);
-  const B = load(cut({ name: 'abaitzik' }, page(recs)), recs, E);
-  assert.equal(typeof B.lbTap, 'function', 'lbTap is in his copy');
+  const B = load(cut({ name: who || 'abaitzik' }, page(recs)), recs, E);
+  assert.equal(typeof B.lbTap, 'function', 'lbTap is in the copy');
   const root = new El('div'); root.innerHTML = B.board();
   const tap = (n) => { assert.ok(n, 'there is something to tap'); const ev = { target: n, prevented: false, preventDefault() { this.prevented = true; } }; ev.handled = B.lbTap(ev, root); return ev; };
   const rows = (id) => root.querySelectorAll('.lbRow').filter((r) => r.getAttribute('data-id') === id);
@@ -576,11 +641,56 @@ test('board: delete removes every row of the lead and fixes the counters', () =>
   assert.ok(M.root.querySelector('.bzSec').textContent.includes('(3, חדש אחד)'));
 });
 
-test('the board handlers are wired in his copy only', () => {
+test('the board handlers are wired in every copy', () => {
   const html = page(L);
-  const own = cut({ name: 'abaitzik' }, html), cust = cut({ name: 'ily' }, html);
-  assert.ok(own.includes('lbTap(e,el)'), 'the sheet click goes to the board first');
-  ['lbTap', 'lbWhen', 'lbFilter', 'data-bz="lbed"'].forEach((k) => assert.ok(!cust.includes(k), k + ' is not in a customer copy'));
+  for (const who of ['abaitzik', 'ily']) {
+    const h = cut({ name: who }, html);
+    assert.ok(h.includes('if(lbTap(e,el))return;'), 'the sheet click goes to the board first: ' + who);
+    ['function lbTap(', 'function lbWhen(', 'function lbFilter(', 'data-bz="lbed"', 'LBS.el=el;'].forEach((k) => assert.ok(h.includes(k), k + ': ' + who));
+    // the old table's handlers are gone (lbTap takes every row)
+    assert.ok(!h.includes("a==='ldnote'"), 'no old ldnote handler: ' + who);
+  }
+});
+
+/*
+  18.11.2026, a live incident: a new page global window.lbState collided with a function lbState and broke the leads
+  button. Every name the leads part declares at its top level must be declared nowhere else in the page's scripts,
+  in his copy and in a customer's, and every inline script of the page must still parse.
+*/
+function scripts(h) {
+  const out = [];
+  h.replace(/<script(\s[^>]*)?>([\s\S]*?)<\/script>/g, (m, a, b) => { if (!/\bsrc=|type="(?!text\/javascript)/.test(a || '')) out.push(b); return m; });
+  return out;
+}
+test('the leads board declares no name the rest of the page declares, and every page script parses', () => {
+  const html = page(L);
+  for (const who of ['abaitzik', 'ily']) {
+    const h = cut({ name: who }, html);
+    const part = leadsPart(h);
+    const names = new Set();
+    part.replace(/^ {2}(?:function ([\w$]+)\(|var ([\w$]+)=)/gm, (m, f, v) => { names.add(f || v); return m; });
+    // a top level var line can declare more than one name (var lbSeq=LBS.seq,lbMsg=LBS.msg,LB_F={...})
+    part.replace(/^ {2}var [^\n]*/gm, (l) => { let d = 0; for (let i = 0; i < l.length; i++) { const c = l[i]; if ('([{'.includes(c)) d++; else if (')]}'.includes(c)) d--; else if (c === ',' && d === 0) { const m = /^,([A-Za-z_$][\w$]*)=(?!=)/.exec(l.slice(i)); if (m) names.add(m[1]); } } return l; });
+    ['lbMsg', 'LB_F', 'lbSeq'].forEach((n) => assert.ok(names.has(n), n + ' (a comma declared name) is checked too: ' + who));
+    ['ldBoardHtml', 'lbTap', 'lbWhen', 'LB_ASK', 'LB_HI', 'LBS', 'ldScanHtml', 'LD_FWD'].forEach((n) => assert.ok(names.has(n), n + ' is a top level name of the part: ' + who));
+    const rest = h.replace(part, '');
+    names.forEach((n) => {
+      const re = new RegExp('(?:function\\s+' + n.replace('$', '\\$') + '\\s*\\(|(?:var|let|const)\\s+' + n.replace('$', '\\$') + '\\b|window\\.' + n.replace('$', '\\$') + '\\s*=|[,{]\\s*' + n.replace('$', '\\$') + '\\s*=[^=])');
+      const m = re.exec(rest);
+      assert.ok(!m, who + ': "' + n + '" is declared outside the leads part too: ' + (m && rest.slice(Math.max(0, m.index - 60), m.index + 60)));
+    });
+    assert.equal(part.split('function lbTap(').length - 1, 1, 'one lbTap: ' + who);
+    assert.ok(!/window\.ldBoardSt\s*=/.test(rest) && rest.split('ldBoardSt').length === 1, 'ldBoardSt is the board\'s alone: ' + who);
+    // a name the board calls must be real in this copy, never an empty stand in left by a cut block of Itzik's
+    const stand = new Set();
+    h.replace(/^function ([\w$]+)\(\)\{\}$|^var ([\w$]+)=(?:null|\[\]|\{\});$/gm, (m, f, v) => { stand.add(f || v); return m; });
+    if (who === 'ily') assert.ok(stand.size > 5, 'the customer copy has stand ins to check against');
+    const calls = new Set(); part.replace(/(?:^|[^.\w$])([A-Za-z_$][\w$]*)\(/g, (m, n) => { calls.add(n); return m; });
+    calls.forEach((n) => assert.ok(!stand.has(n), who + ': the board calls ' + n + ', an empty stand in in this copy'));
+    const S = scripts(h);
+    assert.ok(S.length > 3, 'the page has scripts: ' + who);
+    S.forEach((code, i) => { try { new Function(code); } catch (e) { assert.fail(who + ': script ' + i + ' does not parse: ' + e.message); } });
+  }
 });
 
 // 18.11.2026, final review: "⏰ צריך לחזור" (dueHtml, his and a customer's) shows nextAt in Israel time, a date only
