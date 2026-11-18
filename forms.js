@@ -37,11 +37,14 @@ function summary(d, s, partial) {
   return t + NL + (d.ask || 'מה מזה כדאי להראות לו בהדגמה, ומה לשאול אותו בשיחה?');
 }
 
+// 18.11.2026: { embed } on a question shows a video above it. Only a Google Drive preview link is accepted.
+function embedOk(u) { return /^https:\/\/drive\.google\.com\/file\/d\/[A-Za-z0-9_-]+\/preview$/.test(String(u || '')); }
 function page(tok, d, s) {
   const qs = d.questions.map((q, i) => {
     const sel = (s.answers || {})[q.id] || [];
     return '<section class="q" data-id="' + esc(q.id) + '" data-multi="' + (q.multi ? 1 : 0) + '" data-max="' + (q.max || 0) + '">'
       + '<h2><span>' + (i + 1) + '</span>' + esc(q.q) + '</h2>'
+      + (embedOk(q.embed) ? '<div class="vid"><iframe src="' + esc(q.embed) + '" allow="autoplay; fullscreen" allowfullscreen loading="lazy"></iframe></div>' : '')
       + (q.text ? (q.hint ? '<p class="hint">' + esc(q.hint) + '</p>' : '') + '<textarea class="tx" rows="' + (q.rows || 2) + '">' + esc(sel[0] || '') + '</textarea></section>'
       : (q.multi ? '<p class="hint">' + (q.max ? 'אפשר לסמן עד ' + q.max : 'אפשר לסמן כמה') + '</p>' : '')
       + '<div class="ops">' + q.options.map((o) => '<button type="button" class="op' + (sel.indexOf(o) > -1 ? ' on' : '') + '">' + esc(o) + '</button>').join('') + '</div></section>');
@@ -61,6 +64,7 @@ function page(tok, d, s) {
     + '.q h2{font:700 16.5px/1.45 Heebo;margin:0 0 10px;display:flex;gap:9px;align-items:flex-start}.q h2 span{flex:none;width:26px;height:26px;border-radius:50%;background:#e0f7fb;color:#0e7490;font:800 13px/26px Heebo;text-align:center}'
     + '.q.done h2 span{background:#06b6d4;color:#0f1b2a}'
     + '.hint{font:500 13px Heebo;color:#6b7c90;margin:-4px 0 10px}'
+    + '.vid{position:relative;width:100%;aspect-ratio:4/5;border-radius:14px;overflow:hidden;background:#0f1b2a;margin:0 0 12px}.vid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}'
     + '.ops{display:flex;flex-wrap:wrap;gap:8px}.op{border:1.5px solid #cbd5e1;background:#fff;color:#0f1b2a;border-radius:999px;padding:10px 15px;font:500 15px Heebo;cursor:pointer;min-height:44px}'
     + '.op.on{background:#0f1b2a;border-color:#0f1b2a;color:#fff;font-weight:700}'
     + '.tx{width:100%;border:1.5px solid #cbd5e1;border-radius:14px;padding:10px 12px;font:500 15.5px/1.5 Heebo;color:#0f1b2a;resize:vertical}.tx:focus{outline:none;border-color:#06b6d4}'
