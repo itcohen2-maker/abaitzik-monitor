@@ -154,6 +154,15 @@ test("board: the switch is his only; a customer copy has no ldBoardHtml and keep
   assert.equal(O.main, O.board, 'his sheet calls the board');
 });
 
+test('board: the row layout goes by the board width (container query), not the screen (18.11)', () => {
+  const own = cut({ name: 'abaitzik' }, page(L));
+  const css = own.slice(own.indexOf('.lbBoard{font'), own.indexOf('.lbBoard .lbSt,.lbNext,.lbRem,.lbSite{cursor:pointer}'));
+  assert.ok(css.length > 100, 'the board CSS is in his copy');
+  assert.ok(/\.lbBoard\{[^}]*container-type:inline-size/.test(css), 'the board is a size container');
+  assert.ok(css.includes('@container (min-width:760px){'), 'the seven columns open by the board width');
+  assert.ok(!/@media[^{]*\{[^@]*grid-template-columns/.test(css), 'no screen media query switches the grid');
+});
+
 test('the old table and the board share one lead body (ldBodyHtml), not two copies', () => {
   const part = leadsPart(cut({ name: 'abaitzik' }, page(L)));
   assert.ok(/function ldBodyHtml\(/.test(part));

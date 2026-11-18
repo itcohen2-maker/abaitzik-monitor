@@ -3627,7 +3627,8 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 .ldAct .yb{text-decoration:none;flex:0 1 auto;width:auto;margin:0}
 /*ITZIK:BEGIN*/
 /* 18.11.2026, Itzik: "כמו הלוק של Monday". The leads board (ldBoardHtml), his copy only for now. A row is also .ldRow, so every rule here outranks the table's. */
-.lbBoard{font:500 14px/1.4 Heebo,sans-serif}
+/* 18.11.2026: the board sits in bizSheet (about 550px even on a wide screen), so the row layout goes by the width of the board itself (a container query), not of the screen. */
+.lbBoard{font:500 14px/1.4 Heebo,sans-serif;container-type:inline-size;min-width:0;max-width:100%}
 .lbBar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 10px}
 .lbFlt{display:flex;flex-wrap:wrap;gap:4px;background:rgba(128,128,128,.12);border-radius:10px;padding:3px}
 .lbFlt button{border:0;background:none;color:inherit;font:600 13px Heebo,sans-serif;padding:6px 10px;border-radius:8px;cursor:pointer}
@@ -3654,7 +3655,7 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 .lbHd{display:none}
 .lbBoard .lbRow.ldRow{border:1px solid rgba(128,128,128,.22);border-inline-start:5px solid var(--c);border-radius:10px;margin:0 0 6px;background:rgba(128,128,128,.03)}
 .lbBoard .lbRow.ldRow>summary{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;padding:9px 10px;background:none}
-.lbBoard .lbRow.ldRow>summary>span{font-size:13px;min-width:0;overflow-wrap:anywhere}
+.lbBoard .lbRow.ldRow>summary>span{font-size:13px;min-width:0;max-width:100%;overflow-wrap:anywhere}
 .lbBoard .lbName{flex:1 0 100%;display:flex;flex-direction:column}
 .lbName b{font:700 15px Heebo,sans-serif}
 .lbName small{font:400 13px Heebo,sans-serif;color:#5a6478;direction:ltr;text-align:right}
@@ -3668,8 +3669,8 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 .lbBoard .lbLast{flex:1 0 100%;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lbLast:empty{display:none}
 .lbHist{display:flex;flex-direction:column;gap:2px;border-inline-start:3px solid rgba(128,128,128,.3);padding-inline-start:8px}
-@media (min-width:700px){
- .lbHd,.lbBoard .lbRow.ldRow>summary{display:grid;grid-template-columns:minmax(9em,1.6fr) 6.5em minmax(7em,1.4fr) 7.5em minmax(6em,1fr) minmax(6em,1fr) minmax(8em,1.8fr);gap:8px;align-items:center}
+@container (min-width:760px){
+ .lbHd,.lbBoard .lbRow.ldRow>summary{display:grid;grid-template-columns:minmax(8.5em,1.6fr) 6.5em minmax(6.5em,1.4fr) 7em minmax(5.5em,1fr) minmax(5.5em,1fr) minmax(7em,1.8fr);gap:8px;align-items:center}
  .lbHd{font:700 12px Heebo,sans-serif;opacity:.65;padding:2px 10px 4px;border-inline-start:6px solid transparent}
  .lbBoard .lbName,.lbBoard .lbLast{flex:none}
  .lbLast:empty{display:block}
