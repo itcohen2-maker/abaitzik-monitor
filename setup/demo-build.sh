@@ -7,6 +7,8 @@
 #  3. the page: MONITOR_NO_GATE build as the demo user, with instance.json publicDemo: true.
 # instance.json and data/ under /home/demo/app are kept between runs. Log: /var/log/monitor-demo.log
 set -euo pipefail
+# 18.11.2026: the security check (monitor-security) flagged /var/log/monitor-demo.log as readable by all (644). systemd appends to it, so it keeps its mode; this makes it 640 on every run.
+[ -f /var/log/monitor-demo.log ] && chmod 640 /var/log/monitor-demo.log || true
 SRC=/home/monitor/abaitzik-monitor
 APP=/home/demo/app
 NEW=$(mktemp -d /home/demo/.app-new-XXXX)
