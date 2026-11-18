@@ -20505,7 +20505,7 @@ function bizSheet(t0){
     (wait, ok, bad), drawn into the row by the board itself, so a change that did not go stays red after any redraw, and
     a tap still sends it (msg, nq). el is the sheet open now, where late answers paint.
   */
-  var LBS=window.lbState||(window.lbState={mk:{},msg:{},seq:{},nq:{},el:null});
+  var LBS=window.ldBoardSt||(window.ldBoardSt={mk:{},msg:{},seq:{},nq:{},el:null});
   /*
     Top to bottom: the count, filter and search, "⏰ היום" (a reminder due today or passed), then the five stages as
     groups, נסגר and אבד shut. A row shows name and phone, stage, the next step, ⏰, 🌐, where from and the last note;
