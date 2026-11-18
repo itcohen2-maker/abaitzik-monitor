@@ -19882,8 +19882,6 @@ function connSheet(){
   h+='<div class="cnr'+(r.on?' on':'')+(r.locked?' lock':'')+'"'+(r.locked?' aria-disabled="true"':'')+'><span class="cni">'+esc(r.icon)+'</span><div class="cnt"><b>'+esc(r.title)+'</b>'+st+(r.who?'<small>'+esc(r.who)+'</small>':'')+'</div>';
   if(r.link&&!r.soon)h+='<a class="cnb'+(r.on?' again':'')+'" href="'+esc(r.link)+'" target="_blank" rel="noopener">'+(r.on?'חיבור מחדש':(r.linkLabel||'להתחבר'))+'</a>';
   // 12.11: the quick WhatsApp connect is the primary action; the own number (waOwn flag) is a small second link, a note says how to disconnect.
-  // 18.11.2026, Itzik: the 🔌 sheet showed Google with no help for the 'not verified' warning.
-  if(r.key==='google'&&!r.on&&!r.locked&&r.link&&!r.soon)h+='<div style="flex-basis:100%">'+GWARN+'</div>';
   if(r.link2&&!r.on)h+='<a href="'+esc(r.link2)+'" target="_blank" rel="noopener" style="flex-basis:100%;font-size:12.5px;color:#0e7490;margin-top:4px">'+esc(r.link2Label||'')+'</a>';
   if(r.note)h+='<small style="flex-basis:100%">'+esc(r.note)+'</small>';
   // 12.11: YouTube takes a channel link here, no Google login and no leaving the monitor.

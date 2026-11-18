@@ -47,7 +47,7 @@ async function checkCard(tok, st) {
   const p = st.oauth.provider;
   const out = { id: st.id, title: st.title, provider: p, ok: false, why: '' };
   if (!oa.ready(p)) { out.why = 'הספק עוד לא מוגדר בשרת (הכרטיס מציג "בקרוב")'; out.pending = true; return out; }
-  const start = BASE + '/oauth/' + p + '/start?t=' + tok + '&s=' + encodeURIComponent(st.id);
+  const start = BASE + '/oauth/' + p + '/start?t=' + tok + '&s=' + encodeURIComponent(st.id) + (p === 'google' ? '&go=1' : '');
   const a = await hop(start, gateCk(tok));
   if (a.status !== 302 || !a.loc) { out.why = 'הכפתור לא מפנה (' + a.status + ')'; return out; }
   const u = new URL(a.loc);

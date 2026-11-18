@@ -100,7 +100,8 @@ test('the page shows a connect button per provider and no token', () => {
 test('start for an unknown page or a step of another provider is 404', () => {
   let r = res(); setup.oauthStart('google', new URLSearchParams({ t: '0000000000000000', s: 'g' }), r); assert.equal(r.code, 404);
   r = res(); setup.oauthStart('meta', new URLSearchParams({ t: TOK, s: 'g' }), r); assert.equal(r.code, 404);
-  r = res(); setup.oauthStart('google', new URLSearchParams({ t: TOK, s: 'g' }), r); assert.equal(r.code, 302);
+  r = res(); setup.oauthStart('google', new URLSearchParams({ t: TOK, s: 'g' }), r); assert.equal(r.code, 200); // 18.11: help screen first
+  r = res(); setup.oauthStart('google', new URLSearchParams({ t: TOK, s: 'g', go: '1' }), r); assert.equal(r.code, 302);
   assert.ok(r.headers.Location.startsWith('https://accounts.google.com/'));
 });
 

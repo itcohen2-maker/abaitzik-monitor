@@ -442,9 +442,31 @@ function oauthStart(p, q, res) {
   const st = d && d.steps.find((x) => x.id === q.get('s') && x.oauth && oaProv(x.oauth) === p);
   if (!st) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('הדף לא נמצא'); }
   const view = q.get('v') === '1';
+  // 18.11.2026, Itzik: "בגלל דברים כאלו אנשים לא יתחברו". Every Google button (🔌, first steps, setup page,
+  // the reconnect link in a message) lands here, so the help for Google's "not verified" warning is shown
+  // first, on its own screen, with one button that continues (&go=1). Remove once Google verifies the app.
+  if (p === 'google' && q.get('go') !== '1') return googleIntro(q, res);
   const r = oa.startUrl(p, tok, st.id, st.oauth.scopes, null, view);
   if (!r.url) { res.writeHead(302, { Location: '/s/' + tok + (view ? '/view' : '') + '#' + st.id }); return res.end(); }
   res.writeHead(302, { Location: r.url, 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' }); res.end();
+}
+
+function googleIntro(q, res) {
+  const u = new URLSearchParams(q); u.set('go', '1');
+  const next = '/oauth/google/start?' + u.toString();
+  const page = '<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+    + '<title>חיבור לגוגל</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet">'
+    + '<style>body{margin:0;background:#f1f5f9;font-family:Heebo,Arial,sans-serif;color:#0f172a}main{max-width:460px;margin:0 auto;padding:22px 16px 40px}'
+    + 'h1{font-size:23px;margin:4px 0 6px}p.l{font-size:16px;line-height:1.55;margin:0 0 10px}'
+    + 'a.go{display:block;text-align:center;background:#0e7490;color:#fff;text-decoration:none;font-weight:800;font-size:19px;padding:16px;border-radius:14px;margin-top:16px}'
+    + 'small{display:block;text-align:center;color:#64748b;margin-top:10px;font-size:13px}</style></head><body><main>'
+    + '<h1>📧 רגע לפני החיבור לגוגל</h1>'
+    + '<p class="l">גוגל יציג מסך אזהרה. זה תקין, והמעבר לוקח שתי לחיצות. ככה עושים את זה:</p>'
+    + require('./lib/google-warn.js').WARN_HTML
+    + '<a class="go" rel="noreferrer" referrerpolicy="no-referrer" href="' + next.replace(/&/g, '&amp;') + '">הבנתי, להתחבר לגוגל</a>'
+    + '</main></body></html>';
+  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' });
+  res.end(page);
 }
 
 // 5.11: GET /oauth/<p>/callback. Saves the token as the step's secret, tells the monitor, sends the client back.
