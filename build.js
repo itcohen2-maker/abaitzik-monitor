@@ -19364,6 +19364,11 @@ function handleSheet(req){
  };
  document.body.appendChild(w);
 }
+/*ITZIK:END*/
+/*
+  18.11.2026: out of his block, since the leads board is every customer's: in a customer's copy these were empty stand
+  ins, so 🗑 on his board asked nothing and deleted nothing. paintHandle is still a stand in there, which is fine.
+*/
 /*
   12.11.2026, Itzik: "תיתן לי אפשרות חוץ מטופל גם למחוק אותו, הליד שנכנס זה אני הייתי." One in page confirm (never
   window.confirm) for the three places a lead shows: 📋 לטיפול, the new lead card and the leads table. Confirmed, it sends
@@ -19392,7 +19397,6 @@ function leadDelAsk(name,bizId,after){
  };
  document.body.appendChild(w);
 }
-/*ITZIK:END*/
 var VIS_API='https://wa.abaitzik.com/api/visit',visSid='',visOn=false,visTimer=0;
 function visDev(){var t=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Mac/.test(navigator.platform||''));return t?'phone':'computer';}
 function visSend(ev){try{if(!D||!D.visitKey||!visSid)return;fetch(VIS_API,{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({key:D.visitKey,sid:visSid,ev:ev,dev:visDev()})}).catch(function(){});}catch(e){}}

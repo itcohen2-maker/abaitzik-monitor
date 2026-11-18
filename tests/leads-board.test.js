@@ -669,6 +669,9 @@ test('the leads board declares no name the rest of the page declares, and every 
     const part = leadsPart(h);
     const names = new Set();
     part.replace(/^ {2}(?:function ([\w$]+)\(|var ([\w$]+)=)/gm, (m, f, v) => { names.add(f || v); return m; });
+    // a top level var line can declare more than one name (var lbSeq=LBS.seq,lbMsg=LBS.msg,LB_F={...})
+    part.replace(/^ {2}var [^\n]*/gm, (l) => { let d = 0; for (let i = 0; i < l.length; i++) { const c = l[i]; if ('([{'.includes(c)) d++; else if (')]}'.includes(c)) d--; else if (c === ',' && d === 0) { const m = /^,([A-Za-z_$][\w$]*)=(?!=)/.exec(l.slice(i)); if (m) names.add(m[1]); } } return l; });
+    ['lbMsg', 'LB_F', 'lbSeq'].forEach((n) => assert.ok(names.has(n), n + ' (a comma declared name) is checked too: ' + who));
     ['ldBoardHtml', 'lbTap', 'lbWhen', 'LB_ASK', 'LB_HI', 'LBS', 'ldScanHtml', 'LD_FWD'].forEach((n) => assert.ok(names.has(n), n + ' is a top level name of the part: ' + who));
     const rest = h.replace(part, '');
     names.forEach((n) => {
@@ -678,6 +681,12 @@ test('the leads board declares no name the rest of the page declares, and every 
     });
     assert.equal(part.split('function lbTap(').length - 1, 1, 'one lbTap: ' + who);
     assert.ok(!/window\.ldBoardSt\s*=/.test(rest) && rest.split('ldBoardSt').length === 1, 'ldBoardSt is the board\'s alone: ' + who);
+    // a name the board calls must be real in this copy, never an empty stand in left by a cut block of Itzik's
+    const stand = new Set();
+    h.replace(/^function ([\w$]+)\(\)\{\}$|^var ([\w$]+)=(?:null|\[\]|\{\});$/gm, (m, f, v) => { stand.add(f || v); return m; });
+    if (who === 'ily') assert.ok(stand.size > 5, 'the customer copy has stand ins to check against');
+    const calls = new Set(); part.replace(/(?:^|[^.\w$])([A-Za-z_$][\w$]*)\(/g, (m, n) => { calls.add(n); return m; });
+    calls.forEach((n) => assert.ok(!stand.has(n), who + ': the board calls ' + n + ', an empty stand in in this copy'));
     const S = scripts(h);
     assert.ok(S.length > 3, 'the page has scripts: ' + who);
     S.forEach((code, i) => { try { new Function(code); } catch (e) { assert.fail(who + ': script ' + i + ' does not parse: ' + e.message); } });

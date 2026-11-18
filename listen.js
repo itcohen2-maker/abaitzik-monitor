@@ -935,7 +935,7 @@ function recordIncoming(m) {
       try { require('./lib/handle.js').publishSoon(); } catch (e) { /* the next build carries it */ }
       return true;
     }
-    const ldD = codeOk && inst.biz && require('./lib/lead-delete.js').parse(text);
+    const ldD = codeOk && (inst.biz || inst.name !== 'abaitzik') && require('./lib/lead-delete.js').parse(text); // 18.11: a customer's board deletes too
     if (ldD) {
       let res;
       try { res = require('./lib/lead-delete.js').apply(inst.dataPath, ldD.id); say('מחיקת ליד: ' + ldD.id + ' | ' + (res.ok ? res.moved.map((x) => x.kind).join(',') : res.reply)); }

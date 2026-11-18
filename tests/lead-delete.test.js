@@ -36,7 +36,7 @@ test('parse: the exact line, with the kind line and the code line around it; str
 
 test('the listener applies it only with the owner code, silently, with no model', () => {
   const src = fs.readFileSync(path.join(__dirname, '..', 'listen.js'), 'utf8');
-  assert.ok(/const ldD = codeOk && inst\.biz && require\('\.\/lib\/lead-delete\.js'\)\.parse\(text\);/.test(src));
+  assert.ok(/const ldD = codeOk && \(inst\.biz \|\| inst\.name !== 'abaitzik'\) && require\('\.\/lib\/lead-delete\.js'\)\.parse\(text\);/.test(src));
   const i = src.indexOf('const ldD = ');
   const block = src.slice(i, src.indexOf('12.11.2026, Itzik: "📤 הודעות לשליחה"', i));
   assert.ok(/fs\.unlinkSync\(path\.join\(CHAT, name\)\)/.test(block), 'the request message is dropped, like ✓ טופל');
@@ -182,7 +182,7 @@ test('page: the confirm is in the page (no window.confirm), says the sentence, a
   const html = page();
   const i = html.indexOf('function leadDelAsk(');
   assert.ok(i > 0);
-  const j = html.indexOf('/*ITZIK:END*/', i);
+  const j = html.indexOf('var VIS_API=', i); // 18.11.2026: out of his block (every customer's board deletes too)
   const src = html.slice(i, j > 0 ? j : i + 3000);
   assert.ok(!/\bconfirm\s*\(/.test(src), 'no window.confirm');
   assert.ok(src.includes('למחוק את הליד ') && src.includes('הוא לא ייספר בדוחות.') && src.includes('>מחיקה<') && src.includes('>ביטול<'));
