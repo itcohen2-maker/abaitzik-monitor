@@ -45,3 +45,18 @@ test("a note asking to remove the lead removes it, not interested closes it", ()
     assert.strictEqual(left[0].status, "אבד");
   } finally { fs.rmSync(d, { recursive: true, force: true }); }
 });
+
+test("a note on a new lead moves it to בשיחה, a note on a closed lead keeps its status", () => {
+  const d = tmp();
+  fs.mkdirSync(path.join(d, "biz", "biz"), { recursive: true });
+  const rec = { id: "biz-20261113202225-site", kind: "lead", name: "בדיקה", status: "חדש", note: "", at: "2026-11-13T20:22:25.923Z", source: "site" };
+  fs.writeFileSync(path.join(d, "biz", "biz", rec.id + ".json"), JSON.stringify(rec));
+  assert.ok(L.apply(d, "ליד [" + rec.id + "]: הערה לא הרגישה טוב. נקבע לדבר שוב").ok);
+  const back = JSON.parse(fs.readFileSync(path.join(d, "biz", "biz", rec.id + ".json"), "utf8"));
+  assert.strictEqual(back.status, "בשיחה");
+  assert.match(back.note, /נקבע לדבר שוב/);
+  // a note on a lead already נסגר keeps its status
+  rec.status = "נסגר"; fs.writeFileSync(path.join(d, "biz", "biz", rec.id + ".json"), JSON.stringify(rec));
+  assert.ok(L.apply(d, "ליד [" + rec.id + "]: הערה תודה").ok);
+  assert.strictEqual(JSON.parse(fs.readFileSync(path.join(d, "biz", "biz", rec.id + ".json"), "utf8")).status, "נסגר");
+});
