@@ -4980,7 +4980,7 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
     tasks of today, and a peek at tomorrow.
   -->
   <button type="button" class="gt gMyDay" data-grp="day" id="gMyDay" data-new="1" data-upd="20261024-tdel"><b>📅 מה יש לי היום</b><small>תורים, תזכורות ומשימות של היום</small></button>
-  <button type="button" class="gt g18" data-grp="day" id="gAppts" data-upd="20261116-tests-img"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>
+  ${inst.name === 'abaitzik' ? '<!-- 18.11.2026, Itzik: two tiles of the same appointments was a double. His 🏥 lives only in 🏡 מצב אישי (🩺 תורים עתידיים, opens the same screen). Customers keep it here: their 🩺 does not open it. -->' : '<button type="button" class="gt g18" data-grp="day" id="gAppts" data-upd="20261116-tests-img"><b>🏥 תורים עתידיים</b><small>איפה, מתי, לפי הסדר</small></button>'}
   <button type="button" class="gt g16" data-grp="day" id="gRemind" data-upd="20261115-remsnooze"><b>⏰ תזכורות</b><small>מה קבענו, ומתי זה יקפוץ לך</small></button>
   <button type="button" class="gt g10 roundTile roundCap" id="gNotes" title="פתקים" aria-label="פתקים" data-upd="notes-caption-20261112"><span>📝</span><small>פתקים</small></button>
   <!-- 12.10, Itzik: "תקים אפליקציה לבדוק מה כל הקלקולים האלה". Every monitor's faults on one screen. -->
@@ -17616,7 +17616,7 @@ function todaySheet(){
  var day=new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'});
  function apRow(a){return '<div class="tdRow">'+(a.noTime?'':'<i>'+esc(tdHour(a.when))+'</i>')+esc(a.what)
   +(a.where&&a.where!==a.what?'<br><small><a href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(a.where)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">📍 '+esc(a.where)+'</a></small>':'')+'</div>';}
- h+='<div class="tdSec">🏥 תורים</div>'+(x.ap.length?x.ap.map(apRow).join(''):'<small>אין תור היום. תור חדש מוסיפים מהמסך הראשי: לוחצים על 🏥 תורים עתידיים, בטופס למטה.</small>');
+ h+='<div class="tdSec">🏥 תורים</div>'+(x.ap.length?x.ap.map(apRow).join(''):'<small>אין תור היום. תור חדש מוסיפים '+((INSTANCE&&INSTANCE.name)==='abaitzik'?'ב 🏡 מצב אישי: לוחצים על 🩺 תורים עתידיים, בטופס למטה.':'מהמסך הראשי: לוחצים על 🏥 תורים עתידיים, בטופס למטה.')+'</small>');
  h+='<div class="tdSec">⏰ תזכורות</div>'+(x.rm.length?x.rm.map(function(r){return '<div class="tdRow">'+esc(r.text)+'</div>';}).join(''):'<small>אין תזכורת להיום.</small>');
  h+='<div class="tdSec">✅ משימות</div>'+(x.tk.length?x.tk.map(function(t){
    return '<label class="tdRow tk'+(x.done[t.id]?' done':'')+'"><input type="checkbox" data-tk="'+esc(t.id)+'"'+(x.done[t.id]?' checked':'')+'> '+esc(t.text)+tkActs(t)+'</label>';
