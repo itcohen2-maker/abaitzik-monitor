@@ -406,9 +406,17 @@
   "ytd": "On November 3, Google announced that Gemini and AI in Search will be switched off in school managed student accounts until the school admin turns them on, and a school that keeps them off gives up Search for students too. Reportedly starting in early 2027. Source: NBC Bay Area and PPC Land.",
   "song": "",
   "song_tt": "",
-  "posted": false,
-  "postedAt": null,
-  "approvedAt": "2026-11-15T06:00:45.408Z"
+  "posted": true,
+  "postedAt": "2026-11-18T18:05:48.341Z",
+  "approvedAt": "2026-11-15T06:00:45.408Z",
+  "auto": {
+   "reel": "17961687990260419",
+   "story": "17917380792504652",
+   "storyError": null,
+   "page": "1133367016089938",
+   "pageError": null,
+   "channel": "itsolution.global"
+  }
  },
  {
   "id": "waze-he",
