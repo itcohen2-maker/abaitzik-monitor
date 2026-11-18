@@ -84,3 +84,19 @@ test('12.11: requests belong to tiles: a new tile by ref, an existing one by don
   P.apply(d, { add: [{ t: 'חוג ציור', i: '🎨' }] });
   assert.strictEqual(P.forPage(d).tiles.filter((t) => t.t === 'חוג ציור').length, 1);
 });
+
+test('18.11.2026: the 🩺 tile shows every future appointment from data/appts, not only a doctor from the mail', () => {
+  const fs = require('fs'), path = require('path');
+  const d = tmp();
+  P.setPicked(d, 'doctor');
+  const ad = path.join(d, 'appts', 'appts'); fs.mkdirSync(ad, { recursive: true });
+  fs.writeFileSync(path.join(ad, '20261224-pelephone.json'), JSON.stringify({ id: 'a20261224-pelephone', when: '2026-12-24T12:00:00+02:00', what: 'החזרת ציוד yes', where: 'משה לוי 16' }));
+  fs.writeFileSync(path.join(ad, '20261101-old.json'), JSON.stringify({ id: 'aold', when: '2026-11-01T10:00:00+02:00', what: 'עבר' }));
+  fs.writeFileSync(path.join(ad, '20261130-day.json'), JSON.stringify({ id: 'aday', when: '2026-11-30T09:00:00+02:00', noTime: true, what: 'בלי שעה' }));
+  const now = Date.parse('2026-11-18T09:00:00Z');
+  P.addItem(d, { k: 'doctor', line: 'רופא עיניים', when: '2026-12-01 10:30', ref: 'm1' }, now);
+  const t = P.forPage(d, now).tiles.find((x) => x.k === 'doctor');
+  assert.strictEqual(t.t, 'תורים עתידיים');
+  assert.deepStrictEqual(t.items.map((x) => x.when), ['2026-11-30', '2026-12-01 10:30', '2026-12-24 12:00']);
+  assert.strictEqual(t.items[2].line, 'החזרת ציוד yes, משה לוי 16');
+});
