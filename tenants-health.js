@@ -347,8 +347,10 @@ function main() {
               const res = LM.finish(inst.dataPath, T, it, ok);
               if (res === 'done') console.log('leads missing: handed over ' + t.id + ' ' + it.id);
               else if (res === 'gaveup') console.log('leads missing: gave up on ' + t.id + ' ' + it.id + ' after ' + LM.MAX_TRIES + ' tries, kept in 💡 only');
+              else if (res === 'later') console.log('leads missing: gave up on ' + t.id + ' ' + it.id + ' but its idea was not written, tomorrow again');
             }));
-          if (tries.length) Promise.allSettled(tries).then(() => LM.unlock(inst.dataPath, T));
+          // round 3: an unlock or write failure is one log line, never an unhandled rejection that ends the run
+          if (tries.length) Promise.allSettled(tries).then(() => LM.unlock(inst.dataPath, T)).catch((e) => console.log('leads missing, unlock failed: ' + String(e && e.message).slice(0, 120)));
         }
       } catch (e) { console.log('leads missing: ' + String(e.message).slice(0, 120)); }
     }

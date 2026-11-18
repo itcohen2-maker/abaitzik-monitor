@@ -123,7 +123,7 @@ test('the listener and the health check are wired to it', () => {
   const h = H.slice(H.indexOf("require('./lib/leads-missing.js')"));
   assert.ok(H.includes('LM.collect(inst.dataPath, T)'), 'Itzik collects them');
   assert.ok(h.includes("require('./lib/wa-out.js').sendOwner(inst.dataPath, it.line)"), 'and hears on WhatsApp');
-  assert.ok(h.includes('const res = LM.finish(inst.dataPath, T, it, ok);') && h.includes('Promise.allSettled(tries).then(() => LM.unlock(inst.dataPath, T))'), 'finished after each try, unlocked after all');
+  assert.ok(h.includes('const res = LM.finish(inst.dataPath, T, it, ok);') && h.includes('Promise.allSettled(tries).then(() => LM.unlock(inst.dataPath, T)).catch('), 'finished after each try, unlocked after all');
   assert.ok(H.includes('if (!(ij && ij.publicDemo))'), 'never a public demo');
 });
 
@@ -187,4 +187,25 @@ test('round 2: a run holds the customer until its tries came back; a lock older 
   assert.equal(g3.items.length, 1, 'a run that died does not hold him forever');
   LM.done(owner, T, g3.items[0], T0 + LM.LOCK_MS + 2000); LM.unlock(owner, T);
   assert.deepEqual(LM.collect(owner, T, T0 + LM.LOCK_MS + 3000).items, []);
+});
+
+test('round 3: a given up line whose idea cannot be written is not finished, it waits for the next Israel day', () => {
+  const owner = tmp(), tdir = tmp();
+  LM.record(path.join(tdir, 'data'), 'אחת', T0);
+  const T = { id: 'later', dir: tdir, name: 'לקוח' };
+  // the ideas folder is a file, so the idea cannot be written
+  fs.mkdirSync(path.join(owner, 'better'), { recursive: true });
+  fs.writeFileSync(path.join(owner, 'better', 'better'), 'x');
+  const res = [];
+  for (let r = 0; r < 3; r++) { const g = LM.collect(owner, T, T0 + r * 60000); g.items.forEach((it) => res.push(LM.finish(owner, T, it, false, T0 + r * 60000))); LM.unlock(owner, T); }
+  assert.deepEqual(res, ['retry', 'retry', 'later']);
+  assert.equal(told(owner).later.ids.length, 0, 'not finished');
+  assert.equal(LM.collect(owner, T, T0 + 10 * 60000).items.length, 0, 'not again today');
+  fs.unlinkSync(path.join(owner, 'better', 'better'));
+  const next = Date.parse('2026-11-19T10:00:00Z');
+  const g = LM.collect(owner, T, next);
+  assert.equal(g.items.length, 1, 'tomorrow again');
+  assert.equal(LM.finish(owner, T, g.items[0], false, next), 'gaveup', 'and now its idea is written');
+  assert.equal(told(owner).later.ids.length, 1);
+  assert.equal(ideasIn(owner).length, 1);
 });
