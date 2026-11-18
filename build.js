@@ -15360,6 +15360,10 @@ var REEL_ITEMS=[
 {n:'IT 01 כריכה',t:'הכריכה: מי לא שילם לך החודש?',r:'it01-cover.jpg'},
 {n:'IT 01 פרסום',p:'it01',t:'טקסט לסטורי באינסטגרם ולטיקטוק, עם קישור לכל רשת',r:'it01-post.txt'},
 // 9.11, Itzik: sardine sandwich, three things he stopped buying; caption copied from his reference post.
+// 18.11, Itzik: the drive with dual capture like the iPhone, his own lines; music like the reference (U2).
+{n:'37',t:'ריל: חיים פעם אחת, נסיעה עם צילום כפול · 1080 זמני, ה 4K בדרך',r:'reel-37-nesia.mp4'},
+{n:'37 כריכה',t:'הכריכה',r:'reel-37-cover.jpg'},
+{n:'37 פרסום',t:'כיתוב, מוזיקה והאשטגים לכל רשת',r:'reel-37-post.txt'},
 {n:'36ה',t:'ריל: 3 דברים שהפסקתי לעשות במטבח, 20 שניות · 4K הכי איכותי, לשמירה בגלריה',r:'reel-36e-yogurt.mp4'},
 {n:'36 כריכה',t:'הכריכה · 4K',r:'reel-36-cover.jpg'},
 {n:'36 פרסום',t:'כיתוב, מוזיקה והאשטגים לכל רשת',r:'reel-36-post.txt'},
