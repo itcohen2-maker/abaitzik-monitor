@@ -292,6 +292,8 @@ if (cmd === 'add') {
   const t = locked(() => {
     const x = get(rest[0]);
     x.lastError = why.slice(0, 500);
+    // 18.11: a task sent back to the queue counts its wait from here, not from its first try (watchdog.js).
+    x.queuedAt = new Date().toISOString();
     // 14.11: a WhatsApp task (the bank) is not tried again: the bank session it needed is gone.
     x.status = (x.tries || 0) >= MAX_TRIES || x.wa || x.pc === 'bank' ? 'failed' : 'pending';
     write(x);

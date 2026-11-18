@@ -106,3 +106,12 @@ test('12.10: a send held for a wrong code says so, and the history opens and clo
   h = history({ history: h }, [], now + 120000);
   assert.ok(h[0].end);
 });
+
+test("a task sent back to the queue counts its wait from that moment", () => {
+  const now = Date.parse("2026-11-18T06:00:00Z");
+  const t = { status: "pending", at: "2026-11-18T05:11:00Z", queuedAt: "2026-11-18T05:59:00Z", task: "x", pc: "lolos" };
+  const on = () => ({ on: true, since: now - 60 * 60000 });
+  assert.deepEqual(pcProblems([t], true, 0, now, on), []);
+  const old = Object.assign({}, t, { queuedAt: undefined });
+  assert.match(pcProblems([old], true, 0, now, on)[0], /מחכה יותר מעשר דקות/);
+});

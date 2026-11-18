@@ -149,7 +149,7 @@ function pcProblems(tasks, on, since, now, namedFn) {
     if (!t || t.test) return;
     const up = t.pc ? (namedFn ? namedFn(t.pc) : { on: false, since: 0 }) : { on, since };
     if (!up.on) return;
-    if (t.status === "pending" && now - Math.max(Date.parse(t.at), up.since || 0) > 10 * 60 * 1000) out.push("משימה למחשב מחכה יותר מעשר דקות: " + String(t.task).slice(0, 40));
+    if (t.status === "pending" && now - Math.max(Date.parse(t.queuedAt || t.at), up.since || 0) > 10 * 60 * 1000) out.push("משימה למחשב מחכה יותר מעשר דקות: " + String(t.task).slice(0, 40));
     if (t.status === "claimed" && now - Math.max(Date.parse(t.claimedAt), up.since || 0) > 25 * 60 * 1000) out.push("המחשב תקוע על משימה יותר מ-25 דקות: " + String(t.task).slice(0, 40));
   });
   return out;
