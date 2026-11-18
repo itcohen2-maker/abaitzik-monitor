@@ -168,7 +168,9 @@ function firstUse(t) {
   works. No phone ring, nothing waiting for approval. Returns true when handled.
 */
 function selfArena(t, x) {
-  if (!t.selfArenas || !/זיר[הות]/.test(x.text || '')) return false;
+  // 18.11: a change to an arena that says theatre, a scene or IPTV and not the word arena went to the server worker,
+  // which has no theatre code and answered "not found" (Alon, IPTV). Any theatre word now goes to the PC.
+  if (!t.selfArenas || !/זיר[הות]|תיאטרון|סצנ[הות]|IPTV|bubot/i.test(x.text || '')) return false;
   try {
     const root = 'tenant-' + t.id + '-' + x.id;
     const at = new Date();
@@ -178,7 +180,7 @@ function selfArena(t, x) {
       text: (t.title || t.id) + ' ביקש זירה חדשה בתיאטרון, והיא עברה לבנייה במחשב בלי אישור: ' + x.text,
     }, null, 1), 'utf8');
     execFileSync('node', ['pc-task.js', 'add', '--re', root,
-      'זירה חדשה בתיאטרון רמת הנשיא (bubot-theatre, הקוד במחשב ב C:\\Users\\User\\bubot-theatre), לבקשת ' + (t.title || t.id)
+      'זירה חדשה או שינוי בזירה קיימת בתיאטרון רמת הנשיא (bubot-theatre, הקוד במחשב ב C:\\Users\\User\\bubot-theatre), לבקשת ' + (t.title || t.id)
       + ' שמנהל את התיאטרון יחד עם איציק ולא צריך אישור לזירות. לבנות אותה כמו הזירות הקיימות, לפרוס לייצור ולבדוק אותה חיה. הבקשה במילים שלו: '
       + x.text + '\nאחרי הפריסה לרשום ביומן החדשות של האתר (מה ש /api/news מחזיר) שורה אחת עם by "claude" ומה נבנה, כדי שהאריח של התיאטרון יהבהב אצל איציק ואצל ' + (t.title || t.id) + '.'
       + '\nבסוף לענות בשורה אחת מה נבנה והקישור לזירה.'], { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
