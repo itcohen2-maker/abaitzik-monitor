@@ -19214,6 +19214,8 @@ var LB_ROWS=[
  {id:'manual',ic:'✍️',n:'נרשם ידנית',cc:['#b0bec5','#37474f']}
 ];
 function lbDay(iso){var t=Date.parse(iso);if(isNaN(t))return '';return new Date(t).toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'});}
+// 18.11.2026 (review): the day a lead is due by. A date only nextAt is already a day; a full one is its Israel day (00:30 Israel is the UTC day before).
+function lbDueDay(v){v=String(v||'');if(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(v))return v;return lbDay(v)||v.slice(0,10);}
 function lbHm(iso){var t=Date.parse(iso);if(isNaN(t))return '';return new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(t));}
 function lbState(r){var s=r.status||'חדש';return s==='נסגר'?'ok':s==='אבד'?'miss':s==='חדש'?'no':'wait';}
 function lbWa(p){var d=String(p||'').replace(/[^0-9]/g,'');if(d.indexOf('0')===0)d='972'+d.slice(1);return 'https://wa.me/'+d;}
@@ -19250,9 +19252,9 @@ function leadBoard(wk){
   +(ok?'🟢 הסורק עובד: בדק '+(ago<2?'עכשיו':'לפני '+ago+' דקות')+'. אתר, מסנג׳ר, תגובות בפייסבוק ובאינסטגרם, טפסים. כל 10 דקות.'
    :'🔴 הסורק לא תקין'+(S&&S.need&&S.need.length?': חסרות הרשאות '+esc(S.need.join(', ')):ago!=null?': לא רץ '+ago+' דקות':'')+'. המנהל מטפל.')+'</div>';
  // who is waiting for him now: new, or due today or earlier
- var wait=L.filter(function(r){var s=r.status||'חדש';if(s==='נסגר'||s==='אבד')return false;return s==='חדש'||(r.nextAt&&String(r.nextAt).slice(0,10)<=T0);})
+ var wait=L.filter(function(r){var s=r.status||'חדש';if(s==='נסגר'||s==='אבד')return false;return s==='חדש'||(r.nextAt&&lbDueDay(r.nextAt)<=T0);})
   .sort(function(a,b){return String(a.nextAt||a.at).localeCompare(String(b.nextAt||b.at));});
- var tmr=add(T0,1),soon=L.filter(function(r){var s=r.status||'חדש';return s!=='נסגר'&&s!=='אבד'&&s!=='חדש'&&r.nextAt&&String(r.nextAt).slice(0,10)===tmr;});
+ var tmr=add(T0,1),soon=L.filter(function(r){var s=r.status||'חדש';return s!=='נסגר'&&s!=='אבד'&&s!=='חדש'&&r.nextAt&&lbDueDay(r.nextAt)===tmr;});
  function card(r){
   var src=(LB_ROWS.filter(function(x){return x.id===r.source;})[0]||{ic:'✍️',n:r.source||'ליד'});
   return '<div class="ai s-'+lbState(r)+'"><span class="tm">'+esc(lbHm(r.at))+'<small style="display:block">'+esc(dm(lbDay(r.at)||T0))+'</small></span>'
@@ -20235,6 +20237,8 @@ function bzRow(r,extra){
   +'<button type="button" class="yb" data-bz="edit">עדכן</button>'
   +(r.kind==='lead'&&r.id&&typeof leadDelAsk==='function'?'<button type="button" class="yb ldDel" data-bz="leaddel" data-id="'+esc(r.id)+'" data-n="'+esc(r.name||'')+'">🗑 מחיקה</button>':'')+'</div>';
 }
+// 18.11.2026 (review): a nextAt as he reads it, in Israel time ("19.11 09:00"). A date only one (older leads, a customer's) stays as it was.
+function bzNextAtTxt(x){x=String(x||'').trim();if(!x||/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(x))return x;var m=/^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}):([0-9]{2})$/.exec(x);if(m)return (+m[3])+'.'+(+m[2])+' '+m[4]+':'+m[5];var n=Date.parse(x);if(isNaN(n))return x;var p={};new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(new Date(n)).forEach(function(q){p[q.type]=q.value;});return (+p.day)+'.'+(+p.month)+' '+(p.hour==='24'?'00':p.hour)+':'+p.minute;}
 function bizSheet(t0){
  ensure('biz',function(){
   var S=D.bizSum||null,recs=(D.biz||[]).filter(function(r){return typeof ldGone!=='function'||(ldGone()||[]).indexOf(r.id)<0;/* 17.11.2026: a customer copy has the empty stand in ldGone(){}, and the leads tile threw */}),tab=t0||'leads';
@@ -20286,7 +20290,7 @@ function bizSheet(t0){
      h+=bzRow(r,'<small>לא נגעו בו '+esc(String(s.days))+' ימים</small>');});}
    if(du.length){h+='<div class="bzSec">זמן לחזור</div>';
     du.forEach(function(d){var r=bzById(d.id)||{name:d.name,kind:'lead'};
-     h+=bzRow(r,'<small>'+esc(d.next||'')+(d.nextAt?' · '+esc(d.nextAt):'')+'</small>');});}
+     h+=bzRow(r,'<small>'+esc(d.next||'')+(d.nextAt?' · '+esc(bzNextAtTxt(d.nextAt)):'')+'</small>');});}
    // 14.11.2026, Itzik: "לחזור מחר" — what is due tomorrow, already here today
    if(tm.length){h+='<div class="bzSec">📅 לחזור מחר</div>';
     tm.forEach(function(d){var r=bzById(d.id)||{name:d.name,kind:'lead'};

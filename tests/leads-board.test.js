@@ -573,3 +573,34 @@ test('the board handlers are wired in his copy only', () => {
   assert.ok(own.includes('lbTap(e,el)'), 'the sheet click goes to the board first');
   ['lbTap', 'lbWhen', 'lbFilter', 'data-bz="lbed"'].forEach((k) => assert.ok(!cust.includes(k), k + ' is not in a customer copy'));
 });
+
+// 18.11.2026, final review: "⏰ צריך לחזור" (dueHtml, his and a customer's) shows nextAt in Israel time, a date only
+// one stays a date; the leads sheet (owner) counts a full ISO nextAt by its Israel day.
+function pageFn(html, name, deps) {
+  // the helper sits on a line of its own in the page
+  const line = html.split(String.fromCharCode(10)).find((l) => l.trim().startsWith('function ' + name + '('));
+  assert.ok(line, name + ' is in the page');
+  const k = Object.keys(deps || {});
+  return new Function(...k, line + '; return ' + name + ';')(...k.map((x) => deps[x]));
+}
+test('review 3: ⏰ צריך לחזור prints the reminder in Israel time, a date only one as before, in a customer copy too', () => {
+  const html = page(L);
+  for (const who of ['abaitzik', 'ily']) {
+    const h = cut({ name: who }, html);
+    const f = pageFn(h, 'bzNextAtTxt');
+    assert.equal(f('2026-11-19T07:00:00.000Z'), '19.11 09:00', who);
+    assert.equal(f('2026-11-14T22:30:00.000Z'), '15.11 00:30', who);
+    assert.equal(f('2026-11-19'), '2026-11-19', who);
+    assert.equal(f(''), '', who);
+    assert.ok(h.includes("esc(bzNextAtTxt(d.nextAt))"), 'dueHtml uses it: ' + who);
+    assert.ok(!h.includes("' · '+esc(d.nextAt)"), 'no raw nextAt: ' + who);
+  }
+});
+test('review 7: the leads sheet counts a full ISO nextAt by its Israel day', () => {
+  const own = cut({ name: 'abaitzik' }, page(L));
+  const lbDay = pageFn(own, 'lbDay');
+  const f = pageFn(own, 'lbDueDay', { lbDay });
+  assert.equal(f('2026-11-14T22:30:00.000Z'), '2026-11-15');
+  assert.equal(f('2026-11-14'), '2026-11-14');
+  assert.ok(!/String\(r\.nextAt\)\.slice\(0,10\)/.test(own), 'no UTC day slice of nextAt left');
+});
