@@ -18183,6 +18183,13 @@ on('gClalit',clalitSheet);
   only once they are in the monitor; Drive links (u) open the folder.
 */
 var TOM_ITEMS=[
+// 18.11.2026, Itzik: "שים את כולם ברילים קמפיין. שים בנפרד סרטונים להחלפה". The monitor series (night mode, 27s,
+// a pain hook per service business), on standby until the campaign check in a day or two.
+ {h:"🔄 סרטונים להחלפה, בסטנד ביי מ 18.11"},
+ {n:"210",t:"📣 קמפיין · 🔄 להחלפה · כללי: העסק עובד 8 שעות. ואתה עוד 4 אחריו?",r:"sb-1811-general.mp4"},
+ {n:"215",t:"📣 קמפיין · 🔄 להחלפה · מטפלת בקליניקה: בין מטופל למטופל, 12 הודעות על תורים",r:"sb-1811-clinic.mp4"},
+ {n:"216",t:"📣 קמפיין · 🔄 להחלפה · משרד שיווק: 5 לקוחות, 20 פוסטים בשבוע",r:"sb-1811-marketing.mp4"},
+ {h:"📣 בקמפיין ובאישור"},
  {n:"201",t:"📣 קמפיין · 🆕 לאישורך · תור 15 שניות",r:"tor-1711-15s.mp4"},
  {n:"204",t:"📣 קמפיין · ✅ איליי 4: רוב בעלי העסקים משלמים על 7 מערכות · קמפיינים ותוכן",r:"ilay-1711-4-mefotzatz.mp4"},
  {n:"203",t:"📣 קמפיין · ✅ איליי 3: תסגור את כל החלוניות · מסך אחד ווואטסאפ",r:"ilay-1711-4-masachim.mp4"},
