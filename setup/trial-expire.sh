@@ -22,9 +22,10 @@ for f in /srv/monitor-changes/t??????.plan.json; do
   [ -n "$start" ] || continue
   name=$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1])).get("name",""))' "data/signup/queue/$id.json" 2>/dev/null)
   if [ "$now" -ge $((start + 8*86400)) ]; then
+    ( set -a; . /etc/monitor.env; set +a; node setup/trial-goodbye.js "$id" ) >> /var/log/trial-expire.log 2>&1
     out=$(bash setup/remove-trial.sh "$id" 2>&1 | tail -1)
     echo "$(date -Is) $id $out" >> /var/log/trial-expire.log
-    case "$out" in *removed) tell "🗑️ המוניטור של ${name:-$id} נמחק: עבר שבוע ניסיון ויום אחרי דרישת התשלום, ולא שילם." ;; esac
+    case "$out" in *removed) tell "🗑️ המוניטור של ${name:-$id} נמחק: עבר שבוע ניסיון ויום אחרי דרישת התשלום, ולא שילם. נשלח לו מייל שהנתונים נמחקו ושהוא מוזמן להצטרף שוב." ;; esac
   elif [ "$now" -ge $((start + 7*86400)) ] && ! grep -qx "warned $id" "$STATE"; then
     echo "warned $id" >> "$STATE"
     when=$(TZ=Asia/Jerusalem date -d "@$((start + 8*86400))" "+%d.%m בשעה %H:%M")
