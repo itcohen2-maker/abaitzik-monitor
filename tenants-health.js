@@ -320,21 +320,31 @@ function main() {
       } catch (e) { console.log('request alert failed: ' + String(e.message).slice(0, 120)); }
     }
     /*
-      18.11.2026: "💡 מה חסר לך כאן?" from a customer's leads board (lib/leads-missing.js). Each new line becomes an idea
-      in his 💡 רעיונות (data/better/better) and one WhatsApp line to Itzik, once. WhatsApp failing falls back to a push.
+      18.11.2026: "💡 מה חסר לך כאן?" from a customer's leads board (lib/leads-missing.js). Each new line goes to Itzik on
+      WhatsApp (a push when WhatsApp fails) and, once it reached him, becomes an idea in his 💡 רעיונות. A line that did
+      not reach him waits for the next run. Capped there (3 a run, 10 a day per customer, no file over 64KB); what is held
+      waits silently with one log line. A public demo monitor is never read.
     */
     if (!DRY && t.dir) {
       try {
-        let who = t.title || t.id;
-        try { const ij = JSON.parse(fs.readFileSync(path.join(t.dir, 'instance.json'), 'utf8')); if (ij && ij.owner) who = ij.owner; } catch (e) { /* the title */ }
-        const lmLines = require('./lib/leads-missing.js').collect(inst.dataPath, { id: t.id, dir: t.dir, name: who });
-        if (lmLines.length) changed = true;
-        lmLines.forEach((line) => {
-          require('./lib/wa-out.js').sendOwner(inst.dataPath, line).catch((e) => {
-            console.log('leads missing, WhatsApp failed: ' + String(e.message).slice(0, 120));
-            try { execFileSync('node', ['notify.js', '💡 בלוח הלידים חסר', line.slice(0, 300)], { cwd: __dirname, stdio: 'ignore', timeout: 60000 }); } catch (x) { /* logged above */ }
+        let who = t.title || t.id, ij = null;
+        try { ij = JSON.parse(fs.readFileSync(path.join(t.dir, 'instance.json'), 'utf8')); if (ij && ij.owner) who = ij.owner; } catch (e) { /* the title */ }
+        if (!(ij && ij.publicDemo)) {
+          const LM = require('./lib/leads-missing.js');
+          const T = { id: t.id, dir: t.dir, name: who };
+          const got = LM.collect(inst.dataPath, T);
+          if (got.why === 'big') console.log('leads missing: ' + t.id + ' file over 64KB, not read');
+          if (got.held) console.log('leads missing: ' + t.id + ' ' + got.held + ' held by the caps');
+          got.items.forEach((it) => {
+            require('./lib/wa-out.js').sendOwner(inst.dataPath, it.line)
+              .catch((e) => {
+                console.log('leads missing, WhatsApp failed: ' + String(e.message).slice(0, 120));
+                execFileSync('node', ['notify.js', '💡 בלוח הלידים חסר', it.line.slice(0, 300)], { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
+              })
+              .then(() => { LM.done(inst.dataPath, T, it); console.log('leads missing: handed over ' + t.id + ' ' + it.id); })
+              .catch((e) => console.log('leads missing, not handed over (next run): ' + String(e.message).slice(0, 120)));
           });
-        });
+        }
       } catch (e) { console.log('leads missing: ' + String(e.message).slice(0, 120)); }
     }
     delete t.paused;

@@ -547,9 +547,10 @@ function build() {
     .map(x => ({ id: x.id, at: x.at || '', text: x.text || '', network: x.network || '', used: !!x.used }))
     .sort((a, b) => (a.at < b.at ? 1 : -1));
   // The reviewer's improvements (review.js), newest first. 30.9.
+  // 18.11.2026 (review): a customer's "מה חסר לך כאן?" (lib/leads-missing.js) keeps its "tenant:<id>" (betterBy).
   const better = loadDocs('better')
     .map(x => ({ at: x.at || '', t: x.t || '', d: x.d || '', area: x.area || '', size: x.size || '', built: x.built || '',
-                 by: x.by === 'radar' || x.by === 'pains' ? x.by : 'review', q: x.q || '', u: /^https:\/\//.test(x.u || '') ? x.u : '' }))
+                 by: betterBy(x.by), q: x.q || '', u: /^https:\/\//.test(x.u || '') ? x.u : '' }))
     // 12.10, Itzik: "כל זמן אותם רעיונות". What is already done sinks under what is still open.
     .sort((a, b) => (!a.built !== !b.built ? (a.built ? 1 : -1) : (a.at < b.at ? 1 : -1)));
   // 12.10: what the other side changed in the theatre (theatre-news.js), newest first.
@@ -25603,7 +25604,12 @@ function bizRow(r) {
   BIZ_FIELDS.forEach((f) => { if (r && r[f] != null) o[f] = r[f]; });
   return o;
 }
-module.exports = { renderPage, build, loadDocs, bizRow };
+/*
+  Who an idea is from, as the 💡 screen tells them apart: radar, pains, a customer ("tenant:<id>", an id only), or the
+  reviewer for anything else.
+*/
+function betterBy(by) { return by === 'radar' || by === 'pains' ? by : /^tenant:[A-Za-z0-9_-]{1,40}$/.test(String(by || '')) ? by : 'review'; }
+module.exports = { renderPage, build, loadDocs, bizRow, betterBy };
 if (require.main === module) build();
 
 
