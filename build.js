@@ -18184,9 +18184,9 @@ on('gClalit',clalitSheet);
 */
 // 18.11.2026, Itzik: "תשים אותם בלשונית נפרדת, קמפיין עתידי, תקרא לזה סרטונים להחלפה". Videos waiting to replace ads in Meta.
 var SWAP_ITEMS=[
- {n:"210",t:"📣 קמפיין · 🔄 להחלפה · כללי: העסק עובד 8 שעות. ואתה עוד 4 אחריו?",r:"sb-1811-general.mp4"},
- {n:"215",t:"📣 קמפיין · 🔄 להחלפה · מטפלת בקליניקה: בין מטופל למטופל, 12 הודעות על תורים",r:"sb-1811-clinic.mp4"},
- {n:"216",t:"📣 קמפיין · 🔄 להחלפה · משרד שיווק: 5 לקוחות, 20 פוסטים בשבוע",r:"sb-1811-marketing.mp4"},
+ {n:"210",v:1,t:"כללי: העסק עובד 8 שעות. ואתה עוד 4 אחריו?",r:"sb-1811-general.mp4"},
+ {n:"215",v:5,t:"מטפלת בקליניקה: בין מטופל למטופל, 12 הודעות על תורים",r:"sb-1811-clinic.mp4"},
+ {n:"216",v:6,t:"משרד שיווק: 5 לקוחות, 20 פוסטים בשבוע",r:"sb-1811-marketing.mp4"},
 ];
 var TOM_ITEMS=[
 // 18.11.2026, Itzik: "שים את כולם ברילים קמפיין. שים בנפרד סרטונים להחלפה". The monitor series (night mode, 27s,
@@ -18419,7 +18419,7 @@ function vidTabs(){
   {id:'st',l:'📲 סטטוס'+(stN?' ('+stN+')':''),h:'סטטוס וואטסאפ: מה עולה היום ומה הבא בתור. לחיצה פותחת את הסרטון והטקסט, 3 נגיעות',L:vqRows('st').concat([{h:'📂 הדף המלא'},{k:'go',t:'📲 פתיחת כל הסטטוסים המוכנים',u:'status/index.html'}])},
   {id:'sr',l:'📱 סטורי'+(srN?' ('+srN+')':''),upd:'20261117-story',h:'סטורי לאינסטגרם ולפייסבוק: סרטון קצר, ובסוף מסגרת להדבקת מדבקת הקישור להרשמה',L:vqRows('sr').concat([{h:'📂 הדף המלא'},{k:'go',t:'📱 פתיחת כל הסטורי המוכן',u:'story/index.html'}])},
   {id:'ads',l:'📣 קמפיין',upd:'20261117-ilay4b',h:'הממומן, וסרטוני המוניטור לסטורי',L:TOM_ITEMS.map(function(it){return it.h?{h:it.h}:{k:'tom',it:it};})},
-  {id:'swap',l:'🔄 סרטונים להחלפה',upd:'20261118-swap',h:'לקמפיין עתידי: סרטונים שמחכים להחלפה במטא',L:SWAP_ITEMS.map(function(it){return {k:'tom',it:it};})},
+  {id:'swap',l:'🔄 סרטונים להחלפה',upd:'20261118-swap',h:'לקמפיין עתידי: סרטונים שמחכים להחלפה במטא',L:[{h:'6 סרטונים בסדרה · מוכנים: 1, 5, 6 · בהכנה: 2 יועץ עסקי, 3 סוכנת ביטוח, 4 מתווך'}].concat(SWAP_ITEMS.filter(function(it){return !it.h;}).map(function(it){return {k:'tom',it:it,lab:'🎬 סרטון '+it.v+' מתוך 6 · '+it.t};}))},
   {id:'sh',l:'🌅 שחר',h:'הרילים, הסטורי והפוסטים של שחר',L:[{h:'🎬 מוכן לרשתות'}].concat(R.filter(function(x){return isSh(x.it);}),[{h:'💡 רעיונות'}],F.filter(function(x){return isSh(x.it);}))},
   {id:'pl',l:'🍽️ מה בצלחת'+(plN?' ('+plN+')':''),h:'הסטוריז לפי הסדר, אפשר לסדר ולמחוק',L:vqRows('pl').concat([{h:'📂 הדף המלא'},{h:'💡 רעיונות'}]).concat(F.filter(function(x){return plateN[x.it.n];}))},
   // 8.11, Itzik: the AI channel reels to upload, like the plate tab, split Hebrew and English, what went up and what did not.

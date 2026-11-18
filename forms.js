@@ -49,7 +49,7 @@ function page(tok, d, s) {
   const qs = d.questions.map((q, i) => {
     const sel = (s.answers || {})[q.id] || [];
     return '<section class="q" data-id="' + esc(q.id) + '" data-multi="' + (q.multi ? 1 : 0) + '" data-max="' + (q.max || 0) + '">'
-      + '<h2><span>' + (i + 1) + '</span>' + esc(q.q) + '</h2>'
+      + '<h2><span>' + esc(q.badge != null ? q.badge : String(i + 1)) + '</span>' + esc(q.q) + '</h2>'
       + vidHtml(q)
       + (q.text ? (q.hint ? '<p class="hint">' + esc(q.hint) + '</p>' : '') + '<textarea class="tx" rows="' + (q.rows || 2) + '">' + esc(sel[0] || '') + '</textarea></section>'
       : (q.multi ? '<p class="hint">' + (q.max ? 'אפשר לסמן עד ' + q.max : 'אפשר לסמן כמה') + '</p>' : '')
