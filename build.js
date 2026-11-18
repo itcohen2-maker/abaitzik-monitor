@@ -3625,6 +3625,57 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 .ldSrc{border-top:1px dashed rgba(127,127,127,.35);padding-top:6px;opacity:.85;display:flex;flex-direction:column;gap:2px}
 .ldAct{display:flex;flex-wrap:wrap;gap:6px}
 .ldAct .yb{text-decoration:none;flex:0 1 auto;width:auto;margin:0}
+/*ITZIK:BEGIN*/
+/* 18.11.2026, Itzik: "כמו הלוק של Monday". The leads board (ldBoardHtml), his copy only for now. A row is also .ldRow, so every rule here outranks the table's. */
+.lbBoard{font:500 14px/1.4 Heebo,sans-serif}
+.lbBar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 10px}
+.lbFlt{display:flex;flex-wrap:wrap;gap:4px;background:rgba(128,128,128,.12);border-radius:10px;padding:3px}
+.lbFlt button{border:0;background:none;color:inherit;font:600 13px Heebo,sans-serif;padding:6px 10px;border-radius:8px;cursor:pointer}
+.lbFlt button.on{background:#0073ea;color:#fff}
+.lbQ{flex:1 1 160px;min-width:0;border:1px solid rgba(128,128,128,.4);border-radius:10px;padding:8px 10px;font:15px Heebo,sans-serif;background:transparent;color:inherit}
+.lbToday{border:1px solid rgba(226,68,92,.45);border-radius:12px;padding:6px 8px;margin-bottom:12px;background:rgba(226,68,92,.06)}
+.lbToday.lbNone{border-color:rgba(128,128,128,.3);background:none}
+.lbToday>small{display:block;opacity:.7;padding:2px 4px 4px}
+.lbTh{font:800 15px Heebo,sans-serif;color:#e2445c;margin:2px 2px 6px}
+.lbToday.lbNone .lbTh{color:inherit;opacity:.75}
+.lbGrp,.lbRow,.lbSt{--c:#e2445c}
+.lbGrp[data-g="בשיחה"],.lbRow[data-s="בשיחה"],.lbSt[data-s="בשיחה"]{--c:#fdab3d}
+.lbGrp[data-g="הצעה"],.lbRow[data-s="הצעה"],.lbSt[data-s="הצעה"]{--c:#a25ddc}
+.lbGrp[data-g="נסגר"],.lbRow[data-s="נסגר"],.lbSt[data-s="נסגר"]{--c:#00c875}
+.lbGrp[data-g="אבד"],.lbRow[data-s="אבד"],.lbSt[data-s="אבד"]{--c:#c4c4c4}
+.lbGrp{margin-bottom:12px}
+.lbGh{list-style:none;cursor:pointer;display:flex;gap:8px;align-items:baseline;padding:6px 2px;color:var(--c);font:800 16px Heebo,sans-serif}
+.lbGh::-webkit-details-marker{display:none}
+.lbGh::before{content:"▾";display:inline-block;transition:transform .15s}
+.lbGrp:not([open])>.lbGh::before{transform:rotate(90deg)}
+.lbGh small{font-weight:500;opacity:.75}
+.lbGrp[data-g="אבד"]>.lbGh{color:#8a8f99}
+.lbEmpty{display:block;opacity:.6;padding:4px 8px}
+.lbHd{display:none}
+.lbBoard .lbRow.ldRow{border:1px solid rgba(128,128,128,.22);border-inline-start:5px solid var(--c);border-radius:10px;margin:0 0 6px;background:rgba(128,128,128,.03)}
+.lbBoard .lbRow.ldRow>summary{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;padding:9px 10px;background:none}
+.lbBoard .lbRow.ldRow>summary>span{font-size:13px;min-width:0;overflow-wrap:anywhere}
+.lbBoard .lbName{flex:1 0 100%;display:flex;flex-direction:column}
+.lbName b{font:700 15px Heebo,sans-serif}
+.lbName small{font:400 13px Heebo,sans-serif;color:#5a6478;direction:ltr;text-align:right}
+.lbBoard .lbSt{display:inline-block;background:var(--c);color:#fff;font:700 12px Heebo,sans-serif;border-radius:6px;padding:3px 10px;text-align:center}
+.lbBoard .lbSt[data-s="אבד"]{color:#323338}
+.lbNext,.lbRem,.lbSite{background:rgba(128,128,128,.1);border-radius:6px;padding:3px 8px}
+.lbBoard .lbNone{opacity:.55}
+.lbBoard .lbRem.lbDue{background:#e2445c;color:#fff;font-weight:700;opacity:1}
+.lbSite a{color:#0073ea;text-decoration:none}
+.lbBoard .lbRow.ldRow>summary>.lbSrc{font-size:12px;opacity:.75}
+.lbBoard .lbLast{flex:1 0 100%;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lbLast:empty{display:none}
+.lbHist{display:flex;flex-direction:column;gap:2px;border-inline-start:3px solid rgba(128,128,128,.3);padding-inline-start:8px}
+@media (min-width:700px){
+ .lbHd,.lbBoard .lbRow.ldRow>summary{display:grid;grid-template-columns:minmax(9em,1.6fr) 6.5em minmax(7em,1.4fr) 7.5em minmax(6em,1fr) minmax(6em,1fr) minmax(8em,1.8fr);gap:8px;align-items:center}
+ .lbHd{font:700 12px Heebo,sans-serif;opacity:.65;padding:2px 10px 4px;border-inline-start:6px solid transparent}
+ .lbBoard .lbName,.lbBoard .lbLast{flex:none}
+ .lbLast:empty{display:block}
+ .lbNext,.lbRem,.lbSite{text-align:center}
+}
+/*ITZIK:END*/
 .bzRow b{font:700 14px Heebo,sans-serif}
 .bzRow small{opacity:.85}
 .bzRow .yb{align-self:flex-start;padding:6px 12px;min-height:36px;font-size:13px;margin-top:4px}
@@ -20340,58 +20391,74 @@ function bizSheet(t0){
   function ldWa(p){var d=String(p||'').replace(/[^0-9]/g,'');if(!d)return '';if(d.charAt(0)==='0')d='972'+d.slice(1);return 'https://wa.me/'+d;}
   // The site chat sends its raw answers ([Chat Lead], Answers:, stage: mockups); shown in words.
   function ldNote(n){var W={idea:'רעיון',spec:'אפיון',mockups:'מסכים',product:'מוצר עובד',tier1:'0 עד 5,000 ₪',tier2:'5,000 עד 10,000 ₪',tier3:'10,000 עד 30,000 ₪',tier4:'30,000 עד 50,000 ₪',tier5:'50,000 ₪ ומעלה'};return String(n||'').split(String.fromCharCode(10)).map(function(l){return l.trim();}).filter(function(l){return l&&l!=='[Chat Lead]'&&l!=='Answers:'&&!/^Description: *N.A$/i.test(l);}).map(function(l){var m=/^(stage|budget): *([a-z0-9]+)/i.exec(l);return m?(m[1].toLowerCase()==='stage'?'שלב: ':'תקציב: ')+(W[m[2]]||m[2]):l;}).join(String.fromCharCode(10));}
+  // 13.11.2026, Itzik: "שים לב שלא יהיו טעויות בתאריך והשעה". Every date and time here is Israel time, whatever the
+  // device clock says, and the order is by the real moment (records mix +02:00 and Z, a string sort mixed them).
+  // 18.11.2026: lifted out of itsLeadsHtml, so the table and the Monday board read dates the same way.
+  var ldT=function(x){var n=Date.parse(x||'');return isNaN(n)?0:n;};
+  var ldIL=function(x){var n=ldT(x);if(!n)return {dd:'',hm:''};var o={timeZone:'Asia/Jerusalem'},p={};new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(new Date(n)).forEach(function(q){p[q.type]=q.value;});return {dd:(+p.day)+'.'+(+p.month),hm:p.hour+':'+p.minute};};
+  // What one lead is: when it came (Israel time), its mail (also one written only inside the note) and where from.
+  function ldInfo(r){
+   var il=ldIL(r.at);
+   // 13.11.2026, Itzik: every detail to get back to him: phone, mail, where from and when. A mail written only inside the note is read from there.
+   var em=r.email||((String(r.note||'').match(/מייל: *([^ ,;]+@[^ ,;]+)/)||[])[1]||'');
+   return {dd:il.dd,hm:il.hm,em:em,src:LD_SRC[r.source]||(r.kind==='customer'?'🤝 לקוח':'✍️ ידני')};
+  }
+  function ldScanHtml(){
+   var sc=D.leadScan;if(!sc)return '';
+   var t=sc.at?(function(z){return z.dd+' '+z.hm;})(ldIL(sc.at)):'';
+   return '<small style="display:block;margin:-2px 0 8px;color:#5a6478;font-size:13px;line-height:1.4">'+(sc.ok?'🟢 הסורק בודק כל 10 דקות את האתר, התגובות במודעות, מסנג׳ר ואינסטגרם. נבדק לאחרונה '+esc(t):'🟠 לידים מהאתר נכנסים לבד. תגובות והודעות מהמודעות עוד לא נכנסות לבד: חסר אישור אחד במטא. עד אז אני מוסיף אותן ידנית.')+'</small>';
+  }
+  /*
+    The inside of an open lead, one copy for the table (itsLeadsHtml) and the Monday board: who he is, the
+    note box, forward, contact, where from, the stages and delete. hist (the board): the notes as a history, newest
+    first, instead of one block.
+  */
+  function ldBodyHtml(r,hist){
+   var i=ldInfo(r),dd=i.dd,hm=i.hm,em=i.em,src=i.src,meta=/comment|messenger|dm|leadform/.test(r.source||'');
+   var rep='';
+   if(r.phone){rep+='<a class="yb yb2" href="'+ldWa(r.phone)+'" target="_blank" rel="noopener">💬 וואטסאפ</a><a class="yb" href="tel:'+esc(String(r.phone).replace(/[^0-9+]/g,''))+'">📞 להתקשר</a>';}
+   if(em)rep+='<a class="yb" href="mailto:'+esc(em)+'">✉️ מייל</a>';
+   if(meta&&(r.link||LD_INBOX))rep+='<a class="yb yb2" href="'+esc(r.link||LD_INBOX)+'" target="_blank" rel="noopener">💬 לענות במטא</a>';
+   // 11.11: copy the phone, or all the details at once (name, phone, mail, where from, when, what he wrote, notes)
+   var NL=String.fromCharCode(10),all=[r.name||'בלי שם',r.phone?'טלפון: '+r.phone:'',em?'מייל: '+em:'','מאיפה: '+src.replace(/^[^ ]+ /,'')+(r.ref?' ('+r.ref+')':''),dd?'תאריך: '+dd+' '+hm:'','סטטוס: '+(r.status||''),r.last?'כתב: '+r.last:'',r.note?ldNote(r.note):''].filter(Boolean).join(NL);
+   if(r.phone)rep+='<button type="button" class="yb" data-bz="ldcopy" data-w="הטלפון" data-u="'+esc(r.phone)+'">📋 להעתיק טלפון</button>';
+   rep+='<button type="button" class="yb" data-bz="ldcopy" data-w="כל הפרטים" data-u="'+esc(all)+'">📋 להעתיק את כל הפרטים</button>';
+   // 13.11.2026, Itzik: "להעביר את הליד לטום ... אני אחליט למי אני שולח". WhatsApp opens with every detail
+   // already written and no recipient, so he picks who gets it (טום or anyone).
+   var fwd='<a class="yb yb1 ldFwd" href="https://wa.me/?text='+encodeURIComponent('ליד להעברה'+NL+all)+'" target="_blank" rel="noopener">📤 להעביר בוואטסאפ למישהו אחר (טום, סוכן)</a>';
+   return '<div class="ldBody">'
+    // 14.11.2026, Itzik: "למעלה יהיה כתוב השם שלו, המייל שלו, למה, אם הוא כתב משהו, טלפון, ורק למטה מאיפה הוא הגיע.
+    // אחרי זה ... הערה ... שליחה לוואטסאפ אחר". Who he is and what he wants on top, the note, the forward, and where from last.
+    +'<div class="ldTop"><b class="ldName">'+esc(r.name||'בלי שם')+'</b>'
+    +(dd?'<small>🕐 הגיע ב '+esc(dd)+(hm?' בשעה '+esc(hm):'')+'</small>':'') // 14.11.2026, Itzik: "בלידים תרשום גם באיזה שעה הגיעו"
+    +(em?'<small>✉️ <bdi>'+esc(em)+'</bdi></small>':'<small class="ldNo">✉️ לא השאיר מייל</small>')
+    +(r.last?'<p class="ldLast">💬 "'+esc(r.last)+'"</p>':'')
+    +(hist?(hist.length?'<div class="lbHist">'+hist.map(function(l){return '<small>'+esc(l)+'</small>';}).join('')+'</div>':''):(r.note?'<small class="ldWhy" style="white-space:pre-line">'+esc(ldNote(r.note))+'</small>':''))
+    +(r.phone?'<small>📞 '+bzTel(r.phone)+'</small>':'<small class="ldNo">📞 לא השאיר טלפון</small>')
+    +'</div>'
+    // 13.11.2026, Itzik: "בלידים אין לי איך להכניס הערה". The 📝 button sat at the very bottom, after every other
+    // button. Now the note box is open in every lead, right under the details, and a sent note shows at once.
+    +'<div class="bzEd ldNoteBox"><input placeholder="📝 הערה על הליד" enterkeyhint="send"><button type="button" class="yb yb2" data-tdy="1" data-bz="ldsend">לרשום</button></div>'
+    +fwd
+    +'<div class="ldAct">'+(rep||'<small>אין טלפון או מייל. מחכים שיחזור.</small>')+'</div>'
+    +'<div class="ldSrc"><small>📍 מאיפה: '+esc(src.replace(/^[^ ]+ /,''))+(r.ref?' · '+esc(r.ref):'')+'</small>'+(dd?'<small>🕒 נכנס: '+esc(dd+' '+hm)+'</small>':'')+'</div>'
+    +'<div class="ldAct">'+BZ_ORDER.filter(function(st){return st!==r.status;}).map(function(st){return '<button type="button" class="yb" data-bz="ldst" data-s="'+st+'">'+st+'</button>';}).join('')+'</div>'
+    +'<div class="ldAct"><button type="button" class="yb ldDel" data-bz="lddel">🗑 מחיקה</button></div>'
+    +'</div>';
+  }
   function itsLeadsHtml(){
-   // 13.11.2026, Itzik: "שים לב שלא יהיו טעויות בתאריך והשעה". Every date and time here is Israel time, whatever the
-   // device clock says, and the order is by the real moment (records mix +02:00 and Z, a string sort mixed them).
-   var ldT=function(x){var n=Date.parse(x||'');return isNaN(n)?0:n;};
-   var ldIL=function(x){var n=ldT(x);if(!n)return {dd:'',hm:''};var o={timeZone:'Asia/Jerusalem'},p={};new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(new Date(n)).forEach(function(q){p[q.type]=q.value;});return {dd:(+p.day)+'.'+(+p.month),hm:p.hour+':'+p.minute};};
    var L=recs.filter(function(r){return r.kind==='lead'||r.kind==='customer';}).slice().sort(function(a,b){return ldT(b.at)-ldT(a.at);});
    // 12.11.2026: a test lead (his own phone or mail) is listed greyed and is not in the counts
-   var LC=L.filter(function(r){return !r.test;}),sc=D.leadScan,open=LC.filter(function(r){return r.status==='חדש';}).length;
+   var LC=L.filter(function(r){return !r.test;}),open=LC.filter(function(r){return r.status==='חדש';}).length;
    var h='<div class="bzSec">📋 כל הלידים ('+LC.length+(open?', '+open+' חדשים':'')+')</div>';
-   if(sc){
-    var t=sc.at?(function(z){return z.dd+' '+z.hm;})(ldIL(sc.at)):'';
-    h+='<small style="display:block;margin:-2px 0 8px;color:#5a6478;font-size:13px;line-height:1.4">'+(sc.ok?'🟢 הסורק בודק כל 10 דקות את האתר, התגובות במודעות, מסנג׳ר ואינסטגרם. נבדק לאחרונה '+esc(t):'🟠 לידים מהאתר נכנסים לבד. תגובות והודעות מהמודעות עוד לא נכנסות לבד: חסר אישור אחד במטא. עד אז אני מוסיף אותן ידנית.')+'</small>';
-   }
+   h+=ldScanHtml();
    if(!L.length)return h+'<p class="bzEmpty">עוד אין לידים.</p>';
    // 13.11.2026, Itzik: "הטבלה של הלידים ... מערבבת. תחצה אותה לשתיים": trial-week signups in one table, every other
    // lead (the site chat, Meta, WhatsApp, manual, customers) in a second one. Each table is newest first with its own count.
    function oneRow(r){
-    var il=ldIL(r.at),dd=il.dd,hm=il.hm;
-    // 13.11.2026, Itzik: every detail to get back to him: phone, mail, where from and when. A mail written only inside the note is read from there.
-    var em=r.email||((String(r.note||'').match(/מייל: *([^ ,;]+@[^ ,;]+)/)||[])[1]||'');
-    var src=LD_SRC[r.source]||(r.kind==='customer'?'🤝 לקוח':'✍️ ידני'),meta=/comment|messenger|dm|leadform/.test(r.source||'');
-    var rep='';
-    if(r.phone){rep+='<a class="yb yb2" href="'+ldWa(r.phone)+'" target="_blank" rel="noopener">💬 וואטסאפ</a><a class="yb" href="tel:'+esc(String(r.phone).replace(/[^0-9+]/g,''))+'">📞 להתקשר</a>';}
-    if(em)rep+='<a class="yb" href="mailto:'+esc(em)+'">✉️ מייל</a>';
-    if(meta&&(r.link||LD_INBOX))rep+='<a class="yb yb2" href="'+esc(r.link||LD_INBOX)+'" target="_blank" rel="noopener">💬 לענות במטא</a>';
-    // 11.11: copy the phone, or all the details at once (name, phone, mail, where from, when, what he wrote, notes)
-    var NL=String.fromCharCode(10),all=[r.name||'בלי שם',r.phone?'טלפון: '+r.phone:'',em?'מייל: '+em:'','מאיפה: '+src.replace(/^[^ ]+ /,'')+(r.ref?' ('+r.ref+')':''),dd?'תאריך: '+dd+' '+hm:'','סטטוס: '+(r.status||''),r.last?'כתב: '+r.last:'',r.note?ldNote(r.note):''].filter(Boolean).join(NL);
-    if(r.phone)rep+='<button type="button" class="yb" data-bz="ldcopy" data-w="הטלפון" data-u="'+esc(r.phone)+'">📋 להעתיק טלפון</button>';
-    rep+='<button type="button" class="yb" data-bz="ldcopy" data-w="כל הפרטים" data-u="'+esc(all)+'">📋 להעתיק את כל הפרטים</button>';
-    // 13.11.2026, Itzik: "להעביר את הליד לטום ... אני אחליט למי אני שולח". WhatsApp opens with every detail
-    // already written and no recipient, so he picks who gets it (טום or anyone).
-    var fwd='<a class="yb yb1 ldFwd" href="https://wa.me/?text='+encodeURIComponent('ליד להעברה'+NL+all)+'" target="_blank" rel="noopener">📤 להעביר בוואטסאפ למישהו אחר (טום, סוכן)</a>';
+    var i=ldInfo(r),dd=i.dd,hm=i.hm,em=i.em,src=i.src;
     h+='<details class="ldRow'+(r.test?' ldTest':(r.status==='חדש'?' ldNew':''))+'" data-id="'+esc(r.id)+'" data-n="'+esc(r.name||'')+'" data-at="'+esc(r.at||'')+'"><summary><span>'+esc(dd)+(hm?' · '+esc(hm):'')+'</span><b>'+esc(r.name||'בלי שם')+(r.test?'<span class="ldTestTag">בדיקה שלך</span>':'')+((r.phone||em)?'<small class="ldC"><bdi>'+esc([r.phone,em].filter(Boolean).join(' · '))+'</bdi></small>':'<small class="ldC">אין טלפון</small>')+'</b><span>'+esc(src)+'</span><span class="ldSt">'+esc(r.status||'')+'</span></summary>'
-     +'<div class="ldBody">'
-     // 14.11.2026, Itzik: "למעלה יהיה כתוב השם שלו, המייל שלו, למה, אם הוא כתב משהו, טלפון, ורק למטה מאיפה הוא הגיע.
-     // אחרי זה ... הערה ... שליחה לוואטסאפ אחר". Who he is and what he wants on top, the note, the forward, and where from last.
-     +'<div class="ldTop"><b class="ldName">'+esc(r.name||'בלי שם')+'</b>'
-     +(dd?'<small>🕐 הגיע ב '+esc(dd)+(hm?' בשעה '+esc(hm):'')+'</small>':'') // 14.11.2026, Itzik: "בלידים תרשום גם באיזה שעה הגיעו"
-     +(em?'<small>✉️ <bdi>'+esc(em)+'</bdi></small>':'<small class="ldNo">✉️ לא השאיר מייל</small>')
-     +(r.last?'<p class="ldLast">💬 "'+esc(r.last)+'"</p>':'')
-     +(r.note?'<small class="ldWhy" style="white-space:pre-line">'+esc(ldNote(r.note))+'</small>':'')
-     +(r.phone?'<small>📞 '+bzTel(r.phone)+'</small>':'<small class="ldNo">📞 לא השאיר טלפון</small>')
-     +'</div>'
-     // 13.11.2026, Itzik: "בלידים אין לי איך להכניס הערה". The 📝 button sat at the very bottom, after every other
-     // button. Now the note box is open in every lead, right under the details, and a sent note shows at once.
-     +'<div class="bzEd ldNoteBox"><input placeholder="📝 הערה על הליד" enterkeyhint="send"><button type="button" class="yb yb2" data-tdy="1" data-bz="ldsend">לרשום</button></div>'
-     +fwd
-     +'<div class="ldAct">'+(rep||'<small>אין טלפון או מייל. מחכים שיחזור.</small>')+'</div>'
-     +'<div class="ldSrc"><small>📍 מאיפה: '+esc(src.replace(/^[^ ]+ /,''))+(r.ref?' · '+esc(r.ref):'')+'</small>'+(dd?'<small>🕒 נכנס: '+esc(dd+' '+hm)+'</small>':'')+'</div>'
-     +'<div class="ldAct">'+BZ_ORDER.filter(function(st){return st!==r.status;}).map(function(st){return '<button type="button" class="yb" data-bz="ldst" data-s="'+st+'">'+st+'</button>';}).join('')+'</div>'
-     +'<div class="ldAct"><button type="button" class="yb ldDel" data-bz="lddel">🗑 מחיקה</button></div>'
-     +'</div></details>';
+     +ldBodyHtml(r)+'</details>';
    }
    function ldTable(title,list,empty){
     var n=list.filter(function(r){return !r.test;}),o=n.filter(function(r){return r.status==='חדש';}).length;
@@ -20405,6 +20472,64 @@ function bizSheet(t0){
    ldTable('📥 פניות: צ׳אט באתר, מודעות ועוד',L.filter(function(r){return r.source!=='signup';}),'עוד אין פניות.');
    return h;
   }
+  /*
+    18.11.2026, Itzik: "תבנה את מערכת ה CRM שלנו כמו הלוק של Monday. מה שיש עכשיו לא נח לי." The leads board
+    (docs/superpowers/specs/2026-11-18-leads-board-design.md). His copy only for now ("רק כרגע אצלי במוניטור שלי"):
+    the switch and the whole board sit in his blocks, so a customer's copy keeps the table above and has no trace of it.
+  */
+  var LD_BOARD=false;/*ITZIK:BEGIN*/LD_BOARD=true;/*ITZIK:END*/
+  var ldMain=itsLeadsHtml;
+  /*ITZIK:BEGIN*/
+  if(LD_BOARD)ldMain=ldBoardHtml;
+  /*
+    Top to bottom: the count, filter and search, "⏰ היום" (a reminder due today or passed), then the five stages as
+    groups, נסגר and אבד shut. A row shows name and phone, stage, the next step, ⏰, 🌐, where from and the last note;
+    a tap opens the history, the note box and the buttons of the table (ldBodyHtml). A status that is not one of the
+    five sits in חדש, so no lead is lost. Reminders are compared as Israel time "YYYY-MM-DD HH:MM" strings; a date
+    only nextAt (older leads) means 09:00 that day.
+    The DOM the editing (Task 4) hangs on: .lbRow[data-id][data-n][data-s][data-src][data-q], .lbSt[data-s], .lbNext,
+    .lbSite, .lbRem[data-at], .lbGrp[data-g], .lbToday, .lbFlt [data-f], .lbQ. A row is also .ldRow and its stage is also
+    .ldSt, so the table's handlers (ldst, ldsend, lddel, ldcopy) keep working on it.
+  */
+  function ldBoardHtml(){
+   var IL=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
+   var ilKey=function(ms){var p={};IL.formatToParts(new Date(ms)).forEach(function(q){p[q.type]=q.value;});return p.year+'-'+p.month+'-'+p.day+' '+(p.hour==='24'?'00':p.hour)+':'+p.minute;};
+   var remKey=function(x){x=String(x||'');if(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(x))return x+' 09:00';var n=ldT(x);return n?ilKey(n):'';};
+   var nowK=ilKey(Date.now()),todayK=nowK.slice(0,10);
+   var stage=function(r){return BZ_ORDER.indexOf(r.status)>-1?r.status:'חדש';};
+   var shut=function(s){return s==='נסגר'||s==='אבד';};
+   var A=recs.filter(function(r){return r.kind==='lead'||r.kind==='customer';}).slice().sort(function(a,b){return ldT(b.at)-ldT(a.at);});
+   var LC=A.filter(function(r){return !r.test;}),nNew=LC.filter(function(r){return stage(r)==='חדש';}).length;
+   var h='<div class="lbBoard"><div class="bzSec">📋 כל הלידים ('+LC.length+(nNew?', '+(nNew===1?'חדש אחד':nNew+' חדשים'):'')+')</div>'+ldScanHtml();
+   if(!A.length)return h+'<p class="bzEmpty">עוד אין לידים.</p></div>';
+   function row(r){
+    var st=stage(r),i=ldInfo(r),k=remKey(r.nextAt),due=!!k&&k<=nowK&&!shut(st);
+    var site=String(r.site||'').trim(),okSite=/^https?:[/][/][^ "'<>]+$/i.test(site);
+    var hist=r.note?ldNote(r.note).split(String.fromCharCode(10)).filter(Boolean).reverse():[];
+    var tel=String(r.phone||'').replace(/[^0-9]/g,'');
+    return '<details class="lbRow ldRow'+(r.test?' ldTest':(st==='חדש'?' ldNew':''))+'" data-id="'+esc(r.id)+'" data-n="'+esc(r.name||'')+'" data-at="'+esc(r.at||'')+'" data-s="'+esc(st)+'" data-src="'+(r.source==='signup'?'signup':'other')+'" data-q="'+esc((String(r.name||'')+' '+String(r.email||'')).toLowerCase()+' '+tel)+'"><summary>'
+     +'<span class="lbName"><b>'+esc(r.name||'בלי שם')+(r.test?'<span class="ldTestTag">בדיקה שלך</span>':'')+'</b><small><bdi>'+esc(r.phone||i.em||'אין טלפון')+'</bdi></small></span>'
+     +'<span class="lbSt ldSt" data-s="'+esc(st)+'">'+esc(st)+'</span>'
+     +'<span class="lbNext'+(r.next?'':' lbNone')+'" data-v="'+esc(r.next||'')+'">'+esc(r.next||'צעד הבא')+'</span>'
+     +'<span class="lbRem'+(due?' lbDue':'')+(k?'':' lbNone')+'" data-at="'+esc(r.nextAt||'')+'">⏰'+(k?' '+(+k.slice(8,10))+'.'+(+k.slice(5,7))+' '+k.slice(11):'')+'</span>'
+     +'<span class="lbSite'+(okSite?'':' lbNone')+'" data-v="'+(okSite?esc(site):'')+'">'+(okSite?'<a href="'+esc(site)+'" target="_blank" rel="noopener">🌐 '+esc(site.replace(/^https?:[/][/](www[.])?/i,'').split('/')[0])+'</a>':'🌐')+'</span>'
+     +'<span class="lbSrc">'+esc(i.src)+'</span>'
+     +'<span class="lbLast">'+esc(hist[0]||(r.last?'"'+r.last+'"':''))+'</span>'
+     +'</summary>'+ldBodyHtml(r,hist)+'</details>';
+   }
+   h+='<div class="lbBar"><div class="lbFlt"><button type="button" class="on" data-f="all">הכל</button><button type="button" data-f="signup">נרשמו לשבוע ניסיון</button><button type="button" data-f="other">פניות</button></div>'
+    +'<input class="lbQ" type="search" placeholder="🔎 חיפוש לפי שם או טלפון" enterkeyhint="search"></div>';
+   var T=A.filter(function(r){var k=remKey(r.nextAt);return k&&k.slice(0,10)<=todayK&&!shut(stage(r));}).sort(function(a,b){return remKey(a.nextAt)<remKey(b.nextAt)?-1:1;});
+   h+='<div class="lbToday'+(T.length?'':' lbNone')+'"><div class="lbTh">⏰ היום'+(T.length?' ('+T.length+')':'')+'</div>'+(T.length?T.map(row).join(''):'<small>אין תזכורות להיום.</small>')+'</div>';
+   var HD='<div class="lbHd"><span>שם</span><span>שלב</span><span>הצעד הבא</span><span>⏰ תזכורת</span><span>🌐 אתר</span><span>מקור</span><span>הערה אחרונה</span></div>';
+   BZ_ORDER.forEach(function(g){
+    var rs=A.filter(function(r){return stage(r)===g;}),n=rs.filter(function(r){return !r.test;}).length;
+    h+='<details class="lbGrp'+(shut(g)?' lbShut"':'"')+' data-g="'+g+'"'+(shut(g)?'':' open')+'><summary class="lbGh"><b>'+g+'</b><small>('+n+')</small></summary>'
+     +(rs.length?HD+rs.map(row).join(''):'<small class="lbEmpty">אין כאן לידים.</small>')+'</details>';
+   });
+   return h+'</div>';
+  }
+  /*ITZIK:END*/
   function itsHtml(){
    // 8.11.2026, Itzik: "תעשה סדר בכל הטאב, תסיר את שי, תאפס ותשאיר לי: טופס סודיות, הסכם בינינו וטופס התחברות".
    // Three clean templates, no customer name. Shai's files and answers are in data/_archive/shai-20261108.
@@ -20512,7 +20637,7 @@ function bizSheet(t0){
    if(tab==='docs')return docsHtml();
    if(tab==='li')return liHtml();
    // 1.11, Itzik: "תשים את ההצעה גם במוניטור". The official quote for Shai Bodek (3 packages), the demo on 3.11.
-   return '<div class="bzHead">🔔 לידים: כל מה שנכנס, במקום אחד</div>'+itsLeadsHtml()+newLeadHtml();
+   return '<div class="bzHead">🔔 לידים: כל מה שנכנס, במקום אחד</div>'+ldMain()+newLeadHtml();
   }
   // 2.11, Itzik: a tab with something new blinks until he opens it. The stamp changes whenever something is added there.
   var BZ_UPD={its:'20261111-leads'+((D.nda&&D.nda.signed&&D.nda.signed[0])?'-'+String(D.nda.signed[0].at).replace(/\D/g,'').slice(0,12):'')+((D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done)?'-s'+String(D.shaiForms.sign.done).replace(/\\D/g,'').slice(0,12):''),shachar:((D.shSum&&D.shSum.upd)||'20261103-shachar-auto')+'-ld1104',li:'li-queue-20261109'};
