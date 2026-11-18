@@ -1063,14 +1063,9 @@ function build() {
     try {
       const biz = require('./lib/biz.js');
       const recs = biz.load(inst.dataPath) || [];
-      const BIZ_FIELDS = ['id', 'kind', 'name', 'phone', 'email', 'status', 'amount', 'note', 'next', 'nextAt', 'at', 'updatedAt', 'source', 'last', 'link', 'ref'];
       // 11.11.2026: the leads scanner (lead-scan.js) says when it last looked and what Meta refused.
       try { payload.leadScan = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'status', 'lead-scan.json'), 'utf8')); } catch (e) { payload.leadScan = null; }
-      const rows = recs.map((r) => {
-        const o = {};
-        BIZ_FIELDS.forEach((f) => { if (r && r[f] != null) o[f] = r[f]; });
-        return o;
-      }).sort((a, b) => String(b.updatedAt || b.at || '').localeCompare(String(a.updatedAt || a.at || '')));
+      const rows = recs.map(bizRow).sort((a, b) => String(b.updatedAt || b.at || '').localeCompare(String(a.updatedAt || a.at || '')));
       const sum = biz.summary(recs, Date.now());
       // Both or neither: records without the summary would reach the head unsealed.
       payload.biz = rows;
@@ -25233,7 +25228,14 @@ document.getElementById('back').onclick=function(e){
 </script>
 </html>`;
 
-module.exports = { renderPage, build, loadDocs };
+// Which lead fields reach the page as D.biz. Every new lead field must be listed here.
+const BIZ_FIELDS = ['id', 'kind', 'name', 'phone', 'email', 'status', 'amount', 'note', 'next', 'nextAt', 'at', 'updatedAt', 'source', 'last', 'link', 'ref', 'site'];
+function bizRow(r) {
+  const o = {};
+  BIZ_FIELDS.forEach((f) => { if (r && r[f] != null) o[f] = r[f]; });
+  return o;
+}
+module.exports = { renderPage, build, loadDocs, bizRow };
 if (require.main === module) build();
 
 
