@@ -2103,7 +2103,7 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 .ldAct{display:flex;flex-wrap:wrap;gap:6px}
 .ldAct .yb{text-decoration:none;flex:0 1 auto;width:auto;margin:0}
 
-.lbBoard{font:500 14px/1.4 Heebo,sans-serif}
+.lbBoard{font:500 14px/1.4 Heebo,sans-serif;container-type:inline-size;min-width:0;max-width:100%}
 .lbBar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 10px}
 .lbFlt{display:flex;flex-wrap:wrap;gap:4px;background:rgba(128,128,128,.12);border-radius:10px;padding:3px}
 .lbFlt button{border:0;background:none;color:inherit;font:600 13px Heebo,sans-serif;padding:6px 10px;border-radius:8px;cursor:pointer}
@@ -2130,7 +2130,7 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 .lbHd{display:none}
 .lbBoard .lbRow.ldRow{border:1px solid rgba(128,128,128,.22);border-inline-start:5px solid var(--c);border-radius:10px;margin:0 0 6px;background:rgba(128,128,128,.03)}
 .lbBoard .lbRow.ldRow>summary{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;padding:9px 10px;background:none}
-.lbBoard .lbRow.ldRow>summary>span{font-size:13px;min-width:0;overflow-wrap:anywhere}
+.lbBoard .lbRow.ldRow>summary>span{font-size:13px;min-width:0;max-width:100%;overflow-wrap:anywhere}
 .lbBoard .lbName{flex:1 0 100%;display:flex;flex-direction:column}
 .lbName b{font:700 15px Heebo,sans-serif}
 .lbName small{font:400 13px Heebo,sans-serif;color:#5a6478;direction:ltr;text-align:right}
@@ -2144,8 +2144,8 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 .lbBoard .lbLast{flex:1 0 100%;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lbLast:empty{display:none}
 .lbHist{display:flex;flex-direction:column;gap:2px;border-inline-start:3px solid rgba(128,128,128,.3);padding-inline-start:8px}
-@media (min-width:700px){
- .lbHd,.lbBoard .lbRow.ldRow>summary{display:grid;grid-template-columns:minmax(9em,1.6fr) 6.5em minmax(7em,1.4fr) 7.5em minmax(6em,1fr) minmax(6em,1fr) minmax(8em,1.8fr);gap:8px;align-items:center}
+@container (min-width:760px){
+ .lbHd,.lbBoard .lbRow.ldRow>summary{display:grid;grid-template-columns:minmax(8.5em,1.6fr) 6.5em minmax(6.5em,1.4fr) 7em minmax(5.5em,1fr) minmax(5.5em,1fr) minmax(7em,1.8fr);gap:8px;align-items:center}
  .lbHd{font:700 12px Heebo,sans-serif;opacity:.65;padding:2px 10px 4px;border-inline-start:6px solid transparent}
  .lbBoard .lbName,.lbBoard .lbLast{flex:none}
  .lbLast:empty{display:block}
@@ -3277,7 +3277,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-18T16:51:07.642Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-18T16:56:52.995Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3634,14 +3634,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -5233,7 +5226,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='d2e91ba469';
+var CODE_ID='5c19b77b4c';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -21808,7 +21801,7 @@ function bhQuoteShow(q,w){
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="BAJSdIafAtGxgHzJr3tOJLTViE1Gkn6rNyAReKPb5ZiMM-6xXp2c1PD7V5VKOXkQRWLI9-Wdq7-Q4hyMCcYp2iQ";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
