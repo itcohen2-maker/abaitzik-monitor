@@ -19882,6 +19882,8 @@ function connSheet(){
   h+='<div class="cnr'+(r.on?' on':'')+(r.locked?' lock':'')+'"'+(r.locked?' aria-disabled="true"':'')+'><span class="cni">'+esc(r.icon)+'</span><div class="cnt"><b>'+esc(r.title)+'</b>'+st+(r.who?'<small>'+esc(r.who)+'</small>':'')+'</div>';
   if(r.link&&!r.soon)h+='<a class="cnb'+(r.on?' again':'')+'" href="'+esc(r.link)+'" target="_blank" rel="noopener">'+(r.on?'חיבור מחדש':(r.linkLabel||'להתחבר'))+'</a>';
   // 12.11: the quick WhatsApp connect is the primary action; the own number (waOwn flag) is a small second link, a note says how to disconnect.
+  // 18.11.2026, Itzik: the 🔌 sheet showed Google with no help for the 'not verified' warning.
+  if(r.key==='google'&&!r.on&&!r.locked&&r.link&&!r.soon)h+='<div style="flex-basis:100%">'+GWARN+'</div>';
   if(r.link2&&!r.on)h+='<a href="'+esc(r.link2)+'" target="_blank" rel="noopener" style="flex-basis:100%;font-size:12.5px;color:#0e7490;margin-top:4px">'+esc(r.link2Label||'')+'</a>';
   if(r.note)h+='<small style="flex-basis:100%">'+esc(r.note)+'</small>';
   // 12.11: YouTube takes a channel link here, no Google login and no leaving the monitor.
@@ -19966,6 +19968,8 @@ try{(function(){var f=D&&D.yt&&D.yt.items&&D.yt.items[0];if(!f)return;var s='';t
   connected: Google in one tap, Facebook next, and every other connection in 🔌.
   It leaves by itself once Google is on. Only in a customer's page (#firstSteps).
 */
+// 18.11.2026: one copy of the Google warning help (lib/google-warn.js), used by firstSteps and by the 🔌 sheet.
+var GWARN='<div dir="rtl" style="margin:10px 0 4px;padding:12px;border-radius:14px;background:#f8fafc;border:1px solid #cbd5e1;color:#0f172a;font:500 13.5px/1.5 Heebo,sans-serif;text-align:right"><b style="display:block;font-size:14.5px;margin-bottom:6px">גוגל יציג אזהרה? ככה עוברים אותה:</b><div style="margin:0 0 6px"><b>1.</b> לא ללחוץ על הכפתור הכחול. ללחוץ על המילה הקטנה <b>מתקדם</b>, למטה משמאל.</div><div style="background:#1f1f1f;color:#e3e3e3;border-radius:10px;padding:10px 12px;margin:0 0 10px"><div style="color:#f28b82;font-size:18px;line-height:1">⚠</div><div style="font-size:13px;margin:4px 0 10px">Google לא אימתה את האפליקציה הזו</div><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="background:#0b57d0;color:#fff;border-radius:6px;padding:4px 8px;font-size:11.5px;opacity:.55">חזרה למצב בטוח</span><span style="border:2px solid #ef4444;border-radius:999px;padding:2px 10px;color:#a8c7fa;text-decoration:underline;font-weight:700">👈 מתקדם</span></div></div><div style="margin:0 0 6px"><b>2.</b> ייפתחו עוד שורות. ללחוץ על <b>מעבר אל it-solution.co.il (לא בטוח)</b>.</div><div style="margin:0 0 6px"><b>3.</b> לסמן את כל התיבות וללחוץ <b>המשך</b>.</div><div style="font-size:12.5px;color:#475569">האזהרה מופיעה רק כי גוגל עוד בודקת את האפליקציה החדשה שלנו. החיבור בטוח, והגישה נשארת רק אצלך במוניטור.</div></div>';
 function firstSteps(){
  var w=document.getElementById('firstSteps');if(!w)return;
  var R=(D.conn&&D.conn.rows)||[];
@@ -19995,7 +19999,7 @@ function firstSteps(){
   +(m.on?'<span class="fsOk">✓ מחובר</span>':m.link&&!m.soon?'<a class="fsB" href="'+esc(m.link)+'" target="_blank" rel="noopener">להתחבר</a>':'<small>בתיאום איתנו</small>')+'</div>';
  h+='<div class="fsR"><span class="fsI">🔌</span><div><b>כל שאר החיבורים</b><small>מיקרוסופט, לינקדין, תמלול פגישות ועוד.</small></div><button type="button" class="fsB" data-fs="all">לראות</button></div>';
  // 15.11.2026: a copy of lib/google-warn.js WARN_HTML (Rinat got stuck on the Google warning)
- if(gl)h+='<div dir="rtl" style="margin:10px 0 4px;padding:12px;border-radius:14px;background:#f8fafc;border:1px solid #cbd5e1;color:#0f172a;font:500 13.5px/1.5 Heebo,sans-serif;text-align:right"><b style="display:block;font-size:14.5px;margin-bottom:6px">גוגל יציג אזהרה? ככה עוברים אותה:</b><div style="margin:0 0 6px"><b>1.</b> לא ללחוץ על הכפתור הכחול. ללחוץ על המילה הקטנה <b>מתקדם</b>, למטה משמאל.</div><div style="background:#1f1f1f;color:#e3e3e3;border-radius:10px;padding:10px 12px;margin:0 0 10px"><div style="color:#f28b82;font-size:18px;line-height:1">⚠</div><div style="font-size:13px;margin:4px 0 10px">Google לא אימתה את האפליקציה הזו</div><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="background:#0b57d0;color:#fff;border-radius:6px;padding:4px 8px;font-size:11.5px;opacity:.55">חזרה למצב בטוח</span><span style="border:2px solid #ef4444;border-radius:999px;padding:2px 10px;color:#a8c7fa;text-decoration:underline;font-weight:700">👈 מתקדם</span></div></div><div style="margin:0 0 6px"><b>2.</b> ייפתחו עוד שורות. ללחוץ על <b>מעבר אל it-solution.co.il (לא בטוח)</b>.</div><div style="margin:0 0 6px"><b>3.</b> לסמן את כל התיבות וללחוץ <b>המשך</b>.</div><div style="font-size:12.5px;color:#475569">האזהרה מופיעה רק כי גוגל עוד בודקת את האפליקציה החדשה שלנו. החיבור בטוח, והגישה נשארת רק אצלך במוניטור.</div></div>';
+ if(gl)h+=GWARN;
  w.innerHTML=h;w.hidden=false;
  w.onclick=function(e){var t=e.target.closest&&e.target.closest('[data-fs]');if(t)connSheet();};
 }
