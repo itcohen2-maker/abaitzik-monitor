@@ -463,6 +463,23 @@ test('board: a note goes to the top of the history in both rows, once, and a ח�
   assert.equal(inGrp(M, 'biz-2'), 'אבד', '"לא מעוניין" closes it as lost, as the server does');
 });
 
+test('board: notes add up: a failed note stays red after a later one goes, and a tap sends it again', async () => {
+  const sent = [];
+  const M = mount(fx(), { sendText: (s, b) => { sent.push(b); return sent.length === 1 ? Promise.reject(new Error('down')) : Promise.resolve('ok'); } });
+  const r = M.grp('בשיחה').querySelector('.lbRow');
+  const note = (v) => { r.querySelector('.ldNoteBox input').value = v; M.tap(r.querySelector('.ldNoteBox [data-bz="ldsend"]')); };
+  note('א'); await flush();
+  const f = r.querySelector('.lbLast');
+  assert.equal(f.getAttribute('data-mk'), 'bad');
+  note('ב'); await flush();
+  assert.equal(f.getAttribute('data-mk'), 'bad', 'note א still did not go');
+  M.tap(f);
+  assert.equal(sent[2], 'ליד [biz-2]: הערה א', 'a tap sends the note that did not go');
+  assert.equal(sent.length, 3, 'and only that one');
+  await flush();
+  assert.equal(f.getAttribute('data-mk'), 'ok');
+});
+
 test('board: the site is normalised as the server does, a bad one is not sent, and it can be removed', async () => {
   const M = mount(fx());
   const r = M.grp('בשיחה').querySelector('.lbRow');

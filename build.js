@@ -3685,6 +3685,10 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 .lbBoard [data-mk="ok"]::after{content:" ✓";color:#8a93a3;font-weight:700}
 .lbBoard .lbRow [data-mk="bad"]{background:#e2445c;color:#fff;opacity:1}
 .lbBoard .lbRow [data-mk="bad"]::after{content:" לא נשמר, לנסות שוב";font-weight:700}
+.lbBoard .lbRow .lbLast[data-mk]::after{content:none}
+.lbBoard .lbLast[data-mk="wait"]::before{content:"⏳ "}
+.lbBoard .lbLast[data-mk="ok"]::before{content:"✓ ";color:#8a93a3;font-weight:700}
+.lbBoard .lbLast[data-mk="bad"]::before{content:"לא נשמר, לנסות שוב: ";font-weight:700}
 /*ITZIK:END*/
 .bzRow b{font:700 14px Heebo,sans-serif}
 .bzRow small{opacity:.85}
@@ -20589,6 +20593,27 @@ function bizSheet(t0){
    p.then(function(){clearTimeout(tm);if(!cur())return;lbMark(el,id,f,'ok');setTimeout(function(){if(cur())lbMark(el,id,f,'');},3000);},
     function(){clearTimeout(tm);if(cur())lbMark(el,id,f,'bad');});
   }
+  /*
+    Notes add up, so "the last wins" is wrong for them: every note waits in its lead's queue until it went out. The last
+    note on the row shows ⏳ while any is on its way, red while any did not go (a tap sends every one that did not), and ✓
+    only when none is left. A late answer of a note that was already sent again is ignored.
+  */
+  var lbNq={};
+  function lbNotePaint(el,id){
+   var q=lbNq[id]||[];
+   if(q.some(function(x){return x.st==='go';}))return lbMark(el,id,'note','wait');
+   if(q.length)return lbMark(el,id,'note','bad');
+   lbMark(el,id,'note','ok');setTimeout(function(){if(!(lbNq[id]||[]).length)lbMark(el,id,'note','');},3000);
+  }
+  function lbNoteGo(el,id,it){
+   it.st='go';it.n=(it.n||0)+1;
+   var n=it.n,fin=function(ok){if(it.n!==n)return;if(ok){var q=lbNq[id]||[],i=q.indexOf(it);if(i>-1)q.splice(i,1);}else it.st='bad';lbNotePaint(el,id);};
+   var tm=setTimeout(function(){fin(false);},30000),p;
+   try{p=Promise.resolve(sendText('ליד',it.body,'ליד'));}catch(x){p=Promise.reject(x);}
+   p.then(function(){clearTimeout(tm);fin(true);},function(){clearTimeout(tm);fin(false);});
+   lbNotePaint(el,id);
+  }
+  function lbNoteSend(el,id,body){var it={body:body};(lbNq[id]=lbNq[id]||[]).push(it);lbNoteGo(el,id,it);}
   function lbStBtns(cur){return BZ_ORDER.filter(function(st){return st!==cur;}).map(function(st){return '<button type="button" class="yb" data-tdy="1" data-bz="ldst" data-s="'+st+'">'+st+'</button>';}).join('');}
   // A group left with no row shows "אין כאן לידים." again.
   function lbTidy(g){if(!g||!g.classList.contains('lbGrp')||lbKids(g).length)return;var hd=g.querySelector('.lbHd');if(hd)hd.parentNode.removeChild(hd);if(!g.querySelector('.lbEmpty'))g.insertAdjacentHTML('beforeend','<small class="lbEmpty">אין כאן לידים.</small>');}
@@ -20706,7 +20731,7 @@ function bizSheet(t0){
    if(a==='lbflt'){lbAll(el,'.lbFlt [data-f]').forEach(function(b){b.classList.toggle('on',b===t);});lbFilter(el);return true;}
    var row=tg.closest('.lbRow'),id=row&&row.getAttribute('data-id');if(!id)return false;
    var bad=tg.closest('[data-mk="bad"]');
-   if(bad){e.preventDefault();for(var f in LB_F){if(bad.classList.contains(LB_F[f])&&lbMsg[id+'|'+f]){lbSend(el,id,f,lbMsg[id+'|'+f]);break;}}return true;}
+   if(bad){e.preventDefault();if(bad.classList.contains('lbLast')){(lbNq[id]||[]).filter(function(x){return x.st==='bad';}).forEach(function(x){lbNoteGo(el,id,x);});return true;}for(var f in LB_F){if(bad.classList.contains(LB_F[f])&&lbMsg[id+'|'+f]){lbSend(el,id,f,lbMsg[id+'|'+f]);break;}}return true;}
    if(a==='lbed'){
     // the last note folds and unfolds the row as before, and the 🌐 link opens the site
     if(t.getAttribute('data-k')==='note'||tg.closest('a'))return true;
@@ -20737,7 +20762,7 @@ function bizSheet(t0){
    if(a==='ldsend'){
     var nb=t.closest('.bzEd'),ni=nb?lbAll(nb,'input').filter(function(q){return (q.type||q.getAttribute('type'))!=='checkbox';})[0]:null,nv=ni?String(ni.value||'').trim():'';
     if(!nv){if(ni)ni.focus();return true;}
-    ni.value='';lbNote(el,id,nv);lbSend(el,id,'note','ליד ['+id+']: הערה '+nv);return true;
+    ni.value='';lbNote(el,id,nv);lbNoteSend(el,id,'ליד ['+id+']: הערה '+nv);return true;
    }
    if(a==='lddel'){leadDelAsk(row.getAttribute('data-n'),id,function(){lbGone(el,id);});return true;}
    return false;
