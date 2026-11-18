@@ -190,6 +190,8 @@ function waiting() {
   const now = Date.now();
   return all.filter((m) => m.from === 'itzik')
     .filter((m) => m.status !== 'done')
+    // 18.11: a "פתח את ... לחתימה" notice of the signing page needs no answer; it is never handed to a session.
+    .filter((m) => !(m.auto && /\sפתח את .*לחתימה\.\s*$/.test(String(m.text || ""))))
     .filter((m) => !(m.id && answeredIds.has(m.id)) || reopened(m, all))
     .filter((m) => !done[m.file] || (m.reopenAt && m.reopenAt > done[m.file]))
     .filter((m) => now - Date.parse(m.at) > SETTLE_MS)
@@ -266,7 +268,8 @@ function unanswered(list) {
 // whether an answer (a record of mine with re) exists for the message.
 function missedOf(list, code, got) {
   got = got || answeredIds();
-  return list.filter((m) => (m.id ? !got.has(m.id) : code !== 0));
+  // 18.11: the signing page's "פתח את ... לחתימה" notice is information, not a request: never missed.
+  return list.filter((m) => !(m.auto && /\sפתח את .*לחתימה\.\s*$/.test(String(m.text || ""))) && (m.id ? !got.has(m.id) : code !== 0));
 }
 
 function markHandled(list) {
@@ -1002,7 +1005,7 @@ function reconcile(live) {
     automatic "קובץ:" line of an upload may stay silent, its text travels with
     the note it came with.
   */
-  const autoFile = (m) => m.auto && Array.isArray(m.files) && /^קובץ:/.test(String(m.text || ''));
+  const autoFile = (m) => (m.auto && Array.isArray(m.files) && /^קובץ:/.test(String(m.text || ''))) || (m.auto && /\sפתח את .*לחתימה\.\s*$/.test(String(m.text || "")));
   const handed = new Set(require('./lib/pc-handed.js')());
   const takenAt = (m) => Date.parse(seen[m.file] || m.at);
   all.filter((m) => m.from === 'itzik' && !(m.id && (got.has(m.id) || handed.has(m.id))) && !held.has(m.file))
