@@ -9,7 +9,7 @@ if (cmd === 'add') {
   if (!r.ok) { console.error({ time: 'זמן לא תקין, צריך "YYYY-MM-DD HH:MM"', past: 'הזמן כבר עבר', far: 'רחוק מדי, עד שנה', text: 'חסר טקסט', many: 'יותר מדי תזכורות פתוחות' }[r.why] || r.why); process.exit(2); }
   console.log('נקבעה תזכורת ל' + r.when + ': ' + r.alarm.text);
 } else if (cmd === 'list') {
-  A.list(inst.dataPath).filter((a) => !a.sentAt && !a.missed).forEach((a) => console.log(A.when(Date.parse(a.due)) + '  ' + a.text));
+  A.list(inst.dataPath).filter(A.isOpen).forEach((a) => console.log(A.when(Date.parse(a.due)) + '  ' + a.text));
 } else if (cmd === 'declined') {
   console.log('סירובים: ' + A.declined(inst.dataPath));
 } else { console.error('usage: node wa-alarm.js add "YYYY-MM-DD HH:MM" "<text>" | list | declined'); process.exit(2); }

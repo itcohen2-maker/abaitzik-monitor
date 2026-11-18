@@ -165,3 +165,86 @@ test('tick skips cancelled alarms and alarms of a deleted lead', () => {
     assert.ok(sent[0].includes('ערן'));
   } finally { fs.rmSync(d, { recursive: true, force: true }); }
 });
+
+// 18.11.2026, final review of the leads board.
+test('review 1: cancelled and replaced reminders do not fill the 200 slots; a deleted lead\'s alarm is marked cancelled', () => {
+  const d = tmp();
+  try {
+    const r = mk(d);
+    for (let i = 0; i < 201; i++) {
+      const hh = String(10 + (i % 12)).padStart(2, '0'), dd = String(19 + Math.floor(i / 12) % 9).padStart(2, '0');
+      assert.ok(L.apply(d, 'ליד [' + r.id + ']: תזכורת 2026-11-' + dd + ' ' + hh + ':00', NOW).ok, 'cycle ' + i);
+    }
+    const plain = A.add(d, '2026-11-25 09:00', 'תזכיר לי', NOW);
+    assert.strictEqual(plain.ok, true, plain.why);
+    assert.strictEqual(A.isOpen({ cancelledAt: 'x' }), false);
+    assert.strictEqual(A.isOpen({ doneAt: 'x' }), false);
+    assert.strictEqual(A.isOpen({ due: 'x' }), true);
+    // a deleted lead: tick marks its alarm cancelled, so it stops counting
+    const g = mk(d, { name: 'דני' });
+    L.apply(d, 'ליד [' + g.id + ']: תזכורת 2026-11-30 09:00', NOW);
+    fs.unlinkSync(path.join(d, 'biz', 'biz', g.id + '.json'));
+    A.tick(d, NOW, { push() {}, wa() {} });
+    assert.ok(A.list(d).find((a) => a.lead === g.id).cancelledAt);
+  } finally { fs.rmSync(d, { recursive: true, force: true }); }
+});
+
+test('review 2: נסגר, אבד and a "לא מעוניין" note clear nextAt', () => {
+  for (const act of ['סטטוס נסגר', 'סטטוס אבד', 'הערה לא מעוניין']) {
+    const d = tmp();
+    try {
+      const r = mk(d);
+      L.apply(d, 'ליד [' + r.id + ']: תזכורת 2026-11-19 09:00', NOW);
+      L.apply(d, 'ליד [' + r.id + ']: ' + act, NOW);
+      assert.strictEqual(L.readAll(d)[0].nextAt, '', act);
+      assert.strictEqual(open(d).length, 0, act);
+    } finally { fs.rmSync(d, { recursive: true, force: true }); }
+  }
+});
+
+test('review 4: a lead reminder goes out once with ⏰, in the exact format', () => {
+  const d = tmp();
+  try {
+    const r = mk(d);
+    L.apply(d, 'ליד [' + r.id + ']: צעד להציע דמו', NOW);
+    L.apply(d, 'ליד [' + r.id + ']: תזכורת 2026-11-19 09:00', NOW);
+    const sent = [];
+    A.tick(d, Date.parse('2026-11-19T07:01:00Z'), { push() {}, wa(t) { sent.push(t); } });
+    assert.deepStrictEqual(sent, ['⏰ ערן: להציע דמו · 0501234567']);
+  } finally { fs.rmSync(d, { recursive: true, force: true }); }
+});
+
+test('review 5: a new next step updates the text of the open reminder', () => {
+  const d = tmp();
+  try {
+    const r = mk(d);
+    L.apply(d, 'ליד [' + r.id + ']: צעד להציע דמו', NOW);
+    L.apply(d, 'ליד [' + r.id + ']: תזכורת 2026-11-19 09:00', NOW);
+    L.apply(d, 'ליד [' + r.id + ']: צעד לשלוח הצעת מחיר', NOW);
+    assert.strictEqual(open(d)[0].text, '⏰ ערן: לשלוח הצעת מחיר · 0501234567');
+  } finally { fs.rmSync(d, { recursive: true, force: true }); }
+});
+
+test('review 6: snooze from WhatsApp moves the lead\'s nextAt; a deleted lead is not written back', () => {
+  const d = tmp();
+  try {
+    const r = mk(d);
+    L.apply(d, 'ליד [' + r.id + ']: תזכורת 2026-11-19 09:00', NOW);
+    const T = Date.parse('2026-11-19T07:01:00Z');
+    A.tick(d, T, { push() {}, wa() {} });
+    const a = A.list(d).find((x) => x.lead === r.id);
+    const h = A.act(d, a.id, '1h', T);
+    assert.ok(h.ok);
+    assert.strictEqual(L.readAll(d)[0].nextAt, new Date(T + 3600e3).toISOString());
+    const g = mk(d, { name: 'דני' });
+    L.apply(d, 'ליד [' + g.id + ']: תזכורת 2026-11-19 09:00', NOW);
+    const b = A.list(d).find((x) => x.lead === g.id);
+    fs.unlinkSync(path.join(d, 'biz', 'biz', g.id + '.json'));
+    assert.ok(A.act(d, b.id, 'tom', T).ok);
+    assert.ok(!fs.existsSync(path.join(d, 'biz', 'biz', g.id + '.json')));
+    // a lead closed after the reminder went out keeps an empty nextAt when the old message is snoozed
+    L.apply(d, 'ליד [' + r.id + ']: סטטוס נסגר', T);
+    assert.ok(A.act(d, h.id, 'tom', T).ok);
+    assert.strictEqual(L.readAll(d).find((x) => x.id === r.id).nextAt, '');
+  } finally { fs.rmSync(d, { recursive: true, force: true }); }
+});
