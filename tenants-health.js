@@ -319,6 +319,24 @@ function main() {
           { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
       } catch (e) { console.log('request alert failed: ' + String(e.message).slice(0, 120)); }
     }
+    /*
+      18.11.2026: "💡 מה חסר לך כאן?" from a customer's leads board (lib/leads-missing.js). Each new line becomes an idea
+      in his 💡 רעיונות (data/better/better) and one WhatsApp line to Itzik, once. WhatsApp failing falls back to a push.
+    */
+    if (!DRY && t.dir) {
+      try {
+        let who = t.title || t.id;
+        try { const ij = JSON.parse(fs.readFileSync(path.join(t.dir, 'instance.json'), 'utf8')); if (ij && ij.owner) who = ij.owner; } catch (e) { /* the title */ }
+        const lmLines = require('./lib/leads-missing.js').collect(inst.dataPath, { id: t.id, dir: t.dir, name: who });
+        if (lmLines.length) changed = true;
+        lmLines.forEach((line) => {
+          require('./lib/wa-out.js').sendOwner(inst.dataPath, line).catch((e) => {
+            console.log('leads missing, WhatsApp failed: ' + String(e.message).slice(0, 120));
+            try { execFileSync('node', ['notify.js', '💡 בלוח הלידים חסר', line.slice(0, 300)], { cwd: __dirname, stdio: 'ignore', timeout: 60000 }); } catch (x) { /* logged above */ }
+          });
+        });
+      } catch (e) { console.log('leads missing: ' + String(e.message).slice(0, 120)); }
+    }
     delete t.paused;
     Object.assign(t, r, { checkedAt: new Date().toISOString() });
     if (r.state === 'ok') delete t.downSince; else if (!t.downSince) t.downSince = new Date().toISOString();

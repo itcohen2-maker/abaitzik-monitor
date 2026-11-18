@@ -804,7 +804,28 @@ function recordIncoming(m) {
       11.11.2026, Itzik: the leads table in IT Solution. Its buttons send "ליד [<id>]: סטטוס|הערה|מחיקה ...".
       Applied here with no model (lib/leads.js); delete moves the record to data/biz/_deleted. Silent when it worked.
     */
-    const ldA = codeOk && inst.biz && require('./lib/leads.js').parse(text.replace(/\n\s*קוד[^\n]*$/, ''));
+    /*
+      18.11.2026: "💡 מה חסר לך כאן?" at the bottom of a customer's leads board sends "לוח לידים: חסר <text>". Kept here
+      with no model in his data/status/leads-missing.json (lib/leads-missing.js); Itzik's tenants-health.js hands it to
+      Itzik as an idea and on WhatsApp. He is answered at once. A customer's monitor only (Itzik's board has no box).
+    */
+    const lmA = codeOk && inst.name !== 'abaitzik' && require('./lib/leads-missing.js').parse(text.replace(/\n\s*קוד[^\n]*$/, ''));
+    if (lmA) {
+      let lmReply = inst.adminName ? 'תודה, העברתי ל ' + inst.adminName + '.' : 'תודה, העברתי לאיציק.';
+      try { require('./lib/leads-missing.js').record(inst.dataPath, lmA.t); say('לוח לידים, חסר: ' + lmA.t.slice(0, 80)); }
+      catch (e) { lmReply = 'לא הצלחתי לשמור את זה. נסה שוב בעוד כמה דקות.'; say('!! לוח לידים, חסר: ' + e.message); }
+      rec.status = 'done';
+      try {
+        fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8');
+        fs.writeFileSync(path.join(CHAT, name.replace(/-itzik-auto\.json$/, '-claude-lead-ack.json')),
+          JSON.stringify({ at: new Date().toISOString(), from: 'claude', re: rec.id, text: lmReply, status: 'done' }, null, 1), 'utf8');
+      } catch (e) { /* the next build carries it */ }
+      try { publishChat(); } catch (e) { /* the next build carries it */ }
+      return true;
+    }
+    // 18.11.2026: the board is every customer's now, so a customer's board actions are applied too (as build.js gives
+    // every monitor its leads records: inst.biz or not Itzik's). Before, a customer with no biz flag had them fall through.
+    const ldA = codeOk && (inst.biz || inst.name !== 'abaitzik') && require('./lib/leads.js').parse(text.replace(/\n\s*קוד[^\n]*$/, ''));
     if (ldA) {
       let res;
       try { res = require('./lib/leads.js').apply(inst.dataPath, text.replace(/\n\s*קוד[^\n]*$/, '')); say('ליד: ' + ldA.id + ' ' + ldA.act + ' | ' + res.reply); }
