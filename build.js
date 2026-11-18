@@ -23804,6 +23804,17 @@ function tilesEnter(grid){
  // the top button only opens the move mode; סיום is the bar at the bottom (tileBar)
  var at=document.getElementById('tileArrTop');if(at)at.style.display='none';
 }
+// 18.11.2026: a folded home (bare, the default on a customer's phone) hides the whole grid, so the
+// arrange button inside it has no size and a press on it did nothing: no move mode, no done bar. Opening the
+// move mode now unfolds the tiles first, so the button always answers.
+function tilesOpen(grid){
+ if(!grid)return;
+ if(getComputedStyle(grid).display==='none'){
+  try{localStorage.setItem('bareHome','0');}catch(e){}
+  if(typeof bareApply==='function')bareApply(false);
+ }
+ tilesEnter(grid);
+}
 function tilesExit(){
  var grid=document.getElementById('blkTiles');
  tEdit=false;
@@ -23935,7 +23946,7 @@ function armTiles(grid){
  var oldTools=document.getElementById('tileTools');if(oldTools)oldTools.remove();
  var arr=document.createElement('button');
  arr.type='button';arr.id='tileArr';arr.className='tarr';arr.textContent='✎ הזזת אריחים';
- arr.onclick=function(){if(tEdit)tilesExit();else tilesEnter(grid);};
+ arr.onclick=function(){if(tEdit)tilesExit();else tilesOpen(grid);};
  // Inside the grid, across the full row: the home screen re-pins its blocks
  // after this runs, and a button standing beside the grid got left behind.
  var tools=document.createElement('div');
@@ -23950,7 +23961,7 @@ function armTiles(grid){
   if(!px){px=document.createElement('div');px.id='tileArrTop';px.className='tarrs';var pb=document.createElement('button');pb.type='button';pb.className='tarr';px.appendChild(pb);}
   if(bz.firstChild!==px)bz.insertBefore(px,bz.firstChild);
   // the grid is rebuilt after boot and the button with it: always press the current one
-  var pbt=px.firstChild;pbt.id='tileArr';pbt.textContent=arr.textContent;pbt.onclick=function(){if(tEdit)tilesExit();else{var g=document.getElementById('blkTiles');if(g)tilesEnter(g);}};
+  var pbt=px.firstChild;pbt.id='tileArr';pbt.textContent=arr.textContent;pbt.onclick=function(){if(tEdit)tilesExit();else{var g=document.getElementById('blkTiles');if(g)tilesOpen(g);}};
   arr.id='tileArrGrid';tools.style.display='none';
  }
  var pin=pinTiles(grid);

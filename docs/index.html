@@ -3214,7 +3214,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-18T12:05:59.751Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-18T12:07:34.367Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -5170,7 +5170,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='b20f5426f3';
+var CODE_ID='14b028d421';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -18672,6 +18672,14 @@ function tilesEnter(grid){
  var a=document.getElementById('tileArr');if(a)a.textContent='✓ סיום';
  var at=document.getElementById('tileArrTop');if(at)at.style.display='none';
 }
+function tilesOpen(grid){
+ if(!grid)return;
+ if(getComputedStyle(grid).display==='none'){
+  try{localStorage.setItem('bareHome','0');}catch(e){}
+  if(typeof bareApply==='function')bareApply(false);
+ }
+ tilesEnter(grid);
+}
 function tilesExit(){
  var grid=document.getElementById('blkTiles');
  tEdit=false;
@@ -18784,7 +18792,7 @@ function armTiles(grid){
  var oldTools=document.getElementById('tileTools');if(oldTools)oldTools.remove();
  var arr=document.createElement('button');
  arr.type='button';arr.id='tileArr';arr.className='tarr';arr.textContent='✎ הזזת אריחים';
- arr.onclick=function(){if(tEdit)tilesExit();else tilesEnter(grid);};
+ arr.onclick=function(){if(tEdit)tilesExit();else tilesOpen(grid);};
  var tools=document.createElement('div');
  tools.id='tileTools';tools.className='tarrs';
  tools.appendChild(arr);
@@ -18794,7 +18802,7 @@ function armTiles(grid){
   var px=document.getElementById('tileArrTop');
   if(!px){px=document.createElement('div');px.id='tileArrTop';px.className='tarrs';var pb=document.createElement('button');pb.type='button';pb.className='tarr';px.appendChild(pb);}
   if(bz.firstChild!==px)bz.insertBefore(px,bz.firstChild);
-  var pbt=px.firstChild;pbt.id='tileArr';pbt.textContent=arr.textContent;pbt.onclick=function(){if(tEdit)tilesExit();else{var g=document.getElementById('blkTiles');if(g)tilesEnter(g);}};
+  var pbt=px.firstChild;pbt.id='tileArr';pbt.textContent=arr.textContent;pbt.onclick=function(){if(tEdit)tilesExit();else{var g=document.getElementById('blkTiles');if(g)tilesOpen(g);}};
   arr.id='tileArrGrid';tools.style.display='none';
  }
  var pin=pinTiles(grid);
