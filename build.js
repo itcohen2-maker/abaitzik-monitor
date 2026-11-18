@@ -2894,6 +2894,8 @@ ${pushUi.css}
  border:1px solid var(--line);background:var(--bg);color:var(--ink);
  font:600 18px Heebo,sans-serif;letter-spacing:.3em}
 .lockrow button{flex:0 0 92px}
+.lockrow .lockeye{flex:0 0 58px;background:transparent;color:var(--accent);
+ border:1px solid var(--line);box-shadow:none;font-weight:500;font-size:14px}
 
 .conn{margin-inline-start:auto;font:700 15px Heebo,sans-serif;color:#fff;
  background:linear-gradient(180deg,#5cc36f,var(--green));flex:0 0 auto;white-space:nowrap;
@@ -4721,6 +4723,7 @@ try{
   <button type="button" id="lockFace">כניסה בזיהוי פנים</button>
   <div class="lockrow" id="lockRow" hidden>
    <input type="password" id="lockCode" inputmode="numeric" autocomplete="off" placeholder="הקוד">
+   <button type="button" class="lockeye" id="lockEye" aria-pressed="false">הצג</button>
    <button type="button" id="lockGo">כניסה</button>
   </div>
   <button type="button" class="alt" id="lockUseCode">כניסה עם הקוד</button>
@@ -14352,6 +14355,22 @@ function lockFaceTry(auto){
   instance.json openPin holds the hash of that code, and this lock asks for it
   on every opening, with no face and no other way around it.
 */
+/*
+  18.11, from the reviewer: a mistyped code was invisible and nothing said how
+  long it is. The eye shows what was typed, and the hint gives the length of the
+  code chosen on this phone, also after a wrong try.
+*/
+document.getElementById('lockEye').onclick=function(){
+ var lc=document.getElementById('lockCode'),show=lc.type==='password';
+ lc.type=show?'text':'password';
+ this.textContent=show?'הסתר':'הצג';
+ this.setAttribute('aria-pressed',show?'true':'false');
+ lc.focus();
+};
+var lockLen=function(){
+ var c=myCode();if(!c)return '';
+ return /^\\d+$/.test(c)?c.length+' ספרות':c.length+' תווים';
+};
 if(locked()&&INSTANCE.openPin){
  document.getElementById('lockFace').hidden=true;
  document.getElementById('lockUseCode').hidden=true;
@@ -14383,6 +14402,7 @@ if(locked()&&!INSTANCE.openPin){
   document.getElementById('lockForgot').textContent='לא מצליח להיכנס? לבקש פתיחה מ'+OWNER;
  }
  else if(!myCode())document.getElementById('lockUseCode').hidden=true;
+ else document.getElementById('lockCode').setAttribute('placeholder','הקוד שבחרת, '+lockLen());
  document.getElementById('lockUseCode').onclick=function(){
   document.getElementById('lockRow').hidden=false;
   document.getElementById('lockCode').focus();
@@ -14402,7 +14422,7 @@ if(locked()&&!INSTANCE.openPin){
   }
   if(v&&v===myCode()){unlock();return;}
   document.getElementById('lockCode').value='';
-  lockSay('קוד לא נכון.');
+  lockSay(lockLen()?'קוד לא נכון. הקוד שבחרת הוא '+lockLen()+'.':'קוד לא נכון.');
  };
  document.getElementById('lockGo').onclick=lockGo;
  document.getElementById('lockCode').addEventListener('keydown',function(e){
