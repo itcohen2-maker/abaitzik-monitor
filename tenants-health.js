@@ -335,15 +335,20 @@ function main() {
           const got = LM.collect(inst.dataPath, T);
           if (got.why === 'big') console.log('leads missing: ' + t.id + ' file over 64KB, not read');
           if (got.held) console.log('leads missing: ' + t.id + ' ' + got.held + ' held by the caps');
-          got.items.forEach((it) => {
-            require('./lib/wa-out.js').sendOwner(inst.dataPath, it.line)
-              .catch((e) => {
-                console.log('leads missing, WhatsApp failed: ' + String(e.message).slice(0, 120));
-                execFileSync('node', ['notify.js', '💡 בלוח הלידים חסר', it.line.slice(0, 300)], { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
-              })
-              .then(() => { LM.done(inst.dataPath, T, it); console.log('leads missing: handed over ' + t.id + ' ' + it.id); })
-              .catch((e) => console.log('leads missing, not handed over (next run): ' + String(e.message).slice(0, 120)));
-          });
+          // Review 18.11, round 2: every try counts toward his 10 a day (in collect), a line is tried at most 3 times, and
+          // he stays locked (collect) until every try came back, so an overlapping run never sends it again.
+          const tries = got.items.map((it) => require('./lib/wa-out.js').sendOwner(inst.dataPath, it.line)
+            .catch((e) => {
+              console.log('leads missing, WhatsApp failed: ' + String(e.message).slice(0, 120));
+              execFileSync('node', ['notify.js', '💡 בלוח הלידים חסר', it.line.slice(0, 300)], { cwd: __dirname, stdio: 'ignore', timeout: 60000 });
+            })
+            .then(() => true, (e) => { console.log('leads missing, push failed too: ' + String(e.message).slice(0, 120)); return false; })
+            .then((ok) => {
+              const res = LM.finish(inst.dataPath, T, it, ok);
+              if (res === 'done') console.log('leads missing: handed over ' + t.id + ' ' + it.id);
+              else if (res === 'gaveup') console.log('leads missing: gave up on ' + t.id + ' ' + it.id + ' after ' + LM.MAX_TRIES + ' tries, kept in 💡 only');
+            }));
+          if (tries.length) Promise.allSettled(tries).then(() => LM.unlock(inst.dataPath, T));
         }
       } catch (e) { console.log('leads missing: ' + String(e.message).slice(0, 120)); }
     }

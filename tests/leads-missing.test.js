@@ -12,7 +12,8 @@ const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'lm-'));
 const T0 = Date.parse('2026-11-18T10:00:00Z');
 const ideasIn = (owner) => { const d = path.join(owner, 'better', 'better'); try { return fs.readdirSync(d).map((f) => JSON.parse(fs.readFileSync(path.join(d, f), 'utf8'))); } catch (e) { return []; } };
 // one run of the health check: collect, then every line "reaches" Itzik
-const run = (owner, T, now) => { const g = LM.collect(owner, T, now); g.items.forEach((it) => LM.done(owner, T, it, now)); return g; };
+const run = (owner, T, now, ok) => { const g = LM.collect(owner, T, now); g.items.forEach((it) => LM.finish(owner, T, it, ok !== false, now)); LM.unlock(owner, T); return g; };
+const told = (owner) => JSON.parse(fs.readFileSync(path.join(owner, 'status', 'leads-missing-told.json'), 'utf8'));
 
 test('parse: only the line the button sends, as the first content line (after the "ליד" kind line)', () => {
   assert.deepEqual(LM.parse('ליד\nלוח לידים: חסר עמודה של סכום\n\nקוד 1234'), { t: 'עמודה של סכום' });
@@ -49,7 +50,10 @@ test('collect and done: a line is an idea and handed over only once it reached I
   assert.equal(ideasIn(owner).length, 0, 'nothing is an idea before it reached him');
   // WhatsApp and the push both failed for the second: it comes again next run
   LM.done(owner, T, g.items[0], T0 + 3000);
+  assert.equal(LM.finish(owner, T, g.items[1], false, T0 + 3000), 'retry');
+  LM.unlock(owner, T);
   assert.deepEqual(LM.collect(owner, T, T0 + 60000).items.map((x) => x.t), ['סינון לפי עיר'], 'not handed over: tried again');
+  LM.unlock(owner, T);
   run(owner, T, T0 + 60000);
   assert.deepEqual(LM.collect(owner, T, T0 + 120000).items, [], 'handed over once');
   const ideas = ideasIn(owner);
@@ -119,7 +123,7 @@ test('the listener and the health check are wired to it', () => {
   const h = H.slice(H.indexOf("require('./lib/leads-missing.js')"));
   assert.ok(H.includes('LM.collect(inst.dataPath, T)'), 'Itzik collects them');
   assert.ok(h.includes("require('./lib/wa-out.js').sendOwner(inst.dataPath, it.line)"), 'and hears on WhatsApp');
-  assert.ok(/\.then\(\(\) => \{ LM\.done\(inst\.dataPath, T, it\)/.test(h), 'handed over only after WhatsApp or the push went');
+  assert.ok(h.includes('const res = LM.finish(inst.dataPath, T, it, ok);') && h.includes('Promise.allSettled(tries).then(() => LM.unlock(inst.dataPath, T))'), 'finished after each try, unlocked after all');
   assert.ok(H.includes('if (!(ij && ij.publicDemo))'), 'never a public demo');
 });
 
@@ -149,4 +153,38 @@ test('the 💡 screen shows a customer idea as a customer idea', () => {
   assert.ok(cust.lastIndexOf('💬 לקוח כתב') > cust.lastIndexOf('class="idea"'), 'the customer idea carries the customer tag: ' + h.slice(0, 400));
   const rev = h.slice(0, h.indexOf('שיפור של הבודק'));
   assert.ok(rev.lastIndexOf('🔍 בודק השיפורים') > rev.lastIndexOf('class="idea"'), 'the reviewer keeps its tag');
+});
+
+test('round 2: sends that always fail never pass 10 tries a day, a line is tried 3 times, then kept in 💡 only', () => {
+  const owner = tmp(), tdir = tmp(), tdata = path.join(tdir, 'data');
+  for (let i = 0; i < 50; i++) LM.record(tdata, 'כשל ' + i, T0 + i);
+  const T = { id: 'fail', dir: tdir, name: 'לקוח' };
+  let tries = 0;
+  for (let r = 0; r < 120; r++) tries += run(owner, T, T0 + 60000 * (r + 1), false).items.length;
+  assert.ok(tries <= LM.PER_DAY, 'at most 10 tries a day: ' + tries);
+  assert.equal(told(owner).fail.n, tries, 'every try is counted, also the failed ones');
+  const per = {};
+  for (let r = 0; r < 3; r++) {
+    // three more days: each line is tried at most 3 times in all, then given up
+    const day = Date.parse('2026-11-19T10:00:00Z') + r * 86400000;
+    for (let k = 0; k < 10; k++) run(owner, T, day + 60000 * k, false).items.forEach((it) => { per[it.id] = (per[it.id] || 0) + 1; });
+  }
+  const first = told(owner).fail;
+  assert.ok(Object.values(first.tries).every((n) => n <= LM.MAX_TRIES), 'no line over 3 tries');
+  assert.ok(first.ids.length >= 3, 'the lines tried 3 times are given up (finished)');
+  assert.ok(ideasIn(owner).length === first.ids.length, 'a given up line is still in 💡 רעיונות');
+});
+
+test('round 2: a run holds the customer until its tries came back; a lock older than 5 minutes is ignored', () => {
+  const owner = tmp(), tdir = tmp();
+  LM.record(path.join(tdir, 'data'), 'אחת', T0);
+  const T = { id: 'lock', dir: tdir, name: 'לקוח' };
+  const g = LM.collect(owner, T, T0);
+  assert.equal(g.items.length, 1);
+  const g2 = LM.collect(owner, T, T0 + 60000);
+  assert.deepEqual([g2.items.length, g2.why], [0, 'busy'], 'an overlapping run sends nothing');
+  const g3 = LM.collect(owner, T, T0 + LM.LOCK_MS + 1000);
+  assert.equal(g3.items.length, 1, 'a run that died does not hold him forever');
+  LM.done(owner, T, g3.items[0], T0 + LM.LOCK_MS + 2000); LM.unlock(owner, T);
+  assert.deepEqual(LM.collect(owner, T, T0 + LM.LOCK_MS + 3000).items, []);
 });
