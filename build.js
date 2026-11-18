@@ -1063,14 +1063,9 @@ function build() {
     try {
       const biz = require('./lib/biz.js');
       const recs = biz.load(inst.dataPath) || [];
-      const BIZ_FIELDS = ['id', 'kind', 'name', 'phone', 'email', 'status', 'amount', 'note', 'next', 'nextAt', 'at', 'updatedAt', 'source', 'last', 'link', 'ref'];
       // 11.11.2026: the leads scanner (lead-scan.js) says when it last looked and what Meta refused.
       try { payload.leadScan = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'status', 'lead-scan.json'), 'utf8')); } catch (e) { payload.leadScan = null; }
-      const rows = recs.map((r) => {
-        const o = {};
-        BIZ_FIELDS.forEach((f) => { if (r && r[f] != null) o[f] = r[f]; });
-        return o;
-      }).sort((a, b) => String(b.updatedAt || b.at || '').localeCompare(String(a.updatedAt || a.at || '')));
+      const rows = recs.map(bizRow).sort((a, b) => String(b.updatedAt || b.at || '').localeCompare(String(a.updatedAt || a.at || '')));
       const sum = biz.summary(recs, Date.now());
       // Both or neither: records without the summary would reach the head unsealed.
       payload.biz = rows;
@@ -3630,6 +3625,71 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 .ldSrc{border-top:1px dashed rgba(127,127,127,.35);padding-top:6px;opacity:.85;display:flex;flex-direction:column;gap:2px}
 .ldAct{display:flex;flex-wrap:wrap;gap:6px}
 .ldAct .yb{text-decoration:none;flex:0 1 auto;width:auto;margin:0}
+/*ITZIK:BEGIN*/
+/* 18.11.2026, Itzik: "כמו הלוק של Monday". The leads board (ldBoardHtml), his copy only for now. A row is also .ldRow, so every rule here outranks the table's. */
+.lbBoard{font:500 14px/1.4 Heebo,sans-serif}
+.lbBar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 10px}
+.lbFlt{display:flex;flex-wrap:wrap;gap:4px;background:rgba(128,128,128,.12);border-radius:10px;padding:3px}
+.lbFlt button{border:0;background:none;color:inherit;font:600 13px Heebo,sans-serif;padding:6px 10px;border-radius:8px;cursor:pointer}
+.lbFlt button.on{background:#0073ea;color:#fff}
+.lbQ{flex:1 1 160px;min-width:0;border:1px solid rgba(128,128,128,.4);border-radius:10px;padding:8px 10px;font:15px Heebo,sans-serif;background:transparent;color:inherit}
+.lbToday{border:1px solid rgba(226,68,92,.45);border-radius:12px;padding:6px 8px;margin-bottom:12px;background:rgba(226,68,92,.06)}
+.lbToday.lbNone{border-color:rgba(128,128,128,.3);background:none}
+.lbToday>small{display:block;opacity:.7;padding:2px 4px 4px}
+.lbTh{font:800 15px Heebo,sans-serif;color:#e2445c;margin:2px 2px 6px}
+.lbToday.lbNone .lbTh{color:inherit;opacity:.75}
+.lbGrp,.lbRow,.lbSt{--c:#e2445c}
+.lbGrp[data-g="בשיחה"],.lbRow[data-s="בשיחה"],.lbSt[data-s="בשיחה"]{--c:#fdab3d}
+.lbGrp[data-g="הצעה"],.lbRow[data-s="הצעה"],.lbSt[data-s="הצעה"]{--c:#a25ddc}
+.lbGrp[data-g="נסגר"],.lbRow[data-s="נסגר"],.lbSt[data-s="נסגר"]{--c:#00c875}
+.lbGrp[data-g="אבד"],.lbRow[data-s="אבד"],.lbSt[data-s="אבד"]{--c:#c4c4c4}
+.lbGrp{margin-bottom:12px}
+.lbGh{list-style:none;cursor:pointer;display:flex;gap:8px;align-items:baseline;padding:6px 2px;color:var(--c);font:800 16px Heebo,sans-serif}
+.lbGh::-webkit-details-marker{display:none}
+.lbGh::before{content:"▾";display:inline-block;transition:transform .15s}
+.lbGrp:not([open])>.lbGh::before{transform:rotate(90deg)}
+.lbGh small{font-weight:500;opacity:.75}
+.lbGrp[data-g="אבד"]>.lbGh{color:#8a8f99}
+.lbEmpty{display:block;opacity:.6;padding:4px 8px}
+.lbHd{display:none}
+.lbBoard .lbRow.ldRow{border:1px solid rgba(128,128,128,.22);border-inline-start:5px solid var(--c);border-radius:10px;margin:0 0 6px;background:rgba(128,128,128,.03)}
+.lbBoard .lbRow.ldRow>summary{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;padding:9px 10px;background:none}
+.lbBoard .lbRow.ldRow>summary>span{font-size:13px;min-width:0;overflow-wrap:anywhere}
+.lbBoard .lbName{flex:1 0 100%;display:flex;flex-direction:column}
+.lbName b{font:700 15px Heebo,sans-serif}
+.lbName small{font:400 13px Heebo,sans-serif;color:#5a6478;direction:ltr;text-align:right}
+.lbBoard .lbSt{display:inline-block;background:var(--c);color:#fff;font:700 12px Heebo,sans-serif;border-radius:6px;padding:3px 10px;text-align:center}
+.lbBoard .lbSt[data-s="אבד"]{color:#323338}
+.lbNext,.lbRem,.lbSite{background:rgba(128,128,128,.1);border-radius:6px;padding:3px 8px}
+.lbBoard .lbNone{opacity:.55}
+.lbBoard .lbRem.lbDue{background:#e2445c;color:#fff;font-weight:700;opacity:1}
+.lbSite a{color:#0073ea;text-decoration:none}
+.lbBoard .lbRow.ldRow>summary>.lbSrc{font-size:12px;opacity:.75}
+.lbBoard .lbLast{flex:1 0 100%;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lbLast:empty{display:none}
+.lbHist{display:flex;flex-direction:column;gap:2px;border-inline-start:3px solid rgba(128,128,128,.3);padding-inline-start:8px}
+@media (min-width:700px){
+ .lbHd,.lbBoard .lbRow.ldRow>summary{display:grid;grid-template-columns:minmax(9em,1.6fr) 6.5em minmax(7em,1.4fr) 7.5em minmax(6em,1fr) minmax(6em,1fr) minmax(8em,1.8fr);gap:8px;align-items:center}
+ .lbHd{font:700 12px Heebo,sans-serif;opacity:.65;padding:2px 10px 4px;border-inline-start:6px solid transparent}
+ .lbBoard .lbName,.lbBoard .lbLast{flex:none}
+ .lbLast:empty{display:block}
+ .lbNext,.lbRem,.lbSite{text-align:center}
+}
+/* 18.11.2026, Task 4: editing in the row. ⏳ while sending, a grey ✓ for 3 seconds, red when it did not go. */
+.lbBoard .lbSt,.lbNext,.lbRem,.lbSite{cursor:pointer}
+.lbTools,.lbEd{display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px 0}
+.lbTools .yb,.lbEd .yb{width:auto;margin:0;min-height:40px;padding:8px 12px;font-size:14px}
+.lbEd .lbIn{flex:1 1 100%;min-width:0;border-radius:10px;border:1px solid rgba(128,128,128,.5);padding:9px;font:16px Heebo,sans-serif;background:transparent;color:inherit}
+.lbBoard .lbHide{display:none}
+.lbBoard [data-mk="wait"]::after{content:" ⏳"}
+.lbBoard [data-mk="ok"]::after{content:" ✓";color:#8a93a3;font-weight:700}
+.lbBoard .lbRow [data-mk="bad"]{background:#e2445c;color:#fff;opacity:1}
+.lbBoard .lbRow [data-mk="bad"]::after{content:" לא נשמר, לנסות שוב";font-weight:700}
+.lbBoard .lbRow .lbLast[data-mk]::after{content:none}
+.lbBoard .lbLast[data-mk="wait"]::before{content:"⏳ "}
+.lbBoard .lbLast[data-mk="ok"]::before{content:"✓ ";color:#8a93a3;font-weight:700}
+.lbBoard .lbLast[data-mk="bad"]::before{content:"לא נשמר, לנסות שוב: ";font-weight:700}
+/*ITZIK:END*/
 .bzRow b{font:700 14px Heebo,sans-serif}
 .bzRow small{opacity:.85}
 .bzRow .yb{align-self:flex-start;padding:6px 12px;min-height:36px;font-size:13px;margin-top:4px}
@@ -19154,6 +19214,8 @@ var LB_ROWS=[
  {id:'manual',ic:'✍️',n:'נרשם ידנית',cc:['#b0bec5','#37474f']}
 ];
 function lbDay(iso){var t=Date.parse(iso);if(isNaN(t))return '';return new Date(t).toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'});}
+// 18.11.2026 (review): the day a lead is due by. A date only nextAt is already a day; a full one is its Israel day (00:30 Israel is the UTC day before).
+function lbDueDay(v){v=String(v||'');if(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(v))return v;return lbDay(v)||v.slice(0,10);}
 function lbHm(iso){var t=Date.parse(iso);if(isNaN(t))return '';return new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(t));}
 function lbState(r){var s=r.status||'חדש';return s==='נסגר'?'ok':s==='אבד'?'miss':s==='חדש'?'no':'wait';}
 function lbWa(p){var d=String(p||'').replace(/[^0-9]/g,'');if(d.indexOf('0')===0)d='972'+d.slice(1);return 'https://wa.me/'+d;}
@@ -19190,9 +19252,9 @@ function leadBoard(wk){
   +(ok?'🟢 הסורק עובד: בדק '+(ago<2?'עכשיו':'לפני '+ago+' דקות')+'. אתר, מסנג׳ר, תגובות בפייסבוק ובאינסטגרם, טפסים. כל 10 דקות.'
    :'🔴 הסורק לא תקין'+(S&&S.need&&S.need.length?': חסרות הרשאות '+esc(S.need.join(', ')):ago!=null?': לא רץ '+ago+' דקות':'')+'. המנהל מטפל.')+'</div>';
  // who is waiting for him now: new, or due today or earlier
- var wait=L.filter(function(r){var s=r.status||'חדש';if(s==='נסגר'||s==='אבד')return false;return s==='חדש'||(r.nextAt&&String(r.nextAt).slice(0,10)<=T0);})
+ var wait=L.filter(function(r){var s=r.status||'חדש';if(s==='נסגר'||s==='אבד')return false;return s==='חדש'||(r.nextAt&&lbDueDay(r.nextAt)<=T0);})
   .sort(function(a,b){return String(a.nextAt||a.at).localeCompare(String(b.nextAt||b.at));});
- var tmr=add(T0,1),soon=L.filter(function(r){var s=r.status||'חדש';return s!=='נסגר'&&s!=='אבד'&&s!=='חדש'&&r.nextAt&&String(r.nextAt).slice(0,10)===tmr;});
+ var tmr=add(T0,1),soon=L.filter(function(r){var s=r.status||'חדש';return s!=='נסגר'&&s!=='אבד'&&s!=='חדש'&&r.nextAt&&lbDueDay(r.nextAt)===tmr;});
  function card(r){
   var src=(LB_ROWS.filter(function(x){return x.id===r.source;})[0]||{ic:'✍️',n:r.source||'ליד'});
   return '<div class="ai s-'+lbState(r)+'"><span class="tm">'+esc(lbHm(r.at))+'<small style="display:block">'+esc(dm(lbDay(r.at)||T0))+'</small></span>'
@@ -20175,6 +20237,8 @@ function bzRow(r,extra){
   +'<button type="button" class="yb" data-bz="edit">עדכן</button>'
   +(r.kind==='lead'&&r.id&&typeof leadDelAsk==='function'?'<button type="button" class="yb ldDel" data-bz="leaddel" data-id="'+esc(r.id)+'" data-n="'+esc(r.name||'')+'">🗑 מחיקה</button>':'')+'</div>';
 }
+// 18.11.2026 (review): a nextAt as he reads it, in Israel time ("19.11 09:00"). A date only one (older leads, a customer's) stays as it was.
+function bzNextAtTxt(x){x=String(x||'').trim();if(!x||/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(x))return x;var m=/^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}):([0-9]{2})$/.exec(x);if(m)return (+m[3])+'.'+(+m[2])+' '+m[4]+':'+m[5];var n=Date.parse(x);if(isNaN(n))return x;var p={};new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(new Date(n)).forEach(function(q){p[q.type]=q.value;});return (+p.day)+'.'+(+p.month)+' '+(p.hour==='24'?'00':p.hour)+':'+p.minute;}
 function bizSheet(t0){
  ensure('biz',function(){
   var S=D.bizSum||null,recs=(D.biz||[]).filter(function(r){return typeof ldGone!=='function'||(ldGone()||[]).indexOf(r.id)<0;/* 17.11.2026: a customer copy has the empty stand in ldGone(){}, and the leads tile threw */}),tab=t0||'leads';
@@ -20226,7 +20290,7 @@ function bizSheet(t0){
      h+=bzRow(r,'<small>לא נגעו בו '+esc(String(s.days))+' ימים</small>');});}
    if(du.length){h+='<div class="bzSec">זמן לחזור</div>';
     du.forEach(function(d){var r=bzById(d.id)||{name:d.name,kind:'lead'};
-     h+=bzRow(r,'<small>'+esc(d.next||'')+(d.nextAt?' · '+esc(d.nextAt):'')+'</small>');});}
+     h+=bzRow(r,'<small>'+esc(d.next||'')+(d.nextAt?' · '+esc(bzNextAtTxt(d.nextAt)):'')+'</small>');});}
    // 14.11.2026, Itzik: "לחזור מחר" — what is due tomorrow, already here today
    if(tm.length){h+='<div class="bzSec">📅 לחזור מחר</div>';
     tm.forEach(function(d){var r=bzById(d.id)||{name:d.name,kind:'lead'};
@@ -20345,58 +20409,74 @@ function bizSheet(t0){
   function ldWa(p){var d=String(p||'').replace(/[^0-9]/g,'');if(!d)return '';if(d.charAt(0)==='0')d='972'+d.slice(1);return 'https://wa.me/'+d;}
   // The site chat sends its raw answers ([Chat Lead], Answers:, stage: mockups); shown in words.
   function ldNote(n){var W={idea:'רעיון',spec:'אפיון',mockups:'מסכים',product:'מוצר עובד',tier1:'0 עד 5,000 ₪',tier2:'5,000 עד 10,000 ₪',tier3:'10,000 עד 30,000 ₪',tier4:'30,000 עד 50,000 ₪',tier5:'50,000 ₪ ומעלה'};return String(n||'').split(String.fromCharCode(10)).map(function(l){return l.trim();}).filter(function(l){return l&&l!=='[Chat Lead]'&&l!=='Answers:'&&!/^Description: *N.A$/i.test(l);}).map(function(l){var m=/^(stage|budget): *([a-z0-9]+)/i.exec(l);return m?(m[1].toLowerCase()==='stage'?'שלב: ':'תקציב: ')+(W[m[2]]||m[2]):l;}).join(String.fromCharCode(10));}
+  // 13.11.2026, Itzik: "שים לב שלא יהיו טעויות בתאריך והשעה". Every date and time here is Israel time, whatever the
+  // device clock says, and the order is by the real moment (records mix +02:00 and Z, a string sort mixed them).
+  // 18.11.2026: lifted out of itsLeadsHtml, so the table and the Monday board read dates the same way.
+  var ldT=function(x){var n=Date.parse(x||'');return isNaN(n)?0:n;};
+  var ldIL=function(x){var n=ldT(x);if(!n)return {dd:'',hm:''};var o={timeZone:'Asia/Jerusalem'},p={};new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(new Date(n)).forEach(function(q){p[q.type]=q.value;});return {dd:(+p.day)+'.'+(+p.month),hm:p.hour+':'+p.minute};};
+  // What one lead is: when it came (Israel time), its mail (also one written only inside the note) and where from.
+  function ldInfo(r){
+   var il=ldIL(r.at);
+   // 13.11.2026, Itzik: every detail to get back to him: phone, mail, where from and when. A mail written only inside the note is read from there.
+   var em=r.email||((String(r.note||'').match(/מייל: *([^ ,;]+@[^ ,;]+)/)||[])[1]||'');
+   return {dd:il.dd,hm:il.hm,em:em,src:LD_SRC[r.source]||(r.kind==='customer'?'🤝 לקוח':'✍️ ידני')};
+  }
+  function ldScanHtml(){
+   var sc=D.leadScan;if(!sc)return '';
+   var t=sc.at?(function(z){return z.dd+' '+z.hm;})(ldIL(sc.at)):'';
+   return '<small style="display:block;margin:-2px 0 8px;color:#5a6478;font-size:13px;line-height:1.4">'+(sc.ok?'🟢 הסורק בודק כל 10 דקות את האתר, התגובות במודעות, מסנג׳ר ואינסטגרם. נבדק לאחרונה '+esc(t):'🟠 לידים מהאתר נכנסים לבד. תגובות והודעות מהמודעות עוד לא נכנסות לבד: חסר אישור אחד במטא. עד אז אני מוסיף אותן ידנית.')+'</small>';
+  }
+  /*
+    The inside of an open lead, one copy for the table (itsLeadsHtml) and the Monday board: who he is, the
+    note box, forward, contact, where from, the stages and delete. hist (the board): the notes as a history, newest
+    first, instead of one block.
+  */
+  function ldBodyHtml(r,hist,cur){
+   var i=ldInfo(r),dd=i.dd,hm=i.hm,em=i.em,src=i.src,meta=/comment|messenger|dm|leadform/.test(r.source||'');
+   var rep='';
+   if(r.phone){rep+='<a class="yb yb2" href="'+ldWa(r.phone)+'" target="_blank" rel="noopener">💬 וואטסאפ</a><a class="yb" href="tel:'+esc(String(r.phone).replace(/[^0-9+]/g,''))+'">📞 להתקשר</a>';}
+   if(em)rep+='<a class="yb" href="mailto:'+esc(em)+'">✉️ מייל</a>';
+   if(meta&&(r.link||LD_INBOX))rep+='<a class="yb yb2" href="'+esc(r.link||LD_INBOX)+'" target="_blank" rel="noopener">💬 לענות במטא</a>';
+   // 11.11: copy the phone, or all the details at once (name, phone, mail, where from, when, what he wrote, notes)
+   var NL=String.fromCharCode(10),all=[r.name||'בלי שם',r.phone?'טלפון: '+r.phone:'',em?'מייל: '+em:'','מאיפה: '+src.replace(/^[^ ]+ /,'')+(r.ref?' ('+r.ref+')':''),dd?'תאריך: '+dd+' '+hm:'','סטטוס: '+(r.status||''),r.last?'כתב: '+r.last:'',r.note?ldNote(r.note):''].filter(Boolean).join(NL);
+   if(r.phone)rep+='<button type="button" class="yb" data-bz="ldcopy" data-w="הטלפון" data-u="'+esc(r.phone)+'">📋 להעתיק טלפון</button>';
+   rep+='<button type="button" class="yb" data-bz="ldcopy" data-w="כל הפרטים" data-u="'+esc(all)+'">📋 להעתיק את כל הפרטים</button>';
+   // 13.11.2026, Itzik: "להעביר את הליד לטום ... אני אחליט למי אני שולח". WhatsApp opens with every detail
+   // already written and no recipient, so he picks who gets it (טום or anyone).
+   var fwd='<a class="yb yb1 ldFwd" href="https://wa.me/?text='+encodeURIComponent('ליד להעברה'+NL+all)+'" target="_blank" rel="noopener">📤 להעביר בוואטסאפ למישהו אחר (טום, סוכן)</a>';
+   return '<div class="ldBody">'
+    // 14.11.2026, Itzik: "למעלה יהיה כתוב השם שלו, המייל שלו, למה, אם הוא כתב משהו, טלפון, ורק למטה מאיפה הוא הגיע.
+    // אחרי זה ... הערה ... שליחה לוואטסאפ אחר". Who he is and what he wants on top, the note, the forward, and where from last.
+    +'<div class="ldTop"><b class="ldName">'+esc(r.name||'בלי שם')+'</b>'
+    +(dd?'<small>🕐 הגיע ב '+esc(dd)+(hm?' בשעה '+esc(hm):'')+'</small>':'') // 14.11.2026, Itzik: "בלידים תרשום גם באיזה שעה הגיעו"
+    +(em?'<small>✉️ <bdi>'+esc(em)+'</bdi></small>':'<small class="ldNo">✉️ לא השאיר מייל</small>')
+    +(r.last?'<p class="ldLast">💬 "'+esc(r.last)+'"</p>':'')
+    +(hist?(hist.length?'<div class="lbHist">'+hist.map(function(l){return '<small>'+esc(l)+'</small>';}).join('')+'</div>':''):(r.note?'<small class="ldWhy" style="white-space:pre-line">'+esc(ldNote(r.note))+'</small>':''))
+    +(r.phone?'<small>📞 '+bzTel(r.phone)+'</small>':'<small class="ldNo">📞 לא השאיר טלפון</small>')
+    +'</div>'
+    // 13.11.2026, Itzik: "בלידים אין לי איך להכניס הערה". The 📝 button sat at the very bottom, after every other
+    // button. Now the note box is open in every lead, right under the details, and a sent note shows at once.
+    +'<div class="bzEd ldNoteBox"><input placeholder="📝 הערה על הליד" enterkeyhint="send"><button type="button" class="yb yb2" data-tdy="1" data-bz="ldsend">לרשום</button></div>'
+    +fwd
+    +'<div class="ldAct">'+(rep||'<small>אין טלפון או מייל. מחכים שיחזור.</small>')+'</div>'
+    +'<div class="ldSrc"><small>📍 מאיפה: '+esc(src.replace(/^[^ ]+ /,''))+(r.ref?' · '+esc(r.ref):'')+'</small>'+(dd?'<small>🕒 נכנס: '+esc(dd+' '+hm)+'</small>':'')+'</div>'
+    +'<div class="ldAct">'+BZ_ORDER.filter(function(st){return st!==(cur||r.status);}).map(function(st){return '<button type="button" class="yb" data-bz="ldst" data-s="'+st+'">'+st+'</button>';}).join('')+'</div>'
+    +'<div class="ldAct"><button type="button" class="yb ldDel" data-bz="lddel">🗑 מחיקה</button></div>'
+    +'</div>';
+  }
   function itsLeadsHtml(){
-   // 13.11.2026, Itzik: "שים לב שלא יהיו טעויות בתאריך והשעה". Every date and time here is Israel time, whatever the
-   // device clock says, and the order is by the real moment (records mix +02:00 and Z, a string sort mixed them).
-   var ldT=function(x){var n=Date.parse(x||'');return isNaN(n)?0:n;};
-   var ldIL=function(x){var n=ldT(x);if(!n)return {dd:'',hm:''};var o={timeZone:'Asia/Jerusalem'},p={};new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(new Date(n)).forEach(function(q){p[q.type]=q.value;});return {dd:(+p.day)+'.'+(+p.month),hm:p.hour+':'+p.minute};};
    var L=recs.filter(function(r){return r.kind==='lead'||r.kind==='customer';}).slice().sort(function(a,b){return ldT(b.at)-ldT(a.at);});
    // 12.11.2026: a test lead (his own phone or mail) is listed greyed and is not in the counts
-   var LC=L.filter(function(r){return !r.test;}),sc=D.leadScan,open=LC.filter(function(r){return r.status==='חדש';}).length;
+   var LC=L.filter(function(r){return !r.test;}),open=LC.filter(function(r){return r.status==='חדש';}).length;
    var h='<div class="bzSec">📋 כל הלידים ('+LC.length+(open?', '+open+' חדשים':'')+')</div>';
-   if(sc){
-    var t=sc.at?(function(z){return z.dd+' '+z.hm;})(ldIL(sc.at)):'';
-    h+='<small style="display:block;margin:-2px 0 8px;color:#5a6478;font-size:13px;line-height:1.4">'+(sc.ok?'🟢 הסורק בודק כל 10 דקות את האתר, התגובות במודעות, מסנג׳ר ואינסטגרם. נבדק לאחרונה '+esc(t):'🟠 לידים מהאתר נכנסים לבד. תגובות והודעות מהמודעות עוד לא נכנסות לבד: חסר אישור אחד במטא. עד אז אני מוסיף אותן ידנית.')+'</small>';
-   }
+   h+=ldScanHtml();
    if(!L.length)return h+'<p class="bzEmpty">עוד אין לידים.</p>';
    // 13.11.2026, Itzik: "הטבלה של הלידים ... מערבבת. תחצה אותה לשתיים": trial-week signups in one table, every other
    // lead (the site chat, Meta, WhatsApp, manual, customers) in a second one. Each table is newest first with its own count.
    function oneRow(r){
-    var il=ldIL(r.at),dd=il.dd,hm=il.hm;
-    // 13.11.2026, Itzik: every detail to get back to him: phone, mail, where from and when. A mail written only inside the note is read from there.
-    var em=r.email||((String(r.note||'').match(/מייל: *([^ ,;]+@[^ ,;]+)/)||[])[1]||'');
-    var src=LD_SRC[r.source]||(r.kind==='customer'?'🤝 לקוח':'✍️ ידני'),meta=/comment|messenger|dm|leadform/.test(r.source||'');
-    var rep='';
-    if(r.phone){rep+='<a class="yb yb2" href="'+ldWa(r.phone)+'" target="_blank" rel="noopener">💬 וואטסאפ</a><a class="yb" href="tel:'+esc(String(r.phone).replace(/[^0-9+]/g,''))+'">📞 להתקשר</a>';}
-    if(em)rep+='<a class="yb" href="mailto:'+esc(em)+'">✉️ מייל</a>';
-    if(meta&&(r.link||LD_INBOX))rep+='<a class="yb yb2" href="'+esc(r.link||LD_INBOX)+'" target="_blank" rel="noopener">💬 לענות במטא</a>';
-    // 11.11: copy the phone, or all the details at once (name, phone, mail, where from, when, what he wrote, notes)
-    var NL=String.fromCharCode(10),all=[r.name||'בלי שם',r.phone?'טלפון: '+r.phone:'',em?'מייל: '+em:'','מאיפה: '+src.replace(/^[^ ]+ /,'')+(r.ref?' ('+r.ref+')':''),dd?'תאריך: '+dd+' '+hm:'','סטטוס: '+(r.status||''),r.last?'כתב: '+r.last:'',r.note?ldNote(r.note):''].filter(Boolean).join(NL);
-    if(r.phone)rep+='<button type="button" class="yb" data-bz="ldcopy" data-w="הטלפון" data-u="'+esc(r.phone)+'">📋 להעתיק טלפון</button>';
-    rep+='<button type="button" class="yb" data-bz="ldcopy" data-w="כל הפרטים" data-u="'+esc(all)+'">📋 להעתיק את כל הפרטים</button>';
-    // 13.11.2026, Itzik: "להעביר את הליד לטום ... אני אחליט למי אני שולח". WhatsApp opens with every detail
-    // already written and no recipient, so he picks who gets it (טום or anyone).
-    var fwd='<a class="yb yb1 ldFwd" href="https://wa.me/?text='+encodeURIComponent('ליד להעברה'+NL+all)+'" target="_blank" rel="noopener">📤 להעביר בוואטסאפ למישהו אחר (טום, סוכן)</a>';
+    var i=ldInfo(r),dd=i.dd,hm=i.hm,em=i.em,src=i.src;
     h+='<details class="ldRow'+(r.test?' ldTest':(r.status==='חדש'?' ldNew':''))+'" data-id="'+esc(r.id)+'" data-n="'+esc(r.name||'')+'" data-at="'+esc(r.at||'')+'"><summary><span>'+esc(dd)+(hm?' · '+esc(hm):'')+'</span><b>'+esc(r.name||'בלי שם')+(r.test?'<span class="ldTestTag">בדיקה שלך</span>':'')+((r.phone||em)?'<small class="ldC"><bdi>'+esc([r.phone,em].filter(Boolean).join(' · '))+'</bdi></small>':'<small class="ldC">אין טלפון</small>')+'</b><span>'+esc(src)+'</span><span class="ldSt">'+esc(r.status||'')+'</span></summary>'
-     +'<div class="ldBody">'
-     // 14.11.2026, Itzik: "למעלה יהיה כתוב השם שלו, המייל שלו, למה, אם הוא כתב משהו, טלפון, ורק למטה מאיפה הוא הגיע.
-     // אחרי זה ... הערה ... שליחה לוואטסאפ אחר". Who he is and what he wants on top, the note, the forward, and where from last.
-     +'<div class="ldTop"><b class="ldName">'+esc(r.name||'בלי שם')+'</b>'
-     +(dd?'<small>🕐 הגיע ב '+esc(dd)+(hm?' בשעה '+esc(hm):'')+'</small>':'') // 14.11.2026, Itzik: "בלידים תרשום גם באיזה שעה הגיעו"
-     +(em?'<small>✉️ <bdi>'+esc(em)+'</bdi></small>':'<small class="ldNo">✉️ לא השאיר מייל</small>')
-     +(r.last?'<p class="ldLast">💬 "'+esc(r.last)+'"</p>':'')
-     +(r.note?'<small class="ldWhy" style="white-space:pre-line">'+esc(ldNote(r.note))+'</small>':'')
-     +(r.phone?'<small>📞 '+bzTel(r.phone)+'</small>':'<small class="ldNo">📞 לא השאיר טלפון</small>')
-     +'</div>'
-     // 13.11.2026, Itzik: "בלידים אין לי איך להכניס הערה". The 📝 button sat at the very bottom, after every other
-     // button. Now the note box is open in every lead, right under the details, and a sent note shows at once.
-     +'<div class="bzEd ldNoteBox"><input placeholder="📝 הערה על הליד" enterkeyhint="send"><button type="button" class="yb yb2" data-tdy="1" data-bz="ldsend">לרשום</button></div>'
-     +fwd
-     +'<div class="ldAct">'+(rep||'<small>אין טלפון או מייל. מחכים שיחזור.</small>')+'</div>'
-     +'<div class="ldSrc"><small>📍 מאיפה: '+esc(src.replace(/^[^ ]+ /,''))+(r.ref?' · '+esc(r.ref):'')+'</small>'+(dd?'<small>🕒 נכנס: '+esc(dd+' '+hm)+'</small>':'')+'</div>'
-     +'<div class="ldAct">'+BZ_ORDER.filter(function(st){return st!==r.status;}).map(function(st){return '<button type="button" class="yb" data-bz="ldst" data-s="'+st+'">'+st+'</button>';}).join('')+'</div>'
-     +'<div class="ldAct"><button type="button" class="yb ldDel" data-bz="lddel">🗑 מחיקה</button></div>'
-     +'</div></details>';
+     +ldBodyHtml(r)+'</details>';
    }
    function ldTable(title,list,empty){
     var n=list.filter(function(r){return !r.test;}),o=n.filter(function(r){return r.status==='חדש';}).length;
@@ -20410,6 +20490,302 @@ function bizSheet(t0){
    ldTable('📥 פניות: צ׳אט באתר, מודעות ועוד',L.filter(function(r){return r.source!=='signup';}),'עוד אין פניות.');
    return h;
   }
+  /*
+    18.11.2026, Itzik: "תבנה את מערכת ה CRM שלנו כמו הלוק של Monday. מה שיש עכשיו לא נח לי." The leads board
+    (docs/superpowers/specs/2026-11-18-leads-board-design.md). His copy only for now ("רק כרגע אצלי במוניטור שלי"):
+    the switch and the whole board sit in his blocks, so a customer's copy keeps the table above and has no trace of it.
+  */
+  var LD_BOARD=false;/*ITZIK:BEGIN*/LD_BOARD=true;/*ITZIK:END*/
+  var ldMain=itsLeadsHtml;
+  /*ITZIK:BEGIN*/
+  if(LD_BOARD)ldMain=ldBoardHtml;
+  /*
+    Review 18.11: a redraw of the tab (bzRe, a drawer, the sheet opened again) paints the board from recs, which already
+    holds the new value. So the send state lives on the page, not in this sheet: mk is the mark of every lead field
+    (wait, ok, bad), drawn into the row by the board itself, so a change that did not go stays red after any redraw, and
+    a tap still sends it (msg, nq). el is the sheet open now, where late answers paint.
+  */
+  var LBS=window.lbState||(window.lbState={mk:{},msg:{},seq:{},nq:{},el:null});
+  /*
+    Top to bottom: the count, filter and search, "⏰ היום" (a reminder due today or passed), then the five stages as
+    groups, נסגר and אבד shut. A row shows name and phone, stage, the next step, ⏰, 🌐, where from and the last note;
+    a tap opens the history, the note box and the buttons of the table (ldBodyHtml). A status that is not one of the
+    five sits in חדש, so no lead is lost. Reminders are compared as Israel time "YYYY-MM-DD HH:MM" strings; a date
+    only nextAt (older leads) means 09:00 that day.
+    The DOM the editing (Task 4) hangs on: .lbRow[data-id][data-n][data-s][data-src][data-q], .lbSt[data-s], .lbNext,
+    .lbSite, .lbRem[data-at], .lbGrp[data-g], .lbToday, .lbFlt [data-f], .lbQ. A row is also .ldRow and its stage is also
+    .ldSt; ldcopy keeps the table's handler, ldst, ldsend and lddel in a row go through lbTap below.
+  */
+  var LB_IL=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
+  var lbKey=function(ms){var p={};LB_IL.formatToParts(new Date(ms)).forEach(function(q){p[q.type]=q.value;});return p.year+'-'+p.month+'-'+p.day+' '+(p.hour==='24'?'00':p.hour)+':'+p.minute;};
+  // A reminder as an Israel "YYYY-MM-DD HH:MM". One set on this page is already that and passes as is (never through
+  // Date.parse: Safari gives NaN for it, other browsers read it as device time). A date only nextAt is 09:00 that day.
+  var lbRemKey=function(x){x=String(x||'').trim();if(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(x))return x+' 09:00';if(/^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}$/.test(x))return x;var n=ldT(x);return n?lbKey(n):'';};
+  var lbStage=function(r){return BZ_ORDER.indexOf(r.status)>-1?r.status:'חדש';};
+  var lbShut=function(s){return s==='נסגר'||s==='אבד';};
+  var lbRemTxt=function(k){return '⏰'+(k?' '+(+k.slice(8,10))+'.'+(+k.slice(5,7))+' '+k.slice(11):'');};
+  // A site is a link only when it is a clean http(s) address; anything else (an old "eran.co.il", a bad value) is plain text.
+  var lbSiteIn=function(x){x=String(x||'');if(/^https?:[/][/][^ "'<>]+$/i.test(x))return '<a href="'+esc(x)+'" target="_blank" rel="noopener">🌐 '+esc(x.replace(/^https?:[/][/](www[.])?/i,'').split('/')[0])+'</a>';return x?'🌐 <bdi>'+esc(x)+'</bdi>':'🌐';};
+  var LB_HD='<div class="lbHd"><span>שם</span><span>שלב</span><span>הצעד הבא</span><span>⏰ תזכורת</span><span>🌐 אתר</span><span>מקור</span><span>הערה אחרונה</span></div>';
+  // In an open row, right under the summary (an input inside summary would fold the row on a space): what can be edited.
+  var LB_TOOLS='<div class="lbTools"><button type="button" class="yb" data-tdy="1" data-bz="lbed" data-k="next">✏️ הצעד הבא</button><button type="button" class="yb" data-tdy="1" data-bz="lbed" data-k="rem">⏰ תזכורת</button><button type="button" class="yb" data-tdy="1" data-bz="lbed" data-k="site">🌐 אתר</button></div>';
+  function ldBoardHtml(){
+   var nowK=lbKey(Date.now()),todayK=nowK.slice(0,10);
+   var A=recs.filter(function(r){return r.kind==='lead'||r.kind==='customer';}).slice().sort(function(a,b){return ldT(b.at)-ldT(a.at);});
+   var LC=A.filter(function(r){return !r.test;}),nNew=LC.filter(function(r){return lbStage(r)==='חדש';}).length;
+   var h='<div class="lbBoard"><div class="bzSec">📋 כל הלידים ('+LC.length+(nNew?', '+(nNew===1?'חדש אחד':nNew+' חדשים'):'')+')</div>'+ldScanHtml();
+   if(!A.length)return h+'<p class="bzEmpty">עוד אין לידים.</p></div>';
+   function row(r){
+    var st=lbStage(r),i=ldInfo(r),k=lbRemKey(r.nextAt),due=!!k&&k<=nowK&&!lbShut(st);
+    var mk=function(f){var m=LBS.mk[r.id+'|'+f];return m?' data-mk="'+m+'"':'';};
+    var site=String(r.site||'').trim();
+    var hist=r.note?ldNote(r.note).split(String.fromCharCode(10)).filter(Boolean).reverse():[];
+    var tel=String(r.phone||'').replace(/[^0-9]/g,'');
+    return '<details class="lbRow ldRow'+(r.test?' ldTest':(st==='חדש'?' ldNew':''))+'" data-id="'+esc(r.id)+'" data-n="'+esc(r.name||'')+'" data-at="'+esc(r.at||'')+'" data-s="'+esc(st)+'" data-src="'+(r.source==='signup'?'signup':'other')+'" data-q="'+esc((String(r.name||'')+' '+String(r.email||'')).toLowerCase()+' '+tel)+'"><summary>'
+     +'<span class="lbName"><b>'+esc(r.name||'בלי שם')+(r.test?'<span class="ldTestTag">בדיקה שלך</span>':'')+'</b><small><bdi>'+esc(r.phone||i.em||'אין טלפון')+'</bdi></small></span>'
+     +'<span data-bz="lbed" data-k="st"'+mk('st')+' class="lbSt ldSt" data-s="'+esc(st)+'">'+esc(st)+'</span>'
+     +'<span data-bz="lbed" data-k="next"'+mk('next')+' class="lbNext'+(r.next?'':' lbNone')+'" data-v="'+esc(r.next||'')+'">'+esc(r.next||'צעד הבא')+'</span>'
+     +'<span data-bz="lbed" data-k="rem"'+mk('rem')+' class="lbRem'+(due?' lbDue':'')+(k?'':' lbNone')+'" data-at="'+esc(r.nextAt||'')+'">'+lbRemTxt(k)+'</span>'
+     +'<span data-bz="lbed" data-k="site"'+mk('site')+' class="lbSite'+(site?'':' lbNone')+'" data-v="'+esc(site)+'">'+lbSiteIn(site)+'</span>'
+     +'<span class="lbSrc">'+esc(i.src)+'</span>'
+     +'<span data-bz="lbed" data-k="note"'+mk('note')+' class="lbLast">'+esc(hist[0]||(r.last?'"'+r.last+'"':''))+'</span>'
+     +'</summary>'+LB_TOOLS+ldBodyHtml(r,hist,st)+'</details>';
+   }
+   h+='<div class="lbBar"><div class="lbFlt"><button type="button" class="on" data-bz="lbflt" data-f="all">הכל</button><button type="button" data-bz="lbflt" data-f="signup">נרשמו לשבוע ניסיון</button><button type="button" data-bz="lbflt" data-f="other">פניות</button></div>'
+    +'<input class="lbQ" type="search" placeholder="🔎 חיפוש לפי שם או טלפון" enterkeyhint="search"></div>';
+   var T=A.filter(function(r){var k=lbRemKey(r.nextAt);return k&&k.slice(0,10)<=todayK&&!lbShut(lbStage(r));}).sort(function(a,b){return lbRemKey(a.nextAt)<lbRemKey(b.nextAt)?-1:1;});
+   var nT=T.filter(function(r){return !r.test;}).length;
+   h+='<div class="lbToday'+(T.length?'':' lbNone')+'"><div class="lbTh">⏰ היום'+(nT?' ('+nT+')':'')+'</div>'+(T.length?T.map(row).join(''):'<small class="lbTNo">אין תזכורות להיום.</small>')+'</div>';
+   BZ_ORDER.forEach(function(g){
+    var rs=A.filter(function(r){return lbStage(r)===g;}),n=rs.filter(function(r){return !r.test;}).length;
+    h+='<details class="lbGrp'+(lbShut(g)?' lbShut"':'"')+' data-g="'+g+'"'+(lbShut(g)?'':' open')+'><summary class="lbGh"><b>'+g+'</b><small>('+n+')</small></summary>'
+     +(rs.length?LB_HD+rs.map(row).join(''):'<small class="lbEmpty">אין כאן לידים.</small>')+'</details>';
+   });
+   return h+'</div>';
+  }
+  /*
+    18.11.2026, the board's editing (Task 4). A tap on a field of a row (stage, next step, ⏰, 🌐) opens its editor under
+    the summary; the row's tools do the same in an open row. Every change shows at once with ⏳ on every row of that lead
+    (a due lead is in ⏰ היום and in its group, same data-id), then goes as "ליד [<id>]: ..." (lib/leads.js). Sent: a grey
+    ✓ for 3 seconds. Refused, or no answer in 30 seconds: the field is red, "לא נשמר, לנסות שוב", and a tap on it sends
+    the same line again. Only the newest send of a field paints it, so an older answer never overrides a newer change
+    (a late success of the newest one still turns its red to ✓). What the server refuses (an empty step, a bad site,
+    a passed time) is stopped here, since ✓ only means the line went out. Filter and search are this page only.
+  */
+  // The reminder chips: "YYYY-MM-DD HH:MM" in Israel time from nowMs, whatever the device clock. eve: 19:00 today, or
+  // tomorrow once 19:00 passed; tom: tomorrow 09:00; week: in 7 days 09:00. Days are added on the calendar, never as 24 hours.
+  function lbWhen(kind,nowMs){
+   var k=lbKey(nowMs),y=+k.slice(0,4),m=+k.slice(5,7),d=+k.slice(8,10);
+   var day=function(n){return new Date(Date.UTC(y,m-1,d+n)).toISOString().slice(0,10);};
+   if(kind==='eve')return day(k.slice(11)<'19:00'?0:1)+' 19:00';
+   if(kind==='tom')return day(1)+' 09:00';
+   if(kind==='week')return day(7)+' 09:00';
+   return '';
+  }
+  // The same rule as normSite in lib/leads.js: a bare domain gets https://, any other scheme or markup is refused.
+  function lbSiteNorm(x){
+   x=String(x||'').trim();if(!x||/[<>"']/.test(x)||x.indexOf(String.fromCharCode(92))>-1||x.indexOf(String.fromCharCode(96))>-1)return '';
+   for(var i=0;i<x.length;i++){if(x.charCodeAt(i)<33)return '';}
+   if(!/^https?:[/][/]/i.test(x)){if(/^[a-z][a-z0-9+.-]*:/i.test(x))return '';x='https://'+x;}
+   if(!/^https?:[/][/][a-z0-9-]+([.][a-z0-9-]+)*(:[0-9]+)?([/?#]|$)/i.test(x)||x.length>300)return '';
+   return x;
+  }
+  var lbSeq=LBS.seq,lbMsg=LBS.msg,LB_F={st:'lbSt',next:'lbNext',site:'lbSite',rem:'lbRem',note:'lbLast'};
+  var lbAll=function(p,sel){return Array.prototype.slice.call(p.querySelectorAll(sel));};
+  var lbKids=function(p){return lbAll(p,'.lbRow');};
+  function lbRows(el,id){return lbKids(el).filter(function(r){return r.getAttribute('data-id')===id;});}
+  // The page's copy of the lead changes too, so a redraw of the tab keeps what was just set.
+  function lbRec(id,o){recs.forEach(function(r){if(r.id===id){for(var k in o)r[k]=o[k];}});}
+  function lbMark(el,id,f,m){var k=id+'|'+f;if(m)LBS.mk[k]=m;else delete LBS.mk[k];el=LBS.el||el;lbRows(el,id).forEach(function(r){var x=r.querySelector('.'+LB_F[f]);if(!x)return;if(m)x.setAttribute('data-mk',m);else x.removeAttribute('data-mk');});}
+  function lbSend(el,id,f,body){
+   var k=id+'|'+f,n=lbSeq[k]=(lbSeq[k]||0)+1,cur=function(){return lbSeq[k]===n;};
+   lbMsg[k]=body;lbMark(el,id,f,'wait');
+   var tm=setTimeout(function(){if(cur())lbMark(el,id,f,'bad');},30000),p;
+   try{p=Promise.resolve(sendText('ליד',body,'ליד'));}catch(x){p=Promise.reject(x);}
+   p.then(function(){clearTimeout(tm);if(!cur())return;lbMark(el,id,f,'ok');setTimeout(function(){if(cur())lbMark(el,id,f,'');},3000);},
+    function(){clearTimeout(tm);if(cur())lbMark(el,id,f,'bad');});
+  }
+  /*
+    Notes add up, so "the last wins" is wrong for them: every note waits in its lead's queue until it went out. The last
+    note on the row shows ⏳ while any is on its way, red while any did not go (a tap sends every one that did not), and ✓
+    only when none is left. A late answer of a note that was already sent again is ignored.
+  */
+  var lbNq=LBS.nq;
+  function lbNotePaint(el,id){
+   var q=lbNq[id]||[];
+   if(q.some(function(x){return x.st==='go';}))return lbMark(el,id,'note','wait');
+   if(q.length)return lbMark(el,id,'note','bad');
+   lbMark(el,id,'note','ok');setTimeout(function(){if(!(lbNq[id]||[]).length)lbMark(el,id,'note','');},3000);
+  }
+  function lbNoteGo(el,id,it){
+   it.st='go';it.fly=true;it.n=(it.n||0)+1;
+   var n=it.n,fin=function(ok,end){if(end&&it.n===n)it.fly=false;if(it.n!==n)return;if(ok){var q=lbNq[id]||[],i=q.indexOf(it);if(i>-1)q.splice(i,1);}else it.st='bad';lbNotePaint(el,id);};
+   var tm=setTimeout(function(){fin(false);},30000),p;
+   try{p=Promise.resolve(sendText('ליד',it.body,'ליד'));}catch(x){p=Promise.reject(x);}
+   p.then(function(){clearTimeout(tm);fin(true,1);},function(){clearTimeout(tm);fin(false,1);});
+   lbNotePaint(el,id);
+  }
+  function lbNoteSend(el,id,body){var it={body:body};(lbNq[id]=lbNq[id]||[]).push(it);lbNoteGo(el,id,it);}
+  function lbStBtns(cur){return BZ_ORDER.filter(function(st){return st!==cur;}).map(function(st){return '<button type="button" class="yb" data-tdy="1" data-bz="ldst" data-s="'+st+'">'+st+'</button>';}).join('');}
+  // A group left with no row shows "אין כאן לידים." again.
+  function lbTidy(g){if(!g||!g.classList.contains('lbGrp')||lbKids(g).length)return;var hd=g.querySelector('.lbHd');if(hd)hd.parentNode.removeChild(hd);if(!g.querySelector('.lbEmpty'))g.insertAdjacentHTML('beforeend','<small class="lbEmpty">אין כאן לידים.</small>');}
+  function lbIntoGrp(el,r,s){
+   var g=el.querySelector('.lbGrp[data-g="'+s+'"]'),old=r.parentNode;if(!g||g===old)return;
+   var em=g.querySelector('.lbEmpty');if(em)em.parentNode.removeChild(em);
+   if(!g.querySelector('.lbHd'))g.querySelector('.lbGh').insertAdjacentHTML('afterend',LB_HD);
+   var t0=ldT(r.getAttribute('data-at')),rs=lbKids(g),nx=null;
+   for(var i=0;i<rs.length;i++){if(ldT(rs[i].getAttribute('data-at'))<t0){nx=rs[i];break;}}
+   g.insertBefore(r,nx);lbTidy(old);
+  }
+  // Every counter from what is on the page: the groups, the main line and ⏰ היום (a test lead is shown, never counted).
+  function lbCount(el){
+   var B=el.querySelector('.lbBoard');if(!B)return;
+   var real=function(p){return lbKids(p).filter(function(r){return !r.classList.contains('ldTest');}).length;},tot=0,nw=0;
+   lbAll(B,'.lbGrp').forEach(function(g){var n=real(g),c=g.querySelector('.lbGh small');tot+=n;if(g.getAttribute('data-g')==='חדש')nw=n;if(c)c.textContent='('+n+')';});
+   var m=B.querySelector('.bzSec');if(m)m.textContent='📋 כל הלידים ('+tot+(nw?', '+(nw===1?'חדש אחד':nw+' חדשים'):'')+')';
+   var T=B.querySelector('.lbToday');if(!T)return;
+   var all=lbKids(T).length,n=real(T),no=T.querySelector('.lbTNo'),th=T.querySelector('.lbTh');
+   if(th)th.textContent='⏰ היום'+(n?' ('+n+')':'');
+   T.classList.toggle('lbNone',!all);
+   if(all&&no)no.parentNode.removeChild(no);
+   if(!all&&!no)T.insertAdjacentHTML('beforeend','<small class="lbTNo">אין תזכורות להיום.</small>');
+  }
+  function lbStageSet(el,id,s){
+   if(BZ_ORDER.indexOf(s)<0)return;
+   lbRec(id,{status:s});
+   lbRows(el,id).forEach(function(r){
+    r.setAttribute('data-s',s);if(!r.classList.contains('ldTest'))r.classList.toggle('ldNew',s==='חדש');
+    var b=r.querySelector('.lbSt');if(b){b.setAttribute('data-s',s);b.textContent=s;}
+    var sb=r.querySelector('[data-bz="ldst"]'),box=sb&&sb.closest('.ldAct');if(box)box.innerHTML=lbStBtns(s);
+    var ed=r.querySelector('.lbEd');if(ed&&ed.getAttribute('data-k')==='st')ed.parentNode.removeChild(ed);
+    if(r.parentNode&&r.parentNode.classList.contains('lbGrp'))lbIntoGrp(el,r,s);
+   });
+   // נסגר and אבד: the server cancels the reminder, so it goes from the rows and from ⏰ היום.
+   if(lbShut(s))lbRemSet(el,id,'');
+   lbCount(el);lbFilter(el);
+  }
+  function lbRemSet(el,id,k){
+   lbRec(id,{nextAt:k});
+   var rows=lbRows(el,id),nowK=lbKey(Date.now()),shut=!!rows[0]&&lbShut(rows[0].getAttribute('data-s'));
+   var due=!!k&&k<=nowK&&!shut,day=!!k&&k.slice(0,10)<=nowK.slice(0,10)&&!shut;
+   var T=el.querySelector('.lbToday'),inT=null,src=null;
+   rows.forEach(function(r){
+    var x=r.querySelector('.lbRem');if(x){x.setAttribute('data-at',k);x.textContent=lbRemTxt(k);x.classList.toggle('lbDue',due);x.classList.toggle('lbNone',!k);}
+    if(T&&r.parentNode===T)inT=r;else src=r;
+   });
+   if(day&&src&&T&&!inT){
+    var c=src.cloneNode(true);c.removeAttribute('open');var ce=c.querySelector('.lbEd');if(ce)ce.parentNode.removeChild(ce);
+    var ts=lbKids(T),nx=null;
+    for(var i=0;i<ts.length;i++){var q=ts[i].querySelector('.lbRem');if(q&&lbRemKey(q.getAttribute('data-at'))>k){nx=ts[i];break;}}
+    T.insertBefore(c,nx);
+   }else if(inT&&!day)inT.parentNode.removeChild(inT);
+   lbCount(el);lbFilter(el);
+  }
+  function lbNextSet(el,id,v){lbRec(id,{next:v});lbRows(el,id).forEach(function(r){var x=r.querySelector('.lbNext');if(!x)return;x.setAttribute('data-v',v);x.textContent=v||'צעד הבא';x.classList.toggle('lbNone',!v);});}
+  function lbSiteSet(el,id,v){lbRec(id,{site:v});lbRows(el,id).forEach(function(r){var x=r.querySelector('.lbSite');if(!x)return;x.setAttribute('data-v',v);x.innerHTML=lbSiteIn(v);x.classList.toggle('lbNone',!v);});}
+  // A note goes on top of the history (newest first) and on the row, in every row of the lead. Like lib/leads.js:
+  // "לא מעוניין" or "לא רלוונטי" makes it אבד, any other note on a חדש lead makes it בשיחה.
+  function lbNote(el,id,v){
+   var line=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',day:'numeric',month:'numeric'}).format(new Date(Date.now())).replace('/','.')+': '+v;
+   lbRows(el,id).forEach(function(r){
+    var hs=r.querySelector('.lbHist');
+    if(!hs){var top=r.querySelector('.ldTop');if(!top)return;top.insertAdjacentHTML('beforeend','<div class="lbHist"></div>');hs=r.querySelector('.lbHist');}
+    hs.insertAdjacentHTML('afterbegin','<small class="ldMine">'+esc(line)+'</small>');
+    var la=r.querySelector('.lbLast');if(la)la.textContent=line;
+   });
+   var rec=null;recs.forEach(function(r){if(r.id===id)rec=r;});
+   var was=rec?rec.status:'';
+   if(rec)rec.note=(rec.note?rec.note+String.fromCharCode(10):'')+line;
+   if(/לא מעוניי?[ןנ]|לא רלוונטי/.test(v)){if(was!=='אבד')lbStageSet(el,id,'אבד');}
+   else if(was==='חדש')lbStageSet(el,id,'בשיחה');
+  }
+  function lbGone(el,id){
+   lbRows(el,id).forEach(function(r){var p=r.parentNode;p.removeChild(r);lbTidy(p);});
+   for(var i=recs.length-1;i>=0;i--){if(recs[i].id===id)recs.splice(i,1);}
+   lbCount(el);lbFilter(el);
+  }
+  // Filter (all, trial week signups, every other lead) and search by name or by the phone's digits. A group with nothing
+  // to show hides while a filter or a search is on; the counters stay the full counts.
+  function lbFilter(el){
+   var B=el.querySelector('.lbBoard');if(!B)return;
+   var on=B.querySelector('.lbFlt .on'),f=on?on.getAttribute('data-f'):'all',qi=B.querySelector('.lbQ');
+   var q=String(qi&&qi.value||'').trim().toLowerCase(),qd=q.replace(/[^0-9]/g,''),act=f!=='all'||!!q;
+   lbKids(B).forEach(function(r){
+    var dq=r.getAttribute('data-q')||'';
+    var ok=(f==='all'||r.getAttribute('data-src')===f)&&(!q||dq.indexOf(q)>-1||(qd.length>1&&dq.replace(/[^0-9]/g,'').indexOf(qd)>-1));
+    r.classList.toggle('lbHide',!ok);
+   });
+   lbAll(B,'.lbGrp').concat(lbAll(B,'.lbToday')).forEach(function(g){g.classList.toggle('lbHide',act&&!lbKids(g).some(function(r){return !r.classList.contains('lbHide');}));});
+  }
+  function lbEdHtml(row,k){
+   var B='<button type="button" data-tdy="1" class="yb';
+   if(k==='st'){var c=row.getAttribute('data-s');return BZ_ORDER.map(function(st){return B+(st===c?' yb2':'')+'" data-bz="lbst" data-s="'+st+'">'+st+'</button>';}).join('');}
+   if(k==='next')return '<input class="lbIn" maxlength="200" enterkeyhint="done" placeholder="מה הצעד הבא? למשל להתקשר ביום שלישי" value="'+esc(row.querySelector('.lbNext').getAttribute('data-v')||'')+'">'+B+' yb2" data-bz="lbnext">שמירה</button>';
+   if(k==='site'){var sv=row.querySelector('.lbSite').getAttribute('data-v')||'';return '<input class="lbIn" type="url" inputmode="url" enterkeyhint="done" placeholder="כתובת האתר, למשל eran.co.il" value="'+esc(sv)+'">'+B+' yb2" data-bz="lbsite">שמירה</button>'+(sv?B+'" data-bz="lbsite" data-x="1">בלי אתר</button>':'');}
+   if(k==='pick')return '<input class="lbIn" type="datetime-local" value="'+lbWhen('tom',Date.now()).replace(' ','T')+'">'+B+' yb2" data-bz="lbrem" data-r="set">שמירה</button>';
+   var now=Date.now(),eve=lbWhen('eve',now).slice(0,10)===lbKey(now).slice(0,10)?'הערב 19:00':'מחר 19:00';
+   return B+'" data-bz="lbrem" data-r="eve">'+eve+'</button>'+B+'" data-bz="lbrem" data-r="tom">מחר 9:00</button>'+B+'" data-bz="lbrem" data-r="week">בעוד שבוע</button>'+B+'" data-bz="lbrem" data-r="pick">📅 תאריך ושעה</button>'
+    +(row.querySelector('.lbRem').getAttribute('data-at')?B+'" data-bz="lbrem" data-r="off">בלי תזכורת</button>':'');
+  }
+  function lbEdOpen(row,k){
+   var old=row.querySelector('.lbEd'),same=old&&old.getAttribute('data-k')===k;
+   if(old)old.parentNode.removeChild(old);
+   if(same)return;
+   var tl=row.querySelector('.lbTools');if(!tl)return;
+   tl.insertAdjacentHTML('afterend','<div class="lbEd bzEd" data-k="'+k+'">'+lbEdHtml(row,k)+'</div>');
+   row.setAttribute('open','');
+   var i=row.querySelector('.lbEd input');if(i){try{i.focus();}catch(x){}}
+  }
+  // The sheet's click goes here first (his copy only). true: done here, the table's handlers never see it.
+  function lbTap(e,el){
+   var tg=e.target;if(!tg||!tg.closest)return false;
+   var t=tg.closest('[data-bz]'),a=t?t.getAttribute('data-bz'):'';
+   if(a==='lbflt'){lbAll(el,'.lbFlt [data-f]').forEach(function(b){b.classList.toggle('on',b===t);});lbFilter(el);return true;}
+   var row=tg.closest('.lbRow'),id=row&&row.getAttribute('data-id');if(!id)return false;
+   var bad=tg.closest('[data-mk="bad"]');
+   if(bad){e.preventDefault();if(bad.classList.contains('lbLast')){var nq=(lbNq[id]||[]).filter(function(x){return x.st==='bad'&&!x.fly;});if(!nq.length)toast('ההערה עוד בדרך. מחכים לתשובה, ואם לא תגיע היא תסומן שוב.');nq.forEach(function(x){lbNoteGo(el,id,x);});return true;}for(var f in LB_F){if(bad.classList.contains(LB_F[f])&&lbMsg[id+'|'+f]){lbSend(el,id,f,lbMsg[id+'|'+f]);break;}}return true;}
+   if(a==='lbed'){
+    // the last note folds and unfolds the row as before, and the 🌐 link opens the site
+    if(t.getAttribute('data-k')==='note'||tg.closest('a'))return true;
+    e.preventDefault();lbEdOpen(row,t.getAttribute('data-k'));return true;
+   }
+   if(a==='lbst'||a==='ldst'){var s=t.getAttribute('data-s');if(BZ_ORDER.indexOf(s)<0||s===row.getAttribute('data-s'))return true;lbStageSet(el,id,s);lbSend(el,id,'st','ליד ['+id+']: סטטוס '+s);return true;}
+   var ed=t?t.closest('.lbEd'):null,inp=ed?ed.querySelector('input'):null,v=inp?String(inp.value||'').trim():'';
+   var done=function(){if(ed&&ed.parentNode)ed.parentNode.removeChild(ed);};
+   if(a==='lbnext'){
+    if(!v){if(inp)inp.focus();return true;}
+    v=v.slice(0,200);lbNextSet(el,id,v);done();lbSend(el,id,'next','ליד ['+id+']: צעד '+v);return true;
+   }
+   if(a==='lbsite'){
+    var x=t.getAttribute('data-x')==='1',u=x?'':lbSiteNorm(v);
+    if(!x&&!u){toast('כתובת האתר לא תקינה. למשל: eran.co.il');if(inp)inp.focus();return true;}
+    lbSiteSet(el,id,u);done();lbSend(el,id,'site','ליד ['+id+']: אתר '+(u||'ביטול'));return true;
+   }
+   if(a==='lbrem'){
+    var w=t.getAttribute('data-r');
+    if(w==='pick'){lbEdOpen(row,'pick');return true;}
+    var key=w==='off'?'':w==='set'?v.replace('T',' ').slice(0,16):lbWhen(w,Date.now());
+    if(w!=='off'){
+     if(!/^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}$/.test(key)){toast('צריך לבחור תאריך ושעה.');return true;}
+     if(key<=lbKey(Date.now())){toast('הזמן הזה כבר עבר. בוחרים זמן מאוחר יותר.');return true;}
+    }
+    done();lbRemSet(el,id,key);lbSend(el,id,'rem','ליד ['+id+']: תזכורת '+(key||'ביטול'));return true;
+   }
+   if(a==='ldsend'){
+    var nb=t.closest('.bzEd'),ni=nb?lbAll(nb,'input').filter(function(q){return (q.type||q.getAttribute('type'))!=='checkbox';})[0]:null,nv=ni?String(ni.value||'').trim():'';
+    if(!nv){if(ni)ni.focus();return true;}
+    ni.value='';lbNote(el,id,nv);lbNoteSend(el,id,'ליד ['+id+']: הערה '+nv);return true;
+   }
+   if(a==='lddel'){leadDelAsk(row.getAttribute('data-n'),id,function(){lbGone(el,id);});return true;}
+   return false;
+  }
+  // Typing in the search filters at once; Enter in an editor saves it.
+  function lbOnKey(e,el){
+   var tg=e.target;if(!tg||!tg.classList)return;
+   if(e.type==='input'&&tg.classList.contains('lbQ')){lbFilter(el);return;}
+   if(e.type==='keydown'&&e.key==='Enter'&&tg.classList.contains('lbIn')){var b=tg.closest('.lbEd'),sv=b&&b.querySelector('[data-bz]');if(sv){e.preventDefault();sv.click();}}
+  }
+  /*ITZIK:END*/
   function itsHtml(){
    // 8.11.2026, Itzik: "תעשה סדר בכל הטאב, תסיר את שי, תאפס ותשאיר לי: טופס סודיות, הסכם בינינו וטופס התחברות".
    // Three clean templates, no customer name. Shai's files and answers are in data/_archive/shai-20261108.
@@ -20517,7 +20893,7 @@ function bizSheet(t0){
    if(tab==='docs')return docsHtml();
    if(tab==='li')return liHtml();
    // 1.11, Itzik: "תשים את ההצעה גם במוניטור". The official quote for Shai Bodek (3 packages), the demo on 3.11.
-   return '<div class="bzHead">🔔 לידים: כל מה שנכנס, במקום אחד</div>'+itsLeadsHtml()+newLeadHtml();
+   return '<div class="bzHead">🔔 לידים: כל מה שנכנס, במקום אחד</div>'+ldMain()+newLeadHtml();
   }
   // 2.11, Itzik: a tab with something new blinks until he opens it. The stamp changes whenever something is added there.
   var BZ_UPD={its:'20261111-leads'+((D.nda&&D.nda.signed&&D.nda.signed[0])?'-'+String(D.nda.signed[0].at).replace(/\D/g,'').slice(0,12):'')+((D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done)?'-s'+String(D.shaiForms.sign.done).replace(/\\D/g,'').slice(0,12):''),shachar:((D.shSum&&D.shSum.upd)||'20261103-shachar-auto')+'-ld1104',li:'li-queue-20261109'};
@@ -20544,7 +20920,7 @@ function bizSheet(t0){
      return '<h3 data-t="'+t[0]+'"'+(t[3]?' data-n="'+t[3]+'"':'')+(bzTabNew(t[0])?' data-new="1"':'')+'>'+t[1]+' '+esc(t[2])+'</h3><div class="bzPane" data-t="'+t[0]+'">'+bodyFor(t[0])+'</div>';
     }).join('')+'</div></div>';
   shipOpen('bizSheet','💼 העסק שלי',html,function(el){
-   var bm=el.querySelector('#bizMic');if(bm)bm.onclick=toggleRec;
+   var bm=el.querySelector('#bizMic');if(bm)bm.onclick=toggleRec;/*ITZIK:BEGIN*/if(LD_BOARD){LBS.el=el;el.addEventListener('input',function(e){lbOnKey(e,el);});el.addEventListener('keydown',function(e){lbOnKey(e,el);});}/*ITZIK:END*/
    // 1.11, Itzik: inside העסק שלי there was no back, only home. חזרה goes one step back.
    // Every tab change is a step. The phone's back gesture uses the same step (see popstate below).
    var bizHist=[],bzQuiet=false;
@@ -20567,7 +20943,7 @@ function bizSheet(t0){
     d.addEventListener('toggle',function(){if(!d.open||bzQuiet||t2===tab)return;bizHist.push(tab);tab=t2;bzMarkSeen(tab);p.innerHTML=body();});
    });
    window.bizStep=function(){if(!bizHist.length)return false;bizShow(bizHist.pop(),true);return true;};
-   el.addEventListener('click',function(e){
+   el.addEventListener('click',function(e){/*ITZIK:BEGIN*/if(LD_BOARD&&lbTap(e,el))return;/*ITZIK:END*/
     var t=e.target.closest?e.target.closest('[data-bz]'):null;if(!t)return;
     var a=t.getAttribute('data-bz');
     if(a==='demo'){dmoStart();return;}
@@ -25233,7 +25609,14 @@ document.getElementById('back').onclick=function(e){
 </script>
 </html>`;
 
-module.exports = { renderPage, build, loadDocs };
+// Which lead fields reach the page as D.biz. Every new lead field must be listed here.
+const BIZ_FIELDS = ['id', 'kind', 'name', 'phone', 'email', 'status', 'amount', 'note', 'next', 'nextAt', 'at', 'updatedAt', 'source', 'last', 'link', 'ref', 'site'];
+function bizRow(r) {
+  const o = {};
+  BIZ_FIELDS.forEach((f) => { if (r && r[f] != null) o[f] = r[f]; });
+  return o;
+}
+module.exports = { renderPage, build, loadDocs, bizRow };
 if (require.main === module) build();
 
 

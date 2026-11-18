@@ -29,3 +29,11 @@ test('bizLeadsItem: an own number is a test and is not counted', () => {
   const it = bizLeadsItem([{ kind: 'lead', name: 'אני', phone: '050', status: 'חדש', at: '2026-11-10T07:30:00Z' }], NOW, (t) => /050/.test(t));
   assert.strictEqual(it.st, 'done');
 });
+
+test('bizLeadsItem: a reminder at 00:30 Israel time is due on that Israel day, not the UTC day before', () => {
+  // 2026-11-14T22:30Z is 15.11 00:30 in Israel; NOW is 14.11
+  const it = bizLeadsItem([{ kind: 'lead', name: 'דנה', status: 'בשיחה', at: '2026-11-01T07:30:00Z', nextAt: '2026-11-14T22:30:00.000Z' }], NOW);
+  assert.strictEqual(it.st, 'done');
+  const it2 = bizLeadsItem([{ kind: 'lead', name: 'דנה', status: 'בשיחה', at: '2026-11-01T07:30:00Z', nextAt: '2026-11-13T22:30:00.000Z' }], NOW);
+  assert.match(it2.sub, /הגיע היום לחזור: דנה/);
+});
