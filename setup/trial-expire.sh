@@ -16,6 +16,7 @@ for f in /srv/monitor-changes/t??????.plan.json; do
   [[ "$id" =~ ^t[a-f0-9]{6}$ ]] || continue
   plan=$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1])).get("plan",""))' "$f" 2>/dev/null)
   [ "$plan" = "trial" ] || continue
+  grep -q "\"family\": *true" "$f" && continue
   grep -qx "$id" "$KEEP" && continue
   start=$(python3 -c 'import json,sys,datetime;print(int(datetime.datetime.fromisoformat(json.load(open(sys.argv[1]))["start"].replace("Z","+00:00")).timestamp()))' "$f" 2>/dev/null) || continue
   [ -n "$start" ] || continue

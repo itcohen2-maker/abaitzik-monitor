@@ -1251,14 +1251,15 @@ function planHold() {
   const save = () => { try { fs.writeFileSync(flag, JSON.stringify(told)); } catch (e) {} };
   // 11.11.2026: the self signup trial is the one package that stops: at 40 actions or after 7 days.
   if (st.trial) {
-    if (st.level === 'warn' && !DRY && !told.trialWarn) { told.trialWarn = 1; save(); tell('שבוע הניסיון', P.SAY.trialWarn); planChat('trial-warn', P.SAY.trialWarn); }
+    const sayWarn = st.family ? P.SAY.trialWarnFamily : P.SAY.trialWarn, sayEnd = st.family ? P.SAY.trialEndFamily : P.SAY.trialEnd;
+    if (st.level === 'warn' && !DRY && !told.trialWarn) { told.trialWarn = 1; save(); tell('שבוע הניסיון', sayWarn); planChat('trial-warn', sayWarn); }
     if (st.level !== 'ended') return false;
     say('שבוע הניסיון הסתיים (' + st.used + ' מתוך ' + st.total + '). לא מפעיל סשן.');
     if (!DRY && !told.trialEnd) {
       told.trialEnd = 1; save();
-      tell('שבוע הניסיון הסתיים', P.SAY.trialEnd);
-      planChat('trial-end', P.SAY.trialEnd);
-      try { require('./lib/change-requests.js').add('שבוע הניסיון של ' + inst.name + ' הסתיים (' + st.used + ' מתוך ' + st.total + ' פעולות). אם לא שילם תוך יומיים, לחזור אליו.', ''); } catch (e) {}
+      tell('שבוע הניסיון הסתיים', sayEnd);
+      planChat('trial-end', sayEnd);
+      try { require('./lib/change-requests.js').add('שבוע הניסיון של ' + inst.name + ' הסתיים (' + st.used + ' מתוך ' + st.total + ' פעולות). ' + (st.family ? 'משפחה: נאמר לו לפנות אליך, לא נמחק.' : 'אם לא שילם תוך יום, המוניטור נמחק.'), ''); } catch (e) {}
     }
     return true;
   }
