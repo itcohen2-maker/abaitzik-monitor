@@ -480,6 +480,39 @@ test('board: notes add up: a failed note stays red after a later one goes, and a
   assert.equal(f.getAttribute('data-mk'), 'ok');
 });
 
+test('board: a change that did not go stays red after the tab is drawn again (review, 18.11)', async () => {
+  const M = mount(fx(), { sendText: () => Promise.reject(new Error('down')) });
+  const r = M.grp('בשיחה').querySelector('.lbRow');
+  M.tap(r.querySelector('.lbTools [data-k="next"]')); r.querySelector('.lbEd input').value = 'לחזור אליו';
+  M.tap(r.querySelector('[data-bz="lbnext"]'));
+  r.querySelector('.ldNoteBox input').value = 'דיברנו';
+  M.tap(r.querySelector('.ldNoteBox [data-bz="ldsend"]'));
+  M.tap(r.querySelector('[data-bz="ldst"][data-s="הצעה"]'));
+  await flush();
+  // bzRe: the pane is drawn again from recs, which already holds the new values
+  M.root.innerHTML = M.B.board();
+  const r2 = M.rows('biz-2')[0];
+  assert.equal(r2.parentNode.getAttribute('data-g'), 'הצעה');
+  ['.lbNext', '.lbSt', '.lbLast'].forEach((c) => assert.equal(r2.querySelector(c).getAttribute('data-mk'), 'bad', c + ' is still red, not shown as saved'));
+  assert.ok(M.B.board().includes('class="lbSt ldSt" data-s="הצעה">הצעה<'), 'the label markup Task 3 tests hold to is kept');
+});
+
+test('board: a note still on its way is not sent again by a tap', async () => {
+  const sent = [], pend = [];
+  const M = mount(fx(), { sendText: (s, b) => { sent.push(b); return new Promise((res, rej) => pend.push({ res, rej })); } });
+  const r = M.grp('בשיחה').querySelector('.lbRow');
+  r.querySelector('.ldNoteBox input').value = 'א';
+  M.tap(r.querySelector('.ldNoteBox [data-bz="ldsend"]'));
+  M.E.tick(30000);
+  const f = r.querySelector('.lbLast');
+  assert.equal(f.getAttribute('data-mk'), 'bad', 'no answer in 30 seconds is red');
+  M.tap(f);
+  assert.equal(sent.length, 1, 'not sent twice while the first is still out');
+  assert.ok(M.E.toasts.some((x) => x.includes('בדרך')));
+  pend[0].res('ok'); await flush();
+  assert.equal(f.getAttribute('data-mk'), 'ok', 'the late answer saves it');
+});
+
 test('board: the site is normalised as the server does, a bad one is not sent, and it can be removed', async () => {
   const M = mount(fx());
   const r = M.grp('בשיחה').querySelector('.lbRow');

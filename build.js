@@ -20496,6 +20496,13 @@ function bizSheet(t0){
   /*ITZIK:BEGIN*/
   if(LD_BOARD)ldMain=ldBoardHtml;
   /*
+    Review 18.11: a redraw of the tab (bzRe, a drawer, the sheet opened again) paints the board from recs, which already
+    holds the new value. So the send state lives on the page, not in this sheet: mk is the mark of every lead field
+    (wait, ok, bad), drawn into the row by the board itself, so a change that did not go stays red after any redraw, and
+    a tap still sends it (msg, nq). el is the sheet open now, where late answers paint.
+  */
+  var LBS=window.lbState||(window.lbState={mk:{},msg:{},seq:{},nq:{},el:null});
+  /*
     Top to bottom: the count, filter and search, "⏰ היום" (a reminder due today or passed), then the five stages as
     groups, נסגר and אבד shut. A row shows name and phone, stage, the next step, ⏰, 🌐, where from and the last note;
     a tap opens the history, the note box and the buttons of the table (ldBodyHtml). A status that is not one of the
@@ -20526,17 +20533,18 @@ function bizSheet(t0){
    if(!A.length)return h+'<p class="bzEmpty">עוד אין לידים.</p></div>';
    function row(r){
     var st=lbStage(r),i=ldInfo(r),k=lbRemKey(r.nextAt),due=!!k&&k<=nowK&&!lbShut(st);
+    var mk=function(f){var m=LBS.mk[r.id+'|'+f];return m?' data-mk="'+m+'"':'';};
     var site=String(r.site||'').trim();
     var hist=r.note?ldNote(r.note).split(String.fromCharCode(10)).filter(Boolean).reverse():[];
     var tel=String(r.phone||'').replace(/[^0-9]/g,'');
     return '<details class="lbRow ldRow'+(r.test?' ldTest':(st==='חדש'?' ldNew':''))+'" data-id="'+esc(r.id)+'" data-n="'+esc(r.name||'')+'" data-at="'+esc(r.at||'')+'" data-s="'+esc(st)+'" data-src="'+(r.source==='signup'?'signup':'other')+'" data-q="'+esc((String(r.name||'')+' '+String(r.email||'')).toLowerCase()+' '+tel)+'"><summary>'
      +'<span class="lbName"><b>'+esc(r.name||'בלי שם')+(r.test?'<span class="ldTestTag">בדיקה שלך</span>':'')+'</b><small><bdi>'+esc(r.phone||i.em||'אין טלפון')+'</bdi></small></span>'
-     +'<span data-bz="lbed" data-k="st" class="lbSt ldSt" data-s="'+esc(st)+'">'+esc(st)+'</span>'
-     +'<span data-bz="lbed" data-k="next" class="lbNext'+(r.next?'':' lbNone')+'" data-v="'+esc(r.next||'')+'">'+esc(r.next||'צעד הבא')+'</span>'
-     +'<span data-bz="lbed" data-k="rem" class="lbRem'+(due?' lbDue':'')+(k?'':' lbNone')+'" data-at="'+esc(r.nextAt||'')+'">'+lbRemTxt(k)+'</span>'
-     +'<span data-bz="lbed" data-k="site" class="lbSite'+(site?'':' lbNone')+'" data-v="'+esc(site)+'">'+lbSiteIn(site)+'</span>'
+     +'<span data-bz="lbed" data-k="st"'+mk('st')+' class="lbSt ldSt" data-s="'+esc(st)+'">'+esc(st)+'</span>'
+     +'<span data-bz="lbed" data-k="next"'+mk('next')+' class="lbNext'+(r.next?'':' lbNone')+'" data-v="'+esc(r.next||'')+'">'+esc(r.next||'צעד הבא')+'</span>'
+     +'<span data-bz="lbed" data-k="rem"'+mk('rem')+' class="lbRem'+(due?' lbDue':'')+(k?'':' lbNone')+'" data-at="'+esc(r.nextAt||'')+'">'+lbRemTxt(k)+'</span>'
+     +'<span data-bz="lbed" data-k="site"'+mk('site')+' class="lbSite'+(site?'':' lbNone')+'" data-v="'+esc(site)+'">'+lbSiteIn(site)+'</span>'
      +'<span class="lbSrc">'+esc(i.src)+'</span>'
-     +'<span data-bz="lbed" data-k="note" class="lbLast">'+esc(hist[0]||(r.last?'"'+r.last+'"':''))+'</span>'
+     +'<span data-bz="lbed" data-k="note"'+mk('note')+' class="lbLast">'+esc(hist[0]||(r.last?'"'+r.last+'"':''))+'</span>'
      +'</summary>'+LB_TOOLS+ldBodyHtml(r,hist,st)+'</details>';
    }
    h+='<div class="lbBar"><div class="lbFlt"><button type="button" class="on" data-bz="lbflt" data-f="all">הכל</button><button type="button" data-bz="lbflt" data-f="signup">נרשמו לשבוע ניסיון</button><button type="button" data-bz="lbflt" data-f="other">פניות</button></div>'
@@ -20578,13 +20586,13 @@ function bizSheet(t0){
    if(!/^https?:[/][/][a-z0-9-]+([.][a-z0-9-]+)*(:[0-9]+)?([/?#]|$)/i.test(x)||x.length>300)return '';
    return x;
   }
-  var lbSeq={},lbMsg={},LB_F={st:'lbSt',next:'lbNext',site:'lbSite',rem:'lbRem',note:'lbLast'};
+  var lbSeq=LBS.seq,lbMsg=LBS.msg,LB_F={st:'lbSt',next:'lbNext',site:'lbSite',rem:'lbRem',note:'lbLast'};
   var lbAll=function(p,sel){return Array.prototype.slice.call(p.querySelectorAll(sel));};
   var lbKids=function(p){return lbAll(p,'.lbRow');};
   function lbRows(el,id){return lbKids(el).filter(function(r){return r.getAttribute('data-id')===id;});}
   // The page's copy of the lead changes too, so a redraw of the tab keeps what was just set.
   function lbRec(id,o){recs.forEach(function(r){if(r.id===id){for(var k in o)r[k]=o[k];}});}
-  function lbMark(el,id,f,m){lbRows(el,id).forEach(function(r){var x=r.querySelector('.'+LB_F[f]);if(!x)return;if(m)x.setAttribute('data-mk',m);else x.removeAttribute('data-mk');});}
+  function lbMark(el,id,f,m){var k=id+'|'+f;if(m)LBS.mk[k]=m;else delete LBS.mk[k];el=LBS.el||el;lbRows(el,id).forEach(function(r){var x=r.querySelector('.'+LB_F[f]);if(!x)return;if(m)x.setAttribute('data-mk',m);else x.removeAttribute('data-mk');});}
   function lbSend(el,id,f,body){
    var k=id+'|'+f,n=lbSeq[k]=(lbSeq[k]||0)+1,cur=function(){return lbSeq[k]===n;};
    lbMsg[k]=body;lbMark(el,id,f,'wait');
@@ -20598,7 +20606,7 @@ function bizSheet(t0){
     note on the row shows ⏳ while any is on its way, red while any did not go (a tap sends every one that did not), and ✓
     only when none is left. A late answer of a note that was already sent again is ignored.
   */
-  var lbNq={};
+  var lbNq=LBS.nq;
   function lbNotePaint(el,id){
    var q=lbNq[id]||[];
    if(q.some(function(x){return x.st==='go';}))return lbMark(el,id,'note','wait');
@@ -20606,11 +20614,11 @@ function bizSheet(t0){
    lbMark(el,id,'note','ok');setTimeout(function(){if(!(lbNq[id]||[]).length)lbMark(el,id,'note','');},3000);
   }
   function lbNoteGo(el,id,it){
-   it.st='go';it.n=(it.n||0)+1;
-   var n=it.n,fin=function(ok){if(it.n!==n)return;if(ok){var q=lbNq[id]||[],i=q.indexOf(it);if(i>-1)q.splice(i,1);}else it.st='bad';lbNotePaint(el,id);};
+   it.st='go';it.fly=true;it.n=(it.n||0)+1;
+   var n=it.n,fin=function(ok,end){if(end&&it.n===n)it.fly=false;if(it.n!==n)return;if(ok){var q=lbNq[id]||[],i=q.indexOf(it);if(i>-1)q.splice(i,1);}else it.st='bad';lbNotePaint(el,id);};
    var tm=setTimeout(function(){fin(false);},30000),p;
    try{p=Promise.resolve(sendText('ליד',it.body,'ליד'));}catch(x){p=Promise.reject(x);}
-   p.then(function(){clearTimeout(tm);fin(true);},function(){clearTimeout(tm);fin(false);});
+   p.then(function(){clearTimeout(tm);fin(true,1);},function(){clearTimeout(tm);fin(false,1);});
    lbNotePaint(el,id);
   }
   function lbNoteSend(el,id,body){var it={body:body};(lbNq[id]=lbNq[id]||[]).push(it);lbNoteGo(el,id,it);}
@@ -20731,7 +20739,7 @@ function bizSheet(t0){
    if(a==='lbflt'){lbAll(el,'.lbFlt [data-f]').forEach(function(b){b.classList.toggle('on',b===t);});lbFilter(el);return true;}
    var row=tg.closest('.lbRow'),id=row&&row.getAttribute('data-id');if(!id)return false;
    var bad=tg.closest('[data-mk="bad"]');
-   if(bad){e.preventDefault();if(bad.classList.contains('lbLast')){(lbNq[id]||[]).filter(function(x){return x.st==='bad';}).forEach(function(x){lbNoteGo(el,id,x);});return true;}for(var f in LB_F){if(bad.classList.contains(LB_F[f])&&lbMsg[id+'|'+f]){lbSend(el,id,f,lbMsg[id+'|'+f]);break;}}return true;}
+   if(bad){e.preventDefault();if(bad.classList.contains('lbLast')){var nq=(lbNq[id]||[]).filter(function(x){return x.st==='bad'&&!x.fly;});if(!nq.length)toast('ההערה עוד בדרך. מחכים לתשובה, ואם לא תגיע היא תסומן שוב.');nq.forEach(function(x){lbNoteGo(el,id,x);});return true;}for(var f in LB_F){if(bad.classList.contains(LB_F[f])&&lbMsg[id+'|'+f]){lbSend(el,id,f,lbMsg[id+'|'+f]);break;}}return true;}
    if(a==='lbed'){
     // the last note folds and unfolds the row as before, and the 🌐 link opens the site
     if(t.getAttribute('data-k')==='note'||tg.closest('a'))return true;
@@ -20908,7 +20916,7 @@ function bizSheet(t0){
      return '<h3 data-t="'+t[0]+'"'+(t[3]?' data-n="'+t[3]+'"':'')+(bzTabNew(t[0])?' data-new="1"':'')+'>'+t[1]+' '+esc(t[2])+'</h3><div class="bzPane" data-t="'+t[0]+'">'+bodyFor(t[0])+'</div>';
     }).join('')+'</div></div>';
   shipOpen('bizSheet','💼 העסק שלי',html,function(el){
-   var bm=el.querySelector('#bizMic');if(bm)bm.onclick=toggleRec;/*ITZIK:BEGIN*/if(LD_BOARD){el.addEventListener('input',function(e){lbOnKey(e,el);});el.addEventListener('keydown',function(e){lbOnKey(e,el);});}/*ITZIK:END*/
+   var bm=el.querySelector('#bizMic');if(bm)bm.onclick=toggleRec;/*ITZIK:BEGIN*/if(LD_BOARD){LBS.el=el;el.addEventListener('input',function(e){lbOnKey(e,el);});el.addEventListener('keydown',function(e){lbOnKey(e,el);});}/*ITZIK:END*/
    // 1.11, Itzik: inside העסק שלי there was no back, only home. חזרה goes one step back.
    // Every tab change is a step. The phone's back gesture uses the same step (see popstate below).
    var bizHist=[],bzQuiet=false;
