@@ -148,11 +148,13 @@ function bizBlock() {
   try {
     if (!inst.biz) return '';
     const biz = require('./lib/biz.js');
-    const recs = biz.load(inst.dataPath);
+    // 18.11.2026: leadsOff (lib/features.js), the summary without the leads and no "לידים פתוחים".
+    let lo = false; try { lo = require('./lib/features.js').leadsOff(inst.dataPath, inst.name); } catch (e) { lo = false; }
+    const recs = (biz.load(inst.dataPath) || []).filter((r) => !lo || r.kind !== 'lead');
     if (!recs.length) return '';
     const s = biz.summary(recs, Date.now());
     const n = v => Math.round(v).toLocaleString('he-IL');
-    return '\n\nהעסק שלי: ' + s.urgent + '\nלידים פתוחים: ' + s.counts.lead + ', ציון: ' + s.score +
+    return '\n\nהעסק שלי: ' + s.urgent + '\n' + (lo ? '' : 'לידים פתוחים: ' + s.counts.lead + ', ') + 'ציון: ' + s.score +
       ', הכנסות החודש: ₪' + n(s.monthIncome) + ', הוצאות: ₪' + n(s.monthExpense) + '.';
   } catch (e) { return ''; }
 }

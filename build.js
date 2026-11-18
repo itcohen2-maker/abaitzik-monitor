@@ -215,7 +215,10 @@ function shaiSignStamp() {
   the site chat, trial signups, Meta comments and messages, manual adds. It blinks while a lead is still "חדש" and
   this phone has not opened the tile since that lead came in. A tap opens העסק שלי on the leads tab, the same table.
 */
+// 18.11.2026, Itzik: a customer who does not want leads (lib/features.js leadsOff) gets no 🔔 tile. Never his own monitor.
+function leadsHiddenHere() { try { return require('./lib/features.js').leadsOff(inst.dataPath, inst.name); } catch (e) { return false; } }
 function leadsTile() {
+  if (leadsHiddenHere()) return '';
   let all = [];
   try { all = require('./lib/leads.js').readAll(inst.dataPath).filter((r) => r.kind === 'lead' && !r.test); } catch (e) { all = []; }
   const fresh = all.filter((r) => r.status === 'חדש');
@@ -1067,7 +1070,8 @@ function build() {
       // 11.11.2026: the leads scanner (lead-scan.js) says when it last looked and what Meta refused.
       try { payload.leadScan = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'status', 'lead-scan.json'), 'utf8')); } catch (e) { payload.leadScan = null; }
       const rows = recs.map(bizRow).sort((a, b) => String(b.updatedAt || b.at || '').localeCompare(String(a.updatedAt || a.at || '')));
-      const sum = biz.summary(recs, Date.now());
+      // 18.11.2026: leadsOff, the score, the urgent line and ⏰ צריך לחזור leave the leads out (they stay in the records).
+      const sum = biz.summary(leadsHiddenHere() ? recs.filter((r) => r.kind !== 'lead') : recs, Date.now());
       // Both or neither: records without the summary would reach the head unsealed.
       payload.biz = rows;
       payload.bizSum = sum;
@@ -1611,6 +1615,8 @@ function tenantTiles(inst) {
   try { if (ids.indexOf('gYtCom') < 0 && fs.existsSync(path.join(inst.dataPath || 'data', 'yt', 'channel.json'))) ids.push('gYtCom'); } catch (e) { /* none */ }
   // 13.11.2026, Itzik: "תעשה אריח אחד של לידים ... על כל המוניטורים". Here when the business grid (which has it) is not drawn.
   if (ids.indexOf('gLeads') < 0 && !(inst.biz && !(Array.isArray(inst.screens) && inst.screens.length))) ids.unshift('gLeads');
+  // 18.11.2026, Itzik: "לא מעניין אותה לידים". leadsOff (lib/features.js) takes the 🔔 tile off this customer's home.
+  try { if (require('./lib/features.js').leadsOff(inst.dataPath || 'data', inst.name)) { const k = ids.indexOf('gLeads'); if (k >= 0) ids.splice(k, 1); } } catch (e) { /* lifted alone by a test: as before */ }
   // 17.11.2026, the audit Itzik approved: a customer does not see what does not work for him yet.
   // 📣 is not in the entry package or the trial; 🎙️ meeting summaries only once Fireflies has a key.
   try { const st = require('./lib/plan-io.js').stateOf(inst.name); if (st && (st.plan === 'entry' || st.plan === 'trial')) { const k = ids.indexOf('gCamp'); if (k >= 0) ids.splice(k, 1); } } catch (e) { /* no plan file: as before */ }
@@ -4981,7 +4987,7 @@ ${require('./lib/home-ui.js').html}
 
  <div id="askBox"></div>
 <!-- 4.11, Itzik: "תעלה את האריח של העסק שלי למעלה ברשימה. למה שמת אותו אחרון?" The business grid opens the home screen. -->
-${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? require('./lib/sendlist-ui.js').tile : '') + ((inst.name === 'abaitzik' || inst.handle === true) ? '<button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16" id="gVisits" hidden data-new="1"><b>👀 כניסות לקוחות</b><small>מתי נכנסו ולכמה זמן</small></button><button type="button" class="gt g16" id="gDemoSt" data-new="1"><b>📊 מוניטור ההדגמה</b><small>כניסות, שאלות ווואטסאפ</small></button><button type="button" class="gt g16" id="gAffs" hidden data-new="1"><b>🤝 שותפים</b><small>מי הגיע דרך שי</small></button>' : '') + leadsTile() + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261116-vids-link' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109-cb1115"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button>' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g13" data-grp="work" id="gBhQuote" data-new="1"><b>🧾 הצעות מחיר</b><small>הצעה עם הלוגו שלך, לפני מע״מ, ב PDF</small></button>' : '') + '</div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
+${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div class="grid" id="blkBiz">' + (inst.name === 'abaitzik' ? require('./lib/sendlist-ui.js').tile : '') + ((inst.name === 'abaitzik' || inst.handle === true) ? '<button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button>' : '') + (inst.name === 'abaitzik' ? '<button type="button" class="gt g16" id="gVisits" hidden data-new="1"><b>👀 כניסות לקוחות</b><small>מתי נכנסו ולכמה זמן</small></button><button type="button" class="gt g16" id="gDemoSt" data-new="1"><b>📊 מוניטור ההדגמה</b><small>כניסות, שאלות ווואטסאפ</small></button><button type="button" class="gt g16" id="gAffs" hidden data-new="1"><b>🤝 שותפים</b><small>מי הגיע דרך שי</small></button>' : '') + leadsTile() + '<button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261116-vids-link' + ndaStamp() + agrStamp() + newestLead() + shaiSignStamp() + '-li-queue-20261109-cb1115"><b>💼 העסק שלי</b><small>' + (leadsHiddenHere() ? 'לקוחות, כסף, ומה לחזור אליו' : 'לידים, לקוחות, כסף, ומה לחזור אליו') + '</small></button>' + (inst.name === 'abaitzik' ? '<button type="button" class="gt g13" data-grp="work" id="gBhQuote" data-new="1"><b>🧾 הצעות מחיר</b><small>הצעה עם הלוגו שלך, לפני מע״מ, ב PDF</small></button>' : '') + '</div>' + (inst.name === 'abaitzik' ? LEAD_NEW_JS + leadTexts() + LEAD_BOX_JS : '') : ''}
 <!--ITZIK:BEGIN-->
  <div class="grid" id="blkTiles">
   <!-- 3.11, Itzik: "אני צריך אריח שממש יעבב לי, כמו ליד חדש". First on the grid; shows while a --nag reminder is open, hard blink once it is due, until "✅ עשיתי". -->
@@ -20910,6 +20916,8 @@ function bizSheet(t0){
   if(tab==='shachar')tab='its'; // 14.11: the Shachar tab is out; a saved way back to it opens IT Solution
   // 13.11.2026: a customer's copy showed Itzik's own tabs (IT Solution, Shachar, the office). Only his own business here.
   if(!bzOwner)tabs=tabs.filter(function(t){return ['leads','money','due'].indexOf(t[0])>=0;});
+  /* 18.11.2026, Itzik: a customer with leadsOff (lib/features.js) has no leads tab; whatever asked for it opens the next one. */
+  if(!bzOwner&&D.features&&D.features.leadsOff===true){tabs=tabs.filter(function(t){return t[0]!=='leads';});if(tab==='leads')tab=tabs.length?tabs[0][0]:'money';}
   if(INSTANCE&&INSTANCE.clalit)tabs.push(['docs','🏥','מסמכים']);
   ((D.agr&&D.agr.clients)||[]).forEach(function(c,i){tabs.splice(1+i,0,['agr'+i,'🩺',c.tab||c.client]);});
   // 1.11.2026: the client demo starts from here (lib/demo-mode.js).
