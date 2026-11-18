@@ -34,11 +34,17 @@ async function check() {
   } catch (e) { bad.push('שרת ההרשמה לא עונה'); }
   try {
     const r = await fetch(API, Object.assign({ method: 'POST', headers: { Origin: ORIGIN, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: 'בדיקת המנהל', email: 'manager-check@gmail.con', terms: true }) }, tm(15000)));
+      // 18.11.2026: the phone is required since 17.11, so the probe sends one too. The mail has a typo, so it is refused
+      // at the email check and no code goes out.
+      body: JSON.stringify({ name: 'בדיקת המנהל', phone: '0500000000', email: 'manager-check@gmail.con', terms: true }) }, tm(15000)));
     const j = await r.json().catch(() => ({}));
     if (j.error !== 'email') bad.push('שרת ההרשמה ענה לא כצפוי (' + r.status + ' ' + (j.error || '') + ')');
   } catch (e) { bad.push('שרת ההרשמה לא עונה לשליחה'); }
-  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+  // 14.11.2026: the same settings the mailer uses (process, else /etc/monitor.env). A PC has no /etc/monitor.env:
+  // there the mail road is the server's to check, so it is skipped here instead of reported as broken.
+  const env = require('./lib/mailer.js').settings();
+  const onServer = fs.existsSync('/etc/monitor.env');
+  if (env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS) {
     try {
       execFileSync('python3', ['-c', [
         'import os,smtplib,ssl',
@@ -46,9 +52,9 @@ async function check() {
         's.starttls(context=ssl.create_default_context())',
         's.login(os.environ["SMTP_USER"],os.environ["SMTP_PASS"])',
         's.quit()',
-      ].join('\n')], { timeout: 40000, stdio: 'ignore', env: process.env });
+      ].join('\n')], { timeout: 40000, stdio: 'ignore', env });
     } catch (e) { bad.push('שרת המייל של info@ לא מקבל את הכניסה שלנו, קודים לא יוצאים'); }
-  } else bad.push('אין הגדרות שרת מייל בסביבה של הבדיקה');
+  } else if (onServer) bad.push('אין הגדרות שרת מייל ב /etc/monitor.env, קודים לא יוצאים');
   try {
     const since = Date.now() - 24 * 3600e3;
     const lines = fs.readFileSync('/var/log/monitor-wa.log', 'utf8').split('\n').slice(-4000);
