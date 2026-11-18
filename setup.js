@@ -445,7 +445,7 @@ function oauthStart(p, q, res) {
   // 18.11.2026, Itzik: "בגלל דברים כאלו אנשים לא יתחברו". Every Google button (🔌, first steps, setup page,
   // the reconnect link in a message) lands here, so the help for Google's "not verified" warning is shown
   // first, on its own screen, with one button that continues (&go=1). Remove once Google verifies the app.
-  if (p === 'google' && q.get('go') !== '1') return googleIntro(q, res);
+  if (p === 'google' && q.get('go') !== '1' && d.lang !== 'en') return googleIntro(q, res);
   const r = oa.startUrl(p, tok, st.id, st.oauth.scopes, null, view);
   if (!r.url) { res.writeHead(302, { Location: '/s/' + tok + (view ? '/view' : '') + '#' + st.id }); return res.end(); }
   res.writeHead(302, { Location: r.url, 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' }); res.end();
