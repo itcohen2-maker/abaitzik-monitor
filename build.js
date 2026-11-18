@@ -24555,8 +24555,10 @@ boot('welcome',function(){
  var text=(INSTANCE&&INSTANCE.welcome)||'ברוכים הבאים למוניטור של אבא איציק';
  // 4.11.2026, Itzik: Shai has an iPhone, no need to write about Android. Only his phone kind (intake phone).
  var ph=INSTANCE&&INSTANCE.phone;
- var save=ph==='ios'?'באייפון: שיתוף ואז "הוספה למסך הבית".':ph==='android'?'תפריט ואז "התקנת אפליקציה".':'באייפון שיתוף ואז "הוספה למסך הבית", באנדרואיד תפריט ואז "התקנת אפליקציה".';
- var steps=['1. שמרו את המוניטור במסך הבית: '+save,
+ // 18.11.2026, Itzik: on a computer, say how to keep it as a bookmark or a desktop icon, not the phone steps.
+ var onPc=!/iPhone|iPad|iPod|Android/i.test(navigator.userAgent||'');
+ var save=onPc?'Ctrl+D שומר כסימנייה. לאייקון על שולחן העבודה: בכרום, שלוש הנקודות, "שמירה ושיתוף", ואז "יצירת קיצור דרך".':ph==='ios'?'באייפון: שיתוף ואז "הוספה למסך הבית".':ph==='android'?'תפריט ואז "התקנת אפליקציה".':'באייפון שיתוף ואז "הוספה למסך הבית", באנדרואיד תפריט ואז "התקנת אפליקציה".';
+ var steps=['1. שמרו את המוניטור '+(onPc?'במחשב: ':'במסך הבית: ')+save,
   '2. הפעילו התראות מכאן, בלחיצה אחת. כך כל תשובה קופצת לטלפון, בלי אפליקציה נוספת.',
   '3. שלחו הודעה ראשונה, למשל: "מה יש לי היום ביומן?"'];
  var pbtn=(typeof PUSH_KEY!=='undefined'&&PUSH_KEY)
