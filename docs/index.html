@@ -2076,23 +2076,14 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 #ftText .bzT{background:#26303c;color:#e8eef5}#ftText .bzT.on{background:#e8eef5;color:#16202c}#ftText #bzBody{border-color:#e8eef5}
 .bzSec{font:700 14px Heebo,sans-serif;margin:10px 0 2px;color:#14675a}
 .bzRow{border-bottom:1px solid rgba(128,128,128,.25);padding:8px 0;font:500 14px/1.45 Heebo,sans-serif;display:flex;flex-direction:column;gap:2px}
-.ldTbl{border:1px solid rgba(128,128,128,.3);border-radius:12px;overflow:hidden;margin-bottom:14px;font:500 14px/1.4 Heebo,sans-serif}
-.ldHd,.ldRow>summary{display:grid;grid-template-columns:auto minmax(5em,1fr) minmax(3.6em,7.5em) auto;gap:6px;padding:9px 10px;align-items:center}
-.ldHd{font-weight:700;font-size:12px;opacity:.7;background:rgba(128,128,128,.08)}
-.ldRow{border-top:1px solid rgba(128,128,128,.22)}
 .ldRow>summary{cursor:pointer;list-style:none}
 .ldRow>summary::-webkit-details-marker{display:none}
 .ldRow>summary b{min-width:0;white-space:normal;overflow-wrap:anywhere}
-.ldRow>summary span:nth-child(3){font-size:12px;min-width:0;overflow-wrap:anywhere}
-.ldSt{font-size:12px;font-weight:700;text-align:center;border-radius:8px;padding:2px 4px;background:rgba(128,128,128,.12)}
-.ldNew>summary{background:rgba(255,153,0,.13)}
 .ldRow.ldTest,.bzRow.bzTest{opacity:.55;filter:grayscale(1)}
 .ldTestTag{display:inline-block;background:#e5e7eb;color:#374151;border-radius:8px;padding:1px 8px;font:700 12px Heebo,sans-serif;margin-inline-start:6px}
 .yb.ldDel{background:#fee2e2;color:#991b1b}
-.ldNew .ldSt{background:#f59e0b;color:#fff}
 .ldBody{padding:4px 10px 12px;display:flex;flex-direction:column;gap:6px}
 .ldBody small{display:block}
-.ldRow summary b .ldC{display:block;font:400 13px Heebo,sans-serif;color:#5a6478;margin-top:2px;direction:ltr;text-align:right}
 .ldLast{margin:0;font-style:italic;opacity:.85}
 .ldTop{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border-radius:12px;background:rgba(127,127,127,.08)}
 .ldTop .ldName{font:800 18px Heebo,sans-serif}
@@ -2102,7 +2093,6 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 .ldSrc{border-top:1px dashed rgba(127,127,127,.35);padding-top:6px;opacity:.85;display:flex;flex-direction:column;gap:2px}
 .ldAct{display:flex;flex-wrap:wrap;gap:6px}
 .ldAct .yb{text-decoration:none;flex:0 1 auto;width:auto;margin:0}
-
 .lbBoard{font:500 14px/1.4 Heebo,sans-serif;container-type:inline-size;min-width:0;max-width:100%}
 .lbBar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 10px}
 .lbFlt{display:flex;flex-wrap:wrap;gap:4px;background:rgba(128,128,128,.12);border-radius:10px;padding:3px}
@@ -2164,7 +2154,13 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 .lbBoard .lbLast[data-mk="wait"]::before{content:"⏳ "}
 .lbBoard .lbLast[data-mk="ok"]::before{content:"✓ ";color:#8a93a3;font-weight:700}
 .lbBoard .lbLast[data-mk="bad"]::before{content:"לא נשמר, לנסות שוב: ";font-weight:700}
-
+.lbHi{display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:14px;background:rgba(0,115,234,.07);border:1px solid rgba(0,115,234,.25);margin:4px 0 12px}
+.lbHi b{font:800 17px Heebo,sans-serif}
+.lbHi small{font:500 15px/1.5 Heebo,sans-serif}
+.lbHi .yb{width:100%}
+.lbAsk{margin-top:16px;padding:12px;border-radius:14px;border:1px dashed rgba(128,128,128,.5);display:flex;flex-direction:column;gap:4px}
+.lbAsk b{font:800 15px Heebo,sans-serif}
+.lbAsk small{font:500 13px/1.45 Heebo,sans-serif;opacity:.8}
 .bzRow b{font:700 14px Heebo,sans-serif}
 .bzRow small{opacity:.85}
 .bzRow .yb{align-self:flex-start;padding:6px 12px;min-height:36px;font-size:13px;margin-top:4px}
@@ -3277,7 +3273,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-18T18:20:08.885Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-18T18:23:44.096Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3634,7 +3630,14 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-
+<div class="alerts" id="pushBox" hidden>
+ <div>
+  <b>התראות לטלפון</b>
+  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
+ </div>
+ <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
+ <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
+</div>
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -5226,7 +5229,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='7033569d4f';
+var CODE_ID='932c3e0a61';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -15072,6 +15075,7 @@ function handleSheet(req){
  };
  document.body.appendChild(w);
 }
+
 function ldGone(){try{return JSON.parse(localStorage.getItem('leadGone')||'[]')||[];}catch(e){return [];}}
 function leadDelAsk(name,bizId,after){
  var old=document.getElementById('ldDelAsk');if(old)old.remove();
@@ -15094,7 +15098,6 @@ function leadDelAsk(name,bizId,after){
  };
  document.body.appendChild(w);
 }
-
 var VIS_API='https://wa.abaitzik.com/api/visit',visSid='',visOn=false,visTimer=0;
 function visDev(){var t=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Mac/.test(navigator.platform||''));return t?'phone':'computer';}
 function visSend(ev){try{if(!D||!D.visitKey||!visSid)return;fetch(VIS_API,{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({key:D.visitKey,sid:visSid,ev:ev,dev:visDev()})}).catch(function(){});}catch(e){}}
@@ -15995,11 +15998,15 @@ function bizSheet(t0){
    var em=r.email||((String(r.note||'').match(/מייל: *([^ ,;]+@[^ ,;]+)/)||[])[1]||'');
    return {dd:il.dd,hm:il.hm,em:em,src:LD_SRC[r.source]||(r.kind==='customer'?'🤝 לקוח':'✍️ ידני')};
   }
-  function ldScanHtml(){
+  var ldScanHtml=function(){return '';};
+  
+  ldScanHtml=function(){
    var sc=D.leadScan;if(!sc)return '';
    var t=sc.at?(function(z){return z.dd+' '+z.hm;})(ldIL(sc.at)):'';
    return '<small style="display:block;margin:-2px 0 8px;color:#5a6478;font-size:13px;line-height:1.4">'+(sc.ok?'🟢 הסורק בודק כל 10 דקות את האתר, התגובות במודעות, מסנג׳ר ואינסטגרם. נבדק לאחרונה '+esc(t):'🟠 לידים מהאתר נכנסים לבד. תגובות והודעות מהמודעות עוד לא נכנסות לבד: חסר אישור אחד במטא. עד אז אני מוסיף אותן ידנית.')+'</small>';
-  }
+  };
+  
+  var LD_FWD='📤 להעביר בוואטסאפ למישהו אחר';LD_FWD='📤 להעביר בוואטסאפ למישהו אחר (טום, סוכן)';
   function ldBodyHtml(r,hist,cur){
    var i=ldInfo(r),dd=i.dd,hm=i.hm,em=i.em,src=i.src,meta=/comment|messenger|dm|leadform/.test(r.source||'');
    var rep='';
@@ -16009,7 +16016,7 @@ function bizSheet(t0){
    var NL=String.fromCharCode(10),all=[r.name||'בלי שם',r.phone?'טלפון: '+r.phone:'',em?'מייל: '+em:'','מאיפה: '+src.replace(/^[^ ]+ /,'')+(r.ref?' ('+r.ref+')':''),dd?'תאריך: '+dd+' '+hm:'','סטטוס: '+(r.status||''),r.last?'כתב: '+r.last:'',r.note?ldNote(r.note):''].filter(Boolean).join(NL);
    if(r.phone)rep+='<button type="button" class="yb" data-bz="ldcopy" data-w="הטלפון" data-u="'+esc(r.phone)+'">📋 להעתיק טלפון</button>';
    rep+='<button type="button" class="yb" data-bz="ldcopy" data-w="כל הפרטים" data-u="'+esc(all)+'">📋 להעתיק את כל הפרטים</button>';
-   var fwd='<a class="yb yb1 ldFwd" href="https://wa.me/?text='+encodeURIComponent('ליד להעברה'+NL+all)+'" target="_blank" rel="noopener">📤 להעביר בוואטסאפ למישהו אחר (טום, סוכן)</a>';
+   var fwd='<a class="yb yb1 ldFwd" href="https://wa.me/?text='+encodeURIComponent('ליד להעברה'+NL+all)+'" target="_blank" rel="noopener">'+LD_FWD+'</a>';
    return '<div class="ldBody">'
     +'<div class="ldTop"><b class="ldName">'+esc(r.name||'בלי שם')+'</b>'
     +(dd?'<small>🕐 הגיע ב '+esc(dd)+(hm?' בשעה '+esc(hm):'')+'</small>':'') // 14.11.2026, Itzik: "בלידים תרשום גם באיזה שעה הגיעו"
@@ -16026,33 +16033,6 @@ function bizSheet(t0){
     +'<div class="ldAct"><button type="button" class="yb ldDel" data-bz="lddel">🗑 מחיקה</button></div>'
     +'</div>';
   }
-  function itsLeadsHtml(){
-   var L=recs.filter(function(r){return r.kind==='lead'||r.kind==='customer';}).slice().sort(function(a,b){return ldT(b.at)-ldT(a.at);});
-   var LC=L.filter(function(r){return !r.test;}),open=LC.filter(function(r){return r.status==='חדש';}).length;
-   var h='<div class="bzSec">📋 כל הלידים ('+LC.length+(open?', '+open+' חדשים':'')+')</div>';
-   h+=ldScanHtml();
-   if(!L.length)return h+'<p class="bzEmpty">עוד אין לידים.</p>';
-   function oneRow(r){
-    var i=ldInfo(r),dd=i.dd,hm=i.hm,em=i.em,src=i.src;
-    h+='<details class="ldRow'+(r.test?' ldTest':(r.status==='חדש'?' ldNew':''))+'" data-id="'+esc(r.id)+'" data-n="'+esc(r.name||'')+'" data-at="'+esc(r.at||'')+'"><summary><span>'+esc(dd)+(hm?' · '+esc(hm):'')+'</span><b>'+esc(r.name||'בלי שם')+(r.test?'<span class="ldTestTag">בדיקה שלך</span>':'')+((r.phone||em)?'<small class="ldC"><bdi>'+esc([r.phone,em].filter(Boolean).join(' · '))+'</bdi></small>':'<small class="ldC">אין טלפון</small>')+'</b><span>'+esc(src)+'</span><span class="ldSt">'+esc(r.status||'')+'</span></summary>'
-     +ldBodyHtml(r)+'</details>';
-   }
-   function ldTable(title,list,empty){
-    var n=list.filter(function(r){return !r.test;}),o=n.filter(function(r){return r.status==='חדש';}).length;
-    h+='<div class="bzSec" style="margin-top:14px">'+title+' ('+n.length+(o?', '+(o===1?'חדש אחד':o+' חדשים'):'')+')</div>';
-    if(!list.length){h+='<p class="bzEmpty">'+empty+'</p>';return;}
-    h+='<div class="ldTbl"><div class="ldHd"><span>תאריך</span><span>שם</span><span>מאיפה</span><span>סטטוס</span></div>';
-    list.forEach(oneRow);
-    h+='</div>';
-   }
-   ldTable('🆕 נרשמו לשבוע ניסיון',L.filter(function(r){return r.source==='signup';}),'עוד אין הרשמות לשבוע ניסיון.');
-   ldTable('📥 פניות: צ׳אט באתר, מודעות ועוד',L.filter(function(r){return r.source!=='signup';}),'עוד אין פניות.');
-   return h;
-  }
-  var LD_BOARD=false;LD_BOARD=true;
-  var ldMain=itsLeadsHtml;
-  
-  if(LD_BOARD)ldMain=ldBoardHtml;
   var LBS=window.ldBoardSt||(window.ldBoardSt={mk:{},msg:{},seq:{},nq:{},el:null});
   var LB_IL=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
   var lbKey=function(ms){var p={};LB_IL.formatToParts(new Date(ms)).forEach(function(q){p[q.type]=q.value;});return p.year+'-'+p.month+'-'+p.day+' '+(p.hour==='24'?'00':p.hour)+':'+p.minute;};
@@ -16063,12 +16043,18 @@ function bizSheet(t0){
   var lbSiteIn=function(x){x=String(x||'');if(/^https?:[/][/][^ "'<>]+$/i.test(x))return '<a href="'+esc(x)+'" target="_blank" rel="noopener">🌐 '+esc(x.replace(/^https?:[/][/](www[.])?/i,'').split('/')[0])+'</a>';return x?'🌐 <bdi>'+esc(x)+'</bdi>':'🌐';};
   var LB_HD='<div class="lbHd"><span>שם</span><span>שלב</span><span>הצעד הבא</span><span>⏰ תזכורת</span><span>🌐 אתר</span><span>מקור</span><span>הערה אחרונה</span></div>';
   var LB_TOOLS='<div class="lbTools"><button type="button" class="yb" data-tdy="1" data-bz="lbed" data-k="next">✏️ הצעד הבא</button><button type="button" class="yb" data-tdy="1" data-bz="lbed" data-k="rem">⏰ תזכורת</button><button type="button" class="yb" data-tdy="1" data-bz="lbed" data-k="site">🌐 אתר</button></div>';
+  var LB_HI_SRC='כל ליד שתכתוב או תגיד למוניטור נרשם כאן: שם, טלפון ומה הוא רוצה. כאן מסמנים באיזה שלב הוא, מה הצעד הבא, ומקבלים תזכורת בזמן שבחרת.';
+  LB_HI_SRC='לידים נכנסים לכאן לבד מהצ׳אט באתר ומהוואטסאפ. אפשר גם להוסיף ליד בעצמך.';
+  var LB_HI='<div class="lbHi"><b>👋 עוד אין כאן לידים</b><small>'+LB_HI_SRC+'</small><button type="button" class="yb yb1" data-bz="newtoggle">➕ להוסיף ליד</button></div>';
+  var LB_ASK='<div class="lbAsk"><b>💡 מה חסר לך כאן?</b><small>משפט אחד על מה שהיית רוצה לראות בלוח. זה מגיע ישר לאיציק.</small><div class="bzEd"><input class="lbAskIn" maxlength="300" enterkeyhint="send" placeholder="למשל: עמודה של סכום העסקה"><button type="button" class="yb yb2" data-tdy="1" data-bz="lbask">לשלוח</button></div></div>';
+  LB_ASK='';
   function ldBoardHtml(){
    var nowK=lbKey(Date.now()),todayK=nowK.slice(0,10);
    var A=recs.filter(function(r){return r.kind==='lead'||r.kind==='customer';}).slice().sort(function(a,b){return ldT(b.at)-ldT(a.at);});
    var LC=A.filter(function(r){return !r.test;}),nNew=LC.filter(function(r){return lbStage(r)==='חדש';}).length;
    var h='<div class="lbBoard"><div class="bzSec">📋 כל הלידים ('+LC.length+(nNew?', '+(nNew===1?'חדש אחד':nNew+' חדשים'):'')+')</div>'+ldScanHtml();
-   if(!A.length)return h+'<p class="bzEmpty">עוד אין לידים.</p></div>';
+   if(!LC.length)h+=LB_HI;
+   if(!A.length)return h+LB_ASK+'</div>';
    function row(r){
     var st=lbStage(r),i=ldInfo(r),k=lbRemKey(r.nextAt),due=!!k&&k<=nowK&&!lbShut(st);
     var mk=function(f){var m=LBS.mk[r.id+'|'+f];return m?' data-mk="'+m+'"':'';};
@@ -16085,7 +16071,7 @@ function bizSheet(t0){
      +'<span data-bz="lbed" data-k="note"'+mk('note')+' class="lbLast">'+esc(hist[0]||(r.last?'"'+r.last+'"':''))+'</span>'
      +'</summary>'+LB_TOOLS+ldBodyHtml(r,hist,st)+'</details>';
    }
-   h+='<div class="lbBar"><div class="lbFlt"><button type="button" class="on" data-bz="lbflt" data-f="all">הכל</button><button type="button" data-bz="lbflt" data-f="signup">נרשמו לשבוע ניסיון</button><button type="button" data-bz="lbflt" data-f="other">פניות</button></div>'
+   h+='<div class="lbBar">'+(A.some(function(r){return r.source==='signup';})?'<div class="lbFlt"><button type="button" class="on" data-bz="lbflt" data-f="all">הכל</button><button type="button" data-bz="lbflt" data-f="signup">נרשמו לשבוע ניסיון</button><button type="button" data-bz="lbflt" data-f="other">פניות</button></div>':'')
     +'<input class="lbQ" type="search" placeholder="🔎 חיפוש לפי שם או טלפון" enterkeyhint="search"></div>';
    var T=A.filter(function(r){var k=lbRemKey(r.nextAt);return k&&k.slice(0,10)<=todayK&&!lbShut(lbStage(r));}).sort(function(a,b){return lbRemKey(a.nextAt)<lbRemKey(b.nextAt)?-1:1;});
    var nT=T.filter(function(r){return !r.test;}).length;
@@ -16095,7 +16081,7 @@ function bizSheet(t0){
     h+='<details class="lbGrp'+(lbShut(g)?' lbShut"':'"')+' data-g="'+g+'"'+(lbShut(g)?'':' open')+'><summary class="lbGh"><b>'+g+'</b><small>('+n+')</small></summary>'
      +(rs.length?LB_HD+rs.map(row).join(''):'<small class="lbEmpty">אין כאן לידים.</small>')+'</details>';
    });
-   return h+'</div>';
+   return h+LB_ASK+'</div>';
   }
   function lbWhen(kind,nowMs){
    var k=lbKey(nowMs),y=+k.slice(0,4),m=+k.slice(5,7),d=+k.slice(8,10);
@@ -16249,6 +16235,14 @@ function bizSheet(t0){
    var tg=e.target;if(!tg||!tg.closest)return false;
    var t=tg.closest('[data-bz]'),a=t?t.getAttribute('data-bz'):'';
    if(a==='lbflt'){lbAll(el,'.lbFlt [data-f]').forEach(function(b){b.classList.toggle('on',b===t);});lbFilter(el);return true;}
+   if(a==='lbask'){
+    var ab=t.closest('.lbAsk'),ai=ab?ab.querySelector('.lbAskIn'):null,av=ai?String(ai.value||'').replace(/[ ]+/g,' ').trim().slice(0,300):'';
+    if(!av){if(ai)ai.focus();return true;}
+    if(t.disabled)return true;t.disabled=true;
+    var ap;try{ap=Promise.resolve(sendText('ליד','לוח לידים: חסר '+av,'ליד'));}catch(x){ap=Promise.reject(x);}
+    ap.then(function(){t.disabled=false;ai.value='';toast('תודה, העברתי לאיציק.');},function(){t.disabled=false;toast('לא נשלח, נסה שוב מאוחר יותר.');});
+    return true;
+   }
    var row=tg.closest('.lbRow'),id=row&&row.getAttribute('data-id');if(!id)return false;
    var bad=tg.closest('[data-mk="bad"]');
    if(bad){e.preventDefault();if(bad.classList.contains('lbLast')){var nq=(lbNq[id]||[]).filter(function(x){return x.st==='bad'&&!x.fly;});if(!nq.length)toast('ההערה עוד בדרך. מחכים לתשובה, ואם לא תגיע היא תסומן שוב.');nq.forEach(function(x){lbNoteGo(el,id,x);});return true;}for(var f in LB_F){if(bad.classList.contains(LB_F[f])&&lbMsg[id+'|'+f]){lbSend(el,id,f,lbMsg[id+'|'+f]);break;}}return true;}
@@ -16289,9 +16283,9 @@ function bizSheet(t0){
   function lbOnKey(e,el){
    var tg=e.target;if(!tg||!tg.classList)return;
    if(e.type==='input'&&tg.classList.contains('lbQ')){lbFilter(el);return;}
+   if(e.type==='keydown'&&e.key==='Enter'&&tg.classList.contains('lbAskIn')){var ak=tg.closest('.lbAsk'),ag=ak&&ak.querySelector('[data-bz="lbask"]');if(ag){e.preventDefault();ag.click();}return;}
    if(e.type==='keydown'&&e.key==='Enter'&&tg.classList.contains('lbIn')){var b=tg.closest('.lbEd'),sv=b&&b.querySelector('[data-bz]');if(sv){e.preventDefault();sv.click();}}
   }
-  
   function itsHtml(){
    return '<div class="bzHead">💻 IT Solution</div>'+planBoardHtml()
     +'<div class="bzSec">🔒 טופס סודיות</div>'+ndaHtml()
@@ -16385,7 +16379,7 @@ function bizSheet(t0){
    if(tab==='anim')return animHtml();
    if(tab==='docs')return docsHtml();
    if(tab==='li')return liHtml();
-   return '<div class="bzHead">🔔 לידים: כל מה שנכנס, במקום אחד</div>'+ldMain()+newLeadHtml();
+   return '<div class="bzHead">🔔 לידים: כל מה שנכנס, במקום אחד</div>'+ldBoardHtml()+newLeadHtml();
   }
   var BZ_UPD={its:'20261111-leads'+((D.nda&&D.nda.signed&&D.nda.signed[0])?'-'+String(D.nda.signed[0].at).replace(/D/g,'').slice(0,12):'')+((D.shaiForms&&D.shaiForms.sign&&D.shaiForms.sign.done)?'-s'+String(D.shaiForms.sign.done).replace(/\D/g,'').slice(0,12):''),shachar:((D.shSum&&D.shSum.upd)||'20261103-shachar-auto')+'-ld1104',li:'li-queue-20261109'};
   ((D.agr&&D.agr.clients)||[]).forEach(function(c,i){BZ_UPD['agr'+i]='a8-'+String(c.signedAt||c.openedAt||'new').replace(/\D/g,'').slice(0,12);});
@@ -16407,7 +16401,7 @@ function bizSheet(t0){
      return '<h3 data-t="'+t[0]+'"'+(t[3]?' data-n="'+t[3]+'"':'')+(bzTabNew(t[0])?' data-new="1"':'')+'>'+t[1]+' '+esc(t[2])+'</h3><div class="bzPane" data-t="'+t[0]+'">'+bodyFor(t[0])+'</div>';
     }).join('')+'</div></div>';
   shipOpen('bizSheet','💼 העסק שלי',html,function(el){
-   var bm=el.querySelector('#bizMic');if(bm)bm.onclick=toggleRec;if(LD_BOARD){LBS.el=el;el.addEventListener('input',function(e){lbOnKey(e,el);});el.addEventListener('keydown',function(e){lbOnKey(e,el);});}
+   var bm=el.querySelector('#bizMic');if(bm)bm.onclick=toggleRec;LBS.el=el;el.addEventListener('input',function(e){lbOnKey(e,el);});el.addEventListener('keydown',function(e){lbOnKey(e,el);});
    var bizHist=[],bzQuiet=false;
    function bzPane(t2){return el.querySelector('.bzPane[data-t="'+t2+'"]');}
    function bzRe(){var p=bzPane(tab);if(p)p.innerHTML=body();}
@@ -16427,7 +16421,7 @@ function bizSheet(t0){
     d.addEventListener('toggle',function(){if(!d.open||bzQuiet||t2===tab)return;bizHist.push(tab);tab=t2;bzMarkSeen(tab);p.innerHTML=body();});
    });
    window.bizStep=function(){if(!bizHist.length)return false;bizShow(bizHist.pop(),true);return true;};
-   el.addEventListener('click',function(e){if(LD_BOARD&&lbTap(e,el))return;
+   el.addEventListener('click',function(e){if(lbTap(e,el))return;
     var t=e.target.closest?e.target.closest('[data-bz]'):null;if(!t)return;
     var a=t.getAttribute('data-bz');
     if(a==='demo'){dmoStart();return;}
@@ -16483,18 +16477,6 @@ function bizSheet(t0){
     if(a==='ner'){var bx=el.querySelector('[data-a="x"]');if(bx)bx.click();nerBizSheet();return;}  // 30.10, Itzik: the X did not get him out, two sheets were stacked; one at a time
     if(a==='back'){if(!window.bizStep())el.querySelector('[data-a="x"]').click();return;}
     if(a==='tab'){bizShow(t.getAttribute('data-t'));return;}
-    if(a==='ldst'||a==='ldnote'||a==='lddel'||a==='ldsend'){
-     var lr=t.closest('.ldRow'),lid=lr&&lr.getAttribute('data-id');if(!lid)return;
-     var lgo=function(body,ok){sendText('ליד',body,'ליד').then(function(){toast(ok);}).catch(function(){toast('לא נשלח, נסה שוב מאוחר יותר.');});};
-     if(a==='ldst'){var ls=t.getAttribute('data-s');lr.querySelector('.ldSt').textContent=ls;lr.classList.toggle('ldNew',ls==='חדש');lgo('ליד ['+lid+']: סטטוס '+ls,'עודכן: '+ls);return;}
-     if(a==='lddel'){
-      leadDelAsk(lr.getAttribute('data-n'),lid,function(){lr.style.display='none';});return;}
-     if(a==='ldnote'){if(lr.querySelector('.bzEd'))return;t.parentNode.insertAdjacentHTML('afterend','<div class="bzEd"><input placeholder="מה לרשום על הליד"><button type="button" class="yb yb2" data-tdy="1" data-bz="ldsend">שלח</button></div>');lr.querySelector('.bzEd input').focus();return;}
-     var lbx=t.closest('.bzEd'),lin=lbx.querySelector('input:not([type=checkbox])'),lv=lin.value.trim();if(!lv){lin.focus();return;}
-     lgo('ליד ['+lid+']: הערה '+lv,'נרשם.');
-     if(lbx.classList.contains('ldNoteBox')){var nd=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',day:'numeric',month:'numeric'}).format(new Date()).replace('/','.');lbx.insertAdjacentHTML('beforebegin','<small class="ldMine" style="white-space:pre-line">'+nd+': '+lv.replace(/[&<>"]/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch];})+'</small>');lin.value='';}else lbx.remove();
-     return;
-    }
     if(a==='leaddel'){var dr=t.closest('.bzRow'),did=t.getAttribute('data-id');if(!did||typeof leadDelAsk!=='function')return;leadDelAsk(t.getAttribute('data-n'),did,function(){if(dr)dr.style.display='none';});return;}
     if(a==='newtoggle'){var nb=el.querySelector('[data-bz="newbox"]');nb.hidden=!nb.hidden;if(!nb.hidden)el.querySelector('#bzNewIn').focus();return;}
     if(a==='newsend'){
@@ -16709,7 +16691,7 @@ function ideaDone(){
 }
 function renderIdeas(){
  var asked=ideaDone();
- var L=(D.better||[]).map(function(x){return {t:x.t,d:x.d,u:x.u,q:x.q,pain:x.by==='pains',built:!!x.built,tag:(x.built?'✅ כבר בוצע · '+stamp(x.built):(x.by==='radar'?'🔭 כלים חדשים':x.by==='pains'?'🩹 כאב למודעה':'🔍 בודק השיפורים')+(x.at?' · '+stamp(x.at):''))+(x.size?' · '+x.size:'')};}).concat(IDEAS);
+ var L=(D.better||[]).map(function(x){return {t:x.t,d:x.d,u:x.u,q:x.q,pain:x.by==='pains',built:!!x.built,tag:(x.built?'✅ כבר בוצע · '+stamp(x.built):(x.by==='radar'?'🔭 כלים חדשים':x.by==='pains'?'🩹 כאב למודעה':String(x.by||'').indexOf('tenant:')===0?'💬 לקוח כתב':'🔍 בודק השיפורים')+(x.at?' · '+stamp(x.at):''))+(x.size?' · '+x.size:'')};}).concat(IDEAS);
  IDEAS_SHOWN=L;
  var IH=L.map(function(x,n){
   var on=asked.indexOf(x.t)>-1;
@@ -21801,7 +21783,7 @@ function bhQuoteShow(q,w){
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="";
+var PUSH_KEY="BAJSdIafAtGxgHzJr3tOJLTViE1Gkn6rNyAReKPb5ZiMM-6xXp2c1PD7V5VKOXkQRWLI9-Wdq7-Q4hyMCcYp2iQ";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
