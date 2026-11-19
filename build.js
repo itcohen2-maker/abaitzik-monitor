@@ -7544,7 +7544,8 @@ function sendBigs(bigs,note,quiet){
   return chain.then(function(){
    var label=(f.name.length>28?f.name.slice(0,25)+'...':f.name)+(n>1?' ('+(i+1)+' מתוך '+n+')':'');
    if(!quiet)upPanel(true,'מעלה '+label+' 0%',0);
-   return bigUpload(f,i===0?note:'',function(share){
+   // 19.11.2026: every file of one send carries its words (not only the first), so the listener joins them all to one request.
+   return bigUpload(f,note,function(share){
     if(quiet)return;
     var pct=Math.floor(share*100);
     upPanel(true,'מעלה '+label+' '+pct+'%',pct);
