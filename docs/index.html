@@ -1658,6 +1658,7 @@ section#talkCard.talk{padding:8px 10px;gap:6px 10px;margin-bottom:8px}
 .c-th{background:linear-gradient(160deg,#8b1e3f,#3a0a1c);font-size:26px}
 .c-sl{background:linear-gradient(160deg,#f472b6,#be185d)}
 .c-its{background:linear-gradient(160deg,#06b6d4,#0a4a5a)}
+.c-camp{background:linear-gradient(160deg,#f97316,#9a3412);font-size:22px}
 .c-el{background:linear-gradient(160deg,#1f8f7d,#14675a)}
 .c-al{background:linear-gradient(160deg,#7e57c2,#4527a0)}
 .c-pb{background:linear-gradient(160deg,#26a69a,#00695c)}
@@ -3273,7 +3274,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-19T08:40:14.976Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-19T08:42:17.642Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3541,6 +3542,7 @@ try{
   <button type="button" class="ic icNew" data-grp="day" id="icPersonal" data-new="1"><span class="c c-ps">🏡</span>מצב אישי</button>
   <button type="button" class="ic icNew" data-grp="work" id="icBoard" data-new="1"><span class="c c-board">🎛️</span>לוח בקרה</button><button type="button" class="ic icNew" data-grp="work" id="icLeadBoard" data-new="1"><span class="c c-lboard">🔔</span>לוח לידים</button>
   <button type="button" class="ic icNew" data-grp="work" id="icSignup" data-new="1"><span class="c c-its">🚀</span>דף הרשמה</button>
+  <button type="button" class="ic icNew" data-grp="work" id="icCamp" data-new="1"><span class="c c-camp">📣</span>קמפיין</button>
   <button type="button" class="ic icNew" data-grp="day" id="icFcSales" data-new="1" style="display:none"><span class="c c-fcs">🎯</span>אימון מכירות</button>
   <button type="button" class="ic icNew" data-grp="day" id="icFcCoach" data-new="1" style="display:none"><span class="c c-fcc">🧭</span>אימון עסקי</button>
   <button type="button" class="ic icNew" data-grp="day" id="icFcPersonal" data-new="1" style="display:none"><span class="c c-fcp">🌿</span>אימון אישי</button>
@@ -5222,7 +5224,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='60d6868178';
+var CODE_ID='0f412041b0';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -14921,6 +14923,21 @@ function boardMore(){
  document.body.appendChild(w);
 }
 on('icSignup',function(){signupShare();});
+var CAMP_URL='https://form.it-solution.co.il/p/c851a7a3231353fa6107.html';
+function campShare(){
+ var NL=String.fromCharCode(10),txt='המודעות שרצות עכשיו בקמפיין, עם הסרטונים, הטקסטים והמספרים:'+NL+CAMP_URL;
+ var w=document.createElement('div');w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','קמפיין');
+ w.innerHTML='<div class="ycard"><b>📣 הקמפיין</b><small>כל המודעות שרצות במטא, כל קמפיין בנפרד, ולמטה הסרטונים להחלפה</small>'
+  +'<a class="yb yb1" style="display:block;text-align:center;text-decoration:none" href="'+CAMP_URL+'" target="_blank" rel="noopener">👀 לפתוח את הדף</a>'
+  +'<a class="yb" style="display:block;text-align:center;text-decoration:none" href="https://wa.me/?text='+encodeURIComponent(txt)+'" target="_blank" rel="noopener">💬 לשתף בוואטסאפ</a>'
+  +'<a class="yb" style="display:block;text-align:center;text-decoration:none" href="mailto:?subject='+encodeURIComponent('המודעות בקמפיין')+'&body='+encodeURIComponent(txt)+'">✉️ לשלוח במייל</a>'
+  +'<button type="button" class="yb" data-k="copy">📋 להעתיק את הקישור</button>'
+  +'<button type="button" class="yb yx" data-k="x">סגירה</button></div>';
+ w.onclick=function(e){var k=e.target.closest&&e.target.closest('[data-k]');if(e.target===w||(k&&k.getAttribute('data-k')==='x'))return w.remove();
+  if(k&&k.getAttribute('data-k')==='copy'){try{navigator.clipboard.writeText(CAMP_URL).then(function(){toast('הקישור הועתק');},function(){uiPrompt('הקישור:',CAMP_URL);});}catch(x){uiPrompt('הקישור:',CAMP_URL);}}};
+ document.body.appendChild(w);
+}
+on('icCamp',function(){campShare();});
 var LB_WEEK=0;
 var LB_ROWS=[
  {id:'site',ic:'🌐',n:'צ׳אט באתר',cc:['#5aa9fb','#0a4f9c']},

@@ -3158,6 +3158,7 @@ section#talkCard.talk{padding:8px 10px;gap:6px 10px;margin-bottom:8px}
 .c-sl{background:linear-gradient(160deg,#f472b6,#be185d)}
 /* 15.10: the IT site, round like the others in this row (Itzik: "אייקון עגול"). */
 .c-its{background:linear-gradient(160deg,#06b6d4,#0a4a5a)}
+.c-camp{background:linear-gradient(160deg,#f97316,#9a3412);font-size:22px}
 .c-el{background:linear-gradient(160deg,#1f8f7d,#14675a)}
 .c-al{background:linear-gradient(160deg,#7e57c2,#4527a0)}
 .c-pb{background:linear-gradient(160deg,#26a69a,#00695c)}
@@ -5181,6 +5182,9 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
   ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icBoard" data-new="1"><span class="c c-board">🎛️</span>לוח בקרה</button><button type="button" class="ic icNew" data-grp="work" id="icLeadBoard" data-new="1"><span class="c c-lboard">🔔</span>לוח לידים</button>' : ''}
   <!-- 11.11.2026, Itzik: "שימו לי במוניטור אייקון של הטופס הזה, שאני אוכל לשלוח אותו לאנשים בוואטסאפ או במייל". The signup page (it-solution.co.il/start). -->
   ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icSignup" data-new="1"><span class="c c-its">🚀</span>דף הרשמה</button>' : ''}
+  <!-- 19.11.2026, Itzik: "תעשה לי אייקון במוניטור, תרשום עליו קמפיין ותיתן לי אופציה לשתף אותו" (round, not a tile). Opens campShare():
+       the page of every active ad per campaign plus the videos waiting to replace them, built by /root/campaign-page.js. -->
+  ${inst.name === 'abaitzik' ? '<button type="button" class="ic icNew" data-grp="work" id="icCamp" data-new="1"><span class="c c-camp">📣</span>קמפיין</button>' : ''}
   <!-- 7.11.2026, Itzik: the trainings sit in round icons beside the calendar. Shown only when the chat is allowed (fcBoot). -->
   <button type="button" class="ic icNew" data-grp="day" id="icFcSales" data-new="1" style="display:none"><span class="c c-fcs">🎯</span>אימון מכירות</button>
   <button type="button" class="ic icNew" data-grp="day" id="icFcCoach" data-new="1" style="display:none"><span class="c c-fcc">🧭</span>אימון עסקי</button>
@@ -19210,6 +19214,22 @@ function boardMore(){
  document.body.appendChild(w);
 }
 on('icSignup',function(){signupShare();});
+// 19.11.2026: the campaign page (form.it-solution.co.il/p/..., private link), to open or to share.
+var CAMP_URL='https://form.it-solution.co.il/p/c851a7a3231353fa6107.html';
+function campShare(){
+ var NL=String.fromCharCode(10),txt='המודעות שרצות עכשיו בקמפיין, עם הסרטונים, הטקסטים והמספרים:'+NL+CAMP_URL;
+ var w=document.createElement('div');w.className='ysheet';w.setAttribute('role','dialog');w.setAttribute('aria-label','קמפיין');
+ w.innerHTML='<div class="ycard"><b>📣 הקמפיין</b><small>כל המודעות שרצות במטא, כל קמפיין בנפרד, ולמטה הסרטונים להחלפה</small>'
+  +'<a class="yb yb1" style="display:block;text-align:center;text-decoration:none" href="'+CAMP_URL+'" target="_blank" rel="noopener">👀 לפתוח את הדף</a>'
+  +'<a class="yb" style="display:block;text-align:center;text-decoration:none" href="https://wa.me/?text='+encodeURIComponent(txt)+'" target="_blank" rel="noopener">💬 לשתף בוואטסאפ</a>'
+  +'<a class="yb" style="display:block;text-align:center;text-decoration:none" href="mailto:?subject='+encodeURIComponent('המודעות בקמפיין')+'&body='+encodeURIComponent(txt)+'">✉️ לשלוח במייל</a>'
+  +'<button type="button" class="yb" data-k="copy">📋 להעתיק את הקישור</button>'
+  +'<button type="button" class="yb yx" data-k="x">סגירה</button></div>';
+ w.onclick=function(e){var k=e.target.closest&&e.target.closest('[data-k]');if(e.target===w||(k&&k.getAttribute('data-k')==='x'))return w.remove();
+  if(k&&k.getAttribute('data-k')==='copy'){try{navigator.clipboard.writeText(CAMP_URL).then(function(){toast('הקישור הועתק');},function(){uiPrompt('הקישור:',CAMP_URL);});}catch(x){uiPrompt('הקישור:',CAMP_URL);}}};
+ document.body.appendChild(w);
+}
+on('icCamp',function(){campShare();});
 // 14.11.2026, Itzik: "אני רוצה כמו הלוח בקרה אבל של הלידים". The same week tiles as 🎛️ לוח בקרה (bdCss, bdTiles):
 // a row per place a lead comes from, a column per day, each tile the leads that came in that day and the hour of the
 // first one, coloured by where they stand (⚠️ waiting for you, ⏳ in talk, ✅ closed, ❌ lost). Under it: is the scanner
