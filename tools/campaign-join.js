@@ -233,8 +233,14 @@ function decodedSize(f) {
   return m ? { w: Number(m[1]), h: Number(m[2]) } : null;
 }
 
+// 19.11.2026, Itzik: a render for one customer must not slow the others' answers. On Linux every encode runs at
+// nice 19 and idle disk priority; on Itzik's Windows PC it runs as before.
+function lowPrio(args) {
+  return process.platform === 'win32' ? ['ffmpeg', args] : ['nice', ['-n', '19', 'ionice', '-c', '3', 'ffmpeg'].concat(args)];
+}
 function ff(args, what) {
-  const r = spawnSync('ffmpeg', ['-v', 'error', '-y'].concat(args), { encoding: 'utf8', maxBuffer: 1 << 26 });
+  const [bin, argv] = lowPrio(['-v', 'error', '-y'].concat(args));
+  const r = spawnSync(bin, argv, { encoding: 'utf8', maxBuffer: 1 << 26 });
   if (r.status !== 0) throw new Error('ffmpeg failed (' + what + '): ' + String(r.stderr || '').slice(-800));
 }
 
@@ -409,7 +415,8 @@ function run(o, tmp) {
   a.push('-filter_complex', fc.join(';'), '-map', '[vj]', '-map', amap, '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '21',
     '-c:a', 'aac', '-b:a', '160k', '-movflags', '+faststart', o.out);
   fs.mkdirSync(path.dirname(path.resolve(o.out)), { recursive: true });
-  const r = spawnSync('ffmpeg', a, { encoding: 'utf8', maxBuffer: 1 << 26 });
+  const [bin, argv] = lowPrio(a);
+  const r = spawnSync(bin, argv, { encoding: 'utf8', maxBuffer: 1 << 26 });
   if (r.status !== 0) throw new Error('ffmpeg failed: ' + String(r.stderr || '').slice(-800));
   fs.writeFileSync(o.out.replace(/\.mp4$/i, '.clips.json'), JSON.stringify({ video: path.basename(o.out), total: +total.toFixed(2), clips, end: endInfo }, null, 1));
 }

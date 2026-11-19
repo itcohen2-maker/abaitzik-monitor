@@ -15,6 +15,13 @@ Type=simple
 WorkingDirectory=/home/monitor/abaitzik-monitor
 StateDirectory=monitor-upload
 StateDirectoryMode=0700
+# 19.11.2026, Itzik: one customer's heavy work (a render, a long video) must not slow the others' answers.
+# The listener is never limited; the upload service and the answering worker get a CPU ceiling and a lower priority,
+# and ffmpeg inside them runs at nice 19 (lib/upload-server.js, tools/campaign-join.js).
+Nice=5
+CPUQuota=200%
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
 ExecStart=/usr/bin/node upload.js
 Restart=always
 RestartSec=5

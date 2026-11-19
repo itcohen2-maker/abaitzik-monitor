@@ -57,6 +57,13 @@ json.dump(d, open(p, 'w', encoding='utf8'), ensure_ascii=False, indent=1)
 EOF
 chown "$U":"$U" "$DIR/instance.json"; chattr +i "$DIR/instance.json"
 
+# 19.11.2026: one video conversion at a time on the whole server (lib/upload-server.js encodeLock). Every
+# customer's service is another user, so the lock is a root owned 0666 file in a root owned plain folder
+# (fs.protected_regular=2 refuses a shared file in a sticky folder such as /run/lock).
+install -d -o root -g root -m 0755 /var/lib/monitor-encode
+[ -f /var/lib/monitor-encode/encode.lock ] || install -o root -g root -m 0666 /dev/null /var/lib/monitor-encode/encode.lock
+chmod 0666 /var/lib/monitor-encode/encode.lock
+
 # the unit, as the customer's own user
 touch /var/log/monitor-upload-$ID.log; chown "$U":"$U" /var/log/monitor-upload-$ID.log; chmod 640 /var/log/monitor-upload-$ID.log
 cat > /etc/systemd/system/$UNIT <<EOF
@@ -74,6 +81,13 @@ Type=simple
 WorkingDirectory=$DIR
 StateDirectory=monitor-upload-$ID
 StateDirectoryMode=0700
+# 19.11.2026, Itzik: one customer's heavy work (a render, a long video) must not slow the others' answers.
+# The listener is never limited; the upload service and the answering worker get a CPU ceiling and a lower priority,
+# and ffmpeg inside them runs at nice 19 (lib/upload-server.js, tools/campaign-join.js).
+Nice=5
+CPUQuota=200%
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
 ExecStart=/usr/bin/node upload.js
 Restart=always
 RestartSec=5

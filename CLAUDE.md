@@ -13,8 +13,10 @@
 - **Big file uploads (11.10.2026):** a file over 15MB from the phone goes straight to our server, not ntfy.
   `upload.js` (unit `monitor-upload.service`, 127.0.0.1:8791, user monitor) behind `https://ilay.abaitzik.com/up/*`
   (Caddy, see setup/monitor-upload-caddy.txt); protocol and limits in lib/upload-server.js. Needs the personal code
-  (data/owner-code.txt) in every call; up to 4GB, refuses under 10GB free, 20GB quota, 48h partials and 7 day
-  finished files are deleted (Itzik, 21.10.2026: keep room on the server) (staging /var/lib/monitor-upload, finished files land in data/inbox). The service leaves
+  (data/owner-code.txt) in every call; up to 3GB a file, refuses under 4GB free, 3GB quota per monitor, videos up to
+  10 minutes (19.11.2026: every video is converted to 1080p in the upload service, nice 19, one at a time on the whole
+  server via /var/lib/monitor-encode/encode.lock, before the listener sees it; a failed conversion delivers the original),
+  48h partials and 7 day finished files are deleted (Itzik, 21.10.2026: keep room on the server) (staging /var/lib/monitor-upload, finished files land in data/inbox). The service leaves
   data/uploads/ready/<id>.json; the listener turns it into the chat line in pollUploads (from itzik, status working,
   files [name]). The page enables it through `uploadUrl` in instance.json; an instance without it keeps the ntfy path.
   Log /var/log/monitor-upload.log; keepalive and watchdog watch the unit. A customer instance needs its own unit

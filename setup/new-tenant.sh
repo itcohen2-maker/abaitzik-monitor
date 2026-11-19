@@ -218,6 +218,9 @@ WantedBy=timers.target"
 # gets a lighter one than the other units (6.10: with strict it died on mkdir /tmp/claude-<uid>).
 mkdir -p /etc/systemd/system/monitor-worker-$ID.service.d
 printf '[Service]\nPrivateTmp=no\nProtectSystem=full\n' > /etc/systemd/system/monitor-worker-$ID.service.d/claude.conf
+# 19.11.2026, Itzik: a render or a long video in one customer's session must not slow the other monitors.
+# The worker (and every ffmpeg or render it starts) gets a CPU ceiling and a lower priority; the listener does not.
+printf '[Service]\nNice=10\nCPUQuota=200%%\nIOSchedulingClass=best-effort\nIOSchedulingPriority=7\n' > /etc/systemd/system/monitor-worker-$ID.service.d/limits.conf
 for f in listen worker watchdog sync; do touch /var/log/monitor-$f-$ID.log; chown "$U":"$U" /var/log/monitor-$f-$ID.log; chmod 640 /var/log/monitor-$f-$ID.log; done
 
 # the web server: security headers, no API route, nothing but docs/
