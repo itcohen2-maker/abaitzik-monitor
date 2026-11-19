@@ -3279,7 +3279,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-19T14:46:33.993Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-19T14:48:27.224Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -5236,7 +5236,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='bb8047a28a';
+var CODE_ID='7fc350f1a1';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -10451,11 +10451,12 @@ document.addEventListener('change',function(e){
  if(justDone&&lbl){lbl.classList.add('pop');setTimeout(renderTasks,300);}
  else renderTasks();
 });
+function tkDay(off){var d=new Date(Date.now()+(off||0)*864e5);return d.toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'});}
 function tkAddInit(){
  var sel=document.getElementById('tkDay');
  if(!sel||sel.options.length)return;
  var o='';for(var k=0;k<60;k++){var dd=new Date(Date.now()+k*864e5);
-  o+='<option value="'+tdDay(k)+'">'+(k===0?'היום':k===1?'מחר':esc(dd.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'})))+'</option>';}
+  o+='<option value="'+tkDay(k)+'">'+(k===0?'היום':k===1?'מחר':esc(dd.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'})))+'</option>';}
  sel.innerHTML=o;
 }
 on2('tkForm','submit',function(e){
@@ -10463,7 +10464,7 @@ on2('tkForm','submit',function(e){
  var t=document.getElementById('tkText'),said=document.getElementById('tkSaid'),sel=document.getElementById('tkDay');
  var v=t.value.trim();
  if(!v)return;
- var iso=sel.value,today=iso===tdDay(0);
+ var iso=sel.value,today=iso===tkDay(0);
  var lbl=new Date(iso+'T12:00:00').toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'});
  said.textContent='שולח.';
  if(tkEditId){

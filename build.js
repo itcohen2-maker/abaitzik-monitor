@@ -14021,12 +14021,16 @@ document.addEventListener('change',function(e){
  if(justDone&&lbl){lbl.classList.add('pop');setTimeout(renderTasks,300);}
  else renderTasks();
 });
+// 19.11.2026, the end to end check of a new monitor: tdDay lives in an ITZIK block, so a customer's page has only its
+// empty stand in, every option of this list was "undefined", and every task went out as "Invalid Date (undefined)".
+// The tasks screen is on every monitor, so it has its own day helper.
+function tkDay(off){var d=new Date(Date.now()+(off||0)*864e5);return d.toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'});}
 // 17.10: the day list of the box on the tasks screen, filled once (a re-render would reset the pick).
 function tkAddInit(){
  var sel=document.getElementById('tkDay');
  if(!sel||sel.options.length)return;
  var o='';for(var k=0;k<60;k++){var dd=new Date(Date.now()+k*864e5);
-  o+='<option value="'+tdDay(k)+'">'+(k===0?'היום':k===1?'מחר':esc(dd.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'})))+'</option>';}
+  o+='<option value="'+tkDay(k)+'">'+(k===0?'היום':k===1?'מחר':esc(dd.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'})))+'</option>';}
  sel.innerHTML=o;
 }
 on2('tkForm','submit',function(e){
@@ -14034,7 +14038,7 @@ on2('tkForm','submit',function(e){
  var t=document.getElementById('tkText'),said=document.getElementById('tkSaid'),sel=document.getElementById('tkDay');
  var v=t.value.trim();
  if(!v)return;
- var iso=sel.value,today=iso===tdDay(0);
+ var iso=sel.value,today=iso===tkDay(0);
  var lbl=new Date(iso+'T12:00:00').toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'});
  said.textContent='שולח.';
  if(tkEditId){
