@@ -24909,7 +24909,10 @@ function gateBoot(){
     try{applyResetSeen();}catch(e){}
     try{applyResetMarks();}catch(e){}
     repaintAll();
-    wrap.parentNode.removeChild(wrap);
+    // 19.11.2026: a personal link (#k=) on a phone that already saved the key ran two unlocks at once. The second
+    // found the card gone, threw here, and its catch set GKEY to null: every screen loaded later (🔔 לידים among
+    // them) failed to open its file and showed "0". Removing the card is now safe to do twice.
+    if(wrap.parentNode)wrap.parentNode.removeChild(wrap);
     return true;
    });
  }
@@ -24918,6 +24921,8 @@ function gateBoot(){
  // behaviour and needs no version number of its own.
  var saved=null;
  try{saved=localStorage.getItem('gateKey');}catch(e){}
+ // With a saved key the personal link waits: it is used only if that key turns out wrong (one unlock, never two).
+ var linkCode=saved?GATE_LINK:'';if(saved)GATE_LINK='';
  /*
    No lock card on a phone that already has the key.
 
@@ -24944,7 +24949,8 @@ function gateBoot(){
   crypto.subtle.importKey('raw',gbytes(saved),{name:'AES-GCM'},true,['encrypt','decrypt'])
    .then(function(k){GKEY=k;return load();})
    .then(function(ok){
-    if(ok===false){GKEY=null;try{localStorage.removeItem('gateKey');}catch(e){}clearTimeout(reveal);wrap.style.visibility='';}
+    if(ok===false){GKEY=null;try{localStorage.removeItem('gateKey');}catch(e){}clearTimeout(reveal);wrap.style.visibility='';
+     if(linkCode){box.value=linkCode;linkCode='';form.onsubmit({preventDefault:function(){}});}}
     else if(ok===true)clearTimeout(reveal);
    })
    .catch(function(){GKEY=null;clearTimeout(reveal);wrap.style.visibility='';});
