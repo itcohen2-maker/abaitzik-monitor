@@ -431,9 +431,17 @@
   "ytd": "וייז לא רואה את הפקק, הוא שומע אותו מהטלפונים של כולם. כל טלפון שולח מיקום כל כמה שניות, והשרת משווה את המהירות לקצב הרגיל של כל קטע כביש. מקור: Waze Partners Help.",
   "song": "",
   "song_tt": "",
-  "posted": false,
-  "postedAt": null,
-  "approvedAt": "2026-11-15T06:00:45.408Z"
+  "posted": true,
+  "postedAt": "2026-11-19T18:01:53.527Z",
+  "approvedAt": "2026-11-15T06:00:45.408Z",
+  "auto": {
+   "reel": "18417782221082201",
+   "story": "18084661139348387",
+   "storyError": null,
+   "page": "1683392223199325",
+   "pageError": null,
+   "channel": "itsolution.ai"
+  }
  },
  {
   "id": "waze-en",
