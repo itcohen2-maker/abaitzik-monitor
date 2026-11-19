@@ -222,12 +222,23 @@ function leadsTile() {
   let all = [];
   try { all = require('./lib/leads.js').readAll(inst.dataPath).filter((r) => r.kind === 'lead' && !r.test); } catch (e) { all = []; }
   const fresh = all.filter((r) => r.status === 'חדש');
-  const newest = fresh.map((r) => String(r.at || '')).sort().pop() || '';
+  // 19.11.2026, Itzik: "ברגע שזה נכנס ללידים, האריח היה צריך להבהב והוא לא הבהב". Two holes: the home is folded
+  // (bareHome), so this tile blinked where he could not see it, and the key came only from status חדש, so a note
+  // moved the lead to בשיחה and the blink was gone. Now the key is the newest open lead by arrival, and a strip
+  // "🔔 ליד חדש" stands on top of the folded home until he taps it (the same seen mark as this tile).
+  const iso = (r) => { const d = new Date(r.at); return isNaN(d) ? '' : d.toISOString(); };
+  const open = all.filter((r) => r.status !== 'נסגר' && r.status !== 'אבד' && iso(r));
+  const top = open.slice().sort((a, b) => iso(a).localeCompare(iso(b))).pop();
+  const newest = top ? iso(top) : '';
+  const SRC = { whatsapp: 'מוואטסאפ', messenger: 'ממסנג׳ר', signup: 'מהרשמה עצמית', site: 'מהאתר', instagram: 'מאינסטגרם', facebook: 'מפייסבוק', tiktok: 'מטיקטוק' };
+  const who = top ? (String(top.name || '').slice(0, 40) + ' ' + (SRC[top.source] || '')).trim() : '';
   const small = (fresh.length ? (fresh.length === 1 ? 'ליד חדש אחד' : fresh.length + ' לידים חדשים') + ' · ' : '') + all.length + ' בסך הכל';
-  return '<button type="button" class="gt g16" id="gLeads" data-lnew="' + newest.replace(/[^0-9TZ:.-]/g, '') + '"><b>🔔 לידים</b><small>' + small + '</small></button>'
+  return '<button type="button" class="gt g16" id="gLeads" data-lnew="' + newest.replace(/[^0-9TZ:.-]/g, '') + '" data-lwho="' + who.replace(/[&<>"']/g, '') + '"><b>🔔 לידים</b><small>' + small + '</small></button>'
     + '<script>(function(){var t=document.getElementById("gLeads");if(!t)return;var k=t.getAttribute("data-lnew"),s="";try{s=localStorage.getItem("leadsTileSeen")||"";}catch(e){}'
-    + 'if(k&&s!==k)t.classList.add("leadNew");'
-    + 't.addEventListener("click",function(){try{if(k)localStorage.setItem("leadsTileSeen",k);}catch(e){}t.classList.remove("leadNew");if(typeof bizSheet==="function"){bizSheet("leads");if(typeof bzOpenDrawer==="function")bzOpenDrawer("leads");}});})();</script>';
+    + 'if(k&&s!==k){t.classList.add("leadNew");var al=document.createElement("button");al.type="button";al.id="leadAlert";al.className="gt g16 leadNew";'
+    + 'var w=t.getAttribute("data-lwho")||"";al.innerHTML="<b>🔔 ליד חדש</b><small></small>";al.querySelector("small").textContent=(w?w+" · ":"")+"לחיצה לפתיחה";'
+    + 'al.onclick=function(){t.click();};var place=function(){var h=document.getElementById("pH");if(h&&al.parentNode!==h)h.insertBefore(al,h.firstChild);};place();document.addEventListener("DOMContentLoaded",place);setTimeout(place,1500);}'
+    + 't.addEventListener("click",function(){try{if(k)localStorage.setItem("leadsTileSeen",k);}catch(e){}t.classList.remove("leadNew");var a=document.getElementById("leadAlert");if(a)a.remove();if(typeof bizSheet==="function"){bizSheet("leads");if(typeof bzOpenDrawer==="function")bzOpenDrawer("leads");}});})();</script>';
 }
 
 function newestLead() {
@@ -4334,7 +4345,9 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   and nothing becomes unreachable: one button in the header brings the rest
   back, and the choice is remembered.
 */
-#pH.bare > *:not(#talkCard):not(#bareBtn):not(#approvalsBox){display:none!important}
+#pH.bare > *:not(#talkCard):not(#bareBtn):not(#approvalsBox):not(#leadAlert){display:none!important}
+#leadAlert{display:block;width:100%;box-sizing:border-box;margin:6px 0 10px;text-align:right;position:relative;min-height:56px;padding:10px 14px;border:0;border-radius:14px;color:#fff;font-family:Heebo,sans-serif;cursor:pointer}
+#leadAlert b{display:block;font-size:18px}#leadAlert small{display:block;font-size:14px;opacity:.95}
 body.offHome #talkCard,body.offHome #gBackChat,body.offHome .gMenu{display:none!important}
 /*
   9.10, the improvements reviewer: a wide green bar saying "refresh me" told a
