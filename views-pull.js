@@ -131,7 +131,7 @@ function report(vs) {
     if (st.seen[k]) return; st.seen[k] = e.t;
     if (st.sent >= DAY_CAP) return; st.sent++;
     const who = e.r ? e.r : 'מישהו';
-    try { execFileSync('node', [path.join(HERE, 'notify.js'), '👀 ' + who + ' פתח את ' + PAGES[e.p], [dev(e), e.city, source(e)].filter(Boolean).join(' · ') + '\nהפרטים: 💼 העסק שלי ← 💻 IT Solution ← 👀 מי ראה את הדפים'], { stdio: 'ignore', timeout: 30000 }); } catch (x) { console.error('notify', x.message); }
+    try { execFileSync('node', [path.join(HERE, 'notify.js'), '👀 ' + who + ' פתח את ' + PAGES[e.p], [dev(e), e.city, source(e)].filter(Boolean).join(' · ')], { stdio: 'ignore', timeout: 30000 }); } catch (x) { console.error('notify', x.message); }
   });
   st.since = all.length ? all[all.length - 1].t : st.since;
   st.pending = true;

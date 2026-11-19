@@ -3279,7 +3279,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-19T15:04:41.795Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-19T15:05:23.263Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -5236,7 +5236,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='7fc350f1a1';
+var CODE_ID='7af09a47d9';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -16340,11 +16340,6 @@ function bizSheet(t0){
     +'<div class="bzSec">🛡️ מוניטור ואבטחה</div>'
     +'<button type="button" class="yb yb1" data-bz="anim" data-f="views-report.html">👀 מי ראה את הדפים</button>'
     +'<a class="yb" href="https://it-solution.co.il/monitor/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">💡 דף המוניטור לעסק, למה לבחור בנו</a>'
-    +'<button type="button" class="yb" data-bz="secshare" data-u="monitor" data-k="share">📤 לשלוח ללקוח את דף המוניטור</button>'
-    +'<button type="button" class="yb" data-bz="secshare" data-u="monitor" data-k="wa">💬 דף המוניטור בוואטסאפ</button>'
-    +'<a class="yb" href="https://it-solution.co.il/security/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">🔒 דף אבטחת המידע ללקוח</a>'
-    +'<button type="button" class="yb" data-bz="secshare" data-u="security" data-k="share">📤 לשלוח ללקוח את דף האבטחה</button>'
-    +'<button type="button" class="yb" data-bz="secshare" data-u="security" data-k="wa">💬 דף האבטחה בוואטסאפ</button>'
     +'<div class="bzSec">הדגמה ללקוח</div>'
     +(typeof dmoStart==='function'?'<button type="button" class="yb yb1" data-bz="demo">🎬 מצב הדגמה ללקוח</button>':'')
     ;

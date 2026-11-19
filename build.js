@@ -20859,15 +20859,6 @@ function bizSheet(t0){
     +'<div class="bzRow"><b>לחיצה אחת, הפייסבוק של איליי</b><small>הקישור לאיליי בלבד. אם תלחץ בעצמך על הכפתור בדף, יתחבר הפייסבוק שלך. אחרי שהוא מתחבר, הקמפיינים שלו מופיעים במוניטור שלו ב 📊 מצב הקמפיינים. לפני כן צריך להוסיף אותו כ Tester באפליקציה של מטא.</small></div>'
     +'<a class="yb yb1" href="https://wa.me/972558853023?text='+encodeURIComponent('איליי, לחיצה אחת ומתחברים עם הפייסבוק שלך, כדי שהמוניטור יראה את הקמפיינים שלך. רק קריאה, לא משנה כלום:\\nhttps://form.it-solution.co.il/s/9ac71db672eafc146b63')+'" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none" data-new="1">💬 לשלוח לאיליי בוואטסאפ</a>'
     +'<a class="yb" href="https://form.it-solution.co.il/s/9ac71db672eafc146b63/view" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">👀 לראות את הדף שלו</a>'
-    // 4.11, Itzik: an insurance agent asks how confidential the monitor is. Pages to hand the customer.
-    +'<div class="bzSec">🛡️ מוניטור ואבטחה</div>'
-    +'<button type="button" class="yb yb1" data-bz="anim" data-f="views-report.html">👀 מי ראה את הדפים</button>'
-    +'<a class="yb" href="https://it-solution.co.il/monitor/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">💡 דף המוניטור לעסק, למה לבחור בנו</a>'
-    +'<button type="button" class="yb" data-bz="secshare" data-u="monitor" data-k="share">📤 לשלוח ללקוח את דף המוניטור</button>'
-    +'<button type="button" class="yb" data-bz="secshare" data-u="monitor" data-k="wa">💬 דף המוניטור בוואטסאפ</button>'
-    +'<a class="yb" href="https://it-solution.co.il/security/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">🔒 דף אבטחת המידע ללקוח</a>'
-    +'<button type="button" class="yb" data-bz="secshare" data-u="security" data-k="share">📤 לשלוח ללקוח את דף האבטחה</button>'
-    +'<button type="button" class="yb" data-bz="secshare" data-u="security" data-k="wa">💬 דף האבטחה בוואטסאפ</button>'
     +'<div class="bzSec">הדגמה ללקוח</div>'
     +(typeof dmoStart==='function'?'<button type="button" class="yb yb1" data-bz="demo">🎬 מצב הדגמה ללקוח</button>':'')
     ;
