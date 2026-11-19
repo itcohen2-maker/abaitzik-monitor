@@ -14,7 +14,7 @@ APP=/home/demo/app
 NEW=$(mktemp -d /home/demo/.app-new-XXXX)
 cd "$SRC"
 runuser -u monitor -- git fetch -q origin stable
-git archive origin/stable | tar -x -C "$NEW" --exclude=docs --exclude=promo --exclude=tests --exclude=instance.json --exclude=data
+runuser -u monitor -- git archive origin/stable | tar -x -C "$NEW" --exclude=docs --exclude=promo --exclude=tests --exclude=instance.json --exclude=data
 # the code is replaced, instance.json and data stay
 find "$APP" -mindepth 1 -maxdepth 1 ! -name instance.json ! -name data ! -name docs -exec rm -rf {} +
 cp -a "$NEW"/. "$APP"/
