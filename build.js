@@ -7602,7 +7602,9 @@ function sendAll(list,note){
  var err=null;
  var first=sp.small.length?sendSmall(sp.small,note).catch(function(e){err=e;return 'ok';}):Promise.resolve('ok');
  return first.then(function(how){
-  return sendBigs(sp.big,sp.small.length?'':note).then(function(bf){
+  // 19.11.2026: the big files carry the same words as the small ones, so the listener joins them to that one request
+  // (listen.js pollUploads, by caption) instead of opening a bare "קובץ: x.mov" line that the session answered on its own.
+  return sendBigs(sp.big,note).then(function(bf){
    var failed=[];
    if(err)failed=err.failed?err.failed.slice():sp.small.map(function(f){return f.name;});
    bf.names.forEach(function(nm){failed.push(nm);});
