@@ -7460,13 +7460,27 @@ function upCall(path,opt){
 }
 // 2xx is the answer. A refusal that no retry can change is fatal and carries
 // the sentence for his screen; everything else (network, 429, 5xx) is retried.
+/*
+  19.11.2026, Itzik: one customer's long 4K videos must not slow the others. The server now takes 3GB a file and
+  3GB a customer at once, videos up to 10 minutes, and converts each video to 1080p before it is handled
+  (lib/upload-server.js). Each refusal has its own sentence here, not a general "לא נשלח".
+*/
+var UPMSG={
+ 'too-big':'הקובץ גדול מ 3 ג׳יגה ולכן לא נשלח. אפשר לקצר אותו, או לחלק אותו לכמה חלקים ולשלוח כל חלק בנפרד.',
+ 'quota':'כבר יש אצלנו 3 ג׳יגה של קבצים ממך מהימים האחרונים, וזה המקסימום בבת אחת, ולכן הקובץ הזה לא נשלח. קבצים נמחקים מהשרת אחרי 7 ימים ואז אפשר לשלוח שוב. סרטון קצר יותר אפשר לנסות כבר עכשיו.',
+ 'disk-low':'השרת מלא כרגע ואין בו מקום לקובץ הזה, ולכן הוא לא נשלח. זו לא תקלה אצלך. כדאי לנסות שוב בעוד כמה שעות.',
+ 'too-long':'הסרטון ארוך מ 10 דקות ולכן לא נשלח. אפשר לקצר אותו, או לחלק אותו לכמה סרטונים של עד 10 דקות ולשלוח כל אחד בנפרד.'
+};
+var UPCONV='השרת מכין עכשיו עותק באיכות 1080, וזה לוקח כמה דקות. הסרטון ייכנס לטיפול מיד אחרי זה, אין צורך לשלוח שוב.';
 function upCheck(r){
  if(r.status>=200&&r.status<300)return r.body;
  var er=r.body&&r.body.error,e=new Error('upload '+r.status+' '+(er||''));
  e.status=r.status;e.code=er;
  if(r.status===401){e.fatal=true;e.msg='הקוד האישי לא מתקבל, ההעלאה נקטעה. בהגדרות מכניסים אותו מחדש.';}
- else if(r.status===413){e.fatal=true;e.msg='הקובץ גדול מדי, ההעלאה נקטעה. המגבלה 4 ג׳יגה.';}
+ else if(er&&UPMSG[er]){e.fatal=true;e.msg=UPMSG[er];}
+ else if(r.status===413){e.fatal=true;e.msg='הקובץ גדול מדי, ההעלאה נקטעה. המגבלה 3 ג׳יגה.';}
  else if(r.status===507){e.fatal=true;e.msg='אין כרגע מקום בשרת לקובץ הזה, ההעלאה נקטעה.';}
+ else if(r.status===422){e.fatal=true;}
  else if(r.status===403||r.status===503){e.fatal=true;e.unreachable=true;}
  else if(r.status===404){e.fatal=true;e.gone=true;}
  else if(r.status===400||r.status===411||r.status===405){e.fatal=true;}
@@ -7491,6 +7505,18 @@ function upRetry(fn,tries){
   });
  }
  return go();
+}
+// 19.11.2026: a video's length, read on the phone, so a 20 minute video is refused before 2GB go up for nothing.
+// 0 when the browser cannot tell (the server still checks at finish).
+function upDur(f){
+ if(!/^video[/]/i.test(f.type||'')&&!/[.](mp4|mov|m4v|webm|mkv|3gp)$/i.test(f.name||''))return Promise.resolve(0);
+ return new Promise(function(res){
+  var v,u,done=false;
+  function end(d){if(done)return;done=true;try{if(u)URL.revokeObjectURL(u);}catch(e){}res(d>0&&isFinite(d)?d:0);}
+  try{v=document.createElement('video');v.preload='metadata';v.muted=true;u=URL.createObjectURL(f);
+   v.onloadedmetadata=function(){end(v.duration);};v.onerror=function(){end(0);};v.src=u;}catch(e){end(0);}
+  setTimeout(function(){end(0);},5000);
+ });
 }
 // One file: create or resume, slices, finish. onProg gets a 0..1 share.
 function bigUpload(f,caption,onProg){
@@ -7529,7 +7555,10 @@ function bigUpload(f,caption,onProg){
    return b;
   });
  }
- return create().then(slices).then(fin).catch(function(e){
+ return upDur(f).then(function(d){
+  if(d>601){var e=new Error('too-long');e.fatal=true;e.code='too-long';e.msg=UPMSG['too-long'];throw e;}
+  if(f.size>3*1024*1024*1024){var e2=new Error('too-big');e2.fatal=true;e2.code='too-big';e2.msg=UPMSG['too-big'];throw e2;}
+ }).then(create).then(slices).then(fin).catch(function(e){
   if(e&&e.gone&&started)e.msg='ההעלאה פגה בשרת, ההעלאה נקטעה. אפשר להתחיל מחדש.';
   throw e;
  });
@@ -7550,8 +7579,8 @@ function sendBigs(bigs,note,quiet){
     var pct=Math.floor(share*100);
     upPanel(true,'מעלה '+label+' '+pct+'%',pct);
     fSaid.textContent='מעלה קובץ גדול: '+pct+'%. לא לסגור את הדף.';
-   }).then(function(){
-    if(!quiet)upPanel(true,'התקבל ✓',100,f.name+'. '+UPKEEP);
+   }).then(function(b){
+    if(!quiet)upPanel(true,'התקבל ✓',100,f.name+'. '+(b&&b.converting?UPCONV:UPKEEP));
    },function(e){
     out.names.push(f.name);
     if(e&&e.unreachable)out.unreachable=true;
@@ -16099,18 +16128,18 @@ function campSheet(){
   // and a video that did not upload turned the whole send into "לא נשלח" though the photos had gone. Now the button
   // says it is sending, the sheet stays open with what happens next, and a partial send names what did not arrive.
   e.target.textContent='⏳ שולח, עוד רגע...';e.target.classList.add('busy');
-  function cpDone(miss){
+  function cpDone(miss,why){
    markSent(allF.length?'file':'text',note);
    var card=w.querySelector('.ycard');if(!card){close();return;}
    card.innerHTML='<b>✅ נשלח</b>'
-    +(miss&&miss.length?'<div style="margin:8px 0;padding:10px;border-radius:12px;background:#fff4e5;color:#7a3e00;font:700 15px Heebo,sans-serif">⚠️ לא עלו: '+esc(miss.join(', '))+'. כל השאר נשלח. אפשר לפתוח שוב את 📣 קמפיינים ולשלוח רק אותם.</div>':'')
+    +(miss&&miss.length?'<div style="margin:8px 0;padding:10px;border-radius:12px;background:#fff4e5;color:#7a3e00;font:700 15px Heebo,sans-serif">⚠️ לא עלו: '+esc(miss.join(', '))+'. '+(why?esc(why)+' ':'')+'כל השאר נשלח. אפשר לפתוח שוב את 📣 קמפיינים ולשלוח רק אותם.</div>':'')
     +'<div style="font:600 16px/1.6 Heebo,sans-serif;margin:8px 0">מה קורה עכשיו:<br>1. אני מכין טיוטה: מטרה, קהל, תקציב, כיתובים ותמונות מותאמות. זה לוקח כמה דקות.<br>2. היא תגיע למסך <b>תשובות</b>, עם התראה.<br>3. שם מאשרים, או כותבים מה לתקן.</div>'
     +'<small>שום דבר לא עולה לפייסבוק או לאינסטגרם בלי אישור שלך.</small>'
     +'<button type="button" class="yb yb1" data-a="x">הבנתי</button>';
   }
   go.then(function(){cpDone(null);}).catch(function(er){
    var miss=(er&&er.failed)||null;
-   if(miss&&miss.length&&miss.length<allF.length){cpDone(miss);return;}
+   if(miss&&miss.length&&miss.length<allF.length){cpDone(miss,er&&er.msg);return;}
    e.target.disabled=false;e.target.textContent='שליחה';e.target.classList.remove('busy');
    toast(er&&er.msg?er.msg:'לא נשלח. תבדוק חיבור ותנסה שוב.');
   });
@@ -16240,7 +16269,7 @@ function campQuiz(){
   sendAll(files,note).then(function(){
    markSent('file',note);w.remove();
    toast('נשלח. ההכנה לוקחת כמה שעות. כשזה מוכן תקבל הודעה, והתוצאה תחכה במסך התשובות'+(tile?' ובאריח 🎁 במסך הבית.':'.'));
-  }).catch(function(){t.disabled=false;t.textContent='שליחה';toast('לא נשלח. תבדוק חיבור ותנסה שוב. התשובות נשמרו כאן.');});
+  }).catch(function(er){t.disabled=false;t.textContent='שליחה';toast(er&&er.msg?er.msg+' התשובות נשמרו כאן.':'לא נשלח. תבדוק חיבור ותנסה שוב. התשובות נשמרו כאן.');});
  };
  w.addEventListener('change',function(e){
   if(e.target&&e.target.id==='cqFiles'){files=files.concat([].slice.call(e.target.files||[]));e.target.value='';paint();}
@@ -16569,7 +16598,7 @@ function clDate(d){var p=String(d||'').split('-');return p.length===3?(+p[2])+'.
 function clUpload(accept,note,done){
  var i=document.createElement('input');i.type='file';i.accept=accept;i.multiple=true;i.style.display='none';
  i.onchange=function(){var f=[].slice.call(i.files||[]);i.remove();if(!f.length)return;toast('שולח...');
-  sendAll(f,note).then(function(){toast('נשלח. אקרא את זה ואעדכן כאן, וגם אכתוב לך בתשובות.');if(done)done();},function(){toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});};
+  sendAll(f,note).then(function(){toast('נשלח. אקרא את זה ואעדכן כאן, וגם אכתוב לך בתשובות.');if(done)done();},function(er){toast(er&&er.msg?er.msg:'לא נשלח. תבדוק חיבור ותנסה שוב.');});};
  document.body.appendChild(i);i.click();
 }
 function labSheet(){
@@ -22172,7 +22201,7 @@ document.getElementById('fdPick').addEventListener('change',function(){
    :'נשלח. אני מחשב ומחזיר לך את הערכים.';
   toast(said.textContent);
   markSent('file');renderSent();
- }).catch(function(){said.textContent='לא נשלח. תבדוק חיבור ותנסה שוב.';});
+ }).catch(function(er){said.textContent=er&&er.msg?er.msg:'לא נשלח. תבדוק חיבור ותנסה שוב.';});
  this.value='';
 });
 document.getElementById('fdForm').onsubmit=function(e){

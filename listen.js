@@ -1300,7 +1300,9 @@ function pollUploads() {
       try {
         for (const n of fs.readdirSync(CHAT).filter(function (x) { return /-itzik-auto(-\d+)?\.json$/.test(x); }).sort().reverse().slice(0, 30)) {
           let r0; try { r0 = JSON.parse(fs.readFileSync(path.join(CHAT, n), 'utf8')); } catch (e) { continue; }
-          if (!r0 || r0.from !== 'itzik' || r0.status === 'done' || at - Date.parse(r0.at) > 5 * 60e3) continue;
+          // 19.11.2026: a video is converted to 1080p before its note comes (lib/upload-server.js), so the
+          // five minutes count from when it was sent (up.at), not from now.
+          if (!r0 || r0.from !== 'itzik' || r0.status === 'done' || Math.abs((Date.parse(up.at) || at.getTime()) - Date.parse(r0.at)) > 5 * 60e3) continue;
           if (String(r0.text || '').split(String.fromCharCode(10))[0].slice(0, 400) !== capKey) continue;
           r0.files = (r0.files || []).concat([name]);
           r0.text = group.groupText(String(up.caption || '').trim().replace(/\n?\[re:[^\]\s]+\]\s*$/, ''), r0.files);
