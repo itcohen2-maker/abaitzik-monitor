@@ -18,7 +18,7 @@ const os = require('os');
 const path = require('path');
 const { spawnSync } = require('child_process');
 
-const SERVER_DIR = '/home/monitor/work-logs';
+const SERVER_DIR = process.env.WORKLOG_DIR || '/home/monitor/work-logs';
 const ON_SERVER = fs.existsSync('/home/monitor/abaitzik-monitor');
 const QUEUE = path.join(os.homedir(), 'work-logs', 'queue');
 const KEY = path.join(os.homedir(), '.ssh', 'monitor_server');
@@ -44,11 +44,14 @@ function entry(now) {
 
 function appendServer(day, text) {
   if (ON_SERVER) {
-    fs.mkdirSync(SERVER_DIR, { recursive: true });
-    const f = path.join(SERVER_DIR, day + '.md');
-    if (!fs.existsSync(f)) fs.writeFileSync(f, '# יומן עבודה ' + day + '\n');
-    fs.appendFileSync(f, text);
-    return true;
+    // A customer's user on this server cannot write here (the folder is monitor's only): it says so and goes on.
+    try {
+      fs.mkdirSync(SERVER_DIR, { recursive: true });
+      const f = path.join(SERVER_DIR, day + '.md');
+      if (!fs.existsSync(f)) fs.writeFileSync(f, '# יומן עבודה ' + day + '\n', { mode: 0o640 });
+      fs.appendFileSync(f, text);
+      return true;
+    } catch (e) { console.error('אין הרשאה ליומן: ' + e.code); process.exit(0); }
   }
   const cmd = 'mkdir -p ' + SERVER_DIR + ' && chown monitor:monitor ' + SERVER_DIR + ' && f=' + SERVER_DIR + '/' + day + '.md && '
     + '{ [ -f "$f" ] || echo "# יומן עבודה ' + day + '" > "$f"; } && cat >> "$f" && chown monitor:monitor "$f"';

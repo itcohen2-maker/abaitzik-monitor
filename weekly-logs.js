@@ -16,7 +16,7 @@ const { spawn, spawnSync } = require('child_process');
 const { dayOf } = require('./worklog.js');
 
 const ROOT = __dirname;
-const LOGS = '/home/monitor/work-logs';
+const LOGS = process.env.WORKLOG_DIR || '/home/monitor/work-logs';
 const DRY = process.argv.includes('--dry');
 
 function weekFiles(now) {
