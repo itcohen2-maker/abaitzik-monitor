@@ -3285,7 +3285,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-19T20:04:30.763Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-19T20:07:15.660Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -5242,7 +5242,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='bfb35803b3';
+var CODE_ID='4b4db35816';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -15658,7 +15658,7 @@ function connSheet(){
  var C=D.conn||{rows:[]};
  var cnReal=C.rows.filter(function(r){return r.id!=='sign';});
  var n=cnReal.filter(function(r){return r.on;}).length;
- var h='<div class="ycard"><b>🔌 חיבורים</b><p>'+n+' מתוך '+cnReal.length+' מחוברים. כל חיבור נותן למוניטור לעבוד בשבילך עם עוד מקום.</p>';
+ var h='<div class="ycard"><button type="button" class="yb bzBackTop" data-k="">→ חזרה</button><b>🔌 חיבורים</b><p>'+n+' מתוך '+cnReal.length+' מחוברים. כל חיבור נותן למוניטור לעבוד בשבילך עם עוד מקום.</p>';
  if(connNone())h+='<p style="font-weight:700">עוד לא חיברת כלום, ובלי חיבור המוניטור לא יכול לעבוד בשבילך. כדאי להתחיל מגוגל: מייל, יומן ודרייב, זה לוקח דקה.</p>';
  C.rows.forEach(function(r){
   var st=r.on?'<span class="cnOk">✓ מחובר</span>':r.paid?'<span class="cnPaid">'+esc(r.paid)+'</span>':r.soon?'<span class="cnSoon">מחברים בתיאום עם IT Solution</span>':'<span class="cnOff">לא מחובר</span>';
