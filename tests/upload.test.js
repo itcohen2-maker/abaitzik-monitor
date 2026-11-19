@@ -184,12 +184,15 @@ test('size limits: over 4GB, zero, junk, and a chunk over 16MB', async () => {
   await s.close();
 });
 
-test('disk guard: refuse when free space after the file would be under 10GB', async () => {
+// 19.11.2026: the floor is 4GB (lib/upload-server.js minFree, Itzik 19.11). A failed assert still closes the server,
+// or the open socket keeps node --test alive and every push.js waits on npm test forever.
+test('disk guard: refuse when free space after the file would be under 4GB', async () => {
   const s = await setup();
-  s.state.free = 10 * 1024 * MB + 500;
-  assert.strictEqual((await create(s, { name: 'a', size: 400 })).status, 201);
-  assert.strictEqual((await create(s, { name: 'b', size: 600 })).body.error, 'disk-low');
-  await s.close();
+  try {
+    s.state.free = 4 * 1024 * MB + 500;
+    assert.strictEqual((await create(s, { name: 'a', size: 400 })).status, 201);
+    assert.strictEqual((await create(s, { name: 'b', size: 600 })).body.error, 'disk-low');
+  } finally { await s.close(); }
 });
 
 test('tenant quota counts partial and finished uploads', async () => {
