@@ -3285,7 +3285,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-19T19:53:38.404Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-19T20:00:06.656Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -5235,7 +5235,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='a388c5de0b';
+var CODE_ID='cc2be7b2a9';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -5542,7 +5542,7 @@ function upCall(path,opt){
 }
 var UPMSG={
  'too-big':'הקובץ גדול מ 3 ג׳יגה ולכן לא נשלח. אפשר לקצר אותו, או לחלק אותו לכמה חלקים ולשלוח כל חלק בנפרד.',
- 'quota':'כבר יש אצלנו 3 ג׳יגה של קבצים ממך מהימים האחרונים, וזה המקסימום בבת אחת, ולכן הקובץ הזה לא נשלח. קבצים נמחקים מהשרת אחרי 7 ימים ואז אפשר לשלוח שוב. סרטון קצר יותר אפשר לנסות כבר עכשיו.',
+ 'quota':'הקובץ הזה לא נשלח, כי יחד עם הקבצים שכבר אצלנו הוא עובר את המכסה של 3 ג׳יגה. אם שלחת עכשיו סרטון ארוך, המקום מתפנה תוך כמה דקות כשהשרת מסיים להכין אותו, ואז אפשר לשלוח שוב. קבצים ישנים נמחקים אחרי 7 ימים.',
  'disk-low':'השרת מלא כרגע ואין בו מקום לקובץ הזה, ולכן הוא לא נשלח. זו לא תקלה אצלך. כדאי לנסות שוב בעוד כמה שעות.',
  'too-long':'הסרטון ארוך מ 10 דקות ולכן לא נשלח. אפשר לקצר אותו, או לחלק אותו לכמה סרטונים של עד 10 דקות ולשלוח כל אחד בנפרד.'
 };
