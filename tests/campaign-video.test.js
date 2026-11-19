@@ -29,6 +29,18 @@ test('wrap and fit keep lines short and at most the allowed count', () => {
   assert.ok(f.lines.length <= 3 && f.fs >= 50);
   const short = J.fit('קנקן שקוף', 88, 3, 56);
   assert.deepStrictEqual(short, { fs: 88, lines: ['קנקן שקוף'] });
+  assert.deepStrictEqual(J.balanced('קנקן שקוף וכוס מפוספסת', 18), ['קנקן שקוף', 'וכוס מפוספסת'], 'no word left alone');
+  const one = J.fit('קנקן שקוף וכוס מפוספסת', 88, 3, 56);
+  assert.strictEqual(one.lines.length, 1, 'one line when it fits at a slightly smaller size');
+  assert.ok(one.fs < 88 && one.fs >= 75);
+});
+
+test('the photo sits between the text bands, never under them', () => {
+  const top = J.blockTop('קנקן שקוף וכוס מפוספסת'), bottom = J.blockBottom('קנקן שקוף בעיצוב ייחודי');
+  const b = J.photoBox(top, bottom);
+  assert.ok(b.y >= top.band.y + top.band.h);
+  assert.ok(b.y + b.h <= bottom.band.y);
+  assert.deepStrictEqual(J.photoBox(null, null), { y: 120, h: 1680 });
 });
 
 test('parseArgs: old calls still work, texts come from flags or a file', () => {

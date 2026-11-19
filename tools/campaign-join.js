@@ -59,17 +59,30 @@ function wrap(s, maxChars) {
   return lines;
 }
 
-// Fit a text into at most maxLines lines, shrinking the font from fs down to minFs. Heebo Bold averages about
-// 0.55 of the font size per character; 900px of the 1080 width is used.
+// Fit a text into at most maxLines lines. Heebo Bold Hebrew measured about 0.48 of the font size per character
+// (frames, 19.11.2026); 0.5 and 940 of the 1080px keep a margin. One line if it fits at down to 85% of fs; otherwise
+// balanced lines (no single word left alone on the last line), shrinking towards minFs only when needed.
+const perLine = (size) => Math.max(6, Math.floor(940 / (size * 0.5)));
+function balanced(s, max) {
+  const lines = wrap(s, max);
+  if (lines.length < 2) return lines;
+  const len = clean(s).length;
+  for (let t = Math.ceil(len / lines.length); t < max; t++) {
+    const b = wrap(s, t);
+    if (b.length === lines.length) return b;
+  }
+  return lines;
+}
 function fit(s, fs, maxLines, minFs) {
-  let size = fs, lines = [];
-  for (; size >= minFs; size = Math.round(size * 0.9)) {
-    lines = wrap(s, Math.max(6, Math.floor(900 / (size * 0.56))));
+  const len = clean(s).length;
+  for (let size = fs; size >= Math.round(fs * 0.85); size -= 2) {
+    if (len <= perLine(size)) return { fs: size, lines: [clean(s)].filter(Boolean) };
+  }
+  for (let size = fs; size >= minFs; size = Math.round(size * 0.9)) {
+    const lines = balanced(s, perLine(size));
     if (lines.length <= maxLines) return { fs: size, lines };
   }
-  size = minFs;
-  lines = wrap(s, Math.max(6, Math.floor(900 / (size * 0.56))));
-  return { fs: size, lines: lines.slice(0, maxLines) };
+  return { fs: minFs, lines: balanced(s, perLine(minFs)).slice(0, maxLines) };
 }
 
 function parseArgs(argv) {
@@ -143,6 +156,13 @@ function blockEnd(o) {
   return { band: { y: y0, h: (y - y0) + 70 }, lines };
 }
 
+// The area for the photo or video: below the title band (or from y 120) and above the caption band (or to 1800).
+function photoBox(top, bottom) {
+  const y = top ? top.band.y + top.band.h + 24 : 120;
+  const yEnd = bottom ? bottom.band.y - 24 : 1800;
+  return { y, h: Math.max(400, yEnd - y) };
+}
+
 function probe(f) {
   const r = spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'stream=codec_type:format=duration', '-of', 'json', f], { encoding: 'utf8' });
   try { const j = JSON.parse(r.stdout); return { audio: (j.streams || []).some((s) => s.codec_type === 'audio'), dur: Number((j.format || {}).duration) || 0 }; }
@@ -192,12 +212,14 @@ function main() {
     const texts = [].concat(textFilters(top, 0.2), textFilters(bottom, top ? 0.8 : 0.3));
     fc.push('[' + i + ':v]setsar=1,split=2[b' + i + '][f' + i + ']');
     fc.push(bgChain('b' + i, 'bg' + i));
-    fc.push('[f' + i + ']scale=' + W + ':' + H + ':force_original_aspect_ratio=decrease,setsar=1[fg' + i + ']');
+    // The product sits in the space between the text bands, so no band covers it (19.11: the caption hid the base).
+    const box = photoBox(top, bottom);
+    fc.push('[f' + i + ']scale=' + W + ':' + box.h + ':force_original_aspect_ratio=decrease,setsar=1[fg' + i + ']');
     const n = Math.round(info.dur * FPS);
     const motion = isImg
-      ? ',scale=' + (W * 2) + ':' + (H * 2) + ",zoompan=z='1+0.07*on/" + n + "':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=" + W + 'x' + H + ':fps=' + FPS
+      ? ',scale=' + (W * 2) + ':' + (H * 2) + ",zoompan=z='1+0.05*on/" + n + "':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=" + W + 'x' + H + ':fps=' + FPS
       : ',fps=' + FPS;
-    fc.push('[bg' + i + '][fg' + i + ']overlay=(W-w)/2:(H-h)/2' + motion + ',setsar=1,format=yuv420p'
+    fc.push('[bg' + i + '][fg' + i + ']overlay=(W-w)/2:' + box.y + '+(' + box.h + '-h)/2' + motion + ',setsar=1,format=yuv420p'
       + (texts.length ? ',' + texts.join(',') : '') + '[v' + i + ']');
     if (info.audio) fc.push('[' + i + ':a]aresample=44100,aformat=channel_layouts=stereo[a' + i + ']');
     else fc.push('anullsrc=r=44100:cl=stereo,atrim=duration=' + info.dur.toFixed(2) + '[a' + i + ']');
@@ -242,5 +264,5 @@ function main() {
   console.log(o.out);
 }
 
-module.exports = { clean, rtl, wrap, fit, parseArgs, blockTop, blockBottom, blockEnd, SAFE_TOP, SAFE_BOTTOM };
+module.exports = { clean, rtl, wrap, balanced, fit, photoBox, parseArgs, blockTop, blockBottom, blockEnd, SAFE_TOP, SAFE_BOTTOM };
 if (require.main === module) main();
