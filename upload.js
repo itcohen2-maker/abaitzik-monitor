@@ -72,4 +72,18 @@ if (require.main === module) {
   const stop = () => { log('stopping'); up.server.close(() => process.exit(0)); setTimeout(() => process.exit(0), 5000); };
   process.on('SIGTERM', stop);
   process.on('SIGINT', stop);
+  // 19.11.2026: videos queued for 1080p before a restart start again (lib/upload-server.js resume).
+  try { const n = up.resume(); if (n) log('conversions resumed: ' + n); } catch (e) { log('resume failed: ' + e.message); }
+  /*
+    19.11.2026: a customer's service runs the code of its own checkout (stable), and nothing restarted it when
+    tenants-sync brought new code, so a fix to this file never reached a running customer. When the code on disk
+    changes, the process exits once nothing is in flight (no chunk being written, no conversion), and systemd
+    (Restart=always) starts the new code. An upload between chunks resumes by itself.
+  */
+  const codeFiles = [__filename, path.join(__dirname, 'lib', 'upload-server.js'), path.join(__dirname, 'lib', 'pc-api.js')];
+  const codeStamp = () => codeFiles.map((f) => { try { return require('crypto').createHash('sha1').update(fs.readFileSync(f)).digest('hex'); } catch (e) { return '-'; } }).join(',');
+  const born = codeStamp();
+  setInterval(() => {
+    if (codeStamp() !== born && up.idle()) { log('new code on disk, restarting'); stop(); }
+  }, 60 * 1000).unref();
 }

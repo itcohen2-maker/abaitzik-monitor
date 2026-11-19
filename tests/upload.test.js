@@ -170,12 +170,12 @@ test('finishing short of the declared size is refused and nothing reaches the in
   await s.close();
 });
 
-test('size limits: over 4GB, zero, junk, and a chunk over 16MB', async () => {
+test('size limits: over 3GB, zero, junk, and a chunk over 16MB', async () => {
   const s = await setup();
-  assert.strictEqual((await create(s, { name: 'x', size: 4 * 1024 * MB + 1 })).status, 413);
+  assert.strictEqual((await create(s, { name: 'x', size: 3 * 1024 * MB + 1 })).status, 413);
   assert.strictEqual((await create(s, { name: 'x', size: 0 })).status, 400);
   assert.strictEqual((await create(s, { name: 'x', size: 'big' })).status, 400);
-  assert.strictEqual((await create(s, { name: 'x', size: 4 * 1024 * MB })).status, 201);
+  assert.strictEqual((await create(s, { name: 'x', size: 3 * 1024 * MB - 50 * MB })).status, 201);
   const r = await create(s, { name: 'y', size: 40 * MB });
   const big = await put(s, r.body.id, 0, Buffer.alloc(17 * MB));
   assert.strictEqual(big.status, 413);
@@ -314,4 +314,141 @@ test('a recording ntfy refuses (its 20MB per 3h quota) goes to our server instea
   // no uploadUrl: exactly the old path
   await assert.rejects(mk('', refuseAll, serverOk)([voice], 'x'), (e) => !!e.notSent);
   assert.strictEqual(got, null);
+});
+
+/*
+  19.11.2026, Itzik: a customer's long 4K videos must not slow the other monitors. Videos over 10 minutes are
+  refused at finish, every other video is converted to 1080p in the background before the listener sees it,
+  and the original goes only after the copy is checked. Small real videos made here with ffmpeg.
+*/
+const { spawnSync } = require('child_process');
+const HAVE_FF = spawnSync('ffmpeg', ['-version']).status === 0 && spawnSync('ffprobe', ['-version']).status === 0;
+function makeVideo(file, w, h, secs, audio) {
+  const a = ['-v', 'error', '-y', '-f', 'lavfi', '-i', 'testsrc2=size=' + w + 'x' + h + ':rate=10:duration=' + secs];
+  if (audio) a.push('-f', 'lavfi', '-i', 'sine=frequency=440:duration=' + secs);
+  a.push('-c:v', 'libx264', '-preset', 'ultrafast', '-pix_fmt', 'yuv420p');
+  if (audio) a.push('-c:a', 'aac');
+  a.push(file);
+  assert.strictEqual(spawnSync('ffmpeg', a).status, 0, 'test video made');
+  return fs.readFileSync(file);
+}
+function probeJson(file) {
+  const r = spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'stream=codec_type,codec_name,width,height,pix_fmt:format=duration', '-of', 'json', file], { encoding: 'utf8' });
+  return JSON.parse(r.stdout);
+}
+async function sendWhole(s, name, buf, caption) {
+  const c = await create(s, { name, size: buf.length, type: 'video/quicktime' });
+  assert.strictEqual(c.status, 201);
+  assert.strictEqual((await put(s, c.body.id, 0, buf)).status, 200);
+  return Object.assign(await finish(s, c.body.id, caption), { id: c.body.id });
+}
+
+test('a video over the length limit is refused at finish with too-long, and nothing is kept', { skip: !HAVE_FF }, async () => {
+  const s = await setup({ maxSeconds: 1, encodeLock: '' });
+  try {
+    const buf = makeVideo(path.join(s.base, 'long.mp4'), 160, 120, 4, false);
+    const r = await sendWhole(s, 'long.mov', buf, 'x');
+    assert.strictEqual(r.status, 422);
+    assert.strictEqual(r.body.error, 'too-long');
+    assert.strictEqual(r.body.max, 1);
+    assert.deepStrictEqual(fs.readdirSync(path.join(s.base, 'stage', 'acme')), []);
+    assert.ok(!fs.existsSync(path.join(s.data, 'inbox', 'long.mov')));
+    assert.ok(!fs.existsSync(path.join(s.data, 'uploads', 'ready')));
+  } finally { await s.close(); }
+});
+
+test('a big video is converted to 1080p before the listener sees it, the original goes, other notes wait for it', { skip: !HAVE_FF }, async () => {
+  const s = await setup({ encodeLock: '' });
+  try {
+    const buf = makeVideo(path.join(s.base, 'v.mp4'), 2560, 1440, 3, true);
+    const r = await sendWhole(s, 'clip.mov', buf, 'קמפיין: שלושה קבצים');
+    assert.strictEqual(r.status, 200);
+    assert.strictEqual(r.body.converting, true);
+    // while it converts: done for the page, no ready note yet
+    const g = await (await fetch(s.url + '/up/v1/acme/uploads/' + r.id, { headers: H() })).json();
+    assert.strictEqual(g.done, true);
+    assert.strictEqual(g.offset, buf.length);
+    // a plain file of the same send is held until the video is ready
+    const c = await create(s, { name: 'doc.pdf', size: 5 });
+    await put(s, c.body.id, 0, Buffer.from('hello'));
+    assert.strictEqual((await finish(s, c.body.id, 'קמפיין: שלושה קבצים')).status, 200);
+    assert.ok(!fs.existsSync(path.join(s.data, 'uploads', 'ready', c.body.id + '.json')), 'held while the video converts');
+    await s.up.drain();
+    const out = path.join(s.data, 'inbox', 'clip.mp4');
+    assert.ok(fs.existsSync(out), 'the 1080p copy is in the inbox');
+    assert.ok(!fs.existsSync(path.join(s.data, 'inbox', 'clip.mov')));
+    assert.deepStrictEqual(fs.readdirSync(path.join(s.base, 'stage', 'acme', 'conv')), [], 'original and temp gone');
+    const p = probeJson(out);
+    const v = p.streams.find((x) => x.codec_type === 'video');
+    assert.strictEqual(v.codec_name, 'h264');
+    assert.strictEqual(v.width, 1920);
+    assert.strictEqual(v.height, 1080);
+    assert.strictEqual(v.pix_fmt, 'yuv420p');
+    assert.ok(p.streams.some((x) => x.codec_type === 'audio'));
+    assert.ok(Math.abs(Number(p.format.duration) - 3) < 1);
+    const note = JSON.parse(fs.readFileSync(path.join(s.data, 'uploads', 'ready', r.id + '.json'), 'utf8'));
+    assert.strictEqual(note.name, 'clip.mp4');
+    assert.strictEqual(note.size, fs.statSync(out).size);
+    assert.strictEqual(note.caption, 'קמפיין: שלושה קבצים');
+    assert.ok(fs.existsSync(path.join(s.data, 'uploads', 'ready', c.body.id + '.json')), 'held note released');
+    assert.ok(!fs.existsSync(path.join(s.base, 'stage', 'acme', 'held.json')));
+    const fin = JSON.parse(fs.readFileSync(path.join(s.base, 'stage', 'acme', 'finished.json'), 'utf8'));
+    assert.strictEqual(fin.find((e) => e.id === r.id).size, note.size, 'the sweep expires the copy by its own size');
+    // a finish again (a retry from the page) still says ok
+    assert.strictEqual((await finish(s, r.id, 'x')).status, 200);
+  } finally { await s.close(); }
+});
+
+test('a portrait video keeps its shape: long side 1920, even sides, no audio is fine', { skip: !HAVE_FF }, async () => {
+  const s = await setup({ encodeLock: '' });
+  try {
+    const buf = makeVideo(path.join(s.base, 'p.mp4'), 1082, 2402, 2, false);
+    const r = await sendWhole(s, 'tall.mp4', buf, 'x');
+    assert.strictEqual(r.body.converting, true);
+    await s.up.drain();
+    const v = probeJson(path.join(s.data, 'inbox', 'tall.mp4')).streams.find((x) => x.codec_type === 'video');
+    assert.strictEqual(v.height, 1920);
+    assert.ok(v.width % 2 === 0 && Math.abs(v.width - 864) <= 2, 'width ' + v.width);
+  } finally { await s.close(); }
+});
+
+test('a small 1080p H.264 video is not converted, a failed conversion delivers the original', { skip: !HAVE_FF }, async () => {
+  const s = await setup({ encodeLock: '', runEncode: () => Promise.resolve({ code: 1, err: 'boom' }) });
+  try {
+    const small = makeVideo(path.join(s.base, 's.mp4'), 640, 360, 2, false);
+    const a = await sendWhole(s, 'small.mp4', small, 'x');
+    assert.strictEqual(a.body.converting, undefined);
+    assert.ok(fs.existsSync(path.join(s.data, 'uploads', 'ready', a.id + '.json')));
+    const big = makeVideo(path.join(s.base, 'b.mp4'), 2560, 1440, 2, false);
+    const b = await sendWhole(s, 'big.mov', big, 'x');
+    assert.strictEqual(b.body.converting, true);
+    await s.up.drain();
+    const kept = path.join(s.data, 'inbox', 'big.mov');
+    assert.ok(fs.existsSync(kept), 'the original is never lost');
+    assert.strictEqual(fs.statSync(kept).size, big.length);
+    assert.strictEqual(JSON.parse(fs.readFileSync(path.join(s.data, 'uploads', 'ready', b.id + '.json'), 'utf8')).name, 'big.mov');
+  } finally { await s.close(); }
+});
+
+test('a video waiting for conversion still counts in the quota', { skip: !HAVE_FF }, async () => {
+  let release;
+  const gate = new Promise((r) => { release = r; });
+  const s = await setup({ encodeLock: '', runEncode: () => gate.then(() => ({ code: 1, err: '' })) });
+  try {
+    const big = makeVideo(path.join(s.base, 'b.mp4'), 2560, 1440, 1, false);
+    const b = await sendWhole(s, 'big.mov', big, 'x');
+    assert.strictEqual(b.body.converting, true);
+    const s2 = await create(s, { name: 'next.mov', size: 3 * 1024 * MB - big.length + 1 });
+    assert.strictEqual(s2.status, 507);
+    assert.strictEqual(s2.body.error, 'quota');
+    release();
+    await s.up.drain();
+  } finally { await s.close(); }
+});
+
+test('the defaults are 3GB a file, 3GB a tenant, 10 minutes a video', () => {
+  const { DEFAULTS, GB: G } = require('../lib/upload-server.js');
+  assert.strictEqual(DEFAULTS.maxBytes, 3 * G);
+  assert.strictEqual(DEFAULTS.quota, 3 * G);
+  assert.strictEqual(DEFAULTS.maxSeconds, 600);
 });
