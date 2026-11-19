@@ -456,9 +456,17 @@
   "ytd": "Waze doesn't see the traffic, it hears it from everyone's phones. Every phone sends its location every few seconds, and the server compares each road stretch's speed to its usual pace. Source: Waze Partners Help.",
   "song": "",
   "song_tt": "",
-  "posted": false,
-  "postedAt": null,
-  "approvedAt": "2026-11-15T06:00:45.408Z"
+  "posted": true,
+  "postedAt": "2026-11-19T18:04:08.509Z",
+  "approvedAt": "2026-11-15T06:00:45.408Z",
+  "auto": {
+   "reel": "18117094286152987",
+   "story": "17926056585219756",
+   "storyError": null,
+   "page": "1190400150086368",
+   "pageError": null,
+   "channel": "itsolution.global"
+  }
  },
  {
   "id": "wascam-he",
