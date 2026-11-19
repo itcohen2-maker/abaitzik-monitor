@@ -611,6 +611,28 @@ function reKeyFor(at) {
   return '';
 }
 
+/*
+  19.11.2026, Itzik, on the test monitor: a campaign went up, the files were taken, and nothing told the customer
+  that it is now being worked on and where the answer will come. A campaign request gets that note at once, as a
+  separate bubble from the monitor. It carries no re on purpose: a claude record with re counts as the answer
+  everywhere (worker, watchdog, brief), and the request must stay open until the draft is written. kind 'ack' and
+  ackOf let wa-bridge.js send the same note to the customer's WhatsApp when it is connected (data/conn/wa.json).
+*/
+function campaignAck(rec, at) {
+  let wa = false;
+  try { const w = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'conn', 'wa.json'), 'utf8')); wa = !!(w && w.phone); } catch (e) {}
+  const text = 'קיבלתי את בקשת הקמפיין, והיא נכנסה לעבודה עכשיו. '
+    + (wa ? 'כשהטיוטה תהיה מוכנה תקבל אותה כאן בוואטסאפ, והיא תופיע גם במסך התשובות במוניטור.'
+          : 'כשהטיוטה תהיה מוכנה היא תופיע כאן במסך התשובות.')
+    + ' טיוטה רגילה מוכנה בדרך כלל תוך כמה דקות. סרטון או קרוסלה יכולים לקחת עד כמה שעות.';
+  const a = new Date(at.getTime() + 1000);
+  const name = chatName(a).replace('-itzik-auto', '-claude-ack');
+  try {
+    fs.writeFileSync(path.join(CHAT, name), JSON.stringify({ at: a.toISOString(), from: 'claude', kind: 'ack', ackOf: rec.id, text: text }, null, 1), 'utf8');
+    say('אישור קבלה לקמפיין נכתב' + (wa ? ', ייצא גם לוואטסאפ' : ''));
+  } catch (e) { say('!! אישור קבלה לקמפיין לא נכתב: ' + e.message); }
+}
+
 function recordIncoming(m) {
   const gid = group.groupOf(m.title);
   const held = gid ? groupFiles.get(gid) : null;
@@ -696,6 +718,7 @@ function recordIncoming(m) {
     if (rec.heldWhy === 'waitlist') alertWaitlist(text);
     if (rec.heldWhy === 'login-wait') alertLoginWait(text);
     if (rec.heldWhy === 'shachar-feedback') alertShacharFeedback(text);
+    if (codeOk && /^קמפיין:/.test(text.trim())) campaignAck(rec, at);
     recordDrain(text, at);
     /*
       13.10: the quiet hours line from the settings screen is applied here, with

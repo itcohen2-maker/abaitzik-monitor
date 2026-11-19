@@ -815,6 +815,7 @@ function latestOwn(to) {
 // The answers: claude's chat records that answer a message that came from WhatsApp.
 function sweep() {
   outboxSweep();
+  try { pageTasksSweep(); } catch (e) { log('page tasks: ' + e.message); }
   try { waPushSweep(); } catch (e) { log('wa push: ' + e.message); }
   const st = loadState();
   const ids = Object.keys(st.pending);
@@ -827,6 +828,37 @@ function sweep() {
   const s4 = loadState(); let ch = false;
   Object.keys(s4.pending).forEach(function (k) { if (Date.now() - s4.pending[k].at > 6 * 3600e3) { delete s4.pending[k]; ch = true; } });
   if (ch) saveState(s4);
+}
+/*
+  19.11.2026, Itzik: "אם הוא חיבר את הוואטסאפ, אז יהיה בוואטסאפ, ואם לא, אז יהיה במסך התשובות". A task sent from the
+  page of a customer whose WhatsApp is connected (wa-tenants.json) goes on the waiting list with page: true, so
+  sweepQueue sends its answer there, as fast chat tasks already do (16.11). The "received" note that listen.js
+  writes under a campaign (kind ack, no re) goes out at once.
+*/
+function pageTasksSweep() {
+  let map = {}; try { map = JSON.parse(fs.readFileSync(path.join(DATA, 'wa-tenants.json'), 'utf8')) || {}; } catch (e) { return; }
+  const st = loadState(); st.ackSent = st.ackSent || {}; let ch = false;
+  Object.keys(map).forEach(function (phone) {
+    const t = map[phone]; if (!t || !t.approved || !t.dir || !t.tenant) return;
+    const dir = path.join(t.dir, 'data', 'chat', 'chat');
+    let files = []; try { files = fs.readdirSync(dir).filter(function (f) { return f.endsWith('.json'); }); } catch (e) { return; }
+    files.forEach(function (f) {
+      let d; try { if (Date.now() - fs.statSync(path.join(dir, f)).mtimeMs > 15 * 60e3) return; d = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')); } catch (e) { return; }
+      if (!d) return;
+      if (d.from === 'itzik' && d.auto && d.id && /^(ntfy|up)-/.test(d.id) && d.status === 'working' && !st.pending[d.id] && !st.sent['page:' + d.id]) {
+        st.pending[d.id] = { to: phone, at: Date.now(), name: '', tenant: t.tenant, dir: t.dir, page: true };
+        st.sent['page:' + d.id] = Date.now(); ch = true;
+        log('page task ' + t.tenant + ' ' + d.id + ' -> answer to WhatsApp');
+      }
+      const ak = t.tenant + '/' + f;
+      if (d.from === 'claude' && d.kind === 'ack' && d.ackOf && d.text && !st.ackSent[ak]) {
+        st.ackSent[ak] = Date.now(); ch = true;
+        const open = st.lastIn && st.lastIn[phone] && Date.now() - st.lastIn[phone] < 23.5 * 3600e3;
+        (open ? tenantSend(phone, d.text) : waTemplate(phone, d.text)).then(function (ok) { log('ack out ' + t.tenant + ' ' + f + (ok === false ? ' (not delivered)' : '')); }, function (e) { log('ack out ' + t.tenant + ': ' + e.message); });
+      }
+    });
+  });
+  if (ch) saveState(st);
 }
 function sweepQueue(st, Q, ids) {
   const mine = Q === CHAT;
