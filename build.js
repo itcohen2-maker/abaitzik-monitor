@@ -20060,7 +20060,8 @@ function connSheet(){
  // right above "עוד לא חיברת כלום". The count is of real connections only.
  var cnReal=C.rows.filter(function(r){return r.id!=='sign';});
  var n=cnReal.filter(function(r){return r.on;}).length;
- var h='<div class="ycard"><b>🔌 חיבורים</b><p>'+n+' מתוך '+cnReal.length+' מחוברים. כל חיבור נותן למוניטור לעבוד בשבילך עם עוד מקום.</p>';
+ // 19.11.2026, Itzik: "אין כפתור חזרה ממסך החיבורים". The only way out was סגירה at the very end of a long list.
+ var h='<div class="ycard"><button type="button" class="yb bzBackTop" data-k="">→ חזרה</button><b>🔌 חיבורים</b><p>'+n+' מתוך '+cnReal.length+' מחוברים. כל חיבור נותן למוניטור לעבוד בשבילך עם עוד מקום.</p>';
  if(connNone())h+='<p style="font-weight:700">עוד לא חיברת כלום, ובלי חיבור המוניטור לא יכול לעבוד בשבילך. כדאי להתחיל מגוגל: מייל, יומן ודרייב, זה לוקח דקה.</p>';
  C.rows.forEach(function(r){
   var st=r.on?'<span class="cnOk">✓ מחובר</span>':r.paid?'<span class="cnPaid">'+esc(r.paid)+'</span>':r.soon?'<span class="cnSoon">מחברים בתיאום עם IT Solution</span>':'<span class="cnOff">לא מחובר</span>';
