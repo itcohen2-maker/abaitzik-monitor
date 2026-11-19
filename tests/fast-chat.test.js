@@ -145,3 +145,17 @@ test('chatOn / chatOff triggers', () => {
   for (const t of ['מצב בקשות', 'סיום שיחה.']) assert.ok(FC.chatOff(t) && !FC.chatOn(t), t);
   for (const t of ['בוא נדבר על המחיר', 'מצב שיחה עכשיו', '', null]) assert.ok(!FC.chatOn(t) && !FC.chatOff(t), String(t));
 });
+
+// 19.11.2026: a tap on another training inside a sales role play switches modes.
+test('another training ends a sales role play', async () => {
+  const d = tmp();
+  await FC.turn(d, 'אימון מכירות', { llm: stub('x'), salesTrain: salesStub });
+  const a = await FC.turn(d, 'אימון עסקי', { llm: stub('מה היעד שלך?'), salesTrain: salesStub });
+  assert.equal(a.mode, 'coach'); assert.equal(FC.load(d).sales, undefined); assert.equal(a.reply, 'מה היעד שלך?');
+  const b = await FC.turn(d, 'אימון אישי', { llm: stub('על מה נעבוד?'), salesTrain: salesStub });
+  assert.equal(b.mode, 'personal');
+  const c = await FC.turn(d, 'אימון מכירות', { llm: stub('x'), salesTrain: salesStub });
+  assert.equal(c.mode, 'sales');
+  const e = await FC.turn(d, 'אימון מכירות', { llm: stub('x'), salesTrain: salesStub });
+  assert.equal(e.mode, 'sales'); assert.match(e.reply, /מתחילים אימון מכירות/);
+});
