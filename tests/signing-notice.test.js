@@ -21,10 +21,16 @@ test("a signing notice is not reported as missed, with or without a reply", () =
   assert.deepStrictEqual(missedOf([notice], null, new Set()), []);
 });
 
+test("the setup page open notice is not reported as missed", () => {
+  const setupNotice = { id: "s1", auto: true, text: "דף הקמה" + NL + "בדיקה פתח את דף ההקמה עכשיו." };
+  assert.deepStrictEqual(missedOf([setupNotice], 0, new Set()), []);
+  assert.deepStrictEqual(missedOf([setupNotice], null, new Set()), []);
+});
+
 test("a real request and a completion notice are still reported when unanswered", () => {
   assert.deepStrictEqual(missedOf([mine, done], 0, new Set()).map((m) => m.id), ["m1", "d1"]);
 });
 
 test("the queue, the missed check and the retry check all skip the signing notice", () => {
-  assert.strictEqual((src.split("פתח את .*לחתימה").length - 1), 3);
+  assert.strictEqual((src.split("פתח את (?:.*לחתימה|דף ההקמה עכשיו)").length - 1), 3);
 });
