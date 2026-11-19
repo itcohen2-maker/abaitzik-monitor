@@ -16087,15 +16087,30 @@ function campSheet(){
   var sndNote=ownAu?'צליל משלי: '+ownAu.name+' (הלקוח מאשר שיש לו זכויות עליו)':(chosenSound&&sndTitle[chosenSound]?'צליל: '+sndTitle[chosenSound]:'');
   var metaSnd=((document.getElementById('cpMeta')||{}).value||'').trim();
   if(metaSnd)sndNote+=(sndNote?' | ':'')+'צליל מאוסף Meta בזמן הפרסום: '+metaSnd;
-  var note='קמפיין: '+(chosen.length?chosen.join(', '):'לא נבחר סוג')+(t?' | '+t:'')+(sndNote?' | '+sndNote:'')
+  var note='קמפיין: '+(chosen.length?chosen.join(', '):'לפי התיאור')+(t?' | '+t:'')+(sndNote?' | '+sndNote:'')
    +(picked.length>1?' | סדר הקבצים: '+picked.map(function(f,i){return (i+1)+'. '+f.name;}).join(', '):'')+(joinAll?' | לחבר הכול לסרטון אחד':'');
   var allF=picked.concat(ownAu?[ownAu]:[]);
   e.target.disabled=true;
   var go=allF.length?sendAll(allF,note):sendText('קמפיין',note,'משימה');
-  go.then(function(){
-   markSent(allF.length?'file':'text',note);close();
-   toast('נשלח. אכין טיוטה ואחזיר אותה בתשובות, ושום דבר לא יעלה בלי אישור שלך.');
-  }).catch(function(){e.target.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
+  // 19.11.2026, Itzik: "הכפתור שליחה לא עובד ולא מבינים מה השלב הבא". It worked, the sheet just closed with a toast,
+  // and a video that did not upload turned the whole send into "לא נשלח" though the photos had gone. Now the button
+  // says it is sending, the sheet stays open with what happens next, and a partial send names what did not arrive.
+  e.target.textContent='⏳ שולח, עוד רגע...';e.target.classList.add('busy');
+  function cpDone(miss){
+   markSent(allF.length?'file':'text',note);
+   var card=w.querySelector('.ycard');if(!card){close();return;}
+   card.innerHTML='<b>✅ נשלח</b>'
+    +(miss&&miss.length?'<div style="margin:8px 0;padding:10px;border-radius:12px;background:#fff4e5;color:#7a3e00;font:700 15px Heebo,sans-serif">⚠️ לא עלו: '+esc(miss.join(', '))+'. כל השאר נשלח. אפשר לפתוח שוב את 📣 קמפיינים ולשלוח רק אותם.</div>':'')
+    +'<div style="font:600 16px/1.6 Heebo,sans-serif;margin:8px 0">מה קורה עכשיו:<br>1. אני מכין טיוטה: מטרה, קהל, תקציב, כיתובים ותמונות מותאמות. זה לוקח כמה דקות.<br>2. היא תגיע למסך <b>תשובות</b>, עם התראה.<br>3. שם מאשרים, או כותבים מה לתקן.</div>'
+    +'<small>שום דבר לא עולה לפייסבוק או לאינסטגרם בלי אישור שלך.</small>'
+    +'<button type="button" class="yb yb1" data-a="x">הבנתי</button>';
+  }
+  go.then(function(){cpDone(null);}).catch(function(er){
+   var miss=(er&&er.failed)||null;
+   if(miss&&miss.length&&miss.length<allF.length){cpDone(miss);return;}
+   e.target.disabled=false;e.target.textContent='שליחה';e.target.classList.remove('busy');
+   toast(er&&er.msg?er.msg:'לא נשלח. תבדוק חיבור ותנסה שוב.');
+  });
  };
  w.addEventListener('change',function(e){
   if(e.target&&e.target.id==='cpFiles'){picked=picked.concat([].slice.call(e.target.files||[]));e.target.value='';paintList();if(picked.length&&!cpAiAsked.length&&!cpRealText((document.getElementById('cpText')||{}).value||''))cpAiRun();}
