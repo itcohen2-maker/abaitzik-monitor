@@ -24,6 +24,20 @@ chown -R demo:demo "$APP"
 # mktemp made the copy 700 and cp -a carried it over: Caddy could not read the page (17.11)
 chmod 711 "$APP"; setfacl -m u:caddy:x "$APP" 2>/dev/null || true
 cd "$APP"
+# 19.11.2026, Itzik: "שמוניטור ההדגמה ידגים הכל ... גם התוספות בתשלום". The demo's package, Medium with every add-on on
+# (bank read only, accounting on Morning, 50 more signatures). Only the instance named "demo" reads this file
+# (lib/plan-io.js stateOf), so the 📦 tile, the money view and the 🔌 rows show as for a customer who bought them.
+# Written here as root from this repo, never by the demo's own code.
+# Only once the code copied from stable has the demo of 19.11 (lib/demo-acts.js): older code would show these screens empty.
+if [ -f "$APP/lib/demo-acts.js" ]; then
+PLAN=/srv/monitor-changes/demo.plan.json
+printf '{"plan":"medium","month":"%s","extra":0,"applied":[],"history":[],"addons":{"accounting":{"on":true,"at":"2026-11-01T08:00:00.000Z","software":"morning"},"bank":{"on":true,"at":"2026-11-01T08:00:00.000Z","bank":"demo","kind":"business"},"sign50":{"on":true,"at":"2026-11-01T08:00:00.000Z"}}}\n' \
+  "$(TZ=Asia/Jerusalem date +%Y-%m)" > "$PLAN.tmp" && chown monitor:monitor "$PLAN.tmp" && chmod 644 "$PLAN.tmp" && mv "$PLAN.tmp" "$PLAN"
+# and every screen a customer can have that the invented data fills (instance.json stays between runs; this keeps it right)
+node -e 'const fs=require("fs"),f=process.argv[1],j=JSON.parse(fs.readFileSync(f,"utf8"));
+j.screens=["gMyBoard","gBhCal","gBhMeet","gBhClients","gBhMail","gBhQuote","gRemind","gTasks","gCamp","gCIdeas","gShopList","gUpgrade"];
+j.board=true;fs.writeFileSync(f,JSON.stringify(j,null,1));' "$APP/instance.json"
+fi
 sudo -u demo -H node lib/demo-data.js data
 sudo -u demo -H env MONITOR_NO_GATE=1 node build.js 2>&1 | tail -1
 # Shared code carries owner only links with private tokens (forms /f/, pages /p/, partner /r/). A customer's page is
