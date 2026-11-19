@@ -235,10 +235,10 @@ function leadsTile() {
   const small = (fresh.length ? (fresh.length === 1 ? 'ליד חדש אחד' : fresh.length + ' לידים חדשים') + ' · ' : '') + all.length + ' בסך הכל';
   return '<button type="button" class="gt g16" id="gLeads" data-lnew="' + newest.replace(/[^0-9TZ:.-]/g, '') + '" data-lwho="' + who.replace(/[&<>"']/g, '') + '"><b>🔔 לידים</b><small>' + small + '</small></button>'
     + '<script>(function(){var t=document.getElementById("gLeads");if(!t)return;var k=t.getAttribute("data-lnew"),s="";try{s=localStorage.getItem("leadsTileSeen")||"";}catch(e){}'
-    + 'if(k&&s!==k){t.classList.add("leadNew");var al=document.createElement("button");al.type="button";al.id="leadAlert";al.className="gt g16 leadNew";'
-    + 'var w=t.getAttribute("data-lwho")||"";al.innerHTML="<b>🔔 ליד חדש</b><small></small>";al.querySelector("small").textContent=(w?w+" · ":"")+"לחיצה לפתיחה";'
-    + 'al.onclick=function(){t.click();};var place=function(){var h=document.getElementById("pH");if(h&&al.parentNode!==h)h.insertBefore(al,h.firstChild);};place();document.addEventListener("DOMContentLoaded",place);setTimeout(place,1500);}'
-    + 't.addEventListener("click",function(){try{if(k)localStorage.setItem("leadsTileSeen",k);}catch(e){}t.classList.remove("leadNew");var a=document.getElementById("leadAlert");if(a)a.remove();if(typeof bizSheet==="function"){bizSheet("leads");if(typeof bzOpenDrawer==="function")bzOpenDrawer("leads");}});})();</script>';
+    + 'var sm=t.querySelector("small"),all=sm?sm.textContent:"";'
+    + 'if(k&&s!==k){t.classList.add("leadNew");var w=t.getAttribute("data-lwho")||"";if(sm)sm.textContent="ליד חדש"+(w?": "+w:"")+" · "+all;}'
+    + 'var al=document.createElement("div");al.id="leadAlert";var place=function(){var h=document.getElementById("pH");if(!h)return;if(t.parentNode!==al)al.appendChild(t);if(al.parentNode!==h)h.insertBefore(al,h.firstChild);};place();document.addEventListener("DOMContentLoaded",place);setTimeout(place,1500);'
+    + 't.addEventListener("click",function(){try{if(k)localStorage.setItem("leadsTileSeen",k);}catch(e){}t.classList.remove("leadNew");if(sm)sm.textContent=all;if(typeof bizSheet==="function"){bizSheet("leads");if(typeof bzOpenDrawer==="function")bzOpenDrawer("leads");}});})();</script>';
 }
 
 function newestLead() {
@@ -4346,8 +4346,9 @@ body.rdragging{user-select:none;-webkit-user-select:none}
   back, and the choice is remembered.
 */
 #pH.bare > *:not(#talkCard):not(#bareBtn):not(#approvalsBox):not(#leadAlert){display:none!important}
-#leadAlert{display:block;width:100%;box-sizing:border-box;margin:6px 0 10px;text-align:right;position:relative;min-height:56px;padding:10px 14px;border:0;border-radius:14px;color:#fff;font-family:Heebo,sans-serif;cursor:pointer}
-#leadAlert b{display:block;font-size:18px}#leadAlert small{display:block;font-size:14px;opacity:.95}
+#leadAlert{display:block;margin:6px 0 10px}
+#leadAlert>#gLeads{display:block!important;width:100%;box-sizing:border-box;text-align:right;position:relative;min-height:56px!important;height:auto!important;padding:10px 14px!important;border:0;border-radius:14px;color:#fff;font-family:Heebo,sans-serif;cursor:pointer}
+#leadAlert>#gLeads>b{display:block;font-size:18px!important}#leadAlert>#gLeads>small{display:block;font-size:14px!important;opacity:.95;white-space:normal!important}
 body.offHome #talkCard,body.offHome #gBackChat,body.offHome .gMenu{display:none!important}
 /*
   9.10, the improvements reviewer: a wide green bar saying "refresh me" told a
