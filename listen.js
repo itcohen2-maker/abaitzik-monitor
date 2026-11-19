@@ -1291,6 +1291,28 @@ function pollUploads() {
     const name = String(up.name || '');
     if (!name || name !== path.basename(name) || !fs.existsSync(path.join(DROP, name))) { say('!! קובץ גדול נעלם: ' + name); return; }
     const at = new Date();
+    // 19.11.2026, the end to end check: one campaign with three files became three chat lines with the same words, the
+    // session answered each one ("הסרטון לא נפתח", "זו אותה בקשה"...). A file whose caption is the same request as a line
+    // that came in the last five minutes and is still open joins that line.
+    const capKey = String(up.caption || '').trim().split(String.fromCharCode(10))[0].replace(/\n?\[re:[^\]\s]+\]\s*$/, '').slice(0, 400);
+    if (capKey.length > 20) {
+      let joined = false;
+      try {
+        for (const n of fs.readdirSync(CHAT).filter(function (x) { return /-itzik-auto(-\d+)?\.json$/.test(x); }).sort().reverse().slice(0, 30)) {
+          let r0; try { r0 = JSON.parse(fs.readFileSync(path.join(CHAT, n), 'utf8')); } catch (e) { continue; }
+          if (!r0 || r0.from !== 'itzik' || r0.status === 'done' || at - Date.parse(r0.at) > 5 * 60e3) continue;
+          if (String(r0.text || '').split(String.fromCharCode(10))[0].slice(0, 400) !== capKey) continue;
+          r0.files = (r0.files || []).concat([name]);
+          r0.text = group.groupText(String(up.caption || '').trim().replace(/\n?\[re:[^\]\s]+\]\s*$/, ''), r0.files);
+          fs.writeFileSync(path.join(CHAT, n), JSON.stringify(r0, null, 1), 'utf8');
+          say('קובץ גדול צורף לאותה בקשה: ' + name);
+          logPull('file', name);
+          try { fs.renameSync(taken, path.join(READY, f.replace(/\.json$/, '.done'))); } catch (e) {}
+          joined = true; wrote = true; break;
+        }
+      } catch (e) {}
+      if (joined) return;
+    }
     const file = chatName(at);
     // 4.11: the same [re:<time>] tag as a phone send links a big file to the bubble it was aimed at.
     const upTag = String(up.caption || '').trim().match(/\n?\[re:([^\]\s]+)\]\s*$/);
