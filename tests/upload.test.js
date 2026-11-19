@@ -361,7 +361,7 @@ test('a big video is converted to 1080p before the listener sees it, the origina
   const s = await setup({ encodeLock: '' });
   try {
     const buf = makeVideo(path.join(s.base, 'v.mp4'), 2560, 1440, 3, true);
-    const r = await sendWhole(s, 'clip.mov', buf, 'קמפיין: שלושה קבצים');
+    const r = await sendWhole(s, 'clip.mov', buf, 'קמפיין: שלושה קבצים לחנות החדשה');
     assert.strictEqual(r.status, 200);
     assert.strictEqual(r.body.converting, true);
     // while it converts: done for the page, no ready note yet
@@ -371,8 +371,13 @@ test('a big video is converted to 1080p before the listener sees it, the origina
     // a plain file of the same send is held until the video is ready
     const c = await create(s, { name: 'doc.pdf', size: 5 });
     await put(s, c.body.id, 0, Buffer.from('hello'));
-    assert.strictEqual((await finish(s, c.body.id, 'קמפיין: שלושה קבצים')).status, 200);
+    assert.strictEqual((await finish(s, c.body.id, 'קמפיין: שלושה קבצים לחנות החדשה')).status, 200);
     assert.ok(!fs.existsSync(path.join(s.data, 'uploads', 'ready', c.body.id + '.json')), 'held while the video converts');
+    // a file of another request (a voice note, other words) is not held
+    const o2 = await create(s, { name: 'voice.m4a', size: 5 });
+    await put(s, o2.body.id, 0, Buffer.from('hello'));
+    assert.strictEqual((await finish(s, o2.body.id, 'הודעה קולית על משהו אחר לגמרי')).status, 200);
+    assert.ok(fs.existsSync(path.join(s.data, 'uploads', 'ready', o2.body.id + '.json')), 'another request goes at once');
     await s.up.drain();
     const out = path.join(s.data, 'inbox', 'clip.mp4');
     assert.ok(fs.existsSync(out), 'the 1080p copy is in the inbox');
@@ -389,7 +394,7 @@ test('a big video is converted to 1080p before the listener sees it, the origina
     const note = JSON.parse(fs.readFileSync(path.join(s.data, 'uploads', 'ready', r.id + '.json'), 'utf8'));
     assert.strictEqual(note.name, 'clip.mp4');
     assert.strictEqual(note.size, fs.statSync(out).size);
-    assert.strictEqual(note.caption, 'קמפיין: שלושה קבצים');
+    assert.strictEqual(note.caption, 'קמפיין: שלושה קבצים לחנות החדשה');
     assert.ok(fs.existsSync(path.join(s.data, 'uploads', 'ready', c.body.id + '.json')), 'held note released');
     assert.ok(!fs.existsSync(path.join(s.base, 'stage', 'acme', 'held.json')));
     const fin = JSON.parse(fs.readFileSync(path.join(s.base, 'stage', 'acme', 'finished.json'), 'utf8'));
