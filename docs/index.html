@@ -3282,7 +3282,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-19T16:10:37.244Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-19T16:11:46.109Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3420,7 +3420,7 @@ try{
 
 
  <div id="askBox"></div>
-<div class="grid" id="blkBiz"><button type="button" class="gt g16" id="gSend" hidden data-new="1"><b>📤 הודעות לשליחה</b><small>מוכנות לך אחת אחת</small></button><button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button><button type="button" class="gt g16" id="gVisits" hidden data-new="1"><b>👀 כניסות לקוחות</b><small>מתי נכנסו ולכמה זמן</small></button><button type="button" class="gt g16" id="gDemoSt" data-new="1"><b>📊 מוניטור ההדגמה</b><small>כניסות, שאלות ווואטסאפ</small></button><button type="button" class="gt g16" id="gAffs" hidden data-new="1"><b>🤝 שותפים</b><small>מי הגיע דרך שי</small></button><button type="button" class="gt g16" id="gLeads" data-lnew="2026-11-19T12:17:42.393Z"><b>🔔 לידים</b><small>ליד חדש אחד · 5 בסך הכל</small></button><script>(function(){var t=document.getElementById("gLeads");if(!t)return;var k=t.getAttribute("data-lnew"),s="";try{s=localStorage.getItem("leadsTileSeen")||"";}catch(e){}if(k&&s!==k)t.classList.add("leadNew");t.addEventListener("click",function(){try{if(k)localStorage.setItem("leadsTileSeen",k);}catch(e){}t.classList.remove("leadNew");if(typeof bizSheet==="function"){bizSheet("leads");if(typeof bzOpenDrawer==="function")bzOpenDrawer("leads");}});})();</script><button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261116-vids-link-agr001420-202611132022-li-queue-20261109-cb1115"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button><button type="button" class="gt g13" data-grp="work" id="gBhQuote" data-new="1"><b>🧾 הצעות מחיר</b><small>הצעה עם הלוגו שלך, לפני מע״מ, ב PDF</small></button></div><script>
+<div class="grid" id="blkBiz"><button type="button" class="gt g16" id="gSend" hidden data-new="1"><b>📤 הודעות לשליחה</b><small>מוכנות לך אחת אחת</small></button><button type="button" class="gt g16" id="gReq" hidden data-new="1"><b>📨 בקשה מהמנהלה</b><small>בקשה מלקוח</small></button><button type="button" class="gt g16" id="gVisits" hidden data-new="1"><b>👀 כניסות לקוחות</b><small>מתי נכנסו ולכמה זמן</small></button><button type="button" class="gt g16" id="gDemoSt" data-new="1"><b>📊 מוניטור ההדגמה</b><small>כניסות, שאלות ווואטסאפ</small></button><button type="button" class="gt g16" id="gAffs" hidden data-new="1"><b>🤝 שותפים</b><small>מי הגיע דרך שי</small></button><button type="button" class="gt g16" id="gLeads" data-lnew=""><b>🔔 לידים</b><small>5 בסך הכל</small></button><script>(function(){var t=document.getElementById("gLeads");if(!t)return;var k=t.getAttribute("data-lnew"),s="";try{s=localStorage.getItem("leadsTileSeen")||"";}catch(e){}if(k&&s!==k)t.classList.add("leadNew");t.addEventListener("click",function(){try{if(k)localStorage.setItem("leadsTileSeen",k);}catch(e){}t.classList.remove("leadNew");if(typeof bizSheet==="function"){bizSheet("leads");if(typeof bzOpenDrawer==="function")bzOpenDrawer("leads");}});})();</script><button type="button" class="gt g16" data-grp="work" id="gBiz" data-new="1" data-upd="20261116-vids-link-agr001420-202611132022-li-queue-20261109-cb1115"><b>💼 העסק שלי</b><small>לידים, לקוחות, כסף, ומה לחזור אליו</small></button><button type="button" class="gt g13" data-grp="work" id="gBhQuote" data-new="1"><b>🧾 הצעות מחיר</b><small>הצעה עם הלוגו שלך, לפני מע״מ, ב PDF</small></button></div><script>
 (function(){
  var K='leadSeen';
  function seen(){try{return JSON.parse(localStorage.getItem(K)||'[]');}catch(e){return [];}}
@@ -5239,7 +5239,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='2f0deaada4';
+var CODE_ID='1bff23b4be';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -12085,15 +12085,27 @@ function campSheet(){
   var sndNote=ownAu?'צליל משלי: '+ownAu.name+' (הלקוח מאשר שיש לו זכויות עליו)':(chosenSound&&sndTitle[chosenSound]?'צליל: '+sndTitle[chosenSound]:'');
   var metaSnd=((document.getElementById('cpMeta')||{}).value||'').trim();
   if(metaSnd)sndNote+=(sndNote?' | ':'')+'צליל מאוסף Meta בזמן הפרסום: '+metaSnd;
-  var note='קמפיין: '+(chosen.length?chosen.join(', '):'לא נבחר סוג')+(t?' | '+t:'')+(sndNote?' | '+sndNote:'')
+  var note='קמפיין: '+(chosen.length?chosen.join(', '):'לפי התיאור')+(t?' | '+t:'')+(sndNote?' | '+sndNote:'')
    +(picked.length>1?' | סדר הקבצים: '+picked.map(function(f,i){return (i+1)+'. '+f.name;}).join(', '):'')+(joinAll?' | לחבר הכול לסרטון אחד':'');
   var allF=picked.concat(ownAu?[ownAu]:[]);
   e.target.disabled=true;
   var go=allF.length?sendAll(allF,note):sendText('קמפיין',note,'משימה');
-  go.then(function(){
-   markSent(allF.length?'file':'text',note);close();
-   toast('נשלח. אכין טיוטה ואחזיר אותה בתשובות, ושום דבר לא יעלה בלי אישור שלך.');
-  }).catch(function(){e.target.disabled=false;toast('לא נשלח. תבדוק חיבור ותנסה שוב.');});
+  e.target.textContent='⏳ שולח, עוד רגע...';e.target.classList.add('busy');
+  function cpDone(miss){
+   markSent(allF.length?'file':'text',note);
+   var card=w.querySelector('.ycard');if(!card){close();return;}
+   card.innerHTML='<b>✅ נשלח</b>'
+    +(miss&&miss.length?'<div style="margin:8px 0;padding:10px;border-radius:12px;background:#fff4e5;color:#7a3e00;font:700 15px Heebo,sans-serif">⚠️ לא עלו: '+esc(miss.join(', '))+'. כל השאר נשלח. אפשר לפתוח שוב את 📣 קמפיינים ולשלוח רק אותם.</div>':'')
+    +'<div style="font:600 16px/1.6 Heebo,sans-serif;margin:8px 0">מה קורה עכשיו:<br>1. אני מכין טיוטה: מטרה, קהל, תקציב, כיתובים ותמונות מותאמות. זה לוקח כמה דקות.<br>2. היא תגיע למסך <b>תשובות</b>, עם התראה.<br>3. שם מאשרים, או כותבים מה לתקן.</div>'
+    +'<small>שום דבר לא עולה לפייסבוק או לאינסטגרם בלי אישור שלך.</small>'
+    +'<button type="button" class="yb yb1" data-a="x">הבנתי</button>';
+  }
+  go.then(function(){cpDone(null);}).catch(function(er){
+   var miss=(er&&er.failed)||null;
+   if(miss&&miss.length&&miss.length<allF.length){cpDone(miss);return;}
+   e.target.disabled=false;e.target.textContent='שליחה';e.target.classList.remove('busy');
+   toast(er&&er.msg?er.msg:'לא נשלח. תבדוק חיבור ותנסה שוב.');
+  });
  };
  w.addEventListener('change',function(e){
   if(e.target&&e.target.id==='cpFiles'){picked=picked.concat([].slice.call(e.target.files||[]));e.target.value='';paintList();if(picked.length&&!cpAiAsked.length&&!cpRealText((document.getElementById('cpText')||{}).value||''))cpAiRun();}
