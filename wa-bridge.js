@@ -1126,7 +1126,7 @@ async function api(q, s, u) {
     s.writeHead(r.ok ? 200 : 400, h); return s.end(JSON.stringify(r));
   }
   // 17.11.2026: the public demo monitor (lib/demo-chat.js). Public, no code, the owner instance only. Never his queue or thread.
-  if (/^\/api\/demo\/(chat|hit|wa)$/.test(u.pathname)) {
+  if (/^\/api\/demo\/(chat|hit|wa|camp)$/.test(u.pathname)) {
     if (!isOwnerInstance()) { s.writeHead(404, h); return s.end('{}'); }
     const r = await require('./lib/demo-chat.js').api(u.pathname, b, { dataPath: DATA, ip: realIp(q) });
     s.writeHead(r.status, h); return s.end(JSON.stringify(r.json));
