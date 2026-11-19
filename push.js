@@ -98,7 +98,7 @@ const git = (...a) => execFileSync('git', a, { cwd: HERE, encoding: 'utf8', maxB
   and the next build publishes again.
 */
 const pullRebase = () => {
-  try { git('pull', '--rebase', '--autostash'); }
+  try { git('pull', '--rebase', '--autostash', '-X', 'theirs'); }
   catch (e) { try { git('rebase', '--abort'); } catch (e2) { /* no rebase running */ } throw e; }
 };
 
