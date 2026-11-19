@@ -13,8 +13,9 @@ SRC=/home/monitor/abaitzik-monitor
 APP=/home/demo/app
 NEW=$(mktemp -d /home/demo/.app-new-XXXX)
 cd "$SRC"
-runuser -u monitor -- git fetch -q origin stable
-runuser -u monitor -- git archive origin/stable | tar -x -C "$NEW" --exclude=docs --exclude=promo --exclude=tests --exclude=instance.json --exclude=data
+# 19.11.2026: the timer runs as root and the log showed git "dubious ownership" errors on every run of the code copy
+runuser -u monitor -- git -c safe.directory=/home/monitor/abaitzik-monitor fetch -q origin stable
+runuser -u monitor -- git -c safe.directory=/home/monitor/abaitzik-monitor archive origin/stable | tar -x -C "$NEW" --exclude=docs --exclude=promo --exclude=tests --exclude=instance.json --exclude=data
 # the code is replaced, instance.json and data stay
 find "$APP" -mindepth 1 -maxdepth 1 ! -name instance.json ! -name data ! -name docs -exec rm -rf {} +
 cp -a "$NEW"/. "$APP"/
