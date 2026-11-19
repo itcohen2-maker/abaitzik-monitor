@@ -3279,7 +3279,7 @@ body.gH #talkCard>.mvSkel{order:6;width:100%;box-sizing:border-box}
   if(window.fetch)fetch('version.json?t='+Date.now(),{cache:'no-store'})
    .then(function(r){return r.ok?r.json():null;})
    .then(function(v){
-    if(!v||!v.builtAt||v.builtAt==='2026-11-19T14:02:37.050Z')return;
+    if(!v||!v.builtAt||v.builtAt==='2026-11-19T14:03:11.319Z')return;
     var key='staleFixedFor';
     var seen='';
     try{seen=sessionStorage.getItem(key)||'';}catch(e){}
@@ -3637,14 +3637,7 @@ try{
 
 <details class="setmore" id="moreSet">
 <summary>עוד הגדרות</summary>
-<div class="alerts" id="pushBox" hidden>
- <div>
-  <b>התראות לטלפון</b>
-  <small id="pushSaid">כל תשובה קופצת בטלפון, גם כשהמוניטור סגור.</small>
- </div>
- <div class="pushGuide" id="pushGuide" hidden>כדי לקבל התראות באייפון: שיתוף ← הוספה למסך הבית, ואז לפתוח מהאייקון</div>
- <button type="button" class="abtn" id="pushBtn" hidden>להפעיל התראות</button>
-</div>
+
 <div class="alerts" id="quietBox">
  <div>
   <b>שעות שקטות</b>
@@ -5236,7 +5229,7 @@ document.addEventListener('click',function(ev){
  ev.preventDefault();
  fileLinkOpen(n);
 },true);
-var CODE_ID='4490fe87a9';
+var CODE_ID='fa42fec239';
 var INSTANCE={"name":"abaitzik","owner":"איציק","pageTitle":"אבא איציק בבנייה עצמית","screens":null,"unlocks":[],"computer":null,"phone":null,"welcome":null,"homeTile":"","gender":"","uploadUrl":"https://ilay.abaitzik.com/up/v1/abaitzik/uploads","clalit":false,"openPin":"","guides":[],"links":[]};
 var OWNER=(INSTANCE&&INSTANCE.owner)||'איציק';
 var FEM=!!(INSTANCE&&INSTANCE.gender==='f');
@@ -20666,12 +20659,15 @@ function renderHome(){
   t.classList.toggle('busy',!!busy().length);
   var old=document.getElementById('gMyMgr');if(old)old.style.display='none';
  }
- var renFor=null,agOpen={},scr=null,tab='all',formFor=null,fq='day',kind='remind',pickT=-1,evOpen=null,EVL=[];
+ var renFor=null,agOpen={},scr=null,tab='all',formFor=null,fq='day',kind='remind',pickT=-1,evOpen=null,EVL=[],AGL=[];
  function evDay(){try{return new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Jerusalem'});}catch(e){return new Date().toISOString().slice(0,10);}}
  function evKey(e){return evDay()+'|'+e.who+'|'+e.t+'|'+(e.k==='wait'?'w':String(e.at||''));}
  function evHid(){try{return JSON.parse(localStorage.getItem('agEvHide')||'{}')||{};}catch(e){return {};}}
  function evHide(e){var m=evHid(),d=evDay(),o={};Object.keys(m).forEach(function(k){if(k.slice(0,10)>=d)o[k]=m[k];});o[evKey(e)]=1;try{localStorage.setItem('agEvHide',JSON.stringify(o));}catch(x){}
   if(e.k==='wait'&&typeof rxMark==='function')try{rxMark(e.t,'no');}catch(x){}}
+ function evActs(e,at,n){return '<div class="evA" data-'+at+'="'+n+'">'+(e.k==='wait'?'<button type="button" data-a="evok">✓ בוצע</button>':'')+'<button type="button" data-a="evrp">💬 תגובה או הערה</button><button type="button" data-a="evdel">🗑 מחיקה</button></div>'
+  +(evOpen===evKey(e)?'<div class="agRp" data-'+at+'="'+n+'"><textarea id="evTx" rows="1" placeholder="מה לענות, לתקן או להוסיף על זה"></textarea><button type="button" data-a="evgo">שליחה</button></div>':'');}
+ function agEv(a,i){return {k:(i.st==='done'||i.st==='ok')?'done':'wait',at:MAT(),c:COL[a.c%4],who:a.name,t:String(i.t||'').replace('undefined ',''),res:i.sub||''};}
  function evLine(e){return e.who+': '+e.t+(e.res?' ('+e.res+')':'');}
 
  function chk(){return '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M7 12.5l3.2 3.2L17 9"/></svg>';}
@@ -20695,10 +20691,11 @@ function renderHome(){
   var c=a?COL[(a.c||0)%4]:'#9aa0a6',id=a?a.id:'',S=a&&a.sys;
   var ST={done:'✓',ok:'✓',warn:'⚠️',todo:'○'};
   var isOpen=!!agOpen[id||'_']||formFor===id+'|cmd'||renFor===id;
-  var nW=S?a.items.filter(function(i){return i.st!=='done'&&i.st!=='ok';}).length:0,nD=S?a.items.length-nW:0;
+  var hidA=evHid(),IT=S?a.items.filter(function(i){return !hidA[evKey(agEv(a,i))];}):[];
+  var nW=S?IT.filter(function(i){return i.st!=='done'&&i.st!=='ok';}).length:0,nD=S?IT.length-nW:0;
   var s1=S?(nW?'<b style="color:#FBBC05">⚠️ '+nW+' מחכים לך</b>':'<b style="color:#34A853">✓ הכל טופל</b>')+(nD?' · ✓ '+nD+' נעשו':'')+(L.length?' · '+L.length+' פקודות שלך':'')
     :(L.length?L.length+(L.length===1?' פקודה':' פקודות')+(L[0]?' · '+E(L[0].label):''):'עוד אין פקודות');
-  var fixed=S?'<ul class="agL">'+a.items.map(function(i){return '<li><span>'+(ST[i.st]||'•')+'</span><span class="t">'+E(String(i.t||'').replace('undefined ',''))+(i.sub?'<br><small style="color:var(--dim,#9aa0a6)">'+E(i.sub)+'</small>':'')+'</span></li>';}).join('')+'</ul>'
+  var fixed=S?'<ul class="agL">'+IT.map(function(i){var e=agEv(a,i),n=AGL.push(e)-1;return '<li><span>'+(ST[i.st]||'•')+'</span><span class="t">'+E(e.t)+(i.sub?'<br><small style="color:var(--dim,#9aa0a6)">'+E(i.sub)+'</small>':'')+evActs(e,'agi',n)+'</span></li>';}).join('')+'</ul>'
    +'<ul class="agL">'+S[4].map(function(x){return '<li><span>'+x[1]+'</span><span class="t">'+E(x[2])+'<br><span class="fq">'+E(x[0])+' · קבוע</span></span></li>';}).join('')+'</ul>':'';
   return '<div class="ag'+(isOpen?' open':'')+(on||!L.length?'':' off')+(wk?' work':'')+'" style="--c:'+c+'" data-ag="'+E(id)+'"><div class="agH"><div class="agA">'+E(a?a.name.charAt(0):'⚙')+'</div>'
    +'<div class="agN"><b><span class="nm">'+E(a?a.name:'כללי')+'</span>'+(a?'<button type="button" class="agEd" data-a="ren" aria-label="לשנות את השם">✏️</button>':'')+'</b><small>'+E(a?(a.role||'בלי תפקיד'):'פקודות בלי סוכן')+'</small></div>'
@@ -20723,14 +20720,13 @@ function renderHome(){
   return '<div class="agWork"><h3>🗂️ עבודת '+(NAME0==='המנהל שלי'?'המנהל':'המנהלת')+' <small>היום · '+ev.filter(function(e){return e.k!=='next';}).length+' נעשו</small></h3>'
    +'<div class="agTabs">'+[['all','הכל'],['wait','מחכה לך'],['done','נעשה'],['next','בהמשך היום']].map(function(x){return '<button type="button" data-tab="'+x[0]+'"'+(tab===x[0]?' class="on"':'')+'>'+x[1]+'</button>';}).join('')+'</div>'
    +(sh.length?sh.map(function(e,n){return '<div class="ev '+e.k+'" style="--c:'+e.c+'"><div class="ic">'+(e.k==='now'?'<span></span>':e.k==='next'?'🕒':e.k==='wait'?'⚠️':chk())+'</div><div class="tx"><small>'+(e.k==='now'?'עכשיו':hhmm(e.at))+(e.k==='wait'?' · מחכה לך':'')+'</small><span class="who">'+E(e.who)+'</span> '+E(e.t)+(e.res?'<small>'+E(e.res)+'</small>':'')
-     +(e.k==='now'?'':'<div class="evA" data-ev="'+n+'">'+(e.k==='wait'?'<button type="button" data-a="evok">✓ בוצע</button>':'')+'<button type="button" data-a="evrp">💬 תגובה או הערה</button><button type="button" data-a="evdel">🗑 מחיקה</button></div>'
-      +(evOpen===evKey(e)?'<div class="agRp" data-ev="'+n+'"><textarea id="evTx" rows="1" placeholder="מה לענות, לתקן או להוסיף על זה"></textarea><button type="button" data-a="evgo">שליחה</button></div>':''))
+     +(e.k==='now'?'':evActs(e,'ev',n))
      +'</div></div>';}).join('')
      :'<div class="agEmpty">'+(tab==='next'?'אין עוד משהו היום.':tab==='wait'?'שום דבר לא מחכה לך.':'עוד לא נעשה כלום היום.')+'</div>')+'</div>';
  }
  function draw(){
   if(!scr)return;var y=scr.scrollTop;
-  var ag=ALL(),gen=routinesOf(null),rs=R(),act=rs.filter(function(r){return r.state==='active';}).length,ev=events();
+  AGL=[];var ag=ALL(),gen=routinesOf(null),rs=R(),act=rs.filter(function(r){return r.state==='active';}).length,ev=events();
   scr.innerHTML='<div class="agW"><div class="agBar"><button type="button" class="agBack" data-a="x">‹ חזרה</button><h2>🧑‍💼 '+E(NM())+' <button type="button" class="agEd" data-a="renM" aria-label="לשנות את השם של המנהל">✏️</button></h2>'+(renFor==='amanager0'?renHtml(NM(),'',true):'')+'</div>'
    +'<p class="agLead">תן למנהל פקודות שחוזרות על עצמן. כל סוכן אחראי על תחום אחד, ואתה קובע לו מה לעשות וכמה פעמים. תזכורת מגיעה לטלפון, ועבודה חוזרת עם תשובה במסך התשובות.</p>'
    +'<div class="agSum"><div><b>'+ag.length+'</b><small>סוכנים</small></div><div><b>'+(MI().length?ev.filter(function(e){return e.k==='wait';}).length:act)+'</b><small>'+(MI().length?'מחכים לך':'פקודות פעילות')+'</small></div><div><b>'+ev.filter(function(e){return e.k==='done';}).length+'</b><small>נעשו היום</small></div></div>'
@@ -20771,11 +20767,11 @@ function renderHome(){
   var ag=ALL().filter(function(x){return x.id===aid;})[0];
   if(b.getAttribute('data-tab')){tab=b.getAttribute('data-tab');evOpen=null;draw();return;}
   if(a==='evok'||a==='evrp'||a==='evdel'||a==='evgo'){
-   var bx=b.closest('[data-ev]'),ev0=EVL[+(bx&&bx.getAttribute('data-ev'))];if(!ev0)return;
+   var bx=b.closest('[data-ev],[data-agi]'),ev0=bx&&bx.hasAttribute('data-agi')?AGL[+bx.getAttribute('data-agi')]:EVL[+(bx&&bx.getAttribute('data-ev'))];if(!ev0)return;
    if(a==='evrp'){evOpen=evOpen===evKey(ev0)?null:evKey(ev0);draw();var tx=document.getElementById('evTx');if(tx)tx.focus();return;}
    if(a==='evdel'&&!b.getAttribute('data-sure')){b.setAttribute('data-sure','1');b.textContent='🗑 למחוק מהרשימה?';return;}
    var msg,ok;
-   if(a==='evgo'){var v=((document.getElementById('evTx')||{}).value||'').trim();if(!v){say('כתוב קודם מה לענות');return;}
+   if(a==='evgo'){var v=(((b.closest('.agRp')||document).querySelector('textarea')||{}).value||'').trim();if(!v){say('כתוב קודם מה לענות');return;}
     msg='💬 תגובה על עבודת המנהל: '+evLine(ev0)+(ev0.k==='wait'?' [מחכה לך]':' [נעשה]')+' :: '+v;ok='נשלח. אני מטפל ועונה בצ׳אט.';}
    else if(a==='evok'){msg='✓ סימנתי בוצע מהדוח: '+evLine(ev0)+'. להוריד מהמעקב.';ok='סומן בוצע.';}
    else if(ev0.k==='wait'){msg='✕ לא רלוונטי מהדוח: '+evLine(ev0)+'. להוריד מהמעקב.';ok='נמחק מהרשימה.';}
@@ -21847,7 +21843,7 @@ function bhQuoteShow(q,w){
 function dzBoot(){try{localStorage.removeItem('designSkin');}catch(e){}document.documentElement.removeAttribute('data-skin');}
 
 boot('design',dzBoot);
-var PUSH_KEY="BAJSdIafAtGxgHzJr3tOJLTViE1Gkn6rNyAReKPb5ZiMM-6xXp2c1PD7V5VKOXkQRWLI9-Wdq7-Q4hyMCcYp2iQ";
+var PUSH_KEY="";
 
 function pushB64(s){var pad='='.repeat((4-s.length%4)%4);var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(b);var out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;}
 function pushIsIos(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
