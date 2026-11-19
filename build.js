@@ -15985,14 +15985,16 @@ function campSheet(){
   cpAiQs.forEach(function(q){if(cpAiAsked.indexOf(q.q)<0)cpAiAsked.push(q.q);});
   var h='';
   if(j&&j.note)h+='<small style="opacity:1;font-weight:700">🤖 '+esc(j.note)+'</small>';
+  // 19.11.2026, Itzik: one question a round was tiring and nobody knew how many were left. All of them now, counted.
+  if(cpAiQs.length)h+='<small style="opacity:1;font-weight:800;display:block;margin-top:6px">'+(cpAiQs.length===1?'שאלה אחת, וזהו.':cpAiQs.length+' שאלות, וזהו. אין סבב נוסף.')+'</small>';
   cpAiQs.forEach(function(q,i){
-   h+='<div id="cpAq'+i+'" style="margin:8px 0;padding:10px;border:1px solid #ccd;border-radius:12px"><b style="font:700 15px Heebo,sans-serif">'+esc(q.q)+'</b>'
+   h+='<div id="cpAq'+i+'" style="margin:8px 0;padding:10px;border:1px solid #ccd;border-radius:12px">'+(cpAiQs.length>1?'<small style="display:block;opacity:.7;font-weight:700">'+(i+1)+' מתוך '+cpAiQs.length+'</small>':'')+'<b style="font:700 15px Heebo,sans-serif">'+esc(q.q)+'</b>'
     +'<div class="arPick">'+(q.opts||[]).map(function(o,k){return '<button type="button" class="yb" data-ao="'+i+'_'+k+'">'+esc(o)+'</button>';}).join('')+'</div>'
     +'<div style="display:flex;gap:6px;margin-top:6px"><input type="text" id="cpAin'+i+'" maxlength="300" placeholder="או במילים שלך" style="flex:1;min-width:0;border-radius:10px;border:1px solid #ccd;padding:8px;font:15px Heebo,sans-serif">'
     +'<button type="button" class="yb" data-aok="'+i+'">הוספה</button></div></div>';
   });
   if(j&&j.ready)h+='<small style="opacity:1;font-weight:700">✓ יש מספיק כדי להכין טיוטה טובה. אפשר לשלוח, או לענות על עוד שאלה.</small>';
-  if(cpAiQs.length||!(j&&j.ready))h+='<button type="button" class="yb" data-a="ai">🤖 עוד שאלות</button>';
+  if(!cpAiQs.length&&!(j&&j.ready))h+='<button type="button" class="yb" data-a="ai">🤖 עוד שאלות</button>';
   box.innerHTML=h;
  }
  function cpAiRun(){
@@ -16010,7 +16012,7 @@ function campSheet(){
   var q=cpAiQs[i],ta=document.getElementById('cpText');ans=String(ans||'').trim();if(!q||!ta||!ans)return;
   ta.value=(ta.value.trim()?ta.value.trim()+String.fromCharCode(10):'')+q.q+' '+ans;ta.style.borderColor='#ccd';
   cpAiDone[i]=1;var c=document.getElementById('cpAq'+i);if(c){c.style.opacity='.55';c.querySelector('b').textContent='✓ '+q.q;}
-  var all=cpAiQs.every(function(_,k){return cpAiDone[k];});if(all)cpAiRun();
+  var all=cpAiQs.every(function(_,k){return cpAiDone[k];});if(all){var bx=document.getElementById('cpAI');if(bx){bx.insertAdjacentHTML('beforeend','<small style="opacity:1;font-weight:800;display:block;margin-top:8px">✓ זהו, ענית על הכל. התשובות נכנסו לתיבה, אפשר לשלוח.</small>');}}
  }
  function paintAudio(){
   var l=document.getElementById('cpAuL');if(!l)return;

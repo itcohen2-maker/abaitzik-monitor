@@ -3,10 +3,10 @@ const test = require('node:test');
 const assert = require('node:assert');
 const C = require('../lib/camp-ask.js');
 
-test('parse keeps up to three questions and four answers, strips dashes', () => {
-  const r = C.parse('here {"ready":false,"note":"חסר קהל - ומטרה","questions":[{"q":"מי הקהל?","opts":["a","b","c","d","e"]},{"q":"למה?","opts":[]},{"q":"x","opts":["y"]},{"q":"z","opts":[]}]} end');
+test('parse keeps up to six questions and four answers, strips dashes', () => {
+  const r = C.parse('here {"ready":false,"note":"חסר קהל - ומטרה","questions":[{"q":"מי הקהל?","opts":["a","b","c","d","e"]},{"q":"למה?","opts":[]},{"q":"x","opts":["y"]},{"q":"z","opts":[]},{"q":"5","opts":[]},{"q":"6","opts":[]},{"q":"7","opts":[]}]} end');
   assert.strictEqual(r.ready, false);
-  assert.strictEqual(r.questions.length, 3);
+  assert.strictEqual(r.questions.length, 6);
   assert.strictEqual(r.questions[0].opts.length, 4);
   assert.ok(!/-/.test(r.note));
 });
