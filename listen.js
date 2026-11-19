@@ -672,6 +672,33 @@ function saveManualLead(rec) {
   } catch (e) { say('!! ליד לא נרשם: ' + e.message); }
 }
 
+/*
+  19.11.2026, the end to end check: a task from ✅ משימות ("משימה להיום, ... (2026-11-19): ...") was left to the session,
+  which twice answered "רשמתי" and wrote nothing (claim-check caught it). The listener writes the task file itself,
+  the same shape the page reads (data/tasks/tasks/<id>.json), and answers at once, so no session is spent on it.
+*/
+function saveManualTask(rec) {
+  try {
+    const raw = String(rec.text || '');
+    const m = raw.match(/משימה (?:להיום|ליום)[^\n]*?\((\d{4}-\d{2}-\d{2})\):\s*([^\n]+)/);
+    if (!m) return false;
+    const day = m[1], text = m[2].trim().slice(0, 300);
+    if (!text) return false;
+    const dir = path.join(inst.dataPath, 'tasks', 'tasks');
+    fs.mkdirSync(dir, { recursive: true });
+    const at = new Date(rec.at || Date.now());
+    const stamp = at.toISOString().replace(/\D/g, '').slice(0, 12);
+    const id = 't' + stamp.slice(0, 8) + '-' + stamp.slice(8, 12) + '-' + (rec.id || '').replace(/[^a-z0-9]/gi, '').slice(-6);
+    if (!fs.existsSync(path.join(dir, id + '.json'))) fs.writeFileSync(path.join(dir, id + '.json'), JSON.stringify({ id: id, day: day, text: text, n: 1 }), 'utf8');
+    const lbl = new Date(day + 'T12:00:00').toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'numeric', timeZone: 'Asia/Jerusalem' });
+    const name = chatName(new Date(at.getTime() + 1000)).replace('-itzik-auto', '-claude-task');
+    fs.writeFileSync(path.join(CHAT, name), JSON.stringify({ at: new Date(at.getTime() + 1000).toISOString(), from: 'claude', re: rec.id,
+      text: 'רשמתי את המשימה ל' + lbl + ': ' + text + '. היא מופיעה ב ✅ משימות.' }, null, 1), 'utf8');
+    say('משימה נרשמה: ' + text.slice(0, 50));
+    return true;
+  } catch (e) { say('!! משימה לא נרשמה: ' + e.message); return false; }
+}
+
 function recordIncoming(m) {
   const gid = group.groupOf(m.title);
   const held = gid ? groupFiles.get(gid) : null;
@@ -760,6 +787,7 @@ function recordIncoming(m) {
     if (rec.heldWhy === 'shachar-feedback') alertShacharFeedback(text);
     if (codeOk && /^קמפיין:/.test(text.trim())) campaignAck(rec, at);
     if (codeOk && /^ליד חדש/.test(text.trim())) saveManualLead(rec);
+    if (codeOk && /^משימה\s+משימה (?:להיום|ליום)/.test(text.trim()) && saveManualTask(rec)) { rec.status = 'done'; try { fs.writeFileSync(path.join(CHAT, name), JSON.stringify(rec, null, 1), 'utf8'); } catch (e) {} }
     recordDrain(text, at);
     /*
       13.10: the quiet hours line from the settings screen is applied here, with
