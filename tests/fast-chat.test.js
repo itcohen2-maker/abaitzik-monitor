@@ -159,3 +159,17 @@ test('another training ends a sales role play', async () => {
   const e = await FC.turn(d, 'אימון מכירות', { llm: stub('x'), salesTrain: salesStub });
   assert.equal(e.mode, 'sales'); assert.match(e.reply, /מתחילים אימון מכירות/);
 });
+
+// 19.11.2026: the home box (plain) is answered as plain chat even while a training is on, and the training stays on.
+test('home box answers as chat while a training is on', async () => {
+  const d = tmp();
+  await FC.turn(d, 'אימון עסקי', { llm: stub('מה היעד?') });
+  let seen = '';
+  const r = await FC.turn(d, 'מה השעות שלכם?', { llm: async (m, s) => { seen = s; return 'אנחנו פתוחים עד 18'; }, plain: true });
+  assert.equal(r.reply, 'אנחנו פתוחים עד 18');
+  assert.equal(r.mode, 'coach');
+  assert.ok(!/אימון עסקי/.test(seen), 'the chat prompt, not the coach');
+  await FC.turn(d, 'אימון מכירות', { llm: stub('x'), salesTrain: salesStub });
+  const s = await FC.turn(d, 'יש לכם משלוחים?', { llm: stub('כן, עד הבית'), salesTrain: salesStub, plain: true });
+  assert.equal(s.reply, 'כן, עד הבית'); assert.equal(s.mode, 'sales');
+});

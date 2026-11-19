@@ -20024,8 +20024,11 @@ function calSheet(all,mode,ym,sel){
 function connSheet(){
  var old=document.getElementById('connSheet');if(old)old.remove();
  var C=D.conn||{rows:[]};
- var n=C.rows.filter(function(r){return r.on;}).length;
- var h='<div class="ycard"><b>🔌 חיבורים</b><p>'+n+' מתוך '+C.rows.length+' מחוברים. כל חיבור נותן למוניטור לעבוד בשבילך עם עוד מקום.</p>';
+ // 19.11.2026: ✍️ חתימה דיגיטלית is built in and always on, so a monitor with nothing connected read "1 מתוך 10 מחוברים"
+ // right above "עוד לא חיברת כלום". The count is of real connections only.
+ var cnReal=C.rows.filter(function(r){return r.id!=='sign';});
+ var n=cnReal.filter(function(r){return r.on;}).length;
+ var h='<div class="ycard"><b>🔌 חיבורים</b><p>'+n+' מתוך '+cnReal.length+' מחוברים. כל חיבור נותן למוניטור לעבוד בשבילך עם עוד מקום.</p>';
  if(connNone())h+='<p style="font-weight:700">עוד לא חיברת כלום, ובלי חיבור המוניטור לא יכול לעבוד בשבילך. כדאי להתחיל מגוגל: מייל, יומן ודרייב, זה לוקח דקה.</p>';
  C.rows.forEach(function(r){
   var st=r.on?'<span class="cnOk">✓ מחובר</span>':r.paid?'<span class="cnPaid">'+esc(r.paid)+'</span>':r.soon?'<span class="cnSoon">מחברים בתיאום עם IT Solution</span>':'<span class="cnOff">לא מחובר</span>';
@@ -20230,13 +20233,13 @@ function fcPaintMsgs(force){
  box.innerHTML=h;
  box.scrollTop=near?box.scrollHeight:keep;
 }
-function fcSend(text,force){
+function fcSend(text,force,plain){
  text=String(text||'').trim();if(!text||(fcS.busy&&!force))return;
  fcS.busy=true;fcS.err='';
  fcS.msgs=fcS.msgs.concat([{id:'tmp'+Date.now(),from:'me',text:text}]);
  var ta=document.getElementById('fcText');if(ta)ta.value='';
  fcPaintMode();fcPaintMsgs(true);
- fcPost('',{text:text}).then(function(j){fcApply(j);var l=fcS.msgs[fcS.msgs.length-1];if(j&&j.reply&&(!l||l.from!=='bot'))fcS.err=j.reply;},function(e){
+ fcPost('',plain?{text:text,plain:1}:{text:text}).then(function(j){fcApply(j);var l=fcS.msgs[fcS.msgs.length-1];if(j&&j.reply&&(!l||l.from!=='bot'))fcS.err=j.reply;},function(e){
   fcS.msgs=fcS.msgs.slice(0,-1);fcS.err=(e&&e.status)?'לא הצלחתי לענות עכשיו, נסה שוב':'אין חיבור כרגע';
   var t=document.getElementById('fcText')||document.getElementById('fcQText');if(t&&!t.value)t.value=text;
  }).then(function(){fcS.busy=false;fcPaintMode();fcPaintMsgs(true);fcPaintRow();});
