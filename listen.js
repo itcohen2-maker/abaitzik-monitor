@@ -618,7 +618,15 @@ function reKeyFor(at) {
   everywhere (worker, watchdog, brief), and the request must stay open until the draft is written. kind 'ack' and
   ackOf let wa-bridge.js send the same note to the customer's WhatsApp when it is connected (data/conn/wa.json).
 */
+const ackedCampaigns = new Map();
 function campaignAck(rec, at) {
+  // 19.11.2026, the end to end test: with files every part of one request carries the same caption, and with an
+  // uploadUrl they all come through pollUploads, not recordIncoming. One note per request, by its caption.
+  const key = String(rec.text || '').split(String.fromCharCode(10))[0].slice(0, 400);
+  const now = Date.now();
+  for (const [k, t] of ackedCampaigns) if (now - t > 30 * 60e3) ackedCampaigns.delete(k);
+  if (ackedCampaigns.has(key)) return;
+  ackedCampaigns.set(key, now);
   let wa = false;
   try { const w = JSON.parse(fs.readFileSync(path.join(inst.dataPath, 'conn', 'wa.json'), 'utf8')); wa = !!(w && w.phone); } catch (e) {}
   const text = 'קיבלתי את בקשת הקמפיין, והיא נכנסה לעבודה עכשיו. '
@@ -677,6 +685,7 @@ function recordIncoming(m) {
     try { fs.writeFileSync(path.join(CHAT, held.name), JSON.stringify(rec, null, 1), 'utf8'); }
     catch (e) { say('!! לא עודכן בצ׳אט: ' + e.message); return false; }
     say('צורף לאותה הודעה: ' + rec.text.slice(0, 60));
+    if (rec.from === 'itzik' && /^קמפיין:/.test(String(rec.text || '').trim())) campaignAck(rec, new Date());
     if (attach && group.isAudio(attach)) {
       transcribeLater(path.join(DROP, attach), held.name);
     }
@@ -1210,6 +1219,7 @@ function pollUploads() {
       fs.writeFileSync(path.join(CHAT, file), JSON.stringify(rec, null, 1), 'utf8');
     } catch (e) { say('!! קובץ גדול לא נרשם בצ׳אט: ' + e.message); return; }
     say('קובץ גדול נקלט: ' + name + ' (' + up.size + ')');
+    if (/^קמפיין:/.test(String(up.caption || '').trim())) campaignAck(rec, at);
     logPull('file', name);
     if (group.isAudio(name) && Number(up.size) < 200 * 1024 * 1024) transcribeLater(path.join(DROP, name), file);
     try { fs.renameSync(taken, path.join(READY, f.replace(/\.json$/, '.done'))); } catch (e) {}
