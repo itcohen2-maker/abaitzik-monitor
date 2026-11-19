@@ -641,6 +641,37 @@ function campaignAck(rec, at) {
   } catch (e) { say('!! אישור קבלה לקמפיין לא נכתב: ' + e.message); }
 }
 
+/*
+  19.11.2026, the end to end check of a new monitor: "➕ ליד חדש" in 💼 העסק שלי sends "ליד חדש" with a name and a phone.
+  The session answered "רשמתי את הליד" and wrote nothing, so the lead never reached 🔔 לידים (a customer has no
+  data/biz at all until something writes there). The listener writes the record itself, the same shape lib/biz.js
+  reads; the session still answers, and finds the card already there.
+*/
+function saveManualLead(rec) {
+  try {
+    const raw = String(rec.text || '');
+    const lines = raw.split(String.fromCharCode(10)).map(function (l) { return l.trim(); }).filter(Boolean);
+    if (!lines.length || !/^ליד חדש/.test(lines[0])) return;
+    const body = lines.slice(lines[0] === 'ליד חדש' ? 1 : 0).join(' ').replace(/^ליד חדש[:,\s]*/, '').trim();
+    if (!body) return;
+    const ph = body.match(/(?:\+?972[-\s]?|0)5\d[-\s]?\d{3}[-\s]?\d{4}|0[2-9][-\s]?\d{7}/);
+    const phone = ph ? ph[0].replace(/[^\d+]/g, '') : '';
+    const name = (ph ? body.slice(0, ph.index) : body.split(/[,،]/)[0]).replace(/[,،:\s]+$/, '').trim().slice(0, 60) || 'ליד';
+    const mail = (body.match(/[\w.+-]+@[\w-]+\.[\w.]+/) || [''])[0];
+    const dir = path.join(inst.dataPath, 'biz', 'biz');
+    fs.mkdirSync(dir, { recursive: true });
+    const at = new Date(rec.at || Date.now());
+    const stamp = at.toISOString().replace(/\D/g, '').slice(0, 14);
+    const id = 'biz-' + stamp + '-man';
+    if (fs.existsSync(path.join(dir, id + '.json'))) return;
+    const lead = { id: id, kind: 'lead', name: name, phone: phone, email: mail, status: 'חדש', amount: 0, note: body.slice(0, 1000),
+      last: '', next: 'לחזור אליו', nextAt: at.toLocaleDateString('sv-SE', { timeZone: 'Asia/Jerusalem' }), at: at.toISOString(),
+      updatedAt: at.toISOString(), source: 'manual', srcKey: rec.id || '' };
+    fs.writeFileSync(path.join(dir, id + '.json'), JSON.stringify(lead, null, 1), 'utf8');
+    say('ליד נרשם ב 🔔 לידים: ' + name);
+  } catch (e) { say('!! ליד לא נרשם: ' + e.message); }
+}
+
 function recordIncoming(m) {
   const gid = group.groupOf(m.title);
   const held = gid ? groupFiles.get(gid) : null;
@@ -728,6 +759,7 @@ function recordIncoming(m) {
     if (rec.heldWhy === 'login-wait') alertLoginWait(text);
     if (rec.heldWhy === 'shachar-feedback') alertShacharFeedback(text);
     if (codeOk && /^קמפיין:/.test(text.trim())) campaignAck(rec, at);
+    if (codeOk && /^ליד חדש/.test(text.trim())) saveManualLead(rec);
     recordDrain(text, at);
     /*
       13.10: the quiet hours line from the settings screen is applied here, with
