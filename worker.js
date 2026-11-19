@@ -564,7 +564,9 @@ function prompt(list) {
     '     אם לא כתבת בשלב א, זה הקובץ היחיד שלך עכשיו.',
     '     אם כתבת בשלב א, לא פותחים קובץ שני. מחליפים את text באותו קובץ בתוצאה,',
     '     משאירים את at כמו שהוא ומוסיפים "editedAt" עם השעה עכשיו.',
-    '  3. npm test, ואז `node push.js "מה עשית"`.',
+    // 19.11.2026: npm test on a loaded server passed ten minutes, the session was stopped before push.js, and the
+    // customer's answer was written but never published (a campaign draft never reached his screen).
+    '  3. קודם `node push.js "מה עשית"`, מיד, כדי שהתשובה תופיע אצלו. npm test רק אם שינית קוד (לא רק קבצי data), ורק אחרי הדחיפה.',
     '',
     'אם משהו באמת חסום או דורש החלטה שלו, כתוב לו את זה מיד, בשלב א. גם אז',
     'הכתיבה והדחיפה הן חובה: הודעה שלא נכתבה היא הודעה שהוא לא קיבל.',
@@ -880,6 +882,9 @@ function run(list) {
     */
     // 15.11: an answer written into the message's own reply field is copied to the chat, so it counts and he sees it.
     try { require('./lib/answer-adopt.js').adoptReplies(CHAT, list); } catch (e) { say('!! העתקת תשובה נכשלה: ' + e.message); }
+    // 19.11.2026: a session stopped at ten minutes after it wrote the answer and before push.js left the answer on disk
+    // and off his screen. Whatever it wrote is published here.
+    if (code !== 0) { try { execFile('node', ['push.js', 'worker: publish what a stopped session wrote'], { cwd: HERE, timeout: 240000 }, () => {}); say('הסשן נעצר, מפרסם את מה שנכתב.'); } catch (e) { say('!! פרסום אחרי עצירה נכשל: ' + e.message); } }
     const missed = missedOf(list, code);
     if (missed.length) {
       unmarkHandled(missed);
