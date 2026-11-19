@@ -33,6 +33,9 @@ function home(id) { return '/home/' + id + '/' + id + '-monitor'; }
 
 function connections(q, qf) {
   if (q.setup) return;
+  // 19.11.2026: new-tenant.sh now gives every new monitor its page (setup/tenant-connections.js). Adopt it, never a second one.
+  const have = (rd(path.join(DATA, 'cal', 'sources.json'), []) || []).find((x) => x && x.name === q.id && x.setup);
+  if (have) { q.setup = have.setup; wr(qf, q, 'monitor'); log(q.id + ' connections page adopted'); return; }
   const def = rd(path.join(DATA, 'setup', TEMPLATE + '.def.json'), null);
   if (!def) { log(q.id + ' no connections template'); return; }
   const tok = crypto.randomBytes(10).toString('hex');

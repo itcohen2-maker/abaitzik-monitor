@@ -250,6 +250,9 @@ EOF
 # 19.11.2026: through the gate, anything that worked and broke is put back (setup/safe-caddy-reload.sh)
 bash /home/monitor/abaitzik-monitor/setup/safe-caddy-reload.sh || echo "!! the gate refused the Caddyfile change, the last good config is back"
 
+# 19.11.2026: the 🔌 connections page of this monitor (a monitor opened by hand had an empty 🔌 חיבורים).
+node /home/monitor/abaitzik-monitor/setup/tenant-connections.js "$ID" "$OWNER" || echo "!! no connections page, run setup/tenant-connections.js $ID"
+
 # lock the customer's own settings, register with Itzik's monitor, keep alive
 # 16.11.2026, Itzik: the code goes into the record too, so his monitors screen shows it.
 chattr +i instance.json data/profile.md
