@@ -3721,6 +3721,9 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
  background:#e8eef6;color:#16202c;cursor:pointer;min-height:48px}
 .yb1{background:linear-gradient(150deg,#90caf9,#1565c0);color:#fff}
 .yb2{background:linear-gradient(150deg,#7bd88f,#1e8e4a);color:#fff}
+.yb.busy{background:linear-gradient(150deg,#fbbf24,#f97316)!important;color:#1f1300!important;animation:ybBusy 1s ease-in-out infinite;opacity:1!important}
+@keyframes ybBusy{50%{filter:brightness(1.25);transform:scale(1.02)}}
+@media (prefers-reduced-motion:reduce){.yb.busy{animation:none}}
 .ybRed{background:linear-gradient(150deg,#ef9a9a,#c62828);color:#fff}
 .ybWait{background:linear-gradient(150deg,#ffcc80,#ef6c00);color:#fff}
 .yb3{background:linear-gradient(150deg,#e8a38a,#b0482c);color:#fff}
@@ -15995,9 +15998,12 @@ function campSheet(){
  function cpAiRun(){
   if(cpAiBusy)return;var box=document.getElementById('cpAI');if(!box)return;
   cpAiBusy=true;box.innerHTML='<small style="opacity:1;font-weight:600">🤖 רגע, בודק מה חסר כדי שהקמפיין ייצא הכי טוב...</small>';
+  // 19.11.2026, Itzik: "אף אחד לא רואה שהוא עובד". The button itself says it is working, in a pulsing colour, until the answer is in.
+  var aiB=w.querySelector('.yb2[data-a=ai]');if(aiB){if(!aiB.getAttribute('data-l'))aiB.setAttribute('data-l',aiB.textContent);aiB.textContent='⏳ עובד על זה, עוד רגע...';aiB.classList.add('busy');aiB.disabled=true;}
+  function aiDone(){if(aiB){aiB.textContent=aiB.getAttribute('data-l');aiB.classList.remove('busy');aiB.disabled=false;}try{box.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){}}
   var kd=[].map.call(w.querySelectorAll('#cpKinds .yb.on'),function(b){return b.getAttribute('data-k');});
-  fcPost('/camp',{kinds:kd,text:(document.getElementById('cpText')||{}).value||'',files:picked.map(function(f){return f.name;})}).then(function(j){cpAiBusy=false;cpAiPaint(j);},function(er){
-   cpAiBusy=false;box.innerHTML='<small style="opacity:1">'+(er&&er.status===429?'הגעת למכסת השאלות של היום. אפשר להמשיך לכתוב בעצמך.':'לא הצלחתי לשאול עכשיו. אפשר לענות על השאלות שמעל התיבה, או לנסות שוב.')+'</small><button type="button" class="yb" data-a="ai">🤖 לנסות שוב</button>';
+  fcPost('/camp',{kinds:kd,text:(document.getElementById('cpText')||{}).value||'',files:picked.map(function(f){return f.name;})}).then(function(j){cpAiBusy=false;aiDone();cpAiPaint(j);},function(er){
+   cpAiBusy=false;aiDone();box.innerHTML='<small style="opacity:1">'+(er&&er.status===429?'הגעת למכסת השאלות של היום. אפשר להמשיך לכתוב בעצמך.':'לא הצלחתי לשאול עכשיו. אפשר לענות על השאלות שמעל התיבה, או לנסות שוב.')+'</small><button type="button" class="yb" data-a="ai">🤖 לנסות שוב</button>';
   });
  }
  function cpAiAdd(i,ans){
