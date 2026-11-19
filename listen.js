@@ -1227,6 +1227,29 @@ function recordIncoming(m) {
   is claimed by renaming it first, so a crash can lose a line but never write
   two of them.
 */
+/*
+  19.11.2026: texts the page sent to our own upload service instead of ntfy (lib/upload-server.js handleText).
+  Each is handled exactly like an ntfy message, one at a time, then deleted.
+*/
+const TEXTS = path.join(inst.dataPath, 'uploads', 'text');
+let textsBusy = false;
+async function pollTexts() {
+  if (textsBusy) return;
+  let names = [];
+  try { names = fs.readdirSync(TEXTS).filter(function (f) { return /^own[0-9a-f]{18}\.json$/.test(f); }).sort(); } catch (e) { return; }
+  if (!names.length) return;
+  textsBusy = true;
+  try {
+    for (const f of names) {
+      const taken = path.join(TEXTS, f.replace(/\.json$/, '.taken'));
+      try { fs.renameSync(path.join(TEXTS, f), taken); } catch (e) { continue; }
+      let m = null;
+      try { m = JSON.parse(fs.readFileSync(taken, 'utf8')); } catch (e) { say('!! הודעה מהשרת פגומה: ' + f); }
+      if (m && m.id && m.message) { try { await handle({ id: m.id, time: m.time, event: 'message', title: m.title, message: m.message }); } catch (e) { say('!! הודעה מהשרת לא טופלה: ' + e.message); } }
+      try { fs.unlinkSync(taken); } catch (e) {}
+    }
+  } finally { textsBusy = false; }
+}
 const READY = path.join(inst.dataPath, 'uploads', 'ready');
 function pollUploads() {
   let names = [];
@@ -2049,6 +2072,7 @@ if (require.main === module) (async () => {
   setInterval(checkSources, 60000);
   setInterval(pcWatch, 60000);
   setInterval(pollUploads, 3000);
+  setInterval(pollTexts, 2000);
   let wait = 2000;
   for (;;) {
     try {

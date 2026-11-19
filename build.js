@@ -7085,12 +7085,17 @@ function ntfyText(kind, text, gid) {
  var plain = [kind, text, '', 'קוד ' + sendCode()].join(String.fromCharCode(10));
  var ready = SEALING() ? gseal(plain) : Promise.resolve(plain);
  return ready.then(function (body) {
-  return fetch('https://ntfy.sh/' + NTFYIN(), {
+  // 19.11.2026: our own upload service first (lib/upload-server.js handleText, the same code as a file), ntfy only
+  // when there is none or it does not answer. ntfy.sh refused whole addresses with 429 and the text was lost.
+  var title = 'monitor' + (gid ? ' ' + gid + ' cap' : '');
+  var own = UPURL ? fetch(UPURL + '/text', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Monitor-Code': sendCode() || secret('upKey') }, body: JSON.stringify({ title: title, message: body }) })
+   .then(function (r) { if (!r.ok) throw new Error('own ' + r.status); return 'own'; }) : Promise.reject(new Error('no own'));
+  return own.catch(function () { return fetch('https://ntfy.sh/' + NTFYIN(), {
    // 12.10: an account key (listen.js ownToken) is never kept on ntfy's side.
    method: 'POST', headers: Object.assign({ Title: 'monitor' + (gid ? ' ' + gid + ' cap' : ''), 'X-Tags': 'memo' }, String(text).indexOf('sk-ant-oat') > -1 ? { Cache: 'no' } : {}),
    body: body
-  });
- }).then(function (r) { if (!r.ok) throw new Error('ntfy'); return 'ok'; });
+  }).then(function (r) { if (!r.ok) throw new Error('ntfy'); return 'ok'; }); });
+ }).then(function () { return 'ok'; });
 }
 // Returns 'ok' when the primary channel carried it and 'backup' when the
 // mailbox had to, so the page can tell him which one it went out on rather
