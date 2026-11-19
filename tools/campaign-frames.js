@@ -8,7 +8,8 @@
       and writes <video base>.check.json: every question and answer from the message, the frames and what each must
       show (from <video>.clips.json, written by tools/campaign-join.js), all marked "pending".
       The session then LOOKS at every frame and fills the file: for each answer "show" (what text, which clip) or
-      "not on video" with "why"; and "status": "pass" or "fail" with "note", for every item, every frame and "status".
+      "not on video" with "why"; and "status": "pass" or "fail" with "note", for every item, every check (the list
+      below, including the crops the draft named and an inviting end card), every frame, and the overall "status".
 
     node tools/campaign-frames.js --verify <video base>.check.json
       Exits 0 and prints "ok" only when every item and every frame is "pass" and the overall status is "pass".
@@ -24,6 +25,8 @@ const CHECKS = [
   'קריא, לא חתוך, בתוך האזור הבטוח (לא ב 250 העליונים ולא ב 350 התחתונים)',
   'התמונה או הסרטון של הלקוח, בסדר שהוא נתן',
   'אין מחיר, מבצע, שם או עובדה שהלקוח לא כתב',
+  'הסחות דעת שהטיוטה המליצה לחתוך הוסרו מהסרטון (crops ו hide בקובץ הטקסטים, כמו בטיוטה)',
+  'כרטיס הסיום קריא ומזמין: תמונות המוצר, קריאה לפעולה גדולה, דרך הפנייה בולטת',
 ];
 
 // "קמפיין: <kind> | <description>\n<question>? <answer>\n... | סדר הקבצים: ... | <note>\n(קובץ: ...)"
@@ -52,9 +55,11 @@ function parseMessage(text) {
 function frameTimes(clips) {
   const list = (clips.clips || []).map((c) => {
     const d = c.end - c.start;
-    return { clip: c.n, kind: c.kind, file: c.file, at: +(c.start + Math.min(d - 0.3, Math.max(1.4, d * 0.7))).toFixed(2), texts: [c.title, c.caption].filter(Boolean) };
+    return { clip: c.n, kind: c.kind, file: c.file, at: +(c.start + Math.min(d - 0.3, Math.max(1.4, d * 0.7))).toFixed(2), texts: [c.title, c.caption].filter(Boolean),
+      crop: c.crop || null, hide: c.hide || null };
   });
-  if (clips.end) list.push({ clip: 'end', kind: 'end card', file: '', at: +(clips.end.start + Math.min(2, (clips.end.end - clips.end.start) - 0.3)).toFixed(2), texts: [clips.end.offer, clips.end.cta, clips.end.brand].filter(Boolean) });
+  if (clips.end) list.push({ clip: 'end', kind: 'end card', file: '', at: +(clips.end.start + Math.min(2, (clips.end.end - clips.end.start) - 0.3)).toFixed(2),
+    texts: [clips.end.offer, clips.end.cta, clips.end.contact, clips.end.brand].filter(Boolean), thumbs: clips.end.thumbs || 0 });
   return list;
 }
 
@@ -67,7 +72,7 @@ function skeleton(videoName, msg, clips, frameDir) {
   return {
     video: videoName,
     kind: msg.kind,
-    checks: CHECKS,
+    checks: CHECKS.map((c) => ({ check: c, status: 'pending', note: '' })),
     items,
     frames: frameTimes(clips).map((f) => Object.assign(f, { png: path.join(frameDir, 'f-' + f.clip + '.png'), status: 'pending', note: '' })),
     status: 'pending',
@@ -80,6 +85,8 @@ function verify(check) {
     if (x.status !== 'pass') bad.push('item ' + (i + 1) + ' (' + x.q + '): ' + (x.status || 'no status'));
     if (!x.show && !x.why) bad.push('item ' + (i + 1) + ' (' + x.q + '): neither show nor why');
   });
+  (check.checks || []).forEach((c, i) => { if (!c || c.status !== 'pass') bad.push('check ' + (i + 1) + ' (' + ((c && c.check) || c) + '): ' + ((c && c.status) || 'no status')); });
+  if ((check.checks || []).length < CHECKS.length) bad.push('checks missing');
   if (!(check.frames || []).length) bad.push('no frames');
   (check.frames || []).forEach((f) => { if (f.status !== 'pass') bad.push('frame ' + f.clip + ': ' + (f.status || 'no status')); });
   if (check.status !== 'pass') bad.push('overall status: ' + (check.status || 'none'));

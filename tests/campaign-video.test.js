@@ -61,11 +61,48 @@ test('parseArgs: old calls still work, texts come from flags or a file', () => {
 
 test('every text block stays inside the Reels safe zone, even long ones', () => {
   const long = 'טקסט ארוך מאוד שחוזר על עצמו '.repeat(6);
-  for (const b of [J.blockTop(long), J.blockBottom(long), J.blockEnd({ offer: long, end: long, brand: long }), J.blockEnd({ end: 'לפרטים ולהזמנה: הודעה בוואטסאפ' })]) {
+  for (const b of [J.blockTop(long), J.blockBottom(long), J.blockTop('קנקן')]) {
     assert.ok(b.band.y >= J.SAFE_TOP, 'band top ' + b.band.y);
     assert.ok(b.band.y + b.band.h <= J.SAFE_BOTTOM, 'band bottom ' + (b.band.y + b.band.h));
+    assert.ok(b.band.x >= 0 && b.band.x + b.band.w <= 1080);
     b.lines.forEach((l) => assert.ok(l.y >= J.SAFE_TOP && l.y + l.fs * 1.3 <= J.SAFE_BOTTOM));
   }
+  assert.ok(J.blockTop('קנקן').band.w < 1000, 'a short title gets a short rounded band, not a full width strip');
+  for (const n of [0, 1, 2, 3]) {
+    const e = J.blockEnd({ offer: long, end: long, contact: 'הודעה בוואטסאפ', brand: long }, n);
+    assert.ok(e.bottom <= J.SAFE_BOTTOM, n + ' thumbs: bottom ' + e.bottom);
+    e.thumbs.forEach((t) => assert.ok(t.y >= J.SAFE_TOP && t.x >= 0 && t.x + t.w <= 1080));
+    e.lines.forEach((l) => assert.ok(l.y >= J.SAFE_TOP));
+  }
+});
+
+test('end card: product thumbnails, the call to action big, WhatsApp on a green pill', () => {
+  const e = J.blockEnd({ end: 'לפרטים ולהזמנה', contact: 'הודעה בוואטסאפ' }, 2);
+  assert.strictEqual(e.thumbs.length, 2);
+  assert.strictEqual(e.pill.color, '0x1DA851');
+  const cta = e.lines.find((l) => l.t === 'לפרטים ולהזמנה');
+  assert.ok(cta && cta.fs >= 80);
+  assert.ok(e.lines.some((l) => l.t === 'הודעה בוואטסאפ' && l.color === 'white'));
+  assert.strictEqual(J.blockEnd({ contact: 'בקישור לחנות' }, 0).pill.color !== '0x1DA851', true);
+});
+
+test('a hide box is covered from just above, soft on inner sides only', () => {
+  const p = J.hidePlan([3560, 2760, 724, 440], { w: 4284, h: 5712 });
+  assert.deepStrictEqual([p.x, p.y, p.w, p.h, p.sy], [3560, 2760, 724, 440, 2320]);
+  assert.ok(!/W-1-X/.test(p.alpha), 'no fade towards the photo edge it touches');
+  assert.ok(/X/.test(p.alpha) && /H-1-Y/.test(p.alpha));
+  assert.strictEqual(J.hidePlan([10, 5, 50, 40], { w: 400, h: 400 }).sy, 45, 'no room above: from below');
+});
+
+test('crops and hide boxes come from the texts file, per photo', () => {
+  const d = fs.mkdtempSync(path.join(os.tmpdir(), 'cv-'));
+  fs.writeFileSync(path.join(d, 't.json'), JSON.stringify({ end: 'לפרטים', contact: 'וואטסאפ', crops: [null, [10, 20, 300, 400]], hide: [[[1, 2, 3, 4]], null] }));
+  const o = J.parseArgs(['o.mp4', '--texts', path.join(d, 't.json'), 'a.jpg', 'b.jpg']);
+  assert.deepStrictEqual(o.crops, [null, [10, 20, 300, 400]]);
+  assert.deepStrictEqual(o.hide, [[[1, 2, 3, 4]], []]);
+  assert.strictEqual(o.contact, 'וואטסאפ');
+  fs.writeFileSync(path.join(d, 'b.json'), JSON.stringify({ crops: [[1, 2, 'x', 4]] }));
+  assert.deepStrictEqual(J.parseArgs(['o.mp4', '--texts', path.join(d, 'b.json'), 'a.jpg']).crops, [null], 'a broken box is ignored');
 });
 
 const MSG = 'קמפיין: לפי התיאור | קנקן שקוף וכוס מפוספסת, רוצה למכור אותם\nמה העסק שלך עושה בדיוק? חנות מוצרים לבית ולמטבח\n'
@@ -90,6 +127,8 @@ test('the checklist starts all pending and --verify passes only when everything 
   assert.ok(F.verify(c).length > 0);
   c.items.forEach((x) => { x.status = 'pass'; x.show = 'כן'; });
   c.frames.forEach((f) => { f.status = 'pass'; });
+  assert.ok(F.verify(c).some((b) => /^check 6/.test(b)), 'the distractions check is part of the list');
+  c.checks.forEach((x) => { x.status = 'pass'; });
   assert.ok(F.verify(c).some((b) => /overall/.test(b)));
   c.status = 'pass';
   assert.deepStrictEqual(F.verify(c), []);
@@ -102,6 +141,8 @@ test('the font ships with the repo, and lib/campaign.js makes the texts and the 
   const lines = require('../lib/campaign.js').promptLines().join('\n');
   assert.ok(/--texts/.test(lines) && /campaign-frames\.js/.test(lines) && /--verify/.test(lines));
   assert.ok(/לא ממציאים/.test(lines));
+  assert.ok(/crops/.test(lines) && /hide/.test(lines) && /contact/.test(lines), 'the crops the draft names go into the video');
+  assert.ok(/הסחות דעת שהטיוטה המליצה לחתוך הוסרו/.test(lines) && /כרטיס הסיום קריא ומזמין/.test(lines));
 });
 
 test('a real render: one photo with texts gives a 1080x1920 video, clips.json, frames and a checklist', { timeout: 240000 }, () => {
@@ -109,7 +150,8 @@ test('a real render: one photo with texts gives a 1080x1920 video, clips.json, f
   const img = path.join(d, 'p.png');
   assert.strictEqual(spawnSync('ffmpeg', ['-v', 'error', '-y', '-f', 'lavfi', '-i', 'color=c=0x3366aa:s=120x160:d=1', '-frames:v', '1', img]).status, 0);
   const out = path.join(d, 'campaign-t.mp4');
-  const r = spawnSync(process.execPath, [path.join(ROOT, 'tools', 'campaign-join.js'), out, '--photo', '1', '--title', 'כותרת!', '--caption', 'כיתוב', '--end', 'לפרטים: וואטסאפ', img], { encoding: 'utf8' });
+  fs.writeFileSync(path.join(d, 'x.json'), JSON.stringify({ crops: [[10, 10, 100, 140]], hide: [[[20, 20, 30, 30]]] }));
+  const r = spawnSync(process.execPath, [path.join(ROOT, 'tools', 'campaign-join.js'), out, '--texts', path.join(d, 'x.json'), '--photo', '1', '--title', 'כותרת!', '--caption', 'כיתוב', '--end', 'לפרטים: וואטסאפ', '--contact', 'הודעה בוואטסאפ', img], { encoding: 'utf8' });
   assert.strictEqual(r.status, 0, r.stderr);
   const p = spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'stream=width,height:format=duration', '-of', 'json', out], { encoding: 'utf8' });
   const j = JSON.parse(p.stdout);
@@ -119,6 +161,8 @@ test('a real render: one photo with texts gives a 1080x1920 video, clips.json, f
   const clips = JSON.parse(fs.readFileSync(out.replace('.mp4', '.clips.json'), 'utf8'));
   assert.strictEqual(clips.clips[0].caption, 'כיתוב');
   assert.strictEqual(clips.end.cta, 'לפרטים: וואטסאפ');
+  assert.strictEqual(clips.end.thumbs, 1);
+  assert.deepStrictEqual(clips.clips[0].crop, [10, 10, 100, 140]);
   fs.writeFileSync(path.join(d, 'm.txt'), MSG);
   const fr = spawnSync(process.execPath, [path.join(ROOT, 'tools', 'campaign-frames.js'), out, '--msg', path.join(d, 'm.txt')], { encoding: 'utf8' });
   assert.strictEqual(fr.status, 0, fr.stderr);
