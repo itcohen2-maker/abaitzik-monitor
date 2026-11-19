@@ -25213,6 +25213,9 @@ async function liveFromNtfy(){
    newest thing Itzik could see was hours old and the pill called it dead.
    Three hours: several pulses inside the window even if one or two are lost.
  */
+ // 19.11.2026: before the sealed keys open the topic is empty, and every load sent "ntfy.sh//json" (a CORS error in
+ // the console of every customer). No topic yet: the file on our own origin answers instead.
+ if(!LIVE_TOPIC())return null;
  var r=await fetch('https://ntfy.sh/'+LIVE_TOPIC()+'/json?poll=1&since=3h',{cache:'no-store'});
  var t=(await r.text()).trim();
  var rows=t?t.split(String.fromCharCode(10)):[];
