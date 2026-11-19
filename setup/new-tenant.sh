@@ -247,7 +247,8 @@ $HOST {
 	}
 }
 EOF
-caddy validate --config /etc/caddy/Caddyfile >/dev/null 2>&1 && caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null 2>&1
+# 19.11.2026: through the gate, anything that worked and broke is put back (setup/safe-caddy-reload.sh)
+bash /home/monitor/abaitzik-monitor/setup/safe-caddy-reload.sh || echo "!! the gate refused the Caddyfile change, the last good config is back"
 
 # lock the customer's own settings, register with Itzik's monitor, keep alive
 # 16.11.2026, Itzik: the code goes into the record too, so his monitors screen shows it.

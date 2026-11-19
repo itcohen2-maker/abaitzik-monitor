@@ -61,7 +61,7 @@ for l in L:
     out.append(l)
 open(p,'w').write('\n'.join(out))
 PY
-  if caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null 2>&1; then caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null 2>&1; echo "page: $HOST 410"; else cp -a "$D/Caddyfile.bak" /etc/caddy/Caddyfile; echo "caddy did not validate, restored"; fi
+  if caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null 2>&1; then bash /home/monitor/abaitzik-monitor/setup/safe-caddy-reload.sh --allow "$ID"; echo "page: $HOST 410"; else cp -a "$D/Caddyfile.bak" /etc/caddy/Caddyfile; echo "caddy did not validate, restored"; fi
 fi
 cat > "$D/README" <<TXT
 $ID disconnected $(date -u +%FT%TZ). Data kept in /home/$ID.

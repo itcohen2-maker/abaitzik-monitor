@@ -110,7 +110,7 @@ if route not in block:
                                   '\t\treverse_proxy 127.0.0.1:%s' % port, '\t}']
 open(p, 'w', encoding='utf8').write('\n'.join(lines))
 EOF
-if caddy validate --config /etc/caddy/Caddyfile >/dev/null 2>&1; then caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null 2>&1
+if caddy validate --config /etc/caddy/Caddyfile >/dev/null 2>&1; then bash /home/monitor/abaitzik-monitor/setup/safe-caddy-reload.sh || { echo "the gate refused the change, see above"; exit 1; }
 else cp /etc/caddy/Caddyfile.bak-upload-$ID /etc/caddy/Caddyfile; echo "caddy rejected the route, restored"; exit 1; fi
 
 # keepalive, then the page with the new url and key
