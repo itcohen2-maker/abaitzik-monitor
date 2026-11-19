@@ -27,7 +27,7 @@ function save(l) { fs.mkdirSync(path.dirname(FILE), { recursive: true }); fs.wri
 const OPEN = s => s === 'pending' || s === 'needsInfo' || s === 'rejected' || s === 'notSubmitted';
 
 function taskText(a) {
-  return 'בדיקת אישור חיצוני עבור המנהל: ' + a.title + '. ' + a.check +
+  return 'בדיקת אישור חיצוני עבור המנהל: ' + a.title + '. ' + a.check + ' כלל (19.11): אם יש מייל או הודעה בפורטל שמבקשים מאיתנו לענות, לעדכן או להשלים משהו (Action Needed, You must reply, נדרש מידע), ועוד לא ענינו אחריהם, הסטטוס הוא needsInfo ולא pending, גם אם הבקשה עדיין בבדיקה. ' +
     ' בסוף, בלי לשנות כלום ובלי ללחוץ על שום כפתור שליחה, להריץ בשרת: ssh -i C:\Users\User\.ssh\monitor_server root@178.105.63.97 ' +
     '"su monitor -c \'cd /home/monitor/abaitzik-monitor && node approvals.js set ' + a.id + ' <pending|needsInfo|rejected|approved|notSubmitted> \\"<משפט אחד בעברית: מה כתוב שם>\\"\'" ' +
     'ולסגור את הלשונית.';
