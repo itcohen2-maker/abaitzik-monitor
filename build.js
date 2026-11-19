@@ -589,9 +589,11 @@ function build() {
     hospital's text: "תפתח לי כפתור חדש עם תורים עתידיים ותכניס את זה לתוך
     התורים". Soonest first; one that has passed drops off the page by itself.
   */
+  // 19.11.2026: a picture whose file is gone (the guard reported it) is not shown as a broken image; the note stays.
+  const haveFile = (img) => { const n = path.basename(String(img || '')); if (!n) return false; return ['files-private', 'files'].some((d) => { try { return fs.statSync(path.join(inst.dataPath, d, n)).isFile(); } catch (e) { return false; } }); };
   const appts = loadDocs('appts')
     .map(x => ({ id: x.id, when: x.when || '', what: x.what || '',
-                 where: x.where || '', note: x.note || '', img: x.img || '',
+                 where: x.where || '', note: x.note || '', img: haveFile(x.img) ? x.img : '',
                  doc: x.doc || '', docLabel: x.docLabel || '' }))
     // No date yet ("רופא תעסוקתי", 1.10) goes last, not first.
     .sort((a, b) => ((a.when || '~') < (b.when || '~') ? -1 : 1));
