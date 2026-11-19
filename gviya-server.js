@@ -45,7 +45,8 @@ function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '
 let pushTimer = null, pushSince = 0;
 // 29.10, איציק: "תשלח רק מה שהשתנה, לא כותרות". כל סימון נרשם כאן, וה push מכיל רק אותם.
 let pending = [];
-const STATUS_HE = { collect: 'יואל על זה', paid: 'גבה, הצ׳ק אצלו', future: 'צ׳ק עתידי' };
+// 19.11: "גבה" בלבד. חלק מהסימונים הם העברות או הפקדות, לא צ׳ק, ו"הצ׳ק אצלו" הטעה.
+const STATUS_HE = { collect: 'יואל על זה', paid: 'גבה', future: 'צ׳ק עתידי' };
 function noteChange(name, o, prev) {
   const bits = [];
   if ('status' in o && (o.status || null) !== (prev.status || null)) bits.push(o.status ? STATUS_HE[o.status] || o.status : 'הסימון בוטל');
@@ -81,7 +82,7 @@ function sendPush() {
   let body = 'עדכון גבייה מיואל — ' + new Date().toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' }) + '\n\n';
   body += '✋ אני על זה (' + collect.length + ', ' + ils(collectSum) + '):\n';
   body += (collect.length ? collect.map(c => ' • ' + c.n + ' — ' + ils(c.a) + (c.note ? '  [' + c.note + ']' : '')).join('\n') : ' —');
-  body += '\n\n✅ גבה, הצ׳ק אצלו (' + paid.length + '):\n';
+  body += '\n\n✅ גבה (' + paid.length + '):\n';
   body += (paid.length ? paid.map(c => ' • ' + c.n + (c.when ? ' · ' + c.when : '') + (c.note ? '  [' + c.note + ']' : '')).join('\n') : ' —');
   const cmts = [];
   Object.keys(marks).forEach(n => { const cs = (marks[n] || {}).comments; if (Array.isArray(cs) && cs.length) { const l = cs[cs.length - 1]; cmts.push(' • ' + n + ' — ' + (l.w ? l.w + ': ' : '') + l.t); } });
