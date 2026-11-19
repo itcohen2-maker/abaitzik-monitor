@@ -173,6 +173,10 @@ async function main() {
 async function flush() {
   try { fs.writeFileSync(FLOCK, JSON.stringify({ pid: process.pid, at: new Date().toISOString() }), 'utf8'); } catch (e) {}
   try {
+    // 19.11.2026: nothing ahead of origin, nothing to wait for (the timer runs this every two minutes).
+    let ahead0 = '';
+    try { ahead0 = git('rev-list', '--count', '@{u}..HEAD').trim(); } catch (e) { ahead0 = '1'; }
+    if (ahead0 === '0') return;
     const wait = GAP_MS - sinceLastPush();
     if (wait > 0) await new Promise((r) => setTimeout(r, wait + 2000));
     const until = Date.now() + WAIT_MS;

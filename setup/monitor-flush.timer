@@ -1,0 +1,9 @@
+[Unit]
+Description=Every two minutes: push what push.js held (returns at once when nothing is ahead)
+
+[Timer]
+OnCalendar=*:0/2
+Persistent=false
+
+[Install]
+WantedBy=timers.target
