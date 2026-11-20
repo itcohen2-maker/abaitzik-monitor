@@ -226,5 +226,53 @@
   "caption": "Candle lighting and Havdalah times in 15 languages, by your exact location.\nFree for every Jew, wherever you are.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: \"Parisian\" by Kevin MacLeod (incompetech.com), CC BY 3.0.",
   "approved": true,
   "approvedBy": "itzik-19.11-auto"
+ },
+ {
+  "name": "story-he-thu-2611",
+  "date": "2026-11-26",
+  "time": "20:00",
+  "kind": "story",
+  "lang": "he",
+  "city": "ערד",
+  "file": "media/story-he-thu-2611.mp4",
+  "caption": "",
+  "approved": true,
+  "approvedBy": "itzik-20.11-auto"
+ },
+ {
+  "name": "story-en-thu-2611",
+  "date": "2026-11-26",
+  "time": "20:00",
+  "kind": "story",
+  "lang": "en",
+  "city": "Brussels",
+  "file": "media/story-en-thu-2611.mp4",
+  "caption": "",
+  "approved": true,
+  "approvedBy": "itzik-20.11-auto"
+ },
+ {
+  "name": "post-he-thu-2611",
+  "date": "2026-11-26",
+  "time": "20:00",
+  "kind": "post",
+  "lang": "he",
+  "city": "רמת השרון",
+  "file": "media/post-he-thu-2611.mp4",
+  "caption": "מחר ערב שבת. בדקו את זמן הדלקת הנרות לפי המיקום שלכם.\nבחינם, מתנה ממני על כל התמיכה.\nהלינק בביו: candletimes.com\n\n#הדלקתנרות #זמניהדלקתנרות #שבת #candletimes\n\nתמונות: ויקישיתוף, נחלת הכלל. מוזיקה: נחלת הכלל.",
+  "approved": true,
+  "approvedBy": "itzik-20.11-auto"
+ },
+ {
+  "name": "post-en-thu-2611",
+  "date": "2026-11-26",
+  "time": "20:00",
+  "kind": "post",
+  "lang": "en",
+  "city": "Stockholm",
+  "file": "media/post-en-thu-2611.mp4",
+  "caption": "Tomorrow is Erev Shabbat. Check your candle lighting time by your exact location.\nFree for every Jew.\nLink in bio: candletimes.com\n\n#candlelighting #shabbat #jewish #candletimes\n\nPhotos: Wikimedia Commons, public domain. Music: public domain.",
+  "approved": true,
+  "approvedBy": "itzik-20.11-auto"
  }
 ]
