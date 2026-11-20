@@ -100,3 +100,14 @@ test('18.11.2026: the 🩺 tile shows every future appointment from data/appts, 
   assert.deepStrictEqual(t.items.map((x) => x.when), ['2026-11-30', '2026-12-01 10:30', '2026-12-24 12:00']);
   assert.strictEqual(t.items[2].line, 'החזרת ציוד yes, משה לוי 16');
 });
+
+// 20.11.2026: apply() (the manager adding a tile, a line, an order) dropped chosen, and the 🏡 fell back to the
+// first choice screen, without Itzik's home screen and his cannabis prescriptions.
+test('the manager adding a tile keeps the monitor chosen', () => {
+  const d = tmp();
+  P.setPicked(d, 'doctor,pills');
+  P.apply(d, { add: [{ t: 'טלוויזיה בכבלים', i: '📺' }], notes: { doctor: 'שורה' }, order: ['pills', 'doctor'] });
+  const f = P.forPage(d);
+  assert.strictEqual(f.chosen, true);
+  assert.ok(f.tiles.some((t) => t.t === 'טלוויזיה בכבלים'));
+});
