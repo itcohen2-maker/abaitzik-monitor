@@ -1,6 +1,6 @@
 {
- "at": "2026-11-20T17:26:01.128Z",
- "up": 10800,
+ "at": "2026-11-20T18:26:01.137Z",
+ "up": 14400,
  "since": "2026-11-20T14:26:01.509Z",
  "last": "2026-11-20T15:13:51.723Z",
  "n": 1,
@@ -33,8 +33,8 @@
    "cap": 150,
    "left": 127,
    "paid": false,
-   "blockedUntil": "",
-   "daily": false
+   "blockedUntil": "2026-11-20T18:26:01.740Z",
+   "daily": true
   },
   "mail": {
    "label": "מייל",
@@ -51,14 +51,14 @@
    "cap": 30,
    "left": 1,
    "paid": false,
-   "blockedUntil": "2026-11-20T17:26:01.768Z",
-   "daily": true
+   "blockedUntil": "",
+   "daily": false
   }
  },
- "queued": 6,
+ "queued": 8,
  "pc": {
   "on": true,
-  "seen": "2026-11-20T17:25:46.800Z"
+  "seen": "2026-11-20T18:25:47.043Z"
  },
  "hold": false,
  "quota": null,
