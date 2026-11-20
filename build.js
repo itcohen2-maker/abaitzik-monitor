@@ -5413,7 +5413,8 @@ ${pushUi.html(pushKey())}
 <div class="alerts" id="pingBox">
  <div>
   <b>בדיקת חיבור</b>
-  <small id="pingSaid">לוחצים, ההודעה יוצאת אליי, והשורה הזאת אומרת מה עבר ומתי חזרתי.</small>
+  <!-- neutral voice: a customer sees this box too, and does not know who "I" is -->
+  <small id="pingSaid">לוחצים, הבדיקה נשלחת למפעיל המוניטור, והשורה הזאת תציג מה עבר ומתי הוא ענה.</small>
  </div>
  <button type="button" class="abtn" id="pingBtn">בדיקה</button>
 </div>
@@ -10274,12 +10275,13 @@ function pingPaint(){
   var ms=Math.max(0,Date.parse(back.at||'')-Date.parse(st.at));
   var mins=Math.round(ms/60000);
   box.classList.add('ok');
-  pingSay('חזרתי אליך עם הקוד של הבדיקה'
+  // neutral voice, as in the box text: customers see this line too
+  pingSay('המפעיל ענה עם הקוד של הבדיקה'
    +(mins>0?', '+(mins===1?'דקה':mins+' דקות')+' אחרי הלחיצה':'')+'. החיבור עובד.');
  }else{
   box.classList.remove('ok');
-  pingSay('נשלח '+agoAfter(st.at)+' ועוד לא חזרתי עם הקוד. גרסה חדשה של האתר אינה תשובה, '
-   +'אז השורה הזאת לא תתחלף לבד. אם עוברת יותר משעה, משהו אצלי תקוע.');
+  pingSay('נשלח '+agoAfter(st.at)+' ועוד אין תשובה עם הקוד. גרסה חדשה של האתר אינה תשובה, '
+   +'אז השורה הזאת לא תתחלף לבד. אם עוברת יותר משעה, משהו בצד של המפעיל תקוע.');
  }
 }
 function pingBind(){
