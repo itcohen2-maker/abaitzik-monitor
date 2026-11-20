@@ -41,3 +41,13 @@ test('emptyClaims: a private file that changed is real work', () => {
   const all = [{ from: 'claude', re: 'm1', at: new Date().toISOString(), text: 'השלמתי את ההוראות' }];
   assert.strictEqual(emptyClaims(all, list, since, d, path.join(d, 'data')).length, 0);
 });
+
+test('emptyClaims: a tile written in data/personal is real work (20.11, false accusation)', () => {
+  const { d } = repo();
+  const since = Date.now() - 1000;
+  fs.mkdirSync(path.join(d, 'data', 'personal'), { recursive: true });
+  fs.writeFileSync(path.join(d, 'data', 'personal', 'state.json'), '{"extra":[]}');
+  const list = [{ id: 'm1', file: 'x.json' }];
+  const all = [{ from: 'claude', re: 'm1', at: new Date().toISOString(), text: 'הוספתי לאריח טלוויזיה בכבלים' }];
+  assert.strictEqual(emptyClaims(all, list, since, d, path.join(d, 'data')).length, 0);
+});
