@@ -224,7 +224,7 @@ test('board: the row layout goes by the board width (container query), not the s
   const css = own.slice(own.indexOf('.lbBoard{font'), own.indexOf('.lbBoard .lbSt,.lbNext,.lbRem,.lbSite{cursor:pointer}'));
   assert.ok(css.length > 100, 'the board CSS is in his copy');
   assert.ok(/\.lbBoard\{[^}]*container-type:inline-size/.test(css), 'the board is a size container');
-  assert.ok(css.includes('@container (min-width:760px){'), 'the seven columns open by the board width');
+  assert.ok(css.includes('@container (min-width:640px){'), 'the seven columns open by the board width (640 since 20.11, a phone on its side)');
   assert.ok(!/@media[^{]*\{[^@]*grid-template-columns/.test(css), 'no screen media query switches the grid');
 });
 
