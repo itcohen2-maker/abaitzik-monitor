@@ -5257,7 +5257,6 @@ ${inst.biz && !(Array.isArray(inst.screens) && inst.screens.length) ? '<div clas
    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-2 9a6 6 0 0 1-12 0z"/><circle cx="9" cy="9.5" r="1"/><circle cx="15" cy="9.5" r="1"/><path d="M9.5 13c1.5 1.3 3.5 1.3 5 0"/></svg></span>מוניטורים</a>
   <!-- 9.11.2026, Itzik: "תעשה לו אייקון כמו האייקון של אלון. כשאני לוחץ אני רואה את כל המוניטורים, פלוס הקוד שלהם של הכניסה". Same as Alon's: the colour of his monitor's health check, and the click opens the monitors screen (link and entry code of each), scrolled to Dr. Shulman's. -->
   ${inst.name === 'abaitzik' ? '<style>/* 13.11.2026, Itzik: off his home screen. 16.11: ⏰ gRemind back, "אני לא רואה במוניטור אותו" */#icFcSales,#icFcCoach,#icFcPersonal,#icPb,#gAlarm,#icShachar,#gShachar,#gWin{display:none!important}</style>' : ''}
-  <a class="ic" data-grp="work" href="#" id="icPb" data-new="1"><span class="c c-pb" id="icPbC">🦷</span>ד״ר שולמן</a>
   <!-- 8.11.2026, Itzik: the Shai icon is gone. He is not paying and his access was cancelled. -->
   <button type="button" class="ic" data-grp="work" id="icHealth"><span class="c c-hl" id="icHealthC">🩺</span>תקלות</button>
   <!-- 7.11.2026: 🔌 חיבורים, shown only when D.features.conn (applyFeatures). -->
@@ -20467,7 +20466,7 @@ function bizSheet(t0){
   }
   // 4.11, Itzik: the monthly packages, one row per customer (lib/plan-io.js board). Dollars are list price.
   function planBoardHtml(){
-   var B=(D.planBoard||[]).filter(function(r){return /אלון|שולמן/.test(String(r.title||''));}); // 9.11, Itzik: only Alon and Dr Shulman here
+   var B=(D.planBoard||[]).filter(function(r){return /אלון/.test(String(r.title||''));}); // 9.11, Itzik: only Alon here (Dr Shulman removed 20.11)
    if(!B.length)return '';
    var h='<div class="bzSec">📦 החבילות החודשיות</div>';
    B.forEach(function(r){
