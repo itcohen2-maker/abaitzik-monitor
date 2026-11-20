@@ -3679,8 +3679,14 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 .lbBoard .lbLast{flex:1 0 100%;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lbLast:empty{display:none}
 .lbHist{display:flex;flex-direction:column;gap:2px;border-inline-start:3px solid rgba(128,128,128,.3);padding-inline-start:8px}
-@container (min-width:760px){
- .lbHd,.lbBoard .lbRow.ldRow>summary{display:grid;grid-template-columns:minmax(8.5em,1.6fr) 6.5em minmax(6.5em,1.4fr) 7em minmax(5.5em,1fr) minmax(5.5em,1fr) minmax(7em,1.8fr);gap:8px;align-items:center}
+.lbHist:empty{display:none}
+.lbBody>.ldNoteBox{margin:2px 0 0}
+.lbBody .lbTools{padding:0}
+/* 20.11.2026, Itzik: "אם אפשר לסובב את המסך, אז ה CRM ייראה נורמלי". A phone on its side: the sheet takes the whole width,
+   so the board (a container query) turns into the table with the column titles. */
+@media (orientation:landscape) and (min-width:640px){#bizSheet .ycard{max-width:none!important;width:calc(100vw - 16px)!important;box-sizing:border-box}}
+@container (min-width:640px){
+ .lbHd,.lbBoard .lbRow.ldRow>summary{display:grid;grid-template-columns:minmax(7em,1.6fr) 5.5em minmax(5.5em,1.4fr) 6.5em minmax(4.5em,1fr) minmax(4.5em,1fr) minmax(5em,1.8fr);gap:8px;align-items:center}
  .lbHd{font:700 12px Heebo,sans-serif;opacity:.65;padding:2px 10px 4px;border-inline-start:6px solid transparent}
  .lbBoard .lbName,.lbBoard .lbLast{flex:none}
  .lbLast:empty{display:block}
@@ -20574,6 +20580,23 @@ function bizSheet(t0){
    // 13.11.2026, Itzik: "להעביר את הליד לטום ... אני אחליט למי אני שולח". WhatsApp opens with every detail
    // already written and no recipient, so he picks who gets it (טום or anyone).
    var fwd='<a class="yb yb1 ldFwd" href="https://wa.me/?text='+encodeURIComponent('ליד להעברה'+NL+all)+'" target="_blank" rel="noopener">'+LD_FWD+'</a>';
+   if(noNote){
+    // 20.11.2026, Itzik: "לפני להעביר בוואטסאפ, להתקשר, להעתיק ... תן לי לרשום תגובה לידו. ושזה לא ייפתח פעמיים במסך".
+    // On the board: the note box with the forward and contact buttons right under it, then the row's tools, and the
+    // details only once (name and phone are already in the row's summary, so they are not repeated here).
+    return '<div class="ldBody lbBody">'+LD_NOTE_BOX+fwd
+     +'<div class="ldAct">'+(rep||'<small>אין טלפון או מייל. מחכים שיחזור.</small>')+'</div>'
+     +LB_TOOLS
+     +'<div class="ldTop lbInfo">'
+     +(dd?'<small>🕐 הגיע ב '+esc(dd)+(hm?' בשעה '+esc(hm):'')+' · 📍 '+esc(src.replace(/^[^ ]+ /,''))+(r.ref?' · '+esc(r.ref):'')+'</small>':'<small>📍 '+esc(src.replace(/^[^ ]+ /,''))+'</small>')
+     +(em?'<small>✉️ <bdi>'+esc(em)+'</bdi></small>':'')
+     +(r.last?'<p class="ldLast">💬 "'+esc(r.last)+'"</p>':'')
+     +'<div class="lbHist">'+(hist||[]).map(function(l){return '<small>'+esc(l)+'</small>';}).join('')+'</div>'
+     +'</div>'
+     +'<div class="ldAct">'+BZ_ORDER.filter(function(st){return st!==(cur||r.status);}).map(function(st){return '<button type="button" class="yb" data-bz="ldst" data-s="'+st+'">'+st+'</button>';}).join('')+'</div>'
+     +'<div class="ldAct"><button type="button" class="yb ldDel" data-bz="lddel">🗑 מחיקה</button></div>'
+     +'</div>';
+   }
    return '<div class="ldBody">'
     // 14.11.2026, Itzik: "למעלה יהיה כתוב השם שלו, המייל שלו, למה, אם הוא כתב משהו, טלפון, ורק למטה מאיפה הוא הגיע.
     // אחרי זה ... הערה ... שליחה לוואטסאפ אחר". Who he is and what he wants on top, the note, the forward, and where from last.
@@ -20667,7 +20690,7 @@ function bizSheet(t0){
      +'<span data-bz="lbed" data-k="site"'+mk('site')+' class="lbSite'+(site?'':' lbNone')+'" data-v="'+esc(site)+'">'+lbSiteIn(site)+'</span>'
      +'<span class="lbSrc">'+esc(i.src)+'</span>'
      +'<span data-bz="lbed" data-k="note"'+mk('note')+' class="lbLast">'+esc(hist[0]||(r.last?'"'+r.last+'"':''))+'</span>'
-     +'</summary>'+LD_NOTE_BOX+LB_TOOLS+ldBodyHtml(r,hist,st,1)+'</details>';
+     +'</summary>'+ldBodyHtml(r,hist,st,1)+'</details>';
    }
    // the filter is for trial week signups (IT Solution's); a board with none has only the search
    h+='<div class="lbBar">'+(A.some(function(r){return r.source==='signup';})?'<div class="lbFlt"><button type="button" class="on" data-bz="lbflt" data-f="all">הכל</button><button type="button" data-bz="lbflt" data-f="signup">נרשמו לשבוע ניסיון</button><button type="button" data-bz="lbflt" data-f="other">פניות</button></div>':'')
