@@ -169,6 +169,19 @@ for pg in pages:
     if ph or ml:
         leaky.append('%s (%d טלפונים, %d מיילים)' % (pg.split('/')[2], len(ph), len(ml)))
 add('pagepii', not leaky, 'אין פרטים אישיים גלויים בדפי המוניטור', ('גלוי ב: ' + ', '.join(leaky)) if leaky else '%d דפים' % len(pages))
+# 15. 20.11.2026: a document under docs is open to anyone with its address. Two customer PDFs (Yehuda, Ilay) sat in
+# docs/files and docs/hm unsealed until 20.11. Every file a build keeps must be sealed under docs/f.
+openf = []
+for pg in pages:
+    d = os.path.dirname(pg)
+    for root, ds, fs in os.walk(d):
+        if (root + os.sep).startswith(os.path.join(d, 'f') + os.sep) or '/node_modules' in root:
+            continue
+        for f in fs:
+            rel = os.path.relpath(os.path.join(root, f), d)
+            if rel.startswith('files' + os.sep) and not f.startswith('.') or re.search(r'[.](pdf|docx?|xlsx?|csv)$', f, re.I):
+                openf.append(pg.split('/')[2] + ':' + rel)
+add('pubfiles', not openf, 'אין מסמכים פתוחים בלי הצפנה בדפי המוניטור', ('פתוח: ' + ', '.join(openf[:6])) if openf else 'נקי')
 add('exposed', not exposed, 'אין קבצים פרטיים פתוחים ברשת', ('נגישים: ' + ', '.join(exposed)) if exposed else '')
 
 # Write, and push only when the failing set changed.
