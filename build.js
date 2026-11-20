@@ -25546,7 +25546,10 @@ ${require('./lib/public-demo.js').tail(inst)}</body>
   The Yehuda review stays public: it is shared with him by link on purpose.
   Without a gate nothing moves, because then the page itself is public anyway.
 */
-const PUBLIC_FILES = new Set(['happymeal-sekira-yehuda.pdf', 'content-plan-ilay.pdf']);
+// 20.11.2026, security: Itzik approved locking the last two. Yehuda's review and Ilay's content plan were open to
+// anyone with the address; their tiles were gone, and now they are sealed like every other file. Keep this name:
+// tests/owner-cut.test.js cuts the page source at it.
+const PUBLIC_FILES = new Set([]);
 const MIME = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp',
   mp4: 'video/mp4', mov: 'video/quicktime', webm: 'audio/webm', m4a: 'audio/mp4', mp3: 'audio/mpeg',
   ogg: 'audio/ogg', wav: 'audio/wav', pdf: 'application/pdf', txt: 'text/plain; charset=utf-8',
