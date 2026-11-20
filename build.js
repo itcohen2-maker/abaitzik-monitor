@@ -20561,7 +20561,7 @@ function bizSheet(t0){
     note box, forward, contact, where from, the stages and delete. hist (the board): the notes as a history, newest
     first, instead of one block.
   */
-  function ldBodyHtml(r,hist,cur){
+  function ldBodyHtml(r,hist,cur,noNote){
    var i=ldInfo(r),dd=i.dd,hm=i.hm,em=i.em,src=i.src,meta=/comment|messenger|dm|leadform/.test(r.source||'');
    var rep='';
    if(r.phone){rep+='<a class="yb yb2" href="'+ldWa(r.phone)+'" target="_blank" rel="noopener">💬 וואטסאפ</a><a class="yb" href="tel:'+esc(String(r.phone).replace(/[^0-9+]/g,''))+'">📞 להתקשר</a>';}
@@ -20586,7 +20586,7 @@ function bizSheet(t0){
     +'</div>'
     // 13.11.2026, Itzik: "בלידים אין לי איך להכניס הערה". The 📝 button sat at the very bottom, after every other
     // button. Now the note box is open in every lead, right under the details, and a sent note shows at once.
-    +'<div class="bzEd ldNoteBox"><input placeholder="📝 הערה על הליד" enterkeyhint="send"><button type="button" class="yb yb2" data-tdy="1" data-bz="ldsend">לרשום</button></div>'
+    +(noNote?'':LD_NOTE_BOX)
     +fwd
     +'<div class="ldAct">'+(rep||'<small>אין טלפון או מייל. מחכים שיחזור.</small>')+'</div>'
     +'<div class="ldSrc"><small>📍 מאיפה: '+esc(src.replace(/^[^ ]+ /,''))+(r.ref?' · '+esc(r.ref):'')+'</small>'+(dd?'<small>🕒 נכנס: '+esc(dd+' '+hm)+'</small>':'')+'</div>'
@@ -20606,6 +20606,9 @@ function bizSheet(t0){
     (wait, ok, bad), drawn into the row by the board itself, so a change that did not go stays red after any redraw, and
     a tap still sends it (msg, nq). el is the sheet open now, where late answers paint.
   */
+  // 20.11.2026, Itzik: "עד שאני מגיע לרשום תגובה על הליד אני צריך לגלול". On the board the note box sat under the
+  // tools and a second copy of the details, below the phone's screen. Now it is the first thing under the row's summary.
+  var LD_NOTE_BOX='<div class="bzEd ldNoteBox"><input placeholder="📝 הערה על הליד" enterkeyhint="send"><button type="button" class="yb yb2" data-tdy="1" data-bz="ldsend">לרשום</button></div>';
   var LBS=window.ldBoardSt||(window.ldBoardSt={mk:{},msg:{},seq:{},nq:{},el:null});
   /*
     Top to bottom: the count, filter and search, "⏰ היום" (a reminder due today or passed), then the five stages as
@@ -20664,7 +20667,7 @@ function bizSheet(t0){
      +'<span data-bz="lbed" data-k="site"'+mk('site')+' class="lbSite'+(site?'':' lbNone')+'" data-v="'+esc(site)+'">'+lbSiteIn(site)+'</span>'
      +'<span class="lbSrc">'+esc(i.src)+'</span>'
      +'<span data-bz="lbed" data-k="note"'+mk('note')+' class="lbLast">'+esc(hist[0]||(r.last?'"'+r.last+'"':''))+'</span>'
-     +'</summary>'+LB_TOOLS+ldBodyHtml(r,hist,st)+'</details>';
+     +'</summary>'+LD_NOTE_BOX+LB_TOOLS+ldBodyHtml(r,hist,st,1)+'</details>';
    }
    // the filter is for trial week signups (IT Solution's); a board with none has only the search
    h+='<div class="lbBar">'+(A.some(function(r){return r.source==='signup';})?'<div class="lbFlt"><button type="button" class="on" data-bz="lbflt" data-f="all">הכל</button><button type="button" data-bz="lbflt" data-f="signup">נרשמו לשבוע ניסיון</button><button type="button" data-bz="lbflt" data-f="other">פניות</button></div>':'')
@@ -21037,7 +21040,10 @@ function bizSheet(t0){
      return '<h3 data-t="'+t[0]+'"'+(t[3]?' data-n="'+t[3]+'"':'')+(bzTabNew(t[0])?' data-new="1"':'')+'>'+t[1]+' '+esc(t[2])+'</h3><div class="bzPane" data-t="'+t[0]+'">'+bodyFor(t[0])+'</div>';
     }).join('')+'</div></div>';
   shipOpen('bizSheet','💼 העסק שלי',html,function(el){
-   var bm=el.querySelector('#bizMic');if(bm)bm.onclick=toggleRec;LBS.el=el;el.addEventListener('input',function(e){lbOnKey(e,el);});el.addEventListener('keydown',function(e){lbOnKey(e,el);});
+   var bm=el.querySelector('#bizMic');if(bm)bm.onclick=toggleRec;LBS.el=el;
+   // 20.11.2026: a lead opened on a phone scrolls up so its top line and the note box are on screen.
+   el.addEventListener('toggle',function(e){var d=e.target;if(!d||!d.open||!d.classList||!d.classList.contains('lbRow'))return;setTimeout(function(){var y=d.getBoundingClientRect();if(y.top<0||y.top>innerHeight*0.35){try{d.scrollIntoView({block:'start',behavior:'smooth'});}catch(x){d.scrollIntoView(true);}}},60);},true);
+   el.addEventListener('input',function(e){lbOnKey(e,el);});el.addEventListener('keydown',function(e){lbOnKey(e,el);});
    // 1.11, Itzik: inside העסק שלי there was no back, only home. חזרה goes one step back.
    // Every tab change is a step. The phone's back gesture uses the same step (see popstate below).
    var bizHist=[],bzQuiet=false;
