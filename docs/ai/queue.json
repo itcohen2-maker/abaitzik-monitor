@@ -481,9 +481,17 @@
   "ytd": "קיבלתם הודעה שהוואטסאפ עומד להיחסם ומבקשים קוד שהגיע ב SMS? זו הונאה: הרמאי מנסה להתחבר לחשבון שלכם ווואטסאפ שולחת את קוד האימות אליכם. ההגנה הכי חזקה היא אימות דו שלבי. מקור: מרכז העזרה של WhatsApp, 2026.",
   "song": "",
   "song_tt": "",
-  "posted": false,
-  "postedAt": null,
-  "approvedAt": "2026-11-15T06:00:45.408Z"
+  "posted": true,
+  "postedAt": "2026-11-20T18:01:51.972Z",
+  "approvedAt": "2026-11-15T06:00:45.408Z",
+  "auto": {
+   "reel": "18381265936211401",
+   "story": "18117017774599929",
+   "storyError": null,
+   "page": "2418725938665118",
+   "pageError": null,
+   "channel": "itsolution.ai"
+  }
  },
  {
   "id": "wascam-en",
@@ -498,9 +506,17 @@
   "ytd": "Got a message that your WhatsApp is about to be blocked and they ask for an SMS code? It's a scam: the scammer tries to log in to your WhatsApp and WhatsApp sends the verification code to you. The strongest protection is two step verification. Source: WhatsApp Help Center, 2026.",
   "song": "",
   "song_tt": "",
-  "posted": false,
-  "postedAt": null,
-  "approvedAt": "2026-11-15T06:00:45.408Z"
+  "posted": true,
+  "postedAt": "2026-11-20T18:03:57.735Z",
+  "approvedAt": "2026-11-15T06:00:45.408Z",
+  "auto": {
+   "reel": "18121211147041765",
+   "story": "17969312391228477",
+   "storyError": null,
+   "page": "1385821316808085",
+   "pageError": null,
+   "channel": "itsolution.global"
+  }
  },
  {
   "id": "qrscam-he",
