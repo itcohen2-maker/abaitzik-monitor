@@ -19,6 +19,9 @@ const ROOT = __dirname;
 const CHAT = path.join(ROOT, 'data/chat/chat');
 const STATE = path.join(ROOT, 'data/status/mail-check.json');
 const HOURS = [8, 10, 12, 14, 16];
+// 20.11.2026, Itzik: "לבדוק 3 פעמים ביום חשבוניות וקבלות, להעביר אותם לדרייב ולעדכן אותי בוואטסאפ מה הגיע. בסוף החודש הדפיס".
+// The receipts pass runs at these three hours only, and whatever it finds goes to his WhatsApp too (the print stays on the 1st, manager.js).
+const BILL_HOURS = [8, 13, 18];
 const LINE = /^\[(\d+)\] (\d{2})\.(\d{2})\.(\d{4}) (\d{2}):(\d{2}) \| (.*)$/;
 // What counts as an invoice or receipt by its subject, and what does not (card statements, ads).
 const RECEIPT = /(קבלה|חשבונית|receipt|invoice)/i;
@@ -68,7 +71,11 @@ function say(now, state, text, title, body) {
 function main() {
   const force = process.argv.includes('--now');
   const now = israelNow();
-  if (!force && !HOURS.includes(now.getHours())) return;
+  const billTime = force || BILL_HOURS.includes(now.getHours());
+  if (!force && !HOURS.includes(now.getHours())) {
+    if (billTime) billsOnly(now);
+    return;
+  }
 
   const state = readState(ymd(now));
 
@@ -107,7 +114,7 @@ function main() {
   // 3.11.2026: receipts are found by their own pass. The two-hour window missed every mail
   // between 16:00 and 08:00 (Meta receipts of 1.11 and 2.11 were never printed). This pass
   // looks back three days and remembers each receipt uid for good, so none is missed or doubled.
-  const billNote = billsPass();
+  const billNote = billTime ? billsPass() : '';
   // 4.11.2026: mail asking to leave Shachar's list is added to unsub in data/shachar/state.json (lib/shachar-unsub.js).
   try { require('./lib/shachar-unsub.js').scan(ROOT); } catch (e) { console.error('shachar unsub failed:', String(e.message || e).slice(0, 300)); }
   const k = fresh.length;
@@ -144,6 +151,26 @@ function billsPass() {
   return note;
 }
 
+// A receipts-only run (13:00 and 18:00): a chat line and WhatsApp only when something came.
+function billsOnly(now) {
+  const note = billsPass();
+  if (!note) return;
+  const stamp = `${ymd(now)}-${hm(now).replace(':', '')}`;
+  fs.writeFileSync(path.join(CHAT, `${stamp}-claude-bills.json`), JSON.stringify({ at: now.toISOString(), from: 'claude', text: `חשבוניות (${hm(now)}):${note}` }, null, 1) + '\n');
+  spawnSync('/usr/bin/node', ['push.js', 'bills ' + hm(now)], { cwd: ROOT, stdio: 'inherit', timeout: 300000 });
+}
+
+// What came, to his WhatsApp (never swallowed: the reason goes to the log).
+function billsToWhatsApp(found) {
+  const inst = require('./lib/instance.js');
+  if (inst.name !== 'abaitzik') return;
+  const lines = found.slice(0, 10).map(r => `• ${r.at.toLocaleDateString('he-IL')} ${r.from}: ${r.subject}`.slice(0, 160));
+  const text = `🧾 הגיעו ${found.length} חשבוניות או קבלות:\n${lines.join('\n')}${found.length > 10 ? `\nועוד ${found.length - 10}.` : ''}\nנשמרות בדרייב בתיקיית החודש, וההדפסה בסוף החודש.`;
+  require('./lib/wa-out.js').sendOwner(inst.dataPath, text, { kind: 'bills' })
+    .then(r => console.log('bills wa ' + r.via))
+    .catch(e => console.error('bills wa failed: ' + String(e.message || e).slice(0, 300)));
+}
+
 function bills(fresh) {
   const found = fresh.filter(r => RECEIPT.test(r.subject) && !NOT_RECEIPT.test(r.subject + ' ' + r.from));
   if (!found.length) return '';
@@ -161,6 +188,7 @@ function bills(fresh) {
     + '5) בג׳ימייל לתייג את המייל בתווית "חשבוניות 2026" ובתווית הספק שתחתיה: גוגל, Anthropic, סלקום, דומיינים ואתרים, קניות (ספק חדש מקבל תווית חדשה תחת "חשבוניות 2026"). לא למחוק מיילים. '
     + '6) לענות שורה אחת: מה נשמר והסכום, ושזה נאסף להדפסה של סוף החודש. לא דפי פירוט אשראי, לא לולוס, לא מסמכים רפואיים.';
   spawnSync('/usr/bin/node', ['pc-task.js', 'add', '--quiet', '--re', 'mail-check-bills', job], { cwd: ROOT, stdio: 'ignore', timeout: 60000 });
+  billsToWhatsApp(found);
   return `\n\n🧾 ${found.length} חשבוניות או קבלות: המחשב שומר אותן בתיקיית החודש בדרייב, וההדפסה בסוף החודש.`;
 }
 
