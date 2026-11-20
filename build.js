@@ -133,6 +133,11 @@ function leadStamps() {
 // 1.11, Itzik: "באריח יש ליד חדש אני לא רואה אותו". The tile now opens the lead itself,
 // right under it: the full text, a copy button, a share button and a "טופל" mark.
 function leadTexts() {
+  // 20.11.2026, security: this wrote every site lead since 1.11 (name, phone, mail) into index.html as plain text,
+  // outside the gate, on a public page. Its only reader was the gLeadNew tile, gone since 13.11 (the leads board
+  // reads the sealed biz data). It writes nothing now; the security check scans his page for phones and mails.
+  return '';
+  // eslint-disable-next-line no-unreachable
   try {
     const isTest = (t) => require('./lib/biz.js').isTestLead(t) || require('./lib/own-leads.js').isOwnText(inst.dataPath, t); // 12.11.2026: his own phone or mail is a test, not counted
     const out = {};

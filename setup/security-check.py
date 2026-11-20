@@ -78,7 +78,12 @@ for f in secrets:
 add('secrets', not open_s, 'קבצים סודיים נעולים', ('פתוחים לכולם: ' + ', '.join(open_s)) if open_s else 'קודים, מפתחות וסיסמאות בהרשאות סגורות')
 
 # 3. Logs readable by other users.
-open_l = [f for f in glob.glob('/var/log/monitor-*.log') if os.stat(f).st_mode & stat.S_IROTH]
+# 14.11: the cron logs in /home/monitor too (the home dir is 751, so a known name could be read). Fix on the spot, then report.
+for f in glob.glob('/home/monitor/*.log'):
+    try:
+        if os.stat(f).st_mode & stat.S_IROTH: os.chmod(f, os.stat(f).st_mode & ~0o007)
+    except Exception: pass
+open_l = [f for f in glob.glob('/var/log/monitor-*.log') + glob.glob('/home/monitor/*.log') if os.stat(f).st_mode & stat.S_IROTH]
 add('logs', not open_l, 'יומנים סגורים', ('%d יומנים פתוחים לכולם: ' % len(open_l) + ', '.join(os.path.basename(x) for x in open_l[:5])) if open_l else 'אף משתמש אחר לא קורא אותם')
 
 # 4. Owner code strength.
@@ -148,6 +153,22 @@ for h in hosts:
             if body != home and '<!doctype html' not in body.lower() and '<html' not in body.lower():
                 exposed.append(h + '/' + p)
 add('headers', not nohdr, 'כותרות אבטחה בכל האתרים', ('חסרות ב: ' + ', '.join(nohdr)) if nohdr else '%d אתרים' % len(hosts))
+# 11. 20.11.2026: a page is sealed, so its index.html carries no personal data. A lead's details were written into
+# Itzik's page in plain text (window.LEAD_NEW_DATA) from 1.11 to 20.11. Scan every monitor's page for a mobile
+# number or a mail that is not one of ours. Names only in the report, never the number.
+OURS = ('candletimes.com', 'abaitzik.com', 'it-solution.co.il', 'mac.org.il', 'itcohen2@gmail.com', 'example.com')
+leaky = []
+pages = [os.path.join(REPO, 'docs', 'index.html')] + [os.path.join(d, 'docs', 'index.html') for d in [x[1] if isinstance(x, (list, tuple)) else (x.get('dir') if isinstance(x, dict) else x) for x in tenants()]]
+for pg in pages:
+    try:
+        txt = open(pg, encoding='utf-8', errors='ignore').read()
+    except Exception:
+        continue
+    ph = set(re.findall(r'(?<![0-9])(?:\+972|0)5[0-9][- ]?[0-9]{3}[- ]?[0-9]{4}(?![0-9])', txt))
+    ml = set(m for m in re.findall(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[a-z]{2,}', txt) if not any(m.lower().endswith(o) or m.lower() == o for o in OURS))
+    if ph or ml:
+        leaky.append('%s (%d טלפונים, %d מיילים)' % (pg.split('/')[2], len(ph), len(ml)))
+add('pagepii', not leaky, 'אין פרטים אישיים גלויים בדפי המוניטור', ('גלוי ב: ' + ', '.join(leaky)) if leaky else '%d דפים' % len(pages))
 add('exposed', not exposed, 'אין קבצים פרטיים פתוחים ברשת', ('נגישים: ' + ', '.join(exposed)) if exposed else '')
 
 # Write, and push only when the failing set changed.
