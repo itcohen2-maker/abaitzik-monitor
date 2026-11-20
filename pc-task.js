@@ -190,7 +190,10 @@ if (cmd === 'add') {
   const test = rest.includes('--test');
   const quiet = rest.includes('--quiet');
   const ri = rest.indexOf('--re');
-  const re = ri > -1 ? rest[ri + 1] : '';
+  // 20.11.2026: --re may list several of his message ids, comma separated: the first is re, the rest alsoRe.
+  const reAll = ri > -1 ? String(rest[ri + 1] || '').split(',').map((x) => x.trim()).filter(Boolean) : [];
+  const re = reAll[0] || '';
+  const alsoRe = reAll.slice(1);
   const ti = rest.indexOf('--then');
   const then = ti > -1 ? String(rest[ti + 1] || '').trim() : '';
   const wa = rest.includes('--wa');
@@ -216,7 +219,7 @@ if (cmd === 'add') {
   const id = 'pc-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
   write(Object.assign({ id, re, at: new Date().toISOString(), task, status: 'pending', tries: 0 },
     test ? { test: true } : {}, quiet ? { quiet: true } : {}, then ? { then } : {},
-    wa ? { wa: true } : {}, pcName ? { pc: pcName } : {}, chrome ? { chrome: true } : {}, model ? { model } : {}));
+    wa ? { wa: true } : {}, pcName ? { pc: pcName } : {}, chrome ? { chrome: true } : {}, model ? { model } : {}, alsoRe.length ? { alsoRe } : {}));
   const o = pcOnline(pcName);
   console.log(id);
   console.log(o.on ? 'pc: on' : 'pc: off, last seen ' + (o.at || 'never'));
