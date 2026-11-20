@@ -3682,11 +3682,19 @@ details.ansPj[open]>summary.ansPjH::after{content:' ▴'}
 .lbHist:empty{display:none}
 .lbBody>.ldNoteBox{margin:2px 0 0}
 .lbBody .lbTools{padding:0}
+/* 20.11.2026 (2), a phone held upright: a lead with no site had an empty 🌐 chip on its own line (the 🌐 אתר button inside
+   sets it), and the four contact buttons took three lines. Now the chip hides until there is a site, and the buttons go two by
+   two. The page wraps each button in a .tdy-row, so the rule is on the row's children, whatever they are. */
+.lbBoard .lbRow.ldRow>summary>.lbSite.lbNone{display:none}
+.lbBody>.ldNoteBox+*+.ldAct>:not(small){flex:1 1 calc(50% - 3px);min-width:0;justify-content:center;text-align:center}
 /* 20.11.2026, Itzik: "אם אפשר לסובב את המסך, אז ה CRM ייראה נורמלי". A phone on its side: the sheet takes the whole width,
    so the board (a container query) turns into the table with the column titles. */
 @media (orientation:landscape) and (min-width:640px){#bizSheet .ycard{max-width:none!important;width:calc(100vw - 16px)!important;box-sizing:border-box}}
 @container (min-width:640px){
- .lbHd,.lbBoard .lbRow.ldRow>summary{display:grid;grid-template-columns:minmax(7em,1.6fr) 5.5em minmax(5.5em,1.4fr) 6.5em minmax(4.5em,1fr) minmax(4.5em,1fr) minmax(5em,1.8fr);gap:8px;align-items:center}
+ .lbHd,.lbBoard .lbRow.ldRow>summary{display:grid;grid-template-columns:minmax(8.5em,2fr) 5.5em minmax(5.5em,1.4fr) 7.5em minmax(3em,.5fr) minmax(4.5em,.8fr) minmax(6em,2.4fr);gap:8px;align-items:center}
+ /* 20.11.2026 (2), on its side: the name and the reminder broke over two lines, and an empty site took a wide column */
+ .lbBoard .lbRow.ldRow>summary>.lbSite.lbNone{display:block}
+ .lbBoard .lbRem{white-space:nowrap}
  .lbHd{font:700 12px Heebo,sans-serif;opacity:.65;padding:2px 10px 4px;border-inline-start:6px solid transparent}
  .lbBoard .lbName,.lbBoard .lbLast{flex:none}
  .lbLast:empty{display:block}
