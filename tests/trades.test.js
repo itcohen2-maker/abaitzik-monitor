@@ -28,3 +28,9 @@ test('an unknown trade is null', () => {
   assert.strictEqual(T.get(undefined), null);
   assert.strictEqual(T.get('gypsum').id, 'gypsum');
 });
+
+test('instance.json keeps "trade" (lib/instance.js drops keys it does not know)', () => {
+  const I = require('../lib/instance.js');
+  assert.ok('trade' in I.DEFAULTS);
+  assert.strictEqual(I.DEFAULTS.trade, null);
+});

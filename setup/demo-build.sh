@@ -45,7 +45,7 @@ printf '{"plan":"medium","month":"%s","extra":0,"applied":[],"history":[],"addon
 # and every screen a customer can have that the invented data fills (instance.json stays between runs; this keeps it right)
 node -e 'const fs=require("fs"),f=process.argv[1],j=JSON.parse(fs.readFileSync(f,"utf8"));
 j.screens=["gMyBoard","gBhCal","gBhMeet","gBhClients","gBhMail","gBhQuote","gRemind","gTasks","gCamp","gCIdeas","gShopList","gUpgrade"];
-j.board=true;const t=process.argv[2];if(t){const T=require("./lib/trades.js").get(t);j.name="demo-"+t;j.trade=t;j.screens=T.screens.slice();j.board=false;}
+j.board=true;const t=process.argv[2];if(t){const T=require("./lib/trades.js").get(t);j.name="demo-"+t;j.trade=t;j.screens=T.screens.slice();j.board=false;const B=require("./lib/demo-trades/"+t+".js").BIZ;j.owner=B.owner;j.pageTitle="המוניטור של "+B.name;j.biz={name:B.name,sub:B.sub,phone:"03-0000000",address:"רחוב הדוגמה 1, "+B.city};j.publicUrl="https://"+T.host+"/";j.origin="https://"+T.host;}
 fs.writeFileSync(f,JSON.stringify(j,null,1));' "$APP/instance.json" "$TRADE"
 fi
 sudo -u demo -H node lib/demo-data.js data ${TRADE:+--trade "$TRADE"}
